@@ -2,7 +2,7 @@ class_name EvHistory
 extends RefCounted
 
 # THE MEMORY (GDD §7). One row per resolution, and a query surface content can actually reach:
-# "a decision on day 10 has a visible consequence on day 90" (§7.2) needs a card to be able to
+# "a decision in week 2 has a visible consequence in week 13" (§7.2) needs a card to be able to
 # ask what already happened.
 #
 # LANGUAGE INDEPENDENCE IS STRUCTURAL (§7.4). Rows store ids only — event_id, option_id,
@@ -90,9 +90,9 @@ static func last_day(event_id: String) -> int:
 	return int(_last_row(event_id).get("day", -1))
 
 
-## Days since it last resolved, or -1 if it never has — so "never happened" cannot satisfy
-## ">= 30".
-static func days_since(event_id: String) -> int:
+## Weeks since it last resolved, or -1 if it never has — so "never happened" cannot satisfy
+## ">= 4".
+static func weeks_since(event_id: String) -> int:
 	var day: int = last_day(event_id)
 	return -1 if day < 0 else GameState.day - day
 

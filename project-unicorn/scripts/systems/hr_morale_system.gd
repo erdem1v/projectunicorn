@@ -18,9 +18,9 @@ extends RefCounted
 # alan olmadığı için GameState.flags'te kişi başına tutulur.
 const FLAG_MANUAL_LEAVE_PREFIX := "hr_manual_leave_"
 
-# Bekleyen istifa. Oyuncu kartı kapatana kadar kişi burada kalır: hem aynı kişi için günlük
-# roll'u durdurur (yoksa etkin olasılık RESIGN_CHANCE_PER_DAY'in üstüne çıkardı) hem de
-# HRActions'ın kart eylemlerini reddettiği gerçektir.
+# Bekleyen istifa. Oyuncu kartı kapatana kadar kişi burada kalır: hem aynı kişi için roll'u
+# durdurur (yoksa kart açıkken ertesi hafta ikinci bir istifa istenirdi) hem de HRActions'ın
+# kart eylemlerini reddettiği gerçektir.
 static var _pending: Array[String] = []
 
 
@@ -48,7 +48,8 @@ static func tick_leave_returns() -> void:
 
 static func tick_leave_departures() -> void:
 	# §11.4 yaz penceresi: her çalışanın Haziran–Ağustos içinde atanmış bir izin HAFTASI var;
-	# o hafta gelince oyuncu onayı istenmeden izne çıkar.
+	# o hafta gelince oyuncu onayı istenmeden izne çıkar. Her tik bir Perşembedir ve pencerenin
+	# Perşembeleri 0..12 indekslerine birer kez düşer.
 	var date: Dictionary = GameState.get_date_dict()
 	var month: int = int(date.month)
 	var year: int = int(date.year)
@@ -66,20 +67,20 @@ static func tick_leave_departures() -> void:
 		# §15.3: talep bu modülden doğar, kartı olay motorunundur; kart bağlanana kadar izin
 		# otomatik başlar ama sinyal yayınlanır.
 		EventBus.leave_requested.emit(emp.id)
-		send_on_leave(emp, HRConstants.LEAVE_DAYS, false)
+		send_on_leave(emp, HRConstants.LEAVE_WEEKS, false)
 
 
 static func tick_thresholds() -> void:
-	# Kaçma riski sayacı ve istifa roll'u. Drift ve ease'ten sonra koşar ki bugünün moralini okusun.
+	# Kaçma riski sayacı ve istifa roll'u. Drift ve ease'ten sonra koşar ki bu haftanın moralini okusun.
 	for emp in CharacterRegistry.get_employees():
 		# İzindekinin sayacı DONAR (sıfırlanmaz, ihmal tatille aklanmaz) ve roll atılmaz:
-		# oyuncunun ödediği toparlanma tatilin üçüncü günü istifayla cevaplanmamalı.
+		# oyuncunun ödediği toparlanma tatili istifayla cevaplanmamalı.
 		if emp.status == HRConstants.STATUS_ON_LEAVE:
 			continue
 		if not HRConstants.is_flight_risk(emp.morale):
-			emp.flight_risk_days = 0
+			emp.flight_risk_weeks = 0
 			continue
-		emp.flight_risk_days += 1
+		emp.flight_risk_weeks += 1
 		_maybe_resign(emp)
 
 
@@ -124,6 +125,7 @@ static func _seed_target(emp: Character) -> void:
 ## §7.1 taban sürüklenme. Saat çarpanı ve aşırı yük YALNIZ buraya uygulanır; çarpan sıfırın
 ## altına inince işaret döner ve moral yükselir (yedide durur, altıda yükselir).
 static func tick_drift() -> void:
+	var drift: float = TimeModel.per_tick(HRConstants.MORALE_BASE_DRIFT_PER_DAY)
 	for emp in CharacterRegistry.get_employees():
 		_seed_target(emp)
 		# §8.6: izindekinin morali hiç sürüklenmez, kazanç dönüşte tek seferde gelir. Eğitimdeki
@@ -133,7 +135,7 @@ static func tick_drift() -> void:
 		var hour_mult: float = 1.0
 		if emp.status != HRConstants.STATUS_TRAINING:
 			hour_mult = HRConstants.hour_morale_mult(WorkHoursSystem.hours_for(emp))
-		var raw: float = -HRConstants.MORALE_BASE_DRIFT_PER_DAY * hour_mult
+		var raw: float = -drift * hour_mult
 		if HRSystem.is_overloaded(emp):
 			# §12.1: aşırı yük düşüşü hızlandırır; kısa günde de moral YÜKSELMEZ, en fazla durur.
 			raw = raw * HRConstants.OVERLOAD_MORALE_MULT if raw < 0.0 else 0.0
@@ -145,14 +147,15 @@ static func tick_drift() -> void:
 
 ## §7 "anında sıçramaz": görünen moral hedefe doğru günde en fazla MORALE_EASE_PER_DAY yürür.
 static func tick_ease() -> void:
+	var max_step: float = TimeModel.per_tick(HRConstants.MORALE_EASE_PER_DAY)
 	for emp in CharacterRegistry.get_employees():
 		_seed_target(emp)
 		var gap: float = emp.morale_target - float(emp.morale)
 		if is_zero_approx(gap):
 			continue
-		var step: float = clampf(gap, -HRConstants.MORALE_EASE_PER_DAY, HRConstants.MORALE_EASE_PER_DAY)
-		# Adım ±1'e zorlanmaz: günde 0,25'lik drift kesir olarak hedefte birikir ve moral
-		# ancak fark yarım puanı geçince kımıldar. Zorlamak drift'i dört katına çıkarırdı.
+		var step: float = clampf(gap, -max_step, max_step)
+		# Adım ±1'e zorlanmaz: drift kesir olarak hedefte birikir ve moral ancak fark yarım
+		# puanı geçince kımıldar. Zorlamak kesirli drift'i tam puana şişirirdi.
 		var next_value: int = int(round(float(emp.morale) + step))
 		if next_value != emp.morale:
 			CharacterRegistry.set_morale(emp.id, next_value)
@@ -215,8 +218,8 @@ static func average_morale() -> float:
 	return float(total) / float(employees.size())
 
 
-## "İZİNDE · N gün kaldı" satırı için; işteyken 0.
-static func days_until_return(emp: Character) -> int:
+## "İZİNDE · N hafta kaldı" satırı için; işteyken 0.
+static func weeks_until_return(emp: Character) -> int:
 	if emp == null or emp.status != HRConstants.STATUS_ON_LEAVE:
 		return 0
 	return maxi(emp.leave_until_day - GameState.day, 0)
@@ -232,21 +235,20 @@ static func has_pending_departure(character_id: String) -> bool:
 # ============================================================================
 
 ## on_leave'e tek kapı. Ücretli izin: maaş akar (maaş toplamı durumla süzülmez), katkı durur.
-static func send_on_leave(emp: Character, days: int, is_manual: bool) -> void:
-	if emp == null or emp.category != "employee" or days <= 0:
+static func send_on_leave(emp: Character, weeks: int, is_manual: bool) -> void:
+	if emp == null or emp.category != "employee" or weeks <= 0:
 		return
 	if emp.status == HRConstants.STATUS_ON_LEAVE:
 		return   # süren izin yeniden başlatılmaz
 	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ON_LEAVE)
-	emp.leave_until_day = GameState.day + days
+	emp.leave_until_day = GameState.day + TimeModel.ticks(weeks)
 	# Manuel tatil de o yılın iznini tüketir (§11.4); yoksa dönüş bonusu her hafta tekrarlanabilirdi.
 	emp.leave_taken_year = int(GameState.get_date_dict().year)
 	GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, is_manual)
 	# Kimse izni ONAYLAMAZ (§11.4): modal değil ticker satırı.
-	if is_manual:
-		EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate("HR_NEWS_ON_HOLIDAY").format({"name": emp.character_name, "n": days}))
-	else:
-		EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate("HR_NEWS_ON_LEAVE_MONTH").format({"name": emp.character_name}))
+	var key: String = "HR_NEWS_ON_HOLIDAY" if is_manual else "HR_NEWS_ON_LEAVE"
+	EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate(
+		Fmt.count_key(key, weeks)).format({"name": emp.character_name, "n": weeks}))
 
 
 ## hr_departure modifier'ı oyuncu istifayı kabul edince çağırır. İstifanın kadrodan çıktığı
@@ -312,12 +314,12 @@ static func from_dict(d: Dictionary) -> void:
 ## Kaçma riski ihmal edilirse istifa (§11.3). Ucuz tamsayı testleri RNG'den önce: sağlıklı
 ## bir ekip hiç çekiliş tüketmez.
 static func _maybe_resign(emp: Character) -> void:
-	if emp.flight_risk_days < HRConstants.RESIGN_WINDOW_MIN_DAYS or _pending.has(emp.id):
+	if emp.flight_risk_weeks < TimeModel.ticks(HRConstants.RESIGN_WINDOW_MIN_WEEKS) or _pending.has(emp.id):
 		return
 	var chance: float = HRConstants.resign_chance(emp.traits)
 	# Pencerenin üst ucu kesinliktir: sonsuz roll kalıcı bir kırmızı rozetle arafta kalan
-	# biri bırakırdı. "İki hafta ihmal" oyuncunun öğrenebileceği bir kural olur.
-	if emp.flight_risk_days >= HRConstants.RESIGN_WINDOW_MAX_DAYS:
+	# biri bırakırdı. "Üç hafta ihmal" oyuncunun öğrenebileceği bir kural olur.
+	if emp.flight_risk_weeks >= TimeModel.ticks(HRConstants.RESIGN_WINDOW_MAX_WEEKS):
 		chance = 1.0
 	if not _roll(chance):
 		return

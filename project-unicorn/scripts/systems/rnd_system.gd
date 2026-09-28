@@ -97,10 +97,10 @@ static func _ensure_seeded() -> void:
 ## TimeManager._dispatch_daily_tick runs this after the Product/Support/Infra ticks (so it
 ## reads today's settled build/support/infra state) and before HRSystem.daily_tick.
 ##
-## TWO ONE-DAY LAGS, both consistent with the tree's existing conventions: a node completing
-## on day N that moves an Infra or Support constant lands on N+1 because those already
-## ticked; and research speed on day N reads yesterday's settled morale because HR ticks
-## after. Do NOT reorder — the Support-then-Infra ordering carries its own contract.
+## TWO ONE-TICK LAGS, both consistent with the tree's existing conventions: a node completing
+## on tick N that moves an Infra or Support constant lands on N+1 because those already
+## ticked; and research speed on tick N reads the previous tick's settled morale because HR
+## ticks after. Do NOT reorder — the Support-then-Infra ordering carries its own contract.
 static func daily_tick() -> void:
 	if not tree_open():
 		return  # §2 ağaç kapalı; §7 canlı ürün yokken rapor da gelmez
@@ -111,14 +111,15 @@ static func daily_tick() -> void:
 	emit_edges()
 
 
-## §5.4 · §5.7 — accrue, or freeze. Progress is never burned and never decayed.
+## §5.4 · §5.7 — accrue the tick's seven days, or freeze. Progress is never burned and never
+## decayed. At the 00:00 tick the founder's meeting share is the week that just ended.
 static func _accrue() -> void:
 	if _active == "":
 		return
-	var rate: float = research_per_day(_active, _assignees)
+	var rate: float = research_per_day(_active, _assignees, 1.0 - GameState.founder_meeting_share())
 	if rate <= 0.0:
 		return  # §5.7 FREEZE. "Yanacak olsa kimse başlamaz (kurtarılabilir baskı)."
-	var done: float = progress_effort(_active) + rate
+	var done: float = progress_effort(_active) + TimeModel.per_tick(rate)
 	_progress[_active] = done
 	if done >= float(ResearchTree.effort_of(_active)):
 		_complete(_active)
@@ -155,7 +156,7 @@ static func emit_edges() -> void:
 
 
 # ============================================================================
-#  §5.4 — speed and the day estimate
+#  §5.4 — speed and the week estimate
 # ============================================================================
 
 ## §5.4 [K] — araştırma/gün = Σ hr.effective_skill(atanan, gereken alan) × saat/8 × K_ARGE.
@@ -169,7 +170,8 @@ static func emit_edges() -> void:
 ## `ids` is exactly the set being asked about; an empty set contributes nothing.
 ## HRSystem.is_busy is the freeness gate: effective_skill checks only `status`, so a founder
 ## in pitch_prep_active would otherwise keep researching at full rate.
-static func research_per_day(node_id: String, ids: Array) -> float:
+## `founder_share` scales the founder's term; only the tick passes the week's meeting share.
+static func research_per_day(node_id: String, ids: Array, founder_share: float = 1.0) -> float:
 	var areas: Array = ResearchTree.areas_of(node_id)
 	var total: float = 0.0
 	for cid in ids:
@@ -179,28 +181,29 @@ static func research_per_day(node_id: String, ids: Array) -> float:
 		var best: float = 0.0
 		for area in areas:
 			best = maxf(best, HRSystem.daily_contribution(c, String(area)))
-		total += best
+		total += best * (founder_share if c.category == "founder" else 1.0)
 	return total * ResearchTree.k_arge()
 
 
-## §5.5 — THE number, and the only one on the card. Returns -1.0 for "no contribution" so no
-## caller ever divides by zero or prints ∞; the caller writes the reason line instead.
-static func days_estimate(node_id: String, ids: Array) -> float:
+## §5.5 — THE number, and the only one on the card, in weeks. Returns -1.0 for "no
+## contribution" so no caller ever divides by zero or prints ∞; the caller writes the reason
+## line instead.
+static func weeks_estimate(node_id: String, ids: Array) -> float:
 	var rate: float = research_per_day(node_id, ids)
 	if rate <= 0.0:
 		return -1.0
 	var left: float = maxf(0.0, float(ResearchTree.effort_of(node_id)) - progress_effort(node_id))
-	return left / rate
+	return left / TimeModel.per_tick(rate)
 
 
 ## §5.5 — the estimate shown before anyone is ticked. Computed against the founder alone,
 ## who is the one person always in the pool (§5.3) — which is exactly what §8's card
-## "~9 gün (Kurucu)" shows.
-static func days_estimate_solo(node_id: String) -> float:
+## "~N hafta (Kurucu)" shows.
+static func weeks_estimate_solo(node_id: String) -> float:
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
 		return -1.0
-	return days_estimate(node_id, [founder.id])
+	return weeks_estimate(node_id, [founder.id])
 
 
 # ============================================================================
@@ -424,7 +427,7 @@ static func _complete(node_id: String) -> void:
 	_open_hidden_line_for(node_id)
 
 	if node_id == NODE_USER_RESEARCH:
-		_note_last_day = GameState.day  # §6 — the 30-day clock starts here.
+		_note_last_day = GameState.day  # §6 — the report-period clock starts here.
 
 	EventBus.research_completed.emit(node_id)
 	# §5.8 — KISA BİR KEŞİF KARTI DÜŞER. Kart PanelLayer'a main.gd tarafından mount edilir;
@@ -490,7 +493,7 @@ static func restore_hidden_lines() -> void:
 static func _tick_note() -> void:
 	if _note_last_day < 0:
 		return                       # user_research not complete
-	if GameState.day - _note_last_day < ResearchTree.report_period_days():
+	if GameState.day - _note_last_day < TimeModel.ticks(ResearchTree.report_period_weeks()):
 		return
 	_note_last_day = GameState.day
 	var author: Character = note_author()

@@ -1,5 +1,5 @@
 {
-  "_port_note": "Reaches the player through the assigned Customer Rep — Ekip §10.4: 'bir müşteri olayı ateşlendiğinde bu olay onun aracılığıyla oyuncuya ulaşır'. The condition reads B2BSalesSystem's own `cs_escalated` fact rather than re-deriving it from a satisfaction threshold, so it cannot drift from the system's hysteresis. Tagged critical because the rep raising the alarm is the edge, and the sweep — not the weighted pool — is what fires on an edge the same day it appears. 'Ask them to be patient' exists so a locked promise never leaves 'No' as the only open row: refusing the rep's word is what ENDS the account, so 'No' churns it.",
+  "_port_note": "Reaches the player through the assigned Customer Rep — Ekip §10.4: 'bir müşteri olayı ateşlendiğinde bu olay onun aracılığıyla oyuncuya ulaşır'. The condition reads B2BSalesSystem's own `cs_escalated` fact rather than re-deriving it from a satisfaction threshold, so it cannot drift from the system's hysteresis. Tagged critical because the rep raising the alarm is the edge, and the sweep — not the weighted pool — is what fires on an edge the same week it appears. 'Ask them to be patient' exists so a locked promise never leaves 'No' as the only open row: refusing the rep's word is what ENDS the account, so 'No' churns it.",
   "id": "customer.cs_escalation",
   "version_scope": "demo",
   "category": "customer",
@@ -25,7 +25,7 @@
     }
   },
   "latch": {
-    "cooldown_days": 21
+    "cooldown_weeks": 3
   },
   "latch_key": "entity",
   "condition": {
@@ -53,7 +53,7 @@
           "verb": "promise_create",
           "scope": "customer",
           "feature_id": "pain",
-          "deadline_days": 14
+          "deadline_weeks": 2
         }
       ],
       "requires": {
@@ -153,7 +153,7 @@
       }
     }
   },
-  "expires_days": 7,
+  "expires_weeks": 1,
   "on_expire": {
     "penalties": [
       {

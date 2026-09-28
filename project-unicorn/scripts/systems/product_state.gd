@@ -172,12 +172,18 @@ static func fix_run_fixed() -> int:
 
 # ------------------------------------------------------- §9 age, interest
 
-## SÜRÜM yaşı, ürün yaşı DEĞİL (§17). Her yayında sıfırlanır.
-static func version_age_days() -> int:
-	var stamped: int = int(GameState.get_flag(VERSION_LAUNCH_DAY, 0))
-	if not is_live() or stamped <= 0:
-		return 0
-	return maxi(0, GameState.day - stamped)
+## SÜRÜM yaşı hafta olarak, ürün yaşı DEĞİL (§17); her yayında sıfırlanır. Yayın saat kesriyle
+## damgalanır, yaş kesirli okunur: `into_tick` ölçülen anın tik içindeki yeridir (tik başı 0).
+static func version_age(into_tick: float = 0.0) -> float:
+	var stamped: float = float(GameState.get_flag(VERSION_LAUNCH_DAY, 0.0))
+	if not is_live() or stamped <= 0.0:
+		return 0.0
+	return maxf(0.0, float(GameState.day) + into_tick - stamped)
+
+
+## Rozet ve seam için yayından bu yana dönen tik sayısı.
+static func version_age_weeks() -> int:
+	return int(ceil(version_age()))
 
 
 static func interest() -> float:
@@ -192,7 +198,7 @@ static func new_code_effort() -> float:
 ## BİRLİKTE burada sıfırlanır, çünkü üçü aynı olayın üç yüzüdür; ayrı yazılırlarsa
 ## ayrışırlar ve akış modeli sessizce yanlış bir yaşı okur.
 static func refresh_on_publish(new_effort: float = 0.0) -> void:
-	GameState.set_flag(VERSION_LAUNCH_DAY, GameState.day)
+	GameState.set_flag(VERSION_LAUNCH_DAY, ProductSystem.clock_stamp())
 	GameState.set_flag(INTEREST, INTEREST_MAX)
 	GameState.set_flag(NEW_CODE_EFFORT, maxf(0.0, new_effort))
 

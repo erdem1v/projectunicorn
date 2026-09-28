@@ -15,7 +15,7 @@ extends VBoxContainer
 #      satır İKİ SATIRLIK.
 #
 # BU DOSYA HİÇBİR SAYI TÜRETMEZ: havuz `RnDSystem.eligible_assignees`, hız
-# `RnDSystem.days_estimate`, engel `RnDSystem.start_refusal`.
+# `RnDSystem.weeks_estimate`, engel `RnDSystem.start_refusal`.
 # ============================================================================
 
 ## Araştırma başladı / atama uygulandı — kart kendini kapatsın.
@@ -71,7 +71,7 @@ func _build_shell() -> void:
 
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	# SOL: alan + canlı gün tahmini. Her onay kutusu değişiminde yeniden okunur.
+	# SOL: alan + canlı hafta tahmini. Her onay kutusu değişiminde yeniden okunur.
 	_footer_info = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
 	_footer_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_footer_info.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -275,10 +275,10 @@ func _row_box(picked: bool, hovered: bool) -> StyleBoxFlat:
 
 func _refresh_footer() -> void:
 	var parts: PackedStringArray = RnDUiShared.area_parts(_node_id)
-	var days: float = RnDSystem.days_estimate(_node_id, _selected)
+	var weeks: float = RnDSystem.weeks_estimate(_node_id, _selected)
 	# -1.0 = katkı yok (§5.5): sayı yerine durumun kendi cümlesi, asla ∞.
-	parts.append(RnDUiShared.t("RND_DAYS_EST").format({"n": RnDUiShared.whole_days(days)})
-		if days > 0.0 else RnDUiShared.t("RND_DAYS_NONE"))
+	parts.append(RnDUiShared.weeks_line("RND_WEEKS_EST", weeks)
+		if weeks > 0.0 else RnDUiShared.t("RND_WEEKS_NONE"))
 	_footer_info.text = " · ".join(parts)
 
 	for c in _action_slot.get_children():

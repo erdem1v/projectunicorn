@@ -8,14 +8,14 @@ extends Control
 #
 # İKİ SATIR:
 #   başlık : altıgen glif + düğüm adı + sağda TEK DURUM DİZGİSİ — koşarken
-#            "~{days} gün kaldı", duraklamışken sebep cümlesi (§5.6.1). İkisi asla
-#            bir arada olamaz: katkı sıfırken gün tahmini zaten -1'dir.
+#            "~{n} hafta kaldı", duraklamışken sebep cümlesi (§5.6.1). İkisi asla
+#            bir arada olamaz: katkı sıfırken hafta tahmini zaten -1'dir.
 #   faz    : SATIRIN KENDİ ZEMİNİ İLERLEMEDİR — ayrı çubuk yok. ARAŞTIRMA + alan +
 #            yüzde + iki bağ (duraklat · ata).
 #
-# GÜN SAYISI BAŞLIK SATIRINDA: faz satırında olsaydı satır ~460px isterdi ve 360px'lik
-# kartta `duraklat` ile `ata` kırpılırdı. Bölünen parça GÜN, çünkü GDD onu tek sayı
-# sayar (§8: "Tek sayı gün tahminidir.") ve taşan satırda elipsle ilk o yenirdi.
+# HAFTA SAYISI BAŞLIK SATIRINDA: faz satırında olsaydı satır ~460px isterdi ve 360px'lik
+# kartta `duraklat` ile `ata` kırpılırdı. Bölünen parça HAFTA, çünkü GDD süre tahminini tek
+# sayı sayar (§8) ve taşan satırda elipsle ilk o yenirdi.
 # Üstünde 2px KAPAK ÇİZGİSİ: durumun taşıyıcısı (amber koşuyor · nötr donmuş).
 #
 # %100'DE ÇUBUK KAYBOLUR (§5.8): model false döner, `fingerprint()` "" olur, ev
@@ -51,7 +51,7 @@ var _font: Font = null
 var _cap: Panel = null
 var _hex: Control = null
 var _name_label: Label = null
-var _status_label: Label = null      # gün tahmini VEYA duraklama sebebi
+var _status_label: Label = null      # hafta tahmini VEYA duraklama sebebi
 var _fill: Panel = null
 var _title_label: Label = null
 var _area_label: Label = null
@@ -251,14 +251,14 @@ func _repaint() -> void:
 
 
 ## Başlık satırının sağ yuvası. Duraklamışsa SEBEP CÜMLESİ, koşarken
-## "~{days} gün kaldı". Katkı sıfırken (days_left == NO_DAYS) sayı UYDURULMAZ; o
+## "~{n} hafta kaldı". Katkı sıfırken (weeks_left == NO_WEEKS) sayı UYDURULMAZ; o
 ## hâlin sebebini zaten sebep cümlesi söylüyor.
 func _status_text(m: Model) -> String:
 	if m.pause_note_key != "":
 		return tr(m.pause_note_key)
-	if m.days_left == Model.NO_DAYS:
+	if m.weeks_left == Model.NO_WEEKS:
 		return ""
-	return tr("RND_DAYS_LEFT").format({"days": m.days_left})
+	return RnDUiShared.weeks_text(m.weeks_left)
 
 
 # --- Bağlar ---------------------------------------------------------------------

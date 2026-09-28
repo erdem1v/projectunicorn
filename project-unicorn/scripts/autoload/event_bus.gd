@@ -18,7 +18,11 @@ signal runway_recalculated(months: float)
 signal equity_changed(investor_pct: int)
 
 # --- UI / time signals ---
-signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x
+signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x, 4=4x
+# TimeManager reached WEEK_START_HOUR after skipping the night (only on arrival).
+signal night_skipped()
+# A TimeManager batch (advance_hours / skip_night) finished; cards held during it show now.
+signal clock_batch_ended()
 # "" = sekme yok, pencere yok. Sekme id'leri ray sırasıyla: "product", "sales", "hr",
 # "finance", "personal", "marketing", "rnd", "events". "marketing" KİLİTLİ: rayda görünür
 # ama tıklanamaz, bu sinyal onu taşımaz.
@@ -46,8 +50,8 @@ signal character_removed(character_id: String)
 signal morale_changed(character_id: String, new_morale: int)
 ## DENEYİM biriktiğinde / sıfırlandığında; defter satırı mini-barı bununla tazelenir.
 signal employee_experience_changed(character_id: String, new_experience: int)
-## Eğitim başladığında, her gün ve bittiğinde (0 = bitti/eğitimde değil).
-signal employee_training_changed(character_id: String, days_left: int)
+## Eğitim başladığında, her tik ve bittiğinde (0 = bitti/eğitimde değil).
+signal employee_training_changed(character_id: String, weeks_left: int)
 ## §9.3 OLAN terfi. employee_eligible_for_promotion ile karıştırılmaz: o UYGUN HÂLE GELMEYİ bildirir.
 signal employee_promoted(character_id: String, new_level: int)
 
@@ -95,8 +99,9 @@ signal customer_satisfaction_changed(customer_id: String, new_satisfaction: int)
 # --- B2B lifecycle / relationship signals ---
 # Phase edges only: `customer.retention` binds to it, so a daily emission would re-ask every Risk account.
 signal customer_health_changed(customer_id: String, phase: String)
-# The "Churn'e ~N gün" readout's repaint; -1 when no countdown runs. Moves daily, so no card binds to it.
-signal customer_churn_countdown_changed(customer_id: String, days: int)
+# The churn countdown readout's repaint (weeks); -1 when no countdown runs. Moves every tick, so no
+# card binds to it.
+signal customer_churn_countdown_changed(customer_id: String, weeks: int)
 signal customer_churned(customer_id: String)
 signal customer_expanded(customer_id: String, new_seats: int)
 signal customer_assigned(customer_id: String, employee_id: String)
@@ -202,9 +207,12 @@ signal rep_band_cap_changed(rep_id: String)           # §7.2.2
 # Frank's advisory line as a CSV key and its format args; the surfaces resolve it at render.
 signal mentor_advisory_changed(key: String, args: Dictionary)
 
-# Live ticker line: the ONLY non-modal notification channel. `source` is the attribution shown
+# Archived ticker line: the non-modal notification channel the "Biz" news source keeps. `source` is the attribution shown
 # in accent ("Atlas Seçme & Yerleştirme", "İK"). For beats that must NOT interrupt the player.
 signal headline_added(source: String, text: String)
+# A live-only ticker line (month close, runway warning): shown once, never kept in the "Biz"
+# archive, which drains at most one line a tick.
+signal ticker_live_line(source: String, text: String)
 
 # --- Endgame signals ---
 # Gate condition satisfied. Phase has NOT changed yet; phase_changed fires after advance_phase().
@@ -215,9 +223,12 @@ signal run_ended(ending_id: String, ending_data: Dictionary)
 # plus "mode": "milestone"; the run CONTINUES after "Devam et".
 signal milestone_reached(milestone_id: String, ending_data: Dictionary)
 # Kepenk counter. -1 = inactive/cleared; N..0 = counting.
-signal shutter_changed(days_left: int)
-# A calendar month closed; shape on MonthSummarySystem._build_summary_data. main.gd mounts the modal.
-signal month_ended(summary_data: Dictionary)
+signal shutter_changed(weeks_left: int)
+# A calendar month closed (slot 0 of the new month's first tick). Silent: the payload is the
+# month_history entry just pushed; the summary modal listens to summary_ready instead.
+signal month_ended(month_close: Dictionary)
+# A summary period closed at the player's summary frequency; main.gd mounts the modal.
+signal summary_ready(data: Dictionary)
 
 # --- Cinematic dialogue shell — MeetingScene ---
 # view_state is the dict MeetingScene.populate() consumes; main.gd mounts the scene into
@@ -229,7 +240,7 @@ signal sheet_granted(vc_id: String)             # term sheet delivered into acti
 signal sheet_expired(vc_id: String)             # validity clock hit 0 — NOT a rejection
 signal callback_ready(vc_id: String)            # callback condition met; door reopened
 signal meeting_day(vc_id: String)               # a booked meeting's day arrived
-signal offer_countdown_changed(days_left: int)  # min sheet validity ≤ threshold; -1 = hide chip
+signal offer_countdown_changed(weeks_left: int) # min sheet validity ≤ threshold; -1 = hide chip
 signal term_table_requested(vc_id: String, stage: String)  # Finance>Yatırım "Masaya otur" / deal-prompt → main mounts the table
 signal sheet_walked(vc_id: String)              # a table walk destroyed a sheet — HuntTab repaints
 

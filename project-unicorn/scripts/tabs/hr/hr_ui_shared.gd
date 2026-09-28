@@ -73,14 +73,15 @@ static func roster_title(c: Character) -> String:
 	return HRConstants.job_title(c.role, c.level)
 
 
-## Müsait olan kimsede boş döner. Gün sayıları izin ve eğitim domain'lerinin kendi okuma
+## Müsait olan kimsede boş döner. Hafta sayıları izin ve eğitim domain'lerinin kendi okuma
 ## seam'lerinden gelir; burada tarih aritmetiği yapılmaz.
 static func availability_text(c: Character) -> String:
-	if c.training_days_left > 0:
-		return TranslationServer.translate("PROD_TEAM_AVAIL_TRAINING").format({"n": c.training_days_left})
+	if c.training_weeks_left > 0:
+		return TranslationServer.translate(Fmt.count_key("PROD_TEAM_AVAIL_TRAINING",
+			c.training_weeks_left)).format({"n": c.training_weeks_left})
 	if c.status == HRConstants.STATUS_ON_LEAVE:
-		return TranslationServer.translate("PROD_TEAM_AVAIL_LEAVE").format({
-			"n": HRMoraleSystem.days_until_return(c)})
+		var n: int = HRMoraleSystem.weeks_until_return(c)
+		return TranslationServer.translate(Fmt.count_key("PROD_TEAM_AVAIL_LEAVE", n)).format({"n": n})
 	if c.category == "founder" and HRSystem.is_busy(c):
 		# Kurucunun üçüncü meşguliyeti: yatırım hazırlığı.
 		return TranslationServer.translate("HR_FOUNDER_STATE_PITCH_PREP")
@@ -144,10 +145,8 @@ static func status_cell(emp: Character, width: int = 0) -> Control:
 			UiTokens.ACCENT_DEEP, UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
 
 	# Süreli durumlar rozet değil, sayaçlı etiket (§13.3).
-	if emp.training_days_left > 0:
-		box.add_child(UiFactory.make_label(
-			TranslationServer.translate("HR_STATE_TRAINING").format(
-				{"days": emp.training_days_left}), &"RowMeta"))
+	if emp.training_weeks_left > 0:
+		box.add_child(UiFactory.make_label(HRSystem.training_line(emp), &"RowMeta"))
 	elif emp.status == HRConstants.STATUS_ON_LEAVE:
 		box.add_child(UiFactory.make_label(HRSystem.leave_line(emp), &"RowMeta"))
 

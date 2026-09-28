@@ -16,9 +16,11 @@ signal dismissed
 
 const DisplaySettingsLib := preload("res://scripts/systems/display_settings.gd")
 
-const AUTOSAVE_IDS: Array[String] = ["off", "daily", "weekly", "monthly"]
-const AUTOSAVE_KEYS: Array[String] = [
-	"SET_AUTOSAVE_OFF", "SET_AUTOSAVE_DAILY", "SET_AUTOSAVE_WEEKLY", "SET_AUTOSAVE_MONTHLY"]
+const AUTOSAVE_KEYS: Array[String] = [   # SaveManager.AUTOSAVE_FREQUENCIES sırasıyla
+	"SET_AUTOSAVE_OFF", "SET_AUTOSAVE_WEEKLY", "SET_AUTOSAVE_MONTHLY"]
+const SUMMARY_FREQ_KEYS: Array[String] = [   # SummarySystem.FREQUENCIES sırasıyla
+	"SET_SUMMARY_FREQ_WEEKLY", "SET_SUMMARY_FREQ_MONTHLY", "SET_SUMMARY_FREQ_QUARTERLY",
+	"SET_SUMMARY_FREQ_YEARLY"]
 const LANG_KEYS: Array[String] = ["LANG_TR", "LANG_EN"]   # Localization.SUPPORTED sırasıyla
 
 const KEY_COLORBLIND := "colorblind_palette"
@@ -61,6 +63,7 @@ var _music_slider: HSlider
 var _sfx_slider: HSlider
 var _mute_toggle: CheckButton
 var _autosave_option: OptionButton
+var _summary_option: OptionButton
 var _cb_toggle: CheckButton
 
 var _pct_labels: Dictionary = {}   # HSlider → yüzde Label'ı
@@ -128,10 +131,14 @@ func _build_audio_section() -> void:
 
 
 func _build_game_section() -> void:
-	_autosave_option = _dropdown(AUTOSAVE_IDS.size())
+	_autosave_option = _dropdown(SaveManager.AUTOSAVE_FREQUENCIES.size())
 	_autosave_option.item_selected.connect(func(idx: int) -> void:
-		Settings.set_value(SaveManager.SETTING_AUTOSAVE_FREQUENCY, AUTOSAVE_IDS[idx]))
+		Settings.set_value(SaveManager.SETTING_AUTOSAVE_FREQUENCY, SaveManager.AUTOSAVE_FREQUENCIES[idx]))
 	_add_row(_game_body, "SET_AUTOSAVE", _autosave_option)
+	_summary_option = _dropdown(SummarySystem.FREQUENCIES.size())
+	_summary_option.item_selected.connect(func(idx: int) -> void:
+		Settings.set_value(SummarySystem.SETTING_FREQUENCY, SummarySystem.FREQUENCIES[idx]))
+	_add_row(_game_body, "SET_SUMMARY_FREQ", _summary_option)
 
 
 func _build_language_section() -> void:
@@ -217,7 +224,11 @@ func _sync_from_state() -> void:
 	_music_toggle.set_pressed_no_signal(AudioManager.is_music_enabled())
 	_music_slider.editable = AudioManager.is_music_enabled()
 	_mute_toggle.set_pressed_no_signal(AudioManager.is_mute_unfocused())
-	_autosave_option.select(maxi(0, AUTOSAVE_IDS.find(String(Settings.get_value(SaveManager.SETTING_AUTOSAVE_FREQUENCY)))))
+	# get_choice: an option this build no longer offers shows the default the game reads for it.
+	_autosave_option.select(SaveManager.AUTOSAVE_FREQUENCIES.find(
+		Settings.get_choice(SaveManager.SETTING_AUTOSAVE_FREQUENCY, SaveManager.AUTOSAVE_FREQUENCIES)))
+	_summary_option.select(SummarySystem.FREQUENCIES.find(
+		Settings.get_choice(SummarySystem.SETTING_FREQUENCY, SummarySystem.FREQUENCIES)))
 	_lang_option.select(Localization.SUPPORTED.find(Localization.get_language()))
 	_cb_toggle.set_pressed_no_signal(UiTokens.is_colorblind())
 	_update_pct_labels()
@@ -286,6 +297,8 @@ func _retranslate() -> void:
 		_mode_option.set_item_text(i, tr(DisplaySettingsLib.MODE_KEYS[i]))
 	for i in AUTOSAVE_KEYS.size():
 		_autosave_option.set_item_text(i, tr(AUTOSAVE_KEYS[i]))
+	for i in SUMMARY_FREQ_KEYS.size():
+		_summary_option.set_item_text(i, tr(SUMMARY_FREQ_KEYS[i]))
 	for i in DisplaySettingsLib.UI_SCALE_STEPS.size():   # yüzde kalıbı dile göre değişir
 		_scale_option.set_item_text(i, Fmt.percent(int(round(DisplaySettingsLib.UI_SCALE_STEPS[i] * 100.0)), 0))
 	for node in _label_keys:

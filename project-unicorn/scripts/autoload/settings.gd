@@ -36,8 +36,9 @@ const DEFAULTS := {
 	"music_volume": 0.35,
 	"sfx_volume": 0.7,
 	"mute_unfocused": true,
-	# --- Oyun (SaveManager reads this lazily) ---
-	"autosave_frequency": "weekly",     # "off" | "daily" | "weekly" | "monthly"  [WORKING]
+	# --- Oyun (SaveManager and SummarySystem read these lazily) ---
+	"autosave_frequency": "weekly",     # SaveManager.AUTOSAVE_FREQUENCIES  [WORKING]
+	"summary_frequency": "quarterly",   # SummarySystem.FREQUENCIES
 	# --- Erişilebilirlik (UiTokens applies) ---
 	"colorblind_palette": false,
 }
@@ -68,6 +69,13 @@ func _ready() -> void:
 ## through JSON (bool/float/int/String).
 func get_value(key: String, default_value: Variant = null) -> Variant:
 	return _data.get(key, DEFAULTS.get(key) if default_value == null else default_value)
+
+
+## A stored choice the game still offers, else the key's default: an option a later build
+## removed reads as the default everywhere, the settings screen included.
+func get_choice(key: String, offered: Array) -> String:
+	var v: String = String(get_value(key))
+	return v if offered.has(v) else String(DEFAULTS[key])
 
 
 ## Was this key ever written? get_value cannot tell "stored 1920x1080" from

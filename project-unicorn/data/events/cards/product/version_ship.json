@@ -5,13 +5,14 @@
   "category": "product",
   "tick": "request",
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": [
     "critical",
     "build_safe"
   ],
   "speaker": "char_mentor_frank",
   "latch": {
-    "cooldown_days": 1
+    "cooldown_weeks": 1
   },
   "options": [
     {

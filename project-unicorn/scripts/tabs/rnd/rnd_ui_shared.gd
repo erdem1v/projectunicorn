@@ -7,7 +7,7 @@ extends RefCounted
 #
 # BURADA HİÇBİR SAYI TÜRETİLMEZ. Her değer bir motor çağrısından gelir
 # (`RnDSystem.*`, `ResearchTree.*`, `ResearchSeam.*`); bu dosya onları düğüme
-# çevirir. Tek istisna BİÇİMLEME: kesir → yüzde, float gün → tavana yuvarlanmış
+# çevirir. Tek istisna BİÇİMLEME: kesir → yüzde, float hafta → tavana yuvarlanmış
 # tam sayı.
 #
 # TEMA: sıfır yeni `theme_type_variation`. Durum-bağımlı her stil KODDA kurulmuş
@@ -110,15 +110,21 @@ static func tier_caption(node_id: String, frozen: bool = false) -> String:
 	return t("RND_TIER_FROZEN").format({"tier": tier}) if frozen else tier
 
 
-## Gün tahmini ekranda tavana yuvarlanır ve en az 1'dir; kart, panel ve çubuk aynı
+## Hafta tahmini ekranda tavana yuvarlanır ve en az 1'dir; kart, panel ve çubuk aynı
 ## sayıyı göstersin diye tek yerde. -1.0 ("katkı yok", §5.5) buraya hiç gelmez:
 ## çağıran o durumda sayı yerine sebep satırını yazar.
-static func whole_days(days: float) -> int:
-	return maxi(1, int(ceil(days)))
+static func whole_weeks(weeks: float) -> int:
+	return maxi(1, int(ceil(weeks)))
 
 
-static func days_text(days: float) -> String:
-	return t("RND_DAYS_LEFT").format({"days": whole_days(days)})
+## Tavana yuvarlanmış hafta sayısı {n} olarak anahtarına ya da tekil ikizine girer.
+static func weeks_line(key: String, weeks: float) -> String:
+	var n: int = whole_weeks(weeks)
+	return t(Fmt.count_key(key, n)).format({"n": n})
+
+
+static func weeks_text(weeks: float) -> String:
+	return weeks_line("RND_WEEKS_LEFT", weeks)
 
 
 ## Yüzde: tek ev UiTokens.build_percent — barın sayısı ile yazının sayısı

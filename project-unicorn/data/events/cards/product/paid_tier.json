@@ -19,7 +19,7 @@
         "value": true
       },
       {
-        "seam": "urun.days_since_launch",
+        "seam": "urun.weeks_since_launch",
         "op": ">=",
         "value": 1
       }
@@ -64,7 +64,7 @@
       "expire_note": "The question of price closed without being opened."
     }
   },
-  "expires_days": 7,
+  "expires_weeks": 1,
   "on_expire": {
     "penalties": []
   },

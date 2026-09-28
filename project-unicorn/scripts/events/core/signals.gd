@@ -40,6 +40,10 @@ static var _connected: Array = []
 ## catalogue loads — the set of signals worth listening to is a property of the CONTENT, and
 ## reading it off the content is what keeps the two from drifting.
 static func install() -> void:
+	# Not a trigger: a card admitted inside a batch of hours (a meeting's skip, the night) is
+	# shown when the batch ends (EvEngine.pump).
+	if not EventBus.clock_batch_ended.is_connected(EvEngine.pump):
+		EventBus.clock_batch_ended.connect(EvEngine.pump)
 	for entry in _connected:
 		if EventBus.is_connected(entry["signal"], entry["handler"]):
 			EventBus.disconnect(entry["signal"], entry["handler"])

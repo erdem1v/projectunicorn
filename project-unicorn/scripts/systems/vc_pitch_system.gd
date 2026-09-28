@@ -46,6 +46,8 @@ static var _cold_exit_key: String = ""    # the Frank line this sitting's reject
 # meeting PRODUCES. The TABLE is told its stage by open(vc_id, stage) instead, because one
 # fund can hold an unsigned seed offer and a Series A sheet at once.
 static var _stage: String = PitchConstants.STAGE_SERIES_A
+# The finished sitting's clock, run by end_sitting once the scene is gone.
+static var _owed_hours: int = 0
 
 
 # ============================================================================
@@ -65,7 +67,7 @@ static func begin_meeting(vc_id: String, stage: String = PitchConstants.STAGE_SE
 		return
 	_stage = stage
 	# THE SEED ROOM SKIPS THE CEREMONY, and that is a design statement rather than a saving.
-	# The Series A hunt makes the founder book three days ahead and spend a prep focus; the
+	# The Series A hunt makes the founder book a week ahead and spend a prep focus; the
 	# seed room is the fast one, a bet on a person. So no pending_meeting to consume and no
 	# prep to spend, which also keeps pending_meeting a Series-A-only field and leaves
 	# funding.meeting_day and every seam that reads a booked meeting untouched by this rung.
@@ -79,6 +81,7 @@ static func begin_meeting(vc_id: String, stage: String = PitchConstants.STAGE_SE
 	if series_a:
 		GameState.pending_meeting.clear()
 	_active = true
+	HRSystem.founder_in_meeting = true
 	_vc_id = vc_id
 	_prep_focus = _consume_prep(vc_id) if series_a else ""
 	_cap = 100
@@ -106,13 +109,30 @@ static func advance(choice_id: String) -> Dictionary:
 
 
 static func withdraw() -> void:
-	# Available only before the first check (Beat 1). Meeting consumed,
-	# VC open, no rejection. run_pitches NOT incremented (no completed pitch).
+	# Available only before the first check (Beat 1). Meeting consumed, VC open, no
+	# rejection, half the sitting's clock. run_pitches NOT incremented (no completed pitch).
 	if not _active:
 		return
 	GameState.pending_meeting.clear()
-	reset()
+	_close_sitting(PitchConstants.MEETING_HOURS / 2)
 	EventBus.pitch_finished.emit()
+
+
+## Runs the finished sitting's hours once the scene is gone: main after releasing it, the probe
+## after `done`. The founder pays hours / WEEK_WORK_HOURS of the week and the skip stops at
+## midnight (TimeManager.advance_hours).
+static func end_sitting() -> void:
+	var hours: int = _owed_hours
+	_owed_hours = 0
+	if hours > 0:
+		TimeManager.advance_hours(hours, true)
+
+
+## The sitting is over: reset() clears it and releases the founder, and `hours` wait for
+## end_sitting.
+static func _close_sitting(hours: int) -> void:
+	reset()
+	_owed_hours = hours
 
 
 # ============================================================================
@@ -145,7 +165,7 @@ static func _conviction_series_a(vc_id: String) -> Dictionary:
 	why.append({"d": brand_delta, "l": _t("VC_WHY_BRAND_SOLID" if brand_delta >= 0 else "VC_WHY_BRAND_LOW")})
 
 	# Runway health.
-	if GameState.shutter_days_left >= 0:
+	if GameState.shutter_weeks_left >= 0:
 		why.append({"d": PitchConstants.CONV_SHUTTER_PENALTY, "l": _t("VC_WHY_SHUTTER")})
 	elif _gross_runway_months() < 1.0:
 		why.append({"d": PitchConstants.CONV_THIN_RUNWAY_PENALTY, "l": _t("VC_WHY_RUNWAY_THIN")})
@@ -206,7 +226,7 @@ static func _conviction_seed(vc_id: String) -> Dictionary:
 	if bool(inv.get("warm_intro", false)):
 		why.append({"d": SeedConstants.CONV_WARM_INTRO_BONUS, "l": _t("VC_WHY_WARM_INTRO")})
 
-	if GameState.shutter_days_left >= 0:
+	if GameState.shutter_weeks_left >= 0:
 		why.append({"d": SeedConstants.CONV_SHUTTER_PENALTY, "l": _t("VC_WHY_SHUTTER")})
 	elif _gross_runway_months() < 1.0:
 		why.append({"d": SeedConstants.CONV_THIN_RUNWAY_PENALTY, "l": _t("VC_WHY_RUNWAY_THIN")})
@@ -321,7 +341,7 @@ static func _finish() -> Dictionary:
 	# signature came") means a Series A table, the reason _grant_seed_sheet skips run_sheets_won.
 	if _stage == PitchConstants.STAGE_SERIES_A:
 		GameState.run_pitches += 1
-	reset()
+	_close_sitting(PitchConstants.MEETING_HOURS)
 	EventBus.pitch_finished.emit()
 	return {"done": true}
 
@@ -347,7 +367,7 @@ static func _grant_sheet() -> void:
 	GameState.run_sheets_won += 1
 	GameState.vc_last_meeting_rejected = false
 	# Stamped on the fund's state rather than handed to _make_sheet, because a delayed sheet
-	# is built days later by _deliver_pending_sheet, long after the room closed.
+	# is built weeks later by _deliver_pending_sheet, long after the room closed.
 	_vc(_vc_id).sheet_conviction = mini(_conviction, _cap)
 	if GameState.active_sheets.size() < PitchConstants.MAX_SHEETS:
 		GameState.active_sheets.append(_make_sheet(_vc_id, GameState.day))
@@ -367,8 +387,7 @@ static func _make_sheet(vc_id: String, granted_day: int) -> TermSheet:
 	var sheet := TermSheet.new()
 	sheet.vc_id = vc_id
 	sheet.granted_day = granted_day
-	# WEEKDAYS on the real calendar, not calendar days.
-	sheet.expires_day = GameState.add_business_days(granted_day, PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS)
+	sheet.expires_day = granted_day + TimeModel.ticks(PitchConstants.SHEET_VALIDITY_WEEKS)
 	sheet.patience_pool = int(inv.get("patience_pool", 0))
 	# The meeting's closing conviction, if one was stamped (-1 = none; the table falls back).
 	sheet.conviction = int(GameState.vc_states.get(vc_id, {}).get("sheet_conviction", -1))
@@ -546,7 +565,7 @@ static func decline_expired_sheet(vc_id: String) -> bool:
 
 
 ## The Series A sheet whose window has closed and is waiting for an answer, or null. Lowest
-## fund id first, so two sheets closing on the same day reach the player in a stable order.
+## fund id first, so two sheets closing in the same week reach the player in a stable order.
 static func decision_due_sheet(skip: Dictionary = {}) -> TermSheet:
 	var best: TermSheet = null
 	for sheet in GameState.active_sheets:
@@ -630,7 +649,7 @@ static func sheet_for(vc_id: String) -> TermSheet:
 # ============================================================================
 
 ## Why a meeting with this fund cannot be booked right now, as an id the Hunt tab renders:
-## "" (bookable) · "busy" · "cancelled_today" · "callback_unmet" · "closed" · "locked".
+## "" (bookable) · "busy" · "cancelled_this_week" · "callback_unmet" · "closed" · "locked".
 static func meeting_blocked_reason(vc_id: String) -> String:
 	if InvestorRegistry.is_locked(vc_id):
 		return "locked"
@@ -644,7 +663,7 @@ static func meeting_blocked_reason(vc_id: String) -> String:
 	if not GameState.pending_meeting.is_empty():
 		return "busy"                          # one at a time
 	if GameState.vc_meeting_cancel_day == GameState.day:
-		return "cancelled_today"
+		return "cancelled_this_week"
 	return ""
 
 
@@ -671,12 +690,13 @@ static func series_a_road_closed() -> bool:
 static func request_meeting(vc_id: String) -> bool:
 	if meeting_blocked_reason(vc_id) != "":
 		return false
-	GameState.pending_meeting = {"vc_id": vc_id, "day": GameState.day + PitchConstants.MEETING_LEAD_DAYS}
+	GameState.pending_meeting = {"vc_id": vc_id,
+		"day": GameState.day + TimeModel.ticks(PitchConstants.MEETING_LEAD_WEEKS)}
 	_vc(vc_id).meeting_count = int(_vc(vc_id).get("meeting_count", 0)) + 1
 	return true
 
 
-## Can the booked meeting still be moved? Only before its day - on the day itself the
+## Can the booked meeting still be moved? Only before its week - in the week itself the
 ## meeting card is already the decision.
 static func can_move_meeting() -> bool:
 	var pm: Dictionary = GameState.pending_meeting
@@ -684,7 +704,7 @@ static func can_move_meeting() -> bool:
 
 
 ## "Cancel": the booking goes, a prep aimed at it goes with it, the fund remembers
-## (MEETING_CANCEL_PENALTY off its next meeting), and no new meeting is booked today.
+## (MEETING_CANCEL_PENALTY off its next meeting), and no new meeting is booked this week.
 static func cancel_meeting() -> bool:
 	if not can_move_meeting():
 		return false
@@ -699,14 +719,15 @@ static func cancel_meeting() -> bool:
 	return true
 
 
-## "Reschedule": the same lead time again, from today. The prep (if any) stays aimed at
-## the same fund; the fund remembers (MEETING_RESCHEDULE_PENALTY off its next meeting).
+## "Reschedule": the same lead time again, counted from the booked week, so the booking week
+## itself can move it. The prep (if any) stays aimed at the same fund; the fund remembers
+## (MEETING_RESCHEDULE_PENALTY off its next meeting).
 static func reschedule_meeting() -> bool:
 	if not can_move_meeting():
 		return false
-	var vc_id: String = String(GameState.pending_meeting.get("vc_id", ""))
-	GameState.pending_meeting["day"] = GameState.day + PitchConstants.MEETING_LEAD_DAYS
-	_add_move_penalty(vc_id, PitchConstants.MEETING_RESCHEDULE_PENALTY)
+	var pm: Dictionary = GameState.pending_meeting
+	pm["day"] = int(pm.get("day", 0)) + TimeModel.ticks(PitchConstants.MEETING_LEAD_WEEKS)
+	_add_move_penalty(String(pm.get("vc_id", "")), PitchConstants.MEETING_RESCHEDULE_PENALTY)
 	return true
 
 
@@ -721,16 +742,18 @@ static func prep_blocked_reason(vc_id: String) -> String:
 		return _t("VC_PREP_BUSY")
 	if GameState.pending_meeting.get("vc_id", "") != vc_id:
 		return _t("VC_PREP_NEED_MEETING")
-	var days_before: int = int(GameState.pending_meeting.get("day", 0)) - GameState.day
-	if days_before < PitchConstants.PREP_MIN_DAYS_BEFORE:
-		return _t("VC_PREP_TOO_SOON").format({"days": PitchConstants.PREP_MIN_DAYS_BEFORE})
+	var weeks_before: int = int(GameState.pending_meeting.get("day", 0)) - GameState.day
+	if weeks_before < TimeModel.ticks(PitchConstants.PREP_MIN_WEEKS_BEFORE):
+		return _t(Fmt.count_key("VC_PREP_TOO_SOON", PitchConstants.PREP_MIN_WEEKS_BEFORE)).format(
+			{"weeks": PitchConstants.PREP_MIN_WEEKS_BEFORE})
 	return ""
 
 
 static func start_prep(vc_id: String, focus: String) -> bool:
 	if prep_blocked_reason(vc_id) != "":
 		return false
-	GameState.prep = {"vc_id": vc_id, "focus": focus, "done_day": GameState.day + PitchConstants.PREP_DAYS}
+	GameState.prep = {"vc_id": vc_id, "focus": focus,
+		"done_day": GameState.day + TimeModel.ticks(PitchConstants.PREP_WEEKS)}
 	GameState.set_flag("pitch_prep_active", true)   # capacity coupling (product slows)
 	return true
 
@@ -799,7 +822,7 @@ static func _tick_prep() -> void:
 
 
 static func _tick_meeting_day() -> void:
-	# No latch here: `funding.meeting_day` declares `cooldown_days: 1` on `latch_key: entity`.
+	# No latch here: `funding.meeting_day` declares `cooldown_weeks: 1` on `latch_key: entity`.
 	# The SIGNAL is emitted because the meeting day arriving is a fact several surfaces want
 	# and only one of them is a card.
 	var pm: Dictionary = GameState.pending_meeting
@@ -810,22 +833,23 @@ static func _tick_meeting_day() -> void:
 
 
 static func _tick_countdown_chip() -> void:
-	# BUSINESS days. A sheet whose window has closed is the decision card's business, not
-	# the chip's, so it is left out.
-	var min_days := 9999
+	# Weeks. A sheet whose window has closed is the decision card's business, not the chip's,
+	# so it is left out.
+	var min_weeks := 9999
 	for sheet in GameState.active_sheets:
 		if (sheet as TermSheet).is_decision_due(GameState.day):
 			continue
-		min_days = mini(min_days, (sheet as TermSheet).business_days_left(GameState.day))
-	EventBus.offer_countdown_changed.emit(min_days if (min_days <= PitchConstants.WARNING_DAYS) else -1)
+		min_weeks = mini(min_weeks, (sheet as TermSheet).weeks_left(GameState.day))
+	EventBus.offer_countdown_changed.emit(
+		min_weeks if min_weeks <= TimeModel.ticks(PitchConstants.WARNING_WEEKS) else -1)
 
 
-## Is today the last day to answer the last table? Frank v6, surface 15. The trigger is the
-## SITUATION the line describes, not a calendar date: today is the last day to answer, and
+## Is this the last week to answer the last table? Frank v6, surface 15. The trigger is the
+## SITUATION the line describes, not a calendar date: this is the last week to answer, and
 ## there is nothing else left to walk to.
 ##
 ## Distinct from surface 14 (the expiry warning), which fires while an offer's clock is still
-## running and can fire more than once. This one is the last day, with no other table.
+## running and can fire more than once. This one is the last week, with no other table.
 ##
 ## `funding.last_answer` reads this through the `funding.last_answer_moment` seam; the card's
 ## `one_shot` is the latch. Read-only (vc_states.get, never _vc): a card condition writes nothing.
@@ -833,8 +857,8 @@ static func is_last_answer_moment() -> bool:
 	if GameState.active_sheets.size() != 1:
 		return false                             # "elde başka masa kalmamıştır"
 	var sheet: TermSheet = GameState.active_sheets[0]
-	if sheet == null or sheet.business_days_left(GameState.day) != 1:
-		return false                             # one weekday left ⇒ today is the last day to answer
+	if sheet == null or sheet.weeks_left(GameState.day) != 1:
+		return false                             # one week left ⇒ this is the last week to answer
 	if not GameState.pending_meeting.is_empty():
 		return false
 	for inv in InvestorRegistry.get_active():
@@ -875,7 +899,7 @@ static func _base_view_state() -> Dictionary:
 			"cash": UiTokens.format_money(GameState.cash),
 			"runway_label": _t("RUNWAY_GROSS_LABEL"),
 			"months": int(floor(_gross_runway_months())),
-			"day": GameState.day})},
+			"date": Fmt.date_line(GameState.get_date_dict())})},
 		"can_withdraw": false,
 	}
 
@@ -1119,7 +1143,7 @@ static func _gross_runway_months() -> float:
 	# GROSS burn runway (revenue ignored — "if revenue went to zero, how long?"). The VC's
 	# question; deliberately distinct from the shell's revenue-aware NET runway. Always finite.
 	var burn: int = maxi(GameState.daily_burn, 1)
-	return (float(GameState.cash) / float(burn) / float(GameState.DAYS_PER_MONTH)) if GameState.cash > 0 else 0.0
+	return (float(GameState.cash) / float(burn) / float(TimeModel.DAYS_PER_MONTH)) if GameState.cash > 0 else 0.0
 
 
 ## The Beat-2 angle difficulty. At Series A it is the fund's own weight; in the seed room
@@ -1233,11 +1257,13 @@ static func _rival_ahead() -> bool:
 	return false
 
 
-## Run-boundary reset (SaveManager.reset_all_owners) and the end of every sitting. The
-## meeting-local statics are reset, never serialised: SaveManager.can_save() refuses while
-## is_active(), so a sitting is idle at every save point. `pitch_prep_active` is a FLAG and
-## rides in the GameState block, so it is not touched here.
+## Run-boundary reset (SaveManager.reset_all_owners) and the end of every sitting: a live
+## sitting releases the founder. The meeting-local statics are reset, never serialised:
+## SaveManager.can_save() refuses while is_active(), so a sitting is idle at every save point.
+## `pitch_prep_active` is a FLAG and rides in the GameState block, so it is not touched here.
 static func reset() -> void:
+	if _active:
+		HRSystem.founder_in_meeting = false
 	_active = false
 	_vc_id = ""
 	_beat = 0
@@ -1249,6 +1275,7 @@ static func reset() -> void:
 	_sorgu = {}
 	_cold_exit_key = ""
 	_stage = PitchConstants.STAGE_SERIES_A
+	_owed_hours = 0
 
 
 ## Which room's copy a shared beat should speak. "VC_B1_LINE" at Series A, "SEED_B1_LINE"

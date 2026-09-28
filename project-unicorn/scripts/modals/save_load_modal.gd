@@ -91,7 +91,7 @@ func _meta_line(slot: Dictionary) -> String:
 		return tr(String(slot.get("error_key", "SAVE_ERR_CORRUPT")))
 	var meta: Dictionary = slot.get("meta", {}) as Dictionary
 	var parts: Array[String] = [
-		tr("SAVE_META_DAY").format({"n": int(meta.get("day", 0))}),
+		tr("SAVE_META_DAY").format({"date": Fmt.date_line(GameState.get_date_dict(int(meta.get("day", 1))))}),
 		String(meta.get("phase_name", "")),
 		tr("SAVE_META_CASH").format({"amount": UiTokens.format_money(int(meta.get("cash", 0)))}),
 		tr("SAVE_META_MRR").format({"amount": UiTokens.format_money(int(meta.get("mrr", 0)))}),

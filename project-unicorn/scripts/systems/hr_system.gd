@@ -18,6 +18,10 @@ extends RefCounted
 # Frank (category "mentor") is excluded from every path here because they all iterate
 # get_employees()/get_active_employees(), which filter on category == "employee".
 
+# The founder sits at a meeting (sales, VC or seed pitch, term sheet table): true while the
+# sitting's scene is open and the clock is stopped. Never saved: a save is refused mid-sitting.
+static var founder_in_meeting: bool = false
+
 
 static func daily_tick() -> void:
 	# Order matters; each step reads state the previous one settled:
@@ -26,11 +30,11 @@ static func daily_tick() -> void:
 	#  3. Search arrival can add an employee, so it lands before anything that iterates the
 	#     roster for morale.
 	#  4. §7 taban sürüklenme eşiklerden ÖNCE: bugünün saat ayarı ve aşırı yükü hedefe yazılır,
-	#     ease onu morale taşır, sonra eşikler O MORALİ okur. Ters sıra Ayrılabilir'i bir gün
+	#     ease onu morale taşır, sonra eşikler O MORALİ okur. Ters sıra Ayrılabilir'i bir tik
 	#     geriden getirirdi.
-	#  5. DENEYİM: bugün gerçekten çalışmış olanlar biriktirir.
-	#  6. EĞİTİM en sonda: önce koşarsa bitiş günü sıfırlanan deneyime tick_experience aynı
-	#     gün bir puan geri verir ve "biterken sıfırlanır" sözleşmesi bozulur.
+	#  5. DENEYİM: bu hafta gerçekten çalışmış olanlar biriktirir.
+	#  6. EĞİTİM en sonda: önce koşarsa bitişte sıfırlanan deneyime tick_experience aynı tikte
+	#     puan geri verir ve "biterken sıfırlanır" sözleşmesi bozulur.
 	HRMoraleSystem.tick_leave_returns()
 	HRMoraleSystem.tick_leave_departures()
 	HRSearchSystem.daily_tick()
@@ -47,9 +51,10 @@ static func daily_tick() -> void:
 
 # --- DENEYİM / EĞİTİM ---
 
-## Günlük deneyim birikimi — §5.1 "Çalışan projelerde aktif rol aldıkça deneyim kazanır."
+## Deneyim birikimi — §5.1 "Çalışan projelerde aktif rol aldıkça deneyim kazanır."
 ## TEK BAR, alan başına değil. YALNIZ gerçekten çalışanlar: izindeki ya da eğitimdeki biri
-## get_active_employees dışında kalır.
+## get_active_employees dışında kalır. Kazanç günlük orandır; taban (1) günlük değere
+## uygulanır, sonra tik başına ×7.
 ##
 ## BOŞTAKİ KİŞİ ÖĞRENMEZ: §12.2'nin "Boşta çalışan maaş yemeye devam eder" cümlesinin ikinci
 ## yarısı — boşta durmak yalnız bugünü değil yarını da kaybettirir.
@@ -75,11 +80,11 @@ static func tick_experience() -> void:
 			continue
 		# ÇABUK KAPAR: kişinin KENDİ öğrenme hızı (§6).
 		var own_mult: float = HRConstants.trait_mult(emp.traits, "experience_mult")
-		var gain: int = int(round(float(base) * own_mult * lead_mult))
-		CharacterRegistry.add_experience(emp.id, maxi(gain, 1))
+		var gain: int = maxi(int(round(float(base) * own_mult * lead_mult)), 1)
+		CharacterRegistry.add_experience(emp.id, int(TimeModel.per_tick(gain)))
 
 
-## Eğitim günlerini işler; biten her eğitim bir haber satırı bırakır. Kurucu dahil:
+## Eğitim haftalarını işler; biten her eğitim bir haber satırı bırakır. Kurucu dahil:
 ## get_employees() onu içermez ve dışarıda kalırsa STATUS_TRAINING'de askıda kalırdı.
 static func tick_training() -> void:
 	var in_training: Array[Character] = CharacterRegistry.get_employees()
@@ -87,7 +92,7 @@ static func tick_training() -> void:
 	if founder != null:
 		in_training.append(founder)
 	for emp in in_training:
-		if emp.training_days_left <= 0:
+		if emp.training_weeks_left <= 0:
 			continue
 		if CharacterRegistry.tick_training(emp.id):
 			EventBus.headline_added.emit(HRConstants.notice_source_hr(),
@@ -145,20 +150,20 @@ static func status(c: Character) -> String:
 
 
 ## §2.2 MEŞGULİYET TEK MODEL: izindeyken · eğitimdeyken · (kurucu) yatırım hazırlığında ya da
-## satış toplantısındayken. Ara kademe, yarı hız çarpanı, kısmi kapasite YOKTUR.
-## Satış toplantısı (Satış §5.0) sekizinci bir görev durumu değildir: toplantı atomiktir ve
-## atlanan iki saat "kurucu katkısı sıfır" sayılır. Yapım yolu ProductSystem._is_free'yi,
-## araştırma burayı okur — ikisine de eklenmezse kurucu inşa ederken araştırmadan donar.
+## toplantıdayken. Ara kademe, yarı hız çarpanı, kısmi kapasite YOKTUR.
+## Toplantı (Satış §5.0) sekizinci bir görev durumu değildir: oturum boyunca kurucu meşguldür.
+## Yapım yolu ProductSystem._is_free'yi, araştırma burayı okur — ikisine de eklenmezse kurucu
+## inşa ederken araştırmadan donar.
 static func is_busy(c: Character) -> bool:
 	if c == null:
 		return false
 	if c.status == HRConstants.STATUS_ON_LEAVE or c.status == HRConstants.STATUS_TRAINING:
 		return true
 	return c.category == "founder" and (bool(GameState.get_flag("pitch_prep_active", false))
-		or bool(GameState.get_flag("sales_meeting_active", false)))
+		or founder_in_meeting)
 
 
-static func tenure_days(c: Character) -> int:
+static func tenure_weeks(c: Character) -> int:
 	if c == null or c.hire_day <= 0:
 		return 0
 	return maxi(GameState.day - c.hire_day, 0)
@@ -182,7 +187,7 @@ static func work_hours(c: Character) -> int:
 
 static func work_hours_company() -> Dictionary:
 	return {
-		"hours": GameState.company_work_hours,
+		"hours": WorkHoursSystem.hours_for(null),
 		"start_hour": WorkHoursSystem.start_hour(),
 	}
 
@@ -376,19 +381,12 @@ static func daily_contribution(c: Character, area_key: String) -> float:
 	return effective_skill(c, area_key) * HRConstants.hours_output_mult(WorkHoursSystem.hours_for(c))
 
 
-## O ALANA atanmış herkesin, o alandaki puanlarının ÇARPANLI toplamı — rol değil ATAMA sayar.
-static func area_sum_for(area_id: String) -> float:
-	var total: float = 0.0
-	for c in assigned_to(area_id):
-		total += float(int(c.role_stats.get(area_id, 0))) * output_mult_for_area(c, area_id)
-	return total
-
-
 # --- Run reset (called from GameState.initialize_run, after the flags clear) ---
 
 static func reset() -> void:
 	# HRSearchSystem holds no statics: its whole state lives on GameState.hr_search, which
 	# initialize_run clears and the save carries.
+	founder_in_meeting = false
 	HRMoraleSystem.reset()
 
 
@@ -428,9 +426,18 @@ static func attention_count() -> int:
 	return n
 
 
-## "İzinde · 4 gün kaldı" for the ledger's on-leave chip. Empty for anyone at work, so the
+## "İzinde · 2 hafta kaldı" for the ledger's on-leave chip. Empty for anyone at work, so the
 ## caller can render it unconditionally.
 static func leave_line(emp: Character) -> String:
 	if emp == null or emp.status != HRConstants.STATUS_ON_LEAVE:
 		return ""
-	return TranslationServer.translate("HR_STATE_ON_LEAVE_DAYS").format({"n": HRMoraleSystem.days_until_return(emp)})
+	var n: int = HRMoraleSystem.weeks_until_return(emp)
+	return TranslationServer.translate(Fmt.count_key("HR_STATE_ON_LEAVE_WEEKS", n)).format({"n": n})
+
+
+## "Eğitimde · 2 hafta": the dossier and the roster row both read it here, like leave_line.
+static func training_line(c: Character) -> String:
+	if c == null or c.training_weeks_left <= 0:
+		return ""
+	var n: int = c.training_weeks_left
+	return TranslationServer.translate(Fmt.count_key("HR_STATE_TRAINING", n)).format({"n": n})

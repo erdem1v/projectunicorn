@@ -22,10 +22,10 @@ extends RefCounted
 # Frank gate scene dies with the run) and freezes the clock.
 
 # Working values — calibration items, numbers last.
-const SHUTTER_DAYS := 30           # Kepenk (director ruling): a month is real recovery room,
-                                   # a week is a formality. The warning copy names no number.
+const SHUTTER_WEEKS := 4           # Kepenk (director ruling): four weeks is real recovery room,
+                                   # one is a formality. The warning copy names no number.
 const BRAND_COLLAPSE_FLOOR := 15
-const BRAND_COLLAPSE_WINDOW := 30  # "no recovery for 30 days"
+const BRAND_COLLAPSE_WINDOW := 4   # weeks: "no recovery for a month"
 const CASCADE_TABLES := 3          # closed pitch tables
 const PIVOT_MRR_MIN := 2000        # "metrics are alive" floor
 # SOFT CAP [WORKING]. Not a wall the economy is stretched across; the catch for a run that
@@ -33,11 +33,11 @@ const PIVOT_MRR_MIN := 2000        # "metrics are alive" floor
 # contracts are SEEN renewing. NOT deferred for a live term sheet: there is no auto-sign,
 # and an unsigned sheet is named on the paper. Its telegraph is the final-stretch ladder
 # (world.final_stretch_* cards, arc_final_stretch, ending on Frank's D-1 verdict), which
-# stamps `soft_cap_telegraphed`. Same day as a profitability close → the win wins (scan order).
-const SOFT_CAP_DAY := 730
+# stamps `soft_cap_telegraphed`. Same tick as a profitability close → the win wins (scan order).
+const SOFT_CAP_WEEK := 104
 # PROFITABLE & SELF-SUSTAINING — a CONDITION evaluated daily. An "Artıda" month = net > 0
 # AND the treasury never sampled below zero inside it (GameState.month_history, closed by
-# MonthSummarySystem), so one early Kepenk does not bar the win for the rest of the run.
+# SummarySystem), so one early Kepenk does not bar the win for the rest of the run.
 # The MRR floor is its own number, not SalesSystem.TRACTION_MRR_TARGET (the Series A bar).
 const PROFIT_STREAK_MONTHS := 6    # [WORKING] consecutive Artıda month-closes
 const PROFIT_MIN_MARGIN_PCT := 15  # [WORKING] Σnet/Σincome over the window, percent
@@ -59,9 +59,9 @@ const ACQ_BRAND_ADJ := [0.9, 1.0, 1.1, 1.2]
 const ACQ_M_MIN := 1.5
 const ACQ_M_MAX := 5.0
 # How long the buyer can still turn up after the road closes. Without an upper bound the
-# card condition stays true for the rest of the run and the phone rings on some unrelated
-# day a year later. [ÇALIŞMA]
-const ACQ_CARD_WINDOW_DAYS := 10
+# card condition stays true for the rest of the run and the phone rings in some unrelated
+# week a year later. `funding.acquisition_offer` holds the same number as a literal. [ÇALIŞMA]
+const ACQ_CARD_WINDOW_WEEKS := 1
 
 # The 7 endings, each id mapped to its tone. The title and Frank's closing line are
 # END_META_<ID>_TITLE / _FRANK in strings.csv, read through ending_title() and
@@ -91,14 +91,14 @@ static func daily_tick() -> void:
 	if _tick_shutter() or _check_brand_collapse() or _check_vc_cascade() \
 			or _check_profitable_bootstrap() or _check_soft_cap():
 		return
-	_tick_acquisition_window()  # one day stamp; the card decides, not this scan
+	_tick_acquisition_window()  # one tick stamp; the card decides, not this scan
 
 
 # --- Daily trackers (cheap, serializable) ---
 
 static func _update_trackers() -> void:
-	# Brand-collapse window anchor: first day brand dipped under the floor;
-	# any recovery to/above the floor resets the 30-day clock.
+	# Brand-collapse window anchor: first tick brand dipped under the floor;
+	# any recovery to/above the floor resets the window's clock.
 	if GameState.brand < BRAND_COLLAPSE_FLOOR:
 		if GameState.brand_low_since_day < 0:
 			GameState.brand_low_since_day = GameState.day
@@ -110,25 +110,25 @@ static func _update_trackers() -> void:
 
 static func _tick_shutter() -> bool:
 	if GameState.cash < 0:
-		if GameState.shutter_days_left < 0:
+		if GameState.shutter_weeks_left < 0:
 			# Shutter starts: visible counter (TopBar via shutter_changed) +
 			# Frank warning scene. A queued gate scene is held.
-			GameState.set_shutter_days_left(SHUTTER_DAYS)
+			GameState.set_shutter_weeks_left(TimeModel.ticks(SHUTTER_WEEKS))
 			GameState.submit_month_highlight(TranslationServer.translate("END_HL_SHUTTER_STARTED"), 90)  # AYIN OLAYI
 			PhaseGateSystem.on_shutter_started()
 			# Nothing is pushed. `funding.shutter_warning` reads
-			# `finance.cash < 0 AND finance.shutter_days_left >= 0` — the two facts the two
+			# `finance.cash < 0 AND finance.shutter_weeks_left >= 0` — the two facts the two
 			# lines above have just written — and is tagged `critical`, so the daily sweep
 			# admits it on the same day the counter appears.
 		else:
-			GameState.set_shutter_days_left(GameState.shutter_days_left - 1)
-			if GameState.shutter_days_left <= 0:
-				# The shutter card is the telegraph: 30 days of visible countdown.
+			GameState.set_shutter_weeks_left(GameState.shutter_weeks_left - 1)
+			if GameState.shutter_weeks_left <= 0:
+				# The shutter card is the telegraph: SHUTTER_WEEKS of visible countdown.
 				trigger_ending("bankruptcy", "funding.shutter_warning")
 				return true
-	elif GameState.shutter_days_left >= 0:
+	elif GameState.shutter_weeks_left >= 0:
 		# Cash recovered — full reset, the held gate scene returns.
-		GameState.set_shutter_days_left(-1)
+		GameState.set_shutter_weeks_left(-1)
 	return false
 
 
@@ -141,7 +141,7 @@ static func _check_brand_collapse() -> bool:
 		return false
 	if GameState.brand_low_since_day < 0:
 		return false
-	if GameState.day - GameState.brand_low_since_day < BRAND_COLLAPSE_WINDOW:
+	if GameState.day - GameState.brand_low_since_day < TimeModel.ticks(BRAND_COLLAPSE_WINDOW):
 		return false
 	if not GameState.active_scandal:
 		return false
@@ -243,7 +243,7 @@ static func _check_soft_cap() -> bool:
 	# live sheet or a pending meeting (no auto-sign; the D-1 warning told the
 	# player). The ledger carries `unsigned_sheets` so the paper can name what was left on
 	# the table.
-	if GameState.day < SOFT_CAP_DAY:
+	if GameState.day < TimeModel.ticks(SOFT_CAP_WEEK):
 		return false
 	# A run that has taken a positive milestone is past "reached no goal inside the window":
 	# the cap does not apply to it (owner ruling — running_on_fumes says
@@ -318,14 +318,14 @@ static func road_over() -> bool:
 	return true
 
 
-## Days since the road closed, or -1 while it has not.
-static func acq_days_open() -> int:
+## Weeks since the road closed, or -1 while it has not.
+static func acq_weeks_open() -> int:
 	if GameState.acq_road_over_day < 0:
 		return -1
 	return GameState.day - GameState.acq_road_over_day
 
 
-## One day stamp, and nothing pushed — the card's own condition reads it, the same grammar
+## One tick stamp, and nothing pushed — the card's own condition reads it, the same grammar
 ## the phase gates and the seed door use.
 static func _tick_acquisition_window() -> void:
 	if GameState.acq_road_over_day >= 0 or not road_over():
@@ -520,6 +520,7 @@ static func ending_title(ending_id: String) -> String:
 	return TranslationServer.translate("END_META_%s_TITLE" % ending_id.to_upper())
 
 
-## Frank's closing line for an ending.
+## Frank's closing line for an ending. His approved bankruptcy line counts the shutter in days.
 static func ending_frank_line(ending_id: String) -> String:
-	return TranslationServer.translate("END_META_%s_FRANK" % ending_id.to_upper()).format({"days": SHUTTER_DAYS})
+	return TranslationServer.translate("END_META_%s_FRANK" % ending_id.to_upper()).format(
+		{"days": int(TimeModel.days(TimeModel.ticks(SHUTTER_WEEKS)))})

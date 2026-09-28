@@ -4,6 +4,7 @@
   "category": "founder",
   "tick": "daily",
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": [
     "critical",
     "build_safe"
@@ -27,7 +28,7 @@
         {
           "verb": "schedule_event",
           "event_id": "fixture.thesis_payoff",
-          "delay_days": 80,
+          "delay_weeks": 11,
           "arc_id": "arc_fixture_thesis"
         }
       ]

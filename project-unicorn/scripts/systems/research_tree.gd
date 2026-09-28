@@ -57,7 +57,7 @@ static var _nodes: Dictionary = {}
 static var _hidden: Dictionary = {}
 static var _children: Dictionary = {}
 static var _k_arge: float = 1.0
-static var _report_period: int = 30
+static var _report_period: int = 4
 static var _loaded := false
 static var _load_errors: Array[String] = []
 
@@ -94,11 +94,11 @@ static func _load() -> void:
 		return
 
 	_k_arge = float(doc.get("k_arge", 1.0))
-	_report_period = int(doc.get("report_period_days", 30))
+	_report_period = int(doc.get("report_period_weeks", 4))
 	if _k_arge <= 0.0:
 		_fail("k_arge must be positive, got %s" % _k_arge)
 	if _report_period <= 0:
-		_fail("report_period_days must be positive, got %d" % _report_period)
+		_fail("report_period_weeks must be positive, got %d" % _report_period)
 
 	_nodes = (doc.get("nodes", {}) as Dictionary).duplicate(true)
 	_hidden = (doc.get("hidden_lines", {}) as Dictionary).duplicate(true)
@@ -398,7 +398,7 @@ static func k_arge() -> float:
 	return _k_arge
 
 
-static func report_period_days() -> int:
+static func report_period_weeks() -> int:
 	ensure_loaded()
 	return _report_period
 

@@ -1,9 +1,10 @@
 class_name FinanceSystem
 extends RefCounted
 
-# Pure-logic system driven by TimeManager._dispatch_daily_tick (slot 5): daily revenue from MRR,
-# daily burn as the sum of named categories, net flow applied to GameState.cash. Every mutation
-# goes through a GameState setter, which emits; FinanceSystem never touches scenes or signals.
+# Pure-logic system driven by TimeManager._dispatch_daily_tick (slot 5): revenue from MRR and
+# burn as the sum of named categories are daily rates, and each tick applies a week of them to
+# GameState.cash. Every mutation goes through a GameState setter, which emits; FinanceSystem
+# never touches scenes or signals.
 
 # Day-1 burn: $50/day (~$1,500/month; with $10K starting cash ≈ 6.6 months runway), all of it
 # the founder's own cost. This const is its single home: burn_breakdown starts as a mutable copy
@@ -13,8 +14,8 @@ extends RefCounted
 # (marketing, office) ve mekaniği gelene dek görünmez (get_burn_breakdown_pct sıfır satırı atlar).
 # Uydurma sabit kalem YOK.
 const STARTING_BURN_BREAKDOWN := {
-	"salaries": 0,     # Overwritten daily by pull from CharacterRegistry
-	"overtime": 0,     # Overwritten daily by pull from WorkHoursSystem; 0 when nobody is over 8h
+	"salaries": 0,     # Overwritten every tick by pull from CharacterRegistry
+	"overtime": 0,     # Overwritten every tick by pull from WorkHoursSystem; 0 when nobody is over 8h
 	"founder": 50,     # WORKING: kurucunun kendi yaşam gideri — day-1 baseline'ın tamamı
 	"marketing": 0,    # TODO hook: player marketing spend mechanic (set_burn_category ile yazar)
 	"office": 0,       # TODO hook: ofis/kira mekaniği; 0 iken görünmez
@@ -40,6 +41,12 @@ const ONE_TIME_LABELS := {
 	"training": "HR_COST_TRAINING",
 	"rnd": "TAB_RND",
 }
+
+# Runway thresholds (months), highest first. The Finance tab badge lights under the first; the
+# ticker announces each one once on the way down (SummarySystem) and re-arms it when runway
+# climbs RUNWAY_ALERT_REARM_MONTHS above it. [WORKING]
+const RUNWAY_ALERT_MONTHS := [3, 1]
+const RUNWAY_ALERT_REARM_MONTHS := 0.5
 
 
 # --- Run boundary + save (SaveManager) ---
@@ -95,11 +102,13 @@ static func daily_tick() -> void:
 	var total_burn: int = compute_total_burn()
 	if GameState.daily_burn != total_burn:
 		GameState.set_daily_burn(total_burn)  # emits burn_changed → TopBar
-	var daily_revenue: int = GameState.get_daily_revenue()
-	var new_cash: int = GameState.cash + daily_revenue - total_burn
-	# Calendar-month ledger accrual: the same figures that move the cash, once per day, before
+	# The only place the daily rates become a week of money; the rates themselves stay daily.
+	var revenue: int = int(TimeModel.per_tick(GameState.get_daily_revenue()))
+	var burn: int = int(TimeModel.per_tick(total_burn))
+	var new_cash: int = GameState.cash + revenue - burn
+	# Calendar-month ledger accrual: the same figures that move the cash, once per tick, before
 	# the sample so the close reads a settled month.
-	GameState.accrue_month_flow(daily_revenue, total_burn, new_cash)
+	GameState.accrue_month_flow(revenue, burn, new_cash)
 	# Curve sample BEFORE set_cash: signals are synchronous, so the cash_changed repaint
 	# must read an already-fresh buffer. Slot-5 cash is tick-final (later slots' event
 	# deltas land intra-day at modal resolve, not during dispatch), so this single
@@ -140,7 +149,7 @@ static func daily_salary_for(monthly_total: int) -> int:
 	# Monthly payroll → the daily figure that lands in burn_breakdown["salaries"], rounded ONCE.
 	# Exposed so a preview (HRSearchSystem.preview_hire) can promise the exact number this tick
 	# will publish instead of mirroring the arithmetic and drifting from it.
-	return int(round(float(monthly_total) / float(GameState.DAYS_PER_MONTH)))
+	return int(round(float(monthly_total) / float(TimeModel.DAYS_PER_MONTH)))
 
 
 static func compute_total_burn() -> int:
@@ -210,8 +219,8 @@ static func get_monthly_flow() -> Dictionary:
 	# bar can never disagree: income = MRR as-is, expense/net = daily × DAYS_PER_MONTH.
 	return {
 		"income": GameState.mrr,
-		"expense": GameState.daily_burn * GameState.DAYS_PER_MONTH,
-		"net": GameState.get_net_daily_flow() * GameState.DAYS_PER_MONTH,
+		"expense": GameState.daily_burn * TimeModel.DAYS_PER_MONTH,
+		"net": GameState.get_net_daily_flow() * TimeModel.DAYS_PER_MONTH,
 	}
 
 
@@ -246,8 +255,17 @@ static func get_burn_breakdown_pct() -> Array:
 	return rows
 
 
+## The lowest alert threshold `months` is under; 0 when it is under none.
+static func runway_band(months: float) -> int:
+	var band: int = 0
+	for t in RUNWAY_ALERT_MONTHS:
+		if months < t:
+			band = t
+	return band
+
+
 static func get_optimistic_daily_net() -> int:
 	# WORKING: "satış hedefi tutarsa" projection slope — today's MRR plus the
 	# pipeline-weighted open pipeline, minus today's burn.
 	var optimistic_mrr: int = GameState.mrr + SalesSystem.pipeline_optimistic_mrr()
-	return int(round(optimistic_mrr / float(GameState.DAYS_PER_MONTH))) - GameState.daily_burn
+	return int(round(optimistic_mrr / float(TimeModel.DAYS_PER_MONTH))) - GameState.daily_burn

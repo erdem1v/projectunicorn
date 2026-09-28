@@ -2,8 +2,9 @@ class_name B2BSalesSystem
 extends RefCounted
 
 # B2B customer lifecycle engine. Pure static logic, no scene dependency — mirrors SalesSystem.
-# Dispatched DAILY from SalesSystem.daily_tick (slot 4, B2B market only), AFTER the B2C-only
-# satisfaction tick. There is deliberately NO hourly B2B branch — B2B lifecycle is a daily cadence.
+# Dispatched once a tick from SalesSystem.daily_tick (slot 4, B2B market only), AFTER the B2C-only
+# satisfaction tick. There is deliberately NO hourly B2B branch — B2B lifecycle is a tick cadence;
+# its per-day rates are applied seven-fold here.
 #
 # Owns the two-layer satisfaction model (visible `satisfaction` computed from product health;
 # hidden per-customer `tolerance` seeded at signing), the lifecycle phase machine (onboarding →
@@ -35,20 +36,21 @@ static func daily_tick() -> void:
 	for c in CustomerRegistry.get_by_market("b2b"):
 		_tick_customer(c)
 	CustomerRepSystem.daily_tick()
-	# SATIŞ rev 6 §3/§4 — the faucet and the pipeline clock run BEFORE the sales desk, so a
-	# rep starting work today can pick up a lead that arrived today. It is NOT gated on
-	# staffing: §3's base inbound continues with zero sales staff.
+	# SATIŞ rev 6 §3 — the faucet runs BEFORE the sales desk, so a rep starting work today can
+	# pick up a lead that arrived today. It is NOT gated on staffing: §3's base inbound
+	# continues with zero sales staff.
 	SalesFaucetSystem.daily_tick()
 	SalesRepSystem.daily_tick()
+	SalesFaucetSystem.expire_leads()   # after the desk: the tick a lead expires on is still a tick a rep can take it
 
 
 static func _tick_customer(c: Customer) -> void:
-	# The trust ledger forgives on its own, BEFORE the satisfaction drift, so today's target
-	# already reflects today's (slightly smaller) grudge — a broken promise makes an account
+	# The trust ledger forgives on its own, BEFORE the satisfaction drift, so this tick's target
+	# already reflects the (slightly smaller) grudge — a broken promise makes an account
 	# fragile for a month, not forever.
 	if not is_zero_approx(c.trust_offset):
 		CustomerRegistry.set_trust_offset(c.id,
-			move_toward(c.trust_offset, 0.0, B2BConstants.TRUST_OFFSET_DECAY_PER_DAY))
+			move_toward(c.trust_offset, 0.0, TimeModel.per_tick(B2BConstants.TRUST_OFFSET_DECAY_PER_DAY)))
 	_tick_satisfaction(c)
 	# A delegated account raises ONE escalation when it sinks past the level its rep can hold;
 	# recovery above the threshold re-arms it. The flag IS the edge: `customer.cs_escalation`
@@ -71,11 +73,12 @@ static func _tick_customer(c: Customer) -> void:
 static func _tick_satisfaction(c: Customer) -> void:
 	var target: int = _satisfaction_target(c)
 	var step: int = B2BConstants.SAT_DRIFT_STEP
-	# Onboarding window (first ~ONBOARDING_DAYS after signing): first impressions
+	# Onboarding window (first ONBOARDING_WEEKS after signing): first impressions
 	# swing harder — a bug-heavy product at signing bites more, a solid one wins faster.
 	if GameState.day < c.onboarding_until:
 		step = int(ceil(float(step) * B2BConstants.ONBOARDING_AMP))
-	var delta: int = clampi(target - c.satisfaction, -step, step)
+	var gap: int = target - c.satisfaction
+	var down: int = step
 	# İLGİLENİLEN HESAP DAHA YAVAŞ AŞINIR, ve "ilgilenen" hesabın SAHİBİDİR (bkz.
 	# _account_owner): kurucunun kendi masasındaki hesap da aynı formülle korunur, özel kural yok.
 	# Bonus ETKİN ÇIKTIDAN okunur, ham eksenden değil: `HRSystem.effective_skill` alan
@@ -86,17 +89,20 @@ static func _tick_satisfaction(c: Customer) -> void:
 	# alternative is widening the account's tolerance instead — a different feel (the account
 	# forgives more rather than souring slower) and a different interaction with §5.2's loss
 	# reasons, so it is the director's call.
-	if delta < 0:
+	if gap < 0:
 		var owner: Character = _account_owner(c)
 		if owner != null:
 			var output: float = HRSystem.effective_skill(owner, HRConstants.AREA_CUSTOMER_SUCCESS)
-			delta = int(float(delta) * B2BConstants.cs_dampen(int(round(output))))
+			down = int(float(down) * B2BConstants.cs_dampen(int(round(output))))
 			# HAYIR DİYEMEZ: kendi hesaplarında memnuniyet daha yüksek durur. Bir DELTA
 			# ÜRETMİYOR — var olan aşınmayı daha da yumuşatıyor, yani "oynanmamış
 			# ekonomik sonuç yok" kuralı duruyor: düşüşün sebebi hep ürün sağlığı.
 			var bonus: float = HRConstants.trait_sum(owner.traits, "satisfaction_bonus")
 			if bonus > 0.0:
-				delta = int(float(delta) * maxf(0.0, 1.0 - bonus / 100.0))
+				down = int(float(down) * maxf(0.0, 1.0 - bonus / 100.0))
+	# Both steps are per-day caps, the care dampener applied per day; the tick moves seven days
+	# of them and stops at the target.
+	var delta: int = clampi(gap, -int(TimeModel.per_tick(down)), int(TimeModel.per_tick(step)))
 	if delta != 0:
 		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
@@ -120,8 +126,8 @@ static func _satisfaction_target(c: Customer) -> int:
 	# economy reads (bugs already folded into effective stability via economy dims,
 	# so there is no separate bug subtractor). NO price link (B2B is not price-driven).
 	# Kept promises lift the target and broken ones depress it through the per-customer trust
-	# ledger: that is what makes a broken word DURABLE (the daily drift would otherwise walk
-	# PROMISE_BROKEN_SAT back within a week) and gives each account its own target.
+	# ledger: that is what makes a broken word DURABLE (the drift would otherwise walk
+	# PROMISE_BROKEN_SAT back within one tick) and gives each account its own target.
 	var health: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
 	return clampi(int(round(health + c.trust_offset)), 0, 100)
 
@@ -132,15 +138,16 @@ static func _tick_at_risk(c: Customer) -> void:
 	# the visible churn countdown. Churn ONLY at the counter's zero — never instant.
 	CustomerRegistry.set_risk_streak(c.id, c.risk_streak + 1)
 	if c.lifecycle_phase != "risk":
-		if c.risk_streak < B2BConstants.RISK_TRIGGER_DAYS:
+		if c.risk_streak < TimeModel.ticks(B2BConstants.RISK_TRIGGER_WEEKS):
 			return
-		# HYSTERESIS: an account that left Risk inside RISK_REENTRY_DAYS does not re-enter
-		# yet — the streak keeps counting, nothing else starts. The day the window closes it
+		# HYSTERESIS: an account that left Risk inside RISK_REENTRY_WEEKS does not re-enter
+		# yet — the streak keeps counting, nothing else starts. The tick the window closes it
 		# re-enters immediately if it is still under its bar.
-		if c.last_risk_exit_day >= 0 and GameState.day - c.last_risk_exit_day < B2BConstants.RISK_REENTRY_DAYS:
+		if c.last_risk_exit_day >= 0 \
+				and GameState.day - c.last_risk_exit_day < TimeModel.ticks(B2BConstants.RISK_REENTRY_WEEKS):
 			return
 		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
-		CustomerRegistry.set_churn_countdown(c.id, B2BConstants.CHURN_COUNTDOWN_DAYS)
+		CustomerRegistry.set_churn_countdown(c.id, TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
 		# Entering Risk IS the retention edge: set_lifecycle_phase emits
 		# customer_health_changed, which `customer.retention` listens for. Nothing is pushed
 		# from here; the engine decides.
@@ -194,7 +201,7 @@ static func can_offer_expansion(c: Customer) -> bool:
 		return false
 	if c.last_expansion_day >= 0:
 		return false   # this account has already had its expansion moment
-	return (GameState.day - c.acquired_on_day) >= B2BConstants.EXPANSION_MATURE_DAYS
+	return (GameState.day - c.acquired_on_day) >= TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS)
 
 
 static func _churn(c: Customer) -> void:
@@ -218,12 +225,12 @@ static func _remove_lost(c: Customer) -> void:
 
 # --- Retention outcomes (called by the event effect verbs; WRITE-THROUGH LAW) ---
 
-static func accept_promise(customer_id: String, feature_id: String, deadline_days: int) -> void:
+static func accept_promise(customer_id: String, feature_id: String, deadline_weeks: int) -> void:
 	# "Söz ver": create a promise (a debt) and the customer stays — recovered from Risk.
 	var c: Customer = CustomerRegistry.get_customer(customer_id)
 	if c == null:
 		return
-	PromiseRegistry.create(customer_id, feature_id, deadline_days)
+	PromiseRegistry.create(customer_id, feature_id, deadline_weeks)
 	# A prior broken word makes a fresh promise land with less goodwill.
 	var bump: int = B2BConstants.RETAIN_SAT_BUMP
 	if GameState.get_flag("b2b_broke_%s" % customer_id, false):
@@ -241,7 +248,8 @@ static func hold(customer_id: String) -> void:
 		return  # caught on — stalling no longer works
 	c.retain_stalls += 1
 	if c.lifecycle_phase == "risk" and c.churn_countdown >= 0:
-		CustomerRegistry.set_churn_countdown(c.id, c.churn_countdown + B2BConstants.RETAIN_DELAY_DAYS)
+		CustomerRegistry.set_churn_countdown(c.id,
+			c.churn_countdown + TimeModel.ticks(B2BConstants.RETAIN_DELAY_WEEKS))
 
 
 static func apply_discount(customer_id: String, mrr_delta: int) -> void:
@@ -265,8 +273,8 @@ static func apply_discount(customer_id: String, mrr_delta: int) -> void:
 
 static func ignore_risk(_customer_id: String) -> void:
 	# "Kendi haline bırak": choose not to intervene. Deliberate NO-OP — the customer
-	# stays in Risk and keeps paying; the churn countdown (already running) continues on
-	# the daily tick and fires _churn on its own at zero. No instant state change here.
+	# stays in Risk and keeps paying; the churn countdown (already running) continues every
+	# tick and fires _churn on its own at zero. No instant state change here.
 	pass
 
 
@@ -285,7 +293,7 @@ static func expand(customer_id: String, add_seats: int, per_seat_mrr: int) -> vo
 	GameState.run_customers_expanded += 1  # run counter seam — genuine upsell only
 	EventBus.customer_expanded.emit(c.id, c.seats)
 	# Back to a settled account after the upsell moment — and STAMP the latch, or the
-	# account lands right back on the condition that promoted it and re-fires tomorrow.
+	# account lands right back on the condition that promoted it and re-fires next tick.
 	CustomerRegistry.set_last_expansion_day(c.id, GameState.day)
 	if c.lifecycle_phase == "expansion":
 		CustomerRegistry.set_lifecycle_phase(c.id, "active")
@@ -376,7 +384,7 @@ static func on_promise_resolved(p: Promise) -> void:
 				CustomerRegistry.set_tolerance(c.id, mini(c.tolerance + B2BConstants.PROMISE_BROKEN_TOLERANCE,
 					B2BConstants.seed_tolerance(c.scale, c.industry) + B2BConstants.PROMISE_TOLERANCE_CEILING))
 				# THE DURABLE HALF. Without this the -20 above is walked back by SAT_DRIFT_STEP
-				# within a week and a broken word leaves no trace at all.
+				# within one tick and a broken word leaves no trace at all.
 				CustomerRegistry.set_trust_offset(c.id, c.trust_offset + B2BConstants.PROMISE_BROKEN_OFFSET)
 				# INSIDE the null guard: a promise that outlived its account must not charge
 				# brand or stamp a credibility flag for a company that no longer exists

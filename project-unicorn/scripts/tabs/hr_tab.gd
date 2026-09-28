@@ -13,7 +13,7 @@ extends Control
 # GÜN SINIRI: day_advanced'e DEĞİL, hr_day_processed'a bağlanır. day_advanced
 # GameState.advance_day() içinde, TimeManager günlük tick'leri dağıtmadan ÖNCE
 # atılıyor — oraya bağlanan bir tazeleme HR durumunu tick'ten ÖNCE okur (Atlas
-# şeridi bir gün geride, gelen dosyalar bir gün görünmez).
+# şeridi bir tik geride, gelen dosyalar bir tik görünmez).
 #
 # Bu dosya hiçbir sonucu hesaplamaz: her rakam bir motor çağrısından gelir. Tek istisna
 # BİÇİMLEME: kesir → yüzde ve float → int yuvarlaması.
@@ -165,17 +165,21 @@ func _refresh() -> void:
 func _compute_structure_key() -> String:
 	# Satır KÜMESİNİ ve satırların şeklini değiştiren her şey buraya girer; moral GİRMEZ
 	# (yerinde boyanır). Rozet ağırlığı moralle değiştiği için ayrıca yazılıyor, yoksa eşik
-	# geçildiğinde satırın sırası güncellenmez.
+	# geçildiğinde satırın sırası güncellenmez. Eğitim ve izin sayaçları ile YENİ rozeti
+	# yalnız yeniden kurulurken çizilir, o yüzden onlar da anahtarda.
 	var parts := PackedStringArray()
-	parts.append("%s|%d" % [HRSearchSystem.get_state(), HRSearchSystem.days_waiting()])
-	# DURUM sütunundaki saat istisnası etiketi bu iki sayıyı okuyor (§8.5, §13.3).
-	parts.append("wh%d|%d" % [GameState.company_work_hours, WorkHoursSystem.override_count()])
+	parts.append("%s|%d" % [HRSearchSystem.get_state(), HRSearchSystem.weeks_until_arrival()])
+	# DURUM sütunundaki saat istisnası etiketi bu sayıları okuyor (§8.5, §13.3); süre okunurken
+	# başlangıca göre kırpıldığı için başlangıç da anahtarda.
+	parts.append("wh%d|%d|%d" % [GameState.company_work_hours, WorkHoursSystem.start_hour(),
+		WorkHoursSystem.override_count()])
 	# Müşteri masasındakilerin taşıdığı hesap sayısı satırın şeklinin parçası.
 	for rep in CustomerRepSystem.ranked_reps():
 		parts.append("cs%s%d" % [rep.id, CustomerRepSystem.roster_size(rep.id)])
 	for emp in CharacterRegistry.get_employees():
-		parts.append("%s|%s|%d|%d" % [emp.id, emp.status, emp.monthly_salary,
-			HRUiShared.worst_badge_severity(emp)])
+		parts.append("%s|%s|%d|%d|%d|%d|%d" % [emp.id, emp.status, emp.monthly_salary,
+			HRUiShared.worst_badge_severity(emp), emp.training_weeks_left,
+			HRMoraleSystem.weeks_until_return(emp), int(HRConstants.is_new_hire(emp.hire_day, GameState.day))])
 	return "/".join(parts)
 
 
@@ -226,19 +230,20 @@ func _atlas_strip() -> Control:
 		head.add_child(HRUiShared.action_button(tr("HR_OPEN_FILES"), _open_atlas, true))
 		return card
 
-	# Arayış sürüyor: tek durum satırı — rol + kaçıncı gün. "İade edilmez" uyarısı ödeme ve
-	# iptal anında yaşıyor, bekleme şeridinde değil.
+	# Arayış sürüyor: tek durum satırı — rol + dosyalara kalan hafta. "İade edilmez" uyarısı
+	# ödeme ve iptal anında yaşıyor, bekleme şeridinde değil.
 	var role_id: String = HRSearchSystem.current_role()
-	info.add_child(UiFactory.make_label(tr("HR_SEARCHING").format({
+	var weeks: int = HRSearchSystem.weeks_until_arrival()
+	info.add_child(UiFactory.make_label(tr(Fmt.count_key("HR_SEARCHING", weeks)).format({
 		"role": HRConstants.role_label(role_id) if role_id != "" else tr("HR_CANDIDATE_GENERIC"),
-		"n": HRSearchSystem.days_waiting(),
+		"n": weeks,
 	}), &"BodySerif"))
 	head.add_child(HRUiShared.action_button(tr("HR_SEARCH_CANCEL"), _on_cancel_search))
 	return card
 
 
 func _on_cancel_search() -> void:
-	# İptal para yakmıyor (§10 — arama ücretsiz), BEKLENMİŞ GÜNLERİ yakıyor: yeni bir arayış
+	# İptal para yakmıyor (§10 — arama ücretsiz), BEKLENMİŞ ZAMANI yakıyor: yeni bir arayış
 	# baştan bir hafta sürer. Onay bu yüzden isteniyor.
 	EventBus.confirm_requested.emit({
 		"title": tr("HR_SEARCH_CANCEL_TITLE"),

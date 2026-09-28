@@ -412,7 +412,7 @@ func _step_button(glyph: String, enabled: bool, steps: int) -> Button:
 
 
 func _on_infra_commit() -> void:
-	# İki ayrı karar, iki ayrı yazma. Göç bedeli yok; yeni fiyat ertesi günden işler.
+	# İki ayrı karar, iki ayrı yazma. Göç bedeli yok; yeni fiyat bir sonraki tikten işler.
 	InfraSystem.set_provider(_draft_provider)
 	InfraSystem.set_capacity(_draft_units)
 	_advance()

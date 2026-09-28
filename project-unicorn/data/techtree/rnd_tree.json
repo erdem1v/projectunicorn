@@ -5,7 +5,7 @@
   "_areas": "§5.2 — root and branch want the family own area; continuation wants two, its own first. Family to area: capability=product, platform=engineering, practice=qa, design=design.",
 
   "k_arge": 1.0,
-  "report_period_days": 30,
+  "report_period_weeks": 4,
 
   "nodes": {
     "data_model":         {"effort": 40, "cash": 0,   "areas": ["product"],                "stars": 1, "parent": ""},

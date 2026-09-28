@@ -16,7 +16,7 @@ extends Resource
 ##
 ## THE STAGE LIVES ON THE SHEET, NOT IN A STATIC, and the reason is the seed offer's own rule:
 ## it never expires (SeedConstants.NO_EXPIRY_DAY), so the player can walk away and sit down at
-## the table days later. A static set during the meeting is long gone by then, and a table that
+## the table weeks later. A static set during the meeting is long gone by then, and a table that
 ## guessed wrong would paint a `raise` lever over `valuation_m` terms and read $0.
 ##
 ## An older save has no such field and takes the declared default, which is the correct
@@ -26,8 +26,8 @@ extends Resource
 ## Empty on a Series A sheet. Drives the offer card's variant body and the funding page's word.
 @export var band: String = ""
 @export var vc_id: String = ""
-@export var granted_day: int = 0          # day the validity window opened (delivery day for a delayed sheet)
-@export var expires_day: int = 0          # the day the last of PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS falls on
+@export var granted_day: int = 0          # tick the validity window opened (delivery tick for a delayed sheet)
+@export var expires_day: int = 0          # tick the window closes on: granted_day + PitchConstants.SHEET_VALIDITY_WEEKS
 
 # --- Term Sheet Table inputs ---
 @export var patience_pool: int = 0        # set at grant (the fund's pool, or the seed band's); the table consumes it
@@ -42,15 +42,10 @@ extends Resource
 @export var opening_terms: Dictionary = {}
 
 
-## Calendar days to the close (DeskPapers' term-sheet reminder reads it).
-func days_left(current_day: int) -> int:
-	return expires_day - current_day
-
-
-## Weekdays left before the window closes (0 on the closing day, and after it). This is
-## the number every player-facing Series A countdown shows.
-func business_days_left(current_day: int) -> int:
-	return maxi(0, GameState.business_days_between(current_day, expires_day))
+## Weeks left before the window closes: 1 in its last week, 0 once it has closed. The number
+## every player-facing Series A countdown shows.
+func weeks_left(current_day: int) -> int:
+	return maxi(0, expires_day - current_day)
 
 
 ## The window has closed and the fund is waiting for a yes or a no. The sheet stays in

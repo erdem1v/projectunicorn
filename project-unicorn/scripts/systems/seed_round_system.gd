@@ -96,7 +96,7 @@ static func pitch_blocked_reason(vc_id: String) -> String:
 ## Sit down with this fund. The ONE seed pitch of the run is spent here, before the meeting
 ## opens, so a mid-meeting quit cannot hand it back.
 ##
-## NO SCHEDULING CEREMONY, and that is deliberate. The Series A hunt makes you book three days
+## NO SCHEDULING CEREMONY, and that is deliberate. The Series A hunt makes you book a week
 ## ahead and choose a prep focus; the seed room does not, because it is the fast room — a
 ## bet on the founder, not a diligence appointment. It also keeps
 ## GameState.pending_meeting a Series-A-only field, so `funding.meeting_day` and every seam
@@ -188,7 +188,7 @@ static func accept(vc_id: String, terms: Dictionary) -> void:
 # ============================================================================
 
 ## The full reading the funding page paints and the fumes paper colours from.
-## {state, avg_pct, need_pct, grace_days_left}. `avg_pct` is
+## {state, avg_pct, need_pct, grace_weeks_left}. `avg_pct` is
 ## GameState.GROWTH_AVG_UNKNOWN when there are too few closed months to judge.
 ##
 ## A ROLLING AVERAGE, NOT A STREAK. One flat month inside a good quarter is not a stall, and
@@ -199,15 +199,15 @@ static func expectation() -> Dictionary:
 		"state": SeedConstants.EXPECT_NONE,
 		"avg_pct": GameState.GROWTH_AVG_UNKNOWN,
 		"need_pct": SeedConstants.EXPECT_MOM_PCT,
-		"grace_days_left": 0,
+		"grace_weeks_left": 0,
 	}
 	if GameState.seed_lead == "" or GameState.seed_closed_day < 0:
 		return d                                  # no money taken ⇒ nothing was promised
 	var since: int = GameState.day - GameState.seed_closed_day
 	d.avg_pct = GameState.get_mom_growth_avg_pct(SeedConstants.EXPECT_WINDOW_MONTHS)
-	if since < SeedConstants.EXPECT_GRACE_DAYS:
+	if since < TimeModel.ticks(SeedConstants.EXPECT_GRACE_WEEKS):
 		d.state = SeedConstants.EXPECT_GRACE
-		d.grace_days_left = SeedConstants.EXPECT_GRACE_DAYS - since
+		d.grace_weeks_left = TimeModel.ticks(SeedConstants.EXPECT_GRACE_WEEKS) - since
 		return d
 	if int(d.avg_pct) == GameState.GROWTH_AVG_UNKNOWN:
 		# Past the grace window but the calendar ledger cannot answer yet (too few closes).

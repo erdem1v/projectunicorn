@@ -28,7 +28,7 @@ func _ready() -> void:
 			EventBus.employee_training_changed, EventBus.employee_promoted,
 			EventBus.assignment_changed]:
 		sig.connect(_on_person_changed)
-	# İzin günleri ve kurucunun hazırlık durumu gün sınırında değişir.
+	# İzin haftaları ve kurucunun hazırlık durumu tik sınırında değişir.
 	EventBus.hr_day_processed.connect(rebuild_view)
 	EventBus.character_removed.connect(_on_person_changed)
 
@@ -83,8 +83,8 @@ func _identity(c: Character) -> Control:
 func _now_text(c: Character) -> String:
 	if c.category == "founder":
 		return HRSystem.founder_task_label()
-	if c.training_days_left > 0:
-		return tr("HR_STATE_TRAINING").format({"days": c.training_days_left})
+	if c.training_weeks_left > 0:
+		return HRSystem.training_line(c)
 	if HRSystem.is_busy(c):
 		return HRSystem.leave_line(c)
 	if c.assigned_job_ids.is_empty():

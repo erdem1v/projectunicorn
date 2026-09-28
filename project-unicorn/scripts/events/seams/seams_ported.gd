@@ -92,10 +92,10 @@ static func install() -> void:
 		"HR", "the per-person resignation line")
 
 	# --- urun. -----------------------------------------------------------
-	EvSeams.register("urun.days_since_launch", G, TYPE_INT,
+	EvSeams.register("urun.weeks_since_launch", G, TYPE_INT,
 		func() -> int:
 			# -1 when nothing has launched, NEVER 0: an unshipped product must not satisfy
-			# "one day after it shipped".
+			# "one week after it shipped".
 			if not GameState.has_flag("mvp_launch_day"):
 				return -1
 			return GameState.day - int(GameState.get_flag("mvp_launch_day", 0)),
@@ -113,38 +113,41 @@ static func install() -> void:
 	EvSeams.register("funding.angel_threshold_met", G, TYPE_BOOL,
 		func() -> bool: return GameState.mrr >= AngelRoundSystem.MRR_THRESHOLD,
 		"Funding", "MRR has crossed the bar Frank's cheque waits on")
-	EvSeams.register("funding.angel_days_since_accept", G, TYPE_INT,
+	EvSeams.register("funding.angel_weeks_since_accept", G, TYPE_INT,
 		func() -> int:
 			var d: int = int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, 0))
 			return -1 if d <= 0 else GameState.day - d,
-		"Investment", "-1 when the cheque has not landed; the day stamp stays in GameState")
+		"Investment", "-1 when the cheque has not landed; the tick stamp stays in GameState")
 	EvSeams.register("funding.gate_pending_phase", G, TYPE_INT,
 		func() -> int: return GameState.pending_next_phase,
 		"Funding", "WRAPPER; 0 when no gate is open")
+	EvSeams.register("funding.sheet_weeks_left", G, TYPE_INT,
+		func() -> int: return _sheet_weeks_left(),
+		"Funding", "weeks; 9999 when no sheet is live")
+	# Days, for the one sealed Frank sentence that still counts in days (sheet_expiry's body);
+	# conditions read funding.sheet_weeks_left.
 	EvSeams.register("funding.sheet_days_left", G, TYPE_INT,
-		func() -> int:
-			# The MINIMUM across live sheets, in BUSINESS days (the number Frank's warning
-			# prints). 9999 with none, so "<= 3" cannot be met by having no sheet. A sheet
-			# whose window has closed belongs to funding.sheet_decision_due and is left out.
-			var least: int = 9999
-			for sheet in GameState.active_sheets:
-				var ts: TermSheet = sheet
-				if ts.is_decision_due(GameState.day):
-					continue
-				least = mini(least, ts.business_days_left(GameState.day))
-			return least,
-		"Funding", "business days; 9999 when no sheet is live")
+		func() -> int: return int(TimeModel.days(_sheet_weeks_left())),
+		"Funding", "sheet_expiry body text only; the weeks above in days")
 	EvSeams.register("funding.sheet_decision_due", G, TYPE_BOOL,
 		func() -> bool: return VCPitchSystem.decision_due_sheet() != null,
 		"Funding", "a Series A sheet's window has closed and waits for sit-or-decline")
 	EvSeams.register("funding.last_answer_moment", G, TYPE_BOOL,
 		func() -> bool: return VCPitchSystem.is_last_answer_moment(),
-		"Investment", "one sheet, one day left, and no other table to walk to")
+		"Investment", "one sheet, one week left, and no other table to walk to")
 	EvSeams.register("funding.meeting_day_arrived", G, TYPE_BOOL,
 		func() -> bool:
 			var pm: Dictionary = GameState.pending_meeting
 			return not pm.is_empty() and int(pm.get("day", 0)) <= GameState.day,
-		"Funding", "a booked meeting's day has come")
+		"Funding", "a booked meeting's week has come")
+	# WorkHoursSystem.sitting_open, the one entry gate of every VC sitting: not at night, and the
+	# sitting ends inside the founder's workday. The cards that open a sitting lock or wait on it.
+	EvSeams.register("funding.meeting_sitting_open", G, TYPE_BOOL,
+		func() -> bool: return WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS),
+		"Funding", "a seed or Series A pitch can start now")
+	EvSeams.register("funding.table_sitting_open", G, TYPE_BOOL,
+		func() -> bool: return WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS),
+		"Funding", "the term-sheet table can open now")
 
 	# --- funding. · the seed rung ---------------------------------------
 	EvSeams.register("funding.seed_door_open", G, TYPE_BOOL,
@@ -169,18 +172,18 @@ static func install() -> void:
 	EvSeams.register("funding.seed_expectation", G, TYPE_INT,
 		func() -> int: return SeedRoundSystem.expectation_state(),
 		"Funding", "0 none · 1 grace · 2 on track · 3 durgun (SeedConstants.EXPECT_*)")
-	EvSeams.register("funding.seed_days_since_close", G, TYPE_INT,
+	EvSeams.register("funding.seed_weeks_since_close", G, TYPE_INT,
 		func() -> int:
 			var d: int = GameState.seed_closed_day
 			return -1 if d < 0 else GameState.day - d,
-		"Funding", "-1 until the round closes; mirrors funding.angel_days_since_accept")
+		"Funding", "-1 until the round closes; mirrors funding.angel_weeks_since_accept")
 
 	# --- funding. · the buyout offer -------------------------------------
 	EvSeams.register("funding.acq_road_over", G, TYPE_BOOL,
 		func() -> bool: return EndingsSystem.road_over(),
 		"Funding", "faced Series A by a decline or a walk, and no table is left to walk to")
-	EvSeams.register("funding.acq_days_open", G, TYPE_INT,
-		func() -> int: return EndingsSystem.acq_days_open(),
+	EvSeams.register("funding.acq_weeks_open", G, TYPE_INT,
+		func() -> int: return EndingsSystem.acq_weeks_open(),
 		"Funding", "-1 until the road closes; the buyout window is measured from that stamp")
 	# STRING, formatted at read time: the buyout body reads these through {seam:}, which
 	# str()s the value — an INT would print "1440000" in a sentence. Nothing is stored.
@@ -190,3 +193,15 @@ static func install() -> void:
 	EvSeams.register("funding.acq_offer", G, TYPE_STRING,
 		func() -> String: return Fmt.money(EndingsSystem.acquisition_founder_share()),
 		"Funding", "the founder's slice of that price — what the sealed line calls 'your share'")
+
+
+## The MINIMUM across live sheets, in weeks (the number the warning prints). 9999 with none, so
+## "<= 2" cannot be met by having no sheet. A sheet whose window has closed belongs to
+## funding.sheet_decision_due and is left out.
+static func _sheet_weeks_left() -> int:
+	var least: int = 9999
+	for sheet in GameState.active_sheets:
+		var ts: TermSheet = sheet
+		if not ts.is_decision_due(GameState.day):
+			least = mini(least, ts.weeks_left(GameState.day))
+	return least

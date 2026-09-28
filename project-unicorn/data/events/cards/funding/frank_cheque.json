@@ -5,6 +5,7 @@
   "category": "funding",
   "tick": "daily",
   "class": "interrupt",
+  "expires_weeks": 4,
   "tags": [
     "critical",
     "build_safe"

@@ -7,25 +7,18 @@ extends RefCounted
 # ticked on its own signing day.
 #
 # Supply is the faucet's (§3). A rep works ONE lead at a time and the pipeline says which one
-# and for how long (§7.2). The ceiling is a STAR: a rep sells at or below their own Satış star
-# and cannot reach above it (§7.1), a gate the player can see on the card.
+# (§7.2). The ceiling is a STAR: a rep sells at or below their own Satış star and cannot reach
+# above it (§7.1), a gate the player can see on the card.
 #
-# THE CLOSE IS DETERMINISTIC IN-LEAGUE (§7.6). There is no hidden close percentage. A rep
-# assigned to a lead inside their band on Competitive or Standard WILL close it; what varies
-# is how long it takes, and that comes from `hr.effective_skill` — morale, focus, hours and
-# traits all play the same duration rather than a private formula. Premium is the one
-# conditional: it lengthens processing and, on a price-sensitive archetype, produces the
-# price-break moment (§7.6).
+# AN IN-LEAGUE DEAL ALWAYS CLOSES (§7.6); only WHEN is drawn. Each processing tick rolls the
+# league's close chance (PROCESS_CLOSE_CHANCE) on the seeded `sales_rep` stream, because a
+# week-long tick is too coarse to hold a duration of a few days. Premium is the one conditional:
+# it divides the chance and, on a price-sensitive archetype, produces the price-break moment (§7.6).
 #
-# THE PRICE-BREAK CARD IS DEFINED AND INERT. Its behaviour, its trigger window and its
-# HAYIR DİYEMEZ multiplier all live here, and the moment publishes `rep_discount_requested`.
-# What does NOT happen is `EventGate.request` — the wiring is the event package's (§18), and
-# until it lands the deal closes at its own stance. That is a stated fallback, not an
-# accident: an inert card must not be able to strand a deal.
-#
-# NO RNG. Not one draw. A rep working a lead is WORK, which this game models as elapsed days
-# against a duration, not a coin flip — and it is what makes "Kerem dört gündür Ege Sigorta
-# ile görüşüyor" a readable cause instead of a hidden roll.
+# THE PRICE-BREAK CARD IS DEFINED AND INERT. Its behaviour and its trigger live here, and the
+# moment publishes `rep_discount_requested`. What does NOT happen is `EventGate.request` — the
+# wiring is the event package's (§18), and until it lands the deal closes at its own stance.
+# That is a stated fallback, not an accident: an inert card must not be able to strand a deal.
 #
 # THE ADDITIVITY INVARIANT, desk half: with nobody on Satış nothing is worked — any open
 # processing drops, and no lead is started or closed.
@@ -52,12 +45,11 @@ static func _assigned_rep(rep_id: String) -> Character:
 static func _drop_processing(lead: Prospect) -> void:
 	lead.worked_by = ""
 	lead.work_started_day = -1
-	lead.work_due_day = -1
 	lead.work_stance = ""
 	lead.price_break_raised = false
 	# The lead returns to the ordinary waiting rules with a full clock — the freeze it enjoyed
 	# while it was being worked was never time it spent waiting.
-	lead.expires_on_day = GameState.day + SalesConstants.LEAD_LIFE_DAYS
+	lead.expires_on_day = GameState.day + TimeModel.ticks(SalesConstants.LEAD_LIFE_WEEKS)
 
 
 # ============================================================================
@@ -154,31 +146,25 @@ static func _start_processing(rep: Character, lead: Prospect) -> void:
 	# kapanır." Moving the dial mid-deal cannot retroactively reprice a conversation that is
 	# already happening.
 	lead.work_stance = SalesLedger.price_stance()
-	lead.work_due_day = GameState.day + processing_days(rep, lead, lead.work_stance)
 	# NO `lead_routed` HERE. That signal is the PLAYER's verb ("Temsilciye ver") and its one
 	# publisher is SalesLedger.set_routing; a desk picking work up on its own is a different
 	# event and borrowing the name would give one signal two meanings and two emitters (§14).
 
 
 # ============================================================================
-#  §7.2 · Processing duration
+#  §7.2 · Processing
 # ============================================================================
 
-## League difference picks the span (§7.2: own league 6-7 · one below 3-4 · two below 2-3),
-## and the rep's EFFECTIVE OUTPUT places the deal inside it. Reading `hr.effective_skill`
-## rather than a raw star is the whole point: morale, focus, hours and traits already live in
-## that one formula (Ekip §4.5) and this desk does not get a second copy of it.
-static func processing_days(rep: Character, lead: Prospect, stance: String) -> int:
-	var span: Array = SalesConstants.process_span(lead.star - rep_star(rep))
-	var output: float = HRSystem.effective_skill(rep, HRConstants.AREA_SALES)
-	var t: float = clampf(output / SalesConstants.PROCESS_REFERENCE_OUTPUT, 0.0, 1.0)
-	# A better rep lands nearer the FAST end of the span.
-	var days: float = lerpf(float(span[1]), float(span[0]), t)
-	if stance == SalesConstants.STANCE_PREMIUM:
-		days *= (1.0 + SalesConstants.PROCESS_PREMIUM_PENALTY)
-	return maxi(int(round(days)), SalesConstants.PROCESS_MIN_DAYS)
+## The chance this deal closes on one processing tick: the league difference picks it and
+## Premium divides it, so the expected processing time grows by the same +30 %.
+static func close_chance(rep: Character, lead: Prospect) -> float:
+	var chance: float = float(SalesConstants.PROCESS_CLOSE_CHANCE[clampi(lead.star - rep_star(rep), -2, 0)])
+	if lead.work_stance == SalesConstants.STANCE_PREMIUM:
+		chance /= 1.0 + SalesConstants.PROCESS_PREMIUM_PENALTY
+	return chance
 
 
+## A lead started this tick is picked up after this sweep, so its first roll is the next tick.
 static func _tick_processing() -> void:
 	for p in ProspectRegistry.get_all():
 		var lead: Prospect = p as Prospect
@@ -189,10 +175,10 @@ static func _tick_processing() -> void:
 			# §12 — "Temsilci ayrılır / izne çıkar | işleme düşer; lead bekleme kurallarına döner."
 			_drop_processing(lead)
 			continue
-		# §7.6 — the price-break moment, in the closing days of a Premium deal against a
-		# price-sensitive archetype. It publishes and does NOT raise a card (see the header).
+		# §7.6 — the price-break moment of a Premium deal against a price-sensitive archetype,
+		# read before the roll. It publishes and does NOT raise a card (see the header).
 		_maybe_price_break(rep, lead)
-		if GameState.day >= lead.work_due_day:
+		if RngStreams.get_stream(RngStreams.STREAM_SALES_REP).randf() < close_chance(rep, lead):
 			_close(rep, lead)
 
 
@@ -200,22 +186,16 @@ static func _tick_processing() -> void:
 #  §7.6 · The close, and the price-break moment
 # ============================================================================
 
-## Is this deal in the window where the price-break card would drop? The whole predicate, so
-## the event package can bind to one name when it wires the card.
-static func price_break_due(rep: Character, lead: Prospect) -> bool:
+## Would the price-break card drop on this deal? The whole predicate, so the event package can
+## bind to one name when it wires the card.
+static func price_break_due(lead: Prospect) -> bool:
 	if lead.work_stance != SalesConstants.STANCE_PREMIUM:
 		return false
-	if not SalesArchetypes.is_price_sensitive(lead.archetype_id):
-		return false   # "Duyarsız arketip kartı üretmez."
-	var window: int = SalesConstants.PRICE_BREAK_TRIGGER_LAST_DAYS
-	# HAYIR DİYEMEZ widens the window rather than rolling a die — same effect, no RNG.
-	if HRConstants.trait_mult(rep.traits, "promise_chance_mult") > 1.0:
-		window = int(round(float(window) * SalesConstants.PRICE_BREAK_CANT_SAY_NO_MULT))
-	return GameState.day >= lead.work_due_day - window
+	return SalesArchetypes.is_price_sensitive(lead.archetype_id)   # "Duyarsız arketip kartı üretmez."
 
 
 static func _maybe_price_break(rep: Character, lead: Prospect) -> void:
-	if not price_break_due(rep, lead):
+	if not price_break_due(lead):
 		return
 	if lead.price_break_raised:
 		return
@@ -232,8 +212,7 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, seat_price,
 		SalesSystem.signing_satisfaction_seed(), "sales_rep:%s" % rep.id)
 	ProspectRegistry.remove(lead.id)
-	GameState.set_flag("sales_weekly_closes",
-		int(GameState.get_flag("sales_weekly_closes", 0)) + 1)
+	SalesLedger.record_close(c, true)
 	SalesSystem.record_sales_event("auto_close", rep.character_name, c.company_name, c.mrr)
 	EventBus.rep_deal_closed.emit(rep.id, c.id)
 	SalesLedger.announce_signing(c, lead.is_whale,
@@ -269,23 +248,22 @@ static func _tick_weekly_summary() -> void:
 	if anchor <= 0:
 		GameState.set_flag("sales_weekly_anchor_day", GameState.day)
 		return
-	if GameState.day - anchor < SalesConstants.WEEKLY_SUMMARY_INTERVAL_DAYS:
+	if GameState.day - anchor < TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS):
 		return
-	var closes: int = int(GameState.get_flag("sales_weekly_closes", 0))
 	GameState.set_flag("sales_weekly_anchor_day", GameState.day)
-	GameState.set_flag("sales_weekly_closes", 0)
+	var closes: int = SalesLedger.close_week()
 	if closes <= 0:
 		return
 	EventBus.weekly_sales_report_issued.emit(closes)
-	EventGate.request(SalesConstants.WEEKLY_SUMMARY_CARD_ID, {"closes": closes})
+	EventGate.request(SalesConstants.WEEKLY_SUMMARY_CARD_ID)
 
 
 # ============================================================================
 #  Reads for the pipeline panel
 # ============================================================================
 
-## "Palmiye ile görüşüyor · 3. gün" — the panel's line, as data. Day counting is INCLUSIVE
-## (the first day reads as day 1), which is how a person would say it.
+## "Palmiye ile görüşüyor · 2. hafta" — the panel's line, as data. Week counting is INCLUSIVE
+## (the first week reads as week 1), which is how a person would say it.
 static func processing_view(rep: Character) -> Dictionary:
 	var lead_id: String = SalesLedger.rep_busy(rep.id)
 	if lead_id == "":
@@ -294,7 +272,6 @@ static func processing_view(rep: Character) -> Dictionary:
 	return {
 		"lead_id": lead.id,
 		"company_name": lead.company_name,
-		"day": GameState.day - lead.work_started_day + 1,
-		"due_day": lead.work_due_day,
+		"week": GameState.day - lead.work_started_day + 1,
 		"stance": lead.work_stance,
 	}

@@ -27,7 +27,7 @@ static func _install_product() -> void:
 		"Product", "shipped version number")
 	EvSeams.register("urun.version_age", G, TYPE_INT,
 		func() -> int: return ProductRead.version_age(),
-		"Product", "days since THIS VERSION shipped, not since the product was born")
+		"Product", "weeks since THIS VERSION shipped, not since the product was born")
 	EvSeams.register("urun.market_type", G, TYPE_STRING,
 		func() -> String: return ProductState.market_type(),
 		"Product", "b2b | b2c; empty until the first ship writes it")
@@ -61,7 +61,7 @@ static func _install_product() -> void:
 		func() -> int: return ProductRead.unconfirmed(), "Product", "incoming, unvalidated reports")
 	EvSeams.register("urun.interest", G, TYPE_FLOAT,
 		func() -> float: return ProductRead.interest(),
-		"Product", "0-100, refreshed on publish, 30-day half-life")
+		"Product", "0-100, refreshed on publish, decays by a half-life counted in weeks")
 	EvSeams.register("urun.usage", G, TYPE_FLOAT,
 		func() -> float: return ProductRead.usage(), "Product", "load multiplier")
 	EvSeams.register("urun.capacity_tier", G, TYPE_INT,

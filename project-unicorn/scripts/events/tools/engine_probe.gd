@@ -65,7 +65,7 @@ static func _check_seams() -> void:
 	_ok("hr.headcount is known", EvSeams.has("hr.headcount"))
 	_ok("unknown name is not known", not EvSeams.has("hr.nonsense"))
 	_ok("hr.headcount reads an int", typeof(EvSeams.read("hr.headcount")) == TYPE_INT)
-	_ok("time.day matches GameState", int(EvSeams.read("time.day")) == GameState.day)
+	_ok("time.week matches GameState", int(EvSeams.read("time.week")) == GameState.day)
 
 	# Type coercion: the JSON-float defect. A literal authored as 3 arrives as 3.0 and must
 	# come back an int, or `in` against an int seam silently never matches.
@@ -153,19 +153,19 @@ static func _check_flags() -> void:
 		EvCondition.eval({"flag_unset": "nope"})
 		and not EvCondition.eval({"flag_unset": "frank_seed_taken"}))
 
-	# The absent-stamp rule: "N days after X" must be FALSE when X never happened, not day 0.
-	_ok("days_since_flag on an unstamped name is false",
-		not EvCondition.eval({"days_since_flag": "never", "op": ">=", "value": 0}))
+	# The absent-stamp rule: "N weeks after X" must be FALSE when X never happened, not week 0.
+	_ok("weeks_since_flag on an unstamped name is false",
+		not EvCondition.eval({"weeks_since_flag": "never", "op": ">=", "value": 0}))
 	EvFlags.stamp("shipped", "probe")
-	_ok("days_since_flag is 0 on the stamping day",
-		EvCondition.eval({"days_since_flag": "shipped", "op": ">=", "value": 0}))
-	_ok("and not yet 1", not EvCondition.eval({"days_since_flag": "shipped", "op": ">=", "value": 1}))
+	_ok("weeks_since_flag is 0 in the stamping week",
+		EvCondition.eval({"weeks_since_flag": "shipped", "op": ">=", "value": 0}))
+	_ok("and not yet 1", not EvCondition.eval({"weeks_since_flag": "shipped", "op": ">=", "value": 1}))
 
-	EvFlags.set_timed("window", 3, "probe")
+	EvFlags.set_timed("window", 1, "probe")
 	_ok("a timed flag reads as set", EvFlags.has("window"))
-	_ok("days_until_expiry counts", EvFlags.days_until_expiry("window") == 3)
+	_ok("weeks_until_expiry counts", EvFlags.weeks_until_expiry("window") == 1)
 	_ok("flag_expires_within sees it",
-		EvCondition.eval({"flag_expires_within": "window", "days": 5}))
+		EvCondition.eval({"flag_expires_within": "window", "weeks": 1}))
 
 
 # --- History ---------------------------------------------------------------
@@ -174,7 +174,7 @@ static func _check_history() -> void:
 	print("- history")
 	EvHistory.reset()
 	_ok("nothing has fired", EvHistory.fire_count("ev.x") == 0)
-	_ok("days_since is -1, not a big number", EvHistory.days_since("ev.x") == -1)
+	_ok("weeks_since is -1, not a big number", EvHistory.weeks_since("ev.x") == -1)
 
 	EvHistory.record("hr.raise_request", EvHistory.RESOLUTION_CHOSEN, "accept", "gave_raise",
 		{"employee": {"type": "employee", "id": "emp_1"}}, [])
@@ -218,14 +218,14 @@ static func _check_latches() -> void:
 	EvLatches.spend(key)
 	_ok("a spent one_shot blocks", EvLatches.blocked_reason(one_shot, key) != "")
 
-	var cooldown: Dictionary = {EvLatches.COOLDOWN: 30}
+	var cooldown: Dictionary = {EvLatches.COOLDOWN: 4}
 	var ck: String = EvLatches.key_for("ev.cool", EvLatches.KEY_RUN, "")
 	_ok("a fresh cooldown passes", EvLatches.blocked_reason(cooldown, ck) == "")
 	EvLatches.spend(ck)
 	_ok("a spent cooldown blocks today", EvLatches.blocked_reason(cooldown, ck) != "")
-	_ok("and reports how long is left", EvLatches.cooldown_left(cooldown, ck) == 30)
+	_ok("and reports how long is left", EvLatches.cooldown_left(cooldown, ck) == 4)
 
-	# The per-entity key: two people may each raise the same card on the same day (§20 A6).
+	# The per-entity key: two people may each raise the same card in the same week (§20 A6).
 	var k1: String = EvLatches.key_for("hr.raise", EvLatches.KEY_ENTITY, "emp_1")
 	var k2: String = EvLatches.key_for("hr.raise", EvLatches.KEY_ENTITY, "emp_2")
 	_ok("entity keys differ per subject", k1 != k2)
@@ -280,7 +280,7 @@ static func _check_scope() -> void:
 static func _check_schedule() -> void:
 	print("- schedule")
 	EvSchedule.reset()
-	EvSchedule.add("ev.payoff", 80, {"employee": {"type": "employee", "id": "emp_1"}}, "arc_x")
+	EvSchedule.add("ev.payoff", 11, {"employee": {"type": "employee", "id": "emp_1"}}, "arc_x")
 	_ok("an entry is pending", EvSchedule.size() == 1)
 	_ok("nothing is due yet", EvSchedule.take_due().is_empty())
 
@@ -295,16 +295,16 @@ static func _check_schedule() -> void:
 	EvSchedule.add("ev.overdue", 0, {}, "arc_y")
 	_ok("a due entry is taken", EvSchedule.take_due().size() == 1)
 
-	# Freeze / thaw: relative days on the arc, absolute in the schedule.
+	# Freeze / thaw: relative weeks on the arc, absolute in the schedule.
 	EvSchedule.reset()
 	EvSchedule.add("ev.step", 10, {}, "arc_z")
 	var frozen: Array = EvSchedule.freeze_arc("arc_z")
 	_ok("freezing removes it from the schedule", EvSchedule.size() == 0 and frozen.size() == 1)
-	_ok("and keeps the delay as RELATIVE days",
-		int((frozen[0] as Dictionary)["remaining_days"]) == 10)
+	_ok("and keeps the delay as RELATIVE weeks",
+		int((frozen[0] as Dictionary)["remaining_weeks"]) == 10)
 	EvSchedule.thaw_arc("arc_z", frozen)
 	_ok("thawing restores one entry", EvSchedule.size() == 1)
-	_ok("still due in 10 days, not overdue", EvSchedule.take_due().is_empty())
+	_ok("still due in 10 weeks, not overdue", EvSchedule.take_due().is_empty())
 
 	EvSchedule.reset()
 	EvSchedule.add("ev.a", 5, {}, "arc_a")
@@ -400,7 +400,7 @@ static func _check_save_block() -> void:
 	EvFlags.set_flag("probe_flag", "probe")
 	EvHistory.record("ev.probe", EvHistory.RESOLUTION_CHOSEN, "opt", "out",
 		{"employee": {"type": "employee", "id": "emp_probe"}}, [])
-	EvSchedule.add("ev.probe", 30, {"employee": {"type": "employee", "id": "emp_probe"}}, "arc_p")
+	EvSchedule.add("ev.probe", 4, {"employee": {"type": "employee", "id": "emp_probe"}}, "arc_p")
 
 	var block: Dictionary = EvSave.to_dict()
 	_ok("the block declares its version", int(block.get("version", 0)) == EvSave.BLOCK_VERSION)
@@ -460,7 +460,7 @@ static func _check_catalog() -> void:
 	_ok("§10.10: an arc step is never in the pool", not pool_ids.has("fixture.thesis_payoff"))
 
 	# unwired/ must stay unreachable. Its cards have empty conditions, and an empty condition
-	# is TRUE — so a loader that saw that directory would fire ev_seed_closed on day 1.
+	# is TRUE — so a loader that saw that directory would fire ev_seed_closed in week 1.
 	_ok("unwired/ is excluded from the catalogue", not EvCatalog.has_card("ev_seed_closed"))
 
 
@@ -473,12 +473,12 @@ static func _due_day_of(event_id: String) -> int:
 
 # --- THE THESIS TEST --------------------------------------------------------
 #
-# GDD §0.2, and §24 makes it the gate stage 2 may not be skipped past: a card played on day 10
-# produces a visible consequence on day 90, across a save/load, a speed change and an unrelated
+# GDD §0.2, and §24 makes it the gate stage 2 may not be skipped past: a card played in week 2
+# produces a visible consequence in week 13, across a save/load, a speed change and an unrelated
 # concurrent arc, with its subject and context intact.
 
 static func _check_thesis() -> void:
-	print("- THE THESIS TEST (day 10 -> day 90)")
+	print("- THE THESIS TEST (week 2 -> week 13)")
 	var shipped: Array = EvTuning.SHIPPED_SCOPES.duplicate()
 	EvTuning.SHIPPED_SCOPES.append("fixture")
 
@@ -486,20 +486,20 @@ static func _check_thesis() -> void:
 	EvEngine.reset()
 	EvCatalog.reload()
 
-	# --- day 10: the decision --------------------------------------------
-	GameState.day = 10
+	# --- week 2: the decision --------------------------------------------
+	GameState.day = 2
 	var opened: EvGate.Verdict = EvGate.propose("fixture.thesis_open", EvGate.Origin.TICK_DAILY)
-	_ok("day 10: the opening card is admitted", opened.admitted,
+	_ok("week 2: the opening card is admitted", opened.admitted,
 		"%s: %s" % [opened.step, opened.reason])
 	EvQueue.admit("fixture.thesis_open", opened.context, "interrupt")
 	EvEngine.pump()
-	_ok("day 10: it is on screen", EvQueue.active_id() == "fixture.thesis_open")
+	_ok("week 2: it is on screen", EvQueue.active_id() == "fixture.thesis_open")
 	EvEngine.resolve("fixture.thesis_open", "promise")
-	_ok("day 10: the arc started", EvArcs.is_active("arc_fixture_thesis"))
-	_ok("day 10: the payoff is scheduled", EvSchedule.has("fixture.thesis_payoff"))
+	_ok("week 2: the arc started", EvArcs.is_active("arc_fixture_thesis"))
+	_ok("week 2: the payoff is scheduled", EvSchedule.has("fixture.thesis_payoff"))
 
 	# --- an unrelated arc runs alongside ---------------------------------
-	EvSchedule.add("fixture.concurrent", 40, {}, "")
+	EvSchedule.add("fixture.concurrent", 5, {}, "")
 	_ok("an unrelated card shares the schedule", EvSchedule.size() == 2)
 
 	# --- the save/load cycle ---------------------------------------------
@@ -516,17 +516,17 @@ static func _check_thesis() -> void:
 		EvCondition.eval({"history": "chose", "event": "fixture.thesis_open", "option": "promise"}))
 
 	# --- a speed change ---------------------------------------------------
-	# Every day field is absolute (§16.3), so a speed change cannot distort the arithmetic —
+	# Every tick field is absolute (§16.3), so a speed change cannot distort the arithmetic —
 	# there is no arithmetic to distort. Asserted rather than assumed.
 	TimeManager.current_speed = 3
-	_ok("a speed change moves no due date", _due_day_of("fixture.thesis_payoff") == 90,
-		"due on day %d" % _due_day_of("fixture.thesis_payoff"))
+	_ok("a speed change moves no due date", _due_day_of("fixture.thesis_payoff") == 13,
+		"due in week %d" % _due_day_of("fixture.thesis_payoff"))
 	TimeManager.current_speed = 1
 
-	# --- days 11..89: nothing lands early, and the unrelated card runs alongside ----
+	# --- weeks 3..12: nothing lands early, and the unrelated card runs alongside ----
 	var early: int = 0
 	var concurrent_landed_on: int = -1
-	for d in range(11, 90):
+	for d in range(3, 13):
 		GameState.day = d
 		for due in EvSchedule.take_due():
 			var due_id: String = String((due as Dictionary)["event_id"])
@@ -537,31 +537,31 @@ static func _check_thesis() -> void:
 				var v: EvGate.Verdict = EvGate.propose(due_id, EvGate.Origin.SCHEDULE)
 				if v.admitted:
 					EvQueue.admit(due_id, v.context, "paper")
-					EvPapers.place(due_id, v.context, 200)
+					EvPapers.place(due_id, v.context, 29)
 	_ok("nothing fires early", early == 0)
-	_ok("the unrelated card landed on its own day, mid-arc", concurrent_landed_on == 50,
-		"landed on day %d" % concurrent_landed_on)
+	_ok("the unrelated card landed in its own week, mid-arc", concurrent_landed_on == 7,
+		"landed in week %d" % concurrent_landed_on)
 	_ok("and it is sitting on the desk while the arc runs", EvPapers.has("fixture.concurrent"))
 
-	# --- day 90: the payoff -----------------------------------------------
-	GameState.day = 90
+	# --- week 13: the payoff ----------------------------------------------
+	GameState.day = 13
 	var due_now: Array = EvSchedule.take_due()
 	var found: bool = false
 	for due in due_now:
 		if String((due as Dictionary)["event_id"]) == "fixture.thesis_payoff":
 			found = true
-	_ok("day 90: the payoff comes due", found)
+	_ok("week 13: the payoff comes due", found)
 
 	var payoff: EvGate.Verdict = EvGate.propose("fixture.thesis_payoff", EvGate.Origin.SCHEDULE)
-	_ok("day 90: it passes the gate", payoff.admitted, "%s: %s" % [payoff.step, payoff.reason])
-	_ok("its condition read a choice made 80 days earlier",
+	_ok("week 13: it passes the gate", payoff.admitted, "%s: %s" % [payoff.step, payoff.reason])
+	_ok("its condition read a choice made 11 weeks earlier",
 		EvCondition.eval((EvCatalog.card("fixture.thesis_payoff") as Dictionary)["condition"]))
 
 	EvQueue.admit("fixture.thesis_payoff", payoff.context, "interrupt", "arc_fixture_thesis")
 	EvEngine.pump()
-	_ok("day 90: the payoff is on screen", EvQueue.active_id() == "fixture.thesis_payoff")
+	_ok("week 13: the payoff is on screen", EvQueue.active_id() == "fixture.thesis_payoff")
 	EvEngine.resolve("fixture.thesis_payoff", "acknowledge")
-	_ok("day 90: THE PAYOFF LANDED", EvFlags.has("fixture_payoff_landed"))
+	_ok("week 13: THE PAYOFF LANDED", EvFlags.has("fixture_payoff_landed"))
 	_ok("and the arc closed with its outcome",
 		EvArcs.state_of("arc_fixture_thesis") == EvArcs.STATE_ENDED
 		and EvArcs.outcome_of("arc_fixture_thesis") == "kept")
@@ -601,16 +601,16 @@ static func _check_invalidation() -> void:
 	_ok("the subject exists", CharacterRegistry.get_character("emp_probe_subject") != null)
 
 	# --- reassign: pause, do not kill -------------------------------------
-	GameState.day = 40
+	GameState.day = 6
 	EvArcs.start("arc_fixture_subject", {"type": "employee", "id": "emp_probe_subject",
 		"slot": "employee"})
-	EvSchedule.add("fixture.subject_open", 20, {}, "arc_fixture_subject")
+	EvSchedule.add("fixture.subject_open", 3, {}, "arc_fixture_subject")
 	_ok("the arc is running with a subject", EvArcs.is_active("arc_fixture_subject"))
 	_ok("and has a scheduled step", EvSchedule.has("fixture.subject_open"))
 
-	GameState.day = 60
+	GameState.day = 9
 	CharacterRegistry.remove("emp_probe_subject")
-	_ok("day 60: the subject is gone",
+	_ok("week 9: the subject is gone",
 		CharacterRegistry.get_character("emp_probe_subject") == null)
 
 	EvEngine.daily_tick()
@@ -623,7 +623,7 @@ static func _check_invalidation() -> void:
 	_ok("and the step is remembered as a RELATIVE delay",
 		(EvArcs.snapshot("arc_fixture_subject").get("frozen_schedule", []) as Array).size() == 1)
 
-	# --- resuming: relative days re-materialise, nothing dumps at once -----
+	# --- resuming: relative weeks re-materialise, nothing dumps at once ----
 	var replacement := Character.new()
 	replacement.id = "emp_probe_replacement"
 	replacement.character_name = "Replacement"
@@ -635,28 +635,28 @@ static func _check_invalidation() -> void:
 	replacement.role_stats = HRConstants.default_employee_skills()
 	CharacterRegistry.add(replacement)
 
-	GameState.day = 69
+	GameState.day = 10
 	EvArcs.reassign_subject("arc_fixture_subject",
 		{"type": "employee", "id": "emp_probe_replacement", "slot": "employee"})
 	_ok("a new subject resumes the arc", EvArcs.is_active("arc_fixture_subject"))
 	_ok("the frozen step came back", EvSchedule.has("fixture.subject_open"))
-	_ok("and it is NOT overdue after a 9-day pause",
-		_due_day_of("fixture.subject_open") == 69,
-		"due on day %d — a frozen arc must not dump every step at once on resume"
+	_ok("and it is NOT overdue after a one-week pause",
+		_due_day_of("fixture.subject_open") == 10,
+		"due in week %d — a frozen arc must not dump every step at once on resume"
 			% _due_day_of("fixture.subject_open"))
 
-	# --- the 14-day timeout falls to close --------------------------------
+	# --- the awaiting timeout falls to close -----------------------------
 	EvEngine.reset()
 	EvCatalog.reload()
-	GameState.day = 100
+	GameState.day = 15
 	EvArcs.start("arc_fixture_subject", {"type": "employee", "id": "emp_probe_replacement",
 		"slot": "employee"})
 	CharacterRegistry.remove("emp_probe_replacement")
 	EvEngine.daily_tick()
 	_ok("awaiting again", EvArcs.state_of("arc_fixture_subject") == EvArcs.STATE_AWAITING)
 	_ok("not yet timed out", not EvArcs.awaiting_timed_out("arc_fixture_subject"))
-	GameState.day = 100 + EvTuning.ARC_AWAITING_SUBJECT_TIMEOUT_DAYS
-	_ok("timed out on day %d" % GameState.day,
+	GameState.day = 15 + TimeModel.ticks(EvTuning.ARC_AWAITING_SUBJECT_TIMEOUT_WEEKS)
+	_ok("timed out in week %d" % GameState.day,
 		EvArcs.awaiting_timed_out("arc_fixture_subject"))
 	EvEngine.daily_tick()
 	_ok("and the timeout CLOSED it rather than leaving it hanging",
@@ -676,11 +676,11 @@ static func _check_invalidation() -> void:
 	# --- a dead arc leaves nothing behind on any surface -------------------
 	EvEngine.reset()
 	EvCatalog.reload()
-	GameState.day = 200
+	GameState.day = 29
 	EvArcs.start("arc_fixture_thesis")
-	EvSchedule.add("fixture.thesis_payoff", 5, {}, "arc_fixture_thesis")
+	EvSchedule.add("fixture.thesis_payoff", 1, {}, "arc_fixture_thesis")
 	EvQueue.admit("fixture.thesis_close", {}, "interrupt", "arc_fixture_thesis")
-	EvPapers.place("fixture.concurrent", {}, 30, "arc_fixture_thesis")
+	EvPapers.place("fixture.concurrent", {}, 4, "arc_fixture_thesis")
 	EvArcs.abort("arc_fixture_thesis", "probe")
 	_ok("aborting sweeps the schedule", not EvSchedule.has("fixture.thesis_payoff"))
 	_ok("and the queue", not EvQueue.has("fixture.thesis_close"))

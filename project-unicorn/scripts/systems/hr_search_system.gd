@@ -32,7 +32,6 @@ const KEY_ROLE := "role"
 ## §3 SEVİYE. Eski kayıtlardaki arama "band" taşıyabilir; current_level ikisini de tanır.
 const KEY_LEVEL := "level"
 const KEY_SEED := "seed"
-const KEY_STARTED_DAY := "started_day"
 const KEY_ARRIVAL_DAY := "arrival_day"
 const KEY_FILES := "files"
 
@@ -71,12 +70,11 @@ static func get_files() -> Array:
 	return stored as Array if stored is Array else []
 
 
-static func days_waiting() -> int:
-	# Counted from the day the player commissioned the search, in both `searching` and
-	# `files_ready`. 0 when idle.
-	if get_state() == HRConstants.SEARCH_IDLE:
+## Weeks until the files land; 0 unless Atlas is still looking.
+static func weeks_until_arrival() -> int:
+	if get_state() != HRConstants.SEARCH_SEARCHING:
 		return 0
-	return maxi(0, GameState.day - int(GameState.hr_search.get(KEY_STARTED_DAY, GameState.day)))
+	return maxi(0, int(GameState.hr_search.get(KEY_ARRIVAL_DAY, GameState.day)) - GameState.day)
 
 
 static func current_role() -> String:
@@ -119,8 +117,7 @@ static func start_search(role_id: String, level: int) -> bool:
 		KEY_ROLE: role_id,
 		KEY_LEVEL: level,
 		KEY_SEED: HRCandidateGenerator.seed_for(role_id, level),
-		KEY_STARTED_DAY: GameState.day,
-		KEY_ARRIVAL_DAY: GameState.day + HRConstants.SEARCH_ARRIVAL_DAYS,
+		KEY_ARRIVAL_DAY: GameState.day + TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS),
 		KEY_FILES: [],
 	}
 	return true
@@ -185,7 +182,8 @@ static func hire(candidate_index: int) -> Character:
 		# money moves: a rejected hire must not charge a commission.
 		push_error("[HRSearchSystem] CharacterRegistry.add rejected '%s' — no charge, no state change" % emp.id)
 		return null
-	# A hire starts the NEXT day at full performance (no ramp). add() stamps hire_day = today,
+	# hire_day counts from the next tick, so tenure, severance and the YENİ badge start with
+	# the first full week; the person works from this hour. add() stamps hire_day = today,
 	# so the correction must come after it.
 	emp.hire_day = GameState.day + 1
 	FinanceSystem.apply_one_time_cost(HRConstants.commission_for(salary), "hire")

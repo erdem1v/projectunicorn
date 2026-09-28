@@ -1,11 +1,12 @@
 {
-  "_design": "A Series A sheet whose ten business days have run out does not close on its own. The sheet stays in active_sheets, due (TermSheet.is_decision_due), and this card asks for the answer: sit down now, or decline and the fund is closed for good. Two options and no third - no 'later' row, and an interrupt, so it cannot be dismissed or deferred. Decline is the PLAYER'S answer, so decline_offer closes the fund without counting a rejection. HOURLY and critical so that two sheets closing on the same day arrive one after the other on that day: the decision_sheet selector binds one due fund at a time, the first answer frees it, and the next hourly sweep binds the other. cooldown_days 1 per entity: if a sitting somehow ends with the sheet still due, the card comes back the next day rather than never. No speaker - this is the plain fact of the offer, not Frank's voice (his lines for this surface are an open decision in docs/ACIK_ISLER/ACIK_KARARLAR.md).",
+  "_design": "A Series A sheet whose validity weeks have run out does not close on its own. The sheet stays in active_sheets, due (TermSheet.is_decision_due), and this card asks for the answer: sit down now, or decline and the fund is closed for good. Two options and no third - no 'later' row, and an interrupt, so it cannot be dismissed or deferred. Decline is the PLAYER'S answer, so decline_offer closes the fund without counting a rejection. HOURLY and critical so that two sheets closing in the same week arrive one after the other that week: the decision_sheet selector binds one due fund at a time, the first answer frees it, and the next hourly sweep binds the other. cooldown_weeks 1 per entity: if a sitting somehow ends with the sheet still due, the card comes back the next week rather than never. The condition also waits on funding.table_sitting_open, so the card asks only at an hour when the table can open; the pump checks it again on the way to the screen. Sit down still carries the same lock with its reason, for a card that reaches the screen after a sitting's hours have run. No speaker - this is the plain fact of the offer, not Frank's voice (his lines for this surface are an open decision in docs/ACIK_ISLER/ACIK_KARARLAR.md).",
   "id": "funding.sheet_decision",
   "version_scope": "demo",
   "category": "funding",
   "tick": "hourly",
   "allowed_hours": [0, 23],
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": [
     "critical",
     "build_safe"
@@ -18,18 +19,33 @@
     }
   },
   "latch": {
-    "cooldown_days": 1
+    "cooldown_weeks": 1
   },
   "latch_key": "entity",
   "condition": {
-    "seam": "funding.sheet_decision_due",
-    "op": "==",
-    "value": true
+    "all": [
+      {
+        "seam": "funding.sheet_decision_due",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "funding.table_sitting_open",
+        "op": "==",
+        "value": true
+      }
+    ]
   },
   "options": [
     {
       "id": "sit_down",
       "outcome_id": "sat",
+      "requires": {
+        "seam": "funding.table_sitting_open",
+        "op": "==",
+        "value": true,
+        "reason": "VC_BLOCK_LATE"
+      },
       "effects": [
         {
           "verb": "open_term_table",
@@ -55,6 +71,9 @@
       "options": {
         "sit_down": "VC_EV_DECISION_SIT",
         "decline": "VC_EV_DECISION_DECLINE"
+      },
+      "locked_reasons": {
+        "sit_down": "VC_BLOCK_LATE"
       }
     },
     "en": {
@@ -63,6 +82,9 @@
       "options": {
         "sit_down": "VC_EV_DECISION_SIT",
         "decline": "VC_EV_DECISION_DECLINE"
+      },
+      "locked_reasons": {
+        "sit_down": "VC_BLOCK_LATE"
       }
     }
   }

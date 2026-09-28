@@ -169,7 +169,7 @@ static func debug_fixture_full() -> Dictionary:
 		],
 		"beat_label": "Sorgu · 3/4",   # LOC-DATA shot fixture
 		"can_withdraw": true,   # LOC-DATA shot fixture
-		"stat_strip": {"left_text": "Kasa: $8.2K · Runway: 19 gün · Gün 141"},   # LOC-DATA shot fixture
+		"stat_strip": {"left_text": "Kasa: $8.2K · Brüt Runway: 0 ay · Hafta 21 · Mayıs 2026"},   # LOC-DATA shot fixture
 	}
 
 
@@ -194,5 +194,5 @@ static func debug_fixture_long() -> Dictionary:
 		],
 		"beat_label": "Kapanış · 4/4",   # LOC-DATA shot fixture
 		"can_withdraw": false,   # LOC-DATA shot fixture
-		"stat_strip": {"left_text": "Kasa: $1.24M · Runway: 402 gün · Gün 212 · MRR: $1.2M"},   # LOC-DATA shot fixture
+		"stat_strip": {"left_text": "Kasa: $1.24M · Brüt Runway: 13 ay · Hafta 31 · Temmuz 2026 · MRR: $1.2M"},   # LOC-DATA shot fixture
 	}

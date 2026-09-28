@@ -5,6 +5,7 @@
   "category": "customer",
   "tick": "request",
   "class": "info",
+  "expires_weeks": 1,
   "tags": [
     "sales",
     "report",
@@ -12,7 +13,7 @@
   ],
   "weight": 1.0,
   "latch": {
-    "cooldown_days": 6
+    "cooldown_weeks": 1
   },
   "guards": {
     "market": "b2b"
@@ -36,14 +37,14 @@
   "text": {
     "tr": {
       "title": "SALES_WEEKLY_TITLE",
-      "body": "Bu hafta kapananlar:\n\n{seam:sales.weekly_closes}\n\nDefterdeki hesap: {seam:sales.account_count}",
+      "body": "Geçen hafta kapananlar:\n\n{seam:sales.weekly_closes}\n\nDefterdeki hesap: {seam:sales.account_count}",
       "options": {
         "read_it": "SALES_WEEKLY_CLOSE"
       }
     },
     "en": {
       "title": "SALES_WEEKLY_TITLE",
-      "body": "Closed this week:\n\n{seam:sales.weekly_closes}\n\nAccounts on the books: {seam:sales.account_count}",
+      "body": "Closed last week:\n\n{seam:sales.weekly_closes}\n\nAccounts on the books: {seam:sales.account_count}",
       "options": {
         "read_it": "SALES_WEEKLY_CLOSE"
       }

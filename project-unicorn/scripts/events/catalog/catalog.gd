@@ -8,7 +8,7 @@ extends RefCounted
 #
 # The loader recurses, so EXCLUDED_DIRS is a rule, not a convenience: cards for mechanics that
 # do not exist yet carry empty conditions, an empty condition is TRUE (§5.3), and pooling such a
-# directory would fire them on day 1.
+# directory would fire them in week 1.
 
 const CARDS_DIR := "res://data/events/cards/"
 const ARCS_DIR := "res://data/events/arcs/"
@@ -107,10 +107,10 @@ static func _normalise_card(card: Dictionary) -> void:
 	card["guards"] = card.get("guards", {})
 	card["options"] = card.get("options", [])
 	card["weight"] = float(card.get("weight", 1.0))
-	card["min_gap_days"] = int(card.get("min_gap_days", 30))
+	card["min_gap_weeks"] = int(card.get("min_gap_weeks", EvTuning.MIN_GAP_WEEKS_DEFAULT))
 	card["latch_key"] = String(card.get("latch_key", EvLatches.KEY_RUN))
 	if not card.has("latch"):
-		card["latch"] = {EvLatches.COOLDOWN: EvLatches.DEFAULT_COOLDOWN_DAYS}
+		card["latch"] = {EvLatches.COOLDOWN: EvLatches.DEFAULT_COOLDOWN_WEEKS}
 	_coerce_conditions(card)
 
 

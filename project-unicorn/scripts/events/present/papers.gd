@@ -9,8 +9,8 @@ extends RefCounted
 # to the ticker with player-outcome priority. Lint enforces the trio (§17.7).
 #
 # The office's notice stack shows the first few papers and a "+N" badge past them. Which come
-# first is decided here: ordered() sorts by urgency, so a paper inside its last
-# EXPIRY_URGENT_DAYS leads the stack and cannot run its clock down behind the badge.
+# first is decided here: ordered() sorts by weeks left, so a paper in its last week leads the
+# stack and cannot run its clock down behind the badge.
 #
 # Papers are keyed by EvLatches.key_of. The key is also the desk's id for the paper, so a click
 # on its row opens the instance it shows.
@@ -19,14 +19,14 @@ extends RefCounted
 static var _papers: Dictionary = {}
 
 
-static func place(event_id: String, context: Dictionary, expires_days: int,
+static func place(event_id: String, context: Dictionary, expires_weeks: int,
 		arc_id: String = "") -> void:
 	_papers[EvLatches.key_of(event_id, context)] = {
 		"event_id": event_id,
 		"context": context.duplicate(true),
-		# §12.5: an ABSOLUTE day, never "days remaining" — a counter that misses a tick (save,
-		# speed change, load on a later day) is a paper that never expires.
-		"expires_on": GameState.day + maxi(1, expires_days),
+		# §12.5: an ABSOLUTE tick, never "weeks remaining" — a counter that misses a tick (save,
+		# speed change, load on a later week) is a paper that never expires.
+		"expires_on": GameState.day + TimeModel.ticks(maxi(1, expires_weeks)),
 		"arc_id": arc_id,
 		"opened_before": false,
 		"admitted_day": GameState.day,
@@ -52,18 +52,26 @@ static func mark_opened(key: String) -> void:
 
 # --- Time ------------------------------------------------------------------
 
-static func days_left(key: String) -> int:
+static func weeks_left(key: String) -> int:
 	if not _papers.has(key):
 		return -1
 	return int((_papers[key] as Dictionary)["expires_on"]) - GameState.day
 
 
-static func is_expiring_soon(key: String) -> bool:
-	var left: int = days_left(key)
-	return left >= 0 and left <= EvTuning.EXPIRY_URGENT_DAYS
+## In its last EXPIRY_URGENT_WEEKS, when it lived longer than that: the desk highlights it, the
+## queue ranks it first and the last warning fires. A paper whose whole life fits inside says
+## "this week" from the start and gets neither.
+static func is_expiring(key: String) -> bool:
+	if not _papers.has(key):
+		return false
+	var entry: Dictionary = _papers[key]
+	var urgent: int = TimeModel.ticks(EvTuning.EXPIRY_URGENT_WEEKS)
+	var left: int = weeks_left(key)
+	return left >= 1 and left <= urgent \
+		and int(entry["expires_on"]) - int(entry["admitted_day"]) > urgent
 
 
-## Papers whose day has come, as their entries. §12.5: a paper whose day passed while the game
+## Papers whose tick has come, as their entries. §12.5: a paper whose tick passed while the game
 ## was shut resolves on load — the clock ran whether the process did or not.
 static func take_expired() -> Array:
 	var expired: Array = []
@@ -74,13 +82,13 @@ static func take_expired() -> Array:
 	return expired
 
 
-## Keys of the papers one day from expiry, for §12.4's last-warning interrupt. §20 B11: the
-## warning comes first and the expiry the day after; if the warning cannot fire, the expiry
+## Keys of the expiring papers one tick from expiry, for §12.4's last-warning interrupt. §20 B11:
+## the warning comes first and the expiry the tick after; if the warning cannot fire, the expiry
 ## still does.
 static func needing_last_warning() -> Array:
 	var out: Array = []
 	for key in _papers:
-		if days_left(key) == 1:
+		if weeks_left(key) == 1 and is_expiring(key):
 			out.append(key)
 	out.sort()
 	return out
@@ -88,12 +96,12 @@ static func needing_last_warning() -> Array:
 
 # --- What the desk shows ---------------------------------------------------
 
-## Most urgent first, ties by admission day then id.
+## Most urgent first, ties by admission tick then id.
 static func ordered() -> Array:
 	var ids: Array = _papers.keys()
 	ids.sort_custom(func(a, b):
-		var la: int = days_left(a)
-		var lb: int = days_left(b)
+		var la: int = weeks_left(a)
+		var lb: int = weeks_left(b)
 		if la != lb:
 			return la < lb
 		var da: int = int((_papers[a] as Dictionary)["admitted_day"])

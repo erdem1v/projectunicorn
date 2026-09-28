@@ -154,15 +154,16 @@ static func _tick_b2c_audience() -> void:
 	# Sprint'in bedeli kapasite havuzudur (ProductSystem.capacity_speed_factor: build'le
 	# paralelse ikisi de yavaşlar).
 	# Accumulate as float so small per-hour deltas (especially slow erosion) survive
-	# instead of rounding to zero each hour.
-	var delta: float = _audience_delta_per_hour()
+	# instead of rounding to zero each hour. A tick is a week, so each of its 24 hourly steps
+	# carries seven calendar hours of the flow.
+	var delta: float = TimeModel.per_tick(_audience_delta_per_hour())
 	GameState.set_flag("b2c_audience", maxf(0.0, b2c_audience() + delta))
 
 
-# Shared audience-growth delta: _tick_b2c_audience and growth_band BOTH call this, so the
-# "büyüyor / eriyor" verdict can never drift from the actual audience motion. Quality is the
-# normalized, type-weighted, effective-stability composite (bugs already baked in via
-# effective_stability, so there is NO separate bug subtractor — one clean channel).
+# Shared audience-growth delta per calendar hour: _tick_b2c_audience and growth_band BOTH call
+# this, so the "büyüyor / eriyor" verdict can never drift from the actual audience motion.
+# Quality is the normalized, type-weighted, effective-stability composite (bugs already baked
+# in via effective_stability, so there is NO separate bug subtractor — one clean channel).
 static func _audience_delta_per_hour() -> float:
 	var quality_term: float = _rival_relative_quality(QualityModel.shipped_normalized())
 	var grow: float = (HOURLY_AUD_BASE \
@@ -336,13 +337,13 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	# longer. The model's defaults already read onboarding / no countdown / no risk streak.
 	c.scale = prospect.star
 	c.tolerance = B2BConstants.seed_tolerance(prospect.star, prospect.industry)
-	c.onboarding_until = GameState.day + B2BConstants.ONBOARDING_DAYS
+	c.onboarding_until = GameState.day + TimeModel.ticks(B2BConstants.ONBOARDING_WEEKS)
 	# Request-channel phase, assigned ONCE here and never moved. A stride walk over a counter
 	# coprime with the interval spreads the book by construction; an id.hash() would not —
 	# consecutive customer ids differ only in their trailing character, so their hashes land
 	# on consecutive phases.
 	c.cs_request_phase = (GameState.run_customers_signed * B2BConstants.CS_PHASE_STRIDE) \
-		% B2BConstants.CS_REQUEST_INTERVAL_DAYS
+		% TimeModel.ticks(B2BConstants.CS_REQUEST_INTERVAL_WEEKS)
 	# The feature this account wants (drives special requests + the retention promise).
 	c.pain_feature_id = prospect.pain_feature_id
 	if c.pain_feature_id == "":
@@ -392,7 +393,8 @@ static func signing_satisfaction_seed() -> int:
 
 static func _tick_satisfaction() -> void:
 	# B2C satisfaction rises on strong EXPERIENCE (the axis the record was seeded from) and
-	# falls when the open bug count is high (the direct churn driver). See the gate's note.
+	# falls when the open bug count is high (the direct churn driver), one point a day each.
+	# See the gate's note.
 	var delta: int = 0
 	if QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience") >= SATISFACTION_QUALITY_GATE:
 		delta += 1
@@ -402,7 +404,7 @@ static func _tick_satisfaction() -> void:
 		return
 	# B2B satisfaction is owned by B2BSalesSystem (two-layer model).
 	for c in CustomerRegistry.get_by_market("b2c"):
-		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
+		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + int(TimeModel.per_tick(delta)))
 
 
 # --- Value algorithm (product worth → optimal price + lower bound) ---

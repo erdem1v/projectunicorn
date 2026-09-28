@@ -22,12 +22,12 @@
     }
   },
   "latch": {
-    "cooldown_days": 14
+    "cooldown_weeks": 2
   },
   "latch_key": "entity",
-  "expires_days": 7,
+  "expires_weeks": 2,
   "expire_note": "expire_note",
-  "_port_note": "tick: request — no sweep, no pool draw. CustomerRepSystem names this card when a request ages past CS_ESCALATE_AFTER_DAYS and the weekly ceiling has room; the ceiling is a desk policy, not a tempo rule, so it stays in that system. No `musteri.is_assigned` leaf: the rep slot is the desk lead (select support_lead), not the account's steward, so a founder-managed account still gets its request card. The one request card with a discount row: at renewal a price cut is the honest lever.",
+  "_port_note": "tick: request — no sweep, no pool draw. CustomerRepSystem names this card when a request ages past CS_ESCALATE_AFTER_WEEKS and the weekly ceiling has room; the ceiling is a desk policy, not a tempo rule, so it stays in that system. No `musteri.is_assigned` leaf: the rep slot is the desk lead (select support_lead), not the account's steward, so a founder-managed account still gets its request card. The one request card with a discount row: at renewal a price cut is the honest lever.",
   "id": "customer.request_renewal",
   "condition": {
     "entity_seam": "musteri.request_kind",

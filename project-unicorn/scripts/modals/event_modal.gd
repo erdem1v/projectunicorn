@@ -159,8 +159,8 @@ func _fill_header() -> void:
 	var tag: Dictionary = _source_tag(_event)
 	_header_row.add_child(UiFactory.make_badge(String(tag.text), StringName(tag.kind)))
 	var day_key: String = "EVENT_READOUT_DAY" if _is_readout() else "EVENT_DECISION_DAY"
-	var meta := UiFactory.make_label(
-		tr(day_key).format({"day": GameState.day}), &"SectionLabel")
+	var meta := UiFactory.make_label(UiTokens.tr_upper(
+		tr(day_key).format({"date": Fmt.date_line(GameState.get_date_dict())})), &"SectionLabel")
 	meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_header_row.add_child(meta)
 	var spacer := Control.new()
@@ -372,12 +372,12 @@ func _describe_modifier(m) -> Dictionary:
 		"seats": return _chip("EFFECT_SEATS", _fmt_signed(d), d)
 		"morale_all": return _chip("EFFECT_TEAM", _fmt_signed(d), d)
 		"bug_delta": return _chip("EFFECT_BUGS", _fmt_signed(d), -d)
-		"delay_days":
-			# The executor refuses a day cost with no build running; the chip does not claim one.
+		"delay_weeks":
+			# The executor refuses a week cost with no build running; the chip does not claim one.
 			if ProductSystem.get_active_build() == null:
 				return {}
-			var days: int = int(m.get("days", 0))
-			return _chip("EFFECT_DAYS", _fmt_signed(days), -days)
+			var weeks: int = int(m.get("weeks", 0))
+			return _chip(Fmt.count_key("EFFECT_WEEKS", absi(weeks)), _fmt_signed(weeks), -weeks)
 		"change_morale":
 			var who: String = _first_name(_target(m, EvScope.TYPE_EMPLOYEE), tr("EFFECT_MORALE"))
 			return {"text": tr("EFFECT_AXIS").format({"axis": who, "v": _fmt_signed(d)}), "kind": _kind(d)}

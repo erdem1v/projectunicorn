@@ -18,13 +18,13 @@ extends RefCounted
 #   · which gate step refused it (G1-G8)
 #   · the failing condition leaves, WITH the live seam values behind them
 #   · latch state: last fire, cooldown remaining
-#   · what it is waiting on: a signal, an arc, a day
+#   · what it is waiting on: a signal, an arc, a week
 #   · and — the one nobody thinks to ask — whether the signal it waits on has EVER been emitted
 
 static func report(event_id: String) -> String:
 	var out: PackedStringArray = []
 	out.append("=== WHY DIDN'T '%s' FIRE? ===" % event_id)
-	out.append("day %d, hour %02d, phase %d" % [GameState.day, GameState.current_hour, GameState.phase])
+	out.append("week %d, hour %02d, phase %d" % [GameState.day, GameState.current_hour, GameState.phase])
 	out.append("")
 
 	if not EvCatalog.has_card(event_id):
@@ -54,12 +54,12 @@ static func report(event_id: String) -> String:
 		return "\n".join(out)
 	var papers: Array = EvPapers.keys_of(event_id)
 	if not papers.is_empty():
-		out.append("IT IS ON THE DESK as a paper, %d day(s) left." % EvPapers.days_left(String(papers[0])))
+		out.append("IT IS ON THE DESK as a paper, %d week(s) left." % EvPapers.weeks_left(String(papers[0])))
 		return "\n".join(out)
 	if EvSchedule.has(event_id):
 		for e in EvSchedule.pending():
 			if String((e as Dictionary)["event_id"]) == event_id:
-				out.append("IT IS SCHEDULED for day %d — %d day(s) away."
+				out.append("IT IS SCHEDULED for week %d — %d week(s) away."
 					% [int((e as Dictionary)["fire_on_day"]),
 						int((e as Dictionary)["fire_on_day"]) - GameState.day])
 				return "\n".join(out)
@@ -67,7 +67,7 @@ static func report(event_id: String) -> String:
 	# --- history and latch --------------------------------------------------
 	var fires: int = EvHistory.fire_count(event_id)
 	out.append("HISTORY   fired %d time(s)%s"
-		% [fires, "" if fires == 0 else ", last on day %d as '%s'"
+		% [fires, "" if fires == 0 else ", last in week %d as '%s'"
 			% [EvHistory.last_day(event_id), EvHistory.last_resolution(event_id)]])
 	if fires > 0 and EvHistory.last_option(event_id) != "":
 		out.append("          the player chose '%s'" % EvHistory.last_option(event_id))
@@ -79,7 +79,7 @@ static func report(event_id: String) -> String:
 		out.append("          BLOCKED: %s" % latch_block)
 		var left: int = EvLatches.cooldown_left(card["latch"], latch_key)
 		if left > 0:
-			out.append("          available again on day %d" % (GameState.day + left))
+			out.append("          available again in week %d" % (GameState.day + left))
 	out.append("")
 
 	# --- what is it waiting on ---------------------------------------------
@@ -110,7 +110,7 @@ static func report(event_id: String) -> String:
 	if verdict.admitted:
 		out.append("GATE      IT WOULD BE ADMITTED RIGHT NOW, as class '%s'." % verdict.card_class)
 		out.append("          So the reason you have not seen it is timing, not eligibility:")
-		out.append("          nothing has proposed it from a %s origin today."
+		out.append("          nothing has proposed it from a %s origin this week."
 			% EvGate.origin_name(origin))
 	else:
 		out.append("GATE      REFUSED AT %s" % verdict.step)
@@ -160,7 +160,7 @@ static func _detail_line(detail: Dictionary) -> String:
 		return "flag %s is %s" % [detail["flag"], "set" if bool(detail.get("set", false)) else "unset"]
 	if detail.has("stamp"):
 		return "stamp %s: %s" % [detail["stamp"],
-			("%d day(s) ago" % int(detail.get("days", 0))) if bool(detail.get("stamped", false))
+			("%d week(s) ago" % int(detail.get("weeks", 0))) if bool(detail.get("stamped", false))
 				else "NEVER STAMPED"]
 	if detail.has("form"):
 		var bits: PackedStringArray = []

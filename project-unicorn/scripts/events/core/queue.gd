@@ -71,7 +71,7 @@ static func rank(event_id: String, key: String, card_class: String) -> int:
 	var tags: Array = EvCatalog.card(event_id).get("tags", [])
 	if tags.has("terminal_warning"):
 		return 0
-	if EvPapers.is_expiring_soon(key):
+	if EvPapers.is_expiring(key):
 		return 1
 	if tags.has("critical"):
 		return 2

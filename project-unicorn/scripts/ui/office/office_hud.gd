@@ -24,6 +24,7 @@ var _toast_tween: Tween
 
 
 func _ready() -> void:
+	add_to_group(&"office_overlays")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -67,7 +68,8 @@ func _ready() -> void:
 	_refresh()
 
 
-## The map's own panel takes the button's corner while it is open; the toast stays.
+## The map's own panel takes the button's corner while it is open, and the founder's trip
+## shows no controls (OfficeView says which); the toast stays.
 func set_map_open(open: bool) -> void:
 	_row.visible = not open
 
@@ -78,8 +80,8 @@ func _refresh() -> void:
 		_badge.free()
 		_badge = null
 	if OfficeSystem.is_moving():
-		var days := OfficeSystem.arrival_day() - GameState.day
-		_badge = UiFactory.make_pill(tr("OFFICE_MOVING_BADGE_ONE") if days == 1 else tr("OFFICE_MOVING_BADGE").format({"days": days}),
+		var weeks := OfficeSystem.arrival_day() - GameState.day
+		_badge = UiFactory.make_pill(tr(Fmt.count_key("OFFICE_MOVING_BADGE", weeks)).format({"weeks": weeks}),
 			UiTokens.BADGE_BG, UiTokens.BADGE_FG, false)
 		_row.add_child(_badge)
 	_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_XL)

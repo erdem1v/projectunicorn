@@ -10,9 +10,8 @@ extends RefCounted
 
 # --- §13.3 Layer 1: the same card ------------------------------------------
 
-## Days before a fired card may return to the deck. A card may override; the linter warns
-## under 7 (§17.9) because a card that can return within a week is usually an accident.
-const MIN_GAP_DAYS_DEFAULT := 30
+## Weeks before a fired card may return to the deck. A card may override it.
+const MIN_GAP_WEEKS_DEFAULT := 4
 
 # --- §13.3 Layer 2: the same subject ---------------------------------------
 #
@@ -20,15 +19,15 @@ const MIN_GAP_DAYS_DEFAULT := 30
 # reason arcs work: an arc about one employee fires card after card about that employee, and
 # throttling it would be throttling the story.
 
-const SUBJECT_GAP_EMPLOYEE_DAYS := 14
-const SUBJECT_GAP_CUSTOMER_DAYS := 30
+const SUBJECT_GAP_EMPLOYEE_WEEKS := 2
+const SUBJECT_GAP_CUSTOMER_WEEKS := 4
 
-# --- §13.3 Layer 3: category quota over a rolling 7 days --------------------
+# --- §13.3 Layer 3: category quota per week ----------------------------------
 #
 # The side benefit is the real one: a full quota forces the engine to look at another category,
 # so the player's week is never one colour.
 
-const CATEGORY_QUOTA_7D := {
+const CATEGORY_QUOTA_WEEK := {
 	"team": 2,
 	"customer": 2,
 	"product": 2,
@@ -44,9 +43,9 @@ const CATEGORY_QUOTA_7D := {
 ## silently get "unlimited".
 const CATEGORY_QUOTA_DEFAULT := 1
 
-# --- §13.3 Layer 4: the daily ceiling --------------------------------------
+# --- §13.3 Layer 4: the per-tick ceiling -----------------------------------
 
-## Interrupts per day. The third one becomes paper — it is not dropped (I4).
+## Interrupts per game day (tick). The third one becomes paper — it is not dropped (I4).
 const MAX_INTERRUPTS_PER_DAY := 2
 
 # --- §13.4 Phase multipliers -----------------------------------------------
@@ -62,8 +61,8 @@ const PHASE_MULTIPLIER := {
 
 # --- §13.6 The floor: dead time --------------------------------------------
 
-## Consecutive days with no interrupt and no paper before the quiet pool is drawn from.
-const FLOOR_QUIET_DAYS := 5
+## Consecutive weeks with no interrupt and no paper before the quiet pool is drawn from.
+const FLOOR_QUIET_WEEKS := 1
 
 ## Three consecutive floor triggers that find nothing is a CONTENT HOLE, and the harness says
 ## so rather than letting randomness cover it (§13.6's last clause).
@@ -71,22 +70,22 @@ const FLOOR_EMPTY_REPORT_AFTER := 3
 
 # --- §12 Expiry ------------------------------------------------------------
 #
-# §12.2's table. The default is a week; money gets a month because a term sheet the player
-# cannot think about for a month is not a decision; low-stakes gets a fortnight.
+# §12.2's table, in weeks. Fallbacks only: every interrupt and paper card carries its own
+# expires_weeks (lint), chosen for the situation it describes.
 
-const EXPIRY_DEFAULT_DAYS := 7
-const EXPIRY_MONEY_DAYS := 30
-const EXPIRY_LOW_STAKES_DAYS := 14
+const EXPIRY_DEFAULT_WEEKS := 1
+const EXPIRY_MONEY_WEEKS := 4
+const EXPIRY_LOW_STAKES_WEEKS := 2
 
-## Days before expiry at which a paper starts showing urgency, and at which it is promoted
-## into a visible desk slot if it has been sitting behind the overflow chip. A consequence
-## that lands off-screen is not a consequence.
-const EXPIRY_URGENT_DAYS := 3
+## The last weeks of a paper that lived longer than this: the desk highlights them, the queue
+## ranks the paper as expiring and the last warning fires. A paper whose whole life fits inside
+## says "this week" from the start and gets no separate warning.
+const EXPIRY_URGENT_WEEKS := 1
 
 # --- §10.5 Arcs ------------------------------------------------------------
 
-## An arc waiting for a new subject does not wait forever; after this it closes.
-const ARC_AWAITING_SUBJECT_TIMEOUT_DAYS := 14
+## An arc waiting for a new subject does not wait forever; after this many weeks it closes.
+const ARC_AWAITING_SUBJECT_TIMEOUT_WEEKS := 2
 
 ## Nesting cap (§10.8). Arcs ship flat, so this is the cap the linter enforces, not a depth the
 ## runtime walks.

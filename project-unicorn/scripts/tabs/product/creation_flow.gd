@@ -113,7 +113,7 @@ func setup(args: Dictionary) -> void:
 
 
 func repaint() -> void:
-	# Saatlik/günlük sinyaller. Alt bandın rakamları oynar (kasa, ~gün) VE iki alt
+	# Saatlik/günlük sinyaller. Alt bandın rakamları oynar (kasa, ~hafta) VE iki alt
 	# görünüm kendi tazelemesini yapar: hat satırlarının kapı durumu ile ekip
 	# satırlarının müsaitliği İK'da değişir (eğitim biter, izin döner).
 	if _lines_view != null:
@@ -661,14 +661,14 @@ func _update_dynamic() -> void:
 	# §3'ün maliyet dürüstlüğü: "Toplam efor · süre · bittiğinde kasada $X kalır".
 	var efor: int = ProductSystem.effort_ceiling(_selected)
 	var cost: int = ProductLines.sum_license_cost(_selected)
-	var days: int = ProductSystem.estimate_line_build_days(_selected, _lead_id())
+	var weeks: int = ProductSystem.estimate_line_build_weeks(_selected, _lead_id())
 	if cost > 0:
-		_totals_label.text = tr("PROD_TOTALS_COST").format(
-			{"efor": efor, "amount": Fmt.money_exact(cost), "days": days})
+		_totals_label.text = tr(Fmt.count_key("PROD_TOTALS_COST", weeks)).format(
+			{"efor": efor, "amount": Fmt.money_exact(cost), "weeks": weeks})
 	else:
-		_totals_label.text = tr("PROD_TOTALS").format({"efor": efor, "days": days})
+		_totals_label.text = tr(Fmt.count_key("PROD_TOTALS", weeks)).format({"efor": efor, "weeks": weeks})
 	_cash_label.text = tr("PROD_CASH_AFTER").format(
-		{"amount": Fmt.money_exact(ProductUiShared.cash_after_build(cost, days))})
+		{"amount": Fmt.money_exact(ProductUiShared.cash_after_build(cost, weeks))})
 	# Onay YALNIZ geçerli bir planla açılır; doğrulayıcı TEK (§18). Ret kimliği makine
 	# kimliğidir (CSV metni yok), o yüzden ekrana yazılmaz.
 	_commit_btn.disabled = ProductSystem.validate_line_plan(_type_id, _selected) != ""
@@ -681,8 +681,8 @@ func _on_cancel_pressed() -> void:
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if b == null:
 		return
-	var burned_days: int = maxi(0, GameState.day - b.start_day)
-	var burned_cash: int = burned_days * GameState.daily_burn   # working yaklaşım
+	var burned_weeks: int = maxi(0, GameState.day - b.start_day)
+	var burned_cash: int = int(burned_weeks * TimeModel.per_tick(GameState.daily_burn))   # working yaklaşım
 	# Geri gelen şey PLAN'dır: iptal hat durumlarına dokunmadı (plan hiç yazılmamıştı),
 	# o yüzden prefill'in geri verdiği kademe seti hâlâ birebir geçerli.
 	var prefill := {
@@ -692,9 +692,9 @@ func _on_cancel_pressed() -> void:
 	}
 	EventBus.confirm_requested.emit({
 		"title": tr("PROD_CANCEL_BUILD_Q"),
-		"body": tr("PROD_CANCEL_BUILD_BODY") if burned_days < ProductSystem.CANCEL_FREE_DAYS
-			else tr("PROD_CANCEL_BUILD_COST").format(
-				{"days": burned_days, "amount": Fmt.money_exact(burned_cash)}),
+		"body": tr("PROD_CANCEL_BUILD_BODY") if burned_weeks < TimeModel.ticks(ProductSystem.CANCEL_FREE_WEEKS)
+			else tr(Fmt.count_key("PROD_CANCEL_BUILD_COST", burned_weeks)).format(
+				{"weeks": burned_weeks, "amount": Fmt.money_exact(burned_cash)}),
 		"confirm_text": tr("HR_SEARCH_CANCEL_OK"),
 		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_cancel.bind(prefill),

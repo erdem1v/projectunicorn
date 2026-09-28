@@ -360,13 +360,14 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	return card
 
 
-## RUNWAY şeridi: "6 ay → 1 ay", sonraki değer kırmızı. Çift okuma ve kırmızı kararı tek
-## seam'den (UiTokens.net_runway_pair): tam aya yuvarlanan iki değer aynı okunurken şerit
-## kırmızı yanmasın diye karar epsilon'lu.
+## RUNWAY şeridi: "6 ay → 1 ay", sonraki değer kırmızı. Çift okuma tek seam'den
+## (UiTokens.net_runway_pair): iki taraf aynı okunuyorsa şerit kırmızı yanmaz; kırmızı yalnız
+## işe alım runway'i kısaltıyorsa.
 func _runway_strip(pv: Dictionary) -> Control:
-	var pair: Dictionary = UiTokens.net_runway_pair(
-		float(pv.get("runway_before", 0.0)), float(pv.get("runway_after", 0.0)))
-	var worse: bool = bool(pair["changed"])
+	var before: float = float(pv.get("runway_before", 0.0))
+	var after: float = float(pv.get("runway_after", 0.0))
+	var pair: Dictionary = UiTokens.net_runway_pair(before, after)
+	var worse: bool = bool(pair["changed"]) and after < before
 
 	var strip := PanelContainer.new()
 	var sb := StyleBoxFlat.new()

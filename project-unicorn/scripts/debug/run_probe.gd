@@ -2,7 +2,7 @@ class_name RunProbe
 extends RefCounted
 
 # Headless RUN LOG harness — event fire log, churn-chain autopsy and the played run.
-# Debug builds only; main.gd runs it for --run-log=<preset>:<days>:<mode>.
+# Debug builds only; main.gd runs it for --run-log=<preset>:<weeks>:<mode>.
 #
 # The probe is "the player". It mounts no shell and no modals: it drives the real tick
 # dispatch and answers every decision through the seam the modal calls (EventGate.resolve),
@@ -14,14 +14,17 @@ extends RefCounted
 # does over a run.
 #
 # Drive modes:
-#   sim   — drives TimeManager's dispatch directly (hour 1..23 → hour 0 → advance_day →
-#           daily), no wall clock. Deterministic, instant, exact slot attribution.
-#   1|2|3 — the REAL clock at that speed index (TimeManager._drain_boundaries, frame pacing
-#           and all). The only mode that can catch a real-time-only defect.
+#   sim     — the game's clock without the wall clock: every visible hour is its own one-hour
+#             TimeManager.advance_hours batch, answered before the next, and the night is one
+#             skip_night batch (the rollover and the daily tick inside it). Deterministic, instant.
+#   1|2|3|4 — the REAL clock at that speed index (TimeManager._advance_real, frame pacing and
+#             all). The only mode that can catch a real-time-only defect.
+# In both the founder sits the sales meetings when the week opens (the first 08:00, then every
+# night_skipped) and takes the desk decisions at every visible hour, as a player at the keyboard.
 #
 # Output contract — one line per record, all prefixed PROBE so a grep separates them
 # from the engine's own log lines:
-#   PROBE BEGIN preset=<p> days=<n> mode=<m> seed=<s>
+#   PROBE BEGIN preset=<p> weeks=<n> mode=<m> seed=<s>
 #   PROBE FIRE  day=<d> hour=<h> id=<id> src=<src>
 #   PROBE PICK  day=<d> id=<id> choice=<i> label=<label>
 #   PROBE STATE day=<d> cash=<n> mrr=<n> brand=<n> burn=<n> runway=<f> cust=<n> emp=<n> promises=<n>
@@ -32,7 +35,7 @@ extends RefCounted
 #   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
 #   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn categories> ...
 #                                           (full_run*: once, the day the Series A door opens)
-#   PROBE MONTH_BURN day=<d> n=<n> salaries=<n> ... one_time=<n>   (full_run*: beside each PROBE MONTH)
+#   PROBE MONTH_BURN day=<d> n=<n> ticks=<n> salaries=<n> ... one_time=<n>   (full_run*: beside each PROBE MONTH)
 #   PROBE VC_*  (full_run_vc_naive / full_run_vc_cautious only): VC_CONFIG, VC_BOOK, VC_MEET,
 #               VC_TABLE_OPEN, VC_PUSH, VC_TABLE_END, VC_REPLAY, VC_REPLAY_SUM
 
@@ -57,7 +60,8 @@ const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
 
 static var _fires: Dictionary = {}      # id -> fire count
 static var _picks: Dictionary = {}      # id -> resolve count
-static var _stop_day: int = 0
+static var _stop_day: int = 0              # the tick (week) the run stops on
+static var _stopped: bool = false
 static var _preset: String = ""
 static var _mode: String = ""
 static var _wired: bool = false
@@ -65,21 +69,21 @@ static var _build_promises: bool = false   # presets ending "_keep": the founder
 static var _full_run: bool = false         # "full_run": day 1, nothing seeded, the founder plays it
 static var _weak_v1: bool = false          # "full_run_weak": the original weak feature set + immediate launch
 static var _beta_wait: bool = false        # full_run only: hold the ship in Beta until the backlog is small
-static var _beta_since_day: int = -1       # first day the build was seen parked in Beta (bugfix phase)
+static var _beta_since_day: int = -1       # first tick the build was seen parked in Beta (bugfix phase)
 static var _hire_started: bool = false
 static var _last_appetite: String = ""     # PROBE SIGNAL on change
 static var _discount_uses: Dictionary = {}  # customer id -> discounts taken
 static var _policy: String = "sensible"     # full_run answer policy: sensible | naive | discount
 static var _last_ship_day: int = 0          # the played run ships a version at a steady cadence
 static var _run_seed: int = 424242
-static var _fix_run_day: int = -1           # day the running fix pass started
+static var _fix_on_at: float = 0.0         # clock day (TimeModel.days) the running fix pass started
+static var _fix_off_at: float = -INF        # clock day the last fix pass ended
 static var _fixer_id: String = ""           # the developer lent to the support desk for it
-static var _fires_by_day: Dictionary = {}   # day -> card fires that day, for PROBE WEEK
+static var _fires_by_day: Dictionary = {}   # tick -> card fires that week, for PROBE WEEK
 static var _gate_day: int = -1              # the day phase_gate_reached(3) fired (PROBE GATE)
 static var _gate_logged: bool = false
 static var _mb_acc: Dictionary = {}         # burn id -> realised sum over the open fiscal month
-static var _mb_days: int = 0                # dispatch days folded into _mb_acc
-static var _mb_folded_day: int = -1         # a close day whose burn month_ended already folded in
+static var _mb_ticks: int = 0               # dispatched ticks folded into _mb_acc
 static var _vc_policy: String = ""          # "" | "naive" | "cautious" (full_run_vc_* presets)
 static var _replay_k: int = -1              # naive only: table replays per fund; -1 = not given
 static var _vc_done: bool = false           # the one table this run gets has been played
@@ -93,10 +97,10 @@ const TABLE_PUSH_CAP := 64                  # runaway backstop for a push loop, 
 # ============================================================================
 
 static func run(spec: String, payload: Dictionary) -> void:
-	# spec = "<preset>:<days>:<mode>", e.g. "b2b_solo:90:sim" or "b2c:60:3".
+	# spec = "<preset>:<weeks>:<mode>", e.g. "b2b_solo:13:sim" or "b2c:9:3".
 	var parts: PackedStringArray = spec.split(":", false)
 	if parts.size() < 2:
-		print("PROBE ERROR bad spec '%s' (want <preset>:<days>[:<mode>])" % spec)
+		print("PROBE ERROR bad spec '%s' (want <preset>:<weeks>[:<mode>])" % spec)
 		return
 	_preset = String(parts[0])
 	_stop_day = int(parts[1])
@@ -120,9 +124,9 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_build_promises = false
 	_gate_day = -1
 	_gate_logged = false
+	_stopped = false
 	_mb_acc = {}
-	_mb_days = 0
-	_mb_folded_day = -1
+	_mb_ticks = 0
 	_vc_policy = ""
 	_vc_done = false
 	_vc_booked = ""
@@ -130,6 +134,8 @@ static func run(spec: String, payload: Dictionary) -> void:
 	# The presets measure the demo. A --build=ea in Main Run Args would otherwise turn the
 	# bootstrap win into a non-terminal milestone and a real-clock run would sit on its paper.
 	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
+	# The summary frequency is the player's setting; the probe logs the monthly cadence.
+	SummarySystem.frequency_override = "monthly"
 	GameState.initialize_run(payload)
 	# Pin the seed so two probe runs of the same preset are comparable line for line, as
 	# main.gd's _seed_run_reproducible does for the shots. initialize_run seeds from
@@ -144,16 +150,16 @@ static func run(spec: String, payload: Dictionary) -> void:
 	else:
 		_replay_k = 0
 	if _vc_policy != "" and _mode != "sim":
-		# The real clock plays the founder BEFORE the day's dispatch, so the meeting card and
-		# the table would land a day apart from sim. The policies are defined on sim only.
+		# The policies are defined and measured on sim only.
 		print("PROBE ERROR %s is sim-only" % _preset)
 		Engine.get_main_loop().quit()
 		return
 
-	print("PROBE BEGIN preset=%s days=%d mode=%s seed=%d" % [_preset, _stop_day, _mode, GameState.run_seed])
+	print("PROBE BEGIN preset=%s weeks=%d mode=%s seed=%d" % [_preset, _stop_day, _mode, GameState.run_seed])
 	if _vc_policy != "":
 		print("PROBE VC_CONFIG policy=%s replay=%d" % [_vc_policy, _replay_k])
 	_log_state()
+	_play_the_week()                # the run opens at the first week's 08:00
 
 	if _mode == "sim":
 		_run_sim()
@@ -180,10 +186,11 @@ static func _wire_log() -> void:
 	EventBus.month_ended.connect(_on_month_ended)
 	EventBus.phase_gate_reached.connect(_on_gate_reached)
 	EventBus.day_tick_completed.connect(_on_day_tick_completed)
+	EventBus.night_skipped.connect(_on_week_start)
 
 
 static func _on_month_ended(_data: Dictionary) -> void:
-	# The calendar-month ledger: the entry MonthSummarySystem just pushed.
+	# The calendar-month ledger: the entry SummarySystem just pushed.
 	if GameState.month_history.is_empty():
 		return
 	var e: Dictionary = GameState.month_history[GameState.month_history.size() - 1]
@@ -195,7 +202,7 @@ static func _on_month_ended(_data: Dictionary) -> void:
 			growth = "%.1f" % ((float(int(e.get("mrr_close", 0))) / float(prev) - 1.0) * 100.0)
 	print("PROBE MONTH day=%d n=%d mrr_close=%d income=%d expense=%d net=%d red=%d growth_pct=%s streak=%d profit_streak=%d" % [
 		GameState.day, n, int(e.get("mrr_close", 0)), int(e.get("income", 0)), int(e.get("expense", 0)),
-		int(e.get("net", 0)), int(e.get("red_days", 0)), growth,
+		int(e.get("net", 0)), int(e.get("red_weeks", 0)), growth,
 		GameState.get_mrr_growth_streak(PhaseGateSystem.GROWTH_MIN_PCT), GameState.get_profitable_month_streak()])
 	if _full_run:
 		_log_month_burn(e, n)
@@ -228,42 +235,39 @@ static func _on_gate_reached(next_phase: int) -> void:
 		_gate_day = GameState.day
 
 
-static func _on_day_tick_completed(day: int) -> void:
-	if not _full_run:
-		return
-	if _mb_folded_day != day:      # a month-close day was already folded in inside month_ended
-		_mb_add_today()
+static func _on_day_tick_completed(_day: int) -> void:
+	if _full_run:
+		_mb_add_tick()
 
 
-## Today's burn, by category. The breakdown is written in the finance slot and nothing but
-## the next day's first slot rewrites it, so after the dispatch it is exactly what accrued.
-static func _mb_add_today() -> void:
+## This tick's burn, by category. The breakdown holds daily rates written in the finance slot,
+## which applies them for the tick's DAYS_PER_TICK days. The month closes in slot 0, before the
+## finance slot, so a tick's burn always belongs to the month it is folded into here.
+static func _mb_add_tick() -> void:
 	var bd: Dictionary = FinanceSystem.get_burn_breakdown()
 	for raw in FinanceSystem.BURN_IDS:
 		var k: String = String(raw)
-		_mb_acc[k] = int(_mb_acc.get(k, 0)) + int(bd.get(k, 0))
-	_mb_days += 1
+		_mb_acc[k] = int(_mb_acc.get(k, 0)) + TimeModel.DAYS_PER_TICK * int(bd.get(k, 0))
+	_mb_ticks += 1
 
 
 ## PROBE MONTH_BURN — the closed month's expense split into the burn categories. one_time is
 ## what the categories do not explain: the one-off charges (hire commission, severance,
 ## training, build commits) that accrue straight into the month's expense.
 static func _log_month_burn(e: Dictionary, n: int) -> void:
-	_mb_add_today()                 # the 1st's own burn accrued BEFORE this close, so it is in it
-	_mb_folded_day = GameState.day
 	var cat: int = 0
 	for raw in FinanceSystem.BURN_IDS:
 		cat += int(_mb_acc.get(String(raw), 0))
 	var s0: int = int(e.get("start_day", 0))
 	var e0: int = int(e.get("end_day", 0))
 	var exp: int = int(e.get("expense", 0))
-	print("PROBE MONTH_BURN day=%d n=%d start=%d end=%d days=%d days_expected=%d salaries=%d overtime=%d founder=%d servers=%d marketing=%d office=%d cat_sum=%d expense=%d one_time=%d income=%d" % [
-		GameState.day, n, s0, e0, _mb_days, e0 - s0,
+	print("PROBE MONTH_BURN day=%d n=%d start=%d end=%d ticks=%d ticks_expected=%d salaries=%d overtime=%d founder=%d servers=%d marketing=%d office=%d cat_sum=%d expense=%d one_time=%d income=%d" % [
+		GameState.day, n, s0, e0, _mb_ticks, e0 - s0,
 		int(_mb_acc.get("salaries", 0)), int(_mb_acc.get("overtime", 0)), int(_mb_acc.get("founder", 0)),
 		int(_mb_acc.get("servers", 0)), int(_mb_acc.get("marketing", 0)), int(_mb_acc.get("office", 0)),
 		cat, exp, exp - cat, int(e.get("income", 0))])
 	_mb_acc = {}
-	_mb_days = 0
+	_mb_ticks = 0
 
 
 ## PROBE GATE — the company on the day the Series A door opens: who is on the payroll, what
@@ -294,7 +298,7 @@ static func _log_gate() -> void:
 	var bd_sum: int = 0
 	for raw in FinanceSystem.BURN_IDS:
 		bd_sum += int(bd.get(String(raw), 0))
-	var runrate: int = GameState.daily_burn * 30
+	var runrate: int = GameState.daily_burn * TimeModel.DAYS_PER_MONTH
 	var rr_margin: String = "n/a"
 	if GameState.mrr > 0:
 		rr_margin = str(int((GameState.mrr - runrate) * 100 / GameState.mrr))
@@ -533,25 +537,42 @@ static func _cash_delta_of(choice: EventChoice) -> int:
 # ============================================================================
 
 static func _run_sim() -> void:
-	# Mirrors EndgameSmoke._sim_day_full — the engine's real boundary order — with the
-	# player's answer interleaved after EVERY dispatch, because an unanswered modal blocks
-	# _pump_queue and the rest of the day's fires would queue up invisibly behind it.
-	while GameState.day < _stop_day and GameState.run_active:
-		while GameState.current_hour < TimeManager.HOURS_PER_DAY - 1:
-			var next_hour: int = GameState.current_hour + 1
-			GameState.set_current_hour(next_hour)
-			TimeManager._dispatch_hourly_tick(next_hour)
-			_drain_modals()
-		GameState.set_current_hour(0)
-		TimeManager._dispatch_hourly_tick(0)
-		_drain_modals()
-		GameState.advance_day()
-		TimeManager._dispatch_daily_tick()
-		_drain_modals()
-		_play_the_founder()
-		_log_state()
-		_log_customers()
+	# The game's clock, hour by hour: a visible hour is its own batch, so its cards are shown at
+	# that hour and answered before the next, as a player answers them; an unanswered modal
+	# would hold every later card behind it. The night is one batch that ends at 08:00, where
+	# night_skipped opens the week (_on_week_start).
+	while GameState.run_active and not _stopped:
+		if TimeManager.is_clock_held():
+			print("PROBE ERROR day=%d the clock is held" % GameState.day)
+			break
+		if TimeManager.is_night() or GameState.current_hour == TimeModel.HOURS_PER_DAY - 1:
+			TimeManager.skip_night()
+		else:
+			TimeManager.advance_hours(1)
+			_answer()
+			_play_the_hour()
 	_finish()
+
+
+## 08:00, the week opens (night_skipped, both modes): the founder plays the week, the week's
+## ledger lines print, and the run stops on its last week.
+static func _on_week_start() -> void:
+	_play_the_week()
+	_log_state()
+	_log_customers()
+	if GameState.day >= _stop_day or not GameState.run_active:
+		_stopped = true
+		if _mode != "sim":
+			_finish()
+			Engine.get_main_loop().quit()
+
+
+## Answer every card on screen, then play a VC meeting the answers seated: in the game its
+## scene holds the clock from the hour it opens.
+static func _answer() -> void:
+	_drain_modals()
+	if VCPitchSystem.is_active():
+		_play_the_hunt()
 
 
 # ============================================================================
@@ -559,38 +580,31 @@ static func _run_sim() -> void:
 # ============================================================================
 
 static func _run_realtime(speed_idx: int) -> void:
-	if speed_idx <= 0 or speed_idx >= TimeManager.SECONDS_PER_DAY.size():
+	if speed_idx <= 0 or speed_idx >= TimeModel.SECONDS_PER_HOUR.size():
 		print("PROBE ERROR bad speed index %d" % speed_idx)
 		Engine.get_main_loop().quit()
 		return
 	# Nothing pauses the clock in probe mode (main.gd's modal pause is shell wiring that
 	# is not mounted), so the drain has to ride the hour boundary or a stuck active event
-	# would silently block every later fire while days kept rolling past it.
-	EventBus.hour_changed.connect(func(_h: int) -> void: _drain_modals())
-	EventBus.day_advanced.connect(func(day: int) -> void:
+	# would silently block every later fire while the weeks kept rolling past it. The desk rides
+	# it too, outside a batch: the night's and a meeting's hours are not the player's, and
+	# night_skipped opens the week (_on_week_start).
+	EventBus.hour_changed.connect(func(_h: int) -> void:
 		_drain_modals()
-		_play_the_founder()
-		_log_state()
-		_log_customers()
-		if day >= _stop_day or not GameState.run_active:
-			_finish()
-			Engine.get_main_loop().quit()
+		if not TimeManager.is_batching():
+			_play_the_hour()
 	)
+	# A run that ends inside the night batch never reaches night_skipped: the ending closes it.
+	EventBus.run_ended.connect(func(_id: String, _data: Dictionary) -> void:
+		_finish()
+		Engine.get_main_loop().quit(), CONNECT_ONE_SHOT)
 	EventBus.speed_change_requested.emit(speed_idx)
 
 
 static func _log_weekly_fires() -> void:
-	# Verdict line: card fires per 7-day week.
-	var last_day: int = GameState.day
-	var week: int = 1
-	var d: int = 1
-	while d <= last_day:
-		var all: int = 0
-		for k in range(d, mini(d + 7, last_day + 1)):
-			all += int(_fires_by_day.get(k, 0))
-		print("PROBE WEEK w=%d fires=%d" % [week, all])
-		week += 1
-		d += 7
+	# Verdict line: card fires per week, one tick each.
+	for w in range(1, GameState.day + 1):
+		print("PROBE WEEK w=%d fires=%d" % [w, int(_fires_by_day.get(w, 0))])
 
 
 static func _finish() -> void:
@@ -631,60 +645,77 @@ static func _log_hr() -> void:
 #  The founder's own moves (the played run; inert for the fire-log presets)
 # ============================================================================
 
-static func _play_the_founder() -> void:
-	# Runs once per day, after the daily dispatch. Every move goes through the seam the
-	# corresponding tab button calls — the probe has no privileged path into the engine.
+## The week's 08:00: the night's cards are answered, the desk looked at, then the sales
+## meetings sat back to back and the Series A hunt played. Every move goes through the seam the
+## corresponding tab button calls — the probe has no privileged path into the engine.
+static func _play_the_week() -> void:
+	_answer()
+	_play_the_hour()
+	if not _full_run:
+		return
+	if GameState.get_flag("mvp_shipped", false):
+		_work_the_pipeline()
+	if _vc_policy != "":
+		_play_the_hunt()
+
+
+## Every visible hour: the desk decisions a player takes whenever a gate opens — the build's
+## next phase, a hire, a fix pass, capacity, research, the roster.
+static func _play_the_hour() -> void:
+	if not GameState.run_active or TimeManager.is_night():
+		return
 	if _full_run:
 		_open_the_company()
 		_hire_after_the_seed()
 		if not _weak_v1:
 			_run_the_company()
-		if _vc_policy != "":
-			_play_the_hunt()
-			if not GameState.run_active:
-				return          # a signature ended the run; nothing else happens today
-	if not _build_promises:
-		return
-	_keep_the_word()
+	if _build_promises:
+		_keep_the_word()
 
 
 static func _open_the_company() -> void:
-	# Day 1 of a real run: there is no product. Build one, ship it, then go selling.
+	# The first week of a real run: there is no product. Build one; the weeks' meetings sell it.
 	#
 	# B2B, not B2C: a modest B2C v1's audience growth barely clears its erosion term, so an
 	# autopilot B2C run never reaches the seed bar, while a signed B2B account is worth
 	# $200-$2,000 of MRR on the day it closes. It is also the market the churn work lives in.
-	if not GameState.get_flag("mvp_shipped", false):
-		if ProductSystem.get_active_build() != null:
-			return
-		# The played run builds the LINE product a player can actually pick (erp is the only
-		# playable B2B subtype). full_run_weak builds the flat `saas_ops` weak set instead:
-		# it has no line data, so the sales meeting reads its axes as 0.
-		if _weak_v1:
-			var features: Array = ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_scheduling"]
-			if ProductSystem.start_build("saas_ops", features, "", "Sahra"):
-				print("PROBE PLAY day=%d start_build v1 Sahra (b2b) set=weak" % GameState.day)
-			return
-		var v1: Array = ["line_erp_ledger_k1", "line_erp_stock_k1", "line_erp_cashflow_k1"]
-		if ProductSystem.start_line_build("erp", v1, CharacterRegistry.get_founder().id, "Sahra"):
-			print("PROBE PLAY day=%d start_line_build v1 Sahra (erp) steps=%s" % [GameState.day, str(v1)])
+	if GameState.get_flag("mvp_shipped", false) or ProductSystem.get_active_build() != null:
 		return
-	_work_the_pipeline()
+	# The played run builds the LINE product a player can actually pick (erp is the only
+	# playable B2B subtype). full_run_weak builds the flat `saas_ops` weak set instead:
+	# it has no line data, so the sales meeting reads its axes as 0.
+	if _weak_v1:
+		var features: Array = ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_scheduling"]
+		if ProductSystem.start_build("saas_ops", features, "", "Sahra"):
+			print("PROBE PLAY day=%d start_build v1 Sahra (b2b) set=weak" % GameState.day)
+		return
+	var v1: Array = ["line_erp_ledger_k1", "line_erp_stock_k1", "line_erp_cashflow_k1"]
+	if ProductSystem.start_line_build("erp", v1, CharacterRegistry.get_founder().id, "Sahra"):
+		print("PROBE PLAY day=%d start_line_build v1 Sahra (erp) steps=%s" % [GameState.day, str(v1)])
 
 
 static func _work_the_pipeline() -> void:
-	# The founder's sales day (Satış §3, §5.0): leads arrive on their own and the throttle is
-	# the daily meeting right, asked through the same seam the tab asks, so the probe gets no
-	# faster a pipeline than a player at the same keyboard.
+	# The founder's sales week (Satış §3, §5.0): leads arrive on their own and the throttle is
+	# the entry gate (the hour budget and the week's cap), asked through the same seam the tab
+	# asks, so the probe gets no faster a pipeline than a player at the same keyboard. Each
+	# sitting's close runs its hours, so the loop meets until the gate shuts, back at the desk
+	# between sittings.
 	if SalesMeetingSystem.is_active() or NegotiationSystem.is_active():
 		return
-	# The first lead the founder is allowed to sit with, not only the head of the queue: a
-	# blocked returning company at leads[0] would idle the day's meeting.
-	for raw in ProspectRegistry.get_all():
-		var lead: Prospect = raw as Prospect
-		if lead != null and SalesLedger.meeting_block_reason(lead.id) == "":
-			_meet(lead)
+	for i in SalesConstants.MEETINGS_PER_WEEK + 1:
+		# The first lead the founder is allowed to sit with, not only the head of the queue: a
+		# blocked returning company at leads[0] would idle the meeting.
+		var table: Prospect = null
+		for raw in ProspectRegistry.get_all():
+			var lead: Prospect = raw as Prospect
+			if lead != null and SalesLedger.meeting_block_reason(lead.id) == "":
+				table = lead
+				break
+		if table == null or not GameState.run_active:
 			return
+		_meet(table)
+		_answer()
+		_play_the_hour()
 
 
 static func _meet(p: Prospect) -> void:
@@ -810,18 +841,24 @@ static func _run_the_company() -> void:
 		InfraSystem.set_provider("cloud")
 		InfraSystem.set_capacity(InfraSystem.suggested_start_units())
 		print("PROBE PLAY day=%d infra provider=cloud units=%d" % [GameState.day, InfraSystem.units()])
-	if InfraSystem.occupancy() > 0.85:
+	var units0: int = InfraSystem.units()
+	while InfraSystem.occupancy() > 0.85:
 		InfraSystem.adjust_capacity(1)
-		print("PROBE PLAY day=%d infra +1 unit -> %d" % [GameState.day, InfraSystem.units()])
-	# A fix pass pauses the build (§8.4), so a player closes it after a few days and ships
-	# what was fixed; waiting for zero confirmed bugs never ends, because reports keep coming.
+	if InfraSystem.units() > units0:
+		print("PROBE PLAY day=%d infra +%d units -> %d" % [GameState.day, InfraSystem.units() - units0, InfraSystem.units()])
+	# A fix pass pauses the build (§8.4), so a player closes it every few days and ships what
+	# was fixed; waiting for zero confirmed bugs never ends, because reports keep coming. Four
+	# calendar days on, one off, counted on the clock: the night cannot be acted in, so while the
+	# backlog stays high a week settles at twenty hours on (12:00 to 08:00) and four off.
+	var now: float = TimeModel.days(GameState.day + GameState.current_hour / float(TimeModel.HOURS_PER_DAY))
 	if ProductState.fix_run_active():
-		if ProductState.bugs_confirmed() <= 1 or GameState.day - _fix_run_day >= 4:
+		if ProductState.bugs_confirmed() <= 1 or now - _fix_on_at >= 4.0:
 			print("PROBE PLAY day=%d fix_run end shipped=%d" % [GameState.day, SupportSystem.end_fix_run()])
+			_fix_off_at = now
 			if _fixer_id != "":
 				CharacterRegistry.unassign_job(_fixer_id, HRConstants.JOB_SUPPORT)
 				_fixer_id = ""
-	elif ProductState.bugs_confirmed() >= 6 and SupportSystem.can_start_fix_run():
+	elif ProductState.bugs_confirmed() >= 6 and SupportSystem.can_start_fix_run() and now - _fix_off_at >= 1.0:
 		# §8.4: fixes are ENGINEERING on the support desk. The CS reps who staff it have no
 		# engineering, so a player lends a developer to the desk for the pass.
 		for dev in CharacterRegistry.get_employees():
@@ -830,7 +867,7 @@ static func _run_the_company() -> void:
 				_fixer_id = dev.id
 				break
 		SupportSystem.start_fix_run()
-		_fix_run_day = GameState.day
+		_fix_on_at = now
 		print("PROBE PLAY day=%d fix_run start bugs=%d fixer=%s fix_per_day=%.2f" % [GameState.day,
 			ProductState.bugs_confirmed(), _fixer_id, SupportSystem.fix_per_day()])
 	_run_research()
@@ -849,7 +886,7 @@ static func _keep_the_team() -> void:
 		if HRActions.can_raise(emp, 10) and HRActions.apply_raise(emp, 10):
 			print("PROBE PLAY day=%d raise %s morale=%d" % [GameState.day, emp.role, emp.morale])
 		elif emp.leave_taken_year != int(GameState.get_date_dict().year):
-			HRMoraleSystem.send_on_leave(emp, 10, true)
+			HRMoraleSystem.send_on_leave(emp, HRConstants.LEAVE_WEEKS, true)
 			print("PROBE PLAY day=%d holiday %s morale=%d" % [GameState.day, emp.role, emp.morale])
 
 
@@ -945,13 +982,12 @@ static func _keep_the_word() -> void:
 		elif b.current_phase == "bugfix":
 			# Beta is a PARK with no auto-ship: waiting is free apart from burn and clears the
 			# backlog at POLISH_BUG_FIX_PER_DAY. The competent founder (full_run) waits until the
-			# backlog is small or five Beta days have passed; every other preset (and the weak
-			# v1) ships the day Beta opens.
+			# backlog is small or one Beta week has passed; every other preset (and the weak
+			# v1) ships the week Beta opens.
 			if _beta_wait:
 				if _beta_since_day < 0:
 					_beta_since_day = GameState.day
-				var beta_days: int = GameState.day - _beta_since_day
-				if b.bug_count > 3 and beta_days < 5:
+				if b.bug_count > 3 and GameState.day - _beta_since_day < 1:
 					return
 			_beta_since_day = -1
 			print("PROBE PLAY day=%d launch build=%s bugs=%d" % [GameState.day, str(b.component_ids), b.bug_count])
@@ -976,7 +1012,7 @@ static func _keep_the_word() -> void:
 				GameState.day, p.feature_id, p.id, p.deadline_day])
 			return
 	# Nothing promised: a growing product still ships. A version every three weeks, two steps.
-	if line_product and _full_run and not _weak_v1 and GameState.day - _last_ship_day >= 21:
+	if line_product and _full_run and not _weak_v1 and GameState.day - _last_ship_day >= 3:
 		var steps: Array = _next_open_steps(2)
 		if not steps.is_empty() and ProductSystem.start_line_build(ProductState.subtype(), steps,
 				CharacterRegistry.get_founder().id):
@@ -1006,7 +1042,7 @@ static func _play_the_hunt() -> void:
 	if VCPitchSystem.is_active():
 		_play_the_meeting()
 		_vc_meet_day = GameState.day
-	# 2. A live Series A sheet: sit down the day it arrives (so the decision card never comes).
+	# 2. A live Series A sheet: sit down the week it arrives (so the decision card never comes).
 	if not GameState.active_sheets.is_empty():
 		var ts: TermSheet = GameState.active_sheets[0] as TermSheet
 		_play_the_table(String(ts.vc_id))
@@ -1014,11 +1050,11 @@ static func _play_the_hunt() -> void:
 	# 3. Waiting on a booked meeting or a queued sheet.
 	if not GameState.pending_meeting.is_empty() or EndingsSystem._any_pending_sheet():
 		var pm_day: int = int(GameState.pending_meeting.get("day", -1))
-		if not GameState.pending_meeting.is_empty() and pm_day >= 0 and pm_day < GameState.day - 5:
+		if not GameState.pending_meeting.is_empty() and pm_day >= 0 and pm_day < GameState.day - 1:
 			print("PROBE ERROR day=%d booked meeting (day %d) never started" % [GameState.day, pm_day])
 		return
 	if _vc_meet_day == GameState.day:
-		return                          # a refusal today: the next fund is booked tomorrow
+		return                          # a refusal this week: the next fund is booked next week
 	# 4. Book the first fund that will meet, in the registry's order.
 	for raw in InvestorRegistry.get_active():
 		var vc: String = String((raw as Dictionary).get("id", ""))
@@ -1095,6 +1131,7 @@ static func _play_the_meeting() -> void:
 			break
 	if VCPitchSystem.is_active():
 		print("PROBE ERROR day=%d meeting did not finish" % GameState.day)
+	VCPitchSystem.end_sitting()     # the sitting's hours run once the scene is gone
 	var st: Dictionary = GameState.vc_states.get(fund, {}) as Dictionary
 	print("PROBE VC_MEET day=%d fund=%s n=%d conv0=%d path=%s result=%s sheet_conv=%d rejections=%d brand=%d" % [
 		GameState.day, fund, int(st.get("meeting_count", 0)), conv0, ",".join(trace),
@@ -1188,6 +1225,7 @@ static func _play_the_table(vc: String) -> void:
 		TermSheetTableSystem.leave()    # the closure is already written by the fund's walk-out
 	else:
 		TermSheetTableSystem.sign()     # → EndingsSystem.trigger_ending("series_a_close")
+	TermSheetTableSystem.end_sitting()  # a run-ending signature owes no hours
 
 
 static func _vc_end(outcome: String, reason: String) -> void:
@@ -1363,7 +1401,7 @@ static func _seed_world(preset: String) -> void:
 
 
 ## A product already live on day 1. mvp_launch_day is stamped here because the fixture skips
-## ship_active_build, its only writer, and every days_since_flag trigger reading it would
+## ship_active_build, its only writer, and every weeks_since_flag trigger reading it would
 ## otherwise stay false forever.
 static func _seed_live_product(market: String, subtype: String, components: Array, product_name: String) -> void:
 	GameState.set_flag("mvp_shipped", true)

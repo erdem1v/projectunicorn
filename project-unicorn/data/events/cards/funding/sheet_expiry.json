@@ -1,10 +1,11 @@
 {
-  "_port_note": "The investor slot selects `expiring_sheet` (the live sheet with the fewest business days left), not the first investor by id: funding.sheet_days_left is a minimum across live sheets, so without the selector the card would name one investor beside another investor's deadline. The latch is entity-keyed, so each sheet gets its own card. The body is inline in both locales rather than a CSV key because {seam:} tokens cannot live in strings.csv: loc_csv_integrity counts braces against [a-z_]+ tokens and rejects them.",
+  "_port_note": "The investor slot selects `expiring_sheet` (the live sheet with the fewest weeks left), not the first investor by id: funding.sheet_weeks_left is a minimum across live sheets, so without the selector the card would name one investor beside another investor's deadline. The latch is entity-keyed, so each sheet gets its own card. The body is inline in both locales rather than a CSV key because {seam:} tokens cannot live in strings.csv: loc_csv_integrity counts braces against [a-z_]+ tokens and rejects them.",
   "id": "funding.sheet_expiry",
   "version_scope": "demo",
   "category": "funding",
   "tick": "daily",
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": [
     "critical",
     "build_safe"
@@ -29,9 +30,9 @@
         "value": 0
       },
       {
-        "seam": "funding.sheet_days_left",
+        "seam": "funding.sheet_weeks_left",
         "op": "<=",
-        "value": 3
+        "value": 2
       }
     ]
   },

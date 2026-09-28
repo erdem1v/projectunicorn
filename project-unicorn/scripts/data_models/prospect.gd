@@ -30,7 +30,7 @@ extends Resource
 # --- Life and routing (§4) ---
 @export var spawned_on_day: int = 0
 ## §4 — "çalışılmayan lead 1 hafta bekler; görünür sayaç". Absolute, not a countdown: a
-## stored countdown drifts every time the day advances outside a tick.
+## stored countdown drifts every time the tick advances outside the sweep.
 @export var expires_on_day: int = 0
 ## §7.2.1 — "" | "reserved" (the desk is the founder's) | "rep" (first in the band queue).
 @export var routing: String = ""
@@ -41,7 +41,6 @@ extends Resource
 ## §7.5 — "İşlenmekte olan deal başladığı kadrandan kapanır." The stance is stamped when
 ## processing STARTS, so moving the dial mid-deal cannot retroactively reprice it.
 @export var work_stance: String = ""
-@export var work_due_day: int = -1            # the day processing completes
 ## §7.6 — the price-break moment fired for THIS processing; cleared when the processing drops.
 @export var price_break_raised: bool = false
 
@@ -66,9 +65,9 @@ extends Resource
 @export var source: String = "faucet"         # "faucet" | "event" | "referral" | "frank_intro"
 
 
-## Days left before the lead gives up (§4 "görünür sayaç"). Clamped at zero so a lead the
+## Weeks left before the lead gives up (§4 "görünür sayaç"). Clamped at zero so a lead the
 ## sweep has not reached yet never renders a negative count.
-func days_left() -> int:
+func weeks_left() -> int:
 	return maxi(expires_on_day - GameState.day, 0)
 
 

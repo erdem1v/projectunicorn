@@ -4,6 +4,13 @@ extends Control
 # the current office and swaps it on office_changed, drives its light every frame, and routes the
 # pointer: drag and wheel move the camera, clicks and hover go to the people, or to the city map
 # while that is the loaded layout. Windows are later siblings, so they take the pointer first.
+# The skipped night blinks: the 3D image drops to dark and the 08:00 light fades in. The controls
+# over the office (the office_overlays group) step aside for the map and for the founder's trip.
+
+const TRAVEL := preload("res://scripts/ui/office/office_travel.gd")
+## The blink's dark end: the 3D view's own fade, scene data like the office's other colours.
+const FADE_DARK := Color.BLACK
+const NIGHT_FADE_S := 0.6     # [WORKING]
 
 @onready var _container: SubViewportContainer = $Viewport3D
 @onready var camera: OfficeCamera = $Viewport3D/SubViewport/World/Camera3D
@@ -15,9 +22,13 @@ extends Control
 
 var layout: OfficeLayout
 var lighting: OfficeLighting
+## The founder's trip to an outside meeting (main.gd plays it).
+var travel: TRAVEL
 var _lowest := 0.0
 var _fitted := false
 var _pointer_inside := false
+var _fade: Tween
+var _veiled := false   # the founder's trip is on: the layer shows the office alone
 
 
 func _ready() -> void:
@@ -29,11 +40,15 @@ func _ready() -> void:
 	_container.resized.connect(_fit_once, CONNECT_DEFERRED)
 	camera.clicked.connect(_on_clicked)
 	EventBus.office_changed.connect(load_layout)
+	EventBus.night_skipped.connect(_on_night_skipped)
 	load_layout(OfficeSystem.current())
+	travel = TRAVEL.new(self, _people, _city)
+	$Overlay.add_child(travel)
 
 
-## Loads an office (or "city", the map) in place of the one on screen.
-func load_layout(office_id: String) -> void:
+## Loads an office (or "city", the map) in place of the one on screen. `road` is the map of the
+## founder's trip: no controls, and the view takes no pointer.
+func load_layout(office_id: String, road := false) -> void:
 	for old in _scene_root.get_children():
 		old.free()
 	layout = OfficeLayout.load(office_id)
@@ -47,9 +62,28 @@ func load_layout(office_id: String) -> void:
 	_fitted = false
 	_fit_once()
 	_people.set_layout(layout, self)
-	_city.set_layout(layout, self, materials.get("water", []))
-	# The map brings its own corners: the controls over the office step aside while it is open.
-	get_tree().call_group(&"office_overlays", &"set_map_open", office_id == "city")
+	_city.set_layout(layout, self, materials.get("water", []), road)
+	_container.mouse_filter = Control.MOUSE_FILTER_IGNORE if road else Control.MOUSE_FILTER_STOP
+	if road:
+		_on_pointer_left()
+	_step_overlays()
+
+
+## WindowLayer's veil for the founder's trip: the controls over the office step aside until it
+## lifts, through the loads of the trip too.
+func set_veiled(veiled: bool) -> void:
+	_veiled = veiled
+	_step_overlays()
+
+
+## Eases the 3D image to FADE_DARK or back over `time` seconds. The tween is this node's, which
+## runs while the tree is paused.
+func fade(dark: bool, time: float) -> Tween:
+	if _fade != null:
+		_fade.kill()
+	_fade = create_tween()
+	_fade.tween_property(_container, "modulate", FADE_DARK if dark else Color.WHITE, time)
+	return _fade
 
 
 ## `screen_pos` is in this view's own coordinates, as pick and hover receive it.
@@ -110,3 +144,14 @@ func _on_clicked(screen_pos: Vector2) -> void:
 func _on_pointer_left() -> void:
 	_pointer_inside = false
 	hide_tooltip()
+
+
+## The map brings its own corners and the trip wants none: the controls over the office step
+## aside while either is on.
+func _step_overlays() -> void:
+	get_tree().call_group(&"office_overlays", &"set_map_open", _veiled or layout.id == "city")
+
+
+func _on_night_skipped() -> void:
+	_container.modulate = FADE_DARK
+	fade(false, NIGHT_FADE_S)

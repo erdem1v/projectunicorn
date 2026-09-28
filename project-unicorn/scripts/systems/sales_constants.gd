@@ -15,11 +15,9 @@ extends RefCounted
 
 # ============================ §3 · The faucet ================================
 # "Musluk üç şeyi okur: atanmış satış kapasitesi + ilgi + faz."
-# Flow accumulates per DAY from a per-WEEK rate, so a rep hired on a Tuesday contributes
-# from Tuesday rather than at a week boundary the player cannot see.
+# A tick is a week, so the per-week rate lands whole on every tick.
 const FAUCET_BASE_PER_WEEK := 3.0        # [K] base inbound with ZERO sales staff
 const FAUCET_PER_REP_PER_WEEK := 2.0     # [K] added per assigned sales rep
-const DAYS_PER_WEEK := 7.0
 
 # Interest (§3; owner Ürün §9) maps onto a multiplier band. Zero interest still flows: the
 # faucet never dries, it slows.
@@ -35,9 +33,9 @@ const PHASE_MULT_TRACTION := 1.25        # [K]
 # multiplier, expressed per week and applied to the 1★ band alone.
 const ONE_STAR_FLOOR_PER_WEEK := 1.0     # [K]
 
-# A day cannot deliver more than this however the multipliers stack. Legible on purpose: a
+# A tick cannot deliver more than this however the multipliers stack. Legible on purpose: a
 # full column reads as "you are not meeting anyone", never as "the faucet broke".
-const FAUCET_DAILY_MAX := 2              # [K]
+const FAUCET_TICK_MAX := 14              # [K]
 
 # Star mix per phase, 1★/2★/3★ (§3). The demo ceiling is 3★ and MÜHÜRLÜ (§2): 4-5★ is not
 # generated and not written, and there is no locked 4★ card either.
@@ -55,8 +53,8 @@ const QUALITY_STRENGTH_HIGH := 1.6       # [K] ratio at which the top band opens
 
 
 # ============================ §4 · Pipeline ==================================
-const LEAD_LIFE_DAYS := 7                # [K] an unworked lead waits this long
-const RETURN_LOCK_DAYS := 30             # [K] an expired company will not return before this
+const LEAD_LIFE_WEEKS := 1               # [K] an unworked lead waits this long
+const RETURN_LOCK_WEEKS := 4             # [K] an expired company will not return before this
 
 # Routing verbs (§7.2.1). Stored on the Prospect as ids, never as localised text.
 const ROUTE_NONE := ""
@@ -67,6 +65,7 @@ const ROUTE_REP := "rep"                 # "Temsilciye ver" — first in the ban
 # ============================ §5.0 · Time model ==============================
 const MEETING_SKIP_HOURS := 2            # [K] the clock the sitting costs
 const MEETING_ENTRY_CUTOFF_HOURS := 2    # [ÇALIŞMA] no entry this close to the end of the workday
+const MEETINGS_PER_WEEK := 4             # [WORKING] sales meetings a week holds, whatever the workday length
 
 
 # ============================ §5.1 · Act 1 · persuasion ======================
@@ -142,31 +141,24 @@ const COUNTER_STEP_MIN := 0.06           # [K] the counter-offer step, largest a
 const COUNTER_STEP_MAX := 0.16           # [K]
 # A promise narrows the band's TOP end (§5.3, §6): the promised feature is not free.
 const PROMISE_BAND_NARROW := 0.15        # [K] the fraction of the band the locked zone takes
-const WALK_LOCK_DAYS := 30               # [ÇALIŞMA] neutral walk, traceless
+const WALK_LOCK_WEEKS := 4               # [ÇALIŞMA] neutral walk, traceless
 
 
 # ============================ §7 · Rep automation ============================
-# Processing duration by league difference (§7.2), a [min, max] day span. The rep's
-# effective output places the deal inside it.
-const PROCESS_DAYS_OWN_LEAGUE := [6, 7]  # [K]
-const PROCESS_DAYS_ONE_BELOW := [3, 4]   # [K]
-const PROCESS_DAYS_TWO_BELOW := [2, 3]   # [K]
-# The effective output that reads as a competent rep — the anchor the span measures against.
-const PROCESS_REFERENCE_OUTPUT := 5.0    # [K]
-const PROCESS_PREMIUM_PENALTY := 0.30    # [K] "Premium işleme süresini uzatır +%30"
-const PROCESS_MIN_DAYS := 1
+# The chance a worked lead closes on one processing tick, by league difference (customer star
+# − rep star): expected processing is 2 / 1.33 / 1 weeks.
+const PROCESS_CLOSE_CHANCE := {0: 0.50, -1: 0.75, -2: 1.00}   # [WORKING]
+const PROCESS_PREMIUM_PENALTY := 0.30    # [K] "Premium işleme süresini uzatır +%30": chance ÷ 1.30
 
 # §7.2.2 band cap. -1 = "Kendi ligi", the default; otherwise a full star step.
 const BAND_CAP_OWN_LEAGUE := -1
 
 # §7.6 price-break card. DEFINED HERE, FIRED BY THE EVENT PACKAGE — inert until then.
 const PRICE_BREAK_CARD_ID := "sales.price_break"
-const PRICE_BREAK_TRIGGER_LAST_DAYS := 2   # [ÇALIŞMA] the closing days of processing
-const PRICE_BREAK_CANT_SAY_NO_MULT := 1.6  # [K] HAYIR DİYEMEZ drops the card more often
 const PRICE_BREAK_SIGNING_DISCOUNT := 0.15 # [K] the permanent trace a broken band leaves
 
-# §7.3 presentation.
-const WEEKLY_SUMMARY_INTERVAL_DAYS := 7    # [ÇALIŞMA]
+# §7.3 presentation. The summary covers the closes of the window that just ended.
+const WEEKLY_SUMMARY_INTERVAL_WEEKS := 1   # [ÇALIŞMA]
 const WEEKLY_SUMMARY_CARD_ID := "sales.weekly_summary"
 const TICKER_NEWSWORTHY_STAR := 3          # [ÇALIŞMA] a 3★ signing is news
 # §7.3 "Prestij: haber değeri VE MARKA ETKİSİ". A newsworthy signing (whale, above the
@@ -235,15 +227,6 @@ static func seat_band(star: int) -> Dictionary:
 ## Stance id → the §7.5 band placement multiplier.
 static func stance_mult(stance: String) -> float:
 	return float(STANCE_MULT.get(stance, STANCE_MULT[STANCE_DEFAULT]))
-
-
-## League difference (customer star − rep star) → the §7.2 [min, max] day span.
-static func process_span(league_delta: int) -> Array:
-	if league_delta >= 0:
-		return PROCESS_DAYS_OWN_LEAGUE.duplicate()
-	if league_delta == -1:
-		return PROCESS_DAYS_ONE_BELOW.duplicate()
-	return PROCESS_DAYS_TWO_BELOW.duplicate()
 
 
 # ============================================================================

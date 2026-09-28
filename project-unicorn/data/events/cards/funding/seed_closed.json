@@ -5,6 +5,7 @@
   "category": "funding",
   "tick": "daily",
   "class": "interrupt",
+  "expires_weeks": 2,
   "tags": [
     "critical",
     "build_safe"
@@ -21,7 +22,7 @@
         "value": true
       },
       {
-        "seam": "funding.seed_days_since_close",
+        "seam": "funding.seed_weeks_since_close",
         "op": "<=",
         "value": 1,
         "reason": "the confirmation of a round that just closed, not a memory of one"

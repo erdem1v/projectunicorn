@@ -146,7 +146,7 @@ func _add_state_body(state: String) -> void:
 	var parts: PackedStringArray = RnDUiShared.area_parts(_node_id)
 	match state:
 		RnDUiShared.TILE_RUNNING, RnDUiShared.TILE_FROZEN:
-			# Gereksinimin YERİNE atananlar + kalan gün.
+			# Gereksinimin YERİNE atananlar + kalan hafta.
 			var ids: Array = RnDSystem.assigned(_node_id)
 			var names := PackedStringArray()
 			for cid in ids:
@@ -155,11 +155,11 @@ func _add_state_body(state: String) -> void:
 					names.append(c.character_name)
 			if not names.is_empty():
 				parts.append(", ".join(names))
-			var days: float = RnDSystem.days_estimate(_node_id, ids)
-			if days > 0.0:
-				parts.append(RnDUiShared.days_text(days))
+			var weeks: float = RnDSystem.weeks_estimate(_node_id, ids)
+			if weeks > 0.0:
+				parts.append(RnDUiShared.weeks_text(weeks))
 		RnDUiShared.TILE_DONE:
-			# Süre parçası yok: RnDSystem tamamlanma gününü saklamıyor ve sayı efordan ya
+			# Süre parçası yok: RnDSystem tamamlanma tikini saklamıyor ve sayı efordan ya
 			# da tahminden uydurulmaz.
 			var opened: Array = ResearchTree.children_of(_node_id)
 			if opened.size() >= 2:
@@ -170,9 +170,9 @@ func _add_state_body(state: String) -> void:
 		_:
 			parts = RnDUiShared.req_parts(_node_id)
 			# -1.0 = "katkı yok" (§5.5): sayı yoksa parça da yok, asla ∞ yazılmaz.
-			var solo: float = RnDSystem.days_estimate_solo(_node_id)
+			var solo: float = RnDSystem.weeks_estimate_solo(_node_id)
 			if solo > 0.0:
-				parts.append(RnDUiShared.t("RND_DAYS_SOLO").format({"n": RnDUiShared.whole_days(solo)}))
+				parts.append(RnDUiShared.weeks_line("RND_WEEKS_SOLO", solo))
 			var cash: int = ResearchTree.cash_of(_node_id)
 			if cash > 0:
 				# §8 — bazı düğümlerin adlandırılmış maliyet etiketi var ("GPU kirası $600").

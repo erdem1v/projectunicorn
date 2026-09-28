@@ -39,7 +39,7 @@ var _progress_label: Label = null
 var _bar: Control = null
 var _bar_fill: Panel = null
 var _bar_name: Label = null
-var _bar_days: Label = null
+var _bar_weeks: Label = null
 var _bar_percent: Label = null
 var _structure_key: String = ""
 var _selected: String = ""
@@ -153,7 +153,7 @@ func _build_chrome() -> void:
 	outer.add_child(_build_legend())
 
 
-## Üst şerit (§8): ARAŞTIRMA · ad · kalan gün · yüzde, ve YAZININ ARKASINDA
+## Üst şerit (§8): ARAŞTIRMA · ad · kalan hafta · yüzde, ve YAZININ ARKASINDA
 ## yüzde çapalı bir dolgu. Dolgu ayrı bir düğüm çünkü bir `StyleBoxFlat` yüzde
 ## İFADE EDEMEZ (build_bar.gd'nin reçetesi).
 func _build_bar() -> Control:
@@ -192,9 +192,9 @@ func _build_bar() -> Control:
 	_bar_name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_bar_name)
 	row.add_child(RnDUiShared.spacer())
-	_bar_days = UiFactory.make_label("", &"RowMeta")
-	_bar_days.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(_bar_days)
+	_bar_weeks = UiFactory.make_label("", &"RowMeta")
+	_bar_weeks.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_bar_weeks)
 	_bar_percent = UiFactory.make_label("", &"RowMeta", UiTokens.INK)
 	_bar_percent.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_bar_percent)
@@ -286,13 +286,13 @@ func _paint_bar() -> void:
 	RnDUiShared.set_fill(_bar_fill, p)
 	_bar_percent.text = RnDUiShared.percent_text(p)
 	# Tracker'ın kuralı (§5.6.1): donmuşsa cümle SEBEBİ söyler ve motordan okunur; değilse
-	# kalan gün. Atananların hepsi izinde ya da eğitimdeyse `days_estimate` -1.0 döner
+	# kalan hafta. Atananların hepsi izinde ya da eğitimdeyse `weeks_estimate` -1.0 döner
 	# ("katkı yok", §5.5) ve satır boş kalır: araştırma donmuş değil, üstünde insan var.
 	var note: String = RnDSystem.freeze_note_key()
-	var days: float = RnDSystem.days_estimate(active, RnDSystem.assigned(active))
+	var weeks: float = RnDSystem.weeks_estimate(active, RnDSystem.assigned(active))
 	if note != "":
-		_bar_days.text = tr(note)
-		_bar_days.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
+		_bar_weeks.text = tr(note)
+		_bar_weeks.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
 	else:
-		_bar_days.text = RnDUiShared.days_text(days) if days > 0.0 else ""
-		_bar_days.add_theme_color_override("font_color", UiTokens.INK_MUTED)
+		_bar_weeks.text = RnDUiShared.weeks_text(weeks) if weeks > 0.0 else ""
+		_bar_weeks.add_theme_color_override("font_color", UiTokens.INK_MUTED)

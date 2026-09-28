@@ -33,16 +33,16 @@ static func install() -> void:
 	EvSeams.register("musteri.lifecycle_phase", E, TYPE_STRING, customer_field("lifecycle_phase", ""),
 		"Sales", "onboarding | active | risk | churning | expansion")
 	EvSeams.register("musteri.churn_countdown", E, TYPE_INT, customer_field("churn_countdown", -1),
-		"Sales", "WRAPPER; -1 when not counting, else days to churn")
+		"Sales", "WRAPPER; -1 when not counting, else weeks to churn")
 	EvSeams.register("musteri.mrr", E, TYPE_INT, customer_field("mrr", 0), "Sales", "WRAPPER")
 	EvSeams.register("musteri.seats", E, TYPE_INT, customer_field("seats", 0), "Sales", "WRAPPER")
 	EvSeams.register("musteri.scale", E, TYPE_INT, customer_field("scale", 0),
 		"Sales", "WRAPPER; 1-5, demo binds to 1-3")
-	EvSeams.register("musteri.tenure_days", E, TYPE_INT,
+	EvSeams.register("musteri.tenure_weeks", E, TYPE_INT,
 		func(id: String) -> int:
 			var c: Customer = CustomerRegistry.get_customer(id)
 			return GameState.day - c.acquired_on_day if c != null else 0,
-		"Sales", "WRAPPER; days since signature")
+		"Sales", "WRAPPER; weeks since signature")
 	EvSeams.register("musteri.has_open_promise", E, TYPE_BOOL,
 		func(id: String) -> bool: return PromiseRegistry.has_open_for(id),
 		"Sales", "a feature was promised and has not resolved")
@@ -86,7 +86,7 @@ static func install() -> void:
 	# §7.3'ün haftalık özeti SATIR ister, cümle değil; aritmetik ve biçim Satış'ta durur.
 	EvSeams.register("sales.weekly_closes", G, TYPE_STRING,
 		func() -> String: return SalesLedger.weekly_close_lines(),
-		"Sales", "this week's closes, one line each, with a total")
+		"Sales", "closes of the week that just ended, one line each, with a total")
 	# KAÇ HESAP — `musteri.count`'tan farkı B2C toplu kullanıcı tabanı kaydıdır: o bir KİTLE,
 	# hesap değil, sıfır koltukludur ve "defterde N hesap var" cümlesinde sayılmaz.
 	EvSeams.register("sales.account_count", G, TYPE_INT,

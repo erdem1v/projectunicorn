@@ -30,11 +30,11 @@ static func can_raise(emp: Character, pct: int) -> bool:
 	return _raised_salary(emp.monthly_salary, _clamp_pct(pct)) > emp.monthly_salary
 
 
-## §9.2 bekleme süresinden KALAN gün. 0 = zam verilebilir.
+## §9.2 bekleme süresinden KALAN hafta. 0 = zam verilebilir.
 static func raise_cooldown_left(emp: Character) -> int:
 	if emp == null or emp.last_raise_day <= 0:
 		return 0
-	return maxi(HRConstants.RAISE_COOLDOWN_DAYS - (GameState.day - emp.last_raise_day), 0)
+	return maxi(TimeModel.ticks(HRConstants.RAISE_COOLDOWN_WEEKS) - (GameState.day - emp.last_raise_day), 0)
 
 
 static func preview_raise(emp: Character, pct: int) -> Dictionary:
@@ -138,7 +138,7 @@ static func apply_promotion(emp: Character, pct: int) -> bool:
 	CharacterRegistry.set_salary(emp.id, after_salary)
 	emp.salary_floor = maxi(emp.salary_floor, after_salary)
 	emp.last_promotion_day = GameState.day
-	# Terfi bir zammı içerir; §9.2'nin bekleme süresi de kurulur, yoksa ertesi gün üstüne
+	# Terfi bir zammı içerir; §9.2'nin bekleme süresi de kurulur, yoksa hemen ardından üstüne
 	# ayrı bir zam almak bekleme süresini anlamsız kılardı.
 	emp.last_raise_day = GameState.day
 	emp.employment_history.append({
@@ -161,10 +161,10 @@ static func preview_fire(emp: Character) -> Dictionary:
 	var reason: String = _block_reason(emp)
 	if reason != "":
 		return _refusal(reason)
-	var days_served: int = maxi(GameState.day - emp.hire_day, 0)
+	var weeks_served: int = HRSystem.tenure_weeks(emp)
 	# The note's months and the charged amount come from the same rule (§15.2).
-	var multiple: float = HRConstants.severance_multiple(days_served)
-	var severance: int = HRConstants.severance_amount(emp.monthly_salary, days_served)
+	var multiple: float = HRConstants.severance_multiple(weeks_served)
+	var severance: int = HRConstants.severance_amount(emp.monthly_salary, weeks_served)
 	var payroll: int = CharacterRegistry.get_total_monthly_salaries()
 	var cash_after: int = GameState.cash - severance
 	return {
@@ -190,10 +190,9 @@ static func fire(emp: Character) -> bool:
 	if not can_fire(emp):
 		_refuse_loudly(emp, "fire")
 		return false
-	var days_served: int = maxi(GameState.day - emp.hire_day, 0)
 	# Charged before the removal so the ledger line and the roster change cannot come apart.
 	FinanceSystem.apply_one_time_cost(
-		HRConstants.severance_amount(emp.monthly_salary, days_served), "severance")
+		HRConstants.severance_amount(emp.monthly_salary, HRSystem.tenure_weeks(emp)), "severance")
 	# get_employees(), not the active list: someone on leave hears about it too.
 	for other in CharacterRegistry.get_employees():
 		if other.id != emp.id:

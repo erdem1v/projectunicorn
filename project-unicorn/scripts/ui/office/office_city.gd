@@ -6,6 +6,8 @@ extends Node3D
 # office; while it is the loaded layout this binds its buildings, draws the chips, the hover
 # card and the office card over the view, marks the pick and the current office, and runs the
 # traffic. The move button that opens it lives in OfficeHud, mounted here with the first layout.
+# In road mode (the founder's trip to a meeting) the map has no controls and takes no input: the
+# camera starts on the company's building and drive() slides it and the pin to the meeting's.
 
 const HUD := preload("res://scripts/ui/office/office_hud.gd")
 const CARD := preload("res://scripts/ui/office/office_map_card.gd")
@@ -19,6 +21,7 @@ const FOCUS_HEIGHT := 0.35
 const FOCUS_ZOOM := 2.1
 const FOCUS_SHIFT_PX := 170.0
 const FOCUS_TIME := 0.75
+const DRIVE_TIME := 1.2       # [WORKING] the trip's slide to the meeting's building
 ## mapAnchors: a chip goes once its anchor is this share of the frame outside it.
 const CHIP_SLACK := 0.025
 ## A chip's gap above its anchor; the current office's clears the pin.
@@ -58,10 +61,11 @@ var _selected := {}
 var _frames := {}                 # hit id -> selection frame
 var _pin: Node3D
 var _pin_hit := {}
+var _pin_at := Vector3.ZERO       # the point the pin floats over
 var _cars: Array[Array] = []      # [car, lane]
 var _ferry: Node3D
 var _water: Array = []            # the map's water materials, drifting on _now
-## Wall-clock seconds of traffic; they stand still while the tree is paused.
+## Wall-clock seconds of traffic; they stand still while the tree is paused. The trip runs it.
 var _now := 0.0
 
 
@@ -70,7 +74,7 @@ func _ready() -> void:
 	EventBus.palette_changed.connect(_rebuild_controls.unbind(1))
 
 
-func set_layout(layout: OfficeLayout, view: Node, water: Array) -> void:
+func set_layout(layout: OfficeLayout, view: Node, water: Array, road := false) -> void:
 	_view = view
 	_layout = layout
 	_water = water
@@ -82,13 +86,25 @@ func set_layout(layout: OfficeLayout, view: Node, water: Array) -> void:
 	if _map != null:
 		_drop_controls()
 	var is_map := layout.id == "city"
-	_hud.set_map_open(is_map)
 	set_process(is_map)
 	if is_map:
 		_selected = {}
 		_bind_scene()
 		_frame_camera()
-		_build_controls()
+		if road:
+			_focus_on(_pin_hit.box, 0.0)
+		else:
+			_build_controls()
+
+
+## The trip's slide: the camera and the pin move from the company's building to `target`; the
+## camera says focus_done on arrival.
+func drive(target: AABB) -> void:
+	_focus_on(target, DRIVE_TIME)
+	var top := target.get_center()
+	top.y = target.end.y
+	create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT) \
+		.tween_property(self, "_pin_at", top, DRIVE_TIME)
 
 
 ## Picks the building under the pointer, or clears the pick on empty ground.
@@ -148,21 +164,21 @@ func debug_pick(office_id: String) -> void:
 func _process(delta: float) -> void:
 	if not get_tree().paused:
 		_now += delta
-	var cam: OfficeCamera = _view.camera
-	var frame := get_viewport().get_visible_rect().size
-	var room := Rect2(-frame * CHIP_SLACK, frame * (1.0 + 2.0 * CHIP_SLACK))
-	for c: Array in _chips:
-		var at := cam.unproject_position(c[0].anchor)
-		var chip: Control = c[1]
-		chip.visible = room.has_point(at)
-		chip.position = at - Vector2(chip.size.x * 0.5, chip.size.y + c[2])
-	# The view asks for hover only while the pointer is on the 3D view and no drag runs.
-	if Engine.get_process_frames() - _hover_frame > 1:
-		_hover_card.hide()
-		_hovered_id = ""
+	if _map != null:
+		var cam: OfficeCamera = _view.camera
+		var frame := get_viewport().get_visible_rect().size
+		var room := Rect2(-frame * CHIP_SLACK, frame * (1.0 + 2.0 * CHIP_SLACK))
+		for c: Array in _chips:
+			var at := cam.unproject_position(c[0].anchor)
+			var chip: Control = c[1]
+			chip.visible = room.has_point(at)
+			chip.position = at - Vector2(chip.size.x * 0.5, chip.size.y + c[2])
+		# The view asks for hover only while the pointer is on the 3D view and no drag runs.
+		if Engine.get_process_frames() - _hover_frame > 1:
+			_hover_card.hide()
+			_hovered_id = ""
 	if _pin.visible:
-		var anchor: Vector3 = _pin_hit.anchor
-		_pin.position = Vector3(anchor.x, anchor.y + PIN_RISE + sin(_now * PIN_BOB_RATE) * PIN_BOB, anchor.z)
+		_pin.position = _pin_at + Vector3.UP * (PIN_RISE + sin(_now * PIN_BOB_RATE) * PIN_BOB)
 		_pin.rotation.y = _now * PIN_SPIN
 	for c: Array in _cars:
 		var lane: Dictionary = c[1]
@@ -184,6 +200,7 @@ func _bind_scene() -> void:
 			_pin_hit = hit
 	_pin = scene.find_child("pin", true, false)
 	_pin.visible = not _pin_hit.is_empty()
+	_pin_at = _pin_hit.get("anchor", Vector3.ZERO)
 	_cars.clear()
 	for lane: Dictionary in _layout.lanes:
 		var car: Node3D = scene.find_child(lane.car_node, true, false)
@@ -280,15 +297,21 @@ func _select(hit: Dictionary) -> void:
 	for id: String in _frames:
 		_frames[id].visible = id == hit.get("id", "")
 	_show_card()
-	var cam: OfficeCamera = _view.camera
 	if hit.is_empty():
+		var cam: OfficeCamera = _view.camera
 		cam.focus(cam.fit_target, cam.fit_zoom, FOCUS_TIME)
 		return
-	var box: AABB = hit.box
+	_focus_on(hit.box, FOCUS_TIME, FOCUS_SHIFT_PX)
+
+
+## focusMap's framing of a building: a point FOCUS_HEIGHT up its box, FOCUS_ZOOM closer than the
+## map, moved `shift_px` left of centre.
+func _focus_on(box: AABB, duration: float, shift_px := 0.0) -> void:
+	var cam: OfficeCamera = _view.camera
 	var to := box.get_center()
 	to.y = box.position.y + box.size.y * FOCUS_HEIGHT
 	var zoom := cam.fit_zoom * FOCUS_ZOOM
-	cam.focus(to + cam.global_basis.x * FOCUS_SHIFT_PX * _units_per_px(cam, zoom), zoom, FOCUS_TIME)
+	cam.focus(to + cam.global_basis.x * shift_px * _units_per_px(cam, zoom), zoom, duration)
 
 
 func _show_card() -> void:

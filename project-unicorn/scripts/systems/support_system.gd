@@ -15,20 +15,21 @@ extends RefCounted
 # çağrılır. Bayrak ADLARININ tek evi ProductState'tir; bu modül §8 sayaçlarının tek
 # yazarıdır ama adı daima ProductState'in sabitinden alır.
 #
-# SAAT/GÜN AYRIMI:
+# SAAT/GÜN AYRIMI (bir tik yedi takvim günüdür):
 #   hourly_tick — AKIŞLAR. §9 bildirim akışı, §8.2 doğrulama, §8.4 düzeltme koşusu.
-#                 Üçü de GÜNLÜK oranlardır ve saatte 1/24'ü işlenir; kesirli birikim
-#                 *_PROGRESS bayraklarında durur, tam sayıya taşınca sayaç oynar.
-#                 Sıra kasıtlı: bildirim gelir → doğrulanır → koşu çözer. Aynı saat
-#                 içinde bir bildirimin doğrulanıp çözülebilmesi "masa dolu" hâlinin
-#                 ta kendisidir.
+#                 Üçü de GÜNLÜK oranlardır; saatlik tikte tikin yedi gününün 1/24'ü
+#                 işlenir. Kesirli birikim *_PROGRESS bayraklarında durur, tam sayıya
+#                 taşınca sayaç oynar. Sıra kasıtlı: bildirim gelir → doğrulanır → koşu
+#                 çözer. Aynı saat içinde bir bildirimin doğrulanıp çözülebilmesi "masa
+#                 dolu" hâlinin ta kendisidir.
 #   daily_tick  — GÜNLÜK KESİNTİLER. §8.3 memnuniyet zararı ve §9 ilgi sönümü. İkisi
-#                 de belgede açıkça "/gün" yazılıdır; saate bölünmeleri anlamı
-#                 değiştirirdi (zarar tavanı GÜNLÜK bir tavandır).
+#                 de belgede açıkça "/gün" yazılıdır; zarar tavanı GÜNLÜK bir tavandır ve
+#                 günlük değere uygulanır, tik yedi günü sonra alır.
 
 # ------------------------------------------------------ §9 canlı hata akışı
 # gelen bildirim/gün = (0,2 + 0,05 × taşınan_hata
-#                       + 0,03 × yeni_kod_eforu × e^(−sürüm_yaşı/21)) × kullanım_çarpanı
+#                       + 0,03 × yeni_kod_eforu × e^(−sürüm_yaşı/3)) × kullanım_çarpanı
+# Sürüm yaşı haftadır ve saat kesrini taşır.
 #
 ## §9 taban — "hiçbir ürün %100 hatasız değildir; akış asla sıfırlanmaz."
 const INFLOW_BASE := 0.2
@@ -39,8 +40,8 @@ const INFLOW_CARRIED_COEF := 0.05
 ## §9 yeni kod terimi — yeni sürümün efor büyüklüğüyle orantılı yeni havuz.
 const INFLOW_NEWCODE_COEF := 0.03
 ## §9 "~3 haftada söner" — YALNIZ yeni kod terimi söner. Yeni sürüm sıfırdan havuz
-## yaratmaz: olgun ürün altta durur, tazelenen tek şey bu terimdir.
-const INFLOW_TAU := 21.0
+## yaratmaz: olgun ürün altta durur, tazelenen tek şey bu terimdir. Birim hafta.
+const INFLOW_TAU := 3.0
 ## §9 kullanım çarpanı: 1 + aktif kullanıcı/2000 (B2C) · 1 + hesap sayısı/10 (B2B).
 const USAGE_DIV_B2C := 2000.0
 const USAGE_DIV_B2B := 10.0
@@ -62,8 +63,8 @@ const DAMAGE_INCOMING_PER_TEN := -0.6
 ## Hızlı yanıt alan kullanıcı, düzeltme gecikse bile hemen ayrılmaz.
 const DAMAGE_CONFIRMED_PER_TEN := -0.3
 const DAMAGE_PER_UNITS := 10.0
-## §8.3 TAVAN: iki kademenin günlük TOPLAM zararı −2,0/gün ile sınırlı. İhmal ölüm
-## sarmalı değil, ağır ama toparlanabilir bir kanamadır.
+## §8.3 TAVAN: iki kademenin günlük TOPLAM zararı −2,0/gün ile sınırlı; tik başına −14. İhmal
+## ölüm sarmalı değil, ağır ama toparlanabilir bir kanamadır.
 const DAMAGE_DAILY_CAP := -2.0
 
 # ------------------------------------------------------------- §8.4 düzeltme koşusu
@@ -80,8 +81,8 @@ const BAND_HOT := "hot"
 
 # ------------------------------------------------------------------ §9 ilgi
 ## §9 — "her yayın ilgiyi 100'e tazeler; ilgi sürüm yaşıyla söner, yarı ömür 30 gün."
-## Tazeleme ProductState.refresh_on_publish()'in işi; sönüm burada.
-const INTEREST_HALF_LIFE := 30.0
+## Tazeleme ProductState.refresh_on_publish()'in işi; sönüm burada. Birim hafta; tam bölünür.
+const INTEREST_HALF_LIFE := 30.0 / TimeModel.DAYS_PER_TICK
 
 const MARKET_B2B := "b2b"
 
@@ -107,19 +108,22 @@ static var _damage_residue: Dictionary = {}
 static func hourly_tick(_hour: int) -> void:
 	if not ProductState.is_live():
 		return
-	var f: float = 1.0 / float(TimeManager.HOURS_PER_DAY)
+	var f: float = 1.0 / float(TimeModel.HOURS_PER_DAY)
+	# Toplantı atlamasının saatinde kurucu masada payıyla sayılır (TimeManager.founder_output_factor).
+	var founder_share: float = TimeManager.founder_output_factor()
 	# §9 — bildirimler kendiliğinden gelir. Masa kapalı olsa da gelir; §8.2'nin
 	# kapattığı şey doğrulamadır, akış değil.
-	var reports: float = float(GameState.get_flag(ProductState.REPORTS_PROGRESS, 0.0)) + reports_per_day() * f
+	var reports: float = float(GameState.get_flag(ProductState.REPORTS_PROGRESS, 0.0)) \
+		+ TimeModel.per_tick(reports_per_day()) * f
 	var arrived: int = int(reports)
 	GameState.set_flag(ProductState.REPORTS_PROGRESS, reports - arrived)
 	GameState.set_flag(ProductState.REPORTS_INCOMING, ProductState.reports_incoming() + arrived)
 	# §8.2 — GELEN'i DOĞRULANMIŞ'a çevirir. Boş masa küçük bir sızıntı değil, tam sıfırdır.
-	_drain(ProductState.VALIDATION_PROGRESS, validation_per_day() * f,
+	_drain(ProductState.VALIDATION_PROGRESS, TimeModel.per_tick(validation_per_day(founder_share)) * f,
 		ProductState.REPORTS_INCOMING, ProductState.BUGS_CONFIRMED)
 	# §8.4 — koşu DOĞRULANMIŞ'ı eritir ve çözülenleri sayar. Havuz boşalırsa koşu
 	# KENDİLİĞİNDEN BİTMEZ: yeni doğrulamaları da yer. Koşuyu bitiren yalnız oyuncudur.
-	_drain(ProductState.FIX_RUN_PROGRESS, fix_per_day() * f,
+	_drain(ProductState.FIX_RUN_PROGRESS, TimeModel.per_tick(fix_per_day(founder_share)) * f,
 		ProductState.BUGS_CONFIRMED, ProductState.FIX_RUN_FIXED)
 
 
@@ -147,13 +151,14 @@ static func from_dict(d: Dictionary) -> void:
 #  §9 · CANLI HATA AKIŞI
 # =========================================================================
 
-## §9'un tam formülü, GÜNLÜK bildirim sayısı olarak. Canlı ürün yoksa akış yoktur.
+## §9'un tam formülü, GÜNLÜK bildirim sayısı olarak. Canlı ürün yoksa akış yoktur. Saatlik tik
+## okur: yaş saatin başından ölçülür.
 static func reports_per_day() -> float:
 	if not ProductState.is_live():
 		return 0.0
 	var floor_rate: float = INFLOW_BASE_RESEARCHED if ResearchSeam.completed("self_service") else INFLOW_BASE
 	var new_code: float = ProductState.new_code_effort() \
-		* exp(-float(ProductState.version_age_days()) / INFLOW_TAU)
+		* exp(-ProductState.version_age(ProductSystem.hour_start_fraction()) / INFLOW_TAU)
 	# Taşınan hata `live_bug_count`'tur: yayında BETA'dan devreden açık hatalarla başlar ve
 	# canlı aşınmayla (ProductSystem._post_ship_wear_hourly) büyür; §9 aşınma terimi yazmaz.
 	var base: float = floor_rate + INFLOW_CARRIED_COEF * float(ProductSystem.live_bug_count()) \
@@ -213,27 +218,29 @@ static func desk_staffed() -> bool:
 
 ## §8.2 — doğrulama/gün = katsayı × Σ `HRSystem.daily_contribution` (effective_skill × saat/8).
 ## Liderlik çarpanı BU FORMÜLDE YOK: §4.2 onu alanın toplamına uyguluyor ve §8.2 yazmıyor.
-static func validation_per_day() -> float:
+static func validation_per_day(founder_share: float = 1.0) -> float:
 	if not ProductState.is_live():
 		return 0.0
 	var coef: float = VALIDATION_COEF_RESEARCHED if ResearchSeam.completed("bug_tracker") else VALIDATION_COEF
-	return coef * _desk_sum(HRConstants.AREA_CUSTOMER_SUCCESS)
+	return coef * _desk_sum(HRConstants.AREA_CUSTOMER_SUCCESS, founder_share)
 
 
 ## §8.4 — düzeltme/gün = 1,2 × Σ etkin Yazılım × saat/8, yine YALNIZ Destek masası.
 ## Koşu yokken 0: hiçbir hata kendiliğinden çözülmez (§8.1).
-static func fix_per_day() -> float:
+static func fix_per_day(founder_share: float = 1.0) -> float:
 	if not ProductState.is_live() or not ProductState.fix_run_active():
 		return 0.0
-	return FIX_COEF * _desk_sum(HRConstants.AREA_ENGINEERING)
+	return FIX_COEF * _desk_sum(HRConstants.AREA_ENGINEERING, founder_share)
 
 
 ## İki işteki kişi 0,5 odakla bölünür — `effective_skill` bunu zaten uyguluyor, yani
-## koşu sırasında doğrulamanın sürmesi (§8.4) bedavaya gelmiyor.
-static func _desk_sum(area_key: String) -> float:
+## koşu sırasında doğrulamanın sürmesi (§8.4) bedavaya gelmiyor. `founder_share` kurucunun
+## katkısını çarpar; yalnız saatlik tik toplantı payını verir.
+static func _desk_sum(area_key: String, founder_share: float) -> float:
 	var total: float = 0.0
 	for c in desk_roster():
-		total += HRSystem.daily_contribution(c, area_key)
+		total += HRSystem.daily_contribution(c, area_key) \
+			* (founder_share if c.category == "founder" else 1.0)
 	return total
 
 
@@ -252,11 +259,11 @@ static func daily_satisfaction_damage() -> float:
 	return maxf(support + InfraSystem.satisfaction_delta_per_day(), DAMAGE_DAILY_CAP)
 
 
-## §8.3 dağıtımı — B2B'de zarar AKTİF HESAPLARA EŞİT bölünür, B2C'de Satış'ın tek toplu
-## kitle kaydına işler (ücretli kademe açılmadan o kayıt yoktur). Yazma yolu
-## CustomerRegistry.set_satisfaction (WRITE-THROUGH LAW).
+## §8.3 dağıtımı — tikin zararı, tavanlı günlük zararın yedi günüdür. B2B'de zarar AKTİF
+## HESAPLARA EŞİT bölünür, B2C'de Satış'ın tek toplu kitle kaydına işler (ücretli kademe
+## açılmadan o kayıt yoktur). Yazma yolu CustomerRegistry.set_satisfaction (WRITE-THROUGH LAW).
 static func apply_daily_satisfaction_damage() -> void:
-	var damage: float = daily_satisfaction_damage()
+	var damage: float = TimeModel.per_tick(daily_satisfaction_damage())
 	if damage >= 0.0:
 		return
 	var targets: Array[Customer] = []
@@ -347,12 +354,12 @@ static func warmth_band() -> String:
 
 
 ## §9 — ilgi SÜRÜM yaşından türetilir (ürün yaşından değil, §17). Saf fonksiyon:
-## saklanan değeri okumaz.
+## saklanan değeri okumaz. Yaş tik başında ölçülür: ilgi tik başında yazılır ve satış o sayıyı okur,
+## canlı okuma da aynı sayıyı verir.
 static func interest_now() -> float:
 	if not ProductState.is_live():
 		return 0.0
-	var age: float = float(ProductState.version_age_days())
-	return ProductState.INTEREST_MAX * pow(0.5, age / INTEREST_HALF_LIFE)
+	return ProductState.INTEREST_MAX * pow(0.5, ProductState.version_age() / INTEREST_HALF_LIFE)
 
 
 # =========================================================================

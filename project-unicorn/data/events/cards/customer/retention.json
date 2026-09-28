@@ -1,5 +1,5 @@
 {
-  "_port_note": "latch_key entity gives each account its own brake. tick: signal on `customer_health_changed`: the decision belongs to the EDGE into Risk, not the state — a daily tick would ask again every draw for as long as the account is dying — and the signal carries the customer id, so the emitter binds the slot. The cooldown is ONE day: the Sales tab's İlgilen button re-opens the same card, and the player may still rescue before expiry; what one day forbids is re-opening the card just answered, which is an undo, not a decision. Stall and discount each cost reputation, not brand: holding one account back is a private credibility cost, not a market-facing one.",
+  "_port_note": "latch_key entity gives each account its own brake. tick: signal on `customer_health_changed`: the decision belongs to the EDGE into Risk, not the state — a daily tick would ask again every draw for as long as the account is dying — and the signal carries the customer id, so the emitter binds the slot. The cooldown is ONE week: the Sales tab's İlgilen button re-opens the same card, and the player may still rescue before expiry; what one week forbids is re-opening the card just answered, which is an undo, not a decision. Stall and discount each cost reputation, not brand: holding one account back is a private credibility cost, not a market-facing one.",
   "id": "customer.retention",
   "version_scope": "demo",
   "category": "customer",
@@ -19,7 +19,7 @@
     }
   },
   "latch": {
-    "cooldown_days": 1
+    "cooldown_weeks": 1
   },
   "latch_key": "entity",
   "condition": {
@@ -81,7 +81,7 @@
           "verb": "promise_create",
           "scope": "customer",
           "feature_id": "pain",
-          "deadline_days": 14
+          "deadline_weeks": 2
         },
         {
           "verb": "add_reputation",
@@ -177,7 +177,7 @@
     }
   },
   "_r8a_note": "A non-critical interrupt is demotable (§13.2), and a demoted card lands on the desk with a clock — which is the only reason paper is a safe floor for I4. So it carries the paper trio even though it usually renders as an interrupt.",
-  "expires_days": 7,
+  "expires_weeks": 1,
   "on_expire": {
     "penalties": [
       {

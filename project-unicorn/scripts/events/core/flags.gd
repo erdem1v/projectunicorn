@@ -4,8 +4,8 @@ extends RefCounted
 # THE ENGINE'S OWN FLAG STORE (GDD §16.1). Three kinds of memory that are not History:
 #
 #   flags        a fact that is simply true    "frank_seed_taken"
-#   timed_flags  a fact with an expiry day     "negotiation_window_open" for 3 days
-#   stamps       a day something happened      days_since_flag reads these
+#   timed_flags  a fact with an expiry tick    "negotiation_window_open" for 1 week
+#   stamps       a tick something happened     weeks_since_flag reads these
 #
 # SEPARATE FROM GameState.flags ON PURPOSE. GameState.flags is SYSTEM state (FLAG_TYPES);
 # letting a card write it through a generic set_flag would let content reach past every seam,
@@ -47,17 +47,17 @@ static func has(name: String) -> bool:
 
 # --- Timed flags -----------------------------------------------------------
 
-static func set_timed(name: String, days: int, source: String = "effect") -> void:
+static func set_timed(name: String, weeks: int, source: String = "effect") -> void:
 	_timed[name] = {
-		"expires_on": GameState.day + days,
+		"expires_on": GameState.day + TimeModel.ticks(weeks),
 		"set_day": GameState.day,
 		"set_by": source,
 	}
 
 
-## Days left before it lapses; -1 when it is not a live timed flag at all.
+## Weeks left before it lapses; -1 when it is not a live timed flag at all.
 ## -1 rather than 0 so `flag_expires_within: 0` cannot be satisfied by "there is no such flag".
-static func days_until_expiry(name: String) -> int:
+static func weeks_until_expiry(name: String) -> int:
 	if not _timed.has(name):
 		return -1
 	var left: int = int((_timed[name] as Dictionary)["expires_on"]) - GameState.day
@@ -65,16 +65,16 @@ static func days_until_expiry(name: String) -> int:
 
 
 ## Sweep lapsed timed flags. Called once per daily tick, BEFORE any condition is read, so a
-## flag can never be observed one day past its own expiry.
+## flag can never be observed one tick past its own expiry.
 static func tick_expiry() -> void:
 	for name in _timed.keys():
 		if int((_timed[name] as Dictionary)["expires_on"]) < GameState.day:
 			_timed.erase(name)
 
 
-# --- Day stamps ------------------------------------------------------------
+# --- Stamps ----------------------------------------------------------------
 
-## Mark today. Re-stamping MOVES the day: "days since the last time X happened" is almost
+## Mark this tick. Re-stamping MOVES the stamp: "weeks since the last time X happened" is almost
 ## always the question, and a stamp that refused to move would answer a different one.
 static func stamp(name: String, source: String = "effect") -> void:
 	_stamps[name] = {"day": GameState.day, "set_by": source}
@@ -84,9 +84,9 @@ static func has_stamp(name: String) -> bool:
 	return _stamps.has(name)
 
 
-## Days elapsed since the stamp, or -1 when it was never stamped. The caller must treat -1 as
-## "no", never as a large number — see the note in EvCondition._leaf_days_since.
-static func days_since(name: String) -> int:
+## Weeks elapsed since the stamp, or -1 when it was never stamped. The caller must treat -1 as
+## "no", never as a large number — see the note in EvCondition._leaf_weeks_since.
+static func weeks_since(name: String) -> int:
 	if not _stamps.has(name):
 		return -1
 	return GameState.day - int((_stamps[name] as Dictionary)["day"])

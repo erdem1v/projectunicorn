@@ -33,13 +33,15 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_debug_fkey(key)
 		return
-	# Hız: Space pause/devam, 1-3 hız basamağı. 1-4 MeetingScene / TermSheetTable içinde
-	# diyalog seçimi de; onlar yalnız modal açıkken var, Guard 2 ayrımı sağlar.
+	# Hız: Space pause/devam, 1-4 hız basamağı. 1-4 MeetingScene / TermSheetTable içinde
+	# diyalog seçimi de; onlar yalnız modal açıkken var, Guard 2 ayrımı sağlar. Kurucunun
+	# toplantı yolculuğunda bu tuşları OfficeTravel yutar.
 	var speed_idx: int = -1
 	match key.keycode:
 		KEY_1, KEY_KP_1: speed_idx = 1
 		KEY_2, KEY_KP_2: speed_idx = 2
 		KEY_3, KEY_KP_3: speed_idx = 3
+		KEY_4, KEY_KP_4: speed_idx = 4
 	if speed_idx < 0 and key.keycode != KEY_SPACE and key.keycode != KEY_ESCAPE:
 		return
 	# Guard 1: metin alanı odaklı → tuş karakterini yazsın. Esc'te LineEdit odağı
@@ -75,8 +77,8 @@ func _input(event: InputEvent) -> void:
 # EventManager'ın olay hattını kalıcı olarak kilitler.
 func _debug_fkey(key: InputEventKey) -> void:
 	if key.keycode == KEY_F11:
-		# Canlı veriyle ay özeti; Shift = uç-değer yerleşim fikstürü.
-		MonthSummarySystem.debug_force_summary(key.shift_pressed)
+		# Dönemin şimdiye kadarki özeti; Shift = uç-değer yerleşim fikstürü.
+		SummarySystem.debug_force_summary(key.shift_pressed)
 		return
 	if key.shift_pressed and key.keycode in [KEY_F2, KEY_F4, KEY_F5, KEY_F6]:
 		if _layer_busy("ModalLayer"):
@@ -110,9 +112,9 @@ func _debug_open_term_table() -> void:
 
 
 # Argless relays for the MCP runtime bridge (it can't pass typed args). Debug builds only.
-func debug_force_month_extreme() -> void:
+func debug_force_summary_extreme() -> void:
 	if OS.is_debug_build():
-		MonthSummarySystem.debug_force_summary(true)
+		SummarySystem.debug_force_summary(true)
 
 
 func debug_force_meeting() -> void:
@@ -157,24 +159,25 @@ func _debug_endgame_key(keycode: Key) -> void:
 			# Marka çöküşü ön şartları.
 			GameState.set_brand(10)
 			GameState.active_scandal = true
-			GameState.brand_low_since_day = maxi(1, GameState.day - 30)
+			GameState.brand_low_since_day = maxi(1, GameState.day - TimeModel.ticks(EndingsSystem.BRAND_COLLAPSE_WINDOW))
 		KEY_F7:
 			# Kaskad ön şartları: 3 ret, ölü metrikler.
 			GameState.vc_rejections = 3
 			GameState.set_mrr(0)
 		KEY_F8:
 			# Kârlılık koşulu: PROFIT_STREAK_MONTHS artıda ay kapanışı (marj %20) + MRR tabanı.
+			# Damgalar haftalık tiktir; fikstürün ayı dört haftadır.
 			GameState.month_history.clear()
 			for i in EndingsSystem.PROFIT_STREAK_MONTHS:
-				GameState.push_month_close({"start_day": 1 + i * 30, "end_day": 30 + i * 30,
+				GameState.push_month_close({"start_day": 1 + i * 4, "end_day": 4 + i * 4,
 					"mrr_close": EndingsSystem.BOOTSTRAP_WIN_MRR, "income": 30_000, "expense": 24_000,
-					"net": 6_000, "red_days": 0})
+					"net": 6_000, "red_weeks": 0})
 			GameState.set_mrr(EndingsSystem.BOOTSTRAP_WIN_MRR)
 			if GameState.cash < 0:
 				GameState.set_cash(1000)
 		KEY_F9:
 			# Yumuşak tavan arifesi.
-			GameState.day = EndingsSystem.SOFT_CAP_DAY - 1
+			GameState.day = TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK) - 1
 		KEY_F10:
 			# Pivot teklifi ön şartları: 3 ret, canlı metrikler.
 			GameState.vc_rejections = 3

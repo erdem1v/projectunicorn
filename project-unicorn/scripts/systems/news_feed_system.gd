@@ -17,7 +17,7 @@ extends RefCounted
 # Repeat yok: bir sektör satırı havuz tükenene dek tekrar etmez, sonra reshuffle.
 #
 # Ticker tüketici sözleşmesi: get_stream() (en yeni önce) + get_lines_for_day(day)
-# + EventBus.news_stream_changed (gün-sonu repaint kancası). Satır şekli:
+# + EventBus.news_stream_changed (tik-sonu repaint kancası). Satır şekli:
 #   {day: int, kind: "sektor"|"rakip"|"biz", src: String, txt: String}
 # news_ticker.gd'nin {src, txt} vokabüleriyle bire bir uyumlu.
 #
@@ -28,20 +28,20 @@ const TARGET_SEKTOR := 0.5
 const TARGET_RAKIP := 0.3
 const TARGET_BIZ := 0.2
 const BIZ_HARD_CAP := 0.20          # (biz+1)/(toplam+1) bu oranı AŞAMAZ — sert kapı
-const DAILY_LINES_MIN := 3
-const DAILY_LINES_MAX := 5
+const WEEKLY_LINES_MIN := 3
+const WEEKLY_LINES_MAX := 5
 const STREAM_CAP := 30
 const BIZ_BUFFER_CAP := 10
-# Aynı rakip bu kadar gün içinde ikinci kez haber OLMAZ. Gün bazlı cooldown,
+# Aynı rakip bu kadar hafta içinde ikinci kez haber OLMAZ. Hafta bazlı cooldown,
 # adet bazlı "son N rakip" değil: adet bazlısı, nitelikli rakip sayısı N'in
 # altına düşünce kendini kilitler (yeni emisyon yok → rotasyon yok → sonsuz dışlama).
-const RIVAL_COOLDOWN_DAYS := 2
+const RIVAL_COOLDOWN_WEEKS := 1
 # "Büyük hamle" eşiği, % puan — dev/yerleşik/holding ancak bunu aşarak haber olur.
 # Pay modelinin (rival_registry._share_at) GERÇEK dağılımından türetildi; 10 alt-tür
 # × 11 satır × 200 gün taraması haftalık hareketin İKİ banda ayrıldığını gösteriyor:
 #   RUTİN  — büyüme terimi tam olarak seed × momentum × 0,028 ve hep aynı kalır;
 #            tavanı 0,051 (lider startup) / 0,045 (lider yerleşik) / 0,015 (holding).
-#   SIÇRAMA— wobble'ın hafta bloğu atladığı tek gün (gün 70); 0,061 (ma_doruk, id
+#   SIÇRAMA— wobble'ın hafta anahtarının basamak attığı tek tik (tik 10); 0,061 (ma_doruk, id
 #            global olduğu için HER koşuda aynı) ile 0,271 (startup) arasında.
 # Eşik iki bandın ARASINA oturur: rutin hiçbir zaman "büyük" sayılmaz, gerçek sıçrama
 # her zaman sayılır. Ölçülen kapı: yerleşik alt-türlerin 8/10'unda + holding her
@@ -126,7 +126,7 @@ const RIVAL_UP_COUNT := 4
 const RIVAL_DOWN_COUNT := 3
 
 
-# --- Günlük kompozisyon ------------------------------------------------------
+# --- Haftalık kompozisyon ----------------------------------------------------
 
 static func daily_tick() -> void:
 	var nf: Dictionary = _ensure_state()
@@ -135,9 +135,9 @@ static func daily_tick() -> void:
 	# Ship öncesi güvenli: ürün yokken rakip kaynağı susar, dünya (sektör) konuşur.
 	if sub_id != "":
 		rival_pool = _rival_candidates(RivalRegistry.get_market_snapshot(sub_id), nf)
-	var lines_today: int = DAILY_LINES_MIN \
-		+ absi(hash("nf_count|%d" % GameState.day)) % (DAILY_LINES_MAX - DAILY_LINES_MIN + 1)
-	for slot in lines_today:
+	var lines: int = WEEKLY_LINES_MIN \
+		+ absi(hash("nf_count|%d" % GameState.day)) % (WEEKLY_LINES_MAX - WEEKLY_LINES_MIN + 1)
+	for slot in lines:
 		match _pick_source(nf, rival_pool):
 			"rakip":
 				_emit_rakip(nf, rival_pool)
@@ -153,7 +153,7 @@ static func on_headline_added(source: String, text: String) -> void:
 	# akışa girişi daily_tick'in kota yürüyüşü ve sert kapı belirler.
 	#
 	# TAŞMA YÖNÜ (sözleşme): kuyruk dolduğunda EN YENİ satır düşer, en eski DEĞİL.
-	# Sert kapı günde ~0,7 biz satırı boşaltır; otonom kapanışlar + ekip ayrılıkları
+	# Sert kapı haftada ~0,7 biz satırı boşaltır; otonom kapanışlar + ekip ayrılıkları
 	# bundan hızlı üretir, yani kuyruk şişer ve taşma kaçınılmazdır — soru "kim
 	# kaybeder" sorusudur. Yeni satır ticker'a ZATEN canlı düştü (news_ticker'ın
 	# headline_added kulağı) ve MAX_LIVE_LINES penceresinde hâlâ duruyor; en eskinin
@@ -199,7 +199,7 @@ static func _ensure_state() -> Dictionary:
 		nf["counts"] = {"sektor": 0, "rakip": 0, "biz": 0}   # LOC-DATA news line kind id
 		nf["biz_buffer"] = []
 		nf["biz_dropped"] = 0      # kuyruk doluyken geri çevrilen milestone sayısı
-		nf["recent_rivals"] = {}   # rival id -> son haber günü (cooldown penceresi)
+		nf["recent_rivals"] = {}   # rival id -> son haber tiki (cooldown penceresi)
 		nf["stream"] = []
 	return nf
 
@@ -269,7 +269,7 @@ static func _rival_candidates(snap: Dictionary, nf: Dictionary) -> Array:
 	for row in snap["rivals"]:
 		if not bool(row["moved_recently"]):
 			continue
-		if GameState.day - int(recent.get(String(row["id"]), -999)) < RIVAL_COOLDOWN_DAYS:
+		if GameState.day - int(recent.get(String(row["id"]), -999)) < TimeModel.ticks(RIVAL_COOLDOWN_WEEKS):
 			continue
 		var big: bool = float(row["delta_pct"]) >= RIVAL_BIG_MOVE_PCT
 		var near: bool = absf(float(row["share_pct"]) - player_pct) <= RIVAL_NEAR_BAND_PCT
@@ -283,7 +283,7 @@ static func _emit_rakip(nf: Dictionary, rival_pool: Array) -> void:
 	var recent: Dictionary = nf["recent_rivals"]
 	recent[String(row["id"])] = GameState.day
 	for rid in recent.keys():
-		if GameState.day - int(recent[rid]) > RIVAL_COOLDOWN_DAYS * 4:
+		if GameState.day - int(recent[rid]) > TimeModel.ticks(RIVAL_COOLDOWN_WEEKS) * 4:
 			recent.erase(rid)   # süresi çoktan dolmuş girdileri temizle (sözlük küçük kalsın)
 	var up: bool = int(row["trend"]) >= 0
 	var count: int = RIVAL_UP_COUNT if up else RIVAL_DOWN_COUNT

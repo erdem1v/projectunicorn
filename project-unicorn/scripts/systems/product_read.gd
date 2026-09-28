@@ -72,9 +72,9 @@ static func unconfirmed(_product_id: String = "") -> int:
 	return ProductState.reports_incoming()
 
 
-## §17 — SÜRÜM yaşı, ürün yaşı DEĞİL.
+## §17 — SÜRÜM yaşı hafta olarak, ürün yaşı DEĞİL.
 static func version_age(_product_id: String = "") -> int:
-	return ProductState.version_age_days()
+	return ProductState.version_age_weeks()
 
 
 ## §9 — kullanım: akış modelinin çarpanını besleyen sayı (B2C kitle, B2B hesap).

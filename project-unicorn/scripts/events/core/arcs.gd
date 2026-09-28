@@ -1,7 +1,7 @@
 class_name EvArcs
 extends RefCounted
 
-# ARCS (GDD §10). An arc OWNS a chain of cards, so a promise made on day 10 cannot be orphaned
+# ARCS (GDD §10). An arc OWNS a chain of cards, so a promise made in week 2 cannot be orphaned
 # by one link's condition never coming true: a card dies, the arc lives, and when its subject
 # leaves it applies a policy (§10.5) instead of evaporating (§0.2).
 #
@@ -144,8 +144,8 @@ static func reassign_subject(arc_id: String, subject: Dictionary) -> bool:
 # --- The three invalidation policies (§10.5) -------------------------------
 
 ## Pause without dying. The arc keeps its step and vars; its scheduled steps leave the global
-## schedule and wait as RELATIVE days. A past-due schedule entry fires immediately (§20 B1), so
-## keeping absolute days would dump every frozen step at once on resume.
+## schedule and wait as RELATIVE weeks. A past-due schedule entry fires immediately (§20 B1), so
+## keeping absolute ticks would dump every frozen step at once on resume.
 static func pause_for_subject(arc_id: String) -> void:
 	var st: Dictionary = _live.get(arc_id, {})
 	if st.is_empty() or String(st["state"]) != STATE_ACTIVE:
@@ -169,7 +169,7 @@ static func awaiting_timed_out(arc_id: String) -> bool:
 	if st.is_empty() or String(st["state"]) != STATE_AWAITING:
 		return false
 	var since: int = int(st["awaiting_since"])
-	return since >= 0 and (GameState.day - since) >= EvTuning.ARC_AWAITING_SUBJECT_TIMEOUT_DAYS
+	return since >= 0 and (GameState.day - since) >= TimeModel.ticks(EvTuning.ARC_AWAITING_SUBJECT_TIMEOUT_WEEKS)
 
 
 # --- State reads (EvCondition's arc leaves) --------------------------------

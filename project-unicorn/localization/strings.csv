@@ -1,9 +1,11 @@
 keys,tr,en
 RUNWAY_PROFITABLE,Artıda,Default Alive
-RUNWAY_PROFITABLE_NOTE,"Gider gelirin altında; kasa erimiyor. Sayaç, günlük net eksiye dönerse işler.",Expenses run below revenue; the treasury holds. The clock starts only if daily net turns negative.
+RUNWAY_PROFITABLE_NOTE,"Gider gelirin altında; kasa erimiyor. Sayaç, net akış eksiye dönerse işler.",Expenses run below revenue; the treasury holds. The clock starts only if net flow turns negative.
 RUNWAY_UNIT_MONTHS,ay,mo
-RUNWAY_UNIT_DAYS,gün,d
+RUNWAY_UNIT_WEEKS,hafta,wk
 RUNWAY_GROSS_LABEL,Brüt Runway,Gross Burn Runway
+RUNWAY_CROSS_TICKER,Runway {n} ayın altına indi,Runway fell below {n} months
+RUNWAY_CROSS_TICKER_ONE,Runway {n} ayın altına indi,Runway fell below {n} month
 SETTINGS_LANGUAGE,Dil,Language
 LANG_TR,Türkçe,Turkish
 LANG_EN,İngilizce,English
@@ -109,7 +111,8 @@ SALES_CHIP_RISK,RİSK ALTINDA,AT RISK
 SALES_CHIP_EXPANSION,BÜYÜMEK İSTİYOR,WANTS TO GROW
 SALES_CHIP_NEW,YENİ,NEW
 SALES_STEWARD,Müşteri temsilcisi: {name},Account manager: {name}
-SALES_CHURN_COUNTDOWN,Churn'e ~{n} gün,~{n} days to churn
+SALES_CHURN_COUNTDOWN,Churn'e ~{n} hafta,~{n} weeks to churn
+SALES_CHURN_COUNTDOWN_ONE,Churn'e ~{n} hafta,~{n} week to churn
 SALES_REASON_PREFIX,Sebep: {reason},Reason: {reason}
 SALES_REASON_OUTAGE,sık kesinti şikayeti,frequent outage complaints
 SALES_REASON_SATISFACTION,memnuniyet düşüyor,satisfaction is falling
@@ -119,7 +122,8 @@ SALES_ACTION_EXPAND,Değerlendir,Evaluate
 ENDING_NEXT,SIRADA NE VAR?,WHAT'S NEXT?
 ENDING_BADGE_EA,ERKEN ERİŞİM'DE,IN EARLY ACCESS
 ENDING_WISHLIST,WISHLIST'E EKLE,ADD TO WISHLIST
-ENDING_RUN_META,BU RUN: {days} GÜN · NORMAL MOD,THIS RUN: {days} DAYS · NORMAL MODE
+ENDING_RUN_META,BU OYUN: {weeks} HAFTA · NORMAL MOD,THIS RUN: {weeks} WEEKS · NORMAL MODE
+ENDING_RUN_META_ONE,BU OYUN: {weeks} HAFTA · NORMAL MOD,THIS RUN: {weeks} WEEK · NORMAL MODE
 ENDING_RETRY,TEKRAR DENE,TRY AGAIN
 ENDING_HARD_MODE,ZOR MOD · YAKINDA,HARD MODE · SOON
 ENDING_SOON_TOOLTIP,Yakında,Coming soon
@@ -141,7 +145,8 @@ DESK_PAPER_TAG_GATE,EŞİK,GATE
 DESK_PAPER_TAG_FUNDING,YATIRIM,FUNDING
 DESK_PAPER_TAG_ATLAS,ATLAS,ATLAS
 DESK_PAPER_GATE_TITLE,Faz kapısı açık — karar bekliyor,Phase gate open: decision pending
-DESK_PAPER_SHEET_TITLE,Yatırım teklifi masada — son {days} gün,"Offer on the table, {days} days left"
+DESK_PAPER_SHEET_TITLE,"Yatırım teklifi masada, son {weeks} hafta","Offer on the table, {weeks} weeks left"
+DESK_PAPER_SHEET_TITLE_ONE,"Yatırım teklifi masada, son hafta","Offer on the table, final week"
 DESK_PAPER_SHEETS_TITLE,{n} yatırım teklifi masada,{n} offers on the table
 DESK_PAPER_ATLAS_TITLE,{n} aday dosyası hazır,{n} candidate files ready
 DESK_PAPER_EXPANSION_TITLE,Büyüme talebi masada,Expansion request waiting
@@ -196,9 +201,13 @@ SET_MUSIC_ENABLED,Arka plan müziği,Background music
 SET_MUTE_UNFOCUSED,Odak kaybında sessize al,Mute when unfocused
 SET_AUTOSAVE,Otomatik kayıt sıklığı,Autosave frequency
 SET_AUTOSAVE_OFF,Kapalı,Off
-SET_AUTOSAVE_DAILY,Her gün,Every day
 SET_AUTOSAVE_WEEKLY,Her hafta,Every week
 SET_AUTOSAVE_MONTHLY,Her ay,Every month
+SET_SUMMARY_FREQ,Özet sıklığı,Summary frequency
+SET_SUMMARY_FREQ_WEEKLY,Her hafta,Every week
+SET_SUMMARY_FREQ_MONTHLY,Her ay,Every month
+SET_SUMMARY_FREQ_QUARTERLY,Her çeyrek,Every quarter
+SET_SUMMARY_FREQ_YEARLY,Her yıl,Every year
 SET_COLORBLIND,Renk körü dostu palet,Colourblind-friendly palette
 SET_COLORBLIND_NOTE,Olumlu ve olumsuz renk çifti maviye ve turuncuya döner.,The positive and negative colour pair becomes blue and orange.
 SET_OPEN_SAVE_FOLDER,Kayıt klasörünü aç,Open save folder
@@ -217,7 +226,7 @@ SYS_MAIN_MENU,Ana menüye dön,Return to main menu
 SYS_SOON,YAKINDA,SOON
 SYS_QUIT,Masaüstüne çık,Quit to desktop
 SYS_QUIT_TITLE,Kaydedilmemiş ilerleme var.,You have unsaved progress.
-SYS_QUIT_BODY,Son kayıttan bu yana oynadığın günler kaybolur.,The days you have played since your last save will be lost.
+SYS_QUIT_BODY,Son kayıttan bu yana oynadığın haftalar kaybolur.,The weeks you have played since your last save will be lost.
 SYS_QUIT_SAVE,Kaydet ve çık,Save and quit
 SYS_QUIT_DISCARD,Çık,Quit
 SYS_CANCEL,Vazgeç,Cancel
@@ -227,7 +236,7 @@ SAVE_NEW_SLOT,Yeni kayıt,New save
 SAVE_QUICK_SLOT,Hızlı kayıt,Quicksave
 SAVE_AUTO_SLOT,Otomatik kayıt {n},Autosave {n}
 SAVE_MANUAL_SLOT,Kayıt {n},Save {n}
-SAVE_META_DAY,Gün {n},Day {n}
+SAVE_META_DAY,{date},{date}
 SAVE_META_CASH,Kasa {amount},Cash {amount}
 SAVE_META_MRR,MRR {amount},MRR {amount}
 SAVE_EMPTY,Henüz kayıt yok.,No saves yet.
@@ -239,7 +248,7 @@ SAVE_DELETE_TITLE,Kayıt silinsin mi?,Delete this save?
 SAVE_DELETE_BODY,{label} geri getirilemez.,{label} cannot be brought back.
 SAVE_DELETE_OK,Sil,Delete
 SAVE_LOAD_CONFIRM_TITLE,Kaydedilmemiş ilerleme var.,You have unsaved progress.
-SAVE_LOAD_CONFIRM_BODY,Bu kaydı açarsan son kayıttan bu yana oynadığın günler kaybolur.,Opening this save loses the days you have played since your last save.
+SAVE_LOAD_CONFIRM_BODY,Bu kaydı açarsan son kayıttan bu yana oynadığın haftalar kaybolur.,Opening this save loses the weeks you have played since your last save.
 SAVE_LOAD_CONFIRM_OK,Yükle,Load
 SAVE_ERR_CORRUPT,Dosya okunamıyor.,This file cannot be read.
 SAVE_ERR_NEWER,Bu kayıt daha yeni bir sürümden; açılamıyor.,This save comes from a newer version and cannot be opened.
@@ -291,10 +300,10 @@ HR_TRAINING_CTA,EĞİTİME GÖNDER · {fee},SEND TO TRAINING · {fee}
 HR_TRAINING_AT_CAP,Bu alan tavanda.,This area is already at the cap.
 HR_TRAINING_NOT_EARNED,Deneyim barı dolmadı.,The experience bar is not full yet.
 HR_DURATION_WEEKS,{n} hafta,{n} weeks
-HR_DURATION_DAYS,{n} gün,{n} days
-PER_HEADER_META,{origin} · {phase} · KIDEM {n}. GÜN,{origin} · {phase} · TENURE DAY {n}
+HR_DURATION_WEEKS_ONE,1 hafta,1 week
+PER_HEADER_META,{origin} · {phase} · KIDEM {n}. HAFTA,{origin} · {phase} · TENURE WEEK {n}
 PER_FOUNDER,KURUCU,FOUNDER
-PER_TENURE,KIDEM · {n}. GÜN,TENURE · DAY {n}
+PER_TENURE,KIDEM · {n}. HAFTA,TENURE · WEEK {n}
 PER_EXPERIENCE,DENEYİM,EXPERIENCE
 PER_TASK_LABEL,GÖREV,TASK
 PER_TRAITS,HUYLAR,TRAITS
@@ -352,7 +361,8 @@ HR_SUMMARY,ÇALIŞAN {count} · ORTALAMA MORAL {morale} · AYLIK MAAŞ YÜKÜ {p
 HR_SEARCH_START,+ İŞE ALIM BAŞLAT,+ Start Recruitment
 HR_SEARCH_START_INLINE,İŞE ALIM BAŞLAT,Start Recruitment
 HR_EMPTY_ROW,Henüz kimse yok,Nobody here yet
-HR_STATE_TRAINING,Eğitimde · {days} gün,In training · {days} d
+HR_STATE_TRAINING,Eğitimde · {n} hafta,In training · {n} weeks
+HR_STATE_TRAINING_ONE,Eğitimde · 1 hafta,In training · 1 week
 HR_TRAINING,EĞİTİM,TRAINING
 HR_TRAINING_SEND,EĞİTİME GÖNDER,SEND TO TRAINING
 HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
@@ -398,14 +408,7 @@ MONTH_9,Eylül,September
 MONTH_10,Ekim,October
 MONTH_11,Kasım,November
 MONTH_12,Aralık,December
-DOW_0,Paz,Sun
-DOW_1,Pzt,Mon
-DOW_2,Sal,Tue
-DOW_3,Çar,Wed
-DOW_4,Per,Thu
-DOW_5,Cum,Fri
-DOW_6,Cmt,Sat
-DATE_LINE,"{dow}, {day} {mon} {year}","{dow}, {mon} {day}, {year}"
+DATE_LINE,Hafta {week} · {mon} {year},Week {week} · {mon} {year}
 PCT_PATTERN,%{v},{v}%
 SHARE_FLOOR,"<%0,1",<0.1%
 NUM_GROUP_SEP,.,","
@@ -423,7 +426,8 @@ LOCK_BUILD_IN_PROGRESS,İNŞA EDİLİYOR · SEÇİM KİLİTLİ,BUILD IN PROGRESS
 FIN_PHASE_BOOTSTRAP,Bootstrap,Bootstrap
 FIN_PHASE_TRACTION,Traction,Traction
 FIN_PHASE_SERIES_A,Series A,Series A
-FIN_SHUTTER_COUNTDOWN,KEPENK: {n} GÜN,SHUTTER: {n} DAYS
+FIN_SHUTTER_COUNTDOWN,KEPENK: {n} HAFTA,SHUTTER: {n} WEEKS
+FIN_SHUTTER_COUNTDOWN_ONE,KEPENK: {n} HAFTA,SHUTTER: {n} WEEK
 FIN_CAP_CASH,KASA,CASH
 FIN_CAP_BURN,BURN,BURN
 FIN_CAP_NET,NET,NET
@@ -444,7 +448,7 @@ BUILD_SHIP_TOOLTIP_BUGS,Yayınla · {n} hata canlıya taşınır,Ship · {n} bug
 BUILD_BETA_GATE_LOCKED,GELİŞTİRME %100 olmadan BETA'ya geçilemez.,BETA needs DEVELOPMENT at 100%.
 BUILD_DESIGN_RUSH_CONFIRM,Tasarım turu tamamlanmadı. Bu sürüm potansiyelinin dörtte üçünü taşıyacak.,The design turn is unfinished. This version will carry three quarters of its potential.
 BUILD_DESIGN_RUSH_TITLE,Tasarımı yarıda bırak,Cut the design short
-BUILD_BETA_DAY,{n}. gün,Day {n}
+BUILD_BETA_WEEK,{n}. hafta,Week {n}
 BUILD_BUSY_NOBODY,Kimse üzerinde değil.,Nobody is on it.
 BUILD_BUSY_ELSEWHERE,Ekip başka işte.,The team is on other work.
 BUILD_BUSY_FIX_RUN,Ekip düzeltme koşusunda.,The team is on a fix run.
@@ -479,7 +483,6 @@ BUILD_BETA_TRIPLET,BULUNAN {found} · ÇÖZÜLEN {fixed} · KALAN {left},FOUND {
 PROD_PERCENT,%{n},{n}%
 PROD_TO_BETA_PLAIN,Beta'ya geç,Move to beta
 PROD_LAUNCH_PLAIN,Yayınla,Ship it
-BUILD_DEV_LINE,Geliştirme · ~{days} gün,Development · about {days} days
 BUILD_HALF_ROUND_TOOLTIP,Yarım tur sayılmaz,A half round doesn't count
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
@@ -533,7 +536,8 @@ HR_HOURS_HOVER_7,Kısa gün moral erimesini durdurur,A short day stops morale er
 HR_HOURS_HOVER_9,Ek mesai morali normalden hızlı eritir,Overtime erodes morale faster than normal
 HR_HOURS_HOVER_10,Ek mesai morali belirgin hızlı eritir,Overtime erodes morale markedly faster
 HR_HOURS_HOVER_11,Ek mesai morali çok hızlı eritir,Overtime erodes morale very fast
-HR_HOURS_COST_BURN,Günlük burn,Daily burn
+HR_HOURS_HOVER_LONG,On bir saatlik günü aşan her saat morali daha da hızlı eritir,Every hour past an eleven-hour day erodes morale faster still
+HR_HOURS_COST_BURN,Aylık burn,Monthly burn
 HR_HOURS_FACT_OVER,{n} çalışan mesaide,{n} on overtime
 HR_HOURS_FACT_SHORT,{n} çalışan kısa günde,{n} on a short day
 HR_HOURS_RULE_OVERTIME,Mesai saatleri %50 fazla ücretle ödenir,Overtime hours are paid at 50% above the hourly rate
@@ -687,20 +691,23 @@ HUNT_NO_OFFERS,Henüz teklif yok.,No offers yet.
 HUNT_ROAD_CLOSED,Series A için kapısı açık fon kalmadı. Bu yolda oturulacak masa yok.,No fund is left open for a Series A. There is no table left on this road.
 HUNT_EMPTY_SLOT,— boş slot —,— empty slot —
 HUNT_TERMS,Tahmini: değerleme {valuation} · pay {equity},Estimated: valuation {valuation} · equity {equity}
-HUNT_VALIDITY,Teklif süresi: {n} iş günü,Business days left on the offer: {n}
+HUNT_VALIDITY,Teklifte {n} hafta kaldı,{n} weeks left on the offer
+HUNT_VALIDITY_ONE,Teklifin son haftası,Final week of the offer
 HUNT_EST_VALUATION,~${lo}–{hi}M,~${lo}–{hi}M
 HUNT_EST_DILUTION,~%{lo}–{hi},~{lo}–{hi}%
 HUNT_DECISION_DUE,Süre doldu. Fon bir cevap bekliyor.,Time is up. The fund wants an answer.
-HUNT_QUEUED_OFFER,{investor} · sırada. Bir teklif kapanınca masaya gelir; süresi o gün başlar ({n} iş günü).,"{investor} · queued. It arrives when an offer slot frees up, with a fresh {n} business days."
+HUNT_QUEUED_OFFER,{investor} · sırada. Bir teklif kapanınca masaya gelir; süresi o hafta başlar ({n} hafta).,"{investor} · queued. It arrives when an offer slot frees up, with a fresh {n} weeks."
 HUNT_SIT_DOWN,Masaya otur,Sit down
 HUNT_WALK_AWAY,Masadan kalk,Walk away
 HUNT_WALK_CONFIRM_TITLE,Masadan kalkılsın mı?,Walk away from the table?
 HUNT_WALK_CONFIRM_BODY,Bu teklif yanar ve fon kapanır. Ret sayılmaz. Diğer teklifler açık kalır.,This offer burns and the fund closes. It does not count as a rejection. Your other offers stay open.
 HUNT_WALK_CONFIRM_OK,Kalk,Walk
-HUNT_MEETING_PENDING,Toplantı — {vc} · {n} gün,Meeting — {vc} · {n} days
-HUNT_PREP_PENDING,Hazırlık — {focus} · {when},Prep — {focus} · {when}
+HUNT_MEETING_PENDING,Toplantı: {vc} · {when},Meeting: {vc} · {when}
+HUNT_PREP_PENDING,Hazırlık: {focus} · {when},Prep: {focus} · {when}
 HUNT_PREP_READY,hazır,ready
-HUNT_DAYS,{n} gün,{n} days
+HUNT_WEEKS,{n} hafta sonra,in {n} weeks
+HUNT_THIS_WEEK,bu hafta,this week
+HUNT_NEXT_WEEK,gelecek hafta,next week
 HUNT_NONE_PENDING,Bekleyen yok.,Nothing pending.
 HUNT_COUNTER_PIVOT,Pivot — bootstrap yolu,Pivot — the bootstrap road
 HUNT_COUNTER_TABLES,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
@@ -722,14 +729,14 @@ HUNT_FOCUS_STORY,Hikâye,Story
 HUNT_FOCUS_REHEARSAL,Prova,Rehearsal
 SALES_CONVICTION,İKNA,CONVICTION
 HUNT_FRANK_LINE,Av açık. Kapanan masa: {n}. Üçüncüde yol biter.,The hunt is on. Tables closed: {n}. The third one ends it.
-HUNT_REQUEST_AGAIN,Tekrar iste (~{n} gün),Ask again (~{n} days)
-HUNT_REQUEST_MEETING,Toplantı iste (~{n} gün),Request a meeting (~{n} days)
+HUNT_REQUEST_AGAIN,Tekrar iste ({when}),Ask again ({when})
+HUNT_REQUEST_MEETING,Toplantı iste ({when}),Request a meeting ({when})
 HUNT_MEETING_BUSY,Başka bir toplantı bekliyor,Another meeting is already pending
 HUNT_MEETING_CANCEL,İptal et,Cancel
-HUNT_MEETING_RESCHEDULE,Ertele (~{n} gün),Reschedule (~{n} days)
-HUNT_CANCEL_TIP,Bu fonun bir sonraki toplantısında ikna −{n}. Bugün yeni toplantı ayarlanamaz.,Conviction −{n} at this fund's next meeting. No new meeting can be booked today.
+HUNT_MEETING_RESCHEDULE,Ertele ({when}),Reschedule ({when})
+HUNT_CANCEL_TIP,Bu fonun bir sonraki toplantısında ikna −{n}. Bu hafta yeni toplantı ayarlanamaz.,Conviction −{n} at this fund's next meeting. No new meeting can be booked this week.
 HUNT_RESCHEDULE_TIP,Bu fonun bir sonraki toplantısında ikna −{n}.,Conviction −{n} at this fund's next meeting.
-HUNT_MEETING_CANCELLED_TODAY,Bugün bir toplantı iptal edildi. Yenisi yarın ayarlanabilir.,A meeting was cancelled today. The next one can be booked tomorrow.
+HUNT_MEETING_CANCELLED_THIS_WEEK,Bu hafta bir toplantı iptal edildi. Yenisi gelecek hafta ayarlanabilir.,A meeting was cancelled this week. The next one can be booked next week.
 PRICE_TIP_PREMIUM,Bu kategori premium fiyatı kaldırır,This category can carry a premium price
 PRICE_TIP_VOLUME,Bu kategori hacim oyunu — düşük fiyat mantıklı,This category is a volume game — a low price makes sense
 GROWTH_MELTING,eriyor,shrinking
@@ -741,6 +748,7 @@ HEALTH_HEALTHY,sağlıklı,healthy
 HEALTH_AT_RISK,riskli,at risk
 HEALTH_CHURNING,kaçıyor,churning
 NOTICE_SRC_SALES,Satış,Sales
+NOTICE_SRC_FINANCE,Finans,Finance
 HR_BADGE_NEW,Yeni,New
 HR_TRAIT_LOYAL_LABEL,SADIK,Loyal
 HR_TRAIT_LOYAL_EFFECT,Moral düşükken bile kolay kolay ayrılmaz; rakip teklifine dayanır.,"Unlikely to leave even at low morale, and holds out against a rival offer."
@@ -799,13 +807,19 @@ HR_WARN_SALARY_CASHFLOW,"Bu maaş nakit akışını eksiye çevirir, kasa erimey
 HR_NEWS_FILES_READY,{role} arayışı için {n} aday dosyası masanda.,{n} candidate files for the {role} search are on your desk.
 HR_EV_RESIGN_TITLE,Ayrılık,A departure
 HR_EV_RESIGN_ACK,Anlaşıldı,Understood
-HR_STATE_ON_LEAVE_DAYS,İzinde · {n} gün kaldı,On leave · {n} days left
+HR_STATE_ON_LEAVE_WEEKS,İzinde · {n} hafta kaldı,On leave · {n} weeks left
+HR_STATE_ON_LEAVE_WEEKS_ONE,İzinde · 1 hafta kaldı,On leave · 1 week left
 HR_NEWS_BACK_FROM,{name} {whence} döndü,{name} is back from {whence}
-HR_NEWS_ON_LEAVE_MONTH,{name} bu ay izinde,{name} is on leave this month
+HR_NEWS_ON_LEAVE,{name} {n} hafta izinde,{name} is on leave for {n} weeks
+HR_NEWS_ON_LEAVE_ONE,{name} bir hafta izinde,{name} is on leave for a week
+HR_NEWS_ON_HOLIDAY,{name} {n} haftalığına tatile çıktı,{name} is off on holiday for {n} weeks
+HR_NEWS_ON_HOLIDAY_ONE,{name} bir haftalığına tatile çıktı,{name} is off on holiday for a week
 HR_WHENCE_LEAVE,izinden,leave
+HR_WHENCE_HOLIDAY,tatilden,holiday
 HR_FILES_ON_DESK,{n} aday dosyası masada.,{n} candidate files on your desk.
 HR_OPEN_FILES,DOSYALARI AÇ,OPEN THE FILES
-HR_SEARCHING,{role} aranıyor · {n}. gün,Searching for {role} · day {n}
+HR_SEARCHING,{role} aranıyor · dosyalar {n} hafta sonra gelir,Searching for {role} · files arrive in {n} weeks
+HR_SEARCHING_ONE,{role} aranıyor · dosyalar gelecek hafta gelir,Searching for {role} · files arrive next week
 HR_SEARCH_CANCEL_TITLE,Arayışı iptal et,Cancel the search
 HR_SEARCH_CANCEL_BODY,Arayış kapanır. Yeniden başlatırsan adaylar {span} sonra gelir.,The search closes. If you start again the candidates arrive in {span}.
 HR_SEARCH_CANCEL_OK,İptal et,Cancel it
@@ -1078,12 +1092,15 @@ PROD_PROFILE,ÜRÜN PROFİLİ,PRODUCT PROFILE
 PROD_CANCEL_BUILD,Geliştirmeyi iptal et,Cancel development
 PROD_CANCEL_BUILD_Q,Geliştirmeyi iptal et?,Cancel development?
 PROD_CANCEL_BUILD_BODY,Kurma ekranına dönersin · seçimlerini düzenleyip yeniden başlarsın.,You return to the setup screen · you can edit your picks and start again.
-PROD_CANCEL_BUILD_COST,{days} gün + {amount} yandı · geri gelmez. Sadece bundan sonrası durur.,{days} days and {amount} are burned · they do not come back. Only what follows stops.
+PROD_CANCEL_BUILD_COST,{weeks} hafta + {amount} yandı · geri gelmez. Sadece bundan sonrası durur.,{weeks} weeks and {amount} are burned · they do not come back. Only what follows stops.
+PROD_CANCEL_BUILD_COST_ONE,{weeks} hafta + {amount} yandı · geri gelmez. Sadece bundan sonrası durur.,{weeks} week and {amount} are burned · they do not come back. Only what follows stops.
 PROD_NAME_LABEL,Ürün adı,Product name
 PROD_NAME_SUGGEST,ÖNER,SUGGEST
 PROD_SELECTED_COUNT,{n} seçili,{n} selected
-PROD_TOTALS_COST,Toplam efor {efor} · Maliyet {amount} · Süre ~{days} gün,Total effort {efor} · Cost {amount} · About {days} days
-PROD_TOTALS,Toplam efor {efor} · Süre ~{days} gün,Total effort {efor} · About {days} days
+PROD_TOTALS_COST,Toplam efor {efor} · Maliyet {amount} · Süre ~{weeks} hafta,Total effort {efor} · Cost {amount} · About {weeks} weeks
+PROD_TOTALS_COST_ONE,Toplam efor {efor} · Maliyet {amount} · Süre ~{weeks} hafta,Total effort {efor} · Cost {amount} · About {weeks} week
+PROD_TOTALS,Toplam efor {efor} · Süre ~{weeks} hafta,Total effort {efor} · About {weeks} weeks
+PROD_TOTALS_ONE,Toplam efor {efor} · Süre ~{weeks} hafta,Total effort {efor} · About {weeks} week
 PROD_CASH_AFTER,Bittiğinde kasada {amount} kalır,{amount} left in the treasury when it is done
 PROD_CASH_DEDUCT, · {amount} kasadan düşer, · {amount} comes out of the treasury
 PROD_CONFIRM_START,Onayla ve Başlat,Confirm and Start
@@ -1092,9 +1109,7 @@ PROD_TEAM_REFUSE_JOB_CAP,Bu kişi zaten iki iş taşıyor; önce birini bırakma
 PROD_TEAM_REFUSE_ROLE,Bu rol yapım işini taşımıyor.,This role does not carry the build job.
 PROD_TEAM_REFUSE_INACTIVE,Bu kişi şu an çalışmıyor.,This person is not working right now.
 PROD_TEAM_REFUSE_OTHER,Bu kişi yapıma atanamadı.,This person could not be assigned to the build.
-PROD_PHASE_LINE,{phase} · {pct} · ~{days} gün,{phase} · {pct} · about {days} days
 PROD_BETA_LINE,Beta · bulunan {found} · çözülen {fixed} · açık {open},Beta · found {found} · fixed {fixed} · open {open}
-PROD_ROUND_LINE,{phase} · Tur {round} · ~{days} gün,{phase} · Round {round} · about {days} days
 PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
 PROD_STATUS,DURUM,STATUS
 PROD_OPEN_BUGS,AÇIK HATA,OPEN BUGS
@@ -1105,15 +1120,17 @@ PROD_ACTION_HARDEN_DESC,Hataları temizle · kararlılık geri gelir (geliştirm
 PROD_ACTION_PRICE,Fiyatlandır,Set the price
 PROD_WITH_SALES,SATIŞ İLE,WITH SALES
 PROD_ACTION_PRICE_B2B,B2B'de fiyat kontratta konuşulur · paket ve taban fiyatı ayarla.,In B2B the price is settled in the contract · set the package and the floor.
-PROD_LIVE_DAYS,V{version} · {days} GÜN CANLI,V{version} · {days} DAYS LIVE
-PROD_DAYS,{n} gün,{n} days
+PROD_LIVE_WEEKS,V{version} · {weeks} HAFTA CANLI,V{version} · {weeks} WEEKS LIVE
+PROD_LIVE_WEEKS_ONE,V{version} · {weeks} HAFTA CANLI,V{version} · {weeks} WEEK LIVE
+PROD_WEEKS,{n} hafta,{n} weeks
+PROD_WEEKS_ONE,{n} hafta,{n} week
 PROD_PROMISED,SÖZ VERİLDİ,PROMISED
 PROD_LIVE_SUFFIX, · CANLI, · LIVE
 PROD_VERSION_LIVE,v{version} · {date} · CANLI,v{version} · {date} · LIVE
 PROD_IN_DEVELOPMENT,GELİŞTİRMEDE,IN DEVELOPMENT
 PROD_UNPLANNED,planlanmadı,not planned
 PROD_VERSIONS,SÜRÜMLER,VERSIONS
-PROD_ETA_DAYS,~{n}+ GÜN,~{n}+ DAYS
+PROD_ETA_WEEKS,~{n}+ HAFTA,~{n}+ WEEKS
 PROD_MARKET_SHARE,pazar payı {share},market share {share}
 PROD_RIVAL_PASSED, · {rival} seni geçti., · {rival} passed you.
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
@@ -1256,10 +1273,12 @@ VC_WHY_CALLBACK,Kapı yeniden açık,The door reopened
 VC_WHY_MOVED,Randevuyu kaydırdın,You moved the meeting
 VC_PREP_BUSY,Zaten bir hazırlık sürüyor,A prep is already running
 VC_PREP_NEED_MEETING,Önce bu VC'yle toplantı iste,Ask this VC for a meeting first
-VC_PREP_TOO_SOON,Toplantıya {days} günden az kaldı,Fewer than {days} days left before the meeting
+VC_PREP_TOO_SOON,Toplantıya {weeks} haftadan az kaldı,Fewer than {weeks} weeks left before the meeting
+VC_PREP_TOO_SOON_ONE,"Toplantı bu hafta, hazırlığa vakit kalmadı","The meeting is this week, too late to prep"
+VC_BLOCK_LATE,Mesainin kalanı bir fonla masaya oturmaya yetmez. Artık gelecek hafta.,"Not enough of the workday left to sit down with a fund. Next week, then."
 VC_CALLBACK_REOPENED,Kapı yeniden açıldı: {investor}. Tekrar iste.,{investor}'s door is open again. Ask again.
 VC_SPEAKER_LIVE,{name} — Canlı,{name} — Live
-VC_STAT_STRIP,Kasa: {cash} · {runway_label}: {months} ay · Gün {day},Cash: {cash} · {runway_label}: {months} mo · Day {day}
+VC_STAT_STRIP,Kasa: {cash} · {runway_label}: {months} ay · {date},Cash: {cash} · {runway_label}: {months} mo · {date}
 VC_ODDS,{approach} — {difficulty} · {pct},{approach} — {difficulty} · {pct}
 VC_REHEARSED,PROVA EDİLDİ,REHEARSED
 VC_BEAT1_LABEL,Odayı Oku · 1/4,Read the Room · 1/4
@@ -1417,7 +1436,8 @@ TERM_BOARD_CLEAN,temiz,clean
 TERM_BOARD_SEATS,{n} koltuk,{n} seats
 TERM_BOARD_VETO, + veto, + veto
 TERM_INVESTMENT,{amount} yatırım,{amount} investment
-TERM_CASH_RUNWAY,Kasa: {cash} · Runway: {days} gün,Cash: {cash} · Runway: {days} days
+TERM_CASH_RUNWAY,Kasa: {cash} · Runway: {weeks} hafta,Cash: {cash} · Runway: {weeks} weeks
+TERM_CASH_RUNWAY_ONE,Kasa: {cash} · Runway: {weeks} hafta,Cash: {cash} · Runway: {weeks} week
 TERM_TABLES_CLOSED,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
 TERM_LEVERAGE_BOX,Cebinde 2. term sheet var — {investor}. Bunu onlar da biliyor.,You have a second term sheet in your pocket — {investor}. They know it too.
 TERM_RESULT_ACCEPTED,Kabul ettiler. {move}.,They accepted. {move}.
@@ -1491,8 +1511,8 @@ FIN_NET,Net,Net
 FIN_BURN_SECTION,Gider dağılımı,Expense breakdown
 FIN_RECENT_TX,Son işlemler,Recent transactions
 FIN_NO_TX,Henüz işlem yok,No transactions yet
-FIN_TX_DATE,{day} {month},{month} {day}
-FIN_PER_DAY,{amount} / gün,{amount} / day
+FIN_TX_DATE,H{week} · {mon} {year},W{week} · {mon} {year}
+FIN_PER_MONTH,{amount} / ay,{amount} / mo
 FIN_REQ_OPENS,Series A Hunt'ta açılır: {reqs},Opens in the Series A Hunt: {reqs}
 FIN_CAPTABLE_HEADER,Hisse dağılımı,Cap table
 FIN_CAPTABLE_FOUNDER,Kurucu · {pct},Founder · {pct}
@@ -1625,24 +1645,39 @@ NEWS_RIVAL_DOWN_0,{name} bu hafta pay kaybetti; koridorlarda indirim söylentisi
 NEWS_RIVAL_DOWN_1,{name} müşterilerinin yenileme pazarlığı sertleşti; payı {share} seviyesine geriledi.,{name}'s customers have hardened in renewal talks; its share has slipped to {share}.
 NEWS_RIVAL_DOWN_2,{name} kilit bir hesabını kaybetti; pazar payı {share} bandına indi.,{name} lost a key account; its market share has dropped into the {share} band.
 TOPBAR_CLOCK,{date} · {hour}:00,{date} · {hour}:00
-TOPBAR_CLOCK_COMPACT,{day} {mon} · {hour}:00,{mon} {day} · {hour}:00
-FIN_OFFER_COUNTDOWN,TEKLİF · İŞ GÜNÜ: {n},OFFER · BUSINESS DAYS: {n}
+TOPBAR_CLOCK_COMPACT,H{week} · {mon} · {hour}:00,W{week} · {mon} · {hour}:00
+FIN_OFFER_COUNTDOWN,TEKLİF · {n} HAFTA,OFFER · {n} WEEKS
+FIN_OFFER_COUNTDOWN_ONE,TEKLİF · {n} HAFTA,OFFER · {n} WEEK
 MONTH_TITLE,{month} {year},{month} {year}
-MONTH_DAY_RANGE,Gün {from}–{to},Days {from}–{to}
+SUMMARY_TITLE_WEEK,Hafta {week} · {year},Week {week} · {year}
+SUMMARY_TITLE_QUARTER,{quarter}. Çeyrek {year},Q{quarter} {year}
+SUMMARY_TITLE_YEAR,{year} Yılı,Year {year}
+SUMMARY_RANGE,Hafta {from}-{to},Weeks {from}-{to}
+SUMMARY_RANGE_ONE,Hafta {from},Week {from}
 MONTH_HIGHLIGHT_FALLBACK,Sakin bir ay. Sakin aylar ucuz değildir.,A quiet month. Quiet months are not cheap.
+SUMMARY_HIGHLIGHT_FALLBACK_WEEK,Sakin bir hafta. Sakin haftalar ucuz değildir.,A quiet week. Quiet weeks are not cheap.
+SUMMARY_HIGHLIGHT_FALLBACK_QUARTER,Sakin bir çeyrek. Sakin çeyrekler ucuz değildir.,A quiet quarter. Quiet quarters are not cheap.
+SUMMARY_HIGHLIGHT_FALLBACK_YEAR,Sakin bir yıl. Sakin yıllar ucuz değildir.,A quiet year. Quiet years are not cheap.
 MONTH_FRANK_SHUTTER,Kepenk sayacı işliyor; ay nasıl geçerse geçsin.,"The shutter counter is running, whatever kind of month that was."
 MONTH_FRANK_BURNING_BUT_SELLING,Para yakıyorsun ama gelir büyüyor.,"You're burning money, but revenue is growing."
 MONTH_FRANK_SHRINKING,Gelir düştü. Sebebini bul.,Revenue fell. Find out why.
 MONTH_FRANK_GOOD,Dört rakam da yukarı. İyi bir ay.,All four numbers up. Good month.
 MONTH_FRANK_ANOTHER,Bir ay daha geride.,Another month behind you.
 MONTH_EVENT_OF_THE_MONTH,✦ AYIN OLAYI,✦ EVENT OF THE MONTH
+SUMMARY_EVENT_WEEK,✦ HAFTANIN OLAYI,✦ EVENT OF THE WEEK
+SUMMARY_EVENT_QUARTER,✦ ÇEYREĞİN OLAYI,✦ EVENT OF THE QUARTER
+SUMMARY_EVENT_YEAR,✦ YILIN OLAYI,✦ EVENT OF THE YEAR
 MONTH_AUTO_SUMMARY,Otomatik özet · her ay sonu,Automatic summary · at each month end
+SUMMARY_AUTO_WEEK,Otomatik özet · her haftanın sonunda,Automatic summary · at the end of each week
+SUMMARY_AUTO_QUARTER,Otomatik özet · her çeyrek sonu,Automatic summary · at each quarter end
+SUMMARY_AUTO_YEAR,Otomatik özet · her yıl sonu,Automatic summary · at each year end
+MONTH_CLOSED_TICKER,{month} kapandı · MRR {mrr} · nakit {delta},{month} closed · MRR {mrr} · cash {delta}
 FIN_GOAL_PROGRESS,{met}/{total},{met}/{total}
 MONTH_ROW_CASH,Kasa,Cash
 MONTH_ROW_TEAM,Ekip,Team
 MONTH_ROW_BRAND,Marka,Brand
 EVENT_CHOICE_PERMANENT,Seçim kalıcıdır · Oyun duraklatıldı,The choice is permanent · Game paused
-EVENT_DECISION_DAY,KARAR · GÜN {day},DECISION · DAY {day}
+EVENT_DECISION_DAY,KARAR · {date},DECISION · {date}
 EVENT_MENTOR_ADVICE,MENTOR TAVSİYESİ,MENTOR'S ADVICE
 EVENT_TAG_CUSTOMER,MÜŞTERİ,CUSTOMER
 EVENT_TAG_TEAM,EKİP,TEAM
@@ -1663,7 +1698,8 @@ EFFECT_AXIS,{axis} {v},{axis} {v}
 EFFECT_QUALITY,Kalite,Quality
 EFFECT_MORALE,Moral,Morale
 EFFECT_BUGS,Hata {v},Bugs {v}
-EFFECT_DAYS,{v} gün,{v} days
+EFFECT_WEEKS,{v} hafta,{v} weeks
+EFFECT_WEEKS_ONE,{v} hafta,{v} week
 EFFECT_QUALITY_BONUS,Kalite +{n},Quality +{n}
 EFFECT_DEV_BEGINS,Geliştirme başlar,Development begins
 EFFECT_BETA_BEGINS,Beta başlar,Beta begins
@@ -1726,7 +1762,7 @@ You tell him it's an idea.
 ""Then there's nobody to write the first version. You'll write it, and it'll probably be bad.""
 
 He hangs up. Five past ten. Nothing else on today."
-TOPBAR_UNIT_PER_DAY,/g,/d
+TOPBAR_UNIT_PER_MONTH,/ay,/mo
 MEETING_WITHDRAW,Toplantıdan çekil,Withdraw from the meeting
 TOPBAR_PAUSE,II,II
 NUM_0,sıfır,zero
@@ -1744,7 +1780,7 @@ NUM_11,on bir,eleven
 NUM_12,on iki,twelve
 WORLD_OUTLET_EKONOMI_CAPS,EKONOMİ POSTASI,EKONOMİ POSTASI
 END_LEDGER_TITLE,RAKAMLARLA {company},{company} BY THE NUMBERS
-END_DATE_LINE,{day} {month} {year} · SAYI {issue},"{month} {day}, {year} · ISSUE {issue}"
+END_DATE_LINE,{date} · SAYI {issue},{date} · NO. {issue}
 END_MILLIONS,{n} milyon dolar,{n} million dollars
 END_SPAN_NEAR_YEAR,bir yıla yakın sürede,in close to a year
 END_SPAN_UNDER_MONTH,bir aydan kısa sürede,in under a month
@@ -2187,8 +2223,10 @@ PROD_TEAM_GROUP_SELECTED,SEÇİLİ,SELECTED
 PROD_TEAM_LEAD,LİDER,LEAD
 PROD_TEAM_LEAD_NONE,Lider seçilmedi,No lead chosen
 PROD_TEAM_LEAD_PICK,Lider seç,Choose a lead
-PROD_TEAM_AVAIL_LEAVE,İzinde · {n}g sonra katılır,On leave · joins in {n}d
-PROD_TEAM_AVAIL_TRAINING,Eğitimde · {n}g sonra katılır,In training · joins in {n}d
+PROD_TEAM_AVAIL_LEAVE,İzinde · {n} hafta sonra katılır,On leave · joins in {n} weeks
+PROD_TEAM_AVAIL_LEAVE_ONE,İzinde · gelecek hafta katılır,On leave · joins next week
+PROD_TEAM_AVAIL_TRAINING,Eğitimde · {n} hafta sonra katılır,In training · joins in {n} weeks
+PROD_TEAM_AVAIL_TRAINING_ONE,Eğitimde · gelecek hafta katılır,In training · joins next week
 PROD_TEAM_FILTER_SEARCH,ara…,search…
 PROD_TEAM_FILTER_AREA_ALL,ALAN,AREA
 PROD_TEAM_FILTER_AVAILABLE,MÜSAİT,AVAILABLE
@@ -2298,7 +2336,8 @@ RND_PLACE_CONT,devam,continuation
 RND_LOCKED_SLOT,? {area},? {area}
 RND_UNLOCKS_PREFIX,Açtığı şey:,What it opens:
 RND_START,Başlat,Start
-RND_DAYS_LEFT,~{days} gün kaldı,~{days} days left
+RND_WEEKS_LEFT,~{n} hafta kaldı,~{n} weeks left
+RND_WEEKS_LEFT_ONE,~{n} hafta kaldı,~{n} week left
 RND_AREA_OF,{area} alanı,{area} area
 RND_REQ_STARS,{area} {stars},{area} {stars}
 RND_WHO,{who},{who}
@@ -2343,9 +2382,11 @@ RND_ASSIGN_PICK,Kimin çalışacağını seç.,Choose who works on it.
 RND_ASSIGN_ZERO,Seçtiklerinin hiçbiri bu alanda çalışmıyor.,None of the people you picked work in this area.
 RND_COMPLETED_UNLOCKED_ONE,Açtığı devam yuvası adlandı: {node},The continuation slot it opened now has a name: {node}
 RND_CROSS_MARK,⇠ {area},⇠ {area}
-RND_DAYS_EST,~{n} gün,~{n} days
-RND_DAYS_NONE,katkı yok,no contribution
-RND_DAYS_SOLO,~{n} gün (Kurucu),~{n} days (Founder)
+RND_WEEKS_EST,~{n} hafta,~{n} weeks
+RND_WEEKS_EST_ONE,~{n} hafta,~{n} week
+RND_WEEKS_NONE,katkı yok,no contribution
+RND_WEEKS_SOLO,~{n} hafta (Kurucu),~{n} weeks (Founder)
+RND_WEEKS_SOLO_ONE,~{n} hafta (Kurucu),~{n} week (Founder)
 RND_NODE_META,{family} · {tier},{family} · {tier}
 RND_REQ_CASH,{money},{money}
 RND_TIER_FROZEN,{tier} · donmuş,{tier} · frozen
@@ -2364,11 +2405,13 @@ EFFECT_PHASE_HOLD,Şimdilik aynı evrede kalırsın,You stay in this phase for n
 EFFECT_SHIP_LIVE,Sürüm yayına çıkar,The version goes live
 EFFECT_MEETING_STARTS,Toplantı başlar,The meeting starts
 EFFECT_TAKES_YOU_THERE,Seni oraya götürür,Takes you there
-DESK_PAPER_DAYS,{n} gün,{n}d
+DESK_PAPER_WEEKS,{n} hafta,{n} weeks
+DESK_PAPER_THIS_WEEK,bu hafta,this week
 SALES_PIPELINE_HEADER,BORU HATTI,PIPELINE
 SALES_LOCKED_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
 SALES_FLOW_RATE,Akış: {n}/hafta,Flow: {n}/week
-SALES_DAYS_LEFT,{n} gün,{n} days
+SALES_DAYS_LEFT,{n} hafta,{n} weeks
+SALES_DAYS_LEFT_ONE,{n} hafta,{n} week
 SALES_ACTION_MEET,Görüşmeye git,Go to the meeting
 SALES_ROUTE_RESERVE,Ayır,Reserve
 SALES_ROUTE_GIVE,Temsilciye ver,Give to a rep
@@ -2378,7 +2421,7 @@ SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.
 SALES_EXPIRED_LINE,Beklemekten vazgeçti.,They stopped waiting.
 SALES_DESK_HEADER,SATIŞ MASASI,SALES DESK
 SALES_DESK_EMPTY,Satış işine atanmış kimse yok.,Nobody is assigned to the sales job.
-SALES_REP_WORKING,{company} ile görüşüyor · {n}. gün,Working {company} · day {n}
+SALES_REP_WORKING,{company} ile görüşüyor · {n}. hafta,Working {company} · week {n}
 SALES_BAND_CAPTION,Çalıştığı bant:,Working band:
 SALES_BAND_OWN,Kendi ligi,Own league
 SALES_BAND_STAR,{n}★,{n}★
@@ -2407,8 +2450,8 @@ SALES_MOD_CHARISMA,karizman,your charisma
 SALES_MOD_RETURNED,geçmiş bir görüşme,an earlier meeting
 SALES_MOD_ANSWERS,verdiğin cevaplar,the answers you gave
 SALES_BLOCK_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
-SALES_BLOCK_MEETING_SPENT,Bugünkü toplantı hakkın doldu. Yarın mesai başında yenilenir.,Today's meeting is spent. It comes back when the workday starts.
-SALES_BLOCK_TOO_LATE,Mesai bitmek üzere. Bugün yeni bir masaya oturulmaz.,The workday is nearly over. No new table today.
+SALES_BLOCK_WEEK_FULL,Bu haftaki toplantı hakların doldu. Yeni hafta başında yenilenir.,This week's meetings are spent. They come back when the new week starts.
+SALES_BLOCK_TOO_LATE,Mesai bitiyor. Bu hafta yeni bir masaya oturulmaz.,The workday is ending. No new table this week.
 SALES_BLOCK_NO_LEAD,Bu aday artık boru hattında değil.,That lead is no longer in the pipeline.
 SALES_BLOCK_REASON_UNCHANGED,Aynı sebep hâlâ ortada. Değişmeden aynı cevabı verirler.,"The same reason still stands. Unchanged, they answer the same way."
 SALES_WHALE_PROVIDER_OR_CERT,Altyapı güvencesi istiyor.,They want an infrastructure assurance.
@@ -2497,8 +2540,10 @@ B2B_LOCK_PAIN_SHIPPED,İstedikleri şey zaten yayında.,What they asked for is a
 B2B_LOCK_PAIN_GATED,Bunu yapabilecek kimse yok henüz. Ne ekip var ne araştırma.,Nobody here can build that yet. Not the people and not the research.
 PROD_DESK_ACCOUNTS_ONLY,"{names} hesapları taşıyor ama destek masasına atanmadı. Görevler sayfasında Destek sütununu işaretle.","{names} carries accounts but is not on the support desk. Tick the Support column on the Duties page."
 PROD_DESK_NOBODY_ELIGIBLE,Masayı taşıyabilecek kimse yok. Bir Müşteri Temsilcisi ya da Yazılımcı işe al.,Nobody can staff the desk. Hire a Customer Rep or an Engineer.
-SALES_PROMISE_OPEN,Açık söz: {feature} · {days} gün,Open promise: {feature} · {days} days
-EVENT_READOUT_DAY,ÖZET · GÜN {day},SUMMARY · DAY {day}
+SALES_PROMISE_OPEN,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} weeks
+SALES_PROMISE_OPEN_ONE,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} week
+SALES_PROMISE_OPEN_THIS_WEEK,Açık söz: {feature} · bu hafta,Open promise: {feature} · this week
+EVENT_READOUT_DAY,ÖZET · {date},SUMMARY · {date}
 SALES_WEEKLY_ROW,{company}  {stars}  {seats} koltuk x {price} = {mrr}/ay,{company}  {stars}  {seats} seats x {price} = {mrr}/mo
 SALES_WEEKLY_TOTAL,Toplam: {n} anlaşma · {mrr}/ay,Total: {n} deals · {mrr}/mo
 HR_FOUNDER_STATE_CARE,PH: Müşterilerle ilgileniyor,PH: Looking after customers
@@ -2524,7 +2569,8 @@ SEED_BAND_STANDARD,Ölçülü,Measured
 SEED_BAND_HARSH,Sıkı,Tight
 SEED_DONE_LINE,{investor} · {amount} · {equity} hisse,{investor} · {amount} · {equity} of the company
 SEED_EXPECT_LABEL,Büyüme beklentisi,Growth expectation
-SEED_EXPECT_GRACE,İlk aylar sayılmıyor. {days} gün sonra üç aylık ortalamana bakılacak.,The first months do not count. Your three-month average starts being read in {days} days.
+SEED_EXPECT_GRACE,İlk aylar sayılmıyor. Üç aylık ortalamana {weeks} hafta sonra bakılacak.,The first months do not count. Your three-month average starts being read in {weeks} weeks.
+SEED_EXPECT_GRACE_ONE,İlk aylar sayılmıyor. Üç aylık ortalamana gelecek hafta bakılacak.,The first months do not count. Your three-month average starts being read next week.
 SEED_EXPECT_ON_TRACK,Üç aylık ortalama {avg}; beklenen {need}.,"Three-month average {avg}, against the {need} expected."
 SEED_EXPECT_STALLED,Durgun. Üç aylık ortalama {avg}; beklenen {need}.,"Stalled. Three-month average {avg}, against the {need} expected."
 SEED_EXPECT_UNKNOWN,Ortalama için yeterli kapanmış ay yok.,Not enough closed months to read an average yet.
@@ -2730,7 +2776,7 @@ OFFICE_TOAST_MOVED,Yeni ofis: {name},New office: {name}
 OFFICE_CHIP_CURRENT,MEVCUT · {name},CURRENT · {name}
 OFFICE_HOVER_HOME,Kurucunun dairesi,The founder's flat
 OFFICE_HOVER_LINE,{desks} masa · {money}/ay,{desks} desks · {money}/mo
-OFFICE_MOVING_BADGE,Taşınıyor · {days} gün,Moving · {days} days
+OFFICE_MOVING_BADGE,Taşınıyor · {weeks} hafta,Moving · {weeks} weeks
 OFFICE_ACT_CODE,Kod yazıyor,Writing code
 OFFICE_ACT_RESEARCH,Araştırıyor,Researching
 OFFICE_ACT_DESIGN,Çizim yapıyor,Sketching
@@ -2750,7 +2796,7 @@ HR_DOSSIER_IDLE,Boşta,Idle
 EVENTS_DESK_HEADER,MASADA,ON THE DESK
 EVENTS_DESK_EMPTY,Masada bekleyen bir şey yok.,Nothing is waiting on the desk.
 OFFICE_ACT_SLEEP,Uyuyor,Asleep
-OFFICE_MOVING_BADGE_ONE,Taşınıyor · 1 gün,Moving · 1 day
+OFFICE_MOVING_BADGE_ONE,Taşınıyor · 1 hafta,Moving · 1 week
 OFFICE_CARD_UNMET_ONE,1 şart karşılanmadı,1 requirement unmet
 FRANK_OFFICE_MOVE_TITLE,Taşınma vakti,Time to move
 FRANK_OFFICE_MOVE_BODY,"Frank'ten mesaj.

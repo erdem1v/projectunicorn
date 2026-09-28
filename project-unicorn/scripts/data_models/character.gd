@@ -51,7 +51,7 @@ extends Resource
 @export var hire_day: int = 0                # CharacterRegistry.add damgalar; 0 = işe alınmadı
 @export var leave_until_day: int = 0         # izin GameState.day buna ulaşınca biter
 @export var leave_taken_year: int = 0        # §11.4 "yılda bir" mandalı
-@export var flight_risk_days: int = 0        # MORALE_FLIGHT_RISK altında art arda gün
+@export var flight_risk_weeks: int = 0       # MORALE_FLIGHT_RISK altında art arda hafta
 
 # --- §12 GÖREV ATAMASI ---
 # Atama birimi İŞTİR (HRConstants.JOBS); en fazla MAX_JOBS_PER_PERSON sürekli iş (§12.1).
@@ -66,7 +66,7 @@ extends Resource
 
 # --- EĞİTİM ---
 @export var trainings_done: Dictionary = {}  # {alan_id: kaç kez eğitildi}
-@export var training_days_left: int = 0      # >0 iken eğitimde (edilgen); 0 = eğitimde değil
+@export var training_weeks_left: int = 0     # >0 iken eğitimde (edilgen); 0 = eğitimde değil
 @export var training_area: String = ""       # bitince +1 alacak alan; "" = eğitimde değil
 
 # --- §5.1 DENEYİM: tek bar ---
@@ -85,8 +85,8 @@ extends Resource
 @export var leave_deferrals: int = 0        # §11.4: bu yıl kaç kez ertelendi, en fazla 2
 
 # --- §7 moral hedefi ---
-# "Hedefe doğru sürüklenir, anında sıçramaz": deltalar hedefe yazılır, görünen moral günde
-# MORALE_EASE_PER_DAY yürür. -1 = tohumlanmadı (ilk tikte morale'den dolar). §15'in alan
+# "Hedefe doğru sürüklenir, anında sıçramaz": deltalar hedefe yazılır, görünen moral günde en
+# fazla MORALE_EASE_PER_DAY yürür. -1 = tohumlanmadı (ilk tikte morale'den dolar). §15'in alan
 # listesinde yok; §7 kişi başına ikinci bir sayı olmadan uygulanamıyor.
 @export var morale_target: float = -1.0
 

@@ -149,6 +149,7 @@ static var _show_outcome: String = ""       # SHOW_* of the fund's last answer t
 static var _show_back: String = ""          # the claw-back move text for SHOW_CONDITION
 static var _other_terms: Dictionary = {}    # the real other sheet, as shown
 static var _other_vc_shown: String = ""
+static var _owed_hours: int = 0             # the finished sitting's clock, run by end_sitting
 
 
 ## The rows this sitting has. Every loop over the sitting's rows walks this, the SCENE's row
@@ -175,11 +176,14 @@ static func is_active() -> bool:
 	return _active
 
 
-## Run-boundary reset (SaveManager.reset_all_owners). The sitting statics are reset, never
-## serialised: SaveManager.can_save() refuses while is_active(), so a table is closed at every
-## save point. The SHEET persists (GameState.active_sheets, or GameState.seed_sheet at seed);
-## what dies here is the negotiation in progress.
+## Run-boundary reset (SaveManager.reset_all_owners) and the end of every sitting: a live
+## table releases the founder. The sitting statics are reset, never serialised:
+## SaveManager.can_save() refuses while is_active(), so a table is closed at every save point.
+## The SHEET persists (GameState.active_sheets, or GameState.seed_sheet at seed); what dies
+## here is the negotiation in progress.
 static func reset() -> void:
+	if _active:
+		HRSystem.founder_in_meeting = false
 	_active = false
 	_vc_id = ""
 	_terms = {}
@@ -203,6 +207,7 @@ static func reset() -> void:
 	_show_back = ""
 	_other_terms = {}
 	_other_vc_shown = ""
+	_owed_hours = 0
 
 
 # ============================================================================
@@ -220,6 +225,7 @@ static func open(vc_id: String, stage: String) -> Dictionary:
 	if sheet == null:
 		return {}   # no live sheet — caller shouldn't have routed here
 	_active = true
+	HRSystem.founder_in_meeting = true
 	_vc_id = vc_id
 	_stage = stage
 	_terms = sheet.opening_terms.duplicate()
@@ -555,8 +561,27 @@ static func sign() -> void:
 	var vc: String = _vc_id
 	var terms: Dictionary = _terms.duplicate()
 	var stage: String = _stage
-	reset()
+	_close_sitting()
 	VCPitchSystem.sign_table(vc, terms, stage)
+	if not GameState.run_active:
+		_owed_hours = 0   # the signature ended the run, and a finished run's clock stays put
+
+
+## Runs the finished sitting's hours once the scene is gone: main after releasing it, the probe
+## after sign or leave. The founder pays hours / WEEK_WORK_HOURS of the week and the skip stops
+## at midnight (TimeManager.advance_hours).
+static func end_sitting() -> void:
+	var hours: int = _owed_hours
+	_owed_hours = 0
+	if hours > 0:
+		TimeManager.advance_hours(hours, true)
+
+
+## The sitting is over: reset() clears it and releases the founder, and its hours wait for
+## end_sitting.
+static func _close_sitting() -> void:
+	reset()
+	_owed_hours = PitchConstants.TERM_TABLE_HOURS
 
 
 ## Walk the table → VC seam (sheet destroyed, fund closed, others survive; the player's
@@ -576,7 +601,7 @@ static func walk() -> void:
 		push_error("[TermSheetTableSystem] walk() at a seed table — the refusal row is ZOR MOD")
 		return
 	var vc: String = _vc_id
-	reset()
+	_close_sitting()
 	VCPitchSystem.walk_table(vc)
 
 
@@ -585,7 +610,7 @@ static func walk() -> void:
 static func leave() -> void:
 	if not _active or not _fund_walked:
 		return
-	reset()
+	_close_sitting()
 
 
 ## THE INVERSION, and it is the whole shape of the seed table. At Series A the money falls
@@ -929,12 +954,12 @@ static func _lever_name(lever: String) -> String:
 
 
 static func _kasa_runway_text() -> String:
-	# GROSS runway in DAYS — deliberate table lens (VC side ignores revenue; the player
+	# GROSS runway in WEEKS — deliberate table lens (VC side ignores revenue; the player
 	# shell shows NET months). Floored at 0 like VCPitchSystem._gross_runway_months: a
 	# company in the red has no runway left, not a negative one.
-	var days: int = maxi(0, int(floor(float(GameState.cash) / float(maxi(GameState.daily_burn, 1)))))
-	return TranslationServer.translate("TERM_CASH_RUNWAY").format({
-		"cash": UiTokens.format_money(GameState.cash), "days": days})
+	var weeks: int = maxi(0, floori(float(GameState.cash) / TimeModel.per_tick(maxi(GameState.daily_burn, 1))))
+	return TranslationServer.translate(Fmt.count_key("TERM_CASH_RUNWAY", weeks)).format({
+		"cash": UiTokens.format_money(GameState.cash), "weeks": weeks})
 
 
 # ============================================================================

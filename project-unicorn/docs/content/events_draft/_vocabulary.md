@@ -12,7 +12,7 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **171** |
+| Seams (read) | **173** |
 | Effect verbs (write) | **62** |
 | Cards in the catalogue | 44 |
 | Arcs | 3 |
@@ -50,7 +50,7 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `start_training`
 - `dimension_delta`
 - `bug_delta`
-- `delay_days`
+- `delay_weeks`
 - `damage_product`
 - `ship_active_build`
 - `enter_development`
@@ -136,19 +136,19 @@ slot of that type (§17.12).
 |---|---|---|---|---|
 | `finance.brand` | global | int | Finance | WRAPPER; clamped 0-100 |
 | `finance.cash` | global | int | Finance | WRAPPER over GameState.cash; MAY BE NEGATIVE, which is what starts the shutter |
-| `finance.daily_burn` | global | int | Finance | WRAPPER; day 1 is $50 |
-| `finance.daily_net` | global | int | Finance | signed |
+| `finance.daily_burn` | global | int | Finance | WRAPPER; a per-day rate, $50 at the start |
+| `finance.daily_net` | global | int | Finance | signed; a per-day rate |
 | `finance.growth_streak_months` | global | int | Finance | consecutive closed months of MRR growth |
 | `finance.investor_equity_pct` | global | int | Finance | 0-100 |
 | `finance.months_closed` | global | int | Finance | WRAPPER; capped at 12 by the ledger |
 | `finance.mrr` | global | int | Finance | WRAPPER; the headline revenue number |
 | `finance.peak_mrr` | global | int | Finance | WRAPPER; high-water mark |
-| `finance.profit_streak_months` | global | int | Finance | consecutive closed months in the black with no red days |
+| `finance.profit_streak_months` | global | int | Finance | consecutive closed months in the black with no red weeks |
 | `finance.reputation` | global | int | Finance | WRAPPER; clamped -10..100 |
-| `finance.runway_days` | global | int | Finance | WRAPPER; 9999 stands for default-alive |
 | `finance.runway_months` | global | float | Finance | INF when net >= 0 — compare with '<', never '>' |
-| `finance.shutter_days_left` | global | int | Finance | WRAPPER; -1 when not counting, else counts down |
-| `finance.shutter_days_total` | global | int | Finance | the shutter window; card text interpolates this rather than typing it |
+| `finance.runway_weeks` | global | int | Finance | WRAPPER; 9999 stands for default-alive |
+| `finance.shutter_weeks_left` | global | int | Finance | WRAPPER; -1 when not counting, else weeks left |
+| `finance.shutter_weeks_total` | global | int | Finance | the shutter window in weeks; card text interpolates this rather than typing it |
 | `finance.total_raised` | global | int | Finance | cash in from all rounds |
 
 ### `founder.`
@@ -167,25 +167,28 @@ slot of that type (§17.12).
 
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
-| `funding.acq_days_open` | global | int | Funding | -1 until the road closes; the buyout window is measured from that stamp |
 | `funding.acq_offer` | global | string | Funding | the founder's slice of that price — what the sealed line calls 'your share' |
 | `funding.acq_road_over` | global | bool | Funding | faced Series A by a decline or a walk, and no table is left to walk to |
 | `funding.acq_valuation` | global | string | Funding | the buyer's price for the whole company: ARR x multiple |
-| `funding.angel_days_since_accept` | global | int | Investment | -1 when the cheque has not landed; the day stamp stays in GameState |
+| `funding.acq_weeks_open` | global | int | Funding | -1 until the road closes; the buyout window is measured from that stamp |
 | `funding.angel_threshold_met` | global | bool | Funding | MRR has crossed the bar Frank's cheque waits on |
+| `funding.angel_weeks_since_accept` | global | int | Investment | -1 when the cheque has not landed; the tick stamp stays in GameState |
 | `funding.gate_pending_phase` | global | int | Funding | WRAPPER; 0 when no gate is open |
 | `funding.hard_mode` | global | bool | Funding | RESERVED — no writer exists; the honest lock on Frank's decline row |
-| `funding.last_answer_moment` | global | bool | Investment | one sheet, one day left, and no other table to walk to |
-| `funding.meeting_day_arrived` | global | bool | Funding | a booked meeting's day has come |
+| `funding.last_answer_moment` | global | bool | Investment | one sheet, one week left, and no other table to walk to |
+| `funding.meeting_day_arrived` | global | bool | Funding | a booked meeting's week has come |
+| `funding.meeting_sitting_open` | global | bool | Funding | a seed or Series A pitch can start now |
 | `funding.seed_band` | global | int | Funding | 0 harsh · 1 standard · 2 strong — an INDEX, for by_seam bodies |
-| `funding.seed_days_since_close` | global | int | Funding | -1 until the round closes; mirrors funding.angel_days_since_accept |
 | `funding.seed_door_open` | global | bool | Funding | the Traction-phase door is latched and unspent |
 | `funding.seed_expectation` | global | int | Funding | 0 none · 1 grace · 2 on track · 3 durgun (SeedConstants.EXPECT_*) |
 | `funding.seed_offer_live` | global | bool | Funding | an unsigned seed offer is on the table; it never expires |
 | `funding.seed_pitch_used` | global | bool | Funding | the run's one seed meeting has been spent |
 | `funding.seed_taken` | global | bool | Funding | a seed round was signed this run |
-| `funding.sheet_days_left` | global | int | Funding | business days; 9999 when no sheet is live |
+| `funding.seed_weeks_since_close` | global | int | Funding | -1 until the round closes; mirrors funding.angel_weeks_since_accept |
+| `funding.sheet_days_left` | global | int | Funding | sheet_expiry body text only; the weeks above in days |
 | `funding.sheet_decision_due` | global | bool | Funding | a Series A sheet's window has closed and waits for sit-or-decline |
+| `funding.sheet_weeks_left` | global | int | Funding | weeks; 9999 when no sheet is live |
+| `funding.table_sitting_open` | global | bool | Funding | the term-sheet table can open now |
 
 ### `hr.`
 
@@ -208,16 +211,16 @@ slot of that type (§17.12).
 | `hr.morale_band` | entity | string | HR | high | mid | low, at 80 / 50 / 35 |
 | `hr.overtime_active` | entity | bool | HR | hours above 8 |
 | `hr.payroll_monthly` | global | int | HR | not status-filtered: leave is paid |
-| `hr.raise_cooldown_left` | entity | int | HR | days until a raise is allowed again; 0 means now |
+| `hr.raise_cooldown_left` | entity | int | HR | weeks until a raise is allowed again; 0 means now |
 | `hr.resign_voice` | entity | string | HR | the per-person resignation line |
 | `hr.salary` | entity | int | HR | WRAPPER over Character.monthly_salary, USD/month |
 | `hr.salary_band_position` | entity | float | HR | WRAPPER: <0 under the band, 0..1 inside it |
 | `hr.short_day_active` | entity | bool | HR | hours below 8 |
 | `hr.status` | entity | string | HR | active | on_leave | training |
-| `hr.tenure_days` | entity | int | HR | days on the payroll; 0 when hire_day was never stamped |
+| `hr.tenure_weeks` | entity | int | HR | weeks on the payroll; 0 when hire_day was never stamped |
 | `hr.unstaffed_job_count` | global | int | HR | jobs nobody is assigned to |
-| `hr.work_hours` | entity | int | HR | 5-11, the resolved inheritance chain, default 8 |
-| `hr.work_hours_company` | global | int | HR | the company base, 5-11 |
+| `hr.work_hours` | entity | int | HR | 5-16, the resolved inheritance chain, default 8 |
+| `hr.work_hours_company` | global | int | HR | the company base, 5-16 |
 
 ### `investor.`
 
@@ -238,7 +241,7 @@ slot of that type (§17.12).
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
 | `musteri.at_risk_count` | global | int | Sales | accounts currently in Risk |
-| `musteri.churn_countdown` | entity | int | Sales | WRAPPER; -1 when not counting, else days to churn |
+| `musteri.churn_countdown` | entity | int | Sales | WRAPPER; -1 when not counting, else weeks to churn |
 | `musteri.company_name` | entity | string | Sales | for {customer} in prose |
 | `musteri.complaint_voice` | entity | string | Sales | the per-sector complaint line |
 | `musteri.count` | global | int | Sales | active customer RECORDS — includes the B2C aggregate; see sales.account_count |
@@ -263,7 +266,7 @@ slot of that type (§17.12).
 | `musteri.seats` | entity | int | Sales | WRAPPER |
 | `musteri.sector_contact` | entity | string | Sales | the speaker's role line |
 | `musteri.stalls_used` | entity | int | Sales | 0-2; the stall row locks at the cap |
-| `musteri.tenure_days` | entity | int | Sales | WRAPPER; days since signature |
+| `musteri.tenure_weeks` | entity | int | Sales | WRAPPER; weeks since signature |
 | `musteri.tolerance` | entity | int | Sales | WRAPPER; HIDDEN from the player. Condition on it, never name it in copy |
 | `musteri.total_mrr` | global | int | Sales |  |
 | `musteri.under_tolerance` | entity | bool | Sales | the comparison that actually drives Risk |
@@ -307,19 +310,18 @@ slot of that type (§17.12).
 | `sales.is_b2b` | global | bool | Sales | reads the SHIPPED market, not one being built |
 | `sales.market_share_pct` | global | float | Sales | one global figure; per-segment share does not exist yet |
 | `sales.pipeline_count` | global | int | Sales | live prospects |
-| `sales.weekly_closes` | global | string | Sales | this week's closes, one line each, with a total |
+| `sales.weekly_closes` | global | string | Sales | closes of the week that just ended, one line each, with a total |
 
 ### `time.`
 
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
-| `time.day` | global | int | Time | WRAPPER; absolute game day, starts at 1. GameState owns it, not TimeManager |
 | `time.hour` | global | int | Time | WRAPPER; 0-23 |
 | `time.is_paused` | global | bool | Time | WRAPPER; there is no named predicate for this |
-| `time.month` | global | int | Time | 1-12; real month lengths, not 30-day blocks |
+| `time.month` | global | int | Time | 1-12; the month of the week's Thursday on the real calendar |
 | `time.run_active` | global | bool | Time | WRAPPER; false once a terminal has fired |
-| `time.speed` | global | int | Time | WRAPPER; 0 paused, 1-3 |
-| `time.weekday` | global | int | Time | 0-6 from the real calendar; day 1 is a Thursday, 1 Jan 2026 |
+| `time.speed` | global | int | Time | WRAPPER; 0 paused, 1-4 |
+| `time.week` | global | int | Time | WRAPPER; absolute game week (the tick), starts at 1. GameState owns it, not TimeManager |
 
 ### `urun.`
 
@@ -334,11 +336,10 @@ slot of that type (§17.12).
 | `urun.build_paused` | global | bool | Product | auto or manual |
 | `urun.build_progress` | global | float | Product | 0.0-1.0 |
 | `urun.capacity_tier` | global | int | Product | provisioned infra units |
-| `urun.days_since_launch` | global | int | Product | -1 when nothing has shipped |
 | `urun.floor_experience` | global | string | Product | '' | warning | crossed |
 | `urun.floor_innovation` | global | string | Product | '' | warning | crossed |
 | `urun.floor_stability` | global | string | Product | '' | warning | crossed |
-| `urun.interest` | global | float | Product | 0-100, refreshed on publish, 30-day half-life |
+| `urun.interest` | global | float | Product | 0-100, refreshed on publish, decays by a half-life counted in weeks |
 | `urun.is_live` | global | bool | Product | something has shipped |
 | `urun.iteration_round` | global | int | Product | design rounds completed on the active build |
 | `urun.lines_open` | global | int | Product | 0-9 feature lines opened |
@@ -350,7 +351,8 @@ slot of that type (§17.12).
 | `urun.tech_debt` | global | bool | Product | WRAPPER over a flag; boolean by design in the demo |
 | `urun.usage` | global | float | Product | load multiplier |
 | `urun.version` | global | int | Product | shipped version number |
-| `urun.version_age` | global | int | Product | days since THIS VERSION shipped, not since the product was born |
+| `urun.version_age` | global | int | Product | weeks since THIS VERSION shipped, not since the product was born |
+| `urun.weeks_since_launch` | global | int | Product | -1 when nothing has shipped |
 
 ## c · Condition vocabulary
 
@@ -366,11 +368,11 @@ branch failed, and naming one of them is arbitrary and usually misleading.
 {"seam": "phase.current", "op": "in", "value": [2, 3]}
 {"flag": "frank_seed_taken"}
 {"flag_unset": "acquisition_declined"}
-{"days_since_flag": "mvp_launch", "op": ">=", "value": 30}
-{"flag_expires_within": "negotiation_window", "days": 3}
+{"weeks_since_flag": "mvp_launch", "op": ">=", "value": 4}
+{"flag_expires_within": "negotiation_window", "weeks": 1}
 {"history": "chose", "event": "hr.raise_request", "option": "accept"}
 {"history": "fired", "event": "hr.raise_request"}
-{"history": "days_since", "event": "hr.raise_request", "op": ">=", "value": 30}
+{"history": "weeks_since", "event": "hr.raise_request", "op": ">=", "value": 4}
 {"history": "resolution", "event": "sales.offer", "value": "expired"}
 {"arc": "active", "id": "arc_promise_mobile"}
 {"arc": "at_step", "id": "arc_promise_mobile", "step": 2}

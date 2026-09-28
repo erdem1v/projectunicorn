@@ -99,8 +99,8 @@ func _init(office_id: String) -> void:
 	if current:
 		go.text = tr("OFFICE_CARD_HERE")
 	elif OfficeSystem.is_moving():
-		var days := OfficeSystem.arrival_day() - GameState.day
-		go.text = tr("OFFICE_MOVING_BADGE_ONE") if days == 1 else tr("OFFICE_MOVING_BADGE").format({"days": days})
+		var weeks := OfficeSystem.arrival_day() - GameState.day
+		go.text = tr(Fmt.count_key("OFFICE_MOVING_BADGE", weeks)).format({"weeks": weeks})
 	elif OfficeSystem.can_move_to(office_id):
 		go.text = tr("OFFICE_CARD_MOVE_FOR").format({"money": UiTokens.format_money(move_money)})
 		go.disabled = false

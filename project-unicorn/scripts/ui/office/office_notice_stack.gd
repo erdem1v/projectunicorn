@@ -34,7 +34,8 @@ func _ready() -> void:
 	_refresh(false)
 
 
-## The city map's office card takes the right edge while the map is open.
+## The city map's office card takes the right edge while the map is open, and the founder's
+## trip shows no controls (OfficeView says which).
 func set_map_open(open: bool) -> void:
 	visible = not open
 
@@ -74,9 +75,9 @@ func _refresh(arrive: bool) -> void:
 		if i == shown.size() - 1 and not hidden.is_empty():
 			# The desk puts the most urgent first, so what hides is the least urgent; the badge
 			# still turns amber when a hidden one is running out.
-			var urgent: bool = hidden.any(func(p: Dictionary) -> bool: return bool(p["urgent"]))
+			var expiring: bool = hidden.any(func(p: Dictionary) -> bool: return bool(p["expiring"]))
 			row.add_child(UiFactory.make_badge("+%d" % hidden.size(),
-				&"accent" if urgent else &"neutral"))
+				&"accent" if expiring else &"neutral"))
 		_add(row, func() -> void: PAPERS.open(paper), String(paper["id"]), arrive)
 
 

@@ -8,9 +8,9 @@ extends RefCounted
 # THE SITTING IS ATOMIC (§5.0). No save is taken inside it and the world does not turn:
 # SaveManager.can_save() refuses while is_active(), which is what makes "meeting-local state
 # is reset, never serialised" honest rather than a carve-out. On close the clock jumps two
-# hours and those hours are SIMULATED — the same hourly path live play uses, with the founder
-# counted busy (§5.0). There is no second catch-up formula, because a second simulation path
-# is a divergence factory.
+# hours and those hours are SIMULATED through TimeManager.advance_hours — the same hourly path
+# live play uses, with the founder's output at the meeting's share of the week (§5.0). There is
+# no second catch-up formula, because a second simulation path is a divergence factory.
 #
 # THE CUSTOMER ENDS THE MEETING, NOT A QUOTA (§5.1.1). One needle, two thresholds: over the
 # top one the customer cuts and Act 2 opens, under the bottom one the customer cuts and it is
@@ -87,11 +87,10 @@ static func open(lead_id: String) -> Dictionary:
 	_probe_budget = _probes_for_star(p.star)
 	_base_contributions = _build_base_contributions(p)
 	_needle = _odds_from(_base_contributions)
-	SalesLedger.consume_meeting_right()
-	# §5.0 — the founder is AT the table for the whole sitting. The flag is what the two
-	# busy gates read during the skip; setting it on open rather than on close means a save
-	# taken by any path outside the scene can never catch a half-set world.
-	GameState.set_flag("sales_meeting_active", true)
+	SalesLedger.count_meeting()
+	# §5.0 — the founder is AT the table for the whole sitting; the busy gates read it while
+	# the scene is open and the clock stands.
+	HRSystem.founder_in_meeting = true
 	EventBus.meeting_entered.emit(lead_id)
 	_advance_probe()
 	if _probe.is_empty():
@@ -103,29 +102,15 @@ static func open(lead_id: String) -> Dictionary:
 	return view_state()
 
 
-## §5.0 — closing costs two hours, and those hours RUN. The founder contributes nothing to
-## them (the busy flag is still set); everyone else works normally, which is exactly Ekip
-## §2.1: a build with a free team member flows, a founder-only build pauses.
+## §5.0 — closing costs MEETING_SKIP_HOURS, and those hours RUN. The meeting batch ends the
+## founder's sitting, stops at midnight and charges the founder hours / WEEK_WORK_HOURS of the
+## week; everyone else works normally.
 static func close() -> void:
 	if not _active:
 		return
 	_active = false
-	for i in SalesConstants.MEETING_SKIP_HOURS:
-		var next_hour: int = GameState.current_hour + 1
-		if next_hour >= TimeManager.HOURS_PER_DAY:
-			# Mirrors TimeManager._drain_boundaries' order exactly: hour 0's hourly tick
-			# fires, THEN the day rolls. Getting this backwards costs a day its first hour.
-			GameState.set_current_hour(0)
-			TimeManager._dispatch_hourly_tick(0)
-			GameState.advance_day()
-			TimeManager._dispatch_daily_tick()
-		else:
-			GameState.set_current_hour(next_hour)
-			TimeManager._dispatch_hourly_tick(next_hour)
-	# The float accumulator is authoritative over the integer hour; leaving them disagreeing
-	# makes TimeManager.from_dict warn and silently drop back to the integer on the next load.
-	TimeManager.sync_to_current_hour()
-	GameState.set_flag("sales_meeting_active", false)
+	HRSystem.founder_in_meeting = false
+	TimeManager.advance_hours(SalesConstants.MEETING_SKIP_HOURS, true)
 	EventBus.pitch_finished.emit()
 	# ONE SITTING, and nothing of it survives. Clearing here rather than on the next open() is
 	# what makes "never serialised" a fact rather than a promise: between two meetings there
@@ -226,9 +211,11 @@ static func _probes_for_star(star: int) -> int:
 	return SalesConstants.PROBES_DEEP
 
 
+## The tie-break seed folds in the week's meeting count: up to MEETINGS_PER_WEEK sittings
+## share one tick, and each draws its own sequence.
 static func _advance_probe() -> void:
-	_probe = SalesProbes.pick(_facts, _used_families,
-		GameState.run_seed + GameState.day * 31 + _probe_index * 17)
+	_probe = SalesProbes.pick(_facts, _used_families, GameState.run_seed + GameState.day * 31
+		+ SalesLedger.meetings_this_week() * 101 + _probe_index * 17)
 	if _probe.is_empty():
 		return
 	_used_families.append(String(_probe.get("family", "")))
@@ -287,7 +274,7 @@ static func choose(answer_id: String) -> Dictionary:
 # DESIGN-PARKED: §5.1.1 gives the ENDING to the customer and defines no player exit from
 # Act 1, so there is none — sitting down is the decision and the sitting always resolves.
 # Alternatives seen: a neutral "stand up" (makes the two-hour cost dodgeable and weakens
-# "masa kurucunundur"), or an exit that burns the daily meeting right anyway.
+# "masa kurucunundur"), or an exit that burns one of the week's meetings anyway.
 ## §5.1.1 — "Teklife geç" from the second probe on. The remaining probes are not played and
 ## the reading goes to the close AS IT STANDS. No penalty; the cost is the ▲ never earned.
 static func skip_to_offer() -> Dictionary:
@@ -329,7 +316,7 @@ static func _lose(reason: String) -> Dictionary:
 	if p != null:
 		# §5.2 — the account remembers, the log records, the signal fires. No economic delta.
 		SalesLedger.report_loss(p.company_name, reason, _loss_target(reason))
-		SalesFaucetSystem.lock_return(p.company_name, SalesConstants.RETURN_LOCK_DAYS)
+		SalesFaucetSystem.lock_return(p.company_name, SalesConstants.RETURN_LOCK_WEEKS)
 		ProspectRegistry.remove(p.id)
 	return view_state()
 

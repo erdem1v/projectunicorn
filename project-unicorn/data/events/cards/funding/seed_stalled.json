@@ -1,5 +1,5 @@
 {
-  "_worked_example": "class: paper - a beat the player can leave on the desk, which is the register the moment wants: nobody is shouting, a page simply arrived. Being a paper it carries the 17.7 trio, and its on_expire is EMPTY on purpose: not answering a report is not a failure, and the expire_note says only that it went unopened. The 90-day cooldown makes it a quarterly note: it comes back if the stall continues, without nagging.",
+  "_worked_example": "class: paper - a beat the player can leave on the desk, which is the register the moment wants: nobody is shouting, a page simply arrived. Being a paper it carries the 17.7 trio, and its on_expire is EMPTY on purpose: not answering a report is not a failure, and the expire_note says only that it went unopened. The 13-week cooldown makes it a quarterly note: it comes back if the stall continues, without nagging.",
   "id": "funding.seed_stalled",
   "version_scope": "demo",
   "category": "funding",
@@ -16,9 +16,9 @@
     }
   },
   "latch": {
-    "cooldown_days": 90
+    "cooldown_weeks": 13
   },
-  "expires_days": 14,
+  "expires_weeks": 2,
   "expire_note": "expire_unanswered",
   "on_expire": {
     "penalties": []

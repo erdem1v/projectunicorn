@@ -1,8 +1,8 @@
 extends Control
 
-# Month-End Summary modal ("Ay Sonu Özeti").
-# Populated from MonthSummarySystem's summary_data (shape documented there).
-# Scannable in <15s: 4 delta rows + runway, AYIN OLAYI, one Frank line, DEVAM ET.
+# Period summary modal; the period follows the player's summary frequency (week, month,
+# quarter, year). Populated from SummarySystem's payload (shape on _build_summary_data).
+# Scannable in <15s: 4 delta rows + runway, the period's highlight, one Frank line, DEVAM ET.
 #
 # process_mode = ALWAYS in the .tscn — mounts on a paused tree.
 # Charcoal header/footer bands are StyleBoxFlat built HERE from UiTokens
@@ -16,8 +16,11 @@ signal dismissed
 @onready var _meta: Label = %MetaLabel
 @onready var _rows_box: VBoxContainer = %RowsBox
 @onready var _highlight_strip: PanelContainer = %HighlightStrip
+@onready var _highlight_caption: Label = %HighlightCaption
 @onready var _highlight_text: Label = %HighlightText
+@onready var _frank_row: HBoxContainer = %FrankRow
 @onready var _frank_line: Label = %FrankLine
+@onready var _footer_caption: Label = %FooterCaption
 @onready var _continue_btn: Button = %ContinueBtn
 
 
@@ -31,10 +34,13 @@ func _ready() -> void:
 
 
 func populate(data: Dictionary) -> void:
-	_title.text = data.month_title
-	_meta.text = "%s · %s" % [data.day_range, data.phase_name]
+	_title.text = data.title
+	_meta.text = "%s · %s" % [data.range, data.phase_name]
+	_highlight_caption.text = data.caption
 	_highlight_text.text = data.highlight
 	_frank_line.text = data.frank_line
+	_frank_row.visible = String(data.frank_line) != ""   # outside monthly mode Frank may be silent
+	_footer_caption.text = data.footer
 
 	var mrr: Dictionary = data.mrr
 	var cash: Dictionary = data.cash

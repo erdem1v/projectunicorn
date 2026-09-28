@@ -24,16 +24,16 @@ extends RefCounted
 # [static-tr] tetiklenmesin.
 # ============================================================================
 
-## RnDSystem.days_estimate -1.0 döndüğünde (katkı yok) bu değer taşınır. Çubuk
-## gün satırını hiç yazmaz; sebebi başlık satırındaki duraklama cümlesidir.
-const NO_DAYS := -1
+## RnDSystem.weeks_estimate -1.0 döndüğünde (katkı yok) bu değer taşınır. Çubuk
+## hafta satırını hiç yazmaz; sebebi başlık satırındaki duraklama cümlesidir.
+const NO_WEEKS := -1
 
 var node_id: String = ""
 var node_name: String = ""
 var area_line: String = ""        # "{area} alanı" — çözülmüş
 var fill: float = 0.0             # faz satırının zemin dolumu 0-1
 var percent: int = 0              # ekrana yazılan yüzde, 0-99
-var days_left: int = NO_DAYS
+var weeks_left: int = NO_WEEKS
 var paused: bool = false          # §5.7 donmuş = aktif araştırma, üstünde kimse yok
 var pause_note_key: String = ""   # "" | BUILD_BUSY_NOBODY | RND_PAUSED_BUILD
 var assignee_names: Array[String] = []
@@ -71,10 +71,10 @@ func derive() -> bool:
 		if c != null:
 			assignee_names.append(c.character_name)
 
-	var est: float = RnDSystem.days_estimate(id, ids)
+	var est: float = RnDSystem.weeks_estimate(id, ids)
 	# -1.0 = "katkı yok" (§5.5). Sıfıra bölme ya da ∞ ekranda ASLA olmaz; sayı
 	# yerine sebep satırı konuşur.
-	days_left = NO_DAYS if est < 0.0 else RnDUiShared.whole_days(est)
+	weeks_left = NO_WEEKS if est < 0.0 else RnDUiShared.whole_weeks(est)
 	return true
 
 
@@ -83,5 +83,5 @@ func derive() -> bool:
 ## aynı resim.
 func fingerprint() -> String:
 	return "%s|%.3f|%d|%d|%d|%s|%d" % [
-		node_id, fill, percent, days_left, int(paused), pause_note_key,
+		node_id, fill, percent, weeks_left, int(paused), pause_note_key,
 		assignee_names.size()]

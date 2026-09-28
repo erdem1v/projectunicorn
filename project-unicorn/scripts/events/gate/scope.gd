@@ -219,8 +219,8 @@ static func _select_employee(mode: String, used: Dictionary, bound: Dictionary) 
 static func _select_investor(mode: String, used: Dictionary) -> String:
 	match mode:
 		"expiring_sheet":
-			# The sheet with the fewest business days left — the same minimum the
-			# funding.sheet_days_left seam reads, so the card names the investor whose deadline
+			# The sheet with the fewest weeks left — the same minimum the
+			# funding.sheet_weeks_left seam reads, so the card names the investor whose deadline
 			# it prints.
 			var best: String = ""
 			var least: int = 9999
@@ -229,9 +229,9 @@ static func _select_investor(mode: String, used: Dictionary) -> String:
 				var vc_id: String = String(ts.vc_id)
 				if used.has(vc_id) or ts.is_decision_due(GameState.day):
 					continue
-				var days: int = ts.business_days_left(GameState.day)
-				if days < least or (days == least and vc_id < best):
-					least = days
+				var weeks: int = ts.weeks_left(GameState.day)
+				if weeks < least or (weeks == least and vc_id < best):
+					least = weeks
 					best = vc_id
 			return best
 		"decision_sheet":

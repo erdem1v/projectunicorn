@@ -35,10 +35,10 @@ const PM_EXPERIENCE_CAP := 3.0
 # --- Faz bantları ve TASARIM turları (düz yol) ---
 const PHASE_DESIGN_END := 0.20      # TASARIM [0, 0,20) — tur 1 bu bandın kendisidir
 const PHASE_DEV_END := 0.80         # GELİŞTİRME [0,20, 0,80) · BETA [0,80, 1,0]
-# Tur 1 dolunca turlar kendiliğinden zincirlenir. Her ek tur ITER_ROUND_DAYS takvim günü sürer
-# (ekip hızından bilinçli bağımsız: bedeli "N gün" olarak okunur) ve sonunda eksenleri büyütür.
+# Tur 1 dolunca turlar kendiliğinden zincirlenir. Her ek tur ITER_ROUND_WEEKS hafta sürer (ekip
+# hızından bilinçli bağımsız: bedeli "N hafta" olarak okunur) ve sonunda eksenleri büyütür.
 # ITER_MAX_ROUNDS'ta park eder; azalan getiri dördün ötesini ödüllendirmez.
-const ITER_ROUND_DAYS := 4
+const ITER_ROUND_WEEKS := 1
 const ITER_MAX_ROUNDS := 4
 # Eksen tavanı = ITER_CEIL_FOUNDER_COEF × kurucunun eksen alanındaki puanı
 #              + min(ekibin o alandaki katkısı × ITER_CEIL_ROLE_COEF, ITER_CEIL_ROLE_CAP).
@@ -99,43 +99,41 @@ const MEMBER_EXPERTISE_WEIGHT := 1.0
 const CRITICAL_BUG_LAUNCH_PENALTY := 5
 
 # --- BETA: test gizli hataları bulur, bulunanları çözer ---
-## §7 [K] — günlük keşif = BETA_BUG_FIND_PER_DAY × sönüm^(beta günü). Ar-Ge `test_automation`
-## düğümü sönümü 0,85 → 0,90'a çeker (Ar-Ge §4.3 · §13).
+## §7 [K] — günlük keşif = BETA_BUG_FIND_PER_DAY × sönüm^(beta günü); beta günü girişin saatinden
+## sayılan tam takvim günüdür. Ar-Ge `test_automation` düğümü sönümü 0,85 → 0,90'a çeker (Ar-Ge §4.3 · §13).
 const BETA_BUG_FIND_PER_DAY := 6.0
 const BETA_FIND_DECAY := 0.85
 const BETA_FIND_DECAY_RESEARCHED := 0.90
 const POLISH_BUG_FIX_PER_DAY := 4   # BETA'da günlük çözülen hata
-# Test alanı bulma isabetini ve bulma/çözme temposunu artırır, hata sprintini kısaltır. Test'e
-# kimse atanmamışsa çarpanlar ×1,0.
+# Test alanı bulma isabetini ve bulma/çözme temposunu artırır. Test'e kimse atanmamışsa çarpanlar ×1,0.
 const TESTER_FIND_PER_EXPERTISE := 0.08
 const TESTER_FIND_MULT_MAX := 1.8
 const TESTER_TEMPO_PER_PACE := 0.05
 const TESTER_TEMPO_MULT_MAX := 1.6
-const TESTER_SPRINT_PER_EXPERTISE := 0.06
 
-# İptalin ilk günü bedelsizdir (yanlış tık affı); sonrasında onay yanan gün ve parayı söyler.
-const CANCEL_FREE_DAYS := 1
+# Başladığı hafta içinde iptal bedelsizdir (yanlış tık affı); sonrasında onay yanan hafta ve
+# parayı söyler.
+const CANCEL_FREE_WEEKS := 1
 
 # --- Canlı ürün ---
 # Aşınma: kullanıcı ve karmaşıklık saatlik hata biriktirir; Test uzmanlığı düşürür ama WEAR_FLOOR'un
-# altına indiremez. İhmal edilen ürün hatayı günler içinde biriktirir.
+# altına indiremez. İhmal edilen ürün hatayı günler içinde biriktirir. Katsayılar takvim saati
+# başınadır; saatlik tik yedi takvim saati taşır.
 const WEAR_AUD_COEF := 0.00004       # kullanıcı başına / saat
 const WEAR_CPLX_COEF := 0.0012       # toplam karmaşıklık puanı başına / saat
 const WEAR_TECH_REDUCER := 0.005
 const WEAR_FLOOR := 0.002
-# Hata sprinti canlı hataları birkaç günde temizler; süre hata sayısıyla ölçeklenir.
+# Hata sprinti canlı hataları bir hafta boyunca temizler; süre başlarken damgalanır.
 const SPRINT_BUG_FIX_PER_DAY := 4
-const MIN_SPRINT_DAYS := 1
-const MAX_SPRINT_DAYS := 7
+const SPRINT_WEEKS := 1
 # Ürün Detayı sağlık ve trend türetmeleri.
-const BUG_HISTORY_DAYS := 7         # mvp_bug_history penceresi (günlük örnek)
+const BUG_HISTORY_WEEKS := 2        # mvp_bug_history penceresi (tik başına bir örnek)
 const TREND_DELTA := 2              # |son − ilk| >= bu → artıyor/azalıyor, altı sabit
 const TREND_SPIKE := 4              # keskin artış → sağlık riskli
 const HEALTH_EFF_STAB_RATIO := 0.5  # effective/raw stability >= bu → sağlıklı adayı
 const BUG_RISK_ORTA := 0.5          # canlı hata / toplam karmaşıklık
 const BUG_RISK_YUKSEK := 1.5
 
-const HOURS_PER_BUILD_DAY := 24     # efor ve hatalar saatlik birikir (günlük oran / 24)
 # Kapasite = kurucu + ürün kadrosu. Sprint ve build birer kapasite ister; talep aşarsa ikisi de
 # orantılı yavaşlar (capacity_speed_factor).
 const CAPACITY_BASE := 1
@@ -189,12 +187,12 @@ static func from_dict(d: Dictionary) -> void:
 
 
 static func daily_tick() -> void:
-	# Canlı ürünün günlük hata örneği; bug_trend() ve health_state() bu pencereyi okur.
+	# Canlı ürünün haftalık hata örneği; bug_trend() ve health_state() bu pencereyi okur.
 	if not ProductState.is_live():
 		return
 	var hist: Array = GameState.get_flag("mvp_bug_history", [])
 	hist.append(int(GameState.get_flag("mvp_live_bug_count", 0)))
-	while hist.size() > BUG_HISTORY_DAYS:
+	while hist.size() > TimeModel.ticks(BUG_HISTORY_WEEKS):
 		hist.pop_front()
 	GameState.set_flag("mvp_bug_history", hist)
 
@@ -234,14 +232,12 @@ static func capacity_speed_factor() -> float:
 
 
 static func projected_speed_factor_with_extra_job() -> float:
-	# Onay öncesi önizleme: bu iş de başlarsa hangi hızda koşar ("~3 gün → ~6 gün").
+	# Onay öncesi önizleme: bu iş de başlarsa hangi hızda koşar ("~3 hafta → ~6 hafta").
 	return minf(1.0, float(capacity_total()) / float(capacity_demand() + 1))
 
 
 # --- Meşguliyet ve duraklama ---
-# "Kurucu her şeyi yapabilir, ama aynı anda değil." Kural kişi başınadır. Meşgul sayılanlar: izinde
-# ya da eğitimde olan herkes; VC toplantısına hazırlanan ya da satış masasında oturan kurucu (Satış
-# §5.0). VC toplantısının kendisi ve olay modalları zaten ağacı duraklatır.
+# "Kurucu her şeyi yapabilir, ama aynı anda değil." Kural kişi başınadır; meşgul `HRSystem.is_busy`'dir.
 
 static func _phase_areas(phase: String) -> Array:
 	# Faz dışı (planning) → geliştirme: commit öncesi projeksiyonun varsayılanı.
@@ -251,10 +247,7 @@ static func _phase_areas(phase: String) -> Array:
 ## Bu kişi bugün işe girebilir mi. Tek işçi meşgul kurucuysa yapım durur, ekipte boş biri varsa
 ## akar (Ekip §2.1).
 static func _is_free(c: Character) -> bool:
-	if c == null or c.status != HRConstants.STATUS_ACTIVE:
-		return false
-	return not (c.category == "founder" and (GameState.get_flag("pitch_prep_active", false)
-		or GameState.get_flag("sales_meeting_active", false)))
+	return c != null and c.status == HRConstants.STATUS_ACTIVE and not HRSystem.is_busy(c)
 
 
 ## Bu fazı taşıyabilecek herkes, durumuna BAKMADAN. HRSystem.assigned_to STATUS_ACTIVE filtrelediği
@@ -453,7 +446,7 @@ static func _phase_area_sum(phase: String, _lead_id: String) -> float:
 	return total
 
 
-static func _speed_for_phase(phase: String, lead_id: String) -> float:
+static func _speed_for_phase(phase: String, lead_id: String, founder_share: float = 1.0) -> float:
 	var speed: float = 0.0
 	if _founder_on_build():
 		# Kurucu terimi Ekip seam'inin dışında hesaplandığı için saat oranını (§8.3) ve odak
@@ -461,14 +454,15 @@ static func _speed_for_phase(phase: String, lead_id: String) -> float:
 		var founder: Character = CharacterRegistry.get_founder()
 		speed = FOUNDER_SPEED_COEF * float(GameState.get_founder_skill(_founder_phase_area(phase))) \
 			* HRConstants.hours_output_mult(WorkHoursSystem.hours_for(founder)) \
-			* HRConstants.focus_mult(HRSystem.job_count(founder))
+			* HRConstants.focus_mult(HRSystem.job_count(founder)) * founder_share
 	speed += EMPLOYEE_SPEED_COEF * _phase_area_sum(phase, lead_id)
 	return maxf(SPEED_MIN, speed * _lead_coordination(lead_id))
 
 
 ## Faz duyarlı ve her çağrıda taze: aynı ekip TASARIM'da ve GELİŞTİRME'de farklı hızda koşar.
-static func team_speed(b: FeatureBuild) -> float:
-	return _speed_for_phase(b.current_phase, b.lead_engineer_id)
+## `founder_share` kurucu terimini çarpar; yalnız saatlik tik toplantı payını verir.
+static func team_speed(b: FeatureBuild, founder_share: float = 1.0) -> float:
+	return _speed_for_phase(b.current_phase, b.lead_engineer_id, founder_share)
 
 
 ## Bir alana atanmış çalışanların (kurucu hariç) katkı toplamı.
@@ -519,13 +513,14 @@ static func build_carriers() -> Array[Character]:
 	return HRSystem.assigned_to_job(HRConstants.JOB_BUILD)
 
 
-## §6.1 — yapım hızı, efor/gün. Kurucu herkes gibi sayılır.
-static func build_effort_per_day(lead_id: String = "") -> float:
+## §6.1 — yapım hızı, efor/gün. Kurucu herkes gibi sayılır; `founder_share` onun katkısını çarpar
+## ve yalnız saatlik tik toplantı payını verir.
+static func build_effort_per_day(lead_id: String = "", founder_share: float = 1.0) -> float:
 	var total: float = 0.0
 	for c in build_carriers():
 		var area: String = build_carrier_area(c)
 		if area != "":
-			total += HRSystem.daily_contribution(c, area)
+			total += HRSystem.daily_contribution(c, area) * (founder_share if c.category == "founder" else 1.0)
 	# Ekip §4.2: liderlik alanın toplamına uygulanır. §3: iş başında olmayan lider çarpan vermez.
 	var lead: Character = CharacterRegistry.get_character(lead_id)
 	var leadership: int = 0
@@ -548,30 +543,30 @@ static func line_bug_rate_per_effort() -> float:
 	return clampf(ceil_now - BUG_RATE_SKILL_COEF * avg, BUG_RATE_FLOOR, ceil_now)
 
 
-static func tester_find_mult() -> float:
-	return minf(1.0 + HRSystem.area_sum_for(HRConstants.AREA_QA) * TESTER_FIND_PER_EXPERTISE,
-		TESTER_FIND_MULT_MAX)
+## Test alanına atananların çarpanlı puan toplamı. `founder_share` kurucunun satırını çarpar ve yalnız
+## saatlik tik toplantı payını verir: BETA'da kurucu Test'e oturur.
+static func _qa_sum(founder_share: float) -> float:
+	var total: float = 0.0
+	for c in HRSystem.assigned_to(HRConstants.AREA_QA):
+		total += float(int(c.role_stats.get(HRConstants.AREA_QA, 0))) \
+			* HRSystem.output_mult_for_area(c, HRConstants.AREA_QA) \
+			* (founder_share if c.category == "founder" else 1.0)
+	return total
 
 
-static func tester_tempo_mult() -> float:
-	return minf(1.0 + HRSystem.area_sum_for(HRConstants.AREA_QA) * TESTER_TEMPO_PER_PACE,
-		TESTER_TEMPO_MULT_MAX)
+static func tester_find_mult(founder_share: float = 1.0) -> float:
+	return minf(1.0 + _qa_sum(founder_share) * TESTER_FIND_PER_EXPERTISE, TESTER_FIND_MULT_MAX)
 
 
-# --- Süre: "~N gün"ün tek kaynağı ---
+static func tester_tempo_mult(founder_share: float = 1.0) -> float:
+	return minf(1.0 + _qa_sum(founder_share) * TESTER_TEMPO_PER_PACE, TESTER_TEMPO_MULT_MAX)
 
-static func estimated_days_remaining(b: FeatureBuild) -> int:
-	var rate: float = team_speed(b) * capacity_speed_factor()
+
+# --- Süre: "~N hafta"nın tek kaynağı; hız günlüktür, tahmin tik başına efordan yukarı yuvarlanır ---
+
+static func estimated_weeks_remaining(b: FeatureBuild) -> int:
+	var rate: float = TimeModel.per_tick(team_speed(b) * capacity_speed_factor())
 	return int(ceil(maxf(0.0, b.total_efor - b.efor_spent) / maxf(0.01, rate)))
-
-
-## Düz yolun commit öncesi projeksiyonu. GELİŞTİRME hızıyla: eforun %60'ı o bantta ve en uzun faz o.
-static func estimate_build_days(new_ids: Array, strengthen_ids: Array, sorumlu_id: String) -> int:
-	var total: float = float(ProductCatalog.sum_efor(new_ids) + STRENGTHEN_EFOR * strengthen_ids.size())
-	if total <= 0.0:
-		return 0
-	var rate: float = _speed_for_phase("development", sorumlu_id) * projected_speed_factor_with_extra_job()
-	return int(ceil(total / maxf(0.01, rate)))
 
 
 static func build_progress() -> float:
@@ -603,7 +598,7 @@ static func design_turn_progress() -> float:
 	return clampf(into / cost, 0.0, 1.0)
 
 
-## "Geliştirmeye geç" ilk günden basılabilir; tur 1 dolmadıysa düğmenin ipucu ×0,75 bedelini söyler.
+## "Geliştirmeye geç" ilk andan basılabilir; tur 1 dolmadıysa düğmenin ipucu ×0,75 bedelini söyler.
 static func needs_design_confirm() -> bool:
 	return is_line_build() and active_build.current_phase == "iteration" \
 		and active_build.design_turns_completed < 1
@@ -614,6 +609,20 @@ static func design_turns_maxed() -> bool:
 
 
 # --- Saatlik tik ---
+# Bir tik yedi takvim günü ve 24 saatlik tiktir: günlük oranın saatlik payı per_tick(oran) / 24,
+# takvim saati başına katsayınınki per_tick(katsayı). Süre sayaçları haftadır ve saatte 1/24 akar.
+
+## Saatlik tikin kapsadığı saatin tik içindeki başlangıcı (0 ile 23/24). Yalnız saatlik tikte
+## geçerlidir: 00:00'ın saatlik tiki devirden önce koşar, o saat biten tikin son saatidir.
+static func hour_start_fraction() -> float:
+	return float(posmod(GameState.current_hour - 1, TimeModel.HOURS_PER_DAY)) / float(TimeModel.HOURS_PER_DAY)
+
+
+## Oyuncu eyleminin tik damgası, saat kesriyle: BETA sönümü ve sürüm yaşı eylemin saatinden ölçülür.
+## Eylem saatlik tikler arasında olur; sonraki saatlik tikin tik + hour_start_fraction'ı tam bu damgadır.
+static func clock_stamp() -> float:
+	return float(GameState.day) + float(GameState.current_hour) / float(TimeModel.HOURS_PER_DAY)
+
 
 static func hourly_tick(_hour: int) -> void:
 	# Kapasite çarpanı işin tüm saatlik çıktısına uygulanır (efor, hata, beta): tek başına koşan işin
@@ -644,7 +653,8 @@ static func _tick_line_build_hourly(f: float) -> void:
 	if b.current_phase == "bugfix":
 		_tick_beta_hourly(f)   # BETA'yı Test taşır ve efor ilerletmez (§7); Build hızına bağlı değil
 		return
-	var rate: float = build_effort_per_day(b.lead_engineer_id) * f / float(HOURS_PER_BUILD_DAY)
+	var rate: float = TimeModel.per_tick(build_effort_per_day(b.lead_engineer_id,
+		TimeManager.founder_output_factor())) * f / float(TimeModel.HOURS_PER_DAY)
 	if rate <= 0.0:
 		return
 	if b.current_phase == "iteration":
@@ -671,18 +681,19 @@ static func _tick_build_hourly(f: float) -> void:
 		"iteration": cap *= PHASE_DESIGN_END
 		"development": cap *= PHASE_DEV_END
 	var in_iter_hold: bool = b.current_phase == "iteration" \
-		and (b.iteration_decision_pending or b.iteration_round_days > 0.0)
+		and (b.iteration_decision_pending or b.iteration_round_weeks > 0.0)
 	# Kapı cap'e bakar: fikstürün cap üstüne zorladığı efor aşağı çekilmez.
 	var working: bool = b.efor_spent < cap and not in_iter_hold and not build_paused()
 	if working:
 		# §8.4 — ek mesainin getirisi saatin kendisidir ve team_speed'in içindedir; ayrı bonus yok.
-		b.efor_spent = minf(cap, b.efor_spent + team_speed(b) * f / float(HOURS_PER_BUILD_DAY))
+		b.efor_spent = minf(cap, b.efor_spent + TimeModel.per_tick(team_speed(b,
+			TimeManager.founder_output_factor())) * f / float(TimeModel.HOURS_PER_DAY))
 	match b.current_phase:
 		"iteration":
-			if b.iteration_round_days > 0.0:
+			if b.iteration_round_weeks > 0.0:
 				# Ek tur takvim ritüelidir: kapasite çarpanı süreyi esnetir, ekip hızı girmez.
-				b.iteration_round_days = maxf(0.0, b.iteration_round_days - f / float(HOURS_PER_BUILD_DAY))
-				if b.iteration_round_days == 0.0:
+				b.iteration_round_weeks = maxf(0.0, b.iteration_round_weeks - f / float(TimeModel.HOURS_PER_DAY))
+				if b.iteration_round_weeks == 0.0:
 					_apply_iteration_round_gains(b)
 					_end_round(b)
 			elif b.iteration_count == 1 and not b.iteration_decision_pending \
@@ -728,7 +739,7 @@ static func _end_round(b: FeatureBuild) -> void:
 static func _start_next_round(b: FeatureBuild) -> void:
 	# Kazanç tur SONUNDA uygulanır. pending(false) kayıttan gelen parkın dinleyicilerini de temizler.
 	b.iteration_count += 1
-	b.iteration_round_days = float(ITER_ROUND_DAYS)
+	b.iteration_round_weeks = float(TimeModel.ticks(ITER_ROUND_WEEKS))
 	b.iteration_decision_pending = false
 	EventBus.build_iteration_decision_pending.emit(false)
 
@@ -745,7 +756,7 @@ static func _apply_iteration_round_gains(b: FeatureBuild) -> void:
 
 # --- Faz geçişleri (oyuncu kararları) ---
 
-## TASARIM'dan çıkış. Hat modelinde ilk günden açıktır: acele etmenin bedeli kilit değil cila
+## TASARIM'dan çıkış. Hat modelinde ilk andan açıktır: acele etmenin bedeli kilit değil cila
 ## çarpanıdır (×0,75, §5; bkz. needs_design_confirm). Düz yolda tur 1 bitince açılır; koşan yarım
 ## tur kazançsız terk edilir.
 static func can_enter_development() -> bool:
@@ -760,7 +771,7 @@ static func enter_development() -> void:
 		return
 	var b := active_build
 	b.iteration_decision_pending = false
-	b.iteration_round_days = 0.0
+	b.iteration_round_weeks = 0.0
 	b.current_phase = "development"
 	EventBus.build_iteration_decision_pending.emit(false)
 	_reseat_founder("development")
@@ -796,8 +807,9 @@ static func enter_beta() -> void:
 	b.bugs_fixed = 0
 	b.bug_find_progress = 0.0
 	b.bug_fix_progress = 0.0
-	# §7 — keşif sönümü BETA'da geçen günü okur, yapımın yaşını değil.
-	b.beta_entered_day = GameState.day
+	# §7 — keşif sönümü BETA'da geçen takvim gününü okur, yapımın yaşını değil; girişin saati sönümün
+	# başlangıcıdır, tikin başı değil.
+	b.beta_entered_day = clock_stamp()
 	# BETA barının paydası.
 	GameState.set_flag("bug_count_at_bugfix_start_%s" % b.id, b.bug_count)
 	_reseat_founder("bugfix")
@@ -815,10 +827,17 @@ static func _tick_beta_hourly(f: float) -> void:
 	# yayınlamak" gerçek bir karardır. "Yayınlamak test etmekten hızlı hata bulur."
 	var decay: float = BETA_FIND_DECAY_RESEARCHED if ResearchSeam.completed("test_automation") \
 		else BETA_FIND_DECAY
-	var beta_day: int = maxi(0, GameState.day - b.beta_entered_day)
-	var find_rate: float = BETA_BUG_FIND_PER_DAY * pow(decay, float(beta_day)) \
-		* tester_find_mult() * tester_tempo_mult()
-	b.bug_find_progress += find_rate * f / float(HOURS_PER_BUILD_DAY)
+	# Sönen oran beta gününe basamaklıdır, gün içinde sabit. Saatlik tikin kapsadığı takvim aralığı
+	# [t0, t1) gün sınırında bölünerek integre edilir.
+	var t0: float = TimeModel.days(maxf(0.0,
+		float(GameState.day) + hour_start_fraction() - b.beta_entered_day))
+	var t1: float = t0 + TimeModel.days(1.0 / float(TimeModel.HOURS_PER_DAY))
+	var cut: float = minf(t1, floor(t0) + 1.0)
+	var decayed_days: float = pow(decay, floor(t0)) * (cut - t0) + pow(decay, floor(t0) + 1.0) * (t1 - cut)
+	# Toplantı atlamasının saatinde Test'e oturan kurucu payıyla sayılır (TimeManager.founder_output_factor).
+	var share: float = TimeManager.founder_output_factor()
+	var tempo: float = tester_tempo_mult(share)
+	b.bug_find_progress += BETA_BUG_FIND_PER_DAY * decayed_days * tester_find_mult(share) * tempo * f
 	while b.bug_find_progress >= 1.0:
 		if hidden > 0:
 			hidden -= 1
@@ -827,7 +846,8 @@ static func _tick_beta_hourly(f: float) -> void:
 		b.bugs_found += 1
 		b.bug_find_progress -= 1.0
 	if b.bugs_found - b.bugs_fixed > 0:
-		b.bug_fix_progress += float(POLISH_BUG_FIX_PER_DAY) * tester_tempo_mult() * f / float(HOURS_PER_BUILD_DAY)
+		b.bug_fix_progress += TimeModel.per_tick(POLISH_BUG_FIX_PER_DAY * tempo) * f \
+			/ float(TimeModel.HOURS_PER_DAY)
 		while b.bug_fix_progress >= 1.0 and b.bugs_found - b.bugs_fixed > 0:
 			b.bugs_fixed += 1
 			b.bug_count -= 1
@@ -844,7 +864,7 @@ static func _accrue_bugs_hourly(f: float) -> void:
 	# Yazılım'daki her TİTİZ oranı çarpımsal düşürür: iki TİTİZ birinden iyidir, getiri azalarak.
 	for c in HRSystem.assigned_to(HRConstants.AREA_ENGINEERING):
 		rate *= HRConstants.trait_mult(c.traits, "bug_rate_mult")
-	_add_bug_progress(b, maxf(BUG_FLOOR, rate) * f)
+	_add_bug_progress(b, TimeModel.per_tick(maxf(BUG_FLOOR, rate) * f))
 
 
 static func _add_bug_progress(b: FeatureBuild, amount: float) -> void:
@@ -883,7 +903,7 @@ static func _post_ship_wear_hourly() -> void:
 	var expertise: float = _team_area_avg(HRConstants.AREA_QA, "")
 	var rate: float = maxf(WEAR_FLOOR, audience * WEAR_AUD_COEF + float(complexity) * WEAR_CPLX_COEF
 		- expertise * WEAR_TECH_REDUCER)
-	var prog: float = float(GameState.get_flag("mvp_live_bug_progress", 0.0)) + rate
+	var prog: float = float(GameState.get_flag("mvp_live_bug_progress", 0.0)) + TimeModel.per_tick(rate)
 	var count: int = int(GameState.get_flag("mvp_live_bug_count", 0))
 	while prog >= 1.0:
 		count += 1
@@ -900,13 +920,6 @@ static func _shipped_total_complexity() -> int:
 	return total
 
 
-## Sprint süresi başlarken bir kez damgalanır; Test alanı kısaltır.
-static func sprint_duration_for(bug_count: int) -> int:
-	var rate: float = float(SPRINT_BUG_FIX_PER_DAY) * (1.0
-		+ HRSystem.area_sum_for(HRConstants.AREA_QA) * TESTER_SPRINT_PER_EXPERTISE)
-	return clampi(int(ceil(float(bug_count) / maxf(0.01, rate))), MIN_SPRINT_DAYS, MAX_SPRINT_DAYS)
-
-
 ## Canlı hataları temizleyen koşu. Build slotu kullanmaz, durumu mvp_sprint_* bayraklarındadır;
 ## bedeli kapasite havuzudur (build'le paralelse ikisi de yavaşlar).
 static func start_bug_sprint() -> bool:
@@ -915,12 +928,11 @@ static func start_bug_sprint() -> bool:
 		return false
 	if not ProductState.is_live():
 		return false
-	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", 0))
-	if bugs <= 0:
+	if int(GameState.get_flag("mvp_live_bug_count", 0)) <= 0:
 		return false
 	GameState.set_flag("mvp_bug_sprint_active", true)
-	GameState.set_flag("mvp_sprint_days_total", sprint_duration_for(bugs))
-	GameState.set_flag("mvp_sprint_days_elapsed", 0.0)
+	GameState.set_flag("mvp_sprint_weeks_total", TimeModel.ticks(SPRINT_WEEKS))
+	GameState.set_flag("mvp_sprint_weeks_elapsed", 0.0)
 	GameState.set_flag("mvp_sprint_fix_progress", 0.0)
 	return true
 
@@ -928,16 +940,17 @@ static func start_bug_sprint() -> bool:
 static func _tick_live_sprint_hourly(f: float) -> void:
 	var prog: float = float(GameState.get_flag("mvp_sprint_fix_progress", 0.0))
 	var count: int = int(GameState.get_flag("mvp_live_bug_count", 0))
-	prog -= f * float(SPRINT_BUG_FIX_PER_DAY) / float(HOURS_PER_BUILD_DAY)
+	prog -= TimeModel.per_tick(SPRINT_BUG_FIX_PER_DAY) * f / float(TimeModel.HOURS_PER_DAY)
 	while prog <= -1.0 and count > 0:
 		count -= 1
 		prog += 1.0
 	GameState.set_flag("mvp_sprint_fix_progress", prog)
 	GameState.set_flag("mvp_live_bug_count", count)
 	GameState.set_flag("mvp_live_bug_progress", 0.0)
-	var elapsed: float = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0)) + f / float(HOURS_PER_BUILD_DAY)
-	GameState.set_flag("mvp_sprint_days_elapsed", elapsed)
-	if elapsed >= float(GameState.get_flag("mvp_sprint_days_total", 1)):
+	var elapsed: float = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0)) \
+		+ f / float(TimeModel.HOURS_PER_DAY)
+	GameState.set_flag("mvp_sprint_weeks_elapsed", elapsed)
+	if elapsed >= float(GameState.get_flag("mvp_sprint_weeks_total", 1)):
 		GameState.set_flag("mvp_bug_sprint_active", false)
 	EventBus.build_progress_changed.emit()
 
@@ -1144,14 +1157,14 @@ static func effort_ceiling(step_ids: Array) -> int:
 	return ProductLines.sum_effort(step_ids)
 
 
-## Konsept önizlemesindeki "Süre ~N gün" (§3): tavan + tek TASARIM turu (taban cila ×1,00), bu iş de
-## başlarsa kapasiteyle. Tur sayısı TASARIM'da belirlenir, Konsept onu bilemez.
-static func estimate_line_build_days(step_ids: Array, lead_id: String = "") -> int:
+## Konsept önizlemesindeki "Süre ~N hafta" (§3): tavan + tek TASARIM turu (taban cila ×1,00), bu iş
+## de başlarsa kapasiteyle. Tur sayısı TASARIM'da belirlenir, Konsept onu bilemez.
+static func estimate_line_build_weeks(step_ids: Array, lead_id: String = "") -> int:
 	var ceiling: float = float(effort_ceiling(step_ids))
 	if ceiling <= 0.0:
 		return 0
 	var design: float = DESIGN_TURN_COST * ceiling
-	var rate: float = build_effort_per_day(lead_id) * projected_speed_factor_with_extra_job()
+	var rate: float = TimeModel.per_tick(build_effort_per_day(lead_id) * projected_speed_factor_with_extra_job())
 	return int(ceil((ceiling + design) / maxf(0.01, rate)))
 
 
@@ -1338,14 +1351,15 @@ static func cancel_build() -> void:
 
 # --- Olay efektleri ---
 
-## "+N gün" yapımı ilerleten hızla efora çevrilip toplama eklenir (negatif hızlandırır). Toplam
+## "+N hafta" yapımı ilerleten hızla efora çevrilip toplama eklenir (negatif hızlandırır). Toplam
 ## harcananın ve 1 eforun altına inmez.
-static func apply_speed_bonus(days: int) -> void:
+static func apply_speed_bonus(weeks: int) -> void:
 	if active_build == null:
 		return
 	var b := active_build
 	var speed: float = build_effort_per_day(b.lead_engineer_id) if is_line_build() else team_speed(b)
-	b.total_efor = maxf(maxf(1.0, b.efor_spent), b.total_efor + float(days) * speed)
+	b.total_efor = maxf(maxf(1.0, b.efor_spent),
+		b.total_efor + float(TimeModel.ticks(weeks)) * TimeModel.per_tick(speed))
 
 
 ## Düz ekleme, taban 0: olay delta'sı yoksa önizleme == ship ve her delta modalda rozet taşır.

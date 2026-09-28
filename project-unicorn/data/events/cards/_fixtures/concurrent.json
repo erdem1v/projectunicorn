@@ -5,7 +5,7 @@
   "tick": "scheduled",
   "class": "paper",
   "tags": ["build_safe"],
-  "expires_days": 200,
+  "expires_weeks": 29,
   "expire_note": "FIXTURE_CONCURRENT_EXPIRE",
   "on_expire": { "penalties": [] },
   "latch": { "one_shot": true },

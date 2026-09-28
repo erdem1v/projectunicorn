@@ -22,7 +22,7 @@
     "one_shot": true
   },
   "latch_key": "entity",
-  "expires_days": 14,
+  "expires_weeks": 2,
   "expire_note": "expire_note",
   "on_expire": {
     "penalties": [

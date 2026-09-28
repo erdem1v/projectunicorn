@@ -179,8 +179,8 @@ static func _leaf(node: Dictionary, ctx: Dictionary, report) -> bool:
 		return _leaf_flag(node, report, true)
 	if node.has("flag_unset"):
 		return _leaf_flag(node, report, false)
-	if node.has("days_since_flag"):
-		return _leaf_days_since(node, report)
+	if node.has("weeks_since_flag"):
+		return _leaf_weeks_since(node, report)
 	if node.has("flag_expires_within"):
 		return _leaf_expires_within(node, report)
 	if node.has("history"):
@@ -218,26 +218,26 @@ static func _leaf_flag(node: Dictionary, report, want_set: bool) -> bool:
 	return ok
 
 
-static func _leaf_days_since(node: Dictionary, report) -> bool:
-	# "N days after the day stamped in <key>". An ABSENT stamp is FALSE, never day 0 — a run
-	# whose product has not shipped must not satisfy "one day after it shipped".
-	var key: String = String(node["days_since_flag"])
+static func _leaf_weeks_since(node: Dictionary, report) -> bool:
+	# "N weeks after the week stamped in <key>". An ABSENT stamp is FALSE, never week 0 — a run
+	# whose product has not shipped must not satisfy "one week after it shipped".
+	var key: String = String(node["weeks_since_flag"])
 	if not EvFlags.has_stamp(key):
-		_stamp(report, node, "days_since_flag", false, [], {"stamp": key, "stamped": false})
+		_stamp(report, node, "weeks_since_flag", false, [], {"stamp": key, "stamped": false})
 		return false
-	var elapsed: int = EvFlags.days_since(key)
+	var elapsed: int = EvFlags.weeks_since(key)
 	var ok: bool = _compare(elapsed, String(node.get("op", ">=")), node.get("value", 0))
-	_stamp(report, node, "days_since_flag", ok, [],
-		{"stamp": key, "stamped": true, "days": elapsed, "want": node.get("value", 0)})
+	_stamp(report, node, "weeks_since_flag", ok, [],
+		{"stamp": key, "stamped": true, "weeks": elapsed, "want": node.get("value", 0)})
 	return ok
 
 
 static func _leaf_expires_within(node: Dictionary, report) -> bool:
 	var key: String = String(node["flag_expires_within"])
-	var days: int = int(node.get("days", 0))
-	var left: int = EvFlags.days_until_expiry(key)
-	var ok: bool = left >= 0 and left <= days
-	_stamp(report, node, "flag_expires_within", ok, [], {"flag": key, "days_left": left, "within": days})
+	var weeks: int = int(node.get("weeks", 0))
+	var left: int = EvFlags.weeks_until_expiry(key)
+	var ok: bool = left >= 0 and left <= weeks
+	_stamp(report, node, "flag_expires_within", ok, [], {"flag": key, "weeks_left": left, "within": weeks})
 	return ok
 
 
@@ -259,10 +259,10 @@ static func _leaf_history(node: Dictionary, report) -> bool:
 			ok = EvHistory.chose(ev, opt)
 			detail["option"] = opt
 			detail["chosen"] = EvHistory.last_option(ev)
-		"days_since":
-			var d: int = EvHistory.days_since(ev)
-			ok = d >= 0 and _compare(d, String(node.get("op", ">=")), node.get("value", 0))
-			detail["days"] = d
+		"weeks_since":
+			var w: int = EvHistory.weeks_since(ev)
+			ok = w >= 0 and _compare(w, String(node.get("op", ">=")), node.get("value", 0))
+			detail["weeks"] = w
 		"resolution":
 			var want_res: String = String(node.get("value", ""))
 			ok = EvHistory.last_resolution(ev) == want_res

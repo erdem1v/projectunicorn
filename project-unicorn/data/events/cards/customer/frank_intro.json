@@ -60,7 +60,7 @@
       "expire_note": "The person Frank introduced spoke to somebody else."
     }
   },
-  "expires_days": 7,
+  "expires_weeks": 1,
   "on_expire": {
     "penalties": [
       {

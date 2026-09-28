@@ -12,28 +12,30 @@ const CATEGORY_TAGS := {"customer": "EVENT_TAG_CUSTOMER", "team": "EVENT_TAG_TEA
 	"product": "EVENT_TAG_PRODUCT", "funding": "DESK_PAPER_TAG_FUNDING"}
 
 
-## [{id, dot, tag, title, days_left (-1 = saatsiz), urgent, tab, subpage}]. Motor kâğıdının
-## `tab`'ı boştur: tıklanınca kendi kartı açılır.
+## [{id, dot, tag, title, weeks_left (-1 = saatsiz), expiring, tab, subpage}]. `expiring` motorun
+## son hafta vurgusudur; hatırlatıcıda hep false. Motor kâğıdının `tab`'ı boştur: tıklanınca
+## kendi kartı açılır.
 static func gather() -> Array:
 	var papers: Array = []
 	for e in EventGate.desk_papers(64):
-		var urgent: bool = bool(e["urgent"])
+		var expiring: bool = bool(e["expiring"])
 		papers.append({"id": String(e["id"]), "title": String(e["title"]),
 			"tag": TranslationServer.translate(CATEGORY_TAGS.get(e["category"], "EVENT_TAG_AGENDA")),
-			"days_left": int(e["days_left"]), "urgent": urgent, "tab": "", "subpage": "",
-			"dot": UiTokens.ACCENT_DEEP if urgent else UiTokens.health_color(&"warn")})
+			"weeks_left": int(e["weeks_left"]), "expiring": expiring, "tab": "", "subpage": "",
+			"dot": UiTokens.ACCENT_DEEP if expiring else UiTokens.health_color(&"warn")})
 	if GameState.phase_gate_ready and GameState.pending_next_phase > 0:
 		papers.append(_reminder("gate", UiTokens.ACCENT_DEEP,
 			TranslationServer.translate("DESK_PAPER_TAG_GATE"),
 			TranslationServer.translate("DESK_PAPER_GATE_TITLE"), "finance"))
 	var sheets: Array = GameState.active_sheets
 	if not sheets.is_empty():
-		var min_left: int = 999
-		for sheet in sheets:
-			min_left = mini(min_left, sheet.days_left(GameState.day))
-		var title: String = TranslationServer.translate("DESK_PAPER_SHEET_TITLE").format(
-			{"days": maxi(0, min_left)}) if sheets.size() == 1 \
-			else TranslationServer.translate("DESK_PAPER_SHEETS_TITLE").format({"n": sheets.size()})
+		var title: String = TranslationServer.translate("DESK_PAPER_SHEETS_TITLE").format({"n": sheets.size()})
+		if sheets.size() == 1:
+			var sheet: TermSheet = sheets[0]
+			var weeks: int = sheet.weeks_left(GameState.day)
+			# Süresi dolan teklifin sayacak haftası kalmaz; kâğıt fonun cevap beklediğini söyler.
+			title = TranslationServer.translate("HUNT_DECISION_DUE") if sheet.is_decision_due(GameState.day) \
+				else TranslationServer.translate(Fmt.count_key("DESK_PAPER_SHEET_TITLE", weeks)).format({"weeks": weeks})
 		papers.append(_reminder("sheet", UiTokens.health_color(&"warn"),
 			TranslationServer.translate("DESK_PAPER_TAG_FUNDING"), title, "finance",
 			"yatirim"))   # LOC-DATA route id
@@ -62,8 +64,8 @@ static func connect_changes(c: Callable) -> void:
 		sig.connect(c)
 
 
-## Kâğıdın satırı, iki yüzeyde aynı: nokta, etiket, başlık ve saati olan kâğıtta kalan gün. Son
-## günlerde gün vurgulu; ertelenmiş bir kararın aldığı tek uyarı bu.
+## Kâğıdın satırı, iki yüzeyde aynı: nokta, etiket, başlık ve saati olan kâğıtta kalan hafta. Son
+## haftasında "bu hafta" der; vurgu ertelenmiş bir kararın aldığı tek uyarıdır.
 static func make_row(paper: Dictionary) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -74,11 +76,12 @@ static func make_row(paper: Dictionary) -> HBoxContainer:
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
-	var days_left: int = int(paper["days_left"])
-	if days_left >= 0:
+	var weeks_left: int = int(paper["weeks_left"])
+	if weeks_left >= 0:
 		row.add_child(UiFactory.make_label(
-			TranslationServer.translate("DESK_PAPER_DAYS").format({"n": days_left}),
-			&"MicroLabel", UiTokens.ACCENT_DEEP if bool(paper["urgent"]) else UiTokens.INK_MUTED))
+			TranslationServer.translate("DESK_PAPER_THIS_WEEK") if weeks_left == 1
+				else TranslationServer.translate("DESK_PAPER_WEEKS").format({"n": weeks_left}),
+			&"MicroLabel", UiTokens.ACCENT_DEEP if bool(paper["expiring"]) else UiTokens.INK_MUTED))
 	return row
 
 
@@ -96,5 +99,5 @@ static func open(paper: Dictionary) -> void:
 
 static func _reminder(id: String, dot: Color, tag: String, title: String, tab: String,
 		subpage: String = "") -> Dictionary:
-	return {"id": id, "dot": dot, "tag": tag, "title": title, "days_left": -1, "urgent": false,
+	return {"id": id, "dot": dot, "tag": tag, "title": title, "weeks_left": -1, "expiring": false,
 		"tab": tab, "subpage": subpage}

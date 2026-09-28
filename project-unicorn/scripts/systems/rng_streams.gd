@@ -11,13 +11,15 @@ extends RefCounted
 # Draw sites (a new site joins a stream, it does not open a bare randf()):
 #   skill     — SkillCheck.roll_against / SkillCheck.resolve.
 #   hr_morale — HRMoraleSystem's resignation roll.
+#   sales_rep — SalesRepSystem's per-tick close roll.
 #
 # Seed/state are stored as STRINGS: both are 64-bit, and JSON numbers are doubles, so anything
 # past 2^53 would come back rounded. str()/to_int() round-trips the full bit pattern.
 
 const STREAM_SKILL := "skill"
 const STREAM_HR_MORALE := "hr_morale"
-const STREAM_IDS: Array[String] = [STREAM_SKILL, STREAM_HR_MORALE]
+const STREAM_SALES_REP := "sales_rep"
+const STREAM_IDS: Array[String] = [STREAM_SKILL, STREAM_HR_MORALE, STREAM_SALES_REP]
 
 static var _streams: Dictionary = {}   # id (String) -> RandomNumberGenerator
 static var _seeded_for: int = -1       # run_seed the streams are currently keyed to
@@ -64,14 +66,14 @@ static func to_dict() -> Dictionary:
 	return out
 
 
-## Streams absent from the payload are keyed off the restored run_seed on first draw.
+## A stream absent from the payload never drew: it is keyed off the restored run_seed here, so
+## get_stream() finds every stream present and never reseeds the restored ones.
 static func from_dict(d: Dictionary) -> void:
+	reseed(GameState.run_seed)
 	for id in STREAM_IDS:
 		var entry: Variant = d.get(id, null)
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
-		var rng: RandomNumberGenerator = _stream_for(id)
 		# `seed` resets `state`, so state is written second.
-		rng.seed = String((entry as Dictionary).get("seed", "0")).to_int()
-		rng.state = String((entry as Dictionary).get("state", "0")).to_int()
-	_seeded_for = GameState.run_seed
+		_streams[id].seed = String((entry as Dictionary).get("seed", "0")).to_int()
+		_streams[id].state = String((entry as Dictionary).get("state", "0")).to_int()

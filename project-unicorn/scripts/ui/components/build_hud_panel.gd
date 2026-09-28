@@ -55,7 +55,8 @@ func _ready() -> void:
 	_refresh()
 
 
-## OfficeView her yerleşim yüklenişinde `office_overlays` grubuna söyler.
+## OfficeView her yerleşim yüklenişinde ve kurucunun yolculuğu boyunca (örtü) `office_overlays`
+## grubuna söyler.
 func set_map_open(open: bool) -> void:
 	_map_open = open
 	_refresh()

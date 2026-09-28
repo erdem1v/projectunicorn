@@ -39,7 +39,7 @@ const NEUTRAL_VERBS := [
 	# people — morale and assignment are not economy; salary is, and lives below
 	"change_morale", "morale_all", "assign_to", "send_on_leave", "start_training",
 	# product
-	"dimension_delta", "bug_delta", "delay_days", "damage_product",
+	"dimension_delta", "bug_delta", "delay_weeks", "damage_product",
 	"ship_active_build", "enter_development", "enter_beta",
 	# customers — satisfaction is a relationship, not a payment
 	"satisfaction_delta", "promise_create",
@@ -279,18 +279,18 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			EvFlags.clear_flag(String(e.get("name", "")))
 			return {"verb": verb, "name": e.get("name", "")}
 		"set_timed_flag":
-			EvFlags.set_timed(String(e.get("name", "")), int(e.get("days", 1)), "card")
-			return {"verb": verb, "name": e.get("name", ""), "days": e.get("days", 1)}
+			EvFlags.set_timed(String(e.get("name", "")), int(e.get("weeks", 1)), "card")
+			return {"verb": verb, "name": e.get("name", ""), "weeks": e.get("weeks", 1)}
 		"stamp_day":
 			EvFlags.stamp(String(e.get("name", "")), "card")
 			return {"verb": verb, "name": e.get("name", "")}
 
 		# --- scheduling -----------------------------------------------------
 		"schedule_event":
-			EvSchedule.add(String(e.get("event_id", "")), int(e.get("delay_days", 1)),
+			EvSchedule.add(String(e.get("event_id", "")), int(e.get("delay_weeks", 1)),
 				(e.get("context", ctx) as Dictionary), String(e.get("arc_id", "")))
 			return {"verb": verb, "event_id": e.get("event_id", ""),
-				"delay_days": e.get("delay_days", 1)}
+				"delay_weeks": e.get("delay_weeks", 1)}
 		"cancel_scheduled":
 			var dropped: int = EvSchedule.cancel(String(e.get("event_id", "")))
 			return {"verb": verb, "event_id": e.get("event_id", ""), "dropped": dropped}
@@ -359,7 +359,8 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				pfid = pc.pain_feature_id if pc != null else ""
 			if pfid == "":
 				return _no_target(verb, pcid)
-			B2BSalesSystem.accept_promise(pcid, pfid, int(e.get("deadline_days", 14)))
+			B2BSalesSystem.accept_promise(pcid, pfid,
+				int(e.get("deadline_weeks", B2BConstants.PROMISE_DEADLINE_WEEKS)))
 			return {"verb": verb, "customer": pcid, "feature": pfid}
 
 		# --- product ----------------------------------------------------------
@@ -369,13 +370,13 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 		"bug_delta":
 			ProductSystem.apply_bug_delta(_amount(e))
 			return {"verb": verb, "amount": _amount(e)}
-		"delay_days":
+		"delay_weeks":
 			# The seam no-ops without an active build; logging the refusal keeps a card from
 			# silently claiming time it did not take.
 			if ProductSystem.get_active_build() == null:
-				return {"verb": verb, "refused": "no active build; a day cost cannot apply"}
-			ProductSystem.apply_speed_bonus(int(e.get("days", 0)))
-			return {"verb": verb, "days": e.get("days", 0)}
+				return {"verb": verb, "refused": "no active build; a week cost cannot apply"}
+			ProductSystem.apply_speed_bonus(int(e.get("weeks", 0)))
+			return {"verb": verb, "weeks": e.get("weeks", 0)}
 		"ship_active_build":
 			ProductSystem.ship_active_build()
 			return {"verb": verb}

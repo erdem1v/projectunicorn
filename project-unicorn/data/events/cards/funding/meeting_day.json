@@ -1,10 +1,13 @@
 {
   "_port_note": "The investor slot selects `meeting_pending` — the one in GameState.pending_meeting. The condition alone could not pick him: it is a global seam, and a bound slot is checked, never searched.",
+  "_design": "HOURLY and gated on funding.meeting_sitting_open, not daily. The daily sweep runs at 00:00, inside the night, where no sitting may start, so a gate in a daily card's condition would never pass. The hourly sweep proposes the card at the first waking hour of the meeting week, 08:00, when the gate is open. The pump checks the condition again when the card reaches the screen, so a card whose gate shut on the way is dropped and comes back the next week (the latch is spent at admission). The only option carries no lock: a locked only option would leave a modal nobody can close.",
   "id": "funding.meeting_day",
   "version_scope": "demo",
   "category": "funding",
-  "tick": "daily",
+  "tick": "hourly",
+  "allowed_hours": [0, 23],
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": [
     "critical",
     "build_safe"
@@ -18,13 +21,22 @@
     }
   },
   "latch": {
-    "cooldown_days": 1
+    "cooldown_weeks": 1
   },
   "latch_key": "entity",
   "condition": {
-    "seam": "funding.meeting_day_arrived",
-    "op": "==",
-    "value": true
+    "all": [
+      {
+        "seam": "funding.meeting_day_arrived",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "funding.meeting_sitting_open",
+        "op": "==",
+        "value": true
+      }
+    ]
   },
   "options": [
     {

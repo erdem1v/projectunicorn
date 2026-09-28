@@ -10,9 +10,9 @@ extends RefCounted
 # never arrives; a save that names a method can also ask the game to call something. Behaviour
 # re-resolved from an id also picks up content edits.
 #
-# ABSOLUTE DAYS ONLY (§16.3), never "ticks remaining", so save/load and speed changes cannot
-# distort the arithmetic. §20 B1: a due day that has PASSED fires immediately, never skipped.
-# The one exception is a frozen arc, which stores RELATIVE days on the arc itself (see
+# ABSOLUTE TICKS ONLY (§16.3), never "weeks remaining", so save/load and speed changes cannot
+# distort the arithmetic. §20 B1: a due tick that has PASSED fires immediately, never skipped.
+# The one exception is a frozen arc, which stores RELATIVE weeks on the arc itself (see
 # EvArcs.pause_for_subject) so the global schedule stays purely absolute.
 
 ## Array of entries, kept sorted by fire_on_day so due() is a prefix scan.
@@ -21,11 +21,11 @@ static var _entries: Array = []
 
 # --- Writing ---------------------------------------------------------------
 
-static func add(event_id: String, delay_days: int, context: Dictionary = {},
+static func add(event_id: String, delay_weeks: int, context: Dictionary = {},
 		arc_id: String = "") -> void:
 	_entries.append({
 		"event_id": event_id,
-		"fire_on_day": GameState.day + maxi(0, delay_days),
+		"fire_on_day": GameState.day + TimeModel.ticks(maxi(0, delay_weeks)),
 		# Scalars only: EvScope stores {type, id, bound_day}, never an object. A Resource here
 		# would come back on load as a private copy of a dead entity.
 		"context": context.duplicate(true),
@@ -61,7 +61,7 @@ static func freeze_arc(arc_id: String) -> Array:
 		if String(entry["arc_id"]) == arc_id:
 			frozen.append({
 				"event_id": entry["event_id"],
-				"remaining_days": maxi(0, int(entry["fire_on_day"]) - GameState.day),
+				"remaining_weeks": maxi(0, int(entry["fire_on_day"]) - GameState.day),
 				"context": entry["context"],
 			})
 		else:
@@ -70,18 +70,18 @@ static func freeze_arc(arc_id: String) -> Array:
 	return frozen
 
 
-## Put them back, re-materialising absolute days from today. An arc that waited nine days
-## resumes with nine days still to go on each step — not nine steps due at once.
+## Put them back, re-materialising absolute ticks from now. An arc that waited three weeks
+## resumes with three weeks still to go on each step — not three steps due at once.
 static func thaw_arc(arc_id: String, frozen: Array) -> void:
 	for f in frozen:
 		var entry: Dictionary = f
-		add(String(entry["event_id"]), int(entry["remaining_days"]),
+		add(String(entry["event_id"]), int(entry["remaining_weeks"]),
 			entry.get("context", {}), arc_id)
 
 
 # --- Reading ---------------------------------------------------------------
 
-## Entries due today or overdue, removed from the schedule as they are handed over.
+## Entries due this tick or overdue, removed from the schedule as they are handed over.
 ## Overdue is not an error and is not skipped — see the header.
 static func take_due() -> Array:
 	var due: Array = []

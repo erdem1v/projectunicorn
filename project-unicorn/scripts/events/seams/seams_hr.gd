@@ -39,12 +39,12 @@ static func _install_people() -> void:
 	EvSeams.register("hr.is_busy", E, TYPE_BOOL,
 		func(id: String) -> bool: return HRSystem.is_busy(_emp(id)),
 		"HR", "leave or training, plus pitch prep for the founder")
-	EvSeams.register("hr.tenure_days", E, TYPE_INT,
-		func(id: String) -> int: return HRSystem.tenure_days(_emp(id)),
-		"HR", "days on the payroll; 0 when hire_day was never stamped")
+	EvSeams.register("hr.tenure_weeks", E, TYPE_INT,
+		func(id: String) -> int: return HRSystem.tenure_weeks(_emp(id)),
+		"HR", "weeks on the payroll; 0 when hire_day was never stamped")
 	EvSeams.register("hr.work_hours", E, TYPE_INT,
 		func(id: String) -> int: return HRSystem.work_hours(_emp(id)),
-		"HR", "5-11, the resolved inheritance chain, default 8")
+		"HR", "5-16, the resolved inheritance chain, default 8")
 	EvSeams.register("hr.overtime_active", E, TYPE_BOOL,
 		func(id: String) -> bool: return HRSystem.overtime_active(_emp(id)),
 		"HR", "hours above 8")
@@ -89,7 +89,7 @@ static func _install_people() -> void:
 		func(id: String) -> int:
 			var c: Character = _emp(id)
 			return HRActions.raise_cooldown_left(c) if c != null else 0,
-		"HR", "days until a raise is allowed again; 0 means now")
+		"HR", "weeks until a raise is allowed again; 0 means now")
 
 	# The retention modifier "maaşı bandın altında" needs this (I7: no seam, no modifier).
 	# A promotion raises by a percent and does not reseat the salary into the new band, so
@@ -136,7 +136,7 @@ static func _install_company() -> void:
 		"HR", "not status-filtered: leave is paid")
 	EvSeams.register("hr.work_hours_company", G, TYPE_INT,
 		func() -> int: return int(HRSystem.work_hours_company().get("hours", 8)),
-		"HR", "the company base, 5-11")
+		"HR", "the company base, 5-16")
 	EvSeams.register("hr.candidates_ready", G, TYPE_BOOL,
 		func() -> bool: return HRSearchSystem.has_files_ready(),
 		"HR", "the Atlas search has delivered")

@@ -24,9 +24,9 @@ var product_name: String = ""
 var fill: float = 0.0            # faz satırının zemin dolumu 0-1
 var percent: int = 0
 ## §7 — hat modelinde BETA satırı yüzde taşımaz (mühürlü): havuz tükenmez, yüzde sahte bir
-## tamamlanma iması olurdu. Satır sayaçları ve geçen günü (`beta_day`) gösterir.
+## tamamlanma iması olurdu. Satır sayaçları ve BETA'nın kaçıncı haftası olduğunu (`beta_week`) gösterir.
 var show_percent: bool = true
-var beta_day: int = 0
+var beta_week: int = 0
 var paused: bool = false
 ## §2 — "" · "auto" · "manual". Oto-duraklama cümleyle (`pause_note_key`), manuel duraklama
 ## glifle konuşur; ikisi bir arada görünmez.
@@ -76,7 +76,7 @@ func derive() -> bool:
 				round_max = ProductSystem.DESIGN_TURN_MAX
 				round_index = mini(b.design_turns_completed + (0 if at_cap else 1), round_max)
 				fill = 1.0 if at_cap else _quantize(ProductSystem.design_turn_progress())
-				# İlk günden basılabilir; tur 1 dolmadan geçmenin bedeli onay metninde.
+				# İlk andan basılabilir; tur 1 dolmadan geçmenin bedeli onay metninde.
 				if ProductSystem.needs_design_confirm():
 					decision_tooltip = TranslationServer.translate("BUILD_DESIGN_RUSH_CONFIRM")
 			else:
@@ -89,9 +89,9 @@ func derive() -> bool:
 					fill = _quantize(b.efor_spent
 						/ maxf(0.001, ProductSystem.PHASE_DESIGN_END * b.total_efor))
 				else:
-					# Tur ≥2: takvim geri sayımı.
-					fill = _quantize(1.0 - b.iteration_round_days
-						/ maxf(0.001, float(ProductSystem.ITER_ROUND_DAYS)))
+					# Tur ≥2: takvim geri sayımı, hafta.
+					fill = _quantize(1.0 - b.iteration_round_weeks
+						/ float(TimeModel.ticks(ProductSystem.ITER_ROUND_WEEKS)))
 			decision_key = "PROD_TO_DEVELOPMENT_PLAIN"
 			decision_enabled = ProductSystem.can_enter_development()
 		"development":
@@ -117,7 +117,7 @@ func derive() -> bool:
 			bugs_left = maxi(0, bugs_found - bugs_fixed)
 			if line:
 				show_percent = false
-				beta_day = maxi(1, GameState.day - b.beta_entered_day + 1)
+				beta_week = maxi(1, GameState.day - int(b.beta_entered_day) + 1)
 			else:
 				# Düz katalog: YÜKSELEN çubuk, 1 − kalan/başlangıç (dolu = iş bitti). Olay
 				# başlangıcı aşan hata eklerse çubuk geri düşer ama negatife inmez.

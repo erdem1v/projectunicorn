@@ -4,7 +4,7 @@ extends Node
 # CustomerRegistry / ProspectRegistry (mutations route through methods; state changes
 # emit on EventBus so UI binds without polling).
 #
-# Resolution: ship-coupling (build_phase_changed → kept, or partial when late) and the daily
+# Resolution: ship-coupling (build_phase_changed → kept, or partial when late) and the per-tick
 # deadline sweep (→ broken). "Shipped" is ProductState.is_feature_live.
 
 var _promises: Dictionary = {}  # id (String) -> Promise
@@ -16,7 +16,7 @@ func _ready() -> void:
 	# A promise cannot outlive the company it was made to. Bound to the REMOVAL SIGNAL
 	# rather than to B2BSalesSystem's churn seam on purpose: accounts also leave through
 	# the `churn_customer` event modifier, which deletes the record directly, and a promise
-	# left behind by that path breaks days later — charging brand a second time for a
+	# left behind by that path breaks weeks later — charging brand a second time for a
 	# company that already took its churn hit and is gone from every screen.
 	EventBus.customer_removed.connect(drop_open_for)
 
@@ -47,8 +47,8 @@ func has_open_for(customer_id: String) -> bool:
 
 # --- Write API ---
 
-func create(customer_id: String, feature_id: String, deadline_days: int) -> Promise:
-	# The single creation seam. Emits promise_created. Deadline is relative to today.
+func create(customer_id: String, feature_id: String, deadline_weeks: int) -> Promise:
+	# The single creation seam. Emits promise_created. The deadline is weeks from this tick.
 	#
 	# A PROMISE WITH NO TARGET IS REFUSED. Nothing ever ships "", so it could never be kept,
 	# and while it stays open `has_open_for` reports true and every card that asks "is a word
@@ -63,7 +63,7 @@ func create(customer_id: String, feature_id: String, deadline_days: int) -> Prom
 	p.id = "promise_%s_%s_%d" % [customer_id, feature_id, GameState.day]
 	p.customer_id = customer_id
 	p.feature_id = feature_id
-	p.deadline_day = GameState.day + maxi(deadline_days, 1)
+	p.deadline_day = GameState.day + maxi(TimeModel.ticks(deadline_weeks), 1)
 	p.status = "open"
 	# Guard against a duplicate id in the same-day/same-feature edge (append a suffix).
 	if _promises.has(p.id):
@@ -137,7 +137,7 @@ func _on_build_phase_changed(phase: String) -> void:
 
 
 func tick_deadlines(day: int) -> void:
-	# Called daily by B2BSalesSystem. An open promise past its deadline breaks.
+	# Called every tick by B2BSalesSystem. An open promise past its deadline breaks.
 	for p in _promises.values():
 		if p.status == "open" and day > p.deadline_day:
 			_resolve(p, "broken")

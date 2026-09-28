@@ -70,6 +70,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 	# takes --build= from Project Settings -> Main Run Args, which headless runs load too. The
 	# suite measures the demo unless a case pins EA / full itself.
 	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
+	# The summary frequency is the player's setting; the suite reads the monthly cadence.
+	SummarySystem.frequency_override = "monthly"
 	_gate_signals = []
 	_endings = []
 	EventBus.phase_gate_reached.connect(func(p: int) -> void: _gate_signals.append(p))
@@ -96,6 +98,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"capacity_split":       fail = _case_capacity_split()
 		"speed_preserve":       fail = _case_speed_preserve()
 		"month_summary":        fail = _case_month_summary()
+		"summary_frequency_ticks": fail = _case_summary_frequency_ticks()
 		"full_loop":            fail = _case_full_loop()
 		"pitch_ret_counter":    fail = _case_pitch_ret_counter()
 		"gecistir_cap":         fail = _case_gecistir_cap()
@@ -154,7 +157,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sales_inner_voice_reaches_view": fail = _case_sales_inner_voice_reaches_view()
 		"sales_faucet_guard_b2c": fail = _case_sales_faucet_guard_b2c()
 		"sales_lead_expiry_and_return_lock": fail = _case_sales_lead_expiry_and_return_lock()
-		"sales_meeting_time_skip_founder_zero": fail = _case_sales_meeting_time_skip_founder_zero()
+		"sales_meeting_time_skip_founder_share": fail = _case_sales_meeting_time_skip_founder_share()
 		"sales_check_replays_after_load": fail = _case_sales_check_replays_after_load()
 		"sales_single_open_promise_lock": fail = _case_sales_single_open_promise_lock()
 		"sales_rep_selection_rule": fail = _case_sales_rep_selection_rule()
@@ -304,6 +307,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_roundtrip_fingerprint":         fail = _case_save_roundtrip_fingerprint()
 		"save_continuity_seeded":             fail = _case_save_continuity_seeded()
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
+		"save_v13_day_stamps_migrate":        fail = _case_save_v13_day_stamps_migrate()
 		"hr_experience_accrues":      fail = _case_hr_experience_accrues()
 		"hr_training_eligibility_edge": fail = _case_hr_training_eligibility_edge()
 		"hr_training_blocks_and_charges_once": fail = _case_hr_training_blocks_and_charges_once()
@@ -372,10 +376,10 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"milestone_paper_under_card":      fail = _case_milestone_paper_under_card()
 		"profit_predicate_margin_scale_red": fail = _case_profit_predicate_margin_scale_red()
 		"speed_save_clamps_to_ladder":     fail = _case_speed_save_clamps_to_ladder()
-		"topbar_speed_cluster_three_rungs": fail = _case_topbar_speed_cluster_three_rungs()
+		"topbar_speed_cluster_four_rungs": fail = _case_topbar_speed_cluster_four_rungs()
 		"smoke_seed_pinned":               fail = _case_smoke_seed_pinned()
 		"ambient_hourly_chance_exact":     fail = _case_ambient_hourly_chance_exact()
-		"ambient_one_per_day_across_hour0": fail = _case_ambient_one_per_day_across_hour0()
+		"ambient_hourly_never_at_night": fail = _case_ambient_hourly_never_at_night()
 		"creation_draft_survives_navigation": fail = _case_creation_draft_survives_navigation()
 		"borderless_note_key_exists":      fail = _case_borderless_note_key_exists()
 		# --- Temizlik turu 2026-08-20 (GDD v2 uygunluk denetiminin karar gerektirmeyen
@@ -519,24 +523,19 @@ static func _sim_day() -> void:
 	TimeManager._dispatch_daily_tick()
 
 
-# TAM GÜN sürücü: motorun gerçek gün sınırını birebir yansıtır.
-# TimeManager._drain_boundaries sırası: saat 1..23 → saat 0 → advance_day() → günlük
-# slotlar. Günlük tik saat 0 ile saat 1'in ARASINDA durur; maliyeti günlük, faydayı
-# saatlik işleyen her mekanizma tam olarak orada ayrışır (ek mesai bedava hızı ve
-# bonus/ödeme asimetrisi bu boşlukta yaşıyordu, 135 case boyunca görünmeden).
-#
-# set_current_hour ŞART: EventManager._is_eligible `allowed_hours`'ı dispatch'e geçilen
-# argümandan değil GameState.current_hour'dan okur — saat yazılmazsa saatlik pencereli
-# her event yanlış saate karşı ölçülür.
+# TAM GÜN sürücü: oyunun saat yolu (TimeManager.advance_hours) bu tikin kalan saatlerini ve 00:00
+# devrini koşar, günlük tikten hemen sonra, gece atlamasına girmeden durur. Toplu adım kartları
+# sonda bir kez gösterir, yani toplu adımda kabul edilen kart 00:00'da yeniden doğrulanır.
 static func _sim_day_full() -> void:
-	while GameState.current_hour < TimeManager.HOURS_PER_DAY - 1:
-		var next_hour: int = GameState.current_hour + 1
-		GameState.set_current_hour(next_hour)
-		TimeManager._dispatch_hourly_tick(next_hour)
-	GameState.set_current_hour(0)
-	TimeManager._dispatch_hourly_tick(0)
-	GameState.advance_day()
-	TimeManager._dispatch_daily_tick()
+	TimeManager.advance_hours(TimeModel.HOURS_PER_DAY - GameState.current_hour)
+
+
+# Bir sonraki tikin 08:00'ine, oyunun oynadığı gibi: günün kalanı, devir ve günlük tik, sonra gece
+# atlaması. Uyanık saate kapılı saatlik kartlar (toplantı ve masa oturumu) 08:00'de kabul edilir ve
+# atlamanın sonundaki pump'ta gösterilir.
+static func _sim_to_morning() -> void:
+	_sim_day_full()
+	TimeManager.skip_night()
 
 
 ## Kurucunun `tech`i 2026-08-21'de DÖRDE bölündü (Ürün · Tasarım · Yazılım · Test), çünkü
@@ -628,14 +627,14 @@ static func _seed_b2b_series_a() -> void:
 	_seed_b2b(SalesSystem.TRACTION_MRR_TARGET + 1000)
 
 
-## Closed calendar months on GameState.month_history: sequential
-## 30-day spans, the given MRR closes, one income/expense pair per month.
-static func _seed_month_closes(mrr_closes: Array, income: int = 30000, expense: int = 24000, red_days: int = 0) -> void:
+## Closed calendar months on GameState.month_history: sequential spans of 30 ticks (only the
+## closes and the money are read), the given MRR closes, one income/expense pair per month.
+static func _seed_month_closes(mrr_closes: Array, income: int = 30000, expense: int = 24000, red_weeks: int = 0) -> void:
 	GameState.month_history.clear()
 	var start: int = 1
 	for m in mrr_closes:
 		GameState.push_month_close({"start_day": start, "end_day": start + 29, "mrr_close": int(m),
-			"income": income, "expense": expense, "net": income - expense, "red_days": red_days})
+			"income": income, "expense": expense, "net": income - expense, "red_weeks": red_weeks})
 		start += 30
 
 
@@ -884,7 +883,7 @@ static func _expect_door_open_then_gate() -> String:
 
 static func _case_gate_decline_reminder() -> String:
 	# REPOINTED (Frank v6, surface 9). The Traction card became a one-option NOTIFICATION, so
-	# the decline path, the escalating bodies and the REMIND_INTERVAL_DAYS re-ask live ONLY on
+	# the decline path, the escalating bodies and the cooldown re-ask live ONLY on
 	# the Series A gate now. Same mechanism, same three things proved — decline works, the body
 	# escalates, the reminder re-asks on the cadence and NOT before — moved to the gate that
 	# still owns them. What the Traction card BECAME is pinned by the case below it.
@@ -900,7 +899,7 @@ static func _case_gate_decline_reminder() -> String:
 		return "phase 2 gate is %s, not %s" % [String(gate.get("card_id", "")), GATE2_ID]
 	# The contract moved onto the card, so it is read off the card. Two options and three body
 	# variants are what the escalation needs; the re-ask interval is the card's own cooldown,
-	# which is also the number the reminder half of this case counts days against.
+	# which is also the number the reminder half of this case counts ticks against.
 	var card: Dictionary = EventGate.catalogue_card(GATE2_ID)
 	if (card.get("options", []) as Array).size() != 2:
 		return "%s carries %d option(s) — the escalation contract has no home left" % [
@@ -909,11 +908,12 @@ static func _case_gate_decline_reminder() -> String:
 		.get("body", {}).get("variants", {})
 	if variants.size() < 2:
 		return "%s carries %d body/bodies — nothing can escalate" % [GATE2_ID, variants.size()]
-	var remind_days: int = int((card.get("latch", {}) as Dictionary).get("cooldown_days", 0))
-	var hold_days: int = 2   # strictly inside the window, so the clock cannot tick on its own
-	if remind_days <= hold_days:
-		return "the re-ask cooldown is %d — the hold below no longer fits in the window" % \
-			remind_days
+	var remind_ticks: int = TimeModel.ticks(int((card.get("latch", {}) as Dictionary).get("cooldown_weeks", 0)))
+	if remind_ticks < 1:
+		return "%s has no re-ask cooldown" % GATE2_ID
+	# Strictly inside the window, so the clock cannot tick on its own; a one-week cooldown
+	# leaves no room and the hold is empty.
+	var hold_ticks: int = remind_ticks - 1
 
 	# Both bodies read from strings.csv BEFORE anything is built, plus the two guards that keep
 	# the comparison from going vacuous: a missing row makes translate() echo the key back, and
@@ -954,7 +954,7 @@ static func _case_gate_decline_reminder() -> String:
 	if open_day >= 0:
 		return "the gate has a resolution in history before it was answered"
 	var fired_day: int = EvLatches.last_day(EvLatches.key_for(GATE2_ID, EvLatches.KEY_RUN, ""))
-	for i in hold_days:
+	for i in hold_ticks:
 		_sim_day()
 		if _instances_of(GATE2_ID) != 1:
 			return "the card that is still up went to %d instances" % _instances_of(GATE2_ID)
@@ -979,14 +979,14 @@ static func _case_gate_decline_reminder() -> String:
 	# gate_prompt_day on decline, so a player who sat on the card for four days bought himself
 	# nine days of quiet. §3.1's cooldown is measured from the last time the card was SHOWN.
 	var elapsed: int = GameState.day - fired_day
-	if elapsed >= remind_days:
+	if elapsed >= remind_ticks:
 		return "the hold consumed the whole cooldown (%d of %d) — the window proves nothing" % [
-			elapsed, remind_days]
-	for i in remind_days - elapsed - 1:
+			elapsed, remind_ticks]
+	for i in remind_ticks - elapsed - 1:
 		_sim_day()
 		if _instances_of(GATE2_ID) > 0:
-			return "reminder re-admitted early (%d days after the fire, cooldown %d)" % [
-				GameState.day - fired_day, remind_days]
+			return "reminder re-admitted early (%d ticks after the fire, cooldown %d)" % [
+				GameState.day - fired_day, remind_ticks]
 	# …then exactly one re-prompt, on the escalated body.
 	_sim_day()
 	if _instances_of(GATE2_ID) != 1:
@@ -1001,7 +1001,7 @@ static func _case_gate_decline_reminder() -> String:
 	if EventGate.active_card().body_text != escalated:
 		return "reminder copy did not escalate (declines=%d)" % 			int(GameState.get_flag("gate_declines", 0))
 	# Never duplicates, even across a further reminder window.
-	for i in remind_days + 1:
+	for i in remind_ticks + 1:
 		_sim_day()
 		if _instances_of(GATE2_ID) > 1:
 			return "gate scene duplicated (§7.10 violation)"
@@ -1009,7 +1009,7 @@ static func _case_gate_decline_reminder() -> String:
 
 
 ## The Traction card is a NOTIFICATION now (Frank v6, surface 9): ONE body, ONE option, and
-## therefore no decline counter, no escalating copy and no REMIND_INTERVAL_DAYS re-ask.
+## therefore no decline counter, no escalating copy and no cooldown re-ask.
 ## Everything _case_gate_decline_reminder used to prove about gate 1 died with the second
 ## option, so this pins what REPLACED it rather than leaving the surface uncovered.
 ##
@@ -1087,9 +1087,9 @@ static func _case_traction_gate_is_one_option() -> String:
 static func _case_bankruptcy() -> String:
 	GameState.set_cash(-1000)
 	# SINIR TÜRETİLDİ: ilk kasa-eksi tik sayacı AZALTMAZ, KURAR — yani iflas
-	# SHUTTER_DAYS + 1'inci tik'te düşer. Bir tik pay bırakılıyor ve döngüyü asıl
-	# durduran aşağıdaki `break`. (Emekli literal 10, eski sabitin 7 + 3'üydü.)
-	for i in EndingsSystem.SHUTTER_DAYS + 2:
+	# SHUTTER_WEEKS + 1'inci tik'te düşer. Bir tik pay bırakılıyor ve döngüyü asıl
+	# durduran aşağıdaki `break`.
+	for i in TimeModel.ticks(EndingsSystem.SHUTTER_WEEKS) + 2:
 		_sim_day()
 		if not GameState.run_active:
 			break
@@ -1107,15 +1107,14 @@ static func _case_shutter_recovery() -> String:
 	for i in 3:
 		_sim_day()
 	# TÜRETİLDİ, YAZILMADI: sayaç ilk kasa-eksi tik'inde SET edilir, sonrakilerde azalır —
-	# üç ardışık tik SHUTTER_DAYS - 2 bırakır. Sabit bir sayı yazmak bu vakayı bir kez
-	# zaten düşürdü (7 -> 30, Frank v6 turu): satır 28'lik gerçeğe karşı 5 iddia ediyordu.
-	var want_left: int = EndingsSystem.SHUTTER_DAYS - 2
-	if GameState.shutter_days_left != want_left:
-		return "counter wrong after 3 days (%d, want %d)" % [GameState.shutter_days_left, want_left]
+	# üç ardışık tik SHUTTER_WEEKS - 2 bırakır.
+	var want_left: int = TimeModel.ticks(EndingsSystem.SHUTTER_WEEKS) - 2
+	if GameState.shutter_weeks_left != want_left:
+		return "counter wrong after 3 ticks (%d, want %d)" % [GameState.shutter_weeks_left, want_left]
 	GameState.set_cash(5000)
 	_sim_day()
-	if GameState.shutter_days_left != -1:
-		return "counter did not reset on recovery (%d)" % GameState.shutter_days_left
+	if GameState.shutter_weeks_left != -1:
+		return "counter did not reset on recovery (%d)" % GameState.shutter_weeks_left
 	for i in 5:
 		_sim_day()
 	if not GameState.run_active or not _endings.is_empty():
@@ -1127,7 +1126,8 @@ static func _case_brand_collapse() -> String:
 	GameState.day = 40
 	GameState.set_brand(10)
 	GameState.active_scandal = true
-	GameState.brand_low_since_day = 5  # 35 days under the floor
+	# Under the floor for exactly the window once the next tick lands.
+	GameState.brand_low_since_day = GameState.day + 1 - TimeModel.ticks(EndingsSystem.BRAND_COLLAPSE_WINDOW)
 	_sim_day()
 	if _endings != ["brand_collapse"]:
 		return "endings: %s" % str(_endings)
@@ -1242,10 +1242,8 @@ static func _case_live_during_vbuild() -> String:
 		return "v3 build could not start"
 	var aud0: float = float(GameState.get_flag("b2c_audience", 0))
 	var mrr0: int = GameState.mrr
-	# 10 gün: saatlik ekonomi + günlük slotlar. Bu döngü elle yazılmıştı ve günlük tiki
-	# saat 23'ten SONRA atıyordu; motor onu saat 0 ile saat 1'in arasına koyuyor.
-	# _sim_day_full() gerçek sırayı taşıyor.
-	for d in 10:
+	# İki tik: saatlik ekonomi + günlük slotlar, motorun gerçek sırasıyla (_sim_day_full).
+	for d in 2:
 		_sim_day_full()
 		if not GameState.run_active:
 			return "run ended mid-case (day %d, endings %s)" % [GameState.day, str(_endings)]
@@ -1261,13 +1259,10 @@ static func _case_live_during_vbuild() -> String:
 	GameState.set_flag("mvp_live_bug_count", 6)
 	if not ProductSystem.start_bug_sprint():
 		return "bug sprint blocked during v3 dev"
-	for h in 24:
-		TimeManager._dispatch_hourly_tick(h)
+	_sim_day_full()
 	if int(GameState.get_flag("mvp_live_bug_count", 99)) >= 6:
 		return "sprint not clearing bugs during v3 dev"
-	for d in 8:   # sprint kurusun (max 7 gün)
-		for h in 24:
-			TimeManager._dispatch_hourly_tick(h)
+	_sim_day_full()   # bir haftalık sprint build'le paralel yarı hızda iki tik sürer
 	if GameState.get_flag("mvp_bug_sprint_active", false):
 		return "sprint never completed"
 	# v3 ship canlı sürümü DEĞİŞTİRİR (tek yaşam döngüsü, slot temiz).
@@ -1292,13 +1287,13 @@ static func _case_sprint_no_freeze() -> String:
 	# trials (audience) ve payers/MRR akmaya devam eder (bedel artık kapasite
 	# havuzu, ekonomi donması değil).
 	_seed_live_product()
-	GameState.set_flag("mvp_live_bug_count", 20)   # 5 iş-günü sprint — pencere boyunca aktif
+	GameState.set_flag("mvp_live_bug_count", 20)
 	if not ProductSystem.start_bug_sprint():
 		return "sprint could not start"
 	var aud0: float = float(GameState.get_flag("b2c_audience", 0))
 	var mrr0: int = GameState.mrr
-	for h in 48:
-		TimeManager._dispatch_hourly_tick(h % 24)   # sales hourly da koşmalı → dispatch üzerinden
+	# Yarım hafta: bir haftalık sprint pencere boyunca aktif kalır.
+	TimeManager.advance_hours(TimeModel.HOURS_PER_DAY / 2)
 	if not GameState.get_flag("mvp_bug_sprint_active", false):
 		return "sprint ended early — case window invalid"
 	var aud1: float = float(GameState.get_flag("b2c_audience", 0))
@@ -1317,14 +1312,16 @@ static func _case_capacity_split() -> String:
 	_seed_live_product()
 	if CharacterRegistry.count_active_developers() != 0:
 		return "unexpected engineer in registry (capacity would be 2)"
-	# 1) Yalnız sprint → tam hız referansı (1.0 iş-günü / takvim günü).
-	GameState.set_flag("mvp_live_bug_count", 28)   # 7 iş-günü — case boyunca bitmez
+	# 1) Yalnız sprint → tam hız referansı (24 saatte 1 hafta).
+	GameState.set_flag("mvp_live_bug_count", 28)
 	if not ProductSystem.start_bug_sprint():
 		return "sprint could not start"
-	var s0: float = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0))
+	# Sprint bir hafta sürer; üç ölçüm penceresi bunu aşar, fikstür süreyi uzatır.
+	GameState.set_flag("mvp_sprint_weeks_total", 99)
+	var s0: float = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0))
 	for h in 24:
 		ProductSystem.hourly_tick(h)   # saf hız ölçümü — sales/event gürültüsü yok
-	if absf(float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0)) - s0 - 1.0) > 0.02:
+	if absf(float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0)) - s0 - 1.0) > 0.02:
 		return "solo sprint not full speed"
 	# 2) Sprint AKTİFKEN v-build başlamalı (silinen guard'ın kanıtı) → ikisi yarı hız.
 	# Rev3 ölçümü: build ilerlemesi EFOR cinsinden — beklenen günlük harcama =
@@ -1345,6 +1342,8 @@ static func _case_capacity_split() -> String:
 			["ai_assistant_voice", "ai_assistant_streaming", "ai_assistant_tools"], "founder"):
 		return "v-build blocked during sprint (guard not removed)"
 	var b: FeatureBuild = ProductSystem.get_active_build()
+	# Fikstür: iki tik uzunluğunda ölçüm penceresi geliştirme bandına sığsın diye build uzatılır.
+	b.total_efor = 200.0
 	if absf(ProductSystem.capacity_speed_factor() - 0.5) > 0.001:
 		return "parallel factor not 0.5 (%.2f)" % ProductSystem.capacity_speed_factor()
 	# Build Bar grameri: v-build'in minik tasarım bandı ölçüm penceresinin İÇİNE
@@ -1359,12 +1358,12 @@ static func _case_capacity_split() -> String:
 	ProductSystem.enter_development()
 	var want_day: float = 0.0
 	var e0: float = b.efor_spent
-	s0 = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0))
+	s0 = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0))
 	for h in 24:
-		want_day += ProductSystem.team_speed(b) * ProductSystem.capacity_speed_factor() / 24.0
+		want_day += TimeModel.per_tick(ProductSystem.team_speed(b)) * ProductSystem.capacity_speed_factor() / 24.0
 		ProductSystem.hourly_tick(h)
 	var db: float = b.efor_spent - e0
-	var ds: float = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0)) - s0
+	var ds: float = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0)) - s0
 	if absf(db - want_day) > 0.02:
 		return "build not at split speed (%.3f efor/day, want %.3f)" % [db, want_day]
 	if absf(ds - 0.5) > 0.02:
@@ -1379,12 +1378,12 @@ static func _case_capacity_split() -> String:
 		return "factor did not recover to 1.0 (%.2f)" % ProductSystem.capacity_speed_factor()
 	var want_day2: float = 0.0
 	e0 = b.efor_spent
-	s0 = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0))
+	s0 = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0))
 	for h in 24:
-		want_day2 += ProductSystem.team_speed(b) * ProductSystem.capacity_speed_factor() / 24.0
+		want_day2 += TimeModel.per_tick(ProductSystem.team_speed(b)) * ProductSystem.capacity_speed_factor() / 24.0
 		ProductSystem.hourly_tick(h)
 	var db2: float = b.efor_spent - e0
-	ds = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0)) - s0
+	ds = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0)) - s0
 	if absf(db2 - want_day2) > 0.02:
 		return "build did not recover to full speed (%.3f efor/day, want %.3f)" % [db2, want_day2]
 	if db2 <= db:
@@ -1416,8 +1415,13 @@ static func _case_speed_preserve() -> String:
 # --- Month-End Summary ---
 
 static func _case_month_summary() -> String:
-	var months: Array = []  # captured summary_data dicts
-	EventBus.month_ended.connect(func(d: Dictionary) -> void: months.append(d))
+	# The modal listens to summary_ready; month_ended only carries the month_history entry.
+	var summaries: Array = []
+	var closes: Array = []
+	var lines: Array = []
+	EventBus.summary_ready.connect(func(d: Dictionary) -> void: summaries.append(d))
+	EventBus.month_ended.connect(func(d: Dictionary) -> void: closes.append(d))
+	EventBus.ticker_live_line.connect(func(_src: String, t: String) -> void: lines.append(t))
 
 	# Highlight registry rules: higher priority replaces, first-come wins ties.
 	GameState.submit_month_highlight("a", 50)
@@ -1428,47 +1432,53 @@ static func _case_month_summary() -> String:
 	GameState.month_highlight_text = ""
 	GameState.month_highlight_priority = -1
 
-	# Quiet January with one known delta: brand 50 → 60. No customers, no
-	# mvp flags → gates stay closed, MRR stays 0, cash falls by burn only.
+	# Quiet January with one known delta: brand 50 → 60. No customers, no mvp flags → gates
+	# stay closed, MRR stays 0, cash falls by burn only. Ticks 1-5 are the Thursdays of January.
 	GameState.set_brand(60)
-	for i in 30:
-		_sim_day()  # days 2..31 — still January
-	if months.size() != 0:
-		return "month fired early (day %d, count %d)" % [GameState.day, months.size()]
-	_sim_day()  # day 32 = Feb 1, 2026 → January closes (real calendar, not day%30)
-	if months.size() != 1:
-		return "expected exactly 1 month_ended at day 32, got %d" % months.size()
-	var m: Dictionary = months[0]
-	# Locale-independent: builds the expected string from the same keys the system uses,
-	# instead of pinning the Turkish bytes (the old pin only held because the process
-	# happened to run in Turkish).
-	var want_title: String = TranslationServer.translate("MONTH_TITLE").format(
-		{"month": Fmt.month_upper(1), "year": 2026})
-	if String(m.month_title) != want_title:
-		return "month_title: %s (want %s)" % [String(m.month_title), want_title]
-	var want_range: String = TranslationServer.translate("MONTH_DAY_RANGE").format(
-		{"from": 1, "to": 31})
-	if String(m.day_range) != want_range:
-		return "day_range: %s (want %s)" % [String(m.day_range), want_range]
+	for i in 4:
+		_sim_day()  # ticks 2..5
+	if not summaries.is_empty() or not closes.is_empty():
+		return "month fired early (tick %d, count %d)" % [GameState.day, summaries.size()]
+	_sim_day()  # tick 6 = 5 Feb 2026 → January closes in slot 0, before this week's flow
+	if summaries.size() != 1 or closes.size() != 1:
+		return "expected one summary and one close at tick 6, got %d / %d" % [summaries.size(), closes.size()]
+	var m: Dictionary = summaries[0]
+	var want_title: String = Fmt.upper(TranslationServer.translate("MONTH_TITLE").format(
+		{"month": Fmt.month_name(1), "year": 2026}))
+	if String(m.title) != want_title:
+		return "title: %s (want %s)" % [String(m.title), want_title]
+	var want_range: String = TranslationServer.translate(Fmt.count_key("SUMMARY_RANGE", 5)).format(
+		{"from": 1, "to": 5})
+	if String(m.range) != want_range:
+		return "range: %s (want %s)" % [String(m.range), want_range]
 	if int(m.brand.from) != 50 or int(m.brand.to) != 60:
 		return "brand delta: %s" % str(m.brand)
 	if int(m.mrr.from) != 0 or int(m.mrr.to) != 0:
 		return "mrr delta: %s" % str(m.mrr)
-	# Hand-computed cash: 31 daily finance ticks × $50 burn, $0 revenue.
-	if int(m.cash.from) != 10000 or int(m.cash.to) != 10000 - 31 * 50:
-		return "cash delta: %s (want 10000 → %d)" % [str(m.cash), 10000 - 31 * 50]
+	# Day 1 has no finance tick, so January carries ticks 2-5: four weeks, 28 days of $50 burn.
+	var jan_flow: int = 4 * TimeModel.DAYS_PER_TICK * 50
+	if int(m.cash.from) != 10000 or int(m.cash.to) != 10000 - jan_flow:
+		return "cash delta: %s (want 10000 → %d)" % [str(m.cash), 10000 - jan_flow]
+	if int(closes[0].expense) != jan_flow or int(closes[0].end_day) != 6:
+		return "January close: %s (want expense %d, end_day 6)" % [str(closes[0]), jan_flow]
 	if int(m.team.from) != 1 or int(m.team.to) != 1:
 		return "team delta: %s" % str(m.team)
-	if String(m.highlight) != MonthSummarySystem.highlight_fallback():
+	var quiet: String = TranslationServer.translate(String(SummarySystem.PERIOD_KEYS["monthly"].quiet))
+	if String(m.highlight) != quiet:
 		return "quiet month should use fallback highlight, got: %s" % String(m.highlight)
 	# Which RULE fired is the assertion; the sentence is whatever the CSV says it is.
 	var want_frank: String = TranslationServer.translate("MONTH_FRANK_ANOTHER")
 	if String(m.frank_line) != want_frank:
 		return "frank rule mismatch: %s (want %s)" % [String(m.frank_line), want_frank]
-	if int(GameState.month_ledger.get("start_day", 0)) != 32:
+	if int(GameState.month_ledger.get("start_day", 0)) != 6:
 		return "ledger not re-snapshotted (start_day %s)" % str(GameState.month_ledger.get("start_day"))
+	# The close itself is one live ticker line (runway is still above every alert band).
+	var want_line: String = TranslationServer.translate("MONTH_CLOSED_TICKER").format({
+		"month": Fmt.month_name(1), "mrr": Fmt.money(0), "delta": Fmt.money(-jan_flow)})
+	if lines != [want_line]:
+		return "month close ticker lines: %s (want [%s])" % [str(lines), want_line]
 
-	# Run counter seams (write-only; ledger deltas must not be affected).
+	# Run counter seams (write-only; the period snapshot must not be affected).
 	var p := Prospect.new()
 	p.id = "lead_month_smoke"
 	p.company_name = "Month Corp"
@@ -1487,22 +1497,71 @@ static func _case_month_summary() -> String:
 	_make_employee("char_month_smoke_emp", "Smoke Hire", HRConstants.ROLE_DEVELOPER)
 	if GameState.run_hires != 1:
 		return "run_hires = %d, want 1" % GameState.run_hires
-	if int(GameState.month_ledger.get("brand", -1)) != 60:
-		return "counters disturbed the ledger snapshot"
+	if int(GameState.summary_ledger.get("brand", -1)) != 60:
+		return "counters disturbed the period snapshot"
 
-	# Terminal suppression: Feb 2026 has 28 days → Feb closes at day 60 (Mar 1).
-	# Force a Class-A ending on exactly that day: slot 9 ends the run before
-	# slot 10 runs → the ending wins, no second summary.
-	while GameState.day < 59:
+	# Terminal suppression: February is ticks 6-9, so it closes at tick 10 (5 Mar). A Class-A
+	# ending on that tick: slot 9 ends the run before slot 10 sends → the ending wins, no second
+	# summary. The month still closes in slot 0.
+	while GameState.day < 9:
 		_sim_day()
-	if months.size() != 1:
-		return "february closed before day 60? (count %d, day %d)" % [months.size(), GameState.day]
+	if summaries.size() != 1:
+		return "february closed before tick 10? (count %d, tick %d)" % [summaries.size(), GameState.day]
 	GameState.series_a_closed = true
-	_sim_day()  # day 60
+	_sim_day()  # tick 10
 	if GameState.run_active:
-		return "run did not end on day 60"
-	if months.size() != 1:
-		return "summary fired on a terminal day (ending must win)"
+		return "run did not end on tick 10"
+	if summaries.size() != 1:
+		return "summary fired on a terminal tick (ending must win)"
+	if closes.size() != 2:
+		return "February did not close in slot 0 (%d closes)" % closes.size()
+	return ""
+
+
+## The summary arrives at the right tick for each frequency, and a month close outside the
+## summary's period is silent: one live ticker line, no summary. One calendar year of ticks
+## 2..54 (tick N is the Thursday 1 Jan 2026 + 7(N − 1); 54 = 7 Jan 2027) through SummarySystem's
+## two slots. A month turns on the first Thursday of the next month. The runway line rides the
+## same slot: once when runway falls under a band, again only after it climbs back
+## RUNWAY_ALERT_REARM_MONTHS above it and falls once more.
+static func _case_summary_frequency_ticks() -> String:
+	var fired: Array = []
+	var lines: Array = []
+	EventBus.summary_ready.connect(func(_d: Dictionary) -> void: fired.append(GameState.day))
+	EventBus.ticker_live_line.connect(func(_src: String, _t: String) -> void: lines.append(GameState.day))
+	var month_turns: Array = [6, 10, 14, 19, 23, 27, 32, 36, 40, 45, 49, 54]
+	var want := {"weekly": range(2, 55), "monthly": month_turns, "quarterly": [14, 27, 40, 54],
+		"yearly": [54]}
+	for freq in SummarySystem.FREQUENCIES:
+		SummarySystem.frequency_override = freq
+		fired.clear()
+		lines.clear()
+		for t in range(2, 55):
+			GameState.day = t
+			SummarySystem.begin_day()
+			SummarySystem.daily_tick()
+		if fired != Array(want[freq]):
+			return "%s summaries on ticks %s, want %s" % [freq, str(fired), str(want[freq])]
+		# One month-close line per turn whatever the frequency; the runway never moves here.
+		if lines != month_turns:
+			return "%s month-close lines on ticks %s" % [freq, str(lines)]
+
+	# THE RUNWAY LINE. No revenue, so runway is cash / (daily burn × DAYS_PER_MONTH) months.
+	var month_cash: float = float(GameState.daily_burn * TimeModel.DAYS_PER_MONTH)
+	var band: float = float(FinanceSystem.RUNWAY_ALERT_MONTHS[0])
+	var rearm: float = FinanceSystem.RUNWAY_ALERT_REARM_MONTHS
+	# above · crosses · stays under · back up inside the re-arm margin · under again ·
+	# recovered past the margin · crosses again
+	var walk: Array = [band + 1.0, band - 0.1, band - 0.2, band + rearm * 0.5, band - 0.1,
+		band + rearm + 0.1, band - 0.1]
+	var want_lines: Array = [0, 1, 1, 1, 1, 1, 2]
+	lines.clear()
+	for i in walk.size():
+		GameState.set_cash(int(round(month_cash * float(walk[i]))))
+		SummarySystem.daily_tick()
+		if lines.size() != int(want_lines[i]):
+			return "runway %.2f months: %d ticker line(s), want %d" % [
+				GameState.get_runway_months(), lines.size(), int(want_lines[i])]
 	return ""
 
 
@@ -1512,9 +1571,9 @@ static func _case_terminal_kills_gate() -> String:
 	if not GameState.phase_gate_ready:
 		return "gate did not open"
 	GameState.set_cash(-1000)
-	# TÜRETİLDİ (_case_bankruptcy'ye bak): kepenk SHUTTER_DAYS + 1'inci tik'te düşer,
+	# TÜRETİLDİ (_case_bankruptcy'ye bak): kepenk SHUTTER_WEEKS + 1'inci tik'te düşer,
 	# `break` düştüğü an çıkar.
-	for i in EndingsSystem.SHUTTER_DAYS + 2:
+	for i in TimeModel.ticks(EndingsSystem.SHUTTER_WEEKS) + 2:
 		_sim_day()
 		if not GameState.run_active:
 			break
@@ -1555,7 +1614,7 @@ static func _case_full_loop() -> String:
 	if not VCPitchSystem.request_meeting("anchor"):
 		return "request_meeting refused"
 	for i in 5:
-		_sim_day()
+		_sim_to_morning()
 		if not GameState.run_active:
 			return "run ended during wait: %s" % str(_endings)
 		if EventGate.active_id() == MEETING_ID or _instances_of(MEETING_ID) > 0:
@@ -1699,28 +1758,28 @@ static func _case_pitch_refused_acq() -> String:
 
 
 static func _case_sheet_expiry_no_rejection() -> String:
-	# Two sheets granted the same day. Frank's warning comes at 3 BUSINESS days; at
+	# Two sheets granted the same tick. Frank's warning comes in the last WARNING_WEEKS; at
 	# the close the sheets are NOT dropped - a sit-or-decline card asks, one fund at a time,
-	# on the same day; declining closes the fund and is not a rejection.
+	# in the same week; declining closes the fund and is not a rejection.
 	GameState.set_phase(3)
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("nexus", GameState.day))
 	var expires: int = VCPitchSystem.sheet_for("anchor").expires_day
-	if GameState.business_days_between(GameState.day, expires) != PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS:
-		return "validity is not %d business days" % PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS
+	if expires - GameState.day != TimeModel.ticks(PitchConstants.SHEET_VALIDITY_WEEKS):
+		return "validity is not %d weeks" % PitchConstants.SHEET_VALIDITY_WEEKS
 	var warned := false
 	var decided: Array = []
 	var decision_days: Array = []
 	for i in 20:
-		_sim_day_full()
+		_sim_to_morning()
 		for guard in 16:
 			var a: String = EventGate.active_id()
 			if a == "":
 				break
 			if a == SHEET_WARN_ID:
 				warned = true
-				if VCPitchSystem.sheet_for("anchor").business_days_left(GameState.day) > PitchConstants.WARNING_DAYS:
-					return "expiry warning early (%d business days left)" % VCPitchSystem.sheet_for("anchor").business_days_left(GameState.day)
+				if VCPitchSystem.sheet_for("anchor").weeks_left(GameState.day) > PitchConstants.WARNING_WEEKS:
+					return "expiry warning early (%d weeks left)" % VCPitchSystem.sheet_for("anchor").weeks_left(GameState.day)
 			if a == SHEET_DECISION_ID:
 				var vc: String = str(EventGate.active_context().get("investor", {}).get("id", ""))
 				if GameState.active_sheets.size() != 2 - decided.size():
@@ -1728,11 +1787,10 @@ static func _case_sheet_expiry_no_rejection() -> String:
 				decided.append(vc)
 				decision_days.append(GameState.day)
 				EventGate.resolve(a, "decline")
-				# The next card comes on the hourly sweep, the same day.
-				while decided.size() < 2 and GameState.current_hour < TimeManager.HOURS_PER_DAY - 1 \
+				# The next card comes on the next hourly sweep, the same week.
+				while decided.size() < 2 and GameState.current_hour < TimeModel.HOURS_PER_DAY - 1 \
 						and EventGate.active_id() == "":
-					GameState.set_current_hour(GameState.current_hour + 1)
-					TimeManager._dispatch_hourly_tick(GameState.current_hour)
+					TimeManager.advance_hours(1)
 				continue
 			EventGate.resolve(a, 0)
 		if decided.size() >= 2:
@@ -1744,9 +1802,9 @@ static func _case_sheet_expiry_no_rejection() -> String:
 	if decided[0] == decided[1]:
 		return "the same fund was asked twice: %s" % str(decided)
 	if decision_days[0] != decision_days[1]:
-		return "the two cards came on different days %s" % str(decision_days)
+		return "the two cards came on different ticks %s" % str(decision_days)
 	if decision_days[0] < expires:
-		return "decision card before the window closed (day %d < %d)" % [decision_days[0], expires]
+		return "decision card before the window closed (tick %d < %d)" % [decision_days[0], expires]
 	if not GameState.active_sheets.is_empty():
 		return "declined sheets survived"
 	for vc in ["anchor", "nexus"]:
@@ -2073,25 +2131,26 @@ static func _case_deal_prompt_defer_keeps_clock() -> String:
 	if sheet == null:
 		return "sheet not granted"
 	var day0: int = GameState.day
-	if sheet.business_days_left(GameState.day) != PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS:
-		return "validity clock not at full (%d)" % sheet.business_days_left(GameState.day)
-	for i in 3:
+	var validity: int = TimeModel.ticks(PitchConstants.SHEET_VALIDITY_WEEKS)
+	if sheet.weeks_left(GameState.day) != validity:
+		return "validity clock not at full (%d)" % sheet.weeks_left(GameState.day)
+	for i in validity - 1:   # deferred up to the offer's last week
 		_sim_day()
 	if VCPitchSystem.sheet_for("anchor") == null:
 		return "sheet expired too early during defer"
 	var vs: Dictionary = TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	if vs.is_empty() or not TermSheetTableSystem.is_active():
 		return "table not re-enterable after defer"
-	var want: int = PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS - GameState.business_days_between(day0, GameState.day)
-	if sheet.business_days_left(GameState.day) != want:
-		return "clock did not tick in business days during defer (%d, want %d)" % [sheet.business_days_left(GameState.day), want]
+	var want: int = validity - (GameState.day - day0)
+	if sheet.weeks_left(GameState.day) != want:
+		return "clock did not tick in weeks during defer (%d, want %d)" % [sheet.weeks_left(GameState.day), want]
 	return ""
 
 
 static func _case_hunt_offer_lifecycle() -> String:
 	# The pre-table estimate contains the true opening term and is never centred on it,
 	# and it does not reroll. Cancelling costs the fund's next meeting and shuts booking
-	# for the day. Frank's cold exit is the fund's own line first, then "two in a row".
+	# for the week. Frank's cold exit is the fund's own line first, then "two in a row".
 	# A clean Beat-3 question shows the odds it rolls.
 	GameState.set_phase(3)
 	_seed_b2b_series_a()
@@ -2114,25 +2173,28 @@ static func _case_hunt_offer_lifecycle() -> String:
 	if not VCPitchSystem.cancel_meeting():
 		return "cancel refused"
 	if VCPitchSystem.request_meeting("anchor"):
-		return "a meeting was booked the same day as a cancel"
-	if VCPitchSystem.meeting_blocked_reason("anchor") != "cancelled_today":
+		return "a meeting was booked the same week as a cancel"
+	if VCPitchSystem.meeting_blocked_reason("anchor") != "cancelled_this_week":
 		return "blocked reason '%s'" % VCPitchSystem.meeting_blocked_reason("anchor")
 	var after: int = int(VCPitchSystem.initial_conviction("nexus").value)
 	if base - after != PitchConstants.MEETING_CANCEL_PENALTY:
 		return "cancel penalty %d (want %d)" % [base - after, PitchConstants.MEETING_CANCEL_PENALTY]
 	_sim_day()
 	if not VCPitchSystem.request_meeting("nexus"):
-		return "booking still shut the next day"
+		return "booking still shut the next week"
+	# A booking moves only before its week, counted from the booked week.
 	var day_before: int = int(GameState.pending_meeting.day)
-	_sim_day()
 	if not VCPitchSystem.reschedule_meeting():
 		return "reschedule refused"
-	if int(GameState.pending_meeting.day) != GameState.day + PitchConstants.MEETING_LEAD_DAYS \
-			or int(GameState.pending_meeting.day) == day_before:
-		return "reschedule did not re-apply the lead time from today"
+	if int(GameState.pending_meeting.day) != day_before + TimeModel.ticks(PitchConstants.MEETING_LEAD_WEEKS):
+		return "reschedule did not re-apply the lead time from the booked week"
 	if int(GameState.vc_states["nexus"].get("move_penalty", 0)) \
 			!= PitchConstants.MEETING_CANCEL_PENALTY + PitchConstants.MEETING_RESCHEDULE_PENALTY:
 		return "move penalties did not accumulate (%s)" % str(GameState.vc_states["nexus"].get("move_penalty"))
+	while GameState.day < int(GameState.pending_meeting.day):
+		_sim_day()
+	if VCPitchSystem.reschedule_meeting():
+		return "the meeting moved in its own week"
 	GameState.pending_meeting.clear()
 
 	# Cold exit: two rejections in a row.
@@ -2163,14 +2225,239 @@ static func _case_hunt_offer_lifecycle() -> String:
 	return ""
 
 
+## v13 → v14. A real save taken on tick 40 gets known day values under the v13 names in every
+## block, is aged to v13 and read back: today 40 is week 6, a past day d is week (d − 1) / 7 + 1,
+## a due date is week 6 plus the weeks it had left (41 and 42 → 7, where the past-day rule says 6).
+## The migrated world then loads and runs a tick.
+static func _case_save_v13_day_stamps_migrate() -> String:
+	var slot: String = "smoke_v13_days_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	_seed_save_world()
+	var cust_id: String = CustomerRegistry.get_by_market("b2b")[0].id
+	_add_prospect("lead_v13", 1, "")
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	var gs: Dictionary = raw["state"]["game_state"]
+	var reg: Dictionary = raw["state"]["registries"]
+	var sys: Dictionary = raw["state"]["systems"]
+	var ev: Dictionary = sys[EvSave.BLOCK_KEY]
+	var row_of := func(rows: Array, id: String) -> Dictionary:
+		return rows.filter(func(r: Dictionary) -> bool: return r["id"] == id)[0]
+	if int(gs["day"]) != 40 or (ev["papers"] as Dictionary).is_empty() \
+			or typeof(sys["product"]["active_build"]) != TYPE_NIL:
+		return done.call("fixture: want tick 40, a paper on the desk and no build (day %s, papers %s)"
+			% [gs["day"], (ev["papers"] as Dictionary).keys()])
+
+	# --- the file aged to v13 ----------------------------------------------------
+	raw["schema_version"] = 13
+	for k in ["shutter_weeks_left", "summary_ledger", "runway_warn_band", "founder_meeting_hours",
+			"sales_meetings_week"]:
+		gs.erase(k)
+	gs.merge({"shutter_days_left": 10, "brand_low_since_day": 15, "vc_meeting_cancel_day": 39,
+		"bootstrap_milestone_day": -1, "company_start_hour": 7, "company_work_hours": 9,
+		"cash": 60000, "mrr": 3000, "daily_burn": 1100,   # runway 2 months: band 3
+		"cash_history": [{"day": 1, "cash": 100}, {"day": 7, "cash": 107}, {"day": 8, "cash": 108},
+			{"day": 40, "cash": 140}],
+		"transactions": [{"day": 15, "label": "a", "amount": -1}, {"day": 16, "label": "b", "amount": -2}],
+		"cs_escalation_days": [15, 36],
+		"sales_return_locks": {"V13 Co": 41},
+		"hr_search": {"started_day": 30, "arrival_day": 42},
+		"month_ledger": {"start_day": 32, "mrr": 2500, "cash": 111000, "employees": 2, "brand": 55,
+			"customers_signed": 1, "customers_lost": 0, "income": 0, "expense": 0, "red_days": 8},
+		"month_history": [{"start_day": 1, "end_day": 32, "mrr_close": 0, "income": 0, "expense": 0,
+			"net": 0, "red_days": 3}],
+	}, true)
+	var flags: Dictionary = gs["flags"]
+	for k in ["mvp_sprint_weeks_total", "mvp_sprint_weeks_elapsed"]:
+		flags.erase(k)
+	flags.merge({"mvp_launch_day": 10, "mvp_version_launch_day": 36,
+		"mvp_version_history": [{"version": 1, "day": 10}], "mvp_bug_history": [3, 4, 5],
+		"mvp_sprint_days_total": 10, "mvp_sprint_days_elapsed": 3.5, "sales_weekly_anchor_day": 0,
+		"angel_seed_accepted_day": 29, "finance_runway_warn_snooze_until_day": 42,
+		"sales_meeting_active": true, "sales_meeting_used_day": 40, "sales_weekly_closes": 2}, true)
+	var emp: Dictionary = row_of.call(reg["characters"], "emp_save")
+	emp.erase("flight_risk_weeks")
+	emp.erase("training_weeks_left")
+	emp.merge({"hire_day": 22, "last_raise_day": 0, "flight_risk_days": 13, "training_days_left": 8,
+		"employment_history": [{"day": 22, "kind": "raise", "old": 1, "new": 2}]}, true)
+	(row_of.call(reg["customers"], cust_id) as Dictionary).merge({"acquired_on_day": 12,
+		"onboarding_until": 41, "last_expansion_day": 20, "support_request_since_day": 33,
+		"last_risk_exit_day": -1, "churn_countdown": -1, "risk_streak": 13, "cs_request_phase": 13}, true)
+	(row_of.call(reg["prospects"], "lead_v13") as Dictionary).merge({"spawned_on_day": 30,
+		"expires_on_day": 41, "work_started_day": -1, "work_due_day": 45}, true)
+	reg["promises"][0]["deadline_day"] = 41
+	# A build and an arc have nothing behind them here; they ride only as far as read_slot.
+	var build: Dictionary = SaveCodec.res_to_dict(FeatureBuild.new())
+	build.erase("iteration_round_weeks")
+	build.merge({"start_day": 22, "beta_entered_day": 36, "iteration_round_days": 3.5}, true)
+	sys["product"]["active_build"] = build
+	var scope := {"customer": {"type": "customer", "id": cust_id, "bound_day": 22}}
+	ev["arcs"]["smoke_v13"] = {"id": "smoke_v13", "subject": {"type": "employee", "id": "emp_save",
+		"bound_day": 22}, "started_day": 15, "awaiting_since": 29,
+		"frozen_schedule": [{"event_id": EXPANSION_ID, "remaining_days": 10, "context": {}}]}
+	ev["flags"]["smoke_v13"] = {"set_day": 22, "set_by": "smoke"}
+	ev["timed_flags"]["smoke_v13"] = {"expires_on": SeedConstants.NO_EXPIRY_DAY, "set_day": 20,
+		"set_by": "smoke"}
+	ev["stamps"]["smoke_v13"] = {"day": 15, "set_by": "smoke"}
+	ev["latches"]["smoke_v13"] = {"fires": 1, "last_day": 29}
+	(ev["schedule"] as Array).append({"event_id": EXPANSION_ID, "fire_on_day": 55,
+		"context": scope.duplicate(true), "arc_id": ""})
+	(ev["rows"] as Array).append({"event_id": "smoke.v13", "day": 22, "resolution": "chosen",
+		"option_id": "", "outcome_id": "", "entities": scope.duplicate(true), "deltas": [], "arc_id": ""})
+	var paper_key: String = (ev["papers"] as Dictionary).keys()[0]
+	(ev["papers"][paper_key] as Dictionary).merge({"expires_on": 41, "admitted_day": 38}, true)
+	(ev["tempo_window"] as Array).append({"day": 40, "event_id": EXPANSION_ID, "category": "customer",
+		"subject": cust_id, "class": "paper"})
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+
+	# --- read_slot hands back week values ----------------------------------------
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	if not bool(payload.get("ok", false)):
+		return done.call("the v13 save was refused: %s" % payload.get("error_key", ""))
+	var st: Dictionary = payload["state"]
+	var mgs: Dictionary = st["game_state"]
+	var mfl: Dictionary = mgs["flags"]
+	var mreg: Dictionary = st["registries"]
+	var mev: Dictionary = st["systems"][EvSave.BLOCK_KEY]
+	var bad: Array[String] = []
+	var expect := func(what: String, got: Variant, want: float) -> void:
+		if not (got is int or got is float) or not is_equal_approx(float(got), want):
+			bad.append("%s = %s, want %s" % [what, got, want])
+	var gone := func(what: String, d: Dictionary, keys: Array) -> void:
+		for k in keys:
+			if d.has(k):
+				bad.append("%s still carries '%s'" % [what, k])
+	var days_of := func(rows: Array) -> Array:
+		return rows.map(func(r: Dictionary) -> int: return int(r["day"]))
+
+	expect.call("meta.day", payload["meta"].get("day"), 6)
+	expect.call("day", mgs.get("day"), 6)
+	expect.call("brand_low_since_day", mgs.get("brand_low_since_day"), 3)
+	expect.call("vc_meeting_cancel_day (not today)", mgs.get("vc_meeting_cancel_day"), -1)
+	expect.call("shutter_weeks_left", mgs.get("shutter_weeks_left"), 2)
+	expect.call("bootstrap_milestone_day (sentinel)", mgs.get("bootstrap_milestone_day"), -1)
+	expect.call("company_start_hour", mgs.get("company_start_hour"), 8)
+	expect.call("company_work_hours", mgs.get("company_work_hours"), 9)
+	expect.call("runway_warn_band", mgs.get("runway_warn_band"), 3)
+	expect.call("sales_return_locks", mgs["sales_return_locks"].get("V13 Co"), 7)
+	expect.call("hr_search.arrival_day", mgs["hr_search"].get("arrival_day"), 7)
+	gone.call("game_state", mgs, ["shutter_days_left"])
+	gone.call("hr_search", mgs["hr_search"], ["started_day"])
+	var cash: Array = (mgs["cash_history"] as Array).map(
+		func(r: Dictionary) -> Array: return [int(r["day"]), int(r["cash"])])
+	if cash != [[1, 107], [2, 108], [6, 140]]:
+		bad.append("cash_history = %s, want each week's last sample" % str(cash))
+	if days_of.call(mgs["transactions"]) != [3, 3]:
+		bad.append("transactions days = %s, want [3, 3]" % str(days_of.call(mgs["transactions"])))
+	var esc: Array = (mgs["cs_escalation_days"] as Array).map(func(d: Variant) -> int: return int(d))
+	if esc != [3, 6]:
+		bad.append("cs_escalation_days = %s, want [3, 6]" % str(esc))
+	var month: Dictionary = mgs["month_ledger"]
+	expect.call("month_ledger.start_day", month.get("start_day"), 5)
+	expect.call("month_ledger.red_weeks", month.get("red_weeks"), 2)
+	gone.call("month_ledger", month, ["red_days", "mrr", "employees", "brand"])
+	var period: Dictionary = mgs.get("summary_ledger", {})
+	for pair in [["start_day", 5], ["mrr", 2500], ["cash", 111000], ["employees", 2], ["brand", 55]]:
+		expect.call("summary_ledger." + pair[0], period.get(pair[0]), pair[1])
+	var closed: Dictionary = mgs["month_history"][0]
+	expect.call("month_history.start_day", closed.get("start_day"), 1)
+	expect.call("month_history.end_day", closed.get("end_day"), 5)
+	expect.call("month_history.red_weeks", closed.get("red_weeks"), 1)
+	gone.call("month_history", closed, ["red_days"])
+
+	expect.call("mvp_launch_day", mfl.get("mvp_launch_day"), 2)
+	expect.call("mvp_version_launch_day", mfl.get("mvp_version_launch_day"), 6)
+	expect.call("mvp_version_history.day", mfl["mvp_version_history"][0].get("day"), 2)
+	expect.call("mvp_sprint_weeks_total", mfl.get("mvp_sprint_weeks_total"), 2)
+	expect.call("mvp_sprint_weeks_elapsed", mfl.get("mvp_sprint_weeks_elapsed"), 0.5)
+	expect.call("sales_weekly_anchor_day (empty)", mfl.get("sales_weekly_anchor_day"), 0)
+	expect.call("angel_seed_accepted_day", mfl.get("angel_seed_accepted_day"), 5)
+	expect.call("finance_runway_warn_snooze_until_day", mfl.get("finance_runway_warn_snooze_until_day"), 7)
+	if (mfl["mvp_bug_history"] as Array).map(func(n: Variant) -> int: return int(n)) != [5]:
+		bad.append("mvp_bug_history = %s, want the newest sample" % str(mfl["mvp_bug_history"]))
+	gone.call("flags", mfl, ["mvp_sprint_days_total", "mvp_sprint_days_elapsed", "sales_meeting_active",
+		"sales_meeting_used_day", "sales_weekly_closes"])
+
+	var memp: Dictionary = row_of.call(mreg["characters"], "emp_save")
+	expect.call("hire_day", memp.get("hire_day"), 4)
+	expect.call("last_raise_day (sentinel)", memp.get("last_raise_day"), 0)
+	expect.call("flight_risk_weeks", memp.get("flight_risk_weeks"), 1)
+	expect.call("training_weeks_left", memp.get("training_weeks_left"), 2)
+	expect.call("employment_history.day", memp["employment_history"][0].get("day"), 4)
+	gone.call("character", memp, ["flight_risk_days", "training_days_left"])
+	var mcust: Dictionary = row_of.call(mreg["customers"], cust_id)
+	for pair in [["acquired_on_day", 2], ["onboarding_until", 7], ["last_expansion_day", 3],
+			["support_request_since_day", 5], ["last_risk_exit_day", -1], ["churn_countdown", -1],
+			["risk_streak", 1], ["cs_request_phase", 1]]:
+		expect.call("customer." + pair[0], mcust.get(pair[0]), pair[1])
+	var mlead: Dictionary = row_of.call(mreg["prospects"], "lead_v13")
+	expect.call("prospect.spawned_on_day", mlead.get("spawned_on_day"), 5)
+	expect.call("prospect.expires_on_day", mlead.get("expires_on_day"), 7)
+	expect.call("prospect.work_started_day (sentinel)", mlead.get("work_started_day"), -1)
+	gone.call("prospect", mlead, ["work_due_day"])
+	expect.call("promise.deadline_day", mreg["promises"][0].get("deadline_day"), 7)
+
+	var mbuild: Dictionary = st["systems"]["product"]["active_build"]
+	expect.call("build.start_day", mbuild.get("start_day"), 4)
+	expect.call("build.beta_entered_day", mbuild.get("beta_entered_day"), 6)
+	expect.call("build.iteration_round_weeks", mbuild.get("iteration_round_weeks"), 0.5)
+	gone.call("build", mbuild, ["iteration_round_days"])
+
+	var arc: Dictionary = mev["arcs"]["smoke_v13"]
+	expect.call("arc.started_day", arc.get("started_day"), 3)
+	expect.call("arc.awaiting_since", arc.get("awaiting_since"), 5)
+	expect.call("arc.subject.bound_day", arc["subject"].get("bound_day"), 4)
+	expect.call("arc.frozen.remaining_weeks", arc["frozen_schedule"][0].get("remaining_weeks"), 2)
+	gone.call("arc.frozen", arc["frozen_schedule"][0], ["remaining_days"])
+	expect.call("ev.flag.set_day", mev["flags"]["smoke_v13"].get("set_day"), 4)
+	expect.call("ev.timed.expires_on (NO_EXPIRY_DAY)", mev["timed_flags"]["smoke_v13"].get("expires_on"),
+		SeedConstants.NO_EXPIRY_DAY)
+	expect.call("ev.timed.set_day", mev["timed_flags"]["smoke_v13"].get("set_day"), 3)
+	expect.call("ev.stamp.day", mev["stamps"]["smoke_v13"].get("day"), 3)
+	expect.call("ev.latch.last_day", mev["latches"]["smoke_v13"].get("last_day"), 5)
+	var sched: Dictionary = (mev["schedule"] as Array).back()
+	expect.call("ev.schedule.fire_on_day", sched.get("fire_on_day"), 9)
+	expect.call("ev.schedule.bound_day", sched["context"]["customer"].get("bound_day"), 4)
+	var hist: Dictionary = (mev["rows"] as Array).back()
+	expect.call("ev.row.day", hist.get("day"), 4)
+	expect.call("ev.row.bound_day", hist["entities"]["customer"].get("bound_day"), 4)
+	expect.call("ev.paper.expires_on", mev["papers"][paper_key].get("expires_on"), 7)
+	expect.call("ev.paper.admitted_day", mev["papers"][paper_key].get("admitted_day"), 6)
+	if not (mev["tempo_window"] as Array).is_empty():
+		bad.append("tempo_window kept %d row(s)" % (mev["tempo_window"] as Array).size())
+	if not bad.is_empty():
+		return done.call("; ".join(bad))
+
+	# --- the migrated world loads and runs a tick --------------------------------
+	st["systems"]["product"]["active_build"] = null
+	(mev["arcs"] as Dictionary).erase("smoke_v13")
+	if not SaveManager.apply_loaded_state(payload):
+		return done.call("apply_loaded_state returned false")
+	if GameState.day != 6 or GameState.shutter_weeks_left != 2 \
+			or CharacterRegistry.get_character("emp_save").training_weeks_left != 2:
+		return done.call("the load did not seat the week values (tick %d, shutter %d)"
+			% [GameState.day, GameState.shutter_weeks_left])
+	_sim_day_full()
+	if GameState.day != 7:
+		return done.call("one day from the load reached tick %d, want 7" % GameState.day)
+	return done.call("")
+
+
 ## A v12 SAVE FROM BEFORE THE CANCEL-PENALTY, FINAL-COUNTER AND COLD-EXIT FIELDS
 ## LOADS AND SITS DOWN. Not a hand-written fixture: a real save is taken with every new field at
 ## a NON-default value, each key is asserted present in the file (so deleting it cannot be
 ## vacuous), deleted, and the file goes back through read_slot + apply_loaded_state. What comes
 ## back must be the declared defaults, and the live offer must open the table at
 ## E_FALLBACK_CONV_SERIES_A + fit. The fit is read, never hard-coded, so the case does not care
-## how a fund's lens is defined. The offer is granted on a WEEKEND, the only grant day on which
-## the old fourteen-calendar-day expiry differs from the current ten-business-day one.
+## how a fund's lens is defined. The save is taken on tick 1, the one tick a day stamp and a
+## week stamp agree on, so the file reads the same through the v14 migration.
 static func _case_legacy_v12_save_opens_live_table() -> String:
 	const STAMP := 88   # never equal to the fallback, so a surviving stamp cannot pass as it
 	if SaveManager.MIN_LOADABLE_VERSION > 12:
@@ -2182,15 +2469,6 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 	# --- a live hunt with every new field at a non-default value ---------------
 	GameState.set_phase(3)
 	_seed_b2b_series_a()
-	_sim_day()
-	_drain_all_modals()   # a card on screen refuses the save (can_save); answer it first
-	var walk_guard: int = 0
-	while GameState.is_business_day(GameState.day) and walk_guard < 7:
-		walk_guard += 1
-		_sim_day()
-		_drain_all_modals()
-	if GameState.is_business_day(GameState.day):
-		return "fixture: no weekend reached to grant on"
 	# The cancel penalty the real way: book Nexus and cancel, which writes move_penalty on ITS row and today's
 	# cancel day. Not on Anchor: begin_meeting erases the penalty, so a fund holding an offer
 	# and a penalty at once is not a state the game produces.
@@ -2208,10 +2486,7 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 	var sheet: TermSheet = VCPitchSystem.sheet_for("anchor")
 	if sheet == null or sheet.conviction != STAMP:
 		return "fixture: the grant did not carry the row's conviction"
-	sheet.expires_day = sheet.granted_day + 14   # the OLD rule: fourteen calendar days
 	var want_expires: int = sheet.expires_day
-	if want_expires == GameState.add_business_days(sheet.granted_day, PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS):
-		return "fixture: the old and new rules agree on this grant day — nothing old to load"
 	var save_day: int = GameState.day
 
 	# Checked first so a refusal is diagnosed here, not as save_to_slot's warning.
@@ -2237,7 +2512,7 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 	if sheets_json.size() != 1 or int((sheets_json[0] as Dictionary).get("conviction", -1)) != STAMP:
 		pre = "the sheet's conviction"
 	elif int((sheets_json[0] as Dictionary).get("expires_day", 0)) != want_expires:
-		pre = "the old-rule expires_day"
+		pre = "the sheet's expires_day"
 	elif int((rows.get("anchor", {}) as Dictionary).get("sheet_conviction", -1)) != STAMP:
 		pre = "anchor's sheet_conviction"
 	elif int((rows.get("nexus", {}) as Dictionary).get("move_penalty", 0)) != PitchConstants.MEETING_CANCEL_PENALTY:
@@ -2282,7 +2557,7 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 		return "vc_last_meeting_rejected came back true"
 	if not GameState.vc_frank_cold_shown.is_empty():
 		return "vc_frank_cold_shown came back %s" % str(GameState.vc_frank_cold_shown)
-	# The cancel day was TODAY in the file; had it survived, booking would read cancelled_today.
+	# The cancel day was THIS WEEK in the file; had it survived, booking would read cancelled_this_week.
 	if VCPitchSystem.meeting_blocked_reason("bosphorus") != "":
 		return "booking locked after the load (%s)" % VCPitchSystem.meeting_blocked_reason("bosphorus")
 
@@ -2292,23 +2567,11 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 		return "the live offer did not survive the load"
 	if loaded.conviction != -1:
 		return "sheet conviction came back %d, want -1 (unstamped)" % loaded.conviction
-	if loaded.expires_day != want_expires:
-		return "expires_day came back %d, want the old-rule %d" % [loaded.expires_day, want_expires]
-	# Two calendar weeks hold exactly ten weekdays wherever they start; a calendar count reads 14.
-	var left: int = loaded.business_days_left(GameState.day)
-	if left != 10:
-		return "the old 14-day window reads %d business days, want 10" % left
-	if loaded.is_decision_due(GameState.day):
-		return "a fresh old-rule offer loaded already decision-due"
-	# The clock read through the business-day counter on every day up to a week past the old
-	# expiry: never negative, always the counter's own number (0 once the window is gone).
-	for d in range(save_day, want_expires + 8):
-		var n: int = loaded.business_days_left(d)
-		if n < 0 or n != maxi(0, GameState.business_days_between(d, want_expires)):
-			return "day %d: the old offer reads %d business days, counter says %d" \
-				% [d, n, GameState.business_days_between(d, want_expires)]
-	if not loaded.is_decision_due(want_expires):
-		return "the old-rule offer is not decision-due on its own expires_day"
+	# The stored window comes back live and falls due on its own expires_day.
+	if loaded.weeks_left(GameState.day) <= 0 or loaded.is_decision_due(GameState.day):
+		return "a fresh offer loaded already decision-due (expires tick %d)" % loaded.expires_day
+	if not loaded.is_decision_due(loaded.expires_day):
+		return "the loaded offer is not decision-due on its own expires_day"
 
 	# --- vc_states rows: absent keys read as the reader defaults -----------------
 	var a_row: Dictionary = GameState.vc_states.get("anchor", {})
@@ -2411,7 +2674,7 @@ static func _case_series_a_road_closed_when_all_funds_close() -> String:
 
 	# A booked meeting — request_meeting's shape. Written directly: request_meeting refuses a
 	# closed fund, and a booking with an open status would be caught by the status read instead.
-	GameState.pending_meeting = {"vc_id": "meridian", "day": GameState.day + PitchConstants.MEETING_LEAD_DAYS}
+	GameState.pending_meeting = {"vc_id": "meridian", "day": GameState.day + TimeModel.ticks(PitchConstants.MEETING_LEAD_WEEKS)}
 	if VCPitchSystem.series_a_road_closed():
 		return "a booked meeting still read as road closed"
 	GameState.pending_meeting.clear()
@@ -2464,11 +2727,15 @@ static func _case_prep_bonus_and_capacity() -> String:
 	var founder: Character = CharacterRegistry.get_founder()
 	if ProductSystem._is_free(founder):
 		return "a founder in VC prep still counts as FREE for the build"
-	VCPitchSystem.begin_meeting("anchor")  # consumes the prep focus
+	VCPitchSystem.begin_meeting("anchor")  # consumes the prep focus; the founder is at the table
 	if GameState.get_flag("pitch_prep_active", false):
 		return "capacity flag not cleared at meeting start"
+	if ProductSystem._is_free(founder):
+		return "a founder seated at the pitch still counts as FREE for the build"
+	VCPitchSystem.withdraw()
+	VCPitchSystem.end_sitting()
 	if not ProductSystem._is_free(founder):
-		return "the founder stayed busy after the prep was consumed"
+		return "the founder stayed busy after the sitting closed"
 	return ""
 
 
@@ -2506,7 +2773,7 @@ static func _case_meeting_during_kepenk() -> String:
 	_seed_b2b_series_a()   # bar + 1000
 	_sim_day()  # base seed comfortably positive so the [0,100] clamp doesn't hide the penalty
 	var seed_clear: int = int(VCPitchSystem.initial_conviction("anchor").value)
-	GameState.shutter_days_left = 5  # Kepenk active
+	GameState.shutter_weeks_left = 5  # Kepenk active
 	VCPitchSystem.begin_meeting("anchor")
 	if not VCPitchSystem.is_active():
 		return "meeting blocked during Kepenk (should be allowed — ledger 12)"
@@ -2648,6 +2915,16 @@ static func _case_burn_refresh_same_tick() -> String:
 		return "daily_burn stale: %d (want %d)" % [GameState.daily_burn, expected]
 	if GameState.daily_burn <= burn0:
 		return "burn did not rise after marketing spend (%d -> %d)" % [burn0, GameState.daily_burn]
+	# One tick's cash delta is seven days of the daily rates, each rounded first:
+	# 7 × (round(MRR / 30) − daily burn). MRR 1000 tells the order apart (7 × 33 ≠ 7000 / 30).
+	_seed_b2b(1000)
+	var cash0: int = GameState.cash
+	_sim_day()
+	var want: int = TimeModel.DAYS_PER_TICK * (int(round(GameState.mrr / float(TimeModel.DAYS_PER_MONTH)))
+		- GameState.daily_burn)
+	if GameState.mrr != 1000 or GameState.cash - cash0 != want:
+		return "one tick moved cash by %d at MRR %d, burn %d (want %d)" % [
+			GameState.cash - cash0, GameState.mrr, GameState.daily_burn, want]
 	return ""
 
 
@@ -2725,8 +3002,9 @@ static func _case_commit_cost_charged_once() -> String:
 		var before: int = GameState.cash
 		_sim_day()
 		var day_delta: int = before - GameState.cash
-		if day_delta != GameState.daily_burn:   # MRR 0 → net akış = -burn; başka kesinti YOK
-			return "extra one-time delta on day %d: -%d (daily burn %d)" % [GameState.day, day_delta, GameState.daily_burn]
+		# MRR 0 → tik akışı = -7 × günlük burn; başka kesinti YOK
+		if day_delta != TimeModel.DAYS_PER_TICK * GameState.daily_burn:
+			return "extra one-time delta on tick %d: -%d (daily burn %d)" % [GameState.day, day_delta, GameState.daily_burn]
 	# Strengthen-only v2: inherited/strengthen asla yeniden tahsil edilmez.
 	ProductSystem.cancel_build()
 	GameState.set_flag("mvp_shipped", true)
@@ -2768,15 +3046,15 @@ static func _case_phase_bands_20_60_20() -> String:
 		return "efor not clamped at design band (%.3f, want %.3f)" % [b.efor_spent, design_cap]
 	if b.iteration_count != 2 or b.iteration_decision_pending:
 		return "round 2 did not auto-start when round 1 ended (count %d, pending %s)" % [b.iteration_count, str(b.iteration_decision_pending)]
-	# 2) Turlar kendi kendine döner: 3 gün daha tik → faz aynı, efor donuk, tur 2 hâlâ koşuyor.
-	for i in 24 * 3:
-		ProductSystem.hourly_tick(i % 24)
+	# 2) Turlar kendi kendine döner: yarım tur daha → faz aynı, efor donuk, tur 2 hâlâ koşuyor.
+	for i in TimeModel.HOURS_PER_DAY / 2:
+		ProductSystem.hourly_tick(i)
 	if b.current_phase != "iteration":
 		return "auto-advanced out of design (phase %s)" % b.current_phase
 	if absf(b.efor_spent - design_cap) > 0.001:
 		return "efor moved during design rounds (%.3f)" % b.efor_spent
-	if b.iteration_count != 2 or b.iteration_round_days <= 0.0:
-		return "round 2 not running after 3 days (count %d, days %.2f)" % [b.iteration_count, b.iteration_round_days]
+	if b.iteration_count != 2 or b.iteration_round_weeks <= 0.0:
+		return "round 2 not running half a round in (count %d, weeks %.2f)" % [b.iteration_count, b.iteration_round_weeks]
 	# 3) Oyuncu kararı → development (yarım tur 2 kazançsız terk edilir); dev bandı %80'de PARK eder.
 	ProductSystem.enter_development()
 	if b.current_phase != "development":
@@ -3004,7 +3282,7 @@ static func _case_iter_ceiling_never_exceeded() -> String:
 		return "cap reached but the decision is not pending — the build would be stuck"
 	for i in 24 * 3:   # tavan parkı: 3 gün daha, sayaç ve efor kımıldamaz
 		ProductSystem.hourly_tick(i % 24)
-	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS or b.iteration_round_days > 0.0:
+	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS or b.iteration_round_weeks > 0.0:
 		return "the round chain ran past the safety cap"
 	if float(stamp["innovation"]) > float(ceilings["innovation"]) \
 			and absf(b.innovation - float(stamp["innovation"])) > 0.0001:
@@ -3110,7 +3388,7 @@ static func _case_iter_version_build_same_loop() -> String:
 	if not ProductSystem.start_version_build(["ai_assistant_voice"], ""):
 		return "start_version_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b.iteration_count != 1 or b.iteration_decision_pending or b.iteration_round_days > 0.0:
+	if b.iteration_count != 1 or b.iteration_decision_pending or b.iteration_round_weeks > 0.0:
 		return "v-commit did not reset the iteration counters"
 	if not _drive_to_round_end():
 		return "v-build design band never ended round 1"
@@ -3152,8 +3430,10 @@ static func _case_speed_tracks_team_change() -> String:
 		return "no founder in registry"
 	_set_founder_tech(6)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
-		return "start_build failed"   # efor 8+8=16 — ölçüm pencereleri içinde bitmez
+		return "start_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
+	# Fikstür: iki tik uzunluğunda ölçüm penceresi geliştirme bandına sığsın diye build uzatılır.
+	b.total_efor = 100.0
 	var iter_speed_solo: float = ProductSystem.team_speed(b)
 	if b.current_phase != "iteration":
 		return "build did not start in the design phase (%s)" % b.current_phase
@@ -3190,13 +3470,13 @@ static func _case_speed_tracks_team_change() -> String:
 	var s0: float = b.efor_spent
 	for h in 24:
 		ProductSystem.hourly_tick(h)
-	if absf((b.efor_spent - s0) - want_solo) > 0.02:
-		return "solo day spend %.3f (want %.3f)" % [b.efor_spent - s0, want_solo]
-	var days_before: int = ProductSystem.estimated_days_remaining(b)
+	if absf((b.efor_spent - s0) - TimeModel.per_tick(want_solo)) > 0.02:
+		return "solo tick spend %.3f (want %.3f)" % [b.efor_spent - s0, TimeModel.per_tick(want_solo)]
+	var weeks_before: int = ProductSystem.estimated_weeks_remaining(b)
 	_make_employee("char_smoke_speed_eng", "Speed Eng", HRConstants.ROLE_DEVELOPER)
-	var days_after: int = ProductSystem.estimated_days_remaining(b)
-	if days_after >= days_before:
-		return "~gün did not shrink after hire (%d -> %d)" % [days_before, days_after]
+	var weeks_after: int = ProductSystem.estimated_weeks_remaining(b)
+	if weeks_after >= weeks_before:
+		return "~hafta did not shrink after hire (%d -> %d)" % [weeks_before, weeks_after]
 	# LEDGER (Coupling): old = 3.0 + SPEED_ASSIST_WEIGHT(0.5) x ENGINEER_DEFAULT_TECH_LEGACY(2)
 	# = 4.0. New = (FOUNDER_SPEED_COEF x kurucunun alani + EMPLOYEE_SPEED_COEF x pace 4)
 	# x coordination = 4.0. Same number, derived from the new law — anchor b1. No lead/assist
@@ -3208,8 +3488,8 @@ static func _case_speed_tracks_team_change() -> String:
 	s0 = b.efor_spent
 	for h in 24:
 		ProductSystem.hourly_tick(h)
-	if absf((b.efor_spent - s0) - want_team) > 0.02:
-		return "team day spend %.3f (want %.3f)" % [b.efor_spent - s0, want_team]
+	if absf((b.efor_spent - s0) - TimeModel.per_tick(want_team)) > 0.02:
+		return "team tick spend %.3f (want %.3f)" % [b.efor_spent - s0, TimeModel.per_tick(want_team)]
 	return ""
 
 
@@ -3427,7 +3707,7 @@ static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
 	if gate_delta == 0:
 		return "test misconfigured: expected a non-zero B2C gate delta (stab=%.1f)" % stab
 	var s0: int = ub.satisfaction
-	var want: int = clampi(s0 + gate_delta, 0, 100) - s0
+	var want: int = clampi(s0 + int(TimeModel.per_tick(gate_delta)), 0, 100) - s0
 	_sim_day()
 	var got: int = ub.satisfaction - s0
 	if got != want:
@@ -3501,7 +3781,7 @@ static func _case_b2b_retention_routes_seams() -> String:
 	if not EventGate.force_fire(RETAIN_ID, {"customer": c2.id}):
 		return "the retention card was refused for co_rb"
 	EventGate.resolve(RETAIN_ID, "stall")
-	if c2.churn_countdown != cd0 + B2BConstants.RETAIN_DELAY_DAYS:
+	if c2.churn_countdown != cd0 + TimeModel.ticks(B2BConstants.RETAIN_DELAY_WEEKS):
 		return "Oyala did not extend the countdown (%d -> %d)" % [cd0, c2.churn_countdown]
 	if c2.retain_stalls != 1:
 		return "Oyala did not count a stall"
@@ -3560,6 +3840,8 @@ static func _case_b2b_ignore_then_churn() -> String:
 
 	# Ignore path → countdown runs down → natural churn with one brand hit.
 	var c: Customer = _add_risk_b2b("ic", 1000)
+	# The real countdown: the product also erodes the healthy twin, and a longer walk churns it.
+	CustomerRegistry.set_churn_countdown(c.id, TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
 	if not EventGate.request(RETAIN_ID, {"customer": c.id}):
 		return "the retention card was refused for co_ic"
 	EventGate.resolve(RETAIN_ID, "leave_alone")
@@ -3589,24 +3871,24 @@ static func _case_b2b_ignore_then_churn() -> String:
 		return "churn brand delta wrong/missing (want single %d)" % B2BConstants.CHURN_BRAND
 
 	# Rescue path: a fresh Risk account, ignored once, is still saved by İlgilen → Söz ver.
-	GameState.set_flag("mvp_stability", 90.0)
-	GameState.set_flag("mvp_live_bug_count", 0)
+	# The product stays degraded: a fixed one lifts the account out of Risk on its own inside
+	# the week the card's cooldown takes, and there is nothing left to rescue.
 	var r: Customer = _add_risk_b2b("ir", 1000)
 	if not EventGate.request(RETAIN_ID, {"customer": r.id}):
 		return "the retention card was refused for co_ir"
 	EventGate.resolve(RETAIN_ID, "leave_alone")
 	if CustomerRegistry.get_customer("co_ir") == null:
 		return "rescue target churned on ignore"
-	# THE REOPEN NOW COSTS A DAY, and the day is the finding. `customer.retention` carries a
-	# one-day entity cooldown, so the İlgilen button cannot re-open the card the player just
+	# THE REOPEN NOW COSTS A WEEK, and the week is the finding. `customer.retention` carries a
+	# one-week entity cooldown, so the İlgilen button cannot re-open the card the player just
 	# answered — that is an undo, not a decision — but the rescue window itself is untouched:
 	# the account is still in Risk with its countdown running.
 	if EventGate.request(RETAIN_ID, {"customer": r.id}):
-		return "the card re-opened the same day it was answered — the latch is not holding"
+		return "the card re-opened the same week it was answered — the latch is not holding"
 	GameState.advance_day()
 	B2BSalesSystem.daily_tick()
 	if not EventGate.request(RETAIN_ID, {"customer": r.id}):
-		return "İlgilen could not re-open the card a day later"
+		return "İlgilen could not re-open the card a week later"
 	EventGate.resolve(RETAIN_ID, "promise_it")     # Söz ver → recover
 	if r.lifecycle_phase == "risk":
 		return "İlgilen → Söz ver did not rescue after an earlier ignore"
@@ -3735,7 +4017,7 @@ static func _replay_once(lead_id: String) -> String:
 	if ProspectRegistry.get_prospect(lead_id) != null:
 		ProspectRegistry.remove(lead_id)
 	var p: Prospect = _add_prospect(lead_id, 2, "ai_vec_filter")
-	GameState.set_flag("sales_meeting_used_day", -1)
+	GameState.sales_meetings_week.clear()
 	var vs: Dictionary = SalesMeetingSystem.open(p.id)
 	if vs.is_empty():
 		return ""
@@ -3766,7 +4048,7 @@ static func _case_sales_inner_voice_reaches_view() -> String:
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	GameState.set_flag("sales_inner_voice_used", 0)
-	GameState.set_flag("sales_meeting_used_day", -1)
+	GameState.sales_meetings_week.clear()
 	var p: Prospect = _add_prospect("voice_lead", 3, "ai_vec_filter")
 	var opened: Dictionary = SalesMeetingSystem.open(p.id)
 	if opened.is_empty() or String(opened.get("outcome", "")) != "":
@@ -3873,7 +4155,7 @@ static func _case_b2b_promise_broken_on_deadline() -> String:
 		return "credibility flag not set after a broken promise"
 	# A re-approach now lands with HALF the goodwill bump (credibility down).
 	var sat_before: int = c.satisfaction
-	B2BSalesSystem.accept_promise(c.id, "ai_vec_filter", 14)
+	B2BSalesSystem.accept_promise(c.id, "ai_vec_filter", B2BConstants.PROMISE_DEADLINE_WEEKS)
 	if c.satisfaction != clampi(sat_before + int(B2BConstants.RETAIN_SAT_BUMP / 2), 0, 100):
 		return "re-approach goodwill not reduced after a broken promise"
 	return ""
@@ -3921,9 +4203,8 @@ static func _case_b2b_cs_absorbs_routine() -> String:
 	GameState.set_flag("mvp_live_bug_count", 40)
 	CustomerRegistry.set_satisfaction(founder_mgd.id, 60)
 	CustomerRegistry.set_satisfaction(cs_mgd.id, 60)
-	for i in 6:
-		GameState.advance_day()
-		B2BSalesSystem.daily_tick()
+	GameState.advance_day()   # one week of erosion; a longer walk floors both twins at 0
+	B2BSalesSystem.daily_tick()
 	if cs_mgd.satisfaction <= founder_mgd.satisfaction:
 		return "CS-managed did not erode slower (cs=%d founder=%d)" % [cs_mgd.satisfaction, founder_mgd.satisfaction]
 	if _instances_of(RETAIN_ID) != 0:
@@ -4037,7 +4318,7 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	var m: Customer = CustomerRegistry.get_customer("co_lead_mature")
 	if m == null:
 		return "the mature fixture account was not created"
-	m.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)  # mature
+	m.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)  # mature
 	CustomerRegistry.set_lifecycle_phase(m.id, "active")
 	CustomerRegistry.set_satisfaction(m.id, 80)  # healthy (>= tolerance)
 	var seats_before: int = m.seats
@@ -4055,7 +4336,7 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	for entry in desk:
 		if String((entry as Dictionary)["id"]) == paper:
 			on_desk = true
-			if int((entry as Dictionary)["days_left"]) <= 0:
+			if int((entry as Dictionary)["weeks_left"]) <= 0:
 				return "the expansion paper landed with no clock"
 	if not on_desk:
 		return "the expansion card did not reach the desk (desk: %d paper(s))" % desk.size()
@@ -4222,8 +4503,8 @@ static func _case_build_bar_hosts_agree() -> String:
 		ProductSystem.hourly_tick(i % 24)
 	if b.iteration_count != 3:
 		return "fixture did not reach round 3 (count %d)" % b.iteration_count
-	for i in 24 * 2:
-		ProductSystem.hourly_tick(i % 24)
+	for i in TimeModel.HOURS_PER_DAY / 2:   # a design round is one tick; half of it
+		ProductSystem.hourly_tick(i)
 	# Ev sahibi = autoload (root main._ready sırasında meşgul — onboarding_pages_contract deseni).
 	var host: Node = EventBus
 	var shell: Node = load("res://scenes/main/GameShell.tscn").instantiate()
@@ -4349,15 +4630,15 @@ static func _case_runway_days_and_negative_cash() -> String:
 	# FAILS against the pre-fix engine: sub-month printed "0 ay", and negative cash printed
 	# the green "Artıda" two cells from a running bankruptcy counter.
 	GameState.set_cash(8597)
-	# 0.2047 months ≈ 6 days. int(round()) rendered a bare 0 — insolvency, on a company
-	# that is solvent for most of a week.
-	var sub: Dictionary = UiTokens.net_runway_parts(0.2047)
-	if String(sub.get("value", "")) == "0":
-		return "sub-month runway still renders as a bare 0"
-	if String(sub.get("unit", "")) == TranslationServer.translate("RUNWAY_UNIT_MONTHS"):
-		return "sub-month runway is still labelled in months"
+	# Half a month is two whole weeks. int(round()) of the months rendered "1 ay" or "0 ay";
+	# under a month the value is weeks.
+	var sub: Dictionary = UiTokens.net_runway_parts(0.5)
+	if String(sub.get("value", "")) != "2" \
+			or String(sub.get("unit", "")) != TranslationServer.translate("RUNWAY_UNIT_WEEKS"):
+		return "half a month of runway renders as '%s %s', want 2 weeks" % [
+			str(sub.get("value")), str(sub.get("unit"))]
 	if bool(sub.get("positive", false)):
-		return "a six-day runway reads as positive"
+		return "a two-week runway reads as positive"
 	# The months path above one month is untouched.
 	var normal: Dictionary = UiTokens.net_runway_parts(6.4)
 	if String(normal.get("value", "")) != "6" \
@@ -4408,26 +4689,17 @@ static func _case_angel_fires_at_crossing() -> String:
 	# growth streak, no brand floor).
 	CustomerRegistry.set_mrr(c.id, SalesSystem.TRACTION_MRR_TARGET + 1000)
 	SalesSystem.reflect_mrr()
-	# The crossing day is driven by hand rather than through _sim_day_full, for one reason:
+	# The crossing day is driven in two batches rather than one _sim_day_full, for one reason:
 	# the assertion below is a claim about two DETERMINISTIC beats, and it is only decidable
 	# when the queue is empty when they fire (see the note at the assertion). The hourly
-	# pass can drop a random ambient event in first — and it cannot be hoped away, because
-	# run_case does NOT pin GameState.run_seed (initialize_run seeds off
-	# Time.get_ticks_msec), so the ambient roll is a fresh coin every invocation. This case
-	# passed solo and failed 4 times in 12 on that toss.
+	# pass can drop a random ambient event in first.
 	#
-	# So: run the hours exactly as the engine does, answer whatever the hourly pool raised,
-	# and only then cross the day boundary into the daily slots that carry the two beats.
-	# Nothing about the ordering under test is bypassed — only the unrelated noise is.
-	while GameState.current_hour < TimeManager.HOURS_PER_DAY - 1:
-		var h: int = GameState.current_hour + 1
-		GameState.set_current_hour(h)
-		TimeManager._dispatch_hourly_tick(h)
-	GameState.set_current_hour(0)
-	TimeManager._dispatch_hourly_tick(0)
+	# So: run the hours up to 23:00 as the engine does, answer whatever the hourly pool raised,
+	# and only then step into 00:00, whose rollover runs the daily slots that carry the two
+	# beats. Nothing about the ordering under test is bypassed — only the unrelated noise is.
+	TimeManager.advance_hours(TimeModel.HOURS_PER_DAY - 1 - GameState.current_hour)
 	_drain_all_modals()          # the queue is now provably empty
-	GameState.advance_day()
-	TimeManager._dispatch_daily_tick()
+	TimeManager.advance_hours(1)
 
 	if not _card_fired(ANGEL_ID):
 		return "the offer never opened at MRR %d" % GameState.mrr
@@ -4668,7 +4940,7 @@ static func _case_angel_survives_series_a() -> String:
 
 
 static func _case_angel_hire_nudge() -> String:
-	# Frank's line about being one person: once, a couple of days after the money, and only
+	# Frank's line about being one person: once, the card's delay after the money, and only
 	# while the founder actually is alone. The HR rail badge rides with it and clears itself.
 	var c: Customer = _seed_angel_world(AngelRoundSystem.MRR_THRESHOLD)
 	if c == null:
@@ -4680,13 +4952,11 @@ static func _case_angel_hire_nudge() -> String:
 	EventGate.resolve(ANGEL_ID, "accept")
 	if HRSystem.attention_count() != badge0 + 1:
 		return "the HR badge did not light after the seed (%d -> %d)" % [badge0, HRSystem.attention_count()]
-	# Too early: the day after acceptance is inside the delay.
-	_sim_day_full()
-	if _instances_of(NUDGE_ID) != 0:
-		return "the nudge fired before its delay elapsed"
-	# The delay is the card's own condition — `funding.angel_days_since_accept >= 2` — so the
-	# number is read off the card rather than off a system constant that no longer exists.
-	for i in _nudge_delay_days():
+	# The delay is the card's own condition — `funding.angel_weeks_since_accept >= n` — so the
+	# number is read off the card rather than off a system constant. Nothing arrives before it.
+	for i in TimeModel.ticks(_card_literal(NUDGE_ID, "funding.angel_weeks_since_accept")):
+		if _instances_of(NUDGE_ID) != 0:
+			return "the nudge fired before its delay elapsed (tick %d)" % GameState.day
 		_sim_day_full()
 	if not _drain_to(NUDGE_ID):
 		return "the hire nudge never arrived"
@@ -4697,7 +4967,7 @@ static func _case_angel_hire_nudge() -> String:
 	for i in 6:
 		_sim_day_full()
 		if _instances_of(NUDGE_ID) != 0:
-			return "the nudge repeated on day %d" % GameState.day
+			return "the nudge repeated on tick %d" % GameState.day
 	# Hiring clears the badge — the signpost is self-retiring, not a standing demand.
 	_make_employee("emp_nudge_hire", "İlk Çalışan", HRConstants.ROLE_DEVELOPER)
 	if HRSystem.attention_count() != badge0:
@@ -4730,7 +5000,7 @@ static func _case_promise_no_duplicate_word() -> String:
 		return "the retention card offered no promise row with nothing outstanding"
 
 	# Give the word once, through the real modifier seam.
-	B2BSalesSystem.accept_promise(c.id, c.pain_feature_id, B2BConstants.PROMISE_DEADLINE_DAYS)
+	B2BSalesSystem.accept_promise(c.id, c.pain_feature_id, B2BConstants.PROMISE_DEADLINE_WEEKS)
 	if not PromiseRegistry.has_open_for(c.id):
 		return "accept_promise did not open a promise"
 
@@ -4803,13 +5073,14 @@ static func _card_fired(event_id: String) -> bool:
 	return EvLatches.fires(EvLatches.key_for(event_id, EvLatches.KEY_RUN, "")) > 0
 
 
-## The hire nudge's delay, read off the card's own condition rather than off a constant.
-static func _nudge_delay_days() -> int:
+## The literal a card's condition compares a seam against. Card JSON cannot read a constant, so
+## a case reads the number off the card and holds it to the constant it stands for. −1: absent.
+static func _card_literal(card_id: String, seam: String) -> int:
 	for leaf in EventGate.condition_leaves(
-			EventGate.catalogue_card(NUDGE_ID).get("condition", {})):
-		if String((leaf as Dictionary).get("seam", "")) == "funding.angel_days_since_accept":
+			EventGate.catalogue_card(card_id).get("condition", {})):
+		if String((leaf as Dictionary).get("seam", "")) == seam:
 			return int((leaf as Dictionary).get("value", 0))
-	return 2
+	return -1
 
 
 ## Is row `idx` playable right now, against this card's frozen context? An out-of-range index
@@ -4892,7 +5163,7 @@ static func _case_recover_preserves_onboarding() -> String:
 	# _recover stamped "active" unconditionally, while _tick_healthy's
 	# own risk branch preserves "onboarding" inside the window — the identical bug that
 	# branch carries a comment about, still live on this one. An account rescued in its
-	# first ONBOARDING_DAYS left the window early while _tick_satisfaction kept amplifying
+	# first ONBOARDING_WEEKS left the window early while _tick_satisfaction kept amplifying
 	# its drift, so phase and model disagreed for the rest of the window.
 	# Observed in a driver run: signed day 1, stamped "active" on day 4, onboarding_until 31.
 	# FAILS against the pre-fix engine: phase reads "active".
@@ -5025,7 +5296,7 @@ static func _case_fumes_zero_revenue_ledger() -> String:
 
 
 static func _case_b2b_expansion_no_refire() -> String:
-	# The promotion test is MONOTONE (day - acquired_on_day >= MATURE_DAYS) and
+	# The promotion test is MONOTONE (day - acquired_on_day >= MATURE_WEEKS) and
 	# BOTH resolutions used to put the account straight back to "active" — the exact state
 	# that predicate passes — so the identical modal re-fired every morning forever and
 	# "Büyüt" was an unbounded free MRR faucet for one click a day.
@@ -5035,7 +5306,7 @@ static func _case_b2b_expansion_no_refire() -> String:
 
 	# --- Branch 1: ACCEPT ---
 	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
-	c.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
+	c.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)
 	CustomerRegistry.set_lifecycle_phase(c.id, "active")
 	CustomerRegistry.set_satisfaction(c.id, 80)
 	# A PAPER, not a modal — see _case_b2b_expansion_moves_seats_mrr_counter for the why. The
@@ -5068,7 +5339,7 @@ static func _case_b2b_expansion_no_refire() -> String:
 	var d: Customer = CustomerRegistry.get_customer("co_lead_decliner")
 	if d == null:
 		return "second account was not created"
-	d.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
+	d.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)
 	CustomerRegistry.set_lifecycle_phase(d.id, "active")
 	CustomerRegistry.set_satisfaction(d.id, 80)
 	# ONE card id for the whole family; the entity latch makes each account's offer its own
@@ -5338,10 +5609,10 @@ static func _case_hotfix_founder_takes_support_desk() -> String:
 
 	# A MEETING COUNTS AS ENGAGED TOO — `is_busy` is the other half of the predicate, and it is
 	# what keeps a founder at a sales table from also manning the desk.
-	GameState.set_flag("sales_meeting_active", true)
+	HRSystem.founder_in_meeting = true
 	if SupportSystem.founder_passive_care():
 		return "a founder in a sales meeting still read as looking after customers"
-	GameState.set_flag("sales_meeting_active", false)
+	HRSystem.founder_in_meeting = false
 
 	# NO LIVE PRODUCT, NO CARE: there is nothing to verify, and §2.3's BOŞTA must survive.
 	GameState.set_flag("mvp_shipped", false)
@@ -5396,7 +5667,10 @@ static func _case_hotfix_weekly_summary_rows() -> String:
 	var c: Customer = _sign_fixture(lead, 1200, 70)
 	if c == null:
 		return "the fixture did not sign"
-	SalesSystem.record_sales_event("founder_close", "", c.company_name, c.mrr)
+	# The rows are the report of the last week the desk closed in.
+	SalesLedger.record_close(c, true)
+	if SalesLedger.close_week() != 1:
+		return "a week with one desk close did not report it"
 	var lines: String = SalesLedger.weekly_close_lines()
 	if not lines.contains("Hafta Corp"):
 		return "the week's close did not name its account"
@@ -5412,10 +5686,12 @@ static func _case_hotfix_weekly_summary_rows() -> String:
 	var rows: PackedStringArray = lines.split("\n")
 	if rows.size() != 2:
 		return "one close plus a total should be 2 lines, got %d" % rows.size()
-	# A close that fell out of the window is not this week's business.
-	GameState.day += SalesLedger.WEEKLY_WINDOW_DAYS + 1
-	if SalesLedger.weekly_close_lines() != "":
-		return "a close older than the window still counted as this week's"
+	# A founder-only week raises no card, so it leaves the last report in place.
+	SalesLedger.record_close(c, false)
+	if SalesLedger.close_week() != 0 or SalesLedger.weekly_close_lines() != lines:
+		return "a founder-only week replaced the report"
+	if SalesLedger.close_week() != 0:
+		return "an empty week reported closes"
 	return ""
 
 
@@ -5700,13 +5976,17 @@ static func _case_sales_autoclose_empty_pain() -> String:
 	if SalesRepSystem.pick_lead_for(rep) != null:
 		return "the rep picked a RESERVED lead"
 	# The clock keeps running on a reserved lead (§7.2.1: "Rezerv süreyi durdurmaz").
-	var left0: int = mine.days_left()
+	var left0: int = mine.weeks_left()
 	GameState.advance_day()
 	B2BSalesSystem.daily_tick()
 	if ProspectRegistry.get_prospect("reserved") != null \
-			and ProspectRegistry.get_prospect("reserved").days_left() >= left0:
+			and ProspectRegistry.get_prospect("reserved").weeks_left() >= left0:
 		return "reserving froze the lead's counter"
 	# Control: an unrouted sibling IS picked, so the skip is the reservation and nothing else.
+	# The tick's faucet leads are set aside first: a higher star would outrank the sibling.
+	for other in ProspectRegistry.get_all():
+		if other.id != mine.id:
+			ProspectRegistry.remove(other.id)
 	var free_lead: Prospect = _add_prospect("free", 1, "ai_vec_filter")
 	var picked: Prospect = SalesRepSystem.pick_lead_for(rep)
 	if picked == null or picked.id != free_lead.id:
@@ -5747,7 +6027,7 @@ static func _case_event_instance_per_subject() -> String:
 	_seed_b2b(500)
 	var a: Customer = _add_risk_b2b("inst_a", 800)
 	# A's card, demoted to the desk earlier; A's Risk edge is still buffered, so the drain re-asks A.
-	EvPapers.place(RETAIN_ID, _ctx_customer(a), 7)
+	EvPapers.place(RETAIN_ID, _ctx_customer(a), 1)
 	var b: Customer = _add_risk_b2b("inst_b", 900)
 	EventGate.hourly_tick(GameState.current_hour)
 	if _instances_of(RETAIN_ID) != 1:
@@ -5766,8 +6046,8 @@ static func _case_event_instance_per_subject() -> String:
 	EventGate.resolve(RETAIN_ID, "leave_alone")
 	if not EventGate.desk_papers(8).is_empty():
 		return "answering A's paper left it on the desk"
-	EvPapers.place(RETAIN_ID, _ctx_customer(b), 7)
-	EvPapers.place(RETAIN_ID, _ctx_customer(c), 7)
+	EvPapers.place(RETAIN_ID, _ctx_customer(b), 1)
+	EvPapers.place(RETAIN_ID, _ctx_customer(c), 1)
 	var block: Dictionary = JSON.parse_string(JSON.stringify(EvSave.to_dict()))
 	EvSave.from_dict(block)
 	if EventGate.desk_papers(8).size() != 2:
@@ -5821,7 +6101,9 @@ static func _case_b2b_scale_and_sector_gating() -> String:
 			return "lead industry %s is not one of %s's sectors" % [p.industry, p.archetype_id]
 		if not SalesArchetypes.accepts_star(p.archetype_id, p.star):
 			return "archetype %s does not take a %d-star table" % [p.archetype_id, p.star]
-		if p.expires_on_day != p.spawned_on_day + SalesConstants.LEAD_LIFE_DAYS:
+		# A lead spawned after the week began gets one more week (SalesFaucetSystem.spawn).
+		if p.expires_on_day <= p.spawned_on_day \
+				or p.expires_on_day > p.spawned_on_day + TimeModel.ticks(SalesConstants.LEAD_LIFE_WEEKS) + 1:
 			return "lead has no honest expiry: spawned %d, expires %d" % [
 				p.spawned_on_day, p.expires_on_day]
 	return ""
@@ -5896,7 +6178,7 @@ static func _case_sales_month_counters() -> String:
 	if gained != 3 or lost != 1 or (gained - lost) != 2:
 		return "monthly delta wrong: gained=%d lost=%d net=%d" % [gained, lost, gained - lost]
 	# The next month rolls over → re-snapshot moves the baseline to the current totals.
-	MonthSummarySystem.snapshot()
+	SummarySystem.snapshot()
 	if int(GameState.month_ledger.get("customers_signed", -1)) != 3 or int(GameState.month_ledger.get("customers_lost", -1)) != 1:
 		return "re-snapshot did not capture the new month baseline"
 	return ""
@@ -6467,13 +6749,13 @@ static func _case_hr_training_locks() -> String:
 	if dev.status != HRConstants.STATUS_TRAINING:
 		return "the employee is not in training after send_to_training"
 
-	# 6 · §5.5 SÜRE TÜRETİLİR. Metin gün sayısından çıkar; sabit bir satır olsaydı
-	# TRAINING_DAYS değiştiğinde iki dilde birden yalan söylerdi (§16).
+	# 6 · §5.5 SÜRE TÜRETİLİR. Metin hafta sayısından çıkar; sabit bir satır olsaydı
+	# TRAINING_WEEKS değiştiğinde iki dilde birden yalan söylerdi (§16).
 	var duration: String = HRConstants.training_duration_text()
 	if duration == "" or duration.begins_with("HR_DURATION_"):
 		return "the derived duration text resolved to a raw key: '%s'" % duration
-	if not duration.contains(str(HRConstants.TRAINING_DAYS / 7)):
-		return "the duration text '%s' does not read %d days" % [duration, HRConstants.TRAINING_DAYS]
+	if not duration.contains(str(HRConstants.TRAINING_WEEKS)):
+		return "the duration text '%s' does not read %d weeks" % [duration, HRConstants.TRAINING_WEEKS]
 	return ""
 
 
@@ -6497,14 +6779,14 @@ static func _case_hr_search_cycle() -> String:
 	if HRSearchSystem.can_start():
 		return "a second search may start while one is already active"
 	var arrived_on: int = -1
-	for i in HRConstants.SEARCH_ARRIVAL_DAYS + 3:
+	var arrival: int = TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS)
+	for i in arrival + 3:
 		_sim_day()
 		if HRSearchSystem.has_files_ready():
 			arrived_on = i + 1
 			break
-	if arrived_on < HRConstants.SEARCH_ARRIVAL_DAYS or arrived_on > HRConstants.SEARCH_ARRIVAL_DAYS:
-		return "files arrived on day %d, want %d-%d" % [
-			arrived_on, HRConstants.SEARCH_ARRIVAL_DAYS, HRConstants.SEARCH_ARRIVAL_DAYS]
+	if arrived_on != arrival:
+		return "files arrived on tick %d, want %d" % [arrived_on, arrival]
 	# Arrival is a badge and a ticker line, never an interruption.
 	# The HR family is one card now (`team.resignation`), so the prefix test became a namespace
 	# test: nothing in `team.` may be on screen because files landed on the desk.
@@ -6530,7 +6812,7 @@ static func _case_hr_search_cycle() -> String:
 	if hired.status != HRConstants.STATUS_ACTIVE:
 		return "the new hire is not active"
 	if hired.hire_day != GameState.day + 1:
-		return "hire_day is %d, want the next day (%d) — full performance from day one, no ramp" % [
+		return "hire_day is %d, want the next tick (%d) — full performance from the first week, no ramp" % [
 			hired.hire_day, GameState.day + 1]
 	if hired.leave_week < 0:
 		return "leave_week not assigned at hire (%d)" % hired.leave_week
@@ -6549,7 +6831,7 @@ static func _case_hr_search_cycle() -> String:
 	if HRSearchSystem.get_state() != HRConstants.SEARCH_IDLE:
 		return "the search did not close after the hire"
 	FinanceSystem.daily_tick()
-	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(float(salary) / float(GameState.DAYS_PER_MONTH))):
+	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(float(salary) / float(TimeModel.DAYS_PER_MONTH))):
 		return "the new hire's salary is not in the burn breakdown"
 	return ""
 
@@ -6574,7 +6856,7 @@ static func _case_hr_search_cancel_dismiss() -> String:
 		return "cancel did not return to idle"
 	if not HRSearchSystem.start_search(HRConstants.ROLE_SALES_REP, HRConstants.LEVEL_SENIOR):
 		return "could not start a second search after cancelling"
-	for i in HRConstants.SEARCH_ARRIVAL_DAYS + 3:
+	for i in TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS) + 3:
 		_sim_day()
 		if HRSearchSystem.has_files_ready():
 			break
@@ -6602,8 +6884,10 @@ static func _case_hr_fire_path() -> String:
 	var a: Character = _make_employee("char_fire_a", "Fire A", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 70)
 	var b: Character = _make_employee("char_fire_b", "Fire B", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 70)
 	_park_leave([a, b])
-	a.hire_day = GameState.day - 400   # one full year served
-	var want_severance: int = HRConstants.severance_amount(6000, 400)
+	# One full year served. Tenure reads 0 for hire_day <= 0, so the run is moved past a year.
+	GameState.day = TimeModel.ticks(TimeModel.WEEKS_PER_YEAR) + 1
+	a.hire_day = GameState.day - TimeModel.ticks(TimeModel.WEEKS_PER_YEAR)
+	var want_severance: int = HRConstants.severance_amount(6000, TimeModel.ticks(TimeModel.WEEKS_PER_YEAR))
 	if want_severance != 6000:
 		return "severance rule drifted: one year of service on 6000 gives %d" % want_severance
 	var devs0: int = CharacterRegistry.count_active_developers()
@@ -6649,7 +6933,7 @@ static func _case_hr_resignation_path() -> String:
 	# other's card, without the id having to encode the subject.
 	var resign_id: String = "team.resignation"
 	var seen: bool = false
-	for i in HRConstants.RESIGN_WINDOW_MAX_DAYS + 4:
+	for i in TimeModel.ticks(HRConstants.RESIGN_WINDOW_MAX_WEEKS) + 4:
 		_sim_day()
 		if _instances_of(resign_id) >= 1:
 			seen = true
@@ -6657,11 +6941,11 @@ static func _case_hr_resignation_path() -> String:
 		if CharacterRegistry.get_character(e.id) == null:
 			return "the employee vanished without a resignation event"
 	if not seen:
-		return "resignation never fired (risk days reached %d, window opens at %d)" % [
-			e.flight_risk_days, HRConstants.RESIGN_WINDOW_MIN_DAYS]
-	if e.flight_risk_days < HRConstants.RESIGN_WINDOW_MIN_DAYS:
-		return "the roll fired after only %d risk days; the window opens at %d" % [
-			e.flight_risk_days, HRConstants.RESIGN_WINDOW_MIN_DAYS]
+		return "resignation never fired (risk weeks reached %d, window opens at %d)" % [
+			e.flight_risk_weeks, HRConstants.RESIGN_WINDOW_MIN_WEEKS]
+	if e.flight_risk_weeks < TimeModel.ticks(HRConstants.RESIGN_WINDOW_MIN_WEEKS):
+		return "the roll fired after only %d risk weeks; the window opens at %d" % [
+			e.flight_risk_weeks, HRConstants.RESIGN_WINDOW_MIN_WEEKS]
 	if not _drain_to(resign_id):
 		return "could not bring the resignation event to the front"
 	var cash_before: int = GameState.cash
@@ -6677,17 +6961,16 @@ static func _case_hr_resignation_path() -> String:
 
 static func _case_hr_leave_cycle() -> String:
 	# Leave month reached -> on_leave automatically, salary STILL charged (paid leave),
-	# capacity contribution absent, returns after LEAVE_DAYS with morale refreshed.
+	# capacity contribution absent, returns after LEAVE_WEEKS with morale refreshed.
 	GameState.set_cash(100000)
 	var e: Character = _make_employee("char_leave", "Leave Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 60)
 	# HERKESİ PARK ET, SONRA YALNIZ BİRİNİ PİNLE. İzin haftası artık işe alımda damgalanıyor
 	# (§11.4), yani kadronun başkaları da aynı haftaya düşebilir ve "kapasite BİR azaldı"
 	# iddiası o zaman iki kişilik bir düşüşü ölçerdi.
 	_park_leave(CharacterRegistry.get_employees())
-	# §11.4: izin artık YAZ PENCERESİ içinde bir HAFTAdır, ay değil. Pencereye (Haziran)
-	# atlayıp kişiyi o haftaya pinliyoruz — eski model yılın herhangi bir ayına düşebiliyordu
-	# ve yaz kısıtı yoktu.
-	while int(GameState.get_date_dict().month) != HRConstants.LEAVE_WINDOW_START_MONTH:
+	# §11.4: izin YAZ PENCERESİ içinde bir HAFTAdır. Pencerenin (Haziran) ilk tikinin arifesine
+	# gidip kişiyi o tikin haftasına (0) pinliyoruz.
+	while int(GameState.get_date_dict(GameState.day + 1).month) != HRConstants.LEAVE_WINDOW_START_MONTH:
 		_sim_day()
 	e.leave_week = 0
 	e.leave_taken_year = 0
@@ -6702,15 +6985,15 @@ static func _case_hr_leave_cycle() -> String:
 	if CharacterRegistry.count_developers() != 1:
 		return "an on-leave developer vanished from the headcount lens"
 	FinanceSystem.daily_tick()
-	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(6000.0 / float(GameState.DAYS_PER_MONTH))):
+	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(6000.0 / float(TimeModel.DAYS_PER_MONTH))):
 		return "paid leave is broken: salary is not charged while on leave"
 	var morale_on_leave: int = e.morale
-	for i in HRConstants.LEAVE_DAYS + 3:
+	for i in TimeModel.ticks(HRConstants.LEAVE_WEEKS) + 3:
 		_sim_day()
 		if e.status == HRConstants.STATUS_ACTIVE:
 			break
 	if e.status != HRConstants.STATUS_ACTIVE:
-		return "never returned from leave after %d days" % (HRConstants.LEAVE_DAYS + 3)
+		return "never returned from leave after %d ticks" % (TimeModel.ticks(HRConstants.LEAVE_WEEKS) + 3)
 	if e.morale <= morale_on_leave:
 		return "return from leave did not refresh morale (%d -> %d)" % [morale_on_leave, e.morale]
 	if ProductSystem.capacity_total() != cap0:
@@ -6729,8 +7012,9 @@ static func _case_hr_morale_drift_shape() -> String:
 	# FALSİFİKASYON: HRConstants.HOUR_MORALE_MULT'ta 7'yi 0 yerine 1,0 yap → "seven hours"
 	# iddiası FAIL eder. 5'i pozitif yap → "five hours" iddiası FAIL eder.
 	GameState.set_flag("debug_hr_force", "fail")   # istifa roll'u atmasın
-	var days: int = 12
-	var expect: int = int(round(HRConstants.MORALE_BASE_DRIFT_PER_DAY * float(days)))
+	GameState.set_cash(500000)   # 36 haftalık burn kasayı eritmesin; nakit krizi morale dokunur
+	var days: int = 12   # tik; her tik yedi günlük drift
+	var expect: int = int(round(TimeModel.per_tick(HRConstants.MORALE_BASE_DRIFT_PER_DAY) * float(days)))
 
 	# --- 8 SAAT: taban hızında erir ---
 	var base_emp: Character = _make_employee("drift_base", "Drift Base", HRConstants.ROLE_DEVELOPER,
@@ -6740,7 +7024,7 @@ static func _case_hr_morale_drift_shape() -> String:
 	for i in days:
 		_sim_day()
 	if base_emp.morale != before - expect:
-		return "8h drifted %d over %d days, want -%d (§7.1 taban)" % [
+		return "8h drifted %d over %d ticks, want -%d (§7.1 taban)" % [
 			base_emp.morale - before, days, expect]
 
 	# --- 7 SAAT: DURUR. Çarpan tam sıfır, yani hiçbir yöne gitmez. ---
@@ -6757,7 +7041,7 @@ static func _case_hr_morale_drift_shape() -> String:
 	for i in days:
 		_sim_day()
 	if base_emp.morale != low + expect:
-		return "5h moved %d over %d days, want +%d (§7.1 ×-1,0)" % [
+		return "5h moved %d over %d ticks, want +%d (§7.1 ×-1,0)" % [
 			base_emp.morale - low, days, expect]
 
 	# --- AŞIRI YÜK BİR TABAN KOYAR (§7.1 / §12.1) ---
@@ -6814,10 +7098,10 @@ static func _case_hr_recovery_channels() -> String:
 	var rested: Character = _make_employee("rec_leave", "Rec Leave", HRConstants.ROLE_TESTER,
 		SEED_PACE, 0, 50)
 	var before_leave: int = rested.morale
-	HRMoraleSystem.send_on_leave(rested, HRConstants.LEAVE_DAYS, false)
+	HRMoraleSystem.send_on_leave(rested, HRConstants.LEAVE_WEEKS, false)
 	if rested.status != HRConstants.STATUS_ON_LEAVE:
 		return "send_on_leave did not put the employee on leave"
-	for i in HRConstants.LEAVE_DAYS + 2:
+	for i in TimeModel.ticks(HRConstants.LEAVE_WEEKS) + 2:
 		_sim_day()
 	if rested.status != HRConstants.STATUS_ACTIVE:
 		return "the employee never came back from leave"
@@ -6865,13 +7149,13 @@ static func _case_hr_raise_and_leave() -> String:
 	if e.morale <= m0:
 		return "the raise did not raise morale (%d -> %d)" % [m0, e.morale]
 	FinanceSystem.daily_tick()
-	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(11000.0 / float(GameState.DAYS_PER_MONTH))):
+	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(11000.0 / float(TimeModel.DAYS_PER_MONTH))):
 		return "the raise did not flow to burn"
 	# İZİN ARTIK TEK KANALDAN: OTOMATİK YILLIK (H5, 2026-08-22). Oyuncunun
 	# "Tatile gönder" yolu kaldırıldı; ölçülen yasa aynı kaldı (biri gider,
 	# kapasite düşer, dönüşte moral tazelenir), yalnız kapı değişti.
 	var cap0: int = ProductSystem.capacity_total()
-	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_DAYS, false)
+	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_WEEKS, false)
 	if e.status != HRConstants.STATUS_ON_LEAVE:
 		return "annual leave did not take the employee out of capacity"
 	if ProductSystem.capacity_total() != cap0 - 1:
@@ -6879,7 +7163,7 @@ static func _case_hr_raise_and_leave() -> String:
 	if e.leave_taken_year != int(GameState.get_date_dict().year):
 		return "the automatic leave did not stamp this year's latch"
 	var mv: int = e.morale
-	for i in HRConstants.LEAVE_DAYS + 3:
+	for i in TimeModel.ticks(HRConstants.LEAVE_WEEKS) + 3:
 		_sim_day()
 		if e.status == HRConstants.STATUS_ACTIVE:
 			break
@@ -6951,8 +7235,8 @@ static func _case_hr_active_filters() -> String:
 	var cap_before: int = ProductSystem.capacity_total()
 	var payroll_before: int = CharacterRegistry.get_total_monthly_salaries()
 	var team_before: int = CharacterRegistry.get_employees().size()
-	HRMoraleSystem.send_on_leave(dev, HRConstants.LEAVE_DAYS, false)
-	HRMoraleSystem.send_on_leave(rep, HRConstants.LEAVE_DAYS, false)
+	HRMoraleSystem.send_on_leave(dev, HRConstants.LEAVE_WEEKS, false)
+	HRMoraleSystem.send_on_leave(rep, HRConstants.LEAVE_WEEKS, false)
 	# EXCLUDED while away.
 	if ProductSystem.capacity_total() != cap_before - 1:
 		return "an on-leave developer is still in the capacity pool"
@@ -7190,8 +7474,9 @@ static func _case_hr_constants_contract() -> String:
 	# Eski çift-ücret modeli (peşin $600 + %15) oyuncuyu ARAMADAN ÖNCE cezalandırıyordu.
 	if HRConstants.commission_for(3000) != 1500:
 		return "commission on 3000 is %d, want §10's 1500 (half a month)" % HRConstants.commission_for(3000)
-	if not is_equal_approx(HRConstants.severance_multiple(364), 1.0 / 3.0) \
-			or not is_equal_approx(HRConstants.severance_multiple(730), 2.0):
+	var year: int = TimeModel.ticks(TimeModel.WEEKS_PER_YEAR)
+	if not is_equal_approx(HRConstants.severance_multiple(year - 1), 1.0 / 3.0) \
+			or not is_equal_approx(HRConstants.severance_multiple(2 * year), 2.0):
 		return "the severance year rule drifted"
 	if HRConstants.raise_morale_gain(HRConstants.RAISE_MAX_PCT) <= HRConstants.raise_morale_gain(HRConstants.RAISE_MIN_PCT):
 		return "the raise morale gain does not scale with the percentage"
@@ -7200,18 +7485,20 @@ static func _case_hr_constants_contract() -> String:
 	# "Aşan saatler için SAATLİK ÜCRETİN %50 FAZLASI ödenir (çarpan 1,5×). YALNIZ aşan
 	# saatler; ilk sekiz saat normal ücrettir." Blok başına günlük yüzde (%40) modeli gitti.
 	var hourly: float = float(9000) / float(HRConstants.HOURS_PER_MONTH)
-	var want_ot: int = int(round(hourly * 3.0 * HRConstants.OVERTIME_WAGE_MULT))
+	var over: int = HRConstants.WORK_HOURS_MAX - HRConstants.WORK_HOURS_DEFAULT
+	var want_ot: int = int(round(hourly * float(over) * HRConstants.OVERTIME_WAGE_MULT))
 	if HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MAX) != want_ot:
-		return "eleven hours on 9000 bills %d, want %d (three hours at 1.5x)" % [
-			HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MAX), want_ot]
+		return "the longest day on 9000 bills %d, want %d (%d hours at 1.5x)" % [
+			HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MAX), want_ot, over]
 	# İLK SEKİZ SAAT NORMAL ÜCRET: sekizde ve altında tahakkuk YOKTUR.
 	if HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_DEFAULT) != 0 \
 			or HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MIN) != 0:
 		return "an eight-hour or shorter day accrued overtime"
-	# §8.4 ORAN: 11 saat +%37,5, 5 saat %62,5 — §8.1 ve §8.3'ün KENDİ sayıları.
-	if not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MAX), 1.375) \
+	# §8.4 ORAN: sekizin üstündeki her saat yarım verim. 11 saat 1,1875, 16 saat 1,5, 5 saat 0,625.
+	if not is_equal_approx(HRConstants.hours_output_mult(11), 1.1875) \
+			or not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MAX), 1.5) \
 			or not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MIN), 0.625):
-		return "the hour-to-output ratio drifted from §8.1/§8.3's own numbers"
+		return "the hour-to-output ratio drifted from the diminishing-yield numbers"
 	if not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_DEFAULT), 1.0):
 		return "the standard day is not neutral — every calibrated constant would move"
 
@@ -7263,20 +7550,18 @@ static func _case_hr_constants_contract() -> String:
 
 
 # ============================ Speed ladder (tempo) ===========================
-# The ladder is expressed as REAL SECONDS PER IN-GAME DAY in ONE place
-# (TimeManager.SECONDS_PER_DAY). These two cases pin the contract that makes the
-# retune safe: the table itself, and the fact that a game day is the same number
-# of ticks at every speed (only the real-time rate differs).
+# The ladder is REAL SECONDS PER IN-GAME HOUR in ONE place (TimeModel.SECONDS_PER_HOUR). These
+# cases pin the table and the fact that a tick is the same 24 hourly ticks at every speed: only
+# the visible hours cost real time, the night is skipped.
 
 static func _case_speed_ladder() -> String:
-	# The 4x rung is gone — pause + 1x/2x/3x.
-	var ladder: Array = TimeManager.SECONDS_PER_DAY
-	if ladder.size() != 4:
-		return "the ladder has %d entries, want 4 (pause + 1x/2x/3x)" % ladder.size()
-	var want: Array = [0.0, 12.0, 6.0, 3.0]
+	var ladder: Array = TimeModel.SECONDS_PER_HOUR
+	var want: Array = [0.0, 10.0, 5.0, 10.0 / 3.0, 2.5]
+	if ladder.size() != want.size():
+		return "the ladder has %d entries, want %d (pause + 1x/2x/3x/4x)" % [ladder.size(), want.size()]
 	for i in ladder.size():
 		if not is_equal_approx(float(ladder[i]), float(want[i])):
-			return "speed %d is %.3f s/day, want %.3f" % [i, ladder[i], want[i]]
+			return "speed %d is %.3f s/hour, want %.3f" % [i, ladder[i], want[i]]
 	# Strictly faster as the index rises (idx 0 is pause, not part of the ordering).
 	for i in range(2, ladder.size()):
 		if float(ladder[i]) >= float(ladder[i - 1]):
@@ -7286,71 +7571,138 @@ static func _case_speed_ladder() -> String:
 	if not is_equal_approx(TimeManager.hours_per_real_second(0), 0.0):
 		return "pause must accrue no in-game hours"
 	for i in range(1, ladder.size()):
-		var want_mult: float = float(TimeManager.HOURS_PER_DAY) / float(ladder[i])
-		if not is_equal_approx(TimeManager.hours_per_real_second(i), want_mult):
-			return "speed %d multiplier is %.4f, want %.4f" % [i, TimeManager.hours_per_real_second(i), want_mult]
+		if not is_equal_approx(TimeManager.hours_per_real_second(i), 1.0 / float(ladder[i])):
+			return "speed %d multiplier is %.4f, want %.4f" % [i, TimeManager.hours_per_real_second(i), 1.0 / float(ladder[i])]
 	# Out-of-range indices must be inert, not crash the accumulator.
 	if not is_equal_approx(TimeManager.hours_per_real_second(ladder.size()), 0.0):
 		return "an out-of-range speed index returned a live multiplier"
 
-	# Bounds: the top index (3) is accepted, one past it (the old 4x) is refused.
-	EventBus.speed_change_requested.emit(3)
-	if TimeManager.current_speed != 3:
-		return "top speed 3 was rejected (current %d)" % TimeManager.current_speed
-	EventBus.speed_change_requested.emit(4)
-	if TimeManager.current_speed != 3:
-		return "the retired 4x index was accepted (current %d)" % TimeManager.current_speed
+	# Bounds: the top index is accepted, one past it is refused.
+	var top: int = ladder.size() - 1
+	EventBus.speed_change_requested.emit(top)
+	if TimeManager.current_speed != top:
+		return "top speed %d was rejected (current %d)" % [top, TimeManager.current_speed]
+	EventBus.speed_change_requested.emit(top + 1)
+	if TimeManager.current_speed != top:
+		return "index %d was accepted (current %d)" % [top + 1, TimeManager.current_speed]
 
 	# Pause/resume round-trip at the top index (speed_preserve covers idx 2).
 	EventBus.speed_change_requested.emit(0)
 	TimeManager.resume_if_paused()
-	if TimeManager.current_speed != 3:
+	if TimeManager.current_speed != top:
 		return "paused game did not resume to last_running_speed (%d)" % TimeManager.current_speed
 	if TimeManager.get_tree().paused:
 		return "tree still paused after resume"
 	return ""
 
 
+## One tick through the real-time clock at speed idx, from the current hour to the next 08:00,
+## in frames of 1/100 of an hour: TimeManager._advance_real, the night gate and the night skip.
+## Returns the event log (hour values, "D" day_advanced, "T" day_tick_completed), the frame
+## count, whether the clock agreed with itself inside the daily tick and whether 08:00 arrived.
+## on_frame(out) runs before each frame.
+static func _walk_day(idx: int, on_frame: Callable = Callable()) -> Dictionary:
+	var out := {"log": [], "frames": 0, "synced": true, "arrived": false}
+	var on_hour := func(h: int) -> void: (out["log"] as Array).append(h)
+	var on_day := func(_d: int) -> void: (out["log"] as Array).append("D")
+	var on_done := func(_d: int) -> void:
+		(out["log"] as Array).append("T")
+		if not is_equal_approx(TimeManager._in_game_hours, float(GameState.current_hour)):
+			out["synced"] = false
+	var on_skip := func() -> void: out["arrived"] = true
+	EventBus.hour_changed.connect(on_hour)
+	EventBus.day_advanced.connect(on_day)
+	EventBus.day_tick_completed.connect(on_done)
+	EventBus.night_skipped.connect(on_skip)
+	EventBus.speed_change_requested.emit(idx)
+	var step: float = float(TimeModel.SECONDS_PER_HOUR[idx]) / 100.0
+	while not bool(out["arrived"]) and int(out["frames"]) < 5000:
+		out["frames"] = int(out["frames"]) + 1
+		if on_frame.is_valid():
+			on_frame.call(out)
+		TimeManager._advance_real(step)
+	EventBus.hour_changed.disconnect(on_hour)
+	EventBus.day_advanced.disconnect(on_day)
+	EventBus.day_tick_completed.disconnect(on_done)
+	EventBus.night_skipped.disconnect(on_skip)
+	return out
+
+
+## TICK PURITY at every speed: from 08:00 the hours run 9…23, the rollover at 00:00 carries
+## day_advanced and the daily tick, then 1…8; the real time is the visible hours only, (workday
+## end − 08:00) × s/hour, within one frame. Variants: a 24:00 workday end, a hold taken inside
+## the night skip, and an office that is not empty yet.
 static func _case_speed_day_invariant() -> String:
-	# TICK PURITY: one in-game day is exactly HOURS_PER_DAY hourly boundaries and one
-	# day advance at EVERY speed — only the real-time cost differs. Drives the
-	# accumulator directly (no wall clock), the way the rest of this harness drives ticks.
-	# Counters hang off the GameState seams (set_current_hour / advance_day), so they stay
-	# honest even if a terminal fires and the dispatch guards start returning early.
-	for idx in range(1, TimeManager.SECONDS_PER_DAY.size()):
-		var counts: Dictionary = {"h": 0, "d": 0}
-		var on_hour: Callable = func(_h: int) -> void: counts["h"] += 1
-		var on_day: Callable = func(_d: int) -> void: counts["d"] += 1
-		EventBus.hour_changed.connect(on_hour)
-		EventBus.day_advanced.connect(on_day)
+	var want_log: Array = range(9, 24) + [0, "D", "T"] + range(1, 9)
+	var base_frames: Dictionary = {}
+	for idx in range(1, TimeModel.SECONDS_PER_HOUR.size()):
+		if GameState.current_hour != TimeModel.WEEK_START_HOUR:
+			return "speed %d did not start at 08:00 (%d)" % [idx, GameState.current_hour]
+		var s: float = float(TimeModel.SECONDS_PER_HOUR[idx])
+		var want_secs: float = float(WorkHoursSystem.workday_end() - TimeModel.WEEK_START_HOUR) * s
+		var w: Dictionary = _walk_day(idx)
+		if not bool(w["arrived"]):
+			return "speed %d never reached the next 08:00" % idx
+		if w["log"] != want_log:
+			return "speed %d clock order %s" % [idx, str(w["log"])]
+		if not bool(w["synced"]):
+			return "speed %d: the accumulator disagreed with the hour inside the daily tick" % idx
+		var secs: float = float(w["frames"]) * s / 100.0
+		if absf(secs - want_secs) > s / 100.0 + 0.0001:
+			return "speed %d took %.3f real s/tick, want %.3f" % [idx, secs, want_secs]
+		base_frames[idx] = int(w["frames"])
 
-		# Start the day cleanly at 00:00 and zero the counters AFTER that write.
-		GameState.set_current_hour(0)
-		TimeManager.sync_to_current_hour()
-		counts["h"] = 0
-		counts["d"] = 0
+	# Gate: the office is not empty for K frames; the clock waits at the workday end.
+	const K := 5
+	var gate_hours: Array = []
+	var gate := func() -> bool:
+		gate_hours.append(GameState.current_hour)
+		return gate_hours.size() > K
+	TimeManager.register_night_gate(gate, 10.0)
+	var end_hour: int = WorkHoursSystem.workday_end()
+	var g: Dictionary = _walk_day(1)
+	TimeManager.unregister_night_gate()
+	if g["log"] != want_log or int(g["frames"]) != int(base_frames[1]) + K:
+		return "gate: log %s, frames %d (want %d)" % [str(g["log"]), int(g["frames"]), int(base_frames[1]) + K]
+	if gate_hours.size() != K + 1 or gate_hours.count(end_hour) != K + 1:
+		return "gate: the clock moved while the office was not empty (%s)" % str(gate_hours)
 
-		var secs: float = float(TimeManager.SECONDS_PER_DAY[idx])
-		var mult: float = TimeManager.hours_per_real_second(idx)
-		var step: float = secs / 1000.0        # 0.1% of a day per step
-		var elapsed: float = 0.0
-		var guard: int = 0
-		while counts["d"] < 1 and guard < 5000:
-			guard += 1
-			TimeManager._in_game_hours += mult * step
-			TimeManager._drain_boundaries()
-			elapsed += step
+	# Hold: a hold taken inside the skip stops it; released, the tick completes all 24 hours.
+	var held := {"frames": 0, "hour": -1}
+	var on_hour := func(h: int) -> void:
+		if h == 3 and held["hour"] < 0:
+			held["hour"] = h
+			TimeManager.hold_clock("smoke_hold")
+	var while_held := func(out: Dictionary) -> void:
+		if not TimeManager.is_clock_held():
+			return
+		if GameState.current_hour != 3 or bool(out["arrived"]):
+			held["hour"] = 99
+		held["frames"] = int(held["frames"]) + 1
+		if int(held["frames"]) == 5:
+			TimeManager.release_clock("smoke_hold")
+			EventBus.speed_change_requested.emit(1)
+	EventBus.hour_changed.connect(on_hour)
+	var hold_walk: Dictionary = _walk_day(1, while_held)
+	EventBus.hour_changed.disconnect(on_hour)
+	if int(held["hour"]) != 3 or int(held["frames"]) != 5:
+		return "hold: the skip did not stop at the hold (%s)" % str(held)
+	if hold_walk["log"] != want_log:
+		return "hold: log after release %s" % str(hold_walk["log"])
 
-		EventBus.hour_changed.disconnect(on_hour)
-		EventBus.day_advanced.disconnect(on_day)
-
-		if counts["d"] != 1:
-			return "speed %d did not roll a day over within one day of real time" % idx
-		if counts["h"] != TimeManager.HOURS_PER_DAY:
-			return "speed %d fired %d hourly ticks in a day, want %d" % [idx, counts["h"], TimeManager.HOURS_PER_DAY]
-		# ...and the day cost the real seconds the ladder advertises.
-		if absf(elapsed - secs) > secs * 0.01:
-			return "speed %d took %.3f real s/day, want %.3f" % [idx, elapsed, secs]
+	# A workday ending at 24:00: sixteen visible hours, the rollover inside the night skip.
+	WorkHoursSystem.set_company_start_hour(TimeModel.WEEK_START_HOUR)
+	WorkHoursSystem.set_company_hours(TimeModel.WORKDAY_LATEST_END - TimeModel.WEEK_START_HOUR)
+	if WorkHoursSystem.workday_end() != TimeModel.WORKDAY_LATEST_END:
+		return "fixture: workday end %d, want 24" % WorkHoursSystem.workday_end()
+	var late: Dictionary = _walk_day(1)
+	var late_secs: float = float(late["frames"]) * float(TimeModel.SECONDS_PER_HOUR[1]) / 100.0
+	var late_want: float = float(TimeModel.WORKDAY_LATEST_END - TimeModel.WEEK_START_HOUR) \
+		* float(TimeModel.SECONDS_PER_HOUR[1])
+	if late["log"] != want_log or not bool(late["synced"]):
+		return "24:00 end: clock order %s" % str(late["log"])
+	if absf(late_secs - late_want) > float(TimeModel.SECONDS_PER_HOUR[1]) / 100.0 + 0.0001:
+		return "24:00 end took %.3f real s, want %.3f" % [late_secs, late_want]
 	return ""
 
 
@@ -7456,7 +7808,7 @@ static func _case_coupling_coordination_sources() -> String:
 	# STALE LEAD: a fired or on-leave SORUMLU resolves to founder-as-lead, not to a silent
 	# fallback. Nothing rewrites lead_engineer_id after commit, so this path is reachable.
 	b.lead_engineer_id = strong.id
-	HRMoraleSystem.send_on_leave(strong, HRConstants.LEAVE_DAYS, false)
+	HRMoraleSystem.send_on_leave(strong, HRConstants.LEAVE_WEEKS, false)
 	var speed_on_leave: float = ProductSystem.team_speed(b)
 	b.lead_engineer_id = ""
 	if absf(speed_on_leave - ProductSystem.team_speed(b)) > 0.001:
@@ -7616,23 +7968,18 @@ static func _case_coupling_pm_experience_bonus() -> String:
 
 
 static func _case_coupling_tester_beta_and_sprint() -> String:
-	# TEST bölümü: bulma isabeti + tempo from the Test Uzmanı, and a shorter hata sprinti.
-	# No tester → every multiplier is exactly 1.0, which is why the existing beta cases hold.
+	# TEST bölümü: bulma isabeti + tempo from the Test Uzmanı. The hata sprinti is one week
+	# whoever is on staff. No tester → every multiplier is exactly 1.0, which is why the existing
+	# beta cases hold.
 	if not is_equal_approx(ProductSystem.tester_find_mult(), 1.0) \
 			or not is_equal_approx(ProductSystem.tester_tempo_mult(), 1.0):
 		return "the tester multipliers are not neutral with no tester on staff"
-	var solo_sprint: int = ProductSystem.sprint_duration_for(28)
 	_make_employee("char_tester", "Test One", HRConstants.ROLE_TESTER,
 		SEED_PACE, 0, 50, 9, SEED_RAPPORT)
 	if ProductSystem.tester_find_mult() <= 1.0:
 		return "a UZMANLIK-9 tester did not raise bug-finding accuracy"
 	if ProductSystem.tester_tempo_mult() <= 1.0:
 		return "a tester did not raise the find/fix tempo"
-	var team_sprint: int = ProductSystem.sprint_duration_for(28)
-	if team_sprint >= solo_sprint:
-		return "a tester did not shorten the hata sprinti (%d -> %d days)" % [solo_sprint, team_sprint]
-	if team_sprint < ProductSystem.MIN_SPRINT_DAYS:
-		return "the sprint fell below MIN_SPRINT_DAYS (%d)" % team_sprint
 	# The tester also joins BETA's speed crew (PHASE_CREW bugfix = tester + developer).
 	if not ProductSystem._phase_areas("bugfix").has(HRConstants.AREA_QA):
 		return "the tester is not in the BETA phase crew"
@@ -7697,6 +8044,10 @@ static func _case_coupling_overtime_applied() -> String:
 			["ai_assistant_tools", "ai_assistant_image", "ai_assistant_memory", "ai_assistant_voice"], ""):
 		return "start_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
+	# Fikstür: üç tik uzunluğunda ölçüm penceresi geliştirme bandına sığsın diye build uzatılır;
+	# on altı saatlik gün ancak 08:00 başlangıcına sığar.
+	b.total_efor = 400.0
+	WorkHoursSystem.set_company_start_hour(TimeModel.WEEK_START_HOUR)
 	if not _run_build_to_phase("development"):
 		return "build never reached development"
 	# Baseline day, no block running.
@@ -7707,10 +8058,8 @@ static func _case_coupling_overtime_applied() -> String:
 	var base_efor: float = b.efor_spent - e0
 	var base_bugs: float = (b.bug_progress + float(b.bug_count)) - bugs0
 	# ---- §8.4 · GETİRİ SAATİN KENDİSİDİR ----
-	# "Ekip 8 saatte belli bir çıktı üretiyorsa 11 saatte ORANTILI OLARAK daha fazla üretir.
-	# Fazladan bir 'ek mesai hızı' katsayısı UYGULANMAZ — eski koddaki +%30/+%15 hız bonusu
-	# kaldırılmıştır." Oran BİR SAYI, ve o sayı §8.1'in kendi cümlesinde yazıyor: "en fazla
-	# üç saat ek mesai, yani EN FAZLA +%37,5 ÇIKTI."
+	# Uzun gün daha fazla üretir, sekizin üstündeki her saat yarım verimle
+	# (HRConstants.hours_output_mult). Fazladan bir 'ek mesai hızı' katsayısı UYGULANMAZ.
 	#
 	# FALSİFİKASYON: HRSystem.daily_contribution'dan hours_output_mult çarpanını kaldır →
 	# oran 1,0 çıkar ve ilk iddia FAIL eder.
@@ -7723,14 +8072,14 @@ static func _case_coupling_overtime_applied() -> String:
 	var long_bugs: float = (b.bug_progress + float(b.bug_count)) - bugs0
 	var want_ratio: float = HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MAX)
 	if absf(long_efor / maxf(0.001, base_efor) - want_ratio) > 0.02:
-		return "an eleven-hour day produced %.3f× the eight-hour day, want %.3f" % [
+		return "the longest day produced %.3f× the eight-hour day, want %.3f" % [
 			long_efor / maxf(0.001, base_efor), want_ratio]
 	# §8.4: EK MESAİ KALİTE CEZASI TAŞIMAZ. "Eski koddaki ×1,25 bug çarpanı kaldırılmıştır.
 	# Gerekçe: §7 moralin kaliteye dokunmadığını söyler; ek mesainin dokunması aynı sınırı
 	# ihlal ederdi." Bug oranı ÇALIŞILAN SAATLE artmaz — hata birikimi kapasite çarpanından
 	# gelir ve o saatten bağımsızdır, o yüzden iki günün bug'ı BİRBİRİNE EŞİT olmalı.
 	if absf(long_bugs - base_bugs) > 0.0001:
-		return "an eleven-hour day changed the bug rate (%.4f -> %.4f) — §8.4 forbids it" % [
+		return "the longest day changed the bug rate (%.4f -> %.4f) — §8.4 forbids it" % [
 			base_bugs, long_bugs]
 	# ---- §8.3 · KISA GÜN, AYNI ORANLA AŞAĞI ----
 	# "Beş saatlik gün, sekiz saatlik günün %62,5'i kadar iş çıkarır."
@@ -7775,7 +8124,9 @@ static func _add_prospect(pid: String, star: int, pain: String,
 	p.archetype_id = archetype_id
 	p.pain_feature_id = pain
 	p.spawned_on_day = GameState.day
-	p.expires_on_day = GameState.day + SalesConstants.LEAD_LIFE_DAYS
+	# One tick longer than a faucet lead: cases drive the desk across the next tick boundary and
+	# read the lead after it, where a faucet lead would already have expired.
+	p.expires_on_day = GameState.day + TimeModel.ticks(SalesConstants.LEAD_LIFE_WEEKS) + 1
 	ProspectRegistry.add(p)
 	return p
 
@@ -7792,10 +8143,10 @@ static func _case_sales_pipeline_rate_by_pace() -> String:
 	_seed_b2b(1000)
 	var mult: float = SalesConstants.interest_mult(ProductRead.interest()) \
 		* SalesConstants.phase_mult(GameState.phase)
-	var base: float = SalesConstants.FAUCET_BASE_PER_WEEK / SalesConstants.DAYS_PER_WEEK * mult
-	if not is_equal_approx(SalesFaucetSystem.lead_rate_per_day(), base):
+	var base: float = SalesConstants.FAUCET_BASE_PER_WEEK * mult
+	if not is_equal_approx(SalesFaucetSystem.lead_rate_per_week(), base):
 		return "base inbound %f with no sales staff, want %f" % [
-			SalesFaucetSystem.lead_rate_per_day(), base]
+			SalesFaucetSystem.lead_rate_per_week(), base]
 	if base <= 0.0:
 		return "the faucet is dry with no sales staff — §3 says the base inbound continues"
 	var before: int = ProspectRegistry.count()
@@ -7803,36 +8154,35 @@ static func _case_sales_pipeline_rate_by_pace() -> String:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
 	if ProspectRegistry.count() <= before:
-		return "no leads arrived over ten days with the base inbound running"
+		return "no leads arrived over ten ticks with the base inbound running"
 
 	# An ASSIGNED rep raises the flow by exactly one rep's worth (§3: +2/week).
 	_make_sales_rep("char_sr_1", 6, 1)
-	var want: float = (SalesConstants.FAUCET_BASE_PER_WEEK + SalesConstants.FAUCET_PER_REP_PER_WEEK) \
-		/ SalesConstants.DAYS_PER_WEEK * mult
-	if not is_equal_approx(SalesFaucetSystem.lead_rate_per_day(), want):
-		return "rate with one rep %f, want %f" % [SalesFaucetSystem.lead_rate_per_day(), want]
+	var want: float = (SalesConstants.FAUCET_BASE_PER_WEEK + SalesConstants.FAUCET_PER_REP_PER_WEEK) * mult
+	if not is_equal_approx(SalesFaucetSystem.lead_rate_per_week(), want):
+		return "rate with one rep %f, want %f" % [SalesFaucetSystem.lead_rate_per_week(), want]
 	return ""
 
 static func _case_sales_pipeline_stack_diminishes() -> String:
 	# THE STACK DECAY IS RETIRED and this case guards what replaced it. §3 makes the faucet
 	# LINEAR in assigned capacity (+2/week each) because supply is now a market reading
-	# rather than a crowded queue; the anti-burst rule moved to a DAILY CAP, which is the
-	# thing that still has to hold. FALSIFICATION: remove FAUCET_DAILY_MAX and the second
-	# half fails — a week of banked flow releases in one morning.
+	# rather than a crowded queue; the anti-burst rule is a PER-TICK CAP, which is the
+	# thing that still has to hold. FALSIFICATION: remove FAUCET_TICK_MAX and the second
+	# half fails — twenty reps' flow releases in one week.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
 	_make_sales_rep("char_sr_1", 6, 1)
-	var one: float = SalesFaucetSystem.lead_rate_per_day()
+	var one: float = SalesFaucetSystem.lead_rate_per_week()
 	_make_sales_rep("char_sr_2", 6, 1)
-	var two: float = SalesFaucetSystem.lead_rate_per_day()
-	var step: float = SalesConstants.FAUCET_PER_REP_PER_WEEK / SalesConstants.DAYS_PER_WEEK \
+	var two: float = SalesFaucetSystem.lead_rate_per_week()
+	var step: float = SalesConstants.FAUCET_PER_REP_PER_WEEK \
 		* SalesConstants.interest_mult(ProductRead.interest()) \
 		* SalesConstants.phase_mult(GameState.phase)
 	if not is_equal_approx(two - one, step):
 		return "a second rep added %f, want one rep's worth %f" % [two - one, step]
-	# The daily cap holds however much flow has banked.
+	# The tick cap holds however much flow comes in.
 	GameState.set_flag("sales_faucet_progress", 0.99)
 	for i in 20:
 		_make_sales_rep("char_sr_x%d" % i, 9, 1)
@@ -7840,32 +8190,39 @@ static func _case_sales_pipeline_stack_diminishes() -> String:
 	GameState.advance_day()
 	B2BSalesSystem.daily_tick()
 	var emitted: int = ProspectRegistry.count() - before
-	if emitted > SalesConstants.FAUCET_DAILY_MAX:
-		return "%d leads in one day, cap is %d" % [emitted, SalesConstants.FAUCET_DAILY_MAX]
+	if emitted > SalesConstants.FAUCET_TICK_MAX:
+		return "%d leads in one tick, cap is %d" % [emitted, SalesConstants.FAUCET_TICK_MAX]
 	return ""
 
 static func _case_sales_autonomous_close_routine() -> String:
-	# §7.6 — an IN-LEAGUE close is DETERMINISTIC: no hidden percentage, the only variable is
-	# how long it takes. The deal closes at the DIAL's price (§7.5), names the closer, and
-	# logs. FALSIFICATION: against the old desk the price assertion fails — it placed the
-	# deal inside an archetype MRR band and never read a stance.
+	# §7.6 — a deal two leagues below the rep always closes on its first processing tick (the
+	# tick after the rep picks it up). The deal closes at the DIAL's price (§7.5), names the
+	# closer, and logs. FALSIFICATION: against the old desk the price assertion fails — it
+	# placed the deal inside an archetype MRR band and never read a stance.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
 	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)   # Satış 9 -> star 4, band 1..3
 	SalesLedger.set_price_stance(SalesConstants.STANCE_STANDARD)
-	_add_prospect("routine", 1, "ai_vec_filter")
+	# Handed to the rep, so the faucet's own leads of the same tick do not outrank it.
+	SalesLedger.set_routing(_add_prospect("routine", 1, "ai_vec_filter").id, SalesConstants.ROUTE_REP)
 	var signed0: int = GameState.run_customers_signed
 	var closed: bool = false
+	var started: int = -1
 	for i in 40:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-		if ProspectRegistry.get_prospect("routine") == null:
+		var lead: Prospect = ProspectRegistry.get_prospect("routine")
+		if lead == null:
 			closed = true
 			break
+		if lead.is_being_worked():
+			started = lead.work_started_day
 	if not closed:
 		return "an in-league lead never closed"
+	if started < 0 or GameState.day != started + 1:
+		return "a two-below deal took until tick %d, work started on %d" % [GameState.day, started]
 	if GameState.run_customers_signed != signed0 + 1:
 		return "signing counter did not move (%d -> %d)" % [signed0, GameState.run_customers_signed]
 	var c: Customer = CustomerRegistry.get_customer("co_routine")
@@ -7881,13 +8238,15 @@ static func _case_sales_autonomous_close_routine() -> String:
 	if c.seats < int(band["low"]) or c.seats > int(band["high"]):
 		return "seats %d outside the 1-star band %d..%d" % [
 			c.seats, int(band["low"]), int(band["high"])]
-	var log: Array = SalesSystem.get_sales_log()
-	if log.is_empty():
-		return "the close produced no activity-log line"
-	var last: Dictionary = log[log.size() - 1]
-	if String(last.get("kind", "")) != "auto_close" or String(last.get("actor", "")) != rep.character_name:
-		return "activity line does not name who closed it: %s" % str(last)
-	return ""
+	# The same tick's faucet expiries log after the desk, so the close is looked up, not taken
+	# as the last line.
+	for row in SalesSystem.get_sales_log():
+		var r: Dictionary = row as Dictionary
+		if String(r.get("kind", "")) == "auto_close" and String(r.get("company", "")) == c.company_name:
+			if String(r.get("actor", "")) != rep.character_name:
+				return "activity line does not name who closed it: %s" % str(r)
+			return ""
+	return "the close produced no activity-log line"
 
 static func _case_sales_close_threshold_surfaces() -> String:
 	# §7.1 THE STAR GATE, and it replaced an MRR ceiling. A rep sells at or below their own
@@ -7901,10 +8260,10 @@ static func _case_sales_close_threshold_surfaces() -> String:
 	var rep: Character = _make_sales_rep("char_sr_1", 0, 3)   # Satış 3 -> star 1.5 -> band 1
 	_add_prospect("above", 3, "ai_vec_filter")
 	var signed0: int = GameState.run_customers_signed
-	# INSIDE THE LEAD'S LIFE. Forty days would let §4's expiry take the lead and the case
+	# INSIDE THE LEAD'S LIFE. A longer walk would let §4's expiry take the lead and the case
 	# would then read "gone" as "closed" — a false pass in one direction and a false failure
-	# in the other. A rep that could take this table would have started on day one.
-	for i in SalesConstants.LEAD_LIFE_DAYS - 2:
+	# in the other. A rep that could take this table would have started on the first tick.
+	for i in TimeModel.ticks(SalesConstants.LEAD_LIFE_WEEKS):
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
 	var p: Prospect = ProspectRegistry.get_prospect("above")
@@ -7951,8 +8310,8 @@ static func _case_sales_threshold_separates_tiers() -> String:
 
 static func _case_sales_concession_deal_surfaces() -> String:
 	# §7.6 THE PRICE-BREAK MOMENT — defined, published, and INERT. On Premium against a
-	# price-sensitive archetype the desk publishes `rep_discount_requested` in the closing
-	# days; it does NOT raise the card, because §18 puts that wiring in the event package.
+	# price-sensitive archetype the desk publishes `rep_discount_requested` before a processing
+	# roll; it does NOT raise the card, because §18 puts that wiring in the event package.
 	# The deal must still close at its own stance: an unwired card cannot be allowed to
 	# strand a finished deal. FALSIFICATION: make the card fire and the fourth branch fails.
 	GameState.set_flag("mvp_shipped", true)
@@ -7961,7 +8320,9 @@ static func _case_sales_concession_deal_surfaces() -> String:
 	_seed_b2b(1000)
 	_make_sales_rep("char_sr_1", 0, 9)
 	SalesLedger.set_price_stance(SalesConstants.STANCE_PREMIUM)
-	_add_prospect("premium", 1, "ai_vec_filter", "ops_cautious")   # price-sensitive archetype
+	# A price-sensitive archetype, handed to the rep so the faucet's leads do not outrank it.
+	SalesLedger.set_routing(_add_prospect("premium", 1, "ai_vec_filter", "ops_cautious").id,
+		SalesConstants.ROUTE_REP)
 	var fired: Array = []
 	var probe := func(_rep_id: String, lead_id: String) -> void: fired.append(lead_id)
 	EventBus.rep_discount_requested.connect(probe)
@@ -7985,38 +8346,63 @@ static func _case_sales_concession_deal_surfaces() -> String:
 	insensitive.star = 1
 	insensitive.archetype_id = "tech_exacting"
 	insensitive.work_stance = SalesConstants.STANCE_PREMIUM
-	insensitive.work_due_day = GameState.day
-	var rep2: Character = CharacterRegistry.get_character("char_sr_1")
-	if SalesRepSystem.price_break_due(rep2, insensitive):
+	if SalesRepSystem.price_break_due(insensitive):
 		return "a price-INSENSITIVE archetype produced the price-break moment"
 	return ""
 
 static func _case_sales_close_speed_by_expertise() -> String:
-	# §7.2 — the processing span comes from the LEAGUE DIFFERENCE and the rep's EFFECTIVE
-	# OUTPUT places the deal inside it. TWO-DIRECTIONAL: a stronger seller closes the same
-	# lead in strictly fewer days, and Premium lengthens it (§7.5). Reading
-	# `hr.effective_skill` rather than a raw star is the point — morale, focus, hours and
-	# traits already live in that one formula and this desk does not copy it.
+	# §7.2 — a worked deal closes on each processing tick with a chance the LEAGUE DIFFERENCE
+	# picks (SalesConstants.PROCESS_CLOSE_CHANCE), and Premium divides it (§7.5), so the
+	# expected processing time grows by the same +30 %. A stronger seller sits more leagues
+	# above the same lead and closes it sooner.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
 	var weak: Character = _make_sales_rep("char_sr_weak", 0, 4)
 	var strong: Character = _make_sales_rep("char_sr_strong", 0, 9)
-	var lead: Prospect = _add_prospect("span", 1, "ai_vec_filter")
-	var slow: int = SalesRepSystem.processing_days(weak, lead, SalesConstants.STANCE_STANDARD)
-	var fast: int = SalesRepSystem.processing_days(strong, lead, SalesConstants.STANCE_STANDARD)
-	if fast >= slow:
-		return "effective output did not speed the close (weak=%d days, strong=%d days)" % [slow, fast]
-	var premium: int = SalesRepSystem.processing_days(strong, lead, SalesConstants.STANCE_PREMIUM)
-	if premium <= fast:
-		return "Premium did not lengthen processing (%d -> %d days)" % [fast, premium]
-	# And the span itself is league-driven: two leagues below is strictly faster than own.
-	var own: Array = SalesConstants.process_span(0)
-	var below: Array = SalesConstants.process_span(-2)
-	if int(below[1]) >= int(own[0]):
-		return "the league table does not separate own-league from two-below"
+	var own_star: int = SalesRepSystem.rep_star(weak)
+	if SalesRepSystem.rep_star(strong) - own_star < 2:
+		return "fixture: the strong rep is not two leagues above the weak one"
+	var lead: Prospect = _add_prospect("span", own_star, "ai_vec_filter")
+	lead.work_stance = SalesConstants.STANCE_STANDARD
+	var own: float = SalesRepSystem.close_chance(weak, lead)
+	var below: float = SalesRepSystem.close_chance(strong, lead)
+	if not is_equal_approx(own, float(SalesConstants.PROCESS_CLOSE_CHANCE[0])) \
+			or not is_equal_approx(below, float(SalesConstants.PROCESS_CLOSE_CHANCE[-2])):
+		return "close chances own %.2f / two below %.2f do not read the league table" % [own, below]
+	if below <= own:
+		return "a stronger seller did not close the same lead sooner (%.2f -> %.2f)" % [own, below]
+	lead.work_stance = SalesConstants.STANCE_PREMIUM
+	if not is_equal_approx(SalesRepSystem.close_chance(strong, lead),
+			below / (1.0 + SalesConstants.PROCESS_PREMIUM_PENALTY)):
+		return "Premium did not divide the chance (%.3f)" % SalesRepSystem.close_chance(strong, lead)
+	ProspectRegistry.remove(lead.id)
+
+	# THE ROLL, through the desk's own sweep on the seeded stream: 1000 own-league deals close
+	# after 1 / chance processing ticks on average (2 at 0.50).
+	var n: int = 1000
+	for i in n:
+		var p: Prospect = _add_prospect("own_%d" % i, own_star, "ai_vec_filter")
+		p.worked_by = weak.id
+		p.work_started_day = GameState.day
+		p.work_stance = SalesConstants.STANCE_STANDARD
+	var open: int = ProspectRegistry.count()
+	var tick_sum: int = 0
+	for t in range(1, 60):
+		GameState.day += 1
+		SalesRepSystem._tick_processing()
+		tick_sum += (open - ProspectRegistry.count()) * t
+		open = ProspectRegistry.count()
+		if open == 0:
+			break
+	var mean: float = float(tick_sum) / float(n)
+	var want: float = 1.0 / float(SalesConstants.PROCESS_CLOSE_CHANCE[0])
+	if open != 0 or absf(mean - want) > 0.15:
+		return "own-league deals closed after %.3f ticks on average, want %.2f (%d still open)" % [
+			mean, want, open]
 	return ""
+
 
 static func _case_cs_auto_assignment_capacity() -> String:
 	# Delegation is EXCESS-driven: under the founder's own capacity nothing moves; above it the
@@ -8261,9 +8647,8 @@ static func _case_promise_broken_penalty() -> String:
 		return "trust offset %f, want %f" % [c.trust_offset, B2BConstants.PROMISE_BROKEN_OFFSET]
 	# (c) a week later the account is STILL below where it started. A return to the 0.0 stub
 	#     fails HERE - that is the whole point of this case.
-	for i in 7:
-		GameState.advance_day()
-		B2BSalesSystem.daily_tick()
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
 	if c.satisfaction >= sat_before:
 		return "the broken promise was erased by drift within a week (now %d, started %d)" % [
 			c.satisfaction, sat_before]
@@ -8516,7 +8901,7 @@ static func _case_market_share_tracks_mrr() -> String:
 
 
 static func _case_news_feed_weights_and_no_repeat() -> String:
-	# Fix 4: 90 simulated days on the ISOLATED driver (advance_day + explicit feed tick —
+	# Fix 4: 90 simulated ticks on the ISOLATED driver (advance_day + explicit feed tick —
 	# full dispatch would drag phase gates/endings into a feed test; same rationale as the
 	# 2b additivity case). Asserts the source distribution (sektör ~50%, biz hard-capped
 	# at 20%), the no-repeat-until-reshuffle contract, and the stream cap. Writes the
@@ -8525,11 +8910,11 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 	_seed_b2b(1500)
 	var audit: Array[String] = []
 	var sektor_seen: Dictionary = {}     # txt -> true, cleared at each observed reshuffle
-	var days: int = 90
-	for i in days:
+	var ticks: int = 90
+	for i in ticks:
 		GameState.advance_day()
 		# "Biz" injections through the real channel (TimeManager._ready wired the feed).
-		# DAILY on purpose: with surplus supply the hard cap is what limits the source,
+		# EVERY TICK on purpose: with surplus supply the hard cap is what limits the source,
 		# so the ≤20% assertion below tests the cap, not the scarcity of milestones.
 		EventBus.headline_added.emit(B2BConstants.notice_source_sales(), "Smoke kapanışı %d" % i)
 		var reshuffles_before: int = int(GameState.news_feed.get("reshuffles", 0))
@@ -8545,8 +8930,8 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 				sektor_seen[String(line["txt"])] = true
 	var counts: Dictionary = GameState.news_feed["counts"]
 	var total: float = float(int(counts["sektor"]) + int(counts["rakip"]) + int(counts["biz"]))
-	if total < float(days * NewsFeedSystem.DAILY_LINES_MIN):
-		return "only %d lines over %d days" % [int(total), days]
+	if total < float(ticks * NewsFeedSystem.WEEKLY_LINES_MIN):
+		return "only %d lines over %d ticks" % [int(total), ticks]
 	var sektor_frac: float = float(counts["sektor"]) / total
 	var rakip_frac: float = float(counts["rakip"]) / total
 	var biz_frac: float = float(counts["biz"]) / total
@@ -8555,14 +8940,14 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 	if sektor_frac < 0.40 or sektor_frac > 0.62:
 		return "sektor share off band: %.3f" % sektor_frac
 	if int(counts["rakip"]) == 0:
-		return "rival source never fired over %d days" % days
+		return "rival source never fired over %d ticks" % ticks
 	if (GameState.news_feed["stream"] as Array).size() > NewsFeedSystem.STREAM_CAP:
 		return "stream exceeded its cap"
 	# Audit report for the done message (distribution header + every line).
 	var f: FileAccess = FileAccess.open("user://news_feed_audit_90d.txt", FileAccess.WRITE)
 	if f != null:
-		f.store_line("days=%d total=%d sektor=%.3f rakip=%.3f biz=%.3f reshuffles=%d" % [
-			days, int(total), sektor_frac, rakip_frac, biz_frac, int(GameState.news_feed["reshuffles"])])
+		f.store_line("ticks=%d total=%d sektor=%.3f rakip=%.3f biz=%.3f reshuffles=%d" % [
+			ticks, int(total), sektor_frac, rakip_frac, biz_frac, int(GameState.news_feed["reshuffles"])])
 		for entry in audit:
 			f.store_line(entry)
 		f.close()
@@ -8659,7 +9044,7 @@ static func _seed_save_world() -> void:
 	# karardır. Bir kâğıt tam da bunun karşıtıdır: motor durumudur, EvSave bloğunda gidip
 	# gelir, ve oyuncunun gerçek kayıtları da böyle görünür — masada kâğıt, ekranda modal yok.
 	var aged: Customer = CustomerRegistry.get_by_market("b2b")[0]
-	aged.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
+	aged.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)
 	CustomerRegistry.set_lifecycle_phase(aged.id, "active")
 	CustomerRegistry.set_satisfaction(aged.id, 80)
 	EventGate.request(EXPANSION_ID, {"customer": aged.id})
@@ -8754,9 +9139,9 @@ static func _case_save_roundtrip_fingerprint() -> String:
 	if entry.is_empty():
 		_cleanup_save_slots()
 		return "the paper did not survive the round-trip (desk: %d)" % desk.size()
-	if int(entry["days_left"]) <= 0:
+	if int(entry["weeks_left"]) <= 0:
 		_cleanup_save_slots()
-		return "the paper came back with no clock (%d)" % int(entry["days_left"])
+		return "the paper came back with no clock (%d)" % int(entry["weeks_left"])
 	# The VIEW is rebuilt from the catalogue, in the live locale, from an id and a frozen
 	# context. Nothing about the card's words was in the save file, and that is the property
 	# under test: a title that resolves proves the rebuild, and a title that is still its own
@@ -8898,9 +9283,9 @@ static func _case_hr_experience_accrues() -> String:
 	if emp.experience_threshold <= 0:
 		return "a fresh employee has no experience threshold — the bar would divide by zero"
 	_sim_day()
-	if emp.experience_raw < HRConstants.EXPERIENCE_PER_WORKED_DAY:
-		return "after one day experience is %d, want at least %d" % [
-			emp.experience_raw, HRConstants.EXPERIENCE_PER_WORKED_DAY]
+	var week_gain: int = int(TimeModel.per_tick(HRConstants.EXPERIENCE_PER_WORKED_DAY))
+	if emp.experience_raw < week_gain:
+		return "after one tick experience is %d, want at least %d" % [emp.experience_raw, week_gain]
 	# BOŞTAKİ kişi öğrenmez — §4'ün "boşta durur ve maaş yer" cümlesinin ikinci yarısı.
 	var idle: Character = _make_employee("char_xp_idle", "XP Idle", HRConstants.ROLE_DEVELOPER)
 	CharacterRegistry.clear_jobs(idle.id)
@@ -9001,12 +9386,12 @@ static func _case_hr_training_completion() -> String:
 	var before: int = int(emp.role_stats[area_key])
 	if not HRSystem.send_to_training(emp.id, area_key):
 		return "send_to_training refused an eligible employee"
-	for i in HRConstants.TRAINING_DAYS:
+	for i in TimeModel.ticks(HRConstants.TRAINING_WEEKS):
 		if emp.status != HRConstants.STATUS_TRAINING:
-			return "left training early on day %d" % i
+			return "left training early on tick %d" % i
 		_sim_day()
 	if emp.status != HRConstants.STATUS_ACTIVE:
-		return "after %d days status is '%s', want active" % [HRConstants.TRAINING_DAYS, emp.status]
+		return "after %d ticks status is '%s', want active" % [TimeModel.ticks(HRConstants.TRAINING_WEEKS), emp.status]
 	var after: int = int(emp.role_stats[area_key])
 	if after != before + 1:
 		return "%s %d -> %d, want +1" % [area_key, before, after]
@@ -9054,7 +9439,7 @@ static func _case_hr_expertise_cap_respected() -> String:
 	var area2: String = HRConstants.role_key_area(HRConstants.ROLE_DEVELOPER)
 	if not HRSystem.send_to_training(emp2.id, area2):
 		return "an employee one below the ceiling was refused"
-	for _i in HRConstants.TRAINING_DAYS:
+	for _i in TimeModel.ticks(HRConstants.TRAINING_WEEKS):
 		_sim_day()
 	var final_value: int = int(emp2.role_stats[area2])
 	if final_value != HRConstants.AREA_MAX:
@@ -9198,19 +9583,19 @@ static func _case_loc_csv_integrity() -> String:
 
 ## Fmt actually flips. Replaces the byte-pins that asserted the Turkish-only forms and
 ## could not have noticed English rendering Turkish. Asserts the SHAPES that differ:
-## thousands separator, decimal mark, percent side, date field ORDER, and the uppercase
+## thousands separator, decimal mark, percent side, the date line's words, and the uppercase
 ## rule (the English branch exists because tr_upper was mangling Display→DİSPLAY).
 static func _case_loc_format_locale_flip() -> String:
 	var loc0: String = TranslationServer.get_locale()
-	var d := {"weekday": 3, "day": 9, "month": 9, "year": 2026}
+	var d := {"week": 37, "month": 9, "year": 2026}
 	var want := {
 		"tr": {
 			"money_exact": "$1.234.567", "money": "$3,5K", "pct": "%12,5",
-			"date": "Çar, 9 Eyl 2026", "upper": "İYİ", "month": "Eylül",
+			"date": "Hafta 37 · Eylül 2026", "upper": "İYİ", "month": "Eylül",
 		},
 		"en": {
 			"money_exact": "$1,234,567", "money": "$3.5K", "pct": "12.5%",
-			"date": "Wed, Sep 9, 2026", "upper": "IYI", "month": "September",
+			"date": "Week 37 · September 2026", "upper": "IYI", "month": "September",
 		},
 	}
 	for loc in ["tr", "en"]:
@@ -9653,7 +10038,7 @@ static func _case_founder_trains_and_learns() -> String:
 	for c in HRSystem.assigned_to(area_key):
 		if c.id == founder.id:
 			return "a founder in training still counts on the roster of '%s'" % area_key
-	for _i in HRConstants.TRAINING_DAYS:
+	for _i in TimeModel.ticks(HRConstants.TRAINING_WEEKS):
 		_sim_day()
 	if int(founder.role_stats.get(area_key, 0)) != value_before + 1:
 		return "'%s' went %d -> %d, want +1" % [
@@ -9686,10 +10071,10 @@ static func _case_leadership_is_trainable() -> String:
 	var before: int = lead_value
 	if not HRSystem.send_to_training(emp.id, HRConstants.SKILL_LEADERSHIP):
 		return "send_to_training refused Liderlik"
-	if emp.training_days_left != HRConstants.TRAINING_DAYS:
-		return "training runs %d days, want the flat %d (11c: 'iki hafta' on every row)" % [
-			emp.training_days_left, HRConstants.TRAINING_DAYS]
-	for _i in HRConstants.TRAINING_DAYS:
+	if emp.training_weeks_left != TimeModel.ticks(HRConstants.TRAINING_WEEKS):
+		return "training runs %d weeks, want the flat %d (11c: 'iki hafta' on every row)" % [
+			emp.training_weeks_left, HRConstants.TRAINING_WEEKS]
+	for _i in TimeModel.ticks(HRConstants.TRAINING_WEEKS):
 		_sim_day()
 	if int(emp.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0)) != before + 1:
 		return "Liderlik went %d -> %d, want +1" % [
@@ -9738,8 +10123,8 @@ static func _case_hr_read_catalogue() -> String:
 		return "a freshly hired employee read as idle — §12.2 seats them on a job"
 	if HRSystem.job_count(emp) != 1:
 		return "hr.job_count is %d, want 1" % HRSystem.job_count(emp)
-	if HRSystem.tenure_days(emp) < 0:
-		return "hr.tenure_days went negative"
+	if HRSystem.tenure_weeks(emp) < 0:
+		return "hr.tenure_weeks went negative"
 	if HRSystem.assigned_to_job(HRConstants.JOB_BUILD).is_empty():
 		return "hr.assigned_to(iş) found nobody on Build"
 	if not (HRSystem.unstaffed_jobs() is Array):
@@ -9924,10 +10309,12 @@ static func _case_effective_skill_formula() -> String:
 	var daily: float = HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING)
 	if absf(daily - per_hour) > 0.001:
 		return "the standard day is not neutral (%.3f vs %.3f)" % [daily, per_hour]
-	# ONBİR SAAT: §8.1'in kendi cümlesi, "en fazla +%37,5 çıktı".
+	# EN UZUN GÜN: sekizin üstündeki saatler yarım verimle, on altı saat +%50 çıktı. On altı saat
+	# ancak 08:00 başlangıcına sığar; gün en geç 00:00'da biter.
+	WorkHoursSystem.set_company_start_hour(TimeModel.WEEK_START_HOUR)
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
-	if absf(HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING) - per_hour * 1.375) > 0.001:
-		return "an eleven-hour day did not raise the daily contribution by 37.5%"
+	if absf(HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING) - per_hour * 1.5) > 0.001:
+		return "the longest day did not raise the daily contribution by 50%"
 	# BEŞ SAAT: §8.3'ün kendi cümlesi, "sekiz saatlik günün %62,5'i".
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MIN)
 	if absf(HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING) - per_hour * 0.625) > 0.001:
@@ -9967,9 +10354,9 @@ static func _case_promotion_and_raise_gate() -> String:
 	# --- §9.2 ALTI AY: ikinci zam REDDEDİLİR, ve gerekçesi okunabilir ---
 	if HRActions.can_raise(emp, HRConstants.RAISE_MAX_PCT):
 		return "a second raise was allowed the same day — §9.2 wants six months"
-	if HRActions.raise_cooldown_left(emp) != HRConstants.RAISE_COOLDOWN_DAYS:
-		return "cooldown reads %d days, want %d" % [
-			HRActions.raise_cooldown_left(emp), HRConstants.RAISE_COOLDOWN_DAYS]
+	if HRActions.raise_cooldown_left(emp) != TimeModel.ticks(HRConstants.RAISE_COOLDOWN_WEEKS):
+		return "cooldown reads %d weeks, want %d" % [
+			HRActions.raise_cooldown_left(emp), HRConstants.RAISE_COOLDOWN_WEEKS]
 
 	# --- §9.3 TERFİ: tek adım, unvan değişir, maaş BANDA OTURMAZ ---
 	var level_before: int = emp.level
@@ -10009,13 +10396,14 @@ static func _case_promotion_and_raise_gate() -> String:
 		return "the locked promotion row would show no reason (§13.3)"
 
 	# --- §11.1 KIDEM TAZMİNATI BASAMAKLI VE TAVANLI ---
-	if HRConstants.severance_amount(3000, 100) != int(round(3000.0 / 3.0)):
-		return "under a year did not pay ⅓ salary: %d" % HRConstants.severance_amount(3000, 100)
-	if HRConstants.severance_amount(3000, 550) != 3000:
+	var year: int = TimeModel.ticks(TimeModel.WEEKS_PER_YEAR)
+	if HRConstants.severance_amount(3000, year - 1) != int(round(3000.0 / 3.0)):
+		return "under a year did not pay ⅓ salary: %d" % HRConstants.severance_amount(3000, year - 1)
+	if HRConstants.severance_amount(3000, year + year / 2) != 3000:
 		return "a year and a half paid %d, want exactly one salary (ara aylar yuvarlanmaz)" % \
-			HRConstants.severance_amount(3000, 550)
-	if HRConstants.severance_amount(3000, 3650) != 9000:
-		return "ten years paid %d, want the three-salary cap" % HRConstants.severance_amount(3000, 3650)
+			HRConstants.severance_amount(3000, year + year / 2)
+	if HRConstants.severance_amount(3000, 10 * year) != 9000:
+		return "ten years paid %d, want the three-salary cap" % HRConstants.severance_amount(3000, 10 * year)
 	return ""
 
 static func _case_work_hours_draft_commits() -> String:
@@ -10041,7 +10429,7 @@ static func _case_work_hours_draft_commits() -> String:
 	# 1 · TASLAK MOTORA DOKUNMAZ. Üç kapsamın üçü de düzenlenir; motor kıpırdamaz.
 	var st: Dictionary = WorkHoursSystem.draft_state()
 	st["company"] = 10
-	st["start"] = 7
+	st["start"] = 10
 	(st["groups"] as Dictionary)[group_id] = 11
 	(st["people"] as Dictionary)[dev.id] = 6
 	if GameState.company_work_hours != 8:
@@ -10074,7 +10462,7 @@ static func _case_work_hours_draft_commits() -> String:
 	WorkHoursSystem.apply_state(st)
 	if GameState.company_work_hours != 10:
 		return "apply_state did not commit the company hours (%d)" % GameState.company_work_hours
-	if WorkHoursSystem.start_hour() != 7:
+	if WorkHoursSystem.start_hour() != 10:
 		return "apply_state did not commit the start hour (%d)" % WorkHoursSystem.start_hour()
 	if WorkHoursSystem.hours_for(dev) != 11:
 		return "apply_state did not commit the group override (%d)" % WorkHoursSystem.hours_for(dev)
@@ -10093,9 +10481,9 @@ static func _case_work_hours_draft_commits() -> String:
 
 	# 6 · PENCERE TEK EVDEN. Çip ve modal aynı cümleyi çiziyor; iki hesap iki cevap demekti.
 	var win: Dictionary = WorkHoursSystem.company_window()
-	if int(win["start"]) != 7 or int(win["end"]) != 17:
-		return "company_window says %s–%s, want 07–17" % [str(win["start"]), str(win["end"])]
-	if String(win["end_text"]) != "17:00":
+	if int(win["start"]) != 10 or int(win["end"]) != 20:
+		return "company_window says %s–%s, want 10–20" % [str(win["start"]), str(win["end"])]
+	if String(win["end_text"]) != "20:00":
 		return "company_window's end text is '%s'" % String(win["end_text"])
 
 	# 7 · BAŞLANGIÇ SAATİ KAPIYI GEÇEMEZ. Rapor edilen "03:00" kusuru burada aranıyor:
@@ -10810,7 +11198,7 @@ static func _case_loc_language_switch() -> String:
 			FinanceSystem.burn_category_label("salaries"),
 			TranslationServer.translate("PROD_DEV_VERSION").format({"version": 3}),
 			Fmt.money_exact(1234567),
-			Fmt.date_line({"weekday": 3, "day": 9, "month": 9, "year": 2026}),
+			Fmt.date_line({"week": 37, "month": 9, "year": 2026}),
 		]
 	Localization.set_language("tr")
 	var tr_out: Array = samples.call()
@@ -10928,7 +11316,7 @@ static func _case_field_unlocked_for_saas_ops() -> String:
 
 
 static func _case_b2c_satisfaction_gate_experience() -> String:
-	# B2C-growth precondition (director ruling 2026-08-19): the B2C aggregate's daily +1 reads the
+	# B2C-growth precondition (director ruling 2026-08-19): the B2C aggregate's +1 a day reads the
 	# EXPERIENCE axis at the re-seated gate (40). Raw 25 → 50 ≥ 40 climbs; raw 10 → 28.6
 	# does not; a heavy backlog still erodes either way.
 	_seed_b2c()
@@ -10943,6 +11331,9 @@ static func _case_b2c_satisfaction_gate_experience() -> String:
 	# desk's two-tier damage (Ops §8.3) legitimately writes the same B2C record every day; this
 	# case isolates the QUALITY GATE, so each leg starts with no reports, no confirmed bugs and
 	# no carried damage residue.
+	# The servers too: an over-capacity product feeds the same damage (InfraSystem overage).
+	InfraSystem.set_provider("cloud")
+	InfraSystem.set_capacity(100)
 	var quiet := func() -> void:
 		GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
 		GameState.set_flag(ProductState.BUGS_CONFIRMED, 0)
@@ -10950,8 +11341,10 @@ static func _case_b2c_satisfaction_gate_experience() -> String:
 	quiet.call()
 	CustomerRegistry.set_satisfaction(ub.id, 50)
 	_sim_day()
-	if ub.satisfaction != 51:
-		return "experience 25 (axis 50) did not lift satisfaction (+%d)" % (ub.satisfaction - 50)
+	var lift: int = int(TimeModel.per_tick(1))
+	if ub.satisfaction != 50 + lift:
+		return "experience 25 (axis 50) lifted satisfaction by %d, want a week's +%d" % [
+			ub.satisfaction - 50, lift]
 	GameState.set_flag("mvp_experience", 10.0)
 	quiet.call()
 	CustomerRegistry.set_satisfaction(ub.id, 50)
@@ -11003,33 +11396,39 @@ static func _case_rival_relative_uses_template_half_sat() -> String:
 
 static func _case_soft_cap_ends_run_at_730() -> String:
 	# A run with no goal ending reaches the soft cap and ends there, as running_on_fumes,
-	# on exactly SOFT_CAP_DAY — never earlier, never silently.
+	# on exactly the SOFT_CAP_WEEK tick — never earlier, never silently.
+	var cap: int = TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK)
+	# The verdict card speaks the week before the cap; its JSON carries that week as a literal.
+	if _card_literal("world.final_stretch_verdict", "time.week") != EndingsSystem.SOFT_CAP_WEEK - 1:
+		return "final_stretch_verdict waits for week %d, the cap's eve is %d" % [
+			_card_literal("world.final_stretch_verdict", "time.week"), EndingsSystem.SOFT_CAP_WEEK - 1]
 	GameState.set_cash(500000)   # no Kepenk on the way: cash is not the subject here
-	GameState.day = EndingsSystem.SOFT_CAP_DAY - 3
+	GameState.day = cap - 3
 	for i in 6:
 		if not GameState.run_active:
 			break
 		_sim_day()
 	if _endings != ["running_on_fumes"]:
-		return "endings: %s (day %d)" % [str(_endings), GameState.day]
-	if GameState.day != EndingsSystem.SOFT_CAP_DAY:
-		return "soft cap fired on day %d, want %d" % [GameState.day, EndingsSystem.SOFT_CAP_DAY]
+		return "endings: %s (tick %d)" % [str(_endings), GameState.day]
+	if GameState.day != cap:
+		return "soft cap fired on tick %d, want %d" % [GameState.day, cap]
 	return ""
 
 
 static func _case_no_calendar_stop_before_cap() -> String:
-	# Day 180 is just a day now. A solvent run with nothing else going on is still alive at
-	# day 400 — the Day-180 fork used to end every run here.
+	# Week 26 (the old Day-180 fork) is just a week now. A solvent run with nothing else going
+	# on is still alive the week before the cap.
+	var last: int = TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK) - 1
 	GameState.set_cash(500000)
-	GameState.day = 176
-	for i in 224:
+	GameState.day = 25
+	for i in last - 25:
 		if not GameState.run_active:
 			break
 		_sim_day()
 	if not GameState.run_active or not _endings.is_empty():
-		return "run ended early: %s at day %d (the calendar wall is back)" % [str(_endings), GameState.day]
-	if GameState.day != 400:
-		return "sim drifted: day %d, want 400" % GameState.day
+		return "run ended early: %s at tick %d (the calendar wall is back)" % [str(_endings), GameState.day]
+	if GameState.day != last:
+		return "sim drifted: tick %d, want %d" % [GameState.day, last]
 	return ""
 
 
@@ -11038,14 +11437,14 @@ static func _case_soft_cap_no_defer_for_sheet() -> String:
 	# ledger names the unsigned offer instead.
 	GameState.set_cash(500000)
 	GameState.phase = 3
-	GameState.day = EndingsSystem.SOFT_CAP_DAY - 2
+	GameState.day = TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK) - 2
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
 	for i in 4:
 		if not GameState.run_active:
 			break
 		_sim_day()
 	if _endings != ["running_on_fumes"]:
-		return "a live sheet deferred the soft cap: endings %s at day %d" % [str(_endings), GameState.day]
+		return "a live sheet deferred the soft cap: endings %s at tick %d" % [str(_endings), GameState.day]
 	if int(GameState.get_run_ledger().get("unsigned_sheets", 0)) != 1:
 		return "the ledger does not name the unsigned sheet (unsigned_sheets=%s)" % str(GameState.get_run_ledger().get("unsigned_sheets"))
 	return ""
@@ -11054,7 +11453,7 @@ static func _case_soft_cap_no_defer_for_sheet() -> String:
 # REMOVED 2026-08-23 — _case_soft_cap_warning_day.
 # The mechanic it tested no longer exists: the warning was a fixed calendar day
 # (PitchConstants.SOFT_CAP_WARN_DAY) and is now sheet-relative — VCPitchSystem
-# ._tick_last_answer_warning fires once when the sole live sheet has days_left == 1, and
+# ._tick_last_answer_warning fires once when the sole live sheet has weeks_left == 1, and
 # suppresses on a pending meeting or another open/callback sheet (vc_pitch_system.gd:519-544).
 # The working tree's replacement cases (last_answer_warning, last_answer_warning_suppressed)
 # were destroyed before they were committed.
@@ -11088,7 +11487,7 @@ static func _case_soft_cap_warns_open_hunt() -> String:
 static func _case_soft_cap_paper_names_unsigned_sheet() -> String:
 	# The rewritten paper: an unsigned offer on the table is a ledger line; none → no line.
 	var with_sheet: Dictionary = {
-		"phase": 3, "day": 730, "mrr": 4000, "customers_signed": 3, "customers_active": 3,
+		"phase": 3, "day": TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK), "mrr": 4000, "customers_signed": 3, "customers_active": 3,
 		"hires": 1, "employees": 1, "product_ships": 2, "unsigned_sheets": 1,
 	}
 	var claim: String = TranslationServer.translate("END_RF_UNSIGNED_SHEET")
@@ -11105,29 +11504,30 @@ static func _case_soft_cap_paper_names_unsigned_sheet() -> String:
 	for line in (vs2.get("ledger_lines", []) as Array):
 		if String(line) == claim:
 			return "the paper named an unsigned sheet that does not exist"
-	# Two-year span phrase: a 730-day run is not "close to a year".
+	# Two-year span phrase: a soft-cap run is not "close to a year".
 	var span_two: String = TranslationServer.translate("END_SPAN_NEAR_TWO_YEARS")
 	if span_two == "" or span_two == "END_SPAN_NEAR_TWO_YEARS":
 		return "END_SPAN_NEAR_TWO_YEARS missing"
 	var head_line: String = String((vs.get("ledger_lines", []) as Array)[0])
 	if head_line.find(span_two) < 0:
-		return "730-day paper does not use the two-year span phrase: '%s'" % head_line
+		return "soft-cap paper does not use the two-year span phrase: '%s'" % head_line
 	return ""
 
 
 # --- The Series A gate: revenue bar (never shown) + a growth streak; the signal is shown ---
 
 static func _case_month_history_close_and_cap() -> String:
-	# The calendar-month ledger closes on the 1st, carries the open month's accruals
-	# (income = Σ daily revenue, expense = Σ burn + one-time costs, red_days), and keeps 12.
+	# The calendar-month ledger closes on the first tick of the next month, carries the open
+	# month's accruals (income = Σ tick revenue, expense = Σ burn + one-time costs, red_weeks),
+	# and keeps 12.
 	GameState.set_cash(100000)
-	_seed_b2b(3000)   # daily revenue 100, burn 50 (founder) → net +50/day
+	_seed_b2b(3000)   # daily revenue 100, burn 50 (founder) → net +350/tick
 	_sim_day()        # settle the bridge (MRR → GameState)
 	var closes_before: int = GameState.month_history.size()
-	for i in 40:
-		_sim_day()
+	for i in 4:
+		_sim_day()    # ticks 3..6: January closes at tick 6 (5 Feb)
 	if GameState.month_history.size() != closes_before + 1:
-		return "expected one fiscal close in 40 days, got %d" % (GameState.month_history.size() - closes_before)
+		return "expected one fiscal close by tick 6, got %d" % (GameState.month_history.size() - closes_before)
 	var e: Dictionary = GameState.month_history[GameState.month_history.size() - 1]
 	if int(e.get("income", 0)) <= 0 or int(e.get("expense", 0)) <= 0:
 		return "close carries no accruals: %s" % str(e)
@@ -11135,10 +11535,10 @@ static func _case_month_history_close_and_cap() -> String:
 		return "net != income - expense: %s" % str(e)
 	if int(e.get("mrr_close", 0)) != GameState.mrr:
 		return "mrr_close %d != live MRR %d at close" % [int(e.get("mrr_close", 0)), GameState.mrr]
-	if int(e.get("red_days", -1)) != 0:
-		return "a solvent month counted red days: %s" % str(e)
+	if int(e.get("red_weeks", -1)) != 0:
+		return "a solvent month counted red weeks: %s" % str(e)
 	for i in 20:
-		GameState.push_month_close({"start_day": 1, "end_day": 30, "mrr_close": 1, "income": 1, "expense": 1, "net": 0, "red_days": 0})
+		GameState.push_month_close({"start_day": 1, "end_day": 30, "mrr_close": 1, "income": 1, "expense": 1, "net": 0, "red_weeks": 0})
 	if GameState.month_history.size() != GameState.MONTH_HISTORY_CAP:
 		return "ring did not cap at %d (size %d)" % [GameState.MONTH_HISTORY_CAP, GameState.month_history.size()]
 	return ""
@@ -11517,7 +11917,7 @@ static func _seed_risk_account() -> Customer:
 	GameState.set_flag("mvp_stability", 5.0)
 	GameState.set_flag("mvp_live_bug_count", 30)
 	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
-	CustomerRegistry.set_churn_countdown(c.id, B2BConstants.CHURN_COUNTDOWN_DAYS)
+	CustomerRegistry.set_churn_countdown(c.id, TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
 	return c
 
 
@@ -11541,8 +11941,8 @@ static func _case_discount_cap_two_uses() -> String:
 
 
 static func _case_risk_reentry_hysteresis() -> String:
-	# Rescued on day D, still under the bar: the account stays OUT of Risk until D+21, with
-	# no countdown and no card, then re-enters the day the window closes.
+	# Rescued on tick D, still under the bar: the account stays OUT of Risk until D + the
+	# re-entry window, with no countdown and no card, then re-enters the tick the window closes.
 	var c: Customer = _seed_risk_account()
 	var day0: int = GameState.day
 	B2BSalesSystem.apply_discount(c.id, -100)   # _recover → leaves Risk, stamps the exit day
@@ -11552,20 +11952,20 @@ static func _case_risk_reentry_hysteresis() -> String:
 	EventBus.event_triggered.connect(func(id: String) -> void:
 		if id == RETAIN_ID:
 			cards[0] += 1)
-	for i in B2BConstants.RISK_REENTRY_DAYS - 1:
+	for i in TimeModel.ticks(B2BConstants.RISK_REENTRY_WEEKS) - 1:
 		CustomerRegistry.set_satisfaction(c.id, 10)   # hold it far under the bar
 		_sim_day()
 		if c.lifecycle_phase == "risk":
-			return "re-entered Risk on day %d, %d days after the rescue (window %d)" % [
-				GameState.day, GameState.day - day0, B2BConstants.RISK_REENTRY_DAYS]
-	if c.risk_streak < B2BConstants.RISK_TRIGGER_DAYS:
+			return "re-entered Risk on tick %d, %d ticks after the rescue (window %d)" % [
+				GameState.day, GameState.day - day0, B2BConstants.RISK_REENTRY_WEEKS]
+	if c.risk_streak < TimeModel.ticks(B2BConstants.RISK_TRIGGER_WEEKS):
 		return "the streak stopped counting during the window (%d)" % c.risk_streak
 	if int(cards[0]) != 0:
 		return "a retention card fired inside the window"
 	CustomerRegistry.set_satisfaction(c.id, 10)
-	_sim_day()   # D + 21
+	_sim_day()   # D + the window
 	if c.lifecycle_phase != "risk" or c.churn_countdown < 0:
-		return "did not re-enter Risk when the window closed (day %d, phase %s)" % [GameState.day, c.lifecycle_phase]
+		return "did not re-enter Risk when the window closed (tick %d, phase %s)" % [GameState.day, c.lifecycle_phase]
 	_drain_all_modals()
 	return ""
 
@@ -11584,7 +11984,7 @@ static func _case_risk_exit_stamps_day() -> String:
 	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 	CustomerRegistry.set_churn_countdown(c.id, 5)
 	GameState.day += 10
-	B2BSalesSystem.accept_promise(c.id, "ai_vec_filter", 14)   # the promise path → _recover
+	B2BSalesSystem.accept_promise(c.id, "ai_vec_filter", B2BConstants.PROMISE_DEADLINE_WEEKS)   # the promise path → _recover
 	if c.last_risk_exit_day != GameState.day:
 		return "_recover exit did not stamp (exit %d, day %d)" % [c.last_risk_exit_day, GameState.day]
 	_drain_all_modals()
@@ -11692,8 +12092,8 @@ static func _case_manual_retention_respects_cap() -> String:
 
 static func _case_profit_condition_fires() -> String:
 	# Five Artıda closes seeded, live MRR over the floor, the sixth month earned by the sim:
-	# no ending on the close day itself (slot 10 closes after slot 9 reads), the win the day
-	# after; never before the sixth close.
+	# the month closes in slot 0, so the endings scan (slot 9) of the same tick reads the sixth
+	# close and the win lands on the close tick; never before the sixth close.
 	GameState.set_cash(100000)
 	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)   # daily revenue ~833 vs burn 50 → an Artıda month
 	# THE FIFTH CLAUSE (ch. 13 §1): profitability alone is not an ending. These two cases
@@ -11717,8 +12117,8 @@ static func _case_profit_condition_fires() -> String:
 	if GameState.month_history.size() != closes0 + 1:
 		return "the win needed %d closes, want exactly one more" % (GameState.month_history.size() - closes0)
 	var close_day: int = int(GameState.month_history[GameState.month_history.size() - 1].get("end_day", 0))
-	if fired_day != close_day + 1:
-		return "win fired on day %d, want the day after the close (%d)" % [fired_day, close_day + 1]
+	if fired_day != close_day:
+		return "win fired on tick %d, want the close tick (%d)" % [fired_day, close_day]
 	# The paper names the streak (END_BS_STREAK) when the ledger carries one.
 	var vs: Dictionary = EndingsCopy.build("profitable_bootstrap", GameState.get_run_ledger(), {})
 	var claim: String = TranslationServer.translate("END_BS_STREAK").format({"n": EndingsCopy._num(EndingsSystem.PROFIT_STREAK_MONTHS)})
@@ -11756,7 +12156,7 @@ static func _case_ending_modes_by_build() -> String:
 				EndingsSystem.build_scope_override = ""
 				return "%s: %s is %s, want %s" % [scope, eid, got, want]
 	# A milestone save opened in the DEMO is a demo run: the latch does not count there, so
-	# the win can still end it and the day-730 cap still applies.
+	# the win can still end it and the week-104 cap still applies.
 	# FALSIFICATION: read the bare latch in bootstrap_milestone_taken → the demo run is stuck.
 	GameState.bootstrap_milestone_day = 100
 	EndingsSystem.build_scope_override = EndingsSystem.BUILD_EA
@@ -11769,16 +12169,16 @@ static func _case_ending_modes_by_build() -> String:
 	elif demo_taken:
 		fail = "demo: a milestone save's latch still reads as taken"
 	else:
-		GameState.day = EndingsSystem.SOFT_CAP_DAY
+		GameState.day = TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK)
 		if not EndingsSystem._check_soft_cap() or GameState.ending_id != "running_on_fumes":
-			fail = "demo: the day-730 cap did not end a milestone save's run (ending '%s')" % GameState.ending_id
+			fail = "demo: the week-104 cap did not end a milestone save's run (ending '%s')" % GameState.ending_id
 	EndingsSystem.build_scope_override = ""
 	return fail
 
 
 ## EA: the profitable bootstrap opens the milestone paper ONCE and the run goes on — no
 ## run_ended, no ending_id, run_active untouched. The latch keeps the condition shut on the
-## days after, the day-730 soft cap no longer ends the run (option a), and the soft-cap
+## ticks after, the week-104 soft cap no longer ends the run (option a), and the soft-cap
 ## telegraph's seam reads true so its cards stay silent. The demo control is
 ## profit_condition_fires: the same fixture, an ending.
 ## FALSIFICATION: drop the latch check at the top of _check_profitable_bootstrap → the
@@ -11826,29 +12226,29 @@ static func _case_bootstrap_milestone_keeps_the_run() -> String:
 			# after it would never run.
 			fail = "the latched bootstrap check still claims the daily scan"
 	if fail == "":
-		# The soft-cap telegraph opener at day >= 640 is shut by the new seam.
-		GameState.day = 650
+		# The soft-cap telegraph opener (its own time.week floor) is shut by the new seam.
+		GameState.day = TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK) - 1
 		var press: Dictionary = EvCatalog.card("world.final_stretch_press")
 		if press.is_empty():
 			fail = "world.final_stretch_press is missing from the catalogue"
 		elif EventGate.condition_met(press.get("condition", {}) as Dictionary, {}):
 			fail = "the soft-cap telegraph would still fire after the milestone"
 	if fail == "":
-		GameState.day = EndingsSystem.SOFT_CAP_DAY
+		GameState.day = TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK)
 		_sim_day()
 		if not _endings.is_empty() or not GameState.run_active:
-			fail = "day %d ended a run past its milestone: %s" % [GameState.day, str(_endings)]
+			fail = "tick %d ended a run past its milestone: %s" % [GameState.day, str(_endings)]
 	if fail == "":
-		# The run is past day 730 now, so its paper needs a span the cap never allowed.
-		# FALSIFICATION: drop the OVER_TWO_YEAR_DAYS branch → day 1100 reads "close to two years".
+		# The run is past week 104 now, so its paper needs a span the cap never allowed.
+		# FALSIFICATION: drop the OVER_TWO_YEAR_WEEKS branch → week 157 reads "close to two years".
 		var over: String = TranslationServer.translate("END_SPAN_OVER_TWO_YEARS")
 		var near: String = TranslationServer.translate("END_SPAN_NEAR_TWO_YEARS")
 		if over == "END_SPAN_OVER_TWO_YEARS" or over == near:
 			fail = "END_SPAN_OVER_TWO_YEARS does not resolve to its own line"
-		elif EndingsCopy._span_phrase(1100) != over:
-			fail = "day 1100 reads '%s'" % EndingsCopy._span_phrase(1100)
-		elif EndingsCopy._span_phrase(EndingsSystem.SOFT_CAP_DAY) != near:
-			fail = "day %d (the cap) no longer reads '%s'" % [EndingsSystem.SOFT_CAP_DAY, near]
+		elif EndingsCopy._span_phrase(157) != over:
+			fail = "week 157 reads '%s'" % EndingsCopy._span_phrase(157)
+		elif EndingsCopy._span_phrase(TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK)) != near:
+			fail = "week %d (the cap) no longer reads '%s'" % [EndingsSystem.SOFT_CAP_WEEK, near]
 	EndingsSystem.build_scope_override = ""
 	return fail
 
@@ -12031,7 +12431,7 @@ static func _case_profit_predicate_margin_scale_red() -> String:
 		return "all clauses met should read met (%s)" % str(sig)
 	# One red day inside the newest month breaks the streak.
 	var last: Dictionary = GameState.month_history[GameState.month_history.size() - 1]
-	last["red_days"] = 1
+	last["red_weeks"] = 1
 	GameState.month_history[GameState.month_history.size() - 1] = last
 	sig = EndingsSystem.profitability_signal()
 	if bool(sig.get("met", false)) or int(sig.get("streak", 9)) != 0:
@@ -12039,25 +12439,28 @@ static func _case_profit_predicate_margin_scale_red() -> String:
 	return ""
 
 
-# --- The speed ladder is 1×/2×/3× ---
+# --- The speed ladder is 1×/2×/3×/4× ---
 
 static func _case_speed_save_clamps_to_ladder() -> String:
-	# A save written under the 5-rung ladder carries last_running_speed 4; from_dict clamps it
-	# to the array's top (3) and the resume lands there — no 4x ghost in the accumulator.
-	TimeManager.from_dict({"in_game_hours": 0.0, "current_speed": 4, "last_running_speed": 4})
-	if TimeManager.last_running_speed != 3:
-		return "stored speed 4 came back as %d, want 3" % TimeManager.last_running_speed
+	# last_running_speed past the ladder's top clamps to it on load, and the resume lands there.
+	var top: int = TimeModel.SECONDS_PER_HOUR.size() - 1
+	TimeManager.from_dict({"in_game_hours": float(GameState.current_hour), "current_speed": top + 1,
+		"last_running_speed": top + 1})
+	if TimeManager.last_running_speed != top:
+		return "stored speed %d came back as %d, want %d" % [top + 1, TimeManager.last_running_speed, top]
 	TimeManager.resume_if_paused()
-	if TimeManager.current_speed != 3:
-		return "resume after a 4x save landed on %d, want 3" % TimeManager.current_speed
-	if not is_equal_approx(TimeManager.hours_per_real_second(4), 0.0):
-		return "index 4 still yields a live multiplier"
+	if TimeManager.current_speed != top:
+		return "resume after a speed-%d save landed on %d, want %d" % [top + 1, TimeManager.current_speed, top]
+	if not is_equal_approx(TimeManager.hours_per_real_second(top + 1), 0.0):
+		return "index %d yields a live multiplier" % (top + 1)
+	if is_equal_approx(TimeManager.hours_per_real_second(top), 0.0):
+		return "the top index %d yields no multiplier" % top
 	return ""
 
 
-static func _case_topbar_speed_cluster_three_rungs() -> String:
-	# The TopBar scene carries pause + three rungs and no Speed4Btn; the script's button
-	# array matches the ladder size exactly (index == speed index).
+static func _case_topbar_speed_cluster_four_rungs() -> String:
+	# The TopBar scene carries pause + four rungs; the script's button array matches the ladder
+	# (index == speed index) and the shell binds KEY_4 to the top rung.
 	var packed: PackedScene = load("res://scenes/ui/components/TopBar.tscn")
 	if packed == null:
 		return "TopBar.tscn failed to load"
@@ -12065,14 +12468,17 @@ static func _case_topbar_speed_cluster_three_rungs() -> String:
 	var names: Array = []
 	for i in state.get_node_count():
 		names.append(String(state.get_node_name(i)))
-	if names.has("Speed4Btn"):
-		return "TopBar.tscn still carries Speed4Btn"
-	for want in ["PauseBtn", "Speed1Btn", "Speed2Btn", "Speed3Btn"]:
+	for want in ["PauseBtn", "Speed1Btn", "Speed2Btn", "Speed3Btn", "Speed4Btn"]:
 		if not names.has(want):
 			return "TopBar.tscn is missing %s" % want
+	if names.has("Speed5Btn"):
+		return "TopBar.tscn carries a fifth rung"
 	var src: String = (load("res://scripts/ui/components/top_bar.gd") as GDScript).source_code
-	if src.find("Speed4Btn") >= 0:
-		return "top_bar.gd still references Speed4Btn"
+	if src.find("Speed4Btn") < 0:
+		return "top_bar.gd does not wire Speed4Btn"
+	var shell: String = (load("res://scripts/main/game_shell.gd") as GDScript).source_code
+	if not shell.contains("KEY_4, KEY_KP_4: speed_idx = 4"):
+		return "game_shell.gd does not bind KEY_4 to speed 4"
 	return ""
 
 
@@ -12110,28 +12516,14 @@ static func _case_ambient_hourly_chance_exact() -> String:
 	return ""
 
 
-static func _case_ambient_one_per_day_across_hour0() -> String:
-	# Drive 30 full engine days (hour 1..23 → 0 → advance → daily) and count the hourly cards
-	# per CALENDAR day — including across the hour-0 rollover, which is the boundary this case
-	# exists for.
-	#
-	# THE CEILING MOVED AND IS NOW DECLARED. The old engine hard-capped the hourly path at one
-	# card a day, in code, with no name. §13's budget is `MAX_INTERRUPTS_PER_DAY` and it
-	# governs every interrupt rather than one path — so the number is read from EvTuning
-	# instead of typed here, and raising it in the calibration pass will not make this case
-	# lie. What the case still pins is the thing that was actually fragile: the rollover.
-	#
-	# REPOINTED, and STRONGER for it. The subject used to
-	# be the three authored B2C hourly cards; all three were legacy flavour and are gone, and
-	# the deck that replaces them is not written. The claim is about the ENGINE's clock, not
-	# about content, so it must not wait on content: the subject is `fixture.hourly_ambient`,
-	# admitted the way the thesis case admits its own fixtures — by widening SHIPPED_SCOPES for
-	# the length of the run and narrowing it again.
-	#
-	# The fixture sits in allowed_hours [0, 0] ON PURPOSE. The three cards it replaced sat in
-	# windows of 9-18, 18-22 and 20-23, so not one of them could ever fire at hour 0 and the
-	# rollover branch named in the comment above was never actually reached. Now every fire is
-	# a rollover fire.
+## An hourly ambient card fires only in the visible hours and at most MAX_INTERRUPTS_PER_DAY a
+## tick. The ENGINE's hourly clock is the subject, so the card is `fixture.hourly_ambient`
+## (allowed_hours [10, 10], inside every workday), admitted by widening SHIPPED_SCOPES for the
+## run. The ticks are driven hour by hour, each hour its own batch, so a card admitted in a
+## visible hour shows at that hour as it does in play. The night's hours are skipped in one
+## batch nobody watches: G4 refuses a non-critical hourly card there.
+## FALSIFICATION: remove the is_night check in gate.gd _g4_window and the refusal fails.
+static func _case_ambient_hourly_never_at_night() -> String:
 	var shipped: Array = EvTuning.SHIPPED_SCOPES.duplicate()
 	EvTuning.SHIPPED_SCOPES.append("fixture")
 	EvCatalog.reload()
@@ -12142,36 +12534,34 @@ static func _case_ambient_one_per_day_across_hour0() -> String:
 	GameState.set_flag("mvp_experience", 17.5)
 	GameState.set_flag("b2c_audience", 500.0)
 	SalesSystem.add_b2c_audience(0)
-	var per_day: Dictionary = {}
-	# "Ambient" is a DECLARED tick now, not a derived one. `has_random_trigger()` used to
-	# decide at read time whether a card belonged to the hourly path — the same routing that
-	# made allowed_hours structurally dead on the daily path — so the case asked the card
-	# whether it had a dice roll. It asks which clock the card declares instead.
+	var per_tick: Dictionary = {}
+	var at_night: Array = []
 	EventBus.event_triggered.connect(func(id: String) -> void:
-		var card: Dictionary = EventGate.catalogue_card(id)
-		if String(card.get("tick", "")) == "hourly":
-			# hour 0 belongs to the NEW calendar day (GameState.day still shows yesterday)
-			var slot: int = GameState.day + (1 if GameState.current_hour == 0 else 0)
-			per_day[slot] = int(per_day.get(slot, 0)) + 1)
-	var total: int = 0
-	var at_hour_zero: int = 0
+		if String(EventGate.catalogue_card(id).get("tick", "")) != "hourly":
+			return
+		per_tick[GameState.day] = int(per_tick.get(GameState.day, 0)) + 1
+		if TimeManager.is_night():
+			at_night.append(GameState.current_hour))
 	for i in 30:
-		var before: int = per_day.get(GameState.day + 1, 0)
-		_sim_day_full()
-		if int(per_day.get(GameState.day, 0)) > before:
-			at_hour_zero += 1
-		_drain_all_modals()
+		for h in TimeModel.HOURS_PER_DAY:
+			TimeManager.advance_hours(1)
+			_drain_all_modals()
+	GameState.set_current_hour(TimeModel.WEEK_START_HOUR - 5)
+	var v: EvGate.Verdict = EvGate.propose("fixture.hourly_ambient", EvGate.Origin.TICK_HOURLY)
 	EvTuning.SHIPPED_SCOPES.assign(shipped)
 	EvCatalog.reload()
-	for d in per_day.keys():
-		total += int(per_day[d])
-		if int(per_day[d]) > EvTuning.MAX_INTERRUPTS_PER_DAY:
-			return "day %d received %d hourly cards (ceiling %d)" % [
-				d, int(per_day[d]), EvTuning.MAX_INTERRUPTS_PER_DAY]
+	var total: int = 0
+	for t in per_tick.keys():
+		total += int(per_tick[t])
+		if int(per_tick[t]) > EvTuning.MAX_INTERRUPTS_PER_DAY:
+			return "tick %d received %d hourly cards (ceiling %d)" % [
+				t, int(per_tick[t]), EvTuning.MAX_INTERRUPTS_PER_DAY]
 	if total == 0:
-		return "fixture: no hourly card fired in 30 days (pool not eligible?)"
-	if at_hour_zero == 0:
-		return "no fire was attributed across the hour-0 rollover, which is the boundary this case is for"
+		return "fixture: no hourly card fired in 30 ticks (pool not eligible?)"
+	if not at_night.is_empty():
+		return "a non-critical hourly card was shown in the night at hours %s" % str(at_night)
+	if v.admitted or v.step != "G4" or not v.reason.contains("is in the skipped night"):
+		return "a night proposal was not refused at G4 (step '%s', reason '%s')" % [v.step, v.reason]
 	return ""
 
 
@@ -12332,8 +12722,8 @@ static func _case_borderless_note_key_exists() -> String:
 			if TranslationServer.get_translation_object(loc) != null else ""
 		if txt == "" or txt == "SET_RESOLUTION_BORDERLESS":
 			return "SET_RESOLUTION_BORDERLESS does not resolve in %s" % loc
-	if TranslationServer.translate("TOPBAR_UNIT_PER_DAY") == "TOPBAR_UNIT_PER_DAY":
-		return "TOPBAR_UNIT_PER_DAY missing"
+	if TranslationServer.translate("TOPBAR_UNIT_PER_MONTH") == "TOPBAR_UNIT_PER_MONTH":
+		return "TOPBAR_UNIT_PER_MONTH missing"
 	return ""
 
 # ============================================================================
@@ -12562,7 +12952,7 @@ static func _case_vacation_action_retired() -> String:
 	_park_leave([e])
 	if e.leave_taken_year != 0:
 		return "the year latch did not start clear"
-	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_DAYS, false)
+	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_WEEKS, false)
 	if e.leave_taken_year != int(GameState.get_date_dict().year):
 		return "the automatic channel no longer stamps the year latch"
 	return ""
@@ -12608,7 +12998,7 @@ static func _case_leave_does_not_pause_build() -> String:
 	if ProductSystem.build_paused():
 		return "the build was already paused with everyone active"
 	for c in staff:
-		HRMoraleSystem.send_on_leave(c, HRConstants.LEAVE_DAYS, false)
+		HRMoraleSystem.send_on_leave(c, HRConstants.LEAVE_WEEKS, false)
 		if c.status != HRConstants.STATUS_ON_LEAVE:
 			return "send_on_leave did not park %s" % c.id
 	if founder.status != HRConstants.STATUS_ACTIVE:
@@ -12701,9 +13091,9 @@ static func _case_beta_gate_requires_full_bar() -> String:
 	ProductSystem.enter_beta()
 	if b.current_phase != "bugfix":
 		return "enter_beta refused a legal crossing"
-	# §7 — sönümün başlangıç günü BETA girişinde damgalanır.
-	if b.beta_entered_day != GameState.day:
-		return "beta entry day was not stamped (%d vs %d)" % [b.beta_entered_day, GameState.day]
+	# §7 — sönümün başlangıcı BETA girişinde, saat kesriyle damgalanır.
+	if not is_equal_approx(b.beta_entered_day, ProductSystem.clock_stamp()):
+		return "beta entry was not stamped (%.3f vs %.3f)" % [b.beta_entered_day, ProductSystem.clock_stamp()]
 	return ""
 
 
@@ -12742,33 +13132,41 @@ static func _case_beta_discovery_decays_pool_never_empties() -> String:
 	ProductSystem.enter_beta()
 
 	# --- SÖNÜM, MOTORDAN ÖLÇÜLÜYOR ---------------------------------------
-	# Aynı ekip, aynı havuz, tek fark BETA'da geçen gün. İlk gün çok bulur,
-	# ikinci hafta tek tük (§7). Havuz tükenmez olduğu için ölçüm havuz
-	# büyüklüğüne değil YALNIZ eğriye bakar.
-	b.beta_entered_day = GameState.day
+	# Aynı ekip, aynı havuz, tek fark BETA'da geçen süre. İlk hafta çok bulur,
+	# ikinci hafta az (§7). Havuz tükenmez olduğu için ölçüm havuz büyüklüğüne değil
+	# YALNIZ eğriye bakar. Saat oyunun yolundan ilerler: sönüm tikin takvim aralığını integre
+	# eder, saat kıpırdamazsa her saatlik tik aynı aralığı sayar.
+	var hpd: int = TimeModel.HOURS_PER_DAY
+	b.beta_entered_day = ProductSystem.clock_stamp()
 	b.bug_find_progress = 0.0
-	var found_day0: int = b.bugs_found
-	for h0 in 24:
-		ProductSystem.hourly_tick(h0)
-	var early: int = b.bugs_found - found_day0
+	var found_w1: int = b.bugs_found
+	TimeManager.advance_hours(hpd)
+	var early: float = float(b.bugs_found - found_w1) + b.bug_find_progress
+	# İlk hafta 6 × Σ 0,85^gün (gün 0–6) = 27,18; tik başına düz ×7 olsa 42 çıkardı. BETA'ya
+	# oturan kurucunun Test katsayıları ve kapasite çarpanı hafta boyu sabit, bölünür.
+	var mult: float = ProductSystem.tester_find_mult() * ProductSystem.tester_tempo_mult() \
+		* ProductSystem.capacity_speed_factor()
+	early /= mult
+	var d: float = ProductSystem.BETA_FIND_DECAY
+	var want_w1: float = ProductSystem.BETA_BUG_FIND_PER_DAY \
+		* (1.0 - pow(d, TimeModel.DAYS_PER_TICK)) / (1.0 - d)
+	if absf(early - want_w1) > 0.01:
+		return "the first BETA week found %.3f, want %.3f (calendar-day decay)" % [early, want_w1]
 
-	b.beta_entered_day = GameState.day - 12       # on ikinci beta günü
+	b.beta_entered_day = ProductSystem.clock_stamp() - 1.0       # ikinci beta haftası
 	b.bug_find_progress = 0.0
-	var found_day12: int = b.bugs_found
-	for h12 in 24:
-		ProductSystem.hourly_tick(h12)
-	var late: int = b.bugs_found - found_day12
+	var found_w2: int = b.bugs_found
+	TimeManager.advance_hours(hpd)
+	var late: float = (float(b.bugs_found - found_w2) + b.bug_find_progress) / mult
 
-	if early <= 0:
-		return "beta found nothing on its first day (%d)" % early
 	if late >= early:
-		return "discovery did not decay: day 1 found %d, day 13 found %d" % [early, late]
-	# 6 × 0,85^12 ≈ 0,85/gün — ilk günün altıda birinden az olmalı.
-	if float(late) > float(early) * 0.5:
-		return "decay is far too shallow: %d then %d" % [early, late]
+		return "discovery did not decay: week 1 found %.2f, week 2 found %.2f" % [early, late]
+	# 0,85^7 ≈ 0,32 — ikinci hafta ilkinin yarısından az olmalı.
+	if late > early * 0.5:
+		return "decay is far too shallow: %.2f then %.2f" % [early, late]
 
 	# HAVUZU BİLEREK BOŞALT: gizli = bug_count - (found - fixed) = 0.
-	b.beta_entered_day = GameState.day
+	b.beta_entered_day = ProductSystem.clock_stamp()
 	b.bug_find_progress = 0.0
 	b.bugs_found = b.bug_count
 	b.bugs_fixed = 0
@@ -13548,10 +13946,14 @@ static func _case_line_design_turns_and_gate() -> String:
 		return "the first design turn never completed"
 	if ProductSystem.needs_design_confirm():
 		return "the confirm dialog survived the first completed turn"
-	# Turun maliyeti EforTavanı × 0,08, ve GELİŞTİRME barından ÇALMAZ.
+	# Turun maliyeti EforTavanı × 0,08, ve GELİŞTİRME barından ÇALMAZ. Bir saatlik tik haftanın
+	# 1/24'ünü yakar, yani tur, maliyetini aştığı saatte ve en fazla bir saatlik yanmayla kapanır.
 	var want_cost: float = ProductSystem.DESIGN_TURN_COST * ceiling
-	if absf(b.design_efor_spent - want_cost) > want_cost * 0.25:
-		return "one turn burned %.2f, §5 says about %.2f" % [b.design_efor_spent, want_cost]
+	var hour_burn: float = TimeModel.per_tick(ProductSystem.build_effort_per_day(b.lead_engineer_id)) \
+		* ProductSystem.capacity_speed_factor() / float(TimeModel.HOURS_PER_DAY)
+	if b.design_efor_spent < want_cost * 0.75 or b.design_efor_spent - hour_burn > want_cost * 1.25:
+		return "one turn burned %.2f, §5 says about %.2f (an hour burns %.2f)" % [
+			b.design_efor_spent, want_cost, hour_burn]
 	if b.efor_spent > 0.0001:
 		return "design turns ate into the development bar (%.3f)" % b.efor_spent
 	if absf(b.total_efor - ceiling) > 0.001:
@@ -13789,8 +14191,8 @@ static func _case_build_bar_line_states() -> String:
 		return "BETA published a percent value of %d" % mb.percent
 	if mb.bugs_left != 2:
 		return "KALAN reads %d, want 2 (4 found − 2 fixed)" % mb.bugs_left
-	if mb.beta_day < 1:
-		return "the beta day counter reads %d" % mb.beta_day
+	if mb.beta_week < 1:
+		return "the beta week counter reads %d" % mb.beta_week
 	if String(mb.decision_tooltip).strip_edges() == "":
 		return "the ship action lost its bug tooltip in beta"
 	return ""
@@ -14440,12 +14842,12 @@ static func _case_save_v10_product_state() -> String:
 	GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
 	GameState.set_flag(ProductState.FIX_RUN_ACTIVE, true)
 	GameState.set_flag(ProductState.FIX_RUN_FIXED, 27)
-	GameState.set_flag(ProductState.VERSION_LAUNCH_DAY, maxi(1, GameState.day - 12))
+	GameState.set_flag(ProductState.VERSION_LAUNCH_DAY, maxf(1.0, ProductSystem.clock_stamp() - 2.0))
 	GameState.set_flag(ProductState.INTEREST, 62.5)
 	GameState.set_flag(ProductState.INFRA_PROVIDER, "cloud")
 	GameState.set_flag(ProductState.INFRA_UNITS, 7)
 
-	var age_before: int = ProductState.version_age_days()
+	var age_before: float = ProductState.version_age()
 	var readings_before: Dictionary = ProductState.axis_readings()
 	var usage_before: int = ProductState.usage_weight_total()
 
@@ -14485,10 +14887,10 @@ static func _case_save_v10_product_state() -> String:
 	if not ProductState.fix_run_active() or ProductState.fix_run_fixed() != 27:
 		_cleanup_save_slots()
 		return "the fix run did not survive"
-	if ProductState.version_age_days() != age_before:
+	if not is_equal_approx(ProductState.version_age(), age_before):
 		_cleanup_save_slots()
-		return "version age drifted across the reload (%d vs %d)" \
-			% [ProductState.version_age_days(), age_before]
+		return "version age drifted across the reload (%.3f vs %.3f)" \
+			% [ProductState.version_age(), age_before]
 	if absf(ProductState.interest() - 62.5) > 0.001:
 		_cleanup_save_slots()
 		return "interest came back %.2f" % ProductState.interest()
@@ -14773,8 +15175,12 @@ static func _case_research_and_build_pause_each_other() -> String:
 	if not ProductSystem.start_line_build("note_tool",
 			["line_note_tool_capture_k1"], founder.id, "Sable"):
 		return "fixture: start_line_build refused"
+	# One star in the root's area, its own requirement: a stronger founder finishes it in a week.
+	founder.role_stats[HRConstants.AREA_PRODUCT] = 2
 	if RnDSystem.start("data_model", [founder.id]) != "":
 		return "fixture: research would not start"
+	if RnDSystem.weeks_estimate("data_model", [founder.id]) <= 2.0:
+		return "fixture: the research would finish within two ticks"
 	if not ProductSystem.build_paused():
 		return "direction A: starting a research did not pause the build"
 	# Bar SEBEBİ yazar, yalnız durumu değil (§5.6.1).
@@ -14819,10 +15225,14 @@ static func _case_research_freezes_and_resumes() -> String:
 	var founder: Character = CharacterRegistry.get_founder()
 	for area in HRConstants.AREAS:
 		founder.role_stats[area] = HRConstants.AREA_MAX
+	# One star in the root's area, its own requirement: a stronger founder finishes it in a week.
+	founder.role_stats[HRConstants.AREA_PRODUCT] = 2
 	CharacterRegistry.clear_jobs(founder.id)
 
 	if RnDSystem.start("data_model", [founder.id]) != "":
 		return "fixture: research would not start"
+	if RnDSystem.weeks_estimate("data_model", [founder.id]) <= 2.0:
+		return "fixture: the research would finish within two ticks"
 	RnDSystem.daily_tick()
 	var p1: float = RnDSystem.progress_effort("data_model")
 	if p1 <= 0.0:
@@ -15460,6 +15870,28 @@ static func _case_event_i4_demoted_never_dropped() -> String:
 	if demoted == 0:
 		return "six interrupts in one day and nothing was demoted — the ceiling is %d" \
 			% EvTuning.MAX_INTERRUPTS_PER_DAY
+
+	# THE DEMOTED CARD'S CLOCK (§12.4). A two-week paper reads its last week as `expiring` and
+	# gets the last warning the tick before it expires; a one-week paper is in its last week
+	# from the start ("this week"), never reads `expiring` and expires with no warning.
+	var two_key: String = EvLatches.key_of("fixture.concurrent", {})
+	var one_key: String = EvLatches.key_of("fixture.hourly_ambient", {})
+	EvPapers.place("fixture.concurrent", {}, 2)
+	EvPapers.place("fixture.hourly_ambient", {}, 1)
+	for row in EventGate.desk_papers(8):
+		var r: Dictionary = row
+		var want_left: int = 2 if String(r["id"]) == two_key else 1
+		if int(r["weeks_left"]) != want_left or bool(r["expiring"]):
+			return "a fresh %d-week paper reads %d week(s), expiring %s" % [
+				want_left, int(r["weeks_left"]), str(r["expiring"])]
+	GameState.day += 1
+	if not EvPapers.is_expiring(two_key) or not EvPapers.needing_last_warning().has(two_key):
+		return "a two-week paper in its last week is not expiring"
+	EvEngine._step_paper_expiry()
+	if not EvQueue.holds(two_key):
+		return "the two-week paper got no last warning"
+	if EvPapers.has(one_key) or EvQueue.holds(one_key):
+		return "the one-week paper outlived its week or drew a last warning"
 	return ""
 
 
@@ -15537,7 +15969,7 @@ static func _case_event_i7_modifier_needs_seam() -> String:
 	# The other direction: a contribution with no label does not render, rather than rendering
 	# a machine key at the player.
 	var rendered: Array = EvDice.modifier_lines(
-		[{"seam": "hr.morale", "delta": 0.2}, {"seam": "hr.tenure_days", "delta": -0.1}],
+		[{"seam": "hr.morale", "delta": 0.2}, {"seam": "hr.tenure_weeks", "delta": -0.1}],
 		{"hr.morale": "morale is good"})
 	if rendered.size() != 1:
 		return "an unlabelled contribution rendered anyway (%d line(s))" % rendered.size()
@@ -15580,7 +16012,7 @@ static func _case_event_dice_is_stable() -> String:
 ## THE THESIS TEST, in the suite as well as the probe.
 ##
 ## §24 makes this the gate stage 2 may not be skipped past, and §0.2 makes it the reason the
-## engine exists: a decision on day 10 produces a visible consequence on day 90, across a
+## engine exists: a decision in week 2 produces a visible consequence in week 13, across a
 ## save/load, and the player can trace the link.
 static func _case_event_thesis_day10_to_day90() -> String:
 	var shipped: Array = EvTuning.SHIPPED_SCOPES.duplicate()
@@ -15589,10 +16021,10 @@ static func _case_event_thesis_day10_to_day90() -> String:
 	EvEngine.reset()
 	EvCatalog.reload()
 
-	GameState.day = 10
+	GameState.day = 2
 	if not EvEngine.force_fire("fixture.thesis_open"):
 		EvTuning.SHIPPED_SCOPES.assign(shipped)
-		return "the day-10 card would not fire"
+		return "the week-2 card would not fire"
 	EvEngine.resolve("fixture.thesis_open", "promise")
 	if not EvArcs.is_active("arc_fixture_thesis"):
 		EvTuning.SHIPPED_SCOPES.assign(shipped)
@@ -15606,7 +16038,7 @@ static func _case_event_thesis_day10_to_day90() -> String:
 		EvTuning.SHIPPED_SCOPES.assign(shipped)
 		return "the arc did not survive a save/load"
 
-	GameState.day = 90
+	GameState.day = 13
 	var due: Array = EvSchedule.take_due()
 	var found: bool = false
 	for e in due:
@@ -15614,17 +16046,17 @@ static func _case_event_thesis_day10_to_day90() -> String:
 			found = true
 	if not found:
 		EvTuning.SHIPPED_SCOPES.assign(shipped)
-		return "the payoff was not due on day 90"
+		return "the payoff was not due in week 13"
 
-	# The load-bearing assertion: the condition reads a choice made 80 days ago.
+	# The load-bearing assertion: the condition reads a choice made eleven weeks ago.
 	var cond: Dictionary = EvCatalog.card("fixture.thesis_payoff")["condition"]
 	if not EvCondition.eval(cond):
 		EvTuning.SHIPPED_SCOPES.assign(shipped)
-		return "the payoff's condition could not read the day-10 choice"
+		return "the payoff's condition could not read the week-2 choice"
 
 	if not EvEngine.force_fire("fixture.thesis_payoff"):
 		EvTuning.SHIPPED_SCOPES.assign(shipped)
-		return "the payoff would not fire on day 90"
+		return "the payoff would not fire in week 13"
 	EvEngine.resolve("fixture.thesis_payoff", "acknowledge")
 	var landed: bool = EvFlags.has("fixture_payoff_landed")
 	EvTuning.SHIPPED_SCOPES.assign(shipped)
@@ -15656,7 +16088,7 @@ static func _walk_gd(root: String) -> Array:
 ##
 ## `event_thesis_day10_to_day90` proves the arc, the schedule and the condition. It proves none
 ## of paper, desk, expiry clock or the presentation layer, because it drives the engine
-## directly. This one runs the same day-10 → day-90 arc through everything a player touches:
+## directly. This one runs the same week-2 → week-13 arc through everything a player touches:
 ## the view the modal is handed, the desk a deferred card lands on, and the clock it carries.
 ##
 ## ON A2'S "FORCED INTO DEMOTION" CLAUSE — an amendment written before §13.5 was implemented,
@@ -15690,10 +16122,10 @@ static func _thesis_presenter_body() -> String:
 	var on_modal := func(ev: GameEvent) -> void: shown.append(ev)
 	EventBus.modal_requested.connect(on_modal)
 
-	GameState.day = 10
+	GameState.day = 2
 	if not EventGate.request("fixture.thesis_open"):
 		EventBus.modal_requested.disconnect(on_modal)
-		return "the day-10 card was refused"
+		return "the week-2 card was refused"
 	if shown.is_empty():
 		EventBus.modal_requested.disconnect(on_modal)
 		return "the card was admitted but never reached modal_requested"
@@ -15708,9 +16140,9 @@ static func _thesis_presenter_body() -> String:
 		EventBus.modal_requested.disconnect(on_modal)
 		return "the arc did not start"
 
-	# A paper due the SAME DAY as the payoff, so the desk half is exercised on the day that
+	# A paper due the SAME TICK as the payoff, so the desk half is exercised on the tick that
 	# matters rather than on a quiet one.
-	EvSchedule.add("fixture.concurrent", 80)
+	EvSchedule.add("fixture.concurrent", 11)
 
 	# Round-trip, exactly as a real save would.
 	var json: String = JSON.stringify(EvSave.to_dict())
@@ -15752,9 +16184,9 @@ static func _thesis_presenter_body() -> String:
 				+ "day is the silent-death class §10.6 exists to prevent"
 	EvTempo.reset()
 
-	# --- DAY 90 -----------------------------------------------------------------------------
+	# --- WEEK 13 ----------------------------------------------------------------------------
 	shown.clear()
-	GameState.day = 90
+	GameState.day = 13
 	EvEngine.daily_tick()
 	# The day may raise more than one card, and §11.2 decides which owns the modal slot first.
 	# Answering the others is what a player does; what must be true is that the payoff reaches
@@ -15767,7 +16199,7 @@ static func _thesis_presenter_body() -> String:
 		if (ev as GameEvent).id == "fixture.thesis_payoff":
 			reached = true
 	if not reached:
-		return "the payoff did not reach the screen on day 90 (shown: %d card(s))" % shown.size()
+		return "the payoff did not reach the screen in week 13 (shown: %d card(s))" % shown.size()
 	if not mounted or EventGate.active_id() != "fixture.thesis_payoff":
 		return "the payoff is not the active card (%s)" % EventGate.active_id()
 
@@ -15779,8 +16211,8 @@ static func _thesis_presenter_body() -> String:
 			paper = entry
 	if paper.is_empty():
 		return "the same-day paper did not reach the desk (desk: %d)" % desk.size()
-	if int(paper["days_left"]) <= 0:
-		return "the paper landed with no clock (%d)" % int(paper["days_left"])
+	if int(paper["weeks_left"]) <= 0:
+		return "the paper landed with no clock (%d)" % int(paper["weeks_left"])
 
 	EventGate.resolve("fixture.thesis_payoff", "acknowledge")
 	if not EvFlags.has("fixture_payoff_landed"):
@@ -15840,7 +16272,7 @@ static func _case_sales_faucet_guard_b2c() -> String:
 
 
 ## §4 LEAD LIFE AND THE RETURN LOCK. An unworked lead waits a week and then drops with the
-## honest line; the company cannot be offered again for thirty days, and the return is
+## honest line; the company cannot be offered again for RETURN_LOCK_WEEKS, and the return is
 ## TRACELESS — no memory, no penalty, nothing on the account.
 ## FALSIFICATION: drop _lock_return from the expiry branch and the company comes back the
 ## next morning, which is the "havuz tükenmez" rule turning into "havuz unutmaz".
@@ -15852,11 +16284,15 @@ static func _case_sales_lead_expiry_and_return_lock() -> String:
 	if p == null:
 		return "the faucet produced no lead"
 	var name: String = p.company_name
-	if p.days_left() != SalesConstants.LEAD_LIFE_DAYS:
-		return "a fresh lead shows %d days, want %d" % [p.days_left(), SalesConstants.LEAD_LIFE_DAYS]
-	for i in SalesConstants.LEAD_LIFE_DAYS + 1:
+	# A lead lives LEAD_LIFE_WEEKS; the expiry runs after the rep desk, so the next tick's desk
+	# still sees it before it goes.
+	var life: int = TimeModel.ticks(SalesConstants.LEAD_LIFE_WEEKS)
+	if p.weeks_left() != life:
+		return "a fresh lead shows %d weeks, want %d" % [p.weeks_left(), life]
+	for i in life:
 		GameState.advance_day()
 		SalesFaucetSystem.daily_tick()
+		SalesFaucetSystem.expire_leads()
 	if ProspectRegistry.get_prospect(p.id) != null:
 		return "the lead outlived its week"
 	if not SalesFaucetSystem.is_return_locked(name):
@@ -15885,7 +16321,7 @@ static func _case_sales_lead_expiry_and_return_lock() -> String:
 		ProspectRegistry.remove(q.id)
 		SalesFaucetSystem.lock_return(q.company_name, 9999)
 	# And it lifts on time rather than forever.
-	for i in SalesConstants.RETURN_LOCK_DAYS + 1:
+	for i in TimeModel.ticks(SalesConstants.RETURN_LOCK_WEEKS) + 1:
 		GameState.advance_day()
 		SalesFaucetSystem.daily_tick()
 	if SalesFaucetSystem.is_return_locked(name):
@@ -15893,12 +16329,16 @@ static func _case_sales_lead_expiry_and_return_lock() -> String:
 	return ""
 
 
-## §5.0 THE TIME SKIP. Two hours pass and they are SIMULATED through the real hourly path
-## with the founder counted busy. Ekip §2.1 then produces the GDD's own sentence: a build with
-## a free team member FLOWS, a founder-only build PAUSES.
-## FALSIFICATION: remove the `sales_meeting_active` branch from ProductSystem._is_free and the
-## solo half fails — the founder keeps building from inside a meeting they are sitting in.
-static func _case_sales_meeting_time_skip_founder_zero() -> String:
+## §5.0 THE TIME SKIP AND THE ENTRY GATE. Closing a sitting costs MEETING_SKIP_HOURS and those
+## hours are SIMULATED through the real hourly path. The founder is not zeroed: each skipped hour
+## keeps 1 − HOURS_PER_DAY / WEEK_WORK_HOURS of the founder's output, so a meeting costs the week
+## exactly hours / WEEK_WORK_HOURS (5 % for two hours). The busy flag lives only while the sitting
+## is open and never reaches a save. Entry is shut at night and near the founder's end, four
+## meetings fill the week whatever the workday's length, and a skip never crosses midnight.
+## FALSIFICATION: drop founder_output_factor from ProductSystem's line tick and the solo ratio
+## reads 1.0; drop the midnight clamp in TimeManager.advance_hours and the late skip runs the
+## daily tick.
+static func _case_sales_meeting_time_skip_founder_share() -> String:
 	ProductLines.reload()
 	GameState.set_cash(50000)
 	GameState.set_flag("mvp_shipped", true)
@@ -15914,46 +16354,110 @@ static func _case_sales_meeting_time_skip_founder_zero() -> String:
 	var plan := ["line_erp_ledger_k1", "line_erp_stock_k1", "line_erp_invoicing_k1"]
 	if not ProductSystem.start_line_build("erp", plan, "", "Nova"):
 		return "start_line_build refused the fixture plan"
-	# INTO AN HOURLY PHASE. `ProductSystem.hourly_tick` advances effort only in
-	# iteration | development | bugfix; a fresh build sits in DESIGN, which is a daily turn,
-	# and two skipped hours would then read as "nothing happened" for both halves of this
-	# case — a false pass on the solo side and a false failure on the team side.
-	ProductSystem.get_active_build().current_phase = "development"
+	# INTO AN HOURLY PHASE: a fresh build sits in DESIGN, and the effort measured below is the
+	# development bar's.
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	b.current_phase = "development"
+	var skip: int = SalesConstants.MEETING_SKIP_HOURS
 
-	# SOLO — the founder is the only carrier, so the skipped hours produce nothing.
+	# SOLO — the founder is the only carrier: two ordinary hours, then a meeting's two hours.
 	var lead: Prospect = SalesFaucetSystem.spawn(1, "faucet")
 	if lead == null:
 		return "the faucet produced no lead to sit at"
-	var solo_before: float = ProductSystem.get_active_build().efor_spent
+	var e0: float = b.efor_spent
+	TimeManager.advance_hours(skip)
+	var plain: float = b.efor_spent - e0
+	if plain <= 0.0:
+		return "a founder-only build did not advance in ordinary hours"
 	var hour_before: int = GameState.current_hour
 	SalesMeetingSystem.open(lead.id)
+	if not HRSystem.founder_in_meeting:
+		return "the open sitting did not seat the founder"
+	var saved: String = JSON.stringify([SaveCodec.capture_game_state(),
+		SaveCodec.capture_registries(), SaveManager._capture_systems()])
+	if saved.contains("founder_in_meeting") or saved.contains("sales_meeting_active"):
+		return "the sitting's busy flag reached the save state"
+	var e1: float = b.efor_spent
 	SalesMeetingSystem.close()
-	var solo_after: float = ProductSystem.get_active_build().efor_spent
-	var skipped: int = (GameState.current_hour - hour_before + 24) % 24
-	if skipped != SalesConstants.MEETING_SKIP_HOURS:
-		return "the clock moved %d hours, want %d" % [skipped, SalesConstants.MEETING_SKIP_HOURS]
-	if solo_after > solo_before + 0.00001:
-		return "a founder-only build advanced while the founder sat at a table (%.5f -> %.5f)" \
-			% [solo_before, solo_after]
+	var met: float = b.efor_spent - e1
+	if GameState.current_hour - hour_before != skip:
+		return "the clock moved %d hours, want %d" % [GameState.current_hour - hour_before, skip]
+	var keep: float = 1.0 - float(TimeModel.HOURS_PER_DAY) / float(TimeModel.WEEK_WORK_HOURS)
+	if absf(met - plain * keep) > 0.0001:
+		return "the meeting's hours kept %.3f of the founder's output, want %.3f" % [met / plain, keep]
+	# A tick is HOURS_PER_DAY such hours, so the week lost exactly skip / WEEK_WORK_HOURS.
+	var week_loss: float = (plain - met) / (plain / float(skip) * float(TimeModel.HOURS_PER_DAY))
+	var want_share: float = float(skip) / float(TimeModel.WEEK_WORK_HOURS)
+	if absf(week_loss - want_share) > 0.0001 or not is_equal_approx(GameState.founder_meeting_share(), want_share):
+		return "one meeting cost %.4f of the week (share %.4f), want %.4f" % [
+			week_loss, GameState.founder_meeting_share(), want_share]
 
-	# TEAM — one free engineer on the build, and the same two hours flow.
+	# TEAM — one free engineer on the build, and the same two hours flow at full rate for them.
 	var eng: Character = _make_employee("char_eng_skip", "Deniz", HRConstants.ROLE_DEVELOPER)
 	eng.role_stats[HRConstants.AREA_ENGINEERING] = HRConstants.AREA_MAX
 	CharacterRegistry.assign_job(eng.id, HRConstants.JOB_BUILD)
 	var lead2: Prospect = SalesFaucetSystem.spawn(1, "faucet")
 	if lead2 == null:
 		return "the faucet produced no second lead"
-	GameState.set_flag("sales_meeting_used_day", -1)   # a fresh day's right
-	var team_before: float = ProductSystem.get_active_build().efor_spent
+	var team_before: float = b.efor_spent
 	SalesMeetingSystem.open(lead2.id)
 	SalesMeetingSystem.close()
-	var team_after: float = ProductSystem.get_active_build().efor_spent
-	if team_after <= team_before:
-		return "a team build did not advance across the skipped hours (%.5f -> %.5f)" \
-			% [team_before, team_after]
+	if b.efor_spent - team_before <= met:
+		return "a team build did not outrun the founder alone across the skipped hours"
 	# And the flag is DOWN afterwards: a founder stuck busy is worse than one never freed.
-	if bool(GameState.get_flag("sales_meeting_active", false)):
+	if HRSystem.founder_in_meeting:
 		return "the meeting flag survived the close"
+
+	# THE WEEK'S CAP on a day that ends at midnight: four meetings, then the week is full with
+	# hours still left. The next week starts at 08:00 through the real night skip.
+	WorkHoursSystem.set_company_start_hour(TimeModel.WEEK_START_HOUR)
+	WorkHoursSystem.set_company_hours(TimeModel.WORKDAY_LATEST_END - TimeModel.WEEK_START_HOUR)
+	_sim_to_morning()
+	if SalesLedger.meetings_this_week() != 0 or GameState.founder_meeting_share() != 0.0:
+		return "a new week kept last week's meetings (%d, share %.2f)" % [
+			SalesLedger.meetings_this_week(), GameState.founder_meeting_share()]
+	for i in SalesConstants.MEETINGS_PER_WEEK:
+		var table: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+		var why: String = SalesLedger.meeting_block_reason(table.id)
+		if why != "":
+			return "meeting %d of the week was refused at %02d:00: %s" % [i + 1, GameState.current_hour, why]
+		SalesMeetingSystem.open(table.id)
+		SalesMeetingSystem.close()
+	var fifth: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	if SalesLedger.meeting_block_reason(fifth.id) != "SALES_BLOCK_WEEK_FULL":
+		return "the fifth meeting at %02d:00 reads '%s', want the week full" % [
+			GameState.current_hour, SalesLedger.meeting_block_reason(fifth.id)]
+	if not is_equal_approx(GameState.founder_meeting_share(),
+			float(SalesConstants.MEETINGS_PER_WEEK * skip) / float(TimeModel.WEEK_WORK_HOURS)):
+		return "four meetings cost %.3f of the week" % GameState.founder_meeting_share()
+
+	# A DAY ENDING AT 24:00 counts as 23:00 for a sitting: the last entry runs its full hours and
+	# lands at 23:00, so the rollover with its daily tick waits for the night skip.
+	GameState.sales_meetings_week.clear()
+	var last_entry: int = TimeModel.HOURS_PER_DAY - 1 - SalesConstants.MEETING_ENTRY_CUTOFF_HOURS
+	GameState.set_current_hour(last_entry + 1)
+	TimeManager.sync_to_current_hour()
+	if SalesLedger.meeting_block_reason(fifth.id) != "SALES_BLOCK_TOO_LATE":
+		return "an entry at %02d:00 would run past 23:00 on a day ending at midnight: '%s'" % [
+			GameState.current_hour, SalesLedger.meeting_block_reason(fifth.id)]
+	GameState.set_current_hour(last_entry)
+	TimeManager.sync_to_current_hour()
+	var day0: int = GameState.day
+	if SalesLedger.meeting_block_reason(fifth.id) != "":
+		return "entry at %02d:00 refused on a day that ends at midnight: %s" % [
+			GameState.current_hour, SalesLedger.meeting_block_reason(fifth.id)]
+	SalesMeetingSystem.open(fifth.id)
+	SalesMeetingSystem.close()
+	if GameState.day != day0 or GameState.current_hour != TimeModel.HOURS_PER_DAY - 1:
+		return "the late meeting did not land at 23:00 on its own tick (tick %d, %02d:00)" % [
+			GameState.day, GameState.current_hour]
+
+	# THE NIGHT is shut whatever the week's count.
+	GameState.sales_meetings_week.clear()
+	GameState.set_current_hour(TimeModel.WEEK_START_HOUR - 1)
+	TimeManager.sync_to_current_hour()
+	if SalesLedger.meeting_block_reason(fifth.id) != "SALES_BLOCK_TOO_LATE":
+		return "a night entry reads '%s', want too late" % SalesLedger.meeting_block_reason(fifth.id)
 	return ""
 
 
@@ -15988,7 +16492,7 @@ static func _case_sales_check_replays_after_load() -> String:
 		GameState.sales_line_memory[k] = memory_before[k]
 	if ProspectRegistry.get_prospect("replay_save") == null:
 		_add_prospect("replay_save", 2, "")
-	GameState.set_flag("sales_meeting_used_day", -1)
+	GameState.sales_meetings_week.clear()
 	var second: Dictionary = _play_to_skip(SalesMeetingSystem.open("replay_save"))
 	var outcome_b: String = String(second.get("outcome", ""))
 	var path_b: String = SalesMeetingSystem.path_id()
@@ -16120,7 +16624,6 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 	p.routing = SalesConstants.ROUTE_RESERVED
 	p.worked_by = "char_sr_1"
 	p.work_started_day = GameState.day - 2
-	p.work_due_day = GameState.day + 3
 	p.work_stance = SalesConstants.STANCE_PREMIUM
 	p.whale_condition = SalesConstants.WHALE_COND_LOCKED_TIER
 	p.is_whale = true
@@ -16134,7 +16637,7 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 	SalesLedger.record_insult("Devrilen A.Ş.")
 	SalesFaucetSystem.lock_return("Kilitli A.Ş.", 12)
 	SalesLedger.set_open_pitch_promise(c.id)
-	SalesLedger.consume_meeting_right()
+	SalesLedger.count_meeting()
 	SalesLedger.spend_inner_voice()
 	SalesProbes.remember("probe_capacity")
 
@@ -16155,8 +16658,7 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 	if rp == null:
 		return "the lead did not survive the round trip"
 	for pair in [["star", rp.star, 3], ["loss_count", rp.loss_count, 2],
-			["work_started_day", rp.work_started_day, p.work_started_day],
-			["work_due_day", rp.work_due_day, p.work_due_day]]:
+			["work_started_day", rp.work_started_day, p.work_started_day]]:
 		if int(pair[1]) != int(pair[2]):
 			return "lead.%s came back %d, want %d" % [String(pair[0]), int(pair[1]), int(pair[2])]
 	for spair in [["routing", rp.routing, SalesConstants.ROUTE_RESERVED],
@@ -16191,8 +16693,8 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 		return "the return lock did not survive"
 	if SalesLedger.open_pitch_promise() != c.id:
 		return "the open pitch promise did not survive"
-	if SalesLedger.meeting_available_today():
-		return "the spent meeting right did not survive"
+	if SalesLedger.meetings_this_week() != 1:
+		return "the week's meeting count did not survive (%d)" % SalesLedger.meetings_this_week()
 	if SalesLedger.inner_voice_left() >= SalesConstants.INNER_VOICE_BUDGET_PER_RUN:
 		return "the inner-voice budget did not survive"
 	if not GameState.sales_line_memory.has("probe_capacity"):
@@ -16227,7 +16729,7 @@ static func _case_loc_sales_derived_keys() -> String:
 	for stance in SalesConstants.STANCES:
 		wanted.append("SALES_STANCE_%s" % String(stance).to_upper())
 		wanted.append("SALES_STANCE_HINT_%s" % String(stance).to_upper())
-	for key in ["SALES_BLOCK_NO_B2B", "SALES_BLOCK_MEETING_SPENT", "SALES_BLOCK_TOO_LATE",
+	for key in ["SALES_BLOCK_NO_B2B", "SALES_BLOCK_WEEK_FULL", "SALES_BLOCK_TOO_LATE",
 			"SALES_BLOCK_NO_LEAD", "SALES_BLOCK_REASON_UNCHANGED", "SALES_BAND_ABOVE_REP",
 			"SALES_BAND_ABOVE_CAP", "SALES_WIN_CUT", "SALES_INNER_VOICE_0",
 			"SALES_INNER_VOICE_1", "SALES_INNER_VOICE_2"]:
@@ -16294,27 +16796,28 @@ static func _case_sales_presentation_rules() -> String:
 		return "a 3-star signing did not reach the ticker"
 
 	# THE WEEKLY CARD carries closes and nothing else, and a quiet week produces none.
-	GameState.set_flag("sales_weekly_closes", 0)
-	GameState.set_flag("sales_weekly_anchor_day",
-		GameState.day - SalesConstants.WEEKLY_SUMMARY_INTERVAL_DAYS - 1)
+	var interval: int = TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS)
+	SalesLedger.close_week()   # the closes above belong to an earlier window
+	GameState.set_flag("sales_weekly_anchor_day", GameState.day - interval)
 	var reported: Array = []
 	var wprobe := func(closes: int) -> void: reported.append(closes)
 	EventBus.weekly_sales_report_issued.connect(wprobe)
-	SalesRepSystem.daily_tick()
+	SalesRepSystem._tick_weekly_summary()
 	if not reported.is_empty():
 		EventBus.weekly_sales_report_issued.disconnect(wprobe)
 		return "a week with zero closes still issued a summary"
-	# With a close on the books it does report, and it reports the COUNT.
-	GameState.set_flag("sales_weekly_closes", 3)
-	GameState.set_flag("sales_weekly_anchor_day",
-		GameState.day - SalesConstants.WEEKLY_SUMMARY_INTERVAL_DAYS - 1)
-	SalesRepSystem.daily_tick()
+	# With desk closes in the window it does report, and it reports the COUNT.
+	var booked: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	for i in 3:
+		SalesLedger.record_close(booked, true)
+	GameState.set_flag("sales_weekly_anchor_day", GameState.day - interval)
+	SalesRepSystem._tick_weekly_summary()
 	EventBus.weekly_sales_report_issued.disconnect(wprobe)
 	if reported.size() != 1 or int(reported[0]) != 3:
 		return "the weekly summary did not report its closes: %s" % str(reported)
-	# And the counter resets, or the next week reports this week's work again.
-	if int(GameState.get_flag("sales_weekly_closes", -1)) != 0:
-		return "the weekly close counter did not reset"
+	# And the window resets, or the next week reports this week's work again.
+	if not (GameState.get_flag("sales_weekly_close_rows", []) as Array).is_empty():
+		return "the weekly close window did not reset"
 	if rep == null:
 		return "fixture rep vanished"
 	return ""
@@ -16642,11 +17145,11 @@ static func _case_seed_survives_series_a_sign() -> String:
 static func _case_seed_expectation_grace_then_stall() -> String:
 	GameState.seed_lead = "anchor"
 	GameState.seed_closed_day = 100
-	GameState.day = 100 + SeedConstants.EXPECT_GRACE_DAYS - 1
+	GameState.day = 100 + TimeModel.ticks(SeedConstants.EXPECT_GRACE_WEEKS) - 1
 	_seed_month_closes([10000, 10000, 10000, 10000])       # flat, but inside the grace window
 	if SeedRoundSystem.expectation_state() != SeedConstants.EXPECT_GRACE:
 		return "a flat month inside grace read as %d" % SeedRoundSystem.expectation_state()
-	GameState.day = 100 + SeedConstants.EXPECT_GRACE_DAYS + 1
+	GameState.day = 100 + TimeModel.ticks(SeedConstants.EXPECT_GRACE_WEEKS) + 1
 	if SeedRoundSystem.expectation_state() != SeedConstants.EXPECT_STALLED:
 		return "a flat quarter past grace read as %d" % SeedRoundSystem.expectation_state()
 	_seed_growth_streak(20000)                              # +15 %/month, above the 10 % bar
@@ -16833,11 +17336,15 @@ static func _case_buyout_needs_the_road_over() -> String:
 		GameState.vc_states[vc] = {"status": "rejected", "callback": {}, "pending_sheet": false}
 	if not EndingsSystem.road_over():
 		return "the road did not close once every fund was closed"
+	# The card's window is a literal in its JSON; it must be the constant's.
+	if _card_literal(BUYOUT_ID, "funding.acq_weeks_open") != EndingsSystem.ACQ_CARD_WINDOW_WEEKS:
+		return "acquisition_offer's window is %d weeks, ACQ_CARD_WINDOW_WEEKS is %d" % [
+			_card_literal(BUYOUT_ID, "funding.acq_weeks_open"), EndingsSystem.ACQ_CARD_WINDOW_WEEKS]
 	# THE MODAL SLOT HAS TO BE DRAINED. One card is active at a time, so an unresolved
 	# foreign card blocks every later one — and a case that does not drain measures the
 	# queue rather than the card it names.
 	var arrived: bool = false
-	for i in EndingsSystem.ACQ_CARD_WINDOW_DAYS + 2:
+	for i in TimeModel.ticks(EndingsSystem.ACQ_CARD_WINDOW_WEEKS) + 2:
 		_sim_day_full()
 		if _drain_to(BUYOUT_ID):
 			arrived = true
@@ -16846,8 +17353,8 @@ static func _case_buyout_needs_the_road_over() -> String:
 			break
 	if not arrived:
 		return ("the buyout card never fired inside the window "
-			+ "(road_over=%s days_open=%d lead=%s active=%s)" % [
-				str(EndingsSystem.road_over()), EndingsSystem.acq_days_open(),
+			+ "(road_over=%s weeks_open=%d lead=%s active=%s)" % [
+				str(EndingsSystem.road_over()), EndingsSystem.acq_weeks_open(),
 				GameState.seed_lead, EventGate.active_id()])
 	# It names the SEED LEAD, and its two numbers are money rather than raw integers.
 	# THE ACTIVE CONTEXT, not a bare render. render() with no context binds no scope slot,
@@ -17053,8 +17560,8 @@ static func _case_seed_sheet_round_trips() -> String:
 
 
 ## THE OFFICE LADDER: its gates, its week and its save. A fresh run sits in the flat; the
-## business block opens on Frank's cheque and its cash bar, not a dollar short; the move lands on
-## day MOVE_DAYS and not a day early; the flat is no way back; the office survives a real save
+## business block opens on Frank's cheque and its cash bar, not a dollar short; the move lands
+## MOVE_WEEKS ticks later and not a tick early; the flat is no way back; the office survives a real save
 ## file; and that file aged to v12 (no office fields) puts a run that took the cheque in the
 ## business block and leaves one that did not at home.
 static func _case_office_move_gates_and_save() -> String:
@@ -17076,13 +17583,13 @@ static func _case_office_move_gates_and_save() -> String:
 		return "move_to did not start a move"
 	if OfficeSystem.move_to("ishani"):
 		return "a second move started while the first was on the road"
-	for i in OfficeConstants.MOVE_DAYS:
+	for i in TimeModel.ticks(OfficeConstants.MOVE_WEEKS):
 		if OfficeSystem.current() != "home":
-			return "arrived after %d day(s), want %d" % [i, OfficeConstants.MOVE_DAYS]
+			return "arrived after %d tick(s), want %d" % [i, OfficeConstants.MOVE_WEEKS]
 		_sim_day()
 	if OfficeSystem.current() != "ishani" or OfficeSystem.is_moving():
-		return "after %d days the office is '%s' (moving: %s)" \
-			% [OfficeConstants.MOVE_DAYS, OfficeSystem.current(), OfficeSystem.is_moving()]
+		return "after %d ticks the office is '%s' (moving: %s)" \
+			% [OfficeConstants.MOVE_WEEKS, OfficeSystem.current(), OfficeSystem.is_moving()]
 	if OfficeSystem.can_move_to("home"):
 		return "the flat is offered as a way back"
 

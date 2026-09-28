@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-09-27.
+Last generated 2026-09-28.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -10,14 +10,14 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 131 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 135 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **131** |
+| Signals declared | **135** |
 | Declared with **no production emitter** | **2** |
 | Emitted with **no production listener** | **69** |
 
@@ -55,7 +55,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `burn_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `brand_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `reputation_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
-| `day_advanced` | `new_day: int` | game_state | 1 | 3 | main · research_bar · top_bar |
+| `day_advanced` | `new_day: int` | game_state | 1 | 2 | research_bar · top_bar |
 | `hour_changed` | `hour: int` | game_state | 1 | 1 | top_bar |
 | `phase_changed` | `new_phase: int` | game_state | 2 | 2 | finance_tab · top_bar |
 | `runway_recalculated` | `months: float` | game_state | 1 | 2 | left_tabs · top_bar |
@@ -65,7 +65,9 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 17 | 1 | time_manager |
+| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 18 | 1 | time_manager |
+| `night_skipped` | `—` | time_manager | 1 | 3 | main · office_view |
+| `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
 | `tab_changed` | `tab_id: String` | effects · main · rnd_card_modal · creation_flow · detail_view · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 22 | 2 | left_tabs · window_layer |
 | `finance_subpage_requested` | `page_id: String` | effects · main · desk_papers | 3 | 1 | finance_tab |
 
@@ -86,7 +88,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `character_removed` | `character_id: String` | character_registry | 1 | 3 | hr_dossier · left_tabs · office_people |
 | `morale_changed` | `character_id: String, new_morale: int` | character_registry | 1 | 1 | left_tabs |
 | `employee_experience_changed` | `character_id: String, new_experience: int` | character_registry | 2 | 0 | — |
-| `employee_training_changed` | `character_id: String, days_left: int` | character_registry | 3 | 2 | build_bar · research_bar |
+| `employee_training_changed` | `character_id: String, weeks_left: int` | character_registry | 3 | 2 | build_bar · research_bar |
 | `employee_promoted` | `character_id: String, new_level: int` | hr_actions | 1 | 0 | — |
 | `experience_bar_full` | `character_id: String` | character_registry | 1 | 0 | — |
 | `morale_band_changed` | `character_id: String, band_id: String` | character_registry | 1 | 0 | — |
@@ -116,7 +118,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `customer_health_changed` | `customer_id: String, phase: String` | customer_registry | 1 | 1 | left_tabs · EvSignals (card trigger) |
-| `customer_churn_countdown_changed` | `customer_id: String, days: int` | customer_registry | 1 | 0 | — |
+| `customer_churn_countdown_changed` | `customer_id: String, weeks: int` | customer_registry | 1 | 0 | — |
 | `customer_churned` | `customer_id: String` | b2b_sales_system | 1 | 1 | left_tabs · EvSignals (bindable) |
 | `customer_expanded` | `customer_id: String, new_seats: int` | b2b_sales_system | 1 | 0 | EvSignals (bindable) |
 | `customer_assigned` | `customer_id: String, employee_id: String` | customer_registry | 1 | 0 | — |
@@ -129,7 +131,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `event_triggered` | `event_id: String` | engine | 1 | 1 | left_tabs |
-| `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 2 | main · left_tabs |
+| `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 3 | save_manager · main · left_tabs |
 | `modal_requested` | `event: GameEvent` | engine | 1 | 1 | main |
 
 ### Build / product signals
@@ -220,7 +222,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · vc_pitch_system | 2 | 2 | game_state · hunt_tab |
-| `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger | 8 | 2 | time_manager · news_ticker |
+| `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger | 7 | 2 | time_manager · news_ticker |
+| `ticker_live_line` | `source: String, text: String` | summary_system | 2 | 1 | news_ticker |
 
 ### Endgame signals
 
@@ -229,8 +232,9 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `phase_gate_reached` | `next_phase: int` | phase_gate_system | 1 | 0 | EvSignals (bindable) |
 | `run_ended` | `ending_id: String, ending_data: Dictionary` | endings_system | 1 | 1 | main |
 | `milestone_reached` | `milestone_id: String, ending_data: Dictionary` | endings_system | 1 | 1 | main |
-| `shutter_changed` | `days_left: int` | game_state | 1 | 1 | top_bar |
-| `month_ended` | `summary_data: Dictionary` | month_summary_system | 3 | 1 | main |
+| `shutter_changed` | `weeks_left: int` | game_state | 1 | 1 | top_bar |
+| `month_ended` | `month_close: Dictionary` | summary_system | 1 | 2 | save_manager · top_bar |
+| `summary_ready` | `data: Dictionary` | summary_system | 3 | 1 | main |
 
 ### Cinematic dialogue shell — MeetingScene
 
@@ -246,8 +250,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `sheet_expired` | `vc_id: String` | vc_pitch_system | 1 | 0 | EvSignals (bindable) |
 | `callback_ready` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 | `meeting_day` | `vc_id: String` | vc_pitch_system | 1 | 0 | EvSignals (bindable) |
-| `offer_countdown_changed` | `days_left: int` | vc_pitch_system | 1 | 1 | top_bar |
-| `term_table_requested` | `vc_id: String, stage: String` | effects · game_shell · hunt_tab | 5 | 1 | main |
+| `offer_countdown_changed` | `weeks_left: int` | vc_pitch_system | 1 | 1 | top_bar |
+| `term_table_requested` | `vc_id: String, stage: String` | effects · game_shell · hunt_tab | 4 | 1 | main |
 | `sheet_walked` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 
 ### Seed round (GDD v2 ch. 09 §3) — the middle rung. One publisher each.

@@ -22,16 +22,16 @@ extends Control
 # ============================================================================
 
 const RUNWAY_WARN_MONTHS := 6.0   # WORKING: mentor uyarısı eşiği (ay)
-const WARN_SNOOZE_DAYS := 14      # WORKING: ERTELE süresi (oyun günü)
+const WARN_SNOOZE_WEEKS := 2      # WORKING: ERTELE süresi
 const SNOOZE_FLAG := "finance_runway_warn_snooze_until_day"
 const TX_SHOWN := 8               # WORKING: Son işlemler'de gösterilen satır sayısı
 
-# Aralık düğmeleri (bu sırayla): id -> {window: pencere gün sayısı (0 = tümü), horizon: projeksiyon günü}.
-# WORKING: horizon = pencere/3; TÜMÜ için 60.
+# Aralık düğmeleri (bu sırayla): id -> {window: pencere hafta sayısı (0 = tümü), horizon:
+# projeksiyon haftası}. WORKING: horizon ≈ pencere/3; TÜMÜ için 9.
 const RANGES := {
-	"6ay": {"label_key": "FIN_RANGE_6M", "window": 180, "horizon": 60},
-	"12ay": {"label_key": "FIN_RANGE_12M", "window": 360, "horizon": 120},
-	"tum": {"label_key": "FIN_RANGE_ALL", "window": 0, "horizon": 60},
+	"6ay": {"label_key": "FIN_RANGE_6M", "window": 26, "horizon": 9},
+	"12ay": {"label_key": "FIN_RANGE_12M", "window": 52, "horizon": 17},
+	"tum": {"label_key": "FIN_RANGE_ALL", "window": 0, "horizon": 9},
 }
 
 var _range: String = "6ay"
@@ -268,7 +268,7 @@ func _build_curve_card() -> PanelContainer:
 	_runway_note = UiFactory.make_label("", &"CaptionMuted", UiTokens.INK_MUTED)
 	_runway_note.visible = false
 	vb.add_child(_runway_note)
-	# Kârlılık bitişi her gün değerlendirilen bir KOŞUL (PROFIT_STREAK_MONTHS ardışık
+	# Kârlılık bitişi her tik değerlendirilen bir KOŞUL (PROFIT_STREAK_MONTHS ardışık
 	# artıda ay kapanışı + marj + ölçek); ilerlemesi burada okunur — en az bir artıda ay
 	# kapanmışsa görünür, marj/ölçek eksikse nedenini tek kelimeyle söyler.
 	_profit_progress = UiFactory.make_label("", &"CaptionMuted", UiTokens.INK_MUTED)
@@ -600,7 +600,7 @@ func _league_row(no: int, display: String, is_player: bool, value: String) -> HB
 
 func _refresh_curve() -> void:
 	var cfg: Dictionary = RANGES[_range]
-	var window: int = int(cfg.window)
+	var window: int = TimeModel.ticks(int(cfg.window))
 	var history: Array = GameState.get_cash_history()
 	var samples: Array = history
 	if window > 0:
@@ -608,16 +608,17 @@ func _refresh_curve() -> void:
 		samples = history.filter(func(s): return int(s.day) >= cutoff)
 	if samples.is_empty() and not history.is_empty():
 		samples = [history[history.size() - 1]]  # pencere boş kalmasın — en taze örnek
-	var horizon: int = int(cfg.horizon)
-	var current_net: int = GameState.get_net_daily_flow()
+	var horizon: int = TimeModel.ticks(int(cfg.horizon))
+	# Eğri tik ekseninde: eğimler günlük netin tik başına karşılığı.
+	var current_net: int = int(TimeModel.per_tick(GameState.get_net_daily_flow()))
 	var day_min: int = int(samples[0].day) if not samples.is_empty() else GameState.day
 	_curve.set_data({
 		"samples": samples,
 		"today_day": GameState.day,
 		"cash_now": GameState.cash,
 		"current_net": current_net,
-		"optimistic_net": FinanceSystem.get_optimistic_daily_net(),
-		"horizon_days": horizon,
+		"optimistic_net": int(TimeModel.per_tick(FinanceSystem.get_optimistic_daily_net())),
+		"horizon_weeks": horizon,
 		"ticks": _month_ticks(day_min, GameState.day + horizon),
 	})
 	# ARTIDA kuralı: kasa erimiyorken kırmızı erime projeksiyonu ne çizilir ne listelenir.
@@ -627,14 +628,17 @@ func _refresh_curve() -> void:
 
 
 func _month_ticks(day_min: int, day_max: int) -> Array:
-	# Ay başlangıçları GERÇEK takvimden (GameState.get_date_dict — 28/30/31 günlü aylar),
-	# asla ekonomi sabiti DAYS_PER_MONTH'tan değil. Etiket: Fmt.month_abbr (yerele göre).
+	# Ay başlangıçları GERÇEK takvimden: bir tik Perşembesinin ayına aittir ve ayı, ayı bir
+	# önceki tikinkinden farklı olan tik açar (GameState.get_date_dict), asla ekonomi sabiti
+	# DAYS_PER_MONTH değil. Etiket: Fmt.month_abbr (yerele göre).
 	var ticks: Array = []
-	for d in range(maxi(day_min, 1), day_max + 1):
-		var date: Dictionary = GameState.get_date_dict(d)
-		if int(date.day) == 1:
-			ticks.append({"day": d,
-					"label": Fmt.month_abbr(int(date.month))})
+	var first: int = maxi(day_min, 1)
+	var prev_month: int = int(GameState.get_date_dict(first - 1).month)
+	for d in range(first, day_max + 1):
+		var month: int = int(GameState.get_date_dict(d).month)
+		if month != prev_month:
+			ticks.append({"day": d, "label": Fmt.month_abbr(month)})
+		prev_month = month
 	return ticks
 
 
@@ -683,8 +687,9 @@ func _refresh_burn() -> void:
 		v.custom_minimum_size = Vector2(36, 0)
 		v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(v)
-		row.tooltip_text = tr("FIN_PER_DAY").format(
-			{"amount": UiTokens.format_money(int(row_data.amount))})
+		# Kalemler günlük orandır; ipucu üst barla aynı aylık hızı yazar.
+		row.tooltip_text = tr("FIN_PER_MONTH").format(
+			{"amount": UiTokens.format_money(int(row_data.amount) * TimeModel.DAYS_PER_MONTH)})
 		_burn_list.add_child(row)
 
 
@@ -700,10 +705,10 @@ func _refresh_transactions() -> void:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 12)
 		var date: Dictionary = GameState.get_date_dict(int(t.day))
-		var d := UiFactory.make_label(tr("FIN_TX_DATE").format({
-					"day": int(date.day), "month": Fmt.month_abbr(int(date.month))}),
+		var d := UiFactory.make_label(tr("FIN_TX_DATE").format({"week": int(date.week),
+					"mon": Fmt.month_abbr(int(date.month)), "year": int(date.year)}),
 				&"FeedDay", UiTokens.INK_DIM)
-		d.custom_minimum_size = Vector2(52, 0)
+		d.custom_minimum_size = Vector2(96, 0)
 		row.add_child(d)
 		var l := UiFactory.make_label(
 				FinanceSystem.one_time_label_display(String(t.label)), &"RowMeta", UiTokens.INK)
@@ -753,7 +758,7 @@ func _refresh_mentor() -> void:
 	# The shutter band is its own visibility case: once the counter runs there is no runway
 	# left to be "under" the threshold, so a months < RUNWAY_WARN_MONTHS test alone
 	# would hide the warning exactly when it matters most.
-	var shuttered: bool = GameState.shutter_days_left >= 0
+	var shuttered: bool = GameState.shutter_weeks_left >= 0
 	_mentor_card.visible = not snoozed and (shuttered or months < RUNWAY_WARN_MONTHS)
 	if not _mentor_card.visible:
 		return
@@ -765,8 +770,8 @@ func _refresh_mentor() -> void:
 
 
 func _on_snooze_pressed() -> void:
-	# Mutlak hedef gün state'e yazılır, karşılaştırma okurken yapılır. Süre dolduktan sonra
-	# eşik hâlâ aşılıyorsa kart kendiliğinden geri gelir (günlük cash_changed repaint'i
+	# Mutlak hedef tik state'e yazılır, karşılaştırma okurken yapılır. Süre dolduktan sonra
+	# eşik hâlâ aşılıyorsa kart kendiliğinden geri gelir (her tikin cash_changed repaint'i
 	# _refresh_mentor'u yeniden değerlendirir).
-	GameState.set_flag(SNOOZE_FLAG, GameState.day + WARN_SNOOZE_DAYS)
+	GameState.set_flag(SNOOZE_FLAG, GameState.day + TimeModel.ticks(WARN_SNOOZE_WEEKS))
 	_refresh_mentor()

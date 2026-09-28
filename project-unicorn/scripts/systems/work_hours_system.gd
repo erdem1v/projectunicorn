@@ -29,27 +29,46 @@ extends RefCounted
 # ============================================================================
 
 ## ZİNCİRİN TEK GÖVDESİ. İki giriş var (canlı motor durumu · taahhüt edilmemiş modal
-## taslağı) ama sıra yalnız burada yürür.
-static func _resolve(company: int, group_hours: Variant, person_hours: int) -> int:
+## taslağı) ama sıra yalnız burada yürür. Süre OKUNURKEN kırpılır: başlangıç ve süre ayrı
+## saklandığı için 11 başlangıç ile 16 saat 27 ederdi; mesai en geç 00:00'da biter.
+static func _resolve(company: int, group_hours: Variant, person_hours: int, start: int) -> int:
+	var h: int = company
 	if person_hours > 0:
-		return _clamp_hours(person_hours)
-	if group_hours != null:
-		return _clamp_hours(int(group_hours))
-	return _clamp_hours(company)
+		h = person_hours
+	elif group_hours != null:
+		h = int(group_hours)
+	return mini(_clamp_hours(h), max_hours(start))
+
+
+## The longest workday a start hour allows: the day ends at 00:00 at the latest.
+static func max_hours(start: int) -> int:
+	return mini(HRConstants.WORK_HOURS_MAX, TimeModel.WORKDAY_LATEST_END - start)
+
+
+## A draft group row's hours: the group's own value, else the company's, capped like a person's.
+static func group_hours_in(st: Dictionary, group_id: String) -> int:
+	return _resolve(int(st.get("company", GameState.company_work_hours)),
+		(st.get("groups", {}) as Dictionary).get(group_id), 0, int(st.get("start", start_hour())))
+
+
+## The one entry gate of every founder sitting (sales, VC and seed pitch, term sheet table): not
+## at night, and the sitting fits before the founder's workday ends. A 24:00 end counts as 23:00,
+## as in TimeManager.advance_hours: a sitting never runs into the rollover.
+static func sitting_open(hours: int) -> bool:
+	return not TimeManager.is_night() and GameState.current_hour \
+		<= mini(end_hour_for(CharacterRegistry.get_founder()), TimeModel.HOURS_PER_DAY - 1) - hours
 
 
 ## Kişinin BUGÜN devraldığı günlük saat — CANLI giriş.
 static func hours_for(c: Character) -> int:
-	if c == null:
-		return GameState.company_work_hours
 	# §2: kurucu şirket çalışma saatini devralır ve İSTİSNA ALAMAZ. Morali olmadığı için
 	# kişisel bir istisna hiçbir şey ifade etmez. Çalışma saatleri modalinde de görünmez (§8.5).
-	if c.category == "founder":
-		return _clamp_hours(GameState.company_work_hours)
+	if c == null or c.category == "founder":
+		return _resolve(GameState.company_work_hours, null, 0, start_hour())
 	var group_id: String = group_of(c)
 	return _resolve(GameState.company_work_hours,
 		GameState.group_work_hours_override.get(group_id) if group_id != "" else null,
-		c.work_hours_override)
+		c.work_hours_override, start_hour())
 
 
 ## Bir satırın değeri DEVRALINMIŞ mı yoksa KARAR mı — §8.5'in devir dili buradan okunur:
@@ -82,19 +101,34 @@ static func start_hour() -> int:
 	return clampi(GameState.company_start_hour, HRConstants.START_HOUR_MIN, HRConstants.START_HOUR_MAX)
 
 
-## Bitiş = başlangıç + kişinin devraldığı süre (§8.1). Bugünkü tavanlarla 24'ü geçemez;
-## modulo bir sonraki kalibrasyona karşı sigortadır.
+## Bitiş = başlangıç + kişinin devraldığı süre (§8.1); en geç 24, yani 00:00.
 static func end_hour_for(c: Character) -> int:
-	return (start_hour() + hours_for(c)) % 24
+	return start_hour() + hours_for(c)
 
 
 ## ŞİRKET PENCERESİ — tek ev (§15.2): kadro başlığındaki çip ve modalin Şirket satırı
-## buradan okur. `hours`/`start` verilirse TAAHHÜT EDİLMEMİŞ bir taslak çizilir.
+## buradan okur. `hours`/`start` verilirse TAAHHÜT EDİLMEMİŞ bir taslak çizilir. Bitiş 24
+## olabilir; metni "00:00" yazar.
 static func company_window(hours: int = -1, start: int = -1) -> Dictionary:
 	var s: int = clampi(start, HRConstants.START_HOUR_MIN, HRConstants.START_HOUR_MAX) \
 		if start >= 0 else start_hour()
-	var e: int = (s + _clamp_hours(hours if hours >= 0 else GameState.company_work_hours)) % 24
-	return {"start": s, "end": e, "start_text": "%02d:00" % s, "end_text": "%02d:00" % e}
+	var e: int = s + _resolve(hours if hours >= 0 else GameState.company_work_hours, null, 0, s)
+	return {"start": s, "end": e, "start_text": "%02d:00" % s, "end_text": "%02d:00" % (e % 24)}
+
+
+## Ofiste sayılan kişi: ofis görünümü ve gece atlaması aynı kuralı okur.
+static func in_office(c: Character) -> bool:
+	return c.status == HRConstants.STATUS_ACTIVE
+
+
+## Ofisin son çıkış saati: gece atlamasının tek girdisi, görünümden bağımsız. Şirket penceresinin
+## bitişi (kurucu) tabandır; ofisteki her çalışanın bitişi onu uzatabilir.
+static func workday_end() -> int:
+	var end: int = end_hour_for(CharacterRegistry.get_founder())
+	for c in CharacterRegistry.get_employees():
+		if in_office(c):
+			end = maxi(end, end_hour_for(c))
+	return end
 
 
 static func _clamp_hours(hours: int) -> int:
@@ -150,14 +184,15 @@ static func draft_state() -> Dictionary:
 
 static func hours_in(st: Dictionary, c: Character) -> int:
 	var company: int = int(st.get("company", GameState.company_work_hours))
+	var start: int = int(st.get("start", start_hour()))
 	if c == null or c.category == "founder":
-		return _clamp_hours(company)
+		return _resolve(company, null, 0, start)
 	var group_id: String = group_of(c)
 	var groups: Dictionary = st.get("groups", {}) as Dictionary
 	var people: Dictionary = st.get("people", {}) as Dictionary
 	return _resolve(company,
 		groups.get(group_id) if group_id != "" else null,
-		int(people.get(c.id, 0)))
+		int(people.get(c.id, 0)), start)
 
 
 static func person_has_override_in(st: Dictionary, c: Character) -> bool:

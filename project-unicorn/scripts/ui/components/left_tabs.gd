@@ -9,7 +9,7 @@ extends Panel
 # the wrong tab. Sources:
 #   hr       HRSystem.attention_count() (thresholds live in HRConstants)
 #   sales    B2BSalesSystem.attention_count() (accounts in the RİSK phase)
-#   finance  1 when runway < 3 months
+#   finance  1 when runway is under FinanceSystem's first runway alert threshold
 #   events   EventGate.queue_size()
 #   rnd      RnDSystem.attention_count() (frozen research + unread report)
 
@@ -129,8 +129,10 @@ func _refresh_hr_badge() -> void:
 
 
 func _refresh_finance_badge() -> void:
-	# INF (kârlı) `< 3.0`'ı geçemez → rozet yok; kârlılık asla uyarı değildir.
-	_set_badge_count("finance", 1 if GameState.get_runway_months() < 3.0 else 0)
+	# INF (kârlı) eşiği geçemez → rozet yok; kârlılık asla uyarı değildir. Eşik, şeritteki
+	# runway satırıyla paylaşılır.
+	_set_badge_count("finance",
+		1 if GameState.get_runway_months() < FinanceSystem.RUNWAY_ALERT_MONTHS[0] else 0)
 
 
 func _refresh_events_badge() -> void:

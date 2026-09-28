@@ -18,7 +18,8 @@ extends RefCounted
 # moment of display, which is what makes a mid-run language switch safe.
 
 static var _KEY_RE: RegEx = _compile("^[A-Z][A-Z0-9_]{2,}$")
-static var _SEAM_RE: RegEx = _compile(r"\{seam:([a-z_]+\.[a-z_]+)\}")
+## Lint parses card text with it too, so a token lint passes is one this resolves.
+static var SEAM_RE: RegEx = _compile(r"\{seam:([a-z_]+\.[a-z_]+)\}")
 
 
 static func _compile(pattern: String) -> RegEx:
@@ -107,21 +108,22 @@ static func _subject_character(context: Dictionary) -> String:
 # --- The desk --------------------------------------------------------------
 
 ## What the desk lists, most urgent first. The model is uncapped (§11.4); `visible_slots` caps
-## the rows, and EvPapers.ordered() keeps urgent papers inside the cap. `id` is the paper's key,
-## which is what open_paper takes; `category` is the card's id, which the surface puts in words.
+## the rows, and EvPapers.ordered() keeps the papers with the fewest weeks left inside the cap.
+## `id` is the paper's key, which is what open_paper takes; `category` is the card's category,
+## which the surface puts in words. `weeks_left` 1 reads "this week", and `expiring`
+## (EvPapers.is_expiring) is the row's one highlight.
 static func desk_papers(visible_slots: int) -> Array:
 	var out: Array = []
 	for key in EvPapers.visible(visible_slots):
 		var card: Dictionary = EvCatalog.card(EvPapers.event_id_of(key))
-		var left: int = EvPapers.days_left(key)
 		out.append({
 			"id": key,
 			"title": resolve_text(text_block(card).get("title", ""), EvPapers.context_of(key)),
 			"category": String(card.get("category", "")),
-			"days_left": left,
-			# §11.4: remaining time is on the paper, emphasised in the last days — the only
+			"weeks_left": EvPapers.weeks_left(key),
+			# §11.4: remaining time is on the paper, emphasised in its last week — the only
 			# warning a deferred decision gets.
-			"urgent": left <= EvTuning.EXPIRY_URGENT_DAYS,
+			"expiring": EvPapers.is_expiring(key),
 			"target": "event:%s" % key,
 		})
 	return out
@@ -179,7 +181,7 @@ static func _interpolate(text: String, context: Dictionary) -> String:
 
 	# Seams first, so a seam that returns prose containing {customer} still gets its entity
 	# substitution below. The guard stops a seam whose value contains itself.
-	var m: RegExMatch = _SEAM_RE.search(out)
+	var m: RegExMatch = SEAM_RE.search(out)
 	var guard: int = 0
 	while m != null and guard < 16:
 		guard += 1
@@ -194,7 +196,7 @@ static func _interpolate(text: String, context: Dictionary) -> String:
 		else:
 			value = str(EvSeams.read(seam_name))
 		out = out.replace(m.get_string(0), value)
-		m = _SEAM_RE.search(out)
+		m = SEAM_RE.search(out)
 
 	for slot in context:
 		var bound: Dictionary = context[slot]

@@ -56,6 +56,8 @@ const DASH_CHARS := ["—", "–"]
 ## §17.8: a daily-tick card may not assert a clock. Deterministic beats fire at the day
 ## boundary, so "· 13:05" on one of them is a lie the player can check against the TopBar.
 static var _clock_re: RegEx = RegEx.create_from_string("[0-2]?[0-9][:.][0-5][0-9]")
+## A verb, a history form, a seam name: a value that is a name rather than prose.
+static var _identifier_re: RegEx = RegEx.create_from_string("^[a-z0-9_.]+$")
 
 static var _findings: Array = []
 static var _baseline: Dictionary = {}
@@ -102,25 +104,28 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 		_add(SEVERITY_ERROR, "17.1", where, "unknown class '%s'" % card["class"])
 	if String(card["tick"]) not in ["daily", "hourly", "scheduled", "signal", "request"]:
 		_add(SEVERITY_ERROR, "17.1", where, "unknown tick '%s'" % card["tick"])
-	if not EvTuning.CATEGORY_QUOTA_7D.has(String(card["category"])):
+	if not EvTuning.CATEGORY_QUOTA_WEEK.has(String(card["category"])):
 		_add(SEVERITY_WARN, "17.1", where,
 			"category '%s' has no quota row; it will fall to the default" % card["category"])
+	_lint_day_names(where, card)
 
 	for tree in _trees_of(card):
 		_lint_condition(where, tree as Dictionary)
 
 	# §17.7 paper ----------------------------------------------------------
 	var is_paper: bool = String(card["class"]) == "paper"
+	# Every card that can wait carries its own wait, chosen for its situation; §12.2's table by
+	# stakes is only the engine's fallback.
+	if (is_paper or String(card["class"]) == "interrupt") and not card.has("expires_weeks"):
+		_add(SEVERITY_ERROR, "17.7", where, "class: %s without expires_weeks" % card["class"])
 	# Demotable is the governor's own definition, so an exempt interrupt is never asked for a
 	# trio it can never need.
 	var demotable: bool = String(card["class"]) == "interrupt" \
 		and not EvTempo.budget_exempt(card)
 	if is_paper or demotable:
-		# §13.2 demotes interrupt → paper when the day's budget is spent and §17.7 makes a
+		# §13.2 demotes interrupt → paper when the tick's budget is spent and §17.7 makes a
 		# paper without the trio an error, so an interrupt that CAN be demoted carries it too.
 		var why: String = "class: paper" if is_paper else "a demotable interrupt (§13.2)"
-		if not card.has("expires_days"):
-			_add(SEVERITY_ERROR, "17.7", where, "%s without expires_days" % why)
 		if not card.has("on_expire"):
 			_add(SEVERITY_ERROR, "17.7", where, "%s without on_expire" % why)
 		if String(card.get("expire_note", "")) == "":
@@ -307,6 +312,17 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 		_add(SEVERITY_WARN, "17.11", where,
 			"more than four modifier_lines; §9.6 shows four and folds the rest")
 
+	# §8.4: a {seam:} token the presenter cannot read prints nothing ("inside  weeks"), so every
+	# token is parsed with the presenter's own pattern and its seam must be registered.
+	for s in _strings_in(text):
+		var found: Array = EvPresenter.SEAM_RE.search_all(String(s))
+		if found.size() != String(s).count("{seam:"):
+			_add(SEVERITY_ERROR, "17.1", where, "a {seam:} token the presenter cannot parse in '%s'" % s)
+		for m in found:
+			if not EvSeams.has((m as RegExMatch).get_string(1)):
+				_add(SEVERITY_ERROR, "17.1", where,
+					"text reads unknown seam '%s'" % (m as RegExMatch).get_string(1))
+
 	for locale in ["tr", "en"]:
 		var block: Dictionary = text[locale]
 		_lint_variant_keys(where, locale, block)
@@ -354,6 +370,7 @@ static func _lint_variant_keys(where: String, locale: String, value: Variant) ->
 
 static func _lint_arc(arc_id: String, arc: Dictionary) -> void:
 	var where: String = String(arc.get("_path", arc_id))
+	_lint_day_names(where, arc)
 	var arc_type: String = String(arc.get("type", ""))
 	if arc_type not in [EvArcs.TYPE_PROMISE, EvArcs.TYPE_CHARACTER, EvArcs.TYPE_WORLD,
 			EvArcs.TYPE_ASSIGNMENT]:
@@ -374,13 +391,13 @@ static func _lint_arc(arc_id: String, arc: Dictionary) -> void:
 				"a promise arc may not carry empty on_invalidate penalties — §10.6")
 
 	if policy == EvArcs.POLICY_REASSIGN:
-		# The 14-day timeout falls to close, and close fires a DIFFERENT card from the reassign
+		# The awaiting timeout falls to close, and close fires a DIFFERENT card from the reassign
 		# prompt. Declaring only one of them leaves the timeout with nothing to show.
 		if String(on_inv.get("reassign_event", "")) == "":
 			_add(SEVERITY_ERROR, "17.6", where, "policy reassign without a reassign_event")
 		if String(on_inv.get("close_event", "")) == "":
 			_add(SEVERITY_ERROR, "17.6", where,
-				"policy reassign without a close_event — the 14-day timeout falls to close "
+				"policy reassign without a close_event — the awaiting timeout falls to close "
 				+ "and would have nothing to fire")
 
 	var steps: Array = arc.get("steps", [])
@@ -548,6 +565,44 @@ static func _walk_scripts(dir_path: String, needle: String, hits: Array) -> void
 
 
 # --- Helpers ---------------------------------------------------------------
+
+## §17.1: durations are weeks. A day-named key has no reader left and every reader falls back to
+## its default in silence (a 0 cooldown becomes the default cooldown, a `days_since_flag` leaf
+## is unrecognised and FALSE), so it is an error wherever it sits. Identifier values count too: a
+## history form or a verb is a name as much as a key is.
+static func _lint_day_names(where: String, value: Variant) -> void:
+	match typeof(value):
+		TYPE_DICTIONARY:
+			for key in (value as Dictionary):
+				if _is_day_name(String(key)):
+					_add(SEVERITY_ERROR, "17.1", where, "day-named key '%s'; durations are weeks" % key)
+				_lint_day_names(where, (value as Dictionary)[key])
+		TYPE_ARRAY:
+			for v in (value as Array):
+				_lint_day_names(where, v)
+		TYPE_STRING:
+			if _identifier_re.search(String(value)) != null and _is_day_name(String(value)):
+				_add(SEVERITY_ERROR, "17.1", where, "day-named '%s'; durations are weeks" % value)
+
+
+static func _is_day_name(s: String) -> bool:
+	return s == "days" or s.contains("_days") or s.contains("days_since")
+
+
+## Every string under a value, depth-first.
+static func _strings_in(value: Variant) -> Array:
+	match typeof(value):
+		TYPE_STRING:
+			return [value]
+		TYPE_DICTIONARY:
+			return _strings_in((value as Dictionary).values())
+		TYPE_ARRAY:
+			var out: Array = []
+			for v in (value as Array):
+				out.append_array(_strings_in(v))
+			return out
+	return []
+
 
 static func _trees_of(card: Dictionary) -> Array:
 	var out: Array = []

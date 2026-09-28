@@ -4,13 +4,14 @@
   "category": "founder",
   "tick": "scheduled",
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": ["critical", "build_safe"],
   "arc": "arc_fixture_thesis",
   "latch": { "one_shot": true },
   "condition": {
     "all": [
       { "history": "chose", "event": "fixture.thesis_open", "option": "promise" },
-      { "days_since_flag": "fixture_promise_made", "op": ">=", "value": 80 }
+      { "weeks_since_flag": "fixture_promise_made", "op": ">=", "value": 11 }
     ]
   },
   "options": [

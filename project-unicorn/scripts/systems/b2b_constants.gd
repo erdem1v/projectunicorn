@@ -7,16 +7,16 @@ extends RefCounted
 # pass (numbers last). Pure statics; no state, no scene dependency.
 
 # ================================ Lifecycle ==================================
-const ONBOARDING_DAYS := 30             # first-impressions window after signing
-const RISK_TRIGGER_DAYS := 3            # consecutive days under tolerance → Risk phase
-# HYSTERESIS: after an account LEAVES Risk it cannot re-enter for this many days, however far
+const ONBOARDING_WEEKS := 4            # first-impressions window after signing
+const RISK_TRIGGER_WEEKS := 1           # consecutive ticks under tolerance → Risk phase
+# HYSTERESIS: after an account LEAVES Risk it cannot re-enter for this many weeks, however far
 # under its bar it drifts (the streak keeps counting; the countdown and the retention card do
-# not start). The bump a rescue buys (+8) decays back under the bar in ~3 days, so without
-# this the retention card would return every few days. Three weeks is the founder's time to
-# move the CAUSE (a sprint, a version) before the account asks again.
-const RISK_REENTRY_DAYS := 21           # [WORKING] days after leaving Risk before it can re-enter
-const CHURN_COUNTDOWN_DAYS := 7         # visible "Churn'e ~N gün" counter length
-const EXPANSION_MATURE_DAYS := 45       # active + this old → eligible for expansion
+# not start). The bump a rescue buys (+8) decays back under the bar within one tick, so without
+# this the retention card would return every week. Three weeks is the founder's time to move
+# the CAUSE (a sprint, a version) before the account asks again.
+const RISK_REENTRY_WEEKS := 3           # [WORKING] weeks after leaving Risk before it can re-enter
+const CHURN_COUNTDOWN_WEEKS := 2        # visible "Churn'e ~N hafta" counter length
+const EXPANSION_MATURE_WEEKS := 6       # active + this old → eligible for expansion
 const SAT_DRIFT_STEP := 3               # max satisfaction move per day (drift toward target)
 const ONBOARDING_AMP := 1.5             # onboarding-window swing amplifier
 
@@ -50,7 +50,7 @@ const RETAIN_DELAY_MAX_USES := 2        # "Oyala" works this many times, then th
 # VISIBLE but locked, with the reason on its sub-line (B2B_DISCOUNT_SPENT_DESC). Without a
 # ceiling a 15 % cut is a strictly dominant move.
 const RETAIN_DISCOUNT_MAX_USES := 2     # [WORKING] discounts per account, then the row locks
-const RETAIN_DELAY_DAYS := 3            # days the churn countdown is pushed out by a stall
+const RETAIN_DELAY_WEEKS := 1           # weeks the churn countdown is pushed out by a stall
 const RETAIN_DISCOUNT_PCT := 0.15       # "İndirim ver" MRR cut fraction
 const RETAIN_SAT_BUMP := 8              # satisfaction relief from a discount
 # Retention brand/reputation deltas (every option touches brand/reputation).
@@ -122,7 +122,7 @@ static func _derived(prefix: String, id: String, fallback_key: String) -> String
 
 
 # ================================= Promises ==================================
-const PROMISE_DEADLINE_DAYS := 14
+const PROMISE_DEADLINE_WEEKS := 2
 const PROMISE_KEPT_SAT := 15
 const PROMISE_BROKEN_SAT := -20         # doubled drop (returns angrier)
 const PROMISE_BROKEN_BRAND := -3
@@ -210,15 +210,15 @@ const REP_STACK_DECAY := 0.6
 const CS_ASSIGNABLE_PHASES := ["active", "risk", "expansion"]
 # Request channel. Fires for the WHOLE customer book, founder-managed accounts included, from
 # the rep's first day. Stewardship (assigned_to) is the separate, capped job.
-const CS_REQUEST_INTERVAL_DAYS := 22    # WORKING — bir hesap bu aralıkla talep açar
+const CS_REQUEST_INTERVAL_WEEKS := 3    # WORKING — bir hesap bu aralıkla talep açar
 # Faz, hesap imzalanırken bu adımla yürüyen bir sayaçtan atanır (bkz. Customer.cs_request_phase).
-# 9 ile 22 aralarında asal → sayaç tüm yuvaları dolaşır, ardışık düşmez: 0, 9, 18, 5, 14, 1, 10…
-const CS_PHASE_STRIDE := 9
-# Şirket geneli tavan: bir hesap ne kadar sık talep açarsa açsın, oyuncu 7 günde en fazla bu
+# 2 ile 3 aralarında asal → sayaç tüm yuvaları dolaşır: 0, 2, 1, 0…
+const CS_PHASE_STRIDE := 2
+# Şirket geneli tavan: bir hesap ne kadar sık talep açarsa açsın, oyuncu bir haftada en fazla bu
 # kadar CS kararıyla kesilir. WORKING. Retention/churn modalleri bu tavana DAHİL DEĞİL — onlar
 # ölen bir hesabın sonucu, rutin trafik değil (Erdem kararı).
 const CS_ESCALATION_WEEKLY_CAP := 2
-const CS_ESCALATION_WINDOW_DAYS := 7
+const CS_ESCALATION_WINDOW_WEEKS := 1
 const CS_THROUGHPUT_BASE := 0.5         # hiç katkısı olmayan bir temsilcinin bile günlük talep kapasitesi
 const CS_THROUGHPUT_PER_PACE := 0.15    # MÜŞTERİ İLİŞKİLERİ katkısının puanı başına günlük ek talep
 # Absorb-vs-escalate is the judgement valve: ceiling = CS_ABSORB_BASE + the top rep's MÜŞTERİ
@@ -226,7 +226,7 @@ const CS_THROUGHPUT_PER_PACE := 0.15    # MÜŞTERİ İLİŞKİLERİ katkısın�
 # request_difficulty). At 4 points the ceiling is 7, which absorbs an unhappy scale-3 account
 # asking for an unshipped feature (1+2+2+2); at 3 points that same request reaches the player.
 const CS_ABSORB_BASE := 3               # WORKING — rutin talepler daha çok yutulur
-const CS_ESCALATE_AFTER_DAYS := 3       # bu kadar gün karşılanmayan talep oyuncuya çıkar
+const CS_ESCALATE_AFTER_WEEKS := 1      # bu kadar hafta karşılanmayan talep oyuncuya çıkar
 
 # --- Talep türleri ---
 # Üç tür kendi gövde metnini ve kendi seçenek setini kurar; söz vermek YALNIZ `feature`'ın
@@ -238,8 +238,8 @@ const CS_REQUEST_KINDS := [CS_KIND_FEATURE, CS_KIND_COMPLAINT, CS_KIND_RENEWAL]
 
 # --- Söz dayanıklılığı (Customer.trust_offset) ---
 # Kept/broken promises shift the account's satisfaction TARGET, not just its current value.
-# Without this the -20 of PROMISE_BROKEN_SAT is erased by SAT_DRIFT_STEP (3/day) inside a
-# week and a broken word leaves no trace. The offset forgives on its own, so one mistake
+# Without this the -20 of PROMISE_BROKEN_SAT is erased by SAT_DRIFT_STEP (3/day) inside one
+# tick and a broken word leaves no trace. The offset forgives on its own, so one mistake
 # makes an account FRAGILE for a month rather than doomed forever.
 const PROMISE_KEPT_OFFSET := 6.0
 const PROMISE_PARTIAL_OFFSET := -2.0

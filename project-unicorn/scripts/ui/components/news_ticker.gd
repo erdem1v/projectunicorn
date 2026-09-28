@@ -11,16 +11,17 @@ extends Panel
 #    label has scrolled past one copy width we add the same amount
 #    back. Visual: zero gap, zero jump.
 #
-#  - LIVE LINES: EventBus.headline_added pushes a real gameplay line, which is
-#    prepended to the loop and the stream is rebuilt. This is the game's only
-#    non-modal notification channel — candidate arrival must raise a badge
+#  - LIVE LINES: EventBus.headline_added and EventBus.ticker_live_line push a real gameplay
+#    line, which is prepended to the loop and the stream is rebuilt. Only headline_added
+#    also reaches NewsFeedSystem's "Biz" archive; a ticker_live_line is shown once. This is
+#    the game's only non-modal notification channel — candidate arrival must raise a badge
 #    and a ticker line WITHOUT interrupting the player. Rebuilding resets the scroll
 #    position, so a line landing mid-scroll causes one visible jump; acceptable for a
 #    once-in-a-while beat (TODO: splice the line in without resetting the scroll).
 #
 # Akış içeriği NewsFeedSystem.get_stream()'den gelir (sektör/rakip/biz, 50/30/≤20) ve
-# gün sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10 anahtarları
-# SOĞUK-BAŞLANGIÇ yedeğidir: akış boşken (gün 1, ilk tick öncesi) ve akış kısayken
+# tik sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10 anahtarları
+# SOĞUK-BAŞLANGIÇ yedeğidir: akış boşken (hafta 1, ilk tik öncesi) ve akış kısayken
 # döngüyü doldurur. ANAHTAR ADLARI SABİT SÖZLEŞMEDİR.
 
 const SCROLL_SPEED := 50.0  # pixels per second
@@ -46,9 +47,10 @@ var _live_lines: Array[Dictionary] = []
 
 
 func _ready() -> void:
-	EventBus.headline_added.connect(_on_headline_added)
-	# Gün-sonu akış tazelemesi (post-tick sinyal — day_advanced tick'ten ÖNCE atılır,
-	# ona bağlanmak dünkü akışı okurdu; sinyalin kendi yorumuna bak).
+	EventBus.headline_added.connect(_on_live_line)
+	EventBus.ticker_live_line.connect(_on_live_line)
+	# Tik-sonu akış tazelemesi (post-tick sinyal — day_advanced tik işlenmeden ÖNCE atılır,
+	# ona bağlanmak önceki tikin akışını okurdu; sinyalin kendi yorumuna bak).
 	EventBus.news_stream_changed.connect(_rebuild)
 	# Ambient yedek tr() anahtarlarından geliyor — dil değişince yeniden kur.
 	EventBus.language_changed.connect(_on_language_changed)
@@ -56,8 +58,10 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	if EventBus.headline_added.is_connected(_on_headline_added):
-		EventBus.headline_added.disconnect(_on_headline_added)
+	if EventBus.headline_added.is_connected(_on_live_line):
+		EventBus.headline_added.disconnect(_on_live_line)
+	if EventBus.ticker_live_line.is_connected(_on_live_line):
+		EventBus.ticker_live_line.disconnect(_on_live_line)
 	if EventBus.news_stream_changed.is_connected(_rebuild):
 		EventBus.news_stream_changed.disconnect(_rebuild)
 	if EventBus.language_changed.is_connected(_on_language_changed):
@@ -68,7 +72,7 @@ func _on_language_changed(_locale: String) -> void:
 	await _rebuild()
 
 
-func _on_headline_added(source: String, text: String) -> void:
+func _on_live_line(source: String, text: String) -> void:
 	if text.strip_edges() == "":
 		return
 	_live_lines.push_front({"src": source, "txt": text})
@@ -95,7 +99,7 @@ func _build_bbcode() -> String:
 	# Canlı satırlar önde (anlık beat'ler); ardından haber akışı (en yeni STREAM_SHOWN
 	# satır). Biz-kaynaklı akış satırı zaten canlı satır olarak dönmüş olabilir —
 	# aynı cümle döngüde iki kez akmasın diye metin bazlı ayıklanır. Döngü kısa
-	# kalırsa (ilk günler) soğuk-başlangıç ambient anahtarları tamamlar.
+	# kalırsa (ilk haftalar) soğuk-başlangıç ambient anahtarları tamamlar.
 	var seen_txt: Dictionary = {}
 	for h in _live_lines:
 		parts.append(_part(h.src, h.txt))
@@ -110,7 +114,7 @@ func _build_bbcode() -> String:
 		seen_txt[String(line["txt"])] = true
 		shown += 1
 	if parts.size() < LOOP_MIN_PARTS:
-		# Dolgu, koşu tohumu + günden türeyen deterministik bir kaydırmayla başlar (ev
+		# Dolgu, koşu tohumu + tikten türeyen deterministik bir kaydırmayla başlar (ev
 		# kuralı: RNG yok, hash var) ve AMBIENT_KEYS boyunca dolanır: on anahtarın hepsi
 		# sıra alır, açılış koşudan koşuya değişir. Rozet anahtarla eşleşir (döngü sırasıyla
 		# değil), böylece bir cümle hangi pencerede çıkarsa çıksın hep aynı yayının altında akar.

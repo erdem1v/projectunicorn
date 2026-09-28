@@ -16,7 +16,7 @@ extends RefCounted
 # is `funding.hire_nudge`.
 #
 # The accept day, `angel_seed_accepted_day`, is a GameState flag, not an engine FlagStore one:
-# HRSystem's rail badge, RunProbe and the investor.angel_taken / funding.angel_days_since_accept
+# HRSystem's rail badge, RunProbe and the investor.angel_taken / funding.angel_weeks_since_accept
 # seams read it there, and moving a flag's storage silently breaks every condition that reads
 # the old place.
 

@@ -197,7 +197,7 @@ func set_lifecycle_phase(customer_id: String, phase: String) -> void:
 
 
 func set_churn_countdown(customer_id: String, value: int) -> void:
-	# -1 = inactive; N..0 drives the visible "Churn'e ~N gün" readout.
+	# -1 = inactive; N..0 drives the visible "Churn'e ~N hafta" readout.
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
 		push_warning("[CustomerRegistry] set_churn_countdown on unknown id: %s" % customer_id)
@@ -219,7 +219,7 @@ func set_tolerance(customer_id: String, value: int) -> void:
 
 
 func set_risk_streak(customer_id: String, value: int) -> void:
-	# HIDDEN bookkeeping counter (consecutive days under tolerance) — no signal.
+	# HIDDEN bookkeeping counter (consecutive ticks under tolerance) — no signal.
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
 		return
@@ -238,7 +238,7 @@ func set_trust_offset(customer_id: String, value: float) -> void:
 
 func set_support_request(customer_id: String, since_day: int) -> void:
 	# HIDDEN request-channel bookkeeping — no signal. since_day == -1 means the account has
-	# no open request; any other value is the day one opened (the escalation clock AND the
+	# no open request; any other value is the tick one opened (the escalation clock AND the
 	# once-only latch, so the latch lives in state the system owns).
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:

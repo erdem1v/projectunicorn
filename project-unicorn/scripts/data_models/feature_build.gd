@@ -45,8 +45,9 @@ extends Resource
 @export var bugs_fixed: int = 0
 @export var bug_find_progress: float = 0.0
 @export var bug_fix_progress: float = 0.0
-## ÜRÜN rev 6.1 §7 — beta keşfi güne göre azalır (6 × 0,85^gün); girişte damgalanır.
-@export var beta_entered_day: int = 0
+## ÜRÜN rev 6.1 §7 — beta keşfi takvim gününe göre azalır (6 × 0,85^gün). Girişte tik ve saat
+## kesriyle damgalanır; 0 = BETA'ya girilmedi.
+@export var beta_entered_day: float = 0.0
 
 ## ÜRÜN rev 6.1 §12 — bu sürümün aldığı kademeler. Hat durumları yalnız YAYINDA güncellenir,
 ## o yüzden §12.3 kural 4 ("iptal edilen sürümün kademeleri hiç yapılmamış sayılır")
@@ -63,9 +64,9 @@ extends Resource
 @export var manually_paused: bool = false
 
 # İterasyon döngüsü: tasarım bandı dolunca decision_pending yanar (build parkta, efor donuk);
-# her "Bir tur daha" count'u artırıp round_days'i kurar. Tur 1 = tasarım bandının kendisi.
+# her "Bir tur daha" count'u artırıp round_weeks'i kurar. Tur 1 = tasarım bandının kendisi.
 @export var iteration_count: int = 0
-@export var iteration_round_days: float = 0.0   # koşan ek turun kalan günü; 0 = tur yok
+@export var iteration_round_weeks: float = 0.0   # koşan ek turun kalan haftası; 0 = tur yok
 @export var iteration_decision_pending: bool = false
 
 

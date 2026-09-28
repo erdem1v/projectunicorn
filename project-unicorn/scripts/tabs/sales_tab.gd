@@ -197,7 +197,7 @@ func _refresh_pipeline() -> void:
 	# §3 — akış oyuncuya GÖRÜNÜR bir sayıdır. Temsilci almak bu sayıyı büyütür; işe alım
 	# kararının karşılığı budur ve bir hesap tablosunda değil burada okunur.
 	_pipeline_col.add_child(_column_head(tr("SALES_PIPELINE_HEADER"), tr("SALES_FLOW_RATE").format(
-		{"n": Fmt.number(SalesFaucetSystem.lead_rate_per_day() * SalesConstants.DAYS_PER_WEEK, 1)})))
+		{"n": Fmt.number(SalesFaucetSystem.lead_rate_per_week(), 1)})))
 
 	if leads.is_empty():
 		_pipeline_col.add_child(UiFactory.make_label(tr("SALES_PROSPECTS_EMPTY"),
@@ -231,11 +231,17 @@ func _lead_card(p: Prospect) -> Control:
 	var star_row := HBoxContainer.new()
 	star_row.add_theme_constant_override("separation", UiTokens.SPACE_S)
 	star_row.add_child(StarRating.make_stars(float(p.star), 13))
-	var days := UiFactory.make_label(tr("SALES_DAYS_LEFT").format({"n": p.days_left()}),
-		&"RowMeta", UiTokens.negative() if p.days_left() <= 2 else UiTokens.INK_DIM)
-	days.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	days.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	star_row.add_child(days)
+	# The last week is flagged only on a lead that had more than one: a one-week lead is always
+	# in its last week, and a colour that never changes says nothing. A lead on a rep's desk
+	# does not age, so it is never flagged.
+	var weeks_left: int = p.weeks_left()
+	var urgent: bool = weeks_left <= 1 and not p.is_being_worked() \
+		and p.expires_on_day - p.spawned_on_day > TimeModel.ticks(1)
+	var left := UiFactory.make_label(tr(Fmt.count_key("SALES_DAYS_LEFT", weeks_left)).format(
+		{"n": weeks_left}), &"RowMeta", UiTokens.negative() if urgent else UiTokens.INK_DIM)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	star_row.add_child(left)
 	col.add_child(star_row)
 
 	col.add_child(UiFactory.make_label(SalesArchetypes.voice_line(p.archetype_id),
@@ -252,7 +258,7 @@ func _lead_card(p: Prospect) -> Control:
 	if p.is_above_league(founder_star):
 		col.add_child(UiFactory.make_label(tr("SALES_ABOVE_LEAGUE"), &"RowMeta", UiTokens.INK_MUTED))
 
-	# §7.2 — işlenen lead kimin masasında ve kaçıncı gün.
+	# §7.2 — işlenen lead kimin masasında ve kaçıncı hafta.
 	if p.is_being_worked():
 		var rep: Character = CharacterRegistry.get_character(p.worked_by)
 		if rep != null:
@@ -356,12 +362,12 @@ func _rep_row(rep: Character) -> Control:
 		HRConstants.stars_for(HRSystem.skill(rep, HRConstants.AREA_SALES))))
 	col.add_child(_band_cap_row(rep))
 
-	# §7.2 — "Palmiye ile görüşüyor · 3. gün".
+	# §7.2 — "Palmiye ile görüşüyor · 2. hafta".
 	var work: Dictionary = SalesRepSystem.processing_view(rep)
 	if not work.is_empty():
 		col.add_child(UiFactory.make_label(tr("SALES_REP_WORKING").format({
 			"company": String(work.get("company_name", "")),
-			"n": int(work.get("day", 1))}), &"RowMeta", UiTokens.INK_MUTED))
+			"n": int(work.get("week", 1))}), &"RowMeta", UiTokens.INK_MUTED))
 	return col
 
 
@@ -436,9 +442,8 @@ func _card_risk(c: Customer) -> Control:
 	col.add_child(UiFactory.make_label(
 		tr("SALES_REASON_PREFIX").format({"reason": reason}), &"QuoteSerif"))
 	if c.churn_countdown >= 0:
-		col.add_child(UiFactory.make_label(
-			tr("SALES_CHURN_COUNTDOWN").format({"n": c.churn_countdown}),
-			&"RowMeta", UiTokens.negative()))
+		col.add_child(UiFactory.make_label(tr(Fmt.count_key("SALES_CHURN_COUNTDOWN",
+			c.churn_countdown)).format({"n": c.churn_countdown}), &"RowMeta", UiTokens.negative()))
 	_add_steward_line(col, c)
 	_add_promise_line(col, c)
 	# PROPOSER, not a second admission path (I1): the tab NAMES the card and the gate runs
@@ -476,16 +481,18 @@ func _card_head(c: Customer, ink: Color, chip_text: String, chip_kind: StringNam
 
 ## AÇIK SÖZ HESABIN KENDİ KARTINDA GÖRÜNÜR. Ürün sayfası bütün açık sözleri bir arada listeler;
 ## hesabın kartı ise sözün verildiği ve kırıldığında bedelini ödeyecek yerdir. Tek satır: ne söz
-## verildi ve kaç gün kaldı.
+## verildi ve kaç hafta kaldı. Son tikinde söz hâlâ tutulabilir, satır "bu hafta" okur.
 func _add_promise_line(col: VBoxContainer, c: Customer) -> void:
 	var open: Array[Promise] = PromiseRegistry.get_open_for(c.id)
 	if open.is_empty():
 		return
 	var p: Promise = open[0]
-	col.add_child(UiFactory.make_label(tr("SALES_PROMISE_OPEN").format({
-		"feature": B2BConstants.feature_label(p.feature_id),
-		"days": maxi(0, p.deadline_day - GameState.day),
-	}), &"RowMeta", UiTokens.ACCENT_DEEP))
+	var weeks: int = p.deadline_day - GameState.day
+	var key: String = "SALES_PROMISE_OPEN_THIS_WEEK" if weeks <= 0 \
+		else Fmt.count_key("SALES_PROMISE_OPEN", weeks)
+	col.add_child(UiFactory.make_label(tr(key).format(
+		{"feature": B2BConstants.feature_label(p.feature_id), "n": weeks}),
+		&"RowMeta", UiTokens.ACCENT_DEEP))
 
 
 func _add_steward_line(col: VBoxContainer, c: Customer) -> void:
@@ -536,13 +543,13 @@ func _steward_option(pop: HRPopover, c: Customer, steward_id: String, steward_na
 		return HRUiShared.disabled_button(label, tr("SALES_STEWARD_FULL"))
 	return HRUiShared.action_button(label, func() -> void:
 		# pinned=true even for the founder: otherwise _delegate_excess hands it straight
-		# back tomorrow morning and the player's choice silently evaporates.
+		# back at the next tick and the player's choice silently evaporates.
 		CustomerRegistry.assign_customer(c.id, steward_id, true)
 		pop.close())
 
 
 func _meta_line(c: Customer) -> String:
-	var months: int = (GameState.day - c.acquired_on_day) / GameState.DAYS_PER_MONTH
+	var months: int = int(TimeModel.months(GameState.day - c.acquired_on_day))
 	var parts: Array[String] = [
 		Fmt.money(c.mrr) + tr("SALES_PER_MONTH"),
 		tr("SALES_SEATS").format({"n": c.seats}),

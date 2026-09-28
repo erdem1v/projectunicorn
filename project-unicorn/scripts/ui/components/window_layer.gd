@@ -4,7 +4,9 @@ extends Panel
 # pencere (sekme) ve ona bağlı bir ayrıntı penceresi, hepsinin üstünde BuildHUD (son çocuk).
 # Yuvalar sabit, sürükleme yok. tab_changed("") = pencere yok; kapatmanın üç yolu (×, Esc,
 # aktif sekmeye tekrar tıklama) bu sinyale çıkar. Pencereler ModalLayer'a ASLA gitmez:
-# game_shell orada Space/1-3'ü yutuyor, pencere açıkken hız kontrolü çalışmalı.
+# game_shell orada Space/1-4'ü yutuyor, pencere açıkken hız kontrolü çalışmalı. Kurucunun
+# toplantı yolculuğunda katmanda yalnız ofis kalır (set_veiled): pencereler kapanmadan gizlenir,
+# dönüşte aynı pencere gelir.
 
 const TAB_SCENES := {
 	"product": preload("res://scenes/tabs/ProductTab.tscn"),
@@ -40,6 +42,7 @@ var _detail: FRAME = null
 var _primary_id: String = ""
 var _detail_kind: String = ""
 var _detail_payload: Dictionary = {}
+var _veiled: bool = false
 
 
 func _ready() -> void:
@@ -102,6 +105,17 @@ func close_top() -> bool:
 	return true
 
 
+## Örtülü katmanda yalnız ofis görünür: açık pencereler ve örtü sürerken açılanlar gizli kalır,
+## ofisin üstündeki denetimler (BuildHUD, bildirim yığını, taşınma düğmesi) OfficeView'dan çekilir.
+## Katmanın kendisi gizlenemez: yolculuk ofiste, yani onun ilk çocuğunda oynar.
+func set_veiled(veiled: bool) -> void:
+	_veiled = veiled
+	for frame: Control in [_current_page, _detail]:
+		if frame != null:
+			frame.visible = not veiled
+	get_tree().call_group(&"office_view", &"set_veiled", veiled)
+
+
 ## Harness erişimi: birincil pencerenin sayfası; pencere yoksa null.
 func get_current_page_body() -> Control:
 	return _current_page.page if _current_page != null else null
@@ -128,6 +142,7 @@ func _rebuild() -> void:
 
 
 func _mount(frame: Control) -> void:
+	frame.visible = not _veiled
 	add_child(frame)
 	move_child(frame, get_child_count() - 2)   # BuildHUD (son çocuk) pencerelerin üstünde kalır
 	_place()

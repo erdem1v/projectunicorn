@@ -198,7 +198,7 @@ static func accept_counter() -> Dictionary:
 	return _close(OUTCOME_SIGNED, _counter)
 
 
-## §5.3 — walking is NEUTRAL. A 30-day lock, and no trace on the account.
+## §5.3 — walking is NEUTRAL. A four-week lock, and no trace on the account.
 static func walk() -> Dictionary:
 	if not _active:
 		return view_state()

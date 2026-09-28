@@ -1,7 +1,7 @@
 {
-  "_doc": "GDD SATIŞ rev 6 §7.6 — FİYAT-KIRMA KARTI. DAVRANIŞI TANIMLI, WIRING OLAY PAKETİNDE (§18). Premium kadranda, fiyata duyarlı arketipte, işlemenin son günlerinde düşer. Kart bugün HİÇBİR ŞEY TARAFINDAN İSTENMİYOR: SalesRepSystem an geldiğinde rep_discount_requested sinyalini yayınlar ve EventGate.request'i ÇAĞIRMAZ. Bu kasıtlı — bağlanmamış bir kart bitmiş bir anlaşmayı askıda bırakamaz, o yüzden anlaşma kendi kadranından kapanır ve kart bekler.",
+  "_doc": "GDD SATIŞ rev 6 §7.6 — FİYAT-KIRMA KARTI. DAVRANIŞI TANIMLI, WIRING OLAY PAKETİNDE (§18). Premium kadranda, fiyata duyarlı arketipte, her işleme tikinde zardan önce değerlendirilir (lead başına bir kez). Kart bugün HİÇBİR ŞEY TARAFINDAN İSTENMİYOR: SalesRepSystem an geldiğinde rep_discount_requested sinyalini yayınlar ve EventGate.request'i ÇAĞIRMAZ. Bu kasıtlı — bağlanmamış bir kart bitmiş bir anlaşmayı askıda bırakamaz, o yüzden anlaşma kendi kadranından kapanır ve kart bekler.",
   "_wiring_note": "Bağlamak için tek şey gerekir: SalesRepSystem._maybe_price_break içinde EventGate.request(SalesConstants.PRICE_BREAK_CARD_ID, {\"prospect\": lead.id}) çağrısı. Kartın koşulu, kapsamı, iki seçeneği ve süre dolumu burada hazır bekliyor.",
-  "_expiry_note": "§12'nin kendi satırı: 'Fiyat-kırma kartı süresi dolar | on_expire: deal düşer, neden fiyat; boru hattına işler.' Motor §17.7'si de aynı şeyi yapısal olarak istiyor — kağıda düşebilen bir interrupt süresiz olamaz ve §12.4 SESSİZ süre dolumunu yasaklıyor. Cezanın ekonomik deltası YOK (§5.2: kayıp ekonomik delta üretmez); süre dolumu bir GÜN DAMGASI bırakıyor ve anlaşmanın düşmesi wiring indiğinde SalesRepSystem'in işi olacak.",
+  "_expiry_note": "§12'nin kendi satırı: 'Fiyat-kırma kartı süresi dolar | on_expire: deal düşer, neden fiyat; boru hattına işler.' Motor §17.7'si de aynı şeyi yapısal olarak istiyor — kağıda düşebilen bir interrupt süresiz olamaz ve §12.4 SESSİZ süre dolumunu yasaklıyor. Cezanın ekonomik deltası YOK (§5.2: kayıp ekonomik delta üretmez); süre dolumu bir TİK DAMGASI bırakıyor ve anlaşmanın düşmesi wiring indiğinde SalesRepSystem'in işi olacak.",
   "id": "sales.price_break",
   "version_scope": "demo",
   "category": "customer",
@@ -13,9 +13,9 @@
   ],
   "weight": 1.0,
   "latch": {
-    "cooldown_days": 0
+    "cooldown_weeks": 0
   },
-  "expires_days": 2,
+  "expires_weeks": 1,
   "expire_note": "Fiyat konusu kapandı.",
   "on_expire": {
     "penalties": [

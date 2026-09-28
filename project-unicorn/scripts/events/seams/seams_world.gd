@@ -36,7 +36,7 @@ static func _install_phase() -> void:
 	EvSeams.register("phase.series_a_approach", G, TYPE_INT,
 		func() -> int: return PhaseGateSystem.series_a_approach(),
 		"Phase", "0-4: approach marks cleared toward the Series A revenue bar (50/75/90/100 %). A step, never the number")
-	# The soft-cap telegraph reads it: a company past its milestone has no day-730 clock.
+	# The soft-cap telegraph reads it: a company past its milestone has no soft-cap clock.
 	EvSeams.register("phase.bootstrap_milestone", G, TYPE_BOOL,
 		func() -> bool: return EndingsSystem.bootstrap_milestone_taken(),
 		"Phase", "WRAPPER; the bootstrap milestone was taken (EA / full), so the soft cap no longer applies")
@@ -45,20 +45,17 @@ static func _install_phase() -> void:
 static func _install_time() -> void:
 	var G := EvSeams.Kind.GLOBAL
 
-	EvSeams.register("time.day", G, TYPE_INT,
+	EvSeams.register("time.week", G, TYPE_INT,
 		func() -> int: return GameState.day,
-		"Time", "WRAPPER; absolute game day, starts at 1. GameState owns it, not TimeManager")
+		"Time", "WRAPPER; absolute game week (the tick), starts at 1. GameState owns it, not TimeManager")
 	EvSeams.register("time.hour", G, TYPE_INT,
 		func() -> int: return GameState.current_hour, "Time", "WRAPPER; 0-23")
-	EvSeams.register("time.weekday", G, TYPE_INT,
-		func() -> int: return int(GameState.get_date_dict().get("weekday", 0)),
-		"Time", "0-6 from the real calendar; day 1 is a Thursday, 1 Jan 2026")
 	EvSeams.register("time.month", G, TYPE_INT,
 		func() -> int: return int(GameState.get_date_dict().get("month", 1)),
-		"Time", "1-12; real month lengths, not 30-day blocks")
+		"Time", "1-12; the month of the week's Thursday on the real calendar")
 	EvSeams.register("time.speed", G, TYPE_INT,
 		func() -> int: return TimeManager.current_speed,
-		"Time", "WRAPPER; 0 paused, 1-3")
+		"Time", "WRAPPER; 0 paused, 1-4")
 	EvSeams.register("time.is_paused", G, TYPE_BOOL,
 		func() -> bool: return TimeManager.current_speed == 0,
 		"Time", "WRAPPER; there is no named predicate for this")

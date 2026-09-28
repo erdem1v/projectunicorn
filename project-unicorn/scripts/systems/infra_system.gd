@@ -259,7 +259,7 @@ static func monthly_bill() -> int:
 
 
 static func daily_bill() -> int:
-	return int(round(float(monthly_bill()) / float(GameState.DAYS_PER_MONTH)))
+	return int(round(float(monthly_bill()) / float(TimeModel.DAYS_PER_MONTH)))
 
 
 ## "Brüt marj = MRR − sunucu faturası"; ikisi de aylık.

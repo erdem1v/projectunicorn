@@ -1,10 +1,11 @@
 {
-  "_port_note": "The condition is one seam over VCPitchSystem.is_last_answer_moment(), not `sheets_live > 0 AND sheet_days_left <= 1`: that paraphrase also fires with two sheets live, i.e. exactly when there IS another table — the one situation this line must not be said in.",
+  "_port_note": "The condition is one seam over VCPitchSystem.is_last_answer_moment(), not `sheets_live > 0 AND sheet_weeks_left <= 1`: that paraphrase also fires with two sheets live, i.e. exactly when there IS another table — the one situation this line must not be said in.",
   "id": "funding.last_answer",
   "version_scope": "demo",
   "category": "funding",
   "tick": "daily",
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": [
     "critical",
     "build_safe",

@@ -35,12 +35,12 @@ extends RefCounted
 
 ## Signals proposed during the systems' own slots, drained at step (g).
 static var _signal_buffer: Array = []
-## Total days the floor was reached and found nothing; the harness reports it.
+## Total ticks the floor was reached and found nothing; the harness reports it.
 static var _floor_empty_total: int = 0
-## Consecutive days the floor found nothing. §13.6: a run of these is a content hole.
+## Consecutive ticks the floor found nothing. §13.6: a run of these is a content hole.
 static var _floor_empty_streak: int = 0
-## Consecutive days with no interrupt and no paper.
-static var _quiet_days: int = 0
+## Consecutive ticks with no interrupt and no paper.
+static var _quiet_ticks: int = 0
 ## Admissions made today, {event_id, context}, awaiting class assignment at step (k).
 static var _today_admissions: Array = []
 ## Instance keys admitted through force_fire and not yet resolved, so their history row says
@@ -48,7 +48,7 @@ static var _today_admissions: Array = []
 static var _forced: Array = []
 
 
-static func empty_floor_days() -> int:
+static func empty_floor_ticks() -> int:
 	return _floor_empty_total
 
 
@@ -89,7 +89,7 @@ static func hourly_tick(_hour: int) -> void:
 # --- (a) Paper expiry ------------------------------------------------------
 
 static func _step_paper_expiry() -> void:
-	# §20 B11: the last-day warning comes first and the expiry the day after. If the warning
+	# §20 B11: the last warning comes first and the expiry the tick after. If the warning
 	# cannot fire the expiry still happens — the consequence is not conditional on the courtesy.
 	_step_last_warnings()
 
@@ -123,7 +123,7 @@ static func _step_last_warnings() -> void:
 			continue                      # already in front of the player
 		var event_id: String = EvPapers.event_id_of(key)
 		var context: Dictionary = EvPapers.context_of(key)
-		# A paper whose subject died overnight gets no last-day warning; it still expires.
+		# A paper whose subject died overnight gets no last warning; it still expires.
 		if not EvGate.revalidate(event_id, context).admitted:
 			continue
 		EvQueue.admit(event_id, context, "interrupt", EvPapers.arc_of(key))
@@ -157,7 +157,7 @@ static func _invalidate(arc_id: String, definition: Dictionary, context: Diction
 
 	match String(policy_block.get("policy", EvArcs.POLICY_FADE)):
 		EvArcs.POLICY_REASSIGN:
-			# §10.5: the arc does not die, it STOPS. Its schedule is frozen as relative days and
+			# §10.5: the arc does not die, it STOPS. Its schedule is frozen as relative weeks and
 			# a card goes out asking who takes over.
 			EvArcs.pause_for_subject(arc_id)
 			var prompt: String = String(policy_block.get("reassign_event", ""))
@@ -254,7 +254,7 @@ static func _step_signal_drain() -> void:
 # --- (h) The sweep ---------------------------------------------------------
 
 ## Per-tick, never per-frame (§15.3). The GDD asks for change-driven re-evaluation via seam
-## dirty-flags; condition-triggered cards are swept instead, because `days_since_flag` depends
+## dirty-flags; condition-triggered cards are swept instead, because `weeks_since_flag` depends
 ## on the day counter (always dirty) and selectors like "the lowest-morale employee" are dirty
 ## on every morale signal — and a missed dirty-mark would be invisible: the card silently never
 ## fires. The gate's own order (latch, guards, tree) is the cheap pre-filter.
@@ -308,15 +308,15 @@ static func _step_floor() -> void:
 	# §13.6's three conditions: a quiet stretch, a CLEAR desk, and no open modal. An unanswered
 	# paper means the player is deferring, and filling a silence the player made is nagging.
 	if not _today_admissions.is_empty() or not EvPapers.is_empty() or EvQueue.active_id() != "":
-		_quiet_days = 0
+		_quiet_ticks = 0
 		return
 	if EvFlags.has("tutorial_active"):
 		return                                  # §11.6: the floor is off during a tutorial
 
-	_quiet_days += 1
-	if _quiet_days < EvTuning.FLOOR_QUIET_DAYS:
+	_quiet_ticks += 1
+	if _quiet_ticks < TimeModel.ticks(EvTuning.FLOOR_QUIET_WEEKS):
 		return
-	_quiet_days = 0
+	_quiet_ticks = 0
 
 	# §13.6: quiet cards still pass their own conditions; the floor only ignores the quota.
 	var quiet_pool: Array = []
@@ -357,7 +357,7 @@ static func _step_assign_classes() -> void:
 		if final_class == "paper" and bool(entry.get("demoted", false)):
 			var card: Dictionary = EvCatalog.card(String(entry["event_id"]))
 			EvPapers.place(String(entry["event_id"]), EvQueue.take(key)["context"],
-				_expiry_days(card), String(card.get("arc", "")))
+				_expiry_weeks(card), String(card.get("arc", "")))
 	_today_admissions.clear()
 
 
@@ -370,7 +370,7 @@ static func _propose(event_id: String, origin: EvGate.Origin, given: Dictionary,
 
 
 ## An instance whose paper is on the desk is refused: queued beside its own paper it would pass
-## for the paper's last-day warning, the one re-queue §13.5 lets past the budget.
+## for the paper's last warning, the one re-queue §13.5 lets past the budget.
 static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) -> bool:
 	var key: String = EvLatches.key_of(event_id, verdict.context)
 	if EvPapers.has(key):
@@ -380,7 +380,7 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) ->
 	# would hold the game paused for its whole week; and `pump()` would mount it as a modal,
 	# the opposite of §11.4, where a paper waits until the player picks it up.
 	if verdict.card_class == "paper":
-		EvPapers.place(event_id, verdict.context, _expiry_days(EvCatalog.card(event_id)), arc_id)
+		EvPapers.place(event_id, verdict.context, _expiry_weeks(EvCatalog.card(event_id)), arc_id)
 	elif not EvQueue.admit(event_id, verdict.context, verdict.card_class, arc_id):
 		return false
 
@@ -393,22 +393,26 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) ->
 	return true
 
 
-## §12.2's table, by stakes.
-static func _expiry_days(card: Dictionary) -> int:
-	if card.has("expires_days"):
-		return int(card["expires_days"])
+## The card's own wait; §12.2's table by stakes is the fallback.
+static func _expiry_weeks(card: Dictionary) -> int:
+	if card.has("expires_weeks"):
+		return int(card["expires_weeks"])
 	var tags: Array = card["tags"]
 	if tags.has("money_table"):
-		return EvTuning.EXPIRY_MONEY_DAYS
+		return EvTuning.EXPIRY_MONEY_WEEKS
 	if tags.has("low_stakes"):
-		return EvTuning.EXPIRY_LOW_STAKES_DAYS
-	return EvTuning.EXPIRY_DEFAULT_DAYS
+		return EvTuning.EXPIRY_LOW_STAKES_WEEKS
+	return EvTuning.EXPIRY_DEFAULT_WEEKS
 
 
-## Show the top card, if nothing is showing. §4.4's re-validation happens HERE — days may have
+## Show the top card, if nothing is showing. §4.4's re-validation happens HERE — weeks may have
 ## passed since admission, and the card's subject may have resigned.
+##
+## Deferred while the clock runs a batch of hours (a meeting's skip, the night): the batch's end
+## pumps once (EvSignals connects it), so the card is re-validated at the hour it is seen, the
+## most important one comes first and an open card does not block the 00:00 autosave.
 static func pump() -> bool:
-	if not GameState.run_active or EvQueue.active_id() != "":
+	if not GameState.run_active or EvQueue.active_id() != "" or TimeManager.is_batching():
 		return false
 
 	while true:
@@ -517,7 +521,7 @@ static func reset() -> void:
 	_signal_buffer.clear()
 	_floor_empty_streak = 0
 	_floor_empty_total = 0
-	_quiet_days = 0
+	_quiet_ticks = 0
 	_today_admissions.clear()
 	_forced.clear()
 	EvSave.reset()

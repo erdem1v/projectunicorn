@@ -8,7 +8,7 @@ extends RefCounted
 # new name rather than a quiet redefinition.
 #
 # IT IS ALSO THE WRITE SIDE, and that is deliberate. §14's queries read run state that has no
-# other owner — the price stance, the per-rep band cap, the daily meeting right, the loss log,
+# other owner — the price stance, the per-rep band cap, the week's meeting count, the loss log,
 # the account memory. Putting the getters somewhere and the setters somewhere else is how a
 # field ends up written raw "just this once" (CLAUDE.md's WRITE-THROUGH LAW). One file, one
 # vocabulary, and every setter that a surface reacts to emits.
@@ -36,9 +36,9 @@ static func lead_star(lead_id: String) -> int:
 	return p.star if p != null else 0
 
 
-static func lead_days_left(lead_id: String) -> int:
+static func lead_weeks_left(lead_id: String) -> int:
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
-	return p.days_left() if p != null else 0
+	return p.weeks_left() if p != null else 0
 
 
 static func lead_routing(lead_id: String) -> String:
@@ -263,32 +263,32 @@ static func seat_price(account_id: String) -> int:
 
 
 # ============================================================================
-#  §5.0 · The daily meeting right
+#  §5.0 · The week's meetings
 # ============================================================================
 
-## §5.0 — "kurucu günde bir toplantıya girer; hak her mesai başında yenilenir." Stored as the
-## DAY the right was spent rather than a boolean, so the refresh needs no tick to run: a new
-## day simply stops matching.
-static func meeting_available_today() -> bool:
-	return int(GameState.get_flag("sales_meeting_used_day", -1)) != GameState.day
+## §5.0 — sales meetings held this week. The counter carries its tick, so a new week reads zero
+## with no reset to run. Meetings sit in the working hours, where the tick is the week.
+static func meetings_this_week() -> int:
+	var week: Dictionary = GameState.sales_meetings_week
+	return int(week.get("count", 0)) if int(week.get("tick", -1)) == GameState.day else 0
 
 
-static func consume_meeting_right() -> void:
-	GameState.set_flag("sales_meeting_used_day", GameState.day)
+static func count_meeting() -> void:
+	GameState.sales_meetings_week = {"tick": GameState.day, "count": meetings_this_week() + 1}
 
 
-## §5.0 — "mesai bitimine 2 saatten az kala giriş kapalı, nedenli." The workday is the company
-## window (Ekip §15.2); at its widest settings it ends at 22:00, so it never crosses midnight.
-## Returns "" when entry is open, otherwise the CSV key naming the reason, so the caller never
-## composes a sentence.
+## §5.0 — the entry gate, in order: the night, too close to the end of the workday ("mesai
+## bitimine 2 saatten az kala giriş kapalı, nedenli"), then the week's meeting cap. The workday
+## is the founder's, whose end also stops the meeting's skip, and it may end at 24:00. Returns
+## "" when entry is open, otherwise the CSV key naming the reason, so the caller never composes
+## a sentence.
 static func meeting_block_reason(lead_id: String) -> String:
 	if not SalesFaucetSystem.market_open():
 		return "SALES_BLOCK_NO_B2B"
-	if not meeting_available_today():
-		return "SALES_BLOCK_MEETING_SPENT"
-	if GameState.current_hour > int(WorkHoursSystem.company_window().end) \
-			- SalesConstants.MEETING_ENTRY_CUTOFF_HOURS:
+	if not WorkHoursSystem.sitting_open(SalesConstants.MEETING_ENTRY_CUTOFF_HOURS):
 		return "SALES_BLOCK_TOO_LATE"
+	if meetings_this_week() >= SalesConstants.MEETINGS_PER_WEEK:
+		return "SALES_BLOCK_WEEK_FULL"
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
 	if p == null:
 		return "SALES_BLOCK_NO_LEAD"
@@ -340,36 +340,49 @@ static func spend_inner_voice() -> void:
 # §7.3 asks for the week's CLOSES, and a summary with no rows summarises nothing.
 #
 # COMPOSED HERE, NOT IN THE CARD, because the card is data: it names one seam and the
-# arithmetic stays in the module that owns it. `GameState.sales_log` carries the close events
-# (day, kind, company, mrr); the star, the seat count and the seat price come off the account
-# those closes produced, which is the only place they are stamped (§5.4).
+# arithmetic stays in the module that owns it.
+#
+# EACH CLOSE IS STAMPED AS IT SIGNS (company, star, seats, seat price, MRR) into the open
+# window's rows. The capped activity log can lose a week's closes behind the next tick's
+# expiries, and an account can churn before the card is read. When the window ends with a desk
+# close, its rows become the REPORT, and the card reads the report whenever it is shown.
 #
 # STATIC → `TranslationServer.translate`, never `tr()`: a static has no node to resolve
 # against, and `loc_residue` fails the build on it ([static-tr]).
 
-const WEEKLY_WINDOW_DAYS := 7
-const CLOSE_KINDS := ["auto_close", "founder_close"]
+## One close into the open window. `by_rep` marks the desk's closes, the ones that raise the
+## card; the founder's closes are listed beside them.
+static func record_close(c: Customer, by_rep: bool) -> void:
+	var rows: Array = GameState.get_flag("sales_weekly_close_rows", [])
+	rows.append({"company": c.company_name, "star": c.scale, "seats": c.seats,
+		"price": c.seat_price, "mrr": c.mrr, "by_rep": by_rep})
+	GameState.set_flag("sales_weekly_close_rows", rows)
 
 
-## The week's closes, one line each, plus a total. "" when the week closed nothing — the card
-## itself is not raised on an empty week (§7.3), so this is the belt to that braces.
+## Ends the open window and returns how many of its closes the desk made. Only a window with a
+## desk close raises the card, so only such a window replaces the report.
+static func close_week() -> int:
+	var rows: Array = GameState.get_flag("sales_weekly_close_rows", [])
+	GameState.set_flag("sales_weekly_close_rows", [])
+	var by_desk: int = rows.filter(func(r: Variant) -> bool: return bool(r["by_rep"])).size()
+	if by_desk > 0:
+		GameState.set_flag("sales_weekly_report_rows", rows)
+	return by_desk
+
+
+## The report's closes, one line each, plus a total. "" when there is no report yet.
 static func weekly_close_lines() -> String:
-	var since: int = GameState.day - WEEKLY_WINDOW_DAYS
 	var rows: PackedStringArray = []
 	var total: int = 0
-	for entry in SalesSystem.get_sales_log():
+	for entry in GameState.get_flag("sales_weekly_report_rows", []):
 		var e: Dictionary = entry as Dictionary
-		if int(e.get("day", 0)) <= since or not CLOSE_KINDS.has(String(e.get("kind", ""))):
-			continue
-		var company: String = String(e.get("company", ""))
-		var mrr: int = int(e.get("mrr", 0))
-		var acct: Customer = _account_of(company)
+		var mrr: int = int(e["mrr"])
 		total += mrr
 		rows.append(TranslationServer.translate("SALES_WEEKLY_ROW").format({
-			"company": company,
-			"stars": _star_text(acct.scale if acct != null else 0),
-			"seats": acct.seats if acct != null else 0,
-			"price": Fmt.money_exact(acct.seat_price if acct != null else 0),
+			"company": String(e["company"]),
+			"stars": _star_text(int(e["star"])),
+			"seats": int(e["seats"]),
+			"price": Fmt.money_exact(int(e["price"])),
 			"mrr": Fmt.money_exact(mrr),
 		}))
 	if rows.is_empty():
@@ -384,10 +397,3 @@ static func weekly_close_lines() -> String:
 static func _star_text(star: int) -> String:
 	var filled: int = clampi(star, 0, HRConstants.STAR_MAX)
 	return StarRating.FILLED.repeat(filled) + "·".repeat(HRConstants.STAR_MAX - filled)
-
-
-static func _account_of(company: String) -> Customer:
-	for c in CustomerRegistry.get_by_market("b2b"):
-		if (c as Customer).company_name == company:
-			return c as Customer
-	return null

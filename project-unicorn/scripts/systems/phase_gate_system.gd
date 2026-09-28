@@ -10,7 +10,7 @@ extends RefCounted
 #
 # The scenes are cards (`funding.gate_traction`, `funding.gate_series_a`); this file sets the
 # ratchet they read and nothing else. The re-ask cadence is the Series A card's own
-# `cooldown_days`; the shutter hold is the cards' `finance.shutter_days_left < 0` leaf.
+# `cooldown_weeks`; the shutter hold is the cards' `finance.shutter_weeks_left < 0` leaf.
 #
 # Ratchet: once open, a gate never re-locks; conditions are never re-evaluated after
 # the latch. Subgenre-agnostic by construction — conditions run through the ONE condition
@@ -57,8 +57,8 @@ const GATES := [
 		],  # runway deliberately NOT a condition (deadlock; low runway feeds pitch odds instead)
 		# THE CARD SPEAKS SECOND. The gate latches here; Frank's `funding.frank_door_open` line
 		# says it first, and `funding.gate_series_a` waits for that line to have been answered on
-		# an EARLIER day (its history leaf) — the door-open message and the decision never
-		# share a day.
+		# an EARLIER week (its history leaf) — the door-open message and the decision never
+		# share a week.
 		# The escalating body (three variants by decline count) is the card's
 		# `{by_seam: phase.gate_declines}` block. `gate_declines` itself stays here.
 	},
@@ -108,7 +108,7 @@ static func on_shutter_started() -> void:
 	# `funding.frank_door_open` is deliberately NOT pulled. Its latch is spent at admission and
 	# `funding.gate_series_a` waits on its HISTORY row; a removal writes no row, so pulling it
 	# here would lock the Series A door for the rest of the run. It is held out of a running
-	# shutter by its own `finance.shutter_days_left < 0` leaf instead.
+	# shutter by its own `finance.shutter_weeks_left < 0` leaf instead.
 
 
 # --- Debug (F1) ---

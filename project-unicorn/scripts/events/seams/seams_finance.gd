@@ -15,9 +15,9 @@ static func install() -> void:
 	EvSeams.register("finance.peak_mrr", G, TYPE_INT,
 		func() -> int: return GameState.run_peak_mrr, "Finance", "WRAPPER; high-water mark")
 	EvSeams.register("finance.daily_burn", G, TYPE_INT,
-		func() -> int: return GameState.daily_burn, "Finance", "WRAPPER; day 1 is $50")
+		func() -> int: return GameState.daily_burn, "Finance", "WRAPPER; a per-day rate, $50 at the start")
 	EvSeams.register("finance.daily_net", G, TYPE_INT,
-		func() -> int: return GameState.get_net_daily_flow(), "Finance", "signed")
+		func() -> int: return GameState.get_net_daily_flow(), "Finance", "signed; a per-day rate")
 	EvSeams.register("finance.brand", G, TYPE_INT,
 		func() -> int: return GameState.brand, "Finance", "WRAPPER; clamped 0-100")
 	EvSeams.register("finance.reputation", G, TYPE_INT,
@@ -29,28 +29,28 @@ static func install() -> void:
 		func() -> float: return GameState.get_runway_months(),
 		"Finance", "INF when net >= 0 — compare with '<', never '>'")
 
-	# The day-valued runway the shutter and the soft cap think in, with INF mapped to 9999
+	# The week-valued runway the shutter and the soft cap think in, with INF mapped to 9999
 	# rather than multiplied.
-	EvSeams.register("finance.runway_days", G, TYPE_INT,
+	EvSeams.register("finance.runway_weeks", G, TYPE_INT,
 		func() -> int:
 			var months: float = GameState.get_runway_months()
 			if is_inf(months) or months < 0.0:
 				return 9999
-			return int(round(months * 30.0)),
+			return int(round(months * TimeModel.DAYS_PER_MONTH / TimeModel.DAYS_PER_TICK)),
 		"Finance", "WRAPPER; 9999 stands for default-alive")
 
-	EvSeams.register("finance.shutter_days_left", G, TYPE_INT,
-		func() -> int: return GameState.shutter_days_left,
-		"Finance", "WRAPPER; -1 when not counting, else counts down")
+	EvSeams.register("finance.shutter_weeks_left", G, TYPE_INT,
+		func() -> int: return GameState.shutter_weeks_left,
+		"Finance", "WRAPPER; -1 when not counting, else weeks left")
 
 	# §8.4: the number lives here and copy interpolates it, so a sentence cannot go stale.
-	EvSeams.register("finance.shutter_days_total", G, TYPE_INT,
-		func() -> int: return EndingsSystem.SHUTTER_DAYS,
-		"Finance", "the shutter window; card text interpolates this rather than typing it")
+	EvSeams.register("finance.shutter_weeks_total", G, TYPE_INT,
+		func() -> int: return EndingsSystem.SHUTTER_WEEKS,
+		"Finance", "the shutter window in weeks; card text interpolates this rather than typing it")
 
 	EvSeams.register("finance.profit_streak_months", G, TYPE_INT,
 		func() -> int: return GameState.get_profitable_month_streak(),
-		"Finance", "consecutive closed months in the black with no red days")
+		"Finance", "consecutive closed months in the black with no red weeks")
 	EvSeams.register("finance.growth_streak_months", G, TYPE_INT,
 		func() -> int: return GameState.get_mrr_growth_streak(PhaseGateSystem.GROWTH_MIN_PCT),
 		"Finance", "consecutive closed months of MRR growth")

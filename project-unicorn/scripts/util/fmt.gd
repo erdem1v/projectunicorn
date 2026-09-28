@@ -6,8 +6,8 @@ extends RefCounted
 #
 # Static + TranslationServer, not tr(): a static function has no Object to translate through.
 #
-# Locale data (month names, weekday abbreviations, date field ORDER, percent shape, numeric
-# separators) lives in strings.csv, so adding a locale is a CSV column, not a code edit.
+# Locale data (month names, date field ORDER, percent shape, numeric separators) lives in
+# strings.csv, so adding a locale is a CSV column, not a code edit.
 #
 # Money is a full locale flip: TR $1.234.567 / $3,5K, EN $1,234,567 / $3.5K. The "$" stays in
 # both (the fiction is USD). The numeric part comes from printf and only the separator character
@@ -34,6 +34,13 @@ static func upper(s: String) -> String:
 	return s.replace("i", "İ").to_upper()   # LOC-DATA Turkish dotted-i mapping
 
 
+# --- Counts -----------------------------------------------------------------
+
+## The singular twin of a counted key: "<KEY>_ONE" when n is 1 (EN "1 week" vs "2 weeks").
+static func count_key(key: String, n: int) -> String:
+	return key + "_ONE" if n == 1 else key
+
+
 # --- Calendar ---------------------------------------------------------------
 
 ## Title-case month name, 1-based (1 = January / Ocak).
@@ -46,19 +53,12 @@ static func month_abbr(month: int) -> String:
 	return month_name(month).substr(0, 3)
 
 
-## Uppercase month for header registers (Month-End summary, gazette dateline).
-static func month_upper(month: int) -> String:
-	return upper(month_name(month))
-
-
-## The chrome date line from GameState.get_date_dict(). Field order is data: DATE_LINE is
-## "{dow}, {day} {mon} {year}" in Turkish and "{dow}, {mon} {day} {year}" in English.
-## Weekday index follows Godot's Time.weekday (0 = Sunday).
+## The chrome date line from GameState.get_date_dict(): the tick's ISO week and its month
+## ("Hafta 14 · Nisan 2026"). Field order is data (DATE_LINE).
 static func date_line(d: Dictionary) -> String:
 	return _t("DATE_LINE").format({
-		"dow": _t("DOW_%d" % clampi(int(d.get("weekday", 0)), 0, 6)),
-		"day": int(d.get("day", 1)),
-		"mon": month_abbr(int(d.get("month", 1))),
+		"week": int(d.get("week", 1)),
+		"mon": month_name(int(d.get("month", 1))),
 		"year": int(d.get("year", 2026)),
 	})
 

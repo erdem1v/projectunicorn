@@ -11,16 +11,17 @@ second thing to forget.
 The probe (`--event-probe`) widens `SHIPPED_SCOPES` for its own run and narrows it again
 afterwards, and three smoke cases do the same for the length of one case
 (`event_thesis_day10_to_day90`, `event_thesis_through_presenter`,
-`ambient_one_per_day_across_hour0`). Nothing in production code does, and nothing should:
+`ambient_hourly_never_at_night`). Nothing in production code does, and nothing should:
 the widening is always paired with a restore in the same function.
 
-`hourly_ambient.json` is the subject of `ambient_one_per_day_across_hour0`, which asserts
+`hourly_ambient.json` is the subject of `ambient_hourly_never_at_night`, which asserts
 something about the ENGINE's clock rather than about content, so it gets a fixture instead of
-waiting on authored content. It sits in `allowed_hours: [0, 0]` deliberately: hour 0 is
-the last hourly dispatch of a day and belongs to the NEXT calendar day, so every fire it
-produces is a rollover fire.
+waiting on authored content. It sits in `allowed_hours: [10, 10]` deliberately: the week
+starts at 08:00 and no workday ends before 13:00, so hour 10 lies inside every workday and the
+fixture is a live non-critical hourly card. Night hours refuse such a card at the gate; that
+refusal is asserted on its own.
 
-**Do not** make a card inert by other means: an empty condition is TRUE (§5.3) and fires on
-day 1, a card with no options mounts a modal that can never be dismissed and so disables
+**Do not** make a card inert by other means: an empty condition is TRUE (§5.3) and fires in
+week 1, a card with no options mounts a modal that can never be dismissed and so disables
 saving (SaveManager.can_save refuses while an event is active), and an unrecognised condition
 leaf evaluates FALSE with a push_error on every evaluation.

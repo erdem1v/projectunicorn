@@ -27,7 +27,7 @@ extends Resource
 # --- Status ---
 @export var status: String = "active"         # "active" | "trial" | "churned"
 @export var health: String = "healthy"        # "healthy" | "at_risk" | "churning" — derived from satisfaction
-@export var satisfaction: int = 70            # 0-100; init from product quality, drifts daily; drives health band
+@export var satisfaction: int = 70            # 0-100; init from product quality, drifts every tick; drives health band
 
 # --- Acquisition (set when a customer is created) ---
 @export var acquisition_source: String = ""   # "founder_pitch" | "sales_rep:<id>" | "organic" | "event" | "referral"
@@ -38,16 +38,16 @@ extends Resource
 @export var lifecycle_phase: String = "onboarding"  # onboarding|active|risk|churning|expansion
 @export var scale: int = 1                    # 1..5 stars (customer size); demo binds 1-3
 @export var tolerance: int = 50               # HIDDEN — satisfaction floor this account endures before Risk
-@export var churn_countdown: int = -1         # -1 inactive; N..0 = the visible "Churn'e ~N gün" counter
-@export var risk_streak: int = 0              # consecutive days satisfaction < tolerance
+@export var churn_countdown: int = -1         # -1 inactive; N..0 = the visible "Churn'e ~N hafta" counter
+@export var risk_streak: int = 0              # consecutive ticks satisfaction < tolerance
 @export var assigned_to: String = ""          # "" = founder-managed; else a Customer Success employee id
-@export var onboarding_until: int = 0         # day the onboarding window closes (signed_day + ONBOARDING_DAYS)
+@export var onboarding_until: int = 0         # tick the onboarding window closes (signed tick + ONBOARDING_WEEKS)
 @export var pain_feature_id: String = ""      # the ProductCatalog feature this account wants (drives promises)
 @export var retain_stalls: int = 0            # how many times "Oyala" has been used (works 1-2x, then caught on)
 @export var retain_discounts: int = 0     # how many discounts this account has been given (cap B2BConstants.RETAIN_DISCOUNT_MAX_USES, both channels)
-@export var last_risk_exit_day: int = -1  # HYSTERESIS latch: the day the account last left Risk; -1 = never. No re-entry for RISK_REENTRY_DAYS
+@export var last_risk_exit_day: int = -1  # HYSTERESIS latch: the tick the account last left Risk; -1 = never. No re-entry for RISK_REENTRY_WEEKS
 # HIDDEN expansion latch. The maturity test in B2BSalesSystem.can_offer_expansion is MONOTONE
-# (day - acquired_on_day >= EXPANSION_MATURE_DAYS) and BOTH resolutions put the account back to
+# (day - acquired_on_day >= EXPANSION_MATURE_WEEKS) and BOTH resolutions put the account back to
 # "active", so without a record that the moment already happened the account would be promoted
 # back to "expansion" every morning. Stored as the DAY rather than a bool so a future re-arm
 # rule can read it without a schema migration.
@@ -56,15 +56,15 @@ extends Resource
 
 # --- Trust ledger + the customer-rep request channel (all HIDDEN, no signals) ---
 # trust_offset is what makes a broken promise LAST: it shifts this account's satisfaction
-# TARGET, so the one-shot PROMISE_BROKEN_SAT is not erased by SAT_DRIFT_STEP within a
-# week. It decays back to 0 daily, so the account forgives on its own.
+# TARGET, so the one-shot PROMISE_BROKEN_SAT is not erased by SAT_DRIFT_STEP within one
+# tick. It decays back to 0 every tick, so the account forgives on its own.
 @export var trust_offset: float = 0.0         # signed target shift from kept/broken promises
-@export var support_request_since_day: int = -1    # -1 = no open request; else the day it opened
+@export var support_request_since_day: int = -1    # -1 = no open request; else the tick it opened
 # The request phase is assigned ONCE at signing from a stride walk (B2BConstants.CS_PHASE_STRIDE),
 # which spreads the book by construction. It is NOT derived from id.hash(): customer ids differ
 # only in their trailing character and String.hash() is djb2, so consecutive signings would get
 # consecutive phases and the whole book would file on consecutive mornings.
-@export var cs_request_phase: int = 0         # day-offset within CS_REQUEST_INTERVAL_DAYS
+@export var cs_request_phase: int = 0         # tick offset within CS_REQUEST_INTERVAL_WEEKS
 @export var last_request_kind: String = ""    # blocks the same request kind twice in a row
 # Player-set stewardship. reconcile_assignments() runs every morning and would otherwise undo
 # a manual choice the same night; this flag is what lets player intent outlive the automation.

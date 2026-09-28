@@ -69,23 +69,28 @@ const BEAT4_PUSH_SKILL := "charisma"    # Masayı zorla
 const ANGLE_SKILL := {"vizyon": "charisma"}   # Beat 2 anlatı; fallback: "sales" (metrik, traction)
 
 # --- Prep ---
-const MEETING_LEAD_DAYS := 3           # request → meeting day
-const PREP_DAYS := 2
-const PREP_MIN_DAYS_BEFORE := 2        # prep startable only if ≥ this many full days remain
+const MEETING_LEAD_WEEKS := 1          # request → meeting week
+const PREP_WEEKS := 1
+const PREP_MIN_WEEKS_BEFORE := 1       # prep startable only if ≥ this many weeks remain
 const PREP_BONUS := 2                  # SkillCheck bonus units on the focused check (+~20% odds)
 # Moving a booked meeting costs a little of that fund's goodwill, paid at its NEXT meeting
 # (stored per fund in vc_states.move_penalty, consumed when that meeting begins). Cancelling
-# also shuts the booking desk for the rest of the day.
+# also shuts the booking desk for the rest of the week.
 const MEETING_CANCEL_PENALTY := 3      # conviction points off the fund's next meeting
 const MEETING_RESCHEDULE_PENALTY := 2  # ditto; reschedule = the same lead time again
 
+# --- The clock a sitting costs ---
+# A sitting stops the clock; when it ends the clock runs these hours (end_sitting). A pitch
+# withdrawn at beat 1 costs half. [WORKING]
+const MEETING_HOURS := 2               # a seed or Series A pitch
+const TERM_TABLE_HOURS := 1            # the term-sheet table
+
 # --- Sheet economy ---
-# A Series A sheet is valid for a fixed number of BUSINESS days - weekdays on the
-# real calendar (GameState.is_business_day). TermSheet.expires_day is the day the last one falls
-# on; business_days_left() counts down to it. A queued sheet gets a fresh window on delivery.
-const SHEET_VALIDITY_BUSINESS_DAYS := 10
+# A Series A sheet is valid for a fixed number of weeks. TermSheet.expires_day is the tick its
+# window closes on; weeks_left() counts down to it. A queued sheet gets a fresh window on delivery.
+const SHEET_VALIDITY_WEEKS := 3
 const MAX_SHEETS := 2
-const WARNING_DAYS := 3                 # BUSINESS days: expiry warning card + TopBar chip threshold
+const WARNING_WEEKS := 2                # expiry warning card + TopBar chip threshold
 
 # The offer row before the table shows an ESTIMATED range, never the number. The range
 # always contains the true opening term and never sits centred on it: the true value's position

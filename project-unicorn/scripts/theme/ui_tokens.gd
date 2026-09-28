@@ -494,16 +494,15 @@ static func net_runway_parts(months: float) -> Dictionary:
 	# net without looking at cash, so a company at cash < 0 would otherwise be painted
 	# a green "Artıda" next to a red bankruptcy countdown.
 	if GameState.cash < 0:
-		return {"value": "0", "unit": TranslationServer.translate("RUNWAY_UNIT_DAYS"),
+		return {"value": "0", "unit": TranslationServer.translate("RUNWAY_UNIT_WEEKS"),
 				"positive": false, "note": ""}
 	if months == INF:
 		return {"value": TranslationServer.translate("RUNWAY_PROFITABLE"), "unit": "",
 				"positive": true, "note": TranslationServer.translate("RUNWAY_PROFITABLE_NOTE")}
 	if months < 1.0:
-		# Under a month a bare "0 ay" reads as insolvency; say it in days. floor(), not
-		# round(): a countdown must never promise a day the cash cannot cover.
-		return {"value": str(int(floor(months * GameState.DAYS_PER_MONTH))),
-				"unit": TranslationServer.translate("RUNWAY_UNIT_DAYS"),
+		# Under a month a bare "0 ay" reads as insolvency; say it in weeks.
+		return {"value": str(_runway_weeks(months)),
+				"unit": TranslationServer.translate("RUNWAY_UNIT_WEEKS"),
 				"positive": false, "note": ""}
 	return {"value": str(int(round(months))), "unit": TranslationServer.translate("RUNWAY_UNIT_MONTHS"),
 			"positive": false, "note": ""}
@@ -515,28 +514,27 @@ static func net_runway_text(months: float) -> String:
 
 
 ## İki runway değeri yan yana ("önce → sonra" şeritleri). net_runway_text tam aya
-## yuvarlar; iki sayı yan yana konduğunda bu, kırmızı bir kutuda "5 ay → 5 ay" yazan bir
-## yalan üretir. İki metin aynı çıkıp düşüş gerçekten anlamlıysa ikisi de GÜN'de yazılır.
-## `changed` yalnız sonlu sayılarda ve epsilon'lu karar verir: INF→INF kırmızıya boyanmaz,
-## kayan-nokta gürültüsü düşüş sayılmaz.
-const RUNWAY_PAIR_EPSILON := 0.05
-
-
+## yuvarlar; iki sayı yan yana konduğunda bu, "5 ay → 5 ay" yazan bir yalan üretir. Ay
+## metinleri aynı çıkıp hafta metinleri ayrışıyorsa ikisi de HAFTA'da yazılır. `changed`,
+## ekrana basılan iki metnin farklı olmasıdır: aynı okunan çift kırmızıya boyanmaz.
 static func net_runway_pair(before: float, after: float) -> Dictionary:
 	var before_text: String = net_runway_text(before)
 	var after_text: String = net_runway_text(after)
-	var worse: bool = is_finite(before) and is_finite(after) \
-			and (before - after) > RUNWAY_PAIR_EPSILON
-	if worse and before_text == after_text and GameState.cash >= 0:
-		before_text = _runway_days_text(before)
-		after_text = _runway_days_text(after)
-	return {"before": before_text, "after": after_text, "changed": worse}
+	if before_text == after_text and is_finite(before) and GameState.cash >= 0 \
+			and _runway_weeks(before) != _runway_weeks(after):
+		before_text = _runway_weeks_text(before)
+		after_text = _runway_weeks_text(after)
+	return {"before": before_text, "after": after_text, "changed": before_text != after_text}
 
 
-static func _runway_days_text(months: float) -> String:
-	# floor(): net_runway_parts'ın ay-altı dalıyla aynı gerekçe.
-	return "%d %s" % [int(floor(maxf(months, 0.0) * GameState.DAYS_PER_MONTH)),
-		TranslationServer.translate("RUNWAY_UNIT_DAYS")]
+static func _runway_weeks_text(months: float) -> String:
+	return "%d %s" % [_runway_weeks(months), TranslationServer.translate("RUNWAY_UNIT_WEEKS")]
+
+
+## Whole weeks of runway. floor(), not round(): a countdown must never promise a week the cash
+## cannot cover.
+static func _runway_weeks(months: float) -> int:
+	return int(floor(maxf(months, 0.0) * TimeModel.DAYS_PER_MONTH / TimeModel.DAYS_PER_TICK))
 
 
 ## Build progress (0.0-1.0) as the whole percent every surface prints — the single

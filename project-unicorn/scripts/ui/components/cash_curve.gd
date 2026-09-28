@@ -3,19 +3,19 @@ extends Control
 
 # ============================================================================
 # Nakit eğrisi. Gerçekleşen kasa çizgisi + iki kesikli
-# projeksiyon: "mevcut gidiş" (bugünkü günlük net, doğrusal) ve "satış hedefi
+# projeksiyon: "mevcut gidiş" (bugünkü net, doğrusal) ve "satış hedefi
 # tutarsa" (pipeline-ağırlıklı iyimser net). Desen triangle_radar.gd'den:
 # kendi _draw()'u olan, queue_redraw ile tazelenen, UiTokens renkli, tscn'siz
 # Control. Ekonomi burada HESAPLANMAZ — set_data'ya gelen her sayı bir motor
-# seam'inden çıkar; bu dosya yalnız piksel geometrisi çözer.
+# seam'inden çıkar; bu dosya yalnız piksel geometrisi çözer. Yatay eksen tiktir (hafta).
 #
 # Kullanım (FinanceOzetView):
 #   curve.set_data({
 #     "samples": [...],        # [{day:int, cash:int}] — pencere görünümde KIRPILMIŞ
 #     "today_day": int, "cash_now": int,
-#     "current_net": int,      # GameState.get_net_daily_flow()
-#     "optimistic_net": int,   # FinanceSystem.get_optimistic_daily_net()
-#     "horizon_days": int,     # projeksiyon uzunluğu (görünüm karar verir)
+#     "current_net": int,      # tik başına net: TimeModel.per_tick(GameState.get_net_daily_flow())
+#     "optimistic_net": int,   # tik başına: TimeModel.per_tick(FinanceSystem.get_optimistic_daily_net())
+#     "horizon_weeks": int,    # projeksiyon uzunluğu (görünüm karar verir)
 #     "ticks": [...],          # [{day:int, label:String}] ay başlangıçları
 #   })
 # ============================================================================
@@ -56,7 +56,7 @@ func _draw() -> void:
 	var cash_now: int = int(_d.cash_now)
 	var current_net: int = int(_d.current_net)
 	var optimistic_net: int = int(_d.optimistic_net)
-	var horizon_days: int = int(_d.horizon_days)
+	var horizon_weeks: int = int(_d.horizon_weeks)
 
 	# --- Alan (plot rect) ---
 	var x0: float = PAD_LEFT
@@ -66,9 +66,9 @@ func _draw() -> void:
 	if x1 - x0 < 8.0 or y1 - y0 < 8.0:
 		return
 
-	# --- Gün alanı: pencere başı → bugün + ufuk (en eski örnek ≤ bugün, ufuk ≥ 1 → aralık > 0) ---
+	# --- Tik alanı: pencere başı → bugün + ufuk (en eski örnek ≤ bugün, ufuk ≥ 1 → aralık > 0) ---
 	var day_min: float = float(samples[0].day)
-	var day_max: float = float(today_day + horizon_days)
+	var day_max: float = float(today_day + horizon_weeks)
 
 	# --- Nakit alanı: örnekler + projeksiyon uçları; $0 tabanı hep dahil ---
 	var cash_min: float = 0.0
@@ -76,8 +76,8 @@ func _draw() -> void:
 	for s in samples:
 		cash_min = minf(cash_min, float(s.cash))
 		cash_max = maxf(cash_max, float(s.cash))
-	var end_current: float = float(cash_now + current_net * horizon_days)
-	var end_optimistic: float = float(cash_now + optimistic_net * horizon_days)
+	var end_current: float = float(cash_now + current_net * horizon_weeks)
+	var end_optimistic: float = float(cash_now + optimistic_net * horizon_weeks)
 	if current_net < 0:
 		cash_min = minf(cash_min, end_current)
 		cash_max = maxf(cash_max, end_current)

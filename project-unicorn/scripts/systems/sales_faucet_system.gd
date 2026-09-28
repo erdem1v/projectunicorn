@@ -2,8 +2,9 @@ class_name SalesFaucetSystem
 extends RefCounted
 
 # THE MARKET FAUCET (§3) and the pipeline's clock (§4). Pure static logic, no scene
-# dependency. Dispatched daily from B2BSalesSystem.daily_tick, BEFORE the rep desk, so a rep
-# starting work today can pick up a lead that arrived today.
+# dependency. Dispatched daily from B2BSalesSystem.daily_tick: the inflow runs BEFORE the rep
+# desk, so a rep starting work today can pick up a lead that arrived today, and expire_leads
+# runs AFTER it, so the tick a lead expires on is still a tick a rep can take it.
 #
 # THE FAUCET READS THREE THINGS (§3) — assigned sales capacity, interest, and phase — and it
 # never dries: with zero sales staff a base inbound continues, and the 1★ band carries a hard
@@ -16,7 +17,7 @@ extends RefCounted
 # THE MARKET GUARD (§3.1) IS CHECKED HERE TOO. SalesSystem.daily_tick already gates the whole
 # B2B desk on a live B2B product, and this file re-asks. The duplication is deliberate: §3.1
 # says a consumer run must produce ZERO B2B leads, and a second reader costs one comparison a
-# day.
+# tick.
 #
 # NO RNG. Every draw is integer arithmetic over the run seed and the day, on SalesConstants'
 # mixer constants. Two runs with the same seed meet the same companies in the same order,
@@ -36,7 +37,6 @@ const SIZE_TO_STAR := {"small": 1, "mid": 2, "enterprise": 3}
 static func daily_tick() -> void:
 	if not market_open():
 		return
-	_tick_expiry()
 	_tick_return_locks()
 	_tick_whale_conditions()
 	_tick_inflow()
@@ -51,19 +51,19 @@ static func market_open() -> bool:
 #  §4 — lead life and the return lock
 # ============================================================================
 
-static func _tick_expiry() -> void:
+static func expire_leads() -> void:
 	for p in ProspectRegistry.get_all():
 		var lead: Prospect = p as Prospect
 		# §12 — "İşlenen lead | sayacı donar." A lead on a rep's desk does not age; the
 		# expiry day is pushed with the work so nothing accumulates behind the freeze.
 		if lead.is_being_worked():
-			lead.expires_on_day = GameState.day + SalesConstants.LEAD_LIFE_DAYS
+			lead.expires_on_day = GameState.day + TimeModel.ticks(SalesConstants.LEAD_LIFE_WEEKS)
 			continue
 		if GameState.day < lead.expires_on_day:
 			continue
 		# §4 — "süre dolunca dürüst düşer". The line is honest and the return is TRACELESS:
 		# no memory, no penalty, only a lock on how soon this company can come back.
-		lock_return(lead.company_name, SalesConstants.RETURN_LOCK_DAYS)
+		lock_return(lead.company_name, SalesConstants.RETURN_LOCK_WEEKS)
 		# The card disappears with the lead, so the sentence has to survive it somewhere the
 		# player can still read. The activity log is that place — an expiry the player never
 		# sees is an untelegraphed loss, and the line is the telegraph.
@@ -96,13 +96,13 @@ static func _tick_whale_conditions() -> void:
 		EventBus.whale_condition_met.emit(lead.id)
 
 
-## Hold a company out of the pool until `days` have passed. Expiry (§4), a lost meeting (§5.2)
+## Hold a company out of the pool until `weeks` have passed. Expiry (§4), a lost meeting (§5.2)
 ## and a walked or insulted negotiation (§5.3) all write this one ledger; §7.6's price-break
-## refusal ("fiyatta kal … 30 gün kilit") will too once its card is wired.
-static func lock_return(company_name: String, days: int) -> void:
+## refusal ("fiyatta kal … 4 hafta kilit") will too once its card is wired.
+static func lock_return(company_name: String, weeks: int) -> void:
 	if company_name == "":
 		return
-	var until: int = GameState.day + maxi(days, 1)
+	var until: int = GameState.day + maxi(TimeModel.ticks(weeks), 1)
 	var locks: Dictionary = GameState.sales_return_locks
 	locks[company_name] = maxi(int(locks.get(company_name, 0)), until)
 
@@ -115,26 +115,25 @@ static func is_return_locked(company_name: String) -> bool:
 #  §3 — the flow
 # ============================================================================
 
-## Leads per day before the daily cap. PUBLIC so the pipeline panel and the smoke suite read
-## the same number the tick uses.
-static func lead_rate_per_day() -> float:
+## Leads per week (one tick) before the tick cap. PUBLIC so the pipeline panel and the smoke
+## suite read the same number the tick uses.
+static func lead_rate_per_week() -> float:
 	# §3's "atanmış satış kapasitesi" is an ASSIGNMENT question, never a job title one: the
 	# founder counts when assigned, exactly like anyone else (Ekip §12.0).
-	var per_week: float = SalesConstants.FAUCET_BASE_PER_WEEK \
+	var rate: float = SalesConstants.FAUCET_BASE_PER_WEEK \
 		+ SalesConstants.FAUCET_PER_REP_PER_WEEK * float(HRSystem.assigned_to(HRConstants.AREA_SALES).size())
-	var rate: float = per_week / SalesConstants.DAYS_PER_WEEK
 	rate *= SalesConstants.interest_mult(ProductRead.interest())
 	rate *= SalesConstants.phase_mult(GameState.phase)
 	# §3 — "1★ akışı hiçbir durumda kurumaz." The floor sits UNDER the product of every
 	# multiplier, so a stale version with no interest still meets someone.
-	return maxf(rate, SalesConstants.ONE_STAR_FLOOR_PER_WEEK / SalesConstants.DAYS_PER_WEEK)
+	return maxf(rate, SalesConstants.ONE_STAR_FLOOR_PER_WEEK)
 
 
 static func _tick_inflow() -> void:
 	var progress: float = float(GameState.get_flag("sales_faucet_progress", 0.0)) \
-		+ lead_rate_per_day()
+		+ lead_rate_per_week()
 	var emitted: int = 0
-	while progress >= 1.0 and emitted < SalesConstants.FAUCET_DAILY_MAX:
+	while progress >= 1.0 and emitted < SalesConstants.FAUCET_TICK_MAX:
 		if spawn(_roll_star(emitted), "faucet") == null:
 			break
 		progress -= 1.0
@@ -231,7 +230,7 @@ static func spawn(star: int, source: String) -> Prospect:
 	p.star = s
 	p.archetype_id = archetype
 	p.spawned_on_day = GameState.day
-	p.expires_on_day = GameState.day + SalesConstants.LEAD_LIFE_DAYS
+	p.expires_on_day = GameState.day + TimeModel.ticks(SalesConstants.LEAD_LIFE_WEEKS)
 	p.source = source
 	# The feature this company wants, from the SAME picker the account side uses, so a
 	# promise given at the table points at the same kind of thing a retention promise does

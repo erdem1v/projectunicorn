@@ -6,7 +6,7 @@ extends Control
 # SATIRLAR: çalışanda ANA + İKİNCİL alan + LİDERLİK (§4.4 altı alanı düz listede göstermeyi
 # yasaklıyor). Kurucunun ana/ikincil ayrımı yok, onda ALTI ALAN + Liderlik listelenir.
 #
-# SÜRE METNİ gün sayısından türetilir (§5.5), sabit bir anahtara gömülmez:
+# SÜRE METNİ TRAINING_WEEKS sabitinden türetilir (§5.5), sabit bir anahtara gömülmez:
 # HRConstants.training_duration_text().
 #
 # BEDEL KADEMELİDİR VE HER SATIRDA OKUNUR (§5.5), kilitli satırda da: fark ancak her satır

@@ -36,6 +36,10 @@ const INDENT_PERSON := 46
 const STEP_BTN := Vector2(22, 24)
 const STEP_VALUE_W := 56
 const MORALE_METER := Vector2(44, 4)
+## MORAL sütunu çubuk ve sayının yanında üç şevrondan fazlasını taşımaz.
+const CHEVRON_MAX := 3
+## HR_HOURS_HOVER_<saat> cümleleri bu saate kadar yazılı; daha uzun günler HR_HOURS_HOVER_LONG'u paylaşır.
+const HOVER_KEYED_MAX := 11
 
 @onready var _root_box: VBoxContainer = %RootBox
 
@@ -155,7 +159,7 @@ func _head_cell(text: String, width: int, align: int = HORIZONTAL_ALIGNMENT_LEFT
 # --- Satırlar -----------------------------------------------------------------
 
 func _company_row(headcount: int) -> Control:
-	var hours: int = int(_draft["company"])
+	var hours: int = WorkHoursSystem.hours_in(_draft, null)
 	var start: int = int(_draft["start"])
 
 	var col := VBoxContainer.new()
@@ -192,7 +196,7 @@ func _company_row(headcount: int) -> Control:
 
 func _group_row(group_id: String) -> Control:
 	var owns: bool = WorkHoursSystem.group_has_override_in(_draft, group_id)
-	var hours: int = int((_draft["groups"] as Dictionary).get(group_id, _draft["company"]))
+	var hours: int = WorkHoursSystem.group_hours_in(_draft, group_id)
 	var name_cell := UiFactory.make_label(UiTokens.tr_upper(HRConstants.group_label(group_id)), &"SectionAmber")
 	name_cell.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	return _row(H_ROW, INDENT_GROUP, false, UiTokens.DIVIDER_LIGHT, [
@@ -254,7 +258,7 @@ func _hours_cell(hours: int, inherited: bool, short_day: bool, on_set: Callable)
 		color = UiTokens.positive()
 	return _pin(W_HOURS, _centered(_stepper(
 		tr("HR_HOURS_VALUE").format({"n": hours}),
-		hours > HRConstants.WORK_HOURS_MIN, hours < HRConstants.WORK_HOURS_MAX,
+		hours > HRConstants.WORK_HOURS_MIN, hours < WorkHoursSystem.max_hours(int(_draft["start"])),
 		on_set.bind(hours - 1), on_set.bind(hours + 1), color, inherited)))
 
 
@@ -380,8 +384,8 @@ func _morale_cell(emp: Character, hours: int) -> Control:
 	return _pin(W_MORALE, cell)
 
 
-## Kademeli şevron: 9s bir · 10s iki · 11s üç amber aşağı · 7s düz çizgi · 5-6s yeşil yukarı ·
-## 8s hiç. Kademenin cümlesi tooltip'te.
+## Kademeli şevron: 9s bir · 10s iki · 11s ve üstü üç amber aşağı · 7s düz çizgi · 5-6s yeşil
+## yukarı · 8s hiç. Kademenin cümlesi tooltip'te.
 func _morale_direction(hours: int) -> Control:
 	var delta: int = hours - HRConstants.WORK_HOURS_DEFAULT
 	if delta == 0:
@@ -389,10 +393,10 @@ func _morale_direction(hours: int) -> Control:
 	var box := HBoxContainer.new()
 	box.add_theme_constant_override("separation", 1)
 	box.alignment = BoxContainer.ALIGNMENT_END
-	box.tooltip_text = tr("HR_HOURS_HOVER_%d" % hours)
+	box.tooltip_text = tr("HR_HOURS_HOVER_LONG" if hours > HOVER_KEYED_MAX else "HR_HOURS_HOVER_%d" % hours)
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
 	if delta > 0:
-		for _i in delta:
+		for _i in mini(delta, CHEVRON_MAX):
 			box.add_child(HRUiShared.chevron(9, UiTokens.ACCENT_DEEP, false))
 	elif delta == -1:
 		box.add_child(HRUiShared.chevron_flat(9, UiTokens.positive()))
@@ -415,10 +419,11 @@ func _cost_block() -> Control:
 	col.add_theme_constant_override("separation", 9)
 	col.add_child(_gap(18))
 
-	# DELTA: "önce" bugün yayınlanmış günlük burn, "sonra" taslağın ima ettiği burn.
+	# DELTA: "önce" TopBar'ın canlı aylık burn'ü, "sonra" taslağın ima ettiği aylık burn. Mesai
+	# tahakkuku günlük orandır ve aya TopBar'ınkiyle aynı çarpanla (DAYS_PER_MONTH) çevrilir.
 	var published: int = int(FinanceSystem.get_burn_breakdown().get("overtime", 0))
-	var before: int = GameState.daily_burn
-	var after: int = before - published + WorkHoursSystem.daily_overtime_in(_draft)
+	var before: int = int(FinanceSystem.get_monthly_flow()["expense"])
+	var after: int = before + (WorkHoursSystem.daily_overtime_in(_draft) - published) * TimeModel.DAYS_PER_MONTH
 	var delta := HBoxContainer.new()
 	delta.add_theme_constant_override("separation", 10)
 	delta.add_child(UiFactory.make_label(tr("HR_HOURS_COST_BURN"), &"RowMeta", UiTokens.INK_MUTED))

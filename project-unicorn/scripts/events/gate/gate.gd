@@ -191,6 +191,10 @@ static func _g4_window(card: Dictionary, origin: Origin) -> String:
 	# allowed_hours governs hourly cards only: the daily tick runs at a fixed hour, so a window
 	# on a daily card could make it permanently ineligible. Lint rejects that combination.
 	if tick == "hourly":
+		# The night's hours are simulated in one batch nobody watches; only a critical card may
+		# claim one, and it is shown when the batch ends.
+		if TimeManager.is_night() and not (card["tags"] as Array).has("critical"):
+			return "hour %d is in the skipped night" % GameState.current_hour
 		var window: Array = card.get("allowed_hours", DEFAULT_ALLOWED_HOURS)
 		if not _hour_in(GameState.current_hour, window):
 			return "hour %d outside allowed_hours %s" % [GameState.current_hour, str(window)]

@@ -6,6 +6,7 @@
   "category": "funding",
   "tick": "daily",
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": ["critical", "build_safe", "terminal_warning"],
   "speaker": "char_mentor_frank",
 
@@ -14,7 +15,7 @@
   "condition": {
     "all": [
       { "seam": "finance.cash", "op": "<", "value": 0 },
-      { "seam": "finance.shutter_days_left", "op": ">=", "value": 0 }
+      { "seam": "finance.shutter_weeks_left", "op": ">=", "value": 0 }
     ]
   },
 

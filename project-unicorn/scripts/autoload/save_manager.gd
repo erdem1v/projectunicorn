@@ -13,13 +13,13 @@ extends Node
 # NegotiationSystem) are reset, never serialised: can_save() refuses while any of them
 # is_active(), so a sitting is always idle at the moment a save is taken.
 
-const SCHEMA_VERSION := 13
+const SCHEMA_VERSION := 14
 
 ## GDD ÜRÜN rev 6.1 §22.5 — eski kayıt TAŞINMAZ. "Yükleyici eski sürümü görürse kullanıcıya
 ## AÇIK MESAJ verir, sessizce bozuk state üretmez." Düz özellik listesi hat durumlarına
 ## çevrilemez ve v9 olay bloğu v10 motorunun arklarını/latch'lerini taşımaz; çevirmeye
 ## çalışmak çalışıyor görünen ve yanlış olan bir koşu üretir. O yüzden kapı sürümdedir.
-## v11-v13 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
+## v11-v14 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
 const MIN_LOADABLE_VERSION := 10
 const SAVE_DIR := "user://saves/"
 
@@ -28,20 +28,17 @@ const QUICK_SLOT_ID := "quick"
 const AUTO_SLOT_IDS: Array[String] = ["auto_1", "auto_2", "auto_3"]
 const MANUAL_SLOT_PREFIX := "manual_"
 
-# Settings key; values "off" | "daily" | "weekly" | "monthly".
 const SETTING_AUTOSAVE_FREQUENCY := "autosave_frequency"
-const AUTOSAVE_INTERVAL_DAYS := {"off": 0, "daily": 1, "weekly": 7, "monthly": 30}   # [WORKING]
+const AUTOSAVE_FREQUENCIES: Array[String] = ["off", "weekly", "monthly"]
 
-# Real-time floor between two autosaves. At 3x a day is 3 real seconds, so "daily" would
-# otherwise write ~20 full saves a minute. A skipped write stays pending and lands at the next
-# safe boundary: coalesced, never lost.
-const AUTOSAVE_MIN_REAL_SECONDS := 20                              # [WORKING]
+# Real-time floor between two autosaves: a short workday at 4x is about 20 real seconds. A
+# skipped write stays pending and lands at the next safe boundary: coalesced, never lost.
+const AUTOSAVE_MIN_REAL_SECONDS := 10                      # [WORKING]
 
 # Smoke, probe and screenshot harnesses drive hundreds of ticks in seconds; they must never
 # write into the player's slots.
 var _autosave_enabled: bool = true
 var _autosave_pending: bool = false
-var _last_autosave_day: int = -1
 var _last_autosave_msec: int = 0
 # "Days have been played since the last save." Raised at the day-tick boundary, cleared by a
 # successful save and by a load.
@@ -53,6 +50,8 @@ func _ready() -> void:
 	# day_tick_completed, NOT day_advanced: day_advanced fires before the daily slots run, so
 	# a save hung off it would pair the new day number with yesterday's systems.
 	EventBus.day_tick_completed.connect(_on_day_tick_completed)
+	EventBus.month_ended.connect(_on_month_ended)
+	EventBus.event_resolved.connect(_on_event_resolved)
 	for a in OS.get_cmdline_args() + OS.get_cmdline_user_args():
 		if _is_harness_arg(String(a)):
 			_autosave_enabled = false
@@ -141,6 +140,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		_migrate_sales_rev6(state)
 	if version < 13:
 		_migrate_13(state)
+	if version < 14:
+		_migrate_14(state, meta)
 	return {"ok": true, "error_key": "", "meta": meta, "state": state}
 
 
@@ -232,8 +233,6 @@ func apply_loaded_state(payload: Dictionary) -> bool:
 
 	TimeManager.set_suspended(false)
 	_dirty = false
-	_autosave_pending = false
-	_last_autosave_day = GameState.day
 	return true
 
 
@@ -243,6 +242,8 @@ func reset_all_owners() -> void:
 
 	# Clock first, so nothing ticks into the inconsistent window below.
 	TimeManager.reset()
+	# A pending autosave belongs to the run being replaced.
+	_autosave_pending = false
 
 	# Registries, in SaveCodec's restore order. Direct clears, no signals: CustomerRegistry
 	# must not emit customer_removed, which PromiseRegistry turns into promise drops.
@@ -310,27 +311,36 @@ func _restore_systems(state: Dictionary) -> void:
 
 func _on_day_tick_completed(_day: int) -> void:
 	_dirty = true
-	if not _autosave_enabled:
-		return
-	# Read here, never in _ready: Settings is autoloaded after SaveManager.
-	var freq: String = String(Settings.get_value(SETTING_AUTOSAVE_FREQUENCY))
-	var interval: int = int(AUTOSAVE_INTERVAL_DAYS.get(freq,
-		AUTOSAVE_INTERVAL_DAYS[Settings.DEFAULTS[SETTING_AUTOSAVE_FREQUENCY]]))
-	if interval <= 0:
-		return                                   # "off"
-	if _last_autosave_day < 0:
-		_last_autosave_day = GameState.day       # first tick of a run arms the clock
-		return
-	if GameState.day - _last_autosave_day >= interval:
+	if _autosave_frequency() == "weekly":
 		_autosave_pending = true
-	# A pending autosave that cannot be taken now waits for the next safe day boundary.
-	if not _autosave_pending or not can_save():
+	_try_autosave()
+
+
+func _on_month_ended(_close: Dictionary) -> void:
+	if _autosave_frequency() == "monthly":
+		_autosave_pending = true
+
+
+# An autosave a card blocked lands once the queue is empty, not a week later.
+func _on_event_resolved(_event_id: String, _choice_index: int) -> void:
+	if not EventGate.has_pending():
+		_try_autosave()
+
+
+# Read at use, never in _ready: Settings is autoloaded after SaveManager.
+func _autosave_frequency() -> String:
+	return Settings.get_choice(SETTING_AUTOSAVE_FREQUENCY, AUTOSAVE_FREQUENCIES)
+
+
+func _try_autosave() -> void:
+	# A pending autosave that cannot be taken now waits for the next safe boundary.
+	if not _autosave_enabled or not _autosave_pending or _autosave_frequency() == "off" \
+			or not can_save():
 		return
 	if Time.get_ticks_msec() - _last_autosave_msec < AUTOSAVE_MIN_REAL_SECONDS * 1000:
 		return
 	if save_to_slot(_next_auto_slot_id()):
 		_autosave_pending = false
-		_last_autosave_day = GameState.day
 		_last_autosave_msec = Time.get_ticks_msec()
 
 
@@ -474,6 +484,164 @@ func _migrate_sales_rev6(state: Dictionary) -> void:
 func _migrate_13(state: Dictionary) -> void:
 	var gs: Dictionary = state.get("game_state", {}) as Dictionary
 	gs["office_id"] = "ishani" if int(gs.get("run_angel_amount", 0)) > 0 else "home"
+
+
+## v13 → v14: the weekly time model. One tick is a week, so every day stamp becomes a week stamp,
+## a countdown rounds up, a streak rounds down and a fractional count divides. A renamed key is
+## written under its v14 name. Pure and cheap: list_slots reads every slot through here.
+func _migrate_14(state: Dictionary, meta: Dictionary) -> void:
+	var gs: Dictionary = state.get("game_state", {}) as Dictionary
+	var flags: Dictionary = gs.get("flags", {}) as Dictionary
+	var reg: Dictionary = state.get("registries", {}) as Dictionary
+	var sys: Dictionary = state.get("systems", {}) as Dictionary
+	var ev: Dictionary = sys.get(EvSave.BLOCK_KEY, {}) as Dictionary
+	var today: int = int(gs.get("day", 1))
+	var ceil_weeks := func(n: Variant) -> int:
+		return int(n) if int(n) <= 0 else ceili(float(n) / TimeModel.DAYS_PER_TICK)
+	var floor_weeks := func(n: Variant) -> int: return int(n) / TimeModel.DAYS_PER_TICK
+	var frac_weeks := func(n: Variant) -> float: return float(n) / TimeModel.DAYS_PER_TICK
+
+	_stamp_keys(meta, ["day"], today)
+
+	_stamp_keys(gs, ["day", "brand_low_since_day", "seed_door_open_day", "seed_closed_day",
+		"acq_road_over_day", "bootstrap_milestone_day", "office_move_day"], today)
+	# A same-tick latch only ever meant "not again today".
+	gs["vc_meeting_cancel_day"] = _week_stamp(today, today) \
+		if int(gs.get("vc_meeting_cancel_day", -1)) == today else -1
+	_convert(gs, "shutter_days_left", "shutter_weeks_left", ceil_weeks)
+	for key in ["transactions", "sales_log", "sales_loss_log"]:
+		_stamp_each(gs.get(key, []), ["day"], today)
+	# One cash sample per tick: each week keeps its last day's.
+	var weekly: Dictionary = {}
+	for row in gs.get("cash_history", []):
+		_stamp_keys(row, ["day"], today)
+		weekly[row["day"]] = row
+	gs["cash_history"] = weekly.values()
+	gs["cs_escalation_days"] = (gs.get("cs_escalation_days", []) as Array).map(
+		func(d: Variant) -> int: return _week_stamp(d, today))
+	_stamp_each(gs.get("sales_account_memory", {}), ["loss_day", "insult_day"], today)
+	var locks: Dictionary = gs.get("sales_return_locks", {}) as Dictionary
+	_stamp_keys(locks, locks.keys(), today)
+	_stamp_each((gs.get("active_sheets", []) as Array) + [gs.get("seed_sheet")],
+		["granted_day", "expires_day"], today)
+	_stamp_keys(gs.get("pending_meeting", {}), ["day"], today)
+	_stamp_keys(gs.get("prep", {}), ["done_day"], today)
+	var search: Dictionary = gs.get("hr_search", {}) as Dictionary
+	search.erase("started_day")
+	_stamp_keys(search, ["arrival_day"], today)
+	var feed: Dictionary = gs.get("news_feed", {}) as Dictionary
+	_stamp_each(feed.get("stream", []), ["day"], today)
+	var rivals: Dictionary = feed.get("recent_rivals", {}) as Dictionary
+	_stamp_keys(rivals, rivals.keys(), today)
+	for row in gs.get("month_history", []):
+		_stamp_keys(row, ["start_day", "end_day"], today)
+		_convert(row, "red_days", "red_weeks", ceil_weeks)
+	# The summary period opens where the month did; the month ledger keeps only its own keys.
+	var month: Dictionary = gs.get("month_ledger", {}) as Dictionary
+	_stamp_keys(month, ["start_day"], today)
+	_convert(month, "red_days", "red_weeks", ceil_weeks)
+	var period: Dictionary = {"start_day": int(month.get("start_day", 1)), "cash": int(month.get("cash", 0))}
+	for key in ["mrr", "employees", "brand"]:
+		period[key] = int(month.get(key, 0))
+		month.erase(key)
+	gs["summary_ledger"] = period
+	# Seeded where runway already is, so the load announces nothing.
+	var daily_net: int = int(round(float(gs.get("mrr", 0)) / TimeModel.DAYS_PER_MONTH)) \
+		- int(gs.get("daily_burn", 0))
+	gs["runway_warn_band"] = FinanceSystem.runway_band(
+		GameState.runway_months_for(int(gs.get("cash", 0)), daily_net))
+	# The week opens at 08:00: an earlier start moves up and keeps its length.
+	gs["company_start_hour"] = maxi(int(gs.get("company_start_hour", HRConstants.START_HOUR_DEFAULT)),
+		HRConstants.START_HOUR_MIN)
+
+	_stamp_keys(flags, ["mvp_launch_day", "mvp_version_launch_day", "sales_weekly_anchor_day",
+		"angel_seed_accepted_day", "finance_runway_warn_snooze_until_day"], today)
+	_stamp_each(flags.get("mvp_version_history", []), ["day"], today)
+	# One bug sample per tick: the daily window keeps its newest.
+	if flags.has("mvp_bug_history"):
+		flags["mvp_bug_history"] = (flags["mvp_bug_history"] as Array).slice(-1)
+	_convert(flags, "mvp_sprint_days_total", "mvp_sprint_weeks_total", ceil_weeks)
+	_convert(flags, "mvp_sprint_days_elapsed", "mvp_sprint_weeks_elapsed", frac_weeks)
+	for key in ["sales_meeting_active", "sales_meeting_used_day", "sales_weekly_closes"]:
+		flags.erase(key)
+
+	for c in reg.get("characters", []):
+		_stamp_keys(c, ["last_raise_day", "last_promotion_day", "hire_day", "leave_until_day"], today)
+		_stamp_each(c.get("employment_history", []), ["day"], today)
+		_convert(c, "flight_risk_days", "flight_risk_weeks", floor_weeks)
+		_convert(c, "training_days_left", "training_weeks_left", ceil_weeks)
+	for c in reg.get("customers", []):
+		_stamp_keys(c, ["acquired_on_day", "onboarding_until", "last_risk_exit_day",
+			"last_expansion_day", "support_request_since_day"], today)
+		c["churn_countdown"] = ceil_weeks.call(c.get("churn_countdown", -1))
+		c["risk_streak"] = floor_weeks.call(c.get("risk_streak", 0))
+		c["cs_request_phase"] = floor_weeks.call(c.get("cs_request_phase", 0)) \
+			% TimeModel.ticks(B2BConstants.CS_REQUEST_INTERVAL_WEEKS)
+	for p in reg.get("prospects", []):
+		_stamp_keys(p, ["spawned_on_day", "expires_on_day", "work_started_day"], today)
+		p.erase("work_due_day")
+	_stamp_each(reg.get("promises", []), ["deadline_day"], today)
+
+	var build: Variant = (sys.get("product", {}) as Dictionary).get("active_build")
+	if build is Dictionary:
+		_stamp_keys(build, ["start_day", "beta_entered_day"], today)
+		_convert(build, "iteration_round_days", "iteration_round_weeks", frac_weeks)
+	_stamp_keys(sys.get("rnd", {}), ["note_last_day"], today)
+
+	_stamp_each(ev.get("flags", {}), ["set_day"], today)
+	_stamp_each(ev.get("timed_flags", {}), ["expires_on", "set_day"], today)
+	_stamp_each(ev.get("stamps", {}), ["day"], today)
+	_stamp_each(ev.get("latches", {}), ["last_day"], today)
+	_stamp_each(ev.get("held", []), ["day"], today)
+	# A scope slot {type, id, bound_day} rides in every context and in a history row's entities.
+	for row in ev.get("rows", []):
+		_stamp_keys(row, ["day"], today)
+		_stamp_each(row.get("entities", {}), ["bound_day"], today)
+	for e in (ev.get("queue", []) as Array) + (ev.get("schedule", []) as Array) \
+			+ (ev.get("papers", {}) as Dictionary).values():
+		_stamp_keys(e, ["admitted_day", "fire_on_day", "expires_on"], today)
+		_stamp_each(e.get("context", {}), ["bound_day"], today)
+	for arc in (ev.get("arcs", {}) as Dictionary).values():
+		_stamp_keys(arc, ["started_day", "awaiting_since"], today)
+		_stamp_keys(arc.get("subject", {}), ["bound_day"], today)
+		for f in arc.get("frozen_schedule", []):
+			_convert(f, "remaining_days", "remaining_weeks", ceil_weeks)
+			_stamp_each(f.get("context", {}), ["bound_day"], today)
+	# Seven days folded into one week would fill this week's interrupt count.
+	ev["tempo_window"] = []
+
+
+## A v13 day as a week stamp. A past day maps to its week, W(d) = (d − 1) / 7 + 1; a due date
+## maps to today's week plus the weeks it had left, rounded up, so nothing falls due early. −1,
+## 0 and NO_EXPIRY_DAY are sentinels and stay.
+static func _week_stamp(d: Variant, today: int) -> int:
+	var day: int = int(d)
+	if day <= 0 or day == SeedConstants.NO_EXPIRY_DAY:
+		return day
+	if day > today:
+		return _week_stamp(today, today) + ceili(float(day - today) / TimeModel.DAYS_PER_TICK)
+	return (day - 1) / TimeModel.DAYS_PER_TICK + 1
+
+
+## Rewrites `keys` of a dictionary as week stamps. Anything else (a null resource, a context's
+## scalar value) is left alone.
+static func _stamp_keys(d: Variant, keys: Array, today: int) -> void:
+	if d is Dictionary:
+		for key in keys:
+			if d.has(key):
+				d[key] = _week_stamp(d[key], today)
+
+
+## _stamp_keys over every row of an array or every value of a dictionary.
+static func _stamp_each(rows: Variant, keys: Array, today: int) -> void:
+	for row in (rows.values() if rows is Dictionary else rows):
+		_stamp_keys(row, keys, today)
+
+
+static func _convert(d: Dictionary, from: String, to: String, f: Callable) -> void:
+	if d.has(from):
+		d[to] = f.call(d[from])
+		d.erase(from)
 
 
 # ----------------------------------------------------------------------------

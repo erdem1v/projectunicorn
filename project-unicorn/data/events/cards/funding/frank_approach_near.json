@@ -5,6 +5,7 @@
   "category": "funding",
   "tick": "daily",
   "class": "interrupt",
+  "expires_weeks": 2,
   "tags": [
     "critical",
     "build_safe"
@@ -41,7 +42,7 @@
         "reason": "a later approach line already spoke; an earlier one never follows it"
       },
       {
-        "seam": "finance.shutter_days_left",
+        "seam": "finance.shutter_weeks_left",
         "op": "<",
         "value": 0,
         "reason": "held while the shutter runs (GDD 7.4)"

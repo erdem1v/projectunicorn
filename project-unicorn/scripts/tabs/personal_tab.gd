@@ -103,7 +103,7 @@ func _header() -> Control:
 	head.add_child(UiFactory.make_label(tr("PER_HEADER_META").format({
 		"origin": UiTokens.tr_upper(_origin_label()),
 		"phase": UiTokens.tr_upper(GameState.phase_display_name(GameState.phase)),
-		"n": _tenure_days(),
+		"n": _tenure_weeks(),
 	}), &"TitleRowSummary"))
 	var pad := Control.new()
 	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -116,8 +116,8 @@ func _origin_label() -> String:
 	return tr(String(origin.get("name_key", "")))
 
 
-## Kıdem = koşunun kaçıncı günü. Kurucunun hire_day'i yok (işe alınmadı, kurdu).
-func _tenure_days() -> int:
+## Kıdem = koşunun kaçıncı haftası. Kurucunun hire_day'i yok (işe alınmadı, kurdu).
+func _tenure_weeks() -> int:
 	return maxi(GameState.day, 1)
 
 
@@ -158,7 +158,7 @@ func _founder_card(founder: Character) -> Control:
 		UiTokens.tr_upper(_origin_label()), &"RowMeta", UiTokens.INK_DIM))
 	meta.add_child(HRUiShared.v_hairline(11))
 	meta.add_child(UiFactory.make_label(
-		tr("PER_TENURE").format({"n": _tenure_days()}), &"RowMeta", UiTokens.INK_DIM))
+		tr("PER_TENURE").format({"n": _tenure_weeks()}), &"RowMeta", UiTokens.INK_DIM))
 	name_block.add_child(meta)
 	right.add_child(name_block)
 

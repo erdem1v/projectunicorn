@@ -1,10 +1,11 @@
 {
-  "_port_note": "Scheduled by the event probe, which freezes it with the arc, thaws it and asserts the relative day survived.",
+  "_port_note": "Scheduled by the event probe, which freezes it with the arc, thaws it and asserts the relative week survived.",
   "id": "fixture.subject_open",
   "version_scope": "fixture",
   "category": "team",
   "tick": "scheduled",
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": [
     "build_safe"
   ],

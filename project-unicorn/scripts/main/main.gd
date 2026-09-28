@@ -2,7 +2,7 @@ extends Node
 
 # Main scene root — owns the launch lifecycle:
 #   1. Pause the clock (TimeManager auto-starts at 1x in its own _ready) so onboarding keeps
-#      day/hour at 1/09:00.
+#      day/hour at 1/08:00.
 #   2. Mount OnboardingFlow. GameShell is NOT mounted upfront: its children paint from
 #      GameState in _ready(), so it can only mount after initialize_run.
 #   3. On flow completed (or F12 debug skip): swap the flow for GameShell and mount the
@@ -29,6 +29,7 @@ const SYSTEM_MENU_MODAL := preload("res://scenes/modals/SystemMenuModal.tscn")
 const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
 const RND_CARD_MODAL := preload("res://scenes/modals/RnDCardModal.tscn")
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
+const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason for the founder's trip
 
 var _flow: Node = null
 var _shell: Node = null
@@ -41,7 +42,7 @@ var _settings_modal: Node = null
 var _confirm_modal: Node = null
 var _ending_modal: Node = null       # mounts once, never dismissed back to gameplay
 var _milestone_modal: Node = null    # the same paper in milestone mode (EA / full)
-var _month_modal: Node = null
+var _summary_modal: Node = null
 var _meeting_scene: Node = null
 var _term_table: Node = null
 var _sales_meeting: Node = null      # Satış §5.0
@@ -53,15 +54,20 @@ var _pre_event_speed: int = -1
 var _pre_settings_speed: int = -1
 var _pre_confirm_speed: int = -1
 var _pre_system_speed: int = -1
-var _pre_month_speed: int = -1
+var _pre_summary_speed: int = -1
 var _pre_dialogue_speed: int = -1
 var _pre_milestone_speed: int = -1
+# The founder's trip to an outside meeting: set before the trip's first await, so the event
+# restore and the sitting guards see it; a card that arrives during it waits for the sitting.
+var _in_transit: bool = false
+var _card_waiting := false
+var _travel_on: bool = true          # shots stage their surfaces without the trip
 # Ar-Ge kartı: aynı anda en fazla bir tane. Bir keşif ile koşunun ilk raporu aynı güne
 # düşebilir ve iki üst üste scrim karartmayı ikiye katlar; ikincisi bu kuyrukta bekler.
 var _rnd_card: Node = null
 var _rnd_card_queue: Array[Dictionary] = []
 
-var _tempo_last_msec: int = 0   # --tempo-probe: real-clock stamp of the previous day boundary
+var _tempo_last_msec: int = 0   # --tempo-probe: real-clock stamp of the previous 08:00
 
 const _ERP_SHIPPED_LINES := [
 	["line_erp_ledger", 2, "line_erp_ledger_k2", 1.06],
@@ -151,7 +157,7 @@ func _run_debug_harness() -> bool:
 			get_tree().quit()
 		return true
 
-	# --run-log=<preset>:<days>:<mode>[:<seed>]. "sim" finishes inside run(); the real-clock
+	# --run-log=<preset>:<weeks>:<mode>[:<seed>]. "sim" finishes inside run(); the real-clock
 	# modes have only armed their handlers and must stay alive to tick.
 	var run_log: String = _flag_value("--run-log=", _run_args())
 	if run_log != "":
@@ -181,7 +187,7 @@ func _run_debug_harness() -> bool:
 		"--event-lint=": func(v: String) -> void: _quit_with(EvLint.run(v == "baseline")),
 		"--why-fire=": _run_why_fire,
 		"--event-harness=": func(v: String) -> void: _quit_with(EvHarness.run(v)),
-		"--tempo-probe=": func(v: String) -> void: _run_tempo_probe(int(v)),
+		"--tempo-probe=": _run_tempo_probe,
 		"--render-probe=": _run_render_probe,
 		"--b2b-shot=": _run_b2b_shot,
 		"--event-shot=": _run_event_shot,
@@ -198,6 +204,8 @@ func _run_debug_harness() -> bool:
 		"--onboard-shot=": func(v: String) -> void: _run_onboard_shot(int(v)),
 		"--theme-audit=": _run_theme_audit,
 		"--office-shot=": _run_office_shot,
+		"--travel-shot=": _run_travel_shot,
+		"--day-shot=": _run_day_shot,
 	}
 	for prefix in valued:
 		var value: String = _flag_value(prefix, cmdline)
@@ -345,16 +353,21 @@ func _run_render_probe(tab_id: String) -> void:
 	get_tree().quit()
 
 
-# --tempo-probe=<speed idx> runs the REAL clock headless and prints one line per day boundary,
-# so seconds-per-day can be stopwatched; the smoke drives ticks directly and cannot measure it.
-# The STATE line must be identical across speeds for the same seed (tick purity). Day 1 is
-# only 15 in-game hours, so its boundary just starts the stopwatch.
-func _run_tempo_probe(idx: int) -> void:
-	if idx <= 0 or idx >= TimeManager.SECONDS_PER_DAY.size():
+const TEMPO_STOP_DAY := 3
+
+
+# --tempo-probe=<speed idx>[:shell] runs the REAL clock and prints one line per week, 08:00 to
+# 08:00 (the night skip lands there), with its deviation from TimeModel's target; the smoke
+# drives ticks directly and cannot measure it. Headless it times the clock alone; `:shell`
+# (windowed) mounts the shell, so the office's walk-out gate is in the cost. The STATE line must
+# be identical across speeds for the same seed (tick purity).
+func _run_tempo_probe(spec: String) -> void:
+	var parts: PackedStringArray = spec.split(":")
+	var idx: int = int(parts[0])
+	if idx <= 0 or idx >= TimeModel.SECONDS_PER_HOUR.size():
 		print("TEMPO ERROR bad speed index %d" % idx)
 		get_tree().quit()
 		return
-	var stop_day: int = 6
 	_seed_run_reproducible()
 	# Give the HOURLY path real work — build effort, B2C audience flow, post-ship wear and bug
 	# accrual — because that is where a speed-coupled bug would surface. mvp_shipped is
@@ -376,27 +389,34 @@ func _run_tempo_probe(idx: int) -> void:
 	ProductSystem.start_build("ai_assistant",
 		["ai_assistant_chat", "ai_assistant_memory"], "", "Nova")
 	# Design rounds chain by themselves; take the development seat as soon as it is offered so
-	# effort keeps flowing for the whole window.
-	for i in 24 * 30:
+	# effort keeps flowing for the whole window. The rounds get an economy month of hours at most.
+	var month_ticks: int = ceili(float(TimeModel.DAYS_PER_MONTH) / TimeModel.DAYS_PER_TICK)
+	for i in TimeModel.HOURS_PER_DAY * month_ticks:
 		if ProductSystem.get_active_build() == null or ProductSystem.can_enter_development():
 			break
-		ProductSystem.hourly_tick(i % 24)
+		ProductSystem.hourly_tick(i % TimeModel.HOURS_PER_DAY)
 	ProductSystem.enter_development()
-	print("TEMPO START speed=%d want_ms=%d" % [idx, int(TimeManager.SECONDS_PER_DAY[idx] * 1000.0)])
-	EventBus.day_advanced.connect(func(day: int) -> void:
+	if parts.size() > 1 and parts[1] == "shell":
+		_begin_shot()
+		await _mount_shot_shell()
+	var want_ms: int = int(TimeModel.seconds_per_tick(idx) * 1000.0)
+	print("TEMPO START speed=%d want_ms=%d" % [idx, want_ms])
+	EventBus.night_skipped.connect(func() -> void:
 		var now: int = Time.get_ticks_msec()
-		if _tempo_last_msec > 0:
-			print("TEMPO speed=%d day=%d delta_ms=%d" % [idx, day, now - _tempo_last_msec])
+		var delta_ms: int = now - _tempo_last_msec
+		print("TEMPO speed=%d day=%d delta_ms=%d want_ms=%d dev=%+.1f%%" % [idx, GameState.day,
+			delta_ms, want_ms, 100.0 * (delta_ms - want_ms) / want_ms])
 		_tempo_last_msec = now
 		var build: FeatureBuild = ProductSystem.get_active_build()
 		var efor: float = build.efor_spent if build != null else 0.0
 		print("TEMPO STATE day=%d cash=%d mrr=%d brand=%d rep=%d aud=%.4f efor=%.4f" % [
-			day, GameState.cash, GameState.mrr, GameState.brand, GameState.reputation,
+			GameState.day, GameState.cash, GameState.mrr, GameState.brand, GameState.reputation,
 			float(GameState.get_flag("b2c_audience", 0.0)), efor])
-		if day >= stop_day:
+		if GameState.day >= TEMPO_STOP_DAY:
 			print("TEMPO DONE speed=%d" % idx)
 			get_tree().quit()
 	)
+	_tempo_last_msec = Time.get_ticks_msec()
 	EventBus.speed_change_requested.emit(idx)
 
 
@@ -406,7 +426,9 @@ func _run_tempo_probe(idx: int) -> void:
 
 ## Common opening of every shot. The window drops to windowed mode first: the default mode is
 ## borderless, where a size assignment is silently swallowed. Headless makes all of it a no-op.
+## A shot mounts its sitting at once, without the founder's trip.
 func _begin_shot() -> void:
+	_travel_on = false
 	get_tree().paused = false
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	var win_size: Vector2i = _shot_size_override(Vector2i(1920, 1080))
@@ -520,7 +542,7 @@ func _run_b2b_shot(kind: String) -> void:
 			card_id = "customer.cs_escalation"
 		"expansion":
 			# can_offer_expansion wants a MATURE account that was never offered one.
-			c.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
+			c.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)
 			CustomerRegistry.set_lifecycle_phase(c.id, "active")
 			CustomerRegistry.set_satisfaction(c.id, 80)
 			card_id = "customer.expansion"
@@ -539,7 +561,7 @@ func _run_b2b_shot(kind: String) -> void:
 		"weekly":
 			# §7.3 haftalık özet: bilgi kartı karar giysisi taşımaz ve satır taşır.
 			CustomerRegistry.set_lifecycle_phase(c.id, "active")
-			SalesSystem.record_sales_event("founder_close", "", c.company_name, c.mrr)
+			SalesLedger.record_close(c, false)
 			var second := Prospect.new()
 			second.id = "lead_weekly_2"   # LOC-DATA debug seed / id
 			second.company_name = "Kuzey İnşaat"   # LOC-DATA debug seed / id
@@ -547,13 +569,13 @@ func _run_b2b_shot(kind: String) -> void:
 			second.star = 3
 			var c2: Customer = SalesSystem.add_b2b_customer(second, 24, 55, 70, "sales_rep:shot")
 			if c2 != null:
-				SalesSystem.record_sales_event("auto_close",
-					"Burcu Cetin", c2.company_name, c2.mrr)   # LOC-DATA debug seed / id
+				SalesLedger.record_close(c2, true)
+			SalesLedger.close_week()
 			card_id = "sales.weekly_summary"
 			scoped = false
 		_:
 			CustomerRegistry.set_lifecycle_phase(c.id, "risk")
-			CustomerRegistry.set_churn_countdown(c.id, 8)
+			CustomerRegistry.set_churn_countdown(c.id, TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
 			if kind == "retention_capped":   # LOC-DATA debug seed / id
 				# Both discounts spent: the row renders locked-visible with its reason line.
 				CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
@@ -583,7 +605,7 @@ func _run_event_shot(event_id: String) -> void:
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_sales_world()
-	GameState.day = 95
+	GameState.day = 14
 	GameState.set_flag("mvp_live_bug_count", 12)  # risk reason → "sık kesinti şikayeti"
 	if kind == "b2c":
 		GameState.set_flag("mvp_market_type", "b2c")
@@ -603,15 +625,15 @@ func _run_sales_shot(kind: String) -> void:
 		rep.role_stats = HRConstants.seed_skills(rep.role, 5, 3)
 		rep.traits = ["picks_it_up_fast"]
 		CharacterRegistry.add(rep)
-		rep.hire_day = GameState.day - 30   # add() stamps today
+		rep.hire_day = GameState.day - 4   # add() stamps today
 		CharacterRegistry.assign_job(rep.id, HRConstants.JOB_SALES)
 		SalesRepSystem.daily_tick()
-	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)   # LOC-DATA debug seed / id
-	_shot_customer("co_palmiye", "Palmiye Holding", "insurance", "active", 1500, 16, 150, true)
-	_shot_customer("co_aras", "Aras Klinik", "health", "onboarding", 700, 6, 10, false)
-	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 60, false)
-	CustomerRegistry.set_churn_countdown("co_ege", 8)
-	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 180, false)
+	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
+	_shot_customer("co_palmiye", "Palmiye Holding", "insurance", "active", 1500, 16, 21, true)
+	_shot_customer("co_aras", "Aras Klinik", "health", "onboarding", 700, 6, 1, false)
+	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
+	CustomerRegistry.set_churn_countdown("co_ege", TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
+	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
 	# Monthly strip figures: gained 1 / lost 2 / net -1.
 	GameState.run_customers_signed = 5
 	GameState.run_customers_lost = 2
@@ -627,7 +649,7 @@ func _run_sales_shot(kind: String) -> void:
 # audit and a screenshot of the same tab verify each other.
 func _seed_theme_surface() -> void:
 	_seed_run_reproducible()
-	GameState.day = 95
+	GameState.day = 14
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
@@ -636,23 +658,24 @@ func _seed_theme_surface() -> void:
 	GameState.set_flag("mvp_experience", 45.0)
 	GameState.set_flag("mvp_live_bug_count", 12)
 	_seed_hr_roster()
-	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)   # LOC-DATA debug seed / id
-	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 60, false)
-	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 180, false)
+	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
+	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
+	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
 	SalesFaucetSystem.spawn_prospect("small", "find")
 	SalesFaucetSystem.spawn_prospect("mid", "find")
 	SalesSystem.reflect_mrr()
 
 
-## Faz 2 sinyal fikstürü: dört artıda ay kapanışı, +%15/ay (üç büyüme ayı).
+## Faz 2 sinyal fikstürü: dört artıda ay kapanışı, +%15/ay (üç büyüme ayı). Damgalar haftalık
+## tiktir; fikstürün ayı dört haftadır.
 func _seed_signal_months() -> void:
 	GameState.set_phase(2)
 	GameState.month_history.clear()
 	var start_day: int = 1
 	for m in [12000, 13900, 16000, 18400]:
-		GameState.push_month_close({"start_day": start_day, "end_day": start_day + 29, "mrr_close": m,
-			"income": m, "expense": 9000, "net": m - 9000, "red_days": 0})
-		start_day += 30
+		GameState.push_month_close({"start_day": start_day, "end_day": start_day + 3, "mrr_close": m,
+			"income": m, "expense": 9000, "net": m - 9000, "red_weeks": 0})
+		start_day += 4
 
 
 # --office-shot=<home|ishani|plaza|loft|city>:<hour>[:<extra>]: the office in the GameShell, the
@@ -713,6 +736,82 @@ func _run_office_shot(spec: String) -> void:
 	get_tree().quit()
 
 
+const TRAVEL_SHOT_EVERY := 0.25    # seconds between frames
+const TRAVEL_SHOT_MAX := 40        # frames of the trip out before the shot gives up on the scene
+const TRAVEL_SHOT_BACK := 8        # frames of the walk back in
+
+
+# --travel-shot=<home|ishani|plaza|loft>: the founder's trip to a sales meeting from that office
+# at 10:00, as the player sees it: frames of the walk out and the map's drive, one of the
+# meeting, then the walk back in. travel_shot_<office>_NN.png, in order.
+func _run_travel_shot(office_id: String) -> void:
+	_begin_shot()
+	_travel_on = true
+	_seed_sales_world()
+	GameState.office_id = office_id
+	GameState.set_current_hour(10)
+	TimeManager.sync_to_current_hour()
+	var lead: Prospect = SalesFaucetSystem.spawn(2, "faucet")
+	await _mount_shot_shell()
+	EventBus.speed_change_requested.emit(1)
+	await get_tree().create_timer(1.0).timeout
+	var frame: int = 0
+	_open_sales_meeting(lead.id)
+	while _sales_meeting == null:
+		if frame == TRAVEL_SHOT_MAX:
+			_shot_fail("[TravelShot] the meeting scene never mounted")
+			return
+		_save_shot("travel_shot_%s_%02d" % [office_id, frame])
+		frame += 1
+		await get_tree().create_timer(TRAVEL_SHOT_EVERY).timeout
+	await get_tree().create_timer(0.4).timeout
+	_save_shot("travel_shot_%s_%02d" % [office_id, frame])
+	_close_sales_meeting()
+	for _i in TRAVEL_SHOT_BACK:
+		frame += 1
+		await get_tree().create_timer(TRAVEL_SHOT_EVERY).timeout
+		_save_shot("travel_shot_%s_%02d" % [office_id, frame])
+	get_tree().quit()
+
+
+const DAY_SHOT_FRAMES := 24        # frames across one visible day, whatever the speed
+const DAY_SHOT_AFTER := 3          # frames kept after the night skip lands on the new week
+
+
+# --day-shot=<home|ishani|plaza|loft>:<speed 1-4>: one working week on the real clock, 08:00
+# through the walk-out and the night skip to the next 08:00, as the player sees it. The week is
+# the last of January, so the silent month close lands in the skip and its ticker line shows.
+# day_shot_<office>_<speed>_NN.png plus one DAYSHOT line per frame (real ms, week, clock, night).
+func _run_day_shot(spec: String) -> void:
+	var parts: PackedStringArray = spec.split(":")
+	var office_id: String = parts[0]
+	var speed: int = int(parts[1]) if parts.size() > 1 else 1
+	_begin_shot()
+	_seed_theme_surface()
+	GameState.office_id = office_id
+	GameState.day = 5
+	GameState.set_current_hour(TimeModel.WEEK_START_HOUR)
+	TimeManager.sync_to_current_hour()
+	await _mount_shot_shell()
+	var landed: Array[bool] = [false]
+	EventBus.night_skipped.connect(func() -> void: landed[0] = true, CONNECT_ONE_SHOT)
+	var every: float = TimeModel.seconds_per_tick(speed) / DAY_SHOT_FRAMES
+	var start: int = Time.get_ticks_msec()
+	EventBus.speed_change_requested.emit(speed)
+	var after: int = 0
+	for frame in DAY_SHOT_FRAMES * 3:
+		await get_tree().create_timer(every).timeout
+		print("DAYSHOT|%02d|ms=%d|week=%d|clock=%02d:%02d|night=%s|speed=%d" % [frame,
+			Time.get_ticks_msec() - start, GameState.day, int(TimeManager.day_minute()) / 60,
+			int(TimeManager.day_minute()) % 60, str(TimeManager.is_night()), TimeManager.current_speed])
+		_save_shot("day_shot_%s_%d_%02d" % [office_id, speed, frame])
+		if landed[0]:
+			after += 1
+			if after == DAY_SHOT_AFTER:
+				break
+	get_tree().quit()
+
+
 # --tab-shot=<product|sales|hr|finance|personal|marketing|rnd|events>. tab_changed is emitted
 # directly, so a tab locked on the rail can still be framed — the lock lives on the rail.
 func _run_tab_shot(tab_id: String) -> void:
@@ -752,7 +851,7 @@ func _run_modal_shot(kind: String) -> void:
 		"settings":
 			EventBus.settings_requested.emit()
 		"month":
-			MonthSummarySystem.debug_force_summary(false)
+			SummarySystem.debug_force_summary(false)
 		"system":
 			EventBus.system_menu_requested.emit()
 		"mentor":
@@ -901,7 +1000,7 @@ func _audit_color(c: Color) -> String:
 	return "%.3f,%.3f,%.3f,%.2f" % [c.r, c.g, c.b, c.a]
 
 
-# --finance-shot=<ozet|artida|uyari|kepenk|signal>: ~40 days played through real seams (cash
+# --finance-shot=<ozet|artida|uyari|kepenk|signal>: six weeks played through real seams (cash
 # ring buffer and transaction ledger fill from the real flow), framed on the Finance tab.
 #   ozet   — negatif net: çatallı projeksiyonlar, imza + retainer karışık işlemler
 #   artida — MRR > burn: yeşil ARTIDA, kırmızı erime projeksiyonu yok
@@ -921,24 +1020,24 @@ func _run_finance_shot(kind: String) -> void:
 	GameState.cash_history = [{"day": GameState.day, "cash": GameState.cash}]
 	# artida: 3 imza × 20K = 60K MRR → günlük gelir 2000 > kadro burn'ü (~1500).
 	var sign_mrr: int = 20000 if kind == "artida" else 1100   # LOC-DATA debug seed / id
-	for i in range(40):
+	for i in range(6):
 		GameState.advance_day()
-		if i == 10 or (kind == "artida" and (i == 12 or i == 14)):   # LOC-DATA debug seed / id
+		if i == 1 or (kind == "artida" and (i == 2 or i == 3)):   # LOC-DATA debug seed / id
 			var pr: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")
 			# §5.3 koltuk × koltuk fiyatı: 20.000 = 400 × $50, 1.100 = 22 × $50.
 			SalesSystem.add_b2b_customer(pr, sign_mrr / 50, 50, 70)
 			ProspectRegistry.remove(pr.id)
-		if i == 20 and kind != "artida":   # LOC-DATA debug seed / id
+		if i == 3 and kind != "artida":   # LOC-DATA debug seed / id
 			# Bekleyen bir arayış; arama ücretsiz (§10), gider satırı eğitimden gelir.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
-		if i == 30 and kind == "ozet":
+		if i == 4 and kind == "ozet":
 			var pr2: Prospect = SalesFaucetSystem.spawn_prospect("small", "event")
 			SalesSystem.add_b2b_customer(pr2, 16, 50, 72)   # 16 × $50 = $800
 			ProspectRegistry.remove(pr2.id)
 		FinanceSystem.daily_tick()
 	if kind == "kepenk":   # LOC-DATA debug seed / id
 		GameState.set_cash(-4000)
-		GameState.set_shutter_days_left(EndingsSystem.SHUTTER_DAYS - 3)
+		GameState.set_shutter_weeks_left(TimeModel.ticks(EndingsSystem.SHUTTER_WEEKS - 1))
 	# Açık pipeline: iyimser projeksiyon gerçek prospect'lerden beslenir.
 	SalesFaucetSystem.spawn_prospect("small", "find")
 	SalesFaucetSystem.spawn_prospect("mid", "find")
@@ -975,13 +1074,13 @@ func _first_ledger_row(tab: Node) -> Control:
 	return null
 
 
-# --hr-shot=<ekip|atlas|dosyalar|gider|saatler|gorevler|gorevler-bos|egitim|egitim-modal|zam|
+# --hr-shot=<ekip|atlas|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-bos|egitim|egitim-modal|zam|
 # menu|cikar|cikar-eksi|bos>: a roster across all three departments (one on leave, one burning
 # out, one fresh hire), driven to the requested HR surface.
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
-	GameState.day = 64
+	GameState.day = 10
 	if kind != "bos" and kind != "gorevler-bos":
 		_seed_hr_roster()
 		# Kasa ve burn maaşları görsün: üst bar ile önizlemeler aynı gerçeği okur.
@@ -993,7 +1092,7 @@ func _run_hr_shot(kind: String) -> void:
 		"dosyalar":
 			# Files on the table: the arrival window's worth of real generator output.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
-			for _i in HRConstants.SEARCH_ARRIVAL_DAYS:
+			for _i in TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS):
 				GameState.day += 1
 				HRSearchSystem.daily_tick()
 		"gider":
@@ -1041,6 +1140,11 @@ func _run_hr_shot(kind: String) -> void:
 	match kind:
 		"atlas", "dosyalar":
 			tab._open_atlas()
+		"saatler-gece":   # LOC-DATA debug seed / id
+			# Mesai en geç 00:00: 08:00 başlangıç ve 16 saat, sürgüler üst sınırda.
+			WorkHoursSystem.set_company_start_hour(TimeModel.WEEK_START_HOUR)
+			WorkHoursSystem.set_company_hours(WorkHoursSystem.max_hours(TimeModel.WEEK_START_HOUR))
+			tab._open_hours_modal()
 		"saatler":   # LOC-DATA debug seed / id
 			# §8.5: üç kapsam birden — şirket normalde, bir grup mesaide, bir kişi kısa günde.
 			WorkHoursSystem.set_group_hours(HRConstants.GROUP_DEVELOPMENT, 10)
@@ -1127,9 +1231,9 @@ func _seed_hr_roster() -> void:
 		emp.status = HRConstants.STATUS_ACTIVE
 		CharacterRegistry.add(emp)
 		# add() bugünü damgalar; kıdem satırının üç dalı görünsün diye geriye alınıyor.
-		emp.hire_day = maxi(1, GameState.day - (ordinal * 26))
+		emp.hire_day = maxi(1, GameState.day - (ordinal * 4))
 	HRMoraleSystem.send_on_leave(CharacterRegistry.get_character("char_emp_shot_2"),
-		HRConstants.LEAVE_DAYS, false)
+		HRConstants.LEAVE_WEEKS, false)
 	CharacterRegistry.get_character("char_emp_shot_4").hire_day = GameState.day   # YENİ etiketi
 
 
@@ -1142,9 +1246,9 @@ func _run_ending_shot(key: String) -> void:
 	_seed_run_reproducible()
 	GameState.company_name = "PromptPilot"
 	GameState.founder_name = "Deniz"
-	GameState.day = 156
+	GameState.day = 23
 	GameState.set_flag("mvp_version", 3)
-	GameState.set_flag("mvp_version_history", [{"version": 1, "day": 40}, {"version": 2, "day": 90}, {"version": 3, "day": 140}])
+	GameState.set_flag("mvp_version_history", [{"version": 1, "day": 6}, {"version": 2, "day": 13}, {"version": 3, "day": 20}])
 	GameState.run_customers_lost = 3
 	GameState.run_hires = 4
 	GameState.run_pitches = 2
@@ -1194,8 +1298,8 @@ func _run_ending_shot(key: String) -> void:
 			GameState.run_investment_amount = int(round(22_000_000.0 * GameState.run_equity_pct / 100.0))
 		"running_on_fumes":
 			# The soft cap's paper: a two-year run with one unsigned offer on the table.
-			GameState.day = EndingsSystem.SOFT_CAP_DAY
-			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day - 5))
+			GameState.day = TimeModel.ticks(EndingsSystem.SOFT_CAP_WEEK)
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day - 1))
 		"bootstrap_milestone":
 			# A milestone only exists outside the demo; pin EA unless --build= named one.
 			ending_id = "profitable_bootstrap"
@@ -1248,7 +1352,7 @@ func _seed_build_state(state: String) -> void:
 			ProductSystem.hourly_tick(9)
 			for c in CharacterRegistry.get_all():
 				c.status = HRConstants.STATUS_TRAINING
-				c.training_days_left = 6
+				c.training_weeks_left = 1
 		"r1":
 			b.efor_spent = design_cap * 0.5
 			ProductSystem.hourly_tick(9)
@@ -1305,7 +1409,7 @@ func _run_product_shot(kind: String) -> void:
 	var founder: Character = CharacterRegistry.get_founder()
 	match kind:
 		"detail_b2b", "detail_care", "portfoy":   # LOC-DATA debug seed / id
-			GameState.day = 95
+			GameState.day = 14
 			GameState.set_flag("mvp_shipped", true)
 			GameState.set_flag("mvp_market_type", "b2b")
 			GameState.set_flag("mvp_product_name", "Nova")
@@ -1313,14 +1417,14 @@ func _run_product_shot(kind: String) -> void:
 			# Üç hat açık, biri K2'de: kilitli · tamamlanmış · boş hat durumları aynı karede.
 			# Eksenler hat durumundan türer (ProductState.axis_readings).
 			_seed_line_state("erp", _ERP_SHIPPED_LINES)
-			GameState.set_flag("mvp_launch_day", 73)
+			GameState.set_flag("mvp_launch_day", 11)
 			# The publish flow's ALTYAPI step is skipped, so provider and units are set here.
 			ProductState.set_infra_provider("enterprise")
 			ProductState.set_infra_units(3)
 			GameState.set_flag("mvp_live_bug_count", 6)
-			GameState.set_flag("mvp_bug_history", [2, 2, 3, 4, 4, 5, 6])
+			GameState.set_flag("mvp_bug_history", [5, 6])
 			GameState.set_flag("mvp_version_history",
-				[{"version": 1, "day": 10}, {"version": 2, "day": 73}])
+				[{"version": 1, "day": 2}, {"version": 2, "day": 11}])
 			var p := Prospect.new()
 			p.id = "shot_ege"
 			p.company_name = "Ege Sigorta"
@@ -1328,7 +1432,7 @@ func _run_product_shot(kind: String) -> void:
 			p.star = 1
 			p.pain_feature_id = "saas_ops_integration"
 			var c: Customer = SalesSystem.add_b2b_customer(p, 6, 67, 70)   # 6 seats x $67 = $402
-			PromiseRegistry.create(c.id, "saas_ops_integration", 12)
+			PromiseRegistry.create(c.id, "saas_ops_integration", B2BConstants.PROMISE_DEADLINE_WEEKS)
 			if kind == "portfoy":   # LOC-DATA debug seed / id
 				# "Yapımda" satırı iki hareketi birden gösterir: Stok K2 açık bir hattı
 				# yükseltir, Sipariş K1 yeni hat açar. Stok K2'nin kapısı (Yazılım ★2 ·
@@ -1356,7 +1460,7 @@ func _run_product_shot(kind: String) -> void:
 			ProductState.set_infra_units(2)
 			# buggy: the pricing ruler's conversion projection moving under the bug penalty.
 			GameState.set_flag("mvp_live_bug_count", 15 if kind == "detail_b2c_buggy" else 5)
-			GameState.set_flag("mvp_bug_history", [1, 2, 2, 3, 4, 4, 5])
+			GameState.set_flag("mvp_bug_history", [4, 5])
 			GameState.set_flag("mvp_version_history", [{"version": 1, "day": GameState.day}])
 			GameState.set_flag("b2c_audience", 1.0)
 			# Satış okuma kapısını aç: optimal rakam gerçek değerle çizilsin.
@@ -1409,12 +1513,12 @@ func _seed_line_state(subtype: String, rows: Array) -> void:
 func _seed_sales_world() -> void:
 	_seed_run_reproducible()
 	GameState.founder_portrait = "founder_01"
-	GameState.day = 62
+	GameState.day = 9
 	GameState.set_cash(48000)
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	_seed_line_state("erp", _ERP_SHIPPED_LINES)
-	GameState.set_flag("mvp_launch_day", 40)
+	GameState.set_flag("mvp_launch_day", 6)
 	ProductState.set_infra_provider("cloud")
 	ProductState.set_infra_units(6)
 	var founder: Character = CharacterRegistry.get_founder()
@@ -1437,7 +1541,7 @@ func _run_vc_shot(kind: String) -> void:
 	match kind:
 		"hunt":
 			# Two live offers, one queued behind them, one fund that said no.
-			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day - 2))
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day - 1))
 			VCPitchSystem._vc("anchor")["status"] = "offered"
 			GameState.active_sheets.append(VCPitchSystem._make_sheet("meridian", GameState.day))
 			VCPitchSystem._vc("meridian")["status"] = "offered"
@@ -1473,10 +1577,9 @@ func _run_vc_shot(kind: String) -> void:
 			GameState.seed_sheet = SeedRoundSystem.make_seed_sheet("anchor", "standard", GameState.day)
 			TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SEED)
 		"k10":
-			# A sheet whose ten business days ran out today: the decision card's moment.
-			var due: TermSheet = VCPitchSystem._make_sheet("meridian", GameState.day - 14)
-			due.expires_day = GameState.day
-			GameState.active_sheets.append(due)
+			# A sheet whose weeks ran out today: the decision card's moment.
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("meridian",
+				GameState.day - TimeModel.ticks(PitchConstants.SHEET_VALIDITY_WEEKS)))
 			VCPitchSystem._vc("meridian")["status"] = "offered"
 		_:
 			_shot_fail("[VcShot] unknown --vc-shot kind: %s" % kind)
@@ -1627,7 +1730,7 @@ func _run_negotiation_shot(kind: String) -> void:
 	get_tree().quit()
 
 
-func _shot_customer(id: String, cname: String, industry: String, phase: String, mrr: int, seats: int, days_ago: int, cs: bool) -> void:
+func _shot_customer(id: String, cname: String, industry: String, phase: String, mrr: int, seats: int, weeks_ago: int, cs: bool) -> void:
 	var c := Customer.new()
 	c.id = id
 	c.company_name = cname
@@ -1637,7 +1740,7 @@ func _shot_customer(id: String, cname: String, industry: String, phase: String, 
 	c.seats = seats
 	c.satisfaction = 25 if phase == "risk" else 72
 	c.lifecycle_phase = phase
-	c.acquired_on_day = GameState.day - days_ago
+	c.acquired_on_day = GameState.day - weeks_ago
 	c.scale = 3
 	c.pain_feature_id = "saas_ops_integration"
 	if cs:
@@ -1691,7 +1794,7 @@ func _wire_modal_signals() -> void:
 	EventBus.confirm_requested.connect(_on_confirm_requested)
 	EventBus.run_ended.connect(_on_run_ended)
 	EventBus.milestone_reached.connect(_on_milestone_reached)
-	EventBus.month_ended.connect(_on_month_ended)
+	EventBus.summary_ready.connect(_on_summary_ready)
 	EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
 	EventBus.term_table_requested.connect(_on_term_table_requested)
 	EventBus.system_menu_requested.connect(_on_system_menu_requested)
@@ -1718,8 +1821,14 @@ func _restore_speed(pre: int) -> void:
 
 
 func _on_event_modal_requested(event: GameEvent) -> void:
+	if _in_transit:
+		_card_waiting = true   # shown when the sitting closes
+		return
+	# A card that lands as a sitting closes, or on the period summary, finds the clock stopped by
+	# that surface; the speed to hand back is the one from before it.
 	if _pre_event_speed < 0:
-		_pre_event_speed = TimeManager.current_speed
+		_pre_event_speed = _pre_dialogue_speed if _pre_dialogue_speed >= 0 \
+			else (_pre_summary_speed if _pre_summary_speed >= 0 else TimeManager.current_speed)
 	EventBus.speed_change_requested.emit(0)
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
@@ -1742,10 +1851,12 @@ func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
 		_event_modal = null
 	# event_resolved fires BEFORE the engine pumps its queue, so has_pending() still sees the
 	# next card and the clock stays paused for it. A choice can also OPEN a cinematic surface
-	# (start_vc_meeting / open_term_table run before event_resolved); that surface's close
-	# owns the restore.
-	if not EventGate.has_pending() and _meeting_scene == null and _term_table == null:
-		_restore_speed(_pre_event_speed)
+	# (start_vc_meeting / open_term_table run before event_resolved), whose trip may still be on
+	# its way to it; that surface's close owns the restore. The period summary still under the
+	# card restores the speed itself when it closes last.
+	if not EventGate.has_pending() and _meeting_scene == null and _term_table == null and not _in_transit:
+		if _summary_modal == null:
+			_restore_speed(_pre_event_speed)
 		_pre_event_speed = -1
 
 
@@ -1757,6 +1868,48 @@ func _claim_pre_dialogue_speed() -> void:
 	_pre_event_speed = -1
 
 
+## The founder's trip to an outside meeting, before its scene mounts. The sitting is already
+## open, so saving is refused and the founder is busy. The clock freezes and the tree runs, even
+## under the card that opened the sitting, so the office walks and its lift and doors move; the
+## windows step aside and the office view plays the walk out and the map. Then the clock stops at
+## speed 0 for the scene, and the office reloads under it.
+func _leave_office() -> void:
+	_in_transit = true
+	TimeManager.freeze_clock(TRAVEL_FREEZE)
+	EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
+	get_tree().call_group(&"window_layer", &"set_veiled", true)
+	var travel: Node = _office_travel()
+	if travel != null:
+		await travel.travel_out()
+	EventBus.speed_change_requested.emit(0)
+	TimeManager.thaw_clock(TRAVEL_FREEZE)
+	_in_transit = false
+	if travel != null:
+		travel.travel_back()
+
+
+## The sitting closed and its hours ran: the windows come back, the founder walks in (not past
+## the workday), and a card that arrived during the trip is shown now. A sitting that ended the
+## run (a Series A signature) leaves the ending paper alone: no walk in, and the held card goes.
+func _return_to_office() -> void:
+	if not GameState.run_active:
+		_card_waiting = false
+		return
+	get_tree().call_group(&"window_layer", &"set_veiled", false)
+	var travel: Node = _office_travel()
+	if travel != null:
+		travel.arrive()
+	if _card_waiting:
+		_card_waiting = false
+		_on_event_modal_requested(EventGate.active_card())
+
+
+## The office view's trip player, or null where there is no trip (shots, no office view).
+func _office_travel() -> Node:
+	var view: Node = get_tree().get_first_node_in_group(&"office_view")
+	return view.travel if _travel_on and view != null else null
+
+
 # THE SALES SITTING (Satış §5.0): "ODA da terminal UI da görünmez; bar notu, pause etiketi,
 # HUD yoktur." Done as a subtree swap, not change_scene: tearing down Main would lose the
 # modal routing, the event wiring and every harness path. GameShell is HIDDEN rather than
@@ -1764,14 +1917,14 @@ func _claim_pre_dialogue_speed() -> void:
 # runs once per instance — a re-added shell would be wired to nothing.
 # The tree is paused during the sitting, so the scene carries process_mode = ALWAYS.
 func _open_sales_meeting(prospect_id: String) -> void:
-	if _sales_meeting != null:
+	if _sales_meeting != null or _in_transit:
 		return
 	if SalesLedger.meeting_block_reason(prospect_id) != "":
 		return   # the tab draws the reason; reaching here at all is a UI bug, not a state one
 	if SalesMeetingSystem.open(prospect_id).is_empty():
 		return
 	_claim_pre_dialogue_speed()
-	EventBus.speed_change_requested.emit(0)
+	await _leave_office()
 	if _shell != null:
 		_shell.visible = false
 	_sales_meeting = SALES_MEETING_SCENE.instantiate()
@@ -1789,12 +1942,13 @@ func _close_sales_meeting() -> void:
 	SalesMeetingSystem.close()
 	if _shell != null:
 		_shell.visible = true
+	_return_to_office()
 	_restore_speed(_pre_dialogue_speed)
 	_pre_dialogue_speed = -1
 
 
 func _on_settings_requested() -> void:
-	if _settings_modal != null:
+	if _settings_modal != null or _in_transit:
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
@@ -1862,7 +2016,7 @@ func _on_system_menu_dismissed() -> void:
 
 
 ## §5.8 keşif kartı · §6.1 aylık ürün notu. PanelLayer'a (layer 9) monte edilir, ModalLayer'a
-## (layer 10) DEĞİL: ModalLayer Space ve 1-3'ü yutuyor, yani saat oyuncunun duraklatamadığı
+## (layer 10) DEĞİL: ModalLayer Space ve 1-4'ü yutuyor, yani saat oyuncunun duraklatamadığı
 ## bir kartın üstünde koşardı. Esc'i kart kendi `_unhandled_input`'unda alır.
 func _on_rnd_card_requested(kind: String, data: Dictionary) -> void:
 	if is_instance_valid(_rnd_card):
@@ -1948,26 +2102,26 @@ func _load_slot(slot_id: String) -> void:
 	EventBus.game_loaded.emit(slot_id)
 
 
-func _on_month_ended(summary_data: Dictionary) -> void:
-	if _month_modal != null:
+func _on_summary_ready(data: Dictionary) -> void:
+	if _summary_modal != null:
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
 		return
-	# If an event card is already up (both fired in one daily tick) the summary stacks on
-	# top; dismissing it reveals the card, and the restore defers to it via has_pending().
-	_pre_month_speed = TimeManager.current_speed
+	# The week's cards pump after the night batch, so a card lands on top of the summary and
+	# inherits its saved speed; whichever closes last restores it.
+	_pre_summary_speed = TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
-	_month_modal = MONTH_SUMMARY_MODAL.instantiate()
-	_month_modal.dismissed.connect(_on_month_dismissed)
-	modal_layer.add_child(_month_modal)
-	_month_modal.populate(summary_data)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
+	_summary_modal = MONTH_SUMMARY_MODAL.instantiate()
+	_summary_modal.dismissed.connect(_on_summary_dismissed)
+	modal_layer.add_child(_summary_modal)
+	_summary_modal.populate(data)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
 
 
-func _on_month_dismissed() -> void:
-	_month_modal = null
-	_restore_speed(_pre_month_speed)
-	_pre_month_speed = -1
+func _on_summary_dismissed() -> void:
+	_summary_modal = null
+	_restore_speed(_pre_summary_speed)
+	_pre_summary_speed = -1
 
 
 # Terminal: the ending paper never restores speed. EndingsSystem already flushed the queue and
@@ -1984,7 +2138,7 @@ func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
 
 
 # The ending paper in milestone mode (EA / full): a win the run lives through. The clock is
-# HELD while it is up, so a card, the month summary or settings closing on top of it cannot
+# HELD while it is up, so a card, the period summary or settings closing on top of it cannot
 # restart time behind it; DEVAM ET releases the hold and restores the player's speed.
 func _on_milestone_reached(_milestone_id: String, data: Dictionary) -> void:
 	if _ending_modal != null or _milestone_modal != null:
@@ -2011,10 +2165,10 @@ func _on_milestone_continue() -> void:
 		_milestone_modal.queue_free()
 	_milestone_modal = null
 	TimeManager.release_clock(MILESTONE_CLOCK_HOLD)
-	# The month summary still open on top owns the pause and restores it itself. `> 0`, not
+	# The period summary still open on top owns the pause and restores it itself. `> 0`, not
 	# `>= 0`: DEVAM ET always resumes, so a paper that found the clock paused hands back the
 	# last running speed.
-	if _month_modal == null:
+	if _summary_modal == null:
 		_restore_speed(_pre_milestone_speed if _pre_milestone_speed > 0 else -1)
 	_pre_milestone_speed = -1
 
@@ -2042,13 +2196,13 @@ func _keep_run_for_main_menu() -> String:
 # MeetingScene: a live VC meeting (VCPitchSystem) or the Shift+F2 debug fixture, which has no
 # driver and simply closes.
 func _on_meeting_scene_requested(view_state: Dictionary) -> void:
-	if _meeting_scene != null:
+	if _meeting_scene != null or _in_transit:
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
 		return
 	_claim_pre_dialogue_speed()
-	EventBus.speed_change_requested.emit(0)
+	await _leave_office()
 	_meeting_scene = MEETING_SCENE.instantiate()
 	_meeting_scene.choice_selected.connect(_on_dialogue_choice_selected)
 	_meeting_scene.withdraw_requested.connect(_on_dialogue_withdrawn)
@@ -2072,16 +2226,20 @@ func _on_dialogue_withdrawn() -> void:
 	_close_dialogue_scenes()
 
 
+## The meeting's hours run once its scene is gone, so the player comes back to the world they
+## produced.
 func _close_dialogue_scenes() -> void:
 	if _meeting_scene != null:
 		_meeting_scene.queue_free()
 		_meeting_scene = null
+	VCPitchSystem.end_sitting()
+	_return_to_office()
 	_restore_speed(_pre_dialogue_speed)
 	_pre_dialogue_speed = -1
 
 
 func _on_term_table_requested(vc_id: String, stage: String) -> void:
-	if _term_table != null:
+	if _term_table != null or _in_transit:
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
@@ -2090,18 +2248,21 @@ func _on_term_table_requested(vc_id: String, stage: String) -> void:
 		push_warning("[Main] term_table_requested for %s/%s with no live sheet" % [vc_id, stage])
 		return
 	_claim_pre_dialogue_speed()
-	EventBus.speed_change_requested.emit(0)
+	await _leave_office()
 	_term_table = TERM_TABLE_SCENE.instantiate()
 	_term_table.closed.connect(_close_term_table)
 	modal_layer.add_child(_term_table)
 
 
-# A signature ends the run (no restore — the ending owns the freeze); a walk-out leaves it
-# alive and restores the pre-table speed.
+# A signature ends the run (no restore and no return to the office: the ending owns the screen
+# and the freeze); a walk-out leaves it alive and restores the pre-table speed. The table's hour
+# runs once the scene is gone.
 func _close_term_table() -> void:
 	if _term_table != null:
 		_term_table.queue_free()
 		_term_table = null
+	TermSheetTableSystem.end_sitting()
+	_return_to_office()
 	_restore_speed(_pre_dialogue_speed)
 	_pre_dialogue_speed = -1
 
@@ -2146,7 +2307,7 @@ func _teardown_run_ui() -> void:
 	_confirm_modal = null
 	_ending_modal = null
 	_milestone_modal = null
-	_month_modal = null
+	_summary_modal = null
 	_system_menu = null
 	_save_load_modal = null
 	_meeting_scene = null
@@ -2156,10 +2317,12 @@ func _teardown_run_ui() -> void:
 		_sales_meeting.queue_free()
 		_sales_meeting = null
 	_rnd_card_queue.clear()
+	_in_transit = false
+	_card_waiting = false
 	_pre_event_speed = -1
 	_pre_settings_speed = -1
 	_pre_confirm_speed = -1
-	_pre_month_speed = -1
+	_pre_summary_speed = -1
 	_pre_system_speed = -1
 	_pre_dialogue_speed = -1
 	_pre_milestone_speed = -1

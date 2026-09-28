@@ -112,7 +112,7 @@ const SEED_LEAD_WARMTH_BONUS := 10
 # SeedRoundSystem.expectation() says why.
 const EXPECT_MOM_PCT := 10            # rolling month-over-month average the run is judged against
 const EXPECT_WINDOW_MONTHS := 3       # the window that average is taken over
-const EXPECT_GRACE_DAYS := 60         # from signing: nothing grows in the first two months
+const EXPECT_GRACE_WEEKS := 9         # from signing: nothing grows in the first two months
 const EXPECT_NONE := 0                # no seed taken — the expectation does not exist
 const EXPECT_GRACE := 1               # inside the grace window
 const EXPECT_ON_TRACK := 2

@@ -24,7 +24,8 @@ extends RefCounted
 # The trade-off lives in the assignment layer, not in the person: who is on Hesap sahipliği
 # at all, and what else you had to leave unstaffed to put them there (Ekip §4.4, §12.0).
 #
-# NO RNG — see SalesRepSystem's header for the reasoning; the same rule binds this file.
+# NO RNG. The cadence, the queue and the request kind are arithmetic over state the player can
+# see, so every request has a readable cause.
 #
 # THE ADDITIVITY INVARIANT: with nobody at the desk (ranked_reps), both entry points return
 # before touching state and no request is ever generated. Customers still reach the player
@@ -61,8 +62,8 @@ static func capacity_of(c: Character) -> int:
 
 
 static func throughput_of(rep: Character) -> float:
-	# Requests one rep clears per day. Public so desk_throughput and the smoke suite read the
-	# same number.
+	# Requests one rep clears per day; the queue applies seven days of it per tick. Public so
+	# desk_throughput and the smoke suite read the same number.
 	# §4.5: kişinin ne ürettiği TEK EVDE (HRSystem.effective_skill) — alan katsayısı, odak,
 	# moral bandı ve huy çarpanları orada. Masanın kendi şekli (taban + kişi başı kapasite, ve
 	# ranked_reps'in istif sırası) burada kalıyor.
@@ -203,7 +204,7 @@ static func _open_due_requests() -> void:
 	for c in CustomerRegistry.get_by_market("b2b"):
 		if c.support_request_since_day >= 0:
 			continue
-		if (GameState.day + c.cs_request_phase) % B2BConstants.CS_REQUEST_INTERVAL_DAYS != 0:
+		if (GameState.day + c.cs_request_phase) % TimeModel.ticks(B2BConstants.CS_REQUEST_INTERVAL_WEEKS) != 0:
 			continue
 		CustomerRegistry.set_support_request(c.id, GameState.day)
 
@@ -245,7 +246,8 @@ static func absorb_ceiling() -> int:
 
 
 static func _work_the_queue() -> void:
-	var budget: float = float(GameState.get_flag("cs_throughput_progress", 0.0)) + desk_throughput()
+	var budget: float = float(GameState.get_flag("cs_throughput_progress", 0.0)) \
+		+ TimeModel.per_tick(desk_throughput())
 	var ceiling: int = absorb_ceiling()
 	for c in _open_requests():
 		if budget < 1.0:
@@ -271,9 +273,9 @@ static func _absorb(c: Customer) -> void:
 static func _escalate_stale() -> void:
 	# A request the desk never got to still reaches the player eventually — that is the cost of
 	# understaffing. It stays subject to the weekly ceiling (see _escalate): over the cap the
-	# request stays open and re-tries tomorrow — deferred, never dropped.
+	# request stays open and re-tries next week — deferred, never dropped.
 	for c in _open_requests():
-		if GameState.day - c.support_request_since_day >= B2BConstants.CS_ESCALATE_AFTER_DAYS:
+		if GameState.day - c.support_request_since_day >= TimeModel.ticks(B2BConstants.CS_ESCALATE_AFTER_WEEKS):
 			_escalate(c)
 
 
@@ -284,9 +286,9 @@ static func _escalate(c: Customer) -> void:
 	# CS_ESCALATION_WEEKLY_CAP times per window, whatever the book does. The stamp array is a
 	# rolling window, pruned as it is read.
 	# Over budget, or refused by the gate → return WITHOUT clearing the latch or stamping the
-	# window, so the request stays open and is re-offered tomorrow. Deferred, never dropped:
+	# window, so the request stays open and is re-offered next week. Deferred, never dropped:
 	# nothing the player owed a decision on silently disappears.
-	var cutoff: int = GameState.day - B2BConstants.CS_ESCALATION_WINDOW_DAYS
+	var cutoff: int = GameState.day - TimeModel.ticks(B2BConstants.CS_ESCALATION_WINDOW_WEEKS)
 	while not GameState.cs_escalation_days.is_empty() and GameState.cs_escalation_days[0] <= cutoff:
 		GameState.cs_escalation_days.remove_at(0)
 	if GameState.cs_escalation_days.size() >= B2BConstants.CS_ESCALATION_WEEKLY_CAP:
@@ -334,7 +336,7 @@ static func pick_request_kind(c: Customer) -> String:
 	if c.risk_streak > 0 or c.churn_countdown >= 0:
 		complaint += 10
 	# Yenileme: kıdem büyüdükçe sözleşme masası yaklaşır; sayaç/oyalama izi acilleştirir.
-	var tenure_months: int = int(float(GameState.day - c.acquired_on_day) / 30.0)
+	var tenure_months: int = int(TimeModel.months(GameState.day - c.acquired_on_day))
 	var renewal: int = 6 * tenure_months
 	if c.churn_countdown >= 0:
 		renewal += 20

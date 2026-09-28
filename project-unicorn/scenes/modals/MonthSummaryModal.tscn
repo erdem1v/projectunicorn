@@ -92,10 +92,11 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="HighlightCaption" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/HighlightStrip/HighlightRow"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"SectionLabel"
-text = "MONTH_EVENT_OF_THE_MONTH"
+text = "—"
 
 [node name="HighlightText" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/HighlightStrip/HighlightRow"]
 unique_name_in_owner = true
@@ -106,6 +107,7 @@ theme_type_variation = &"BodySerif"
 clip_text = true
 
 [node name="FrankRow" type="HBoxContainer" parent="CenterPanel/Body/BodyMargin/BodyCol"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
 
@@ -152,10 +154,11 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="FooterCaption" type="Label" parent="CenterPanel/Body/FooterBand/FooterRow"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"ChromeLabel"
-text = "MONTH_AUTO_SUMMARY"
+text = "—"
 
 [node name="FooterSpacer" type="Control" parent="CenterPanel/Body/FooterBand/FooterRow"]
 layout_mode = 2

@@ -39,11 +39,12 @@ const COMPACT_BELOW := 1600
 	$Margin/Row/TimeGroup/SpeedControls/Speed1Btn,
 	$Margin/Row/TimeGroup/SpeedControls/Speed2Btn,
 	$Margin/Row/TimeGroup/SpeedControls/Speed3Btn,
+	$Margin/Row/TimeGroup/SpeedControls/Speed4Btn,
 ]
 
 # Teklif geri sayımının sinyali yeniden atmaz; dil ya da palet değişince çipi yeniden
 # boyayabilmek için son değer burada tutulur. -1 = çip gizli.
-var _offer_days_left: int = -1
+var _offer_weeks_left: int = -1
 
 
 func _ready() -> void:
@@ -52,7 +53,7 @@ func _ready() -> void:
 
 	EventBus.cash_changed.connect(_on_cash_changed)
 	EventBus.mrr_changed.connect(_on_mrr_changed)
-	EventBus.burn_changed.connect(_on_burn_changed)
+	EventBus.burn_changed.connect(_refresh_flow.unbind(1))
 	EventBus.runway_recalculated.connect(_on_runway_changed)
 	EventBus.brand_changed.connect(_on_brand_changed)
 	EventBus.reputation_changed.connect(_on_reputation_changed)
@@ -65,6 +66,8 @@ func _ready() -> void:
 	# override'ları kendiliğinden dönmez; ikisi de yeniden okunarak yenilenir.
 	EventBus.language_changed.connect(_refresh_all.unbind(1))
 	EventBus.palette_changed.connect(_refresh_all.unbind(1))
+	# Ay kapanışı sessizdir; aylık rakamlar yine de kapanışta bir kez baştan okunur.
+	EventBus.month_ended.connect(_refresh_all.unbind(1))
 	# Hız yalnız TimeManager üzerinden gidip gelir (speed_change_requested → speed_changed);
 	# gösterge buradan boyanır ki olay-duraklatma dönüşü gibi başka değiştiriciler de görünsün.
 	TimeManager.speed_changed.connect(_apply_speed_visual)
@@ -95,14 +98,13 @@ func _refresh_all() -> void:
 	company_name_label.text = GameState.company_name
 	_on_cash_changed(GameState.cash)
 	_on_mrr_changed(GameState.mrr)
-	_on_burn_changed(GameState.daily_burn)
 	_on_runway_changed(GameState.get_runway_months())
 	_on_brand_changed(GameState.brand)
 	_on_reputation_changed(GameState.reputation)
 	_update_day_label()
 	_on_phase_changed(GameState.phase)
-	_on_shutter_changed(GameState.shutter_days_left)
-	_on_offer_countdown_changed(_offer_days_left)
+	_on_shutter_changed(GameState.shutter_weeks_left)
+	_on_offer_countdown_changed(_offer_weeks_left)
 	_apply_speed_visual(TimeManager.current_speed)
 
 
@@ -112,17 +114,15 @@ func _on_cash_changed(value: int) -> void:
 
 func _on_mrr_changed(value: int) -> void:
 	mrr_value_label.text = UiTokens.format_money_chip(value)
-	_refresh_net()
+	_refresh_flow()
 
 
-func _on_burn_changed(value: int) -> void:
-	burn_value_label.text = UiTokens.format_money_chip(value)
-	_refresh_net()
-
-
-func _refresh_net() -> void:
-	# Günlük net akış (mrr − burn), işaret renkli; "/d" birimi sahnede sabit.
-	var net: int = GameState.get_net_daily_flow()
+func _refresh_flow() -> void:
+	# Burn ve net canlı aylık hızdır (FinanceSystem.get_monthly_flow, Finans sekmesiyle aynı
+	# kaynak); net işaret renkli, "/ay" birimi sahnede sabit.
+	var flow: Dictionary = FinanceSystem.get_monthly_flow()
+	burn_value_label.text = UiTokens.format_money_chip(int(flow.expense))
+	var net: int = int(flow.net)
 	var sign_str: String = "+" if net > 0 else ("-" if net < 0 else "")
 	net_value_label.text = "%s%s" % [sign_str, UiTokens.format_money_chip(absi(net))]
 	net_value_label.add_theme_color_override("font_color", UiTokens.delta_color_bright(net))
@@ -152,32 +152,34 @@ func _on_reputation_changed(value: int) -> void:
 
 
 func _update_day_label() -> void:
-	# Dar viewport'ta gün adı ve yıl düşer ("9 Eyl · 10:00"): yıl ay sonu özetinde zaten var,
-	# gün adı hiçbir kararın girdisi değil. Kelimeler ve sıraları Fmt'nindir.
+	# Dar viewport'ta yıl düşer ve ay kısalır ("H14 · Nis · 10:00"): yıl özet başlığında zaten
+	# var. Kelimeler ve sıraları Fmt'nindir.
 	var d: Dictionary = GameState.get_date_dict()
 	var hour: String = "%02d" % GameState.current_hour
 	if _is_compact():
 		day_label.text = tr("TOPBAR_CLOCK_COMPACT").format({
-			"day": int(d.day), "mon": Fmt.month_abbr(int(d.month)), "hour": hour})
+			"week": int(d.week), "mon": Fmt.month_abbr(int(d.month)), "hour": hour})
 	else:
 		day_label.text = tr("TOPBAR_CLOCK").format({"date": Fmt.date_line(d), "hour": hour})
 
 
-func _on_shutter_changed(days_left: int) -> void:
+func _on_shutter_changed(weeks_left: int) -> void:
 	# Kepenk sayacı: kasa eksideyken kırmızı geri sayım; -1 = gizli.
-	shutter_label.visible = days_left >= 0
+	shutter_label.visible = weeks_left >= 0
 	shutter_label.add_theme_color_override("font_color", UiTokens.negative_bright())
-	if days_left >= 0:
-		shutter_label.text = tr("FIN_SHUTTER_COUNTDOWN").format({"n": days_left})
+	if weeks_left >= 0:
+		shutter_label.text = tr(Fmt.count_key("FIN_SHUTTER_COUNTDOWN", weeks_left)).format(
+			{"n": weeks_left})
 
 
-func _on_offer_countdown_changed(days_left: int) -> void:
-	# Term sheet geçerlilik çipi: son günden önce amber, son gün kırmızı; -1 = gizli.
-	_offer_days_left = days_left
-	offer_label.visible = days_left >= 0
-	if days_left >= 0:
-		offer_label.text = tr("FIN_OFFER_COUNTDOWN").format({"n": days_left})
-		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT_CHROME if days_left > 1 else UiTokens.negative_bright())
+func _on_offer_countdown_changed(weeks_left: int) -> void:
+	# Term sheet geçerlilik çipi: son haftadan önce amber, son hafta kırmızı; -1 = gizli.
+	_offer_weeks_left = weeks_left
+	offer_label.visible = weeks_left >= 0
+	if weeks_left >= 0:
+		offer_label.text = tr(Fmt.count_key("FIN_OFFER_COUNTDOWN", weeks_left)).format(
+			{"n": weeks_left})
+		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT_CHROME if weeks_left > 1 else UiTokens.negative_bright())
 
 
 func _on_phase_changed(new_phase: int) -> void:

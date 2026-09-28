@@ -6,7 +6,8 @@ extends Node
 #
 # Seeded from RivalCatalog at _ready. Rivals evolve slowly on the daily tick
 # (advance_all, called by TimeManager) — startups fast, established slow, giants
-# static — so a player who stops feeding their product gets passed.
+# static — so a player who stops feeding their product gets passed. Momentum is a
+# per-day rate; each tick applies a week of it.
 #
 # STRUCTURAL CEILING: rival advancement uses QualityModel.grow with per-tier
 # asymptotes. The player's axes are bounded by the catalog pool sums (+
@@ -25,7 +26,7 @@ func _ready() -> void:
 func reset() -> void:
 	# Run-boundary reset (SaveManager.reset_all_owners). Rivals are the ONE registry that
 	# cannot simply be emptied: advance_all() mutates innovation/stability/experience every
-	# single day, so by day 140 the field is nothing like the catalog — but an empty field
+	# single tick, so by week 20 the field is nothing like the catalog — but an empty field
 	# is not a valid state either. _rival_relative_quality benchmarks the player's audience
 	# churn against the same-type startup average, and with no rivals it returns the player's
 	# own quality, i.e. the load-bearing competitive pressure silently switches off. So this
@@ -83,7 +84,7 @@ func get_player_rank_in_startup_league(sub_type_id: String, player_composite: fl
 	return {"rank": better + 1, "total": league + 1}
 
 
-# --- Advancement (called daily by TimeManager) ---
+# --- Advancement (called on every tick by TimeManager) ---
 
 func advance_all() -> void:
 	var any_changed: bool = false
@@ -91,9 +92,10 @@ func advance_all() -> void:
 		if r.momentum <= 0.0:
 			continue   # giants are static
 		var a: float = float(TIER_ASYMPTOTE.get(r.tier, 100.0))
-		r.innovation = QualityModel.grow(r.innovation, r.momentum, a)
-		r.stability = QualityModel.grow(r.stability, r.momentum, a)
-		r.experience = QualityModel.grow(r.experience, r.momentum, a)
+		var step: float = TimeModel.per_tick(r.momentum)
+		r.innovation = QualityModel.grow(r.innovation, step, a)
+		r.stability = QualityModel.grow(r.stability, step, a)
+		r.experience = QualityModel.grow(r.experience, step, a)
 		var new_status: String = _status_for(r)
 		if new_status != r.status:
 			r.status = new_status
@@ -117,7 +119,7 @@ func _status_for(r: Rival) -> String:
 # Sunum katmanı. STATELESS: get_market_snapshot her
 # çağrıda yalnız (RivalCatalog seed'leri + momentum, GameState.day, GameState.mrr,
 # MARKET_TOTAL_MRR) girdilerinden türetilen SAF fonksiyondur — canlı kalite
-# eksenleri OKUNMAZ (advance_all onları her gün mutasyona uğratır; bugünden
+# eksenleri OKUNMAZ (advance_all onları her tik mutasyona uğratır; bu tikten
 # "geçen haftanın payı"nı hesaplamak ancak saf bir fonksiyonla doğru kalır).
 # Kalite ligi (composite, rank API, ekonomi bağı) ayrıdır: pay, MRR
 # anlatısıdır, kalite yarışı değil. RNG yok — doku, hafta-bloklu hash wobble.
@@ -127,7 +129,7 @@ func _status_for(r: Rival) -> String:
 # sinyali: day_advanced + mrr_changed yeterlidir (snapshot durumsuz olduğundan her okuma
 # günceldir).
 
-const SHARE_GROWTH_PER_DAY := 0.004    # momentum başına günlük göreli büyüme  # WORKING
+const SHARE_GROWTH_PER_DAY := 0.004    # momentum başına günlük göreli büyüme; takvim günüyle işler  # WORKING
 const SHARE_WOBBLE_AMP := 0.08         # hafta-bloklu doku genliği (momentum ölçekli)  # WORKING
 # Eşik, rakiplerin HAFTALIK rutin hamlesinin altında durmalı, yoksa rakip haber
 # kaynağı açlıktan ölür (90 günlük smoke bunu ölçer). Ölçülen rutin bant (10 alt-tür
@@ -137,14 +139,14 @@ const SHARE_WOBBLE_AMP := 0.08         # hafta-bloklu doku genliği (momentum ö
 # Kardeş sabit NewsFeedSystem.RIVAL_BIG_MOVE_PCT aynı taramadan türedi: o, rutin
 # bandın ÜSTÜNDE durup yalnız sıçramayı yakalar. % puan.
 const SHARE_TREND_EPSILON := 0.02      # altı "yatay" sayılır  # WORKING
-const SHARE_MOVED_WINDOW_DAYS := 7     # trend + moved_recently penceresi; _share_at'ın wobble hafta bloğu da bu
+const SHARE_MOVED_WINDOW_WEEKS := 1    # trend + moved_recently penceresi (hafta)
 
 
 func get_market_snapshot(sub_type_id: String) -> Dictionary:
 	# {player_pct, others_pct, rivals: [{id, name, tier, share_pct,
 	#  trend(-1|0|+1), delta_pct, moved_recently}] pay-azalan}. Toplam (player + rivals + others)
 	# = 100 — "diğerleri" (uzun kuyruk) artıktır, taşmada adlandırılmışlar ölçeklenir.
-	var day: int = GameState.day
+	var tick: int = GameState.day
 	var player_pct: float = get_player_share_pct()
 	var rows: Array = []
 	var raw_sum: float = 0.0
@@ -154,10 +156,10 @@ func get_market_snapshot(sub_type_id: String) -> Dictionary:
 		var r: Rival = get_rival(rid)
 		var display_name: String = r.product_name if r != null else "%s #%d" % [sub_type_id, i]
 		rows.append(_share_row(rid, display_name, String(t["tier"]),
-			float(RivalCatalog.SHARE_SEED[i]), float(t["momentum"]), day))
+			float(RivalCatalog.SHARE_SEED[i]), float(t["momentum"]), tick))
 	for actor in RivalCatalog.MARKET_ACTORS:
 		rows.append(_share_row(String(actor["id"]), String(actor["name"]), "holding",
-			float(actor["share"]), float(actor["momentum"]), day))
+			float(actor["share"]), float(actor["momentum"]), tick))
 	for row in rows:
 		raw_sum += float(row["share_pct"])
 	var budget: float = 100.0 - player_pct
@@ -189,9 +191,9 @@ func format_share(pct: float) -> String:
 
 
 func _share_row(rid: String, display_name: String, tier: String,
-		seed: float, momentum: float, day: int) -> Dictionary:
-	var now: float = _share_at(rid, seed, momentum, day)
-	var prev: float = _share_at(rid, seed, momentum, maxi(day - SHARE_MOVED_WINDOW_DAYS, 0))
+		seed: float, momentum: float, tick: int) -> Dictionary:
+	var now: float = _share_at(rid, seed, momentum, tick)
+	var prev: float = _share_at(rid, seed, momentum, maxi(tick - TimeModel.ticks(SHARE_MOVED_WINDOW_WEEKS), 0))
 	var delta: float = now - prev
 	var trend: int = 0
 	if delta > SHARE_TREND_EPSILON:
@@ -206,8 +208,8 @@ func _share_row(rid: String, display_name: String, tier: String,
 	}
 
 
-func _share_at(rid: String, seed: float, momentum: float, day: int) -> float:
-	# Saf pay eğrisi: yavaş momentum büyümesi × hafta-bloklu deterministik wobble.
+func _share_at(rid: String, seed: float, momentum: float, tick: int) -> float:
+	# Saf pay eğrisi: yavaş momentum büyümesi × haftalık deterministik wobble.
 	# Momentum 0 (dev) → tamamen durağan; kalite modelindeki "giants are static"
 	# ile aynı fiction. Wobble genliği momentumla ölçeklenir: yerleşikler kıpırdar,
 	# startup'lar oynar.
@@ -215,13 +217,12 @@ func _share_at(rid: String, seed: float, momentum: float, day: int) -> float:
 	# ÖLÇÜM NOTU: wobble PRATİKTE doku üretmiyor. hash()
 	# djb2'dir ve hafta numarası dizginin SONUNA yazılır — ardışık hafta anahtarları
 	# ardışık tamsayıya düşer, %1000 sonrası w haftada yalnız +0,001 kayar. Tek gerçek
-	# sıçrama haftanın basamak sayısı değişince olur (hafta 9→10, yani gün 70). Sonuç:
+	# sıçrama haftanın basamak sayısı değişince olur (tik 9→10). Sonuç:
 	# haftalık delta neredeyse tamamen büyüme terimidir (seed × momentum × 0,028) ve
 	# koşu başına TEK büyük hamle penceresi vardır. Paylar tutarlı, ama "doku" iddiası
 	# şu an gerçekleşmiyor; düzeltmek oyuncunun gördüğü payları (Finans, Ürün) oynatır, o
 	# yüzden ayrı karar. Haber eşikleri bu GERÇEK dağılıma göre ayarlandı, iddiaya göre değil.
-	var grown: float = seed * (1.0 + momentum * SHARE_GROWTH_PER_DAY * float(day))
-	var week: int = int(float(day) / float(SHARE_MOVED_WINDOW_DAYS))
-	var w: float = float(absi(hash("%s|%d" % [rid, week])) % 1000) / 1000.0
+	var grown: float = seed * (1.0 + momentum * SHARE_GROWTH_PER_DAY * TimeModel.days(tick))
+	var w: float = float(absi(hash("%s|%d" % [rid, tick])) % 1000) / 1000.0
 	var amp: float = SHARE_WOBBLE_AMP * momentum
 	return maxf(grown * (1.0 + amp * (w * 2.0 - 1.0)), 0.0)

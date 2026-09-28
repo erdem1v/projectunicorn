@@ -5,6 +5,7 @@
   "category": "funding",
   "tick": "daily",
   "class": "interrupt",
+  "expires_weeks": 1,
   "tags": [
     "critical",
     "build_safe",
@@ -30,10 +31,10 @@
         "reason": "the Series A road closed by a DECLINE or a WALK, and nothing is left to walk to"
       },
       {
-        "seam": "funding.acq_days_open",
+        "seam": "funding.acq_weeks_open",
         "op": "<=",
-        "value": 10,
-        "reason": "EndingsSystem.ACQ_CARD_WINDOW_DAYS - a buyer that never showed up does not show up in year two"
+        "value": 1,
+        "reason": "EndingsSystem.ACQ_CARD_WINDOW_WEEKS - a buyer that never showed up does not show up in year two"
       },
       {
         "seam": "funding.seed_taken",
@@ -42,7 +43,7 @@
         "reason": "the caller IS the seed lead; with no seed there is nobody to make the call"
       },
       {
-        "seam": "finance.shutter_days_left",
+        "seam": "finance.shutter_weeks_left",
         "op": "<",
         "value": 0
       }

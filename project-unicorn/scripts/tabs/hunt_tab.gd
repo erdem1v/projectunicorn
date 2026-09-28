@@ -23,6 +23,12 @@ var _advisory_active: bool = false   # a phone note has taken the strip over (se
 # HuntTab.tscn: everything else on this page is already programmatic, and the strip is
 # entirely conditional — it is absent for most of a run.
 var _seed_strip: VBoxContainer = null
+# The two sitting gates (WorkHoursSystem.sitting_open) as the page was painted. The clock and a
+# work-hours change (assignment_changed, which moves the founder's end) can flip either one,
+# and a flip repaints the page.
+var _pitch_open: bool = true
+var _table_open: bool = true
+var _gate_signals: Array = []
 
 
 func _ready() -> void:
@@ -38,6 +44,9 @@ func _ready() -> void:
 	for sig in _signals:
 		sig.connect(_on_changed)
 	EventBus.mentor_advisory_changed.connect(_on_advisory)
+	_gate_signals = [EventBus.hour_changed, EventBus.assignment_changed]
+	for sig in _gate_signals:
+		sig.connect(_on_gate_input)
 	_seed_strip = VBoxContainer.new()
 	_seed_strip.add_theme_constant_override("separation", 4)
 	$Layout.add_child(_seed_strip)
@@ -51,6 +60,9 @@ func _exit_tree() -> void:
 			sig.disconnect(_on_changed)
 	if EventBus.mentor_advisory_changed.is_connected(_on_advisory):
 		EventBus.mentor_advisory_changed.disconnect(_on_advisory)
+	for sig in _gate_signals:
+		if sig.is_connected(_on_gate_input):
+			sig.disconnect(_on_gate_input)
 
 
 func _on_changed(_arg = null) -> void:
@@ -63,11 +75,19 @@ func _on_advisory(key: String, args: Dictionary) -> void:
 	_refresh()
 
 
+func _on_gate_input(_arg = null) -> void:
+	if WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS) != _pitch_open \
+			or WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS) != _table_open:
+		_refresh()
+
+
 func _refresh() -> void:
 	# Once a phone advisory has taken the strip it keeps it; until then the line is re-read on
 	# every refresh so {n} (tables already closed) follows vc_rejections.
 	if not _advisory_active:
 		_frank.text = tr("HUNT_FRANK_LINE").format({"n": GameState.vc_rejections})
+	_pitch_open = WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS)
+	_table_open = WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS)
 	for box in [_seed_strip, _roster, _offers, _pending]:
 		for c in box.get_children():
 			c.queue_free()
@@ -93,36 +113,36 @@ func _refresh_seed() -> void:
 		_seed_strip.add_child(_label(tr("SEED_DONE_LINE").format({
 			"investor": _vc_name(GameState.seed_lead),
 			"amount": Fmt.money_exact(GameState.run_seed_amount),
-			"equity": Fmt.percent(GameState.run_seed_equity_pct, 0)}), UiTokens.INK_MUTED, 12))
-		_seed_strip.add_child(_label(tr("SEED_EXPECT_LABEL"), UiTokens.INK_DIM, 11))
+			"equity": Fmt.percent(GameState.run_seed_equity_pct, 0)}), UiTokens.INK_MUTED, UiTokens.SIZE_DATA))
+		_seed_strip.add_child(_label(tr("SEED_EXPECT_LABEL"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL))
 		_seed_strip.add_child(_seed_expectation_line())
 		return
 
 	var sheet: TermSheet = GameState.seed_sheet
 	if sheet != null:
 		_seed_strip.add_child(_label(tr("SEED_OFFER_LINE").format(
-			{"investor": _vc_name(sheet.vc_id)}), UiTokens.INK, 12))
+			{"investor": _vc_name(sheet.vc_id)}), UiTokens.INK, UiTokens.SIZE_DATA))
 		_seed_strip.add_child(_label(tr("SEED_OFFER_TERMS").format(
-			{"band": tr("SEED_BAND_" + sheet.band.to_upper())}), UiTokens.INK_DIM, 11))
+			{"band": tr("SEED_BAND_" + sheet.band.to_upper())}), UiTokens.INK_DIM, UiTokens.SIZE_SMALL))
 		# NO WALK BUTTON, and not by omission: refusing the round is ZOR MOD, so the row
 		# that refuses it lives at the TABLE where it can be rendered locked with its
 		# reason. A second refusal path here would be an unlocked door beside a locked one.
-		_seed_strip.add_child(_button(tr("SEED_SIT_DOWN"), EventBus.term_table_requested.emit.bind(sheet.vc_id, PitchConstants.STAGE_SEED)))
+		_seed_strip.add_child(_sit_button(tr("SEED_SIT_DOWN"), sheet.vc_id, PitchConstants.STAGE_SEED))
 		return
 
 	if GameState.seed_pitch_used:
 		_seed_strip.add_child(_label(tr("SEED_PITCH_SPENT_LINE").format(
-			{"investor": _vc_name(GameState.seed_lead)}), UiTokens.INK_DIM, 11, true))
+			{"investor": _vc_name(GameState.seed_lead)}), UiTokens.INK_DIM, UiTokens.SIZE_SMALL, true))
 		return
 
-	_seed_strip.add_child(_label(tr("SEED_DOOR_LINE"), UiTokens.INK_MUTED, 11, true))
-	_seed_strip.add_child(_label(tr("SEED_DOOR_HINT"), UiTokens.INK_DIM, 11, true))
+	_seed_strip.add_child(_label(tr("SEED_DOOR_LINE"), UiTokens.INK_MUTED, UiTokens.SIZE_SMALL, true))
+	_seed_strip.add_child(_label(tr("SEED_DOOR_HINT"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL, true))
 	var row := _box(HBoxContainer.new(), 6)
 	for inv in InvestorRegistry.get_active():
 		var vc_id: String = String(inv.get("id", ""))
 		# The blocked reason, when there is one, on the surface that would otherwise offer a
 		# button that quietly does nothing (no fake choices).
-		var blocked: String = SeedRoundSystem.pitch_blocked_reason(vc_id)
+		var blocked: String = _seed_block(vc_id)
 		# CONFIRMED, because it cannot be taken back: one seed pitch per run, and the
 		# fund chosen here is the fund. Same grammar as walking a table.
 		var b := _button(String(inv.get("display_name", "")), _confirm_seed_pitch.bind(vc_id),
@@ -132,25 +152,35 @@ func _refresh_seed() -> void:
 	_seed_strip.add_child(row)
 
 
+## The seed pitch's lock reason: the rung's own first, then the sitting gate.
+func _seed_block(vc_id: String) -> String:
+	var why: String = SeedRoundSystem.pitch_blocked_reason(vc_id)
+	return "VC_BLOCK_LATE" if why == "" and not _pitch_open else why
+
+
 ## The growth expectation, in one line. The threshold IS rendered here, unlike
 ## the door bar: the door is an appetite the player infers, but 10 % a month is a promise
 ## an investor made out loud, and a promise nobody states is not one.
 func _seed_expectation_line() -> Label:
 	var e: Dictionary = SeedRoundSystem.expectation()
-	var args := {"days": e.grace_days_left, "avg": Fmt.percent(int(e.avg_pct), 0),
+	var weeks: int = int(e.grace_weeks_left)
+	var args := {"weeks": weeks, "avg": Fmt.percent(int(e.avg_pct), 0),
 		"need": Fmt.percent(int(e.need_pct), 0)}
 	match int(e.state):
 		SeedConstants.EXPECT_GRACE:
-			return _label(tr("SEED_EXPECT_GRACE").format(args), UiTokens.INK_DIM, 11, true)
+			# Past the grace weeks but still GRACE: too few closed months to read, so no count.
+			if weeks > 0:
+				return _label(tr(Fmt.count_key("SEED_EXPECT_GRACE", weeks)).format(args),
+					UiTokens.INK_DIM, UiTokens.SIZE_SMALL, true)
 		SeedConstants.EXPECT_ON_TRACK:
-			return _label(tr("SEED_EXPECT_ON_TRACK").format(args), UiTokens.positive(), 11, true)
+			return _label(tr("SEED_EXPECT_ON_TRACK").format(args), UiTokens.positive(), UiTokens.SIZE_SMALL, true)
 		SeedConstants.EXPECT_STALLED:
-			return _label(tr("SEED_EXPECT_STALLED").format(args), UiTokens.negative(), 11, true)
-	return _label(tr("SEED_EXPECT_UNKNOWN"), UiTokens.INK_DIM, 11, true)
+			return _label(tr("SEED_EXPECT_STALLED").format(args), UiTokens.negative(), UiTokens.SIZE_SMALL, true)
+	return _label(tr("SEED_EXPECT_UNKNOWN"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL, true)
 
 
 func _confirm_seed_pitch(vc_id: String) -> void:
-	if SeedRoundSystem.pitch_blocked_reason(vc_id) != "":
+	if _seed_block(vc_id) != "":
 		return
 	EventBus.confirm_requested.emit({
 		"title": tr("SEED_PITCH_CONFIRM_TITLE"),
@@ -185,12 +215,12 @@ func _build_roster_card(inv: Dictionary) -> Control:
 	card.add_child(head)
 
 	if locked:
-		card.add_child(_label(tr("HUNT_LOCKED_SOON"), UiTokens.INK_DIM, 11))
+		card.add_child(_label(tr("HUNT_LOCKED_SOON"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL))
 		return card
 
 	var meta := _box(HBoxContainer.new(), 8)
 	meta.add_child(UiFactory.make_pill(InvestorRegistry.domain_chip(vc_id), UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
-	var arc := _label(InvestorRegistry.archetype_line(vc_id), UiTokens.INK_MUTED, 11, true)
+	var arc := _label(InvestorRegistry.archetype_line(vc_id), UiTokens.INK_MUTED, UiTokens.SIZE_SMALL, true)
 	arc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	meta.add_child(arc)
 	card.add_child(meta)
@@ -206,7 +236,7 @@ func _build_roster_actions(vc_id: String) -> Control:
 	# TELEGRAPHED, NOT BLANK: the page is reachable in Traction once the seed door has opened,
 	# and a row of four funds with no button and no sentence reads as a bug.
 	if GameState.phase < 3:
-		return _label(tr("FIN_SUBTAB_LOCKED"), UiTokens.INK_DIM, 11)
+		return _label(tr("FIN_SUBTAB_LOCKED"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL)
 	var reason: String = VCPitchSystem.meeting_blocked_reason(vc_id)
 	if reason == "closed":
 		return null  # closed, or the offer lives in Teklifler — no roster action
@@ -217,20 +247,21 @@ func _build_roster_actions(vc_id: String) -> Control:
 	var row := _box(VBoxContainer.new(), 3)
 	if callback:
 		condition = tr("HUNT_CONDITION").format({"condition": _callback_text(st.get("callback", {}))})
-		row.add_child(_label(condition, UiTokens.INK_DIM, 11, true))
+		row.add_child(_label(condition, UiTokens.INK_DIM, UiTokens.SIZE_SMALL, true))
 
 	if GameState.pending_meeting.get("vc_id", "") == vc_id:
-		row.add_child(_label(tr("HUNT_MEETING_SET"), UiTokens.INK_MUTED, 11))
+		row.add_child(_label(tr("HUNT_MEETING_SET"), UiTokens.INK_MUTED, UiTokens.SIZE_SMALL))
 		if VCPitchSystem.can_move_meeting():
 			row.add_child(_meeting_move_row())
 		row.add_child(_prep_row(vc_id))
 		return row
 
 	var text: String = (tr("HUNT_REQUEST_AGAIN") if callback else tr("HUNT_REQUEST_MEETING")).format(
-		{"n": PitchConstants.MEETING_LEAD_DAYS})
+		{"when": _when(TimeModel.ticks(PitchConstants.MEETING_LEAD_WEEKS))})
 	# The system says why (no fake choices): the callback condition is the lock on a
 	# callback fund, and it is already printed one line up, so the tooltip repeats it.
-	var why: String = {"callback_unmet": condition, "cancelled_today": tr("HUNT_MEETING_CANCELLED_TODAY"),
+	var why: String = {"callback_unmet": condition,
+		"cancelled_this_week": tr("HUNT_MEETING_CANCELLED_THIS_WEEK"),
 		"busy": tr("HUNT_MEETING_BUSY")}.get(reason, "")
 	var btn := _button(text, _act.bind(VCPitchSystem.request_meeting.bind(vc_id)), why)
 	btn.disabled = reason != ""
@@ -238,11 +269,13 @@ func _build_roster_actions(vc_id: String) -> Control:
 	return row
 
 
-## Cancel or move the booked meeting. Only before its day; each costs a little of that
-## fund's conviction at its next meeting, and the buttons say how much.
+## Cancel or move the booked meeting. Only before its week; each costs a little of that
+## fund's conviction at its next meeting, and the buttons say how much. The move button names
+## the week the meeting would land in (VCPitchSystem.reschedule_meeting).
 func _meeting_move_row() -> Control:
 	var box := _box(HBoxContainer.new(), 4)
-	box.add_child(_button(tr("HUNT_MEETING_RESCHEDULE").format({"n": PitchConstants.MEETING_LEAD_DAYS}),
+	var moved_to: int = int(GameState.pending_meeting.get("day", 0)) + TimeModel.ticks(PitchConstants.MEETING_LEAD_WEEKS)
+	box.add_child(_button(tr("HUNT_MEETING_RESCHEDULE").format({"when": _when(moved_to - GameState.day)}),
 		_act.bind(VCPitchSystem.reschedule_meeting),
 		tr("HUNT_RESCHEDULE_TIP").format({"n": PitchConstants.MEETING_RESCHEDULE_PENALTY})))
 	box.add_child(_button(tr("HUNT_MEETING_CANCEL"), _act.bind(VCPitchSystem.cancel_meeting),
@@ -253,10 +286,10 @@ func _meeting_move_row() -> Control:
 func _prep_row(vc_id: String) -> Control:
 	# 3 focus buttons if prep is allowed; the block reason otherwise (no fake choices).
 	if not GameState.prep.is_empty():
-		return _label(tr("HUNT_PREP_RUNNING"), UiTokens.INK_DIM, 11)
+		return _label(tr("HUNT_PREP_RUNNING"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL)
 	var reason: String = VCPitchSystem.prep_blocked_reason(vc_id)
 	if reason != "":
-		return _label(tr("HUNT_PREP_REASON").format({"reason": reason}), UiTokens.INK_DIM, 11)
+		return _label(tr("HUNT_PREP_REASON").format({"reason": reason}), UiTokens.INK_DIM, UiTokens.SIZE_SMALL)
 	var box := _box(HBoxContainer.new(), 4)
 	for focus_id in FOCUS_KEYS:
 		box.add_child(_button(tr(FOCUS_KEYS[focus_id]), _act.bind(VCPitchSystem.start_prep.bind(vc_id, focus_id))))
@@ -275,42 +308,43 @@ func _refresh_offers() -> void:
 	if road_closed:
 		# Every fund is closed and nothing is live: say it once, plainly, with no empty-offers
 		# line or empty slot that implies another meeting could still produce one.
-		_offers.add_child(_label(tr("HUNT_ROAD_CLOSED"), UiTokens.INK_MUTED, 12, true))
+		_offers.add_child(_label(tr("HUNT_ROAD_CLOSED"), UiTokens.INK_MUTED, UiTokens.SIZE_DATA, true))
 	elif sheets.is_empty() and queued.is_empty():
-		_offers.add_child(_label(tr("HUNT_NO_OFFERS"), UiTokens.INK_DIM, 11))
+		_offers.add_child(_label(tr("HUNT_NO_OFFERS"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL))
 	for sheet in sheets:
 		_offers.add_child(_build_offer_card(sheet))
 	if sheets.size() < PitchConstants.MAX_SHEETS and not road_closed:
-		var empty := _label(tr("HUNT_EMPTY_SLOT"), UiTokens.INK_DIM, 11)
+		var empty := _label(tr("HUNT_EMPTY_SLOT"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_offers.add_child(empty)
 	# The third sheet waits for a slot, and the player can see it waiting.
 	for vc_id in queued:
 		_offers.add_child(_label(tr("HUNT_QUEUED_OFFER").format({"investor": _vc_name(vc_id),
-			"n": PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS}), UiTokens.INK_DIM, 11, true))
+			"n": PitchConstants.SHEET_VALIDITY_WEEKS}), UiTokens.INK_DIM, UiTokens.SIZE_SMALL, true))
 
 
 func _build_offer_card(sheet: TermSheet) -> Control:
 	var vc_id: String = sheet.vc_id
 	var card := _box(VBoxContainer.new(), 3)
-	card.add_child(_label(_vc_name(vc_id), UiTokens.INK, 13))
+	card.add_child(_label(_vc_name(vc_id), UiTokens.INK, UiTokens.SIZE_BODY))
 	# An ESTIMATED range, never the number and never the board term - the table is where
 	# the exact terms open up. The range is seeded per sheet, so it does not reroll.
 	card.add_child(_label(tr("HUNT_TERMS").format({
 		"valuation": VCPitchSystem.estimate_valuation_text(vc_id),
-		"equity": VCPitchSystem.estimate_dilution_text(vc_id)}), UiTokens.INK_MUTED, 11, true))
+		"equity": VCPitchSystem.estimate_dilution_text(vc_id)}), UiTokens.INK_MUTED, UiTokens.SIZE_SMALL, true))
 	var due: bool = sheet.is_decision_due(GameState.day)
 	if due:
 		# The window has closed; the decision card is up (or about to be). The same two
 		# answers live here so the page never shows a sheet with nothing to do about it.
-		card.add_child(_label(tr("HUNT_DECISION_DUE"), UiTokens.negative(), 11, true))
+		card.add_child(_label(tr("HUNT_DECISION_DUE"), UiTokens.negative(), UiTokens.SIZE_SMALL, true))
 	else:
-		# Plain information in business days, amber → red at the warning threshold.
-		var days: int = sheet.business_days_left(GameState.day)
-		card.add_child(_label(tr("HUNT_VALIDITY").format({"n": days}),
-			UiTokens.ACCENT_DEEP if days > PitchConstants.WARNING_DAYS else UiTokens.negative(), 11))
+		# Plain information in weeks, amber → red at the warning threshold.
+		var weeks: int = sheet.weeks_left(GameState.day)
+		card.add_child(_label(tr(Fmt.count_key("HUNT_VALIDITY", weeks)).format({"n": weeks}),
+			UiTokens.ACCENT_DEEP if weeks > TimeModel.ticks(PitchConstants.WARNING_WEEKS) else UiTokens.negative(),
+			UiTokens.SIZE_SMALL))
 	var actions := _box(HBoxContainer.new(), 6)
-	actions.add_child(_button(tr("HUNT_SIT_DOWN"), EventBus.term_table_requested.emit.bind(vc_id, PitchConstants.STAGE_SERIES_A)))
+	actions.add_child(_sit_button(tr("HUNT_SIT_DOWN"), vc_id, PitchConstants.STAGE_SERIES_A))
 	if due:
 		actions.add_child(_button(tr("VC_EV_DECISION_DECLINE"),
 			_act.bind(VCPitchSystem.decline_expired_sheet.bind(vc_id))))
@@ -337,14 +371,14 @@ func _refresh_pending() -> void:
 	var pr: Dictionary = GameState.prep
 	if not pm.is_empty():
 		_pending.add_child(_label(tr("HUNT_MEETING_PENDING").format({"vc": _vc_name(String(pm.get("vc_id", ""))),
-			"n": maxi(int(pm.get("day", 0)) - GameState.day, 0)}), UiTokens.INK, 12))
+			"when": _when(int(pm.get("day", 0)) - GameState.day)}), UiTokens.INK, UiTokens.SIZE_DATA))
 	if not pr.is_empty():
 		var pd: int = int(pr.get("done_day", 0)) - GameState.day
 		_pending.add_child(_label(tr("HUNT_PREP_PENDING").format({
 			"focus": tr(FOCUS_KEYS.get(String(pr.get("focus", "")), "HUNT_CB_NONE")),
-			"when": tr("HUNT_PREP_READY") if pd <= 0 else tr("HUNT_DAYS").format({"n": pd})}), UiTokens.INK, 12))
+			"when": tr("HUNT_PREP_READY") if pd <= 0 else _when(pd)}), UiTokens.INK, UiTokens.SIZE_DATA))
 	if pm.is_empty() and pr.is_empty():
-		_pending.add_child(_label(tr("HUNT_NONE_PENDING"), UiTokens.INK_DIM, 11))
+		_pending.add_child(_label(tr("HUNT_NONE_PENDING"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL))
 
 
 # --- Rejection counter / pivot ---
@@ -385,6 +419,21 @@ func _callback_text(cb: Dictionary) -> String:
 
 func _vc_name(vc_id: String) -> String:
 	return String(InvestorRegistry.get_investor(vc_id).get("display_name", vc_id))
+
+
+## How far off a booking is, in words: this week, next week, or in n weeks.
+func _when(weeks: int) -> String:
+	if weeks <= 0:
+		return tr("HUNT_THIS_WEEK")
+	return tr("HUNT_NEXT_WEEK") if weeks == 1 else tr("HUNT_WEEKS").format({"n": weeks})
+
+
+## "Masaya otur", locked with its reason while the table's sitting gate is shut.
+func _sit_button(text: String, vc_id: String, stage: String) -> Button:
+	var b := _button(text, EventBus.term_table_requested.emit.bind(vc_id, stage),
+		"" if _table_open else tr("VC_BLOCK_LATE"))
+	b.disabled = not _table_open
+	return b
 
 
 ## Run a system action, then repaint: not every action emits a signal this page listens to.

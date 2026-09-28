@@ -3,19 +3,24 @@ extends Node3D
 
 # The staff in the office (office-sim-v12.js rebuildPeople and update, people-x.js): the founder
 # and every employee as an OfficeActor, seated in hire order. Who is in follows the game clock,
-# each person's working hours; how they move is real time, in a time-lapse office where a whole
-# day passes in 12 real seconds at 1×. A walk in or out is sped up to take at most ARRIVE_MAX_S,
-# and the clock may have moved on by the time they sit down or reach the door; short breaks from
-# the desk run at walking pace. Walkers open the layout's lift or door, and the office lighting
-# hears who sits at which desk.
+# each person's working hours (the founder's are the company window); how they move is real
+# time, in a time-lapse office where a working day passes in 90 real seconds at 1×. A walk in or
+# out is sped up to take at most ARRIVE_MAX_S, and the walk out starts that many real seconds
+# before the hours end, so the office is empty when they do; short breaks from the desk run at
+# walking pace. The night waits on office_empty() (TimeManager's night gate) and sends anyone
+# still up out at once. Walkers open the layout's lift or door, and the office lighting hears
+# who sits at which desk. The founder's trip to a meeting walks them out at walking pace; main
+# runs the tree for the trip, so the walk and the lift or door play as on any day.
+
+signal founder_arrived   # the founder sent out reached the door
 
 const TRIP_EVERY := Vector2(25.0, 60.0)   # [WORKING] real seconds at the desk between breaks
 const TRIP_STAY := Vector2(6.0, 10.0)     # [WORKING] real seconds at the break spot
 const AWAY_SHARE := 1.0 / 3.0             # [WORKING] share of those in who may be off their seats
 const ARRIVE_MAX_S := 3.0                 # [WORKING] real seconds a walk in or out may take
+## The longest the night waits for the office to empty.
+const NIGHT_WALKOUT_MAX_S := ARRIVE_MAX_S + 0.5
 const LIFT_EASE := 6.0                    # the design's lift easing, per second
-## The design's founder at home sleeps from 23:25 to 07:35 (office-home.js), in game minutes.
-const BED := Vector2(1405.0, 455.0)
 ## Break spot kinds and what each reads as (people-x.js brk). Booths are the sales reps'; at
 ## home the founder takes the kettle and the balcony in place of the kitchen table.
 const BREAKS := {"coffee": "coffee", "wc": "wc", "visit": "visit", "booth": "phone", "eat": "food"}
@@ -38,12 +43,50 @@ var _entry := {}          # where people come in and go out
 var _bed := {}            # the founder's bed, at home
 var _lift: Array = []     # [node, panel] per lift door or door wing
 var _lift_open := 0.0
+## The founder is on the trip to a meeting: out of the office until founder_back().
+var founder_away := false
 
 
 func _ready() -> void:
 	EventBus.character_added.connect(_on_character_added)
 	EventBus.character_removed.connect(_on_character_removed)
 	EventBus.assignment_changed.connect(_on_assignment_changed)
+	TimeManager.register_night_gate(office_empty, NIGHT_WALKOUT_MAX_S)
+
+
+func _exit_tree() -> void:
+	TimeManager.unregister_night_gate()
+
+
+## The night gate: nobody is up in the office. The founder asleep at home counts as out, and the
+## map has nobody in it.
+func office_empty() -> bool:
+	if _layout.id == "city":
+		return true
+	return _actors.values().all(func(a: OfficeActor) -> bool:
+		return not a.visible or (is_same(a.spot, _bed) and not a.is_walking()))
+
+
+## The founder's trip to a meeting: up from wherever they are and out of the door at walking
+## pace. founder_arrived says they reached it, next frame when they were out already.
+func send_founder_out() -> void:
+	founder_away = true
+	var a: OfficeActor = _actors[CharacterRegistry.get_founder().id]
+	if a.visible:
+		if a.is_walking():
+			a.stand(a.destination(), a.act)
+		a.walk(_entry, "")
+	if not a.is_walking():
+		founder_arrived.emit.call_deferred()
+
+
+## Back from the meeting: in working hours the steer walks the founder in from the door; a
+## meeting that ran past the workday at home puts them straight to bed.
+func founder_back() -> void:
+	founder_away = false
+	var a: OfficeActor = _actors[CharacterRegistry.get_founder().id]
+	if not _bed.is_empty() and is_same(_wanted(a, TimeManager.day_minute()), _bed):
+		a.stand(_bed, "sleep")
 
 
 func set_layout(layout: OfficeLayout, view: Node) -> void:
@@ -91,13 +134,14 @@ func _process(delta: float) -> void:
 		return
 	var running := not get_tree().paused
 	var minute := TimeManager.day_minute()
+	var night := TimeManager.is_night()
 	var icon_size := maxf(ICON_MIN, ICON_PX * (_view.camera as OfficeCamera).size / get_viewport().get_visible_rect().size.y)
 	var lighting: OfficeLighting = _view.lighting
 	var anyone := false
 	var near_lift := false
 	for a: OfficeActor in _actors.values():
 		if running:
-			_steer(a, delta, minute)
+			_steer(a, delta, minute, night)
 		a.animate(delta, running, icon_size)
 		var at_desk := a.visible and not a.is_walking() and is_same(a.spot, a.seat)
 		if a.desk_id >= 0:
@@ -116,27 +160,35 @@ func _process(delta: float) -> void:
 			node.set_indexed("rotation:y" if panel.rot else "position:" + panel.ax, panel.p0 + panel.d * _lift_open)
 
 
-## Where `a` belongs now: their seat in working hours, the founder always (in bed at night at
-## home); {} = not in the office.
+## Where `a` belongs now: their seat in their hours, left early by ARRIVE_MAX_S real seconds at
+## this speed so the walk out ends with them; out of hours the founder sleeps at home. {} = not
+## in the office.
 func _wanted(a: OfficeActor, minute: float) -> Dictionary:
-	if a.seat.is_empty() or a.character.status != HRConstants.STATUS_ACTIVE:
+	if a.seat.is_empty() or not WorkHoursSystem.in_office(a.character) or (a.founder and founder_away):
 		return {}
-	if a.founder:
-		return _bed if not _bed.is_empty() and (minute >= BED.x or minute < BED.y) else a.seat
 	var start := WorkHoursSystem.start_hour() * 60.0
-	return a.seat if minute >= start and minute < start + WorkHoursSystem.hours_for(a.character) * 60.0 else {}
+	var early := ARRIVE_MAX_S * 60.0 * TimeManager.hours_per_real_second(TimeManager.current_speed)
+	if minute >= start and minute < start + WorkHoursSystem.hours_for(a.character) * 60.0 - early:
+		return a.seat
+	return _bed if a.founder else {}
 
 
 func _act_at(a: OfficeActor, place: Dictionary) -> String:
 	return "sleep" if is_same(place, _bed) else a.work_act
 
 
-func _steer(a: OfficeActor, delta: float, minute: float) -> void:
+func _steer(a: OfficeActor, delta: float, minute: float, night: bool) -> void:
+	var want := _wanted(a, minute)
+	if night and not is_same(a.destination(), _entry if want.is_empty() else want):
+		# The night sends everyone still up out (the founder at home to bed) at once, a walk
+		# back from a break included: that walk ends where it was going.
+		a.stand(a.destination(), a.act)
+		a.stay = 0.0
 	if a.is_walking():
 		a.advance(delta)
-		return
-	var want := _wanted(a, minute)
-	if want.is_empty():
+		if a.founder and founder_away and not a.is_walking():
+			founder_arrived.emit()
+	elif want.is_empty():
 		if a.visible:
 			a.stay = 0.0
 			a.walk(_entry, "", ARRIVE_MAX_S)

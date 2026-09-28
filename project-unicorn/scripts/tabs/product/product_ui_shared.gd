@@ -18,7 +18,7 @@ static func axis_color(axis_id: String) -> Color:
 	return UiTokens.INK_MUTED
 
 
-## Gün N → "Oca 2026" (SÜRÜMLER satırı).
+## Tik N → "Oca 2026" (SÜRÜMLER satırı).
 static func month_year(day: int) -> String:
 	var d: Dictionary = GameState.get_date_dict(day)
 	return Fmt.month_abbr(int(d.month)) + " " + str(int(d.year))
@@ -51,10 +51,10 @@ static func b2c_free_users() -> int:
 	return maxi(0, int(floor(SalesSystem.b2c_audience())) - CustomerRegistry.get_total_users())
 
 
-## "Bittiğinde kasada $X kalır" — kasa − maliyet + süre × günlük net akış.
-static func cash_after_build(total_cost: int, duration_days: int) -> int:
-	return GameState.cash - total_cost \
-		+ duration_days * (GameState.get_daily_revenue() - GameState.daily_burn)
+## "Bittiğinde kasada $X kalır" — kasa − maliyet + süre × haftalık net akış.
+static func cash_after_build(total_cost: int, duration_weeks: int) -> int:
+	return GameState.cash - total_cost + int(duration_weeks
+		* TimeModel.per_tick(GameState.get_daily_revenue() - GameState.daily_burn))
 
 
 ## Ürün Detayı ipucu şeridi: tam üç şablon, sistem ipucu (Frank'in sözü değil).

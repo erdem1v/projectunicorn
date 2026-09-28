@@ -14,7 +14,7 @@ extends RefCounted
 #
 # EDITORIAL RULES (the END_* copy and the code below both keep them):
 #   1. newspaper language, not stat language;
-#   2. NO raw day count in prose (calendar framing via _span_phrase);
+#   2. NO raw run length in prose (calendar framing via _span_phrase);
 #   3. NO cash figures / "$" in PROSE (origin-aware founding clause); the stat_cells row
 #      is the ONE sanctioned "$" surface: it is an infographic, not prose;
 #   4. investment figures in prose stay spelled-out ("milyon dolar");
@@ -26,11 +26,11 @@ extends RefCounted
 const FF_MAX_EQUITY := 18          # Founder-Friendly ceiling (inclusive): equity <= 18 AND no veto
 const MIN_LEDGER_LINES := 4
 const MAX_LEDGER_LINES := 6
-const YEAR_DAYS := 350             # >= → "bir yıla yakın" framing
-const OVER_YEAR_DAYS := 380           # "bir yılı aşkın" — a run clearly past its first year
-const TWO_YEAR_DAYS := 700            # "iki yıla yakın" — the soft cap's own span (730)
-const OVER_TWO_YEAR_DAYS := 745       # "iki yılı aşkın" — only a run past its milestone gets here (EA / full: no cap)
-const ISSUE_PERIOD_DAYS := 7       # weekly paper: masthead "SAYI N" = run day / 7  # WORKING
+const YEAR_WEEKS := 50             # >= → "bir yıla yakın" framing
+const OVER_YEAR_WEEKS := 54        # "bir yılı aşkın" — a run clearly past its first year
+const TWO_YEAR_WEEKS := 100        # "iki yıla yakın" — the soft cap's own span (EndingsSystem.SOFT_CAP_WEEK)
+const OVER_TWO_YEAR_WEEKS := 106   # "iki yılı aşkın" — only a run past its milestone gets here (EA / full: no cap)
+const ISSUE_PERIOD_WEEKS := 1      # weekly paper: masthead "SAYI N" = run week  # WORKING
 const ENGRAVING_DIR := "res://assets/endings/"
 
 # Month words come from Fmt.month_name (the single home; it does NOT lowercase a
@@ -97,7 +97,7 @@ static func _series_a(ledger: Dictionary, data: Dictionary) -> Dictionary:
 			"valuation": _valuation_tr(valuation), "investment": _investment_tr(investment),
 			"equity": equity}))
 	if seats > 0:
-		var board := _n("END_SA_BOARD", seats).format({"seats": _num(seats)})
+		var board := _t(Fmt.count_key("END_SA_BOARD", seats)).format({"seats": _num(seats)})
 		if veto:
 			board += _t("END_SA_VETO")
 		pool.append(board)
@@ -178,7 +178,7 @@ static func _bankruptcy(ledger: Dictionary, data: Dictionary) -> Dictionary:
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
 	pool.append(_people_line(ledger, "END_BK_LEFT_BEHIND", "END_BK_AUDIENCE"))
 	if int(ledger.get("customers_lost", 0)) > 0:
-		pool.append(_n("END_BK_LOST", int(ledger.get("customers_lost", 0))).format(
+		pool.append(_t(Fmt.count_key("END_BK_LOST", int(ledger.get("customers_lost", 0)))).format(
 			{"n": int(ledger.get("customers_lost", 0))}))
 	if int(ledger.get("hires", 0)) > 0:
 		# Framed on hires, never a "1 resignation" line.
@@ -223,7 +223,7 @@ static func _brand_collapse(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	pool.append(_t("END_BC_TRUST_LOST").format(
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
 	if int(ledger.get("customers_lost", 0)) > 0:
-		pool.append(_n("END_BC_ONE_BY_ONE", int(ledger.get("customers_lost", 0))).format(
+		pool.append(_t(Fmt.count_key("END_BC_ONE_BY_ONE", int(ledger.get("customers_lost", 0)))).format(
 			{"n": int(ledger.get("customers_lost", 0))}))
 	pool.append(_t("END_BC_BELOW_THRESHOLD"))
 	if int(ledger.get("hires", 0)) > 0:
@@ -398,7 +398,7 @@ static func _people_line(ledger: Dictionary, b2b_key: String, b2c_key: String) -
 	var n: int = _people_count(ledger)
 	if n <= 0:
 		return ""
-	return _n(b2c_key if _is_b2c(ledger) else b2b_key, n).format({"n": n})
+	return _t(Fmt.count_key(b2c_key if _is_b2c(ledger) else b2b_key, n)).format({"n": n})
 
 
 ## The population CELL for the stat row: accounts on a B2B run, paying users on a B2C one.
@@ -416,8 +416,8 @@ static func _mrr_stat(ledger: Dictionary, label_key: String) -> Dictionary:
 
 static func _months_stat(ledger: Dictionary) -> Dictionary:
 	# Stat-row month count as DIGITS — the infographic surface, unlike _span_phrase
-	# which frames the same span as prose (Rule 2 keeps raw day counts off the paper).
-	return _stat(str(int(ceil(_day(ledger) / 30.0))), _t("END_STAT_MONTHS_ALIVE"))
+	# which frames the same span as prose (Rule 2 keeps raw run lengths off the paper).
+	return _stat(str(int(ceil(TimeModel.months(_day(ledger))))), _t("END_STAT_MONTHS_ALIVE"))
 
 
 ## The audience cell — B2C only. The second half of ch. 13 §2's "audience AND paying".
@@ -454,19 +454,19 @@ static func _founder_share(ledger: Dictionary) -> int:
 	return maxi(0, 100 - int(ledger.get("investor_equity_pct", 0)))
 
 
-static func _span_phrase(days: int) -> String:
-	# Rule 2: the paper never prints a raw day count — it frames time in calendar months.
-	# The spans run past two years: a run reaches the soft cap (730), and an EA / full run
-	# past the bootstrap milestone has no cap at all.
-	if days >= OVER_TWO_YEAR_DAYS:
+static func _span_phrase(weeks: int) -> String:
+	# Rule 2: the paper never prints a raw run length — it frames time in calendar months.
+	# The spans run past two years: a run reaches the soft cap (EndingsSystem.SOFT_CAP_WEEK),
+	# and an EA / full run past the bootstrap milestone has no cap at all.
+	if weeks >= TimeModel.ticks(OVER_TWO_YEAR_WEEKS):
 		return _t("END_SPAN_OVER_TWO_YEARS")
-	if days >= TWO_YEAR_DAYS:
+	if weeks >= TimeModel.ticks(TWO_YEAR_WEEKS):
 		return _t("END_SPAN_NEAR_TWO_YEARS")
-	if days >= OVER_YEAR_DAYS:
+	if weeks >= TimeModel.ticks(OVER_YEAR_WEEKS):
 		return _t("END_SPAN_OVER_YEAR")
-	if days >= YEAR_DAYS:
+	if weeks >= TimeModel.ticks(YEAR_WEEKS):
 		return _t("END_SPAN_NEAR_YEAR")
-	var m := int(ceil(days / 30.0))
+	var m := int(ceil(TimeModel.months(weeks)))
 	if m <= 1:
 		return _t("END_SPAN_UNDER_MONTH")
 	return _t("END_SPAN_UNDER_N_MONTHS").format({"n": _num(m)})
@@ -485,16 +485,15 @@ static func _founding_clause(ledger: Dictionary) -> String:
 
 
 static func _date_line(ledger: Dictionary) -> String:
-	# Masthead meta line: full calendar date + issue number ("14 KASIM 2027 · SAYI 214").
-	# A date and an edition, never a day count — the raw count lives ONLY in the rail's
-	# run-meta line (Rule 2). Ledger-driven, not GameState.day, so the paper dates the
-	# ledger it was handed (a fixture ledger included), not the live clock.
+	# Masthead meta line: the chrome date line in capitals + issue number ("HAFTA 46 · KASIM
+	# 2027 · SAYI 99"). A date and an edition, never a run length — the raw count lives ONLY in
+	# the rail's run-meta line (Rule 2). Ledger-driven, not GameState.day, so the paper dates
+	# the ledger it was handed (a fixture ledger included), not the live clock.
 	var day := _day(ledger)
-	var d: Dictionary = GameState.get_date_dict(day if day > 0 else -1)
-	var issue := maxi(1, int(float(day) / ISSUE_PERIOD_DAYS))
+	var issue := maxi(1, int(float(day) / TimeModel.ticks(ISSUE_PERIOD_WEEKS)))
 	return _t("END_DATE_LINE").format({
-		"day": int(d.day), "month": Fmt.month_upper(int(d.month)),
-		"year": int(d.year), "issue": issue})
+		"date": Fmt.upper(Fmt.date_line(GameState.get_date_dict(day if day > 0 else -1))),
+		"issue": issue})
 
 
 static func _valuation_tr(valuation_m: int) -> String:
@@ -535,14 +534,3 @@ static func _assemble(pool: Array, backups: Array) -> Array:
 ## static func has no Object, so tr() would compile here and then die at run time.
 static func _t(key: String) -> String:
 	return TranslationServer.translate(key)
-
-
-## Count-aware row picker: "<KEY>_ONE" when n is exactly 1, "<KEY>" otherwise.
-##
-## English inflects a noun after a numeral and Turkish does not, so a line like
-## "{n} enterprise customers were won" reads "1 enterprise customers" in English on a run
-## that signed one. Two ROWS rather than a plural engine — the law wants no grammatical
-## machinery around an interpolated value, and a second CSV row is something a translator
-## can see. Turkish keeps the same sentence in both rows on purpose.
-static func _n(key: String, count: int) -> String:
-	return _t(key + "_ONE") if count == 1 else _t(key)

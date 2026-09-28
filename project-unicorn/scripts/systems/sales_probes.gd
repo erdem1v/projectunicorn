@@ -61,7 +61,7 @@ static func facts_for(p: Prospect) -> Dictionary:
 		"axis_experience": ProductRead.axis_reading("", "experience"),
 		"confirmed_bugs": ProductRead.confirmed_open(),
 		"unconfirmed_reports": ProductRead.unconfirmed(),
-		"version_age": ProductRead.version_age(),
+		"version_age": ProductRead.version_age(),   # weeks
 		"interest": int(ProductRead.interest()),
 		"lines_open": ProductRead.lines_open(),
 		"steps_shipped": ProductRead.steps_shipped(),

@@ -47,7 +47,7 @@ func get_active_employees() -> Array[Character]:
 
 
 # --- DENEYİM / EĞİTİM ---
-# `trainings_done`, `training_days_left`, `training_area` ve `assigned_jobs` yalnız burada
+# `trainings_done`, `training_weeks_left`, `training_area` ve `assigned_jobs` yalnız burada
 # yazılır: defter satırı bu değerleri çiziyor ve HR sekmesi yapı anahtarıyla yeniden kuruluyor.
 
 ## Eğitime uygun mu? Edilgen olmayan çalışan ya da kurucu, deneyim barı dolu (§5.2) ve seçilen
@@ -136,21 +136,21 @@ func begin_training(id: String, area_key: String) -> void:
 	if not HRConstants.is_trainable_key(area_key):
 		push_error("[CharacterRegistry] begin_training with an untrainable target: '%s'" % area_key)
 		return
-	c.training_days_left = HRConstants.TRAINING_DAYS
+	c.training_weeks_left = TimeModel.ticks(HRConstants.TRAINING_WEEKS)
 	c.training_area = area_key
 	c.status = HRConstants.STATUS_TRAINING
-	EventBus.employee_training_changed.emit(id, c.training_days_left)
+	EventBus.employee_training_changed.emit(id, c.training_weeks_left)
 	EventBus.training_started.emit(id, area_key)
 
 
-## Bir eğitim gününü işler. `true` yalnız eğitim BİTTİYSE döner; haber satırını çağıran atar.
+## Bir eğitim haftasını işler. `true` yalnız eğitim BİTTİYSE döner; haber satırını çağıran atar.
 func tick_training(id: String) -> bool:
 	var c: Character = _characters.get(id, null)
-	if c == null or c.training_days_left <= 0:
+	if c == null or c.training_weeks_left <= 0:
 		return false
-	c.training_days_left -= 1
-	if c.training_days_left > 0:
-		EventBus.employee_training_changed.emit(id, c.training_days_left)
+	c.training_weeks_left -= 1
+	if c.training_weeks_left > 0:
+		EventBus.employee_training_changed.emit(id, c.training_weeks_left)
 		return false
 	var area_key: String = c.training_area
 	if HRConstants.is_trainable_key(area_key):
@@ -434,7 +434,7 @@ func add(character: Character) -> void:
 	if character.category == "employee":
 		# İstihdam damgaları hire akışında değil BURADA: olayla gelen işe alım da alır.
 		# HRSearchSystem.hire() hire_day'i hemen ardından GameState.day + 1'e yeniden damgalar
-		# (işe alınan ertesi gün başlar); bu bilinçli.
+		# (kıdem ertesi tikten sayılır); bu bilinçli.
 		character.hire_day = GameState.day
 		# §12.2: atanmamış kişi boşta durur ve maaş yer; yeni işe alınan kendi ana işine düşer.
 		if character.assigned_job_ids.is_empty():
@@ -522,7 +522,7 @@ func reset() -> void:
 	_characters.clear()
 
 
-## Maaş seam'i (HRActions.apply_raise). Sinyal yok: Finance bordroyu her gün çeker.
+## Maaş seam'i (HRActions.apply_raise). Sinyal yok: Finance bordroyu her tikte çeker.
 func set_salary(id: String, value: int) -> void:
 	var c: Character = _characters.get(id, null)
 	if c == null:

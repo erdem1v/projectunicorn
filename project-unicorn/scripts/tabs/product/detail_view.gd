@@ -54,7 +54,7 @@ var _traction_ready_badge: Control = null
 var _traction_meta: Label = null
 var _appetite_chip_host: HBoxContainer = null
 var _stat_values: Dictionary = {}    # DURUM hücre anahtarı -> değer Label'ı
-# B2B söz satırları: açık sözlerin kimlik kümesi değişince yeniden kurulur, gün sayıları yerinde.
+# B2B söz satırları: açık sözlerin kimlik kümesi değişince yeniden kurulur, hafta sayıları yerinde.
 var _promise_box: VBoxContainer = null
 var _promise_rows: Array = []        # [{"label": Label, "promise": Promise}]
 var _promise_key: String = ""
@@ -139,7 +139,7 @@ func repaint() -> void:
 	_capacity.repaint()
 	var building: bool = ProductSystem.get_active_build() != null
 	_v_title.text = tr("PROD_DEV_VERSION").format({"version": ver + 1})
-	_v_status.text = tr("PROD_ETA_DAYS").format({"n": maxi(3, ProductSystem.estimate_build_days([], [], ""))})
+	_v_status.text = tr("PROD_ETA_WEEKS").format({"n": 1})
 	_v_card.modulate.a = 0.55 if building else 1.0
 	_v_card.mouse_filter = Control.MOUSE_FILTER_IGNORE if building else Control.MOUSE_FILTER_STOP
 	_repaint_bottom(sub, ver, readings, risk)
@@ -620,8 +620,9 @@ func _repaint_profile(ver: int, bugs: int, readings: Dictionary, risk: String) -
 	_badges_row.add_child(UiFactory.make_pill(tr("PROD_BUGS_TREND").format(
 		{"bugs": bugs, "trend": ProductUiShared.trend_label(ProductSystem.bug_trend())}), pal.bg, pal.fg))
 	# §17: rozet SÜRÜM yaşını söyler (her yayında sıfırlanır), ürün yaşını değil.
-	_badges_row.add_child(UiFactory.make_badge(tr("PROD_LIVE_DAYS").format(
-		{"version": ver, "days": ProductState.version_age_days()}), &"neutral"))
+	var age: int = ProductState.version_age_weeks()
+	_badges_row.add_child(UiFactory.make_badge(tr(Fmt.count_key("PROD_LIVE_WEEKS", age)).format(
+		{"version": ver, "weeks": age}), &"neutral"))
 
 
 func _repaint_traction() -> void:
@@ -682,8 +683,8 @@ func _repaint_promises() -> void:
 		for p in open:
 			_promise_box.add_child(_make_promise_row(p))
 	for entry in _promise_rows:
-		(entry["label"] as Label).text = tr("PROD_DAYS").format(
-			{"n": maxi(0, int(entry["promise"].deadline_day) - GameState.day)})
+		var left: int = maxi(0, int(entry["promise"].deadline_day) - GameState.day)
+		(entry["label"] as Label).text = tr(Fmt.count_key("PROD_WEEKS", left)).format({"n": left})
 
 
 func _make_promise_row(p: Promise) -> PanelContainer:
@@ -696,10 +697,10 @@ func _make_promise_row(p: Promise) -> PanelContainer:
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	row.add_child(mid)
-	var days_lbl := UiFactory.make_label("", &"RowName")
-	days_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(days_lbl)
-	_promise_rows.append({"label": days_lbl, "promise": p})
+	var weeks_lbl := UiFactory.make_label("", &"RowName")
+	weeks_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(weeks_lbl)
+	_promise_rows.append({"label": weeks_lbl, "promise": p})
 	var card := UiFactory.make_card(row)
 	_apply_amber_panel(card)
 	return card

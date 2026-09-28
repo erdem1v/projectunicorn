@@ -396,7 +396,7 @@ static func future_role_hint(role_id: String) -> String:
 #   bug_rate_mult           ProductSystem._accrue_bugs_hourly
 #   speed_mult              ProductSystem._phase_area_sum — kişinin katkı çarpanı
 #   output_mult             ProductSystem._phase_area_sum — aynı yer, ters yön
-#   promise_chance_mult     CustomerRepSystem, SalesRepSystem — söz olaylarının bu kişide ateşlenme oranı
+#   promise_chance_mult     CustomerRepSystem — söz olaylarının bu kişide ateşlenme oranı
 #   satisfaction_bonus      B2BSalesSystem._tick_satisfaction — hesaplarında memnuniyet
 #   dept_morale_decay_mult  HRMoraleSystem — ekibinin moral erime hızı
 #
@@ -694,20 +694,21 @@ static func search_agency_name() -> String:
 ## §10 tek ücret: arama bedava, işe alımda bir aylık maaşın %50'si komisyon
 ## ("$3.000'lik bir çalışanın maliyeti $4.500").
 const SEARCH_COMMISSION_PCT := 0.50
-## §10: aday listesi bir hafta sonra gelir; oyuncu bir ayrılışı o gün kapatamaz.
-const SEARCH_ARRIVAL_DAYS := 7
+## §10: aday listesi bir hafta sonra gelir; oyuncu bir ayrılışı o hafta kapatamaz.
+const SEARCH_ARRIVAL_WEEKS := 1
 const CANDIDATE_COUNT := 3              # her arayış üç dosya getirir
 
 # ========================= ÇALIŞMA SAATLERİ — §8 =============================
 # Ayrı bir ek mesai mekaniği yoktur (§8.2): süre sekizi aşarsa mesai, altına inerse kısa gün.
 # Getiri saatin kendisidir (§8.4).
 const WORK_HOURS_MIN := 5           # §8.1 en kısa gün
-const WORK_HOURS_MAX := 11          # §8.1 en uzun gün — İş Kanunu md.63'ün günlük sınırı
+const WORK_HOURS_MAX := 16          # §8.1 en uzun gün; okurken 24 − başlangıçla kırpılır (en geç 00:00)
 const WORK_HOURS_DEFAULT := 8       # §8.1 şirket kapsamı varsayılanı; herkes bunu devralır
 
 ## §8.1: başlangıç saati yalnız şirket kapsamındadır; grup ve çalışan yalnız süreyi değiştirir.
+## Hafta 08:00'de başlar; daha erken bir başlangıç gecenin içine düşerdi.
 const START_HOUR_DEFAULT := 9
-const START_HOUR_MIN := 6
+const START_HOUR_MIN := TimeModel.WEEK_START_HOUR
 const START_HOUR_MAX := 11
 
 ## §7.1 saat → moral çarpanı. Taban sürüklenmeye uygulanır; sıfırın altında işaret döner ve
@@ -720,6 +721,11 @@ const HOUR_MORALE_MULT := {
 	9: 1.1,
 	10: 1.3,
 	11: 1.5,
+	12: 1.7,
+	13: 1.9,
+	14: 2.1,
+	15: 2.3,
+	16: 2.5,
 }
 
 ## §12.1 aşırı yük çarpanı. Çarpanlar çarpılır: 11 saat + aşırı yük = ×2,25.
@@ -734,9 +740,12 @@ const HOURS_PER_MONTH := 176
 
 
 ## §8.4 saatin çıktıya ORANI: sekiz saat 1,0, yani diğer modüllerin kalibre sabitleri ölçek
-## değiştirmez. 11 saat → 1,375, 5 saat → 0,625 (§8.1/§8.3).
+## değiştirmez. Sekizi aşan her saat TimeModel.OVERTIME_HOUR_YIELD kadar verir, uzayan gün
+## yorar: 11 saat → 1,1875, 16 saat → 1,5, 5 saat → 0,625 (§8.1/§8.3).
 static func hours_output_mult(hours: int) -> float:
-	return float(clampi(hours, WORK_HOURS_MIN, WORK_HOURS_MAX)) / float(WORK_HOURS_DEFAULT)
+	var h: int = clampi(hours, WORK_HOURS_MIN, WORK_HOURS_MAX)
+	return (float(mini(h, WORK_HOURS_DEFAULT))
+		+ float(maxi(h - WORK_HOURS_DEFAULT, 0)) * TimeModel.OVERTIME_HOUR_YIELD) / float(WORK_HOURS_DEFAULT)
 
 
 static func hour_morale_mult(hours: int) -> float:
@@ -755,7 +764,8 @@ static func hourly_wage(monthly_salary: int) -> float:
 	return float(maxi(monthly_salary, 0)) / float(HOURS_PER_MONTH)
 
 
-## Bir günün ek mesai tahakkuku. İzindeki/eğitimdeki için çağrılmaz (§8.6).
+## Bir günün ek mesai tahakkuku: günlük orandır, daily_burn'ün içinde tik başına ×7 işler.
+## İzindeki/eğitimdeki için çağrılmaz (§8.6).
 static func overtime_pay_for_day(monthly_salary: int, hours: int) -> int:
 	var extra: int = maxi(hours - WORK_HOURS_DEFAULT, 0)
 	if extra <= 0:
@@ -807,10 +817,11 @@ const LEAD_MORALE_PER_POINT := 0.02
 
 ## Taban günlük düşüş; §7.1 saat çarpanı YALNIZ buna uygulanır, olay deltaları ham iner.
 ## 0,25 = ayda 7,5 puan: sekiz saat geri sayım değil hafif baskıdır, yedi saat gerçek rahatlama.
+## Günlük orandır; tick_drift tik başına ×7 uygular.
 const MORALE_BASE_DRIFT_PER_DAY := 0.25
 
-## §7 "anında sıçramaz": görünen moral hedefe günde en fazla bu kadar yürür; −15'lik bir
-## olay beş günde iner ve oyuncunun tepki penceresi budur.
+## §7 "anında sıçramaz": görünen moral hedefe günde en fazla bu kadar yürür; tick_ease tik
+## başına ×7 uygular.
 const MORALE_EASE_PER_DAY := 3.0
 
 const MORALE_LEAVE_DEFER := 5            # §11.4 erteleme bedeli
@@ -859,7 +870,7 @@ const BADGE_SEVERITY := {
 }
 
 ## §17.4: YENİ rozetinin süresi; Atlas'ın bir haftalık bekleyişini ve bir yerleşme süresini taşır.
-const NEW_HIRE_BADGE_DAYS := 14
+const NEW_HIRE_BADGE_WEEKS := 2
 
 # Character.status — saklanan DURUM; rozet her çizimde türetilir.
 const STATUS_ACTIVE := "active"
@@ -872,12 +883,13 @@ const STATUS_TRAINING := "training"
 const EXPERIENCE_LEAD_BONUS_MAX := 1.5  # WORKING: Liderlik tavanındaki lider altında öğrenme hızı
 
 ## §5.1 deneyim tek bar, ekranda hep 0–100; kendiliğinden yıldıza dönüşmez, tek çıkışı eğitim.
+## Günlük oranlar; tick_experience tik başına ×7 uygular.
 const EXPERIENCE_PER_WORKED_DAY := 2   # en az bir işe atanmış ve edilgen olmayan her gün
 const EXPERIENCE_BUILD_BONUS := 1      # bir geliştirme fazı koşarken üstüne (toplam 3)
 
-## Eşik = BASE + PER_POINT × (altı alan + Liderlik ham toplamı). Junior (T≈12) ≈37 günde,
-## dört yıldızlı kıdemli (T≈25) ≈63 günde dolar (§5.1 "belirgin şekilde uzun"). Girdi
-## istatistiktir: dışarıdan alınan beş yıldızlı biri de yavaş olmalı.
+## Eşik = BASE + PER_POINT × (altı alan + Liderlik ham toplamı). Yapım sürerken Junior (T≈12)
+## 6 haftada, dört yıldızlı kıdemli (T≈25) 10 haftada dolar (§5.1 "belirgin şekilde uzun").
+## Girdi istatistiktir: dışarıdan alınan beş yıldızlı biri de yavaş olmalı.
 const EXPERIENCE_THRESHOLD_BASE := 40
 const EXPERIENCE_THRESHOLD_PER_POINT := 6
 
@@ -897,14 +909,11 @@ const TRAINING_FEE_GROWTH := 1.32
 static func training_fee_tiered(current_area_value: int) -> int:
 	var rung: int = clampi(current_area_value, AREA_MIN, AREA_MAX)
 	return int(round(float(TRAINING_FEE_BASE) * pow(TRAINING_FEE_GROWTH, float(rung))))
-const TRAINING_DAYS := 14            # §5.2: "Çalışan İKİ HAFTA eğitimde kalır"
+const TRAINING_WEEKS := 2            # §5.2: "Çalışan İKİ HAFTA eğitimde kalır"
 
-## §5.5: süre metni gün sayısından türetilir ki süre değişince metin yalan söylemesin. Tam
-## haftaya bölünüyorsa hafta, değilse gün.
+## §5.5: süre metni sabitten türetilir ki süre değişince metin yalan söylemesin.
 static func training_duration_text() -> String:
-	if TRAINING_DAYS % 7 == 0:
-		return TranslationServer.translate("HR_DURATION_WEEKS").format({"n": TRAINING_DAYS / 7})
-	return TranslationServer.translate("HR_DURATION_DAYS").format({"n": TRAINING_DAYS})
+	return TranslationServer.translate(Fmt.count_key("HR_DURATION_WEEKS", TRAINING_WEEKS)).format({"n": TRAINING_WEEKS})
 
 
 static func trainable_keys() -> Array:
@@ -928,8 +937,9 @@ static func badge_severity(badge_id: String) -> int:
 
 
 static func is_new_hire(hire_day: int, today: int) -> bool:
-	# hire_day işe alımın ERTESİ gününe damgalanır, ödeme günü today < hire_day'dir.
-	return today <= hire_day + NEW_HIRE_BADGE_DAYS
+	# hire_day işe alımın ERTESİ tikine damgalanır: rozet alım tikinde ve ardından
+	# NEW_HIRE_BADGE_WEEKS tik görünür.
+	return today < hire_day + TimeModel.ticks(NEW_HIRE_BADGE_WEEKS)
 
 
 static func is_flight_risk(morale: int) -> bool:
@@ -985,13 +995,16 @@ static func coordination_for_lead(leadership: int, has_natural_leader: bool = fa
 # ============================ İstifa — §11.3 =================================
 # Kaçma riski ihmal edilirse istifa. Karar yukarıdadır: rozet bütün pencere boyunca görünür
 # ve kart eylemleri açıktır — ihmal kararın kendisidir.
-const RESIGN_WINDOW_MIN_DAYS := 10      # kaçma riski bu kadar gün sürerse roll başlar
-const RESIGN_WINDOW_MAX_DAYS := 14      # pencerenin üst sınırı; bu gün istifa kesin
-const RESIGN_CHANCE_PER_DAY := 0.25     # WORKING: pencere boyunca ~%76 birikimli
+const RESIGN_WINDOW_MIN_WEEKS := 2      # kaçma riski bu kadar hafta sürerse roll atılır
+const RESIGN_WINDOW_MAX_WEEKS := 3      # pencerenin üst sınırı; bu hafta istifa kesin
+const RESIGN_CHANCE_PER_DAY := 0.25     # WORKING: günlük istifa olasılığı
+const RESIGN_ROLL_DAYS := 4             # pencere haftasının tek roll'u bu kadar günü biriktirir
 
 
+## Pencere haftasındaki tek roll'un olasılığı: çarpansız ~%68, SADIK ~%48, GÖZÜ YÜKSEKTE ~%87.
 static func resign_chance(trait_ids: Array) -> float:
-	return clampf(RESIGN_CHANCE_PER_DAY * trait_mult(trait_ids, "resign_chance_mult"), 0.0, 1.0)
+	var daily: float = clampf(RESIGN_CHANCE_PER_DAY * trait_mult(trait_ids, "resign_chance_mult"), 0.0, 1.0)
+	return 1.0 - pow(1.0 - daily, RESIGN_ROLL_DAYS)
 
 
 ## Ayrılış tek replikli olaydır (§11.3). Karakter id'sinin hash'iyle seçilir (String.hash
@@ -1006,16 +1019,16 @@ static func resign_voice(character_id: String) -> String:
 # --------------------- §11.4 yaz izni (hafta tabanlı) ------------------------
 # İzin çalışanın kendisine aittir. İki hafta, tek blok, Haziran–Ağustos penceresinde.
 # Ücretli: maaş akar, kapasite/hız/CS/mesai katkısı durur.
-const LEAVE_DAYS := 14                  # §11.4 "iki hafta (10 iş günü)"
+const LEAVE_WEEKS := 2                  # §11.4 "iki hafta"
 const LEAVE_WINDOW_START_MONTH := 6     # Haziran
 const LEAVE_WINDOW_END_MONTH := 8       # Ağustos
-## Yaz penceresi ~13 hafta. Adım 5 ile 13 aralarında asal: on üç ardışık işe alım on üç
-## farklı haftaya düşer ve bütün ekip aynı hafta izinde olmaz.
+## Yaz penceresinde her yıl en az 13 tik (Perşembe) var. Adım 5 ile 13 aralarında asal: on üç
+## ardışık işe alım on üç farklı haftaya düşer ve bütün ekip aynı hafta izinde olmaz.
 const LEAVE_WEEK_COUNT := 13
 const LEAVE_WEEK_STRIDE := 5
-## §11.4 erteleme: −5 moral, talep 30 gün sonra döner, en fazla iki kez.
+## §11.4 erteleme: −5 moral, talep 4 hafta sonra döner, en fazla iki kez.
 const LEAVE_MAX_DEFERRALS := 2
-const LEAVE_DEFER_DAYS := 30
+const LEAVE_DEFER_WEEKS := 4
 
 
 ## hire_ordinal = bu kişiden önce kaç çalışan alındı. Sonuç 0..12 hafta indeksi.
@@ -1046,25 +1059,24 @@ const SEVERANCE_UNDER_ONE_YEAR := 1.0 / 3.0
 const SEVERANCE_MAX_MONTHS := 3.0
 
 
-static func severance_multiple(days_served: int) -> float:
-	var years: int = int(floor(float(maxi(days_served, 0)) / float(DAYS_PER_YEAR)))
+static func severance_multiple(weeks_served: int) -> float:
+	var years: int = int(floor(float(maxi(weeks_served, 0)) / float(TimeModel.ticks(TimeModel.WEEKS_PER_YEAR))))
 	if years < 1:
 		return SEVERANCE_UNDER_ONE_YEAR
 	return minf(float(years), SEVERANCE_MAX_MONTHS)
 
 
-static func severance_amount(monthly_salary: int, days_served: int) -> int:
-	return int(round(float(monthly_salary) * severance_multiple(days_served)))
+static func severance_amount(monthly_salary: int, weeks_served: int) -> int:
+	return int(round(float(monthly_salary) * severance_multiple(weeks_served)))
 
 
 # ======================= Oyuncu eylemleri (çalışan kartı) ====================
 const RAISE_MIN_PCT := 3           # zam slider alt sınırı (§9.2)
 const RAISE_MAX_PCT := 10          # §9.2 aralık %3–10
-const RAISE_COOLDOWN_DAYS := 180   # §9.2 "aynı çalışana altı ay geçmeden yeni zam verilemez"
+const RAISE_COOLDOWN_WEEKS := 26  # §9.2 "aynı çalışana altı ay geçmeden yeni zam verilemez"
 ## §9.3 terfi: tek seviye atlama, oyuncu %10–25 arası zammı slider'dan seçer.
 const PROMOTION_MIN_PCT := 10
 const PROMOTION_MAX_PCT := 25
-const DAYS_PER_YEAR := 365         # kıdem hesabı (hire_day → tam yıl)
 
 
 # ============================ Aday dosyası içeriği ===========================

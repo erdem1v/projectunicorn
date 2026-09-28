@@ -103,7 +103,7 @@ text = "$500"
 layout_mode = 2
 size_flags_vertical = 8
 theme_type_variation = &"MetricUnit"
-text = "TOPBAR_UNIT_PER_DAY"
+text = "TOPBAR_UNIT_PER_MONTH"
 
 [node name="StatCol_Net" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
 layout_mode = 2
@@ -129,7 +129,7 @@ text = "+$500"
 layout_mode = 2
 size_flags_vertical = 8
 theme_type_variation = &"MetricUnit"
-text = "TOPBAR_UNIT_PER_DAY"
+text = "TOPBAR_UNIT_PER_MONTH"
 
 [node name="StatCol_Runway" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
 layout_mode = 2
@@ -288,4 +288,11 @@ layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SpeedButton"
 text = "3x"
+
+[node name="Speed4Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
+custom_minimum_size = Vector2(26, 22)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"SpeedButton"
+text = "4x"
 

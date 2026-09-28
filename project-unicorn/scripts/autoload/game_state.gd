@@ -3,9 +3,8 @@ extends Node
 # Core run state. Every `var` here is save schema (SaveCodec walks them) and its default is the
 # migration for an older save. Mutations from outside go through the setters/seams below.
 
-const DAYS_PER_MONTH := 30  # the monthly → daily economy conversion; FinanceSystem reads it too
-
-# Day 1 = Thu Jan 1, 2026. get_date_dict() is the seam; Godot Time computes the weekday.
+# Tick 1 = Thu 1 Jan 2026. A tick is a week, so every tick falls on a Thursday; get_date_dict()
+# is the seam.
 const START_DATE := {"year": 2026, "month": 1, "day": 1}
 
 # --- Run identity ---
@@ -26,7 +25,7 @@ var daily_burn: int = FinanceSystem.starting_daily_burn()   # FinanceSystem owns
 var brand: int = 50
 var reputation: int = 0
 var day: int = 1
-var current_hour: int = 9        # 0-23. Day 1 starts at 09:00
+var current_hour: int = TimeModel.WEEK_START_HOUR   # 0-23
 var phase: int = 1               # 1=Bootstrap, 2=Traction, 3=Series A Hunt
 
 # --- World-state flags (sparse, content-defined keys; no EventBus emission) ---
@@ -56,8 +55,8 @@ const FLAG_TYPES := {
 	"mvp_live_bug_progress": TYPE_FLOAT,
 	"mvp_bug_history": TYPE_ARRAY,
 	"mvp_bug_sprint_active": TYPE_BOOL,
-	"mvp_sprint_days_total": TYPE_INT,
-	"mvp_sprint_days_elapsed": TYPE_FLOAT,
+	"mvp_sprint_weeks_total": TYPE_INT,
+	"mvp_sprint_weeks_elapsed": TYPE_FLOAT,
 	"mvp_sprint_fix_progress": TYPE_FLOAT,
 	"critical_bug_unfixed": TYPE_BOOL,
 	"tech_debt_birikti": TYPE_BOOL,
@@ -81,7 +80,7 @@ const FLAG_TYPES := {
 	"mvp_fix_run_progress": TYPE_FLOAT,
 	# --- §9 canlı akış ---
 	# SÜRÜM yaşı (§17): mvp_launch_day ilk yayında bir kez damgalanır, bu her yayında yeniden.
-	"mvp_version_launch_day": TYPE_INT,
+	"mvp_version_launch_day": TYPE_FLOAT,
 	"mvp_interest": TYPE_FLOAT,                 # her yayında 100'e tazelenir, yarı ömür 30 gün
 	"mvp_new_code_effort": TYPE_FLOAT,          # §9 yeni-kod terimi; τ=21 günde söner
 	# --- §10 altyapı ---
@@ -96,14 +95,13 @@ const FLAG_TYPES := {
 	"cs_throughput_progress": TYPE_FLOAT,
 	"sales_faucet_progress": TYPE_FLOAT,       # §3 — sub-lead inflow accumulator
 	"sales_price_stance": TYPE_STRING,         # §7.5 — the SINGLE B2B price source
-	"sales_meeting_used_day": TYPE_INT,        # §5.0 — the day the daily right was spent
-	"sales_meeting_active": TYPE_BOOL,         # §5.0 — the founder is at a table (busy gate)
 	"sales_inner_voice_used": TYPE_INT,        # §5.1.1 — the run's inner-voice budget
 	"sales_open_pitch_promise": TYPE_STRING,   # §6 — the ONE open pitch promise, by account
 	"sales_last_signed_star": TYPE_INT,        # §14 — sales.last_signed_star()
 	"sales_first_top_star_id": TYPE_STRING,    # §7.3 — the run's first 3★ account, "" = none yet
 	"sales_weekly_anchor_day": TYPE_INT,       # §7.3 — the weekly summary's window start
-	"sales_weekly_closes": TYPE_INT,           # §7.3 — closes inside that window
+	"sales_weekly_close_rows": TYPE_ARRAY,     # §7.3 — the open week's closes, stamped at signing
+	"sales_weekly_report_rows": TYPE_ARRAY,    # §7.3 — the last reported week, which the card renders
 	# --- phase gate / endgame / VC ---
 	# How many times the founder has said "not yet"; the gate card's escalating body reads it.
 	"gate_declines": TYPE_INT,
@@ -137,17 +135,17 @@ var ending_id: String = ""             # one of EndingsSystem.ENDINGS keys once 
 var phase_gate_ready: bool = false     # ratchet latch — cleared only by advance_phase()
 var pending_next_phase: int = 0        # 0 = no open gate
 var series_a_closed: bool = false
-var shutter_days_left: int = -1        # -1 inactive; SHUTTER_DAYS..0 = Kepenk counter
+var shutter_weeks_left: int = -1       # -1 inactive; SHUTTER_WEEKS..0 = Kepenk counter
 var vc_rejections: int = 0             # closed pitch tables
 var pivot_used: bool = false           # true → VC path permanently closed
 var active_scandal: bool = false           # RESERVED — no scandal system yet; debug-settable
 var unmanaged_major_scandal: bool = false  # RESERVED
-var brand_low_since_day: int = -1      # brand-collapse 30-day window anchor
+var brand_low_since_day: int = -1      # anchor of EndingsSystem.BRAND_COLLAPSE_WINDOW
 
 # --- Finance surface state ---
-# Daily {day, cash} samples for the cash curve. Single writer: FinanceSystem.daily_tick via
-# append_cash_sample. Intra-day one-time costs land in the next day's point and in `transactions`.
-const CASH_HISTORY_CAP := 760          # soft cap 730 days + headroom; oldest dropped
+# One {day, cash} sample per tick for the cash curve. Single writer: FinanceSystem.daily_tick via
+# append_cash_sample. One-time costs inside a week land in the next tick's point and in `transactions`.
+const CASH_HISTORY_CAP := 110          # soft cap 104 weekly samples + headroom; oldest dropped
 var cash_history: Array = []           # [{day: int, cash: int}]
 # Signed money-event log (negative = spend). Sole append point: FinanceSystem.record_transaction.
 # Labels stored RAW; FinanceSystem.one_time_label_display maps registered ids for display.
@@ -159,19 +157,31 @@ const SALES_LOG_CAP := 12
 var sales_log: Array = []              # [{day, kind, actor, company, mrr}]
 
 # --- Month-End Summary state ---
-# Month-start snapshot {start_day, mrr, cash, employees, brand} plus the OPEN month's accruals
-# (income / expense / red_days). Written only by MonthSummarySystem.snapshot() and the accrue_*
-# seams; "what changed this month?" comes from here, never from the run counters.
+# Month-start snapshot {start_day, cash, customers_signed, customers_lost} plus the OPEN month's
+# accruals (income / expense / red_weeks). Written only by SummarySystem and the accrue_* seams.
 var month_ledger: Dictionary = {}
-# Closed calendar months, oldest → newest. Sole writer: push_month_close (MonthSummarySystem,
-# on the 1st, before the recap emit). Entry, ALL INT (SaveCodec restores ints; compute ratios
-# at read time): {start_day, end_day, mrr_close, income, expense, net, red_days}.
+# Closed calendar months, oldest → newest. Sole writer: push_month_close (SummarySystem, on the
+# first tick of a month, before month_ended). Entry, ALL INT (SaveCodec restores ints; compute
+# ratios at read time): {start_day, end_day, mrr_close, income, expense, net, red_weeks}.
 # One-time INCOME (the angel cheque) is financing and is not accrued.
 const MONTH_HISTORY_CAP := 12
 var month_history: Array[Dictionary] = []
-# "AYIN OLAYI": systems submit via submit_month_highlight(); cleared by snapshot().
+# The summary period's highlight: systems submit via submit_month_highlight(); SummarySystem
+# clears it when a period opens.
 var month_highlight_text: String = ""
 var month_highlight_priority: int = -1
+# The summary period's opening snapshot (SummarySystem); the period follows the player's
+# summary frequency, the month ledger above does not.
+var summary_ledger: Dictionary = {}
+# The lowest runway threshold already announced on the ticker; 0 = none.
+var runway_warn_band: int = 0
+
+# --- The founder's meetings (the week's share of founder output they cost) ---
+# Hours spent in meetings this working week; TimeManager starts a new week at WEEK_START_HOUR, so
+# the night and its 00:00 daily tick still read the week that just ended.
+var founder_meeting_hours: float = 0.0
+# Sales meetings held this week: {tick, count}.
+var sales_meetings_week: Dictionary = {}
 
 # --- Run-cumulative counters (the newspaper ending screen; read via get_run_ledger) ---
 var run_customers_signed: int = 0      # SalesSystem.add_b2b_customer
@@ -260,14 +270,14 @@ var acq_road_over_day: int = -1        # day the Series A road closed; the buyou
 var bootstrap_milestone_day: int = -1
 
 # --- HR Core state (the owning system is the sole writer) ---
-var hr_search: Dictionary = {}          # HRSearchSystem: {state, role, band, seed, started_day, arrival_day, files}
+var hr_search: Dictionary = {}          # HRSearchSystem: {state, role, band, seed, arrival_day, files}
 
 # --- §8.1 ÇALIŞMA SAATLERİ: şirket ve grup kapsamları ---
 # Üçüncü kapsam Character.work_hours_override. Tek çözümleyici hr.work_hours(kişi) (§15.2).
 # BAŞLANGIÇ SAATİ YALNIZ ŞİRKET KAPSAMINDA: ofis tek saatte açılır, grup ve çalışan yalnız SÜREYİ değiştirir.
-var company_start_hour: int = 9         # §8.1 varsayılan 09:00, aralık 06:00-11:00
+var company_start_hour: int = 9         # §8.1 varsayılan 09:00, aralık 08:00-11:00
 var company_work_hours: int = 8         # §8.1 şirket tabanı
-# Yalnız İSTİSNASI OLAN grup (§15). Anahtar HRConstants.ROSTER_GROUPS üyesi, değer 5..11.
+# Yalnız İSTİSNASI OLAN grup (§15). Anahtar HRConstants.ROSTER_GROUPS üyesi, değer 5..16.
 var group_work_hours_override: Dictionary = {}
 
 # --- News feed state (sole writer NewsFeedSystem). JSON-primitive: {used_sektor, reshuffles,
@@ -361,9 +371,22 @@ func set_run_active(value: bool) -> void:
 	run_active = value
 
 
-func set_shutter_days_left(value: int) -> void:
-	shutter_days_left = value
-	EventBus.shutter_changed.emit(shutter_days_left)
+func set_shutter_weeks_left(value: int) -> void:
+	shutter_weeks_left = value
+	EventBus.shutter_changed.emit(shutter_weeks_left)
+
+
+func add_founder_meeting_hours(h: float) -> void:
+	founder_meeting_hours += h
+
+
+## The share of this working week's founder output that meetings took (0..1).
+func founder_meeting_share() -> float:
+	return clampf(founder_meeting_hours / float(TimeModel.WEEK_WORK_HOURS), 0.0, 1.0)
+
+
+func start_work_week() -> void:
+	founder_meeting_hours = 0.0
 
 
 func submit_month_highlight(text: String, priority: int) -> void:
@@ -413,7 +436,7 @@ func has_flag(key: String) -> bool:
 # --- Derived getters ---
 
 func get_daily_revenue() -> int:
-	return int(round(mrr / float(DAYS_PER_MONTH)))
+	return int(round(mrr / float(TimeModel.DAYS_PER_MONTH)))
 
 func get_net_daily_flow() -> int:
 	return get_daily_revenue() - daily_burn
@@ -428,10 +451,10 @@ func get_runway_months() -> float:
 func runway_months_for(cash_value: int, daily_net: int) -> float:
 	if daily_net >= 0:
 		return INF
-	return float(cash_value) / float(-daily_net) / float(DAYS_PER_MONTH)
+	return float(cash_value) / float(-daily_net) / float(TimeModel.DAYS_PER_MONTH)
 
 func append_cash_sample(sample_cash: int) -> void:
-	# Once per day, before FinanceSystem's set_cash, so the cash_changed repaint reads a fresh buffer.
+	# Once per tick, before FinanceSystem's set_cash, so the cash_changed repaint reads a fresh buffer.
 	cash_history.append({"day": day, "cash": sample_cash})
 	while cash_history.size() > CASH_HISTORY_CAP:
 		cash_history.pop_front()
@@ -440,11 +463,11 @@ func append_cash_sample(sample_cash: int) -> void:
 # --- Calendar-month ledger seams ---
 
 func accrue_month_flow(revenue: int, burn: int, closing_cash: int) -> void:
-	# FinanceSystem.daily_tick, once per day, the SAME figures that moved the cash.
+	# FinanceSystem.daily_tick, once per tick, the SAME figures that moved the cash.
 	month_ledger["income"] = int(month_ledger.get("income", 0)) + revenue
 	month_ledger["expense"] = int(month_ledger.get("expense", 0)) + burn
 	if closing_cash < 0:
-		month_ledger["red_days"] = int(month_ledger.get("red_days", 0)) + 1
+		month_ledger["red_weeks"] = int(month_ledger.get("red_weeks", 0)) + 1
 
 
 func accrue_month_expense(amount: int) -> void:
@@ -492,12 +515,12 @@ func get_mom_growth_avg_pct(months: int) -> int:
 	return int(round(total / float(months)))
 
 
-## Consecutive "Artıda" closes, newest backwards: net > 0 AND red_days == 0.
+## Consecutive "Artıda" closes, newest backwards: net > 0 AND red_weeks == 0.
 func get_profitable_month_streak() -> int:
 	var streak: int = 0
 	for i in range(month_history.size() - 1, -1, -1):
 		var e: Dictionary = month_history[i]
-		if int(e.get("net", 0)) <= 0 or int(e.get("red_days", 0)) > 0:
+		if int(e.get("net", 0)) <= 0 or int(e.get("red_weeks", 0)) > 0:
 			break
 		streak += 1
 	return streak
@@ -582,42 +605,16 @@ func get_founder_skill(skill_name: String) -> int:
 	return int(founder.role_stats.get(skill_name, 0))
 
 
-## Run day N → Godot Time datetime dict {year, month, day, weekday, …}. THE day→calendar
-## conversion: month boundaries come from here (real 28/30/31-day months), never from the
-## economy constant DAYS_PER_MONTH. Default: the current day.
+## Tick N → Godot Time datetime dict {year, month, day, …} plus `week`. THE tick→calendar
+## conversion: tick N is START_DATE + (N − 1) × DAYS_PER_TICK days, a Thursday, and its month is
+## that Thursday's month (real 28/30/31-day months, never the economy DAYS_PER_MONTH). `week` is
+## the ISO week of the year, which for a Thursday is (day of year − 1) / 7 + 1. Default: now.
 func get_date_dict(for_day: int = -1) -> Dictionary:
-	var d: int = day if for_day < 0 else for_day
-	var anchor_unix: int = int(Time.get_unix_time_from_datetime_dict(START_DATE))
-	return Time.get_datetime_dict_from_unix_time(anchor_unix + (d - 1) * 86400)
-
-
-## Is run day N a weekday? (Godot weekday: 0 = Sunday … 6 = Saturday.)
-func is_business_day(for_day: int) -> bool:
-	var wd: int = int(get_date_dict(for_day).weekday)
-	return wd != 0 and wd != 6
-
-
-## Weekdays in the half-open run-day interval (from_day, to_day]; negative when to_day is
-## earlier. Whole weeks are counted arithmetically.
-func business_days_between(from_day: int, to_day: int) -> int:
-	if to_day < from_day:
-		return -business_days_between(to_day, from_day)
-	var weeks: int = int(float(to_day - from_day) / 7.0)
-	var count: int = weeks * 5
-	for d in range(from_day + weeks * 7 + 1, to_day + 1):
-		if is_business_day(d):
-			count += 1
-	return count
-
-
-## The run day on which the n-th weekday after from_day falls (n >= 1).
-func add_business_days(from_day: int, n: int) -> int:
-	var d: int = from_day
-	var left: int = maxi(n, 0)
-	while left > 0:
-		d += 1
-		if is_business_day(d):
-			left -= 1
+	var t: int = day if for_day < 0 else for_day
+	var unix: int = int(Time.get_unix_time_from_datetime_dict(START_DATE)) + (t - 1) * TimeModel.DAYS_PER_TICK * 86400
+	var d: Dictionary = Time.get_datetime_dict_from_unix_time(unix)
+	var year_start: int = int(Time.get_unix_time_from_datetime_dict({"year": d.year, "month": 1, "day": 1}))
+	d["week"] = int(float(unix - year_start) / (7.0 * 86400.0)) + 1
 	return d
 
 
@@ -743,7 +740,7 @@ func initialize_run(payload: Dictionary) -> void:
 	brand = 50
 	reputation = 0
 	day = 1
-	current_hour = 9
+	current_hour = TimeModel.WEEK_START_HOUR
 	phase = 1
 
 	# Endgame state
@@ -752,7 +749,7 @@ func initialize_run(payload: Dictionary) -> void:
 	phase_gate_ready = false
 	pending_next_phase = 0
 	series_a_closed = false
-	shutter_days_left = -1
+	shutter_weeks_left = -1
 	vc_rejections = 0
 	pivot_used = false
 	active_scandal = false
@@ -766,9 +763,13 @@ func initialize_run(payload: Dictionary) -> void:
 	transactions.clear()
 	sales_log.clear()
 
-	# Month-End Summary + run counters (month_ledger is snapshotted at the END: it needs the roster)
+	# Month-End Summary + run counters (the ledgers are opened at the END: the period snapshot needs the roster)
 	month_highlight_text = ""
 	month_highlight_priority = -1
+	summary_ledger.clear()
+	runway_warn_band = 0
+	founder_meeting_hours = 0.0
+	sales_meetings_week.clear()
 	run_customers_signed = 0
 	run_customers_lost = 0
 	run_customers_expanded = 0
@@ -868,7 +869,7 @@ func initialize_run(payload: Dictionary) -> void:
 	CharacterRegistry.add(_build_founder(payload))
 
 	# Month-1 ledger after the roster so the team count is real.
-	MonthSummarySystem.snapshot()
+	SummarySystem.snapshot()
 
 
 func _build_founder(payload: Dictionary) -> Character:

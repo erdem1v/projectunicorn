@@ -342,8 +342,10 @@ func _build_rail() -> PanelContainer:
 	if _demo:
 		_build_coming_soon(col)
 
-	# Run-meta line — the ONLY place the raw day count is rendered.
-	var meta := UiFactory.make_label(tr("ENDING_RUN_META").format({"days": int(_ledger.get("day", 0))}), &"ZoneLabel")
+	# Run-meta line — the ONLY place the raw run length is rendered, in weeks (one tick each).
+	var weeks: int = int(_ledger.get("day", 0))
+	var meta := UiFactory.make_label(tr(Fmt.count_key("ENDING_RUN_META", weeks)).format({"weeks": weeks}),
+		&"ZoneLabel")
 	meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(meta)
 

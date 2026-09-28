@@ -7,24 +7,23 @@ extends RefCounted
 # TWO KEYS (§3.1 latch_key).
 #
 #   run     one latch for the card, whatever it is about. A phase gate fires once per run.
-#   entity  one latch PER SUBJECT. Two employees may each ask for a raise on the same day
+#   entity  one latch PER SUBJECT. Two employees may each ask for a raise in the same week
 #           (§20 A6); a run-key latch would swallow the second person's card.
 #
-# G3 IS NOT RE-RUN AT DISPLAY (§4.4). A card admitted yesterday has already spent its cooldown.
+# G3 IS NOT RE-RUN AT DISPLAY (§4.4). A card admitted last tick has already spent its cooldown.
 
 const ONE_SHOT := "one_shot"
 const MAX_FIRES := "max_fires"
-const COOLDOWN := "cooldown_days"
+const COOLDOWN := "cooldown_weeks"
 
-## §3.1: a card that declares nothing gets a 30-day cooldown, not free repetition. The default
-## is deliberately conservative — an author who wants a card back sooner says so, and the
-## linter warns below 7 days (§17.9).
-const DEFAULT_COOLDOWN_DAYS := 30
+## §3.1: a card that declares nothing gets this cooldown, not free repetition. The default
+## is deliberately conservative — an author who wants a card back sooner says so.
+const DEFAULT_COOLDOWN_WEEKS := 4
 
 const KEY_RUN := "run"
 const KEY_ENTITY := "entity"
 
-## latch key string -> {fires: int, last_day: int}
+## latch key string -> {fires: int, last_day: int (tick)}
 static var _state: Dictionary = {}
 
 
@@ -61,7 +60,7 @@ static func blocked_reason(card_latch: Dictionary, key: String) -> String:
 	var last: int = last_day(key)
 
 	if bool(card_latch.get(ONE_SHOT, false)):
-		return "one_shot: already fired on day %d" % last if fired > 0 else ""
+		return "one_shot: already fired on tick %d" % last if fired > 0 else ""
 
 	if card_latch.has(MAX_FIRES):
 		var cap: int = int(card_latch[MAX_FIRES])
@@ -72,20 +71,20 @@ static func blocked_reason(card_latch: Dictionary, key: String) -> String:
 	if cd > 0 and fired > 0:
 		var since: int = GameState.day - last
 		if since < cd:
-			return "cooldown: %d of %d days" % [since, cd]
+			return "cooldown: %d of %d weeks" % [since, cd]
 
 	return ""
 
 
-## §3.1 writes the latch as `one_shot | max_fires:N | cooldown_days:N` — alternatives, not a
-## stack. The 30-day default applies only to a card that declares NO brake; how soon a card may
-## return is min_gap_days' job (§13.3 layer 1).
+## §3.1 writes the latch as `one_shot | max_fires:N | cooldown_weeks:N` — alternatives, not a
+## stack. The default applies only to a card that declares NO brake; how soon a card may
+## return is min_gap_weeks' job (§13.3 layer 1). Returned in ticks.
 static func _cooldown_of(card_latch: Dictionary) -> int:
 	if card_latch.has(COOLDOWN):
-		return int(card_latch[COOLDOWN])
+		return TimeModel.ticks(int(card_latch[COOLDOWN]))
 	if card_latch.has(MAX_FIRES) or bool(card_latch.get(ONE_SHOT, false)):
 		return 0
-	return DEFAULT_COOLDOWN_DAYS
+	return TimeModel.ticks(DEFAULT_COOLDOWN_WEEKS)
 
 
 # --- Spending --------------------------------------------------------------
@@ -106,7 +105,7 @@ static func last_day(key: String) -> int:
 	return int((_state.get(key, {}) as Dictionary).get("last_day", -1))
 
 
-## Days still owed on the cooldown, or 0. What the panel prints next to "waiting on".
+## Weeks still owed on the cooldown, or 0. What the panel prints next to "waiting on".
 static func cooldown_left(card_latch: Dictionary, key: String) -> int:
 	var cd: int = _cooldown_of(card_latch)
 	if cd <= 0 or fires(key) == 0:
