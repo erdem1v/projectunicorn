@@ -1089,6 +1089,12 @@ const LAST_NAMES := [
 	"Aksoy", "Koç", "Güneş", "Demir", "Kaya", "Arslan", "Yıldız", "Çetin",   # LOC-DATA name pool
 	"Doğan", "Şahin", "Erdem", "Polat", "Tekin", "Uysal",   # LOC-DATA name pool
 ]
+# FIRST_NAMES'ın cinsiyeti (ofisteki görünüş için); iki cinse de konan isimler (Deniz, Bilge) yok,
+# onlarınki tohumdan çekilir.
+const FIRST_NAME_SEX := {
+	"Kerem": "m", "Arda": "m", "Mert": "m", "Baran": "m", "Onur": "m", "Kaan": "m", "Tolga": "m", "Emre": "m",   # LOC-DATA name pool
+	"Selin": "w", "Ece": "w", "Zeynep": "w", "Elif": "w", "Sena": "w", "Nehir": "w",   # LOC-DATA name pool
+}
 # Tek satırlık dosya notu — mizaç verir, skill tekrarı yapmaz. Satırlar HR_FILE_NOTE_<n>.
 const FILE_NOTES_COUNT := 12
 

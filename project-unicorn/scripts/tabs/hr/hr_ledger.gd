@@ -69,7 +69,7 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 
 	var muted: bool = emp.status != HRConstants.STATUS_ACTIVE
 
-	# ÇALIŞAN: baş harf rozeti + ad + rol; tıklanınca Ekip dosyası açılır. Yer rozetleri DURUM
+	# ÇALIŞAN: büst + ad + rol; tıklanınca Ekip dosyası açılır. Yer rozetleri DURUM
 	# sütununda. Ad ve rol kısalabilir: dar pencerede sabit sütunlar yer kazanır.
 	var who_cell := HBoxContainer.new()
 	who_cell.add_theme_constant_override("separation", UiTokens.SPACE_L)
@@ -77,7 +77,7 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 	who_cell.tooltip_text = card.tooltip_text
 	who_cell.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	who_cell.gui_input.connect(_on_row_input.bind(emp.id, ACTION_DOSSIER, on_action, who_cell))
-	who_cell.add_child(UiFactory.make_avatar(UiFactory.initials_of(emp.character_name), 32))
+	who_cell.add_child(UiFactory.make_person_avatar(emp.character_name, emp.look, 32))
 	var who := VBoxContainer.new()
 	who.add_theme_constant_override("separation", 2)
 	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -407,7 +407,7 @@ func ensure_mentor() -> void:
 	m.category = "mentor"
 	m.monthly_salary = 0
 	m.morale = 50
-	# Portre politikası (GDD 14 §7): çalışanlar baş harfle, Frank portresiyle çizilir.
+	# Frank boyalı portresiyle çizilir; çalışan ve kurucu görünüşlerinden (Character.look).
 	m.portrait_path = "res://assets/art/investors/portrait_frank.webp"
 	_characters[m.id] = m
 
@@ -449,6 +449,8 @@ func add(character: Character) -> void:
 		if character.leave_week < 0:
 			character.leave_week = HRConstants.leave_week_for(GameState.run_hires)
 		GameState.run_hires += 1
+	if character.category in ["employee", "founder"]:
+		_stamp_look(character)
 	_characters[character.id] = character
 	EventBus.character_added.emit(character.id)
 	if character.category == "employee":
@@ -503,6 +505,47 @@ func insert_raw(character: Character) -> void:
 		return
 	_validate_shape(character)
 	_characters[character.id] = character
+
+
+## Görünüşten önce yazılmış bir kaydın yükleme yolu: kurucu, sonra ekip işe alım sırasıyla,
+## add() nasıl damgalıyorsa öyle. Görünüşlü bir kayıtta yapacak işi yoktur. Sinyal yok: kabuk
+## yüklemeden sonra kurulur ve görünüşü kendisi okur.
+func fill_missing_looks() -> void:
+	_stamp_look(get_founder())
+	for c in employees_by_hire():
+		_stamp_look(c)
+
+
+## Ekip, işe alım sırasıyla; aynı gün alınanlar kimlik sırasıyla.
+func employees_by_hire() -> Array[Character]:
+	var team := get_employees()
+	team.sort_custom(func(a: Character, b: Character) -> bool: return a.hire_day < b.hire_day or (a.hire_day == b.hire_day and a.id < b.id))
+	return team
+
+
+## Görünüşü olmayana görünüşünü verir ve imzasını koşunun defterine yazar. Kurucu seçtiği
+## portreye benzer; çalışan kimliğinden tohumlanır ve yanında görüleceklerden ayrı durur.
+func _stamp_look(c: Character) -> void:
+	if c.look.is_empty():
+		if c.category == "founder":
+			c.look = LookSystem.founder(GameState.founder_portrait)
+		else:
+			c.look = LookSystem.for_person(SalesConstants.mix(c.id, SalesConstants.SALT_LOOK),
+				c.character_name, c.role, looks_around())
+	GameState.register_look(LookSystem.signature(c.look))
+
+
+## Yeni bir kişinin yanında görüleceği görünüşler: kurucu, ekip ve masadaki aday dosyaları.
+func looks_around() -> Array:
+	var out: Array = []
+	for c in _characters.values():
+		if c.category in ["employee", "founder"] and not c.look.is_empty():
+			out.append(c.look)
+	for file in HRSearchSystem.get_files():
+		var look: Dictionary = file.get("look", {})
+		if not look.is_empty():
+			out.append(look)
+	return out
 
 
 ## §11.3 ayrılış. Kişiyi araştırmadan RnDSystem kendi günlük budamasıyla düşürür.

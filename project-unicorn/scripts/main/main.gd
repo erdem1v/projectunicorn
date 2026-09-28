@@ -206,6 +206,7 @@ func _run_debug_harness() -> bool:
 		"--office-shot=": _run_office_shot,
 		"--travel-shot=": _run_travel_shot,
 		"--day-shot=": _run_day_shot,
+		"--office-crowd-probe=": _run_office_crowd_probe,
 	}
 	for prefix in valued:
 		var value: String = _flag_value(prefix, cmdline)
@@ -680,9 +681,11 @@ func _seed_signal_months() -> void:
 
 # --office-shot=<home|ishani|plaza|loft|city>:<hour>[:<extra>]: the office in the GameShell, the
 # clock stopped on the hour; prints frame time and render counts. extra: full = every desk taken
-# and people in (the lit night interior); <tab id> = that tab's window open over it; hr_dossier =
-# the Ekip window with its first employee's dossier on top. city opens the map from İş hanı as
-# the move button does; card (city only) = Plaza picked, its office card open.
+# and people in (the lit night interior); crowd40 = forty on the roster, a LOOKS line and four close
+# frames; founders = the founder portraits beside their busts; nav = the baked floor and the spots'
+# ways in drawn over the office; <tab id> = that tab's window open over it; hr_dossier = the Ekip
+# window with its first employee's dossier on top. city opens the map from İş hanı as the move
+# button does; card (city only) = Plaza picked, its office card open.
 func _run_office_shot(spec: String) -> void:
 	var parts: PackedStringArray = spec.split(":")
 	var office_id: String = parts[0]
@@ -696,9 +699,13 @@ func _run_office_shot(spec: String) -> void:
 	GameState.office_id = "ishani" if office_id == "city" else office_id
 	GameState.set_current_hour(hour)
 	TimeManager.sync_to_current_hour()
+	if extra == "crowd40":
+		# Forty on the roster with the fixture's five and the founder.
+		OfficeCrowdProbe.seed_staff(34)
 	await _mount_shot_shell()
 	var view: Control = get_tree().get_first_node_in_group(&"office_view")
 	var city: OfficeCity = view.get_node("Viewport3D/SubViewport/World/City")
+	var people: OfficePeople = view.get_node("Viewport3D/SubViewport/World/People")
 	if office_id == "city":
 		await city.open()
 	match extra:
@@ -710,12 +717,29 @@ func _run_office_shot(spec: String) -> void:
 			EventBus.tab_changed.emit("hr")
 			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
 				{"character_id": CharacterRegistry.get_employees()[0].id})
+		"crowd40":
+			while not people._placed:
+				await get_tree().physics_frame
+			print("LOOKS|%s" % OfficeCrowdProbe.looks_line(people._actors.values()))
+			# Four close frames, a quarter of the roster apart; the overall frame follows below.
+			var cam: OfficeCamera = view.camera
+			var at: Array = people._actors.values().filter(func(a: OfficeActor) -> bool: return a.visible)
+			for i in 4:
+				cam.focus((at[floori(i * at.size() / 4.0)] as OfficeActor).position + Vector3.UP, cam.fit_zoom * 5.0, 0.0)
+				await get_tree().create_timer(0.6).timeout
+				_save_shot("office_shot_%s_%02d_crowd40_close%d" % [office_id, hour, i])
+			cam.focus(cam.fit_target, cam.fit_zoom, 0.0)
+		"founders":
+			_on_shot_layer(OfficeCrowdProbe.founder_sheet())
+		"nav":
+			view.get_node("Viewport3D/SubViewport/World").add_child(OfficeCrowdProbe.nav_overlay(view.layout))
 		"full":
-			# People write the desk states every frame. Two frames draw and pose everyone
-			# (OfficeActor.POSE_EVERY); then they stop, and the states forced below hold.
-			for i in 2:
-				await get_tree().process_frame
-			view.get_node("Viewport3D/SubViewport/World/People").set_process(false)
+			# People write the desk states every frame. Once the floor has synced and they are
+			# placed, they stop, and the states forced below hold.
+			while not people._placed:
+				await get_tree().physics_frame
+			await get_tree().process_frame
+			people.set_process(false)
 			var lighting: OfficeLighting = view.lighting
 			lighting.anyone_in = true
 			lighting.founder_at_desk = true
@@ -809,6 +833,31 @@ func _run_day_shot(spec: String) -> void:
 			after += 1
 			if after == DAY_SHOT_AFTER:
 				break
+	get_tree().quit()
+
+
+# --office-crowd-probe=<home|ishani|plaza|loft>:<people>:<speed 1-4>: that many people (the
+# founder and a seeded staff, roles in turn) through one working week of the office on the real
+# clock, 08:00 through the night skip into the next morning, with a second's pause at noon.
+# OfficeCrowdProbe prints the CROWD lines; crowd_<office>_<people>_<speed>_NN.png at the start,
+# through the day, as the night begins and after the skip.
+func _run_office_crowd_probe(spec: String) -> void:
+	var parts: PackedStringArray = spec.split(":")
+	_begin_shot()
+	_seed_run_reproducible()
+	GameState.set_cash(500000)
+	GameState.office_id = parts[0]
+	GameState.day = 5
+	GameState.set_current_hour(TimeModel.WEEK_START_HOUR)
+	TimeManager.sync_to_current_hour()
+	OfficeCrowdProbe.seed_staff(int(parts[1]) - 1)
+	# Paused on the speed it will run at: the opening plans the walks in at that pace.
+	EventBus.speed_change_requested.emit(0)
+	TimeManager.last_running_speed = int(parts[2])
+	await _mount_shot_shell()
+	var probe := OfficeCrowdProbe.new()
+	add_child(probe)
+	await probe.run(get_tree().get_first_node_in_group(&"office_view"), int(parts[2]), "_".join(parts), _save_shot)
 	get_tree().quit()
 
 

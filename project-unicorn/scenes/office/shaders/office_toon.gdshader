@@ -15,13 +15,16 @@ uniform vec2 emission_uv_scale = vec2(1.0);
 uniform vec2 emission_uv_offset = vec2(0.0);
 // The design keeps its ground out of the ink pass; roughness carries that to office_ink.
 uniform bool no_edge = false;
-// Office people carry their clothes and faces as linear vertex colours (office_look).
+// Office people carry their clothes and faces as linear vertex colours (office_body).
 uniform bool use_vertex_color = false;
+// People take only outline ink: their hair and folds would draw as streaks. Roughness 0.5 tells
+// office_ink so.
+uniform bool outline_only = false;
 
 void fragment() {
 	ALBEDO = albedo.rgb * texture(albedo_texture, UV * uv1_scale + uv1_offset).rgb * (use_vertex_color ? COLOR.rgb : vec3(1.0));
 	EMISSION = emission * emission_energy * texture(emission_texture, UV * emission_uv_scale + emission_uv_offset).rgb;
-	ROUGHNESS = no_edge ? 0.0 : 1.0;
+	ROUGHNESS = no_edge ? 0.0 : (outline_only ? 0.5 : 1.0);
 }
 
 void light() {

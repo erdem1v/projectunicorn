@@ -56,7 +56,7 @@ func _rebuild() -> void:
 	# --- kişi satırı ---
 	var who := HBoxContainer.new()
 	who.add_theme_constant_override("separation", 14)
-	who.add_child(UiFactory.make_avatar(UiFactory.initials_of(c.character_name), 34))
+	who.add_child(UiFactory.make_person_avatar(c.character_name, c.look, 34))
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 3)
 	stack.size_flags_vertical = Control.SIZE_SHRINK_CENTER

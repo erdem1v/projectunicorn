@@ -196,6 +196,9 @@ var b2b_signed_company_names: Array[String] = []
 # company-wide weekly ceiling (_escalate_stale bypasses the per-account budgets).
 var cs_escalation_days: Array[int] = []
 var run_hires: int = 0                 # CharacterRegistry.add, category "employee"
+# Every look signature the run has handed out (LookSystem.signature), so no two people ever
+# share one. Writer: register_look.
+var issued_looks: Array[String] = []
 
 # --- SATIŞ rev 6 §13 · the run records the module owns ------------------------
 # Sole writer: SalesLedger.
@@ -387,6 +390,11 @@ func founder_meeting_share() -> float:
 
 func start_work_week() -> void:
 	founder_meeting_hours = 0.0
+
+
+func register_look(sig: String) -> void:
+	if not issued_looks.has(sig):
+		issued_looks.append(sig)
 
 
 func submit_month_highlight(text: String, priority: int) -> void:
@@ -779,6 +787,7 @@ func initialize_run(payload: Dictionary) -> void:
 	b2b_rep_portrait_rotation_index = 0
 	b2b_last_rep_portrait = ""
 	run_hires = 0
+	issued_looks.clear()
 	run_departures = 0
 	run_scandals_total = 0
 	run_scandals_managed = 0

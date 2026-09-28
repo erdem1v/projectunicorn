@@ -12,6 +12,8 @@ var max_n: int                    ## desks for employees
 ## kind -> Array[Dictionary] {pos: Vector3, face: float, pose: String, chain: PackedVector3Array,
 ## zone: String}. desk[0] is the founder's, desk[i] employee desk i.
 var spots: Dictionary
+## Each meeting room's seats: the spots meet_<room>, or an office's one room of kind meet.
+var meet_rooms: Array[Array]
 var elev_near: AABB               ## lift proximity box (y spans everything), zero-size when none
 var elev_panels: Array[Dictionary]  ## {node, p0: float, d: float, rot: bool, ax: String}
 var panes: Array[Dictionary]      ## {node, on: float, off: float, all_night: bool}, game minutes
@@ -38,6 +40,10 @@ static func load(office_id: String) -> OfficeLayout:
 				chain.append(_v3(p))
 			list.append({"pos": _v3(s.pos), "face": float(s.face), "pose": s.pose, "chain": chain, "zone": s.zone})
 		l.spots[kind] = list
+	for room: String in raw.meetRooms:
+		l.meet_rooms.append(l.spots["meet_" + room])
+	if l.spots.has("meet"):
+		l.meet_rooms.append(l.spots.meet)
 	if raw.elevNear != null:
 		var half := _v3(raw.elevNear.half)
 		l.elev_near = AABB(_v3(raw.elevNear.center) - half, half * 2.0)

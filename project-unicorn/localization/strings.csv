@@ -2796,6 +2796,8 @@ HR_DOSSIER_IDLE,Boşta,Idle
 EVENTS_DESK_HEADER,MASADA,ON THE DESK
 EVENTS_DESK_EMPTY,Masada bekleyen bir şey yok.,Nothing is waiting on the desk.
 OFFICE_ACT_SLEEP,Uyuyor,Asleep
+OFFICE_ACT_MEETING,Toplantıda,In a meeting
+OFFICE_ACT_LEAVE,Çıkıyor,Heading out
 OFFICE_MOVING_BADGE_ONE,Taşınıyor · 1 hafta,Moving · 1 week
 OFFICE_CARD_UNMET_ONE,1 şart karşılanmadı,1 requirement unmet
 FRANK_OFFICE_MOVE_TITLE,Taşınma vakti,Time to move

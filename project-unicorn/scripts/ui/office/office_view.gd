@@ -4,8 +4,9 @@ extends Control
 # the current office and swaps it on office_changed, drives its light every frame, and routes the
 # pointer: drag and wheel move the camera, clicks and hover go to the people, or to the city map
 # while that is the loaded layout. Windows are later siblings, so they take the pointer first.
-# The skipped night blinks: the 3D image drops to dark and the 08:00 light fades in. The controls
-# over the office (the office_overlays group) step aside for the map and for the founder's trip.
+# The skipped night blinks: the 3D image drops to dark (the people may have faded it out first) and
+# the 08:00 light fades in. The controls over the office (the office_overlays group) step aside for
+# the map and for the founder's trip.
 
 const TRAVEL := preload("res://scripts/ui/office/office_travel.gd")
 ## The blink's dark end: the 3D view's own fade, scene data like the office's other colours.
@@ -22,6 +23,8 @@ const NIGHT_FADE_S := 0.6     # [WORKING]
 
 var layout: OfficeLayout
 var lighting: OfficeLighting
+## The floor the people walk (tools/office3d/bake_nav.gd); null on the city map.
+var nav_region: NavigationRegion3D
 ## The founder's trip to an outside meeting (main.gd plays it).
 var travel: TRAVEL
 var _lowest := 0.0
@@ -61,6 +64,25 @@ func load_layout(office_id: String, road := false) -> void:
 	lighting.set_layout(layout, scene, materials, OfficeMaterials.stations(scene))
 	_fitted = false
 	_fit_once()
+	nav_region = null
+	var links := []
+	if office_id != "city":
+		var nm: NavigationMesh = load("res://art/office3d/%s_nav.tres" % office_id)
+		var map := _scene_root.get_world_3d().navigation_map
+		NavigationServer3D.map_set_cell_size(map, nm.cell_size)
+		NavigationServer3D.map_set_cell_height(map, nm.cell_height)
+		nav_region = NavigationRegion3D.new()
+		nav_region.navigation_mesh = nm
+		_scene_root.add_child(nav_region)
+		# The stairs and doorways the bake could not join, as one-lane links.
+		for l: Dictionary in nm.get_meta("links", []):
+			var link := NavigationLink3D.new()
+			link.bidirectional = true
+			_scene_root.add_child(link)
+			link.start_position = l.a
+			link.end_position = l.b
+			links.append({"rid": link.get_rid(), "path": l.path})
+	OfficePerson.set_links(links)
 	_people.set_layout(layout, self)
 	_city.set_layout(layout, self, materials.get("water", []), road)
 	_container.mouse_filter = Control.MOUSE_FILTER_IGNORE if road else Control.MOUSE_FILTER_STOP

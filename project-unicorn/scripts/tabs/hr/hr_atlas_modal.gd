@@ -262,7 +262,7 @@ func _build_files_step() -> void:
 	_root_box.add_child(footer)
 
 
-## Aday kartı (11b): DOSYA i/n · baş harf + ad + unvan · rol açıklaması · yıldız şeridi
+## Aday kartı (11b): DOSYA i/n · büst + ad + unvan · rol açıklaması · yıldız şeridi
 ## (iki alan · Liderlik) · tek trait çipi · esneyen boşluk (kartlar eşit yükseklik) ·
 ## MAAŞ TALEBİ · İŞE AL · KOMİSYON · RUNWAY.
 func _file_card(index: int, file: Dictionary) -> Control:
@@ -292,7 +292,7 @@ func _file_card(index: int, file: Dictionary) -> Control:
 
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 12)
-	head.add_child(UiFactory.make_avatar(UiFactory.initials_of(cand_name), 34))
+	head.add_child(UiFactory.make_person_avatar(cand_name, file.get("look", {}), 34))
 	var who := VBoxContainer.new()
 	who.add_theme_constant_override("separation", 3)
 	who.size_flags_vertical = Control.SIZE_SHRINK_CENTER

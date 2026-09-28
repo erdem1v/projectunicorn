@@ -16,6 +16,10 @@ Komutlar `project-unicorn` kökünden, Git Bash'te koşulur.
 | 1. dışa aktarma | `bash tools/office3d/run_export.sh [durum_dizini] [sorgu]` | beş GLB + JSON, dört küçük resim |
 | 2. denetim | `python tools/office3d/check_export.py [id ...]` | sayımlar, adlı düğümler, en ağır malzemeler; sözleşme ihlalinde çıkış kodu 1 |
 | 3. içe aktarma | `"$GODOT" --headless --path . --import`, sonra bir ısınma koşusu | `art/office3d/<id>_<n>.png` (GLB'nin gömülü dokuları, içe aktarıcı çıkarır), `.godot/imported/` |
+| 4. zemin | `"$GODOT" --headless --path . -s res://tools/office3d/bake_nav.gd [-- id ...]` | `art/office3d/<id>_nav.tres` (kişilerin yürüdüğü zemin ve bağlantıları); bir yerin girişi zeminde değilse çıkış kodu 1 |
+
+Her dışa aktarımdan sonra zemin yeniden fırınlanır: `<id>_nav.tres` o ofisin GLB'siyle aynı geometriden
+çıkmalıdır, yoksa kişiler eski duvarların arasından yürür. Şehir (`city`) fırınlanmaz; orada kimse yürümez.
 
 **1.** `run_export.sh` `serve.py`'yi `127.0.0.1:8735`'te başlatır (kök `project-unicorn`; `POST /save/<ad>`:
 `.glb`/`.json` → `art/office3d/`, `.jpg`/`.png` → `assets/art/office/`, `.txt` → durum dizini), Chrome'u

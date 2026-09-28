@@ -68,7 +68,7 @@ func rebuild_view() -> void:
 func _identity(c: Character) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	row.add_child(UiFactory.make_avatar(UiFactory.initials_of(c.character_name), 44))
+	row.add_child(UiFactory.make_person_avatar(c.character_name, c.look, 44))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL

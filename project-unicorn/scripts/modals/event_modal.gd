@@ -245,23 +245,24 @@ func _build_speaker_row() -> void:
 
 
 # Kart grameri tek (GDD 14 §7): her olay kartı kaynağının küçük yuvarlak avatarını gösterir —
-# portre taşıyanlar portreleriyle, diğerleri baş harfleriyle. `Avatar` varyasyonu RADIUS_PILL,
-# dolayısıyla clip_contents yuvarlak kırpmayı verir.
+# portre taşıyanlar portreleriyle, diğerleri büstleriyle (görünüşü olmayan baş harfleriyle).
+# `Avatar` varyasyonu RADIUS_PILL, dolayısıyla clip_contents yuvarlak kırpmayı verir.
 static func _make_avatar(c: Character) -> Panel:
 	var tex: Texture2D = null
 	if c.portrait_path != "" and ResourceLoader.exists(c.portrait_path):
 		tex = load(c.portrait_path) as Texture2D
+	if tex == null:
+		return UiFactory.make_person_avatar(c.character_name, c.look, 24)
 	# A portrait covers the plate, so the initials stay blank.
-	var avatar: Panel = UiFactory.make_avatar("" if tex != null else UiFactory.initials_of(c.character_name))
-	if tex != null:
-		avatar.clip_contents = true
-		var pic := TextureRect.new()
-		pic.texture = tex
-		pic.set_anchors_preset(Control.PRESET_FULL_RECT)
-		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		avatar.add_child(pic)
+	var avatar: Panel = UiFactory.make_avatar("")
+	avatar.clip_contents = true
+	var pic := TextureRect.new()
+	pic.texture = tex
+	pic.set_anchors_preset(Control.PRESET_FULL_RECT)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	avatar.add_child(pic)
 	return avatar
 
 

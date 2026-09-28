@@ -16,8 +16,10 @@ extends Resource
 @export var character_name: String = ""   # NOT `name` — Node reserves it
 @export var role: String = ""             # typed id (HRConstants.ROLE_*) — never free text
 @export var category: String = "employee" # "founder" | "employee" | "mentor" | "npc"
-# Boş olması normaldir (GDD 14 §7): çalışanların yüzü yok, baş harfle çizilirler; portresi
-# olanlar Frank ve adlı müşteri/yatırımcı karakterleridir.
+# Çalışan ve kurucu görünüşlerinden çizilir: ofisteki gövde ve arayüzdeki büst (LookSystem;
+# CharacterRegistry eklerken bir kez damgalar). Boyalı portre kurucunun kendi sayfalarında
+# (GameState.founder_portrait) ve Frank'te kalır; portrait_path'i yalnız Frank taşır.
+@export var look: Dictionary = {}
 @export var portrait_path: String = ""
 # Grup saklanmaz; `role`'dan HRConstants.ROLE_GROUP ile türetilir.
 

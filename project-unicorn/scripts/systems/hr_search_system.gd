@@ -175,6 +175,8 @@ static func hire(candidate_index: int) -> Character:
 			int(axes.get(skill_key, HRConstants.AREA_MIN)), HRConstants.AREA_MIN, HRConstants.AREA_MAX)
 	for trait_id in file.get("traits", []):
 		emp.traits.append(String(trait_id))
+	# A file from a save written before looks has none; add() then stamps one.
+	emp.look = (file.get("look", {}) as Dictionary).duplicate()
 
 	CharacterRegistry.add(emp)
 	if CharacterRegistry.get_character(emp.id) == null:
@@ -259,8 +261,17 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 
 static func _deliver_files() -> void:
 	var role_id: String = String(GameState.hr_search.get(KEY_ROLE, ""))
-	var files: Array = HRCandidateGenerator.generate(role_id, current_level(),
-		int(GameState.hr_search.get(KEY_SEED, 0)))
+	var search_seed: int = int(GameState.hr_search.get(KEY_SEED, 0))
+	var files: Array = HRCandidateGenerator.generate(role_id, current_level(), search_seed)
+	# Each candidate arrives with the look they will wear in the office, apart from the team and
+	# from the other files on the table.
+	var around: Array = CharacterRegistry.looks_around()
+	for k in files.size():
+		var file: Dictionary = files[k]
+		file["look"] = LookSystem.for_person(SalesConstants.mix_seed(SalesConstants.mix_seed(search_seed + GameState.run_seed,
+			SalesConstants.SALT_LOOK), k), file.name, file.role, around)
+		around.append(file.look)
+		GameState.register_look(LookSystem.signature(file.look))
 	GameState.hr_search[KEY_FILES] = files
 	GameState.hr_search[KEY_STATE] = HRConstants.SEARCH_FILES_READY
 	EventBus.headline_added.emit(

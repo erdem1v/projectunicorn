@@ -6,6 +6,8 @@ extends RefCounted
 # labels authored in the .tscn scenes. Colours/sizes come from UiTokens; the
 # master theme supplies fonts and per-variation defaults.
 
+static var _bust_mat: ShaderMaterial
+
 
 static func _chip_box(bg: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -96,14 +98,30 @@ static func make_card(content: Control = null, tight: bool = false, attention: b
 	return card
 
 
-## Initials-in-a-circle avatar placeholder. The `Avatar` variation uses RADIUS_PILL,
-## so it stays circular at any diameter.
-static func make_avatar(initials_text: String, diameter: int = 24) -> Panel:
+## A person's disc: the bust of their look (PersonBust), or their initials without one.
+static func make_person_avatar(person_name: String, look: Dictionary, diameter: int) -> Panel:
+	return make_avatar(initials_of(person_name), diameter, PersonBust.texture(look))
+
+
+## Initials-in-a-circle avatar. The `Avatar` variation uses RADIUS_PILL, so it stays circular
+## at any diameter. Given a person's bust (PersonBust), the disc shows the face instead.
+static func make_avatar(initials_text: String, diameter: int = 24, bust: Texture2D = null) -> Panel:
 	var avatar := Panel.new()
 	avatar.theme_type_variation = &"Avatar"
 	avatar.custom_minimum_size = Vector2(diameter, diameter)
 	avatar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if bust != null:
+		var face := TextureRect.new()
+		face.texture = bust
+		face.set_anchors_preset(Control.PRESET_FULL_RECT)
+		face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		face.stretch_mode = TextureRect.STRETCH_SCALE
+		face.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		face.material = _bust_material()
+		avatar.add_child(face)
+		return avatar
 	var initial := make_label(initials_text, &"AvatarInitial")
 	initial.set_anchors_preset(Control.PRESET_FULL_RECT)
 	initial.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -111,6 +129,13 @@ static func make_avatar(initials_text: String, diameter: int = 24) -> Panel:
 	initial.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	avatar.add_child(initial)
 	return avatar
+
+
+static func _bust_material() -> ShaderMaterial:
+	if _bust_mat == null:
+		_bust_mat = ShaderMaterial.new()
+		_bust_mat.shader = preload("res://scenes/ui/components/avatar_bust.gdshader")
+	return _bust_mat
 
 
 ## Up to two initials from a full name. Uppercased through tr_upper: raw to_upper()

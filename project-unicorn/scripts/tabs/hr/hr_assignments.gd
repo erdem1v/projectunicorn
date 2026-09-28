@@ -64,11 +64,11 @@ static func _row(emp: Character, on_toggle: Callable) -> Control:
 	row.add_theme_constant_override("separation", 0)
 	card.add_child(row)
 
-	# ÇALIŞAN: baş harf + ad + tek satırda "ROL · Ana alan ★★★ · İkincil alan ★"
+	# ÇALIŞAN: büst + ad + tek satırda "ROL · Ana alan ★★★ · İkincil alan ★"
 	var who := HBoxContainer.new()
 	who.add_theme_constant_override("separation", UiTokens.SPACE_L)
 	who.custom_minimum_size = Vector2(W_WHO, 0)
-	who.add_child(UiFactory.make_avatar(UiFactory.initials_of(emp.character_name), 30))
+	who.add_child(UiFactory.make_person_avatar(emp.character_name, emp.look, 30))
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 3)
 	stack.size_flags_vertical = Control.SIZE_SHRINK_CENTER

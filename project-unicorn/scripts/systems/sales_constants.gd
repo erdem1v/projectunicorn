@@ -247,6 +247,9 @@ const MIX_SALT_STRIDE := 7919
 const SALT_UNITS := 401          # negotiation seats / equity points
 const SALT_RESERVE := 409        # negotiation hidden reserve
 const SALT_REP_SEATS := 419      # the rep desk's seat count (§7.6)
+const SALT_LOOK := 431           # an office person's look (LookSystem)
+const SALT_ACTOR := 433          # an office person's breaks and idles (OfficeActor)
+const SALT_DAY := 439            # an office person's week: late in, early out (OfficePeople)
 
 
 ## Deterministic value in [0, MIX_MODULUS) from the run seed, a stable identity and a salt.

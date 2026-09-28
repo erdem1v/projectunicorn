@@ -14,6 +14,8 @@ uniform float depth_threshold = 0.25;
 uniform float normal_threshold = 0.35;
 uniform float texel = 1.15;
 uniform float vignette = 0.22;
+// A bust (person_bust) is drawn on a clear background: only the figure and its lines stay opaque.
+uniform bool cutout = false;
 
 // The design's lighter line on dark surfaces, a linear colour as it writes it.
 const vec3 DARK_LINE = vec3(0.55, 0.62, 0.95);
@@ -82,7 +84,9 @@ void fragment() {
 	float px_world = 2.0 / abs(PROJECTION_MATRIX[1][1] * VIEWPORT_SIZE.y);
 	float dth = max(depth_threshold, 4.0 * texel * px_world);
 	float de = smoothstep(dth, dth * 2.0, dd) * fg;
-	float ne = smoothstep(normal_threshold, normal_threshold * 2.0, nd) * fg;
+	// Outline-only surfaces (people, roughness 0.5) keep their silhouette and overlaps, not creases.
+	float crease = step(0.75, texture(normal_roughness_texture, SCREEN_UV).w);
+	float ne = smoothstep(normal_threshold, normal_threshold * 2.0, nd) * fg * crease;
 	vec3 col = texture(screen_texture, SCREEN_UV).rgb;
 	float lum = dot(col, vec3(0.299, 0.587, 0.114));
 	vec3 line = (lum < 0.18 && ne > de) ? mix(col, DARK_LINE, 0.3) : mix(col * 0.3, ink, 0.55);
@@ -90,4 +94,5 @@ void fragment() {
 	// The design darkens the tonemapped frame; the ACES round trip does it before Godot tonemaps.
 	vec2 q = SCREEN_UV - 0.5;
 	ALBEDO = aces_inverse(to_linear(to_srgb(aces(col)) * (1.0 - vignette * dot(q, q) * 2.0)));
+	ALPHA = cutout ? max(fg, max(de, ne)) : 1.0;
 }

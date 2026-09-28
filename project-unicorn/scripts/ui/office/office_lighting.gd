@@ -24,7 +24,9 @@ const CS := [
 ## over the hour before 07:00.
 const DAWN_FROM := 360.0
 const AMBIENT := Color("#fff3e0")
+const AMBIENT_DAY := 0.45                # the ambient's share of the hemisphere by day
 const TOP_FILL := Color("#fff0dc")
+const TOP_FILL_DAY := 0.3                # the top fill's intensity by day
 const TOP_FILL_DIR := Vector3(3.0, 30.0, 4.0)
 const DESK_LAMP := Color("#ffb468")     # intensity 3
 const SCREEN_LIGHT := Color("#8fb8ff")  # intensity .9
@@ -169,11 +171,11 @@ func apply(t: float) -> void:
 	var post_on := 1.0 if t > 1120.0 or t < 440.0 else 0.0
 	var lamp_hour := t > 1080.0 and founder_at_desk
 
-	var ambient: Color = AMBIENT.srgb_to_linear() * (0.45 * inter_day + 0.12 * night_in)
-	_sky.set_shader_parameter("top_color", _rgb(v.top.linear_to_srgb()))
-	_sky.set_shader_parameter("bottom_color", _rgb(v.bot.linear_to_srgb()))
-	_sky.set_shader_parameter("hemi_sky", _rgb((v.hs * v.hi + ambient) * LIGHT_SCALE))
-	_sky.set_shader_parameter("hemi_ground", _rgb((v.hg * v.hi + ambient) * LIGHT_SCALE))
+	var ambient: Color = AMBIENT.srgb_to_linear() * (AMBIENT_DAY * inter_day + 0.12 * night_in)
+	_sky.set_shader_parameter("top_color", rgb(v.top.linear_to_srgb()))
+	_sky.set_shader_parameter("bottom_color", rgb(v.bot.linear_to_srgb()))
+	_sky.set_shader_parameter("hemi_sky", rgb((v.hs * v.hi + ambient) * LIGHT_SCALE))
+	_sky.set_shader_parameter("hemi_ground", rgb((v.hg * v.hi + ambient) * LIGHT_SCALE))
 	_env.fog_light_color = v.bot.linear_to_srgb()
 	_env.glow_intensity = 0.2 + 0.3 * (1.0 - sqrt(f))
 
@@ -184,7 +186,7 @@ func apply(t: float) -> void:
 	var el := deg_to_rad(55.0 if night_k else 10.0 + 48.0 * sin(PI * u))
 	var az := PI / 4.0 + (u - 0.5) * 2.0
 	_sun.basis = Basis.looking_at(-Vector3(sin(az) * cos(el), sin(el), cos(az) * cos(el)))
-	_top.light_energy = (inter_day * 0.3 + night_in * (1.0 - inter_day)) * LIGHT_SCALE
+	_top.light_energy = (inter_day * TOP_FILL_DAY + night_in * (1.0 - inter_day)) * LIGHT_SCALE
 
 	var dk2 := day_k * day_k
 	for material_name: String in STREET:
@@ -283,5 +285,5 @@ func _glow_quad(g: Dictionary, material: Material) -> MeshInstance3D:
 	return mi
 
 
-static func _rgb(c: Color) -> Vector3:
+static func rgb(c: Color) -> Vector3:
 	return Vector3(c.r, c.g, c.b)

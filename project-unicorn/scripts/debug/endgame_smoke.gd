@@ -308,6 +308,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_continuity_seeded":             fail = _case_save_continuity_seeded()
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
 		"save_v13_day_stamps_migrate":        fail = _case_save_v13_day_stamps_migrate()
+		"look_registry_unique_and_saved":     fail = _case_look_registry_unique_and_saved()
 		"hr_experience_accrues":      fail = _case_hr_experience_accrues()
 		"hr_training_eligibility_edge": fail = _case_hr_training_eligibility_edge()
 		"hr_training_blocks_and_charges_once": fail = _case_hr_training_blocks_and_charges_once()
@@ -9266,6 +9267,91 @@ static func _case_save_double_load_no_residue() -> String:
 		return "reset_all_owners left an active build behind"
 
 	_cleanup_save_slots()
+	return ""
+
+
+# --- Looks: one per person, everyone apart, kept by a save, redrawn the same for an old one ---
+static func _case_look_registry_unique_and_saved() -> String:
+	# A portrait past the first, so the founder cannot pass on the not-found fallback.
+	var portrait: String = FounderConstants.PORTRAIT_IDS[2]
+	CharacterRegistry.reset()
+	GameState.initialize_run({"seed": 424242, "portrait_id": portrait})
+	# Read afresh each time: a load builds new records.
+	var people := func() -> Array:
+		return [CharacterRegistry.get_founder()] + CharacterRegistry.get_employees()
+	var looks := func() -> Dictionary:
+		var out := {}
+		for c in people.call():
+			out[c.id] = LookSystem.signature(c.look)
+		return out
+
+	var founder_sig: String = LookSystem.signature(CharacterRegistry.get_founder().look)
+	if founder_sig != LookSystem.signature(LookSystem.founder(portrait)):
+		return "the founder does not wear the look of portrait %s" % portrait
+	if not GameState.issued_looks.has(founder_sig):
+		return "the founder's look was not registered as issued"
+
+	var first: Array = HRConstants.FIRST_NAMES
+	var last: Array = HRConstants.LAST_NAMES
+	var roles: Array = HRConstants.EMPLOYEE_ROLES
+	for i in 70:
+		_make_employee("emp_look_%d" % i, "%s %s" % [first[i % first.size()], last[i % last.size()]], roles[i % roles.size()])
+	var crowd: Array = people.call()
+	if crowd.any(func(c: Character) -> bool: return c.look.is_empty()):
+		return "an employee was added without a look"
+	var sigs: Array = looks.call().values()
+	# Apart in two slots also means no two share a signature.
+	for i in crowd.size():
+		for j in range(i + 1, crowd.size()):
+			var gap: int = LookSystem.apart(crowd[i].look, crowd[j].look)
+			if gap < LookSystem.MIN_APART:
+				return "%s and %s differ in %d glance slots, want %d" % [crowd[i].id, crowd[j].id, gap, LookSystem.MIN_APART]
+	if GameState.issued_looks.size() != sigs.size() \
+			or sigs.any(func(s: String) -> bool: return GameState.issued_looks.count(s) != 1):
+		return "issued_looks holds %d entries, want each of the %d looks once" % [GameState.issued_looks.size(), sigs.size()]
+
+	var saved: Dictionary = looks.call()
+	var issued: Array[String] = GameState.issued_looks.duplicate()
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		_cleanup_save_slots()
+		return "save failed (%s)" % SaveManager.cannot_save_reason_key()
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		_cleanup_save_slots()
+		return "apply_loaded_state returned false"
+	_cleanup_save_slots()
+	if looks.call() != saved:
+		return "a look changed across a save and load"
+	if GameState.issued_looks != issued:
+		return "issued_looks changed across a save and load"
+
+	if not HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID):
+		return "start_search refused"
+	for i in TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS) + 3:
+		_sim_day()
+		if HRSearchSystem.has_files_ready():
+			break
+	var files: Array = HRSearchSystem.get_files()
+	if files.is_empty() or files.any(func(f: Dictionary) -> bool: return (f.get("look", {}) as Dictionary).is_empty()):
+		return "the delivered files do not all carry a look"
+	var file_sig: String = LookSystem.signature(files[0].look)
+	var hired: Character = HRSearchSystem.hire(0)
+	if hired == null or LookSystem.signature(hired.look) != file_sig:
+		return "the hire does not wear the look on its file"
+
+	# A save from before looks: nobody has one and nothing is issued.
+	var blank := func() -> void:
+		for c in CharacterRegistry.get_all():
+			c.look = {}
+		GameState.issued_looks.clear()
+	blank.call()
+	CharacterRegistry.fill_missing_looks()
+	var filled: Dictionary = looks.call()
+	if people.call().any(func(c: Character) -> bool: return c.look.is_empty()):
+		return "fill_missing_looks left someone without a look"
+	blank.call()
+	CharacterRegistry.fill_missing_looks()
+	if looks.call() != filled:
+		return "fill_missing_looks drew different looks for the same save"
 	return ""
 
 
