@@ -174,10 +174,14 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
   negotiation, meeting, product, hr, finance, b2b), `--probe-shot`, `--theme-audit=<sekme>`, `--shot-size=GxY`,
   `--lang=tr|en` (kayıtlı dili ezer). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner; EN `_en` alır.
-  Ofis: `--office-shot=<home|ishani|plaza|loft|city>:<saat>[:full|card|<sekme>|hr_dossier]`. Kurucunun toplantı
-  yolculuğu: `--travel-shot=<home|ishani|plaza|loft>` (10:00'da satış toplantısına gidiş, toplantı ve dönüş;
-  `travel_shot_<ofis>_NN.png` dizisi). Bir hafta gerçek saatle: `--day-shot=<ofis>:<hız>` (08:00'den çıkış ve gece
-  atlamasıyla ertesi 08:00'e, `day_shot_<ofis>_<hız>_NN.png` ve kare başına `DAYSHOT` satırı).
+  Ofis: `--office-shot=<home|ishani|plaza|loft|city>:<saat>[:full|card|<sekme>|hr_dossier|crowd40|founders|nav]`
+  (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare; `founders` portre ile bust yan yana; `nav`
+  fırınlanmış zemin). Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
+  duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve
+  `crowd_<ofis>_<kişi>_<hız>_NN.png`). Kurucunun toplantı yolculuğu: `--travel-shot=<home|ishani|plaza|loft>`
+  (10:00'da satış toplantısına gidiş, toplantı ve dönüş; `travel_shot_<ofis>_NN.png` dizisi). Bir hafta gerçek
+  saatle: `--day-shot=<ofis>:<hız>` (08:00'den çıkış ve gece atlamasıyla ertesi 08:00'e,
+  `day_shot_<ofis>_<hız>_NN.png` ve kare başına `DAYSHOT` satırı).
 - **Ekran kartı.** Ekranlı Godot koşuları (shot, tema denetimi, görsel kabul) paralel değil sırayla koşar; ekran
   gerektirmeyen her koşu `--headless`.
 - Git kökündeki `.githooks/pre-commit` lint ve `loc_residue`'yu koşar; etkin değildir, etkinleştirmek sahibin kararıdır.

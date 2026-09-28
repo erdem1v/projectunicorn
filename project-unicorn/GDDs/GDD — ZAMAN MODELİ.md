@@ -475,7 +475,7 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 ### 7.3 Atlama
 
 - Gece başlayınca saat donar (`freeze_clock("night")`). Ofis görünümü "ofis boş" yüklemini kaydetmişse gece onu her
-  kare yoklar ve en fazla `NIGHT_WALKOUT_MAX_S` = `ARRIVE_MAX_S` + 0,5 = 3,5 gerçek saniye bekler. Bekleme yalnız kare
+  kare yoklar ve en fazla `OfficeConstants.NIGHT_WAIT_S` = 3,5 gerçek saniye [WORKING] bekler. Bekleme yalnız kare
   süresiyle sayılır; duraklatma sayacı da yürüyüşü de birlikte dondurur.
 - Kayıtlı yüklem yoksa (headless, smoke, probe) atlama hemen olur.
 - Atlamadan hemen önce gece yeniden okunur: oyuncu çıkış sırasında mesaiyi uzatmış olabilir.
@@ -488,9 +488,10 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 
 ### 7.4 Ofis görünümü
 
-- Kişiler çıkışa mesai bitişinden `ARRIVE_MAX_S` (3 sn [WORKING]) gerçek saniye önce yürümeye başlar: 1×'te 18,
-  2×'te 36, 3×'te 54, 4×'te 72 oyun dakikası. Bitiş anında ofis çoğunlukla boştur.
-- Gece başlarken hâlâ görünür olan herkes çıkışa ya da yatağa gönderilir.
+- Kişiler kendi yürüyüşlerinin süresine göre çıkar: çıkış yürüyüşü, yürüme süresinin `EXIT_SLACK` katı kadar önce
+  başlar ve kapıdan tek tek geçilir. Sırası günün sonundan sonraya düşen ya da günü yürüyüşe yetmeyecek kadar kısa olan
+  masasında kalır; gece yeni yürüyüş başlamaz, yüklem yalnız kapıya ya da yatağa yürüyenleri bekler, içeride kalan
+  herkes kararma altında kesilir (`OfficePeople.CUT_FADE_S` kararması, sonra atlama).
 - Kurucu şirket penceresini izler: pencere başında gelir, sonunda çıkar. Evde pencere dışı yeri yataktır.
 - Atlamanın ardından kısa kararma ve 08:00 ışığı (`NIGHT_FADE_S` 0,6 sn [WORKING]).
 

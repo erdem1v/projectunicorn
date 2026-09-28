@@ -42,8 +42,11 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   `window_layer.gd` `SPECS`); pencere ya da adımın sütunları, karar ACIK_KARARLAR 65.
 - Ofis 1080p'nin üstünde konteyner ölçüsünde çiziliyor (`scenes/office/OfficeView.tscn`, `stretch`); doğal
   çözünürlükte çizim, karar ACIK_KARARLAR 70.
-- Kişiler Xbot mesh'inin kendi kopyasını taşıyor (`office_look.gd`); 70 kişilik Depo loft ~6 ms ve ~178 MB GPU. Mesh
-  paylaşımı, karar ACIK_KARARLAR 71.
+- 70 kişilik Depo loft 4×'te kare ~8,4 ms (eski Xbot kadrosu ~6 ms); LOD turu, karar ACIK_KARARLAR 71.
+- Harita kartı küçük resimleri hâlâ tasarımın Xbot figürleriyle (`assets/art/office/thumb_*.jpg`); Quaternius
+  karakterleriyle yeniden çekim, karar ACIK_KARARLAR 72.
+- Huylar ofis ritmini etkilemiyor (kahveci, İŞKOLİK, düşük moral kahve ve mola sıklığını değiştirmiyor); trait
+  task'ına bırakıldı (ofis karakterleri kararı 4).
 - Şehir haritası ana iş parçacığında yükleniyor (`OfficeCity.open` → `OfficeView.load_layout("city")`): ~130 ms
   takılma, önünde "hazırlanıyor" perdesi. Arka planda ya da önceden yükleme.
 - Export ön ayarı kurulunca `art/office3d/*.json`'ın pakete girdiği doğrulanır: `OfficeLayout.load` onları

@@ -1378,6 +1378,40 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Kaynak: CLAUDE.md §3 (Frank'in külliyatı Erdem'indir; yeni Frank satırı onaysız ekrana çıkmaz); GDD Zaman Modeli
     §5, §6.3; olay motoru GDD §8.4.
 
+- **91 · Ofis kişilerinin ritim değerleri onay bekliyor.**
+  - Ne oluyor: Kişilerin günü şu [WORKING] değerlerle akar (`OfficeConstants`): görsel hız tavanı `VISUAL_CAP` 2;
+    geliş gecikmesi 0–60 oyun dk, haftaların %10'unda +30–75 dk; çıkış erkenliği 0–45 dk; yürüyerek geç gelme payı
+    `ARRIVE_LATE_OK` 90 dk; çıkış yürüyüşü süresinin `EXIT_SLACK` 1,5 katı önce başlar; `MIN_PRESENCE` pencerenin
+    %50'si; kapı: `DOOR_CLEAR` 0,9 m (gelenler arası), `DOOR_S` 0,5 ambiyans sn (çıkanlar arası), içeri beklemenin
+    tavanı `OfficePerson.DOOR_WAIT` 6 sn; `NIGHT_WAIT_S` 3,5 gerçek sn; gece kesmesinin kararması
+    `OfficePeople.CUT_FADE_S` 0,25 sn; ilk mola 10–30, molalar arası 25–60, ertelenen mola 15–30 ambiyans sn; mola
+    ağırlıkları çalışan/kurucu: kahve 3/2, WC 2/1, masa ziyareti 1/4, kabin 2/0 (yalnız satışçı); kalış: kahve 6–10,
+    WC 5–8, kabin 10–16, ziyaret 5–8, öğle 15–25 sn; öğle penceresi 12:00–13:30; masa başı hareket her 12–30 sn,
+    4–8 sn sürer; ekip toplantısı oda başına 40–80 sn arayla, 20–30 sn, kurucu %30 katılır, masada hareket 5 sn'de
+    bir; all-hands 17:00, 20 sn; kuyruk en çok 3 kişi, 0,75 m aralık (`OfficeVenue`). Kahvenin kapasitesi tasarımın
+    kahve noktası sayısıdır: İş hanı 4, Plaza 4, Depo loft 5; Ev'de kettle 1.
+  - Plandan ayrılan iki nokta: kapıdan iki geliş arası 2 ambiyans saniyesi (`ARRIVAL_GAP`) 40 kişide sabahı 80 saniyeye
+    yayıyordu; yerine gelen, bir öncekinin kapıdan `DOOR_CLEAR` uzaklaşmasını bekler. Çıkışta fiziksel kuyruk Plaza'da
+    koridoru tıkadı; yerine kapı sırası (`DOOR_S`) geldi, sırası günün sonundan sonraya düşen masasında kalıp kesilir.
+  - Ölçüm (`--office-crowd-probe`, bu makine; sıçrama, duraklatmada kıpırtı, takılma, poz hatası ve hata 0): İş hanı
+    11 kişi 1×: 7 kapıdan yürüyerek, 3 kesmeyle çıktı; Plaza 40 kişi 1×: 22 / 18; Plaza 40 kişi 4×: 7 / 31; Depo loft
+    70 kişi 4×: 4 / 19. Gece kapısı hiçbirinde 3,5 sn tavanına düşmedi. Varsayılan 09:00–17:00 mesaide all-hands hiç
+    olmuyor (17:00'de ofis boş).
+  - Nerede: `scripts/systems/office_constants.gd`; `scripts/ui/office/office_venue.gd`, `office_people.gd`,
+    `office_person.gd`.
+  - Oyuncuya etkisi: Ofisin görünen günü; 4×'te büyük ofislerde çoğu kişi kararma altında gelir ve gider.
+  - Seçenekler: A) Değerler mühürlenir. B) Sahip değiştirir (ör. all-hands 16:00, daha kısa `DOOR_S`). C) Huylar
+    ritmi etkiler (trait task'ı; ISLER).
+  - Kaynak: ofis karakterleri planı §2, §9 (Erdem, 2026-09-28).
+
+- **92 · Kurucu portresi ve VC bust'ları.**
+  - Ne oluyor: Kurucunun ofisteki 3B görünümü seçtiği boyalı portreye elle eşlendi (`LookSystem.FOUNDER_LOOKS`, 11
+    portre); kurucu sayfaları boyalı portreyi göstermeye devam ediyor. VC'lerin ve müşteri tarafının bust'ı yok.
+  - Nerede: `scripts/systems/look_system.gd`; `--office-shot=home:14:founders`.
+  - Oyuncuya etkisi: Kurucu iki görüntüyle görünür: sayfalarda boyalı portre, ofiste ve kartlarda 3B karakter.
+  - Açık: Kurucu portresi → karakter seçimi ve VC bust'ları toplantı sahnesi task'ında.
+  - Kaynak: ofis karakterleri görev kararı 5 (Erdem, 2026-09-28).
+
 ## Kod ve test altyapısı
 
 - **EA/tam'da kalan "yakında" izleri.** Av'daki kilitli "— · Tier 2'de" fon satırı (`InvestorRegistry` `locked_tier2`)
@@ -1438,24 +1472,25 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     kalite seçeneği olarak bağlanır. C) Kalır.
   - Kaynak: görsel tur (2026-09-27); UiTokens yazı tipi içe aktarma notu (canvas_items metni fiziksel çözünürlükte).
 
-- **71 · Kalabalık Depo loft'un kare ve bellek maliyeti.**
-  - Ne oluyor: Her kişi Xbot mesh'inin kendi kopyasını taşıyor (kıyafet renkleri kopyanın köşe renklerine pişirilir).
-    70 kişilik Depo loft'ta kare başına ~6 ms ve ~178 MB GPU belleği ölçüldü.
-  - Nerede: `scripts/ui/office/office_look.gd` (köşe rengi kopyası); `scripts/ui/office/office_actor.gd`;
-    `scripts/ui/office/office_people.gd`.
+- **71 · Kalabalık Depo loft'un kare maliyeti.**
+  - Ne oluyor: Kişiler Quaternius gövdeleridir; aynı görünüm ve parçalar mesh önbelleğini paylaşır, poz ekran boyuna
+    göre seyrelir (LOD). 70 kişilik Depo loft 4×'te ortalama kare ~9,9 ms (ölçüm sondasının payı dahil; sondasız
+    ~8,4 ms), 40 kişilik Plaza ~5,8 ms (180 Hz ekranın sınırında). Eski Xbot kadrosu 70 kişide ~6 ms'ydi; plan hedefi
+    40 kişide ≤8 ms tutuyor, 70 kişide aşılıyor.
+  - Nerede: `scripts/ui/office/office_person.gd` (`LOD`, `OFF_SCREEN`), `office_body.gd`, `office_people.gd`.
   - Oyuncuya etkisi: Büyük kadroda zayıf makinede kare düşebilir.
-  - Seçenekler: A) Mesh paylaşılır, kıyafet rengi shader'da hesaplanır. B) Uzaktaki kişiler basitleşir. C) Kalır;
+  - Seçenekler: A) LOD turu: uzaktaki ve oturan kişilerin pozu daha seyrek, kaçınma yalnız yürüyende. B) Kalır;
     ölçüm hedef donanımda tekrarlanır.
-  - Kaynak: görsel tur ölçümü (2026-09-27).
+  - Kaynak: `--office-crowd-probe=loft:70:4` ve `plaza:40:4` ölçümü (2026-09-28).
 
-- **72 · Ofis kişilerinin rigi Mixamo X Bot: lisans onayı.**
-  - Ne oluyor: Kişiler Adobe Mixamo "X Bot" karakterini kullanıyor; dosya three.js deposunun örneklerinden geldi
-    (`assets/art/office/xbot.glb`). Lisans notu README'de: Mixamo koşulları karakterin oyunlarda telif ücretsiz
-    kullanımına izin verir. Ticari sürüm için sahibin onayı yok.
-  - Nerede: `assets/art/office/xbot.glb`, `assets/art/office/README.md`; okuyan `scripts/ui/office/office_look.gd`.
-  - Oyuncuya etkisi: Yok; dağıtımın hukuki dayanağı.
-  - Seçenekler: A) README notu yeterli sayılır. B) Mixamo koşulları kaynağı ve tarihiyle README'ye yazılır. C) Rig
-    değişir.
+- **72 · Harita kartı küçük resimlerindeki Mixamo X Bot figürleri: lisans onayı.**
+  - Ne oluyor: Ofis kişileri artık Quaternius karakterleridir (CC0, `assets/art/people/LICENSES/`); X Bot dosyası
+    repodan çıktı. X Bot yalnız şehir haritası kartlarının küçük resimlerinde, tasarımın kendi çizdiği figürler olarak
+    kaldı. Mixamo koşulları karakterin oyunlarda telif ücretsiz kullanımına izin verir; ticari sürüm için sahibin onayı
+    yok.
+  - Nerede: `assets/art/office/thumb_*.jpg`, `assets/art/office/README.md`, `tools/office3d/README.md`.
+  - Oyuncuya etkisi: Yok; küçük resimlerin hukuki dayanağı.
+  - Seçenekler: A) README notu yeterli sayılır. B) Küçük resimler Quaternius karakterleriyle yeniden çekilir (ISLER).
   - Kaynak: `assets/art/office/README.md`; ofis tasarımı (`office-sim-v12.js` `loadXbot`).
 
 - **73 · `ChromeAlertButton` renk körü takasına girmiyor.**
