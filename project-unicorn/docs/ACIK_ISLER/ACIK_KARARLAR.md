@@ -776,29 +776,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     ardından `_job_text`'teki geri düşüş dalı silinir. B) Bugünkü gibi: etiket yeterli, geri düşüş kalır.
   - Kaynak: Ekip GDD §12.2 (iş metni); Ar-Ge GDD §5.0 (araştırma dışlayıcı iştir).
 
-- **58 · Masadaki term sheet kâğıdı takvim günü sayıyor, diğer Series A geri sayımları iş günü.**
-  - Ne oluyor: Masadaki "sheet" hatırlatma kâğıdı (`DeskPapers`: ofisin not yığını ve Olaylar sayfası) başlıktaki
-    gün sayısını `TermSheet.days_left` ile yazar (takvim günü, `expires_day - bugün`, `maxi(0, …)`). Üst bardaki
-    teklif çipi (`VCPitchSystem._tick_countdown_chip`), Yatırım sekmesi (`hunt_tab.gd`) ve olay kapsamı (`scope.gd`,
-    `seams_ported.gd`) ise `TermSheet.business_days_left` (iş günü) okur. `term_sheet.gd` bu ayrımı iki fonksiyonun
-    belge yorumunda kaydeder. Üst bar çipi yalnız `PitchConstants.WARNING_DAYS` (3 iş günü) ve altında görünür; karar
-    günü gelmiş teklifi (`is_decision_due`) göstermez, masadaki kâğıt gösterir. `DESK_PAPER_SHEET_TITLE`'ın TR metni
-    uzun tire taşıyor (TR "Yatırım teklifi masada — son {days} gün"; EN tiresiz yeniden yazıldı, 68. madde); ch01 §9 ve
-    CLAUDE.md §5 tireyi yasaklıyor.
-  - Nerede: `scripts/ui/components/desk_papers.gd` (`gather`, sheet hatırlatması); `scripts/data_models/term_sheet.gd`
-    (`days_left`, `business_days_left`); `scripts/systems/vc_pitch_system.gd` (`_tick_countdown_chip`);
-    `scripts/ui/components/top_bar.gd`; `scripts/tabs/hunt_tab.gd`; `localization/strings.csv`
-    (`DESK_PAPER_SHEET_TITLE`, `FIN_OFFER_COUNTDOWN`, `HUNT_VALIDITY`).
-  - Oyuncuya etkisi: Aynı teklif için masadaki kâğıt "son 7 gün" derken Yatırım sekmesi 5 iş günü gösterebilir; araya
-    hafta sonu girince iki sayı ayrışır. Metinler de farklı birim söylüyor: kâğıt "gün" (`DESK_PAPER_SHEET_TITLE`),
-    üst bar çipi "İŞ GÜNÜ" (`FIN_OFFER_COUNTDOWN`), Yatırım sekmesi "iş günü" (`HUNT_VALIDITY`).
-  - Seçenekler: A) Kâğıt da `business_days_left` okur, tek sayı olur; kâğıt "gün" demeye devam ederse birim
-    belirsizliği sürer. B) Kâğıt takvim günü saymaya devam eder, metni birimi açıkça söyler (önce EN, sonra TR
-    yerelleştirme). C) Tüm oyuncu geri sayımları iş günü olur ve "gün" diyen metinler "iş günü" der (metin onayı
-    gerekir). Birimi netleştiren yeniden yazım tireyi de kaldırır (önce EN, sonra TR).
-  - Kaynak: GDD ch09 (Funding & Investors) ve ch12 (UI Surfaces & ODA) geri sayım birimini söylemiyor. Tire: ch01 §9,
-    CLAUDE.md §5. `term_sheet.gd` belge yorumları.
-
 - **59 · VC'nin zayıf boyut tabanı ham eksenle karşılaştırılıyor; ürün uyumu bonusu fiilen hiç verilmiyor.**
   - Ne oluyor: `VCPitchSystem._weakest_dimension` literal `< 40.0` çalışma tabanını,
     `TermSheetTableSystem.E_FIT_PRODUCT_DIM_FLOOR` (40,0) ise ürün alanının uyum puanını yayındaki HAM
@@ -994,17 +971,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler: A) Kadro sayısı kalır (izin geçicidir). B) Yalnız işbaşındakiler sayılır.
   - Kaynak: ofis tasarımı (şart "Ekip en az N kişi", `OFFICE_REQ_TEAM`); Erdem, 2026-09-27 görev kararı.
 
-- **63 · Mesai penceresi ofisi hızlandırılmış film gibi gösteriyor.**
-  - Ne oluyor: Çalışanlar yalnız mesai penceresinde ofiste (`WorkHoursSystem.start_hour`, `hours_for`); varsayılan 8
-    saat günün üçte biridir. 1×'te bir oyun günü 12 gerçek saniye olduğu için mesai 4 saniye sürer: kişiler günde bir
-    kez gelir, oturur ve çıkar; ofis günün üçte ikisinde kurucu dışında boştur.
-  - Nerede: `scripts/ui/office/office_people.gd` (`_wanted`, `_steer`, `ARRIVE_MAX_S`);
-    `scripts/autoload/time_manager.gd` (`SECONDS_PER_DAY`); `scripts/systems/hr_constants.gd` (`WORK_HOURS_DEFAULT`).
-  - Oyuncuya etkisi: Ofis çoğu zaman boş ya da giriş çıkış hâlinde görünür.
-  - Seçenekler: A) Kalır: ofis oyunun saatini izler. B) Görünürlük bandı genişler: kişiler mesaiden önce ve sonra bir
-    süre daha ofiste görünür (yalnız görsel; mesai mekaniği değişmez).
-  - Kaynak: Erdem, 2026-09-27 görev kararı (ışık oyun saatini izler, kişiler gerçek zamanlı ambiyans); Ekip GDD §8.1.
-
 - **64 · Plaza ve Depo loft sahnesinde katalogdan fazla masa var.**
   - Ne oluyor: Sahne (tasarımın `maxN`'i) Plaza'da 37, Depo loft'ta 69 çalışan masası kuruyor (kurucu masası
     hariç); katalog (`desks`, tasarımın ofis kartından) 36 ve 64 diyor. Harita kartı ve hover satırı katalog sayısını,
@@ -1028,6 +994,216 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     için A) pencere en az 59 px genişler, B) 3. adımın sütunları daralır.
   - Kaynak: ofis tasarımının pencere mockup'ı; Erdem, 2026-09-27 görev kararı (sabit yuvalı pencereler); görsel tur
     ölçümü (2026-09-27).
+
+- **75 · Temsilcinin etkin çıktısı işleme süresini etkilemiyor.**
+  - Ne oluyor: Satış §7.2'de işleme süresi lige göre bir aralıktır (kendi ligi 6 ile 7 gün, bir alt 3 ile 4, iki alt
+    2 ile 3) ve temsilcinin etkin çıktısı (`hr.effective_skill`: moral, odak, mesai) deal'i bu aralığa yerleştirir.
+    Haftalık modelde süre tik başına kapanma ihtimaline döndü: `SalesConstants.PROCESS_CLOSE_CHANCE` kendi ligde
+    0,50, bir altta 0,75, iki altta 1,00 [WORKING]; Premium'da ihtimal 1,30'a bölünür. Beklenen süre 2 / 1,33 / 1
+    hafta. İhtimal yalnız lig farkından okunur: `PROCESS_REFERENCE_OUTPUT`, `PROCESS_MIN_DAYS` ve
+    `Prospect.work_due_day` silindi, satış masası `hr.effective_skill` okumuyor.
+  - Nerede: `scripts/systems/sales_rep_system.gd` (`close_chance`, `_tick_processing`);
+    `scripts/systems/sales_constants.gd` (`PROCESS_CLOSE_CHANCE`, `PROCESS_PREMIUM_PENALTY`).
+  - Oyuncuya etkisi: Temsilcinin morali, odağı ve mesaisi kapanış hızını değiştirmez; hızı yalnız lig farkı ve kadran
+    belirler. Moralsiz ya da kısa mesaili temsilci ötekiyle aynı hızda kapatır.
+  - Seçenekler: A) Kalır; §7.2'nin "aynı süreyi oynatır" cümlesi GDD'den düşer. B) Etkin çıktı ihtimali ölçekler [K]
+    (ör. çıktı / referans çıktı ile çarpılır, tavan 1,00). C) Etkin çıktı lig farkını kaydırır: güçlü temsilci bir alt
+    ligin ihtimaliyle kapatır.
+  - Kaynak: Satış GDD §7.2, §17; GDD Zaman Modeli §4.5 ve Açık 1; Erdem, 2026-09-27 kararı (tik başına kapanma
+    ihtimali).
+
+- **76 · HAYIR DİYEMEZ'in fiyat-kırma kartına etkisi kalmadı.**
+  - Ne oluyor: Satış §7.6 fiyat-kırma kartını Premium'da, fiyata duyarlı arketipte işlemenin son günlerinde düşürür;
+    HAYIR DİYEMEZ'li temsilcide kart daha sık gelir [K] (§11.8: huyun satış ucu). Gün modelinde pencere son 2 gündü
+    (`PRICE_BREAK_TRIGGER_LAST_DAYS`) ve HAYIR DİYEMEZ onu ×1,6 genişletiyordu (`PRICE_BREAK_CANT_SAY_NO_MULT`).
+    Haftalık modelde vade yok: an her işleme tikinde zardan önce değerlendirilir ve lead başına bir kez gelir; iki
+    sabit silindi. Kartın kendisi bugün de bağlı değil: an yalnız `EventBus.rep_discount_requested` yayar.
+  - Nerede: `scripts/systems/sales_rep_system.gd` (`price_break_due`, `_maybe_price_break`);
+    `scripts/systems/hr_constants.gd` (`TRAITS["cant_say_no"]`).
+  - Oyuncuya etkisi: Bugün yok (kart bağlı değil). Kart bağlanınca HAYIR DİYEMEZ'li temsilci öbürlerinden farksız
+    olur; §11.8'in saydığı satış ucu işlemez.
+  - Seçenekler: A) HAYIR DİYEMEZ'li temsilcide an, deal sürdükçe her işleme tikinde bir ihtimalle yeniden gelebilir [K];
+    öbür temsilcilerde lead başına bir kez kalır. B) Öbür temsilcilerde an bir ihtimale bağlanır [K], HAYIR DİYEMEZ'de
+    kesin gelir. C) Satış ucu kalkar; §7.6'nın cümlesi ve §11.8'in huy satırı güncellenir.
+  - Kaynak: Satış GDD §7.6, §11.8, §17 ("kart tetik günü + HAYIR DİYEMEZ çarpanı"); GDD Zaman Modeli §4.5 ve Açık
+    2; Erdem, 2026-09-27 kararı.
+
+- **77 · Bir haftadan kısa süreler tek tike çöküyor.**
+  - Ne oluyor: Günden haftaya çeviride bir haftanın altındaki süreler tek tike indi, aradaki ayrım kayboldu. Canlı
+    hata sprinti her zaman bir haftadır (`SPRINT_WEEKS`, sahip kararı): gün modelinde hata sayısına ve Test alanına göre
+    1 ile 7 gün sürüyordu; test uzmanlığının sprinti kısaltması (`TESTER_SPRINT_PER_EXPERTISE`) silindi. Pitch
+    hazırlığı bir hafta sürer ve yalnız görüşmeye en az bir hafta varken başlar (`PREP_WEEKS`,
+    `PREP_MIN_WEEKS_BEFORE` 1); bir haftalık randevuda bu, randevunun alındığı haftadır. Hata trendi bu hafta ile
+    geçen haftayı karşılaştırır (`BUG_HISTORY_WEEKS` 2 örnek; eskiden 7 günlük örnek). Musluk haftanın lead'lerini tek
+    seferde üretir (`FAUCET_TICK_MAX` 14). Haber şeridi haftada 3 ile 5 satır yazar (`NewsFeedSystem.WEEKLY_LINES_MIN`
+    / `_MAX`; eskiden günde 3 ile 5).
+  - Nerede: `scripts/systems/product_system.gd` (`SPRINT_WEEKS`, `start_bug_sprint`, `BUG_HISTORY_WEEKS`);
+    `scripts/systems/pitch_constants.gd`; `scripts/systems/sales_faucet_system.gd` (`_tick_inflow`);
+    `scripts/systems/news_feed_system.gd`.
+  - Oyuncuya etkisi: Üç hatalık sprint de bir hafta sürer ve Test'e atanan kişi onu kısaltmaz; hazırlık için tek hafta
+    vardır; hata trendi iki noktadan okunur; lead'ler ve haber satırları hafta başında toplu gelir.
+  - Seçenekler: A) Kalır (tik iriliğinin bilinçli bedeli). B) Saat çözünürlüklü süre: kısa süreler saatle sayılır ve
+    haftanın içinde biter (ayrı tasarım). C) Yalnız seçilen satırlar saat çözünürlüğüne geçer (ör. sprint ve lead
+    gelişi).
+  - Kaynak: GDD Zaman Modeli §4.2, §4.5, §4.7, §4.9 ve Açık 3; Erdem, 2026-09-27 ve 2026-09-28 kararları.
+
+- **78 · Olay kartları haftanın başında geliyor.**
+  - Ne oluyor: Günlük kartlar günlük tikte değerlendirilir; günlük tik 00:00 devrindedir ve gece atlamasının toplu
+    adımının içinde koşar. Toplu adım sürerken gösterim ertelenir (`TimeManager.is_batching`); adım bitince
+    (`EventBus.clock_batch_ended`) motor kartları 08:00'de sırayla gösterir: tik başına en çok 2 kesinti
+    (`EvTuning.MAX_INTERRUPTS_PER_DAY`), gerisi masadaki kâğıtlara düşer. Haftalık satış kartı da o anda gelir,
+    süresi dolan kâğıtlar o anda düşer. Gün içinde yalnız saatlik kartlar (`allowed_hours`) ve oyuncunun eylemlerine
+    bağlı kartlar gelir.
+  - Nerede: `scripts/autoload/time_manager.gd` (`skip_night`, `_run_batch`, `_dispatch_daily_tick`);
+    `scripts/events/core/engine.gd` (pump ertelemesi); `scripts/events/core/signals.gd`;
+    `scripts/events/core/tuning.gd`.
+  - Oyuncuya etkisi: Hafta 08:00'de kararlarla açılır; 1×'te 90 saniyelik haftanın ilk anı kalabalık, gerisi
+    çoğunlukla sessizdir.
+  - Seçenekler: A) Kalır: hafta başı sabah postası gibi okunur. B) Günlük kartlar haftanın gündüz saatlerine yayılır
+    (motor tasarımı: kuyruktaki kart saatlere dağıtılarak gösterilir). C) Yalnız kritik kartlar 08:00'de kalır,
+    öbürleri gün içine yayılır.
+  - Kaynak: Erdem, 2026-09-27 kararı (bir oyun günü bir hafta; ofis boşalınca gece atlanır); ch11 §5; olay motoru GDD
+    §13 (tempo); GDD Zaman Modeli §7.
+
+- **79 · Satış masasının haftalık ayrıntıları: hafta içinde doğan lead, haftalık rapor, gece kilidi.**
+  - Ne oluyor: (1) Sahip kararı, hafta başladıktan sonra doğan lead'e (olay kartından gelen) bir hafta fazla ömür
+    veriyordu: o tikin temsilci masası çoktan koşmuştur. Kod kararın amacını ek hafta yerine sırayla karşılar: her lead
+    1 hafta yaşar (`LEAD_LIFE_WEEKS`), süre dolumu temsilci masasından sonra süpürülür
+    (`SalesFaucetSystem.expire_leads`, `B2BSalesSystem.daily_tick`). Lead dolduğu tikte de masaya girebilir; hafta
+    içinde doğan lead ertesi tikin masasına ulaşır, ama aynı günlük dağıtımda, masadan hemen sonra düşer: oyuncu onu
+    yalnız doğduğu haftanın kalan saatlerinde görür. (2) Haftalık satış raporu yalnız masanın kapanış yaptığı haftada
+    yenisiyle değişir; okunmamış N. hafta kartı N+1'in raporu yazıldıktan sonra gösterilirse N+1'in kapanışlarını
+    listeler (bilgi kartı süreyle düşmez; kuyruktan haftanın başında gösterildiği için seyrek). (3) Gece ve "mesai
+    bitmek üzere" aynı kilit metnini gösterir (`SALES_BLOCK_TOO_LATE`); ayrı bir gece anahtarı yok.
+  - Nerede: `scripts/systems/sales_faucet_system.gd` (`spawn`, `expire_leads`); `scripts/systems/b2b_sales_system.gd`
+    (`daily_tick`); `scripts/systems/sales_ledger.gd` (`close_week`, `weekly_close_lines`, `meeting_block_reason`);
+    `data/events/cards/customer/weekly_summary.json`.
+  - Oyuncuya etkisi: (1) Olay kartından gelen lead panoda yalnız doğduğu haftanın sonuna kadar durur. (2) ve (3) kenar
+    durumlarıdır: rapor kartı nadiren yanlış haftanın kapanışlarını sayar; gece masaya oturmak isteyen oyuncu "mesai
+    bitmek üzere" okur.
+  - Seçenekler: (1) A) Sıra kalır: her lead 1 hafta, dolum masadan sonra. B) Kararın harfi: hafta içinde doğan lead 2
+    hafta yaşar (sıra da kalır). (2) A) Kalır. B) Rapor, kart okunana kadar birikir. (3) A) Tek anahtar kalır. B) Gece
+    için ayrı kilit metni yazılır (önce EN, sonra TR).
+  - Kaynak: Satış GDD §4 (lead ömrü), §5.0 (giriş kapısı), §7.3 (haftalık özet); GDD Zaman Modeli §4.5, §8.2;
+    Erdem, 2026-09-28 kararı (hafta içinde doğan lead'e ek hafta).
+
+- **80 · İki haftalık söz üç tik yaşıyor.**
+  - Ne oluyor: Söz vadesi bugün + `B2BConstants.PROMISE_DEADLINE_WEEKS` (2) olarak damgalanır; kırılma kuralı
+    değişmedi (`day > deadline_day`, vade tiki dahil). Söz sayacı 2, 1, 0 hafta okur ve teslim için üç tik verir. Gün
+    modelinde 14 günlük söz 15 gün yaşıyordu (bir gün fazla); haftada fark bir tam haftadır.
+  - Nerede: `scripts/autoload/promise_registry.gd` (`create`, `tick_deadlines`); `scripts/systems/b2b_constants.gd`
+    (`PROMISE_DEADLINE_WEEKS`); sayaç `scripts/tabs/sales_tab.gd`, `scripts/tabs/product/detail_view.gd`.
+  - Oyuncuya etkisi: Oyuncu "2 hafta" okur ve üçüncü haftanın sonuna kadar teslim edebilir; sayaç son tikte 0
+    gösterir.
+  - Seçenekler: A) Kalır (vade haftası dahil). B) Vade hariç olur (`day >= deadline_day`): söz tam iki tik yaşar;
+    mekanik değişikliğidir. C) Kural kalır, sayaç son tikte "bu hafta" der.
+  - Kaynak: Satış GDD §6 (söz kuralları); GDD Zaman Modeli §4.5.
+
+- **81 · Yatırım toplantısının haftalık takvimi: erteleme, kart saatleri, geç masa kilidi, giriş kapısı.**
+  - Ne oluyor: (1) Erteleme tavansızdır: toplantı haftasından önceki her hafta "Ertele" randevuyu bir bekleme süresi
+    (`PitchConstants.MEETING_LEAD_WEEKS`, 1) daha iter ve fona her seferinde `MEETING_RESCHEDULE_PENALTY` yazar; gün
+    modelinin davranışı budur. Adım sabit bir hafta değil bekleme süresidir; sabit değişirse adım da değişir. (2)
+    `funding.meeting_day` kartı günlük değil saatliktir ve koşulunda `funding.meeting_sitting_open` kapısını taşır:
+    günlük tarama 00:00'da, gecenin içinde koştuğu için kapılı günlük kart hiç geçemezdi. Kart ekrana yine 08:00'de
+    gelir ama havuza 00:00 yerine 08:00'de girer. (3) `funding.sheet_decision`'ın "Masaya otur" seçeneği
+    `VC_BLOCK_LATE` kilidi taşır; kilit görünürse açık kalan tek seçenek reddetmektir ve fon kalıcı kapanır. Kartın
+    koşulu da masa kapısını beklediği için bu yalnız bir oturumun saatleri koşmuşken ekrana gelen kartta olabilir. (4)
+    Oturum kapısı (`WorkHoursSystem.sitting_open`) yalnız giriş yüzeylerinde (Yatırım sekmesi düğmeleri, kart
+    seam'leri) zorlanır; `VCPitchSystem.begin_meeting`, `TermSheetTableSystem.open` ve `SeedRoundSystem.begin_pitch`
+    geç saatte reddetmez (satış toplantısının deseni; smoke ve probe oturumları 00:00'da açılır).
+  - Nerede: `scripts/systems/vc_pitch_system.gd` (`reschedule_meeting`, `begin_meeting`);
+    `scripts/systems/work_hours_system.gd` (`sitting_open`); `scripts/systems/pitch_constants.gd`;
+    `scripts/systems/term_sheet_table_system.gd` (`open`); `scripts/systems/seed_round_system.gd` (`begin_pitch`);
+    `data/events/cards/funding/meeting_day.json`, `sheet_decision.json`; `scripts/events/seams/seams_ported.gd`;
+    `scripts/tabs/hunt_tab.gd`.
+  - Oyuncuya etkisi: (1) Oyuncu toplantıyı istediği kadar erteleyebilir; bedeli fonun hafızasıdır. (3) Nadir bir anda
+    tek açık seçenek fonu kapatmaktır. (2) ve (4) oyuncuya görünmez.
+  - Seçenekler: (1) A) Kalır. B) Erteleme sayısına tavan [K]. C) Erteleme sabit bir hafta iter. (2) A) Saatlik kart
+    onaylanır. B) Kart kapısız ve kilitsiz günlük kalır. (3) A) Kilit kalır. B) Bu kartta kilit kalkar; oyuncu geç
+    saatte de masaya oturur. (4) A) Kalır. B) Oturum sistemleri de kapıyı zorlar; smoke ve probe oturumları gündüz
+    saatine taşınır.
+  - Kaynak: ch09 §4, §5; GDD Zaman Modeli §4.7, §8.2, §8.6; Erdem, 2026-09-27 kararı (toplantı süreleri, tek giriş
+    kapısı).
+
+- **82 · Sürüm yaşı rozeti geç yayında ilk tikte "1 hafta" okuyor.**
+  - Ne oluyor: Yayın saat kesriyle damgalanır (`mvp_version_launch_day` = tik + saat / 24). Destek akışı ve ilgi
+    kesirli yaşı okur (`ProductState.version_age`). Ürün Detayı'nın sürüm rozeti ve `urun.version_age` seam'i
+    `ProductState.version_age_weeks()` okur, yani kesirli yaşın yukarı yuvarlanmışını. Haftanın geç saatinde
+    yayınlanan sürüm bir sonraki tikte, bir haftadan az geçmişken "1 hafta" okur; gün modelinde rozet yayından sonra
+    dönen günleri sayıyordu.
+  - Nerede: `scripts/systems/product_state.gd` (`version_age`, `version_age_weeks`); `scripts/systems/product_read.gd`;
+    `scripts/tabs/product/detail_view.gd`; `scripts/events/seams/seams_product.gd` (`urun.version_age`).
+  - Oyuncuya etkisi: Yayından bir hafta geçmeden rozet "1 hafta" der; `urun.version_age` okuyan kartlar da aynı sayıyı
+    görür.
+  - Seçenekler: A) Kalır: rozet yayından sonra dönen tiki sayar. B) Tamamlanan hafta (kesirli yaşın aşağı
+    yuvarlanmışı): geç yayında rozet bir tik boyunca 0 okur.
+  - Kaynak: Ürün GDD (ch03) §9, §17 (sürüm yaşı); GDD Zaman Modeli §3.5.
+
+- **83 · Dönem özetinin dört açık ayrıntısı.**
+  - Ne oluyor: Özet oyuncunun seçtiği sıklıkta gelir (haftalık, aylık, çeyreklik, yıllık; varsayılan çeyreklik). (1)
+    Dönemin öne çıkan olayı (`month_highlight_*`) dönem kapanırken, yuva 0'da, yük kurulunca temizlenir; özet yuva
+    10'da yayılır. Kapanış tikinin 1 ile 9. yuvalarında yazılan öne çıkanlar yeni dönemin ilk haftasına aittir ve
+    yayında temizlense kaybolurdu. (2) Dönem defteri (`summary_ledger`) başlangıç tikini, MRR'ı, kasayı, ekibi ve
+    markayı tutar; müşteri alanı yok, çünkü hiçbir özet satırı müşteri okumuyor. (3) Haftalık kipte hafta numarası hem
+    başlıkta hem aralık satırında geçer. (4) Sessiz dönem satırının dönem ikizleri (`SUMMARY_HIGHLIGHT_FALLBACK_WEEK`,
+    `_QUARTER`, `_YEAR`) onaylı aylık metni (`MONTH_HIGHLIGHT_FALLBACK`) kopyalar; o metin hüküm taşır ("Sakin aylar
+    ucuz değildir").
+  - Nerede: `scripts/systems/summary_system.gd` (`begin_day`, `_open_period`, `_build_summary_data`, `PERIOD_KEYS`);
+    `scripts/modals/month_summary_modal.gd`; `localization/strings.csv`.
+  - Oyuncuya etkisi: (2) Özet müşteri değişimini göstermez. (3) Haftalık özetin başlığı kendini tekrar eder. (4)
+    Sessiz dönem satırı gözlem yerine hüküm okur (CLAUDE.md §5).
+  - Seçenekler: (1) A) Yuva 0'da temizlik onaylanır. B) Yayında temizlenir. (2) A) Kalır. B) Özete müşteri satırı
+    eklenir, defter müşteriyi de tutar. (3) A) Kalır. B) Haftalık kipte aralık satırı düşer. (4) A) Kopya kalır. B)
+    İkizler yalnız gözlem taşıyan yeni metin alır (önce EN, sonra TR).
+  - Kaynak: ch08 §4 (Monthly close, one screen); GDD Zaman Modeli §6.3; Erdem, 2026-09-27 kararı (sessiz ay kapanışı,
+    özet sıklığı); CLAUDE.md §5.
+
+- **84 · Finans gösterimi: runway çiftinin kırmızısı ve işlem tarihinin yılı.**
+  - Ne oluyor: (1) Runway çifti (önce → sonra) basılan iki metin farklıysa değişmiş sayılır (sahip kararı;
+    `RUNWAY_PAIR_EPSILON` silindi). Bu kuralla kârlılıktan yanmaya geçiş ("Artıda" → "N ay"; ör. kârlılığı bitiren işe
+    alım) Ekip Atlas'ının şeridinde kırmızı basar, eskiden nötrdü; 1,0 aydan 0,99 aya düşüş de "1 ay → 4 hafta" diye
+    kırmızıdır. (2) İşlem listesinin tarih sütunu yılı da taşır (`FIN_TX_DATE`, ör. "H14 · Nis 2026"); sütun 96 px'dir.
+  - Nerede: `scripts/theme/ui_tokens.gd` (`net_runway_pair`, `_runway_weeks`); `scripts/tabs/hr/hr_atlas_modal.gd`;
+    `scripts/tabs/finance/finance_ozet_view.gd` (işlem satırı).
+  - Oyuncuya etkisi: (1) Kârlılığı bitiren işe alım kırmızı uyarı gibi okunur. (2) Tarih sütunu geniştir.
+  - Seçenekler: (1) A) İki durum da kırmızı kalır. B) Sonsuzdan sonluya geçiş nötr kalır, yalnız sayıdan sayıya düşüş
+    kırmızıdır. (2) A) Yıl kalır. B) Kısa biçim ("H14 · Nis"); sütun 72 px'e döner.
+  - Kaynak: GDD Zaman Modeli §4.6, §5; Erdem, 2026-09-28 kararı (çift, basılan metinler farklıysa değişmiş sayılır).
+
+- **85 · Kurucunun toplantı yolculuğu: perde, üst bar tıkları, koşuyu bitiren imza.**
+  - Ne oluyor: Dış toplantıya (satış, VC ve seed pitch'i, term sheet masası) giderken saat donar ve ağaç koşar;
+    kurucu çıkışa yürür, görünüm haritaya kararır, kamera hedef binaya kayar. (1) Perde pencereleri, BuildHUD'u, not
+    yığınını ve "Ofisi taşı" düğmesini gizler, ofis görünür kalır; kararda adı geçen yalnız BuildHUD'du. (2)
+    Yolculukta tuşlar yutulur ama TopBar'ın hız düğmeleri tıklanabilir: duraklatmak kurucuyu ve asansörü dondurur,
+    yolculuk yine süre sınırlarıyla (`EXIT_S`, sonra harita) biter. (3) Koşuyu bitiren imzada (Series A) yolculukta
+    bekletilen kart atılır, ama `EventGate` onu hâlâ aktif kart sayar (`flush` yalnız kuyruğu temizler); sondan sonra
+    onu çözecek yol yok ve `EventGate.has_pending()` true kalır.
+  - Nerede: `scripts/main/main.gd` (`_leave_office`, `_return_to_office`, `_on_event_modal_requested`);
+    `scripts/ui/office/office_travel.gd`; `scripts/ui/office/office_view.gd` (`set_veiled`, `_step_overlays`);
+    `scripts/ui/components/window_layer.gd` (`set_veiled`); `scripts/ui/components/top_bar.gd`;
+    `scripts/events/event_gate.gd`, `scripts/events/core/queue.gd` (`flush`).
+  - Oyuncuya etkisi: (1) Yolculukta not yığını ve taşınma düğmesi görünmez. (2) Duraklatılan yolculuk takılmış gibi
+    görünebilir. (3) Görünür etkisi bulunmadı.
+  - Seçenekler: (1) A) Kalır. B) Yalnız BuildHUD gizlenir. (2) A) Kalır. B) Yolculuk TopBar tıklarını da keser. (3)
+    A) Kalır. B) Koşuyu bitiren imzada aktif kart da temizlenir.
+  - Kaynak: Erdem, 2026-09-27 kararı (kurucunun dış toplantıya gidişi geçiştir: çıkış, harita geçişi, oda); ch09 §4;
+    GDD Zaman Modeli §8.5.
+
+- **88 · Mesai modalında 12 ile 16 saat: üç amber işaret tavanı ve ortak `HR_HOURS_HOVER_LONG` cümlesi.**
+  - Ne oluyor: Süre tavanı 16 saate çıktı (`HRConstants.WORK_HOURS_MAX`). Satırın moral yönü sekizi aşan her saat için
+    bir amber işaret çizer, en fazla üç (`CHEVRON_MAX` 3): 11 ile 16 saat aynı üç işareti gösterir, oysa moral çarpanı
+    1,5'ten 2,5'e çıkar (`HOUR_MORALE_MULT`). Hover cümlesi 11 saate kadar kademe başınadır (`HR_HOURS_HOVER_5` ile
+    `HR_HOURS_HOVER_11`); 12 ile 16 saat tek ortak cümleyi paylaşır (`HR_HOURS_HOVER_LONG`, `HOVER_KEYED_MAX` 11): EN
+    "Every hour past an eleven-hour day erodes morale faster still", TR "On bir saatlik günü aşan her saat morali daha
+    da hızlı eritir". Ortak cümlenin iki dili de onay bekliyor; Ekip §8.5'in hover tablosu 5 ile 11 saati sayar.
+  - Nerede: `scripts/modals/work_hours_modal.gd` (`CHEVRON_MAX`, `HOVER_KEYED_MAX`, `_morale_direction`);
+    `localization/strings.csv` (`HR_HOURS_HOVER_LONG`); `scripts/systems/hr_constants.gd` (`HOUR_MORALE_MULT`).
+  - Oyuncuya etkisi: 11 saatten sonra modal uzayan günün artan moral bedelini ne işaretle ne cümleyle ayırt ettirir.
+  - Seçenekler: A) Kalır; üç işaret ve ortak cümle görsel kabulle onaylanır. B) İşaret merdiveni 12 ile 16 saat için
+    uzar (ör. dördüncü basamak ya da ayrı renk) [K]. C) 12 ile 16 saatin her biri kendi hover cümlesini alır (önce EN,
+    sonra TR).
+  - Kaynak: Ekip GDD §7.1, §8.5; GUNCELLEMELER Ekip §8.5 maddesi; GDD Zaman Modeli §9; sahip kararı 2026-09-27/28
+    (süre 5 ile 16 saat, çarpan 12 ile 16 saat için 1,7 ile 2,5).
 
 ## Metin ve yerelleştirme
 
@@ -1119,7 +1295,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 
 - **68 · Yeniden adlandırılan üç anahtarın TR metninde oyuncuya görünen tire.**
   - Ne oluyor: `DESK_PAPER_GATE_TITLE` (TR "Faz kapısı açık — karar bekliyor"), `DESK_PAPER_SHEET_TITLE` (TR "Yatırım
-    teklifi masada — son {days} gün", 58. madde) ve `PERSONAL_MS_SHIP_NOTE` (TR "Ürün raflara çıktı — artık dünya da
+    teklifi masada — son {days} gün") ve `PERSONAL_MS_SHIP_NOTE` (TR "Ürün raflara çıktı — artık dünya da
     oynuyor.") metinlerini aynen taşıyor. EN tiresiz yeniden yazıldı ("Phase gate open: decision pending", "Offer on
     the table, {days} days left", "The product hit the shelves; now the world plays too."); TR sahibin metni, onay
     bekliyor.
@@ -1140,6 +1316,67 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler: A) Sahip metni onaylar ya da yeniden yazar; kart `demo`'ya döner. B) Kart silinir; nabız yeter.
   - Kaynak: CLAUDE.md §3 (Frank'in külliyatı Erdem'indir; yeni Frank satırı onaysız ekrana çıkmaz); Erdem, 2026-09-27
     görev kararı (ilk taşınmayı Frank'in kartı önerir).
+
+- **86 · Haftalık modelin metin soruları.**
+  - Ne oluyor: Haftaya dönen oyuncu metinleri (önce EN, sonra TR) onay bekliyor; commit "TR/EN onay bekliyor" diye
+    işaretlidir, Frank satırlarının yeni hâli taslaktır. Onayın ötesinde açık kalan ifade soruları: (1) `END_DATE_LINE`
+    EN'de "ISSUE" yerine sözlüğün "No." karşılığı önerildi; `ENDING_RUN_META` TR'de "BU RUN" yerine "BU OYUN". (2)
+    `HR_SEARCHING` anlam değiştirdi: aramanın geçen gününü değil, dosyaların gelmesine kalan süreyi sayar (bir
+    haftalık aramada geçen hafta hep 0 olurdu). (3) `HR_NEWS_ON_LEAVE_MONTH` ("bu ay izinde") yerine `{n}` ve tekil
+    ikiz taşıyan `HR_NEWS_ON_LEAVE` geldi; önerilen TR "{name} {n} hafta izinde" (yaz izni 2 haftadır). Frank
+    satırlarının haftalık taslakları 90. maddededir.
+  - Nerede: `localization/strings.csv`; okuyanlar `scripts/systems/endings_copy.gd`, `scripts/modals/ending_scene.gd`,
+    `scripts/tabs/hr_tab.gd`, `scripts/systems/hr_morale_system.gd`.
+  - Oyuncuya etkisi: Onaysız metin ekranda.
+  - Seçenekler: A) Öneri onaylanır. B) Sahip metni yeniden yazar.
+  - Kaynak: CLAUDE.md §3, §5; `docs/design/localization_glossary.md` (SAYI {n} → No. {n}); GDD Zaman Modeli §5.
+
+- **89 · Okuyucusu olmayan üç gün sözlü anahtar: silinsin mi, bağlansın mı.**
+  - Ne oluyor: `DEAL_PROMPT_VALIDITY` (TR "Geçerlilik: {days} gün", EN "Valid for {days} days"), `VC_EV_SKIP_MEETING`
+    (TR "Bugün değil (randevu yanar)", EN "Not today (the meeting is forfeit)") ve `VC_EV_OFFER_EXPIRING_BODY`
+    (Frank'in "{days} gün içinde yanıt vermeliyiz" / "inside {days} days" satırı) hâlâ gün ya da "bugün" der. Haftalık
+    modelde tike bağlı metin gün saymaz ve "bugün" demez (GDD Zaman Modeli §5). Üçünü de kod, sahne ya da kart okumadığı
+    için haftalık metin turu onlara dokunmadı. İlk ikisi "Frank belgeleri" maddesinde, kodun okumadığı ama karar
+    gelene kadar CSV'de kalan Frank metni arasında ve `docs/writing/FRANK_ORPHANS.md`'de satır kararı bekliyor;
+    üçüncüsü DRAFT-EN kaydında CSV süpürmesinin sileceği referanssız anahtarlar arasında.
+  - Nerede: `localization/strings.csv` (`DEAL_PROMPT_VALIDITY`, `VC_EV_SKIP_MEETING`, `VC_EV_OFFER_EXPIRING_BODY`).
+  - Oyuncuya etkisi: Bugün yok, ekrana çıkmıyorlar. Bu hâlleriyle bağlanırlarsa yanlış birim söylerler.
+  - Seçenekler: A) Üçü CSV'den silinir (ölü anahtar kuralı, CLAUDE.md §8). B) Bağlanırlar: önce haftalık metin yazılır
+    (önce EN, sonra TR; Frank satırı taslak olarak), sonra okuyucu kurulur. C) Frank satırlarının satır kararına
+    (FRANK_ORPHANS) kadar kalırlar.
+  - Kaynak: CLAUDE.md §3, §5, §8; GDD Zaman Modeli §5; `docs/writing/FRANK_ORPHANS.md`.
+
+- **90 · Haftalık modelin Frank taslakları onay bekliyor.**
+  - Ne oluyor: Tike bağlı gün sözü taşıyan Frank satırlarının haftalık hâli taslak olarak yazıldı. Hiçbiri CSV'ye ya da
+    karta işlenmedi; onaya kadar onaylı metin ekranda kalır. Taslaklar (EN / TR; değişmeyen paragraflar yazılmadı):
+    (1) Yeni `SUMMARY_FRANK_SHUTTER`, `SUMMARY_FRANK_GOOD`, `SUMMARY_FRANK_ANOTHER`, üç `MONTH_FRANK_*` kuralının
+    döneme nötr ikizleri: "The shutter counter is running, however this stretch went." / "Kepenk sayacı işliyor; dönem
+    nasıl geçerse geçsin."; "All four numbers up. A good stretch." / "Dört rakam da yukarı. İyi bir dönem.";
+    "Another stretch behind you." / "Bir dönem daha geride." Onaya kadar bu üç kural aylık kip dışında susar
+    (`SummarySystem.PERIOD_NEUTRAL_FRANK`). (2) `END_META_BANKRUPTCY_FRANK`: "You stayed in the red for {weeks}
+    weeks. Numbers are not cruel, only patient." / "{weeks} hafta kırmızıda kaldın. Rakamlar kaba değildir, sadece
+    sabırlıdır." Onaylı metin `{days}` okur (`EndingsSystem.ending_frank_line` 28 verir) ve tire taşır; taslak
+    tiresizdir, onaylanırsa kod `{weeks}` (`SHUTTER_WEEKS`) verir. (3) `VC_EV_LAST_DAY_BODY` (`funding.last_answer`):
+    "This is the last week to give the investors an answer." / "Yatırımcılara dönüş için son hafta."; Frank "Nowhere
+    left to run. If you're signing, sign this week." / "Artık kaçış yok. İmzalayacaksan bu hafta imzala." (4)
+    `SEED_STALL_VERDICT` ve `world.final_stretch_verdict` kartının 0. varyantı (kart JSON'u): son paragraf "Next week
+    we do not talk about this again." / "Gelecek hafta bunu bir daha konuşmayacağız." ("Tomorrow" / "Yarın" yerine).
+    (5) `funding.sheet_expiry` gövdesi (kart JSON'u) `funding.sheet_weeks_left`'e göre iki varyanta ayrılır; Frank'in
+    son cümlesi 1 haftada "We need to give them an answer this week." / "Bu hafta yanıt vermeliyiz.", 2 haftada "We
+    need to give them an answer inside two weeks." / "İki hafta içinde yanıt vermeliyiz." olur. Onaya kadar gövde gün
+    değerli `funding.sheet_days_left`'i okur; onaylanınca o seam silinir. (6) `VC_EV_MEETING_BODY`: anlatıcı satırı
+    "Your meeting with {investor} is this week." / "Bu hafta {investor} ile toplantın var."; Frank'in taksi satırı
+    kalır. Bütün gövde haftaya dönerse Frank: "Big week. I'm in a cab. Don't you dare be late." / "Büyük hafta.
+    Taksideyim, sakın geç kalma." (`VC_EV_MEETING_TITLE` kalır).
+  - Nerede: `localization/strings.csv`; `data/events/cards/world/final_stretch_verdict.json`,
+    `data/events/cards/funding/sheet_expiry.json`; okuyanlar `scripts/systems/summary_system.gd` (`_pick_frank_line`),
+    `scripts/systems/endings_system.gd` (`ending_frank_line`), `data/events/cards/funding/last_answer.json`,
+    `data/events/cards/funding/meeting_day.json`; `scripts/events/seams/seams_ported.gd` (`funding.sheet_days_left`).
+  - Oyuncuya etkisi: Onaya kadar Frank bu satırlarda "bugün", "yarın" ya da gün sayısı söyler; aylık kip dışındaki
+    özetlerde Frank'in üç kuralı susar.
+  - Seçenekler: Her taslak için A) onaylanır ve işlenir, B) sahip yeniden yazar, C) onaylı metin kalır.
+  - Kaynak: CLAUDE.md §3 (Frank'in külliyatı Erdem'indir; yeni Frank satırı onaysız ekrana çıkmaz); GDD Zaman Modeli
+    §5, §6.3; olay motoru GDD §8.4.
 
 ## Kod ve test altyapısı
 
@@ -1241,6 +1478,19 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Oyuncuya etkisi: Yok.
   - Seçenekler: A) §7'ye "3B ofisin üstündeki çip ve haplar" eklenir. B) Krem çifte dönerler.
   - Kaynak: ofis tasarımı; CLAUDE.md §7.
+
+- **87 · Lint: her kesinti kartında `expires_weeks` zorunlu; gün adı kuralı değerlere de bakıyor.**
+  - Ne oluyor: (1) §17.7 denetimi her kâğıt ve her kesinti kartında `expires_weeks` ister. Kritik kesinti hiç
+    bildirime düşmez, o kartlardaki değer hiç okunmaz. Canlı destede bildirime düşebilen kesinti ikidir
+    (`sales.price_break`, `customer.retention`); fonlama, ürün, ekip ve dünya kesintilerinin hepsi kritiktir (ör.
+    `funding.shutter_warning`). (2) Gün adı kuralı (§17.1) yalnız anahtarlara değil, tanımlayıcı biçimli dize
+    değerlerine de bakar (`^[a-z0-9_.]+$`): `_days` ya da `days_since` içeren ya da `days`'e eşit değer hatadır.
+    Böylece `history` biçimi `days_since`, eski `delay_days` fiili ve `*_days_*` adlı seam de yakalanır.
+  - Nerede: `scripts/events/tools/lint.gd` (§17.7 bloğu, `_lint_day_names`, `_is_day_name`).
+  - Oyuncuya etkisi: Yok; içerik yazımının kuralı.
+  - Seçenekler: (1) A) Kural yazıldığı gibi kalır. B) Yalnız bildirime düşebilen kartlarda (kâğıt ve kritik olmayan
+    kesinti) zorunludur; kritik kartlardaki değer silinir. (2) A) Değer denetimi kalır. B) Yalnız anahtarlar denetlenir.
+  - Kaynak: olay motoru GDD §12, §13.2, §17.1, §17.7; GDD Zaman Modeli §3.8.
 
 ## GDD'ye işlenmemiş sahip kararları
 

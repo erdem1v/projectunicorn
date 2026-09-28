@@ -30,7 +30,10 @@ Motor bir gösterici değildir. **Kabul + hafıza + yüklem katmanıdır.** Seki
 
 ### 0.2 Motorun hizmet ettiği oyun tezi
 
-- günde verilen bir kararın 90. günde görünür bir sonucu olmalı, ve oyuncu bu bağı **kendisi kurabilmeli**.
+- 2. haftada verilen bir kararın 13. haftada görünür bir sonucu olmalı, ve oyuncu bu bağı **kendisi kurabilmeli**.
+
+Bir tik bir oyun günüdür, bir oyun günü bir haftadır (§1). Tezin gün modelindeki hâli "10. gün 90. günü etkiler" idi; haftalık modelde aynı mesafe 2. haftadan 13. haftayadır.
+
 Bu tez motorun her tasarım kararını yönetir. Bir özellik bu teze hizmet etmiyorsa motorda yeri yoktur; bu teze zarar veriyorsa reddedilir.
 
 ### 0.3 Yedi motor invariant'ı
@@ -68,7 +71,8 @@ Bunlar tasarım tavsiyesi değil, **derleme kuralıdır**. İhlali build'i durdu
 | Sınıf | Kartın sunum yüzeyi: kesinti / kağıt / bilgi / atmosfer. |
 | Havuz | critical etiketi taşımayan kartların kümesi. |
 | Sessiz havuz | Ölü zaman tabanının çektiği özel alt küme (tag: quiet). |
-| Damga (stamp) | Kalıcı gün işareti. days_since_flag bunun üzerinden çalışır. |
+| Tik (oyun günü) | Motorun zaman birimi. Bir oyun günü bir haftadır; hafta sonu yoktur. Her tik 24 saatlik tik ve bir günlük tik taşır. Adında `day` geçen alanlar tik sayar (§27.9). |
+| Damga (stamp) | Kalıcı tik işareti. weeks_since_flag bunun üzerinden çalışır. |
 | Kapsam slotu | Kartın ihtiyaç duyduğu isimli varlık yuvası (employee_a, customer_main). |
 | DELTA | Bir içerik yazım partisinin motordan talep ettiği yeni kalemler listesi (§21). |
 
@@ -83,7 +87,7 @@ Motor dokuz parçadan oluşur. Her parçanın tek bir sorumluluğu vardır.
 | Gate | Kabul hattı. Tek public giriş. | Hayır (stateless) |
 | Queue | Kabul edilmiş, henüz gösterilmemiş kartlar. Dondurulmuş bağlamla. | Evet |
 | History | Her çözümün kaydı + içeriğin okuyabildiği sorgu arayüzü. | Evet |
-| FlagStore | Bayraklar, süreli bayraklar, gün damgaları. | Evet |
+| FlagStore | Bayraklar, süreli bayraklar, tik damgaları. | Evet |
 | Schedule | Bekleyen zamanlanmış kartlar. Saf data. | Evet |
 | ArcRuntime | Aktif arkların durumu. | Evet |
 | Presenter | Kartı hangi yüzeye koyacağına karar veren katman. | Kısmen (masa durumu) |
@@ -110,6 +114,11 @@ id                  zorunlu, benzersiz, namespace'li: kategori.isim
                     örn: hr.rakip_teklifi, funding.seed_kapisi
 category            zorunlu. §13.3 Katman 3'teki kategori listesinden.
 tick                zorunlu: daily | hourly | scheduled | signal | request
+                    daily: tikin 00:00 devrinde süpürülür (gece
+                    atlamasının içinde); kart 08:00'de, haftanın
+                    başında görünür
+                    hourly: her oyun saatinde süpürülür; gece
+                    saatlerinde yalnız critical kart kabul edilir
                     request: hiçbir saat süpürmez; kartı yalnız adını
                     tek kapıdan veren bir sistem önerir (§4.1)
 class               zorunlu: interrupt | paper | info | ambient
@@ -123,15 +132,19 @@ trigger             ne zaman aday olur (§5)
 condition           koşul ağacı (§5)
 scope               isimli kapsam slotları ve tipleri (§4.3)
 guards              bağlam kısıtları: market, faz, alt-tip, portföy
-allowed_hours       opsiyonel; tanımsızsa 08:00-20:00 (§20 B10)
+allowed_hours       opsiyonel; tanımsızsa 08:00-20:00 (§20 B10). Gece
+                    (mesai bitiminden 08:00'e) critical olmayan saatlik
+                    kart için her zaman kapalıdır
 
-latch               one_shot | max_fires:N | cooldown_days:N
-                    varsayılan: cooldown_days: 30
+latch               one_shot | max_fires:N | cooldown_weeks:N
+                    varsayılan: cooldown_weeks: 4
 latch_key           run | entity        (varsayılan: run)
-min_gap_days        havuz freni, varsayılan 30 (§13.3 Katman 1)
+min_gap_weeks       havuz freni, varsayılan 4 (§13.3 Katman 1)
 weight              havuz ağırlığı, varsayılan 1.0
 
-expires_days        yalnızca class:paper için. §12.
+expires_weeks       her interrupt ve paper kartında ZORUNLU (§17.7).
+                    Kartın bekleyebileceği hafta; kart kağıt olarak
+                    masaya düştüğünde okunur. §12.
 on_expire           süre dolumunda çalışan etkiler. paper ise ZORUNLU.
 expire_note         süre dolumunda ticker'a yazılan satırın ADI. Satır
                     metin bloğundadır (§3.2). ZORUNLU.
@@ -139,6 +152,8 @@ expire_note         süre dolumunda ticker'a yazılan satırın ADI. Satır
 options[]           seçenek listesi (§3.3)
 arc                 opsiyonel: bu kart hangi arkın adımı
 ```
+
+**Süreler haftadır.** Kart JSON'unda süre ya da sayaç taşıyan her alan hafta sayar (`cooldown_weeks`, `min_gap_weeks`, `expires_weeks`, `deadline_weeks`, `delay_weeks`). Gün adlı bir anahtar E-lint'tir (§17.1): okuyucular eski anahtarı görmeyince sessizce varsayılana düşerdi.
 
 ### 3.2 Metin bloğu (locale başına)
 
@@ -173,7 +188,7 @@ text:
 ```
 id                  zorunlu, kart içinde benzersiz. Metinden bağımsız.
 requires            opsiyonel koşul ağacı. Karşılanmazsa seçenek KİLİTLİ.
-cost                opsiyonel: {cash, days, morale, ...}
+cost                opsiyonel: {cash, weeks, morale, ...}
 effects[]           etki listesi (§8)
 check               opsiyonel zar (§9.2)
 outcome_id          history'ye ve outcome_lines'a yazılan sonuç anahtarı
@@ -308,14 +323,14 @@ Bunların hepsi v1'de bulunur. Eksiği tetikleyiciyi GDScript'e kaçırır (I5 i
 **Bayrak ve damga**
 
 - `{"flag": <ad>}` / `{"flag_unset": <ad>}`
-- `{"days_since_flag": <ad>, "op": ">=", "value": N}` ← **Frank korpusunun istediği generic primitive**
-- `{"flag_expires_within": <ad>, "days": N}`
+- `{"weeks_since_flag": <ad>, "op": ">=", "value": N}` ← **Frank korpusunun istediği generic primitive**
+- `{"flag_expires_within": <ad>, "weeks": N}`
 **Geçmiş**
 
 - `{"history": "fired", "event": <id>}`
 - `{"history": "fire_count", "event": <id>, "op": "<", "value": N}`
 - `{"history": "chose", "event": <id>, "option": <id>}` ← callback'lerin temeli
-- `{"history": "days_since", "event": <id>, "op": ">=", "value": N}`
+- `{"history": "weeks_since", "event": <id>, "op": ">=", "value": N}`
 - `{"history": "resolution", "event": <id>, "value": "expired|dropped|chosen"}`
 **Ark**
 
@@ -329,6 +344,8 @@ Bunların hepsi v1'de bulunur. Eksiği tetikleyiciyi GDScript'e kaçırır (I5 i
 - `{"entity_count": <tip>, "op": ">=", "value": N}`
 - `{"entity_seam": "employee.morale", "scope": "employee_a", "op": "<", "value": 50}`
 `scope` alanı: aynı tipten tek slot varsa opsiyonel, birden fazlaysa **zorunlu** (§17.12).
+
+**Zaman okuyan yapraklar hafta sayar.** `weeks_since_flag`, `flag_expires_within` ve `history: weeks_since` tik farkını okur; bir tik bir haftadır. Hiç damgalanmamış bayrak, canlı olmayan süreli bayrak ya da hiç çözülmemiş kart -1 döner ve yaprak FALSE olur: "olmadı", "çok uzun zaman önce oldu" sayılmaz.
 
 ### 5.3 Değerlendirme kuralları
 
@@ -397,7 +414,7 @@ Her çözümde tek satır yazılır:
 event_id
 
 ```
-day                 mutlak oyun günü
+day                 mutlak tik (bir oyun günü = bir hafta); ad korunur
 resolution          chosen | expired | dropped | forced
 option_id           chosen ise dolu, aksi halde null
 outcome_id          zar sonucu dahil nihai sonuç anahtarı
@@ -420,11 +437,11 @@ Mevcut motorun en yıkıcı kusuru buydu: `_history` yazılıyor ama `get_histor
 
 ### 7.4 Dil bağımsızlığı
 
-History **yalnızca id** saklar (`option_id`, `outcome_id`). Etiket saklamaz. Oyuncu 10. günde Türkçe, 90. günde İngilizce oynasa da callback çalışır.
+History **yalnızca id** saklar (`option_id`, `outcome_id`). Etiket saklamaz. Oyuncu 2. haftada Türkçe, 13. haftada İngilizce oynasa da callback çalışır.
 
 ### 7.5 Budama yok
 
-History koşu boyunca budanmaz. 3-5 saatlik bir koşuda ~150-400 satır beklenir; bellek ve save boyutu ihmal edilebilir.
+History koşu boyunca budanmaz. Yumuşak tavana kadar süren bir koşu 104 tiktir (`EndingsSystem.SOFT_CAP_WEEK`); 1×'te varsayılan mesaide bu yaklaşık 2,6 gerçek saat eder. Böyle bir koşuda ~150-400 satır beklenir; bellek ve save boyutu ihmal edilebilir.
 
 ## 8. ETKİ SÖZLÜĞÜ
 
@@ -443,18 +460,18 @@ BAYRAK
 ```
   set_flag(name)
   clear_flag(name)
-  set_timed_flag(name, days)
-  stamp_day(name)               days_since_flag'in kaynağı
+  set_timed_flag(name, weeks)
+  stamp_day(name)               weeks_since_flag'in kaynağı; tiki damgalar
   set_game_flag(name, value = true)
                                 GameState.flags'e tek kapı; beyaz listeli
 ```
 
-İlk dört fiil yalnız motorun kendi hafızasına (`EvFlags`) yazar; `flag`, `flag_unset`, `days_since_flag` ve `flag_expires_within` yaprakları da (§5.2) yalnız onu okur. `GameState.flags` sistem durumudur: içerik ona yalnız `set_game_flag` ile, beyaz listedeki adlara yazar (`tech_debt_birikti`, `critical_bug_unfixed`); `value` verilmezse `true` yazılır, `false` bayrağı indirir. Başka her sistem durumu sahibinin adlı fiiliyle ya da seam'iyle değişir. Beyaz listeye satır eklemek bir tasarım kararıdır.
+İlk dört fiil yalnız motorun kendi hafızasına (`EvFlags`) yazar; `flag`, `flag_unset`, `weeks_since_flag` ve `flag_expires_within` yaprakları da (§5.2) yalnız onu okur. `GameState.flags` sistem durumudur: içerik ona yalnız `set_game_flag` ile, beyaz listedeki adlara yazar (`tech_debt_birikti`, `critical_bug_unfixed`); `value` verilmezse `true` yazılır, `false` bayrağı indirir. Başka her sistem durumu sahibinin adlı fiiliyle ya da seam'iyle değişir. Beyaz listeye satır eklemek bir tasarım kararıdır.
 
 ZAMANLAMA
 
 ```
-  schedule_event(id, delay_days, context?, arc_id?)
+  schedule_event(id, delay_weeks, context?, arc_id?)
   cancel_scheduled(id)
 ```
 
@@ -525,7 +542,7 @@ TERMİNAL
 
 - **Sıralı.** Liste sırasıyla, atomik değil.
 - **Geri alınamaz.** Ama her etki history'nin `deltas` alanına loglanır.
-- **Kaskad aynı tikte olmaz.** Bir etkinin doğurduğu yeni koşul, **bir sonraki tikte** değerlendirilir. Sonsuz döngü riski böyle kapanır.
+- **Kaskad aynı tikte olmaz.** Bir etkinin doğurduğu yeni koşul, **bir sonraki tikte** değerlendirilir. Sonsuz döngü riski böyle kapanır. Saatlik kart için bir sonraki tik bir sonraki oyun saatidir; günlük kart için haftanın sonundaki 00:00 devridir ve oyuncu o kartı yeni haftanın başında, 08:00'de görür.
 - **Hedef yoksa no-op.** `churn_customer` çözülmemiş kapsamda çalışmaz, sessizce atlar ve error.log'a yazar.
 
 ### 8.3 I2 — Ekonomik delta yalnız oynanmış karardan
@@ -548,7 +565,7 @@ Motor, bu telgraf geçmişte ateşlenmemişse etkiyi **uygulamaz** ve error.log'
 
 Kapsam: iflas, yumuşak tavan, kurucu tükenmesi, ürün ölümü, şirket kapanışı.
 
-**Sayı metne gömülmez.** `SHUTTER_DAYS` gibi değerler seam'de yaşar, kart metni interpolasyonla okur. Mevcut `END_META_BANKRUPTCY_FRANK` "yedi gün" derken `SHUTTER_DAYS` 30 olduğu için bayat — bu kural o hata sınıfını kapatır.
+**Sayı metne gömülmez.** `SHUTTER_WEEKS` gibi değerler seam'de yaşar (`finance.shutter_weeks_total`), kart metni interpolasyonla okur. `END_META_BANKRUPTCY_FRANK` bir zamanlar "yedi gün" diyordu, kepenk ise 30 gündü: düzyazıdaki sayı bayatlamıştı ve bu kural o hata sınıfını kapatır. Metin bugün sayıyı `{days}` yer tutucusundan alır. Frank'in onaylı cümlesi gün söylediği için `EndingsSystem` ona haftalık kepengin gün karşılığını verir: `SHUTTER_WEEKS` 4 × 7 = 28.
 
 ### 8.5 Bütçeler
 
@@ -594,6 +611,8 @@ zar = hash(run_seed, day, event_id, option_id)
 - Aynı seçenek tekrar denenirse → **aynı sonuç.** Zar balıkçılığı imkânsız.
 - Farklı seçenek denenirse → **gerçekten farklı zar**, ama farklı maliyet.
 Yani reload'un tek getirisi daha iyi (ve daha pahalı) bir teklif yapmaktır. Bu sömürü değil, öğrenmedir.
+
+`day` tiktir. Bir tik bir hafta olduğu için aynı seçenek aynı hafta içinde hangi saatte denenirse denensin aynı sonucu verir.
 
 Havuz çekilişi de aynı şekilde deterministiktir: `hash(run_seed, day, "pool", n)`.
 
@@ -655,7 +674,7 @@ Bir yazar "rakibin teklifi ciddi" yazamaz, çünkü `rival.offer_seriousness` di
 |---|---|---|
 | Moral bandı | 80-100 / 50-80 / <50 / <35 "Ayrılabilir" | VAR |
 | Kıdem | Kıdem tazminat kademelerinin dayandığı alan | VAR |
-| Çalışma saati / mesai yükü | 5-11 saat, >8h ×1.5 moral decay | VAR |
+| Çalışma saati / mesai yükü | 5-16 saat, bitiş en geç 00:00; 8 saati aşan her saat moral kaymasını hızlandırır (16 saatte ×2,5) | VAR |
 | Seviye | Junior / Mid / Senior | VAR |
 | Trait | Kart başına tek trait | VAR |
 | Kurucu Karizma | Kurucu-özel stat | VAR |
@@ -692,7 +711,7 @@ step:
 
 ```
   id
-  fire: { delay_days: N }  |  { condition: {...} }  |  { signal: <ad> }
+  fire: { delay_weeks: N }  |  { condition: {...} }  |  { signal: <ad> }
   event_id
   optional: true|false     false ise ark bu adımı beklemek zorunda
 ```
@@ -735,7 +754,7 @@ Her tikte kontrol edilir. Tetiklenirse `on_invalidate` politikası uygulanır.
 | close | Ark görünür bir kartla kapanır. on_invalidate.effects koşar. | Vaat arkları |
 | fade | Ticker satırı, kart yok. | Öznesiz dünya arkları |
 
-**`reassign`** **zaman aşımı:** `awaiting_subject` durumu **14 gün** sürerse politika otomatik `close`'a düşer. Ark sonsuza kadar askıda kalmaz.
+**`reassign`** **zaman aşımı:** `awaiting_subject` durumu **2 hafta** (`ARC_AWAITING_SUBJECT_TIMEOUT_WEEKS`) sürerse politika otomatik `close`'a düşer. Ark sonsuza kadar askıda kalmaz. Duraklayan arkın zamanlanmış adımları göreli hafta olarak (`remaining_weeks`) donar ve ark yeniden özne bulunca kaldıkları yerden sayar.
 
 **Örnek —** **`reassign`****:** Zeynep bir araştırma hattını yürütüyor. Zeynep gidiyor. Ark ölmüyor; masaya bir kağıt geliyor: "Zeynep'in yürüttüğü araştırma sahipsiz kaldı. Kim devam edecek?" Oyuncu birini atıyor, ark kaldığı adımdan devam ediyor. Bu, Ar-Ge rev1.4 §5.0'ın "atamalar silinmez, duraklar" kuralıyla birebir hizalıdır.
 
@@ -743,7 +762,7 @@ Her tikte kontrol edilir. Tetiklenirse `on_invalidate` politikası uygulanır.
 
 `type: promise` taşıyan bir arkın `on_invalidate.policy` alanı `fade` **olamaz** ve `effects` boş **olamaz**. Boşsa **E-lint**.
 
-**Gerekçe:** Bizim tezimiz "10. gün 90. günü etkiler." Vaat edilen bir şey sessizce buharlaşırsa oyuncu bunu bug sanır ve tez çürür.
+**Gerekçe:** Bizim tezimiz "2. hafta 13. haftayı etkiler" (§0.2). Vaat edilen bir şey sessizce buharlaşırsa oyuncu bunu bug sanır ve tez çürür.
 
 ### 10.7 Özne başına ark limiti
 
@@ -777,7 +796,7 @@ Bir ark adımı olan kart **havuza giremez** (`tag: critical` gibi davranır, a�
 |---|---|---|---|
 | interrupt | Blocking modal | Durur | Kriz, ark dönüm noktası, süresi dolan teklifin son uyarısı, terminal telgraf |
 | paper | ODA masasında kağıt | Akar | Karar gerektiren ama acil olmayan |
-| info | Sekme rozeti / rapor | Akar | Aylık Ar-Ge notu, terfi uygunluğu bildirimi |
+| info | Sekme rozeti / rapor | Akar | 4 haftada bir Ar-Ge notu (`report_period_weeks`), terfi uygunluğu bildirimi |
 | ambient | News ticker | Akar | Rakip haberi, dünya gürültüsü, ark fade izi |
 
 ### 11.2 Öncelik sırası
@@ -803,21 +822,25 @@ Aynı seviyede: **en eski kabul edilen önce.** Eşitlikte `event_id` alfabetik 
 ### 11.3 Modal kuralları
 
 - **Aynı anda tek modal.** İkincisi kuyrukta bekler.
-- **Modal SceneTree'yi durdurur.** Gün dönüşü modal kapanana kadar bekler.
+- **Modal SceneTree'yi durdurur.** Tik dönüşü (gece atlamasının içindeki 00:00 devri) modal kapanana kadar bekler.
 - **`process_mode = ALWAYS (3)`** **zorunlu.** GameShell ve tüm interaktif çocukları. Agent varsayılanı `INHERIT`'tir ve bu bug runtime testi olmadan görünmez.
 - Karar anında oto-yavaşlama uygulanır (mevcut davranış korunur).
+- **Toplantı saati durdurur, bitince saati ileri atlatır.** Satış toplantısı, VC ve seed pitch'i ve term sheet masası açıkken saat durur. Sahne kapanınca saat oturumun süresi kadar ileri gider: satış 2 saat (`SalesConstants.MEETING_SKIP_HOURS`), pitch 2 saat (`PitchConstants.MEETING_HOURS`; birinci vuruşta çekilen VC toplantısı yarısı, 1 saat), masa 1 saat (`TERM_TABLE_HOURS`; koşuyu bitiren imzada atlama olmaz). Atlanan saatler silinmez: `TimeManager.advance_hours` her birinin saatlik tikini koşar. Atlama kurucunun mesai bitiminde, en geç 23:00'te durur ve gece yarısını geçmez; kalan saatleri gece atlaması taşır.
+- **Toplu adımda kart gösterilmez.** Toplantı atlaması ya da gece atlaması sürerken (`TimeManager.is_batching()`) `EvEngine.pump()` hiçbir kart göstermez; adım bitince (`EventBus.clock_batch_ended`) bir kez pompalanır. Kart gösterileceği saatte yeniden doğrulanır (§4.4), en önemlisi önce gelir (§11.2) ve açık bir kart 00:00 autosave'ini engellemez.
 
 ### 11.4 ODA masası
 
 - Masa kağıtları taşır, **kapasite sınırı yoktur** (§12.1 sebebiyle gereksiz).
 - Kağıt açıldığında modal gibi davranır (zaman durur), kapatıldığında masaya döner.
 - Masa kağıtları örnek anahtarıyla tutar (§20 E2). Bir sistem masada bekleyen örneği `EventGate.request` ile isterse o kağıt açılır.
-- Kağıdın kalan süresi kağıdın üzerinde **görünür**. Son 3 günde görsel vurgu.
+- Kağıdın kalan haftası kağıdın üzerinde **görünür**. Son haftasında görsel vurgu (`expiring`), yalnız ömrü bir haftadan uzun kağıtta. Ömrü tek hafta olan kağıt baştan "bu hafta" der (§12.4).
 - Günlük-tik kartlarında saat gösterilmez (mühürlü kural).
 
 ### 11.5 Maksimum hız
 
-Oyunun maksimum hızı **3x**'tir (4x kaldırıldı — modal yoğunluğu sebebiyle). Tempo bütçesi oyun-günü bazlıdır; 3x'te doğal olarak sıklaşır, fazlası kağıda düşer (I4).
+Oyunun maksimum hızı **4×**'tür. Hız merdiveni oyun saati başına gerçek saniyedir (`TimeModel.SECONDS_PER_HOUR`: duraklat, 10, 5, 10/3, 2,5). Hafta 08:00'de başlar ve ofis boşalınca gece atlanır; varsayılan 09-17 mesaide bir hafta 1×'te 90, 2×'te 45, 3×'te 30, 4×'te 22,5 sn sürer (`TimeModel.seconds_per_tick`).
+
+4× bir ara modal yoğunluğu sebebiyle kaldırılmıştı: gün modelinde 3×'te bir oyun günü 3 sn sürüyordu. Haftalık modelde 4×'te bile bir hafta 22,5 sn sürdüğü için geri geldi (§27.9). Tempo bütçesi tik (hafta) bazlıdır; hız yalnız bütçenin gerçek zamandaki sıklığını değiştirir, fazlası kağıda düşer (I4).
 
 ### 11.6 Tutorial kancası
 
@@ -850,26 +873,32 @@ Bu kural masa dağınıklığını kendiliğinden çözer; kapasite tavanına ge
 
 ### 12.2 Süre tablosu
 
-| Yüzey | Gün | Cevapsız kalırsa |
-|---|---|---|
-| VC teklifi (Series A term sheet) | 10 iş günü | Kendiliğinden kapanmaz: ertelenemez karar kartı sorar (aşağıda) |
-| Satın alma teklifi | 30 | Otomatik red |
-| Rakip teklifi (çalışan) | 7 | Çalışan gider — "bekletildi" |
-| Zam talebi | 7 | Moral düşer, ayrılabilir riski artar |
-| Müşteri şikayeti | 7 | Memnuniyet düşer |
-| Frank'in düşük-bahisli kartları | 14 | Sessiz kapanır, ceza yok |
+Süre haftadır. Bekleyebilen her kart kendi süresini `expires_weeks` alanında taşır; süre kartın anlattığı durumun doğasına göre seçilir (sahibin örneği: çalışan ya da müşteri talebi 2 hafta). Değer, kart masaya kağıt olarak düştüğünde okunur: `class: paper` kartlarda ve tempo bütçesinin kağıda düşürdüğü kesintilerde (§13.2). Lint alanı her `interrupt` ve `paper` kartında zorunlu kılar (§17.7).
 
-**Varsayılan: 7 gün.** Para masası 30. Düşük bahisli 14.
+| Kart | Sınıf | Hafta | Cevapsız kalırsa |
+|---|---|---|---|
+| `customer.request_complaint`, `customer.request_feature`, `customer.request_renewal` | paper | 2 | Hesabın memnuniyeti 5 puan düşer |
+| `customer.expansion` | paper | 2 | Genişleme geri çevrilmiş sayılır |
+| `funding.seed_stalled` | paper | 2 | Kapanır, ceza yok |
+| `world.final_stretch_press` | paper | 4 | Son düzlük arkı yine başlar (§27.7) |
+| `customer.retention` | interrupt, düşebilir | 1 | Riskteki hesap görmezden gelinmiş sayılır |
+| `sales.price_break` | interrupt, düşebilir | 1 | Fiyat konusu kapanır |
 
-**Series A term sheet'i bir motor kağıdı değildir.** Süresini yatırım sistemi tutar: teklif 10 iş günü geçerlidir (K5). Süre dolunca teklif kapanmaz, karar günü gelmiş olarak kalır ve `funding.sheet_decision` kartı cevap ister. Kart `interrupt` ve `critical`'dır, ertelenemez; iki seçeneği vardır: masaya otur (Series A masası açılır) ya da reddet (fon kalıcı olarak kapanır) (K10). Süresi birlikte dolan iki teklifin kartları sırayla gelir.
+**Düşmeyen kesintiler.** Tempo bütçesi tanımayan kesintiler (`critical`, `terminal_warning`, ark adımı; §13.5) hiç kağıda düşmez, hemen cevaplanır. Lint onlardan da `expires_weeks` ister: o haftaya bağlı olanlarda 1, duyurularda 2, para masasında 4 (`funding.frank_cheque`, `funding.seed_offer`). Bu değerleri bugün okuyan yoktur (§27.9). Satın alma teklifi de bu gruptadır: kartı (`funding.acquisition_offer`) kritik bir kesintidir, penceresi `EndingsSystem.ACQ_CARD_WINDOW_WEEKS` (1 hafta).
+
+**Geri düşüş.** Alanı taşımayan kart için motorun tablosu (`EvEngine._expiry_weeks`): varsayılan 1 hafta (`EXPIRY_DEFAULT_WEEKS`), para masası (`money_table` etiketi) 4 (`EXPIRY_MONEY_WEEKS`), düşük bahisli (`low_stakes`) 2 (`EXPIRY_LOW_STAKES_WEEKS`). Gün modelindeki 7 / 30 / 14 günün haftalık karşılığıdır.
+
+**Kartı henüz yazılmamış yüzeyler.** Tasarımın iki yüzeyinin kartı yoktur. Çalışana gelen rakip teklifi cevapsız kalırsa çalışan gider ("bekletildi"); zam talebi cevapsız kalırsa moral düşer ve ayrılabilir riski artar. Süreleri kartları yazılırken aynı kuralla seçilir.
+
+**Series A term sheet'i bir motor kağıdı değildir.** Süresini yatırım sistemi tutar: teklif 3 hafta geçerlidir (`PitchConstants.SHEET_VALIDITY_WEEKS`; K5'in 10 iş günü haftalık modelde 3 hafta oldu). Uyarı kartı ve TopBar çipi son 2 haftada (`WARNING_WEEKS`), son cevap (`funding.last_answer`) son haftada gelir. Süre dolunca teklif kapanmaz, karar haftası gelmiş olarak kalır ve `funding.sheet_decision` kartı cevap ister. Kart `interrupt` ve `critical`'dır, ertelenemez; iki seçeneği vardır: masaya otur (Series A masası açılır) ya da reddet (fon kalıcı olarak kapanır) (K10). Kart yalnız masanın açılabileceği bir saatte sorar (`funding.table_sitting_open`: gece değildir ve kurucunun mesai bitimine en az masanın süresi kadar vardır). Süresi aynı haftada dolan iki teklifin kartları sırayla gelir.
 
 ### 12.3 Yaz izni kağıt değildir
 
-Yaz izni talebi `class: interrupt`'tır. Erteleme kağıt zamanlayıcısıyla değil, **kartın içinde bir seçenek** olarak yaşar (Ekip rev11: ertele = −5 moral + 30 gün sonra tekrar, max 2 kez). Karşında duran bir insana "sonra bakarım" demek bir karardır, zaman aşımı değil.
+Yaz izni talebi `class: interrupt`'tır. Erteleme kağıt zamanlayıcısıyla değil, **kartın içinde bir seçenek** olarak yaşar (Ekip rev11 §11.4: ertele = −5 moral + 4 hafta sonra tekrar, max 2 kez; Ekip'in yazdığı 30 gün haftalık modelde 4 haftadır, `HRConstants.LEAVE_DEFER_WEEKS`). Karşında duran bir insana "sonra bakarım" demek bir karardır, zaman aşımı değil.
 
 ### 12.4 Süre dolumu semantiği
 
-gün == expires_on:
+tik ≥ expires_on (günlük tikin başında):
 
 ```
   on_expire.effects çalışır
@@ -880,19 +909,21 @@ gün == expires_on:
 
 **`expire_note`** **zorunludur.** Sessiz süre dolumu yoktur. Örnek çıktı:
 
-Zeynep bugün ayrıldı. Teklifi bekletmiştin.
+Zeynep bu hafta ayrıldı. Teklifi bekletmiştin.
 
-**Son uyarı:** son 1 günde kalan kağıt için `class: interrupt` bir uyarı kartı ateşlenir ve tempo bütçesi tanımaz (§13.5).
+**Bir hafta, haftanın sonuna kadardır.** Süre haftanın sonundaki 00:00 devrinde, günlük tikin başında dolar. Hafta içinde masaya düşen 1 haftalık kağıt yalnız o haftanın kalan saatlerinde bekler; 2 haftalık kağıt o haftayı ve bir sonrakini.
+
+**Son uyarı (son hafta kuralı):** son haftasına giren kağıt (`weeks_left == 1`) kuyruğa `class: interrupt` olarak yeniden girer ve tempo bütçesi tanımaz (§13.5). Uyarı yalnız ömrü bir haftadan uzun kağıda gelir (`EXPIRY_URGENT_WEEKS`, 1). Ömrü tek hafta olan kağıt baştan "bu hafta" der ve ayrı uyarı almaz. Uyarı haftanın başında gelir, dolum bir sonraki tikte (§20 B11).
 
 ### 12.5 Kayıt/yükleme
 
-`expires_on` **mutlak gün** olarak saklanır, "kalan gün" olarak değil. Yüklemede gün geçmişse anında çözülür.
+`expires_on` **mutlak tik** olarak saklanır, "kalan hafta" olarak değil. Yüklemede tik geçmişse anında çözülür.
 
 ## 13. TEMPO
 
 ### 13.1 Teşhis
 
-Sorun sayı değil, **benzerlik**. Haftada beş farklı konuda kart normal bir şirket haftasıdır. Haftada üç Nordica kartı bir bug gibi hissettirir. 4x hızın kaldırılmasının sebebi de buydu.
+Sorun sayı değil, **benzerlik**. Haftada beş farklı konuda kart normal bir şirket haftasıdır. Haftada üç Nordica kartı bir bug gibi hissettirir. 4× hız bir ara bu sebeple kaldırılmıştı; haftalık modelde geri geldi (§11.5). Bir tik bir hafta olduğu için "hafta" burada motorun kendi birimidir: frenlerin hepsi tik sayar.
 
 ### 13.2 I4 — Hiçbir kart düşürülmez
 
@@ -906,17 +937,19 @@ Kağıda inen her şeyin bir cevap süresi vardır (§12), yani unutulmaz.
 
 ### 13.3 Dört katmanlı fren
 
-**Katman 1 — Aynı kart (****`min_gap_days`****)** Bir kart ateşlendikten sonra N gün desteye dönmez. **Varsayılan 30.** Kart override edebilir (nadir).
+**Katman 1 — Aynı kart (****`min_gap_weeks`****)** Bir kart ateşlendikten sonra N hafta desteye dönmez. **Varsayılan 4** (`MIN_GAP_WEEKS_DEFAULT`). Kart override edebilir (nadir).
 
 **Katman 2 — Aynı özne** Aynı çalışan / müşteri hakkında havuz kartı sıklık freni:
 
-- Çalışan: **14 gün**
-- Müşteri: **30 gün**
+- Çalışan: **2 hafta** (`SUBJECT_GAP_EMPLOYEE_WEEKS`)
+- Müşteri: **4 hafta** (`SUBJECT_GAP_CUSTOMER_WEEKS`)
 **KRİTİK MUAFİYET:** Bu katman **yalnızca havuz kartlarına** uygulanır. `tag: critical` kartları ve **ark adımları muaftır.** Bir ark aynı çalışan hakkında art arda kartlar ateşleyebilir — arkın anlamı budur.
 
-**Katman 3 — Kategori kotası (kayan 7 gün)**
+**Katman 3 — Kategori kotası (hafta başına, `CATEGORY_QUOTA_WEEK`)**
 
-| Kategori | 7 günde max |
+Pencere tek tiktir: kota yalnız bu tikin (bu haftanın) kabullerini sayar.
+
+| Kategori | Haftada max |
 |---|---|
 | Ekip | 2 |
 | Müşteri (B2B/B2C) | 2 |
@@ -927,7 +960,7 @@ Kağıda inen her şeyin bir cevap süresi vardır (§12), yani unutulmaz.
 
 Yan fayda: kota çeşitliliği zorlar. Müşteri kotası dolduysa motor başka kategoriye bakmak zorundadır; oyuncunun haftası tek renk olmaz.
 
-**Katman 4 — Günlük tavan** Günde max **2 interrupt**. Üçüncüsü kağıda düşer.
+**Katman 4 — Tik tavanı** Tik (hafta) başına max **2 interrupt** (`MAX_INTERRUPTS_PER_DAY`; ad korunur, bir oyun günü bir tiktir). Üçüncüsü kağıda düşer. Tavan dolarsa 1×'te 3 gerçek dakika iki hafta, yani 4 kesinti eder; bu, §13.7 çapasının (3) üstüdür. Harness bunu her hız için ölçer ve raporlar (§19.3).
 
 ### 13.4 Faz çarpanı
 
@@ -949,7 +982,7 @@ Katman 3 ve 4'e uygulanır. Katman 1 ve 2 sabittir (tekrar her zaman kötüdür)
 
 **Tetiklenme koşulu (üçü birden):**
 
-- 5 oyun-günü boyunca hiçbir `interrupt` veya `paper` gelmedi, **VE**
+- 1 hafta (`FLOOR_QUIET_WEEKS`) boyunca hiçbir `interrupt` veya `paper` gelmedi (pencere tek tik olduğu için bu, günlük tikin kendi adımlarının hiçbir kart kabul etmemesi demektir), **VE**
 - Masada cevaplanmamış kağıt **yok** (varsa ölü zaman yok; oyuncu erteliyor), **VE**
 - Aktif bir modal yok
 **Davranış:**
@@ -957,7 +990,7 @@ Katman 3 ve 4'e uygulanır. Katman 1 ve 2 sabittir (tekrar her zaman kötüdür)
 - Yalnızca **sessiz havuzdan** (`tag: quiet`) çekilir.
 - Sessiz havuz kartları **kendi koşullarını geçmek zorundadır.** Kapı atlanmaz.
 - **Hiçbiri uymuyorsa hiçbir şey ateşlenmez.** Sessizlik saçmalıktan iyidir.
-- Katman 3 kotası tanınmaz; Katman 1 (`min_gap_days`) tanınır.
+- Katman 3 kotası tanınmaz; Katman 1 (`min_gap_weeks`) tanınır.
 - `tutorial_active` iken devre dışı (§11.6).
 **Sessiz kart yazım kuralları:**
 
@@ -972,9 +1005,11 @@ Normal hızda ortalama **2-3 dakikada bir** karar yüzeyi. Hiçbir 3 dakikalık 
 
 Bu çapa auto-play harness'ında otomatik ölçülür (§19.3): binlerce koşuda "en yoğun 3 dakika" ve "en uzun sessizlik" raporlanır. Kalibrasyon gözle değil, veriyle yapılır.
 
+Gerçek zaman ile oyun zamanı arasındaki bağ `TimeModel.seconds_per_tick`'tir. Varsayılan mesaide bir hafta 1×'te 90 sn sürdüğü için 3 dakika 1×'te 2, 2×'te 4, 3×'te 6, 4×'te 8 haftadır. Harness pencereyi her hız için ayrı hesaplar ve çapayı dört basamakta ayrı raporlar.
+
 ### 13.8 ⚠️ ÖLÇÜLMEDİ
 
-§13.3, §13.4 ve §13.6'daki tüm sayılar **çalışma değerleridir ve hiçbiri ölçülmemiştir.** Kategori kotaları, faz çarpanları, 5 günlük taban eşiği, 30/14 günlük fren pencereleri — hepsi playtest'te değişecektir. §13.7 çapası bir ölçüm aracıdır, bir tasarım kanıtı değil. Bu sayılara mimari bağımlılık kurulmaz; hepsi tek bir tuning yüzeyinde toplanır.
+§13.3, §13.4 ve §13.6'daki tüm sayılar **çalışma değerleridir ve hiçbiri ölçülmemiştir.** Kategori kotaları, faz çarpanları, 1 haftalık taban eşiği, 4/2 haftalık fren pencereleri: hepsi playtest'te değişecektir. Haftalık çeviri de ölçülmedi: gün değerleri 7'ye bölünüp anlamlı en yakın haftaya yuvarlandı (5 günlük taban 1 haftaya, kayan 7 günlük kota penceresi tek tike indi). §13.7 çapası bir ölçüm aracıdır, bir tasarım kanıtı değil. Bu sayılara mimari bağımlılık kurulmaz; hepsi tek bir tuning yüzeyinde toplanır.
 
 ## 14. SEÇİM VE HAVUZ
 
@@ -1052,9 +1087,12 @@ event_engine:
   papers             {örnek_anahtarı: {event_id, context, expires_on,
                       arc_id, opened_before, admitted_day}}   §20 E2
   budgets            {name: kalan}
-  tempo_window       son 7/30 günün ateşleme kayıtları
+  tempo_window       en geniş fren penceresi kadar geriye (bugün 4 hafta)
+                     ateşleme kayıtları
   held               §18 oyuncu-sonucu satırları
 ```
+
+Adında `day` geçen alanlar ve `expires_on` tik tutar (bir oyun günü bir haftadır). Adlar kayıt uyumu için korunur (§27.9).
 
 ### 16.2 Zamanlanmış geri çağrı ASLA fonksiyon değildir
 
@@ -1062,7 +1100,7 @@ Yalnızca `{event_id, fire_on_day, context, arc_id}`. Fonksiyon pointer'ı / clo
 
 ### 16.3 Zaman mutlak
 
-Tüm gün alanları **mutlak oyun günü**dür, "kalan tik" değil. Save/load ve hız değişimleri zaman matematiğini bozmaz.
+Tüm zaman alanları **mutlak tik**tir, "kalan hafta" değil. Bir tik bir oyun günüdür, bir oyun günü bir haftadır. Tek istisna yeni özne bekleyen arkın dondurulmuş adımlarıdır: onlar göreli hafta olarak (`remaining_weeks`) saklanır ve ark sürünce yeniden mutlak tike çevrilir (§10.5). Save/load, hız değişimi, toplantı atlaması ve gece atlaması zaman matematiğini bozmaz: atlamalar saatleri silmez, `TimeManager.advance_hours` ve `skip_night` ile simüle eder.
 
 ### 16.4 Migration
 
@@ -1070,6 +1108,7 @@ Tüm gün alanları **mutlak oyun günü**dür, "kalan tik" değil. Save/load ve
 - Yüklemede katalogda olmayan `event_id` bulunursa: kayıttan temizlenir, error.log'a yazılır, **crash edilmez**.
 - Öznesi olmayan ark yüklemede iptal edilir (`fade`), gösterimde crash etmez.
 - Bilinmeyen bayrak = false (additive namespace).
+- v13 kayıtlarının motor bloğu `SaveManager._migrate_14`'ten geçer (`GDDs/GDD — ZAMAN MODELİ.md` §10): gün damgaları tike çevrilir, `frozen_schedule[].remaining_days` → `remaining_weeks` olur, `tempo_window` temizlenir. Bloğun kendi sürümü 1 kalır.
 
 ### 16.5 Ironman
 
@@ -1089,6 +1128,8 @@ Build'i durduran (**E**) ve uyaran (**W**) kurallar.
 - **E** Bilinmeyen ark id'si
 - **E** Tip uyuşmazlığı (employee effect'i customer slotuna)
 - **E** GDScript'te hardcode tetikleyici (I5) — statik tarama
+- **E** Kart ya da ark JSON'unda gün adlı anahtar ya da tanımlayıcı değer (`_days`, `days_since`, çıplak `days`). Süreler haftadır (§3.1)
+- **E** Metinde presenter'ın çözemediği ya da kayıtlı olmayan seam'i okuyan `{seam:}` jetonu (§8.4)
 - **W** Tanımsız bayrağa referans (yazım hatası yakalar)
 - **W** Hiç okunmayan bayrak (ölü)
 
@@ -1127,8 +1168,8 @@ Build'i durduran (**E**) ve uyaran (**W**) kurallar.
 
 ### 17.7 Kağıt (§12)
 
-- **E** `class: paper` fakat `expires_days` yok
-- **E** `expires_days` var fakat `on_expire` yok
+- **E** `class: paper` ya da `class: interrupt` fakat `expires_weeks` yok
+- **E** `class: paper` ya da tempo bütçesinin kağıda düşürebileceği interrupt, fakat `on_expire` yok
 - **E** `on_expire` var fakat `expire_note` yok
 
 ### 17.8 Metin (iki dilde birden koşar)
@@ -1144,7 +1185,7 @@ Build'i durduran (**E**) ve uyaran (**W**) kurallar.
 ### 17.9 Suppression
 
 - **E** `enqueue` / `enqueue_front` çağrısı (silinmiş API)
-- **W** `min_gap_days` 7'nin altında (kasıtlıysa suppress edilir)
+- **W** `min_gap_weeks` 1'in altında (kasıtlıysa suppress edilir)
 
 ### 17.10 Suppression iş akışı
 
@@ -1174,7 +1215,8 @@ Anlamlı bir sonuç ticker'a düşüyorsa, aynı sonuç **history'ye de yazılm�
 
 - Motor tek çağrıyla besler: `EvTicker.push(line_key, priority, context)`. Satır `EventBus.headline_added` ile yayılır.
 - Motorun **kendi kuyruğu ve kapasitesi yoktur**; kanalı haber akışı taşır. Ekrandaki şerit (`news_ticker.gd`) satırı hemen gösterir ve en yeni 6 canlı satırı tutar (`MAX_LIVE_LINES`).
-- `NewsFeedSystem` aynı satırı "biz" tamponuna alır: 10 satır (`BIZ_BUFFER_CAP`), günlük akışa en eskiden başlayarak ve akışın en çok beşte biri oranında boşaltılır. Tampon doluyken gelen **en yeni** satır tampona girmez (`biz_dropped` sayar); canlı şeritte zaten görünmüştür.
+- `NewsFeedSystem` aynı satırı "biz" tamponuna alır: 10 satır (`BIZ_BUFFER_CAP`), haftalık akışa (tik başına 3-5 satır, `WEEKLY_LINES_MIN/MAX`) en eskiden başlayarak ve akışın en çok beşte biri oranında (`BIZ_HARD_CAP`) boşaltılır. Tampon doluyken gelen **en yeni** satır tampona girmez (`biz_dropped` sayar); canlı şeritte zaten görünmüştür.
+- **Yalnız canlı satırlar.** Ay kapanışı satırı (`MONTH_CLOSED_TICKER`: kapanan ay, MRR, nakit farkı) ve runway eşik satırı (`RUNWAY_CROSS_TICKER`) `EventBus.ticker_live_line` ile yayılır: şerit onları bir kez gösterir, "biz" tamponuna girmezler. `SummarySystem` ikisini günlük dağıtımın son yuvasında, sonların taramasından sonra yayar; koşu bittiyse yaymaz. Neden: tampon akışın en çok beşte biri oranında boşalır, haftalık tikte ise bir haftanın satırları birikir; ay satırı arşive sırası gelmeden taşardı.
 - Oyuncu-sonucu satırları ayrıca `EvTicker`'da tutulur ve hiç düşmez (§18.3).
 - Motoru **asla bloklamaz**, tempo bütçesi **tüketmez**.
 - Save'e yazılan: `EvTicker`'ın tuttuğu oyuncu-sonucu satırları (§16.1 `held`) ve haber akışının durumu (`GameState.news_feed`: tampon ve akış).
@@ -1218,9 +1260,11 @@ Rastgele seçim uzun koşullu arkları asla tamamlayamaz; tek modlu harness ark 
 
 **Niyet betiği** ark tanımından neredeyse otomatik türetilir: adım listesi + her adımda hangi `option_id`'nin ilerlettiği.
 
-**Her iki modda ortak:** save/load her 50 günde bir enjekte edilir, koşu bozulmaz.
+**Her iki modda ortak:** save/load her 7 haftada bir (`SAVE_EVERY_WEEKS`) enjekte edilir, koşu bozulmaz.
 
-**Çıktı raporu:** kart bazında ateşleme sayısı, kategori dağılımı, ortalama karar aralığı, en yoğun/en seyrek dilimler, boş-taban sayacı.
+**Harness hafta hafta yürür.** Her hafta günlük tiki koşar, sonra varsayılan mesainin içinde üç saatte saatlik kartları süpürür (`SWEEP_HOURS`: 9, 13, 16; 17:00 varsayılan 09-17 mesaide gecedir ve kapı kritik olmayan saatlik kartı orada reddeder). Çağrı `--event-harness=random:seeds=N:weeks=M`; varsayılan koşu 52 haftadır.
+
+**Çıktı raporu:** kart bazında ateşleme sayısı, kategori dağılımı, ortalama karar aralığı, en yoğun/en seyrek dilimler, boş-taban sayacı. Tempo çapası (§13.7) dört hız basamağının (1×, 2×, 3×, 4×) her biri için ayrı raporlanır, çünkü 3 gerçek dakika her basamakta farklı sayıda haftadır.
 
 **Bilinen sınır:** rastgele mod gerçek oyuncu davranışını temsil etmez ve false positive üretir. Harness ulaşılabilirlik ve teknik bütünlük içindir; **denge için değildir.**
 
@@ -1256,7 +1300,7 @@ Bunlar de facto şablon olur, ve daha önemlisi **şemanın gerçekten yazılabi
 | A3 | Ark öznesi ark ortasında gitti | §10.5 politikası: reassign / close / fade |
 | A4 | İki ark aynı özneyi istiyor | Özne başına 1 aktif ark. İkincisi deferred, birincisi bitince proposal'a döner |
 | A5 | Sıfır çalışan varken HR kartı | entity_count("employee") >= 1 guard'ı. Kurucu-tek koşusu için ayrı kart seti |
-| A6 | Aynı gün iki çalışandan zam talebi | Per-entity latch farklı anahtarlar; ikisi de geçerli. Katman 4 ikincisini kağıda düşürür |
+| A6 | Aynı tikte (aynı hafta) iki çalışandan zam talebi | Per-entity latch farklı anahtarlar; ikisi de geçerli. Katman 4 ikincisini kağıda düşürür |
 | A7 | B2C koşusunda B2B selector | G6 guard. Kart market: b2b etiketli değilse kabul edilmez; selector tip-güvenli handle döndürür |
 | A8 | Birden fazla ürün varken "ürün" belirsiz | Kapsam açık olmak zorunda. Belirsizse kabul edilmez |
 | A9 | Kart öznesi kurucu | founder ayrı kapsam tipi; employee seçicisi asla kurucuyu döndürmez |
@@ -1268,17 +1312,19 @@ Bunlar de facto şablon olur, ve daha önemlisi **şemanın gerçekten yazılabi
 
 | # | Vaka | Cevap |
 |---|---|---|
-| B1 | Zamanlanmış günü geçmişte kaldı (3x hız, eski save) | fire_on_day <= bugün → hemen proposal'a girer. Atlanmaz |
+| B1 | Zamanlanmış tiki geçmişte kaldı (eski save) | fire_on_day <= bu tik → hemen proposal'a girer. Atlanmaz |
 | B2 | Tek tikte birden fazla geçerli kart | §11.2 öncelik sırası. Deterministik |
 | B3 | Bir etkinin sonucu başka kartın koşulunu doğru yapıyor | Kaskad bir sonraki tike ertelenir. Sonsuz döngü kapanır |
-| B4 | Modal açıkken gün döndü | Modal zamanı durdurur; gün dönüşü bekler |
+| B4 | Modal açıkken tik döndü | Modal zamanı durdurur; gece atlaması ve içindeki 00:00 devri modal kapanana kadar bekler |
 | B5 | Faz geçişi ark ortasında | Ark faz-agnostik yaşar. Ölmesi gerekiyorsa invalidate_when açıkça yazılır |
 | B6 | Koşu bitiyor (iflas) ama bekleyen ödemeler var | Terminal her şeyi keser. Schedule temizlenir, history korunur (son ekranı okur) |
 | B7 | Build sürerken kurucuyu başka işe geçiren kart | Build bar auto-pause zaten kural. Kart bunu gövdesinde söyler; sürpriz olmaz |
-| B8 | Hız 3x'te tempo | Bütçe oyun-günü bazlı. 3x'te doğal olarak sık gelir; fazlası kağıda düşer |
-| B9 | Aynı gün hem schedule hem sinyal aynı kartı öneriyor | Latch tekilleştirir. İkincisi sessizce düşer |
-| B10 | Gece saatlerinde interrupt | allowed_hours guard'ı. Tanımsızsa 08:00–20:00 varsayılan |
-| B11 | Kağıdın son uyarısı ile süre dolumu aynı güne denk geldi | Uyarı önce (öncelik 2), dolum ertesi gün. Uyarı ateşlenemezse dolum yine de çalışır |
+| B8 | Hız 4×'te tempo | Bütçe tik (hafta) bazlı. 4×'te gerçek zamanda doğal olarak sık gelir; fazlası kağıda düşer |
+| B9 | Aynı tikte hem schedule hem sinyal aynı kartı öneriyor | Latch tekilleştirir. İkincisi sessizce düşer |
+| B10 | Gece saatlerinde interrupt | Mesai bitiminden 08:00'e kadarki saatler gecedir ve atlanır: G4 critical olmayan saatlik kartı gecede reddeder. Gündüz saatlerinde allowed_hours guard'ı; tanımsızsa 08:00-20:00 varsayılan (varsayılan 09-17 mesaide 17:00 ve sonrası zaten gecedir) |
+| B11 | Kağıdın son uyarısı ile süre dolumu aynı tike denk geldi | Uyarı önce (öncelik 2), dolum bir sonraki tikte. Uyarı ateşlenemezse dolum yine de çalışır |
+| B12 | Toplantı kapanınca saat ileri atlıyor (satış 2, pitch 2, masa 1 saat) | Saatler silinmez: `TimeManager.advance_hours` her atlanan saatin saatlik tikini koşar. Atlama kurucunun mesai bitiminde, en geç 23:00'te durur, gece yarısını geçmez; kalanını gece atlaması taşır. Atlama sürerken kart gösterilmez, adım bitince bir kez pompalanır (§11.3) |
+| B13 | Ofis boşaldı, gece atlanıyor | Mesai bitiminden 08:00'e kadarki saatler tek toplu adımda simüle edilir (`TimeManager.skip_night`); 00:00 devri, günlük tik, ay dönmüşse ay kapanışı ve autosave bunun içindedir. Günlük tikte kabul edilen kartlar 08:00'de, en önemlisi önce gösterilir. Bir tutma alınırsa (kilometre taşı kağıdı) atlama durur, tutma kalkınca sürer |
 
 ### C. Kayıt ve şema
 
@@ -1291,7 +1337,7 @@ Bunlar de facto şablon olur, ve daha önemlisi **şemanın gerçekten yazılabi
 | C5 | Zamanlanmış geri çağrı | Asla fonksiyon. Sadece data |
 | C6 | Save scumming | Zar hash(seed, day, event_id, option_id). Aynı seçenek = aynı sonuç. Ironman'de zaten tek slot |
 | C7 | v10 öncesi kayıt | Taşınmaz. Yükleyici açık mesajla reddeder (SAVE_ERR_TOO_OLD) |
-| C8 | Kağıt süresi save sırasında doldu | expires_on mutlak gün. Load'da geçmişse anında çözülür |
+| C8 | Kağıt süresi save sırasında doldu | expires_on mutlak tik. Load'da geçmişse anında çözülür |
 | C9 | Bozuk/eksik motor bloğu | Boş motorla başlar, error.log, crash yok. Koşu devam eder |
 | C10 | Ironman'de modal içinde alt+F4 | Kayıt modal öncesi. Karar tekrar sorulur. Kabul edilmiş davranış |
 
@@ -1345,7 +1391,7 @@ Bunlar de facto şablon olur, ve daha önemlisi **şemanın gerçekten yazılabi
 | # | Vaka | Cevap |
 |---|---|---|
 | G1 | Ark adımı tempo kotasına takıldı | Ark adımları bütçe tanımaz (§13.5) |
-| G2 | awaiting_subject sonsuza kadar sürüyor | 14 gün sonra otomatik close |
+| G2 | awaiting_subject sonsuza kadar sürüyor | 2 hafta sonra otomatik close |
 | G3 | Ark iptal oldu ama zamanlanmış adımı Schedule'da | abort_arc kendi schedule girdilerini temizler |
 | G4 | İki ark aynı bayrağı yazıyor | Bayraklar global. Ark-özel durum arc.vars'ta yaşar |
 | G5 | Ark öznesi geri geldi (eski çalışan tekrar işe alındı) | Yeni varlık = yeni id. Ark yeniden bağlanmaz (§10.9) |
@@ -1404,7 +1450,7 @@ Yeni mühürlü metin eski kartın **yerine geçer**, yanında çalışmaz. Bir 
 - K2 (Büyüt: bir tık, sonsuz +$720 MRR/gün) → latch + I2 ile kapanır
 - `mvp_market_type` günlük yol boşluğu → G6 guard'ı
 - Gerçek marka adları (RivalCatalog + event copy) → D6 lint
-- `END_META_BANKRUPTCY_FRANK` "yedi gün" ↔ `SHUTTER_DAYS: 30` → seam interpolasyonu
+- `END_META_BANKRUPTCY_FRANK` "yedi gün" ↔ `SHUTTER_DAYS: 30` (bugün `SHUTTER_WEEKS` 4) → seam interpolasyonu
 - `raise_requested` ve `employee_eligible_for_promotion` sinyalleri → emit noktaları açılır
 
 ## 23. AÇIK MADDELER
@@ -1648,3 +1694,117 @@ geçmişindedir (`git show 6e3e190:project-unicorn/docs/SEAM_REGISTRY.md`).
 `--event-vocab` koşusunda koddan yeniden yazılır. §6.3, §6.4, §23 ve §24'ün metni değiştirilmedi.
 §b'de VAR / OKUNUYOR / YOK sütunu yoktur: listede yalnız kayıtlı seam'ler durur. Envanterin hâlâ
 açık YOK satırları `docs/ACIK_ISLER/ACIK_KARARLAR.md`'dedir.
+
+---
+
+### §27.9 · Haftalık zaman modeli: bir tik bir haftadır
+
+Zaman modelinin tek kaynağı `GDDs/GDD — ZAMAN MODELİ.md`'dir. Motor sabitlerinin gün → hafta çevirisi onun
+§4.8'inde, kart başına bekleme süreleri §4.10'undadır, gün damgalı (v13) kayıtların çevrilmesi §10'undadır. Bu
+belgenin gövdesi haftalık modele göre yerinde güncellendi (§0.2, §1, §2, §3.1, §3.3, §5.2, §7, §8, §9.3, §9.6, §10,
+§11, §12, §13, §16, §17, §18.2, §19.3, §20, §22.3). Aşağıdakiler, kodun eski metinden ayrıldığı ya da metnin yeniden
+yazıldığı yerlerdir. §26 tarihçedir ve değişmedi; oradaki "maksimum hız 3x" satırının bugünkü karşılığı madde 6'dadır.
+§24 inşa sırasıdır ve o da değişmedi: Aşama 2'nin bitiş testi (10. gün → 90. gün) bugün `--event-probe`'da 2. hafta
+→ 13. hafta olarak koşar.
+
+**1. Adında "gün" kalan alanlar tik sayar.**
+
+*Belge ne diyordu.* Motorun zaman birimi oyun günüydü: §7.1 `day`'i, §16.3 bütün zaman alanlarını "mutlak oyun
+günü" diye tanımlıyordu; süreler gün adlı alanlardaydı (`cooldown_days`, `min_gap_days`, `expires_days`,
+`delay_days`, `days_since_flag`).
+
+*Ne yapıldı.* Bir oyun günü bir haftadır ve motor tik sayar. Mutlak damgalar adlarını korur: `admitted_day`,
+`fire_on_day`, `set_day`, `started_day`, `last_day`, history ve `held` satırlarının `day`'i, kağıdın ve süreli
+bayrağın `expires_on`'u. `EvTuning.MAX_INTERRUPTS_PER_DAY` ve `stamp_day` fiili de adını korur. Süre ve sayaç anlatan
+adlar haftaya döndü: kart JSON'unda `cooldown_weeks`, `min_gap_weeks`, `expires_weeks`, `deadline_weeks`,
+`delay_weeks` (hem `schedule_event` alanı hem ürün gecikme fiili), `set_timed_flag.weeks`, `weeks_since_flag`,
+`flag_expires_within.weeks`, `history: weeks_since`; ark dondurmasında `remaining_weeks`; seam'lerde `time.week` ve
+`*_weeks_*`. Süre okuyan her yer `TimeModel.ticks()` kapısından geçer.
+
+*Neden.* Damga adı bir kayıt alanıdır. Adını değiştirmek göç ister, "oyun günü" kavramı ise yerinde durur: tik hâlâ
+bir oyun günüdür, yalnız süresi bir haftadır. Süre adları değişmek zorundaydı, çünkü okuyucu eski anahtarı görmeyince
+sessizce varsayılana düşer: `sales.price_break`'in 0 haftalık cooldown'ı varsayılan 4 haftaya dönerdi,
+`days_since_flag` yaprağı tanınmayan yaprak sayılıp FALSE olurdu. Bu yüzden gün adlı anahtar artık E-lint'tir
+(§17.1).
+
+**2. Kategori kotasının penceresi tek tiktir.**
+
+*Belge ne diyordu.* §13.3 Katman 3: kayan 7 gün.
+
+*Ne yapıldı.* `EvTuning.CATEGORY_QUOTA_WEEK` yalnız bu tikin kabullerini sayar (`EvTempo._category_count`). Kota
+değerleri değişmedi.
+
+*Neden.* Haftalık tikte kayan 7 gün bu haftayla geçen haftayı birlikte sayardı. Eski sayım (`>= day - 7`) ayrıca 7
+değil 8 gün sayıyordu.
+
+**3. Kağıdın süresi kart başınadır; vurgu ve son uyarı son haftadadır.**
+
+*Belge ne diyordu.* §3.1 süreyi yalnız `class: paper` için istiyordu. §12.2 süreyi yüzey türüne göre veriyordu
+(varsayılan 7 gün, para masası 30, düşük bahisli 14). §11.4 son 3 günde vurgu, §12.4 son 1 günde uyarı istiyordu.
+§17.7'nin ikinci kuralı "`expires_days` var fakat `on_expire` yok" idi.
+
+*Ne yapıldı.* Her `interrupt` ve `paper` kartı kendi `expires_weeks`'ini taşır (sahip kararı; §17.7). Eski tablo
+yalnız geri düşüştür: 1 / 4 / 2 hafta (`EXPIRY_DEFAULT_WEEKS`, `EXPIRY_MONEY_WEEKS`, `EXPIRY_LOW_STAKES_WEEKS`).
+Değer yalnız kart masaya kağıt olarak düştüğünde okunur (`EvEngine._expiry_weeks` → `EvPapers.place`). Vurgu ve son
+uyarı tek kurala bağlandı: ömrü `EXPIRY_URGENT_WEEKS`'ten (1) uzun kağıdın son haftası (`EvPapers.is_expiring`). Ömrü
+tek hafta olan kağıt baştan "bu hafta" der ve ayrı uyarı almaz. §17.7'nin ikinci kuralı "kağıt ya da düşürülebilir
+interrupt, fakat `on_expire` yok" oldu.
+
+*Neden.* Süre durumun doğasından gelir (sahibin örneği: çalışan ya da müşteri talebi 2 hafta); tek bir varsayılan her
+kartı aynı sabra zorlardı. Son uyarı tikin başında, `EvPapers.take_expired`'dan hemen önce koşar ve tek haftalık
+kağıdın kalan haftası o anda hiçbir zaman 1 değildir: "son gün" kuralının birebir çevirisi 1 haftalık kağıdı
+uyarısız düşürürdü. §17.7'nin eski ikinci kuralı ise her interrupt artık `expires_weeks` taşıdığı için `on_expire`'ı
+olmayan bütün kritik kesintileri hataya çevirirdi.
+
+*Açık.* Tempo bütçesi tanımayan kesintiler (`critical`, `terminal_warning`, ark adımı) hiç kağıda düşmez; onların
+`expires_weeks` değerini, bilgi kartı `sales.weekly_summary`'ninkini de, bugün okuyan yoktur. Lint kesintilerde yine
+de ister; bilgi kartında istemez.
+Kuralın yalnız düşürülebilir kartları kapsaması sahibin kararıdır.
+
+**4. Gecede saatlik kart reddedilir; toplantı kartları saatliktir.**
+
+*Belge ne diyordu.* §3.1 ve §20 B10 gece için yalnız `allowed_hours`'u (varsayılan 08:00-20:00) sayıyordu.
+
+*Ne yapıldı.* G4, mesai bitiminden 08:00'e kadarki saatlerde (`TimeManager.is_night()`) critical olmayan saatlik
+kartı reddeder. Harness'ın saatlik tarama saatleri 9, 13, 16'dır. İki toplantı kartı (`funding.meeting_day`,
+`funding.sheet_decision`) saatlik süpürülür, `allowed_hours` [0, 23] taşır ve oturum kapısını koşulunda okur
+(`funding.meeting_sitting_open`, `funding.table_sitting_open`). `funding.meeting_day`'in günlükten saatliğe geçişi
+onay bekleyen bir tasarım seçimidir.
+
+*Neden.* Gecenin saatleri kimsenin izlemediği tek toplu adımda geçer. Varsayılan pencere 17:00 sonrasını da kapsadığı
+için kritik olmayan saatlik kart o saatlerde kabul edilip sabaha yığılırdı. Günlük süpürme 00:00'da, gecenin içinde
+koşar ve oturum kapısı orada hep kapalıdır: kapıyı koşulunda okuyan günlük kart hiç geçemezdi. Saatlik süpürme kartı
+haftanın ilk uyanık saatinde, 08:00'de önerir.
+
+**5. Toplu adımda gösterim ertelenir.**
+
+*Belge ne diyordu.* §11.3 saati motorun dışında ileri taşıyan bir yol tanımıyordu; motor her tikin sonunda hemen
+pompalıyordu.
+
+*Ne yapıldı.* Toplantı kapanışı ve gece atlaması saatleri `TimeManager.advance_hours` ve `skip_night` ile tek toplu
+adımda simüle eder. Adım sürerken (`TimeManager.is_batching()`) `EvEngine.pump()` hiçbir kart göstermez;
+`EventBus.clock_batch_ended` onu bir kez çağırır (`EvSignals` bağlar).
+
+*Neden.* Kart gösterileceği saatte yeniden doğrulanır ve kurulur, en önemlisi önce gelir, açık kart 00:00
+autosave'ini engellemez. Günlük tikin bütün kartları böylece 08:00'de, haftanın başında ekrana gelir.
+
+**6. 4× geri geldi.**
+
+*Belge ne diyordu.* §11.5: maksimum hız 3x, 4x modal yoğunluğu sebebiyle kaldırıldı (§26 madde 18).
+
+*Ne yapıldı.* Hız merdiveni oyun saati başına gerçek saniyedir ve beş basamaklıdır (`TimeModel.SECONDS_PER_HOUR`:
+duraklat, 10, 5, 10/3, 2,5). Varsayılan 09-17 mesaide bir hafta 1×'te 90, 4×'te 22,5 sn sürer.
+
+*Neden.* Gün modelinde 3×'te bir oyun günü 3 sn sürüyordu. Haftalık modelde 4×'te bile bir hafta 22,5 sn sürer.
+Tempo bütçesi tik başınadır; 4×'teki gerçek zaman yoğunluğunu harness her basamakta ayrı raporlar (§13.7, §19.3).
+
+**7. Tempo sayılarının haftalık hâli ölçülmedi.**
+
+*Belge ne diyordu.* Gün cinsinden: kart boşluğu 30, özne boşluğu 14 / 30, taban 5, ark zaman aşımı 14, varsayılan
+cooldown 30; harness 50 günde bir kayıt, 365 günlük koşu.
+
+*Ne yapıldı.* 4, 2 / 4, 1, 2, 4 hafta; harness 7 haftada bir kayıt, 52 haftalık koşu. Tik tavanı tik başına 2 kaldı.
+
+*Neden.* Gün değeri 7'ye bölünüp anlamlı en yakın haftaya yuvarlandı; sıfıra düşen süre en az 1 hafta oldu. §13.8
+geçerlidir: hiçbiri ölçülmedi. Tavan dolarsa 1×'te 3 gerçek dakika (iki hafta) 4 kesinti eder, §13.7 çapasının (3)
+üstü; harness bunu ölçer ve raporlar.

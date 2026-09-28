@@ -6,7 +6,7 @@ Açık işlerin tek yeri bu klasördür.
 
 ## Test paketi
 - Smoke ve probe paketi yalın bir paketle değiştirilecek (CLAUDE.md "Test"). Bugün `scripts/debug/endgame_smoke.gd`
-  348 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu ve CSV'de yalnız
+  350 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu ve CSV'de yalnız
   smoke'un okuduğu türetilmiş anahtar aileleri bu işle birlikte ele alınır; temizlik raporlarında "yalnız test" diye
   ayrılan maddeler de buraya girer.
 
@@ -28,8 +28,8 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   yazdıkları gerekçe (ODA alt ağacının donmuş teması) ağaçta yok. Karar: varyasyonlara taşınırlar ya da bağımsızlık
   bugünkü bir gerekçeyle kalır.
 - Ar-Ge atama panelindeki ayraç `HRUiShared.hairline` ile çiziliyor (eski kopya `anti_aliasing = false` diyordu).
-- BETA satırı geçen günü göstermiyor: `build_bar_model.beta_day` hesaplanıyor, `BUILD_BETA_DAY` var, çizen yok
-  (Ürün §7, mühürlü: sayaçlar ve geçen gün).
+- BETA satırı BETA'nın kaçıncı haftasında olunduğunu göstermiyor: `build_bar_model.beta_week` hesaplanıyor,
+  `BUILD_BETA_WEEK` var, çizen yok (Ürün §7; haftalık hâli GUNCELLEMELER ch03 §7).
 - Fiyat bandı gösterimi: eski `BAND_*` token'ları silindi; bandın ekranda nasıl okunacağı arayüz kararı.
 - Oyuncu metinlerinde tire (— –) kalan CSV satırları var (CLAUDE.md §5); mühürlü metinlerde sahibin kararı gerekir.
 - EN çoğul ikizleri: `DESK_PAPER_ATLAS_TITLE` ("{n} candidate files ready") ve `FIN_GOAL_P3_HUNT` ("{n} offers on the
@@ -46,8 +46,6 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   paylaşımı, karar ACIK_KARARLAR 71.
 - Şehir haritası ana iş parçacığında yükleniyor (`OfficeCity.open` → `OfficeView.load_layout("city")`): ~130 ms
   takılma, önünde "hazırlanıyor" perdesi. Arka planda ya da önceden yükleme.
-- Mesai penceresi ofisi 1×'te günde 4 saniye dolu gösteriyor (`office_people.gd` `_wanted`); görünürlük bandını
-  genişletme alternatifi, karar ACIK_KARARLAR 63.
 - Export ön ayarı kurulunca `art/office3d/*.json`'ın pakete girdiği doğrulanır: `OfficeLayout.load` onları
   `FileAccess` ile okur; gerekirse include filtresine eklenir.
 - `project.godot` `rendering/reflections/sky_reflections/roughness_layers=7`: ofisin gökyüzü (REALTIME) yedi katman

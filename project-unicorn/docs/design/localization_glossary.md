@@ -28,7 +28,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 |---|---|---|
 | Bootstrap · Traction · Series A | *aynı* | **Kapı kararı 3 — sonsuza dek kapalı.** Yayın özel adları, iki dilde İngilizce. |
 | Faz kapısı | Phase gate | |
-| KEPENK: {n} GÜN | SHUTTER: {n} DAYS | Kepenk imgesi korunur — fiction'ın kendi metaforu. |
+| KEPENK: {n} HAFTA | SHUTTER: {n} WEEKS | Kepenk imgesi korunur, fiction'ın kendi metaforu. Tekil: SHUTTER: 1 WEEK (`_ONE`). |
 | Artıda | Default Alive | Örnek çift: EN yerlisi tür terimi. |
 | Brüt Runway | Gross Burn Runway | Kanon. |
 | KASA | CASH | TopBar; TR tarafı yeni. |
@@ -75,6 +75,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | ekonomik / dengeli / üst segment *(maaş bantları)* | budget / balanced / premium | Küçük harf TR gibi. |
 | Kaçma riski / Tükeniyor / Aşırı yüklü / Yeni | Flight risk / Burning out / Overloaded / New | |
 | İzinde / Yarın başlıyor | On leave / Starts tomorrow | |
+| İzin / Tatil | Leave / Holiday | İki ayrı durum: HR_NEWS_ON_LEAVE ve HR_NEWS_ON_HOLIDAY. |
 | EK MESAİ · {n}. GÜN | OVERTIME · DAY {n} | |
 | 3 gün / 1 hafta / 2 hafta | 3 days / 1 week / 2 weeks | Mesai blokları. |
 | ARAYIŞ BAŞLAT / ARAYIŞI İPTAL ET | START SEARCH / CANCEL SEARCH | Üç ayrı yazımın tek anahtar ailesi. |
@@ -92,10 +93,10 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | aday | lead | Sayımlar ve akış (`{n} leads`). |
 | prospect | prospect | Panodaki varlık. Kural: **lead gelir, prospect panoda oturur** — shipped ayrım kanonlaştı. |
 | Memnuniyet | Satisfaction | |
-| Churn'e ~{n} gün | ~{n} days to churn | |
+| Churn'e ~{n} hafta | ~{n} weeks to churn | Tekil: ~1 week to churn (`_ONE`). |
 | Söz / Söz teslimi | Promise / Promise due | |
 | VC görüşmesi | VC meeting | |
-| Teklif / TEKLİF: {n} GÜN | Offer / OFFER: {n} DAYS | |
+| Teklif / TEKLİF · {n} HAFTA | Offer / OFFER · {n} WEEKS | Tekil: OFFER · 1 WEEK (`_ONE`). |
 | SABIR | PATIENCE | Term-sheet kolu. |
 | MASADAN KALK | WALK AWAY | Kısa ve soğuk; "LEAVE THE TABLE" değil. |
 | SOĞUK / ILIK / KAZANILDI | COLD / WARM / WON | Pipeline sıcaklık kaydı. |
@@ -126,6 +127,10 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | DEVAM ET | CONTINUE | Kilometre taşı gazetesi de aynı anahtarı (`UI_CONTINUE`) okur. |
 | ANA MENÜ | MAIN MENU | 2026-09-25: kilometre taşı gazetesinin ikinci butonu. Sistem menüsündeki cümle hâli: "Ana menüye dön" / "Return to main menu". |
 | Geri / İleri | Back / Next | Shipped. |
+| Hafta {n} / H{n} *(tarih)* | Week {n} / W{n} | Tam biçim DATE_LINE'da, kısa biçim TopBar ve işlem listesinde. |
+| Çeyrek / {n}. Çeyrek | Quarter / Q{n} | |
+| Özet sıklığı · Her hafta / Her ay / Her çeyrek / Her yıl | Summary frequency · Every week / month / quarter / year | |
+| bu hafta / gelecek hafta | this week / next week | Göreli hafta; "önümüzdeki hafta" ya da "haftaya" kullanılmaz. "Hafta sonu" yazılmaz (hafta sonu yok; `SUMMARY_AUTO_WEEK` "haftanın sonunda" der). |
 | Bildirim yığını | Notice stack | Ofisin sağ altı: Frank'in son notu ve masadaki kâğıtlar. |
 | Kilometre Taşları / SIRADA NE VAR? / KURUCU | Milestones / WHAT'S NEXT? / FOUNDER | Shipped. |
 | Sıfırdan | Self-Made | **Kapı kararı 5 `[WORKING]`** — TR adı lokalize edildi (eski: Self-Made aynı). |

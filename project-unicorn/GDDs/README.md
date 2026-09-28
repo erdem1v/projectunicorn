@@ -35,6 +35,7 @@ yasasına göre doğru bağlamak olarak tanımlar.
 | `GDD — AR-GE MODÜLÜ .docx` | Ar-Ge | rev 1.7 · İNŞA SÜRÜMÜ · 2026-08-25 (YÜRÜRLÜK satırı); §2 ayrıca bir rev 1.8 hükmü taşır | başlık "rev 1 · İNŞA ADAYI" der |
 | `GDD — SATIŞ MODÜLÜ (rev 6 · İNŞA SÜRÜMÜ).docx` | Satış | rev 6.1 · İNŞA SÜRÜMÜ (rev 6: 2026-08-26) | dosya adı rev 6 der; ch04'ün yerine geçer |
 | `GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md` | olay motoru | rev 2 · İNŞA SÜRÜMÜ · 2026-08-25 | yukarıya bakın |
+| `GDD — ZAMAN MODELİ.md` | zaman modeli | rev 1 · İNŞA SÜRÜMÜ · 2026-09-28 | tik (hafta), süre ve oran birimi, takvim, gece atlaması, toplantı saati, mesai ve kayıt göçü için tek kaynak; bir süreyi gün ya da iş günü yazan bölümde bu belge okunur |
 
 Not sütunundaki "§n → X": o bölüm için X okunur.
 

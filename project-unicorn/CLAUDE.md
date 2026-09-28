@@ -7,13 +7,15 @@ tek yönlü üç evreden geçer: Bootstrap → Traction → Series A Hunt. Her e
 yetkin bir oyun "kasa artıyor, karar kalmadı" noktasına varmamalıdır. İki pazar farklı oynanır: B2B (hesaplar,
 sözleşmeler) ve B2C (kitle, ağızdan ağıza). Fon merdiveni: kurucunun birikimi → Frank'in MRR eşiğinde gelen tek
 çeki (tur değil, tek karar) → dört VC'den biriyle term sheet'li seed → aynı dört VC ile Series A. Series A imzası
-zaferdir. Kasa eksiye düşünce 30 günlük [WORKING] kepenk sayacı başlar; sıfıra inerse şirket iflas eder. Yumuşak
-tavan 24 oyun ayıdır ([WORKING] 730 gün). Demo Bootstrap'tan Series A kararının sonuçlanmasına kadar sürer, 60–90
-dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full farkı GDD ile kodda ayrışıyor: `docs/ACIK_ISLER/ACIK_KARARLAR.md`.
+zaferdir. Kasa eksiye düşünce 4 haftalık [WORKING] kepenk sayacı başlar; sıfıra inerse şirket iflas eder. Yumuşak
+tavan 104 oyun haftasıdır ([WORKING], yaklaşık 24 ay). Demo Bootstrap'tan Series A kararının sonuçlanmasına kadar
+sürer, 60 ile 90 dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full farkı GDD ile kodda
+ayrışıyor: `docs/ACIK_ISLER/ACIK_KARARLAR.md`.
 
 ## 2. Tasarım otoritesi
 - Otorite `GDDs/`'dir: v2 bölümleri (ch01–14), modül GDD'leri (Ürün ch03 dosyasındadır; Ekip, Ar-Ge, Satış) ve
-  olay motoru için `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`. Hangi dosyanın yürürlükte olduğu `GDDs/README.md`'de.
+  olay motoru için `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`, zaman modeli için `GDDs/GDD — ZAMAN MODELİ.md`.
+  Hangi dosyanın yürürlükte olduğu `GDDs/README.md`'de.
 - GDD ile `GDDs/GUNCELLEMELER.md` çelişirse ek belge geçerlidir.
 - Motor md'si makineyi, ch11 olay içeriğini yönetir; eşittirler. Kod md'den ayrılırsa ayrılık md'nin §27'sine yazılır.
 - Bir GDD ötekini açıkça geçersiz kılabilir: ch09 → ch01 §4; Ekip → ch02 §2/§6/§10, ch01 §5, ch06 §1.2, ch12 §8.
@@ -68,7 +70,18 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   PromiseRegistry, RivalRegistry, InvestorRegistry, TimeManager, SaveManager, Settings, Localization, AudioManager;
   sonra `MCPRuntime` (`addons/godot_mcp_runtime`, MCP köprüsü).
 - `scripts/systems/` statik `RefCounted` sınıflardır; TimeManager saatlik ve günlük tiki dağıtır, EventBus sinyal
-  merkezidir. Zaman merdiveni `TimeManager.SECONDS_PER_DAY = [0, 12, 6, 3]`: duraklat / 1× / 2× / 3×.
+  merkezidir.
+- **Zaman.** Bir oyun günü (tik) bir haftadır; hafta sonu yoktur. `GameState.day`, sistemlerin `daily_tick`'i ve
+  `EventBus.day_advanced` adlarını korur ve tik sayar; her tik 24 saatlik tik ve bir günlük tik taşır. Zaman
+  sabitlerinin ve birim dönüştürücülerinin tek evi `TimeModel`'dir: süre hafta verisidir ve `TimeModel.ticks()` ile
+  okunur, `*_PER_DAY` oranları gün verisi kalır ve tikte `TimeModel.per_tick()` ile ×7 uygulanır. Hız merdiveni
+  `TimeModel.SECONDS_PER_HOUR = [0.0, 10.0, 5.0, 10.0 / 3.0, 2.5]` saniye / oyun saati: duraklat / 1× / 2× / 3× / 4×
+  [WORKING]. Hafta 08:00'de başlar; varsayılan mesaide (09:00'dan 17:00'ye) hafta 1×'te 90, 4×'te 22,5 saniye sürer.
+  Mesai bitip ofis boşalınca gecenin saatleri tek toplu adımda koşar (`TimeManager.skip_night`); saati dışarıdan
+  ileri taşıyan öbür kapı `TimeManager.advance_hours(n)`'dir (toplantı kapanışı, smoke, probe).
+- Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber
+  şeridine 10. yuvada tek satır düşer; modal açılmaz. Özet modalı oyuncunun seçtiği sıklıkta gelir (`summary_frequency`:
+  haftalık, aylık, çeyreklik ya da yıllık; varsayılan çeyreklik; `SummarySystem`, `EventBus.summary_ready`).
 - **WRITE-THROUGH LAW.** Hiçbir olay, modal ya da UI başka bir alanın durumunu doğrudan yazmaz; değişiklik durumun
   sahibinin seam'inden geçer ve UI'nin dinlediği yerde seam sinyal yayar. Seam yoksa kurulur, alan "bir kereliğine"
   yazılmaz. Seam'ler: müşteri → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (yayar);
@@ -83,7 +96,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   `data/events/arcs/`'ta. İçerik durumu yalnız `scripts/events/seams/`'ten okur. Invariant'lar: motor GDD §0.3.
 - Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
   kazanılır. B2C'de kitle her oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
-- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 13, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
+- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 14, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`).
 
@@ -150,15 +163,21 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   onu `--event-lint=baseline` yazar, doğrulamada koşulmaz)
   → `"$GODOT" --headless --path . -s res://scripts/debug/loc_residue.gd` → `bash tools/smoke_run.sh loc_csv_integrity`
   → hedefli smoke (`smoke_run.sh <vaka>`, önekler HARITA'da); tam smoke (`--all`) yalnız push öncesi.
-- Motor: `--event-probe`, `--why-fire=<kart id>`, `--event-harness=random:seeds=N:days=M | guided[:seeds=N:days=M]`,
+- Motor: `--event-probe`, `--why-fire=<kart id>`, `--event-harness=random:seeds=N:weeks=M | guided[:seeds=N:weeks=M]`,
   `--event-vocab` (`_vocabulary.md`'yi üretir, KEEP bloğu kalır); `python tools/gen_signal_manifest.py`.
-- Probe: `--run-log=<preset>:<gün>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te. Karar değil defter basar;
+- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te. Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir.
+- Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
+  `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`
+  pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer.
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
   negotiation, meeting, product, hr, finance, b2b), `--probe-shot`, `--theme-audit=<sekme>`, `--shot-size=GxY`,
   `--lang=tr|en` (kayıtlı dili ezer). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner; EN `_en` alır.
-  Ofis: `--office-shot=<home|ishani|plaza|loft|city>:<saat>[:full|card|<sekme>|hr_dossier]`.
+  Ofis: `--office-shot=<home|ishani|plaza|loft|city>:<saat>[:full|card|<sekme>|hr_dossier]`. Kurucunun toplantı
+  yolculuğu: `--travel-shot=<home|ishani|plaza|loft>` (10:00'da satış toplantısına gidiş, toplantı ve dönüş;
+  `travel_shot_<ofis>_NN.png` dizisi). Bir hafta gerçek saatle: `--day-shot=<ofis>:<hız>` (08:00'den çıkış ve gece
+  atlamasıyla ertesi 08:00'e, `day_shot_<ofis>_<hız>_NN.png` ve kare başına `DAYSHOT` satırı).
 - **Ekran kartı.** Ekranlı Godot koşuları (shot, tema denetimi, görsel kabul) paralel değil sırayla koşar; ekran
   gerektirmeyen her koşu `--headless`.
 - Git kökündeki `.githooks/pre-commit` lint ve `loc_residue`'yu koşar; etkin değildir, etkinleştirmek sahibin kararıdır.
