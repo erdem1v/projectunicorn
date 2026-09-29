@@ -1205,6 +1205,30 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Kaynak: Ekip GDD §7.1, §8.5; GUNCELLEMELER Ekip §8.5 maddesi; GDD Zaman Modeli §9; sahip kararı 2026-09-27/28
     (süre 5 ile 16 saat, çarpan 12 ile 16 saat için 1,7 ile 2,5).
 
+- **93 · Görüşme panelinin [WORKING] değerleri ve tasarımdan sapmaları onay bekliyor.**
+  - Ne oluyor: Risk sözcüğü eşikleri `UiTokens.RISK_SAFE_MIN` 0,62 ve `RISK_RISKY_MIN` 0,40; TUTUM'un "temkinli"
+    sınırı `ATTITUDE_WARY_MIN` 25; satışta "ılık" sınırı `SalesMeetingAdapter.LUKEWARM_MIN` 40 (iğnenin bu aralıkta
+    kural sınırı yok, VC'nin 40'ıyla aynı); satışta baş sallama eşiği cevabın tam ağırlığının yarısı (`NOD_SHARE`);
+    oynatma süreleri (`MeetingPanel`: zar 0,8 sn, yazma hızı, aralar). Tasarımdan sapmalar: karşı taraf satırı serif
+    16 (tasarımda 19, merdivende yok); balon köşesi 2 px (tasarımda 3/14); sonuç kartı krem kart ve renkli bant
+    (tasarımda koyu kart); "ılık" sözcüğü başlık zemininde `ACCENT_DEEP` ile 3,9:1 (tasarımın rengi 4,1:1; ikisi de
+    4,5'in altında). Sonuç kartı: masa dolu diye bekleyen teklif geçerlilik süresi yazmaz (süre masada yer açılınca
+    başlar); kurucudan başka çalışan yokken ret kartı yalnız marka bedelini yazar (moral bedeli çalışanlara iner).
+  - Nerede: `scripts/theme/ui_tokens.gd`; `scripts/ui/meeting/`.
+  - Oyuncuya etkisi: Seçeneklerin risk sözcüğü, tutum sözcükleri, jestlerin sıklığı, panelin okunurluğu.
+  - Seçenekler: A) Değerler ve sapmalar onaylanır. B) Sahip değiştirir.
+  - Kaynak: görüşme akışı planı §6, §8, §10 (Erdem, 2026-09-29).
+
+- **94 · Tek oda ve tek kule; silinen Frank kartı ve resimler.**
+  - Ne oluyor: Bütün görüşmeler (satış, seed, Series A, term sheet masası) şehirdeki yatırımcı kulesinin en üst
+    katındaki tek toplantı odasında geçer; harita hedefi her karşı taraf için bu kuledir. Frank'in
+    `funding.meeting_day` kartı silindi, yerini fonun çağrısı aldı. Dört oda resmi ve dört fon portresi silindi; Frank'in portresi kaldı.
+  - Nerede: `scripts/ui/office/office_layout.gd` (`meet_hit`), `office_city.gd`, `office_travel.gd`;
+    `art/office3d/meet.*`.
+  - Oyuncuya etkisi: Her görüşme aynı odada; fonlar ve müşteriler yerle değil kişilerle ayrışır.
+  - Seçenekler: A) Onaylanır. B) Fon ya da müşteri başına ayrı oda ve bina (varlık hattı işi).
+  - Kaynak: görüşme akışı planı §0 varsayımları ve §10 (Erdem, 2026-09-29).
+
 ## Metin ve yerelleştirme
 
 - **`TERM_INV_*` masa satırları (15 TR + 15 EN).** TR 95bc9ea'da, EN 8457ce3'te yazıldı; ikisi de onay bekliyor.
@@ -1404,13 +1428,24 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     ritmi etkiler (trait task'ı; ISLER).
   - Kaynak: ofis karakterleri planı §2, §9 (Erdem, 2026-09-28).
 
-- **92 · Kurucu portresi ve VC bust'ları.**
+- **92 · Kurucu portresi.**
   - Ne oluyor: Kurucunun ofisteki 3B görünümü seçtiği boyalı portreye elle eşlendi (`LookSystem.FOUNDER_LOOKS`, 11
-    portre); kurucu sayfaları boyalı portreyi göstermeye devam ediyor. VC'lerin ve müşteri tarafının bust'ı yok.
+    portre); kurucu sayfaları boyalı portreyi göstermeye devam ediyor.
   - Nerede: `scripts/systems/look_system.gd`; `--office-shot=home:14:founders`.
-  - Oyuncuya etkisi: Kurucu iki görüntüyle görünür: sayfalarda boyalı portre, ofiste ve kartlarda 3B karakter.
-  - Açık: Kurucu portresi → karakter seçimi ve VC bust'ları toplantı sahnesi task'ında.
-  - Kaynak: ofis karakterleri görev kararı 5 (Erdem, 2026-09-28).
+  - Oyuncuya etkisi: Kurucu iki görüntüyle görünür: sayfalarda boyalı portre; ofiste, kartlarda ve görüşme panelinde
+    3B karakter.
+  - Açık: Kurucu portresi → karakter seçimi onboarding tasarımında.
+  - Kaynak: ofis karakterleri görev kararı 5 (Erdem, 2026-09-28); görüşme akışı kararı 5 (Erdem, 2026-09-29).
+
+- **95 · Görüşme metinleri; mevcut VC satırlarında tire ve tırnak.**
+  - Ne oluyor: Görüşme akışının yeni anahtarları (`MEETING_*`: kicker'lar, VC ve satış rol adları, tutum ve risk
+    sözcükleri, sonuç kartı, davet, dönüş sorusu, `MEETING_ROLE_LINE`, `MEETING_RES_PAIR`, `MEETING_RES_COST_BRAND`)
+    EN önce yazıldı, TR tasarımın ifadelerini izler; onay bekliyor. Panel mevcut VC satırlarını olduğu gibi gösterir:
+    bazılarında tire var (`VC_B1_LINE` "Vaktim kısa — beni…", `VC_B1_CHOICE`, `VC_B4_CALLBACK`, `VC_B4_PUSH`) ve karşı
+    taraf satırları tırnak içinde (tasarımda tırnak yok). Satış satırları hâlâ `PH:` yer tutucusu.
+  - Nerede: `localization/strings.csv`.
+  - Seçenekler: A) Yeni metin onaylanır. B) Sahip yeniden yazar; tire ve tırnaklar kalkar (LANGUAGE INTEGRITY LAW).
+  - Kaynak: CLAUDE.md §3, §5; 1888fe4, eba2140, 4ebcc5d, cf80260.
 
 ## Kod ve test altyapısı
 

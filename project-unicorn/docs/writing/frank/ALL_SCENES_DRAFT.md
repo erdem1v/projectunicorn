@@ -246,6 +246,8 @@ Frank.
 
 ## 13 · `ev_vc_meeting_prompt`
 
+**Retired (4ebcc5d).** The card is gone: the fund calls in the office (phone and invite card) and the investor speaks in the meeting panel. The draft below is kept for the record.
+
 **Class:** scene (enter or forfeit). 4 lines + options. Structural defect C (investor line quoted inside a Frank card) removed in this draft.
 
 **Skeleton.** `VCPitchSystem`, daily slot 8b, hour 00. Trigger: a booked meeting for `{investor}` whose day has come; `prompted` latch. Options: `VC_EV_ENTER_MEETING` → `start_vc_meeting{vc_id}` (opens MeetingScene; no chip) · `VC_EV_SKIP_MEETING` → `decline_vc_meeting` (clears the meeting; **no chip**). Builder formats `{investor}`. Title `VC_EV_MEETING_TITLE`.

@@ -273,7 +273,7 @@ Bu kural, iki çalışan arasındaki çatışma gibi çoklu-özne kartlarını b
              support_lead   destek sıralamasının ilk temsilcisi
   customer   at_risk · escalated · expansion_ready · open_request
   investor   expiring_sheet (süresi en az kalan teklif) · decision_sheet (karar
-             günü gelmiş teklif) · meeting_pending · seed_lead
+             günü gelmiş teklif) · seed_lead
 ```
 
 `founder`, `prospect` ve `rival` seçici almaz. Koşul bağlanan tek özneye karşı sınanır; hangi özneye sorulacağını seçici söyler (gerekçe §27.4).
@@ -825,7 +825,7 @@ Aynı seviyede: **en eski kabul edilen önce.** Eşitlikte `event_id` alfabetik 
 - **Modal SceneTree'yi durdurur.** Tik dönüşü (gece atlamasının içindeki 00:00 devri) modal kapanana kadar bekler.
 - **`process_mode = ALWAYS (3)`** **zorunlu.** GameShell ve tüm interaktif çocukları. Agent varsayılanı `INHERIT`'tir ve bu bug runtime testi olmadan görünmez.
 - Karar anında oto-yavaşlama uygulanır (mevcut davranış korunur).
-- **Toplantı saati durdurur, bitince saati ileri atlatır.** Satış toplantısı, VC ve seed pitch'i ve term sheet masası açıkken saat durur. Sahne kapanınca saat oturumun süresi kadar ileri gider: satış 2 saat (`SalesConstants.MEETING_SKIP_HOURS`), pitch 2 saat (`PitchConstants.MEETING_HOURS`; birinci vuruşta çekilen VC toplantısı yarısı, 1 saat), masa 1 saat (`TERM_TABLE_HOURS`; koşuyu bitiren imzada atlama olmaz). Atlanan saatler silinmez: `TimeManager.advance_hours` her birinin saatlik tikini koşar. Atlama kurucunun mesai bitiminde, en geç 23:00'te durur ve gece yarısını geçmez; kalan saatleri gece atlaması taşır.
+- **Toplantı saati durdurur, bitince saati ileri atlatır.** Satış toplantısı, VC ve seed pitch'i ve term sheet masası açıkken saat durur. Oturum kapanınca saat oturumun süresi kadar ileri gider: satış 2 saat (`SalesConstants.MEETING_SKIP_HOURS`), pitch 2 saat (`PitchConstants.MEETING_HOURS`; birinci vuruşta çekilen VC toplantısı yarısı, 1 saat), masa 1 saat (`TERM_TABLE_HOURS`; koşuyu bitiren imzada atlama olmaz). Atlanan saatler silinmez: `TimeManager.advance_hours` her birinin saatlik tikini koşar. Atlama kurucunun mesai bitiminde, en geç 23:00'te durur ve gece yarısını geçmez; kalan saatleri gece atlaması taşır.
 - **Toplu adımda kart gösterilmez.** Toplantı atlaması ya da gece atlaması sürerken (`TimeManager.is_batching()`) `EvEngine.pump()` hiçbir kart göstermez; adım bitince (`EventBus.clock_batch_ended`) bir kez pompalanır. Kart gösterileceği saatte yeniden doğrulanır (§4.4), en önemlisi önce gelir (§11.2) ve açık bir kart 00:00 autosave'ini engellemez.
 
 ### 11.4 ODA masası
@@ -1761,15 +1761,15 @@ olmayan bütün kritik kesintileri hataya çevirirdi.
 de ister; bilgi kartında istemez.
 Kuralın yalnız düşürülebilir kartları kapsaması sahibin kararıdır.
 
-**4. Gecede saatlik kart reddedilir; toplantı kartları saatliktir.**
+**4. Gecede saatlik kart reddedilir; masa kartı saatliktir.**
 
 *Belge ne diyordu.* §3.1 ve §20 B10 gece için yalnız `allowed_hours`'u (varsayılan 08:00-20:00) sayıyordu.
 
 *Ne yapıldı.* G4, mesai bitiminden 08:00'e kadarki saatlerde (`TimeManager.is_night()`) critical olmayan saatlik
-kartı reddeder. Harness'ın saatlik tarama saatleri 9, 13, 16'dır. İki toplantı kartı (`funding.meeting_day`,
-`funding.sheet_decision`) saatlik süpürülür, `allowed_hours` [0, 23] taşır ve oturum kapısını koşulunda okur
-(`funding.meeting_sitting_open`, `funding.table_sitting_open`). `funding.meeting_day`'in günlükten saatliğe geçişi
-onay bekleyen bir tasarım seçimidir.
+kartı reddeder. Harness'ın saatlik tarama saatleri 9, 13, 16'dır. Masa kartı (`funding.sheet_decision`) saatlik
+süpürülür, `allowed_hours` [0, 23] taşır ve oturum kapısını koşulunda okur (`funding.table_sitting_open`). VC
+görüşmesini kart açmaz: görüşme haftasında fon arar ve ofiste telefon çalar (`VCPitchSystem.call_waiting`, Zaman
+Modeli §8.6).
 
 *Neden.* Gecenin saatleri kimsenin izlemediği tek toplu adımda geçer. Varsayılan pencere 17:00 sonrasını da kapsadığı
 için kritik olmayan saatlik kart o saatlerde kabul edilip sabaha yığılırdı. Günlük süpürme 00:00'da, gecenin içinde

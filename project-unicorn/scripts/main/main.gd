@@ -1838,7 +1838,7 @@ const MEETING_SHOT_VC := {
 ## rehearsed answer marked; sheet = a won room's result card; callback = a lukewarm room's callback
 ## and its condition; ret = a cold room's rejection, its cost and Frank on the way out; seed = the
 ## seed room's result card; long = a lukewarm room's closing beat under every earlier one, the most
-## the panel holds (pair it with --shot-size=1280x720 for the narrowest dock).
+## the panel holds (pair it with --shot-scale=1.25 for the narrowest dock).
 func _run_meeting_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_sales_world()

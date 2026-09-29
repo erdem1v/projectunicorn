@@ -50,7 +50,7 @@ Judgment: **not a defect.** A milestone acknowledgement is a confirmation card b
 *The card hands the player something and leaves them to go find where it lives. Every instance wants one generic modifier, built once.*
 
 `[VOCAB?] navigate_to_tab{tab}` is required by B1 to B5. Do not special-case Sales.
-Precedent that proves it is buildable: row 13's `start_vc_meeting` already opens the MeetingScene straight from a card, and row 24's `term_table_requested` opens the table from FrankPopup. The routing exists; it is not generalised.
+Precedent that proves it is buildable: row 24's `term_table_requested` opens the table from FrankPopup. The routing exists; it is not generalised.
 
 **B1 · Row 6 `ev_ps_frank_intro_b2b`, type specimen.** Spawns a `mid` prospect and leaves the player on the modal. Ruled: option becomes "Satış'a git" + `navigate_to_tab{tab: "sales"}`.
 **B2 · Row 7.** Names the pricing ruler in Product and does not go there. → `tab: "product"`.
@@ -62,7 +62,7 @@ Precedent that proves it is buildable: row 13's `start_vc_meeting` already opens
 
 ## C · Two voices on one card
 
-**C1 · Row 13 `ev_vc_meeting_prompt`.**
+**C1 · Row 13 `ev_vc_meeting_prompt`.** Closed by retirement (4ebcc5d): the card is gone and the investor speaks in the meeting panel.
 The event carries `character_id = "char_mentor_frank"`, so the modal prints Frank's speaker strip and the MENTOR badge; the body then interpolates `{line}` = `InvestorRegistry.archetype_line` (`INV_ARCH_*`) inside quotation marks (`vc_pitch_system.gd:801-803`). The card shows Frank and quotes the investor.
 Smallest fix: drop `{line}` from the body (the draft in `ALL_SCENES_DRAFT.md` does this) and let the investor speak in the MeetingScene, which is his surface.
 No other Frank card mixes speakers; row 8 mixes narrator + Kasadar notification + Frank, which is one voice plus the world and is fine.
@@ -141,7 +141,7 @@ Recommendation: **remove the Frank framing**, keep the card as a neutral notific
 
 **H2 · Row 15 `ev_vc_d179_warning`.** Same shape: a calendar fact one day before the fork. Recommendation: **remove the Frank framing**, keep the card.
 
-**H3 · Row 13 `ev_vc_meeting_prompt`.** The player booked this meeting. Frank did not arrange it, is not in the room, and the card's real content is the investor's line plus a route into the MeetingScene. Recommendation: **remove the Frank framing** (which also resolves C1), keep the card.
+**H3 · Row 13 `ev_vc_meeting_prompt`.** Closed by retirement (4ebcc5d). The player booked this meeting. Frank did not arrange it, is not in the room, and the card's real content is the investor's line plus a route into the MeetingScene. Recommendation: **remove the Frank framing** (which also resolves C1), keep the card.
 
 **H4 · Row 21 `PROD_TIP_*`.** A system tip derived from bug risk, the quality passer and the weakest axis, rendered under an "FK" avatar and a "FRANK" label (`detail_view.gd:320-340`). Nothing about the strip is his.
 Recommendation: keep it if Frank-as-dashboard-voice is wanted deliberately, drop the attribution if not. Not a rewrite question; a design one.

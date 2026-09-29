@@ -311,7 +311,7 @@ kullanılan gün değişmez.
 | `EXPIRY_DEFAULT` / `MONEY` / `LOW_STAKES` / `URGENT` | 7 / 30 / 14 / 3 | 1 / 4 / 2 / 1 | yalnız geri düşüş, §3.8 |
 | `ARC_AWAITING_SUBJECT_TIMEOUT_*` | 14 | 2 | |
 | `DEFAULT_COOLDOWN_*` | 30 | 4 | |
-| kart `cooldown` | 21, 14 ×3, 6, 5, 1 ×4, 0, 90 | 3, 2 ×3, 1, 1, 1 ×4, 0, 13 | cs_escalation; request_complaint, request_feature, request_renewal; weekly_summary; gate_series_a; retention, meeting_day, sheet_decision, version_ship; price_break; seed_stalled |
+| kart `cooldown` | 21, 14 ×3, 6, 5, 1 ×3, 0, 90 | 3, 2 ×3, 1, 1, 1 ×3, 0, 13 | cs_escalation; request_complaint, request_feature, request_renewal; weekly_summary; gate_series_a; retention, sheet_decision, version_ship; price_break; seed_stalled |
 | kart `deadline` | 14 ×4 | 2 ×4 | cs_escalation, request_complaint, request_feature, retention |
 | seam eşikleri | `sheet_days_left ≤ 3`, `angel ≥ 2`, `seed_close ≤ 1`, `acq ≤ 10`, `launch ≥ 1`, `history ≥ 1` | `sheet_weeks_left ≤ 2`, ≥ 1, ≤ 1, ≤ 1, ≥ 1, ≥ 1 | ⚑ `gate_series_a`'daki `history weeks_since ≥ 1` Frank'in kapı satırıyla karar kartı arasına tam bir hafta koyar |
 | harness kayıt aralığı / varsayılan koşu | 50 / 365 gün | 7 / 52 hafta | tarama saatleri 9, 13, 16 (17:00 varsayılan mesaide gecedir) |
@@ -343,7 +343,7 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 | `customer.retention` | kesinti | 1 | churn sayacı işliyor |
 | `sales.price_break` | kesinti | 1 | teklifin son haftası |
 | `sales.weekly_summary` | bilgi | 1 | haftalık özet |
-| `funding.meeting_day`, `sheet_decision`, `last_answer`, `sheet_expiry` | kesinti, kritik | 1 | bu haftaya bağlı |
+| `funding.sheet_decision`, `last_answer`, `sheet_expiry` | kesinti, kritik | 1 | bu haftaya bağlı |
 | `funding.acquisition_offer` | kesinti, kritik | 1 | `ACQ_CARD_WINDOW_WEEKS` |
 | `funding.shutter_warning` | kesinti, kritik | 1 | hiç düşmez |
 | `funding.frank_cheque`, `seed_offer` | kesinti, kritik | 4 | para masası (`EXPIRY_MONEY_WEEKS`) |
@@ -499,7 +499,7 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 
 ### 8.1 Saat bütçesi ve atlama
 
-- Toplantı sahnesi açıkken saat durur. Kapanışta saat toplantının süresi kadar ileri atlar (`advance_hours(n)`): atlanan
+- Oturum açıkken saat durur. Kapanışta saat toplantının süresi kadar ileri atlar (`advance_hours(n)`): atlanan
   saatler simüle edilir, saatin kesri korunur (10:45 giriş 12:45'e iner).
 - Atlama gece yarısını geçmez: n, `min(n, max(0, min(kurucu bitişi, 23) - saat))` ile kırpılır; kalan saatleri gece
   atlaması taşır. Kurucunun haftalık payına kırpılmış n yazılır (§8.4).
@@ -513,8 +513,9 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 | term sheet masası | 1 saat [WORKING] | `PitchConstants.TERM_TABLE_HOURS` |
 | koşuyu bitiren imza | atlama yok | |
 
-- Atlama sistemde durur, ana sahnede değil: satışta `SalesMeetingSystem.close()`, VC'de ve masada sahne kalktıktan
-  sonra çağrılan `end_sitting()` atlamayı yapar. Probe aynı yoldan geçer.
+- Atlama sistemde durur, ana sahnede değil: satışta `SalesMeetingSystem.close()`, VC'de ve masada `end_sitting()`
+  atlamayı yapar; hepsi görüşme paneli ya da masa sahnesi kalktıktan sonra çağrılır (`main.gd` `_close_meeting`,
+  `_close_term_table`). Probe aynı yoldan geçer.
 - Oturumu kapatan sistem kurucuyu atlamadan önce serbest bırakır (satışta `close()`, VC'de ve masada `reset()`);
   saat kurucunun meşguliyetine dokunmaz.
 
@@ -522,13 +523,13 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 
 - Dört oturum için tek kural: gece ise ya da saat > kurucunun mesai bitişi - oturum saati ise giriş kapalıdır ve
   kilit nedenini gösterir. Kapının tek evi `WorkHoursSystem.sitting_open(saat)`'tir; satış toplantısının kapısı
-  (`SalesLedger.meeting_block_reason`), Yatırım sekmesi ve iki seam (`funding.meeting_sitting_open`,
-  `funding.table_sitting_open`) onu okur.
+  (`SalesLedger.meeting_block_reason`), Yatırım sekmesi, fonun çağrısı (`VCPitchSystem.call_waiting`) ve seam
+  `funding.table_sitting_open` onu okur.
 - Satışta kesim `MEETING_ENTRY_CUTOFF_HOURS` (2 [ÇALIŞMA]) saattir. Kapı sırası: gece ya da çok geç
   (`SALES_BLOCK_TOO_LATE`) → hafta dolu (`SALES_BLOCK_WEEK_FULL`).
-- VC toplantı kartı ve term sheet karar kartı saatlik değerlendirilir ve oturum kapısı açıkken kabul edilir. Term
-  sheet ve seed kartlarının "masaya otur" seçeneği, Yatırım sekmesinin düğmeleri ve masa kapalı kapıda nedenli
-  kilitlidir (`VC_BLOCK_LATE`).
+- VC görüşmesini kart değil fonun çağrısı açar (§8.6). Term sheet karar kartı saatlik değerlendirilir ve oturum
+  kapısı açıkken kabul edilir. Term sheet ve seed kartlarının "masaya otur" seçeneği, Yatırım sekmesinin düğmeleri
+  ve masa kapalı kapıda nedenli kilitlidir (`VC_BLOCK_LATE`).
 
 ### 8.3 Haftalık tavan
 
@@ -547,7 +548,7 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 - Günlük sistemler (Ar-Ge birikimi) kurucu terimini `1 - haftanın toplantı saati / 40` ile çarpar. Sayaç
   `founder_meeting_hours` (GameState) haftalık payın tek kaynağıdır.
 - Aynı pay kuralı VC ve seed pitch'i ile term sheet masasına da uygulanır.
-- Oturum boyunca (sahne açık, saat duruk) kurucu meşgul görünür (`HRSystem.founder_in_meeting`). Bayrak kayda girmez;
+- Oturum boyunca (oturum açık, saat duruk) kurucu meşgul görünür (`HRSystem.founder_in_meeting`). Bayrak kayda girmez;
   oturumu kapatan her yol (satış kapanışı, VC bitişi ve çekilme, masada imza, yürüme, kalkma) onu temizler.
 
 ### 8.5 Kurucunun geçişi
@@ -555,21 +556,30 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 Kurucunun dış toplantıya gidişi yürüyüş değil geçiştir. Geçiş yalnız ana sahnenin toplantı işleyicilerinde koşar;
 mekanik ondan bağımsızdır ve headless güvenlidir.
 
+0. Davet: satışta "Görüşmeye git", Series A'da görüşme haftasının çağrısı (§8.6) ofiste kurucunun başının üstünde
+   telefonu çaldırır; davet kartı Kabul et / Ertele sorar (`MeetingInvite`). Satışta Ertele kartı kapatır ve telefon
+   çalmaya devam eder. Kabul et geçişi başlatır.
 1. Saat donar (`freeze_clock("travel")`); oturum geçişten önce açılır ve kurucu meşgul olur.
 2. Pencere katmanı perdelenir; pencereler kapanmaz, dönüşte aynı pencere açık gelir.
-3. Kurucu masadan kalkar ve çıkışa doğal hızla yürür; yürüyüş en fazla `EXIT_S` 1,5 sn [WORKING] izlenir.
+3. Kurucu masadan kalkar ve çıkışa doğal hızla yürür, en yakın iki oturan çalışan başını ona çevirir; yürüyüş en
+   fazla `EXIT_S` 1,5 sn [WORKING] izlenir.
 4. Kısa kararma (her yarısı `FADE_S` 0,25 sn [WORKING]), sonra şehir haritası yol kipinde: kontrol yok, girdi
    kapalı, trafik akar.
-5. Kamera ve iğne kurucunun ofisinden hedef binaya kayar (`DRIVE_TIME` 1,2 sn [WORKING]). Hedef binalar sahne
-   verisidir (`OfficeConstants.MEETING_TARGET` [WORKING]).
-6. Toplantı sahnesi takılır, saat duraklatılır, gezi donması çözülür.
-7. Kapanışta saat toplantı süresi kadar atlar (§8.1), perde kalkar, hız geri gelir. Kurucu girişten masasına yürür;
-   atlama mesai bitişine ya da ötesine indiyse yürüyüş olmaz, gece başlar.
+5. Mevcut ofisle yatırımcı kulesi arasına kesikli, yukarı kavisli bir yol çizilir ve kurucunun bust'lı diski yol
+   boyunca ilerler; iki binanın üstünde çip durur (mevcut ofis; karşı tarafın yeri ve lideri), varışta kulenin tacı
+   parlar ve kamera kuleye yaklaşır (`OfficeCity.ROAD_OUT` [WORKING]). Bütün görüşmeler yatırımcı kulesinin en üst
+   katındaki cam toplantı odasında geçer (ACIK_KARARLAR 94).
+6. Kararma, toplantı odası: karşı taraf masada oturur, kurucu asansörden yürüyüp oturur (`MeetingCast`). Görüşme
+   paneli ofis görünümünün sağına takılır, saat duraklatılır, gezi donması çözülür.
+7. Kapanışta panel kalkar, saat toplantı süresi kadar atlar (§8.1), kurucu kalkar ve harita üzerinden geri yol
+   çizilir (`ROAD_HOME` [WORKING]); perde kalkar, hız geri gelir. Kurucu girişten masasına yürür, en yakın oturan
+   çalışan başını kaldırır ve haber bandına "{ad}: Nasıl geçti?" düşer; atlama mesai bitişine ya da ötesine
+   indiyse yürüyüş olmaz, gece başlar.
 
 - Geçiş sırasında gelen kart istekleri ertelenir ve toplantıdan sonra gösterilir; kart gösterildiği anda yeniden
   kurulur (`EventGate.active_card()`). Boşluk ve 1-4 tuşları geçişte yutulur, Ayarlar açılmaz. Tık ya da Esc geçişi
   atlar.
-- Görsel kontrol: `--travel-shot=<ofis>` çıkış, harita, oda ve dönüş karelerini çeker. Shot ve harness koşularında
+- Görsel kontrol: `--travel-shot=<ofis>[:vc]` davet, çıkış, harita, oda, panel ve dönüş karelerini çeker. Shot ve harness koşularında
   geçiş yoktur.
 
 ### 8.6 VC randevusu
@@ -578,6 +588,11 @@ mekanik ondan bağımsızdır ve headless güvenlidir.
 - Hazırlık 1 hafta sürer ve görüşmeye en az bir hafta varken başlar (`PREP_MIN_WEEKS_BEFORE` 1); bir haftalık
   randevuda bu, randevunun alındığı haftadır.
 - İptal randevu masasını haftanın geri kalanında kapatır.
+- Görüşme haftası gelince fon arar: oturum kapısı açıkken ofiste telefon çalar, davet kartı hemen açılır ve saat
+  durur (`VCPitchSystem.call_waiting`). Oyuncu kabul eder ya da bir kez erteler: erteleme randevuyu bir bekleme
+  süresi kaydırır ve fona erteleme cezasını yazar (`postpone_call`, `MEETING_RESCHEDULE_PENALTY`); kart bunu ve
+  ertelemenin yalnız bir kez yapılabileceğini söyler. İkinci çağrıda yalnız Kabul et vardır. Seed pitch'inin çağrısı
+  yoktur; oyuncu Yatırım sekmesinden doğrudan girer.
 
 ## 9. Mesai
 
