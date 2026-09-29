@@ -1,6 +1,6 @@
 """Checks art/office3d/<id>.glb + <id>.json against the binding contract in tools/office3d/README.md.
 
-usage: python tools/office3d/check_export.py [id ...]     (default: all five offices)
+usage: python tools/office3d/check_export.py [id ...]     (default: all five offices and the meeting room)
 Prints per office: size, glTF counts, named dynamic nodes, the heaviest materials by
 vertex/index bytes, and every contract violation. Exit code 1 when any check fails.
 """
@@ -9,13 +9,14 @@ from collections import Counter, defaultdict
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 OUT = os.path.join(ROOT, "art", "office3d")
-IDS = ["home", "ishani", "plaza", "loft", "city"]
+IDS = ["home", "ishani", "plaza", "loft", "city", "meet"]
 KINDS = {
     "home": ["desk", "bal", "ket", "eat", "wc", "out", "bed", "stairs", "door", "enter"],
     "ishani": ["desk", "visit", "meet", "eat", "coffee", "wc", "out"],
     "plaza": ["desk", "visit", "meet_A", "meet_B", "meet_board", "eat", "coffee", "wc", "booth", "out"],
     "loft": ["desk", "visit", "meet_r1", "meet_r2", "meet_r3", "meet_board", "eat", "coffee", "wc", "booth", "trib", "present", "out"],
     "city": [],
+    "meet": ["desk", "guest", "out"],
 }
 PATTERNS = ["station_", "pane_", "envpane_", "sky_", "fade_", "sconce_", "elev_panel_", "frame_", "car_", "boat_", "keep_", "matlib_"]
 COMP = {5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4}
@@ -147,6 +148,19 @@ def check_json(office, info, names, hidden):
         for ln in info["lanes"]:
             if ln["carNode"] not in node_set or not (is_vec(ln["a"], 2) and is_vec(ln["b"], 2)):
                 fail(office, "lane of %s malformed" % ln["carNode"])
+        hit = info.get("meetHit")
+        if not (hit and is_vec(hit["box"]["min"]) and is_vec(hit["box"]["max"]) and is_vec(hit["anchor"])):
+            fail(office, "city needs the meetings' tower (meetHit)")
+        if "crown" not in info["materials"]:
+            fail(office, "city lacks the tower's crown material")
+    if office == "meet":
+        if len(info["spots"]["guest"]) != 3:
+            fail(office, "meet needs 3 guest seats, has %d" % len(info["spots"]["guest"]))
+        pen = info.get("pen")
+        if not (is_vec(info.get("table")) and pen and is_vec(pen["pos"]) and is_vec(pen["rot"])):
+            fail(office, "meet needs the table and the pen's place on it")
+        if "pen" not in node_set:
+            fail(office, "GLB lacks pen")
 
 
 for office in sys.argv[1:] or IDS:

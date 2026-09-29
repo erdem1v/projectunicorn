@@ -11,7 +11,7 @@ extends SceneTree
 # Exits non-zero when the bake is empty or a spot's way in (its chain's first point, outside the
 # chair or counter) lies off the walkable floor.
 
-const OFFICES := ["home", "ishani", "plaza", "loft"]
+const OFFICES := ["home", "ishani", "plaza", "loft", "meet"]
 ## One cell is 5 cm: the agent's 0.28 m radius and 0.2 m step survive Recast's rounding to cells.
 ## The agent is the people's own (OfficePerson).
 const CELL := 0.05

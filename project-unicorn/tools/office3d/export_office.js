@@ -9,7 +9,8 @@ import { initMats, applyPalette, bake, buildA2, makeH, setTier, loadXbot, SHARED
 import { buildHome } from './src/office-home.js';
 import { buildPlaza } from './src/office-plaza-v2.js';
 import { buildLoft } from './src/office-loft-v2.js';
-import { buildCity } from './src/office-city.js';
+import { buildCity } from './src/office-city-v2.js';
+import { buildMeet } from './src/office-meet.js';
 
 const { say, done, post } = window.office3d;
 const seen = new Set();
@@ -25,11 +26,15 @@ const OFFICES = [
   { id: 'plaza', k: 2, kinds: ['desk', 'visit', 'meet_A', 'meet_B', 'meet_board', 'eat', 'coffee', 'wc', 'booth', 'out'] },
   { id: 'loft', k: 3, kinds: ['desk', 'visit', 'meet_r1', 'meet_r2', 'meet_r3', 'meet_board', 'eat', 'coffee', 'wc', 'booth', 'trib', 'present', 'out'] },
   { id: 'city', k: 'city', kinds: [] },
+  // The meeting room on the investor tower's top floor: the founder's seat, the guests' (lead first), the lift.
+  { id: 'meet', k: 'meet', kinds: ['desk', 'guest', 'out'] },
 ];
-const tierOf = k => k === 'city' ? 1 : k;
-const build = (k, H) => k === 'city' ? buildCity(H) : k === 0 ? buildHome(H) : k === 1 ? buildA2('cevre') : k === 2 ? buildPlaza(H) : buildLoft(H);
-// The city map's hit ids are the design's; the game's office ids differ for two of them.
+const tierOf = k => k === 'city' || k === 'meet' ? 1 : k;
+const build = (k, H) => k === 'city' ? buildCity(H) : k === 'meet' ? buildMeet(H) : k === 0 ? buildHome(H) : k === 1 ? buildA2('cevre') : k === 2 ? buildPlaza(H) : buildLoft(H);
+// The city map's hit ids are the design's; the game's office ids differ for two of them. The
+// investor tower is no office: it travels as the meetings' building.
 const MAP_OFFICE = { ev: 'home', ishani: 'ishani', plaza: 'plaza', depo: 'loft' };
+const MEET_HIT = 'meridian';
 const SHARED_NAMES = { winMat: 'win', ceilMat: 'ceil', lowDark: 'pane_dark', lowLit: 'pane_lit', postMat: 'post', fLampMat: 'flamp', sconceMat: 'sconce', carHead: 'car_head', carTail: 'car_tail', groundMat: 'ground', walkMat: 'walk', roadMat: 'road', grassMat: 'grass', lineMat: 'line', fadeMat: 'fade', viewMat: 'view' };
 const GLOW_KIND = new Map([[SHARED.poolMat, 'pool'], [SHARED.streetGlow, 'street'], [SHARED.glowMat, 'sconce']]);
 // The state the GLB freezes: 10:15 (the thumbnails' hour), full day, wall clock at 0.
@@ -55,12 +60,17 @@ async function thumbSpec() {
   const aspect = +grab(/a = ([\d.]+); let cw = src\.width/)[1];
   const crop = +grab(/cw \*= ([\d.]+); ch \*= /)[1];
   const size = grab(/c2\.width = (\d+); c2\.height = (\d+);/).slice(1).map(Number);
-  return k => k === 'city' ? null : { k, target: th[k] ? th[k].target : null, zoom: th[k] ? th[k].zoom : zoom, time, aspect, crop, size };
+  return k => k === 'city' || k === 'meet' ? null : { k, target: th[k] ? th[k].target : null, zoom: th[k] ? th[k].zoom : zoom, time, aspect, crop, size };
 }
 
 // L.elev.near is a closure over an x/z box: read its numbers from the source, prove them by probing.
+// The box is written either as two half widths or, for z, as a range.
 function nearBox(near) {
-  const m = /Math\.abs\(q\.x - ([\d.]+)\) < ([\d.]+) && Math\.abs\(q\.z - ([\d.]+)\) < ([\d.]+)/.exec(String(near));
+  let m = /Math\.abs\(q\.x - ([\d.]+)\) < ([\d.]+) && Math\.abs\(q\.z - ([\d.]+)\) < ([\d.]+)/.exec(String(near));
+  if (!m) {
+    const r = /Math\.abs\(q\.x - ([\d.]+)\) < ([\d.]+) && q\.z > ([\d.]+) && q\.z < ([\d.]+)/.exec(String(near));
+    if (r) m = [r[0], r[1], r[2], r4((+r[3] + +r[4]) / 2), r4((r[4] - r[3]) / 2)];
+  }
   if (!m) throw new Error('elev.near is no longer an x/z box: ' + near);
   const [cx, hx, cz, hz] = m.slice(1).map(Number), e = 1e-3, at = (x, z) => near(new THREE.Vector3(x, 0, z));
   if (!at(cx, cz) || !at(cx + hx - e, cz - hz + e) || at(cx + hx + e, cz) || at(cx, cz - hz - e)) throw new Error('elev.near probe mismatch: ' + near);
@@ -73,7 +83,9 @@ function enumerateSpots(L, kinds) {
   for (const kind of kinds) {
     const [k, r] = kind.split('_'), list = [], got = new Set();
     for (let i = 0; i <= (k === 'desk' ? L.maxN : 4095); i++) {
-      const s = k === 'desk' ? L.spot({ id: i }, { k }) : L.spot({ id: 0 }, r ? { k, r, i } : { k, i });
+      // A guest's seat is the person's own: the meeting room seats ids 20, 21, 22.
+      const s = k === 'desk' ? L.spot({ id: i }, { k }) : k === 'guest' ? i < 3 && L.spot({ id: 20 + i }, { k: 'seat' })
+        : L.spot({ id: 0 }, r ? { k, r, i } : { k, i });
       if (!s || got.has(s)) break;
       got.add(s); list.push(s);
     }
@@ -119,6 +131,7 @@ function prepare(o, L, H, thumb) {
   // The facade's night map tiles differently from its base map; Godot's importer keeps only
   // the base map's UV transform, so the emissive one rides in the material extras.
   (L.facMats || []).forEach(m => { m.name = 'facade'; m.userData.emissiveUv = { scale: m.emissiveMap.repeat.toArray(), offset: m.emissiveMap.offset.toArray() }; });
+  if (L.crown) L.crown.name = 'crown';
   if (L.ferry) L.ferry.traverse(x => { if (x.isMesh && x.material.emissive && x.material.emissive.getHex()) x.material.name = 'ferry_win'; });
 
   // Stations: index i is desk id i + 1, the founder's is 'f'.
@@ -153,6 +166,7 @@ function prepare(o, L, H, thumb) {
   }) : [];
   if (L.frames) for (const id in L.frames) L.frames[id].name = 'frame_' + id;
   if (L.pin) L.pin.name = 'pin';
+  if (L.pen) L.pen.name = 'pen';
   if (L.ferry) L.ferry.name = 'ferry';
   (L.cars || []).forEach((c, i) => { c.hg.name = 'car_' + i; });
   (L.boats || []).forEach((b, i) => { b.name = 'boat_' + i; });
@@ -194,6 +208,8 @@ function prepare(o, L, H, thumb) {
     [x.material].flat().forEach(m => { if (m.name) mats.add(m.name); });
   });
 
+  const hitBox = h => ({ box: { min: v3(h.box.min), max: v3(h.box.max) }, anchor: v3(h.anchor) });
+  const meetHit = (L.mapHits || []).find(h => h.id === MEET_HIT);
   const info = {
     id: o.id, generator: 'tools/office3d/export_office.js', three: THREE.REVISION, tier: tierOf(o.k),
     bounds: { min: v3(L.bounds.min), max: v3(L.bounds.max) },
@@ -213,7 +229,11 @@ function prepare(o, L, H, thumb) {
     keep: (L.keep || []).map(x => x.name),
     hidden,
     glows,
-    mapHits: (L.mapHits || []).map(h => ({ id: h.id, office: MAP_OFFICE[h.id], box: { min: v3(h.box.min), max: v3(h.box.max) }, anchor: v3(h.anchor) })),
+    mapHits: (L.mapHits || []).filter(h => MAP_OFFICE[h.id]).map(h => ({ id: h.id, office: MAP_OFFICE[h.id], ...hitBox(h) })),
+    meetHit: meetHit ? hitBox(meetHit) : null,
+    table: L.table ? v3(L.table) : null,
+    // The pen's place put down on the table; in the hand it is the note-taker's own.
+    pen: L.pen ? { pos: v3(L.penB.p), rot: v3(L.penB.r) } : null,
     lanes: (L.cars || []).map(c => ({ a: [r4(c.a[0]), r4(c.a[1])], b: [r4(c.a[0] + c.dx), r4(c.a[1] + c.dz)], v: r4(c.v), ph: r4(c.ph), ry: r4(c.ry), carNode: c.hg.name })),
     thumbTargets: thumb,
     materials: [...mats].sort(),
@@ -232,7 +252,7 @@ async function thumbnails(ids) {
   try { await Promise.race([loadXbot(), new Promise((_, no) => setTimeout(() => no(new Error('no answer in 90 s')), 90000))]); }
   catch (e) { rig = 'capsule'; await say('Xbot rig not loaded, capsule thumbnails: ' + e.message); }
   for (const o of OFFICES) {
-    if (o.k === 'city' || !ids.includes(o.id)) continue;
+    if (o.k === 'city' || o.k === 'meet' || !ids.includes(o.id)) continue;
     const url = sim.snapshot(o.k), blob = await (await fetch(url)).blob();
     URL.revokeObjectURL(url);
     await postOk(`thumb_${o.id}.jpg`, blob);

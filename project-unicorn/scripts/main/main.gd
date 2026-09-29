@@ -679,13 +679,17 @@ func _seed_signal_months() -> void:
 		start_day += 4
 
 
-# --office-shot=<home|ishani|plaza|loft|city>:<hour>[:<extra>]: the office in the GameShell, the
-# clock stopped on the hour; prints frame time and render counts. extra: full = every desk taken
-# and people in (the lit night interior); crowd40 = forty on the roster, a LOOKS line and four close
-# frames; founders = the founder portraits beside their busts; nav = the baked floor and the spots'
-# ways in drawn over the office; <tab id> = that tab's window open over it; hr_dossier = the Ekip
-# window with its first employee's dossier on top. city opens the map from İş hanı as the move
-# button does; card (city only) = Plaza picked, its office card open.
+# --office-shot=<home|ishani|plaza|loft|city|meet>:<hour>[:<extra>]: the office in the GameShell,
+# the clock stopped on the hour; prints frame time and render counts. extra: full = every desk
+# taken and people in (the lit night interior); crowd40 = forty on the roster, a LOOKS line and four
+# close frames; founders = the founder portraits beside their busts; nav = the baked floor and the
+# spots' ways in drawn over the office; <tab id> = that tab's window open over it; hr_dossier = the
+# Ekip window with its first employee's dossier on top. city opens the map from İş hanı as the move
+# button does; card (city only) = Plaza picked, its office card open; crown (city only) = the
+# investors' tower framed with its crown lit. meet is the meeting room with three on the other side
+# and the founder seated, sitting and looking as at a meeting's start; cast (meet only) = the founder
+# walks in from the lift (a frame every CAST_WALK_EVERY, _cast_NN), the table at rest (_NN_rest),
+# then close up the lead speaking (_NN_speak) and each gesture at its middle (_NN_<gesture>).
 func _run_office_shot(spec: String) -> void:
 	var parts: PackedStringArray = spec.split(":")
 	var office_id: String = parts[0]
@@ -694,9 +698,9 @@ func _run_office_shot(spec: String) -> void:
 	_begin_shot()
 	_seed_theme_surface()
 	EventBus.speed_change_requested.emit(0)
-	# Debug path: the shot writes the office straight past OfficeSystem. The map is no office:
-	# the company sits in a real one, which its pin and chips read.
-	GameState.office_id = "ishani" if office_id == "city" else office_id
+	# Debug path: the shot writes the office straight past OfficeSystem. The map and the meeting
+	# room are no office: the company sits in a real one, which the map's pin and chips read.
+	GameState.office_id = "ishani" if office_id in OfficeLayout.AWAY else office_id
 	GameState.set_current_hour(hour)
 	TimeManager.sync_to_current_hour()
 	if extra == "crowd40":
@@ -708,11 +712,23 @@ func _run_office_shot(spec: String) -> void:
 	var people: OfficePeople = view.get_node("Viewport3D/SubViewport/World/People")
 	if office_id == "city":
 		await city.open()
+	if office_id == "meet":
+		view.load_layout("meet")
+		view.cast.stage(_shot_counterparts(), CharacterRegistry.get_founder().look, extra != "cast")
+		if extra.is_empty():
+			_shot_meeting_posts(view.cast)
 	match extra:
 		"":
 			pass
 		"card":
 			city.debug_pick("plaza")
+		"crown":
+			(view.lighting as OfficeLighting).crown_glow = 1.0
+			var cam: OfficeCamera = view.camera
+			var tower: AABB = view.layout.meet_hit.box
+			cam.focus(tower.get_center() + Vector3.UP * tower.size.y * 0.2, cam.fit_zoom * 2.2, 0.0)
+		"cast":
+			await _shot_meeting_cast(view, "office_shot_meet_%02d_cast" % hour)
 		"hr_dossier":
 			EventBus.tab_changed.emit("hr")
 			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
@@ -758,6 +774,74 @@ func _run_office_shot(spec: String) -> void:
 		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)])
 	_save_shot("office_shot_%s_%02d%s" % [office_id, hour, "_" + extra if extra != "" else ""])
 	get_tree().quit()
+
+
+## The meeting shots' other side: [name, role] for the look, lead first.
+const SHOT_COUNTERPARTS := [["Kerem Aksoy", HRConstants.ROLE_SALES_REP], ["Selin Uçar", HRConstants.ROLE_SALES_REP],
+	["Arda Durmaz", HRConstants.ROLE_PRODUCT_MANAGER]]
+## The cast shot: seconds between the walk-in's frames and the most of them; how much closer the
+## gestures are framed.
+const CAST_WALK_EVERY := 0.5
+const CAST_WALK_MAX := 30
+const CAST_CLOSE := 2.6
+
+
+func _shot_counterparts() -> Array:
+	var around: Array = CharacterRegistry.looks_around()
+	var out := []
+	for c: Array in SHOT_COUNTERPARTS:
+		var look := LookSystem.for_person(SalesConstants.mix(c[0], SalesConstants.SALT_LOOK), c[0], c[1], around)
+		around.append(look)
+		out.append(look)
+	return out
+
+
+## The table at rest: the lead and the founder with their arms on it, the partner leaning back
+## with hands in the lap, the analyst taking notes; the other side looks at the founder, the founder
+## at the lead.
+func _shot_meeting_posts(cast: MeetingCast) -> void:
+	cast.post(0, {"arms": "table"})
+	cast.post(1, {"arms": "table", "lean": 0.05})
+	cast.post(2, {"arms": "rest", "lean": -0.1})
+	cast.post(3, {"write": true})
+	for who in range(1, cast.count()):
+		cast.look(who, 0)
+	cast.look(0, 1)
+
+
+## The cast shot's frames: the walk in until the founder sits, the table at rest, the lead speaking,
+## then each gesture at its middle.
+func _shot_meeting_cast(view: Control, stem: String) -> void:
+	var cast: MeetingCast = view.cast
+	var n := 0
+	await get_tree().create_timer(0.6).timeout
+	cast.walk_in()
+	# A lambda captures locals by value: the flag lives in a dictionary.
+	var state := {"seated": false}
+	cast.founder_seated.connect(func() -> void: state.seated = true, CONNECT_ONE_SHOT)
+	while not state.seated and n < CAST_WALK_MAX:
+		await get_tree().create_timer(CAST_WALK_EVERY).timeout
+		_save_shot("%s_%02d" % [stem, n])
+		n += 1
+	print("CAST|walk_in|seated=%s|frames=%d" % [state.seated, n])
+	_shot_meeting_posts(cast)
+	await get_tree().create_timer(1.0).timeout
+	_save_shot("%s_%02d_rest" % [stem, n])
+	n += 1
+	# Close over the table for the gestures, which the room's framing shows too small to judge.
+	var cam: OfficeCamera = view.camera
+	cam.focus(cam.target + Vector3.UP * 0.5, cam.zoom * CAST_CLOSE, 0.0)
+	cast.speak(1)
+	await get_tree().create_timer(1.2).timeout
+	_save_shot("%s_%02d_speak" % [stem, n])
+	n += 1
+	cast.speak(-1)
+	for g: Array in [[2, "nod"], [1, "lean"], [1, "watch"], [2, "back"], [1, "shake"], [3, "pen"], [0, "lookup"]]:
+		cast.gesture(g[0], g[1])
+		await get_tree().create_timer(MeetingCast.GESTURE_S * 0.45).timeout
+		_save_shot("%s_%02d_%s" % [stem, n, g[1]])
+		n += 1
+		await get_tree().create_timer(MeetingCast.GESTURE_S * 0.7).timeout
 
 
 const TRAVEL_SHOT_EVERY := 0.25    # seconds between frames

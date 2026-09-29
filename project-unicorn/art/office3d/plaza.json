@@ -1707,6 +1707,9 @@
   "sconce": []
  },
  "mapHits": [],
+ "meetHit": null,
+ "table": null,
+ "pen": null,
  "lanes": [],
  "thumbTargets": {
   "k": 2,

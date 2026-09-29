@@ -90,7 +90,7 @@ func _exit_tree() -> void:
 ## (left seated for the cut, waiting for their turn at the door) is cut under black, so the view
 ## goes dark over them first; out of sight or asleep counts as out.
 func office_empty() -> bool:
-	if _layout.id == "city" or _headless():
+	if not _layout.staffed() or _headless():
 		return true
 	if not _placed:
 		return false
@@ -125,7 +125,7 @@ func founder_back() -> void:
 
 
 ## Takes the office's layout. The people wait, frozen and out of sight, until its floor is on the
-## navigation map; on the city map they wait for the next office.
+## navigation map; on the city map and in the meeting room they wait for the next office.
 func set_layout(layout: OfficeLayout, view: Node) -> void:
 	_layout = layout
 	_view = view
@@ -137,7 +137,7 @@ func set_layout(layout: OfficeLayout, view: Node) -> void:
 	process_mode = PROCESS_MODE_DISABLED
 	for a: OfficeActor in _actors.values():
 		a.visible = false
-	if layout.id == "city" or _headless():
+	if not layout.staffed() or _headless():
 		return
 	if layout.id != _office:
 		_office = layout.id
@@ -650,12 +650,7 @@ func _hit(screen_pos: Vector2) -> OfficeActor:
 ## The office's floor is on the navigation map: the spots' ways in, the shared places, and
 ## everyone where they belong.
 func _on_map_changed(map: RID) -> void:
-	if _placed or map != _map or not NavigationServer3D.map_get_regions(map).has((_view.nav_region as NavigationRegion3D).get_rid()):
-		return
-	# The region joins the map before its floor is built into it: wait for a way from the door to
-	# the founder's desk.
-	var lift := Vector3.UP * OfficePerson.NAV_LIFT
-	if NavigationServer3D.map_get_path(map, _entry.pos + lift, _layout.spots.desk[0].pos + lift, true).is_empty():
+	if _placed or map != _map or not OfficePerson.floor_ready(_view.nav_region, _entry.pos, _layout.spots.desk[0].pos):
 		return
 	_placed = true
 	process_mode = PROCESS_MODE_INHERIT

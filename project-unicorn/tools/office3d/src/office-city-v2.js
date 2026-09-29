@@ -26,7 +26,7 @@ function sideGeo(T, w, h, d, bay, fl, ou, ov) {
   const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(U, 2)); g.setIndex(I); return g;
 }
 
-export function buildCity(H) {
+export function buildCity(H, CO = {}) {
   const { THREE, V, PI, M, X, B, RB, Cy, grp, floorP, tree, car, bench, lampPost, winUnit, lowDark, groundMat, walkMat, roadMat, grassMat, lineMat, hazeMats, rng, canvasTex } = H;
   hazeMats.length = 0;
   const g = new THREE.Group(), nc = { cast: false }, low = [], posts = [], keep = [], towers = [], facMats = [], R = rng(2024), nE = o => (o.userData.noEdge = true, o);
@@ -70,7 +70,7 @@ export function buildCity(H) {
   old(-83, -67.5, -12, 3, 'old', 4);
   old(-83, -70, 13, 26, 'old', 4); old(-70, -57, 13, 26, 'old', 5); old(-57, -46, 13, 26, 'old', 3); old(-83, -66, 28, 38, 'old', 3); gen(-66, -46, 28, 38, 'mid', 4, MID[0]);
   gen(4, 13, -52, -40, 'tower', 9); gen(22, 40, -58, -42, 'mid', 7, MID[1]); gen(42, 68, -58, -44, 'tower', 11); gen(22, 38, -38, -22, 'mid', 5, MID[2]); old(40, 54, -40, -22, 'old', 4); gen(56, 68, -40, -22, 'ware', 2, WARE[0]);
-  gen(22, 38, -12, 2, 'ware', 2, WARE[1]); gen(40, 54, -12, 2, 'mid', 3, MID[3]); gen(56, 68, -12, 2, 'ware', 2, WARE[0]);
+  gen(22, 38, -12, 2, 'ware', 2, WARE[1]); gen(40, 54, -12, 2, 'mid', 3, MID[3]); 
   [[-82, -66, 'mid', 8], [-64, -50, 'tower', 14], [-48, -40, 'mid', 6], [-36, -20, 'tower', 18], [-18, -2, 'mid', 9], [0, 13, 'tower', 15], [21, 32, 'mid', 7], [34, 48, 'tower', 12], [50, 60, 'mid', 6], [62, 69, 'tower', 10]]
     .forEach(([a, b, s, f], i) => gen(a, b, -79, -68, s, f, MID[i % 4]));
   // park
@@ -122,6 +122,26 @@ export function buildCity(H) {
     B(g, x0 + 29.8, x0 + 33.8, .12, 3.8, z1, z1 + .1, M(0x3f6f7a, { r: .7 })); B(g, x0 + 29.4, x0 + 34.2, 3.8, 4.05, z1, z1 + .16, steel);
     Cy(g, 1.1, 21, x0 + 4, 10.5, z0 + 4, brick); Cy(g, 1.35, .6, x0 + 4, 21.1, z0 + 4, brickD); Cy(g, 1.25, .4, x0 + 4, 15, z0 + 4, brickD, nc);
     hits.push({ id: 'depo', box: new THREE.Box3(V(x0, 0, z0), V(x1, WH + 3.8, z1)), anchor: V((x0 + x1) / 2, WH + 5, (z0 + z1) / 2) }); }
+  // Meridian kulesi (yatırımcı) — ince cam kule, en üst katta cam toplantı katı
+  const MER = { x0: 56, x1: 68, z0: -10, z1: 2, top: 13 * 3.6 };
+  let crownMat = null, glowV = 0;
+  { const { x0, x1, z0, z1, top } = MER, w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, mull = M(0x2a2f36, { r: .4, m: .3 }), stone = M(0xd8d2c6, { r: .7 });
+    const sz = towerMat(H, towers, 0, w / 12, top / 28.8, .62), sx = towerMat(H, towers, 1, d / 12, top / 28.8, .18);
+    const me = new THREE.Mesh(new THREE.BoxGeometry(w, top, d), [sx, sx, FLAT, FLAT, sz, sz]); me.position.set(cx, top / 2, cz); me.castShadow = me.receiveShadow = true; g.add(me);
+    for (const [a, b] of [[x1 - .3, x1 + .12]]) { B(g, a, b, 0, top, z1 - .3, z1 + .12, stone); }
+    for (let y = 3.6; y < top; y += 3.6) { B(g, x0 - .04, x1 + .04, y - .1, y + .06, z1, z1 + .04, stone, nc); B(g, x1, x1 + .04, y - .1, y + .06, z0 - .04, z1 + .04, stone, nc); }
+    B(g, x0 - .7, x1 + .7, 0, 4.4, z0 - .7, z1 + .7, M(0x3a3f47, { r: .5 })); B(g, x0 - .9, x1 + .9, 4.4, 4.7, z0 - .9, z1 + .9, mull);
+    B(g, x0 - .3, x1 + .3, top - .3, top, z0 - .3, z1 + .3, stone);
+    if (!CO.meetRoom) {
+      crownMat = M(0xb9cfd8, { r: .15, e: 0xffd49a, ei: 0 });
+      B(g, x0 + .1, x1 - .1, top, top + 3.4, z0 + .1, z1 - .1, crownMat);
+      for (let x = x0 + .1; x <= x1 - .09; x += 1.475) B(g, x - .05, x + .05, top, top + 3.4, z1 - .12, z1 - .04, mull, nc);
+      for (let z = z0 + .1; z <= z1 - .09; z += 1.475) B(g, x1 - .12, x1 - .04, top, top + 3.4, z - .05, z + .05, mull, nc);
+      B(g, x0 - .6, x1 + .6, top + 3.4, top + 3.75, z0 - .6, z1 + .6, stone);
+      B(g, cx - .14, cx + .14, top + 3.75, top + 13, cz - .14, cz + .14, mull);
+      hits.push({ id: 'meridian', box: new THREE.Box3(V(x0 - .9, 0, z0 - .9), V(x1 + .9, top + 4, z1 + .9)), anchor: V(cx, top + 6.5, cz) });
+    }
+  }
   // Kurucunun evi (6 katlı eski apartman, köşe)
   { const x0 = -57, x1 = -45, z0 = -30.6, z1 = -21, F = 3.2, top = 6 * F, fac = M(0xd4ad8c, { r: .9 }), iron = M(0x1f2126, { r: .6 });
     B(g, x0, x1, 0, top, z0, z1, fac); for (let f = 1; f < 6; f++) B(g, x0 - .05, x1 + .05, f * F - .16, f * F, z0 - .05, z1 + .05, BAND, nc);
@@ -144,7 +164,8 @@ export function buildCity(H) {
   const fw = M(0xf4f1ea, { r: .6 }), fwin = M(0x2c3446, { r: .6, e: 0xffd9a0, ei: 0 });
   RB(ferry, 16, 1.6, 4.2, 0, .8, 0, fw, .5); B(ferry, -8, 8, .9, 1.1, -2.12, 2.12, M(0x2b3a55), nc); RB(ferry, 11, 1.5, 3.6, -.8, 2.35, 0, fw, .2);
   B(ferry, -6.2, 4.6, 2.2, 2.7, -1.82, 1.82, fwin, nc); RB(ferry, 5, .9, 2.6, -1.4, 3.55, 0, fw, .15); Cy(ferry, .45, 1.6, -3, 4.6, 0, M(0x2b2a2a));
-  for (const [bx, bz, br] of [[-40, 60, .3], [20, 78, -.5], [96, 30, 1.2], [92, -40, 1.6]]) { const bt = grp(g, bx, -1.2, bz, br); RB(bt, 4.2, .7, 1.5, 0, .3, 0, M(0xf4f1ea, { r: .7 }), .3); B(bt, -2.1, 2.1, .45, .55, -.76, .76, M(0x2b5a88, { r: .8 }), nc); RB(bt, 1.4, .8, 1.1, -.5, 1.05, 0, M(0xe7e2d6, { r: .7 }), .1); }
+  const boats = []; // export handle (tools/office3d)
+  for (const [bx, bz, br] of [[-40, 60, .3], [20, 78, -.5], [96, 30, 1.2], [92, -40, 1.6]]) { const bt = grp(g, bx, -1.2, bz, br); boats.push(bt); RB(bt, 4.2, .7, 1.5, 0, .3, 0, M(0xf4f1ea, { r: .7 }), .3); B(bt, -2.1, 2.1, .45, .55, -.76, .76, M(0x2b5a88, { r: .8 }), nc); RB(bt, 1.4, .8, 1.1, -.5, 1.05, 0, M(0xe7e2d6, { r: .7 }), .1); }
   // moving cars
   const lanes = [[[LX0, 44.4], [LX1, 44.4]], [[LX1, 41.6], [LX0, 41.6]], [[LX0, -15.6], [LX1, -15.6]], [[LX1, -18.4], [LX0, -18.4]], [[LX1, -64.4], [LX0, -64.4]],
     [[-42.4, LZ0], [-42.4, 40]], [[-39.6, 40], [-39.6, LZ0]], [[71.6, LZ0], [71.6, 40]], [[18.4, 40], [18.4, -60]], [[LX0, 9.4], [-44, 9.4]]];
@@ -156,12 +177,15 @@ export function buildCity(H) {
   return {
     g, bounds: new THREE.Box3(V(LX0, -2, LZ0), V(WX1, 14, WZ1)), sunOff: V(40, 60, 50), fog: null, sky: [], sconces: [], panes: [], low, posts, fades: [], pool: [], env: 'cevre', keep,
     maxN: 0, spd: 3, noPeople: true, mapHits: hits,
-    setMapState(s) { for (const id in frames) frames[id].visible = id === s.selected;
+    frames, pin, ferry, cars, boats, wtex, facMats, crown: crownMat, // export handles (tools/office3d)
+    meridian: MER,
+    setMapState(s) { glowV = s.glow || 0; for (const id in frames) frames[id].visible = id === s.selected;
       const h = hits.find(q => q.id === s.current); pin.visible = !!h; if (h) { pin.position.set(h.anchor.x, 0, h.anchor.z); pinBase = h.anchor.y + 3.4; } },
     people: () => [], peopleCfg: () => ({ roles: [], meetings: [] }), spot: () => null, station: () => null, stations: [], connector: () => [],
     tick(time, dayK) {
       const now = performance.now() * .001, nk = 1 - dayK;
       tickTowers(towers, time, dayK);
+      if (crownMat) crownMat.emissiveIntensity = Math.max(glowV * 1.7, nk * .75);
       for (const m of facMats) m.emissiveIntensity = nk * 1.25;
       wtex.offset.set((now * .004) % 1, Math.sin(now * .25) * .01);
       ferry.position.x = LX0 - 10 + ((now * 3.4) % 140); fwin.emissiveIntensity = nk > .5 ? 1.4 : 0;

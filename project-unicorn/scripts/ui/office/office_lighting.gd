@@ -74,6 +74,8 @@ var _glow_mats := {}
 var anyone_in := false
 ## The founder at their desk lights the floor lamp in the evening.
 var founder_at_desk := false
+## How much the investors' tower's crown on the city map glows, 0..1, over its own glow at night.
+var crown_glow := 0.0
 var _present := {}
 
 
@@ -127,6 +129,7 @@ func set_layout(layout: OfficeLayout, scene: Node3D, materials: Dictionary, stat
 	_stations = stations
 	anyone_in = false
 	founder_at_desk = false
+	crown_glow = 0.0
 	_present.clear()
 	_station_energy.clear()
 	_env.fog_enabled = not layout.fog.is_empty()
@@ -218,6 +221,7 @@ func apply(t: float) -> void:
 	_energy("car_tail", post_on * 1.2)
 	_energy("flamp", 2.0 if lamp_hour else 0.0)
 	_energy("facade", (1.0 - day_k) * 1.25)
+	_energy("crown", maxf(crown_glow * 1.7, (1.0 - day_k) * 0.75))
 	_energy("ferry_win", 1.4 if (day_k < 0.5 if _layout.id == "city" else night_windows) else 0.0)
 	# The map's water runs on OfficeCity's own clock.
 	if _layout.id != "city":

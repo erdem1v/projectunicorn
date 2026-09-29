@@ -3,7 +3,11 @@ extends RefCounted
 
 # One office's side JSON (art/office3d/<id>.json, written by tools/office3d/export_office.js):
 # where people sit and walk, which nodes light up when, and what the camera frames. The GLB next
-# to it carries the geometry; nodes are bound by the names listed here.
+# to it carries the geometry; nodes are bound by the names listed here. Two layouts are no office:
+# the city map and the meeting room on the investors' tower (`meet`).
+
+## Layouts the staff never work in.
+const AWAY := ["city", "meet"]
 
 var id: String
 var bounds: AABB                  ## the design's fitView box
@@ -20,6 +24,11 @@ var panes: Array[Dictionary]      ## {node, on: float, off: float, all_night: bo
 var hidden: PackedStringArray     ## nodes glTF cannot mark invisible
 var glows: Dictionary             ## pool|street|sconce -> Array[Dictionary] {pos: Vector3, size: Vector2, normal: Vector3}
 var map_hits: Array[Dictionary]   ## city: {id, office, box: AABB, anchor: Vector3}
+var meet_hit: Dictionary          ## city: the meetings' tower {box: AABB, anchor: Vector3}, else empty
+## meet: the table's middle, and where the pen lies once put down {pos: Vector3, rot: Vector3
+## (Euler XYZ)}.
+var table: Vector3
+var pen: Dictionary
 var lanes: Array[Dictionary]      ## city cars: {a: Vector2, b: Vector2, v, ph, ry, car_node}
 var thumb_targets: Dictionary     ## {target: Vector3 or null, zoom}, empty in the city
 var materials: PackedStringArray  ## the named materials in the GLB
@@ -60,6 +69,12 @@ static func load(office_id: String) -> OfficeLayout:
 		l.glows[kind] = list
 	for h: Dictionary in raw.mapHits:
 		l.map_hits.append({"id": h.id, "office": h.office, "box": _box(h.box), "anchor": _v3(h.anchor)})
+	if raw.get("meetHit") != null:
+		l.meet_hit = {"box": _box(raw.meetHit.box), "anchor": _v3(raw.meetHit.anchor)}
+	if raw.get("table") != null:
+		l.table = _v3(raw.table)
+	if raw.get("pen") != null:
+		l.pen = {"pos": _v3(raw.pen.pos), "rot": _v3(raw.pen.rot)}
 	for c: Dictionary in raw.lanes:
 		l.lanes.append({"a": Vector2(c.a[0], c.a[1]), "b": Vector2(c.b[0], c.b[1]), "v": float(c.v),
 			"ph": float(c.ph), "ry": float(c.ry), "car_node": c.carNode})
@@ -68,6 +83,11 @@ static func load(office_id: String) -> OfficeLayout:
 		l.thumb_targets = {"target": _v3(t.target) if t.target != null else null, "zoom": float(t.zoom)}
 	l.materials = PackedStringArray(raw.materials)
 	return l
+
+
+## Somewhere the staff work: not the map, not the meeting room.
+func staffed() -> bool:
+	return id not in AWAY
 
 
 static func _v3(a: Array) -> Vector3:

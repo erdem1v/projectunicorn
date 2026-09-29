@@ -8,8 +8,9 @@ extends Node3D
 #
 # The contract: setup() once, then place() before anything else, in the same frame as add_child.
 # place() is a cut (a scene's first frame, a load, a skip under black); go_to() never jumps. `k` is
-# the visual speed, the game's tempo capped at 2, and OfficePeople sets it every frame: at 0 the
-# person holds still in whatever pose they are in, and carries on from it.
+# the visual speed: in the office OfficePeople sets it every frame to the game's tempo capped at 2;
+# a meeting's people keep 1. At 0 the person holds still in whatever pose they are in, and carries
+# on from it.
 
 const LIBS := {
 	"ual1": "res://assets/art/people/anims/ual1.glb",
@@ -52,6 +53,15 @@ const SEAT_HANDS := {
 	"listen": {"lean": 0.15, "nod": 0.05},
 	"stretch": {"left": Vector3(0.15, 1.75, -0.2), "right": Vector3(-0.15, 1.75, -0.2), "lean": -0.12, "nod": -0.2},
 	"yawn": {"right": Vector3(-0.02, 1.1, -0.12), "nod": -0.25},
+	# Round a meeting table: forearms on it, hands in the lap, or notes on the table's own pad.
+	"table": {"left": Vector3(0.16, 0.79, 0.5), "right": Vector3(-0.16, 0.79, 0.5), "lean": 0.2, "slide": 0.15},
+	"rest": {"left": Vector3(0.14, 0.58, 0.38), "right": Vector3(-0.14, 0.58, 0.38), "lean": -0.05},
+	"write": {"left": Vector3(0.22, 0.785, 0.55), "right": Vector3(-0.04, 0.79, 0.62), "lean": 0.35, "nod": 0.3,
+		"slide": 0.2, "motion": "write", "props": ["pen"]},
+}
+## A meeting's gestures that move a hand, over the seated act while they run: a look at the watch.
+const GESTURE_HANDS := {
+	"watch": {"left": Vector3(0.06, 0.9, 0.4)},
 }
 const STAND_HANDS := {
 	"phone": {"props": ["phone"]},
@@ -129,6 +139,13 @@ const DOOR_WAIT := 6.0
 const LOD := [[90.0, 1], [45.0, 2], [0.0, 3]]
 const OFF_SCREEN := 6
 const BODY_HEIGHT := 1.8
+## A meeting's head: how far it turns to the one it looks at, to the side and up or down
+## (radians), and how fast it gets there, per second. A gesture rises and falls over this share of
+## its length.
+const LOOK_YAW := 1.25
+const LOOK_PITCH := 0.35
+const LOOK_EASE := 5.0
+const GESTURE_EDGE := 0.18
 
 enum Phase { STILL, WALK, FOLLOW, TURN, SIT_DOWN, SEATED, STAND_UP, LIE_DOWN, LYING, GET_UP, WAIT_LINK }
 ## Phases off the feet (no avoidance, no one's way blocked) and on the move (the walk space blends).
@@ -161,6 +178,13 @@ var k := 1.0
 var spot := {}                 # where this person is, or is heading
 var act := "idle"
 var phase := Phase.STILL
+## A meeting's overlays on the seated pose (MeetingCast): whom the head turns to (their head), a
+## lean and a head tilt added to the act's (the tilt only while looking at no one), and every
+## frame posed however small on screen.
+var look_at: OfficePerson = null
+var lean_bias := 0.0
+var head_bias := 0.0
+var full_rate := false
 
 var _body: Node3D
 var _skel: Skeleton3D
@@ -206,6 +230,12 @@ var _clock := 0.0                        # the hands' motions and the head's tur
 var _props := {}                         # name -> the prop's node, made at first use
 var _pose_slot := 0                      # which frame of six this body poses on (tiers: 1, 2, 3)
 var _idle_offset := 0.0                  # how far into its idles this body starts
+var _head_bone := -1
+var _look := Vector2.ZERO                # the head's eased look: to the side, down
+var _lean_eased := 0.0                   # lean_bias, eased
+var _gesture_name := ""
+var _gesture_len := 0.0
+var _gesture_left := 0.0                 # ambient seconds
 
 
 ## Builds the body for `look`, and its gait; place() puts it somewhere before go_to() may walk it.
@@ -235,6 +265,7 @@ func setup(look: Dictionary) -> void:
 	_pose_slot = posmod(gait + h, 6)
 	_idle_offset = posmod(h, 997) / 997.0 * 2.0
 	_skel = _body.get_node("%GeneralSkeleton")
+	_head_bone = _skel.find_bone("Head")
 	_skel.modifier_callback_mode_process = Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_MANUAL
 	_gesture = OfficeGesture.new()
 	_skel.add_child(_gesture)
@@ -350,6 +381,20 @@ func is_walking() -> bool:
 	return phase not in [Phase.STILL, Phase.SEATED, Phase.LYING]
 
 
+## A meeting's gesture over the pose for `seconds` (ambient): nod, shake, lookup, lean, back (a
+## lean back with a shake of the head), watch (a look at the watch), pen (the head's wobble as the
+## pen goes down; MeetingCast moves the pen and the lean). A new one replaces the one under way.
+func gesture(gesture_name: String, seconds: float) -> void:
+	_gesture_name = gesture_name
+	_gesture_len = seconds
+	_gesture_left = _gesture_len
+
+
+## Where this person's head is, for others to look at.
+func head_position() -> Vector3:
+	return _skel.global_transform * _skel.get_bone_global_pose(_head_bone).origin
+
+
 func _physics_process(delta: float) -> void:
 	_prev_pos = position
 	_prev_yaw = rotation.y
@@ -459,6 +504,10 @@ func _process(delta: float) -> void:
 	_body.rotation.y = angle_difference(rotation.y, lerp_angle(_prev_yaw, rotation.y, f))
 	# Paused (k = 0), the pose holds with the root, so it carries on from where it stopped.
 	_pose_dt += delta * k
+	if _gesture_left > 0.0:
+		_gesture_left = maxf(0.0, _gesture_left - delta * k)
+		if _gesture_left == 0.0:
+			_gesture_name = ""
 	var every := _lod_every()
 	if Engine.get_process_frames() % every != _pose_slot % every:
 		return
@@ -469,7 +518,8 @@ func _process(delta: float) -> void:
 ## The act done by hand now, for the posture the body is in; empty when there is none.
 func _hand_act() -> Dictionary:
 	if phase == Phase.SEATED:
-		return SEAT_HANDS.get(act, {})
+		var a: Dictionary = SEAT_HANDS.get(act, {})
+		return a.merged(GESTURE_HANDS[_gesture_name], true) if GESTURE_HANDS.has(_gesture_name) else a
 	if phase == Phase.STILL and _here.get("pose", "") == "stand":
 		return STAND_HANDS.get(act, {})
 	return {}
@@ -491,11 +541,11 @@ func _ease_hands(by: float) -> void:
 	_slide = move_toward(_slide, a.get("slide", 0.0), by * HAND_EASE * 0.2)
 	_turn = move_toward(_turn, a.get("turn", 0.0), by * HAND_EASE * 0.4)
 	var held: Array = a.get("props", [])
-	for name: String in PROPS:
-		if held.has(name):
-			_prop(name).visible = true
-		elif _props.has(name):
-			_props[name].visible = false
+	for prop_name: String in PROPS:
+		if held.has(prop_name):
+			prop(prop_name).visible = true
+		elif _props.has(prop_name):
+			_props[prop_name].visible = false
 
 
 ## Moves the pose on by `dt`: the hands and bends of the act, the walk space, the clips.
@@ -512,9 +562,14 @@ func _pose(dt: float) -> void:
 		elif motion == "write" and side == 1:
 			offset = Vector3(cos(_clock * HAND_WRITE_RATE), 0.0, sin(_clock * HAND_WRITE_RATE)) * HAND_WRITE
 		_hands[side].position = _hand_at[side] + offset
-	_gesture.lean = _lean
+	var g := _gesture_offsets()
+	_lean_eased = move_toward(_lean_eased, lean_bias, dt * HAND_EASE * 0.4)
+	_look = _look.lerp(_look_target(), minf(1.0, dt * LOOK_EASE))
+	_gesture.lean = _lean + _lean_eased + g.x
 	_gesture.nod = _nod + (sin(_clock * HAND_NOD_RATE) * HAND_NOD if motion == "nod" else 0.0)
 	_gesture.turn = _turn * sin(_clock * HAND_LOOK_RATE + _pose_slot)
+	_gesture.look_pitch = _look.y + g.y
+	_gesture.look_yaw = _look.x + g.z
 	if k > 0.0:
 		# The walk space follows the root's own speed, so setting off and slowing in a crowd blend.
 		var moving := phase in MOVING
@@ -527,7 +582,46 @@ func _pose(dt: float) -> void:
 	_skel.advance(dt)
 
 
+## The head's way to the one it looks at: (to the body's left, down), within LOOK_YAW and
+## LOOK_PITCH; ahead, tilted by head_bias, when it looks at no one.
+func _look_target() -> Vector2:
+	if look_at == null or not look_at.visible:
+		return Vector2(0.0, head_bias)
+	var from := head_position()
+	var to := look_at.head_position()
+	var yaw := wrapf(atan2(to.x - from.x, to.z - from.z) - rotation.y, -PI, PI)
+	var pitch := -atan2(to.y - from.y, Vector2(to.x - from.x, to.z - from.z).length())
+	return Vector2(clampf(yaw, -LOOK_YAW, LOOK_YAW), clampf(pitch, -LOOK_PITCH, LOOK_PITCH))
+
+
+## The gesture under way as (lean, head down, head to the left), eased in and out over its length.
+func _gesture_offsets() -> Vector3:
+	if _gesture_name.is_empty():
+		return Vector3.ZERO
+	var u := 1.0 - _gesture_left / _gesture_len
+	var e := clampf(minf(u, 1.0 - u) / GESTURE_EDGE, 0.0, 1.0)
+	var shake := sin(u * PI * 6.0) * 0.22 * e
+	match _gesture_name:
+		"nod":
+			return Vector3(0.0, maxf(0.0, sin(u * PI * 6.0)) * 0.28 * e, 0.0)
+		"shake":
+			return Vector3(0.0, 0.0, shake)
+		"lookup":
+			return Vector3(0.0, -0.26 * e, 0.0)
+		"lean":
+			return Vector3(0.25 * e, 0.0, 0.0)
+		"back":
+			return Vector3(-0.24 * e, 0.0, shake)
+		"watch":
+			return Vector3(0.0, 0.34 * e, 0.3 * e)
+		"pen":
+			return Vector3(0.0, 0.0, sin(u * PI * 5.0) * 0.14 * (1.0 - u))
+	return Vector3.ZERO
+
+
 func _lod_every() -> int:
+	if full_rate:
+		return 1
 	var camera := get_viewport().get_camera_3d()
 	var middle := global_position + Vector3.UP * BODY_HEIGHT * 0.5
 	for plane: Plane in camera.get_frustum():
@@ -812,6 +906,16 @@ static func way_in(at: Dictionary) -> Vector3:
 	return chain[0] if not chain.is_empty() else at.pos
 
 
+## `region`'s floor is built into its navigation map, with a way from `from` to `to` (points on the
+## drawn floor): a region joins the map before its floor does.
+static func floor_ready(region: NavigationRegion3D, from: Vector3, to: Vector3) -> bool:
+	var map := region.get_navigation_map()
+	if not NavigationServer3D.map_get_regions(map).has(region.get_rid()):
+		return false
+	var lift := Vector3.UP * NAV_LIFT
+	return not NavigationServer3D.map_get_path(map, from + lift, to + lift, true).is_empty()
+
+
 ## The drawn floor under the baked floor's point nearest `at`, when that lies within `reach` of it
 ## across and FLOOR_RISE up or down; else Vector3.INF.
 static func floor_near(map: RID, at: Vector3, reach: float) -> Vector3:
@@ -935,10 +1039,11 @@ static func _clip(name: String) -> AnimationNodeAnimation:
 	return node
 
 
-## The prop's node, made the first time it is wanted: on its hand bone or in the body's frame.
-func _prop(name: String) -> Node3D:
-	if not _props.has(name):
-		var spec: Dictionary = PROPS[name]
+## The prop `prop_name`'s node (PROPS), made the first time it is wanted: on its hand bone or in
+## the body's frame.
+func prop(prop_name: String) -> Node3D:
+	if not _props.has(prop_name):
+		var spec: Dictionary = PROPS[prop_name]
 		var mi := MeshInstance3D.new()
 		mi.mesh = OfficeBody.block(spec.size, Color(spec.color))
 		mi.material_override = OfficeBody.material
@@ -951,5 +1056,5 @@ func _prop(name: String) -> Node3D:
 			holder.add_child(mi)
 		else:
 			_body.add_child(mi)
-		_props[name] = mi
-	return _props[name]
+		_props[prop_name] = mi
+	return _props[prop_name]

@@ -23,6 +23,8 @@ const NIGHT_FADE_S := 0.6     # [WORKING]
 
 var layout: OfficeLayout
 var lighting: OfficeLighting
+## The people of a meeting, in the `meet` layout.
+var cast: MeetingCast
 ## The floor the people walk (tools/office3d/bake_nav.gd); null on the city map.
 var nav_region: NavigationRegion3D
 ## The founder's trip to an outside meeting (main.gd plays it).
@@ -36,6 +38,8 @@ var _veiled := false   # the founder's trip is on: the layer shows the office al
 
 func _ready() -> void:
 	lighting = OfficeLighting.new($Viewport3D/SubViewport/World)
+	cast = MeetingCast.new()
+	$Viewport3D/SubViewport/World.add_child(cast)
 	_container.gui_input.connect(camera.handle_input)
 	_container.mouse_entered.connect(func() -> void: _pointer_inside = true)
 	_container.mouse_exited.connect(_on_pointer_left)
@@ -49,8 +53,8 @@ func _ready() -> void:
 	$Overlay.add_child(travel)
 
 
-## Loads an office (or "city", the map) in place of the one on screen. `road` is the map of the
-## founder's trip: no controls, and the view takes no pointer.
+## Loads an office (or "city", the map, or "meet", the meeting room) in place of the one on
+## screen. `road` is the map of the founder's trip: no controls, and the view takes no pointer.
 func load_layout(office_id: String, road := false) -> void:
 	for old in _scene_root.get_children():
 		old.free()
@@ -84,6 +88,7 @@ func load_layout(office_id: String, road := false) -> void:
 			links.append({"rid": link.get_rid(), "path": l.path})
 	OfficePerson.set_links(links)
 	_people.set_layout(layout, self)
+	cast.set_layout(layout, self)
 	_city.set_layout(layout, self, materials.get("water", []), road)
 	_container.mouse_filter = Control.MOUSE_FILTER_IGNORE if road else Control.MOUSE_FILTER_STOP
 	if road:
@@ -168,10 +173,10 @@ func _on_pointer_left() -> void:
 	hide_tooltip()
 
 
-## The map brings its own corners and the trip wants none: the controls over the office step
-## aside while either is on.
+## The map brings its own corners, and the trip and the meeting room want none: the controls over
+## the office step aside while any is on.
 func _step_overlays() -> void:
-	get_tree().call_group(&"office_overlays", &"set_map_open", _veiled or layout.id == "city")
+	get_tree().call_group(&"office_overlays", &"set_map_open", _veiled or not layout.staffed())
 
 
 func _on_night_skipped() -> void:
