@@ -309,6 +309,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
 		"save_v13_day_stamps_migrate":        fail = _case_save_v13_day_stamps_migrate()
 		"look_registry_unique_and_saved":     fail = _case_look_registry_unique_and_saved()
+		"meeting_cast_seeded_and_saved":      fail = _case_meeting_cast_seeded_and_saved()
 		"hr_experience_accrues":      fail = _case_hr_experience_accrues()
 		"hr_training_eligibility_edge": fail = _case_hr_training_eligibility_edge()
 		"hr_training_blocks_and_charges_once": fail = _case_hr_training_blocks_and_charges_once()
@@ -9352,6 +9353,103 @@ static func _case_look_registry_unique_and_saved() -> String:
 	CharacterRegistry.fill_missing_looks()
 	if looks.call() != filled:
 		return "fill_missing_looks drew different looks for the same save"
+	return ""
+
+
+# --- The people across the table: each fund's three drawn once and kept, a prospect's drawn from
+# its id each time, everyone named from the pool of the language the run began in ---
+static func _case_meeting_cast_seeded_and_saved() -> String:
+	# A run takes its language from the locale: the case pins it Turkish and hands it back.
+	var loc0: String = TranslationServer.get_locale()
+	TranslationServer.set_locale("tr")
+	var fail: String = _meeting_cast_checks()
+	TranslationServer.set_locale(loc0)
+	return fail
+
+
+static func _meeting_cast_checks() -> String:
+	CharacterRegistry.reset()
+	GameState.initialize_run({"seed": 515151})
+	var founder_look: Dictionary = CharacterRegistry.get_founder().look
+	var drawn: Dictionary = GameState.investor_people.duplicate(true)
+	var funds: Array = InvestorRegistry.get_active()
+	if drawn.size() != funds.size():
+		return "%d funds have people, want all %d" % [drawn.size(), funds.size()]
+	var everyone: Array = []
+	for inv: Dictionary in funds:
+		var people: Array = CounterpartSystem.investor_people(inv.id)
+		if people.map(func(p: Dictionary) -> String: return p.role) != CounterpartSystem.FUND_ROLES:
+			return "%s: roles %s, want lead, partner, analyst" % [inv.id, people.map(func(p: Dictionary) -> String: return p.role)]
+		var firsts: Array = people.map(func(p: Dictionary) -> String: return p.name.get_slice(" ", 0))
+		var lasts: Array = people.map(func(p: Dictionary) -> String: return p.name.get_slice(" ", 1))
+		for i in people.size():
+			if firsts.count(firsts[i]) > 1 or lasts.count(lasts[i]) > 1:
+				return "%s: two at the table share a name (%s)" % [inv.id, people.map(func(p: Dictionary) -> String: return p.name)]
+			if not HRConstants.FIRST_NAMES.has(firsts[i]):
+				return "%s: %s is not from the Turkish pool of a run begun in Turkish" % [inv.id, people[i].name]
+		if inv.has("lead_sex") and people[0].look.sex != inv.lead_sex:
+			return "%s: the lead is not of the sex the fund's copy gives them" % inv.id
+		everyone.append_array(people)
+	var looks: Array = [founder_look] + everyone.map(func(p: Dictionary) -> Dictionary: return p.look)
+	for i in looks.size():
+		for j in range(i + 1, looks.size()):
+			if LookSystem.apart(looks[i], looks[j]) < LookSystem.MIN_APART:
+				return "two of the funds' people (or one and the founder) look alike"
+	if everyone.any(func(p: Dictionary) -> bool: return GameState.issued_looks.has(LookSystem.signature(p.look))):
+		return "a fund's person was issued a look of the run's"
+
+	GameState.name_lang = "en"
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		_cleanup_save_slots()
+		return "save failed (%s)" % SaveManager.cannot_save_reason_key()
+	var payload: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	if not SaveManager.apply_loaded_state(payload):
+		_cleanup_save_slots()
+		return "apply_loaded_state returned false"
+	if GameState.investor_people != drawn:
+		_cleanup_save_slots()
+		return "the funds' people changed across a save and load"
+	if GameState.name_lang != "en":
+		_cleanup_save_slots()
+		return "name_lang came back as %s, want en" % GameState.name_lang
+	# A save from before both: the run began in Turkish and its funds get the same people.
+	var old: Dictionary = payload.duplicate(true)
+	(old.state.game_state as Dictionary).erase("name_lang")
+	(old.state.game_state as Dictionary).erase("investor_people")
+	if not SaveManager.apply_loaded_state(old):
+		_cleanup_save_slots()
+		return "apply_loaded_state refused a save from before the funds had people"
+	_cleanup_save_slots()
+	if GameState.name_lang != "tr":
+		return "a save from before name_lang came back as %s, want tr" % GameState.name_lang
+	if GameState.investor_people != drawn:
+		return "a save from before the funds had people drew different ones"
+
+	# A run begun in English names from the English pools.
+	GameState.name_lang = "en"
+	GameState.investor_people.clear()
+	CounterpartSystem.fill_investor_people()
+	var lead: Dictionary = CounterpartSystem.lead(funds[0].id)
+	if not HRConstants.FIRST_NAMES_EN.has(lead.name.get_slice(" ", 0)) \
+			or not HRConstants.LAST_NAMES_EN.has(lead.name.get_slice(" ", 1)):
+		return "%s is not from the English pools of a run begun in English" % lead.name
+	var files: Array = HRCandidateGenerator.generate(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID, 31337, "en")
+	if files.any(func(f: Dictionary) -> bool: return not HRConstants.FIRST_NAMES_EN.has(f.name.get_slice(" ", 0))):
+		return "a candidate of a run begun in English has a name from another pool"
+	GameState.name_lang = "tr"
+
+	# A prospect brings as many as its stars, the same ones every time.
+	for star in [1, 2, 3]:
+		var p := Prospect.new()
+		p.id = "lead_cast_%d" % star
+		p.star = star
+		var side: Array = CounterpartSystem.prospect_people(p)
+		if side.map(func(q: Dictionary) -> String: return q.role) != CounterpartSystem.PROSPECT_ROLES.slice(0, star):
+			return "a %d-star prospect brought %s" % [star, side.map(func(q: Dictionary) -> String: return q.role)]
+		if str(CounterpartSystem.prospect_people(p)) != str(side):
+			return "a %d-star prospect brought different people the second time" % star
+		if side.any(func(q: Dictionary) -> bool: return GameState.issued_looks.has(LookSystem.signature(q.look))):
+			return "a prospect's person was issued a look of the run's"
 	return ""
 
 

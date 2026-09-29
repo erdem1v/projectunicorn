@@ -151,7 +151,6 @@ func _unhandled_input(event: InputEvent) -> void:
 static func debug_fixture_full() -> Dictionary:
 	return {
 		"background_path": "res://assets/art/rooms/room_anchor.webp",   # LOC-DATA shot fixture
-		"portrait_path": "res://assets/art/investors/portrait_anchor.webp",   # LOC-DATA shot fixture
 		"speaker_name": "Anchor Capital",   # LOC-DATA shot fixture
 		"speaker_role": "Kıdemli Ortak",   # LOC-DATA shot fixture
 		"active_line": {   # LOC-DATA shot fixture
@@ -177,7 +176,6 @@ static func debug_fixture_long() -> Dictionary:
 	# Extreme-length strings — the text-safety proof. Nothing may overflow.
 	return {
 		"background_path": "res://assets/art/rooms/room_meridian.webp",   # LOC-DATA shot fixture
-		"portrait_path": "res://assets/art/investors/portrait_meridian.webp",   # LOC-DATA shot fixture
 		"speaker_name": "Meridian Growth Partners International",   # LOC-DATA shot fixture
 		"speaker_role": "Büyümeden Sorumlu Yönetici Ortak ve Kurucu",   # LOC-DATA shot fixture
 		"active_line": {   # LOC-DATA shot fixture

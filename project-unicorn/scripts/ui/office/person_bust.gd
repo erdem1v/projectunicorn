@@ -1,13 +1,14 @@
 class_name PersonBust
 extends Node
 
-# Head-and-shoulders portraits of the office people for the interface's avatars. One off-screen
-# studio (a SubViewport with its own world, noon light, the office's toon look and ink) renders a
-# look's body once, on a clear background, into an ImageTexture that is handed out at once and
-# filled when drawn, so a card shows the face as soon as it is ready. One portrait a frame; the
-# cache is by look, so a changed look is a new portrait. No studio without a display.
+# Head-and-shoulders portraits of people for the interface's avatars. One off-screen studio (a
+# SubViewport with its own world, noon light, the office's toon look and ink) renders a look's body
+# once per size, on a clear background, into an ImageTexture that is handed out at once and filled
+# when drawn, so a card shows the face as soon as it is ready. One portrait a frame; the cache is by
+# look and size, so a changed look is a new portrait. No studio without a display.
 
-const SIZE := 96
+## A portrait is drawn at this many times the size it is shown and read down by the filter.
+const SUPERSAMPLE := 2
 ## The camera: orthographic, this many metres tall, looking at the head from ahead and a little
 ## to the side and above.
 const FRAME := 0.5
@@ -29,24 +30,25 @@ var _queue := []
 var _busy := false
 
 
-## The portrait of `look`, empty until drawn; null without a look or a display (headless runs).
-static func texture(look: Dictionary) -> ImageTexture:
+## The portrait of `look` for showing `px` pixels across, empty until drawn; null without a look
+## or a display (headless runs).
+static func texture(look: Dictionary, px: int) -> ImageTexture:
 	if look.is_empty() or DisplayServer.get_name() == "headless":
 		return null
-	var sig := LookSystem.signature(look)
-	if not _cache.has(sig):
-		_cache[sig] = ImageTexture.create_from_image(Image.create_empty(SIZE, SIZE, false, Image.FORMAT_RGBA8))
+	var key := "%s@%d" % [LookSystem.signature(look), px]
+	if not _cache.has(key):
+		var n := px * SUPERSAMPLE
+		_cache[key] = ImageTexture.create_from_image(Image.create_empty(n, n, false, Image.FORMAT_RGBA8))
 		if _studio == null:
 			_studio = PersonBust.new()
 			(Engine.get_main_loop() as SceneTree).root.add_child.call_deferred(_studio)
-		_studio._queue.append([_cache[sig], look])
-	return _cache[sig]
+		_studio._queue.append([_cache[key], look])
+	return _cache[key]
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_viewport = SubViewport.new()
-	_viewport.size = Vector2i(SIZE, SIZE)
 	_viewport.own_world_3d = true
 	_viewport.transparent_bg = true
 	_viewport.msaa_3d = Viewport.MSAA_4X
@@ -95,6 +97,7 @@ func _process(_delta: float) -> void:
 func _render(job: Array) -> void:
 	_busy = true
 	var tex: ImageTexture = job[0]
+	_viewport.size = Vector2i(tex.get_size())
 	var body := OfficeBody.build(job[1])
 	_world.add_child(body)
 	var player := AnimationPlayer.new()
@@ -112,9 +115,7 @@ func _render(job: Array) -> void:
 	await get_tree().process_frame
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	await RenderingServer.frame_post_draw
-	var image := _viewport.get_texture().get_image()
-	image.generate_mipmaps()
-	tex.set_image(image)
+	tex.set_image(_viewport.get_texture().get_image())
 	body.queue_free()
 	_busy = false
 

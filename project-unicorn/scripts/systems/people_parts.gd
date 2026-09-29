@@ -113,7 +113,8 @@ const STYLES := {
 		"w": {"Body": ["w_suit"], "Legs": ["w_suit"], "Feet": ["w_suit", "w_formal"]},
 	},
 }
-## Role -> style: builders dress casually, sales in a jacket, the rest in between.
+## Role -> style: builders dress casually, sales in a jacket, the rest in between. The people
+## across a meeting's table (CounterpartSystem) have roles here too.
 const ROLE_STYLES := {
 	HRConstants.ROLE_DEVELOPER: "casual",
 	HRConstants.ROLE_TESTER: "casual",
@@ -121,6 +122,12 @@ const ROLE_STYLES := {
 	HRConstants.ROLE_PRODUCT_MANAGER: "smart",
 	HRConstants.ROLE_CUSTOMER_REP: "smart",
 	HRConstants.ROLE_SALES_REP: "jacket",
+	CounterpartSystem.ROLE_LEAD: "jacket",
+	CounterpartSystem.ROLE_PARTNER: "jacket",
+	CounterpartSystem.ROLE_ANALYST: "smart",
+	CounterpartSystem.ROLE_BUYER: "smart",
+	CounterpartSystem.ROLE_USER: "casual",
+	CounterpartSystem.ROLE_FINANCE: "jacket",
 }
 const HEADS := {
 	"m": ["m_suit", "m_casual", "m_hoodie", "m_beach", "m_adventurer", "m_king", "m_worker", "m_farmer"],

@@ -14,6 +14,8 @@ extends Control
 
 signal closed()
 
+const PORTRAIT_PX := 64
+
 var _portrait_tex: TextureRect
 var _name_label: Label
 var _archetype_label: Label
@@ -91,17 +93,14 @@ func _build_header() -> Control:
 	hb.add_theme_constant_override("separation", 16)
 	panel.add_child(hb)
 
-	# Compact 64×64 framed portrait (the shared DialoguePortraitCard is a 260×325 meeting bust,
-	# too large for a header — build a small one with the same cream PortraitFrame).
+	# The fund's lead in a compact framed bust, in the cream PortraitFrame.
 	var frame := PanelContainer.new()
 	frame.theme_type_variation = &"PortraitFrame"
 	frame.clip_contents = true
-	frame.custom_minimum_size = Vector2(64, 64)
+	frame.custom_minimum_size = Vector2(PORTRAIT_PX, PORTRAIT_PX)
 	frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_portrait_tex = TextureRect.new()
-	_portrait_tex.custom_minimum_size = Vector2(64, 64)
-	_portrait_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_portrait_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_portrait_tex = UiFactory.make_bust(null, false)
+	_portrait_tex.custom_minimum_size = Vector2(PORTRAIT_PX, PORTRAIT_PX)
 	frame.add_child(_portrait_tex)
 	hb.add_child(frame)
 
@@ -303,8 +302,7 @@ func _button(text: String, variation: StringName, on_pressed: Callable) -> Butto
 func _render(vs: Dictionary) -> void:
 	_name_label.text = UiTokens.tr_upper(String(vs.get("display_name", "")))
 	_archetype_label.text = String(vs.get("archetype_line", ""))
-	var pp: String = String(vs.get("portrait_path", ""))
-	_portrait_tex.texture = load(pp) if (pp != "" and ResourceLoader.exists(pp)) else null
+	_portrait_tex.texture = PersonBust.texture(vs.get("lead_look", {}), PORTRAIT_PX)
 	_render_pips(vs.get("patience", {}))
 
 	var levers: Array = vs.get("levers", [])

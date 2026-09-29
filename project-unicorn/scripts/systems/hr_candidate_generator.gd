@@ -1,7 +1,8 @@
 class_name HRCandidateGenerator
 extends RefCounted
 
-# Atlas aday dosyası üretici (§10.2) — a PURE function of (role, level, seed).
+# Atlas aday dosyası üretici (§10.2) — a PURE function of (role, level, seed, the run's name
+# language).
 #
 # HRSearchSystem calls generate() once, on the day the files arrive, with the seed it stored
 # when the search was commissioned — so the same three people are on the table after a reload.
@@ -60,7 +61,8 @@ const CHANCE_RESOLUTION := 1000
 const SALARY_ROUND_TO := 50
 
 
-static func generate(role_id: String, level: int, seed_value: int) -> Array:
+## `lang` picks the name pool: the language the run began in (GameState.name_lang).
+static func generate(role_id: String, level: int, seed_value: int, lang := "tr") -> Array:
 	var files: Array = []
 	if not HRConstants.is_employee_role(role_id):
 		push_warning("[HRCandidateGenerator] generate for non-employee role '%s'" % role_id)
@@ -85,9 +87,9 @@ static func generate(role_id: String, level: int, seed_value: int) -> Array:
 		var salt: int = SALT_CANDIDATE_STRIDE * k
 		# Aday k = arketip k: üçlü sabittir (§10.2), çekim yok.
 		var archetype: String = String(HRConstants.ARCHETYPES[k % HRConstants.ARCHETYPES.size()])
-		var first_name: String = _take_unused(HRConstants.FIRST_NAMES, used_first,
+		var first_name: String = take_unused(HRConstants.first_names(lang), used_first,
 			_mix(seed_value, SALT_FIRST_NAME + salt))
-		var last_name: String = _take_unused(HRConstants.LAST_NAMES, used_last,
+		var last_name: String = take_unused(HRConstants.last_names(lang), used_last,
 			_mix(seed_value, SALT_LAST_NAME + salt))
 		files.append({
 			"name": ("%s %s" % [first_name, last_name]).strip_edges(),
@@ -101,7 +103,7 @@ static func generate(role_id: String, level: int, seed_value: int) -> Array:
 				used_traits, role_id),
 			# The INDEX is stored, never the sentence: a stored sentence would freeze one
 			# language into state.
-			"note_index": _take_unused(range(HRConstants.FILE_NOTES_COUNT), used_notes,
+			"note_index": take_unused(range(HRConstants.FILE_NOTES_COUNT), used_notes,
 				_mix(seed_value, SALT_NOTE + salt)),
 		})
 
@@ -226,7 +228,7 @@ static func _pick_traits(seed_value: int, index: int, wants_cost: bool, used: Ar
 	var salt: int = (SALT_NEGATIVE_PICK if wants_cost else SALT_POSITIVE_PICK) \
 		+ SALT_CANDIDATE_STRIDE * index
 	var traits: Array[String] = []
-	var picked: String = str(_take_unused(pool, used, _mix(seed_value, salt)))
+	var picked: String = str(take_unused(pool, used, _mix(seed_value, salt)))
 	if picked != "":
 		traits.append(picked)
 	return traits
@@ -244,7 +246,7 @@ static func _rolls(seed_value: int, salt: int, chance: float) -> bool:
 	return _mix(seed_value, salt) % CHANCE_RESOLUTION < threshold
 
 
-static func _take_unused(pool: Array, used: Array, draw: int) -> Variant:
+static func take_unused(pool: Array, used: Array, draw: int) -> Variant:
 	# pool[draw % size], then a deterministic forward walk past anything the batch already
 	# took (a retry would need randomness). An exhausted pool returns "".
 	for step in range(pool.size()):

@@ -1893,6 +1893,11 @@ INV_ROLE_SENIOR_PARTNER,Kıdemli Ortak,Senior Partner
 INV_ROLE_MANAGING_PARTNER,Yönetici Ortak,Managing Partner
 INV_ROLE_FOUNDING_PARTNER,Kurucu Ortak,Founding Partner
 INV_ROLE_GROWTH_PARTNER,Büyüme Ortağı,Growth Partner
+MEETING_ROLE_PARTNER,Ortak,Partner
+MEETING_ROLE_ANALYST,Analist,Analyst
+MEETING_ROLE_BUYER,Satın Alma Sorumlusu,Procurement Lead
+MEETING_ROLE_USER,Ekip Yöneticisi,Team Manager
+MEETING_ROLE_FINANCE,Finans Direktörü,Finance Director
 INV_ARCH_ANCHOR,Agresif ama cömert. Kontrolü sever.,Aggressive but generous. Likes control.
 INV_ARCH_NEXUS,"Temkinli. Kurucuyu sever, riski sevmez.","Cautious. Likes the founder, dislikes the risk."
 INV_ARCH_BOSPHORUS,İlişki adamı. Kapıyı Frank açar.,A relationship man. Frank opens the door.

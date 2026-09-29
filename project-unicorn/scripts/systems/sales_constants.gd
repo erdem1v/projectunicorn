@@ -250,6 +250,7 @@ const SALT_REP_SEATS := 419      # the rep desk's seat count (§7.6)
 const SALT_LOOK := 431           # an office person's look (LookSystem)
 const SALT_ACTOR := 433          # an office person's breaks and idles (OfficeActor)
 const SALT_DAY := 439            # an office person's week: late in, early out (OfficePeople)
+const SALT_PEOPLE := 443         # the people across a meeting's table (CounterpartSystem)
 
 
 ## Deterministic value in [0, MIX_MODULUS) from the run seed, a stable identity and a salt.

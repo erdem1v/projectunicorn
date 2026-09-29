@@ -262,7 +262,7 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 static func _deliver_files() -> void:
 	var role_id: String = String(GameState.hr_search.get(KEY_ROLE, ""))
 	var search_seed: int = int(GameState.hr_search.get(KEY_SEED, 0))
-	var files: Array = HRCandidateGenerator.generate(role_id, current_level(), search_seed)
+	var files: Array = HRCandidateGenerator.generate(role_id, current_level(), search_seed, GameState.name_lang)
 	# Each candidate arrives with the look they will wear in the office, apart from the team and
 	# from the other files on the table.
 	var around: Array = CharacterRegistry.looks_around()

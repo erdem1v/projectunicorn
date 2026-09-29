@@ -691,7 +691,7 @@ static func view_state() -> Dictionary:
 		"state": _state,
 		"display_name": inv.get("display_name", ""),
 		"archetype_line": InvestorRegistry.archetype_line(_vc_id),
-		"portrait_path": inv.get("portrait_path", ""),
+		"lead_look": CounterpartSystem.lead(_vc_id).look,
 		"patience": {"current": _patience, "max": _patience_max},
 		"levers": _lever_views(),
 		"selected_lever": _selected_lever,

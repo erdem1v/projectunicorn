@@ -6,7 +6,7 @@ extends RefCounted
 # labels authored in the .tscn scenes. Colours/sizes come from UiTokens; the
 # master theme supplies fonts and per-variation defaults.
 
-static var _bust_mat: ShaderMaterial
+static var _bust_mats := {}   # circle -> the bust's material (avatar_bust.gdshader)
 
 
 static func _chip_box(bg: Color) -> StyleBoxFlat:
@@ -100,7 +100,7 @@ static func make_card(content: Control = null, tight: bool = false, attention: b
 
 ## A person's disc: the bust of their look (PersonBust), or their initials without one.
 static func make_person_avatar(person_name: String, look: Dictionary, diameter: int) -> Panel:
-	return make_avatar(initials_of(person_name), diameter, PersonBust.texture(look))
+	return make_avatar(initials_of(person_name), diameter, PersonBust.texture(look, diameter))
 
 
 ## Initials-in-a-circle avatar. The `Avatar` variation uses RADIUS_PILL, so it stays circular
@@ -112,15 +112,7 @@ static func make_avatar(initials_text: String, diameter: int = 24, bust: Texture
 	avatar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if bust != null:
-		var face := TextureRect.new()
-		face.texture = bust
-		face.set_anchors_preset(Control.PRESET_FULL_RECT)
-		face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		face.stretch_mode = TextureRect.STRETCH_SCALE
-		face.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-		face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		face.material = _bust_material()
-		avatar.add_child(face)
+		avatar.add_child(make_bust(bust))
 		return avatar
 	var initial := make_label(initials_text, &"AvatarInitial")
 	initial.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -131,11 +123,22 @@ static func make_avatar(initials_text: String, diameter: int = 24, bust: Texture
 	return avatar
 
 
-static func _bust_material() -> ShaderMaterial:
-	if _bust_mat == null:
-		_bust_mat = ShaderMaterial.new()
-		_bust_mat.shader = preload("res://scenes/ui/components/avatar_bust.gdshader")
-	return _bust_mat
+## A person's bust (PersonBust.texture) filling its parent, cut to a circle when `circle`.
+static func make_bust(bust: Texture2D, circle := true) -> TextureRect:
+	var face := TextureRect.new()
+	face.texture = bust
+	face.set_anchors_preset(Control.PRESET_FULL_RECT)
+	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	face.stretch_mode = TextureRect.STRETCH_SCALE
+	face.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if not _bust_mats.has(circle):
+		var m := ShaderMaterial.new()
+		m.shader = preload("res://scenes/ui/components/avatar_bust.gdshader")
+		m.set_shader_parameter("circle", circle)
+		_bust_mats[circle] = m
+	face.material = _bust_mats[circle]
+	return face
 
 
 ## Up to two initials from a full name. Uppercased through tr_upper: raw to_upper()

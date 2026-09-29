@@ -28,7 +28,6 @@ const INVESTORS := [
 		"term_bands": {"valuation": "high", "dilution": "high"},
 		"opening_terms": {"valuation_m": 18, "dilution_pct": 22, "board_seats": 1, "board_veto": true},
 		"warm_intro": false,
-		"portrait_path": "res://assets/art/investors/portrait_anchor.webp",
 		"room_path": "res://assets/art/rooms/room_anchor.webp",
 	},
 	{
@@ -43,7 +42,6 @@ const INVESTORS := [
 		"term_bands": {"valuation": "low", "dilution": "low"},
 		"opening_terms": {"valuation_m": 10, "dilution_pct": 15, "board_seats": 0, "board_veto": false},
 		"warm_intro": false,
-		"portrait_path": "res://assets/art/investors/portrait_nexus.webp",
 		"room_path": "res://assets/art/rooms/room_nexus.webp",
 	},
 	{
@@ -58,7 +56,8 @@ const INVESTORS := [
 		"term_bands": {"valuation": "mid", "dilution": "mid"},
 		"opening_terms": {"valuation_m": 14, "dilution_pct": 18, "board_seats": 1, "board_veto": false},
 		"warm_intro": true,
-		"portrait_path": "res://assets/art/investors/portrait_bosphorus.webp",
+		# The copy speaks of this fund's lead as a man (INV_ARCH_BOSPHORUS, PITCH_S0_INNER).
+		"lead_sex": "m",
 		"room_path": "res://assets/art/rooms/room_bosphorus.webp",
 	},
 	{
@@ -73,7 +72,6 @@ const INVESTORS := [
 		"term_bands": {"valuation": "generous", "dilution": "mid"},
 		"opening_terms": {"valuation_m": 16, "dilution_pct": 18, "board_seats": 0, "board_veto": false},
 		"warm_intro": false,
-		"portrait_path": "res://assets/art/investors/portrait_meridian.webp",
 		"room_path": "res://assets/art/rooms/room_meridian.webp",
 	},
 	# Locked Tier-2 teaser (wishlist telegraph) — no meeting, greyed card.
@@ -89,7 +87,6 @@ const INVESTORS := [
 		"term_bands": {},
 		"opening_terms": {},
 		"warm_intro": false,
-		"portrait_path": "",
 		"room_path": "",
 		"locked": true,
 	},

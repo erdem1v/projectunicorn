@@ -40,6 +40,16 @@ const RETIRED_SKILL_KEYS := ["expertise", "pace", "rapport"]
 # Etiketler id'den türetilir (HR_AREA_ + ID vb.), tablo tutulmaz.
 
 
+## Koşunun başladığı dilin ("tr" / "en") isim havuzu: yeni gelen herkes (aday, görüşmenin karşı
+## tarafı) buradan adlanır.
+static func first_names(lang: String) -> Array:
+	return FIRST_NAMES_EN if lang == "en" else FIRST_NAMES
+
+
+static func last_names(lang: String) -> Array:
+	return LAST_NAMES_EN if lang == "en" else LAST_NAMES
+
+
 static func area_label(area_key: String) -> String:
 	return _derived("HR_AREA_", area_key)
 
@@ -1089,11 +1099,22 @@ const LAST_NAMES := [
 	"Aksoy", "Koç", "Güneş", "Demir", "Kaya", "Arslan", "Yıldız", "Çetin",   # LOC-DATA name pool
 	"Doğan", "Şahin", "Erdem", "Polat", "Tekin", "Uysal",   # LOC-DATA name pool
 ]
-# FIRST_NAMES'ın cinsiyeti (ofisteki görünüş için); iki cinse de konan isimler (Deniz, Bilge) yok,
-# onlarınki tohumdan çekilir.
+# İngilizce başlayan koşunun havuzu (GameState.name_lang); seçen first_names() / last_names().
+const FIRST_NAMES_EN := [
+	"James", "Emma", "Oliver", "Jordan", "Sophie", "Daniel", "Grace", "Lucas",   # LOC-DATA name pool
+	"Olivia", "Ethan", "Chloe", "Noah", "Casey", "Henry", "Maya", "Leo",   # LOC-DATA name pool
+]
+const LAST_NAMES_EN := [
+	"Carter", "Hughes", "Bennett", "Walsh", "Foster", "Reed", "Hayes", "Morgan",   # LOC-DATA name pool
+	"Ellis", "Brooks", "Turner", "Porter", "Shaw", "Quinn",   # LOC-DATA name pool
+]
+# İki havuzun ilk isimlerinin cinsiyeti (ofisteki görünüş için); iki cinse de konan isimler (Deniz,
+# Bilge, Jordan, Casey) yok, onlarınki tohumdan çekilir.
 const FIRST_NAME_SEX := {
 	"Kerem": "m", "Arda": "m", "Mert": "m", "Baran": "m", "Onur": "m", "Kaan": "m", "Tolga": "m", "Emre": "m",   # LOC-DATA name pool
 	"Selin": "w", "Ece": "w", "Zeynep": "w", "Elif": "w", "Sena": "w", "Nehir": "w",   # LOC-DATA name pool
+	"James": "m", "Oliver": "m", "Daniel": "m", "Lucas": "m", "Ethan": "m", "Noah": "m", "Henry": "m", "Leo": "m",   # LOC-DATA name pool
+	"Emma": "w", "Sophie": "w", "Grace": "w", "Olivia": "w", "Chloe": "w", "Maya": "w",   # LOC-DATA name pool
 }
 # Tek satırlık dosya notu — mizaç verir, skill tekrarı yapmaz. Satırlar HR_FILE_NOTE_<n>.
 const FILE_NOTES_COUNT := 12

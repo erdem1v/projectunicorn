@@ -17,6 +17,9 @@ var founder_name: String = ""         # Player's name; "" means the founder Char
 var founder_portrait: String = ""     # Portrait id (e.g. "founder_03"); art via FounderConstants.portrait_path()
 # THE RNG SEED, 0 = unseeded. Not the funding round (run_seed_amount / run_seed_equity_pct).
 var run_seed: int = 0
+# The language the run began in ("tr" | "en"): everyone new is named from its pool (candidates,
+# the people across the table); a save from before it began in Turkish.
+var name_lang: String = "tr"
 
 # --- Phase 1 — Bootstrap defaults ---
 var cash: int = FounderConstants.STARTING_CASH
@@ -199,6 +202,9 @@ var run_hires: int = 0                 # CharacterRegistry.add, category "employ
 # Every look signature the run has handed out (LookSystem.signature), so no two people ever
 # share one. Writer: register_look.
 var issued_looks: Array[String] = []
+# Each fund's three people, drawn once: fund id -> [{role, name, look}], lead first.
+# Writer: CounterpartSystem.fill_investor_people.
+var investor_people: Dictionary = {}
 
 # --- SATIŞ rev 6 §13 · the run records the module owns ------------------------
 # Sole writer: SalesLedger.
@@ -741,6 +747,7 @@ func initialize_run(payload: Dictionary) -> void:
 	slogan = payload.get("slogan", "")
 	founder_name = payload.get("founder_name", "")
 	founder_portrait = payload.get("portrait_id", "")
+	name_lang = "en" if Fmt.is_english() and not is_restore else "tr"
 
 	cash = int(FounderConstants.origin_by_id(origin).get("starting_cash", FounderConstants.STARTING_CASH))
 	mrr = 0
@@ -788,6 +795,7 @@ func initialize_run(payload: Dictionary) -> void:
 	b2b_last_rep_portrait = ""
 	run_hires = 0
 	issued_looks.clear()
+	investor_people.clear()
 	run_departures = 0
 	run_scandals_total = 0
 	run_scandals_managed = 0
@@ -876,6 +884,8 @@ func initialize_run(payload: Dictionary) -> void:
 
 	CharacterRegistry.ensure_mentor()
 	CharacterRegistry.add(_build_founder(payload))
+	# After the founder, whose look theirs stand apart from.
+	CounterpartSystem.fill_investor_people()
 
 	# Month-1 ledger after the roster so the team count is real.
 	SummarySystem.snapshot()

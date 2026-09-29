@@ -714,7 +714,8 @@ func _run_office_shot(spec: String) -> void:
 		await city.open()
 	if office_id == "meet":
 		view.load_layout("meet")
-		view.cast.stage(_shot_counterparts(), CharacterRegistry.get_founder().look, extra != "cast")
+		var looks: Array = CounterpartSystem.investor_people(SHOT_FUND).map(func(p: Dictionary) -> Dictionary: return p.look)
+		view.cast.stage(looks, CharacterRegistry.get_founder().look, extra != "cast")
 		if extra.is_empty():
 			_shot_meeting_posts(view.cast)
 	match extra:
@@ -776,24 +777,13 @@ func _run_office_shot(spec: String) -> void:
 	get_tree().quit()
 
 
-## The meeting shots' other side: [name, role] for the look, lead first.
-const SHOT_COUNTERPARTS := [["Kerem Aksoy", HRConstants.ROLE_SALES_REP], ["Selin Uçar", HRConstants.ROLE_SALES_REP],
-	["Arda Durmaz", HRConstants.ROLE_PRODUCT_MANAGER]]
+## The meeting shots' other side: this fund's three.
+const SHOT_FUND := "meridian"
 ## The cast shot: seconds between the walk-in's frames and the most of them; how much closer the
 ## gestures are framed.
 const CAST_WALK_EVERY := 0.5
 const CAST_WALK_MAX := 30
 const CAST_CLOSE := 2.6
-
-
-func _shot_counterparts() -> Array:
-	var around: Array = CharacterRegistry.looks_around()
-	var out := []
-	for c: Array in SHOT_COUNTERPARTS:
-		var look := LookSystem.for_person(SalesConstants.mix(c[0], SalesConstants.SALT_LOOK), c[0], c[1], around)
-		around.append(look)
-		out.append(look)
-	return out
 
 
 ## The table at rest: the lead and the founder with their arms on it, the partner leaning back

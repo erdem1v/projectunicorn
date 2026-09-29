@@ -230,8 +230,10 @@ func apply_loaded_state(payload: Dictionary) -> bool:
 	# A save can carry a promise with an empty feature_id, which would keep has_open_promise
 	# true forever. Runs after the registries because it reads what they restored.
 	PromiseRegistry.drop_targetless()
-	# A save written before people had looks gets them here, apart from the restored team.
+	# A save written before people had looks gets them here, apart from the restored team; one
+	# from before the funds had people gets those too.
 	CharacterRegistry.fill_missing_looks()
+	CounterpartSystem.fill_investor_people()
 
 	TimeManager.set_suspended(false)
 	_dirty = false

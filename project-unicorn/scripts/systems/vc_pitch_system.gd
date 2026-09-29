@@ -891,7 +891,6 @@ static func _base_view_state() -> Dictionary:
 	var inv: Dictionary = InvestorRegistry.get_investor(_vc_id)
 	return {
 		"background_path": inv.get("room_path", ""),
-		"portrait_path": inv.get("portrait_path", ""),
 		"speaker_name": inv.get("display_name", ""),
 		"speaker_role": InvestorRegistry.role_line(_vc_id),
 		"conviction": {"value": mini(_conviction, _cap)},
