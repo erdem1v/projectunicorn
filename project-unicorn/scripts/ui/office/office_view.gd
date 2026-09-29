@@ -27,8 +27,9 @@ var lighting: OfficeLighting
 var cast: MeetingCast
 ## The floor the people walk (tools/office3d/bake_nav.gd); null on the city map.
 var nav_region: NavigationRegion3D
-## The founder's trip to an outside meeting (main.gd plays it).
+## The founder's trip to an outside meeting (main.gd plays it), and the call that opens it.
 var travel: TRAVEL
+var invite: MeetingInvite
 var _lowest := 0.0
 var _fitted := false
 var _pointer_inside := false
@@ -51,6 +52,8 @@ func _ready() -> void:
 	load_layout(OfficeSystem.current())
 	travel = TRAVEL.new(self, _people, _city)
 	$Overlay.add_child(travel)
+	invite = MeetingInvite.new(self, _people)
+	$Overlay.add_child(invite)
 
 
 ## Loads an office (or "city", the map, or "meet", the meeting room) in place of the one on

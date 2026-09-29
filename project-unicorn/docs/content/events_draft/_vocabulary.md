@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **173** |
-| Effect verbs (write) | **62** |
-| Cards in the catalogue | 44 |
+| Seams (read) | **171** |
+| Effect verbs (write) | **61** |
+| Cards in the catalogue | 43 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -63,7 +63,6 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `spend_budget`
 - `notify`
 - `open_negotiation`
-- `start_vc_meeting`
 - `open_term_table`
 - `advance_phase`
 - `phase_gate_decline`
@@ -176,8 +175,6 @@ slot of that type (§17.12).
 | `funding.gate_pending_phase` | global | int | Funding | WRAPPER; 0 when no gate is open |
 | `funding.hard_mode` | global | bool | Funding | RESERVED — no writer exists; the honest lock on Frank's decline row |
 | `funding.last_answer_moment` | global | bool | Investment | one sheet, one week left, and no other table to walk to |
-| `funding.meeting_day_arrived` | global | bool | Funding | a booked meeting's week has come |
-| `funding.meeting_sitting_open` | global | bool | Funding | a seed or Series A pitch can start now |
 | `funding.seed_band` | global | int | Funding | 0 harsh · 1 standard · 2 strong — an INDEX, for by_seam bodies |
 | `funding.seed_door_open` | global | bool | Funding | the Traction-phase door is latched and unspent |
 | `funding.seed_expectation` | global | int | Funding | 0 none · 1 grace · 2 on track · 3 durgun (SeedConstants.EXPECT_*) |

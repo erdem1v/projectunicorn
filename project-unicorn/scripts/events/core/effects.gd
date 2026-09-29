@@ -46,7 +46,7 @@ const NEUTRAL_VERBS := [
 	# world and surfaces
 	"ticker_push", "goto_tab", "unlock_content", "spend_budget", "notify",
 	# investor flow that moves no money by itself
-	"open_negotiation", "start_vc_meeting", "open_term_table", "advance_phase",
+	"open_negotiation", "open_term_table", "advance_phase",
 	"phase_gate_decline",
 	# Seed rung: the money moves at the table's İMZALA, a played moment, not in a card effect;
 	# decline_buyout's declined cash is cash that never arrives.
@@ -423,13 +423,6 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 		"angel_accept":
 			AngelRoundSystem.accept_offer()
 			return {"verb": verb}
-		"start_vc_meeting":
-			# The investor comes from the bound slot; no card can name one at authoring time.
-			var mvc: String = entity_of(e, ctx, EvScope.TYPE_INVESTOR)
-			if mvc == "":
-				return _no_target(verb, mvc)
-			VCPitchSystem.begin_meeting(mvc)
-			return {"verb": verb, "vc": mvc}
 		"open_term_table":
 			# A literal vc_id wins; otherwise the bound investor slot.
 			var tvc: String = String(e.get("vc_id", ""))

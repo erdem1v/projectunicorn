@@ -41,7 +41,6 @@ const FIXED_CHIPS := {
 	"advance_phase": ["EFFECT_PHASE_ADVANCE", &"accent"],
 	"phase_gate_decline": ["EFFECT_PHASE_HOLD", &"neutral"],
 	"ship_active_build": ["EFFECT_SHIP_LIVE", &"accent"],
-	"start_vc_meeting": ["EFFECT_MEETING_STARTS", &"accent"],
 	"goto_tab": ["EFFECT_TAKES_YOU_THERE", &"neutral"],
 }
 

@@ -567,10 +567,13 @@ static func _on_week_start() -> void:
 			Engine.get_main_loop().quit()
 
 
-## Answer every card on screen, then play a VC meeting the answers seated: in the game its
-## scene holds the clock from the hour it opens.
+## Answer every card on screen and the fund's call, then play the VC meeting that seated: in the
+## game its scene holds the clock from the hour it opens.
 static func _answer() -> void:
 	_drain_modals()
+	var caller: String = VCPitchSystem.call_waiting()
+	if caller != "":
+		VCPitchSystem.begin_meeting(caller)
 	if VCPitchSystem.is_active():
 		_play_the_hunt()
 
@@ -1038,7 +1041,7 @@ static func _keep_the_word() -> void:
 static func _play_the_hunt() -> void:
 	if _vc_done or not GameState.run_active or GameState.phase < 3 or TermSheetTableSystem.is_active():
 		return
-	# 1. The drain answered funding.meeting_day with "go", which seated the meeting. Play it.
+	# 1. The founder answered the fund's call, which seated the meeting. Play it.
 	if VCPitchSystem.is_active():
 		_play_the_meeting()
 		_vc_meet_day = GameState.day

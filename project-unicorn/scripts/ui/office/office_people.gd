@@ -43,6 +43,8 @@ const MEETING_ACTS := ["talk", "listen", "nod", "notes"]
 
 ## The founder is on the trip to a meeting: out of the office until founder_back().
 var founder_away := false
+## A call waits for the founder (MeetingInvite): the phone rings over their head.
+var founder_calling := false
 
 var _layout: OfficeLayout
 var _view: Node
@@ -124,6 +126,23 @@ func founder_back() -> void:
 	founder_away = false
 
 
+## The founder in this office, or null before the office is placed or on the map.
+func founder() -> OfficeActor:
+	return _founder if _placed else null
+
+
+## The `n` people seated nearest the founder, nearest first: they look up as the founder leaves
+## for a meeting and comes back. None before the office is placed.
+func nearest_to_founder(n: int) -> Array:
+	if not _placed:
+		return []
+	var seated := _actors.values().filter(func(a: OfficeActor) -> bool:
+		return a != _founder and a.visible and a.phase == OfficePerson.Phase.SEATED)
+	seated.sort_custom(func(x: OfficeActor, y: OfficeActor) -> bool:
+		return x.position.distance_to(_founder.position) < y.position.distance_to(_founder.position))
+	return seated.slice(0, n)
+
+
 ## Takes the office's layout. The people wait, frozen and out of sight, until its floor is on the
 ## navigation map; on the city map and in the meeting room they wait for the next office.
 func set_layout(layout: OfficeLayout, view: Node) -> void:
@@ -199,6 +218,7 @@ func _process(delta: float) -> void:
 	var anyone := false
 	var near_lift := false
 	for a: OfficeActor in _actors.values():
+		a.calling = a.founder and founder_calling
 		a.decorate(icon_size)
 		var at_desk := a.visible and a.phase == OfficePerson.Phase.SEATED and is_same(a.spot, a.seat)
 		if a.desk_id >= 0:

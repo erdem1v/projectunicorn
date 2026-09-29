@@ -6,8 +6,6 @@ extends Camera3D
 # OfficeView hands it the pointer events of the 3D view.
 
 signal clicked(screen_pos: Vector2)
-## An eased focus() reached its frame.
-signal focus_done
 
 const FH := 20.0
 const DISTANCE := 120.0
@@ -123,7 +121,6 @@ func _process(delta: float) -> void:
 	_place()
 	if k >= 1.0:
 		_anim = {}
-		focus_done.emit()
 
 
 ## The point under the cursor stays put while the zoom changes.

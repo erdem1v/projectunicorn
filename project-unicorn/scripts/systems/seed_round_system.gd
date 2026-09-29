@@ -99,8 +99,9 @@ static func pitch_blocked_reason(vc_id: String) -> String:
 ## NO SCHEDULING CEREMONY, and that is deliberate. The Series A hunt makes you book a week
 ## ahead and choose a prep focus; the seed room does not, because it is the fast room — a
 ## bet on the founder, not a diligence appointment. It also keeps
-## GameState.pending_meeting a Series-A-only field, so `funding.meeting_day` and every seam
-## that reads a booked meeting stay untouched by this rung.
+## GameState.pending_meeting a Series-A-only field, so the fund's call
+## (VCPitchSystem.call_waiting) and every seam that reads a booked meeting stay untouched by
+## this rung.
 static func begin_pitch(vc_id: String) -> bool:
 	if pitch_blocked_reason(vc_id) != "":
 		return false

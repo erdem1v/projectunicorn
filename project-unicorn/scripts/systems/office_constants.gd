@@ -9,16 +9,6 @@ extends RefCounted
 ## OFFICE_MAP_SUB spells this out as "a week": a change here changes that row too.
 const MOVE_WEEKS := 1                       # [WORKING] weeks from move_to to arrival
 
-## Where the founder's trip to an outside meeting drives on the city map, per office: a
-## building across the road, its box from the design's (ground corner, then width, height and
-## depth). [WORKING]
-const MEETING_TARGET := {
-	"home": AABB(Vector3(-83.0, 0.0, -12.0), Vector3(15.5, 12.8, 15.0)),
-	"ishani": AABB(Vector3(-70.0, 0.0, 13.0), Vector3(13.0, 16.0, 13.0)),
-	"plaza": AABB(Vector3(22.0, 0.0, -38.0), Vector3(16.0, 16.0, 16.0)),
-	"loft": AABB(Vector3(40.0, 0.0, -40.0), Vector3(14.0, 12.8, 18.0)),
-}
-
 ## id -> {tier_key, name_key, desc_key, desks, rent, deposit, move_cost, room_keys, reqs}.
 ## A req is {kind, value}: angel (Frank's cheque taken, value true), or team (headcount), cash
 ## and brand, each met at >= value.

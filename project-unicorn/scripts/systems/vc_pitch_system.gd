@@ -19,8 +19,6 @@ extends RefCounted
 # field exists yet (churn spike, MRR concentration, rival lead). Each is marked
 # `# WORKING PROXY` for Erdem's review; swap to real signals when those systems land.
 
-## The meeting-day card, named here so cancel_meeting and on_pivot can pull a queued prompt.
-const MEETING_CARD := "funding.meeting_day"
 ## walk_table's reason when the FUND leaves the table (patience-zero walk-out, or the walk that
 ## answers a shown rival offer). Distinct from the player's own "declined" on purpose: the
 ## fund is closed and a rejection is counted, but the player did not refuse the round, so
@@ -69,8 +67,8 @@ static func begin_meeting(vc_id: String, stage: String = PitchConstants.STAGE_SE
 	# THE SEED ROOM SKIPS THE CEREMONY, and that is a design statement rather than a saving.
 	# The Series A hunt makes the founder book a week ahead and spend a prep focus; the
 	# seed room is the fast one, a bet on a person. So no pending_meeting to consume and no
-	# prep to spend, which also keeps pending_meeting a Series-A-only field and leaves
-	# funding.meeting_day and every seam that reads a booked meeting untouched by this rung.
+	# prep to spend, which also keeps pending_meeting a Series-A-only field and leaves the fund's
+	# call (call_waiting) and every seam that reads a booked meeting untouched by this rung.
 	# ONE CALLBACK PER VC. `reentry_bonus` is only armed once the condition is met, so the
 	# status is read as well: any sitting with a fund that already gave a callback is the
 	# re-entry, and a second lukewarm room ends in a rejection rather than a second callback
@@ -696,8 +694,37 @@ static func request_meeting(vc_id: String) -> bool:
 	return true
 
 
-## Can the booked meeting still be moved? Only before its week - in the week itself the
-## meeting card is already the decision.
+## The fund whose booked meeting's week has come, on the phone while a sitting still fits the
+## founder's day (WorkHoursSystem.sitting_open); "" when no one is calling. Answered, the meeting
+## begins (begin_meeting); unanswered, the booking stands and the fund calls again the next day
+## the sitting fits.
+static func call_waiting() -> String:
+	var pm: Dictionary = GameState.pending_meeting
+	if pm.is_empty() or int(pm.get("day", 0)) > GameState.day or _active or not GameState.run_active \
+			or not WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS):
+		return ""
+	return String(pm.get("vc_id", ""))
+
+
+## The fund's call put off: the meeting moves the booking's lead time on and the fund remembers,
+## as a reschedule (MEETING_RESCHEDULE_PENALTY). A booking's call can be put off only once
+## (call_postponable).
+static func postpone_call() -> bool:
+	if call_waiting() == "" or not call_postponable():
+		return false
+	var pm: Dictionary = GameState.pending_meeting
+	pm["day"] = GameState.day + TimeModel.ticks(PitchConstants.MEETING_LEAD_WEEKS)
+	pm["postponed"] = true
+	_add_move_penalty(String(pm.get("vc_id", "")), PitchConstants.MEETING_RESCHEDULE_PENALTY)
+	return true
+
+
+static func call_postponable() -> bool:
+	return not bool(GameState.pending_meeting.get("postponed", false))
+
+
+## Can the booked meeting still be moved? Only before its week - in the week itself the fund's
+## call is already the decision.
 static func can_move_meeting() -> bool:
 	var pm: Dictionary = GameState.pending_meeting
 	return not pm.is_empty() and int(pm.get("day", 0)) > GameState.day
@@ -715,7 +742,6 @@ static func cancel_meeting() -> bool:
 		GameState.set_flag("pitch_prep_active", false)
 	_add_move_penalty(vc_id, PitchConstants.MEETING_CANCEL_PENALTY)
 	GameState.vc_meeting_cancel_day = GameState.day
-	EventGate.remove_queued(MEETING_CARD)
 	return true
 
 
@@ -822,9 +848,8 @@ static func _tick_prep() -> void:
 
 
 static func _tick_meeting_day() -> void:
-	# No latch here: `funding.meeting_day` declares `cooldown_weeks: 1` on `latch_key: entity`.
-	# The SIGNAL is emitted because the meeting day arriving is a fact several surfaces want
-	# and only one of them is a card.
+	# The meeting day arriving is a fact the Hunt page redraws on; the call itself is
+	# call_waiting().
 	var pm: Dictionary = GameState.pending_meeting
 	if pm.is_empty():
 		return
@@ -880,7 +905,6 @@ static func on_pivot() -> void:
 		if st.get("status", "") == "callback":
 			st.status = "rejected"
 		st.pending_sheet = false
-	EventGate.remove_queued(MEETING_CARD)
 
 
 # ============================================================================
@@ -890,6 +914,7 @@ static func on_pivot() -> void:
 static func _base_view_state() -> Dictionary:
 	var inv: Dictionary = InvestorRegistry.get_investor(_vc_id)
 	return {
+		"vc_id": _vc_id,
 		"background_path": inv.get("room_path", ""),
 		"speaker_name": inv.get("display_name", ""),
 		"speaker_role": InvestorRegistry.role_line(_vc_id),

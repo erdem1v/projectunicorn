@@ -22,6 +22,9 @@ const ICONS := {
 ## The design's icon sprite tint, and its opacity while walking: 3D scene colours, not UI tokens.
 const ICON_TINT := Color("#d2d2d2")
 const ICON_DIM := 0.6
+## A call waiting blinks the phone over the head: its opacity swings down to this, this fast.
+const CALL_BLINK := 0.35
+const CALL_BLINK_RATE := 6.0
 const ICON_PRIORITY := 10          # the design draws icons after everything else
 const HEAD_ABOVE := 0.28           # an icon's floor above the head bone
 ## Floor rings (inner and outer radius) and how far above the floor each lies.
@@ -46,6 +49,7 @@ var desk_id := -1
 var work := ""
 var status := ""
 var selected := false
+var calling := false   # a call waits for them (MeetingInvite): the phone blinks over their head
 var ghost := false     # gone from the company: walking out, then removed
 ## Today's draws, {day, late, early}: game minutes after the start they are due in and before
 ## their end they are gone. How the day is going: placed at the desk at the morning cut (the walk
@@ -101,13 +105,19 @@ func decorate(icon_size: float) -> void:
 	var lying := phase in [Phase.LIE_DOWN, Phase.LYING, Phase.GET_UP]
 	_founder_ring.visible = founder and not lying
 	_select_ring.visible = selected and not lying
-	var icon: Texture2D = ICONS.get(status)
+	var icon: Texture2D = ICONS.phone if calling else ICONS.get(status)
 	_icon.visible = icon != null
 	if icon:
 		_icon.texture = icon
-		_icon.modulate = Color(ICON_TINT, ICON_DIM if is_walking() else 1.0)
+		var blink := lerpf(CALL_BLINK, 1.0, 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.001 * CALL_BLINK_RATE))
+		_icon.modulate = Color(ICON_TINT, blink if calling else (ICON_DIM if is_walking() else 1.0))
 		_icon.scale = Vector3.ONE * icon_size
 		_icon.global_position = _head.global_position + Vector3.UP * (HEAD_ABOVE + icon_size * 0.55)
+
+
+## Where the icon over the head is, in the world.
+func marker() -> Vector3:
+	return _icon.global_position
 
 
 ## Distance along the ray to this person's hit box, INF on a miss.

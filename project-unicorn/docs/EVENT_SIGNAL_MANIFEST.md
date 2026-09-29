@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-09-28.
+Last generated 2026-09-29.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -19,7 +19,7 @@ signal with no emit point" a lint error, so the manifest is the lint rule's inpu
 |---|---|
 | Signals declared | **135** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **69** |
+| Emitted with **no production listener** | **68** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -65,10 +65,10 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 18 | 1 | time_manager |
-| `night_skipped` | `—` | time_manager | 1 | 3 | main · office_view |
+| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 21 | 1 | time_manager |
+| `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
-| `tab_changed` | `tab_id: String` | effects · main · rnd_card_modal · creation_flow · detail_view · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 22 | 2 | left_tabs · window_layer |
+| `tab_changed` | `tab_id: String` | effects · main · rnd_card_modal · creation_flow · detail_view · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 24 | 2 | left_tabs · window_layer |
 | `finance_subpage_requested` | `page_id: String` | effects · main · desk_papers | 3 | 1 | finance_tab |
 
 ### Settings signals
@@ -77,7 +77,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
 | `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger · creation_flow | 15 | 1 | main |
-| `language_changed` | `locale: String` | localization | 1 | 6 | news_ticker · research_bar · top_bar · window_layer · office_city · office_notice_stack |
+| `language_changed` | `locale: String` | localization | 1 | 7 | news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
 | `palette_changed` | `colorblind: bool` | settings_modal | 2 | 6 | hr_tab · research_bar · top_bar · window_layer · office_city · office_notice_stack |
 
 ### Character signals
@@ -148,7 +148,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `version_shipped` | `version: int` | product_system | 1 | 1 | rnd_tab · EvSignals (bindable) |
-| `build_started` | `build_id: String` | product_system | 1 | 0 | — |
+| `build_started` | `build_id: String` | product_system | 1 | 1 | office_people |
 | `build_paused` | `reason_key: String` | product_read | 1 | 0 | — |
 | `build_resumed` | `—` | product_read | 1 | 0 | — |
 | `fix_run_started` | `confirmed: int` | support_system | 1 | 0 | — |
@@ -223,7 +223,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · vc_pitch_system | 2 | 2 | game_state · hunt_tab |
 | `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger | 7 | 2 | time_manager · news_ticker |
-| `ticker_live_line` | `source: String, text: String` | summary_system | 2 | 1 | news_ticker |
+| `ticker_live_line` | `source: String, text: String` | summary_system · office_travel | 3 | 1 | news_ticker |
 
 ### Endgame signals
 
@@ -240,7 +240,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `meeting_scene_requested` | `view_state: Dictionary` | game_shell · vc_pitch_system | 4 | 1 | main |
+| `meeting_scene_requested` | `view_state: Dictionary` | game_shell · vc_pitch_system | 4 | 2 | main |
 
 ### VC Pitch / Series A Hunt signals
 

@@ -135,16 +135,8 @@ static func install() -> void:
 	EvSeams.register("funding.last_answer_moment", G, TYPE_BOOL,
 		func() -> bool: return VCPitchSystem.is_last_answer_moment(),
 		"Investment", "one sheet, one week left, and no other table to walk to")
-	EvSeams.register("funding.meeting_day_arrived", G, TYPE_BOOL,
-		func() -> bool:
-			var pm: Dictionary = GameState.pending_meeting
-			return not pm.is_empty() and int(pm.get("day", 0)) <= GameState.day,
-		"Funding", "a booked meeting's week has come")
 	# WorkHoursSystem.sitting_open, the one entry gate of every VC sitting: not at night, and the
 	# sitting ends inside the founder's workday. The cards that open a sitting lock or wait on it.
-	EvSeams.register("funding.meeting_sitting_open", G, TYPE_BOOL,
-		func() -> bool: return WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS),
-		"Funding", "a seed or Series A pitch can start now")
 	EvSeams.register("funding.table_sitting_open", G, TYPE_BOOL,
 		func() -> bool: return WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS),
 		"Funding", "the term-sheet table can open now")

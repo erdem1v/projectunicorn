@@ -238,9 +238,6 @@ static func _select_investor(mode: String, used: Dictionary) -> String:
 			# The sheet waiting for sit-or-decline; the same helper the condition seam reads.
 			var due: TermSheet = VCPitchSystem.decision_due_sheet(used)
 			return "" if due == null else String(due.vc_id)
-		"meeting_pending":
-			var vc: String = String(GameState.pending_meeting.get("vc_id", ""))
-			return "" if vc == "" or used.has(vc) else vc
 		"seed_lead":
 			# Before signing only the offer knows whose it is; after signing the offer is
 			# cleared and GameState.seed_lead remembers. One selector covers both.

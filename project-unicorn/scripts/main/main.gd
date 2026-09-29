@@ -61,6 +61,8 @@ var _pre_milestone_speed: int = -1
 # restore and the sitting guards see it; a card that arrives during it waits for the sitting.
 var _in_transit: bool = false
 var _card_waiting := false
+var _call := {}                    # the call ringing in the office: {kind: "vc" | "sales", id}
+var _trip_label := ""              # the tower's chip on the map, both ways of a meeting's trip
 var _travel_on: bool = true          # shots stage their surfaces without the trip
 # Ar-Ge kartı: aynı anda en fazla bir tane. Bir keşif ile koşunun ilk raporu aynı güne
 # düşebilir ve iki üst üste scrim karartmayı ikiye katlar; ikincisi bu kuyrukta bekler.
@@ -835,14 +837,21 @@ func _shot_meeting_cast(view: Control, stem: String) -> void:
 
 
 const TRAVEL_SHOT_EVERY := 0.25    # seconds between frames
-const TRAVEL_SHOT_MAX := 40        # frames of the trip out before the shot gives up on the scene
-const TRAVEL_SHOT_BACK := 8        # frames of the walk back in
+const TRAVEL_SHOT_MAX := 80        # frames of the trip out before the shot gives up on the scene
+const TRAVEL_SHOT_BACK := 48       # frames of the trip home and the walk back in
+const TRAVEL_SHOT_RING := 2.4      # the phone rings this long, the camera closing on the founder
+const TRAVEL_SHOT_STAFF := 6
 
 
-# --travel-shot=<home|ishani|plaza|loft>: the founder's trip to a sales meeting from that office
-# at 10:00, as the player sees it: frames of the walk out and the map's drive, one of the
-# meeting, then the walk back in. travel_shot_<office>_NN.png, in order.
-func _run_travel_shot(office_id: String) -> void:
+# --travel-shot=<home|ishani|plaza|loft>[:vc]: the founder's trip to a meeting from that office at
+# 10:00, as the player sees it: the phone ringing, its card, then frames of the walk out, the
+# map's road and the walk in to the table, one of the meeting, and the trip home to the walk back
+# in. A sales meeting by default; vc books the shot's fund for this week, whose call rings.
+# travel_shot_<office>[_vc]_NN.png, in order.
+func _run_travel_shot(spec: String) -> void:
+	var office_id: String = spec.get_slice(":", 0)
+	var vc: bool = spec.get_slice(":", 1) == "vc"
+	var stem: String = "travel_shot_%s%s" % [office_id, "_vc" if vc else ""]
 	_begin_shot()
 	_travel_on = true
 	_seed_sales_world()
@@ -850,25 +859,49 @@ func _run_travel_shot(office_id: String) -> void:
 	GameState.set_current_hour(10)
 	TimeManager.sync_to_current_hour()
 	var lead: Prospect = SalesFaucetSystem.spawn(2, "faucet")
+	# People at their desks, who look up as the founder leaves and asks how it went on the way back.
+	OfficeCrowdProbe.seed_staff(TRAVEL_SHOT_STAFF)
+	if vc:
+		GameState.set_phase(3)
+		GameState.pending_meeting = {"vc_id": SHOT_FUND, "day": GameState.day}
+		# A shot wires no signals: the answered call's meeting reaches the scene this way.
+		EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
 	await _mount_shot_shell()
 	EventBus.speed_change_requested.emit(1)
 	await get_tree().create_timer(1.0).timeout
+	if not vc:
+		# A shot wires no signals: the tab's request is made directly.
+		_on_pitch_requested(lead.id)
+	await get_tree().create_timer(TRAVEL_SHOT_RING).timeout
+	var invite: MeetingInvite = _meeting_invite()
+	if not invite.is_ringing():
+		_shot_fail("[TravelShot] the phone never rang")
+		return
 	var frame: int = 0
-	_open_sales_meeting(lead.id)
-	while _sales_meeting == null:
+	_save_shot("%s_%02d" % [stem, frame])
+	invite._open_card()
+	await get_tree().create_timer(TRAVEL_SHOT_EVERY).timeout
+	frame += 1
+	_save_shot("%s_%02d" % [stem, frame])
+	invite._accept()
+	while (_meeting_scene if vc else _sales_meeting) == null:
 		if frame == TRAVEL_SHOT_MAX:
 			_shot_fail("[TravelShot] the meeting scene never mounted")
 			return
-		_save_shot("travel_shot_%s_%02d" % [office_id, frame])
 		frame += 1
 		await get_tree().create_timer(TRAVEL_SHOT_EVERY).timeout
+		_save_shot("%s_%02d" % [stem, frame])
 	await get_tree().create_timer(0.4).timeout
-	_save_shot("travel_shot_%s_%02d" % [office_id, frame])
-	_close_sales_meeting()
+	frame += 1
+	_save_shot("%s_%02d" % [stem, frame])
+	if vc:
+		_close_dialogue_scenes()
+	else:
+		_close_sales_meeting()
 	for _i in TRAVEL_SHOT_BACK:
 		frame += 1
 		await get_tree().create_timer(TRAVEL_SHOT_EVERY).timeout
-		_save_shot("travel_shot_%s_%02d" % [office_id, frame])
+		_save_shot("%s_%02d" % [stem, frame])
 	get_tree().quit()
 
 
@@ -1912,7 +1945,7 @@ func _wire_modal_signals() -> void:
 	_event_signals_wired = true
 	EventBus.modal_requested.connect(_on_event_modal_requested)
 	EventBus.event_resolved.connect(_on_event_resolved)
-	EventBus.pitch_requested.connect(_open_sales_meeting)
+	EventBus.pitch_requested.connect(_on_pitch_requested)
 	EventBus.settings_requested.connect(_on_settings_requested)
 	EventBus.confirm_requested.connect(_on_confirm_requested)
 	EventBus.run_ended.connect(_on_run_ended)
@@ -1974,10 +2007,10 @@ func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
 		_event_modal = null
 	# event_resolved fires BEFORE the engine pumps its queue, so has_pending() still sees the
 	# next card and the clock stays paused for it. A choice can also OPEN a cinematic surface
-	# (start_vc_meeting / open_term_table run before event_resolved), whose trip may still be on
-	# its way to it; that surface's close owns the restore. The period summary still under the
-	# card restores the speed itself when it closes last.
-	if not EventGate.has_pending() and _meeting_scene == null and _term_table == null and not _in_transit:
+	# (open_term_table runs before event_resolved), whose trip may still be on its way to it; that
+	# surface's close owns the restore. The period summary still under the card restores the speed
+	# itself when it closes last.
+	if not EventGate.has_pending() and _term_table == null and not _in_transit:
 		if _summary_modal == null:
 			_restore_speed(_pre_event_speed)
 		_pre_event_speed = -1
@@ -1991,37 +2024,134 @@ func _claim_pre_dialogue_speed() -> void:
 	_pre_event_speed = -1
 
 
-## The founder's trip to an outside meeting, before its scene mounts. The sitting is already
-## open, so saving is refused and the founder is busy. The clock freezes and the tree runs, even
-## under the card that opened the sitting, so the office walks and its lift and doors move; the
-## windows step aside and the office view plays the walk out and the map. Then the clock stops at
-## speed 0 for the scene, and the office reloads under it.
-func _leave_office() -> void:
+## The fund whose meeting week has come calls while a sitting fits the founder's day, when nothing
+## else holds the founder; a call whose moment has passed stops ringing.
+func _process(_delta: float) -> void:
+	var invite := _meeting_invite()
+	if invite == null:
+		return
+	match _call.get("kind", ""):
+		"vc":
+			if VCPitchSystem.call_waiting() != _call.id:
+				_end_call()
+		"sales":
+			if SalesLedger.meeting_block_reason(_call.id) != "":
+				_end_call()
+		_:
+			var caller: String = VCPitchSystem.call_waiting()
+			if caller != "" and not _in_transit and _meeting_scene == null and _sales_meeting == null \
+					and _term_table == null and invite.can_ring():
+				_ring_fund(caller)
+
+
+## The fund whose meeting week has come is on the phone, and it waits for an answer as the meeting
+## card did: the windows close, the call's card is open from the first ring and the clock stops
+## under it. It can be put off once (VCPitchSystem.postpone_call); the card says what that costs.
+func _ring_fund(vc_id: String) -> void:
+	EventBus.tab_changed.emit("")
+	var once: bool = VCPitchSystem.call_postponable()
+	_ring_call("vc", vc_id, {"line": "MEETING_INVITE_VC", "open": true, "postpone": once,
+		"args": {"fund": InvestorRegistry.get_investor(vc_id).display_name, "person": CounterpartSystem.lead(vc_id).name},
+		"note": "MEETING_POSTPONE_ONCE" if once else "MEETING_POSTPONED_ONCE",
+		"note_args": {"n": PitchConstants.MEETING_RESCHEDULE_PENALTY}, "toast": "MEETING_POSTPONED_VC"})
+	_pre_dialogue_speed = TimeManager.current_speed
+	EventBus.speed_change_requested.emit(0)
+
+
+## "Görüşmeye git" on a prospect: the windows close and the phone rings in the office, in place of
+## any call ringing; picking it up goes to the meeting, putting it off lets it ring on. With no
+## office view (shots without the trip) the meeting opens at once.
+func _on_pitch_requested(prospect_id: String) -> void:
+	if _meeting_invite() == null:
+		_open_sales_meeting(prospect_id)
+		return
+	EventBus.tab_changed.emit("")
+	var p: Prospect = ProspectRegistry.get_prospect(prospect_id)
+	_ring_call("sales", prospect_id, {"line": "MEETING_INVITE_SALES", "open": false, "postpone": true,
+		"args": {"company": p.company_name, "person": CounterpartSystem.prospect_people(p)[0].name},
+		"note": "", "note_args": {}, "toast": "MEETING_POSTPONED"})
+
+
+## Rings the office phone for a call of `kind` ("vc" | "sales") about `id` (MeetingInvite.ring).
+func _ring_call(kind: String, id: String, spec: Dictionary) -> void:
+	var invite := _meeting_invite()
+	_call = {"kind": kind, "id": id}
+	if not invite.accepted.is_connected(_on_call_accepted):
+		invite.accepted.connect(_on_call_accepted)
+		invite.postponed.connect(_on_call_postponed)
+	invite.ring(spec)
+
+
+func _end_call() -> void:
+	_meeting_invite().stop()
+	_call = {}
+
+
+func _on_call_accepted() -> void:
+	var call := _call
+	_call = {}
+	if call.kind == "vc":
+		VCPitchSystem.begin_meeting(call.id)
+	else:
+		_open_sales_meeting(call.id)
+
+
+## A fund's call put off moves its meeting on and the clock runs again; a prospect's rings on.
+func _on_call_postponed() -> void:
+	if _call.kind != "vc":
+		return
+	VCPitchSystem.postpone_call()
+	_end_call()
+	_restore_speed(_pre_dialogue_speed)
+	_pre_dialogue_speed = -1
+
+
+## The office view's call, or null where there is no trip (shots, no office view).
+func _meeting_invite() -> MeetingInvite:
+	var view: Node = get_tree().get_first_node_in_group(&"office_view")
+	return view.invite if _travel_on and view != null else null
+
+
+## The founder's trip to an outside meeting, before its scene mounts: `side` sits across the table
+## (CounterpartSystem people, lead first) and the tower's chip on the map reads `place` and the
+## lead's name. The sitting is already open, so saving is refused and the founder is busy. The
+## clock freezes and the tree runs, even under the card that opened the sitting, so the office
+## walks and its lift and doors move; the windows step aside and the office view plays the walk
+## out, the map and the walk in to the table. Then the clock stops at speed 0 for the scene, over
+## the meeting room.
+func _leave_office(side: Array, place: String) -> void:
 	_in_transit = true
+	_trip_label = tr("MEETING_TOWER_CHIP").format({"place": place, "person": side[0].name}) \
+		if not side.is_empty() else place
 	TimeManager.freeze_clock(TRAVEL_FREEZE)
 	EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
 	get_tree().call_group(&"window_layer", &"set_veiled", true)
 	var travel: Node = _office_travel()
 	if travel != null:
-		await travel.travel_out()
+		await travel.travel_out(side.map(func(q: Dictionary) -> Dictionary: return q.look), _trip_label)
 	EventBus.speed_change_requested.emit(0)
 	TimeManager.thaw_clock(TRAVEL_FREEZE)
 	_in_transit = false
-	if travel != null:
-		travel.travel_back()
 
 
-## The sitting closed and its hours ran: the windows come back, the founder walks in (not past
-## the workday), and a card that arrived during the trip is shown now. A sitting that ended the
-## run (a Series A signature) leaves the ending paper alone: no walk in, and the held card goes.
+## The sitting closed and its hours ran, in transit (a card they pumped waits): the trip home
+## plays as the trip out did (the clock frozen, the tree running), the founder walking back in
+## (not past the workday); then the windows come back and a card that arrived meanwhile is shown.
+## A sitting that ended the run (a Series A signature) leaves the ending paper alone: no trip
+## home, and the held card goes.
 func _return_to_office() -> void:
 	if not GameState.run_active:
+		_in_transit = false
 		_card_waiting = false
 		return
-	get_tree().call_group(&"window_layer", &"set_veiled", false)
 	var travel: Node = _office_travel()
 	if travel != null:
-		travel.arrive()
+		TimeManager.freeze_clock(TRAVEL_FREEZE)
+		EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
+		await travel.travel_home(_trip_label)
+		TimeManager.thaw_clock(TRAVEL_FREEZE)
+	_in_transit = false
+	get_tree().call_group(&"window_layer", &"set_veiled", false)
 	if _card_waiting:
 		_card_waiting = false
 		_on_event_modal_requested(EventGate.active_card())
@@ -2047,7 +2177,8 @@ func _open_sales_meeting(prospect_id: String) -> void:
 	if SalesMeetingSystem.open(prospect_id).is_empty():
 		return
 	_claim_pre_dialogue_speed()
-	await _leave_office()
+	var p: Prospect = ProspectRegistry.get_prospect(prospect_id)
+	await _leave_office(CounterpartSystem.prospect_people(p), p.company_name)
 	if _shell != null:
 		_shell.visible = false
 	_sales_meeting = SALES_MEETING_SCENE.instantiate()
@@ -2061,11 +2192,13 @@ func _close_sales_meeting() -> void:
 	_sales_meeting.queue_free()
 	_sales_meeting = null
 	# §5.0 — the clock jumps two hours HERE, after the scene is gone, so the world the player
-	# comes back to is already the world those two hours produced.
+	# comes back to is already the world those two hours produced; in transit, so a card they
+	# pump waits for the trip home.
+	_in_transit = true
 	SalesMeetingSystem.close()
 	if _shell != null:
 		_shell.visible = true
-	_return_to_office()
+	await _return_to_office()
 	_restore_speed(_pre_dialogue_speed)
 	_pre_dialogue_speed = -1
 
@@ -2250,6 +2383,8 @@ func _on_summary_dismissed() -> void:
 # Terminal: the ending paper never restores speed. EndingsSystem already flushed the queue and
 # paused the clock, and TimeManager swallows unpause requests once run_active is false.
 func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
+	if not _call.is_empty():
+		_end_call()
 	if _ending_modal != null:
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
@@ -2325,7 +2460,9 @@ func _on_meeting_scene_requested(view_state: Dictionary) -> void:
 	if modal_layer == null:
 		return
 	_claim_pre_dialogue_speed()
-	await _leave_office()
+	# The Shift+F2 fixture has no fund: an empty table.
+	var vc: String = view_state.get("vc_id", "")
+	await _leave_office(CounterpartSystem.investor_people(vc), InvestorRegistry.get_investor(vc).get("display_name", ""))
 	_meeting_scene = MEETING_SCENE.instantiate()
 	_meeting_scene.choice_selected.connect(_on_dialogue_choice_selected)
 	_meeting_scene.withdraw_requested.connect(_on_dialogue_withdrawn)
@@ -2355,8 +2492,9 @@ func _close_dialogue_scenes() -> void:
 	if _meeting_scene != null:
 		_meeting_scene.queue_free()
 		_meeting_scene = null
+	_in_transit = true
 	VCPitchSystem.end_sitting()
-	_return_to_office()
+	await _return_to_office()
 	_restore_speed(_pre_dialogue_speed)
 	_pre_dialogue_speed = -1
 
@@ -2371,7 +2509,7 @@ func _on_term_table_requested(vc_id: String, stage: String) -> void:
 		push_warning("[Main] term_table_requested for %s/%s with no live sheet" % [vc_id, stage])
 		return
 	_claim_pre_dialogue_speed()
-	await _leave_office()
+	await _leave_office(CounterpartSystem.investor_people(vc_id), InvestorRegistry.get_investor(vc_id).display_name)
 	_term_table = TERM_TABLE_SCENE.instantiate()
 	_term_table.closed.connect(_close_term_table)
 	modal_layer.add_child(_term_table)
@@ -2384,8 +2522,9 @@ func _close_term_table() -> void:
 	if _term_table != null:
 		_term_table.queue_free()
 		_term_table = null
+	_in_transit = true
 	TermSheetTableSystem.end_sitting()
-	_return_to_office()
+	await _return_to_office()
 	_restore_speed(_pre_dialogue_speed)
 	_pre_dialogue_speed = -1
 
@@ -2442,6 +2581,7 @@ func _teardown_run_ui() -> void:
 	_rnd_card_queue.clear()
 	_in_transit = false
 	_card_waiting = false
+	_call = {}
 	_pre_event_speed = -1
 	_pre_settings_speed = -1
 	_pre_confirm_speed = -1

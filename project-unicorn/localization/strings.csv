@@ -1358,18 +1358,6 @@ VC_FRANK_COLD_BOSPHORUS,Bunu bana sorarlar. Ben hallederim.,I'll hear about this
 VC_FRANK_COLD_MERIDIAN,"Ürünü açtılar, kapattılar. Toplantı bu.",They opened the product and closed it. That's the whole meeting.
 VC_FRANK_COLD_GENERAL_1,Bir hayır. Sonuncusu olmayacak. Sonraki odaya taşıma.,One no. Not the last one. Don't carry it into the next room.
 VC_FRANK_COLD_GENERAL_2,Üst üste iki. Sıradaki çok şey belirler. Acele etme.,Two in a row. The next one decides a lot. Take your time.
-VC_EV_MEETING_TITLE,Büyük gün,The big day
-VC_EV_MEETING_BODY,"Bugün {investor} ile toplantın var.
-
-Frank'ten mesaj.
-
-""Bugün büyük gün. Taksideyim, sakın geç kalma.""","You've got the meeting with {investor} today.
-
-A message from Frank.
-
-""Big day. I'm in a cab. Don't you dare be late."""
-VC_EV_ENTER_MEETING,Toplantıya gir,Go into the meeting
-VC_EV_SKIP_MEETING,Bugün değil (randevu yanar),Not today (the meeting is forfeit)
 VC_EV_OFFER_EXPIRING_TITLE,Masadaki teklif,The offer on the table
 VC_EV_OFFER_EXPIRING_BODY,"{investor} teklifi masada.
 
@@ -1898,6 +1886,17 @@ MEETING_ROLE_ANALYST,Analist,Analyst
 MEETING_ROLE_BUYER,Satın Alma Sorumlusu,Procurement Lead
 MEETING_ROLE_USER,Ekip Yöneticisi,Team Manager
 MEETING_ROLE_FINANCE,Finans Direktörü,Finance Director
+MEETING_INVITE_KICKER,GELEN ARAMA · {hour}:00,INCOMING CALL · {hour}:00
+MEETING_INVITE_VC,{fund} adına {person} bu hafta görüşmek istiyor.,{person} of {fund} wants to meet this week.
+MEETING_INVITE_SALES,{company} adına {person} görüşmeye hazır.,{person} of {company} is ready to meet.
+MEETING_ACCEPT,Kabul et,Accept
+MEETING_POSTPONE,Ertele,Postpone
+MEETING_POSTPONED,Ertelendi. Telefon çalmaya devam ediyor.,Postponed. The phone keeps ringing.
+MEETING_POSTPONE_ONCE,Toplantı yalnız bir kez ertelenebilir. Fonun bir sonraki toplantısında ikna −{n}.,The meeting can be put off only once. Conviction −{n} at this fund's next meeting.
+MEETING_POSTPONED_ONCE,Bu toplantı bir kez ertelendi; bir daha ertelenemez.,This meeting was put off once; it can't be put off again.
+MEETING_POSTPONED_VC,Toplantı gelecek haftaya ertelendi. Bir daha ertelenemez.,The meeting moved to next week. It can't be put off again.
+MEETING_BACK_ASK,Nasıl geçti?,How did it go?
+MEETING_TOWER_CHIP,{place} · {person},{place} · {person}
 INV_ARCH_ANCHOR,Agresif ama cömert. Kontrolü sever.,Aggressive but generous. Likes control.
 INV_ARCH_NEXUS,"Temkinli. Kurucuyu sever, riski sevmez.","Cautious. Likes the founder, dislikes the risk."
 INV_ARCH_BOSPHORUS,İlişki adamı. Kapıyı Frank açar.,A relationship man. Frank opens the door.
@@ -2408,7 +2407,6 @@ TICKER_SRC_INTERNAL,İÇERİDEN,INTERNAL
 EFFECT_PHASE_ADVANCE,Yeni evre başlar,A new phase begins
 EFFECT_PHASE_HOLD,Şimdilik aynı evrede kalırsın,You stay in this phase for now
 EFFECT_SHIP_LIVE,Sürüm yayına çıkar,The version goes live
-EFFECT_MEETING_STARTS,Toplantı başlar,The meeting starts
 EFFECT_TAKES_YOU_THERE,Seni oraya götürür,Takes you there
 DESK_PAPER_WEEKS,{n} hafta,{n} weeks
 DESK_PAPER_THIS_WEEK,bu hafta,this week

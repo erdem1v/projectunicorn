@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 9
+const THEME_STAMP := 10
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -202,6 +202,9 @@ const VEIL_STRONG_CHROME := Color(1, 1, 1, 0.10)  # hover on dark
 # Text on these surfaces uses CREAM* / *_BRIGHT. # WORKING — Erdem's F5 seals.
 const SCRIM_MODAL := Color(0.020, 0.027, 0.035, 0.62)  # rgba(5,7,9,.62) · modal dimmer
 const SCRIM_ROOM := Color(0, 0, 0, 0.18)              # readability scrim over full-bleed room art
+# The founder's road on the city map to and from a meeting: cream dashes on a dark casing.
+const ROAD_CASING := Color(0.169, 0.153, 0.133, 0.55)  # #2B2722 .55 · road casing
+const ROAD_DASH := Color(1.0, 0.980, 0.941, 1)         # #FFFAF0 · road dashes
 const STAT_STRIP_BG := Color(0.027, 0.035, 0.043, 0.72)  # translucent stat band over art
 const DIALOGUE_BG := Color(0.063, 0.086, 0.110, 1)   # #10161C · modal / Frank card ground
 const DIALOGUE_COLUMN_BG := Color(0.063, 0.086, 0.110, 0.92)  # floating column (art shows through)

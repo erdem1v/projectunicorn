@@ -28,7 +28,6 @@ const ANGEL_ID := "funding.frank_cheque"
 const NUDGE_ID := "funding.hire_nudge"
 const RETAIN_ID := "customer.retention"
 const EXPANSION_ID := "customer.expansion"
-const MEETING_ID := "funding.meeting_day"
 const SHEET_WARN_ID := "funding.sheet_expiry"
 const SHEET_DECISION_ID := "funding.sheet_decision"
 
@@ -310,6 +309,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_v13_day_stamps_migrate":        fail = _case_save_v13_day_stamps_migrate()
 		"look_registry_unique_and_saved":     fail = _case_look_registry_unique_and_saved()
 		"meeting_cast_seeded_and_saved":      fail = _case_meeting_cast_seeded_and_saved()
+		"vc_call_postpones_once":             fail = _case_vc_call_postpones_once()
 		"hr_experience_accrues":      fail = _case_hr_experience_accrues()
 		"hr_training_eligibility_edge": fail = _case_hr_training_eligibility_edge()
 		"hr_training_blocks_and_charges_once": fail = _case_hr_training_blocks_and_charges_once()
@@ -1619,11 +1619,11 @@ static func _case_full_loop() -> String:
 		_sim_to_morning()
 		if not GameState.run_active:
 			return "run ended during wait: %s" % str(_endings)
-		if EventGate.active_id() == MEETING_ID or _instances_of(MEETING_ID) > 0:
+		if VCPitchSystem.call_waiting() != "":
 			break
-	if not _drain_to(MEETING_ID):
-		return "meeting prompt never admitted"
-	EventGate.resolve(MEETING_ID, "go")
+	if VCPitchSystem.call_waiting() != "anchor":
+		return "the fund never called"
+	VCPitchSystem.begin_meeting(VCPitchSystem.call_waiting())
 	if not VCPitchSystem.is_active():
 		return "meeting did not start"
 	_run_meeting("anchor", "metrik", "durust", "b4_ack")
@@ -9358,6 +9358,39 @@ static func _case_look_registry_unique_and_saved() -> String:
 
 # --- The people across the table: each fund's three drawn once and kept, a prospect's drawn from
 # its id each time, everyone named from the pool of the language the run began in ---
+# --- A fund's call can be put off once: the meeting moves a lead time on and the fund remembers
+# (as a reschedule), it calls again, and that call can only be answered ---
+static func _case_vc_call_postpones_once() -> String:
+	GameState.set_phase(3)
+	_seed_b2b_series_a()
+	if not VCPitchSystem.request_meeting("anchor"):
+		return "request_meeting refused"
+	var call := func() -> String:
+		for i in 5:
+			_sim_to_morning()
+			if VCPitchSystem.call_waiting() != "":
+				break
+		return VCPitchSystem.call_waiting()
+	if call.call() != "anchor":
+		return "the fund never called"
+	var before: int = int(GameState.vc_states.anchor.get("move_penalty", 0))
+	if not VCPitchSystem.postpone_call():
+		return "the first call could not be put off"
+	if VCPitchSystem.call_waiting() != "":
+		return "the fund still calls the week its meeting was put off"
+	var after: int = int(GameState.vc_states.anchor.get("move_penalty", 0))
+	if after != before + PitchConstants.MEETING_RESCHEDULE_PENALTY:
+		return "putting the call off cost %d, want the reschedule's %d" % [after - before, PitchConstants.MEETING_RESCHEDULE_PENALTY]
+	if call.call() != "anchor":
+		return "the fund did not call again"
+	if VCPitchSystem.postpone_call():
+		return "the call was put off twice"
+	VCPitchSystem.begin_meeting(VCPitchSystem.call_waiting())
+	if not VCPitchSystem.is_active():
+		return "the answered call did not start the meeting"
+	return ""
+
+
 static func _case_meeting_cast_seeded_and_saved() -> String:
 	# A run takes its language from the locale: the case pins it Turkish and hands it back.
 	var loc0: String = TranslationServer.get_locale()
