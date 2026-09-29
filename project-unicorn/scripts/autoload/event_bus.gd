@@ -176,7 +176,7 @@ signal rival_advanced()
 # --- Prospect / pitch signals ---
 signal prospect_added(prospect_id: String)
 signal prospect_removed(prospect_id: String)
-# Sales tab "Görüşmeye git" → main.gd opens the pitch in the shared MeetingScene.
+# Sales tab "Görüşmeye git" → main.gd opens the pitch in the shared MeetingPanel.
 signal pitch_requested(prospect_id: String)
 # A sales or VC/seed sitting ended (any outcome, withdraw included); Sales/Hunt tabs repaint.
 signal pitch_finished()
@@ -230,9 +230,9 @@ signal month_ended(month_close: Dictionary)
 # A summary period closed at the player's summary frequency; main.gd mounts the modal.
 signal summary_ready(data: Dictionary)
 
-# --- Cinematic dialogue shell — MeetingScene ---
-# view_state is the dict MeetingScene.populate() consumes; main.gd mounts the scene into
-# ModalLayer and relays choice_selected.
+# --- Meeting panel — MeetingPanel ---
+# view_state is VCPitchSystem's beat-1 view; main.gd wraps it in a VcMeetingAdapter and
+# mounts the MeetingPanel into ModalLayer.
 signal meeting_scene_requested(view_state: Dictionary)
 
 # --- VC Pitch / Series A Hunt signals ---

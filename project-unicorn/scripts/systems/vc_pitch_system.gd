@@ -2,9 +2,10 @@ class_name VCPitchSystem
 extends RefCounted
 
 # VC Pitch engine. Static, pure-logic (PhaseGate/Endings
-# pattern). Drives the MeetingScene as a humble view: builds a view_state, emits
-# EventBus.meeting_scene_requested; main.gd routes the scene's choice_selected back into
-# advance(), which returns the next view_state or {done:true} once the outcome is written.
+# pattern). Drives the meeting panel as a humble view: builds a view_state, emits
+# EventBus.meeting_scene_requested; the panel's VcMeetingAdapter routes each pick back into
+# advance(), which returns the next view_state with the check it rolled, and {done:true} once
+# the result view is closed.
 #
 # TWO state homes:
 #   * Persistent/serialized → GameState (vc_states, active_sheets, seed_sheet, pending_meeting, prep).
@@ -44,12 +45,12 @@ static var _cold_exit_key: String = ""    # the Frank line this sitting's reject
 # meeting PRODUCES. The TABLE is told its stage by open(vc_id, stage) instead, because one
 # fund can hold an unsigned seed offer and a Series A sheet at once.
 static var _stage: String = PitchConstants.STAGE_SERIES_A
-# The finished sitting's clock, run by end_sitting once the scene is gone.
+# The finished sitting's clock, run by end_sitting once the panel is gone.
 static var _owed_hours: int = 0
 
 
 # ============================================================================
-# Public: meeting lifecycle (called by main.gd via the MeetingScene signals)
+# Public: meeting lifecycle (called by the meeting panel's adapter)
 # ============================================================================
 
 ## The uniform name SaveManager.can_save() asks every sitting-scoped system.
@@ -89,10 +90,21 @@ static func begin_meeting(vc_id: String, stage: String = PitchConstants.STAGE_SE
 	_meeting_day_mrr = GameState.mrr
 	var seed_data: Dictionary = initial_conviction(vc_id)
 	_conviction = int(seed_data.value)
+	# The first thing the fund remembers of the founder, among the reasons the conviction
+	# above just counted. Read before the move penalty below is consumed.
+	var memory_key := ""
+	if GameState.seed_lead == vc_id:
+		memory_key = "VC_WHY_SEED_LEAD"
+	elif bool(_vc(vc_id).get("reentry_bonus", false)):
+		memory_key = "VC_WHY_CALLBACK"
+	elif series_a and int(_vc(vc_id).get("move_penalty", 0)) > 0:
+		memory_key = "VC_WHY_MOVED"
+	elif bool(inv.get("warm_intro", false)):
+		memory_key = "VC_WHY_WARM_INTRO"
 	# A cancelled or moved meeting costs this fund's NEXT meeting, and this is it.
 	if series_a:
 		_vc(vc_id).erase("move_penalty")
-	EventBus.meeting_scene_requested.emit(_beat1_view_state(seed_data.why))
+	EventBus.meeting_scene_requested.emit(_beat1_view_state(seed_data.why, memory_key))
 
 
 static func advance(choice_id: String) -> Dictionary:
@@ -116,7 +128,7 @@ static func withdraw() -> void:
 	EventBus.pitch_finished.emit()
 
 
-## Runs the finished sitting's hours once the scene is gone: main after releasing it, the probe
+## Runs the finished sitting's hours once the panel is gone: main after releasing it, the probe
 ## after `done`. The founder pays hours / WEEK_WORK_HOURS of the week and the skip stops at
 ## midnight (TimeManager.advance_hours).
 static func end_sitting() -> void:
@@ -255,9 +267,10 @@ static func _finish_conviction(base: int, why: Array) -> Dictionary:
 
 static func _resolve_beat1(_choice_id: String) -> Dictionary:
 	# Odayı Oku — perception. Success reveals the tell (Beat 2 marks the favored angle).
-	_intel = SkillCheck.resolve(PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0).passed
+	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)
+	_intel = chk.passed
 	_beat = 2
-	return {"done": false, "view_state": _beat2_view_state()}
+	return {"done": false, "view_state": _beat2_view_state(), "check": chk}
 
 
 static func _resolve_beat2(choice_id: String) -> Dictionary:
@@ -274,7 +287,7 @@ static func _resolve_beat2(choice_id: String) -> Dictionary:
 	_conviction = clampi(_conviction, 0, 100)
 	_sorgu = _pick_sorgu_target()
 	_beat = 3
-	return {"done": false, "view_state": _beat3_view_state(chk)}
+	return {"done": false, "view_state": _beat3_view_state(chk), "check": chk}
 
 
 static func _resolve_beat3(choice_id: String) -> Dictionary:
@@ -289,7 +302,7 @@ static func _resolve_beat3(choice_id: String) -> Dictionary:
 		_: s = PitchConstants.GECISTIR_SUCCESS; f = PitchConstants.GECISTIR_FAIL; _cap = PitchConstants.GECISTIR_CAP
 	_conviction = clampi(_conviction + (s if chk.passed else f), 0, 100)
 	_beat = 4
-	return {"done": false, "view_state": _beat4_view_state()}
+	return {"done": false, "view_state": _beat4_view_state(), "check": chk}
 
 
 static func _resolve_beat4(choice_id: String) -> Dictionary:
@@ -302,36 +315,38 @@ static func _resolve_beat4(choice_id: String) -> Dictionary:
 	if _stage == PitchConstants.STAGE_SEED:
 		var band: String = SeedConstants.band_for(zone_val)
 		_grant_seed_sheet(band)
-		_beat = 5
-		return {"done": false, "view_state": _result_view_state("seed_" + band)}
+		return _to_result("seed_" + band)
 	if zone_val >= PitchConstants.WON_MIN:
-		# Kazanıldı — ack closes.
+		# Kazanıldı — the ack takes the sheet.
 		_grant_sheet()
-		return _finish()
+		return _to_result("won")
 	if zone_val < PitchConstants.ILIK_MIN:
-		# Soğuk — RET closes.
+		# Soğuk — RET, whatever was clicked.
 		_reject()
-		return _finish()
+		return _to_result("cold")
 	# Ilık fork.
 	match choice_id:
 		"b4_callback":
 			_set_callback()
-			_beat = 5
-			return {"done": false, "view_state": _result_view_state("callback")}
+			return _to_result("callback")
 		"b4_zorla":
 			var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0)
 			if chk.passed:
 				_grant_sheet()
-				_beat = 5
-				return {"done": false, "view_state": _result_view_state("zorla_win")}
+				return _to_result("zorla_win", chk)
 			_reject()
-			_beat = 5
-			return {"done": false, "view_state": _result_view_state("zorla_ret")}
+			return _to_result("zorla_ret", chk)
 		_:
 			# reentry "no callback" path → accept RET.
 			_reject()
-			_beat = 5
-			return {"done": false, "view_state": _result_view_state("ret")}
+			return _to_result("ret")
+
+
+## Beat 5. The outcome is already written; its result view stays up, and the sitting stays
+## active (no save), until advance("b4_close") finishes it.
+static func _to_result(kind: String, chk: Dictionary = {}) -> Dictionary:
+	_beat = 5
+	return {"done": false, "view_state": _result_view_state(kind), "check": chk}
 
 
 static func _finish() -> Dictionary:
@@ -445,6 +460,17 @@ static func _make_callback(vc_id: String) -> Dictionary:
 		"product": return {"type": "bugs_under", "target": PitchConstants.CALLBACK_BUGS_UNDER, "met": false}
 		"team": return {"type": "first_engineer", "target": 1, "met": false}
 		_: return {"type": "scandal_resolved", "target": 0, "met": false}
+
+
+## A callback's condition in words: the Hunt roster's lock line and the meeting's result card.
+static func callback_text(cb: Dictionary) -> String:
+	match String(cb.get("type", "")):
+		"mrr_growth": return _t("HUNT_CB_MRR").format({"target": Fmt.money(int(cb.get("target", 0))),
+			"current": Fmt.money(GameState.mrr)})
+		"bugs_under": return _t("HUNT_CB_BUGS").format({"n": int(cb.get("target", 0))})
+		"first_engineer": return _t("HUNT_CB_FIRST_ENGINEER")
+		"scandal_resolved": return _t("HUNT_CB_SCANDAL")
+		_: return _t("HUNT_CB_NONE")
 
 
 ## Series A only: the seed branch of _resolve_beat4 returns before any rejection.
@@ -908,67 +934,64 @@ static func on_pivot() -> void:
 
 
 # ============================================================================
-# View-state builders (target MeetingScene contract)
+# View-state builders (read by VcMeetingAdapter)
 # ============================================================================
 
 static func _base_view_state() -> Dictionary:
 	var inv: Dictionary = InvestorRegistry.get_investor(_vc_id)
 	return {
 		"vc_id": _vc_id,
-		"background_path": inv.get("room_path", ""),
+		"stage": _stage,
 		"speaker_name": inv.get("display_name", ""),
-		"speaker_role": InvestorRegistry.role_line(_vc_id),
 		"conviction": {"value": mini(_conviction, _cap)},
-		"stat_strip": {"left_text": _t("VC_STAT_STRIP").format({
-			"cash": UiTokens.format_money(GameState.cash),
-			"runway_label": _t("RUNWAY_GROSS_LABEL"),
-			"months": int(floor(_gross_runway_months())),
-			"date": Fmt.date_line(GameState.get_date_dict())})},
 		"can_withdraw": false,
 	}
 
 
-static func _beat1_view_state(why: Array) -> Dictionary:
+## `memory_key`: the HAFIZA row, what the fund remembers of the founder; "" when nothing.
+static func _beat1_view_state(why: Array, memory_key: String) -> Dictionary:
 	var vs: Dictionary = _base_view_state()
-	vs["active_line"] = _active_line(_t(_k("B1_LINE")).format(
-		{"investor": InvestorRegistry.get_investor(_vc_id).get("display_name", "")}))
+	vs["memory_key"] = memory_key
+	vs["active_line"] = _t(_k("B1_LINE")).format(
+		{"investor": InvestorRegistry.get_investor(_vc_id).get("display_name", "")})
 	# Never empty: both conviction profiles always carry the MRR and brand reasons.
 	vs["monologue_text"] = _t(_k("B1_MONO_WHY")).format({"reasons": " · ".join(PackedStringArray(why))})
 	vs["beat_label"] = _t("VC_BEAT1_LABEL")
 	vs["can_withdraw"] = true                       # only before the first check
-	vs["choices"] = [{"id": "b1_read", "text": _t("VC_B1_CHOICE"), "odds_text": _odds(_t("VC_APPROACH_PERCEPTION"), PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)}]
+	vs["choices"] = [{"id": "b1_read", "text": _t("VC_B1_CHOICE"), "check": _check_view("VC_APPROACH_PERCEPTION", PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)}]
 	return vs
 
 
 static func _beat2_view_state() -> Dictionary:
 	var vs: Dictionary = _base_view_state()
-	# No reaction prefix here: Beat 1 is the founder silently reading the room, a roll the
-	# investor cannot see and that moves no conviction. What it earned shows below instead
-	# (the marked angle, or the monologue).
-	vs["active_line"] = _active_line(_t(_k("B2_LINE")))
+	# No reaction here: Beat 1 is the founder silently reading the room, a roll the investor
+	# cannot see and that moves no conviction. What it earned shows below instead (the marked
+	# angle, or the monologue).
+	vs["active_line"] = _t(_k("B2_LINE"))
 	vs["monologue_text"] = _t(_k("B2_MONO")) if not _intel else ""
 	vs["beat_label"] = _t("VC_BEAT2_LABEL")
 	var favored: String = InvestorRegistry.favored_angle(_vc_id) if _intel else ""
 	var out: Array = []
 	for a in [["metrik", _t(_k("B2_METRIC"))], ["vizyon", _t(_k("B2_VISION"))], ["traction", _t(_k("B2_TRACTION"))]]:
 		# The resolver's own _angle_diff: the odds shown are the odds rolled.
-		out.append({"id": "b2_" + a[0], "text": a[1], "odds_text": _odds(_t("VC_APPROACH_NARRATIVE"), _angle_skill(a[0]), _angle_diff(a[0]), _beat2_bonus(a[0])), "marked": (a[0] == favored)})
+		out.append({"id": "b2_" + a[0], "text": a[1], "check": _check_view("VC_APPROACH_NARRATIVE", _angle_skill(a[0]), _angle_diff(a[0]), _beat2_bonus(a[0])), "marked": (a[0] == favored), "marked_text": _t("MEETING_MARK_FAVORED")})
 	vs["choices"] = out
 	return vs
 
 
 static func _beat3_view_state(prev: Dictionary) -> Dictionary:
 	var vs: Dictionary = _base_view_state()
-	vs["active_line"] = _active_line(_react_line(prev) + String(_sorgu.get("vc_line", "")))
+	vs["reaction_line"] = _react_line(prev)
+	vs["active_line"] = String(_sorgu.get("vc_line", ""))
 	vs["monologue_text"] = String(_sorgu.get("mono", ""))
 	vs["beat_label"] = _t("VC_BEAT3_LABEL")
 	var prova: bool = _prep_focus == "prova"
 	# The resolver's own _beat3_diff / _beat3_bonus: a clean question is rolled at Kolay, and the
 	# odds shown are the odds rolled.
 	vs["choices"] = [
-		{"id": "b3_durust", "text": _t("VC_B3_HONEST"), "odds_text": _odds(_t("VC_APPROACH_HONEST"), PitchConstants.BEAT3_SKILL, _beat3_diff("durust"), _beat3_bonus("durust")), "caption": _t("VC_B3_HONEST_CAP"), "marked": prova, "marked_text": _t("VC_REHEARSED")},
-		{"id": "b3_spin", "text": _t("VC_B3_SPIN"), "odds_text": _odds(_t("VC_APPROACH_SPIN"), PitchConstants.BEAT3_SKILL, _beat3_diff("spin"), _beat3_bonus("spin")), "caption": _t("VC_B3_SPIN_CAP")},
-		{"id": "b3_gecistir", "text": _t("VC_B3_DEFLECT"), "odds_text": _odds(_t("VC_APPROACH_DEFLECT"), PitchConstants.BEAT3_SKILL, _beat3_diff("gecistir"), _beat3_bonus("gecistir")), "caption": _t("VC_B3_DEFLECT_CAP").format({"cap": PitchConstants.GECISTIR_CAP}), "caption_danger": true},
+		{"id": "b3_durust", "text": _t("VC_B3_HONEST"), "check": _check_view("VC_APPROACH_HONEST", PitchConstants.BEAT3_SKILL, _beat3_diff("durust"), _beat3_bonus("durust")), "caption": _t("VC_B3_HONEST_CAP"), "marked": prova, "marked_text": _t("VC_REHEARSED")},
+		{"id": "b3_spin", "text": _t("VC_B3_SPIN"), "check": _check_view("VC_APPROACH_SPIN", PitchConstants.BEAT3_SKILL, _beat3_diff("spin"), _beat3_bonus("spin")), "caption": _t("VC_B3_SPIN_CAP")},
+		{"id": "b3_gecistir", "text": _t("VC_B3_DEFLECT"), "check": _check_view("VC_APPROACH_DEFLECT", PitchConstants.BEAT3_SKILL, _beat3_diff("gecistir"), _beat3_bonus("gecistir")), "caption": _t("VC_B3_DEFLECT_CAP").format({"cap": PitchConstants.GECISTIR_CAP}), "caption_danger": true},
 	]
 	return vs
 
@@ -983,23 +1006,21 @@ static func _beat4_view_state() -> Dictionary:
 	# diminishes the player.
 	if _stage == PitchConstants.STAGE_SEED:
 		var band: String = SeedConstants.band_for(zone_val).to_upper()
-		vs["active_line"] = _active_line(_t("SEED_B4_LINE_" + band))
+		vs["active_line"] = _t("SEED_B4_LINE_" + band)
 		vs["monologue_text"] = _t("SEED_B4_MONO_" + band)
 		vs["choices"] = [{"id": "b4_ack", "text": _t("SEED_B4_ACK")}]
 		return vs
 	if zone_val >= PitchConstants.WON_MIN:
-		vs["active_line"] = _active_line(_t("VC_B4_WIN_LINE"))
+		vs["active_line"] = _t("VC_B4_WIN_LINE")
 		vs["choices"] = [{"id": "b4_ack", "text": _t("VC_B4_WIN_CHOICE")}]
 	elif zone_val < PitchConstants.ILIK_MIN:
-		vs["active_line"] = _active_line(_t("VC_B4_LOSS_LINE"))
-		# The Soğuk band is decided here - _resolve_beat4 rejects whatever is clicked - so the
-		# exit view already carries Frank's line.
-		vs["monologue_text"] = _t("VC_B4_LOSS_MONO") + "\n\n" + _cold_exit_text()
+		vs["active_line"] = _t("VC_B4_LOSS_LINE")
+		vs["monologue_text"] = _t("VC_B4_LOSS_MONO")
 		vs["choices"] = [{"id": "b4_leave", "text": _t("VC_B4_LOSS_CHOICE")}]
 	else:
-		vs["active_line"] = _active_line(_t("VC_B4_WARM_LINE"))
+		vs["active_line"] = _t("VC_B4_WARM_LINE")
 		vs["monologue_text"] = _t("VC_B4_WARM_MONO")
-		var push_choice: Dictionary = {"id": "b4_zorla", "text": _t("VC_B4_PUSH"), "odds_text": _odds(_t("VC_APPROACH_PUSH"), PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": _t("VC_B4_PUSH_CAP"), "caption_danger": true}
+		var push_choice: Dictionary = {"id": "b4_zorla", "text": _t("VC_B4_PUSH"), "check": _check_view("VC_APPROACH_PUSH", PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": _t("VC_B4_PUSH_CAP"), "caption_danger": true}
 		if _reentry:
 			vs["choices"] = [push_choice, {"id": "b4_ret", "text": _t("VC_B4_QUIT"), "caption": _t("VC_B4_QUIT_CAP")}]
 		else:
@@ -1011,6 +1032,7 @@ static func _result_view_state(kind: String) -> Dictionary:
 	var vs: Dictionary = _base_view_state()
 	var line := ""
 	match kind:
+		"won", "cold": pass   # the room's Beat-4 line was its last word
 		"callback": line = _t("VC_RES_CALLBACK")
 		"zorla_win": line = _t("VC_RES_PUSH_WIN")
 		"zorla_ret": line = _t("VC_RES_PUSH_LOSS")
@@ -1018,16 +1040,17 @@ static func _result_view_state(kind: String) -> Dictionary:
 		"seed_standard": line = _t("SEED_RES_STANDARD")
 		"seed_harsh": line = _t("SEED_RES_HARSH")
 		_: line = _t("VC_RES_DEFAULT")
-	vs["active_line"] = _active_line(line)
-	if kind in ["zorla_ret", "ret"]:
+	vs["result_kind"] = kind
+	vs["active_line"] = line
+	if kind in ["cold", "zorla_ret", "ret"]:
 		vs["monologue_text"] = _cold_exit_text()     # the rejection's exit view
 	vs["beat_label"] = _t("VC_BEAT4_LABEL")
-	vs["choices"] = [{"id": "b4_close", "text": _t("VC_B4_CLOSE")}]
+	vs["choices"] = [{"id": "b4_close"}]
 	return vs
 
 
-## Frank on the way out of a Series A rejection. Picked ONCE per sitting (the view may
-## be built before _reject writes the streak), and the pick is written the moment it is made:
+## Frank on the way out of a Series A rejection. Picked ONCE per sitting (the result view
+## reads it after _reject has written the streak), and the pick is written the moment it is made:
 ##   the previous finished Series A meeting was a rejection too  → the "two in a row" line;
 ##   else this fund's own line, if it has not been shown this run  → that line (remembered);
 ##   else                                                          → the general line.
@@ -1210,18 +1233,21 @@ static func _beat3_bonus(posture: String) -> int:
 	return PitchConstants.PREP_BONUS if (_prep_focus == "prova" and posture == "durust") else 0
 
 
-static func _odds(label: String, skill: String, diff: int, bonus: int) -> String:
-	var pct: int = int(round(SkillCheck.chance_for(skill, diff, bonus) * 100.0))
-	return _t("VC_ODDS").format({
-		"approach": label, "difficulty": PitchConstants.diff_label(diff), "pct": Fmt.percent(pct, 0)})
+## A choice's odds, from the breakdown the resolver's roll sums: {approach (the translated
+## VC_APPROACH_* word), chance, difficulty (diff int), skill (FounderConstants id), skill_value,
+## prep (the prep focus id behind the bonus, "" without one)}. Every VC bonus is the prep's.
+static func _check_view(approach_key: String, skill: String, diff: int, bonus: int) -> Dictionary:
+	var b: Dictionary = SkillCheck.breakdown(skill, diff, bonus)
+	return {"approach": _t(approach_key), "chance": float(b.total), "difficulty": diff, "skill": skill,
+		"skill_value": int(b.skill_value), "prep": _prep_focus if bonus > 0 else ""}
 
 
+## The investor's reaction to the previous check, spoken before the next line; "" without one.
 static func _react_line(chk: Dictionary) -> String:
-	# Short VC reaction to the previous check (folded into the next line; inline resolution).
 	match String(chk.get("band", "")):
-		"crit_success", "success": return _t("VC_REACT_GOOD") + " "
-		"near_pass": return _t("VC_REACT_OK") + " "
-		"near_miss", "fail", "crit_fail": return _t("VC_REACT_BAD") + " "
+		"crit_success", "success": return _t("VC_REACT_GOOD")
+		"near_pass": return _t("VC_REACT_OK")
+		"near_miss", "fail", "crit_fail": return _t("VC_REACT_BAD")
 		_: return ""
 
 
@@ -1313,9 +1339,3 @@ static func _k(suffix: String) -> String:
 ## compile here and then die at run time.
 static func _t(key: String) -> String:
 	return TranslationServer.translate(key)
-
-
-## The investor's spoken line, tagged "Kaplan Yatırım — Canlı" / "Kaplan Ventures — Live".
-static func _active_line(text: String) -> Dictionary:
-	var display_name: String = String(InvestorRegistry.get_investor(_vc_id).get("display_name", ""))
-	return {"text": text, "speaker_tag": _t("VC_SPEAKER_LIVE").format({"name": display_name}), "is_monologue": false}

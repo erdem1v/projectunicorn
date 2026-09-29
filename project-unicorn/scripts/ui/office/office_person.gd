@@ -59,9 +59,11 @@ const SEAT_HANDS := {
 	"write": {"left": Vector3(0.22, 0.785, 0.55), "right": Vector3(-0.04, 0.79, 0.62), "lean": 0.35, "nod": 0.3,
 		"slide": 0.2, "motion": "write", "props": ["pen"]},
 }
-## A meeting's gestures that move a hand, over the seated act while they run: a look at the watch.
+## A meeting's gestures that move a hand, over the seated act while they run: a look at the watch,
+## and notes written on the table from any post, as the pen seat writes.
 const GESTURE_HANDS := {
 	"watch": {"left": Vector3(0.06, 0.9, 0.4)},
+	"notes": SEAT_HANDS["write"],
 }
 const STAND_HANDS := {
 	"phone": {"props": ["phone"]},
@@ -382,8 +384,9 @@ func is_walking() -> bool:
 
 
 ## A meeting's gesture over the pose for `seconds` (ambient): nod, shake, lookup, lean, back (a
-## lean back with a shake of the head), watch (a look at the watch), pen (the head's wobble as the
-## pen goes down; MeetingCast moves the pen and the lean). A new one replaces the one under way.
+## lean back with a shake of the head), watch (a look at the watch), notes (writing on the table),
+## pen (the head's wobble as the pen goes down; MeetingCast moves the pen and the lean). A new one
+## replaces the one under way.
 func gesture(gesture_name: String, seconds: float) -> void:
 	_gesture_name = gesture_name
 	_gesture_len = seconds

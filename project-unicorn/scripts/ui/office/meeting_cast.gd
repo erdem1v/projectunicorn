@@ -4,9 +4,9 @@ extends Node3D
 # The people of a meeting in the room on the investors' tower (OfficeView's `meet` layout): the
 # other side sat at the table from the start, lead in the middle, and the founder, who walks in
 # from the lift and sits across from them. The meeting says whom each one looks at, how they sit,
-# who speaks and what they do; this moves the bodies and the pen on the table, and lights the
-# founder's place. The people move at 1× whatever the
-# clock does: the meeting holds it, stopped, and the office view runs through a paused tree.
+# who speaks and what they do; this moves the bodies and the pen on the table, lights the
+# founder's place and frames the table beside the meeting panel. The people move at 1× whatever
+# the clock does: the meeting holds it, stopped, and the office view runs through a paused tree.
 #
 # People by index: 0 is the founder, 1.. the other side in the order staged.
 
@@ -65,8 +65,16 @@ func stage(looks: Array, founder_look: Dictionary, seated := false) -> void:
 	_out_told = true
 	_pen.global_transform = _pen_dropped
 	_pen.visible = true
+	frame_table(0.0)
+
+
+## Frames the table TABLE_ZOOM closer than the room's fit, in the middle of the part of the view
+## that `cover_px` leaves (the meeting panel's width over the view's right side): the camera moves
+## half of it to the right.
+func frame_table(cover_px: float) -> void:
 	var cam: OfficeCamera = _view.camera
-	cam.focus(_layout.table, cam.fit_zoom * TABLE_ZOOM, 0.0)
+	var zoom := cam.fit_zoom * TABLE_ZOOM
+	cam.focus(_layout.table + cam.global_basis.x * cover_px * 0.5 * cam.units_per_px(zoom), zoom, 0.0)
 
 
 ## The founder walks from the lift to their chair; founder_seated says they sat down.
@@ -75,8 +83,10 @@ func walk_in() -> void:
 	_seated_told = false
 
 
-## The founder gets up and goes out through the lift; founder_out says they are through.
+## The founder gets up and goes out through the lift, the meeting panel gone and the table framed
+## whole again; founder_out says they are through.
 func walk_out() -> void:
+	frame_table(0.0)
 	_walk_in = false
 	_out_told = false
 	_people[0].look_at = null

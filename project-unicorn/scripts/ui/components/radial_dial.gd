@@ -3,9 +3,9 @@ extends Control
 
 # Push-roll dial. A top-semicircle gauge: the green arc = success odds, the red arc
 # = the rest, and a needle that rests at the odds boundary, then SWEEPS to a landing on a push
-# (green zone = won, red zone = lost). Custom-drawn with draw_arc / draw_line — Godot has no
-# radial gauge widget; the ConvictionTrack custom-draw pattern (draw + queue_redraw from token
-# colors) is the reference. Self-contained (no .tscn): the % readout Label is built in _ready.
+# (green zone = won, red zone = lost). Custom-drawn with draw_arc / draw_line from token colors
+# and repainted with queue_redraw, since Godot has no radial gauge widget. Self-contained (no
+# .tscn): the % readout Label is built in _ready.
 #
 # Godot concept: overriding _draw() lets us paint at any size and re-solve on resize (no anchor
 # math); a Tween animates the needle via tween_method, and a left click finalizes it (skippable).

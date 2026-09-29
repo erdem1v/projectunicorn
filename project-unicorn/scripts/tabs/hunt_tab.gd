@@ -8,9 +8,6 @@ extends Control
 # Humble UI: reads VCPitchSystem / InvestorRegistry / GameState, calls the system for
 # actions (SalesTab pattern), rebuilds on the VC EventBus signals. Renders on the light body.
 
-## Prep focus ids → their words. The ids stay ids; only the WORD localizes.
-const FOCUS_KEYS := {"rakamlar": "HUNT_FOCUS_NUMBERS", "hikaye": "HUNT_FOCUS_STORY", "prova": "HUNT_FOCUS_REHEARSAL"}
-
 @onready var _frank: Label = $Layout/TitleBar/FrankLabel
 @onready var _roster: VBoxContainer = $Layout/Columns/RosterPanel/RVBox/RosterScroll/RosterList
 @onready var _offers: VBoxContainer = $Layout/Columns/RightCol/OffersPanel/OVBox/OffersList
@@ -246,7 +243,7 @@ func _build_roster_actions(vc_id: String) -> Control:
 	var condition: String = ""
 	var row := _box(VBoxContainer.new(), 3)
 	if callback:
-		condition = tr("HUNT_CONDITION").format({"condition": _callback_text(st.get("callback", {}))})
+		condition = tr("HUNT_CONDITION").format({"condition": VCPitchSystem.callback_text(st.get("callback", {}))})
 		row.add_child(_label(condition, UiTokens.INK_DIM, UiTokens.SIZE_SMALL, true))
 
 	if GameState.pending_meeting.get("vc_id", "") == vc_id:
@@ -291,8 +288,8 @@ func _prep_row(vc_id: String) -> Control:
 	if reason != "":
 		return _label(tr("HUNT_PREP_REASON").format({"reason": reason}), UiTokens.INK_DIM, UiTokens.SIZE_SMALL)
 	var box := _box(HBoxContainer.new(), 4)
-	for focus_id in FOCUS_KEYS:
-		box.add_child(_button(tr(FOCUS_KEYS[focus_id]), _act.bind(VCPitchSystem.start_prep.bind(vc_id, focus_id))))
+	for focus_id in PitchConstants.FOCUS_KEYS:
+		box.add_child(_button(tr(PitchConstants.FOCUS_KEYS[focus_id]), _act.bind(VCPitchSystem.start_prep.bind(vc_id, focus_id))))
 	return box
 
 
@@ -375,7 +372,7 @@ func _refresh_pending() -> void:
 	if not pr.is_empty():
 		var pd: int = int(pr.get("done_day", 0)) - GameState.day
 		_pending.add_child(_label(tr("HUNT_PREP_PENDING").format({
-			"focus": tr(FOCUS_KEYS.get(String(pr.get("focus", "")), "HUNT_CB_NONE")),
+			"focus": tr(PitchConstants.FOCUS_KEYS.get(String(pr.get("focus", "")), "HUNT_CB_NONE")),
 			"when": tr("HUNT_PREP_READY") if pd <= 0 else _when(pd)}), UiTokens.INK, UiTokens.SIZE_DATA))
 	if pm.is_empty() and pr.is_empty():
 		_pending.add_child(_label(tr("HUNT_NONE_PENDING"), UiTokens.INK_DIM, UiTokens.SIZE_SMALL))
@@ -405,16 +402,6 @@ func _status_badge(vc_id: String) -> Control:
 		"walked": return UiFactory.make_badge(tr("HUNT_BADGE_WALKED"), &"neutral")
 		"signed": return UiFactory.make_badge(tr("HUNT_BADGE_SIGNED"), &"positive")
 		_: return UiFactory.make_badge(tr("HUNT_BADGE_OPEN"), &"neutral")
-
-
-func _callback_text(cb: Dictionary) -> String:
-	match String(cb.get("type", "")):
-		"mrr_growth": return tr("HUNT_CB_MRR").format({"target": Fmt.money(int(cb.get("target", 0))),
-			"current": Fmt.money(GameState.mrr)})
-		"bugs_under": return tr("HUNT_CB_BUGS").format({"n": int(cb.get("target", 0))})
-		"first_engineer": return tr("HUNT_CB_FIRST_ENGINEER")
-		"scandal_resolved": return tr("HUNT_CB_SCANDAL")
-		_: return tr("HUNT_CB_NONE")
 
 
 func _vc_name(vc_id: String) -> String:

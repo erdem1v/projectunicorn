@@ -21,10 +21,7 @@ const CONFIRM_MODAL := preload("res://scenes/modals/ConfirmModal.tscn")
 const HR_ACTION_MODAL := preload("res://scenes/modals/HRActionModal.tscn")
 const ENDING_MODAL := preload("res://scenes/modals/EndingScene.tscn")
 const MONTH_SUMMARY_MODAL := preload("res://scenes/modals/MonthSummaryModal.tscn")
-const MEETING_SCENE := preload("res://scenes/modals/MeetingScene.tscn")
 const TERM_TABLE_SCENE := preload("res://scenes/modals/TermSheetTableScene.tscn")
-const SALES_MEETING_SCENE := preload("res://scenes/modals/SalesMeetingScene.tscn")
-const NEGOTIATION_SCENE := preload("res://scenes/modals/NegotiationScene.tscn")
 const SYSTEM_MENU_MODAL := preload("res://scenes/modals/SystemMenuModal.tscn")
 const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
 const RND_CARD_MODAL := preload("res://scenes/modals/RnDCardModal.tscn")
@@ -43,9 +40,8 @@ var _confirm_modal: Node = null
 var _ending_modal: Node = null       # mounts once, never dismissed back to gameplay
 var _milestone_modal: Node = null    # the same paper in milestone mode (EA / full)
 var _summary_modal: Node = null
-var _meeting_scene: Node = null
+var _meeting_panel: MeetingPanel = null   # a VC or a sales sitting
 var _term_table: Node = null
-var _sales_meeting: Node = null      # Satış §5.0
 var _system_menu: Node = null
 var _save_load_modal: Node = null
 # Speed from BEFORE the first event of a chain: cascading events re-enter the handler with
@@ -715,9 +711,7 @@ func _run_office_shot(spec: String) -> void:
 	if office_id == "city":
 		await city.open()
 	if office_id == "meet":
-		view.load_layout("meet")
-		var looks: Array = CounterpartSystem.investor_people(SHOT_FUND).map(func(p: Dictionary) -> Dictionary: return p.look)
-		view.cast.stage(looks, CharacterRegistry.get_founder().look, extra != "cast")
+		_stage_meeting_room(CounterpartSystem.investor_people(SHOT_FUND), extra != "cast")
 		if extra.is_empty():
 			_shot_meeting_posts(view.cast)
 	match extra:
@@ -845,9 +839,9 @@ const TRAVEL_SHOT_STAFF := 6
 
 # --travel-shot=<home|ishani|plaza|loft>[:vc]: the founder's trip to a meeting from that office at
 # 10:00, as the player sees it: the phone ringing, its card, then frames of the walk out, the
-# map's road and the walk in to the table, one of the meeting, and the trip home to the walk back
-# in. A sales meeting by default; vc books the shot's fund for this week, whose call rings.
-# travel_shot_<office>[_vc]_NN.png, in order.
+# map's road and the walk in to the table, one of the meeting panel beside the table, and the trip
+# home to the walk back in. A sales meeting by default; vc books the shot's fund for this week,
+# whose call rings. travel_shot_<office>[_vc]_NN.png, in order.
 func _run_travel_shot(spec: String) -> void:
 	var office_id: String = spec.get_slice(":", 0)
 	var vc: bool = spec.get_slice(":", 1) == "vc"
@@ -864,7 +858,7 @@ func _run_travel_shot(spec: String) -> void:
 	if vc:
 		GameState.set_phase(3)
 		GameState.pending_meeting = {"vc_id": SHOT_FUND, "day": GameState.day}
-		# A shot wires no signals: the answered call's meeting reaches the scene this way.
+		# A shot wires no signals: the answered call's meeting reaches the panel this way.
 		EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
 	await _mount_shot_shell()
 	EventBus.speed_change_requested.emit(1)
@@ -884,9 +878,9 @@ func _run_travel_shot(spec: String) -> void:
 	frame += 1
 	_save_shot("%s_%02d" % [stem, frame])
 	invite._accept()
-	while (_meeting_scene if vc else _sales_meeting) == null:
+	while _meeting_panel == null:
 		if frame == TRAVEL_SHOT_MAX:
-			_shot_fail("[TravelShot] the meeting scene never mounted")
+			_shot_fail("[TravelShot] the meeting panel never mounted")
 			return
 		frame += 1
 		await get_tree().create_timer(TRAVEL_SHOT_EVERY).timeout
@@ -894,10 +888,8 @@ func _run_travel_shot(spec: String) -> void:
 	await get_tree().create_timer(0.4).timeout
 	frame += 1
 	_save_shot("%s_%02d" % [stem, frame])
-	if vc:
-		_close_dialogue_scenes()
-	else:
-		_close_sales_meeting()
+	# The sitting ends where it stands, through the panel's own close.
+	_meeting_panel.closed.emit()
 	for _i in TRAVEL_SHOT_BACK:
 		frame += 1
 		await get_tree().create_timer(TRAVEL_SHOT_EVERY).timeout
@@ -1768,58 +1760,131 @@ func _open_answer(last: bool) -> String:
 	return picked
 
 
-## --meeting-shot=<probe|locked|won|lost|handoff>: Perde 1'in dört hâli ve perde değişimi.
-## `locked` proves the acceptance item "locked rows show their reason line".
+## The meeting room as the founder's trip leaves it, which the shots skip: `side` (CounterpartSystem
+## people, lead first) at the table, and the founder in their chair, or at the lift unless `seated`.
+func _stage_meeting_room(side: Array, seated := true) -> void:
+	var view: Control = get_tree().get_first_node_in_group(&"office_view")
+	view.load_layout("meet")
+	view.cast.stage(side.map(func(q: Dictionary) -> Dictionary: return q.look),
+		CharacterRegistry.get_founder().look, seated)
+
+
+## A sales sitting with `p` in the panel over the meeting room, its opening drawn in full.
+func _shot_sales_sitting(p: Prospect) -> void:
+	_stage_meeting_room(CounterpartSystem.prospect_people(p))
+	_open_sales_meeting(p.id)
+	_meeting_panel.skip_playback()
+	await get_tree().process_frame
+
+
+## One of the founder's picks in the meeting panel, its playback skipped as a click would skip it.
+func _shot_pick(id: String) -> void:
+	_meeting_panel.pick(id)
+	_meeting_panel.skip_playback()
+	await get_tree().process_frame
+
+
+## The sales table played to its end in the panel: each question's first open answer, or its last
+## (the weakest) when `weakest`, and the die where every answer is locked. SAFETY_CAP_PROBES ends
+## every table within six answers; the bound keeps a pick the panel refused from hanging the shot.
+func _shot_play_sales(weakest: bool) -> void:
+	for _i in 8:
+		if SalesMeetingSystem.view_state().outcome != "":
+			return
+		var id := _open_answer(weakest)
+		await _shot_pick(id if id != "" else SalesMeetingAdapter.SKIP)
+
+
+## The table's cut to the offer taken through its Devam, into Perde 2 in the same panel (§5.1.1:
+## the table turns into Perde 2 in the SAME scene). False, and the shot failed, when the table
+## did not cut.
+func _shot_act_two() -> bool:
+	if SalesMeetingSystem.view_state().outcome != "won":
+		_shot_fail("[MeetingShot] the table did not cut to the offer: no Perde 2 to open")
+		return false
+	_meeting_panel.proceed()
+	_meeting_panel.skip_playback()
+	await get_tree().process_frame
+	return true
+
+
+## A price picked on the panel's ruler, as a drag picks it.
+func _shot_price(price: int) -> void:
+	_meeting_panel._ruler.changed.emit(price)
+	await get_tree().process_frame
+
+
+## --meeting-shot's VC kinds: the room, the rolls (forced, so the room lands where the kind needs
+## it; "" forces none) and the founder's picks. Each pick's step brings the next beat's options; a
+## closing pick leaves its result card up.
+const MEETING_SHOT_VC := {
+	"open": [PitchConstants.STAGE_SERIES_A, "", []],
+	"sorgu": [PitchConstants.STAGE_SERIES_A, "pass", ["b1_read", "b2_metrik"]],
+	"sheet": [PitchConstants.STAGE_SERIES_A, "pass", ["b1_read", "b2_metrik", "b3_durust", "b4_ack"]],
+	"callback": [PitchConstants.STAGE_SERIES_A, "pass", ["b1_read", "b2_metrik", "b3_gecistir", "b4_callback"]],
+	"ret": [PitchConstants.STAGE_SERIES_A, "fail", ["b1_read", "b2_metrik", "b3_durust", "b4_leave"]],
+	"seed": [PitchConstants.STAGE_SEED, "pass", ["b1_read", "b2_metrik", "b3_durust", "b4_ack"]],
+	"long": [PitchConstants.STAGE_SERIES_A, "pass", ["b1_read", "b2_metrik", "b3_gecistir"]],
+}
+
+
+## --meeting-shot=<kind>: a sitting in the meeting panel over the meeting room, played through the
+## panel as the founder plays it, each playback skipped.
+## Sales, Perde 1 and the act change: probe = the first question; locked = on to a question with a
+## locked answer and its reason line; won = played to the customer's cut, its Devam into the offer
+## on screen; lost = played to the loss, its result card; handoff = past that Devam into Perde 2.
+## VC, with the shot's fund (the founder moved this meeting once and rehearsed for it): open = Odayı
+## Oku as the room opens, the HAFIZA row and the withdraw button; sorgu = the third beat, the
+## rehearsed answer marked; sheet = a won room's result card; callback = a lukewarm room's callback
+## and its condition; ret = a cold room's rejection, its cost and Frank on the way out; seed = the
+## seed room's result card; long = a lukewarm room's closing beat under every earlier one, the most
+## the panel holds (pair it with --shot-size=1280x720 for the narrowest dock).
 func _run_meeting_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_sales_world()
-	if kind == "locked" or kind == "lost":
-		# Yerel sağlayıcı ve K1 merdiveni: "Gücü göster" satırı kapanır ve gerekçesini yazar.
-		ProductState.set_infra_provider("local")
-		_seed_line_state("erp", [["line_erp_ledger", 1, "line_erp_ledger_k1", 0.75]])
-	if kind == "lost":
-		# Kayıp karesi gerçekten kaybetmeli: kurucunun Satış'ı ve Karizma'sı sıfır, ürün K1,
-		# sağlayıcı yerel, lead 3★ (MISMATCH_PENALTY'nin en sert kademesi). İlk cevapta iğne
-		# §5.1'in alt eşiğinin altına düşer.
-		var founder: Character = CharacterRegistry.get_founder()
-		founder.role_stats[HRConstants.AREA_SALES] = 0
-		founder.role_stats[FounderConstants.SKILL_CHARISMA] = 0
-	var plays_out: bool = kind in ["won", "lost", "handoff"]
-	var p: Prospect = SalesFaucetSystem.spawn(3 if plays_out else 2, "faucet")
-	await _mount_shot_shell()
-	_open_sales_meeting(p.id)
-	await get_tree().process_frame
-	if kind == "locked":
-		for _i in 4:
-			var vs: Dictionary = SalesMeetingSystem.view_state()
-			var has_lock: bool = false
-			for a in (vs.get("answers", []) as Array):
-				has_lock = has_lock or not bool((a as Dictionary).get("open", true))
-			var pick: String = _open_answer(false)
-			if has_lock or String(vs.get("outcome", "")) != "" or pick == "":
-				break
-			SalesMeetingSystem.choose(pick)
-	elif plays_out:
-		# Play the table to its closing frame.
-		for _i in 8:
-			if String(SalesMeetingSystem.view_state().get("outcome", "")) != "":
-				break
-			var picked: String = _open_answer(kind == "lost")
-			if picked == "":
-				SalesMeetingSystem.skip_to_offer()
-				break
-			SalesMeetingSystem.choose(picked)
-	if _sales_meeting != null and kind != "probe":
-		_sales_meeting.call("_render", SalesMeetingSystem.view_state())
-	# `handoff` is the act change itself (§5.1.1: the table turns into Perde 2 in the SAME
-	# scene — room, portrait and title stay on the same pixels), run through the scene's own
-	# _on_open_offer.
-	if kind == "handoff" and _sales_meeting != null:
-		if String(SalesMeetingSystem.view_state().get("outcome", "")) != "won":
-			push_warning("[MeetingShot] handoff: masa kazanmadı, Perde 2 açılmıyor")
-		_sales_meeting.call("_on_open_offer")
+	if MEETING_SHOT_VC.has(kind):
+		var spec: Array = MEETING_SHOT_VC[kind]
+		GameState.set_phase(3 if spec[0] == PitchConstants.STAGE_SERIES_A else 2)
+		GameState.mrr = 125000
+		VCPitchSystem._vc(SHOT_FUND)["move_penalty"] = PitchConstants.MEETING_RESCHEDULE_PENALTY
+		GameState.prep = {"vc_id": SHOT_FUND, "focus": "prova", "done_day": GameState.day}
+		GameState.set_flag("debug_skill_force", spec[1])
+		await _mount_shot_shell()
+		_stage_meeting_room(CounterpartSystem.investor_people(SHOT_FUND))
+		# A shot wires no signals: the fund's first view reaches the panel this way.
+		EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
+		VCPitchSystem.begin_meeting(SHOT_FUND, spec[0])
+		_meeting_panel.skip_playback()
 		await get_tree().process_frame
-	_probe_pause_interactivity(_sales_meeting, "meeting/" + kind)
+		for id: String in spec[2]:
+			await _shot_pick(id)
+	else:
+		if kind == "locked" or kind == "lost":
+			# Yerel sağlayıcı ve K1 merdiveni: "Gücü göster" satırı kapanır ve gerekçesini yazar.
+			ProductState.set_infra_provider("local")
+			_seed_line_state("erp", [["line_erp_ledger", 1, "line_erp_ledger_k1", 0.75]])
+		if kind == "lost":
+			# Kayıp karesi gerçekten kaybetmeli: kurucunun Satış'ı ve Karizma'sı sıfır, ürün K1,
+			# sağlayıcı yerel, lead 3★ (MISMATCH_PENALTY'nin en sert kademesi). İlk cevapta iğne
+			# §5.1'in alt eşiğinin altına düşer.
+			var founder: Character = CharacterRegistry.get_founder()
+			founder.role_stats[HRConstants.AREA_SALES] = 0
+			founder.role_stats[FounderConstants.SKILL_CHARISMA] = 0
+		var plays_out: bool = kind in ["won", "lost", "handoff"]
+		var p: Prospect = SalesFaucetSystem.spawn(3 if plays_out else 2, "faucet")
+		await _mount_shot_shell()
+		await _shot_sales_sitting(p)
+		if kind == "locked":
+			for _i in 4:
+				var vs: Dictionary = SalesMeetingSystem.view_state()
+				if vs.outcome != "" or (vs.answers as Array).any(func(a: Dictionary) -> bool: return not a.open):
+					break
+				await _shot_pick(_open_answer(false))
+		elif plays_out:
+			await _shot_play_sales(kind == "lost")
+			if kind == "handoff" and not (await _shot_act_two()):
+				return
+	_probe_pause_interactivity(_meeting_panel, "meeting/" + kind)
 	await get_tree().create_timer(0.5).timeout
 	_save_shot("meeting_shot_%s" % kind)
 	get_tree().quit()
@@ -1829,8 +1894,6 @@ func _run_meeting_shot(kind: String) -> void:
 ## refusing it input — a surface that looks perfect and eats every click. Neither the scene
 ## file nor a screenshot shows this, so the probe asks can_process() with the tree paused.
 func _probe_pause_interactivity(root: Node, label: String) -> void:
-	if root == null:
-		return
 	var was: bool = get_tree().paused
 	get_tree().paused = true
 	var buttons: Array[Node] = root.find_children("*", "Button", true, false)
@@ -1845,42 +1908,33 @@ func _probe_pause_interactivity(root: Node, label: String) -> void:
 	get_tree().paused = was
 
 
-## --negotiation-shot=<open|countered|insult|confirm>: Perde 2'nin dört hâli. Diyalog yok
-## (§5.3.1): cetvel, rakam, sabır kutuları ve buton tonu.
+## --negotiation-shot=<open|countered|insult|confirm>: Perde 2 in the meeting panel, after a Perde 1
+## won in it. Diyalog yok (§5.3.1): the ruler, the patience boxes and the options' tone. open = as
+## the act opens; countered = an offer under the insult line and their counter; insult = a price
+## over the line picked on the ruler, the offer in its alert tone; confirm = the floor price offered
+## and signed, its result card.
 func _run_negotiation_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_sales_world()
-	var p: Prospect = SalesFaucetSystem.spawn(2, "faucet")
+	var p: Prospect = SalesFaucetSystem.spawn(3, "faucet")
 	await _mount_shot_shell()
-	NegotiationSystem.open(NegotiationSystem.TYPE_B2B, {
-		"account": p.company_name, "lead_id": p.id, "star": p.star,
-		"archetype": p.archetype_id,
-		"promised": "line_erp_ledger_k3" if kind == "confirm" else "",
-		"is_whale": false,
-	})
-	var vs: Dictionary = NegotiationSystem.view_state()
+	await _shot_sales_sitting(p)
+	await _shot_play_sales(false)
+	if not (await _shot_act_two()):
+		return
+	var insult_from: int = NegotiationSystem.view_state().insult_from
 	match kind:
 		"countered":
-			NegotiationSystem.select_price(int(vs.get("insult_from", 60)) - 4)
-			NegotiationSystem.offer()
+			await _shot_price(insult_from - 4)
+			await _shot_pick("offer")
 		"insult":
-			NegotiationSystem.select_price(int(vs.get("insult_from", 60)) + 3)
+			# A table whose insult line sits past the band's top cannot show it: the shot brings it in.
+			NegotiationSystem._insult_from = mini(insult_from, SalesConstants.SEAT_PRICE_MAX - 6)
+			await _shot_price(NegotiationSystem._insult_from + 3)
 		"confirm":
-			NegotiationSystem.select_price(SalesConstants.SEAT_PRICE_MIN)
-			NegotiationSystem.offer()
-	# Perde 2 carries no ground of its own (rev 6.1 §5.1.1); the stage is what the player sees.
-	var stage := SalesStage.new()
-	add_child(stage)
-	stage.set_identity({
-		"portrait_path": "",
-		"name": p.company_name,
-		"star": p.star,
-		"archetype_line": SalesArchetypes.voice_line(p.archetype_id),
-		"whale_condition": p.whale_condition,
-	})
-	stage.content_host().add_child(NEGOTIATION_SCENE.instantiate())
-	await get_tree().process_frame
-	_probe_pause_interactivity(stage, "negotiation/" + kind)
+			await _shot_price(SalesConstants.SEAT_PRICE_MIN)
+			await _shot_pick("offer")
+	_probe_pause_interactivity(_meeting_panel, "negotiation/" + kind)
 	await get_tree().create_timer(0.4).timeout
 	_save_shot("negotiation_shot_%s" % kind)
 	get_tree().quit()
@@ -2039,8 +2093,8 @@ func _process(_delta: float) -> void:
 				_end_call()
 		_:
 			var caller: String = VCPitchSystem.call_waiting()
-			if caller != "" and not _in_transit and _meeting_scene == null and _sales_meeting == null \
-					and _term_table == null and invite.can_ring():
+			if caller != "" and not _in_transit and _meeting_panel == null and _term_table == null \
+					and invite.can_ring():
 				_ring_fund(caller)
 
 
@@ -2163,41 +2217,51 @@ func _office_travel() -> Node:
 	return view.travel if _travel_on and view != null else null
 
 
-# THE SALES SITTING (Satış §5.0): "ODA da terminal UI da görünmez; bar notu, pause etiketi,
-# HUD yoktur." Done as a subtree swap, not change_scene: tearing down Main would lose the
-# modal routing, the event wiring and every harness path. GameShell is HIDDEN rather than
-# removed because the tab pages disconnect their EventBus signals in _exit_tree and _ready
-# runs once per instance — a re-added shell would be wired to nothing.
-# The tree is paused during the sitting, so the scene carries process_mode = ALWAYS.
+# THE SITTING: a VC meeting, or a sales meeting and its negotiation, plays in the meeting panel
+# docked over the meeting room the trip ends in; the panel's input shield keeps the shell around
+# it inert. The tree is paused during the sitting, so the panel runs with process_mode ALWAYS.
+
+## A VC sitting: VCPitchSystem.begin_meeting has opened it and sends its first view.
+func _on_meeting_scene_requested(view_state: Dictionary) -> void:
+	if _meeting_panel != null or _in_transit:
+		return
+	var vc: String = view_state.vc_id
+	_open_meeting(VcMeetingAdapter.new(view_state), CounterpartSystem.investor_people(vc),
+		InvestorRegistry.get_investor(vc).display_name)
+
+
+## A sales sitting, opened before the trip: the meeting is counted and the founder busy from here.
+## The table is read first, because open() can resolve it at once and a loss removes the prospect.
 func _open_sales_meeting(prospect_id: String) -> void:
-	if _sales_meeting != null or _in_transit:
+	if _meeting_panel != null or _in_transit:
 		return
 	if SalesLedger.meeting_block_reason(prospect_id) != "":
 		return   # the tab draws the reason; reaching here at all is a UI bug, not a state one
-	if SalesMeetingSystem.open(prospect_id).is_empty():
-		return
-	_claim_pre_dialogue_speed()
 	var p: Prospect = ProspectRegistry.get_prospect(prospect_id)
-	await _leave_office(CounterpartSystem.prospect_people(p), p.company_name)
-	if _shell != null:
-		_shell.visible = false
-	_sales_meeting = SALES_MEETING_SCENE.instantiate()
-	_sales_meeting.closed.connect(_close_sales_meeting)
-	add_child(_sales_meeting)           # a child of Main, so nothing of the shell is behind it
+	var adapter := SalesMeetingAdapter.new(prospect_id)
+	SalesMeetingSystem.open(prospect_id)
+	_open_meeting(adapter, CounterpartSystem.prospect_people(p), p.company_name)
 
 
-func _close_sales_meeting() -> void:
-	if _sales_meeting == null:
-		return
-	_sales_meeting.queue_free()
-	_sales_meeting = null
-	# §5.0 — the clock jumps two hours HERE, after the scene is gone, so the world the player
-	# comes back to is already the world those two hours produced; in transit, so a card they
-	# pump waits for the trip home.
+## The founder's trip to the sitting (`side` across the table, `place` on the map), then the panel
+## over the meeting room with its people.
+func _open_meeting(adapter: RefCounted, side: Array, place: String) -> void:
+	_claim_pre_dialogue_speed()
+	await _leave_office(side, place)
+	var view: Node = get_tree().get_first_node_in_group(&"office_view")
+	_meeting_panel = MeetingPanel.new()
+	_meeting_panel.closed.connect(_close_meeting.bind(adapter))
+	_modal_layer().add_child(_meeting_panel)
+	_meeting_panel.open(adapter, view.cast)
+
+
+## The sitting's hours run HERE, once the panel is gone, so the world the founder comes back to is
+## already the one those hours made; in transit, so a card they pump waits for the trip home.
+func _close_meeting(adapter: RefCounted) -> void:
+	_meeting_panel.queue_free()
+	_meeting_panel = null
 	_in_transit = true
-	SalesMeetingSystem.close()
-	if _shell != null:
-		_shell.visible = true
+	adapter.end_sitting()
 	await _return_to_office()
 	_restore_speed(_pre_dialogue_speed)
 	_pre_dialogue_speed = -1
@@ -2340,8 +2404,8 @@ func _on_quickload_requested() -> void:
 # and validated before anything is touched: "file corrupt" in a half-torn world is the worst case.
 func _load_slot(slot_id: String) -> void:
 	# The same rule as saving: a decision in progress (event card, VC meeting, term table, sales
-	# sitting, negotiation) is not carried over. F9 bypasses the menu gate, and the hidden
-	# shell still hears it during a sales sitting.
+	# sitting, negotiation) is not carried over. F9 bypasses the menu gate and the ModalLayer
+	# guard, so it reaches here during any sitting.
 	if SaveManager.cannot_save_reason_key() == "SAVE_ERR_MODAL_OPEN":
 		return
 	var payload: Dictionary = SaveManager.read_slot(slot_id)
@@ -2451,54 +2515,6 @@ func _keep_run_for_main_menu() -> String:
 	return slot if SaveManager.save_to_slot(slot) else ""
 
 
-# MeetingScene: a live VC meeting (VCPitchSystem) or the Shift+F2 debug fixture, which has no
-# driver and simply closes.
-func _on_meeting_scene_requested(view_state: Dictionary) -> void:
-	if _meeting_scene != null or _in_transit:
-		return
-	var modal_layer: CanvasLayer = _modal_layer()
-	if modal_layer == null:
-		return
-	_claim_pre_dialogue_speed()
-	# The Shift+F2 fixture has no fund: an empty table.
-	var vc: String = view_state.get("vc_id", "")
-	await _leave_office(CounterpartSystem.investor_people(vc), InvestorRegistry.get_investor(vc).get("display_name", ""))
-	_meeting_scene = MEETING_SCENE.instantiate()
-	_meeting_scene.choice_selected.connect(_on_dialogue_choice_selected)
-	_meeting_scene.withdraw_requested.connect(_on_dialogue_withdrawn)
-	modal_layer.add_child(_meeting_scene)
-	_meeting_scene.populate(view_state)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
-
-
-## advance() writes the outcome and returns the next view_state, or done.
-func _on_dialogue_choice_selected(id: String) -> void:
-	if VCPitchSystem.is_active():
-		var r: Dictionary = VCPitchSystem.advance(id)
-		if not r.get("done", false) and _meeting_scene != null:
-			_meeting_scene.populate(r.get("view_state", {}))
-			return
-	_close_dialogue_scenes()
-
-
-func _on_dialogue_withdrawn() -> void:
-	if VCPitchSystem.is_active():
-		VCPitchSystem.withdraw()
-	_close_dialogue_scenes()
-
-
-## The meeting's hours run once its scene is gone, so the player comes back to the world they
-## produced.
-func _close_dialogue_scenes() -> void:
-	if _meeting_scene != null:
-		_meeting_scene.queue_free()
-		_meeting_scene = null
-	_in_transit = true
-	VCPitchSystem.end_sitting()
-	await _return_to_office()
-	_restore_speed(_pre_dialogue_speed)
-	_pre_dialogue_speed = -1
-
-
 func _on_term_table_requested(vc_id: String, stage: String) -> void:
 	if _term_table != null or _in_transit:
 		return
@@ -2572,12 +2588,8 @@ func _teardown_run_ui() -> void:
 	_summary_modal = null
 	_system_menu = null
 	_save_load_modal = null
-	_meeting_scene = null
+	_meeting_panel = null
 	_term_table = null
-	# The sales sitting is a child of Main, not of the shell, so freeing the shell misses it.
-	if _sales_meeting != null:
-		_sales_meeting.queue_free()
-		_sales_meeting = null
 	_rnd_card_queue.clear()
 	_in_transit = false
 	_card_waiting = false

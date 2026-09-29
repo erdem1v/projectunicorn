@@ -3,7 +3,6 @@ RUNWAY_PROFITABLE,Artıda,Default Alive
 RUNWAY_PROFITABLE_NOTE,"Gider gelirin altında; kasa erimiyor. Sayaç, net akış eksiye dönerse işler.",Expenses run below revenue; the treasury holds. The clock starts only if net flow turns negative.
 RUNWAY_UNIT_MONTHS,ay,mo
 RUNWAY_UNIT_WEEKS,hafta,wk
-RUNWAY_GROSS_LABEL,Brüt Runway,Gross Burn Runway
 RUNWAY_CROSS_TICKER,Runway {n} ayın altına indi,Runway fell below {n} months
 RUNWAY_CROSS_TICKER_ONE,Runway {n} ayın altına indi,Runway fell below {n} month
 SETTINGS_LANGUAGE,Dil,Language
@@ -550,9 +549,6 @@ HR_COST_TRAINING,Eğitim ücreti,Training fee
 HR_LABEL_HR,İK,HR
 SALES_CUSTOMER,Müşteri,Customer
 SALES_SATISFACTION,Memnuniyet,Satisfaction
-SALES_ZONE_COLD,SOĞUK,COLD
-SALES_ZONE_WARM,ILIK,WARM
-SALES_ZONE_WON,KAZANILDI,WON
 WORLD_OUTLET_EKONOMI,Ekonomi Postası,Ekonomi Postası
 WORLD_OUTLET_TEKNOGUNDEM,TeknoGündem,TeknoGündem
 WORLD_OUTLET_GIRISIM,Girişim Bülteni,Girişim Bülteni
@@ -727,7 +723,6 @@ HUNT_CB_NONE,—,—
 HUNT_FOCUS_NUMBERS,Rakamlar,Numbers
 HUNT_FOCUS_STORY,Hikâye,Story
 HUNT_FOCUS_REHEARSAL,Prova,Rehearsal
-SALES_CONVICTION,İKNA,CONVICTION
 HUNT_FRANK_LINE,Av açık. Kapanan masa: {n}. Üçüncüde yol biter.,The hunt is on. Tables closed: {n}. The third one ends it.
 HUNT_REQUEST_AGAIN,Tekrar iste ({when}),Ask again ({when})
 HUNT_REQUEST_MEETING,Toplantı iste ({when}),Request a meeting ({when})
@@ -1277,9 +1272,6 @@ VC_PREP_TOO_SOON,Toplantıya {weeks} haftadan az kaldı,Fewer than {weeks} weeks
 VC_PREP_TOO_SOON_ONE,"Toplantı bu hafta, hazırlığa vakit kalmadı","The meeting is this week, too late to prep"
 VC_BLOCK_LATE,Mesainin kalanı bir fonla masaya oturmaya yetmez. Artık gelecek hafta.,"Not enough of the workday left to sit down with a fund. Next week, then."
 VC_CALLBACK_REOPENED,Kapı yeniden açıldı: {investor}. Tekrar iste.,{investor}'s door is open again. Ask again.
-VC_SPEAKER_LIVE,{name} — Canlı,{name} — Live
-VC_STAT_STRIP,Kasa: {cash} · {runway_label}: {months} ay · {date},Cash: {cash} · {runway_label}: {months} mo · {date}
-VC_ODDS,{approach} — {difficulty} · {pct},{approach} — {difficulty} · {pct}
 VC_REHEARSED,PROVA EDİLDİ,REHEARSED
 VC_BEAT1_LABEL,Odayı Oku · 1/4,Read the Room · 1/4
 VC_B1_LINE,"""{investor}. Otur. Vaktim kısa — beni neden buraya çağırdığını göster.""","""{investor}. Sit. My time is short — show me why you called me here."""
@@ -1346,7 +1338,6 @@ VC_B4_CALLBACK_CAP,Güvenli. Kapı açık kalır.,Safe. The door stays open.
 VC_B4_PUSH,Masayı zorla — şimdi karar ver.,Push the table — decide now.
 VC_APPROACH_PUSH,Zorla,Push
 VC_B4_PUSH_CAP,Başarısızsan masa kapanır.,Fail and the table closes.
-VC_B4_CLOSE,Kapat.,Close.
 VC_RES_CALLBACK,"""Koşulu biliyorsun. Tuttur, kapı açık.""","""You know the condition. Meet it and the door is open."""
 VC_RES_PUSH_WIN,"""Cesaretin varmış. Teklif yolda.""","""You had nerve. The offer is on its way."""
 VC_RES_PUSH_LOSS,"""Zorladın ve tutmadı. Kapı kapandı.""","""You pushed and it did not hold. The door is closed."""
@@ -1510,8 +1501,6 @@ TERM_BOARD_SEAT_ONE,{n} koltuk,{n} seat
 FIN_SUBTAB_SUMMARY,Özet,Summary
 FIN_SUBTAB_INVESTMENT,Yatırım,Funding
 FIN_SUBTAB_LOCKED,Series A Hunt'ta açılır,Opens in the Series A Hunt
-DIALOGUE_YOUR_ANSWER,YANITIN:,YOUR ANSWER:
-DIALOGUE_PICK_ONE,Bir seçenek seç,Pick an option
 COMPANY_BG_EGE_SIGORTA,"Bölgesel oyuncu; acente ağı geniş, evrak işi hâlâ kâğıtta.","A regional player; a wide agency network, and the paperwork is still on paper."
 COMPANY_BG_POYRAZ_SIGORTA,"Fiyat kırarak büyüdü, şimdi hasar dosyalarının altında eziliyor.","Grew by undercutting on price, and is now buried under the claims files."
 COMPANY_BG_DENIZ_SIGORTA,"Kurumsal müşteriye çalışır, temkinli; yeni tedarikçiyi zor kabul eder.","Works with corporate clients, cautious; slow to accept a new supplier."
@@ -1897,6 +1886,48 @@ MEETING_POSTPONED_ONCE,Bu toplantı bir kez ertelendi; bir daha ertelenemez.,Thi
 MEETING_POSTPONED_VC,Toplantı gelecek haftaya ertelendi. Bir daha ertelenemez.,The meeting moved to next week. It can't be put off again.
 MEETING_BACK_ASK,Nasıl geçti?,How did it go?
 MEETING_TOWER_CHIP,{place} · {person},{place} · {person}
+MEETING_KICKER_VC,YATIRIMCI GÖRÜŞMESİ,INVESTOR MEETING
+MEETING_KICKER_SEED,SEED GÖRÜŞMESİ,SEED MEETING
+MEETING_KICKER_SALES,SATIŞ GÖRÜŞMESİ,SALES MEETING
+MEETING_KICKER_BEAT,{kicker} · {beat},{kicker} · {beat}
+MEETING_ATTITUDE,TUTUM,ATTITUDE
+MEETING_MEMORY,HAFIZA,MEMORY
+MEETING_ATT_COLD,soğuk,cold
+MEETING_ATT_WARY,temkinli,wary
+MEETING_ATT_LUKEWARM,ılık,lukewarm
+MEETING_ATT_WARM,sıcak,warm
+MEETING_DICE,ZAR ATILACAK,DICE ROLL
+MEETING_RISK_SAFE,güvenli,safe
+MEETING_RISK_RISKY,riskli,risky
+MEETING_RISK_DANGER,tehlikeli,dangerous
+MEETING_RISK_PCT,{risk} · %{pct},{risk} · {pct}%
+MEETING_CHIP_SKILL,BECERİ,SKILL
+MEETING_CHIP_PREP,HAZIRLIK,PREP
+MEETING_CHIP_ROOM,ODA,ROOM
+MEETING_CHIP_MEMORY,HAFIZA,MEMORY
+MEETING_MARK_FAVORED,SEVDİĞİ AÇI,THEIR ANGLE
+MEETING_CONTINUE,Devam,Continue
+MEETING_RES_EFFECT,MASAYA ETKİSİ,ON THE TABLE
+MEETING_RES_RELATION,İLİŞKİ,RELATIONSHIP
+MEETING_RES_MEMORY,HAFIZAYA YAZILAN,WHAT THEY'LL REMEMBER
+MEETING_RES_RELATION_LINE,{name}: {from} → {to},{name}: {from} → {to}
+MEETING_RES_OFFER,Teklif gelecek,An offer is coming
+MEETING_RES_CALLBACK,Yeniden görüşülecek,They want to meet again
+MEETING_RES_NO,Bu sefer değil,Not this time
+MEETING_RES_SIGNED,Anlaşma imzalandı,Deal signed
+MEETING_RES_LOST,Anlaşma olmadı,No deal
+MEETING_RES_WITHDREW,Görüşmeden çekildin,You withdrew
+MEETING_RES_INSULT,Masadan kalktılar,They left the table
+MEETING_RES_VALID,{weeks} hafta geçerli,Valid for {weeks} weeks
+MEETING_RES_COST,Marka −{brand} · moral −{morale},Brand −{brand} · morale −{morale}
+MEETING_RES_LOCK,{weeks} hafta bu şirkete dönülemez,No going back to this company for {weeks} weeks
+MEETING_RES_NO_TRACE,İz bırakmadı,No trace left
+MEETING_RES_PRICE_OUT,Sabırları tükendi,Their patience ran out
+MEETING_RES_INSULT_MEMORY,Teklifin hakaret sayıldı,Your offer was taken as an insult
+MEETING_OFFER_ROW,TEKLİF · {price},OFFER · {price}
+MEETING_ROLE_LINE,{role} · {company},{role} · {company}
+MEETING_RES_PAIR,{first} · {second},{first} · {second}
+MEETING_RES_COST_BRAND,Marka −{brand},Brand −{brand}
 INV_ARCH_ANCHOR,Agresif ama cömert. Kontrolü sever.,Aggressive but generous. Likes control.
 INV_ARCH_NEXUS,"Temkinli. Kurucuyu sever, riski sevmez.","Cautious. Likes the founder, dislikes the risk."
 INV_ARCH_BOSPHORUS,İlişki adamı. Kapıyı Frank açar.,A relationship man. Frank opens the door.
@@ -2443,7 +2474,6 @@ SALES_SIGNING_DISCOUNT,imza indirimi %{pct},signing discount {pct}%
 SALES_ODDS,İkna %{n},Persuasion {n}%
 SALES_MEETING_SKIP,Teklife geç,Skip to the offer
 SALES_MEETING_OPEN_OFFER,Rakamı konuş,Talk numbers
-SALES_MEETING_CLOSE,Kapat,Close
 SALES_MOD_PRODUCT_FIT,ürün uyumu,product fit
 SALES_MOD_FOUNDER_SALES,senin satış tarafın,your sales side
 SALES_MOD_PRICE_SIGNAL,fiyat duyumu,the price signal
@@ -2471,8 +2501,6 @@ NEG_PRICE_VALUATION,Değerleme,Valuation
 NEG_OFFER,TEKLİF ET,MAKE THE OFFER
 NEG_ACCEPT,KABUL ET,ACCEPT
 NEG_WALK,MASADAN KALK,WALK AWAY
-NEG_SIGN,İMZALA,SIGN
-NEG_LEAVE,ÇIK,LEAVE
 NEG_PATIENCE,SABIR,PATIENCE
 NEG_COUNTER,Karşı rakam {price},Their number {price}
 NEG_CONFIRM_LINE,{units} {unit_label} × {price} = {mrr} MRR,{units} {unit_label} × {price} = {mrr} MRR
@@ -2537,7 +2565,6 @@ SALES_LOG_EXPIRED,{company} beklemekten vazgeçti,{company} stopped waiting
 SALES_LOG_FOUNDER_CLOSE,{company} anlaşmasını sen kapattın · {amount}/ay,you closed {company} · {amount}/mo
 NEG_LAST_OFFER,SON RAKAM,THEIR LAST NUMBER
 NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,Patience is out. Take this number or the table closes.
-SALES_ODDS_HINT,neden?,why?
 B2B_LOCK_NO_PAIN_TARGET,Ne istediklerini söylemediler. Söz verilecek bir şey yok.,They haven't named what they want. There's nothing to promise yet.
 B2B_LOCK_PAIN_SHIPPED,İstedikleri şey zaten yayında.,What they asked for is already live.
 B2B_LOCK_PAIN_GATED,Bunu yapabilecek kimse yok henüz. Ne ekip var ne araştırma.,Nobody here can build that yet. Not the people and not the research.

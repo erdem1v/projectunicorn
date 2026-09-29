@@ -260,7 +260,7 @@ func _bind_scene() -> void:
 func _frame_camera() -> void:
 	var cam: OfficeCamera = _view.camera
 	cam.fit_zoom *= OPEN_ZOOM
-	cam.fit_target += cam.global_basis.y * OPEN_LIFT_PX * _units_per_px(cam, cam.fit_zoom)
+	cam.fit_target += cam.global_basis.y * OPEN_LIFT_PX * cam.units_per_px(cam.fit_zoom)
 	cam.focus(cam.fit_target, cam.fit_zoom, 0.0)
 
 
@@ -362,7 +362,7 @@ func _focus_on(box: AABB, duration: float, shift_px := 0.0, zoom_k := FOCUS_ZOOM
 	var to := box.get_center()
 	to.y = box.position.y + box.size.y * FOCUS_HEIGHT
 	var zoom := cam.fit_zoom * zoom_k
-	cam.focus(to + cam.global_basis.x * shift_px * _units_per_px(cam, zoom), zoom, duration)
+	cam.focus(to + cam.global_basis.x * shift_px * cam.units_per_px(zoom), zoom, duration)
 
 
 func _show_card() -> void:
@@ -477,7 +477,3 @@ func _drop_road() -> void:
 		_road_lines.clear()
 		_chips.clear()
 
-
-## World units across one pixel of the view at `zoom`.
-static func _units_per_px(cam: OfficeCamera, zoom: float) -> float:
-	return OfficeCamera.FH / (zoom * cam.get_viewport().get_visible_rect().size.y)

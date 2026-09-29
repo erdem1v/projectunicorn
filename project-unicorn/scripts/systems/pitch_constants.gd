@@ -6,10 +6,9 @@ extends RefCounted
 # other single location. EVERY number here is a working placeholder the calibration pass
 # tunes; the design fixes STRUCTURE only.
 
-# --- Conviction track zones — Soğuk 0-39 / Ilık 40-69 / Kazanıldı 70-100 ---
+# --- Conviction bands — Soğuk 0-39 / Ilık 40-69 / Kazanıldı 70-100 ---
 const ILIK_MIN := 40
 const WON_MIN := 70
-const ZONE_BOUNDS := [ILIK_MIN, WON_MIN]   # drawn by ConvictionTrack
 
 # --- Conviction seeding (the macro moment) — base + run-state weights ---
 # CONV_*, never SEED_*: SEED_ names the seed ROUND, and a conviction constant spelled that way
@@ -69,6 +68,8 @@ const BEAT4_PUSH_SKILL := "charisma"    # Masayı zorla
 const ANGLE_SKILL := {"vizyon": "charisma"}   # Beat 2 anlatı; fallback: "sales" (metrik, traction)
 
 # --- Prep ---
+## Prep focus ids → their words. The ids stay ids; only the WORD localizes.
+const FOCUS_KEYS := {"rakamlar": "HUNT_FOCUS_NUMBERS", "hikaye": "HUNT_FOCUS_STORY", "prova": "HUNT_FOCUS_REHEARSAL"}
 const MEETING_LEAD_WEEKS := 1          # request → meeting week
 const PREP_WEEKS := 1
 const PREP_MIN_WEEKS_BEFORE := 1       # prep startable only if ≥ this many weeks remain

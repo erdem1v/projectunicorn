@@ -25,8 +25,8 @@ extends RefCounted
 # the body reads INK*, the plain tokens and positive() / negative(). The dark
 # cinematic register (DIALOGUE_*) reads the frame's side as well: CREAM*,
 # ACCENT_CHROME, INK_*_CHROME, CARD_BORDER_CHROME, BORDER_HOVER_CHROME, the
-# VEIL_*_CHROME whites and *_BRIGHT (negative_rule_bright() included). The
-# newspaper keeps its own PAPER_* ladder.
+# VEIL_*_CHROME whites and *_BRIGHT. The newspaper keeps its own PAPER_*
+# ladder.
 #
 # FONT IMPORT STANDARD: all faces share antialiasing=1 (grayscale), hinting=1
 # (light), subpixel_positioning=4 (auto), msdf off, mipmaps off, oversampling=0.
@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 10
+const THEME_STAMP := 13
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -70,9 +70,9 @@ const SURFACE_HOVER := CARD_BG                            # #FBF7EE · hover kee
 const SURFACE_PRESSED := Color(0.937, 0.910, 0.855, 1)   # #EFE8DA · pressed / active key
 const SURFACE_DISABLED := Color(0.937, 0.910, 0.855, 1)  # #EFE8DA · disabled button fill
 const SURFACE_SUNKEN := Color(0.890, 0.855, 0.788, 1)    # #E3DAC9 · meter track
-## Kadro tablosunda tabanı taşıyan satırın zemini: CARD_BG'den bir tık koyu, çünkü o satır
-## tabloda "üstteki" olarak okunmalı. Runtime token; build_theme.gd okumaz.
-const SURFACE_ROW_TINT := Color(0.945, 0.918, 0.859, 1)  # #F1EADB · defterin taban satırı
+## Kadro tablosunda tabanı taşıyan satırın ve toplantı panelinin başlığının zemini: CARD_BG'den
+## bir tık koyu, çünkü ikisi de altındakinin "üstü" olarak okunmalı.
+const SURFACE_ROW_TINT := Color(0.945, 0.918, 0.859, 1)  # #F1EADB · defterin taban satırı · toplantı başlığı
 const SURFACE_FRAME := Color(0.937, 0.910, 0.855, 1)     # #EFE8DA · inset / chip plate
 const SHADOW_SOFT := Color(0.169, 0.153, 0.133, 0.18)    # rgba(43,39,34,.18) · floating card + window shadow
 const SHADOW_MODAL := Color(0, 0, 0, 0.60)               # decision-modal drop shadow over the scrim
@@ -82,6 +82,7 @@ const INK := Color(0.169, 0.153, 0.133, 1)         # #2B2722 · primary text / v
 const INK_MUTED := Color(0.357, 0.329, 0.290, 1)   # #5B544A · secondary / prose
 const INK_DIM := Color(0.541, 0.506, 0.459, 1)     # #8A8175 · column headers, labels, idle
 const INK_FAINT := Color(0.663, 0.620, 0.557, 1)   # #A99E8E · stat captions, units, locked telegraph
+const ON_INK := BG_BODY                            # #F6F1E6 · text ON an INK fill (the founder's speech bubble)
 
 # --- CREAM · text on the dark frame and the dark cinematic register ---
 const CREAM := Color(0.910, 0.929, 0.949, 1)       # #E8EDF2 · values/names on dark
@@ -131,7 +132,6 @@ const NEGATIVE_BG := Color(0.953, 0.851, 0.816, 1)       # #F3D9D0
 const NEGATIVE_RULE := Color(NEGATIVE, 0.45)             # chip border
 const POSITIVE_BRIGHT := Color(0.247, 0.839, 0.549, 1)   # #3FD68C · on the dark frame
 const NEGATIVE_BRIGHT := Color(1.0, 0.361, 0.286, 1)     # #FF5C49 · on the dark frame
-const NEGATIVE_RULE_BRIGHT := Color(NEGATIVE_BRIGHT, 0.35)  # chip border on the dark frame
 const HEALTH_GREEN := Color(0.184, 0.420, 0.227, 1)      # #2F6B3A · status dot
 const HEALTH_AMBER := Color(0.788, 0.588, 0.180, 1)      # #C9962E · status dot
 
@@ -150,7 +150,6 @@ const NEGATIVE_BG_CB := Color(0.945, 0.894, 0.820, 1)     # #F1E4D1
 const NEGATIVE_RULE_CB := Color(NEGATIVE_CB, 0.45)
 const POSITIVE_BRIGHT_CB := Color(0.337, 0.706, 0.914, 1) # #56B4E9 · on the dark frame
 const NEGATIVE_BRIGHT_CB := Color(0.902, 0.624, 0.0, 1)   # #E69F00 · on the dark frame
-const NEGATIVE_RULE_BRIGHT_CB := Color(NEGATIVE_BRIGHT_CB, 0.35)
 const HEALTH_GREEN_CB := Color(0.173, 0.435, 0.682, 1)    # #2C6FAE · status dot (blue twin)
 const DOT_IDLE := Color(0.769, 0.718, 0.624, 1)          # #C4B79F · unearned milestone dot  # WORKING
 # Ürün ekseni üçlüsü KATEGORİKTİR (İnovasyon/Kararlılık/Deneyim), ama iki üyesi
@@ -180,6 +179,21 @@ const BORDER_STEPPER_OWN := Color(0.686, 0.620, 0.498, 1)  # #AF9E7F · karar ve
 const DIVIDER_LIGHT := Color(0.890, 0.855, 0.788, 1)     # #E3DAC9 · in-card hairline
 const SEPARATOR := Color(0.106, 0.137, 0.169, 1)         # #1B232B · chrome hairline
 
+# --- MEETING · the meeting dock on the cream body ---
+# TUTUM is one needle on a cold-to-warm gradient. Its end stops are too pale to be text,
+# so the band word reads a darker twin of the same hue (≥4.5:1 on BG_BODY and on the
+# header's SURFACE_ROW_TINT); the middle bands read the body's own inks (attitude_ink).
+const ATTITUDE_COLD := Color(0.624, 0.702, 0.784, 1)       # #9FB3C8 · gradient cold stop
+const ATTITUDE_MID := Color(0.851, 0.804, 0.706, 1)        # #D9CDB4 · gradient middle stop
+const ATTITUDE_WARM := Color(0.878, 0.576, 0.353, 1)       # #E0935A · gradient warm stop
+const ATTITUDE_COLD_INK := Color(0.310, 0.416, 0.522, 1)   # #4F6A85 · "cold" word
+const ATTITUDE_WARM_INK := Color(0.690, 0.290, 0.149, 1)   # #B04A26 · "warm" word
+# The other side's seats in MeetingCast order: portrait ring and transcript name ink, so
+# each is dark enough to be text on the body.
+const MEETING_SEAT_1 := Color(0.541, 0.353, 0.169, 1)      # #8A5A2B · lead / buyer
+const MEETING_SEAT_2 := Color(0.478, 0.247, 0.353, 1)      # #7A3F5A · partner / user lead
+const MEETING_SEAT_3 := Color(0.247, 0.435, 0.478, 1)      # #3F6F7A · analyst / finance
+
 # --- CHROME · the frame's own values ---
 # Twins pinned to what the frame shows, so a body reskin never moves the frame. The
 # dark cinematic register reads them as well: its stages keep the frame's palette.
@@ -191,26 +205,22 @@ const INK_DIM_CHROME := Color(0.337, 0.392, 0.439, 1)       # #566470 · idle sp
 const INK_FAINT_CHROME := Color(0.275, 0.322, 0.365, 1)     # #46525D · TopBar captions + units
 const CARD_BORDER_CHROME := Color(0.137, 0.173, 0.204, 1)   # #232C34 · idle speed key edge
 const BORDER_HOVER_CHROME := Color(0.165, 0.204, 0.239, 1)  # #2A343D · idle speed key, hover edge
-const SURFACE_PRESSED_CHROME := Color(0.118, 0.153, 0.188, 1)  # #1E2730 · sales-meeting initials plate
-const BORDER_STEPPER_OWN_CHROME := Color(0.231, 0.275, 0.314, 1)  # #3B4650 · sales-meeting initials plate edge
 const DOT_IDLE_CHROME := Color(0.350, 0.320, 0.270, 1)      # #595245 · unreached phase dot
 const VEIL_FAINT_CHROME := Color(1, 1, 1, 0.03)   # at-rest / disabled tint on dark
 const VEIL_SOFT_CHROME := Color(1, 1, 1, 0.06)    # normal / pressed on dark
 const VEIL_STRONG_CHROME := Color(1, 1, 1, 0.10)  # hover on dark
 
-# --- Cinematic dialogue register (MeetingScene) ---
+# --- Cinematic dialogue register ---
 # Text on these surfaces uses CREAM* / *_BRIGHT. # WORKING — Erdem's F5 seals.
 const SCRIM_MODAL := Color(0.020, 0.027, 0.035, 0.62)  # rgba(5,7,9,.62) · modal dimmer
-const SCRIM_ROOM := Color(0, 0, 0, 0.18)              # readability scrim over full-bleed room art
 # The founder's road on the city map to and from a meeting: cream dashes on a dark casing.
 const ROAD_CASING := Color(0.169, 0.153, 0.133, 0.55)  # #2B2722 .55 · road casing
 const ROAD_DASH := Color(1.0, 0.980, 0.941, 1)         # #FFFAF0 · road dashes
-const STAT_STRIP_BG := Color(0.027, 0.035, 0.043, 0.72)  # translucent stat band over art
 const DIALOGUE_BG := Color(0.063, 0.086, 0.110, 1)   # #10161C · modal / Frank card ground
 const DIALOGUE_COLUMN_BG := Color(0.063, 0.086, 0.110, 0.92)  # floating column (art shows through)
 const DIALOGUE_CARD_BG := Color(0.059, 0.078, 0.102, 1)       # #0F141A · choice / quote card (recessed)
 const DIALOGUE_CARD_BORDER := Color(0.137, 0.173, 0.204, 1)   # #232C34 · card hairline
-const CONVICTION_TRACK_BG := Color(0.137, 0.173, 0.204, 1)    # #232C34 · İKNA gauge groove
+const CONVICTION_TRACK_BG := Color(0.137, 0.173, 0.204, 1)    # #232C34 · unlit dot / segment groove
 const PORTRAIT_FRAME := Color(0.910, 0.929, 0.949, 1)         # #E8EDF2 · portrait rule
 
 # --- Newspaper ending register ("Ekonomi Postası") ---
@@ -243,7 +253,7 @@ const PAPER_PLATE := Color(0.890, 0.859, 0.792, 1)    # #E3DBCA · gazete üstü
 #   SIZE_DATA     12   primary CTA 11.5, empty rows 12, clock 12, inputs
 #   SIZE_BODY     13   prose 12.5-13, card names 13
 #   SIZE_LEAD     15   TopBar + month-summary figures 15
-#   SIZE_TITLE    16   card / context serif titles
+#   SIZE_TITLE    16   card / context serif titles, meeting transcript line
 #   SIZE_DISPLAY  22   Ayarlar + secondary page titles
 const SIZE_MICRO := 9
 const SIZE_META := 10
@@ -259,7 +269,7 @@ const SIZE_DISPLAY := 22
 # rhythm. Any size above SIZE_DISPLAY must be named here.
 const SIZE_ED_MODAL := 24       # modal titles (event · Atlas · month summary)
 const SIZE_ED_CEREMONY := 26    # PAGE titles (Ekip / Portföy / Finans / Sales …); onboarding
-const SIZE_ED_HEADLINE := 32    # newspaper headline; path-card display
+const SIZE_ED_HEADLINE := 32    # newspaper headline; path-card display; meeting speaker name
 const SIZE_ED_FIGURE := 44      # newspaper stat figures "$1.2M"
 const SIZE_ED_MASTHEAD := 52    # "EKONOMİ POSTASI"
 
@@ -321,11 +331,13 @@ const PAD_CHOICE := Vector2i(12, 8)       # ChoiceCard family
 const PAD_INPUT_LG := Vector2i(12, 9)     # DialogueInput (ceremony-scale field)
 const PAD_CARD_TIGHT := Vector2i(10, 8)   # CardPanelTight
 const PAD_CARD := Vector2i(12, 10)        # CardPanel / CardCta / CardAttention
-const PAD_STRIP := Vector2i(12, 6)        # StatStrip (same value as PAD_BTN, kept apart by role)
+const PAD_STRIP := Vector2i(12, 6)        # HeaderBand (same value as PAD_BTN, kept apart by role)
 const PAD_BAND := Vector2i(14, 8)         # AttentionStrip
-const PAD_ROW := Vector2i(14, 10)         # QuoteBox / DialogueChoice
+const PAD_ROW := Vector2i(14, 10)         # QuoteBox / DialogueChoice / MeetingFounderBubble
 const PAD_CARD_RAIL := Vector2i(14, 12)   # RailCard
-const PAD_CTA := Vector2i(16, 10)         # CommitButton(Dark) / DialogueChoiceButton / ChromeAlertButton
+const PAD_MEETING_HEADER := Vector2i(16, 14)  # MeetingHeader
+const PAD_MEETING_DECK := Vector2i(16, 12)    # MeetingDeck
+const PAD_CTA := Vector2i(16, 10)         # CommitButton(Dark)
 const PAD_ACTION_ROW := Vector2i(16, 0)   # ActionRow (the host sets the row height)
 const PAD_TOOLTIP := Vector2i(8, 4)       # tooltip panel
 const PAD_RAIL := Vector2i(20, 20)        # RailPanel
@@ -404,9 +416,6 @@ static func positive_rule() -> Color:
 static func negative_rule() -> Color:
 	return NEGATIVE_RULE_CB if _cb_palette else NEGATIVE_RULE
 
-static func negative_rule_bright() -> Color:
-	return NEGATIVE_RULE_BRIGHT_CB if _cb_palette else NEGATIVE_RULE_BRIGHT
-
 ## Ürün ekseni "Deneyim" (bkz. AXIS_EXPERIENCE_CB).
 static func axis_experience() -> Color:
 	return AXIS_EXPERIENCE_CB if _cb_palette else AXIS_EXPERIENCE
@@ -464,6 +473,75 @@ static func bug_severity(bug_count: int) -> Dictionary:
 	if bug_count <= 0: return badge_palette(&"positive")
 	if bug_count <= 2: return badge_palette(&"accent")
 	return badge_palette(&"negative")
+
+
+## A meeting option's die: at or above SAFE its chance reads safe, at or above RISKY risky,
+## below that dangerous. The option shows only the word; the % lives in its tooltip.
+const RISK_SAFE_MIN := 0.62   # WORKING
+const RISK_RISKY_MIN := 0.40  # WORKING
+## Edge between the cold and wary TUTUM words. It sits under both meetings' lukewarm edge and
+## no rule reads it: the band is a word, the outcome stays the systems' own thresholds.
+const ATTITUDE_WARY_MIN := 25  # WORKING
+
+
+## Risk word key for a die's chance (0.0-1.0).
+static func risk_key(chance: float) -> String:
+	if chance >= RISK_SAFE_MIN: return "MEETING_RISK_SAFE"
+	if chance >= RISK_RISKY_MIN: return "MEETING_RISK_RISKY"
+	return "MEETING_RISK_DANGER"
+
+
+## Ink of the risk word, on risk_key's edges.
+static func risk_ink(chance: float) -> Color:
+	if chance >= RISK_SAFE_MIN: return positive()
+	if chance >= RISK_RISKY_MIN: return ACCENT_DEEP
+	return negative()
+
+
+## TUTUM band of a 0-100 attitude: "warm" | "lukewarm" | "wary" | "cold". The warm and
+## lukewarm edges are the meeting's own rule values, passed in by its adapter.
+static func attitude_band(value: int, warm_min: int, lukewarm_min: int) -> String:
+	if value >= warm_min: return "warm"
+	if value >= lukewarm_min: return "lukewarm"
+	if value >= ATTITUDE_WARY_MIN: return "wary"
+	return "cold"
+
+
+## Key of the TUTUM word for an attitude_band band.
+static func attitude_word_key(band: String) -> String:
+	return "MEETING_ATT_" + band.to_upper()
+
+
+## Ink of the TUTUM word for an attitude_band band.
+static func attitude_ink(band: String) -> Color:
+	match band:
+		"warm": return ATTITUDE_WARM_INK
+		"lukewarm": return ACCENT_DEEP
+		"wary": return INK_MUTED
+		_: return ATTITUDE_COLD_INK
+
+
+## Portrait ring of a meeting seat: 0 is the founder, 1-3 the other side in MeetingCast order.
+static func seat_ring(seat: int) -> Color:
+	match seat:
+		0: return ACCENT
+		1: return MEETING_SEAT_1
+		2: return MEETING_SEAT_2
+		_: return MEETING_SEAT_3
+
+
+## A seat's name as text on the cream dock: the founder's amber ring is too pale to read, so the
+## founder takes the deep amber.
+static func seat_ink(seat: int) -> Color:
+	return ACCENT_DEEP if seat == 0 else seat_ring(seat)
+
+
+## Ink of a die factor on the dark tooltip, by its tone: "pos" | "neg" | anything else neutral.
+static func tooltip_tone_ink(tone: String) -> Color:
+	match tone:
+		"pos": return positive_bright()
+		"neg": return negative_bright()
+	return CREAM
 
 
 # Formatting delegates kept for their existing call sites; the bodies live in Fmt,

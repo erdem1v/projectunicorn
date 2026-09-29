@@ -257,7 +257,6 @@ static func view_state() -> Dictionary:
 		"can_offer": _active and not patience_spent(),
 		"last_offer": patience_spent() and _counter >= 0,
 		"can_accept": _active and _counter >= 0,
-		"can_walk": _active,
 		"confirm": {
 			"units": _units,
 			"unit_price": _pending_price(),

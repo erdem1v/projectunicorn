@@ -263,7 +263,7 @@ static func choose(answer_id: String) -> Dictionary:
 		return _win()
 	if _needle <= SalesConstants.CUT_LOW:
 		return _lose(_derive_loss_reason())
-	if _probe_index >= mini(_probe_budget, SalesConstants.SAFETY_CAP_PROBES):
+	if _on_last_probe():
 		return _resolve_by_check()
 	_advance_probe()
 	if _probe.is_empty():
@@ -289,6 +289,10 @@ static func can_skip_to_offer() -> bool:
 
 
 ## THE ONE DIE (§5.1, engine §9.2/§9.3); why its key carries the path is in the header.
+static func _on_last_probe() -> bool:
+	return _probe_index >= mini(_probe_budget, SalesConstants.SAFETY_CAP_PROBES)
+
+
 static func _resolve_by_check() -> Dictionary:
 	var passed: bool = EvDice.check(_needle, "%s.%s" % [EVENT_KIND, _lead_id], path_id())
 	return _win() if passed else _lose(_derive_loss_reason())
@@ -372,24 +376,18 @@ static func promised_feature() -> String:
 # ============================================================================
 
 static func view_state() -> Dictionary:
-	var p: Prospect = ProspectRegistry.get_prospect(_lead_id)
-	var company: String = p.company_name if p != null else ""
-	var star: int = p.star if p != null else 0
-	var archetype: String = p.archetype_id if p != null else ""
 	var vs: Dictionary = {
-		"active": _active,
-		"lead_id": _lead_id,
-		"company_name": company,
-		"star": star,
-		"archetype_line": SalesArchetypes.voice_line(archetype) if archetype != "" else "",
-		"whale_condition": p.whale_condition if p != null else "",
 		"odds": _needle,
 		"modifier_lines": modifier_lines(),
 		"outcome": _outcome,
 		"probe_index": _probe_index,
 		"probe_budget": _probe_budget,
 		"can_skip": can_skip_to_offer() and _outcome == "",
-		"memory_line": _memory_line(p),
+		# The table ended on the die: the needle stopped between the two cuts.
+		"rolled": _outcome != "" and _needle > SalesConstants.CUT_LOW and _needle < SalesConstants.CUT_HIGH,
+		# This question's answer is the last one; whatever it leaves between the cuts rolls.
+		"last_probe": _on_last_probe(),
+		"memory_line": _memory_line(ProspectRegistry.get_prospect(_lead_id)),
 		"inner_voice": _inner_voice_line(),
 	}
 	if _outcome == "":
@@ -440,7 +438,7 @@ static func _memory_line(p: Prospect) -> String:
 ## once per sitting, and only while the run still has budget.
 ##
 ## DRAWN ONCE, SHOWN FOR AS LONG AS ITS PROBE IS ON SCREEN. `view_state()` is not a one-shot
-## (open() returns one, which main.gd discards, and the scene's _ready() asks for another), so
+## (open() returns one, which main.gd discards, and the adapter's start() asks for another), so
 ## the budget is spent exactly once and the KEY is cached; the text is rendered at display time
 ## so a locale switch mid-sitting reads correctly.
 static func _inner_voice_line() -> String:

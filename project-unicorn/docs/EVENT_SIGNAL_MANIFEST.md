@@ -236,11 +236,11 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `month_ended` | `month_close: Dictionary` | summary_system | 1 | 2 | save_manager · top_bar |
 | `summary_ready` | `data: Dictionary` | summary_system | 3 | 1 | main |
 
-### Cinematic dialogue shell — MeetingScene
+### Meeting panel — MeetingPanel
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `meeting_scene_requested` | `view_state: Dictionary` | game_shell · vc_pitch_system | 4 | 2 | main |
+| `meeting_scene_requested` | `view_state: Dictionary` | vc_pitch_system | 1 | 3 | main |
 
 ### VC Pitch / Series A Hunt signals
 

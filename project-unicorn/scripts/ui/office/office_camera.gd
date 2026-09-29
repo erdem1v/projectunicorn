@@ -67,6 +67,11 @@ func frame(framing: Dictionary) -> void:
 	focus(to, fit_zoom * float(framing.zoom), 0.0)
 
 
+## World units across one pixel of the view at `at_zoom`.
+func units_per_px(at_zoom: float) -> float:
+	return FH / (at_zoom * get_viewport().get_visible_rect().size.y)
+
+
 ## Eases target and zoom over `duration` seconds (0 jumps), as the design's camAnim.
 func focus(to: Vector3, to_zoom: float, duration := 0.75) -> void:
 	if duration > 0.0:

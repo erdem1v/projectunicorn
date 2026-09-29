@@ -568,7 +568,7 @@ static func _on_week_start() -> void:
 
 
 ## Answer every card on screen and the fund's call, then play the VC meeting that seated: in the
-## game its scene holds the clock from the hour it opens.
+## game its panel holds the clock from the hour it opens.
 static func _answer() -> void:
 	_drain_modals()
 	var caller: String = VCPitchSystem.call_waiting()
@@ -1134,7 +1134,7 @@ static func _play_the_meeting() -> void:
 			break
 	if VCPitchSystem.is_active():
 		print("PROBE ERROR day=%d meeting did not finish" % GameState.day)
-	VCPitchSystem.end_sitting()     # the sitting's hours run once the scene is gone
+	VCPitchSystem.end_sitting()     # the sitting's hours run once the panel is gone
 	var st: Dictionary = GameState.vc_states.get(fund, {}) as Dictionary
 	print("PROBE VC_MEET day=%d fund=%s n=%d conv0=%d path=%s result=%s sheet_conv=%d rejections=%d brand=%d" % [
 		GameState.day, fund, int(st.get("meeting_count", 0)), conv0, ",".join(trace),

@@ -76,6 +76,7 @@ func _initialize() -> void:
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_MICRO, T.INK)
 	_lbl(th, &"ChoiceLabel", sans_reg, T.SIZE_LEAD, T.INK)
 	_lbl(th, &"ChoiceLabelStrong", sans_sb, T.SIZE_LEAD, T.INK)
+	_lbl(th, &"ChoiceLabelLocked", sans_reg, T.SIZE_LEAD, T.INK_FAINT)   # an option that is not open
 	_lbl(th, &"FeedDay", mono_reg, T.SIZE_SMALL, T.INK_MUTED)
 	_lbl(th, &"ChromeLabel", mono_label, T.SIZE_MICRO, T.CREAM_DIM)
 	_lbl(th, &"ChromeValue", sans_sb, T.SIZE_BODY, T.CREAM)
@@ -102,6 +103,18 @@ func _initialize() -> void:
 	# taşıyamadığı ayrım bu.
 	_lbl(th, &"StepperValue", mono_sb, T.SIZE_DATA, T.INK)
 
+	# ---- Meeting dock (cream body): header and transcript ----
+	_lbl(th, &"MeetingSpeakerName", serif_sb, T.SIZE_ED_HEADLINE, T.INK)
+	_lbl(th, &"MeetingRole", mono_label, T.SIZE_SMALL, T.INK_MUTED)
+	_lbl(th, &"MeetingLine", serif_reg, T.SIZE_TITLE, T.INK)            # a counterpart's spoken line
+	_lbl(th, &"MeetingFounderLine", sans_reg, T.SIZE_LEAD, T.ON_INK)    # inside MeetingFounderBubble
+	_lbl(th, &"MeetingFounderName", mono_sb, T.SIZE_SMALL, T.ACCENT)
+	# The panel repaints it per band from UiTokens.attitude_ink.
+	_lbl(th, &"MeetingAttitudeWord", mono_sb, T.SIZE_SMALL, T.INK)
+	_lbl(th, &"MeetingFigure", mono_sb, T.SIZE_LEAD, T.INK)             # a number on the price table
+	# A sales table's percent: its own tone says the reasons are on hover.
+	_lbl(th, &"MeetingOdds", mono_reg, T.SIZE_SMALL, T.ACCENT_DEEP)
+
 	# ---- Cinematic dialogue register: text on the dark column ----
 	_lbl(th, &"DialogueName", sans_sb, T.SIZE_LEAD, T.CREAM)  # counterpart name (uppercased in code)
 	_lbl(th, &"DialogueRole", mono_label, T.SIZE_SMALL, T.CREAM_DIM)    # role line under the name
@@ -110,10 +123,11 @@ func _initialize() -> void:
 	_lbl(th, &"DialogueMonologue", serif_it, T.SIZE_LEAD, T.CREAM_DIM) # interior voice
 	_lbl(th, &"DialogueChoiceLabel", sans_reg, T.SIZE_LEAD, T.CREAM)   # choice text
 	_lbl(th, &"DialogueOdds", mono_reg, T.SIZE_SMALL, T.CREAM_DIM)   # odds / caption line
-	_lbl(th, &"DialogueNumber", mono_reg, T.SIZE_SMALL, T.CREAM_DIM) # choice number inside its ring chip
-	_lbl(th, &"ZoneLabel", mono_label, T.SIZE_MICRO, T.CREAM_DIM)    # İKNA zones SOĞUK/ILIK/KAZANILDI
+	_lbl(th, &"DialogueNumber", mono_reg, T.SIZE_SMALL, T.CREAM_DIM) # step counter / numeric caption
+	_lbl(th, &"ZoneLabel", mono_label, T.SIZE_MICRO, T.CREAM_DIM)    # micro caption on the dark screens
+	_lbl(th, &"TooltipTitle", mono_label, T.SIZE_MICRO, T.ACCENT_CHROME)  # a dark tooltip's heading
 	_lbl(th, &"ConvictionValue", mono_reg, T.SIZE_BODY, T.CREAM)       # İKNA numeric readout
-	_lbl(th, &"StatStripLabel", mono_reg, T.SIZE_SMALL, T.CREAM)     # bottom-left stat band
+	_lbl(th, &"StatStripLabel", mono_reg, T.SIZE_SMALL, T.CREAM)     # term-sheet pressure strip
 
 	# ---- Dark-register onboarding (3-page threshold ceremony) ----
 	_lbl(th, &"TitleSerifCream", serif_sb, T.SIZE_ED_CEREMONY, T.CREAM)  # page title on dark ("Karakter")
@@ -165,6 +179,8 @@ func _initialize() -> void:
 	_panel(th, &"ChipNegative", "PanelContainer", _box(T.NEGATIVE_BG, T.RADIUS_S, T.NEGATIVE_RULE, T.PAD_CHIP))
 	_panel(th, &"ChoiceCard", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_CHOICE))
 	_panel(th, &"ChoiceCardHover", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_CHOICE))
+	# A choice in the warning tone keeps the ChoiceCard padding, so turning alert moves no row.
+	_panel(th, &"ChoiceCardAlert", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.RADIUS_M, T.CARD_ATTENTION_BORDER, T.PAD_CHOICE))
 	_panel(th, &"HeaderBand", "PanelContainer", _sides_box(Color.TRANSPARENT, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.BORDER_DISABLED, T.PAD_STRIP))
 	# CardFloating: gövde üstünde yüzen kart (BuildHUD overlay'i).
 	var floating_sb := _box(T.CARD_FLOATING_BG, T.RADIUS_L, T.CARD_BORDER, T.PAD_CARD_TIGHT)
@@ -179,18 +195,25 @@ func _initialize() -> void:
 	window_sb.shadow_offset = Vector2(0, T.SPACE_XXS)
 	_panel(th, &"WindowPanel", "PanelContainer", window_sb)
 
+	# ---- Meeting dock (cream body) ----
+	# The dock's sections pad themselves, so the dock carries only its left hairline.
+	_panel(th, &"MeetingDock", "PanelContainer", _sides_box(T.BG_BODY, T.RADIUS_NONE, [T.BORDER_HAIRLINE, 0, 0, 0], T.CARD_BORDER))
+	_panel(th, &"MeetingHeader", "PanelContainer", _sides_box(T.SURFACE_ROW_TINT, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.CARD_BORDER, T.PAD_MEETING_HEADER))
+	_panel(th, &"MeetingDeck", "PanelContainer", _sides_box(T.SURFACE_FRAME, T.RADIUS_NONE, [0, 0, T.BORDER_HAIRLINE, 0], T.CARD_BORDER, T.PAD_MEETING_DECK))
+	_panel(th, &"MeetingFounderBubble", "PanelContainer", _box(T.INK, T.RADIUS_M, Color.TRANSPARENT, T.PAD_ROW))
+	# NumberChip: an option's number disc.
+	_panel(th, &"NumberChip", "PanelContainer", _box(T.SURFACE_SUNKEN, T.RADIUS_PILL))
+
 	# ---- Cinematic dialogue register: dark panels ----
 	# Column = floating semi-opaque charcoal (art shows through); Card = solid
 	# charcoal for the Frank popup; QuoteBox carries the amber left-edge bar;
-	# DialogueChoice(+Hover) swap on mouse-over; NumberChip is the choice ring.
+	# DialogueChoice(+Hover) swap on mouse-over.
 	_panel(th, &"DialogueColumn", "Panel", _box(T.DIALOGUE_COLUMN_BG, T.RADIUS_XXL))
 	_panel(th, &"DialogueCard", "Panel", _box(T.DIALOGUE_BG, T.RADIUS_CARD_LG, T.DIALOGUE_CARD_BORDER))
 	_panel(th, &"PortraitFrame", "PanelContainer", _box(T.PORTRAIT_FRAME, T.RADIUS_PORTRAIT, Color.TRANSPARENT, T.PAD_FRAME))
 	_panel(th, &"QuoteBox", "PanelContainer", _sides_box(T.DIALOGUE_CARD_BG, T.RADIUS_M, [T.BORDER_ACCENT, 0, 0, 0], T.ACCENT_CHROME, T.PAD_ROW))
 	_panel(th, &"DialogueChoice", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.DIALOGUE_CARD_BORDER, T.PAD_ROW))
 	_panel(th, &"DialogueChoiceHover", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.ACCENT_CHROME, T.PAD_ROW))
-	_panel(th, &"NumberChip", "Panel", _box(Color.TRANSPARENT, T.RADIUS_PILL, T.CREAM_DIM))
-	_panel(th, &"StatStrip", "PanelContainer", _box(T.STAT_STRIP_BG, T.RADIUS_M, Color.TRANSPARENT, T.PAD_STRIP))
 
 	# ---- Dark-register onboarding: portrait grid cells (hairline vs 2px amber ring) ----
 	_panel(th, &"PortraitCell", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_L, T.DIALOGUE_CARD_BORDER, T.PAD_CELL))
@@ -222,9 +245,9 @@ func _initialize() -> void:
 	_commit_button(th, &"CommitButton", false)
 	_commit_button(th, &"CommitButtonDark", true)
 
-	# DialogueGhost: quiet cream text button on the dark register ("Toplantıdan çekil"),
-	# transparent until hovered. Disabled and focus are set too: left to base Button they
-	# would draw the cream body's edge and ink on the dark stage.
+	# DialogueGhost: quiet cream text button on the dark register, transparent until hovered.
+	# Disabled and focus are set too: left to base Button they would draw the cream body's
+	# edge and ink on the dark stage.
 	th.set_type_variation(&"DialogueGhost", &"Button")
 	var ghost := _box(Color.TRANSPARENT, T.RADIUS_M, Color.TRANSPARENT, T.PAD_BTN_GHOST)
 	_states(th, &"DialogueGhost", {
@@ -240,24 +263,6 @@ func _initialize() -> void:
 	th.set_color("font_pressed_color", &"DialogueGhost", T.CREAM_DIM)
 	th.set_color("font_focus_color", &"DialogueGhost", T.CREAM_DIM)
 	th.set_color("font_disabled_color", &"DialogueGhost", T.CREAM_DIM_DISABLED)
-
-	# DialogueChoiceButton: DialogueChoice's card as a Button on the dark stages (meeting
-	# answers, negotiation accept); hover moves only the edge. ChromeAlertButton: the same box
-	# in the alert ink (the negotiation offer at the insult line). The offer flips between it
-	# and CommitButtonDark, so both take PAD_CTA and the button never jumps. The alert ink is
-	# baked like ChromeAlert's: the theme is static, so the colourblind repaint is the call
-	# site's job.
-	for pair in [[&"DialogueChoiceButton", T.CREAM], [&"ChromeAlertButton", T.NEGATIVE_BRIGHT]]:
-		var name: StringName = pair[0]
-		th.set_type_variation(name, &"Button")
-		_states(th, name, {
-			"normal": _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.DIALOGUE_CARD_BORDER, T.PAD_CTA),
-			"hover": _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.ACCENT_CHROME, T.PAD_CTA),
-			"pressed": _box(T.VEIL_SOFT_CHROME, T.RADIUS_XL, T.ACCENT_CHROME, T.PAD_CTA),
-			"focus": _no_focus(),
-		})
-		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-			th.set_color(key, name, pair[1])
 
 	# WindowClose: the × at a window's corner. Face and ink come from base Button; no
 	# fill, hover moves only the edge, zero margins keep the glyph still. The host sizes it.

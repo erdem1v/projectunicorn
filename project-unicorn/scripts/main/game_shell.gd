@@ -4,8 +4,7 @@ extends Control
 # the tree is paused — that's what lets Space UN-pause the game. _input (not
 # _unhandled_input) so a focused Button can't swallow Space via ui_accept first.
 
-var _meeting_fixture_toggle: bool = false  # Shift+F2: full ↔ extreme-length fixture
-var _vc_debug_idx: int = 0                 # Shift+F5: cycles the VC roster
+var _vc_debug_idx: int = 0   # Shift+F5: cycles the VC roster
 
 @onready var _windows: Node = $MidRow/CenterViewport   # WindowLayer: Esc en üstteki pencereyi kapatır
 
@@ -33,9 +32,9 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_debug_fkey(key)
 		return
-	# Hız: Space pause/devam, 1-4 hız basamağı. 1-4 MeetingScene / TermSheetTable içinde
-	# diyalog seçimi de; onlar yalnız modal açıkken var, Guard 2 ayrımı sağlar. Kurucunun
-	# toplantı yolculuğunda bu tuşları OfficeTravel yutar.
+	# Hız: Space pause/devam, 1-4 hız basamağı. 1-4 toplantı panelinde (MeetingPanel) ve
+	# TermSheetTable'da seçenek seçimi de; ikisi de ModalLayer'da, Guard 2 ayrımı sağlar.
+	# Kurucunun toplantı yolculuğunda bu tuşları OfficeTravel yutar.
 	var speed_idx: int = -1
 	match key.keycode:
 		KEY_1, KEY_KP_1: speed_idx = 1
@@ -80,14 +79,10 @@ func _debug_fkey(key: InputEventKey) -> void:
 		# Dönemin şimdiye kadarki özeti; Shift = uç-değer yerleşim fikstürü.
 		SummarySystem.debug_force_summary(key.shift_pressed)
 		return
-	if key.shift_pressed and key.keycode in [KEY_F2, KEY_F4, KEY_F5, KEY_F6]:
+	if key.shift_pressed and key.keycode in [KEY_F4, KEY_F5, KEY_F6]:
 		if _layer_busy("ModalLayer"):
 			return
 		match key.keycode:
-			KEY_F2:
-				_meeting_fixture_toggle = not _meeting_fixture_toggle
-				EventBus.meeting_scene_requested.emit(MeetingScene.debug_fixture_full()
-						if _meeting_fixture_toggle else MeetingScene.debug_fixture_long())
 			KEY_F4:
 				EventBus.debug_onboarding_retrigger_requested.emit()
 			KEY_F5:
@@ -115,16 +110,6 @@ func _debug_open_term_table() -> void:
 func debug_force_summary_extreme() -> void:
 	if OS.is_debug_build():
 		SummarySystem.debug_force_summary(true)
-
-
-func debug_force_meeting() -> void:
-	if OS.is_debug_build():
-		EventBus.meeting_scene_requested.emit(MeetingScene.debug_fixture_full())
-
-
-func debug_force_meeting_long() -> void:
-	if OS.is_debug_build():
-		EventBus.meeting_scene_requested.emit(MeetingScene.debug_fixture_long())
 
 
 func debug_force_vc_meeting(vc_id: String = "anchor") -> void:

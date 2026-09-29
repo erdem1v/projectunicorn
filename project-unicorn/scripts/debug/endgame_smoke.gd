@@ -1600,11 +1600,13 @@ static func _force(mode: String) -> void:
 	GameState.set_flag("debug_skill_force", mode)  # SkillCheck deterministic override
 
 static func _run_meeting(_vc: String, b2: String, b3: String, b4: String) -> void:
-	# Drive the beat machine engine-directly (no scene): b1 read → b2 angle → b3 posture → b4.
+	# Drive the beat machine engine-directly (no panel): b1 read → b2 angle → b3 posture → b4 →
+	# close the result view.
 	VCPitchSystem.advance("b1_read")
 	VCPitchSystem.advance("b2_" + b2)
 	VCPitchSystem.advance("b3_" + b3)
 	VCPitchSystem.advance(b4)
+	VCPitchSystem.advance("b4_close")
 
 
 static func _case_full_loop() -> String:
@@ -2207,12 +2209,12 @@ static func _case_hunt_offer_lifecycle() -> String:
 	# The shown Beat-3 odds use the rolled difficulty (Kolay on a clean question).
 	VCPitchSystem._sorgu = {"key": "clean"}
 	var vs: Dictionary = VCPitchSystem._beat3_view_state({})
-	var want_odds: String = VCPitchSystem._odds(TranslationServer.translate("VC_APPROACH_HONEST"),
-		PitchConstants.BEAT3_SKILL, PitchConstants.DIFF_KOLAY, 0)
-	if String(vs.choices[0].odds_text) != want_odds:
-		return "clean-question odds shown '%s', rolled '%s'" % [vs.choices[0].odds_text, want_odds]
+	var want_chance: float = SkillCheck.chance_for(PitchConstants.BEAT3_SKILL, PitchConstants.DIFF_KOLAY, 0)
+	if float(vs.choices[0].check.chance) != want_chance:
+		return "clean-question odds shown %.3f, rolled %.3f" % [float(vs.choices[0].check.chance), want_chance]
 	VCPitchSystem.advance("b3_spin")
 	VCPitchSystem.advance("b4_leave")
+	VCPitchSystem.advance("b4_close")
 	if not GameState.vc_frank_cold_shown.has("anchor") or not GameState.vc_last_meeting_rejected:
 		return "first rejection did not show the fund's own line (%s)" % str(GameState.vc_frank_cold_shown)
 	VCPitchSystem.begin_meeting("meridian")
@@ -2222,6 +2224,7 @@ static func _case_hunt_offer_lifecycle() -> String:
 	if VCPitchSystem._pick_cold_exit() != "VC_FRANK_COLD_GENERAL_2":
 		return "second rejection in a row picked %s" % VCPitchSystem._pick_cold_exit()
 	VCPitchSystem.advance("b4_leave")
+	VCPitchSystem.advance("b4_close")
 	if GameState.vc_frank_cold_shown.has("meridian"):
 		return "the general line also spent meridian's own line"
 	return ""
@@ -3593,13 +3596,13 @@ static func _case_locale_switch() -> String:
 	TranslationServer.set_locale("en")
 	if TranslationServer.translate("RUNWAY_PROFITABLE") != "Default Alive":
 		return "en RUNWAY_PROFITABLE: '%s'" % TranslationServer.translate("RUNWAY_PROFITABLE")
-	if TranslationServer.translate("RUNWAY_GROSS_LABEL") != "Gross Burn Runway":
-		return "en RUNWAY_GROSS_LABEL: '%s'" % TranslationServer.translate("RUNWAY_GROSS_LABEL")
+	if TranslationServer.translate("SETTINGS_LANGUAGE") != "Language":
+		return "en SETTINGS_LANGUAGE: '%s'" % TranslationServer.translate("SETTINGS_LANGUAGE")
 	TranslationServer.set_locale("tr")
 	if TranslationServer.translate("RUNWAY_PROFITABLE") != "Artıda":
 		return "tr RUNWAY_PROFITABLE: '%s'" % TranslationServer.translate("RUNWAY_PROFITABLE")
-	if TranslationServer.translate("RUNWAY_GROSS_LABEL") != "Brüt Runway":
-		return "tr RUNWAY_GROSS_LABEL: '%s'" % TranslationServer.translate("RUNWAY_GROSS_LABEL")
+	if TranslationServer.translate("SETTINGS_LANGUAGE") != "Dil":
+		return "tr SETTINGS_LANGUAGE: '%s'" % TranslationServer.translate("SETTINGS_LANGUAGE")
 	return ""
 
 
@@ -3897,7 +3900,7 @@ static func _case_b2b_ignore_then_churn() -> String:
 	return ""
 
 
-# --- B2B pitch → MeetingScene migration (view-only, outcome-invariant) ---
+# --- B2B pitch meeting (the sitting end to end, outcome-invariant) ---
 
 static func _case_b2b_pitch_meeting_signs() -> String:
 	# THE WHOLE SITTING, END TO END (§5.0 → §5.1 → §5.3 → §5.4): the founder sits down, the
