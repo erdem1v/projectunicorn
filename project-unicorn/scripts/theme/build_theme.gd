@@ -74,7 +74,6 @@ func _initialize() -> void:
 	_lbl(th, &"MetricUnit", mono_reg, T.SIZE_META, T.INK_FAINT_CHROME)
 	_lbl(th, &"TabLabel", mono_label, T.SIZE_META, T.INK_DIM)
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_MICRO, T.INK)
-	_lbl(th, &"ChoiceLabel", sans_reg, T.SIZE_LEAD, T.INK)
 	_lbl(th, &"ChoiceLabelStrong", sans_sb, T.SIZE_LEAD, T.INK)
 	_lbl(th, &"ChoiceLabelLocked", sans_reg, T.SIZE_LEAD, T.INK_FAINT)   # an option that is not open
 	_lbl(th, &"FeedDay", mono_reg, T.SIZE_SMALL, T.INK_MUTED)

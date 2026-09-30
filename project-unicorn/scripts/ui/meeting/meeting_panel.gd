@@ -19,13 +19,9 @@ signal closed
 
 const OPTION := preload("res://scripts/ui/meeting/meeting_panel_option.gd")
 
-## The dock: this share of the office view's width, never narrower than DOCK_MIN_W. Under
-## COMPACT_H tall the header's portrait shrinks and the memory keeps to one line.
+## The dock: this share of the office view's width.
 const DOCK_SHARE := 0.34
-const DOCK_MIN_W := 380.0
-const COMPACT_H := 700.0
 const PORTRAIT_PX := 96
-const PORTRAIT_COMPACT_PX := 56
 const TRANSCRIPT_PX := 38
 const TRANSCRIPT_MIN_H := 80.0
 const RING_POINTS := 48
@@ -68,7 +64,6 @@ var _view: Control
 var _people := {}
 var _company := ""
 var _speaker := 0
-var _compact := false
 var _playing := false
 ## Options are on the deck and take a pick.
 var _live := false
@@ -78,7 +73,6 @@ var _enabled: Array[OPTION] = []
 var _patience := {}
 
 var _dock := PanelContainer.new()
-var _header_col := VBoxContainer.new()
 var _kicker: Label
 var _badge := HBoxContainer.new()
 var _portrait := MarginContainer.new()
@@ -189,8 +183,9 @@ func proceed() -> void:
 func _build_header() -> Control:
 	var header := PanelContainer.new()
 	header.theme_type_variation = &"MeetingHeader"
-	header.add_child(_header_col)
-	_header_col.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	var rows := VBoxContainer.new()
+	header.add_child(rows)
+	rows.add_theme_constant_override("separation", UiTokens.SPACE_L)
 
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -199,11 +194,11 @@ func _build_header() -> Control:
 	_kicker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(_kicker)
 	top.add_child(_badge)
-	_header_col.add_child(top)
+	rows.add_child(top)
 
 	var person := HBoxContainer.new()
 	person.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	_header_col.add_child(person)
+	rows.add_child(person)
 	_portrait.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	person.add_child(_portrait)
 	var about := VBoxContainer.new()
@@ -264,7 +259,7 @@ func _build_header() -> Control:
 	_memory.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_memory_box.add_child(_memory)
 	_memory_box.hide()
-	_header_col.add_child(_memory_box)
+	rows.add_child(_memory_box)
 	return header
 
 
@@ -331,20 +326,11 @@ func _build_tip() -> void:
 func _place_dock() -> void:
 	var area := _view.get_global_rect()
 	area.position -= global_position
-	var width := maxf(DOCK_MIN_W, area.size.x * DOCK_SHARE)
+	var width := area.size.x * DOCK_SHARE
 	_dock.offset_left = area.end.x - width
 	_dock.offset_top = area.position.y
 	_dock.offset_right = area.end.x
 	_dock.offset_bottom = area.end.y
-	var compact := area.size.y < COMPACT_H
-	if compact != _compact:
-		_compact = compact
-		_header_col.add_theme_constant_override("separation", UiTokens.SPACE_M if compact else UiTokens.SPACE_L)
-		# One line and an ellipsis, or the whole memory: a wrapping label that trims has no height.
-		_memory.autowrap_mode = TextServer.AUTOWRAP_OFF if compact else TextServer.AUTOWRAP_WORD_SMART
-		_memory.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS if compact \
-			else TextServer.OVERRUN_NO_TRIMMING
-		_show_person(_speaker)
 	_cast.frame_table(width)
 
 
@@ -535,7 +521,7 @@ func _clear_deck() -> void:
 func _show_person(seat: int) -> void:
 	var person: Dictionary = _people[seat]
 	UiFactory.clear(_portrait)
-	_portrait.add_child(_avatar(seat, PORTRAIT_COMPACT_PX if _compact else PORTRAIT_PX))
+	_portrait.add_child(_avatar(seat, PORTRAIT_PX))
 	_name.text = person.name
 	_role.text = Fmt.upper(tr("MEETING_ROLE_LINE").format({"role": person.role, "company": _company}))
 

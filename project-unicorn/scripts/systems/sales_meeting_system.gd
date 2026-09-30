@@ -381,7 +381,6 @@ static func view_state() -> Dictionary:
 		"modifier_lines": modifier_lines(),
 		"outcome": _outcome,
 		"probe_index": _probe_index,
-		"probe_budget": _probe_budget,
 		"can_skip": can_skip_to_offer() and _outcome == "",
 		# The table ended on the die: the needle stopped between the two cuts.
 		"rolled": _outcome != "" and _needle > SalesConstants.CUT_LOW and _needle < SalesConstants.CUT_HIGH,
