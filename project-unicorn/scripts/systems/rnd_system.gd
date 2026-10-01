@@ -9,9 +9,8 @@ extends RefCounted
 #
 #  Research is a bet paid in PEOPLE and TIME (§1): whoever researches does not make product.
 #  That occupation (§5.0) does not live here — it is HRConstants.JOB_EXCLUSIVE plus
-#  CharacterRegistry's displacement, so the build's own pause machine
-#  (ProductSystem.pause_kind) reports it unchanged. This file only starts, accrues, freezes
-#  and completes.
+#  CharacterRegistry's displacement, and the sprint team leaves a researcher out
+#  (SprintSystem.team). This file only starts, accrues, freezes and completes.
 #
 #  §9 SINGLE SOURCE:
 #    · research speed  → HRSystem.daily_contribution(). Ar-Ge keeps NO copy of the formula.
@@ -164,8 +163,7 @@ static func emit_edges() -> void:
 ## re-derived (§9).
 ##
 ## ONE PERSON IS COUNTED ONCE (§5.4, MÜHÜRLÜ), through whichever required area is stronger
-## for them — the rule ProductSystem._phase_crew applies to the build. So a two-area
-## continuation still structurally wants two PEOPLE (§5.2).
+## for them. So a two-area continuation still structurally wants two PEOPLE (§5.2).
 ##
 ## `ids` is exactly the set being asked about; an empty set contributes nothing.
 ## HRSystem.is_busy is the freeness gate: effective_skill checks only `status`, so a founder
@@ -341,10 +339,8 @@ static func drop_assignee(char_id: String, cause: String = "") -> void:
 
 
 ## §5.6.1 · §5.7 — DONMUŞ BARIN NOTU SEBEBİNİ SÖYLER. İki sebep vardır ve ayrı cümleleri olmalı:
-## oyuncu insanları çekti (bar "Kimse üzerinde değil." der, yapım barıyla AYNI cümle — ve
-## aynı olması §5.0'ın öğretici anını taşıyan şeydir), ya da taşıyıcı sürekli bir işe geçti
-## ve araştırma yerinden edildi ("Ekip yapımda."). İkincisi `BUILD_BUSY_RESEARCH`'ün tam
-## simetriğidir.
+## oyuncu insanları çekti (bar "Kimse üzerinde değil." der), ya da taşıyıcı sürekli bir işe
+## geçti ve araştırma yerinden edildi ("Ekip yapımda.").
 static func freeze_note_key() -> String:
 	if not is_frozen():
 		return ""

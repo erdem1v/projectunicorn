@@ -3,9 +3,7 @@
   "category": "customer",
   "tick": "request",
   "class": "paper",
-  "tags": [
-    "build_safe"
-  ],
+  "tags": [],
   "guards": {
     "market": "b2b"
   },

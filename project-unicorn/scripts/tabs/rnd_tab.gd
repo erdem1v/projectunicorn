@@ -46,7 +46,7 @@ var _selected: String = ""
 
 
 func _ready() -> void:
-	# TASLAK NÖBETİ (creation_flow'un `creation_draft` emsali): dil ya da
+	# TASLAK NÖBETİ: dil ya da
 	# palet değişince router sayfayı yıkıp yeniden kuruyor; bayrak olmasaydı
 	# oyuncu okuduğu düğümden dışarı atılırdı. TÜKETİLİR VE SİLİNİR — bekleme
 	# sayfasında da, bayat bir seçim bir sonraki turda geri gelmesin.
@@ -108,8 +108,8 @@ func on_page_closing() -> void:
 
 ## Dışarıya açık seam, `rnd_node_requested`in işleyicisi. `tab_changed("rnd")` emit'i
 ## sayfayı SENKRON mount ediyor (`_ready` `add_child` içinde koşar), yani hemen ardından
-## gelen `rnd_node_requested` bağlanmış bir işleyici bulur (§2). Ürün'ün "→ Araştır"ı
-## false, barın "ata"sı true gönderir. AÇILMAMIŞ ama var olan bir düğümü de seçer —
+## gelen `rnd_node_requested` bağlanmış bir işleyici bulur (§2). Barın "ata"sı true
+## gönderir. AÇILMAMIŞ ama var olan bir düğümü de seçer —
 ## panel kendini "Önce {düğüm}." diye açıklayabilsin diye (§7).
 func select_node(node_id: String, open_assign: bool = false) -> void:
 	if ResearchSeam.is_node(node_id):
@@ -233,7 +233,7 @@ func _build_legend() -> HBoxContainer:
 ## ERTELENMİŞ: bu işleyicilerin çoğu bir düğmenin/`gui_input`ın İÇİNDEN gelen
 ## motor emit'idir (atama panelinin Başlat'ı → `RnDSystem.start` →
 ## `research_started`). Sayfayı orada yeniden kurmak, düğümü kendi sinyalinin
-## altından çekmek olurdu (team_panel'in yazdığı tuzak).
+## altından çekmek olurdu.
 func _on_state_changed(_arg = null) -> void:
 	_refresh.call_deferred()
 

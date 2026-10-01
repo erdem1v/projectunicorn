@@ -4,9 +4,8 @@ extends Control
 # ============================================================================
 # Nakit eğrisi. Gerçekleşen kasa çizgisi + iki kesikli
 # projeksiyon: "mevcut gidiş" (bugünkü net, doğrusal) ve "satış hedefi
-# tutarsa" (pipeline-ağırlıklı iyimser net). Desen triangle_radar.gd'den:
-# kendi _draw()'u olan, queue_redraw ile tazelenen, UiTokens renkli, tscn'siz
-# Control. Ekonomi burada HESAPLANMAZ — set_data'ya gelen her sayı bir motor
+# tutarsa" (pipeline-ağırlıklı iyimser net). Kendi _draw()'u olan, queue_redraw
+# ile tazelenen, UiTokens renkli, tscn'siz Control. Ekonomi burada HESAPLANMAZ — set_data'ya gelen her sayı bir motor
 # seam'inden çıkar; bu dosya yalnız piksel geometrisi çözer. Yatay eksen tiktir (hafta).
 #
 # Kullanım (FinanceOzetView):

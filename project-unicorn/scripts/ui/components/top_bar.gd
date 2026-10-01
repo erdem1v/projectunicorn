@@ -45,10 +45,15 @@ const COMPACT_BELOW := 1600
 # Teklif geri sayımının sinyali yeniden atmaz; dil ya da palet değişince çipi yeniden
 # boyayabilmek için son değer burada tutulur. -1 = çip gizli.
 var _offer_weeks_left: int = -1
+## "Sprint otomatik başladı": teklif çipinin kardeşi, ürün durumunun notunu okur.
+var _auto_start_label: Label
 
 
 func _ready() -> void:
 	logo_square.color = UiTokens.ACCENT_CHROME
+	_auto_start_label = offer_label.duplicate()
+	time_group.add_child(_auto_start_label)
+	time_group.move_child(_auto_start_label, offer_label.get_index() + 1)
 	_refresh_all()
 
 	EventBus.cash_changed.connect(_on_cash_changed)
@@ -62,6 +67,7 @@ func _ready() -> void:
 	EventBus.phase_changed.connect(_on_phase_changed)
 	EventBus.shutter_changed.connect(_on_shutter_changed)
 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
+	EventBus.product_state_changed.connect(_refresh_auto_start)
 	# Kod tarafında bestelenen metin (runway durumu, sayaçlar) ve örnek başına renk
 	# override'ları kendiliğinden dönmez; ikisi de yeniden okunarak yenilenir.
 	EventBus.language_changed.connect(_refresh_all.unbind(1))
@@ -105,6 +111,7 @@ func _refresh_all() -> void:
 	_on_phase_changed(GameState.phase)
 	_on_shutter_changed(GameState.shutter_weeks_left)
 	_on_offer_countdown_changed(_offer_weeks_left)
+	_refresh_auto_start()
 	_apply_speed_visual(TimeManager.current_speed)
 
 
@@ -180,6 +187,15 @@ func _on_offer_countdown_changed(weeks_left: int) -> void:
 		offer_label.text = tr(Fmt.count_key("FIN_OFFER_COUNTDOWN", weeks_left)).format(
 			{"n": weeks_left})
 		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT_CHROME if weeks_left > 1 else UiTokens.negative_bright())
+
+
+## Planlamada bir gün geçince sprint liderin önerisiyle kendiliğinden başlar; not o sprint
+## sürdükçe amber kalır.
+func _refresh_auto_start() -> void:
+	var auto_started: int = int(GameState.product.get("auto_started", -1))
+	_auto_start_label.visible = SprintSystem.mode() == "active" and auto_started == SprintSystem.sprint_number()
+	_auto_start_label.text = tr("PRODUCT_AUTO_STARTED")
+	_auto_start_label.add_theme_color_override("font_color", UiTokens.ACCENT_CHROME)
 
 
 func _on_phase_changed(new_phase: int) -> void:

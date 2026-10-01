@@ -5,8 +5,8 @@ extends RefCounted
 #
 # Sütunlar: ÇALIŞAN · DURUM · sonra `HRConstants.JOBS`'un her işi için eşit aralıklı bir sütun.
 #
-# KURUCU BURADA YOK: atanabilir bir işçi değil, aktif yapımın fazını motor tarafında
-# kendiliğinden takip eder (ProductSystem._reseat_founder).
+# KURUCU BURADA YOK: atanabilir bir işçi değil, sprint ekibine kendiliğinden girer
+# (SprintSystem.team).
 #
 # HÜCRE DURUMLARI (§12.3):
 #   ana iş + işaretli      → dolu amber, koyu tik

@@ -50,7 +50,7 @@ const LOAD_BASE := 1.0
 const CAPACITY_STEP := 1
 const CAPACITY_MIN := 0
 
-## v1 yayın akışının öneri satırı ("Tahmini ilk ay: ~1.000 kullanıcı"); kural değil.
+## MVP'de açılan bulut kapasitesi (SprintBridges.on_mvp); kural değil.
 const SUGGESTED_START_UNITS := 1
 
 
@@ -77,8 +77,6 @@ const STATE_UNPROVISIONED := "unprovisioned"   # canlı ürün yok ya da hiç ka
 ## "Fatura günlük olarak burn'e işler (aylık/30)": yinelenen gider, FinanceSystem'in burn
 ## kategorisi kanalından gider.
 const BURN_CATEGORY := "servers"
-
-const KEY_START_HINT := "PROD_INFRA_START_HINT"   # {users} yer tutuculu öneri satırı
 
 
 # ---------------------------------------------------------------- durum
@@ -139,14 +137,6 @@ static func _is_b2b(market: String) -> bool:
 	return (market if market != "" else ProductState.market_type()) == MARKET_B2B
 
 
-static func provider_name_key(provider_id: String) -> String:
-	return "PROD_INFRA_PROVIDER_" + provider_id.to_upper()
-
-
-static func provider_quality_key(provider_id: String) -> String:
-	return "PROD_INFRA_QUALITY_" + provider_id.to_upper()
-
-
 # ---------------------------------------------------------------- yük, etkin kapasite, doluluk
 
 ## Yükü okuyan herkes buradan geçer; ham sabite uzanan çağrı Ar-Ge düğümünü o yolda öldürür.
@@ -190,8 +180,9 @@ static func occupancy() -> float:
 	return float(served_count()) / cap
 
 
-static func occupancy_pct() -> int:
-	return int(round(occupancy() * 100.0))
+## Doluluğu `target`ın altında tutan en az birim sayısı.
+static func units_for_occupancy(target: float) -> int:
+	return floori(served_count() * load_factor() / (unit_size() * target)) + 1
 
 
 ## Kapasitesi olmayan ama kullanıcısı olan ürün de aşımdadır; o yüzden oran bölmeden okunur.
@@ -243,10 +234,6 @@ static func adjust_capacity(steps: int) -> int:
 
 static func suggested_start_units() -> int:
 	return SUGGESTED_START_UNITS
-
-
-static func suggested_start_headroom() -> int:
-	return SUGGESTED_START_UNITS * unit_size()
 
 
 # ---------------------------------------------------------------- §10 fatura ve brüt marj

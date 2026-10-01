@@ -39,8 +39,9 @@ const NEUTRAL_VERBS := [
 	# people — morale and assignment are not economy; salary is, and lives below
 	"change_morale", "morale_all", "assign_to", "send_on_leave", "start_training",
 	# product
-	"dimension_delta", "bug_delta", "delay_weeks", "damage_product",
-	"ship_active_build", "enter_development", "enter_beta",
+	"damage_product",
+	# sprint — the card a sprint decision is about, and the sprint's work hours
+	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "sprint_hours",
 	# customers — satisfaction is a relationship, not a payment
 	"satisfaction_delta", "promise_create",
 	# world and surfaces
@@ -363,29 +364,21 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				int(e.get("deadline_weeks", B2BConstants.PROMISE_DEADLINE_WEEKS)))
 			return {"verb": verb, "customer": pcid, "feature": pfid}
 
-		# --- product ----------------------------------------------------------
-		"dimension_delta":
-			ProductSystem.apply_dimension_delta(String(e.get("axis", "innovation")), _amount(e))
-			return {"verb": verb, "axis": e.get("axis", "innovation"), "amount": _amount(e)}
-		"bug_delta":
-			ProductSystem.apply_bug_delta(_amount(e))
-			return {"verb": verb, "amount": _amount(e)}
-		"delay_weeks":
-			# The seam no-ops without an active build; logging the refusal keeps a card from
-			# silently claiming time it did not take.
-			if ProductSystem.get_active_build() == null:
-				return {"verb": verb, "refused": "no active build; a week cost cannot apply"}
-			ProductSystem.apply_speed_bonus(int(e.get("weeks", 0)))
-			return {"verb": verb, "weeks": e.get("weeks", 0)}
-		"ship_active_build":
-			ProductSystem.ship_active_build()
-			return {"verb": verb}
-		"enter_development":
-			ProductSystem.enter_development()
-			return {"verb": verb}
-		"enter_beta":
-			ProductSystem.enter_beta()
-			return {"verb": verb}
+		# --- sprint -------------------------------------------------------------
+		# A decision card names no card in its scope (there is no card scope type): SprintSystem
+		# knows which card the pending decision is about and answers its id, or "" with none.
+		"sprint_card_effort":
+			return _on_decision_card(verb, SprintSystem.decision_effort(_amount(e)), _amount(e))
+		"sprint_card_progress":
+			return _on_decision_card(verb, SprintSystem.decision_progress(_amount(e)), _amount(e))
+		"sprint_card_carry":
+			return _on_decision_card(verb, SprintSystem.decision_carry(), 0)
+		"sprint_hours":
+			var mult: float = float(e.get("mult", 1.0))
+			var sprint: int = SprintSystem.set_hours_mult(mult)
+			if sprint == 0:
+				return _no_target(verb, "")
+			return {"verb": verb, "sprint": sprint, "mult": mult}
 
 		# --- world and surfaces -----------------------------------------------
 		"ticker_push":
@@ -539,3 +532,9 @@ static func entity_of(e: Dictionary, ctx: Dictionary, want_type: String) -> Stri
 static func _no_target(verb: String, entity_id: String) -> Dictionary:
 	push_error("[EvEffects] '%s' found no target (id '%s')" % [verb, entity_id])
 	return {"verb": verb, "refused": "no target"}
+
+
+static func _on_decision_card(verb: String, card_id: String, amount: int) -> Dictionary:
+	if card_id == "":
+		return _no_target(verb, card_id)
+	return {"verb": verb, "card": card_id, "amount": amount}

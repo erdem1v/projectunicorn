@@ -36,11 +36,12 @@ extends RefCounted
 #   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn categories> ...
 #                                           (full_run*: once, the day the Series A door opens)
 #   PROBE MONTH_BURN day=<d> n=<n> ticks=<n> salaries=<n> ... one_time=<n>   (full_run*: beside each PROBE MONTH)
+#   PROBE SPRINT day=<d> n=<n> label=<v1.x|-> shipped=<card ids> carried=<n> velocity=<done>/<capacity>
+#   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it)
 #   PROBE VC_*  (full_run_vc_naive / full_run_vc_cautious only): VC_CONFIG, VC_BOOK, VC_MEET,
 #               VC_TABLE_OPEN, VC_PUSH, VC_TABLE_END, VC_REPLAY, VC_REPLAY_SUM
 
-const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
-	"b2b_slip", "b2b_slip_keep", "b2c", "b2c_keep", "b2c_neglect", "full_run", "full_run_weak",
+const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_slip", "b2c", "b2c_neglect", "full_run",
 	"full_run_naive", "full_run_discount", "full_run_vc_naive", "full_run_vc_cautious"]
 # The played run has three answer policies on one world, a controlled experiment on what
 # the event cards do to the revenue curve:
@@ -52,11 +53,16 @@ const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
 # full_run's, only what happens once the door is open differs — see "The Series A hunt".
 # An optional fifth spec part `replay=<K>` sets the naive preset's per-fund table replays
 # (default 20; 0 turns them off).
-#   full_run_weak — the weak v1 set (workflow+reporting+scheduling, raw stability 6) and an
-#                   immediate launch: the "bad v1" the tolerance band is measured against.
-#   b2c_keep      — the b2c fixture PLUS the sprint policy (_keep grammar): bugs are cleared,
-#                   so the aggregate satisfaction can climb — the "maintained" B2C product.
 #   b2c_neglect   — a stability-poor, bug-heavy B2C fixture nobody tends: satisfaction erodes.
+# The fixture presets seed a live product on a catalogue subtype without line content, so they have
+# no sprints; only the played run builds its product.
+
+## The played run's product, chosen in the Product tab on its first morning. B2B, not B2C: a
+## modest B2C v1's audience growth barely clears its erosion term, so an autopilot B2C run never
+## reaches the seed bar, while a signed B2B account is worth $200-$2,000 of MRR on the day it
+## closes. It is also the market the churn work lives in.
+const FULL_RUN_SUBTYPE := "erp"
+const FULL_RUN_PRODUCT := "Sahra"
 
 static var _fires: Dictionary = {}      # id -> fire count
 static var _picks: Dictionary = {}      # id -> resolve count
@@ -65,16 +71,11 @@ static var _stopped: bool = false
 static var _preset: String = ""
 static var _mode: String = ""
 static var _wired: bool = false
-static var _build_promises: bool = false   # presets ending "_keep": the founder builds what he promised
 static var _full_run: bool = false         # "full_run": day 1, nothing seeded, the founder plays it
-static var _weak_v1: bool = false          # "full_run_weak": the original weak feature set + immediate launch
-static var _beta_wait: bool = false        # full_run only: hold the ship in Beta until the backlog is small
-static var _beta_since_day: int = -1       # first tick the build was seen parked in Beta (bugfix phase)
 static var _hire_started: bool = false
 static var _last_appetite: String = ""     # PROBE SIGNAL on change
 static var _discount_uses: Dictionary = {}  # customer id -> discounts taken
 static var _policy: String = "sensible"     # full_run answer policy: sensible | naive | discount
-static var _last_ship_day: int = 0          # the played run ships a version at a steady cadence
 static var _run_seed: int = 424242
 static var _fix_on_at: float = 0.0         # clock day (TimeModel.days) the running fix pass started
 static var _fix_off_at: float = -INF        # clock day the last fix pass ended
@@ -121,7 +122,6 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_picks.clear()
 	_full_run = false
 	_hire_started = false
-	_build_promises = false
 	_gate_day = -1
 	_gate_logged = false
 	_stopped = false
@@ -183,6 +183,7 @@ static func _wire_log() -> void:
 	EventBus.promise_kept.connect(func(pid: String) -> void: _log_promise(pid, "resolved"))
 	EventBus.promise_broken.connect(func(pid: String) -> void: _log_promise(pid, "resolved"))
 	EventBus.build_phase_changed.connect(_on_build_phase)
+	EventBus.sprint_closed.connect(_on_sprint_closed)
 	EventBus.month_ended.connect(_on_month_ended)
 	EventBus.phase_gate_reached.connect(_on_gate_reached)
 	EventBus.day_tick_completed.connect(_on_day_tick_completed)
@@ -209,15 +210,23 @@ static func _on_month_ended(_data: Dictionary) -> void:
 
 
 static func _on_build_phase(new_phase: String) -> void:
-	# The ship moment, with the raw axes the economy will read from now on. Bug count is the
-	# LIVE count after launch (launch() copies the build's backlog into mvp_live_bug_count).
+	# A public release, with the raw axes the economy reads from now on: the sprint close pushed
+	# them before it announced the release. bugs is the live wear count, tickets the confirmed ones.
 	if new_phase != "shipped":
 		return
-	print("PROBE SHIP day=%d version=%d stability=%.1f innovation=%.1f experience=%.1f bugs=%d components=%s" % [
-		GameState.day, int(GameState.get_flag("mvp_version", 0)),
+	print("PROBE SHIP day=%d version=%d label=%s stability=%.1f innovation=%.1f experience=%.1f bugs=%d tickets=%d" % [
+		GameState.day, ProductState.version(), SprintSystem.version_label(ProductState.version()),
 		float(GameState.get_flag("mvp_stability", 0.0)), float(GameState.get_flag("mvp_innovation", 0.0)),
-		float(GameState.get_flag("mvp_experience", 0.0)), int(GameState.get_flag("mvp_live_bug_count", 0)),
-		str(GameState.get_flag("mvp_components", []))])
+		float(GameState.get_flag("mvp_experience", 0.0)), ProductSystem.live_bug_count(), ProductState.bugs_confirmed()])
+
+
+## Every sprint close, released or not: what shipped, how much carried and the velocity.
+static func _on_sprint_closed(number: int) -> void:
+	var r: Dictionary = GameState.product.release
+	print("PROBE SPRINT day=%d n=%d label=%s shipped=%s carried=%d velocity=%d/%d" % [
+		GameState.day, number, SprintSystem.version_label(int(r.number)) if int(r.number) > 0 else "-",
+		",".join(r.shipped.map(func(c: Dictionary) -> String: return c.id)), r.carried.size(),
+		int(r.velocity.done), int(r.velocity.total)])
 
 
 # ============================================================================
@@ -253,7 +262,7 @@ static func _mb_add_tick() -> void:
 
 ## PROBE MONTH_BURN — the closed month's expense split into the burn categories. one_time is
 ## what the categories do not explain: the one-off charges (hire commission, severance,
-## training, build commits) that accrue straight into the month's expense.
+## training, the licences a sprint start pays) that accrue straight into the month's expense.
 static func _log_month_burn(e: Dictionary, n: int) -> void:
 	var cat: int = 0
 	for raw in FinanceSystem.BURN_IDS:
@@ -656,45 +665,61 @@ static func _play_the_week() -> void:
 	_play_the_hour()
 	if not _full_run:
 		return
+	_plan_the_sprint()
 	if GameState.get_flag("mvp_shipped", false):
 		_work_the_pipeline()
 	if _vc_policy != "":
 		_play_the_hunt()
 
 
-## Every visible hour: the desk decisions a player takes whenever a gate opens — the build's
-## next phase, a hire, a fix pass, capacity, research, the roster.
+## Every visible hour: the desk decisions a player takes whenever a gate opens — a hire, a fix
+## pass, research, the roster.
 static func _play_the_hour() -> void:
 	if not GameState.run_active or TimeManager.is_night():
 		return
 	if _full_run:
-		_open_the_company()
 		_hire_after_the_seed()
-		if not _weak_v1:
-			_run_the_company()
-	if _build_promises:
-		_keep_the_word()
+		_run_the_company()
 
 
-static func _open_the_company() -> void:
-	# The first week of a real run: there is no product. Build one; the weeks' meetings sell it.
-	#
-	# B2B, not B2C: a modest B2C v1's audience growth barely clears its erosion term, so an
-	# autopilot B2C run never reaches the seed bar, while a signed B2B account is worth
-	# $200-$2,000 of MRR on the day it closes. It is also the market the churn work lives in.
-	if GameState.get_flag("mvp_shipped", false) or ProductSystem.get_active_build() != null:
+## The Product tab at the week's 08:00. Sprints close in the night's daily tick, so the morning
+## finds either a running sprint or the release note: the note is read, the next sprint planned
+## (the promised steps first, the lead's suggestion around them) and started. A decision paper
+## waiting on a card is opened and answered first, since a waiting card does not move.
+static func _plan_the_sprint() -> void:
+	if not SprintSystem.is_typed():
+		SprintSystem.choose_type(FULL_RUN_SUBTYPE, FULL_RUN_PRODUCT)
+		print("PROBE PLAY day=%d choose_type %s market=%s" % [GameState.day, FULL_RUN_SUBTYPE, ProductState.market_type()])
+	var decision: Dictionary = GameState.product.decision
+	if not decision.is_empty():
+		SprintSystem.decide(String(decision.card_id))
+		_drain_modals()
+	if SprintSystem.mode() == "release":
+		SprintSystem.plan_next()
+	if SprintSystem.mode() != "plan":
 		return
-	# The played run builds the LINE product a player can actually pick (erp is the only
-	# playable B2B subtype). full_run_weak builds the flat `saas_ops` weak set instead:
-	# it has no line data, so the sales meeting reads its axes as 0.
-	if _weak_v1:
-		var features: Array = ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_scheduling"]
-		if ProductSystem.start_build("saas_ops", features, "", "Sahra"):
-			print("PROBE PLAY day=%d start_build v1 Sahra (b2b) set=weak" % GameState.day)
-		return
-	var v1: Array = ["line_erp_ledger_k1", "line_erp_stock_k1", "line_erp_cashflow_k1"]
-	if ProductSystem.start_line_build("erp", v1, CharacterRegistry.get_founder().id, "Sahra"):
-		print("PROBE PLAY day=%d start_line_build v1 Sahra (erp) steps=%s" % [GameState.day, str(v1)])
+	_plan_promises()
+	SprintSystem.apply_lead()
+	if SprintSystem.start():
+		print("PROBE PLAY day=%d sprint %d start cards=%s used=%d capacity=%d" % [GameState.day,
+			SprintSystem.sprint_number(), ",".join(GameState.product.sprint.cards), SprintSystem.used(),
+			SprintSystem.capacity()])
+
+
+## Keeping the word: an open promise whose step is the line's next one goes into the sprint, as
+## its feature card or, when the account asked for it, as the request card.
+static func _plan_promises() -> void:
+	for p in PromiseRegistry.get_all():
+		if p.status != "open" or ProductState.is_feature_live(p.feature_id):
+			continue
+		for area in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
+			for c in SprintCatalog.candidates(area.id):
+				if c.step != p.feature_id or c.state != "candidate":
+					continue
+				SprintSystem.add(c.id)
+				if GameState.product.sprint.cards.has(c.id):
+					print("PROBE PLAY day=%d promise card=%s (promise %s deadline=%d)" % [
+						GameState.day, c.id, p.id, p.deadline_day])
 
 
 static func _work_the_pipeline() -> void:
@@ -770,7 +795,7 @@ static func _meet(p: Prospect) -> void:
 ## The played run's staffing ladder: a founder who is growing
 ## hires the desk the growth needs — a developer on Frank's money, a support rep once a
 ## few accounts are live, sales reps as MRR climbs. Each rung only when the payroll it
-## adds leaves six months of runway. The weak run makes a single developer hire.
+## adds leaves six months of runway.
 const STAFF_LADDER := [
 	{"role": "developer", "min_customers": 0, "min_mrr": 0},
 	{"role": "customer_rep", "min_customers": 3, "min_mrr": 0},
@@ -805,53 +830,29 @@ static func _hire_after_the_seed() -> void:
 		return
 	if _hire_started or not HRSearchSystem.can_start():
 		return
-	if not _weak_v1:
-		var rung: int = CharacterRegistry.get_employees().size()
-		if rung >= STAFF_LADDER.size():
-			return
-		var want: Dictionary = STAFF_LADDER[rung]
-		if CustomerRegistry.account_count() < int(want["min_customers"]) or GameState.mrr < int(want["min_mrr"]):
-			return
-		var monthly_out: int = GameState.daily_burn * 30 + 6000 - GameState.mrr
-		if monthly_out > 0 and GameState.cash < monthly_out * 6:
-			return
-		if HRSearchSystem.start_search(String(want["role"]), HRConstants.LEVEL_JUNIOR):
-			_hire_started = true
-			print("PROBE PLAY day=%d start_search %s/junior" % [GameState.day, want["role"]])
+	var rung: int = CharacterRegistry.get_employees().size()
+	if rung >= STAFF_LADDER.size():
 		return
-	if not CharacterRegistry.get_employees().is_empty():
+	var want: Dictionary = STAFF_LADDER[rung]
+	if CustomerRegistry.account_count() < int(want["min_customers"]) or GameState.mrr < int(want["min_mrr"]):
 		return
-	if HRSearchSystem.has_files_ready():
-		var emp: Character = HRSearchSystem.hire(0)
-		if emp != null:
-			print("PROBE PLAY day=%d hire %s salary=%d burn=%d" % [
-				GameState.day, emp.role, emp.monthly_salary, GameState.daily_burn])
+	var monthly_out: int = GameState.daily_burn * 30 + 6000 - GameState.mrr
+	if monthly_out > 0 and GameState.cash < monthly_out * 6:
 		return
-	if _hire_started or not HRSearchSystem.can_start():
-		return
-	if HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR):
+	if HRSearchSystem.start_search(String(want["role"]), HRConstants.LEVEL_JUNIOR):
 		_hire_started = true
-		print("PROBE PLAY day=%d start_search developer/junior" % GameState.day)
+		print("PROBE PLAY day=%d start_search %s/junior" % [GameState.day, want["role"]])
 
 
-## The played run's operations — the things any player does: buy server capacity so the
-## product is not over capacity from the first seat, run a fix pass when confirmed bugs pile
-## up, and ship a version on a steady cadence instead of only when a promise demands one.
+## The played run's operations — the things any player does once the product is live: run a
+## fix pass when confirmed bugs pile up, research, look after the roster. Servers and the price
+## follow the releases on their own.
 static func _run_the_company() -> void:
 	if not ProductState.is_live():
 		return
-	if InfraSystem.provider() == "":
-		InfraSystem.set_provider("cloud")
-		InfraSystem.set_capacity(InfraSystem.suggested_start_units())
-		print("PROBE PLAY day=%d infra provider=cloud units=%d" % [GameState.day, InfraSystem.units()])
-	var units0: int = InfraSystem.units()
-	while InfraSystem.occupancy() > 0.85:
-		InfraSystem.adjust_capacity(1)
-	if InfraSystem.units() > units0:
-		print("PROBE PLAY day=%d infra +%d units -> %d" % [GameState.day, InfraSystem.units() - units0, InfraSystem.units()])
-	# A fix pass pauses the build (§8.4), so a player closes it every few days and ships what
-	# was fixed; waiting for zero confirmed bugs never ends, because reports keep coming. Four
-	# calendar days on, one off, counted on the clock: the night cannot be acted in, so while the
+	# A player closes a fix pass every few days and ships what was fixed; waiting for zero confirmed
+	# bugs never ends, because reports keep coming. Four calendar days on, one off, counted on the
+	# clock: the night cannot be acted in, so while the
 	# backlog stays high a week settles at twenty hours on (12:00 to 08:00) and four off.
 	var now: float = TimeModel.days(GameState.day + GameState.current_hour / float(TimeModel.HOURS_PER_DAY))
 	if ProductState.fix_run_active():
@@ -900,7 +901,7 @@ static func _run_research() -> void:
 		return
 	var wanted: Array = []
 	for tier in range(1, ProductLines.TIER_MAX + 1):
-		for raw_line in ProductLines.line_ids("erp"):
+		for raw_line in ProductLines.line_ids(ProductState.subtype()):
 			var line_id: String = String(raw_line)
 			if ProductState.line_tier(line_id) + 1 != tier:
 				continue
@@ -912,7 +913,7 @@ static func _run_research() -> void:
 		if not wanted.has(String(id)):
 			wanted.append(String(id))
 	var founder_id: String = CharacterRegistry.get_founder().id
-	# Research takes the whole person (Ar-Ge §5.0). Keep one developer on the build and
+	# Research takes the whole person (Ar-Ge §5.0). Keep one developer on the sprint and
 	# never take the one lent to the fix pass: a company with a single developer does
 	# not research, it ships.
 	var devs: int = 0
@@ -930,97 +931,6 @@ static func _run_research() -> void:
 			if RnDSystem.start(String(node), [c.id]) == "":
 				print("PROBE PLAY day=%d research %s by %s" % [GameState.day, node, c.role])
 				return
-
-
-## Next steps a version could carry: the lowest open tier on each line, STABILITY first.
-## B2B satisfaction drifts toward the product's stability reading (b2b_sales_system
-## _satisfaction_target), so a player keeping accounts builds that axis before the others.
-static func _next_open_steps(limit: int) -> Array:
-	var out: Array = []
-	var lines: Array = ProductLines.line_ids("erp")
-	lines.sort_custom(func(a, b) -> bool:
-		return int(ProductLines.axis_of(String(a)) == "stability") > int(ProductLines.axis_of(String(b)) == "stability"))
-	for tier in range(1, ProductLines.TIER_MAX + 1):
-		for raw_line in lines:
-			var line_id: String = String(raw_line)
-			if ProductState.line_tier(line_id) + 1 != tier:
-				continue
-			var st: Dictionary = ProductLines.step_at(line_id, tier)
-			var sid: String = String(st.get("id", ""))
-			if sid != "" and LineGates.is_unlocked(sid):
-				out.append(sid)
-				if out.size() >= limit:
-					return out
-	return out
-
-
-static func _keep_the_word() -> void:
-	# THE DIRECTOR'S SCENARIO, played: a customer demands a feature, the founder actually
-	# builds it, and we watch what the account does when it lands. Without this the probe
-	# can only ever observe promises BREAKING, which answers half the question.
-	# Bugs first: a founder watching accounts slide clears the backlog, and on the B2B side
-	# it is the ONLY lever that moves the satisfaction TARGET (the product's effective
-	# stability, B2BSalesSystem._satisfaction_target). Shipping features alone cannot lift
-	# an account over its tolerance bar; fixing bugs can.
-	if int(GameState.get_flag("mvp_live_bug_count", 0)) >= 6 \
-			and not GameState.get_flag("mvp_bug_sprint_active", false) \
-			and ProductSystem.start_bug_sprint():
-		print("PROBE PLAY day=%d bug_sprint bugs=%d" % [
-			GameState.day, int(GameState.get_flag("mvp_live_bug_count", 0))])
-		return
-
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b != null:
-		# Design rounds chain by themselves; the two human seats are "Geliştirmeye geç" (opens
-		# when round 1 ends) and "Beta'ya geç". Taking each seat the moment it opens — ZERO
-		# completed extra rounds — keeps the build honest without buying free quality.
-		if ProductSystem.can_enter_development():
-			ProductSystem.enter_development()
-			print("PROBE PLAY day=%d enter_development" % GameState.day)
-		# Beta waits for the development band: the gate is open at any percentage, but an
-		# early exit costs nothing and dominates, so taking it would skew the calibration.
-		elif ProductSystem.development_band_complete():
-			ProductSystem.enter_beta()
-			print("PROBE PLAY day=%d enter_beta" % GameState.day)
-		elif b.current_phase == "bugfix":
-			# Beta is a PARK with no auto-ship: waiting is free apart from burn and clears the
-			# backlog at POLISH_BUG_FIX_PER_DAY. The competent founder (full_run) waits until the
-			# backlog is small or one Beta week has passed; every other preset (and the weak
-			# v1) ships the week Beta opens.
-			if _beta_wait:
-				if _beta_since_day < 0:
-					_beta_since_day = GameState.day
-				if b.bug_count > 3 and GameState.day - _beta_since_day < 1:
-					return
-			_beta_since_day = -1
-			print("PROBE PLAY day=%d launch build=%s bugs=%d" % [GameState.day, str(b.component_ids), b.bug_count])
-			ProductSystem.launch()   # fires the ship-moment modal; the drain resolves it,
-			_drain_modals()          # and ITS OWN modifier calls ship_active_build
-		return
-
-	# No build running: if a word is outstanding and the feature is not live, go build it.
-	var line_product: bool = ProductLines.has_subtype(ProductState.subtype())
-	for p in PromiseRegistry.get_all():
-		if p.status != "open" or ProductState.is_feature_live(p.feature_id):
-			continue
-		var started: bool = false
-		if line_product:
-			if LineGates.is_unlocked(p.feature_id):
-				started = ProductSystem.start_line_build(ProductState.subtype(), [p.feature_id],
-					CharacterRegistry.get_founder().id)
-		else:
-			started = ProductSystem.start_version_build([p.feature_id], "founder")
-		if started:
-			print("PROBE PLAY day=%d start_version_build feature=%s (promise %s deadline=%d)" % [
-				GameState.day, p.feature_id, p.id, p.deadline_day])
-			return
-	# Nothing promised: a growing product still ships. A version every three weeks, two steps.
-	if line_product and _full_run and not _weak_v1 and GameState.day - _last_ship_day >= 3:
-		var steps: Array = _next_open_steps(2)
-		if not steps.is_empty() and ProductSystem.start_line_build(ProductState.subtype(), steps,
-				CharacterRegistry.get_founder().id):
-			_last_ship_day = GameState.day
-			print("PROBE PLAY day=%d start_version_build steps=%s (cadence)" % [GameState.day, str(steps)])
 
 
 # ============================================================================
@@ -1351,25 +1261,16 @@ static func _run_replays() -> void:
 # ============================================================================
 
 static func _seed_world(preset: String) -> void:
-	# "_keep" suffix = the founder honours his word (builds and ships the promised feature).
-	# Split from the world seed on purpose: b2b_risk and b2b_risk_keep share an identical
-	# world and differ ONLY in whether the promise is delivered, which makes the pair a
-	# controlled experiment rather than two anecdotes.
-	_build_promises = preset.ends_with("_keep")
 	if preset.begins_with("full_run"):
 		# THE PLAYED RUN. Nothing is seeded: no product, no customers, no money beyond the
-		# origin's opening cash. Everything the log shows was earned by _play_the_founder
+		# origin's opening cash. Everything the log shows was earned by the founder's moves
 		# through the same seams the tabs call.
 		_full_run = true
-		_build_promises = true
-		_weak_v1 = preset == "full_run_weak"
-		_beta_wait = not _weak_v1
 		_policy = "naive" if preset == "full_run_naive" else ("discount" if preset == "full_run_discount" else "sensible")
 		_vc_policy = "naive" if preset == "full_run_vc_naive" else ("cautious" if preset == "full_run_vc_cautious" else "")
-		_last_ship_day = 0
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log
-	match preset.trim_suffix("_keep"):
+	match preset:
 		"b2c":
 			_seed_b2c_world(false)
 		"b2c_neglect":
@@ -1404,7 +1305,7 @@ static func _seed_world(preset: String) -> void:
 
 
 ## A product already live on day 1. mvp_launch_day is stamped here because the fixture skips
-## ship_active_build, its only writer, and every weeks_since_flag trigger reading it would
+## the sprint close, its only writer, and every weeks_since_flag trigger reading it would
 ## otherwise stay false forever.
 static func _seed_live_product(market: String, subtype: String, components: Array, product_name: String) -> void:
 	GameState.set_flag("mvp_shipped", true)

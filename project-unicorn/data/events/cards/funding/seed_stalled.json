@@ -5,9 +5,7 @@
   "category": "funding",
   "tick": "daily",
   "class": "paper",
-  "tags": [
-    "build_safe"
-  ],
+  "tags": [],
   "scope": {
     "investor": {
       "type": "investor",

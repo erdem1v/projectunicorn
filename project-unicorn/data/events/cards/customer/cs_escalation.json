@@ -6,7 +6,6 @@
   "tick": "daily",
   "class": "interrupt",
   "tags": [
-    "build_safe",
     "critical"
   ],
   "guards": {

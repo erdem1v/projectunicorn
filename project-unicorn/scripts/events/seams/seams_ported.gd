@@ -100,11 +100,6 @@ static func install() -> void:
 				return -1
 			return GameState.day - int(GameState.get_flag("mvp_launch_day", 0)),
 		"Product", "-1 when nothing has shipped")
-	EvSeams.register("urun.iteration_round", G, TYPE_INT,
-		func() -> int:
-			var b = ProductSystem.get_active_build()
-			return b.iteration_count if b != null else 0,
-		"Product", "design rounds completed on the active build")
 
 	# --- funding. --------------------------------------------------------
 	EvSeams.register("funding.hard_mode", G, TYPE_BOOL,

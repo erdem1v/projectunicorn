@@ -6,9 +6,7 @@
   "tick": "scheduled",
   "class": "interrupt",
   "expires_weeks": 1,
-  "tags": [
-    "build_safe"
-  ],
+  "tags": [],
   "arc": "arc_fixture_subject",
   "scope": {
     "employee": {

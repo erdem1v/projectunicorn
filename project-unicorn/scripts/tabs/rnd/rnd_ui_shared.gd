@@ -11,8 +11,8 @@ extends RefCounted
 # tam sayı.
 #
 # TEMA: sıfır yeni `theme_type_variation`. Durum-bağımlı her stil KODDA kurulmuş
-# `StyleBoxFlat`tır; tek seferlik şekiller için tema öğesi eklenmez (team_panel ile
-# aynı kural), THEME_STAMP bu yüzden yerinde duruyor.
+# `StyleBoxFlat`tır; tek seferlik şekiller için tema öğesi eklenmez, THEME_STAMP bu
+# yüzden yerinde duruyor.
 #
 # METİN: statikler `tr()` çağıramaz, o yüzden `TranslationServer.translate`.
 # Çözülmeyen anahtar kendine döner, yani eksik anahtar ekranda ham token olarak
@@ -192,8 +192,7 @@ static func state_edge_color(state: String) -> Color:
 
 # ---------------------------------------------------------------- düğümler
 
-## Bağ (link), buton DEĞİL: `duraklat` / `ata` metin olarak duruyor
-## (feature_lines_view'ın canlı bağlarıyla aynı reçete).
+## Bağ (link), buton DEĞİL: `duraklat` / `ata` metin olarak duruyor.
 class Link extends Label:
 	signal clicked
 

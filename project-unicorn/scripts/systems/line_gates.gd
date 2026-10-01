@@ -12,7 +12,7 @@ extends RefCounted
 # Bu yüzden burada `HRSystem.effective_skill` DEĞİL, ham `HRSystem.skill` okunur:
 # effective_skill izindekine 0 döner, o da kapıyı yanlış kapatırdı.
 #
-# Kontrol Konsept onayında yapılır; yapım sürerken birinin ayrılması yapımı geriye
+# Kontrol kart sprinte alınırken yapılır; sprint sürerken birinin ayrılması işi geriye
 # dönük bozmaz (§12.7).
 
 ## §12.8 — kapı-üstü bonusu. Fazladan ilk yıldız +%8, ikincisi +%4, sonrası fark

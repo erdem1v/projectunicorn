@@ -14,7 +14,7 @@ extends RefCounted
 #     G1  is this real content
 #     G2  does this build ship it, and is a tutorial suppressing it
 #     G3  latch                     (one_shot / max_fires / cooldown)
-#     G4  tick, phase window, allowed_hours, build-safe
+#     G4  tick, phase window, allowed_hours
 #     G5  scope                     (can the slots fill, with the right types)
 #     G6  guards                    (market, subtype, phase, product_live)
 #     G7  condition tree
@@ -97,7 +97,7 @@ static func propose(event_id: String, origin: Origin, given: Dictionary = {}) ->
 		if g3 != "":
 			return Verdict.refuse("G3", g3)
 
-	# G4 — tick, window, build-safe
+	# G4 — tick, window
 	if not forced:
 		var g4: String = _g4_window(card, origin)
 		if g4 != "":
@@ -163,7 +163,7 @@ static func _g2_scope(card: Dictionary) -> String:
 	return ""
 
 
-# --- G4: tick, window, build-safe ------------------------------------------
+# --- G4: tick, window ------------------------------------------------------
 
 static func _g4_window(card: Dictionary, origin: Origin) -> String:
 	var tick: String = String(card["tick"])
@@ -198,16 +198,6 @@ static func _g4_window(card: Dictionary, origin: Origin) -> String:
 		var window: Array = card.get("allowed_hours", DEFAULT_ALLOWED_HOURS)
 		if not _hour_in(GameState.current_hour, window):
 			return "hour %d outside allowed_hours %s" % [GameState.current_hour, str(window)]
-
-	# Build-safe. While a version is being built, only cards scoped to that build phase or
-	# explicitly marked build_safe may interrupt.
-	var active_build = ProductSystem.get_active_build()
-	if active_build != null:
-		var tags: Array = card["tags"]
-		if not tags.has("build_safe") and not tags.has("critical"):
-			var want_phase: String = String((card["guards"] as Dictionary).get("build_phase", ""))
-			if want_phase == "" or want_phase != active_build.current_phase:
-				return "a build is running and this card is not build_safe"
 	return ""
 
 

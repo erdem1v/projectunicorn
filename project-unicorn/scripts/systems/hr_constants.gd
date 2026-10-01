@@ -96,7 +96,7 @@ const ROLE_AREAS := {
 
 # ============================== İŞLER — §12.0 ================================
 # İş atama birimidir. `AREAS` kişinin neyde İYİ olduğu, `JOBS` ne YAPTIĞI; `JOB_AREAS` köprü.
-const JOB_BUILD := "build"          # Build ekibi (aktif yapım)
+const JOB_BUILD := "build"          # Build ekibi
 const JOB_TEST := "test"            # Test
 const JOB_SUPPORT := "support"      # Destek (canlı ürün)
 const JOB_ACCOUNTS := "accounts"    # Hesap sahipliği
@@ -403,9 +403,9 @@ static func future_role_hint(role_id: String) -> String:
 #   experience_mult         HRSystem.tick_experience — kendi deneyim kazancı
 #   lead_experience_mult    OKUYUCUSU YOK — GERÇEK LİDER'in yalnız ayrılış bedeli işler (açık hata)
 #   departure_morale_extra  HRMoraleSystem — ayrılışın ekibe EK moral bedeli
-#   bug_rate_mult           ProductSystem._accrue_bugs_hourly
-#   speed_mult              ProductSystem._phase_area_sum — kişinin katkı çarpanı
-#   output_mult             ProductSystem._phase_area_sum — aynı yer, ters yön
+#   bug_rate_mult           OKUYUCUSU YOK — TİTİZ'in hata etkisi sprint motorunda bağlı değil
+#   speed_mult              HRSystem.effective_skill — kişinin katkı çarpanı
+#   output_mult             HRSystem.effective_skill — aynı yer, ters yön
 #   promise_chance_mult     CustomerRepSystem — söz olaylarının bu kişide ateşlenme oranı
 #   satisfaction_bonus      B2BSalesSystem._tick_satisfaction — hesaplarında memnuniyet
 #   dept_morale_decay_mult  HRMoraleSystem — ekibinin moral erime hızı
@@ -895,7 +895,7 @@ const EXPERIENCE_LEAD_BONUS_MAX := 1.5  # WORKING: Liderlik tavanındaki lider a
 ## §5.1 deneyim tek bar, ekranda hep 0–100; kendiliğinden yıldıza dönüşmez, tek çıkışı eğitim.
 ## Günlük oranlar; tick_experience tik başına ×7 uygular.
 const EXPERIENCE_PER_WORKED_DAY := 2   # en az bir işe atanmış ve edilgen olmayan her gün
-const EXPERIENCE_BUILD_BONUS := 1      # bir geliştirme fazı koşarken üstüne (toplam 3)
+const EXPERIENCE_BUILD_BONUS := 1      # o hafta bir sprint kartında çalışana üstüne (toplam 3)
 
 ## Eşik = BASE + PER_POINT × (altı alan + Liderlik ham toplamı). Yapım sürerken Junior (T≈12)
 ## 6 haftada, dört yıldızlı kıdemli (T≈25) 10 haftada dolar (§5.1 "belirgin şekilde uzun").
@@ -982,7 +982,7 @@ static func climate_gain_mult(leadership: int) -> float:
 
 # Çarpan KAYNAĞA göre asimetriktir: kurucu her zaman odadadır, Liderlik'i yalnız EKLER;
 # SEÇİLMİŞ bir çalışan lider gerçek bir bahistir ve zayıfı gerçekten kötü koordine eder.
-# ProductSystem._lead_coordination lidere göre doğru olanı seçer.
+# Bugün okuyucusu yok: sprint motoru koordinasyon çarpanı uygulamaz.
 
 static func coordination_for_founder(leadership: int, has_natural_leader: bool = false) -> float:
 	var span: float = COORD_MAX - COORD_FOUNDER_NEUTRAL

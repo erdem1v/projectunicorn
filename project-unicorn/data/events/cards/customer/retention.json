@@ -5,9 +5,7 @@
   "category": "customer",
   "tick": "signal",
   "class": "interrupt",
-  "tags": [
-    "build_safe"
-  ],
+  "tags": [],
   "guards": {
     "market": "b2b"
   },

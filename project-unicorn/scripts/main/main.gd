@@ -194,7 +194,6 @@ func _run_debug_harness() -> bool:
 		"--negotiation-shot=": _run_negotiation_shot,
 		"--sales-shot=": _run_sales_shot,
 		"--product-shot=": _run_product_shot,
-		"--product7-shot=": _run_product7_shot,
 		"--ending-shot=": _run_ending_shot,
 		"--hr-shot=": _run_hr_shot,
 		"--finance-shot=": _run_finance_shot,
@@ -369,33 +368,21 @@ func _run_tempo_probe(spec: String) -> void:
 		get_tree().quit()
 		return
 	_seed_run_reproducible()
-	# Give the HOURLY path real work — build effort, B2C audience flow, post-ship wear and bug
-	# accrual — because that is where a speed-coupled bug would surface. mvp_shipped is
+	# Give the HOURLY path real work (B2C audience flow, post-ship wear and bug accrual) and the
+	# daily path a sprint, because that is where a speed-coupled bug would surface. mvp_shipped is
 	# load-bearing: SalesSystem.hourly_tick gates the whole B2C half on it and ProductSystem
 	# gates post-ship wear on it. Real bools, not strings: event conditions compare via bool().
 	GameState.set_cash(50000)
+	SprintSystem.choose_type("note_tool", "Nova")
 	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_market_type", "b2c")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
-	# Wear rate reads _shipped_total_complexity(); with no components it runs at WEAR_FLOOR.
-	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
 	GameState.set_flag("mvp_innovation", 20.0)
 	GameState.set_flag("mvp_stability", 25.0)
 	GameState.set_flag("mvp_experience", 22.0)
 	GameState.set_flag("mvp_version", 2)
-	GameState.set_flag("mvp_product_name", "Nova")
 	GameState.set_flag("b2c_audience", 4000)
 	SalesSystem.open_b2c_paid_tier(15)   # makes MRR derive hourly too
-	ProductSystem.start_build("ai_assistant",
-		["ai_assistant_chat", "ai_assistant_memory"], "", "Nova")
-	# Design rounds chain by themselves; take the development seat as soon as it is offered so
-	# effort keeps flowing for the whole window. The rounds get an economy month of hours at most.
-	var month_ticks: int = ceili(float(TimeModel.DAYS_PER_MONTH) / TimeModel.DAYS_PER_TICK)
-	for i in TimeModel.HOURS_PER_DAY * month_ticks:
-		if ProductSystem.get_active_build() == null or ProductSystem.can_enter_development():
-			break
-		ProductSystem.hourly_tick(i % TimeModel.HOURS_PER_DAY)
-	ProductSystem.enter_development()
+	# The sprint stays in planning: the first tick starts it with the lead's plan and it closes after
+	# the stop day, so no release note holds the clock under `:shell`.
 	if parts.size() > 1 and parts[1] == "shell":
 		_begin_shot()
 		await _mount_shot_shell()
@@ -407,11 +394,10 @@ func _run_tempo_probe(spec: String) -> void:
 		print("TEMPO speed=%d day=%d delta_ms=%d want_ms=%d dev=%+.1f%%" % [idx, GameState.day,
 			delta_ms, want_ms, 100.0 * (delta_ms - want_ms) / want_ms])
 		_tempo_last_msec = now
-		var build: FeatureBuild = ProductSystem.get_active_build()
-		var efor: float = build.efor_spent if build != null else 0.0
-		print("TEMPO STATE day=%d cash=%d mrr=%d brand=%d rep=%d aud=%.4f efor=%.4f" % [
+		print("TEMPO STATE day=%d cash=%d mrr=%d brand=%d rep=%d aud=%.4f sprint=%d mode=%s done=%d" % [
 			GameState.day, GameState.cash, GameState.mrr, GameState.brand, GameState.reputation,
-			float(GameState.get_flag("b2c_audience", 0.0)), efor])
+			float(GameState.get_flag("b2c_audience", 0.0)), SprintSystem.sprint_number(), SprintSystem.mode(),
+			SprintSystem.done_points()])
 		if GameState.day >= TEMPO_STOP_DAY:
 			print("TEMPO DONE speed=%d" % idx)
 			get_tree().quit()
@@ -1468,196 +1454,23 @@ func _run_ending_shot(key: String) -> void:
 	get_tree().quit()
 
 
-## --build-state=<r1|r3|r4|dev|devpark|beta|beta0|durdu>: Build Bar state for product-shot
-## tracker/beta. `fallback` when absent or unknown.
-func _build_state_arg(fallback: String) -> String:
-	var v: String = _flag_value("--build-state=")
-	if v in ["r1", "r3", "r4", "dev", "devpark", "beta", "beta0", "durdu"]:
-		return v
-	if v != "":
-		push_warning("[Shot] --build-state bilinmiyor: %s" % v)
-	return fallback
-
-
-## Build Bar fixture: three planned K1 tiers of `erp` (a sealed demo subtype with line content;
-## all three gateless, since the fixture runs with the opening roster and §12.7's gates are
-## checked at Konsept approval) driven through the player's seams to the requested state:
-## r1 = tur 1 yarıda · r3 = tur 3 yarıda · r4 = tavan parkı · dev = geliştirme yarıda ·
-## devpark = geliştirme bandı dolu, parkta · beta = açık hatalarla · beta0 = sıfır açık hata ·
-## durdu = efor işlemiş ama taşıyabilecek herkes eğitimde. Efor is written directly only
-## INSIDE a band (half fill), never to skip a phase.
-func _seed_build_state(state: String) -> void:
-	ProductSystem.start_line_build("erp",
-		["line_erp_ledger_k1", "line_erp_stock_k1", "line_erp_cashflow_k1"],
-		CharacterRegistry.get_founder().id, "Nova İki")   # LOC-DATA debug seed / id
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b == null:
-		push_error("[BuildState] start_line_build failed")
-		return
-	var design_cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
-	match state:
-		"durdu":
-			b.efor_spent = design_cap * 0.5
-			ProductSystem.hourly_tick(9)
-			for c in CharacterRegistry.get_all():
-				c.status = HRConstants.STATUS_TRAINING
-				c.training_weeks_left = 1
-		"r1":
-			b.efor_spent = design_cap * 0.5
-			ProductSystem.hourly_tick(9)
-		"r3":
-			# The line model counts turns in design_turns_completed.
-			for i in 24 * 200:
-				if b.design_turns_completed >= 3:
-					break
-				ProductSystem.hourly_tick(i % 24)
-		"r4":
-			# Design chains itself; the cap is telegraphed by at_cap, no pending decision.
-			for i in 24 * 200:
-				if ProductSystem.design_turns_maxed():
-					break
-				ProductSystem.hourly_tick(i % 24)
-		"dev", "devpark", "beta", "beta0":
-			for i in 24 * 90:
-				if ProductSystem.can_enter_development():
-					break
-				ProductSystem.hourly_tick(i % 24)
-			ProductSystem.enter_development()
-			if state == "dev":
-				b.efor_spent = b.total_efor * 0.5
-				ProductSystem.hourly_tick(9)
-			else:
-				# Wait for the BAND, not the gate: can_enter_beta is already true in the first
-				# development hour.
-				for i in 24 * 120:
-					if ProductSystem.development_band_complete():
-						break
-					ProductSystem.hourly_tick(i % 24)
-				if state == "devpark":
-					return   # parkta kal: "Beta'ya geç" butonu + hazır satırları
-				ProductSystem.enter_beta()
-				if b.bug_count <= 0:   # dev birikimi bug üretmediyse fikstür üretir
-					b.bug_count = 12
-					GameState.set_flag("bug_count_at_bugfix_start_%s" % b.id, 12)
-				for i in 24 * 2:   # iki gün test: bulunan/çözülen sayaçları dolsun
-					ProductSystem.hourly_tick(i % 24)
-				if state == "beta0":
-					b.bug_count = 0
-					b.bugs_found = b.bugs_fixed
-	print("[BuildState] %s → phase=%s turn=%d/%d design_efor=%.2f efor=%.2f/%.2f bugs=%d" % [
-		state, b.current_phase, b.design_turns_completed, ProductSystem.DESIGN_TURN_MAX,
-		b.design_efor_spent, b.efor_spent, b.total_efor, b.bug_count])
-
-
-# --product-shot=<portfoy|ozellikler|tracker|beta|detail_b2b|detail_care|detail_b2c|
-# detail_b2c_buggy|publish>: seeded state, the Product tab ROUTER driven to the view — the
-# same path the player takes.
-func _run_product_shot(kind: String) -> void:
+# --product-shot=<c1..c5|cards|flow|edge:<name>|live:<scenario>>: the Product tab. The first four
+# are fed by the debug fixture source (scripts/debug/product_fixtures.gd, edge names live there)
+# through the shell's debug relays, the same path an MCP session takes; flow starts from c1 and
+# saves one frame after each of start, advance and plan_next. live draws ProductModel.live() over a
+# run seeded through SprintSystem (_seed_product_live).
+func _run_product_shot(id: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
-	var founder: Character = CharacterRegistry.get_founder()
-	match kind:
-		"detail_b2b", "detail_care", "portfoy":   # LOC-DATA debug seed / id
-			GameState.day = 14
-			GameState.set_flag("mvp_shipped", true)
-			GameState.set_flag("mvp_market_type", "b2b")
-			GameState.set_flag("mvp_product_name", "Nova")
-			GameState.set_flag("mvp_version", 2)
-			# Üç hat açık, biri K2'de: kilitli · tamamlanmış · boş hat durumları aynı karede.
-			# Eksenler hat durumundan türer (ProductState.axis_readings).
-			_seed_line_state("erp", _ERP_SHIPPED_LINES)
-			GameState.set_flag("mvp_launch_day", 11)
-			# The publish flow's ALTYAPI step is skipped, so provider and units are set here.
-			ProductState.set_infra_provider("enterprise")
-			ProductState.set_infra_units(3)
-			GameState.set_flag("mvp_live_bug_count", 6)
-			GameState.set_flag("mvp_bug_history", [5, 6])
-			GameState.set_flag("mvp_version_history",
-				[{"version": 1, "day": 2}, {"version": 2, "day": 11}])
-			var p := Prospect.new()
-			p.id = "shot_ege"
-			p.company_name = "Ege Sigorta"
-			p.industry = "insurance"
-			p.star = 1
-			p.pain_feature_id = "saas_ops_integration"
-			var c: Customer = SalesSystem.add_b2b_customer(p, 6, 67, 70)   # 6 seats x $67 = $402
-			PromiseRegistry.create(c.id, "saas_ops_integration", B2BConstants.PROMISE_DEADLINE_WEEKS)
-			if kind == "portfoy":   # LOC-DATA debug seed / id
-				# "Yapımda" satırı iki hareketi birden gösterir: Stok K2 açık bir hattı
-				# yükseltir, Sipariş K1 yeni hat açar. Stok K2'nin kapısı (Yazılım ★2 ·
-				# Tasarım ★1) kurucuya gerçek ham puan verilerek karşılanır (★N = ham ≥ 2N).
-				founder.role_stats["engineering"] = 4
-				founder.role_stats["design"] = 2
-				ProductSystem.start_line_build("erp",
-					["line_erp_stock_k2", "line_erp_intake_k1"], founder.id, "Nova")
-				var b: FeatureBuild = ProductSystem.get_active_build()
-				if b != null:
-					b.efor_spent = b.total_efor * 0.64
-					ProductSystem.hourly_tick(9)  # faz bandını ilerlemeye oturtur
-		# `publish` shares the fixture: the flow floats over a live product.
-		"detail_b2c", "detail_b2c_buggy", "publish":   # LOC-DATA debug seed / id
-			GameState.set_flag("mvp_shipped", true)
-			GameState.set_flag("mvp_market_type", "b2c")
-			GameState.set_flag("mvp_product_name", "Fokus")
-			GameState.set_flag("mvp_version", 1)
-			_seed_line_state("note_tool", [
-				["line_note_tool_capture", 1, "line_note_tool_capture_k1", 1.00],
-				["line_note_tool_sync", 1, "line_note_tool_sync_k1", 0.75],
-			])
-			GameState.set_flag("mvp_launch_day", GameState.day)
-			ProductState.set_infra_provider("cloud")
-			ProductState.set_infra_units(2)
-			# buggy: the pricing ruler's conversion projection moving under the bug penalty.
-			GameState.set_flag("mvp_live_bug_count", 15 if kind == "detail_b2c_buggy" else 5)
-			GameState.set_flag("mvp_bug_history", [4, 5])
-			GameState.set_flag("mvp_version_history", [{"version": 1, "day": GameState.day}])
-			GameState.set_flag("b2c_audience", 1.0)
-			# Satış okuma kapısını aç: optimal rakam gerçek değerle çizilsin.
-			founder.role_stats["sales"] = SkillCheck.SALES_READ_THRESHOLD
-		"tracker", "beta":
-			# The floating HUD and the tracker card draw one model from this fixture.
-			_seed_build_state(_build_state_arg("beta" if kind == "beta" else "r1"))
-	await _mount_shot_shell()
-	EventBus.tab_changed.emit("product")
-	await get_tree().process_frame
-	var tab: Node = _shell.find_child("CenterViewport", true, false).get_current_page_body()
-	if tab == null:
-		_shot_fail("[ProductShot] sekme gövdesi bulunamadı (get_current_page_body null)")
+	var stem: String = "product_shot_" + id.replace(":", "_")
+	if id.begins_with("live:"):
+		_seed_product_live(id.trim_prefix("live:"))
+		await _mount_shot_shell()
+		EventBus.tab_changed.emit("product")
+		await _finish_shot(stem)
 		return
-	match kind:
-		"ozellikler":
-			tab._navigate("creation", {"step": 3, "prefill": {"type": "note_tool",
-				"features": ["line_note_tool_capture_k1", "line_note_tool_sync_k1",
-					"line_note_tool_search_k1"]}})
-		"tracker", "beta":
-			tab._navigate("tracker", {})
-		"detail_b2b", "detail_b2c", "detail_b2c_buggy", "detail_care":
-			# detail_care: DESTEK bandının pasif hâli — kurucunun işi yok, müşterilerle ilgileniyor.
-			if kind == "detail_care":
-				CharacterRegistry.clear_jobs(founder.id)
-			tab._navigate("detail", {})
-		"publish":
-			# Through the flow's own door, the path of the player's BETA action.
-			tab._navigate("detail", {})
-			PublishFlow.open()
-	await get_tree().process_frame
-	await get_tree().create_timer(0.4).timeout
-	get_tree().call_group(&"build_bar", "debug_print")   # iki ev sahibinin rect + fingerprint'i
-	var state: String = _build_state_arg("")
-	_save_shot("product_shot_%s%s" % [kind, "_" + state if state != "" else ""])
-	get_tree().quit()
-
-
-# --product7-shot=<c1..c5|cards|flow|edge:<name>>: the sprint screen behind the forced flag, fed
-# by the debug fixture source (scripts/debug/product_rev7_fixtures.gd, edge names live there). It
-# goes through the shell's debug relays, the same path an MCP session takes. flow starts from c1
-# and saves one frame after each of start, advance and plan_next.
-func _run_product7_shot(id: String) -> void:
-	_begin_shot()
-	_seed_run_reproducible()
 	await _mount_shot_shell()
 	_shell.debug_product_apply("c1" if id == "flow" else id.trim_prefix("edge:"))
-	var stem: String = "product7_shot_" + id.replace(":", "_")
 	if id != "flow":
 		await _finish_shot(stem)
 		return
@@ -1667,6 +1480,50 @@ func _run_product7_shot(id: String) -> void:
 		await get_tree().create_timer(0.4).timeout
 		_save_shot("%s_%s" % [stem, kind])
 	get_tree().quit()
+
+
+## live:<pick|plan|active|b2c_mvp|b2b_requests>. pick leaves the product untyped (the type picker).
+## The rest choose a type, staff it with the HR shot roster and play through SprintSystem with only
+## its own daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's
+## plan, active in its second week, b2c_mvp on the CANLI v1.0 release note. b2b_requests signs two
+## accounts once the faucet opens at MVP and plays one more sprint, so the next planning carries
+## their request cards.
+func _seed_product_live(scenario: String) -> void:
+	if scenario == "pick":
+		return
+	var b2b: bool = scenario == "b2b_requests"
+	SprintSystem.choose_type("erp" if b2b else "note_tool", "Fatura" if b2b else "Notly")
+	_seed_hr_roster()
+	var day := func() -> void:
+		GameState.advance_day()
+		SprintSystem.daily_tick()
+	var sprint := func() -> void:
+		if SprintSystem.mode() == "release":
+			SprintSystem.plan_next()
+			SprintSystem.apply_lead()
+			SprintSystem.start()
+		while SprintSystem.mode() == "active":
+			day.call()
+	SprintSystem.apply_lead()
+	if scenario == "plan":
+		return
+	SprintSystem.start()
+	day.call()
+	if scenario == "active":
+		return
+	for i in 12:
+		sprint.call()
+		if ProductState.is_live():
+			break
+	if not b2b:
+		return
+	for i in 2:
+		var lead: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")
+		SalesSystem.add_b2b_customer(lead, 12, 50, 85)
+		ProspectRegistry.remove(lead.id)
+	sprint.call()
+	SprintSystem.plan_next()
+	SprintSystem.apply_lead()
 
 
 ## Rows are [line id, tier, tier id to stamp, turn multiplier]. The readings

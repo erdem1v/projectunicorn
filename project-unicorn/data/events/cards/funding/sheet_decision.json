@@ -8,8 +8,7 @@
   "class": "interrupt",
   "expires_weeks": 1,
   "tags": [
-    "critical",
-    "build_safe"
+    "critical"
   ],
   "scope": {
     "investor": {

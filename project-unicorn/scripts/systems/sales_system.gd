@@ -17,11 +17,11 @@ extends RefCounted
 # Canonical MRR bridge (aggregate active customers → GameState.mrr) is the sink.
 #
 # Driven by TimeManager: hourly_tick (B2C audience + derived MRR) + _dispatch_daily_tick slot 4
-# (B2C satisfaction, the B2B desk on a B2B product, bridge backstop). The pricing ruler
-# (apply_b2c_price) sets the price and applies the hike reaction.
+# (B2C satisfaction, the B2B desk on a B2B product, bridge backstop). The paid plan card
+# (SprintBridges.open_paid_plan → apply_b2c_price) sets the price and applies the hike reaction.
 
 # --- Tunables (working values; playtest revises) ---
-const B2C_PRICE_DEFAULT := 15            # $/user/month; the pricing ruler sets this
+const B2C_PRICE_DEFAULT := 15            # $/user/month; apply_b2c_price sets this
 const B2C_USERBASE_ID := "co_b2c_userbase"
 
 # B2C aggregate satisfaction drift. The gate reads the EXPERIENCE axis — the
@@ -63,9 +63,9 @@ const CHURN_COEF := 0.0002
 # (A_eq = grow / (CHURN_COEF·(42−q))) that never compounds and shrinks as rivals advance.
 # Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product compounds
 # — grow += audience · WOM_COEF · max(0, sat − WOM_SAT_GATE)/100 — and a disliked one grows
-# slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). WOM_COEF [ÖLÇ]: swept on
-# --run-log=b2c_keep:180 (the maintained fixture) for the smallest value that keeps the 30-day
-# MRR means non-decreasing to day 180 while b2c_neglect still declines.
+# slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). WOM_COEF [ÖLÇ]: the smallest
+# value that keeps a maintained B2C fixture's 30-day MRR means non-decreasing to day 180 while
+# b2c_neglect still declines.
 const WOM_COEF := 0.005            # [ÖLÇ] per hour · per audience member · per satisfaction point/100 over the gate
 const WOM_SAT_GATE := 60.0         # [WORKING] satisfaction above which word of mouth starts
 const WOM_MULT_PIVOT := 50.0       # [WORKING] satisfaction at which base growth runs at full strength
@@ -74,8 +74,8 @@ const EROSION_THRESHOLD := 42.0
 
 # --- Dynamic pricing / value algorithm (working values; balance is the last pass) ---
 # product_value() estimates the product's worth ($/user/mo) from quality + feature
-# count/depth + low bug count + product-type tendency. It feeds the pricing panel's optimal
-# mark and rail, the publish flow's price rail, conversion, the hike reaction and audience
+# count/depth + low bug count + product-type tendency. It feeds the paid plan's opening price
+# (SprintBridges.open_paid_plan), conversion, the hike reaction and audience
 # price-sensitivity. Read-only.
 const VALUE_BASE := 4.0
 const VALUE_QUALITY_COEF := 0.12         # per quality point (0-100)
@@ -93,8 +93,7 @@ const CONVERSION_MAX := 0.60
 # browsers to payers at full rate. The standing conversion is scaled by
 # (1 − live_bugs·BUG_CONV_COEF), floored — the raw live count, the same grammar as
 # SATISFACTION_BUG_GATE ("10 bugs ≈ −20 %"). Applied AFTER the price clamp so a cheap price
-# cannot hide bugs under CONVERSION_MAX, then re-clamped. The pricing ruler's live projection
-# reads conversion_rate, so it moves too.
+# cannot hide bugs under CONVERSION_MAX, then re-clamped.
 const BUG_CONV_COEF := 0.02              # [WORKING] per live bug; 10 bugs ≈ −20 %
 const BUG_CONV_FLOOR := 0.4              # [WORKING] 30+ bugs cap the penalty at −60 %
 
@@ -150,9 +149,7 @@ static func reflect_mrr() -> void:
 
 
 static func _tick_b2c_audience() -> void:
-	# TASARIM KANONU: canlı ürünün ekonomisi ASLA donmaz — ne v-build ne sprint sırasında.
-	# Sprint'in bedeli kapasite havuzudur (ProductSystem.capacity_speed_factor: build'le
-	# paralelse ikisi de yavaşlar).
+	# TASARIM KANONU: canlı ürünün ekonomisi ASLA donmaz, sprint sırasında da.
 	# Accumulate as float so small per-hour deltas (especially slow erosion) survive
 	# instead of rounding to zero each hour. A tick is a week, so each of its 24 hourly steps
 	# carries seven calendar hours of the flow.
@@ -228,7 +225,7 @@ static func _ensure_b2c_record() -> void:
 	# stays "") and rendered by Customer.display_name(). Baking it would freeze one language
 	# into the save.
 	base.name_key = "SALES_B2C_USERBASE"
-	base.name_arg = _product_name()
+	base.name_arg = product_display_name()
 	base.industry = "consumer"
 	base.company_size = "individual"
 	base.market_type = "b2c"
@@ -240,7 +237,7 @@ static func _ensure_b2c_record() -> void:
 
 
 # Fixture entry (smoke, probe, main.gd's tempo probe — no game caller): opens the tier +
-# stores the price, then derives MRR. The game's path is the pricing ruler (apply_b2c_price).
+# stores the price, then derives MRR. The game's path is the paid plan card (apply_b2c_price).
 static func open_b2c_paid_tier(price: int) -> void:
 	GameState.set_flag("b2c_paid_tier_open", true)
 	GameState.set_flag("b2c_price", maxi(price, 1))
@@ -442,7 +439,7 @@ static func conversion_rate(price: int) -> float:
 	# eat it outright for anyone already at the ceiling. At optimal 0.35 → 0.4025, under
 	# CONVERSION_MAX, so the node lands in full across the normal band; the ceiling clips it only
 	# below optimal × 0.671 and swallows it only below optimal × 0.583, where an un-researched
-	# player is already capped. pricing_panel.gd renders this rate, so the buff is visible.
+	# player is already capped.
 	var optimal: float = maxf(1.0, float(product_value()["optimal"]))
 	var rate: float = clampf(CONVERSION_BASE * rnd_conversion_mult() * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
 	var bug_factor: float = maxf(BUG_CONV_FLOOR, 1.0 - float(ProductSystem.live_bug_count()) * BUG_CONV_COEF)
@@ -519,7 +516,7 @@ static func growth_band() -> String:
 	return TranslationServer.translate("GROWTH_STEADY")
 
 
-static func _product_name() -> String:
+static func product_display_name() -> String:
 	var n: String = ProductState.product_name()
 	if n != "":
 		return n

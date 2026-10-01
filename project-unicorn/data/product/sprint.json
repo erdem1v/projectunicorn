@@ -1,0 +1,50 @@
+{
+  "sprint_weeks": 2,
+  "quarter_sprints": 6,
+  "mvp_lines": 3,
+  "effort": {"k1": 3, "k2": 5, "k3": 8, "fix": 1, "fix_urgent": 2, "research": 1},
+  "shares": {
+    "feature": [0.2, 0.6, 0.2],
+    "request": [0.2, 0.6, 0.2],
+    "fix": [0.0, 0.7, 0.3],
+    "research": [1.0, 0.0, 0.0]
+  },
+  "roles": {
+    "feature": ["design", "dev", "test"],
+    "request": ["design", "dev", "test"],
+    "fix": ["design", "dev", "test"],
+    "research": ["product", "dev", "test"]
+  },
+  "role_areas": {"design": "design", "dev": "engineering", "test": "qa", "product": "product"},
+  "person_points_week": 2,
+  "skill": {"low_max": 3, "mid_max": 6, "mult": [0.75, 1.0, 1.25]},
+  "founder_mult": 0.75,
+  "founder_roles": ["product", "dev"],
+  "no_role_speed": 0.5,
+  "cap_ceiling": 1.25,
+  "faulty_chance": 0.4,
+  "faulty_chance_beta": 0.2,
+  "expectation": {"1": 1, "2": 2, "3": 2},
+  "rival_bump": 0.5,
+  "rival_bump_max": 1.0,
+  "rival_window_sprints": 3,
+  "polish_step": 0.5,
+  "polish_max": 1.0,
+  "urgent_tickets": 3,
+  "research_users": 5,
+  "request": {"deadline_sprints": 4, "first_after_sprints": 1, "before_renewal_sprints": 6, "contract_weeks": 52},
+  "pm": {"horizon": 3, "goal_weight": 1.5, "low_skill_cards": 0.8, "goal_squares": 10, "goal_mark": 5},
+  "decision": {"rate": 0.25, "cards": ["fixture.sprint_two_paths", "fixture.sprint_late"]},
+  "paid_plan": {"effort": 3, "tiers": 1},
+  "impact": {"step": 1.0, "level": 2.0, "rival_gap": 1.0, "request": 2.0, "mvp": 3.0, "ticket": 0.5, "alert": 2.0, "research": 0.0},
+  "content": {"ticket_titles": 3, "press_core": 2, "press_area": 2, "rival_news": 2},
+  "archetypes": {"tech_exacting": "core", "finance_brisk": "integrations", "ops_cautious": "trust", "default": "onboarding"},
+  "areas": [
+    {"id": "core", "order": 0, "slot": 0, "markets": ["b2c", "b2b"], "identity": true, "lines": [], "name_key": "PRODUCT_AREA_CORE"},
+    {"id": "onboarding", "order": 1, "slot": 1, "markets": ["b2c", "b2b"], "lines": ["line_shared_mobile", "line_hidden_self_serve"], "name_key": "PRODUCT_AREA_ONBOARDING"},
+    {"id": "growth", "order": 2, "slot": 2, "markets": ["b2c"], "lines": ["line_shared_integrations"], "name_key": "PRODUCT_AREA_GROWTH"},
+    {"id": "integrations", "order": 2, "slot": 2, "markets": ["b2b"], "lines": ["line_shared_integrations"], "name_key": "PRODUCT_AREA_INTEGRATIONS"},
+    {"id": "trust", "order": 3, "slot": 3, "markets": ["b2c", "b2b"], "infra_alert": true, "lines": ["line_shared_security", "line_shared_durability"], "name_key": "PRODUCT_AREA_TRUST"},
+    {"id": "revenue", "order": 4, "slot": 4, "markets": ["b2c"], "lines": ["cap_paid_plan"], "name_key": "PRODUCT_AREA_REVENUE"}
+  ]
+}

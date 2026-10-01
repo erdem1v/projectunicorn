@@ -13,12 +13,6 @@ static func install() -> void:
 static func _install_product() -> void:
 	var G := EvSeams.Kind.GLOBAL
 
-	EvSeams.register("urun.phase", G, TYPE_STRING,
-		func() -> String: return ProductRead.phase(),
-		"Product", "concept | design | development | beta | support; empty before anything exists")
-	EvSeams.register("urun.build_active", G, TYPE_BOOL,
-		func() -> bool: return ProductRead.build_active(),
-		"Product", "a version is being built")
 	EvSeams.register("urun.is_live", G, TYPE_BOOL,
 		func() -> bool: return ProductState.is_live(),
 		"Product", "something has shipped")
@@ -30,10 +24,25 @@ static func _install_product() -> void:
 		"Product", "weeks since THIS VERSION shipped, not since the product was born")
 	EvSeams.register("urun.market_type", G, TYPE_STRING,
 		func() -> String: return ProductState.market_type(),
-		"Product", "b2b | b2c; empty until the first ship writes it")
+		"Product", "b2b | b2c; empty until the product type is chosen")
 	EvSeams.register("urun.subtype", G, TYPE_STRING,
 		func() -> String: return ProductState.subtype(),
 		"Product", "one of the sub-product ids")
+
+	# Sprint. A card cannot be a scope slot, so a decision card's text names the card it is
+	# about through urun.decision_card.
+	EvSeams.register("urun.sprint_number", G, TYPE_INT,
+		func() -> int: return SprintSystem.sprint_number(),
+		"Product", "the open sprint; 0 before the product type is chosen")
+	EvSeams.register("urun.sprint_week", G, TYPE_INT,
+		func() -> int: return SprintSystem.week(),
+		"Product", "1 or 2 inside a running sprint")
+	EvSeams.register("urun.sprint_running", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.mode() == "active",
+		"Product", "a sprint is under way: not planning, not the release note")
+	EvSeams.register("urun.decision_card", G, TYPE_STRING,
+		func() -> String: return _decision_card(),
+		"Product", "name of the card a sprint decision waits on; empty when none")
 
 	# Quality. Axis readings, not a single score — §17's triangle rule says the player reads
 	# the asymmetry, so content asks about an axis and never about "quality" as one number.
@@ -73,16 +82,17 @@ static func _install_product() -> void:
 		func() -> int: return ProductRead.lines_open(), "Product", "0-9 feature lines opened")
 	EvSeams.register("urun.steps_shipped", G, TYPE_INT,
 		func() -> int: return ProductRead.steps_shipped(), "Product", "feature steps live")
-	EvSeams.register("urun.build_progress", G, TYPE_FLOAT,
-		func() -> float: return ProductSystem.build_progress(), "Product", "0.0-1.0")
-	EvSeams.register("urun.build_paused", G, TYPE_BOOL,
-		func() -> bool: return ProductSystem.build_paused(), "Product", "auto or manual")
 
 	# Tech debt is a BOOLEAN in the demo, not a level (Ürün §20): a card may ask whether it
 	# exists, not how much.
 	EvSeams.register("urun.tech_debt", G, TYPE_BOOL,
 		func() -> bool: return bool(GameState.get_flag("tech_debt_birikti", false)),
 		"Product", "WRAPPER over a flag; boolean by design in the demo")
+
+
+static func _decision_card() -> String:
+	var card: Dictionary = SprintSystem.decision_card()
+	return "" if card.is_empty() else SprintCatalog.card_name(card)
 
 
 static func _install_rnd() -> void:

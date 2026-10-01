@@ -4,9 +4,7 @@ extends RefCounted
 #
 # TEMA-BAĞIMSIZ, BİLEREK: yazı boyu/rengi çağıranın verdiği UiTokens değerinden,
 # yazı tipi PROJE temasından (ThemeDB) okunur; `get_theme_font` ya da
-# `theme_type_variation` kullanılmaz. Kart ev sahibinin ölçeğiyle çizilir (BuildBar
-# `size_scale`, Ürün sayfasında 1.25×); boyu sabit bir varyasyona uzansaydı yazı
-# büyümez, aynı kart iki ev sahibinde farklı oranda düşerdi.
+# `theme_type_variation` kullanılmaz.
 #
 # class_name yok, iki çubuk da `preload` eder: paylaşılan checkout'ta yeni bir
 # class_name, öteki oturumların headless koşularını global class-cache yarım

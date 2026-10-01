@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **171** |
-| Effect verbs (write) | **61** |
-| Cards in the catalogue | 43 |
+| Seams (read) | **170** |
+| Effect verbs (write) | **59** |
+| Cards in the catalogue | 42 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -48,13 +48,11 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `assign_to`
 - `send_on_leave`
 - `start_training`
-- `dimension_delta`
-- `bug_delta`
-- `delay_weeks`
 - `damage_product`
-- `ship_active_build`
-- `enter_development`
-- `enter_beta`
+- `sprint_card_effort`
+- `sprint_card_progress`
+- `sprint_card_carry`
+- `sprint_hours`
 - `satisfaction_delta`
 - `promise_create`
 - `ticker_push`
@@ -329,19 +327,18 @@ slot of that type (§17.12).
 | `urun.axis_stability` | global | int | Product | 0-120 |
 | `urun.bugs_confirmed` | global | int | Product | confirmed live bugs |
 | `urun.bugs_unconfirmed` | global | int | Product | incoming, unvalidated reports |
-| `urun.build_active` | global | bool | Product | a version is being built |
-| `urun.build_paused` | global | bool | Product | auto or manual |
-| `urun.build_progress` | global | float | Product | 0.0-1.0 |
 | `urun.capacity_tier` | global | int | Product | provisioned infra units |
+| `urun.decision_card` | global | string | Product | name of the card a sprint decision waits on; empty when none |
 | `urun.floor_experience` | global | string | Product | '' | warning | crossed |
 | `urun.floor_innovation` | global | string | Product | '' | warning | crossed |
 | `urun.floor_stability` | global | string | Product | '' | warning | crossed |
 | `urun.interest` | global | float | Product | 0-100, refreshed on publish, decays by a half-life counted in weeks |
 | `urun.is_live` | global | bool | Product | something has shipped |
-| `urun.iteration_round` | global | int | Product | design rounds completed on the active build |
 | `urun.lines_open` | global | int | Product | 0-9 feature lines opened |
-| `urun.market_type` | global | string | Product | b2b | b2c; empty until the first ship writes it |
-| `urun.phase` | global | string | Product | concept | design | development | beta | support; empty before anything exists |
+| `urun.market_type` | global | string | Product | b2b | b2c; empty until the product type is chosen |
+| `urun.sprint_number` | global | int | Product | the open sprint; 0 before the product type is chosen |
+| `urun.sprint_running` | global | bool | Product | a sprint is under way: not planning, not the release note |
+| `urun.sprint_week` | global | int | Product | 1 or 2 inside a running sprint |
 | `urun.steps_shipped` | global | int | Product | feature steps live |
 | `urun.subtype` | global | string | Product | one of the sub-product ids |
 | `urun.support_staffed` | global | bool | Product | the module's central pressure reads from this one boolean |

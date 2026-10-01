@@ -1,10 +1,8 @@
 extends Control
 
 # ============================================================================
-# ResearchBar — ARAŞTIRMA çubuğu (Ar-Ge GDD §5.6). Yapım kartının kardeşi, kopyası
-# DEĞİL: yapım üç satırlık bir KART, araştırma iki satırlık bir ÇUBUKTUR (76px).
-# İkisi aynı anda görünür ve §5.0'ın öğrettiği an tam olarak orada okunur —
-# araştırma akarken yapım "Kimse üzerinde değil." diyor.
+# ResearchBar — ARAŞTIRMA çubuğu (Ar-Ge GDD §5.6). DESTEK kartının kardeşi, kopyası
+# DEĞİL: DESTEK üç satırlık bir KART, araştırma iki satırlık bir ÇUBUKTUR (76px).
 #
 # İKİ SATIR:
 #   başlık : altıgen glif + düğüm adı + sağda TEK DURUM DİZGİSİ — koşarken
@@ -25,9 +23,6 @@ extends Control
 # `ata` BAĞI SEKMEYE GİDER, PANEL AÇMAZ. Akordeon Ar-Ge sayfasında yaşıyor; bu
 # çubuk her sayfanın üstünde yüzüyor, yani paneli kendi içinde açsaydı aynı panel
 # iki yerde iki hâlde bulunurdu.
-#
-# &"build_bar" GRUBUNA KATILMAZ, bilerek: smoke'un `_case_build_bar_hosts_agree`
-# case'i o grubun TAM OLARAK 2 üyesi olduğunu doğruluyor.
 #
 # TEMA-BAĞIMSIZ, BİLEREK: her ölçü ve renk UiTokens'tan, yazı tipi BarKit üzerinden
 # ThemeDB'den. İki çubuk BarKit'i paylaştığı için tema bağımsızlığı ortak sözleşmedir,
@@ -195,8 +190,7 @@ func _build_phase_row() -> Control:
 	return phase_row
 
 
-## Bağ reçetesi, feature_lines_view'ın canlı bağlarıyla AYNI: amber + STOP + el
-## imleci + gui_input. Düğme geometrisi YOK (kutu, kenar, dolgu) — çubuk üzerinde
+## Bağ reçetesi: amber + STOP + el imleci + gui_input. Düğme geometrisi YOK (kutu, kenar, dolgu) — çubuk üzerinde
 ## bir düğme, dolgunun sınırını ikinci bir kenar çizgisiyle keserdi.
 func _make_link(handler: Callable) -> Label:
 	var l := BarKit.label(_font, UiTokens.SIZE_META, UiTokens.ACCENT_DEEP)
@@ -224,7 +218,7 @@ func _repaint() -> void:
 	_status_label.visible = _status_label.text != ""
 
 	var fill_sb := StyleBoxFlat.new()
-	# Duraklamışta DÜZ donuk zemin (yapım çubuğuyla aynı token); koşarken amberin
+	# Duraklamışta DÜZ donuk zemin; koşarken amberin
 	# soluk hâli. İki hâlin de KENARI YOK: sınır renk değişiminin kendisi.
 	fill_sb.bg_color = UiTokens.BUILD_FILL_PAUSED if m.paused \
 		else Color(UiTokens.ACCENT, UiTokens.BUILD_FILL_ALPHA)

@@ -170,17 +170,16 @@ static func task_text(emp: Character) -> String:
 	return tr_key("HR_TASK_NONE")
 
 
-## §12.2 iş metni. Build aktif sürümün adıyla okunur ("Pulse v2'de çalışıyor"): oyuncunun
-## kafasındaki şey o sürümdür. `short` iki iş hâlinin kısa etiketidir.
+## §12.2 iş metni. Sprint koşarken Build çıkacak sürümün adıyla okunur ("Notly v1.5"):
+## oyuncunun kafasındaki şey o sürümdür. `short` iki iş hâlinin kısa etiketidir.
 static func _job_text(job_id: String, short: bool) -> String:
 	if job_id == HRConstants.JOB_BUILD:
-		var build: FeatureBuild = ProductSystem.get_active_build()
-		if build != null:
-			var version: int = ProductSystem.build_version(build)
+		if SprintSystem.mode() == "active":
+			var product: String = SalesSystem.product_display_name()
+			var label: String = SprintSystem.version_label(ProductState.version() + 1)
 			if short:
-				return "%s v%d" % [build.product_name, version]
-			return tr_key("HR_TASK_ON_VERSION").format(
-				{"product": build.product_name, "version": version})
+				return "%s %s" % [product, label]
+			return tr_key("HR_TASK_ON_PRODUCT").format({"product": product, "version": label})
 	if short:
 		return HRConstants.job_label(job_id)
 	var key: String = "HR_TASK_ON_JOB_%s" % job_id.to_upper()

@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-09-29.
+Last generated 2026-10-01.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 135 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 140 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **135** |
+| Signals declared | **140** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **68** |
+| Emitted with **no production listener** | **72** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -55,7 +55,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `burn_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `brand_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `reputation_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
-| `day_advanced` | `new_day: int` | game_state | 1 | 2 | research_bar · top_bar |
+| `day_advanced` | `new_day: int` | game_state | 1 | 3 | product_tab · research_bar · top_bar |
 | `hour_changed` | `hour: int` | game_state | 1 | 1 | top_bar |
 | `phase_changed` | `new_phase: int` | game_state | 2 | 2 | finance_tab · top_bar |
 | `runway_recalculated` | `months: float` | game_state | 1 | 2 | left_tabs · top_bar |
@@ -65,10 +65,10 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 21 | 1 | time_manager |
+| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 22 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
-| `tab_changed` | `tab_id: String` | effects · main · rnd_card_modal · creation_flow · detail_view · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 24 | 2 | left_tabs · window_layer |
+| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 23 | 2 | left_tabs · window_layer |
 | `finance_subpage_requested` | `page_id: String` | effects · main · desk_papers | 3 | 1 | finance_tab |
 
 ### Settings signals
@@ -76,7 +76,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
-| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger · creation_flow | 15 | 1 | main |
+| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 14 | 1 | main |
 | `language_changed` | `locale: String` | localization | 1 | 7 | news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
 | `palette_changed` | `colorblind: bool` | settings_modal | 2 | 6 | hr_tab · research_bar · top_bar · window_layer · office_city · office_notice_stack |
 
@@ -131,36 +131,46 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `event_triggered` | `event_id: String` | engine | 1 | 1 | left_tabs |
-| `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 3 | save_manager · main · left_tabs |
+| `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 4 | save_manager · main · sprint_system · left_tabs |
 | `modal_requested` | `event: GameEvent` | engine | 1 | 1 | main |
 
 ### Build / product signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `build_phase_changed` | `new_phase: String` | product_system | 7 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
-| `build_iteration_decision_pending` | `pending: bool` | product_system | 3 | 0 | — |
-| `build_progress_changed` | `—` | product_system | 6 | 2 | build_bar · build_hud_panel |
-| `infra_changed` | `—` | product_state | 2 | 1 | capacity_block |
+| `build_phase_changed` | `new_phase: String` | sprint_system | 1 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
+| `build_progress_changed` | `—` | product_system | 1 | 2 | build_bar · build_hud_panel |
+| `infra_changed` | `—` | product_state | 2 | 0 | — |
 
 ### GDD ÜRÜN rev 6.1 §19 · OKUMA YÜZEYİNİN SİNYALLERİ
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `version_shipped` | `version: int` | product_system | 1 | 1 | rnd_tab · EvSignals (bindable) |
-| `build_started` | `build_id: String` | product_system | 1 | 1 | office_people |
-| `build_paused` | `reason_key: String` | product_read | 1 | 0 | — |
-| `build_resumed` | `—` | product_read | 1 | 0 | — |
+| `version_shipped` | `version: int` | sprint_system | 1 | 1 | rnd_tab · EvSignals (bindable) |
 | `fix_run_started` | `confirmed: int` | support_system | 1 | 0 | — |
 | `fix_run_finished` | `shipped: int, remaining: int` | support_system | 1 | 0 | — |
 | `bug_confirmed` | `total_confirmed: int` | product_read | 1 | 0 | — |
 | `unconfirmed_threshold_crossed` | `band: String` | product_read | 1 | 0 | — |
 | `axis_floor_warning` | `axis: String` | product_read | 1 | 0 | — |
 | `axis_floor_crossed` | `axis: String` | product_read | 1 | 0 | — |
-| `line_upgraded` | `line_id: String, tier: int` | product_system | 1 | 0 | — |
-| `line_completed` | `line_id: String` | product_system | 1 | 0 | — |
-| `delighter_shipped` | `step_id: String` | product_system | 1 | 0 | — |
+| `line_upgraded` | `line_id: String, tier: int` | sprint_system | 1 | 0 | — |
+| `line_completed` | `line_id: String` | sprint_system | 1 | 0 | — |
+| `delighter_shipped` | `step_id: String` | sprint_system | 1 | 0 | — |
 | `phase_bar_raised` | `phase: int` | product_read | 1 | 0 | — |
+
+### Sprint
+
+| signal | payload | emitter(s) | E | L | listener(s) |
+|---|---|---|---|---|---|
+| `sprint_planned` | `number: int` | sprint_system | 2 | 0 | — |
+| `sprint_started` | `number: int` | sprint_system | 1 | 1 | office_people |
+| `card_phase_changed` | `card_id: String, phase: int` | sprint_system | 1 | 0 | — |
+| `card_done` | `card_id: String` | sprint_system | 1 | 0 | — |
+| `card_carried_over` | `card_id: String` | sprint_system | 2 | 0 | — |
+| `sprint_closed` | `number: int` | sprint_system | 1 | 1 | game_shell |
+| `card_decision_requested` | `card_id: String` | sprint_system | 1 | 0 | — |
+| `sprint_auto_started` | `number: int` | sprint_system | 1 | 0 | — |
+| `product_state_changed` | `—` | sprint_system | 1 | 2 | product_tab · top_bar |
 
 ### GDD AR-GE MODÜLÜ §10 · OKUMA YÜZEYİNİN SİNYALLERİ
 
@@ -175,7 +185,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `product_note_issued` | `day: int` | rnd_system | 1 | 2 | main · left_tabs |
 | `research_progress_changed` | `—` | time_manager | 1 | 2 | build_hud_panel · research_bar |
 | `product_note_read` | `—` | rnd_system | 1 | 1 | left_tabs |
-| `rnd_node_requested` | `node_id: String, open_assign: bool` | creation_flow · research_bar | 2 | 1 | rnd_tab |
+| `rnd_node_requested` | `node_id: String, open_assign: bool` | research_bar | 1 | 1 | rnd_tab |
 | `rnd_card_requested` | `kind: String, data: Dictionary` | main · rnd_system | 4 | 1 | main |
 
 ### Rival signals
@@ -222,8 +232,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · vc_pitch_system | 2 | 2 | game_state · hunt_tab |
-| `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger | 7 | 2 | time_manager · news_ticker |
-| `ticker_live_line` | `source: String, text: String` | summary_system · office_travel | 3 | 1 | news_ticker |
+| `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger · sprint_bridges | 8 | 2 | time_manager · news_ticker |
+| `ticker_live_line` | `source: String, text: String` | sprint_bridges · summary_system · office_travel | 4 | 1 | news_ticker |
 
 ### Endgame signals
 

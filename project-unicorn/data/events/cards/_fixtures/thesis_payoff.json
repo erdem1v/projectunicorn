@@ -5,7 +5,7 @@
   "tick": "scheduled",
   "class": "interrupt",
   "expires_weeks": 1,
-  "tags": ["critical", "build_safe"],
+  "tags": ["critical"],
   "arc": "arc_fixture_thesis",
   "latch": { "one_shot": true },
   "condition": {

@@ -1,0 +1,86 @@
+{
+  "note_tool": {
+    "rivals": [3, 4, 6],
+    "tiers": {
+      "line_note_tool_capture": [1, 1, 1],
+      "line_note_tool_linking": [1, 0, 1],
+      "line_note_tool_sync": [1, 1, 0],
+      "line_note_tool_editor": [2, 1, 1],
+      "line_note_tool_search": [1, 1, 0],
+      "line_shared_integrations@note_tool": [0, 1, 0],
+      "line_shared_security@note_tool": [1, 1, 0],
+      "line_shared_durability@note_tool": [1, 0, 1],
+      "line_shared_mobile@note_tool": [0, 1, 0],
+      "cap_paid_plan": [1, 1, 0]
+    },
+    "launches": [
+      {"rival": 0, "line": "line_shared_mobile@note_tool", "sprint": 4, "topic_key": "PROD_LINE_SHARED_MOBILE"},
+      {"rival": 2, "line": "line_note_tool_search", "sprint": 7, "topic_key": "PROD_LINE_NOTE_TOOL_SEARCH"},
+      {"rival": 1, "line": "line_shared_integrations@note_tool", "sprint": 10, "topic_key": "PROD_LINE_SHARED_INTEGRATIONS"},
+      {"rival": 0, "line": "line_note_tool_search", "sprint": 13, "topic_key": "PROD_LINE_NOTE_TOOL_SEARCH"},
+      {"rival": 2, "line": "line_shared_security@note_tool", "sprint": 16, "topic_key": "PROD_LINE_SHARED_SECURITY"},
+      {"rival": 1, "line": "line_note_tool_linking", "sprint": 20, "topic_key": "PROD_LINE_NOTE_TOOL_LINKING"},
+      {"rival": 0, "line": "line_note_tool_capture", "sprint": 24, "topic_key": "PROD_LINE_NOTE_TOOL_CAPTURE"},
+      {"rival": 2, "line": "line_note_tool_editor", "sprint": 28, "topic_key": "PROD_LINE_NOTE_TOOL_EDITOR"},
+      {"rival": 1, "line": "line_shared_mobile@note_tool", "sprint": 33, "topic_key": "PROD_LINE_SHARED_MOBILE"},
+      {"rival": 0, "line": "line_shared_durability@note_tool", "sprint": 38, "topic_key": "PROD_LINE_SHARED_DURABILITY"},
+      {"rival": 2, "line": "line_note_tool_sync", "sprint": 44, "topic_key": "PROD_LINE_NOTE_TOOL_SYNC"},
+      {"rival": 1, "line": "line_note_tool_search", "sprint": 50, "topic_key": "PROD_LINE_NOTE_TOOL_SEARCH"}
+    ]
+  },
+  "video_clip": {
+    "rivals": [3, 5, 6],
+    "tiers": {
+      "line_video_clip_clipping": [1, 1, 1],
+      "line_video_clip_captions": [1, 2, 0],
+      "line_video_clip_pipeline": [1, 1, 1],
+      "line_video_clip_timeline": [1, 0, 0],
+      "line_video_clip_framing": [1, 0, 1],
+      "line_shared_integrations@video_clip": [1, 0, 0],
+      "line_shared_security@video_clip": [1, 0, 1],
+      "line_shared_durability@video_clip": [0, 1, 0],
+      "line_shared_mobile@video_clip": [1, 0, 1],
+      "cap_paid_plan": [1, 1, 1]
+    },
+    "launches": [
+      {"rival": 0, "line": "line_video_clip_clipping", "sprint": 5, "topic_key": "PROD_LINE_VIDEO_CLIP_CLIPPING"},
+      {"rival": 2, "line": "line_video_clip_captions", "sprint": 8, "topic_key": "PROD_LINE_VIDEO_CLIP_CAPTIONS"},
+      {"rival": 1, "line": "line_shared_mobile@video_clip", "sprint": 11, "topic_key": "PROD_LINE_SHARED_MOBILE"},
+      {"rival": 0, "line": "line_video_clip_framing", "sprint": 14, "topic_key": "PROD_LINE_VIDEO_CLIP_FRAMING"},
+      {"rival": 2, "line": "line_shared_integrations@video_clip", "sprint": 18, "topic_key": "PROD_LINE_SHARED_INTEGRATIONS"},
+      {"rival": 1, "line": "line_video_clip_timeline", "sprint": 22, "topic_key": "PROD_LINE_VIDEO_CLIP_TIMELINE"},
+      {"rival": 0, "line": "line_video_clip_pipeline", "sprint": 26, "topic_key": "PROD_LINE_VIDEO_CLIP_PIPELINE"},
+      {"rival": 2, "line": "line_video_clip_clipping", "sprint": 31, "topic_key": "PROD_LINE_VIDEO_CLIP_CLIPPING"},
+      {"rival": 1, "line": "line_shared_durability@video_clip", "sprint": 36, "topic_key": "PROD_LINE_SHARED_DURABILITY"},
+      {"rival": 0, "line": "line_shared_security@video_clip", "sprint": 42, "topic_key": "PROD_LINE_SHARED_SECURITY"},
+      {"rival": 2, "line": "line_video_clip_timeline", "sprint": 48, "topic_key": "PROD_LINE_VIDEO_CLIP_TIMELINE"}
+    ]
+  },
+  "erp": {
+    "rivals": [3, 5, 6],
+    "tiers": {
+      "line_erp_cashflow": [1, 1, 0],
+      "line_erp_intake": [1, 0, 1],
+      "line_erp_ledger": [2, 1, 1],
+      "line_erp_stock": [1, 1, 0],
+      "line_erp_invoicing": [1, 1, 2],
+      "line_shared_integrations@erp": [1, 0, 1],
+      "line_shared_security@erp": [1, 1, 0],
+      "line_shared_durability@erp": [1, 0, 1],
+      "line_shared_mobile@erp": [0, 0, 1]
+    },
+    "launches": [
+      {"rival": 2, "line": "line_shared_integrations@erp", "sprint": 4, "topic_key": "PROD_LINE_SHARED_INTEGRATIONS"},
+      {"rival": 0, "line": "line_shared_security@erp", "sprint": 7, "topic_key": "PROD_LINE_SHARED_SECURITY"},
+      {"rival": 1, "line": "line_erp_intake", "sprint": 10, "topic_key": "PROD_LINE_ERP_INTAKE"},
+      {"rival": 2, "line": "line_erp_cashflow", "sprint": 13, "topic_key": "PROD_LINE_ERP_CASHFLOW"},
+      {"rival": 0, "line": "line_erp_stock", "sprint": 17, "topic_key": "PROD_LINE_ERP_STOCK"},
+      {"rival": 1, "line": "line_shared_mobile@erp", "sprint": 21, "topic_key": "PROD_LINE_SHARED_MOBILE"},
+      {"rival": 2, "line": "line_shared_security@erp", "sprint": 25, "topic_key": "PROD_LINE_SHARED_SECURITY"},
+      {"rival": 0, "line": "line_erp_invoicing", "sprint": 30, "topic_key": "PROD_LINE_ERP_INVOICING"},
+      {"rival": 1, "line": "line_shared_durability@erp", "sprint": 35, "topic_key": "PROD_LINE_SHARED_DURABILITY"},
+      {"rival": 2, "line": "line_erp_ledger", "sprint": 41, "topic_key": "PROD_LINE_ERP_LEDGER"},
+      {"rival": 0, "line": "line_shared_integrations@erp", "sprint": 47, "topic_key": "PROD_LINE_SHARED_INTEGRATIONS"}
+    ]
+  }
+}

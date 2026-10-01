@@ -5,8 +5,7 @@
   "tick": "daily",
   "class": "interrupt",
   "tags": [
-    "critical",
-    "build_safe"
+    "critical"
   ],
   "guards": {
     "market": "b2c"

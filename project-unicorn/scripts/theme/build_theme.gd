@@ -371,21 +371,8 @@ func _initialize() -> void:
 
 	# ========================================================================
 	# CHROME AİLESİ — koyu kabuk register'ı. Yasal yüzey listesi CLAUDE.md Chrome
-	# kuralında. Desenler kabuğun kendi grameri (VEIL_*_CHROME merdiveni); gövdeyle
-	# birlikte değişen her renk *_CHROME ikizinden okunur.
+	# kuralında; gövdeyle birlikte değişen her renk *_CHROME ikizinden okunur.
 	# ========================================================================
-	# ChromeButton: koyu kabukta standart-boy ikincil buton. Metin boyutu base Button'dan.
-	th.set_type_variation(&"ChromeButton", &"Button")
-	_states(th, &"ChromeButton", {
-		"normal": _box(T.VEIL_FAINT_CHROME, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
-		"hover": _box(T.VEIL_STRONG_CHROME, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
-		"pressed": _box(T.VEIL_SOFT_CHROME, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
-		"disabled": _box(T.VEIL_FAINT_CHROME, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
-		"focus": _no_focus(),
-	})
-	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		th.set_color(key, &"ChromeButton", T.CREAM)
-	th.set_color("font_disabled_color", &"ChromeButton", T.CREAM_DIM_DISABLED)
 	# ChromeTabButton(+Active): TabButton'ın birebir aynısı; Satış sekmesinin bant tavanı
 	# seçicisi okur.
 	_tab_button(th, &"ChromeTabButton", false)
@@ -408,19 +395,9 @@ func _initialize() -> void:
 	th.set_stylebox("background", &"BuildProgress", _box(T.SURFACE_SUNKEN, T.RADIUS_S))
 	th.set_stylebox("fill", &"BuildProgress", _box(T.ACCENT, T.RADIUS_S))
 
-	# ---- HSlider variations. PriceSlider: transparent track so the amber grabber
-	# rides on the coloured value band drawn behind it. VolumeSlider: a visible
-	# neutral groove with an amber fill up to the grabber. ----
+	# ---- HSlider variation. VolumeSlider: a visible neutral groove with an amber fill
+	# up to the grabber. ----
 	var grabber: Texture2D = load("res://assets/icons/slider_grabber.svg")
-	th.set_type_variation(&"PriceSlider", &"HSlider")
-	_states(th, &"PriceSlider", {
-		"slider": StyleBoxEmpty.new(),
-		"grabber_area": StyleBoxEmpty.new(),
-		"grabber_area_highlight": StyleBoxEmpty.new(),
-	})
-	th.set_constant("center_grabber", &"PriceSlider", 1)
-	_grabber_icons(th, &"PriceSlider", grabber)
-
 	th.set_type_variation(&"VolumeSlider", &"HSlider")
 	_states(th, &"VolumeSlider", {
 		"slider": _box(T.CARD_BORDER, T.RADIUS_S, Color.TRANSPARENT, Vector2i(-1, 2)),
@@ -428,7 +405,8 @@ func _initialize() -> void:
 		"grabber_area_highlight": _box(T.ACCENT_HOVER, T.RADIUS_S, Color.TRANSPARENT, Vector2i(-1, 2)),
 	})
 	th.set_constant("center_grabber", &"VolumeSlider", 1)
-	_grabber_icons(th, &"VolumeSlider", grabber)
+	for key in ["grabber", "grabber_highlight", "grabber_disabled"]:
+		th.set_icon(key, &"VolumeSlider", grabber)
 
 	# ---- SettingsSwitch: CheckButton stripped to its on/off pill graphics ----
 	var sw_on: Texture2D = load("res://assets/icons/switch_on.svg")
@@ -676,11 +654,6 @@ func _rich_fonts(th: Theme, name: StringName, normal: Font, bold: Font, italics:
 	for key in ["normal_font_size", "bold_font_size", "italics_font_size",
 			"bold_italics_font_size", "mono_font_size"]:
 		th.set_font_size(key, name, size)
-
-
-func _grabber_icons(th: Theme, name: StringName, grabber: Texture2D) -> void:
-	for key in ["grabber", "grabber_highlight", "grabber_disabled"]:
-		th.set_icon(key, name, grabber)
 
 
 # Rail tile. Idle: CARD_BG fill + CARD_BORDER hairline; hover moves only the edge to

@@ -1,0 +1,62 @@
+{
+  "_port_note": "SprintSystem requests it for a running card; it lands on the desk and the card's Karar ver opens it. One week to answer, so an unanswered paper expires on the dispatch that closes the sprint and its empty on_expire keeps the known route.",
+  "id": "fixture.sprint_two_paths",
+  "version_scope": "fixture",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "expires_weeks": 1,
+  "expire_note": "expire_note",
+  "on_expire": {
+    "penalties": []
+  },
+  "latch": {
+    "cooldown_weeks": 2
+  },
+  "condition": {
+    "seam": "urun.sprint_running",
+    "op": "==",
+    "value": true
+  },
+  "options": [
+    {
+      "id": "new_way",
+      "outcome_id": "switched",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -2
+        },
+        {
+          "verb": "sprint_card_progress",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "known_way",
+      "outcome_id": "kept",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "İki yol var",
+      "body": "Ekip {seam:urun.decision_card} için daha kısa bir yol buldu. Şimdi yol değiştirmek, bu fazda yapılmış işin bir kısmını boşa çıkarır.",
+      "options": {
+        "new_way": "Kısa yola geç",
+        "known_way": "Bilinen yoldan devam et"
+      },
+      "expire_note": "Sprint kararı verilmedi; ekip bilinen yoldan devam etti."
+    },
+    "en": {
+      "title": "Two ways through",
+      "body": "The team found a shorter route for {seam:urun.decision_card}. Switching now throws away part of the work already done in this phase.",
+      "options": {
+        "new_way": "Take the shorter route",
+        "known_way": "Stay on the known route"
+      },
+      "expire_note": "No sprint decision came, so the team stayed on the known route."
+    }
+  }
+}

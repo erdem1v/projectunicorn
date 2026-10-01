@@ -78,94 +78,89 @@ static func locked_type_ids(market: String) -> Array:
 	return ((TYPE_SCREEN.get(market, {}) as Dictionary).get("locked", []) as Array).duplicate()
 
 
-# Düz özellik havuzu (hat modeli olmayan alt-tipler). Satır alanları:
-#   complexity (1-5) — commit'te bug tohumu ve canlı aşınma.
-#   efor (5-9)       — iş miktarı; süre = Σefor / ekip hızı. Çalışma kuralı 4 + complexity,
-#                      ama sapabilsin diye her satırda açık yazılır.
-#   cost — yalnız üçüncü-parti özellikte; commit'te bir kez tahsil edilir.
-#   dimension_contribution — eksenlere tam sayı katkı; ship edilen eksen = seçili katkıların
-#                      toplamı (ProductSystem.projected_axes), yani önizleme == ship.
+# Düz özellik havuzu (hat modeli olmayan alt-tipler): satışın acı noktaları ve sözleri bu
+# kimlikleri okur. complexity (1-5) canlı aşınmaya ve ürün değerine (fiyat) girer.
 const FEATURE_POOLS := {
 	"ai_assistant": [
-		{"id": "ai_assistant_chat", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
-		{"id": "ai_assistant_memory", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 5, "stability": 3}},
-		{"id": "ai_assistant_tools", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6}},
-		{"id": "ai_assistant_voice", "complexity": 3, "efor": 7, "cost": 800, "dimension_contribution": {"innovation": 5, "experience": 3}},
-		{"id": "ai_assistant_image", "complexity": 4, "efor": 8, "cost": 1200, "dimension_contribution": {"innovation": 6}},
-		{"id": "ai_assistant_streaming", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
+		{"id": "ai_assistant_chat", "complexity": 2},
+		{"id": "ai_assistant_memory", "complexity": 3},
+		{"id": "ai_assistant_tools", "complexity": 4},
+		{"id": "ai_assistant_voice", "complexity": 3},
+		{"id": "ai_assistant_image", "complexity": 4},
+		{"id": "ai_assistant_streaming", "complexity": 2},
 	],
 	"ai_photo_editor": [
-		{"id": "ai_photo_bg_removal", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
-		{"id": "ai_photo_inpaint", "complexity": 4, "efor": 8, "cost": 1500, "dimension_contribution": {"innovation": 6, "experience": 3}},
-		{"id": "ai_photo_upscale", "complexity": 3, "efor": 7, "cost": 900, "dimension_contribution": {"innovation": 5, "experience": 3}},
-		{"id": "ai_photo_style_transfer", "complexity": 3, "efor": 7, "cost": 500, "dimension_contribution": {"innovation": 5, "experience": 3}},
-		{"id": "ai_photo_batch", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}},
-		{"id": "ai_photo_filters", "complexity": 1, "efor": 5, "dimension_contribution": {"experience": 3}},
+		{"id": "ai_photo_bg_removal", "complexity": 2},
+		{"id": "ai_photo_inpaint", "complexity": 4},
+		{"id": "ai_photo_upscale", "complexity": 3},
+		{"id": "ai_photo_style_transfer", "complexity": 3},
+		{"id": "ai_photo_batch", "complexity": 3},
+		{"id": "ai_photo_filters", "complexity": 1},
 	],
 	"ai_code_copilot": [
-		{"id": "ai_code_autocomplete", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
-		{"id": "ai_code_chat", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
-		{"id": "ai_code_refactor", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "stability": 3}},
-		{"id": "ai_code_explain", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
-		{"id": "ai_code_test_gen", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 3, "stability": 5}},
-		{"id": "ai_code_multi_file", "complexity": 5, "efor": 9, "dimension_contribution": {"innovation": 7}},
-		{"id": "ai_code_diff_review", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "stability": 3}},
+		{"id": "ai_code_autocomplete", "complexity": 3},
+		{"id": "ai_code_chat", "complexity": 2},
+		{"id": "ai_code_refactor", "complexity": 4},
+		{"id": "ai_code_explain", "complexity": 2},
+		{"id": "ai_code_test_gen", "complexity": 3},
+		{"id": "ai_code_multi_file", "complexity": 5},
+		{"id": "ai_code_diff_review", "complexity": 4},
 	],
 	"ai_vector_search": [
-		{"id": "ai_vec_embed_api", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 3, "stability": 5}},
-		{"id": "ai_vec_search_api", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5}},
-		{"id": "ai_vec_filter", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}},
-		{"id": "ai_vec_dashboard", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
-		{"id": "ai_vec_scaling", "complexity": 5, "efor": 9, "dimension_contribution": {"stability": 7}},
-		{"id": "ai_vec_sdk", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}},
+		{"id": "ai_vec_embed_api", "complexity": 3},
+		{"id": "ai_vec_search_api", "complexity": 3},
+		{"id": "ai_vec_filter", "complexity": 3},
+		{"id": "ai_vec_dashboard", "complexity": 2},
+		{"id": "ai_vec_scaling", "complexity": 5},
+		{"id": "ai_vec_sdk", "complexity": 2},
 	],
 	"saas_project_mgmt": [
-		{"id": "saas_pm_tasks", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}},
-		{"id": "saas_pm_gantt", "complexity": 3, "efor": 7, "dimension_contribution": {"experience": 5}},
-		{"id": "saas_pm_comments", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
-		{"id": "saas_pm_integrations", "complexity": 4, "efor": 8, "cost": 700, "dimension_contribution": {"stability": 6, "experience": 3}},
-		{"id": "saas_pm_automation", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "experience": 3}},
-		{"id": "saas_pm_reporting", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
+		{"id": "saas_pm_tasks", "complexity": 2},
+		{"id": "saas_pm_gantt", "complexity": 3},
+		{"id": "saas_pm_comments", "complexity": 2},
+		{"id": "saas_pm_integrations", "complexity": 4},
+		{"id": "saas_pm_automation", "complexity": 4},
+		{"id": "saas_pm_reporting", "complexity": 3},
 	],
 	"saas_crm": [
-		{"id": "saas_crm_contacts", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}},
-		{"id": "saas_crm_pipeline", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
-		{"id": "saas_crm_email", "complexity": 4, "efor": 8, "cost": 600, "dimension_contribution": {"stability": 6, "experience": 3}},
-		{"id": "saas_crm_forecast", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 5, "experience": 3}},
-		{"id": "saas_crm_mobile", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 3, "experience": 6}},
-		{"id": "saas_crm_call_log", "complexity": 3, "efor": 7, "cost": 800, "dimension_contribution": {"innovation": 5, "stability": 3}},
+		{"id": "saas_crm_contacts", "complexity": 2},
+		{"id": "saas_crm_pipeline", "complexity": 3},
+		{"id": "saas_crm_email", "complexity": 4},
+		{"id": "saas_crm_forecast", "complexity": 3},
+		{"id": "saas_crm_mobile", "complexity": 4},
+		{"id": "saas_crm_call_log", "complexity": 3},
 	],
 	"saas_analytics": [
-		{"id": "saas_an_dashboards", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
-		{"id": "saas_an_query", "complexity": 4, "efor": 8, "dimension_contribution": {"stability": 3, "experience": 6}},
-		{"id": "saas_an_alerts", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 5, "stability": 3}},
-		{"id": "saas_an_share", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}},
-		{"id": "saas_an_etl", "complexity": 5, "efor": 9, "cost": 1000, "dimension_contribution": {"stability": 7}},
-		{"id": "saas_an_embed", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "stability": 3}},
+		{"id": "saas_an_dashboards", "complexity": 3},
+		{"id": "saas_an_query", "complexity": 4},
+		{"id": "saas_an_alerts", "complexity": 3},
+		{"id": "saas_an_share", "complexity": 2},
+		{"id": "saas_an_etl", "complexity": 5},
+		{"id": "saas_an_embed", "complexity": 4},
 	],
 	"saas_billing": [
-		{"id": "saas_bill_subscriptions", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}},
-		{"id": "saas_bill_invoice", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 4, "experience": 2}},
-		{"id": "saas_bill_tax", "complexity": 5, "efor": 9, "cost": 2000, "dimension_contribution": {"stability": 7}},
-		{"id": "saas_bill_dunning", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 3, "stability": 5}},
-		{"id": "saas_bill_webhooks", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5}},
-		{"id": "saas_bill_proration", "complexity": 4, "efor": 8, "dimension_contribution": {"stability": 6}},
+		{"id": "saas_bill_subscriptions", "complexity": 3},
+		{"id": "saas_bill_invoice", "complexity": 2},
+		{"id": "saas_bill_tax", "complexity": 5},
+		{"id": "saas_bill_dunning", "complexity": 3},
+		{"id": "saas_bill_webhooks", "complexity": 3},
+		{"id": "saas_bill_proration", "complexity": 4},
 	],
 	"saas_dev_tools": [
-		{"id": "saas_dev_cli", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}},
-		{"id": "saas_dev_api", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}},
-		{"id": "saas_dev_docs", "complexity": 3, "efor": 7, "dimension_contribution": {"experience": 5}},
-		{"id": "saas_dev_ci_plugin", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 3, "stability": 6}},
-		{"id": "saas_dev_logs", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 3, "stability": 5}},
-		{"id": "saas_dev_sandbox", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}},
+		{"id": "saas_dev_cli", "complexity": 2},
+		{"id": "saas_dev_api", "complexity": 3},
+		{"id": "saas_dev_docs", "complexity": 3},
+		{"id": "saas_dev_ci_plugin", "complexity": 4},
+		{"id": "saas_dev_logs", "complexity": 3},
+		{"id": "saas_dev_sandbox", "complexity": 3},
 	],
 	"saas_ops": [
-		{"id": "saas_ops_workflow", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "experience": 3}},
-		{"id": "saas_ops_reporting", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
-		{"id": "saas_ops_integration", "complexity": 5, "efor": 9, "cost": 1800, "dimension_contribution": {"stability": 7}},
-		{"id": "saas_ops_scheduling", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
-		{"id": "saas_ops_field", "complexity": 5, "efor": 9, "dimension_contribution": {"innovation": 4, "stability": 7}},
-		{"id": "saas_ops_mobile", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 3, "experience": 6}},
+		{"id": "saas_ops_workflow", "complexity": 4},
+		{"id": "saas_ops_reporting", "complexity": 3},
+		{"id": "saas_ops_integration", "complexity": 5},
+		{"id": "saas_ops_scheduling", "complexity": 3},
+		{"id": "saas_ops_field", "complexity": 5},
+		{"id": "saas_ops_mobile", "complexity": 4},
 	],
 }
 
@@ -278,26 +273,6 @@ static func get_price_tendency(sub_product_type_id: String) -> String:
 ## [] for unknown ids → QualityModel falls back to equal DEFAULT_AXES.
 static func get_quality_axes(sub_product_type_id: String) -> Array:
 	return QUALITY_AXES.get(sub_product_type_id, [])
-
-
-# ---------------------------------------------------------------- efor / maliyet
-
-static func get_feature_efor(feature_id: String) -> int:
-	return int(get_feature_by_id(feature_id).get("efor", 0))
-
-
-static func sum_efor(feature_ids: Array) -> int:
-	var total: int = 0
-	for fid in feature_ids:
-		total += get_feature_efor(String(fid))
-	return total
-
-
-static func sum_cost(feature_ids: Array) -> int:
-	var total: int = 0
-	for fid in feature_ids:
-		total += int(get_feature_by_id(String(fid)).get("cost", 0))
-	return total
 
 
 # "Öner" düğmesinin ad havuzu. Özel adlar çevrilmez; seçim sırayla, koşu tekrarlanabilir.

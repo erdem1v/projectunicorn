@@ -35,7 +35,7 @@ const NORMALIZE_HALF_SAT := 25.0
 # (RivalRegistry ranking) are unaffected.
 const RIVAL_TEMPLATE_HALF_SAT := 50.0
 # How much each open bug erodes the Stability the economy reads: features feed the
-# axis, bugs eat it. Also the in-build/launch bug penalty.
+# axis, bugs eat it.
 const BUG_STABILITY_COEF := 0.8
 
 
@@ -93,23 +93,8 @@ static func effective_stability(stability: float, bug_count: int) -> float:
 
 
 # =========================================================================
-#  Surface adapters — the SAME math runs live (build) and post-ship (flags)
+#  Surface adapters — the shipped product's dims, read off the mvp_* flags
 # =========================================================================
-
-# Raw design-time dims (no bug erosion).
-static func dims_from_build(b: FeatureBuild) -> Dictionary:
-	return {"innovation": b.innovation, "stability": b.stability, "experience": b.experience}
-
-
-# Economy dims — Stability replaced by effective_stability(bug_count). Everything
-# the ECONOMY reads (audience, price, satisfaction) goes through this.
-static func economy_dims_from_build(b: FeatureBuild) -> Dictionary:
-	return {
-		"innovation": b.innovation,
-		"stability": effective_stability(b.stability, b.bug_count),
-		"experience": b.experience,
-	}
-
 
 # Raw post-ship dims (no bug erosion), read off the mvp_* flags.
 static func dims_from_flags() -> Dictionary:
@@ -205,17 +190,6 @@ static func axis_bar(subtype: String, line_tiers: Dictionary, axis: String,
 	return market_bar * float(counted) / float(BASELINE_LINES_PER_AXIS)
 
 
-## §5 + §12.8 — the realization multiplier a version stamps onto every step it
-## ships: the design-turn multiplier times the above-gate bonus.
-##
-## STAMPED PER STEP, not applied per read: §2 and §12.3 both rule that a finished
-## version is never damaged retroactively ("Yapım geriye dönük bozulmaz"), so a later
-## one-turn version must not degrade what a four-turn version already built. §11.2
-## writes the multiplier outside the sum; the twice-stated no-retroactive rule wins.
-static func realization_stamp(turn_multiplier: float, above_gate_bonus: float) -> float:
-	return maxf(0.0, turn_multiplier) * (1.0 + maxf(0.0, above_gate_bonus))
-
-
 ## §11.2 — realized value of one axis. `line_tiers` maps line_id -> 0..3 and
 ## `line_realization` maps line_id -> the stamp that line's current step shipped
 ## with (missing = 1.0).
@@ -248,8 +222,8 @@ static func realized_axis(subtype: String, line_tiers: Dictionary,
 	return total
 
 
-## §11.3 — the 0-120 reading. This is what the triangle draws, what
-## `urun.axis_reading` returns and what the floor ladder (§14) compares against.
+## §11.3 — the 0-120 reading. This is what the `urun.axis_*` seams return and what
+## the floor ladder (§14) compares against.
 static func axis_reading(subtype: String, line_tiers: Dictionary,
 		line_realization: Dictionary, axis: String, confirmed_bugs: int = 0,
 		phase: int = -1) -> int:
@@ -260,7 +234,7 @@ static func axis_reading(subtype: String, line_tiers: Dictionary,
 	return int(round(clampf(reading, READING_MIN, READING_MAX)))
 
 
-## All three readings at once — the triangle's feed.
+## All three readings at once.
 static func axis_readings(subtype: String, line_tiers: Dictionary,
 		line_realization: Dictionary, confirmed_bugs: int = 0, phase: int = -1) -> Dictionary:
 	var out: Dictionary = {}

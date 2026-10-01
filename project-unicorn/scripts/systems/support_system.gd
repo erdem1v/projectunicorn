@@ -3,8 +3,7 @@ extends RefCounted
 
 # GDD — ÜRÜN MODÜLÜ rev 6.1 §8 (CANLI / DESTEK) + §9 (CANLI HATA AKIŞI MODELİ).
 #
-# Yaşam döngüsünün BEŞİNCİ fazı ve tek kalıcı olanı: Konsept → TASARIM → GELİŞTİRME →
-# BETA → CANLI/DESTEK. Yapım biter, DESTEK bitmez.
+# Canlı ürünün kalıcı hâli: sprintler biter, DESTEK bitmez.
 #
 # İKİ SAYAÇ (§8.1), MÜHÜRLÜ terimler:
 #   GELEN BİLDİRİM  — doğrulanmamış kullanıcı bildirimi. Kendiliğinden GELİR (§9).
@@ -35,7 +34,7 @@ extends RefCounted
 const INFLOW_BASE := 0.2
 ## Ar-Ge §4.3 `self_service` — aynı tabanın araştırılmış hâli. Akışı KISAR, kapatmaz.
 const INFLOW_BASE_RESEARCHED := 0.14
-## §9 taşınan hata terimi — BETA'dan canlıya taşınan her açık hata zamanla yüzeye çıkar.
+## §9 taşınan hata terimi — canlıdaki her açık hata zamanla yüzeye çıkar.
 const INFLOW_CARRIED_COEF := 0.05
 ## §9 yeni kod terimi — yeni sürümün efor büyüklüğüyle orantılı yeni havuz.
 const INFLOW_NEWCODE_COEF := 0.03
@@ -159,8 +158,8 @@ static func reports_per_day() -> float:
 	var floor_rate: float = INFLOW_BASE_RESEARCHED if ResearchSeam.completed("self_service") else INFLOW_BASE
 	var new_code: float = ProductState.new_code_effort() \
 		* exp(-ProductState.version_age(ProductSystem.hour_start_fraction()) / INFLOW_TAU)
-	# Taşınan hata `live_bug_count`'tur: yayında BETA'dan devreden açık hatalarla başlar ve
-	# canlı aşınmayla (ProductSystem._post_ship_wear_hourly) büyür; §9 aşınma terimi yazmaz.
+	# Taşınan hata `live_bug_count`'tur ve canlı aşınmayla (ProductSystem._post_ship_wear_hourly)
+	# büyür; §9 aşınma terimi yazmaz.
 	var base: float = floor_rate + INFLOW_CARRIED_COEF * float(ProductSystem.live_bug_count()) \
 		+ INFLOW_NEWCODE_COEF * new_code
 	# §10 — altyapı akışı çarpar (ucuz sağlayıcı ×1,25, doluluk %100 üstü ×1,5);
@@ -169,7 +168,7 @@ static func reports_per_day() -> float:
 
 
 ## §9 kullanım çarpanı — "farklı kullanıcı farklı hataya çarpar". B2C'de kaynak ödeyen
-## değil, ürünü KULLANAN kitledir (`get_total_users` yalnız ödeyeni sayar).
+## değil, ürünü KULLANAN kitledir.
 static func usage_multiplier() -> float:
 	if ProductState.market_type() == MARKET_B2B:
 		return 1.0 + float(CustomerRegistry.get_by_market(MARKET_B2B).size()) / USAGE_DIV_B2B
@@ -288,8 +287,7 @@ static func apply_daily_satisfaction_damage() -> void:
 # =========================================================================
 
 ## §8.4 — "DOĞRULANMIŞ birikince DÜZELTME BAŞLAT açılır (DOĞRULANMIŞ 0 iken kapalıdır)."
-## Masa kapalıysa da açılmaz: kimse yokken başlatılan koşu yalnız yapımı duraklatan boş
-## bir kabuk olurdu.
+## Masa kapalıysa da açılmaz: kimse yokken başlatılan koşu boş bir kabuk olurdu.
 static func fix_run_refusal() -> String:
 	if not ProductState.is_live():
 		return REFUSAL_NOT_LIVE
@@ -331,12 +329,6 @@ static func end_fix_run() -> int:
 	GameState.set_flag(ProductState.FIX_RUN_PROGRESS, 0.0)
 	EventBus.fix_run_finished.emit(shipped, ProductState.bugs_confirmed())   # §19
 	return shipped
-
-
-## §8.4 — "Koşu başlatmak aktif yapımı duraklatır." ProductSystem bunu kendi duraklama
-## okumasında sorar; bu modül ona uzanmaz.
-static func fix_run_pauses_build() -> bool:
-	return ProductState.is_live() and ProductState.fix_run_active()
 
 
 # =========================================================================

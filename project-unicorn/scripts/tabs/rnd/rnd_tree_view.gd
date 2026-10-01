@@ -426,8 +426,8 @@ func _on_tile_input(event: InputEvent, node_id: String) -> void:
 
 # ---------------------------------------------------------------- seçim
 
-## `open_assign` derin bağdan gelir (barın "ata"sı true, Konsept'in
-## "→ Araştır"ı false). Kilitli ama AÇILMAMIŞ bir düğüm de seçilebilir: kart
+## `open_assign` derin bağdan gelir (barın "ata"sı true; ağaçtaki tık false).
+## Kilitli ama AÇILMAMIŞ bir düğüm de seçilebilir: kart
 ## kendini "Önce {düğüm}." diye açıklayabilsin diye (§7).
 func select(node_id: String, open_assign: bool = false) -> void:
 	if node_id != "" and not _slots.has(node_id):

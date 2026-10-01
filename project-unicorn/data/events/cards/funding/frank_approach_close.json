@@ -7,8 +7,7 @@
   "class": "interrupt",
   "expires_weeks": 2,
   "tags": [
-    "critical",
-    "build_safe"
+    "critical"
   ],
   "speaker": "char_mentor_frank",
   "latch": {

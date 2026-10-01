@@ -5,13 +5,23 @@ extends Control
 # _unhandled_input) so a focused Button can't swallow Space via ui_accept first.
 
 var _vc_debug_idx: int = 0   # Shift+F5: cycles the VC roster
-# Ürün sprint ekranı röleleri. Fikstür betiği yalnız debug_product_apply'da yüklenir; bayrak kapalı
-# koşu ona dokunmaz. preload: global class cache'e bağımlılık yok (yeni class_name + headless tuzağı).
-const PRODUCT7_FIXTURES := "res://scripts/debug/product_rev7_fixtures.gd"
-const PRODUCT_MODEL := preload("res://scripts/tabs/product_rev7/product_model.gd")
+# Ürün sekmesinin fikstür röleleri. Fikstür betiği yalnız debug_product_apply'da yüklenir; oyun ona
+# dokunmaz.
+const PRODUCT_FIXTURES := "res://scripts/debug/product_fixtures.gd"
 var _product_source: Object = null
 
 @onready var _windows: Node = $MidRow/CenterViewport   # WindowLayer: Esc en üstteki pencereyi kapatır
+
+
+func _ready() -> void:
+	EventBus.sprint_closed.connect(_on_sprint_closed)
+
+
+## Sprint kapanınca sürüm notu Ürün sekmesinde açılır; sekme zaten açıksa kendini yeniden çizer.
+func _on_sprint_closed(_number: int) -> void:
+	var page: Control = _windows.get_current_page_body()
+	if page == null or not page.has_method(&"set_source"):
+		EventBus.tab_changed.emit("product")
 
 
 func _layer_busy(layer_name: String) -> bool:
@@ -58,7 +68,7 @@ func _input(event: InputEvent) -> void:
 	if _layer_busy("ModalLayer"):
 		return
 	if key.keycode == KEY_ESCAPE:
-		# Guard 3: PanelLayer sakinleri (HRAtlasModal / HRPopover / PublishFlow) Esc'in sahibi;
+		# Guard 3: PanelLayer sakinleri (HRAtlasModal / HRPopover) Esc'in sahibi;
 		# yoksa Esc sekmeyi kapatır ve PanelLayer çocuğu ekranda öksüz kalır.
 		if _layer_busy("PanelLayer"):
 			return
@@ -122,16 +132,10 @@ func debug_force_vc_meeting(vc_id: String = "anchor") -> void:
 		VCPitchSystem.begin_meeting(vc_id)
 
 
-func debug_product_rev7_on() -> void:
-	if OS.is_debug_build():
-		PRODUCT_MODEL.forced = true
-		EventBus.tab_changed.emit("product")
-
-
 func debug_product_apply(fixture_id: String) -> void:
 	if OS.is_debug_build():
-		debug_product_rev7_on()
-		_product_source = (load(PRODUCT7_FIXTURES) as GDScript).new(fixture_id)
+		EventBus.tab_changed.emit("product")
+		_product_source = (load(PRODUCT_FIXTURES) as GDScript).new(fixture_id)
 		_windows.get_current_page_body().set_source(_product_source)
 
 

@@ -1,0 +1,70 @@
+{
+  "_port_note": "SprintSystem requests it for a running card; it lands on the desk and the card's Karar ver opens it. One week to answer, so an unanswered paper expires on the dispatch that closes the sprint and on_expire carries the card over.",
+  "id": "fixture.sprint_late",
+  "version_scope": "fixture",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "expires_weeks": 1,
+  "expire_note": "expire_note",
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_carry"
+      }
+    ]
+  },
+  "latch": {
+    "cooldown_weeks": 2
+  },
+  "condition": {
+    "seam": "urun.sprint_running",
+    "op": "==",
+    "value": true
+  },
+  "options": [
+    {
+      "id": "carry",
+      "outcome_id": "carried",
+      "effects": [
+        {
+          "verb": "sprint_card_carry"
+        }
+      ]
+    },
+    {
+      "id": "crunch",
+      "outcome_id": "crunched",
+      "effects": [
+        {
+          "verb": "sprint_hours",
+          "mult": 1.25
+        },
+        {
+          "verb": "morale_all",
+          "amount": -3
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Sprint yetişmeyecek",
+      "body": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek.",
+      "options": {
+        "carry": "Sonraki sprinte devret",
+        "crunch": "Fazla mesaiyle yetiştir"
+      },
+      "expire_note": "Sprint kararı verilmedi; kart sonraki sprinte devretti."
+    },
+    "en": {
+      "title": "The sprint will not make it",
+      "body": "At this pace {seam:urun.decision_card} will not be done by the end of the sprint.",
+      "options": {
+        "carry": "Carry it to the next sprint",
+        "crunch": "Push it through with overtime"
+      },
+      "expire_note": "No sprint decision came, so the card carries over to the next sprint."
+    }
+  }
+}

@@ -8,7 +8,6 @@
   "tags": [
     "critical",
     "low_stakes",
-    "build_safe",
     "terminal_warning"
   ],
   "latch": {

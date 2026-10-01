@@ -63,8 +63,6 @@ static func daily_tick() -> void:
 ## kişi aynı saatleri çalışır. Aynı sürede aynı deneyim.
 static func tick_experience() -> void:
 	var base: int = HRConstants.EXPERIENCE_PER_WORKED_DAY
-	if _build_phase_running():
-		base += HRConstants.EXPERIENCE_BUILD_BONUS
 	# §4.2: lider ataması yapım başınadır; lidersiz alanların öğrenme iklimi kurucudan gelir,
 	# o yüzden burada kurucunun Liderlik'i okunur. GERÇEK LİDER'in lead_experience_mult'u
 	# burada OKUNMUYOR (bkz. HRConstants.TRAITS).
@@ -80,7 +78,9 @@ static func tick_experience() -> void:
 			continue
 		# ÇABUK KAPAR: kişinin KENDİ öğrenme hızı (§6).
 		var own_mult: float = HRConstants.trait_mult(emp.traits, "experience_mult")
-		var gain: int = maxi(int(round(float(base) * own_mult * lead_mult)), 1)
+		# Yapım bonusu: yalnız o hafta bir sprint kartında çalışana.
+		var bonus: int = HRConstants.EXPERIENCE_BUILD_BONUS if SprintSystem.worked(emp.id) else 0
+		var gain: int = maxi(int(round(float(base + bonus) * own_mult * lead_mult)), 1)
 		CharacterRegistry.add_experience(emp.id, int(TimeModel.per_tick(gain)))
 
 
@@ -112,12 +112,6 @@ static func send_to_training(id: String, area_key: String) -> bool:
 	FinanceSystem.apply_one_time_cost(CharacterRegistry.training_fee_for(id, area_key), "training")
 	CharacterRegistry.begin_training(id, area_key)
 	return true
-
-
-## Bir geliştirme fazı KOŞUYOR mu? ProductSystem'in faz listesiyle aynı üçlü.
-static func _build_phase_running() -> bool:
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	return b != null and b.current_phase in ["iteration", "development", "bugfix"]
 
 
 # ============================================================================
@@ -152,8 +146,7 @@ static func status(c: Character) -> String:
 ## §2.2 MEŞGULİYET TEK MODEL: izindeyken · eğitimdeyken · (kurucu) yatırım hazırlığında ya da
 ## toplantıdayken. Ara kademe, yarı hız çarpanı, kısmi kapasite YOKTUR.
 ## Toplantı (Satış §5.0) sekizinci bir görev durumu değildir: oturum boyunca kurucu meşguldür.
-## Yapım yolu ProductSystem._is_free'yi, araştırma burayı okur — ikisine de eklenmezse kurucu
-## inşa ederken araştırmadan donar.
+## Canlı ürünün aşınması (ProductSystem._is_free üzerinden) ve araştırma burayı okur.
 static func is_busy(c: Character) -> bool:
 	if c == null:
 		return false
@@ -340,8 +333,8 @@ static func output_mult_for_area(c: Character, area_key: String) -> float:
 
 # ==================== §4.5 · ETKİN ÇIKTI — KANONİK FORMÜL ====================
 # "Bir kişinin bir işteki etkin çıktısı TEK BİR YERDE tanımlıdır. Başka hiçbir modül kendi
-# hız formülünü kurmaz; hepsi buna referans verir." Ürün, Satış, Destek ve Ar-Ge bu seam'i
-# çağırır ve karakter kaydına doğrudan uzanmaz.
+# hız formülünü kurmaz; hepsi buna referans verir." Satış, Destek ve Ar-Ge bu seam'i çağırır ve
+# karakter kaydına doğrudan uzanmaz; sprint puanı kendi formülündedir (SprintSystem._points).
 
 ## Bir kişinin bir ALANDAKİ saatlik etkin çıktısı. Liderlik BURADA YOK: §4.2 onu ALANIN
 ## TOPLAMINA uyguluyor — kişi başına katlansaydı kadro sayısıyla çarpılırdı.

@@ -4,7 +4,7 @@
   "category": "product",
   "tick": "scheduled",
   "class": "paper",
-  "tags": ["build_safe"],
+  "tags": [],
   "expires_weeks": 29,
   "expire_note": "FIXTURE_CONCURRENT_EXPIRE",
   "on_expire": { "penalties": [] },

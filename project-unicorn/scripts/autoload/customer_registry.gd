@@ -72,16 +72,6 @@ func get_by_market(market_type: String) -> Array[Customer]:
 	return out
 
 
-func get_total_users() -> int:
-	# B2C paying users — the B2C base is one aggregate record whose `seats` is the
-	# paying-user count, so sum seats across active B2C records (not record count).
-	var total: int = 0
-	for c in _customers.values():
-		if c.status == "active" and c.market_type == "b2c":
-			total += c.seats
-	return total
-
-
 func get_total_seats() -> int:
 	var total: int = 0
 	for c in _customers.values():

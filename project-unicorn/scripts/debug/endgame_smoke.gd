@@ -31,22 +31,13 @@ const EXPANSION_ID := "customer.expansion"
 const SHEET_WARN_ID := "funding.sheet_expiry"
 const SHEET_DECISION_ID := "funding.sheet_decision"
 
-# Fixture skill defaults. The three names are KEPT (fifty-odd call sites pass them
-# positionally) but their MEANING moved with the 2026-08-21 area migration, because the
-# three axes they were named after no longer exist:
-#   SEED_EXPERTISE 5 → the role's KEY AREA. Still the neutral point of two channels at
-#                      once: it is ProductSystem.SEED_EXPERTISE_PIVOT (commit-seed
-#                      multiplier exactly 1.0) and, for a build-assigned developer, the
-#                      number that feeds team speed. A seeded employee therefore
-#                      contributes 0.25 × 5 = 1.25 efor/day, not the old 1.0 — the two
-#                      anchors used to sit on two different axes and now share one area,
-#                      so one of them had to move. The pivot was kept and the speed anchor
-#                      moved, because the pivot is a PRODUCTION constant and the speed
-#                      anchor is a test convenience.
+# Fixture skill defaults. The names are kept because fifty-odd call sites pass them
+# positionally; what they set are areas:
+#   SEED_EXPERTISE 5 → the role's KEY AREA, inside the sprint's middle skill band: a seeded
+#                      employee works the neutral 2 points a week.
 #   SEED_PACE 3      → every OTHER area (the "rest" floor). Low but never zero: rev 2 §2
 #                      wants a one-person team to have no holes.
-#   SEED_RAPPORT 5   → LİDERLİK. Mid-ruler coordination when a seeded employee is SORUMLU,
-#                      which is exactly what the name used to buy through UYUM.
+#   SEED_RAPPORT 5   → LİDERLİK, the middle of the ruler.
 const SEED_PACE := 3
 const SEED_EXPERTISE := 5
 const SEED_RAPPORT := 5
@@ -92,9 +83,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# fork_win / fork_loss retired 2026-08-19 with the Day-180 fork;
 		# the soft cap's guards live in the calibration block at the end of this match.
 		"terminal_kills_gate":  fail = _case_terminal_kills_gate()
-		"live_during_vbuild":   fail = _case_live_during_vbuild()
-		"sprint_no_freeze":     fail = _case_sprint_no_freeze()
-		"capacity_split":       fail = _case_capacity_split()
 		"speed_preserve":       fail = _case_speed_preserve()
 		"month_summary":        fail = _case_month_summary()
 		"summary_frequency_ticks": fail = _case_summary_frequency_ticks()
@@ -129,20 +117,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"targeted_modifier_hits_named_customer": fail = _case_targeted_modifier_hits_named_customer()
 		"burn_refresh_same_tick": fail = _case_burn_refresh_same_tick()
 		"burn_day1_breakdown":  fail = _case_burn_day1_breakdown()
-		"feature_bug_seed_by_complexity": fail = _case_feature_bug_seed_by_complexity()
-		"hardening_seeds_no_bugs": fail = _case_hardening_seeds_no_bugs()
-		"single_feature_build_legal": fail = _case_single_feature_build_legal()
-		"commit_cost_charged_once": fail = _case_commit_cost_charged_once()
-		"phase_bands_20_60_20": fail = _case_phase_bands_20_60_20()
-		"speed_tracks_team_change": fail = _case_speed_tracks_team_change()
-		"deterministic_axes_at_ship": fail = _case_deterministic_axes_at_ship()
 		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
-		"iter_decision_gates_development": fail = _case_iter_decision_gates_development()
-		"iter_ceiling_founder_vs_designer": fail = _case_iter_ceiling_founder_vs_designer()
-		"iter_diminishing_returns": fail = _case_iter_diminishing_returns()
-		"iter_ceiling_never_exceeded": fail = _case_iter_ceiling_never_exceeded()
-		"iter_zero_staff_neutrality_and_axis_lock": fail = _case_iter_zero_staff_neutrality_and_axis_lock()
-		"iter_version_build_same_loop": fail = _case_iter_version_build_same_loop()
 		"runway_net_status":    fail = _case_runway_net_status()
 		"gross_runway_months":  fail = _case_gross_runway_months()
 		"locale_switch":        fail = _case_locale_switch()
@@ -200,10 +175,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"leave_does_not_pause_build": fail = _case_leave_does_not_pause_build()
 		"money_never_double_minus": fail = _case_money_never_double_minus()
 		# rev 6.1 §6.4 kapıyı geri koydu; case adıyla birlikte ters çevrildi.
-		"beta_gate_requires_full_bar": fail = _case_beta_gate_requires_full_bar()
-		"beta_discovery_decays_pool_never_empties": fail = _case_beta_discovery_decays_pool_never_empties()
-		"beta_park_frees_capacity_slot": fail = _case_beta_park_frees_capacity_slot()
-		"build_decision_tooltip_renders": fail = _case_build_decision_tooltip_renders()
 		# --- DESTEK (§8) ve ALTYAPI (§10) ---
 		"destek_empty_desk_piles_up":    fail = _case_destek_empty_desk_piles_up()
 		"fix_run_ships_subset":          fail = _case_fix_run_ships_subset()
@@ -211,14 +182,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"infra_heavy_step_costs_capacity": fail = _case_infra_heavy_step_costs_capacity()
 		"infra_overage_applies_and_stops": fail = _case_infra_overage_applies_and_stops()
 		"infra_local_provider_tradeoff": fail = _case_infra_local_provider_tradeoff()
-		"line_build_ships_and_stamps":   fail = _case_line_build_ships_and_stamps()
-		"cancel_reverts_planned_steps":  fail = _case_cancel_reverts_planned_steps()
-		"build_effort_from_hr_seams":    fail = _case_build_effort_from_hr_seams()
 		"product_read_catalogue":        fail = _case_product_read_catalogue()
-		"line_design_turns_and_gate":    fail = _case_line_design_turns_and_gate()
-		"pause_kinds_and_lead_note":     fail = _case_pause_kinds_and_lead_note()
-		"build_bar_line_states":         fail = _case_build_bar_line_states()
-		"run_profile_never_exhausts":    fail = _case_run_profile_never_exhausts()
 		"hr_frank_guard":           fail = _case_hr_frank_guard()
 		"hr_active_filters":        fail = _case_hr_active_filters()
 		"hr_overload_badge":        fail = _case_hr_overload_badge()
@@ -226,14 +190,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"speed_ladder":            fail = _case_speed_ladder()
 		"speed_day_invariant":     fail = _case_speed_day_invariant()
 		# --- Product×HR Coupling (task 2 of 3) ---
-		"coupling_speed_law":            fail = _case_coupling_speed_law()
-		"coupling_coordination":         fail = _case_coupling_coordination_sources()
-		"coupling_bug_team_average":     fail = _case_coupling_bug_team_average()
 		"coupling_wear_team_average":    fail = _case_coupling_wear_team_average()
-		"coupling_pm_experience":        fail = _case_coupling_pm_experience_bonus()
-		"coupling_tester_beta_sprint":   fail = _case_coupling_tester_beta_and_sprint()
 		"coupling_cs_dampen_axis":       fail = _case_coupling_cs_dampen_axis()
-		"coupling_overtime_applied":     fail = _case_coupling_overtime_applied()
 		# --- Sales/Customer×HR Coupling (task 2b) ---
 		"sales_pipeline_rate_by_pace":       fail = _case_sales_pipeline_rate_by_pace()
 		"sales_pipeline_stack_diminishes":   fail = _case_sales_pipeline_stack_diminishes()
@@ -263,7 +221,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"fumes_zero_revenue_ledger":          fail = _case_fumes_zero_revenue_ledger()
 		"promise_orphan_no_brand_hit":        fail = _case_promise_orphan_no_brand_hit()
 		"build_percent_single_source":        fail = _case_build_percent_single_source()
-		"build_bar_hosts_agree":              fail = _case_build_bar_hosts_agree()
 		"runway_days_and_negative_cash":      fail = _case_runway_days_and_negative_cash()
 		"role_locks_and_runway_pair":         fail = _case_role_locks_and_runway_pair()
 		"b2b_market_gate_b2c_run":            fail = _case_b2b_market_gate_b2c_run()
@@ -345,7 +302,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"harness_sniffer_matches_run_log": fail = _case_harness_sniffer_matches_run_log()
 		"quality_half_sat_25":             fail = _case_quality_half_sat_25()
 		"b2b_v1_lands_mid_band":           fail = _case_b2b_v1_lands_mid_band()
-		"field_unlocked_for_saas_ops":     fail = _case_field_unlocked_for_saas_ops()
 		"b2c_satisfaction_gate_experience": fail = _case_b2c_satisfaction_gate_experience()
 		"rival_relative_uses_template_half_sat": fail = _case_rival_relative_uses_template_half_sat()
 		"soft_cap_ends_run_at_730":        fail = _case_soft_cap_ends_run_at_730()
@@ -382,12 +338,10 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"smoke_seed_pinned":               fail = _case_smoke_seed_pinned()
 		"ambient_hourly_chance_exact":     fail = _case_ambient_hourly_chance_exact()
 		"ambient_hourly_never_at_night": fail = _case_ambient_hourly_never_at_night()
-		"creation_draft_survives_navigation": fail = _case_creation_draft_survives_navigation()
 		"borderless_note_key_exists":      fail = _case_borderless_note_key_exists()
 		# --- Temizlik turu 2026-08-20 (GDD v2 uygunluk denetiminin karar gerektirmeyen
 		#     bulguları). Üçü de ÖNCEKİ motora karşı DÜŞER; falsifikasyonla doğrulandı.
 		"source_tag_speaker_wins":         fail = _case_source_tag_speaker_wins()
-		"ship_tooltip_counts_critical_penalty": fail = _case_ship_tooltip_counts_critical_penalty()
 		"rail_tabs_match_scene_order":     fail = _case_rail_tabs_match_scene_order()
 		# --- Ekip modülü · motor tarafı 2026-08-21 (alan modeli; rev 11 §4/§12). Dördü de ÖNCEKİ
 		#     motora karşı DÜŞER; her biri falsifikasyonla doğrulandı.
@@ -409,8 +363,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"effective_skill_formula":        fail = _case_effective_skill_formula()
 		"hr_read_catalogue":              fail = _case_hr_read_catalogue()
 		# --- Trait seti · Build Bar · Görevler (2026-08-21). Beşi de ÖNCEKİ motora karşı DÜŞER.
-		"build_pauses_when_all_busy":     fail = _case_build_pauses_when_all_busy()
-		"build_resumes_when_one_frees":   fail = _case_build_resumes_when_one_frees()
 		"destek_survives_ship":           fail = _case_destek_survives_ship()
 		"gorevler_has_no_founder":        fail = _case_gorevler_has_no_founder()
 		# --- Ürün modülü · hat modeli 2026-08-24 (GDD ÜRÜN rev 6 §11, §12).
@@ -431,16 +383,13 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"research_freezes_and_resumes":   fail = _case_research_freezes_and_resumes()
 		"research_completion_no_economic_delta": fail = _case_research_completion_no_economic_delta()
 		"paused_job_resumes_on_direct_return": fail = _case_paused_job_resumes_on_direct_return()
-		"founder_split_halves_flat_speed": fail = _case_founder_split_halves_flat_speed()
 		"split_bars_name_their_cause": fail = _case_split_bars_name_their_cause()
 		"rnd_rail_open_with_waiting_page": fail = _case_rnd_rail_open_with_waiting_page()
 		"rnd_note_author_and_lines": fail = _case_rnd_note_author_and_lines()
 		"card_math_matches_gdd_example":  fail = _case_card_math_matches_gdd_example()
-		"design_turn_ladder":             fail = _case_design_turn_ladder()
 		"save_v10_product_state":         fail = _case_save_v10_product_state()
 		# --- rev 6.1 · router devri (2026-08-25). İkisi de ÖNCEKİ ağaca karşı DÜŞER.
 		"type_screen_matches_line_content": fail = _case_type_screen_matches_line_content()
-		"line_build_writes_subgenre":     fail = _case_line_build_writes_subgenre()
 		# --- Funding ladder + phase/endings (2026-08-27) ---
 		"seed_door_traction_only":               fail = _case_seed_door_traction_only()
 		"seed_door_below_bar":                   fail = _case_seed_door_below_bar()
@@ -466,6 +415,25 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"card_body_tokens_resolve":              fail = _case_card_body_tokens_resolve()
 		"seed_sheet_round_trips":                fail = _case_seed_sheet_round_trips()
 		"office_move_gates_and_save":            fail = _case_office_move_gates_and_save()
+		"sprint_two_days_close":                 fail = _case_sprint_two_days_close()
+		"sprint_capacity_from_team":             fail = _case_sprint_capacity_from_team()
+		"sprint_ceiling_125_blocks_add":         fail = _case_sprint_ceiling_125_blocks_add()
+		"sprint_carry_keeps_progress":           fail = _case_sprint_carry_keeps_progress()
+		"sprint_mvp_three_identity_k1":          fail = _case_sprint_mvp_three_identity_k1()
+		"sprint_faulty_ticket_deterministic":    fail = _case_sprint_faulty_ticket_deterministic()
+		"sprint_fix_card_closes_tickets":        fail = _case_sprint_fix_card_closes_tickets()
+		"sprint_beta_delays_release":            fail = _case_sprint_beta_delays_release()
+		"sprint_auto_start_after_a_day":         fail = _case_sprint_auto_start_after_a_day()
+		"sprint_request_on_time_met":            fail = _case_sprint_request_on_time_met()
+		"sprint_paid_plan_opens_paid_tier":      fail = _case_sprint_paid_plan_opens_paid_tier()
+		"sprint_save_roundtrip":                 fail = _case_sprint_save_roundtrip()
+		"sprint_decision_blocks_progress":       fail = _case_sprint_decision_blocks_progress()
+		"sprint_beta_card_cannot_be_added":      fail = _case_sprint_beta_card_cannot_be_added()
+		"sprint_release_resets_live_bugs":       fail = _case_sprint_release_resets_live_bugs()
+		"save_v14_build_becomes_sprint_plan":    fail = _case_save_v14_build_becomes_sprint_plan()
+		"save_v14_history_becomes_releases":     fail = _case_save_v14_history_becomes_releases()
+		"product_paid_plan_locked_until_mvp":    fail = _case_product_paid_plan_locked_until_mvp()
+		"product_pm_plan_opens_as_next_sprint":  fail = _case_product_pm_plan_opens_as_next_sprint()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -684,59 +652,6 @@ static func _drain_to(event_id: String, max_steps: int = 8) -> bool:
 # Occurrences of a gate scene across queue + active (must never exceed 1).
 static func _instances_of(event_id: String) -> int:
 	return EventGate.instances_of(event_id)
-
-
-# Rev3: aktif build'i hedef faza gelene dek ProductSystem.hourly_tick ile sürer
-# (sınırlı döngü; gün ilerletmez — saf build-motoru sürüşü).
-# Build Bar grameri (2026-08-19): iki oyuncu koltuğu var — "Geliştirmeye geç" (tur 1
-# bitince açılır) ve "Beta'ya geç" (geliştirme %80'de park eder). Hedef İLERİ bir fazsa
-# helper açılan koltuğa HEMEN oturur — SIFIR tamamlanmış ek tur (yeni başlamış tur 2
-# kazançsız terk edilir), yani sıfır tur kazancı; determinizm case'leri (axes/ship
-# damgaları) bire bir aynı kalır.
-static func _run_build_to_phase(phase: String, max_hours: int = 24 * 120) -> bool:
-	for i in max_hours:
-		var b: FeatureBuild = ProductSystem.get_active_build()
-		if b == null:
-			return false
-		if b.current_phase == phase:
-			return true
-		if b.current_phase == "iteration" and phase != "iteration" and ProductSystem.can_enter_development():
-			ProductSystem.enter_development()
-			continue
-		# BANDI BEKLER, KAPIYI DEĞİL (D2): fixture'lar geliştirmenin gerçekten koştuğu
-		# bir beta istiyor. `can_enter_beta` artık geliştirmenin ilk saatinde de true.
-		if b.current_phase == "development" and phase in ["bugfix", "shipped"] and ProductSystem.development_band_complete():
-			ProductSystem.enter_beta()
-			continue
-		ProductSystem.hourly_tick(i % 24)
-	var b_end: FeatureBuild = ProductSystem.get_active_build()
-	return b_end != null and b_end.current_phase == phase
-
-
-# İterasyon-döngüsü sürücüleri (Build Bar): tasarım bandını TUR 1'İN SONUNA sürer
-# (tur 2 kendiliğinden başlar → "Geliştirmeye geç" açılır) / koşan turu bitene dek koşar
-# (sayaç artar ya da tavan parkı düşer).
-static func _drive_to_round_end(max_hours: int = 24 * 60) -> bool:
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b == null:
-		return false
-	for i in max_hours:
-		if ProductSystem.can_enter_development():
-			return true
-		ProductSystem.hourly_tick(i % 24)
-	return ProductSystem.can_enter_development()
-
-
-static func _run_iteration_round(max_hours: int = 24 * 30) -> bool:
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b == null or b.current_phase != "iteration" or b.iteration_decision_pending:
-		return false
-	var start_count: int = b.iteration_count
-	for i in max_hours:
-		if b.iteration_count > start_count or b.iteration_decision_pending:
-			return true
-		ProductSystem.hourly_tick(i % 24)
-	return b.iteration_count > start_count or b.iteration_decision_pending
 
 
 # --- Run Ledger + newspaper copy (Ending Screen) ---
@@ -1234,167 +1149,7 @@ static func _case_pivot_decline() -> String:
 
 # --- Live-lifecycle case (canlı-yaşam-döngüsü kanonu) ---
 
-static func _case_live_during_vbuild() -> String:
-	# KANON: ship edilmiş sürüm CANLI kalır — sonraki sürüm (v3) geliştirilirken
-	# audience/MRR akar, wear işler, sprint başlatılabilir; yalnız v3'ün ship'i
-	# canlı sürümü değiştirir. (Playtest bug'ı: v3 dev başlayınca ekonomi taş
-	# kesiliyordu — mvp_version_build_active freeze'i + slot-kilitli wear/sprint.)
-	_seed_live_product()
-	if not ProductSystem.start_version_build(["ai_assistant_voice"], "founder"):
-		return "v3 build could not start"
-	var aud0: float = float(GameState.get_flag("b2c_audience", 0))
-	var mrr0: int = GameState.mrr
-	# İki tik: saatlik ekonomi + günlük slotlar, motorun gerçek sırasıyla (_sim_day_full).
-	for d in 2:
-		_sim_day_full()
-		if not GameState.run_active:
-			return "run ended mid-case (day %d, endings %s)" % [GameState.day, str(_endings)]
-	var aud1: float = float(GameState.get_flag("b2c_audience", 0))
-	if absf(aud1 - aud0) < 0.5:
-		return "audience frozen during v3 dev (%.1f -> %.1f)" % [aud0, aud1]
-	if GameState.mrr == mrr0 and absf(aud1 - aud0) > 20.0:
-		return "MRR frozen while audience moved (mrr %d)" % GameState.mrr
-	if float(GameState.get_flag("mvp_live_bug_progress", 0.0)) == 0.0 \
-			and int(GameState.get_flag("mvp_live_bug_count", 0)) == 0:
-		return "post-ship wear frozen during v3 dev"
-	# Sprint build SÜRERKEN başlatılabilmeli ve bug temizlemeli (kanon).
-	GameState.set_flag("mvp_live_bug_count", 6)
-	if not ProductSystem.start_bug_sprint():
-		return "bug sprint blocked during v3 dev"
-	_sim_day_full()
-	if int(GameState.get_flag("mvp_live_bug_count", 99)) >= 6:
-		return "sprint not clearing bugs during v3 dev"
-	_sim_day_full()   # bir haftalık sprint build'le paralel yarı hızda iki tik sürer
-	if GameState.get_flag("mvp_bug_sprint_active", false):
-		return "sprint never completed"
-	# v3 ship canlı sürümü DEĞİŞTİRİR (tek yaşam döngüsü, slot temiz).
-	# Rev3: fazlar otomatik akar — build'i Beta'ya dek sür, sonra Yayınla.
-	if not _run_build_to_phase("bugfix"):
-		return "v3 build never reached beta"
-	ProductSystem.launch()
-	ProductSystem.ship_active_build()
-	if int(GameState.get_flag("mvp_version", 0)) != 3:
-		return "ship did not bump version (got %s)" % str(GameState.get_flag("mvp_version", 0))
-	if ProductSystem.get_active_build() != null:
-		return "build slot not cleared after ship"
-	if GameState.get_flag("mvp_bug_sprint_active", false):
-		return "sprint flag dirty after ship"
-	return ""
-
-
 # --- Kapasite havuzu + freeze-silme case'leri ---
-
-static func _case_sprint_no_freeze() -> String:
-	# KALICI KANIT: sprint'in audience-freeze'i silindi — sprint aktifken
-	# trials (audience) ve payers/MRR akmaya devam eder (bedel artık kapasite
-	# havuzu, ekonomi donması değil).
-	_seed_live_product()
-	GameState.set_flag("mvp_live_bug_count", 20)
-	if not ProductSystem.start_bug_sprint():
-		return "sprint could not start"
-	var aud0: float = float(GameState.get_flag("b2c_audience", 0))
-	var mrr0: int = GameState.mrr
-	# Yarım hafta: bir haftalık sprint pencere boyunca aktif kalır.
-	TimeManager.advance_hours(TimeModel.HOURS_PER_DAY / 2)
-	if not GameState.get_flag("mvp_bug_sprint_active", false):
-		return "sprint ended early — case window invalid"
-	var aud1: float = float(GameState.get_flag("b2c_audience", 0))
-	if absf(aud1 - aud0) < 0.5:
-		return "audience frozen during sprint (%.1f -> %.1f)" % [aud0, aud1]
-	if GameState.mrr == mrr0 and absf(aud1 - aud0) > 20.0:
-		return "payers/MRR frozen while audience moved (mrr %d)" % GameState.mrr
-	return ""
-
-
-static func _case_capacity_split() -> String:
-	# Kapasite = 1 (kurucu, mühendis yok): sprint + v-build paralelken İKİSİ DE
-	# yarı hız; mid-job mühendis eklenince (kapasite 2) anında tam hıza döner.
-	# Sıralama bilinçli: önce sprint, sonra v-build → silinen sprint→v-build
-	# guard'ının regresyon kanıtı da bu case'te.
-	_seed_live_product()
-	if CharacterRegistry.count_active_developers() != 0:
-		return "unexpected engineer in registry (capacity would be 2)"
-	# 1) Yalnız sprint → tam hız referansı (24 saatte 1 hafta).
-	GameState.set_flag("mvp_live_bug_count", 28)
-	if not ProductSystem.start_bug_sprint():
-		return "sprint could not start"
-	# Sprint bir hafta sürer; üç ölçüm penceresi bunu aşar, fikstür süreyi uzatır.
-	GameState.set_flag("mvp_sprint_weeks_total", 99)
-	var s0: float = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0))
-	for h in 24:
-		ProductSystem.hourly_tick(h)   # saf hız ölçümü — sales/event gürültüsü yok
-	if absf(float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0)) - s0 - 1.0) > 0.02:
-		return "solo sprint not full speed"
-	# 2) Sprint AKTİFKEN v-build başlamalı (silinen guard'ın kanıtı) → ikisi yarı hız.
-	# Rev3 ölçümü: build ilerlemesi EFOR cinsinden — beklenen günlük harcama =
-	# team_speed(b) × capacity_speed_factor (taze çarpım; sabit 0.5/1.0 değil).
-	#
-	# LEDGER (Coupling): the expectation is now ACCUMULATED PER HOUR instead of sampled once.
-	# team_speed became phase-aware, so a 24-hour window that crosses a faz sınırı has two
-	# different speeds in it and a single sample silently mis-predicts the total (that is
-	# exactly how this case first failed: 2.792 measured against a 2.000 sample). Summing the
-	# same per-hour product the engine sums is not a weaker assertion — it is the "taze çarpım"
-	# law this case already claimed, now actually enforced hour by hour.
-	# ÜÇ özellik, bir değil: ölçüm iki tam 24 saatlik pencereyi efor TAVANINA ÇARPMADAN
-	# geçirmek zorunda. Tavana dayanan pencere son saatlerde daha az efor yazar ve ölçülen
-	# gün beklenenin altına düşer — 2026-08-21 alan migrasyonunda tam olarak bu oldu
-	# (2.700 ölçüldü, 4.250 bekleniyordu), çünkü ekip hızlandı ve tek özellik erken bitti.
-	# Ölçülen yasa (yarı hız / tam hıza dönüş) değişmedi; pencere dardı.
-	if not ProductSystem.start_version_build(
-			["ai_assistant_voice", "ai_assistant_streaming", "ai_assistant_tools"], "founder"):
-		return "v-build blocked during sprint (guard not removed)"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	# Fikstür: iki tik uzunluğunda ölçüm penceresi geliştirme bandına sığsın diye build uzatılır.
-	b.total_efor = 200.0
-	if absf(ProductSystem.capacity_speed_factor() - 0.5) > 0.001:
-		return "parallel factor not 0.5 (%.2f)" % ProductSystem.capacity_speed_factor()
-	# Build Bar grameri: v-build'in minik tasarım bandı ölçüm penceresinin İÇİNE
-	# düşmesin — tur 1'in sonuna sür, "Geliştirmeye geç" de; iki pencere de development'ta
-	# ölçülür (mid-job developer kıyası da ancak orada anlamlı).
-	for ih in 24 * 30:
-		if ProductSystem.can_enter_development():
-			break
-		ProductSystem.hourly_tick(ih % 24)
-	if not ProductSystem.can_enter_development():
-		return "v-build design band never ended round 1"
-	ProductSystem.enter_development()
-	var want_day: float = 0.0
-	var e0: float = b.efor_spent
-	s0 = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0))
-	for h in 24:
-		want_day += TimeModel.per_tick(ProductSystem.team_speed(b)) * ProductSystem.capacity_speed_factor() / 24.0
-		ProductSystem.hourly_tick(h)
-	var db: float = b.efor_spent - e0
-	var ds: float = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0)) - s0
-	if absf(db - want_day) > 0.02:
-		return "build not at split speed (%.3f efor/day, want %.3f)" % [db, want_day]
-	if absf(ds - 0.5) > 0.02:
-		return "sprint not half speed (%.3f day/day)" % ds
-	# 3) Mid-job hire → kapasite 2 → faktör 1.0'a DÖNER ve gerçek günlük çıktı BÜYÜR.
-	# The relative claim compares MEASURED rates, not sampled expectations: a developer hired
-	# during the TASARIM fazı contributes nothing to speed yet (rol-faz eşlemesi),
-	# so comparing two samples could read equal while real throughput still doubled from the
-	# recovered capacity factor. The measured comparison is the honest one either way.
-	_make_employee("char_smoke_capacity_eng", "Smoke Eng", HRConstants.ROLE_DEVELOPER)
-	if absf(ProductSystem.capacity_speed_factor() - 1.0) > 0.001:
-		return "factor did not recover to 1.0 (%.2f)" % ProductSystem.capacity_speed_factor()
-	var want_day2: float = 0.0
-	e0 = b.efor_spent
-	s0 = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0))
-	for h in 24:
-		want_day2 += TimeModel.per_tick(ProductSystem.team_speed(b)) * ProductSystem.capacity_speed_factor() / 24.0
-		ProductSystem.hourly_tick(h)
-	var db2: float = b.efor_spent - e0
-	ds = float(GameState.get_flag("mvp_sprint_weeks_elapsed", 0.0)) - s0
-	if absf(db2 - want_day2) > 0.02:
-		return "build did not recover to full speed (%.3f efor/day, want %.3f)" % [db2, want_day2]
-	if db2 <= db:
-		return "recovered capacity did not raise real throughput (%.3f -> %.3f)" % [db, db2]
-	db = db2
-	if absf(ds - 1.0) > 0.02:
-		return "sprint did not recover to full speed (%.3f day/day)" % ds
-	return ""
-
 
 static func _case_speed_preserve() -> String:
 	# İş-3 fix'i: aksiyon butonları (build commit, sprint start) artık
@@ -1723,7 +1478,7 @@ static func _case_callback_contract() -> String:
 static func _case_pitch_bug_interrogation() -> String:
 	# A.4: live bugs > 0 must FIRE the product interrogation (sorgu key "bugs") and
 	# leave the bugs_under callback UNMET — both were silently dead while VCPitch read
-	# the never-written mvp_bug_count key (now mvp_live_bug_count with launch fallback).
+	# the never-written mvp_bug_count key (now mvp_live_bug_count).
 	GameState.set_phase(3)
 	_force("pass")
 	GameState.set_flag("mvp_shipped", true)
@@ -2230,10 +1985,11 @@ static func _case_hunt_offer_lifecycle() -> String:
 	return ""
 
 
-## v13 → v14. A real save taken on tick 40 gets known day values under the v13 names in every
+## v13 → v15. A real save taken on tick 40 gets known day values under the v13 names in every
 ## block, is aged to v13 and read back: today 40 is week 6, a past day d is week (d − 1) / 7 + 1,
 ## a due date is week 6 plus the weeks it had left (41 and 42 → 7, where the past-day rule says 6).
-## The migrated world then loads and runs a tick.
+## The v15 step then drops the build and its sprint flags; the run has no product type, so it opens
+## without a sprint. The migrated world then loads and runs a tick.
 static func _case_save_v13_day_stamps_migrate() -> String:
 	var slot: String = "smoke_v13_days_%d" % OS.get_process_id()
 	var done := func(why: String) -> String:
@@ -2254,14 +2010,14 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 	var row_of := func(rows: Array, id: String) -> Dictionary:
 		return rows.filter(func(r: Dictionary) -> bool: return r["id"] == id)[0]
 	if int(gs["day"]) != 40 or (ev["papers"] as Dictionary).is_empty() \
-			or typeof(sys["product"]["active_build"]) != TYPE_NIL:
+			or (sys["product"] as Dictionary).has("active_build"):
 		return done.call("fixture: want tick 40, a paper on the desk and no build (day %s, papers %s)"
 			% [gs["day"], (ev["papers"] as Dictionary).keys()])
 
 	# --- the file aged to v13 ----------------------------------------------------
 	raw["schema_version"] = 13
 	for k in ["shutter_weeks_left", "summary_ledger", "runway_warn_band", "founder_meeting_hours",
-			"sales_meetings_week"]:
+			"sales_meetings_week", "product"]:
 		gs.erase(k)
 	gs.merge({"shutter_days_left": 10, "brand_low_since_day": 15, "vc_meeting_cancel_day": 39,
 		"bootstrap_milestone_day": -1, "company_start_hour": 7, "company_work_hours": 9,
@@ -2278,8 +2034,6 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 			"net": 0, "red_days": 3}],
 	}, true)
 	var flags: Dictionary = gs["flags"]
-	for k in ["mvp_sprint_weeks_total", "mvp_sprint_weeks_elapsed"]:
-		flags.erase(k)
 	flags.merge({"mvp_launch_day": 10, "mvp_version_launch_day": 36,
 		"mvp_version_history": [{"version": 1, "day": 10}], "mvp_bug_history": [3, 4, 5],
 		"mvp_sprint_days_total": 10, "mvp_sprint_days_elapsed": 3.5, "sales_weekly_anchor_day": 0,
@@ -2296,11 +2050,9 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 	(row_of.call(reg["prospects"], "lead_v13") as Dictionary).merge({"spawned_on_day": 30,
 		"expires_on_day": 41, "work_started_day": -1, "work_due_day": 45}, true)
 	reg["promises"][0]["deadline_day"] = 41
-	# A build and an arc have nothing behind them here; they ride only as far as read_slot.
-	var build: Dictionary = SaveCodec.res_to_dict(FeatureBuild.new())
-	build.erase("iteration_round_weeks")
-	build.merge({"start_day": 22, "beta_entered_day": 36, "iteration_round_days": 3.5}, true)
-	sys["product"]["active_build"] = build
+	# A build and an arc have nothing behind them here; the build rides through both migrations.
+	sys["product"]["active_build"] = {SaveCodec.TYPE_TAG: "FeatureBuild", "start_day": 22,
+		"beta_entered_day": 36, "iteration_round_days": 3.5}
 	var scope := {"customer": {"type": "customer", "id": cust_id, "bound_day": 22}}
 	ev["arcs"]["smoke_v13"] = {"id": "smoke_v13", "subject": {"type": "employee", "id": "emp_save",
 		"bound_day": 22}, "started_day": 15, "awaiting_since": 29,
@@ -2353,7 +2105,7 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 	expect.call("runway_warn_band", mgs.get("runway_warn_band"), 3)
 	expect.call("sales_return_locks", mgs["sales_return_locks"].get("V13 Co"), 7)
 	expect.call("hr_search.arrival_day", mgs["hr_search"].get("arrival_day"), 7)
-	gone.call("game_state", mgs, ["shutter_days_left"])
+	gone.call("game_state", mgs, ["shutter_days_left", "product"])
 	gone.call("hr_search", mgs["hr_search"], ["started_day"])
 	var cash: Array = (mgs["cash_history"] as Array).map(
 		func(r: Dictionary) -> Array: return [int(r["day"]), int(r["cash"])])
@@ -2380,15 +2132,13 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 	expect.call("mvp_launch_day", mfl.get("mvp_launch_day"), 2)
 	expect.call("mvp_version_launch_day", mfl.get("mvp_version_launch_day"), 6)
 	expect.call("mvp_version_history.day", mfl["mvp_version_history"][0].get("day"), 2)
-	expect.call("mvp_sprint_weeks_total", mfl.get("mvp_sprint_weeks_total"), 2)
-	expect.call("mvp_sprint_weeks_elapsed", mfl.get("mvp_sprint_weeks_elapsed"), 0.5)
 	expect.call("sales_weekly_anchor_day (empty)", mfl.get("sales_weekly_anchor_day"), 0)
 	expect.call("angel_seed_accepted_day", mfl.get("angel_seed_accepted_day"), 5)
 	expect.call("finance_runway_warn_snooze_until_day", mfl.get("finance_runway_warn_snooze_until_day"), 7)
 	if (mfl["mvp_bug_history"] as Array).map(func(n: Variant) -> int: return int(n)) != [5]:
 		bad.append("mvp_bug_history = %s, want the newest sample" % str(mfl["mvp_bug_history"]))
-	gone.call("flags", mfl, ["mvp_sprint_days_total", "mvp_sprint_days_elapsed", "sales_meeting_active",
-		"sales_meeting_used_day", "sales_weekly_closes"])
+	gone.call("flags", mfl, ["mvp_sprint_days_total", "mvp_sprint_days_elapsed", "mvp_sprint_weeks_total",
+		"mvp_sprint_weeks_elapsed", "sales_meeting_active", "sales_meeting_used_day", "sales_weekly_closes"])
 
 	var memp: Dictionary = row_of.call(mreg["characters"], "emp_save")
 	expect.call("hire_day", memp.get("hire_day"), 4)
@@ -2409,11 +2159,7 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 	gone.call("prospect", mlead, ["work_due_day"])
 	expect.call("promise.deadline_day", mreg["promises"][0].get("deadline_day"), 7)
 
-	var mbuild: Dictionary = st["systems"]["product"]["active_build"]
-	expect.call("build.start_day", mbuild.get("start_day"), 4)
-	expect.call("build.beta_entered_day", mbuild.get("beta_entered_day"), 6)
-	expect.call("build.iteration_round_weeks", mbuild.get("iteration_round_weeks"), 0.5)
-	gone.call("build", mbuild, ["iteration_round_days"])
+	gone.call("systems.product", st["systems"]["product"], ["active_build"])
 
 	var arc: Dictionary = mev["arcs"]["smoke_v13"]
 	expect.call("arc.started_day", arc.get("started_day"), 3)
@@ -2441,7 +2187,6 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 		return done.call("; ".join(bad))
 
 	# --- the migrated world loads and runs a tick --------------------------------
-	st["systems"]["product"]["active_build"] = null
 	(mev["arcs"] as Dictionary).erase("smoke_v13")
 	if not SaveManager.apply_loaded_state(payload):
 		return done.call("apply_loaded_state returned false")
@@ -2449,6 +2194,8 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 			or CharacterRegistry.get_character("emp_save").training_weeks_left != 2:
 		return done.call("the load did not seat the week values (tick %d, shutter %d)"
 			% [GameState.day, GameState.shutter_weeks_left])
+	if SprintSystem.is_typed():
+		return done.call("a run without a product type opened with a sprint")
 	_sim_day_full()
 	if GameState.day != 7:
 		return done.call("one day from the load reached tick %d, want 7" % GameState.day)
@@ -2716,27 +2463,26 @@ static func _case_series_a_road_closed_when_all_funds_close() -> String:
 
 static func _case_prep_bonus_and_capacity() -> String:
 	GameState.set_phase(3)
+	_park_leave([_make_employee("char_prep_dev", "Prep Dev", HRConstants.ROLE_DEVELOPER)])
+	var capacity: int = SprintSystem.capacity()
 	if not VCPitchSystem.request_meeting("anchor"):
 		return "request refused"
 	if not VCPitchSystem.start_prep("anchor", "rakamlar"):
 		return "prep refused (should be allowed, 3 days out)"
 	if not GameState.get_flag("pitch_prep_active", false):
 		return "capacity flag not set"
-	# MEKANİZMA DEĞİŞTİ, KONU AYNI (H6, 2026-08-21). Hazırlık eskiden KAPASİTE TALEBİ
-	# sayılıyordu, yani yapımın TAMAMINI yavaşlatıyordu — yanlış aktör: hazırlık yalnız
-	# KURUCUYU tutar, çalışanların hızına dokunmamalı. Artık kurucuyu MEŞGUL sayar;
-	# tek taşıyıcı oysa yapım DURUR, değilse hiçbir şey yavaşlamaz (ara kademe yok).
-	if ProductSystem.capacity_demand() != 0:
-		return "VC prep still eats build capacity (demand=%d) — H6 moved it off the multiplier" \
-			% ProductSystem.capacity_demand()
+	# Hazırlık yalnız kurucuyu tutar: canlı ürüne meşgul sayılır, sprintin haftalık puanına
+	# dokunmaz (sprint ekibinden yalnız izin ve Ar-Ge düşürür).
+	if SprintSystem.capacity() != capacity:
+		return "VC prep moved the sprint capacity (%d -> %d)" % [capacity, SprintSystem.capacity()]
 	var founder: Character = CharacterRegistry.get_founder()
 	if ProductSystem._is_free(founder):
-		return "a founder in VC prep still counts as FREE for the build"
+		return "a founder in VC prep still counts as FREE for the live product"
 	VCPitchSystem.begin_meeting("anchor")  # consumes the prep focus; the founder is at the table
 	if GameState.get_flag("pitch_prep_active", false):
 		return "capacity flag not cleared at meeting start"
 	if ProductSystem._is_free(founder):
-		return "a founder seated at the pitch still counts as FREE for the build"
+		return "a founder seated at the pitch still counts as FREE for the live product"
 	VCPitchSystem.withdraw()
 	VCPitchSystem.end_sitting()
 	if not ProductSystem._is_free(founder):
@@ -2935,625 +2681,9 @@ static func _case_burn_refresh_same_tick() -> String:
 
 # --- Feature bug-seeding cases ---
 
-static func _case_feature_bug_seed_by_complexity() -> String:
-	# A v1 build seeds bugs = Σ feature complexity at commit (COEF 1.0); high > low.
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_streaming"], ""):
-		return "start_build(low) failed"
-	var low: int = ProductSystem.get_active_build().bug_count   # chat 2 + streaming 2 = 4
-	ProductSystem.cancel_build()
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
-		return "start_build(high) failed"
-	var high: int = ProductSystem.get_active_build().bug_count   # tools 4 + image 4 = 8
-	if low != 4:
-		return "low seed wrong: %d (want 4)" % low
-	if high != 8:
-		return "high seed wrong: %d (want 8)" % high
-	if high <= low:
-		return "high seed (%d) not > low (%d)" % [high, low]
-	# Seeded bugs flow through the existing effective-stability channel.
-	if QualityModel.effective_stability(50.0, high) >= 50.0:
-		return "seeded bugs do not erode effective stability"
-	return ""
-
-
-static func _case_hardening_seeds_no_bugs() -> String:
-	# A pure hardening (strengthen-only) v2 build seeds ZERO feature bugs.
-	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
-	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
-	GameState.set_flag("mvp_innovation", 20.0)
-	GameState.set_flag("mvp_stability", 25.0)
-	GameState.set_flag("mvp_experience", 22.0)
-	GameState.set_flag("mvp_live_bug_count", 3)
-	GameState.set_flag("mvp_version", 1)
-	if not ProductSystem.start_version_build([], "", ["ai_assistant_chat"]):
-		return "start_version_build(harden) failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b.bug_count != 3:
-		return "hardening seeded bugs: bug_count=%d (want 3 inherited, 0 seed)" % b.bug_count
-	if b.strengthened_feature_ids.size() != 1 or b.strengthened_feature_ids[0] != "ai_assistant_chat":
-		return "strengthen list wrong: %s" % str(b.strengthened_feature_ids)
-	return ""
-
-
 # --- Rev3: efor/hız motoru + deterministik eksen case'leri ---
 
-static func _case_single_feature_build_legal() -> String:
-	# Rev3: 2-4 seçim limiti kalktı — tek feature meşru build; boş liste reddedilir.
-	if ProductSystem.start_build("ai_assistant", [], ""):
-		return "empty feature list accepted"
-	if ProductSystem.get_active_build() != null:
-		return "rejected commit left an active build"
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
-		return "single-feature build rejected"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var want_efor: int = ProductCatalog.get_feature_efor("ai_assistant_chat")
-	if want_efor != 6:
-		return "chat efor changed: %d (want 6 = 4 + cx2)" % want_efor
-	if absf(b.total_efor - float(want_efor)) > 0.001:
-		return "total_efor %.1f != feature efor %d" % [b.total_efor, want_efor]
-	return ""
-
-
-static func _case_commit_cost_charged_once() -> String:
-	# Üçüncü-parti maliyet commit'te TAM BİR KEZ düşer (Finance seam); sonraki
-	# günler yalnız günlük net akış; strengthen-only v2 hiç tahsil etmez.
-	var cash0: int = GameState.cash
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_voice"], ""):
-		return "start_build failed"
-	if GameState.cash != cash0 - 800:
-		return "commit cost wrong: %d -> %d (want -800)" % [cash0, GameState.cash]
-	for i in 3:
-		var before: int = GameState.cash
-		_sim_day()
-		var day_delta: int = before - GameState.cash
-		# MRR 0 → tik akışı = -7 × günlük burn; başka kesinti YOK
-		if day_delta != TimeModel.DAYS_PER_TICK * GameState.daily_burn:
-			return "extra one-time delta on tick %d: -%d (daily burn %d)" % [GameState.day, day_delta, GameState.daily_burn]
-	# Strengthen-only v2: inherited/strengthen asla yeniden tahsil edilmez.
-	ProductSystem.cancel_build()
-	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
-	GameState.set_flag("mvp_components", ["ai_assistant_voice"])
-	GameState.set_flag("mvp_version", 1)
-	var cash1: int = GameState.cash
-	if not ProductSystem.start_version_build([], "", ["ai_assistant_voice"]):
-		return "strengthen-only v2 failed"
-	if GameState.cash != cash1:
-		return "strengthen-only v2 charged cash (%d -> %d)" % [cash1, GameState.cash]
-	return ""
-
-
-static func _case_phase_bands_20_60_20() -> String:
-	# Build Bar grameri (2026-08-19): tasarım bandı dolunca tur 2 KENDİLİĞİNDEN başlar
-	# (efor donuk, faz aynı) — fazdan çıkış yalnız enter_development(). Geliştirme
-	# bandı %80'de PARK eder — çıkış yalnız enter_beta(). %100'de Beta'da PARK
-	# (auto-ship yok); launch yalnız Beta'da iş yapar.
-	GameState.set_cash(50000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	# Beta öncesi launch → uyarı + no-op (build durur, ship flag'i yazılmaz).
-	ProductSystem.launch()
-	if GameState.get_flag("mvp_shipped", false) or ProductSystem.get_active_build() == null:
-		return "launch outside beta was not a no-op"
-	# 1) Tasarım bandı: tur 1 bitene dek sür; faz kendi kendine asla değişmez.
-	var hours: int = 0
-	while not ProductSystem.can_enter_development():
-		if b.current_phase != "iteration":
-			return "left iteration without a decision (phase %s)" % b.current_phase
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 120:
-			return "design band never ended round 1 (%.2f / %.2f)" % [b.efor_spent, b.total_efor]
-	var design_cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
-	if absf(b.efor_spent - design_cap) > 0.001:
-		return "efor not clamped at design band (%.3f, want %.3f)" % [b.efor_spent, design_cap]
-	if b.iteration_count != 2 or b.iteration_decision_pending:
-		return "round 2 did not auto-start when round 1 ended (count %d, pending %s)" % [b.iteration_count, str(b.iteration_decision_pending)]
-	# 2) Turlar kendi kendine döner: yarım tur daha → faz aynı, efor donuk, tur 2 hâlâ koşuyor.
-	for i in TimeModel.HOURS_PER_DAY / 2:
-		ProductSystem.hourly_tick(i)
-	if b.current_phase != "iteration":
-		return "auto-advanced out of design (phase %s)" % b.current_phase
-	if absf(b.efor_spent - design_cap) > 0.001:
-		return "efor moved during design rounds (%.3f)" % b.efor_spent
-	if b.iteration_count != 2 or b.iteration_round_weeks <= 0.0:
-		return "round 2 not running half a round in (count %d, weeks %.2f)" % [b.iteration_count, b.iteration_round_weeks]
-	# 3) Oyuncu kararı → development (yarım tur 2 kazançsız terk edilir); dev bandı %80'de PARK eder.
-	ProductSystem.enter_development()
-	if b.current_phase != "development":
-		return "enter_development did not flip phase (%s)" % b.current_phase
-	var dev_cap: float = ProductSystem.PHASE_DEV_END * b.total_efor
-	hours = 0
-	while not ProductSystem.development_band_complete():
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 120:
-			return "development never reached the park (%.1f / %.1f)" % [b.efor_spent, b.total_efor]
-		if b.current_phase != "development":
-			return "left development without a decision (phase %s)" % b.current_phase
-	if absf(b.efor_spent - dev_cap) > 0.001:
-		return "dev park efor not clamped at PHASE_DEV_END (%.3f, want %.3f)" % [b.efor_spent, dev_cap]
-	# 4) Geliştirme parkı: 3 gün daha tik → faz aynı, efor donuk, bug birikmez.
-	var bugs_at_park: int = b.bug_count
-	for i in 24 * 3:
-		ProductSystem.hourly_tick(i % 24)
-	if b.current_phase != "development" or absf(b.efor_spent - dev_cap) > 0.001:
-		return "dev park violated (phase %s, efor %.3f)" % [b.current_phase, b.efor_spent]
-	if b.bug_count != bugs_at_park:
-		return "bugs accrued during the dev park (%d -> %d)" % [bugs_at_park, b.bug_count]
-	# 5) Oyuncu kararı → beta; beta bandında efor %100'e akar.
-	ProductSystem.enter_beta()
-	if b.current_phase != "bugfix":
-		return "enter_beta did not flip phase (%s)" % b.current_phase
-	hours = 0
-	while b.efor_spent < b.total_efor:
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 120:
-			return "efor never completed (%.1f / %.1f)" % [b.efor_spent, b.total_efor]
-		if b.current_phase != "bugfix":
-			return "phase %s during the beta band" % b.current_phase
-	# %100 → Beta'da SÜRESİZ park: 3 gün daha tik, ship YOK, build slotu dolu.
-	for i in 24 * 3:
-		ProductSystem.hourly_tick(i % 24)
-	if GameState.get_flag("mvp_shipped", false):
-		return "auto-shipped from beta park"
-	if ProductSystem.get_active_build() == null:
-		return "build slot cleared without launch"
-	if ProductSystem.get_active_build().current_phase != "bugfix":
-		return "park phase wrong: %s" % ProductSystem.get_active_build().current_phase
-	# Beta'da launch → ship moment kuyruğa düşer, ship_active_build dünyayı damgalar.
-	ProductSystem.launch()
-	if _instances_of("product.first_ship") < 1:
-		return "ship moment not admitted from beta launch"
-	ProductSystem.ship_active_build()
-	if not GameState.get_flag("mvp_shipped", false):
-		return "ship did not set mvp_shipped"
-	if ProductSystem.get_active_build() != null:
-		return "build slot not cleared after ship"
-	return ""
-
-
 # --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
-
-static func _case_iter_decision_gates_development() -> String:
-	# İterasyon fazından ASLA kendi kendine çıkılmaz: tur 1 bitince tur 2 kendiliğinden
-	# başlar (efor donuk, faz aynı), Develop kapısı tur 1 bitmeden KAPALI, çıkış yalnız
-	# enter_development() — ve öğretici moment tam BİR kez düşer (5 gün, iki tur bitse de).
-	GameState.set_cash(50000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if ProductSystem.can_enter_development():
-		return "Develop offered before round 1 ended"
-	ProductSystem.enter_development()   # guarded no-op before round 1 ends
-	if b.current_phase != "iteration":
-		return "enter_development flipped the phase before round 1 ended"
-	if not _drive_to_round_end():
-		return "design band never ended round 1"
-	if b.current_phase != "iteration":
-		return "left iteration without a decision (phase %s)" % b.current_phase
-	var cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
-	if absf(b.efor_spent - cap) > 0.001:
-		return "efor %.3f at round end, want the design cap %.3f" % [b.efor_spent, cap]
-	if b.iteration_count != 2:
-		return "round 2 did not auto-start (count %d)" % b.iteration_count
-	# 5 gün: turlar döner, faz aynı, efor kımıldamaz; intro yalnız BİR kez.
-	for i in 24 * 5:
-		ProductSystem.hourly_tick(i % 24)
-	if b.current_phase != "iteration" or absf(b.efor_spent - cap) > 0.001:
-		return "design loop violated (phase %s, efor %.3f)" % [b.current_phase, b.efor_spent]
-	if b.iteration_count < 3:
-		return "rounds did not chain over 5 days (count %d)" % b.iteration_count
-	if _instances_of("product.design_round_intro") != 1:
-		return "iter intro admitted %d times, want exactly 1" % \
-			_instances_of("product.design_round_intro")
-	ProductSystem.enter_development()
-	if b.current_phase != "development" or b.iteration_decision_pending:
-		return "enter_development did not flip cleanly"
-	var e0: float = b.efor_spent
-	for i in 24:
-		ProductSystem.hourly_tick(i % 24)
-	if b.efor_spent <= e0 + 0.001:
-		return "efor did not resume after the decision"
-	return ""
-
-
-static func _case_iter_ceiling_founder_vs_designer() -> String:
-	# Tavana bağlı azalan getiri (tur sınırı 4 — Software Inc. grameri, 2026-08-19): solo
-	# kurucu (tech 2) ile tur 2 ve 3'ün kazançları pozitif ve AZALAN, eksen tavanı (ya da
-	# tavan üstü damgayı) aşmaz; Tasarımcı (UZMANLIK 7) gelince tavan formül kadar yükselir
-	# ve SON tur (4) solo'nun son kazancından fazla verir — "daha iyi insanlar lazım, daha
-	# çok tur değil" hissinin sayısal kanıtı. (Eski "plato" biçimi 12 tur istiyordu.)
-	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(4)
-	# Kurucu terimi motordan okunur, sabit yazılmaz — burada eski cetvelin fixture değeri
-	# (2.0) duruyordu ve cetvel değişince iddia ölçtüğü şeyden koptu.
-	var want0: float = ProductSystem.ITER_CEIL_FOUNDER_COEF \
-		* float(GameState.get_founder_skill(HRConstants.AREA_PRODUCT))
-	var ceil0: Dictionary = ProductSystem.iteration_axis_ceilings()
-	if absf(float(ceil0["innovation"]) - want0) > 0.001:
-		return "solo innovation ceiling %.2f, want %.2f" % [float(ceil0["innovation"]), want0]
-	GameState.set_cash(200000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if not _drive_to_round_end():
-		return "design band never ended round 1"
-	var stamp0: float = b.innovation
-	var last_gain: float = INF
-	var rounds: int = 0
-	# Solo turlar: tavana kadar olan turların hepsi değil, SON tur işe alım sonrasına kalsın
-	# (ITER_MAX_ROUNDS - 2 = cap 4'te tur 2 ve 3).
-	while not b.iteration_decision_pending and rounds < ProductSystem.ITER_MAX_ROUNDS - 2:
-		var before: float = b.innovation
-		if not _run_iteration_round():
-			return "iteration round %d did not complete" % (rounds + 1)
-		var g: float = b.innovation - before
-		if g <= 0.0:
-			return "solo round %d gave no gain (%.3f) — headroom seeding broken" % [rounds + 2, g]
-		if g >= last_gain - 0.0001:
-			return "solo round %d gain %.3f is not smaller than the previous %.3f" % [rounds + 2, g, last_gain]
-		last_gain = g
-		rounds += 1
-	if rounds != ProductSystem.ITER_MAX_ROUNDS - 2:
-		return "solo drive ran %d rounds, want %d" % [rounds, ProductSystem.ITER_MAX_ROUNDS - 2]
-	if b.innovation > maxf(stamp0, want0) + 0.001:
-		return "solo axis %.2f exceeded the ceiling %.2f" % [b.innovation, want0]
-	var solo_plateau: float = b.innovation
-	# İŞE ALINAN KİŞİ DEĞİŞTİ (2026-08-22): tasarımcı yerine Ürün Yöneticisi.
-	# İnovasyon tavanı ÜRÜN alanını okuyor (rev 2 §2 "özellik kararları") ve atama kapısıyla
-	# birlikte artık YALNIZ Ürün'e ATANMIŞ biri o tavanı yükseltebiliyor. Bir tasarımcı kendi
-	# ana alanına (Tasarım) doğuyor, yani İnovasyon'a değil DENEYİM'e dokunur — case'in ölçtüğü
-	# eksen İnovasyon olduğu için doğru işe alım PM. Ölçülen yasa aynı kaldı: "daha iyi insan,
-	# daha çok tur değil".
-	_make_employee("char_iter_pm", "Iter PM", HRConstants.ROLE_PRODUCT_MANAGER,
-		SEED_PACE, 0, 50, 7)
-	# ANA alan, tam fiyat: §5'in ikincil-alan kesintisi yok.
-	var want1: float = want0 + minf(7.0 * ProductSystem.ITER_CEIL_ROLE_COEF,
-		ProductSystem.ITER_CEIL_ROLE_CAP)
-	var ceil1: Dictionary = ProductSystem.iteration_axis_ceilings()
-	if absf(float(ceil1["innovation"]) - want1) > 0.001:
-		return "PM ceiling %.2f, want %.2f" % [float(ceil1["innovation"]), want1]
-	if b.iteration_decision_pending:
-		return "cannot run the post-hire round (cap hit during the solo drive)"
-	var before2: float = b.innovation
-	if not _run_iteration_round():
-		return "post-hire round did not complete"
-	var gain2: float = b.innovation - before2
-	if gain2 <= last_gain + 0.001:
-		return "hire did not lift the last round (gain %.3f vs solo last %.3f)" % [gain2, last_gain]
-	if b.innovation <= solo_plateau + 0.05:
-		return "axis did not move visibly above the solo level (%.2f vs %.2f)" % [b.innovation, solo_plateau]
-	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS or not b.iteration_decision_pending:
-		return "last round did not land on the cap park (count %d, pending %s)" % [b.iteration_count, str(b.iteration_decision_pending)]
-	return ""
-
-
-static func _case_iter_diminishing_returns() -> String:
-	# Azalan getiri: tur N+1'in kazancı tur N'inkinden KÜÇÜK (ikisi de > 0).
-	# Tasarımcı baştan masada → tavan yüksek, iki tur boyunca bol headroom.
-	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(4)
-	_make_employee("char_iter_dr_designer", "DR Designer", HRConstants.ROLE_DESIGNER,
-		SEED_PACE, 0, 50, 7)
-	GameState.set_cash(200000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if not _drive_to_round_end():
-		return "design band never ended round 1"
-	var v0: float = b.innovation
-	if not _run_iteration_round():
-		return "round 2 did not complete"
-	var gain_a: float = b.innovation - v0
-	var v1: float = b.innovation
-	if not _run_iteration_round():
-		return "round 3 did not complete"
-	var gain_b: float = b.innovation - v1
-	if gain_a <= 0.0 or gain_b <= 0.0:
-		return "rounds gave no gain (%.3f, %.3f) — headroom seeding broken" % [gain_a, gain_b]
-	if gain_b >= gain_a - 0.0001:
-		return "round N+1 gain %.3f is not smaller than round N gain %.3f" % [gain_b, gain_a]
-	return ""
-
-
-static func _case_iter_ceiling_never_exceeded() -> String:
-	# Güvenlik tavanına (ITER_MAX_ROUNDS) kadar sür: hiçbir eksen kendi tavanını (ya da
-	# tavan üstü commit damgasını) aşamaz; tavanda tur ZİNCİRİ durur (park), çıkış hâlâ oyuncuda.
-	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(2)   # taban tavan 4 → damga tavanın üstünde kalabilir
-	GameState.set_cash(200000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if not _drive_to_round_end():
-		return "design band never ended round 1"
-	var stamp := {"innovation": b.innovation, "stability": b.stability, "experience": b.experience}
-	var ceilings: Dictionary = ProductSystem.iteration_axis_ceilings()
-	while not b.iteration_decision_pending:
-		if not _run_iteration_round():
-			return "round %d did not complete" % b.iteration_count
-		for ax in QualityModel.AXES:
-			var v: float = float(QualityModel.dims_from_build(b).get(ax, 0.0))
-			var lim: float = maxf(float(stamp[ax]), float(ceilings[ax]))
-			if v > lim + 0.001:
-				return "axis %s (%.3f) exceeded its ceiling/stamp (%.3f) at round %d" % [ax, v, lim, b.iteration_count]
-	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS:
-		return "loop stopped at round %d, want the safety cap %d" % [b.iteration_count, ProductSystem.ITER_MAX_ROUNDS]
-	if not b.iteration_decision_pending:
-		return "cap reached but the decision is not pending — the build would be stuck"
-	for i in 24 * 3:   # tavan parkı: 3 gün daha, sayaç ve efor kımıldamaz
-		ProductSystem.hourly_tick(i % 24)
-	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS or b.iteration_round_weeks > 0.0:
-		return "the round chain ran past the safety cap"
-	if float(stamp["innovation"]) > float(ceilings["innovation"]) \
-			and absf(b.innovation - float(stamp["innovation"])) > 0.0001:
-		return "an above-ceiling stamp moved (%.3f -> %.3f)" % [float(stamp["innovation"]), b.innovation]
-	ProductSystem.enter_development()
-	if b.current_phase != "development":
-		return "exit blocked at the safety cap"
-	return ""
-
-
-static func _case_iter_zero_staff_neutrality_and_axis_lock() -> String:
-	# Sıfır ekip → her tavan kurucu tabanı; BUILD İŞİNDE OLMAYAN kimse tavan OYNATMAZ;
-	# her ALAN kendi eksenini yükseltir ve terim ITER_CEIL_ROLE_CAP'te kesilir.
-	#
-	# 2026-08-21: "her rol yalnız kendi eksenini yükseltir, gerisi sızıntıdır" hükmü DÜŞTÜ.
-	# O bir ROL kapısıydı; rev 2 §2 onu alanlarla değiştirdi ve sızıntı diye bir şey kalmadı —
-	# her alan zaten kendi eksenini besliyor. Yerine geçen kapı ATAMADIR: build'de olmayan
-	# kimse build tavanına dokunmaz, ki ch. 03 §8'in istediği gerilim de tam olarak budur.
-	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(6)
-	# Kurucu tabanı motordan okunur (aynı gerekçe: sabit yazılı fixture değeri cetvelle
-	# birlikte kayar ve iddiayı sessizce başka bir şeyin ölçüsü hâline getirir).
-	var base: float = ProductSystem.ITER_CEIL_FOUNDER_COEF \
-		* float(GameState.get_founder_skill(HRConstants.AREA_PRODUCT))
-	var c: Dictionary = ProductSystem.iteration_axis_ceilings()
-	for ax in QualityModel.AXES:
-		if absf(float(c[ax]) - base) > 0.001:
-			return "zero-staff ceiling for %s is %.2f, want founder base %.2f" % [ax, float(c[ax]), base]
-	_make_employee("char_iter_zs_tester", "ZS Tester", HRConstants.ROLE_TESTER, SEED_PACE, 0, 50, 9)
-	_make_employee("char_iter_zs_sales", "ZS Sales", HRConstants.ROLE_SALES_REP, SEED_PACE, 0, 50, 9)
-	c = ProductSystem.iteration_axis_ceilings()
-	for ax in QualityModel.AXES:
-		if absf(float(c[ax]) - base) > 0.001:
-			return "an unrelated role moved the %s ceiling (%.2f)" % [ax, float(c[ax])]
-	# A DESIGNER. Tasarım onun ANA alanı, işe alım onu oraya koyuyor — ve Deneyim ekseni
-	# Tasarım'ı okuyor (rev 2 §2 bunu kelimeyle söylüyor). İnovasyon Ürün'ü okur; Ürün onun
-	# İKİNCİL alanı ve oraya ATANMADI, o yüzden İnovasyon tavanı KIPIRDAMAZ.
-	#
-	# İKİ KEZ DEĞİŞEN HÜKÜM. Önce "her rol tam bir ekseni yükseltir, gerisi sızıntıdır" vardı
-	# (ROL kapısı). rev 2 alanları getirince "tasarımcı ikisini de yükseltir, ikincilini daha
-	# az" oldu. Onaylı tasarımın ATAMA kapısıyla şimdi üçüncü hâli: kişi yalnız ATANDIĞI
-	# alanda sayılır. İkincil alanının tavanını yükseltmek istiyorsan oyuncu onu Görevler'den
-	# oraya TAŞIR — karar oyuncunun, karşılığında ana alanını bırakır ya da aşırı yükü öder.
-	_make_employee("char_iter_zs_designer", "ZS Designer", HRConstants.ROLE_DESIGNER, SEED_PACE, 0, 50, 6)
-	c = ProductSystem.iteration_axis_ceilings()
-	var des_exp: float = float(c["experience"]) - base
-	var des_inno: float = float(c["innovation"]) - base
-	# ÜÇÜNCÜ HÂL, rev 11 §12.0: atama birimi ALAN DEĞİL İŞ. Build ekibi Ürün · Tasarım ·
-	# Yazılım alanlarınca taşınır (§12.0) ve tasarımcı ikisini tutar — Tasarım ana, Ürün
-	# ikincil (§4.4). Yani Build'deki bir tasarımcı İKİ tavanı da oynatır, ama ikincilini
-	# §4.3'ün ×0,8'iyle. "Tasarımcıyı Ürün'e mi koyayım" kararı ortadan kalktı; karar artık
-	# "Build'de mi değil mi" ve bedeli §12.1'in odak katsayısıyla ödeniyor.
-	if des_exp <= 0.0:
-		return "a designer did not raise the Deneyim ceiling, which §4.4 gives to Tasarım"
-	if des_inno <= 0.0:
-		return "a designer did not raise İnovasyon — §12.0's Build carries Ürün too"
-	# İKİNCİL DAHA AZ. §4.3'ün ×0,8'i tam da burada okunmalı, yoksa ana/ikincil ayrımı
-	# yalnız bir etiket olur.
-	if des_inno >= des_exp:
-		return "the secondary area contributed as much as the key one (%.2f vs %.2f) — §4.3 wants 0,8" % [
-			des_inno, des_exp]
-	if absf(float(c["stability"]) - base) > 0.001:
-		return "a designer raised Kararlılık; Yazılım is not an area they can hold"
-	# ...ve KARAR HÂLÂ BİR KARAR, yalnız granülerliği değişti. rev 2'de oyuncu tasarımcıyı
-	# Tasarım'dan Ürün'e taşıyordu; §12.0'da ikisi de AYNI İŞİN (Build) taşıdığı alanlar, yani
-	# öyle bir hamle yok. Kalan hamle Build'den ÇIKARMAK, ve bedeli ikisini birden kaybetmek:
-	# tasarımcının tuttuğu her iki alan da o işten geliyordu.
-	#
-	# §12.2: "Boş iş için ayrı bir uyarı satırı yoktur ... matrisin kendisinde zaten görünür."
-	# Buradaki ölçüm de o: boşalan iş sıfır üretir, ve bu okunur.
-	CharacterRegistry.clear_jobs("char_iter_zs_designer")
-	c = ProductSystem.iteration_axis_ceilings()
-	if absf(float(c["experience"]) - base) > 0.001:
-		return "an unassigned designer still raises Deneyim — the move cost nothing"
-	if absf(float(c["innovation"]) - base) > 0.001:
-		return "an unassigned designer still raises İnovasyon"
-	CharacterRegistry.assign_job("char_iter_zs_designer", HRConstants.JOB_BUILD)
-	# ATAMA KAPISI, alakasız roller: bir test mühendisi ve bir satış temsilcisi kendi
-	# alanlarına doğar ve hiçbir build tavanını kıpırdatmaz.
-	var before_unrelated: Dictionary = ProductSystem.iteration_axis_ceilings().duplicate()
-	_make_employee("char_iter_zs_t2", "ZS Tester 2", HRConstants.ROLE_TESTER, SEED_PACE, 0, 50, 9)
-	_make_employee("char_iter_zs_s2", "ZS Sales 2", HRConstants.ROLE_SALES_REP, SEED_PACE, 0, 50, 9)
-	c = ProductSystem.iteration_axis_ceilings()
-	for ax in QualityModel.AXES:
-		if absf(float(c[ax]) - float(before_unrelated[ax])) > 0.001:
-			return "somebody NOT assigned to a build area moved the %s ceiling (%.2f -> %.2f)" % [
-				ax, float(before_unrelated[ax]), float(c[ax])]
-	# The term still caps: stack enough build hires and ITER_CEIL_ROLE_CAP bites.
-	for i in 6:
-		_make_employee("char_iter_zs_pm%d" % i, "ZS PM %d" % i, HRConstants.ROLE_PRODUCT_MANAGER,
-			SEED_PACE, 0, 50, 9)
-	c = ProductSystem.iteration_axis_ceilings()
-	if absf(float(c["innovation"]) - (base + ProductSystem.ITER_CEIL_ROLE_CAP)) > 0.001:
-		return "the İnovasyon term is not capped at ITER_CEIL_ROLE_CAP (%.2f, want %.2f)" % [
-			float(c["innovation"]), base + ProductSystem.ITER_CEIL_ROLE_CAP]
-	return ""
-
-
-static func _case_iter_version_build_same_loop() -> String:
-	# v-build aynı döngüyü yaşar: sayaçlar v-commit'te sıfırdan, tur 1 → tur 2 (otomatik)
-	# → tur 2 biter → karar → geliştirme.
-	_seed_live_product()
-	if not ProductSystem.start_version_build(["ai_assistant_voice"], ""):
-		return "start_version_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b.iteration_count != 1 or b.iteration_decision_pending or b.iteration_round_weeks > 0.0:
-		return "v-commit did not reset the iteration counters"
-	if not _drive_to_round_end():
-		return "v-build design band never ended round 1"
-	if b.current_phase != "iteration":
-		return "v-build auto-advanced (phase %s)" % b.current_phase
-	if b.iteration_count != 2:
-		return "round 2 did not auto-start (%d)" % b.iteration_count
-	if not _run_iteration_round():
-		return "v-build round 2 did not complete"
-	if b.iteration_count != 3:
-		return "round end did not increment the counter (%d)" % b.iteration_count
-	ProductSystem.enter_development()
-	if b.current_phase != "development":
-		return "v-build exit did not flip to development"
-	return ""
-
-
-static func _case_speed_tracks_team_change() -> String:
-	# Hız her saat taze: solo günlük harcama, sonra yazılımcı alınınca artan günlük harcama
-	# (ve kısalan ~gün). ÖLÇÜM GELİŞTİRME FAZINDA yapılır.
-	#
-	# LEDGER (Coupling): the case MOVED phase, the formula did not. Measurement used to sit
-	# wherever the build happened to be, which was iteration.
-	#
-	# LEDGER 2 (rev 2 area migration, 2026-08-21): the role gate came off — a developer's
-	# Tasarım number stopped being decoration.
-	#
-	# LEDGER 3 (onaylı tasarım, 2026-08-22): AMA ATAMA KAPISI GELDİ ve sonuç yeniden değişti.
-	# Atama artık ALANA yapılıyor ve bir çalışan yalnız ANA ya da İKİNCİL alanına atanabilir
-	# (Görevler matrisi öteki sütünları "ALANI YOK · ATANAMAZ" diye kesikli çiziyor). Bir
-	# yazılımcının alanları Yazılım ve Test; ikisi de TASARIM fazının alanı değil, yani o faza
-	# GİREMEZ. §2'nin "tek kişilik ekipte boşluk kalmaz" cümlesi hâlâ geçerli ama YETENEK
-	# hakkında: herkeste altı sayı var. Bugün kimin nereye GİRDİĞİNİ atama söylüyor.
-	# Bu yüzden case iki şeyi ölçüyor: yazılımcı tasarım fazını KIMILDATMAZ, tasarımcı ise
-	# kendi fazında gerçekten oynatır.
-	GameState.set_cash(50000)
-	var founder: Character = CharacterRegistry.get_founder()
-	if founder == null:
-		return "no founder in registry"
-	_set_founder_tech(6)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	# Fikstür: iki tik uzunluğunda ölçüm penceresi geliştirme bandına sığsın diye build uzatılır.
-	b.total_efor = 100.0
-	var iter_speed_solo: float = ProductSystem.team_speed(b)
-	if b.current_phase != "iteration":
-		return "build did not start in the design phase (%s)" % b.current_phase
-	# ATAMA KAPISI: bir yazılımcı Yazılım alanına doğuyor, tasarım fazının alanlarına
-	# (Ürün · Tasarım) atanamaz, dolayısıyla o fazı kıpırdatmaz.
-	_make_employee("char_iter_dev", "Iter Dev", HRConstants.ROLE_DEVELOPER)
-	var with_dev: float = ProductSystem.team_speed(b)
-	if absf(with_dev - iter_speed_solo) > 0.001:
-		return "a developer moved TASARIM speed (%.3f -> %.3f); Yazılım and Test are not design-phase areas" % [
-			iter_speed_solo, with_dev]
-	CharacterRegistry.remove("char_iter_dev")
-	# Tasarımcı ise KENDİ fazında: Tasarım onun ana alanı, oraya doğuyor ve hızı oynatıyor.
-	_make_employee("char_iter_des", "Iter Des", HRConstants.ROLE_DESIGNER)
-	var with_designer: float = ProductSystem.team_speed(b)
-	if with_designer <= iter_speed_solo:
-		return "a designer added nothing to TASARIM (%.3f -> %.3f)" % [iter_speed_solo, with_designer]
-	CharacterRegistry.remove("char_iter_des")
-	# Now push into GELİŞTİRME, the phase a developer owns, and measure there.
-	if not _run_build_to_phase("development"):
-		return "build never reached the development phase"
-	# LEDGER (Coupling): the expectation SHAPE changed, the NUMBER did not. Founder tech-3 solo
-	# was 1.0 x 3 = 3.0 under the old lead-weight law; then it became FOUNDER_SPEED_COEF x 3 x
-	# coordination(Liderlik 0) = 3.0 x 1.0. Held by anchor a2.
-	#
-	# LEDGER 4 (kurucu cetveli 0-10, 2026-08-24): SAYI YINE KIPIRDAMADI ama artik HICBIR
-	# YERDE YAZILI DEGIL. Fixture 3'ten 6'ya, katsayi 1,0'dan 0,5'e gitti; beklenti kurucunun
-	# o fazdaki ALANINI motordan okuyor, cunku sabit yazilmis bir 3.0 bir daha cetvel
-	# degisirse sessizce yanlis capayi savunurdu.
-	var founder_dev_area: float = float(GameState.get_founder_skill(
-		ProductSystem._founder_phase_area("development")))
-	var want_solo: float = maxf(ProductSystem.SPEED_MIN,
-		ProductSystem.FOUNDER_SPEED_COEF * founder_dev_area
-		* HRConstants.coordination_for_founder(GameState.get_founder_skill("leadership")))
-	var s0: float = b.efor_spent
-	for h in 24:
-		ProductSystem.hourly_tick(h)
-	if absf((b.efor_spent - s0) - TimeModel.per_tick(want_solo)) > 0.02:
-		return "solo tick spend %.3f (want %.3f)" % [b.efor_spent - s0, TimeModel.per_tick(want_solo)]
-	var weeks_before: int = ProductSystem.estimated_weeks_remaining(b)
-	_make_employee("char_smoke_speed_eng", "Speed Eng", HRConstants.ROLE_DEVELOPER)
-	var weeks_after: int = ProductSystem.estimated_weeks_remaining(b)
-	if weeks_after >= weeks_before:
-		return "~hafta did not shrink after hire (%d -> %d)" % [weeks_before, weeks_after]
-	# LEDGER (Coupling): old = 3.0 + SPEED_ASSIST_WEIGHT(0.5) x ENGINEER_DEFAULT_TECH_LEGACY(2)
-	# = 4.0. New = (FOUNDER_SPEED_COEF x kurucunun alani + EMPLOYEE_SPEED_COEF x pace 4)
-	# x coordination = 4.0. Same number, derived from the new law — anchor b1. No lead/assist
-	# split any more, and no hard-coded founder number either (bkz. LEDGER 4).
-	var want_team: float = maxf(ProductSystem.SPEED_MIN,
-		(ProductSystem.FOUNDER_SPEED_COEF * founder_dev_area
-			+ ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE))
-		* HRConstants.coordination_for_founder(GameState.get_founder_skill("leadership")))
-	s0 = b.efor_spent
-	for h in 24:
-		ProductSystem.hourly_tick(h)
-	if absf((b.efor_spent - s0) - TimeModel.per_tick(want_team)) > 0.02:
-		return "team tick spend %.3f (want %.3f)" % [b.efor_spent - s0, TimeModel.per_tick(want_team)]
-	return ""
-
-
-static func _case_deterministic_axes_at_ship() -> String:
-	# Eksenler deterministik: commit damgası == projected_axes == ship'teki mvp_*
-	# flag'leri (v1); v2 = önceki canlı + yeni katkılar + strengthen dominant bonusu.
-	#
-	# TAVAN BAŞLIĞI ŞART (2026-08-21). Her kalite ekseni artık KENDİ alanını okuyor
-	# (İnovasyon←Ürün · Kararlılık←Yazılım · Deneyim←Tasarım), yani kurucunun 0 taşıdığı bir
-	# alanın ekseni SIFIR tavanla gelir ve eksen hiç kımıldayamaz. Bu doğru davranıştır —
-	# "tasarım bilmiyorsan tasarımı yükseltemezsin" alan modelinin bütün iddiası — ama bu
-	# case DETERMİNİZMİ ölçüyor, tavanı değil, o yüzden kurucuya dört teknik alanda da
-	# bolca baş açıklığı veriliyor. Tavanın kendisi iter_ceiling_* case'lerinin işi.
-	_set_founder_tech(6)
-	GameState.set_cash(200000)
-	var picks := ["ai_assistant_chat", "ai_assistant_memory"]
-	var want: Dictionary = ProductSystem.projected_axes(picks, [], {})
-	if not ProductSystem.start_build("ai_assistant", picks, ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if absf(b.innovation - float(want["innovation"])) > 0.001 \
-			or absf(b.stability - float(want["stability"])) > 0.001 \
-			or absf(b.experience - float(want["experience"])) > 0.001:
-		return "commit axes != projected (I%.1f/S%.1f/E%.1f vs %s)" % [b.innovation, b.stability, b.experience, str(want)]
-	if not _run_build_to_phase("bugfix"):
-		return "v1 build never reached beta"
-	if absf(b.innovation - float(want["innovation"])) > 0.001 \
-			or absf(b.stability - float(want["stability"])) > 0.001 \
-			or absf(b.experience - float(want["experience"])) > 0.001:
-		return "axes drifted during build (no events fired)"
-	ProductSystem.launch()
-	ProductSystem.ship_active_build()
-	if absf(float(GameState.get_flag("mvp_innovation", -1.0)) - float(want["innovation"])) > 0.001 \
-			or absf(float(GameState.get_flag("mvp_stability", -1.0)) - float(want["stability"])) > 0.001 \
-			or absf(float(GameState.get_flag("mvp_experience", -1.0)) - float(want["experience"])) > 0.001:
-		return "v1 shipped flags != projected (%s)" % str(want)
-	# v2: bir yeni feature + bir strengthen (chat'in dominant ekseni: experience).
-	var base_dims := {
-		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
-		"stability": float(GameState.get_flag("mvp_stability", 0.0)),
-		"experience": float(GameState.get_flag("mvp_experience", 0.0)),
-	}
-	var want2: Dictionary = ProductSystem.projected_axes(["ai_assistant_voice"], ["ai_assistant_chat"], base_dims)
-	if absf(float(want2["experience"]) - (float(want["experience"]) + 3.0 + ProductSystem.STRENGTHEN_AXIS_BONUS)) > 0.001:
-		return "want2 experience math off (%s)" % str(want2)
-	if not ProductSystem.start_version_build(["ai_assistant_voice"], "", ["ai_assistant_chat"]):
-		return "v2 build failed"
-	if not _run_build_to_phase("bugfix"):
-		return "v2 build never reached beta"
-	ProductSystem.launch()
-	ProductSystem.ship_active_build()
-	if int(GameState.get_flag("mvp_version", 0)) != 2:
-		return "v2 ship did not bump version"
-	if absf(float(GameState.get_flag("mvp_innovation", -1.0)) - float(want2["innovation"])) > 0.001 \
-			or absf(float(GameState.get_flag("mvp_stability", -1.0)) - float(want2["stability"])) > 0.001 \
-			or absf(float(GameState.get_flag("mvp_experience", -1.0)) - float(want2["experience"])) > 0.001:
-		return "v2 shipped flags != previous live + contributions + strengthen bonus (%s)" % str(want2)
-	return ""
-
 
 # --- Two-runway model + localization cases ---
 
@@ -4417,39 +3547,6 @@ static func _case_source_tag_speaker_wins() -> String:
 	return ""
 
 
-static func _case_ship_tooltip_counts_critical_penalty() -> String:
-	# Yayınla tooltip'i canlıya taşınacak hata sayısını BEŞ EKSİK yazıyordu: iki ev sahibi de
-	# ham bug_count basıyordu, launch() ise yazmadan hemen önce CRITICAL_BUG_LAUNCH_PENALTY
-	# ekliyordu. Yani sayı, tam da riski göze alan oyuncuda yalan söylüyordu.
-	# FALSİFİKASYON: projected_launch_bugs()'ın ceza dalını sil → ikinci iddia FAIL.
-	GameState.set_cash(60000)
-	var founder_id: String = CharacterRegistry.get_founder().id
-	if not ProductSystem.start_build("saas_ops",
-			["saas_ops_workflow", "saas_ops_reporting"], founder_id, "Nova"):
-		return "start_build failed"
-	if not _run_build_to_phase("bugfix"):
-		return "build never reached beta"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	# Bayrak YOKKEN projeksiyon ham sayıya EŞİT — ceza koşulsuz eklenmiyor.
-	GameState.set_flag("critical_bug_unfixed", false)
-	if ProductSystem.projected_launch_bugs() != b.bug_count:
-		return "bayraksız projeksiyon ham sayıdan saptı (%d != %d)" % [
-			ProductSystem.projected_launch_bugs(), b.bug_count]
-	# Bayrak varken projeksiyon TAM OLARAK cezayı ekler...
-	GameState.set_flag("critical_bug_unfixed", true)
-	var raw: int = b.bug_count
-	var projected: int = ProductSystem.projected_launch_bugs()
-	if projected != raw + ProductSystem.CRITICAL_BUG_LAUNCH_PENALTY:
-		return "projeksiyon cezayı saymıyor (ham %d, projeksiyon %d, ceza %d)" % [
-			raw, projected, ProductSystem.CRITICAL_BUG_LAUNCH_PENALTY]
-	# ...ve launch() canlıya TAM O SAYIYI yazar. Tooltip ile gerçeğin ayrılamayacağı yer bu.
-	ProductSystem.launch()
-	var live: int = int(GameState.get_flag("mvp_live_bug_count", -1))
-	if live != projected:
-		return "launch %d yazdı, tooltip %d vaat etti" % [live, projected]
-	return ""
-
-
 static func _case_rail_tabs_match_scene_order() -> String:
 	# SESSİZ KONUMSAL SÖZLEŞME. UiTokens.TABS bir dizi, LeftTabs.tscn bir düğüm listesi ve
 	# left_tabs.gd ikisini İNDEKSLE eşliyor. Hiçbir şey bu eşleşmeyi doğrulamıyordu: sekme
@@ -4484,85 +3581,6 @@ static func _case_rail_tabs_match_scene_order() -> String:
 		if seen.has(tid):
 			return "TABS'ta yinelenen id: %s" % tid
 		seen[tid] = true
-	return ""
-
-
-static func _case_build_bar_hosts_agree() -> String:
-	# Build Bar (Software Inc. segment grameri): İKİ ev sahibi — yüzen BuildHUD ve tracker
-	# kartı — AYNI BuildBar sahnesini kurar ve bar modelini KENDİ çeker. Bu case ikisinin aynı
-	# tick'te aynı modeli gösterdiğini ölçer: mount → 2 bar → parmak izleri eşit ve türetilen
-	# modele eşit → 6 saat tik → parmak izleri değişmiş ve HÂLÂ eşit. FALSİFİKASYON: BuildBar'ın
-	# build_progress_changed bağını sök → ikinci karşılaştırma FAIL (bar fingerprint()'i yeniden
-	# türetmez, önbelleği okur).
-	# İlk smoke case'i ki GameShell'i headless mount eder — parse/instantiate grep'i şart.
-	GameState.set_cash(50000)
-	var founder_id: String = CharacterRegistry.get_founder().id
-	if not ProductSystem.start_build("saas_ops",
-			["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"], founder_id, "Nova"):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	# r3 durumu: iki tur bitmiş, tur 3 yarıda (harness --build-state=r3 ile aynı sürüş).
-	for i in 24 * 90:
-		if b.iteration_count >= 3:
-			break
-		ProductSystem.hourly_tick(i % 24)
-	if b.iteration_count != 3:
-		return "fixture did not reach round 3 (count %d)" % b.iteration_count
-	for i in TimeModel.HOURS_PER_DAY / 2:   # a design round is one tick; half of it
-		ProductSystem.hourly_tick(i)
-	# Ev sahibi = autoload (root main._ready sırasında meşgul — onboarding_pages_contract deseni).
-	var host: Node = EventBus
-	var shell: Node = load("res://scenes/main/GameShell.tscn").instantiate()
-	host.add_child(shell)
-	EventBus.tab_changed.emit("product")
-	var cv: Node = shell.find_child("CenterViewport", true, false)
-	if cv == null:
-		shell.queue_free()
-		return "CenterViewport not found in the mounted shell"
-	var page: Node = cv.get_current_page_body()
-	if page == null or not page.has_method("_navigate"):
-		shell.queue_free()
-		return "product tab body not mounted synchronously"
-	page._navigate("tracker", {})
-	var bars: Array = []
-	for n in host.get_tree().get_nodes_in_group(&"build_bar"):
-		if n.is_queued_for_deletion():
-			continue
-		bars.append(n)
-	if bars.size() != 2:
-		var paths: Array = []
-		for n in bars:
-			paths.append(str(n.get_path()))
-		shell.queue_free()
-		return "expected 2 BuildBar hosts, found %d: %s" % [bars.size(), str(paths)]
-	var model = load("res://scripts/ui/components/build_bar_model.gd").new()
-	if not model.derive():
-		shell.queue_free()
-		return "model did not derive from the seeded build"
-	var want: String = model.fingerprint()
-	if want.begins_with("design|3/") == false:
-		shell.queue_free()
-		return "fixture fingerprint not in round 3: %s" % want
-	for n in bars:
-		if n.fingerprint() != want:
-			var got: String = n.fingerprint()
-			shell.queue_free()
-			return "host %s shows %s, model says %s" % [str(n.get_path()), got, want]
-	# 6 saat tik: durum değişir; iki bar sinyalle birlikte yürümek zorunda.
-	for i in 6:
-		ProductSystem.hourly_tick(12 + i)
-	var model2 = load("res://scripts/ui/components/build_bar_model.gd").new()
-	model2.derive()
-	var want2: String = model2.fingerprint()
-	if want2 == want:
-		shell.queue_free()
-		return "6 hours changed nothing in the model (%s) — the tick did not advance the round" % want
-	for n in bars:
-		if n.fingerprint() != want2:
-			var got2: String = n.fingerprint()
-			shell.queue_free()
-			return "host %s is stale after the tick: %s (want %s)" % [str(n.get_path()), got2, want2]
-	shell.queue_free()
 	return ""
 
 
@@ -5107,9 +4125,7 @@ static func _case_promise_kept_stops_countdown() -> String:
 	# KEEPING the word must stop the churn clock, exactly as GIVING it
 	# already did. accept_promise ran _recover (countdown → −1, streak → 0); the "kept"
 	# branch of on_promise_resolved wrote satisfaction and nothing else, so the clock kept
-	# running straight through the delivery. Reproduced in a driver run
-	# (--run-log=b2b_risk_keep:90:sim): the feature shipped on day 12 into
-	# "status=kept ... countdown=5 phase=risk".
+	# running straight through the delivery.
 	#
 	# The gap is only survivable when +PROMISE_KEPT_SAT / −PROMISE_KEPT_TOLERANCE happens to
 	# clear the bar in one step; on an account whose tolerance had been ratcheted up by
@@ -6113,33 +5129,34 @@ static func _case_b2b_scale_and_sector_gating() -> String:
 				p.spawned_on_day, p.expires_on_day]
 	return ""
 
+
 static func _case_b2b_onboarding_to_prospect_visible() -> String:
 	# REAL integrated path (NOT the _seed_b2b skip fixture that sets mvp_* flags directly):
-	# onboarding payload → start_build (sets subgenre via the seam) → launch/ship (sets
-	# mvp_market_type/sub_id) → Frank's intro beat → add_prospect → spawn_prospect →
-	# ProspectRegistry (the source the Sales list renders). Guards the whole spawn chain
-	# on the path a fresh game actually takes — the skip-path suite never exercised it.
+	# onboarding payload → the type chosen in the Product tab (market, subtype and subgenre
+	# through their seams) → sprints planned with the lead's suggestion until three identity
+	# lines reach K1 → Frank's intro beat → add_prospect → spawn_prospect → ProspectRegistry
+	# (the source the Sales list renders). Guards the whole spawn chain on the path a fresh
+	# game actually takes; the skip-path suite never exercises it.
 	GameState.initialize_run({"company_name": "Test Inc.", "founder_name": "Dev"})
-	if not ProductSystem.start_build("saas_ops", ["saas_ops_workflow", "saas_ops_reporting"], ""):
-		return "start_build failed"
-	if GameState.subgenre != "saas":
-		return "start_build did not set subgenre via seam (got %s)" % GameState.subgenre
-	# Rev3: fazlar otomatik — Beta'ya dek sür, sonra Yayınla (launch yalnız Beta'da).
-	if not _run_build_to_phase("bugfix"):
-		return "build never reached beta"
-	ProductSystem.launch()
-	# Dismiss the ship-moment (its ship_active_build modifier sets mvp_shipped); if no
-	# modal is active, ship directly. Either way the ship-moment must not block the queue.
-	if EventGate.active_id() != "":
-		EventGate.resolve(EventGate.active_id(), 0)
-	if not GameState.get_flag("mvp_shipped", false):
-		ProductSystem.ship_active_build()
+	GameState.set_cash(200000)
+	SprintSystem.choose_type("erp", "Sahra")
+	if GameState.subgenre == "" or GameState.subgenre != ProductCatalog.get_pool_of("erp"):
+		return "choose_type did not set subgenre via seam (got %s)" % GameState.subgenre
 	if String(GameState.get_flag("mvp_market_type", "")) != "b2b":
-		return "mvp_market_type not b2b after launch (%s)" % String(GameState.get_flag("mvp_market_type", ""))
-	if String(GameState.get_flag("mvp_sub_product_type_id", "")) != "saas_ops":
-		return "mvp_sub_product_type_id not set after launch"
+		return "mvp_market_type not b2b after choosing the type (%s)" % String(GameState.get_flag("mvp_market_type", ""))
+	if String(GameState.get_flag("mvp_sub_product_type_id", "")) != "erp":
+		return "mvp_sub_product_type_id not set by the type"
+	for i in 40:
+		if ProductState.is_live():
+			break
+		if SprintSystem.mode() == "release":
+			SprintSystem.plan_next()
+		if SprintSystem.mode() == "plan":
+			SprintSystem.apply_lead()
+			SprintSystem.start()
+		_sim_day()
 	if not GameState.get_flag("mvp_shipped", false):
-		return "mvp_shipped not set after ship"
+		return "the lead's sprints never shipped the MVP in 40 weeks"
 	# Frank's intro is a post-ship beat — drive daily ticks and drain to it.
 	var reached: bool = false
 	for i in 4:
@@ -6155,9 +5172,8 @@ static func _case_b2b_onboarding_to_prospect_visible() -> String:
 	if prospects.size() != n0 + 1:
 		return "Frank intro produced no prospect (spawn aborted?) %d -> %d" % [n0, prospects.size()]
 	var p: Prospect = prospects[prospects.size() - 1]
-	# The value band is RETIRED (§19): price comes from the seat band and the stance dial, so
-	# there is no display range to populate. What a lead must carry instead is its star, its
-	# archetype and an honest expiry.
+	# Price comes from the seat band and the stance dial (§19). What a lead must carry is its
+	# star, its archetype and an honest expiry.
 	if p.star < SalesConstants.STAR_MIN or p.star > SalesConstants.STAR_MAX:
 		return "event-spawned lead star out of range: %d" % p.star
 	if not SalesArchetypes.has(p.archetype_id):
@@ -6165,7 +5181,6 @@ static func _case_b2b_onboarding_to_prospect_visible() -> String:
 	if p.expires_on_day <= p.spawned_on_day:
 		return "event-spawned lead has no expiry"
 	return ""
-
 
 static func _case_sales_month_counters() -> String:
 	# The month_ledger customer-count snapshot (for the Sales pulse strip's Bu ay cells):
@@ -6966,12 +5981,12 @@ static func _case_hr_resignation_path() -> String:
 
 static func _case_hr_leave_cycle() -> String:
 	# Leave month reached -> on_leave automatically, salary STILL charged (paid leave),
-	# capacity contribution absent, returns after LEAVE_WEEKS with morale refreshed.
+	# out of the sprint team, returns after LEAVE_WEEKS with morale refreshed.
 	GameState.set_cash(100000)
 	var e: Character = _make_employee("char_leave", "Leave Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 60)
-	# HERKESİ PARK ET, SONRA YALNIZ BİRİNİ PİNLE. İzin haftası artık işe alımda damgalanıyor
-	# (§11.4), yani kadronun başkaları da aynı haftaya düşebilir ve "kapasite BİR azaldı"
-	# iddiası o zaman iki kişilik bir düşüşü ölçerdi.
+	# HERKESİ PARK ET, SONRA YALNIZ BİRİNİ PİNLE. İzin haftası işe alımda damgalanıyor (§11.4),
+	# yani kadronun başkaları da aynı haftaya düşebilir ve kapasite düşüşü o zaman iki kişinin
+	# düşüşünü ölçerdi.
 	_park_leave(CharacterRegistry.get_employees())
 	# §11.4: izin YAZ PENCERESİ içinde bir HAFTAdır. Pencerenin (Haziran) ilk tikinin arifesine
 	# gidip kişiyi o tikin haftasına (0) pinliyoruz.
@@ -6979,11 +5994,11 @@ static func _case_hr_leave_cycle() -> String:
 		_sim_day()
 	e.leave_week = 0
 	e.leave_taken_year = 0
-	var cap0: int = ProductSystem.capacity_total()
+	var cap0: int = SprintSystem.capacity()
 	_sim_day()
 	if e.status != HRConstants.STATUS_ON_LEAVE:
 		return "leave month reached but status is '%s'" % e.status
-	if ProductSystem.capacity_total() != cap0 - 1:
+	if _sprint_points(e.id) > 0.0 or SprintSystem.capacity() >= cap0:
 		return "an on-leave developer still counts toward capacity"
 	if CharacterRegistry.count_active_developers() != 0:
 		return "an on-leave developer counts as active"
@@ -7001,8 +6016,8 @@ static func _case_hr_leave_cycle() -> String:
 		return "never returned from leave after %d ticks" % (TimeModel.ticks(HRConstants.LEAVE_WEEKS) + 3)
 	if e.morale <= morale_on_leave:
 		return "return from leave did not refresh morale (%d -> %d)" % [morale_on_leave, e.morale]
-	if ProductSystem.capacity_total() != cap0:
-		return "capacity did not recover after the return"
+	if _sprint_points(e.id) <= 0.0:
+		return "the returning developer did not rejoin the sprint team"
 	return ""
 
 
@@ -7127,9 +6142,10 @@ static func _case_hr_recovery_channels() -> String:
 		return "§8.3 kısa gün did not raise morale (%d → %d)" % [before_short, tired.morale]
 	return ""
 
+
 static func _case_hr_raise_and_leave() -> String:
 	# Raise bounded 3-15% with morale scaling on the percentage and a PERMANENT salary rise
-	# that reaches burn; manual vacation takes the person out of capacity, refreshes morale
+	# that reaches burn; leave takes the person out of the sprint team, refreshes morale
 	# on return, and consumes that year's automatic leave.
 	GameState.set_cash(200000)
 	var e: Character = _make_employee("char_act", "Act Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 10000, 50)
@@ -7156,14 +6172,13 @@ static func _case_hr_raise_and_leave() -> String:
 	FinanceSystem.daily_tick()
 	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(11000.0 / float(TimeModel.DAYS_PER_MONTH))):
 		return "the raise did not flow to burn"
-	# İZİN ARTIK TEK KANALDAN: OTOMATİK YILLIK (H5, 2026-08-22). Oyuncunun
-	# "Tatile gönder" yolu kaldırıldı; ölçülen yasa aynı kaldı (biri gider,
-	# kapasite düşer, dönüşte moral tazelenir), yalnız kapı değişti.
-	var cap0: int = ProductSystem.capacity_total()
+	# İzin tek kanaldan gelir, otomatik yıllık izin: biri gider, kapasite düşer, dönüşte moral
+	# tazelenir.
+	var cap0: int = SprintSystem.capacity()
 	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_WEEKS, false)
 	if e.status != HRConstants.STATUS_ON_LEAVE:
 		return "annual leave did not take the employee out of capacity"
-	if ProductSystem.capacity_total() != cap0 - 1:
+	if _sprint_points(e.id) > 0.0 or SprintSystem.capacity() >= cap0:
 		return "capacity unchanged during leave"
 	if e.leave_taken_year != int(GameState.get_date_dict().year):
 		return "the automatic leave did not stamp this year's latch"
@@ -7177,7 +6192,6 @@ static func _case_hr_raise_and_leave() -> String:
 	if e.morale <= mv:
 		return "the leave return did not refresh morale (%d -> %d)" % [mv, e.morale]
 	return ""
-
 
 static func _case_hr_frank_guard() -> String:
 	# Frank is guarded by CATEGORY, not by name: never hireable, fireable, salaried as
@@ -7226,7 +6240,7 @@ static func _case_hr_frank_guard() -> String:
 
 static func _case_hr_active_filters() -> String:
 	# An on-leave employee is genuinely PRESENT for payroll and every display, and genuinely
-	# ABSENT for capacity, speed, overtime and CS dampen. One list would be wrong half the time.
+	# ABSENT for the sprint team, overtime and CS dampen. One list would be wrong half the time.
 	GameState.set_cash(100000)
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
@@ -7237,13 +6251,12 @@ static func _case_hr_active_filters() -> String:
 	CustomerRegistry.assign_customer(cust.id, rep.id)
 	if B2BSalesSystem._account_owner(cust) == null:
 		return "an ACTIVE customer rep does not read as the account's owner"
-	var cap_before: int = ProductSystem.capacity_total()
 	var payroll_before: int = CharacterRegistry.get_total_monthly_salaries()
 	var team_before: int = CharacterRegistry.get_employees().size()
 	HRMoraleSystem.send_on_leave(dev, HRConstants.LEAVE_WEEKS, false)
 	HRMoraleSystem.send_on_leave(rep, HRConstants.LEAVE_WEEKS, false)
 	# EXCLUDED while away.
-	if ProductSystem.capacity_total() != cap_before - 1:
+	if _sprint_points(dev.id) > 0.0:
 		return "an on-leave developer is still in the capacity pool"
 	if CharacterRegistry.count_active_developers() != 0:
 		return "an on-leave developer counts as active"
@@ -7254,10 +6267,9 @@ static func _case_hr_active_filters() -> String:
 		return "an on-leave employee accrued overtime pay at eleven company hours (%d)" % \
 			WorkHoursSystem.overtime_pay_today(rep)
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
-	# B4 (2026-08-27): the absent-owner answer is now `null` rather than a zero score, and the
-	# ACCOUNT MUST NOT SILENTLY FALL BACK TO THE FOUNDER while its rep is away — an assigned
-	# account belongs to the person assigned to it, present or not. That is what the second
-	# check pins.
+	# The absent owner reads as `null`, and the ACCOUNT MUST NOT SILENTLY FALL BACK TO THE
+	# FOUNDER while its rep is away: an assigned account belongs to the person assigned to it,
+	# present or not.
 	if B2BSalesSystem._account_owner(cust) != null:
 		return "an on-leave customer rep still cares for the account"
 	# INCLUDED while away.
@@ -7340,14 +6352,8 @@ static func _case_hr_constants_contract() -> String:
 	# --- The equivalence anchors the shims used to guarantee, now on the REAL law ---
 	# These are the whole reason the Coupling could delete the conversion tables: the rescaled
 	# coefficients reproduce the pre-migration numbers exactly at the anchor values.
-	# The seeded employee's KEY AREA is what feeds team speed now (2026-08-21). 5 × 0.25.
-	if not is_equal_approx(ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE), 1.25):
-		return "key area %d contributes %.3f efor/day, want 1.25" % [
-			SEED_EXPERTISE, ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE)]
 	if not is_equal_approx(B2BConstants.cs_dampen(5), 0.725):
 		return "UZMANLIK-5 dampen is %.4f, want the old cs_skill-55 value 0.725" % B2BConstants.cs_dampen(5)
-	if not is_equal_approx(ProductSystem.SEED_EXPERTISE_PIVOT, float(SEED_EXPERTISE)):
-		return "the fixture expertise default is no longer the seed pivot — the commit seed will tilt"
 
 	# --- Roles, departments, labels ---
 	if HRConstants.EMPLOYEE_ROLES.size() != 6:
@@ -7717,153 +6723,6 @@ static func _case_speed_day_invariant() -> String:
 #  equivalence anchors survived the rescale exactly.
 # ============================================================================
 
-static func _case_coupling_speed_law() -> String:
-	# THE hız yasası, both hard anchors in one place, measured through the real formula.
-	GameState.set_cash(200000)
-	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(6)
-	var coord: float = HRConstants.coordination_for_founder(GameState.get_founder_skill("leadership"))
-	if not is_equal_approx(coord, 1.0):
-		return "the debug payload no longer gives a neutral coordination multiplier (%.3f) — every anchor below shifts" % coord
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if not _run_build_to_phase("development"):
-		return "build never reached development"
-	# ANCHOR a2: SOLO KURUCU == 3,0 efor/gün, Coupling öncesiyle birebir aynı sayı.
-	# Çapa cetvel değişiminden SAĞ ÇIKTI ve bu kasıtlı: fixture 3'ten 6'ya, katsayı 1,0'dan
-	# 0,5'e gitti (§2.4), çarpım kıpırdamadı. Ölçülen sayının aynı kalması, cetvel
-	# değişiminin kurucunun yapım katkısını sessizce iki katına ÇIKARMADIĞININ kanıtı.
-	if absf(ProductSystem.team_speed(b) - 3.0) > 0.001:
-		return "anchor a2 broken: solo founder is %.3f efor/day, want 3.0" % ProductSystem.team_speed(b)
-	# ANCHOR b1: a seeded developer adds EMPLOYEE_SPEED_COEF × their Yazılım. It was 1.0 (the
-	# pre-Coupling assist engineer) while the seed's build number was HIZ 4; the area
-	# migration made it the KEY AREA, seeded at SEED_EXPERTISE, so the anchor is 1.25.
-	# The COEFFICIENT did not move — the number it multiplies did.
-	var want_b1: float = 3.0 + ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE)
-	_make_employee("char_law_dev", "Law Dev", HRConstants.ROLE_DEVELOPER)
-	if absf(ProductSystem.team_speed(b) - want_b1) > 0.001:
-		return "anchor b1 broken: +seeded developer gives %.3f, want %.3f" % [
-			ProductSystem.team_speed(b), want_b1]
-	# ATAMA KAPISI (onaylı tasarım, 2026-08-22). Bir tasarımcının alanları Tasarım ve Ürün;
-	# Yazılım ikisi de değil, yani GELİŞTİRME fazına hiç giremez ve hızı kıpırdatmaz. §2'nin
-	# "tek kişilik ekipte boşluk kalmaz" cümlesi YETENEK hakkında — herkeste altı sayı var —
-	# ama kimin nereye GİRDİĞİNİ atama söylüyor, ve Görevler matrisi bu iki alan dışındaki
-	# her sütunu "ALANI YOK · ATANAMAZ" diye kesikli çiziyor.
-	var before_designer: float = ProductSystem.team_speed(b)
-	_make_employee("char_law_designer", "Law Designer", HRConstants.ROLE_DESIGNER)
-	var with_designer: float = ProductSystem.team_speed(b)
-	if absf(with_designer - before_designer) > 0.001:
-		return "a designer moved GELİŞTİRME speed (%.3f -> %.3f); Yazılım is not one of their two areas" % [
-			before_designer, with_designer]
-	# ...ve aynası: TASARIM fazında tasarımcı SAYILIR, yazılımcı SAYILMAZ. Toplam kurucu +
-	# tasarımcı(ana alan); yazılımcı terimi YOK, çünkü o fazın alanlarına atanamaz.
-	var iter_speed: float = ProductSystem._speed_for_phase("iteration", "")
-	# Kurucu terimi SABİT YAZILMIYOR, motordan okunuyor: burada `3.0` duruyordu ve o sayı
-	# kurucunun ESKİ cetveldeki fixture değeriydi. Cetvel değişince iddia ölçtüğü şeyden
-	# koptu — "tasarımcı sayılıyor mu" sorusunu değil "fixture kaç" sorusunu ölçer oldu.
-	var founder_area: float = float(GameState.get_founder_skill(
-		ProductSystem._founder_phase_area("iteration")))
-	var want_iter: float = ProductSystem.FOUNDER_SPEED_COEF * founder_area \
-		+ ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE)
-	if absf(iter_speed - want_iter) > 0.001:
-		return "TASARIM speed %.3f, want founder + designer only (%.3f) — the developer must not appear" % [
-			iter_speed, want_iter]
-	# AĞIRLIK YOK among employees: making the developer the SORUMLU must not change the SUM.
-	# (Their quality shows up in the coordination term, which is what replaced the lead weight.)
-	var sum_before: float = ProductSystem._phase_area_sum("development", "")
-	var sum_as_lead: float = ProductSystem._phase_area_sum("development", "char_law_dev")
-	if absf(sum_before - sum_as_lead) > 0.001:
-		return "the lead still carries extra HIZ weight (%.3f vs %.3f) — 'ağırlık yok' broken" % [sum_before, sum_as_lead]
-	return ""
-
-
-static func _case_coupling_coordination_sources() -> String:
-	# The multiplier is asymmetric BY SOURCE, and a stale lead resolves loudly to the founder.
-	GameState.set_cash(200000)
-	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(6)
-	founder.role_stats["leadership"] = 0
-	# Founder-as-lead is never a penalty: neutral at Liderlik 0, rising after that.
-	if not is_equal_approx(HRConstants.coordination_for_founder(0), 1.0):
-		return "founder coordination at Liderlik 0 is %.3f, want exactly 1.0" % HRConstants.coordination_for_founder(0)
-	if HRConstants.coordination_for_founder(9) <= 1.0:
-		return "founder coordination does not rise with Liderlik"
-	# A CHOSEN employee lead is still a real bet — low LİDERLİK genuinely coordinates worse.
-	if HRConstants.coordination_for_lead(0) >= 1.0:
-		return "a Liderlik-0 lead is not a penalty (%.3f)" % HRConstants.coordination_for_lead(0)
-	if HRConstants.coordination_for_lead(0) >= HRConstants.coordination_for_lead(9):
-		return "lead coordination is not two-sided across the ruler"
-	# The lead's LİDERLİK actually reaches the build speed.
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if not _run_build_to_phase("development"):
-		return "build never reached development"
-	var weak: Character = _make_employee("char_coord_weak", "Weak Lead", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 0, 50, SEED_EXPERTISE, 0)
-	var strong: Character = _make_employee("char_coord_strong", "Strong Lead", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 0, 50, SEED_EXPERTISE, 9)
-	b.lead_engineer_id = weak.id
-	var speed_weak: float = ProductSystem.team_speed(b)
-	b.lead_engineer_id = strong.id
-	var speed_strong: float = ProductSystem.team_speed(b)
-	if speed_strong <= speed_weak:
-		return "the SORUMLU's UYUM does not reach build speed (%.3f vs %.3f)" % [speed_weak, speed_strong]
-	# STALE LEAD: a fired or on-leave SORUMLU resolves to founder-as-lead, not to a silent
-	# fallback. Nothing rewrites lead_engineer_id after commit, so this path is reachable.
-	b.lead_engineer_id = strong.id
-	HRMoraleSystem.send_on_leave(strong, HRConstants.LEAVE_WEEKS, false)
-	var speed_on_leave: float = ProductSystem.team_speed(b)
-	b.lead_engineer_id = ""
-	if absf(speed_on_leave - ProductSystem.team_speed(b)) > 0.001:
-		return "an on-leave SORUMLU did not resolve to founder-as-lead (%.3f vs %.3f)" % [
-			speed_on_leave, ProductSystem.team_speed(b)]
-	return ""
-
-
-static func _case_coupling_bug_team_average() -> String:
-	# Bug rate reads the team's UZMANLIK WEIGHTED AVERAGE, and the average cuts BOTH ways.
-	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(6)
-	# GELİŞTİRME fazının alanı Yazılım; commit anındaki hata tohumu da onu okur (rev 2 §2).
-	var dev_area: String = HRConstants.AREA_ENGINEERING
-	# Kurucu yalnız ve sorumluyken ortalama TAM OLARAK onun kendi puanıdır: ağırlıklar
-	# sadeleşir ((1,5 × p) / 1,5 = p), o yüzden BUG_TECH_REDUCER hiç yeniden ölçeklenmedi.
-	#
-	# DEĞER MOTORDAN OKUNUR. Burada `3.0` sabit yazılıydı ve o eski cetvelin fixture
-	# değeriydi; §2.4 kurucuyu 0–10'a alınca sayı 6 oldu. VE BU BİR DENGE DEĞİŞİKLİĞİ:
-	# `_team_area_avg` kurucu ile çalışanı NORMALİZE ETMEDEN aynı ortalamada topluyor, yani
-	# tek kurucu hâlinde bug/wear azaltması gerçekten ikiye katlanıyor. Katsayıyı yarıya
-	# indirmek çalışan-ağırlıklı hâli bozardı; doğru olan kurucunun nihayet aynı cetvelde
-	# sayılması. Beyan edilir, gizlenmez.
-	var founder_area_value: float = float(GameState.get_founder_skill(dev_area))
-	if absf(ProductSystem._team_area_avg(dev_area, "") - founder_area_value) > 0.001:
-		return "founder-solo average is %.3f, want his own %.1f exactly" % [
-			ProductSystem._team_area_avg(dev_area, ""), founder_area_value]
-	# A STRONG team lifts the average (fewer bugs)...
-	var strong: Character = _make_employee("char_bug_strong", "Strong Dev", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 0, 50, 9, SEED_RAPPORT)
-	var avg_strong: float = ProductSystem._team_area_avg(dev_area, "")
-	if avg_strong <= founder_area_value:
-		return "an UZMANLIK-9 developer did not lift the average above the founder's own %.1f (%.3f)" % [
-			founder_area_value, avg_strong]
-	CharacterRegistry.remove(strong.id)
-	# ...and a WEAK team drags it below the founder's own number (more bugs). Two-directional.
-	_make_employee("char_bug_weak", "Weak Dev", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 0, 50, 0, SEED_RAPPORT)
-	var avg_weak: float = ProductSystem._team_area_avg(dev_area, "")
-	if avg_weak >= founder_area_value:
-		return "an UZMANLIK-0 developer did not drag the average below the founder's own %.1f (%.3f)" % [
-			founder_area_value, avg_weak]
-	# The SORUMLU carries ×1.5, so who is in charge changes the quality average.
-	var as_member: float = ProductSystem._team_area_avg(dev_area, "")
-	var as_lead: float = ProductSystem._team_area_avg(dev_area, "char_bug_weak")
-	if as_lead >= as_member:
-		return "making the weak developer SORUMLU did not lower the average (%.3f -> %.3f)" % [as_member, as_lead]
-	return ""
-
-
 static func _case_coupling_wear_team_average() -> String:
 	# Post-ship wear follows the SAME grammar as bug — the founder-only read is gone.
 	_seed_live_product()
@@ -7902,92 +6761,6 @@ static func _case_coupling_wear_team_average() -> String:
 		+ float(int(GameState.get_flag("mvp_live_bug_count", 0)))
 	if team_wear >= solo_wear:
 		return "a strong developer did not slow live-product wear (%.4f -> %.4f)" % [solo_wear, team_wear]
-	return ""
-
-
-static func _case_coupling_pm_experience_bonus() -> String:
-	# TASARIM's quality channel: Ürün Yöneticisi UZMANLIK → Deneyim team bonus, and the
-	# "önizleme == ship" structural guarantee must survive it.
-	GameState.set_cash(200000)
-	var picks := ["ai_assistant_chat", "ai_assistant_memory"]
-	var before: Dictionary = ProductSystem.projected_axes(picks, [], {})
-	# Kimse Tasarım'a atanmamışsa bonus tam olarak 0 — PM'siz her case bu yüzden dokunulmamış.
-	#
-	# ATAMA KAPISI, rev 11 §12.0 GRANÜLERLİĞİNDE. 2026-08-22'de bu case "PM'i Ürün'e mi
-	# Tasarım'a mı koyuyorsun" kararını koruyordu. §12.0 atama birimini ALANDAN İŞE aldı ve
-	# o karar ortadan kalktı: Build ekibi Ürün · Tasarım · Yazılım alanlarınca taşınır, yani
-	# Build'deki bir Ürün Yöneticisi ikisini de getirir — Ürün'ünü ana (×1,0), Tasarım'ını
-	# ikincil (×0,8) katsayısıyla. §4.3'ün "atanabilir, biraz daha verimsiz" cümlesi tam
-	# olarak budur.
-	#
-	# Case'in ASIL ölçtüğü şey korunuyor: bonus hâlâ bir ATAMA KARARINA bağlı. Yalnız karar
-	# artık "hangi alan" değil, "Build'de mi değil mi".
-	var pm: Character = _make_employee("char_pm", "Pm One", HRConstants.ROLE_PRODUCT_MANAGER,
-		SEED_PACE, 0, 50, 4, SEED_RAPPORT)
-	# Yeni işe alınan Build'e oturur (default_job_for_role) → bonus GELİR.
-	if float(ProductSystem.projected_axes(picks, [], {})["experience"]) \
-		- float(before["experience"]) <= 0.0:
-		return "a PM on the Build job added no Deneyim — §12.0 says Build carries Tasarım"
-	# İŞTEN ÇIKARILINCA bonus GİDER: karar hâlâ karar.
-	CharacterRegistry.clear_jobs(pm.id)
-	if absf(float(ProductSystem.projected_axes(picks, [], {})["experience"])
-			- float(before["experience"])) > 0.001:
-		return "an unassigned PM still moved Deneyim — the bonus must follow the assignment"
-	if CharacterRegistry.assign_job(pm.id, HRConstants.JOB_BUILD) != "":
-		return "a PM was refused the Build job, which their Ürün area carries"
-	var after: Dictionary = ProductSystem.projected_axes(picks, [], {})
-	var gain: float = float(after["experience"]) - float(before["experience"])
-	if gain <= 0.0:
-		return "a product manager added no Deneyim bonus"
-	if absf(float(after["innovation"]) - float(before["innovation"])) > 0.001 \
-			or absf(float(after["stability"]) - float(before["stability"])) > 0.001:
-		return "the PM bonus leaked into an axis other than Deneyim"
-	# The CAP applies to the BONUS TERM, not the axis total — otherwise v2's accumulated
-	# Deneyim would eat the cap and a new PM would silently add nothing.
-	# `expertise` 2026-08-21'de emekli oldu; tavanı zorlamak için TASARIM'ı yükseltiyoruz,
-	# çünkü bonusun okuduğu alan o.
-	pm.role_stats[HRConstants.AREA_DESIGN] = HRConstants.AREA_MAX
-	# İkinci PM de Build'e doğar; ayrıca bir alan taşıması gerekmiyor (§12.0).
-	var pm2: Character = _make_employee("char_pm2", "Pm Two", HRConstants.ROLE_PRODUCT_MANAGER,
-		SEED_PACE, 0, 50, 9, SEED_RAPPORT)
-	var capped: Dictionary = ProductSystem.projected_axes(picks, [], {})
-	var capped_gain: float = float(capped["experience"]) - float(before["experience"])
-	if capped_gain > ProductSystem.PM_EXPERIENCE_CAP + 0.001:
-		return "the PM bonus exceeded its cap (%.3f > %.3f)" % [capped_gain, ProductSystem.PM_EXPERIENCE_CAP]
-	# A high v2 base must still receive the full capped bonus (the cap is on the term).
-	var high_base := {"innovation": 40.0, "stability": 40.0, "experience": 40.0}
-	var v2: Dictionary = ProductSystem.projected_axes(picks, [], high_base)
-	var v2_no_pm: float = float(before["experience"]) + 40.0
-	if absf((float(v2["experience"]) - v2_no_pm) - capped_gain) > 0.001:
-		return "the cap was applied to the axis total, not the bonus term (v2 gain %.3f vs %.3f)" % [
-			float(v2["experience"]) - v2_no_pm, capped_gain]
-	# ÖNİZLEME == SHIP: the stamp must equal a fresh projection, bonus included.
-	if not ProductSystem.start_build("ai_assistant", picks, ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var want: Dictionary = ProductSystem.projected_axes(picks, [], {})
-	if absf(b.experience - float(want["experience"])) > 0.001:
-		return "commit stamp %.3f != fresh projection %.3f — preview == ship broken by the PM bonus" % [
-			b.experience, float(want["experience"])]
-	return ""
-
-
-static func _case_coupling_tester_beta_and_sprint() -> String:
-	# TEST bölümü: bulma isabeti + tempo from the Test Uzmanı. The hata sprinti is one week
-	# whoever is on staff. No tester → every multiplier is exactly 1.0, which is why the existing
-	# beta cases hold.
-	if not is_equal_approx(ProductSystem.tester_find_mult(), 1.0) \
-			or not is_equal_approx(ProductSystem.tester_tempo_mult(), 1.0):
-		return "the tester multipliers are not neutral with no tester on staff"
-	_make_employee("char_tester", "Test One", HRConstants.ROLE_TESTER,
-		SEED_PACE, 0, 50, 9, SEED_RAPPORT)
-	if ProductSystem.tester_find_mult() <= 1.0:
-		return "a UZMANLIK-9 tester did not raise bug-finding accuracy"
-	if ProductSystem.tester_tempo_mult() <= 1.0:
-		return "a tester did not raise the find/fix tempo"
-	# The tester also joins BETA's speed crew (PHASE_CREW bugfix = tester + developer).
-	if not ProductSystem._phase_areas("bugfix").has(HRConstants.AREA_QA):
-		return "the tester is not in the BETA phase crew"
 	return ""
 
 
@@ -8030,74 +6803,6 @@ static func _case_coupling_cs_dampen_axis() -> String:
 	if bb.satisfaction <= a.satisfaction:
 		return "the UZMANLIK-9 rep did not hold the account better (strong=%d weak=%d)" % [
 			bb.satisfaction, a.satisfaction]
-	return ""
-
-
-static func _case_coupling_overtime_applied() -> String:
-	# The multipliers task 1 exposed are now APPLIED. Nothing proved this wiring before: task 1
-	# could only assert the numbers were queryable, so a formula that never read them looked fine.
-	GameState.set_cash(200000)
-	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(6)
-	_make_employee("char_ot_dev", "OT Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 100)
-	# DÖRT özellik, iki değil. Ölçüm iki tam günü efor TAVANINA ÇARPMADAN geçirmek zorunda:
-	# tavana dayanan gün son saatlerde daha az efor yazar ve oran sessizce 1.30'un altına
-	# düşer. 2026-08-21'de tam olarak bu oldu — alan migrasyonu çalışanın katkısını 1.0'dan
-	# 1.25'e çıkardı, build daha erken tavana vardı ve oran 1.259 okundu. Ölçülen yasa
-	# değişmedi; ölçüm penceresi dardı.
-	if not ProductSystem.start_build("ai_assistant",
-			["ai_assistant_tools", "ai_assistant_image", "ai_assistant_memory", "ai_assistant_voice"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	# Fikstür: üç tik uzunluğunda ölçüm penceresi geliştirme bandına sığsın diye build uzatılır;
-	# on altı saatlik gün ancak 08:00 başlangıcına sığar.
-	b.total_efor = 400.0
-	WorkHoursSystem.set_company_start_hour(TimeModel.WEEK_START_HOUR)
-	if not _run_build_to_phase("development"):
-		return "build never reached development"
-	# Baseline day, no block running.
-	var e0: float = b.efor_spent
-	var bugs0: float = b.bug_progress + float(b.bug_count)
-	for h in 24:
-		ProductSystem.hourly_tick(h)
-	var base_efor: float = b.efor_spent - e0
-	var base_bugs: float = (b.bug_progress + float(b.bug_count)) - bugs0
-	# ---- §8.4 · GETİRİ SAATİN KENDİSİDİR ----
-	# Uzun gün daha fazla üretir, sekizin üstündeki her saat yarım verimle
-	# (HRConstants.hours_output_mult). Fazladan bir 'ek mesai hızı' katsayısı UYGULANMAZ.
-	#
-	# FALSİFİKASYON: HRSystem.daily_contribution'dan hours_output_mult çarpanını kaldır →
-	# oran 1,0 çıkar ve ilk iddia FAIL eder.
-	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
-	e0 = b.efor_spent
-	bugs0 = b.bug_progress + float(b.bug_count)
-	for h in 24:
-		ProductSystem.hourly_tick(h)
-	var long_efor: float = b.efor_spent - e0
-	var long_bugs: float = (b.bug_progress + float(b.bug_count)) - bugs0
-	var want_ratio: float = HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MAX)
-	if absf(long_efor / maxf(0.001, base_efor) - want_ratio) > 0.02:
-		return "the longest day produced %.3f× the eight-hour day, want %.3f" % [
-			long_efor / maxf(0.001, base_efor), want_ratio]
-	# §8.4: EK MESAİ KALİTE CEZASI TAŞIMAZ. "Eski koddaki ×1,25 bug çarpanı kaldırılmıştır.
-	# Gerekçe: §7 moralin kaliteye dokunmadığını söyler; ek mesainin dokunması aynı sınırı
-	# ihlal ederdi." Bug oranı ÇALIŞILAN SAATLE artmaz — hata birikimi kapasite çarpanından
-	# gelir ve o saatten bağımsızdır, o yüzden iki günün bug'ı BİRBİRİNE EŞİT olmalı.
-	if absf(long_bugs - base_bugs) > 0.0001:
-		return "the longest day changed the bug rate (%.4f -> %.4f) — §8.4 forbids it" % [
-			base_bugs, long_bugs]
-	# ---- §8.3 · KISA GÜN, AYNI ORANLA AŞAĞI ----
-	# "Beş saatlik gün, sekiz saatlik günün %62,5'i kadar iş çıkarır."
-	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MIN)
-	e0 = b.efor_spent
-	for h in 24:
-		ProductSystem.hourly_tick(h)
-	var short_efor: float = b.efor_spent - e0
-	var want_short: float = HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MIN)
-	if absf(short_efor / maxf(0.001, base_efor) - want_short) > 0.02:
-		return "a five-hour day produced %.3f× the eight-hour day, want %.3f" % [
-			short_efor / maxf(0.001, base_efor), want_short]
-	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
 	return ""
 
 
@@ -9209,6 +7914,7 @@ static func _case_save_continuity_seeded() -> String:
 # --- 3. İKİ YÜKLEME, TEK SÜREÇ: reset mimarisinin asıl kanıtı ---
 static func _case_save_double_load_no_residue() -> String:
 	_seed_save_world()
+	SprintSystem.choose_type("erp", "Sahra")
 	if not SaveManager.save_to_slot(SAVE_SLOT_A):
 		_cleanup_save_slots()
 		return "save failed"
@@ -9226,6 +7932,10 @@ static func _case_save_double_load_no_residue() -> String:
 	CustomerRegistry.add(intruder)
 	CharacterRegistry.add(_make_employee("emp_intruder", "Artik", "developer"))
 	GameState.set_flag("residue_marker", true)
+	SprintSystem.apply_lead()
+	if GameState.product.sprint.cards.is_empty():
+		_cleanup_save_slots()
+		return "fixture: the lead planned nothing to leave behind"
 
 	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
 		_cleanup_save_slots()
@@ -9244,6 +7954,9 @@ static func _case_save_double_load_no_residue() -> String:
 	if GameState.flags.has("residue_marker"):
 		_cleanup_save_slots()
 		return "a flag set between loads survived the second load"
+	if not GameState.product.sprint.cards.is_empty():
+		_cleanup_save_slots()
+		return "a sprint plan made between loads survived the second load"
 	if CharacterRegistry.get_all().size() != roster_size:
 		_cleanup_save_slots()
 		return "roster size drifted across two loads (%d then %d)" % [roster_size, CharacterRegistry.get_all().size()]
@@ -9266,9 +7979,6 @@ static func _case_save_double_load_no_residue() -> String:
 	if RivalRegistry.get_all().is_empty():
 		_cleanup_save_slots()
 		return "reset_all_owners emptied the rival field instead of re-seeding it"
-	if ProductSystem.active_build != null:
-		_cleanup_save_slots()
-		return "reset_all_owners left an active build behind"
 
 	_cleanup_save_slots()
 	return ""
@@ -10036,8 +8746,7 @@ static func _case_job_assignment_and_idle() -> String:
 		return "the founder holds %d jobs at run start, want exactly 1" % founder.assigned_job_ids.size()
 	# ALAN AYNASI DAHA GENİŞ OLABİLİR VE BU DOĞRUDUR: Build ekibi Ürün · Tasarım · Yazılım
 	# alanlarınca taşınır (§12.0) ve kurucu altı alanın hepsini taşır (§2), yani Build'deki
-	# bir kurucu üçünde de görünür. ProductSystem._founder_phase_area onu hangi faz koşuyorsa
-	# orada bulabilsin diye böyle; eski tek-alan koltuğu bunu yapamıyordu.
+	# bir kurucu üçünde de görünür.
 	if founder.assigned_jobs.is_empty():
 		return "the founder's area mirror is empty while he holds a job"
 	var held: String = String(founder.assigned_job_ids[0])
@@ -11520,21 +10229,6 @@ static func _case_b2b_v1_lands_mid_band() -> String:
 	return ""
 
 
-static func _case_field_unlocked_for_saas_ops() -> String:
-	# Lever 3: saas_ops_field is buildable in the demo and the competent set stamps raw 17.
-	for f in ProductCatalog.get_feature_pool("saas_ops"):
-		if String(f.get("id", "")) == "saas_ops_field" and bool(f.get("requires_research", false)):
-			return "saas_ops_field is still research-locked"
-	GameState.set_cash(20000)
-	var picks := ["saas_ops_integration", "saas_ops_field", "saas_ops_scheduling"]
-	if not ProductSystem.start_build("saas_ops", picks, "", "Sahra"):
-		return "start_build refused the competent set"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if absf(b.stability - 17.0) > 0.001:
-		return "competent set stamps stability %.1f, want 17" % b.stability
-	return ""
-
-
 static func _case_b2c_satisfaction_gate_experience() -> String:
 	# B2C-growth precondition (director ruling 2026-08-19): the B2C aggregate's +1 a day reads the
 	# EXPERIENCE axis at the re-seated gate (40). Raw 25 → 50 ≥ 40 climbs; raw 10 → 28.6
@@ -11997,8 +10691,8 @@ static func _case_b2c_growth_multiplier_floor() -> String:
 # --- Bugs hit conversion ---
 
 static func _case_conversion_bug_penalty() -> String:
-	# 10 live bugs ≈ −20 % conversion, floored at ×0.4; the pricing ruler's projection
-	# (estimate_price_change → new_paying) moves with it.
+	# 10 live bugs ≈ −20 % conversion, floored at ×0.4; the price-change projection
+	# (SalesSystem.estimate_price_change → new_paying) moves with it.
 	_seed_b2c()
 	GameState.set_flag("mvp_innovation", 15.0)
 	GameState.set_flag("mvp_stability", 20.0)
@@ -12785,76 +11479,8 @@ static func _case_ambient_hourly_never_at_night() -> String:
 	return ""
 
 
-# --- A creation draft survives navigation ---
+# --- The type picker offers exactly the subtypes with line content ---
 
-static func _case_creation_draft_survives_navigation() -> String:
-	# A half-built product (path, type, two PLANNED STEPS, a name) on the creation flow; the
-	# router tells the page it is closing → the draft lands in the typed flag → a fresh
-	# ProductTab mount re-hydrates it at the same step with the same selection. Clean flows
-	# stash nothing.
-	#
-	# The claim is unchanged by the rev 6.1 cutover; only the fixture data moved from flat
-	# feature ids to line step ids, because `_selected` now carries the version plan.
-	var root: Node = _ui_host()
-	var flow_script: GDScript = load("res://scripts/tabs/product/creation_flow.gd")
-	var flow: Control = flow_script.new()
-	root.add_child(flow)
-	flow.setup({"step": 3, "prefill": {"type": "note_tool",
-		"features": ["line_note_tool_capture_k1", "line_note_tool_sync_k1"], "name": "Sahra"}})
-	var d: Dictionary = flow.draft_state()
-	if String(d.get("type", "")) != "note_tool" or (d.get("features", []) as Array).size() != 2 \
-			or String(d.get("name", "")) != "Sahra":
-		flow.free()
-		return "fixture: draft_state did not read the prefilled selection (%s)" % str(d)
-	flow.on_page_closing()
-	flow.free()
-	var stashed: Dictionary = GameState.get_flag("creation_draft", {})
-	if stashed.is_empty():
-		return "on_page_closing stashed nothing for a dirty draft"
-	if int(stashed.get("step", 0)) != 3 or String(stashed.get("type", "")) != "note_tool":
-		return "stashed draft is wrong: %s" % str(stashed)
-	# The router actually calls it: the seam name must appear in window_layer's free path.
-	var router_src: String = (load("res://scripts/ui/components/window_layer.gd") as GDScript).source_code
-	if router_src.find('propagate_call("on_page_closing")') < 0:
-		return "window_layer does not notify the page before freeing it"
-	# Re-mount: ProductTab consumes the draft and lands on the creation view with the selection.
-	var tab: Control = (load("res://scenes/tabs/ProductTab.tscn") as PackedScene).instantiate()
-	root.add_child(tab)
-	var view: Node = tab.get("_view_node")
-	# MESAJ SERBEST BIRAKMADAN ÖNCE KURULUR. Burası `tab.free()`'den SONRA `tab.get()`
-	# çağırıyordu: "Cannot call method 'get' on a previously freed instance" atıyor, gövde
-	# yarıda kesiliyor, fonksiyon "" dönüyor ve vaka SMOKE PASS basıyordu — yani gerçek
-	# iddia BAŞARISIZKEN yeşil görünüyordu. (tools/smoke_run.sh stderr kapısı bunu yakaladı;
-	# vakanın kendisi yakalayamazdı.)
-	if tab.get("_view_id") != "creation" or view == null:
-		var seen: String = str(tab.get("_view_id"))
-		tab.free()
-		return "ProductTab did not re-open the creation flow (view %s)" % seen
-	var restored: Dictionary = view.draft_state()
-	tab.free()
-	if String(restored.get("type", "")) != "note_tool" or (restored.get("features", []) as Array).size() != 2 \
-			or String(restored.get("name", "")) != "Sahra" or int(restored.get("step", 0)) != 3:
-		return "re-hydrated draft differs: %s" % str(restored)
-	if GameState.has_flag("creation_draft"):
-		return "the draft flag was not consumed on re-mount"
-	# A clean flow stashes nothing (and clears a stale flag).
-	var clean: Control = flow_script.new()
-	root.add_child(clean)
-	clean.setup({"step": 1})
-	clean.on_page_closing()
-	clean.free()
-	if GameState.has_flag("creation_draft"):
-		return "a clean flow stashed a draft"
-	return ""
-
-
-## §12.11 MÜHÜRLÜ — tip ekranının OYNANABİLİR kartları ile hat içeriği olan alt-tipler
-## AYNI KÜME olmak zorunda. İkisi iki ayrı dosyada yaşıyor (ProductCatalog.TYPE_SCREEN ve
-## data/product/lines/*.json) ve ayrıştıkları an oyuncu tıklanabilir bir karttan BOŞ bir
-## Konsept'e düşer — motoru görünmez kılan tam olarak bu kopukluktu.
-##
-## Kilitli tarafı da ölçer: §12.11 sayıyı mühürledi (yol başına ÜÇ) ve kilitli bir kartın
-## hat içeriği OLMAMALI, yoksa oynanabilir bir ürünü kilitliyor olurduk.
 ## SAHNE AĞACINA MONTE EDEN VAKALAR İÇİN EV SAHİBİ. `root` OLMAZ: harness main.gd'nin
 ## `_ready`'sinden koşuyor ve o `_ready`, root'un KENDİ `add_child(Main)` çağrısının
 ## İÇİNDE çalışıyor — yani root o an "busy setting up children"dır ve ona `add_child`
@@ -12874,6 +11500,13 @@ static func _ui_host() -> Node:
 	return root.get_child(root.get_child_count() - 1) if root.get_child_count() > 0 else root
 
 
+## §12.11 MÜHÜRLÜ — tip ekranının OYNANABİLİR kartları ile hat içeriği olan alt-tipler
+## AYNI KÜME olmak zorunda. İkisi iki ayrı dosyada yaşıyor (ProductCatalog.TYPE_SCREEN ve
+## data/product/lines/*.json) ve ayrıştıkları an oyuncu tıklanabilir bir karttan BOŞ bir
+## ürüne düşer — motoru görünmez kılan tam olarak bu kopukluktu.
+##
+## Kilitli tarafı da ölçer: §12.11 sayıyı mühürledi (yol başına ÜÇ) ve kilitli bir kartın
+## hat içeriği OLMAMALI, yoksa oynanabilir bir ürünü kilitliyor olurduk.
 static func _case_type_screen_matches_line_content() -> String:
 	var playable: Array[String] = []
 	for market in ["b2c", "b2b"]:
@@ -12908,29 +11541,6 @@ static func _case_type_screen_matches_line_content() -> String:
 	return ""
 
 
-## §3'ün "taahhüt edilen ürün alt-türü seçer" hükmü hat yolunda da geçerli. start_build
-## bunu yapıyordu, start_line_build YAPMIYORDU — ve düz akış emekli olunca GameState.subgenre
-## bir daha hiç yazılmayacaktı: subgenre olay koşulları ve haber havuzu açılış değerinde
-## donardı, hiçbir hata vermeden.
-static func _case_line_build_writes_subgenre() -> String:
-	ProductLines.reload()
-	GameState.set_cash(50000)
-	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag("mvp_shipped", false)
-	ProductSystem.active_build = null
-	GameState.set_subgenre("social")   # kasten yanlış değer: yazma OLMAZSA burada kalır
-	var founder: Character = _seed_build_crew()
-	if not ProductSystem.start_line_build("erp",
-			["line_erp_ledger_k1", "line_erp_stock_k1"], founder.id, "Defter"):
-		return "fixture: start_line_build refused a two-K1 erp plan"
-	var want: String = ProductCatalog.get_pool_of("erp")
-	if want == "":
-		return "fixture: erp has no pool key"
-	if GameState.subgenre != want:
-		return "start_line_build left subgenre at '%s', want '%s'" % [GameState.subgenre, want]
-	return ""
-
-
 # --- Held-back strings landed ---
 
 static func _case_borderless_note_key_exists() -> String:
@@ -12949,77 +11559,6 @@ static func _case_borderless_note_key_exists() -> String:
 # ============================================================================
 #  Build Bar · duraklama · DESTEK · trait göçü · Görevler (2026-08-21)
 # ============================================================================
-
-## R2: "Kurucu her şeyi yapabilir, ama aynı anda değil" — ve bu BİR KARAR DEĞİL,
-## bir SONUÇ. Taşıyabilecek herkes meşgulse yapım durur ve efor İŞLEMEZ.
-## FALSİFİKASYON: `build_paused()`'ı `return false` yap → ikinci iddia FAIL (efor akar).
-static func _case_build_pauses_when_all_busy() -> String:
-	_set_founder_tech(6)
-	if not ProductSystem.start_build("ai_assistant",
-			["ai_assistant_chat", "ai_assistant_streaming"], ""):
-		return "could not start a build"
-	# Tek kişilik şirket: taşıyan yalnız kurucu ve o BOŞ — yapım koşmalı.
-	if ProductSystem.build_paused():
-		return "a build with a free founder on it reported PAUSED"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var before: float = b.efor_spent
-	ProductSystem.hourly_tick(9)
-	if b.efor_spent <= before:
-		return "a running build did not spend effort"
-	# Şimdi kurucuyu EĞİTİME yolla: kodda gerçekten var olan bir meşguliyet.
-	var founder: Character = CharacterRegistry.get_founder()
-	founder.status = HRConstants.STATUS_TRAINING
-	if not ProductSystem.build_paused():
-		return "every carrier is busy and the build still reports running"
-	if ProductSystem.pause_note_key() != "BUILD_BUSY_ELSEWHERE":
-		return "an ASSIGNED-but-busy team got the 'nobody is on it' note (%s)" % \
-			ProductSystem.pause_note_key()
-	var frozen: float = b.efor_spent
-	ProductSystem.hourly_tick(10)
-	if b.efor_spent > frozen + 0.0001:
-		return "a PAUSED build kept spending effort (%.4f → %.4f)" % [frozen, b.efor_spent]
-	# HİÇ KİMSE ATANMAMIŞSA not değişir — iki hâl birbirine karışmamalı.
-	CharacterRegistry.clear_areas(founder.id)
-	if ProductSystem.pause_note_key() != "BUILD_BUSY_NOBODY":
-		return "with nobody assigned the note was not 'nobody is on it' (%s)" % \
-			ProductSystem.pause_note_key()
-	return ""
-
-
-## Duraklama GERİ ALİNİR: biri boşalınca yapım TAM HIZDA döner (ara kademe yok, H5).
-## FALSİFİKASYON: `_is_free`'den STATUS_ACTIVE kapısını kaldır → ilk iddia FAIL.
-static func _case_build_resumes_when_one_frees() -> String:
-	_set_founder_tech(6)
-	if not ProductSystem.start_build("ai_assistant",
-			["ai_assistant_chat", "ai_assistant_streaming"], ""):
-		return "could not start a build"
-	var founder: Character = CharacterRegistry.get_founder()
-	founder.status = HRConstants.STATUS_TRAINING
-	if not ProductSystem.build_paused():
-		return "a build with its only carrier in training is not paused"
-	# İKİNCİ BİR TAŞIYICI: fazın alanına atanmış, boş bir çalışan.
-	var pm: Character = _make_employee("char_free_pm", "Free Pm",
-		HRConstants.ROLE_PRODUCT_MANAGER)
-	if not ProductSystem.phase_assignees("iteration").has(pm):
-		return "a Product Manager was not counted among the design phase's carriers"
-	if ProductSystem.build_paused():
-		return "one free carrier was not enough to resume — H5 has no middle rung"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var before: float = b.efor_spent
-	ProductSystem.hourly_tick(11)
-	if b.efor_spent <= before:
-		return "a resumed build did not spend effort"
-	# VC HAZIRLIĞI da meşgul eder — ama YALNIZ kurucuyu (H6: kapasite çarpanı değil).
-	CharacterRegistry.clear_areas(pm.id)
-	founder.status = HRConstants.STATUS_ACTIVE
-	if ProductSystem.build_paused():
-		return "the founder came back free and the build stayed paused"
-	GameState.set_flag("pitch_prep_active", true)
-	if not ProductSystem.build_paused():
-		return "the founder went into VC prep and the build kept running"
-	GameState.set_flag("pitch_prep_active", false)
-	return ""
-
 
 ## R5: YAYINLAMAK BİR SON DEĞİLDİR. Yayından sonra kart kaybolmaz, DESTEK'e döner
 ## ve ürün yaşadıkça yaşar. DOĞRULANMIŞ gerçek veriyi okur; GELEN ÇİZİLMEZ.
@@ -13050,8 +11589,6 @@ static func _case_destek_survives_ship() -> String:
 	var m = BarModel.new()
 	if not m.derive():
 		return "the card vanished after ship — YAYINLANDI is not a terminal state (R5)"
-	if m.phase != BarModel.PHASE_SUPPORT:
-		return "a shipped product did not land on DESTEK (%s)" % String(m.phase)
 	if m.live_bugs != 7:
 		return "DOĞRULANMIŞ read %d, want the confirmed-bug count 7" % m.live_bugs
 	if m.decision_key != "PROD_FIX_RUN_START" or not m.decision_enabled:
@@ -13063,11 +11600,8 @@ static func _case_destek_survives_ship() -> String:
 	running.derive()
 	if running.decision_key != "PROD_FIX_RUN_END":
 		return "a running fix run did not offer the end action (%s)" % running.decision_key
-	if not running.sprint_running:
+	if not running.fix_run_active:
 		return "the card did not see the running fix run"
-	# DESTEK DURAKLAMAZ: duraklama aktif YAPIMIN hâli, canlı ürünün değil.
-	if running.paused:
-		return "a live product reported PAUSED"
 	return ""
 
 
@@ -13178,59 +11712,43 @@ static func _case_vacation_action_retired() -> String:
 	return ""
 
 
+## Bir çalışan izindeyken sprint DURMAZ: izindeki kişi ekipten düşer, kalan kurucu kartı yürütür.
+## Herkes düşünce (çalışan izinde, kurucu Ar-Ge'de) kapasite sıfırdır ve kart o hafta ilerlemez.
+## İki yön de ölçülür, yoksa "hiç durmuyor" da bu vakayı geçerdi.
 static func _case_leave_does_not_pause_build() -> String:
-	# C4/R4: bir çalışan izindeyken KURUCU BOŞSA yapım DURMAZ. Kural HEPSİ-meşgul,
-	# herhangi-biri değil. İki yönü de ölçülüyor: boş kurucuyla koşar, kurucu da
-	# meşgulken durur — yoksa "hiç durmuyor" da bu vakayı geçerdi.
-	GameState.set_cash(200000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
-		return "start_build failed"
-	# GELİŞTİRME FAZINDA ölçülüyor: alanı tek ("engineering") ve bir YAZILIM MÜHENDİSİ
-	# onu taşıyabiliyor. Tasarım fazının alanları product/design ve bir developer'a
-	# `assign_area` "not_your_area" der — vaka o zaman kimsenin taşımadığı bir fazı
-	# ölçmeye çalışırdı.
-	if not _run_build_to_phase("development"):
-		return "the build never reached development"
-	var b: FeatureBuild = ProductSystem.get_active_build()
+	ResearchTree.reload()
+	RnDSystem.reset()
+	_seed_sprint()
+	var dev: Character = _make_employee("char_leave_sprint", "Leave Dev", HRConstants.ROLE_DEVELOPER)
+	_park_leave([dev])
+	var card_id: String = "feat:line_note_tool_capture_k1"
+	SprintSystem.add(card_id)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	if not GameState.product.cards[card_id].assignees.has(dev.id):
+		return "fixture: the developer was not on the card's first week"
+	HRMoraleSystem.send_on_leave(dev, HRConstants.LEAVE_WEEKS, false)
+	if dev.status != HRConstants.STATUS_ON_LEAVE:
+		return "send_on_leave did not park %s" % dev.id
+	var before: float = _card_worked(card_id)
+	_sim_day()
+	if _card_worked(card_id) <= before:
+		return "an employee on leave stopped the sprint while the founder was free"
+	if GameState.product.cards[card_id].assignees.has(dev.id):
+		return "the week after the leave still staffs the card with the person on leave"
+	# Şimdi kurucu da: araştırma kişinin tamamını alır. Ar-Ge yayından sonra açılır.
+	GameState.set_flag("mvp_shipped", true)
 	var founder: Character = CharacterRegistry.get_founder()
-	if founder == null:
-		return "no founder"
-	var staff: Array[Character] = []
-	for c in ProductSystem.phase_assignees(b.current_phase):
-		if c.category == "employee":
-			staff.append(c)
-	if staff.is_empty():
-		# Fazı taşıyan bir çalışan yoksa vaka ÖLÇECEK BİR ŞEY BULAMAZ ve sessizce yeşil
-		# geçer. Bu ilk yazımda gerçekten oldu: yardımcı ÇALIŞANIN rolüne göre
-		# atanıyordu (engineering), yapım ise "iteration" fazındaydı (product/design),
-		# yani kimse fazı taşımıyordu ve `build_paused` hiç kıpırdamıyordu. Falsifikasyon
-		# bunu yakaladı — vaka bozulmuş motora da PASS basıyordu.
-		var helper: Character = _make_employee("char_pause_help", "Pause Help", HRConstants.ROLE_DEVELOPER)
-		var areas: Array = ProductSystem.PHASE_AREAS.get(b.current_phase, [])
-		if areas.is_empty():
-			return "phase '%s' carries no areas — nothing to measure" % b.current_phase
-		CharacterRegistry.assign_area(helper.id, String(areas[0]))
-		staff = [helper]
-	var carriers: Array[Character] = ProductSystem.phase_assignees(b.current_phase)
-	for c in staff:
-		if not carriers.has(c):
-			return "the fixture employee does not carry phase '%s'" % b.current_phase
-	if ProductSystem.build_paused():
-		return "the build was already paused with everyone active"
-	for c in staff:
-		HRMoraleSystem.send_on_leave(c, HRConstants.LEAVE_WEEKS, false)
-		if c.status != HRConstants.STATUS_ON_LEAVE:
-			return "send_on_leave did not park %s" % c.id
-	if founder.status != HRConstants.STATUS_ACTIVE:
-		return "the founder was not active to begin with"
-	if ProductSystem.build_paused():
-		return "an employee on leave paused the build while the founder was free (R4)"
-	# Şimdi kurucuyu da meşgul et: hazIrlık kurucunun meşguliyet kümesinde.
-	GameState.set_flag("pitch_prep_active", true)
-	var paused_now: bool = ProductSystem.build_paused()
-	GameState.set_flag("pitch_prep_active", false)
-	if not paused_now:
-		return "the build kept running with every carrier busy"
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = HRConstants.AREA_MAX
+	if RnDSystem.start("data_model", [founder.id]) != "":
+		return "fixture: the founder could not start research"
+	if SprintSystem.capacity() != 0:
+		return "with everyone away the sprint still reads %d points" % SprintSystem.capacity()
+	var frozen: float = _card_worked(card_id)
+	_sim_day()
+	if absf(_card_worked(card_id) - frozen) > 0.0001:
+		return "the card moved with nobody on the sprint (%.2f -> %.2f)" % [frozen, _card_worked(card_id)]
 	return ""
 
 
@@ -13258,260 +11776,6 @@ static func _case_money_never_double_minus() -> String:
 	if not seen_negative:
 		# Tek eksi de yoksa vaka bir şey ölçmüyor demektir.
 		return "no negative value reached the preview at all"
-	return ""
-
-
-## GDD ÜRÜN rev 6.1 §6.4 — %100 KAPISI. Bu case, adının ve gövdesinin TERSİNE
-## ÇEVRİLDİĞİ bir case'tir ve sebebi kayda geçer: eski hâli (`beta_gate_open_early`)
-## H1'in "kapı her yüzdede açık" kararını sabitliyordu. rev 6.1 o kararı geri aldı,
-## çünkü H1 kendi gerekçesinde bedelinin olmadığını yazıyordu — hatalar yalnız
-## GELİŞTİRME'de biriktiği için erken geçmek daha AZ hata ve daha KISA yapım
-## demekti, yani bedelsiz baskın strateji. Teknoloji borcu demo dışı olduğundan
-## (§1) eksik geliştirme cezalandırılamaz; cezalandırılamayan şey yasaklanır.
-##
-## Eski gövdenin ikinci yarısı (beta DOLGU çubuğu, bugs_start paydası) buradan
-## ÇIKARILDI: §7 BETA satırının yüzde taşımasını yasaklıyor ve bugs_start'ı emekli
-## ediyor. O yarının yerini BuildBar sayaç reworkünde sayaç iddiaları alır.
-##
-## FALSİFİKASYON: can_enter_beta'dan development_band_complete() koşulunu kaldır →
-## ilk iddia FAIL.
-static func _case_beta_gate_requires_full_bar() -> String:
-	GameState.set_cash(50000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var hours: int = 0
-	while not ProductSystem.can_enter_development():
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 120:
-			return "design band never ended"
-	ProductSystem.enter_development()
-	if b.current_phase != "development":
-		return "enter_development did not flip phase"
-
-	# --- KAPI KAPALI, ve bandın kendisi de dolu değil ---
-	if ProductSystem.development_band_complete():
-		return "the development band claims to be complete on its first hour"
-	if ProductSystem.can_enter_beta():
-		return "BETA opened before the bar was full — §6.4 forbids early phase skipping"
-	# Kapalı kapı BASILAMAZ: enter_beta çağrılsa bile faz kımıldamaz.
-	ProductSystem.enter_beta()
-	if b.current_phase != "development":
-		return "enter_beta crossed anyway while the gate was shut"
-
-	# --- barı doldur, kapı açılsın ---
-	while not ProductSystem.development_band_complete():
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 400:
-			return "the development band never filled"
-	if not ProductSystem.can_enter_beta():
-		return "the gate stayed shut with a full bar"
-	ProductSystem.enter_beta()
-	if b.current_phase != "bugfix":
-		return "enter_beta refused a legal crossing"
-	# §7 — sönümün başlangıcı BETA girişinde, saat kesriyle damgalanır.
-	if not is_equal_approx(b.beta_entered_day, ProductSystem.clock_stamp()):
-		return "beta entry was not stamped (%.3f vs %.3f)" % [b.beta_entered_day, ProductSystem.clock_stamp()]
-	return ""
-
-
-## §7 — KEŞİF KESKİN AZALIR ve HAVUZ TÜKENMEZ. İkisi tek karardır: düz oran +
-## tükenebilir havuz beklemeyi kesin kazançlı yapıyordu. Bu case ikisini de ölçer,
-## ve "sıfıra asla ulaşılmaz" iddiasını havuzu bilerek boşaltarak sınar.
-##
-## FALSİFİKASYON: pow(BETA_FIND_DECAY, gün) terimini kaldır → sönüm iddiası FAIL.
-## Havuz besleme dalını sil → tükenmezlik iddiası FAIL.
-static func _case_beta_discovery_decays_pool_never_empties() -> String:
-	# Sabitler §7'nin yazdığı sayılar olmalı...
-	if absf(ProductSystem.BETA_BUG_FIND_PER_DAY - 6.0) > 0.001:
-		return "beta discovery base is %.2f, §7 says 6" % ProductSystem.BETA_BUG_FIND_PER_DAY
-	if absf(ProductSystem.BETA_FIND_DECAY - 0.85) > 0.001:
-		return "beta decay is %.3f, §7 says 0,85" % ProductSystem.BETA_FIND_DECAY
-	# ...ama sabiti okumak DAVRANIŞI ölçmez. Sönüm aşağıda MOTORDAN ölçülüyor: bu
-	# case ilk yazıldığında eğriyi kendi içinde hesaplıyordu, ve `pow(...)` terimini
-	# motordan silen bir mutasyon case'i GEÇİYORDU. Falsifikasyon o boşluğu buldu.
-
-	GameState.set_cash(50000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var hours: int = 0
-	while not ProductSystem.can_enter_development():
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 120:
-			return "design band never ended"
-	ProductSystem.enter_development()
-	while not ProductSystem.development_band_complete():
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 400:
-			return "the development band never filled"
-	ProductSystem.enter_beta()
-
-	# --- SÖNÜM, MOTORDAN ÖLÇÜLÜYOR ---------------------------------------
-	# Aynı ekip, aynı havuz, tek fark BETA'da geçen süre. İlk hafta çok bulur,
-	# ikinci hafta az (§7). Havuz tükenmez olduğu için ölçüm havuz büyüklüğüne değil
-	# YALNIZ eğriye bakar. Saat oyunun yolundan ilerler: sönüm tikin takvim aralığını integre
-	# eder, saat kıpırdamazsa her saatlik tik aynı aralığı sayar.
-	var hpd: int = TimeModel.HOURS_PER_DAY
-	b.beta_entered_day = ProductSystem.clock_stamp()
-	b.bug_find_progress = 0.0
-	var found_w1: int = b.bugs_found
-	TimeManager.advance_hours(hpd)
-	var early: float = float(b.bugs_found - found_w1) + b.bug_find_progress
-	# İlk hafta 6 × Σ 0,85^gün (gün 0–6) = 27,18; tik başına düz ×7 olsa 42 çıkardı. BETA'ya
-	# oturan kurucunun Test katsayıları ve kapasite çarpanı hafta boyu sabit, bölünür.
-	var mult: float = ProductSystem.tester_find_mult() * ProductSystem.tester_tempo_mult() \
-		* ProductSystem.capacity_speed_factor()
-	early /= mult
-	var d: float = ProductSystem.BETA_FIND_DECAY
-	var want_w1: float = ProductSystem.BETA_BUG_FIND_PER_DAY \
-		* (1.0 - pow(d, TimeModel.DAYS_PER_TICK)) / (1.0 - d)
-	if absf(early - want_w1) > 0.01:
-		return "the first BETA week found %.3f, want %.3f (calendar-day decay)" % [early, want_w1]
-
-	b.beta_entered_day = ProductSystem.clock_stamp() - 1.0       # ikinci beta haftası
-	b.bug_find_progress = 0.0
-	var found_w2: int = b.bugs_found
-	TimeManager.advance_hours(hpd)
-	var late: float = (float(b.bugs_found - found_w2) + b.bug_find_progress) / mult
-
-	if late >= early:
-		return "discovery did not decay: week 1 found %.2f, week 2 found %.2f" % [early, late]
-	# 0,85^7 ≈ 0,32 — ikinci hafta ilkinin yarısından az olmalı.
-	if late > early * 0.5:
-		return "decay is far too shallow: %.2f then %.2f" % [early, late]
-
-	# HAVUZU BİLEREK BOŞALT: gizli = bug_count - (found - fixed) = 0.
-	b.beta_entered_day = ProductSystem.clock_stamp()
-	b.bug_find_progress = 0.0
-	b.bugs_found = b.bug_count
-	b.bugs_fixed = 0
-	b.bug_find_progress = 0.0
-	var found_before: int = b.bugs_found
-	var count_before: int = b.bug_count
-	# Bir tam gün beta koştur — tükenmiş havuza rağmen keşif SÜRMELİ.
-	for h in 24:
-		ProductSystem.hourly_tick(h)
-	if b.bugs_found <= found_before:
-		return "discovery stopped once the hidden pool emptied — §7 says the pool never empties"
-	if b.bug_count <= count_before:
-		return "new bugs were found without the pool being replenished (invariant broken)"
-	var hidden: int = b.bug_count - (b.bugs_found - b.bugs_fixed)
-	if hidden < 0:
-		return "the hidden-pool invariant went negative (%d)" % hidden
-	return ""
-
-
-## §7 · brief'in ikinci adlandırılmış kusuru — BETA'da park eden yapım KAPASİTE
-## SLOTU YEMEZ. Kapasite bir YAPIM bölenidir; BETA'yı Test işi taşır ve BETA barı
-## efor ilerletmez. Havuz tükenmez olduğu için BETA'nın doğal sonu da yoktur, yani
-## eskiden hiç yayınlamayan oyuncu her hata sprintini KALICI olarak yarıya
-## düşürüyordu.
-##
-## FALSİFİKASYON: capacity_demand'in faz listesine "bugfix"i geri koy → FAIL.
-static func _case_beta_park_frees_capacity_slot() -> String:
-	GameState.set_cash(50000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var base: int = ProductSystem.capacity_demand()
-	if base < 1:
-		return "a running build demands no capacity at all (%d)" % base
-
-	var hours: int = 0
-	while not ProductSystem.can_enter_development():
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 120:
-			return "design band never ended"
-	if ProductSystem.capacity_demand() != base:
-		return "TASARIM stopped demanding capacity"
-	ProductSystem.enter_development()
-	if ProductSystem.capacity_demand() != base:
-		return "GELİŞTİRME stopped demanding capacity — it is the phase that spends effort"
-	while not ProductSystem.development_band_complete():
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 400:
-			return "the development band never filled"
-	ProductSystem.enter_beta()
-
-	var parked: int = ProductSystem.capacity_demand()
-	if parked >= base:
-		return "a build parked in BETA still eats a capacity slot (%d, was %d)" % [parked, base]
-	# Ve slot serbest kaldığı için paralel iş tam hızda koşar.
-	if absf(ProductSystem.capacity_speed_factor() - 1.0) > 0.001:
-		return "parking in BETA still halves parallel work (%.2f)" \
-			% ProductSystem.capacity_speed_factor()
-	return ""
-
-
-## §6.4 kilit gerekçesi + §7 yayın tooltip'i — İKİSİ DE GERÇEKTEN ÇİZİLİYOR MU.
-##
-## Bu case'in sebebi tam olarak şudur: `projected_launch_bugs()` DOĞRU cevabı bir
-## süredir veriyordu (cezayı ekledikten sonra hesaplıyor), ama BuildBar reworkü iki
-## tooltip ev sahibini silince ÜRETİM TÜKETİCİSİ KALMADI ve BUILD_SHIP_TOOLTIP_BUGS
-## öksüz bir anahtar oldu. Yani sayı doğruydu ve oyuncu onu HİÇ görmüyordu. Doğru
-## sayıyı test etmek yetmez; ÇİZİLDİĞİNİ test etmek gerekir.
-##
-## FALSİFİKASYON: build_bar_model'den decision_tooltip atamalarını sil → FAIL.
-static func _case_build_decision_tooltip_renders() -> String:
-	GameState.set_cash(50000)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
-		return "start_build failed"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var hours: int = 0
-	while not ProductSystem.can_enter_development():
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 120:
-			return "design band never ended"
-	ProductSystem.enter_development()
-
-	# --- §6.4: kapı kilitliyken GEREKÇESİNİ taşır ---
-	var model: RefCounted = load("res://scripts/ui/components/build_bar_model.gd").new()
-	if not model.derive():
-		return "the model refused to derive in development"
-	if model.decision_enabled:
-		return "the BETA decision reads enabled on development's first hour"
-	if String(model.decision_tooltip).strip_edges() == "":
-		return "the locked BETA gate shows no reason — §6.4 says it must"
-	if String(model.decision_tooltip) == "BUILD_BETA_GATE_LOCKED":
-		return "the gate reason rendered as its own key"
-
-	# --- §7: yayın satırı TAŞINAN HATA SAYISINI taşır ---
-	while not ProductSystem.development_band_complete():
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-		if hours > 24 * 400:
-			return "the development band never filled"
-	ProductSystem.enter_beta()
-	var clean: RefCounted = load("res://scripts/ui/components/build_bar_model.gd").new()
-	if not clean.derive():
-		return "the model refused to derive in beta"
-	var n: int = ProductSystem.projected_launch_bugs()
-	var tip: String = String(clean.decision_tooltip)
-	if tip.strip_edges() == "":
-		return "the ship action carries no tooltip — the honest number is unrendered again"
-	if not tip.contains(str(n)):
-		return "the ship tooltip '%s' does not carry the projected count %d" % [tip, n]
-
-	# --- ve sayı KRİTİK-HATA CEZASINDAN SONRAKİ sayıdır (off-by-5 nüksü) ---
-	GameState.set_flag("critical_bug_unfixed", true)
-	var penalised: RefCounted = load("res://scripts/ui/components/build_bar_model.gd").new()
-	penalised.derive()
-	var n2: int = ProductSystem.projected_launch_bugs()
-	if n2 != n + ProductSystem.CRITICAL_BUG_LAUNCH_PENALTY:
-		GameState.set_flag("critical_bug_unfixed", false)
-		return "the penalty did not reach the projection (%d -> %d)" % [n, n2]
-	if not String(penalised.decision_tooltip).contains(str(n2)):
-		GameState.set_flag("critical_bug_unfixed", false)
-		return "the tooltip still prints the pre-penalty number"
-	GameState.set_flag("critical_bug_unfixed", false)
 	return ""
 
 
@@ -13630,9 +11894,6 @@ static func _case_fix_run_ships_subset() -> String:
 		return "start_fix_run refused"
 	if not ProductState.fix_run_active():
 		return "the run did not read as active"
-	# §2/§8.4 — koşu aktif yapımı duraklatır.
-	if not SupportSystem.fix_run_pauses_build():
-		return "a running fix run does not pause the build"
 
 	# Oyuncu 27 çözülene kadar bekler, sonra BİTİRİR. Sıfır beklenmez.
 	var guard: int = 0
@@ -13837,206 +12098,12 @@ static func _case_infra_local_provider_tradeoff() -> String:
 	return ""
 
 
-## Kurucuyu her alanda tavana çıkarır ve Build işine oturtur — kapılar ve taşıyıcılar
-## bu case'lerin konusu değilken yoldan çekilsinler diye.
-static func _seed_build_crew() -> Character:
-	var founder: Character = CharacterRegistry.get_founder()
-	if founder != null:
-		for area in HRConstants.AREAS:
-			founder.role_stats[area] = HRConstants.AREA_MAX
-		CharacterRegistry.clear_jobs(founder.id)
-		CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
-	return founder
-
-
-## §12 + §11.2 — YAYIN, hat modelinin tek yazma anı. Kademeler ilerler, her biri
-## SÜRÜMÜNÜN cilasını damgalar, ve canlı eksenler hat modelinden türetilir.
-##
-## FALSİFİKASYON: _apply_line_plan_at_ship'ten stamp_step çağrısını sil → damga
-## iddiası FAIL. set_line_tier'i sil → kademe iddiası FAIL.
-static func _case_line_build_ships_and_stamps() -> String:
-	ProductLines.reload()
-	GameState.set_cash(50000)
-	_seed_build_crew()
-	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag(ProductState.STEP_REALIZATION, {})
-	GameState.set_flag("mvp_shipped", false)
-	GameState.set_flag("mvp_version", 0)
-
-	var plan := ["line_note_tool_capture_k1", "line_note_tool_sync_k1",
-		"line_note_tool_editor_k1"]
-	if ProductSystem.validate_line_plan("note_tool", plan) != "":
-		return "a legal three-step v1 plan was refused: %s" \
-			% ProductSystem.validate_line_plan("note_tool", plan)
-	# §6.0 — EforTavanı seçilen kademelerin efor toplamıdır.
-	var want_effort: int = ProductLines.sum_effort(plan)
-	if not ProductSystem.start_line_build("note_tool", plan, "", "Sable"):
-		return "start_line_build refused a valid plan"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if absf(b.total_efor - float(want_effort)) > 0.001:
-		return "EforTavanı is %.1f, the plan sums to %d" % [b.total_efor, want_effort]
-	# Kademeler HENÜZ ilerlemedi — plan build'de durur.
-	if ProductState.line_tier("line_note_tool_capture") != 0:
-		return "starting a build already advanced a line tier"
-
-	# Dört tur tamamlanmış gibi damgalayıp yayınla.
-	b.design_turns_completed = 4
-	b.current_phase = "bugfix"
-	b.bug_count = 2
-	ProductSystem.launch()
-	ProductSystem.ship_active_build()
-
-	for pair in [["line_note_tool_capture", 1], ["line_note_tool_sync", 1],
-			["line_note_tool_editor", 1]]:
-		if ProductState.line_tier(String(pair[0])) != int(pair[1]):
-			return "%s came out of the ship at tier %d, want %d" \
-				% [pair[0], ProductState.line_tier(String(pair[0])), int(pair[1])]
-	var stamps: Dictionary = ProductState.step_realization()
-	var want_stamp: float = ProductSystem.design_turn_mult(4)
-	for sid in plan:
-		if not stamps.has(sid):
-			return "%s shipped without a realization stamp" % sid
-		# Kapı-üstü bonusu kurucu tavandayken devreye girebilir; damga TABANDAN AŞAĞI olamaz.
-		if float(stamps[sid]) < want_stamp - 0.0001:
-			return "%s stamped %.3f, below its version's %.3f polish" \
-				% [sid, float(stamps[sid]), want_stamp]
-	# §11.2 — canlı eksenler hat modelinden türetildi.
-	var dims: Dictionary = ProductState.realized_dims()
-	if absf(float(GameState.get_flag("mvp_innovation", -1.0)) - float(dims["innovation"])) > 0.001:
-		return "the live axes did not come from the line model"
-	if float(dims["innovation"]) <= 0.0:
-		return "a shipped innovation step produced no innovation"
-	return ""
-
-
-## §12.3 kural 4 — "Sürüm iptal edilirse o sürümde PLANLANMIŞ kademeler hiç
-## yapılmamış sayılır; hatlar önceki durumlarında kalır." Ve §2: GELİŞTİRME'den
-## sonra iptal TÜM SÜRÜM EFORUNU yakar.
-##
-## Bu yapısal olarak doğrudur çünkü plan build'de durur ve hatlara yalnız YAYINDA
-## dokunulur — geri alınacak bir şey yok, çünkü ileri de alınmamıştı. Case bunu
-## sabitler ki biri "kolaylık olsun" diye commit'te yazmaya kalkmasın.
-##
-## FALSİFİKASYON: start_line_build'e ProductState.set_line_tier çağrısı ekle → FAIL.
-static func _case_cancel_reverts_planned_steps() -> String:
-	ProductLines.reload()
-	GameState.set_cash(50000)
-	_seed_build_crew()
-	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag(ProductState.STEP_REALIZATION, {})
-	GameState.set_flag("mvp_shipped", false)
-	GameState.set_flag("mvp_version", 0)
-	# Önce bir K1 canlıya çıksın ki "önceki durum" sıfırdan farklı olsun.
-	ProductState.set_line_tier("line_note_tool_search", 1)
-	ProductState.stamp_step("line_note_tool_search_k1", 1.0)
-
-	var plan := ["line_note_tool_search_k2", "line_note_tool_editor_k1"]
-	if ProductSystem.validate_line_plan("note_tool", plan) != "":
-		return "the upgrade plan was refused: %s" \
-			% ProductSystem.validate_line_plan("note_tool", plan)
-	if not ProductSystem.start_line_build("note_tool", plan, "", "Sable"):
-		return "start_line_build refused"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	b.current_phase = "development"
-	b.efor_spent = b.total_efor * 0.6         # yarıdan fazlası harcandı
-	var burned: float = b.efor_spent
-	var cash_before: int = GameState.cash
-
-	ProductSystem.cancel_build()
-
-	if ProductSystem.get_active_build() != null:
-		return "the build survived cancellation"
-	# HATLAR ÖNCEKİ DURUMLARINDA.
-	if ProductState.line_tier("line_note_tool_search") != 1:
-		return "the cancelled version moved a line to %d" \
-			% ProductState.line_tier("line_note_tool_search")
-	if ProductState.line_tier("line_note_tool_editor") != 0:
-		return "a planned step landed despite the cancellation"
-	if ProductState.step_realization().has("line_note_tool_search_k2"):
-		return "a cancelled step left a realization stamp behind"
-	# EFOR YANDI: harcanan iş geri gelmez ve kasaya iade yoktur.
-	if burned <= 0.0:
-		return "the fixture never spent any effort"
-	if GameState.cash != cash_before:
-		return "cancelling refunded %d — §2 says the whole version effort burns" \
-			% (GameState.cash - cash_before)
-	# Ve aynı kademe yeniden planlanabilir: iptal hattı bozmadı.
-	if ProductSystem.validate_line_plan("note_tool", ["line_note_tool_search_k2"]) != "":
-		return "the line could not be re-planned after a cancellation"
-	return ""
-
-
-## §6.1 — yapım hızı YALNIZ Ekip seam'lerinden gelir: Σ(daily_contribution) × K_EFOR.
-## Build işine kimse atanmamışsa efor SIFIRDIR (ünvan hiçbir kapıyı açmaz, Ekip §12.0).
-##
-## FALSİFİKASYON: build_carriers'ı bütün çalışanları döndürecek şekilde değiştir →
-## "unassigned" iddiası FAIL. K_EFOR'u 1.0 yap → katsayı iddiası FAIL.
-static func _case_build_effort_from_hr_seams() -> String:
-	# K_EFOR birleştirmesinin cebirsel özdeşliği: skill × (h/8) × (8/12) ≡ skill × h/12.
-	if absf(ProductSystem.K_EFOR - 8.0 / 12.0) > 0.000001:
-		return "K_EFOR is %.6f, §6.1 says 8/12" % ProductSystem.K_EFOR
-
-	var founder: Character = CharacterRegistry.get_founder()
-	if founder == null:
-		return "no founder"
-	for area in HRConstants.AREAS:
-		founder.role_stats[area] = 0
-	CharacterRegistry.clear_jobs(founder.id)
-
-	var dev: Character = _make_employee("eff_e", "Eff E", HRConstants.ROLE_DEVELOPER)
-	for area_d in HRConstants.AREAS:
-		dev.role_stats[area_d] = 0
-	dev.role_stats[HRConstants.AREA_ENGINEERING] = 8
-	dev.traits = ["picks_it_up_fast"]          # hız/çıktı çarpanı taşımaz
-	# CharacterRegistry.add() taze işe alımı KENDİ ANA İŞİNE oturtuyor (Ekip §12.2:
-	# "işe alım, oyuncunun boşta duran biriyle tanışmak isteyeceği yer değildir"), yani
-	# bir developer doğduğu anda Build'dedir. Atama iddiasını ölçmek için önce
-	# masadan kaldırmak gerekiyor — bu case ilk yazımında tam olarak buna takıldı.
-	CharacterRegistry.clear_jobs(dev.id)
-
-	# BORDRODA VAR, BUILD'DE YOK → sıfır efor.
-	if absf(ProductSystem.build_effort_per_day()) > 0.0001:
-		return "an unassigned developer produced %.3f effort/day" \
-			% ProductSystem.build_effort_per_day()
-
-	if CharacterRegistry.assign_job(dev.id, HRConstants.JOB_BUILD) != "":
-		return "could not assign the developer to the build"
-	# 8 ham × alan 1,0 × odak 1,0 × moral nötr × 8 saat/8 = 8,0 günlük katkı.
-	var contrib: float = HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING)
-	if absf(contrib - 8.0) > 0.001:
-		return "the HR seam returned %.3f, expected 8.0" % contrib
-	var effort: float = ProductSystem.build_effort_per_day()
-	if absf(effort - contrib * ProductSystem.K_EFOR) > 0.001:
-		return "effort/day is %.4f, the seam x K_EFOR is %.4f" \
-			% [effort, contrib * ProductSystem.K_EFOR]
-
-	# §6.2 — TEST build TAŞIMAZ; katkısı BETA'dadır.
-	var qa: Character = _make_employee("eff_q", "Eff Q", HRConstants.ROLE_TESTER)
-	for area_q in HRConstants.AREAS:
-		qa.role_stats[area_q] = 0
-	qa.role_stats[HRConstants.AREA_QA] = 10
-	CharacterRegistry.assign_job(qa.id, HRConstants.JOB_TEST)
-	if absf(ProductSystem.build_effort_per_day() - effort) > 0.001:
-		return "a tester on the Test job changed build effort — §6.2 says Test does not carry it"
-
-	# §6.3 — hata oranı YAZILIM'la düşer ama sıfırlanmaz.
-	var rate_strong: float = ProductSystem.line_bug_rate_per_effort()
-	dev.role_stats[HRConstants.AREA_ENGINEERING] = 1
-	var rate_weak: float = ProductSystem.line_bug_rate_per_effort()
-	if rate_weak <= rate_strong:
-		return "a weaker team did not produce more bugs (%.3f vs %.3f)" % [rate_weak, rate_strong]
-	dev.role_stats[HRConstants.AREA_ENGINEERING] = 10
-	if ProductSystem.line_bug_rate_per_effort() < ProductSystem.BUG_RATE_FLOOR - 0.0001:
-		return "a strong team drove the bug rate below its floor"
-	return ""
-
-
 ## §19 — OKUMA YÜZEYİ. "Adlar kararlıdır ve iç yapı değişse bile korunur. Olay motoru
 ## geldiğinde işi bunları OKUMAK olacak, keşfetmek değil."
 ##
 ## Bu case bir SÖZLÜK denetimidir: eksik bir ad, içeriğin o duruma asla atıfta
-## bulunamaması demektir (§19'un attribution yasası). Bugün hiçbirinin abonesi yok
-## ve olmaması da doğru — sinyaller dinleyicisi olmasa da yayınlanır.
+## bulunamaması demektir (§19'un attribution yasası). Sinyaller dinleyicisi olmasa da
+## yayınlanır. Sprint seam'leri motoru okur: tür seçilmeden sprint yoktur.
 ##
 ## FALSİFİKASYON: EventBus'tan `line_completed` sinyalini sil → sinyal iddiası FAIL.
 ## ProductRead.market_word'ü sil → sorgu iddiası FAIL.
@@ -14046,9 +12113,8 @@ static func _case_product_read_catalogue() -> String:
 	ProductState.set_line_tier("line_note_tool_search", 1)
 	ProductState.stamp_step("line_note_tool_search_k1", 1.0)
 
-	# --- SORGULAR: §19'un listesi, birebir ---
+	# --- SORGULAR ---
 	var q: Dictionary = {
-		"phase": ProductRead.phase(""),
 		"axis_reading": ProductRead.axis_reading("", "innovation"),
 		"market_word": ProductRead.market_word("", "innovation"),
 		"confirmed_open": ProductRead.confirmed_open(""),
@@ -14061,17 +12127,11 @@ static func _case_product_read_catalogue() -> String:
 		"steps_shipped": ProductRead.steps_shipped(""),
 		"interest": ProductRead.interest(""),
 		"capacity_tier": ProductRead.capacity_tier(""),
-		"build_active": ProductRead.build_active(),
 		"support_staffed": ProductRead.support_staffed(""),
 		"step_unlockable": ProductRead.step_unlockable("line_note_tool_search_k2"),
 	}
-	if q.size() != 16:
-		return "the query catalogue has %d entries, §19 lists 16" % q.size()
 
 	# Birkaçının GERÇEKTEN okuduğunu kanıtla — imza sınavı yeterli değil.
-	if String(q["phase"]) != ProductRead.PHASE_SUPPORT:
-		return "a live product with no build reads phase '%s', §2 says DESTEK is permanent" \
-			% String(q["phase"])
 	if int(q["line_tier"]) != 1:
 		return "line_tier read %d, the fixture set 1" % int(q["line_tier"])
 	if String(q["line_next_step"]) != "line_note_tool_search_k2":
@@ -14088,19 +12148,27 @@ static func _case_product_read_catalogue() -> String:
 		return "a completed line still offered a next step"
 	ProductState.set_line_tier("line_note_tool_search", 1)
 
-	# --- SİNYALLER: §19'un listesi, birebir ---
-	var signals := ["version_shipped", "build_started", "build_paused", "build_resumed",
-		"fix_run_started", "fix_run_finished", "bug_confirmed",
-		"unconfirmed_threshold_crossed", "axis_floor_warning", "axis_floor_crossed",
-		"line_upgraded", "line_completed", "delighter_shipped", "phase_bar_raised"]
+	# --- SİNYALLER ---
 	var declared: Array[String] = []
 	for d in EventBus.get_signal_list():
 		declared.append(String((d as Dictionary).get("name", "")))
-	for name in signals:
+	for name in ["version_shipped", "fix_run_started", "fix_run_finished", "bug_confirmed",
+			"unconfirmed_threshold_crossed", "axis_floor_warning", "axis_floor_crossed",
+			"line_upgraded", "line_completed", "delighter_shipped", "phase_bar_raised"]:
 		if not declared.has(name):
 			return "§19 signal '%s' is not declared on EventBus" % name
-	if signals.size() != 14:
-		return "the signal catalogue has %d entries, §19 lists 14" % signals.size()
+
+	# --- SPRINT: seam'ler motoru okur ---
+	if int(EvSeams.read("urun.sprint_number")) != 0 or bool(EvSeams.read("urun.sprint_running")):
+		return "an untyped product reads a sprint (%s, running %s)" % [
+			EvSeams.read("urun.sprint_number"), EvSeams.read("urun.sprint_running")]
+	SprintSystem.choose_type("note_tool", "Fokus")
+	SprintSystem.add("feat:line_note_tool_capture_k1")
+	SprintSystem.start()
+	if int(EvSeams.read("urun.sprint_number")) != 1 or not bool(EvSeams.read("urun.sprint_running")) \
+			or int(EvSeams.read("urun.sprint_week")) != 1:
+		return "a started sprint reads number %s, running %s, week %s" % [EvSeams.read("urun.sprint_number"),
+			EvSeams.read("urun.sprint_running"), EvSeams.read("urun.sprint_week")]
 
 	# Kenar sinyalleri: ilk çağrı yalnız TOHUMLAR, yayınlamaz.
 	var seen: Array[String] = []
@@ -14122,393 +12190,6 @@ static func _case_product_read_catalogue() -> String:
 	ProductRead.emit_edges()
 	if seen.has("bug_confirmed"):
 		return "fixing bugs emitted bug_confirmed"
-	return ""
-
-
-## §5 CİLA MERDİVENİ + §6.0/§6.4 — hat modelinin faz aritmetiği, uçtan uca.
-##
-## Üç iddia bir arada, çünkü üçü de aynı yeniden-şekillendirmenin parçası:
-##  · "Geliştirmeye geç" İLK GÜNDEN basılabilir, ama tur 1 dolmadan ONAY ister.
-##  · TASARIM turları eforu EforTavanı'nın ÜSTÜNDEN yakar (0,08/tur), barından değil.
-##  · GELİŞTİRME barı tavanın %100'üne kadar dolar ve BETA kapısı orada açılır.
-##
-## FALSİFİKASYON: design_efor_spent'i efor_spent'e yaz → %100 kapısı iddiası FAIL.
-## needs_design_confirm'ü false döndür → onay iddiası FAIL.
-static func _case_line_design_turns_and_gate() -> String:
-	ProductLines.reload()
-	GameState.set_cash(50000)
-	_seed_build_crew()
-	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag(ProductState.STEP_REALIZATION, {})
-	GameState.set_flag("mvp_shipped", false)
-	GameState.set_flag("mvp_version", 0)
-
-	var plan := ["line_note_tool_capture_k1", "line_note_tool_editor_k1"]
-	if not ProductSystem.start_line_build("note_tool", plan, "", "Sable"):
-		return "start_line_build refused"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var ceiling: float = b.total_efor
-
-	# --- İLK GÜN: kapı açık, ama onay ister (§5) ---
-	if not ProductSystem.can_enter_development():
-		return "'Geliştirmeye geç' was shut on day one — §5 opens it immediately"
-	if not ProductSystem.needs_design_confirm():
-		return "crossing before turn 1 asked for no confirmation"
-	if ProductSystem.design_turn_mult(b.design_turns_completed) != 0.75:
-		return "a version crossing at zero turns would not carry the 0,75 multiplier"
-
-	# --- TUR 1 dolsun ---
-	var hours: int = 0
-	while b.design_turns_completed < 1 and hours < 24 * 200:
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-	if b.design_turns_completed < 1:
-		return "the first design turn never completed"
-	if ProductSystem.needs_design_confirm():
-		return "the confirm dialog survived the first completed turn"
-	# Turun maliyeti EforTavanı × 0,08, ve GELİŞTİRME barından ÇALMAZ. Bir saatlik tik haftanın
-	# 1/24'ünü yakar, yani tur, maliyetini aştığı saatte ve en fazla bir saatlik yanmayla kapanır.
-	var want_cost: float = ProductSystem.DESIGN_TURN_COST * ceiling
-	var hour_burn: float = TimeModel.per_tick(ProductSystem.build_effort_per_day(b.lead_engineer_id)) \
-		* ProductSystem.capacity_speed_factor() / float(TimeModel.HOURS_PER_DAY)
-	if b.design_efor_spent < want_cost * 0.75 or b.design_efor_spent - hour_burn > want_cost * 1.25:
-		return "one turn burned %.2f, §5 says about %.2f (an hour burns %.2f)" % [
-			b.design_efor_spent, want_cost, hour_burn]
-	if b.efor_spent > 0.0001:
-		return "design turns ate into the development bar (%.3f)" % b.efor_spent
-	if absf(b.total_efor - ceiling) > 0.001:
-		return "the effort ceiling moved during design"
-
-	# --- DÖRT TURDA PARK ---
-	while not ProductSystem.design_turns_maxed() and hours < 24 * 600:
-		ProductSystem.hourly_tick(hours % 24)
-		hours += 1
-	if b.design_turns_completed != 4:
-		return "design stopped at %d turns, §5 caps at 4" % b.design_turns_completed
-	var parked: float = b.design_efor_spent
-	for h in 48:
-		ProductSystem.hourly_tick(h % 24)
-	if absf(b.design_efor_spent - parked) > 0.001:
-		return "design kept burning past its fourth turn"
-	if absf(ProductSystem.design_turn_mult(4) - 1.15) > 0.0001:
-		return "four turns do not read as the 1,15 ceiling"
-
-	# --- GELİŞTİRME: %100'e kadar, kapı orada açılır (§6.4) ---
-	ProductSystem.enter_development()
-	if b.current_phase != "development":
-		return "enter_development did not flip the phase"
-	if ProductSystem.can_enter_beta():
-		return "BETA opened on development's first hour"
-	var guard: int = 0
-	while not ProductSystem.development_band_complete() and guard < 24 * 800:
-		ProductSystem.hourly_tick(guard % 24)
-		guard += 1
-	if not ProductSystem.development_band_complete():
-		return "the development bar never filled"
-	if absf(b.efor_spent - ceiling) > 0.001:
-		return "the bar stopped at %.2f of a %.2f ceiling — §6.0 wants 100%%" \
-			% [b.efor_spent, ceiling]
-	if not ProductSystem.can_enter_beta():
-		return "the gate stayed shut at a full bar"
-	# §6.3 — hatalar GELİŞTİRME'de birikti.
-	if b.bug_count <= 0:
-		return "a full development phase produced no bugs at all"
-	return ""
-
-
-## §2 DURAKLAMA İKİ TÜRDÜR + §3 LİDERSİZ YAPIM.
-##
-## S6'nın sözü: "Oto-duraklama CÜMLEYLE, manuel duraklama GLİFLE ayrışır — ikisi bir
-## arada ASLA görünmez." Bu case tam olarak o ayrımı ölçer, çünkü ikisi tek bir
-## boolean'a çökerse bar oyuncunun kendi kararını bir arıza gibi gösterir.
-##
-## FALSİFİKASYON: pause_kind'dan manuel dalını çıkar → glif iddiası FAIL.
-## lead_missing'i false döndür → lider notu iddiası FAIL.
-static func _case_pause_kinds_and_lead_note() -> String:
-	ProductLines.reload()
-	GameState.set_cash(50000)
-	var founder: Character = _seed_build_crew()
-	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag("mvp_shipped", false)
-	GameState.set_flag("mvp_version", 0)
-	var lead: Character = _make_employee("pk_lead", "PK Lead", HRConstants.ROLE_DEVELOPER)
-	lead.role_stats[HRConstants.AREA_ENGINEERING] = 8
-	lead.role_stats[HRConstants.SKILL_LEADERSHIP] = 8
-
-	if not ProductSystem.start_line_build("note_tool",
-			["line_note_tool_capture_k1"], lead.id, "Sable"):
-		return "start_line_build refused"
-
-	# --- ÇALIŞIYOR ---
-	if ProductSystem.build_paused():
-		return "a fully staffed build reads paused"
-	if ProductSystem.pause_kind() != ProductSystem.PAUSE_NONE:
-		return "pause_kind is '%s' on a running build" % ProductSystem.pause_kind()
-
-	# --- MANUEL: glif, CÜMLE YOK ---
-	ProductSystem.set_manual_pause(true)
-	if ProductSystem.pause_kind() != ProductSystem.PAUSE_MANUAL:
-		return "a manual pause reads '%s'" % ProductSystem.pause_kind()
-	if not ProductSystem.build_paused():
-		return "a manual pause did not stop the build"
-	if ProductSystem.pause_note_key() != "":
-		return "the manual pause printed a sentence ('%s') — §2 says glyph only" \
-			% ProductSystem.pause_note_key()
-	# İlerleme KORUNUR: duraklatmak yapılanı silmez.
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var design_before: float = b.design_efor_spent
-	for h in 24:
-		ProductSystem.hourly_tick(h)
-	if absf(b.design_efor_spent - design_before) > 0.0001:
-		return "a paused build kept working"
-	ProductSystem.set_manual_pause(false)
-	if ProductSystem.build_paused():
-		return "unpausing did not resume the build"
-
-	# --- OTO: cümle, GLİF YOK ---
-	CharacterRegistry.clear_jobs(founder.id)
-	CharacterRegistry.clear_jobs(lead.id)
-	if ProductSystem.pause_kind() != ProductSystem.PAUSE_AUTO:
-		return "an unstaffed build reads '%s'" % ProductSystem.pause_kind()
-	var note: String = ProductSystem.pause_note_key()
-	if note != "BUILD_BUSY_NOBODY" and note != "BUILD_BUSY_ELSEWHERE":
-		return "the auto pause printed '%s'" % note
-	if TranslationServer.translate(note) == note:
-		return "the auto-pause sentence has no string"
-
-	# --- İKİSİ BİR ARADA ASLA: oyuncunun kararı kazanır ---
-	ProductSystem.set_manual_pause(true)
-	if ProductSystem.pause_kind() != ProductSystem.PAUSE_MANUAL:
-		return "with both conditions true the bar chose '%s'" % ProductSystem.pause_kind()
-	if ProductSystem.pause_note_key() != "":
-		return "a manual pause over an empty desk still printed a sentence"
-	ProductSystem.set_manual_pause(false)
-	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
-	CharacterRegistry.assign_job(lead.id, HRConstants.JOB_BUILD)
-
-	# --- §3 LİDERSİZ: yapım SÜRER, çarpan 1,0, bar notu düşer ---
-	if ProductSystem.lead_missing():
-		return "an active lead reads as missing"
-	if ProductSystem.lead_note_key() != "":
-		return "a build with a lead carries the no-lead note"
-	var with_lead: float = ProductSystem.build_effort_per_day(lead.id)
-	lead.status = HRConstants.STATUS_ON_LEAVE     # ayrıldı/çıkarıldı vekili
-	if not ProductSystem.lead_missing():
-		return "a departed lead still reads as present"
-	if ProductSystem.lead_note_key() != "BUILD_NO_LEAD":
-		return "the no-lead note is '%s'" % ProductSystem.lead_note_key()
-	if TranslationServer.translate("BUILD_NO_LEAD") == "BUILD_NO_LEAD":
-		return "BUILD_NO_LEAD has no string"
-	# Liderlik çarpanı 1,0'a döner ve yapım DEVAM eder — geriye dönük bozulma yok.
-	var leaderless: float = ProductSystem.build_effort_per_day(lead.id)
-	if leaderless <= 0.0:
-		return "the build stopped producing effort when the lead left"
-	if leaderless >= with_lead:
-		return "losing the lead did not remove the leadership bonus (%.3f vs %.3f)" \
-			% [leaderless, with_lead]
-	if absf(leaderless - ProductSystem.build_effort_per_day("")) > 0.0001:
-		return "a departed lead is not equivalent to no lead at all"
-	lead.status = HRConstants.STATUS_ACTIVE
-	return ""
-
-
-## S6'nın ALTI DURUMU, hat modeli yolunda. Bar tek renderer, iki ev sahibi — o yüzden
-## durumları MODEL seviyesinde sabitlemek iki yüzeyi birden sabitler.
-##
-## FALSİFİKASYON: _derive_line'da show_percent'i true bırak → BETA iddiası FAIL.
-## GELİŞTİRME dolumunu eski (frac−0,20)/0,60 aritmetiğine döndür → %100 iddiası FAIL.
-static func _case_build_bar_line_states() -> String:
-	ProductLines.reload()
-	GameState.set_cash(50000)
-	var founder: Character = _seed_build_crew()
-	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag("mvp_shipped", false)
-	GameState.set_flag("mvp_version", 0)
-	if not ProductSystem.start_line_build("note_tool",
-			["line_note_tool_capture_k1", "line_note_tool_editor_k1"], "", "Sable"):
-		return "start_line_build refused"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	var M := load("res://scripts/ui/components/build_bar_model.gd")
-
-	# --- 1 · TASARIM, tur metni ve dolum ---
-	var m: RefCounted = M.new()
-	if not m.derive():
-		return "the model refused to derive in design"
-	if String(m.phase) != "design":
-		return "design phase reads '%s'" % String(m.phase)
-	if m.round_max != ProductSystem.DESIGN_TURN_MAX:
-		return "round_max is %d, §5 caps at 4" % m.round_max
-	if m.round_index != 1:
-		return "the first running turn reads %d" % m.round_index
-	if not m.show_percent:
-		return "TASARIM dropped its percentage — only BETA does that"
-	# Tur 1 dolmadan geçmek onay ister ve bar gerekçeyi taşır (§5).
-	if String(m.decision_tooltip).strip_edges() == "":
-		return "the pre-turn-1 crossing carries no confirmation text"
-
-	# --- 2 · MANUEL DURAKLAMA: glif, cümle yok ---
-	ProductSystem.set_manual_pause(true)
-	var mp: RefCounted = M.new(); mp.derive()
-	if mp.pause_kind != ProductSystem.PAUSE_MANUAL:
-		return "the model read the manual pause as '%s'" % mp.pause_kind
-	if mp.pause_note_key != "":
-		return "the manual pause carried a sentence"
-	ProductSystem.set_manual_pause(false)
-
-	# --- 3 · OTO DURAKLAMA: cümle, glif yok ---
-	CharacterRegistry.clear_jobs(founder.id)
-	var ma: RefCounted = M.new(); ma.derive()
-	if ma.pause_kind != ProductSystem.PAUSE_AUTO:
-		return "an unstaffed build read '%s'" % ma.pause_kind
-	if ma.pause_note_key == "":
-		return "the auto pause carried no sentence"
-	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
-
-	# --- 4 · GELİŞTİRME: kapı kilitli, gerekçesi yazılı ---
-	ProductSystem.enter_development()
-	var md: RefCounted = M.new(); md.derive()
-	if String(md.phase) != "development":
-		return "development phase reads '%s'" % String(md.phase)
-	if md.decision_enabled:
-		return "the BETA gate reads open on the first hour"
-	if String(md.decision_tooltip).strip_edges() == "":
-		return "the locked gate shows no reason"
-	# §6.0 — dolum TAVANIN TAMAMINA göre.
-	#
-	# İKİ NOKTADAN ölçülüyor ve sebebi falsifikasyon: %50 eski (frac−0,20)/0,60
-	# aritmetiğinin SABİT NOKTASI ((0,5−0,2)/0,6 = 0,5), yani tek başına iki formülü
-	# ayırt edemiyor ve eski bandı geri getiren mutasyon case'i GEÇİYORDU. %80 ayırıyor:
-	# doğru cevap 0,80, eski aritmetik 1,00 derdi.
-	b.efor_spent = b.total_efor * 0.5
-	var mh: RefCounted = M.new(); mh.derive()
-	if absf(mh.phase_progress - 0.5) > 0.02:
-		return "half the ceiling reads %.2f — the bar is not measuring the full 100%%" \
-			% mh.phase_progress
-	b.efor_spent = b.total_efor * 0.8
-	var mq: RefCounted = M.new(); mq.derive()
-	if absf(mq.phase_progress - 0.8) > 0.02:
-		return "80%% of the ceiling reads %.2f — the bar is still on the old 0,20-0,80 band" \
-			% mq.phase_progress
-
-	# --- 5 · GELİŞTİRME DOLU: kapı açık ---
-	b.efor_spent = b.total_efor
-	var mf: RefCounted = M.new(); mf.derive()
-	if not mf.decision_enabled:
-		return "a full bar did not open the gate"
-	if absf(mf.phase_progress - 1.0) > 0.001:
-		return "a full bar reads %.2f" % mf.phase_progress
-
-	# --- 6 · BETA: YÜZDE YOK, sayaç ve gün var (§7 mühürlü) ---
-	ProductSystem.enter_beta()
-	b.bugs_found = 4
-	b.bugs_fixed = 2
-	var mb: RefCounted = M.new(); mb.derive()
-	if String(mb.phase) != "beta":
-		return "beta phase reads '%s'" % String(mb.phase)
-	if mb.show_percent:
-		return "the BETA row carries a percentage — §7 forbids it"
-	if mb.percent != 0:
-		return "BETA published a percent value of %d" % mb.percent
-	if mb.bugs_left != 2:
-		return "KALAN reads %d, want 2 (4 found − 2 fixed)" % mb.bugs_left
-	if mb.beta_week < 1:
-		return "the beta week counter reads %d" % mb.beta_week
-	if String(mb.decision_tooltip).strip_edges() == "":
-		return "the ship action lost its bug tooltip in beta"
-	return ""
-
-
-## §12.10 — KOŞU PROFİLİ. "Bir demo koşusu 3–5 sürüm çıkarır ve 9–14 kademe harcar;
-## katalogda 27 kademe vardır. Yani HİÇBİR KOŞU KATALOGU BİTİREMEZ; her koşu farklı
-## bir ürün şekli üretir. Tekrar oynanabilirlik yapısaldır."
-##
-## Bu, hat modelinin bütün gerekçesidir (§12.1: düz katalog üçüncü sürümde tükeniyordu),
-## ve ölçülmezse inşa edilmemiş demektir. Case dört sürüm oynar ve katalogda hâlâ iş
-## kaldığını kanıtlar.
-##
-## FALSİFİKASYON: alt-tipin hat sayısını 9'dan 3'e indir → tükenmezlik iddiası FAIL.
-static func _case_run_profile_never_exhausts() -> String:
-	ProductLines.reload()
-	GameState.set_cash(500000)
-	_seed_build_crew()
-	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag(ProductState.STEP_REALIZATION, {})
-	GameState.set_flag("mvp_shipped", false)
-	GameState.set_flag("mvp_version", 0)
-	GameState.set_flag("mvp_market_type", "b2c")
-
-	var subtype := "note_tool"
-	var total_steps: int = 27
-	var counted: int = 0
-	for lid in ProductLines.line_ids(subtype):
-		for tier in [1, 2, 3]:
-			if not ProductLines.step_at(String(lid), tier).is_empty():
-				counted += 1
-	if counted != total_steps:
-		return "the subtype offers %d steps, §12.1 says 27" % counted
-
-	var versions: int = 0
-	var shipped_steps: int = 0
-	var hours: int = 0
-	# Dört sürüm, sürüm başına üç kademe — §12.10'un beklediği profilin ortası.
-	for v in 4:
-		var plan: Array[String] = []
-		for lid2 in ProductLines.line_ids(subtype):
-			if plan.size() >= 3:
-				break
-			var line_id: String = String(lid2)
-			var nxt: int = ProductLines.next_tier(ProductState.line_tier(line_id))
-			if nxt == 0:
-				continue
-			var sid: String = String(ProductLines.step_at(line_id, nxt).get("id", ""))
-			if sid == "" or not LineGates.is_unlocked(sid):
-				continue      # K3'ler Ar-Ge olmadan kilitli — doğru ve beklenen
-			plan.append(sid)
-		if plan.is_empty():
-			return "version %d found no legal step — the catalogue ran dry" % (v + 1)
-		if not ProductSystem.start_line_build(subtype, plan, "", "Sable"):
-			return "version %d refused to start" % (v + 1)
-		var b: FeatureBuild = ProductSystem.get_active_build()
-		# Bir tur tasarım (taban cila), sonra geliştirmeyi doldur, sonra yayınla.
-		while b.design_turns_completed < 1 and hours < 24 * 4000:
-			ProductSystem.hourly_tick(hours % 24)
-			hours += 1
-		ProductSystem.enter_development()
-		while not ProductSystem.development_band_complete() and hours < 24 * 4000:
-			ProductSystem.hourly_tick(hours % 24)
-			hours += 1
-		ProductSystem.enter_beta()
-		ProductSystem.launch()
-		ProductSystem.ship_active_build()
-		versions += 1
-		shipped_steps += plan.size()
-
-	# --- §12.10'un iki sayısı ---
-	if versions < 3 or versions > 5:
-		return "the run shipped %d versions, §12.10 expects 3-5" % versions
-	if shipped_steps < 9 or shipped_steps > 14:
-		return "the run consumed %d steps, §12.10 expects 9-14" % shipped_steps
-	if ProductState.steps_shipped() != shipped_steps:
-		return "the product records %d steps but the run shipped %d" \
-			% [ProductState.steps_shipped(), shipped_steps]
-
-	# --- KATALOG BİTMEDİ: hâlâ alınabilecek kademe var ---
-	var still_open: int = 0
-	for lid3 in ProductLines.line_ids(subtype):
-		if ProductLines.next_tier(ProductState.line_tier(String(lid3))) != 0:
-			still_open += 1
-	if still_open <= 0:
-		return "every line is finished after %d steps — the catalogue was exhausted" % shipped_steps
-	if shipped_steps >= total_steps:
-		return "the run consumed the whole catalogue"
-	# Ve ürün gerçekten olgunlaştı: eksenler sıfırdan yukarı.
-	var readings: Dictionary = ProductState.axis_readings()
-	var any_up: bool = false
-	for axis in readings:
-		if int(readings[axis]) > 0:
-			any_up = true
-	if not any_up:
-		return "four shipped versions produced no axis reading at all"
 	return ""
 
 
@@ -14569,8 +12250,8 @@ static func _case_product_lines_catalog_loads() -> String:
 	return ""
 
 
-## §12.3 MÜHÜRLÜ MERDİVEN, dört kuralın dördü de. Tek yerde yaşar (ProductLines);
-## kart çizimi ve Konsept onayı kendi kontrolünü kurmaz, buraya sorar.
+## §12.3 MÜHÜRLÜ MERDİVEN, dört kuralın dördü de. Tek yerde yaşar (ProductLines); aday kartlar
+## sıradaki kademeyi buradan okur.
 ##
 ## FALSİFİKASYON: ladder_refusal'dan "skips_tier" dalını sil → ilk iddia FAIL.
 ## "line_already_planned" dalını sil → üçüncü iddia FAIL.
@@ -14784,12 +12465,6 @@ static func _case_above_gate_bonus_ladder() -> String:
 	var ungated := "line_note_tool_editor_k1"
 	if absf(LineGates.above_gate_bonus(ungated)) > 0.0001:
 		return "an ungated step paid an above-gate bonus"
-
-	# §11.2 — bonus gerçekleşmeye çarpan olarak giriyor.
-	var plain: float = QualityModel.realization_stamp(1.0, 0.0)
-	var boosted: float = QualityModel.realization_stamp(1.0, two)
-	if absf(boosted - plain * (1.0 + two)) > 0.0001:
-		return "the bonus did not multiply realization"
 	return ""
 
 
@@ -14970,54 +12645,6 @@ static func _case_card_math_matches_gdd_example() -> String:
 		want_gate.erase(area)
 	if not want_gate.is_empty():
 		return "the Arama K2 gate lost %s" % str(want_gate.keys())
-	return ""
-
-
-## §5 (rev 6.1 MÜHÜRLÜ) — cila merdiveni. Bu tablo TERS ÇEVRİLDİ ve yönü iddianın
-## kendisidir: bir turu TAMAMLAMAK taban (×1,00), turu ATLAMAK ceza (×0,75).
-## Eski tabloda tamamlamak ×0,55 idi, yani işini yapan cezalandırılıyordu.
-##
-## FALSİFİKASYON: DESIGN_TURN_MULT'u eski {1: 0,55 …} tablosuna geri al →
-## "completing a turn is the baseline" iddiası FAIL.
-static func _case_design_turn_ladder() -> String:
-	var m0: float = ProductSystem.design_turn_mult(0)
-	var m1: float = ProductSystem.design_turn_mult(1)
-	var m4: float = ProductSystem.design_turn_mult(4)
-
-	if absf(m0 - 0.75) > 0.0001:
-		return "rushing past turn 1 reads %.3f, §5 says 0,75" % m0
-	if absf(m1 - 1.00) > 0.0001:
-		return "one completed turn reads %.3f, §5 says it is the 1,00 baseline" % m1
-	if absf(ProductSystem.design_turn_mult(2) - 1.06) > 0.0001:
-		return "turn 2 reads %.3f, §5 says 1,06" % ProductSystem.design_turn_mult(2)
-	if absf(ProductSystem.design_turn_mult(3) - 1.11) > 0.0001:
-		return "turn 3 reads %.3f, §5 says 1,11" % ProductSystem.design_turn_mult(3)
-	if absf(m4 - 1.15) > 0.0001:
-		return "turn 4 reads %.3f, §5 says 1,15" % m4
-
-	# YÖN: tamamlamak cezalandırılmaz. Eski tablo tam burada düşer.
-	if m1 <= m0:
-		return "completing a design turn is not better than skipping it (%.2f vs %.2f)" % [m1, m0]
-	# Merdiven monoton artar ve tavanda durur.
-	var prev: float = m0
-	for t in [1, 2, 3, 4]:
-		var v: float = ProductSystem.design_turn_mult(t)
-		if v < prev:
-			return "the ladder dips at turn %d (%.3f after %.3f)" % [t, v, prev]
-		prev = v
-	if absf(ProductSystem.design_turn_mult(9) - m4) > 0.0001:
-		return "turn counts above the cap do not read as the cap"
-
-	# Üç ekstra tur eforun %24'ünü yakar ve karşılığında %15 verir (§5'in kendi cümlesi).
-	var extra_cost: float = 3.0 * ProductSystem.DESIGN_TURN_COST
-	if absf(extra_cost - 0.24) > 0.0001:
-		return "three extra turns cost %.2f of EforTavanı, §5 says 0,24" % extra_cost
-	if absf((m4 / m1) - 1.15) > 0.0001:
-		return "four turns pay %.3f over the baseline, §5 says 1,15" % (m4 / m1)
-
-	# §11.2 — çarpan gerçekleşmeye girer, ve KADEME BAŞINA damgalanır.
-	if absf(QualityModel.realization_stamp(m0, 0.0) - 0.75) > 0.0001:
-		return "the rush multiplier did not reach the realization stamp"
 	return ""
 
 
@@ -15298,47 +12925,35 @@ static func _case_rnd_tree_loads_and_validates() -> String:
 	return ""
 
 
-# ============================================================================
-#  AR-GE §5.0 — ARAŞTIRMA İNSANI MEŞGUL EDER
-#
-#  Modülün TEMELİ ve bütün paketin kabul testi. §1'in tek cümlesi şu: "birini masadan
-#  kaldırıp araştırmaya verirsin, o kişi o süre boyunca ürün yapmaz." Bu kural gerçekten
-#  kurulmazsa araştırma hiçbir şeye mal olmaz ve her araştırma bariz bir evete dönüşür.
-# ============================================================================
+## Kurucuyu her alanda tavana çıkarır ve yapım işine oturtur: kapılar bu vakaların konusu değil.
+static func _seed_build_crew() -> Character:
+	var founder: Character = CharacterRegistry.get_founder()
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = HRConstants.AREA_MAX
+	CharacterRegistry.clear_jobs(founder.id)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+	return founder
+
 
 ## Bir kurucu araştırmaya geçince: (a) araştırma İŞİ üstünde, (b) türetilmiş ALAN AYNASI
-## boşalır — yani build ekibinden düşer, (c) eski işi SİLİNMEZ, duraklar, (d) odak 1,00
-## kalır (araştırma iki-iş bölmesine tabi değil), (e) yapım durur ve efor yakmaz.
+## boşalır, (c) eski işi SİLİNMEZ, duraklar, (d) odak 1,00 kalır (araştırma iki-iş bölmesine
+## tabi değil), (e) sprint ekibinden düşer ve kartına iş dökmez.
 ##
 ## FALSİFİKASYON: HRConstants.areas_for_jobs'tan `is_exclusive_job` continue'sunu kaldır →
-## (b) FAIL, çünkü araştıran kurucu sessizce build ekibine geri döner ve §5.0 kağıt üstünde
-## kalır. `_displace_job`'u paused_job_ids'e yazmayacak şekilde değiştir → (c) FAIL.
+## (b) FAIL. `_displace_job`'u paused_job_ids'e yazmayacak şekilde değiştir → (c) FAIL.
+## SprintSystem.team'den JOB_RESEARCH süzgecini kaldır → (e) FAIL.
 static func _case_research_occupies_person() -> String:
-	ProductLines.reload()
 	ResearchTree.reload()
 	RnDSystem.reset()
-	GameState.set_cash(50000)
-	GameState.set_flag(ProductState.LINE_TIERS, {})
+	_seed_sprint()
 	GameState.set_flag("mvp_shipped", true)      # §2 — Ar-Ge v1 yayınından sonra açılır
-	ProductSystem.active_build = null
 	var founder: Character = _seed_build_crew()
-	if founder == null:
-		return "fixture: no founder"
-	if not ProductSystem.start_line_build("note_tool",
-			["line_note_tool_capture_k1"], founder.id, "Sable"):
-		return "fixture: start_line_build refused a one-K1 note_tool plan"
-	if ProductSystem.build_paused():
-		return "fixture: a build with a free founder on it reported PAUSED"
-
-	# efor GELİŞTİRME barında birikir; hat yapımı TASARIM'da başlar (§2, §6).
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	b.design_turns_completed = 4
-	if ProductSystem.can_enter_development():
-		ProductSystem.enter_development()
-	var before: float = b.efor_spent
-	ProductSystem.hourly_tick(9)
-	if b.efor_spent <= before:
-		return "fixture: a running build did not spend effort in GELİŞTİRME"
+	var card_id: String = "feat:line_note_tool_capture_k1"
+	SprintSystem.add(card_id)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	if _sprint_points(founder.id) <= 0.0:
+		return "fixture: a free founder is not on the sprint team"
 
 	# --- ARAŞTIRMAYA GEÇ ---
 	var refusal: String = RnDSystem.start("data_model", [founder.id])
@@ -15361,65 +12976,57 @@ static func _case_research_occupies_person() -> String:
 			% HRSystem.job_count(founder)
 	if HRSystem.is_overloaded(founder):
 		return "a researcher was badged AŞIRI YÜKLÜ while doing exactly one thing"
-	# (e) yapım durdu ve efor YAKMIYOR
-	if not ProductSystem.build_paused():
-		return "the founder went to research and the build still reports running"
-	var frozen: float = b.efor_spent
-	ProductSystem.hourly_tick(10)
-	if b.efor_spent > frozen + 0.0001:
-		return "a build paused by research kept spending effort (%.4f -> %.4f)" \
-			% [frozen, b.efor_spent]
+	# (e) sprint ekibinden düştü ve kartına iş DÖKMÜYOR
+	if _sprint_points(founder.id) > 0.0:
+		return "a researching founder still works the sprint"
+	var frozen: float = _card_worked(card_id)
+	_sim_day()
+	if _card_worked(card_id) > frozen + 0.0001:
+		return "a researching founder's card kept moving (%.4f -> %.4f)" % [frozen, _card_worked(card_id)]
 	return ""
 
 
 ## §5.0 İKİ YÖNLÜ ÇALIŞIR, ve iki yön TEK PROSESTE denenir: tek yönlü bir gerileme
 ## ikisini ayrı vakaya bölseydik saklanabilirdi.
-##   yön A · kurucu yapımdayken araştırma başlatır → yapım duraklar
-##   yön B · kurucu araştırırken yapım başlatır    → araştırma DONAR, ilerleme korunur
+##   yön A · kurucu sprintteyken araştırma başlatır → sprint ekibinden düşer
+##   yön B · kurucu araştırırken yapım işine döner  → araştırma DONAR, ilerleme korunur
 ##
-## Öğretici yoktur; iki bar yan yana durur ve kendini anlatır (§5.0).
-##
-## FALSİFİKASYON: creation_flow'un/registry'nin displacement'ını yön B için kaldır →
-## ikinci yarı FAIL ve araştırma yapımla birlikte akmaya devam eder.
+## FALSİFİKASYON: registry'nin displacement'ını yön B için kaldır → ikinci yarı FAIL ve
+## araştırma yapımla birlikte akmaya devam eder.
 static func _case_research_and_build_pause_each_other() -> String:
-	ProductLines.reload()
 	ResearchTree.reload()
 	RnDSystem.reset()
-	GameState.set_cash(50000)
-	GameState.set_flag(ProductState.LINE_TIERS, {})
+	_seed_sprint()
 	GameState.set_flag("mvp_shipped", true)
-	ProductSystem.active_build = null
 	var founder: Character = _seed_build_crew()
 
-	# --- YÖN A: yapım koşuyor, araştırma başlıyor ---
-	if not ProductSystem.start_line_build("note_tool",
-			["line_note_tool_capture_k1"], founder.id, "Sable"):
-		return "fixture: start_line_build refused"
+	# --- YÖN A: sprint koşuyor, araştırma başlıyor ---
+	SprintSystem.add("feat:line_note_tool_capture_k1")
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
 	# One star in the root's area, its own requirement: a stronger founder finishes it in a week.
 	founder.role_stats[HRConstants.AREA_PRODUCT] = 2
 	if RnDSystem.start("data_model", [founder.id]) != "":
 		return "fixture: research would not start"
 	if RnDSystem.weeks_estimate("data_model", [founder.id]) <= 2.0:
 		return "fixture: the research would finish within two ticks"
-	if not ProductSystem.build_paused():
-		return "direction A: starting a research did not pause the build"
-	# Bar SEBEBİ yazar, yalnız durumu değil (§5.6.1).
-	var note: String = ProductSystem.pause_note_key()
-	if note != "BUILD_BUSY_RESEARCH" and note != "BUILD_BUSY_NOBODY":
-		return "direction A: the paused build's note was '%s'" % note
+	if _sprint_points(founder.id) > 0.0:
+		return "direction A: starting a research left the founder on the sprint team"
 
 	# Araştırma gerçekten akıyor mu.
 	RnDSystem.daily_tick()
 	var moved: float = RnDSystem.progress_effort("data_model")
 	if moved <= 0.0:
-		return "direction A: the research did not accrue while the build was paused"
+		return "direction A: the research did not accrue while the founder was off the sprint"
 
-	# --- YÖN B: araştırma koşarken yapım başlıyor ---
+	# --- YÖN B: araştırma koşarken yapım işine dönüş ---
 	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
 	if founder.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
-		return "direction B: starting a build left the founder on research"
+		return "direction B: going back to the build left the founder on research"
 	if not RnDSystem.is_frozen():
 		return "direction B: the research did not freeze when the founder went to build"
+	if _sprint_points(founder.id) <= 0.0:
+		return "direction B: the founder back from research is not on the sprint team"
 	# İLERLEME KORUNUR, yanmaz (§5.7).
 	if abs(RnDSystem.progress_effort("data_model") - moved) > 0.0001:
 		return "direction B: freezing BURNED progress (%.4f -> %.4f)" \
@@ -15429,6 +13036,14 @@ static func _case_research_and_build_pause_each_other() -> String:
 		return "direction B: a frozen research kept accruing"
 	return ""
 
+
+# ============================================================================
+#  AR-GE §5.0 — ARAŞTIRMA İNSANI MEŞGUL EDER
+#
+#  Modülün TEMELİ ve bütün paketin kabul testi. §1'in tek cümlesi şu: "birini masadan
+#  kaldırıp araştırmaya verirsin, o kişi o süre boyunca ürün yapmaz." Bu kural gerçekten
+#  kurulmazsa araştırma hiçbir şeye mal olmaz ve her araştırma bariz bir evete dönüşür.
+# ============================================================================
 
 ## §5.7 — HERKES ÇEKİLİNCE İLERLEME DONAR, YANMAZ. "Yanacak olsa kimse başlamaz."
 ## Ve geri dönünce kaldığı yerden akar; sıfırdan değil.
@@ -15441,7 +13056,6 @@ static func _case_research_freezes_and_resumes() -> String:
 	RnDSystem.reset()
 	GameState.set_cash(50000)
 	GameState.set_flag("mvp_shipped", true)
-	ProductSystem.active_build = null
 	var founder: Character = CharacterRegistry.get_founder()
 	for area in HRConstants.AREAS:
 		founder.role_stats[area] = HRConstants.AREA_MAX
@@ -15488,7 +13102,6 @@ static func _case_research_completion_no_economic_delta() -> String:
 	RnDSystem.reset()
 	GameState.set_cash(50000)
 	GameState.set_flag("mvp_shipped", true)
-	ProductSystem.active_build = null
 	var founder: Character = CharacterRegistry.get_founder()
 	for area in HRConstants.AREAS:
 		founder.role_stats[area] = HRConstants.AREA_MAX
@@ -15547,7 +13160,6 @@ static func _case_paused_job_resumes_on_direct_return() -> String:
 	ResearchTree.reload()
 	RnDSystem.reset()
 	GameState.set_flag("mvp_shipped", true)
-	ProductSystem.active_build = null
 	var founder: Character = CharacterRegistry.get_founder()
 	for area in HRConstants.AREAS:
 		founder.role_stats[area] = HRConstants.AREA_MAX
@@ -15582,123 +13194,45 @@ static func _case_paused_job_resumes_on_direct_return() -> String:
 	return ""
 
 
-## Ekip §4.5 — "Kurucu için moral bandı uygulanmaz; DİĞER BÜTÜN ÇARPANLAR AYNEN GEÇERLİDİR."
-## Odak bölünmesi o çarpanlardan biridir, ve düz-katalog yolunda kurucu terimi seam'in
-## DIŞINDA hesaplandığı için bölünmeyi ayrıca alması gerekiyor.
-##
-## Bu yolun ölü olmadığına dikkat: barın gün tahmini (build_bar_model) ve
-## estimate_build_days onu çağırıyor, yani bölünme eksikken TAHMİN tam hız derken canlı hat
-## yapımı yarı hızda akıyordu.
-##
-## FALSİFİKASYON: `_speed_for_phase`'deki `* HRConstants.focus_mult(...)` çarpanını sil →
-## iki iş tek işle aynı hızı verir ve iddia FAIL eder, iki sayıyı da yazarak.
-static func _case_founder_split_halves_flat_speed() -> String:
-	ProductLines.reload()
-	RnDSystem.reset()
-	GameState.set_flag("mvp_shipped", false)
-	ProductSystem.active_build = null
-	var founder: Character = CharacterRegistry.get_founder()
-	for area in HRConstants.AREAS:
-		founder.role_stats[area] = HRConstants.AREA_MAX
-	CharacterRegistry.clear_jobs(founder.id)
-	# DÜZ KATALOG yolu: planned_step_ids boş kalmalı ki is_line_build() false olsun.
-	if not ProductSystem.start_build("ai_assistant",
-			["ai_assistant_chat", "ai_assistant_streaming"], ""):
-		return "fixture: could not start a flat-catalog build"
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if ProductSystem.is_line_build():
-		return "fixture: the build took the line path, not the flat one"
-
-	CharacterRegistry.clear_jobs(founder.id)
-	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD) != "":
-		return "fixture: build refused"
-	var solo: float = ProductSystem.team_speed(b)
-	if solo <= 0.0:
-		return "fixture: a founder alone on the build produced no speed"
-
-	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) != "":
-		return "fixture: support refused as a second continuous job"
-	var split: float = ProductSystem.team_speed(b)
-
-	# §12.1 — iki iş, her ikisine AYRI AYRI 0,50. Yapım terimi tam olarak yarıya iner.
-	var want: float = solo * HRConstants.FOCUS_MULT_SPLIT
-	if absf(split - want) > 0.0001:
-		return "a split founder builds at %.4f, want %.4f (half of %.4f)" % [split, want, solo]
-	return ""
-
-
-## YAVAŞLAYAN BAR SEBEBİNİ SÖYLER — duraklamış bir bar gibi (§5.6.1'in bir adım ötesi).
-##
-## Kurucu DESTEK'teyken yapıma başlarsa İKİSİ DE koşar ve İKİSİ DE yavaşlar (Ekip §12.1,
-## odak 0,50/0,50). O baskı — bildirimler doğrulanmaktan hızlı birikir, memnuniyet erir,
-## oyuncu işe alması gerektiğini anlar — modülün öğretmek istediği şeydir, ve yavaşlığın
-## SEBEBİ ekranda yazmazsa duran barın sebebi yazmadığında olduğu kadar haksız bir kayıptır.
-##
-## Bu vaka üç şeyi birden ölçüyor, çünkü üçü tek olgunun üç yüzü:
-##   · yapım barı bölünmeyi söylüyor
-##   · DESTEK barı da söylüyor (o kart bugüne dek HİÇ not taşımıyordu)
+## BÖLÜNMÜŞ ODAK SEBEBİNİ SÖYLER. Kurucu DESTEK'teyken ikinci sürekli bir işe girerse ikisi de
+## koşar ve ikisi de yavaşlar (Ekip §12.1, odak 0,50/0,50). Bildirimler doğrulanmaktan hızlı
+## birikir ve oyuncu işe alması gerektiğini anlar; yavaşlığın SEBEBİ ekranda yazmazsa bu haksız
+## bir kayıptır. İki yüzü ölçülür:
+##   · DESTEK kartı bölünmeyi söylüyor
 ##   · kurucunun kendi durum satırı iki kısa etiketi `·` ile birleştiriyor (Ekip §12.2)
 ##
-## FALSİFİKASYON: `ProductSystem.split_note_key`'in gövdesini `return ""` yap → yapım barı
-## iddiası FAIL. `_derive_support`'taki döngüyü sil → DESTEK iddiası FAIL.
+## FALSİFİKASYON: BuildBarModel.derive'daki masa döngüsünü sil → DESTEK iddiası FAIL.
 ## `founder_task_label`'ın kompozisyon dalını sil → satır tek etikete düşer ve FAIL.
 static func _case_split_bars_name_their_cause() -> String:
-	ProductLines.reload()
-	ResearchTree.reload()
-	RnDSystem.reset()
-	GameState.set_cash(50000)
-	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag("mvp_shipped", true)
+	_seed_support_fixture("b2c")
 	GameState.set_flag("pitch_prep_active", false)
-	ProductSystem.active_build = null
 	var founder: Character = CharacterRegistry.get_founder()
 	for area in HRConstants.AREAS:
 		founder.role_stats[area] = HRConstants.AREA_MAX
 	CharacterRegistry.clear_jobs(founder.id)
+	var bar_model: GDScript = load("res://scripts/ui/components/build_bar_model.gd")
 
-	# TEK İŞ: hiçbir bar bölünmeden söz etmez.
+	# TEK İŞ: kart bölünmeden söz etmez.
 	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) != "":
 		return "fixture: support refused"
-	if ProductSystem.split_note_key() != "":
+	var single = bar_model.new()
+	if not single.derive():
+		return "fixture: the DESTEK card derived nothing"
+	if String(single.split_note_key) != "":
 		return "a single-job founder produced a split note"
 
-	if not ProductSystem.start_line_build("note_tool",
-			["line_note_tool_capture_k1"], founder.id, "Sable"):
-		return "fixture: start_line_build refused"
 	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD) != "":
 		return "fixture: build refused as a second continuous job"
-
-	# İKİSİ DE KOŞUYOR — duraklama YOK. Duraklama olsaydı ders bir DURAKLAMAYLA
-	# değiştirilmiş olurdu ki hüküm tam olarak bunu yasaklıyor.
-	if ProductSystem.build_paused():
-		return "a second continuous job PAUSED the build; only research displaces"
 	if not HRSystem.is_overloaded(founder):
 		return "two continuous jobs did not read as overloaded"
 
-	# 1 · YAPIM BARI sebebi yazıyor.
-	if ProductSystem.split_note_key() != "BUILD_SPLIT_FOCUS":
-		return "the build bar does not name the split (%s)" % ProductSystem.split_note_key()
-	var bm = load("res://scripts/ui/components/build_bar_model.gd").new()
-	if not bm.derive():
-		return "fixture: the build bar model derived nothing"
-	if String(bm.split_note_key) != "BUILD_SPLIT_FOCUS":
-		return "the build bar MODEL dropped the split note"
-	# Duraklama notu boş kalmalı: bar akıyor.
-	if String(bm.pause_note_key) != "":
-		return "a running split build carried a PAUSE note: %s" % bm.pause_note_key
+	# 1 · DESTEK KARTI sebebi yazıyor.
+	var split = bar_model.new()
+	split.derive()
+	if String(split.split_note_key) != "BUILD_SPLIT_FOCUS":
+		return "the DESTEK card does not name the split"
 
-	# 2 · DESTEK BARI da yazıyor. Bu kart, not alanları kurulmadan önce erken döndüğü için
-	#     bugüne kadar hiçbir not taşımıyordu.
-	ProductSystem.active_build = null
-	var sm = load("res://scripts/ui/components/build_bar_model.gd").new()
-	if not sm.derive():
-		return "fixture: the support bar model derived nothing"
-	if String(sm.phase) != "support":
-		return "fixture: expected the DESTEK bar, got '%s'" % sm.phase
-	if String(sm.split_note_key) != "BUILD_SPLIT_FOCUS":
-		return "the DESTEK bar does not name the split"
-
-	# 3 · KURUCUNUN DURUM SATIRI iki kısa etiketi orta noktayla birleştiriyor (§12.2).
+	# 2 · KURUCUNUN DURUM SATIRI iki kısa etiketi orta noktayla birleştiriyor (§12.2).
 	var line: String = HRSystem.founder_task_label()
 	if not line.contains(" · "):
 		return "the founder's state line did not compose two labels: '%s'" % line
@@ -16552,43 +14086,38 @@ static func _case_sales_lead_expiry_and_return_lock() -> String:
 ## §5.0 THE TIME SKIP AND THE ENTRY GATE. Closing a sitting costs MEETING_SKIP_HOURS and those
 ## hours are SIMULATED through the real hourly path. The founder is not zeroed: each skipped hour
 ## keeps 1 − HOURS_PER_DAY / WEEK_WORK_HOURS of the founder's output, so a meeting costs the week
-## exactly hours / WEEK_WORK_HOURS (5 % for two hours). The busy flag lives only while the sitting
-## is open and never reaches a save. Entry is shut at night and near the founder's end, four
-## meetings fill the week whatever the workday's length, and a skip never crosses midnight.
-## FALSIFICATION: drop founder_output_factor from ProductSystem's line tick and the solo ratio
+## exactly hours / WEEK_WORK_HOURS (5 % for two hours). The output measured is the support desk's
+## validation, the hourly work the founder's share reaches; the sprint works by the week. The busy
+## flag lives only while the sitting is open and never reaches a save. Entry is shut at night and
+## near the founder's end, four meetings fill the week whatever the workday's length, and a skip
+## never crosses midnight.
+## FALSIFICATION: drop founder_share from SupportSystem's hourly validation and the solo ratio
 ## reads 1.0; drop the midnight clamp in TimeManager.advance_hours and the late skip runs the
 ## daily tick.
 static func _case_sales_meeting_time_skip_founder_share() -> String:
-	ProductLines.reload()
-	GameState.set_cash(50000)
-	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_market_type", "b2b")
+	_seed_support_fixture("b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "erp")
-	# A FRESH ladder: the plan below is three K1 steps, and a seed that had already shipped
-	# them would make `start_line_build` refuse on the ladder rule rather than on anything
-	# this case is about.
-	_seed_b2b_lines("erp", 0)
-	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag(ProductState.STEP_REALIZATION, {})
-	_seed_build_crew()
-	var plan := ["line_erp_ledger_k1", "line_erp_stock_k1", "line_erp_invoicing_k1"]
-	if not ProductSystem.start_line_build("erp", plan, "", "Nova"):
-		return "start_line_build refused the fixture plan"
-	# INTO AN HOURLY PHASE: a fresh build sits in DESIGN, and the effort measured below is the
-	# development bar's.
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	b.current_phase = "development"
+	GameState.set_cash(50000)
+	# A pile the desk never empties, so every hour validates exactly its rate.
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 10000)
+	var founder: Character = CharacterRegistry.get_founder()
+	founder.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = HRConstants.AREA_MAX
+	CharacterRegistry.clear_jobs(founder.id)
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) != "":
+		return "fixture: the founder could not take the support desk"
+	var validated := func() -> float:
+		return float(ProductState.bugs_confirmed()) + float(GameState.get_flag(ProductState.VALIDATION_PROGRESS, 0.0))
 	var skip: int = SalesConstants.MEETING_SKIP_HOURS
 
-	# SOLO — the founder is the only carrier: two ordinary hours, then a meeting's two hours.
+	# SOLO — the founder is the desk: two ordinary hours, then a meeting's two hours.
 	var lead: Prospect = SalesFaucetSystem.spawn(1, "faucet")
 	if lead == null:
 		return "the faucet produced no lead to sit at"
-	var e0: float = b.efor_spent
+	var e0: float = validated.call()
 	TimeManager.advance_hours(skip)
-	var plain: float = b.efor_spent - e0
+	var plain: float = validated.call() - e0
 	if plain <= 0.0:
-		return "a founder-only build did not advance in ordinary hours"
+		return "a founder-only desk validated nothing in ordinary hours"
 	var hour_before: int = GameState.current_hour
 	SalesMeetingSystem.open(lead.id)
 	if not HRSystem.founder_in_meeting:
@@ -16597,9 +14126,9 @@ static func _case_sales_meeting_time_skip_founder_share() -> String:
 		SaveCodec.capture_registries(), SaveManager._capture_systems()])
 	if saved.contains("founder_in_meeting") or saved.contains("sales_meeting_active"):
 		return "the sitting's busy flag reached the save state"
-	var e1: float = b.efor_spent
+	var e1: float = validated.call()
 	SalesMeetingSystem.close()
-	var met: float = b.efor_spent - e1
+	var met: float = validated.call() - e1
 	if GameState.current_hour - hour_before != skip:
 		return "the clock moved %d hours, want %d" % [GameState.current_hour - hour_before, skip]
 	var keep: float = 1.0 - float(TimeModel.HOURS_PER_DAY) / float(TimeModel.WEEK_WORK_HOURS)
@@ -16612,18 +14141,19 @@ static func _case_sales_meeting_time_skip_founder_share() -> String:
 		return "one meeting cost %.4f of the week (share %.4f), want %.4f" % [
 			week_loss, GameState.founder_meeting_share(), want_share]
 
-	# TEAM — one free engineer on the build, and the same two hours flow at full rate for them.
-	var eng: Character = _make_employee("char_eng_skip", "Deniz", HRConstants.ROLE_DEVELOPER)
-	eng.role_stats[HRConstants.AREA_ENGINEERING] = HRConstants.AREA_MAX
-	CharacterRegistry.assign_job(eng.id, HRConstants.JOB_BUILD)
+	# TEAM — a rep at the desk, and the same two hours flow at full rate for them.
+	var rep: Character = _make_employee("char_rep_skip", "Deniz", HRConstants.ROLE_CUSTOMER_REP)
+	rep.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = HRConstants.AREA_MAX
+	if not SupportSystem.desk_roster().has(rep):
+		return "fixture: the rep was not seated at the desk"
 	var lead2: Prospect = SalesFaucetSystem.spawn(1, "faucet")
 	if lead2 == null:
 		return "the faucet produced no second lead"
-	var team_before: float = b.efor_spent
+	var team_before: float = validated.call()
 	SalesMeetingSystem.open(lead2.id)
 	SalesMeetingSystem.close()
-	if b.efor_spent - team_before <= met:
-		return "a team build did not outrun the founder alone across the skipped hours"
+	if validated.call() - team_before <= met:
+		return "a staffed desk did not outrun the founder alone across the skipped hours"
 	# And the flag is DOWN afterwards: a founder stuck busy is worse than one never freed.
 	if HRSystem.founder_in_meeting:
 		return "the meeting flag survived the close"
@@ -17846,3 +15376,726 @@ static func _case_office_move_gates_and_save() -> String:
 		if got != want:
 			return done.call("a v12 save with angel %d migrated to '%s', want '%s'" % [angel, got, want])
 	return done.call("")
+
+
+# =========================================================================
+#  ÜRÜN · SPRINT MOTORU
+# =========================================================================
+
+## Ürünü Ürün sekmesinin yolundan kurar: tür seçilir, Sprint 1 bugün planlamada açılır. Kasa
+## kepenk sayacını başlatmayacak kadar derin; ekipte yalnız kurucu var.
+static func _seed_sprint(subtype: String = "note_tool") -> void:
+	ProductLines.reload()
+	GameState.set_cash(500000)
+	SprintSystem.choose_type(subtype, "Notly")
+
+
+## Yayındaki ürün: Çekirdek'in ilk üç kimlik yeteneği K1'de, MVP sürümü çıkmış. Sprint kapanışı
+## bunu MVP'den sonraki her sürüm gibi okur.
+static func _seed_sprint_live(subtype: String) -> void:
+	_seed_sprint(subtype)
+	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+		ProductState.set_line_tier(line_id, 1)
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_version", 1)
+
+
+## Orta becerili (ana alanı 5), orta moralli bir ekip üyesi; izin haftası park edilir.
+static func _sprint_hire(id: String, role_id: String) -> Character:
+	var c: Character = _make_employee(id, id, role_id, SEED_PACE, 0, 60)
+	_park_leave([c])
+	return c
+
+
+## Kişinin bu sprintte haftalık puanı; ekipte değilse (izin, Ar-Ge) 0.
+static func _sprint_points(id: String) -> float:
+	for person in SprintSystem.team():
+		if person.id == id:
+			return person.points
+	return 0.0
+
+
+## Kartın üç fazına dökülmüş toplam puan; kart saklanmıyorsa (aday ya da çıkmış) 0.
+static func _card_worked(card_id: String) -> float:
+	var c: Dictionary = GameState.product.cards.get(card_id, {})
+	return 0.0 if c.is_empty() else float(c.progress[0]) + float(c.progress[1]) + float(c.progress[2])
+
+
+## Kartları bu sprinte koyar, başlatır ve iki haftasını oyunun günlük dağıtımıyla oynar; sürüm
+## notundaysa önce sonraki sprintin planlamasına geçer. Sprint başlamazsa false.
+static func _play_sprint(card_ids: Array) -> bool:
+	if SprintSystem.mode() == "release":
+		SprintSystem.plan_next()
+	for id in card_ids:
+		SprintSystem.add(id)
+	if not SprintSystem.start():
+		return false
+	_sim_day()
+	_sim_day()
+	return true
+
+
+## Sprint tam iki gün (iki hafta) sürer: başlatıldığı gün birinci hafta, ertesi gün ikinci, bir
+## sonraki günün tikinde kapanır ve sürüm notu o gün yazılır.
+static func _case_sprint_two_days_close() -> String:
+	_seed_sprint()
+	var closed: Array = []
+	EventBus.sprint_closed.connect(func(n: int) -> void: closed.append(n))
+	var start_day: int = GameState.day
+	SprintSystem.add("feat:line_note_tool_capture_k1")
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	if SprintSystem.mode() != "active" or SprintSystem.week() != 1:
+		return "a started sprint reads %s week %d, want active week 1" % [SprintSystem.mode(), SprintSystem.week()]
+	_sim_day()
+	if SprintSystem.mode() != "active" or SprintSystem.week() != 2 or not closed.is_empty():
+		return "one day in: %s week %d, closes %s; want active week 2" % [SprintSystem.mode(), SprintSystem.week(), closed]
+	_sim_day()
+	if closed != [1] or SprintSystem.mode() != "release":
+		return "two days in: closes %s, %s; want sprint 1 closed onto its release note" % [closed, SprintSystem.mode()]
+	if int(GameState.product.release.day) != start_day + 2:
+		return "the release note is dated %d, want start %d + 2" % [int(GameState.product.release.day), start_day]
+	return ""
+
+
+## Kapasite Ekip'ten okunur: kişi başına haftada iki puan × beceri bandı × moral bandı × çalışma
+## saati, iki hafta; kurucunun bandı sabittir. Moral bandı kişinin puanını değiştirir, Ar-Ge'ye
+## alınan ve izne çıkan kişi ekipten düşer; kimse kalmayınca "+" kapanır.
+static func _case_sprint_capacity_from_team() -> String:
+	ResearchTree.reload()
+	RnDSystem.reset()
+	_seed_sprint()
+	var weeks: int = int(SprintCatalog.cfg("sprint_weeks"))
+	var point: float = float(SprintCatalog.cfg("person_points_week"))
+	var founder_pts: float = point * float(SprintCatalog.cfg("founder_mult"))
+	var mid: float = point * float((SprintCatalog.cfg("skill.mult") as Array)[1])
+	if SprintSystem.capacity() != roundi(founder_pts * weeks):
+		return "a solo founder's sprint holds %d points, want %d" % [SprintSystem.capacity(), roundi(founder_pts * weeks)]
+	var dev: Character = _sprint_hire("char_cap_dev", HRConstants.ROLE_DEVELOPER)
+	if not is_equal_approx(_sprint_points(dev.id), mid) or SprintSystem.capacity() != roundi((founder_pts + mid) * weeks):
+		return "a mid developer works %.2f a week for a capacity of %d, want %.2f and %d" % [
+			_sprint_points(dev.id), SprintSystem.capacity(), mid, roundi((founder_pts + mid) * weeks)]
+	dev.morale = HRConstants.MORALE_BAND_LOW - 1
+	var low: float = mid * HRConstants.MORALE_BAND_LOW_MULT
+	if not is_equal_approx(_sprint_points(dev.id), low) or SprintSystem.capacity() != roundi((founder_pts + low) * weeks):
+		return "low morale left the developer at %.2f a week for a capacity of %d, want %.2f and %d" % [
+			_sprint_points(dev.id), SprintSystem.capacity(), low, roundi((founder_pts + low) * weeks)]
+	dev.morale = HRConstants.MORALE_BAND_LOW
+	var founder: Character = CharacterRegistry.get_founder()
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = HRConstants.AREA_MAX
+	GameState.set_flag("mvp_shipped", true)   # Ar-Ge yayından sonra açılır
+	if RnDSystem.start("data_model", [founder.id]) != "":
+		return "fixture: the founder could not start research"
+	if _sprint_points(founder.id) > 0.0 or SprintSystem.capacity() != roundi(mid * weeks):
+		return "a researching founder still counts: capacity %d, want the developer's %d" % [
+			SprintSystem.capacity(), roundi(mid * weeks)]
+	HRMoraleSystem.send_on_leave(dev, HRConstants.LEAVE_WEEKS, false)
+	if SprintSystem.capacity() != 0 or SprintSystem.can_add():
+		return "with the founder researching and the developer on leave the sprint holds %d points (+ open: %s)" % [
+			SprintSystem.capacity(), SprintSystem.can_add()]
+	return ""
+
+
+## "+" yük tavanında (%125) kapanır: tavanın altındaki sprint kart alır, alınan kart kapasiteyi
+## aşabilir ("devreder" uyarısı), tavanı geçmiş sprint yeni kart almaz.
+static func _case_sprint_ceiling_125_blocks_add() -> String:
+	_seed_sprint()
+	_sprint_hire("char_ceil_dev", HRConstants.ROLE_DEVELOPER)
+	var ceiling: float = SprintSystem.capacity() * float(SprintCatalog.cfg("cap_ceiling"))
+	var refused: int = 0
+	for c in SprintCatalog.candidates("core"):
+		if c.kind != "feature" or SprintCatalog.gate_reason(c.step) != "":
+			continue
+		var open: bool = SprintSystem.can_add()
+		if open != (SprintSystem.used() <= ceiling):
+			return "+ reads %s at a load of %d against a ceiling of %.2f" % [open, SprintSystem.used(), ceiling]
+		SprintSystem.add(c.id)
+		if GameState.product.sprint.cards.has(c.id) != open:
+			return "add() %s %s with + reading %s at a load of %d" % [
+				"took" if not open else "refused", c.id, open, SprintSystem.used()]
+		refused += int(not open)
+	if refused == 0:
+		return "fixture: the core cards never pushed the load over the ceiling (load %d, ceiling %.2f)" % [
+			SprintSystem.used(), ceiling]
+	return ""
+
+
+## Devreden kart ilerlemesini korur: sürüm notu biten ve toplam puanı yazar, kart sonraki sprintte
+## kaldığı yerden sürer ve planlamada yalnız kalan puanı yükler.
+static func _case_sprint_carry_keeps_progress() -> String:
+	_seed_sprint()
+	var id: String = "feat:line_note_tool_capture_k1"
+	var total: int = SprintCatalog.step_effort("line_note_tool_capture_k1")
+	if not _play_sprint([id]):
+		return "fixture: sprint 1 did not start"
+	var worked: float = _card_worked(id)
+	if worked <= 0.0 or worked >= total:
+		return "a solo founder's K1 should carry out of sprint 1 part done, worked %.2f of %d" % [worked, total]
+	var rows: Array = GameState.product.release.carried.filter(func(r: Dictionary) -> bool: return r.id == id)
+	var done: int = floori(worked + SprintSystem.EPS)
+	if rows.size() != 1 or int(rows[0].done) != done or int(rows[0].total) != total or int(rows[0].to_sprint) != 2:
+		return "the release note carries %s, want %s with %d of %d done, to sprint 2" % [rows, id, done, total]
+	SprintSystem.plan_next()
+	if GameState.product.sprint.cards != [id] or not is_equal_approx(_card_worked(id), worked):
+		return "sprint 2 opened with %s and the card at %.2f, want it alone at %.2f" % [
+			GameState.product.sprint.cards, _card_worked(id), worked]
+	if SprintSystem.used() != roundi(total - worked):
+		return "planning loads %d for the carried card, want the %d points it has left" % [
+			SprintSystem.used(), roundi(total - worked)]
+	if not _play_sprint([]):
+		return "fixture: sprint 2 did not start"
+	if ProductState.line_tier("line_note_tool_capture") != 1:
+		return "the carried card never shipped in sprint 2 (worked %.2f)" % _card_worked(id)
+	return ""
+
+
+## MVP: Çekirdek'in kimlik yeteneklerinden üçü K1'e varınca ürün CANLI v1.0 olur. Öncesindeki
+## sprint sürüm çıkarmaz; MVP'nin sinyalleri (version_shipped ve "shipped") tam bir kez atılır ve
+## MVP bayrakları o kapanışta yazılır. Sonraki sürüm v1.1'dir.
+static func _case_sprint_mvp_three_identity_k1() -> String:
+	_seed_sprint()
+	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
+		_sprint_hire("char_mvp_" + role_id, role_id)
+	var versions: Array = []
+	var ships: Array = []
+	EventBus.version_shipped.connect(func(n: int) -> void: versions.append(n))
+	EventBus.build_phase_changed.connect(func(phase: String) -> void: ships.append(phase))
+	var lines: Array = SprintCatalog.capabilities("core")
+	if not _play_sprint(["feat:%s_k1" % lines[0]]) or ProductState.line_tier(lines[0]) != 1:
+		return "fixture: sprint 1 did not ship %s" % lines[0]
+	if ProductState.is_live() or int(GameState.product.release.number) != 0 or not versions.is_empty() \
+			or not ships.is_empty():
+		return "one identity line at K1 went public: live %s, release %d, versions %s, ship signals %s" % [
+			ProductState.is_live(), int(GameState.product.release.number), versions, ships]
+	if not _play_sprint(["feat:%s_k1" % lines[1], "feat:%s_k1" % lines[2]]):
+		return "fixture: sprint 2 did not start"
+	if not ProductState.is_live() or versions != [1] or ships != ["shipped"]:
+		return "three identity lines at K1: live %s, versions %s, ship signals %s; want CANLI v1.0 once" % [
+			ProductState.is_live(), versions, ships]
+	var launch: int = GameState.day
+	if int(GameState.product.release.number) != 1 \
+			or int(GameState.get_flag("mvp_launch_day", -1)) != launch \
+			or (GameState.get_flag("mvp_version_history", []) as Array).size() != 1:
+		return "the MVP release reads %d, launch day %s, history %s" % [int(GameState.product.release.number),
+			GameState.get_flag("mvp_launch_day", -1), GameState.get_flag("mvp_version_history", [])]
+	if not _play_sprint(["feat:%s_k1" % lines[3]]):
+		return "fixture: sprint 3 did not start"
+	if versions != [1, 2] or ships.size() != 2 or int(GameState.get_flag("mvp_launch_day", -1)) != launch \
+			or int(GameState.product.release.number) != 2:
+		return "the release after MVP: versions %s, ship signals %d, launch day %s, release %d; want v1.1" % [
+			versions, ships.size(), GameState.get_flag("mvp_launch_day", -1), int(GameState.product.release.number)]
+	return ""
+
+
+## Test rolü olmayan ekipte kartın Test fazı rolsüz, yarı hızla yapılır ve kart hatalı işaretlenir.
+## Hatalı kart yayına giren sürümde zar atar: zar kartın kimliği ile sprint numarasının hash'i, eşik
+## sprint.json'daki ihtimal. Vaka eşiği zarın hemen üstüne ve tam üstüne koyar (test sabiti):
+## ilkinde kartın yeteneğine tek ticket düşer, ikincisinde düşmez.
+static func _case_sprint_faulty_ticket_deterministic() -> String:
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_faulty_des", HRConstants.ROLE_DESIGNER)
+	if SprintSystem.team().any(func(p: Dictionary) -> bool: return "test" in p.fits):
+		return "fixture: the team has someone in the Test role"
+	var chance: Variant = SprintCatalog.cfg("faulty_chance")
+	var run := func() -> String:
+		var lines: Array = SprintCatalog.capabilities("core").slice(int(SprintCatalog.cfg("mvp_lines")))
+		for i in 2:
+			if SprintSystem.mode() == "release":
+				SprintSystem.plan_next()
+			var id: String = "feat:%s_k1" % lines[i]
+			var roll: float = float(absi(hash(str([id, SprintSystem.sprint_number()]))) % 1000) / 1000.0
+			var ticket: bool = i == 0
+			SprintCatalog._data.faulty_chance = roll + 0.001 if ticket else roll
+			var before: int = ProductState.bugs_confirmed()
+			if not _play_sprint([id]):
+				return "fixture: sprint %d did not start" % (i + 1)
+			var shipped: Array = GameState.product.release.shipped.filter(func(c: Dictionary) -> bool: return c.id == id)
+			if shipped.is_empty() or not shipped[0].faulty:
+				return "fixture: %s did not ship marked faulty from a team with no Test role" % id
+			if ProductState.bugs_confirmed() - before != int(ticket):
+				return "a faulty card rolling %.3f against %.3f gave %d ticket(s), want %d" % [roll,
+					float(SprintCatalog.cfg("faulty_chance")), ProductState.bugs_confirmed() - before, int(ticket)]
+			if ticket and String(GameState.product.tickets.back().line) != lines[i]:
+				return "the faulty ticket landed on %s, want %s" % [GameState.product.tickets.back().line, lines[i]]
+		return ""
+	var fail: String = run.call()
+	SprintCatalog._data.faulty_chance = chance
+	return fail
+
+
+## Ticket'lar yeteneğe göre tek düzeltme kartında toplanır; acil eşiği kadar ticket kartı "! acil"
+## yapar ve alanın uyarısını yakar. Kart çıkınca ticket'lar defterden ve doğrulanmış sayaçtan
+## düşer, uyarı kalkar ve sürüm notu onu kalkanlar arasında yazar.
+static func _case_sprint_fix_card_closes_tickets() -> String:
+	_seed_sprint()
+	_sprint_hire("char_fix_dev", HRConstants.ROLE_DEVELOPER)
+	var line: String = SprintCatalog.capabilities("core")[0]
+	var urgent: int = int(SprintCatalog.cfg("urgent_tickets"))
+	ProductState.set_line_tier(line, 1)
+	ProductState.adjust_confirmed(urgent)
+	SprintBridges.sync_tickets()
+	var fix: Array = SprintCatalog.candidates("core").filter(func(c: Dictionary) -> bool: return c.id == "fix:" + line)
+	if fix.size() != 1 or fix[0].tickets.size() != urgent or not SprintCatalog.is_urgent(fix[0]) \
+			or int(fix[0].effort) != int(SprintCatalog.cfg("effort.fix_urgent")):
+		return "%d tickets on one capability read %s, want one urgent fix card carrying all of them" % [urgent, fix]
+	if not SprintCatalog.area_alert("core"):
+		return "an urgent capability did not raise Çekirdek's alert"
+	if not _play_sprint([fix[0].id]):
+		return "fixture: the sprint did not start"
+	if ProductState.bugs_confirmed() != 0 or not (GameState.product.tickets as Array).is_empty():
+		return "the fix card shipped and left %d confirmed, ledger %s" % [ProductState.bugs_confirmed(),
+			GameState.product.tickets]
+	if SprintCatalog.area_alert("core") or not GameState.product.release.alerts_cleared.has("core"):
+		return "the alert reads %s after the fix, cleared %s" % [SprintCatalog.area_alert("core"),
+			GameState.product.release.alerts_cleared]
+	if SprintCatalog.candidates("core").any(func(c: Dictionary) -> bool: return c.kind == "fix"):
+		return "a fix card outlived its tickets"
+	return ""
+
+
+## Beta açıkken biten kart sürüme girmez, bir sprint "beta" bekler: sürüm numarası artmaz, kademe
+## yazılmaz. Sonraki kapanışta betadan çıkar ve sürüm olur; hatalı çıkış zarı orada betanın
+## ihtimalini okur (test sabiti: normal ihtimal sıfır, beta ihtimali zarın hemen üstü).
+static func _case_sprint_beta_delays_release() -> String:
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_beta_des", HRConstants.ROLE_DESIGNER)
+	var versions: Array = []
+	EventBus.version_shipped.connect(func(n: int) -> void: versions.append(n))
+	var chances: Array = [SprintCatalog.cfg("faulty_chance"), SprintCatalog.cfg("faulty_chance_beta")]
+	var run := func() -> String:
+		var line: String = SprintCatalog.capabilities("core")[3]
+		var id: String = "feat:%s_k1" % line
+		SprintSystem.set_beta(true)
+		if not _play_sprint([id]):
+			return "fixture: sprint 1 did not start"
+		var r: Dictionary = GameState.product.release
+		if int(r.number) != 0 or not r.beta or ProductState.line_tier(line) != 0 or not versions.is_empty() \
+				or GameState.product.cards.get(id, {}).get("state", "") != "beta":
+			return "a card done under beta: release %d (beta %s), tier %d, versions %s; want it waiting in beta" % [
+				int(r.number), r.beta, ProductState.line_tier(line), versions]
+		SprintSystem.plan_next()
+		SprintSystem.set_beta(false)
+		var roll: float = float(absi(hash(str([id, SprintSystem.sprint_number()]))) % 1000) / 1000.0
+		SprintCatalog._data.faulty_chance = 0.0
+		SprintCatalog._data.faulty_chance_beta = roll + 0.001
+		var before: int = ProductState.bugs_confirmed()
+		if not _play_sprint(["res:core"]):
+			return "fixture: sprint 2 did not start"
+		if versions != [2] or ProductState.line_tier(line) != 1:
+			return "the sprint after beta: versions %s, tier %d; want the beta card released as v1.1" % [
+				versions, ProductState.line_tier(line)]
+		if ProductState.bugs_confirmed() - before != 1:
+			return "the beta card rolled %.3f under the beta chance and gave %d ticket(s), want 1" % [
+				roll, ProductState.bugs_confirmed() - before]
+		return ""
+	var fail: String = run.call()
+	SprintCatalog._data.faulty_chance = chances[0]
+	SprintCatalog._data.faulty_chance_beta = chances[1]
+	return fail
+
+
+## Planlamada ya da sürüm notunda bir gün geçerse sprint liderin önerisiyle kendiliğinden başlar
+## ve sprint_auto_started yayılır.
+static func _case_sprint_auto_start_after_a_day() -> String:
+	_seed_sprint()
+	var auto: Array = []
+	EventBus.sprint_auto_started.connect(func(n: int) -> void: auto.append(n))
+	_sim_day()
+	if SprintSystem.mode() != "active" or auto != [1] or int(GameState.product.auto_started) != 1:
+		return "a day in planning: %s, auto starts %s; want sprint 1 running" % [SprintSystem.mode(), auto]
+	if GameState.product.sprint.cards.is_empty():
+		return "the auto-started sprint carries no cards; the lead's plan was not applied"
+	_sim_day()
+	_sim_day()
+	if SprintSystem.mode() != "release":
+		return "fixture: sprint 1 did not close (%s)" % SprintSystem.mode()
+	_sim_day()
+	if SprintSystem.mode() != "active" or SprintSystem.sprint_number() != 2 or auto != [1, 2]:
+		return "a day on the release note: %s sprint %d, auto starts %s; want sprint 2 running" % [
+			SprintSystem.mode(), SprintSystem.sprint_number(), auto]
+	return ""
+
+
+## B2B talebi: hesap imzadan bir sprint sonra sektörünün arketipine bağlı alandan bir kademe ister.
+## Talep kartı adaylarda, liderin önerisinde ve öngörüde "zamanında" olarak görünür; son tarihten
+## önce çıkan sürüm talebi karşılar ve aynı kademeye verilmiş sözü o sürümün "shipped"iyle tutar.
+static func _case_sprint_request_on_time_met() -> String:
+	_seed_sprint_live("erp")
+	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
+		_sprint_hire("char_req_" + role_id, role_id)
+	var lead := Prospect.new()
+	lead.id = "lead_request"
+	lead.company_name = "Request Co"
+	lead.industry = String(SalesArchetypes.sectors("tech_exacting")[0])
+	lead.star = 2
+	var account: Customer = SalesSystem.add_b2b_customer(lead, 12, 50, 85)
+	# A one-point sprint: the request's sprint starts with nothing carried in front of its card.
+	if not _play_sprint(["res:core"]):
+		return "fixture: sprint 1 did not start"
+	var open: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.status == "open")
+	if open.size() != 1 or open[0].customer_id != account.id:
+		return "a sprint after signing the account holds requests %s, want one from %s" % [open, account.id]
+	var req: Dictionary = open[0]
+	if SprintCatalog.area_of_line(req.line) != String(SprintCatalog.cfg("archetypes.tech_exacting")) \
+			or int(req.due_sprint) != int(req.created_sprint) + int(SprintCatalog.cfg("request.deadline_sprints")) \
+			or int(req.value) != account.mrr * 12:
+		return "the request reads %s; want the archetype's area, the deadline sprint and a year of MRR" % req
+	SprintSystem.plan_next()
+	if not SprintCatalog.candidates(SprintCatalog.area_of_line(req.line)).any(
+			func(c: Dictionary) -> bool: return c.id == req.card_id and c.kind == "request"):
+		return "the request card %s is not among the candidates" % req.card_id
+	if not SprintCatalog.lead_suggestion().has(req.card_id):
+		return "the lead's plan skips the open request"
+	if not SprintCatalog.forecast([req.card_id]).any(func(part: Dictionary) -> bool: return part.k == "request_on_time"):
+		return "the forecast does not show the request on time"
+	var promise: Promise = PromiseRegistry.create(account.id, req.step, 10)
+	if not _play_sprint([req.card_id]):
+		return "fixture: sprint 2 did not start"
+	if req.status != "met":
+		return "a request shipped in sprint %d, due %d, reads '%s'" % [SprintSystem.sprint_number(),
+			int(req.due_sprint), req.status]
+	if promise.status != "kept":
+		return "the release met the request but not the word given for the same step ('%s')" % promise.status
+	return ""
+
+
+## Gelir'in "Ücretli plan" kartı çıkınca ücretli katman ürünün o anki değerinin önerdiği fiyatla
+## açılır; tek kademeli yetenek tamamlanır ve aday olarak bir daha gelmez.
+static func _case_sprint_paid_plan_opens_paid_tier() -> String:
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_paid_dev", HRConstants.ROLE_DEVELOPER)
+	var id: String = "plan:" + SprintCatalog.PAID_PLAN
+	var offered := func() -> bool:
+		return SprintCatalog.candidates("revenue").any(func(c: Dictionary) -> bool: return c.id == id)
+	if GameState.get_flag("b2c_paid_tier_open", false) or not offered.call():
+		return "fixture: want a closed paid tier and the plan card in Gelir"
+	SprintSystem.add(id)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_sim_day()
+	# Kapanış katmanı, sürümün henüz itmediği eksenlerle açar: değer o günün başında okunur.
+	var price: int = int(SalesSystem.product_value().optimal)
+	_sim_day()
+	if not GameState.get_flag("b2c_paid_tier_open", false) or int(GameState.get_flag("b2c_price", 0)) != price:
+		return "the paid plan shipped: open %s at %s, want open at the optimal %d" % [
+			GameState.get_flag("b2c_paid_tier_open", false), GameState.get_flag("b2c_price", 0), price]
+	if SprintCatalog.tier(SprintCatalog.PAID_PLAN) != 1 or offered.call():
+		return "the open paid tier reads tier %d and still offers the plan card" % SprintCatalog.tier(SprintCatalog.PAID_PLAN)
+	return ""
+
+
+## Ürün durumu kayıtla gidip gelir: sprintin ortasında alınan kayıt kartları, ilerlemeyi, sürüm
+## geçmişini ve ticket defterini aynen geri verir ve yüklenen dünya sprinti kapatır.
+static func _case_sprint_save_roundtrip() -> String:
+	var slot: String = "smoke_sprint_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	_seed_sprint()
+	_sprint_hire("char_save_des", HRConstants.ROLE_DESIGNER)
+	var lines: Array = SprintCatalog.capabilities("core")
+	if not _play_sprint(["feat:%s_k1" % lines[0]]):
+		return "fixture: sprint 1 did not start"
+	ProductState.adjust_confirmed(2)
+	SprintBridges.sync_tickets()
+	SprintSystem.plan_next()
+	SprintSystem.add("feat:%s_k1" % lines[1])
+	SprintSystem.add("feat:%s_k1" % lines[2])
+	if not SprintSystem.start():
+		return "fixture: sprint 2 did not start"
+	_sim_day()
+	_drain_all_modals()   # a card on screen refuses the save (can_save)
+	if (GameState.product.tickets as Array).size() != 2 or (GameState.product.releases as Array).is_empty():
+		return "fixture: want tickets and a release in the saved product"
+	var plain := func() -> String:
+		return JSON.stringify(SaveCodec.from_json(SaveCodec.to_json(GameState.product)), "", true)
+	var reads := func() -> Array:
+		return [SprintSystem.capacity(), SprintSystem.used(), SprintSystem.week(), SprintSystem.done_points()]
+	var before: String = plain.call()
+	var saved_reads: Array = reads.call()
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(slot)):
+		return done.call("apply_loaded_state returned false")
+	if plain.call() != before:
+		return done.call("the product came back different from the save")
+	if reads.call() != saved_reads:
+		return done.call("the loaded sprint reads %s, the saved one %s" % [reads.call(), saved_reads])
+	_sim_day()
+	if SprintSystem.mode() != "release" or int(GameState.product.release.sprint) != 2:
+		return done.call("the loaded sprint did not close (%s)" % SprintSystem.mode())
+	return done.call("")
+
+
+## Karar bekleyen kart ilerlemez: kâğıt masadayken haftanın işi ona dökülmez ve ona kimse atanmaz;
+## sprint kapanınca ilerlemesiyle devreder, kâğıt kapanınca yeniden yürür. Karar kartları fikstür
+## kapsamındadır: vaka kapsamı ve istek oranını (test sabiti, her hafta) kendi süresince açar ve
+## geri koyar.
+static func _case_sprint_decision_blocks_progress() -> String:
+	_seed_sprint()
+	var scopes: Array = EvTuning.SHIPPED_SCOPES.duplicate()
+	var rate: Variant = SprintCatalog.cfg("decision.rate")
+	EvTuning.SHIPPED_SCOPES.append("fixture")
+	SprintCatalog._data.decision.rate = 1.0
+	var run := func() -> String:
+		var asked: Array = []
+		EventBus.card_decision_requested.connect(func(id: String) -> void: asked.append(id))
+		var lines: Array = SprintCatalog.capabilities("core")
+		var held: String = "feat:%s_k1" % lines[0]
+		var free: String = "feat:%s_k1" % lines[1]
+		SprintSystem.add(held)
+		SprintSystem.add(free)
+		if not SprintSystem.start():
+			return "fixture: the sprint did not start"
+		_sim_day()
+		if asked != [held] or not GameState.product.cards[held].decision:
+			return "a decision at rate 1 went to %s (pending %s), want the first running card %s" % [
+				asked, GameState.product.decision, held]
+		if not (GameState.product.cards[held].assignees as Array).is_empty():
+			return "a card waiting on its decision was staffed for the week"
+		var at: float = _card_worked(held)
+		var other: float = _card_worked(free)
+		_sim_day()
+		if absf(_card_worked(held) - at) > 0.0001:
+			return "a card waiting on its decision moved %.2f -> %.2f" % [at, _card_worked(held)]
+		if _card_worked(free) <= other:
+			return "fixture: the founder freed by the decision did not work the other card"
+		if not GameState.product.release.carried.any(func(r: Dictionary) -> bool: return r.id == held):
+			return "the waiting card did not carry over"
+		SprintSystem.plan_next()
+		if not SprintSystem.start():
+			return "fixture: sprint 2 did not start"
+		if GameState.product.cards[held].decision:
+			return "the expired paper still holds the card"
+		var resumed: float = _card_worked(held)
+		_sim_day()
+		if _card_worked(held) <= resumed:
+			return "the released card did not move again"
+		return ""
+	var fail: String = run.call()
+	EvTuning.SHIPPED_SCOPES.assign(scopes)
+	SprintCatalog._data.decision.rate = rate
+	return fail
+
+
+## Betada bekleyen kart yerinden oynamaz: "+" (B2B müşteri satırı onu aday gibi sunar) onu bu
+## sprinte almaz, kart betada kalır ve sonraki kapanışta betanın ihtimaliyle çıkar.
+## FALSİFİKASYON: SprintSystem._movable'dan "beta"yı çıkar → FAIL.
+static func _case_sprint_beta_card_cannot_be_added() -> String:
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_betaadd_des", HRConstants.ROLE_DESIGNER)
+	var id: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[3]
+	SprintSystem.set_beta(true)
+	if not _play_sprint([id]) or GameState.product.cards.get(id, {}).get("state", "") != "beta":
+		return "fixture: %s is not waiting in beta" % id
+	SprintSystem.plan_next()
+	SprintSystem.add(id)
+	if id in GameState.product.sprint.cards or GameState.product.cards[id].state != "beta":
+		return "+ took the beta card into sprint 2 (sprint %s, state %s)" % [GameState.product.sprint.cards,
+			GameState.product.cards[id].state]
+	return ""
+
+
+## Açık sürüm canlı hata havuzunu sıfırlar: sayaç ve aşınma ilerlemesi 0'dan başlar. Sürüm
+## çıkarmayan kapanış (araştırma) havuza dokunmaz.
+## FALSİFİKASYON: SprintSystem._close'taki mvp_live_bug_count sıfırlamasını sil → FAIL.
+static func _case_sprint_release_resets_live_bugs() -> String:
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_bugs_dev", HRConstants.ROLE_DEVELOPER)
+	GameState.set_flag("mvp_live_bug_count", 7)
+	GameState.set_flag("mvp_live_bug_progress", 0.75)
+	if not _play_sprint(["res:core"]):
+		return "fixture: the research sprint did not start"
+	if int(GameState.product.release.number) != 0 or ProductSystem.live_bug_count() != 7:
+		return "a research-only close (release %d) moved the live pool to %d, want 7 untouched" % [
+			int(GameState.product.release.number), ProductSystem.live_bug_count()]
+	if not _play_sprint(["feat:%s_k1" % SprintCatalog.capabilities("core")[3]]):
+		return "fixture: the release sprint did not start"
+	if int(GameState.product.release.number) != 2:
+		return "fixture: the second sprint did not release v1.1 (release %d)" % int(GameState.product.release.number)
+	if ProductSystem.live_bug_count() != 0 or float(GameState.get_flag("mvp_live_bug_progress", -1.0)) != 0.0:
+		return "the release left the live pool at %d bugs, progress %.2f; want 0 and 0.0" % [
+			ProductSystem.live_bug_count(), float(GameState.get_flag("mvp_live_bug_progress", -1.0))]
+	return ""
+
+
+## v14 → v15: sürmekte olan yapım Sprint 1'in planı olur. Planlanan her kademe bir özellik kartıdır:
+## tasarımı dolu, geliştirmesi yapımın vardığı yerde, lisansı ödenmiş. Hattın şimdiki kademesinin
+## damgası cilaya döner (tek tur üstü yarım, üç tur tam), yapımın bayrakları düşer. Taşınan dünya
+## Sprint 1 planlamada açılır; başlatma lisansı yeniden kesmez ve kartlar kaldıkları yerden yürür.
+static func _case_save_v14_build_becomes_sprint_plan() -> String:
+	var slot: String = "smoke_v14_build_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	ProductLines.reload()
+	GameState.set_cash(200000)
+	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
+	var lines: Array = ProductLines.line_ids("note_tool")
+	ProductState.set_line_tier(lines[0], 1)
+	ProductState.stamp_step("%s_k1" % lines[0], 1.11)
+	ProductState.set_line_tier(lines[1], 1)
+	ProductState.stamp_step("%s_k1" % lines[1], 1.05)
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	raw["schema_version"] = 14
+	var gs: Dictionary = raw["state"]["game_state"]
+	gs.erase("product")
+	var dropped: Array = ["creation_draft", "cancelled_build_prefill", "product_path_frank_seen",
+		"mvp_sprint_weeks_total", "mvp_bug_sprint_active", "bug_count_at_bugfix_start_b1"]
+	for k in dropped:
+		gs["flags"][k] = 1
+	# A licensed K2 on a live line and a K1 that opens a new one, a quarter into development.
+	var steps: Array = ["%s_k2" % lines[0], "%s_k1" % lines[2]]
+	raw["state"]["systems"]["product"]["active_build"] = {SaveCodec.TYPE_TAG: "FeatureBuild",
+		"product_name": "Notly", "planned_step_ids": steps, "total_efor": 8.0, "efor_spent": 2.0,
+		"current_phase": "development"}
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	if not bool(payload.get("ok", false)):
+		return done.call("the v14 save was refused: %s" % payload.get("error_key", ""))
+	var st: Dictionary = payload["state"]
+	var flags: Dictionary = st["game_state"]["flags"]
+	var product: Dictionary = st["game_state"].get("product", {})
+	if (st["systems"]["product"] as Dictionary).has("active_build"):
+		return done.call("the build survived the migration")
+	for k in dropped:
+		if flags.has(k):
+			return done.call("flag '%s' survived the migration" % k)
+	if String(flags.get("mvp_product_name", "")) != "Notly" or String(flags.get("mvp_market_type", "")) != "b2c":
+		return done.call("the type reads name '%s', market '%s'; want the build's name and the subtype's market" % [
+			flags.get("mvp_product_name", ""), flags.get("mvp_market_type", "")])
+	var ids: Array = steps.map(func(s: String) -> String: return "feat:" + s)
+	if product.get("mode", "") != "plan" or int(product.sprint.number) != 1 or product.sprint.status != "planning" \
+			or product.sprint.cards != ids:
+		return done.call("the migrated product opens in %s, sprint %s %s with %s; want Sprint 1 planning with %s" % [
+			product.get("mode", ""), product.get("sprint", {}).get("number"), product.get("sprint", {}).get("status"),
+			product.get("sprint", {}).get("cards"), ids])
+	var shares: Array = SprintCatalog.card_shares("feature")
+	var left: float = 0.0
+	for id in ids:
+		var c: Dictionary = product.cards[id]
+		var effort: float = float(c.effort)
+		var want: Array = [effort * shares[0], effort * shares[1] * 0.25, 0.0]
+		for i in 3:
+			if not is_equal_approx(float(c.progress[i]), want[i]):
+				return done.call("%s carries progress %s, want design done and development a quarter in %s" % [
+					id, c.progress, want])
+		if c.state != "planned" or not c.paid:
+			return done.call("%s reads state %s, paid %s; want a planned card whose licence is paid" % [id, c.state, c.paid])
+		left += effort - want[0] - want[1]
+	var polish: Dictionary = product.polish
+	if not is_equal_approx(float(polish.get(lines[0], 0.0)), float(SprintCatalog.cfg("polish_max"))) \
+			or not is_equal_approx(float(polish.get(lines[1], 0.0)), float(SprintCatalog.cfg("polish_step"))):
+		return done.call("polish reads %s, want the full stamp on %s and the half on %s" % [polish, lines[0], lines[1]])
+
+	if not SaveManager.apply_loaded_state(payload):
+		return done.call("apply_loaded_state returned false")
+	if SprintSystem.mode() != "plan" or SprintSystem.used() != roundi(left):
+		return done.call("the loaded plan reads %s with a load of %d, want planning with %d left" % [
+			SprintSystem.mode(), SprintSystem.used(), roundi(left)])
+	var cash: int = GameState.cash
+	if not SprintSystem.start():
+		return done.call("the migrated plan did not start")
+	if GameState.cash != cash:
+		return done.call("the sprint start charged the migrated cards' licences again (%d -> %d)" % [cash, GameState.cash])
+	var worked: float = _card_worked(ids[0])
+	_sim_day()
+	if _card_worked(ids[0]) <= worked:
+		return done.call("the migrated card did not move from where the build left it")
+	return done.call("")
+
+
+## v14 kaydının sürüm geçmişi Geçmiş'in sürüm listesine taşınır; sprintten önceki sürümün sprinti
+## ve kart sayısı yoktur (-1, çizilmez).
+## FALSİFİKASYON: _migrate_15'te "releases": releases yerine [] yaz → FAIL.
+static func _case_save_v14_history_becomes_releases() -> String:
+	var state := {"game_state": {"day": 30.0, "flags": {"mvp_sub_product_type_id": "note_tool",
+		"mvp_market_type": "b2c", "mvp_shipped": true, "mvp_version": 2.0, "mvp_line_tiers": {},
+		"mvp_version_history": [{"version": 1.0, "day": 10.0}, {"version": 2.0, "day": 20.0}]}},
+		"systems": {"product": {}}}
+	SaveManager._migrate_15(state)
+	var releases: Array = state.game_state.product.releases
+	if releases.map(func(r: Dictionary) -> int: return int(r.number)) != [1, 2]:
+		return "releases came back %s, want versions 1 and 2" % str(releases)
+	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
+	GameState.set_flag("mvp_market_type", "b2c")
+	GameState.product = state.game_state.product
+	var rows: Array = ProductModel.live().versions
+	if rows.size() != 2 or int(rows[0].sprint) != -1 or int(rows[0].shipped_count) != -1:
+		return "Geçmiş rows came back %s" % str(rows)
+	return ""
+
+
+## Ücretli plan yayındaki ürünün katmanıdır: MVP'den önce kilitli ve gerekçeli, "+" ve "→" onu
+## almaz, lider önermez; MVP'den sonra açılır.
+## FALSİFİKASYON: SprintCatalog.gate_reason'daki PAID_PLAN dalını sil → FAIL.
+static func _case_product_paid_plan_locked_until_mvp() -> String:
+	_seed_sprint()
+	var id: String = "plan:" + SprintCatalog.PAID_PLAN
+	if SprintCatalog.gate_reason(SprintCatalog.PAID_PLAN) == "":
+		return "the paid plan is open before MVP"
+	SprintSystem.add(id)
+	SprintSystem.send_next(id)
+	if id in GameState.product.sprint.cards or id in GameState.product.next.cards:
+		return "the paid plan was placed before MVP"
+	if id in SprintCatalog.lead_suggestion():
+		return "the lead suggests the paid plan before MVP"
+	GameState.set_flag("mvp_shipped", true)
+	if SprintCatalog.gate_reason(SprintCatalog.PAID_PLAN) != "":
+		return "the paid plan is still locked after MVP"
+	SprintSystem.add(id)
+	if id not in GameState.product.sprint.cards:
+		return "the paid plan cannot be added after MVP"
+	return ""
+
+
+## PM'in onaylanan planı o sprint sonraki sütun olunca oraya, açılınca sprintin kartlarına geçer;
+## arada lider ileriye ayrılmış kartlara dokunmaz. Onaysız plan saklanmaz; sonraki sprintin planı
+## onaylanınca kartları hemen sonraki sütuna geçer.
+## FALSİFİKASYON: SprintSystem.plan_next'teki onaylı plan döngüsünü sil → FAIL; lead_suggestion'dan
+## _approved_ahead()'i çıkar → FAIL.
+static func _case_product_pm_plan_opens_as_next_sprint() -> String:
+	_seed_sprint()
+	_make_employee("e_des", "Ece", HRConstants.ROLE_DESIGNER)
+	_make_employee("e_dev", "Kaan", HRConstants.ROLE_DEVELOPER)
+	if not SprintCatalog.pm_plans().is_empty():
+		return "the PM plans without a PM"
+	_make_employee("e_pm", "Deniz", HRConstants.ROLE_PRODUCT_MANAGER)
+	var plans: Array = SprintCatalog.pm_plans()
+	if plans.map(func(p: Dictionary) -> int: return int(p.number)) != [2, 3, 4] \
+			or plans.any(func(p: Dictionary) -> bool: return p.approved or p.cards.is_empty()):
+		return "proposals came back %s" % str(plans)
+	if not GameState.product.quarter.plans.is_empty():
+		return "an unapproved plan was stored"
+	var approved: Array = plans[1].cards
+	SprintSystem.approve(3)
+	if not SprintCatalog.pm_plans()[1].approved or GameState.product.quarter.plans.size() != 1:
+		return "approve(3) did not stick"
+	var next_plan: Array = SprintCatalog.pm_plans()[0].cards
+	var ahead: Array = approved + SprintCatalog.pm_plans()[2].cards
+	SprintSystem.approve_all()
+	if next_plan.any(func(id: String) -> bool: return id not in GameState.product.next.cards):
+		return "sprint 2's approved plan is not in the next column"
+	for n in [2, 3]:
+		SprintSystem.apply_lead()
+		if ahead.any(func(id: String) -> bool: return id in GameState.product.sprint.cards):
+			return "the lead took cards approved for later sprints into sprint %d" % (n - 1)
+		if not SprintSystem.start():
+			return "sprint %d did not start" % (n - 1)
+		for _d in 3:
+			if SprintSystem.mode() != "release":
+				_sim_day()
+		SprintSystem.plan_next()
+		var holder: Array = GameState.product.next.cards if n == 2 else GameState.product.sprint.cards
+		var missing: Array = approved.filter(func(id: String) -> bool: return id not in holder)
+		if not missing.is_empty():
+			return "at sprint %d %s is missing %s" % [n, "next" if n == 2 else "open", str(missing)]
+	return ""

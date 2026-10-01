@@ -53,24 +53,15 @@ const FLAG_TYPES := {
 	"mvp_innovation": TYPE_FLOAT,
 	"mvp_stability": TYPE_FLOAT,
 	"mvp_experience": TYPE_FLOAT,
-	"mvp_bug_count_at_launch": TYPE_INT,
 	"mvp_live_bug_count": TYPE_INT,
 	"mvp_live_bug_progress": TYPE_FLOAT,
 	"mvp_bug_history": TYPE_ARRAY,
-	"mvp_bug_sprint_active": TYPE_BOOL,
-	"mvp_sprint_weeks_total": TYPE_INT,
-	"mvp_sprint_weeks_elapsed": TYPE_FLOAT,
-	"mvp_sprint_fix_progress": TYPE_FLOAT,
 	"critical_bug_unfixed": TYPE_BOOL,
 	"tech_debt_birikti": TYPE_BOOL,
-	"cancelled_build_prefill": TYPE_DICTIONARY,
-	"creation_draft": TYPE_DICTIONARY,   # draft guard: {step, market, type, features, name}
-	"product_path_frank_seen": TYPE_BOOL,
 	# --- Ürün rev 6.1 · HAT MODELİ ve DESTEK (§12, §8, §9, §10) ---
 	# mvp_components (düz özellik listesi) Satış ve söz kaydı okuduğu için duruyor.
 	"mvp_line_tiers": TYPE_DICTIONARY,          # {hat kimliği: 0|1|2|3} — §12.1
-	# §11.2: çarpan KADEME başına saklanır, her kademe yayınlandığı sürümün cilasını taşır.
-	# Kaybolursa her geçmiş sürüm bugünkü tur sayısıyla yeniden okunur.
+	# §11.2: çarpan KADEME başına saklanır; eksik kademe 1,0 okunur.
 	"mvp_step_realization": TYPE_DICTIONARY,    # {kademe kimliği: çarpan}
 	"mvp_hidden_lines": TYPE_ARRAY,             # Ar-Ge'nin açtığı gizli hatlar — §12.1
 	# --- DESTEK: iki sayaç, mühürlü adlar (§8.1) ---
@@ -294,6 +285,10 @@ var group_work_hours_override: Dictionary = {}
 # the ≤20 % "biz" quota refused (calibration data). ---
 var news_feed: Dictionary = {}
 
+# --- Product sprint state (writer SprintSystem; its bridge SprintBridges writes only tickets,
+# ticket_seq, requests and rival_hits): sprint, cards, releases, tickets, requests ---
+var product: Dictionary = {}
+
 # --- Office (sole writer OfficeSystem) ---
 var office_id: String = "home"         # the OfficeConstants.CATALOG id the company works in
 var office_move_to: String = ""        # where a move is heading; "" = not moving
@@ -346,7 +341,7 @@ func set_current_hour(value: int) -> void:
 	EventBus.hour_changed.emit(current_hour)
 
 func set_subgenre(value: String) -> void:
-	# Written by ProductSystem.start_build; readers read lazily, so no signal.
+	# Written by SprintSystem.choose_type; readers read lazily, so no signal.
 	subgenre = value
 
 func set_phase(value: int) -> void:
@@ -840,6 +835,7 @@ func initialize_run(payload: Dictionary) -> void:
 	company_work_hours = HRConstants.WORK_HOURS_DEFAULT
 	group_work_hours_override.clear()
 	news_feed.clear()
+	product.clear()
 
 	office_id = "home"
 	office_move_to = ""

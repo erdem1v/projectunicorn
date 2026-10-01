@@ -1,6 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="Script" path="res://scripts/tabs/product_rev7/sprint_card.gd" id="1_card"]
-
-[node name="SprintCard" type="PanelContainer"]
-script = ExtResource("1_card")

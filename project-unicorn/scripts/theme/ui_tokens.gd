@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 15
+const THEME_STAMP := 16
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -100,26 +100,12 @@ const AMBER_WASH := Color(0.604, 0.416, 0.071, 0.06)   # rgba(154,106,18,.06) ·
 const ACCENT_HEX := "#FFA028"                      # BBCode form of ACCENT_CHROME (NewsTicker)
 const ON_ACCENT := Color(0.169, 0.153, 0.133, 1)   # #2B2722 · text ON the amber fill
 
-# --- BUILD BAR · tur rampası ve duraklamış zemin ---
-# Tur SAYIYLA değil RENKLE okunur: rakam kartta hiçbir yerde yazmıyor. Dolgu bu
-# renklerin düşük alfasıdır; o kadar soluk kaldığı için sayaç dizgisi sınırın iki
-# tarafında aynı kontrastta okunur ve kenar çizgisine gerek kalmaz.
-# Motorda tur tavanı 4, rampa üç kademe: dördüncü hex tasarımdan bekleniyor; o
-# gelene kadar tur 4 rampa 3'ü çizer.
-const BUILD_RAMP_1 := ACCENT                             # #F4C430 · tur 1
-const BUILD_RAMP_2 := Color(0.753, 0.412, 0.165, 1)      # #C0692A · tur 2 · bakır  # WORKING
-const BUILD_RAMP_3 := Color(0.184, 0.529, 0.514, 1)      # #2F8783 · tur 3 · soğuk  # WORKING
-const BUILD_FILL_ALPHA := 0.28                           # rampa renginin dolgu alfası  # WORKING
+# --- Yüzen çubuklar · dolgu ve duraklamış zemin ---
+# Dolgu çubuk renginin düşük alfasıdır; o kadar soluk kaldığı için sayaç dizgisi sınırın
+# iki tarafında aynı kontrastta okunur ve kenar çizgisine gerek kalmaz.
+const BUILD_FILL_ALPHA := 0.28                           # araştırma dolgusunun alfası  # WORKING
 const BUILD_FILL_PAUSED := Color(0.937, 0.910, 0.855, 1) # #EFE8DA · durmuş dolgu, DÜZ
 const BUILD_SUPPORT_FILL_ALPHA := 0.10                   # DESTEK koşusu daha da soluk
-
-
-## Turun rengi. Tur SAYISI hiçbir yerde çizilmez — renk tek göstergedir.
-static func build_ramp(round_index: int) -> Color:
-	match maxi(1, round_index):
-		1: return BUILD_RAMP_1
-		2: return BUILD_RAMP_2
-		_: return BUILD_RAMP_3
 
 
 # --- STATE · semantic. Green/red carry MEANING ONLY; they are the pair the
@@ -152,13 +138,6 @@ const POSITIVE_BRIGHT_CB := Color(0.337, 0.706, 0.914, 1) # #56B4E9 · on the da
 const NEGATIVE_BRIGHT_CB := Color(0.902, 0.624, 0.0, 1)   # #E69F00 · on the dark frame
 const HEALTH_GREEN_CB := Color(0.173, 0.435, 0.682, 1)    # #2C6FAE · status dot (blue twin)
 const DOT_IDLE := Color(0.769, 0.718, 0.624, 1)          # #C4B79F · unearned milestone dot  # WORKING
-# Ürün ekseni üçlüsü KATEGORİKTİR (İnovasyon/Kararlılık/Deneyim), ama iki üyesi
-# semantik token'lardan besleniyor (innovation=ACCENT_DEEP, stability=positive()).
-# Renk körü paletinde positive() maviye döndüğünde Kararlılık ile Deneyim aynı
-# legend'da ayırt edilemezdi; Deneyim'in bu yüzden kendi CB ikizi var
-# (varsayılan: kehribar / yeşil / mavi · CB: kehribar / mavi / mor).
-const AXIS_EXPERIENCE := Color("#5B8FF9")                # ürün ekseni "Deneyim"
-const AXIS_EXPERIENCE_CB := Color("#B07AD6")             # CB "Deneyim" — mor
 # Ürün sprint ekranının alan renkleri KATEGORİKTİR (kart kenarı, tür ikonu, kapasite dilimi) [WORKING].
 # Yuva 2 B2C'de Büyüme, B2B'de Entegrasyonlar; yuva 4 Gelir ya da Müşteriler. Yuva 0'ın mavisi
 # POSITIVE_CB'nin tonunda: CB paletinde "Güçlü" dilimleri o alanın rengi gibi okunurdu, bu yüzden
@@ -218,7 +197,6 @@ const BORDER_HOVER_CHROME := Color(0.165, 0.204, 0.239, 1)  # #2A343D · idle sp
 const DOT_IDLE_CHROME := Color(0.350, 0.320, 0.270, 1)      # #595245 · unreached phase dot
 const VEIL_FAINT_CHROME := Color(1, 1, 1, 0.03)   # at-rest / disabled tint on dark
 const VEIL_SOFT_CHROME := Color(1, 1, 1, 0.06)    # normal / pressed on dark
-const VEIL_STRONG_CHROME := Color(1, 1, 1, 0.10)  # hover on dark
 
 # --- Cinematic dialogue register ---
 # Text on these surfaces uses CREAM* / *_BRIGHT. # WORKING — Erdem's F5 seals.
@@ -426,10 +404,6 @@ static func positive_rule() -> Color:
 static func negative_rule() -> Color:
 	return NEGATIVE_RULE_CB if _cb_palette else NEGATIVE_RULE
 
-## Ürün ekseni "Deneyim" (bkz. AXIS_EXPERIENCE_CB).
-static func axis_experience() -> Color:
-	return AXIS_EXPERIENCE_CB if _cb_palette else AXIS_EXPERIENCE
-
 # ============================================================================
 # Runtime colour-decision helpers — the single home for sign/kind → colour.
 # All route through the accessors, so they inherit the palette swap.
@@ -477,13 +451,6 @@ static func relationship_palette(rel: String) -> Dictionary:
 		"wary": return badge_palette(&"accent")
 		"hostile": return badge_palette(&"negative")
 		_: return badge_palette(&"neutral")
-
-## {bg, fg} chip palette for a bug count (product build indicator).
-static func bug_severity(bug_count: int) -> Dictionary:
-	if bug_count <= 0: return badge_palette(&"positive")
-	if bug_count <= 2: return badge_palette(&"accent")
-	return badge_palette(&"negative")
-
 
 ## A meeting option's die: at or above SAFE its chance reads safe, at or above RISKY risky,
 ## below that dangerous. The option shows only the word; the % lives in its tooltip.

@@ -8,8 +8,7 @@
   "expires_weeks": 1,
   "tags": [
     "sales",
-    "report",
-    "build_safe"
+    "report"
   ],
   "weight": 1.0,
   "latch": {

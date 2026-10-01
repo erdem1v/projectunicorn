@@ -10,35 +10,6 @@ extends RefCounted
 # `product_id` parametreleri belgedeki imzayı korur ve YOK SAYILIR: çoklu ürün Erken
 # Erişim'in konusu (§1), demo'da tek ürün vardır.
 
-## §2 — beş fazdan hangisi. Yapım yoksa canlı ürün DESTEK'tedir; ürün de yoksa "".
-const PHASE_NONE := ""
-const PHASE_CONCEPT := "concept"
-const PHASE_DESIGN := "design"
-const PHASE_DEVELOPMENT := "development"
-const PHASE_BETA := "beta"
-const PHASE_SUPPORT := "support"
-
-## Yapımın iç faz dizgelerinden §19'un kararlı adlarına; iç adlar dışarı sızmaz.
-const _PHASE_MAP := {
-	"planning": PHASE_CONCEPT,
-	"iteration": PHASE_DESIGN,
-	"development": PHASE_DEVELOPMENT,
-	"bugfix": PHASE_BETA,
-}
-
-
-static func phase(_product_id: String = "") -> String:
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b != null:
-		return String(_PHASE_MAP.get(b.current_phase, PHASE_NONE))
-	# §2 — DESTEK KALICIDIR; ürün yaşadıkça sürer.
-	return PHASE_SUPPORT if ProductState.is_live() else PHASE_NONE
-
-
-static func build_active() -> bool:
-	return ProductSystem.get_active_build() != null
-
-
 ## §11.3 — 0-120 okuması. Üçgenin çizdiği ve tabanların (§14) karşılaştırdığı sayı.
 static func axis_reading(_product_id: String, axis: String) -> int:
 	return ProductState.axis_reading(axis)
@@ -121,7 +92,7 @@ static func support_staffed(_product_id: String = "") -> bool:
 
 
 ## §12.5/§12.7 — kademe ŞU AN alınabilir mi (kapılar karşılandı mı). Merdiven
-## kuralını sormaz; o Konsept'in işi (validate_line_plan).
+## kuralını sormaz; o sprint kataloğunun işi.
 static func step_unlockable(step_id: String) -> bool:
 	return LineGates.is_unlocked(step_id)
 
@@ -166,7 +137,6 @@ static func axis_floor_state(axis: String) -> String:
 # çifter atar ya hiç atmazdı. Kayda YAZILMAZ: yüklemeden sonraki ilk gün yalnız
 # tohumlar, çünkü kaydı açan oyuncuya dünkü kenarı bildirmek yanlış olurdu.
 
-static var _prev_paused := false
 static var _prev_confirmed := 0
 static var _prev_band := ""
 static var _prev_floor := {}
@@ -181,7 +151,6 @@ static func reset() -> void:
 
 ## Günün sonunda çağrılır (TimeManager, sistemler yerleştikten SONRA).
 static func emit_edges() -> void:
-	var paused: bool = ProductSystem.build_paused()
 	var confirmed: int = ProductState.bugs_confirmed()
 	var band: String = SupportSystem.warmth_band()
 	var phase_now: int = GameState.phase
@@ -190,11 +159,6 @@ static func emit_edges() -> void:
 		floors[axis] = axis_floor_state(String(axis))
 
 	if _seeded:
-		if paused != _prev_paused:
-			if paused:
-				EventBus.build_paused.emit(ProductSystem.pause_note_key())
-			else:
-				EventBus.build_resumed.emit()
 		# §8.1 — bir bildirim DOĞRULANDIĞINDA. Düşüş (düzeltme) bu sinyali atmaz.
 		if confirmed > _prev_confirmed:
 			EventBus.bug_confirmed.emit(confirmed)
@@ -215,7 +179,6 @@ static func emit_edges() -> void:
 			EventBus.phase_bar_raised.emit(phase_now)
 
 	_seeded = true
-	_prev_paused = paused
 	_prev_confirmed = confirmed
 	_prev_band = band
 	_prev_floor = floors

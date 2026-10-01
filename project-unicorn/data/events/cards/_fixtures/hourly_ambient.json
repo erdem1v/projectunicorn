@@ -4,7 +4,7 @@
   "category": "product",
   "tick": "hourly",
   "class": "interrupt",
-  "tags": ["build_safe"],
+  "tags": [],
   "weight": 0.5,
   "allowed_hours": [10, 10],
   "min_gap_weeks": 1,

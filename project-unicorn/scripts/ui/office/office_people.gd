@@ -67,7 +67,7 @@ var _door_turn := 0.0    # the ambient second of the next turn out through the d
 var _fade: Tween         # the view going dark for the night's cut
 var _founder_told := true
 var _rooms: Array[float] = []   # per meeting room: ambient seconds to its next team meeting
-var _build_meeting := false
+var _kickoff: Array = []   # character ids the next kick-off gathers; empty = none due
 var _all_hands_day := -1
 var _selected := ""
 var _rng := RandomNumberGenerator.new()
@@ -78,8 +78,10 @@ func _ready() -> void:
 	EventBus.character_removed.connect(_on_roster_changed.unbind(1))
 	EventBus.assignment_changed.connect(_on_assignment_changed)
 	EventBus.night_skipped.connect(_on_night_skipped)
-	# A kick-off waits for a free room in this office; an office without rooms has none.
-	EventBus.build_started.connect(func(_id: String) -> void: _build_meeting = _placed and not _rooms.is_empty())
+	# A sprint's kick-off waits for a free room; an office without rooms has none.
+	EventBus.sprint_started.connect(func(_n: int) -> void:
+		_kickoff = SprintSystem.team().map(func(p: Dictionary) -> String: return p.id) \
+			if _placed and not _rooms.is_empty() else [])
 	NavigationServer3D.map_changed.connect(_on_map_changed)
 	TimeManager.register_night_gate(office_empty, OfficeConstants.NIGHT_WAIT_S)
 
@@ -149,7 +151,7 @@ func set_layout(layout: OfficeLayout, view: Node) -> void:
 	_layout = layout
 	_view = view
 	_placed = false
-	_build_meeting = false
+	_kickoff = []
 	_map = RID()
 	_lift.clear()
 	_lift_open = 0.0
@@ -395,7 +397,7 @@ func _drop_errand(a: OfficeActor) -> void:
 
 
 ## Team meetings in each free room (a role group with two or more at their desks, sometimes with
-## the founder), the build's kick-off when a build starts, and the loft's all-hands at its hour.
+## the founder), the kick-off when a sprint starts, and the loft's all-hands at its hour.
 func _meetings(dt: float, minute: float) -> void:
 	if _layout.spots.has("trib") and minute >= OfficeConstants.ALL_HANDS_MINUTE and _all_hands_day != GameState.day:
 		_all_hands_day = GameState.day
@@ -411,10 +413,10 @@ func _meetings(dt: float, minute: float) -> void:
 		var room: Array = _layout.meet_rooms[i]
 		if not room.all(_venue.is_free):
 			continue
-		if _build_meeting:
-			_build_meeting = false
-			var team := HRSystem.assigned_to_job(HRConstants.JOB_BUILD)
-			_meet(room, _free_hands().filter(func(a: OfficeActor) -> bool: return a.founder or team.has(a.character)))
+		if not _kickoff.is_empty():
+			var team := _kickoff
+			_kickoff = []
+			_meet(room, _free_hands().filter(func(a: OfficeActor) -> bool: return a.founder or team.has(a.character.id)))
 			continue
 		_rooms[i] -= dt
 		if _rooms[i] > 0.0:

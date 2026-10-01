@@ -53,8 +53,8 @@ func _ready() -> void:
 	settings_btn.pressed.connect(EventBus.settings_requested.emit)
 	(settings_btn.get_node("Stack/Icon") as TextureRect).modulate = UiTokens.INK_DIM
 
-	# Rail clicks, the ✕/Esc close and programmatic switches (Tracker Card, product_tab's
-	# sales redirect) all arrive here, so the highlight has a single painter.
+	# Rail clicks, the ✕/Esc close and programmatic switches (a closing sprint, goto_tab)
+	# all arrive here, so the highlight has a single painter.
 	EventBus.tab_changed.connect(_on_tab_changed)
 	_apply_visual()
 

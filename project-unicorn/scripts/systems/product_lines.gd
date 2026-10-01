@@ -379,8 +379,6 @@ static func axis_of(line_id: String) -> String:
 ## Ar-Ge §4.4 `design_system` — YALNIZ Deneyim ekseninin kademelerinde efor −%20.
 ## · `_validate_step` bandı HAM `effort` üstünden ölçer: indirim bir kademeyi
 ##   EFFORT_BANDS'ten dışarı itse de yükleme düşmez; doğrulama içeriğin sözleşmesidir.
-## · `sum_effort` EforTavanı'nı besler ve tavan commit'te BİR KEZ damgalanır; yapım
-##   ortasında biten araştırma koşan yapımı geriye dönük kısmaz (§2/§12.3).
 ## maxi(1, ...): indirim bir kademeyi bedava yapamaz.
 static func effort_of(step_id: String) -> int:
 	var s: Dictionary = step(step_id)
@@ -452,15 +450,7 @@ static func runtime_line_ids(subtype: String) -> Array:
 	return out
 
 
-## §6.0 — EforTavanı: sürümde seçilen kademelerin efor toplamı.
-static func sum_effort(step_ids: Array) -> int:
-	var total: int = 0
-	for sid in step_ids:
-		total += effort_of(String(sid))
-	return total
-
-
-## Lisans maliyetleri commit'te BİR KEZ tahsil edilir. Ar-Ge §4.2 `model_optimization`
+## Lisans maliyetleri sprint başlarken BİR KEZ tahsil edilir. Ar-Ge §4.2 `model_optimization`
 ## indirimi (−%40) YALNIZ burada uygulanır: tahsilat ile kartta yazan sayı ayrışamaz.
 static func sum_license_cost(step_ids: Array) -> int:
 	var discounted: bool = ResearchSeam.completed("model_optimization")
@@ -472,8 +462,8 @@ static func sum_license_cost(step_ids: Array) -> int:
 
 
 # ------------------------------------------------------- §12.3 ladder rules
-# MÜHÜRLÜ, ve TEK YERDE. Kart çizimi, Konsept onayı ve kayıt yüklemesi bu üç
-# fonksiyonu okur; kendi kontrolünü kurmaz.
+# MÜHÜRLÜ, ve TEK YERDE. Aday kartlar sıradaki kademeyi next_tier'dan okur; merdiveni
+# kendisi kurmaz.
 
 ## The tier a line may take next, or 0 when the line is finished (§12.3: kademe
 ## 3'te biter — sayısal seviye ve sonsuz yükseltme yoktur).

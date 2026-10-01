@@ -328,10 +328,6 @@ func unassign_area(id: String, area_id: String) -> void:
 		unassign_job(id, job_id)
 
 
-func clear_areas(id: String) -> void:
-	clear_jobs(id)
-
-
 # --- Sayımlar ---
 
 ## Müşteri Temsilcisi: category "employee", rolüyle ayrılır. İzin DAHİL (bordro merceği).

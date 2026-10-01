@@ -274,7 +274,6 @@ HR_GROUP_CUSTOMER_SUCCESS,Müşteri İlişkileri,Customer Success
 HR_COL_ROLES_LEADERSHIP,ROLLER · LİDERLİK,ROLES · LEADERSHIP
 HR_COL_TASK,GÖREV,TASK
 HR_COL_TRAIT,TRAIT,TRAIT
-HR_TASK_ON_VERSION,{product} v{version}'de çalışıyor,Working on {product} v{version}
 HR_TASK_NONE,—,—
 HR_LEGEND_PRIMARY,ANA ALAN,PRIMARY AREA
 HR_LEGEND_SECONDARY,İKİNCİL ALAN,SECONDARY AREA
@@ -421,7 +420,6 @@ TAB_RND,Ar-Ge,R&D
 TAB_PERSONAL,Kişisel,Personal
 TAB_EVENTS,Olaylar,Events
 TAB_SETTINGS,Ayarlar,Settings
-LOCK_BUILD_IN_PROGRESS,İNŞA EDİLİYOR · SEÇİM KİLİTLİ,BUILD IN PROGRESS · CHOICES LOCKED
 FIN_PHASE_BOOTSTRAP,Bootstrap,Bootstrap
 FIN_PHASE_TRACTION,Traction,Traction
 FIN_PHASE_SERIES_A,Series A,Series A
@@ -436,25 +434,9 @@ FIN_CAP_BRAND,MARKA,BRAND
 FIN_CAP_REPUTATION,İTİBAR,REPUTATION
 FIN_VALUATION,Değerleme,Valuation
 FIN_EQUITY,Hisse,Equity
-BUILD_PHASE_DESIGN,TASARIM,DESIGN
-BUILD_PHASE_DEVELOPMENT,GELİŞTİRME,DEVELOPMENT
-BUILD_PHASE_BETA,BETA,BETA
-BUILD_LIVE_VERSION,CANLI V{n},LIVE V{n}
-BUILD_ROUND_OF,Tur {n},Round {n}
-BUILD_ROUND_LAST,Tur {n} · son,Round {n} · last
-BUILD_GAIN_LINE,bu tur +{gain} · kalan {left},this round +{gain} · {left} left
-BUILD_SHIP_TOOLTIP_BUGS,Yayınla · {n} hata canlıya taşınır,Ship · {n} bugs go live
-BUILD_BETA_GATE_LOCKED,GELİŞTİRME %100 olmadan BETA'ya geçilemez.,BETA needs DEVELOPMENT at 100%.
-BUILD_DESIGN_RUSH_CONFIRM,Tasarım turu tamamlanmadı. Bu sürüm potansiyelinin dörtte üçünü taşıyacak.,The design turn is unfinished. This version will carry three quarters of its potential.
-BUILD_DESIGN_RUSH_TITLE,Tasarımı yarıda bırak,Cut the design short
-BUILD_BETA_WEEK,{n}. hafta,Week {n}
 BUILD_BUSY_NOBODY,Kimse üzerinde değil.,Nobody is on it.
-BUILD_BUSY_ELSEWHERE,Ekip başka işte.,The team is on other work.
-BUILD_BUSY_FIX_RUN,Ekip düzeltme koşusunda.,The team is on a fix run.
-BUILD_BUSY_RESEARCH,Ekip araştırmada.,The team is on research.
 BUILD_SPLIT_FOCUS,Ekip iki işte.,The team is on two jobs.
 RND_PAUSED_BUILD,Ekip yapımda.,The team is on a build.
-BUILD_NO_LEAD,Lider yok.,No lead.
 PROD_RND_NODE_DATA_MODEL,Veri Modeli,Data Model
 PROD_RND_NODE_AI_ENGINE,AI Engine,AI Engine
 PROD_RND_NODE_SEMANTIC_INDEX,Semantik İndeks,Semantic Index
@@ -477,12 +459,7 @@ PROD_RND_NODE_ACCESSIBILITY,Erişilebilirlik,Accessibility
 PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
 BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
 BUILD_SUPPORT_CONFIRMED,DOĞRULANMIŞ {n},CONFIRMED {n}
-BUILD_DEV_BUGS,{n} hata,{n} bugs
-BUILD_BETA_TRIPLET,BULUNAN {found} · ÇÖZÜLEN {fixed} · KALAN {left},FOUND {found} · FIXED {fixed} · LEFT {left}
 PROD_PERCENT,%{n},{n}%
-PROD_TO_BETA_PLAIN,Beta'ya geç,Move to beta
-PROD_LAUNCH_PLAIN,Yayınla,Ship it
-BUILD_HALF_ROUND_TOOLTIP,Yarım tur sayılmaz,A half round doesn't count
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
 HR_ROLE_DESIGNER,UX/UI Designer,UX/UI Designer
@@ -547,13 +524,10 @@ HR_COST_HIRING,İşe alım,Hiring
 HR_COST_SEVERANCE,Kıdem tazminatı,Severance
 HR_COST_TRAINING,Eğitim ücreti,Training fee
 HR_LABEL_HR,İK,HR
-SALES_CUSTOMER,Müşteri,Customer
-SALES_SATISFACTION,Memnuniyet,Satisfaction
 WORLD_OUTLET_EKONOMI,Ekonomi Postası,Ekonomi Postası
 WORLD_OUTLET_TEKNOGUNDEM,TeknoGündem,TeknoGündem
 WORLD_OUTLET_GIRISIM,Girişim Bülteni,Girişim Bülteni
 WORLD_OUTLET_SEKTOR,Sektör Telgrafı,Sektör Telgrafı
-UI_OK,Tamam,OK
 UI_DISMISS,Vazgeç,Cancel
 UI_CONTINUE,DEVAM ET,CONTINUE
 UI_AVATAR_INITIALS,FK,FK
@@ -1042,10 +1016,6 @@ PROD_TYPE_ERP_DESC,Ön muhasebe · stok · fatura tek defterde.,Bookkeeping · s
 PROD_TYPE_ERP_TRADEOFF,Bir kez kurulunca kimse çıkmaz; ama ilk kurulum uzun sürer.,Once it is in nobody leaves; but the first install takes a long time.
 PROD_TYPE_ERP_BET,Defter tutan herkes aynı üç şeyi arıyor. Üçünü de doğru yap; gerisini sürümler getirir.,Everyone keeping books wants the same three things. Get all three right and versions bring the rest.
 PROD_TYPE_ERP_PITCH,Kasadan stoka işletmenin defterini tutan sistem.,The system that keeps a business's books from till to stock.
-PROD_TYPE_EA_TAG,Erken Erişim,Early Access
-PROD_TYPE_LOCKED_REASON,Daha büyük ekip ister.,It wants a bigger team.
-PROD_TYPE_SLOT_NAME,Yeni B2B ürünü,A new B2B product
-PROD_TYPE_SLOT_REASON,Erken Erişim'de açılır.,It opens in Early Access.
 SECTOR_SUBSCRIPTION,Abonelik,Subscription
 SECTOR_AGENCY,Ajans,Agency
 SECTOR_EDUCATION,Eğitim,Education
@@ -1062,99 +1032,21 @@ PROD_AXIS_EXPERIENCE,Deneyim,Experience
 PROD_RISK_LOW,Düşük,Low
 PROD_RISK_MID,Orta,Medium
 PROD_RISK_HIGH,Yüksek,High
-PROD_STEP_TYPE,02 TİP,02 TYPE
-PROD_STEP_FEATURES,03 ÖZELLİKLER,03 FEATURES
 PROD_PATH_TITLE,Yolunu seç,Choose your road
 PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan değişmez.,This choice decides how the product makes money. It cannot be changed later.
 PROD_PATH_B2C,KİTLE,CONSUMER
 PROD_PATH_B2C_DESC,"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.","You sell to a crowd. Users arrive, users leave, the numbers swing."
-PROD_PATH_B2C_PRO,Kitle kendiliğinden büyür,The audience grows on its own
-PROD_PATH_B2C_CON,Kullanıcı başına küçük gelir,Small revenue per user
 PROD_PATH_B2B_DESC,"Şirketlere satarsın. Her kontrat büyük para, her müşteri senin eserin.","You sell to companies. Every contract is real money, every customer is your own work."
-PROD_PATH_B2B_PRO,Kontrat başına yüksek gelir,High revenue per contract
-PROD_PATH_B2B_CON1,Satışı sen yaparsın,You do the selling
-PROD_PATH_B2B_CON2,Müşteri tutmak iş ister,Keeping customers is work
-PROD_TYPE_EXAMPLES,TİP ÖRNEKLERİ,TYPE EXAMPLES
-PROD_PATH_PICK,Bu yolu seç →,Take this road →
 PROD_MENTOR_TAG,FRANK KÖSEOĞLU · MENTOR,FRANK KÖSEOĞLU · MENTOR
 PROD_MENTOR_LINE,"B2C'de kalabalığa satarsın, kimseyi tanımazsın. B2B'de herkesi tanırsın, herkes seni tanır. İkisi de para. Farklı dertler.","In B2C you sell to a crowd and know nobody. In B2B you know everybody, and everybody knows you. Both are money. Different headaches."
-PROD_BACK_PATH,← GERİ · YOL SEÇİMİ,← BACK · PATH
 PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product type
-PROD_TYPE_STEP_SUB,"Hangi problemi çözüyoruz? Sektör, müşterinin dünyasını belirler.",Which problem are we solving? The sector decides the customer's world.
-PROD_BACK_PORTFOLIO,← GERİ · PORTFÖY,← BACK · PORTFOLIO
-PROD_BACK_TYPE,← GERİ · TİP SEÇİMİ,← BACK · TYPE
-PROD_PROFILE,ÜRÜN PROFİLİ,PRODUCT PROFILE
-PROD_CANCEL_BUILD,Geliştirmeyi iptal et,Cancel development
-PROD_CANCEL_BUILD_Q,Geliştirmeyi iptal et?,Cancel development?
-PROD_CANCEL_BUILD_BODY,Kurma ekranına dönersin · seçimlerini düzenleyip yeniden başlarsın.,You return to the setup screen · you can edit your picks and start again.
-PROD_CANCEL_BUILD_COST,{weeks} hafta + {amount} yandı · geri gelmez. Sadece bundan sonrası durur.,{weeks} weeks and {amount} are burned · they do not come back. Only what follows stops.
-PROD_CANCEL_BUILD_COST_ONE,{weeks} hafta + {amount} yandı · geri gelmez. Sadece bundan sonrası durur.,{weeks} week and {amount} are burned · they do not come back. Only what follows stops.
 PROD_NAME_LABEL,Ürün adı,Product name
 PROD_NAME_SUGGEST,ÖNER,SUGGEST
-PROD_SELECTED_COUNT,{n} seçili,{n} selected
-PROD_TOTALS_COST,Toplam efor {efor} · Maliyet {amount} · Süre ~{weeks} hafta,Total effort {efor} · Cost {amount} · About {weeks} weeks
-PROD_TOTALS_COST_ONE,Toplam efor {efor} · Maliyet {amount} · Süre ~{weeks} hafta,Total effort {efor} · Cost {amount} · About {weeks} week
-PROD_TOTALS,Toplam efor {efor} · Süre ~{weeks} hafta,Total effort {efor} · About {weeks} weeks
-PROD_TOTALS_ONE,Toplam efor {efor} · Süre ~{weeks} hafta,Total effort {efor} · About {weeks} week
-PROD_CASH_AFTER,Bittiğinde kasada {amount} kalır,{amount} left in the treasury when it is done
-PROD_CASH_DEDUCT, · {amount} kasadan düşer, · {amount} comes out of the treasury
 PROD_CONFIRM_START,Onayla ve Başlat,Confirm and Start
-PROD_POLISH_NOTE,Tasarım turları cilayı artırır; net kazanç TASARIM'da belirlenir.,Design rounds raise the polish; the net gain is settled in DESIGN.
-PROD_TEAM_REFUSE_JOB_CAP,Bu kişi zaten iki iş taşıyor; önce birini bırakması gerekir.,This person already holds two jobs; one has to be dropped first.
-PROD_TEAM_REFUSE_ROLE,Bu rol yapım işini taşımıyor.,This role does not carry the build job.
-PROD_TEAM_REFUSE_INACTIVE,Bu kişi şu an çalışmıyor.,This person is not working right now.
-PROD_TEAM_REFUSE_OTHER,Bu kişi yapıma atanamadı.,This person could not be assigned to the build.
-PROD_BETA_LINE,Beta · bulunan {found} · çözülen {fixed} · açık {open},Beta · found {found} · fixed {fixed} · open {open}
 PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
-PROD_STATUS,DURUM,STATUS
-PROD_OPEN_BUGS,AÇIK HATA,OPEN BUGS
-PROD_EFFECTIVE_STABILITY,ETKİN KARARLILIK,EFFECTIVE STABILITY
-PROD_CUSTOMERS_CAP,MÜŞTERİ,CUSTOMERS
-PROD_ACTION_FEATURE_DESC,Yeni özellik / güçlendirme · daha yüksek rekabet. (Yeni özellik = yeni hata.),New feature / reinforcement · stronger competition. (A new feature means new bugs.)
-PROD_ACTION_HARDEN_DESC,Hataları temizle · kararlılık geri gelir (geliştirmeyle paralelse ikisi de yavaşlar).,Clear the bugs · stability comes back (run it alongside development and both slow down).
-PROD_ACTION_PRICE,Fiyatlandır,Set the price
-PROD_WITH_SALES,SATIŞ İLE,WITH SALES
-PROD_ACTION_PRICE_B2B,B2B'de fiyat kontratta konuşulur · paket ve taban fiyatı ayarla.,In B2B the price is settled in the contract · set the package and the floor.
-PROD_LIVE_WEEKS,V{version} · {weeks} HAFTA CANLI,V{version} · {weeks} WEEKS LIVE
-PROD_LIVE_WEEKS_ONE,V{version} · {weeks} HAFTA CANLI,V{version} · {weeks} WEEK LIVE
-PROD_WEEKS,{n} hafta,{n} weeks
-PROD_WEEKS_ONE,{n} hafta,{n} week
-PROD_PROMISED,SÖZ VERİLDİ,PROMISED
-PROD_LIVE_SUFFIX, · CANLI, · LIVE
-PROD_VERSION_LIVE,v{version} · {date} · CANLI,v{version} · {date} · LIVE
-PROD_IN_DEVELOPMENT,GELİŞTİRMEDE,IN DEVELOPMENT
-PROD_UNPLANNED,planlanmadı,not planned
-PROD_VERSIONS,SÜRÜMLER,VERSIONS
-PROD_ETA_WEEKS,~{n}+ HAFTA,~{n}+ WEEKS
 PROD_MARKET_SHARE,pazar payı {share},market share {share}
-PROD_RIVAL_PASSED, · {rival} seni geçti., · {rival} passed you.
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
-PROD_PRICING,FİYATLANDIRMA,PRICING
-PROD_PER_USER,/ kullanıcı,/ user
-PROD_FLOOR,Alt sınır {amount},Floor {amount}
-PROD_UPPER_OPEN,üst açık,no ceiling
-PROD_OPTIMAL_UNKNOWN,Optimal belirsiz (pazar verisi düşük),Optimum unclear (thin market data)
-PROD_AXIS_INNOVATION_N,İNOVASYON {n},INNOVATION {n}
-PROD_AXIS_STABILITY_N,KARARLILIK {n},STABILITY {n}
-PROD_AXIS_EXPERIENCE_N,DENEYİM {n},EXPERIENCE {n}
-PROD_FEATURE_COUNT,{n} ÖZELLİK,{n} FEATURES
-PROD_SELECTED,SEÇİLEN,SELECTED
-PROD_PAYING,ÖDEYEN,PAYING
-PROD_CONVERSION,DÖNÜŞÜM,CONVERSION
-PROD_GUT_PRICE,İÇGÜDÜSEL FİYAT,GUT PRICE
-PROD_PRICE_CHEAP,UCUZ · HIZLI BÜYÜME,CHEAP · FAST GROWTH
-PROD_PRICE_EXPENSIVE,PAHALI · YAVAŞ BÜYÜME,EXPENSIVE · SLOW GROWTH
-PROD_PRICE_OPTIMAL,OPTİMAL · DENGELİ,OPTIMUM · BALANCED
-PROD_PRICE_RAISE,ZAM · KİTLE −{pct},RAISE · AUDIENCE −{pct}
-PROD_PRICE_COMMIT,Fiyatı koy · {amount},Set the price · {amount}
-PROD_LOCKED_SERIES_A,KİLİTLİ · Series A sonrası,LOCKED · after Series A
-PROD_PORTFOLIO,Portföy,Portfolio
-PROD_PORTFOLIO_COUNT,{n} ürün · tıkla ve yönet,{n} products · click to manage
 PROD_LIVE_VERSION_LC,CANLI v{version},LIVE v{version}
-PROD_ROW_B2B,MRR katkısı {amount}/ay · Açık hata {bugs} · Memnuniyet {sat},MRR {amount}/mo · Open bugs {bugs} · Satisfaction {sat}
-PROD_ROW_B2C,Ücretsiz {users} · Açık hata {bugs} · {price},Free {users} · Open bugs {bugs} · {price}
-PROD_IN_DEV_PCT,GELİŞTİRMEDE {pct},IN DEVELOPMENT {pct}
-PROD_NEW_PRODUCT,+ Yeni Ürün,+ New Product
 PROD_HEALTHY,SAĞLIKLI,HEALTHY
 PROD_RISKY,RİSKLİ,AT RISK
 PROD_FLAT,SABİT,FLAT
@@ -1200,16 +1092,7 @@ PROD_DESIGN_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
 ""We can run another round if you want — it burns time and polishes the design. But every round returns less than the last. At some point you need better people, not more rounds.""{note}"
 PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
 PROD_TREND_FALLING,AZALIYOR,FALLING
-PROD_BUGS_TREND,{bugs} HATA · {trend},{bugs} BUGS · {trend}
-PROD_BUILD_STATUS_HEADER,GELİŞTİRME DURUMU,BUILD STATUS
-PROD_EFFORT_N,Efor {n},Effort {n}
-PROD_LIVE_PRICE,CANLI · {amount},LIVE · {amount}
-PROD_OPTIMAL,Optimal {amount},Optimal {amount}
-PROD_PER_MONTH,{amount} /ay,{amount} /mo
-PROD_PRICE_DRAFT,Fiyat taslak,Price draft
-PROD_PRICE_N,Fiyat {amount},Price {amount}
 PROD_TIP_BUGS,Hata riski yüksek. Düzeltme koşusu başlat.,Bug risk is high. Start a fix run.
-PROD_UNKNOWN,belirsiz,unclear
 PROD_ITER_CEILING_NOTE,"İnovasyon {inn} / tur kazancı tavanı {inn_max} · tavanı tur sayısı değil, masadaki ekip belirler.","Innovation {inn} / round gain ceiling {inn_max} · the ceiling comes from the team at the table, not from the number of rounds."
 PROD_EV_VERSION_SHIP_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
 
@@ -1231,28 +1114,9 @@ PROD_EV_ITER_DECISION_BODY,"İlk tasarım turu bitti. Frank prototipin başında
 
 ""The rounds keep going on their own · each one burns time and polishes the design a little more. But every round returns less than the one before. The moment you say enough, we move to development; at some point you need better people, not more rounds."""
 PROD_ITER_KEEP_GOING,Turlar sürsün,Keep the rounds going
-PROD_STEP_PATH,01 YOL,01 PATH
 PROD_PATH_B2B,KONTRAT,CONTRACT
-PROD_PATH_B2C_CON2,Kaprisli,Fickle
-PROD_BUG_RISK_CAP,Hata riski:,Bug risk:
-PROD_TRYING_CAP,ÜCRETSİZ KULLANICI,FREE USERS
-PROD_SUPPORT,DESTEK,SUPPORT
-PROD_REPORTS_INCOMING,Gelen bildirim,Incoming reports
-PROD_BUGS_CONFIRMED,Doğrulanmış hata,Confirmed bugs
-PROD_DESK_STAFFED,Destek masasında: {names},On the support desk: {names}
-PROD_DESK_EMPTY,Destek masasında kimse yok. Bildirimler birikiyor; hiçbir hata doğrulanmıyor.,Nobody is on the support desk. Reports pile up; nothing gets confirmed.
 PROD_FIX_RUN_START,Düzeltme başlat,Start a fix run
 PROD_FIX_RUN_END,Koşuyu bitir,End the run
-PROD_FIX_RUN_FIXED_N,ÇÖZÜLEN {n},FIXED {n}
-PROD_FIX_REFUSAL_NO_BUGS,Doğrulanmış hata yok.,No confirmed bugs.
-PROD_FIX_REFUSAL_DESK_SHUT,Destek masasında kimse yok.,Nobody is on the support desk.
-PROD_FIX_REFUSAL_RUNNING,Koşu zaten sürüyor.,A run is already going.
-PROD_FIX_REFUSAL_NOT_LIVE,Canlı ürün yok.,No live product.
-PROD_INTEREST_CAP,İLGİ,INTEREST
-PROD_CHURN_CAP,CHURN,CHURN
-PROD_MRR_CONTRIB_CAP,MRR KATKISI,MRR CONTRIBUTION
-PROD_GO_TO_SALES,Satış sekmesine git →,Go to Sales →
-PROD_DRAFT_CHIP,TASLAK,DRAFT
 PROD_TREND_RISING,ARTIYOR,RISING
 VC_WHY_MRR_STRONG,MRR güçlü,MRR is strong
 VC_WHY_MRR_WEAK,MRR zayıf,MRR is weak
@@ -1672,14 +1536,8 @@ EFFECT_SATISFACTION,Memnuniyet {v},Satisfaction {v}
 EFFECT_SEATS,Koltuk {v},Seats {v}
 EFFECT_AUDIENCE,Kitle {v},Audience {v}
 EFFECT_AXIS,{axis} {v},{axis} {v}
-EFFECT_QUALITY,Kalite,Quality
 EFFECT_MORALE,Moral,Morale
-EFFECT_BUGS,Hata {v},Bugs {v}
-EFFECT_WEEKS,{v} hafta,{v} weeks
-EFFECT_WEEKS_ONE,{v} hafta,{v} week
 EFFECT_QUALITY_BONUS,Kalite +{n},Quality +{n}
-EFFECT_DEV_BEGINS,Geliştirme başlar,Development begins
-EFFECT_BETA_BEGINS,Beta başlar,Beta begins
 EFFECT_CHURN,Müşteri kaybı,A customer lost
 EFFECT_TERM_TABLE,Term sheet masası açılır,The term sheet table opens
 EFFECT_NEW_PROSPECT,Yeni aday,A new prospect
@@ -2196,77 +2054,16 @@ PROD_STEP_SHARED_DURABILITY_K3_ERP_DESC,Depoda internet yokken de çalışılır
 PROD_STEP_SHARED_MOBILE_K1_ERP_DESC,Ekran küçüldüğünde tablolar dağılmaz; patron faturayı telefondan da açar.,"Tables hold together as the screen shrinks, and the owner opens an invoice from a phone."
 PROD_STEP_SHARED_MOBILE_K2_ERP_DESC,Onay bekleyen sipariş cepte görünür; imza yolda atılır.,An order waiting for approval shows up in a pocket; the signature happens on the road.
 PROD_STEP_SHARED_MOBILE_K3_ERP_DESC,Sahadaki satıcı kapsama dışında sipariş yazar; akşam ofise kendi girer.,"The rep in the field writes an order out of coverage, and in the evening it walks into the office on its own."
-PROD_PUB_STEP_CAPTION,{n} · {title},{n} · {title}
-PROD_PUB_STEP_PRICE,FİYAT,PRICE
-PROD_PUB_STEP_INFRA,ALTYAPI,INFRASTRUCTURE
-PROD_PUB_STEP_CONFIRM,ONAY,CONFIRMATION
-PROD_PUB_PRICE_TITLE,Fiyat belirle,Set the price
-PROD_PUB_INFRA_TITLE,Altyapı seç,Choose infrastructure
-PROD_PUB_CONFIRM_TITLE,Yayına hazır,Ready to ship
-PROD_PER_USER_MONTH,/ kullanıcı · ay,/ user · month
-PROD_COST_PER_USER,Kullanıcı başına maliyet ~${amount},Cost per user ~${amount}
-PROD_PUB_AXIS_SUMMARY,İnovasyon {inn} · Kararlılık {stab} · Deneyim {exp} · {n} özellik,Innovation {inn} · Stability {stab} · Experience {exp} · {n} features
-PROD_INFRA_PROVIDER_LOCAL,Yerel Sağlayıcı,Local Provider
-PROD_INFRA_PROVIDER_CLOUD,Bulut Sağlayıcı,Cloud Provider
-PROD_INFRA_PROVIDER_ENTERPRISE,Kurumsal Bulut,Enterprise Cloud
-PROD_INFRA_QUALITY_LOCAL,Ucuz. Yavaşlık şikayetleri artar; kurumsal hesap imzalamaz.,Cheap. Slowness complaints rise; an enterprise account will not sign.
-PROD_INFRA_QUALITY_CLOUD,Dengeli. Kalite farkı yok.,Balanced. No quality difference.
-PROD_INFRA_QUALITY_ENTERPRISE,Pahalı. Büyük hesabın imza öncesi güven koşulunu karşılar.,Expensive. It meets a large account's trust condition before signing.
-PROD_INFRA_PROVIDER_HEAD,KİMDEN ALIYORSUN,WHO YOU BUY FROM
-PROD_INFRA_CAPACITY_HEAD,NE KADAR ALIYORSUN,HOW MUCH YOU BUY
-PROD_INFRA_UNITS_N,{n} birim,{n} units
-PROD_INFRA_UNIT_PRICE,birim {amount}/ay,{amount}/mo per unit
-PROD_INFRA_MONTHLY_BILL,{amount}/ay,{amount}/mo
-PROD_INFRA_HEADROOM_USERS,{n} kullanıcı,{n} users
-PROD_INFRA_HEADROOM_SEATS,{n} koltuk,{n} seats
-PROD_INFRA_START_HINT,Tahmini ilk ay: ~{users},Estimated first month: ~{users}
-PROD_INFRA_CAPACITY_ONLY,Kapasite yalnız kapasitedir.,Capacity is only capacity.
-PROD_INFRA_COMMIT,Altyapıyı seç · {amount},Choose infrastructure · {amount}
-PROD_PUB_ROW_VERSION,Sürüm,Version
-PROD_PUB_ROW_PRICE,Fiyat,Price
-PROD_PUB_ROW_INFRA,Altyapı,Infrastructure
-PROD_PUB_ROW_FEATURES,Özellik,Features
 PROD_VERSION_SHORT,v{version},v{version}
-PROD_PUB_BUGS_CARRIED,{n} hata canlıya taşınır,{n} bugs carried into production
-PROD_PUB_V2_TITLE,{name} yayınlanacak,{name} will ship
-PROD_CAPACITY,KAPASİTE,CAPACITY
-PROD_INFRA_CHANGE,Değiştir,Change
-PROD_CAPACITY_OCCUPANCY,Doluluk,Occupancy
-PROD_CAPACITY_OF,{used} / {cap},{used} / {cap}
-PROD_CAPACITY_LOAD,Yük,Load
-PROD_CAPACITY_LOAD_VALUE,×{n},×{n}
-PROD_CAPACITY_BILL,Aylık fatura,Monthly bill
-PROD_CAPACITY_MARGIN,Brüt marj,Gross margin
-PROD_CAPACITY_OVER_BADGE,AŞIM,OVER
-PROD_CAPACITY_UNSET,Kapasite alınmadı,No capacity bought
-PROD_LINES_HEADER,ÖZELLİKLER,FEATURES
-PROD_LINES_EMPTY,Bu alt-tip için hat tanımlı değil.,No lines are defined for this subtype.
-PROD_LINE_COMPLETE,hat tamamlandı,line complete
-PROD_LINE_CONTRIB,{axis} {value} ({gain}),{axis} {value} ({gain})
 PROD_LOCK_PREFIX,Kilit:,Locked:
 PROD_LOCK_RESEARCH,"Ar-Ge ""{node}"" {mark}","R&D ""{node}"" {mark}"
 PROD_LOCK_PERSON,{area} {stars} {mark},{area} {stars} {mark}
 PROD_LOCK_TOTAL,{area} toplam {stars} (sizde {have}) {mark},{area} total {stars} (you have {have}) {mark}
-PROD_LOCK_ACTION_RESEARCH,→ Araştır,→ Research
-PROD_LOCK_ACTION_PERSON,→ Eğit / İşe al,→ Train / Hire
-PROD_LOCK_ACTION_TOTAL,→ İşe al / Eğit,→ Hire / Train
-PROD_LOCK_RESEARCH_SOON,Ar-Ge yakında.,R&D is coming.
-PROD_TEAM_HEADER,EKİP,TEAM
-PROD_TEAM_HEADER_SUB,çoklu seçim · kurucu dahil,multi-select · founder included
 PROD_TEAM_GROUP_COUNT,({n}),({n})
-PROD_TEAM_GROUP_SELECTED,SEÇİLİ,SELECTED
-PROD_TEAM_LEAD,LİDER,LEAD
-PROD_TEAM_LEAD_NONE,Lider seçilmedi,No lead chosen
-PROD_TEAM_LEAD_PICK,Lider seç,Choose a lead
 PROD_TEAM_AVAIL_LEAVE,İzinde · {n} hafta sonra katılır,On leave · joins in {n} weeks
 PROD_TEAM_AVAIL_LEAVE_ONE,İzinde · gelecek hafta katılır,On leave · joins next week
 PROD_TEAM_AVAIL_TRAINING,Eğitimde · {n} hafta sonra katılır,In training · joins in {n} weeks
 PROD_TEAM_AVAIL_TRAINING_ONE,Eğitimde · gelecek hafta katılır,In training · joins next week
-PROD_TEAM_FILTER_SEARCH,ara…,search…
-PROD_TEAM_FILTER_AREA_ALL,ALAN,AREA
-PROD_TEAM_FILTER_AVAILABLE,MÜSAİT,AVAILABLE
-PROD_TEAM_PINNED_CAPTION,yukarıda,above
-PROD_TEAM_PINNED_HINT,Seçilenler üste sabitlenir.,Selected rows pin to the top.
 PROD_RND_NODE_DATA_MODEL_DESC,Verinin ortak şeması. Her kayıt aynı dilden konuşur.,A common schema for the data. Every record starts speaking the same language.
 PROD_RND_NODE_DATA_MODEL_UNLOCK,Entegrasyonlar hattının son kademesi.,The last tier of the Integrations line.
 PROD_RND_NODE_AI_ENGINE_DESC,Dil modeli altyapısı. Ürününüz artık anlayabilir.,Language model infrastructure. Your product can understand now.
@@ -2437,7 +2234,6 @@ EV_MODIFIERS_MORE,ve daha fazlası,and more
 TICKER_SRC_INTERNAL,İÇERİDEN,INTERNAL
 EFFECT_PHASE_ADVANCE,Yeni evre başlar,A new phase begins
 EFFECT_PHASE_HOLD,Şimdilik aynı evrede kalırsın,You stay in this phase for now
-EFFECT_SHIP_LIVE,Sürüm yayına çıkar,The version goes live
 EFFECT_TAKES_YOU_THERE,Seni oraya götürür,Takes you there
 DESK_PAPER_WEEKS,{n} hafta,{n} weeks
 DESK_PAPER_THIS_WEEK,bu hafta,this week
@@ -2568,7 +2364,6 @@ NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,P
 B2B_LOCK_NO_PAIN_TARGET,Ne istediklerini söylemediler. Söz verilecek bir şey yok.,They haven't named what they want. There's nothing to promise yet.
 B2B_LOCK_PAIN_SHIPPED,İstedikleri şey zaten yayında.,What they asked for is already live.
 B2B_LOCK_PAIN_GATED,Bunu yapabilecek kimse yok henüz. Ne ekip var ne araştırma.,Nobody here can build that yet. Not the people and not the research.
-PROD_DESK_ACCOUNTS_ONLY,"{names} hesapları taşıyor ama destek masasına atanmadı. Görevler sayfasında Destek sütununu işaretle.","{names} carries accounts but is not on the support desk. Tick the Support column on the Duties page."
 PROD_DESK_NOBODY_ELIGIBLE,Masayı taşıyabilecek kimse yok. Bir Müşteri Temsilcisi ya da Yazılımcı işe al.,Nobody can staff the desk. Hire a Customer Rep or an Engineer.
 SALES_PROMISE_OPEN,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} weeks
 SALES_PROMISE_OPEN_ONE,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} week
@@ -2577,8 +2372,6 @@ EVENT_READOUT_DAY,ÖZET · {date},SUMMARY · {date}
 SALES_WEEKLY_ROW,{company}  {stars}  {seats} koltuk x {price} = {mrr}/ay,{company}  {stars}  {seats} seats x {price} = {mrr}/mo
 SALES_WEEKLY_TOTAL,Toplam: {n} anlaşma · {mrr}/ay,Total: {n} deals · {mrr}/mo
 HR_FOUNDER_STATE_CARE,PH: Müşterilerle ilgileniyor,PH: Looking after customers
-PROD_DESK_FOUNDER_PASSIVE,Kimse atanmadı; sen ilgileniyorsun.,Nobody is assigned; you are looking after it.
-PROD_DESK_FOUNDER_BUSY,Meşgulsün: {what}. Masaya bakan kimse yok.,You are busy: {what}. Nobody is watching the desk.
 SEED_SECTION_TITLE,Seed turu,Seed round
 SEED_DOOR_LINE,"Gelir bir tura yetecek kadar düzenli. Dört fondan biriyle oturabilirsin; bir tur, bir fon.","Revenue is steady enough to carry a round. You can sit down with one of the four funds: one round, one fund."
 SEED_DOOR_HINT,Masaya oturmadan önce seçtiğin fon değişmez.,"Once you sit down, the fund you chose is the fund you have."
@@ -2944,7 +2737,6 @@ PRODUCT_HISTORY_CARDS_ONE,{n} kart,{n} card
 PRODUCT_VIEW_SPRINT,SPRINT,SPRINT
 PRODUCT_VIEW_QUARTER,ÇEYREK,QUARTER
 PRODUCT_QUARTER_NEED_PM,PM işe alınca,Once you hire a PM
-PRODUCT_SOON,Yakında,Soon
 PRODUCT_NEXT_EMPTY,→ ile kart gönder,Send cards with →
 PRODUCT_FLAG_DEADLINE,{customer} · {request} · son tarih,{customer} · {request} · deadline
 PRODUCT_THIS_QUARTER,BU ÇEYREK,THIS QUARTER
@@ -2955,3 +2747,90 @@ PRODUCT_APPROVE_ALL,Hepsini onayla,Approve all
 PRODUCT_APPROVED,ONAYLANDI,APPROVED
 PRODUCT_FX_VOICES_CLOSED,{n} ses kapanır,{n} voices settle
 PRODUCT_FX_VOICES_CLOSED_ONE,{n} ses kapanır,{n} voice settles
+PRODUCT_AREA_CORE,Çekirdek,Core
+PRODUCT_AREA_CORE_SHORT,Çekirdek,Core
+PRODUCT_AREA_ONBOARDING,Onboarding & Erişim,Onboarding & Access
+PRODUCT_AREA_ONBOARDING_SHORT,Onboarding,Onboarding
+PRODUCT_AREA_GROWTH,Büyüme,Growth
+PRODUCT_AREA_GROWTH_SHORT,Büyüme,Growth
+PRODUCT_AREA_INTEGRATIONS,Entegrasyonlar,Integrations
+PRODUCT_AREA_INTEGRATIONS_SHORT,Entegrasyonlar,Integrations
+PRODUCT_AREA_TRUST,Güven & Ölçek,Trust & Scale
+PRODUCT_AREA_TRUST_SHORT,Güven,Trust
+PRODUCT_AREA_REVENUE,Gelir,Revenue
+PRODUCT_AREA_REVENUE_SHORT,Gelir,Revenue
+PRODUCT_AREA_CORE_NONE,Ürünün çekirdeği henüz yok,The core of the product does not exist yet
+PRODUCT_AREA_CORE_WEAK,Kullanıcılar temel işi yapmakta zorlanıyor,Users struggle to get the basic job done
+PRODUCT_AREA_CORE_ENOUGH,Temel iş sorunsuz yürüyor,The basic job runs without trouble
+PRODUCT_AREA_CORE_STRONG,Kullanıcılar çekirdeği başkalarına öneriyor,Users recommend the core to others
+PRODUCT_AREA_ONBOARDING_NONE,Yeni gelen kullanıcıyı karşılayan bir şey yok,Nothing greets a new user yet
+PRODUCT_AREA_ONBOARDING_WEAK,Yeni kullanıcıların çoğu ilk hafta bırakıyor,Most new users quit in the first week
+PRODUCT_AREA_ONBOARDING_ENOUGH,Yeni kullanıcılar yolunu buluyor,New users find their way
+PRODUCT_AREA_ONBOARDING_STRONG,Yeni kullanıcılar ilk gün alışıyor,New users settle in on day one
+PRODUCT_AREA_GROWTH_NONE,Ürün kendi kendine yayılmıyor,The product does not spread on its own
+PRODUCT_AREA_GROWTH_WEAK,"Paylaşım zor, davet az geliyor",Sharing is hard and few invites come in
+PRODUCT_AREA_GROWTH_ENOUGH,Kullanıcılar arada bir davet gönderiyor,Users send an invite now and then
+PRODUCT_AREA_GROWTH_STRONG,Davetler kendiliğinden geliyor,Invites keep arriving on their own
+PRODUCT_AREA_INTEGRATIONS_NONE,Başka programlarla bağlantı yok,No connection to other software
+PRODUCT_AREA_INTEGRATIONS_WEAK,Veri elle taşınıyor,Data is moved by hand
+PRODUCT_AREA_INTEGRATIONS_ENOUGH,Temel programlarla bağlantı kuruluyor,It connects to the main tools
+PRODUCT_AREA_INTEGRATIONS_STRONG,Müşteriler ürünü kendi sistemlerine bağlıyor,Customers wire the product into their own systems
+PRODUCT_AREA_TRUST_NONE,Ne yedek var ne yetki,No backups and no access control
+PRODUCT_AREA_TRUST_WEAK,Veri kaybı ve kesinti korkusu var,People fear data loss and downtime
+PRODUCT_AREA_TRUST_ENOUGH,Ürün güvenilir çalışıyor,The product runs reliably
+PRODUCT_AREA_TRUST_STRONG,Büyük hesaplar da ürüne güveniyor,Large accounts trust the product too
+PRODUCT_AREA_REVENUE_NONE,Ücretli plan henüz yok,No paid plan yet
+PRODUCT_AREA_REVENUE_WEAK,"Ücretli plan var, ödeyen az","There is a paid plan, few pay"
+PRODUCT_AREA_REVENUE_ENOUGH,Ücretli plan açık,The paid plan is open
+PRODUCT_AREA_REVENUE_STRONG,Ödeyen kullanıcılar artıyor,Paying users keep growing
+PRODUCT_AREA_TICKETS,{n} açık ticket,{n} open tickets
+PRODUCT_AREA_TICKETS_ONE,{n} açık ticket,{n} open ticket
+PRODUCT_AREA_RIVAL,{rival} bu alanda yeni bir şey çıkardı,{rival} shipped something new here
+PRODUCT_AREA_OVER_CAPACITY,Sunucular yükü kaldırmıyor,The servers can't keep up with the load
+PRODUCT_CAP_PAID_PLAN,Ücretli plan,Paid plan
+PRODUCT_FIX_CARD,{capability} düzeltmesi,{capability} fix
+PRODUCT_RESEARCH_CARD,{n} kullanıcıyla görüş,Talk to {n} users
+PRODUCT_REQUEST_CARD,{step} ({customer}),{step} ({customer})
+PRODUCT_TICKET_0,{capability}: arada bir yanıt vermiyor,{capability}: stops responding now and then
+PRODUCT_TICKET_1,{capability}: kaydettiğim değişiklik kayboldu,{capability}: a change I saved was lost
+PRODUCT_TICKET_2,{capability}: hata veriyor ve iş yarım kalıyor,{capability}: throws an error and the job is left half done
+PRODUCT_RESEARCH_VOICE_CORE,Görüştüğümüz kullanıcılar temel işin daha hızlı olmasını istiyor,The users we talked to want the basic job to go faster
+PRODUCT_RESEARCH_VOICE_ONBOARDING,Görüştüğümüz kullanıcılar ilk günü karışık buluyor,The users we talked to find the first day confusing
+PRODUCT_RESEARCH_VOICE_GROWTH,Görüştüğümüz kullanıcılar ürünü bir arkadaşına göstermek istiyor,The users we talked to want to show the product to a friend
+PRODUCT_RESEARCH_VOICE_INTEGRATIONS,Görüştüğümüz müşteriler veriyi elle taşımaktan yorulmuş,The customers we talked to are tired of moving data by hand
+PRODUCT_RESEARCH_VOICE_TRUST,Görüştüğümüz kullanıcılar verilerinin güvende olduğunu bilmek istiyor,The users we talked to want to know their data is safe
+PRODUCT_RESEARCH_VOICE_REVENUE,Görüştüğümüz kullanıcılar neye para ödeyeceğini bilmek istiyor,The users we talked to want to know what they would pay for
+PRODUCT_RIVAL_VOICE,{rival} artık şunu yapıyor: {capability}. Sizde ne zaman?,{rival} does this now: {capability}. When will you have it?
+PRODUCT_NEWS_RIVAL_LAUNCH_0,{rival} yeni özelliğini duyurdu: {capability},{rival} announced a new feature: {capability}
+PRODUCT_NEWS_RIVAL_LAUNCH_1,{rival} kullanıcılarına yeni bir araç sundu: {capability},{rival} rolled out a new tool for its users: {capability}
+PRODUCT_PRESS_CORE_0,{product} yeni sürümünü çıkardı: {capability},{product} released a new version: {capability}
+PRODUCT_PRESS_CORE_1,{product} güncellendi; öne çıkan yenilik {capability},{product} has been updated; the headline change is {capability}
+PRODUCT_PRESS_AREA_0,{product} {area} tarafındaki açığını kapattı,{product} closed its gap on {area}
+PRODUCT_PRESS_AREA_1,{product} {area} tarafında toparlandı,{product} has caught up on {area}
+PRODUCT_RESULT_LEVEL_EXPECTED,{area} {to} olmalı,{area} should be {to}
+PRODUCT_RESULT_LEVEL_ACTUAL,{area} {from} iken {to} oldu,{area} went from {from} to {to}
+PRODUCT_RESULT_TICKETS_EXPECTED,{n} ticket kapanmalı,{n} tickets should close
+PRODUCT_RESULT_TICKETS_EXPECTED_ONE,{n} ticket kapanmalı,{n} ticket should close
+PRODUCT_RESULT_TICKETS_ACTUAL,{n} ticket kapandı,{n} tickets closed
+PRODUCT_RESULT_TICKETS_ACTUAL_ONE,{n} ticket kapandı,{n} ticket closed
+PRODUCT_RESULT_NONE_EXPECTED,Görünür bir değişiklik beklenmiyor,No visible change expected
+PRODUCT_RESULT_NONE_ACTUAL,Görünür bir değişiklik olmadı,Nothing visible changed
+PRODUCT_LEAD_TWO,{first} ve {second} bu sprintte bitmeli.,{first} and {second} should land this sprint.
+PRODUCT_LEAD_ONE,{card} bu sprintte bitmeli.,{card} should land this sprint.
+PRODUCT_LEAD_REQUEST,{request} gecikirse {customer} yenilemez.,"If {request} slips, {customer} won't renew."
+PRODUCT_LEAD_CARRIED,{card} bir sprint daha ister.,{card} needs one more sprint.
+PRODUCT_LEAD_WEAKEST,{area} sırada.,{area} is next.
+PRODUCT_AUTO_STARTED,Sprint otomatik başladı,Sprint started automatically
+EFFECT_SPRINT_EFFORT,Efor {v},Effort {v}
+EFFECT_SPRINT_PROGRESS,İlerleme {v},Progress {v}
+EFFECT_SPRINT_CARRY,Sonraki sprinte devreder,Carries over to the next sprint
+EFFECT_SPRINT_HOURS,Bu sprint çalışma saati ×{v},Work hours ×{v} this sprint
+HR_TASK_ON_PRODUCT,{product} {version} üzerinde çalışıyor,Working on {product} {version}
+PRODUCT_LOCK_LIVE,Canlı ürün {mark},Live product {mark}
+PRODUCT_GOAL_CORE,kullanıcıların yarısı asıl işini burada bitirsin,half of users get their main job done here
+PRODUCT_GOAL_ONBOARDING,yeni kullanıcıların yarısı kalsın,half of new users stay
+PRODUCT_GOAL_GROWTH,kullanıcıların yarısı birini getirsin,half of users bring someone in
+PRODUCT_GOAL_INTEGRATIONS,müşterilerin yarısı öbür araçlarını bağlasın,half of customers connect their other tools
+PRODUCT_GOAL_TRUST,kullanıcıların yarısı verisini emanet etsin,half of users trust it with their data
+PRODUCT_GOAL_REVENUE,düzenli kullanıcıların yarısı ödemeye razı olsun,half of regular users would pay
+PRODUCT_GOAL_PROGRESS,şu an {total} üzerinden {now},now {now} of {total}

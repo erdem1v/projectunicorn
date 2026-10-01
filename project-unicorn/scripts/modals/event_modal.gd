@@ -24,8 +24,6 @@ const SILENT_VERBS := [
 
 ## Verbs whose chip is a fixed sentence: [CSV key, badge kind].
 const FIXED_CHIPS := {
-	"enter_development": ["EFFECT_DEV_BEGINS", &"neutral"],
-	"enter_beta": ["EFFECT_BETA_BEGINS", &"neutral"],
 	"open_term_table": ["EFFECT_TERM_TABLE", &"accent"],
 	"open_seed_table": ["EFFECT_SEED_TABLE", &"accent"],
 	"decline_offer": ["EFFECT_FUND_CLOSES", &"negative"],
@@ -40,8 +38,8 @@ const FIXED_CHIPS := {
 	"b2b_expand_decline": ["EFFECT_NO_CHANGE", &"neutral"],
 	"advance_phase": ["EFFECT_PHASE_ADVANCE", &"accent"],
 	"phase_gate_decline": ["EFFECT_PHASE_HOLD", &"neutral"],
-	"ship_active_build": ["EFFECT_SHIP_LIVE", &"accent"],
 	"goto_tab": ["EFFECT_TAKES_YOU_THERE", &"neutral"],
+	"sprint_card_carry": ["EFFECT_SPRINT_CARRY", &"neutral"],
 }
 
 var _event: GameEvent = null
@@ -371,22 +369,17 @@ func _describe_modifier(m) -> Dictionary:
 		"satisfaction_delta": return _chip("EFFECT_SATISFACTION", _fmt_signed(d), d)
 		"seats": return _chip("EFFECT_SEATS", _fmt_signed(d), d)
 		"morale_all": return _chip("EFFECT_TEAM", _fmt_signed(d), d)
-		"bug_delta": return _chip("EFFECT_BUGS", _fmt_signed(d), -d)
-		"delay_weeks":
-			# The executor refuses a week cost with no build running; the chip does not claim one.
-			if ProductSystem.get_active_build() == null:
-				return {}
-			var weeks: int = int(m.get("weeks", 0))
-			return _chip(Fmt.count_key("EFFECT_WEEKS", absi(weeks)), _fmt_signed(weeks), -weeks)
+		"sprint_card_effort":
+			var effort: int = SprintSystem.effort_change(d)
+			return _chip("EFFECT_SPRINT_EFFORT", _fmt_signed(effort), -effort)
+		"sprint_card_progress": return _chip("EFFECT_SPRINT_PROGRESS", _fmt_signed(d), d)
+		"sprint_hours":
+			var mult: float = float(m.get("mult", 1.0))
+			return {"text": tr("EFFECT_SPRINT_HOURS").format({"v": Fmt.number(mult, 2)}),
+				"kind": _kind(int(signf(mult - 1.0)))}
 		"change_morale":
 			var who: String = _first_name(_target(m, EvScope.TYPE_EMPLOYEE), tr("EFFECT_MORALE"))
 			return {"text": tr("EFFECT_AXIS").format({"axis": who, "v": _fmt_signed(d)}), "kind": _kind(d)}
-		"dimension_delta":
-			var axis_id: String = String(m.get("axis", "innovation"))
-			var label: String = ProductCatalog.axis_label(axis_id)
-			if label == axis_id:
-				label = tr("EFFECT_QUALITY")
-			return {"text": tr("EFFECT_AXIS").format({"axis": label, "v": _fmt_signed(d)}), "kind": _kind(d)}
 		"audience_delta":
 			if m.has("pct"):
 				# Fmt.percent is locale-aware (TR prefix, EN suffix); the sign rides the number.

@@ -13,13 +13,13 @@ extends Node
 # NegotiationSystem) are reset, never serialised: can_save() refuses while any of them
 # is_active(), so a sitting is always idle at the moment a save is taken.
 
-const SCHEMA_VERSION := 14
+const SCHEMA_VERSION := 15
 
 ## GDD ÜRÜN rev 6.1 §22.5 — eski kayıt TAŞINMAZ. "Yükleyici eski sürümü görürse kullanıcıya
 ## AÇIK MESAJ verir, sessizce bozuk state üretmez." Düz özellik listesi hat durumlarına
 ## çevrilemez ve v9 olay bloğu v10 motorunun arklarını/latch'lerini taşımaz; çevirmeye
 ## çalışmak çalışıyor görünen ve yanlış olan bir koşu üretir. O yüzden kapı sürümdedir.
-## v11-v14 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
+## v11-v15 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
 const MIN_LOADABLE_VERSION := 10
 const SAVE_DIR := "user://saves/"
 
@@ -142,6 +142,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		_migrate_13(state)
 	if version < 14:
 		_migrate_14(state, meta)
+	if version < 15:
+		_migrate_15(state)
 	return {"ok": true, "error_key": "", "meta": meta, "state": state}
 
 
@@ -503,7 +505,6 @@ func _migrate_14(state: Dictionary, meta: Dictionary) -> void:
 	var ceil_weeks := func(n: Variant) -> int:
 		return int(n) if int(n) <= 0 else ceili(float(n) / TimeModel.DAYS_PER_TICK)
 	var floor_weeks := func(n: Variant) -> int: return int(n) / TimeModel.DAYS_PER_TICK
-	var frac_weeks := func(n: Variant) -> float: return float(n) / TimeModel.DAYS_PER_TICK
 
 	_stamp_keys(meta, ["day"], today)
 
@@ -564,8 +565,6 @@ func _migrate_14(state: Dictionary, meta: Dictionary) -> void:
 	# One bug sample per tick: the daily window keeps its newest.
 	if flags.has("mvp_bug_history"):
 		flags["mvp_bug_history"] = (flags["mvp_bug_history"] as Array).slice(-1)
-	_convert(flags, "mvp_sprint_days_total", "mvp_sprint_weeks_total", ceil_weeks)
-	_convert(flags, "mvp_sprint_days_elapsed", "mvp_sprint_weeks_elapsed", frac_weeks)
 	for key in ["sales_meeting_active", "sales_meeting_used_day", "sales_weekly_closes"]:
 		flags.erase(key)
 
@@ -586,10 +585,6 @@ func _migrate_14(state: Dictionary, meta: Dictionary) -> void:
 		p.erase("work_due_day")
 	_stamp_each(reg.get("promises", []), ["deadline_day"], today)
 
-	var build: Variant = (sys.get("product", {}) as Dictionary).get("active_build")
-	if build is Dictionary:
-		_stamp_keys(build, ["start_day", "beta_entered_day"], today)
-		_convert(build, "iteration_round_days", "iteration_round_weeks", frac_weeks)
 	_stamp_keys(sys.get("rnd", {}), ["note_last_day"], today)
 
 	_stamp_each(ev.get("flags", {}), ["set_day"], today)
@@ -646,6 +641,90 @@ static func _convert(d: Dictionary, from: String, to: String, f: Callable) -> vo
 	if d.has(from):
 		d[to] = f.call(d[from])
 		d.erase(from)
+
+
+## v14 → v15: the sprint engine replaces the build. A build in progress becomes Sprint 1's plan, one
+## feature card per planned step with its design done and its development as far along as the build
+## was; the build and its flags go. A line's polish is read from the stamp its current step shipped
+## with. Confirmed bugs stay counted and the first daily sync attributes them to capabilities, so the
+## ticket ledger starts empty. A typed product opens in Sprint 1 planning; an untyped
+## run keeps the empty state the type picker starts from. Pure and cheap: list_slots reads every slot
+## through here.
+const _POLISH_HALF_STAMP := 1.0     # above the one-turn baseline: a second design turn or a gate bonus
+const _POLISH_FULL_STAMP := 1.11    # three design turns
+const _BUILD_FLAG_PREFIXES := ["creation_draft", "cancelled_build_prefill", "product_path_frank_seen", "mvp_sprint_",
+	"mvp_bug_sprint_", "bug_count_at_bugfix_start_", "mvp_bug_count_at_launch"]
+
+
+func _migrate_15(state: Dictionary) -> void:
+	var gs: Dictionary = state.get("game_state", {}) as Dictionary
+	var flags: Dictionary = gs.get("flags", {}) as Dictionary
+	var sys: Dictionary = state.get("systems", {}) as Dictionary
+	var build: Variant = (sys.get("product", {}) as Dictionary).get("active_build")
+	(sys.get("product", {}) as Dictionary).erase("active_build")
+	for key in flags.keys():
+		if _BUILD_FLAG_PREFIXES.any(func(p: String) -> bool: return String(key).begins_with(p)):
+			flags.erase(key)
+	var subtype: String = String(flags.get("mvp_sub_product_type_id", ""))
+	if subtype == "":
+		return
+	# The build wrote the market and the name only at launch; a typed product carries both.
+	if not flags.has("mvp_market_type"):
+		flags["mvp_market_type"] = ProductCatalog.get_market_type(subtype)
+	if build is Dictionary and not flags.has("mvp_product_name"):
+		flags["mvp_product_name"] = String(build.get("product_name", ""))
+	var today: int = int(gs.get("day", 1))
+
+	# A step id is the line's base id plus `_k<tier>`, then the line's `@subtype` suffix. Parsed, not
+	# looked up: a hidden line is registered only after the load restores Ar-Ge.
+	var tiers: Dictionary = flags.get("mvp_line_tiers", {}) as Dictionary
+	var stamps: Dictionary = flags.get("mvp_step_realization", {}) as Dictionary
+	var polish: Dictionary = {}
+	for line: String in tiers:
+		var base: String = line.get_slice("@", 0)
+		var stamp: float = float(stamps.get("%s_k%d%s" % [base, int(tiers[line]), line.trim_prefix(base)], 1.0))
+		if stamp > _POLISH_HALF_STAMP:
+			polish[line] = SprintCatalog.cfg("polish_max" if stamp >= _POLISH_FULL_STAMP else "polish_step")
+
+	var cards: Dictionary = {}
+	if build is Dictionary:
+		var total: float = float(build.get("total_efor", 0.0))
+		var done: float = clampf(float(build.get("efor_spent", 0.0)) / total, 0.0, 1.0) if total > 0.0 else 0.0
+		# Ar-Ge is read from the save: the run in memory is not the one being read.
+		var lighter: bool = ((sys.get("rnd", {}) as Dictionary).get("states", {}) as Dictionary).get(
+			"design_system") == RnDSystem.STATE_DONE
+		var areas: Array = SprintCatalog.areas_for(subtype, String(flags["mvp_market_type"]))
+		for raw in build.get("planned_step_ids", []):
+			var step: String = String(raw)
+			var base: String = step.get_slice("@", 0)
+			var line_base: String = base.left(-3)
+			var line: String = line_base + step.trim_prefix(base)
+			var tier: int = base.right(1).to_int()
+			var area: Dictionary = areas.filter(func(a: Dictionary) -> bool:
+				return (a.get("identity", false) and line == line_base) or line_base in a.lines)[0]
+			var effort: int = int(SprintCatalog.cfg("effort.k%d" % tier))
+			if lighter and ProductLines.axis_of(line) == "experience":
+				effort = maxi(1, roundi(effort * ProductLines.RND_EXPERIENCE_EFFORT_MULT))
+			var card: Dictionary = SprintCatalog.new_card("feat:" + step, "feature", area.id, effort, line, step, tier)
+			# Progress is in points: a phase is full at effort × its share.
+			card.progress = [effort * card.shares[0], effort * card.shares[1] * done, 0.0]
+			card.state = "planned"
+			# The old build charged the licence when it committed; the sprint start must not again.
+			card.paid = true
+			cards[card.id] = card
+
+	# The version history becomes the release list Geçmiş reads. A release from before sprints
+	# has no sprint and no cards: -1 is the release record's "unknown".
+	var releases: Array = (flags.get("mvp_version_history", []) as Array).map(func(v: Dictionary) -> Dictionary:
+		var n: int = int(v.version)
+		return {"number": n, "sprint": -1, "shipped": [], "carried": [], "velocity": {"done": 0, "total": 0},
+			"expected": {}, "actual": {}, "press": {}, "beta": false, "day": int(v.day), "changed_areas": [],
+			"alerts_cleared": []})
+
+	var product: Dictionary = SprintSystem.new_state(today)
+	product.sprint.cards = cards.keys()
+	product.merge({"cards": cards, "releases": releases, "polish": polish}, true)
+	gs["product"] = product
 
 
 # ----------------------------------------------------------------------------

@@ -162,6 +162,14 @@ static func bugs_confirmed() -> int:
 	return int(GameState.get_flag(BUGS_CONFIRMED, 0))
 
 
+## Ürünün ticket defterinin yazma yolu: düzeltme kartı kapattığı doğrulanmış hataları düşer,
+## hatalı çıkış bir tane ekler. Yalnız DOĞRULANMIŞ oynar ve sıfırın altına inmez; GELEN ve
+## koşunun sayaçları DESTEK'indir. Koşunun birikimi havuz boşalınca DESTEK'in kendi bankası
+## kuralıyla kırpılır.
+static func adjust_confirmed(delta: int) -> void:
+	GameState.set_flag(BUGS_CONFIRMED, maxi(0, bugs_confirmed() + delta))
+
+
 static func fix_run_active() -> bool:
 	return bool(GameState.get_flag(FIX_RUN_ACTIVE, false))
 
@@ -234,8 +242,8 @@ static func set_infra_units(units: int) -> void:
 # ------------------------------------------------------------ readings
 
 ## §11.2/§11.3 — the three 0-120 readings, assembled from the one true state.
-## Every surface that draws an axis goes through here, never through the chain
-## directly, so the triangle and the monitor cannot disagree.
+## Every reader of an axis goes through here, never through the chain directly, so
+## two readers cannot disagree.
 static func axis_readings() -> Dictionary:
 	return QualityModel.axis_readings(subtype(), line_tiers(), line_realization(),
 		bugs_confirmed())

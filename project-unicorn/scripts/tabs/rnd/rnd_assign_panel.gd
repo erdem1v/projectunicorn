@@ -3,16 +3,9 @@ extends VBoxContainer
 
 # ============================================================================
 # AR-GE → ATAMA PANELİ. Detay kartının İÇİNDE açılır; Ekip'in alan-gruplu
-# akordeonuyla aynı gramer (§8).
-#
-# NEDEN ProductTeamPanel DEĞİL — dördü de yapısal:
-#   1. O panel FİLTRELER (arama/alan/müsaitlik satırı); burada alanı tutamayan
-#      kişi sönük değil, kapalı değil, YOK.
-#   2. Onun gruplama anahtarı KİŞİ BAŞINA TEK ALANDIR; iki alanlı bir devam
-#      düğümünde çift-yeterli biri HER İKİ grupta da görünmek zorunda.
-#   3. Onda LİDER SATIRI var; araştırmanın lideri yok (§5.4 tek toplam).
-#   4. Onun sütunları dar kart sütununa TEK SATIRDA sığmıyor; bu yüzden buradaki
-#      satır İKİ SATIRLIK.
+# akordeonuyla aynı gramer (§8). Alanı tutamayan kişi sönük değil, kapalı değil, YOK;
+# iki alanlı bir devam düğümünde çift-yeterli biri HER İKİ grupta da görünür. Araştırmanın
+# lideri yok (§5.4 tek toplam). Satır dar kart sütununa sığsın diye İKİ SATIRLIK.
 #
 # BU DOSYA HİÇBİR SAYI TÜRETMEZ: havuz `RnDSystem.eligible_assignees`, hız
 # `RnDSystem.weeks_estimate`, engel `RnDSystem.start_refusal`.

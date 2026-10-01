@@ -1,11 +1,7 @@
 extends Control
 
 # Yüzen takip kartı yığını — sağ üstte. Bu node bir şey çizmez: onaylı kartlar (BuildBar ·
-# ResearchBar) kendilerini çizer, burası onları taşır, gizler ve sürükletir. Onaylı sayfa
-# iptali hiçbir karede çizmiyor; `ProductSystem.cancel_build` Ürün sayfasındaki girişte.
-#
-# İki çubuk tek yığında, çünkü Ar-Ge §5.0'ın öğrettiği an ancak ikisi aynı anda görünürken
-# okunur: araştırma akarken yapım çubuğu "Ekip araştırmada." der.
+# ResearchBar) kendilerini çizer, burası onları taşır, gizler ve sürükletir.
 #
 # GÖRÜNÜRLÜK: herhangi bir çubuğun fingerprint()'i doluysa görünür, ofiste de pencerenin
 # üstünde de; yalnız şehir haritası açıkken gizli, çünkü haritanın ofis kartı sağ kenarı alır.
@@ -25,7 +21,7 @@ extends Control
 
 @onready var root: Control = $Root
 
-## Taşınan çubuklar, .tscn sırasıyla (yapım üstte). Bu node çubukların içini bilmez: tek
+## Taşınan çubuklar, .tscn sırasıyla (DESTEK üstte). Bu node çubukların içini bilmez: tek
 ## istediği `fingerprint()` ve `gui_input`.
 var _bars: Array[Control] = []
 

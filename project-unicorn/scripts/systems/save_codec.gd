@@ -30,7 +30,6 @@ static func script_for_class(cls: String) -> Script:
 		"Prospect":     return Prospect
 		"Rival":        return Rival
 		"Promise":      return Promise
-		"FeatureBuild": return FeatureBuild
 		"TermSheet":    return TermSheet
 		_:              return null
 

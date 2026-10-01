@@ -116,11 +116,9 @@ signal event_resolved(event_id: String, choice_index: int)
 signal modal_requested(event: GameEvent)
 
 # --- Build / product signals ---
+# SprintSystem her açık sürümde "shipped" ile atar; PromiseRegistry sözü burada tutar.
 signal build_phase_changed(new_phase: String)
-# true YALNIZ tavan parkında (ITER_MAX_ROUNDS'a gelindi); "Geliştirmeye geç" ya da yeni tur false.
-signal build_iteration_decision_pending(pending: bool)
-# END of ProductSystem.daily_tick: day_advanced fires BEFORE the tick moves the counters, so a
-# bar repainting there would lag a day.
+# ProductSystem's hourly wear moved the live bug counters.
 signal build_progress_changed()
 # Ürün §10: sağlayıcı ya da kapasite değişti. Tek kaynak ProductState'in write-through
 # seam'leri (set_infra_provider / set_infra_units); kapasite yüzeyleri poll etmez.
@@ -130,9 +128,6 @@ signal infra_changed()
 # Dinleyicisi olmasa da yayınlanır; eksik bir ad içeriğin o ana atıfta bulunamaması demektir.
 # Adlar KARARLIDIR ve her birinin TEK emitter'ı vardır: iki emitter motora aynı anı iki kez gösterir.
 signal version_shipped(version: int)
-signal build_started(build_id: String)
-signal build_paused(reason_key: String)
-signal build_resumed()
 signal fix_run_started(confirmed: int)
 signal fix_run_finished(shipped: int, remaining: int)
 signal bug_confirmed(total_confirmed: int)
@@ -143,6 +138,18 @@ signal line_upgraded(line_id: String, tier: int)
 signal line_completed(line_id: String)
 signal delighter_shipped(step_id: String)
 signal phase_bar_raised(phase: int)
+
+# --- Sprint ---
+# Tek emitter SprintSystem. product_state_changed sprint ekranının yeniden çizim kancasıdır.
+signal sprint_planned(number: int)
+signal sprint_started(number: int)
+signal card_phase_changed(card_id: String, phase: int)
+signal card_done(card_id: String)
+signal card_carried_over(card_id: String)
+signal sprint_closed(number: int)
+signal card_decision_requested(card_id: String)
+signal sprint_auto_started(number: int)
+signal product_state_changed()
 
 # --- GDD AR-GE MODÜLÜ §10 · OKUMA YÜZEYİNİN SİNYALLERİ ---
 # Ürün bloğuyla aynı yasa; tek emitter RnDSystem.
@@ -161,7 +168,7 @@ signal research_progress_changed()
 signal product_note_read()
 
 # Ar-Ge deep-link (§2): tab_changed("rnd") SENKRON mount eder, ardışık emit güvenli.
-# open_assign: barın "ata" bağı true, Konsept'in "→ Araştır" bağı false.
+# open_assign: barın "ata" bağı atama panelini açık getirir.
 signal rnd_node_requested(node_id: String, open_assign: bool)
 
 # §5.8 / §6.1 PanelLayer kartları. RnDSystem yayınlar, main.gd mount eder.
