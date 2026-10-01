@@ -1229,6 +1229,124 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler: A) Onaylanır. B) Fon ya da müşteri başına ayrı oda ve bina (varlık hattı işi).
   - Kaynak: görüşme akışı planı §0 varsayımları ve §10 (Erdem, 2026-09-29).
 
+- **96 · Ürün rev 7 · Faz B ajan kararları onay bekliyor.**
+  - Ne oluyor: Sprint döngüsü canlıya alınırken ajanlar PRD'nin ve sahip kararlarının (GUNCELLEMELER "Ürün rev 7")
+    açık bıraktığı yerlerde karar verdi. Kod bu kararlarla çalışır; hiçbiri GUNCELLEMELER'in kuralı değildir.
+    - Eşleme. (1) Yetenek mevcut hattır; alanlar: Çekirdek beş kimlik hattı, Onboarding & Erişim mobil hat ve gizli
+      `line_hidden_self_serve`, Büyüme (B2C) ya da Entegrasyonlar (B2B) entegrasyon hattı, Güven & Ölçek güvenlik ve
+      dayanıklılık, Gelir yalnız B2C'de sanal "Ücretli plan"; B2B'de Gelir yerine Müşteriler satırı
+      (`data/product/sprint.json` `areas`). (2) Cila kartı üretilmez, katalogda cila adı yok; cila sayacını yalnız kayıt
+      göçü doldurur (`sprint.json` `polish_*`). (3) Kademenin lisans bedeli kartın sprinti başlarken bir kez alınır,
+      göçle gelen kart ödenmiş sayılır (`SprintSystem.start`, `card.paid`). (4) Faz → rol → Ekip alanı tablosu;
+      uymayan kişi fazı %50 hızla yürütür, Test'e uyan kimse yoksa testsiz biten kart hatalıdır (`sprint.json`
+      `roles`, `role_areas`, `no_role_speed`; `SprintSystem._fits`). (5) Sprint ekibi aktif kurucu ve ürün alanlı aktif
+      çalışanlardır, Satış ve Müşteri Temsilcisi sayılmaz; beceri bandı rolün ana alanından okunur, ikincil alanla uyan
+      kişi aynı puanla çalışır; kurucu 0,75, moralsiz, yalnız Ürün ve Yazılım'a uyar (`SprintSystem.team`, `_points`).
+      Ekip sekmesindeki iş ataması (Ar-Ge dışında, Yapım sütunu dahil) ve Ekip §12.1'in iki işte 0,50 odak katsayısı
+      (`HRConstants.focus_mult`) sprint puanına girmez: Yapım ve Destek'teki yazılımcı sprintte de masada da tam çıktı
+      verir.
+      (6) Kurucunun satış toplantısı ve VC hazırlığı sprint kapasitesini düşürmez: sprint puanı haftalıktır, Satış §5.0
+      toplantı payı uygulanmaz; `sales_meeting_time_skip_founder_share` toplantı payını DESTEK masasında,
+      `prep_bonus_and_capacity` kapasitenin değişmediğini ölçer. (7) Lider en yüksek Liderlik'li aktif çalışandır
+      (eşitlikte küçük kimlik), yoksa kurucu (`product_model.gd`). (8) Sprint numarası saklanır, hafta günden türetilir:
+      planlama başlangıcı geciktirebildiği için PRD §3.11'in "numara günden türetilir" yarısı uygulanmadı
+      (`GameState.product.sprint`). (9) "!" bir yetenekte 3+ ticket ya da Güven'de altyapı aşımıdır
+      (`SprintCatalog.area_alert`). (10) Müşteri arketipi `Customer.industry`'nin sektöründen okunur (Hevesli → Çekirdek,
+      Fiyat-avcısı → Entegrasyonlar, Bürokratik → Güven, öbürü → Onboarding), sözleşme 52 hafta; zamanında çıkan talep
+      yalnız "memnun" işaretlenir, Satış'a ya da memnuniyete yazılmaz; geç talep sessizce düşer
+      (`sprint.json` `archetypes`, `request`; `SprintBridges.tick_requests`). (11) `product.paid_tier` kartı kalır,
+      üç eski ürün kartı `cards/unwired/`'a taşındı.
+    - Katalog ve lider. (12) Beklenti alanın ulaşabileceği en yüksek seviyeye kırpılır; Gelir'in tavanı 1'dir, yoksa
+      Traction ve Series A'da hep Zayıf okunurdu (`SprintCatalog.expectation`). (13) Deneyim eksenli adımlara Ar-Ge
+      `design_system`'in %20 efor indirimi uygulanır (`SprintCatalog.step_effort`). (14) Durum eşikleri sırayla okunur:
+      0 Yok, beklentinin altı Zayıf, beklenti + 1'in altı Yeterli, üstü Güçlü; PRD'nin "±0,5 Yeterli"si "Zayıf"la
+      çakışıyordu (`SprintCatalog.word_for`). (15) Rakibin kademesi taban tablo + her çıkış için +1; beklenti artışı
+      birikimlidir (en çok +1); çip, cümle ve ses son 3 sprintin çıkışlarını okur (`SprintCatalog`, `rivals.json`).
+      (16) Lider kuralının açılımı: en yakın son tarihli açık talep ve acil düzeltmeler zorunlu seçimdir; MVP'den önce
+      zorunlu alan Çekirdek'tir (yoksa Tasarım ★ kilitli Onboarding "en zayıf" sayılıp yalnız araştırma verirdi);
+      zorunlular %125'e, dolgu %100'e kadar girer; boş sprint tavanı aşan zorunlu kartı da alır (yalnız kurucu kapasite
+      3 iken K2 5 puandır); etkisi 0 olan kart dolguya girmez; kilitli, başka sütunda duran ve PM'in onaylı planındaki
+      kart önerilmez (`SprintCatalog._suggest`). (17) Araştırmanın etki ağırlığı 0,5 → 0: araştırma yalnız zorunlu
+      seçim olarak gelir, yoksa her K2'yi geçip sprintleri dolduruyordu (`sprint.json` `impact.research`).
+      (18) Ücretli plan MVP'ye kadar kilitlidir ("Kilit: Canlı ürün ✗"); "+", "→" ve lider onu almaz
+      (`SprintCatalog.gate_reason`). (19) Kalibrasyon girdisi, değişiklik değil: dört kişi ve kurucuda sprintin
+      bitirdiği iş kapasitenin %58–79'u; açık her adım yapılınca otomatik sprintler yalnız araştırma taşır.
+    - Motor. (20) Beta bir kanaldır, sonraki sprintte de açık kalır (`SprintSystem.plan_next`). (21) Hatalı kart
+      yalnız sürüm çıkaran kapanışta ticket açar; MVP öncesi açmaz (`SprintSystem._close`). (22) Çıkan kademeye
+      gerçekleşme damgası vurulmaz: eski kapı üstü bonus (+%8 / +%4) ve tasarım turu cilası yeni kademede yoktur
+      (`SprintSystem._close`; `LineGates.above_gate_bonus` yalnız smoke'ta). (23) `refresh_on_publish`'in yeni kod
+      terimi katalog eforunu okur (`ProductLines.effort_of`, DESTEK'in kalibre olduğu ölçek), sprint puanını değil.
+      (24) Yalnız araştırma çıkan kapanış sürüm değildir. (25) Karar 2. haftanın tikinde istenir. Kâğıt sprint sürerken
+      kapanınca kart haftanın kalanında o hafta boşta kalanlarla yürür; boşta kimse yoksa yürümez ve devreder
+      (`SprintSystem._clear_decision`). (26) Durum eklemeleri: `sprint.status` "closed", `sprint.hours_mult`,
+      `card.base`, `card.paid`, `product.worked`; sürüm kaydı etiket değil numara saklar (`release.number`, 0 sürüm
+      değildir). (27) "→" kilitli kartı da reddeder (PRD yalnız "+"yı kilitler); sonraki
+      sütundaki kart planlama dışında yalnız "çıkar"ı sunar.
+    - Köprüler. (28) Talep yalnız kilitsiz adımı hedefler; alanında yapılabilir adım yoksa o pencerede talep doğmaz
+      (`SprintBridges.tick_requests`). (29) Ticket dağıtım ağırlığı 1 + kullanım ağırlığıdır (çoğu K1'in kullanım
+      ağırlığı 0). (30) Sürümde altyapı, doluluk `InfraSystem.OCCUPANCY_AMBER` (0,80) altında kalacak kadar (+1 birim)
+      büyür, hiç küçülmez (`InfraSystem.units_for_occupancy`); MVP'de bulut ve `suggested_start_units` (`SprintBridges.on_mvp`, `on_release`). (31) Rakip
+      çıkışı şeride yalnız canlı satır olarak düşer (`ticker_live_line`), arşive girmez; basın satırı "Biz" arşivine
+      girer (`headline_added`). (32) Müşteriler satırı yalnız açık talebi olanı listeler; müşteri başına ticket sayısı
+      yoktur, ticket yeteneğe bağlıdır (PRD C5 "Beykoz · 2 ticket").
+    - Ekran. (33) Kırmızı ton hem "!" hem Zayıf alanda (`product_model.gd`). (34) Beta sürüm notu sonraki sürümün
+      etiketini beta notuyla gösterir. (35) "Sprint otomatik başladı" çipi yalnız o sprint koşarken görünür
+      (`top_bar.gd`). (36) Onaysız PM planı saklanmaz, her okumada bugünkü durumdan kurulur; yalnız onaylı plan saklanır
+      (`SprintCatalog.pm_plans`). (37) "Düzenle" yalnız SONRAKİ sprintin sütununda: C4 fikstürü artık onu yalnız Sprint
+      8'in altında çizer, mockup 8, 9 ve 10'un altında (`quarter_view.gd`). (38) Düzenle önerinin kartlarını onaysız
+      olarak sonraki sütuna koyar ve PM kalan kapasiteye ek kart önerebilir; onaylanan sonraki sprint planı hemen
+      sütuna geçer, ileri onaylı plan sprinti sonraki olunca geçer (`SprintSystem.approve`, `edit`, `plan_next`).
+      (39) Hedef şeridi 10 kare, çizgi 5. karede; dolu kare = en çok 10, yuvarla(seviye / beklenti × 5)
+      (`sprint.json` `pm.goal_squares`, `pm.goal_mark`). (40) Tür seçici yalnız oynanabilir türleri çizer; yol başına
+      üç kilitli kart (ch03 §12.11, GUNCELLEMELER ch14 §2) çizilmez (`type_picker.gd`).
+    - Kayıt. (41) v15 göçünde ilerleme birimi faz puanıdır; yapımın gizli hataları, tasarım eforu, beta ve iterasyon
+      durumu taşınmaz; cila eşlemesi 1,0'ın üstü → 0,5, 1,11 ve üstü → 1,0; `bug_count_at_bugfix_start_*` de düşer;
+      sürüm geçmişi `releases`'a sprintsiz (−1) geçer (`save_manager.gd` `_migrate_15`).
+    - Silmeler. (42) `PROD_RIVAL_PASSED` ("{rival} seni geçti.") TR metniyle silindi; süpürme listesi onu sahip kararı
+      diye işaretlemişti. (43) Frank anahtarları `PROD_MENTOR_LINE`, `PROD_TIP_BUGS`, `PROD_TIP_GOOD`, `PROD_TIP_WEAK`,
+      `PROD_READY_TALK_FRANK` okuyucusuz kaldı; Frank külliyatı olduğu için silinmedi. (44) Probe preset'leri
+      `full_run_weak`, `b2c_keep`, `b2b_risk_keep`, `b2b_slip_keep` silindi (düz alt-tür, sprint oynayamaz); 34'ün C
+      seçeneği `b2c_keep`'i anıyor. (45) Konusu silinen yüzeyde kalan açık maddeler: 2'nin yapım lideri koltuğu
+      (`set_build_lead` yok; sprint lideri yalnız öneri verir), 41 (yapım hızı yok), 43 (`FeatureBuild` yok), 46
+      (Konsept'te boş ad; tür seçici adı boşken onaylamaz), 48 ve 51 (Ürün Detayı), 49 (Konsept onayı), 52 (fiyat
+      paneli ve detay üçgeni), 54 (DESTEK bloğunun masa cümlesi), 65'in ürün kurma yarısı, 80 ve 82'nin Ürün Detayı
+      sayacı; 44 (`start_build`, `start_version_build`, `sum_efor`, `sum_cost` ve havuzun efor, maliyet ve boyut katkısı
+      alanları silindi; havuzların öbür okuyucuları kalır), 45 (sayaç artık her açık sürümde sıfırlanır, devir 0'dır,
+      bkz. (50); `mvp_bug_count_at_launch` yok), 47 (`delay_days` ve `apply_speed_bonus` silindi), 50
+      (`FeatureLinesView` ve Konsept yok; açıklamalar yine hiçbir ekranda görünmüyor), 61'in Build Bar 2. ve 3. tur
+      rengi (`BUILD_RAMP_*` silindi), 77'nin hata sprinti yarısı (`SPRINT_WEEKS`, `start_bug_sprint` silindi) ve
+      `Chrome*` maddesinin alıntıladığı liste (CLAUDE.md §7'de Ürün sayfasının Frank şeridi artık yok).
+    - Metin (TR/EN onay bekliyor). (46) Stage 1'in 74 `PRODUCT_*` içerik anahtarı (alan adları ve kısa adları, alan ×
+      durum cümleleri, ticket, rakip ve aşım ekleri, kart adları, ticket başlıkları, araştırma ve rakip sesleri, rakip
+      haber satırları, basın satırları, beklenen ve gerçekleşen cümleleri, lider cümleleri, otomatik başlama notu) ve
+      Faz A ekran anahtarları; `PRODUCT_LOCK_LIVE`, `PRODUCT_GOAL_CORE`, `PRODUCT_GOAL_ONBOARDING`,
+      `PRODUCT_GOAL_GROWTH`, `PRODUCT_GOAL_INTEGRATIONS`, `PRODUCT_GOAL_TRUST`, `PRODUCT_GOAL_REVENUE`,
+      `PRODUCT_GOAL_PROGRESS`; çipler `EFFECT_SPRINT_EFFORT`, `EFFECT_SPRINT_PROGRESS`, `EFFECT_SPRINT_CARRY`,
+      `EFFECT_SPRINT_HOURS`; `HR_TASK_ON_PRODUCT`. (47) Karar fikstürlerinin metni ve değerleri (efor −2, ilerleme −1,
+      saat ×1,25, moral −3, bekleme 2 hafta, süre 1 hafta; `data/events/cards/_fixtures/sprint_two_paths.json`,
+      `sprint_late.json`). (48) `rivals.json`'ın rakip seçimi, kademe tablosu ve çıkış takvimi. (49) "sprint",
+      "ticket", "PM" ve "Onboarding" izinli ödünç listesinde yok; `docs/design/localization_glossary.md` satırı gerekir.
+    - İnceleme turu. (50) Her açık sürüm canlı hata havuzunu sıfırlar (`mvp_live_bug_count` 0, `mvp_live_bug_progress`
+      0,0): eski yayın sayacı BETA'nın devriyle başlıyordu, sprintte gizli hata devri yoktur, devir 0'dır; aşınma sonraki
+      sürüme kadar yeniden biriktirir (45'in A seçeneğinin aşınmalı hâli; `SprintSystem._close`). Göç eski
+      `mvp_bug_count_at_launch` bayrağını düşürür. (51) Kademesine başka bir kartla varılmış kart kapanışta kademe
+      yazmaz, sinyal atmaz, yeni kod saymaz ve sonraki planlamada saklı kartlardan düşer (geç kalan talebin kartı ile
+      aynı kademenin özellik kartı; `SprintSystem._close`, `plan_next`). (52) Düzeltme kartının ticket'ları kart
+      koşmaya başlayana dek defterden okunur (koşunun erittikleri düşer, hattın yenileri eklenir); kapanış gerçekten
+      kapananları sayar ve sürüm notuna onlar yazılır (`SprintSystem._refresh_fix_cards`, `SprintBridges.close_tickets`).
+      (53) Kartın yükü kart başına yuvarlanır (kalan puan); kapasite çubuğunun dilimleri ile "kullanılan" aynı sayıdır
+      (`SprintSystem.card_load`, `remaining`). (54) Etki satırının seviye geçişi kelimesini beklentiye göre taşır
+      (`SprintCatalog.word_for`): öngörü, alan satırı ve sürüm notu aynı kelimeyi okur; yetenek geçişinin dilimleri de
+      alanın beklentisiyle boyanır (`SprintCatalog.card_effect`, `forecast`).
+  - Nerede: her maddenin parantezinde; ayrıntılı gerekçe ajan raporlarındadır.
+  - Oyuncuya etkisi: Ürün sekmesinin bütün kuralları; özellikle lider önerisi (16, 17), MVP öncesi Ücretli plan (18),
+    beta (20), hata ve ticket (21, 29, 50, 52), talepler (28), altyapı (30), ÇEYREK (36–39), tür seçici (40) ve karar
+    kartı (25).
+  - Seçenekler: Her madde için A) onaylanır, B) sahip değiştirir (değer ve kural `sprint.json`'da ya da parantezdeki
+    yerde), C) metin maddelerinde sahip yeniden yazar.
+  - Kaynak: sahip kararı 2026-10-01; `docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md`; GUNCELLEMELER "Ürün rev 7";
+    CLAUDE.md §3 (tasarım sabiti ve TR metni onay bekler).
+
 ## Metin ve yerelleştirme
 
 - **`TERM_INV_*` masa satırları (15 TR + 15 EN).** TR 95bc9ea'da, EN 8457ce3'te yazıldı; ikisi de onay bekliyor.
@@ -1598,10 +1716,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   yazar; Erdem ikisini düzeltir; Frank satırları yalnız taslak. ch14 §2 "olay metnini yönetmen tarafı yazar, ajanlar yazmaz"
   diyor. Açık: ch14 §2 güncellensin mi. Kaynak: HANDOFF_series_a §F.
 
-- **Ürün rev 7 geçişi bayrak arkasında, eski akış korunuyor (sahip kararı 2026-10-01).** Yeni sprint ekranı
-  `--product-rev7` debug bayrağıyla açılır (varsayılan kapalı; `ProductModel.enabled`); kapalıyken Ürün sekmesi bugünkü
-  dosya ve davranışıyla çalışır. Sprint, alan, puan kapasitesi, ses, sürüm notu ve çeyrek sistemleri henüz yok; ekran
-  debug fikstürüyle doğrulandı. Yeni anahtarlar `PRODUCT_*`, TR/EN onay bekliyor (sprint, PM ve ticket izinli ödünç
-  listesinde yok). GDD ch03 rev 6.1 eski akışı tanımlıyor (Konsept, yayın akışı, kapasite bloğu, fiyat paneli, Frank
-  şeridi, monitör); PRD rev 7 sprint döngüsü bunların yerine geçiyor, GUNCELLEMELER'de rev 7 maddesi yok. Açık: ch03
-  rev 7'ye güncellensin mi; bayrak hangi kapıyla kalkar (ISLER "Ürün rev 7"). Kaynak: `docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md`.
+- **Ürün rev 7 sprint döngüsü canlı, eski akış silindi (sahip kararı 2026-10-01).** Geçiş bayrağı yoktur; Ürün
+  sekmesi sprint ekranıdır ve canlı veriyle çalışır (`SprintSystem`, `SprintCatalog`, `SprintBridges`,
+  `GameState.product`, kayıt şeması 15). Eski Konsept, yapım ve yayın akışı, eski sekme ve onları sınayan smoke
+  vakaları silindi. Kural `GDDs/GUNCELLEMELER.md` "Ürün rev 7" bölümüne işlendi; GDD ch03 rev 6.1 .docx hâlâ eski akışı
+  (Konsept, yayın akışı, kapasite bloğu, fiyat paneli, Frank şeridi, monitör), ch12 .docx §3 ve §5 eski ev sahiplerini
+  ve onboarding'in Konsept'e açılmasını anlatıyor. Ajanın verdiği kararlar 96'dadır. Açık: ch03 ve ch12 .docx rev 7'ye
+  güncellensin mi. Kaynak: `docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md`; GUNCELLEMELER "Ürün rev 7".

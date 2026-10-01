@@ -109,7 +109,7 @@ vardır (`TimeModel.seconds_per_tick(hız)`):
 |---|---|---|
 | `ticks(weeks)` | hafta verisi → tik; birebir | süre okuyan her yer |
 | `per_tick(rate_per_day)` | günlük oran × 7 | oranın uygulandığı yer |
-| `days(ticks)` | tik → takvim günü | beta keşfi, rakip payı büyümesi, `funding.sheet_days_left`, kepenk gazetesinin Frank satırı |
+| `days(ticks)` | tik → takvim günü | rakip payı büyümesi, `funding.sheet_days_left`, kepenk gazetesinin Frank satırı |
 | `months(ticks)` | tik → ekonomi ayı (× 7 / 30) | müşteri kıdemi, sonların ay sayısı |
 | `seconds_per_tick(speed)` | varsayılan günün gerçek süresi | harness, tempo ölçümü |
 
@@ -141,8 +141,9 @@ sonra ×7 alır: gün modelinin yedi günlük adımı aynen korunur. Yukarı yö
 
 ### 3.4 Sönen oranlar takvim günüyle integre edilir
 
-- Sönen oran tik başına düz ×7 yapılmaz. BETA keşfi `BETA_BUG_FIND_PER_DAY` (6) × `BETA_FIND_DECAY`^⌊beta günü⌋'dür;
-  oran beta günü içinde sabittir ve saatlik tikin kapsadığı takvim aralığında, gün sınırında bölünerek integre edilir.
+- Sönen oran tik başına düz ×7 yapılmaz; oran gün içinde sabit tutulur ve saatlik tikin kapsadığı takvim aralığında,
+  gün sınırında bölünerek integre edilir. Kuralın örneği olan BETA keşfi Ürün rev 7 ile silindi (`GUNCELLEMELER.md`
+  "Ürün rev 7"); bugün bu kurala tabi oran yoktur, aşağıdaki sayılar kuralın gerekçesidir.
 - Gün modelinin kalibrasyonu aynen korunur: 0,85'te ilk hafta 27,18, ömür boyu 40 keşif; araştırmalı 0,90'da
   31,30 / 60. Düz ×7 ilk haftada 42 verirdi.
 
@@ -194,17 +195,12 @@ kullanılan gün değişmez.
 
 | sabit | gün modeli (gün) | yürürlükte (hafta) | not |
 |---|---|---|---|
-| `ITER_ROUND_*` | 4 | 1 | tasarım turu bir tik sürer |
-| `CANCEL_FREE_*` | 1 | 1 | yapımın başladığı tik içinde iptal bedelsiz |
-| `MIN_SPRINT_*` / `MAX_SPRINT_*` → `SPRINT_WEEKS` | 1 / 7 | 1 | ⚑ sprint her zaman bir haftadır; test uzmanlığının sprint süresine bağı yoktur (`TESTER_SPRINT_PER_EXPERTISE` silindi) |
+| sprint (`data/product/sprint.json` `sprint_weeks`) | yok | 2 [WORKING] | Ürün rev 7: başlatıldığı tik 1. hafta, ertesi tik 2. hafta; çeyrek 6 sprint |
 | `BUG_HISTORY_*` | 7 günlük örnek | 2 haftalık örnek | ⚑ trend bu hafta ile geçen haftayı karşılaştırır; `TREND_DELTA` 2 / `TREND_SPIKE` 4 aynı |
 | `INFLOW_TAU` | 21 | 3 | §3.5 |
 | `INTEREST_HALF_LIFE` | 30 | 30 / 7 ≈ 4,29 | §3.5 |
-| `BETA_BUG_FIND_PER_DAY` / `BETA_FIND_DECAY` / `_RESEARCHED` | 6 / 0,85 / 0,90 | aynı, gün verisi | §3.4 |
 | `DAMAGE_DAILY_CAP` | -2 / gün | -2 / gün, tik başına -14 | §3.3 |
-| süre tahminleri (`estimate_*`) | gün, yukarı | hafta, yukarı | `ceil(efor / per_tick(oran))` |
-| sonraki sürüm kartının tabanı | 3 gün | 1 hafta | |
-| balayı H (Ürün §15) | 45 [K] | 6 [K] | talep üreteci bağlı değil; kodda sabiti yok |
+| B2B talebi (`sprint.json` `request`) | yok | sprint cinsinden [WORKING] | imzadan 1 sprint sonra ve yenilemeden 6 sprint önce doğar, son tarih 4 sprint; sözleşme 52 hafta |
 
 ### 4.3 Ar-Ge
 
@@ -228,7 +224,7 @@ kullanılan gün değişmez.
 | `LEAVE_DEFER_*` | 30 | 4 | |
 | `RAISE_COOLDOWN_*` | 180 | 26 | |
 | `HRConstants.DAYS_PER_YEAR` → `TimeModel.WEEKS_PER_YEAR` | 365 | 52 | kıdem tazminatı |
-| `EXPERIENCE_PER_WORKED_DAY` / `EXPERIENCE_BUILD_BONUS` | 2 / 1 gün başına | aynı, tik başına ×7 | taban 1 / gün → en az 7 / tik; yapımda 21 / tik |
+| `EXPERIENCE_PER_WORKED_DAY` / `EXPERIENCE_BUILD_BONUS` | 2 / 1 gün başına | aynı, tik başına ×7 | taban 1 / gün → en az 7 / tik; o hafta bir sprint kartında çalışana 21 / tik |
 | `MORALE_BASE_DRIFT_PER_DAY` | 0,25 | aynı, tik başına 1,75 | saat, yük ve huy ölçeklemesinden önce |
 | `MORALE_EASE_PER_DAY` | 3 | aynı, tik başına 21 | §3.3 |
 | mesai | Ekip §8.1 | §9 | |
@@ -311,7 +307,7 @@ kullanılan gün değişmez.
 | `EXPIRY_DEFAULT` / `MONEY` / `LOW_STAKES` / `URGENT` | 7 / 30 / 14 / 3 | 1 / 4 / 2 / 1 | yalnız geri düşüş, §3.8 |
 | `ARC_AWAITING_SUBJECT_TIMEOUT_*` | 14 | 2 | |
 | `DEFAULT_COOLDOWN_*` | 30 | 4 | |
-| kart `cooldown` | 21, 14 ×3, 6, 5, 1 ×3, 0, 90 | 3, 2 ×3, 1, 1, 1 ×3, 0, 13 | cs_escalation; request_complaint, request_feature, request_renewal; weekly_summary; gate_series_a; retention, sheet_decision, version_ship; price_break; seed_stalled |
+| kart `cooldown` | 21, 14 ×3, 6, 5, 1 ×2, 0, 90 | 3, 2 ×3, 1, 1, 1 ×2, 0, 13 | cs_escalation; request_complaint, request_feature, request_renewal; weekly_summary; gate_series_a; retention, sheet_decision; price_break; seed_stalled |
 | kart `deadline` | 14 ×4 | 2 ×4 | cs_escalation, request_complaint, request_feature, retention |
 | seam eşikleri | `sheet_days_left ≤ 3`, `angel ≥ 2`, `seed_close ≤ 1`, `acq ≤ 10`, `launch ≥ 1`, `history ≥ 1` | `sheet_weeks_left ≤ 2`, ≥ 1, ≤ 1, ≤ 1, ≥ 1, ≥ 1 | ⚑ `gate_series_a`'daki `history weeks_since ≥ 1` Frank'in kapı satırıyla karar kartı arasına tam bir hafta koyar |
 | harness kayıt aralığı / varsayılan koşu | 50 / 365 gün | 7 / 52 hafta | tarama saatleri 9, 13, 16 (17:00 varsayılan mesaide gecedir) |
@@ -349,10 +345,13 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 | `funding.frank_cheque`, `seed_offer` | kesinti, kritik | 4 | para masası (`EXPIRY_MONEY_WEEKS`) |
 | `funding.frank_approach_close`, `_half`, `_near`, `frank_door_open`, `frank_office_move`, `gate_traction`, `gate_series_a`, `seed_door`, `seed_closed`, `hire_nudge` | kesinti, kritik | 2 | duyuru, bekleyebilir |
 | `funding.seed_stalled` | kâğıt | 2 | |
-| `product.design_round_intro`, `first_ship`, `version_ship`, `paid_tier` | kesinti, kritik | 1 | o haftanın olayı |
+| `product.paid_tier` | kesinti, kritik | 1 | o haftanın olayı |
 | `team.resignation` | kesinti, kritik | 1 | |
 | `world.final_stretch_press` | kâğıt, kritik | 4 | |
 | `world.final_stretch_comment`, `final_stretch_verdict` | kesinti, kritik | 1 | yumuşak tavana bağlı |
+
+`product.design_round_intro`, `first_ship` ve `version_ship` `data/events/cards/unwired/`'dadır; deste onları
+yüklemez, süreleri okunmaz.
 
 ## 5. Takvim ve tarih satırı
 
@@ -542,9 +541,10 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 
 - Her toplantı kurucunun o haftaki çıktısından `toplantı saati / WEEK_WORK_HOURS` (40) payını alır. 2 saatlik toplantı
   haftalık kurucu çıktısının %5'idir; 4 toplantı %20.
-- Saatlik sistemler (ürün yapımı, destek masası, BETA'da test) toplantı atlamasının saatlerinde kurucuyu
+- Saatlik sistemler (destek masası) toplantı atlamasının saatlerinde kurucuyu
   `1 - HOURS_PER_DAY / WEEK_WORK_HOURS` = 0,4 katsayısıyla sayar. Atlanan her saat haftanın 1/24'ü olduğundan toplam
-  kayıp tam saat / 40 eder.
+  kayıp tam saat / 40 eder. Ürünün sprint kapasitesi haftalık puandır ve toplantı payını okumaz
+  (`docs/ACIK_ISLER/ACIK_KARARLAR.md` 96).
 - Günlük sistemler (Ar-Ge birikimi) kurucu terimini `1 - haftanın toplantı saati / 40` ile çarpar. Sayaç
   `founder_meeting_hours` (GameState) haftalık payın tek kaynağıdır.
 - Aynı pay kuralı VC ve seed pitch'i ile term sheet masasına da uygulanır.
@@ -663,7 +663,8 @@ mekanik ondan bağımsızdır ve headless güvenlidir.
   - `summary_ledger`, `runway_warn_band`, `company_start_hour` (türetilir).
 - `flags`: `mvp_launch_day`, `mvp_version_launch_day`, `sales_weekly_anchor_day` (0 = boş), `angel_seed_accepted_day`,
   `finance_runway_warn_snooze_until_day`, `mvp_version_history[].day`; `mvp_bug_history` (R7);
-  `mvp_sprint_days_total` → `mvp_sprint_weeks_total` (R3); `mvp_sprint_days_elapsed` → `mvp_sprint_weeks_elapsed` (R5).
+  `mvp_sprint_days_*` bayrakları ve eski yapımın alanları v15 göçünde (`_migrate_15`, Ürün rev 7) düşer, burada
+  çevrilmez.
 - `registries`:
   - karakter: `last_raise_day`, `last_promotion_day`, `hire_day`, `leave_until_day`, `employment_history[].day`;
     `flight_risk_days` → `flight_risk_weeks` (R4); `training_days_left` → `training_weeks_left` (R3);
@@ -672,8 +673,7 @@ mekanik ondan bağımsızdır ve headless güvenlidir.
     `CS_REQUEST_INTERVAL_WEEKS`;
   - lead: `spawned_on_day`, `expires_on_day`, `work_started_day`;
   - söz: `deadline_day`.
-- `systems`: `product.active_build`'in `start_day` ve `beta_entered_day`'i (0 = boş), `iteration_round_days` →
-  `iteration_round_weeks` (R5); `rnd.note_last_day`.
+- `systems`: `rnd.note_last_day`.
 - `event_engine`: `flags[].set_day`, `timed_flags[].expires_on` / `set_day`, `stamps[].day`, `latches[].last_day`,
   `held[].day` (şeridin bekleyen satırları), `rows[].day` ve `rows[].entities.*.bound_day`; `queue[]`, `schedule[]` ve
   `papers[]`'ın `admitted_day`, `fire_on_day`, `expires_on` alanları ve `context.*.bound_day`'i; `arcs[]`'ın
@@ -691,7 +691,7 @@ Karar verilene kadar kod yukarıdaki hâliyle çalışır; sahip onayı bekleyen
 2. **HAYIR DİYEMEZ'in fiyat-kırma etkisi yok.** Satış §7.6'da bu huydaki temsilcide kart daha sık düşer [K].
    Vade penceresi olmadığı için pencere çarpanı (`PRICE_BREAK_CANT_SAY_NO_MULT`) silindi; kart her işleme tikinde,
    lead başına bir kez değerlendirilir. Karar: huyun etkisi hafta tanesinde nasıl kurulur?
-3. **Alt-hafta ayrımları tek tike çöküyor.** ⚑ satırlarında (sprint uzunluğu, hazırlık, lead'lerin toplu gelişi, bug
+3. **Alt-hafta ayrımları tek tike çöküyor.** ⚑ satırlarında (hazırlık, lead'lerin toplu gelişi, bug
    trendi, haber şeridinin seyrekleşmesi) bir haftadan kısa süre tek tike iner. Alternatif, saat çözünürlüklü süre,
    ayrı karardır.
 4. **Hafta içinde doğan lead ek hafta almıyor.** Sahip kararı ona bir hafta fazla ömür veriyordu; kod amacı sırayla

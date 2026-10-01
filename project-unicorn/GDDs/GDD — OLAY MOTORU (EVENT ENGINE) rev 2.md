@@ -1808,3 +1808,71 @@ cooldown 30; harness 50 günde bir kayıt, 365 günlük koşu.
 *Neden.* Gün değeri 7'ye bölünüp anlamlı en yakın haftaya yuvarlandı; sıfıra düşen süre en az 1 hafta oldu. §13.8
 geçerlidir: hiçbiri ölçülmedi. Tavan dolarsa 1×'te 3 gerçek dakika (iki hafta) 4 kesinti eder, §13.7 çapasının (3)
 üstü; harness bunu ölçer ve raporlar.
+
+### §27.10 · Ürün rev 7: yapım motoru silindi, sprint dikişleri eklendi
+
+Sahip kararı 2026-10-01 eski ürün yapım motorunu (Konsept, tasarım turları, geliştirme, beta, yayın) sildi; ürün
+sprint sprint geliştirilir (`GDDs/GUNCELLEMELER.md` "Ürün rev 7"). Motorun yapıma bağlı yerleri aşağıdadır.
+
+**1. G4'ün build-safe denetimi yok.**
+
+*Belge ne diyordu.* §4.1: G4 tick uyumu ve pencereyle birlikte build-safe denetler; `Origin.REQUEST` tick eşleşmesini
+atlasa da `allowed_hours` ve build-safe yine uygulanır (ayrıca §27.4). Bir sürüm yapılırken yalnız `build_safe`
+etiketli ya da o yapım fazına kapsamlı kart kesebiliyordu.
+
+*Ne yapıldı.* Denetim G4'ten ve kartların `build_safe` etiketi kart JSON'larından silindi. Sprint sürerken G4 kartı
+yalnız tick ve pencereyle süzer.
+
+*Neden.* Denetimin okuduğu aktif yapım yoktur. Sprint bir yapım fazı değildir ve PRD sprint süresince kartları
+susturmaz.
+
+**2. Ürün fiilleri değişti.**
+
+*Belge ne diyordu.* Ürün kartlarının fiilleri aktif yapıma yazıyordu: `dimension_delta`, `bug_delta`, `delay_weeks`
+(ürün gecikmesi; §27.9 madde 1'deki adın ürün yarısı), `ship_active_build`, `enter_development`, `enter_beta`.
+
+*Ne yapıldı.* Bu altı fiil ve çipleri silindi. Yerlerine dört nötr fiil geldi (`EvEffects.NEUTRAL_VERBS`):
+`sprint_card_effort {amount}` ve `sprint_card_progress {amount}` bekleyen karar kartının eforunu ve ilerlemesini,
+`sprint_card_carry` onu sonraki sprinte devreder, `sprint_hours {mult}` koşan sprintin çalışma saatini çarpar. Hedef
+yoksa (bekleyen karar ya da koşan sprint) fiil `_no_target` yoluyla reddedilir. Çipleri `event_modal._describe_modifier`
+kurar; efor çipi kartın gerçekten değişecek eforunu yazar (`SprintSystem.effort_change`).
+
+*Neden.* Kartın sonucu oyuncunun gördüğü yere düşmeli: sprint ekranında görünen şey kartın eforu, ilerlemesi ve
+sprintin kapasitesidir.
+
+**3. Ürün seam'leri ve sinyalleri değişti.**
+
+*Belge ne diyordu.* Üretilmiş seam ve sinyal listesi (§27.8) yapım okumalarını (`urun.phase`, `urun.build_active`,
+`urun.build_progress`, `urun.build_paused`, `urun.iteration_round`) ve yapım sinyallerini (`build_started`,
+`build_paused`, `build_resumed`, `build_iteration_decision_pending`) taşıyordu.
+
+*Ne yapıldı.* Bunlar silindi. Yeni seam'ler `urun.sprint_number`, `urun.sprint_week`, `urun.sprint_running`,
+`urun.decision_card`; yeni sinyaller EventBus'ın Sprint bölümündedir (`sprint_planned`, `sprint_started`,
+`card_phase_changed`, `card_done`, `card_carried_over`, `sprint_closed`, `card_decision_requested`,
+`sprint_auto_started`, `product_state_changed`). `version_shipped` ve `build_phase_changed("shipped")` sürüm çıkaran
+sprint kapanışında yayılır. Hiçbir kart sprint sinyaliyle tetiklenmez; `EvSignals.BINDINGS`'e satır eklenmedi. Güncel
+liste `docs/content/events_draft/_vocabulary.md` ve `docs/EVENT_SIGNAL_MANIFEST.md`'dedir.
+
+*Neden.* Okunacak yapım yoktur; sprintin okunur durumu numara, hafta, koşuyor mu ve bekleyen karardır.
+
+**4. Sprint karar kartları.**
+
+*Belge ne diyordu.* Sistemlerin kartı adıyla istemesi (§4.1) bir sprint kartına bağlı karar tanımlamıyordu.
+
+*Ne yapıldı.* `SprintSystem`, koşan bir kart için sprintin 2. haftasının tikinde deterministik hash'le
+(`data/product/sprint.json` `decision.rate`) `decision.cards`'tan bir kartı `EventGate.request` ile ister. Kabul
+edilirse kart karar bekler ve ilerlemez; "Karar ver" kağıdı açar. Seçim `event_resolved` ile kartı hemen serbest
+bırakır; süresi dolan kağıdın `on_expire`'ı motorun kendi yolundan koşar ve kart sonraki tikte serbest kalır. Kağıdın
+masada durup durmadığını okuyan bir seam olmadığı için sistem `EventGate.desk_papers`'ı tarar. Bugün listede yalnız
+`_fixtures/` kartları vardır (`fixture.sprint_two_paths`, `fixture.sprint_late`); normal koşuda G2 onları reddeder ve
+karar çıkmaz.
+
+*Neden.* PRD §3.3 kart kapsamlı olayı ve dört sonuç değiştiricisini ister; kart içeriği yazılana kadar dikiş fikstürle
+sınanır.
+
+**5. Eski ürün kartları havuzdan çıktı.**
+
+*Ne yapıldı.* `product.first_ship`, `product.version_ship` ve `product.design_round_intro` `cards/unwired/`'a taşındı;
+yükleyici o dizine girmez, metinleri korunur.
+
+*Neden.* Seçenekleri silinen fiilleri kullanıyordu; sürüm anını artık sprint ekranının sürüm notu taşır.

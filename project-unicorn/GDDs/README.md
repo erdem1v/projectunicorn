@@ -22,13 +22,13 @@ yasasına göre doğru bağlamak olarak tanımlar.
 |---|---|---|---|
 | `GDD v2 — 01 · The Run (spine).docx` | koşu omurgası | DIRECTOR-APPROVED 2026-08-20 | §4 → ch09; §5 yaşam maliyeti → Ekip §17.6; §1 demo kesim noktası ve §6 zorluk → ch14 §1–§2 |
 | `GDD v2 — 02 · Founder & People Model.docx` | kurucu ve insan modeli | DIRECTOR-APPROVED 2026-08-20 | §2, §6 ve §10 → Ekip (§0.1, §17.6) |
-| `GDD v2 — 03 · Product Lifecycle.docx` | Ürün | rev 6.1 · İNŞA SÜRÜMÜ · 2026-08-24 | gövde başlığı "GDD — ÜRÜN MODÜLÜ (rev 6 · İNŞA ADAYI)" der, YÜRÜRLÜK rev 6.1; §24 inşa notlarını taşır |
+| `GDD v2 — 03 · Product Lifecycle.docx` | Ürün | rev 6.1 · İNŞA SÜRÜMÜ · 2026-08-24 | gövde başlığı "GDD — ÜRÜN MODÜLÜ (rev 6 · İNŞA ADAYI)" der, YÜRÜRLÜK rev 6.1; §24 inşa notlarını taşır; yapım ve canlı ürün yüzeyleri (§2, §3, §5–§7, §10, §16, §17) → GUNCELLEMELER "Ürün rev 7" ve `../docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md` |
 | `GDD v2 — 06 · Operations.docx` | operasyon | DIRECTOR-APPROVED 2026-08-20 | §1.2 destek kapasite formülü → Ekip §17.6 |
 | `GDD v2 — 08 · Finance & Economy.docx` | finans ve ekonomi | DIRECTOR-APPROVED 2026-08-20 | |
 | `GDD v2 — 09 · Funding & Investors.docx` | fonlama ve yatırımcılar | DIRECTOR-APPROVED 2026-08-20 | |
 | `GDD v2 — 10 · Rivals & World.docx` | rakipler ve dünya | DIRECTOR-APPROVED 2026-08-20 | durum satırı: spec yazılmadan önce daha derin bir tasarım oturumu gerekir |
 | `GDD v2 — 11 · Events & Narrative.docx` | olay içeriği ve anlatı | DIRECTOR-APPROVED 2026-08-20 | yukarıya bakın |
-| `GDD v2 — 12 · UI Surfaces & ODA.docx` | UI yüzeyleri ve ODA | DIRECTOR-APPROVED 2026-08-20 | §1 Ar-Ge sekmesi → Ar-Ge §2; §8'deki enerji → Ekip §17.6 |
+| `GDD v2 — 12 · UI Surfaces & ODA.docx` | UI yüzeyleri ve ODA | DIRECTOR-APPROVED 2026-08-20 | §1 Ar-Ge sekmesi → Ar-Ge §2; §8'deki enerji → Ekip §17.6; §3 ve §5 → GUNCELLEMELER "Ürün rev 7" |
 | `GDD v2 — 13 · Endings & Progression.docx` | sonlar ve ilerleme | DIRECTOR-APPROVED 2026-08-20 | |
 | `GDD v2 — 14 · Scope (v1 _ EA _ Full).docx` | kapsam (v1 / EA / Full) | DIRECTOR-APPROVED 2026-08-20 | §3 Ar-Ge kilidi → Ar-Ge §2 |
 | `GDD — EKİP MODÜLÜ vson.docx` | Ekip | rev 11 · İNŞA SÜRÜMÜ · 2026-08-23 | |

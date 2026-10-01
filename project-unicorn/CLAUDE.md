@@ -86,17 +86,17 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   sahibinin seam'inden geçer ve UI'nin dinlediği yerde seam sinyal yayar. Seam yoksa kurulur, alan "bir kereliğine"
   yazılmaz. Seam'ler: müşteri → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (yayar);
   toplam MRR yalnız `SalesSystem.reflect_mrr()`; kasa, burn, marka, itibar → `GameState.set_*`; faz →
-  `GameState.advance_phase()` (`set_phase` yalnız kayıt ve debug içindir); karakter → `CharacterRegistry.*`; ürün ve
-  build → `ProductSystem.*`; tek seferlik gider → `FinanceSystem.apply_one_time_cost`. `GameState.flags` sistem
-  durumudur: içerik ona sahibin adlı fiiliyle yazar (tek kapı `set_game_flag` beyaz listesi); motorun kendi hafızası
-  `EvFlags`'tadır.
+  `GameState.advance_phase()` (`set_phase` yalnız kayıt ve debug içindir); karakter → `CharacterRegistry.*`; ürün →
+  `SprintSystem.*` (`GameState.product`'ın yazarı; köprüsü `SprintBridges` yalnız `tickets`, `ticket_seq`,
+  `requests`, `rival_hits`'i yazar) ve `ProductState.*`; tek seferlik gider → `FinanceSystem.apply_one_time_cost`. `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
+  kapı `set_game_flag` beyaz listesi); motorun kendi hafızası `EvFlags`'tadır.
 - Olay motoru autoload değil; tek girişi statik `EventGate.request(event_id: String, context: Dictionary = {})`.
   Sistem kartın adını verir, kartı kurmaz. Kartlar `data/events/cards/<kategori>/` altında JSON'dur ve
   `version_scope` ile `EvTuning.SHIPPED_SCOPES`'a göre süzülür (`_fixtures/` yalnız test içindir); arklar
   `data/events/arcs/`'ta. İçerik durumu yalnız `scripts/events/seams/`'ten okur. Invariant'lar: motor GDD §0.3.
 - Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
   kazanılır. B2C'de kitle her oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
-- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 14, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
+- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 15, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`).
 
@@ -115,9 +115,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   TopBar, NewsTicker, MonthSummary bandı) ve `CREAM*`, `*_CHROME`, `*_BRIGHT` okur; sinematik koyu register
   (`DIALOGUE_*`) de `CREAM*` ve `VEIL_*_CHROME`. Tek ada gazetedir (`PaperPanel`, kendi `PAPER_*` merdiveni). 3B
   ofisin renkleri UI token'ı değil sahne verisidir: `OfficeConstants`, `scripts/ui/office/`, `scenes/office/shaders/`.
-- **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) yalnız TopBar, MonthSummary, NewsTicker ve Ürün sayfasının Frank
-  şeridinde (`ChromeButton`) kullanılır. Satış sekmesinin `ChromeTabButton`'ı açık karardır
-  (`docs/ACIK_ISLER/ACIK_KARARLAR.md`); yeni yüzey eklemek ayrı karardır.
+- **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) yalnız TopBar, MonthSummary ve NewsTicker'da kullanılır. Satış
+  sekmesinin `ChromeTabButton`'ı açık karardır (`docs/ACIK_ISLER/ACIK_KARARLAR.md`); yeni yüzey eklemek ayrı karardır.
 
 ## 8. Kod yazımı
 Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları tekrarlamaz.
@@ -179,7 +178,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi;
   `city:<saat>:crown` kulenin tacı). Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff`,
   VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|confirm>`; en dar dok
-  `--shot-scale=1.25`. Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
+  `--shot-scale=1.25`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug fikstürüyle
+  (`scripts/debug/product_fixtures.gd`), `--product-shot=live:<pick|plan|active|b2c_mvp|b2b_requests>` sprint motoruyla
+  kurulan koşuda. Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
   duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve
   `crowd_<ofis>_<kişi>_<hız>_NN.png`). Kurucunun toplantı yolculuğu: `--travel-shot=<home|ishani|plaza|loft>[:vc]`
   (10:00'da satış toplantısına, `:vc` ile Series A görüşmesine davet, gidiş, panel ve dönüş;
