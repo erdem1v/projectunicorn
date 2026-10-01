@@ -1597,3 +1597,11 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 - **Oyuncu metnini kim yazar.** 2026-09-25 hükmü (6edade6): ajan oyuncu metnini önce Türkçe, sonra ayrı bir İngilizce olarak
   yazar; Erdem ikisini düzeltir; Frank satırları yalnız taslak. ch14 §2 "olay metnini yönetmen tarafı yazar, ajanlar yazmaz"
   diyor. Açık: ch14 §2 güncellensin mi. Kaynak: HANDOFF_series_a §F.
+
+- **Ürün rev 7 geçişi bayrak arkasında, eski akış korunuyor (sahip kararı 2026-10-01).** Yeni sprint ekranı
+  `--product-rev7` debug bayrağıyla açılır (varsayılan kapalı; `ProductModel.enabled`); kapalıyken Ürün sekmesi bugünkü
+  dosya ve davranışıyla çalışır. Sprint, alan, puan kapasitesi, ses, sürüm notu ve çeyrek sistemleri henüz yok; ekran
+  debug fikstürüyle doğrulandı. Yeni anahtarlar `PRODUCT_*`, TR/EN onay bekliyor (sprint, PM ve ticket izinli ödünç
+  listesinde yok). GDD ch03 rev 6.1 eski akışı tanımlıyor (Konsept, yayın akışı, kapasite bloğu, fiyat paneli, Frank
+  şeridi, monitör); PRD rev 7 sprint döngüsü bunların yerine geçiyor, GUNCELLEMELER'de rev 7 maddesi yok. Açık: ch03
+  rev 7'ye güncellensin mi; bayrak hangi kapıyla kalkar (ISLER "Ürün rev 7"). Kaynak: `docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md`.

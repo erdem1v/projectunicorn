@@ -53,3 +53,18 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   `FileAccess` ile okur; gerekirse include filtresine eklenir.
 - `project.godot` `rendering/reflections/sky_reflections/roughness_layers=7`: ofisin gökyüzü (REALTIME) yedi katman
   istiyor; proje ayarı farkı sahibin onayıyla commit'lenir (CLAUDE.md §12).
+
+## Ürün rev 7
+- **Sistem görevi:** PRD sistemleri + `ProductModel` adaptörü + `SWEEP_LIST` süpürmesi + eski sekmenin silinmesi +
+  bayrağın kaldırılması (`docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md` Faz B).
+  - Sprint ekranı bugün `--product-rev7` bayrağı arkasında yalnız görünüm sözleşmesini çizer
+    (`scripts/tabs/product_rev7/product_model.gd`); `live()` başlığı ve sürüm geçmişini doldurur, eylemler debug
+    fikstürüne bağlı (`scripts/debug/product_rev7_fixtures.gd`). Adaptör aynı alan adlarıyla `live()`'ı ve
+    `set_source` sözleşmesini (`model()`, `act(kind, args)`) doldurur.
+  - Pencere sürüm notundayken kapatılırsa durum korunur, yeniden açılınca sürüm notu gelir. Bugün sekme saati
+    `HOLD_RELEASE_NOTE` ile tutar, kapanınca bırakır (`product_rev7_tab.gd`).
+  - PRD §3.11 "bir gün planlanmazsa sprint liderin önerisiyle otomatik başlar" kuralı bu tutuşa ve planlama durumuna
+    bağlanır.
+  - Süpürme listesi Faz A'da çıkarıldı (izlenmeyen `docs/audits/urun_rev7/SWEEP_LIST.md`). GDD ch03'ün adını andığı
+    yüzeyler (Konsept, yayın akışı, kapasite bloğu, fiyat paneli, Frank şeridi, monitör) GUNCELLEMELER'e rev 7 kaydı
+    düşülmeden silinmez (ACIK_KARARLAR "Ürün rev 7 geçişi").

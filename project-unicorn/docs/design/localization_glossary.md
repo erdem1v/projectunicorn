@@ -57,6 +57,18 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Kararlılık *(monitör)* | Stability | Pitch KARARLILIK'ından AYRI anlam — anahtar paylaşılmaz. |
 | Teknik borç | Tech debt | |
 | Geliştirme bekleniyor | Awaiting development | |
+| sprint | sprint | `PRODUCT_SPRINT_TITLE` ve ürün ekranı. "sprint" izinli ödünç kelimelerde yok: TR onay bekliyor. |
+| PM | PM | `PRODUCT_PM`, Ürün Yöneticisi'nin çip kısaltması. "PM" izinli ödünç kelimelerde yok: TR onay bekliyor. |
+| ticket | ticket | `PRODUCT_CUSTOMER_TICKETS`, `PRODUCT_FX_TICKETS_*`. "ticket" izinli ödünç kelimelerde yok: TR onay bekliyor. |
+| puan *(efor)* | points | Tekil: point (`_ONE`). |
+| alan *(ürün)* | area | ALANLAR / AREAS. |
+| yetenek | capability | Alanın altındaki yapılmış iş. |
+| ses *(kullanıcı)* | voice | SESLER / VOICES; kart fiili "ses kapatır" ↔ "settles {n} voices". |
+| talep | request | Müşterinin ürün talebi; satıştaki "aday ↔ lead" ile karışmaz. |
+| lider *(build)* | lead | LİDERİN ÖNERİSİ / LEAD'S PICK. Satıştaki "aday ↔ lead"den ayrı anahtar ailesi. |
+| devreden | carried over | Kart damgası küçük harf: devreden / carried. |
+| sürüm notu | release note | |
+| hız *(sprint)* | velocity | HIZ / VELOCITY. Kişi ekseni "Hız ↔ Pace"ten ayrı anlam. |
 
 ## 4. İnsanlar — eksenler, roller, bölümler, bantlar, HR
 
