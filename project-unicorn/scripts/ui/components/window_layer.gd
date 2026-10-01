@@ -23,6 +23,11 @@ const DETAILS := {
 }
 # preload: global class cache'e bağımlılık yok (yeni class_name + headless tuzağı).
 const FRAME := preload("res://scripts/ui/components/window_frame.gd")
+## Ürün sekmesinin sprint ekranı bayrak arkasında. Sahne yalnız bayrak açıkken yüklenir; boyu
+## pencereyi 1920 tabanında BuildHUD'un (x ≥ 1540) solunda tutar.
+const PRODUCT_MODEL := preload("res://scripts/tabs/product_rev7/product_model.gd")
+const PRODUCT_REV7_SCENE := "res://scenes/tabs/product_rev7/ProductRev7Tab.tscn"
+const PRODUCT_REV7_SIZE := Vector2(1424, 960)
 ## 1920×1080 tabanında pencere boyları; merkez alan daha darsa pencere ona sığacak kadar
 ## küçülür. Sahnesi olmayan sekme yer tutucunun (marketing) boyunu alır. Ekip 1200: defterin
 ## sabit sütunları ve ÇALIŞAN 1000'e sığmıyor.
@@ -43,6 +48,7 @@ var _primary_id: String = ""
 var _detail_kind: String = ""
 var _detail_payload: Dictionary = {}
 var _veiled: bool = false
+var _rev7: bool = false
 
 
 func _ready() -> void:
@@ -72,7 +78,10 @@ func open_primary(tab_id: String) -> void:
 	if _primary_id == "":
 		return
 	var body: Control
-	if TAB_SCENES.has(_primary_id):
+	_rev7 = _primary_id == "product" and PRODUCT_MODEL.enabled()
+	if _rev7:
+		body = (load(PRODUCT_REV7_SCENE) as PackedScene).instantiate()
+	elif TAB_SCENES.has(_primary_id):
 		body = (TAB_SCENES[_primary_id] as PackedScene).instantiate()
 	else:
 		body = _placeholder(_primary_id)
@@ -155,7 +164,7 @@ func _place() -> void:
 	var room: Vector2 = size - corner * 2.0
 	if _current_page != null:
 		_current_page.position = corner
-		_current_page.size = (SPECS.get(_primary_id, SPECS["marketing"]) as Vector2).min(room)
+		_current_page.size = (PRODUCT_REV7_SIZE if _rev7 else SPECS.get(_primary_id, SPECS["marketing"]) as Vector2).min(room)
 	if _detail == null:
 		return
 	_detail.size = (SPECS[_detail_kind] as Vector2).min(room)

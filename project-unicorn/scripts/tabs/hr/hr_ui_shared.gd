@@ -301,10 +301,12 @@ static func trait_row(trait_ids: Array, with_tooltip: bool = false) -> Control:
 # --- Sayfa kromu ------------------------------------------------------------
 
 ## Küçük mono büyük-harf başlık, sağa uzayan saç teli çizgiyle (§13.2).
-static func section_header(text: String, with_rule: bool = true) -> Control:
+static func section_header(text: String, with_rule: bool = true, variation: StringName = &"SectionLabel") -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	row.add_child(UiFactory.make_section_header(text))
+	var label := UiFactory.make_section_header(text)
+	label.theme_type_variation = variation
+	row.add_child(label)
 	if with_rule:
 		var rule := hairline()
 		rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL

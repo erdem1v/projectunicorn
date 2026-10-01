@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 14
+const THEME_STAMP := 15
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -159,6 +159,16 @@ const DOT_IDLE := Color(0.769, 0.718, 0.624, 1)          # #C4B79F · unearned m
 # (varsayılan: kehribar / yeşil / mavi · CB: kehribar / mavi / mor).
 const AXIS_EXPERIENCE := Color("#5B8FF9")                # ürün ekseni "Deneyim"
 const AXIS_EXPERIENCE_CB := Color("#B07AD6")             # CB "Deneyim" — mor
+# Ürün sprint ekranının alan renkleri KATEGORİKTİR (kart kenarı, tür ikonu, kapasite dilimi) [WORKING].
+# Yuva 2 B2C'de Büyüme, B2B'de Entegrasyonlar; yuva 4 Gelir ya da Müşteriler. Yuva 0'ın mavisi
+# POSITIVE_CB'nin tonunda: CB paletinde "Güçlü" dilimleri o alanın rengi gibi okunurdu, bu yüzden
+# kendi CB ikizi var.
+const AREA_SLOT_0 := Color("#4F6C94")                    # Çekirdek
+const AREA_SLOT_0_CB := Color("#9A4F63")                 # CB Çekirdek · tozlu gül
+const AREA_SLOT_1 := Color("#2E7F87")                    # Onboarding & Erişim
+const AREA_SLOT_2 := Color("#86578A")                    # Büyüme / Entegrasyonlar
+const AREA_SLOT_3 := Color("#56606B")                    # Güven & Ölçek
+const AREA_SLOT_4 := Color("#7B7B3B")                    # Gelir / Müşteriler
 
 # --- BADGE / CHIP ---
 const BADGE_BG := Color(0.957, 0.769, 0.188, 1)          # #F4C430 · count badge (amber pill)
@@ -623,3 +633,34 @@ static func _runway_weeks(months: float) -> int:
 ## disagree in one frame. Bars take build_percent(p) / 100.0, never the raw fraction.
 static func build_percent(progress: float) -> int:
 	return int(round(clampf(progress, 0.0, 1.0) * 100.0))
+
+
+# ============================================================================
+# PRODUCT SPRINT SCREEN · [WORKING]
+# ============================================================================
+const AREA_COLORS := [AREA_SLOT_0, AREA_SLOT_1, AREA_SLOT_2, AREA_SLOT_3, AREA_SLOT_4]
+const PRODUCT_PANEL_RATIOS := [0.32, 0.44, 0.24]   # areas · this sprint · next sprint
+const PRODUCT_PANEL_GAP := 16
+const PRODUCT_WINDOW_PAD := Vector2i(20, 16)   # window inner pad; the page draws its own ×
+const PRODUCT_GOAL_STRIP_H := 56         # the quarter goal strip
+const PRODUCT_CARD_GAP := 8
+const PRODUCT_CARD_ROW_GAP := 6
+const PRODUCT_AREA_ROW_H := 72
+const PRODUCT_CAPACITY_BAR_H := 8
+const PRODUCT_SLICE_PX := 11
+const PRODUCT_SLICE_PX_SMALL := 7         # slices inside an effect line
+const PRODUCT_PHASE_DOT_PX := 9
+const PRODUCT_PHASE_RING_PX := 11
+const PRODUCT_FADED_ALPHA := 0.55         # a candidate already planned, a locked card
+const PRODUCT_QUARTER_AREA_W := 300
+const PRODUCT_ICON_PX := 12               # kind, role, bubble and effect-arrow glyphs
+const PRODUCT_BADGE_PX := 18              # the "!" attention badge
+## The paper cards and folder columns round one pixel more than RADIUS_M.
+const RADIUS_PAPER := 3
+# Content margins (h, v), build_theme.gd only.
+const PAD_PAPER_CARD := Vector2i(10, 7)   # PaperCard family · DecisionRow
+const PAD_STAMP := Vector2i(7, 2)         # Stamp family
+
+
+static func area_color(slot: int) -> Color:
+	return AREA_SLOT_0_CB if slot == 0 and _cb_palette else AREA_COLORS[slot]

@@ -194,6 +194,7 @@ func _run_debug_harness() -> bool:
 		"--negotiation-shot=": _run_negotiation_shot,
 		"--sales-shot=": _run_sales_shot,
 		"--product-shot=": _run_product_shot,
+		"--product7-shot=": _run_product7_shot,
 		"--ending-shot=": _run_ending_shot,
 		"--hr-shot=": _run_hr_shot,
 		"--finance-shot=": _run_finance_shot,
@@ -1644,6 +1645,27 @@ func _run_product_shot(kind: String) -> void:
 	get_tree().call_group(&"build_bar", "debug_print")   # iki ev sahibinin rect + fingerprint'i
 	var state: String = _build_state_arg("")
 	_save_shot("product_shot_%s%s" % [kind, "_" + state if state != "" else ""])
+	get_tree().quit()
+
+
+# --product7-shot=<c1..c5|cards|flow|edge:<name>>: the sprint screen behind the forced flag, fed
+# by the debug fixture source (scripts/debug/product_rev7_fixtures.gd, edge names live there). It
+# goes through the shell's debug relays, the same path an MCP session takes. flow starts from c1
+# and saves one frame after each of start, advance and plan_next.
+func _run_product7_shot(id: String) -> void:
+	_begin_shot()
+	_seed_run_reproducible()
+	await _mount_shot_shell()
+	_shell.debug_product_apply("c1" if id == "flow" else id.trim_prefix("edge:"))
+	var stem: String = "product7_shot_" + id.replace(":", "_")
+	if id != "flow":
+		await _finish_shot(stem)
+		return
+	for kind in ["start", "advance", "plan_next"]:
+		_shell.debug_product_act(kind)
+		await get_tree().process_frame
+		await get_tree().create_timer(0.4).timeout
+		_save_shot("%s_%s" % [stem, kind])
 	get_tree().quit()
 
 

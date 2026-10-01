@@ -304,6 +304,72 @@ func _initialize() -> void:
 		th.set_color("font_pressed_color", name, ink)
 
 	# ========================================================================
+	# ÜRÜN SPRINT EKRANI — folder window, paper cards, stamps. No semantic green or
+	# red here: CANLI, the warning chip, "!", the Güçlü/Zayıf words and the over-capacity
+	# bar are painted at runtime through the colourblind helpers.
+	# ========================================================================
+	_panel(th, &"FolderWindow", "PanelContainer", window_sb)
+	_panel(th, &"FolderColumn", "PanelContainer", _box(T.CARD_BG, T.RADIUS_PAPER, T.CARD_BORDER, Vector2i(T.SPACE_M, T.SPACE_M)))
+	_panel(th, &"FolderColumnActive", "PanelContainer", _box(T.CARD_BG, T.RADIUS_PAPER, T.ACCENT_DEEP, Vector2i(T.SPACE_XL, T.SPACE_XL)))
+	# The dashed variants draw their outline in code: StyleBoxFlat cannot dash.
+	_panel(th, &"FolderColumnDashed", "PanelContainer", _box(Color.TRANSPARENT, T.RADIUS_PAPER, Color.TRANSPARENT, Vector2i(T.SPACE_XL, T.SPACE_XL)))
+	_panel(th, &"PaperCard", "PanelContainer", _box(T.CARD_BG, T.RADIUS_PAPER, T.CARD_BORDER, T.PAD_PAPER_CARD))
+	# Open area row and hovered card: PaperCard's margins, so the content does not move.
+	_panel(th, &"PaperCardOpen", "PanelContainer", _box(T.CARD_BG, T.RADIUS_PAPER, T.ACCENT_DEEP, T.PAD_PAPER_CARD, T.BORDER_FOCUS))
+	_panel(th, &"PaperCardDashed", "PanelContainer", _box(Color.TRANSPARENT, T.RADIUS_PAPER, Color.TRANSPARENT, T.PAD_PAPER_CARD))
+	var hover_sb := _box(T.CARD_BG, T.RADIUS_PAPER, T.ACCENT_DEEP, Vector2i(T.SPACE_L, T.SPACE_S))
+	hover_sb.shadow_color = T.SHADOW_SOFT
+	hover_sb.shadow_size = T.SPACE_S
+	hover_sb.shadow_offset = Vector2(0, T.SPACE_XXS)
+	_panel(th, &"HoverBox", "PanelContainer", hover_sb)
+	_panel(th, &"DecisionRow", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT_DEEP, T.PAD_PAPER_CARD))
+	_panel(th, &"GoalStrip", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_PAPER, T.ACCENT_DEEP, Vector2i(T.SPACE_XL, 0)))
+	_panel(th, &"QuarterHeaderBand", "PanelContainer", _sides_box(T.AMBER_BG, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.ACCENT_DEEP, Vector2i(T.SPACE_M, T.SPACE_M)))
+	_lbl(th, &"DataMono", mono_sb, T.SIZE_DATA, T.INK)
+	_lbl(th, &"DataMonoLarge", mono_sb, T.SIZE_ED_MODAL, T.INK)
+	_lbl(th, &"DataMonoHero", mono_sb, T.SIZE_ED_HEADLINE, T.INK)
+	_lbl(th, &"TickerLabel", serif_it, T.SIZE_BODY, T.INK)
+	_lbl(th, &"AreaName", mono_sb, T.SIZE_BODY, T.INK)
+	_lbl(th, &"RowMetaStrong", mono_sb, T.SIZE_SMALL, T.INK)   # the named part of an effect line beside RowMeta
+	_lbl(th, &"AreaSentence", sans_reg, T.SIZE_DATA, T.INK_MUTED)
+	_lbl(th, &"LeadQuote", serif_it, T.SIZE_LEAD, T.INK)
+	# Boxed labels. The host sets the minimum size and centres the text; AttentionBadge
+	# stays neutral here and turns red through the helpers.
+	var banner := _box(T.INK_DIM, T.RADIUS_S, Color.TRANSPARENT, T.PAD_STAMP)
+	banner.corner_radius_top_left = 0      # the flag's pole stands on the left
+	banner.corner_radius_bottom_left = 0
+	for boxed in [
+		[&"Stamp", T.SIZE_META, T.INK_MUTED, _box(T.SURFACE_FRAME, T.RADIUS_S, T.CARD_BORDER, T.PAD_STAMP)],
+		[&"StampAmber", T.SIZE_META, T.ACCENT_DEEP, _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT_DEEP, T.PAD_STAMP)],
+		[&"StampGrey", T.SIZE_MICRO, T.CARD_BG, banner],
+		[&"AttentionBadge", T.SIZE_SMALL, T.INK_MUTED, _box(T.SURFACE_FRAME, T.RADIUS_S, T.CARD_BORDER, Vector2i.ZERO)],
+		[&"DataMonoBox", T.SIZE_SMALL, T.INK, _box(T.SURFACE_FRAME, T.RADIUS_S, T.CARD_BORDER, Vector2i(T.SPACE_XS, 0))],
+		[&"AvatarChip", T.SIZE_MICRO, T.INK_MUTED, _box(T.BG_PANEL, T.RADIUS_S, T.BORDER_HOVER, Vector2i.ZERO)],
+		[&"AvatarChipMe", T.SIZE_MICRO, T.ACCENT_DEEP, _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT_DEEP, Vector2i.ZERO)],
+	]:
+		_lbl(th, boxed[0], mono_sb, boxed[1], boxed[2])
+		th.set_stylebox("normal", boxed[0], boxed[3])
+	_commit_button(th, &"PrimaryButton", false)
+	_commit_button(th, &"PrimaryButtonSmall", false, T.PAD_BTN)
+	th.set_font_size("font_size", &"PrimaryButtonSmall", T.SIZE_META)
+	# InkButton: a card's square + → buttons and its remove word.
+	th.set_type_variation(&"InkButton", &"Button")
+	var ink_hot := _box(T.CARD_BG, T.RADIUS_S, T.ACCENT_DEEP, T.PAD_BTN_XS)
+	_states(th, &"InkButton", {
+		"normal": _box(T.CARD_BG, T.RADIUS_S, T.CARD_BORDER, T.PAD_BTN_XS),
+		"hover": ink_hot,
+		"pressed": ink_hot,
+		"disabled": _box(Color.TRANSPARENT, T.RADIUS_S, T.BORDER_DISABLED, T.PAD_BTN_XS),
+		"focus": _no_focus(),
+	})
+	th.set_font("font", &"InkButton", mono_sb)
+	th.set_font_size("font_size", &"InkButton", T.SIZE_SMALL)
+	th.set_color("font_color", &"InkButton", T.INK_MUTED)
+	th.set_color("font_hover_color", &"InkButton", T.INK)
+	th.set_color("font_pressed_color", &"InkButton", T.INK)
+	th.set_color("font_disabled_color", &"InkButton", T.INK_FAINT)
+
+	# ========================================================================
 	# CHROME AİLESİ — koyu kabuk register'ı. Yasal yüzey listesi CLAUDE.md Chrome
 	# kuralında. Desenler kabuğun kendi grameri (VEIL_*_CHROME merdiveni); gövdeyle
 	# birlikte değişen her renk *_CHROME ikizinden okunur.
@@ -662,14 +728,14 @@ func _speed_button(th: Theme, name: StringName, active: bool) -> void:
 # Primary button: filled amber with ON_ACCENT text, the ink that reads on the fill. The body's
 # disables onto the cream plate. The dark stages' (CommitButtonDark) take the frame's amber and
 # disable onto their own recessed card: the cream plate would glare on the charcoal.
-func _commit_button(th: Theme, name: StringName, dark: bool) -> void:
+func _commit_button(th: Theme, name: StringName, dark: bool, pad: Vector2i = T.PAD_CTA) -> void:
 	th.set_type_variation(name, &"Button")
 	_states(th, name, {
-		"normal": _box(T.ACCENT_CHROME if dark else T.ACCENT, T.RADIUS_M, Color.TRANSPARENT, T.PAD_CTA),
-		"hover": _box(T.ACCENT_HOVER_CHROME if dark else T.ACCENT_HOVER, T.RADIUS_M, Color.TRANSPARENT, T.PAD_CTA),
-		"pressed": _box(T.ACCENT_PRESSED_CHROME if dark else T.ACCENT_PRESSED, T.RADIUS_M, Color.TRANSPARENT, T.PAD_CTA),
+		"normal": _box(T.ACCENT_CHROME if dark else T.ACCENT, T.RADIUS_M, Color.TRANSPARENT, pad),
+		"hover": _box(T.ACCENT_HOVER_CHROME if dark else T.ACCENT_HOVER, T.RADIUS_M, Color.TRANSPARENT, pad),
+		"pressed": _box(T.ACCENT_PRESSED_CHROME if dark else T.ACCENT_PRESSED, T.RADIUS_M, Color.TRANSPARENT, pad),
 		"disabled": _box(T.DIALOGUE_CARD_BG if dark else T.SURFACE_DISABLED, T.RADIUS_M,
-			T.DIALOGUE_CARD_BORDER if dark else T.BORDER_DISABLED, T.PAD_CTA),
+			T.DIALOGUE_CARD_BORDER if dark else T.BORDER_DISABLED, pad),
 		"focus": _no_focus(),
 	})
 	th.set_color("font_color", name, T.ON_ACCENT)

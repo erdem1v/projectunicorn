@@ -2839,3 +2839,119 @@ FRANK_OFFICE_MOVE_BODY,"Frank'ten mesaj.
 FRANK_OFFICE_MOVE_OK,Bakacağım,I'll look into it
 FRANK_ADVISORY_MEETING_SET,Görüşme ayarlandı. Hazırlıklı git.,Meeting's set. Go in prepared.
 FRANK_ADVISORY_PAID_TIER,Artık ücret almanın vakti. Fiyatı belirle.,Time to start charging. Set the price.
+PRODUCT_AREAS,ALANLAR,AREAS
+PRODUCT_BUILT,YAPILANLAR,BUILT
+PRODUCT_POSSIBLE,YAPILABİLECEKLER,TO BUILD
+PRODUCT_VOICES,SESLER,VOICES
+PRODUCT_VOICES_COUNT,{n} ses,{n} voices
+PRODUCT_VOICES_COUNT_ONE,{n} ses,{n} voice
+PRODUCT_NEW_COUNT,{n} yeni,{n} new
+PRODUCT_NEW_STAMP,YENİ,NEW
+PRODUCT_RIVALS_HAVE,{have}/{total} rakipte var,{have}/{total} rivals have it
+PRODUCT_RIVAL_TOPIC,Rakip: {topic},Rival: {topic}
+PRODUCT_LEVEL_STRONG,Güçlü,Strong
+PRODUCT_LEVEL_ENOUGH,Yeterli,Solid
+PRODUCT_LEVEL_WEAK,Zayıf,Weak
+PRODUCT_LEVEL_NONE,Yok,None
+PRODUCT_AREA_NOTHING_LEFT,Bu alanda yapılacak bir şey kalmadı,Nothing left to build here
+PRODUCT_CUSTOMERS,Müşteriler,Customers
+PRODUCT_REQUESTS_COUNT,{n} talep,{n} requests
+PRODUCT_REQUESTS_COUNT_ONE,{n} talep,{n} request
+PRODUCT_CUSTOMERS_NONE,Açık talep yok,No open requests
+PRODUCT_DUE_SPRINT,Sprint {n} sonuna kadar,By the end of sprint {n}
+PRODUCT_PER_YEAR,{amount}/yıl,{amount}/yr
+PRODUCT_CUSTOMER_TICKETS,{customer} · {n} ticket,{customer} · {n} tickets
+PRODUCT_CUSTOMER_TICKETS_ONE,{customer} · {n} ticket,{customer} · {n} ticket
+PRODUCT_TAG_SPRINT,Sprint {n},Sprint {n}
+PRODUCT_SPRINT_TITLE,SPRINT {n},SPRINT {n}
+PRODUCT_WEEKS,{n} hafta,{n} weeks
+PRODUCT_WEEKS_ONE,{n} hafta,{n} week
+PRODUCT_WEEK_OF,Hafta {w}/{t},Week {w}/{t}
+PRODUCT_THIS_SPRINT,BU SPRINT,THIS SPRINT
+PRODUCT_NEXT,SONRAKİ,NEXT
+PRODUCT_TEAM_NOBODY,Bu sprintte çalışacak kimse yok,Nobody can work this sprint
+PRODUCT_ROLE_MISSING,Ekipte {role} yok · kartlar hatalı çıkabilir,No {role} on the team · cards may ship buggy
+PRODUCT_CARD_SPILLS,devreder,carries over
+PRODUCT_PLANNED,planlanan,planned
+PRODUCT_CARRIED,devreden,carried
+PRODUCT_URGENT,! acil,! urgent
+PRODUCT_BETA_WAITING,beta bekliyor,in beta
+PRODUCT_LOCKED_NODE,Ar-Ge: {node},R&D: {node}
+PRODUCT_REMOVE,çıkar,remove
+PRODUCT_EFFORT_POINTS,{n} puan,{n} points
+PRODUCT_EFFORT_POINTS_ONE,{n} puan,{n} point
+PRODUCT_EFFORT_PERSON,{name} {weeks},{name} {weeks}
+PRODUCT_PERSON_ROLE,{name} · {role},{name} · {role}
+PRODUCT_FX_TICKETS_CLOSE,{n} ticket kapatır,closes {n} tickets
+PRODUCT_FX_TICKETS_CLOSE_ONE,{n} ticket kapatır,closes {n} ticket
+PRODUCT_FX_TICKETS_CLOSED,{n} ticket kapanır,{n} tickets close
+PRODUCT_FX_TICKETS_CLOSED_ONE,{n} ticket kapanır,{n} ticket closes
+PRODUCT_FX_VOICES_CLOSE,{n} ses kapatır,settles {n} voices
+PRODUCT_FX_VOICES_CLOSE_ONE,{n} ses kapatır,settles {n} voice
+PRODUCT_FX_HOLDS,{level} kalır,stays {level}
+PRODUCT_FX_ALERT_CLEARS,kalkar,clears
+PRODUCT_FX_RIVAL_GAP,rakip açığını kapatır,closes the rival gap
+PRODUCT_FX_RESEARCH,beklentisi netleşir,expectations get clearer
+PRODUCT_FX_REQUEST,{customer} talebi,{customer} request
+PRODUCT_FX_ON_TIME,talebi zamanında,request on time
+PRODUCT_AT_SPRINT_END,SPRINT SONUNDA,AT SPRINT END
+PRODUCT_STATUS,DURUM,STATUS
+PRODUCT_STATUS_CARDS,{n} kart,{n} cards
+PRODUCT_STATUS_CARDS_ONE,{n} kart,{n} card
+PRODUCT_STATUS_DONE,bitti,done
+PRODUCT_STATUS_RUNNING,sürüyor,in progress
+PRODUCT_STATUS_DECISIONS,{n} karar,{n} decisions
+PRODUCT_STATUS_DECISIONS_ONE,{n} karar,{n} decision
+PRODUCT_STATUS_WAITING,bekliyor,waiting
+PRODUCT_NEXT_RELEASE,SONRAKİ SÜRÜM,NEXT RELEASE
+PRODUCT_IN_WEEKS,{n} hafta sonra,in {n} weeks
+PRODUCT_IN_WEEKS_ONE,{n} hafta sonra,in {n} week
+PRODUCT_PLUS_ONE_SPRINT,+1 sprint,+1 sprint
+PRODUCT_CARDS_LEFT,{n} kart kaldı,{n} cards left
+PRODUCT_CARDS_LEFT_ONE,{n} kart kaldı,{n} card left
+PRODUCT_LEAD_TIP,LİDERİN ÖNERİSİ · {name},LEAD'S PICK · {name}
+PRODUCT_LEAD_LINE,{name} · lider,{name} · lead
+PRODUCT_BETA_CHANNEL,Beta kanalı,Beta channel
+PRODUCT_OFF,Kapalı,Off
+PRODUCT_ON,Açık,On
+PRODUCT_START_SPRINT,Sprinti başlat,Start sprint
+PRODUCT_START_NEED_CARD,En az bir kart ekle,Add at least one card
+PRODUCT_PLAN_SPRINT,Sprint {n} planına geç,Plan sprint {n}
+PRODUCT_DECIDE,Karar ver,Decide
+PRODUCT_DECISION_SPEAKER,{speaker}:,{speaker}:
+PRODUCT_PHASE_DESIGN,Tasarım,Design
+PRODUCT_PHASE_DEV,Geliştirme,Development
+PRODUCT_PHASE_TEST,Test,Test
+PRODUCT_RELEASE_NOTE,SÜRÜM NOTU,RELEASE NOTE
+PRODUCT_SPRINT_END,Sprint {n} sonu,End of sprint {n}
+PRODUCT_LIVE,CANLI,LIVE
+PRODUCT_SHIPPED,ÇIKANLAR,SHIPPED
+PRODUCT_CARRIED_OVER,DEVREDEN,CARRIED OVER
+PRODUCT_VELOCITY,HIZ,VELOCITY
+PRODUCT_VELOCITY_LINE,Ekip {total} puanın {done} tanesini bitirdi.,The team finished {done} of {total} points.
+PRODUCT_VELOCITY_LINE_ONE,Ekip {total} puanın {done} tanesini bitirdi.,The team finished {done} of {total} point.
+PRODUCT_RESULT,SONUÇ,RESULT
+PRODUCT_RESULT_EXPECTED,Beklenen: {text},Expected: {text}
+PRODUCT_RESULT_ACTUAL,Gerçekleşen: {text},Actual: {text}
+PRODUCT_PRESS,BASIN,PRESS
+PRODUCT_NO_RELEASE,Bu sprint sürüm çıkmadı,No release this sprint
+PRODUCT_RELEASE_BETA,Beta kanalında · bir sonraki sprintte yayına girer,In the beta channel · goes live next sprint
+PRODUCT_MVP_NOT_LIVE,MVP · yayında değil,MVP · not live
+PRODUCT_HISTORY,Geçmiş,History
+PRODUCT_HISTORY_NONE,Henüz sürüm yok,No releases yet
+PRODUCT_HISTORY_CARDS,{n} kart,{n} cards
+PRODUCT_HISTORY_CARDS_ONE,{n} kart,{n} card
+PRODUCT_VIEW_SPRINT,SPRINT,SPRINT
+PRODUCT_VIEW_QUARTER,ÇEYREK,QUARTER
+PRODUCT_QUARTER_NEED_PM,PM işe alınca,Once you hire a PM
+PRODUCT_SOON,Yakında,Soon
+PRODUCT_NEXT_EMPTY,→ ile kart gönder,Send cards with →
+PRODUCT_FLAG_DEADLINE,{customer} · {request} · son tarih,{customer} · {request} · deadline
+PRODUCT_THIS_QUARTER,BU ÇEYREK,THIS QUARTER
+PRODUCT_PM,PM,PM
+PRODUCT_APPROVE,Onayla,Approve
+PRODUCT_EDIT,Düzenle,Edit
+PRODUCT_APPROVE_ALL,Hepsini onayla,Approve all
+PRODUCT_APPROVED,ONAYLANDI,APPROVED
+PRODUCT_FX_VOICES_CLOSED,{n} ses kapanır,{n} voices settle
+PRODUCT_FX_VOICES_CLOSED_ONE,{n} ses kapanır,{n} voice settles
