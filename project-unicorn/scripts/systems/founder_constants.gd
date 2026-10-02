@@ -75,8 +75,14 @@ const ORIGINS := [
 		"locked_note_key": "LOCK_SOON"},
 ]
 
-# --- Portraits (onboarding Page 1) — data-driven grid; one id per asset in PORTRAIT_DIR.
-const PORTRAIT_DIR := "res://assets/art/founders/"
+# --- Portraits, pre-rendered from LookSystem.FOUNDER_LOOKS (in PORTRAIT_IDS order) and
+# LookSystem.FRANK_LOOK by tools/people/bake_portraits.gd: <id>.png is a founder's 4:5 master; a
+# crop for smaller places is named for the size it is cut at (<id>_132x165.png, a disc <id>_24.png)
+# and shown near it.
+const PORTRAIT_DIR := "res://assets/art/portraits/"
+const MENTOR_PORTRAIT := "frank"
+const PORTRAIT_CELL := Vector2i(132, 165)   # the onboarding grid's cells, Kişisel
+const PORTRAIT_THUMB := Vector2i(32, 40)    # the company step's founder line
 const PORTRAIT_IDS := [
 	"founder_01", "founder_02", "founder_03", "founder_04", "founder_05", "founder_06",
 	"founder_07", "founder_08", "founder_09", "founder_10", "founder_11",
@@ -182,5 +188,10 @@ static func origin_by_id(origin_id: String) -> Dictionary:
 	return {}
 
 
-static func portrait_path(portrait_id: String) -> String:
-	return PORTRAIT_DIR + portrait_id + ".webp"
+## `portrait_id`'s master, or its crop cut at `size` (a square one is a disc, named for its width).
+static func portrait_path(portrait_id: String, size := Vector2i.ZERO) -> String:
+	if size == Vector2i.ZERO:
+		return PORTRAIT_DIR + portrait_id + ".png"
+	if size.x == size.y:
+		return "%s%s_%d.png" % [PORTRAIT_DIR, portrait_id, size.x]
+	return "%s%s_%dx%d.png" % [PORTRAIT_DIR, portrait_id, size.x, size.y]

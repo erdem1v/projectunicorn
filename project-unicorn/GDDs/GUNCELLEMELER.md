@@ -377,10 +377,10 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
 
 ## GDD v2 — 14 · Scope (v1 / EA / Full)
 
-- **§7 Portrait policy, "Employees: no faces" satırı ve olay kartı cümlesinin çalışan yarısı**
+- **§7 Portrait policy, "Employees: no faces" satırı ve olay kartı cümlesi; "Frank has a portrait"**
   - Eski metin: Çalışanların yüzü yoktur: baş harf ve renk. Olay kartı kaynağının küçük dairesi çalışanda baş harftir; Frank'te ve portreli karakterlerde portredir.
-  - Yürürlükteki kural: Çalışan, aday ve kurucu, baş harf dairesinin gösterildiği her kartta ofisteki 3B görünümünden çekilmiş bir bust ile görünür (Ekip kadrosu, dosya, görevler, eğitim, Atlas dosyaları, olay kartının kaynağı). Adayın görünümü dosyada doğar; işe alınan aynı kişi ofise yürür. Kurucunun görünümü seçtiği portreye benzetilir. Boyalı kurucu portresi, Frank ve VC yüzeyleri değişmez; görünümü olmayan (eski dosya) baş harfle kalır. Açık: kurucu portresinin karakter seçimine dönmesi ve VC bust'ları (ACIK_KARARLAR 92).
-  - Kaynak: ofis karakterleri görev kararı 5 (Erdem, 2026-09-28).
+  - Yürürlükteki kural: Çalışan, aday ve kurucu, baş harf dairesinin gösterildiği her kartta ofisteki 3B görünümünden çekilmiş bir bust ile görünür (Ekip kadrosu, dosya, görevler, eğitim, Atlas dosyaları, olay kartının kaynağı). Adayın görünümü dosyada doğar; işe alınan aynı kişi ofise yürür. Yağlı boya portreler emeklidir: Frank'in ve 11 kurucunun portresi, büstlerle aynı 3B karakter sisteminden önceden render edilmiş sabit portredir. Kurucu onu açılışta seçer (kurucu seçimi, şirket adımı) ve Kişisel sayfasında görür; ofiste aynı görünüşle durur. Frank'in görünüşü sabittir (gri sakal ve saç, gri takım, bordo kravat); gri saçı sakallı bir başta (kendi başı ya da bıyığı saç renginden boyanan baş) yalnız onundur, hiçbir çalışan, aday ya da görüşmedeki muhatap onu taşımaz; eski kayıtta taşıyanın görünüşü yüklemede yeniden çekilir. Frank sahnede görünmez; portresi olay kartının kaynağında, tanışmada, dönem özetinde ve bildirim yığınında durur. VC'ler ve müşteri muhatapları 3B bust'larıyla görünür (ch09 görüşme maddesi). Görünümü olmayan (eski dosya) baş harfle kalır.
+  - Kaynak: ofis karakterleri görev kararı 5 (Erdem, 2026-09-28); arayüz yeniden tasarımı kararları 2, 12 ve 13 (Erdem, 2026-10-02).
 
 - **§1 Demo / v1 cut point, "Target session" cümlesi**
   - Eski metin: Hedef oturum 60 ile 90 dakikadır.

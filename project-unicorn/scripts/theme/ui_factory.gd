@@ -103,6 +103,17 @@ static func make_person_avatar(person_name: String, look: Dictionary, diameter: 
 	return make_avatar(initials_of(person_name), diameter, PersonBust.texture(look, diameter))
 
 
+## Frank's disc: his pre-rendered portrait, already cut to the circle (FounderConstants).
+static func make_mentor_avatar(diameter: int) -> TextureRect:
+	var face := TextureRect.new()
+	face.texture = load(FounderConstants.portrait_path(FounderConstants.MENTOR_PORTRAIT, Vector2i(diameter, diameter)))
+	face.custom_minimum_size = Vector2(diameter, diameter)
+	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	face.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return face
+
+
 ## Initials-in-a-circle avatar. The `Avatar` variation uses RADIUS_PILL, so it stays circular
 ## at any diameter. Given a person's bust (PersonBust), the disc shows the face instead.
 static func make_avatar(initials_text: String, diameter: int = 24, bust: Texture2D = null) -> Panel:

@@ -183,7 +183,7 @@ func prefill(draft: Dictionary) -> void:
 	var founder: String = String(draft.get("founder_name", "")).strip_edges()
 	_preview_founder.text = founder if founder != "" else tr("HR_ROLE_FOUNDER")
 	var portrait_id: String = draft.get("portrait_id", "")
-	var path: String = FounderConstants.portrait_path(portrait_id)
+	var path: String = FounderConstants.portrait_path(portrait_id, FounderConstants.PORTRAIT_THUMB)
 	_preview_portrait.texture = load(path) if portrait_id != "" and ResourceLoader.exists(path) else null
 	_refresh_visual()
 

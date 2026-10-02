@@ -7984,7 +7984,8 @@ static func _case_save_double_load_no_residue() -> String:
 	return ""
 
 
-# --- Looks: one per person, everyone apart, kept by a save, redrawn the same for an old one ---
+# --- Looks: one per person, everyone apart, Frank's his alone, kept by a save, redrawn the same
+# for an old one, drawn again on load where an old one wears Frank's ---
 static func _case_look_registry_unique_and_saved() -> String:
 	# A portrait past the first, so the founder cannot pass on the not-found fallback.
 	var portrait: String = FounderConstants.PORTRAIT_IDS[2]
@@ -8023,6 +8024,19 @@ static func _case_look_registry_unique_and_saved() -> String:
 	if GameState.issued_looks.size() != sigs.size() \
 			or sigs.any(func(s: String) -> bool: return GameState.issued_looks.count(s) != 1):
 		return "issued_looks holds %d entries, want each of the %d looks once" % [GameState.issued_looks.size(), sigs.size()]
+
+	# A draw that lands on Frank's hair on a bearded head is drawn again: the team, the candidates
+	# and the funds' people all draw through LookSystem._unique.
+	var landing := 0
+	while not LookSystem.is_franks(LookSystem._make(landing, HRConstants.ROLE_SALES_REP, "m")):
+		landing += 1
+	if LookSystem.is_franks(LookSystem._unique(landing, HRConstants.ROLE_SALES_REP, "m", [])):
+		return "a draw from seed %d kept Frank's look" % landing
+	var funds: Array = GameState.investor_people.values().reduce(func(all: Array, side: Array) -> Array:
+		return all + side, [])
+	if crowd.any(func(c: Character) -> bool: return LookSystem.is_franks(c.look)) \
+			or funds.any(func(q: Dictionary) -> bool: return LookSystem.is_franks(q.look)):
+		return "someone in the office or across the table wears Frank's look"
 
 	var saved: Dictionary = looks.call()
 	var issued: Array[String] = GameState.issued_looks.duplicate()
@@ -8066,6 +8080,17 @@ static func _case_look_registry_unique_and_saved() -> String:
 	CharacterRegistry.fill_missing_looks()
 	if looks.call() != filled:
 		return "fill_missing_looks drew different looks for the same save"
+
+	# A save from before Frank's look was his alone: an employee and a fund's person wearing it.
+	var worn: Character = CharacterRegistry.get_employees()[0]
+	var analyst: Dictionary = GameState.investor_people.values()[0][2]
+	var moustache := LookSystem.FRANK_LOOK.merged({"head": "m_worker"}, true)
+	worn.look = moustache.duplicate()
+	analyst.look = LookSystem.FRANK_LOOK.duplicate()
+	CharacterRegistry.fill_missing_looks()
+	CounterpartSystem.fill_investor_people()
+	if worn.look == moustache or analyst.look == LookSystem.FRANK_LOOK:
+		return "a load kept a look of Frank's"
 	return ""
 
 

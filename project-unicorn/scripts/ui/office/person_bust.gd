@@ -23,9 +23,12 @@ const KEY_DIR := Vector3(-0.6, -0.55, -0.6)
 static var _studio: PersonBust
 static var _cache := {}
 
-var _viewport: SubViewport
+var viewport: SubViewport
+var camera: Camera3D
+## The ink pass and the light's environment; the portrait baker (tools/people/) tunes both.
+var ink: ShaderMaterial
+var environment: Environment
 var _world: Node3D
-var _camera: Camera3D
 var _queue := []
 var _busy := false
 
@@ -48,19 +51,21 @@ static func texture(look: Dictionary, px: int) -> ImageTexture:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_viewport = SubViewport.new()
-	_viewport.own_world_3d = true
-	_viewport.transparent_bg = true
-	_viewport.msaa_3d = Viewport.MSAA_4X
-	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	add_child(_viewport)
+	viewport = SubViewport.new()
+	viewport.own_world_3d = true
+	viewport.transparent_bg = true
+	viewport.msaa_3d = Viewport.MSAA_4X
+	viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(viewport)
 	_world = Node3D.new()
-	_viewport.add_child(_world)
-	_camera = Camera3D.new()
-	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	_camera.size = FRAME
-	_world.add_child(_camera)
-	_world.add_child(_environment())
+	viewport.add_child(_world)
+	camera = Camera3D.new()
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera.size = FRAME
+	_world.add_child(camera)
+	var sky := _environment()
+	environment = sky.environment
+	_world.add_child(sky)
 	var key := DirectionalLight3D.new()
 	key.light_specular = 0.0
 	key.basis = Basis.looking_at(KEY_DIR.normalized())
@@ -74,19 +79,19 @@ func _ready() -> void:
 	fill.light_color = OfficeLighting.TOP_FILL
 	fill.light_energy = OfficeLighting.TOP_FILL_DAY * OfficeLighting.LIGHT_SCALE
 	_world.add_child(fill)
-	var ink := MeshInstance3D.new()
+	var ink_pass := MeshInstance3D.new()
 	var quad := QuadMesh.new()
 	quad.size = Vector2(2, 2)
-	ink.mesh = quad
-	ink.extra_cull_margin = 16384.0
-	ink.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var ink_mat := ShaderMaterial.new()
-	ink_mat.shader = preload("res://scenes/office/shaders/office_ink.gdshader")
-	ink_mat.render_priority = -128
-	ink_mat.set_shader_parameter("vignette", 0.0)
-	ink_mat.set_shader_parameter("cutout", true)
-	ink.material_override = ink_mat
-	_world.add_child(ink)
+	ink_pass.mesh = quad
+	ink_pass.extra_cull_margin = 16384.0
+	ink_pass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ink = ShaderMaterial.new()
+	ink.shader = preload("res://scenes/office/shaders/office_ink.gdshader")
+	ink.render_priority = -128
+	ink.set_shader_parameter("vignette", 0.0)
+	ink.set_shader_parameter("cutout", true)
+	ink_pass.material_override = ink
+	_world.add_child(ink_pass)
 
 
 func _process(_delta: float) -> void:
@@ -97,8 +102,17 @@ func _process(_delta: float) -> void:
 func _render(job: Array) -> void:
 	_busy = true
 	var tex: ImageTexture = job[0]
-	_viewport.size = Vector2i(tex.get_size())
+	viewport.size = Vector2i(tex.get_size())
 	var body := OfficeBody.build(job[1])
+	var look_at := pose(body) + Vector3.DOWN * HEAD_DROP
+	camera.look_at_from_position(look_at + Vector3(sin(TURN), RISE, cos(TURN)) * 4.0, look_at)
+	tex.set_image(await snap())
+	body.queue_free()
+	_busy = false
+
+
+## Stands `body` in the studio in the busts' pose; where its head bone is.
+func pose(body: Node3D) -> Vector3:
 	_world.add_child(body)
 	var player := AnimationPlayer.new()
 	body.add_child(player)
@@ -109,15 +123,15 @@ func _render(job: Array) -> void:
 	player.seek(POSE[1], true)
 	var skel: Skeleton3D = body.get_node("%GeneralSkeleton")
 	skel.force_update_all_bone_transforms()
-	var head := skel.global_transform * skel.get_bone_global_pose(skel.find_bone("Head")).origin
-	var look_at := head + Vector3.DOWN * HEAD_DROP
-	_camera.look_at_from_position(look_at + Vector3(sin(TURN), RISE, cos(TURN)) * 4.0, look_at)
+	return skel.global_transform * skel.get_bone_global_pose(skel.find_bone("Head")).origin
+
+
+## The studio drawn once as it stands.
+func snap() -> Image:
 	await get_tree().process_frame
-	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	await RenderingServer.frame_post_draw
-	tex.set_image(_viewport.get_texture().get_image())
-	body.queue_free()
-	_busy = false
+	return viewport.get_texture().get_image()
 
 
 func _environment() -> WorldEnvironment:

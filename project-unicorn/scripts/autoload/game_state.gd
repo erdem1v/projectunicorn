@@ -212,9 +212,6 @@ var sales_band_caps: Dictionary = {}
 # §11.2 — storylet repeat memory {row_id: times spoken}.
 var sales_line_memory: Dictionary = {}
 
-# B2B pitch customer-rep portrait rotation over the non-selected founder portraits.
-var b2b_rep_portrait_rotation_index: int = 0
-var b2b_last_rep_portrait: String = ""         # last face shown — no consecutive repeat
 var run_departures: int = 0            # CharacterRegistry.remove, category "employee"
 var run_scandals_total: int = 0        # RESERVED — no scandal system yet; debug-settable
 var run_scandals_managed: int = 0      # RESERVED
@@ -786,8 +783,6 @@ func initialize_run(payload: Dictionary) -> void:
 	run_prospects_spawned = 0
 	b2b_signed_company_names.clear()
 	cs_escalation_days.clear()
-	b2b_rep_portrait_rotation_index = 0
-	b2b_last_rep_portrait = ""
 	run_hires = 0
 	issued_looks.clear()
 	investor_people.clear()

@@ -530,7 +530,6 @@ WORLD_OUTLET_GIRISIM,Girişim Bülteni,Girişim Bülteni
 WORLD_OUTLET_SEKTOR,Sektör Telgrafı,Sektör Telgrafı
 UI_DISMISS,Vazgeç,Cancel
 UI_CONTINUE,DEVAM ET,CONTINUE
-UI_AVATAR_INITIALS,FK,FK
 SECTOR_CONSTRUCTION,İnşaat,Construction
 SECTOR_HEALTH,Sağlık,Healthcare
 SECTOR_LOGISTICS,Lojistik,Logistics

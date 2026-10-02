@@ -56,8 +56,7 @@ func _refresh(arrive: bool) -> void:
 		room -= 1
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-		row.add_child(UiFactory.make_avatar(
-			UiFactory.initials_of(CharacterRegistry.get_mentor().character_name)))
+		row.add_child(UiFactory.make_mentor_avatar(24))
 		var quote := UiFactory.make_label(tr("FIN_MENTOR_QUOTE_WRAPPED").format(
 			{"quote": tr(key).format(GameState.mentor_line_args)}), &"QuoteSerif")
 		quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

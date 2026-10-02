@@ -17,10 +17,9 @@ extends Resource
 @export var role: String = ""             # typed id (HRConstants.ROLE_*) — never free text
 @export var category: String = "employee" # "founder" | "employee" | "mentor" | "npc"
 # Çalışan ve kurucu görünüşlerinden çizilir: ofisteki gövde ve arayüzdeki büst (LookSystem;
-# CharacterRegistry eklerken bir kez damgalar). Boyalı portre kurucunun kendi sayfalarında
-# (GameState.founder_portrait) ve Frank'te kalır; portrait_path'i yalnız Frank taşır.
+# CharacterRegistry eklerken bir kez damgalar). Kurucunun sayfalarındaki portre seçtiği kimlikten
+# (GameState.founder_portrait), Frank'inki sabitten çözülür (FounderConstants.portrait_path).
 @export var look: Dictionary = {}
-@export var portrait_path: String = ""
 # Grup saklanmaz; `role`'dan HRConstants.ROLE_GROUP ile türetilir.
 
 # --- Maaş (Finance CharacterRegistry'den çeker) ---

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/modals/mentor_intro_modal.gd" id="1_modal"]
+[ext_resource type="Texture2D" uid="uid://bq1ar1fiyw3fn" path="res://assets/art/portraits/frank_48.png" id="2_frank"]
 
 [node name="MentorIntroModal" type="Control"]
 process_mode = 3
@@ -52,24 +53,12 @@ theme_override_constants/separation = 14
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Portrait" type="Panel" parent="CenterPanel/Body/Header"]
+[node name="Portrait" type="TextureRect" parent="CenterPanel/Body/Header"]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"Avatar"
-
-[node name="PortraitLabel" type="Label" parent="CenterPanel/Body/Header/Portrait"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_type_variation = &"AvatarInitial"
-text = "UI_AVATAR_INITIALS"
-horizontal_alignment = 1
-vertical_alignment = 1
+texture = ExtResource("2_frank")
+expand_mode = 1
 
 [node name="HeaderText" type="VBoxContainer" parent="CenterPanel/Body/Header"]
 layout_mode = 2

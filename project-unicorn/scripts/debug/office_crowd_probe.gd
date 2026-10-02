@@ -15,7 +15,6 @@ const DOOR := 0.5           # metres from the door where people may appear and v
 const PAUSE_S := 1.0        # real seconds of pause at noon
 const MORNING_S := 3.0      # real seconds kept after the night skip
 const SHOTS := [0.02, 0.3, 0.6]   # shares of the working day a frame is saved at
-const FOUNDER_PX := 88      # the founders sheet's portraits and busts, near a card's size
 const NAV_FLOOR := Color(0.1, 0.9, 0.2, 0.45)
 const NAV_WAY := Color(0.9, 0.1, 0.1)
 const NAV_DOOR := Color(0.1, 0.2, 0.95)
@@ -224,7 +223,8 @@ static func looks_line(actors: Array) -> String:
 	return "people=%d looks=%d min_apart=%d" % [actors.size(), sigs.size(), apart]
 
 
-## The eleven founder portraits, each beside the bust of the look the office gives it.
+## The eleven founder portraits (tools/people/bake_portraits.gd), each beside the live bust of the
+## look they are rendered from.
 static func founder_sheet() -> Control:
 	var sheet := PanelContainer.new()
 	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -233,12 +233,11 @@ static func founder_sheet() -> Control:
 	sheet.add_child(grid)
 	for id: String in FounderConstants.PORTRAIT_IDS:
 		var portrait := TextureRect.new()
-		portrait.texture = load("res://assets/art/founders/%s.webp" % id)
+		portrait.texture = load(FounderConstants.portrait_path(id, FounderConstants.PORTRAIT_CELL))
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		portrait.custom_minimum_size = Vector2.ONE * FOUNDER_PX
+		portrait.custom_minimum_size = Vector2(FounderConstants.PORTRAIT_CELL)
 		grid.add_child(portrait)
-		grid.add_child(UiFactory.make_person_avatar(id, LookSystem.founder(id), FOUNDER_PX))
+		grid.add_child(UiFactory.make_person_avatar(id, LookSystem.founder(id), FounderConstants.PORTRAIT_CELL.x))
 	return sheet
 
 

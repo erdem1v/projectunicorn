@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/modals/month_summary_modal.gd" id="1_monthsum"]
+[ext_resource type="Texture2D" uid="uid://f5qjq54t06aj" path="res://assets/art/portraits/frank_40.png" id="2_frank"]
 
 [node name="MonthSummaryModal" type="Control"]
 process_mode = 3
@@ -111,23 +112,12 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="AvatarPanel" type="Panel" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow"]
+[node name="Avatar" type="TextureRect" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow"]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"Avatar"
-
-[node name="AvatarLabel" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow/AvatarPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_type_variation = &"AvatarInitial"
-text = "UI_AVATAR_INITIALS"
-horizontal_alignment = 1
-vertical_alignment = 1
+texture = ExtResource("2_frank")
+expand_mode = 1
 
 [node name="FrankCol" type="VBoxContainer" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow"]
 layout_mode = 2

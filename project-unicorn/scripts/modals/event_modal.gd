@@ -229,7 +229,10 @@ func _build_speaker_row() -> void:
 		push_warning("[EventModal] event.character_id refers to unknown character: %s" % _event.character_id)
 		return
 	_speaker_row.visible = true
-	_speaker_row.add_child(_make_avatar(c))
+	# Kart grameri tek (GDD 14 §7): kaynağın küçük yuvarlak avatarı; Frank önceden render edilmiş
+	# portresiyle, diğerleri büstleriyle (görünüşü olmayan baş harfleriyle).
+	_speaker_row.add_child(UiFactory.make_mentor_avatar(24) if c.category == "mentor"
+		else UiFactory.make_person_avatar(c.character_name, c.look, 24))
 	# role is a TYPED id — resolve it to a display name so no internal code reaches the strip.
 	var name_label := UiFactory.make_label(
 		"%s · %s" % [c.character_name, HRConstants.role_label(c.role)], &"RowName")
@@ -239,28 +242,6 @@ func _build_speaker_row() -> void:
 	_speaker_row.add_child(UiFactory.make_pill(c.relationship, pal.bg, pal.fg))
 	for t in c.traits.slice(0, 2):
 		_speaker_row.add_child(UiFactory.make_badge(_trait_label(String(t)), &"neutral"))
-
-
-# Kart grameri tek (GDD 14 §7): her olay kartı kaynağının küçük yuvarlak avatarını gösterir —
-# portre taşıyanlar portreleriyle, diğerleri büstleriyle (görünüşü olmayan baş harfleriyle).
-# `Avatar` varyasyonu RADIUS_PILL, dolayısıyla clip_contents yuvarlak kırpmayı verir.
-static func _make_avatar(c: Character) -> Panel:
-	var tex: Texture2D = null
-	if c.portrait_path != "" and ResourceLoader.exists(c.portrait_path):
-		tex = load(c.portrait_path) as Texture2D
-	if tex == null:
-		return UiFactory.make_person_avatar(c.character_name, c.look, 24)
-	# A portrait covers the plate, so the initials stay blank.
-	var avatar: Panel = UiFactory.make_avatar("")
-	avatar.clip_contents = true
-	var pic := TextureRect.new()
-	pic.texture = tex
-	pic.set_anchors_preset(Control.PRESET_FULL_RECT)
-	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	avatar.add_child(pic)
-	return avatar
 
 
 # Employees and the founder draw from SEPARATE trait catalogs (employee labels live in

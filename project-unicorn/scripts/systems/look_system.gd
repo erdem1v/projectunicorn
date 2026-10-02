@@ -16,8 +16,14 @@ const NO_TIE := 0.5
 ## by; after TRIES draws the most apart one is kept.
 const MIN_APART := 2
 const TRIES := 64
-## The founder looks like the portrait chosen at the start (assets/art/founders/founder_NN.webp,
-## in order): the same sex, skin, hair, face hair, glasses and top as near as the wardrobe comes.
+## Frank is drawn only as his pre-rendered portrait (assets/art/portraits/frank*.png) and never
+## stands in the office. His grey hair on a bearded head (his own, or the one whose moustache takes
+## the hair colour) is his alone: no one else wears it (is_franks).
+const FRANK_LOOK := {"sex": "m", "head": "m_king", "body": "m_suit", "legs": "m_suit", "feet": "m_suit", "skin": 2,
+	"hair": 7, "top": 2, "top2": 0, "tie": 0, "bottom": -1, "shoe": 1, "height": 3, "girth": 2, "glasses": false}
+const BEARDED_HEADS := ["m_king", "m_worker"]
+## The founder's look, in FounderConstants.PORTRAIT_IDS order; the founder portraits are rendered
+## from these (assets/art/portraits/founder_NN*.png).
 const FOUNDER_LOOKS := [
 	{"sex": "w", "head": "w_scifi", "body": "w_casual", "legs": "w_casual", "feet": "w_casual", "skin": 4, "hair": 1,
 		"top": 3, "top2": 3, "tie": 0, "bottom": 2, "shoe": 1, "height": 2, "girth": 1, "glasses": false},
@@ -80,14 +86,16 @@ static func _bottom(rng: RandomNumberGenerator, look: Dictionary) -> int:
 	return options[rng.randi_range(0, options.size() - 1)]
 
 
-## A look for `role` and `sex` from `from_seed` whose signature the run has not handed out yet and
-## that stands MIN_APART slots from each look in `around` (the people it will be seen with).
+## A look for `role` and `sex` from `from_seed` whose signature the run has not handed out yet, that
+## is not Frank's, and that stands MIN_APART slots from each look in `around` (the people it will be
+## seen with). The team, the candidates and the people across a meeting's table (CounterpartSystem)
+## all draw here.
 static func _unique(from_seed: int, role: String, sex: String, around: Array) -> Dictionary:
 	var best := {}
 	var best_gap := -1
 	for i in TRIES:
 		var look := _make(from_seed + i * RESEED, role, sex)
-		if GameState.issued_looks.has(signature(look)):
+		if GameState.issued_looks.has(signature(look)) or is_franks(look):
 			continue
 		var gap: int = around.reduce(func(m: int, other: Dictionary) -> int: return mini(m, apart(look, other)), MIN_APART)
 		if gap >= MIN_APART:
@@ -96,6 +104,11 @@ static func _unique(from_seed: int, role: String, sex: String, around: Array) ->
 			best = look
 			best_gap = gap
 	return best if not best.is_empty() else _make(from_seed, role, sex)
+
+
+## Whether `look` wears Frank's hair on a bearded head, which only he may.
+static func is_franks(look: Dictionary) -> bool:
+	return look.hair == FRANK_LOOK.hair and look.head in BEARDED_HEADS
 
 
 ## The founder's look: the portrait chosen at the start (in FounderConstants.PORTRAIT_IDS order),

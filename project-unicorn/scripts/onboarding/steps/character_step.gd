@@ -87,7 +87,7 @@ func _make_cell(portrait_id: String) -> PanelContainer:
 	cell.theme_type_variation = &"PortraitCell"
 	cell.custom_minimum_size = CELL_SIZE
 	cell.clip_contents = true
-	var path: String = FounderConstants.portrait_path(portrait_id)
+	var path: String = FounderConstants.portrait_path(portrait_id, FounderConstants.PORTRAIT_CELL)
 	if ResourceLoader.exists(path):
 		var tex := TextureRect.new()
 		tex.texture = load(path)

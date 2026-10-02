@@ -200,9 +200,8 @@ func _frame(min_size: Vector2) -> PanelContainer:
 func _portrait() -> Control:
 	var frame := _frame(PORTRAIT_SIZE)
 	frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	# Kurucunun portresi Character.portrait_path'te DEĞİL: onboarding'de seçilen id
-	# GameState.founder_portrait'te, dosya yolunu FounderConstants çözüyor.
-	var path: String = FounderConstants.portrait_path(GameState.founder_portrait)
+	# Kurucunun portresi onboarding'de seçilen id'den (GameState.founder_portrait) çözülür.
+	var path: String = FounderConstants.portrait_path(GameState.founder_portrait, FounderConstants.PORTRAIT_CELL)
 	if path != "" and ResourceLoader.exists(path):
 		var tex := TextureRect.new()
 		tex.texture = load(path)

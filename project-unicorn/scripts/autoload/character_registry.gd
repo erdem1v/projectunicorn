@@ -403,8 +403,6 @@ func ensure_mentor() -> void:
 	m.category = "mentor"
 	m.monthly_salary = 0
 	m.morale = 50
-	# Frank boyalı portresiyle çizilir; çalışan ve kurucu görünüşlerinden (Character.look).
-	m.portrait_path = "res://assets/art/investors/portrait_frank.webp"
 	_characters[m.id] = m
 
 
@@ -503,9 +501,9 @@ func insert_raw(character: Character) -> void:
 	_characters[character.id] = character
 
 
-## Görünüşten önce yazılmış bir kaydın yükleme yolu: kurucu, sonra ekip işe alım sırasıyla,
-## add() nasıl damgalıyorsa öyle. Görünüşlü bir kayıtta yapacak işi yoktur. Sinyal yok: kabuk
-## yüklemeden sonra kurulur ve görünüşü kendisi okur.
+## Kaydın yükleme yolu: görünüşü olmayana (görünüşten önce yazılmış kayıt) ya da Frank'inkini
+## taşıyana (LookSystem.is_franks) görünüş verir; kurucu, sonra ekip işe alım sırasıyla, add() nasıl
+## damgalıyorsa öyle. Sinyal yok: kabuk yüklemeden sonra kurulur ve görünüşü kendisi okur.
 func fill_missing_looks() -> void:
 	_stamp_look(get_founder())
 	for c in employees_by_hire():
@@ -519,10 +517,11 @@ func employees_by_hire() -> Array[Character]:
 	return team
 
 
-## Görünüşü olmayana görünüşünü verir ve imzasını koşunun defterine yazar. Kurucu seçtiği
-## portreye benzer; çalışan kimliğinden tohumlanır ve yanında görüleceklerden ayrı durur.
+## Görünüşü olmayana ya da Frank'inkini taşıyana görünüşünü verir ve imzasını koşunun defterine
+## yazar. Kurucu seçtiği portreye benzer; çalışan kimliğinden tohumlanır ve yanında görüleceklerden
+## ayrı durur.
 func _stamp_look(c: Character) -> void:
-	if c.look.is_empty():
+	if c.look.is_empty() or LookSystem.is_franks(c.look):
 		if c.category == "founder":
 			c.look = LookSystem.founder(GameState.founder_portrait)
 		else:

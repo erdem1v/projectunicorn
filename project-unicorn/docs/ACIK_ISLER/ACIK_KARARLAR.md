@@ -1222,7 +1222,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 - **94 · Tek oda ve tek kule; silinen Frank kartı ve resimler.**
   - Ne oluyor: Bütün görüşmeler (satış, seed, Series A, term sheet masası) şehirdeki yatırımcı kulesinin en üst
     katındaki tek toplantı odasında geçer; harita hedefi her karşı taraf için bu kuledir. Frank'in
-    `funding.meeting_day` kartı silindi, yerini fonun çağrısı aldı. Dört oda resmi ve dört fon portresi silindi; Frank'in portresi kaldı.
+    `funding.meeting_day` kartı silindi, yerini fonun çağrısı aldı. Dört oda resmi ve dört fon portresi silindi.
   - Nerede: `scripts/ui/office/office_layout.gd` (`meet_hit`), `office_city.gd`, `office_travel.gd`;
     `art/office3d/meet.*`.
   - Oyuncuya etkisi: Her görüşme aynı odada; fonlar ve müşteriler yerle değil kişilerle ayrışır.
@@ -1545,15 +1545,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler: A) Değerler mühürlenir. B) Sahip değiştirir (ör. all-hands 16:00, daha kısa `DOOR_S`). C) Huylar
     ritmi etkiler (trait task'ı; ISLER).
   - Kaynak: ofis karakterleri planı §2, §9 (Erdem, 2026-09-28).
-
-- **92 · Kurucu portresi.**
-  - Ne oluyor: Kurucunun ofisteki 3B görünümü seçtiği boyalı portreye elle eşlendi (`LookSystem.FOUNDER_LOOKS`, 11
-    portre); kurucu sayfaları boyalı portreyi göstermeye devam ediyor.
-  - Nerede: `scripts/systems/look_system.gd`; `--office-shot=home:14:founders`.
-  - Oyuncuya etkisi: Kurucu iki görüntüyle görünür: sayfalarda boyalı portre; ofiste, kartlarda ve görüşme panelinde
-    3B karakter.
-  - Açık: Kurucu portresi → karakter seçimi onboarding tasarımında.
-  - Kaynak: ofis karakterleri görev kararı 5 (Erdem, 2026-09-28); görüşme akışı kararı 5 (Erdem, 2026-09-29).
 
 - **95 · Görüşme metinleri; mevcut VC satırlarında tire ve tırnak.**
   - Ne oluyor: Görüşme akışının yeni anahtarları (`MEETING_*`: kicker'lar, VC ve satış rol adları, tutum ve risk

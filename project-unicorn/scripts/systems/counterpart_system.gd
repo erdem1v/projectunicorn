@@ -28,13 +28,19 @@ const ROLE_KEYS := {
 }
 
 
-## Draws every fund's three when the run has none yet: a new run, or a save from before them.
+## Draws every fund's three when the run has none yet (a new run, or a save from before them), and
+## draws the look of a kept one who wears Frank's (LookSystem.is_franks) again.
 static func fill_investor_people() -> void:
-	if not GameState.investor_people.is_empty():
-		return
 	var around := CharacterRegistry.looks_around()
-	for inv: Dictionary in InvestorRegistry.get_active():
-		GameState.investor_people[inv.id] = _people_for(inv.id, FUND_ROLES, around, inv.get("lead_sex", ""))
+	if GameState.investor_people.is_empty():
+		for inv: Dictionary in InvestorRegistry.get_active():
+			GameState.investor_people[inv.id] = _people_for(inv.id, FUND_ROLES, around, inv.get("lead_sex", ""))
+	for vc_id: String in GameState.investor_people:
+		var side: Array = GameState.investor_people[vc_id]
+		for person: Dictionary in side:
+			if LookSystem.is_franks(person.look):
+				person.look = _look(_draw(vc_id, person.role), person.name, person.role,
+					around + side.map(func(q: Dictionary) -> Dictionary: return q.look))
 
 
 ## `vc_id`'s three, lead first: [{role, name, look}].
@@ -66,7 +72,7 @@ static func _people_for(identity: String, roles: Array, around: Array, first_sex
 	var used_last := []
 	var out := []
 	for role: String in roles:
-		var draw := SalesConstants.mix("%s:%s" % [identity, role], SalesConstants.SALT_PEOPLE)
+		var draw := _draw(identity, role)
 		var sex := first_sex if out.is_empty() else ""
 		var firsts := HRConstants.first_names(GameState.name_lang).filter(func(n: String) -> bool:
 			return sex.is_empty() or HRConstants.FIRST_NAME_SEX.get(n, "") == sex)
@@ -74,8 +80,17 @@ static func _people_for(identity: String, roles: Array, around: Array, first_sex
 			HRCandidateGenerator.take_unused(firsts, used_first, draw),
 			HRCandidateGenerator.take_unused(HRConstants.last_names(GameState.name_lang), used_last,
 				SalesConstants.mix_seed(draw, SalesConstants.SALT_PEOPLE))]
-		# Its own seed: a name worn by both sexes draws the sex from it.
-		var look := LookSystem.for_person(SalesConstants.mix_seed(draw, SalesConstants.SALT_LOOK), person_name, role, around)
+		var look := _look(draw, person_name, role, around)
 		around.append(look)
 		out.append({"role": role, "name": person_name, "look": look})
 	return out
+
+
+## The seed `identity`'s person in `role` is drawn from.
+static func _draw(identity: String, role: String) -> int:
+	return SalesConstants.mix("%s:%s" % [identity, role], SalesConstants.SALT_PEOPLE)
+
+
+## That person's look, from its own seed: a name worn by both sexes draws the sex from it.
+static func _look(draw: int, person_name: String, role: String, around: Array) -> Dictionary:
+	return LookSystem.for_person(SalesConstants.mix_seed(draw, SalesConstants.SALT_LOOK), person_name, role, around)
