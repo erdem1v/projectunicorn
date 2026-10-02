@@ -1,9 +1,9 @@
 [gd_resource type="FontVariation" format=3]
 
-[ext_resource type="FontFile" path="res://assets/fonts/mono/JetBrainsMono-Regular.ttf" id="1_sx3hs"]
-[ext_resource type="FontFile" path="res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf" id="2_inexh"]
+[ext_resource type="FontFile" path="res://assets/fonts/mono/JetBrainsMono-Regular.ttf" id="JetBrainsMono-Regular_8ff1e"]
+[ext_resource type="FontFile" path="res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf" id="NotoSansSymbols2-Regular_d7e49"]
 
 [resource]
-fallbacks = Array[Font]([ExtResource("2_inexh")])
-base_font = ExtResource("1_sx3hs")
+fallbacks = Array[Font]([ExtResource("NotoSansSymbols2-Regular_d7e49")])
+base_font = ExtResource("JetBrainsMono-Regular_8ff1e")
 spacing_glyph = 1

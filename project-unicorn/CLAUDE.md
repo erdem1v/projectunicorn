@@ -171,8 +171,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer.
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
-  negotiation, meeting, product, hr, finance, b2b), `--probe-shot`, `--theme-audit=<sekme>`, `--shot-size=GxY`,
-  `--lang=tr|en` (kayıtlı dili ezer). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner; EN `_en` alır.
+  negotiation, meeting, product, hr, finance, b2b), `--probe-shot`, `--theme-audit=<sekme | modal:<tür> | onboard:<adım>>`,
+  `--shot-size=GxY`, `--lang=tr|en` (kayıtlı dili ezer). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a
+  iner; EN `_en` alır.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
   founders|nav|crown|cast` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare; `founders` portre ile
   bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi;
@@ -187,6 +188,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `travel_shot_<ofis>[_vc]_NN.png` dizisi). Bir hafta gerçek
   saatle: `--day-shot=<ofis>:<hız>` (08:00'den çıkış ve gece atlamasıyla ertesi 08:00'e,
   `day_shot_<ofis>_<hız>_NN.png` ve kare başına `DAYSHOT` satırı).
+- Tema denetçisi: `"$GODOT" --headless --path . -s res://scripts/theme/theme_check.gd [--theme=<yol>]` master'a göre
+  eksik ya da boş öğede 1 ile çıkar, metin ve zemin kontrastını basar.
 - **Ekran kartı.** Ekranlı Godot koşuları (shot, tema denetimi, görsel kabul) paralel değil sırayla koşar; ekran
   gerektirmeyen her koşu `--headless`.
 - Git kökündeki `.githooks/pre-commit` lint ve `loc_residue`'yu koşar; etkin değildir, etkinleştirmek sahibin kararıdır.
@@ -201,7 +204,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   değişince headless koşulardan önce `--headless --import` çalıştırılır.
 - Editör `.tres` ve `project.godot`'u yeniden kaydeder (uid ekler, yorum siler); fark sahip onaylamadan commit'lenmez.
 - Dosya yazan bayraklar: `--event-lint=baseline` (taban dosyası), `--event-vocab` (`_vocabulary.md`), `--display-check`
-  (ayarlar), `--modal-shot=saveload` (hızlı kayıt), `--ending-shot` (zaman damgalı gazete PNG'si).
+  (ayarlar), `--modal-shot=saveload` ve `--theme-audit=modal:saveload` (hızlı kayıt), `--ending-shot` (zaman damgalı
+  gazete PNG'si).
 - Bazı smoke vakaları kaynak metni ve özel adları okur; ad değiştirmeden önce vakayı bul. `event_bus.gd`'deki
   `# --- X ---` başlıkları manifest bölümleri, `# LOC-DATA` işaretleri `loc_residue` istisnalarıdır; silinmez.
 

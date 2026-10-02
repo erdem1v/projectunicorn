@@ -1,8 +1,8 @@
 [gd_resource type="FontVariation" format=3]
 
-[ext_resource type="FontFile" path="res://assets/fonts/sans/IBMPlexSans-Regular.ttf" id="1_fp1jf"]
-[ext_resource type="FontFile" path="res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf" id="2_pu60m"]
+[ext_resource type="FontFile" path="res://assets/fonts/sans/IBMPlexSans-Regular.ttf" id="IBMPlexSans-Regular_9ca0a"]
+[ext_resource type="FontFile" path="res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf" id="NotoSansSymbols2-Regular_d7e49"]
 
 [resource]
-fallbacks = Array[Font]([ExtResource("2_pu60m")])
-base_font = ExtResource("1_fp1jf")
+fallbacks = Array[Font]([ExtResource("NotoSansSymbols2-Regular_d7e49")])
+base_font = ExtResource("IBMPlexSans-Regular_9ca0a")

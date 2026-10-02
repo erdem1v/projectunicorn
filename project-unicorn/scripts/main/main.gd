@@ -60,6 +60,7 @@ var _card_waiting := false
 var _call := {}                    # the call ringing in the office: {kind: "vc" | "sales", id}
 var _trip_label := ""              # the tower's chip on the map, both ways of a meeting's trip
 var _travel_on: bool = true          # shots stage their surfaces without the trip
+var _audit_spec := ""                # --theme-audit: the staged surface prints its audit, no frame
 # Ar-Ge kartı: aynı anda en fazla bir tane. Bir keşif ile koşunun ilk raporu aynı güne
 # düşebilir ve iki üst üste scrim karartmayı ikiye katlar; ikincisi bu kuyrukta bekler.
 var _rnd_card: Node = null
@@ -483,7 +484,12 @@ func _save_shot(basename: String) -> void:
 func _finish_shot(basename: String, settle: float = 0.4) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(settle).timeout
-	_save_shot(basename)
+	if _audit_spec == "":
+		_save_shot(basename)
+	else:
+		print("AUDIT_BEGIN %s" % _audit_spec)
+		_audit_walk(_shell if _shell != null else self, "")
+		print("AUDIT_END %s" % _audit_spec)
 	get_tree().quit()
 
 
@@ -1029,19 +1035,19 @@ func _run_onboard_shot(step: int) -> void:
 	await _finish_shot("onboard_shot_%d" % step)
 
 
-# --theme-audit=<tab_id> prints the RESOLVED theme values of every Control (no screenshot) —
-# immune to anti-aliasing noise, and it names exactly which nodes changed.
-func _run_theme_audit(tab_id: String) -> void:
-	_begin_shot()
-	_seed_theme_surface()
-	await _mount_shot_shell()
-	EventBus.tab_changed.emit(tab_id)
-	await get_tree().process_frame
-	await get_tree().create_timer(0.4).timeout
-	print("AUDIT_BEGIN %s" % tab_id)
-	_audit_walk(_shell, "")
-	print("AUDIT_END %s" % tab_id)
-	get_tree().quit()
+# --theme-audit=<tab_id | modal:<kind> | onboard:<step>> stages the surface as --tab-shot,
+# --modal-shot or --onboard-shot does and prints the RESOLVED theme values of every Control in
+# place of the frame: immune to anti-aliasing noise, and it names exactly which nodes changed.
+func _run_theme_audit(spec: String) -> void:
+	_audit_spec = spec
+	var kind: String = spec.get_slice(":", 1)
+	match spec.get_slice(":", 0):
+		"modal":
+			_run_modal_shot(kind)
+		"onboard":
+			_run_onboard_shot(int(kind))
+		_:
+			_run_tab_shot(spec)
 
 
 # --probe-shot: ThemeProbe.tscn, one unstyled instance of every basic Control class. Screenshot
@@ -1069,7 +1075,8 @@ const _AUDIT_TEXT_CLASSES := [
 
 
 # One AUDIT line per Control: path, class, variation, font size, font colour, local overrides
-# (S=font_size, C=font_color, P=panel stylebox), font face, panel stylebox fingerprint.
+# (S=font_size, C=font_color, P=panel stylebox), font face, panel stylebox fingerprint, then
+# _audit_layout's content margins, minimum size and theme sources, and every override (ov).
 func _audit_walk(node: Node, path: String) -> void:
 	for child in node.get_children():
 		var p: String = path + "/" + String(child.name)
@@ -1077,12 +1084,15 @@ func _audit_walk(node: Node, path: String) -> void:
 		if c != null:
 			var variation: String = String(c.theme_type_variation)
 			var cls: String = c.get_class()
+			var font_key: String = ""
 			var size_key: String = ""
 			var color_key: String = ""
 			if cls == "RichTextLabel":
+				font_key = "normal_font"
 				size_key = "normal_font_size"
 				color_key = "default_color"
 			elif cls in _AUDIT_TEXT_CLASSES:
+				font_key = "font"
 				size_key = "font_size"
 				color_key = "font_color"
 			var fs: String = "-"
@@ -1098,17 +1108,102 @@ func _audit_walk(node: Node, path: String) -> void:
 				ovr += "C"
 			if c.has_theme_stylebox_override("panel"):
 				ovr += "P"
-			print("AUDIT|%s|%s|%s|%s|%s|%s|%s|%s" % [
+			print("AUDIT|%s|%s|%s|%s|%s|%s|%s|%s|%s|ov:%s" % [
 				p, cls, variation if variation != "" else "--", fs, col,
-				ovr if ovr != "" else "-", _audit_font(c, size_key), _audit_stylebox(c)])
+				ovr if ovr != "" else "-", _audit_font(c, font_key), _audit_stylebox(c),
+				_audit_layout(c, font_key, size_key, color_key), _audit_overrides(c)])
 		_audit_walk(child, p)
 
 
+## cm: content margins (L,T,R,B) of the box the control draws, `panel` else `normal`. min: the
+## combined minimum size. src: where font (f), size (s), colour (c) and box (b) resolved. A scoped
+## theme that lacks a variation hands its controls the base type's box: cm collapses, src names it.
+func _audit_layout(c: Control, font_key: String, size_key: String, color_key: String) -> String:
+	var chain := _audit_theme_chain(c)
+	var types := _audit_types(c, chain)
+	var src := PackedStringArray()
+	if font_key != "":
+		src.append("f=" + _audit_source(c, chain, types, Theme.DATA_TYPE_FONT, font_key))
+		src.append("s=" + _audit_source(c, chain, types, Theme.DATA_TYPE_FONT_SIZE, size_key))
+		src.append("c=" + _audit_source(c, chain, types, Theme.DATA_TYPE_COLOR, color_key))
+	var box: String = "panel" if c.has_theme_stylebox("panel") else ("normal" if c.has_theme_stylebox("normal") else "")
+	var cm: String = "-"
+	if box != "":
+		var sb: StyleBox = c.get_theme_stylebox(box)
+		cm = "%s=%.1f,%.1f,%.1f,%.1f" % [box, sb.get_margin(SIDE_LEFT), sb.get_margin(SIDE_TOP),
+				sb.get_margin(SIDE_RIGHT), sb.get_margin(SIDE_BOTTOM)]
+		src.append("b=" + _audit_source(c, chain, types, Theme.DATA_TYPE_STYLEBOX, box))
+	var m: Vector2 = c.get_combined_minimum_size()
+	return "cm:%s|min:%.1fx%.1f|src:%s" % [cm, m.x, m.y, ",".join(src) if not src.is_empty() else "-"]
+
+
+## The themes Godot asks, in its order, as [label, theme]: one on the control or an ancestor up to
+## the nearest CanvasLayer (a:<file or node>), then the project theme (p), then the engine's (d).
+func _audit_theme_chain(c: Control) -> Array:
+	var chain: Array = []
+	var n: Node = c
+	while n is Control or n is Window:
+		var th: Theme = n.get("theme")
+		if th != null:
+			chain.append(["a:" + (th.resource_path.get_file().get_basename() if th.resource_path != "" else String(n.name)), th])
+		n = n.get_parent()
+	chain.append(["p", ThemeDB.get_project_theme()])
+	chain.append(["d", ThemeDB.get_default_theme()])
+	return chain
+
+
+## The type chain Godot searches: the variation's bases as the first theme declaring it has
+## them, then the class and its ancestors.
+func _audit_types(c: Control, chain: Array) -> Array[StringName]:
+	var types: Array[StringName] = []
+	var cls := StringName(c.get_class())
+	var v: StringName = c.theme_type_variation
+	if v != &"":
+		for entry in chain:
+			var th: Theme = entry[1]
+			if th.get_type_variation_base(v) != &"":
+				while v != &"" and v != cls:
+					types.append(v)
+					v = th.get_type_variation_base(v)
+				break
+	while cls != &"":
+		types.append(cls)
+		cls = ClassDB.get_parent_class(cls)
+	return types
+
+
+## o: the control's own override, else the label of the first theme holding the item.
+func _audit_source(c: Control, chain: Array, types: Array[StringName], dt: int, item: StringName) -> String:
+	var own: bool
+	match dt:
+		Theme.DATA_TYPE_COLOR: own = c.has_theme_color_override(item)
+		Theme.DATA_TYPE_FONT: own = c.has_theme_font_override(item)
+		Theme.DATA_TYPE_FONT_SIZE: own = c.has_theme_font_size_override(item)
+		Theme.DATA_TYPE_STYLEBOX: own = c.has_theme_stylebox_override(item)
+	if own:
+		return "o"
+	for entry in chain:
+		for t in types:
+			if (entry[1] as Theme).has_theme_item(dt, item, t):
+				return entry[0]
+	return "-"
+
+
+## Every theme item set on the control itself, as kind/item. Names a native class does not declare
+## are not listed.
+func _audit_overrides(c: Control) -> String:
+	var ov := PackedStringArray()
+	for prop in c.get_property_list():
+		if String(prop.name).begins_with("theme_override_") and prop.usage & PROPERTY_USAGE_STORAGE:
+			ov.append(String(prop.name).trim_prefix("theme_override_"))
+	ov.sort()
+	return ",".join(ov) if not ov.is_empty() else "-"
+
+
 ## Resolved font face file name, for text-drawing classes only.
-func _audit_font(c: Control, size_key: String) -> String:
-	if size_key == "":
+func _audit_font(c: Control, font_key: String) -> String:
+	if font_key == "":
 		return "-"
-	var font_key: String = "normal_font" if size_key == "normal_font_size" else "font"
 	var f: Font = c.get_theme_font(font_key) if c.has_theme_font(font_key) else null
 	if f == null:
 		return "-"

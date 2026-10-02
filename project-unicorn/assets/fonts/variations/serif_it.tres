@@ -1,8 +1,8 @@
 [gd_resource type="FontVariation" format=3]
 
-[ext_resource type="FontFile" path="res://assets/fonts/serif/SourceSerif4-It.ttf" id="1_6kixu"]
-[ext_resource type="FontFile" path="res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf" id="2_hshv7"]
+[ext_resource type="FontFile" path="res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf" id="NotoSansSymbols2-Regular_d7e49"]
+[ext_resource type="FontFile" path="res://assets/fonts/serif/SourceSerif4-It.ttf" id="SourceSerif4-It_02c97"]
 
 [resource]
-fallbacks = Array[Font]([ExtResource("2_hshv7")])
-base_font = ExtResource("1_6kixu")
+fallbacks = Array[Font]([ExtResource("NotoSansSymbols2-Regular_d7e49")])
+base_font = ExtResource("SourceSerif4-It_02c97")

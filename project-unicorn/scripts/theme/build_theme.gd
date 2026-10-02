@@ -559,7 +559,7 @@ func _initialize() -> void:
 	th.set_font_size("font_size", &"TooltipLabel", T.SIZE_SMALL)
 	th.set_color("font_color", &"TooltipLabel", T.CREAM)
 
-	var err := ResourceSaver.save(th, OUT_PATH)
+	var err := _save(th, OUT_PATH)
 	if err != OK:
 		push_error("[build_theme] save failed: %d" % err)
 		quit(1)
@@ -581,8 +581,45 @@ func _mkfont(ttf_path: String, fallback: FontFile, vname: String, glyph_spacing:
 	if glyph_spacing != 0.0:
 		fv.spacing_glyph = int(glyph_spacing * 2.0)  # px tracking at small sizes
 	var path := VAR_DIR + vname + ".tres"
-	ResourceSaver.save(fv, path)
+	_save(fv, path)
 	return load(path)
+
+
+## Saves with ids derived from content instead of the saver's random ones, so an unchanged rebuild
+## writes the same bytes.
+func _save(res: Resource, path: String) -> Error:
+	_stamp_ids(res, path, {}, {})
+	return ResourceSaver.save(res, path)
+
+
+## A file reference takes its id from its path, an embedded resource from its class and stored
+## values, numbered when two store the same.
+func _stamp_ids(res: Resource, path: String, seen: Dictionary, taken: Dictionary) -> void:
+	for prop in res.get_property_list():
+		if not (prop.usage & PROPERTY_USAGE_STORAGE):
+			continue
+		var value = res.get(prop.name)
+		for v in (value if value is Array else [value]):
+			if not v is Resource or seen.has(v):
+				continue
+			seen[v] = true
+			if not v.is_built_in():
+				v.set_id_for_path(path, "%s_%s" % [v.resource_path.get_file().get_basename(), v.resource_path.md5_text().left(5)])
+				continue
+			var stored := PackedStringArray()
+			for p in v.get_property_list():
+				if p.usage & PROPERTY_USAGE_STORAGE:
+					var x = v.get(p.name)
+					stored.append("%s=%s" % [p.name, x.resource_path if x is Resource else var_to_str(x)])
+			var stem := "%s_%s" % [v.get_class(), " ".join(stored).md5_text().left(5)]
+			var id := stem
+			var n := 1
+			while taken.has(id):
+				n += 1
+				id = "%s_%d" % [stem, n]
+			taken[id] = true
+			v.resource_scene_unique_id = id
+			_stamp_ids(v, path, seen, taken)
 
 
 ## Flat box: fill, radius, optional uniform border (colour + width) and content

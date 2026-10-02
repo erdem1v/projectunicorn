@@ -57,17 +57,18 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 
 ## Tema ve UI kiti · GDD ch12
 
-- **Yer:** `scripts/theme/{ui_tokens,ui_factory,build_theme}.gd`, `themes/master_theme.tres` (üretilmiş), `scripts/ui/components/{bar_kit,star_rating,value_slider,dialogue_portrait_card}.gd`, `scenes/ui/components/DialoguePortraitCard.tscn`, `scenes/debug/ThemeProbe.tscn`, `assets/fonts/`, `assets/icons/` kökündeki genel ikonlar
+- **Yer:** `scripts/theme/{ui_tokens,ui_factory,build_theme,theme_check}.gd`, `themes/master_theme.tres` (üretilmiş), `scripts/ui/components/{bar_kit,star_rating,value_slider,dialogue_portrait_card}.gd`, `scenes/ui/components/DialoguePortraitCard.tscn`, `scenes/debug/ThemeProbe.tscn`, `assets/fonts/`, `assets/icons/` kökündeki genel ikonlar
 - **Sahip:** sınıf `UiTokens`, `UiFactory`, `StarRating`, `ValueSlider`, `DialoguePortraitCard`
 - **Giriş:**
   - `UiTokens`: palet, yazı merdiveni, `THEME_STAMP`; yardımcılar `format_money`, `positive`, `negative`, `badge_palette`, `build_percent`.
   - `UiFactory.make_label`, `make_badge`, `make_card`, `make_pill`, `make_state_chip`, `make_section_header`, `make_centered_column`, `make_placeholder_column`, `initials_of`, `clear`, `is_left_click`.
-  - `build_theme.gd` token → tema dönüştürücüsüdür: `godot --headless --path . -s res://scripts/theme/build_theme.gd`. `main.gd` açılışta `master_theme.tres` damgasını `THEME_STAMP` ile karşılaştırır.
+  - `build_theme.gd` token → tema dönüştürücüsüdür: `godot --headless --path . -s res://scripts/theme/build_theme.gd`. Kaynak kimliklerini içerikten ve yoldan türetir: girdi değişmezse iki üretim bayt bayt aynıdır. `main.gd` açılışta `master_theme.tres` damgasını `THEME_STAMP` ile karşılaştırır.
+  - `theme_check.gd` tema denetçisidir: `godot --headless --path . -s res://scripts/theme/theme_check.gd [--theme=<yol>]`. Master'daki her tip, taban ve öğe yoksa ya da bir font, ikon veya kutu boşsa 1 ile çıkar; her metin renginin altındaki opak kutuya WCAG kontrastını basar (4.5 altı `LOW`).
   - Kabuk varyasyonları: pencere `WindowPanel` (krem kart, `RADIUS_WINDOW`, gölge) ve köşesindeki × `WindowClose`; sol ray `SideRailPanel`, `TabButton` / `TabButtonActive`. Koyu çerçeve gövdeyle değişen her rengi `*_CHROME` ikizinden okur (`ACCENT_CHROME`, `INK_*_CHROME`, `VEIL_*_CHROME`); `Chrome*` ailesinin yasal yüzeyleri CLAUDE.md §7'de.
   - `bar_kit.gd` Build Bar ile Research Bar'ın ortak çizimidir. `DialoguePortraitCard`'ı onboarding'in karakter adımı kullanır.
 - **Smoke:** `build_percent_single_source`, `star_ruler_contract`, `rail_tabs_match_scene_order`.
 - **Probe:** yok.
-- **Görsel:** `--theme-audit=<sekme id>`, `--probe-shot` (ThemeProbe), `--tab-shot=`, `--shot-size=`.
+- **Görsel:** `--theme-audit=<sekme id | modal:<tür> | onboard:<adım>>` (yüzeyi `--tab-shot`, `--modal-shot`, `--onboard-shot` gibi kurar; her Control'ün çözülmüş değerleri, içerik payı `cm`, en küçük boyu `min` ve öğeyi çözen tema `src`: `o` override, `a:<tema>` ata teması, `p` proje teması, `d` motor varsayılanı; `ov` Control'ün kendi üstüne koyduğu her tema öğesi), `--probe-shot` (ThemeProbe), `--tab-shot=`, `--shot-size=`.
 
 ## Kabuk (main.gd, GameShell, TopBar, LeftTabs, WindowLayer) · GDD ch12
 
@@ -293,7 +294,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Görsel ve ölçüm bayrakları** yalnız debug build'de çalışır. Bayraklar `--` ayıracının arkasına konmaz.
   - `*-shot` bayrakları (`--probe-shot` dahil) pencereli açılır ve kareyi kullanıcı dizinine (`%APPDATA%/Godot/app_userdata/Project Unicorn/`) yazar. `--theme-audit` pencereli açılır, kare yazmaz, denetim satırlarını basar.
   - Ölçüm bayrakları (`--tempo-probe`, `--render-probe`, `--display-check`) kare yazmaz, ölçüm satırlarını basar.
-  - Dosya yazanlar: `--event-lint=baseline`, `--modal-shot=saveload`, `--event-vocab`, `--display-check` (`settings.json`'a yazar ve geri yükler).
+  - Dosya yazanlar: `--event-lint=baseline`, `--modal-shot=saveload` ve `--theme-audit=modal:saveload`, `--event-vocab`, `--display-check` (`settings.json`'a yazar ve geri yükler).
 
 ## Üçüncü taraf ve altyapı
 
