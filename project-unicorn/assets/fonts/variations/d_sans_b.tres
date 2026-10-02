@@ -1,0 +1,6 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/sans/IBMPlexSans-Bold.ttf" id="IBMPlexSans-Bold_403a1"]
+
+[resource]
+base_font = ExtResource("IBMPlexSans-Bold_403a1")

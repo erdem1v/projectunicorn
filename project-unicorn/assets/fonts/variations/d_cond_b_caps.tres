@@ -1,0 +1,12 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/cond/BarlowCondensed-Bold.ttf" id="BarlowCondensed-Bold_49109"]
+[ext_resource type="FontFile" path="res://assets/fonts/sans/IBMPlexSans-Bold.ttf" id="IBMPlexSans-Bold_403a1"]
+
+[resource]
+fallbacks = Array[Font]([ExtResource("IBMPlexSans-Bold_403a1")])
+base_font = ExtResource("BarlowCondensed-Bold_49109")
+opentype_features = {
+1953396077: 1
+}
+spacing_glyph = 1

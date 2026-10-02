@@ -1,0 +1,8 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/sans/IBMPlexSans-Regular.ttf" id="IBMPlexSans-Regular_9ca0a"]
+[ext_resource type="FontFile" path="res://assets/fonts/sans/IBMPlexSansCondensed-Regular.ttf" id="IBMPlexSansCondensed-Regular_3e4c2"]
+
+[resource]
+fallbacks = Array[Font]([ExtResource("IBMPlexSans-Regular_9ca0a")])
+base_font = ExtResource("IBMPlexSansCondensed-Regular_3e4c2")

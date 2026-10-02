@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 17
+const THEME_STAMP := 18
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -97,7 +97,6 @@ const ACCENT_DIM := Color(0.118, 0.153, 0.188, 1)      # #1E2730 · amber-keyed 
 const ACCENT_DEEP := Color(0.604, 0.416, 0.071, 1)     # #9A6A12 · amber TEXT and rules on cream
 const AMBER_BG := Color(0.604, 0.416, 0.071, 0.10)     # rgba(154,106,18,.10) · amber chip fill
 const AMBER_WASH := Color(0.604, 0.416, 0.071, 0.06)   # rgba(154,106,18,.06) · selected-card wash
-const ACCENT_HEX := "#FFA028"                      # BBCode form of ACCENT_CHROME (NewsTicker)
 const ON_ACCENT := Color(0.169, 0.153, 0.133, 1)   # #2B2722 · text ON the amber fill
 
 # --- Yüzen çubuklar · dolgu ve duraklamış zemin ---
@@ -285,6 +284,7 @@ const SPACE_L := 12
 const SPACE_XL := 16
 const SPACE_XXL := 20
 const SPACE_3XL := 24
+const SPACE_4XL := 32
 
 # --- Corner radii ---
 # Radius 2 for everything that is not a pill or a window; the named steps are
@@ -513,6 +513,11 @@ static func seat_ink(seat: int) -> Color:
 	return ACCENT_DEEP if seat == 0 else seat_ring(seat)
 
 
+## BBCode form of ACCENT_CHROME (NewsTicker).
+static func accent_hex() -> String:
+	return "#" + ACCENT_CHROME.to_html(false)
+
+
 ## Ink of a die factor on the dark tooltip, by its tone: "pos" | "neg" | anything else neutral.
 static func tooltip_tone_ink(tone: String) -> Color:
 	match tone:
@@ -631,3 +636,309 @@ const PAD_STAMP := Vector2i(7, 2)         # Stamp family
 
 static func area_color(slot: int) -> Color:
 	return AREA_SLOT_0_CB if slot == 0 and _cb_palette else AREA_COLORS[slot]
+
+
+# ============================================================================
+# MENAJER MASASI · the dark language. themes/menajer_theme.tres reads these tokens (and PAPER_*),
+# and so does every screen whose root carries that theme; the cream tokens above stay with
+# master_theme.tres. Names are roles, never grounds: surfaces darken from 5 to 0, inks lighten
+# from 4 to 1. Amber fills only the one primary action and outlines only the time state, red is
+# danger only, hover is a border and selected is ink. Colours with a colour-blind twin are read
+# through the D_ helpers at the end of this block.
+# ============================================================================
+const MENAJER_THEME := "res://themes/menajer_theme.tres"
+
+# --- surfaces: warm charcoal ---
+const D_SURFACE_0 := Color("#100E0B")   # ground: ticker, tooltip, page
+const D_SURFACE_1 := Color("#15120F")   # chrome: top bar, rail
+const D_SURFACE_2 := Color("#1A1714")   # inset: inbox list, sticky table head, input field
+const D_SURFACE_3 := Color("#1E1B18")   # window body
+const D_SURFACE_4 := Color("#27231F")   # raised: window header, selected row, time block, menu, stake box
+const D_SURFACE_5 := Color("#2E2924")   # control fill: idle speed key, count badge, switch track
+
+# --- lines ---
+const D_LINE_1 := Color("#3A342D")       # rules and separators
+const D_LINE_2 := Color("#4A4239")       # component borders: window, outline button, input, tracks
+const D_LINE_3 := Color("#6A5F52")       # strong outline: tag, relation chip, scrollbar thumb
+const D_LINE_HOVER := Color("#958C7E")   # the hover border
+const D_ROW_RULE := Color(D_LINE_1, 0.75)   # data row separator
+
+# --- ink ---
+const D_INK_1 := Color("#FFFFFF")    # emphasis: cash, window title, row name, active label
+const D_INK_2 := Color("#E9E4DA")    # primary text
+const D_INK_3 := Color("#B3AA9E")    # secondary: keys, column heads, idle rail name
+const D_INK_4 := Color("#9A9184")    # tertiary: idle rail icon, rail lock reason
+const D_INK_OFF := Color("#6B6358")  # a disabled or locked label or glyph, never a reason
+
+# --- accent ---
+const D_ACCENT := Color("#F2B53A")
+const D_ACCENT_HOVER := Color("#F7C65F")
+const D_ACCENT_PRESSED := Color("#DDA12D")
+const D_ON_ACCENT := Color("#17130A")       # text and glyph on amber
+const D_ACCENT_GLOW := Color(D_ACCENT, 0.24)   # the ring around a waiting-decision dot
+
+# --- meaning: gain, danger, attention, notice ---
+const D_POS := Color("#4FD27A")
+const D_NEG := Color("#EC6A5E")
+const D_WARN := Color("#E8913A")
+const D_INFO := Color("#8CC2EC")
+const D_NEG_BG := Color("#2B1A17")       # danger strip fill
+const D_NEG_LINE := Color("#6E3129")     # danger strip border
+const D_NEG_INK := Color("#F4A39A")      # soft danger text on the strip or in a risk tag
+const D_NEG_TAG_BG := Color(D_NEG, 0.16)
+const D_NEG_TAG_LINE := Color(D_NEG, 0.60)
+const D_POS_TAG_BG := Color(D_POS, 0.12)
+const D_POS_TAG_LINE := Color(D_POS, 0.55)
+const D_POS_INK := Color("#8FE3A8")      # soft gain text in a gain tag
+const D_WARN_TAG_BG := Color(D_WARN, 0.12)
+const D_WARN_TAG_LINE := Color(D_WARN, 0.55)
+const D_ON_NEG := Color("#1B0F0D")       # text on a solid danger badge
+# Colour-blind twins: gain blue, danger vermilion, attention pale yellow, notice pale blue.
+const D_POS_CB := Color("#56B4E9")
+const D_NEG_CB := Color("#F07A3C")
+const D_WARN_CB := Color("#F6EA85")
+const D_INFO_CB := Color("#C0E2F6")
+const D_NEG_BG_CB := Color("#2E1D12")
+const D_NEG_LINE_CB := Color("#7A4522")
+const D_NEG_INK_CB := Color("#F7B48C")
+const D_NEG_TAG_BG_CB := Color(D_NEG_CB, 0.16)
+const D_NEG_TAG_LINE_CB := Color(D_NEG_CB, 0.60)
+const D_POS_TAG_BG_CB := Color(D_POS_CB, 0.12)
+const D_POS_TAG_LINE_CB := Color(D_POS_CB, 0.55)
+const D_POS_INK_CB := Color("#A6D6F5")
+const D_WARN_TAG_BG_CB := Color(D_WARN_CB, 0.10)
+const D_WARN_TAG_LINE_CB := Color(D_WARN_CB, 0.50)
+const D_ON_NEG_CB := Color("#1F1206")
+
+# --- skill values: luminance rises with the value in both palettes ---
+const D_SKILL_1 := Color("#A09789")   # 1-2
+const D_SKILL_2 := Color("#B4AB9B")   # 3-4
+const D_SKILL_3 := Color("#C9C3B4")   # 5-6
+const D_SKILL_4 := Color("#BCDF72")   # 7-8
+const D_SKILL_5 := Color("#86F7A0")   # 9-10
+const D_SKILL_4_CB := Color("#A3D2F7")
+const D_SKILL_5_CB := Color("#D4EEFF")
+const D_ROLE_BAND := Color(D_INK_2, 0.05)   # a role's columns inside its group
+
+# --- topic pills: a hue border and the hue at D_PILL_FILL_ALPHA as fill ---
+const D_TOPIC_MENTOR := Color("#C9A8E6")
+const D_TOPIC_CUSTOMER := Color("#6FC9B6")
+const D_TOPIC_TEAM := Color("#7FB6DE")
+const D_TOPIC_PRODUCT := Color("#9EB18C")
+const D_TOPIC_FUNDING := Color("#E6A2C2")
+const D_TOPIC_MARKET := Color("#D4BD8E")
+const D_TOPIC_AGENDA := D_INK_3   # the generic topic stays neutral, in both palettes
+const D_TOPIC_MENTOR_CB := Color("#A985E0")
+const D_TOPIC_CUSTOMER_CB := Color("#B6EDED")
+const D_TOPIC_TEAM_CB := Color("#85C5E0")
+const D_TOPIC_PRODUCT_CB := Color("#B6D175")
+const D_TOPIC_FUNDING_CB := Color("#C9945E")
+const D_TOPIC_MARKET_CB := Color("#DAC7A9")
+const D_PILL_FILL_ALPHA := 0.12
+
+# --- ticker outlets ---
+const D_OUTLET_SEKTOR := Color("#7FB6DE")
+const D_OUTLET_EKONOMI := Color("#E6A2C2")
+const D_OUTLET_TEKNOGUNDEM := Color("#6FC9B6")
+const D_OUTLET_GIRISIM := Color("#C2ABEA")
+const D_OUTLET_SEKTOR_CB := Color("#85C5E0")
+const D_OUTLET_EKONOMI_CB := Color("#C9945E")
+const D_OUTLET_TEKNOGUNDEM_CB := Color("#B6EDED")
+const D_OUTLET_GIRISIM_CB := Color("#A985E0")
+
+# --- charts and bars: ink based, red only below zero ---
+const D_CHART_GRID := Color("#2F2A25")
+const D_CHART_AXIS := D_LINE_3
+const D_CHART_LINE := D_INK_2
+const D_CHART_PROJ := D_INK_4
+const D_CHART_NEG_AREA := Color(D_NEG, 0.12)
+const D_CHART_NEG_AREA_CB := Color(D_NEG_CB, 0.12)
+const D_CHART_POS_AREA := Color(D_INK_2, 0.05)
+const D_BAR_TRACK := D_LINE_1
+const D_BAR_FILL := D_INK_3   # progress that is neither good nor bad
+const D_BAR_EMPH := D_INK_2   # the one share a part-to-whole bar highlights
+
+# --- state and overlay ---
+const D_FOCUS := D_INK_1           # the keyboard focus ring
+const D_SELECTED_MARK := D_INK_1   # the marker on a selected row's left edge
+const D_SCRIM := Color(Color("#0A0806"), 0.62)   # true modals only
+const D_HALO := Color(Color("#0A0806"), 0.66)    # a window's shadow
+const D_SHADOW_FLOAT := Color(0, 0, 0, 0.42)
+const D_SHADOW_TOOLTIP := Color(0, 0, 0, 0.45)
+
+# --- portraits: the ink-outlined busts need a lit ground on charcoal ---
+const D_PORTRAIT_LIT := Color("#574B3F")    # radial centre behind the head
+const D_PORTRAIT_EDGE := Color("#2A2520")   # radial edge
+const D_AV_RIM := D_LINE_3
+
+# --- desk motif: a document has its top-right corner cut, a finished one is stamped ---
+const D_STAMP := D_INK_3
+const D_CUT := 12      # document corner bevel
+const D_CUT_SM := 8    # small documents: toast, notice, selected inbox row
+
+# --- newspaper island: cream in both themes; the dark theme's meta line reads at 4.5:1 ---
+const D_PAPER_INK_META := Color("#6E6553")
+
+# --- type ladder: twelve steps named by size; a dark variation picks one ---
+const D_FS_12 := 12
+const D_FS_13 := 13
+const D_FS_14 := 14
+const D_FS_15 := 15
+const D_FS_16 := 16
+const D_FS_18 := 18
+const D_FS_20 := 20
+const D_FS_22 := 22
+const D_FS_26 := 26
+const D_FS_30 := 30
+const D_FS_36 := 36
+const D_FS_40 := 40
+# The newspaper keeps its own set pieces above the ladder.
+const D_PAPER_FS_HEADLINE := 32
+const D_PAPER_FS_FIGURE := 44
+const D_PAPER_FS_MASTHEAD := 52
+# A Label line is its face's own height; paragraphs and Frank's quotes add D_LEADING_PARA.
+const D_LEADING := 0
+const D_LEADING_PARA := 2
+
+# --- shape ---
+const D_RADIUS_1 := 2   # tracks, markers, a document's three straight corners
+const D_RADIUS_2 := 4   # buttons, tags, inputs, speed keys, tooltip
+const D_RADIUS_3 := 6   # floats, strips, option bar, portrait well, menu
+const D_RADIUS_4 := 8   # windows
+const D_MARK := Vector2i(3, 8)   # selected marker: width, inset from the row's top and bottom
+# One shadow per box: (size, y offset).
+const D_SHADOW_WINDOW := Vector2i(96, 12)
+const D_SHADOW_FLOATING := Vector2i(20, 6)
+const D_SHADOW_TIP := Vector2i(12, 4)
+
+# --- control heights; the theme derives vertical content margins from them ---
+const D_H_BTN := 40
+const D_H_BTN_SM := 32
+const D_H_BTN_LG := 56
+const D_H_INPUT := 40
+const D_H_SPEED_KEY := 32
+const D_H_FLOAT_BTN := 44
+const D_H_MENU_ITEM := 32
+const D_H_TOOLTIP := 28
+const D_H_STAMP := 26
+const D_H_FX := 24
+const D_H_TAG := 22
+const D_H_PILL := 20
+const D_H_BADGE := 20
+
+const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
+const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]
+## Topic hue [standard, colour-blind] by the tag key the pill shows.
+const D_TOPICS := {
+	"EVENT_TAG_MENTOR": [D_TOPIC_MENTOR, D_TOPIC_MENTOR_CB],
+	"EVENT_TAG_CUSTOMER": [D_TOPIC_CUSTOMER, D_TOPIC_CUSTOMER_CB],
+	"EVENT_TAG_TEAM": [D_TOPIC_TEAM, D_TOPIC_TEAM_CB],
+	"EVENT_TAG_PRODUCT": [D_TOPIC_PRODUCT, D_TOPIC_PRODUCT_CB],
+	"DESK_PAPER_TAG_FUNDING": [D_TOPIC_FUNDING, D_TOPIC_FUNDING_CB],
+	"EVENT_TAG_MARKET": [D_TOPIC_MARKET, D_TOPIC_MARKET_CB],
+	"EVENT_TAG_AGENDA": [D_TOPIC_AGENDA, D_TOPIC_AGENDA],
+}
+## Outlet hue [standard, colour-blind] by the outlet's name key.
+const D_OUTLETS := {
+	"WORLD_OUTLET_SEKTOR": [D_OUTLET_SEKTOR, D_OUTLET_SEKTOR_CB],
+	"WORLD_OUTLET_EKONOMI": [D_OUTLET_EKONOMI, D_OUTLET_EKONOMI_CB],
+	"WORLD_OUTLET_TEKNOGUNDEM": [D_OUTLET_TEKNOGUNDEM, D_OUTLET_TEKNOGUNDEM_CB],
+	"WORLD_OUTLET_GIRISIM": [D_OUTLET_GIRISIM, D_OUTLET_GIRISIM_CB],
+}
+
+
+static func D_pos() -> Color:
+	return D_POS_CB if _cb_palette else D_POS
+
+static func D_neg() -> Color:
+	return D_NEG_CB if _cb_palette else D_NEG
+
+static func D_warn() -> Color:
+	return D_WARN_CB if _cb_palette else D_WARN
+
+static func D_info() -> Color:
+	return D_INFO_CB if _cb_palette else D_INFO
+
+## The danger strip's fill, border and text, and the text on a solid danger badge.
+static func D_neg_bg() -> Color:
+	return D_NEG_BG_CB if _cb_palette else D_NEG_BG
+
+static func D_neg_rule() -> Color:
+	return D_NEG_LINE_CB if _cb_palette else D_NEG_LINE
+
+static func D_neg_ink() -> Color:
+	return D_NEG_INK_CB if _cb_palette else D_NEG_INK
+
+static func D_on_neg() -> Color:
+	return D_ON_NEG_CB if _cb_palette else D_ON_NEG
+
+static func D_chart_neg_area() -> Color:
+	return D_CHART_NEG_AREA_CB if _cb_palette else D_CHART_NEG_AREA
+
+
+## Ink of a 1-10 skill value; a founder's unspent skill reads 0.
+static func D_skill(value: int) -> Color:
+	return (D_SKILLS_CB if _cb_palette else D_SKILLS)[(clampi(value, 1, 10) - 1) / 2]
+
+
+static func D_topic(tag_key: String) -> Color:
+	return D_TOPICS[tag_key][int(_cb_palette)]
+
+
+static func D_outlet(outlet_key: String) -> Color:
+	return D_OUTLETS[outlet_key][int(_cb_palette)]
+
+
+## Delta colour on the dark ground.
+static func D_delta_color(value: int) -> Color:
+	if value > 0: return D_pos()
+	if value < 0: return D_neg()
+	return D_INK_3
+
+
+## {bg, line, fg} of a tag, by badge_palette's kinds: "accent" is the attention tag, "attention"
+## the neutral count badge.
+static func D_badge_palette(kind: StringName) -> Dictionary:
+	var cb := _cb_palette
+	match kind:
+		&"positive": return {"bg": D_POS_TAG_BG_CB if cb else D_POS_TAG_BG,
+				"line": D_POS_TAG_LINE_CB if cb else D_POS_TAG_LINE, "fg": D_POS_INK_CB if cb else D_POS_INK}
+		&"negative": return {"bg": D_NEG_TAG_BG_CB if cb else D_NEG_TAG_BG,
+				"line": D_NEG_TAG_LINE_CB if cb else D_NEG_TAG_LINE, "fg": D_neg_ink()}
+		&"accent": return {"bg": D_WARN_TAG_BG_CB if cb else D_WARN_TAG_BG,
+				"line": D_WARN_TAG_LINE_CB if cb else D_WARN_TAG_LINE, "fg": D_warn()}
+		&"attention": return {"bg": D_SURFACE_5, "line": D_LINE_2, "fg": D_INK_2}
+		_: return {"bg": D_SURFACE_5, "line": Color.TRANSPARENT, "fg": D_INK_3}
+
+
+## Health dot colour. state: "healthy" | "warn" | "bad".
+static func D_health_color(state: StringName) -> Color:
+	match state:
+		&"healthy": return D_pos()
+		&"warn": return D_warn()
+		&"bad": return D_neg()
+		_: return D_INK_3
+
+
+## {line, fg, dot} of a relationship chip: the word stays neutral and the dot carries the tone.
+static func D_relationship_palette(rel: String) -> Dictionary:
+	var dot: Color = D_INK_4
+	match rel:
+		"ally": dot = D_pos()
+		"friendly": dot = Color(D_pos(), 0.6)
+		"wary": dot = D_warn()
+		"hostile": dot = D_neg()
+	return {"line": D_LINE_3, "fg": D_INK_2, "dot": dot}
+
+
+## Ink of a meeting option's risk word, on risk_key's edges.
+static func D_risk_ink(chance: float) -> Color:
+	if chance >= RISK_SAFE_MIN: return D_pos()
+	if chance >= RISK_RISKY_MIN: return D_warn()
+	return D_neg()
+
+
+## A meeting seat's ring and name: the other side's lead (seat 1) in emphasis, every other seat in
+## secondary ink. The seats carry no hue.
+static func D_seat_ink(seat: int) -> Color:
+	return D_INK_1 if seat == 1 else D_INK_3

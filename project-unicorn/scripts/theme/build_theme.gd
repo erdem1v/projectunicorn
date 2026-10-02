@@ -4,15 +4,15 @@ extends SceneTree
 # Theme generator (run headless):
 #   godot --headless --path <project> -s res://scripts/theme/build_theme.gd
 #
-# Builds FontVariation wrappers (carrying the symbol fallback) and generates
-# themes/master_theme.tres from UiTokens. The theme is a BUILD ARTIFACT of
-# UiTokens — re-run this whenever tokens or the font trio change.
+# Builds the FontVariation wrappers and generates both themes from UiTokens; a theme is a BUILD
+# ARTIFACT of UiTokens, so re-run this whenever tokens or faces change. Master is written first.
+# - themes/master_theme.tres, the project theme (cream): Source Serif 4, IBM Plex Sans and
+#   JetBrains Mono, every face falling back to Noto Sans Symbols 2.
+# - themes/menajer_theme.tres (the dark language), set on the roots of migrated screens: Barlow
+#   Condensed (falls back to Plex), IBM Plex Sans and Plex Sans Condensed, Source Serif 4; no
+#   text face falls back to Noto, whose height would set every Label's line.
 #
-# Fonts: Source Serif 4 (serif) + IBM Plex Sans (sans/numbers) + JetBrains Mono
-# (labels/meta/ticker/badges). Fallback: Noto Sans Symbols 2.
-#
-# Every size here is a UiTokens scale step: a variation picks a step, it never
-# invents a number.
+# Every size here is a UiTokens scale step: a variation picks a step, it never invents a number.
 # ============================================================================
 
 # Loaded in _initialize, not preloaded: ui_tokens.gd names the GameState autoload, which a
@@ -24,6 +24,11 @@ const FONT_SERIF_SB := "res://assets/fonts/serif/SourceSerif4-Semibold.ttf"
 const FONT_SERIF_IT := "res://assets/fonts/serif/SourceSerif4-It.ttf"
 const FONT_SANS_REG := "res://assets/fonts/sans/IBMPlexSans-Regular.ttf"
 const FONT_SANS_SB := "res://assets/fonts/sans/IBMPlexSans-SemiBold.ttf"
+const FONT_SANS_MED := "res://assets/fonts/sans/IBMPlexSans-Medium.ttf"
+const FONT_SANS_B := "res://assets/fonts/sans/IBMPlexSans-Bold.ttf"
+const FONT_SANSC_REG := "res://assets/fonts/sans/IBMPlexSansCondensed-Regular.ttf"
+const FONT_COND_SB := "res://assets/fonts/cond/BarlowCondensed-SemiBold.ttf"
+const FONT_COND_B := "res://assets/fonts/cond/BarlowCondensed-Bold.ttf"
 const FONT_MONO_REG := "res://assets/fonts/mono/JetBrainsMono-Regular.ttf"
 const FONT_MONO_SB := "res://assets/fonts/mono/JetBrainsMono-SemiBold.ttf"
 const FONT_SYMBOLS := "res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf"
@@ -51,8 +56,8 @@ func _initialize() -> void:
 	var sans_reg := _mkfont(FONT_SANS_REG, symbols, "sans_reg")
 	var sans_sb := _mkfont(FONT_SANS_SB, symbols, "sans_sb")
 	var mono_reg := _mkfont(FONT_MONO_REG, symbols, "mono_reg")
-	var mono_label := _mkfont(FONT_MONO_REG, symbols, "mono_label", 0.6)
-	var mono_sb := _mkfont(FONT_MONO_SB, symbols, "mono_sb", 0.6)
+	var mono_label := _mkfont(FONT_MONO_REG, symbols, "mono_label", 1)
+	var mono_sb := _mkfont(FONT_MONO_SB, symbols, "mono_sb", 1)
 
 	var th := Theme.new()
 	th.set_default_font(sans_reg)
@@ -143,10 +148,10 @@ func _initialize() -> void:
 	_lbl(th, &"NewsStatSerif", serif_sb, T.SIZE_ED_FIGURE, T.PAPER_INK)         # stat-row figures ("$4.0M")
 
 	# ---- Panel variations ----
-	_panel(th, &"TopBarPanel", "Panel", _sides_box(T.BG_TOPBAR, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.SEPARATOR))
+	_panel(th, &"TopBarPanel", "Panel", _sides_box(T.BG_TOPBAR, T.RADIUS_NONE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE), T.SEPARATOR))
 	# SideRailPanel: the cream tab rail; a right hairline divides it from the office.
-	_panel(th, &"SideRailPanel", "Panel", _sides_box(T.BG_PANEL, T.RADIUS_NONE, [0, T.BORDER_HAIRLINE, 0, 0], T.CARD_BORDER))
-	_panel(th, &"NewsPanel", "Panel", _sides_box(T.BG_NEWS, T.RADIUS_NONE, [0, 0, T.BORDER_HAIRLINE, 0], T.SEPARATOR))
+	_panel(th, &"SideRailPanel", "Panel", _sides_box(T.BG_PANEL, T.RADIUS_NONE, Vector4i(0, 0, T.BORDER_HAIRLINE, 0), T.CARD_BORDER))
+	_panel(th, &"NewsPanel", "Panel", _sides_box(T.BG_NEWS, T.RADIUS_NONE, Vector4i(0, T.BORDER_HAIRLINE, 0, 0), T.SEPARATOR))
 	_panel(th, &"ViewportPanel", "Panel", _box(T.BG_BODY, T.RADIUS_NONE))
 	_panel(th, &"ModalPanel", "Panel", _box(T.CARD_BG, T.RADIUS_L, T.CARD_BORDER))
 	_panel(th, &"PhaseDotActive", "Panel", _box(T.ACCENT_CHROME, T.RADIUS_XS))
@@ -180,7 +185,7 @@ func _initialize() -> void:
 	_panel(th, &"ChoiceCardHover", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_CHOICE))
 	# A choice in the warning tone keeps the ChoiceCard padding, so turning alert moves no row.
 	_panel(th, &"ChoiceCardAlert", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.RADIUS_M, T.CARD_ATTENTION_BORDER, T.PAD_CHOICE))
-	_panel(th, &"HeaderBand", "PanelContainer", _sides_box(Color.TRANSPARENT, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.BORDER_DISABLED, T.PAD_STRIP))
+	_panel(th, &"HeaderBand", "PanelContainer", _sides_box(Color.TRANSPARENT, T.RADIUS_NONE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE), T.BORDER_DISABLED, T.PAD_STRIP))
 	# CardFloating: gövde üstünde yüzen kart (BuildHUD overlay'i).
 	var floating_sb := _box(T.CARD_FLOATING_BG, T.RADIUS_L, T.CARD_BORDER, T.PAD_CARD_TIGHT)
 	floating_sb.shadow_color = T.SHADOW_SOFT
@@ -196,9 +201,9 @@ func _initialize() -> void:
 
 	# ---- Meeting dock (cream body) ----
 	# The dock's sections pad themselves, so the dock carries only its left hairline.
-	_panel(th, &"MeetingDock", "PanelContainer", _sides_box(T.BG_BODY, T.RADIUS_NONE, [T.BORDER_HAIRLINE, 0, 0, 0], T.CARD_BORDER))
-	_panel(th, &"MeetingHeader", "PanelContainer", _sides_box(T.SURFACE_ROW_TINT, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.CARD_BORDER, T.PAD_MEETING_HEADER))
-	_panel(th, &"MeetingDeck", "PanelContainer", _sides_box(T.SURFACE_FRAME, T.RADIUS_NONE, [0, 0, T.BORDER_HAIRLINE, 0], T.CARD_BORDER, T.PAD_MEETING_DECK))
+	_panel(th, &"MeetingDock", "PanelContainer", _sides_box(T.BG_BODY, T.RADIUS_NONE, Vector4i(T.BORDER_HAIRLINE, 0, 0, 0), T.CARD_BORDER))
+	_panel(th, &"MeetingHeader", "PanelContainer", _sides_box(T.SURFACE_ROW_TINT, T.RADIUS_NONE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE), T.CARD_BORDER, T.PAD_MEETING_HEADER))
+	_panel(th, &"MeetingDeck", "PanelContainer", _sides_box(T.SURFACE_FRAME, T.RADIUS_NONE, Vector4i(0, T.BORDER_HAIRLINE, 0, 0), T.CARD_BORDER, T.PAD_MEETING_DECK))
 	_panel(th, &"MeetingFounderBubble", "PanelContainer", _box(T.INK, T.RADIUS_M, Color.TRANSPARENT, T.PAD_ROW))
 	# NumberChip: an option's number disc.
 	_panel(th, &"NumberChip", "PanelContainer", _box(T.SURFACE_SUNKEN, T.RADIUS_PILL))
@@ -210,7 +215,7 @@ func _initialize() -> void:
 	_panel(th, &"DialogueColumn", "Panel", _box(T.DIALOGUE_COLUMN_BG, T.RADIUS_XXL))
 	_panel(th, &"DialogueCard", "Panel", _box(T.DIALOGUE_BG, T.RADIUS_CARD_LG, T.DIALOGUE_CARD_BORDER))
 	_panel(th, &"PortraitFrame", "PanelContainer", _box(T.PORTRAIT_FRAME, T.RADIUS_PORTRAIT, Color.TRANSPARENT, T.PAD_FRAME))
-	_panel(th, &"QuoteBox", "PanelContainer", _sides_box(T.DIALOGUE_CARD_BG, T.RADIUS_M, [T.BORDER_ACCENT, 0, 0, 0], T.ACCENT_CHROME, T.PAD_ROW))
+	_panel(th, &"QuoteBox", "PanelContainer", _sides_box(T.DIALOGUE_CARD_BG, T.RADIUS_M, Vector4i(T.BORDER_ACCENT, 0, 0, 0), T.ACCENT_CHROME, T.PAD_ROW))
 	_panel(th, &"DialogueChoice", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.DIALOGUE_CARD_BORDER, T.PAD_ROW))
 	_panel(th, &"DialogueChoiceHover", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.ACCENT_CHROME, T.PAD_ROW))
 
@@ -229,7 +234,7 @@ func _initialize() -> void:
 	modal_card_sb.shadow_offset = Vector2(0, 10)
 	_panel(th, &"ModalCard", "PanelContainer", modal_card_sb)
 	# RailPanel: the dark meta rail — same charcoal as the screen, a left hairline divides it.
-	_panel(th, &"RailPanel", "PanelContainer", _sides_box(T.DIALOGUE_BG, T.RADIUS_NONE, [T.BORDER_HAIRLINE, 0, 0, 0], T.SEPARATOR, T.PAD_RAIL))
+	_panel(th, &"RailPanel", "PanelContainer", _sides_box(T.DIALOGUE_BG, T.RADIUS_NONE, Vector4i(T.BORDER_HAIRLINE, 0, 0, 0), T.SEPARATOR, T.PAD_RAIL))
 	# RailCard: Coming-Soon Tier2/Tier3 cards on the rail.
 	_panel(th, &"RailCard", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_M, T.DIALOGUE_CARD_BORDER, T.PAD_CARD_RAIL))
 	# EngravingFrame: the illustration frame on the paper; reads the paper ink because
@@ -280,7 +285,7 @@ func _initialize() -> void:
 	# the row never jumps. Face and ink come from base Button.
 	th.set_type_variation(&"ActionRow", &"Button")
 	var row_flat := _box(Color.TRANSPARENT, T.RADIUS_NONE, Color.TRANSPARENT, T.PAD_ACTION_ROW)
-	var row_hot := _sides_box(T.AMBER_WASH, T.RADIUS_NONE, [T.BORDER_FOCUS, 0, 0, 0], T.ACCENT_DEEP, T.PAD_ACTION_ROW)
+	var row_hot := _sides_box(T.AMBER_WASH, T.RADIUS_NONE, Vector4i(T.BORDER_FOCUS, 0, 0, 0), T.ACCENT_DEEP, T.PAD_ACTION_ROW)
 	_states(th, &"ActionRow", {
 		"normal": row_flat,
 		"hover": row_hot,
@@ -324,7 +329,7 @@ func _initialize() -> void:
 	_panel(th, &"HoverBox", "PanelContainer", hover_sb)
 	_panel(th, &"DecisionRow", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT_DEEP, T.PAD_PAPER_CARD))
 	_panel(th, &"GoalStrip", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_PAPER, T.ACCENT_DEEP, Vector2i(T.SPACE_XL, 0)))
-	_panel(th, &"QuarterHeaderBand", "PanelContainer", _sides_box(T.AMBER_BG, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.ACCENT_DEEP, Vector2i(T.SPACE_M, T.SPACE_M)))
+	_panel(th, &"QuarterHeaderBand", "PanelContainer", _sides_box(T.AMBER_BG, T.RADIUS_NONE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE), T.ACCENT_DEEP, Vector2i(T.SPACE_M, T.SPACE_M)))
 	_lbl(th, &"DataMono", mono_sb, T.SIZE_DATA, T.INK)
 	_lbl(th, &"DataMonoLarge", mono_sb, T.SIZE_ED_MODAL, T.INK)
 	_lbl(th, &"DataMonoHero", mono_sb, T.SIZE_ED_HEADLINE, T.INK)
@@ -565,21 +570,599 @@ func _initialize() -> void:
 		quit(1)
 		return
 	print("[build_theme] wrote %s" % OUT_PATH)
+
+	var dark := _menajer(th)
+	if dark == null:
+		quit(1)
+		return
+	err = _save(dark, T.MENAJER_THEME)
+	if err != OK:
+		push_error("[build_theme] save failed: %d" % err)
+		quit(1)
+		return
+	print("[build_theme] wrote %s" % T.MENAJER_THEME)
 	quit(0)
+
+
+# ============================================================================
+# MENAJER THEME · the dark language. Every master type comes over first, with what it resolves in
+# master (its own items, its bases', its class ancestors') in dark tokens and faces: a control in a
+# dark root that still names a master variation keeps master's sizes and content margins. Then the
+# base types and the new variations take the dark language's own ladder.
+# ============================================================================
+
+## The dark token for each cream token master draws, by how it is drawn: FILL a box's fill, EDGE
+## its border, LINE a rule, SHADOW its shadow, FONT a text colour. A master colour missing here fails
+## the build, so no cream value reaches menajer_theme.tres; disabled text always takes D_INK_OFF.
+## Hover and selected edges become the hover border, amber text becomes emphasis ink.
+const DARK_OF := {
+	"FILL": {
+		"BG_BODY": "D_SURFACE_0", "BG_TOPBAR": "D_SURFACE_1", "BG_PANEL": "D_SURFACE_1",
+		"DIALOGUE_CARD_BG": "D_SURFACE_2", "SURFACE_INPUT": "D_SURFACE_2", "VEIL_FAINT_CHROME": "D_SURFACE_2",
+		"CARD_BG": "D_SURFACE_3", "CARD_FLOATING_BG": "D_SURFACE_3", "DIALOGUE_BG": "D_SURFACE_3",
+		"DIALOGUE_COLUMN_BG": "D_SURFACE_3", "SURFACE_ROW_TINT": "D_SURFACE_4", "ACCENT_DIM": "D_SURFACE_4",
+		"AMBER_BG": "D_SURFACE_4", "AMBER_WASH": "D_SURFACE_4", "VEIL_SOFT_CHROME": "D_SURFACE_4",
+		"SURFACE_FRAME": "D_SURFACE_5", "BG_AVATAR": "D_SURFACE_5", "INK": "D_SURFACE_5",
+		"SURFACE_SUNKEN": "D_BAR_TRACK", "CARD_BORDER": "D_BAR_TRACK", "DOT_IDLE_CHROME": "D_LINE_2",
+		"PORTRAIT_FRAME": "D_LINE_3", "INK_DIM": "D_INK_3",
+		"ACCENT": "D_ACCENT", "ACCENT_CHROME": "D_ACCENT", "ACCENT_HOVER": "D_ACCENT_HOVER",
+		"ACCENT_HOVER_CHROME": "D_ACCENT_HOVER", "ACCENT_PRESSED": "D_ACCENT_PRESSED",
+		"ACCENT_PRESSED_CHROME": "D_ACCENT_PRESSED",
+		"CARD_ATTENTION_BG": "D_NEG_BG", "POSITIVE_BG": "D_POS_TAG_BG", "NEGATIVE_BG": "D_NEG_TAG_BG",
+		"PAPER_BG": "PAPER_BG", "PAPER_PLATE": "PAPER_PLATE",
+	},
+	"EDGE": {
+		"SEPARATOR": "D_LINE_1", "VEIL_SOFT_CHROME": "D_LINE_1", "CARD_BORDER": "D_LINE_2",
+		"CARD_BORDER_CHROME": "D_LINE_2", "BORDER_HOVER": "D_LINE_HOVER", "BORDER_HOVER_CHROME": "D_LINE_HOVER",
+		"ACCENT_DEEP": "D_LINE_HOVER", "ACCENT_CHROME": "D_LINE_HOVER", "CREAM_DIM": "D_LINE_HOVER",
+		"CARD_ATTENTION_BORDER": "D_NEG_LINE", "POSITIVE_RULE": "D_POS_TAG_LINE",
+		"PAPER_EDGE": "PAPER_EDGE", "PAPER_INK_META": "D_PAPER_INK_META",
+	},
+	"LINE": {"DIVIDER_LIGHT": "D_LINE_1"},
+	"SHADOW": {"SHADOW_SOFT": "D_SHADOW_FLOAT", "SHADOW_MODAL": "D_HALO"},
+	"FONT": {
+		"INK": "D_INK_2", "CREAM": "D_INK_2", "INK_MUTED": "D_INK_3", "INK_DIM": "D_INK_3",
+		"CREAM_DIM": "D_INK_3", "INK_FAINT_CHROME": "D_INK_3", "INK_DIM_CHROME": "D_INK_3",
+		"INK_FAINT": "D_INK_4", "ACCENT": "D_INK_1", "ACCENT_DEEP": "D_INK_1", "ACCENT_CHROME": "D_INK_1",
+		"INK_MUTED_CHROME": "D_INK_1", "ON_INK": "D_INK_1", "CARD_BG": "D_SURFACE_3", "NEGATIVE_BRIGHT": "D_NEG",
+		"PAPER_INK": "PAPER_INK", "PAPER_INK_BODY": "PAPER_INK_BODY", "PAPER_INK_DECK": "PAPER_INK_DECK",
+		"PAPER_INK_MAST": "PAPER_INK_MAST", "PAPER_INK_META": "D_PAPER_INK_META",
+	},
+}
+## The slider grabber and the switch pair, drawn for the dark ground under the master files' names.
+const DARK_ICONS := "res://assets/icons/dark/"
+const INK_OF := {"normal": "font_color", "hover": "font_hover_color", "pressed": "font_pressed_color",
+	"disabled": "font_disabled_color"}
+
+
+## menajer_theme.tres, or null with the reasons pushed as errors: a master type, base or item it
+## lacks, a box that leaves its content margins to the border, a master colour without a dark token.
+func _menajer(master: Theme) -> Theme:
+	var plex_reg: FontFile = load(FONT_SANS_REG)
+	var plex_sb: FontFile = load(FONT_SANS_SB)
+	var plex_b: FontFile = load(FONT_SANS_B)
+	# Barlow's figures are proportional; Plex's are already equal width.
+	var tnum := {TextServerManager.get_primary_interface().name_to_tag("tnum"): 1}
+	var cond_sb := _mkfont(FONT_COND_SB, plex_sb, "d_cond_sb", 0, tnum)
+	var cond_sb_caps := _mkfont(FONT_COND_SB, plex_sb, "d_cond_sb_caps", 1, tnum)
+	var cond_b := _mkfont(FONT_COND_B, plex_b, "d_cond_b", 0, tnum)
+	var cond_b_caps := _mkfont(FONT_COND_B, plex_b, "d_cond_b_caps", 1, tnum)
+	var sans_reg := _mkfont(FONT_SANS_REG, null, "d_sans_reg")
+	var sans_med := _mkfont(FONT_SANS_MED, null, "d_sans_med")
+	var sans_sb := _mkfont(FONT_SANS_SB, null, "d_sans_sb")
+	var sans_b := _mkfont(FONT_SANS_B, null, "d_sans_b")
+	var sansc := _mkfont(FONT_SANSC_REG, plex_reg, "d_sansc_reg")
+	var sansc_caps := _mkfont(FONT_SANSC_REG, plex_reg, "d_sansc_caps", 1)
+	var serif_reg := _mkfont(FONT_SERIF_REG, null, "d_serif_reg")
+	var serif_sb := _mkfont(FONT_SERIF_SB, null, "d_serif_sb")
+	var serif_it := _mkfont(FONT_SERIF_IT, null, "d_serif_it")
+
+	var th := Theme.new()
+	# Mono's jobs move to Plex and its caps labels to Barlow.
+	var errors := _copy_dark(master, th, {"serif_reg": serif_reg, "serif_sb": serif_sb,
+		"serif_it": serif_it, "sans_reg": sans_reg, "sans_sb": sans_sb, "mono_reg": sans_reg,
+		"mono_label": cond_sb_caps, "mono_sb": sans_sb})
+
+	# ---- Where a cream token plays another role on the dark ground ----
+	_recolor(th, &"NewsPanel", "panel", T.D_SURFACE_0)
+	_recolor(th, &"PhaseDotActive", "panel", T.D_INK_2)
+	_recolor(th, &"TabBadge", "panel", T.D_SURFACE_5)
+	_recolor(th, &"BuildProgress", "fill", T.D_BAR_FILL)
+	_recolor(th, &"VolumeSlider", "grabber_area", T.D_INK_3)
+	_recolor(th, &"VolumeSlider", "grabber_area_highlight", T.D_INK_2)
+	_recolor(th, &"PortraitCellSelected", "panel", null, T.D_INK_1)
+	for state in ["normal", "hover", "pressed"]:
+		_recolor(th, &"SpeedButtonActive", state, null, T.D_ACCENT)
+		for tab in [&"TabButtonActive", &"ChromeTabButtonActive"]:
+			_recolor(th, tab, state, T.D_SURFACE_4, T.D_SELECTED_MARK)
+	for commit in [&"CommitButton", &"CommitButtonDark", &"PrimaryButton", &"PrimaryButtonSmall"]:
+		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
+			th.set_color(key, commit, T.D_ON_ACCENT)
+	# A window's shadow is its halo over the office.
+	for window in [&"WindowPanel", &"FolderWindow"]:
+		th.set_stylebox("panel", window, _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_4,
+			_pad_of(th.get_stylebox("panel", window)), T.D_LINE_2), T.D_HALO, T.D_SHADOW_WINDOW))
+	# The newspaper stays cream with its own faces and sizes; its meta line is Plex Sans Condensed.
+	for row in [
+		[&"MastheadSerif", serif_sb, T.D_PAPER_FS_MASTHEAD, T.PAPER_INK_MAST],
+		[&"NewsHeadlineSerif", serif_sb, T.D_PAPER_FS_HEADLINE, T.PAPER_INK],
+		[&"NewsStatSerif", serif_sb, T.D_PAPER_FS_FIGURE, T.PAPER_INK],
+		[&"NewsDeckSerif", serif_it, T.D_FS_16, T.PAPER_INK_DECK],
+		[&"NewsBodySerif", serif_reg, T.D_FS_15, T.PAPER_INK_BODY],
+		[&"NewsCaptionSerif", serif_it, T.D_FS_12, T.D_PAPER_INK_META],
+		[&"NewsMeta", sansc_caps, T.D_FS_12, T.D_PAPER_INK_META],
+	]:
+		_lbl(th, row[0], row[1], row[2], row[3])
+
+	# ---- Base types ----
+	th.default_font = sans_reg
+	th.default_font_size = T.D_FS_15
+	th.set_color("font_color", &"Label", T.D_INK_2)
+	th.set_constant("line_spacing", &"Label", T.D_LEADING)
+	_rich_fonts(th, &"RichTextLabel", sans_reg, sans_sb, serif_it, sans_reg, T.D_FS_15)
+	th.set_color("default_color", &"RichTextLabel", T.D_INK_2)
+	th.set_constant("line_separation", &"RichTextLabel", T.D_LEADING)
+	th.set_stylebox("panel", &"Panel", _flat(T.D_SURFACE_3, T.D_RADIUS_1,
+		_pad_of(th.get_stylebox("panel", &"Panel")), T.D_LINE_1))
+	th.set_stylebox("panel", &"PanelContainer", _flat(T.D_SURFACE_3, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_1))
+	th.set_stylebox("background", &"ProgressBar", _flat(T.D_BAR_TRACK, T.D_RADIUS_1, Vector4.ZERO))
+	th.set_stylebox("fill", &"ProgressBar", _flat(T.D_BAR_FILL, T.D_RADIUS_1, Vector4.ZERO))
+	th.set_stylebox("separator", &"HSeparator", _pin(_rule(T.D_LINE_1, false)))
+	th.set_stylebox("separator", &"VSeparator", _pin(_rule(T.D_LINE_1, true)))
+	var bare := _pin(StyleBoxEmpty.new())
+	th.set_stylebox("panel", &"ScrollContainer", bare)
+	th.set_stylebox("focus", &"ScrollContainer", bare)
+
+	# Focus is a 2 px ring 2 px off the control's edge.
+	var thick := Vector4i(T.BORDER_FOCUS, T.BORDER_FOCUS, T.BORDER_FOCUS, T.BORDER_FOCUS)
+	var ring := _flat(Color.TRANSPARENT, T.D_RADIUS_4, Vector4.ZERO, T.D_FOCUS, thick)
+	ring.draw_center = false
+	ring.set_expand_margin_all(T.SPACE_XS)
+
+	# Buttons: base Button is the secondary button. {state: [fill, edge, ink]}.
+	var clear := Color.TRANSPARENT
+	var primary := {"normal": [T.D_ACCENT, clear, T.D_ON_ACCENT], "hover": [T.D_ACCENT_HOVER, clear, T.D_ON_ACCENT],
+		"pressed": [T.D_ACCENT_PRESSED, clear, T.D_ON_ACCENT], "disabled": [T.D_SURFACE_5, clear, T.D_INK_OFF]}
+	var secondary := {"normal": [clear, T.D_LINE_2, T.D_INK_2], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}
+	var ghost := {"normal": [clear, clear, T.D_INK_2], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]}
+	# The danger button, the risk strip and the risk labels bake the standard palette; their host
+	# repaints them from the D_ helpers when the colour-blind palette is on.
+	var danger := {"normal": [clear, T.D_NEG_TAG_LINE, T.D_NEG_INK],
+		"hover": [clear, T.D_NEG, T.D_NEG], "pressed": [T.D_NEG_BG, T.D_NEG, T.D_NEG],
+		"disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}
+	var regular := [cond_b, T.D_FS_18, _fit(cond_b, T.D_FS_18, T.D_H_BTN, T.SPACE_XL, T.SPACE_XL)]
+	var small := [cond_sb, T.D_FS_16, _fit(cond_sb, T.D_FS_16, T.D_H_BTN_SM, T.SPACE_L, T.SPACE_L)]
+	var large := [cond_b, T.D_FS_22, _fit(cond_b, T.D_FS_22, T.D_H_BTN_LG, T.SPACE_4XL, T.SPACE_4XL)]
+	for row in [
+		[&"Button", secondary, regular], [&"SecondaryButtonSmall", secondary, small],
+		[&"PrimaryButtonDark", primary, regular], [&"PrimaryButtonDarkSmall", primary, small],
+		[&"PrimaryButtonDarkLarge", primary, large], [&"GhostButton", ghost, regular],
+		[&"GhostButtonSmall", ghost, small], [&"DangerButton", danger, regular],
+	]:
+		_dbtn(th, row[0], row[1], row[2][0], row[2][1], row[2][2])
+	th.set_stylebox("focus", &"Button", ring)
+	th.set_type_variation(&"SecondaryButton", &"Button")
+
+	var field := _fit(sans_reg, T.D_FS_15, T.D_H_INPUT, T.SPACE_L, T.SPACE_L)
+	_states(th, &"LineEdit", {
+		"normal": _flat(T.D_SURFACE_2, T.D_RADIUS_2, field, T.D_LINE_2),
+		"focus": _flat(clear, T.D_RADIUS_2, field, T.D_INK_3),
+		"read_only": _flat(clear, T.D_RADIUS_2, field, T.D_LINE_1),
+	})
+	th.set_font_size("font_size", &"LineEdit", T.D_FS_15)
+	for row in [["font_color", T.D_INK_1], ["caret_color", T.D_INK_1], ["font_placeholder_color", T.D_INK_4],
+			["font_uneditable_color", T.D_INK_3]]:
+		th.set_color(row[0], &"LineEdit", row[1])
+
+	_dbtn(th, &"OptionButton", {
+		"normal": [T.D_SURFACE_2, T.D_LINE_2, T.D_INK_2], "hover": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": [T.D_SURFACE_2, T.D_INK_3, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF],
+	}, sans_reg, T.D_FS_15, _fit(sans_reg, T.D_FS_15, T.D_H_INPUT, T.SPACE_L, T.SPACE_M))
+	th.set_stylebox("focus", &"OptionButton", ring)
+	th.set_constant("modulate_arrow", &"OptionButton", 1)
+	th.set_constant("arrow_margin", &"OptionButton", T.SPACE_M)
+	th.set_constant("h_separation", &"OptionButton", T.SPACE_M)
+
+	# A check box or switch is its icon and a Plex label; Button's boxes must not reach it.
+	for toggle in [&"CheckBox", &"CheckButton"]:
+		for state in ["normal", "hover", "pressed", "disabled", "hover_pressed"]:
+			th.set_stylebox(state, toggle, bare)
+		th.set_stylebox("focus", toggle, ring)
+		th.set_font("font", toggle, sans_reg)
+		th.set_font_size("font_size", toggle, T.D_FS_15)
+		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
+			th.set_color(key, toggle, T.D_INK_2)
+		th.set_color("font_disabled_color", toggle, T.D_INK_OFF)
+		th.set_constant("h_separation", toggle, T.SPACE_M)
+	for key in ["checked", "checked_disabled"]:
+		th.set_icon(key, &"CheckButton", load(DARK_ICONS + "switch_on.svg"))
+	for key in ["unchecked", "unchecked_disabled"]:
+		th.set_icon(key, &"CheckButton", load(DARK_ICONS + "switch_off.svg"))
+
+	for arrow in ["up", "down"]:
+		th.set_stylebox(arrow + "_background", &"SpinBox", _flat(clear, T.D_RADIUS_2, Vector4.ZERO))
+		th.set_stylebox(arrow + "_background_hovered", &"SpinBox", _flat(clear, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_HOVER))
+		th.set_stylebox(arrow + "_background_pressed", &"SpinBox", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_HOVER))
+		th.set_stylebox(arrow + "_background_disabled", &"SpinBox", _flat(clear, T.D_RADIUS_2, Vector4.ZERO))
+		th.set_color(arrow + "_icon_modulate", &"SpinBox", T.D_INK_2)
+		th.set_color(arrow + "_hover_icon_modulate", &"SpinBox", T.D_INK_1)
+		th.set_color(arrow + "_pressed_icon_modulate", &"SpinBox", T.D_INK_1)
+		th.set_color(arrow + "_disabled_icon_modulate", &"SpinBox", T.D_INK_OFF)
+	th.set_stylebox("field_and_buttons_separator", &"SpinBox", _pin(_rule(T.D_LINE_1, true)))
+	th.set_stylebox("up_down_buttons_separator", &"SpinBox", _pin(_rule(T.D_LINE_1, false)))
+
+	# Scrollbars: an 8 px lane, the thumb 1 px inside it on both long sides.
+	for bar in [&"VScrollBar", &"HScrollBar"]:
+		var vertical: bool = bar == &"VScrollBar"
+		var lane := _flat(clear, T.RADIUS_PILL, Vector4(T.SPACE_XS, 0, T.SPACE_XS, 0) if vertical else Vector4(0, T.SPACE_XS, 0, T.SPACE_XS))
+		th.set_stylebox("scroll", bar, lane)
+		th.set_stylebox("scroll_focus", bar, lane)
+		for row in [["grabber", T.D_LINE_3], ["grabber_highlight", T.D_INK_4], ["grabber_pressed", T.D_INK_4]]:
+			var thumb := _flat(row[1], T.RADIUS_PILL, Vector4(T.SPACE_XS, T.SPACE_XS, T.SPACE_XS, T.SPACE_XS))
+			for side in ([SIDE_LEFT, SIDE_RIGHT] if vertical else [SIDE_TOP, SIDE_BOTTOM]):
+				thumb.set_expand_margin(side, -T.BORDER_HAIRLINE)
+			th.set_stylebox(row[0], bar, thumb)
+
+	var groove := Vector4(0, T.SPACE_XXS, 0, T.SPACE_XXS)
+	_states(th, &"HSlider", {
+		"slider": _flat(T.D_BAR_TRACK, T.D_RADIUS_1, groove),
+		"grabber_area": _flat(T.D_INK_3, T.D_RADIUS_1, groove),
+		"grabber_area_highlight": _flat(T.D_INK_2, T.D_RADIUS_1, groove),
+	})
+	for key in ["grabber", "grabber_highlight", "grabber_disabled"]:
+		th.set_icon(key, &"HSlider", load(DARK_ICONS + "slider_grabber.svg"))
+
+	# A menu row is 32 tall; hover is a border, never a fill.
+	th.set_stylebox("panel", &"PopupMenu", _shadow(_flat(T.D_SURFACE_4, T.D_RADIUS_3,
+		Vector4(T.SPACE_XS, T.SPACE_XS, T.SPACE_XS, T.SPACE_XS), T.D_LINE_2), T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING))
+	th.set_stylebox("hover", &"PopupMenu", _flat(clear, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_HOVER))
+	var menu_rule := _pin(_rule(T.D_LINE_1, false))
+	for key in ["separator", "labeled_separator_left", "labeled_separator_right"]:
+		th.set_stylebox(key, &"PopupMenu", menu_rule)
+	th.set_font("font", &"PopupMenu", sans_reg)
+	th.set_font_size("font_size", &"PopupMenu", T.D_FS_15)
+	th.set_font("font_separator", &"PopupMenu", cond_sb_caps)
+	th.set_font_size("font_separator_size", &"PopupMenu", T.D_FS_12)
+	for row in [["font_color", T.D_INK_2], ["font_hover_color", T.D_INK_1], ["font_disabled_color", T.D_INK_OFF],
+			["font_accelerator_color", T.D_INK_4], ["font_separator_color", T.D_INK_3]]:
+		th.set_color(row[0], &"PopupMenu", row[1])
+	th.set_constant("v_separation", &"PopupMenu", int(T.D_H_MENU_ITEM - sans_reg.get_height(T.D_FS_15)))
+	for key in ["h_separation", "item_start_padding", "item_end_padding"]:
+		th.set_constant(key, &"PopupMenu", T.SPACE_M)
+
+	th.set_stylebox("panel", &"TooltipPanel", _shadow(_flat(T.D_SURFACE_0, T.D_RADIUS_2,
+		_fit(sans_reg, T.D_FS_13, T.D_H_TOOLTIP, T.SPACE_L, T.SPACE_L), T.D_LINE_2), T.D_SHADOW_TOOLTIP, T.D_SHADOW_TIP))
+	th.set_font("font", &"TooltipLabel", sans_reg)
+	th.set_font_size("font_size", &"TooltipLabel", T.D_FS_13)
+	th.set_color("font_color", &"TooltipLabel", T.D_INK_2)
+
+	# ---- New variations: type roles in component inks ----
+	for row in [
+		[&"TitleH1", cond_b_caps, T.D_FS_40, T.D_INK_1],
+		[&"TitleH2", cond_b, T.D_FS_30, T.D_INK_1],
+		[&"SubheadLabel", cond_b, T.D_FS_20, T.D_INK_2],
+		[&"OptionLabel", cond_b, T.D_FS_20, T.D_INK_1],
+		[&"OptionLabelLocked", cond_b, T.D_FS_20, T.D_INK_OFF],
+		[&"FloatTitle", cond_b, T.D_FS_18, T.D_INK_1],
+		[&"GateLabel", cond_b_caps, T.D_FS_18, T.D_ACCENT],
+		[&"NavLabel", cond_sb_caps, T.D_FS_16, T.D_INK_3],
+		[&"NavLabelActive", cond_sb_caps, T.D_FS_16, T.D_INK_1],
+		[&"NavLabelLocked", cond_sb_caps, T.D_FS_16, T.D_INK_OFF],
+		[&"GroupLabel", cond_sb_caps, T.D_FS_15, T.D_INK_2],
+		[&"KeyLabel", cond_sb_caps, T.D_FS_14, T.D_INK_3],
+		[&"KeyLabelStrong", cond_sb_caps, T.D_FS_14, T.D_INK_1],
+		[&"RiskKey", cond_sb_caps, T.D_FS_14, T.D_NEG_INK],
+		[&"KeySmall", cond_sb_caps, T.D_FS_12, T.D_INK_3],
+		[&"NavReason", cond_sb_caps, T.D_FS_12, T.D_INK_4],
+		[&"PartValue", sans_b, T.D_FS_36, T.D_INK_2],
+		[&"HeroValue", sans_sb, T.D_FS_30, T.D_INK_1],
+		[&"KpiValue", sans_sb, T.D_FS_26, T.D_INK_2],
+		[&"PartValueArmed", sans_b, T.D_FS_26, T.D_INK_2],
+		[&"ClockLabel", sans_sb, T.D_FS_22, T.D_INK_2],
+		[&"RiskValue", sans_b, T.D_FS_18, T.D_NEG],
+		[&"ValueText", sans_med, T.D_FS_18, T.D_INK_2],
+		[&"BodyLabel", sans_reg, T.D_FS_16, T.D_INK_2],
+		[&"SenderName", sans_sb, T.D_FS_16, T.D_INK_2],
+		[&"RiskName", sans_sb, T.D_FS_16, T.D_INK_1],
+		[&"SubjectLabel", sans_med, T.D_FS_16, T.D_INK_2],
+		[&"SubjectStrong", sans_sb, T.D_FS_16, T.D_INK_1],
+		[&"SkillValue", sans_med, T.D_FS_16, T.D_SKILL_3],   # its host paints D_skill(value)
+		[&"DataText", sans_reg, T.D_FS_15, T.D_INK_2],
+		[&"DataStrong", sans_sb, T.D_FS_15, T.D_INK_1],
+		[&"NoticeText", sans_med, T.D_FS_15, T.D_INK_2],
+		[&"NoteMuted", sans_reg, T.D_FS_15, T.D_INK_3],
+		[&"CondData", sansc, T.D_FS_15, T.D_INK_2],
+		[&"TipTitle", sans_sb, T.D_FS_14, T.D_INK_1],
+		[&"KeyText", sans_med, T.D_FS_14, T.D_INK_2],
+		[&"KeyTextMuted", sans_med, T.D_FS_14, T.D_INK_3],
+		[&"MetaMuted", sans_reg, T.D_FS_14, T.D_INK_3],
+		[&"Caption", sans_reg, T.D_FS_13, T.D_INK_3],
+		[&"CondCaption", sansc, T.D_FS_13, T.D_INK_3],
+		[&"SegCount", sans_med, T.D_FS_13, T.D_INK_4],
+		[&"SegCountActive", sans_med, T.D_FS_13, T.D_INK_3],
+		[&"SmallMuted", sans_reg, T.D_FS_12, T.D_INK_3],
+		[&"FrankQuote", serif_reg, T.D_FS_20, T.D_INK_2],
+	]:
+		_lbl(th, row[0], row[1], row[2], row[3])
+	th.set_constant("line_spacing", &"FrankQuote", T.D_LEADING_PARA)
+
+	# Boxed labels. Tags with a meaning (risk, gain, attention) and topic hues are painted at
+	# runtime from the D_ helpers, so the colour-blind palette reaches them.
+	var tag := _fit(cond_b_caps, T.D_FS_13, T.D_H_TAG, T.SPACE_M, T.SPACE_M)
+	var pill := _fit(cond_b_caps, T.D_FS_13, T.D_H_PILL, T.SPACE_S, T.SPACE_S)
+	for row in [
+		[&"Tag", cond_b_caps, T.D_FS_13, T.D_INK_2, _flat(clear, T.D_RADIUS_2, tag, T.D_LINE_3)],
+		[&"TagNeutral", cond_b_caps, T.D_FS_13, T.D_INK_3, _flat(T.D_SURFACE_5, T.D_RADIUS_2, tag)],
+		[&"TagOutline", cond_b_caps, T.D_FS_13, T.D_INK_3, _flat(clear, T.D_RADIUS_2, tag, T.D_LINE_2)],
+		[&"TopicPill", cond_b_caps, T.D_FS_13, T.D_TOPIC_AGENDA,
+			_flat(Color(T.D_TOPIC_AGENDA, T.D_PILL_FILL_ALPHA), T.D_RADIUS_2, pill, T.D_TOPIC_AGENDA)],
+		[&"BadgeCount", sans_b, T.D_FS_13, T.D_INK_2, _flat(T.D_SURFACE_5, T.RADIUS_PILL,
+			_fit(sans_b, T.D_FS_13, T.D_H_BADGE, T.SPACE_S, T.SPACE_S), T.D_LINE_2)],
+		[&"DocStamp", cond_b_caps, T.D_FS_14, T.D_STAMP, _flat(clear, T.D_RADIUS_1,
+			_fit(cond_b_caps, T.D_FS_14, T.D_H_STAMP, T.SPACE_M, T.SPACE_M), T.D_STAMP, thick)],
+		[&"FxPart", sans_med, T.D_FS_14, T.D_INK_2, _flat(T.D_SURFACE_2, T.D_RADIUS_2,
+			_fit(sans_med, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), T.D_LINE_1)],
+	]:
+		_lbl(th, row[0], row[1], row[2], row[3])
+		th.set_stylebox("normal", row[0], row[4])
+
+	# Boxes. Rows and bands take their height from the host; a document has its corner cut.
+	var bottom := Vector4i(0, 0, 0, T.BORDER_HAIRLINE)
+	var row_pad := Vector4(T.SPACE_3XL, T.SPACE_L, T.SPACE_XL, 0)
+	var band_pad := Vector4(T.SPACE_3XL, 0, T.SPACE_XL, 0)
+	var option_pad := Vector4(T.SPACE_XXL, 0, T.SPACE_XL, 0)
+	var doc_pad := Vector4(T.SPACE_3XL, 0, T.SPACE_XXL, 0)
+	for row in [
+		[&"WinHead", _flat(T.D_SURFACE_4, 0, band_pad, T.D_LINE_1, bottom)],
+		[&"WinCtl", _flat(clear, 0, Vector4(T.SPACE_3XL, 0, T.SPACE_3XL, 0), T.D_LINE_1, bottom)],
+		[&"WinReadOnly", _flat(T.D_SURFACE_2, 0, band_pad, T.D_LINE_1, bottom)],
+		[&"KpiCell", _flat(clear, 0, Vector4(T.SPACE_3XL, 0, T.SPACE_3XL, 0), T.D_LINE_1, Vector4i(T.BORDER_HAIRLINE, 0, 0, 0))],
+		[&"TimeBlock", _flat(T.D_SURFACE_4, 0, Vector4.ZERO, T.D_LINE_1, Vector4i(T.BORDER_HAIRLINE, 0, 0, 0))],
+		[&"TableHead", _flat(clear, 0, Vector4(0, 0, 0, T.SPACE_M), T.D_LINE_1, bottom)],
+		[&"TableRow", _flat(clear, 0, Vector4.ZERO, T.D_ROW_RULE, bottom)],
+		[&"TableRowHover", _flat(clear, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_HOVER)],
+		[&"TableRowSelected", _flat(T.D_SURFACE_4, 0, Vector4.ZERO, T.D_ROW_RULE, bottom)],
+		[&"InboxList", _flat(T.D_SURFACE_2, 0, Vector4(0, 0, T.SPACE_L, 0), T.D_LINE_1, Vector4i(0, 0, T.BORDER_HAIRLINE, 0))],
+		[&"InboxRow", _flat(clear, 0, row_pad, T.D_LINE_1, bottom)],
+		[&"InboxRowHover", _flat(clear, T.D_RADIUS_1, row_pad, T.D_LINE_HOVER)],
+		[&"InboxRowSelected", _doc(_flat(T.D_SURFACE_4, 0, row_pad, T.D_LINE_1, bottom), T.D_CUT_SM)],
+		[&"InboxBand", _flat(T.D_SURFACE_1, 0, band_pad, T.D_LINE_1, bottom)],
+		[&"PortraitWell", _flat(T.D_PORTRAIT_EDGE, T.D_RADIUS_3, Vector4.ZERO, T.D_LINE_2)],
+		[&"StakeBox", _doc(_flat(T.D_SURFACE_4, 0, doc_pad, T.D_LINE_2), T.D_CUT)],
+		[&"PaperBar", _doc(_flat(T.D_SURFACE_4, 0, doc_pad, T.D_LINE_2), T.D_CUT)],
+		[&"OptionBar", _flat(T.D_SURFACE_3, T.D_RADIUS_3, option_pad, T.D_LINE_2)],
+		[&"OptionBarHover", _flat(T.D_SURFACE_3, T.D_RADIUS_3, option_pad, T.D_LINE_HOVER)],
+		[&"OptionBarLocked", _flat(clear, T.D_RADIUS_3, option_pad, T.D_LINE_1)],
+		[&"OptionArmed", _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_3XL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XXL), T.D_LINE_HOVER), T.D_CUT)],
+		[&"RiskStrip", _flat(T.D_NEG_BG, T.D_RADIUS_3, Vector4(T.SPACE_XL, 0, T.SPACE_L, 0), T.D_NEG_LINE)],
+		[&"Toast", _shadow(_doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_M, 0, T.SPACE_XXL, 0), T.D_LINE_2), T.D_CUT_SM),
+			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+		[&"FloatPanel", _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_3, Vector4.ZERO, T.D_LINE_1), T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+		[&"FloatHead", _flat(clear, 0, Vector4(T.SPACE_XL, T.SPACE_L, T.SPACE_XL, T.SPACE_L), T.D_LINE_1, bottom)],
+		[&"NoticeDoc", _shadow(_doc(_flat(T.D_SURFACE_3, 0, Vector4(T.SPACE_XL, 0, T.SPACE_XL, 0), T.D_LINE_1), T.D_CUT_SM),
+			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+	]:
+		_panel(th, row[0], "PanelContainer", row[1])
+	_panel(th, &"GateDot", "Panel", _flat(T.D_ACCENT, T.RADIUS_PILL, Vector4.ZERO))
+	_panel(th, &"IconWell", "Panel", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO))
+
+	# Clickable rows and keys.
+	_dbtn(th, &"ChipButton", secondary, sans_reg, T.D_FS_15, _fit(sans_reg, T.D_FS_15, T.D_H_BTN, T.SPACE_L, T.SPACE_L))
+	var under := Vector4i(0, 0, 0, T.BORDER_FOCUS)
+	var under_pad := Vector4(0, 0, 0, T.BORDER_FOCUS)
+	_dbtn(th, &"SegTab", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_3],
+		"pressed": [clear, T.D_INK_1, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]},
+		cond_sb_caps, T.D_FS_18, under_pad, 0, under)
+	_dbtn(th, &"SegTabActive", {"normal": [clear, T.D_INK_1, T.D_INK_1], "hover": [clear, T.D_INK_1, T.D_INK_1],
+		"pressed": [clear, T.D_INK_1, T.D_INK_1], "disabled": [clear, T.D_INK_1, T.D_INK_OFF]},
+		cond_sb_caps, T.D_FS_18, under_pad, 0, under)
+	var key_pad := _fit(cond_b, T.D_FS_16, T.D_H_SPEED_KEY, 0, 0)
+	_dbtn(th, &"SpeedKey", {"normal": [T.D_SURFACE_5, clear, T.D_INK_3], "hover": [T.D_SURFACE_5, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": [T.D_SURFACE_4, T.D_ACCENT, T.D_INK_1], "disabled": [T.D_SURFACE_2, clear, T.D_INK_OFF]},
+		cond_b, T.D_FS_16, key_pad)
+	# The running speed is the time state: an amber frame.
+	_dbtn(th, &"SpeedKeyActive", {"normal": [T.D_SURFACE_4, T.D_ACCENT, T.D_INK_1], "hover": [T.D_SURFACE_4, T.D_ACCENT, T.D_INK_1],
+		"pressed": [T.D_SURFACE_4, T.D_ACCENT, T.D_INK_1], "disabled": [T.D_SURFACE_2, clear, T.D_INK_OFF]},
+		cond_b, T.D_FS_16, key_pad, T.D_RADIUS_2, thick)
+	# A rail row is its box; the icon, name and badge are its children.
+	var rail_pad := Vector4(T.SPACE_XXL, 0, T.SPACE_XL, 0)
+	_dbtn(th, &"RailRow", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_3],
+		"pressed": [clear, T.D_LINE_HOVER, T.D_INK_3], "disabled": [clear, clear, T.D_INK_OFF]}, cond_sb_caps, T.D_FS_16, rail_pad)
+	var inset: StyleBoxFlat = th.get_stylebox("hover", &"RailRow")
+	inset.set_expand_margin(SIDE_LEFT, -T.SPACE_S)
+	inset.set_expand_margin(SIDE_RIGHT, -T.SPACE_S)
+	inset.set_expand_margin(SIDE_TOP, -T.SPACE_XXS)
+	inset.set_expand_margin(SIDE_BOTTOM, -T.SPACE_XXS)
+	_dbtn(th, &"RailRowActive", {"normal": [T.D_SURFACE_4, clear, T.D_INK_1], "hover": [T.D_SURFACE_4, clear, T.D_INK_1],
+		"pressed": [T.D_SURFACE_4, clear, T.D_INK_1], "disabled": [T.D_SURFACE_4, clear, T.D_INK_OFF]}, cond_sb_caps, T.D_FS_16, rail_pad)
+	var float_look := {"normal": [T.D_SURFACE_3, T.D_LINE_1, T.D_INK_2], "hover": [T.D_SURFACE_3, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [T.D_SURFACE_3, T.D_LINE_1, T.D_INK_OFF]}
+	_dbtn(th, &"FloatButton", float_look, sans_med, T.D_FS_15,
+		_fit(sans_med, T.D_FS_15, T.D_H_FLOAT_BTN, T.SPACE_L, T.SPACE_XL), T.D_RADIUS_3)
+	for state in float_look:
+		_shadow(th.get_stylebox(state, &"FloatButton"), T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)
+	_dbtn(th, &"TickerToggle", {"normal": [clear, T.D_LINE_1, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": [clear, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]},
+		sans_reg, T.D_FS_14, Vector4.ZERO, 0, Vector4i(0, 0, T.BORDER_HAIRLINE, 0))
+
+	# Message body and ticker text.
+	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")
+	_rich_fonts(th, &"PaneBodyRich", sans_reg, sans_sb, serif_it, sans_reg, T.D_FS_16)
+	th.set_color("default_color", &"PaneBodyRich", T.D_INK_2)
+	th.set_constant("line_separation", &"PaneBodyRich", T.D_LEADING_PARA)
+	th.set_type_variation(&"TickerRich", &"RichTextLabel")
+	_rich_fonts(th, &"TickerRich", sans_reg, sans_sb, serif_it, sans_reg, T.D_FS_14)
+	th.set_color("default_color", &"TickerRich", T.D_INK_3)
+
+	var check = load("res://scripts/theme/theme_check.gd")
+	errors.append_array(check.missing(th, master))
+	errors.append_array(check.unset_margins(th))
+	for e in errors:
+		push_error("[build_theme] menajer_theme: " + e)
+	return th if errors.is_empty() else null
+
+
+func _copy_dark(master: Theme, th: Theme, faces: Dictionary) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var consts: Dictionary = T.get_script_constant_map()
+	var dark_of := {}
+	for kind in DARK_OF:
+		for cream in DARK_OF[kind]:
+			var key: String = kind + (consts[cream] as Color).to_html()
+			var to: Color = consts[DARK_OF[kind][cream]]
+			if dark_of.get(key, to) != to:
+				errors.append("%s of %s has two dark tokens" % [kind, cream])
+			dark_of[key] = to
+	var boxes := {}
+	for type in master.get_type_list():
+		var base := master.get_type_variation_base(type)
+		if base != &"":
+			th.set_type_variation(type, base)
+		var t := type
+		while t != &"":
+			for dt in Theme.DATA_TYPE_MAX:
+				for item in master.get_theme_item_list(dt, t):
+					if th.has_theme_item(dt, item, type):
+						continue
+					var at := "%s/%s" % [type, item]
+					var v = master.get_theme_item(dt, item, t)
+					match dt:
+						Theme.DATA_TYPE_COLOR:
+							v = _tone(v, "OFF" if "disabled" in item else "FONT", dark_of, errors, at)
+						Theme.DATA_TYPE_FONT:
+							v = faces.get(v.resource_path.get_file().get_basename())
+						Theme.DATA_TYPE_ICON:
+							v = load(DARK_ICONS + v.resource_path.get_file())
+						Theme.DATA_TYPE_STYLEBOX:
+							if not boxes.has(v):
+								boxes[v] = _dark_box(v, dark_of, errors, at)
+							v = boxes[v]
+					th.set_theme_item(dt, item, type, v)
+			var up := master.get_type_variation_base(t)
+			t = up if up != &"" else (ClassDB.get_parent_class(t) if ClassDB.class_exists(t) else &"")
+	return errors
+
+
+func _tone(c: Color, kind: String, dark_of: Dictionary, errors: PackedStringArray, at: String) -> Color:
+	if c.a == 0.0:
+		return c
+	if kind == "OFF":
+		return T.D_INK_OFF
+	var key := kind + c.to_html()
+	if not dark_of.has(key):
+		errors.append("%s #%s (%s) has no dark token" % [at, c.to_html(), kind])
+		return c
+	return dark_of[key]
+
+
+## A master box in dark tokens with its effective content margins written out.
+func _dark_box(sb: StyleBox, dark_of: Dictionary, errors: PackedStringArray, at: String) -> StyleBox:
+	var d = sb.duplicate()
+	if d is StyleBoxFlat:
+		if d.draw_center:
+			d.bg_color = _tone(d.bg_color, "FILL", dark_of, errors, at)
+		if d.border_width_left + d.border_width_top + d.border_width_right + d.border_width_bottom > 0:
+			d.border_color = _tone(d.border_color, "EDGE", dark_of, errors, at)
+		if d.shadow_size > 0:
+			d.shadow_color = _tone(d.shadow_color, "SHADOW", dark_of, errors, at)
+	elif d is StyleBoxLine:
+		d.color = _tone(d.color, "LINE", dark_of, errors, at)
+	return _pin(d)
+
+
+## One item of one type, recoloured on its own copy of the box.
+func _recolor(th: Theme, type: StringName, item: StringName, fill = null, edge = null) -> void:
+	var sb: StyleBoxFlat = th.get_stylebox(item, type).duplicate()
+	if fill != null:
+		sb.bg_color = fill
+	if edge != null:
+		sb.border_color = edge
+	th.set_stylebox(item, type, sb)
+
+
+## A flat box: content margins [L, T, R, B], where -1 leaves a side to the border; border widths
+## [L, T, R, B] drawn only in a visible colour.
+func _flat(bg: Color, radius: int, pad: Vector4, border := Color.TRANSPARENT, widths := Vector4i(1, 1, 1, 1)) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.set_corner_radius_all(radius)
+	if border.a > 0.0:
+		sb.border_color = border
+		sb.border_width_left = widths.x
+		sb.border_width_top = widths.y
+		sb.border_width_right = widths.z
+		sb.border_width_bottom = widths.w
+	sb.content_margin_left = pad.x
+	sb.content_margin_top = pad.y
+	sb.content_margin_right = pad.z
+	sb.content_margin_bottom = pad.w
+	return sb
+
+
+## Content margins that centre one line of the face in a box exactly h tall.
+func _fit(face: Font, size: int, h: int, left: int, right: int) -> Vector4:
+	var spare := h - face.get_height(size)
+	var top := floorf(spare / 2.0)
+	return Vector4(left, top, right, spare - top)
+
+
+func _pad_of(sb: StyleBox) -> Vector4:
+	return Vector4(sb.get_margin(SIDE_LEFT), sb.get_margin(SIDE_TOP), sb.get_margin(SIDE_RIGHT), sb.get_margin(SIDE_BOTTOM))
+
+
+## Writes a box's effective content margins out, so it never falls back to its border.
+func _pin(sb: StyleBox) -> StyleBox:
+	for side in 4:
+		sb.set_content_margin(side, sb.get_margin(side))
+	return sb
+
+
+## A document: its top-right corner cut, the other three nearly square (detail 1 bevels them all).
+func _doc(sb: StyleBoxFlat, cut: int) -> StyleBoxFlat:
+	sb.set_corner_radius_all(T.D_RADIUS_1)
+	sb.corner_radius_top_right = cut
+	sb.corner_detail = 1
+	return sb
+
+
+## shadow is (size, y offset).
+func _shadow(sb: StyleBoxFlat, color: Color, shadow: Vector2i) -> StyleBoxFlat:
+	sb.shadow_color = color
+	sb.shadow_size = shadow.x
+	sb.shadow_offset = Vector2(0, shadow.y)
+	return sb
+
+
+## A dark button from {state: [fill, edge, ink]}; every state's box carries the same margins, so no
+## state moves the label. A class is styled in place, any other name becomes a Button variation.
+func _dbtn(th: Theme, name: StringName, look: Dictionary, face: Font, size: int, pad: Vector4,
+		radius: int = T.D_RADIUS_2, widths := Vector4i(1, 1, 1, 1)) -> void:
+	if not ClassDB.class_exists(name):
+		th.set_type_variation(name, &"Button")
+	for state in look:
+		th.set_stylebox(state, name, _flat(look[state][0], radius, pad, look[state][1], widths))
+		th.set_color(INK_OF[state], name, look[state][2])
+	th.set_color("font_hover_pressed_color", name, look.pressed[2])
+	th.set_color("font_focus_color", name, look.normal[2])
+	th.set_font("font", name, face)
+	th.set_font_size("font_size", name, size)
 
 
 # --- helpers ----------------------------------------------------------------
 
-func _mkfont(ttf_path: String, fallback: FontFile, vname: String, glyph_spacing: float = 0.0) -> FontVariation:
+## A face with its fallback (none for a chain of one) and whole-pixel tracking.
+func _mkfont(ttf_path: String, fallback: Font, vname: String, spacing: int = 0, features: Dictionary = {}) -> FontVariation:
 	var base: FontFile = load(ttf_path)
 	if base == null:
 		push_error("[build_theme] font load failed: %s" % ttf_path)
 		quit(1)
 	var fv := FontVariation.new()
 	fv.base_font = base
-	fv.fallbacks = [fallback]
-	if glyph_spacing != 0.0:
-		fv.spacing_glyph = int(glyph_spacing * 2.0)  # px tracking at small sizes
+	fv.fallbacks = [fallback] if fallback != null else []
+	fv.spacing_glyph = spacing
+	fv.opentype_features = features
 	var path := VAR_DIR + vname + ".tres"
 	_save(fv, path)
 	return load(path)
@@ -622,34 +1205,15 @@ func _stamp_ids(res: Resource, path: String, seen: Dictionary, taken: Dictionary
 			_stamp_ids(v, path, seen, taken)
 
 
-## Flat box: fill, radius, optional uniform border (colour + width) and content
-## margins (h, v). A transparent border colour means "no border".
+## Flat box: fill, radius, optional uniform border (colour + width) and content margins (h, v).
 func _box(bg: Color, radius: int, border: Color = Color.TRANSPARENT, pad: Vector2i = NO_PAD,
 		width: int = T.BORDER_HAIRLINE) -> StyleBoxFlat:
-	var sb := _sides_box(bg, radius, [], border, pad)
-	if border != Color.TRANSPARENT:
-		sb.set_border_width_all(width)
-		sb.border_color = border
-	return sb
+	return _sides_box(bg, radius, Vector4i(width, width, width, width), border, pad)
 
 
-## Flat box with per-side border widths [L, R, T, B] in one colour. The widths are
-## kept even when the colour is transparent: they still reserve the content margin.
-func _sides_box(bg: Color, radius: int, sides: Array, color: Color, pad: Vector2i = NO_PAD) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg
-	sb.set_corner_radius_all(radius)
-	if sides.size() == 4:
-		sb.border_width_left = sides[0]
-		sb.border_width_right = sides[1]
-		sb.border_width_top = sides[2]
-		sb.border_width_bottom = sides[3]
-		sb.border_color = color
-	sb.content_margin_left = pad.x
-	sb.content_margin_right = pad.x
-	sb.content_margin_top = pad.y
-	sb.content_margin_bottom = pad.y
-	return sb
+## Flat box with per-side border widths [L, T, R, B] in one colour and content margins (h, v).
+func _sides_box(bg: Color, radius: int, widths: Vector4i, color: Color, pad: Vector2i = NO_PAD) -> StyleBoxFlat:
+	return _flat(bg, radius, Vector4(pad.x, pad.y, pad.x, pad.y), color, widths)
 
 
 func _no_focus() -> StyleBoxFlat:
@@ -702,7 +1266,7 @@ func _tab_button(th: Theme, name: StringName, active: bool) -> void:
 	var normal: StyleBoxFlat
 	var hover: StyleBoxFlat
 	if active:
-		normal = _sides_box(T.TAB_ACTIVE_BG, T.RADIUS_WINDOW, [T.BORDER_ACCENT, 0, 0, 0], T.ACCENT_DEEP, T.PAD_BTN_XS)
+		normal = _sides_box(T.TAB_ACTIVE_BG, T.RADIUS_WINDOW, Vector4i(T.BORDER_ACCENT, 0, 0, 0), T.ACCENT_DEEP, T.PAD_BTN_XS)
 		hover = normal
 	else:
 		normal = _box(T.CARD_BG, T.RADIUS_WINDOW, T.CARD_BORDER, T.PAD_BTN_XS)

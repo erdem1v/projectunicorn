@@ -104,13 +104,24 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
 1. **Sözlük `UiTokens`'ındır.** Her renk palet tablosunda adlıdır; her boyut merdivendendir (`SIZE_MICRO 9 · META 10
    · SMALL 11 · DATA 12 · BODY 13 · LEAD 15 · TITLE 16 · DISPLAY 22`; editorial `SIZE_ED_* 24 · 26 · 32 · 44 · 52`).
    Ham `Color(...)` ya da ham boyut yazılmaz; duruma bağlı stil helper'dan okunur (`delta_color`, `badge_palette`, …).
-2. **`themes/master_theme.tres` üretilmiştir.** Üretici `"$GODOT" --headless --path . -s
-   res://scripts/theme/build_theme.gd` (temiz checkout önce `--import`). Token ya da `build_theme.gd` değişikliği
-   aynı commit'te `UiTokens.THEME_STAMP`'i artırır ve temayı yeniden üretir; debug açılışı bayat damgada uyarır.
+2. **`themes/master_theme.tres` ve `themes/menajer_theme.tres` üretilmiştir.** Üretici `"$GODOT" --headless --path .
+   -s res://scripts/theme/build_theme.gd` (temiz checkout önce `--import`). Token ya da `build_theme.gd` değişikliği
+   aynı commit'te `UiTokens.THEME_STAMP`'i artırır ve iki temayı yeniden üretir; debug açılışı iki temadan biri
+   bayat damga taşıyorsa uyarır.
 3. **Token'ı tema öğesine çeviren tek dosya `build_theme.gd`'dir.** Skala boyutun, varyasyon yüz ve rengin sahibidir.
 4. **Sahne ve script yalnız yerleşimin sahibidir** (anchor, separation, margin, min-size); boyut, renk, stylebox
    taşımaz, `theme_type_variation`'a uzanır ya da yenisini ekler. Mevcut literal, çevresi değişince taşınır.
-- Görsel dil: mono yazı, hairline çizgi, amber vurgu; hover dolgu değil kenardır (`ACCENT_DEEP`, kartta `BORDER_HOVER`).
+- **Geçiş: iki tema.** Arayüz koyu Menajer Masası diline ekran ekran taşınıyor (sıcak kömür yüzey, açık mürekkep;
+  Erdem 2026-10-02). Taşıma bitene kadar proje teması krem `master_theme.tres`'tir; krem token değerleri, `SIZE_*`
+  merdiveni, helper gövdeleri ve taban tipleri değişmez. `menajer_theme.tres` taşınan her alt ağacın köküne elle
+  atanır; CanvasLayer ve açılır pencere kalıtımı kestiği için her katman kökü ayrıca. Master'ın her varyasyonunu master
+  ölçüleriyle koyu renkte taşır, taban tiplerini ve yeni varyasyonları yeni dille kurar; doğrulayıcı eksik varyasyonda
+  ya da içerik payı açık kutuda üretimi düşürür. Koyu yüzey yalnız `D_*` token'larını ve `D_` helper'larını okur
+  (renk körü ikizleri helper'dadır, merdiven `D_FS_12` … `D_FS_40`). Yazı Barlow Condensed + IBM Plex Sans (dar
+  sütunda Plex Sans Condensed) + Source Serif 4'tür ve Set A'nın yerini alır; JetBrains Mono yalnız krem ailede
+  kalır, koyu yüzlerin yedek zincirinde Noto Sans Symbols 2 yoktur. Gazete iki temada da kremdir. Kontrast kapısı
+  `--theme-contrast-audit`.
+- Krem dil: mono yazı, hairline çizgi, amber vurgu; hover dolgu değil kenardır (`ACCENT_DEEP`, kartta `BORDER_HOVER`).
   Gövde krem kâğıttır (sayfa `#F6F1E6`, kart ve pencere `#FBF7EE`, `INK` `#2B2722`); çerçeve koyudur (`#07090B`:
   TopBar, NewsTicker, MonthSummary bandı) ve `CREAM*`, `*_CHROME`, `*_BRIGHT` okur; sinematik koyu register
   (`DIALOGUE_*`) de `CREAM*` ve `VEIL_*_CHROME`. Tek ada gazetedir (`PaperPanel`, kendi `PAPER_*` merdiveni). 3B
@@ -171,9 +182,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer.
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
-  negotiation, meeting, product, hr, finance, b2b), `--probe-shot`, `--theme-audit=<sekme | modal:<tür> | onboard:<adım>>`,
-  `--shot-size=GxY`, `--lang=tr|en` (kayıtlı dili ezer). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a
-  iner; EN `_en` alır.
+  negotiation, meeting, product, hr, finance, b2b), `--probe-shot[=menajer]`,
+  `--theme-audit=<sekme | modal:<tür> | onboard:<adım>>`, `--shot-size=GxY`, `--lang=tr|en` (kayıtlı dili ezer).
+  PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner; EN `_en` alır.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
   founders|nav|crown|cast` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare; `founders` portre ile
   bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi;
@@ -189,7 +200,12 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   saatle: `--day-shot=<ofis>:<hız>` (08:00'den çıkış ve gece atlamasıyla ertesi 08:00'e,
   `day_shot_<ofis>_<hız>_NN.png` ve kare başına `DAYSHOT` satırı).
 - Tema denetçisi: `"$GODOT" --headless --path . -s res://scripts/theme/theme_check.gd [--theme=<yol>]` master'a göre
-  eksik ya da boş öğede 1 ile çıkar, metin ve zemin kontrastını basar.
+  eksik ya da boş öğede, master dışı temada içerik payı açık kutuda 1 ile çıkar, metin ve zemin kontrastını basar.
+  Koyu temanın kapısı `"$GODOT" --headless --path . --theme-contrast-audit`: her metin rengi çizildiği her zeminde,
+  iki palette; gövde 4,5, büyük metin ve metin dışı işaret 3, devre dışı metin 1,6 ile 4,5 arası; düşen çiftte 1 ile
+  çıkar. Glif denetimi `"$GODOT" --headless --path . -s res://scripts/debug/glyph_audit.gd`: CSV'nin, kod
+  literallerinin ve `data/` metninin her karakterini koyu yüzlere ve zincirlerine sorar. `--probe-shot=menajer`
+  ThemeProbe'u koyu temanın altında, koyu temanın yeni varyasyonlarıyla çeker.
 - **Ekran kartı.** Ekranlı Godot koşuları (shot, tema denetimi, görsel kabul) paralel değil sırayla koşar; ekran
   gerektirmeyen her koşu `--headless`.
 - Git kökündeki `.githooks/pre-commit` lint ve `loc_residue`'yu koşar; etkin değildir, etkinleştirmek sahibin kararıdır.

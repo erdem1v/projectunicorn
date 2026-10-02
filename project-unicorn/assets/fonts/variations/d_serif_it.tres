@@ -1,0 +1,6 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/serif/SourceSerif4-It.ttf" id="SourceSerif4-It_02c97"]
+
+[resource]
+base_font = ExtResource("SourceSerif4-It_02c97")

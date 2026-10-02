@@ -82,13 +82,12 @@ func _ready() -> void:
 	EventBus.speed_change_requested.emit(0)
 
 	if OS.is_debug_build():
-		# master_theme.tres is generated from UiTokens by hand; a forgotten regen is caught
-		# only here. An unstamped .tres reads 0 and warns too.
-		var proj_theme: Theme = ThemeDB.get_project_theme()
-		if proj_theme != null:
-			var baked_stamp: int = proj_theme.get_constant(&"stamp", &"UiTokensStamp")
+		# Both themes are generated from UiTokens by hand; a forgotten regen is caught only here.
+		# An unstamped .tres reads 0 and warns too.
+		for th: Theme in [ThemeDB.get_project_theme(), load(UiTokens.MENAJER_THEME)]:
+			var baked_stamp: int = th.get_constant(&"stamp", &"UiTokensStamp")
 			if baked_stamp != UiTokens.THEME_STAMP:
-				push_warning("[Theme] master_theme.tres BAYAT: gömülü damga %d != UiTokens.THEME_STAMP %d — regen: godot --headless --path . -s res://scripts/theme/build_theme.gd" % [baked_stamp, UiTokens.THEME_STAMP])
+				push_warning("[Theme] %s BAYAT: gömülü damga %d != UiTokens.THEME_STAMP %d — regen: godot --headless --path . -s res://scripts/theme/build_theme.gd" % [th.resource_path.get_file(), baked_stamp, UiTokens.THEME_STAMP])
 		# Shift+F4 (game_shell.gd) re-triggers onboarding from a running game.
 		EventBus.debug_onboarding_retrigger_requested.connect(_on_debug_onboarding_retrigger)
 		if _run_debug_harness():
@@ -174,8 +173,9 @@ func _run_debug_harness() -> bool:
 		# Bare form measures the HR ledger: the densest text surface, the worst case for glyphs.
 		"--render-probe": _run_render_probe.bind("hr"),
 		"--sales-shot": _run_sales_shot.bind("pipeline"),
-		"--probe-shot": _run_probe_shot,
+		"--probe-shot": _run_probe_shot.bind(""),
 		"--display-check": _run_display_check,
+		"--theme-contrast-audit": func() -> void: _quit_with(load("res://scripts/theme/theme_check.gd").contrast_audit(load(UiTokens.MENAJER_THEME), UiTokens)),
 	}
 	for flag in bare:
 		if flag in cmdline:
@@ -202,6 +202,7 @@ func _run_debug_harness() -> bool:
 		"--modal-shot=": _run_modal_shot,
 		"--onboard-shot=": func(v: String) -> void: _run_onboard_shot(int(v)),
 		"--theme-audit=": _run_theme_audit,
+		"--probe-shot=": _run_probe_shot,
 		"--office-shot=": _run_office_shot,
 		"--travel-shot=": _run_travel_shot,
 		"--day-shot=": _run_day_shot,
@@ -1052,18 +1053,69 @@ func _run_theme_audit(spec: String) -> void:
 
 # --probe-shot: ThemeProbe.tscn, one unstyled instance of every basic Control class. Screenshot
 # and audit dump come from the same run so pixels and resolved values verify each other.
-func _run_probe_shot() -> void:
+# --probe-shot=menajer mounts it under menajer_theme.tres and adds one sample of every variation
+# that theme holds beyond master's.
+func _run_probe_shot(theme_name: String) -> void:
 	_begin_shot()
 	var probe: Control = (load("res://scenes/debug/ThemeProbe.tscn") as PackedScene).instantiate()
+	if theme_name == "menajer":
+		probe.theme = load(UiTokens.MENAJER_THEME)
+		_probe_variations(probe.get_node("Margin/Col"), probe.theme)
 	add_child(probe)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
-	_save_shot("probe_shot")
+	_save_shot("probe_shot" if theme_name == "" else "probe_shot_" + theme_name)
 	print("PROBE_BEGIN")
 	_audit_walk(probe, "")
 	print("PROBE_END")
 	get_tree().quit()
+
+
+func _probe_variations(col: Control, th: Theme) -> void:
+	var master_types := ThemeDB.get_project_theme().get_type_list()
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", 12)
+	flow.add_theme_constant_override("v_separation", 8)
+	col.add_child(flow)
+	var names := th.get_type_list()
+	names.sort()
+	for type in names:
+		var base := th.get_type_variation_base(type)
+		if base == &"" or master_types.has(type):
+			continue
+		var c: Control
+		match base:
+			&"Label":
+				c = Label.new()
+				c.text = type
+			&"Button":
+				c = Button.new()
+				c.text = type
+			&"RichTextLabel":
+				c = RichTextLabel.new()
+				c.bbcode_enabled = true
+				c.fit_content = true
+				c.custom_minimum_size = Vector2(320, 0)
+				c.text = type + " [b]kalın[/b] [i]italik[/i]"
+			&"Panel":
+				c = Panel.new()
+				c.custom_minimum_size = Vector2(24, 24)
+			_:
+				c = PanelContainer.new()
+				c.custom_minimum_size = Vector2(160, 40)
+				var name_label := Label.new()
+				name_label.text = type
+				c.add_child(name_label)
+		c.theme_type_variation = type
+		c.tooltip_text = type
+		flow.add_child(c)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(240, 72)
+	var tall := Label.new()
+	tall.text = "ScrollContainer\n1\n2\n3\n4\n5\n6"
+	scroll.add_child(tall)
+	flow.add_child(scroll)
 
 
 # Classes that DRAW text. A Panel also answers get_theme_font_size("font_size") but draws

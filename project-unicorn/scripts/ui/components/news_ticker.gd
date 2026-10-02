@@ -129,7 +129,7 @@ func _build_bbcode() -> String:
 
 
 func _part(src: String, txt: String) -> String:
-	return "[color=%s]%s[/color]  %s" % [UiTokens.ACCENT_HEX, src, txt]
+	return "[color=%s]%s[/color]  %s" % [UiTokens.accent_hex(), src, txt]
 
 
 func _process(delta: float) -> void:
