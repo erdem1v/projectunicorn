@@ -6,6 +6,8 @@ extends RefCounted
 # labels authored in the .tscn scenes. Colours/sizes come from UiTokens; the
 # master theme supplies fonts and per-variation defaults.
 
+const CLOSE_ICON := preload("res://assets/icons/util/close.svg")
+
 static var _bust_mats := {}   # circle -> the bust's material (avatar_bust.gdshader)
 
 
@@ -203,14 +205,21 @@ static func make_placeholder_column(title: String, line: String) -> VBoxContaine
 
 
 ## The × that closes a window or a card. No focus: game_shell reads Space as the speed key.
-## WindowClose carries no margins, so this square is the button's size.
-static func make_close_button(on_close: Callable) -> Button:
+## Its variation carries no margins, so this square is the button's size; `dark` is the Menajer
+## Masası's close, its glyph in a 40 px key.
+static func make_close_button(on_close: Callable, dark := false) -> Button:
 	var close := Button.new()
-	close.theme_type_variation = &"WindowClose"
 	close.focus_mode = Control.FOCUS_NONE
-	close.text = "×"
 	close.tooltip_text = TranslationServer.translate("WIN_CLOSE")
-	close.custom_minimum_size = Vector2(UiTokens.SPACE_3XL, UiTokens.SPACE_3XL)
+	if dark:
+		close.theme_type_variation = &"WinClose"
+		close.icon = CLOSE_ICON
+		close.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		close.custom_minimum_size = Vector2.ONE * UiTokens.D_H_BTN
+	else:
+		close.theme_type_variation = &"WindowClose"
+		close.text = "×"
+		close.custom_minimum_size = Vector2(UiTokens.SPACE_3XL, UiTokens.SPACE_3XL)
 	close.pressed.connect(on_close)
 	return close
 

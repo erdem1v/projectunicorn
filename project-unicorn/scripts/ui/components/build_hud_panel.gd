@@ -1,7 +1,8 @@
 extends Control
 
 # Yüzen takip kartı yığını — sağ üstte. Bu node bir şey çizmez: onaylı kartlar (BuildBar ·
-# ResearchBar) kendilerini çizer, burası onları taşır, gizler ve sürükletir.
+# ResearchBar) kendilerini çizer, burası onları taşır, gizler ve sürükletir. Koyu tema bu kökte
+# (BuildHUDPanel.tscn); kartlar ondan çözülür.
 #
 # GÖRÜNÜRLÜK: herhangi bir çubuğun fingerprint()'i doluysa görünür. Pencerelerin altında çizilir
 # ve üstüne bir pencere binince gizlenir; şehir haritası açıkken de gizli, çünkü haritanın ofis
@@ -9,15 +10,14 @@ extends Control
 # Çubuk başına görünürlük çubuğun kendi repaint'inin işidir; bu node onu yalnız OKUR,
 # yazsaydı iki yazar tek alan için yarışırdı.
 #
-# BOY: Root bir VBoxContainer ve çocuklarına göre boylanır (araştırma başlar/biter), o yüzden
+# BOY: Root bir VBoxContainer ve kartlarına göre boylanır (araştırma başlar/biter), o yüzden
 # kelepçe hem panelin hem Root'un `resized`'ını dinler; yoksa alt kenara sürüklenmiş yığın
-# büyüyünce ekran dışına taşardı. BuildBar'ın asgari boyu .tscn'de ev sahibince verilir:
-# FULL_RECT bir çocuk, container'ın asgari boyutuna hiçbir şey katmaz.
+# büyüyünce ekran dışına taşardı.
 #
 # SÜRÜKLEME: Root bu node'un rect'ine kelepçelenir; WindowLayer onu rayın sağındaki alana
 # oturtur, yani top bar / sol ray / ticker yapısal olarak erişilemez. Tutamak kartların
-# kendisidir: çubuk kökleri PASS, karar satırı STOP — onun üstünde sürükleme başlamaz. Konum
-# oturum boyunca kalır.
+# kendisidir: kart kökleri PASS, düğme ve bağlar STOP — onların üstünde sürükleme başlamaz.
+# Konum oturum boyunca kalır.
 #
 # PROCESS_MODE_ALWAYS: ağaç duraklıyken de sürüklenebilsin ve kartlar canlı kalsın.
 

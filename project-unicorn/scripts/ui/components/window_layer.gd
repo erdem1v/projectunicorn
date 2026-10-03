@@ -1,8 +1,9 @@
 extends Panel
 
 # Merkez alanın pencere yöneticisi. Arka plan (ilk çocuk) ofistir, ardından BuildHUD; üstlerinde en
-# fazla bir birincil pencere (sekme) ve ona bağlı bir ayrıntı penceresi. Ray bu katmanın sol
-# kenarının üstüne biner: ofis, BuildHUD ve pencereler rayın canlı genişliğinin sağında kalır.
+# fazla bir birincil pencere (sekme) ve ona bağlı bir ayrıntı penceresi. Açık pencerenin altında
+# ofis kararır. Ray bu katmanın sol kenarının üstüne biner: ofis, BuildHUD ve pencereler rayın
+# canlı genişliğinin sağında kalır.
 # Yuvalar sabit, sürükleme yok. tab_changed("") = pencere yok; kapatmanın üç yolu (×, Esc,
 # aktif sekmeye tekrar tıklama) bu sinyale çıkar. Pencereler ModalLayer'a ASLA gitmez:
 # game_shell orada Space/1-4'ü yutuyor, pencere açıkken hız kontrolü çalışmalı. Kurucunun
@@ -181,13 +182,15 @@ func _place() -> void:
 
 
 ## Ofisin üstündeki yüzen denetimler (office_overlays) üstlerine pencere binince gizlenir; görünen
-## pencerelerin kapladığı alanı onlara söyler.
+## pencerelerin kapladığı alanı onlara söyler. Görünen pencere varken ofis kararır; yolculukta
+## pencereler gizli olduğu için kararma da kalkar.
 func _tell_floats() -> void:
 	var cover := Rect2()
 	for frame: Control in [_current_page, _detail]:
 		if frame != null and frame.visible:
 			cover = frame.get_global_rect() if not cover.has_area() else cover.merge(frame.get_global_rect())
 	get_tree().call_group(&"office_overlays", &"set_window_cover", cover)
+	_office.set_dimmed(cover.has_area())
 
 
 ## Sahnesi olmayan sekme: ortalanmış başlık + tek satır. Başlık id'den türer (TAB_ + ID),

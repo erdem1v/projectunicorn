@@ -78,7 +78,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
 | `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 14 | 1 | main |
 | `language_changed` | `locale: String` | localization | 1 | 8 | left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
-| `palette_changed` | `colorblind: bool` | settings_modal | 2 | 8 | hr_tab · left_tabs · news_ticker · research_bar · top_bar · window_layer · office_city · office_notice_stack |
+| `palette_changed` | `colorblind: bool` | settings_modal | 2 | 7 | hr_tab · left_tabs · news_ticker · top_bar · window_layer · office_city · office_notice_stack |
 
 ### Character signals
 

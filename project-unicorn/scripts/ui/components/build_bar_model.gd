@@ -11,6 +11,13 @@ extends RefCounted
 # Sözcükler BuildBar'da çözülür; burada sayılar, kimlikler ve anahtar adları var. İstisna
 # `product_name` (ad + sürüm).
 
+## Kapalı eylemin gerekçesi, motorun ret sebebinden. Kart yalnız yayındaki üründe var ve koşu
+## sürerken eylem bitirmedir: geriye bu iki sebep kalır.
+const REFUSAL_KEYS := {
+	SupportSystem.REFUSAL_NO_BUGS: "FIX_RUN_REFUSED_NO_BUGS",
+	SupportSystem.REFUSAL_DESK_SHUT: "BUILD_BUSY_NOBODY",
+}
+
 var product_name: String = ""
 var fill: float = 0.0            # düzeltme koşusunun havuzu ne kadar erittiği 0-1
 var percent: int = 0
@@ -19,6 +26,7 @@ var percent: int = 0
 var split_note_key: String = ""
 var decision_key: String = ""
 var decision_enabled: bool = false
+var refusal_key: String = ""     # eylem kapalıyken gerekçesi
 var live_bugs: int = 0           # doğrulanmış açık hata (§8.1)
 var fix_run_active: bool = false
 
@@ -42,9 +50,11 @@ func derive() -> bool:
 	fill = 0.0 if live_bugs + fixed <= 0 else float(fixed) / float(live_bugs + fixed)
 	# Dolum, yüzdenin tek evi UiTokens.build_percent'ten geçer: çubuk yanındaki sayıyla çelişmez.
 	percent = UiTokens.build_percent(fill)
-	# §8.4 — koşu sürerken karar satırı düşmez, "bitir"e döner: koşuyu bitiren oyuncudur.
+	# §8.4 — koşu sürerken eylem düğmesi düşmez, "bitir"e döner: koşuyu bitiren oyuncudur.
 	decision_key = "PROD_FIX_RUN_END" if fix_run_active else "PROD_FIX_RUN_START"
 	decision_enabled = fix_run_active or SupportSystem.can_start_fix_run()
+	if not decision_enabled:
+		refusal_key = REFUSAL_KEYS[SupportSystem.fix_run_refusal()]
 	for c in SupportSystem.desk_roster():
 		if HRSystem.is_overloaded(c):
 			split_note_key = "BUILD_SPLIT_FOCUS"

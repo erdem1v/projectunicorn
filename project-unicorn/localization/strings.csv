@@ -433,7 +433,7 @@ FIN_CAP_REPUTATION,İTİBAR,REPUTATION
 FIN_VALUATION,Değerleme,Valuation
 FIN_EQUITY,Hisse,Equity
 BUILD_BUSY_NOBODY,Kimse üzerinde değil.,Nobody is on it.
-BUILD_SPLIT_FOCUS,Ekip iki işte.,The team is on two jobs.
+BUILD_SPLIT_FOCUS,Ekip iki işte.,Split focus.
 RND_PAUSED_BUILD,Ekip yapımda.,The team is on a build.
 PROD_RND_NODE_DATA_MODEL,Veri Modeli,Data Model
 PROD_RND_NODE_AI_ENGINE,AI Engine,AI Engine
@@ -456,7 +456,8 @@ PROD_RND_NODE_ONBOARDING_FLOW,Onboarding Akışı,Onboarding Flow
 PROD_RND_NODE_ACCESSIBILITY,Erişilebilirlik,Accessibility
 PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
 BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
-BUILD_SUPPORT_CONFIRMED,DOĞRULANMIŞ {n},CONFIRMED {n}
+BUILD_SUPPORT_CONFIRMED,Doğrulanmış {n},Confirmed {n}
+FIX_RUN_REFUSED_NO_BUGS,Doğrulanmış hata yok.,No confirmed bugs.
 PROD_PERCENT,%{n},{n}%
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager

@@ -711,7 +711,8 @@ func _menajer(master: Theme) -> Theme:
 	th.set_stylebox("panel", &"Panel", _flat(T.D_SURFACE_3, T.D_RADIUS_1,
 		_pad_of(th.get_stylebox("panel", &"Panel")), T.D_LINE_1))
 	th.set_stylebox("panel", &"PanelContainer", _flat(T.D_SURFACE_3, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_1))
-	th.set_stylebox("background", &"ProgressBar", _flat(T.D_BAR_TRACK, T.D_RADIUS_1, Vector4.ZERO))
+	var track := Vector4(0, T.D_H_PROGRESS * 0.5, 0, T.D_H_PROGRESS * 0.5)
+	th.set_stylebox("background", &"ProgressBar", _flat(T.D_BAR_TRACK, T.D_RADIUS_1, track))
 	th.set_stylebox("fill", &"ProgressBar", _flat(T.D_BAR_FILL, T.D_RADIUS_1, Vector4.ZERO))
 	th.set_stylebox("separator", &"HSeparator", _pin(_rule(T.D_LINE_1, false)))
 	th.set_stylebox("separator", &"VSeparator", _pin(_rule(T.D_LINE_1, true)))
@@ -861,6 +862,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"KeyLabelStrong", cond_sb_caps, T.D_FS_14, T.D_INK_1],
 		[&"RiskKey", cond_sb_caps, T.D_FS_14, T.D_NEG_INK],
 		[&"KeySmall", cond_sb_caps, T.D_FS_12, T.D_INK_3],
+		[&"FloatKey", cond_sb_caps, T.D_FS_14, T.D_INK_2],
 		[&"NavReason", cond_sb_caps, T.D_FS_12, T.D_INK_4],
 		[&"PartValue", sans_b, T.D_FS_36, T.D_INK_2],
 		[&"HeroValue", sans_sb, T.D_FS_30, T.D_INK_1],
@@ -887,6 +889,8 @@ func _menajer(master: Theme) -> Theme:
 		[&"KeyTextMuted", sans_med, T.D_FS_14, T.D_INK_3],
 		[&"MetaMuted", sans_reg, T.D_FS_14, T.D_INK_3],
 		[&"Caption", sans_reg, T.D_FS_13, T.D_INK_3],
+		[&"CaptionPrimary", sans_reg, T.D_FS_13, T.D_INK_2],
+		[&"CaptionFaint", sans_reg, T.D_FS_13, T.D_INK_4],
 		[&"CondCaption", sansc, T.D_FS_13, T.D_INK_3],
 		[&"SegCount", sans_med, T.D_FS_13, T.D_INK_4],
 		[&"SegCountActive", sans_med, T.D_FS_13, T.D_INK_3],
@@ -953,6 +957,9 @@ func _menajer(master: Theme) -> Theme:
 			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
 		[&"FloatPanel", _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_3, Vector4.ZERO, T.D_LINE_1), T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
 		[&"FloatHead", _flat(clear, 0, Vector4(T.SPACE_XL, T.SPACE_L, T.SPACE_XL, T.SPACE_L), T.D_LINE_1, bottom)],
+		[&"FloatRow", _flat(clear, 0, Vector4(T.SPACE_XL, T.SPACE_M, T.SPACE_XL, T.SPACE_M), T.D_LINE_1, bottom)],
+		[&"FloatFoot", _flat(clear, 0, Vector4(T.SPACE_XL, T.SPACE_M, T.SPACE_XL, T.SPACE_M), T.D_LINE_1,
+			Vector4i(0, T.BORDER_HAIRLINE, 0, 0))],
 		[&"NoticeDoc", _shadow(_doc(_flat(T.D_SURFACE_3, 0, Vector4(T.SPACE_XL, 0, T.SPACE_XL, 0), T.D_LINE_1), T.D_CUT_SM),
 			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
 	]:
@@ -1003,10 +1010,20 @@ func _menajer(master: Theme) -> Theme:
 	_dbtn(th, &"TickerToggle", {"normal": [clear, T.D_LINE_1, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
 		"pressed": [clear, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]},
 		sans_reg, T.D_FS_14, Vector4.ZERO, 0, Vector4i(0, 0, T.BORDER_HAIRLINE, 0))
-	for row in [["icon_normal_color", T.D_INK_3], ["icon_focus_color", T.D_INK_3], ["icon_hover_color", T.D_INK_1],
-			["icon_pressed_color", T.D_INK_1], ["icon_hover_pressed_color", T.D_INK_1]]:
-		th.set_color(row[0], &"TickerToggle", row[1])
 	th.set_constant("icon_max_width", &"TickerToggle", T.D_ICON_CONTROL)
+	# A window's close: its glyph in a 40 px key, hover a border.
+	_dbtn(th, &"WinClose", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]},
+		sans_reg, T.D_FS_14, Vector4.ZERO)
+	th.set_constant("icon_max_width", &"WinClose", T.D_ICON_CONTROL)
+	# A float card's action is a small ghost button with a smaller glyph; its links are text keys.
+	th.set_type_variation(&"FloatAction", &"GhostButtonSmall")
+	th.set_constant("icon_max_width", &"FloatAction", T.D_ICON_ACTION)
+	th.set_constant("h_separation", &"FloatAction", T.SPACE_S)
+	_dbtn(th, &"FloatLink", ghost, sans_reg, T.D_FS_13, _fit(sans_reg, T.D_FS_13, T.D_H_LINK, T.SPACE_S, T.SPACE_S))
+	# A paused progress keeps its share in a neutral fill.
+	th.set_type_variation(&"ProgressPaused", &"ProgressBar")
+	th.set_stylebox("fill", &"ProgressPaused", _flat(T.D_LINE_3, T.D_RADIUS_1, Vector4.ZERO))
 
 	# Message body and ticker text.
 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")
@@ -1157,7 +1174,8 @@ func _shadow(sb: StyleBoxFlat, color: Color, shadow: Vector2i) -> StyleBoxFlat:
 
 
 ## A dark button from {state: [fill, edge, ink]}; every state's box carries the same margins, so no
-## state moves the label. A class is styled in place, any other name becomes a Button variation.
+## state moves the label, and a glyph takes its label's ink. A class is styled in place, any other
+## name becomes a Button variation.
 func _dbtn(th: Theme, name: StringName, look: Dictionary, face: Font, size: int, pad: Vector4,
 		radius: int = T.D_RADIUS_2, widths := Vector4i(1, 1, 1, 1)) -> void:
 	if not ClassDB.class_exists(name):
@@ -1165,8 +1183,10 @@ func _dbtn(th: Theme, name: StringName, look: Dictionary, face: Font, size: int,
 	for state in look:
 		th.set_stylebox(state, name, _flat(look[state][0], radius, pad, look[state][1], widths))
 		th.set_color(INK_OF[state], name, look[state][2])
-	th.set_color("font_hover_pressed_color", name, look.pressed[2])
-	th.set_color("font_focus_color", name, look.normal[2])
+		th.set_color("icon_%s_color" % state, name, look[state][2])
+	for part in ["font", "icon"]:
+		th.set_color(part + "_hover_pressed_color", name, look.pressed[2])
+		th.set_color(part + "_focus_color", name, look.normal[2])
 	th.set_font("font", name, face)
 	th.set_font_size("font_size", name, size)
 

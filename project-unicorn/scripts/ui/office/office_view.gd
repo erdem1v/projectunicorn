@@ -5,13 +5,17 @@ extends Control
 # pointer: drag and wheel move the camera, clicks and hover go to the people, or to the city map
 # while that is the loaded layout. Windows are later siblings, so they take the pointer first.
 # The skipped night blinks: the 3D image drops to dark (the people may have faded it out first) and
-# the 08:00 light fades in. The controls over the office (the office_overlays group) step aside for
-# the map and for the founder's trip.
+# the 08:00 light fades in. Under an open window the image dims, on its own modulate, so the blink
+# multiplies with it and the controls over the office keep their colour. The controls over the
+# office (the office_overlays group) step aside for the map and for the founder's trip.
 
 const TRAVEL := preload("res://scripts/ui/office/office_travel.gd")
 ## The blink's dark end: the 3D view's own fade, scene data like the office's other colours.
 const FADE_DARK := Color.BLACK
 const NIGHT_FADE_S := 0.6     # [WORKING]
+## The office under an open window: the 3D image times DIM, eased in and out over DIM_S.
+const DIM := 0.84             # [WORKING]
+const DIM_S := 0.12
 
 @onready var _container: SubViewportContainer = $Viewport3D
 @onready var camera: OfficeCamera = $Viewport3D/SubViewport/World/Camera3D
@@ -35,6 +39,8 @@ var _fitted := false
 var _pointer_inside := false
 var _fade: Tween
 var _veiled := false   # the founder's trip is on: the layer shows the office alone
+var _dimmed := false   # a window is open over the view
+var _dim: Tween
 
 
 func _ready() -> void:
@@ -97,6 +103,7 @@ func load_layout(office_id: String, road := false) -> void:
 	if road:
 		_on_pointer_left()
 	_step_overlays()
+	_ease_dim()
 
 
 ## WindowLayer keeps the view right of the rail (`left`, in the parent's space): the camera
@@ -110,6 +117,12 @@ func set_safe_left(left: float) -> void:
 func set_veiled(veiled: bool) -> void:
 	_veiled = veiled
 	_step_overlays()
+
+
+## WindowLayer dims the office while a window is open over it; the map stays lit.
+func set_dimmed(dimmed: bool) -> void:
+	_dimmed = dimmed
+	_ease_dim()
 
 
 ## Eases the 3D image to FADE_DARK or back over `time` seconds. The tween is this node's, which
@@ -190,6 +203,14 @@ func _on_pointer_left() -> void:
 ## the office step aside while any is on.
 func _step_overlays() -> void:
 	get_tree().call_group(&"office_overlays", &"set_map_open", _veiled or not layout.staffed())
+
+
+func _ease_dim() -> void:
+	var to := Color(DIM, DIM, DIM) if _dimmed and layout.id != "city" else Color.WHITE
+	if _dim != null:
+		_dim.kill()
+	_dim = create_tween()
+	_dim.tween_property(_container, "self_modulate", to, DIM_S)
 
 
 func _on_night_skipped() -> void:

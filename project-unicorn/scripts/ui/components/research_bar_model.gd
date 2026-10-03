@@ -31,7 +31,7 @@ const NO_WEEKS := -1
 var node_id: String = ""
 var node_name: String = ""
 var area_line: String = ""        # "{area} alanı" — çözülmüş
-var fill: float = 0.0             # faz satırının zemin dolumu 0-1
+var fill: float = 0.0             # araştırmanın ilerlemesi 0-1
 var percent: int = 0              # ekrana yazılan yüzde, 0-99
 var weeks_left: int = NO_WEEKS
 var paused: bool = false          # §5.7 donmuş = aktif araştırma, üstünde kimse yok

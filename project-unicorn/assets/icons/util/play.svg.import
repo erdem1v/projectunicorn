@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drj2kkqfdh5qu"
-path="res://.godot/imported/decision.svg-ccafd8850401bf3b70ac9fa11c3c5ec5.ctex"
+uid="uid://cxpktyu4gqwcd"
+path="res://.godot/imported/play.svg-556a5004c8729e5ec21e1b763e1596cc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/build/decision.svg"
-dest_files=["res://.godot/imported/decision.svg-ccafd8850401bf3b70ac9fa11c3c5ec5.ctex"]
+source_file="res://assets/icons/util/play.svg"
+dest_files=["res://.godot/imported/play.svg-556a5004c8729e5ec21e1b763e1596cc.ctex"]
 
 [params]
 

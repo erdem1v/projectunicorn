@@ -1084,6 +1084,8 @@ func _probe_variations(col: Control, th: Theme) -> void:
 		var base := th.get_type_variation_base(type)
 		if base == &"" or master_types.has(type):
 			continue
+		while th.get_type_variation_base(base) != &"":
+			base = th.get_type_variation_base(base)
 		var c: Control
 		match base:
 			&"Label":

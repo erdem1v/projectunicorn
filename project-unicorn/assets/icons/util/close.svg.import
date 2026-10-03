@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccicu4ovl8ox7"
-path="res://.godot/imported/phase_support.svg-7b37b89566c8cdd4288e5fc8da5558ec.ctex"
+uid="uid://bxm8tpu8igvva"
+path="res://.godot/imported/close.svg-b4b9449d61e0db090986bfc19efea3de.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/build/phase_support.svg"
-dest_files=["res://.godot/imported/phase_support.svg-7b37b89566c8cdd4288e5fc8da5558ec.ctex"]
+source_file="res://assets/icons/util/close.svg"
+dest_files=["res://.godot/imported/close.svg-b4b9449d61e0db090986bfc19efea3de.ctex"]
 
 [params]
 

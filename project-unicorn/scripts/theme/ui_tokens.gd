@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 19
+const THEME_STAMP := 20
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -98,14 +98,6 @@ const ACCENT_DEEP := Color(0.604, 0.416, 0.071, 1)     # #9A6A12 · amber TEXT a
 const AMBER_BG := Color(0.604, 0.416, 0.071, 0.10)     # rgba(154,106,18,.10) · amber chip fill
 const AMBER_WASH := Color(0.604, 0.416, 0.071, 0.06)   # rgba(154,106,18,.06) · selected-card wash
 const ON_ACCENT := Color(0.169, 0.153, 0.133, 1)   # #2B2722 · text ON the amber fill
-
-# --- Yüzen çubuklar · dolgu ve duraklamış zemin ---
-# Dolgu çubuk renginin düşük alfasıdır; o kadar soluk kaldığı için sayaç dizgisi sınırın
-# iki tarafında aynı kontrastta okunur ve kenar çizgisine gerek kalmaz.
-const BUILD_FILL_ALPHA := 0.28                           # araştırma dolgusunun alfası  # WORKING
-const BUILD_FILL_PAUSED := Color(0.937, 0.910, 0.855, 1) # #EFE8DA · durmuş dolgu, DÜZ
-const BUILD_SUPPORT_FILL_ALPHA := 0.10                   # DESTEK koşusu daha da soluk
-
 
 # --- STATE · semantic. Green/red carry MEANING ONLY; they are the pair the
 # colourblind toggle swaps, so they are read through the accessors below. ---
@@ -812,9 +804,15 @@ const D_H_TAG := 22
 const D_H_PILL := 20
 const D_H_BADGE := 20
 const D_H_BADGE_ICON := 18   # a count on the corner of an icon (the rail's icon mode)
+const D_H_LINK := 24         # a text link on a float card (the research card's pause and assign)
+const D_H_PROGRESS := 6      # a progress track
+const D_H_WIN_HEAD := 72     # a window's header band
 # --- glyph sizes ---
-const D_ICON_CONTROL := 20   # a control's own glyph (the ticker toggle)
+const D_ICON_CONTROL := 20   # a control's own glyph (the ticker toggle, a window's close)
+const D_ICON_TITLE := 20     # a float card's title glyph
+const D_ICON_ROW := 16       # a row's leading glyph
 const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
+const D_ICON_ACTION := 12    # the glyph inside a float card's action
 
 const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
 const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]
