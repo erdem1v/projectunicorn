@@ -734,8 +734,8 @@ func _menajer(master: Theme) -> Theme:
 		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}
 	var ghost := {"normal": [clear, clear, T.D_INK_2], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
 		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]}
-	# The danger button, the risk strip and the risk labels bake the standard palette; their host
-	# repaints them from the D_ helpers when the colour-blind palette is on.
+	# The danger button bakes the standard palette; its host repaints it from the D_ helpers when the
+	# colour-blind palette is on.
 	var danger := {"normal": [clear, T.D_NEG_TAG_LINE, T.D_NEG_INK],
 		"hover": [clear, T.D_NEG, T.D_NEG], "pressed": [T.D_NEG_BG, T.D_NEG, T.D_NEG],
 		"disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}
@@ -751,6 +751,12 @@ func _menajer(master: Theme) -> Theme:
 		_dbtn(th, row[0], row[1], row[2][0], row[2][1], row[2][2])
 	th.set_stylebox("focus", &"Button", ring)
 	th.set_type_variation(&"SecondaryButton", &"Button")
+	# A glyph beside the label: 18 px on a button, 16 on a small one.
+	th.set_constant("icon_max_width", &"Button", T.D_ICON_BUTTON)
+	th.set_constant("h_separation", &"Button", T.SPACE_M)
+	for small_button in [&"SecondaryButtonSmall", &"PrimaryButtonDarkSmall", &"GhostButtonSmall"]:
+		th.set_constant("icon_max_width", small_button, T.D_ICON_BUTTON_SM)
+		th.set_constant("h_separation", small_button, T.SPACE_S)
 
 	var field := _fit(sans_reg, T.D_FS_15, T.D_H_INPUT, T.SPACE_L, T.SPACE_L)
 	_states(th, &"LineEdit", {
@@ -820,6 +826,7 @@ func _menajer(master: Theme) -> Theme:
 	})
 	for key in ["grabber", "grabber_highlight", "grabber_disabled"]:
 		th.set_icon(key, &"HSlider", load(DARK_ICONS + "slider_grabber.svg"))
+	th.set_stylebox("focus", &"HSlider", ring)
 
 	# A menu row is 32 tall; hover is a border, never a fill.
 	th.set_stylebox("panel", &"PopupMenu", _shadow(_flat(T.D_SURFACE_4, T.D_RADIUS_3,
@@ -860,7 +867,6 @@ func _menajer(master: Theme) -> Theme:
 		[&"GroupLabel", cond_sb_caps, T.D_FS_15, T.D_INK_2],
 		[&"KeyLabel", cond_sb_caps, T.D_FS_14, T.D_INK_3],
 		[&"KeyLabelStrong", cond_sb_caps, T.D_FS_14, T.D_INK_1],
-		[&"RiskKey", cond_sb_caps, T.D_FS_14, T.D_NEG_INK],
 		[&"KeySmall", cond_sb_caps, T.D_FS_12, T.D_INK_3],
 		[&"FloatKey", cond_sb_caps, T.D_FS_14, T.D_INK_2],
 		[&"NavReason", cond_sb_caps, T.D_FS_12, T.D_INK_4],
@@ -869,7 +875,6 @@ func _menajer(master: Theme) -> Theme:
 		[&"KpiValue", sans_sb, T.D_FS_26, T.D_INK_2],
 		[&"PartValueArmed", sans_b, T.D_FS_26, T.D_INK_2],
 		[&"ClockLabel", sans_sb, T.D_FS_22, T.D_INK_2],
-		[&"RiskValue", sans_b, T.D_FS_18, T.D_NEG],
 		[&"ValueText", sans_med, T.D_FS_18, T.D_INK_2],
 		[&"ValueTextStrong", sans_sb, T.D_FS_18, T.D_INK_1],
 		[&"BodyLabel", sans_reg, T.D_FS_16, T.D_INK_2],
@@ -878,6 +883,9 @@ func _menajer(master: Theme) -> Theme:
 		[&"SubjectLabel", sans_med, T.D_FS_16, T.D_INK_2],
 		[&"SubjectStrong", sans_sb, T.D_FS_16, T.D_INK_1],
 		[&"SkillValue", sans_med, T.D_FS_16, T.D_SKILL_3],   # its host paints D_skill(value)
+		[&"SkillMain", sans_b, T.D_FS_16, T.D_SKILL_3],
+		[&"SkillSecondary", sans_sb, T.D_FS_16, T.D_SKILL_3],
+		[&"MoraleValue", sans_b, T.D_FS_16, T.D_INK_2],   # its host paints the morale band
 		[&"DataText", sans_reg, T.D_FS_15, T.D_INK_2],
 		[&"DataStrong", sans_sb, T.D_FS_15, T.D_INK_1],
 		[&"DataMedium", sans_med, T.D_FS_15, T.D_INK_2],
@@ -889,6 +897,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"KeyTextMuted", sans_med, T.D_FS_14, T.D_INK_3],
 		[&"MetaMuted", sans_reg, T.D_FS_14, T.D_INK_3],
 		[&"Caption", sans_reg, T.D_FS_13, T.D_INK_3],
+		[&"CaptionStrong", sans_b, T.D_FS_13, T.D_INK_2],
 		[&"CaptionPrimary", sans_reg, T.D_FS_13, T.D_INK_2],
 		[&"CaptionFaint", sans_reg, T.D_FS_13, T.D_INK_4],
 		[&"CondCaption", sansc, T.D_FS_13, T.D_INK_3],
@@ -900,8 +909,8 @@ func _menajer(master: Theme) -> Theme:
 		_lbl(th, row[0], row[1], row[2], row[3])
 	th.set_constant("line_spacing", &"FrankQuote", T.D_LEADING_PARA)
 
-	# Boxed labels. Tags with a meaning (risk, gain, attention) and topic hues are painted at
-	# runtime from the D_ helpers, so the colour-blind palette reaches them.
+	# Boxed labels. Topic hues are painted at runtime from the D_ helpers, so the colour-blind palette
+	# reaches them.
 	var tag := _fit(cond_b_caps, T.D_FS_13, T.D_H_TAG, T.SPACE_M, T.SPACE_M)
 	var pill := _fit(cond_b_caps, T.D_FS_13, T.D_H_PILL, T.SPACE_S, T.SPACE_S)
 	var badge := _fit(sans_b, T.D_FS_13, T.D_H_BADGE, T.SPACE_S, T.SPACE_S)
@@ -923,6 +932,21 @@ func _menajer(master: Theme) -> Theme:
 	]:
 		_lbl(th, row[0], row[1], row[2], row[3])
 		th.set_stylebox("normal", row[0], row[4])
+	# The risk and attention tags and the risk strip bake both palettes from the D_ helpers: the
+	# colour-blind one is the "Cb" twin, which the host picks through UiTokens.D_variation.
+	var strip_pad := Vector4(T.SPACE_XL, 0, T.SPACE_L, 0)
+	for cb in [false, true]:
+		T.set_colorblind(cb)
+		var twin := "Cb" if cb else ""
+		for row in [["TagRisk", &"negative"], ["TagWarn", &"accent"]]:
+			var p: Dictionary = T.D_badge_palette(row[1])
+			_lbl(th, row[0] + twin, cond_b_caps, T.D_FS_13, p.fg)
+			th.set_stylebox("normal", row[0] + twin, _flat(p.bg, T.D_RADIUS_2, tag, p.line))
+		_lbl(th, "RiskKey" + twin, cond_sb_caps, T.D_FS_14, T.D_neg_ink())
+		_lbl(th, "RiskValue" + twin, sans_b, T.D_FS_18, T.D_neg())
+		_panel(th, "RiskStrip" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg_rule()))
+		_panel(th, "RiskStripHover" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg()))
+	T.set_colorblind(false)
 
 	# Boxes. Rows and bands take their height from the host; a document has its corner cut.
 	var bottom := Vector4i(0, 0, 0, T.BORDER_HAIRLINE)
@@ -940,6 +964,10 @@ func _menajer(master: Theme) -> Theme:
 		[&"TableRow", _flat(clear, 0, Vector4.ZERO, T.D_ROW_RULE, bottom)],
 		[&"TableRowHover", _flat(clear, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_HOVER)],
 		[&"TableRowSelected", _flat(T.D_SURFACE_4, 0, Vector4.ZERO, T.D_ROW_RULE, bottom)],
+		[&"TableRowSelectedHover", _flat(T.D_SURFACE_4, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_HOVER)],
+		[&"TraitBox", _flat(T.D_SURFACE_5, T.D_RADIUS_2, Vector4.ONE * (T.D_TRAIT_BOX - T.D_ICON_ROW) / 2.0,
+			T.D_LINE_2)],
+		[&"MenuPanel", th.get_stylebox("panel", &"PopupMenu")],
 		[&"InboxList", _flat(T.D_SURFACE_2, 0, Vector4(0, 0, T.SPACE_L, 0), T.D_LINE_1, Vector4i(0, 0, T.BORDER_HAIRLINE, 0))],
 		[&"InboxRow", _flat(clear, 0, row_pad, T.D_LINE_1, bottom)],
 		[&"InboxRowHover", _flat(clear, T.D_RADIUS_1, row_pad, T.D_LINE_HOVER)],
@@ -952,7 +980,6 @@ func _menajer(master: Theme) -> Theme:
 		[&"OptionBarHover", _flat(T.D_SURFACE_3, T.D_RADIUS_3, option_pad, T.D_LINE_HOVER)],
 		[&"OptionBarLocked", _flat(clear, T.D_RADIUS_3, option_pad, T.D_LINE_1)],
 		[&"OptionArmed", _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_3XL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XXL), T.D_LINE_HOVER), T.D_CUT)],
-		[&"RiskStrip", _flat(T.D_NEG_BG, T.D_RADIUS_3, Vector4(T.SPACE_XL, 0, T.SPACE_L, 0), T.D_NEG_LINE)],
 		[&"Toast", _shadow(_doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_M, 0, T.SPACE_XXL, 0), T.D_LINE_2), T.D_CUT_SM),
 			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
 		[&"FloatPanel", _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_3, Vector4.ZERO, T.D_LINE_1), T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
@@ -966,6 +993,10 @@ func _menajer(master: Theme) -> Theme:
 		_panel(th, row[0], "PanelContainer", row[1])
 	_panel(th, &"GateDot", "Panel", _flat(T.D_ACCENT, T.RADIUS_PILL, Vector4.ZERO))
 	_panel(th, &"IconWell", "Panel", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO))
+	_panel(th, &"RoleBand", "Panel", _flat(T.D_ROLE_BAND, 0, Vector4.ZERO))
+	_panel(th, &"BarTrack", "Panel", _flat(T.D_BAR_TRACK, T.RADIUS_PILL, Vector4.ZERO))
+	# A bar's fill is white so its host can tint it with the value's own colour.
+	_panel(th, &"BarTint", "Panel", _flat(Color.WHITE, T.RADIUS_PILL, Vector4.ZERO))
 	_panel(th, &"BrandMark", "Panel", _flat(T.D_BRAND_MARK, T.D_RADIUS_1, Vector4.ZERO))
 	var mark := _flat(T.D_SELECTED_MARK, T.D_RADIUS_1, Vector4.ZERO)
 	mark.corner_radius_top_left = 0
@@ -974,6 +1005,9 @@ func _menajer(master: Theme) -> Theme:
 
 	# Clickable rows and keys.
 	_dbtn(th, &"ChipButton", secondary, sans_reg, T.D_FS_15, _fit(sans_reg, T.D_FS_15, T.D_H_BTN, T.SPACE_L, T.SPACE_L))
+	# A chip's glyph stays quiet while its label lifts on hover.
+	for state in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+		th.set_color("icon_%s_color" % state, &"ChipButton", T.D_INK_3)
 	var under := Vector4i(0, 0, 0, T.BORDER_FOCUS)
 	var under_pad := Vector4(0, 0, 0, T.BORDER_FOCUS)
 	_dbtn(th, &"SegTab", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_3],

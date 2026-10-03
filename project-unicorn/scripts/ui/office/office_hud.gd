@@ -1,8 +1,9 @@
 extends Control
 
 # The office view's own controls: the move button at the bottom left (windows dock at the top
-# left), the countdown of a move under way beside it, and the toast that announces a move.
-# OfficeCity mounts this on the view's overlay and opens the city map on move_pressed.
+# left) and the countdown of a move under way beside it. The shell's toast says when a move starts
+# and when it lands. OfficeCity mounts this on the view's overlay and opens the city map on
+# move_pressed.
 
 signal move_pressed
 
@@ -10,17 +11,13 @@ signal move_pressed
 const PULSE_SCALE := 1.04     # [WORKING]
 const PULSE_ALPHA := 0.8      # [WORKING]
 const PULSE_TIME := 0.9       # [WORKING] seconds each way
-const TOAST_TIME := 2.6
-const TOAST_FADE := 0.3       # [WORKING]
+const MOVE_GLYPH := preload("res://assets/icons/util/move.svg")
 
 var _row := HBoxContainer.new()
 var _button := PanelContainer.new()
 var _label: Label
 var _badge: Control
 var _pulse: Tween
-var _toast := PanelContainer.new()
-var _toast_label: Label
-var _toast_tween: Tween
 var _map_open := false
 var _window_cover := Rect2()
 
@@ -57,17 +54,11 @@ func _ready() -> void:
 	inner.add_child(_label)
 	HRUiShared.set_mouse_ignore(inner)
 
-	_toast.theme_type_variation = &"CardFloating"
-	_toast.hide()
-	_toast_label = UiFactory.make_label("", &"RowName")
-	_toast.add_child(_toast_label)
-	HRUiShared.set_mouse_ignore(_toast)
-	add_child(_toast)
-
 	for s: Signal in [EventBus.day_advanced, EventBus.office_changed, EventBus.equity_changed,
 			EventBus.language_changed]:
 		s.connect(_refresh.unbind(1))
 	EventBus.office_move_started.connect(_on_move_started)
+	EventBus.office_changed.connect(_toast.bind("OFFICE_TOAST_MOVED"))
 	_refresh()
 
 
@@ -117,14 +108,11 @@ func _refresh() -> void:
 
 
 func _on_move_started(office_id: String, _arrival_day: int) -> void:
-	_toast_label.text = tr("OFFICE_TOAST_MOVED").format({"name": tr(OfficeConstants.CATALOG[office_id].name_key)})
-	_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_XL)
-	_toast.modulate.a = 1.0
-	_toast.show()
-	if _toast_tween != null:
-		_toast_tween.kill()
-	_toast_tween = create_tween()
-	_toast_tween.tween_interval(TOAST_TIME)
-	_toast_tween.tween_property(_toast, "modulate:a", 0.0, TOAST_FADE)
-	_toast_tween.tween_callback(_toast.hide)
+	_toast(office_id, "OFFICE_TOAST_MOVE_STARTED")
 	_refresh()
+
+
+## What happened to the move, and where to.
+func _toast(office_id: String, head_key: String) -> void:
+	get_tree().call_group(&"toast", &"show_toast", tr(head_key),
+		tr(OfficeConstants.CATALOG[office_id].name_key), MOVE_GLYPH, UiTokens.D_INK_3)

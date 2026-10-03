@@ -127,8 +127,8 @@ ENDING_RETRY,TEKRAR DENE,TRY AGAIN
 ENDING_HARD_MODE,ZOR MOD · YAKINDA,HARD MODE · SOON
 ENDING_SOON_TOOLTIP,Yakında,Coming soon
 ENDING_SHARE,GAZETEYİ PAYLAŞ,SHARE THE PAPER
-ENDING_SAVED_TOAST,Gazete kaydedildi: {path},Paper saved: {path}
-ENDING_OPEN_FOLDER,KLASÖRÜ AÇ,OPEN FOLDER
+ENDING_SAVED_TOAST,Gazete kaydedildi,Paper saved
+ENDING_OPEN_FOLDER,Klasörü aç,Open folder
 ENDING_ENGRAVING_SOON,GÖRSEL YAKINDA,ART COMING SOON
 SALES_STEWARD_CHANGE,Değiştir,Change
 SALES_STEWARD_PICK,Sorumlu ata,Assign account manager
@@ -255,6 +255,11 @@ SAVE_ERR_TOO_OLD,Bu kayıt eski bir sürümden; ürün verisi değiştiği için
 SAVE_ERR_MODAL_OPEN,Bir karar ekranı açıkken kaydedilemez.,Saving is unavailable while a decision screen is open.
 SAVE_ERR_WRITE,Kayıt yazılamadı.,The save could not be written.
 SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.
+SAVE_TOAST_SAVED,Kaydedildi,Saved
+SAVE_TOAST_NOT_SAVED,Kaydedilmedi,Not saved
+SAVE_TOAST_LOADED,Yüklendi,Loaded
+SAVE_TOAST_WHEN,Hafta {week} · {time},Week {week} · {time}
+SAVE_TOAST_LOADED_WHEN,{slot} · Hafta {week} · {time},{slot} · Week {week} · {time}
 HR_COL_EMPLOYEE,ÇALIŞAN,EMPLOYEE
 HR_COL_EXPERIENCE,DENEYİM,EXPERIENCE
 HR_AREA_PRODUCT,Ürün,Product
@@ -273,10 +278,13 @@ HR_GROUP_SALES,Satış,Sales
 HR_GROUP_CUSTOMER_SUCCESS,Müşteri İlişkileri,Customer Success
 HR_COL_ROLES_LEADERSHIP,ROLLER · LİDERLİK,ROLES · LEADERSHIP
 HR_COL_TASK,GÖREV,TASK
+HR_COL_ROLES,ROLLER,ROLES
 HR_COL_TRAIT,TRAIT,TRAIT
 HR_TASK_NONE,—,—
 HR_LEGEND_PRIMARY,ANA ALAN,PRIMARY AREA
 HR_LEGEND_SECONDARY,İKİNCİL ALAN,SECONDARY AREA
+HR_SKILL_LEGEND_MAIN,ana,main
+HR_SKILL_LEGEND_SECONDARY,ikincil,secondary
 HR_LEGEND_NO_AREA,ALANI YOK · ATANAMAZ,NO AREA · CANNOT ASSIGN
 HR_CHIP_IDLE_COUNT,{n} BOŞTA,{n} IDLE
 HR_CHIP_OVERLOAD_COUNT,{n} AŞIRI YÜK,{n} OVERLOADED
@@ -1736,7 +1744,8 @@ MEETING_INVITE_VC,{fund} adına {person} bu hafta görüşmek istiyor.,{person} 
 MEETING_INVITE_SALES,{company} adına {person} görüşmeye hazır.,{person} of {company} is ready to meet.
 MEETING_ACCEPT,Kabul et,Accept
 MEETING_POSTPONE,Ertele,Postpone
-MEETING_POSTPONED,Ertelendi. Telefon çalmaya devam ediyor.,Postponed. The phone keeps ringing.
+MEETING_POSTPONED,Ertelendi,Postponed
+MEETING_POSTPONED_SALES,Telefon çalmaya devam ediyor.,The phone keeps ringing.
 MEETING_POSTPONE_ONCE,Toplantı yalnız bir kez ertelenebilir. Fonun bir sonraki toplantısında ikna −{n}.,The meeting can be put off only once. Conviction −{n} at this fund's next meeting.
 MEETING_POSTPONED_ONCE,Bu toplantı bir kez ertelendi; bir daha ertelenemez.,This meeting was put off once; it can't be put off again.
 MEETING_POSTPONED_VC,Toplantı gelecek haftaya ertelendi. Bir daha ertelenemez.,The meeting moved to next week. It can't be put off again.
@@ -2593,7 +2602,8 @@ OFFICE_CARD_CANCEL,Vazgeç,Cancel
 OFFICE_CARD_HERE,Buradasınız,You are here
 OFFICE_CARD_MOVE_FOR,Taşın · {money},Move · {money}
 OFFICE_CARD_UNMET,{n} şart karşılanmadı,{n} requirements unmet
-OFFICE_TOAST_MOVED,Yeni ofis: {name},New office: {name}
+OFFICE_TOAST_MOVED,Yeni ofis,New office
+OFFICE_TOAST_MOVE_STARTED,Taşınma başladı,Move started
 OFFICE_CHIP_CURRENT,MEVCUT · {name},CURRENT · {name}
 OFFICE_HOVER_HOME,Kurucunun dairesi,The founder's flat
 OFFICE_HOVER_LINE,{desks} masa · {money}/ay,{desks} desks · {money}/mo

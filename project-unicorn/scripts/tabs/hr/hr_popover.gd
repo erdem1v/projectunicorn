@@ -8,7 +8,8 @@ extends Control
 # yok, dolayısıyla çapanın global_position/size değerleri aynı uzayda okunur.
 #
 # Kapanma: ESC (ui_cancel) ve dışarı tıklama. Aynı anda tek popover: mount() eskisini kapatır.
-# process_mode = ALWAYS: saat duruyorken de tıklanabilir olmalı.
+# process_mode = ALWAYS: saat duruyorken de tıklanabilir olmalı. Koyu dile taşınmış sayfa onu koyu
+# açar (mount(anchor, true)): menajer_theme kökte, kutu menü kutusu.
 
 const LIFT := 6.0               # panel çapanın üst kenarından bu kadar yukarı başlar
 const EDGE_MARGIN := 12.0       # ekran kenarına en az bu kadar yaklaşır
@@ -26,7 +27,7 @@ func _ready() -> void:
 	# Kök tüm ekranı kaplar ve tıklamayı yutar: dışarı-tıklama kapatması böyle çalışır.
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel = PanelContainer.new()
-	_panel.theme_type_variation = &"CardPanel"
+	_panel.theme_type_variation = &"MenuPanel" if theme != null else &"CardPanel"
 	_panel.custom_minimum_size = Vector2(MIN_WIDTH, 0)
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP   # panel içi tıklama köke düşmesin
 	add_child(_panel)
@@ -89,7 +90,7 @@ func close() -> void:
 ## Açık popover'ı kapatır, yenisini monte edip döndürür. Sıra: mount → body()'yi doldur →
 ## open_at(anchor). ModalLayer değil: orada game_shell Space/1-4'ü yutar ve bir panel
 ## açmak saati durdurma yeteneğini elden alırdı. Popover bir panel, karar anı değil.
-static func mount(anchor: Control) -> HRPopover:
+static func mount(anchor: Control, dark := false) -> HRPopover:
 	if anchor == null or not anchor.is_inside_tree():
 		return null
 	var layer: Node = anchor.get_tree().get_root().find_child("PanelLayer", true, false)
@@ -100,5 +101,7 @@ static func mount(anchor: Control) -> HRPopover:
 		if child is HRPopover:
 			(child as HRPopover).close()
 	var pop := HRPopover.new()
+	if dark:
+		pop.theme = load(UiTokens.MENAJER_THEME)
 	layer.add_child(pop)
 	return pop

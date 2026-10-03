@@ -34,6 +34,8 @@ extends Control
 const STEAM_PAGE_URL := ""
 
 const LOCK_ICON := "res://assets/icons/lock.svg"
+const TOAST := preload("res://scripts/ui/components/toast.gd")
+const SAVED_GLYPH := preload("res://assets/icons/util/check.svg")
 
 signal continue_requested       # milestone mode: DEVAM ET
 signal main_menu_requested      # milestone mode: ANA MENÜ
@@ -41,8 +43,8 @@ signal main_menu_requested      # milestone mode: ANA MENÜ
 var _rail_host: Control               # host for the rail panel
 var _paper_panel: PanelContainer      # the cream page (PNG-crop target — rail excluded)
 var _paper_col: VBoxContainer         # the page plus the Frank strip beneath it
-var _toast: Label                     # share-confirmation line (hidden until GAZETEYİ PAYLAŞ)
-var _open_folder_btn: Button          # reveals with the toast — opens the save folder
+var _toast: TOAST                     # the share's toast, its open-folder button inside
+var _notice: Label                    # milestone mode: why ANA MENÜ could not keep the save
 
 var _data: Dictionary = {}            # the run_ended / milestone_reached payload
 var _mode: String = EndingsSystem.MODE_ENDING   # payload "mode"; absent = ending
@@ -349,7 +351,9 @@ func _build_rail() -> PanelContainer:
 	meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(meta)
 
-	_build_share_toast(col)
+	_toast = TOAST.new()
+	_toast.set_action(tr("ENDING_OPEN_FOLDER"), _on_open_folder)
+	col.add_child(_toast)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -393,18 +397,6 @@ func _build_coming_soon(col: VBoxContainer) -> void:
 	var wishlist := _button(&"CommitButtonDark", "ENDING_WISHLIST")
 	wishlist.pressed.connect(_on_wishlist)
 	col.add_child(wishlist)
-
-
-## Share-confirmation toast + open-folder button (hidden until GAZETEYİ PAYLAŞ writes a file).
-func _build_share_toast(col: VBoxContainer) -> void:
-	_toast = UiFactory.make_label("", &"ZoneLabel")
-	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_toast.visible = false
-	col.add_child(_toast)
-	_open_folder_btn = _button(&"DialogueGhost", "ENDING_OPEN_FOLDER")
-	_open_folder_btn.visible = false
-	_open_folder_btn.pressed.connect(_on_open_folder)
-	col.add_child(_open_folder_btn)
 
 
 func _add_hard_mode(actions: HBoxContainer) -> void:
@@ -453,10 +445,10 @@ func _build_milestone_rail() -> PanelContainer:
 	cont.pressed.connect(func() -> void: continue_requested.emit())
 	col.add_child(cont)
 
-	_toast = UiFactory.make_label("", &"ZoneLabel")
-	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_toast.visible = false
-	col.add_child(_toast)
+	_notice = UiFactory.make_label("", &"ZoneLabel")
+	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_notice.visible = false
+	col.add_child(_notice)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -475,8 +467,8 @@ func _build_milestone_rail() -> PanelContainer:
 ## main.gd's answer when ANA MENÜ could not keep the save (a decision screen is open under
 ## the paper): the paper stays up and says why.
 func show_notice(text: String) -> void:
-	_toast.text = text
-	_toast.visible = true
+	_notice.text = text
+	_notice.visible = true
 
 
 func _build_tier_card(tag: String, title: String, badge_text: String, body: String) -> Control:
@@ -534,9 +526,7 @@ func _on_share() -> void:
 	var path: String = await _export_paper_png()
 	if path == "":
 		return
-	_toast.text = tr("ENDING_SAVED_TOAST").format({"path": ProjectSettings.globalize_path(path)})
-	_toast.visible = true
-	_open_folder_btn.visible = true
+	_toast.show_toast(tr("ENDING_SAVED_TOAST"), path.get_file(), SAVED_GLYPH, UiTokens.D_pos())
 
 
 func _on_open_folder() -> void:

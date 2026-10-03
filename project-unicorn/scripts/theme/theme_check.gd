@@ -146,6 +146,9 @@ const LAYERED_DARK := [
 	["RiskKey", "font_color", "RiskStrip", "panel"],
 	["RiskValue", "font_color", "RiskStrip", "panel"],
 	["RiskName", "font_color", "RiskStrip", "panel"],
+	["RiskKeyCb", "font_color", "RiskStripCb", "panel"],
+	["RiskValueCb", "font_color", "RiskStripCb", "panel"],
+	["RiskName", "font_color", "RiskStripCb", "panel"],
 ]
 const MIN_RATIO := {"body": 4.5, "large": 3.0, "ui": 3.0}
 

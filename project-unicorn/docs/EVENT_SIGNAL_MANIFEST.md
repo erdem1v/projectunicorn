@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 22 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
-| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 22 | 2 | left_tabs · window_layer |
+| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 24 | 2 | left_tabs · window_layer |
 | `finance_subpage_requested` | `page_id: String` | effects · main · desk_papers | 3 | 1 | finance_tab |
 
 ### Settings signals
@@ -276,8 +276,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `office_move_started` | `office_id: String, arrival_day: int` | office_system | 1 | 1 | office_hud |
-| `office_changed` | `office_id: String` | office_system | 1 | 1 | office_view |
+| `office_move_started` | `office_id: String, arrival_day: int` | main · office_system | 2 | 1 | office_hud |
+| `office_changed` | `office_id: String` | main · office_system | 2 | 2 | office_hud · office_view |
 
 ### Save / system-menu signals
 
@@ -287,8 +287,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `game_loaded` | `slot_id: String` | main | 1 | 1 | left_tabs |
 | `system_menu_requested` | `—` | game_shell · main | 2 | 1 | main |
 | `save_load_requested` | `mode: String` | main · system_menu_modal | 3 | 1 | main |
-| `quicksave_requested` | `—` | game_shell | 1 | 1 | main |
-| `quickload_requested` | `—` | game_shell | 1 | 1 | main |
+| `quicksave_requested` | `—` | game_shell · main | 3 | 1 | main |
+| `quickload_requested` | `—` | game_shell · main | 2 | 1 | main |
 
 ### Debug signals (OS.is_debug_build only; emitter game_shell.gd)
 

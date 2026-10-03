@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 20
+const THEME_STAMP := 21
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -807,10 +807,29 @@ const D_H_BADGE_ICON := 18   # a count on the corner of an icon (the rail's icon
 const D_H_LINK := 24         # a text link on a float card (the research card's pause and assign)
 const D_H_PROGRESS := 6      # a progress track
 const D_H_WIN_HEAD := 72     # a window's header band
+# --- sizes the host lays out ---
+const D_H_TOAST := 48
+const D_H_ROW := 40          # a table's data row
+const D_H_GROUP := 36        # a table's group header
+const D_H_STRIP := 52        # a strip over a table (the risk strip)
+const D_H_EMPTY_ROW := 52    # a group with nobody in it
+const D_TOAST_WELL := 32     # the square behind a toast's glyph
+const D_TRAIT_BOX := 24      # the square behind a trait's glyph
+const D_AVATAR_ROW := 32     # a person's disc in a row or strip
+const D_W_MORALE := 32       # the morale figure's column, right aligned, before its bar
+const D_MORALE_BAR := Vector2i(76, 6)
+const D_NOTCH := Vector2i(1, 12)        # the flight-risk notch across the morale bar
+const D_SKILL_MARK := Vector2i(16, 2)   # the main skill's underline, a 6 px step above the cell's foot
 # --- glyph sizes ---
 const D_ICON_CONTROL := 20   # a control's own glyph (the ticker toggle, a window's close)
 const D_ICON_TITLE := 20     # a float card's title glyph
+const D_ICON_STRIP := 20     # a strip's leading and trailing glyphs
+const D_ICON_BUTTON := 18    # a button's or chip's glyph
+const D_ICON_GROUP := 18     # a table group's glyph
+const D_ICON_TOAST := 18     # the glyph in a toast's well
+const D_ICON_BUTTON_SM := 16 # a small button's glyph
 const D_ICON_ROW := 16       # a row's leading glyph
+const D_ICON_PART := 14      # a part's polarity glyph beside its value
 const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
 const D_ICON_ACTION := 12    # the glyph inside a float card's action
 
@@ -930,3 +949,9 @@ static func D_risk_ink(chance: float) -> Color:
 ## secondary ink. The seats carry no hue.
 static func D_seat_ink(seat: int) -> Color:
 	return D_INK_1 if seat == 1 else D_INK_3
+
+
+## The dark theme bakes a meaning variation in both palettes, the colour-blind one as its "Cb" twin:
+## the one the palette in use reads.
+static func D_variation(name: StringName) -> StringName:
+	return StringName(name + "Cb") if _cb_palette else name

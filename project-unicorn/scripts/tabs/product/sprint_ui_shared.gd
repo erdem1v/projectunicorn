@@ -112,7 +112,7 @@ static func word_color(word: String) -> Color:
 ## ids: kind_feature · kind_polish · kind_fix · kind_research · role_design · role_dev ·
 ## role_test (böcek; uyarı çipi de bunu kullanır) · role_product · bubble · tick · arrow.
 static func icon(id: String, px: int, color: Color) -> TextureRect:
-	return HRUiShared._glyph(ICON_DIR + id + ".svg", px, color)
+	return UiFactory.make_glyph(ICON_DIR + id + ".svg", px, color)
 
 
 static func stamp(text: String, variation: StringName) -> Label:

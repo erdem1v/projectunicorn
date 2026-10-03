@@ -25,6 +25,9 @@ const TERM_TABLE_SCENE := preload("res://scenes/modals/TermSheetTableScene.tscn"
 const SYSTEM_MENU_MODAL := preload("res://scenes/modals/SystemMenuModal.tscn")
 const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
 const RND_CARD_MODAL := preload("res://scenes/modals/RnDCardModal.tscn")
+const SAVED_GLYPH := preload("res://assets/icons/util/check.svg")
+const NOT_SAVED_GLYPH := preload("res://assets/icons/util/save.svg")
+const LOADED_GLYPH := preload("res://assets/icons/util/load.svg")
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
 const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason for the founder's trip
 
@@ -720,6 +723,8 @@ func _run_office_shot(spec: String) -> void:
 			cam.focus(tower.get_center() + Vector3.UP * tower.size.y * 0.2, cam.fit_zoom * 2.2, 0.0)
 		"cast":
 			await _shot_meeting_cast(view, "office_shot_meet_%02d_cast" % hour)
+		"toast":
+			await _shot_toasts(view)
 		"hr_dossier":
 			EventBus.tab_changed.emit("hr")
 			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
@@ -765,6 +770,42 @@ func _run_office_shot(spec: String) -> void:
 		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)])
 	_save_shot("office_shot_%s_%02d%s" % [office_id, hour, "_" + extra if extra != "" else ""])
 	get_tree().quit()
+
+
+## The shell's toast through its real callers, a frame each: F5 over an open window, F5 refused, a
+## sales and a VC call put off, a move under way and its arrival, then F9, which remounts the shell.
+func _shot_toasts(view: Control) -> void:
+	_wire_modal_signals()
+	# The toast places itself when shown: wait for --shot-scale, which _begin_shot applies late.
+	await get_tree().create_timer(0.4).timeout
+	EventBus.tab_changed.emit("hr")
+	EventBus.quicksave_requested.emit()
+	await _toast_frame("saved")
+	EventBus.tab_changed.emit("")
+	# The one refusal a shot can stage without opening a sitting.
+	GameState.run_active = false
+	EventBus.quicksave_requested.emit()
+	GameState.run_active = true
+	await _toast_frame("not_saved")
+	var invite: MeetingInvite = view.invite
+	for kind in ["sales", "vc"]:
+		invite.ring({"line": "MEETING_INVITE_SALES", "args": {}, "open": false, "postpone": true, "note": "",
+			"note_args": {}, "toast": "MEETING_POSTPONED_" + kind.to_upper()})
+		invite._postpone()
+		await _toast_frame("postponed_" + kind)
+		invite.stop()
+	EventBus.office_move_started.emit("plaza", GameState.day + 1)
+	await _toast_frame("move_started")
+	EventBus.office_changed.emit(GameState.office_id)
+	await _toast_frame("moved")
+	EventBus.quickload_requested.emit()
+	await get_tree().create_timer(0.5).timeout
+	await _toast_frame("loaded")
+
+
+func _toast_frame(name: String) -> void:
+	await get_tree().create_timer(0.5).timeout
+	_save_shot("office_shot_toast_" + name)
 
 
 ## The meeting shots' other side: this fund's three.
@@ -964,7 +1005,7 @@ func _run_tab_shot(tab_id: String) -> void:
 	await _finish_shot("tab_shot_%s" % tab_id)
 
 
-# --modal-shot=<confirm|confirm3|settings|month|system|saveload|mentor|rnd-note|rnd-discovery|
+# --modal-shot=<confirm|confirm3|confirm_dark|settings|month|system|saveload|mentor|rnd-note|rnd-discovery|
 # rnd-discovery-line>. Each goes through the REAL mount path (EventBus signal → handler here),
 # so fixture and live behaviour cannot drift. `mentor` is the one surface whose body length is
 # a design constraint (the longest text, no scrollbar) — pair it with --shot-size.
@@ -981,14 +1022,15 @@ func _run_modal_shot(kind: String) -> void:
 				"confirm_text": "İPTAL ET",   # LOC-DATA debug seed / id
 				"cancel_text": "VAZGEÇ",   # LOC-DATA debug seed / id
 			})
-		"confirm3":
-			# Üç butonlu hâl: alt_text varlığı üçüncü butonu açar.
+		"confirm3", "confirm_dark":
+			# Üç butonlu hâl: alt_text varlığı üçüncü butonu açar. confirm_dark aynı onayı koyu dilde açar.
 			EventBus.confirm_requested.emit({
 				"title": tr("SYS_QUIT_TITLE"),
 				"body": tr("SYS_QUIT_BODY"),
 				"confirm_text": tr("SYS_QUIT_SAVE"),
 				"alt_text": tr("SYS_QUIT_DISCARD"),
 				"cancel_text": tr("SYS_CANCEL"),
+				"theme": kind == "confirm_dark",
 			})
 		"settings":
 			EventBus.settings_requested.emit()
@@ -1054,10 +1096,15 @@ func _run_theme_audit(spec: String) -> void:
 # --probe-shot: ThemeProbe.tscn, one unstyled instance of every basic Control class. Screenshot
 # and audit dump come from the same run so pixels and resolved values verify each other.
 # --probe-shot=menajer mounts it under menajer_theme.tres and adds one sample of every variation
-# that theme holds beyond master's.
+# that theme holds beyond master's. --probe-shot=kit lays out the dark kit's components in their
+# states instead (scripts/debug/kit_probe.gd).
 func _run_probe_shot(theme_name: String) -> void:
 	_begin_shot()
-	var probe: Control = (load("res://scenes/debug/ThemeProbe.tscn") as PackedScene).instantiate()
+	var probe: Control
+	if theme_name == "kit":
+		probe = load("res://scripts/debug/kit_probe.gd").page()
+	else:
+		probe = (load("res://scenes/debug/ThemeProbe.tscn") as PackedScene).instantiate()
 	if theme_name == "menajer":
 		probe.theme = load(UiTokens.MENAJER_THEME)
 		_probe_variations(probe.get_node("Margin/Col"), probe.theme)
@@ -1599,7 +1646,13 @@ func _run_ending_shot(key: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	_save_shot("ending_shot_%s" % key)
-	await scene._export_paper_png()
+	if data.get("mode", "") == EndingsSystem.MODE_MILESTONE:
+		await scene._export_paper_png()
+	else:
+		# Sharing writes the paper's PNG and shows its toast: a second frame.
+		await scene._on_share()
+		await get_tree().create_timer(0.4).timeout
+		_save_shot("ending_shot_%s_share" % key)
 	get_tree().quit()
 
 
@@ -2151,7 +2204,7 @@ func _on_pitch_requested(prospect_id: String) -> void:
 	var p: Prospect = ProspectRegistry.get_prospect(prospect_id)
 	_ring_call("sales", prospect_id, {"line": "MEETING_INVITE_SALES", "open": false, "postpone": true,
 		"args": {"company": p.company_name, "person": CounterpartSystem.prospect_people(p)[0].name},
-		"note": "", "note_args": {}, "toast": "MEETING_POSTPONED"})
+		"note": "", "note_args": {}, "toast": "MEETING_POSTPONED_SALES"})
 
 
 ## Rings the office phone for a call of `kind` ("vc" | "sales") about `id` (MeetingInvite.ring).
@@ -2324,6 +2377,9 @@ func _on_confirm_requested(config: Dictionary) -> void:
 	EventBus.speed_change_requested.emit(0)
 	_confirm_modal = (HR_ACTION_MODAL if String(config.get("modal", "")) == "hr_action"
 		else CONFIRM_MODAL).instantiate()
+	# A screen in the dark language opens its confirmation in it ("theme": true).
+	if config.get("theme", false):
+		_confirm_modal.theme = load(UiTokens.MENAJER_THEME)
 	var on_confirm: Callable = config.get("on_confirm", Callable())
 	if on_confirm.is_valid():
 		_confirm_modal.confirmed.connect(on_confirm)
@@ -2417,37 +2473,57 @@ func _on_save_load_requested(mode: String) -> void:
 	_save_load_modal.populate(mode)   # add_child SONRASI — @onready ref'ler ancak o zaman dolu
 
 
+## F5 says whether the run was saved, and when it stands; a refusal says why.
 func _on_quicksave_requested() -> void:
-	if _shell_mounted and SaveManager.can_save():
-		SaveManager.quicksave()
+	if not _shell_mounted:
+		return
+	var why: String = SaveManager.cannot_save_reason_key()
+	if why == "" and not SaveManager.quicksave():
+		why = "SAVE_ERR_WRITE"
+	if why == "":
+		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_SAVED"), _save_when("SAVE_TOAST_WHEN"),
+			SAVED_GLYPH, UiTokens.D_pos())
+	else:
+		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_NOT_SAVED"), tr(why), NOT_SAVED_GLYPH,
+			UiTokens.D_warn())
 
 
+## F9 says it loaded on the shell it remounted.
 func _on_quickload_requested() -> void:
-	if _shell_mounted:
-		_load_slot(SaveManager.QUICK_SLOT_ID)
+	if _shell_mounted and await _load_slot(SaveManager.QUICK_SLOT_ID):
+		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_LOADED"), _save_when("SAVE_TOAST_LOADED_WHEN"),
+			LOADED_GLYPH, UiTokens.D_pos())
+
+
+## The week and the hour the run stands at, as the top bar shows them.
+func _save_when(key: String) -> String:
+	return tr(key).format({"slot": tr("SAVE_QUICK_SLOT"), "week": int(GameState.get_date_dict().week),
+		"time": "%02d:00" % GameState.current_hour})
 
 
 # The single load path. The shell is torn down BEFORE state is applied, so initialize_run's
 # "no listeners yet" assumption holds here too and no signal storm is needed. The save is read
 # and validated before anything is touched: "file corrupt" in a half-torn world is the worst case.
-func _load_slot(slot_id: String) -> void:
+# True once the loaded run stands on its new shell.
+func _load_slot(slot_id: String) -> bool:
 	# The same rule as saving: a decision in progress (event card, VC meeting, term table, sales
 	# sitting, negotiation) is not carried over. F9 bypasses the menu gate and the ModalLayer
 	# guard, so it reaches here during any sitting.
 	if SaveManager.cannot_save_reason_key() == "SAVE_ERR_MODAL_OPEN":
-		return
+		return false
 	var payload: Dictionary = SaveManager.read_slot(slot_id)
 	if not bool(payload.get("ok", false)):
 		push_warning("[Main] yükleme reddedildi (%s): %s" % [slot_id, payload.get("error_key", "")])
-		return
+		return false
 	_teardown_run_ui()
 	# queue_free is deferred; without a frame two GameShells would share the tree.
 	await get_tree().process_frame
 	if not SaveManager.apply_loaded_state(payload):
 		push_error("[Main] yükleme durumu uygulanamadı (%s)" % slot_id)
-		return
+		return false
 	await _mount_shell()
 	EventBus.game_loaded.emit(slot_id)
+	return true
 
 
 func _on_summary_ready(data: Dictionary) -> void:

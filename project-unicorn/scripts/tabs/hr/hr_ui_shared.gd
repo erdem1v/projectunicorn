@@ -100,7 +100,7 @@ static func v_hairline(height: int = 26) -> Panel:
 
 static func trait_icon(trait_id: String, px: int = 18) -> TextureRect:
 	var file: String = trait_id if TRAIT_ICON_DRAWN.has(trait_id) else "unspecified"
-	return _glyph(TRAIT_ICON_DIR + file + ".svg", px, UiTokens.INK_MUTED)
+	return UiFactory.make_glyph(TRAIT_ICON_DIR + file + ".svg", px, UiTokens.INK_MUTED)
 
 
 ## Tooltip: ad ve etki alt alta. PASS, STOP DEĞİL: STOP tooltip'i çalıştırır ama satır
@@ -328,38 +328,26 @@ static func hairline(color: Color = UiTokens.DIVIDER_LIGHT) -> Panel:
 
 ## Saatin moral YÖNÜ. Kademe ÇAĞIRANDA: kaç tane çizildiği kademedir (§8.5 katsayı yazdırmaz).
 static func chevron(px: int = 9, color: Color = UiTokens.ACCENT, up: bool = false) -> TextureRect:
-	return _glyph("res://assets/icons/chevron_up.svg" if up
+	return UiFactory.make_glyph("res://assets/icons/chevron_up.svg" if up
 		else "res://assets/icons/chevron_down.svg", px, color)
 
 
 ## 7 saat: erime durdu ama yükselmiyor, düz çizgi.
 static func chevron_flat(px: int = 9, color: Color = UiTokens.POSITIVE) -> TextureRect:
-	return _glyph("res://assets/icons/chevron_flat.svg", px, color)
+	return UiFactory.make_glyph("res://assets/icons/chevron_flat.svg", px, color)
 
 
 static func revert_arrow_icon() -> Texture2D:
 	return load("res://assets/icons/revert_arrow.svg")
 
 
-static func _glyph(path: String, px: int, color: Color) -> TextureRect:
-	var tex := TextureRect.new()
-	tex.texture = load(path)
-	tex.custom_minimum_size = Vector2(px, px)
-	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	tex.modulate = color
-	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return tex
-
-
 ## Uyarı "bak" der, kilit "yapamazsın": iki ayrı glif.
 static func warning_glyph(px: int = 12, color: Color = UiTokens.NEGATIVE) -> TextureRect:
-	return _glyph("res://assets/icons/warning.svg", px, color)
+	return UiFactory.make_glyph("res://assets/icons/warning.svg", px, color)
 
 
 static func lock_glyph(px: int, color: Color) -> TextureRect:
-	return _glyph("res://assets/icons/lock.svg", px, color)
+	return UiFactory.make_glyph("res://assets/icons/lock.svg", px, color)
 
 
 static func action_button(label: String, on_press: Callable, primary: bool = false) -> Button:
@@ -402,3 +390,258 @@ static func set_mouse_ignore(n: Node) -> void:
 		(n as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for c in n.get_children():
 		set_mouse_ignore(c)
+
+
+# --- Koyu kit (Menajer Masası) ----------------------------------------------
+# Ekip koyu dile taşınınca kadro tablosu, şeritleri ve hücreleri buradan çizer; krem çizenler
+# yukarıda kalır. Renk D_ token'ı ya da D_ yardımcısıdır, kutu menajer_theme varyasyonudur.
+
+const D_TRAIT_DIR := "res://assets/icons/trait/"
+const D_SKILL_LOOKS := {&"": &"SkillValue", &"main": &"SkillMain", &"secondary": &"SkillSecondary"}
+
+
+## Sütun başlığı: büyük harfli anahtar, başlığın tabanına yaslı.
+static func D_head(text: String, width: int, align := HORIZONTAL_ALIGNMENT_CENTER) -> Label:
+	var head := UiFactory.make_label(Fmt.upper(text), &"KeyLabel")
+	head.horizontal_alignment = align
+	head.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	head.custom_minimum_size.x = width
+	return head
+
+
+## Grup başlığı: açma oku, grubun glifi, büyük harfli adı, sağa uzanan çizgi. Kapalı grup soluk okunur
+## ve içindeki kişi sayısını gösterir; tıklama `on_toggle`'ı çağırır.
+static func D_group(text: String, glyph_path: String, count: int, collapsed: bool,
+		on_toggle: Callable) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size.y = UiTokens.D_H_GROUP
+	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	row.add_child(UiFactory.make_glyph("res://assets/icons/util/chevron_%s.svg" % ("right" if collapsed else "down"),
+		UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
+	row.add_child(UiFactory.make_glyph(glyph_path, UiTokens.D_ICON_GROUP, UiTokens.D_INK_3))
+	row.add_child(UiFactory.make_label(Fmt.upper(text), &"GroupLabel", UiTokens.D_INK_3 if collapsed else null))
+	if collapsed:
+		row.add_child(UiFactory.make_label(str(count), &"Caption"))
+	var rule := HSeparator.new()
+	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(rule)
+	for part: Control in row.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	set_mouse_ignore(row)
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
+	row.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	row.gui_input.connect(func(event: InputEvent) -> void:
+		if UiFactory.is_left_click(event):
+			on_toggle.call())
+	return row
+
+
+## Veri satırı; hücrelerini çağıran ekler. Üstüne gelince kenarı açılır, seçili satır yükselir ve sol
+## kenarında işaret taşır.
+static func D_row(selected: bool) -> PanelContainer:
+	var row := PanelContainer.new()
+	var looks: Array = [&"TableRowSelected", &"TableRowSelectedHover"] if selected else [&"TableRow", &"TableRowHover"]
+	row.theme_type_variation = looks[0]
+	row.custom_minimum_size.y = UiTokens.D_H_ROW
+	row.mouse_entered.connect(func() -> void: row.theme_type_variation = looks[1])
+	row.mouse_exited.connect(func() -> void: row.theme_type_variation = looks[0])
+	if selected:
+		var layer := Control.new()
+		var mark := Panel.new()
+		mark.theme_type_variation = &"RailMark"
+		mark.anchor_bottom = 1.0
+		mark.offset_top = UiTokens.D_MARK.y
+		mark.offset_right = UiTokens.D_MARK.x
+		mark.offset_bottom = -UiTokens.D_MARK.y
+		layer.add_child(mark)
+		set_mouse_ignore(layer)
+		row.add_child(layer)
+	return row
+
+
+## Beceri hücresi: değer rampanın renginde. `rank` "main" kalın ve altı çizili, "secondary" yarı kalın;
+## `band` rolün sütununu grubun boyunca aydınlatır.
+static func D_skill_cell(value: int, rank: StringName, width: int, band: bool) -> Control:
+	var cell := Control.new()
+	cell.custom_minimum_size.x = width
+	if band:
+		var ground := Panel.new()
+		ground.theme_type_variation = &"RoleBand"
+		ground.set_anchors_preset(Control.PRESET_FULL_RECT)
+		cell.add_child(ground)
+	var ink: Color = UiTokens.D_skill(value)
+	var figure := UiFactory.make_label(str(value), D_SKILL_LOOKS[rank], ink)
+	figure.set_anchors_preset(Control.PRESET_FULL_RECT)
+	figure.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	figure.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cell.add_child(figure)
+	if rank == &"main":
+		var mark := ColorRect.new()
+		mark.color = ink
+		mark.anchor_left = 0.5
+		mark.anchor_right = 0.5
+		mark.anchor_top = 1.0
+		mark.anchor_bottom = 1.0
+		mark.offset_left = -UiTokens.D_SKILL_MARK.x / 2.0
+		mark.offset_right = UiTokens.D_SKILL_MARK.x / 2.0
+		mark.offset_top = -UiTokens.SPACE_S - UiTokens.D_SKILL_MARK.y
+		mark.offset_bottom = -UiTokens.SPACE_S
+		cell.add_child(mark)
+	set_mouse_ignore(cell)
+	return cell
+
+
+## Başlığın beceri lejantı: rampanın beş basamağı kendi renginde, ana alanın altı çizili, ikincilin
+## yalın örneği.
+static func D_skill_legend() -> PanelContainer:
+	var cell := PanelContainer.new()
+	cell.theme_type_variation = &"KpiCell"
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
+	cell.add_child(col)
+	col.add_child(UiFactory.make_label(Fmt.upper(TranslationServer.translate("HR_COL_ROLES")), &"KeyLabel"))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	col.add_child(row)
+	for low in [1, 3, 5, 7, 9]:
+		row.add_child(UiFactory.make_label("%d-%d" % [low, low + 1], &"ValueTextStrong", UiTokens.D_skill(low)))
+	for sample in [["7", "HR_SKILL_LEGEND_MAIN"], ["6", "HR_SKILL_LEGEND_SECONDARY"]]:
+		var key := HBoxContainer.new()
+		key.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+		key.size_flags_vertical = Control.SIZE_SHRINK_END
+		var figure := UiFactory.make_label(sample[0], &"CaptionStrong")
+		key.add_child(figure)
+		key.add_child(UiFactory.make_label(TranslationServer.translate(sample[1]), &"Caption"))
+		row.add_child(key)
+		if sample[1] == "HR_SKILL_LEGEND_MAIN":
+			var mark := ColorRect.new()
+			mark.color = UiTokens.D_INK_2
+			mark.anchor_right = 1.0
+			mark.anchor_top = 1.0
+			mark.anchor_bottom = 1.0
+			mark.offset_top = UiTokens.BORDER_HAIRLINE
+			mark.offset_bottom = UiTokens.BORDER_HAIRLINE + UiTokens.D_SKILL_MARK.y
+			figure.add_child(mark)
+	return cell
+
+
+## Moral hücresi: değer bandının renginde, sağa yaslı; yanında bar ve 35'teki kaçma çentiği. `refs`
+## değeri ve dolguyu tutar, D_repaint_morale yerinde boyar.
+static func D_morale(morale: int, refs: Dictionary) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	var value := UiFactory.make_label("", &"MoraleValue")
+	value.custom_minimum_size.x = UiTokens.D_W_MORALE
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	value.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(value)
+	var track := Panel.new()
+	track.theme_type_variation = &"BarTrack"
+	track.custom_minimum_size = UiTokens.D_MORALE_BAR
+	track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(track)
+	var fill := Panel.new()
+	fill.theme_type_variation = &"BarTint"
+	track.add_child(fill)
+	var notch := ColorRect.new()
+	notch.color = UiTokens.D_INK_4
+	notch.size = UiTokens.D_NOTCH
+	var risk_at: float = UiTokens.D_MORALE_BAR.x * HRConstants.MORALE_FLIGHT_RISK / float(HRConstants.MORALE_MAX)
+	notch.position = Vector2(roundf(risk_at), (UiTokens.D_MORALE_BAR.y - UiTokens.D_NOTCH.y) / 2.0)
+	track.add_child(notch)
+	set_mouse_ignore(row)
+	refs["value"] = value
+	refs["fill"] = fill
+	D_repaint_morale(refs, morale)
+	return row
+
+
+static func D_repaint_morale(refs: Dictionary, morale: int) -> void:
+	var ink: Color = D_morale_ink(morale)
+	var value: Label = refs["value"]
+	value.text = str(morale)
+	value.add_theme_color_override("font_color", ink)
+	var fill: Panel = refs["fill"]
+	fill.self_modulate = ink
+	fill.size = Vector2(UiTokens.D_MORALE_BAR.x * morale / float(HRConstants.MORALE_MAX), UiTokens.D_MORALE_BAR.y)
+
+
+## §7'nin bantları: 35 altı Ayrılabilir tehlikedir, 50 altı uyarı, üstü olumlu.
+static func D_morale_ink(morale: int) -> Color:
+	if HRConstants.is_flight_risk(morale):
+		return UiTokens.D_neg()
+	if morale < HRConstants.MORALE_BAND_LOW:
+		return UiTokens.D_warn()
+	return UiTokens.D_pos()
+
+
+## Huy hücresi: kutusunda glifi ve yanında adı; üstüne gelince adı ve etkisi. Huyu olmayanın hücresi
+## boştur.
+static func D_trait_cell(trait_ids: Array) -> HBoxContainer:
+	var cell := HBoxContainer.new()
+	cell.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	if trait_ids.is_empty():
+		return cell
+	var pick: String = String(trait_ids[0])
+	var box := PanelContainer.new()
+	box.theme_type_variation = &"TraitBox"
+	box.add_child(UiFactory.make_glyph(D_TRAIT_DIR + (pick if TRAIT_ICON_DRAWN.has(pick) else "unspecified") + ".svg",
+		UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
+	cell.add_child(box)
+	cell.add_child(UiFactory.make_label(HRConstants.trait_label(pick), &"CondCaption"))
+	for part: Control in cell.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	set_mouse_ignore(cell)
+	return _hoverable(cell, pick)
+
+
+## Kaçma riski şeridi: tehlike glifi, kişinin yüzü ve adı, morali ve etiketi; tıklanınca `on_open`.
+static func D_risk_strip(emp: Character, on_open: Callable) -> PanelContainer:
+	var strip := PanelContainer.new()
+	var looks: Array = [UiTokens.D_variation(&"RiskStrip"), UiTokens.D_variation(&"RiskStripHover")]
+	strip.theme_type_variation = looks[0]
+	strip.custom_minimum_size.y = UiTokens.D_H_STRIP
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	strip.add_child(row)
+	row.add_child(UiFactory.make_glyph("res://assets/icons/util/warn.svg", UiTokens.D_ICON_STRIP, UiTokens.D_neg()))
+	row.add_child(UiFactory.make_person_avatar(emp.character_name, emp.look, UiTokens.D_AVATAR_ROW))
+	row.add_child(UiFactory.make_label(emp.character_name, &"RiskName"))
+	row.add_child(UiFactory.make_label(Fmt.upper(TranslationServer.translate("HR_COL_MORALE")),
+		UiTokens.D_variation(&"RiskKey")))
+	row.add_child(UiFactory.make_label(str(emp.morale), UiTokens.D_variation(&"RiskValue")))
+	row.add_child(UiFactory.D_tag(HRConstants.badge_label(HRConstants.BADGE_FLIGHT_RISK), &"risk"))
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(gap)
+	row.add_child(UiFactory.make_glyph("res://assets/icons/util/chevron_right.svg", UiTokens.D_ICON_STRIP,
+		UiTokens.D_neg_ink()))
+	for part: Control in row.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	set_mouse_ignore(row)
+	strip.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	strip.mouse_entered.connect(func() -> void: strip.theme_type_variation = looks[1])
+	strip.mouse_exited.connect(func() -> void: strip.theme_type_variation = looks[0])
+	strip.gui_input.connect(func(event: InputEvent) -> void:
+		if UiFactory.is_left_click(event):
+			on_open.call())
+	return strip
+
+
+## Boş grup satırı: notu ve yanında grubu dolduracak eylemin küçük düğmesi.
+static func D_empty_row(note: String, action: String, on_action: Callable) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size.y = UiTokens.D_H_EMPTY_ROW
+	row.add_theme_constant_override("separation", UiTokens.SPACE_XL)
+	row.add_child(UiFactory.make_label(note, &"NoteMuted"))
+	var go := Button.new()
+	go.theme_type_variation = &"SecondaryButtonSmall"
+	go.icon = load("res://assets/icons/util/plus.svg")
+	go.text = action
+	go.focus_mode = Control.FOCUS_NONE
+	go.pressed.connect(on_action)
+	row.add_child(go)
+	for part: Control in row.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return row

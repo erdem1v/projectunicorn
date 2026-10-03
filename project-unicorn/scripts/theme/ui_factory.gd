@@ -55,6 +55,19 @@ static func make_state_chip(text: String, fg: Color, bg: Color, border: Color) -
 	return chip
 
 
+## A white glyph (SVG) tinted `color`, `px` square, centred in its row.
+static func make_glyph(path: String, px: int, color: Color) -> TextureRect:
+	var tex := TextureRect.new()
+	tex.texture = load(path)
+	tex.custom_minimum_size = Vector2(px, px)
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tex.modulate = color
+	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return tex
+
+
 ## Generic themed label. Optional one-off color override.
 static func make_label(text: String, variation: StringName = &"BodySerif", color: Variant = null) -> Label:
 	var lbl := Label.new()
@@ -222,6 +235,63 @@ static func make_close_button(on_close: Callable, dark := false) -> Button:
 		close.custom_minimum_size = Vector2(UiTokens.SPACE_3XL, UiTokens.SPACE_3XL)
 	close.pressed.connect(on_close)
 	return close
+
+
+# --- Menajer Masası: the dark language's entry points ---------------------------------------
+# A screen taken to the dark language builds these under its menajer_theme root; the cream
+# builders above stay with the screens that have not moved.
+
+## A caps tag: "" the plain outline, "neutral" quiet on a fill, "outline" quieter still, and the
+## meanings "risk" and "warn" in the palette in use.
+static func D_tag(text: String, kind: StringName = &"") -> Label:
+	var tag := make_label(Fmt.upper(text), {&"": &"Tag", &"neutral": &"TagNeutral", &"outline": &"TagOutline",
+		&"risk": UiTokens.D_variation(&"TagRisk"), &"warn": UiTokens.D_variation(&"TagWarn")}[kind])
+	tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return tag
+
+
+## A window header's figure: its caps key over its value, a rule on its left. An empty value keeps
+## its line, so the key stays on the header's baseline.
+static func D_kpi(key: String, value: String) -> PanelContainer:
+	var cell := PanelContainer.new()
+	cell.theme_type_variation = &"KpiCell"
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", 0)
+	col.add_child(make_label(Fmt.upper(key), &"KeyLabel"))
+	col.add_child(make_label(value, &"KpiValue"))
+	cell.add_child(col)
+	return cell
+
+
+## A window's section tabs, in caps: the active one in ink over its underline. A click moves the
+## underline and calls `on_pick(index)`.
+static func D_seg_tabs(labels: Array, active: int, on_pick: Callable) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
+	for i in labels.size():
+		var tab := Button.new()
+		tab.text = Fmt.upper(labels[i])
+		tab.theme_type_variation = &"SegTabActive" if i == active else &"SegTab"
+		tab.focus_mode = Control.FOCUS_NONE
+		tab.pressed.connect(func() -> void:
+			for other: Button in row.get_children():
+				other.theme_type_variation = &"SegTabActive" if other == tab else &"SegTab"
+			on_pick.call(i))
+		row.add_child(tab)
+	return row
+
+
+## A cost: its value in ink behind the cost disc, never in red (a cost is not a danger).
+static func D_cost(value: String, variation: StringName = &"DataText") -> HBoxContainer:
+	var part := HBoxContainer.new()
+	part.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	part.add_child(make_glyph("res://assets/icons/stake/cost.svg", UiTokens.D_ICON_PART, UiTokens.D_INK_3))
+	var label := make_label(value, variation)
+	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	part.add_child(label)
+	return part
 
 
 ## Removes every child from the tree at once (so it cannot clash with the replacements

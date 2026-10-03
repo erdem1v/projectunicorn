@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/components/BuildHUDPanel.tscn" id="6_buildhud"]
 [ext_resource type="PackedScene" path="res://scenes/office/OfficeView.tscn" id="8_officeview"]
 [ext_resource type="Script" path="res://scripts/main/game_shell.gd" id="7_shell"]
+[ext_resource type="Script" path="res://scripts/ui/components/toast.gd" id="9_toast"]
 
 [node name="GameShell" type="Control" unique_id=1712078200]
 process_mode = 3
@@ -67,3 +68,10 @@ layer = 9
 
 [node name="ModalLayer" type="CanvasLayer" parent="." unique_id=1292228396]
 layer = 10
+
+[node name="ToastLayer" type="CanvasLayer" parent="." unique_id=1292228398]
+layer = 11
+
+[node name="Toast" type="PanelContainer" parent="ToastLayer" unique_id=1292228399 node_paths=PackedStringArray("rail")]
+script = ExtResource("9_toast")
+rail = NodePath("../../LeftTabs")

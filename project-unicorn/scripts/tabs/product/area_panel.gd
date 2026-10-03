@@ -276,7 +276,7 @@ func _edged_card(slot: int) -> PanelContainer:
 func _chevron(open: bool) -> TextureRect:
 	if open:
 		return HRUiShared.chevron(UiTokens.PRODUCT_ICON_PX, UiTokens.ACCENT_DEEP)
-	return HRUiShared._glyph("res://assets/icons/chevron_right.svg", UiTokens.PRODUCT_ICON_PX, UiTokens.INK_FAINT)
+	return UiFactory.make_glyph("res://assets/icons/chevron_right.svg", UiTokens.PRODUCT_ICON_PX, UiTokens.INK_FAINT)
 
 
 func _hbox(separation: int) -> HBoxContainer:
