@@ -3,8 +3,9 @@
 Frank'in ve on bir kurucunun önceden render edilmiş portreleri: ofisin 3B karakterleri, büst stüdyosunda
 (`PersonBust`), ışıklı portre zemininde. Görünüşler `LookSystem.FRANK_LOOK` ve `LookSystem.FOUNDER_LOOKS`.
 Kurucunun `<id>.png`'si 4:5 ana görüntüdür (260×325 için kesilir); `<id>_<boy>.png` daha küçük yerler için
-kırpımdır, adındaki boy kesildiği mantıksal boydur ve yerler onu yakın bir boyda gösterir. Frank'in yalnız
-diskleri vardır. Dosya mantıksal boyun iki katıdır ve çizimde doğrusal süzgeçle iner (mipmap yok). Kare kırpımlar
+kırpımdır, adındaki boy kesildiği mantıksal boydur ve yerler onu yakın bir boyda gösterir. Frank'in ana görüntüsü
+yoktur: maillerinin portre kuyusu (256×320) ve diskleri vardır. Dosya mantıksal boyun iki katıdır ve çizimde
+doğrusal süzgeçle iner (mipmap yok). Kare kırpımlar
 daireye kesilmiş disklerdir, kenarları düz (premultiply edilmemiş) alfadır; kartlar opaktır.
 
 Bu dosyayı ve görüntüleri `tools/people/bake_portraits.gd` yazar (`project-unicorn/`'dan, pencereli, tek Godot):
@@ -17,6 +18,7 @@ Gövdeler Quaternius Ultimate Modular Men/Women 2022, poz Universal Animation Li
 
 | Dosya | Piksel | Görünüş imzası | Araç | sha256 |
 |---|---|---|---|---|
+| `frank_256x320.png` | 512×640 | `body=m_suit\|bottom=-1\|feet=m_suit\|girth=2\|glasses=false\|hair=7\|head=m_king\|height=3\|legs=m_suit\|sex=m\|shoe=1\|skin=2\|tie=0\|top=2\|top2=0` | `tools/people/bake_portraits.gd` | `066a94906a1d6f57bae1f02065912ada32665ea4e10ea85e682c9991b73dfc63` |
 | `frank_24.png` | 48×48 | `body=m_suit\|bottom=-1\|feet=m_suit\|girth=2\|glasses=false\|hair=7\|head=m_king\|height=3\|legs=m_suit\|sex=m\|shoe=1\|skin=2\|tie=0\|top=2\|top2=0` | `tools/people/bake_portraits.gd` | `ebc6125f61029a60a7fbf44e978ff3d17b74b7704a30301e10a03ca551ebc7e9` |
 | `frank_40.png` | 80×80 | `body=m_suit\|bottom=-1\|feet=m_suit\|girth=2\|glasses=false\|hair=7\|head=m_king\|height=3\|legs=m_suit\|sex=m\|shoe=1\|skin=2\|tie=0\|top=2\|top2=0` | `tools/people/bake_portraits.gd` | `f11db3fe0d0125be94c78d86056da5296ae09efeee1f635728b78e00642e1593` |
 | `frank_48.png` | 96×96 | `body=m_suit\|bottom=-1\|feet=m_suit\|girth=2\|glasses=false\|hair=7\|head=m_king\|height=3\|legs=m_suit\|sex=m\|shoe=1\|skin=2\|tie=0\|top=2\|top2=0` | `tools/people/bake_portraits.gd` | `6781130ad0a53556211a10b1718815eb0f7ef6b90b2773f04a120de96630f15f` |

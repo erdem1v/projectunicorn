@@ -46,6 +46,8 @@ static var _today_admissions: Array = []
 ## Instance keys admitted through force_fire and not yet resolved, so their history row says
 ## `forced`.
 static var _forced: Array = []
+## True while the chosen option's effects run: a sitting the option opens is the card's own.
+static var _resolving: bool = false
 
 
 static func empty_floor_ticks() -> int:
@@ -443,7 +445,7 @@ static func pump() -> bool:
 
 
 ## The engine's only words to the UI. `event_triggered` feeds the left rail's badge;
-## `modal_requested` is what main.gd mounts the EventModal on — without it nothing reaches the
+## `modal_requested` is what main.gd opens the decision gate on — without it nothing reaches the
 ## screen. The view is built here so the receiver never has to know which id is active.
 static func _announce(event_id: String, context: Dictionary) -> void:
 	EventBus.event_triggered.emit(event_id)
@@ -480,6 +482,7 @@ static func resolve(event_id: String, option_id: String) -> void:
 	var names: Dictionary = EvPresenter.freeze_names(context)
 	var deltas: Array
 	var outcome: String = String(option.get("outcome_id", option_id))
+	_resolving = true
 	if option.has("check"):
 		# §9: the dice. Both branches run through the check-branch vocabulary, where I6 lives.
 		var check: Dictionary = option["check"]
@@ -490,6 +493,7 @@ static func resolve(event_id: String, option_id: String) -> void:
 		outcome = "%s_%s" % [outcome, "pass" if passed else "fail"]
 	else:
 		deltas = EvEffects.run_played(option.get("effects", []), context)
+	_resolving = false
 
 	var arc_id: String = String(card.get("arc", ""))
 	var key: String = EvLatches.key_of(event_id, context)
@@ -512,6 +516,10 @@ static func resolve(event_id: String, option_id: String) -> void:
 	EventBus.event_resolved.emit(event_id, option_index)
 
 	pump()
+
+
+static func resolving() -> bool:
+	return _resolving
 
 
 static func _option_index(card: Dictionary, option_id: String) -> int:

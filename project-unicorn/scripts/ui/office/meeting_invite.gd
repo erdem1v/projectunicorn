@@ -7,7 +7,8 @@ extends Control
 # or the card is open from the first ring. Postponing closes the card and the shell's toast says so;
 # main.gd rings it (a fund whose meeting week has come, a prospect the player asked to meet),
 # decides what a postponement does, and stops it once the call is gone. With the founder out of
-# sight (the map, the meeting room, a trip) nothing shows and the call waits.
+# sight (the map, the meeting room, a trip) nothing shows and the call waits; while a decision waits
+# the call is not taken.
 
 signal accepted
 signal postponed
@@ -49,10 +50,9 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_ring = Control.new()
 	_ring.size = Vector2.ONE * RING_PX
-	_ring.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_ring.draw.connect(_draw_ring)
 	_ring.gui_input.connect(func(event: InputEvent) -> void:
-		if UiFactory.is_left_click(event):
+		if UiFactory.is_left_click(event) and EventGate.active_id() == "":
 			_open_card())
 	add_child(_ring)
 	_card = PanelContainer.new()
@@ -129,6 +129,9 @@ func _process(_delta: float) -> void:
 	visible = can_ring()
 	if not visible:
 		return
+	var gated: bool = EventGate.active_id() != ""
+	_accept_button.disabled = gated
+	_ring.mouse_default_cursor_shape = Control.CURSOR_ARROW if gated else Control.CURSOR_POINTING_HAND
 	var at: Vector2 = (_view.camera as Camera3D).unproject_position(_people.founder().marker())
 	_ring.position = at - _ring.size * 0.5
 	_ring.queue_redraw()

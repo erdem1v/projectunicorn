@@ -47,6 +47,17 @@ static func active_id() -> String:
 	return EvQueue.active_id()
 
 
+## The active card is a paper the player picked up off the desk; it may go back unanswered.
+static func active_from_desk() -> bool:
+	return EvQueue.active_from_desk()
+
+
+## True while the chosen option's effects run: a sitting the option opens is the card's own, so
+## the decision gate lets it through.
+static func resolving() -> bool:
+	return EvEngine.resolving()
+
+
 ## The active card's frozen scope binding. The modal needs it to re-check option locks.
 static func active_context() -> Dictionary:
 	return EvQueue.active_context()
@@ -68,6 +79,11 @@ static func queue_size() -> int:
 	return EvQueue.size()
 
 
+## Every resolution, oldest first (§7.1's rows); the inbox lists the played and expired ones.
+static func history() -> Array:
+	return EvHistory.rows()
+
+
 static func is_catalogued(event_id: String) -> bool:
 	return EvCatalog.has_card(event_id)
 
@@ -75,7 +91,7 @@ static func is_catalogued(event_id: String) -> bool:
 # --- Condition vocabulary --------------------------------------------------
 
 ## Evaluate one condition tree. Not event-only: PhaseGateSystem gates phase transitions with it
-## and EventModal re-checks option locks. `context` binds the card's scope slots; an
+## and the inbox's reading pane re-checks option locks. `context` binds the card's scope slots; an
 ## `entity_seam` leaf has no subject without it.
 static func condition_met(condition: Dictionary, context: Dictionary = {}) -> bool:
 	return EvCondition.eval(condition, context)
@@ -129,8 +145,8 @@ static func pump() -> void:
 	EvEngine.pump()
 
 
-## The desk, most urgent first, capped at the layout's slot count.
-static func desk_papers(slots: int) -> Array:
+## The desk, most urgent first, capped at the layout's slot count (the whole desk without one).
+static func desk_papers(slots := -1) -> Array:
 	return EvPresenter.desk_papers(slots)
 
 
@@ -163,9 +179,10 @@ static func queue_position_of(event_id: String) -> int:
 	return EvQueue.ids().find(event_id)
 
 
-## Any card's view with a caller-supplied context, without admitting it (harnesses, shot flags).
-static func render(event_id: String, context: Dictionary = {}) -> GameEvent:
-	return EvPresenter.build_view(event_id, context)
+## Any card's view with a caller-supplied context, without admitting it: the inbox's papers and
+## past decisions (with the names they kept) and the shot flags.
+static func render(event_id: String, context: Dictionary = {}, names: Dictionary = {}) -> GameEvent:
+	return EvPresenter.build_view(event_id, context, names)
 
 
 ## Bind a card's scope slots against the world as it is. Empty when a required slot cannot fill.

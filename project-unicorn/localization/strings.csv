@@ -148,7 +148,6 @@ DESK_PAPER_SHEET_TITLE,"Yatırım teklifi masada, son {weeks} hafta","Offer on t
 DESK_PAPER_SHEET_TITLE_ONE,"Yatırım teklifi masada, son hafta","Offer on the table, final week"
 DESK_PAPER_SHEETS_TITLE,{n} yatırım teklifi masada,{n} offers on the table
 DESK_PAPER_ATLAS_TITLE,{n} aday dosyası hazır,{n} candidate files ready
-DESK_PAPER_EXPANSION_TITLE,Büyüme talebi masada,Expansion request waiting
 FIN_GOAL_P1_LABEL,Traction'a:,To Traction:
 FIN_GOAL_P1_META,Sürüm + ilk müşteri + ilk gelir,Ship + first customer + first revenue
 FIN_GOAL_P2_LABEL,Series A'ya:,To Series A:
@@ -161,7 +160,6 @@ MILESTONE_FOUNDING,Kuruluş,Founding
 MILESTONE_FIRST_SHIP,İlk sürüm,First release
 MILESTONE_FIRST_FUNDING,İlk yatırım,First funding
 PERSONAL_MILESTONES_TITLE,Kilometre Taşları,Milestones
-EVENTS_FRANK_HEADER,Frank'ten not,A note from Frank
 PERSONAL_MS_FOUNDING_NOTE,Kapıya isim asıldı; defterin ilk satırı.,The name went on the door; the ledger's first line.
 PERSONAL_MS_SHIP_NOTE,Ürün raflara çıktı — artık dünya da oynuyor.,The product hit the shelves; now the world plays too.
 PERSONAL_MS_FUNDING_NOTE,İlk çek yazıldı; masadaki sandalyeler arttı.,The first cheque was signed; more chairs at the table.
@@ -1043,7 +1041,6 @@ PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan
 PROD_PATH_B2C,KİTLE,CONSUMER
 PROD_PATH_B2C_DESC,"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.","You sell to a crowd. Users arrive, users leave, the numbers swing."
 PROD_PATH_B2B_DESC,"Şirketlere satarsın. Her kontrat büyük para, her müşteri senin eserin.","You sell to companies. Every contract is real money, every customer is your own work."
-PROD_MENTOR_TAG,FRANK KÖSEOĞLU · MENTOR,FRANK KÖSEOĞLU · MENTOR
 PROD_MENTOR_LINE,"B2C'de kalabalığa satarsın, kimseyi tanımazsın. B2B'de herkesi tanırsın, herkes seni tanır. İkisi de para. Farklı dertler.","In B2C you sell to a crowd and know nobody. In B2B you know everybody, and everybody knows you. Both are money. Different headaches."
 PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product type
 PROD_NAME_LABEL,Ürün adı,Product name
@@ -1514,10 +1511,10 @@ MONTH_FRANK_BURNING_BUT_SELLING,Para yakıyorsun ama gelir büyüyor.,"You're bu
 MONTH_FRANK_SHRINKING,Gelir düştü. Sebebini bul.,Revenue fell. Find out why.
 MONTH_FRANK_GOOD,Dört rakam da yukarı. İyi bir ay.,All four numbers up. Good month.
 MONTH_FRANK_ANOTHER,Bir ay daha geride.,Another month behind you.
-MONTH_EVENT_OF_THE_MONTH,✦ AYIN OLAYI,✦ EVENT OF THE MONTH
-SUMMARY_EVENT_WEEK,✦ HAFTANIN OLAYI,✦ EVENT OF THE WEEK
-SUMMARY_EVENT_QUARTER,✦ ÇEYREĞİN OLAYI,✦ EVENT OF THE QUARTER
-SUMMARY_EVENT_YEAR,✦ YILIN OLAYI,✦ EVENT OF THE YEAR
+MONTH_EVENT_OF_THE_MONTH,AYIN OLAYI,EVENT OF THE MONTH
+SUMMARY_EVENT_WEEK,HAFTANIN OLAYI,EVENT OF THE WEEK
+SUMMARY_EVENT_QUARTER,ÇEYREĞİN OLAYI,EVENT OF THE QUARTER
+SUMMARY_EVENT_YEAR,YILIN OLAYI,EVENT OF THE YEAR
 MONTH_AUTO_SUMMARY,Otomatik özet · her ay sonu,Automatic summary · at each month end
 SUMMARY_AUTO_WEEK,Otomatik özet · her haftanın sonunda,Automatic summary · at the end of each week
 SUMMARY_AUTO_QUARTER,Otomatik özet · her çeyrek sonu,Automatic summary · at each quarter end
@@ -1525,10 +1522,8 @@ SUMMARY_AUTO_YEAR,Otomatik özet · her yıl sonu,Automatic summary · at each y
 MONTH_CLOSED_TICKER,{month} kapandı · MRR {mrr} · nakit {delta},{month} closed · MRR {mrr} · cash {delta}
 FIN_GOAL_PROGRESS,{met}/{total},{met}/{total}
 MONTH_ROW_CASH,Kasa,Cash
-MONTH_ROW_TEAM,Ekip,Team
 MONTH_ROW_BRAND,Marka,Brand
 EVENT_CHOICE_PERMANENT,Seçim kalıcıdır · Oyun duraklatıldı,The choice is permanent · Game paused
-EVENT_DECISION_DAY,KARAR · {date},DECISION · {date}
 EVENT_MENTOR_ADVICE,MENTOR TAVSİYESİ,MENTOR'S ADVICE
 EVENT_TAG_CUSTOMER,MÜŞTERİ,CUSTOMER
 EVENT_TAG_TEAM,EKİP,TEAM
@@ -1569,7 +1564,6 @@ EFFECT_EQUITY,%{equity} hisse,{equity}% equity
 UI_CONFIRM_TITLE,Emin misin?,Are you sure?
 UI_CONFIRM,Onayla,Confirm
 MENTOR_NAME,Frank Köseoğlu,Frank Köseoğlu
-MENTOR_ROLE,OPERASYON ORTAĞI,OPERATING PARTNER
 MENTOR_INTRO_CTA,Hadi başlayalım,Let's get started
 MENTOR_INTRO_TITLE,İlk sabah,The first morning
 MENTOR_INTRO_BODY,"İstifadan sonraki ilk sabah. Alarm çalıyor.
@@ -2199,20 +2193,16 @@ RND_REQ_MET,karşılandı,met
 RND_REQ_UNMET,eksik,missing
 RND_BAR_TITLE,ARAŞTIRMA,RESEARCH
 RND_BAR_PAUSE,duraklat,pause
-RND_DISCOVERY_TITLE,KEŞİF,DISCOVERY
+RND_DISCOVERY_TITLE,Keşif,Discovery
 RND_OPENED_PREFIX,Açıldı:,Opened:
 RND_HIDDEN_LINE_OPENED,Yeni özellik hattı açıldı: {line},A new feature line has opened: {line}
 RND_EA_LINE_NOTE,Bu hattın içeriği Erken Erişim'de açılıyor.,The content of this line opens in Early Access.
-RND_OK,Tamam,OK
-RND_NOTE_TITLE,AYLIK ÜRÜN NOTU,MONTHLY PRODUCT NOTE
+RND_NOTE_TITLE,Aylık ürün notu,Monthly product note
 RND_NOTE_UNREAD,OKUNMADI,UNREAD
 RND_NOTE_OPEN,Aç,Open
-RND_NOTE_AUTHOR_META,{author} · bu ay,{author} · this month
-RND_NOTE_FIRST_HINT,Bundan sonra bu not her ay Ar-Ge sayfasında bekliyor olacak.,From now on this note will be waiting on the R&D page every month.
 RND_NOTE_NO_WRITER,Kadronda Ürün Yöneticisi ya da Tasarımcı yok; rapor gelmez.,There is no Product Manager or Designer on staff; the note will not come.
 RND_NOTE_GO_PRODUCT,Ürün sayfasına git,Go to the product page
 RND_NOTE_GO_TREE,Ar-Ge'ye git,Go to R&D
-RND_NOTE_CLOSE,Kapat,Close
 RND_LEGEND_INTRA,aile içi bağ,a link inside the family
 RND_LEGEND_CROSS,başka aileden gereksinim,a requirement from another family
 RND_LEGEND_LOCKED,kilitli yuva,a locked slot
@@ -2381,8 +2371,6 @@ PROD_DESK_NOBODY_ELIGIBLE,Masayı taşıyabilecek kimse yok. Bir Müşteri Temsi
 SALES_PROMISE_OPEN,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} weeks
 SALES_PROMISE_OPEN_ONE,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} week
 SALES_PROMISE_OPEN_THIS_WEEK,Açık söz: {feature} · bu hafta,Open promise: {feature} · this week
-EVENT_READOUT_DAY,ÖZET · {date},SUMMARY · {date}
-SALES_WEEKLY_ROW,{company}  {stars}  {seats} koltuk x {price} = {mrr}/ay,{company}  {stars}  {seats} seats x {price} = {mrr}/mo
 SALES_WEEKLY_TOTAL,Toplam: {n} anlaşma · {mrr}/ay,Total: {n} deals · {mrr}/mo
 HR_FOUNDER_STATE_CARE,PH: Müşterilerle ilgileniyor,PH: Looking after customers
 SEED_SECTION_TITLE,Seed turu,Seed round
@@ -2629,8 +2617,6 @@ WIN_CLOSE,Kapat,Close
 HR_DOSSIER_NOW,ŞU AN,NOW
 HR_DOSSIER_SKILLS,YETENEKLER,SKILLS
 HR_DOSSIER_IDLE,Boşta,Idle
-EVENTS_DESK_HEADER,MASADA,ON THE DESK
-EVENTS_DESK_EMPTY,Masada bekleyen bir şey yok.,Nothing is waiting on the desk.
 OFFICE_ACT_SLEEP,Uyuyor,Asleep
 OFFICE_ACT_MEETING,Toplantıda,In a meeting
 OFFICE_ACT_LEAVE,Çıkıyor,Heading out
@@ -2998,3 +2984,59 @@ EV_WORLD_NEWSLETTER_SLOT_BODY,Büyük bir teknoloji bülteni baş köşesini bir
 EV_WORLD_NEWSLETTER_SLOT_TAKE,Bu ayı al,Take the month
 EV_WORLD_NEWSLETTER_SLOT_PASS,Yeri bırak,Let the slot go
 EV_WORLD_NEWSLETTER_SLOT_EXPIRED,"Cevap gitmedi, yer başka bir uygulamaya verildi.","No answer went back, and the slot went to another app."
+TOPBAR_GATE,Cevap bekliyor,Answer needed
+TOPBAR_GATE_COUNT,{n} karar bekliyor,{n} decisions waiting
+CLOCK_HELD,Saat kilitli,Clock held
+GATE_ANSWER_FIRST,Önce bekleyen kararı cevapla.,Answer the waiting decision first.
+WIN_READ_ONLY,Karar bekliyor. Bu pencere yalnız okunur.,A decision is waiting. This window is read only.
+WIN_BACK_TO_DECISION,Karara dön,Back to the decision
+INBOX_SOONEST,En yakın süre,Soonest deadline
+INBOX_THIS_WEEK,Bu hafta,This week
+INBOX_ALL,Tümü,All
+INBOX_WAITING,Bekleyen,Waiting
+INBOX_UNREAD,Okunmamış,Unread
+INBOX_QUEUE,{n} karar daha sırada,{n} more decisions queued
+INBOX_QUEUE_ONE,{n} karar daha sırada,{n} more decision queued
+INBOX_QUEUE_AFTER,bundan sonra açılır,open after this one
+INBOX_EMPTY_ALL,Henüz bir şey yok.,Nothing here yet.
+INBOX_EMPTY_WAITING,Bekleyen bir şey yok.,Nothing waiting.
+INBOX_EMPTY_UNREAD,Okunmamış bir şey yok.,Nothing unread.
+INBOX_PANE_EMPTY,Seçili mesaj yok.,No message selected.
+INBOX_ROW_REPORT,rapor,report
+INBOX_ROW_DISCOVERY,keşif,discovery
+INBOX_CHOICE,Seçimin: {option},Your choice: {option}
+INBOX_SUBJ_RISK,Risk altında,At risk
+INBOX_SUBJ_GROW,Büyümek istiyor,Wants to grow
+MAIL_KIND_DECISION,Karar,Decision
+MAIL_KIND_PAPER,Kağıt,Paper
+MAIL_KIND_REPORT,Rapor,Report
+MAIL_KIND_MESSAGE,Mesaj,Message
+MAIL_KIND_ATTENTION,Dikkat,Attention
+MAIL_WITHIN,{n} hafta içinde,Within {n} weeks
+MAIL_WITHIN_ONE,{n} hafta içinde,Within {n} week
+MAIL_FINAL_WEEK,Bu hafta son,Final week
+MAIL_TO,Kime,To
+MAIL_REPLY,Cevabın,Your reply
+MAIL_YOUR_CHOICE,Seçimin,Your choice
+MAIL_CHOOSE,Seç,Choose
+MAIL_RESPOND,Cevapla,Respond
+MAIL_SET_ASIDE,Kenara koy,Set aside
+MAIL_KEY_ESC,Esc,Esc
+MAIL_STAMP_ANSWERED,Cevaplandı,Answered
+MAIL_STAMP_LEFT,Ayrıldı,Left
+MAIL_STAMP_EXPIRED,Süresi doldu,Expired
+MAIL_STAMP_AT,{stamp} H{week},{stamp} W{week}
+MAIL_SENDER_ACCOUNTS,Muhasebe,Accounts
+MAIL_SENDER_SUPPORT,Destek,Support
+MAIL_SELF_NOTE,Kendine not,Note to self
+MAIL_RPT_CLOSED,Geçen hafta kapananlar:,Closed last week:
+MAIL_RPT_BOOKS,Defterdeki hesap: {n},Accounts on the books: {n}
+MAIL_RPT_CUSTOMER,Müşteri,Customer
+MAIL_RPT_STARS,Yıldız,Stars
+MAIL_RPT_SEATS,Koltuk,Seats
+MAIL_RPT_PRICE,Fiyat,Price
+MAIL_CONTINUE,Devam et,Continue
+SUMMARY_ROW_TEAM_FOUNDER,Ekip · kurucu dahil,Team · incl. founder
+REC_SATISFACTION,Memnuniyet,Satisfaction
+REC_TENURE,{n} aydır,{n} mo
+REC_AM_NONE,atanmadı,not assigned

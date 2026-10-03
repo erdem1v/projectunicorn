@@ -2,6 +2,7 @@
   "id": "product.working_parts",
   "version_scope": "demo",
   "category": "product",
+  "sender": "self",
   "tick": "daily",
   "class": "interrupt",
   "tags": [

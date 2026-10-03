@@ -3,7 +3,7 @@ extends Control
 # The office view's own controls: the move button at the bottom left (windows dock at the top
 # left) and the countdown of a move under way beside it. The shell's toast says when a move starts
 # and when it lands. OfficeCity mounts this on the view's overlay and opens the city map on
-# move_pressed.
+# move_pressed. While a decision waits the button is off and says so: no move, no map.
 
 signal move_pressed
 
@@ -17,6 +17,7 @@ var _row := HBoxContainer.new()
 var _button := PanelContainer.new()
 var _label: Label
 var _badge: Control
+var _waiting: Label
 var _pulse: Tween
 var _map_open := false
 var _window_cover := Rect2()
@@ -37,7 +38,7 @@ func _ready() -> void:
 	_button.mouse_entered.connect(func() -> void: _button.theme_type_variation = &"ChoiceCardHover")
 	_button.mouse_exited.connect(func() -> void: _button.theme_type_variation = &"ChoiceCard")
 	_button.gui_input.connect(func(event: InputEvent) -> void:
-		if UiFactory.is_left_click(event):
+		if UiFactory.is_left_click(event) and EventGate.active_id() == "":
 			move_pressed.emit())
 	_button.resized.connect(func() -> void: _button.pivot_offset = _button.size * 0.5)
 	_row.resized.connect(_show_row)
@@ -52,11 +53,17 @@ func _ready() -> void:
 	inner.add_child(glyph)
 	_label = UiFactory.make_label("", &"RowName")
 	inner.add_child(_label)
+	_waiting = UiFactory.make_label("", &"CaptionMuted")
+	_waiting.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	inner.add_child(_waiting)
 	HRUiShared.set_mouse_ignore(inner)
 
 	for s: Signal in [EventBus.day_advanced, EventBus.office_changed, EventBus.equity_changed,
 			EventBus.language_changed]:
 		s.connect(_refresh.unbind(1))
+	EventBus.event_triggered.connect(_refresh.unbind(1))
+	EventBus.event_set_aside.connect(_refresh.unbind(1))
+	EventBus.event_resolved.connect(_refresh.unbind(2))
 	EventBus.office_move_started.connect(_on_move_started)
 	EventBus.office_changed.connect(_toast.bind("OFFICE_TOAST_MOVED"))
 	_refresh()
@@ -82,6 +89,10 @@ func _show_row() -> void:
 
 func _refresh() -> void:
 	_label.text = tr("OFFICE_MOVE_BTN")
+	var gated: bool = EventGate.active_id() != ""
+	_waiting.text = tr("TOPBAR_GATE")
+	_waiting.visible = gated
+	_button.mouse_default_cursor_shape = Control.CURSOR_ARROW if gated else Control.CURSOR_POINTING_HAND
 	if _badge != null:
 		_badge.free()
 		_badge = null

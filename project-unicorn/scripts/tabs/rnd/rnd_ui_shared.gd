@@ -287,9 +287,11 @@ static func legend_item(kind: String, text: String) -> Control:
 	return row
 
 
-static func spacer() -> Control:
+## The row's free width, or a fixed `width` gap.
+static func spacer(width := 0) -> Control:
 	var s := Control.new()
-	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	s.custom_minimum_size.x = width
+	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL if width == 0 else Control.SIZE_SHRINK_BEGIN
 	s.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return s
 

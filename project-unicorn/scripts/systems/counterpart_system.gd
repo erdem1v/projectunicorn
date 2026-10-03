@@ -57,6 +57,11 @@ static func prospect_people(p: Prospect) -> Array:
 	return _people_for(p.id, PROSPECT_ROLES.slice(0, p.star), [CharacterRegistry.get_founder().look])
 
 
+## The buyer an account was won from: its lead's first person (an account's id is its lead's).
+static func buyer_of(c: Customer) -> Dictionary:
+	return _people_for(c.id.trim_prefix("co_"), [ROLE_BUYER], [CharacterRegistry.get_founder().look])[0]
+
+
 ## `person`'s title in the live locale; a lead's is its fund's (`vc_id`).
 static func title(person: Dictionary, vc_id := "") -> String:
 	if person.role == ROLE_LEAD:

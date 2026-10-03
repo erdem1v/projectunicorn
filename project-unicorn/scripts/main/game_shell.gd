@@ -4,7 +4,13 @@ extends Control
 # the tree is paused — that's what lets Space UN-pause the game. _input (not
 # _unhandled_input) so a focused Button can't swallow Space via ui_accept first.
 
+const INBOX := preload("res://scripts/ui/components/inbox.gd")
+const HELD_GLYPH := preload("res://assets/icons/util/pause.svg")
+## A refused speed key says why at most this often.
+const HELD_TOAST_MS := 3000
+
 var _vc_debug_idx: int = 0   # Shift+F5: cycles the VC roster
+var _held_toast_ms := -HELD_TOAST_MS
 # Ürün sekmesinin fikstür röleleri. Fikstür betiği yalnız debug_product_apply'da yüklenir; oyun ona
 # dokunmaz.
 const PRODUCT_FIXTURES := "res://scripts/debug/product_fixtures.gd"
@@ -80,17 +86,29 @@ func _input(event: InputEvent) -> void:
 	if _layer_busy("ModalLayer"):
 		return
 	if key.keycode == KEY_ESCAPE:
-		# Guard 3: PanelLayer sakinleri (HRAtlasModal / HRPopover) Esc'in sahibi;
+		# Guard 3: PanelLayer sakinleri (Atlas, Eğitim, Mesai, satır menüsü) Esc'in sahibi;
 		# yoksa Esc sekmeyi kapatır ve PanelLayer çocuğu ekranda öksüz kalır.
 		if _layer_busy("PanelLayer"):
 			return
 		get_viewport().set_input_as_handled()
-		# Önce ayrıntı, sonra birincil pencere (× ile aynı kanal). Ofiste her şey kapalıyken
-		# sistem menüsü; Guard 2 geçildiyse zorunlu karar yok.
-		if not _windows.close_top():
+		# Önce ayrıntı, sonra birincil pencere (× ile aynı kanal). Ofiste her şey kapalıyken karar
+		# bekliyorsa gelen kutusu kararla yeniden açılır, yoksa sistem menüsü.
+		if _windows.close_top():
+			return
+		if EventGate.active_id() != "":
+			INBOX.show("active")
+		else:
 			EventBus.system_menu_requested.emit()
 		return
 	get_viewport().set_input_as_handled()
+	# Karar saati tutarken hız değişmez: kapı çerçevesi yanıp söner, toast nedenini söyler.
+	if EventGate.active_id() != "":
+		get_tree().call_group(&"top_bar", &"blink_gate")
+		if Time.get_ticks_msec() - _held_toast_ms >= HELD_TOAST_MS:
+			_held_toast_ms = Time.get_ticks_msec()
+			get_tree().call_group(&"toast", &"show_toast", tr("CLOCK_HELD"), tr("GATE_ANSWER_FIRST"),
+				HELD_GLYPH, UiTokens.D_ACCENT)
+		return
 	# TopBar butonlarıyla aynı sinyal, TopBar senkron kalsın.
 	if speed_idx < 0:
 		speed_idx = 0 if TimeManager.current_speed > 0 else TimeManager.last_running_speed
@@ -102,10 +120,6 @@ func _input(event: InputEvent) -> void:
 # Shift varyantları yığılmaz: modal çözülmeden shell'i serbest bırakmak (Shift+F4)
 # EventManager'ın olay hattını kalıcı olarak kilitler.
 func _debug_fkey(key: InputEventKey) -> void:
-	if key.keycode == KEY_F11:
-		# Dönemin şimdiye kadarki özeti; Shift = uç-değer yerleşim fikstürü.
-		SummarySystem.debug_force_summary(key.shift_pressed)
-		return
 	if key.shift_pressed and key.keycode in [KEY_F4, KEY_F5, KEY_F6]:
 		if _layer_busy("ModalLayer"):
 			return
@@ -134,11 +148,6 @@ func _debug_open_term_table() -> void:
 
 
 # Argless relays for the MCP runtime bridge (it can't pass typed args). Debug builds only.
-func debug_force_summary_extreme() -> void:
-	if OS.is_debug_build():
-		SummarySystem.debug_force_summary(true)
-
-
 func debug_force_vc_meeting(vc_id: String = "anchor") -> void:
 	if OS.is_debug_build():
 		VCPitchSystem.begin_meeting(vc_id)

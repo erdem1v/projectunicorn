@@ -82,7 +82,6 @@ func _initialize() -> void:
 	_lbl(th, &"ChoiceLabelStrong", sans_sb, T.SIZE_LEAD, T.INK)
 	_lbl(th, &"ChoiceLabelLocked", sans_reg, T.SIZE_LEAD, T.INK_FAINT)   # an option that is not open
 	_lbl(th, &"FeedDay", mono_reg, T.SIZE_SMALL, T.INK_MUTED)
-	_lbl(th, &"ChromeLabel", mono_label, T.SIZE_MICRO, T.CREAM_DIM)
 	_lbl(th, &"ChromeValue", sans_sb, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"ChromeClock", mono_reg, T.SIZE_DATA, T.CREAM_DIM)   # TopBar tarih/saat
 	# ChromeAlert: KEPENK / TEKLİF geri sayımı. Tema statiktir; renk körü takası bu
@@ -386,10 +385,6 @@ func _initialize() -> void:
 	# ---- RichTextLabel variations ----
 	# Godot 4's keys are "italics_font"/"bold_italics_font" (with the s); "italic_font"
 	# is silently ignored and *italic* spans fall back to the engine default.
-	th.set_type_variation(&"BodyRich", &"RichTextLabel")
-	_rich_fonts(th, &"BodyRich", serif_reg, serif_sb, serif_it, mono_reg, T.SIZE_LEAD)
-	th.set_color("default_color", &"BodyRich", T.INK)
-
 	th.set_type_variation(&"NewsRich", &"RichTextLabel")
 	th.set_font("normal_font", &"NewsRich", mono_reg)
 	th.set_font_size("normal_font_size", &"NewsRich", T.SIZE_SMALL)
@@ -945,12 +940,16 @@ func _menajer(master: Theme) -> Theme:
 		_lbl(th, "RiskKey" + twin, cond_sb_caps, T.D_FS_14, T.D_neg_ink())
 		_lbl(th, "RiskValue" + twin, sans_b, T.D_FS_18, T.D_neg())
 		_panel(th, "RiskStrip" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg_rule()))
+		var risk: Dictionary = T.D_badge_palette(&"negative")
+		_panel(th, "FxChipDanger" + twin, "PanelContainer", _flat(risk.bg, T.D_RADIUS_2,
+			_fit(sans_med, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), risk.line))
 		_panel(th, "RiskStripHover" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg()))
 	T.set_colorblind(false)
 
 	# Boxes. Rows and bands take their height from the host; a document has its corner cut.
 	var bottom := Vector4i(0, 0, 0, T.BORDER_HAIRLINE)
-	var row_pad := Vector4(T.SPACE_3XL, T.SPACE_L, T.SPACE_XL, 0)
+	# An inbox row keeps its left edge for its marker and dot.
+	var row_pad := Vector4(0, 0, T.SPACE_XL, 0)
 	var band_pad := Vector4(T.SPACE_3XL, 0, T.SPACE_XL, 0)
 	var option_pad := Vector4(T.SPACE_XXL, 0, T.SPACE_XL, 0)
 	var doc_pad := Vector4(T.SPACE_3XL, 0, T.SPACE_XXL, 0)
@@ -989,8 +988,18 @@ func _menajer(master: Theme) -> Theme:
 			Vector4i(0, T.BORDER_HAIRLINE, 0, 0))],
 		[&"NoticeDoc", _shadow(_doc(_flat(T.D_SURFACE_3, 0, Vector4(T.SPACE_XL, 0, T.SPACE_XL, 0), T.D_LINE_1), T.D_CUT_SM),
 			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+		# A document inside a mail: an answered decision, a report's highlight, a record.
+		[&"NoteBox", _doc(_flat(clear, 0, Vector4(T.SPACE_3XL, T.SPACE_XL, T.SPACE_3XL, T.SPACE_XL), T.D_LINE_2), T.D_CUT)],
+		# A sender with no face: a company's initials or a desk's glyph.
+		[&"MonoBox", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_2)],
+		# An effect part in an option's row: its glyph and its words.
+		[&"FxChip", _flat(T.D_SURFACE_2, T.D_RADIUS_2, _fit(sans_med, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), T.D_LINE_1)],
 	]:
 		_panel(th, row[0], "PanelContainer", row[1])
+	# The time state's frame round the top bar's gate slot and clock while a decision waits.
+	var gate_frame := _flat(clear, 0, Vector4.ZERO, T.D_ACCENT, thick)
+	gate_frame.draw_center = false
+	_panel(th, &"GateFrame", "Panel", gate_frame)
 	_panel(th, &"GateDot", "Panel", _flat(T.D_ACCENT, T.RADIUS_PILL, Vector4.ZERO))
 	_panel(th, &"IconWell", "Panel", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO))
 	_panel(th, &"RoleBand", "Panel", _flat(T.D_ROLE_BAND, 0, Vector4.ZERO))
@@ -1064,6 +1073,13 @@ func _menajer(master: Theme) -> Theme:
 	_rich_fonts(th, &"PaneBodyRich", sans_reg, sans_sb, serif_it, sans_reg, T.D_FS_16)
 	th.set_color("default_color", &"PaneBodyRich", T.D_INK_2)
 	th.set_constant("line_separation", &"PaneBodyRich", T.D_LEADING_PARA)
+	th.set_constant("paragraph_separation", &"PaneBodyRich", T.SPACE_XL)
+	# Frank writes his mail in the serif.
+	th.set_type_variation(&"PaneQuoteRich", &"RichTextLabel")
+	_rich_fonts(th, &"PaneQuoteRich", serif_reg, serif_sb, serif_it, serif_reg, T.D_FS_20)
+	th.set_color("default_color", &"PaneQuoteRich", T.D_INK_2)
+	th.set_constant("line_separation", &"PaneQuoteRich", T.D_LEADING_PARA)
+	th.set_constant("paragraph_separation", &"PaneQuoteRich", T.SPACE_XL)
 	th.set_type_variation(&"TickerRich", &"RichTextLabel")
 	_rich_fonts(th, &"TickerRich", sans_reg, sans_sb, serif_it, sans_reg, T.D_FS_14)
 	th.set_color("default_color", &"TickerRich", T.D_INK_3)

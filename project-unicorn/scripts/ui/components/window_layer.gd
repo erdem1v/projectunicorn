@@ -32,7 +32,7 @@ const FRAME := preload("res://scripts/ui/components/window_frame.gd")
 const SPECS := {
 	"finance": Vector2(1344, 720), "hr": Vector2(1200, 720), "product": Vector2(1424, 928),
 	"sales": Vector2(1280, 760), "rnd": Vector2(1280, 780), "personal": Vector2(1000, 640),
-	"events": Vector2(900, 640), "marketing": Vector2(900, 640), "hr_dossier": Vector2(380, 580),
+	"events": Vector2(1240, 900), "marketing": Vector2(900, 640), "hr_dossier": Vector2(380, 580),
 }
 const EDGE := 24.0            # pencere ile pencere alanının (ray dışı merkez alan) kenarı arasındaki boşluk
 const DETAIL_DROP := 130.0    # ayrıntı, birincilin üst kenarından bu kadar aşağıda başlar
@@ -85,7 +85,8 @@ func open_primary(tab_id: String) -> void:
 		body = (TAB_SCENES[_primary_id] as PackedScene).instantiate()
 	else:
 		body = _placeholder(_primary_id)
-	_current_page = FRAME.new(body, func() -> void: EventBus.tab_changed.emit(""))
+	# The inbox is where a waiting decision is answered; every other window reads only while it waits.
+	_current_page = FRAME.new(body, func() -> void: EventBus.tab_changed.emit(""), _primary_id != "events")
 	_mount(_current_page)
 
 
@@ -103,8 +104,12 @@ func open_detail(kind: String, payload: Dictionary) -> void:
 		get_tree().call_group(&"office_view", &"select_person", String(payload["character_id"]))
 
 
-## Esc: önce ayrıntı, sonra birincil (× ile aynı kanal). Kapatacak pencere yoksa false.
+## Esc: önce ayrıntı, sonra birincil (× ile aynı kanal); birincil sayfa Esc'i önce kendisi
+## kullanabilir (gelen kutusunda kurulu seçenek çözülür). Kapatacak pencere yoksa false.
 func close_top() -> bool:
+	if _detail == null and _current_page != null and _current_page.page.has_method(&"on_escape") \
+			and _current_page.page.on_escape():
+		return true
 	if _detail != null:
 		_close_detail()
 	elif _current_page != null:

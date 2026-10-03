@@ -265,22 +265,35 @@ static func D_kpi(key: String, value: String) -> PanelContainer:
 	return cell
 
 
-## A window's section tabs, in caps: the active one in ink over its underline. A click moves the
-## underline and calls `on_pick(index)`.
-static func D_seg_tabs(labels: Array, active: int, on_pick: Callable) -> HBoxContainer:
+## A window's section tabs, in caps: the active one in ink over its underline, each with its count
+## beside it when `counts` gives one. A click moves the underline and calls `on_pick(index)`.
+static func D_seg_tabs(labels: Array, active: int, on_pick: Callable, counts: Array = []) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
 	for i in labels.size():
+		var cell := HBoxContainer.new()
+		cell.add_theme_constant_override("separation", UiTokens.SPACE_M)
 		var tab := Button.new()
 		tab.text = Fmt.upper(labels[i])
-		tab.theme_type_variation = &"SegTabActive" if i == active else &"SegTab"
 		tab.focus_mode = Control.FOCUS_NONE
 		tab.pressed.connect(func() -> void:
-			for other: Button in row.get_children():
-				other.theme_type_variation = &"SegTabActive" if other == tab else &"SegTab"
+			_paint_seg_tabs(row, i)
 			on_pick.call(i))
-		row.add_child(tab)
+		cell.add_child(tab)
+		if i < counts.size():
+			var count := make_label(str(counts[i]), &"SegCount")
+			count.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			cell.add_child(count)
+		row.add_child(cell)
+	_paint_seg_tabs(row, active)
 	return row
+
+
+static func _paint_seg_tabs(row: HBoxContainer, active: int) -> void:
+	for i in row.get_child_count():
+		for part: Control in row.get_child(i).get_children():
+			var base: String = "SegTab" if part is Button else "SegCount"
+			part.theme_type_variation = StringName(base + ("Active" if i == active else ""))
 
 
 ## A cost: its value in ink behind the cost disc, never in red (a cost is not a danger).

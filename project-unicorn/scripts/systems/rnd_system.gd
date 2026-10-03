@@ -46,7 +46,6 @@ static var _freeze_cause: String = ""    # "" | RND_PAUSED_BUILD
 static var _note_last_day: int = -1      # -1 = user_research not complete yet
 static var _note_pending: Dictionary = {}
 static var _note_unread := false
-static var _note_modal_shown := false
 
 # --- derived edge-detector memory. NOT saved, exactly like ProductRead's _prev_*: a load
 #     must not fire research_frozen for a state the player already saw.
@@ -73,7 +72,6 @@ static func reset() -> void:
 	_note_last_day = -1
 	_note_pending = {}
 	_note_unread = false
-	_note_modal_shown = false
 	_freeze_cause = ""
 	_was_frozen = false
 	_seeded = false
@@ -416,6 +414,8 @@ static func _complete(node_id: String) -> void:
 		return  # §7 — the same node cannot complete twice.
 	_states[node_id] = STATE_DONE
 	_active = ""
+	# The first of the team on it writes the discovery up (§5.8).
+	var author: Character = CharacterRegistry.get_character(_assignees[0]) if not _assignees.is_empty() else null
 	_release_assignees()
 	_progress[node_id] = float(ResearchTree.effort_of(node_id))
 
@@ -426,12 +426,12 @@ static func _complete(node_id: String) -> void:
 		_note_last_day = GameState.day  # §6 — the report-period clock starts here.
 
 	EventBus.research_completed.emit(node_id)
-	# §5.8 — KISA BİR KEŞİF KARTI DÜŞER. Kart PanelLayer'a main.gd tarafından mount edilir ve
-	# gelen kutusuna mesaj olarak da düşer; ikisinin yükü yalnız düğüm kimliğidir, çünkü kartın
-	# okuduğu her şey (beat, açtığı şey, gizli hat) zaten ResearchSeam/ResearchTree'den
+	# §5.8 — KISA BİR KEŞİF NOTU gelen kutusuna mesaj olarak düşer. Yükü düğüm kimliği ve yazanın
+	# adı: notun okuduğu her şey (beat, açtığı şey, gizli hat) ResearchSeam/ResearchTree'den
 	# türetilebilir ve ikinci bir kopya §9'u çiğnerdi.
-	EventBus.rnd_card_requested.emit("discovery", {"node": node_id})
-	MessageSystem.post("rnd_discovery", "RND_DISCOVERY_TITLE", {"node": node_id})
+	MessageSystem.post("rnd_discovery", "RND_DISCOVERY_TITLE", {"node": node_id,
+		"author_name": author.character_name if author != null else "",
+		"author_role": author.role if author != null else ""})
 	# §5.8 — NO ECONOMIC DELTA. No cash, no brand, no MRR. The discovery card is
 	# presentation; the door it opens is the whole reward.
 
@@ -563,7 +563,7 @@ static func _emerging_node(day: int) -> String:
 ## görünüm belgelenmiş bozunmuş hâline düşer ("Bu ay kimse bir şey istemedi."). Diğer iki
 ## satırın havuzları buradan seçilir.
 ##
-## TEK BESTECİ: harness de (--modal-shot=rnd-note) bu fonksiyonu çağırır, sözlüğü elle
+## TEK BESTECİ: harness de (--inbox-shot=rnd_note) bu fonksiyonu çağırır, sözlüğü elle
 ## kurmaz; elle kurulan bir kopya ayrışır.
 static func compose_note(author: Character) -> Dictionary:
 	var suffix: String = "B2B" if ProductState.market_type() == "b2b" else "B2C"
@@ -604,15 +604,6 @@ static func mark_note_read() -> void:
 	if not notes.is_empty():   # a note loaded from an older save has no message
 		MessageSystem.mark_read(String(notes[-1].id))
 	EventBus.product_note_read.emit()
-
-
-## §6.1 — the run's FIRST report opens once as a modal and says the report now lives in the
-## Ar-Ge tab. True exactly once per run; the latch is set here, not by the modal.
-static func take_first_note_modal() -> bool:
-	if _note_modal_shown:
-		return false
-	_note_modal_shown = true
-	return true
 
 
 ## What the left rail's Ar-Ge badge counts. One number from one place, the
@@ -728,7 +719,6 @@ static func to_dict() -> Dictionary:
 		"note_last_day": _note_last_day,
 		"note_pending": _note_pending.duplicate(true),
 		"note_unread": _note_unread,
-		"note_modal_shown": _note_modal_shown,
 	}
 
 
@@ -747,7 +737,6 @@ static func from_dict(d: Dictionary) -> void:
 	_note_last_day = int(d.get("note_last_day", -1))
 	_note_pending = (d.get("note_pending", {}) as Dictionary).duplicate(true)
 	_note_unread = bool(d.get("note_unread", false))
-	_note_modal_shown = bool(d.get("note_modal_shown", false))
 	_was_frozen = false
 	_seeded = false
 	_ensure_seeded()

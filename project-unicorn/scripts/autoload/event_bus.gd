@@ -30,6 +30,8 @@ signal tab_changed(tab_id: String)
 # Mount edilmiş Finance sekmesine alt sayfa seçtirir ("ozet"|"yatirim"). tab_changed("finance")
 # SENKRON mount eder, ardışık emit bu yüzden güvenli.
 signal finance_subpage_requested(page_id: String)
+# A card's goto_tab: main opens the tab once no decision waits ("" subpage = the tab's own).
+signal goto_tab_requested(tab_id: String, subpage: String)
 
 # --- Settings signals ---
 # main.gd mounts SettingsModal (pause on open, restore on close).
@@ -178,9 +180,6 @@ signal product_note_read()
 # Ar-Ge deep-link (§2): tab_changed("rnd") SENKRON mount eder, ardışık emit güvenli.
 # open_assign: barın "ata" bağı atama panelini açık getirir.
 signal rnd_node_requested(node_id: String, open_assign: bool)
-
-# §5.8 / §6.1 PanelLayer kartları. RnDSystem yayınlar, main.gd mount eder.
-signal rnd_card_requested(kind: String, data: Dictionary)
 
 # --- Rival signals ---
 # rival_advanced fires once per day after advance_all so the market-share readouts (Finance,

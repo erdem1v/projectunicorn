@@ -19,7 +19,7 @@ signal with no emit point" a lint error, so the manifest is the lint rule's inpu
 |---|---|
 | Signals declared | **143** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **72** |
+| Emitted with **no production listener** | **71** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -68,8 +68,9 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 22 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
-| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 24 | 2 | left_tabs · window_layer |
-| `finance_subpage_requested` | `page_id: String` | effects · main · desk_papers | 3 | 1 | finance_tab |
+| `tab_changed` | `tab_id: String` | game_shell · main · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 30 | 3 | main · left_tabs · window_layer |
+| `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 1 | finance_tab |
+| `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
 ### Settings signals
 
@@ -130,11 +131,11 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `event_triggered` | `event_id: String` | engine | 1 | 1 | left_tabs |
-| `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 4 | save_manager · main · sprint_system · left_tabs |
+| `event_triggered` | `event_id: String` | engine | 1 | 4 | left_tabs · top_bar · window_frame · office_hud |
+| `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 7 | save_manager · main · sprint_system · left_tabs · top_bar · window_frame · office_hud |
 | `modal_requested` | `event: GameEvent` | engine | 1 | 1 | main |
-| `event_set_aside` | `event_id: String` | engine | 1 | 1 | save_manager |
-| `desk_changed` | `—` | papers | 4 | 0 | — |
+| `event_set_aside` | `event_id: String` | engine | 1 | 6 | save_manager · main · left_tabs · top_bar · window_frame · office_hud |
+| `desk_changed` | `—` | papers | 4 | 1 | left_tabs |
 
 ### Inbox messages
 
@@ -190,11 +191,10 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `research_resumed` | `node_id: String` | rnd_system | 1 | 2 | left_tabs · research_bar |
 | `node_revealed` | `node_id: String` | rnd_system | 1 | 0 | — |
 | `hidden_line_unlocked` | `line_id: String` | rnd_system | 1 | 0 | — |
-| `product_note_issued` | `day: int` | rnd_system | 1 | 2 | main · left_tabs |
+| `product_note_issued` | `day: int` | rnd_system | 1 | 1 | left_tabs |
 | `research_progress_changed` | `—` | time_manager | 1 | 2 | build_hud_panel · research_bar |
 | `product_note_read` | `—` | rnd_system | 1 | 1 | left_tabs |
 | `rnd_node_requested` | `node_id: String, open_assign: bool` | research_bar | 1 | 1 | rnd_tab |
-| `rnd_card_requested` | `kind: String, data: Dictionary` | main · rnd_system | 4 | 1 | main |
 
 ### Rival signals
 
@@ -239,7 +239,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · vc_pitch_system | 2 | 2 | game_state · hunt_tab |
+| `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · vc_pitch_system | 2 | 3 | game_state · hunt_tab · office_notice_stack |
 | `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger · sprint_bridges | 8 | 2 | time_manager · news_ticker |
 | `ticker_live_line` | `source: String, text: String` | sprint_bridges · summary_system · office_travel | 4 | 1 | news_ticker |
 
@@ -252,7 +252,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `milestone_reached` | `milestone_id: String, ending_data: Dictionary` | endings_system | 1 | 1 | main |
 | `shutter_changed` | `weeks_left: int` | game_state | 1 | 1 | top_bar |
 | `month_ended` | `month_close: Dictionary` | summary_system | 1 | 2 | save_manager · top_bar |
-| `summary_ready` | `data: Dictionary` | summary_system | 3 | 1 | main |
+| `summary_ready` | `data: Dictionary` | main · summary_system | 2 | 1 | main |
 
 ### Meeting panel — MeetingPanel
 

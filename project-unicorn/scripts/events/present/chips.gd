@@ -47,6 +47,10 @@ const FIXED_CHIPS := {
 ## The polarity's glyph (A2's icon names); a neutral part has none.
 const GLYPHS := {"gain": "up", "cost": "cost", "danger": "warn", "neutral": ""}
 
+## A card's category as its topic, where no family tag or speaker names one.
+const CATEGORY_TAGS := {"customer": "EVENT_TAG_CUSTOMER", "team": "EVENT_TAG_TEAM",
+	"product": "EVENT_TAG_PRODUCT", "funding": "DESK_PAPER_TAG_FUNDING"}
+
 
 ## The parts of one effect. `is_delta` false: `item` is a card effect and every figure is computed
 ## the way EvEffects will apply it against `ctx`, the card's frozen scope. `is_delta` true: `item`
@@ -130,32 +134,34 @@ static func text(part: Dictionary) -> String:
 		else "%s %s" % [part["label"], part["value"]]
 
 
-## {text, kind} for a card's source chip. Order matters: families that NAME their source
-## (customer / team / phase gate / ship moment) first, then the speaker, then the generic
-## `endgame` topic, then GÜNDEM. `endgame` is a topic, not a source, so a Frank card tagged
-## `endgame` is still MENTOR; `ship_moment` beats the speaker because it is a product beat
+## {key, text} of a card's topic. Order matters: families that NAME their source (customer /
+## team / phase gate / ship moment) first, then the speaker, then the generic `endgame` topic,
+## then the card's category, then GÜNDEM. `endgame` is a topic, not a source, so a Frank card
+## tagged `endgame` is still MENTOR; `ship_moment` beats the speaker because it is a product beat
 ## even when Frank narrates it.
-static func source_tag(ev: GameEvent) -> Dictionary:
-	var pick: Array = []
+static func source_tag(ev: GameEvent, category := "") -> Dictionary:
+	var key: String = ""
 	for s in ev.tags:
 		if s.begins_with("b2b_"):
-			pick = ["EVENT_TAG_CUSTOMER", &"accent"]
+			key = "EVENT_TAG_CUSTOMER"
 		elif s.begins_with("hr_"):
-			pick = ["EVENT_TAG_TEAM", &"neutral"]
+			key = "EVENT_TAG_TEAM"
 		elif s == "phase_gate":
-			pick = ["EVENT_TAG_MENTOR", &"accent"]
+			key = "EVENT_TAG_MENTOR"
 		elif s == "ship_moment":
-			pick = ["EVENT_TAG_PRODUCT", &"positive"]
-		if not pick.is_empty():
+			key = "EVENT_TAG_PRODUCT"
+		if key != "":
 			break
-	if pick.is_empty():
+	if key == "":
 		if ev.character_id == "char_mentor_frank":
-			pick = ["EVENT_TAG_MENTOR", &"accent"]
+			key = "EVENT_TAG_MENTOR"
 		elif ev.tags.has("endgame"):
-			pick = ["EVENT_TAG_MARKET", &"attention"]
+			key = "EVENT_TAG_MARKET"
+		elif CATEGORY_TAGS.has(category):
+			key = CATEGORY_TAGS[category]
 		else:
-			pick = ["EVENT_TAG_AGENDA", &"neutral"]
-	return {"text": _t(pick[0]), "kind": pick[1]}
+			key = "EVENT_TAG_AGENDA"
+	return {"key": key, "text": _t(key)}
 
 
 static func _part(label: String, value: String, polarity: String) -> Dictionary:

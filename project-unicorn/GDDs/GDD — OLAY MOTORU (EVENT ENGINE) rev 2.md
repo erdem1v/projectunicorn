@@ -122,6 +122,10 @@ tick                zorunlu: daily | hourly | scheduled | signal | request
                     request: hiçbir saat süpürmez; kartı yalnız adını
                     tek kapıdan veren bir sistem önerir (§4.1)
 class               zorunlu: interrupt | paper | info | ambient
+sender              opsiyonel: frank | self | employee | contact |
+                    investor | press | desk. Gelen kutusundaki
+                    gönderenin türü; yoksa kapsamdan ve kategoriden
+                    türetilir (§27.14)
 tags                opsiyonel: [critical, quiet, promise, terminal_warning,
                                 tutorial, ...]
 version_scope       opsiyonel: demo | ea | full   (varsayılan: demo)
@@ -432,6 +436,7 @@ Mevcut motorun en yıkıcı kusuru buydu: `_history` yazılıyor ama `get_histor
 
 §5.2'deki `history` yaprakları bu tablodan okur. Ayrıca:
 
+- **Olaylar gelen kutusu** cevaplanan ve süresi dolan satırları seçilen seçenek, delta çipleri ve damgayla gösterir; `forced` satırı ve ambient kart listeye girmez (§27.14).
 - **Son ekranı** history'yi okuyup koşunun anlatısını çıkarabilir.
 - **Ticker** son çözümlerden satır üretebilir (§18).
 - **Debug paneli** tam kaydı gösterir.
@@ -795,10 +800,13 @@ Bir ark adımı olan kart **havuza giremez** (`tag: critical` gibi davranır, a�
 
 | Sınıf | Yüzey | Zaman | Ne zaman |
 |---|---|---|---|
-| interrupt | Blocking modal | Durur | Kriz, ark dönüm noktası, süresi dolan teklifin son uyarısı, terminal telgraf |
-| paper | ODA masasında kağıt | Akar | Karar gerektiren ama acil olmayan |
-| info | Sekme rozeti / rapor | Akar | 4 haftada bir Ar-Ge notu (`report_period_weeks`), terfi uygunluğu bildirimi |
+| interrupt | Karar kapısı: Olaylar gelen kutusu kartın üstünde açılır | Durur (saat tutulur) | Kriz, ark dönüm noktası, süresi dolan teklifin son uyarısı, terminal telgraf |
+| paper | Gelen kutusunda kağıt (masa); ofisin bildirim yığını önizler | Akar | Karar gerektiren ama acil olmayan |
+| info | Sekme rozeti / gelen kutusunda mesaj | Akar | 4 haftada bir Ar-Ge notu (`report_period_weeks`), terfi uygunluğu bildirimi |
 | ambient | News ticker | Akar | Rakip haberi, dünya gürültüsü, ark fade izi |
+
+Karar olmayan anlar (Frank'in tanışması, dönem özeti, Ar-Ge notu ve keşfi, haftalık satış raporu) kart değildir:
+gelen kutusunda mesajdır ve motorun dışında `GameState.messages`'ta durur (§27.13, §27.14).
 
 ### 11.2 Öncelik sırası
 
@@ -820,19 +828,35 @@ Kuyrukta birden fazla geçerli kart varsa:
 
 Aynı seviyede: **en eski kabul edilen önce.** Eşitlikte `event_id` alfabetik (deterministik, seed'e bağlı değil).
 
-### 11.3 Modal kuralları
+### 11.3 Karar kapısı kuralları
 
-- **Aynı anda tek modal.** İkincisi kuyrukta bekler.
-- **Modal SceneTree'yi durdurur.** Tik dönüşü (gece atlamasının içindeki 00:00 devri) modal kapanana kadar bekler.
+- **Aynı anda tek karar.** İkincisi kuyrukta bekler; gelen kutusu kuyruğu tek satırda sayı olarak, üst çubuk
+  "{n} karar bekliyor" diye gösterir.
+- **Karar saati tutar.** Kart ekrana gelince `main` saati tutar (`TimeManager.hold_clock("event")`); motor yalnız
+  duyurur (`EventBus.modal_requested`), kabuk kurmayan koşu (smoke, probe) bu yüzden donmaz. Tutuş SceneTree'yi
+  durdurur ve toplu adımı keser: tik dönüşü (gece atlamasının içindeki 00:00 devri) kart cevaplanana kadar bekler.
+  Tutuş varken hız tuşları reddedilir, üst çubuktaki kapı yuvası yanıp söner. Cevap ya da masadan açılan kağıdın
+  kenara konması tutuşu bırakır ve kartın bulduğu hızı geri verir; kuyrukta kart varsa saat durmaya devam eder.
 - **`process_mode = ALWAYS (3)`** **zorunlu.** GameShell ve tüm interaktif çocukları. Agent varsayılanı `INHERIT`'tir ve bu bug runtime testi olmadan görünmez.
-- Karar anında oto-yavaşlama uygulanır (mevcut davranış korunur).
+- **Kapı açıkken başka her şey yalnız okunur.** Tek yüklem `EventGate.active_id() != ""`'dır. Olaylar dışındaki
+  pencerede başlığın altında karara dönen şerit belirir ve sayfa gövdesine tıklama ulaşmaz; tekerlek ve kaydırma
+  çubuğu geçer. Panel katmanı kapanır ve yeni panel açılmaz; ofis taşıma ve şehir haritası kapalıdır, kişiye tıklama
+  dosyayı yalnız okunur açar. `main` pitch, onay, satış ve sprint isteklerini ve term sheet masasını (kartın kendi
+  seçeneğinin açtığı hariç) reddeder; çalan telefon açılmaz. Kayıt kapalıdır; sistem menüsü gerekçeyi yazar. Esc üstteki pencereyi kapatır;
+  pencere kalmamışsa Olaylar'ı kartın üstünde yeniden açar.
+- **Kartın istediği sekme kapı kapanınca açılır** (`goto_tab`). Dönüm noktası kâğıdı da kapıyı bekler: kâğıt gece
+  atlamasını durdurur, o atlamanın kabul ettiği kart altında açılırsa kâğıt karara yer açar ve kapı kapanınca geri
+  gelir. Kuyruktaki kartların hepsi yeniden doğrulamada düşerse (§4.4) saat ve bekleyenler pompadan sonra döner.
 - **Toplantı saati durdurur, bitince saati ileri atlatır.** Satış toplantısı, VC ve seed pitch'i ve term sheet masası açıkken saat durur. Oturum kapanınca saat oturumun süresi kadar ileri gider: satış 2 saat (`SalesConstants.MEETING_SKIP_HOURS`), pitch 2 saat (`PitchConstants.MEETING_HOURS`; birinci vuruşta çekilen VC toplantısı yarısı, 1 saat), masa 1 saat (`TERM_TABLE_HOURS`; koşuyu bitiren imzada atlama olmaz). Atlanan saatler silinmez: `TimeManager.advance_hours` her birinin saatlik tikini koşar. Atlama kurucunun mesai bitiminde, en geç 23:00'te durur ve gece yarısını geçmez; kalan saatleri gece atlaması taşır.
 - **Toplu adımda kart gösterilmez.** Toplantı atlaması ya da gece atlaması sürerken (`TimeManager.is_batching()`) `EvEngine.pump()` hiçbir kart göstermez; adım bitince (`EventBus.clock_batch_ended`) bir kez pompalanır. Kart gösterileceği saatte yeniden doğrulanır (§4.4), en önemlisi önce gelir (§11.2) ve açık bir kart 00:00 autosave'ini engellemez.
 
-### 11.4 ODA masası
+### 11.4 Masa
 
 - Masa kağıtları taşır, **kapasite sınırı yoktur** (§12.1 sebebiyle gereksiz).
-- Kağıt açıldığında modal gibi davranır (zaman durur), kapatıldığında masaya döner.
+- Masa gelen kutusunda görünür: her kağıt bir satırdır (gönderen, konu, ilk satır, kalan hafta). Ofisin bildirim
+  yığını en yeni satırları önizler; tıklanan satır kutuyu o kağıtta açar.
+- Kağıt okunurken zaman akar. "Cevapla" kağıdı açar; açılan kağıt karar gibi davranır (saat tutulur). Esc, × ya da
+  başka sekmeye geçmek onu cevapsız masaya döndürür (§27.12).
 - Masa kağıtları örnek anahtarıyla tutar (§20 E2). Bir sistem masada bekleyen örneği `EventGate.request` ile isterse o kağıt açılır.
 - Kağıdın kalan haftası kağıdın üzerinde **görünür**. Son haftasında görsel vurgu (`expiring`), yalnız ömrü bir haftadan uzun kağıtta. Ömrü tek hafta olan kağıt baştan "bu hafta" der (§12.4).
 - Günlük-tik kartlarında saat gösterilmez (mühürlü kural).
@@ -2042,3 +2066,51 @@ kategorisinin haftalık kotasından bir yer tutuyordu. Rapor motordan çıkınca
 kotası dolu haftalarda büyüme kağıdı (`customer.expansion`) daha sık gelir. Bu, §13.2'nin istediği davranıştır; ayrılık
 ise kodda durur: sınıf ve motor yolu kaldığı için ileride bağlanan her `info` ya da `ambient` kart yine kategori kotası
 tüketir (`docs/ACIK_ISLER/ISLER.md`, Olay motoru).
+
+### §27.14 · Gelen kutusu ve karar kapısı (Menajer Masası Faz E3)
+
+Olaylar penceresi koyu gelen kutusu oldu (sahip kararı 2026-10-02, `GDDs/GUNCELLEMELER.md` ch12 §1). Kart metni
+değişmedi: konu kartın başlığıdır, gönderen kartın bağlamından türetilir.
+
+**1. Kart modal değil, kutuda seçili karar.**
+
+*Belge ne diyordu.* §11.1: interrupt engelleyen modaldır; §11.3 modalın saati durdurduğunu söyler; §11.4 kağıdı ODA
+masasında gösterir.
+
+*Ne yapıldı.* `EventModal` silindi. `EventBus.modal_requested` adını korur; `main` onu dinler, saati
+`hold_clock("event")` ile tutar, panel katmanını ve şehir haritasını kapatır ve Olaylar'ı kartın üstünde açar. Okuma
+bölmesi (`scripts/tabs/events/mail_pane.gd`) kartı `EvPresenter.build_view` ile kurar ve seçimi `EventGate.resolve`'a
+verir. Tutuş cevapta ve kenara koymada bırakılır (`main._on_gate_closed`). Kartın açtığı oturum (pitch, masa) tutuşu
+bırakır ve kartın hızını devralır. Motorun yeni okuması yalnız `EvEngine.resolving()`'dir: bir seçeneğin açtığı term
+sheet masasını kapının reddettiği istekten ayırır.
+
+*Neden.* Hız 0 tuşla açılır; tutuş açılmaz ve toplu adımı keser. Yalnız okunur pencereler kararı görünür tutar:
+oyuncu kartı cevaplamadan başka bir kararı başlatamaz.
+
+**2. Gönderen.**
+
+*Ne yapıldı.* Kart isteğe bağlı `sender` taşır (`frank | self | employee | contact | investor | press | desk`,
+`EvPresenter.SENDERS`; bilinmeyen değer E-lint §17.1). Yoksa kutu gönderi kartın kapsamından (çalışan, müşteri, VC) ve
+kategorisinden türetir. Alanı dört kart taşır: `customer.frank_intro` ve `product.paid_tier` (`frank`),
+`product.working_parts` ve `team.first_weeks` (`self`).
+
+*Neden.* Kapsamı olmayan Frank sahnesi ya da kurucunun kendi anı, kategorisinden yanlış gönderen alırdı.
+
+**3. Mesajlar kutuda açılır.**
+
+*Ne yapıldı.* `MentorIntroModal`, `MonthSummaryModal` ve `RnDCardModal` silindi. Tanışma ve dönem özeti kutuda
+kendiliğinden açılır ve oyunu hız 0 ile duraklatır (tutuş değil); kutudan çıkınca hız döner. Haftalık satış raporu ve
+Ar-Ge notu durdurmaz. `RnDSystem`'in ilk not modalı bayrağı ve `EventBus.rnd_card_requested` silindi; keşif mesajı
+keşfi yapan kişinin adını ve rolünü taşır.
+
+**4. Masa yüzeyi.**
+
+*Ne yapıldı.* `DeskPapers` yerine `Inbox` (`scripts/ui/components/inbox.gd`) kutunun satırlarını kurar: etkin kart,
+kuyruk sayısı, masa, hatırlatmalar, mesajlar ve geçmiş. `EvPresenter.desk_papers` kağıdın kabul haftasını ve açılıp
+açılmadığını da verir. `EventBus.desk_changed`'ı kutu, ofisin bildirim yığını ve ray rozeti dinler (§27.12 madde 5).
+
+**5. `goto_tab` kapı kapanınca.**
+
+*Ne yapıldı.* Etki `EventBus.goto_tab_requested` yayar; `main` hedefi saklar ve kapı kapanınca açar.
+
+*Neden.* Sekme kartın altında açılırsa oyuncu cevaplamadan kartı kaybeder.

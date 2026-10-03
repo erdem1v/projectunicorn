@@ -304,8 +304,8 @@ kuralı değildir.
 
 - **§4 Monthly close (one screen)**
   - Eski metin: Her ay tek bir kapanış ekranı açılır: gelir, gider dökümü, net, brüt marj ve değişimin nedeni, kasa ve runway, Artıda serisi, ayın üç önemli olayı.
-  - Yürürlükteki kural: Ay kapanışı sessizdir ve ekran açmaz. Bir hafta, Perşembe'sinin düştüğü aya aittir; ay 4 ya da 5 haftadır ve yeni ayın ilk tikinin başında, o haftanın akışından önce kapanır. Kapanışta ay defteri kapanır, TopBar'ın aylık rakamları yenilenir ve haber bandına tek satır düşer (`MONTH_CLOSED_TICKER`: "{month} kapandı · MRR {mrr} · nakit {delta}"); satır yalnız canlı akar, arşive girmez. Özet ekranı ayrı bir dönem özetidir; sıklığı Ayarlar'dan seçilir: haftalık, aylık, çeyreklik ya da yıllık, varsayılan çeyreklik (`summary_frequency`, `SummarySystem`). Çeyrek Ocak, Nisan, Temmuz ya da Ekim'e dönen ayda, yıl Ocak'a dönen ayda kapanır. Özet ekranının içeriği bu maddenin konusu değildir.
-  - Kaynak: `GDD — ZAMAN MODELİ.md` §5, §6; sahip kararı 2026-09-27/28.
+  - Yürürlükteki kural: Ay kapanışı sessizdir ve ekran açmaz. Bir hafta, Perşembe'sinin düştüğü aya aittir; ay 4 ya da 5 haftadır ve yeni ayın ilk tikinin başında, o haftanın akışından önce kapanır. Kapanışta ay defteri kapanır, TopBar'ın aylık rakamları yenilenir ve haber bandına tek satır düşer (`MONTH_CLOSED_TICKER`: "{month} kapandı · MRR {mrr} · nakit {delta}"); satır yalnız canlı akar, arşive girmez. Özet ekranı ayrı bir dönem özetidir; sıklığı Ayarlar'dan seçilir: haftalık, aylık, çeyreklik ya da yıllık, varsayılan çeyreklik (`summary_frequency`, `SummarySystem`). Çeyrek Ocak, Nisan, Temmuz ya da Ekim'e dönen ayda, yıl Ocak'a dönen ayda kapanır. Dönem özeti ekran değil, Olaylar gelen kutusunda Muhasebe'den gelen bir mesajdır: MRR, kasa, ekip (kurucu dahil), marka ve runway satırları dönemin başı ve sonuyla, ve dönemin olayı. Mesaj kutuda kendiliğinden açılır ve oyunu duraklatır; kutudan çıkınca hız döner.
+  - Kaynak: `GDD — ZAMAN MODELİ.md` §5, §6; sahip kararı 2026-09-27/28; olay motoru GDD rev 2 §27.14; sahip kararı 2026-10-02 (Olaylar gelen kutusu).
 
 - **§6 Shutter, 1. ve 2. satır; §9 Open decisions, 1. madde**
   - Eski metin: Kasa sıfırın altına inince 30 günlük kepenk sayacı başlar [WORKING; 21'e inebilir]; TopBar'da "Kepenk: 23 gün" görünür. §9 kepenk uzunluğunu 30 mu 21 mi diye sorar.
@@ -355,7 +355,7 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
 
 - **§6 Memory, 3. madde ("today it is written and never read")**
   - Eski metin: Koşu geçmişi yazılıyor ama hiç okunmuyor; okunur hâle getirmek hedeftir.
-  - Yürürlükteki kural: Hedef gerçekleşti. Her çözüm geçmişe bir satır yazar (tik, yani oyun haftası; çözüm türü, seçenek, sonuç, özneler); koşul sözlüğünün history yaprakları (`fired`, `fire_count`, `chose`, `weeks_since`, `resolution`; motor §5.2) onu okur; son ekranı ve haber bandı da okuyabilir. Süre okuyan yapraklar hafta sayar. Parantez çıkar.
+  - Yürürlükteki kural: Hedef gerçekleşti. Her çözüm geçmişe bir satır yazar (tik, yani oyun haftası; çözüm türü, seçenek, sonuç, özneler); koşul sözlüğünün history yaprakları (`fired`, `fire_count`, `chose`, `weeks_since`, `resolution`; motor §5.2) onu okur; Olaylar gelen kutusu onu oyuncuya gösterir (cevaplanan ve süresi dolan kararlar seçilen seçenek ve etki çipleriyle listede kalır; ch12 §9 maddesi); son ekranı ve haber bandı da okuyabilir. Süre okuyan yapraklar hafta sayar. Parantez çıkar.
   - Kaynak: olay motoru GDD rev 2 §5.2, §7.1–§7.3; `GDD — ZAMAN MODELİ.md` §1, §3; sahip kararı 2026-09-27/28.
 
 - **§7 Voice, 1. satır ("TR canonical … EN native and not a translation")**
@@ -372,8 +372,8 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
 
 - **§1 Tabs (v1), "Events: no separate tab; events arrive as modals from the room (the phone)" cümlesi**
   - Eski metin: Olayların ayrı sekmesi yoktur; her olay oyuncuya ODA'daki telefondan gelen bir modal olarak ulaşır.
-  - Yürürlükteki kural: Olaylar rayda kendi sekmesi olan gerçek bir sayfadır: Frank'in son notu ve masada bekleyen bütün kâğıtlar. Olayların dört sunum sınıfı vardır: interrupt engelleyen modaldır (zaman durur); paper masada bir kâğıttır, ofisin sağ altındaki bildirim yığınında ve Olaylar sayfasında bekler, açılınca modal gibi davranır, kalan süresi üzerinde görünür; info bir sekme rozeti ya da rapordur; ambient haber bandına düşer. Acil olmayan karar kartları masada kâğıt olarak bekler. Olaylar için telefon yoktur; telefon yalnız görüşme davetinde çalar (ofis kademesi maddesi). §1'in Ar-Ge sekmesi cümlesi ve olay günlüğünün yeri (§9) bu maddenin konusu değildir.
-  - Kaynak: olay motoru GDD rev 2 §11.1, §11.4; Erdem, 2026-09-27 görev kararı (izometrik ofis).
+  - Yürürlükteki kural: Olaylar rayda kendi sekmesi olan bir gelen kutusudur: solda liste, sağda okuma bölmesi. Liste bekleyen kararı, kuyruktaki kart sayısını, masadaki kâğıtları, dikkat isteyen hesap ve çalışanları, mesajları ve geçmiş kararları gösterir; satır gönderen, konu rozeti, konu, ilk satır ve kalan hafta ya da tarih taşır; Tümü, Bekleyen ve Okunmamış süzgeçleri sayılarıyla durur. Okuma bölmesi mail gibi okunur: gönderen başlığı, gövde, imza ve "Cevabın" altında seçenekler (tek açık seçenek hazır durur; birden fazlasında önce seçilir, sonra "Seç"; kilitli seçenek gerekçesiyle görünür; kalıcılık satırı). Kart metni değişmez: konu kartın başlığıdır, gönderen kartın bağlamından türetilir. Olayların dört sunum sınıfı vardır: interrupt karar kapısıdır, kutu kartın üstünde açılır ve saat cevaba kadar tutulur, bu sürede başka her pencere yalnız okunur (olay motoru md §11.3); paper masada bir kâğıttır, kutuda ve ofisin sağ altındaki bildirim yığınında bekler, "Cevapla" ile açılınca karar gibi davranır, Esc onu masaya geri koyar, kalan süresi üzerinde görünür; info bir sekme rozeti ya da kutuda mesajdır; ambient haber bandına düşer. Acil olmayan karar kartları masada kâğıt olarak bekler. Frank'in tanışması ve dönem özeti kutuda kendiliğinden açılır ve oyunu duraklatır. Üst çubuk bekleyen kararı "Cevap bekliyor" yuvasında gösterir; yuva karara döner. Olaylar için telefon yoktur; telefon yalnız görüşme davetinde çalar (ofis kademesi maddesi). §1'in Ar-Ge sekmesi cümlesi bu maddenin konusu değildir; olay günlüğünün yeri §9 maddesindedir.
+  - Kaynak: olay motoru GDD rev 2 §11.1, §11.3, §11.4, §27.14; Erdem, 2026-09-27 görev kararı (izometrik ofis); sahip kararı 2026-10-02 (Menajer Masası, Olaylar gelen kutusu).
 
 - **§2 Centre and frame, "Centre view = ODA", "TopBar carries …" ve "Right panel carries today's items and warnings" cümleleri**
   - Eski metin: Merkez görünüm ODA'dır; TopBar tarih, kasa, MRR, runway, varsa kepenk sayacı ve hızı (1×/2×/3×) taşır; sağ panel günün işlerini ve uyarılarını taşır.
@@ -400,9 +400,14 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
   - Yürürlükteki kural: Ay kapanışı ekran açmaz. Finans'ın ay yüzeyi sessiz ay kapanışıdır (haber bandı satırı, TopBar'ın aylık rakamları) ve Ayarlar'dan sıklığı seçilen dönem özetidir (ch08 §4 maddesi).
   - Kaynak: `GDD — ZAMAN MODELİ.md` §6; sahip kararı 2026-09-27/28.
 
+- **§9 Open decisions, 1. madde ("Whether the events log lives in Kişisel or in the right panel"); §1 "An events log lives inside Kişisel [WORKING]" cümlesi**
+  - Eski metin: Olay günlüğünün Kişisel'de mi sağ panelde mi yaşayacağı açık karardır; §1 onu çalışma değeri olarak Kişisel'e koyar.
+  - Yürürlükteki kural: Madde kapandı. Olay günlüğü Olaylar gelen kutusudur: cevaplanan ve süresi dolan her karar seçilen seçenek, sonucun etki çipleri ve damgasıyla (Cevaplandı, Ayrıldı ya da Süresi doldu ve haftası) listede kalır; mesajlar da oradadır. Kişisel'de olay günlüğü yoktur; sağ panel yoktur (§2 maddesi).
+  - Kaynak: olay motoru GDD rev 2 §7.3, §27.14; sahip kararı 2026-10-02 (Olaylar gelen kutusu).
+
 - **§8 Links, "Kişisel → founder card, energy, net worth, events log"**
   - Eski metin: Kişisel yüzeyi kurucu enerjisini de taşır.
-  - Yürürlükteki kural: Kurucu enerji barı yoktur ve olmayacaktır; satırdan "energy" çıkar. Kişisel sayfasında moral de yoktur. Net varlık ve olay günlüğü bu maddenin konusu değildir.
+  - Yürürlükteki kural: Kurucu enerji barı yoktur ve olmayacaktır; satırdan "energy" çıkar. Kişisel sayfasında moral de yoktur. Olay günlüğü Olaylar'dadır (§9 maddesi). Net varlık bu maddenin konusu değildir.
   - Kaynak: Ekip GDD §2, §2.5, §17.6; GDDs/README (ch12 §8 → Ekip §17.6).
 
 - **Bölüm yok: ofis kademesi, taşınma ve toplantı yolculuğu**
@@ -572,6 +577,11 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
   - Eski metin: Aylık ürün notu user_research'ten sonra 30 günde bir [K] gelir; kayıt son raporun gününü (30 günlük sayaç) saklar; demo kapsamı devam seviyesini kurucunun 30 günden fazla ürün yapmamasıyla ölçer.
   - Yürürlükteki kural: Ürün notu 4 haftada bir gelir (`report_period_weeks` 4 [K], `data/techtree/rnd_tree.json`); kayıt son raporun tikini saklar. "Aylık" adı kalır; ekonomi ayı 30, rapor aralığı 28 takvim günüdür. §13.5'in ölçüsü hafta birimiyle 4 haftadan fazladır.
   - Kaynak: `GDD — ZAMAN MODELİ.md` §4; sahip kararı 2026-09-27/28.
+
+- **§6.1 Ne olduğu, "Teslim biçimi (MÜHÜRLÜ)" paragrafı; §5.8 Tamamlanma, "Kısa bir keşif kartı düşer" cümlesi**
+  - Eski metin: Koşunun ilk raporu bir kez modal olarak açılır ve raporun bundan sonra Ar-Ge sekmesinde bulunacağını söyler; sonraki raporlar modal açmaz, Ar-Ge sekmesinde yaşar, ODA masasına kâğıt düşmez. Araştırma tamamlanınca kısa bir keşif kartı düşer.
+  - Yürürlükteki kural: Ürün notu ve keşif Olaylar gelen kutusunda mesajdır; modal açılmaz, ilk rapor da açmaz. Ürün notu onu yazan Ürün Yöneticisi ya da Tasarımcının sesiyle gelir; keşif, düğüme atanmış ilk kişinin (yoksa kurucunun) sesiyle gelir ve konusu düğümün adıdır. Mesaj oyunu durdurmaz, listede okunmamış olarak bekler. Rapor Ar-Ge sekmesinde de yaşar; okunmuş sayılması iki yüzeyde ortaktır ve Ar-Ge'nin ray rozeti okunmamış raporu saymayı sürdürür. Kart metni (§6.3'ün üç sinyali, §5.8'in beat'i), ikilem kuralı ve masaya kâğıt düşmemesi değişmez.
+  - Kaynak: olay motoru GDD rev 2 §27.13, §27.14; sahip kararı 2026-10-02 (Olaylar gelen kutusu, mesaj dönüşümü).
 
 - **§12.2 Ses ve dil, 1. cümlenin ikinci yarısı ("içerik TR (kanonik) + EN (edebi)")**
   - Eski metin: Ar-Ge'nin oyuncu metninde Türkçe kaynak metindir ve önce yazılır, İngilizce edebi karşılığıdır.

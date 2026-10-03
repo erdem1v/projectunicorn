@@ -64,9 +64,10 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   fiiller `EvChips.SILENT_VERBS`'te, `event_chip_coverage` smoke'u zorlar.
 
 ## 6. Mimari
-- Godot 4.6 (Forward Plus), yalnız GDScript. Ana sahne `scenes/main/Main.tscn`; `main.gd` açılışı, modal montajını
-  ve debug bayraklarını taşır. Merkez görünüm `scenes/office/OfficeView.tscn`'dir (SubViewport'ta 3B ofis); sekmeler
-  üstünde `WindowLayer` pencereleridir. Tasarım tabanı 1920×1080; `DisplaySettings.BASE_VIEWPORT` bunu elle yansıtır.
+- Godot 4.6 (Forward Plus), yalnız GDScript. Ana sahne `scenes/main/Main.tscn`; `main.gd` açılışı, modal montajını,
+  karar kapısını ve debug bayraklarını taşır. Merkez görünüm `scenes/office/OfficeView.tscn`'dir (SubViewport'ta 3B
+  ofis); sekmeler üstünde `WindowLayer` pencereleridir. Tasarım tabanı 1920×1080; `DisplaySettings.BASE_VIEWPORT` bunu
+  elle yansıtır.
 - Autoload'lar (`project.godot` sırası): EventBus, GameState, CharacterRegistry, CustomerRegistry, ProspectRegistry,
   PromiseRegistry, RivalRegistry, InvestorRegistry, TimeManager, SaveManager, Settings, Localization, AudioManager;
   sonra `MCPRuntime` (`addons/godot_mcp_runtime`, MCP köprüsü).
@@ -81,8 +82,9 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   Mesai bitip ofis boşalınca gecenin saatleri tek toplu adımda koşar (`TimeManager.skip_night`); saati dışarıdan
   ileri taşıyan öbür kapı `TimeManager.advance_hours(n)`'dir (toplantı kapanışı, smoke, probe).
 - Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber
-  şeridine 10. yuvada tek satır düşer; modal açılmaz. Özet modalı oyuncunun seçtiği sıklıkta gelir (`summary_frequency`:
-  haftalık, aylık, çeyreklik ya da yıllık; varsayılan çeyreklik; `SummarySystem`, `EventBus.summary_ready`).
+  şeridine 10. yuvada tek satır düşer; modal açılmaz. Dönem özeti oyuncunun seçtiği sıklıkta
+  gelen kutusuna mesaj olarak gelir (`summary_frequency`: haftalık, aylık, çeyreklik ya da yıllık; varsayılan
+  çeyreklik; `SummarySystem`, `EventBus.summary_ready`).
 - **WRITE-THROUGH LAW.** Hiçbir olay, modal ya da UI başka bir alanın durumunu doğrudan yazmaz; değişiklik durumun
   sahibinin seam'inden geçer ve UI'nin dinlediği yerde seam sinyal yayar. Seam yoksa kurulur, alan "bir kereliğine"
   yazılmaz. Seam'ler: müşteri → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (yayar);
@@ -95,6 +97,9 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   Sistem kartın adını verir, kartı kurmaz. Kartlar `data/events/cards/<kategori>/` altında JSON'dur ve
   `version_scope` ile `EvTuning.SHIPPED_SCOPES`'a göre süzülür (`_fixtures/` yalnız test içindir); arklar
   `data/events/arcs/`'ta. İçerik durumu yalnız `scripts/events/seams/`'ten okur. Invariant'lar: motor GDD §0.3.
+  Kart ekrana gelince `main` saati tutar (`TimeManager.hold_clock("event")`) ve Olaylar gelen kutusunu kartın
+  üstünde açar; cevaba kadar başka her pencere yalnız okunur, tek yüklem `EventGate.active_id() != ""` (motor md
+  §11.3). Karar olmayan anlar `MessageSystem` mesajıdır.
 - Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
   kazanılır. B2C'de kitle her oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
 - Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 15, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
@@ -124,10 +129,10 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   `--theme-contrast-audit`.
 - Krem dil: mono yazı, hairline çizgi, amber vurgu; hover dolgu değil kenardır (`ACCENT_DEEP`, kartta `BORDER_HOVER`).
   Gövde krem kâğıttır (sayfa `#F6F1E6`, kart ve pencere `#FBF7EE`, `INK` `#2B2722`); çerçeve koyudur (`#07090B`:
-  TopBar, NewsTicker, MonthSummary bandı) ve `CREAM*`, `*_CHROME`, `*_BRIGHT` okur; sinematik koyu register
+  TopBar, NewsTicker) ve `CREAM*`, `*_CHROME`, `*_BRIGHT` okur; sinematik koyu register
   (`DIALOGUE_*`) de `CREAM*` ve `VEIL_*_CHROME`. Tek ada gazetedir (`PaperPanel`, kendi `PAPER_*` merdiveni). 3B
   ofisin renkleri UI token'ı değil sahne verisidir: `OfficeConstants`, `scripts/ui/office/`, `scenes/office/shaders/`.
-- **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) yalnız TopBar, MonthSummary ve NewsTicker'da kullanılır. Satış
+- **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) yalnız TopBar ve NewsTicker'da kullanılır. Satış
   sekmesinin `ChromeTabButton`'ı açık karardır (`docs/ACIK_ISLER/ACIK_KARARLAR.md`); yeni yüzey eklemek ayrı karardır.
 
 ## 8. Kod yazımı
@@ -183,9 +188,13 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer.
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
-  negotiation, meeting, product, hr, finance, b2b), `--probe-shot[=menajer]`,
-  `--theme-audit=<sekme | modal:<tür> | onboard:<adım>>`, `--shot-size=GxY`, `--lang=tr|en` (kayıtlı dili ezer).
-  PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner; EN `_en` alır.
+  negotiation, meeting, product, hr, finance, b2b, inbox), `--probe-shot[=menajer]`,
+  `--theme-audit=<sekme | modal:<tür> | onboard:<adım>>`, `--shot-size=GxY`, `--lang=tr|en` (kayıtlı dili ezer),
+  `--palette=cb` (renk körü paleti, yalnız o koşu). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner;
+  EN `_en`, renk körü `_cb` alır. Gelen kutusu: `--inbox-shot=<durum>` (durumlar HARITA'da); `flow` karar kapısını
+  kabuğun kendi girdisiyle oynar (karar gelir, saat tutulur, Ekip yalnız okunur, hız tuşu reddedilir, Esc Olaylar'a
+  döner, Ekip'in üstündeki dosyanın şeridi karara döner, karar verilir, saat döner) ve kare başına `GATEFLOW` satırı
+  basar.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
   founders|nav|crown|cast` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare; `founders` portre ile
   bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi;

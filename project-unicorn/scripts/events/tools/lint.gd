@@ -104,6 +104,8 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 		_add(SEVERITY_ERROR, "17.1", where, "unknown class '%s'" % card["class"])
 	if String(card["tick"]) not in ["daily", "hourly", "scheduled", "signal", "request"]:
 		_add(SEVERITY_ERROR, "17.1", where, "unknown tick '%s'" % card["tick"])
+	if card.has("sender") and String(card["sender"]) not in EvPresenter.SENDERS:
+		_add(SEVERITY_ERROR, "17.1", where, "unknown sender '%s'" % card["sender"])
 	if not EvTuning.CATEGORY_QUOTA_WEEK.has(String(card["category"])):
 		_add(SEVERITY_WARN, "17.1", where,
 			"category '%s' has no quota row; it will fall to the default" % card["category"])

@@ -9,11 +9,11 @@ extends Node
 # Run by bake_portraits.gd; exits non-zero when the hair reaches the top of a render.
 
 ## A founder's sizes: the 4:5 master, a little over the biggest place it is shown (the
-## onboarding's preview card), and its crops. Frank's discs: the event card's speaker and the
-## notice stack, the period summary, the intro.
+## onboarding's preview card), and its crops. Frank's: his mail's portrait well and his discs
+## (the notice stack, the mail's header, the period summary).
 const MASTER := Vector2i(260, 325)
 const FOUNDER_SIZES := [MASTER, FounderConstants.PORTRAIT_CELL, FounderConstants.PORTRAIT_THUMB]
-const FRANK_DISCS := [Vector2i(24, 24), Vector2i(40, 40), Vector2i(48, 48)]
+const FRANK_SIZES := [Vector2i(256, 320), Vector2i(24, 24), Vector2i(40, 40), Vector2i(48, 48)]
 const SCALE := 2
 ## The camera: this far round from the face, raised as the bust's; the busts' Idle pose.
 const TURN := 0.3
@@ -49,7 +49,7 @@ func _ready() -> void:
 	_studio = PersonBust.new()
 	add_child(_studio)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(FounderConstants.PORTRAIT_DIR))
-	await _bake(FounderConstants.MENTOR_PORTRAIT, LookSystem.FRANK_LOOK, FRANK_DISCS)
+	await _bake(FounderConstants.MENTOR_PORTRAIT, LookSystem.FRANK_LOOK, FRANK_SIZES)
 	for i in FounderConstants.PORTRAIT_IDS.size():
 		await _bake(FounderConstants.PORTRAIT_IDS[i], LookSystem.FOUNDER_LOOKS[i], FOUNDER_SIZES)
 	_write_readme()
@@ -190,8 +190,9 @@ func _write_readme() -> void:
 		"Frank'in ve on bir kurucunun önceden render edilmiş portreleri: ofisin 3B karakterleri, büst stüdyosunda",
 		"(`PersonBust`), ışıklı portre zemininde. Görünüşler `LookSystem.FRANK_LOOK` ve `LookSystem.FOUNDER_LOOKS`.",
 		"Kurucunun `<id>.png`'si 4:5 ana görüntüdür (260×325 için kesilir); `<id>_<boy>.png` daha küçük yerler için",
-		"kırpımdır, adındaki boy kesildiği mantıksal boydur ve yerler onu yakın bir boyda gösterir. Frank'in yalnız",
-		"diskleri vardır. Dosya mantıksal boyun iki katıdır ve çizimde doğrusal süzgeçle iner (mipmap yok). Kare kırpımlar",
+		"kırpımdır, adındaki boy kesildiği mantıksal boydur ve yerler onu yakın bir boyda gösterir. Frank'in ana görüntüsü",
+		"yoktur: maillerinin portre kuyusu (256×320) ve diskleri vardır. Dosya mantıksal boyun iki katıdır ve çizimde",
+		"doğrusal süzgeçle iner (mipmap yok). Kare kırpımlar",
 		"daireye kesilmiş disklerdir, kenarları düz (premultiply edilmemiş) alfadır; kartlar opaktır.",
 		"",
 		"Bu dosyayı ve görüntüleri `tools/people/bake_portraits.gd` yazar (`project-unicorn/`'dan, pencereli, tek Godot):",

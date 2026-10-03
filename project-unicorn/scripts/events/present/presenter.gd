@@ -1,19 +1,24 @@
 class_name EvPresenter
 extends RefCounted
 
-# THE SURFACE LAYER (GDD §11, §12). Turns a card Dictionary into something the existing modal
-# can render, and builds the desk rows.
+# THE SURFACE LAYER (GDD §11, §12). Turns a card Dictionary into something the inbox's reading
+# pane can render, and builds the desk rows.
 #
-#   interrupt  a blocking modal, time stops
-#   paper      the desk (notice stack, Events page), time flows
+#   interrupt  the decision gate: the inbox opens on it and the clock is held
+#   paper      the desk (the inbox and the office's notice stack), time flows
 #   info       the owning module's badge — no engine queue: the module already counts its own
 #              attention (RnDSystem/HRSystem.attention_count), so an info card fires `notify`
 #   ambient    the news ticker
 #
-# `EventModal` takes a `GameEvent` Resource, so the adapter builds a throwaway one at display
-# time. It never reaches persistence — the queue stores ids — and it keeps the modal's locked-
-# option treatment (suppressed effect chips, authored reason badge) intact.
+# The pane takes a `GameEvent` Resource, so the adapter builds a throwaway one at display time.
+# It never reaches persistence — the queue stores ids — and it keeps the locked-option treatment
+# (suppressed effect chips, authored reason) intact.
 #
+# A card's mail comes from one sender. `sender` on the card names its kind (SENDERS) when the
+# card's slots and category would name the wrong one; the inbox derives it otherwise.
+
+const SENDERS := ["frank", "self", "employee", "contact", "investor", "press", "desk"]
+
 # TEXT IS RESOLVED HERE AND NOWHERE ELSE (§3.2). The queue holds ids; the locale is read at the
 # moment of display, which is what makes a mid-run language switch safe.
 
@@ -30,8 +35,9 @@ static func _compile(pattern: String) -> RegEx:
 
 # --- The adapter -----------------------------------------------------------
 
-## Build a renderable `GameEvent` from a card id and its frozen context.
-static func build_view(event_id: String, context: Dictionary) -> GameEvent:
+## Build a renderable `GameEvent` from a card id and its frozen context; `names` are the names a
+## desk paper or a history row kept.
+static func build_view(event_id: String, context: Dictionary, names: Dictionary = {}) -> GameEvent:
 	var card: Dictionary = EvCatalog.card(event_id)
 	if card.is_empty():
 		return null
@@ -39,9 +45,9 @@ static func build_view(event_id: String, context: Dictionary) -> GameEvent:
 
 	var ev := GameEvent.new()
 	ev.id = event_id
-	ev.title = resolve_text(text.get("title", ""), context)
-	ev.subtitle = resolve_text(text.get("subtitle", ""), context)
-	ev.body_text = resolve_text(text.get("body", ""), context)
+	ev.title = resolve_text(text.get("title", ""), context, names)
+	ev.subtitle = resolve_text(text.get("subtitle", ""), context, names)
+	ev.body_text = resolve_text(text.get("body", ""), context, names)
 	for t in card.get("tags", []):
 		ev.tags.append(String(t))
 
@@ -56,11 +62,11 @@ static func build_view(event_id: String, context: Dictionary) -> GameEvent:
 		var opt: Dictionary = o
 		var opt_id: String = String(opt.get("id", ""))
 		var choice := EventChoice.new()
-		choice.label = resolve_text(labels.get(opt_id, opt_id), context)
-		# The modal re-evaluates the lock at render time, so a lock can change between
+		choice.label = resolve_text(labels.get(opt_id, opt_id), context, names)
+		# The pane re-evaluates the lock at render time, so a lock can change between
 		# admission and display.
 		choice.unlock_condition = opt.get("requires", {})
-		choice.unlock_reason_text = resolve_text(reasons.get(opt_id, ""), context)
+		choice.unlock_reason_text = resolve_text(reasons.get(opt_id, ""), context, names)
 		# Carried only for the chips (EvChips); EvEngine.resolve is the one path that
 		# applies effects and writes history.
 		choice.modifiers = opt.get("effects", [])
@@ -129,16 +135,21 @@ static func _subject_character(context: Dictionary) -> String:
 # --- The desk --------------------------------------------------------------
 
 ## What the desk lists, most urgent first. The model is uncapped (§11.4); `visible_slots` caps
-## the rows, and EvPapers.ordered() keeps the papers with the fewest weeks left inside the cap.
+## the rows (-1: none), and EvPapers.ordered() keeps the papers with the fewest weeks left inside the cap.
 ## `id` is the paper's key, which is what open_paper takes; `category` is the card's category,
 ## which the surface puts in words. `weeks_left` 1 reads "this week", and `expiring`
-## (EvPapers.is_expiring) is the row's one highlight.
+## (EvPapers.is_expiring) is the row's one highlight. The card, its context and the names it
+## kept let the inbox read the paper without opening it; `opened` is its read mark.
 static func desk_papers(visible_slots: int) -> Array:
 	var out: Array = []
 	for key in EvPapers.visible(visible_slots):
-		var card: Dictionary = EvCatalog.card(EvPapers.event_id_of(key))
+		var event_id: String = EvPapers.event_id_of(key)
+		var card: Dictionary = EvCatalog.card(event_id)
 		out.append({
 			"id": key,
+			"event_id": event_id,
+			"context": EvPapers.context_of(key),
+			"names": EvPapers.names_of(key),
 			"title": resolve_text(text_block(card).get("title", ""), EvPapers.context_of(key),
 				EvPapers.names_of(key)),
 			"category": String(card.get("category", "")),
@@ -146,7 +157,8 @@ static func desk_papers(visible_slots: int) -> Array:
 			# §11.4: remaining time is on the paper, emphasised in its last week — the only
 			# warning a deferred decision gets.
 			"expiring": EvPapers.is_expiring(key),
-			"target": "event:%s" % key,
+			"admitted_day": EvPapers.admitted_day_of(key),
+			"opened": EvPapers.opened_before(key),
 		})
 	return out
 

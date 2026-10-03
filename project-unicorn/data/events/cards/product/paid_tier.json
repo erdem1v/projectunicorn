@@ -2,6 +2,7 @@
   "id": "product.paid_tier",
   "version_scope": "demo",
   "category": "product",
+  "sender": "frank",
   "tick": "daily",
   "class": "interrupt",
   "tags": [

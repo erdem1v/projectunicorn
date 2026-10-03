@@ -194,7 +194,7 @@ static func _build_summary_data(freq: String, last_day: int) -> Dictionary:
 	return data
 
 
-## The payload's text in the current language, as MonthSummaryModal.populate() reads it.
+## The payload's text in the current language, as the inbox's report mail reads it.
 static func display(p: Dictionary) -> Dictionary:
 	var keys: Dictionary = PERIOD_KEYS[p.freq]
 	var start_day: int = int(p.start_day)
@@ -203,9 +203,9 @@ static func display(p: Dictionary) -> Dictionary:
 	var cash_to: int = int(p.cash.to)
 	var highlight: Dictionary = p.highlight
 	return {
-		"title": Fmt.upper(TranslationServer.translate(String(keys.title)).format({
+		"title": TranslationServer.translate(String(keys.title)).format({
 			"week": int(last.week), "month": Fmt.month_name(int(last.month)),
-			"quarter": ceili(int(last.month) / 3.0), "year": int(last.year)})),
+			"quarter": ceili(int(last.month) / 3.0), "year": int(last.year)}),
 		"range": TranslationServer.translate(
 			Fmt.count_key("SUMMARY_RANGE", last_day - start_day + 1)).format(
 			{"from": int(GameState.get_date_dict(start_day).week), "to": int(last.week)}),
@@ -225,33 +225,6 @@ static func _team_size() -> int:
 	# "Ekip" = founder + payroll employees; the mentor is an advisor, not team.
 	return 1 + CharacterRegistry.count_employees()
 
-
-# --- Debug (F11 / Shift+F11 in game_shell) ---
-
-static func debug_force_summary(extreme: bool = false) -> void:
-	# F11: the period so far, with live data and no snapshot (layout/flow check without waiting
-	# for the period to end). Shift+F11: extreme-value fixture — the layout stress test
-	# ("$999.9K → $1.2M", 3-digit team, August 2026, weeks 31-35, 8 months of runway) stays
-	# reproducible. The highlight and Frank's line are FIXTURE strings in the key slots, not
-	# shipped copy: no key matches them, so the translation hands them back as they are, and the
-	# point is a long Turkish headline overflowing the band. Debug build only (F11 is gated on it).
-	if extreme:
-		EventBus.summary_ready.emit({
-			"freq": "monthly",
-			"start_day": 31,
-			"last_day": 35,
-			"phase": 3,
-			"mrr": {"from": 999_900, "to": 1_200_000},
-			"cash": {"from": 999_900, "to": 1_200_000},
-			"team": {"from": 98, "to": 120},
-			"brand": {"from": 12, "to": 100},
-			"net": -5_000,
-			"shutter": false,
-			"highlight": {"key": "Uzun bir başlık taşma testi — satın alma teklifi masada, Nordica $1.2K/ay imzalandı", "args": {}},   # LOC-DATA layout fixture
-			"frank_key": "İyi bir ay. Not al — nadir gelirler.",   # LOC-DATA layout fixture
-		})
-		return
-	EventBus.summary_ready.emit(_build_summary_data(_frequency(), GameState.day))
 
 
 static func _pick_frank_line(data: Dictionary, monthly: bool) -> String:

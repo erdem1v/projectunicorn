@@ -1,11 +1,12 @@
 extends VBoxContainer
 
-# The notice stack at the office's bottom right: Frank's latest line, then the papers waiting on
-# the desk, at most MAX_CARDS cards with a +N badge on the last for the rest. What a paper is and
-# where its click goes is DeskPapers'; the Events window lists them all. Windows are later
-# siblings of the office, and the stack hides while one lies over it.
+# The notice stack at the office's bottom right: the inbox's preview. Frank's latest line, then what
+# waits in the inbox (papers, then reminders, in its order), at most MAX_CARDS cards with a +N badge
+# on the last for the rest. A row reads sender · subject · time left; a click opens it in the inbox.
+# The decision on screen is not a row: the top bar's gate slot is. Windows are later siblings of the
+# office, and the stack hides while one lies over it. In the dark language from its root.
 
-const PAPERS := preload("res://scripts/ui/components/desk_papers.gd")
+const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const WIDTH := 352
 const MAX_CARDS := 4
 const ARRIVE_S := 0.35
@@ -18,6 +19,7 @@ var _window_cover := Rect2()
 
 
 func _ready() -> void:
+	theme = load(UiTokens.MENAJER_THEME)
 	add_to_group(&"office_overlays")
 	custom_minimum_size.x = WIDTH
 	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE,
@@ -27,9 +29,10 @@ func _ready() -> void:
 	alignment = BoxContainer.ALIGNMENT_END
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_theme_constant_override("separation", UiTokens.SPACE_M)
-	# The Events page's signals, plus the two that repaint what it gets from a rebuild: the
-	# office is never rebuilt on a palette or language switch.
-	PAPERS.connect_changes(_queue_refresh)
+	# The inbox's signals, plus the two that repaint what it gets from a rebuild: the office is never
+	# rebuilt on a palette or language switch.
+	INBOX.connect_changes(_queue_refresh)
+	EventBus.mentor_advisory_changed.connect(_queue_refresh)
 	EventBus.palette_changed.connect(_queue_refresh)
 	EventBus.language_changed.connect(_queue_refresh)
 	# The desk as the office opens is not news: nothing arrives on the first fill.
@@ -70,38 +73,61 @@ func _refresh(arrive: bool) -> void:
 	if key != "":
 		room -= 1
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-		row.add_child(UiFactory.make_mentor_avatar(24))
+		row.add_theme_constant_override("separation", UiTokens.SPACE_L)
+		row.add_child(UiFactory.make_mentor_avatar(UiTokens.D_AVATAR_ROW))
+		var said := VBoxContainer.new()
+		said.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		said.add_theme_constant_override("separation", 0)
+		said.add_child(UiFactory.make_label(INBOX.frank().name, &"MetaMuted"))
 		var quote := UiFactory.make_label(tr("FIN_MENTOR_QUOTE_WRAPPED").format(
 			{"quote": tr(key).format(GameState.mentor_line_args)}), &"QuoteSerif")
 		quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		quote.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(quote)
+		said.add_child(quote)
+		row.add_child(said)
 		# Keyed by the line, not its words: a language switch is not a new note.
 		_add(row, EventBus.tab_changed.emit.bind("events"),
 			"frank:%s%s" % [key, GameState.mentor_line_args], arrive)
-	var papers: Array = PAPERS.gather()
-	var shown: Array = papers.slice(0, room)
-	var hidden: Array = papers.slice(room)
+	var desk: Array = INBOX.desk()
+	var shown: Array = desk.slice(0, room)
+	var hidden: int = desk.size() - shown.size()
 	for i in shown.size():
-		var paper: Dictionary = shown[i]
-		var row: HBoxContainer = PAPERS.make_row(paper)
-		if i == shown.size() - 1 and not hidden.is_empty():
-			# The desk puts the most urgent first, so what hides is the least urgent; the badge
-			# still turns amber when a hidden one is running out.
-			var expiring: bool = hidden.any(func(p: Dictionary) -> bool: return bool(p["expiring"]))
-			row.add_child(UiFactory.make_badge("+%d" % hidden.size(),
-				&"accent" if expiring else &"neutral"))
-		_add(row, func() -> void: PAPERS.open(paper), String(paper["id"]), arrive)
+		var it: Dictionary = shown[i]
+		var row := _row(it)
+		if i == shown.size() - 1 and hidden > 0:
+			var more := UiFactory.make_label("+%d" % hidden, &"BadgeCount")
+			more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			row.add_child(more)
+		_add(row, INBOX.show.bind(String(it.id)), String(it.id), arrive)
+
+
+## sender · subject · time left; the dot says what kind of wait it is.
+func _row(it: Dictionary) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	var last: bool = it.kind == "paper" and (bool(it.expiring) or int(it.weeks_left) <= 1)
+	var dot: Color = UiTokens.D_neg() if it.get("risk", false) else (UiTokens.D_warn() if last
+		else (UiTokens.D_pos() if it.get("grow", false) else UiTokens.D_info()))
+	row.add_child(UiFactory.make_dot(dot, UiTokens.SPACE_M))
+	row.add_child(UiFactory.make_label(String(it.sender.name), &"MetaMuted"))
+	var subject := UiFactory.make_label(String(it.subject), &"NoticeText")
+	subject.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	subject.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(subject)
+	if it.kind == "paper":
+		var weeks: int = int(it.weeks_left)
+		row.add_child(UiFactory.make_label(tr("DESK_PAPER_THIS_WEEK") if last
+			else tr(Fmt.count_key("DESK_PAPER_WEEKS", weeks)).format({"n": weeks}), &"Caption",
+			UiTokens.D_warn() if last else null))
+	for c in row.get_children():
+		c.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return row
 
 
 func _add(row: Control, on_click: Callable, id: String, arrive: bool) -> void:
 	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanelTight"
+	card.theme_type_variation = &"NoticeDoc"
+	card.custom_minimum_size.y = UiTokens.D_H_STRIP
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	# Hover moves the edge only; both variations share fill and margins, so the card holds still.
-	card.mouse_entered.connect(func() -> void: card.theme_type_variation = &"CardPanelTightHover")
-	card.mouse_exited.connect(func() -> void: card.theme_type_variation = &"CardPanelTight")
 	card.gui_input.connect(func(event: InputEvent) -> void:
 		if UiFactory.is_left_click(event):
 			on_click.call()

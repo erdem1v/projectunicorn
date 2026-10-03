@@ -126,7 +126,7 @@ static func ordered() -> Array:
 
 
 static func visible(slots: int) -> Array:
-	return ordered().slice(0, slots)
+	return ordered() if slots < 0 else ordered().slice(0, slots)
 
 
 # --- Reading ---------------------------------------------------------------
@@ -154,6 +154,15 @@ static func arc_of(key: String) -> String:
 
 static func names_of(key: String) -> Dictionary:
 	return (_papers.get(key, {}) as Dictionary).get("names", {})
+
+
+static func admitted_day_of(key: String) -> int:
+	return int((_papers.get(key, {}) as Dictionary).get("admitted_day", GameState.day))
+
+
+## The player has picked it up once; until then it reads unread.
+static func opened_before(key: String) -> bool:
+	return bool((_papers.get(key, {}) as Dictionary).get("opened_before", false))
 
 
 ## §13.6: the dead-time floor only fires when the desk is CLEAR. An unanswered paper means the

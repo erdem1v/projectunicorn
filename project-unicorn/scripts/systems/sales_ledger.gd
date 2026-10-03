@@ -343,10 +343,7 @@ static func spend_inner_voice() -> void:
 # into the open window's rows. The capped activity log can lose a week's closes behind the next
 # tick's expiries, and an account can churn before the report is read. When the window ends with
 # a desk close, its rows become the week's report: SalesRepSystem posts them to the inbox as they
-# stand, and the report renders from those rows whenever it is opened.
-#
-# STATIC → `TranslationServer.translate`, never `tr()`: a static has no node to resolve
-# against, and `loc_residue` fails the build on it ([static-tr]).
+# stand, and the inbox draws its table from those rows whenever it is opened.
 
 ## One close into the open window, with the name of the rep who closed it, "" for the founder.
 ## The desk's closes raise the report and sign it; the name is stored, not looked up, because
@@ -364,31 +361,3 @@ static func close_week() -> Array:
 	GameState.set_flag("sales_weekly_close_rows", [])
 	return rows
 
-
-## A report's closes, one line each, plus a total. "" for no closes.
-static func weekly_close_lines(report: Array) -> String:
-	var rows: PackedStringArray = []
-	var total: int = 0
-	for entry in report:
-		var e: Dictionary = entry as Dictionary
-		var mrr: int = int(e["mrr"])
-		total += mrr
-		rows.append(TranslationServer.translate("SALES_WEEKLY_ROW").format({
-			"company": String(e["company"]),
-			"stars": _star_text(int(e["star"])),
-			"seats": int(e["seats"]),
-			"price": Fmt.money_exact(int(e["price"])),
-			"mrr": Fmt.money_exact(mrr),
-		}))
-	if rows.is_empty():
-		return ""
-	rows.append(TranslationServer.translate("SALES_WEEKLY_TOTAL").format({
-		"n": rows.size(), "mrr": Fmt.money_exact(total)}))
-	return "\n".join(rows)
-
-
-## Always five glyphs, filled then "·" (§2, Ekip §4.1): the unlit stars are the scale's
-## telegraph, and a row that shrinks with the star turns a table into a ragged edge.
-static func _star_text(star: int) -> String:
-	var filled: int = clampi(star, 0, HRConstants.STAR_MAX)
-	return StarRating.FILLED.repeat(filled) + "·".repeat(HRConstants.STAR_MAX - filled)

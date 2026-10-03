@@ -6,7 +6,7 @@ extends RefCounted
 # ============================================================================
 # UiTokens owns the VOCABULARY: every Color in the game (named), the type scale,
 # spacing / radius / border / padding tokens, leading, and the runtime colour
-# helpers a .tres cannot express (delta_color, badge_palette, health_color…).
+# helpers a .tres cannot express (delta_color, badge_palette, health_green…).
 # It knows nothing about Control types.
 #
 # themes/master_theme.tres owns the ASSIGNMENT (which type / variation gets which
@@ -21,7 +21,7 @@ extends RefCounted
 #
 # CONTEXT RULE — the body is cream paper inside a dark chrome frame. INK is text
 # on the cream body, CREAM is text on the dark frame. The frame (TopBar,
-# NewsTicker, MonthSummary bands) reads CREAM*, the *_CHROME twins and *_BRIGHT;
+# NewsTicker) reads CREAM*, the *_CHROME twins and *_BRIGHT;
 # the body reads INK*, the plain tokens and positive() / negative(). The dark
 # cinematic register (DIALOGUE_*) reads the frame's side as well: CREAM*,
 # ACCENT_CHROME, INK_*_CHROME, CARD_BORDER_CHROME, BORDER_HOVER_CHROME, the
@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 21
+const THEME_STAMP := 22
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -422,22 +422,6 @@ static func badge_palette_for_delta(value: int) -> Dictionary:
 	if value < 0: return badge_palette(&"negative")
 	return badge_palette(&"neutral")
 
-## Health dot color. state: "healthy" | "warn" | "bad".
-static func health_color(state: StringName) -> Color:
-	match state:
-		&"healthy": return health_green()
-		&"warn": return HEALTH_AMBER   # amber is already colourblind-safe
-		&"bad": return negative()
-		_: return INK_DIM
-
-## {bg, fg} chip palette for a relationship tier (event character strip).
-static func relationship_palette(rel: String) -> Dictionary:
-	match rel:
-		"ally", "friendly": return badge_palette(&"positive")
-		"wary": return badge_palette(&"accent")
-		"hostile": return badge_palette(&"negative")
-		_: return badge_palette(&"neutral")
-
 ## A meeting option's die: at or above SAFE its chance reads safe, at or above RISKY risky,
 ## below that dangerous. The option shows only the word; the % lives in its tooltip.
 const RISK_SAFE_MIN := 0.62   # WORKING
@@ -710,6 +694,7 @@ const D_TOPIC_PRODUCT_CB := Color("#B6D175")
 const D_TOPIC_FUNDING_CB := Color("#C9945E")
 const D_TOPIC_MARKET_CB := Color("#DAC7A9")
 const D_PILL_FILL_ALPHA := 0.12
+const D_GONE_ALPHA := 0.55   # a mail from someone who has left: the avatar fades
 
 # --- ticker outlets ---
 const D_OUTLET_SEKTOR := Color("#7FB6DE")
@@ -809,6 +794,7 @@ const D_H_PROGRESS := 6      # a progress track
 const D_H_WIN_HEAD := 72     # a window's header band
 # --- sizes the host lays out ---
 const D_H_TOAST := 48
+const D_H_STAKE := 104       # a decision's stake box, at its least
 const D_H_ROW := 40          # a table's data row
 const D_H_GROUP := 36        # a table's group header
 const D_H_STRIP := 52        # a strip over a table (the risk strip)

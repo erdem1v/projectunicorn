@@ -340,7 +340,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"bootstrap_milestone_keeps_the_run": fail = _case_bootstrap_milestone_keeps_the_run()
 		"ending_paper_modes_on_screen":    fail = _case_ending_paper_modes_on_screen()
 		"milestone_clock_hold":            fail = _case_milestone_clock_hold()
-		"milestone_paper_under_card":      fail = _case_milestone_paper_under_card()
+		"milestone_paper_waits_for_card":  fail = _case_milestone_paper_waits_for_card()
+		"event_gate_holds_clock":          fail = _case_event_gate_holds_clock()
 		"profit_predicate_margin_scale_red": fail = _case_profit_predicate_margin_scale_red()
 		"speed_save_clamps_to_ladder":     fail = _case_speed_save_clamps_to_ladder()
 		"topbar_speed_cluster_four_rungs": fail = _case_topbar_speed_cluster_four_rungs()
@@ -1196,7 +1197,7 @@ static func _case_speed_preserve() -> String:
 # --- Month-End Summary ---
 
 static func _case_month_summary() -> String:
-	# The modal listens to summary_ready; month_ended only carries the month_history entry.
+	# The inbox opens on summary_ready; month_ended only carries the month_history entry.
 	var summaries: Array = []
 	var closes: Array = []
 	var lines: Array = []
@@ -1229,8 +1230,8 @@ static func _case_month_summary() -> String:
 		return "the summary was not posted to the inbox as its payload: %s" % str(posted)
 	var payload: Dictionary = summaries[0]
 	var m: Dictionary = SummarySystem.display(payload)
-	var want_title: String = Fmt.upper(TranslationServer.translate("MONTH_TITLE").format(
-		{"month": Fmt.month_name(1), "year": 2026}))
+	var want_title: String = TranslationServer.translate("MONTH_TITLE").format(
+		{"month": Fmt.month_name(1), "year": 2026})
 	if String(m.title) != want_title:
 		return "title: %s (want %s)" % [String(m.title), want_title]
 	var want_range: String = TranslationServer.translate(Fmt.count_key("SUMMARY_RANGE", 5)).format(
@@ -4801,13 +4802,14 @@ static func _case_hotfix_new_account_auto_assigned() -> String:
 
 
 ## F4 — A SUMMARY WITH NO ROWS SUMMARISES NOTHING. §7.3 asks for the week's CLOSES: the week's
-## rows come out of Sales (`SalesLedger.close_week`) and render one line each, plus a total
-## (`SalesLedger.weekly_close_lines`).
-## FALSIFICATION: return "" from weekly_close_lines and every check below fails.
+## rows come out of Sales (`SalesLedger.close_week`), one per close, each with what the report's
+## table reads, and the window resets.
+## FALSIFICATION: drop the seats from record_close's row and the row check fails; skip the reset
+## in close_week and the last check fails.
 static func _case_hotfix_weekly_summary_rows() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	if SalesLedger.weekly_close_lines([]) != "":
+	if not SalesLedger.close_week().is_empty():
 		return "a week with no closes produced rows"
 	var lead := Prospect.new()
 	lead.id = "wk_1"
@@ -4821,21 +4823,12 @@ static func _case_hotfix_weekly_summary_rows() -> String:
 	var week: Array = SalesLedger.close_week()
 	if week.size() != 1:
 		return "a week with one close returned %d rows" % week.size()
-	var lines: String = SalesLedger.weekly_close_lines(week)
-	if not lines.contains("Hafta Corp"):
+	var row: Dictionary = week[0]
+	if String(row.company) != "Hafta Corp":
 		return "the week's close did not name its account"
-	if not lines.contains(str(c.seats)):
-		return "the row did not carry the seat count"
-	# ALWAYS FIVE GLYPHS, the same grammar the star row draws: a table whose rows change width
-	# with the star is a ragged edge, not a table.
-	var first: String = lines.split("\n")[0]
-	var glyphs: int = first.count(StarRating.FILLED) + first.count("·")
-	if glyphs != HRConstants.STAR_MAX:
-		return "the star cell drew %d glyphs, want %d" % [glyphs, HRConstants.STAR_MAX]
-	# The total is a separate, final line.
-	var rows: PackedStringArray = lines.split("\n")
-	if rows.size() != 2:
-		return "one close plus a total should be 2 lines, got %d" % rows.size()
+	if int(row.seats) != c.seats or int(row.star) != c.scale or int(row.mrr) != c.mrr \
+			or int(row.price) != c.seat_price:
+		return "the row did not carry the account's seats, star, price and MRR: %s" % str(row)
 	# The window resets, or the next week reports this week's work again.
 	if not SalesLedger.close_week().is_empty():
 		return "an empty week reported closes"
@@ -5387,7 +5380,6 @@ static func _case_messages_save_round_trip() -> String:
 	if GameState.messages.size() != 3 or String(GameState.messages[1].id) != "sales_week:%d:0" % GameState.day:
 		return "fixture: want intro, report and summary, got %s" % str(GameState.messages)
 	var before: String = str(GameState.messages)
-	var report: String = SalesLedger.weekly_close_lines(GameState.messages[1].args.rows)
 	var summary: String = str(SummarySystem.display(GameState.messages[2].args))
 	if not SaveManager.save_to_slot(SAVE_SLOT_A):
 		return "save_to_slot refused"
@@ -5397,9 +5389,8 @@ static func _case_messages_save_round_trip() -> String:
 	_cleanup_save_slots()
 	if str(GameState.messages) != before:
 		return "the messages changed across the save:\n%s\n%s" % [before, str(GameState.messages)]
-	if SalesLedger.weekly_close_lines(GameState.messages[1].args.rows) != report \
-			or str(SummarySystem.display(GameState.messages[2].args)) != summary:
-		return "a loaded message renders differently"
+	if str(SummarySystem.display(GameState.messages[2].args)) != summary:
+		return "a loaded summary renders differently"
 
 	for i in MessageSystem.CAPACITY:
 		MessageSystem.post("probe", "MONTH_TITLE")
@@ -11676,50 +11667,103 @@ static func _case_milestone_clock_hold() -> String:
 	return fail
 
 
-## main.gd's milestone handlers, driven directly with a stand-in ModalLayer (no GameShell):
-##   1. a card already up when the paper opens stays ON TOP of it (the player answers the card
-##      first; on top, the paper would hide it and ANA MENÜ would refuse to save for a
-##      decision screen nobody can see), and the paper holds the clock;
-##   2. DEVAM ET frees the paper and releases the hold;
-##   3. ANA MENÜ keeps the run in a MANUAL slot — the rolling autosave would be overwritten by
+## A stand-in GameShell for main.gd's handlers: the two layers they mount on and free from.
+static func _stand_in_shell(host: Node) -> Node:
+	var shell := Node.new()
+	for layer_name in ["PanelLayer", "ModalLayer"]:
+		var layer := CanvasLayer.new()
+		layer.name = layer_name
+		shell.add_child(layer)
+	host.add_child(shell)
+	return shell
+
+
+## THE DECISION GATE HOLDS THE CLOCK FROM THE CARD TO ITS ANSWER, and it is main's handler that
+## holds it: the engine only announces, so a harness with no shell never freezes. Between the two
+## a speed key does nothing; the answer gives back the speed the card found.
+## FALSIFICATION: drop TimeManager.hold_clock from main._on_event_modal_requested → the speed key
+## goes through; drop release_clock from main._on_gate_closed → the clock stays held.
+static func _case_event_gate_holds_clock() -> String:
+	var host: Node = _ui_host()
+	if host == null or not host.has_method("_on_event_modal_requested"):
+		return "no main.gd host to drive the gate"
+	var shell: Node = _stand_in_shell(host)
+	var prev_shell: Variant = host.get("_shell")
+	host.set("_shell", shell)
+	EventBus.speed_change_requested.emit(2)
+	var fail: String = ""
+	if not EventGate.force_fire("fixture.thesis_close"):
+		fail = "fixture: the card did not fire"
+	elif TimeManager.is_clock_held():
+		fail = "the engine held the clock by itself; a harness with no shell would freeze"
+	if fail == "":
+		host.call("_on_event_modal_requested", EventGate.active_card())
+		EventBus.speed_change_requested.emit(3)
+		if not TimeManager.is_clock_held() or TimeManager.current_speed != 0:
+			fail = "the card on screen did not hold the clock (speed %d)" % TimeManager.current_speed
+	if fail == "":
+		EventGate.resolve("fixture.thesis_close", 0)
+		host.call("_on_event_resolved", "fixture.thesis_close", 0)
+		if TimeManager.is_clock_held():
+			fail = "the answer did not release the clock"
+		elif TimeManager.current_speed != 2:
+			fail = "the answer did not give back the speed the card found (%d)" % TimeManager.current_speed
+	host.set("_shell", prev_shell)
+	TimeManager.release_clock("event")
+	shell.queue_free()
+	return fail
+
+
+## main.gd's milestone handlers, driven directly with a stand-in shell, in the order a run brings
+## them:
+##   1. the paper mounts and holds the clock, which stops the night's batch; the card that batch
+##      admitted pumps under it, and the paper steps aside for the decision (it would cover the inbox,
+##      and ANA MENÜ would refuse to save for a decision the player cannot see) with its hold;
+##   2. the answered decision brings the paper back, holding the clock;
+##   3. DEVAM ET frees the paper, releases the hold and gives back the speed from before the paper;
+##   4. ANA MENÜ keeps the run in a MANUAL slot — the rolling autosave would be overwritten by
 ##      the next run's third weekly autosave.
-## FALSIFICATION: drop the move_child → the paper sits above the card. Save through the
-## autosave again → the slot is auto_*.
-static func _case_milestone_paper_under_card() -> String:
+## FALSIFICATION: drop the step-aside from _on_event_modal_requested → the paper stays over the card;
+## drop its release_clock → the hold stays; drop the mount from _open_after_gate → the paper never
+## comes back. Save through the autosave again → the slot is auto_*.
+static func _case_milestone_paper_waits_for_card() -> String:
 	var host: Node = _ui_host()
 	if host == null or not host.has_method("_on_milestone_reached"):
 		return "no main.gd host to drive the milestone handlers"
 	EndingsSystem.build_scope_override = EndingsSystem.BUILD_EA
-	var shell := Node.new()
-	var layer := CanvasLayer.new()
-	layer.name = "ModalLayer"
-	shell.add_child(layer)
-	host.add_child(shell)
-	var card := Control.new()
-	layer.add_child(card)
+	var shell: Node = _stand_in_shell(host)
 	var prev_shell: Variant = host.get("_shell")
-	var prev_event: Variant = host.get("_event_modal")
 	host.set("_shell", shell)
-	host.set("_event_modal", card)
 	var data: Dictionary = EndingsSystem._build_ending_data("profitable_bootstrap", {})
 	data["mode"] = EndingsSystem.MODE_MILESTONE
+	EventBus.speed_change_requested.emit(2)
 	host.call("_on_milestone_reached", "profitable_bootstrap", data)
-	var paper: Node = host.get("_milestone_modal")
 	var fail: String = ""
-	if paper == null:
-		fail = "the paper did not mount"
-	elif paper.get_index() >= card.get_index():
-		fail = "the paper sits above the open card (paper %d, card %d)" % [paper.get_index(), card.get_index()]
-	elif not TimeManager.is_clock_held():
-		fail = "the paper did not hold the clock"
+	if host.get("_milestone_modal") == null or not TimeManager.is_clock_held():
+		fail = "fixture: the paper did not mount and hold the clock"
+	elif not EventGate.force_fire("fixture.thesis_close"):
+		fail = "fixture: the card did not fire"
 	if fail == "":
-		host.set("_event_modal", null)   # the card was answered
-		card.queue_free()
+		host.call("_on_event_modal_requested", EventGate.active_card())
+		if host.get("_milestone_modal") != null:
+			fail = "the paper stayed over the decision that came under it"
+		elif TimeManager._holds.has("milestone_paper"):
+			fail = "the paper stepped aside but kept the clock held"
+	if fail == "":
+		EventGate.resolve("fixture.thesis_close", 0)
+		host.call("_on_event_resolved", "fixture.thesis_close", 0)
+		if host.get("_milestone_modal") == null:
+			fail = "the answered decision did not bring the paper back"
+		elif not TimeManager.is_clock_held():
+			fail = "the paper came back without holding the clock"
+	if fail == "":
 		host.call("_on_milestone_continue")
 		if host.get("_milestone_modal") != null:
 			fail = "DEVAM ET left the paper up"
 		elif TimeManager.is_clock_held():
 			fail = "DEVAM ET did not release the hold"
+		elif TimeManager.current_speed != 2:
+			fail = "DEVAM ET did not give back the speed from before the paper (%d)" % TimeManager.current_speed
 	if fail == "":
 		var slot: String = String(host.call("_keep_run_for_main_menu"))
 		if slot == "":
@@ -11735,9 +11779,10 @@ static func _case_milestone_paper_under_card() -> String:
 			elif not listed:
 				fail = "ANA MENÜ reported slot '%s' but no such save is listed" % slot
 	host.set("_shell", prev_shell)
-	host.set("_event_modal", prev_event)
 	host.set("_milestone_modal", null)
+	host.set("_milestone_paper", [])
 	TimeManager.release_clock("milestone_paper")
+	TimeManager.release_clock("event")
 	shell.queue_free()
 	EndingsSystem.build_scope_override = ""
 	return fail

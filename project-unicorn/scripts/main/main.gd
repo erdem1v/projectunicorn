@@ -5,30 +5,30 @@ extends Node
 #      day/hour at 1/08:00.
 #   2. Mount OnboardingFlow. GameShell is NOT mounted upfront: its children paint from
 #      GameState in _ready(), so it can only mount after initialize_run.
-#   3. On flow completed (or F12 debug skip): swap the flow for GameShell and mount the
-#      MentorIntroModal into GameShell/ModalLayer.
-# It also routes every modal / cinematic surface and dispatches the debug launch flags.
+#   3. On flow completed (or F12 debug skip): swap the flow for GameShell and open the inbox on
+#      the run's first message.
+# It also owns the decision gate (a card on screen holds the clock in the inbox), routes every
+# modal / cinematic surface and dispatches the debug launch flags.
 
 const ONBOARDING_FLOW := preload("res://scenes/onboarding/OnboardingFlow.tscn")
 const LANGUAGE_GATE := preload("res://scenes/onboarding/LanguageGate.tscn")
 const GAME_SHELL := preload("res://scenes/main/GameShell.tscn")
-const MENTOR_MODAL := preload("res://scenes/modals/MentorIntroModal.tscn")
-const EVENT_MODAL := preload("res://scenes/modals/EventModal.tscn")
+const INBOX := preload("res://scripts/ui/components/inbox.gd")
+const MAIL_PANE := preload("res://scripts/tabs/events/mail_pane.gd")
 const SETTINGS_MODAL := preload("res://scenes/modals/SettingsModal.tscn")
 const CONFIRM_MODAL := preload("res://scenes/modals/ConfirmModal.tscn")
 # İK eylem modalı AYNI host'u kullanıyor (`confirm_requested`); config'deki
 # `"modal": "hr_action"` yalnız SAHNEYİ seçiyor.
 const HR_ACTION_MODAL := preload("res://scenes/modals/HRActionModal.tscn")
 const ENDING_MODAL := preload("res://scenes/modals/EndingScene.tscn")
-const MONTH_SUMMARY_MODAL := preload("res://scenes/modals/MonthSummaryModal.tscn")
 const TERM_TABLE_SCENE := preload("res://scenes/modals/TermSheetTableScene.tscn")
 const SYSTEM_MENU_MODAL := preload("res://scenes/modals/SystemMenuModal.tscn")
 const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
-const RND_CARD_MODAL := preload("res://scenes/modals/RnDCardModal.tscn")
 const SAVED_GLYPH := preload("res://assets/icons/util/check.svg")
 const NOT_SAVED_GLYPH := preload("res://assets/icons/util/save.svg")
 const LOADED_GLYPH := preload("res://assets/icons/util/load.svg")
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
+const EVENT_CLOCK_HOLD := "event"                 # TimeManager hold reason while a decision waits
 const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason for the founder's trip
 
 var _flow: Node = null
@@ -37,12 +37,10 @@ var _shell_mounted: bool = false
 var _event_signals_wired: bool = false
 # Currently-open surfaces (null = closed). Each pausing surface remembers the speed it
 # found (-1 = none) and hands it back on close.
-var _event_modal: Node = null
 var _settings_modal: Node = null
 var _confirm_modal: Node = null
 var _ending_modal: Node = null       # mounts once, never dismissed back to gameplay
 var _milestone_modal: Node = null    # the same paper in milestone mode (EA / full)
-var _summary_modal: Node = null
 var _meeting_panel: MeetingPanel = null   # a VC or a sales sitting
 var _term_table: Node = null
 var _system_menu: Node = null
@@ -53,21 +51,23 @@ var _pre_event_speed: int = -1
 var _pre_settings_speed: int = -1
 var _pre_confirm_speed: int = -1
 var _pre_system_speed: int = -1
-var _pre_summary_speed: int = -1
+# The intro or the period summary opened itself in the inbox and paused the game; closing the
+# inbox hands this speed back.
+var _pre_note_speed: int = -1
 var _pre_dialogue_speed: int = -1
 var _pre_milestone_speed: int = -1
 # The founder's trip to an outside meeting: set before the trip's first await, so the event
 # restore and the sitting guards see it; a card that arrives during it waits for the sitting.
 var _in_transit: bool = false
 var _card_waiting := false
+# A card's goto_tab ([tab, subpage]) waits for the decision gate to close; so does the milestone
+# paper, whose [id, data] stays here from the milestone to DEVAM ET so a decision can set it aside.
+var _goto_after_gate: Array = []
+var _milestone_paper: Array = []
 var _call := {}                    # the call ringing in the office: {kind: "vc" | "sales", id}
 var _trip_label := ""              # the tower's chip on the map, both ways of a meeting's trip
 var _travel_on: bool = true          # shots stage their surfaces without the trip
 var _audit_spec := ""                # --theme-audit: the staged surface prints its audit, no frame
-# Ar-Ge kartı: aynı anda en fazla bir tane. Bir keşif ile koşunun ilk raporu aynı güne
-# düşebilir ve iki üst üste scrim karartmayı ikiye katlar; ikincisi bu kuyrukta bekler.
-var _rnd_card: Node = null
-var _rnd_card_queue: Array[Dictionary] = []
 
 var _tempo_last_msec: int = 0   # --tempo-probe: real-clock stamp of the previous 08:00
 
@@ -193,6 +193,7 @@ func _run_debug_harness() -> bool:
 		"--render-probe=": _run_render_probe,
 		"--b2b-shot=": _run_b2b_shot,
 		"--event-shot=": _run_event_shot,
+		"--inbox-shot=": _run_inbox_shot,
 		"--meeting-shot=": _run_meeting_shot,
 		"--vc-shot=": _run_vc_shot,
 		"--negotiation-shot=": _run_negotiation_shot,
@@ -424,6 +425,9 @@ func _begin_shot() -> void:
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	var win_size: Vector2i = _shot_size_override(Vector2i(1920, 1080))
 	get_window().size = win_size
+	# --palette=cb draws the colour-blind palette for this run only; the setting is not written.
+	if _flag_value("--palette=") == "cb":
+		UiTokens.set_colorblind(true)
 	# --shot-scale runs the REAL gate (clamp_step): an illegal scale is clipped up just as the
 	# game would. Applied a moment later on purpose: the resize takes effect only next frame,
 	# and writing content_scale_factor now would scale against the OLD size and crop the view.
@@ -474,9 +478,11 @@ func _on_shot_layer(node: Node) -> Node:
 
 
 ## The file name carries the language: TR keeps the bare name, EN gets `_en`, so both frames
-## of one screen sit side by side. Read from the locale itself, however it got set.
+## of one screen sit side by side. Read from the locale itself, however it got set; `_cb` marks
+## the colour-blind palette of --palette=cb.
 func _shot_path(basename: String) -> String:
-	return "user://%s%s.png" % [basename, "_en" if Fmt.is_english() else ""]
+	return "user://%s%s%s.png" % [basename, "_en" if Fmt.is_english() else "",
+		"_cb" if _flag_value("--palette=") == "cb" else ""]
 
 
 func _save_shot(basename: String) -> void:
@@ -503,7 +509,7 @@ func _shot_fail(msg: String) -> void:
 
 
 ## --b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel>: one
-## factory-built card in a real EventModal.
+## factory-built card in the inbox's reading pane.
 func _run_b2b_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -560,26 +566,244 @@ func _run_b2b_shot(kind: String) -> void:
 			if kind == "retention_capped":   # LOC-DATA debug seed / id
 				# Both discounts spent: the row renders locked-visible with its reason line.
 				CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
-	var ev: GameEvent = EventGate.render(card_id, EventGate.bind_scope(card_id) if scoped else {})
-	_on_shot_layer(EVENT_MODAL.instantiate()).populate(ev)
+	_shot_pane(card_id, EventGate.bind_scope(card_id) if scoped else {})
 	await get_tree().process_frame
 	await _finish_shot("b2b_shot_%s" % kind, 0.35)
 
 
-## --event-shot=<card id>: any catalogued card, `version_scope: fixture` ones included.
+## --event-shot=<card id>: any catalogued card, `version_scope: fixture` ones included, in the
+## reading pane's preview (its options drawn, not taken).
 func _run_event_shot(event_id: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
 	if not EventGate.is_catalogued(event_id):
 		_shot_fail("[EventShot] no card with id: %s" % event_id)
 		return
-	var ev: GameEvent = EventGate.render(event_id, EventGate.bind_scope(event_id))
-	if ev == null:
-		_shot_fail("[EventShot] could not render card: %s" % event_id)
-		return
-	_on_shot_layer(EVENT_MODAL.instantiate()).populate(ev)
+	_shot_pane(event_id, EventGate.bind_scope(event_id))
 	await get_tree().process_frame
 	await _finish_shot("event_shot_%s" % event_id, 0.35)
+
+
+## --inbox-shot=<state>: the Olaylar inbox over the theme seed (week 14, İş hanı) in the mockups'
+## states, through the real gate (main's handler holds the clock and opens the inbox on the card):
+##   offer · queue · customer (an option armed) · locked · history · paper · paper_open ·
+##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
+##   frank_moment · rnd_note · rnd_discovery · weekly_sales · empty · long · team_read_only (Ekip
+##   read-only over a decision) · held_key (a speed key refused: the frame's blink and the toast)
+## Cards come through force_fire; a past decision is resolved for real at an earlier week.
+func _run_inbox_shot(state: String) -> void:
+	_begin_shot()
+	if state == "intro":
+		_seed_run_reproducible()
+	else:
+		_seed_theme_surface()
+		GameState.current_hour = 11
+		TimeManager.sync_to_current_hour()
+	await _mount_shot_shell()
+	_wire_modal_signals()
+	var selina := "char_emp_shot_3"
+	match state:
+		"flow":
+			await _gate_flow()
+			get_tree().quit()
+			return
+		"intro":
+			_open_note("intro")
+		"offer", "team_read_only", "held_key":
+			_shot_card("funding.frank_cheque", {}, 8)
+			if state == "team_read_only":
+				EventBus.tab_changed.emit("hr")
+			elif state == "held_key":
+				EventBus.tab_changed.emit("")
+				var key := InputEventKey.new()
+				key.keycode = KEY_SPACE
+				key.pressed = true
+				_shell._input(key)
+		"queue":
+			_shot_card("funding.frank_cheque", {}, 8)
+			EventGate.force_fire("customer.retention", {"customer": "co_ege"})
+			EventGate.force_fire("team.resignation", {"employee": selina})
+			# Queued under the card on screen, which no signal tells: the inbox reads again.
+			INBOX.show("active")
+		"customer", "locked":
+			if state == "locked":
+				_shot_answered("customer.retention", {"customer": "co_ege"}, "stall", 11)
+				_shot_answered("customer.retention", {"customer": "co_ege"}, "stall", 12)
+			_shot_card("customer.retention", {"customer": "co_ege"}, 8)
+			if state == "customer":
+				await get_tree().process_frame
+				get_tree().call_group(INBOX.GROUP, &"arm_for_shot", 2)
+		"history":
+			_shot_answered("customer.retention", {"customer": "co_ege"}, "stall", 11)
+			_shot_card("customer.retention", {"customer": "co_ege"}, 8)
+			INBOX.show("h:0")
+		"paper", "paper_open", "paper_waiting":
+			var key: String = _shot_paper("customer.expansion", {"customer": "co_nordica"}, 2)
+			if state == "paper_open":
+				EventGate.open_paper(key)
+			elif state == "paper_waiting":
+				_shot_card("funding.frank_cheque", {}, 8)
+				INBOX.show("paper:" + key)
+			else:
+				INBOX.show("paper:" + key)
+		"paper_last_week":
+			GameState.day -= 1
+			var key: String = _shot_paper("customer.expansion", {"customer": "co_nordica"}, 2)
+			GameState.day += 1
+			INBOX.show("paper:" + key)
+		"attention":
+			INBOX.show("r:customer:co_ege")
+		"resignation":
+			_shot_card("team.resignation", {"employee": selina}, 8)
+		"departed":
+			_shot_answered("team.resignation", {"employee": selina}, "acknowledge", 14)
+			INBOX.show("h:0")
+		"frank_moment":
+			_shot_card("customer.frank_intro", {}, 8)
+		"summary":
+			GameState.current_hour = 8
+			TimeManager.sync_to_current_hour()
+			var payload: Dictionary = SummarySystem._build_summary_data("quarterly", GameState.day - 1)
+			MessageSystem.post("summary", String(SummarySystem.PERIOD_KEYS.quarterly.title), payload)
+			EventBus.summary_ready.emit(payload)
+		"rnd_note":
+			var id: String = MessageSystem.post("rnd_note", "RND_NOTE_TITLE",
+				RnDSystem.compose_note(CharacterRegistry.get_character("char_emp_shot_0")))
+			INBOX.show("m:" + id)
+		"rnd_discovery":
+			var id: String = MessageSystem.post("rnd_discovery", "RND_DISCOVERY_TITLE", {"node": "test_automation",
+				"author_name": "Selin Kaya", "author_role": HRConstants.ROLE_TESTER})   # LOC-DATA debug seed / id
+			INBOX.show("m:" + id)
+		"weekly_sales":
+			var rows := []
+			for c in CustomerRegistry.get_by_market("b2b").slice(0, 2):
+				rows.append({"company": c.company_name, "star": 2, "seats": c.seats, "price": c.mrr / maxi(1, c.seats),
+					"mrr": c.mrr, "rep": "Burak Şahin"})   # LOC-DATA debug seed / id
+			var id: String = MessageSystem.post("sales_week", "SALES_WEEKLY_TITLE",
+				{"rows": rows, "accounts": CustomerRegistry.account_count()})
+			INBOX.show("m:" + id)
+		"empty":
+			EventBus.tab_changed.emit("events")
+			get_tree().call_group(INBOX.GROUP, &"filter_for_shot", 1)
+		"long":
+			for row in [["customer.retention", {"customer": "co_ege"}, "stall", 5],
+					["team.resignation", {"employee": "char_emp_shot_1"}, "acknowledge", 7],
+					["customer.retention", {"customer": "co_ege"}, "leave_alone", 11],
+					["customer.retention", {"customer": "co_ege"}, "discount", 13]]:
+				_shot_answered(row[0], row[1], row[2], row[3])
+			INBOX.show("h:1")
+			await get_tree().process_frame
+			get_tree().call_group(INBOX.GROUP, &"scroll_for_shot", 236)
+		_:
+			_shot_fail("[InboxShot] unknown state: %s" % state)
+			return
+	# The staging moved the week and the hour under a top bar that paints on ticks.
+	get_tree().call_group(&"top_bar", &"_refresh")
+	await get_tree().process_frame
+	await _finish_shot("inbox_shot_%s" % state, 0.6)
+
+
+## --inbox-shot=flow: the gate played through the shell's own input, a frame and a GATEFLOW line a
+## step: the clock runs; a decision arrives (the clock is held, the inbox opens on it); Ekip opens
+## and reads only (a click on its first button does nothing); a speed key is refused; Esc closes
+## Ekip, Esc again brings the inbox back; the decision is taken with a click; the clock runs again.
+func _gate_flow() -> void:
+	var mounted := [0]   # panels that reached the panel layer at all (main frees them under a gate)
+	_shell.get_node("PanelLayer").child_entered_tree.connect(func(_n: Node) -> void: mounted[0] += 1)
+	var step := func(n: int, what: String) -> void:
+		var page: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()
+		print("GATEFLOW|%02d|%s|speed=%d|held=%s|active=%s|window=%s|panels_mounted=%d" % [n, what,
+			TimeManager.current_speed, TimeManager.is_clock_held(), EventGate.active_id(),
+			page.name if page != null else "", mounted[0]])
+		await get_tree().create_timer(0.4).timeout
+		_save_shot("inbox_flow_%02d" % n)
+	# The pointer moves onto the button first: the hover is what a read-only window reads.
+	var click := func(button: Button) -> void:
+		var move := InputEventMouseMotion.new()
+		move.position = button.get_global_rect().get_center()
+		move.global_position = move.position
+		get_viewport().push_input(move)
+		for pressed in [true, false]:
+			var e := InputEventMouseButton.new()
+			e.button_index = MOUSE_BUTTON_LEFT
+			e.pressed = pressed
+			e.position = move.position
+			e.global_position = e.position
+			get_viewport().push_input(e)
+			await get_tree().process_frame
+	var key := func(code: Key) -> void:
+		var e := InputEventKey.new()
+		e.keycode = code
+		e.pressed = true
+		_shell._input(e)
+		await get_tree().process_frame
+	EventBus.speed_change_requested.emit(1)
+	await step.call(1, "running")
+	_shot_card("funding.frank_cheque", {}, GameState.current_hour)
+	await step.call(2, "decision")
+	EventBus.tab_changed.emit("hr")
+	await get_tree().process_frame
+	var hr: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()
+	await click.call(hr.find_children("*", "Button", true, false).filter(
+		func(b: Button) -> bool: return b.text == tr("HR_SEARCH_START"))[0])
+	await step.call(3, "hr_recruit_click_refused")
+	await key.call(KEY_2)
+	await step.call(4, "speed_key")
+	await key.call(KEY_ESCAPE)
+	await step.call(5, "esc_closes_hr")
+	await key.call(KEY_ESCAPE)
+	await step.call(6, "esc_reopens_inbox")
+	# A file opened from the office over Ekip: its own way back to the decision sits on Ekip's page.
+	EventBus.tab_changed.emit("hr")
+	var layer: Node = get_tree().get_first_node_in_group(&"window_layer")
+	layer.open_detail("hr_dossier", {"character_id": "char_emp_shot_0"})
+	await get_tree().process_frame
+	await click.call(layer.find_children("*", "Button", true, false).filter(
+		func(b: Button) -> bool: return b.text == tr("WIN_BACK_TO_DECISION") and b.is_visible_in_tree())[-1])
+	await step.call(7, "dossier_back_to_decision")
+	var label: String = (EventGate.active_card().choices[0] as EventChoice).label
+	var take: Array = get_tree().root.find_children("*", "Button", true, false).filter(
+		func(b: Button) -> bool: return b.text == label and b.is_visible_in_tree())
+	await click.call(take[0])
+	await step.call(8, "answered")
+
+
+## A card through the real gate at `hour`: the clock stops there as at the week's start.
+func _shot_card(card_id: String, given: Dictionary, hour: int) -> void:
+	GameState.current_hour = hour
+	TimeManager.sync_to_current_hour()
+	if not EventGate.force_fire(card_id, given):
+		_shot_fail("[InboxShot] %s did not fire" % card_id)
+
+
+## A card answered `option` at week `day`, and the run back at its week: a history row.
+func _shot_answered(card_id: String, given: Dictionary, option: String, day: int) -> void:
+	var now: int = GameState.day
+	GameState.day = day
+	EventGate.force_fire(card_id, given)
+	EvEngine._forced.clear()   # the row reads as played, which is what the inbox lists
+	EventGate.resolve(card_id, option)
+	GameState.day = now
+
+
+## A paper on the desk for `weeks`, landed this week; its key.
+func _shot_paper(card_id: String, given: Dictionary, weeks: int) -> String:
+	var bound: Dictionary = EvScope.resolve(EventGate.catalogue_card(card_id).get("scope", {}), given)
+	EvPapers.place(card_id, bound.context, weeks)
+	return EvLatches.key_of(card_id, bound.context)
+
+
+## The reading pane alone on its own layer, at the inbox's width, reading a card in preview.
+func _shot_pane(card_id: String, ctx: Dictionary) -> void:
+	var back := PanelContainer.new()
+	back.theme = load(UiTokens.MENAJER_THEME)
+	back.theme_type_variation = &"WindowPanel"
+	back.position = Vector2.ONE * UiTokens.SPACE_3XL
+	back.size = Vector2(840, get_window().size.y - 2 * UiTokens.SPACE_3XL)
+	var pane: ScrollContainer = MAIL_PANE.new()
+	back.add_child(pane)
+	_on_shot_layer(back)
+	pane.populate(INBOX.card_item("preview", card_id, ctx, {}, GameState.day), "preview")
 
 
 ## --sales-shot=<pipeline|desk|b2c>. `b2c` photographs §3.1's locked pipeline with its reason line.
@@ -990,10 +1214,8 @@ func _run_tab_shot(tab_id: String) -> void:
 	await _finish_shot("tab_shot_%s" % tab_id)
 
 
-# --modal-shot=<confirm|confirm3|confirm_dark|settings|month|system|saveload|mentor|rnd-note|rnd-discovery|
-# rnd-discovery-line>. Each goes through the REAL mount path (EventBus signal → handler here),
-# so fixture and live behaviour cannot drift. `mentor` is the one surface whose body length is
-# a design constraint (the longest text, no scrollbar) — pair it with --shot-size.
+# --modal-shot=<confirm|confirm3|confirm_dark|settings|system|saveload>. Each goes through the REAL
+# mount path (EventBus signal → handler here), so fixture and live behaviour cannot drift.
 func _run_modal_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_theme_surface()
@@ -1019,28 +1241,12 @@ func _run_modal_shot(kind: String) -> void:
 			})
 		"settings":
 			EventBus.settings_requested.emit()
-		"month":
-			SummarySystem.debug_force_summary(false)
 		"system":
 			EventBus.system_menu_requested.emit()
-		"mentor":
-			_modal_layer().add_child(MENTOR_MODAL.instantiate())
 		"saveload":
 			# Önce gerçek bir kayıt yaz ki YÜKLE listesinde gerçek bir slot satırı olsun.
 			SaveManager.quicksave()
 			EventBus.save_load_requested.emit("load")
-		"rnd-note":
-			# The engine's own composer, never a hand-built dict: a copy drifts from the live card.
-			var author: Character = RnDSystem.note_author()
-			if author == null:
-				author = CharacterRegistry.get_founder()
-			EventBus.rnd_card_requested.emit("note", RnDSystem.compose_note(author))
-		"rnd-discovery":
-			# Hat açmayan düğüm: isteğe bağlı satır kurulu ama gizli.
-			EventBus.rnd_card_requested.emit("discovery", {"node": "data_model"})
-		"rnd-discovery-line":
-			# Hat açan düğüm (§13.5'in tek dal seviyesi istisnası).
-			EventBus.rnd_card_requested.emit("discovery", {"node": "test_automation"})
 		_:
 			_shot_fail("[ThemeShot] unknown --modal-shot kind: %s" % kind)
 			return
@@ -1804,11 +2010,11 @@ func _run_vc_shot(kind: String) -> void:
 		await get_tree().process_frame
 		EventBus.finance_subpage_requested.emit("yatirim")   # LOC-DATA sub-page id
 	elif kind == "k10":
-		var ev: GameEvent = EventGate.render("funding.sheet_decision", EventGate.bind_scope("funding.sheet_decision"))
-		if ev == null:
-			_shot_fail("[VcShot] funding.sheet_decision did not render (no decision-due sheet bound)")
+		var ctx: Dictionary = EventGate.bind_scope("funding.sheet_decision")
+		if ctx.is_empty():
+			_shot_fail("[VcShot] funding.sheet_decision did not bind (no decision-due sheet)")
 			return
-		_on_shot_layer(EVENT_MODAL.instantiate()).populate(ev)
+		_shot_pane("funding.sheet_decision", ctx)
 	else:
 		_on_shot_layer(TERM_TABLE_SCENE.instantiate())
 	await get_tree().process_frame
@@ -2044,12 +2250,12 @@ func _swap_to_shell_and_modal() -> void:
 	await _mount_shell()
 	# The clock stays paused past the intro: the player's first decision (the build commit) is
 	# what unpauses.
-	_modal_layer().add_child(MENTOR_MODAL.instantiate())
+	_open_note("intro")
 
 
 # The "repaint the world" seam: every shell child paints from GameState in its own _ready(),
 # so state is restored first and the shell mounted second. A save load comes through here
-# WITHOUT the mentor intro, which belongs to a new run only.
+# WITHOUT opening the intro, which belongs to a new run only.
 func _mount_shell() -> void:
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
@@ -2060,11 +2266,15 @@ func _mount_shell() -> void:
 
 
 func _wire_modal_signals() -> void:
+	_shell.get_node("PanelLayer").child_entered_tree.connect(_on_panel_mounted)
 	if _event_signals_wired:
 		return
 	_event_signals_wired = true
 	EventBus.modal_requested.connect(_on_event_modal_requested)
 	EventBus.event_resolved.connect(_on_event_resolved)
+	EventBus.event_set_aside.connect(_on_event_set_aside)
+	EventBus.goto_tab_requested.connect(_on_goto_tab_requested)
+	EventBus.tab_changed.connect(_on_tab_changed)
 	EventBus.pitch_requested.connect(_on_pitch_requested)
 	EventBus.settings_requested.connect(_on_settings_requested)
 	EventBus.confirm_requested.connect(_on_confirm_requested)
@@ -2077,8 +2287,6 @@ func _wire_modal_signals() -> void:
 	EventBus.save_load_requested.connect(_on_save_load_requested)
 	EventBus.quicksave_requested.connect(_on_quicksave_requested)
 	EventBus.quickload_requested.connect(_on_quickload_requested)
-	EventBus.rnd_card_requested.connect(_on_rnd_card_requested)
-	EventBus.product_note_issued.connect(_on_product_note_issued)
 
 
 ## GameShell/ModalLayer, or null (with an error) when no shell is mounted.
@@ -2096,49 +2304,125 @@ func _restore_speed(pre: int) -> void:
 		EventBus.speed_change_requested.emit(pre if pre >= 0 else TimeManager.last_running_speed)
 
 
-func _on_event_modal_requested(event: GameEvent) -> void:
+# THE DECISION GATE. A card on screen opens the inbox on it and holds the clock until it is
+# answered (or, a paper the player picked up, put back on the desk). The hold is taken here, in the
+# shell's handler, so a harness with no shell never freezes. While it holds, every other window
+# reads only (WindowFrame), the panels close, the move and the map are off, and the requests below
+# that would open something else are refused.
+
+func _on_event_modal_requested(_event: GameEvent) -> void:
 	if _in_transit:
 		_card_waiting = true   # shown when the sitting closes
 		return
+	# The milestone paper stops the night's batch, whose card then pumps under it: the paper steps
+	# aside for the decision and comes back once the gate closes.
+	if _milestone_modal != null:
+		_milestone_modal.queue_free()
+		_milestone_modal = null
+		TimeManager.release_clock(MILESTONE_CLOCK_HOLD)
 	# A card that lands as a sitting closes, or on the period summary, finds the clock stopped by
 	# that surface; the speed to hand back is the one from before it.
 	if _pre_event_speed < 0:
 		_pre_event_speed = _pre_dialogue_speed if _pre_dialogue_speed >= 0 \
-			else (_pre_summary_speed if _pre_summary_speed >= 0 else TimeManager.current_speed)
-	EventBus.speed_change_requested.emit(0)
-	var modal_layer: CanvasLayer = _modal_layer()
-	if modal_layer == null:
-		return
-	# Never stack two cards: game_shell guards ESC and the speed keys on the ModalLayer child
-	# count and the event modal has no ui_cancel, so a second card on the first would leave no
-	# keyboard way out — no pause, no menu, no save, no quit.
-	if _event_modal != null:
-		push_error("[Main] an event modal is already mounted (%s) — refusing to stack"
-			% _event_modal.name)
-		_event_modal.queue_free()
-	_event_modal = EVENT_MODAL.instantiate()
-	modal_layer.add_child(_event_modal)
-	_event_modal.populate(event)
+			else (_pre_note_speed if _pre_note_speed >= 0 else TimeManager.current_speed)
+	TimeManager.hold_clock(EVENT_CLOCK_HOLD)
+	for panel in _shell.get_node("PanelLayer").get_children():
+		panel.queue_free()
+	get_tree().call_group(&"office_view", &"close_map")
+	INBOX.show("active")
 
 
+# event_resolved fires BEFORE the engine pumps its queue, so has_pending() still sees the next card
+# and the clock stays stopped for it. A choice can also OPEN a cinematic surface (open_term_table
+# runs before event_resolved), whose trip may still be on its way to it; that surface's close owns
+# the restore. The period summary still open in the inbox restores the speed when it closes.
 func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
-	if _event_modal != null:
-		_event_modal.queue_free()
-		_event_modal = null
-	# event_resolved fires BEFORE the engine pumps its queue, so has_pending() still sees the
-	# next card and the clock stays paused for it. A choice can also OPEN a cinematic surface
-	# (open_term_table runs before event_resolved), whose trip may still be on its way to it; that
-	# surface's close owns the restore. The period summary still under the card restores the speed
-	# itself when it closes last.
-	if not EventGate.has_pending() and _term_table == null and not _in_transit:
-		if _summary_modal == null:
-			_restore_speed(_pre_event_speed)
-		_pre_event_speed = -1
+	_on_gate_closed()
 
 
-## A cinematic surface opened from an event choice finds the clock already paused by the
-## card; it inherits the card's stored speed instead and owns restoring it.
+func _on_event_set_aside(_event_id: String) -> void:
+	_on_gate_closed()
+
+
+## The queue's next card opens on the pump that follows; the pump may drop every queued card, so
+## with a queue the gate settles after it.
+func _on_gate_closed() -> void:
+	TimeManager.release_clock(EVENT_CLOCK_HOLD)
+	if EventGate.has_pending():
+		_settle_gate.call_deferred()
+	else:
+		_settle_gate()
+
+
+## No decision on screen: the clock comes back and what waited for the gate opens. A sitting the
+## answer opened owns both until it closes.
+func _settle_gate() -> void:
+	if EventGate.active_id() != "" or _term_table != null or _in_transit:
+		return
+	if _pre_note_speed < 0:
+		_restore_speed(_pre_event_speed)
+	_pre_event_speed = -1
+	_open_after_gate()
+
+
+## What waited for the gate: the card's goto_tab, then the milestone paper.
+func _open_after_gate() -> void:
+	if EventGate.active_id() != "" or not GameState.run_active:
+		return
+	if not _goto_after_gate.is_empty():
+		EventBus.tab_changed.emit(_goto_after_gate[0])
+		if _goto_after_gate[1] != "":
+			EventBus.finance_subpage_requested.emit(_goto_after_gate[1])
+		_goto_after_gate = []
+	if not _milestone_paper.is_empty() and _milestone_modal == null:
+		_on_milestone_reached(_milestone_paper[0], _milestone_paper[1])
+
+
+## A card's goto_tab runs while the card is still on screen: the tab opens once nothing waits.
+func _on_goto_tab_requested(tab_id: String, subpage: String) -> void:
+	_goto_after_gate = [tab_id, subpage]
+	_open_after_gate()
+
+
+## Leaving the inbox puts an opened paper back on the desk (an interrupt stays: the gate slot shows
+## it) and hands back the speed an intro or a summary paused, unless the player has set one since.
+func _on_tab_changed(tab_id: String) -> void:
+	if tab_id == "events":
+		return
+	EventGate.set_aside()
+	if _pre_note_speed >= 0:
+		if TimeManager.current_speed == 0:
+			_restore_speed(_pre_note_speed)
+		_pre_note_speed = -1
+
+
+## The intro and the period summary open themselves in the inbox and pause the game: speed 0, not a
+## hold, so the night's batch they land in runs on. A decision on screen keeps the inbox's selection.
+func _open_note(kind: String) -> void:
+	var notes: Array = GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == kind)
+	if notes.is_empty() or EventGate.active_id() != "":
+		return
+	if _pre_note_speed < 0:
+		_pre_note_speed = TimeManager.current_speed
+	EventBus.speed_change_requested.emit(0)
+	INBOX.show("m:" + String(notes[-1].id))
+
+
+## Nothing opens on the panel layer while a decision waits.
+func _on_panel_mounted(panel: Node) -> void:
+	if EventGate.active_id() != "":
+		panel.queue_free()
+
+
+## A waiting decision lets through only the sitting its own chosen option opens.
+func _gate_shut() -> bool:
+	return EventGate.active_id() != "" and not EventGate.resolving()
+
+
+## A cinematic surface opened from an event choice finds the clock held by the card; it releases
+## the hold, inherits the card's stored speed and owns restoring it.
 func _claim_pre_dialogue_speed() -> void:
+	TimeManager.release_clock(EVENT_CLOCK_HOLD)
 	if _pre_dialogue_speed < 0:
 		_pre_dialogue_speed = _pre_event_speed if _pre_event_speed >= 0 else TimeManager.current_speed
 	_pre_event_speed = -1
@@ -2160,7 +2444,7 @@ func _process(_delta: float) -> void:
 		_:
 			var caller: String = VCPitchSystem.call_waiting()
 			if caller != "" and not _in_transit and _meeting_panel == null and _term_table == null \
-					and invite.can_ring():
+					and EventGate.active_id() == "" and invite.can_ring():
 				_ring_fund(caller)
 
 
@@ -2182,6 +2466,8 @@ func _ring_fund(vc_id: String) -> void:
 ## any call ringing; picking it up goes to the meeting, putting it off lets it ring on. With no
 ## office view (shots without the trip) the meeting opens at once.
 func _on_pitch_requested(prospect_id: String) -> void:
+	if EventGate.active_id() != "":
+		return
 	if _meeting_invite() == null:
 		_open_sales_meeting(prospect_id)
 		return
@@ -2208,6 +2494,8 @@ func _end_call() -> void:
 
 
 func _on_call_accepted() -> void:
+	if _gate_shut():
+		return
 	var call := _call
 	_call = {}
 	if call.kind == "vc":
@@ -2356,7 +2644,8 @@ func _on_confirm_requested(config: Dictionary) -> void:
 	if _confirm_modal != null:
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
-	if modal_layer == null:
+	# While a decision waits only a modal's own question passes (the system menu's quit).
+	if modal_layer == null or (EventGate.active_id() != "" and modal_layer.get_child_count() == 0):
 		return
 	_pre_confirm_speed = TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
@@ -2383,8 +2672,8 @@ func _on_confirm_dismissed() -> void:
 	_pre_confirm_speed = -1
 
 
-# game_shell emits system_menu_requested only when ModalLayer AND PanelLayer are empty, so a
-# forced decision stays forced: ESC never reaches this menu over an event card.
+# game_shell emits system_menu_requested only when ModalLayer AND PanelLayer are empty and no
+# decision waits: ESC over a waiting decision opens the inbox on it instead.
 func _on_system_menu_requested() -> void:
 	if _system_menu != null:
 		return
@@ -2402,45 +2691,6 @@ func _on_system_menu_dismissed() -> void:
 	_system_menu = null
 	_restore_speed(_pre_system_speed)
 	_pre_system_speed = -1
-
-
-## §5.8 keşif kartı · §6.1 aylık ürün notu. PanelLayer'a (layer 9) monte edilir, ModalLayer'a
-## (layer 10) DEĞİL: ModalLayer Space ve 1-4'ü yutuyor, yani saat oyuncunun duraklatamadığı
-## bir kartın üstünde koşardı. Esc'i kart kendi `_unhandled_input`'unda alır.
-func _on_rnd_card_requested(kind: String, data: Dictionary) -> void:
-	if is_instance_valid(_rnd_card):
-		if _rnd_card_queue.size() < 2:
-			_rnd_card_queue.append({"kind": kind, "data": data})
-		return
-	_mount_rnd_card(kind, data)
-
-
-func _mount_rnd_card(kind: String, data: Dictionary) -> void:
-	var layer: Node = _shell.get_node_or_null("PanelLayer") if _shell != null else null
-	if layer == null:
-		push_error("[Main] GameShell/PanelLayer yok — Ar-Ge kartı monte edilemiyor")
-		return
-	_rnd_card = RND_CARD_MODAL.instantiate()
-	_rnd_card.tree_exited.connect(_on_rnd_card_closed)
-	layer.add_child(_rnd_card)
-	_rnd_card.populate(kind, data)
-
-
-## Deferred: `tree_exited` fires mid-removal, and adding a child to the same layer inside that
-## flow would race it.
-func _on_rnd_card_closed() -> void:
-	_rnd_card = null
-	if _rnd_card_queue.is_empty():
-		return
-	var next: Dictionary = _rnd_card_queue.pop_front()
-	_mount_rnd_card.call_deferred(String(next.get("kind", "")), next.get("data", {}))
-
-
-## §6.1 — only the run's FIRST report opens as a modal. The latch lives in the engine
-## (take_first_note_modal), so save/load cannot split it from a second flag here.
-func _on_product_note_issued(_day: int) -> void:
-	if RnDSystem.take_first_note_modal():
-		_on_rnd_card_requested("note", RnDSystem.pending_note())
 
 
 # Stacks on the system menu, which already paused the game — so no speed capture of its own.
@@ -2514,26 +2764,10 @@ func _load_slot(slot_id: String) -> bool:
 	return true
 
 
-func _on_summary_ready(data: Dictionary) -> void:
-	if _summary_modal != null:
-		return
-	var modal_layer: CanvasLayer = _modal_layer()
-	if modal_layer == null:
-		return
-	# The week's cards pump after the night batch, so a card lands on top of the summary and
-	# inherits its saved speed; whichever closes last restores it.
-	_pre_summary_speed = TimeManager.current_speed
-	EventBus.speed_change_requested.emit(0)
-	_summary_modal = MONTH_SUMMARY_MODAL.instantiate()
-	_summary_modal.dismissed.connect(_on_summary_dismissed)
-	modal_layer.add_child(_summary_modal)
-	_summary_modal.populate(data)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
-
-
-func _on_summary_dismissed() -> void:
-	_summary_modal = null
-	_restore_speed(_pre_summary_speed)
-	_pre_summary_speed = -1
+# The week's cards pump after the night batch, so a card lands on the open summary and inherits its
+# saved speed; the inbox closing last restores it.
+func _on_summary_ready(_data: Dictionary) -> void:
+	_open_note("summary")
 
 
 # Terminal: the ending paper never restores speed. EndingsSystem already flushed the queue and
@@ -2553,9 +2787,14 @@ func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
 
 # The ending paper in milestone mode (EA / full): a win the run lives through. The clock is
 # HELD while it is up, so a card, the period summary or settings closing on top of it cannot
-# restart time behind it; DEVAM ET releases the hold and restores the player's speed.
-func _on_milestone_reached(_milestone_id: String, data: Dictionary) -> void:
+# restart time behind it; DEVAM ET releases the hold and restores the player's speed. A decision
+# is answered first: the paper would cover the inbox, and ANA MENÜ would refuse to save for a
+# decision the player cannot see. It opens when the gate closes.
+func _on_milestone_reached(milestone_id: String, data: Dictionary) -> void:
 	if _ending_modal != null or _milestone_modal != null:
+		return
+	_milestone_paper = [milestone_id, data]
+	if EventGate.active_id() != "":
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
@@ -2566,11 +2805,6 @@ func _on_milestone_reached(_milestone_id: String, data: Dictionary) -> void:
 	_milestone_modal.continue_requested.connect(_on_milestone_continue)
 	_milestone_modal.main_menu_requested.connect(_on_milestone_main_menu)
 	modal_layer.add_child(_milestone_modal)
-	# A card admitted earlier the same day stays ON TOP: it is answered first (its restore is
-	# swallowed by the hold). Under the paper it would be hidden, and ANA MENÜ would refuse to
-	# save for a decision screen the player cannot see.
-	if is_instance_valid(_event_modal) and _event_modal.get_parent() == modal_layer:
-		modal_layer.move_child(_milestone_modal, _event_modal.get_index())
 	_milestone_modal.populate(data)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
 
 
@@ -2578,11 +2812,12 @@ func _on_milestone_continue() -> void:
 	if _milestone_modal != null:
 		_milestone_modal.queue_free()
 	_milestone_modal = null
+	_milestone_paper = []
 	TimeManager.release_clock(MILESTONE_CLOCK_HOLD)
-	# The period summary still open on top owns the pause and restores it itself. `> 0`, not
+	# The period summary still open in the inbox owns the pause and restores it itself. `> 0`, not
 	# `>= 0`: DEVAM ET always resumes, so a paper that found the clock paused hands back the
 	# last running speed.
-	if _summary_modal == null:
+	if _pre_note_speed < 0:
 		_restore_speed(_pre_milestone_speed if _pre_milestone_speed > 0 else -1)
 	_pre_milestone_speed = -1
 
@@ -2608,7 +2843,7 @@ func _keep_run_for_main_menu() -> String:
 
 
 func _on_term_table_requested(vc_id: String, stage: String) -> void:
-	if _term_table != null or _in_transit:
+	if _term_table != null or _in_transit or _gate_shut():
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
@@ -2625,7 +2860,7 @@ func _on_term_table_requested(vc_id: String, stage: String) -> void:
 
 # A signature ends the run (no restore and no return to the office: the ending owns the screen
 # and the freeze); a walk-out leaves it alive and restores the pre-table speed. The table's hour
-# runs once the scene is gone.
+# runs once the scene is gone. A card's option that opened the table left what waits for its gate.
 func _close_term_table() -> void:
 	if _term_table != null:
 		_term_table.queue_free()
@@ -2635,6 +2870,7 @@ func _close_term_table() -> void:
 	await _return_to_office()
 	_restore_speed(_pre_dialogue_speed)
 	_pre_dialogue_speed = -1
+	_open_after_gate()
 
 
 # --- Debug (debug builds only) ---
@@ -2672,24 +2908,23 @@ func _teardown_run_ui() -> void:
 		_shell.queue_free()
 		_shell = null
 	_shell_mounted = false
-	_event_modal = null
 	_settings_modal = null
 	_confirm_modal = null
 	_ending_modal = null
 	_milestone_modal = null
-	_summary_modal = null
 	_system_menu = null
 	_save_load_modal = null
 	_meeting_panel = null
 	_term_table = null
-	_rnd_card_queue.clear()
 	_in_transit = false
 	_card_waiting = false
+	_goto_after_gate = []
+	_milestone_paper = []
 	_call = {}
 	_pre_event_speed = -1
 	_pre_settings_speed = -1
 	_pre_confirm_speed = -1
-	_pre_summary_speed = -1
+	_pre_note_speed = -1
 	_pre_system_speed = -1
 	_pre_dialogue_speed = -1
 	_pre_milestone_speed = -1

@@ -6,8 +6,12 @@ extends Panel
 # DisplaySettings.COMPACT_SHELL_BELOW altındayken sıkışık kip: marka yalnız kare, kısa tarih, dar hız
 # tuşları (rayın simge kipiyle aynı eşik). Hafta çubuğu en çok MAX_WEEK_BAR uzar; daha geniş barda
 # Sıradaki yuvası ve saat bloğu gün bloğunun hemen ardından gelir, artan genişlik sağda boş kalır.
-# Sıradaki yuvası hep ayrılmıştır: teklif süresi, yoksa mesai bitimi. Ayırıcılar ve hafta çubuğu
+# Sıradaki yuvası hep ayrılmıştır: teklif süresi, yoksa mesai bitimi. Bir karar beklerken yuva kapıdır:
+# amber nokta ve "Cevap bekliyor", altında göndericisi ya da bekleyen kararların sayısı; yuva ve saat
+# bloğu amber çerçevede, hız tuşları kapalı, tıklanınca karara dönülür. Ayırıcılar ve hafta çubuğu
 # _draw'da.
+
+const INBOX := preload("res://scripts/ui/components/inbox.gd")
 
 const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SERIES_A"]
 ## [tam, sıkışık]: marka bloğunun genişliği; anahtar (A, C, E, G) ve değer (B, D, F, H) sütunlarının
@@ -29,6 +33,14 @@ const DATE_LINE := 28.0
 const HOUR_LINE := 58.0
 const NEXT_KEY_LINE := 29.0
 const NEXT_LINE := 50.0
+const GATE_LINE := 30.0
+const GATE_SUB_LINE := 51.0
+## The gate dot's ring: one pulse, how far it grows and how bright it starts (SPEC §7).
+const PULSE_S := 1.6
+const PULSE_SCALE := 4.0
+const PULSE_ALPHA := 0.55
+## A refused speed key blinks the frame: twice, each way this long.
+const BLINK_S := 0.09
 const CLOCK_LINE := 41.0
 const LOGO := Vector2(20, 14)
 const LOGO_COMPACT := Vector2(22, 22)
@@ -61,6 +73,7 @@ const MAX_WEEK_BAR := 720.0
 var _offer_weeks_left: int = -1
 var _compact := false
 var _slot_x := 0.0
+var _pulse: Tween
 
 
 func _ready() -> void:
@@ -79,6 +92,9 @@ func _ready() -> void:
 	EventBus.language_changed.connect(refresh)
 	EventBus.palette_changed.connect(refresh)
 	EventBus.month_ended.connect(refresh)
+	EventBus.event_triggered.connect(refresh)
+	EventBus.event_set_aside.connect(refresh)
+	EventBus.event_resolved.connect(_refresh.unbind(2))
 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
 	# Hız yalnız TimeManager üzerinden gidip gelir (speed_change_requested → speed_changed); gösterge
 	# buradan boyanır ki olay duraklatmasının dönüşü gibi başka değiştiriciler de görünsün.
@@ -86,6 +102,10 @@ func _ready() -> void:
 	for i in speed_btns.size():
 		speed_btns[i].pressed.connect(EventBus.speed_change_requested.emit.bind(i))
 	resized.connect(_refresh)
+	$GateHit.gui_input.connect(func(e: InputEvent) -> void:
+		if UiFactory.is_left_click(e):
+			INBOX.show("active"))
+	add_to_group(&"top_bar")
 	_refresh()
 	_apply_speed_visual(TimeManager.current_speed)
 
@@ -186,6 +206,49 @@ func _refresh_day(g: Dictionary) -> void:
 	_paint($NextLine, line, ink)
 	_put($NextKey, _slot_x + g.pad, NEXT_KEY_LINE)
 	_put($NextLine, _slot_x + g.pad, NEXT_LINE, g.slot - 2 * g.pad)
+	_refresh_gate(g)
+
+
+## The gate: while a decision waits the slot says so and the clock's keys are off.
+func _refresh_gate(g: Dictionary) -> void:
+	var gated: bool = GameState.run_active and EventGate.active_id() != ""
+	for part: Control in [$NextKey, $NextLine]:
+		part.visible = not gated
+	for part: Control in [$GateDot, $GateRing, $GateLabel, $GateLine, $GateHit, $GateFrame]:
+		part.visible = gated
+	for b in speed_btns:
+		b.disabled = gated
+	if not gated:
+		if _pulse != null:
+			_pulse.kill()
+			_pulse = null
+		return
+	var dot := Vector2(_slot_x + g.pad, GATE_LINE - UiTokens.SPACE_M)
+	$GateDot.position = dot
+	$GateRing.position = dot
+	$GateLabel.text = Fmt.upper(tr("TOPBAR_GATE"))
+	var left: float = dot.x + UiTokens.SPACE_M + UiTokens.SPACE_M
+	_put($GateLabel, left, GATE_LINE, _slot_x + g.slot - g.pad - left)
+	var waiting: int = 1 + EventGate.queue_size()
+	$GateLine.text = tr("TOPBAR_GATE_COUNT").format({"n": waiting}) if waiting > 1 \
+		else String(INBOX.active_item().sender.name)
+	_put($GateLine, left, GATE_SUB_LINE, _slot_x + g.slot - g.pad - left)
+	$GateHit.position = Vector2(_slot_x, 0)
+	$GateHit.size = Vector2(g.slot, size.y)
+	$GateFrame.position = Vector2(_slot_x, 0)
+	$GateFrame.size = Vector2(g.slot + g.time, size.y)
+	if _pulse == null:
+		_pulse = create_tween().set_loops()
+		_pulse.tween_property($GateRing, "scale", Vector2.ONE * PULSE_SCALE, PULSE_S).from(Vector2.ONE)
+		_pulse.parallel().tween_property($GateRing, "modulate:a", 0.0, PULSE_S).from(PULSE_ALPHA)
+
+
+## A speed key pressed while the decision holds the clock: the frame blinks twice.
+func blink_gate() -> void:
+	var tw := create_tween()
+	for i in 2:
+		tw.tween_property($GateFrame, "modulate:a", 0.4, BLINK_S)
+		tw.tween_property($GateFrame, "modulate:a", 1.0, BLINK_S)
 
 
 func _refresh_time(g: Dictionary) -> void:

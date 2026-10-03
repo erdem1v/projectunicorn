@@ -27,8 +27,7 @@ Açık işlerin tek yeri bu klasördür.
 
 ## Arayüz yeniden yapılırken
 Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktalar:
-- Ham stil değerleri (UI/STYLE LAW; her biri yeni token ister): `month_summary_modal.gd` font, yarıçap, margin;
-  `finance_ozet_view.gd` modulate'ları; `hunt_tab.gd` `_label` boyutları (11–14; 14 merdivende yok)
+- Ham stil değerleri (UI/STYLE LAW; her biri yeni token ister): `finance_ozet_view.gd` modulate'ları; `hunt_tab.gd` `_label` boyutları (11–14; 14 merdivende yok)
   ve disabled alfaları; `OnboardingFlow.tscn` LoadingLabel 18, `origin_traits_step.gd` ve `character_step.gd`
   modulate'ları; bir yerde ham 24 punto ve CREAM rengi.
 - `hr_tab.gd` saat çipini (`_paint_hours_control`) ve Kadro/Görevler segmentini (`_paint_segments`) elle kurduğu

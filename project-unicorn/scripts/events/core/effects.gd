@@ -401,10 +401,8 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			return {"verb": verb, "line_key": e.get("line_key", "")}
 		"goto_tab":
 			var tab_id: String = String(e.get("tab_id", ""))
-			EventBus.tab_changed.emit(tab_id)
 			var subpage: String = String(e.get("subpage", ""))
-			if subpage != "":
-				EventBus.finance_subpage_requested.emit(subpage)
+			EventBus.goto_tab_requested.emit(tab_id, subpage)
 			return {"verb": verb, "tab": tab_id, "subpage": subpage}
 		"notify":
 			# class: info's surface. Badge state belongs to the owning module, so this nudges it

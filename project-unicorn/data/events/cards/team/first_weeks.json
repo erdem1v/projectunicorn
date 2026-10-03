@@ -2,6 +2,7 @@
   "id": "team.first_weeks",
   "version_scope": "demo",
   "category": "team",
+  "sender": "self",
   "tick": "daily",
   "class": "interrupt",
   "tags": [

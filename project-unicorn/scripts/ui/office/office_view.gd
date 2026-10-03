@@ -62,6 +62,12 @@ func _ready() -> void:
 	$Overlay.add_child(invite)
 
 
+## A decision opens over the office: no move is chosen on a map left open under it.
+func close_map() -> void:
+	if layout.id == "city":
+		_city.close()
+
+
 ## Loads an office (or "city", the map, or "meet", the meeting room) in place of the one on
 ## screen. `road` is the map of the founder's trip: no controls, and the view takes no pointer.
 func load_layout(office_id: String, road := false) -> void:

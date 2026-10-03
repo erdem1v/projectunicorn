@@ -140,6 +140,40 @@ layout_mode = 0
 theme_type_variation = &"KeyText"
 text_overrun_behavior = 3
 
+[node name="GateRing" type="Panel" parent="."]
+visible = false
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+pivot_offset = Vector2(4, 4)
+mouse_filter = 2
+theme_type_variation = &"GateDot"
+
+[node name="GateDot" type="Panel" parent="."]
+visible = false
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+mouse_filter = 2
+theme_type_variation = &"GateDot"
+
+[node name="GateLabel" type="Label" parent="."]
+visible = false
+layout_mode = 0
+theme_type_variation = &"GateLabel"
+text_overrun_behavior = 3
+
+[node name="GateLine" type="Label" parent="."]
+visible = false
+layout_mode = 0
+theme_type_variation = &"KeyText"
+text_overrun_behavior = 3
+
+[node name="GateHit" type="Control" parent="."]
+visible = false
+layout_mode = 0
+mouse_default_cursor_shape = 2
+
 [node name="TimeBlock" type="Panel" parent="."]
 layout_mode = 0
 mouse_filter = 2
@@ -178,3 +212,9 @@ layout_mode = 0
 focus_mode = 0
 theme_type_variation = &"SpeedKey"
 text = "4x"
+
+[node name="GateFrame" type="Panel" parent="."]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"GateFrame"

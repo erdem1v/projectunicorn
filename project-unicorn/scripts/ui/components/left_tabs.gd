@@ -16,7 +16,8 @@ extends Panel
 #   hr       HRSystem.attention_count() (thresholds live in HRConstants)
 #   sales    B2BSalesSystem.attention_count() (accounts in the RİSK phase)
 #   finance  1 when runway is under FinanceSystem's first runway alert threshold
-#   events   EventGate.queue_size()
+#   events   the decisions queued and the papers on the desk; while a decision waits, the amber
+#            gate dot instead
 #   rnd      RnDSystem.attention_count() (frozen research + unread report)
 
 const WIDTH := 184.0
@@ -90,6 +91,12 @@ func _ready() -> void:
 		btn.add_child(lock)
 
 	settings_btn.pressed.connect(EventBus.settings_requested.emit)
+	var gate := Panel.new()
+	gate.name = "GateDot"
+	gate.theme_type_variation = &"GateDot"
+	gate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gate.custom_minimum_size = Vector2.ONE * UiTokens.SPACE_M
+	tab_buttons[_index_of("events")].add_child(gate)
 
 	# Rail clicks, the ✕/Esc close and programmatic switches (a closing sprint, goto_tab)
 	# all arrive here, so the highlight has a single painter.
@@ -101,6 +108,8 @@ func _ready() -> void:
 	EventBus.runway_recalculated.connect(_refresh_finance_badge.unbind(1))
 	EventBus.event_triggered.connect(_refresh_events_badge.unbind(1))
 	EventBus.event_resolved.connect(_refresh_events_badge.unbind(2))
+	EventBus.event_set_aside.connect(_refresh_events_badge.unbind(1))
+	EventBus.desk_changed.connect(_refresh_events_badge)
 	EventBus.customer_health_changed.connect(_refresh_sales_badge.unbind(2))
 	EventBus.customer_churned.connect(_refresh_sales_badge.unbind(1))
 	EventBus.customer_removed.connect(_refresh_sales_badge.unbind(1))
@@ -131,6 +140,8 @@ func _paint() -> void:
 		var state: String = "locked" if _is_locked(i) else ("active" if i == current_tab_idx else "idle")
 		_paint_row(tab_buttons[i], "TAB_" + id.to_upper(), state, icons)
 		_paint_badge(tab_buttons[i].get_node("Badge"), id in DANGER_TABS, state == "active", icons)
+		if id == "events":
+			_place_gate_dot(tab_buttons[i].get_node("GateDot"), icons)
 		if state == "locked":
 			var reason: Label = tab_buttons[i].get_node("Stack/NameLabel/Reason")
 			reason.text = Fmt.upper(tr(_lock_reason(String(UiTokens.TABS[i].lock))))
@@ -187,6 +198,17 @@ func _paint_badge(badge: Label, danger: bool, active: bool, icons: bool) -> void
 		box.set_expand_margin_all(BADGE_RING)
 		box.border_color = UiTokens.D_SURFACE_4 if active else UiTokens.D_SURFACE_1
 	badge.add_theme_stylebox_override("normal", box)
+
+
+## Where a count would sit: right of the name, or on the icon's corner.
+func _place_gate_dot(dot: Panel, icons: bool) -> void:
+	var px: float = UiTokens.SPACE_M
+	dot.set_anchors_preset(Control.PRESET_TOP_LEFT if icons else Control.PRESET_CENTER_RIGHT)
+	var at := BADGE_AT_ICONS if icons else Vector2(-BADGE_RIGHT - UiTokens.D_H_BADGE / 2.0 - px / 2.0, -px / 2.0)
+	dot.offset_left = at.x
+	dot.offset_top = at.y
+	dot.offset_right = at.x + px
+	dot.offset_bottom = at.y + px
 
 
 ## The demo build says which build opens a tab gated "ea"; any other build, or gate, says "soon".
@@ -247,7 +269,9 @@ func _refresh_finance_badge() -> void:
 
 
 func _refresh_events_badge() -> void:
-	_set_badge_count("events", EventGate.queue_size())
+	var gated: bool = EventGate.active_id() != ""
+	tab_buttons[_index_of("events")].get_node("GateDot").visible = gated
+	_set_badge_count("events", 0 if gated else EventGate.queue_size() + EventGate.desk_papers().size())
 
 
 func _refresh_sales_badge() -> void:
