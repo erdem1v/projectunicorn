@@ -189,7 +189,7 @@ func _paint_kpi() -> void:
 			soonest = int(it.weeks_left) if soonest < 0 else mini(soonest, int(it.weeks_left))
 			last = last or bool(it.get("expiring", false)) or int(it.weeks_left) <= 1
 	_kpi.visible = soonest >= 0
-	var value: Label = _kpi.get_child(0).get_child(1)
+	var value: Label = UiFactory.D_kpi_value(_kpi)
 	value.text = tr("INBOX_THIS_WEEK") if last else tr(Fmt.count_key("DESK_PAPER_WEEKS", soonest)).format({"n": soonest})
 	if last:
 		value.add_theme_color_override("font_color", UiTokens.D_warn())

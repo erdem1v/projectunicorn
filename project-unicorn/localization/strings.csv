@@ -279,33 +279,32 @@ HR_RELATION_FRIENDLY,Dost,Friendly
 HR_RELATION_NEUTRAL,Nötr,Neutral
 HR_RELATION_WARY,Temkinli,Wary
 HR_RELATION_HOSTILE,Düşman,Hostile
-HR_COL_ROLES_LEADERSHIP,ROLLER · LİDERLİK,ROLES · LEADERSHIP
 HR_COL_TASK,GÖREV,TASK
 HR_COL_ROLES,ROLLER,ROLES
-HR_COL_TRAIT,TRAIT,TRAIT
+HR_COL_ROLE,Rol,Role
+HR_COL_TRAIT,Huy,Trait
 HR_TASK_NONE,—,—
-HR_LEGEND_PRIMARY,ANA ALAN,PRIMARY AREA
-HR_LEGEND_SECONDARY,İKİNCİL ALAN,SECONDARY AREA
 HR_SKILL_LEGEND_MAIN,ana,main
 HR_SKILL_LEGEND_SECONDARY,ikincil,secondary
-HR_LEGEND_NO_AREA,ALANI YOK · ATANAMAZ,NO AREA · CANNOT ASSIGN
-HR_CHIP_IDLE_COUNT,{n} BOŞTA,{n} IDLE
-HR_CHIP_OVERLOAD_COUNT,{n} AŞIRI YÜK,{n} OVERLOADED
-HR_ATLAS_ARRIVAL,adaylar {span} içinde gelir,candidates arrive within {span}
+HR_LEGEND_NO_AREA,alanı yok,no area
+HR_LEGEND_LOCKED,kilitli,locked
+HR_CHIP_IDLE_COUNT,{n} boşta,{n} idle
+HR_CHIP_OVERLOAD_COUNT,{n} aşırı yük,{n} overloaded
+HR_ATLAS_ARRIVAL,Adaylar {span} içinde gelir,Candidates arrive within {span}
 HR_ATLAS_ARRIVAL_SPAN,bir hafta,a week
-HR_ATLAS_FILE_N,DOSYA {i}/{n},FILE {i}/{n}
+HR_ATLAS_FILE_N,Dosya {i}/{n},File {i}/{n}
 HR_ATLAS_SALARY_LABEL,MAAŞ TALEBİ,SALARY ASK
 HR_ATLAS_COMMISSION_LABEL,KOMİSYON,COMMISSION
+HR_ATLAS_COMMISSION_ONCE,tek seferlik,one-off
 HR_ATLAS_RUNWAY_LABEL,RUNWAY,RUNWAY
 HR_PER_MONTH,/ay,/mo
-HR_TRAINING_STEP_AREA,ALAN SEÇ,CHOOSE AN AREA
 HR_TRAINING_COL_AREA,ALAN,AREA
 HR_TRAINING_COL_CURRENT,MEVCUT,CURRENT
 HR_TRAINING_COL_TARGET,HEDEF,TARGET
 HR_TRAINING_COL_FEE,ÜCRET,FEE
 HR_TRAINING_COL_DURATION,SÜRE,DURATION
 HR_TRAINING_WARNING,Eğitimdeyken görev alamaz.,Cannot be assigned while in training.
-HR_TRAINING_CTA,EĞİTİME GÖNDER · {fee},SEND TO TRAINING · {fee}
+HR_TRAINING_CTA,Eğitime gönder · {fee},Send to training · {fee}
 HR_TRAINING_AT_CAP,Bu alan tavanda.,This area is already at the cap.
 HR_TRAINING_NOT_EARNED,Deneyim barı dolmadı.,The experience bar is not full yet.
 HR_DURATION_WEEKS,{n} hafta,{n} weeks
@@ -316,7 +315,7 @@ PER_TENURE,KIDEM · {n}. HAFTA,TENURE · WEEK {n}
 PER_EXPERIENCE,DENEYİM,EXPERIENCE
 PER_TASK_LABEL,GÖREV,TASK
 PER_TRAITS,HUYLAR,TRAITS
-HR_FOUNDER_STATE_BUILD,Bir yapımda çalışıyor,Working on a build
+HR_FOUNDER_STATE_BUILD,Yapımda görev alıyor,Working on the build
 HR_FOUNDER_STATE_SALES,Satışta,In sales
 HR_FOUNDER_STATE_SUPPORT,Destekte,On support
 HR_FOUNDER_STATE_RESEARCH,Araştırmada,In research
@@ -335,8 +334,8 @@ PER_VALUATION,SON DEĞERLEME,LATEST VALUATION
 PER_PEAK_VALUE,ZİRVE DEĞER,ALL-TIME PEAK
 PER_NO_VALUATION,Değerleme henüz yok — ilk yatırım turunda hesaplanır.,No valuation yet — calculated at the first funding round.
 PER_CAP_FOUNDER,Kurucu · %{pct},Founder · {pct}%
-HR_BADGE_IDLE,BOŞTA,IDLE
-HR_BADGE_OVERLOADED_JOBS,AŞIRI YÜK,OVERLOADED
+HR_BADGE_IDLE,Boşta,Idle
+HR_BADGE_OVERLOADED_JOBS,Aşırı yük,Overloaded
 HR_IDLE_HINT,Hiçbir işe atanmadı — duruyor ve maaş alıyor.,Not assigned to any job — standing idle and still on payroll.
 HR_OVERLOAD_HINT,"Birden fazla işte çalışıyor. Zamanı işler arasında bölünür, her iki işte de hızı belirgin düşer, ve morali normalden hızlı erir.","Working more than one job. Their time is split between them, they are markedly slower in both, and their morale erodes faster than normal."
 HR_AREA_MEANING_PRODUCT_MANAGER_PRODUCT,Özellik kararları ve tasarım tavanı,Feature decisions and the design ceiling
@@ -365,14 +364,12 @@ ONB_SKILL_CHARISMA_DESC,"Yatırımcı ikna gücü, şartlar ve kriz anları.","I
 HR_COL_STATE,DURUM,STATE
 HR_COL_SALARY,MAAŞ,SALARY
 HR_COL_MORALE,MORAL,MORALE
-HR_PAGE_TITLE,Ekip,Team
-HR_SUMMARY,ÇALIŞAN {count} · ORTALAMA MORAL {morale} · AYLIK MAAŞ YÜKÜ {payroll},HEADCOUNT {count} · AVERAGE MORALE {morale} · MONTHLY PAYROLL {payroll}
-HR_SEARCH_START,+ İŞE ALIM BAŞLAT,+ Start Recruitment
-HR_SEARCH_START_INLINE,İŞE ALIM BAŞLAT,Start Recruitment
+HR_KPI_EMPLOYEES,Çalışan,Employees
+HR_KPI_MORALE,Ortalama moral,Average morale
+HR_SEARCH_START,İşe alım başlat,Start recruitment
 HR_EMPTY_ROW,Henüz kimse yok,Nobody here yet
 HR_STATE_TRAINING,Eğitimde · {n} hafta,In training · {n} weeks
 HR_STATE_TRAINING_ONE,Eğitimde · 1 hafta,In training · 1 week
-HR_TRAINING,EĞİTİM,TRAINING
 HR_TRAINING_SEND,EĞİTİME GÖNDER,SEND TO TRAINING
 HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
 HR_NEWS_TRAINING_DONE,{name} eğitimden döndü; uzmanlığı arttı.,{name} is back from training with sharper expertise.
@@ -471,7 +468,7 @@ FIX_RUN_REFUSED_NO_BUGS,Doğrulanmış hata yok.,No confirmed bugs.
 PROD_PERCENT,%{n},{n}%
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
-HR_ROLE_DESIGNER,UX/UI Designer,UX/UI Designer
+HR_ROLE_DESIGNER,Tasarımcı,UX/UI Designer
 HR_ROLE_DEVELOPER,Yazılım Mühendisi,Software Engineer
 HR_ROLE_TESTER,Test Mühendisi,QA Engineer
 HR_ROLE_SALES_REP,Satış Temsilcisi,Sales Representative
@@ -482,7 +479,7 @@ HR_LEVEL_PREFIX_SENIOR,Kıdemli,Senior
 HR_LEVEL_JUNIOR,Junior,Junior
 HR_LEVEL_MID,Orta,Mid
 HR_LEVEL_SENIOR,Kıdemli,Senior
-HR_JOB_BUILD,Build ekibi,Build team
+HR_JOB_BUILD,Yapım ekibi,Build team
 HR_JOB_TEST,Test,Test
 HR_JOB_SUPPORT,Destek,Support
 HR_JOB_ACCOUNTS,Hesap sahipliği,Account ownership
@@ -495,10 +492,11 @@ HR_TASK_ON_JOB_SALES,Satışta görev alıyor,Working sales
 HR_STATE_HOURS_OVER,+{n}s mesai,+{n}h overtime
 HR_STATE_HOURS_SHORT,−{n}s kısa,−{n}h short
 HR_ASSIGN_JOB_CAP,En fazla iki iş.,Two jobs is the limit.
-HR_HOURS_WINDOW,{start}–{end},{start}–{end}
-HR_HOURS_CHIP_OVERTIME,{window} · {n} çalışan mesaide,{window} · {n} on overtime
-HR_HOURS_CHIP_OVERRIDES,{window} · {n} istisna,{window} · {n} exceptions
+HR_HOURS_WINDOW,{start} ile {end} arası,{start} to {end}
+HR_HOURS_CHIP_OVERRIDES,{n} istisna,{n} exceptions
+HR_HOURS_CHIP_OVERRIDES_ONE,1 istisna,1 exception
 HR_HOURS_TITLE,Çalışma saatleri,Working hours
+HR_HOURS_DAY_BAND,Ofis günü,Office day
 HR_HOURS_SCOPE_COMPANY,Şirket,Company
 HR_HOURS_COL_HOURS,SÜRE,HOURS
 HR_HOURS_COL_SOURCE,KAYNAK,SOURCE
@@ -528,7 +526,7 @@ HR_HOURS_FACT_SHORT,{n} çalışan kısa günde,{n} on a short day
 HR_HOURS_RULE_OVERTIME,Mesai saatleri %50 fazla ücretle ödenir,Overtime hours are paid at 50% above the hourly rate
 HR_HOURS_RULE_SHORT,Kısa gün maaş yükünü düşürmez,A short day does not lower the payroll
 HR_BADGE_FLIGHT_RISK,Ayrılabilir,At risk of leaving
-HR_SEARCH_CANCEL,ARAYIŞI İPTAL ET,CANCEL SEARCH
+HR_SEARCH_CANCEL,Arayışı iptal et,Cancel search
 HR_COST_HIRING,İşe alım,Hiring
 HR_COST_SEVERANCE,Kıdem tazminatı,Severance
 HR_COST_TRAINING,Eğitim ücreti,Training fee
@@ -723,21 +721,21 @@ HEALTH_CHURNING,kaçıyor,churning
 NOTICE_SRC_SALES,Satış,Sales
 NOTICE_SRC_FINANCE,Finans,Finance
 HR_BADGE_NEW,Yeni,New
-HR_TRAIT_LOYAL_LABEL,SADIK,Loyal
+HR_TRAIT_LOYAL_LABEL,Sadık,Loyal
 HR_TRAIT_LOYAL_EFFECT,Moral düşükken bile kolay kolay ayrılmaz; rakip teklifine dayanır.,"Unlikely to leave even at low morale, and holds out against a rival offer."
-HR_TRAIT_PICKS_IT_UP_FAST_LABEL,ÇABUK KAPAR,Picks It Up Fast
+HR_TRAIT_PICKS_IT_UP_FAST_LABEL,Çabuk kapar,Picks It Up Fast
 HR_TRAIT_PICKS_IT_UP_FAST_EFFECT,Deneyimi belirgin şekilde hızlı kazanır.,Gains experience noticeably faster.
-HR_TRAIT_TAKES_THEM_UNDER_LABEL,GERÇEK LİDER,Takes Them Under
+HR_TRAIT_TAKES_THEM_UNDER_LABEL,Gerçek lider,Takes Them Under
 HR_TRAIT_TAKES_THEM_UNDER_EFFECT,Sorumlusu olduğu alanda herkes daha hızlı öğrenir; ayrılıkları ağır alır.,Everyone in the area they lead learns faster; they take departures hard.
-HR_TRAIT_DOUBLE_CHECKER_LABEL,TİTİZ,Double Checker
+HR_TRAIT_DOUBLE_CHECKER_LABEL,Titiz,Double Checker
 HR_TRAIT_DOUBLE_CHECKER_EFFECT,"Geliştirmede çok daha az hata çıkarır, ama yavaş çalışır.","Generates far fewer bugs during development, but works slower."
-HR_TRAIT_LAST_ONE_OUT_LABEL,İŞKOLİK,Last One Out
+HR_TRAIT_LAST_ONE_OUT_LABEL,İşkolik,Last One Out
 HR_TRAIT_LAST_ONE_OUT_EFFECT,Mesai morali onda çok daha yavaş erir.,Overtime erodes their morale far more slowly.
-HR_TRAIT_CANT_SAY_NO_LABEL,HAYIR DİYEMEZ,Can't Say No
+HR_TRAIT_CANT_SAY_NO_LABEL,Hayır diyemez,Can't Say No
 HR_TRAIT_CANT_SAY_NO_EFFECT,"Hesapları daha memnun, ama üzerinde daha çok söz birikir.","Their accounts stay happier, but more promises pile up on them."
-HR_TRAIT_BAG_PACKED_LABEL,GÖZÜ YÜKSEKTE,Bag Packed
+HR_TRAIT_BAG_PACKED_LABEL,Gözü yüksekte,Bag Packed
 HR_TRAIT_BAG_PACKED_EFFECT,"Yüksek verimle çalışır, ama rakip teklifinde tutması zor.","Works at high output, but is hard to hold against a rival offer."
-HR_TRAIT_MOOD_BUSTER_LABEL,TAT KAÇIRAN,Mood Buster
+HR_TRAIT_MOOD_BUSTER_LABEL,Tat kaçıran,Mood Buster
 HR_TRAIT_MOOD_BUSTER_EFFECT,Ekibinin morali normalden hızlı erir.,Their team's morale erodes faster than normal.
 HR_ROLE_HINT_PRODUCT_MANAGER,"Ne yapılacağına karar verir, ekibi aynı hedefe bakar tutar.",Decides what gets built and keeps everyone pointed at it.
 HR_ROLE_HINT_DESIGNER,Ürünün nasıl göründüğünü ve nasıl kullanıldığını kurar.,Shapes how the product looks and how it is used.
@@ -747,7 +745,7 @@ HR_ROLE_HINT_SALES_REP,"Aday müşteri bulur, anlaşmayı kapatır.",Finds prosp
 HR_ROLE_HINT_CUSTOMER_REP,Mevcut müşterileri elde tutar. Müşteriden gelen her şey önce ona uğrar.,Keeps existing customers. Everything from a customer reaches them first.
 HR_ROLE_HINT_MARKETING,Ürünü duyurur ve talebi büyütür.,Gets the product heard and grows demand.
 HR_ROLE_HINT_HR_INHOUSE,İşe alımı ve ekibin iç işlerini şirket içinden yürütür.,Runs hiring and the team's internal affairs from inside the company.
-HR_AGENCY_NAME,ATLAS RECRUITMENT,ATLAS RECRUITMENT
+HR_AGENCY_NAME,Atlas Recruitment,Atlas Recruitment
 HR_RESIGN_VOICE_1,"""Bir süre düşündüm. Burada tükeniyorum, daha fazla taşımak istemiyorum.""","""I've thought about it for a while. I'm burning out here, and I don't want to carry it anymore."""
 HR_RESIGN_VOICE_2,"""Kimseyle sorunum yok. Sadece her sabah biraz daha zor kalkıyorum. O kadar.""","""I don't have a problem with anyone. It's just harder to get up every morning. That's all."""
 HR_RESIGN_VOICE_3,"""Bana kötü davranıldı demeyeceğim. Ama fark edilmedim.""","""I won't say I was treated badly. But nobody noticed me."""
@@ -769,7 +767,7 @@ HR_RAISE_PERMANENT,"Zam kalıcıdır, geri alınmaz",A raise is permanent and ca
 HR_PROMOTION_PERMANENT,"Terfi kalıcıdır, geri alınmaz",A promotion is permanent and cannot be undone
 HR_ERR_TOP_LEVEL,En üst seviye,Top level
 HR_CARD_PROMOTE,Terfi ettir,Promote
-HR_APPLY_PROMOTE_PCT,Terfi ettir · +%{pct},Promote · +{pct}%
+HR_APPLY_PROMOTE_PCT,Terfi ettir · +{pct},Promote · +{pct}
 HR_ROW_TITLE,Unvan,Title
 HR_ERR_NO_RECORD,Kayıt bulunamadı,No record found
 HR_ERR_EMPLOYEES_ONLY,Bu aksiyon yalnız çalışanlar için,This action is for employees only
@@ -782,6 +780,8 @@ HR_EV_RESIGN_TITLE,Ayrılık,A departure
 HR_EV_RESIGN_ACK,Anlaşıldı,Understood
 HR_STATE_ON_LEAVE_WEEKS,İzinde · {n} hafta kaldı,On leave · {n} weeks left
 HR_STATE_ON_LEAVE_WEEKS_ONE,İzinde · 1 hafta kaldı,On leave · 1 week left
+HR_STATE_ON_LEAVE,İzinde,On leave
+HR_STATE_IN_TRAINING,Eğitimde,In training
 HR_NEWS_BACK_FROM,{name} {whence} döndü,{name} is back from {whence}
 HR_NEWS_ON_LEAVE,{name} {n} hafta izinde,{name} is on leave for {n} weeks
 HR_NEWS_ON_LEAVE_ONE,{name} bir hafta izinde,{name} is on leave for a week
@@ -790,29 +790,30 @@ HR_NEWS_ON_HOLIDAY_ONE,{name} bir haftalığına tatile çıktı,{name} is off o
 HR_WHENCE_LEAVE,izinden,leave
 HR_WHENCE_HOLIDAY,tatilden,holiday
 HR_FILES_ON_DESK,{n} aday dosyası masada.,{n} candidate files on your desk.
-HR_OPEN_FILES,DOSYALARI AÇ,OPEN THE FILES
+HR_OPEN_FILES,Dosyaları aç,Open the files
 HR_SEARCHING,{role} aranıyor · dosyalar {n} hafta sonra gelir,Searching for {role} · files arrive in {n} weeks
 HR_SEARCHING_ONE,{role} aranıyor · dosyalar gelecek hafta gelir,Searching for {role} · files arrive next week
 HR_SEARCH_CANCEL_TITLE,Arayışı iptal et,Cancel the search
 HR_SEARCH_CANCEL_BODY,Arayış kapanır. Yeniden başlatırsan adaylar {span} sonra gelir.,The search closes. If you start again the candidates arrive in {span}.
 HR_SEARCH_CANCEL_OK,İptal et,Cancel it
 HR_FIRE_CONFIRM_OK,İşten çıkar,Let go
+HR_FIRE_CASH_NEGATIVE,Kasa eksiye düşer. {n} haftalık kepenk sayacı başlar.,Cash goes below zero. The {n}-week shutter countdown starts.
 HR_ATLAS_STEP_ROLE,Adım 1 · Rol,Step 1 · Role
 HR_ATLAS_STEP_LEVEL,Adım 2 · Seviye,Step 2 · Level
-HR_ATLAS_FREE_NOTE,arama ücretsiz · komisyon işe alımda ödenir,the search is free · commission is paid on the hire
-HR_ATLAS_CANCEL,VAZGEÇ,CANCEL
-HR_ATLAS_START,ARAYIŞ BAŞLAT,START SEARCH
+HR_ATLAS_FREE_NOTE,Arama ücretsiz · komisyon işe alımda ödenir,The search is free · commission is paid on the hire
+HR_ATLAS_START,Arayış başlat,Start search
 HR_ATLAS_NEED_SELECTION,Rol ve seviye seçilmeli.,Pick a role and a level.
 HR_ATLAS_FILES_COUNT,Aday dosyaları · {n},Candidate files · {n}
 HR_ATLAS_TAKE_NONE,Hiçbirini alma,Take none
-HR_ATLAS_HIRE,İŞE AL · {amount}/AY,HIRE · {amount}/MO
+HR_ATLAS_HIRE,İşe al · {amount}/ay,Hire · {amount}/mo
 HR_ATLAS_CLOSE_BODY,Dosyalar kapanır. Yeni bir arayış başlatırsan adaylar {span} sonra gelir.,The files close. If you start a new search the candidates arrive in {span}.
 HR_ATLAS_CLOSE_OK,Dosyaları kapat,Close the files
 HR_CARD_RAISE,Zam yap,Give a raise
 HR_CARD_FIRE,İşten çıkar,Dismiss
 HR_MENU_PERMANENT,kalıcı,permanent
+HR_MENU_OPEN_DOSSIER,Dosyayı aç,Open file
 HR_CANDIDATE_GENERIC,Aday,Candidate
-HR_APPLY_RAISE_PCT,ZAMMI UYGULA · +{pct},APPLY RAISE · +{pct}
+HR_APPLY_RAISE_PCT,Zammı uygula · +{pct},Apply raise · +{pct}
 HR_ROW_SALARY,Maaş,Salary
 HR_ROW_MORALE,Moral,Morale
 HR_ROW_PAYROLL,Aylık maaş yükü,Monthly payroll

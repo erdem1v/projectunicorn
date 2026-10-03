@@ -1,10 +1,10 @@
 extends Control
 
 # ============================================================================
-# Ekip sayfası — HR sekmesi (§13).
-#
-# Kod-kurulu düzen, boş .tscn kökü: grup bölümleri dinamik. Atlas, eğitim ve çalışma
-# saatleri PanelLayer modalları; satır aksiyonları bir popover.
+# Ekip penceresi (HR, §13). Koyu başlıkta Ekip, üç KPI ve beceri lejantı; altında denetim şeridi
+# (Kadro / Görevler, mesai çipi, İşe alım başlat), şeritler (kaçma riski, Atlas), yapışkan tablo
+# başlığı ve kayan liste. Atlas, eğitim ve çalışma saatleri PanelLayer panelleri; satır aksiyonları
+# bir popover. Kadro belli bir kişi sayısından sonra sıkı kipe geçer (HRLedger.COMPACT_FROM).
 #
 # TAZELEME MODELİ: ucuz bir yapı anahtarı (kadro id'leri + statüler + arayış hali + mesai
 # hali) yeniden-kurma ile yerinde-güncelleme arasında karar verir. Böylece morale_changed
@@ -15,9 +15,11 @@ extends Control
 # atılıyor — oraya bağlanan bir tazeleme HR durumunu tick'ten ÖNCE okur (Atlas
 # şeridi bir tik geride, gelen dosyalar bir tik görünmez).
 #
-# Bu dosya hiçbir sonucu hesaplamaz: her rakam bir motor çağrısından gelir. Tek istisna
-# BİÇİMLEME: kesir → yüzde ve float → int yuvarlaması.
+# Bu dosya hiçbir sonucu hesaplamaz: her rakam bir motor çağrısından gelir.
 # ============================================================================
+
+## The window grows with the list (WindowLayer reads fit_height).
+signal fit_changed
 
 const ATLAS_MODAL := "res://scenes/modals/HRAtlasModal.tscn"
 const WORK_HOURS_MODAL := "res://scenes/modals/WorkHoursModal.tscn"
@@ -26,28 +28,52 @@ const WORK_HOURS_MODAL := "res://scenes/modals/WorkHoursModal.tscn"
 ## tamamen farklı sütunlar taşıyor ve görünmez bir tabloyu beslemek bayatlık demek.
 const VIEW_ROSTER := "roster"
 const VIEW_ASSIGNMENTS := "assignments"
+## The list ends this far inside the body's right edge: the scrollbar's lane.
+const GUTTER := UiTokens.SPACE_L
+## The row menu's content width.
+const MENU_W := 304
 
+var frame_options: Dictionary
+var _kpis: Array = []   # employees, average morale, payroll
+var _outer: VBoxContainer
+var _seg_slot: HBoxContainer
+var _ctl_tags: HBoxContainer
+var _hours: Button
+var _hire: Button
+var _strips: VBoxContainer
+var _head_slot: MarginContainer
+var _scroll: ScrollContainer
+var _list: VBoxContainer
 var _signals: Array = []
-var _list: VBoxContainer = null
-var _summary: Label = null
-var _hours_control: Button = null
 var _structure_key: String = ""
 var _view: String = VIEW_ROSTER
-var _seg_roster: Button = null
-var _seg_assign: Button = null
-var _placement_chips: HBoxContainer = null
-var _attention_strip: VBoxContainer = null
-var _header: Control = null   # KADRO sütun başlıkları; GÖREVLER görünümünde gizli
-# Satır başına yerinde-repaint referansları: emp.id → {"bar":…, "value":…}
-var _morale_refs: Dictionary = {}
+var _collapsed: Dictionary = {}   # group id -> true
+var _menu_id: String = ""         # the person whose row menu is open
+var _held: Dictionary = {}        # emp.id -> how many of their file, dialogs and panels are open
+var _rows: Dictionary = {}        # emp.id -> row, for the selection
+var _morale_refs: Dictionary = {} # emp.id -> D_morale refs
+
+
+func _init() -> void:
+	var slot := HBoxContainer.new()
+	slot.add_theme_constant_override("separation", 0)
+	for key in ["HR_KPI_EMPLOYEES", "HR_KPI_MORALE", "HR_ROW_PAYROLL"]:
+		var kpi := UiFactory.D_kpi(tr(key), "")
+		_kpis.append(kpi)
+		slot.add_child(kpi)
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slot.add_child(gap)
+	slot.add_child(HRUiShared.D_skill_legend())
+	frame_options = {"title": "TAB_HR", "kpi": slot, "pad": Vector2i.ZERO}
 
 
 func _ready() -> void:
-	_build_chrome()
+	_build()
 	# Ekip dosyasından yapılan bir kişi aksiyonu bu sayfayı da tazeler (HRLedger).
 	add_to_group(HRLedger.VIEWS_GROUP)
 	# Mesai ve arayış durumu için motorda sinyal yok; onları hr_day_processed ve aksiyon
-	# sonrası yerel tazeleme taşıyor.
+	# sonrası yerel tazeleme taşıyor. Karar kapısı açılıp kapanınca denetimler kapanıp açılır.
 	_signals = [
 		EventBus.character_added, EventBus.character_removed, EventBus.morale_changed,
 		EventBus.headline_added, EventBus.cash_changed, EventBus.burn_changed,
@@ -55,6 +81,7 @@ func _ready() -> void:
 		# MT satırı canlı hesap sayısı taşıyor.
 		EventBus.customer_assigned,
 		EventBus.employee_experience_changed, EventBus.employee_training_changed,
+		EventBus.event_triggered, EventBus.event_resolved, EventBus.event_set_aside,
 	]
 	for sig in _signals:
 		sig.connect(_on_state_changed)
@@ -76,99 +103,128 @@ func _on_state_changed(_a = null, _b = null, _c = null) -> void:
 
 
 func _on_palette_changed(_cb: bool) -> void:
-	# Yapı anahtarı palette bağlı değil; çipler çalışma zamanında erişimcilerden kurulduğu
+	# Yapı anahtarı palette bağlı değil; renkler çalışma zamanında erişimcilerden kurulduğu
 	# için yeni paleti ancak yeniden kurulunca alır.
 	rebuild_view()
 
 
-# --- Sayfa kromu ------------------------------------------------------------
+# --- Sayfa ------------------------------------------------------------------
 
-func _build_chrome() -> void:
-	# Kenar boşluğu pencerenin (WindowFrame): başlık satırı kapatma glifiyle aynı çizgide.
-	var outer := VBoxContainer.new()
-	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	outer.add_theme_constant_override("separation", 10)
-	add_child(outer)
+func _build() -> void:
+	_outer = VBoxContainer.new()
+	_outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_outer.add_theme_constant_override("separation", 0)
+	add_child(_outer)
 
-	# Başlık satırı: Ekip + özet + yerleşim çipleri · sağda saat kontrolü + İŞE ALIM BAŞLAT.
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 14)
-	head.alignment = BoxContainer.ALIGNMENT_CENTER
-	head.add_child(UiFactory.make_label(tr("HR_PAGE_TITLE"), &"PageTitleSerif"))
-	# Özet + çipler tek genişleyen grupta durur: özet kelepçelenmez, çipler cümlenin hemen
-	# ardına gelir ve kalan boşluk eylem grubunu sağa iter.
-	var info := HBoxContainer.new()
-	info.add_theme_constant_override("separation", 14)
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(info)
-	_summary = UiFactory.make_label("", &"TitleRowSummary")
-	_summary.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	info.add_child(_summary)
-	_placement_chips = HBoxContainer.new()
-	_placement_chips.add_theme_constant_override("separation", UiTokens.SPACE_S)
-	_placement_chips.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	info.add_child(_placement_chips)
-	# §13.2 eylem grubu iki üyelidir: çalışma saatleri kontrolü + İŞE ALIM BAŞLAT. Eğitim
-	# satır menüsündedir (§13.3), orada kişi zaten seçili.
-	_hours_control = _build_hours_control()
-	head.add_child(_hours_control)
-	head.add_child(HRUiShared.action_button(tr("HR_SEARCH_START"), _open_atlas, true))
-	outer.add_child(head)
+	var ctl := PanelContainer.new()
+	ctl.theme_type_variation = &"WinCtl"
+	ctl.custom_minimum_size.y = UiTokens.D_H_WIN_CTL
+	var bar := HBoxContainer.new()
+	bar.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	ctl.add_child(bar)
+	_seg_slot = HBoxContainer.new()
+	bar.add_child(_seg_slot)
+	_ctl_tags = HBoxContainer.new()
+	_ctl_tags.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	bar.add_child(_ctl_tags)
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_child(gap)
+	# §13.2 eylem grubu iki üyelidir: çalışma saatleri çipi + İşe alım başlat. Eğitim satır
+	# menüsündedir (§13.3), orada kişi zaten seçili.
+	_hours = Button.new()
+	_hours.theme_type_variation = &"ChipButton"
+	_hours.focus_mode = Control.FOCUS_NONE
+	_hours.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_hours.pressed.connect(_open_hours_modal)
+	bar.add_child(_hours)
+	_hire = Button.new()
+	_hire.theme_type_variation = &"PrimaryButtonDark"
+	_hire.icon = load("res://assets/icons/util/plus.svg")
+	_hire.text = tr("HR_SEARCH_START")
+	_hire.focus_mode = Control.FOCUS_NONE
+	_hire.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_hire.pressed.connect(_open_atlas)
+	bar.add_child(_hire)
+	_outer.add_child(ctl)
 
-	var tabs := HBoxContainer.new()
-	tabs.add_theme_constant_override("separation", 28)
-	_seg_roster = _make_segment(tr("HR_TAB_ROSTER"), VIEW_ROSTER)
-	_seg_assign = _make_segment(tr("HR_TAB_ASSIGNMENTS"), VIEW_ASSIGNMENTS)
-	tabs.add_child(_seg_roster)
-	tabs.add_child(_seg_assign)
-	outer.add_child(tabs)
-	outer.add_child(HRUiShared.hairline())
-
-	# Dikkat şeridi doğrudan sayfa başlığının altında; boşken görünmez.
-	_attention_strip = VBoxContainer.new()
-	_attention_strip.add_theme_constant_override("separation", 6)
-	outer.add_child(_attention_strip)
-
-	# Sütun başlıkları kaydırma alanının DIŞINDA: sayfa kayarken görünür kalır.
-	_header = HRLedger.column_header()
-	outer.add_child(_header)
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	outer.add_child(scroll)
+	var body := MarginContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("margin_left", UiTokens.SPACE_3XL)
+	body.add_theme_constant_override("margin_top", UiTokens.SPACE_XL)
+	body.add_theme_constant_override("margin_right", UiTokens.SPACE_3XL - GUTTER)
+	body.add_theme_constant_override("margin_bottom", UiTokens.SPACE_3XL)
+	_outer.add_child(body)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 0)
+	body.add_child(col)
+	# Şeritler ve başlık listenin çizgisinde biter; kaydırma çubuğu sağdaki payda.
+	_strips = VBoxContainer.new()
+	_strips.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	col.add_child(_gutter(_strips))
+	_head_slot = _gutter(Control.new())
+	col.add_child(_head_slot)
+	_scroll = ScrollContainer.new()
+	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.get_v_scroll_bar().value_changed.connect(_on_scrolled)
+	col.add_child(_scroll)
+	# The list is the table's width; the scroll's lane sits beside it in the gutter.
 	_list = VBoxContainer.new()
-	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_list.add_theme_constant_override("separation", 10)
-	scroll.add_child(_list)
+	_list.size_flags_horizontal = Control.SIZE_FILL
+	_list.custom_minimum_size.x = HRLedger.TABLE_W
+	_list.add_theme_constant_override("separation", 0)
+	_scroll.add_child(_list)
+
+
+func _gutter(child: Control) -> MarginContainer:
+	var pad := MarginContainer.new()
+	pad.add_theme_constant_override("margin_right", GUTTER)
+	pad.add_child(child)
+	return pad
+
+
+## The page's natural height: its frame of controls plus the whole list.
+func fit_height() -> float:
+	return _outer.get_combined_minimum_size().y - _scroll.get_combined_minimum_size().y \
+		+ _list.get_combined_minimum_size().y
+
+
+## A PanelLayer panel is open over the window: the panel holds the one amber action.
+func on_panel_over(on: bool) -> void:
+	_hire.theme_type_variation = &"SecondaryButton" if on else &"PrimaryButtonDark"
 
 
 # --- Tazeleme ---------------------------------------------------------------
 
 func _refresh() -> void:
-	# Saat çipi ve özet yapı değişmeden de oynuyor (modalde saat, ortalama moral), o yüzden
-	# her tazelemede yeniden yazılır.
-	_paint_hours_control()
-	_summary.text = tr("HR_SUMMARY").format({
-		"count": CharacterRegistry.count_employees(),
-		"morale": int(round(HRMoraleSystem.average_morale())),
-		"payroll": Fmt.money_exact(CharacterRegistry.get_total_monthly_salaries()),
-	})
+	# KPI'lar, saat çipi ve denetimler yapı değişmeden de oynuyor (ortalama moral, karar kapısı),
+	# o yüzden her tazelemede yeniden yazılır.
+	var count: int = CharacterRegistry.count_employees()
+	UiFactory.D_kpi_value(_kpis[0]).text = str(count)
+	# Kimse yokken ortalama yoktur: değer satırı boş kalır, anahtar yerinde durur.
+	UiFactory.D_kpi_value(_kpis[1]).text = str(int(round(HRMoraleSystem.average_morale()))) if count > 0 else ""
+	UiFactory.D_kpi_value(_kpis[2]).text = Fmt.money_exact(CharacterRegistry.get_total_monthly_salaries())
+	var read_only: bool = EventGate.active_id() != ""
+	_hire.disabled = read_only
+	_paint_hours(read_only)
 	if _structure_key != _compute_structure_key():
 		_rebuild()
 		return
 	for emp in CharacterRegistry.get_employees():
 		if _morale_refs.has(emp.id):
-			HRUiShared.repaint_morale(_morale_refs[emp.id], emp.morale)
+			HRUiShared.D_repaint_morale(_morale_refs[emp.id], emp.morale)
 
 
 func _compute_structure_key() -> String:
 	# Satır KÜMESİNİ ve satırların şeklini değiştiren her şey buraya girer; moral GİRMEZ
 	# (yerinde boyanır). Rozet ağırlığı moralle değiştiği için ayrıca yazılıyor, yoksa eşik
 	# geçildiğinde satırın sırası güncellenmez. Eğitim ve izin sayaçları ile YENİ rozeti
-	# yalnız yeniden kurulurken çizilir, o yüzden onlar da anahtarda.
+	# yalnız yeniden kurulurken çizilir, o yüzden onlar da anahtarda. Karar kapısı boş grubun
+	# düğmesini kapatır.
 	var parts := PackedStringArray()
-	parts.append("%s|%d" % [HRSearchSystem.get_state(), HRSearchSystem.weeks_until_arrival()])
+	parts.append("%s|%d|%s" % [HRSearchSystem.get_state(), HRSearchSystem.weeks_until_arrival(),
+		EventGate.active_id() != ""])
 	# DURUM sütunundaki saat istisnası etiketi bu sayıları okuyor (§8.5, §13.3); süre okunurken
 	# başlangıca göre kırpıldığı için başlangıç da anahtarda.
 	parts.append("wh%d|%d|%d" % [GameState.company_work_hours, WorkHoursSystem.start_hour(),
@@ -177,31 +233,56 @@ func _compute_structure_key() -> String:
 	for rep in CustomerRepSystem.ranked_reps():
 		parts.append("cs%s%d" % [rep.id, CustomerRepSystem.roster_size(rep.id)])
 	for emp in CharacterRegistry.get_employees():
-		parts.append("%s|%s|%d|%d|%d|%d|%d" % [emp.id, emp.status, emp.monthly_salary,
+		parts.append("%s|%s|%d|%d|%d|%d|%d|%s" % [emp.id, emp.status, emp.monthly_salary,
 			HRUiShared.worst_badge_severity(emp), emp.training_weeks_left,
-			HRMoraleSystem.weeks_until_return(emp), int(HRConstants.is_new_hire(emp.hire_day, GameState.day))])
+			HRMoraleSystem.weeks_until_return(emp), int(HRConstants.is_new_hire(emp.hire_day, GameState.day)),
+			",".join(PackedStringArray(emp.assigned_job_ids))])
 	return "/".join(parts)
 
 
 func _rebuild() -> void:
 	_structure_key = _compute_structure_key()
 	_morale_refs.clear()
+	_rows.clear()
 	UiFactory.clear(_list)
+	UiFactory.clear(_strips)
+	UiFactory.clear(_ctl_tags)
+	UiFactory.clear(_head_slot)
+	UiFactory.clear(_seg_slot)
 
-	_paint_placement_chips()
-	_paint_attention_strip()
-	_paint_segments()
-
-	_header.visible = _view == VIEW_ROSTER
+	_seg_slot.add_child(UiFactory.D_seg_tabs([tr("HR_TAB_ROSTER"), tr("HR_TAB_ASSIGNMENTS")],
+		0 if _view == VIEW_ROSTER else 1, func(i: int) -> void: _show_view([VIEW_ROSTER, VIEW_ASSIGNMENTS][i])))
+	_paint_strips()
+	var compact: bool = CharacterRegistry.count_employees() >= HRLedger.COMPACT_FROM
 	if _view == VIEW_ASSIGNMENTS:
-		_list.add_child(HRAssignments.build(_on_assignment_toggled, _open_atlas))
-		return
+		_paint_assignment_tags()
+		_head_slot.add_child(HRAssignments.head())
+		_list.add_child(HRAssignments.build(_on_assignment_toggled, _open_atlas, EventGate.active_id() != ""))
+	else:
+		_head_slot.add_child(HRLedger.head(compact))
+		for group_id: String in HRConstants.ROSTER_GROUPS:
+			_add_group(group_id, compact)
+	_on_scrolled(_scroll.get_v_scroll_bar().value)
+	fit_changed.emit()
 
-	var strip: Control = _atlas_strip()
-	if strip != null:
-		_list.add_child(strip)
-	for group_id in HRConstants.ROSTER_GROUPS:
-		_add_group(String(group_id))
+
+## Kaçma riski başına bir şerit (dosyayı açar), sonra Atlas'ın şeridi; aralarında ve tablodan önce boşluk.
+func _paint_strips() -> void:
+	for emp in CharacterRegistry.get_employees():
+		if HRConstants.is_flight_risk(emp.morale):
+			_strips.add_child(HRUiShared.D_risk_strip(emp, _on_card_action.bind(emp.id, HRLedger.ACTION_DOSSIER, null)))
+	var atlas: Control = _atlas_strip()
+	if atlas != null:
+		_strips.add_child(atlas)
+	if _strips.get_child_count() > 0:
+		_strips.add_child(Control.new())   # the strips' gap to the table
+
+
+## The head turns into a stuck band once the list scrolls under it.
+func _on_scrolled(value: float) -> void:
+	if _head_slot.get_child_count() > 0:
+		var band := _head_slot.get_child(0) as PanelContainer
+		band.theme_type_variation = &"TableHeadStuck" if value > 0.0 else &"TableHead"
 
 
 # --- Atlas şeridi (§10.1) ---------------------------------------------------
@@ -210,36 +291,45 @@ func _atlas_strip() -> Control:
 	var state: String = HRSearchSystem.get_state()
 	if state == HRConstants.SEARCH_IDLE:
 		return null
-	# CardCta (amber çerçeve): CardAttention kaçma riskine ayrılmış, arayış şeridi uyarı değil.
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardCta"
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 10)
-	head.add_child(UiFactory.make_avatar("A", 26))
-	card.add_child(head)
-	var info := VBoxContainer.new()
-	info.add_theme_constant_override("separation", 2)
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.search_agency_name()), &"SectionLabel"))
-	head.add_child(info)
-
+	var strip := PanelContainer.new()
+	strip.theme_type_variation = &"NoticeStrip"
+	strip.custom_minimum_size.y = UiTokens.D_H_STRIP
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	strip.add_child(row)
+	var agency: String = HRConstants.search_agency_name()
+	row.add_child(HRUiShared.D_mono(agency.left(1), UiTokens.D_AVATAR_ROW))
+	row.add_child(UiFactory.make_label(agency, &"DataStrong"))
+	var text: String
+	var action := Button.new()
+	action.focus_mode = Control.FOCUS_NONE
 	if state == HRConstants.SEARCH_FILES_READY:
-		info.add_child(UiFactory.make_label(
-			tr("HR_FILES_ON_DESK").format({"n": HRSearchSystem.get_files().size()}), &"BodySerif"))
-		head.add_child(HRUiShared.action_button(tr("HR_OPEN_FILES"), _open_atlas, true))
-		return card
-
-	# Arayış sürüyor: tek durum satırı — rol + dosyalara kalan hafta. "İade edilmez" uyarısı
-	# ödeme ve iptal anında yaşıyor, bekleme şeridinde değil.
-	var role_id: String = HRSearchSystem.current_role()
-	var weeks: int = HRSearchSystem.weeks_until_arrival()
-	info.add_child(UiFactory.make_label(tr(Fmt.count_key("HR_SEARCHING", weeks)).format({
-		"role": HRConstants.role_label(role_id) if role_id != "" else tr("HR_CANDIDATE_GENERIC"),
-		"n": weeks,
-	}), &"BodySerif"))
-	head.add_child(HRUiShared.action_button(tr("HR_SEARCH_CANCEL"), _on_cancel_search))
-	return card
+		text = tr("HR_FILES_ON_DESK").format({"n": HRSearchSystem.get_files().size()})
+		action.theme_type_variation = &"SecondaryButtonSmall"
+		action.text = tr("HR_OPEN_FILES")
+		action.pressed.connect(_open_atlas)
+	else:
+		# Arayış sürüyor: tek durum satırı — rol + dosyalara kalan hafta. "İade edilmez" uyarısı
+		# ödeme ve iptal anında yaşıyor, bekleme şeridinde değil.
+		var role_id: String = HRSearchSystem.current_role()
+		var weeks: int = HRSearchSystem.weeks_until_arrival()
+		text = tr(Fmt.count_key("HR_SEARCHING", weeks)).format({
+			"role": HRConstants.role_label(role_id) if role_id != "" else tr("HR_CANDIDATE_GENERIC"),
+			"n": weeks,
+		})
+		action.theme_type_variation = &"GhostButtonSmall"
+		action.text = tr("HR_SEARCH_CANCEL")
+		action.pressed.connect(_on_cancel_search)
+	action.disabled = EventGate.active_id() != ""
+	var line := UiFactory.make_label(text, &"DataText")
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.clip_text = true
+	line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(line)
+	row.add_child(action)
+	for part: Control in row.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return strip
 
 
 func _on_cancel_search() -> void:
@@ -251,6 +341,7 @@ func _on_cancel_search() -> void:
 		"confirm_text": tr("HR_SEARCH_CANCEL_OK"),
 		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_cancel_search,
+		"theme": true,
 	})
 
 
@@ -259,60 +350,38 @@ func _do_cancel_search() -> void:
 	rebuild_view()
 
 
-# --- Çalışma saatleri kontrolü (§13.2 / §8.5) --------------------------------
+# --- Çalışma saatleri çipi (§13.2 / §8.5) -------------------------------------
 
-## Kenarlıklı, dolgusuz buton: İŞE ALIM BAŞLAT'ın bir tık sessizi (§13.2). Saat glifi +
-## şirket penceresi; Kadro ve Görevler görünümlerinin ikisinde de görünür.
-func _build_hours_control() -> Button:
-	var btn := Button.new()
-	btn.icon = load("res://assets/icons/clock.svg")
-	btn.add_theme_constant_override("icon_max_width", 13)
-	btn.add_theme_constant_override("h_separation", 8)
-	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	btn.pressed.connect(_open_hours_modal)
-	return btn
-
-
-## Metin ve renk AYNI koşuldan türer (§8.5): mesai ya da istisna varsa amber. Mesai varsa
-## çalışan sayısı eklenir; yoksa ama kapsamlar şirketten ayrılıyorsa istisna sayısı. İkisi
-## birden doğruysa mesai eki kazanır — para ve moral maliyeti orada.
-func _paint_hours_control() -> void:
-	var btn: Button = _hours_control
+## The company's window, and after it who is on overtime (in the warning tone) or how many exceptions
+## the scopes hold; while a decision waits it reads only.
+func _paint_hours(read_only: bool) -> void:
+	UiFactory.clear(_hours)
+	_hours.disabled = read_only
 	# Pencere tek evden okunur (§15.2): modal ile çip aynı cümleyi çizmek zorunda.
 	var win: Dictionary = WorkHoursSystem.company_window()
-	var window: String = tr("HR_HOURS_WINDOW").format({
-		"start": String(win["start_text"]),
-		"end": String(win["end_text"]),
-	})
+	var parts := HBoxContainer.new()
+	parts.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	var off: Variant = UiTokens.D_INK_OFF if read_only else null
+	parts.add_child(UiFactory.make_glyph("res://assets/icons/util/clock.svg", UiTokens.D_ICON_BUTTON,
+		UiTokens.D_INK_OFF if read_only else UiTokens.D_INK_3))
+	parts.add_child(UiFactory.make_label(tr("HR_HOURS_WINDOW").format(
+		{"start": String(win["start_text"]), "end": String(win["end_text"])}), &"DataText", off))
 	var over: int = int(WorkHoursSystem.counts()["overtime"])
 	var exceptions: int = WorkHoursSystem.override_count()
-	if over > 0:
-		btn.text = tr("HR_HOURS_CHIP_OVERTIME").format({"window": window, "n": over})
-	elif exceptions > 0:
-		btn.text = tr("HR_HOURS_CHIP_OVERRIDES").format({"window": window, "n": exceptions})
-	else:
-		btn.text = window
-	var flagged: bool = over > 0 or exceptions > 0
-	var ink: Color = UiTokens.ACCENT_DEEP if flagged else UiTokens.INK_MUTED
-	var edge: Color = UiTokens.ACCENT_DEEP if flagged else UiTokens.BORDER_HOVER
-	btn.add_theme_color_override("font_color", ink)
-	btn.add_theme_color_override("font_hover_color", UiTokens.INK)
-	btn.add_theme_color_override("font_pressed_color", ink)
-	btn.add_theme_color_override("icon_normal_color", ink)
-	btn.add_theme_color_override("icon_hover_color", UiTokens.INK)
-	for state in ["normal", "hover", "pressed", "focus"]:
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color.TRANSPARENT
-		sb.set_border_width_all(1)
-		# Hover KENARDA yaşar, dolguda değil (Terminal reçetesi).
-		sb.border_color = UiTokens.ACCENT_DEEP if state == "hover" else edge
-		sb.set_corner_radius_all(2)
-		sb.content_margin_left = 14
-		sb.content_margin_right = 14
-		sb.content_margin_top = 10
-		sb.content_margin_bottom = 10
-		btn.add_theme_stylebox_override(state, sb)
+	if over > 0 or exceptions > 0:
+		parts.add_child(UiFactory.make_label("·", &"CaptionFaint", off))
+		parts.add_child(UiFactory.make_label(
+			tr("HR_HOURS_FACT_OVER").format({"n": over}) if over > 0
+				else tr(Fmt.count_key("HR_HOURS_CHIP_OVERRIDES", exceptions)).format({"n": exceptions}),
+			&"DataText", off if read_only else (UiTokens.D_warn() if over > 0 else UiTokens.D_INK_3)))
+	for part: Control in parts.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	HRUiShared.set_mouse_ignore(parts)
+	_hours.add_child(parts)
+	parts.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	parts.offset_left = UiTokens.SPACE_L
+	parts.offset_right = -UiTokens.SPACE_L
+	_hours.custom_minimum_size = Vector2(parts.get_combined_minimum_size().x + 2 * UiTokens.SPACE_L, UiTokens.D_H_BTN)
 
 
 func _open_hours_modal() -> void:
@@ -326,26 +395,22 @@ func _open_atlas() -> void:
 
 # --- Kadro grupları ---------------------------------------------------------
 
-## Bir kadro grubu (9b): amber başlık + hairline + satırlar.
-func _add_group(group_id: String) -> void:
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 10)
-	header.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.group_label(group_id)), &"SectionAmber"))
-	var rule := HRUiShared.hairline()
-	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	header.add_child(rule)
-	_list.add_child(header)
-
+## A roster group: its head (click folds it), then its people, or the empty row's way to hire.
+func _add_group(group_id: String, compact: bool) -> void:
 	# get_employees(), get_active_employees() DEĞİL: defter izindeki ve eğitimdeki kişiyi de
 	# gösterir — maaşı ödeniyor, yalnız o günkü kapasiteye girmiyor.
 	var roster: Array[Character] = []
 	for emp in CharacterRegistry.get_employees():
 		if String(HRConstants.ROLE_GROUP.get(emp.role, "")) == group_id:
 			roster.append(emp)
+	var folded: bool = _collapsed.has(group_id)
+	_list.add_child(HRUiShared.D_group(HRConstants.group_label(group_id),
+		"res://assets/icons/dept/%s.svg" % group_id, roster.size(), folded, _toggle_group.bind(group_id)))
+	if folded:
+		return
 	if roster.is_empty():
-		_list.add_child(HRLedger.empty_row(_open_atlas))
+		_list.add_child(HRUiShared.D_empty_row(tr("HR_EMPTY_ROW"), tr("HR_SEARCH_START"), _open_atlas,
+			EventGate.active_id() != ""))
 		return
 	# Dikkat isteyen satırlar üste. sort_custom kararlı DEĞİL ve çoğu ağırlık 0, o yüzden
 	# hire_day ve id ile kesin tiebreak: sıra her yeniden kurmada aynı kalır.
@@ -359,87 +424,40 @@ func _add_group(group_id: String) -> void:
 		return a.id < b.id)
 	for emp in roster:
 		var refs: Dictionary = {}
-		_list.add_child(HRLedger.row(emp, _on_card_action, refs))
+		var line := HRLedger.row(emp, compact, _is_selected(emp.id), _on_card_action, refs)
+		_rows[emp.id] = line
 		_morale_refs[emp.id] = refs
+		_list.add_child(line)
 
 
-# --- KADRO / GÖREVLER segmentleri ------------------------------------------
+func _toggle_group(group_id: String) -> void:
+	if not _collapsed.erase(group_id):
+		_collapsed[group_id] = true
+	rebuild_view()
 
-func _make_segment(label: String, view_id: String) -> Button:
-	var btn := Button.new()
-	btn.text = label
-	btn.flat = true
-	btn.focus_mode = Control.FOCUS_NONE
-	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	btn.pressed.connect(_show_view.bind(view_id))
-	return btn
 
+# --- KADRO / GÖREVLER -------------------------------------------------------
 
 func _show_view(view_id: String) -> void:
 	if _view == view_id:
 		return
 	_view = view_id
+	_scroll.scroll_vertical = 0
 	rebuild_view()
 
 
-## Aktif segment: INK + 2px amber alt kenar; öteki INK_DIM ve kenarsız (9b).
-func _paint_segments() -> void:
-	for pair in [[_seg_roster, VIEW_ROSTER], [_seg_assign, VIEW_ASSIGNMENTS]]:
-		var btn: Button = pair[0]
-		var active: bool = String(pair[1]) == _view
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color.TRANSPARENT
-		sb.border_width_bottom = UiTokens.BORDER_FOCUS if active else 0
-		sb.border_color = UiTokens.ACCENT_DEEP
-		sb.content_margin_left = 2.0
-		sb.content_margin_right = 2.0
-		sb.content_margin_top = 0.0
-		sb.content_margin_bottom = 10.0
-		for state in ["normal", "hover", "pressed", "focus"]:
-			btn.add_theme_stylebox_override(state, sb)
-		btn.add_theme_color_override("font_color", UiTokens.INK if active else UiTokens.INK_DIM)
-		btn.add_theme_color_override("font_hover_color",
-			UiTokens.INK if active else UiTokens.INK_MUTED)
-
-
-## "N BOŞTA" (nötr) + "N AŞIRI YÜK" (amber). Sıfır olan çip çizilmez — sıfırı göstermek
-## bir uyarıyı gürültüye çevirir.
-func _paint_placement_chips() -> void:
-	UiFactory.clear(_placement_chips)
+## Görevler'de sekmelerin yanında: kaç kişi boşta (çizgi etiket) ve kaçı aşırı yükte (uyarı). Sıfır
+## olan çizilmez — sıfırı göstermek bir uyarıyı gürültüye çevirir.
+func _paint_assignment_tags() -> void:
 	var idle: int = HRSystem.idle_count()
 	if idle > 0:
-		_placement_chips.add_child(UiFactory.make_state_chip(
-			tr("HR_CHIP_IDLE_COUNT").format({"n": idle}),
-			UiTokens.INK_DIM, Color.TRANSPARENT, UiTokens.CARD_BORDER))
+		_ctl_tags.add_child(UiFactory.D_tag(tr("HR_CHIP_IDLE_COUNT").format({"n": idle}), &"outline"))
 	var over: int = 0
 	for emp in CharacterRegistry.get_active_employees():
 		if HRSystem.is_overloaded(emp):
 			over += 1
 	if over > 0:
-		_placement_chips.add_child(UiFactory.make_state_chip(
-			tr("HR_CHIP_OVERLOAD_COUNT").format({"n": over}),
-			UiTokens.ACCENT_DEEP, UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
-
-
-## Kaçma riski başına bir kırmızı şerit: ad + MORAL n. Eşik motorun
-## (HRConstants.is_flight_risk).
-func _paint_attention_strip() -> void:
-	UiFactory.clear(_attention_strip)
-	for emp in CharacterRegistry.get_employees():
-		if not HRConstants.is_flight_risk(emp.morale):
-			continue
-		var strip := PanelContainer.new()
-		strip.theme_type_variation = &"AttentionStrip"
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-		row.add_child(HRUiShared.warning_glyph(13, UiTokens.negative()))
-		row.add_child(UiFactory.make_label(emp.character_name, &"RowName"))
-		row.add_child(UiFactory.make_label(
-			"%s %d" % [UiTokens.tr_upper(tr("HR_COL_MORALE")), emp.morale],
-			&"RowName", UiTokens.negative()))
-		strip.add_child(row)
-		_attention_strip.add_child(strip)
-	_attention_strip.visible = _attention_strip.get_child_count() > 0
+		_ctl_tags.add_child(UiFactory.D_tag(tr("HR_CHIP_OVERLOAD_COUNT").format({"n": over}), &"warn"))
 
 
 ## GÖREVLER matrisindeki bir kutu tıklandı. Tek yazar CharacterRegistry; yer değiştirmeyi
@@ -460,36 +478,62 @@ func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:
 	var emp: Character = CharacterRegistry.get_character(emp_id)
 	if emp == null:
 		return
-	match action:
-		HRLedger.ACTION_MENU:
-			_open_actions(emp, anchor)
-		HRLedger.ACTION_DOSSIER:
-			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier", {"character_id": emp.id})
-		_:
-			HRLedger.run_action(self, emp, action)
+	if action == HRLedger.ACTION_MENU:
+		_open_actions(emp, anchor)
+	else:
+		HRLedger.run_action(self, emp, action)
 
 
-# --- Satır aksiyon menüsü (9e) ---------------------------------------------
+# --- Satır menüsü ve seçim -------------------------------------------------
 
+## The row menu (9e): who it is for, then the person's actions with the file first.
 func _open_actions(emp: Character, anchor: Control) -> void:
-	var pop: HRPopover = HRPopover.mount(self)
+	var pop: HRPopover = HRPopover.mount(anchor, true)
 	if pop == null:
 		return
 	var body: VBoxContainer = pop.body()
 	body.add_theme_constant_override("separation", 0)
-
-	var head := VBoxContainer.new()
-	head.add_theme_constant_override("separation", 2)
-	head.add_child(UiFactory.make_label(emp.character_name, &"RowName"))
-	head.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.role_label(emp.role)), &"MicroLabel"))
+	body.custom_minimum_size.x = MENU_W
+	var head := MarginContainer.new()
+	for side in ["left", "top", "right", "bottom"]:
+		head.add_theme_constant_override("margin_" + side, UiTokens.SPACE_M)
+	head.add_child(HRUiShared.D_who(emp, UiTokens.D_AVATAR_ROW, UiTokens.SPACE_M))
 	body.add_child(head)
-	body.add_child(HRUiShared.hairline())
+	body.add_child(HSeparator.new())
 	body.add_child(HRLedger.action_list(emp, func(act: String) -> void:
 		pop.close()
-		HRLedger.run_action(self, emp, act)))
-
+		HRLedger.run_action(self, emp, act), true))
+	pop.tree_exited.connect(_on_menu_closed.bind(emp.id))
 	pop.open_at(anchor)
+	_menu_id = emp.id
+	_paint_selection()
+
+
+## A menu replaced by the next one closes after it opened: only the open menu's person is cleared.
+func _on_menu_closed(character_id: String) -> void:
+	if _menu_id == character_id:
+		_menu_id = ""
+		_paint_selection()
+
+
+## A person's file, dialog or panel says it opened or closed (HRLedger.VIEWS_GROUP), so their row stays
+## raised while any of them is open; a file replaced by the next one closes after it opened.
+func hold_person(character_id: String, on: bool) -> void:
+	var n: int = int(_held.get(character_id, 0)) + (1 if on else -1)
+	if n > 0:
+		_held[character_id] = n
+	else:
+		_held.erase(character_id)
+	_paint_selection()
+
+
+func _is_selected(character_id: String) -> bool:
+	return character_id == _menu_id or _held.has(character_id)
+
+
+func _paint_selection() -> void:
+	for id: String in _rows:
+		HRUiShared.D_select_row(_rows[id], _is_selected(id))
 
 
 ## Yapı anahtarını geçersiz kılıp tam yeniden kurar. set_salary ve set_status sinyal

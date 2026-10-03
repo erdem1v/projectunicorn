@@ -91,7 +91,6 @@ func _initialize() -> void:
 	_lbl(th, &"SectionAmber", mono_label, T.SIZE_SMALL, T.ACCENT_DEEP)  # kural çizgisiyle birlikte kullanılır
 	# Serif YALNIZ sayfa ve modal başlığıdır.
 	_lbl(th, &"PageTitleSerif", serif_sb, T.SIZE_ED_CEREMONY, T.INK)
-	_lbl(th, &"ModalTitleSerif", serif_sb, T.SIZE_ED_MODAL, T.INK)
 	# Özet başlık satırında yaşar, asla kopuk bir alt şeritte değil.
 	_lbl(th, &"TitleRowSummary", mono_label, T.SIZE_SMALL, T.INK_DIM)
 	_lbl(th, &"EmptyRowLabel", mono_reg, T.SIZE_DATA, T.INK_FAINT)     # "Henüz kimse yok"
@@ -101,10 +100,6 @@ func _initialize() -> void:
 	_lbl(th, &"AvatarInitial", sans_sb, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"MetricValueInk", sans_sb, T.SIZE_TITLE, T.INK)
 	_lbl(th, &"MetricCaptionInk", mono_label, T.SIZE_MICRO, T.INK_DIM)
-	# StepperValue: bir stepper'ın ortasındaki sayı. Vurgu ağırlığında, çünkü kutunun
-	# devralan ve karar veren hâlleri ağırlıkla ayrışıyor — rengin tek başına
-	# taşıyamadığı ayrım bu.
-	_lbl(th, &"StepperValue", mono_sb, T.SIZE_DATA, T.INK)
 
 	# ---- Meeting dock (cream body): header and transcript ----
 	_lbl(th, &"MeetingSpeakerName", serif_sb, T.SIZE_ED_HEADLINE, T.INK)
@@ -169,12 +164,6 @@ func _initialize() -> void:
 	_panel(th, &"CardAttention", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.RADIUS_M, T.CARD_ATTENTION_BORDER, T.PAD_CARD))
 	# AttentionStrip: kırmızı dikkat şeridi, sayfa başlığının hemen altında.
 	_panel(th, &"AttentionStrip", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.RADIUS_M, T.CARD_ATTENTION_BORDER, T.PAD_BAND))
-	# EmptyRow: boş departman satırı. Kesikli kenar yerine tek piksellik düz kenar,
-	# dolgu yok — böylece "boş" okunuyor.
-	_panel(th, &"EmptyRow", "PanelContainer", _box(Color.TRANSPARENT, T.RADIUS_M, T.BORDER_DASHED, T.PAD_ROW))
-	# LedgerRow(+Hover): hover yalnız kenar; dolgu ve margin aynı kalır, yoksa satır zıplar.
-	_panel(th, &"LedgerRow", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_ROW))
-	_panel(th, &"LedgerRowHover", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.BORDER_HOVER, T.PAD_ROW))
 	# Durum çipleri: ince renkli kenar + soluk dolgu.
 	_panel(th, &"ChipNeutral", "PanelContainer", _box(T.NEUTRAL_BADGE_BG, T.RADIUS_S, T.BORDER_DISABLED, T.PAD_CHIP))
 	_panel(th, &"ChipAmber", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT_DEEP, T.PAD_CHIP))
@@ -729,11 +718,6 @@ func _menajer(master: Theme) -> Theme:
 		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}
 	var ghost := {"normal": [clear, clear, T.D_INK_2], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
 		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]}
-	# The danger button bakes the standard palette; its host repaints it from the D_ helpers when the
-	# colour-blind palette is on.
-	var danger := {"normal": [clear, T.D_NEG_TAG_LINE, T.D_NEG_INK],
-		"hover": [clear, T.D_NEG, T.D_NEG], "pressed": [T.D_NEG_BG, T.D_NEG, T.D_NEG],
-		"disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}
 	var regular := [cond_b, T.D_FS_18, _fit(cond_b, T.D_FS_18, T.D_H_BTN, T.SPACE_XL, T.SPACE_XL)]
 	var small := [cond_sb, T.D_FS_16, _fit(cond_sb, T.D_FS_16, T.D_H_BTN_SM, T.SPACE_L, T.SPACE_L)]
 	var large := [cond_b, T.D_FS_22, _fit(cond_b, T.D_FS_22, T.D_H_BTN_LG, T.SPACE_4XL, T.SPACE_4XL)]
@@ -741,7 +725,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"Button", secondary, regular], [&"SecondaryButtonSmall", secondary, small],
 		[&"PrimaryButtonDark", primary, regular], [&"PrimaryButtonDarkSmall", primary, small],
 		[&"PrimaryButtonDarkLarge", primary, large], [&"GhostButton", ghost, regular],
-		[&"GhostButtonSmall", ghost, small], [&"DangerButton", danger, regular],
+		[&"GhostButtonSmall", ghost, small],
 	]:
 		_dbtn(th, row[0], row[1], row[2][0], row[2][1], row[2][2])
 	th.set_stylebox("focus", &"Button", ring)
@@ -851,6 +835,8 @@ func _menajer(master: Theme) -> Theme:
 	for row in [
 		[&"TitleH1", cond_b_caps, T.D_FS_40, T.D_INK_1],
 		[&"TitleH2", cond_b, T.D_FS_30, T.D_INK_1],
+		[&"DialogTitle", cond_b, T.D_FS_22, T.D_INK_1],
+		[&"NameTitle", cond_b, T.D_FS_20, T.D_INK_1],
 		[&"SubheadLabel", cond_b, T.D_FS_20, T.D_INK_2],
 		[&"OptionLabel", cond_b, T.D_FS_20, T.D_INK_1],
 		[&"OptionLabelLocked", cond_b, T.D_FS_20, T.D_INK_OFF],
@@ -927,8 +913,8 @@ func _menajer(master: Theme) -> Theme:
 	]:
 		_lbl(th, row[0], row[1], row[2], row[3])
 		th.set_stylebox("normal", row[0], row[4])
-	# The risk and attention tags and the risk strip bake both palettes from the D_ helpers: the
-	# colour-blind one is the "Cb" twin, which the host picks through UiTokens.D_variation.
+	# The risk and attention tags, the risk strip and the danger button bake both palettes from the D_
+	# helpers: the colour-blind one is the "Cb" twin, which the host picks through UiTokens.D_variation.
 	var strip_pad := Vector4(T.SPACE_XL, 0, T.SPACE_L, 0)
 	for cb in [false, true]:
 		T.set_colorblind(cb)
@@ -937,6 +923,10 @@ func _menajer(master: Theme) -> Theme:
 			var p: Dictionary = T.D_badge_palette(row[1])
 			_lbl(th, row[0] + twin, cond_b_caps, T.D_FS_13, p.fg)
 			th.set_stylebox("normal", row[0] + twin, _flat(p.bg, T.D_RADIUS_2, tag, p.line))
+		# The danger button, in the palette in use.
+		_dbtn(th, "DangerButton" + twin, {"normal": [clear, T.D_badge_palette(&"negative").line, T.D_neg_ink()],
+			"hover": [clear, T.D_neg(), T.D_neg()], "pressed": [T.D_neg_bg(), T.D_neg(), T.D_neg()],
+			"disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}, regular[0], regular[1], regular[2])
 		_lbl(th, "RiskKey" + twin, cond_sb_caps, T.D_FS_14, T.D_neg_ink())
 		_lbl(th, "RiskValue" + twin, sans_b, T.D_FS_18, T.D_neg())
 		_panel(th, "RiskStrip" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg_rule()))
@@ -953,6 +943,20 @@ func _menajer(master: Theme) -> Theme:
 	var band_pad := Vector4(T.SPACE_3XL, 0, T.SPACE_XL, 0)
 	var option_pad := Vector4(T.SPACE_XXL, 0, T.SPACE_XL, 0)
 	var doc_pad := Vector4(T.SPACE_3XL, 0, T.SPACE_XXL, 0)
+	# Content inside a box's 1 px border: a card the player picks from and a document read in full lay
+	# out their own inset, since their selected marker sits on the box's own left edge.
+	var hairline: Vector4 = Vector4.ONE * T.BORDER_HAIRLINE
+	# A panel's foot follows the panel's rounded corners from inside its border.
+	var foot := _flat(T.D_SURFACE_2, 0, Vector4(T.SPACE_3XL, T.SPACE_XL, T.SPACE_3XL, T.SPACE_XL), T.D_LINE_1,
+		Vector4i(0, T.BORDER_HAIRLINE, 0, 0))
+	foot.corner_radius_bottom_left = T.D_RADIUS_4 - T.BORDER_HAIRLINE
+	foot.corner_radius_bottom_right = T.D_RADIUS_4 - T.BORDER_HAIRLINE
+	# A document's head band follows its corners the same way, the cut one included.
+	var doc_head := _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_XXL, T.SPACE_XL, T.SPACE_L, T.SPACE_XL), T.D_LINE_1,
+		bottom), T.D_CUT - T.BORDER_HAIRLINE)
+	doc_head.corner_radius_top_left = T.D_RADIUS_1 - T.BORDER_HAIRLINE
+	doc_head.corner_radius_bottom_left = 0
+	doc_head.corner_radius_bottom_right = 0
 	for row in [
 		[&"WinHead", _flat(T.D_SURFACE_4, 0, band_pad, T.D_LINE_1, bottom)],
 		[&"WinCtl", _flat(clear, 0, Vector4(T.SPACE_3XL, 0, T.SPACE_3XL, 0), T.D_LINE_1, bottom)],
@@ -994,6 +998,24 @@ func _menajer(master: Theme) -> Theme:
 		[&"MonoBox", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_2)],
 		# An effect part in an option's row: its glyph and its words.
 		[&"FxChip", _flat(T.D_SURFACE_2, T.D_RADIUS_2, _fit(sans_med, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), T.D_LINE_1)],
+		# A table head the list has scrolled under.
+		[&"TableHeadStuck", _flat(T.D_SURFACE_2, 0, Vector4(0, 0, 0, T.SPACE_M), T.D_LINE_2, bottom)],
+		# A neutral strip over a table, the risk strip's shape (the agency's search and files).
+		[&"NoticeStrip", _flat(T.D_SURFACE_4, T.D_RADIUS_3, Vector4(T.SPACE_L, 0, T.SPACE_L, 0), T.D_LINE_2)],
+		# A detail window is a document; a dialog or a PanelLayer panel is a window with no scrim.
+		[&"DocWindow", _shadow(_doc(_flat(T.D_SURFACE_3, 0, hairline, T.D_LINE_2), T.D_CUT), T.D_HALO, T.D_SHADOW_WINDOW)],
+		[&"DocHead", doc_head],
+		[&"DialogPanel", _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_4, hairline, T.D_LINE_2), T.D_HALO, T.D_SHADOW_WINDOW)],
+		[&"PanelFoot", foot],
+		[&"PickCard", _flat(T.D_SURFACE_3, T.D_RADIUS_3, hairline, T.D_LINE_2)],
+		[&"PickCardHover", _flat(T.D_SURFACE_3, T.D_RADIUS_3, hairline, T.D_LINE_HOVER)],
+		[&"PickCardSelected", _flat(T.D_SURFACE_4, T.D_RADIUS_3, hairline, T.D_LINE_2)],
+		[&"FileDoc", _doc(_flat(T.D_SURFACE_3, 0, hairline, T.D_LINE_2), T.D_CUT)],
+		[&"FileDocHover", _doc(_flat(T.D_SURFACE_3, 0, hairline, T.D_LINE_HOVER), T.D_CUT)],
+		[&"FileDocSelected", _doc(_flat(T.D_SURFACE_4, 0, hairline, T.D_LINE_2), T.D_CUT)],
+		# A fact under a table: its glyph and its sentence.
+		[&"FactBox", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4(T.SPACE_L, T.SPACE_M, T.SPACE_L, T.SPACE_M), T.D_LINE_1)],
+		[&"StepperBox", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_2)],
 	]:
 		_panel(th, row[0], "PanelContainer", row[1])
 	# The time state's frame round the top bar's gate slot and clock while a decision waits.
@@ -1007,6 +1029,8 @@ func _menajer(master: Theme) -> Theme:
 	# A bar's fill is white so its host can tint it with the value's own colour.
 	_panel(th, &"BarTint", "Panel", _flat(Color.WHITE, T.RADIUS_PILL, Vector4.ZERO))
 	_panel(th, &"BrandMark", "Panel", _flat(T.D_BRAND_MARK, T.D_RADIUS_1, Vector4.ZERO))
+	# The disc on a picked card, behind its check glyph.
+	_panel(th, &"CheckDisc", "Panel", _flat(T.D_INK_1, T.RADIUS_PILL, Vector4.ZERO))
 	var mark := _flat(T.D_SELECTED_MARK, T.D_RADIUS_1, Vector4.ZERO)
 	mark.corner_radius_top_left = 0
 	mark.corner_radius_bottom_left = 0
@@ -1014,9 +1038,30 @@ func _menajer(master: Theme) -> Theme:
 
 	# Clickable rows and keys.
 	_dbtn(th, &"ChipButton", secondary, sans_reg, T.D_FS_15, _fit(sans_reg, T.D_FS_15, T.D_H_BTN, T.SPACE_L, T.SPACE_L))
+	_dbtn(th, &"ChipSmall", secondary, sans_reg, T.D_FS_13, _fit(sans_reg, T.D_FS_13, T.D_H_FX, T.SPACE_M, T.SPACE_M))
+	th.set_constant("icon_max_width", &"ChipSmall", T.D_ICON_MARK)
+	th.set_constant("h_separation", &"ChipSmall", T.SPACE_S)
 	# A chip's glyph stays quiet while its label lifts on hover.
 	for state in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
-		th.set_color("icon_%s_color" % state, &"ChipButton", T.D_INK_3)
+		for chip in [&"ChipButton", &"ChipSmall"]:
+			th.set_color("icon_%s_color" % state, chip, T.D_INK_3)
+	# A menu row is a ghost key the size its host gives it; its parts are the host's labels.
+	_dbtn(th, &"MenuItem", ghost, sans_reg, T.D_FS_15, Vector4(T.SPACE_M, 0, T.SPACE_M, 0))
+	# A stepper's minus and plus keys, square, glyph only.
+	_dbtn(th, &"StepKey", ghost, sans_reg, T.D_FS_15, Vector4.ZERO)
+	th.set_constant("icon_max_width", &"StepKey", T.D_ICON_PART)
+	# A job box in the assignment matrix: open, held as a second job, held as the main job; the check
+	# glyph takes the box's ink.
+	_dbtn(th, &"JobBox", {"normal": [T.D_SURFACE_2, T.D_LINE_3, T.D_INK_2], "hover": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_2],
+		"pressed": [T.D_SURFACE_5, T.D_LINE_HOVER, T.D_INK_2], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}, sans_reg, T.D_FS_13, Vector4.ZERO)
+	_dbtn(th, &"JobBoxSecondary", {"normal": [T.D_SURFACE_5, T.D_INK_3, T.D_INK_2],
+		"hover": [T.D_SURFACE_5, T.D_LINE_HOVER, T.D_INK_1], "pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1],
+		"disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}, sans_reg, T.D_FS_13, Vector4.ZERO)
+	_dbtn(th, &"JobBoxPrimary", {"normal": [T.D_INK_2, T.D_INK_2, T.D_SURFACE_0],
+		"hover": [T.D_INK_2, T.D_LINE_HOVER, T.D_SURFACE_0], "pressed": [T.D_INK_3, T.D_LINE_HOVER, T.D_SURFACE_0],
+		"disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}, sans_reg, T.D_FS_13, Vector4.ZERO)
+	for job in [&"JobBox", &"JobBoxSecondary", &"JobBoxPrimary"]:
+		th.set_constant("icon_max_width", job, T.D_ICON_ROW)
 	var under := Vector4i(0, 0, 0, T.BORDER_FOCUS)
 	var under_pad := Vector4(0, 0, 0, T.BORDER_FOCUS)
 	_dbtn(th, &"SegTab", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_3],

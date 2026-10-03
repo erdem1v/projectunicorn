@@ -12083,7 +12083,7 @@ static func _case_gorevler_has_no_founder() -> String:
 	const Assignments := preload("res://scripts/tabs/hr/hr_assignments.gd")
 	_make_employee("char_matrix_dev", "Matrix Dev", HRConstants.ROLE_DEVELOPER)
 	var founder: Character = CharacterRegistry.get_founder()
-	var page: Control = Assignments.build(func(_a: String, _b: String, _c: bool) -> void: pass)
+	var page: Control = Assignments.build(func(_a: String, _b: String, _c: bool) -> void: pass, Callable(), false)
 	var names: Array[String] = []
 	_collect_label_text(page, names)
 	page.queue_free()

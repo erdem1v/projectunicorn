@@ -12,8 +12,10 @@ extends Panel
 # gate is visible, its icon and name off, the reason under the name, and never connects `pressed`.
 #
 # Badges address a tab BY ID, never by index, so a reorder cannot shift a count onto the wrong tab.
-# Red is for danger only (DANGER_TABS); every other count is neutral. Sources:
-#   hr       HRSystem.attention_count() (thresholds live in HRConstants)
+# Red is for danger only (DANGER_TABS, and Ekip while someone may leave); every other count is
+# neutral. Sources:
+#   hr       HRSystem.attention_count() (thresholds live in HRConstants); one count, coloured by its
+#            heaviest part
 #   sales    B2BSalesSystem.attention_count() (accounts in the RİSK phase)
 #   finance  1 when runway is under FinanceSystem's first runway alert threshold
 #   events   the decisions queued and the papers on the desk; while a decision waits, the amber
@@ -32,7 +34,7 @@ const BADGE_AT_ICONS := Vector2(34, 6)
 const LOCK_AT_ICONS := Vector2(38, 28)
 ## In icon mode a badge sits on the icon; a ring in the row's ground cuts it out.
 const BADGE_RING := 2
-const DANGER_TABS := ["hr", "sales", "finance"]
+const DANGER_TABS := ["sales", "finance"]
 const LOCK_ICON := preload("res://assets/icons/util/lock.svg")
 
 @onready var tab_buttons: Array[Button] = [
@@ -49,6 +51,7 @@ const LOCK_ICON := preload("res://assets/icons/util/lock.svg")
 @onready var settings_btn: Button = $Margin/Col/SettingsBtn
 
 var current_tab_idx: int = -1  # -1 = hiçbir sekme açık değil, pencere yok
+var _hr_danger := false        # someone on the team may leave: Ekip's count is red
 
 
 func _ready() -> void:
@@ -139,7 +142,8 @@ func _paint() -> void:
 		# Kilitli sekme (--tab-shot=marketing onu açabilir) kilitli görünümde kalır, hiç vurgulanmaz.
 		var state: String = "locked" if _is_locked(i) else ("active" if i == current_tab_idx else "idle")
 		_paint_row(tab_buttons[i], "TAB_" + id.to_upper(), state, icons)
-		_paint_badge(tab_buttons[i].get_node("Badge"), id in DANGER_TABS, state == "active", icons)
+		_paint_badge(tab_buttons[i].get_node("Badge"), id in DANGER_TABS or (id == "hr" and _hr_danger),
+			state == "active", icons)
 		if id == "events":
 			_place_gate_dot(tab_buttons[i].get_node("GateDot"), icons)
 		if state == "locked":
@@ -259,6 +263,11 @@ func _refresh_badges() -> void:
 func _refresh_hr_badge() -> void:
 	# İzindeki çalışan da sayılır: hâlâ ekipte, hâlâ dikkat ister.
 	_set_badge_count("hr", HRSystem.attention_count())
+	var danger: bool = CharacterRegistry.get_employees().any(
+		func(emp: Character) -> bool: return HRConstants.is_flight_risk(emp.morale))
+	if danger != _hr_danger:
+		_hr_danger = danger
+		_paint()
 
 
 func _refresh_finance_badge() -> void:

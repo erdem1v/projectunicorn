@@ -6,7 +6,7 @@ extends RefCounted
 # ============================================================================
 # UiTokens owns the VOCABULARY: every Color in the game (named), the type scale,
 # spacing / radius / border / padding tokens, leading, and the runtime colour
-# helpers a .tres cannot express (delta_color, badge_palette, health_green…).
+# helpers a .tres cannot express (delta_color, badge_palette…).
 # It knows nothing about Control types.
 #
 # themes/master_theme.tres owns the ASSIGNMENT (which type / variation gets which
@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 22
+const THEME_STAMP := 23
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -109,15 +109,12 @@ const NEGATIVE_BG := Color(0.953, 0.851, 0.816, 1)       # #F3D9D0
 const NEGATIVE_RULE := Color(NEGATIVE, 0.45)             # chip border
 const POSITIVE_BRIGHT := Color(0.247, 0.839, 0.549, 1)   # #3FD68C · on the dark frame
 const NEGATIVE_BRIGHT := Color(1.0, 0.361, 0.286, 1)     # #FF5C49 · on the dark frame
-const HEALTH_GREEN := Color(0.184, 0.420, 0.227, 1)      # #2F6B3A · status dot
-const HEALTH_AMBER := Color(0.788, 0.588, 0.180, 1)      # #C9962E · status dot
 
 # --- STATE · colourblind-safe counterparts (Settings > Erişilebilirlik) ---
 # Blue/orange survives all three dichromacies while green/red survives none
 # (Okabe-Ito hues, deepened to read as text on cream; the *_BRIGHT_CB pair keeps
 # screen brightness for the dark frame). Only the pair moves: amber already reads
-# as amber to a dichromat, so HEALTH_AMBER and ACCENT stay put and the health dot
-# stays three-state (blue / amber / orange).
+# as amber to a dichromat, so ACCENT stays put.
 # ALL # WORKING — Erdem's F5 seals the hues.
 const POSITIVE_CB := Color(0.173, 0.435, 0.682, 1)        # #2C6FAE · blue
 const POSITIVE_BG_CB := Color(0.851, 0.898, 0.941, 1)     # #D9E5F0
@@ -127,7 +124,6 @@ const NEGATIVE_BG_CB := Color(0.945, 0.894, 0.820, 1)     # #F1E4D1
 const NEGATIVE_RULE_CB := Color(NEGATIVE_CB, 0.45)
 const POSITIVE_BRIGHT_CB := Color(0.337, 0.706, 0.914, 1) # #56B4E9 · on the dark frame
 const NEGATIVE_BRIGHT_CB := Color(0.902, 0.624, 0.0, 1)   # #E69F00 · on the dark frame
-const HEALTH_GREEN_CB := Color(0.173, 0.435, 0.682, 1)    # #2C6FAE · status dot (blue twin)
 const DOT_IDLE := Color(0.769, 0.718, 0.624, 1)          # #C4B79F · unearned milestone dot  # WORKING
 # Ürün sprint ekranının alan renkleri KATEGORİKTİR (kart kenarı, tür ikonu, kapasite dilimi) [WORKING].
 # Yuva 2 B2C'de Büyüme, B2B'de Entegrasyonlar; yuva 4 Gelir ya da Müşteriler. Yuva 0'ın mavisi
@@ -153,9 +149,6 @@ const BORDER_HOVER := Color(0.769, 0.718, 0.624, 1)      # #C4B79F · hover/ghos
 const CARD_ATTENTION_BORDER := Color(NEGATIVE, 0.45)   # rgba(155,59,40,.45) · attention-strip edge
 const BORDER_DISABLED := Color(0.851, 0.816, 0.749, 1)   # #D9D0BF · disabled control edge
 const BORDER_DASHED := Color(0.851, 0.816, 0.749, 1)     # #D9D0BF · empty-slot edge
-## KARAR VEREN ama nötr kalan bir kontrolün kenarı: aynı satırda DEVRALAN kutunun
-## sönük kenarından ayrılsın diye BORDER_HOVER'dan bir adım koyu. Runtime token.
-const BORDER_STEPPER_OWN := Color(0.686, 0.620, 0.498, 1)  # #AF9E7F · karar veren nötr kutu  # WORKING
 const DIVIDER_LIGHT := Color(0.890, 0.855, 0.788, 1)     # #E3DAC9 · in-card hairline
 const SEPARATOR := Color(0.106, 0.137, 0.169, 1)         # #1B232B · chrome hairline
 
@@ -384,9 +377,6 @@ static func positive_bright() -> Color:
 
 static func negative_bright() -> Color:
 	return NEGATIVE_BRIGHT_CB if _cb_palette else NEGATIVE_BRIGHT
-
-static func health_green() -> Color:
-	return HEALTH_GREEN_CB if _cb_palette else HEALTH_GREEN
 
 ## Çip kenarları da semantiktir: dolgu takas olup kenar sabit kalsaydı renk körü
 ## modunda çip iki paletten karışık okunurdu.
@@ -793,19 +783,35 @@ const D_H_LINK := 24         # a text link on a float card (the research card's 
 const D_H_PROGRESS := 6      # a progress track
 const D_H_WIN_HEAD := 72     # a window's header band
 # --- sizes the host lays out ---
+const D_H_WIN_CTL := 56      # a window's control strip under its header
+const D_H_HEAD := 36         # a table's head
+const D_H_HEAD_TWO := 56     # a table's two-tier head (a span over a group of columns)
 const D_H_TOAST := 48
 const D_H_STAKE := 104       # a decision's stake box, at its least
 const D_H_ROW := 40          # a table's data row
+const D_H_ROW_SM := 32       # a compact table's data row
+const D_H_ROW_LG := 44       # a row the player picks from (a training row), a menu row with its reason under it
+const D_H_ROW_MATRIX := 48   # the job matrix's row
+const D_H_SKILL_ROW := 30    # a skill's row in a person's file
+const D_H_FACT_ROW := 28     # a fact's row on a candidate's file
+const D_BOX_JOB := 24        # a job's box in the matrix
+const D_BOX_JOB_SM := 20     # the matrix legend's sample box
+const D_CHECK_DISC := 20     # the check disc on a picked card
 const D_H_GROUP := 36        # a table's group header
 const D_H_STRIP := 52        # a strip over a table (the risk strip)
 const D_H_EMPTY_ROW := 52    # a group with nobody in it
 const D_TOAST_WELL := 32     # the square behind a toast's glyph
 const D_TRAIT_BOX := 24      # the square behind a trait's glyph
 const D_AVATAR_ROW := 32     # a person's disc in a row or strip
+const D_AVATAR_ROW_SM := 24  # a person's disc in a compact row
+const D_AVATAR_DOC := 40     # a person's disc at the head of their file
+const D_AVATAR_CARD := 48    # a candidate's disc on their file
 const D_W_MORALE := 32       # the morale figure's column, right aligned, before its bar
 const D_MORALE_BAR := Vector2i(76, 6)
+const D_MORALE_BAR_SM := Vector2i(44, 4)   # the morale bar beside a work-hours row
+const D_XP_BAR := Vector2i(32, 4)
 const D_NOTCH := Vector2i(1, 12)        # the flight-risk notch across the morale bar
-const D_SKILL_MARK := Vector2i(16, 2)   # the main skill's underline, a 6 px step above the cell's foot
+const D_SKILL_MARK := Vector2i(16, 2)   # the main skill's underline, just under its figure
 # --- glyph sizes ---
 const D_ICON_CONTROL := 20   # a control's own glyph (the ticker toggle, a window's close)
 const D_ICON_TITLE := 20     # a float card's title glyph

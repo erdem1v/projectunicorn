@@ -308,18 +308,25 @@ func _run_display_check() -> void:
 
 const RENDER_PROBE_WARMUP := 45
 const RENDER_PROBE_FRAMES := 180
+const RENDER_PROBE_REBUILDS := 12
 
 
-# --render-probe[=<tab id>] mounts the real shell and prints FRAME COST and TEXTURE/VIDEO
-# MEMORY, then quits — the number a screenshot cannot give. VSYNC IS FORCED OFF or every
-# frame would measure the monitor's refresh rate; safe because SaveManager._is_harness_arg
-# knows this flag, so the player's stored vsync is never touched.
-func _run_render_probe(tab_id: String) -> void:
+# --render-probe[=<tab id>[:<people>[:<speed>]]] mounts the real shell and prints FRAME COST and
+# TEXTURE/VIDEO MEMORY, then quits — the number a screenshot cannot give. <people> fills the roster
+# up to that many; <speed> runs the clock at that speed key while it measures, for at least three game
+# hours so the hourly ticks land in the sample. A page with rebuild_view also prints the frames that
+# rebuild it whole (a structure change). VSYNC IS FORCED OFF or every frame would measure the
+# monitor's refresh rate; safe because SaveManager._is_harness_arg knows this flag, so the player's
+# stored vsync is never touched.
+func _run_render_probe(spec: String) -> void:
+	var parts: PackedStringArray = spec.split(":")
 	_begin_shot()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	_seed_theme_surface()
+	if parts.size() > 1:
+		OfficeCrowdProbe.seed_staff(maxi(0, int(parts[1]) - CharacterRegistry.count_employees()))
 	await _mount_shot_shell()
-	EventBus.tab_changed.emit(tab_id)
+	EventBus.tab_changed.emit(parts[0])
 	await get_tree().create_timer(0.4).timeout
 
 	# The first frames pay shader compilation and texture upload — with mipmaps the upload is
@@ -327,8 +334,23 @@ func _run_render_probe(tab_id: String) -> void:
 	for _i in RENDER_PROBE_WARMUP:
 		await get_tree().process_frame
 
+	var page: Node = _shell.find_child("CenterViewport", true, false).get_current_page_body()
+	var rebuild_ms: Array = []
+	if page != null and page.has_method(&"rebuild_view"):
+		for _i in RENDER_PROBE_REBUILDS:
+			var t0: int = Time.get_ticks_usec()
+			page.rebuild_view()
+			await get_tree().process_frame
+			rebuild_ms.append(float(Time.get_ticks_usec() - t0) / 1000.0)
+		rebuild_ms.sort()
+
+	var speed: int = int(parts[2]) if parts.size() > 2 else 0
+	var hour0: int = GameState.current_hour
+	if speed > 0:
+		EventBus.speed_change_requested.emit(speed)
 	var sorted_ms: Array = []
-	for _i in RENDER_PROBE_FRAMES:
+	var until: int = Time.get_ticks_msec() + int(TimeModel.SECONDS_PER_HOUR[speed] * 3000.0)
+	while sorted_ms.size() < RENDER_PROBE_FRAMES or Time.get_ticks_msec() < until:
 		var t0: int = Time.get_ticks_usec()
 		await get_tree().process_frame
 		sorted_ms.append(float(Time.get_ticks_usec() - t0) / 1000.0)
@@ -339,6 +361,11 @@ func _run_render_probe(tab_id: String) -> void:
 	var win: Vector2i = get_window().size
 
 	print("RENDER_PROBE_BEGIN")
+	print("LOAD|tab=%s|people=%d|speed=%d|game_hours=%d" % [parts[0], CharacterRegistry.count_employees(), speed,
+		GameState.current_hour - hour0])
+	if not rebuild_ms.is_empty():
+		print("REBUILD_MS|median=%.3f|max=%.3f|n=%d" % [float(rebuild_ms[int(rebuild_ms.size() * 0.5)]),
+			float(rebuild_ms[-1]), rebuild_ms.size()])
 	# The logical viewport is where content_scale_factor (a REQUEST) can be seen to have landed.
 	var vis: Vector2 = get_viewport().get_visible_rect().size
 	print("WINDOW|%dx%d|scale=%.3f|viewport=%dx%d|vsync=off" % [
@@ -589,7 +616,8 @@ func _run_event_shot(event_id: String) -> void:
 ##   offer · queue · customer (an option armed) · locked · history · paper · paper_open ·
 ##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
 ##   frank_moment · rnd_note · rnd_discovery · weekly_sales · empty · long · team_read_only (Ekip
-##   read-only over a decision) · held_key (a speed key refused: the frame's blink and the toast)
+##   read-only over a decision) · team_tasks_read_only (its Görevler) · held_key (a speed key refused:
+##   the frame's blink and the toast)
 ## Cards come through force_fire; a past decision is resolved for real at an earlier week.
 func _run_inbox_shot(state: String) -> void:
 	_begin_shot()
@@ -609,10 +637,14 @@ func _run_inbox_shot(state: String) -> void:
 			return
 		"intro":
 			_open_note("intro")
-		"offer", "team_read_only", "held_key":
+		"offer", "team_read_only", "team_tasks_read_only", "held_key":
 			_shot_card("funding.frank_cheque", {}, 8)
-			if state == "team_read_only":
+			if state.begins_with("team_"):
 				EventBus.tab_changed.emit("hr")
+				if state == "team_tasks_read_only":
+					await get_tree().process_frame
+					var page: Node = _shell.find_child("CenterViewport", true, false).get_current_page_body()
+					page._show_view(page.VIEW_ASSIGNMENTS)
 			elif state == "held_key":
 				EventBus.tab_changed.emit("")
 				var key := InputEventKey.new()
@@ -1587,29 +1619,26 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 	return false
 
 
-## The ledger's first real row: popover placement derives from the anchor's on-screen rect,
-## so anchoring on the page would silently weaken the check.
-func _first_ledger_row(tab: Node) -> Control:
-	for child in tab._list.get_children():
-		if child is PanelContainer and String(child.theme_type_variation) == "LedgerRow":
-			return child
-	return null
-
-
-# --hr-shot=<ekip|atlas|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-bos|egitim|egitim-modal|zam|
-# menu|cikar|cikar-eksi|bos>: a roster across all three departments (one on leave, one burning
-# out, one fresh hire), driven to the requested HR surface.
+# --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
+# gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|cikar|cikar-eksi|bos|dosya|dosya-kurucu|kalabalik>:
+# a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
+# requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
+# list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
+# founder's file over the office; ekip-saat = Kadro with hours exceptions in Durum; atlas-secili = the
+# search with a role and a level picked; gorevler-arge = Görevler with someone researching.
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
 	GameState.day = 10
 	if kind != "bos" and kind != "gorevler-bos":
 		_seed_hr_roster()
+		if kind == "kalabalik":   # LOC-DATA debug seed / id
+			OfficeCrowdProbe.seed_staff(34)
 		# Kasa ve burn maaşları görsün: üst bar ile önizlemeler aynı gerçeği okur.
 		GameState.set_cash(240000)
 		FinanceSystem.daily_tick()
 	match kind:
-		"gorevler-bos", "atlas":   # LOC-DATA debug seed / id
+		"gorevler-bos", "atlas", "atlas-secili", "dosya-kurucu":   # LOC-DATA debug seed / id
 			pass
 		"dosyalar":
 			# Files on the table: the arrival window's worth of real generator output.
@@ -1635,6 +1664,11 @@ func _run_hr_shot(kind: String) -> void:
 			HRSearchSystem.daily_tick()
 	await _mount_shot_shell()
 	_wire_modal_signals()   # cikar / zam open their modal through confirm_requested
+	if kind == "egitim-secili":   # LOC-DATA debug seed / id
+		# The first employee's bar is full: the panel opens on an area to train.
+		var first: Character = CharacterRegistry.get_employees()[0]
+		CharacterRegistry.refresh_experience_threshold(first)
+		first.experience_raw = first.experience_threshold
 	if kind == "egitim":   # LOC-DATA debug seed / id
 		# Deneyim/eğitim satırlarının üç hâli tek karede: dolu (EĞİTİME GÖNDER), eğitimde
 		# (geri sayan çip), yarı yolda. Eşik kişiye göre değiştiği için oran eşikten türer.
@@ -1660,8 +1694,18 @@ func _run_hr_shot(kind: String) -> void:
 		_shot_fail("[HRShot] sekme gövdesi bulunamadı (get_current_page_body null)")
 		return
 	match kind:
-		"atlas", "dosyalar":
+		"atlas", "dosyalar", "atlas-secili":   # LOC-DATA debug seed / id
 			tab._open_atlas()
+			if kind == "atlas-secili":   # LOC-DATA debug seed / id
+				var atlas: Node = get_tree().get_root().find_child("PanelLayer", true, false).get_child(-1)
+				atlas._selected_role = HRConstants.ROLE_DEVELOPER
+				atlas._selected_level = HRConstants.LEVEL_MID
+				atlas._rebuild()
+		"ekip-saat":   # LOC-DATA debug seed / id
+			# Durum's hours exceptions: Geliştirme on overtime, the first employee on a short day.
+			WorkHoursSystem.set_group_hours(HRConstants.GROUP_DEVELOPMENT, 10)
+			WorkHoursSystem.set_person_hours(CharacterRegistry.get_employees()[0].id, 6)
+			tab.rebuild_view()
 		"saatler-gece":   # LOC-DATA debug seed / id
 			# Mesai en geç 00:00: 08:00 başlangıç ve 16 saat, sürgüler üst sınırda.
 			WorkHoursSystem.set_company_start_hour(TimeModel.WEEK_START_HOUR)
@@ -1674,31 +1718,41 @@ func _run_hr_shot(kind: String) -> void:
 			if not crew.is_empty():
 				WorkHoursSystem.set_person_hours(crew[0].id, 6)
 			tab._open_hours_modal()
-		"gorevler":   # LOC-DATA debug seed / id
-			# §12.0 matrisi dört hâliyle: biri iki işle (üçüncü hücresi §12.1'e göre kilitli),
-			# biri boşta, gerisi normal.
+		"gorevler", "gorevler-arge":   # LOC-DATA debug seed / id
+			# §12.0 matrisi dört hâliyle: testçi iki işte (üçüncü hücresi §12.1'e göre kilitli),
+			# tasarımcı boşta (gorevler-arge'de araştırmada), gerisi normal.
 			var roster: Array[Character] = CharacterRegistry.get_employees()
-			if roster.size() >= 2:
-				for job_id in HRConstants.JOBS:
-					if not roster[0].assigned_job_ids.has(job_id) \
-							and HRConstants.can_hold_job(roster[0].role, job_id, roster[0].category):
-						CharacterRegistry.assign_job(roster[0].id, String(job_id))
-						break
+			if roster.size() >= 4:
+				for job_id in [HRConstants.JOB_TEST, HRConstants.JOB_BUILD]:
+					if not roster[3].assigned_job_ids.has(job_id):
+						CharacterRegistry.assign_job(roster[3].id, job_id)
 				CharacterRegistry.clear_jobs(roster[1].id)
+				if kind == "gorevler-arge":   # LOC-DATA debug seed / id
+					CharacterRegistry.assign_job(roster[1].id, HRConstants.JOB_RESEARCH)
 			tab._show_view(tab.VIEW_ASSIGNMENTS)
 		"gorevler-bos":   # LOC-DATA debug seed / id
 			tab._show_view(tab.VIEW_ASSIGNMENTS)
-		"egitim-modal":   # LOC-DATA debug seed / id
+		"egitim-modal", "egitim-secili":   # LOC-DATA debug seed / id
 			var who: Array[Character] = CharacterRegistry.get_employees()
 			if not who.is_empty():
 				tab._on_card_action(who[0].id, HRLedger.ACTION_TRAIN, null)
+		"dosya":   # LOC-DATA debug seed / id
+			tab._on_card_action(CharacterRegistry.get_employees()[0].id, HRLedger.ACTION_DOSSIER, null)
+		"dosya-kurucu":   # LOC-DATA debug seed / id
+			EventBus.tab_changed.emit("")
+			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
+				{"character_id": CharacterRegistry.get_founder().id})
+		"kalabalik":   # LOC-DATA debug seed / id
+			tab._toggle_group(HRConstants.GROUP_DEVELOPMENT)
+			await get_tree().process_frame
+			tab._scroll.scroll_vertical = UiTokens.D_H_GROUP + UiTokens.D_H_ROW_SM * 2
 		"zam", "menu", "cikar", "cikar-eksi":
 			# The row's REAL path: a row click opens the HRPopover anchored on that row.
-			var row: Control = _first_ledger_row(tab)
+			var target: Character = CharacterRegistry.get_employees()[0]
+			var row: Control = tab._rows.get(target.id)
 			if row == null:
 				_shot_fail("[HRShot] defter satırı bulunamadı — popover çapasız")
 				return
-			var target: Character = CharacterRegistry.get_employees()[0]
 			tab._on_card_action(target.id,
 				HRLedger.ACTION_RAISE if kind == "zam" else HRLedger.ACTION_MENU, row)
 			if kind == "cikar-eksi":

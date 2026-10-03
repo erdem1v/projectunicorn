@@ -8,7 +8,7 @@ extends RefCounted
 
 const CLOSE_ICON := preload("res://assets/icons/util/close.svg")
 
-static var _bust_mats := {}   # circle -> the bust's material (avatar_bust.gdshader)
+static var _bust_mats := {}   # (circle, grey) -> the bust's material (avatar_bust.gdshader)
 
 
 static func _chip_box(bg: Color) -> StyleBoxFlat:
@@ -113,9 +113,10 @@ static func make_card(content: Control = null, tight: bool = false, attention: b
 	return card
 
 
-## A person's disc: the bust of their look (PersonBust), or their initials without one.
-static func make_person_avatar(person_name: String, look: Dictionary, diameter: int) -> Panel:
-	return make_avatar(initials_of(person_name), diameter, PersonBust.texture(look, diameter))
+## A person's disc: the bust of their look (PersonBust), or their initials without one. `grey` is the
+## face of someone away.
+static func make_person_avatar(person_name: String, look: Dictionary, diameter: int, grey := false) -> Panel:
+	return make_avatar(initials_of(person_name), diameter, PersonBust.texture(look, diameter), grey)
 
 
 ## Frank's disc: his pre-rendered portrait, already cut to the circle (FounderConstants).
@@ -131,14 +132,14 @@ static func make_mentor_avatar(diameter: int) -> TextureRect:
 
 ## Initials-in-a-circle avatar. The `Avatar` variation uses RADIUS_PILL, so it stays circular
 ## at any diameter. Given a person's bust (PersonBust), the disc shows the face instead.
-static func make_avatar(initials_text: String, diameter: int = 24, bust: Texture2D = null) -> Panel:
+static func make_avatar(initials_text: String, diameter: int = 24, bust: Texture2D = null, grey := false) -> Panel:
 	var avatar := Panel.new()
 	avatar.theme_type_variation = &"Avatar"
 	avatar.custom_minimum_size = Vector2(diameter, diameter)
 	avatar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if bust != null:
-		avatar.add_child(make_bust(bust))
+		avatar.add_child(make_bust(bust, true, grey))
 		return avatar
 	var initial := make_label(initials_text, &"AvatarInitial")
 	initial.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -149,8 +150,8 @@ static func make_avatar(initials_text: String, diameter: int = 24, bust: Texture
 	return avatar
 
 
-## A person's bust (PersonBust.texture) filling its parent, cut to a circle when `circle`.
-static func make_bust(bust: Texture2D, circle := true) -> TextureRect:
+## A person's bust (PersonBust.texture) filling its parent, cut to a circle when `circle`, grey when `grey`.
+static func make_bust(bust: Texture2D, circle := true, grey := false) -> TextureRect:
 	var face := TextureRect.new()
 	face.texture = bust
 	face.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -158,12 +159,14 @@ static func make_bust(bust: Texture2D, circle := true) -> TextureRect:
 	face.stretch_mode = TextureRect.STRETCH_SCALE
 	face.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if not _bust_mats.has(circle):
+	var key := Vector2i(int(circle), int(grey))
+	if not _bust_mats.has(key):
 		var m := ShaderMaterial.new()
 		m.shader = preload("res://scenes/ui/components/avatar_bust.gdshader")
 		m.set_shader_parameter("circle", circle)
-		_bust_mats[circle] = m
-	face.material = _bust_mats[circle]
+		m.set_shader_parameter("grey", grey)
+		_bust_mats[key] = m
+	face.material = _bust_mats[key]
 	return face
 
 
@@ -263,6 +266,11 @@ static func D_kpi(key: String, value: String) -> PanelContainer:
 	col.add_child(make_label(value, &"KpiValue"))
 	cell.add_child(col)
 	return cell
+
+
+## A D_kpi cell's value line, which its host rewrites in place.
+static func D_kpi_value(cell: PanelContainer) -> Label:
+	return cell.get_child(0).get_child(1)
 
 
 ## A window's section tabs, in caps: the active one in ink over its underline, each with its count

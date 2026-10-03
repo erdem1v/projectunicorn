@@ -1,12 +1,12 @@
 extends RefCounted
 
 # --probe-shot=kit: the dark kit's components in their states on a window body, laid out like the
-# approved Ekip row sheet (SPEC §3.4 grid), beside the tags, parts, toasts, focus rings and the row
+# approved Ekip row sheet (the Kadro grid, HRLedger.COLUMNS), beside the tags, parts, toasts, focus rings and the row
 # menu's dark host. Debug only: names and figures are samples, the strings come from the CSV.
 
 const TOAST := preload("res://scripts/ui/components/toast.gd")
 const GROUP_GLYPH := "res://assets/icons/rail/hr.svg"
-## SPEC §3.4, the 1352 px Ekip window: face, name, six skills, leadership, task, experience, state,
+## HRLedger.COLUMNS, the 1352 px Ekip window: face, name, six skills, leadership, task, experience, state,
 ## trait, salary, morale.
 const W := [48, 170, 44, 80, 172, 88, 142, 142, 80, 116]
 const ROWS := [
@@ -18,7 +18,7 @@ const ROWS := [
 		"lead": 6, "tags": [["HR_BADGE_NEW", &""]], "trait": "takes_them_under", "salary": 9800, "morale": 72,
 		"selected": true},
 	{"name": "Mert Yıldız", "role": "DEVELOPER", "skills": [4, 4, 8, 7, 4, 4], "main": 2, "second": 3,   # LOC-DATA debug sample
-		"lead": 3, "tags": [["HR_FOUNDER_STATE_TRAINING", &"neutral"]], "weeks": 2, "trait": "loyal",
+		"lead": 3, "tags": [["HR_STATE_IN_TRAINING", &"neutral"]], "weeks": 2, "trait": "loyal",
 		"salary": 11200, "morale": 61, "away": true},
 	{"name": "Selin Kaya", "role": "TESTER", "skills": [3, 3, 4, 5, 3, 3], "main": 3, "second": 2,   # LOC-DATA debug sample
 		"lead": 1, "tags": [["HR_BADGE_FLIGHT_RISK", &"risk"]], "trait": "double_checker", "salary": 6900,
@@ -95,14 +95,14 @@ static func _window() -> PanelContainer:
 	ctl_row.add_child(tabs)
 	var chip := Button.new()
 	chip.theme_type_variation = &"ChipButton"
-	chip.icon = load("res://assets/icons/clock.svg")
+	chip.icon = load("res://assets/icons/util/clock.svg")
 	chip.text = _tr("HR_HOURS_WINDOW").format({"start": "09:00", "end": "17:00"})
 	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	ctl_row.add_child(chip)
 	var hire := Button.new()
 	hire.theme_type_variation = &"PrimaryButtonDark"
 	hire.icon = load("res://assets/icons/util/plus.svg")
-	hire.text = _tr("HR_SEARCH_START_INLINE")
+	hire.text = _tr("HR_SEARCH_START")
 	hire.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	ctl_row.add_child(hire)
 	col.add_child(ctl)
@@ -128,7 +128,7 @@ static func _window() -> PanelContainer:
 		list.add_child(_row(r))
 	list.add_child(HRUiShared.D_group(_tr("HR_GROUP_DEVELOPMENT"), GROUP_GLYPH, 14, true, func() -> void: pass))
 	list.add_child(HRUiShared.D_group(_tr("HR_GROUP_CUSTOMER_SUCCESS"), GROUP_GLYPH, 0, false, func() -> void: pass))
-	list.add_child(HRUiShared.D_empty_row(_tr("HR_EMPTY_ROW"), _tr("HR_SEARCH_START_INLINE"), func() -> void: pass))
+	list.add_child(HRUiShared.D_empty_row(_tr("HR_EMPTY_ROW"), _tr("HR_SEARCH_START"), func() -> void: pass, false))
 	return win
 
 
@@ -231,7 +231,7 @@ static func _samples() -> VBoxContainer:
 	tags.add_theme_constant_override("h_separation", UiTokens.SPACE_M)
 	tags.add_theme_constant_override("v_separation", UiTokens.SPACE_M)
 	for t in [["HR_BADGE_NEW", &""], ["HR_BADGE_FLIGHT_RISK", &"risk"], ["SALES_CHIP_RISK", &"risk"],
-			["HR_BADGE_OVERLOADED_JOBS", &"warn"], ["HR_FOUNDER_STATE_TRAINING", &"neutral"],
+			["HR_BADGE_OVERLOADED_JOBS", &"warn"], ["HR_STATE_IN_TRAINING", &"neutral"],
 			["HR_BADGE_IDLE", &"outline"]]:
 		tags.add_child(UiFactory.D_tag(_tr(t[0]), t[1]))
 	col.add_child(tags)

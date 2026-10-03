@@ -25,18 +25,18 @@ const DETAILS := {
 }
 # preload: global class cache'e bağımlılık yok (yeni class_name + headless tuzağı).
 const FRAME := preload("res://scripts/ui/components/window_frame.gd")
+const OFFICE := preload("res://scripts/ui/office/office_view.gd")
 ## 1920×1080 tabanında pencere boyları; pencere alanı daha darsa pencere ona sığacak kadar
-## küçülür. Sahnesi olmayan sekme yer tutucunun (marketing) boyunu alır. Ekip 1200: defterin
-## sabit sütunları ve ÇALIŞAN 1000'e sığmıyor. Finans 1344 BuildHUD'un solunda biter; Ürün 1424 ona
-## biner ve BuildHUD gizlenir.
+## küçülür. Sahnesi olmayan sekme yer tutucunun (marketing) boyunu alır. Ekip 1352: kadronun EN
+## sütunları; 1920'de BuildHUD'un 16 px solunda biter. Finans 1344 BuildHUD'un solunda biter; Ürün
+## 1424 ona biner ve BuildHUD gizlenir. `fit_height()` taşıyan sayfanın penceresi (Ekip, dosya)
+## içeriği kadar uzar, boyu en çok buradaki kadardır.
 const SPECS := {
-	"finance": Vector2(1344, 720), "hr": Vector2(1200, 720), "product": Vector2(1424, 928),
+	"finance": Vector2(1344, 720), "hr": Vector2(1352, 928), "product": Vector2(1424, 928),
 	"sales": Vector2(1280, 760), "rnd": Vector2(1280, 780), "personal": Vector2(1000, 640),
-	"events": Vector2(1240, 900), "marketing": Vector2(900, 640), "hr_dossier": Vector2(380, 580),
+	"events": Vector2(1240, 900), "marketing": Vector2(900, 640), "hr_dossier": Vector2(320, 928),
 }
 const EDGE := 24.0            # pencere ile pencere alanının (ray dışı merkez alan) kenarı arasındaki boşluk
-const DETAIL_DROP := 130.0    # ayrıntı, birincilin üst kenarından bu kadar aşağıda başlar
-const DETAIL_OVERHANG := 4.0  # ...ve sağ kenarından bu kadar taşar
 ## Ofis ve sayfalar ayrıntı penceresini bu gruptan açar: open_detail(kind, payload).
 const GROUP := &"window_layer"
 
@@ -90,8 +90,9 @@ func open_primary(tab_id: String) -> void:
 	_mount(_current_page)
 
 
-## Birincile bağlı ayrıntı penceresi (aynı anda tek); birincil yoksa onun yuvasına oturur.
-## Kapatma bu gövdeye bağlı: yerini yenisine bırakmış bir dosyanın geç isteği yenisini kapatmaz.
+## Birincile bağlı ayrıntı penceresi (aynı anda tek): alanın sağ üst köşesinde, birincilin yanında ya
+## da dar alanda onun üstünde. Kapatma bu gövdeye bağlı: yerini yenisine bırakmış bir dosyanın geç
+## isteği yenisini kapatmaz.
 func open_detail(kind: String, payload: Dictionary) -> void:
 	_close_detail()
 	var body: Control = (DETAILS[kind] as GDScript).new()
@@ -159,31 +160,66 @@ func _rebuild() -> void:
 
 func _mount(frame: Control) -> void:
 	frame.visible = not _veiled
+	# A page that grows with its content says so, and the read-only strip changes its frame's height.
+	if frame.page.has_signal(&"fit_changed"):
+		frame.page.fit_changed.connect(_place)
+		frame.minimum_size_changed.connect(_place)
 	add_child(frame)
 	_place()
 
 
+## The window under a PanelLayer panel steps back: it dims as the office does, and its page gives up
+## its amber (the page's on_panel_over).
+func set_under(on: bool) -> void:
+	if _current_page == null:
+		return
+	_current_page.modulate = Color(OFFICE.DIM, OFFICE.DIM, OFFICE.DIM) if on else Color.WHITE
+	_current_page.page.propagate_call(&"on_panel_over", [on])
+
+
+## A PanelLayer panel's global rect: at the area's top, centred on the open window and kept inside the
+## area. With `cover`, a panel as wide as the window is at least as tall as it.
+func panel_rect(want: Vector2, cover: bool) -> Rect2:
+	var area: Rect2 = _area()
+	var box: Vector2 = want.min(area.size)
+	var mid: float = area.get_center().x
+	if _current_page != null:
+		mid = _current_page.get_rect().get_center().x
+		if cover and box.x >= _current_page.size.x:
+			box.y = clampf(_current_page.size.y, box.y, area.size.y)
+	var x: float = clampf(mid - box.x / 2.0, area.position.x, area.end.x - box.x)
+	return Rect2(global_position + Vector2(x, area.position.y), box)
+
+
+## The window area: the centre right of the rail, EDGE inside it.
+func _area() -> Rect2:
+	var corner := Vector2(rail.get_rect().end.x - position.x + EDGE, EDGE)
+	return Rect2(corner, size - Vector2(EDGE, EDGE) - corner)
+
+
 ## Ofis ve BuildHUD rayın sağındaki alanı alır; pencereler o alanın EDGE kadar içinde kalır.
-## Birincil sol üstte; ayrıntı birincilin sağ kenarına biner. Katman ya da ray yeniden
-## boyutlanınca (arayüz ölçeği, rayın kipi) yeniden oturur.
+## Birincil sol üstte, ayrıntı sağ üstte. Katman ya da ray yeniden boyutlanınca (arayüz ölçeği,
+## rayın kipi) yeniden oturur.
 func _place() -> void:
 	var left: float = rail.get_rect().end.x - position.x
 	_office.set_safe_left(left)
 	_build_hud.offset_left = left
-	var corner := Vector2(left + EDGE, EDGE)
-	var end: Vector2 = size - Vector2(EDGE, EDGE)
-	var room: Vector2 = end - corner
+	var area: Rect2 = _area()
 	if _current_page != null:
-		_current_page.position = corner
-		_current_page.size = (SPECS.get(_primary_id, SPECS["marketing"]) as Vector2).min(room)
+		_current_page.position = area.position
+		_current_page.size = _fit(_current_page, SPECS.get(_primary_id, SPECS["marketing"]), area.size)
 	if _detail != null:
-		_detail.size = (SPECS[_detail_kind] as Vector2).min(room)
-		var at: Vector2 = corner
-		if _current_page != null:
-			at = Vector2(_current_page.get_rect().end.x - _detail.size.x + DETAIL_OVERHANG,
-				_current_page.position.y + DETAIL_DROP)
-		_detail.position = at.clamp(corner, (end - _detail.size).max(corner))
+		_detail.size = _fit(_detail, SPECS[_detail_kind], area.size)
+		_detail.position = Vector2(maxf(area.end.x - _detail.size.x, area.position.x), area.position.y)
 	_tell_floats()
+
+
+## A page with fit_height() is as tall as its content plus the frame around it, up to its spec.
+func _fit(frame: FRAME, spec: Vector2, room: Vector2) -> Vector2:
+	if frame.page.has_method(&"fit_height"):
+		var chrome: float = frame.get_combined_minimum_size().y - frame.page.get_combined_minimum_size().y
+		spec.y = minf(spec.y, chrome + frame.page.fit_height())
+	return spec.min(room)
 
 
 ## Ofisin üstündeki yüzen denetimler (office_overlays) üstlerine pencere binince gizlenir; görünen
