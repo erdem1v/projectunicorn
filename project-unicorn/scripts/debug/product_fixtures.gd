@@ -535,9 +535,12 @@ func _header(product: String, market: String, type_text: String) -> Dictionary:
 
 func _versions() -> Array:
 	return [
-		{"label": _version("1.2"), "sprint": 3, "shipped_count": 2},
-		{"label": _version("1.3"), "sprint": 5, "shipped_count": 3},
-		{"label": _version("1.4"), "sprint": 6, "shipped_count": 2},
+		{"label": _version("1.2"), "sprint": 3, "shipped_count": 2, "result": {"kind": "actual",
+			"text": _p("Yeni kullanıcıların yarısı ilk hafta kaldı.", "Half of new users stayed the first week.")}},
+		{"label": _version("1.3"), "sprint": 5, "shipped_count": 3, "result": {"kind": "actual",
+			"text": _p("Kesinti şikâyetleri durdu.", "Outage complaints stopped.")}},
+		{"label": _version("1.4"), "sprint": 6, "shipped_count": 2, "result": {"kind": "expected",
+			"text": _p("Kullanıcıların yarısı verisini emanet etsin.", "Half of users trust it with their data.")}},
 	]
 
 

@@ -1,0 +1,96 @@
+{
+  "id": "founder.side_contract",
+  "_note": "No decline row: letting the paper lapse is the refusal, and the lapse costs nothing.",
+  "version_scope": "demo",
+  "category": "founder",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "product_live": false
+  },
+  "latch": {
+    "cooldown_weeks": 10
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 1
+      },
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "time.week",
+        "op": ">=",
+        "value": 4
+      },
+      {
+        "seam": "finance.runway_weeks",
+        "op": "<",
+        "value": 24
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "take",
+      "outcome_id": "take",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": 3000,
+          "label": "side_work"
+        },
+        {
+          "verb": "sprint_hours",
+          "mult": 0.6
+        }
+      ]
+    },
+    {
+      "id": "half",
+      "outcome_id": "half",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": 1200,
+          "label": "side_work"
+        },
+        {
+          "verb": "sprint_hours",
+          "mult": 0.85
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FOUNDER_SIDE_CONTRACT_TITLE",
+      "body": "EV_FOUNDER_SIDE_CONTRACT_BODY",
+      "options": {
+        "take": "EV_FOUNDER_SIDE_CONTRACT_TAKE",
+        "half": "EV_FOUNDER_SIDE_CONTRACT_HALF"
+      },
+      "expire_note": "EV_FOUNDER_SIDE_CONTRACT_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FOUNDER_SIDE_CONTRACT_TITLE",
+      "body": "EV_FOUNDER_SIDE_CONTRACT_BODY",
+      "options": {
+        "take": "EV_FOUNDER_SIDE_CONTRACT_TAKE",
+        "half": "EV_FOUNDER_SIDE_CONTRACT_HALF"
+      },
+      "expire_note": "EV_FOUNDER_SIDE_CONTRACT_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

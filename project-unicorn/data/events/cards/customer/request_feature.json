@@ -83,6 +83,20 @@
             "op": "==",
             "value": false,
             "reason": "B2B_LOCK_PROMISE_OPEN"
+          },
+          {
+            "entity_seam": "musteri.broke_promise",
+            "scope": "customer",
+            "op": "==",
+            "value": false,
+            "reason": "B2B_LOCK_PROMISE_BROKEN"
+          },
+          {
+            "entity_seam": "musteri.promise_fits",
+            "scope": "customer",
+            "op": "==",
+            "value": true,
+            "reason": "SALES_LOCK_PROMISE_NO_ROOM"
           }
         ]
       }

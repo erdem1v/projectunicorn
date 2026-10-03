@@ -59,6 +59,7 @@ extends Resource
 # TARGET, so the one-shot PROMISE_BROKEN_SAT is not erased by SAT_DRIFT_STEP within one
 # tick. It decays back to 0 every tick, so the account forgives on its own.
 @export var trust_offset: float = 0.0         # signed target shift from kept/broken promises
+@export var promise_broken_day: int = -1      # the tick a promise to this account last broke; -1 = never
 @export var support_request_since_day: int = -1    # -1 = no open request; else the tick it opened
 # The request phase is assigned ONCE at signing from a stride walk (B2BConstants.CS_PHASE_STRIDE),
 # which spreads the book by construction. It is NOT derived from id.hash(): customer ids differ

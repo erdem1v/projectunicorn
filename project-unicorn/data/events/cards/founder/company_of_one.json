@@ -1,0 +1,65 @@
+{
+  "id": "founder.company_of_one",
+  "version_scope": "demo",
+  "category": "founder",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "quiet"
+  ],
+  "guards": {
+    "product_live": false
+  },
+  "latch": {
+    "cooldown_weeks": 4
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 1
+      },
+      {
+        "seam": "hr.headcount",
+        "op": "==",
+        "value": 0
+      },
+      {
+        "seam": "time.week",
+        "op": ">=",
+        "value": 3
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "ok",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FOUNDER_COMPANY_OF_ONE_TITLE",
+      "body": "{seam:time.week}. hafta. Şirketteki her iş hâlâ sana düşüyor: kod da, tasarım da, faturalar da.",
+      "options": {
+        "ok": "EV_FOUNDER_COMPANY_OF_ONE_OK"
+      },
+      "expire_note": "EV_FOUNDER_COMPANY_OF_ONE_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FOUNDER_COMPANY_OF_ONE_TITLE",
+      "body": "Week {seam:time.week}. Every job in the company still falls to you: the code, the design, the bills.",
+      "options": {
+        "ok": "EV_FOUNDER_COMPANY_OF_ONE_OK"
+      },
+      "expire_note": "EV_FOUNDER_COMPANY_OF_ONE_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

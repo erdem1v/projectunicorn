@@ -114,7 +114,8 @@ func _rebuild() -> void:
 	if _ui.is_empty():
 		_ui = m.ui.duplicate()
 	m.ui = _ui
-	var view: String = _ui.view if m.quarter.state == "open" else "sprint"
+	# Sürüm notu yalnız SPRINT görünümünde durur ve saat onun için tutulur: notta görünüm SPRINT'tir.
+	var view: String = _ui.view if m.quarter.state == "open" and m.center.mode != "release" else "sprint"
 	_build_head(m, view)
 	var picking: bool = _source == null and not SprintSystem.is_typed()
 	_picker_row.visible = picking

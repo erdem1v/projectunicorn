@@ -72,6 +72,9 @@ static func _install_rival() -> void:
 	EvSeams.register("rival.player_share_pct", G, TYPE_FLOAT,
 		func() -> float: return RivalRegistry.get_player_share_pct(),
 		"Rivals", "0.0-90.0, derived from MRR against a fixed market total")
+	EvSeams.register("rival.leader", G, TYPE_STRING,
+		func() -> String: return SprintCatalog.rival_leader(),
+		"Rivals", "the subtype's rival with the most launches so far, ties by table order; empty before the type is chosen")
 
 	var E := EvSeams.Kind.ENTITY
 	EvSeams.register("rival.status", E, TYPE_STRING,

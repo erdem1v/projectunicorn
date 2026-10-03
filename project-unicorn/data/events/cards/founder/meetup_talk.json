@@ -1,0 +1,106 @@
+{
+  "id": "founder.meetup_talk",
+  "version_scope": "demo",
+  "category": "founder",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "product_live": false
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 1
+      },
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "time.week",
+        "op": ">=",
+        "value": 2
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "talk",
+      "outcome_id": "talk",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -600,
+          "label": "meetup"
+        },
+        {
+          "verb": "sprint_hours",
+          "mult": 0.9
+        },
+        {
+          "verb": "add_brand",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "listen",
+      "outcome_id": "listen",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -200,
+          "label": "meetup"
+        },
+        {
+          "verb": "add_brand",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FOUNDER_MEETUP_TITLE",
+      "body": "EV_FOUNDER_MEETUP_BODY",
+      "options": {
+        "talk": "EV_FOUNDER_MEETUP_TALK",
+        "listen": "EV_FOUNDER_MEETUP_LISTEN"
+      },
+      "locked_reasons": {
+        "talk": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_FOUNDER_MEETUP_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FOUNDER_MEETUP_TITLE",
+      "body": "EV_FOUNDER_MEETUP_BODY",
+      "options": {
+        "talk": "EV_FOUNDER_MEETUP_TALK",
+        "listen": "EV_FOUNDER_MEETUP_LISTEN"
+      },
+      "locked_reasons": {
+        "talk": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_FOUNDER_MEETUP_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

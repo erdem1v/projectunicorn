@@ -40,6 +40,7 @@ const FIXED_CHIPS := {
 	"phase_gate_decline": ["EFFECT_PHASE_HOLD", &"neutral"],
 	"goto_tab": ["EFFECT_TAKES_YOU_THERE", &"neutral"],
 	"sprint_card_carry": ["EFFECT_SPRINT_CARRY", &"neutral"],
+	"fix_run_start": ["EFFECT_FIX_RUN_STARTS", &"accent"],
 }
 
 var _event: GameEvent = null
@@ -356,7 +357,7 @@ func _describe_modifier(m) -> Dictionary:
 		"sprint_card_progress": return _chip("EFFECT_SPRINT_PROGRESS", _fmt_signed(d), d)
 		"sprint_hours":
 			var mult: float = float(m.get("mult", 1.0))
-			return {"text": tr("EFFECT_SPRINT_HOURS").format({"v": Fmt.number(mult, 2)}),
+			return {"text": tr("EFFECT_SPRINT_HOURS").format({"v": Fmt.number(SprintSystem.hours_after(mult), 2)}),
 				"kind": _kind(int(signf(mult - 1.0)))}
 		"change_morale":
 			var who: String = _first_name(_target(m, EvScope.TYPE_EMPLOYEE), tr("EFFECT_MORALE"))

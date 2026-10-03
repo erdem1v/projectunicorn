@@ -232,13 +232,15 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	var role_id: String = String(file.get("role", ""))
 	var salary: int = int(file.get("salary", 0))
 	var commission: int = HRConstants.commission_for(salary)
-	# FinanceSystem PULLS the whole payroll and converts it in ONE rounding pass, so tomorrow's
-	# burn is today's published total with the salary slice swapped out. Adding this salary
-	# rounded on its own would sit a dollar off, and would double-count a hire made today (the
-	# registry already holds that salary, the published burn does not yet).
+	# FinanceSystem PULLS the whole payroll and the tools bill and converts each in ONE rounding
+	# pass, so tomorrow's burn is today's published total with those two slices swapped out.
+	# Adding this salary rounded on its own would sit a dollar off, and would double-count a hire
+	# made today (the registry already holds that salary, the published burn does not yet).
 	var payroll_after: int = CharacterRegistry.get_total_monthly_salaries() + salary
-	var salaries_now: int = int(FinanceSystem.burn_breakdown.get("salaries", 0))
-	var burn_after: int = GameState.daily_burn - salaries_now + FinanceSystem.daily_salary_for(payroll_after)
+	var tools_after: int = FinanceSystem.monthly_tools_for(CharacterRegistry.get_employees().size() + 1)
+	var published: Dictionary = FinanceSystem.burn_breakdown
+	var burn_after: int = GameState.daily_burn - int(published["salaries"]) - int(published["tools"]) \
+		+ FinanceSystem.daily_rate(payroll_after) + FinanceSystem.daily_rate(tools_after)
 	var net_after: int = GameState.get_daily_revenue() - burn_after
 	var cash_after: int = GameState.cash - commission
 	if GameState.cash < commission:

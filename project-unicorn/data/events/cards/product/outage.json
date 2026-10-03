@@ -1,0 +1,130 @@
+{
+  "id": "product.outage",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [],
+  "guards": {
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 26
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "seam": "urun.capacity_state",
+        "op": "==",
+        "value": "over"
+      },
+      {
+        "any": [
+          {
+            "seam": "sales.account_count",
+            "op": ">=",
+            "value": 5
+          },
+          {
+            "seam": "sales.b2c_audience",
+            "op": ">=",
+            "value": 2000
+          }
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "all_hands",
+      "outcome_id": "all_hands",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "sprint_hours",
+          "mult": 0.6
+        },
+        {
+          "verb": "add_brand",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "credit",
+      "outcome_id": "credit",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -6000,
+          "label": "incident"
+        }
+      ]
+    },
+    {
+      "id": "quiet_fix",
+      "outcome_id": "quiet_fix",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -4
+        },
+        {
+          "verb": "add_reputation",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_OUTAGE_TITLE",
+      "body": "EV_PRODUCT_OUTAGE_BODY",
+      "options": {
+        "all_hands": "EV_PRODUCT_OUTAGE_ALL_HANDS",
+        "credit": "EV_PRODUCT_OUTAGE_CREDIT",
+        "quiet_fix": "EV_PRODUCT_OUTAGE_QUIET"
+      },
+      "locked_reasons": {
+        "all_hands": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_OUTAGE_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_OUTAGE_TITLE",
+      "body": "EV_PRODUCT_OUTAGE_BODY",
+      "options": {
+        "all_hands": "EV_PRODUCT_OUTAGE_ALL_HANDS",
+        "credit": "EV_PRODUCT_OUTAGE_CREDIT",
+        "quiet_fix": "EV_PRODUCT_OUTAGE_QUIET"
+      },
+      "locked_reasons": {
+        "all_hands": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_OUTAGE_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -3
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

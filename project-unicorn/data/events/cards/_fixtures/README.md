@@ -21,11 +21,6 @@ starts at 08:00 and no workday ends before 13:00, so hour 10 lies inside every w
 fixture is a live non-critical hourly card. Night hours refuse such a card at the gate; that
 refusal is asserted on its own.
 
-`sprint_two_paths.json` and `sprint_late.json` are the sprint engine's decision cards
-(`data/product/sprint.json` `decision.cards`) until authored decision content exists. They are
-fixtures so that a normal run fires no sprint decision at all: SprintSystem names them, G2
-refuses them, and no card waits on a decision nobody wrote.
-
 **Do not** make a card inert by other means: an empty condition is TRUE (§5.3) and fires in
 week 1, a card with no options mounts a modal that can never be dismissed and so disables
 saving (SaveManager.can_save refuses while an event is active), and an unrecognised condition

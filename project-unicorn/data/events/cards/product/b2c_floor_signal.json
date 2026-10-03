@@ -1,0 +1,124 @@
+{
+  "id": "product.b2c_floor_signal",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "signal",
+  "class": "interrupt",
+  "tags": [],
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 8
+  },
+  "trigger": {
+    "signal": "axis_floor_warning"
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.weeks_since_launch",
+        "op": ">=",
+        "value": 4
+      },
+      {
+        "any": [
+          {
+            "seam": "urun.floor_innovation",
+            "op": "!=",
+            "value": ""
+          },
+          {
+            "seam": "urun.floor_stability",
+            "op": "!=",
+            "value": ""
+          },
+          {
+            "seam": "urun.floor_experience",
+            "op": "!=",
+            "value": ""
+          }
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "feedback",
+      "outcome_id": "feedback",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "sprint_hours",
+          "mult": 0.9
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "noted",
+      "outcome_id": "noted",
+      "effects": [
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_B2C_FLOOR_SIGNAL_TITLE",
+      "body": "EV_PRODUCT_B2C_FLOOR_SIGNAL_BODY",
+      "options": {
+        "feedback": "EV_PRODUCT_B2C_FLOOR_SIGNAL_FEEDBACK",
+        "noted": "EV_PRODUCT_B2C_FLOOR_SIGNAL_NOTED"
+      },
+      "locked_reasons": {
+        "feedback": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_B2C_FLOOR_SIGNAL_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_B2C_FLOOR_SIGNAL_TITLE",
+      "body": "EV_PRODUCT_B2C_FLOOR_SIGNAL_BODY",
+      "options": {
+        "feedback": "EV_PRODUCT_B2C_FLOOR_SIGNAL_FEEDBACK",
+        "noted": "EV_PRODUCT_B2C_FLOOR_SIGNAL_NOTED"
+      },
+      "locked_reasons": {
+        "feedback": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_B2C_FLOOR_SIGNAL_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "satisfaction_delta",
+        "scope": "customer",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

@@ -481,18 +481,22 @@ func _card_head(c: Customer, ink: Color, chip_text: String, chip_kind: StringNam
 
 ## AÇIK SÖZ HESABIN KENDİ KARTINDA GÖRÜNÜR. Ürün sayfası bütün açık sözleri bir arada listeler;
 ## hesabın kartı ise sözün verildiği ve kırıldığında bedelini ödeyecek yerdir. Tek satır: ne söz
-## verildi ve kaç hafta kaldı. Son tikinde söz hâlâ tutulabilir, satır "bu hafta" okur.
+## verildi ve hangi sprintin sonuna kadar. Ürün türü seçilmeden verilmiş söz günle sayılır: kaç
+## hafta kaldı, son tikinde "bu hafta".
 func _add_promise_line(col: VBoxContainer, c: Customer) -> void:
 	var open: Array[Promise] = PromiseRegistry.get_open_for(c.id)
 	if open.is_empty():
 		return
 	var p: Promise = open[0]
-	var weeks: int = p.deadline_day - GameState.day
-	var key: String = "SALES_PROMISE_OPEN_THIS_WEEK" if weeks <= 0 \
-		else Fmt.count_key("SALES_PROMISE_OPEN", weeks)
-	col.add_child(UiFactory.make_label(tr(key).format(
-		{"feature": B2BConstants.feature_label(p.feature_id), "n": weeks}),
-		&"RowMeta", UiTokens.ACCENT_DEEP))
+	var feature: String = B2BConstants.feature_label(p.feature_id)
+	var text: String
+	if p.due_sprint >= 0:
+		text = tr("SALES_PROMISE_OPEN_SPRINT").format({"feature": feature, "n": p.due_sprint})
+	else:
+		var weeks: int = p.deadline_day - GameState.day
+		text = tr("SALES_PROMISE_OPEN_THIS_WEEK" if weeks <= 0 else Fmt.count_key("SALES_PROMISE_OPEN", weeks)).format(
+			{"feature": feature, "n": weeks})
+	col.add_child(UiFactory.make_label(text, &"RowMeta", UiTokens.ACCENT_DEEP))
 
 
 func _add_steward_line(col: VBoxContainer, c: Customer) -> void:

@@ -305,8 +305,8 @@ static func _matches_one(matcher: Variant, value: Variant) -> bool:
 ## The answer rows for one probe, each already resolved to open / locked with its reason.
 ## A locked row is returned ONLY when it is informative (§5.1.1: "Kilit yalnız o an bilgi
 ## taşıyorsa"); an answer whose gate fails on a fact the player cannot read is dropped rather
-## than drawn as a mystery.
-static func answers_for(row: Dictionary, facts: Dictionary, promise_locked: bool) -> Array:
+## than drawn as a mystery. `promise_lock` is the promise row's lock fact, "" when it is open.
+static func answers_for(row: Dictionary, facts: Dictionary, promise_lock: String) -> Array:
 	var out: Array = []
 	for a in (row.get("answers", []) as Array):
 		var ans: Dictionary = (a as Dictionary).duplicate(true)
@@ -315,9 +315,9 @@ static func answers_for(row: Dictionary, facts: Dictionary, promise_locked: bool
 		if String(ans.get("verb", "")) == VERB_PROMISE:
 			if not bool(facts.get("has_promise_target", false)):
 				continue   # nothing to promise; the row is absent, never a broken offer
-			if promise_locked:
+			if promise_lock != "":
 				open = false
-				ans["lock_fact"] = "open_pitch_promise"
+				ans["lock_fact"] = promise_lock
 		ans["open"] = open
 		if not open and not ans.has("lock_fact"):
 			continue   # a lock with nothing to say is not drawn

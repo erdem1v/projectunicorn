@@ -1,0 +1,135 @@
+{
+  "id": "rival.funding_round",
+  "version_scope": "demo",
+  "category": "rival",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [],
+  "guards": {
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 8
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "any": [
+          {
+            "seam": "phase.series_a_approach",
+            "op": ">=",
+            "value": 2
+          },
+          {
+            "seam": "phase.current",
+            "op": "==",
+            "value": 3
+          }
+        ]
+      },
+      {
+        "seam": "investor.series_a_closed",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "campaign",
+      "outcome_id": "campaign",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -18000,
+          "label": "outreach"
+        },
+        {
+          "verb": "add_brand",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "id": "tell_funds",
+      "outcome_id": "tell_funds",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "sprint_hours",
+          "mult": 0.9
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "hold",
+      "outcome_id": "hold",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -3
+        },
+        {
+          "verb": "schedule_event",
+          "event_id": "rival.price_cut",
+          "delay_weeks": 4
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_RIVAL_FUNDING_ROUND_TITLE",
+      "body": "{seam:rival.leader} bir yatırım turu kapattı. Kurucuları bu hafta her röportajda, fiyatlarının düşeceği konuşuluyor.",
+      "options": {
+        "campaign": "EV_RIVAL_FUNDING_ROUND_CAMPAIGN",
+        "tell_funds": "EV_RIVAL_FUNDING_ROUND_INVESTORS",
+        "hold": "EV_RIVAL_FUNDING_ROUND_HOLD"
+      },
+      "locked_reasons": {
+        "tell_funds": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_RIVAL_FUNDING_ROUND_EXPIRED"
+    },
+    "en": {
+      "title": "EV_RIVAL_FUNDING_ROUND_TITLE",
+      "body": "{seam:rival.leader} closed a funding round. Their founder is in every interview this week, and the talk is that their prices will fall.",
+      "options": {
+        "campaign": "EV_RIVAL_FUNDING_ROUND_CAMPAIGN",
+        "tell_funds": "EV_RIVAL_FUNDING_ROUND_INVESTORS",
+        "hold": "EV_RIVAL_FUNDING_ROUND_HOLD"
+      },
+      "locked_reasons": {
+        "tell_funds": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_RIVAL_FUNDING_ROUND_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -3
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

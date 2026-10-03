@@ -1,0 +1,71 @@
+{
+  "id": "product.sprint_two_paths",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "latch": {
+    "cooldown_weeks": 2
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 5
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "new_way",
+      "outcome_id": "switched",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -3
+        },
+        {
+          "verb": "sprint_card_progress",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "known_way",
+      "outcome_id": "kept",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SPRINT_TWO_PATHS_TITLE",
+      "body": "{seam:urun.decision_card} için daha kısa bir yol var. Şimdi yol değiştirmek, yapılmış işin bir kısmını boşa çıkarır.",
+      "options": {
+        "new_way": "EV_PRODUCT_SPRINT_TWO_PATHS_NEW",
+        "known_way": "EV_PRODUCT_SPRINT_TWO_PATHS_KNOWN"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_TWO_PATHS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SPRINT_TWO_PATHS_TITLE",
+      "body": "There is a shorter route for {seam:urun.decision_card}. Switching now throws away part of the work already done on it.",
+      "options": {
+        "new_way": "EV_PRODUCT_SPRINT_TWO_PATHS_NEW",
+        "known_way": "EV_PRODUCT_SPRINT_TWO_PATHS_KNOWN"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_TWO_PATHS_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

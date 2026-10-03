@@ -16,6 +16,13 @@ static func customer_field(field: String, fallback: Variant) -> Callable:
 		return c.get(field) if c != null else fallback
 
 
+static func _promise_row_locked_earlier(id: String) -> bool:
+	return not EvSeams.read_for("musteri.has_pain_feature", id) \
+		or EvSeams.read_for("musteri.pain_feature_shipped", id) \
+		or not EvSeams.read_for("musteri.pain_buildable", id) \
+		or EvSeams.read_for("musteri.has_open_promise", id)
+
+
 static func install() -> void:
 	var G := EvSeams.Kind.GLOBAL
 	var E := EvSeams.Kind.ENTITY
@@ -46,6 +53,20 @@ static func install() -> void:
 	EvSeams.register("musteri.has_open_promise", E, TYPE_BOOL,
 		func(id: String) -> bool: return PromiseRegistry.has_open_for(id),
 		"Sales", "a feature was promised and has not resolved")
+	# The promise row names one failing clause; when two fail it falls back to its generic text,
+	# which reads "a promise is open". So the two late clauses step aside while an earlier
+	# clause of the row already locks it.
+	EvSeams.register("musteri.broke_promise", E, TYPE_BOOL,
+		func(id: String) -> bool:
+			var c: Customer = CustomerRegistry.get_customer(id)
+			return c != null and B2BSalesSystem.promise_relocked(c) and not _promise_row_locked_earlier(id),
+		"Sales", "a promise to this account broke inside the relock window and nothing earlier locks the promise row")
+	EvSeams.register("musteri.promise_fits", E, TYPE_BOOL,
+		func(id: String) -> bool:
+			var c: Customer = CustomerRegistry.get_customer(id)
+			return c != null and (_promise_row_locked_earlier(id) or B2BSalesSystem.promise_relocked(c)
+				or SprintSystem.fits_plannable(c.pain_feature_id)),
+		"Sales", "the account's wish fits the free points of the next plannable sprint, or another clause locks the promise row")
 	EvSeams.register("musteri.is_assigned", E, TYPE_BOOL,
 		func(id: String) -> bool:
 			var c: Customer = CustomerRegistry.get_customer(id)
@@ -82,7 +103,7 @@ static func install() -> void:
 		func() -> int: return int(GameState.get_flag("b2c_price", 15)),
 		"Sales", "WRAPPER; monthly price")
 	EvSeams.register("sales.growth_band", G, TYPE_STRING,
-		func() -> String: return SalesSystem.growth_band(), "Sales", "")
+		func() -> String: return SalesSystem.growth_band(), "Sales", "melting | flat | steady | fast")
 	# §7.3'ün haftalık özeti SATIR ister, cümle değil; aritmetik ve biçim Satış'ta durur.
 	EvSeams.register("sales.weekly_closes", G, TYPE_STRING,
 		func() -> String: return SalesLedger.weekly_close_lines(),
@@ -99,6 +120,9 @@ static func install() -> void:
 	# --- Support ------------------------------------------------------------
 	EvSeams.register("destek.desk_staffed", G, TYPE_BOOL,
 		func() -> bool: return SupportSystem.desk_staffed(), "Ops", "anyone on support at all")
+	EvSeams.register("destek.can_start_fix_run", G, TYPE_BOOL,
+		func() -> bool: return SupportSystem.can_start_fix_run(),
+		"Ops", "live, no run under way, confirmed bugs waiting and the desk staffed")
 	EvSeams.register("destek.warmth_band", G, TYPE_STRING,
 		func() -> String: return SupportSystem.warmth_band(),
 		"Ops", "calm | warm | hot at 20 / 40 unvalidated reports")

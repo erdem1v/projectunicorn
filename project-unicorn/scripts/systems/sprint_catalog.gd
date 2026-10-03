@@ -220,14 +220,13 @@ static func card_roles(kind: String) -> Array:
 
 ## Alanın aday kartları (PRD §3.2): yetenek başına sonraki kademe (kapısı kapalıysa da görünür),
 ## açık talep o kademeyi talep kartına çevirir, ticket'lı yetenek başına düzeltme, alan başına
-## araştırma. Sprintte ya da sonrakinde duran kart saklanan hâliyle döner. Sıra: acil önde,
-## kilitsiz önde, sonra etki/efor azalan.
+## araştırma (yapıldığı sprintin ardından bir kapanış gizli). Sprintte ya da sonrakinde duran kart
+## saklanan hâliyle döner. Sıra: acil önde, kilitsiz önde, sonra etki/efor azalan.
 static func candidates(area_id: String) -> Array:
 	var stored: Dictionary = _p().get("cards", {})
 	var requests: Dictionary = {}
-	for r in _p().get("requests", []):
-		if r.status == "open":
-			requests[String(r.step)] = r
+	for r in _open_requests():
+		requests[String(r.step)] = r
 	var out: Array = []
 	var caps: Array[String] = capabilities(area_id)
 	for line_id in caps:
@@ -258,7 +257,7 @@ static func candidates(area_id: String) -> Array:
 			card.tickets = ids
 			out.append(card)
 	var researched: Variant = _p().get("research_done", {}).get(area_id)
-	if researched == null or SprintSystem.sprint_number() - int(researched) > 1:
+	if researched == null or SprintSystem.last_closed() > int(researched):
 		out.append(new_card("res:" + area_id, "research", area_id, int(cfg("effort.research"))))
 	var keyed: Array = out.map(func(c: Dictionary) -> Array:
 		var card: Dictionary = (stored.get(c.id, c) as Dictionary).duplicate(true)
@@ -303,7 +302,10 @@ static func card_name(card: Dictionary) -> String:
 		"research":
 			return _t("PRODUCT_RESEARCH_CARD").format({"n": int(cfg("research_users"))})
 		"request":
-			return _t("PRODUCT_REQUEST_CARD").format({"step": step_name(card.step), "customer": customer_name(card)})
+			# Hesabı kapanan müşterinin talebi ertesi tike kadar kartta kalır; adı boş parantez yazmasın.
+			var customer: String = customer_name(card)
+			if customer != "":
+				return _t("PRODUCT_REQUEST_CARD").format({"step": step_name(card.step), "customer": customer})
 	return step_name(card.step)
 
 
@@ -332,7 +334,7 @@ static func gate_reason(step_id: String) -> String:
 
 
 ## Kartın etki satırı (ProductModel `part`): alan dilim geçişi, değişmiyorsa "Alan X kalır" ve
-## yeteneğin geçişi; rakip açığı ve talep; düzeltmede ticket ve "!" kalkışı.
+## yeteneğin geçişi; rakip açığı, talep ve verilmiş söz; düzeltmede ticket ve "!" kalkışı.
 static func card_effect(card: Dictionary) -> Array:
 	var area: String = card.area
 	match card.kind:
@@ -360,13 +362,15 @@ static func card_effect(card: Dictionary) -> Array:
 	var request: Dictionary = _request_of(card)
 	if not request.is_empty():
 		out.append({"k": "request", "customer": customer_name(request), "value": int(request.value)})
+	out.append_array(_promise_parts(card.step))
 	return out
 
 
 ## SPRINT SONUNDA: kartların hepsi bitmiş varsayılır; yalnız değişen alanlar, zamanında talepler,
-## kalkan "!" ve kapanan ticket sayısı.
+## tutulan sözler, kalkan "!" ve kapanan ticket sayısı. Söz betada bir sprint daha bekler, talep
+## beklemez. Kapısı kapanmış kart başlatmada sonraki sütuna geçeceği için sayılmaz.
 static func forecast(card_ids: Array) -> Array:
-	var cards: Array = card_ids.map(card_by_id)
+	var cards: Array = card_ids.map(card_by_id).filter(func(c: Dictionary) -> bool: return gate_reason(c.step) == "")
 	var tiers: Dictionary = {}
 	var closed: Array = []
 	for c in cards:
@@ -382,8 +386,9 @@ static func forecast(card_ids: Array) -> Array:
 			out.append(_shift({"k": "level", "area": area_short(area_id), "from": from, "to": to}, expectation(area_id)))
 	for c in cards:
 		var request: Dictionary = _request_of(c)
-		if not request.is_empty() and SprintSystem.sprint_number() <= int(request.due_sprint):
+		if not request.is_empty() and _on_time(request):
 			out.append({"k": "request_on_time", "customer": customer_name(request)})
+		out.append_array(_promise_parts(c.step))
 	for area_id in area_ids():
 		if area_alert(area_id) and not area_alert(area_id, closed):
 			out.append({"k": "alert_clear", "area": area_short(area_id)})
@@ -399,10 +404,12 @@ static func lead_suggestion() -> Array:
 	return _suggest(SprintSystem.capacity(), SprintSystem.used(), _approved_ahead())
 
 
-## "{kart1} ve {kart2} bu sprintte bitmeli."; öneride talep varsa son tarihi en yakın talebi anar.
+## "{kart1} ve {kart2} bu sprintte bitmeli."; öneride zamanında yetişecek talep varsa son tarihi en
+## yakın olanı anar.
 static func lead_sentence(ids: Array) -> String:
 	var cards: Array = ids.map(card_by_id)
-	var requests: Array = cards.map(_request_of).filter(func(r: Dictionary) -> bool: return not r.is_empty())
+	var requests: Array = cards.map(_request_of).filter(func(r: Dictionary) -> bool:
+		return not r.is_empty() and _on_time(r))
 	if not requests.is_empty():
 		requests.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.due_sprint) < int(b.due_sprint))
 		return _t("PRODUCT_LEAD_REQUEST").format({"request": step_name(requests[0].step),
@@ -420,7 +427,7 @@ static func release_lead_sentence(release: Dictionary) -> String:
 	var carried: Array = release.get("carried", [])
 	if not carried.is_empty():
 		return _t("PRODUCT_LEAD_CARRIED").format({"card": card_name(card_by_id(carried[0].id))})
-	return _t("PRODUCT_LEAD_WEAKEST").format({"area": area_short(_weakest(area_ids()))})
+	return _t("PRODUCT_LEAD_WEAKEST").format({"area": area_short(_weakest(area_ids(), _open_cards([])))})
 
 
 ## Çekirdek'te K1'e varması gereken kimlik yeteneği sayısı; canlı üründe 0.
@@ -444,7 +451,7 @@ static func quarter_pm() -> Character:
 ## Çeyreğin hedef alanı: oyuncunun seçtiği, seçmediyse PM'in önerisi olan en zayıf alan.
 static func quarter_goal() -> String:
 	var goal: String = _p().quarter.goal_area
-	return goal if goal != "" else _weakest(area_ids())
+	return goal if goal != "" else _weakest(area_ids(), _open_cards([]))
 
 
 ## PM'in planı: sonraki sprintten başlayıp ufuk kadar sprint, bugünkü ekibin kapasitesiyle.
@@ -471,7 +478,7 @@ static func pm_plans() -> Array:
 		if stored.has(n):
 			out.append(stored[n].merged({"number": n, "cards": still_open(stored[n].cards)}, true))
 			continue
-		var ids: Array = _suggest(capacity, SprintSystem.points_left(_p().next.cards) if n == first else 0, taken, goal)
+		var ids: Array = _suggest(capacity, SprintSystem.points_left(_p().next.cards) if n == first else 0.0, taken, goal)
 		ids = ids.slice(0, roundi(ids.size() * keep))
 		taken.append_array(ids)
 		out.append({"number": n, "cards": ids, "approved": false})
@@ -501,6 +508,17 @@ static func rival_names(line_id: String) -> Array:
 		if _rival_tier(i, line_id) >= 1:
 			out.append(rival_name(i))
 	return out
+
+
+## Alt-türün en çok çıkış yapmış rakibi, eşitlikte tablo sırası; tür seçilmeden "".
+static func rival_leader() -> String:
+	var rivals: Array = rival_table().rivals
+	if rivals.is_empty():
+		return ""
+	var launches: Array = rivals.map(func(_r: Variant) -> int: return 0)
+	for hit in _p().get("rival_hits", []):
+		launches[int(hit.rival)] += 1
+	return rival_name(launches.find(launches.max()))
 
 
 ## Alt-türün rakip tablosu (rivals.json): rakipler, başlangıç kademeleri, çıkışlar.
@@ -639,10 +657,35 @@ static func _launch_of(hit: Dictionary) -> Dictionary:
 
 ## Kartın karşıladığı açık talep: talep kartının kendisi ya da aynı kademeyi yapan özellik kartı.
 static func _request_of(card: Dictionary) -> Dictionary:
-	for r in _p().get("requests", []):
-		if r.status == "open" and (str(r.id) == card.request_id or (card.kind == "feature" and r.step == card.step)):
+	for r in _open_requests():
+		if str(r.id) == card.request_id or (card.kind == "feature" and r.step == card.step):
 			return r
 	return {}
+
+
+## Açık talepler. Hesabı kapanan müşterinin talebi ertesi tikte düşer; o arada sayılmaz.
+static func _open_requests() -> Array:
+	return (_p().get("requests", []) as Array).filter(func(r: Dictionary) -> bool:
+		return r.status == "open" and CustomerRegistry.get_customer(String(r.customer_id)) != null)
+
+
+## Bu sprintte biten talep son tarihine yetişir mi: beta sürümü bir sprint geciktirir.
+static func _on_time(request: Dictionary) -> bool:
+	return SprintSystem.sprint_number() + int(_p().sprint.beta) <= int(request.due_sprint)
+
+
+## Kademeye verilmiş açık sözler, son tarihi yakın olan önde.
+static func _promises_on(step: String) -> Array:
+	var out: Array = PromiseRegistry.get_all().filter(func(p: Promise) -> bool:
+		return p.status == "open" and p.feature_id == step)
+	out.sort_custom(func(a: Promise, b: Promise) -> bool: return a.due_sprint < b.due_sprint)
+	return out
+
+
+## Etki satırının ve öngörünün söz parçaları. Hesap kapanınca açık sözü de düşer, ad hep okunur.
+static func _promise_parts(step: String) -> Array:
+	return _promises_on(step).map(func(p: Promise) -> Dictionary:
+		return {"k": "promise", "customer": CustomerRegistry.get_customer(p.customer_id).display_name()})
 
 
 ## Talebin ya da talep kartının müşterisi; hesap kapanmışsa "".
@@ -674,34 +717,45 @@ static func _ratio(card: Dictionary) -> float:
 	return _impact(card) / maxi(1, int(card.effort))
 
 
-## Seviyesi beklentisinin en çok altında kalan alan; eşitlikte sırada önce gelen.
-static func _weakest(area_ids: Array) -> String:
+## Seviyesi beklentisinin en çok altında kalan alan. Yuvarlanmamış seviye okunur, yarım dilimin
+## gizlediği fark da sayılır; eşitlikte `pool`'daki en iyi kartının etki/efor oranı yüksek olan.
+static func _weakest(area_ids: Array, pool: Array) -> String:
+	var best: Dictionary = {}
+	for c in pool:
+		best[c.area] = maxf(float(best.get(c.area, 0.0)), _ratio(c))
 	var weakest: String = ""
 	var gap: float = INF
+	var ratio: float = 0.0
 	for area_id in area_ids:
-		var g: float = area_level(area_id) - expectation(area_id)
-		if g < gap:
+		var g: float = _raw_level(area_id) - expectation(area_id)
+		var r: float = best.get(area_id, 0.0)
+		if g < gap or (g == gap and r > ratio):
 			gap = g
+			ratio = r
 			weakest = area_id
 	return weakest
 
 
-## Liderin kuralı: son tarihi en yakın talep, en zayıf alanın (MVP öncesi Çekirdek'in) en iyi kartı
-## ve açık acil düzeltmeler tavana (%125) kadar; boş sprint, "+" gibi, tavanı aşan kartı da alır.
-## Kalan yer etkisi olan, etki/efor oranı en yüksek kartlarla kapasiteye kadar dolar. Araştırmanın
-## etkisi yoktur: yalnız en zayıf alanın tek kartıysa önerilir, yoksa küçük ekibin haftalarını
-## alanı ilerletmeyen işe bağlar. Bu ya da sonraki sprintte duran ve kilitli kartlar önerilmez.
-## `taken` başka sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki sütunları). PM aynı
-## kuralla planlar; `goal` alanının kartları sırada hedef ağırlığıyla öne çıkar.
-static func _suggest(capacity: int, used: int, taken: Array = [], goal := "") -> Array:
-	var pool: Array = []
-	var areas: Array = []
-	for area in _areas():
-		var cards: Array = candidates(area.id).filter(func(c: Dictionary) -> bool:
-			return c.state == "candidate" and gate_reason(c.step) == "" and c.id not in taken)
-		if not cards.is_empty():
-			areas.append(area.id)
-			pool.append_array(cards)
+## Liderin ve PM'in seçebileceği kartlar: aday, kilitsiz ve başka sprinte ayrılmamış.
+static func _open_cards(taken: Array) -> Array:
+	var out: Array = []
+	for area_id in area_ids():
+		out.append_array(candidates(area_id).filter(func(c: Dictionary) -> bool:
+			return c.state == "candidate" and gate_reason(c.step) == "" and c.id not in taken))
+	return out
+
+
+## Liderin kuralı. Zorunlu kartlar sırasıyla tavana (%125) kadar: verilmiş sözlerin kartları (son
+## tarihi yakın önde), son tarihi en yakın talep, ücretli plan (B2C'de yayından sonra gelirin
+## kapısıdır), en zayıf alanın (MVP öncesi Çekirdek'in) en iyi kartı ve açık acil düzeltmeler;
+## boş sprint, "+" gibi, tavanı aşan kartı da alır. Kalan yer etkisi olan, etki/efor oranı en
+## yüksek kartlarla kapasiteye kadar dolar. Araştırmanın etkisi yoktur: küçük ekipte (sprint en çok
+## `lead.small_team_cards` K1 alır) tek kartı araştırma olan alan en zayıf sayılmaz, yoksa ekibin
+## haftaları alanı ilerletmeyen işe bağlanırdı. Bu ya da sonraki sprintte duran ve kilitli kartlar
+## önerilmez. `taken` başka sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki
+## sütunları). PM aynı kuralla planlar; `goal` alanının kartları sırada hedef ağırlığıyla öne çıkar.
+static func _suggest(capacity: int, used: float, taken: Array = [], goal := "") -> Array:
+	var pool: Array = _open_cards(taken)
 	if pool.is_empty():
 		return []
 	var score: Dictionary = {}
@@ -709,24 +763,37 @@ static func _suggest(capacity: int, used: int, taken: Array = [], goal := "") ->
 		score[c.id] = _ratio(c) * (float(cfg("pm.goal_weight")) if c.area == goal else 1.0)
 	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return score[a.id] > score[b.id] if score[a.id] != score[b.id] else a.id < b.id)
-	var weakest: String = _weakest(areas)
+	var areas: Array = area_ids().filter(func(a: String) -> bool:
+		return pool.any(func(c: Dictionary) -> bool: return c.area == a))
+	if floori(capacity / float(cfg("effort.k1"))) <= int(cfg("lead.small_team_cards")):
+		var built: Array = areas.filter(func(a: String) -> bool:
+			return pool.any(func(c: Dictionary) -> bool: return c.area == a and c.kind != "research"))
+		if not built.is_empty():
+			areas = built
+	var weakest: String = _weakest(areas, pool)
 	# Yayında olmayan ürünün tek hedefi MVP'dir: zorunlu kart, açık kartı kaldıkça Çekirdek'ten.
 	if mvp_cards_left() > 0 and _identity_area() in areas:
 		weakest = _identity_area()
-	var must: Array = pool.filter(func(c: Dictionary) -> bool: return c.kind == "request")
+	var must: Array = pool.filter(func(c: Dictionary) -> bool: return not _promises_on(c.step).is_empty())
 	must.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return _promises_on(a.step)[0].due_sprint < _promises_on(b.step)[0].due_sprint)
+	var requests: Array = pool.filter(func(c: Dictionary) -> bool: return c.kind == "request")
+	requests.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(_request_of(a).due_sprint) < int(_request_of(b).due_sprint))
-	must = must.slice(0, 1)
+	must.append_array(requests.slice(0, 1))
+	must.append_array(pool.filter(func(c: Dictionary) -> bool: return c.line == PAID_PLAN))
 	must.append(pool.filter(func(c: Dictionary) -> bool: return c.area == weakest)[0])
 	must.append_array(pool.filter(is_urgent))
 	var picks: Array = []
 	var ceiling: float = capacity * float(cfg("cap_ceiling"))
 	for c in must:
-		if not picks.has(c.id) and ((used == 0 and capacity > 0) or used + int(c.effort) <= ceiling):
+		var load: float = SprintSystem.remaining(c)
+		if not picks.has(c.id) and ((is_zero_approx(used) and capacity > 0) or used + load <= ceiling):
 			picks.append(c.id)
-			used += int(c.effort)
+			used += load
 	for c in pool:
-		if not picks.has(c.id) and score[c.id] > 0.0 and used + int(c.effort) <= capacity:
+		var load: float = SprintSystem.remaining(c)
+		if not picks.has(c.id) and score[c.id] > 0.0 and used + load <= capacity:
 			picks.append(c.id)
-			used += int(c.effort)
+			used += load
 	return picks

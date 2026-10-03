@@ -179,14 +179,15 @@ static func arc_ids() -> Array:
 	return ids
 
 
-## The pool's raw material: cards on this tick that are neither arc steps nor critical. §10.10
+## The pool's raw material: cards on this tick that are not arc steps, critical or quiet. §10.10
 ## keeps arc steps out — a step drawn from the pool would burn its own one_shot latch and lock
-## its arc at that step forever.
+## its arc at that step forever. A quiet card only fills a week nothing else filled (§13.6).
 static func pool_candidates(tick: String) -> Array:
 	var out: Array = []
 	for id in card_ids():
 		var c: Dictionary = _cards[id]
-		if String(c["tick"]) == tick and not c.has("arc") and not (c["tags"] as Array).has("critical"):
+		var tags: Array = c["tags"]
+		if String(c["tick"]) == tick and not c.has("arc") and not tags.has("critical") and not tags.has("quiet"):
 			out.append(c)
 	return out
 

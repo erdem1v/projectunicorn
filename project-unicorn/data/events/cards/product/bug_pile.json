@@ -1,0 +1,91 @@
+{
+  "id": "product.bug_pile",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [],
+  "guards": {
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 8
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.bugs_confirmed",
+        "op": ">=",
+        "value": 12
+      },
+      {
+        "seam": "destek.desk_staffed",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "fix_now",
+      "outcome_id": "fix_now",
+      "requires": {
+        "seam": "destek.can_start_fix_run",
+        "op": "==",
+        "value": true,
+        "reason": "EV_PRODUCT_BUG_PILE_LOCK_FIX"
+      },
+      "effects": [
+        {
+          "verb": "fix_run_start"
+        }
+      ]
+    },
+    {
+      "id": "later",
+      "outcome_id": "later",
+      "effects": [
+        {
+          "verb": "add_reputation",
+          "amount": -1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_BUG_PILE_TITLE",
+      "body": "Doğrulanmış {seam:urun.bugs_confirmed} hata açık. Destek aynı özrü günde birkaç kez yazıyor.",
+      "options": {
+        "fix_now": "EV_PRODUCT_BUG_PILE_FIX",
+        "later": "EV_PRODUCT_BUG_PILE_LATER"
+      },
+      "locked_reasons": {
+        "fix_now": "EV_PRODUCT_BUG_PILE_LOCK_FIX"
+      },
+      "expire_note": "EV_PRODUCT_BUG_PILE_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_BUG_PILE_TITLE",
+      "body": "{seam:urun.bugs_confirmed} confirmed bugs are open. Support writes the same apology several times a day.",
+      "options": {
+        "fix_now": "EV_PRODUCT_BUG_PILE_FIX",
+        "later": "EV_PRODUCT_BUG_PILE_LATER"
+      },
+      "locked_reasons": {
+        "fix_now": "EV_PRODUCT_BUG_PILE_LOCK_FIX"
+      },
+      "expire_note": "EV_PRODUCT_BUG_PILE_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_reputation",
+        "amount": -1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

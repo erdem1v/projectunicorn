@@ -290,6 +290,12 @@ static func _part(part: Dictionary, forecast: bool) -> HBoxContainer:
 		"request_on_time":
 			row.add_child(_strong(part.customer))
 			row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_ON_TIME")))
+		"promise":
+			if forecast:
+				row.add_child(_strong(part.customer))
+				row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_PROMISE_KEPT")))
+			else:
+				row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_PROMISE").format({"customer": part.customer})))
 	return row
 
 

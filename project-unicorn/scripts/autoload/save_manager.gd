@@ -169,7 +169,9 @@ func save_to_slot(slot_id: String) -> bool:
 			"systems": _capture_systems(),
 		},
 	}
-	if not _write_atomic(_path_for(slot_id), JSON.stringify(payload, "\t")):
+	# Keys keep their order: the sprint ships beta cards in the order they were stored, and a
+	# sorted save would replay a different release after loading.
+	if not _write_atomic(_path_for(slot_id), JSON.stringify(payload, "\t", false)):
 		return false
 	_dirty = false
 	return true

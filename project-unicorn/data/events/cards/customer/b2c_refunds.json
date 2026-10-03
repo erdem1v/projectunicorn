@@ -1,0 +1,109 @@
+{
+  "id": "customer.b2c_refunds",
+  "_note": "The customer slot binds the paid userbase: a refund needs someone who paid.",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 12
+  },
+  "condition": {
+    "all": [
+      {
+        "any": [
+          {
+            "seam": "urun.bugs_confirmed",
+            "op": ">=",
+            "value": 8
+          },
+          {
+            "seam": "destek.warmth_band",
+            "op": "==",
+            "value": "hot"
+          }
+        ]
+      },
+      {
+        "seam": "sales.b2c_audience",
+        "op": ">=",
+        "value": 1000
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "refund_all",
+      "outcome_id": "refund_all",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -3000,
+          "label": "refunds"
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "policy",
+      "outcome_id": "policy",
+      "effects": [
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": -5
+        },
+        {
+          "verb": "add_brand",
+          "amount": -1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_CUSTOMER_B2C_REFUNDS_TITLE",
+      "body": "EV_CUSTOMER_B2C_REFUNDS_BODY",
+      "options": {
+        "refund_all": "EV_CUSTOMER_B2C_REFUNDS_ALL",
+        "policy": "EV_CUSTOMER_B2C_REFUNDS_POLICY"
+      },
+      "expire_note": "EV_CUSTOMER_B2C_REFUNDS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_CUSTOMER_B2C_REFUNDS_TITLE",
+      "body": "EV_CUSTOMER_B2C_REFUNDS_BODY",
+      "options": {
+        "refund_all": "EV_CUSTOMER_B2C_REFUNDS_ALL",
+        "policy": "EV_CUSTOMER_B2C_REFUNDS_POLICY"
+      },
+      "expire_note": "EV_CUSTOMER_B2C_REFUNDS_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -3
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

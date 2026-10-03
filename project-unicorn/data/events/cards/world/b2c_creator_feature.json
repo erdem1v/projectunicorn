@@ -1,0 +1,100 @@
+{
+  "id": "world.b2c_creator_feature",
+  "version_scope": "demo",
+  "category": "world",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 26
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "sales.growth_band",
+        "op": "==",
+        "value": "fast"
+      },
+      {
+        "seam": "urun.floor_innovation",
+        "op": "!=",
+        "value": "crossed"
+      },
+      {
+        "seam": "urun.floor_stability",
+        "op": "!=",
+        "value": "crossed"
+      },
+      {
+        "seam": "urun.floor_experience",
+        "op": "!=",
+        "value": "crossed"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "sponsor",
+      "outcome_id": "sponsor",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -2500,
+          "label": "sponsor"
+        },
+        {
+          "verb": "audience_delta",
+          "pct": 0.1
+        },
+        {
+          "verb": "add_brand",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "decline",
+      "outcome_id": "decline",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_WORLD_B2C_CREATOR_TITLE",
+      "body": "EV_WORLD_B2C_CREATOR_BODY",
+      "options": {
+        "sponsor": "EV_WORLD_B2C_CREATOR_SPONSOR",
+        "decline": "EV_WORLD_B2C_CREATOR_DECLINE"
+      },
+      "expire_note": "EV_WORLD_B2C_CREATOR_EXPIRED"
+    },
+    "en": {
+      "title": "EV_WORLD_B2C_CREATOR_TITLE",
+      "body": "EV_WORLD_B2C_CREATOR_BODY",
+      "options": {
+        "sponsor": "EV_WORLD_B2C_CREATOR_SPONSOR",
+        "decline": "EV_WORLD_B2C_CREATOR_DECLINE"
+      },
+      "expire_note": "EV_WORLD_B2C_CREATOR_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

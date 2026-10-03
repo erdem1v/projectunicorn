@@ -166,6 +166,7 @@ static func preview_fire(emp: Character) -> Dictionary:
 	var multiple: float = HRConstants.severance_multiple(weeks_served)
 	var severance: int = HRConstants.severance_amount(emp.monthly_salary, weeks_served)
 	var payroll: int = CharacterRegistry.get_total_monthly_salaries()
+	var staff: int = CharacterRegistry.get_employees().size()
 	var cash_after: int = GameState.cash - severance
 	return {
 		"ok": true,
@@ -181,6 +182,8 @@ static func preview_fire(emp: Character) -> Dictionary:
 			_delta(TranslationServer.translate("HR_ROW_CASH"), Fmt.money_exact(GameState.cash),
 				Fmt.money_exact(cash_after), "", cash_after < 0),
 			_delta(TranslationServer.translate("HR_ROW_PAYROLL"), Fmt.money_exact(payroll), Fmt.money_exact(payroll - emp.monthly_salary)),
+			_delta(TranslationServer.translate("HR_ROW_TOOLS"), Fmt.money_exact(FinanceSystem.monthly_tools_for(staff)),
+				Fmt.money_exact(FinanceSystem.monthly_tools_for(staff - 1))),
 			_fact(TranslationServer.translate("HR_ROW_TEAM_MORALE"), str(-HRConstants.MORALE_FIRE_TEAM)),
 		],
 	}

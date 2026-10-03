@@ -1,0 +1,84 @@
+{
+  "id": "founder.friends_test",
+  "version_scope": "demo",
+  "category": "founder",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "product_live": false
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 1
+      },
+      {
+        "seam": "urun.sprint_number",
+        "op": ">=",
+        "value": 2
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "host",
+      "outcome_id": "host",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -300,
+          "label": "user_tests"
+        },
+        {
+          "verb": "add_brand",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "send",
+      "outcome_id": "send",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": 1
+        },
+        {
+          "verb": "add_reputation",
+          "amount": -1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FOUNDER_FRIENDS_TITLE",
+      "body": "EV_FOUNDER_FRIENDS_BODY",
+      "options": {
+        "host": "EV_FOUNDER_FRIENDS_HOST",
+        "send": "EV_FOUNDER_FRIENDS_SEND"
+      },
+      "expire_note": "EV_FOUNDER_FRIENDS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FOUNDER_FRIENDS_TITLE",
+      "body": "EV_FOUNDER_FRIENDS_BODY",
+      "options": {
+        "host": "EV_FOUNDER_FRIENDS_HOST",
+        "send": "EV_FOUNDER_FRIENDS_SEND"
+      },
+      "expire_note": "EV_FOUNDER_FRIENDS_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **170** |
-| Effect verbs (write) | **59** |
-| Cards in the catalogue | 42 |
+| Seams (read) | **178** |
+| Effect verbs (write) | **60** |
+| Cards in the catalogue | 67 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -49,6 +49,7 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `send_on_leave`
 - `start_training`
 - `damage_product`
+- `fix_run_start`
 - `sprint_card_effort`
 - `sprint_card_progress`
 - `sprint_card_carry`
@@ -124,6 +125,7 @@ slot of that type (§17.12).
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
 | `destek.absorb_ceiling` | global | int | Ops | requests the desk can take before escalating |
+| `destek.can_start_fix_run` | global | bool | Ops | live, no run under way, confirmed bugs waiting and the desk staffed |
 | `destek.desk_staffed` | global | bool | Ops | anyone on support at all |
 | `destek.warmth_band` | global | string | Ops | calm | warm | hot at 20 / 40 unvalidated reports |
 
@@ -236,6 +238,7 @@ slot of that type (§17.12).
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
 | `musteri.at_risk_count` | global | int | Sales | accounts currently in Risk |
+| `musteri.broke_promise` | entity | bool | Sales | a promise to this account broke inside the relock window and nothing earlier locks the promise row |
 | `musteri.churn_countdown` | entity | int | Sales | WRAPPER; -1 when not counting, else weeks to churn |
 | `musteri.company_name` | entity | string | Sales | for {customer} in prose |
 | `musteri.complaint_voice` | entity | string | Sales | the per-sector complaint line |
@@ -254,6 +257,7 @@ slot of that type (§17.12).
 | `musteri.pain_buildable` | entity | bool | Sales | gates the promise row: nobody can promise what the company cannot build yet |
 | `musteri.pain_feature_label` | entity | string | Sales | the feature the promise row names |
 | `musteri.pain_feature_shipped` | entity | bool | Sales | gates the promise row: promising work already done pays for nothing |
+| `musteri.promise_fits` | entity | bool | Sales | the account's wish fits the free points of the next plannable sprint, or another clause locks the promise row |
 | `musteri.request_kind` | entity | string | Sales | complaint | feature | renewal — state-scored, no RNG |
 | `musteri.risk_voice` | entity | string | Sales | what an account in Risk says, by the cause of the Risk |
 | `musteri.satisfaction` | entity | int | Sales | WRAPPER; 0-100, the number the player can see |
@@ -290,6 +294,7 @@ slot of that type (§17.12).
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
 | `rival.count` | global | int | Rivals |  |
+| `rival.leader` | global | string | Rivals | the subtype's rival with the most launches so far, ties by table order; empty before the type is chosen |
 | `rival.momentum` | entity | float | Rivals | WRAPPER; zero for the giants, who do not accelerate |
 | `rival.player_share_pct` | global | float | Rivals | 0.0-90.0, derived from MRR against a fixed market total |
 | `rival.status` | entity | string | Rivals | WRAPPER; DOMINANT | STEADY | SCALING | QUIET |
@@ -301,7 +306,7 @@ slot of that type (§17.12).
 | `sales.account_count` | global | int | Sales | accounts in the book; excludes the B2C aggregate userbase |
 | `sales.b2c_audience` | global | float | Sales | float: it carries a sub-unit accumulator |
 | `sales.b2c_price` | global | int | Sales | WRAPPER; monthly price |
-| `sales.growth_band` | global | string | Sales |  |
+| `sales.growth_band` | global | string | Sales | melting | flat | steady | fast |
 | `sales.is_b2b` | global | bool | Sales | reads the SHIPPED market, not one being built |
 | `sales.market_share_pct` | global | float | Sales | one global figure; per-segment share does not exist yet |
 | `sales.pipeline_count` | global | int | Sales | live prospects |
@@ -327,8 +332,12 @@ slot of that type (§17.12).
 | `urun.axis_stability` | global | int | Product | 0-120 |
 | `urun.bugs_confirmed` | global | int | Product | confirmed live bugs |
 | `urun.bugs_unconfirmed` | global | int | Product | incoming, unvalidated reports |
+| `urun.capacity_state` | global | string | Product | normal | amber | over | unprovisioned |
 | `urun.capacity_tier` | global | int | Product | provisioned infra units |
 | `urun.decision_card` | global | string | Product | name of the card a sprint decision waits on; empty when none |
+| `urun.decision_card_effort` | global | int | Product | the decision card's effort in points; 0 when none waits |
+| `urun.decision_card_late` | global | bool | Product | at the team's pace the decision card will not finish this sprint; false when none waits |
+| `urun.enterprise_trust` | global | bool | Product | the enterprise provider or security_cert research: the bar a large account checks before it signs |
 | `urun.floor_experience` | global | string | Product | '' | warning | crossed |
 | `urun.floor_innovation` | global | string | Product | '' | warning | crossed |
 | `urun.floor_stability` | global | string | Product | '' | warning | crossed |

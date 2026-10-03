@@ -64,6 +64,10 @@ func create(customer_id: String, feature_id: String, deadline_weeks: int) -> Pro
 	p.customer_id = customer_id
 	p.feature_id = feature_id
 	p.deadline_day = GameState.day + maxi(TimeModel.ticks(deadline_weeks), 1)
+	# A product with a sprint loop is promised by sprint, not by weeks: a two-week word given while
+	# a two-week sprint runs with its cards locked could never be kept.
+	if SprintSystem.is_typed():
+		p.due_sprint = SprintSystem.plannable_sprint()
 	p.status = "open"
 	# Guard against a duplicate id in the same-day/same-feature edge (append a suffix).
 	if _promises.has(p.id):
@@ -126,11 +130,13 @@ func _on_build_phase_changed(phase: String) -> void:
 	# broken one if it lands late).
 	if phase != "shipped":
 		return
+	# A sprint promise still open at a ship is on time: the sprint slot ships before the sales
+	# slot's deadline sweep in the same tick, so a late one is already broken here.
 	for p in _promises.values():
 		if not ProductState.is_feature_live(p.feature_id):
 			continue
 		if p.status == "open":
-			_resolve(p, "kept" if GameState.day <= p.deadline_day else "partial")
+			_resolve(p, "kept" if p.due_sprint >= 0 or GameState.day <= p.deadline_day else "partial")
 		elif p.status == "broken":
 			_resolve(p, "partial")  # late redemption of an already-broken promise
 	B2BSalesSystem.refresh_pains_after_ship()
@@ -139,8 +145,19 @@ func _on_build_phase_changed(phase: String) -> void:
 func tick_deadlines(day: int) -> void:
 	# Called every tick by B2BSalesSystem. An open promise past its deadline breaks.
 	for p in _promises.values():
-		if p.status == "open" and day > p.deadline_day:
+		if p.status == "open" and _overdue(p, day):
 			_resolve(p, "broken")
+
+
+## A sprint promise breaks once its sprint has closed without the step live. A step whose card is
+## waiting in beta gets one more sprint: beta holds a finished card back one release.
+func _overdue(p: Promise, day: int) -> bool:
+	if p.due_sprint < 0:
+		return day > p.deadline_day
+	var in_beta: bool = (GameState.product.cards.values() as Array).any(
+		func(c: Dictionary) -> bool: return c.state == "beta" and c.step == p.feature_id)
+	return not ProductState.is_feature_live(p.feature_id) \
+		and SprintSystem.last_closed() >= p.due_sprint + int(in_beta)
 
 
 func _resolve(p: Promise, status: String) -> void:

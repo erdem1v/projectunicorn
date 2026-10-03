@@ -137,6 +137,7 @@ const PROMISE_BROKEN_TOLERANCE := 5
 # Cap on the broken-promise ratchet: a broken word makes an account pickier, never
 # impossible — tolerance stops this far above where it was seeded.
 const PROMISE_TOLERANCE_CEILING := 10
+const PROMISE_RELOCK_WEEKS := 8         # [WORKING] after a broken word, no new "Söz ver" to that account this long
 
 
 # ============================= Customer Success ==============================

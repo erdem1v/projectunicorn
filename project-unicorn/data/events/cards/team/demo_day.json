@@ -1,0 +1,86 @@
+{
+  "id": "team.demo_day",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "quiet"
+  ],
+  "guards": {
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 8
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.sprint_week",
+        "op": "==",
+        "value": 2
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "hold",
+      "outcome_id": "hold",
+      "effects": [
+        {
+          "verb": "morale_all",
+          "amount": 3
+        },
+        {
+          "verb": "sprint_hours",
+          "mult": 0.95
+        }
+      ]
+    },
+    {
+      "id": "skip",
+      "outcome_id": "skip",
+      "effects": [
+        {
+          "verb": "morale_all",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_TEAM_DEMO_DAY_TITLE",
+      "body": "EV_TEAM_DEMO_DAY_BODY",
+      "options": {
+        "hold": "EV_TEAM_DEMO_DAY_HOLD",
+        "skip": "EV_TEAM_DEMO_DAY_SKIP"
+      },
+      "expire_note": "EV_TEAM_DEMO_DAY_EXPIRED"
+    },
+    "en": {
+      "title": "EV_TEAM_DEMO_DAY_TITLE",
+      "body": "EV_TEAM_DEMO_DAY_BODY",
+      "options": {
+        "hold": "EV_TEAM_DEMO_DAY_HOLD",
+        "skip": "EV_TEAM_DEMO_DAY_SKIP"
+      },
+      "expire_note": "EV_TEAM_DEMO_DAY_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

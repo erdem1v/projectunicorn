@@ -117,6 +117,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"targeted_modifier_hits_named_customer": fail = _case_targeted_modifier_hits_named_customer()
 		"burn_refresh_same_tick": fail = _case_burn_refresh_same_tick()
 		"burn_day1_breakdown":  fail = _case_burn_day1_breakdown()
+		"burn_tools_and_service": fail = _case_burn_tools_and_service()
+		"add_cash_writes_ledger": fail = _case_add_cash_writes_ledger()
 		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
 		"runway_net_status":    fail = _case_runway_net_status()
 		"gross_runway_months":  fail = _case_gross_runway_months()
@@ -302,7 +304,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"harness_sniffer_matches_run_log": fail = _case_harness_sniffer_matches_run_log()
 		"quality_half_sat_25":             fail = _case_quality_half_sat_25()
 		"b2b_v1_lands_mid_band":           fail = _case_b2b_v1_lands_mid_band()
-		"b2c_satisfaction_gate_experience": fail = _case_b2c_satisfaction_gate_experience()
+		"b2c_satisfaction_drifts_to_experience": fail = _case_b2c_satisfaction_drifts_to_experience()
 		"rival_relative_uses_template_half_sat": fail = _case_rival_relative_uses_template_half_sat()
 		"soft_cap_ends_run_at_730":        fail = _case_soft_cap_ends_run_at_730()
 		"no_calendar_stop_before_cap":     fail = _case_no_calendar_stop_before_cap()
@@ -318,6 +320,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2c_wom_needs_satisfaction":      fail = _case_b2c_wom_needs_satisfaction()
 		"b2c_growth_multiplier_floor":     fail = _case_b2c_growth_multiplier_floor()
 		"conversion_bug_penalty":          fail = _case_conversion_bug_penalty()
+		"b2c_value_reads_live_lines":      fail = _case_b2c_value_reads_live_lines()
 		"audience_pct_modifier":           fail = _case_audience_pct_modifier()
 		"complaint_never_charges_cash":    fail = _case_complaint_never_charges_cash()
 		"discount_cap_two_uses":           fail = _case_discount_cap_two_uses()
@@ -430,6 +433,18 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_decision_blocks_progress":       fail = _case_sprint_decision_blocks_progress()
 		"sprint_beta_card_cannot_be_added":      fail = _case_sprint_beta_card_cannot_be_added()
 		"sprint_release_resets_live_bugs":       fail = _case_sprint_release_resets_live_bugs()
+		"sprint_departure_restaffs_card":        fail = _case_sprint_departure_restaffs_card()
+		"sprint_never_stalls_in_plan":           fail = _case_sprint_never_stalls_in_plan()
+		"sprint_lead_offers_paid_plan_b2c":      fail = _case_sprint_lead_offers_paid_plan_b2c()
+		"sprint_solo_mvp_by_week_six":           fail = _case_sprint_solo_mvp_by_week_six()
+		"promise_due_sprint_kept_when_shipped_next_sprint": fail = _case_promise_due_sprint_kept_when_shipped_next_sprint()
+		"promise_due_sprint_breaks_after_close": fail = _case_promise_due_sprint_breaks_after_close()
+		"promise_relock_after_break":            fail = _case_promise_relock_after_break()
+		"quiet_cards_fill_empty_floor":          fail = _case_quiet_cards_fill_empty_floor()
+		"sprint_decision_card_fires_shipped":    fail = _case_sprint_decision_card_fires_shipped()
+		"promise_row_locked_after_break":        fail = _case_promise_row_locked_after_break()
+		"promise_row_locked_when_no_room":       fail = _case_promise_row_locked_when_no_room()
+		"sprint_late_only_when_behind":          fail = _case_sprint_late_only_when_behind()
 		"save_v14_build_becomes_sprint_plan":    fail = _case_save_v14_build_becomes_sprint_plan()
 		"save_v14_history_becomes_releases":     fail = _case_save_v14_history_becomes_releases()
 		"product_paid_plan_locked_until_mvp":    fail = _case_product_paid_plan_locked_until_mvp()
@@ -593,8 +608,11 @@ static func _seed_b2b_lines(subtype: String, tier: int = 2) -> void:
 		ProductState.set_line_tier(String(line_id), tier)
 
 
+## An established book at the bar, not a fresh signing: its onboarding window is closed, or the
+## phase-3 onboarding service cost would drain the cash and the VC cases would run in the shutter.
 static func _seed_b2b_series_a() -> void:
 	_seed_b2b(SalesSystem.TRACTION_MRR_TARGET + 1000)
+	CustomerRegistry.get_customer("co_lead_smoke").onboarding_until = GameState.day
 
 
 ## Closed calendar months on GameState.month_history: sequential spans of 30 ticks (only the
@@ -2619,19 +2637,15 @@ static func _case_targeted_modifier_hits_named_customer() -> String:
 
 
 static func _case_burn_day1_breakdown() -> String:
-	# Gider dağılımı DÜRÜST: day-1'de motorda karşılığı olmayan kalem yok — tek satır
-	# kurucu gideri (%100). Uydurma tools(7)/office(25)/legal(11)/misc(7) kalemleri
-	# silindi; toplam 50 kaldı (runway kalibrasyonu oynamadı).
+	# Day 1 carries no category without a mechanic behind it: one row, the phase-1 tools base
+	# with nobody on the payroll, 100 %, $50 (the runway calibration).
 	if FinanceSystem.starting_daily_burn() != 50:
 		return "starting_daily_burn %d, want 50 (baseline calibration moved)" % FinanceSystem.starting_daily_burn()
 	if GameState.daily_burn != FinanceSystem.starting_daily_burn():
 		return "GameState.daily_burn (%d) does not derive from the breakdown" % GameState.daily_burn
-	# `servers` Ürün rev 6.1 §10 ile geldi: sunucu faturası burn'e GERÇEKTEN işliyor
-	# (InfraSystem her gün aylık/30 olarak yazıyor). Ürün yayınlanana kadar 0 olduğu
-	# için day-1 iddiası KIPIRDAMIYOR — aşağıdaki "sıfır olmayan kalem = kurgu"
-	# kontrolü onu zaten kapsıyor ve tek satırlık render sözleşmesi aynen duruyor.
-	# Bayat olan tek şey kadro listesiydi.
-	var want_keys: Array = ["salaries", "overtime", "founder", "marketing", "office", "servers"]
+	# servers and service are written by InfraSystem and stay 0 until the product ships;
+	# marketing and office are hooks at 0.
+	var want_keys: Array = ["salaries", "overtime", "tools", "marketing", "office", "servers", "service"]
 	var keys: Array = FinanceSystem.STARTING_BURN_BREAKDOWN.keys()
 	if keys.size() != want_keys.size():
 		return "breakdown holds %d categories, want %d: %s" % [keys.size(), want_keys.size(), str(keys)]
@@ -2639,21 +2653,21 @@ static func _case_burn_day1_breakdown() -> String:
 		if not FinanceSystem.STARTING_BURN_BREAKDOWN.has(key):
 			return "breakdown lost category '%s'" % key
 		if not FinanceSystem.BURN_IDS.has(key):
-			return "category '%s' has no TR label" % key
+			return "category '%s' has no label" % key
 	for key in keys:
 		var v: int = int(FinanceSystem.STARTING_BURN_BREAKDOWN[key])
-		if String(key) == "founder":
-			if v != 50:
-				return "founder cost %d, want the whole $50 baseline" % v
+		if String(key) == "tools":
+			if v != FinanceSystem.daily_rate(FinanceSystem.monthly_tools_for(0)):
+				return "day-1 tools %d is not the phase-1 base with nobody on the payroll" % v
 		elif v != 0:
 			return "category '%s' carries %d with no mechanic behind it (fiction)" % [key, v]
-	# Day-1 render sözleşmesi: tek satır, founder, %100 (sıfır satırlar atlanır).
+	# Day-1 render contract: one row, tools, 100 % (zero rows are skipped).
 	var rows: Array = FinanceSystem.get_burn_breakdown_pct()
 	if rows.size() != 1:
 		return "day-1 breakdown renders %d rows, want exactly 1: %s" % [rows.size(), str(rows)]
 	var row: Dictionary = rows[0]
-	if String(row.get("id", "")) != "founder" or int(row.get("pct", 0)) != 100 or int(row.get("amount", 0)) != 50:
-		return "day-1 row is not founder/100/50: %s" % str(row)
+	if String(row.get("id", "")) != "tools" or int(row.get("pct", 0)) != 100 or int(row.get("amount", 0)) != 50:
+		return "day-1 row is not tools/100/50: %s" % str(row)
 	return ""
 
 
@@ -2676,6 +2690,111 @@ static func _case_burn_refresh_same_tick() -> String:
 	if GameState.mrr != 1000 or GameState.cash - cash0 != want:
 		return "one tick moved cash by %d at MRR %d, burn %d (want %d)" % [
 			GameState.cash - cash0, GameState.mrr, GameState.daily_burn, want]
+	return ""
+
+
+## The two burn lines that grow with the company. Tools: the phase base plus the phase rate per
+## employee on the payroll, the founder out and people on leave in. Service: B2C per thousand
+## users under the load; B2B per account plus seats under the load, plus the phase multiple of
+## an account's MRR for its first four ticks; nothing while the product is not live.
+##
+## FALSIFICATION: count every character in FinanceSystem's tools pull, read `>=` for the
+## onboarding window, drop the load factor from the seat term, or drop InfraSystem's is_live
+## guard, and the matching assertion fails.
+static func _case_burn_tools_and_service() -> String:
+	FinanceSystem.daily_tick()
+	var base_only: int = FinanceSystem.daily_rate(int(FinanceSystem.TOOLS_BASE_MONTHLY[1]))
+	if int(FinanceSystem.get_burn_breakdown()["tools"]) != base_only:
+		return "a founder-only company pays %d for tools, want the phase-1 base %d" % [
+			int(FinanceSystem.get_burn_breakdown()["tools"]), base_only]
+	_make_employee("char_tools_a", "Tools A", HRConstants.ROLE_DEVELOPER)
+	var away: Character = _make_employee("char_tools_b", "Tools B", HRConstants.ROLE_DESIGNER)
+	CharacterRegistry.set_status(away.id, HRConstants.STATUS_ON_LEAVE)
+	for phase in [1, 2, 3]:
+		GameState.set_phase(phase)
+		FinanceSystem.daily_tick()
+		var want_tools: int = FinanceSystem.daily_rate(int(FinanceSystem.TOOLS_BASE_MONTHLY[phase])
+			+ 2 * int(FinanceSystem.TOOLS_PER_EMPLOYEE_MONTHLY[phase]))
+		var got_tools: int = int(FinanceSystem.get_burn_breakdown()["tools"])
+		if got_tools != want_tools:
+			return "phase %d tools %d, want %d (two employees, one on leave, founder out)" % [
+				phase, got_tools, want_tools]
+
+	GameState.set_phase(2)
+	if InfraSystem.monthly_service() != 0:
+		return "a product that is not live costs %d in service" % InfraSystem.monthly_service()
+
+	_seed_b2c()
+	GameState.set_flag("b2c_audience", 4000.0)
+	var want_b2c: int = int(round(4.0 * InfraSystem.SERVICE_PER_1K_USERS_B2C * InfraSystem.load_factor()))
+	if InfraSystem.monthly_service() != want_b2c:
+		return "4,000 users cost %d in service, want %d" % [InfraSystem.monthly_service(), want_b2c]
+
+	GameState.set_flag("b2c_audience", 0.0)
+	_seed_b2b(3000)
+	ProductState.set_line_tier("line_note_tool_capture", 3)
+	var lf: float = InfraSystem.load_factor()
+	if lf <= InfraSystem.LOAD_BASE:
+		return "fixture: the heavy step carries no load (%.3f)" % lf
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	var settled: float = InfraSystem.SERVICE_PER_ACCOUNT_B2B + c.seats * InfraSystem.SERVICE_PER_SEAT_B2B * lf
+	for phase in [1, 2, 3]:
+		GameState.set_phase(phase)
+		var want_b2b: int = int(round(settled + c.mrr * float(InfraSystem.ONBOARDING_MRR_MULT[phase])))
+		if InfraSystem.monthly_service() != want_b2b:
+			return "phase %d: an onboarding account costs %d in service, want %d" % [
+				phase, InfraSystem.monthly_service(), want_b2b]
+
+	# The multiple holds through the account's fourth tick and is gone on the fifth.
+	GameState.day = c.onboarding_until - 1
+	if InfraSystem.monthly_service() != int(round(settled + c.mrr * float(InfraSystem.ONBOARDING_MRR_MULT[3]))):
+		return "the onboarding multiple ended before the account's fourth tick"
+	GameState.day = c.onboarding_until
+	if InfraSystem.monthly_service() != int(round(settled)):
+		return "the onboarding multiple outlived its window (%d, want %d)" % [
+			InfraSystem.monthly_service(), int(round(settled))]
+
+	InfraSystem.daily_tick()
+	var published: int = int(FinanceSystem.get_burn_breakdown()["service"])
+	if published <= 0 or published != FinanceSystem.daily_rate(InfraSystem.monthly_service()):
+		return "the service line carries %d, the daily rate is %d" % [
+			published, FinanceSystem.daily_rate(InfraSystem.monthly_service())]
+	GameState.set_flag("mvp_shipped", false)
+	InfraSystem.daily_tick()
+	if int(FinanceSystem.get_burn_breakdown()["service"]) != 0:
+		return "service still burns %d with the product offline" % int(FinanceSystem.get_burn_breakdown()["service"])
+	return ""
+
+
+## A card's cash goes through Finance's one-time door: a cost lands in the open month's expense
+## and the transactions list, income in the transactions list, and each moves the cash once. An
+## expiry's cost takes the same door.
+##
+## FALSIFICATION: put `GameState.set_cash(GameState.cash + amount)` back in EvEffects' add_cash
+## and the first assertion fails.
+static func _case_add_cash_writes_ledger() -> String:
+	GameState.set_cash(20000)
+	var expense0: int = int(GameState.month_ledger.get("expense", 0))
+	var rows0: int = GameState.transactions.size()
+	EvEffects.run_played([{"verb": "add_cash", "amount": -6000, "label": "incident"}], {})
+	if int(GameState.month_ledger.get("expense", 0)) != expense0 + 6000:
+		return "a card's cost did not reach the month's expense (%d -> %d)" % [
+			expense0, int(GameState.month_ledger.get("expense", 0))]
+	EvEffects.run_played([{"verb": "add_cash", "amount": 3000, "label": "side_work"}], {})
+	EvEffects.run_expire([{"verb": "add_cash", "amount": -500, "label": "refunds"}], {})
+	if GameState.cash != 20000 - 6000 + 3000 - 500:
+		return "cash is %d, want %d" % [GameState.cash, 20000 - 6000 + 3000 - 500]
+	if int(GameState.month_ledger.get("expense", 0)) != expense0 + 6500:
+		return "the month's expense is %d, want the two costs only (%d)" % [
+			int(GameState.month_ledger.get("expense", 0)), expense0 + 6500]
+	var rows: Array = GameState.transactions.slice(rows0)
+	var want_rows: Array = [["incident", -6000], ["side_work", 3000], ["refunds", -500]]
+	if rows.size() != want_rows.size():
+		return "%d transactions rows, want %d: %s" % [rows.size(), want_rows.size(), str(rows)]
+	for i in rows.size():
+		var row: Dictionary = rows[i]
+		if String(row.get("label", "")) != String(want_rows[i][0]) or int(row.get("amount", 0)) != int(want_rows[i][1]):
+			return "transactions row %d is %s, want %s" % [i, str(row), str(want_rows[i])]
 	return ""
 
 
@@ -2813,9 +2932,9 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 
 
 static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
-	# Regression guard: the _tick_satisfaction refactor (B2C-only) must leave the B2C
-	# aggregate's daily drift byte-identical, and a coexisting B2B account must NOT be
-	# dragged through the old ±1 gate path (it is owned by the two-layer B2B model).
+	# Regression guard: with a B2B account beside it, the B2C aggregate still moves by its own
+	# drift rule and nothing else, and the B2B account is not dragged through that rule (it is
+	# owned by the two-layer B2B model).
 	_seed_b2c()  # co_b2c_userbase
 	var p := Prospect.new()
 	p.id = "lead_iso"
@@ -2826,27 +2945,22 @@ static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	if ub == null:
 		return "no B2C aggregate record after seed"
-	# Product where the OLD gate math yields a definite non-zero B2C delta (stab ≥ gate).
+	# Product whose experience score sits well above the seeded record: a definite drift.
 	GameState.set_flag("mvp_stability", 200.0)
 	GameState.set_flag("mvp_innovation", 200.0)
 	GameState.set_flag("mvp_experience", 200.0)
 	GameState.set_flag("mvp_live_bug_count", 0)
-	# Expected delta computed with the SAME code path the tick uses.
-	var stab: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
-	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", 0))
-	var gate_delta: int = 0
-	if stab >= SalesSystem.SATISFACTION_QUALITY_GATE:
-		gate_delta += 1
-	if bugs > SalesSystem.SATISFACTION_BUG_GATE:
-		gate_delta -= 1
-	if gate_delta == 0:
-		return "test misconfigured: expected a non-zero B2C gate delta (stab=%.1f)" % stab
+	# Expected delta: toward the experience score, capped at a week's step.
+	var target: int = int(round(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")))
+	var step: int = int(TimeModel.per_tick(SalesSystem.SATISFACTION_DRIFT_PER_DAY))
 	var s0: int = ub.satisfaction
-	var want: int = clampi(s0 + int(TimeModel.per_tick(gate_delta)), 0, 100) - s0
+	var want: int = clampi(target - s0, -step, step)
+	if want == 0:
+		return "test misconfigured: expected a non-zero B2C drift (target %d, satisfaction %d)" % [target, s0]
 	_sim_day()
 	var got: int = ub.satisfaction - s0
 	if got != want:
-		return "B2C aggregate satisfaction delta changed by refactor: got %d want %d" % [got, want]
+		return "B2C aggregate satisfaction delta off its drift rule: got %d want %d" % [got, want]
 	return ""
 
 
@@ -6730,8 +6844,10 @@ static func _case_coupling_wear_team_average() -> String:
 	_set_founder_tech(6)
 	# The audience must be big enough to keep the wear rate OFF WEAR_FLOOR in BOTH arms —
 	# otherwise both clamp to the floor and read identical, which says nothing about the
-	# expertise term. (That is how this case first failed: 0.0480 == 24 x WEAR_FLOOR exactly.)
-	GameState.set_flag("b2c_audience", 1000.0)
+	# expertise term. It is sized from the coefficient: 0.04 an hour of user wear, more than
+	# the founder's Test 6 takes off.
+	var audience: float = 0.04 / ProductSystem.WEAR_AUD_COEF
+	GameState.set_flag("b2c_audience", audience)
 	GameState.set_flag("mvp_live_bug_count", 0)
 	GameState.set_flag("mvp_live_bug_progress", 0.0)
 	# Wear with the founder alone, over a day of live product.
@@ -6741,7 +6857,7 @@ static func _case_coupling_wear_team_average() -> String:
 		+ float(int(GameState.get_flag("mvp_live_bug_count", 0)))
 	if solo_wear <= 0.0:
 		return "live product did not wear at all — case window invalid"
-	if absf(solo_wear - 24.0 * ProductSystem.WEAR_FLOOR) < 0.0001:
+	if absf(solo_wear - TimeModel.per_tick(24.0 * ProductSystem.WEAR_FLOOR)) < 0.0001:
 		return "the wear rate is pinned at WEAR_FLOOR (%.4f) — the expertise term cannot be seen" % solo_wear
 	# Aynı gün, bu kez kadroda yüksek TEST'li biri var: aşınma YAVAŞLAMALI.
 	#
@@ -6752,7 +6868,7 @@ static func _case_coupling_wear_team_average() -> String:
 	# aynı: "ekibin Test'i canlı ürünün aşınmasını yavaşlatır".
 	_make_employee("char_wear_dev", "Wear Tester", HRConstants.ROLE_TESTER,
 		SEED_PACE, 0, 50, 9, SEED_RAPPORT)
-	GameState.set_flag("b2c_audience", 1000.0)
+	GameState.set_flag("b2c_audience", audience)
 	GameState.set_flag("mvp_live_bug_count", 0)
 	GameState.set_flag("mvp_live_bug_progress", 0.0)
 	for h in 24:
@@ -10254,49 +10370,45 @@ static func _case_b2b_v1_lands_mid_band() -> String:
 	return ""
 
 
-static func _case_b2c_satisfaction_gate_experience() -> String:
-	# B2C-growth precondition (director ruling 2026-08-19): the B2C aggregate's +1 a day reads the
-	# EXPERIENCE axis at the re-seated gate (40). Raw 25 → 50 ≥ 40 climbs; raw 10 → 28.6
-	# does not; a heavy backlog still erodes either way.
+## B2C satisfaction has no gate: the userbase record drifts toward the experience score a day's
+## step at a time (seven on a tick) from either side and stops there, and a live backlog over
+## SATISFACTION_BUG_GATE pushes it down on top at its own daily rate, not the drift's.
+## FALSIFICATION: put back the "+1 a day while experience ≥ 40" gate and the from-above leg
+## climbs instead of falling; push the backlog at the drift's step and the backlog legs land low.
+static func _case_b2c_satisfaction_drifts_to_experience() -> String:
 	_seed_b2c()
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	if ub == null:
 		return "no B2C aggregate record after seed"
 	GameState.set_flag("mvp_stability", 0.0)
 	GameState.set_flag("mvp_innovation", 0.0)
-	GameState.set_flag("mvp_experience", 25.0)
-	GameState.set_flag("mvp_live_bug_count", 0)
-	# SUPPORT-QUIET WORLD. The support
-	# desk's two-tier damage (Ops §8.3) legitimately writes the same B2C record every day; this
-	# case isolates the QUALITY GATE, so each leg starts with no reports, no confirmed bugs and
-	# no carried damage residue.
-	# The servers too: an over-capacity product feeds the same damage (InfraSystem overage).
+	# SUPPORT-QUIET WORLD: the desk's two-tier damage and the server overage write the same
+	# record every day, so each leg starts with no reports, no confirmed bugs, no carried
+	# residue and room on the servers.
 	InfraSystem.set_provider("cloud")
 	InfraSystem.set_capacity(100)
-	var quiet := func() -> void:
+	var step: int = int(TimeModel.per_tick(SalesSystem.SATISFACTION_DRIFT_PER_DAY))
+	var push: int = int(TimeModel.per_tick(SalesSystem.SATISFACTION_BUG_PUSH_PER_DAY))
+	var over: int = SalesSystem.SATISFACTION_BUG_GATE + 1
+	var target: int = int(round(QualityModel.normalized_quality(25.0)))   # raw experience 25
+	# [raw experience, live bugs, satisfaction before, satisfaction after one tick]
+	for leg in [
+			[25.0, 0, target - 3 * step, target - 2 * step],          # climbs a week's step
+			[25.0, 0, target - 2, target],                            # and stops at the target
+			[25.0, 0, 80, 80 - step],                                 # falls from above: nothing holds it up
+			[10.0, 0, 10, 10 + step],                                 # a weak product (target 29) still climbs
+			[25.0, over, target, target - push],                      # the backlog pushes under the target
+			[25.0, over, target - 3 * step, target - 2 * step - push]]:   # and slows a climb
+		GameState.set_flag("mvp_experience", float(leg[0]))
+		GameState.set_flag("mvp_live_bug_count", int(leg[1]))
 		GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
 		GameState.set_flag(ProductState.BUGS_CONFIRMED, 0)
 		SupportSystem.reset()
-	quiet.call()
-	CustomerRegistry.set_satisfaction(ub.id, 50)
-	_sim_day()
-	var lift: int = int(TimeModel.per_tick(1))
-	if ub.satisfaction != 50 + lift:
-		return "experience 25 (axis 50) lifted satisfaction by %d, want a week's +%d" % [
-			ub.satisfaction - 50, lift]
-	GameState.set_flag("mvp_experience", 10.0)
-	quiet.call()
-	CustomerRegistry.set_satisfaction(ub.id, 50)
-	_sim_day()
-	if ub.satisfaction != 50:
-		return "experience 10 (axis 28.6) moved satisfaction (%d)" % ub.satisfaction
-	GameState.set_flag("mvp_experience", 25.0)
-	GameState.set_flag("mvp_live_bug_count", SalesSystem.SATISFACTION_BUG_GATE + 1)
-	quiet.call()
-	CustomerRegistry.set_satisfaction(ub.id, 50)
-	_sim_day()
-	if ub.satisfaction != 50:
-		return "over-gate bugs did not cancel the experience gain (%d)" % ub.satisfaction
+		CustomerRegistry.set_satisfaction(ub.id, int(leg[2]))
+		_sim_day()
+		if ub.satisfaction != int(leg[3]):
+			return "experience %.0f, %d live bugs: satisfaction %d -> %d, want %d" % [
+				float(leg[0]), int(leg[1]), int(leg[2]), ub.satisfaction, int(leg[3])]
 	return ""
 
 
@@ -10460,7 +10572,7 @@ static func _case_month_history_close_and_cap() -> String:
 	# month's accruals (income = Σ tick revenue, expense = Σ burn + one-time costs, red_weeks),
 	# and keeps 12.
 	GameState.set_cash(100000)
-	_seed_b2b(3000)   # daily revenue 100, burn 50 (founder) → net +350/tick
+	_seed_b2b(3000)   # daily revenue 100, burn 50 tools + the account's service cost → net positive
 	_sim_day()        # settle the bridge (MRR → GameState)
 	var closes_before: int = GameState.month_history.size()
 	for i in 4:
@@ -10659,57 +10771,65 @@ static func _b2c_delta_at_satisfaction(sat: int) -> float:
 
 static func _case_b2c_wom_needs_satisfaction() -> String:
 	# Above the gate the hourly delta carries audience·WOM_COEF·(sat−gate)/100 — proportional
-	# to the AUDIENCE (that is the compounding); below the gate there is no such term.
+	# to the AUDIENCE (that is the compounding); below the gate there is no such term. Every
+	# reading sits at or over WOM_MULT_PIVOT, so base growth is the same in all of them.
 	_seed_b2c()
 	GameState.set_flag("mvp_innovation", 15.0)
 	GameState.set_flag("mvp_stability", 20.0)
 	GameState.set_flag("mvp_experience", 17.5)
 	GameState.set_flag("b2c_audience", 1000.0)
-	var d50: float = _b2c_delta_at_satisfaction(50)
-	var d60: float = _b2c_delta_at_satisfaction(60)
-	var d80: float = _b2c_delta_at_satisfaction(80)
-	if absf(d60 - d50) > 1e-6:
-		return "satisfaction 60 (the gate) already adds word of mouth (%.4f vs %.4f)" % [d60, d50]
+	var pivot: int = int(SalesSystem.WOM_MULT_PIVOT)
+	var gate: int = int(SalesSystem.WOM_SAT_GATE)
+	if gate <= pivot:
+		return "fixture: the word-of-mouth gate (%d) must sit over the pivot (%d)" % [gate, pivot]
+	var d_pivot: float = _b2c_delta_at_satisfaction(pivot)
+	var d_gate: float = _b2c_delta_at_satisfaction(gate)
+	var d_over: float = _b2c_delta_at_satisfaction(gate + 20)
+	if absf(d_gate - d_pivot) > 1e-6:
+		return "satisfaction %d (the gate) already adds word of mouth (%.4f vs %.4f)" % [gate, d_gate, d_pivot]
 	var want: float = 1000.0 * SalesSystem.WOM_COEF * 0.2
-	if absf((d80 - d50) - want) > 1e-6:
-		return "sat 80 adds %.4f/h over sat 50, want audience·WOM_COEF·0.2 = %.4f" % [d80 - d50, want]
+	if absf((d_over - d_gate) - want) > 1e-6:
+		return "sat %d adds %.4f/h over the gate, want audience·WOM_COEF·0.2 = %.4f" % [gate + 20, d_over - d_gate, want]
 	# Proportional to the audience: double the audience, double the word-of-mouth term.
 	GameState.set_flag("b2c_audience", 2000.0)
-	var d80b: float = _b2c_delta_at_satisfaction(80)
-	var d50b: float = _b2c_delta_at_satisfaction(50)
-	if absf((d80b - d50b) - 2.0 * want) > 1e-6:
-		return "word of mouth is not proportional to the audience (%.4f vs %.4f)" % [d80b - d50b, 2.0 * want]
+	var d_over_b: float = _b2c_delta_at_satisfaction(gate + 20)
+	var d_gate_b: float = _b2c_delta_at_satisfaction(gate)
+	if absf((d_over_b - d_gate_b) - 2.0 * want) > 1e-6:
+		return "word of mouth is not proportional to the audience (%.4f vs %.4f)" % [d_over_b - d_gate_b, 2.0 * want]
 	if SalesSystem.WOM_COEF <= 0.0:
 		return "WOM_COEF is %.4f — the compounding term is off" % SalesSystem.WOM_COEF
 	return ""
 
 
 static func _case_b2c_growth_multiplier_floor() -> String:
-	# Below the pivot the BASE growth is scaled by sat/50, floored at 0.3; at and above the
-	# pivot it runs at full strength. Measured as the gap to the sat-50 delta with a tiny
-	# audience so churn and word of mouth are negligible.
+	# Below the pivot the BASE growth is scaled by sat/WOM_MULT_PIVOT, floored at WOM_MULT_MIN;
+	# at and above the pivot it runs at full strength. Measured as the gap to the pivot reading
+	# with no audience, so churn and word of mouth are zero.
 	_seed_b2c()
 	GameState.set_flag("mvp_innovation", 15.0)
 	GameState.set_flag("mvp_stability", 20.0)
 	GameState.set_flag("mvp_experience", 17.5)
 	GameState.set_flag("b2c_audience", 0.0)   # no audience → no churn, no word of mouth: pure base growth
-	var d50: float = _b2c_delta_at_satisfaction(50)
+	var pivot: int = int(SalesSystem.WOM_MULT_PIVOT)
+	var half: int = int(SalesSystem.WOM_MULT_PIVOT * 0.5)
+	var d_pivot: float = _b2c_delta_at_satisfaction(pivot)
 	var d100: float = _b2c_delta_at_satisfaction(100)
-	var d25: float = _b2c_delta_at_satisfaction(25)
+	var d_half: float = _b2c_delta_at_satisfaction(half)
 	var d0: float = _b2c_delta_at_satisfaction(0)
-	if d50 <= 0.0:
-		return "fixture: base growth is not positive (%.4f)" % d50
-	if absf(d100 - d50) > 1e-6:
-		return "satisfaction above the pivot changed base growth (%.4f vs %.4f)" % [d100, d50]
-	if absf(d25 - 0.5 * d50) > 1e-6:
-		return "satisfaction 25 should halve base growth (%.4f vs %.4f)" % [d25, 0.5 * d50]
-	if absf(d0 - SalesSystem.WOM_MULT_MIN * d50) > 1e-6:
-		return "satisfaction 0 should floor at ×%.1f (%.4f vs %.4f)" % [SalesSystem.WOM_MULT_MIN, d0, SalesSystem.WOM_MULT_MIN * d50]
+	if d_pivot <= 0.0:
+		return "fixture: base growth is not positive (%.4f)" % d_pivot
+	if absf(d100 - d_pivot) > 1e-6:
+		return "satisfaction above the pivot changed base growth (%.4f vs %.4f)" % [d100, d_pivot]
+	if absf(d_half - float(half) / float(pivot) * d_pivot) > 1e-6:
+		return "satisfaction %d should scale base growth by %d/%d (%.4f vs %.4f)" % [
+			half, half, pivot, d_half, float(half) / float(pivot) * d_pivot]
+	if absf(d0 - SalesSystem.WOM_MULT_MIN * d_pivot) > 1e-6:
+		return "satisfaction 0 should floor at ×%.1f (%.4f vs %.4f)" % [SalesSystem.WOM_MULT_MIN, d0, SalesSystem.WOM_MULT_MIN * d_pivot]
 	# No aggregate record yet (paid tier closed) → the pre-revenue trickle is untouched.
 	CustomerRegistry.remove(SalesSystem.B2C_USERBASE_ID)
 	var d_none: float = SalesSystem._audience_delta_per_hour()
-	if absf(d_none - d50) > 1e-6:
-		return "without the aggregate record growth should equal the pivot reading (%.4f vs %.4f)" % [d_none, d50]
+	if absf(d_none - d_pivot) > 1e-6:
+		return "without the aggregate record growth should equal the pivot reading (%.4f vs %.4f)" % [d_none, d_pivot]
 	return ""
 
 
@@ -10746,6 +10866,37 @@ static func _case_conversion_bug_penalty() -> String:
 	var paying10: int = int(SalesSystem.estimate_price_change(price)["new_paying"])
 	if paying10 >= paying0:
 		return "the pricing projection did not move under bugs (%d vs %d paying)" % [paying10, paying0]
+	return ""
+
+
+## The B2C price anchor reads the live line ladder: open lines and their usage weight add
+## worth, and the flat feature list (fixtures only) does not.
+## FALSIFICATION: point product_value back at mvp_components and the feature-list leg moves.
+static func _case_b2c_value_reads_live_lines() -> String:
+	_seed_b2c()
+	var sub: String = "note_tool"
+	GameState.set_flag("mvp_sub_product_type_id", sub)
+	GameState.set_flag("mvp_innovation", 15.0)
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_experience", 17.5)
+	var bare: int = int(SalesSystem.product_value()["optimal"])
+	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
+	if int(SalesSystem.product_value()["optimal"]) != bare:
+		return "the flat feature list moved the value (%d -> %d)" % [
+			bare, int(SalesSystem.product_value()["optimal"])]
+	for line_id in ProductLines.line_ids(sub):
+		ProductState.set_line_tier(String(line_id), 2)
+	if ProductState.usage_weight_total() <= 0:
+		return "fixture: tier 2 carries no usage weight, so the depth term cannot be seen"
+	var mult: float = float(SalesSystem.TENDENCY_MULT.get(ProductCatalog.get_price_tendency(sub), 1.0))
+	var want: int = int(round(maxf(1.0, SalesSystem.VALUE_BASE
+		+ QualityModel.shipped_normalized() * SalesSystem.VALUE_QUALITY_COEF
+		+ ProductState.lines_open() * SalesSystem.VALUE_FEATURE_COEF
+		+ ProductState.usage_weight_total() * SalesSystem.VALUE_COMPLEXITY_COEF) * mult))
+	var got: int = int(SalesSystem.product_value()["optimal"])
+	if got != want or got <= bare:
+		return "%d open lines, %d usage weight: optimal %d, want %d (bare %d)" % [
+			ProductState.lines_open(), ProductState.usage_weight_total(), got, want, bare]
 	return ""
 
 
@@ -11034,7 +11185,7 @@ static func _case_profit_condition_fires() -> String:
 	# the month closes in slot 0, so the endings scan (slot 9) of the same tick reads the sixth
 	# close and the win lands on the close tick; never before the sixth close.
 	GameState.set_cash(100000)
-	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)   # daily revenue ~833 vs burn 50 → an Artıda month
+	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)   # daily revenue ~833 vs burn ~53 → an Artıda month
 	# THE FIFTH CLAUSE (ch. 13 §1): profitability alone is not an ending. These two cases
 	# measure the four ECONOMIC clauses, so the investor one is satisfied in the fixture
 	# rather than restated in every assertion. That the clause is REQUIRED — and that
@@ -14281,7 +14432,7 @@ static func _case_sales_check_replays_after_load() -> String:
 
 ## §6 THE SINGLE OPEN PITCH PROMISE. One at a time, and the refusal is a VISIBLE locked row
 ## with its reason rather than a missing option.
-## FALSIFICATION: drop the ledger check from SalesMeetingSystem._promise_locked and the second
+## FALSIFICATION: drop the ledger check from SalesMeetingSystem._promise_lock and the second
 ## table offers a second word while the first is still owed.
 static func _case_sales_single_open_promise_lock() -> String:
 	GameState.set_flag("mvp_shipped", true)
@@ -14290,7 +14441,7 @@ static func _case_sales_single_open_promise_lock() -> String:
 	GameState.set_flag("mvp_components", [])
 	var facts: Dictionary = {"has_promise_target": true, "open_pitch_promise": true}
 	var row: Dictionary = {"answers": [{"id": "a_promise", "verb": SalesProbes.VERB_PROMISE}]}
-	var locked: Array = SalesProbes.answers_for(row, facts, true)
+	var locked: Array = SalesProbes.answers_for(row, facts, "open_pitch_promise")
 	if locked.is_empty():
 		return "the promise row vanished instead of locking"
 	if bool((locked[0] as Dictionary).get("open", true)):
@@ -14299,12 +14450,12 @@ static func _case_sales_single_open_promise_lock() -> String:
 		return "the lock does not name the open promise: %s" % \
 			String((locked[0] as Dictionary).get("lock_fact", ""))
 	# Unlocked, the same row is playable — so the lock is the promise and nothing else.
-	var free_rows: Array = SalesProbes.answers_for(row, facts, false)
+	var free_rows: Array = SalesProbes.answers_for(row, facts, "")
 	if free_rows.is_empty() or not bool((free_rows[0] as Dictionary).get("open", false)):
 		return "the promise row stayed shut with no open promise"
 	# And with nothing to promise the row is ABSENT rather than offered and then broken.
 	var no_target: Dictionary = {"has_promise_target": false, "open_pitch_promise": false}
-	if not SalesProbes.answers_for(row, no_target, false).is_empty():
+	if not SalesProbes.answers_for(row, no_target, "").is_empty():
 		return "the promise row was offered with nothing to promise"
 	return ""
 
@@ -14496,6 +14647,7 @@ static func _case_loc_sales_derived_keys() -> String:
 			if lf != "":
 				wanted.append("SALES_LOCK_%s" % lf.to_upper())
 	wanted.append("SALES_LOCK_OPEN_PITCH_PROMISE")
+	wanted.append("SALES_LOCK_PROMISE_NO_ROOM")
 	for reason in SalesConstants.LOSS_REASONS:
 		wanted.append("SALES_LOSS_%s" % String(reason).to_upper())
 		wanted.append("SALES_MEMORY_%s" % String(reason).to_upper())
@@ -15408,10 +15560,12 @@ static func _case_office_move_gates_and_save() -> String:
 # =========================================================================
 
 ## Ürünü Ürün sekmesinin yolundan kurar: tür seçilir, Sprint 1 bugün planlamada açılır. Kasa
-## kepenk sayacını başlatmayacak kadar derin; ekipte yalnız kurucu var.
+## kepenk sayacını başlatmayacak kadar derin; ekipte yalnız kurucu var. İstek oranı 0'dır (test
+## sabiti): sprint karar kartları destededir, kararı ölçen vaka oranı kendisi açar.
 static func _seed_sprint(subtype: String = "note_tool") -> void:
 	ProductLines.reload()
 	GameState.set_cash(500000)
+	(SprintCatalog.cfg("decision") as Dictionary).rate = 0.0
 	SprintSystem.choose_type(subtype, "Notly")
 
 
@@ -15547,27 +15701,29 @@ static func _case_sprint_ceiling_125_blocks_add() -> String:
 
 
 ## Devreden kart ilerlemesini korur: sürüm notu biten ve toplam puanı yazar, kart sonraki sprintte
-## kaldığı yerden sürer ve planlamada yalnız kalan puanı yükler.
+## kaldığı yerden sürer ve planlamada yalnız kalan puanı yükler. Puan tamdır: notun bitenine ve
+## planlamanın yüküne aynı kalan girer. Kurucu ilk haftada araştırmayı bitirir, kartı yalnız ikinci
+## haftada işler.
 static func _case_sprint_carry_keeps_progress() -> String:
 	_seed_sprint()
 	var id: String = "feat:line_note_tool_capture_k1"
 	var total: int = SprintCatalog.step_effort("line_note_tool_capture_k1")
-	if not _play_sprint([id]):
+	if not _play_sprint(["res:core", id]):
 		return "fixture: sprint 1 did not start"
 	var worked: float = _card_worked(id)
 	if worked <= 0.0 or worked >= total:
 		return "a solo founder's K1 should carry out of sprint 1 part done, worked %.2f of %d" % [worked, total]
 	var rows: Array = GameState.product.release.carried.filter(func(r: Dictionary) -> bool: return r.id == id)
-	var done: int = floori(worked + SprintSystem.EPS)
-	if rows.size() != 1 or int(rows[0].done) != done or int(rows[0].total) != total or int(rows[0].to_sprint) != 2:
-		return "the release note carries %s, want %s with %d of %d done, to sprint 2" % [rows, id, done, total]
+	if rows.size() != 1 or not is_equal_approx(float(rows[0].done), worked) or int(rows[0].total) != total \
+			or int(rows[0].to_sprint) != 2:
+		return "the release note carries %s, want %s with %.2f of %d done, to sprint 2" % [rows, id, worked, total]
 	SprintSystem.plan_next()
 	if GameState.product.sprint.cards != [id] or not is_equal_approx(_card_worked(id), worked):
 		return "sprint 2 opened with %s and the card at %.2f, want it alone at %.2f" % [
 			GameState.product.sprint.cards, _card_worked(id), worked]
-	if SprintSystem.used() != roundi(total - worked):
-		return "planning loads %d for the carried card, want the %d points it has left" % [
-			SprintSystem.used(), roundi(total - worked)]
+	if not is_equal_approx(SprintSystem.used(), total - worked):
+		return "planning loads %.2f for the carried card, want the %.2f points it has left" % [
+			SprintSystem.used(), total - worked]
 	if not _play_sprint([]):
 		return "fixture: sprint 2 did not start"
 	if ProductState.line_tier("line_note_tool_capture") != 1:
@@ -15616,14 +15772,16 @@ static func _case_sprint_mvp_three_identity_k1() -> String:
 ## Test rolü olmayan ekipte kartın Test fazı rolsüz, yarı hızla yapılır ve kart hatalı işaretlenir.
 ## Hatalı kart yayına giren sürümde zar atar: zar kartın kimliği ile sprint numarasının hash'i, eşik
 ## sprint.json'daki ihtimal. Vaka eşiği zarın hemen üstüne ve tam üstüne koyar (test sabiti):
-## ilkinde kartın yeteneğine tek ticket düşer, ikincisinde düşmez.
+## ilkinde kartın yeteneğine tek ticket düşer, ikincisinde düşmez. Kurucu Test rolüne de uyar; vaka
+## onun rollerini Ürün ve Yazılım'a indirir (test sabiti).
 static func _case_sprint_faulty_ticket_deterministic() -> String:
 	_seed_sprint_live("note_tool")
 	_sprint_hire("char_faulty_des", HRConstants.ROLE_DESIGNER)
-	if SprintSystem.team().any(func(p: Dictionary) -> bool: return "test" in p.fits):
-		return "fixture: the team has someone in the Test role"
-	var chance: Variant = SprintCatalog.cfg("faulty_chance")
+	var saved: Array = [SprintCatalog.cfg("faulty_chance"), SprintCatalog.cfg("founder_roles")]
+	SprintCatalog._data.founder_roles = ["product", "dev"]
 	var run := func() -> String:
+		if SprintSystem.team().any(func(p: Dictionary) -> bool: return "test" in p.fits):
+			return "fixture: the team has someone in the Test role"
 		var lines: Array = SprintCatalog.capabilities("core").slice(int(SprintCatalog.cfg("mvp_lines")))
 		for i in 2:
 			if SprintSystem.mode() == "release":
@@ -15645,7 +15803,8 @@ static func _case_sprint_faulty_ticket_deterministic() -> String:
 				return "the faulty ticket landed on %s, want %s" % [GameState.product.tickets.back().line, lines[i]]
 		return ""
 	var fail: String = run.call()
-	SprintCatalog._data.faulty_chance = chance
+	SprintCatalog._data.faulty_chance = saved[0]
+	SprintCatalog._data.founder_roles = saved[1]
 	return fail
 
 
@@ -15681,13 +15840,16 @@ static func _case_sprint_fix_card_closes_tickets() -> String:
 
 ## Beta açıkken biten kart sürüme girmez, bir sprint "beta" bekler: sürüm numarası artmaz, kademe
 ## yazılmaz. Sonraki kapanışta betadan çıkar ve sürüm olur; hatalı çıkış zarı orada betanın
-## ihtimalini okur (test sabiti: normal ihtimal sıfır, beta ihtimali zarın hemen üstü).
+## ihtimalini okur (test sabiti: normal ihtimal sıfır, beta ihtimali zarın hemen üstü). Kart hatalı
+## olsun diye kurucunun rolleri Ürün ve Yazılım'a iner (test sabiti).
 static func _case_sprint_beta_delays_release() -> String:
 	_seed_sprint_live("note_tool")
 	_sprint_hire("char_beta_des", HRConstants.ROLE_DESIGNER)
 	var versions: Array = []
 	EventBus.version_shipped.connect(func(n: int) -> void: versions.append(n))
-	var chances: Array = [SprintCatalog.cfg("faulty_chance"), SprintCatalog.cfg("faulty_chance_beta")]
+	var saved: Array = [SprintCatalog.cfg("faulty_chance"), SprintCatalog.cfg("faulty_chance_beta"),
+		SprintCatalog.cfg("founder_roles")]
+	SprintCatalog._data.founder_roles = ["product", "dev"]
 	var run := func() -> String:
 		var line: String = SprintCatalog.capabilities("core")[3]
 		var id: String = "feat:%s_k1" % line
@@ -15715,8 +15877,9 @@ static func _case_sprint_beta_delays_release() -> String:
 				roll, ProductState.bugs_confirmed() - before]
 		return ""
 	var fail: String = run.call()
-	SprintCatalog._data.faulty_chance = chances[0]
-	SprintCatalog._data.faulty_chance_beta = chances[1]
+	SprintCatalog._data.faulty_chance = saved[0]
+	SprintCatalog._data.faulty_chance_beta = saved[1]
+	SprintCatalog._data.founder_roles = saved[2]
 	return fail
 
 
@@ -15811,7 +15974,9 @@ static func _case_sprint_paid_plan_opens_paid_tier() -> String:
 
 
 ## Ürün durumu kayıtla gidip gelir: sprintin ortasında alınan kayıt kartları, ilerlemeyi, sürüm
-## geçmişini ve ticket defterini aynen geri verir ve yüklenen dünya sprinti kapatır.
+## geçmişini ve ticket defterini aynen ve aynı sırayla geri verir (betadaki kartlar saklandıkları
+## sırayla çıkar) ve yüklenen dünya sprinti kapatır.
+## FALSİFİKASYON: SaveManager.save_to_slot'taki JSON.stringify'a sort_keys=true geri koy → FAIL.
 static func _case_sprint_save_roundtrip() -> String:
 	var slot: String = "smoke_sprint_%d" % OS.get_process_id()
 	var done := func(why: String) -> String:
@@ -15825,8 +15990,8 @@ static func _case_sprint_save_roundtrip() -> String:
 	ProductState.adjust_confirmed(2)
 	SprintBridges.sync_tickets()
 	SprintSystem.plan_next()
-	SprintSystem.add("feat:%s_k1" % lines[1])
 	SprintSystem.add("feat:%s_k1" % lines[2])
+	SprintSystem.add("feat:%s_k1" % lines[1])
 	if not SprintSystem.start():
 		return "fixture: sprint 2 did not start"
 	_sim_day()
@@ -15834,7 +15999,7 @@ static func _case_sprint_save_roundtrip() -> String:
 	if (GameState.product.tickets as Array).size() != 2 or (GameState.product.releases as Array).is_empty():
 		return "fixture: want tickets and a release in the saved product"
 	var plain := func() -> String:
-		return JSON.stringify(SaveCodec.from_json(SaveCodec.to_json(GameState.product)), "", true)
+		return JSON.stringify(SaveCodec.from_json(SaveCodec.to_json(GameState.product)), "", false)
 	var reads := func() -> Array:
 		return [SprintSystem.capacity(), SprintSystem.used(), SprintSystem.week(), SprintSystem.done_points()]
 	var before: String = plain.call()
@@ -15844,7 +16009,7 @@ static func _case_sprint_save_roundtrip() -> String:
 	if not SaveManager.apply_loaded_state(SaveManager.read_slot(slot)):
 		return done.call("apply_loaded_state returned false")
 	if plain.call() != before:
-		return done.call("the product came back different from the save")
+		return done.call("the product came back different from the save, or in another order")
 	if reads.call() != saved_reads:
 		return done.call("the loaded sprint reads %s, the saved one %s" % [reads.call(), saved_reads])
 	_sim_day()
@@ -15854,38 +16019,36 @@ static func _case_sprint_save_roundtrip() -> String:
 
 
 ## Karar bekleyen kart ilerlemez: kâğıt masadayken haftanın işi ona dökülmez ve ona kimse atanmaz;
-## sprint kapanınca ilerlemesiyle devreder, kâğıt kapanınca yeniden yürür. Karar kartları fikstür
-## kapsamındadır: vaka kapsamı ve istek oranını (test sabiti, her hafta) kendi süresince açar ve
-## geri koyar.
+## sprint kapanınca ilerlemesiyle devreder, kâğıt kapanınca yeniden yürür. Kararlar ürünün gerçek
+## sprint kartlarıdır; vaka istek oranını (test sabiti, her hafta) kendi süresince açar ve geri koyar.
+## Tek kurucu ilk haftayı sıradaki ilk karta verir; geride kalan ikinci kart kararı alır.
 static func _case_sprint_decision_blocks_progress() -> String:
 	_seed_sprint()
-	var scopes: Array = EvTuning.SHIPPED_SCOPES.duplicate()
 	var rate: Variant = SprintCatalog.cfg("decision.rate")
-	EvTuning.SHIPPED_SCOPES.append("fixture")
 	SprintCatalog._data.decision.rate = 1.0
 	var run := func() -> String:
 		var asked: Array = []
 		EventBus.card_decision_requested.connect(func(id: String) -> void: asked.append(id))
 		var lines: Array = SprintCatalog.capabilities("core")
-		var held: String = "feat:%s_k1" % lines[0]
-		var free: String = "feat:%s_k1" % lines[1]
-		SprintSystem.add(held)
+		var free: String = "feat:%s_k1" % lines[0]
+		var held: String = "feat:%s_k1" % lines[1]
 		SprintSystem.add(free)
+		SprintSystem.add(held)
 		if not SprintSystem.start():
 			return "fixture: the sprint did not start"
 		_sim_day()
-		if asked != [held] or not GameState.product.cards[held].decision:
-			return "a decision at rate 1 went to %s (pending %s), want the first running card %s" % [
+		if asked != [held] or not GameState.product.cards[held].decision \
+				or not String(GameState.product.decision.get("event_id", "")).begins_with("product.sprint_"):
+			return "a decision at rate 1 went to %s (pending %s), want a product sprint card on %s" % [
 				asked, GameState.product.decision, held]
 		if not (GameState.product.cards[held].assignees as Array).is_empty():
 			return "a card waiting on its decision was staffed for the week"
 		var at: float = _card_worked(held)
-		var other: float = _card_worked(free)
 		_sim_day()
 		if absf(_card_worked(held) - at) > 0.0001:
 			return "a card waiting on its decision moved %.2f -> %.2f" % [at, _card_worked(held)]
-		if _card_worked(free) <= other:
-			return "fixture: the founder freed by the decision did not work the other card"
+		if not GameState.product.release.shipped.any(func(r: Dictionary) -> bool: return r.id == free):
+			return "fixture: the founder freed by the decision did not finish the other card"
 		if not GameState.product.release.carried.any(func(r: Dictionary) -> bool: return r.id == held):
 			return "the waiting card did not carry over"
 		SprintSystem.plan_next()
@@ -15899,7 +16062,6 @@ static func _case_sprint_decision_blocks_progress() -> String:
 			return "the released card did not move again"
 		return ""
 	var fail: String = run.call()
-	EvTuning.SHIPPED_SCOPES.assign(scopes)
 	SprintCatalog._data.decision.rate = rate
 	return fail
 
@@ -15943,6 +16105,449 @@ static func _case_sprint_release_resets_live_bugs() -> String:
 		return "the release left the live pool at %d bugs, progress %.2f; want 0 and 0.0" % [
 			ProductSystem.live_bug_count(), float(GameState.get_flag("mvp_live_bug_progress", -1.0))]
 	return ""
+
+
+## Hafta ortasında ekipten ayrılan kişi kartından düşer ve boştaki kişi kimsesiz kalan karta
+## haftanın kalanında atanır; Ekip'in gününde izne çıkan da karttan düşer.
+## FALSİFİKASYON: SprintSystem._restaff'ın gövdesini boşalt → FAIL.
+static func _case_sprint_departure_restaffs_card() -> String:
+	_seed_sprint()
+	var des: Character = _sprint_hire("char_left_des", HRConstants.ROLE_DESIGNER)
+	var dev: Character = _sprint_hire("char_left_dev", HRConstants.ROLE_DEVELOPER)
+	var founder: String = CharacterRegistry.get_founder().id
+	SprintSystem.add("res:core")
+	SprintSystem.add("res:onboarding")
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	# Founder and designer work equal points: which research card each takes is the tie order.
+	var cards: Array = [GameState.product.cards["res:core"], GameState.product.cards["res:onboarding"]]
+	var staffed: Array = cards.map(func(c: Dictionary) -> Array: return c.assignees)
+	if not ([des.id] in staffed and [founder] in staffed):
+		return "fixture: week one staffs %s, want the designer and the founder on one card each, the developer idle" \
+			% [staffed]
+	var orphan: Dictionary = cards[staffed.find([des.id])]
+	var kept: Dictionary = cards[staffed.find([founder])]
+	CharacterRegistry.remove(des.id)
+	if orphan.assignees != [dev.id] or kept.assignees != [founder]:
+		return "the designer left and the cards read %s and %s; want the idle developer on the orphaned card" % [
+			orphan.assignees, kept.assignees]
+	HRMoraleSystem.send_on_leave(dev, HRConstants.LEAVE_WEEKS, false)
+	EventBus.hr_day_processed.emit()
+	if not (orphan.assignees as Array).is_empty():
+		return "the developer went on leave and still works %s" % orphan.id
+	return ""
+
+
+## Planlama donmaz: önerecek kart kalmayınca sprint boş başlar ve numara ilerler; araştırma bir
+## kapanış sonra yeniden açılır ve lider onu alır.
+## FALSİFİKASYON: SprintSystem._auto_start'ta _begin() yerine start() çağır → FAIL.
+static func _case_sprint_never_stalls_in_plan() -> String:
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_stall_des1", HRConstants.ROLE_DESIGNER)
+	_sprint_hire("char_stall_des2", HRConstants.ROLE_DESIGNER)
+	_sprint_hire("char_stall_dev", HRConstants.ROLE_DEVELOPER)
+	for line_id in ProductLines.line_ids(ProductState.subtype()):
+		ProductState.set_line_tier(String(line_id), ProductLines.TIER_MAX)
+	GameState.set_flag("b2c_paid_tier_open", true)
+	var research: Array = SprintCatalog.area_ids().map(func(a: String) -> String: return "res:" + a)
+	if not _play_sprint(research) or SprintSystem.mode() != "release" \
+			or not (GameState.product.release.carried as Array).is_empty():
+		return "fixture: the research sprint did not ship whole (%s)" % SprintSystem.mode()
+	if SprintCatalog.area_ids().any(func(a: String) -> bool: return not SprintCatalog.candidates(a).is_empty()):
+		return "fixture: a card is left to plan after the research sprint"
+	_sim_day()
+	if SprintSystem.mode() != "active" or SprintSystem.sprint_number() != 2:
+		return "a day with nothing to plan left sprint %d in %s, want sprint 2 running empty" % [
+			SprintSystem.sprint_number(), SprintSystem.mode()]
+	for _d in 3:
+		_sim_day()
+	if SprintSystem.mode() != "active" or SprintSystem.sprint_number() != 3 \
+			or (GameState.product.sprint.cards as Array).is_empty():
+		return "after the empty sprint: sprint %d %s with %s; want sprint 3 running research again" % [
+			SprintSystem.sprint_number(), SprintSystem.mode(), GameState.product.sprint.cards]
+	return ""
+
+
+## Söz sprint'e bağlıdır: koşan sprintte verilen söz bir sonraki sprintin sonuna kadardır, o sprintin
+## planında liderin ilk kartıdır ve etiketini taşır; kart o sprintte çıkınca söz tutulur. İki
+## haftalık gün sayısı arada geçse de söz kırılmaz.
+## FALSİFİKASYON: PromiseRegistry.create'te due_sprint'i yazma → FAIL.
+static func _case_promise_due_sprint_kept_when_shipped_next_sprint() -> String:
+	var setup: Array = _seed_promise_sprint()
+	if setup.is_empty():
+		return "fixture: sprint 1 did not start"
+	var account: Customer = setup[0]
+	var step: String = setup[1]
+	var promise: Promise = PromiseRegistry.create(account.id, step, B2BConstants.PROMISE_DEADLINE_WEEKS)
+	if promise.due_sprint != 2:
+		return "a word given while sprint 1 runs is due by sprint %d, want 2" % promise.due_sprint
+	_sim_day()
+	_sim_day()
+	if promise.status != "open":
+		return "the word broke at sprint 1's close (%s), before its own sprint" % promise.status
+	SprintSystem.plan_next()
+	var card: Dictionary = SprintCatalog.candidates(SprintCatalog.area_of_line(ProductLines.step(step).line_id)).filter(
+		func(c: Dictionary) -> bool: return c.step == step)[0]
+	var lead: Array = SprintCatalog.lead_suggestion()
+	if lead.is_empty() or lead[0] != card.id:
+		return "sprint 2's lead plan is %s, want the promised %s first" % [lead, card.id]
+	if not SprintCatalog.card_effect(card).any(func(part: Dictionary) -> bool: return part.k == "promise"):
+		return "the promised card's effect line does not name the promise"
+	if not _play_sprint([card.id]):
+		return "fixture: sprint 2 did not start"
+	if promise.status != "kept":
+		return "the promised step shipped at sprint 2's close and the word reads '%s'" % promise.status
+	return ""
+
+
+## Sözün sprinti kapanıp adım çıkmadıysa söz kırılır ve kırıldığı tik hesaba yazılır; o sprint
+## sürerken gün sayısı geçmiş olsa da kırılmaz.
+## FALSİFİKASYON: PromiseRegistry._overdue'yu yalnız gün kuralına indir → FAIL.
+static func _case_promise_due_sprint_breaks_after_close() -> String:
+	var setup: Array = _seed_promise_sprint()
+	if setup.is_empty():
+		return "fixture: sprint 1 did not start"
+	var account: Customer = setup[0]
+	var promise: Promise = PromiseRegistry.create(account.id, setup[1], B2BConstants.PROMISE_DEADLINE_WEEKS)
+	_sim_day()
+	_sim_day()
+	SprintSystem.plan_next()
+	SprintSystem.add("res:onboarding")
+	if not SprintSystem.start():
+		return "fixture: sprint 2 did not start"
+	_sim_day()
+	if promise.status != "open":
+		return "the word broke in its own sprint's second week (%s)" % promise.status
+	_sim_day()
+	if promise.status != "broken" or account.promise_broken_day != GameState.day:
+		return "sprint 2 closed without the step: the word reads '%s', broken on %d (today %d)" % [
+			promise.status, account.promise_broken_day, GameState.day]
+	return ""
+
+
+## Kırık sözden sonra o hesaba PROMISE_RELOCK_WEEKS boyunca yeni söz verilmez; süre dolunca kilit
+## kalkar.
+## FALSİFİKASYON: B2BSalesSystem.on_promise_resolved'daki promise_broken_day yazımını sil → FAIL.
+static func _case_promise_relock_after_break() -> String:
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	if B2BSalesSystem.promise_relocked(c):
+		return "a fresh account is locked against promises"
+	var promise: Promise = PromiseRegistry.create(c.id, "ai_vec_filter", 1)
+	for _d in 3:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	if promise.status != "broken" or not B2BSalesSystem.promise_relocked(c):
+		return "the word reads '%s' and the account relocked %s" % [promise.status, B2BSalesSystem.promise_relocked(c)]
+	var lock: int = TimeModel.ticks(B2BConstants.PROMISE_RELOCK_WEEKS)
+	while GameState.day - c.promise_broken_day < lock - 1:
+		GameState.advance_day()
+	if not B2BSalesSystem.promise_relocked(c):
+		return "the lock lifted %d ticks after the break, want %d" % [GameState.day - c.promise_broken_day, lock]
+	GameState.advance_day()
+	if B2BSalesSystem.promise_relocked(c):
+		return "the lock still holds %d ticks after the break" % (GameState.day - c.promise_broken_day)
+	return ""
+
+
+## B2C'de yayından sonra ücretli plan liderin zorunlu kartıdır: gelirin kapısıdır, tek kurucunun dar
+## sprintinde de önce o önerilir.
+## FALSİFİKASYON: SprintCatalog._suggest'teki PAID_PLAN satırını sil → FAIL.
+static func _case_sprint_lead_offers_paid_plan_b2c() -> String:
+	_seed_sprint_live("note_tool")
+	var lead: Array = SprintCatalog.lead_suggestion()
+	if lead.is_empty() or lead[0] != "plan:" + SprintCatalog.PAID_PLAN:
+		return "the solo founder's lead after MVP suggests %s, want the paid plan first" % str(lead)
+	return ""
+
+
+## Tek kurucu dört rolün hepsinde tam hızdadır: liderin önerisiyle her sprint bir K1 biter ve MVP
+## üçüncü kapanışta, türün seçildiği günden en geç altı tik sonra çıkar.
+## FALSİFİKASYON: sprint.json founder_roles'u ["product", "dev"] yap → FAIL.
+static func _case_sprint_solo_mvp_by_week_six() -> String:
+	_seed_sprint()
+	var start: int = GameState.day
+	while not ProductState.is_live() and GameState.day - start < 6:
+		if SprintSystem.mode() == "release":
+			SprintSystem.plan_next()
+		SprintSystem.apply_lead()
+		if not SprintSystem.start():
+			return "sprint %d did not start from the lead's plan" % SprintSystem.sprint_number()
+		_sim_day()
+		_sim_day()
+	var launch: int = int(GameState.get_flag("mvp_launch_day", -1))
+	if not ProductState.is_live() or launch - start > 6:
+		return "the solo founder's MVP: live %s, %d ticks after the type; want live within 6" % [
+			ProductState.is_live(), launch - start]
+	return ""
+
+
+## Söz vakalarının ortak kurulumu: yayındaki ERP, üç kişilik ekip, Çekirdek'te talep eden bir hesap
+## ve araştırmayla koşan Sprint 1. [hesap, söz verilecek kademe]; sprint başlamazsa [].
+static func _seed_promise_sprint() -> Array:
+	_seed_sprint_live("erp")
+	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
+		_sprint_hire("char_word_" + role_id, role_id)
+	var lead := Prospect.new()
+	lead.id = "lead_word"
+	lead.company_name = "Word Co"
+	lead.industry = String(SalesArchetypes.sectors("tech_exacting")[0])
+	lead.star = 2
+	var account: Customer = SalesSystem.add_b2b_customer(lead, 12, 50, 85)
+	SprintSystem.add("res:core")
+	if not SprintSystem.start():
+		return []
+	return [account, "%s_k1" % SprintCatalog.capabilities("core")[3]]
+
+
+## MVP öncesi koşuda taban boş kalmaz: quiet kartlar sıradan havuza girmez, yalnız boş haftayı
+## doldurur ve tek kurucu MVP'ye yürürken taban art arda raporlanacak kadar boş bulunmaz (§13.6).
+## Oyuncu her kartı ilk seçenekle cevaplar ki masa boşalsın ve taban tetiklenebilsin; kasa her
+## hafta düşük bir bakiyede tutulur, runway birikim notunun eşiğinin altında kalır.
+## FALSİFİKASYON: EvCatalog.pool_candidates'ten quiet dışlamasını sil → ilk kontrol düşer;
+## founder.savings_note ve founder.unseen_build'i sil → hiçbir quiet kart ateşlenmez.
+static func _case_quiet_cards_fill_empty_floor() -> String:
+	for c in EvCatalog.pool_candidates("daily"):
+		if ((c as Dictionary)["tags"] as Array).has("quiet"):
+			return "the weighted pool offers the quiet card %s" % (c as Dictionary)["id"]
+	# The rhythm includes the sprint decision papers: their real rate, not _seed_sprint's zero.
+	var rate: Variant = SprintCatalog.cfg("decision.rate")
+	_seed_sprint()
+	SprintCatalog._data.decision.rate = rate
+	var worst: int = 0
+	var weeks: int = 0
+	while weeks < 12:
+		GameState.set_cash(5000)
+		_sim_day_full()
+		if ProductState.is_live():
+			break
+		weeks += 1
+		worst = maxi(worst, EvEngine._floor_empty_streak)
+		for i in 16:
+			if EventGate.active_id() != "":
+				EventGate.resolve(EventGate.active_id(), 0)
+				continue
+			var papers: Array = EventGate.desk_papers(8)
+			if papers.is_empty():
+				break
+			EventGate.open_paper(String((papers[0] as Dictionary).id))
+	if weeks < 5:
+		return "fixture: the MVP shipped after %d week(s); the case needs a pre-MVP stretch" % weeks
+	if worst >= EvTuning.FLOOR_EMPTY_REPORT_AFTER:
+		return "the floor came up empty %d times running before the MVP" % worst
+	if EvHistory.fire_count("founder.savings_note") + EvHistory.fire_count("founder.unseen_build") == 0:
+		return "no quiet card filled an empty week in %d pre-MVP weeks" % weeks
+	return ""
+
+
+## Sprint karar kartları gerçek destededir: istek oranı 1 iken koşan sprintin ilk haftasından sonra
+## geride kalan kart bir product.sprint_* kâğıdını masaya koyar ve gövdesi beklenen kartın adını
+## okur. Vaka fikstür kapsamını açmaz; oranı (test sabiti) kendi süresince açar ve geri koyar.
+## FALSİFİKASYON: kartlardan birinin version_scope'unu "fixture" yap ya da sprint.json
+## decision.cards'ı fixture kimliklerine çevir → karar istenmez.
+static func _case_sprint_decision_card_fires_shipped() -> String:
+	if EvTuning.SHIPPED_SCOPES.has("fixture"):
+		return "fixture: the shipped scopes already admit fixtures"
+	_seed_sprint()
+	var rate: Variant = SprintCatalog.cfg("decision.rate")
+	SprintCatalog._data.decision.rate = 1.0
+	for line_id in SprintCatalog.capabilities("core").slice(0, 2):
+		SprintSystem.add("feat:%s_k1" % line_id)
+	var started: bool = SprintSystem.start()
+	if started:
+		_sim_day()
+	SprintCatalog._data.decision.rate = rate
+	if not started:
+		return "fixture: the sprint did not start"
+	var event_id: String = String(GameState.product.decision.get("event_id", ""))
+	if not event_id.begins_with("product.sprint_") or not event_id in (SprintCatalog.cfg("decision.cards") as Array):
+		return "a decision at rate 1 asked for '%s', want one of %s" % [event_id, SprintCatalog.cfg("decision.cards")]
+	if not EventGate.desk_papers(8).any(func(p: Dictionary) -> bool: return p.id == event_id):
+		return "the %s paper is not on the desk" % event_id
+	var name: String = SprintCatalog.card_name(SprintSystem.decision_card())
+	var body: String = EventGate.render(event_id).body_text
+	if name == "" or not body.contains(name) or body.contains("{"):
+		return "the decision paper reads '%s', want it to name '%s'" % [body, name]
+	return ""
+
+
+## Kırık sözden sonra o hesaba yeni "Söz ver" açılmaz: dört söz satırı ve rakip fiyat kırma
+## kartının söz satırı kilitlenir, gerekçe kırık sözün kendisidir; kilit pencere dolunca kalkar.
+## Kırılmadan sonra hesaba yeni ve yapılmamış bir istek yazılır ki satırı yalnız kırık söz kilitlesin.
+## FALSİFİKASYON: retention.json'un söz satırından musteri.broke_promise yaprağını sil → FAIL.
+static func _case_promise_row_locked_after_break() -> String:
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	c.pain_feature_id = "saas_ops_scheduling"
+	B2BSalesSystem.accept_promise(c.id, c.pain_feature_id, B2BConstants.PROMISE_DEADLINE_WEEKS)
+	PromiseRegistry.tick_deadlines(GameState.day + TimeModel.ticks(B2BConstants.PROMISE_DEADLINE_WEEKS) + 1)
+	if PromiseRegistry.has_open_for(c.id) or c.promise_broken_day != GameState.day:
+		return "fixture: the promise did not break this week (broken on %d)" % c.promise_broken_day
+	c.pain_feature_id = "saas_ops_field"
+	var ctx: Dictionary = _ctx_customer(c)
+	var cards: Array = [RETAIN_ID, "customer.cs_escalation", "customer.request_feature",
+		"customer.request_complaint", "rival.price_cut"]
+	for id in cards:
+		var ev: GameEvent = EventGate.render(id, ctx)
+		var idx: int = _promise_row_index(ev)
+		if idx < 0:
+			return "%s lost its promise row" % id
+		if _row_unlocked(ev, idx, ctx):
+			return "%s offers a new word right after the last one broke" % id
+		var why: String = EventGate.condition_reason(ev.choices[idx].unlock_condition, ctx)
+		if why != "B2B_LOCK_PROMISE_BROKEN":
+			return "%s locks its promise row with '%s', want B2B_LOCK_PROMISE_BROKEN" % [id, why]
+	c.promise_broken_day = GameState.day - TimeModel.ticks(B2BConstants.PROMISE_RELOCK_WEEKS)
+	for id in cards:
+		var ev: GameEvent = EventGate.render(id, ctx)
+		if not _row_unlocked(ev, _promise_row_index(ev), ctx):
+			return "%s keeps its promise row locked after the relock window" % id
+	return ""
+
+## Söz satırı ancak kademe planlanabilir sprintin boş puanına sığıyorsa açıktır: dört söz satırı,
+## rakip fiyat kırma kartının söz satırı ve satış görüşmesinin söz cevabı aynı kuralla kilitlenir,
+## gerekçe "yer yok"tur ve görüşme aynı anahtarı gösterir. Plana girmemiş açık sözler vadesi olan
+## sprintte yer tutar: iki hesaba verilen aynı kademe bir kez sayılır, yeri dolduran ikinci kademe
+## satırı kilitler. Sprint koşarken boş puan sonraki sprintindir: koşan sprintin kartları da, o
+## sprinte verilmiş sözler de yer tutmaz.
+## FALSİFİKASYON: retention.json'un söz satırından musteri.promise_fits yaprağını sil,
+## SalesMeetingSystem._promise_lock'tan sığma dalını sil, SprintSystem.fits_plannable'da açık
+## sözleri sayma, aynı kademeyi her söz için say ya da vade süzgecini kaldır → FAIL.
+static func _case_promise_row_locked_when_no_room() -> String:
+	_seed_sprint_live("erp")
+	_sprint_hire("char_room_dev", HRConstants.ROLE_DEVELOPER)
+	var accounts: Array = []
+	for id in ["lead_room", "lead_owed_a", "lead_owed_b"]:
+		var lead := Prospect.new()
+		lead.id = id
+		lead.company_name = id
+		lead.industry = String(SalesArchetypes.sectors("tech_exacting")[0])
+		lead.star = 2
+		accounts.append(SalesSystem.add_b2b_customer(lead, 12, 50, 85))
+	var c: Customer = accounts[0]
+	var pain: String = "%s_k1" % SprintCatalog.capabilities("core")[3]
+	c.pain_feature_id = pain
+	var pitch: String = SalesMeetingSystem._promise_step()
+	var ctx: Dictionary = _ctx_customer(c)
+	var check := func(open: bool, when: String) -> String:
+		for id in [RETAIN_ID, "customer.cs_escalation", "customer.request_feature", "customer.request_complaint",
+				"rival.price_cut"]:
+			var ev: GameEvent = EventGate.render(id, ctx)
+			var idx: int = _promise_row_index(ev)
+			if idx < 0 or _row_unlocked(ev, idx, ctx) != open:
+				return "%s: the promise row of %s is %s" % [when, id, "locked" if open else "open"]
+			var why: String = EventGate.condition_reason(ev.choices[idx].unlock_condition, ctx)
+			if not open and why != "SALES_LOCK_PROMISE_NO_ROOM":
+				return "%s: %s locks its promise row with '%s'" % [when, id, why]
+		var lock: String = SalesMeetingSystem._promise_lock()
+		if lock != ("" if open else "promise_no_room"):
+			return "%s: the meeting's promise answer reads the lock '%s'" % [when, lock]
+		return ""
+	var free := func(card: Dictionary) -> bool:
+		return card.kind == "feature" and card.state == "candidate" and SprintCatalog.gate_reason(card.step) == "" \
+			and card.step not in [pain, pitch]
+	# Two steps given to the other accounts: each fits beside either word once, not twice, so the
+	# first leaves room for the word and the two together do not.
+	var cap: int = SprintSystem.capacity()
+	var word: Array = [SprintCatalog.step_effort(pain), SprintCatalog.step_effort(pitch)]
+	var owed: Array = []
+	for area_id in SprintCatalog.area_ids():
+		for card in SprintCatalog.candidates(area_id):
+			if owed.size() < 2 and free.call(card) and cap - SprintCatalog.step_effort(card.step) >= word.max() \
+					and cap - 2 * SprintCatalog.step_effort(card.step) < word.min():
+				owed.append(card.step)
+	if owed.size() < 2:
+		return "fixture: no two steps that fit beside the word once but not twice (capacity %d)" % cap
+	# Feature steps that are no word go to `place` until fewer than three points are free.
+	var fill := func(place: Callable, load: Callable) -> float:
+		for area_id in SprintCatalog.area_ids():
+			for card in SprintCatalog.candidates(area_id):
+				if load.call() < SprintSystem.capacity() - 2 and free.call(card) and card.step not in owed:
+					place.call(card)
+		return SprintSystem.capacity() - load.call()
+	var fail: String = check.call(true, "an empty plan")
+	if fail != "":
+		return fail
+	for account in accounts.slice(1):
+		B2BSalesSystem.accept_promise(account.id, owed[0], B2BConstants.PROMISE_DEADLINE_WEEKS)
+	fail = check.call(true, "one step promised to two accounts")
+	if fail != "":
+		return fail
+	B2BSalesSystem.accept_promise(accounts[1].id, owed[1], B2BConstants.PROMISE_DEADLINE_WEEKS)
+	fail = check.call(false, "open promises outside the plan")
+	if fail != "":
+		return fail
+	var add := func(card: Dictionary) -> void: SprintSystem.add(card.id)
+	if fill.call(add, func() -> float: return SprintSystem.used()) >= 3.0:
+		return "fixture: the plan could not be filled"
+	fail = check.call(false, "a full plan")
+	if fail != "":
+		return fail
+	var row: Dictionary = {"answers": [{"id": "a_promise", "verb": SalesProbes.VERB_PROMISE}]}
+	var answer: Dictionary = SalesProbes.answers_for(row, {"has_promise_target": true}, SalesMeetingSystem._promise_lock())[0]
+	var key: String = SalesMeetingSystem._lock_key(String(answer.get("lock_fact", "")))
+	if bool(answer.open) or key != "SALES_LOCK_PROMISE_NO_ROOM":
+		return "the meeting shows its locked promise answer with '%s', not the card rows' reason" % key
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	fail = check.call(true, "a running sprint before an empty next sprint")
+	if fail != "":
+		return fail
+	var send := func(card: Dictionary) -> void: SprintSystem.send_next(card.id)
+	var next_load := func() -> float: return SprintSystem.points_left(GameState.product.next.cards)
+	if fill.call(send, next_load) >= 3.0:
+		return "fixture: the next sprint could not be filled"
+	return check.call(false, "a full next sprint")
+
+
+## product.sprint_late yalnız gerçekten geride kalan kartta açılır: sprintin kalan haftası bugünkü
+## ekiple oynanır. Kurucuyla geliştirici ilk haftayı ilk karta verir; ikinci kart hiç ilerlememiştir
+## ama ikinci hafta ikisi ona yetişir, kâğıt istenmez. Tek kurucunun ikinci kartı yetişmez: kâğıt
+## gelir ve fazla mesai satırı ekipsiz de açıktır.
+## FALSİFİKASYON: sprint_late.json'un koşulundan urun.decision_card_late yaprağını sil → ilk sprintte
+## kâğıt istenir.
+static func _case_sprint_late_only_when_behind() -> String:
+	_seed_sprint()
+	var rate: Variant = SprintCatalog.cfg("decision.rate")
+	var events: Variant = SprintCatalog.cfg("decision.cards")
+	SprintCatalog._data.decision.rate = 1.0
+	SprintCatalog._data.decision.cards = ["product.sprint_late"]
+	var run := func() -> String:
+		var asked: Array = []
+		EventBus.card_decision_requested.connect(func(id: String) -> void: asked.append(id))
+		var dev: Character = _sprint_hire("char_late_dev", HRConstants.ROLE_DEVELOPER)
+		var lines: Array = SprintCatalog.capabilities("core")
+		for line_id in lines.slice(0, 2):
+			SprintSystem.add("feat:%s_k1" % line_id)
+		if not SprintSystem.start():
+			return "fixture: sprint 1 did not start"
+		_sim_day()
+		if _card_worked("feat:%s_k1" % lines[1]) > 0.0:
+			return "fixture: the second card got work in the first week"
+		if not asked.is_empty():
+			return "sprint_late asked about %s, which the founder and the developer finish this week" % asked
+		_sim_day()
+		SprintSystem.plan_next()
+		CharacterRegistry.remove(dev.id)
+		for line_id in lines.slice(2, 4):
+			SprintSystem.add("feat:%s_k1" % line_id)
+		if not SprintSystem.start():
+			return "fixture: sprint 2 did not start"
+		_sim_day()
+		var behind: String = "feat:%s_k1" % lines[3]
+		if asked != [behind] or GameState.product.decision.get("event_id", "") != "product.sprint_late":
+			return "the solo founder's sprint asked about %s (%s), want sprint_late on %s" % [
+				asked, GameState.product.decision, behind]
+		var ev: GameEvent = EventGate.render("product.sprint_late")
+		if not _row_unlocked(ev, _row_with_verb(ev, "sprint_hours"), {}):
+			return "the overtime row is locked for a solo founder"
+		return ""
+	var fail: String = run.call()
+	SprintCatalog._data.decision.rate = rate
+	SprintCatalog._data.decision.cards = events
+	return fail
 
 
 ## v14 → v15: sürmekte olan yapım Sprint 1'in planı olur. Planlanan her kademe bir özellik kartıdır:
@@ -16023,9 +16628,9 @@ static func _case_save_v14_build_becomes_sprint_plan() -> String:
 
 	if not SaveManager.apply_loaded_state(payload):
 		return done.call("apply_loaded_state returned false")
-	if SprintSystem.mode() != "plan" or SprintSystem.used() != roundi(left):
-		return done.call("the loaded plan reads %s with a load of %d, want planning with %d left" % [
-			SprintSystem.mode(), SprintSystem.used(), roundi(left)])
+	if SprintSystem.mode() != "plan" or not is_equal_approx(SprintSystem.used(), left):
+		return done.call("the loaded plan reads %s with a load of %.2f, want planning with %.2f left" % [
+			SprintSystem.mode(), SprintSystem.used(), left])
 	var cash: int = GameState.cash
 	if not SprintSystem.start():
 		return done.call("the migrated plan did not start")

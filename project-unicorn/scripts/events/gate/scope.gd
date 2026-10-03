@@ -199,6 +199,8 @@ static func _select_employee(mode: String, used: Dictionary, bound: Dictionary) 
 		# Ekip §17.3 names these two for content; the catalogue is where they belong.
 		"lowest_morale": return _first_by(pool, func(c): return c.morale)
 		"newest_hire": return _first_by(pool, func(c): return -c.hire_day)
+		# The highest level, and among them the longest on the payroll (Arrays compare in order).
+		"most_senior": return _first_by(pool, func(c): return [-c.level, c.hire_day])
 		"account_rep":
 			# The rep stewarding the already-bound customer. No rep leaves the slot UNFILLED
 			# rather than handing "your rep says" to someone who is not one.
@@ -265,6 +267,8 @@ static func _select_customer(mode: String, used: Dictionary) -> String:
 		"open_request":
 			return _first_by(pool.filter(func(c): return c.support_request_since_day >= 0),
 				func(c): return c.support_request_since_day)
+		"largest":
+			return _first_by(pool, func(c): return -c.mrr)
 	return _first_by(pool, func(c): return c.id)
 
 

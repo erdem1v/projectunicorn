@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-01.
+Last generated 2026-10-03.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -19,7 +19,7 @@ signal with no emit point" a lint error, so the manifest is the lint rule's inpu
 |---|---|
 | Signals declared | **140** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **72** |
+| Emitted with **no production listener** | **70** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -28,10 +28,10 @@ so the engine finds a vocabulary rather than having to discover one.
 The event engine connects signals by NAME at runtime, which a static scan for `.connect(`
 cannot see. `EvSignals.install()` (`scripts/events/core/signals.gd`) connects exactly the `trigger.signal` of the
 cards the catalogue loads from `data/events/cards/`, and this generator reads the same cards. Today that
-is 1 signal(s): `customer_health_changed`. They are listed as `EvSignals (card trigger)` and are not counted
+is 3 signal(s): `axis_floor_crossed`, `axis_floor_warning`, `customer_health_changed`. They are listed as `EvSignals (card trigger)` and are not counted
 as unheard.
 
-`EvSignals.BINDINGS` is an allowlist of the 11 signals a card MAY trigger on. A binding
+`EvSignals.BINDINGS` is an allowlist of the 13 signals a card MAY trigger on. A binding
 alone connects nothing, so the others are listed as `EvSignals (bindable)` and still
 count as unheard.
 
@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 22 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
-| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 23 | 2 | left_tabs · window_layer |
+| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 22 | 2 | left_tabs · window_layer |
 | `finance_subpage_requested` | `page_id: String` | effects · main · desk_papers | 3 | 1 | finance_tab |
 
 ### Settings signals
@@ -85,7 +85,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `character_added` | `character_id: String` | character_registry | 1 | 2 | left_tabs · office_people |
-| `character_removed` | `character_id: String` | character_registry | 1 | 3 | hr_dossier · left_tabs · office_people |
+| `character_removed` | `character_id: String` | character_registry | 1 | 4 | sprint_system · hr_dossier · left_tabs · office_people |
 | `morale_changed` | `character_id: String, new_morale: int` | character_registry | 1 | 1 | left_tabs |
 | `employee_experience_changed` | `character_id: String, new_experience: int` | character_registry | 2 | 0 | — |
 | `employee_training_changed` | `character_id: String, weeks_left: int` | character_registry | 3 | 2 | build_bar · research_bar |
@@ -100,7 +100,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `training_started` | `character_id: String, area_key: String` | character_registry | 1 | 0 | — |
 | `training_completed` | `character_id: String, area_key: String` | character_registry | 1 | 0 | — |
 | `assignment_changed` | `character_id: String` | character_registry · work_hours_system | 11 | 2 | research_bar · office_people |
-| `hr_day_processed` | `—` | hr_system | 1 | 1 | hr_dossier |
+| `hr_day_processed` | `—` | hr_system | 1 | 2 | sprint_system · hr_dossier |
 | `news_stream_changed` | `—` | news_feed_system | 1 | 1 | news_ticker |
 
 ### Customer signals
@@ -151,8 +151,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `fix_run_finished` | `shipped: int, remaining: int` | support_system | 1 | 0 | — |
 | `bug_confirmed` | `total_confirmed: int` | product_read | 1 | 0 | — |
 | `unconfirmed_threshold_crossed` | `band: String` | product_read | 1 | 0 | — |
-| `axis_floor_warning` | `axis: String` | product_read | 1 | 0 | — |
-| `axis_floor_crossed` | `axis: String` | product_read | 1 | 0 | — |
+| `axis_floor_warning` | `axis: String` | product_read | 1 | 0 | EvSignals (card trigger) |
+| `axis_floor_crossed` | `axis: String` | product_read | 1 | 0 | EvSignals (card trigger) |
 | `line_upgraded` | `line_id: String, tier: int` | sprint_system | 1 | 0 | — |
 | `line_completed` | `line_id: String` | sprint_system | 1 | 0 | — |
 | `delighter_shipped` | `step_id: String` | sprint_system | 1 | 0 | — |

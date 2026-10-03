@@ -31,6 +31,8 @@ const BINDINGS := {
 	"sheet_expired": {"slots": {"investor": 0}},
 	"meeting_day": {"slots": {"investor": 0}},
 	"phase_gate_reached": {"slots": {}},
+	"axis_floor_warning": {"slots": {}},
+	"axis_floor_crossed": {"slots": {}},
 }
 
 static var _connected: Array = []

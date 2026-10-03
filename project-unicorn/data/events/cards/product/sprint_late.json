@@ -1,0 +1,79 @@
+{
+  "id": "product.sprint_late",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "latch": {
+    "cooldown_weeks": 2
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_late",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "carry",
+      "outcome_id": "carried",
+      "effects": [
+        {
+          "verb": "sprint_card_carry"
+        }
+      ]
+    },
+    {
+      "id": "crunch",
+      "outcome_id": "crunched",
+      "effects": [
+        {
+          "verb": "sprint_hours",
+          "mult": 1.25
+        },
+        {
+          "verb": "add_brand",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SPRINT_LATE_TITLE",
+      "body": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek. Zamanında bitmesi için geceler ona gidecek, dışarıya hiçbir şey çıkmayacak.",
+      "options": {
+        "carry": "EV_PRODUCT_SPRINT_LATE_CARRY",
+        "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_LATE_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SPRINT_LATE_TITLE",
+      "body": "At this pace {seam:urun.decision_card} will not be done by the end of the sprint. Finishing it in time means nights on it and nothing else going out.",
+      "options": {
+        "carry": "EV_PRODUCT_SPRINT_LATE_CARRY",
+        "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_LATE_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_carry"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

@@ -1,0 +1,81 @@
+{
+  "id": "founder.domain_name",
+  "version_scope": "demo",
+  "category": "founder",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "product_live": false
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 1
+      },
+      {
+        "seam": "urun.sprint_number",
+        "op": ">=",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "buy",
+      "outcome_id": "buy",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -900,
+          "label": "domain"
+        }
+      ]
+    },
+    {
+      "id": "longer",
+      "outcome_id": "longer",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FOUNDER_DOMAIN_TITLE",
+      "body": "EV_FOUNDER_DOMAIN_BODY",
+      "options": {
+        "buy": "EV_FOUNDER_DOMAIN_BUY",
+        "longer": "EV_FOUNDER_DOMAIN_LONGER"
+      },
+      "expire_note": "EV_FOUNDER_DOMAIN_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FOUNDER_DOMAIN_TITLE",
+      "body": "EV_FOUNDER_DOMAIN_BODY",
+      "options": {
+        "buy": "EV_FOUNDER_DOMAIN_BUY",
+        "longer": "EV_FOUNDER_DOMAIN_LONGER"
+      },
+      "expire_note": "EV_FOUNDER_DOMAIN_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

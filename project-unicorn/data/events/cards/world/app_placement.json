@@ -1,0 +1,89 @@
+{
+  "id": "world.app_placement",
+  "version_scope": "demo",
+  "category": "world",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 10
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "seam": "finance.cash",
+        "op": ">=",
+        "value": 167000
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "buy",
+      "outcome_id": "buy",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -25000,
+          "label": "outreach"
+        },
+        {
+          "verb": "audience_delta",
+          "pct": 0.2
+        }
+      ]
+    },
+    {
+      "id": "pass",
+      "outcome_id": "pass",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_WORLD_APP_PLACEMENT_TITLE",
+      "body": "EV_WORLD_APP_PLACEMENT_BODY",
+      "options": {
+        "buy": "EV_WORLD_APP_PLACEMENT_BUY",
+        "pass": "EV_WORLD_APP_PLACEMENT_PASS"
+      },
+      "expire_note": "EV_WORLD_APP_PLACEMENT_EXPIRED"
+    },
+    "en": {
+      "title": "EV_WORLD_APP_PLACEMENT_TITLE",
+      "body": "EV_WORLD_APP_PLACEMENT_BODY",
+      "options": {
+        "buy": "EV_WORLD_APP_PLACEMENT_BUY",
+        "pass": "EV_WORLD_APP_PLACEMENT_PASS"
+      },
+      "expire_note": "EV_WORLD_APP_PLACEMENT_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

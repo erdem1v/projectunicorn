@@ -1,0 +1,141 @@
+{
+  "id": "customer.security_review",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "market": "b2b"
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "entity",
+  "min_gap_weeks": 8,
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "entity_seam": "musteri.scale",
+        "scope": "customer",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "entity_seam": "musteri.tenure_weeks",
+        "scope": "customer",
+        "op": ">=",
+        "value": 6
+      },
+      {
+        "seam": "urun.enterprise_trust",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "audit",
+      "outcome_id": "audit",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -8000,
+          "label": "audit"
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "id": "in_house",
+      "outcome_id": "in_house",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "sprint_hours",
+          "mult": 0.8
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "decline",
+      "outcome_id": "decline",
+      "effects": [
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": -12
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_CUSTOMER_SECURITY_REVIEW_TITLE",
+      "body": "EV_CUSTOMER_SECURITY_REVIEW_BODY",
+      "options": {
+        "audit": "EV_CUSTOMER_SECURITY_REVIEW_AUDIT",
+        "in_house": "EV_CUSTOMER_SECURITY_REVIEW_IN_HOUSE",
+        "decline": "EV_CUSTOMER_SECURITY_REVIEW_DECLINE"
+      },
+      "locked_reasons": {
+        "in_house": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_CUSTOMER_SECURITY_REVIEW_EXPIRED"
+    },
+    "en": {
+      "title": "EV_CUSTOMER_SECURITY_REVIEW_TITLE",
+      "body": "EV_CUSTOMER_SECURITY_REVIEW_BODY",
+      "options": {
+        "audit": "EV_CUSTOMER_SECURITY_REVIEW_AUDIT",
+        "in_house": "EV_CUSTOMER_SECURITY_REVIEW_IN_HOUSE",
+        "decline": "EV_CUSTOMER_SECURITY_REVIEW_DECLINE"
+      },
+      "locked_reasons": {
+        "in_house": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_CUSTOMER_SECURITY_REVIEW_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "satisfaction_delta",
+        "scope": "customer",
+        "amount": -10
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

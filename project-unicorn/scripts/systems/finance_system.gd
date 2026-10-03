@@ -6,28 +6,36 @@ extends RefCounted
 # GameState.cash. Every mutation goes through a GameState setter, which emits; FinanceSystem
 # never touches scenes or signals.
 
+# The tools bill, $/month by phase [WORKING]: the software, licences and equipment the work runs
+# on. A base for the company plus a rate per employee on the payroll; the founder is not an
+# employee, people on leave are (their seats stay paid). The phase-1 base is the founder's own
+# day-1 cost; later phases raise the bill because each phase narrows the runway again (ch01 §5).
+const TOOLS_BASE_MONTHLY := {1: 1500, 2: 1500, 3: 5500}
+const TOOLS_PER_EMPLOYEE_MONTHLY := {1: 150, 2: 300, 3: 500}
+
 # Day-1 burn: $50/day (~$1,500/month; with $10K starting cash ≈ 6.6 months runway), all of it
-# the founder's own cost. This const is its single home: burn_breakdown starts as a mutable copy
-# and GameState's starting daily_burn derives from it (starting_daily_burn()). ALL WORKING.
-# KATEGORİ VAR OLMA KURALI: bir kalem burada ya bir sistem YAZDIĞI için durur (salaries/overtime
-# daily_tick pull'ları, servers InfraSystem'in set_burn_category'si) ya da 0-değerli TODO hook'tur
-# (marketing, office) ve mekaniği gelene dek görünmez (get_burn_breakdown_pct sıfır satırı atlar).
-# Uydurma sabit kalem YOK.
+# the phase-1 tools base. This const is its single home: burn_breakdown starts as a mutable copy
+# and GameState's starting daily_burn derives from it (starting_daily_burn()).
+# KATEGORİ VAR OLMA KURALI: bir kalem burada ya bir sistem YAZDIĞI için durur (salaries/overtime/
+# tools daily_tick pull'ları, servers ve service InfraSystem'in set_burn_category'si) ya da
+# 0-değerli TODO hook'tur (marketing, office) ve mekaniği gelene dek görünmez
+# (get_burn_breakdown_pct sıfır satırı atlar). Uydurma sabit kalem YOK.
 const STARTING_BURN_BREAKDOWN := {
 	"salaries": 0,     # Overwritten every tick by pull from CharacterRegistry
 	"overtime": 0,     # Overwritten every tick by pull from WorkHoursSystem; 0 when nobody is over 8h
-	"founder": 50,     # WORKING: kurucunun kendi yaşam gideri — day-1 baseline'ın tamamı
+	"tools": TOOLS_BASE_MONTHLY[1] / TimeModel.DAYS_PER_MONTH,   # Overwritten every tick (monthly_tools_for)
 	"marketing": 0,    # TODO hook: player marketing spend mechanic (set_burn_category ile yazar)
 	"office": 0,       # TODO hook: ofis/kira mekaniği; 0 iken görünmez
-	# Ürün rev 6.1 §10: sunucu faturası. InfraSystem her gün aylık/30 olarak yazar
-	# (set_burn_category). Ürün yayınlanana kadar 0, yani görünmez.
+	# Ürün rev 6.1 §10: sunucu faturası ve servis maliyeti. InfraSystem her gün aylık/30
+	# olarak yazar (set_burn_category). Ürün yayınlanana kadar 0, yani görünmez.
 	"servers": 0,
+	"service": 0,
 }
 static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
 
 # Legal burn category ids; burn_category_label screams on any other. Display names are
 # strings.csv FIN_BURN_<ID>.
-const BURN_IDS := ["salaries", "overtime", "founder", "marketing", "office", "servers"]
+const BURN_IDS := ["salaries", "overtime", "tools", "marketing", "office", "servers", "service"]
 
 # One-time charge id -> localization key. Callers pass ids and one_time_label_display translates
 # at render time, so the transactions list follows the current language.
@@ -40,6 +48,19 @@ const ONE_TIME_LABELS := {
 	"severance": "HR_COST_SEVERANCE",
 	"training": "HR_COST_TRAINING",
 	"rnd": "TAB_RND",
+	# An event card's add_cash names one of these; EvLint refuses any other.
+	"incident": "FIN_ONETIME_INCIDENT",
+	"audit": "FIN_ONETIME_AUDIT",
+	"retention": "FIN_ONETIME_RETENTION",
+	"contractor": "FIN_ONETIME_CONTRACTOR",
+	"outreach": "FIN_ONETIME_OUTREACH",
+	"refunds": "FIN_ONETIME_REFUNDS",
+	"side_work": "FIN_ONETIME_SIDE_WORK",
+	"meetup": "FIN_ONETIME_MEETUP",
+	"sponsor": "FIN_ONETIME_SPONSOR",
+	"domain": "FIN_ONETIME_DOMAIN",
+	"user_tests": "FIN_ONETIME_USER_TESTS",
+	"trade_fair": "FIN_ONETIME_TRADE_FAIR",
 }
 
 # Runway thresholds (months), highest first. The Finance tab badge lights under the first; the
@@ -53,9 +74,9 @@ const RUNWAY_ALERT_REARM_MONTHS := 0.5
 
 static func reset() -> void:
 	# A new run must not inherit the previous run's burn lines: the daily pulls rewrite only
-	# salaries / overtime (and InfraSystem servers), so a leftover marketing or office figure
-	# would keep charging the new company. duplicate() (not a reference to the const) so a
-	# later set_burn_category cannot edit STARTING_BURN_BREAKDOWN itself.
+	# salaries / overtime / tools (and InfraSystem servers / service), so a leftover marketing
+	# or office figure would keep charging the new company. duplicate() (not a reference to the
+	# const) so a later set_burn_category cannot edit STARTING_BURN_BREAKDOWN itself.
 	burn_breakdown = STARTING_BURN_BREAKDOWN.duplicate()
 
 
@@ -90,13 +111,14 @@ static func starting_daily_burn() -> int:
 # --- Entry point (called by TimeManager._dispatch_daily_tick) ---
 
 static func daily_tick() -> void:
-	# Salaries and overtime are PULLED: HR ticked at slot 3, so the registry and today's
+	# Salaries, tools and overtime are PULLED: HR ticked at slot 3, so the registry and today's
 	# overtime stamp are settled. Pulling (rather than letting HR push via set_burn_category)
 	# keeps daily_burn from ever publishing fresh overtime against stale salaries, and avoids
 	# two extra burn_changed/runway signal passes every day.
 	# Ekip §8.2: ek mesai ayrı bir mekanik değil, çalışma aralığının sonucudur; "KİŞİ BAŞINA
 	# hesaplanır, şirket ayarına göre değil. Ölçüt kişinin §8.1'e göre devraldığı saattir."
-	burn_breakdown["salaries"] = daily_salary_for(CharacterRegistry.get_total_monthly_salaries())
+	burn_breakdown["salaries"] = daily_rate(CharacterRegistry.get_total_monthly_salaries())
+	burn_breakdown["tools"] = daily_rate(monthly_tools_for(CharacterRegistry.get_employees().size()))
 	burn_breakdown["overtime"] = WorkHoursSystem.overtime_pay_accrued_today()
 
 	var total_burn: int = compute_total_burn()
@@ -119,8 +141,7 @@ static func daily_tick() -> void:
 
 # --- One-time cash movements (Write-Through: Finance owns cash) ---
 # Affordability gate yok (nakit eksiye düşebilir — mevcut iflas baskısıyla aynı kanal); iptal +
-# yeniden commit YENİDEN tahsil eder (yanan yanmıştır — working call). Aylık yinelenen
-# API-maliyeti modeli (mekaniğiyle birlikte doğacak bir "tools" kalemi) BİLİNÇLİ ERTELENDİ.
+# yeniden commit YENİDEN tahsil eder (yanan yanmıştır — working call).
 
 static func apply_one_time_cost(amount: int, label: String) -> void:
 	if amount <= 0:
@@ -145,11 +166,17 @@ static func apply_one_time_income(amount: int, label: String) -> void:
 
 # --- Burn breakdown API ---
 
-static func daily_salary_for(monthly_total: int) -> int:
-	# Monthly payroll → the daily figure that lands in burn_breakdown["salaries"], rounded ONCE.
-	# Exposed so a preview (HRSearchSystem.preview_hire) can promise the exact number this tick
-	# will publish instead of mirroring the arithmetic and drifting from it.
-	return int(round(float(monthly_total) / float(TimeModel.DAYS_PER_MONTH)))
+static func daily_rate(monthly: int) -> int:
+	# A monthly figure → the daily rate a burn category holds, rounded ONCE. Exposed so a
+	# preview (HRSearchSystem.preview_hire) can promise the exact number this tick will publish
+	# instead of mirroring the arithmetic and drifting from it.
+	return int(round(float(monthly) / float(TimeModel.DAYS_PER_MONTH)))
+
+
+static func monthly_tools_for(employees: int) -> int:
+	# The tools bill at today's phase for this many employees on the payroll.
+	return int(TOOLS_BASE_MONTHLY[GameState.phase]) \
+		+ employees * int(TOOLS_PER_EMPLOYEE_MONTHLY[GameState.phase])
 
 
 static func compute_total_burn() -> int:

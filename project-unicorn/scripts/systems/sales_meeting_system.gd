@@ -228,7 +228,7 @@ static func _advance_probe() -> void:
 static func choose(answer_id: String) -> Dictionary:
 	if not _active or _probe.is_empty():
 		return view_state()
-	var answers: Array = SalesProbes.answers_for(_probe, _facts, _promise_locked())
+	var answers: Array = SalesProbes.answers_for(_probe, _facts, _promise_lock())
 	var chosen: Dictionary = {}
 	for a in answers:
 		if String((a as Dictionary).get("id", "")) == answer_id and bool((a as Dictionary).get("open", false)):
@@ -247,12 +247,9 @@ static func choose(answer_id: String) -> Dictionary:
 			and SalesArchetypes.pays_honesty_premium(p.archetype_id):
 		delta += SalesConstants.HONESTY_BONUS / maxf(SalesConstants.W_ANSWER, 0.001)
 	# §6 — a pitch promise is registered at the SIGNATURE, not here: a promise made to a
-	# company that walks out was never given. What it does now is narrow Act 2's band. The
-	# account-side picker names the feature, so a promise made at the table points at the same
-	# kind of thing a retention promise does.
+	# company that walks out was never given. What it does now is narrow Act 2's band.
 	if verb == SalesProbes.VERB_PROMISE:
-		_promised_feature = B2BSalesSystem.pick_pain_feature(
-			String(GameState.get_flag("mvp_sub_product_type_id", "")), _probe_index)
+		_promised_feature = _promise_step()
 
 	_answer_contributions.append({"seam": "sales.answer", "delta": SalesConstants.W_ANSWER * delta})
 	_needle = _odds_from(_base_contributions + _answer_contributions)
@@ -359,11 +356,20 @@ static func _loss_target(reason: String) -> String:
 #  §6 — the promise lock
 # ============================================================================
 
-static func _promise_locked() -> bool:
-	if SalesLedger.open_pitch_promise() != "":
-		return true
+## The promise row's lock fact, "" when it is open: a word already owed, then a step the next
+## plannable sprint has no room for (the same fit rule as the card promise rows).
+static func _promise_lock() -> String:
 	var p: Prospect = ProspectRegistry.get_prospect(_lead_id)
-	return p != null and SalesLedger.promise_locked_for(p.company_name)
+	if SalesLedger.open_pitch_promise() != "" or (p != null and SalesLedger.promise_locked_for(p.company_name)):
+		return "open_pitch_promise"
+	var step: String = _promise_step()
+	return "promise_no_room" if step != "" and not SprintSystem.fits_plannable(step) else ""
+
+
+## The step a promise at this probe names: the account-side picker, so a promise made at the table
+## points at the same kind of thing a retention promise does.
+static func _promise_step() -> String:
+	return B2BSalesSystem.pick_pain_feature(String(GameState.get_flag("mvp_sub_product_type_id", "")), _probe_index)
 
 
 static func promised_feature() -> String:
@@ -401,7 +407,7 @@ static func view_state() -> Dictionary:
 
 static func _answer_views() -> Array:
 	var out: Array = []
-	for a in SalesProbes.answers_for(_probe, _facts, _promise_locked()):
+	for a in SalesProbes.answers_for(_probe, _facts, _promise_lock()):
 		var ans: Dictionary = a as Dictionary
 		out.append({
 			"id": String(ans.get("id", "")),

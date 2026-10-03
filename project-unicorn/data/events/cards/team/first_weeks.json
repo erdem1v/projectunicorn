@@ -1,0 +1,89 @@
+{
+  "id": "team.first_weeks",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "quiet"
+  ],
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "newest_hire"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "entity",
+  "condition": {
+    "all": [
+      {
+        "entity_seam": "hr.tenure_weeks",
+        "scope": "employee",
+        "op": "<=",
+        "value": 3
+      },
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "pair",
+      "outcome_id": "pair",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 6
+        },
+        {
+          "verb": "sprint_hours",
+          "mult": 0.95
+        }
+      ]
+    },
+    {
+      "id": "notes",
+      "outcome_id": "notes",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -3
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_TEAM_FIRST_WEEKS_TITLE",
+      "body": "EV_TEAM_FIRST_WEEKS_BODY",
+      "options": {
+        "pair": "EV_TEAM_FIRST_WEEKS_PAIR",
+        "notes": "EV_TEAM_FIRST_WEEKS_NOTES"
+      },
+      "expire_note": "EV_TEAM_FIRST_WEEKS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_TEAM_FIRST_WEEKS_TITLE",
+      "body": "EV_TEAM_FIRST_WEEKS_BODY",
+      "options": {
+        "pair": "EV_TEAM_FIRST_WEEKS_PAIR",
+        "notes": "EV_TEAM_FIRST_WEEKS_NOTES"
+      },
+      "expire_note": "EV_TEAM_FIRST_WEEKS_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

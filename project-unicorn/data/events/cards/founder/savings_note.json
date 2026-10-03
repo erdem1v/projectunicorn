@@ -1,0 +1,65 @@
+{
+  "id": "founder.savings_note",
+  "version_scope": "demo",
+  "category": "founder",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "quiet"
+  ],
+  "guards": {
+    "product_live": false
+  },
+  "latch": {
+    "cooldown_weeks": 8
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 1
+      },
+      {
+        "seam": "finance.runway_weeks",
+        "op": "<",
+        "value": 24
+      },
+      {
+        "seam": "time.week",
+        "op": ">=",
+        "value": 5
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "ok",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FOUNDER_SAVINGS_TITLE",
+      "body": "Birikimin {seam:finance.runway_weeks} hafta daha yeter. Henüz kimse hiçbir şeye para ödemedi.",
+      "options": {
+        "ok": "EV_FOUNDER_SAVINGS_OK"
+      },
+      "expire_note": "EV_FOUNDER_SAVINGS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FOUNDER_SAVINGS_TITLE",
+      "body": "{seam:finance.runway_weeks} weeks of savings left. Nobody has paid for anything yet.",
+      "options": {
+        "ok": "EV_FOUNDER_SAVINGS_OK"
+      },
+      "expire_note": "EV_FOUNDER_SAVINGS_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

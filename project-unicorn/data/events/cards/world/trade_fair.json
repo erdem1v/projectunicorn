@@ -1,0 +1,95 @@
+{
+  "id": "world.trade_fair",
+  "version_scope": "demo",
+  "category": "world",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 10
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "seam": "finance.cash",
+        "op": ">=",
+        "value": 200000
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "book",
+      "outcome_id": "book",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -30000,
+          "label": "trade_fair"
+        },
+        {
+          "verb": "add_prospect",
+          "archetype": "enterprise",
+          "source": "trade_fair"
+        },
+        {
+          "verb": "add_prospect",
+          "archetype": "mid",
+          "source": "trade_fair"
+        }
+      ]
+    },
+    {
+      "id": "skip",
+      "outcome_id": "skip",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_WORLD_TRADE_FAIR_TITLE",
+      "body": "EV_WORLD_TRADE_FAIR_BODY",
+      "options": {
+        "book": "EV_WORLD_TRADE_FAIR_BOOK",
+        "skip": "EV_WORLD_TRADE_FAIR_SKIP"
+      },
+      "expire_note": "EV_WORLD_TRADE_FAIR_EXPIRED"
+    },
+    "en": {
+      "title": "EV_WORLD_TRADE_FAIR_TITLE",
+      "body": "EV_WORLD_TRADE_FAIR_BODY",
+      "options": {
+        "book": "EV_WORLD_TRADE_FAIR_BOOK",
+        "skip": "EV_WORLD_TRADE_FAIR_SKIP"
+      },
+      "expire_note": "EV_WORLD_TRADE_FAIR_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

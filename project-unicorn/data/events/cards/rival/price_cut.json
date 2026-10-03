@@ -1,0 +1,171 @@
+{
+  "id": "rival.price_cut",
+  "version_scope": "demo",
+  "category": "rival",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [],
+  "guards": {
+    "market": "b2b"
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 16
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "seam": "sales.account_count",
+        "op": ">=",
+        "value": 6
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "match",
+      "outcome_id": "match",
+      "requires": {
+        "entity_seam": "musteri.discounts_used",
+        "scope": "customer",
+        "op": "<",
+        "value": 2,
+        "reason": "B2B_DISCOUNT_SPENT_DESC"
+      },
+      "effects": [
+        {
+          "verb": "b2b_retain_discount",
+          "scope": "customer"
+        }
+      ]
+    },
+    {
+      "id": "promise",
+      "outcome_id": "promise",
+      "requires": {
+        "all": [
+          {
+            "entity_seam": "musteri.has_pain_feature",
+            "scope": "customer",
+            "op": "==",
+            "value": true,
+            "reason": "B2B_LOCK_NO_PAIN_TARGET"
+          },
+          {
+            "entity_seam": "musteri.pain_feature_shipped",
+            "scope": "customer",
+            "op": "==",
+            "value": false,
+            "reason": "B2B_LOCK_PAIN_SHIPPED"
+          },
+          {
+            "entity_seam": "musteri.pain_buildable",
+            "scope": "customer",
+            "op": "==",
+            "value": true,
+            "reason": "B2B_LOCK_PAIN_GATED"
+          },
+          {
+            "entity_seam": "musteri.has_open_promise",
+            "scope": "customer",
+            "op": "==",
+            "value": false,
+            "reason": "B2B_LOCK_PROMISE_OPEN"
+          },
+          {
+            "entity_seam": "musteri.broke_promise",
+            "scope": "customer",
+            "op": "==",
+            "value": false,
+            "reason": "B2B_LOCK_PROMISE_BROKEN"
+          },
+          {
+            "entity_seam": "musteri.promise_fits",
+            "scope": "customer",
+            "op": "==",
+            "value": true,
+            "reason": "SALES_LOCK_PROMISE_NO_ROOM"
+          }
+        ]
+      },
+      "effects": [
+        {
+          "verb": "promise_create",
+          "scope": "customer",
+          "feature_id": "pain",
+          "deadline_weeks": 2
+        }
+      ]
+    },
+    {
+      "id": "hold",
+      "outcome_id": "hold",
+      "effects": [
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": -6
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_RIVAL_PRICE_CUT_TITLE",
+      "body": "{seam:rival.leader}, {customer} için aynı koltukları daha ucuza teklif etti. Satın alma sorumluları teklifi iletti, senin ne yapabileceğini soruyor.",
+      "options": {
+        "match": "EV_RIVAL_PRICE_CUT_MATCH",
+        "promise": "EV_RIVAL_PRICE_CUT_PROMISE",
+        "hold": "EV_RIVAL_PRICE_CUT_HOLD"
+      },
+      "locked_reasons": {
+        "match": "B2B_DISCOUNT_SPENT_DESC",
+        "promise": "B2B_LOCK_PROMISE_OPEN"
+      },
+      "expire_note": "EV_RIVAL_PRICE_CUT_EXPIRED"
+    },
+    "en": {
+      "title": "EV_RIVAL_PRICE_CUT_TITLE",
+      "body": "{seam:rival.leader} offered {customer} the same seats for less. Their buyer forwarded the quote and asked what you can do.",
+      "options": {
+        "match": "EV_RIVAL_PRICE_CUT_MATCH",
+        "promise": "EV_RIVAL_PRICE_CUT_PROMISE",
+        "hold": "EV_RIVAL_PRICE_CUT_HOLD"
+      },
+      "locked_reasons": {
+        "match": "B2B_DISCOUNT_SPENT_DESC",
+        "promise": "B2B_LOCK_PROMISE_OPEN"
+      },
+      "expire_note": "EV_RIVAL_PRICE_CUT_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "satisfaction_delta",
+        "scope": "customer",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

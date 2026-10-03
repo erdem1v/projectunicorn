@@ -1,0 +1,100 @@
+{
+  "id": "world.analyst_guide",
+  "version_scope": "demo",
+  "category": "world",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [
+    "critical"
+  ],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 3
+      },
+      {
+        "history": "weeks_since",
+        "event": "funding.gate_series_a",
+        "op": "<=",
+        "value": 2
+      },
+      {
+        "seam": "finance.cash",
+        "op": ">=",
+        "value": 120000
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "brief",
+      "outcome_id": "brief",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -30000,
+          "label": "outreach"
+        },
+        {
+          "verb": "add_prospect",
+          "archetype": "enterprise",
+          "source": "analyst_guide"
+        },
+        {
+          "verb": "add_prospect",
+          "archetype": "mid",
+          "source": "analyst_guide"
+        }
+      ]
+    },
+    {
+      "id": "stay_out",
+      "outcome_id": "stay_out",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_WORLD_ANALYST_GUIDE_TITLE",
+      "body": "EV_WORLD_ANALYST_GUIDE_BODY",
+      "options": {
+        "brief": "EV_WORLD_ANALYST_GUIDE_BRIEF",
+        "stay_out": "EV_WORLD_ANALYST_GUIDE_STAY_OUT"
+      },
+      "expire_note": "EV_WORLD_ANALYST_GUIDE_EXPIRED"
+    },
+    "en": {
+      "title": "EV_WORLD_ANALYST_GUIDE_TITLE",
+      "body": "EV_WORLD_ANALYST_GUIDE_BODY",
+      "options": {
+        "brief": "EV_WORLD_ANALYST_GUIDE_BRIEF",
+        "stay_out": "EV_WORLD_ANALYST_GUIDE_STAY_OUT"
+      },
+      "expire_note": "EV_WORLD_ANALYST_GUIDE_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

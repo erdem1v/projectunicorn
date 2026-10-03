@@ -274,6 +274,12 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 			if not EvCatalog.has_arc(String(effect.get("arc_id", ""))):
 				_add(SEVERITY_ERROR, "17.1", where,
 					"%s names unknown arc '%s'" % [verb, effect.get("arc_id", "")])
+		# A card's cash is a line in the month's books and the transactions list, so it names a
+		# label Finance can print.
+		if verb == "add_cash" and not FinanceSystem.ONE_TIME_LABELS.has(String(effect.get("label", ""))):
+			_add(SEVERITY_ERROR, "17.1", where,
+				"add_cash has no known label ('%s'); FinanceSystem.ONE_TIME_LABELS lists them"
+				% effect.get("label", ""))
 
 
 # --- §17.8 text ------------------------------------------------------------

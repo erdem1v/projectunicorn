@@ -238,6 +238,13 @@ static func accept_promise(customer_id: String, feature_id: String, deadline_wee
 	_recover(c, bump)
 
 
+## A broken word locks new promises to that account for PROMISE_RELOCK_WEEKS (`musteri.broke_promise`);
+## the half-goodwill branch above is for the word given after the lock lifts.
+static func promise_relocked(c: Customer) -> bool:
+	return c.promise_broken_day >= 0 \
+		and GameState.day - c.promise_broken_day < TimeModel.ticks(B2BConstants.PROMISE_RELOCK_WEEKS)
+
+
 static func hold(customer_id: String) -> void:
 	# "Oyala": buy time by pushing the churn countdown out. Works RETAIN_DELAY_MAX_USES
 	# times, then the customer catches on (no more extension; erosion keeps going).
@@ -386,6 +393,7 @@ static func on_promise_resolved(p: Promise) -> void:
 				# THE DURABLE HALF. Without this the -20 above is walked back by SAT_DRIFT_STEP
 				# within one tick and a broken word leaves no trace at all.
 				CustomerRegistry.set_trust_offset(c.id, c.trust_offset + B2BConstants.PROMISE_BROKEN_OFFSET)
+				c.promise_broken_day = GameState.day
 				# INSIDE the null guard: a promise that outlived its account must not charge
 				# brand or stamp a credibility flag for a company that no longer exists
 				# (PromiseRegistry also drops open promises when the account leaves).

@@ -69,10 +69,8 @@ static func add_faulty_ticket(line: String) -> void:
 ## talepte olmayan sonraki kademelerden hash'le seçilir. Son tarih sprinti kapanmış ya da hesabı
 ## kapanan açık talep sessizce düşer (zamanında olan kapanışta on_release'te karşılanmıştır).
 static func tick_requests() -> void:
-	# Sürüm notundayken kapanan sprint henüz numarayı taşır. Talebin ilk sprinti oyuncunun
-	# planlayabileceği ilk sprinttir: planlamadaki sprint, yoksa sıradaki (koşanın kartları kilitli).
-	var last_closed: int = SprintSystem.sprint_number() - (0 if SprintSystem.mode() == "release" else 1)
-	var plannable: int = SprintSystem.sprint_number() + (0 if SprintSystem.mode() == "plan" else 1)
+	var last_closed: int = SprintSystem.last_closed()
+	var plannable: int = SprintSystem.plannable_sprint()
 	var accounts: Array[Customer] = CustomerRegistry.get_by_market("b2b")
 	var account_ids: Array = accounts.map(func(c: Customer) -> String: return c.id)
 	var requests: Array = _p().requests

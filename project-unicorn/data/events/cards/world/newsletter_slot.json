@@ -1,0 +1,94 @@
+{
+  "id": "world.newsletter_slot",
+  "version_scope": "demo",
+  "category": "world",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [
+    "critical"
+  ],
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 3
+      },
+      {
+        "history": "weeks_since",
+        "event": "funding.gate_series_a",
+        "op": "<=",
+        "value": 2
+      },
+      {
+        "seam": "finance.cash",
+        "op": ">=",
+        "value": 100000
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "take",
+      "outcome_id": "take",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -25000,
+          "label": "sponsor"
+        },
+        {
+          "verb": "audience_delta",
+          "pct": 0.2
+        }
+      ]
+    },
+    {
+      "id": "pass",
+      "outcome_id": "pass",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_WORLD_NEWSLETTER_SLOT_TITLE",
+      "body": "EV_WORLD_NEWSLETTER_SLOT_BODY",
+      "options": {
+        "take": "EV_WORLD_NEWSLETTER_SLOT_TAKE",
+        "pass": "EV_WORLD_NEWSLETTER_SLOT_PASS"
+      },
+      "expire_note": "EV_WORLD_NEWSLETTER_SLOT_EXPIRED"
+    },
+    "en": {
+      "title": "EV_WORLD_NEWSLETTER_SLOT_TITLE",
+      "body": "EV_WORLD_NEWSLETTER_SLOT_BODY",
+      "options": {
+        "take": "EV_WORLD_NEWSLETTER_SLOT_TAKE",
+        "pass": "EV_WORLD_NEWSLETTER_SLOT_PASS"
+      },
+      "expire_note": "EV_WORLD_NEWSLETTER_SLOT_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

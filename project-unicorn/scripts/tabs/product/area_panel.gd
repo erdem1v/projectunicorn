@@ -44,7 +44,8 @@ func _add_history() -> void:
 	add_child(HRUiShared.section_header(tr("PRODUCT_HISTORY"), true, &"SectionAmber"))
 	if _model.versions.is_empty():
 		add_child(UiFactory.make_label(tr("PRODUCT_HISTORY_NONE"), &"EmptyRowLabel"))
-	# Bilinmeyen (-1) parça yazılmaz: eski sürüm kayıtları sprint ve kart sayısı taşımıyor.
+	# Bilinmeyen (-1) parça yazılmaz: eski sürüm kayıtları sprint ve kart sayısı taşımıyor. Sonuç
+	# satırı sürümün ertesi günü gerçekleşene döner; beklenen de gerçekleşen de yoksa yazılmaz.
 	for v in _model.versions:
 		var parts := PackedStringArray([v.label])
 		if int(v.sprint) >= 0:
@@ -53,6 +54,12 @@ func _add_history() -> void:
 		if n >= 0:
 			parts.append(tr(Fmt.count_key("PRODUCT_HISTORY_CARDS", n)).format({"n": n}))
 		add_child(UiFactory.make_label(SprintUiShared.SEP.join(parts), &"RowMeta"))
+		var result: Variant = v.result
+		if result != null:
+			var line := UiFactory.make_label(tr(SprintPanel.RESULT_KEYS[result.kind]).format({"text": result.text}),
+				&"AreaSentence")
+			line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			add_child(line)
 
 
 func _add_area_row(area: Dictionary) -> void:

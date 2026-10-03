@@ -707,10 +707,6 @@ HUNT_RESCHEDULE_TIP,Bu fonun bir sonraki toplantısında ikna −{n}.,Conviction
 HUNT_MEETING_CANCELLED_THIS_WEEK,Bu hafta bir toplantı iptal edildi. Yenisi gelecek hafta ayarlanabilir.,A meeting was cancelled this week. The next one can be booked next week.
 PRICE_TIP_PREMIUM,Bu kategori premium fiyatı kaldırır,This category can carry a premium price
 PRICE_TIP_VOLUME,Bu kategori hacim oyunu — düşük fiyat mantıklı,This category is a volume game — a low price makes sense
-GROWTH_MELTING,eriyor,shrinking
-GROWTH_FLAT,duruyor,flat
-GROWTH_FAST,hızlı büyüyor,growing fast
-GROWTH_STEADY,büyüyor,growing
 PRODUCT_FALLBACK_NAME,Ürün,Product
 HEALTH_HEALTHY,sağlıklı,healthy
 HEALTH_AT_RISK,riskli,at risk
@@ -1326,7 +1322,6 @@ TERM_INV_OTHER_HOLD,"""Biz teklif yarışına girmeyiz.""","""We don't get into 
 TERM_INV_OTHER_WALK,"""Anlaşılan seçimini yapmışsın. Git onlarınkini imzala.""","""Sounds like you've already picked. Go sign theirs."""
 FIN_BURN_SALARIES,Maaşlar,Salaries
 FIN_BURN_OVERTIME,Ek mesai,Overtime
-FIN_BURN_FOUNDER,Kurucu yaşam gideri,Founder living costs
 FIN_BURN_MARKETING,Pazarlama,Marketing
 FIN_BURN_OFFICE,Ofis,Office
 FIN_BURN_SERVERS,Sunucular,Servers
@@ -2833,3 +2828,154 @@ PRODUCT_GOAL_INTEGRATIONS,müşterilerin yarısı öbür araçlarını bağlası
 PRODUCT_GOAL_TRUST,kullanıcıların yarısı verisini emanet etsin,half of users trust it with their data
 PRODUCT_GOAL_REVENUE,düzenli kullanıcıların yarısı ödemeye razı olsun,half of regular users would pay
 PRODUCT_GOAL_PROGRESS,şu an {total} üzerinden {now},now {now} of {total}
+PRODUCT_FX_PROMISE,Söz: {customer},Promise: {customer}
+PRODUCT_FX_PROMISE_KEPT,sözü tutulur,promise kept
+PRODUCT_PROMISED,söz verildi,promised
+SALES_PROMISE_OPEN_SPRINT,Açık söz: {feature} · Sprint {n} sonuna kadar,Open promise: {feature} · by the end of sprint {n}
+FIN_BURN_TOOLS,Araçlar,Tools
+FIN_BURN_SERVICE,Servis maliyeti,Service costs
+FIN_ONETIME_INCIDENT,Kesinti gideri,Incident costs
+FIN_ONETIME_AUDIT,Güvenlik denetimi,Security audit
+FIN_ONETIME_RETENTION,Bağlılık primi,Retention bonus
+FIN_ONETIME_CONTRACTOR,Dış kaynak ücreti,Contractor fee
+FIN_ONETIME_OUTREACH,Tanıtım kampanyası,Outreach campaign
+FIN_ONETIME_REFUNDS,İadeler,Refunds
+FIN_ONETIME_SIDE_WORK,Yan iş,Side contract
+FIN_ONETIME_MEETUP,Topluluk buluşması,Meetup
+FIN_ONETIME_SPONSOR,Sponsorluk,Sponsorship
+HR_ROW_TOOLS,Aylık araç gideri,Monthly tools
+EV_LOCK_NO_SPRINT,Süren bir sprint yok.,No sprint is running.
+B2B_LOCK_PROMISE_BROKEN,Bu hesaba verdiğin son söz tutulmadı.,Your last promise to them was not kept.
+EFFECT_FIX_RUN_STARTS,Düzeltme başlar,A fix run starts
+EV_FOUNDER_MEETUP_TITLE,Konuşma daveti,A speaking slot
+EV_FOUNDER_MEETUP_BODY,"Şehirdeki kurucu buluşmasında bir konuşma aralığı boş kalmış, organizatörler sana soruyor. Konuşursan baskı ve küçük bir stant gerekir, bir haftanın akşamları da ürün yerine sunuma gider. Arka sırada oturmanın bedeli yalnız bilet.","The founders' meetup in town has an open speaking slot and the organisers asked if you want it. Speaking means printing, a small stand and a week of evenings spent on slides instead of the product. A seat at the back costs only the ticket."
+EV_FOUNDER_MEETUP_TALK,Konuşmayı üstlen,Take the slot
+EV_FOUNDER_MEETUP_LISTEN,"Bilet al, dinle",Buy a ticket and listen
+EV_FOUNDER_MEETUP_EXPIRED,Buluşma sensiz yapıldı.,The meetup went ahead without you.
+EV_FOUNDER_SIDE_CONTRACT_TITLE,Yan iş,Side work
+EV_FOUNDER_SIDE_CONTRACT_BODY,"Eski bir iş arkadaşının şirketinde küçük bir entegrasyon yapılacak ve aklına sen gelmişsin. Para iyi, işi de çabuk istiyorlar. Harcadığın her saat üründen eksilecek.",A former colleague needs a small integration built at their company and thought of you. The pay is good and they want it soon. Every hour it takes comes out of the product.
+EV_FOUNDER_SIDE_CONTRACT_TAKE,İşin tamamını al,Take the whole job
+EV_FOUNDER_SIDE_CONTRACT_HALF,Bir kısmını al,Take only part of it
+EV_FOUNDER_SIDE_CONTRACT_EXPIRED,"Cevap gitmedi, başka birini buldular.","No answer went back, so they found someone else."
+EV_FOUNDER_SAVINGS_TITLE,Birikim,The savings
+EV_FOUNDER_SAVINGS_OK,İşe dön,Back to work
+EV_FOUNDER_SAVINGS_EXPIRED,Hesaba bir hafta daha bakılmadı.,The balance went unchecked another week.
+EV_FOUNDER_UNSEEN_TITLE,Kimse görmedi,Nobody has seen it
+EV_FOUNDER_UNSEEN_OK,Yapmaya devam et,Keep building
+EV_FOUNDER_UNSEEN_EXPIRED,Bir hafta daha kimse görmeden geçti.,Another week of building with nobody watching.
+EV_PRODUCT_SPRINT_TWO_PATHS_TITLE,İki yol var,Two ways through
+EV_PRODUCT_SPRINT_TWO_PATHS_NEW,Kısa yola geç,Take the shorter route
+EV_PRODUCT_SPRINT_TWO_PATHS_KNOWN,Bilinen yoldan devam et,Stay on the known route
+EV_PRODUCT_SPRINT_TWO_PATHS_EXPIRED,"Karar verilmedi, iş bilinen yoldan sürdü.","No decision came, so the work stayed on the known route."
+EV_PRODUCT_SPRINT_LATE_TITLE,Sprint yetişmeyecek,The sprint will not make it
+EV_PRODUCT_SPRINT_LATE_CARRY,Sonraki sprinte devret,Carry it to the next sprint
+EV_PRODUCT_SPRINT_LATE_CRUNCH,"Her şeyi beklet, işi yetiştir",Put everything else on hold and finish it
+EV_PRODUCT_SPRINT_LATE_EXPIRED,"Karar verilmedi, kart sonraki sprinte devretti.","No decision came, so the card carried over to the next sprint."
+EV_PRODUCT_SPRINT_CONTRACTOR_TITLE,Dışarıdan destek,Outside help
+EV_PRODUCT_SPRINT_CONTRACTOR_HIRE,Serbest çalışan getir,Bring in a contractor
+EV_PRODUCT_SPRINT_CONTRACTOR_LEARN,İçeride öğren,Learn it in house
+EV_PRODUCT_SPRINT_CONTRACTOR_EXPIRED,"Karar verilmedi, iş yavaş yoldan sürdü.","No decision came, so the work went the slow way."
+EV_TEAM_FIRST_WEEKS_TITLE,İlk haftalar,First weeks
+EV_TEAM_FIRST_WEEKS_BODY,"{employee} buradaki işleyişi hâlâ öğreniyor, bu hafta aynı soruyu iki kez sordu.",{employee} is still learning how things work here and asked the same question twice this week.
+EV_TEAM_FIRST_WEEKS_PAIR,Birkaç gün yanında otur,Sit with them for a few days
+EV_TEAM_FIRST_WEEKS_NOTES,Notlara yönlendir,Point them to the notes
+EV_TEAM_FIRST_WEEKS_EXPIRED,{employee} işin içinden tek başına çıktı.,{employee} worked it out alone.
+EV_TEAM_DEMO_DAY_TITLE,Demo günü,Demo day
+EV_TEAM_DEMO_DAY_BODY,"Sprintin ikinci haftası. Biri, sürüm çıkmadan herkesin yaptığını ötekilere göstermesini öneriyor.",It is the second week of the sprint. Someone suggests everyone shows the others what they built before the release goes out.
+EV_TEAM_DEMO_DAY_HOLD,Demoyu yap,Hold the demo
+EV_TEAM_DEMO_DAY_SKIP,Çalışmaya devam,Keep working
+EV_TEAM_DEMO_DAY_EXPIRED,Demo yapılmadı.,The demo never happened.
+EV_PRODUCT_BUG_PILE_TITLE,Hata yığını,The bug pile
+EV_PRODUCT_BUG_PILE_FIX,Düzeltmeye başla,Start a fix run
+EV_PRODUCT_BUG_PILE_LATER,Şimdilik bırak,Leave them for now
+EV_PRODUCT_BUG_PILE_LOCK_FIX,Bir düzeltme zaten sürüyor.,A fix run is already under way.
+EV_PRODUCT_BUG_PILE_EXPIRED,Yığın olduğu yerde kaldı.,The pile stayed where it was.
+EV_PRODUCT_OUTAGE_TITLE,Kesinti,Outage
+EV_PRODUCT_OUTAGE_BODY,"Kullanım, sunucuların kaldırabileceğini aştı. Sayfalar zaman aşımına düşüyor, destek hattı meşgul ve müşteriler ne olduğunu soruyor.","Usage went past what the servers can carry. Pages time out, the support line is busy and customers want to know what happened."
+EV_PRODUCT_OUTAGE_ALL_HANDS,Herkesi bu işe çek,Pull everyone onto it
+EV_PRODUCT_OUTAGE_CREDIT,Kesintiyi telafi et,Pay back the downtime
+EV_PRODUCT_OUTAGE_QUIET,"Yamala, bir şey söyleme",Patch it and say nothing
+EV_PRODUCT_OUTAGE_EXPIRED,"Kesinti kendi seyrinde bitti, herkes fark etti.",The outage ran its course and people noticed.
+EV_CUSTOMER_SECURITY_REVIEW_TITLE,Güvenlik denetimi,Security review
+EV_CUSTOMER_SECURITY_REVIEW_BODY,"{customer} bir güvenlik anketi gönderdi. Satın alma ekipleri, daha ileri gitmeden önce her cevabın kanıtla desteklenmesini istiyor.",{customer} sent over a security questionnaire. Their procurement team wants every answer backed by evidence before they go any further.
+EV_CUSTOMER_SECURITY_REVIEW_AUDIT,Dış denetime para ver,Pay for an outside audit
+EV_CUSTOMER_SECURITY_REVIEW_IN_HOUSE,İçeride cevapla,Answer it in house
+EV_CUSTOMER_SECURITY_REVIEW_DECLINE,Beklemeleri gerektiğini söyle,Tell them it will have to wait
+EV_CUSTOMER_SECURITY_REVIEW_EXPIRED,{customer} cevap beklemeyi bıraktı.,{customer} stopped waiting for an answer.
+EV_RIVAL_FUNDING_ROUND_TITLE,Rakip yatırım aldı,A rival raises
+EV_RIVAL_FUNDING_ROUND_CAMPAIGN,Bir kampanyayla karşılık ver,Answer with a campaign
+EV_RIVAL_FUNDING_ROUND_INVESTORS,Yatırımcılara ne yaptığını göster,Show the investors what you are building
+EV_RIVAL_FUNDING_ROUND_HOLD,Yoluna devam et,Stay the course
+EV_RIVAL_FUNDING_ROUND_EXPIRED,Gündem senin adın geçmeden değişti.,The news moved on without your name in it.
+EV_RIVAL_PRICE_CUT_TITLE,Fiyat kırıldı,Undercut
+EV_RIVAL_PRICE_CUT_MATCH,Fiyatı eşitle,Match the price
+EV_RIVAL_PRICE_CUT_PROMISE,İstediklerine söz ver,Promise what they asked for
+EV_RIVAL_PRICE_CUT_HOLD,Fiyatında dur,Hold your price
+EV_RIVAL_PRICE_CUT_EXPIRED,{customer} senden ses çıkmayınca teklifi ciddiye aldı.,{customer} heard nothing back and took the quote seriously.
+EV_TEAM_OUTSIDE_OFFER_TITLE,Dışarıdan teklif,An outside offer
+EV_TEAM_OUTSIDE_OFFER_BODY,{employee} daha büyük bir şirketten teklif almış ve cevap vermeden önce sana söyledi.,{employee} has an offer from a larger company and told you before answering it.
+EV_TEAM_OUTSIDE_OFFER_BONUS,Kalma primi öde,Pay a retention bonus
+EV_TEAM_OUTSIDE_OFFER_TALK,Konuş ama bir şey teklif etme,"Talk it through, offer nothing"
+EV_TEAM_OUTSIDE_OFFER_RELEASE,İyi şanslar dile,Wish them well
+EV_TEAM_OUTSIDE_OFFER_EXPIRED,{employee} gelmeyen bir cevabı bekledi.,{employee} waited for an answer that did not come.
+EV_CUSTOMER_B2C_REFUNDS_TITLE,İade talepleri,Refund requests
+EV_CUSTOMER_B2C_REFUNDS_BODY,İade talepleri her zamankinden hızlı geliyor. Çoğu aynı sorunlardan söz ediyor.,Refund requests are coming in faster than usual. Most of them mention the same problems.
+EV_CUSTOMER_B2C_REFUNDS_ALL,İsteyen herkese iade et,Refund everyone who asks
+EV_CUSTOMER_B2C_REFUNDS_POLICY,İade koşullarını hatırlat,Point them to the refund policy
+EV_CUSTOMER_B2C_REFUNDS_EXPIRED,"Talepler cevapsız kaldı, yorumlar da bunu yazdı.",The requests went unanswered and the reviews said so.
+EV_PRODUCT_B2C_FLOOR_SIGNAL_TITLE,Yorumlar ne diyor,What the reviews say
+EV_PRODUCT_B2C_FLOOR_SIGNAL_BODY,Son yorumlar hep aynı zayıflığa dönüyor. Henüz bu yüzden giden olmadı.,The newest reviews keep coming back to the same weakness. Nobody has left over it yet.
+EV_PRODUCT_B2C_FLOOR_SIGNAL_FEEDBACK,Geri bildirime zaman ayır,Spend time with the feedback
+EV_PRODUCT_B2C_FLOOR_SIGNAL_NOTED,Not alındı,Noted
+EV_PRODUCT_B2C_FLOOR_SIGNAL_EXPIRED,Yorumlar aynı şeyi söylemeye devam etti.,The reviews kept saying it.
+EV_PRODUCT_B2C_FLOOR_CHURN_TITLE,Kullanıcılar gidiyor,Users are leaving
+EV_PRODUCT_B2C_FLOOR_CHURN_BODY,Yorumların söyleyip durduğu zayıflık artık iptal sebebi. Ayrılış anketi bunu tek satırla söylüyor.,The weakness the reviews kept naming is now why people cancel. The exit survey says it in one line.
+EV_PRODUCT_B2C_FLOOR_CHURN_LET_GO,Gitmelerine izin ver,Let them go
+EV_PRODUCT_B2C_FLOOR_CHURN_CREDITS,Kalmaları için kredi ver,Offer credit to stay
+EV_PRODUCT_B2C_FLOOR_CHURN_ROADMAP,Neyi düzelteceğini açıkla,Publish what you will fix
+EV_PRODUCT_B2C_FLOOR_CHURN_EXPIRED,"Kimse cevap vermedi, gittiler.","Nobody answered, and they left."
+EV_WORLD_B2C_CREATOR_TITLE,Bir içerik üreticisi aradı,A creator calls
+EV_WORLD_B2C_CREATOR_BODY,"Geniş takipçisi olan bir içerik üreticisi ürünü kullanıyor, hakkında video çekmek istiyor. Fiyat listesini de eklemiş.",A creator with a large following has been using the product and wants to make a video about it. Their rate card is attached.
+EV_WORLD_B2C_CREATOR_SPONSOR,Videoya sponsor ol,Sponsor the video
+EV_WORLD_B2C_CREATOR_DECLINE,Teklifi geri çevir,Turn the offer down
+EV_WORLD_B2C_CREATOR_EXPIRED,İçerik üreticisi başka bir ürüne geçti.,The creator moved on to another product.
+EV_FOUNDER_COMPANY_OF_ONE_TITLE,Tek kişilik şirket,A company of one
+EV_FOUNDER_COMPANY_OF_ONE_OK,Devam et,Carry on
+EV_FOUNDER_COMPANY_OF_ONE_EXPIRED,Bir hafta daha her işi tek başına yaptın.,Another week of doing every job alone.
+EV_PRODUCT_WORKING_PARTS_TITLE,Çalışan parçalar,Working parts
+EV_PRODUCT_WORKING_PARTS_OK,Sıradakine geç,On to the next part
+EV_PRODUCT_WORKING_PARTS_EXPIRED,Bir hafta daha sıradaki parçaya gitti.,Another week went into the next part.
+SALES_LOCK_PROMISE_NO_ROOM,Bir sonraki sprintte buna yer yok.,There is no room for it in the next sprint.
+FIN_ONETIME_DOMAIN,Alan adı,Web address
+FIN_ONETIME_USER_TESTS,Kullanıcı denemesi,User tests
+FIN_ONETIME_TRADE_FAIR,Fuar standı,Trade fair
+EV_FOUNDER_DOMAIN_TITLE,Alan adı,The web address
+EV_FOUNDER_DOMAIN_BODY,"Ürün için istediğin kısa alan adı, onu satmaya hazır bir aracının elinde. Araya bir kelime daha alan uzun adres ise boşta.",The short web address you wanted for the product belongs to a reseller who will sell it. A longer one with an extra word in it is still free.
+EV_FOUNDER_DOMAIN_BUY,Kısa adresi satın al,Buy the short address
+EV_FOUNDER_DOMAIN_LONGER,Uzun adresle devam et,Go with the longer address
+EV_FOUNDER_DOMAIN_EXPIRED,"Cevap gitmedi, kısa adres başkasına satıldı.","No answer went back, and the short address was sold to someone else."
+EV_FOUNDER_FRIENDS_TITLE,İlk bakış,A first look
+EV_FOUNDER_FRIENDS_BODY,"Birkaç eski arkadaşın ne yaptığını duymuş, bu hafta denemek istiyorlar. Ne bulurlarsa tanıdıklarına anlatacaklar.","A few old friends heard what you are building and want to try it this week. Whatever they find, they will tell the people they know."
+EV_FOUNDER_FRIENDS_HOST,"Onları çağır, kullanırken izle",Have them over and watch them use it
+EV_FOUNDER_FRIENDS_SEND,Olduğu gibi gönder,Send it to them as it is
+EV_FOUNDER_FRIENDS_EXPIRED,"Cevap gitmedi, onlar da başka işlere döndü.","No reply went out, and they moved on to other things."
+EV_WORLD_TRADE_FAIR_TITLE,Sektör fuarı,The trade fair
+EV_WORLD_TRADE_FAIR_BODY,"Sektörün büyük fuarında ana salonda tek bir stant kalmış. Alıcıların hepsi o salonu dolaşıyor, rakiplerinin çoğu da yerini aylar önce ayırtmış.","The industry's big trade fair has one stand left on the main floor. Buyers from across the sector walk that floor, and most of your competitors booked months ago."
+EV_WORLD_TRADE_FAIR_BOOK,Standı kirala,Book the stand
+EV_WORLD_TRADE_FAIR_SKIP,Bu fuara katılma,Sit this one out
+EV_WORLD_TRADE_FAIR_EXPIRED,"Yer ayırtılmadı, stant başka bir şirkete gitti.","No booking went in, and the stand went to another company."
+EV_WORLD_APP_PLACEMENT_TITLE,Ücretli vitrin,A paid placement
+EV_WORLD_APP_PLACEMENT_BODY,"Bir uygulama ağı, listelerinin en üstünde bir haftalık yer teklif ediyor. Almazsan o hafta listedeki sıradaki uygulamaya gidecek.","An app network offers a week at the top of its listings. If you pass, the week goes to the next app on its list."
+EV_WORLD_APP_PLACEMENT_BUY,Haftayı satın al,Buy the week
+EV_WORLD_APP_PLACEMENT_PASS,Haftayı bırak,Let the week go
+EV_WORLD_APP_PLACEMENT_EXPIRED,"Cevap gitmedi, hafta başka bir uygulamaya verildi.","No answer went back, and the week went to another app."
+EV_WORLD_ANALYST_GUIDE_TITLE,Alıcı rehberi,The buyer's guide
+EV_WORLD_ANALYST_GUIDE_BODY,"Bir sektör analisti senin alanındaki şirketler için bu yılın alıcı rehberini hazırlıyor. Satın alma ekipleri kısa listelerini bu rehberden çıkarıyor, fonlar da okuyor. Rehberde tam sayfa yer almak için ücretli bir tanıtım görüşmesi gerekiyor.","An industry analyst is putting together this year's buyer's guide for your segment. Procurement teams draw their shortlists from it, and funds read it too. A full profile comes with a paid briefing."
+EV_WORLD_ANALYST_GUIDE_BRIEF,Görüşmenin ücretini öde,Pay for the briefing
+EV_WORLD_ANALYST_GUIDE_STAY_OUT,Rehberin dışında kal,Stay out of the guide
+EV_WORLD_ANALYST_GUIDE_EXPIRED,Rehber sen olmadan baskıya girdi.,The guide went to print without you.
+EV_WORLD_NEWSLETTER_SLOT_TITLE,Bültenin baş köşesi,The newsletter's lead slot
+EV_WORLD_NEWSLETTER_SLOT_BODY,Büyük bir teknoloji bülteni baş köşesini bir aylığına teklif ediyor. Okurları yeni bir uygulamayı duydukları hafta deniyor. Almazsan o ay listedeki sıradaki uygulamaya gidecek.,"A large tech newsletter offers its lead slot for a month. Its readers try a new app the week they hear about it. If you pass, the month goes to the next app on its list."
+EV_WORLD_NEWSLETTER_SLOT_TAKE,Bu ayı al,Take the month
+EV_WORLD_NEWSLETTER_SLOT_PASS,Yeri bırak,Let the slot go
+EV_WORLD_NEWSLETTER_SLOT_EXPIRED,"Cevap gitmedi, yer başka bir uygulamaya verildi.","No answer went back, and the slot went to another app."

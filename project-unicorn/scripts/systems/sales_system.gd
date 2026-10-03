@@ -24,11 +24,13 @@ extends RefCounted
 const B2C_PRICE_DEFAULT := 15            # $/user/month; apply_b2c_price sets this
 const B2C_USERBASE_ID := "co_b2c_userbase"
 
-# B2C aggregate satisfaction drift. The gate reads the EXPERIENCE axis — the
-# axis the B2C record is SEEDED from (_ensure_b2c_record), and what a consumer feels day to
-# day. Bugs erode through SATISFACTION_BUG_GATE.
-const SATISFACTION_QUALITY_GATE := 40    # experience axis ≥ → satisfaction drifts up
-const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts down
+# B2C aggregate satisfaction drifts toward the EXPERIENCE axis score: the axis the record is
+# SEEDED from (_ensure_b2c_record), and what a consumer feels week to week. A target instead of
+# a threshold, so a product settles at its own experience reading rather than sliding to 0
+# under a bar it cannot reach. A live backlog over SATISFACTION_BUG_GATE pushes it under.
+const SATISFACTION_DRIFT_PER_DAY := 1.5    # [WORKING] max move a day toward the target
+const SATISFACTION_BUG_PUSH_PER_DAY := 1   # [WORKING] taken off a day on top of the drift while the backlog is over the gate
+const SATISFACTION_BUG_GATE := 5         # live bug_count > → satisfaction pushed down
 
 # THE SERIES A REVENUE BAR, inside the [100,000-150,000] band. The Series A gate is MRR only;
 # PhaseGateSystem (the gate leaf and series_a_bar) is its only reader. NEVER RENDERED AS A
@@ -56,31 +58,38 @@ const HOURLY_AUD_REPUTATION_COEF := 0.01   # raw reputation (-10..100): 0 neutra
 # contract is untouched. BALANCE-TUNABLE.
 # CHURN is PROPORTIONAL to the current audience (churn = losing existing users, so
 # nothing to lose at audience 0 → a fresh product can grow from 0). CHURN_COEF is a
-# per-audience-member rate: at audience 200, gap 18 → 0.0002·18·200 = 0.72 users/hour.
-const CHURN_COEF := 0.0002
+# per-audience-member rate: at audience 200, gap 10 → 0.000036·10·200 = 0.072 users/hour.
+# [WORKING] About 0.6 % of the audience a week per point under the threshold: the MVP reads 8 to
+# 10 and a finished K1 ladder 14 to 18, both under it, and the K2 steps lift the product over it,
+# so a product that stops at K1 keeps bleeding and one that keeps shipping climbs out.
+const CHURN_COEF := 0.000036
 # WORD OF MOUTH — the proportional growth term. Base growth is an ABSOLUTE per-hour trickle
 # and churn is PROPORTIONAL to the audience; alone they settle at a fixed point
-# (A_eq = grow / (CHURN_COEF·(42−q))) that never compounds and shrinks as rivals advance.
-# Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product compounds
-# — grow += audience · WOM_COEF · max(0, sat − WOM_SAT_GATE)/100 — and a disliked one grows
-# slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). WOM_COEF [ÖLÇ]: the smallest
-# value that keeps a maintained B2C fixture's 30-day MRR means non-decreasing to day 180 while
-# b2c_neglect still declines.
-const WOM_COEF := 0.005            # [ÖLÇ] per hour · per audience member · per satisfaction point/100 over the gate
-const WOM_SAT_GATE := 60.0         # [WORKING] satisfaction above which word of mouth starts
-const WOM_MULT_PIVOT := 50.0       # [WORKING] satisfaction at which base growth runs at full strength
+# (A_eq = grow / (CHURN_COEF·(EROSION_THRESHOLD−q))) that never compounds and shrinks as rivals
+# advance. Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product
+# compounds — grow += audience · WOM_COEF · max(0, sat − WOM_SAT_GATE)/100 — and a disliked one
+# grows slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). Satisfaction drifts to
+# the experience score, which an MVP reads at about 14 and a finished K1 ladder at about 24, and
+# an unstaffed support desk holds the record near 10: the pivot sits at that level, so a kept MVP
+# grows at close to full base rate, and the gate sits over it, so compounding needs more
+# experience than the K1 ladder ships with.
+const WOM_COEF := 0.0012           # [WORKING] per hour · per audience member · per satisfaction point/100 over the gate; ~6 % a week at 30 points over
+const WOM_SAT_GATE := 30.0         # [WORKING] satisfaction above which word of mouth starts
+const WOM_MULT_PIVOT := 15.0       # [WORKING] satisfaction at which base growth runs at full strength
 const WOM_MULT_MIN := 0.3          # [WORKING] floor of the base-growth multiplier (satisfaction 0)
-const EROSION_THRESHOLD := 42.0
+const EROSION_THRESHOLD := 25.0    # [WORKING] rival-relative quality (50 = startup-league parity) under which the audience bleeds
 
 # --- Dynamic pricing / value algorithm (working values; balance is the last pass) ---
-# product_value() estimates the product's worth ($/user/mo) from quality + feature
-# count/depth + low bug count + product-type tendency. It feeds the paid plan's opening price
-# (SprintBridges.open_paid_plan), conversion, the hike reaction and audience
-# price-sensitivity. Read-only.
+# product_value() estimates the product's worth ($/user/mo) from quality + the live line
+# ladder (open lines and their usage weight) + low bug count + product-type tendency. It feeds
+# the paid plan's opening price (SprintBridges.open_paid_plan), conversion, the hike reaction
+# and audience price-sensitivity. Read-only.
 const VALUE_BASE := 4.0
 const VALUE_QUALITY_COEF := 0.12         # per quality point (0-100)
-const VALUE_FEATURE_COEF := 1.2          # per shipped feature
-const VALUE_COMPLEXITY_COEF := 0.6       # per total feature-complexity point
+# A finished ladder opens about nine lines and eighteen usage-weight points, so at these weights
+# it is worth about 13, a little over the quality term (≤ 12).
+const VALUE_FEATURE_COEF := 0.75          # [WORKING] per open line (ProductState.lines_open)
+const VALUE_COMPLEXITY_COEF := 0.375       # [WORKING] per live usage-weight point (ProductState.usage_weight_total)
 const VALUE_FLOOR_RATIO := 0.5           # lower-bound mark = optimal × this
 const TENDENCY_MULT := {"premium": 1.35, "neutral": 1.0, "volume": 0.8}
 
@@ -161,6 +170,8 @@ static func _tick_b2c_audience() -> void:
 # this, so the "büyüyor / eriyor" verdict can never drift from the actual audience motion.
 # Quality is the normalized, type-weighted, effective-stability composite (bugs already baked
 # in via effective_stability, so there is NO separate bug subtractor — one clean channel).
+# Interest (Ürün §9) scales base acquisition through the same band the B2B faucet reads, so a
+# fresh release pulls users in and an aging one slows the trickle.
 static func _audience_delta_per_hour() -> float:
 	var quality_term: float = _rival_relative_quality(QualityModel.shipped_normalized())
 	var grow: float = (HOURLY_AUD_BASE \
@@ -168,6 +179,7 @@ static func _audience_delta_per_hour() -> float:
 		+ GameState.brand * HOURLY_AUD_BRAND_COEF \
 		+ GameState.reputation * HOURLY_AUD_REPUTATION_COEF) \
 		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0))) \
+		* SalesConstants.interest_mult(ProductRead.interest()) \
 		* InfraSystem.acquisition_multiplier()   # Ürün §10: over capacity, B2C acquisition ×0,6
 	var audience: float = b2c_audience()
 	# Word of mouth, both directions (see WOM_* above), on the aggregate B2C record's
@@ -389,19 +401,17 @@ static func signing_satisfaction_seed() -> int:
 # --- B2C satisfaction tick ---
 
 static func _tick_satisfaction() -> void:
-	# B2C satisfaction rises on strong EXPERIENCE (the axis the record was seeded from) and
-	# falls when the open bug count is high (the direct churn driver), one point a day each.
-	# See the gate's note.
-	var delta: int = 0
-	if QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience") >= SATISFACTION_QUALITY_GATE:
-		delta += 1
-	if ProductSystem.live_bug_count() > SATISFACTION_BUG_GATE:
-		delta -= 1
-	if delta == 0:
-		return
-	# B2B satisfaction is owned by B2BSalesSystem (two-layer model).
+	# Drift toward the experience score, a day's step a day and seven days a tick, stopping at
+	# the target; an over-gate backlog pushes it further down on top, so it holds satisfaction
+	# under the target. B2B satisfaction is owned by B2BSalesSystem (two-layer model).
+	var target: int = int(round(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")))
+	var step: int = int(TimeModel.per_tick(SATISFACTION_DRIFT_PER_DAY))
+	var push: int = int(TimeModel.per_tick(SATISFACTION_BUG_PUSH_PER_DAY)) \
+		if ProductSystem.live_bug_count() > SATISFACTION_BUG_GATE else 0
 	for c in CustomerRegistry.get_by_market("b2c"):
-		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + int(TimeModel.per_tick(delta)))
+		var delta: int = clampi(target - c.satisfaction, -step, step) - push
+		if delta != 0:
+			CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
 
 # --- Value algorithm (product worth → optimal price + lower bound) ---
@@ -410,13 +420,11 @@ static func product_value() -> Dictionary:
 	# Read-only worth estimate. Pricing power = the type-weighted, effective-stability
 	# NORMALIZED composite, so the premium comes from whatever axis THIS market values
 	# (quality_axes weights) and bugs dampen worth via effective stability, not a separate term.
-	var components: Array = GameState.get_flag("mvp_components", [])
-	var total_complexity: int = 0
-	for fid in components:
-		total_complexity += int(ProductCatalog.get_feature_by_id(String(fid)).get("complexity", 0))
+	# Breadth and depth are the live ladder: what the sprint engine has actually shipped.
 	var mult: float = float(TENDENCY_MULT.get(ProductCatalog.get_price_tendency(ProductState.subtype()), 1.0))
 	var raw: float = VALUE_BASE + QualityModel.shipped_normalized() * VALUE_QUALITY_COEF \
-		+ components.size() * VALUE_FEATURE_COEF + total_complexity * VALUE_COMPLEXITY_COEF
+		+ ProductState.lines_open() * VALUE_FEATURE_COEF \
+		+ ProductState.usage_weight_total() * VALUE_COMPLEXITY_COEF
 	var optimal: int = int(round(maxf(1.0, raw) * mult))
 	return {"optimal": optimal, "floor": maxi(1, int(round(optimal * VALUE_FLOOR_RATIO)))}
 
@@ -504,16 +512,16 @@ static func apply_b2c_price(new_price: int) -> void:
 # --- UI helpers ---
 
 static func growth_band() -> String:
-	# Verbal band for the audience flow DIRECTION. Uses the SAME shared delta as
-	# _tick_b2c_audience so "büyüyor/eriyor" can never contradict the motion.
+	# Band id for the audience flow DIRECTION: melting | flat | steady | fast. Uses the SAME shared
+	# delta as _tick_b2c_audience so the band can never contradict the motion.
 	var delta: float = _audience_delta_per_hour()
 	if delta <= -0.1:
-		return TranslationServer.translate("GROWTH_MELTING")
+		return "melting"
 	if delta < 0.15:
-		return TranslationServer.translate("GROWTH_FLAT")
+		return "flat"
 	if delta >= 0.6:
-		return TranslationServer.translate("GROWTH_FAST")
-	return TranslationServer.translate("GROWTH_STEADY")
+		return "fast"
+	return "steady"
 
 
 static func product_display_name() -> String:

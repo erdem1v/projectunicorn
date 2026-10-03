@@ -1,0 +1,125 @@
+{
+  "id": "team.outside_offer",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [],
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "most_senior"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "entity",
+  "min_gap_weeks": 8,
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 5
+      },
+      {
+        "entity_seam": "hr.tenure_weeks",
+        "scope": "employee",
+        "op": ">=",
+        "value": 12
+      },
+      {
+        "entity_seam": "hr.level",
+        "scope": "employee",
+        "op": ">=",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "bonus",
+      "outcome_id": "bonus",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -5000,
+          "label": "retention"
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "id": "talk",
+      "outcome_id": "talk",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -6
+        }
+      ]
+    },
+    {
+      "id": "release",
+      "outcome_id": "release",
+      "effects": [
+        {
+          "verb": "employee_leaves",
+          "scope": "employee"
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_TEAM_OUTSIDE_OFFER_TITLE",
+      "body": "EV_TEAM_OUTSIDE_OFFER_BODY",
+      "options": {
+        "bonus": "EV_TEAM_OUTSIDE_OFFER_BONUS",
+        "talk": "EV_TEAM_OUTSIDE_OFFER_TALK",
+        "release": "EV_TEAM_OUTSIDE_OFFER_RELEASE"
+      },
+      "expire_note": "EV_TEAM_OUTSIDE_OFFER_EXPIRED"
+    },
+    "en": {
+      "title": "EV_TEAM_OUTSIDE_OFFER_TITLE",
+      "body": "EV_TEAM_OUTSIDE_OFFER_BODY",
+      "options": {
+        "bonus": "EV_TEAM_OUTSIDE_OFFER_BONUS",
+        "talk": "EV_TEAM_OUTSIDE_OFFER_TALK",
+        "release": "EV_TEAM_OUTSIDE_OFFER_RELEASE"
+      },
+      "expire_note": "EV_TEAM_OUTSIDE_OFFER_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

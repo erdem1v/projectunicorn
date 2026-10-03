@@ -38,8 +38,8 @@ const NEUTRAL_VERBS := [
 	"start_arc", "advance_arc", "set_arc_var", "abort_arc", "end_arc",
 	# people — morale and assignment are not economy; salary is, and lives below
 	"change_morale", "morale_all", "assign_to", "send_on_leave", "start_training",
-	# product
-	"damage_product",
+	# product — a fix run spends the desk's hours, not money
+	"damage_product", "fix_run_start",
 	# sprint — the card a sprint decision is about, and the sprint's work hours
 	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "sprint_hours",
 	# customers — satisfaction is a relationship, not a payment
@@ -212,8 +212,14 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 	match verb:
 		# --- economy -------------------------------------------------------
 		"add_cash":
+			# Through Finance's one-time door, so a card's money reaches the month's books and
+			# the transactions list; `label` is the line the player reads there.
 			var amount: int = _amount(e)
-			GameState.set_cash(GameState.cash + amount)
+			var label: String = String(e.get("label", ""))
+			if amount < 0:
+				FinanceSystem.apply_one_time_cost(-amount, label)
+			else:
+				FinanceSystem.apply_one_time_income(amount, label)
 			return {"verb": verb, "amount": amount}
 		"add_mrr":
 			# No aggregate-MRR write seam exists: SalesSystem.reflect_mrr() derives MRR from the
@@ -379,6 +385,10 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			if sprint == 0:
 				return _no_target(verb, "")
 			return {"verb": verb, "sprint": sprint, "mult": mult}
+		"fix_run_start":
+			if not SupportSystem.start_fix_run():
+				return {"verb": verb, "refused": SupportSystem.fix_run_refusal()}
+			return {"verb": verb}
 
 		# --- world and surfaces -----------------------------------------------
 		"ticker_push":

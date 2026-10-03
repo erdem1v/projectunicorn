@@ -79,6 +79,20 @@ const STATE_UNPROVISIONED := "unprovisioned"   # canlı ürün yok ya da hiç ka
 const BURN_CATEGORY := "servers"
 
 
+# ---------------------------------------------------------------- servis maliyeti [WORKING]
+
+## Müşteriye hizmet etmenin aylık bedeli, sunucu faturasından ayrı: büyüyen müşteri defteri
+## bakım ister. B2B'de hesap başı sabit ve koltuk başı, B2C'de bin kullanıcı başı; ağır
+## kademenin yükü koltuğu ve kullanıcıyı pahalılaştırır.
+const SERVICE_PER_ACCOUNT_B2B := 45
+const SERVICE_PER_SEAT_B2B := 8
+const SERVICE_PER_1K_USERS_B2C := 700
+## Yeni hesap ilk haftalarında (onboarding) gelirinin önünde harcatır: evreye göre MRR'ının
+## bu katı kadar.
+const ONBOARDING_MRR_MULT := {1: 0.0, 2: 0.25, 3: 3.0}
+const SERVICE_BURN_CATEGORY := "service"
+
+
 # ---------------------------------------------------------------- durum
 
 ## §10 — "sürüm başına bir kez olay kartı düşer". Kartı tüketilmiş sürüm numarası; sürüm
@@ -246,12 +260,25 @@ static func monthly_bill() -> int:
 
 
 static func daily_bill() -> int:
-	return int(round(float(monthly_bill()) / float(TimeModel.DAYS_PER_MONTH)))
+	return FinanceSystem.daily_rate(monthly_bill())
 
 
-## "Brüt marj = MRR − sunucu faturası"; ikisi de aylık.
+## Aylık servis maliyeti; canlı ürün yoksa 0. Koşunun tek pazarı vardır, öbür terim 0 okur.
+static func monthly_service() -> int:
+	if not ProductState.is_live():
+		return 0
+	var load_mult: float = load_factor()
+	var cost: float = SalesSystem.b2c_audience() / 1000.0 * SERVICE_PER_1K_USERS_B2C * load_mult
+	for c in CustomerRegistry.get_by_market(MARKET_B2B):
+		cost += SERVICE_PER_ACCOUNT_B2B + c.seats * SERVICE_PER_SEAT_B2B * load_mult
+		if c.onboarding_until > GameState.day:
+			cost += c.mrr * float(ONBOARDING_MRR_MULT[GameState.phase])
+	return int(round(cost))
+
+
+## "Brüt marj = MRR − sunucu faturası − servis maliyeti"; hepsi aylık.
 static func gross_margin_monthly() -> int:
-	return GameState.mrr - monthly_bill()
+	return GameState.mrr - monthly_bill() - monthly_service()
 
 
 # ---------------------------------------------------------------- sahiplerine açılan sayılar
@@ -315,6 +342,8 @@ static func mark_capacity_warning_shown() -> void:
 
 # ---------------------------------------------------------------- günlük tik
 
-## TimeManager ürün slotunda, DESTEK'ten sonra koşar. Günün tek işi faturayı yayımlamaktır.
+## TimeManager ürün slotunda, DESTEK'ten sonra koşar. Günün işi sunucu faturasını ve servis
+## maliyetini yayımlamaktır.
 static func daily_tick() -> void:
 	FinanceSystem.set_burn_category(BURN_CATEGORY, daily_bill())
+	FinanceSystem.set_burn_category(SERVICE_BURN_CATEGORY, FinanceSystem.daily_rate(monthly_service()))

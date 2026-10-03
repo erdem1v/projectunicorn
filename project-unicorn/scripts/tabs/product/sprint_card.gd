@@ -80,6 +80,9 @@ func _build_full(line: HBoxContainer, can_add: bool, points: int) -> void:
 		State.DEVREDEN: head.add_child(SprintUiShared.stamp(tr("PRODUCT_CARRIED"), &"StampAmber"))
 		State.BETA_BEKLIYOR: head.add_child(SprintUiShared.stamp(tr("PRODUCT_BETA_WAITING"), &"Stamp"))
 		State.KILITLI: head.add_child(HRUiShared.lock_glyph(UiTokens.PRODUCT_ICON_PX, UiTokens.INK_MUTED))
+	# Söz verilmiş kademe her yerde etiketli: planlamada da, sprint sürerken de.
+	if _card.effect.any(func(part: Dictionary) -> bool: return part.k == "promise"):
+		head.add_child(SprintUiShared.stamp(tr("PRODUCT_PROMISED"), &"StampAmber"))
 	if _card.urgent:
 		_add_alarm(head, tr("PRODUCT_URGENT"))
 	if _card.spills:

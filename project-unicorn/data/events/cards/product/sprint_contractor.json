@@ -1,0 +1,82 @@
+{
+  "id": "product.sprint_contractor",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "latch": {
+    "cooldown_weeks": 4
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 5
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "contractor",
+      "outcome_id": "contractor",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -2000,
+          "label": "contractor"
+        },
+        {
+          "verb": "sprint_card_progress",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "learn",
+      "outcome_id": "learn",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SPRINT_CONTRACTOR_TITLE",
+      "body": "{seam:urun.decision_card} burada kimsenin daha önce yapmadığı bir iş istiyor. Bir serbest çalışan o kısmı çabuk bitirir. İçeride öğrenmek daha uzun sürer.",
+      "options": {
+        "contractor": "EV_PRODUCT_SPRINT_CONTRACTOR_HIRE",
+        "learn": "EV_PRODUCT_SPRINT_CONTRACTOR_LEARN"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_CONTRACTOR_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SPRINT_CONTRACTOR_TITLE",
+      "body": "{seam:urun.decision_card} needs something nobody here has done before. A contractor could do that part quickly. Learning it in house takes longer.",
+      "options": {
+        "contractor": "EV_PRODUCT_SPRINT_CONTRACTOR_HIRE",
+        "learn": "EV_PRODUCT_SPRINT_CONTRACTOR_LEARN"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_CONTRACTOR_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_effort",
+        "amount": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

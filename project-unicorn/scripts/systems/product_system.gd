@@ -9,7 +9,10 @@ extends RefCounted
 # Aşınma: kullanıcı ve karmaşıklık saatlik hata biriktirir; Test uzmanlığı düşürür ama WEAR_FLOOR'un
 # altına indiremez. İhmal edilen ürün hatayı günler içinde biriktirir. Katsayılar takvim saati
 # başınadır; saatlik tik yedi takvim saati taşır.
-const WEAR_AUD_COEF := 0.00004       # kullanıcı başına / saat
+# [WORKING] Kullanıcı başına / saat: 1.000 kullanıcı haftada ~0,3 canlı hata ekler. B2B'de kitle
+# 0 olduğundan yalnız B2C'yi oynatır; küçük, çünkü büyüyen kitlenin kendisi hata yığınıyla
+# memnuniyeti ve dönüşümü boğmamalı.
+const WEAR_AUD_COEF := 0.000002
 const WEAR_CPLX_COEF := 0.0012       # toplam karmaşıklık puanı başına / saat
 const WEAR_TECH_REDUCER := 0.005
 const WEAR_FLOOR := 0.002

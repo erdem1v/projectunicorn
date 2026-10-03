@@ -43,6 +43,14 @@ static func _install_product() -> void:
 	EvSeams.register("urun.decision_card", G, TYPE_STRING,
 		func() -> String: return _decision_card(),
 		"Product", "name of the card a sprint decision waits on; empty when none")
+	EvSeams.register("urun.decision_card_late", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.decision_card_late(),
+		"Product", "at the team's pace the decision card will not finish this sprint; false when none waits")
+	EvSeams.register("urun.decision_card_effort", G, TYPE_INT,
+		func() -> int:
+			var card: Dictionary = SprintSystem.decision_card()
+			return 0 if card.is_empty() else roundi(SprintSystem.total(card)),
+		"Product", "the decision card's effort in points; 0 when none waits")
 
 	# Quality. Axis readings, not a single score — §17's triangle rule says the player reads
 	# the asymmetry, so content asks about an axis and never about "quality" as one number.
@@ -75,6 +83,12 @@ static func _install_product() -> void:
 		func() -> float: return ProductRead.usage(), "Product", "load multiplier")
 	EvSeams.register("urun.capacity_tier", G, TYPE_INT,
 		func() -> int: return ProductRead.capacity_tier(), "Product", "provisioned infra units")
+	EvSeams.register("urun.capacity_state", G, TYPE_STRING,
+		func() -> String: return InfraSystem.capacity_state(),
+		"Product", "normal | amber | over | unprovisioned")
+	EvSeams.register("urun.enterprise_trust", G, TYPE_BOOL,
+		func() -> bool: return InfraSystem.meets_enterprise_trust(),
+		"Product", "the enterprise provider or security_cert research: the bar a large account checks before it signs")
 	EvSeams.register("urun.support_staffed", G, TYPE_BOOL,
 		func() -> bool: return ProductRead.support_staffed(),
 		"Product", "the module's central pressure reads from this one boolean")

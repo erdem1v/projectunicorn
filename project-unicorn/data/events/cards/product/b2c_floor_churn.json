@@ -1,0 +1,138 @@
+{
+  "id": "product.b2c_floor_churn",
+  "_note": "The floor's loss comes only after the player has seen its warning card: answered it, or let it run out on the desk. A warning dropped before it was shown does not count. The loss is an audience share, so its chip reads as one.",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "signal",
+  "class": "interrupt",
+  "tags": [],
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 8
+  },
+  "trigger": {
+    "signal": "axis_floor_crossed"
+  },
+  "condition": {
+    "all": [
+      {
+        "any": [
+          {
+            "seam": "urun.floor_innovation",
+            "op": "==",
+            "value": "crossed"
+          },
+          {
+            "seam": "urun.floor_stability",
+            "op": "==",
+            "value": "crossed"
+          },
+          {
+            "seam": "urun.floor_experience",
+            "op": "==",
+            "value": "crossed"
+          }
+        ]
+      },
+      {
+        "any": [
+          {
+            "history": "chose",
+            "event": "product.b2c_floor_signal",
+            "option": "feedback"
+          },
+          {
+            "history": "chose",
+            "event": "product.b2c_floor_signal",
+            "option": "noted"
+          },
+          {
+            "history": "resolution",
+            "event": "product.b2c_floor_signal",
+            "value": "expired"
+          }
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "let_go",
+      "outcome_id": "let_go",
+      "effects": [
+        {
+          "verb": "audience_delta",
+          "pct": -0.15
+        }
+      ]
+    },
+    {
+      "id": "credits",
+      "outcome_id": "credits",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1000,
+          "label": "refunds"
+        },
+        {
+          "verb": "audience_delta",
+          "pct": -0.05
+        }
+      ]
+    },
+    {
+      "id": "roadmap",
+      "outcome_id": "roadmap",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -2
+        },
+        {
+          "verb": "audience_delta",
+          "pct": -0.08
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_B2C_FLOOR_CHURN_TITLE",
+      "body": "EV_PRODUCT_B2C_FLOOR_CHURN_BODY",
+      "options": {
+        "let_go": "EV_PRODUCT_B2C_FLOOR_CHURN_LET_GO",
+        "credits": "EV_PRODUCT_B2C_FLOOR_CHURN_CREDITS",
+        "roadmap": "EV_PRODUCT_B2C_FLOOR_CHURN_ROADMAP"
+      },
+      "expire_note": "EV_PRODUCT_B2C_FLOOR_CHURN_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_B2C_FLOOR_CHURN_TITLE",
+      "body": "EV_PRODUCT_B2C_FLOOR_CHURN_BODY",
+      "options": {
+        "let_go": "EV_PRODUCT_B2C_FLOOR_CHURN_LET_GO",
+        "credits": "EV_PRODUCT_B2C_FLOOR_CHURN_CREDITS",
+        "roadmap": "EV_PRODUCT_B2C_FLOOR_CHURN_ROADMAP"
+      },
+      "expire_note": "EV_PRODUCT_B2C_FLOOR_CHURN_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "audience_delta",
+        "pct": -0.15
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}
