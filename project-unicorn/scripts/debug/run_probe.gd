@@ -28,41 +28,71 @@ extends RefCounted
 #   PROBE FIRE  day=<d> hour=<h> id=<id> src=<src>
 #   PROBE PICK  day=<d> id=<id> choice=<i> label=<label>
 #   PROBE STATE day=<d> cash=<n> mrr=<n> brand=<n> burn=<n> runway=<f> cust=<n> emp=<n> promises=<n>
+#   PROBE B2C   day=<d> aud=<f> paying=<n> price=<n> conv=<f> sat=<n> sat_target=<n> live_bugs=<n>
+#               confirmed=<n> q=<f> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
+#               validation_day=<f>          (every week a consumer product is live; desk = the
+#                                           support desk's roster, inflow and validation per day)
 #   PROBE CHURN day=<d> id=<cid> ...        (customer_churned — the autopsy's terminal)
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
 #   PROBE TALLY <id> fires=<n> picks=<n>    (one per id, at the end)
-#   PROBE END   day=<d> ...
+#   PROBE END   day=<d> run_active=<b> ending=<id> finite_runway_p<1|2|3>=<finite weeks>/<weeks>
+#               min_cash_pre_seed=<n> seed_day=<n|-1>   (the weeks are the weekly STATE readings,
+#                                           by phase; seed_day is the day the seed was signed)
 #   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
-#   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn categories> ...
+#   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn id>=<n>... ...
 #                                           (full_run*: once, the day the Series A door opens)
-#   PROBE MONTH_BURN day=<d> n=<n> ticks=<n> salaries=<n> ... one_time=<n>   (full_run*: beside each PROBE MONTH)
+#   PROBE MONTH_BURN day=<d> n=<n> ticks=<n> <burn id>=<n>... one_time=<n>   (full_run*: beside each PROBE MONTH)
+#               The burn ids are FinanceSystem.BURN_IDS, in its order.
 #   PROBE SPRINT day=<d> n=<n> label=<v1.x|-> shipped=<card ids> carried=<n> velocity=<done>/<capacity>
 #   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it)
-#   PROBE VC_*  (full_run_vc_naive / full_run_vc_cautious only): VC_CONFIG, VC_BOOK, VC_MEET,
+#   PROBE VC_*  (the presets with a Series A policy): VC_CONFIG, VC_BOOK, VC_MEET,
 #               VC_TABLE_OPEN, VC_PUSH, VC_TABLE_END, VC_REPLAY, VC_REPLAY_SUM
 
-const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_slip", "b2c", "b2c_neglect", "full_run",
-	"full_run_naive", "full_run_discount", "full_run_vc_naive", "full_run_vc_cautious"]
+## Every preset. The fixture presets ({}) seed their world in _seed_world. The played runs
+## (full_run*) seed nothing and carry what the founder picks and plays by:
+##   subtype   — the product chosen in the Product tab on the first morning;
+##   policy    — the event answers (default "sensible", below);
+##   vc        — the Series A policy, sim only (none: the run never sits at a Series A table);
+##   staff_cap — the headcount the B2B staffing ladder stops at (default: the whole ladder);
+##   k1_only   — the founder never plans a K2 or K3 step.
+const PRESETS := {
+	"b2b_reps": {}, "b2b_solo": {}, "b2b_risk": {}, "b2b_slip": {}, "b2c": {}, "b2c_neglect": {},
+	"full_run": {"subtype": "erp"},
+	"full_run_naive": {"subtype": "erp", "policy": "naive"},
+	"full_run_discount": {"subtype": "erp", "policy": "discount"},
+	"full_run_vc_naive": {"subtype": "erp", "vc": "naive"},
+	"full_run_vc_cautious": {"subtype": "erp", "vc": "cautious"},
+	"full_run_lean": {"subtype": "erp", "vc": "walk", "staff_cap": 7},
+	"full_run_b2c": {"subtype": "note_tool"},
+	"full_run_b2c_video": {"subtype": "video_clip"},
+	"full_run_b2c_vc_cautious": {"subtype": "note_tool", "vc": "cautious"},
+	"full_run_b2c_vc_walk": {"subtype": "note_tool", "vc": "walk"},
+	"full_run_b2c_k1": {"subtype": "note_tool", "k1_only": true},
+}
+const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Klipo"}
 # The played run has three answer policies on one world, a controlled experiment on what
 # the event cards do to the revenue curve:
 #   full_run          — "sensible": a promise when one is open, then a stall, and a
 #                       discount only when nothing else is left.
 #   full_run_naive    — always the first unlocked row.
 #   full_run_discount — the discount first, every time it is offered.
-# Two Series A policies sit on top of full_run (sim only): the world and the answers are
-# full_run's, only what happens once the door is open differs — see "The Series A hunt".
-# An optional fifth spec part `replay=<K>` sets the naive preset's per-fund table replays
-# (default 20; 0 turns them off).
+# The Series A policies sit on top of the sensible answers (sim only): only what happens once
+# the door is open differs — see "The Series A hunt". An optional fifth spec part `replay=<K>`
+# sets the naive table's per-fund replays (default 20; 0 turns them off).
+#   full_run_lean     — B2B that stops hiring at seven people and walks the table: the bootstrap
+#                       road, since profitable_bootstrap needs the Series A decision faced.
+#   full_run_b2c*     — the consumer runs: the founder adds the paid plan card once it unlocks,
+#                       never starts a sprint of research alone while a step is open, takes the
+#                       support desk once anyone pays, and hires on B2C_LADDER beside the reps
+#                       the desk needs.
+#   full_run_b2c_k1   — the consumer run that stops at the K1 steps: how far K1 alone carries.
+# Every played run takes the seed round the week its door opens — see "The seed round".
+# The fixtures:
+#   b2c           — a consumer product the sprint engine builds itself, the lead planning every
+#                   sprint; its MVP release brings the launch audience and opens the paid tier.
 #   b2c_neglect   — a stability-poor, bug-heavy B2C fixture nobody tends: satisfaction erodes.
-# The fixture presets seed a live product on a catalogue subtype without line content, so they have
-# no sprints; only the played run builds its product.
-
-## The played run's product, chosen in the Product tab on its first morning. B2B, not B2C: a
-## modest B2C v1's audience growth barely clears its erosion term, so an autopilot B2C run never
-## reaches the seed bar, while a signed B2B account is worth $200-$2,000 of MRR on the day it
-## closes. It is also the market the churn work lives in.
-const FULL_RUN_SUBTYPE := "erp"
-const FULL_RUN_PRODUCT := "Sahra"
+#   The B2B fixtures and b2c_neglect seed a live product on a catalogue subtype without line
+#   content, so they have no sprints.
 
 static var _fires: Dictionary = {}      # id -> fire count
 static var _picks: Dictionary = {}      # id -> resolve count
@@ -76,6 +106,11 @@ static var _hire_started: bool = false
 static var _last_appetite: String = ""     # PROBE SIGNAL on change
 static var _discount_uses: Dictionary = {}  # customer id -> discounts taken
 static var _policy: String = "sensible"     # full_run answer policy: sensible | naive | discount
+static var _subtype: String = ""            # full_run*: the product chosen on the first morning
+static var _staff_cap: int = 0              # full_run*: the headcount the B2B ladder stops at
+static var _k1_only: bool = false           # full_run*: never plan a K2 or K3 step
+static var _runway_weeks: Dictionary = {}   # phase -> Vector2i(weeks with a finite runway, weeks)
+static var _min_cash_pre_seed: int = 0      # the lowest weekly cash before the seed round closed
 static var _run_seed: int = 424242
 static var _fix_on_at: float = 0.0         # clock day (TimeModel.days) the running fix pass started
 static var _fix_off_at: float = -INF        # clock day the last fix pass ended
@@ -85,7 +120,7 @@ static var _gate_day: int = -1              # the day phase_gate_reached(3) fire
 static var _gate_logged: bool = false
 static var _mb_acc: Dictionary = {}         # burn id -> realised sum over the open fiscal month
 static var _mb_ticks: int = 0               # dispatched ticks folded into _mb_acc
-static var _vc_policy: String = ""          # "" | "naive" | "cautious" (full_run_vc_* presets)
+static var _vc_policy: String = ""          # "" | "naive" | "cautious" | "walk"
 static var _replay_k: int = -1              # naive only: table replays per fund; -1 = not given
 static var _vc_done: bool = false           # the one table this run gets has been played
 static var _vc_booked: String = ""          # the fund the current booking is with
@@ -115,7 +150,7 @@ static func run(spec: String, payload: Dictionary) -> void:
 		if extra.begins_with("replay="):
 			_replay_k = maxi(0, int(extra.trim_prefix("replay=")))
 	if not PRESETS.has(_preset):
-		print("PROBE ERROR unknown preset '%s' (have %s)" % [_preset, ", ".join(PRESETS)])
+		print("PROBE ERROR unknown preset '%s' (have %s)" % [_preset, ", ".join(PRESETS.keys())])
 		return
 
 	_fires.clear()
@@ -131,6 +166,7 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_vc_done = false
 	_vc_booked = ""
 	_vc_meet_day = -1
+	_runway_weeks = {}
 	# The presets measure the demo. A --build=ea in Main Run Args would otherwise turn the
 	# bootstrap win into a non-terminal milestone and a real-clock run would sit on its paper.
 	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
@@ -145,6 +181,7 @@ static func run(spec: String, payload: Dictionary) -> void:
 	RngStreams.reseed(GameState.run_seed)   # the named streams, not just the global generator
 	_wire_log()
 	_seed_world(_preset)
+	_min_cash_pre_seed = GameState.cash
 	if _vc_policy == "naive":
 		_replay_k = 20 if _replay_k < 0 else _replay_k
 	else:
@@ -262,7 +299,8 @@ static func _mb_add_tick() -> void:
 
 ## PROBE MONTH_BURN — the closed month's expense split into the burn categories. one_time is
 ## what the categories do not explain: the one-off charges (hire commission, severance,
-## training, the licences a sprint start pays) that accrue straight into the month's expense.
+## training, the licences a sprint start pays, an event card's cash) that accrue straight into
+## the month's expense.
 static func _log_month_burn(e: Dictionary, n: int) -> void:
 	var cat: int = 0
 	for raw in FinanceSystem.BURN_IDS:
@@ -270,18 +308,20 @@ static func _log_month_burn(e: Dictionary, n: int) -> void:
 	var s0: int = int(e.get("start_day", 0))
 	var e0: int = int(e.get("end_day", 0))
 	var exp: int = int(e.get("expense", 0))
-	print("PROBE MONTH_BURN day=%d n=%d start=%d end=%d ticks=%d ticks_expected=%d salaries=%d overtime=%d founder=%d servers=%d marketing=%d office=%d cat_sum=%d expense=%d one_time=%d income=%d" % [
-		GameState.day, n, s0, e0, _mb_ticks, e0 - s0,
-		int(_mb_acc.get("salaries", 0)), int(_mb_acc.get("overtime", 0)), int(_mb_acc.get("founder", 0)),
-		int(_mb_acc.get("servers", 0)), int(_mb_acc.get("marketing", 0)), int(_mb_acc.get("office", 0)),
-		cat, exp, exp - cat, int(e.get("income", 0))])
+	print("PROBE MONTH_BURN day=%d n=%d start=%d end=%d ticks=%d ticks_expected=%d %s cat_sum=%d expense=%d one_time=%d income=%d" % [
+		GameState.day, n, s0, e0, _mb_ticks, e0 - s0, _burn_fields(_mb_acc), cat, exp, exp - cat, int(e.get("income", 0))])
 	_mb_acc = {}
 	_mb_ticks = 0
 
 
+## "<burn id>=<n>" for every burn category, 0 for one nothing has written yet.
+static func _burn_fields(by_id: Dictionary) -> String:
+	return " ".join(FinanceSystem.BURN_IDS.map(func(k: String) -> String: return "%s=%d" % [k, int(by_id.get(k, 0))]))
+
+
 ## PROBE GATE — the company on the day the Series A door opens: who is on the payroll, what
 ## a month costs at today's rate, what the last closed month actually cost, and the margins.
-## "office" is printed as the finance system holds it (a TODO hook at 0); nothing is assumed.
+## Every burn category is printed as the finance system holds it; nothing is assumed.
 static func _log_gate() -> void:
 	var staff: Array[Character] = CharacterRegistry.get_employees()
 	var by_role: Dictionary = {}          # role -> [total, junior, mid, senior]
@@ -319,11 +359,9 @@ static func _log_gate() -> void:
 	var last_margin: String = "n/a"
 	if last_income > 0:
 		last_margin = str(int(last_net * 100 / last_income))
-	print("PROBE GATE day=%d emp=%d on_leave=%d roles=%s payroll_monthly=%d salaries=%d overtime=%d founder=%d servers=%d marketing=%d office=%d bd_sum=%d daily_burn=%d expense_runrate=%d mrr=%d runrate_margin_pct=%s cust=%d accounts=%d cash=%d last_n=%d last_start=%d last_end=%d last_income=%d last_expense=%d last_net=%d last_margin_pct=%s win3_margin_pct=%d win6_margin_pct=%d profit_streak=%d growth_avg_pct=%d" % [
+	print("PROBE GATE day=%d emp=%d on_leave=%d roles=%s payroll_monthly=%d %s bd_sum=%d daily_burn=%d expense_runrate=%d mrr=%d runrate_margin_pct=%s cust=%d accounts=%d cash=%d last_n=%d last_start=%d last_end=%d last_income=%d last_expense=%d last_net=%d last_margin_pct=%s win3_margin_pct=%d win6_margin_pct=%d profit_streak=%d growth_avg_pct=%d" % [
 		GameState.day, staff.size(), on_leave, ",".join(parts), CharacterRegistry.get_total_monthly_salaries(),
-		int(bd.get("salaries", 0)), int(bd.get("overtime", 0)), int(bd.get("founder", 0)),
-		int(bd.get("servers", 0)), int(bd.get("marketing", 0)), int(bd.get("office", 0)), bd_sum,
-		GameState.daily_burn, runrate, GameState.mrr, rr_margin,
+		_burn_fields(bd), bd_sum, GameState.daily_burn, runrate, GameState.mrr, rr_margin,
 		CustomerRegistry.get_all().size(), CustomerRegistry.account_count(), GameState.cash,
 		last_n, int(last.get("start_day", -1)), int(last.get("end_day", -1)), last_income, last_expense, last_net, last_margin,
 		GameState.get_window_margin_pct(3), GameState.get_window_margin_pct(6),
@@ -369,6 +407,9 @@ static func _log_promise(promise_id: String, stage: String) -> void:
 
 static func _log_state() -> void:
 	var runway: float = GameState.get_runway_months()
+	_runway_weeks[GameState.phase] = _runway_weeks.get(GameState.phase, Vector2i.ZERO) + Vector2i(int(not is_inf(runway)), 1)
+	if GameState.seed_closed_day < 0:
+		_min_cash_pre_seed = mini(_min_cash_pre_seed, GameState.cash)
 	# The B2C aggregate (audience, its satisfaction, live bugs) and the rival-relative
 	# quality q that the audience formula actually reads — the four numbers the B2C growth
 	# and bug-conversion verdicts are read from. q is -1 before a ship (nothing to compare).
@@ -422,6 +463,25 @@ static func _log_customers() -> void:
 			clampi(int(round(health)), 0, 100)])
 
 
+## PROBE B2C — the consumer week: the audience and who pays it at what price, the userbase's
+## satisfaction beside the experience score it drifts toward, live and confirmed bugs, the
+## rival-relative q the audience formula reads, interest, server occupancy, and the support
+## desk: who is on it, the reports waiting, and how many arrive and get validated a day.
+static func _log_b2c() -> void:
+	if not ProductState.is_live() or ProductState.market_type() != "b2c":
+		return
+	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	var price: int = int(GameState.get_flag("b2c_price", 0)) if GameState.get_flag("b2c_paid_tier_open", false) else 0
+	print("PROBE B2C day=%d aud=%.1f paying=%d price=%d conv=%.3f sat=%d sat_target=%d live_bugs=%d confirmed=%d q=%.1f interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f" % [
+		GameState.day, SalesSystem.b2c_audience(), SalesSystem.b2c_paying_users(), price,
+		SalesSystem.conversion_rate(price) if price > 0 else 0.0, ub.satisfaction if ub != null else -1,
+		roundi(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")),
+		ProductSystem.live_bug_count(), ProductState.bugs_confirmed(),
+		SalesSystem._rival_relative_quality(QualityModel.shipped_normalized()), ProductRead.interest(),
+		InfraSystem.occupancy(), SupportSystem.desk_roster().size(), ProductState.reports_incoming(),
+		SupportSystem.reports_per_day(), SupportSystem.validation_per_day()])
+
+
 static func _log_tally() -> void:
 	var ids: Array = _fires.keys()
 	ids.sort()
@@ -438,16 +498,22 @@ static func _log_tally() -> void:
 
 static func _drain_modals() -> void:
 	# resolve_choice() ends in _pump_queue(), which mounts the next event synchronously —
-	# so this loop walks the whole queue. The guard is a runaway backstop, not a cap: if
-	# it ever trips, that IS a finding (an event re-queueing itself inside its own
-	# resolution) and it says so instead of hanging the probe.
+	# so this loop walks the whole queue. Then the desk's papers are opened, most urgent first,
+	# and answered by the same policy: a paper left to lapse would pay an on_expire no policy
+	# chose. The guard is a runaway backstop, not a cap: if it ever trips, that IS a finding
+	# (an event re-queueing itself inside its own resolution) and it says so instead of
+	# hanging the probe.
 	var guard: int = 0
-	while EventGate.active_id() != "":
+	while EventGate.active_id() != "" or not EventGate.desk_papers(1).is_empty():
 		guard += 1
 		if guard > 64:
 			print("PROBE ERROR drain guard tripped at day %d on id=%s — an event is re-queueing inside its own resolution" % [
 				GameState.day, EventGate.active_id()])
 			return
+		if EventGate.active_id() == "":
+			# A paper the world has moved past is dropped off the desk instead of opening.
+			EventGate.open_paper(String(EventGate.desk_papers(1)[0].id))
+			continue
 		var id: String = EventGate.active_id()
 		var ev: GameEvent = EventGate.active_card()
 		if ev == null:
@@ -569,6 +635,7 @@ static func _on_week_start() -> void:
 	_play_the_week()
 	_log_state()
 	_log_customers()
+	_log_b2c()
 	if GameState.day >= _stop_day or not GameState.run_active:
 		_stopped = true
 		if _mode != "sim":
@@ -624,8 +691,12 @@ static func _finish() -> void:
 		_vc_end("UNRESOLVED", "phase<3" if GameState.phase < 3 else "run_over")
 	_log_weekly_fires()
 	_log_tally()
-	print("PROBE END day=%d run_active=%s ending=%s" % [
-		GameState.day, str(GameState.run_active), GameState.ending_id])
+	var runway: Array = [1, 2, 3].map(func(ph: int) -> String:
+		var w: Vector2i = _runway_weeks.get(ph, Vector2i.ZERO)
+		return "finite_runway_p%d=%d/%d" % [ph, w.x, w.y])
+	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d" % [
+		GameState.day, str(GameState.run_active), GameState.ending_id, " ".join(runway), _min_cash_pre_seed,
+		GameState.seed_closed_day])
 	_log_hr()
 
 
@@ -657,15 +728,17 @@ static func _log_hr() -> void:
 #  The founder's own moves (the played run; inert for the fire-log presets)
 # ============================================================================
 
-## The week's 08:00: the night's cards are answered, the desk looked at, then the sales
-## meetings sat back to back and the Series A hunt played. Every move goes through the seam the
-## corresponding tab button calls — the probe has no privileged path into the engine.
+## The week's 08:00: the night's cards are answered, the desk looked at, the sprint planned,
+## the seed round taken once its door opens, then the sales meetings sat back to back and the
+## Series A hunt played. Every move goes through the seam the corresponding tab button calls —
+## the probe has no privileged path into the engine.
 static func _play_the_week() -> void:
 	_answer()
 	_play_the_hour()
 	if not _full_run:
 		return
 	_plan_the_sprint()
+	_take_the_seed()
 	if GameState.get_flag("mvp_shipped", false):
 		_work_the_pipeline()
 	if _vc_policy != "":
@@ -684,26 +757,63 @@ static func _play_the_hour() -> void:
 
 ## The Product tab at the week's 08:00. Sprints close in the night's daily tick, so the morning
 ## finds either a running sprint or the release note: the note is read, the next sprint planned
-## (the promised steps first, the lead's suggestion around them) and started. A decision paper
-## waiting on a card is opened and answered first, since a waiting card does not move.
+## (the promised steps first, on B2C the paid plan, the lead's suggestion around them) and
+## started. A decision paper waiting on a card was already answered off the desk (_drain_modals).
 static func _plan_the_sprint() -> void:
 	if not SprintSystem.is_typed():
-		SprintSystem.choose_type(FULL_RUN_SUBTYPE, FULL_RUN_PRODUCT)
-		print("PROBE PLAY day=%d choose_type %s market=%s" % [GameState.day, FULL_RUN_SUBTYPE, ProductState.market_type()])
-	var decision: Dictionary = GameState.product.decision
-	if not decision.is_empty():
-		SprintSystem.decide(String(decision.card_id))
-		_drain_modals()
+		SprintSystem.choose_type(_subtype, PRODUCT_NAMES[_subtype])
+		print("PROBE PLAY day=%d choose_type %s market=%s" % [GameState.day, _subtype, ProductState.market_type()])
 	if SprintSystem.mode() == "release":
 		SprintSystem.plan_next()
 	if SprintSystem.mode() != "plan":
 		return
 	_plan_promises()
+	var b2c: bool = ProductState.market_type() == "b2c"
+	var paid: String = "plan:" + SprintCatalog.PAID_PLAN
+	if b2c and not GameState.product.sprint.cards.has(paid):
+		SprintSystem.add(paid)
+		if GameState.product.sprint.cards.has(paid):
+			print("PROBE PLAY day=%d paid plan card" % GameState.day)
 	SprintSystem.apply_lead()
+	if _k1_only:
+		for id in GameState.product.sprint.cards.duplicate():
+			if not _plannable(GameState.product.cards[id]):
+				SprintSystem.remove(id)
+	if b2c:
+		_keep_building()
+	# With no K1 step or fix left to plan, a research sprint: a plan left unstarted is auto-started
+	# overnight on the lead's suggestion, K2 steps and all.
+	if _k1_only and not SprintSystem.can_start():
+		for area in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
+			var research: Array = SprintCatalog.candidates(area.id).filter(func(c: Dictionary) -> bool: return c.kind == "research")
+			if not research.is_empty():
+				SprintSystem.add(research[0].id)
+				break
 	if SprintSystem.start():
 		print("PROBE PLAY day=%d sprint %d start cards=%s used=%d capacity=%d" % [GameState.day,
-			SprintSystem.sprint_number(), ",".join(GameState.product.sprint.cards), SprintSystem.used(),
+			SprintSystem.sprint_number(), ",".join(GameState.product.sprint.cards), roundi(SprintSystem.used()),
 			SprintSystem.capacity()])
+
+
+## A sprint with research alone (or nothing) in it releases nothing, so while a step is open the
+## founder plans the first one beside the research. With no open step the research sprint runs:
+## there is nothing to build.
+static func _keep_building() -> void:
+	var p: Dictionary = GameState.product
+	if p.sprint.cards.any(func(id: String) -> bool: return p.cards[id].kind != "research"):
+		return
+	for area in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
+		for c in SprintCatalog.candidates(area.id):
+			if c.kind != "research" and c.state == "candidate" and _plannable(c) and SprintCatalog.gate_reason(c.step) == "":
+				SprintSystem.add(c.id)
+				if p.sprint.cards.has(c.id):
+					print("PROBE PLAY day=%d step beside research: %s" % [GameState.day, c.id])
+				return
+
+
+## The K1-only founder plans no step past K1: fixes, research and the paid plan stay open.
+static func _plannable(c: Dictionary) -> bool:
+	return not _k1_only or int(c.target_tier) <= 1
 
 
 ## Keeping the word: an open promise whose step is the line's next one goes into the sprint, as
@@ -792,7 +902,7 @@ static func _meet(p: Prospect) -> void:
 		GameState.day, p.company_name, outcome, mrr_before, GameState.mrr])
 
 
-## The played run's staffing ladder: a founder who is growing
+## The B2B run's staffing ladder: a founder who is growing
 ## hires the desk the growth needs — a developer on Frank's money, a support rep once a
 ## few accounts are live, sales reps as MRR climbs. Each rung only when the payroll it
 ## adds leaves six months of runway.
@@ -813,6 +923,47 @@ const STAFF_LADDER := [
 	{"role": "customer_rep", "min_customers": 25, "min_mrr": 0},
 	{"role": "sales_rep", "min_customers": 0, "min_mrr": 80000},
 ]
+## The consumer run's ladder: no sales desk to staff, so the rungs follow MRR alone, and beside
+## them the support reps the desk needs.
+const B2C_LADDER := [
+	{"role": "developer", "min_mrr": 0},
+	{"role": "designer", "min_mrr": 8000},
+	{"role": "tester", "min_mrr": 15000},
+	{"role": "developer", "min_mrr": 25000},
+	{"role": "product_manager", "min_mrr": 40000},
+]
+
+
+## The role the ladder hires next, or "" while it waits. B2B climbs STAFF_LADDER by headcount up
+## to the preset's cap. B2C first hires a support rep whenever someone pays, reports are waiting
+## and the desk validates fewer a day than arrive: the release-to-release swing in the inflow
+## alone does not hire while the desk keeps the queue empty, and a rep away on leave or in
+## training is waited for, not replaced. Then the first B2C_LADDER rung whose role the staff is
+## short of.
+static func _next_role() -> String:
+	var staff: Array[Character] = CharacterRegistry.get_employees()
+	if SalesSystem.is_b2b_market():
+		if staff.size() >= _staff_cap:
+			return ""
+		var want: Dictionary = STAFF_LADDER[staff.size()]
+		if CustomerRegistry.account_count() < int(want.min_customers) or GameState.mrr < int(want.min_mrr):
+			return ""
+		return String(want.role)
+	var reps: Array = staff.filter(func(c: Character) -> bool: return c.role == HRConstants.ROLE_CUSTOMER_REP)
+	if SalesSystem.b2c_paying_users() > 0 and ProductState.reports_incoming() > 0 \
+			and reps.all(func(c: Character) -> bool: return c.status == HRConstants.STATUS_ACTIVE) \
+			and SupportSystem.validation_per_day() < SupportSystem.reports_per_day():
+		return HRConstants.ROLE_CUSTOMER_REP
+	# The first rung whose role is short of what the ladder wants up to it: a departure is refilled
+	# with the role that left, not with whatever rung the smaller headcount points at.
+	var spare: Dictionary = {}
+	for c in staff:
+		spare[c.role] = int(spare.get(c.role, 0)) + 1
+	for want in B2C_LADDER:
+		spare[want.role] = int(spare.get(want.role, 0)) - 1
+		if int(spare[want.role]) < 0:
+			return String(want.role) if GameState.mrr >= int(want.min_mrr) else ""
+	return ""
 
 
 static func _hire_after_the_seed() -> void:
@@ -820,7 +971,7 @@ static func _hire_after_the_seed() -> void:
 	# HRSearchSystem exactly as the HR tab does it: start a search, wait for the files to
 	# arrive, hire the cheapest one.
 	if int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, 0)) <= 0:
-		return   # no seed money yet — hiring on the opening cash is a different run
+		return   # no cheque from Frank yet — hiring on the opening cash is a different run
 	if HRSearchSystem.has_files_ready():
 		var hired: Character = HRSearchSystem.hire(0)
 		if hired != null:
@@ -830,18 +981,15 @@ static func _hire_after_the_seed() -> void:
 		return
 	if _hire_started or not HRSearchSystem.can_start():
 		return
-	var rung: int = CharacterRegistry.get_employees().size()
-	if rung >= STAFF_LADDER.size():
-		return
-	var want: Dictionary = STAFF_LADDER[rung]
-	if CustomerRegistry.account_count() < int(want["min_customers"]) or GameState.mrr < int(want["min_mrr"]):
+	var role: String = _next_role()
+	if role == "":
 		return
 	var monthly_out: int = GameState.daily_burn * 30 + 6000 - GameState.mrr
 	if monthly_out > 0 and GameState.cash < monthly_out * 6:
 		return
-	if HRSearchSystem.start_search(String(want["role"]), HRConstants.LEVEL_JUNIOR):
+	if HRSearchSystem.start_search(role, HRConstants.LEVEL_JUNIOR):
 		_hire_started = true
-		print("PROBE PLAY day=%d start_search %s/junior" % [GameState.day, want["role"]])
+		print("PROBE PLAY day=%d start_search %s/junior" % [GameState.day, role])
 
 
 ## The played run's operations — the things any player does once the product is live: run a
@@ -850,6 +998,16 @@ static func _hire_after_the_seed() -> void:
 static func _run_the_company() -> void:
 	if not ProductState.is_live():
 		return
+	# Once anyone pays for the consumer product the founder swaps his build job for the support
+	# desk (§8.2). Sprint points do not read his job (SprintSystem.team), so the sprint loses
+	# nothing; the desk gains his engineering for fix passes, and his customer_success for
+	# validation (0 in the debug payload, so the first rep is still needed).
+	var founder: Character = CharacterRegistry.get_founder()
+	if ProductState.market_type() == "b2c" and SalesSystem.b2c_paying_users() > 0 \
+			and not founder.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
+		CharacterRegistry.clear_jobs(founder.id)
+		if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) == "":
+			print("PROBE PLAY day=%d founder takes the support desk" % GameState.day)
 	# A player closes a fix pass every few days and ships what was fixed; waiting for zero confirmed
 	# bugs never ends, because reports keep coming. Four calendar days on, one off, counted on the
 	# clock: the night cannot be acted in, so while the
@@ -934,19 +1092,57 @@ static func _run_research() -> void:
 
 
 # ============================================================================
-#  The Series A hunt (full_run_vc_naive / full_run_vc_cautious only)
+#  The seed round (every played run)
+# ============================================================================
+#
+# The seed door opens in Traction at its MRR bar and closes on entering phase 3; the run gets
+# one pitch, and the seed room cannot say no (ch. 09 §3). Every played run takes it the week the
+# door opens: the first fund in the registry's order that takes the pitch, the meeting played by
+# the Series A rule (_meeting_pick), then the offer signed at the table by the preset's Series A
+# table policy. naive pushes random levers until the final counter; cautious, and the runs with
+# no Series A policy, sign the opening terms; walk signs them too, because the seed table has no
+# walk (TermSheetTableSystem.walk refuses it at seed).
+
+static func _take_the_seed() -> void:
+	if GameState.seed_sheet == null and SeedRoundSystem.door_open() \
+			and WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS):
+		for raw in InvestorRegistry.get_active():
+			var fund: String = String((raw as Dictionary).get("id", ""))
+			if SeedRoundSystem.begin_pitch(fund):
+				var path: String = _sit_the_meeting()
+				print("PROBE PLAY day=%d seed meeting fund=%s path=%s" % [GameState.day, fund, path])
+				break
+	var sheet: TermSheet = GameState.seed_sheet
+	if sheet == null or not WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS):
+		return
+	TermSheetTableSystem.open(sheet.vc_id, PitchConstants.STAGE_SEED)
+	var pushes: int = 0
+	if _vc_policy == "naive":
+		pushes = int(_push_until_done("probe_seed_lever", sheet.vc_id, sheet.vc_id, false).pushes)
+	TermSheetTableSystem.sign()           # → SeedRoundSystem.accept: the money in, the run goes on
+	TermSheetTableSystem.end_sitting()
+	print("PROBE PLAY day=%d seed signed fund=%s band=%s pushes=%d raise=%d equity=%d cash=%d" % [
+		GameState.day, sheet.vc_id, sheet.band, pushes, GameState.run_seed_amount,
+		GameState.run_seed_equity_pct, GameState.cash])
+
+
+# ============================================================================
+#  The Series A hunt (the presets with a Series A policy)
 # ============================================================================
 #
 # What share of term-sheet tables end in a signature, a final offer or the fund walking
 # out when a naive founder plays them? The bot never met a VC, so
-# these two policies are the working definitions the owner wrote:
+# these policies are the working definitions the owner wrote:
 #   naive    — once the door is open, book the first fund that will meet; at the table push
 #              a random lever until patience runs out; sign a final offer.
 #   cautious — the same meeting; sign the opening terms without a single push (the baseline).
-# The meeting is played identically by both, so the two runs are the same run up to the
+#   walk     — the same meeting; walk the first table through its own walk (VCPitchSystem.
+#              walk_table): the Series A decision faced and refused, the bootstrap road.
+# The meeting is played identically by all, so the runs are the same run up to the
 # table. The lever draw comes from a probe-local generator seeded per table with an EvDice
 # hash of seed/day/ids — never a stream the game draws from — and nothing acts before
-# phase 3: a VC preset is full_run until the door opens.
+# phase 3: until the door opens a VC preset is the same run without the policy, except naive,
+# whose seed table is pushed (see "The seed round").
 
 static func _play_the_hunt() -> void:
 	if _vc_done or not GameState.run_active or GameState.phase < 3 or TermSheetTableSystem.is_active():
@@ -1026,6 +1222,16 @@ static func _play_the_meeting() -> void:
 	if fund != _vc_booked:
 		print("PROBE ERROR day=%d meeting fund %s is not the booked %s" % [GameState.day, fund, _vc_booked])
 	var conv0: int = VCPitchSystem._conviction
+	var path: String = _sit_the_meeting()
+	var st: Dictionary = GameState.vc_states.get(fund, {}) as Dictionary
+	print("PROBE VC_MEET day=%d fund=%s n=%d conv0=%d path=%s result=%s sheet_conv=%d rejections=%d brand=%d" % [
+		GameState.day, fund, int(st.get("meeting_count", 0)), conv0, path,
+		String(st.get("status", "?")), int(st.get("sheet_conviction", -1)), GameState.vc_rejections, GameState.brand])
+
+
+## The seated meeting, Series A or seed, played to its end by _meeting_pick and its hours run.
+## Returns the path: "<pick>:<conviction before>><after>" per beat.
+static func _sit_the_meeting() -> String:
 	var trace: Array[String] = []
 	var ids: Array[String] = ["b1_read"]   # Beat 1 has one row, and its resolver ignores the id
 	var guard: int = 0
@@ -1045,10 +1251,7 @@ static func _play_the_meeting() -> void:
 	if VCPitchSystem.is_active():
 		print("PROBE ERROR day=%d meeting did not finish" % GameState.day)
 	VCPitchSystem.end_sitting()     # the sitting's hours run once the panel is gone
-	var st: Dictionary = GameState.vc_states.get(fund, {}) as Dictionary
-	print("PROBE VC_MEET day=%d fund=%s n=%d conv0=%d path=%s result=%s sheet_conv=%d rejections=%d brand=%d" % [
-		GameState.day, fund, int(st.get("meeting_count", 0)), conv0, ",".join(trace),
-		String(st.get("status", "?")), int(st.get("sheet_conviction", -1)), GameState.vc_rejections, GameState.brand])
+	return ",".join(trace)
 
 
 static func _pushable_levers() -> Array[String]:
@@ -1123,11 +1326,13 @@ static func _play_the_table(vc: String) -> void:
 	var outcome: String = "SIGNED_NO_FINAL"
 	if walked:
 		outcome = "FUND_WALKED"
+	elif _vc_policy == "walk":
+		outcome = "FOUNDER_WALKED"
 	elif int(ev.get("state", 0)) == TermSheetTableSystem.PATIENCE_ZERO:
 		outcome = "SIGNED_FINAL"
 	var t1: Dictionary = TermSheetTableSystem._terms.duplicate()
 	# A walked table raised nothing: its working terms are printed, its money is not.
-	var money: String = "-" if walked else str(TermSheetTableSystem.money_raised())
+	var money: String = "-" if walked or _vc_policy == "walk" else str(TermSheetTableSystem.money_raised())
 	print("PROBE VC_TABLE_END day=%d fund=%s policy=%s outcome=%s e0=%d e_end=%d thr=%d pushes=%d wins=%d levers=%s patience_left=%d val_m=%d dil=%d board=%d veto=%s money=%s rejections=%d" % [
 		GameState.day, vc, _vc_policy, outcome, e0, TermSheetTableSystem.eagerness(), thr, int(r.pushes), int(r.wins),
 		String(r.get("levers", "")), int((ev.get("patience", {}) as Dictionary).get("current", 0)), int(t1.get("valuation_m", 0)),
@@ -1136,6 +1341,8 @@ static func _play_the_table(vc: String) -> void:
 	_vc_done = true
 	if walked:
 		TermSheetTableSystem.leave()    # the closure is already written by the fund's walk-out
+	elif _vc_policy == "walk":
+		TermSheetTableSystem.walk()     # → VCPitchSystem.walk_table: the decision faced, the run goes on
 	else:
 		TermSheetTableSystem.sign()     # → EndingsSystem.trigger_ending("series_a_close")
 	TermSheetTableSystem.end_sitting()  # a run-ending signature owes no hours
@@ -1266,15 +1473,19 @@ static func _seed_world(preset: String) -> void:
 		# origin's opening cash. Everything the log shows was earned by the founder's moves
 		# through the same seams the tabs call.
 		_full_run = true
-		_policy = "naive" if preset == "full_run_naive" else ("discount" if preset == "full_run_discount" else "sensible")
-		_vc_policy = "naive" if preset == "full_run_vc_naive" else ("cautious" if preset == "full_run_vc_cautious" else "")
+		var spec: Dictionary = PRESETS[preset]
+		_subtype = String(spec.subtype)
+		_policy = String(spec.get("policy", "sensible"))
+		_vc_policy = String(spec.get("vc", ""))
+		_staff_cap = int(spec.get("staff_cap", STAFF_LADDER.size()))
+		_k1_only = bool(spec.get("k1_only", false))
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log
 	match preset:
 		"b2c":
-			_seed_b2c_world(false)
+			_seed_b2c_world()
 		"b2c_neglect":
-			_seed_b2c_world(true)
+			_seed_b2c_neglect()
 		"b2b_solo":
 			_seed_b2b_world(0)
 		"b2b_reps":
@@ -1317,22 +1528,27 @@ static func _seed_live_product(market: String, subtype: String, components: Arra
 	GameState.set_flag("mvp_product_name", product_name)
 
 
-static func _seed_b2c_world(neglect: bool) -> void:
+## The tended consumer product, built by the sprint engine itself: the note app and the founder
+## alone, Sprint 1 started on the lead's plan and every later sprint auto-started on it. The MVP
+## release brings the launch audience and opens the paid tier.
+static func _seed_b2c_world() -> void:
+	SprintSystem.choose_type("note_tool", PRODUCT_NAMES["note_tool"])
+	SprintSystem.apply_lead()
+	SprintSystem.start()
+	EventBus.version_shipped.connect(func(_n: int) -> void:
+		SalesSystem.add_b2c_audience(200)
+		SalesSystem.open_b2c_paid_tier(15), CONNECT_ONE_SHOT)
+
+
+## The UNTENDED consumer product: experience low enough that satisfaction drifts down toward its
+## score, a live backlog over SATISFACTION_BUG_GATE pushing it lower, and nobody sprints. The
+## "declining" arm of the B2C growth measurement.
+static func _seed_b2c_neglect() -> void:
 	_seed_live_product("b2c", "ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], "Nova")
-	if neglect:
-		# The UNTENDED consumer product. Experience under the B2C
-		# satisfaction gate (no daily +1), a live backlog over SATISFACTION_BUG_GATE (daily −1),
-		# and nobody sprints — satisfaction erodes, the WOM term never opens, the multiplier
-		# shrinks growth. The "declining" arm of the B2C growth measurement.
-		GameState.set_flag("mvp_innovation", 10.0)
-		GameState.set_flag("mvp_stability", 8.0)
-		GameState.set_flag("mvp_experience", 8.0)
-		GameState.set_flag("mvp_live_bug_count", 12)
-	else:
-		# A modest v1: rival-relative q ≈ 41.
-		GameState.set_flag("mvp_innovation", 15.0)
-		GameState.set_flag("mvp_stability", 20.0)
-		GameState.set_flag("mvp_experience", 17.5)
+	GameState.set_flag("mvp_innovation", 10.0)
+	GameState.set_flag("mvp_stability", 8.0)
+	GameState.set_flag("mvp_experience", 8.0)
+	GameState.set_flag("mvp_live_bug_count", 12)
 	SalesSystem.add_b2c_audience(200)
 	SalesSystem.open_b2c_paid_tier(15)
 
