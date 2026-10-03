@@ -1,298 +1,180 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/components/top_bar.gd" id="1_topbar"]
+[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_menajer"]
 
 [node name="TopBar" type="Panel"]
 custom_minimum_size = Vector2(0, 64)
+theme = ExtResource("2_menajer")
 theme_type_variation = &"TopBarPanel"
 script = ExtResource("1_topbar")
 
-[node name="Margin" type="MarginContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 0
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 0
+[node name="Logo" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 20.0
+offset_bottom = 20.0
+mouse_filter = 2
+theme_type_variation = &"BrandMark"
 
-[node name="Row" type="HBoxContainer" parent="Margin"]
-layout_mode = 2
-theme_override_constants/separation = 26
-alignment = 1
+[node name="LogoName" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"SubheadLabel"
+text = "TOPBAR_BRAND"
+text_overrun_behavior = 3
 
-[node name="IdentityGroup" type="HBoxContainer" parent="Margin/Row"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 10
+[node name="Phase" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeySmall"
 
-[node name="LogoSquare" type="ColorRect" parent="Margin/Row/IdentityGroup"]
-custom_minimum_size = Vector2(18, 18)
-layout_mode = 2
-size_flags_vertical = 4
+[node name="PhaseDot1" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 6.0
+offset_bottom = 6.0
+mouse_filter = 2
+theme_type_variation = &"PhaseDotDim"
 
-[node name="CompanyNameLabel" type="Label" parent="Margin/Row/IdentityGroup"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_type_variation = &"ChromeValue"
-text = "—"
+[node name="PhaseDot2" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 6.0
+offset_bottom = 6.0
+mouse_filter = 2
+theme_type_variation = &"PhaseDotDim"
 
-[node name="FinanceGroup" type="HBoxContainer" parent="Margin/Row"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 28
+[node name="PhaseDot3" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 6.0
+offset_bottom = 6.0
+mouse_filter = 2
+theme_type_variation = &"PhaseDotDim"
 
-[node name="StatCol_Cash" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
-custom_minimum_size = Vector2(104, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 2
-
-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Cash"]
-layout_mode = 2
-theme_type_variation = &"MetricCaption"
+[node name="CashKey" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeyLabel"
 text = "FIN_CAP_CASH"
 
-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Cash"]
-layout_mode = 2
-theme_type_variation = &"MetricValue"
-text = "$50,000"
-clip_text = true
+[node name="CashValue" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"HeroValue"
 
-[node name="StatCol_MRR" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
-custom_minimum_size = Vector2(104, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 2
-
-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_MRR"]
-layout_mode = 2
-theme_type_variation = &"MetricCaption"
-text = "FIN_CAP_MRR"
-
-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_MRR"]
-layout_mode = 2
-theme_type_variation = &"MetricValue"
-text = "$0"
-clip_text = true
-
-[node name="StatCol_Burn" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 2
-
-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn"]
-layout_mode = 2
-theme_type_variation = &"MetricCaption"
-text = "FIN_CAP_BURN"
-
-[node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Burn"]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn/ValueRow"]
-layout_mode = 2
-size_flags_vertical = 8
-theme_type_variation = &"MetricValue"
-text = "$500"
-
-[node name="UnitLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn/ValueRow"]
-layout_mode = 2
-size_flags_vertical = 8
-theme_type_variation = &"MetricUnit"
-text = "TOPBAR_UNIT_PER_MONTH"
-
-[node name="StatCol_Net" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 2
-
-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net"]
-layout_mode = 2
-theme_type_variation = &"MetricCaption"
+[node name="NetKey" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeySmall"
 text = "FIN_CAP_NET"
 
-[node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Net"]
-layout_mode = 2
-theme_override_constants/separation = 2
+[node name="NetValue" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"DataMedium"
 
-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net/ValueRow"]
-layout_mode = 2
-size_flags_vertical = 8
-theme_type_variation = &"MetricValue"
-text = "+$500"
-
-[node name="UnitLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net/ValueRow"]
-layout_mode = 2
-size_flags_vertical = 8
-theme_type_variation = &"MetricUnit"
+[node name="NetUnit" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"Caption"
 text = "TOPBAR_UNIT_PER_MONTH"
 
-[node name="StatCol_Runway" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 2
+[node name="RunwayKey" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeyLabel"
 
-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway"]
-layout_mode = 2
-theme_type_variation = &"MetricCaption"
-text = "FIN_CAP_RUNWAY"
+[node name="RunwayValue" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"ValueText"
 
-[node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Runway"]
-layout_mode = 2
-theme_override_constants/separation = 2
+[node name="MrrKey" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeyLabel"
+text = "FIN_CAP_MRR"
 
-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway/ValueRow"]
-layout_mode = 2
-size_flags_vertical = 8
-theme_type_variation = &"MetricValue"
-text = "3.3"
+[node name="MrrValue" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"ValueText"
 
-[node name="UnitLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway/ValueRow"]
-layout_mode = 2
-size_flags_vertical = 8
-theme_type_variation = &"MetricUnit"
-text = "—"
-
-[node name="ReputationGroup" type="HBoxContainer" parent="Margin/Row"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 28
-
-[node name="StatCol_Brand" type="VBoxContainer" parent="Margin/Row/ReputationGroup"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 2
-
-[node name="HeaderLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Brand"]
-layout_mode = 2
-theme_type_variation = &"MetricCaption"
+[node name="BrandKey" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeySmall"
 text = "FIN_CAP_BRAND"
 
-[node name="ValueLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Brand"]
-layout_mode = 2
-theme_type_variation = &"MetricValue"
-text = "50"
+[node name="BrandValue" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"DataText"
 
-[node name="StatCol_Rep" type="VBoxContainer" parent="Margin/Row/ReputationGroup"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 2
+[node name="BurnKey" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeyLabel"
+text = "FIN_CAP_BURN"
 
-[node name="HeaderLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Rep"]
-layout_mode = 2
-theme_type_variation = &"MetricCaption"
+[node name="BurnValue" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"ValueText"
+
+[node name="BurnUnit" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"Caption"
+text = "TOPBAR_UNIT_PER_MONTH"
+
+[node name="RepKey" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeySmall"
 text = "FIN_CAP_REPUTATION"
 
-[node name="ValueLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Rep"]
-layout_mode = 2
-theme_type_variation = &"MetricValue"
-text = "0"
+[node name="RepValue" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"DataText"
 
-[node name="Spacer" type="Control" parent="Margin/Row"]
-custom_minimum_size = Vector2(24, 0)
-layout_mode = 2
-size_flags_horizontal = 3
+[node name="Date" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"BodyLabel"
 
-[node name="TimeGroup" type="HBoxContainer" parent="Margin/Row"]
-custom_minimum_size = Vector2(360, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 16
+[node name="WeekStart" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"SmallMuted"
 
-[node name="DayLabel" type="Label" parent="Margin/Row/TimeGroup"]
-custom_minimum_size = Vector2(210, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_type_variation = &"ChromeClock"
-text = "—"
+[node name="WeekEnd" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"SmallMuted"
 
-[node name="ShutterLabel" type="Label" parent="Margin/Row/TimeGroup"]
-visible = false
-layout_mode = 2
-size_flags_vertical = 4
-theme_type_variation = &"ChromeAlert"
-text = "—"
+[node name="NextKey" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeySmall"
 
-[node name="OfferLabel" type="Label" parent="Margin/Row/TimeGroup"]
-visible = false
-layout_mode = 2
-size_flags_vertical = 4
-theme_type_variation = &"ChromeAlert"
-text = "—"
+[node name="NextLine" type="Label" parent="."]
+layout_mode = 0
+theme_type_variation = &"KeyText"
+text_overrun_behavior = 3
 
-[node name="PhaseGroup" type="VBoxContainer" parent="Margin/Row/TimeGroup"]
-custom_minimum_size = Vector2(108, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 4
+[node name="TimeBlock" type="Panel" parent="."]
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"TimeBlock"
 
-[node name="PhaseNameLabel" type="Label" parent="Margin/Row/TimeGroup/PhaseGroup"]
-layout_mode = 2
-theme_type_variation = &"ChromeLabel"
-text = "FIN_PHASE_BOOTSTRAP"
-horizontal_alignment = 1
+[node name="Clock" type="Label" parent="TimeBlock"]
+layout_mode = 0
+theme_type_variation = &"ClockLabel"
 
-[node name="PhaseDots" type="HBoxContainer" parent="Margin/Row/TimeGroup/PhaseGroup"]
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_constants/separation = 6
-
-[node name="PhaseDot1" type="Panel" parent="Margin/Row/TimeGroup/PhaseGroup/PhaseDots"]
-custom_minimum_size = Vector2(24, 4)
-layout_mode = 2
-theme_type_variation = &"PhaseDotActive"
-
-[node name="PhaseDot2" type="Panel" parent="Margin/Row/TimeGroup/PhaseGroup/PhaseDots"]
-custom_minimum_size = Vector2(24, 4)
-layout_mode = 2
-theme_type_variation = &"PhaseDotDim"
-
-[node name="PhaseDot3" type="Panel" parent="Margin/Row/TimeGroup/PhaseGroup/PhaseDots"]
-custom_minimum_size = Vector2(24, 4)
-layout_mode = 2
-theme_type_variation = &"PhaseDotDim"
-
-[node name="SpeedControls" type="HBoxContainer" parent="Margin/Row/TimeGroup"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 4
-
-[node name="PauseBtn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(26, 22)
-layout_mode = 2
+[node name="PauseBtn" type="Button" parent="TimeBlock"]
+layout_mode = 0
 focus_mode = 0
-theme_type_variation = &"SpeedButton"
+theme_type_variation = &"SpeedKey"
 text = "TOPBAR_PAUSE"
 
-[node name="Speed1Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(26, 22)
-layout_mode = 2
+[node name="Speed1Btn" type="Button" parent="TimeBlock"]
+layout_mode = 0
 focus_mode = 0
-theme_type_variation = &"SpeedButtonActive"
+theme_type_variation = &"SpeedKey"
 text = "1x"
 
-[node name="Speed2Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(26, 22)
-layout_mode = 2
+[node name="Speed2Btn" type="Button" parent="TimeBlock"]
+layout_mode = 0
 focus_mode = 0
-theme_type_variation = &"SpeedButton"
+theme_type_variation = &"SpeedKey"
 text = "2x"
 
-[node name="Speed3Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(26, 22)
-layout_mode = 2
+[node name="Speed3Btn" type="Button" parent="TimeBlock"]
+layout_mode = 0
 focus_mode = 0
-theme_type_variation = &"SpeedButton"
+theme_type_variation = &"SpeedKey"
 text = "3x"
 
-[node name="Speed4Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(26, 22)
-layout_mode = 2
+[node name="Speed4Btn" type="Button" parent="TimeBlock"]
+layout_mode = 0
 focus_mode = 0
-theme_type_variation = &"SpeedButton"
+theme_type_variation = &"SpeedKey"
 text = "4x"
-

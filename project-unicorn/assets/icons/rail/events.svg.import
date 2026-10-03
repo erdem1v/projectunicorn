@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ea6mbv1vnwtg"
-path="res://.godot/imported/events.svg-feb8b1447e70e670bd98732ae94e0f59.ctex"
+uid="uid://b4cm0hgqj70ea"
+path="res://.godot/imported/events.svg-d46cf22b86f9d7c6764d88a31685240a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/tabs/events.svg"
-dest_files=["res://.godot/imported/events.svg-feb8b1447e70e670bd98732ae94e0f59.ctex"]
+source_file="res://assets/icons/rail/events.svg"
+dest_files=["res://.godot/imported/events.svg-d46cf22b86f9d7c6764d88a31685240a.ctex"]
 
 [params]
 

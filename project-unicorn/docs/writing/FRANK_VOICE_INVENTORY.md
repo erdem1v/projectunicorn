@@ -189,7 +189,7 @@ Whitelist: `day == 179` (Sun 28 Jun 2026, provable); ≥ 1 active sheet; hour 00
 - `[COND?]` none.
 
 ### 23 · `ev_shutter_warning` — in the red
-Whitelist: `cash < 0` for the first time since the last recovery; `shutter_days_left` just set to 7 ← `endings_system.gd:19, 96-106`; the counter is on the top bar (`FIN_SHUTTER_COUNTDOWN`); a queued gate card was pulled; hour 00. Not provable: MRR band; whether a recovery happened before (the card re-arms).
+Whitelist: `cash < 0` for the first time since the last recovery; `shutter_days_left` just set to 7 ← `endings_system.gd:19, 96-106`; the counter is the top bar's RUNWAY cell, keyed KEPENK (`TOPBAR_SHUTTER`); a queued gate card was pulled; hour 00. Not provable: MRR band; whether a recovery happened before (the card re-arms).
 - `[COND?]` first-time vs repeat shutter (readable only by keeping a counter; none today)
 
 ### 24 · `ev_pivot_offer` — the third no

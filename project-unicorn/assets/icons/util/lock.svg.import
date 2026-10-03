@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://7tkt3rvk2oq1"
-path="res://.godot/imported/finance.svg-f5bb2628403b94f0ea5acd606226d810.ctex"
+uid="uid://wr11mlflqx4k"
+path="res://.godot/imported/lock.svg-7fef8635d5f9b40efe91c12cc12c941b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/tabs/finance.svg"
-dest_files=["res://.godot/imported/finance.svg-f5bb2628403b94f0ea5acd606226d810.ctex"]
+source_file="res://assets/icons/util/lock.svg"
+dest_files=["res://.godot/imported/lock.svg-7fef8635d5f9b40efe91c12cc12c941b.ctex"]
 
 [params]
 
@@ -38,6 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=2.0
+svg/scale=1.0
 editor/scale_with_editor_scale=false
 editor/convert_colors_with_editor_theme=false

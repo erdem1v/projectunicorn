@@ -1,211 +1,252 @@
 extends Panel
 
-# Persistent stat strip: paints from GameState on _ready, then follows EventBus signals.
-# Active/idle look comes from theme variations (PhaseDotActive/PhaseDotDim,
-# SpeedButtonActive/SpeedButton).
+# Üst bar: iki satırlık metrik ızgarası, koyu temada. Her yazı taban çizgisine göre yerleşir
+# (y = taban - ascent); sütunlar sabittir ve TR ile EN'in en geniş değerinden ölçülüdür, böylece gün
+# bloğu ve hafta çubuğu her durumda ve dilde aynı boydadır. Mantıksal genişlik
+# DisplaySettings.COMPACT_SHELL_BELOW altındayken sıkışık kip: marka yalnız kare, kısa tarih, dar hız
+# tuşları (rayın simge kipiyle aynı eşik). Hafta çubuğu en çok MAX_WEEK_BAR uzar; daha geniş barda
+# Sıradaki yuvası ve saat bloğu gün bloğunun hemen ardından gelir, artan genişlik sağda boş kalır.
+# Sıradaki yuvası hep ayrılmıştır: teklif süresi, yoksa mesai bitimi. Ayırıcılar ve hafta çubuğu
+# _draw'da.
 
-# Canon terms, identical in both locales — keys only so no scene or script holds the words.
 const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SERIES_A"]
-
-@onready var company_name_label: Label = $Margin/Row/IdentityGroup/CompanyNameLabel
-@onready var logo_square: ColorRect = $Margin/Row/IdentityGroup/LogoSquare
-@onready var finance_group: HBoxContainer = $Margin/Row/FinanceGroup
-@onready var reputation_group: HBoxContainer = $Margin/Row/ReputationGroup
-@onready var time_group: HBoxContainer = $Margin/Row/TimeGroup
-@onready var cash_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Cash/ValueLabel
-@onready var mrr_value_label: Label = $Margin/Row/FinanceGroup/StatCol_MRR/ValueLabel
-@onready var burn_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Burn/ValueRow/ValueLabel
-@onready var net_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Net/ValueRow/ValueLabel
-@onready var runway_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Runway/ValueRow/ValueLabel
-@onready var runway_unit_label: Label = $Margin/Row/FinanceGroup/StatCol_Runway/ValueRow/UnitLabel
-@onready var brand_value_label: Label = $Margin/Row/ReputationGroup/StatCol_Brand/ValueLabel
-@onready var rep_value_label: Label = $Margin/Row/ReputationGroup/StatCol_Rep/ValueLabel
-@onready var day_label: Label = $Margin/Row/TimeGroup/DayLabel
-@onready var shutter_label: Label = $Margin/Row/TimeGroup/ShutterLabel
-@onready var offer_label: Label = $Margin/Row/TimeGroup/OfferLabel
-@onready var phase_name_label: Label = $Margin/Row/TimeGroup/PhaseGroup/PhaseNameLabel
-@onready var phase_dots: Array[Panel] = [
-	$Margin/Row/TimeGroup/PhaseGroup/PhaseDots/PhaseDot1,
-	$Margin/Row/TimeGroup/PhaseGroup/PhaseDots/PhaseDot2,
-	$Margin/Row/TimeGroup/PhaseGroup/PhaseDots/PhaseDot3,
+## [tam, sıkışık]: marka bloğunun genişliği; anahtar (A, C, E, G) ve değer (B, D, F, H) sütunlarının
+## sol kenarı; iki metrik grubunu ayıran kısa çizgi; gün bloğunun başı ve iç payı; yuva ve saat
+## bloğunun genişliği, saatin sol payı, hız tuşunun genişliği ve saatle tuşlar arası.
+const GRID := [
+	{"brand": 184, "A": 204, "B": 246, "C": 414, "D": 480, "rule": 616, "E": 637, "F": 684, "G": 766,
+		"H": 843, "day": 943, "pad": 20, "slot": 248, "time": 335, "time_pad": 20, "key": 40, "gap": 16},
+	{"brand": 64, "A": 76, "B": 116, "C": 276, "D": 340, "rule": 468, "E": 481, "F": 526, "G": 600,
+		"H": 675, "day": 767, "pad": 16, "slot": 216, "time": 269, "time_pad": 12, "key": 30, "gap": 12},
 ]
+## Taban çizgileri: iki metrik satırı, marka adı ve evre, tarih ve saat etiketleri, yuvanın iki
+## satırı, saat.
+const ROW_1 := 33.0
+const ROW_2 := 54.0
+const NAME_LINE := 31.0
+const PHASE_LINE := 50.0
+const DATE_LINE := 28.0
+const HOUR_LINE := 58.0
+const NEXT_KEY_LINE := 29.0
+const NEXT_LINE := 50.0
+const CLOCK_LINE := 41.0
+const LOGO := Vector2(20, 14)
+const LOGO_COMPACT := Vector2(22, 22)
+const NAME_X := 48.0
+const NAME_RIGHT := 12.0
+## Evre adının en geniş hâli; noktalar ondan PHASE_DOT_GAP sonra, aralarında PHASE_DOT_STEP.
+const PHASE_W := 65.0
+const PHASE_DOT_GAP := 8.0
+const PHASE_DOT_STEP := 12.0
+const PHASE_DOT_Y := 44.0
+const CLOCK_W := 67.0
+const KEYS_Y := 16.0
+const KEY_GAP := 4.0
+const UNIT_GAP := 2.0
+const RULE_INSET := 12.0
+## Hafta çubuğu: üst kenarı, uzunluk tavanı.
+const WEEK_Y := 38.0
+const MAX_WEEK_BAR := 720.0
+
 @onready var speed_btns: Array[Button] = [
-	$Margin/Row/TimeGroup/SpeedControls/PauseBtn,
-	$Margin/Row/TimeGroup/SpeedControls/Speed1Btn,
-	$Margin/Row/TimeGroup/SpeedControls/Speed2Btn,
-	$Margin/Row/TimeGroup/SpeedControls/Speed3Btn,
-	$Margin/Row/TimeGroup/SpeedControls/Speed4Btn,
+	$TimeBlock/PauseBtn,
+	$TimeBlock/Speed1Btn,
+	$TimeBlock/Speed2Btn,
+	$TimeBlock/Speed3Btn,
+	$TimeBlock/Speed4Btn,
 ]
 
-# Teklif geri sayımının sinyali yeniden atmaz; dil ya da palet değişince çipi yeniden
-# boyayabilmek için son değer burada tutulur. -1 = çip gizli.
+## Teklif geri sayımı yalnız tikte yayılır; dil ya da palet değişince yeniden boyamak için tutulur.
+## -1 = teklif yok.
 var _offer_weeks_left: int = -1
-## "Sprint otomatik başladı": teklif çipinin kardeşi, ürün durumunun notunu okur.
-var _auto_start_label: Label
+var _compact := false
+var _slot_x := 0.0
 
 
 func _ready() -> void:
-	logo_square.color = UiTokens.ACCENT_CHROME
-	_auto_start_label = offer_label.duplicate()
-	time_group.add_child(_auto_start_label)
-	time_group.move_child(_auto_start_label, offer_label.get_index() + 1)
-	_refresh_all()
-
-	EventBus.cash_changed.connect(_on_cash_changed)
-	EventBus.mrr_changed.connect(_on_mrr_changed)
-	EventBus.burn_changed.connect(_refresh_flow.unbind(1))
-	EventBus.runway_recalculated.connect(_on_runway_changed)
-	EventBus.brand_changed.connect(_on_brand_changed)
-	EventBus.reputation_changed.connect(_on_reputation_changed)
-	EventBus.day_advanced.connect(_update_day_label.unbind(1))
-	EventBus.hour_changed.connect(_update_day_label.unbind(1))
-	EventBus.phase_changed.connect(_on_phase_changed)
-	EventBus.shutter_changed.connect(_on_shutter_changed)
+	# Bağlantılar tek tek yazılır: sinyal manifestinin üreticisi `EventBus.<ad>.connect` biçimini okur.
+	var refresh := _refresh.unbind(1)
+	EventBus.cash_changed.connect(refresh)
+	EventBus.mrr_changed.connect(refresh)
+	EventBus.burn_changed.connect(refresh)
+	EventBus.runway_recalculated.connect(refresh)
+	EventBus.brand_changed.connect(refresh)
+	EventBus.reputation_changed.connect(refresh)
+	EventBus.day_advanced.connect(refresh)
+	EventBus.hour_changed.connect(refresh)
+	EventBus.phase_changed.connect(refresh)
+	EventBus.shutter_changed.connect(refresh)
+	EventBus.language_changed.connect(refresh)
+	EventBus.palette_changed.connect(refresh)
+	EventBus.month_ended.connect(refresh)
 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
-	EventBus.product_state_changed.connect(_refresh_auto_start)
-	# Kod tarafında bestelenen metin (runway durumu, sayaçlar) ve örnek başına renk
-	# override'ları kendiliğinden dönmez; ikisi de yeniden okunarak yenilenir.
-	EventBus.language_changed.connect(_refresh_all.unbind(1))
-	EventBus.palette_changed.connect(_refresh_all.unbind(1))
-	# Ay kapanışı sessizdir; aylık rakamlar yine de kapanışta bir kez baştan okunur.
-	EventBus.month_ended.connect(_refresh_all.unbind(1))
-	# Hız yalnız TimeManager üzerinden gidip gelir (speed_change_requested → speed_changed);
-	# gösterge buradan boyanır ki olay-duraklatma dönüşü gibi başka değiştiriciler de görünsün.
+	# Hız yalnız TimeManager üzerinden gidip gelir (speed_change_requested → speed_changed); gösterge
+	# buradan boyanır ki olay duraklatmasının dönüşü gibi başka değiştiriciler de görünsün.
 	TimeManager.speed_changed.connect(_apply_speed_visual)
 	for i in speed_btns.size():
-		speed_btns[i].pressed.connect(_on_speed_button.bind(i))
-
-	get_viewport().size_changed.connect(_apply_density)
-	_apply_density()
-
-
-## Dar mantıksal genişlikte şerit kırpılmaz, sıkışır (rayın simge kipiyle aynı eşik).
-func _is_compact() -> bool:
-	return get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
-
-
-func _apply_density() -> void:
-	var compact: bool = _is_compact()
-	company_name_label.visible = not compact
-	# Sütunlar hiç gitmez, hiçbir sayı gizlenmez; yalnız aralarındaki boşluk daralır.
-	var gap: int = 18 if compact else 28
-	finance_group.add_theme_constant_override("separation", gap)
-	reputation_group.add_theme_constant_override("separation", gap)
-	time_group.add_theme_constant_override("separation", 10 if compact else 16)
-	day_label.custom_minimum_size.x = 0.0 if compact else 210.0
-	_update_day_label()
-
-
-func _refresh_all() -> void:
-	company_name_label.text = GameState.company_name
-	_on_cash_changed(GameState.cash)
-	_on_mrr_changed(GameState.mrr)
-	_on_runway_changed(GameState.get_runway_months())
-	_on_brand_changed(GameState.brand)
-	_on_reputation_changed(GameState.reputation)
-	_update_day_label()
-	_on_phase_changed(GameState.phase)
-	_on_shutter_changed(GameState.shutter_weeks_left)
-	_on_offer_countdown_changed(_offer_weeks_left)
-	_refresh_auto_start()
+		speed_btns[i].pressed.connect(EventBus.speed_change_requested.emit.bind(i))
+	resized.connect(_refresh)
+	_refresh()
 	_apply_speed_visual(TimeManager.current_speed)
 
 
-func _on_cash_changed(value: int) -> void:
-	cash_value_label.text = UiTokens.format_money_exact(value)
-
-
-func _on_mrr_changed(value: int) -> void:
-	mrr_value_label.text = UiTokens.format_money_chip(value)
-	_refresh_flow()
-
-
-func _refresh_flow() -> void:
-	# Burn ve net canlı aylık hızdır (FinanceSystem.get_monthly_flow, Finans sekmesiyle aynı
-	# kaynak); net işaret renkli, "/ay" birimi sahnede sabit.
-	var flow: Dictionary = FinanceSystem.get_monthly_flow()
-	burn_value_label.text = UiTokens.format_money_chip(int(flow.expense))
-	var net: int = int(flow.net)
-	var sign_str: String = "+" if net > 0 else ("-" if net < 0 else "")
-	net_value_label.text = "%s%s" % [sign_str, UiTokens.format_money_chip(absi(net))]
-	net_value_label.add_theme_color_override("font_color", UiTokens.delta_color_bright(net))
-
-
-func _on_runway_changed(months: float) -> void:
-	var p: Dictionary = UiTokens.net_runway_parts(months)
-	runway_value_label.text = String(p.value)
-	runway_unit_label.text = String(p.unit)
-	runway_unit_label.visible = String(p.unit) != ""
-	# Kârlı: durum kelimesi yeşil, nedeni hover notunda (Label varsayılanı IGNORE, tooltip hover ister).
-	var positive: bool = bool(p.get("positive", false))
-	if positive:
-		runway_value_label.add_theme_color_override("font_color", UiTokens.positive_bright())
-	else:
-		runway_value_label.remove_theme_color_override("font_color")
-	runway_value_label.tooltip_text = String(p.get("note", "")) if positive else ""
-	runway_value_label.mouse_filter = Control.MOUSE_FILTER_STOP if positive else Control.MOUSE_FILTER_IGNORE
-
-
-func _on_brand_changed(value: int) -> void:
-	brand_value_label.text = "%d" % value
-
-
-func _on_reputation_changed(value: int) -> void:
-	rep_value_label.text = "%d" % value
-
-
-func _update_day_label() -> void:
-	# Dar viewport'ta yıl düşer ve ay kısalır ("H14 · Nis · 10:00"): yıl özet başlığında zaten
-	# var. Kelimeler ve sıraları Fmt'nindir.
-	var d: Dictionary = GameState.get_date_dict()
-	var hour: String = "%02d" % GameState.current_hour
-	if _is_compact():
-		day_label.text = tr("TOPBAR_CLOCK_COMPACT").format({
-			"week": int(d.week), "mon": Fmt.month_abbr(int(d.month)), "hour": hour})
-	else:
-		day_label.text = tr("TOPBAR_CLOCK").format({"date": Fmt.date_line(d), "hour": hour})
-
-
-func _on_shutter_changed(weeks_left: int) -> void:
-	# Kepenk sayacı: kasa eksideyken kırmızı geri sayım; -1 = gizli.
-	shutter_label.visible = weeks_left >= 0
-	shutter_label.add_theme_color_override("font_color", UiTokens.negative_bright())
-	if weeks_left >= 0:
-		shutter_label.text = tr(Fmt.count_key("FIN_SHUTTER_COUNTDOWN", weeks_left)).format(
-			{"n": weeks_left})
-
-
 func _on_offer_countdown_changed(weeks_left: int) -> void:
-	# Term sheet geçerlilik çipi: son haftadan önce amber, son hafta kırmızı; -1 = gizli.
 	_offer_weeks_left = weeks_left
-	offer_label.visible = weeks_left >= 0
-	if weeks_left >= 0:
-		offer_label.text = tr(Fmt.count_key("FIN_OFFER_COUNTDOWN", weeks_left)).format(
-			{"n": weeks_left})
-		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT_CHROME if weeks_left > 1 else UiTokens.negative_bright())
+	_refresh()
 
 
-## Planlamada bir gün geçince sprint liderin önerisiyle kendiliğinden başlar; not o sprint
-## sürdükçe amber kalır.
-func _refresh_auto_start() -> void:
-	var auto_started: int = int(GameState.product.get("auto_started", -1))
-	_auto_start_label.visible = SprintSystem.mode() == "active" and auto_started == SprintSystem.sprint_number()
-	_auto_start_label.text = tr("PRODUCT_AUTO_STARTED")
-	_auto_start_label.add_theme_color_override("font_color", UiTokens.ACCENT_CHROME)
+func _refresh() -> void:
+	_compact = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
+	var g: Dictionary = GRID[int(_compact)]
+	_refresh_brand(g)
+	_refresh_metrics(g)
+	_slot_x = minf(size.x - g.time - g.slot, g.day + g.pad + MAX_WEEK_BAR + g.pad)
+	_refresh_day(g)
+	_refresh_time(g)
+	queue_redraw()
 
 
-func _on_phase_changed(new_phase: int) -> void:
-	var idx: int = clampi(new_phase - 1, 0, PHASE_KEYS.size() - 1)
+## Marka bloğu: turuncu kare + "Project Unicorn" ve evre; sıkışık kipte yalnız kare.
+func _refresh_brand(g: Dictionary) -> void:
+	$Logo.position = LOGO_COMPACT if _compact else LOGO
+	var phase: int = clampi(GameState.phase, 1, PHASE_KEYS.size())
 	# Ham to_upper bilerek: İngilizce kanon terim; Fmt.upper'ın Türkçe dalı "TRACTİON" yapardı.
-	phase_name_label.text = tr(PHASE_KEYS[idx]).to_upper()
-	for i in phase_dots.size():
-		phase_dots[i].theme_type_variation = &"PhaseDotActive" if i <= idx else &"PhaseDotDim"
+	$Phase.text = tr(PHASE_KEYS[phase - 1]).to_upper()
+	_put($LogoName, NAME_X, NAME_LINE, g.brand - NAME_X - NAME_RIGHT)
+	_put($Phase, NAME_X, PHASE_LINE)
+	for i in 3:
+		var dot: Panel = get_node("PhaseDot%d" % (i + 1))
+		dot.position = Vector2(NAME_X + PHASE_W + PHASE_DOT_GAP + i * PHASE_DOT_STEP, PHASE_DOT_Y)
+		dot.theme_type_variation = &"PhaseDotActive" if i < phase else &"PhaseDotDim"
+	for part: Control in [$LogoName, $Phase, $PhaseDot1, $PhaseDot2, $PhaseDot3]:
+		part.visible = not _compact
 
 
-func _on_speed_button(idx: int) -> void:
-	EventBus.speed_change_requested.emit(idx)
+## KASA tek kahraman, NET altında. Kepenk sayacı koşarken RUNWAY hücresi o sayaçtır. Kırmızı yalnız
+## tehlikede: eksi kasa, kepenk, ilk runway eşiğinin altı; kasa artıdayken eksi NET mürekkeptir.
+func _refresh_metrics(g: Dictionary) -> void:
+	var flow: Dictionary = FinanceSystem.get_monthly_flow()
+	var shut: bool = GameState.cash < 0
+	var net: int = int(flow.net)
+	var months: float = GameState.get_runway_months()
+	_paint($CashValue, Fmt.money_exact(GameState.cash), UiTokens.D_neg() if shut else null)
+	var net_ink = UiTokens.D_pos() if net > 0 else (UiTokens.D_neg() if shut and net < 0 else null)
+	_paint($NetValue, ("+" if net > 0 else ("-" if net < 0 else "")) + Fmt.money_chip(absi(net)), net_ink)
+	var weeks: int = GameState.shutter_weeks_left
+	# Kasa iki tik arasında eksiye düşebilir (olay, tek seferlik gider); kepenk sayacı sonraki tikte
+	# kurulur, o arada hücre RUNWAY kalır.
+	var shutter: bool = shut and weeks >= 0
+	var p: Dictionary = UiTokens.net_runway_parts(months)
+	var alarm: bool = shut or months < FinanceSystem.RUNWAY_ALERT_MONTHS[0]
+	var runway_ink = UiTokens.D_pos() if p.positive else (UiTokens.D_neg() if alarm else null)
+	$RunwayKey.text = Fmt.upper(tr("TOPBAR_SHUTTER" if shutter else "FIN_CAP_RUNWAY"))
+	var runway: Label = $RunwayValue
+	runway.theme_type_variation = &"ValueText" if runway_ink == null else &"ValueTextStrong"
+	_paint(runway, tr(Fmt.count_key("TOPBAR_SHUTTER_WEEKS", weeks)).format({"n": weeks})
+		if shutter else UiTokens.net_runway_text(months), runway_ink)
+	# Artıda olmanın nedeni ipucunda (Label varsayılanı IGNORE, ipucu üzerine gelmeyi ister).
+	runway.tooltip_text = p.note
+	runway.mouse_filter = Control.MOUSE_FILTER_STOP if p.positive else Control.MOUSE_FILTER_IGNORE
+	$MrrValue.text = Fmt.money_chip(GameState.mrr)
+	$BrandValue.text = str(GameState.brand)
+	$BurnValue.text = Fmt.money_chip(int(flow.expense))
+	$RepValue.text = str(GameState.reputation)
+	for row in [[$CashKey, $CashValue, "A", "B", ROW_1], [$NetKey, $NetValue, "A", "B", ROW_2],
+			[$RunwayKey, runway, "C", "D", ROW_1], [$MrrKey, $MrrValue, "E", "F", ROW_1],
+			[$BrandKey, $BrandValue, "E", "F", ROW_2], [$BurnKey, $BurnValue, "G", "H", ROW_1],
+			[$RepKey, $RepValue, "G", "H", ROW_2]]:
+		_put(row[0], g[row[2]], row[4])
+		_put(row[1], g[row[3]], row[4])
+	for row in [[$NetUnit, $NetValue, ROW_2], [$BurnUnit, $BurnValue, ROW_1]]:
+		_put(row[0], row[1].position.x + row[1].get_minimum_size().x + UNIT_GAP, row[2])
+
+
+## Gün bloğu (tarih + hafta çubuğu ve uç saatleri) ve Sıradaki yuvası: teklif süresi uyarı rengindedir,
+## son haftasında kırmızı; teklif yoksa mesainin bitimine kalan saat.
+func _refresh_day(g: Dictionary) -> void:
+	var d: Dictionary = GameState.get_date_dict()
+	$Date.text = tr("TOPBAR_DATE_COMPACT").format({"week": int(d.week), "mon": Fmt.month_abbr(int(d.month))}) \
+		if _compact else Fmt.date_line(d)
+	var x0: float = g.day + g.pad
+	_put($Date, x0, DATE_LINE)
+	var end: int = WorkHoursSystem.workday_end()
+	$WeekStart.text = "%02d:00" % TimeModel.WEEK_START_HOUR
+	$WeekEnd.text = "%02d:00" % (end % 24)
+	_put($WeekStart, x0, HOUR_LINE)
+	_put($WeekEnd, _slot_x - g.pad - $WeekEnd.get_minimum_size().x, HOUR_LINE)
+	$NextKey.text = Fmt.upper(tr("TOPBAR_NEXT"))
+	var line: String = tr("TOPBAR_NEXT_WORKDAY_END").format({"n": maxi(end - GameState.current_hour, 0)})
+	var ink = null
+	if _offer_weeks_left > 1:
+		line = tr("TOPBAR_NEXT_OFFER").format({"n": _offer_weeks_left})
+		ink = UiTokens.D_warn()
+	elif _offer_weeks_left >= 0:
+		line = tr("TOPBAR_NEXT_OFFER_LAST")
+		ink = UiTokens.D_neg()
+	_paint($NextLine, line, ink)
+	_put($NextKey, _slot_x + g.pad, NEXT_KEY_LINE)
+	_put($NextLine, _slot_x + g.pad, NEXT_LINE, g.slot - 2 * g.pad)
+
+
+func _refresh_time(g: Dictionary) -> void:
+	var block: Panel = $TimeBlock
+	block.position = Vector2(_slot_x + g.slot, 0)
+	block.size = Vector2(g.time, size.y)
+	$TimeBlock/Clock.text = "%02d:00" % GameState.current_hour
+	_put($TimeBlock/Clock, g.time_pad, CLOCK_LINE)
+	for i in speed_btns.size():
+		speed_btns[i].position = Vector2(g.time_pad + CLOCK_W + g.gap + i * (g.key + KEY_GAP), KEYS_Y)
+		speed_btns[i].size = Vector2(g.key, UiTokens.D_H_SPEED_KEY)
+
+
+## Yazı taban çizgisine oturur; genişlik verilirse kutu o kadardır (taşan metin üç noktayla kısalır).
+func _put(label: Label, x: float, baseline: float, width := 0.0) -> void:
+	label.position = Vector2(x, baseline - label.get_theme_font("font").get_ascent(label.get_theme_font_size("font_size")))
+	if width > 0.0:
+		label.size.x = width
+
+
+## Durum rengi yalnız anlamı olan değerde; yoksa varyasyonun mürekkebi.
+func _paint(label: Label, text: String, ink) -> void:
+	label.text = text
+	if ink == null:
+		label.remove_theme_color_override("font_color")
+	else:
+		label.add_theme_color_override("font_color", ink)
+
+
+func _draw() -> void:
+	var g: Dictionary = GRID[int(_compact)]
+	var h: float = size.y
+	for x in [g.brand - 1, g.day, _slot_x]:
+		draw_rect(Rect2(x, 0, 1, h), UiTokens.D_LINE_1)
+	draw_rect(Rect2(g.rule, RULE_INSET, 1, h - 2 * RULE_INSET), UiTokens.D_LINE_1)
+	var time_end: float = _slot_x + g.slot + g.time
+	if time_end < size.x:
+		draw_rect(Rect2(time_end, 0, 1, h), UiTokens.D_LINE_1)
+	_draw_week(g.day + g.pad, _slot_x - g.pad)
+
+
+## Haftanın 08:00'den mesainin bitimine kadarki saatleri: mesai öncesi ince iz, geçen saatler dolgu,
+## her saat bir çentik (bitiş uzun), şimdi dikey işaret.
+func _draw_week(x0: float, x1: float) -> void:
+	var start: int = TimeModel.WEEK_START_HOUR
+	var end: int = WorkHoursSystem.workday_end()
+	var at := func(hour: float) -> float: return x0 + (hour - start) / float(end - start) * (x1 - x0)
+	var open: float = at.call(clampi(WorkHoursSystem.start_hour(), start, end))
+	var now: float = at.call(clampf(GameState.current_hour, start, end))
+	draw_rect(Rect2(x0, WEEK_Y + 1, open - x0, 2), UiTokens.D_BAR_TRACK)
+	draw_rect(Rect2(open, WEEK_Y, x1 - open, 4), UiTokens.D_BAR_TRACK)
+	draw_rect(Rect2(x0, WEEK_Y, now - x0, 4), UiTokens.D_BAR_FILL)
+	for hour in range(start + 1, end + 1):
+		var x: float = at.call(hour)
+		if hour == end:
+			draw_rect(Rect2(x - 1, WEEK_Y - 4, 1, 12), UiTokens.D_INK_4)
+		else:
+			draw_rect(Rect2(x, WEEK_Y + 6, 1, 4), UiTokens.D_LINE_2)
+	draw_rect(Rect2(now - 1, WEEK_Y - 5, 2, 14), UiTokens.D_INK_1)
 
 
 func _apply_speed_visual(active_idx: int) -> void:
 	for i in speed_btns.size():
-		speed_btns[i].theme_type_variation = &"SpeedButtonActive" if i == active_idx else &"SpeedButton"
+		speed_btns[i].theme_type_variation = &"SpeedKeyActive" if i == active_idx else &"SpeedKey"

@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 18
+const THEME_STAMP := 19
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -185,7 +185,7 @@ const MEETING_SEAT_3 := Color(0.247, 0.435, 0.478, 1)      # #3F6F7A · analyst 
 # --- CHROME · the frame's own values ---
 # Twins pinned to what the frame shows, so a body reskin never moves the frame. The
 # dark cinematic register reads them as well: its stages keep the frame's palette.
-const ACCENT_CHROME := Color(1.0, 0.627, 0.157, 1)          # #FFA028 · logo, speed key, phase dot, offer countdown
+const ACCENT_CHROME := Color(1.0, 0.627, 0.157, 1)          # #FFA028 · accent of the dark registers (onboarding, dialogue, emblem)
 const ACCENT_HOVER_CHROME := Color(1.0, 0.698, 0.353, 1)    # #FFB25A · CommitButtonDark hover  # WORKING
 const ACCENT_PRESSED_CHROME := Color(0.878, 0.541, 0.110, 1)  # #E08A1C · CommitButtonDark pressed # WORKING
 const INK_MUTED_CHROME := Color(0.624, 0.690, 0.749, 1)     # #9FB0BF · idle speed key, hover text
@@ -340,10 +340,10 @@ const PAD_CELL := Vector2i(3, 3)          # PortraitCell
 # draws it. LeftTabs.tscn's button order must match this
 # array position-for-position (smoke `rail_tabs_match_scene_order`).
 # `lock` names a gate for a visible-but-unreachable tab, resolved in
-# LeftTabs._is_locked so UiTokens stays free of game state. The rail shows it
-# dimmed with a YAKINDA pill. "ea" = Early Access scope, never opens in the demo;
-# YAKINDA means only "not in this build", so Ar-Ge (built, gated on its own page)
-# carries no lock.
+# LeftTabs._is_locked so UiTokens stays free of game state. The rail shows its icon
+# and name off with the reason under the name. "ea" = Early Access scope, never opens
+# in the demo; a lock means only "not in this build", so Ar-Ge (built, gated on its own
+# page) carries no lock.
 const TABS := [
 	{"id": "product"},
 	{"id": "sales"},
@@ -355,7 +355,7 @@ const TABS := [
 	{"id": "events"},
 ]
 
-## A locked rail tile fades as a whole; its YAKINDA pill says why.
+## A muted sub-tab or a locked line fades as a whole.
 const TAB_LOCKED_ALPHA := 0.45
 
 # ============================================================================
@@ -414,12 +414,6 @@ static func delta_color(value: int) -> Color:
 	if value > 0: return positive()
 	if value < 0: return negative()
 	return INK_MUTED
-
-## Delta color for the dark chrome (top-bar metric deltas).
-static func delta_color_bright(value: int) -> Color:
-	if value > 0: return positive_bright()
-	if value < 0: return negative_bright()
-	return CREAM_DIM
 
 ## {bg, fg} for a tinted chip. kind: "positive" | "negative" | "neutral" | "accent" | "attention".
 static func badge_palette(kind: StringName) -> Dictionary:
@@ -513,11 +507,6 @@ static func seat_ink(seat: int) -> Color:
 	return ACCENT_DEEP if seat == 0 else seat_ring(seat)
 
 
-## BBCode form of ACCENT_CHROME (NewsTicker).
-static func accent_hex() -> String:
-	return "#" + ACCENT_CHROME.to_html(false)
-
-
 ## Ink of a die factor on the dark tooltip, by its tone: "pos" | "neg" | anything else neutral.
 static func tooltip_tone_ink(tone: String) -> Color:
 	match tone:
@@ -530,12 +519,6 @@ static func tooltip_tone_ink(tone: String) -> Color:
 # which owns the locale's separators. New code may call Fmt directly.
 static func format_money(amount: int) -> String:
 	return Fmt.money(amount)
-
-
-## TopBar finance-chip format: abbreviated so MRR/BURN/NET cannot widen FinanceGroup.
-## Its thresholds deliberately diverge from format_money.
-static func format_money_chip(value: int) -> String:
-	return Fmt.money_chip(value)
 
 
 ## Exact, thousands-grouped money. CASH is shown in full because money management is precise.
@@ -776,6 +759,9 @@ const D_STAMP := D_INK_3
 const D_CUT := 12      # document corner bevel
 const D_CUT_SM := 8    # small documents: toast, notice, selected inbox row
 
+# --- the brand square of the top bar: the logo's own orange, not a UI accent ---
+const D_BRAND_MARK := Color("#FFA028")
+
 # --- newspaper island: cream in both themes; the dark theme's meta line reads at 4.5:1 ---
 const D_PAPER_INK_META := Color("#6E6553")
 
@@ -825,6 +811,10 @@ const D_H_FX := 24
 const D_H_TAG := 22
 const D_H_PILL := 20
 const D_H_BADGE := 20
+const D_H_BADGE_ICON := 18   # a count on the corner of an icon (the rail's icon mode)
+# --- glyph sizes ---
+const D_ICON_CONTROL := 20   # a control's own glyph (the ticker toggle)
+const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
 
 const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
 const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]

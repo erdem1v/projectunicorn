@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://buut4lck0jm42"
-path="res://.godot/imported/hr.svg-5ee863f6b85f6983b7a26acfde15e752.ctex"
+uid="uid://cavkygni01imr"
+path="res://.godot/imported/product.svg-2a84b9e26e68ec0ae86fb6eba61d127d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/tabs/hr.svg"
-dest_files=["res://.godot/imported/hr.svg-5ee863f6b85f6983b7a26acfde15e752.ctex"]
+source_file="res://assets/icons/rail/product.svg"
+dest_files=["res://.godot/imported/product.svg-2a84b9e26e68ec0ae86fb6eba61d127d.ctex"]
 
 [params]
 

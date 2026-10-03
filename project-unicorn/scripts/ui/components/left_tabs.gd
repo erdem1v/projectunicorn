@@ -1,16 +1,18 @@
 extends Panel
 
-# Left tab rail. Tab definitions live in UiTokens.TABS; the buttons below match that
-# array position-for-position (guarded by the rail_tabs_match_scene_order smoke case).
-# A tab with a `lock` gate is visible, dimmed, carries a YAKINDA pill and never connects
-# `pressed`. The rail lies opaque over the office's left edge (GameShell); under
-# DisplaySettings.COMPACT_SHELL_BELOW of logical width it narrows to its icons.
-# This script owns the row geometry (rail width, Stack insets, Badge offsets) and sets it
-# in _apply_width; the matching values in LeftTabs.tscn are only the editor's preview of
-# the labelled rail.
+# Left tab rail, on the dark theme. Tab definitions live in UiTokens.TABS; the buttons below match
+# that array position-for-position (guarded by the rail_tabs_match_scene_order smoke case). The rail
+# lies opaque over the office's left edge (GameShell); under DisplaySettings.COMPACT_SHELL_BELOW of
+# logical width it narrows to its icons: the names stay in the tree, hidden, and become tooltips,
+# a count moves to the icon's corner and a locked row shows a small lock there.
+# This script owns the row geometry and every row state (_paint); the matching values in
+# LeftTabs.tscn are only the editor's preview of the labelled rail.
 #
-# Badges address a tab BY ID, never by index, so a reorder cannot shift a count onto
-# the wrong tab. Sources:
+# Row states: idle, active (raised ground, a marker on the left edge), locked. A tab with a `lock`
+# gate is visible, its icon and name off, the reason under the name, and never connects `pressed`.
+#
+# Badges address a tab BY ID, never by index, so a reorder cannot shift a count onto the wrong tab.
+# Red is for danger only (DANGER_TABS); every other count is neutral. Sources:
 #   hr       HRSystem.attention_count() (thresholds live in HRConstants)
 #   sales    B2BSalesSystem.attention_count() (accounts in the RİSK phase)
 #   finance  1 when runway is under FinanceSystem's first runway alert threshold
@@ -19,13 +21,18 @@ extends Panel
 
 const WIDTH := 184.0
 const WIDTH_ICONS := 64.0
-## Row geometry per mode: the labelled stack's insets from the button's left and right edges
-## (icons: none), and the badge's top-left from the button's right middle (labelled: right of
-## the name; icons: on the icon's corner).
-const STACK_LEFT := 16.0
-const STACK_RIGHT := 12.0
-const BADGE_AT := Vector2(-28.0, -8.0)
-const BADGE_AT_ICONS := Vector2(-26.0, -18.0)
+## The labelled row's insets from the button's left and right edges (icons: none).
+const STACK_LEFT := 20.0
+const STACK_RIGHT := 16.0
+## Labelled: the badge's right edge from the button's right. Icons: the badge's and the lock's
+## top-left on the row.
+const BADGE_RIGHT := 16.0
+const BADGE_AT_ICONS := Vector2(34, 6)
+const LOCK_AT_ICONS := Vector2(38, 28)
+## In icon mode a badge sits on the icon; a ring in the row's ground cuts it out.
+const BADGE_RING := 2
+const DANGER_TABS := ["hr", "sales", "finance"]
+const LOCK_ICON := preload("res://assets/icons/util/lock.svg")
 
 @onready var tab_buttons: Array[Button] = [
 	$Margin/Col/ProductBtn,
@@ -44,30 +51,49 @@ var current_tab_idx: int = -1  # -1 = hiçbir sekme açık değil, pencere yok
 
 
 func _ready() -> void:
+	for btn: Button in tab_buttons + [settings_btn]:
+		var mark := Panel.new()
+		mark.name = "Mark"
+		mark.theme_type_variation = &"RailMark"
+		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		mark.anchor_bottom = 1.0
+		mark.offset_top = UiTokens.D_MARK.y
+		mark.offset_bottom = -UiTokens.D_MARK.y
+		mark.offset_right = UiTokens.D_MARK.x
+		btn.add_child(mark)
 	for i in tab_buttons.size():
 		var btn: Button = tab_buttons[i]
 		if not _is_locked(i):
 			btn.pressed.connect(_on_tab_button.bind(i))
 			continue
-		# Görünür-ama-ölü. Bilerek Button.disabled DEĞİL: TabButton varyasyonu disabled
-		# stylebox tanımlamıyor, taban Button stylebox'ı sızardı. Amber rozet DİKKAT
-		# register'ıdır, kilitli kapı için yanlış ses.
+		# Görünür ama ölü; Button.disabled değil, satır kendi kilitli görünümünü taşır.
 		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.focus_mode = Control.FOCUS_NONE
-		btn.modulate.a = UiTokens.TAB_LOCKED_ALPHA
-		btn.get_node("Badge").visible = false
-		# Pill akışa (Stack'e) girer, adın sağına; simge kipinde adla birlikte gizlenir.
-		btn.get_node("Stack").add_child(UiFactory.make_badge(tr("SYS_SOON")))
+		# Gerekçe adın altında: ad ve gerekçe birlikte satırın ortasına oturur.
+		var name_label: Label = btn.get_node("Stack/NameLabel")
+		var reason := Label.new()
+		reason.name = "Reason"
+		reason.theme_type_variation = &"NavReason"
+		name_label.add_child(reason)
+		reason.position.y = name_label.get_line_height()
+		name_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		name_label.custom_minimum_size.y = name_label.get_line_height() + reason.get_line_height()
+		var lock := TextureRect.new()
+		lock.name = "Lock"
+		lock.texture = LOCK_ICON
+		lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		lock.size = Vector2.ONE * UiTokens.D_ICON_MARK
+		lock.position = LOCK_AT_ICONS
+		lock.modulate = UiTokens.D_INK_4
+		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(lock)
 
-	# The gear is not a tab: no active styling, never emits tab_changed. Its icon takes
-	# the idle ink once; the SVG itself is white so modulate can tint it.
 	settings_btn.pressed.connect(EventBus.settings_requested.emit)
-	(settings_btn.get_node("Stack/Icon") as TextureRect).modulate = UiTokens.INK_DIM
 
 	# Rail clicks, the ✕/Esc close and programmatic switches (a closing sprint, goto_tab)
 	# all arrive here, so the highlight has a single painter.
 	EventBus.tab_changed.connect(_on_tab_changed)
-	_apply_visual()
 
 	EventBus.morale_changed.connect(_refresh_hr_badge.unbind(2))
 	EventBus.character_added.connect(_refresh_hr_badge.unbind(1))
@@ -88,31 +114,85 @@ func _ready() -> void:
 	EventBus.build_phase_changed.connect(_refresh_badges.unbind(1))
 	EventBus.game_loaded.connect(_refresh_badges.unbind(1))
 	_refresh_badges()
-	get_viewport().size_changed.connect(_apply_width)
-	EventBus.language_changed.connect(_apply_width.unbind(1))
-	_apply_width()
+	get_viewport().size_changed.connect(_paint)
+	EventBus.language_changed.connect(_paint.unbind(1))
+	EventBus.palette_changed.connect(_paint.unbind(1))
+	_paint()
 
 
-## Etiketli ray ya da simge kipi, mantıksal genişliğe göre (üst barın sıkışık kipiyle aynı eşik).
-## Simge kipinde adlar ağaçta kalır, gizlenir ve ipucu olur.
-func _apply_width() -> void:
+## Every row's look from its state and the rail's mode (labelled or icons, by logical width; the
+## same threshold as the top bar's compact mode).
+func _paint() -> void:
 	var icons: bool = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
 	custom_minimum_size.x = WIDTH_ICONS if icons else WIDTH
-	var badge_at: Vector2 = BADGE_AT_ICONS if icons else BADGE_AT
-	for btn: Button in tab_buttons + [settings_btn]:
-		var stack: HBoxContainer = btn.get_node("Stack")
-		stack.alignment = BoxContainer.ALIGNMENT_CENTER if icons else BoxContainer.ALIGNMENT_BEGIN
-		stack.offset_left = 0.0 if icons else STACK_LEFT
-		stack.offset_right = 0.0 if icons else -STACK_RIGHT
-		for part: Control in stack.get_children():
-			part.visible = not icons or part.name == &"Icon"
-		btn.tooltip_text = tr((stack.get_node("NameLabel") as Label).text) if icons else ""
-		var badge: Control = btn.get_node_or_null("Badge")
-		if badge != null:
-			badge.offset_left = badge_at.x
-			badge.offset_top = badge_at.y
-			badge.offset_right = badge_at.x + badge.custom_minimum_size.x
-			badge.offset_bottom = badge_at.y + badge.custom_minimum_size.y
+	for i in tab_buttons.size():
+		var id: String = String(UiTokens.TABS[i].id)
+		# Kilitli sekme (--tab-shot=marketing onu açabilir) kilitli görünümde kalır, hiç vurgulanmaz.
+		var state: String = "locked" if _is_locked(i) else ("active" if i == current_tab_idx else "idle")
+		_paint_row(tab_buttons[i], "TAB_" + id.to_upper(), state, icons)
+		_paint_badge(tab_buttons[i].get_node("Badge"), id in DANGER_TABS, state == "active", icons)
+		if state == "locked":
+			var reason: Label = tab_buttons[i].get_node("Stack/NameLabel/Reason")
+			reason.text = Fmt.upper(tr(_lock_reason(String(UiTokens.TABS[i].lock))))
+			tab_buttons[i].get_node("Lock").visible = icons
+	_paint_row(settings_btn, "TAB_SETTINGS", "idle", icons)
+
+
+func _paint_row(btn: Button, key: String, state: String, icons: bool) -> void:
+	btn.theme_type_variation = &"RailRowActive" if state == "active" else &"RailRow"
+	btn.tooltip_text = tr(key) if icons else ""
+	btn.get_node("Mark").visible = state == "active"
+	var stack: HBoxContainer = btn.get_node("Stack")
+	stack.alignment = BoxContainer.ALIGNMENT_CENTER if icons else BoxContainer.ALIGNMENT_BEGIN
+	stack.offset_left = 0.0 if icons else STACK_LEFT
+	stack.offset_right = 0.0 if icons else -STACK_RIGHT
+	(stack.get_node("Icon") as TextureRect).modulate = {"idle": UiTokens.D_INK_4, "active": UiTokens.D_INK_2,
+		"locked": UiTokens.D_INK_OFF}[state]
+	var name_label: Label = stack.get_node("NameLabel")
+	name_label.visible = not icons
+	name_label.theme_type_variation = {"idle": &"NavLabel", "active": &"NavLabelActive",
+		"locked": &"NavLabelLocked"}[state]
+	name_label.text = Fmt.upper(tr(key))
+
+
+## Labelled: right of the name. Icons: on the icon's corner, smaller, with a ring in the row's ground.
+## The danger fill is read from D_neg() so the colour-blind palette reaches it.
+func _paint_badge(badge: Label, danger: bool, active: bool, icons: bool) -> void:
+	badge.theme_type_variation = StringName(("BadgeDanger" if danger else "BadgeCount") + ("Icon" if icons else ""))
+	var h: float = UiTokens.D_H_BADGE_ICON if icons else UiTokens.D_H_BADGE
+	badge.custom_minimum_size = Vector2.ONE * h
+	badge.set_anchors_preset(Control.PRESET_TOP_LEFT if icons else Control.PRESET_CENTER_RIGHT)
+	if icons:
+		badge.grow_horizontal = Control.GROW_DIRECTION_END
+		badge.offset_left = BADGE_AT_ICONS.x
+		badge.offset_top = BADGE_AT_ICONS.y
+		badge.offset_right = BADGE_AT_ICONS.x + h
+		badge.offset_bottom = BADGE_AT_ICONS.y + h
+	else:
+		badge.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		badge.offset_left = -BADGE_RIGHT - h
+		badge.offset_top = -h / 2.0
+		badge.offset_right = -BADGE_RIGHT
+		badge.offset_bottom = h / 2.0
+	badge.remove_theme_stylebox_override("normal")
+	badge.remove_theme_color_override("font_color")
+	if not (danger or icons):
+		return
+	var box: StyleBoxFlat = badge.get_theme_stylebox("normal").duplicate()
+	if danger:
+		box.bg_color = UiTokens.D_neg()
+		badge.add_theme_color_override("font_color", UiTokens.D_on_neg())
+	if icons:
+		box.set_border_width_all(BADGE_RING)
+		box.set_expand_margin_all(BADGE_RING)
+		box.border_color = UiTokens.D_SURFACE_4 if active else UiTokens.D_SURFACE_1
+	badge.add_theme_stylebox_override("normal", box)
+
+
+## The demo build says which build opens a tab gated "ea"; any other build, or gate, says "soon".
+func _lock_reason(gate: String) -> String:
+	return "ENDING_BADGE_EA" if gate == "ea" and EndingsSystem.build_scope() == EndingsSystem.BUILD_DEMO \
+		else "SYS_SOON"
 
 
 func _on_tab_button(idx: int) -> void:
@@ -122,24 +202,13 @@ func _on_tab_button(idx: int) -> void:
 
 func _on_tab_changed(tab_id: String) -> void:
 	current_tab_idx = _index_of(tab_id)
-	_apply_visual()
+	_paint()
 
 
 ## UiTokens bir ADLI KAPI taşır, boolean değil, böylece oyun durumundan uzak kalır. Bugünkü
-## tek kapı "ea" (bu yapıda yok) ve bilinmeyen bir kapı da KİLİTLİ sayılır: bitmemiş bir
-## sayfa oyuncuya açılmasın.
+## tek kapı "ea" ve bilinmeyen bir kapı da KİLİTLİ sayılır: bitmemiş bir sayfa oyuncuya açılmasın.
 func _is_locked(idx: int) -> bool:
 	return String(UiTokens.TABS[idx].get("lock", "")) != ""
-
-
-func _apply_visual() -> void:
-	for i in tab_buttons.size():
-		# Kilitli sekme (--tab-shot=marketing onu açabilir) idle görünümde kalır, hiç vurgulanmaz.
-		var is_active: bool = i == current_tab_idx and not _is_locked(i)
-		tab_buttons[i].theme_type_variation = &"TabButtonActive" if is_active else &"TabButton"
-		var color: Color = UiTokens.ACCENT_DEEP if is_active else UiTokens.INK_DIM
-		(tab_buttons[i].get_node("Stack/Icon") as TextureRect).modulate = color
-		(tab_buttons[i].get_node("Stack/NameLabel") as Label).add_theme_color_override("font_color", color)
 
 
 func _index_of(tab_id: String) -> int:
@@ -147,6 +216,12 @@ func _index_of(tab_id: String) -> int:
 		if String(UiTokens.TABS[i].id) == tab_id:
 			return i
 	return -1
+
+
+## The ticker's collapsed tab sits on the rail's bottom-left corner; the rail's last row stays
+## above it.
+func set_bottom_clearance(px: float) -> void:
+	$Margin.add_theme_constant_override("margin_bottom", int(UiTokens.SPACE_L + px))
 
 
 # --- Badges ---
@@ -191,6 +266,6 @@ func _set_badge_count(tab_id: String, count: int) -> void:
 	if idx < 0:
 		push_error("LeftTabs: badge for unknown tab id '%s'" % tab_id)
 		return
-	var badge: Panel = tab_buttons[idx].get_node("Badge")
+	var badge: Label = tab_buttons[idx].get_node("Badge")
 	badge.visible = count > 0
-	(badge.get_node("BadgeLabel") as Label).text = str(count)
+	badge.text = str(count)

@@ -6,6 +6,8 @@ extends Control
 #   ürün  : hangi ürün ve sürüm + tek not etiketi.
 #   faz   : satırın kendi zemini koşunun ilerlemesidir, ayrı çubuk yok. Ad + iş yükü + yüzde.
 #   karar : karttaki TEK basılabilir şey.
+# Sprint planlamada bir gün bekleyip liderin önerisiyle kendiliğinden başladıysa, o sprint sürdükçe
+# altta dördüncü bir not satırı. Kartın boyu ev sahibinin verdiği taban + o satır.
 # Üstünde 2px kapak çizgisi: grubun durumu.
 #
 # Dolgu sınırında dikey çizgi yok: dolgu rengin %13 alfası olduğu için sınırın iki yanındaki
@@ -44,12 +46,17 @@ var _decision_row: PanelContainer = null
 var _decision_icon: TextureRect = null
 var _decision_label: Label = null
 var _decision_hover := false
+var _auto_rule: Panel = null
+var _auto_row: Control = null
+var _auto_label: Label = null
+var _base_h := 0.0
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	mouse_filter = Control.MOUSE_FILTER_PASS   # karar satırı tıklanabilir; kart kendisi değil
 	_font = BarKit.resolve_font(self)
+	_base_h = custom_minimum_size.y
 	_build_tree()
 	# Meşguliyet aynı karede okunsun: atama ya da eğitim değişimi bir sonraki oyun saatini
 	# beklerse oyuncu bunu takılma diye okur.
@@ -59,6 +66,7 @@ func _ready() -> void:
 		s.connect(r1)
 	EventBus.build_progress_changed.connect(refresh)
 	EventBus.employee_training_changed.connect(refresh.unbind(2))
+	EventBus.product_state_changed.connect(refresh)
 	refresh()
 
 
@@ -146,6 +154,14 @@ func _build_tree() -> void:
 	_decision_label = BarKit.label(_font, UiTokens.SIZE_SMALL, UiTokens.ACCENT_DEEP)
 	decision.add_child(_decision_label)
 
+	_auto_rule = BarKit.hairline()
+	col.add_child(_auto_rule)
+	var auto: HBoxContainer = _padded_row(col)
+	_auto_row = auto.get_parent()
+	_auto_row.custom_minimum_size = Vector2(0, ROW_DECISION_H)
+	_auto_label = BarKit.label(_font, UiTokens.SIZE_SMALL, UiTokens.INK_DIM)
+	auto.add_child(_auto_label)
+
 
 ## Yatay dolgulu satır: dolgu `parent`'a eklenir, içerik kutusu döner.
 func _padded_row(parent: Control) -> HBoxContainer:
@@ -195,6 +211,12 @@ func _repaint() -> void:
 	# GELEN çizilmez: motorda karşılığı yok.
 	_work_label.text = tr("BUILD_SUPPORT_CONFIRMED").format({"n": m.live_bugs})
 	_paint_decision(m)
+	var auto: bool = SprintSystem.mode() == "active" \
+		and int(GameState.product.get("auto_started", -1)) == SprintSystem.sprint_number()
+	_auto_rule.visible = auto
+	_auto_row.visible = auto
+	_auto_label.text = tr("PRODUCT_AUTO_STARTED")
+	custom_minimum_size.y = _base_h + (_auto_rule.custom_minimum_size.y + ROW_DECISION_H if auto else 0.0)
 
 
 func _paint_decision(m) -> void:

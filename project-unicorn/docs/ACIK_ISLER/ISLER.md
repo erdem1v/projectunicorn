@@ -27,7 +27,7 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
 - Ham stil değerleri (UI/STYLE LAW; her biri yeni token ister): `month_summary_modal.gd` font, yarıçap, margin;
   `finance_ozet_view.gd` modulate'ları; `hunt_tab.gd` `_label` boyutları (11–14; 14 merdivende yok)
   ve disabled alfaları; `OnboardingFlow.tscn` LoadingLabel 18, `origin_traits_step.gd` ve `character_step.gd`
-  modulate'ları; `top_bar.gd` `_apply_density` aralıkları; bir yerde ham 24 punto ve CREAM rengi.
+  modulate'ları; bir yerde ham 24 punto ve CREAM rengi.
 - `hr_tab.gd` saat çipini (`_paint_hours_control`) ve Kadro/Görevler segmentini (`_paint_segments`) elle kurduğu
   StyleBoxFlat'lerle çiziyor; ikisi de tema varyasyonu ister (UI/STYLE LAW 4).
 - Çubukların tema bağımsızlığı: `bar_kit.gd`, `build_bar.gd` ve `research_bar.gd` bilerek tema varyasyonu kullanmıyor,
@@ -60,6 +60,10 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   karar bekleyen kartla sprint içi, sürüm notu, beta sürümü, B2B talepleri, ÇEYREK (PM'li ve PM'siz). Kareler
   `--product-shot=live:<pick|plan|active|b2c_mvp|b2b_requests>` ve fikstürle `--product-shot=<c1..c5|edge:<ad>>`;
   PRD §7.24'ün kareleri `docs/audits/urun_rev7/` altına, §8'in kontrolleri sahibin.
+- **"Sprint otomatik başladı" notunun Ürün penceresindeki yeri.** Not BuildHUD'ın DESTEK kartındadır
+  (`build_bar.gd`). Kart yalnız ürün yayındayken vardır ve bir pencere üstüne gelince gizlenir
+  (`BuildHUDPanel.set_window_cover`); ürün yayına çıkmadan not hiç görünmez, Ürün penceresi açıkken de görünmez.
+  Notun ikinci yeri Ürün penceresidir; Ürün ekranı koyu dile taşınırken kurulur (`product_tab.gd`).
 - **Yeniden yuva listesi (PRD §5.9, §7.23).** GDD'de adı geçtiği ya da sahip tuttuğu için kalan, sprint geçişiyle
   oyun içi çağıranı kalmayan öğeler; her biri sprint ekranında bir yere bağlanır ya da sahibin kararıyla silinir:
   - Hata trendi zinciri (ch03 §8.4 yön okları; sahip): `ProductSystem.bug_trend`, `health_state`, `product_bug_risk`,

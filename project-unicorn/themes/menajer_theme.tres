@@ -131,6 +131,55 @@ corner_radius_top_right = 999
 corner_radius_bottom_right = 999
 corner_radius_bottom_left = 999
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b9c19"]
+content_margin_left = 4.0
+content_margin_top = 0.0
+content_margin_right = 4.0
+content_margin_bottom = 1.0
+bg_color = Color(0.18039216, 0.16078432, 0.14117648, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c3ec8"]
+content_margin_left = 6.0
+content_margin_top = 1.0
+content_margin_right = 6.0
+content_margin_bottom = 1.0
+bg_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45db1"]
+content_margin_left = 4.0
+content_margin_top = 0.0
+content_margin_right = 4.0
+content_margin_bottom = 1.0
+bg_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_77923"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 0.627451, 0.15686275, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b214e"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -2082,27 +2131,27 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.227, 0.204, 0.165, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_50176"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_46f1e"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
 content_margin_bottom = 0.0
 bg_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c5138"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b5c75"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
 content_margin_bottom = 0.0
 bg_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_08a46"]
 content_margin_left = 0.0
@@ -2508,6 +2557,15 @@ corner_radius_top_left = 2
 corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ae064"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cd5d2"]
 content_margin_left = 20.0
@@ -2918,14 +2976,14 @@ content_margin_top = 0.0
 content_margin_right = 0.0
 content_margin_bottom = 0.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_96a1b"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_21b63"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 1.0
 content_margin_bottom = 0.0
 bg_color = Color(0.08235294, 0.07058824, 0.05882353, 1)
 border_width_right = 1
-border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
+border_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f3387_11"]
 content_margin_left = 0.0
@@ -3888,6 +3946,21 @@ BadgeCount/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 BadgeCount/font_sizes/font_size = 13
 BadgeCount/fonts/font = ExtResource("d_sans_b_51908")
 BadgeCount/styles/normal = SubResource("StyleBoxFlat_2c56b")
+BadgeCountIcon/base_type = &"Label"
+BadgeCountIcon/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+BadgeCountIcon/font_sizes/font_size = 12
+BadgeCountIcon/fonts/font = ExtResource("d_sans_b_51908")
+BadgeCountIcon/styles/normal = SubResource("StyleBoxFlat_b9c19")
+BadgeDanger/base_type = &"Label"
+BadgeDanger/colors/font_color = Color(0.105882354, 0.05882353, 0.050980393, 1)
+BadgeDanger/font_sizes/font_size = 13
+BadgeDanger/fonts/font = ExtResource("d_sans_b_51908")
+BadgeDanger/styles/normal = SubResource("StyleBoxFlat_c3ec8")
+BadgeDangerIcon/base_type = &"Label"
+BadgeDangerIcon/colors/font_color = Color(0.105882354, 0.05882353, 0.050980393, 1)
+BadgeDangerIcon/font_sizes/font_size = 12
+BadgeDangerIcon/fonts/font = ExtResource("d_sans_b_51908")
+BadgeDangerIcon/styles/normal = SubResource("StyleBoxFlat_45db1")
 BadgeLabel/base_type = &"Label"
 BadgeLabel/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 BadgeLabel/constants/line_spacing = 3
@@ -3915,6 +3988,8 @@ BodySerif/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 BodySerif/constants/line_spacing = 3
 BodySerif/font_sizes/font_size = 13
 BodySerif/fonts/font = ExtResource("d_serif_reg_e6169")
+BrandMark/base_type = &"Panel"
+BrandMark/styles/panel = SubResource("StyleBoxFlat_77923")
 BuildProgress/base_type = &"ProgressBar"
 BuildProgress/styles/background = SubResource("StyleBoxFlat_b214e")
 BuildProgress/styles/fill = SubResource("StyleBoxFlat_df944")
@@ -4132,6 +4207,10 @@ DangerButton/styles/disabled = SubResource("StyleBoxFlat_6f464_2")
 DangerButton/styles/hover = SubResource("StyleBoxFlat_de673")
 DangerButton/styles/normal = SubResource("StyleBoxFlat_b2386")
 DangerButton/styles/pressed = SubResource("StyleBoxFlat_c268f")
+DataMedium/base_type = &"Label"
+DataMedium/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+DataMedium/font_sizes/font_size = 15
+DataMedium/fonts/font = ExtResource("d_sans_med_8aa82")
 DataMono/base_type = &"Label"
 DataMono/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 DataMono/constants/line_spacing = 3
@@ -4678,9 +4757,9 @@ PartValueArmed/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 PartValueArmed/font_sizes/font_size = 26
 PartValueArmed/fonts/font = ExtResource("d_sans_b_51908")
 PhaseDotActive/base_type = &"Panel"
-PhaseDotActive/styles/panel = SubResource("StyleBoxFlat_50176")
+PhaseDotActive/styles/panel = SubResource("StyleBoxFlat_46f1e")
 PhaseDotDim/base_type = &"Panel"
-PhaseDotDim/styles/panel = SubResource("StyleBoxFlat_c5138")
+PhaseDotDim/styles/panel = SubResource("StyleBoxFlat_b5c75")
 PopupMenu/colors/font_accelerator_color = Color(0.6039216, 0.5686275, 0.5176471, 1)
 PopupMenu/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 PopupMenu/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
@@ -4792,6 +4871,8 @@ QuoteSerifCream/font_sizes/font_size = 15
 QuoteSerifCream/fonts/font = ExtResource("d_serif_it_9778e")
 RailCard/base_type = &"PanelContainer"
 RailCard/styles/panel = SubResource("StyleBoxFlat_fae3d")
+RailMark/base_type = &"Panel"
+RailMark/styles/panel = SubResource("StyleBoxFlat_ae064")
 RailPanel/base_type = &"PanelContainer"
 RailPanel/styles/panel = SubResource("StyleBoxFlat_cd5d2")
 RailRow/base_type = &"Button"
@@ -4975,7 +5056,7 @@ SettingsSwitch/styles/hover_pressed = SubResource("StyleBoxEmpty_c6b6b_5")
 SettingsSwitch/styles/normal = SubResource("StyleBoxEmpty_c6b6b_6")
 SettingsSwitch/styles/pressed = SubResource("StyleBoxEmpty_c6b6b_7")
 SideRailPanel/base_type = &"Panel"
-SideRailPanel/styles/panel = SubResource("StyleBoxFlat_96a1b")
+SideRailPanel/styles/panel = SubResource("StyleBoxFlat_21b63")
 SkillValue/base_type = &"Label"
 SkillValue/colors/font_color = Color(0.7882353, 0.7647059, 0.7058824, 1)
 SkillValue/font_sizes/font_size = 16
@@ -5207,6 +5288,12 @@ TickerToggle/colors/font_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1
 TickerToggle/colors/font_hover_color = Color(1, 1, 1, 1)
 TickerToggle/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
 TickerToggle/colors/font_pressed_color = Color(1, 1, 1, 1)
+TickerToggle/colors/icon_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+TickerToggle/colors/icon_hover_color = Color(1, 1, 1, 1)
+TickerToggle/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+TickerToggle/colors/icon_normal_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+TickerToggle/colors/icon_pressed_color = Color(1, 1, 1, 1)
+TickerToggle/constants/icon_max_width = 20
 TickerToggle/font_sizes/font_size = 14
 TickerToggle/fonts/font = ExtResource("d_sans_reg_96321")
 TickerToggle/styles/disabled = SubResource("StyleBoxFlat_da472")
@@ -5260,7 +5347,7 @@ TopicPill/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
 TopicPill/font_sizes/font_size = 13
 TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
 TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
-UiTokensStamp/constants/stamp = 18
+UiTokensStamp/constants/stamp = 19
 VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")
@@ -5272,6 +5359,10 @@ ValueText/base_type = &"Label"
 ValueText/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 ValueText/font_sizes/font_size = 18
 ValueText/fonts/font = ExtResource("d_sans_med_8aa82")
+ValueTextStrong/base_type = &"Label"
+ValueTextStrong/colors/font_color = Color(1, 1, 1, 1)
+ValueTextStrong/font_sizes/font_size = 18
+ValueTextStrong/fonts/font = ExtResource("d_sans_sb_3375b")
 ViewportPanel/base_type = &"Panel"
 ViewportPanel/styles/panel = SubResource("StyleBoxFlat_17c22")
 VolumeSlider/base_type = &"HSlider"

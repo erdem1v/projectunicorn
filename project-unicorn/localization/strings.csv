@@ -423,8 +423,6 @@ TAB_SETTINGS,Ayarlar,Settings
 FIN_PHASE_BOOTSTRAP,Bootstrap,Bootstrap
 FIN_PHASE_TRACTION,Traction,Traction
 FIN_PHASE_SERIES_A,Series A,Series A
-FIN_SHUTTER_COUNTDOWN,KEPENK: {n} HAFTA,SHUTTER: {n} WEEKS
-FIN_SHUTTER_COUNTDOWN_ONE,KEPENK: {n} HAFTA,SHUTTER: {n} WEEK
 FIN_CAP_CASH,KASA,CASH
 FIN_CAP_BURN,BURN,BURN
 FIN_CAP_NET,NET,NET
@@ -1479,10 +1477,15 @@ NEWS_RIVAL_UP_3,{name} fiyat kampanyasıyla alan kazanıyor; pazar payı {share}
 NEWS_RIVAL_DOWN_0,{name} bu hafta pay kaybetti; koridorlarda indirim söylentisi dolaşıyor.,{name} lost share this week; there is a discount rumour going round the corridors.
 NEWS_RIVAL_DOWN_1,{name} müşterilerinin yenileme pazarlığı sertleşti; payı {share} seviyesine geriledi.,{name}'s customers have hardened in renewal talks; its share has slipped to {share}.
 NEWS_RIVAL_DOWN_2,{name} kilit bir hesabını kaybetti; pazar payı {share} bandına indi.,{name} lost a key account; its market share has dropped into the {share} band.
-TOPBAR_CLOCK,{date} · {hour}:00,{date} · {hour}:00
-TOPBAR_CLOCK_COMPACT,H{week} · {mon} · {hour}:00,W{week} · {mon} · {hour}:00
-FIN_OFFER_COUNTDOWN,TEKLİF · {n} HAFTA,OFFER · {n} WEEKS
-FIN_OFFER_COUNTDOWN_ONE,TEKLİF · {n} HAFTA,OFFER · {n} WEEK
+TOPBAR_BRAND,Project Unicorn,Project Unicorn
+TOPBAR_DATE_COMPACT,H{week} · {mon},W{week} · {mon}
+TOPBAR_SHUTTER,Kepenk,Shutter
+TOPBAR_SHUTTER_WEEKS,{n} hafta,{n} weeks
+TOPBAR_SHUTTER_WEEKS_ONE,{n} hafta,{n} week
+TOPBAR_NEXT,Sıradaki,Up next
+TOPBAR_NEXT_OFFER,Teklif · {n} hafta kaldı,Offer · {n} weeks left
+TOPBAR_NEXT_OFFER_LAST,Teklif · bu hafta son,Offer · final week
+TOPBAR_NEXT_WORKDAY_END,Mesai bitimi · {n} saat,Workday ends · {n} h
 MONTH_TITLE,{month} {year},{month} {year}
 SUMMARY_TITLE_WEEK,Hafta {week} · {year},Week {week} · {year}
 SUMMARY_TITLE_QUARTER,{quarter}. Çeyrek {year},Q{quarter} {year}

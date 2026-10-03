@@ -1,15 +1,42 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/components/news_ticker.gd" id="1_newsticker"]
+[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_menajer"]
+[ext_resource type="Texture2D" path="res://assets/icons/util/news.svg" id="3_news"]
 
 [node name="NewsTicker" type="Panel"]
 clip_contents = true
 custom_minimum_size = Vector2(0, 40)
 process_mode = 3
+theme = ExtResource("2_menajer")
 theme_type_variation = &"NewsPanel"
 script = ExtResource("1_newsticker")
 
-[node name="Stream" type="RichTextLabel" parent="."]
+[node name="Toggle" type="Button" parent="."]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 56.0
+grow_vertical = 2
+focus_mode = 0
+theme_type_variation = &"TickerToggle"
+icon = ExtResource("3_news")
+icon_alignment = 1
+
+[node name="Run" type="Control" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 56.0
+offset_top = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Stream" type="RichTextLabel" parent="Run"]
 layout_mode = 0
 offset_right = 1.0
 offset_bottom = 40.0
@@ -18,4 +45,15 @@ bbcode_enabled = true
 fit_content = true
 scroll_active = false
 autowrap_mode = 0
-theme_type_variation = &"NewsRich"
+theme_type_variation = &"TickerRich"
+
+[node name="Fade" type="Control" parent="Run"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -48.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2

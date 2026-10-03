@@ -1886,3 +1886,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   (Konsept, yayın akışı, kapasite bloğu, fiyat paneli, Frank şeridi, monitör), ch12 .docx §3 ve §5 eski ev sahiplerini
   ve onboarding'in Konsept'e açılmasını anlatıyor. Ajanın verdiği kararlar 96'dadır. Açık: ch03 ve ch12 .docx rev 7'ye
   güncellensin mi. Kaynak: `docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md`; GUNCELLEMELER "Ürün rev 7".
+
+- **Üst barın saati kendi bloğunda (tasarım sistemi, sahip onayı 2026-10-02).** Üst bar tarihi ve saati ayrı
+  bloklarda gösterir: gün bloğu tarihi (`DATE_LINE`, "Hafta 14 · Nisan 2026"; dar genişlikte `TOPBAR_DATE_COMPACT`,
+  "H14 · Nis") ve hafta çubuğunu, saat bloğu saati ve hız tuşlarını taşır (`top_bar.gd`). ZAMAN MODELİ §5 TopBar'ın
+  saati tarih satırına eklediğini ("Hafta 14 · Nisan 2026 · 09:00") ve kısa biçimi `TOPBAR_CLOCK_COMPACT`
+  ("H14 · Nis · 09:00") anlatıyor; o anahtar silindi. Açık: ZAMAN MODELİ §5 ya da GUNCELLEMELER güncellensin mi.
+  Kaynak: Menajer Masası tasarım sistemi (Erdem 2026-10-02, "UI approved").

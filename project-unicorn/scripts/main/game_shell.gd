@@ -11,10 +11,22 @@ const PRODUCT_FIXTURES := "res://scripts/debug/product_fixtures.gd"
 var _product_source: Object = null
 
 @onready var _windows: Node = $CenterViewport   # WindowLayer: Esc en üstteki pencereyi kapatır
+@onready var _ticker: Control = $NewsTicker
 
 
 func _ready() -> void:
 	EventBus.sprint_closed.connect(_on_sprint_closed)
+	_ticker.open_changed.connect(_lay_ticker)
+	_lay_ticker(_ticker.open)
+
+
+## Kapalı haber şeridi sol altta yalnız aç/kapa hücresidir: ofis ve ray ekranın altına iner, rayın
+## son satırı hücrenin üstünde kalır.
+func _lay_ticker(open: bool) -> void:
+	var band: float = _ticker.custom_minimum_size.y
+	$CenterViewport.offset_bottom = -band if open else 0.0
+	$LeftTabs.offset_bottom = -band if open else 0.0
+	$LeftTabs.set_bottom_clearance(0.0 if open else band)
 
 
 ## Sprint kapanınca sürüm notu Ürün sekmesinde açılır; sekme zaten açıksa kendini yeniden çizer.

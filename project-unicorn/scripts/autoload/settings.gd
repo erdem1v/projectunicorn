@@ -41,6 +41,8 @@ const DEFAULTS := {
 	"summary_frequency": "quarterly",   # SummarySystem.FREQUENCIES
 	# --- Erişilebilirlik (UiTokens applies) ---
 	"colorblind_palette": false,
+	# --- Kabuk (NewsTicker reads it; its toggle writes it) ---
+	"ticker_open": true,
 }
 
 # One volume-slider drag is a few hundred set_value calls: mark dirty and flush once

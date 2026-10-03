@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bfbsd5akncuw6"
-path="res://.godot/imported/marketing.svg-4bafd6e4f10440ca3c9294789f364aa7.ctex"
+uid="uid://cigesblpmull3"
+path="res://.godot/imported/sales.svg-79740fda341a20a8307e7da3741bca61.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/tabs/marketing.svg"
-dest_files=["res://.godot/imported/marketing.svg-4bafd6e4f10440ca3c9294789f364aa7.ctex"]
+source_file="res://assets/icons/rail/sales.svg"
+dest_files=["res://.godot/imported/sales.svg-79740fda341a20a8307e7da3741bca61.ctex"]
 
 [params]
 

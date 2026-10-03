@@ -667,6 +667,12 @@ func _menajer(master: Theme) -> Theme:
 	_recolor(th, &"NewsPanel", "panel", T.D_SURFACE_0)
 	_recolor(th, &"PhaseDotActive", "panel", T.D_INK_2)
 	_recolor(th, &"TabBadge", "panel", T.D_SURFACE_5)
+	_recolor(th, &"SideRailPanel", "panel", null, T.D_LINE_1)
+	# The phase dots are 6 px discs on the dark top bar.
+	for dot in [&"PhaseDotActive", &"PhaseDotDim"]:
+		var disc: StyleBoxFlat = th.get_stylebox("panel", dot).duplicate()
+		disc.set_corner_radius_all(T.RADIUS_PILL)
+		th.set_stylebox("panel", dot, disc)
 	_recolor(th, &"BuildProgress", "fill", T.D_BAR_FILL)
 	_recolor(th, &"VolumeSlider", "grabber_area", T.D_INK_3)
 	_recolor(th, &"VolumeSlider", "grabber_area_highlight", T.D_INK_2)
@@ -863,6 +869,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"ClockLabel", sans_sb, T.D_FS_22, T.D_INK_2],
 		[&"RiskValue", sans_b, T.D_FS_18, T.D_NEG],
 		[&"ValueText", sans_med, T.D_FS_18, T.D_INK_2],
+		[&"ValueTextStrong", sans_sb, T.D_FS_18, T.D_INK_1],
 		[&"BodyLabel", sans_reg, T.D_FS_16, T.D_INK_2],
 		[&"SenderName", sans_sb, T.D_FS_16, T.D_INK_2],
 		[&"RiskName", sans_sb, T.D_FS_16, T.D_INK_1],
@@ -871,6 +878,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"SkillValue", sans_med, T.D_FS_16, T.D_SKILL_3],   # its host paints D_skill(value)
 		[&"DataText", sans_reg, T.D_FS_15, T.D_INK_2],
 		[&"DataStrong", sans_sb, T.D_FS_15, T.D_INK_1],
+		[&"DataMedium", sans_med, T.D_FS_15, T.D_INK_2],
 		[&"NoticeText", sans_med, T.D_FS_15, T.D_INK_2],
 		[&"NoteMuted", sans_reg, T.D_FS_15, T.D_INK_3],
 		[&"CondData", sansc, T.D_FS_15, T.D_INK_2],
@@ -892,14 +900,18 @@ func _menajer(master: Theme) -> Theme:
 	# runtime from the D_ helpers, so the colour-blind palette reaches them.
 	var tag := _fit(cond_b_caps, T.D_FS_13, T.D_H_TAG, T.SPACE_M, T.SPACE_M)
 	var pill := _fit(cond_b_caps, T.D_FS_13, T.D_H_PILL, T.SPACE_S, T.SPACE_S)
+	var badge := _fit(sans_b, T.D_FS_13, T.D_H_BADGE, T.SPACE_S, T.SPACE_S)
+	var badge_icon := _fit(sans_b, T.D_FS_12, T.D_H_BADGE_ICON, T.SPACE_XS, T.SPACE_XS)
 	for row in [
 		[&"Tag", cond_b_caps, T.D_FS_13, T.D_INK_2, _flat(clear, T.D_RADIUS_2, tag, T.D_LINE_3)],
 		[&"TagNeutral", cond_b_caps, T.D_FS_13, T.D_INK_3, _flat(T.D_SURFACE_5, T.D_RADIUS_2, tag)],
 		[&"TagOutline", cond_b_caps, T.D_FS_13, T.D_INK_3, _flat(clear, T.D_RADIUS_2, tag, T.D_LINE_2)],
 		[&"TopicPill", cond_b_caps, T.D_FS_13, T.D_TOPIC_AGENDA,
 			_flat(Color(T.D_TOPIC_AGENDA, T.D_PILL_FILL_ALPHA), T.D_RADIUS_2, pill, T.D_TOPIC_AGENDA)],
-		[&"BadgeCount", sans_b, T.D_FS_13, T.D_INK_2, _flat(T.D_SURFACE_5, T.RADIUS_PILL,
-			_fit(sans_b, T.D_FS_13, T.D_H_BADGE, T.SPACE_S, T.SPACE_S), T.D_LINE_2)],
+		[&"BadgeCount", sans_b, T.D_FS_13, T.D_INK_2, _flat(T.D_SURFACE_5, T.RADIUS_PILL, badge, T.D_LINE_2)],
+		[&"BadgeDanger", sans_b, T.D_FS_13, T.D_ON_NEG, _flat(T.D_NEG, T.RADIUS_PILL, badge)],
+		[&"BadgeCountIcon", sans_b, T.D_FS_12, T.D_INK_2, _flat(T.D_SURFACE_5, T.RADIUS_PILL, badge_icon, T.D_LINE_2)],
+		[&"BadgeDangerIcon", sans_b, T.D_FS_12, T.D_ON_NEG, _flat(T.D_NEG, T.RADIUS_PILL, badge_icon)],
 		[&"DocStamp", cond_b_caps, T.D_FS_14, T.D_STAMP, _flat(clear, T.D_RADIUS_1,
 			_fit(cond_b_caps, T.D_FS_14, T.D_H_STAMP, T.SPACE_M, T.SPACE_M), T.D_STAMP, thick)],
 		[&"FxPart", sans_med, T.D_FS_14, T.D_INK_2, _flat(T.D_SURFACE_2, T.D_RADIUS_2,
@@ -947,6 +959,11 @@ func _menajer(master: Theme) -> Theme:
 		_panel(th, row[0], "PanelContainer", row[1])
 	_panel(th, &"GateDot", "Panel", _flat(T.D_ACCENT, T.RADIUS_PILL, Vector4.ZERO))
 	_panel(th, &"IconWell", "Panel", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO))
+	_panel(th, &"BrandMark", "Panel", _flat(T.D_BRAND_MARK, T.D_RADIUS_1, Vector4.ZERO))
+	var mark := _flat(T.D_SELECTED_MARK, T.D_RADIUS_1, Vector4.ZERO)
+	mark.corner_radius_top_left = 0
+	mark.corner_radius_bottom_left = 0
+	_panel(th, &"RailMark", "Panel", mark)
 
 	# Clickable rows and keys.
 	_dbtn(th, &"ChipButton", secondary, sans_reg, T.D_FS_15, _fit(sans_reg, T.D_FS_15, T.D_H_BTN, T.SPACE_L, T.SPACE_L))
@@ -986,6 +1003,10 @@ func _menajer(master: Theme) -> Theme:
 	_dbtn(th, &"TickerToggle", {"normal": [clear, T.D_LINE_1, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
 		"pressed": [clear, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]},
 		sans_reg, T.D_FS_14, Vector4.ZERO, 0, Vector4i(0, 0, T.BORDER_HAIRLINE, 0))
+	for row in [["icon_normal_color", T.D_INK_3], ["icon_focus_color", T.D_INK_3], ["icon_hover_color", T.D_INK_1],
+			["icon_pressed_color", T.D_INK_1], ["icon_hover_pressed_color", T.D_INK_1]]:
+		th.set_color(row[0], &"TickerToggle", row[1])
+	th.set_constant("icon_max_width", &"TickerToggle", T.D_ICON_CONTROL)
 
 	# Message body and ticker text.
 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")
