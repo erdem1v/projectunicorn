@@ -45,7 +45,7 @@ func _ready() -> void:
 	_container.mouse_entered.connect(func() -> void: _pointer_inside = true)
 	_container.mouse_exited.connect(_on_pointer_left)
 	# Deferred: the container says it resized before it resizes the SubViewport the camera fits to.
-	_container.resized.connect(_fit_once, CONNECT_DEFERRED)
+	_container.resized.connect(_fit, CONNECT_DEFERRED)
 	camera.clicked.connect(_on_clicked)
 	EventBus.office_changed.connect(load_layout)
 	EventBus.night_skipped.connect(_on_night_skipped)
@@ -70,7 +70,7 @@ func load_layout(office_id: String, road := false) -> void:
 	var materials := OfficeMaterials.convert_scene(scene, layout)
 	lighting.set_layout(layout, scene, materials, OfficeMaterials.stations(scene))
 	_fitted = false
-	_fit_once()
+	_fit()
 	nav_region = null
 	var links := []
 	if office_id != "city":
@@ -97,6 +97,12 @@ func load_layout(office_id: String, road := false) -> void:
 	if road:
 		_on_pointer_left()
 	_step_overlays()
+
+
+## WindowLayer keeps the view right of the rail (`left`, in the parent's space): the camera
+## frames that part and the overlay's controls anchor to it.
+func set_safe_left(left: float) -> void:
+	offset_left = left
 
 
 ## WindowLayer's veil for the founder's trip: the controls over the office step aside until it
@@ -153,9 +159,13 @@ func _process(_delta: float) -> void:
 		show_tooltip(label, at)
 
 
-## The first time the view has a size, frame the office; later resizes keep the camera.
-func _fit_once() -> void:
-	if _fitted or _container.size.x < 1.0 or _container.size.y < 1.0:
+## The first time the view has a size, frame the office; a later resize (the rail's mode, the UI
+## scale, the window) refits and keeps the frame.
+func _fit() -> void:
+	if _container.size.x < 1.0 or _container.size.y < 1.0:
+		return
+	if _fitted:
+		camera.refit()
 		return
 	_fitted = true
 	camera.fit(layout.bounds, _lowest)

@@ -21,6 +21,8 @@ var _pulse: Tween
 var _toast := PanelContainer.new()
 var _toast_label: Label
 var _toast_tween: Tween
+var _map_open := false
+var _window_cover := Rect2()
 
 
 func _ready() -> void:
@@ -41,6 +43,7 @@ func _ready() -> void:
 		if UiFactory.is_left_click(event):
 			move_pressed.emit())
 	_button.resized.connect(func() -> void: _button.pivot_offset = _button.size * 0.5)
+	_row.resized.connect(_show_row)
 	_row.add_child(_button)
 	var inner := HBoxContainer.new()
 	inner.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -71,7 +74,19 @@ func _ready() -> void:
 ## The map's own panel takes the button's corner while it is open, and the founder's trip
 ## shows no controls (OfficeView says which); the toast stays.
 func set_map_open(open: bool) -> void:
-	_row.visible = not open
+	_map_open = open
+	_show_row()
+
+
+## WindowLayer says where the open windows lie each time it places them; the button steps
+## aside under one.
+func set_window_cover(cover: Rect2) -> void:
+	_window_cover = cover
+	_show_row()
+
+
+func _show_row() -> void:
+	_row.visible = not _map_open and not _window_cover.intersects(_row.get_global_rect())
 
 
 func _refresh() -> void:
@@ -84,7 +99,7 @@ func _refresh() -> void:
 		_badge = UiFactory.make_pill(tr(Fmt.count_key("OFFICE_MOVING_BADGE", weeks)).format({"weeks": weeks}),
 			UiTokens.BADGE_BG, UiTokens.BADGE_FG, false)
 		_row.add_child(_badge)
-	_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_XL)
+	_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_3XL)
 	var breathe := GameState.run_angel_amount > 0 and OfficeSystem.current() == "home" and not OfficeSystem.is_moving()
 	if breathe == (_pulse != null):
 		return

@@ -67,6 +67,10 @@ const BASE_VIEWPORT := Vector2(1920.0, 1080.0)
 ## 1920 pencere → %125 (1536×864) yasal.
 const MIN_CHROME_VIEWPORT := Vector2(1280.0, 720.0)
 
+## Bu mantıksal genişliğin altında kabuk sıkışır: üst bar dar kipe, ray simge kipine geçer; etiketli
+## ray ve tam bar ancak bu genişlikte sığar. Merdivende yalnız %125 (1536) altında kalır.
+const COMPACT_SHELL_BELOW := 1680.0
+
 const KEY_WINDOW_MODE := "window_mode"
 const KEY_RES_W := "resolution_w"
 const KEY_RES_H := "resolution_h"

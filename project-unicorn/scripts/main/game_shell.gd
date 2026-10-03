@@ -10,7 +10,7 @@ var _vc_debug_idx: int = 0   # Shift+F5: cycles the VC roster
 const PRODUCT_FIXTURES := "res://scripts/debug/product_fixtures.gd"
 var _product_source: Object = null
 
-@onready var _windows: Node = $MidRow/CenterViewport   # WindowLayer: Esc en üstteki pencereyi kapatır
+@onready var _windows: Node = $CenterViewport   # WindowLayer: Esc en üstteki pencereyi kapatır
 
 
 func _ready() -> void:

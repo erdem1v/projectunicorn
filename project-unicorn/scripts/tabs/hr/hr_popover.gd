@@ -4,7 +4,7 @@ extends Control
 # Bağlı açılır panel (§9.2): zam kutusu, mesai paneli, kişi menüsü.
 #
 # GameShell/PanelLayer'a monte olur, sekmenin içine değil: CenterViewport kırpar
-# (clip_contents) ve sekme düğümü BuildHUD'ın altında çizilir. PanelLayer'ın dönüşümü
+# (clip_contents) ve ray onun üstünde çizilir. PanelLayer'ın dönüşümü
 # yok, dolayısıyla çapanın global_position/size değerleri aynı uzayda okunur.
 #
 # Kapanma: ESC (ui_cancel) ve dışarı tıklama. Aynı anda tek popover: mount() eskisini kapatır.

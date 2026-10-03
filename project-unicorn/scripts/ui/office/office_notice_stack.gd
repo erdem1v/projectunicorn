@@ -3,23 +3,25 @@ extends VBoxContainer
 # The notice stack at the office's bottom right: Frank's latest line, then the papers waiting on
 # the desk, at most MAX_CARDS cards with a +N badge on the last for the rest. What a paper is and
 # where its click goes is DeskPapers'; the Events window lists them all. Windows are later
-# siblings of the office, so an open window covers the stack.
+# siblings of the office, and the stack hides while one lies over it.
 
 const PAPERS := preload("res://scripts/ui/components/desk_papers.gd")
-const WIDTH := 340
+const WIDTH := 352
 const MAX_CARDS := 4
 const ARRIVE_S := 0.35
 const ARRIVE_SLIDE := 24.0   # px a new card slides in from the right
 
 var _seen := {}   # ids of cards already shown once; only a new one plays the arrival
 var _queued := false
+var _map_open := false
+var _window_cover := Rect2()
 
 
 func _ready() -> void:
 	add_to_group(&"office_overlays")
 	custom_minimum_size.x = WIDTH
 	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE,
-		UiTokens.SPACE_XL)
+		UiTokens.SPACE_3XL)
 	grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	grow_vertical = Control.GROW_DIRECTION_BEGIN
 	alignment = BoxContainer.ALIGNMENT_END
@@ -32,12 +34,25 @@ func _ready() -> void:
 	EventBus.language_changed.connect(_queue_refresh)
 	# The desk as the office opens is not news: nothing arrives on the first fill.
 	_refresh(false)
+	# A new card grows the stack, maybe under a window.
+	resized.connect(_show)
 
 
 ## The city map's office card takes the right edge while the map is open, and the founder's
 ## trip shows no controls (OfficeView says which).
 func set_map_open(open: bool) -> void:
-	visible = not open
+	_map_open = open
+	_show()
+
+
+## WindowLayer says where the open windows lie each time it places them.
+func set_window_cover(cover: Rect2) -> void:
+	_window_cover = cover
+	_show()
+
+
+func _show() -> void:
+	visible = not _map_open and not _window_cover.intersects(get_global_rect())
 
 
 ## One rebuild per frame however many signals land in it, so a new card's arrival is not cut.

@@ -1,7 +1,8 @@
 extends Panel
 
-# Merkez alanın pencere yöneticisi. Arka plan (ilk çocuk) ofistir; üstünde en fazla bir birincil
-# pencere (sekme) ve ona bağlı bir ayrıntı penceresi, hepsinin üstünde BuildHUD (son çocuk).
+# Merkez alanın pencere yöneticisi. Arka plan (ilk çocuk) ofistir, ardından BuildHUD; üstlerinde en
+# fazla bir birincil pencere (sekme) ve ona bağlı bir ayrıntı penceresi. Ray bu katmanın sol
+# kenarının üstüne biner: ofis, BuildHUD ve pencereler rayın canlı genişliğinin sağında kalır.
 # Yuvalar sabit, sürükleme yok. tab_changed("") = pencere yok; kapatmanın üç yolu (×, Esc,
 # aktif sekmeye tekrar tıklama) bu sinyale çıkar. Pencereler ModalLayer'a ASLA gitmez:
 # game_shell orada Space/1-4'ü yutuyor, pencere açıkken hız kontrolü çalışmalı. Kurucunun
@@ -23,15 +24,16 @@ const DETAILS := {
 }
 # preload: global class cache'e bağımlılık yok (yeni class_name + headless tuzağı).
 const FRAME := preload("res://scripts/ui/components/window_frame.gd")
-## 1920×1080 tabanında pencere boyları; merkez alan daha darsa pencere ona sığacak kadar
+## 1920×1080 tabanında pencere boyları; pencere alanı daha darsa pencere ona sığacak kadar
 ## küçülür. Sahnesi olmayan sekme yer tutucunun (marketing) boyunu alır. Ekip 1200: defterin
-## sabit sütunları ve ÇALIŞAN 1000'e sığmıyor. Ürün 1424 genişlikte BuildHUD'un (x ≥ 1540) solunda kalır.
+## sabit sütunları ve ÇALIŞAN 1000'e sığmıyor. Finans 1344 BuildHUD'un solunda biter; Ürün 1424 ona
+## biner ve BuildHUD gizlenir.
 const SPECS := {
-	"finance": Vector2(1410, 700), "hr": Vector2(1200, 720), "product": Vector2(1424, 960),
+	"finance": Vector2(1344, 720), "hr": Vector2(1200, 720), "product": Vector2(1424, 928),
 	"sales": Vector2(1280, 760), "rnd": Vector2(1280, 780), "personal": Vector2(1000, 640),
 	"events": Vector2(900, 640), "marketing": Vector2(900, 640), "hr_dossier": Vector2(380, 580),
 }
-const EDGE := 16.0            # pencere ile merkez alan kenarı arasındaki en az boşluk
+const EDGE := 24.0            # pencere ile pencere alanının (ray dışı merkez alan) kenarı arasındaki boşluk
 const DETAIL_DROP := 130.0    # ayrıntı, birincilin üst kenarından bu kadar aşağıda başlar
 const DETAIL_OVERHANG := 4.0  # ...ve sağ kenarından bu kadar taşar
 ## Ofis ve sayfalar ayrıntı penceresini bu gruptan açar: open_detail(kind, payload).
@@ -44,6 +46,11 @@ var _detail_kind: String = ""
 var _detail_payload: Dictionary = {}
 var _veiled: bool = false
 
+## Sol kenarın üstüne binen ray (GameShell'de kardeş); genişliği kipine göre değişir.
+@export var rail: Control
+@onready var _office: Control = $OfficeView
+@onready var _build_hud: Control = $BuildHUD
+
 
 func _ready() -> void:
 	add_to_group(GROUP)
@@ -54,6 +61,8 @@ func _ready() -> void:
 	EventBus.palette_changed.connect(_rebuild.unbind(1))
 	EventBus.language_changed.connect(_rebuild.unbind(1))
 	resized.connect(_place)
+	rail.resized.connect(_place)
+	_place()
 
 
 ## tab_changed'in alıcısı: her şeyi kapatır, id boşsa ofis çıplak kalır, değilse o sekmenin
@@ -68,6 +77,7 @@ func open_primary(tab_id: String) -> void:
 		_current_page = null
 	_primary_id = tab_id
 	if _primary_id == "":
+		_place()
 		return
 	var body: Control
 	if TAB_SCENES.has(_primary_id):
@@ -112,6 +122,7 @@ func set_veiled(veiled: bool) -> void:
 		if frame != null:
 			frame.visible = not veiled
 	get_tree().call_group(&"office_view", &"set_veiled", veiled)
+	_place()
 
 
 ## Harness erişimi: birincil pencerenin sayfası; pencere yoksa null.
@@ -128,6 +139,7 @@ func _close_detail(body: Control = null) -> void:
 	_detail = null
 	_detail_kind = ""
 	get_tree().call_group(&"office_view", &"clear_selection")
+	_place()
 
 
 func _rebuild() -> void:
@@ -142,26 +154,40 @@ func _rebuild() -> void:
 func _mount(frame: Control) -> void:
 	frame.visible = not _veiled
 	add_child(frame)
-	move_child(frame, get_child_count() - 2)   # BuildHUD (son çocuk) pencerelerin üstünde kalır
 	_place()
 
 
-## Birincil sol üstte; ayrıntı birincilin sağ kenarına biner. İkisi de merkez alanın EDGE
-## kadar içinde kalır. Merkez alan yeniden boyutlanınca (arayüz ölçeği) yeniden oturur.
+## Ofis ve BuildHUD rayın sağındaki alanı alır; pencereler o alanın EDGE kadar içinde kalır.
+## Birincil sol üstte; ayrıntı birincilin sağ kenarına biner. Katman ya da ray yeniden
+## boyutlanınca (arayüz ölçeği, rayın kipi) yeniden oturur.
 func _place() -> void:
-	var corner := Vector2(EDGE, EDGE)
-	var room: Vector2 = size - corner * 2.0
+	var left: float = rail.get_rect().end.x - position.x
+	_office.set_safe_left(left)
+	_build_hud.offset_left = left
+	var corner := Vector2(left + EDGE, EDGE)
+	var end: Vector2 = size - Vector2(EDGE, EDGE)
+	var room: Vector2 = end - corner
 	if _current_page != null:
 		_current_page.position = corner
 		_current_page.size = (SPECS.get(_primary_id, SPECS["marketing"]) as Vector2).min(room)
-	if _detail == null:
-		return
-	_detail.size = (SPECS[_detail_kind] as Vector2).min(room)
-	var at: Vector2 = corner
-	if _current_page != null:
-		at = Vector2(_current_page.get_rect().end.x - _detail.size.x + DETAIL_OVERHANG,
-			_current_page.position.y + DETAIL_DROP)
-	_detail.position = at.clamp(corner, (size - corner - _detail.size).max(corner))
+	if _detail != null:
+		_detail.size = (SPECS[_detail_kind] as Vector2).min(room)
+		var at: Vector2 = corner
+		if _current_page != null:
+			at = Vector2(_current_page.get_rect().end.x - _detail.size.x + DETAIL_OVERHANG,
+				_current_page.position.y + DETAIL_DROP)
+		_detail.position = at.clamp(corner, (end - _detail.size).max(corner))
+	_tell_floats()
+
+
+## Ofisin üstündeki yüzen denetimler (office_overlays) üstlerine pencere binince gizlenir; görünen
+## pencerelerin kapladığı alanı onlara söyler.
+func _tell_floats() -> void:
+	var cover := Rect2()
+	for frame: Control in [_current_page, _detail]:
+		if frame != null and frame.visible:
+			cover = frame.get_global_rect() if not cover.has_area() else cover.merge(frame.get_global_rect())
+	get_tree().call_group(&"office_overlays", &"set_window_cover", cover)
 
 
 ## Sahnesi olmayan sekme: ortalanmış başlık + tek satır. Başlık id'den türer (TAB_ + ID),

@@ -22,32 +22,35 @@ script = ExtResource("7_shell")
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 54.0
+offset_bottom = 64.0
 grow_horizontal = 2
 
-[node name="MidRow" type="HBoxContainer" parent="." unique_id=1513243657]
+[node name="CenterViewport" type="Panel" parent="." unique_id=394671301 node_paths=PackedStringArray("rail")]
+clip_contents = true
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 54.0
-offset_bottom = -34.0
+offset_top = 64.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 0
-
-[node name="LeftTabs" parent="MidRow" unique_id=819207523 instance=ExtResource("2_lefttabs")]
-layout_mode = 2
-
-[node name="CenterViewport" type="Panel" parent="MidRow" unique_id=394671301]
-clip_contents = true
-layout_mode = 2
-size_flags_horizontal = 3
 theme_type_variation = &"ViewportPanel"
 script = ExtResource("3_center")
+rail = NodePath("../LeftTabs")
 
-[node name="OfficeView" parent="MidRow/CenterViewport" instance=ExtResource("8_officeview")]
+[node name="OfficeView" parent="CenterViewport" instance=ExtResource("8_officeview")]
 layout_mode = 1
+
+[node name="BuildHUD" parent="CenterViewport" instance=ExtResource("6_buildhud")]
+
+[node name="LeftTabs" parent="." unique_id=819207523 instance=ExtResource("2_lefttabs")]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_top = 64.0
+offset_bottom = -40.0
+grow_vertical = 2
 
 [node name="NewsTicker" parent="." unique_id=795198888 instance=ExtResource("5_newsticker")]
 layout_mode = 1
@@ -55,7 +58,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -34.0
+offset_top = -40.0
 grow_horizontal = 2
 grow_vertical = 0
 
@@ -64,5 +67,3 @@ layer = 9
 
 [node name="ModalLayer" type="CanvasLayer" parent="." unique_id=1292228396]
 layer = 10
-
-[node name="BuildHUD" parent="MidRow/CenterViewport" instance=ExtResource("6_buildhud")]

@@ -12,7 +12,7 @@
 [ext_resource type="Texture2D" path="res://assets/icons/tabs/settings.svg" id="10_settings"]
 
 [node name="LeftTabs" type="Panel"]
-custom_minimum_size = Vector2(84, 0)
+custom_minimum_size = Vector2(184, 0)
 theme_type_variation = &"SideRailPanel"
 script = ExtResource("1_lefttabs")
 
@@ -24,34 +24,35 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 4
+theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 4
+theme_override_constants/margin_bottom = 12
 
 [node name="Col" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
 [node name="ProductBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"TabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/ProductBtn"]
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/ProductBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Margin/Col/ProductBtn/Stack"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("2_product")
@@ -60,23 +61,27 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="Margin/Col/ProductBtn/Stack"]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TabLabel"
 text = "TAB_PRODUCT"
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/ProductBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 6
 anchor_left = 1.0
+anchor_top = 0.5
 anchor_right = 1.0
-offset_left = -24.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 24.0
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -8.0
+offset_right = -12.0
+offset_bottom = 8.0
 grow_horizontal = 0
+grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
@@ -94,25 +99,26 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="SalesBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"TabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/SalesBtn"]
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/SalesBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Margin/Col/SalesBtn/Stack"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("5_sales")
@@ -121,23 +127,27 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="Margin/Col/SalesBtn/Stack"]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TabLabel"
 text = "TAB_SALES"
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/SalesBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 6
 anchor_left = 1.0
+anchor_top = 0.5
 anchor_right = 1.0
-offset_left = -24.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 24.0
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -8.0
+offset_right = -12.0
+offset_bottom = 8.0
 grow_horizontal = 0
+grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
@@ -155,25 +165,26 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="HRBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"TabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/HRBtn"]
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/HRBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Margin/Col/HRBtn/Stack"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("3_hr")
@@ -182,23 +193,27 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="Margin/Col/HRBtn/Stack"]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TabLabel"
 text = "TAB_HR"
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/HRBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 6
 anchor_left = 1.0
+anchor_top = 0.5
 anchor_right = 1.0
-offset_left = -24.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 24.0
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -8.0
+offset_right = -12.0
+offset_bottom = 8.0
 grow_horizontal = 0
+grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
@@ -216,25 +231,26 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="FinanceBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"TabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/FinanceBtn"]
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/FinanceBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Margin/Col/FinanceBtn/Stack"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("4_finance")
@@ -243,23 +259,27 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="Margin/Col/FinanceBtn/Stack"]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TabLabel"
 text = "TAB_FINANCE"
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/FinanceBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 6
 anchor_left = 1.0
+anchor_top = 0.5
 anchor_right = 1.0
-offset_left = -24.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 24.0
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -8.0
+offset_right = -12.0
+offset_bottom = 8.0
 grow_horizontal = 0
+grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
@@ -277,25 +297,26 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="PersonalBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"TabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/PersonalBtn"]
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/PersonalBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Margin/Col/PersonalBtn/Stack"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("8_personal")
@@ -304,23 +325,27 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="Margin/Col/PersonalBtn/Stack"]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TabLabel"
 text = "TAB_PERSONAL"
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/PersonalBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 6
 anchor_left = 1.0
+anchor_top = 0.5
 anchor_right = 1.0
-offset_left = -24.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 24.0
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -8.0
+offset_right = -12.0
+offset_bottom = 8.0
 grow_horizontal = 0
+grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
@@ -338,25 +363,26 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="MarketingBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"TabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/MarketingBtn"]
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/MarketingBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Margin/Col/MarketingBtn/Stack"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("6_marketing")
@@ -365,23 +391,27 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="Margin/Col/MarketingBtn/Stack"]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TabLabel"
 text = "TAB_MARKETING"
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/MarketingBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 6
 anchor_left = 1.0
+anchor_top = 0.5
 anchor_right = 1.0
-offset_left = -24.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 24.0
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -8.0
+offset_right = -12.0
+offset_bottom = 8.0
 grow_horizontal = 0
+grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
@@ -399,25 +429,26 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="RnDBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"TabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/RnDBtn"]
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/RnDBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Margin/Col/RnDBtn/Stack"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("7_rnd")
@@ -426,23 +457,27 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="Margin/Col/RnDBtn/Stack"]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TabLabel"
 text = "TAB_RND"
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/RnDBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 6
 anchor_left = 1.0
+anchor_top = 0.5
 anchor_right = 1.0
-offset_left = -24.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 24.0
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -8.0
+offset_right = -12.0
+offset_bottom = 8.0
 grow_horizontal = 0
+grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
@@ -460,25 +495,26 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="EventsBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"TabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/EventsBtn"]
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/EventsBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Margin/Col/EventsBtn/Stack"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("9_events")
@@ -487,23 +523,27 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="Margin/Col/EventsBtn/Stack"]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TabLabel"
 text = "TAB_EVENTS"
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/EventsBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 6
 anchor_left = 1.0
+anchor_top = 0.5
 anchor_right = 1.0
-offset_left = -24.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 24.0
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -8.0
+offset_right = -12.0
+offset_bottom = 8.0
 grow_horizontal = 0
+grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
@@ -528,25 +568,26 @@ size_flags_vertical = 3
 layout_mode = 2
 
 [node name="SettingsBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"TabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/SettingsBtn"]
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/SettingsBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Margin/Col/SettingsBtn/Stack"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("10_settings")
@@ -555,7 +596,8 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="Margin/Col/SettingsBtn/Stack"]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TabLabel"
 text = "TAB_SETTINGS"
-horizontal_alignment = 1
+vertical_alignment = 1

@@ -3,7 +3,11 @@ extends Panel
 # Left tab rail. Tab definitions live in UiTokens.TABS; the buttons below match that
 # array position-for-position (guarded by the rail_tabs_match_scene_order smoke case).
 # A tab with a `lock` gate is visible, dimmed, carries a YAKINDA pill and never connects
-# `pressed`.
+# `pressed`. The rail lies opaque over the office's left edge (GameShell); under
+# DisplaySettings.COMPACT_SHELL_BELOW of logical width it narrows to its icons.
+# This script owns the row geometry (rail width, Stack insets, Badge offsets) and sets it
+# in _apply_width; the matching values in LeftTabs.tscn are only the editor's preview of
+# the labelled rail.
 #
 # Badges address a tab BY ID, never by index, so a reorder cannot shift a count onto
 # the wrong tab. Sources:
@@ -12,6 +16,16 @@ extends Panel
 #   finance  1 when runway is under FinanceSystem's first runway alert threshold
 #   events   EventGate.queue_size()
 #   rnd      RnDSystem.attention_count() (frozen research + unread report)
+
+const WIDTH := 184.0
+const WIDTH_ICONS := 64.0
+## Row geometry per mode: the labelled stack's insets from the button's left and right edges
+## (icons: none), and the badge's top-left from the button's right middle (labelled: right of
+## the name; icons: on the icon's corner).
+const STACK_LEFT := 16.0
+const STACK_RIGHT := 12.0
+const BADGE_AT := Vector2(-28.0, -8.0)
+const BADGE_AT_ICONS := Vector2(-26.0, -18.0)
 
 @onready var tab_buttons: Array[Button] = [
 	$Margin/Col/ProductBtn,
@@ -42,11 +56,8 @@ func _ready() -> void:
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.modulate.a = UiTokens.TAB_LOCKED_ALPHA
 		btn.get_node("Badge").visible = false
-		# Pill akışa (Stack'e) girer, çapaya değil: butona anchor atmak onu rayın tamamına
-		# yayıp etiketin üstüne bindirirdi.
-		var stack: VBoxContainer = btn.get_node("Stack")
-		stack.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
-		stack.add_child(UiFactory.make_badge(tr("SYS_SOON")))
+		# Pill akışa (Stack'e) girer, adın sağına; simge kipinde adla birlikte gizlenir.
+		btn.get_node("Stack").add_child(UiFactory.make_badge(tr("SYS_SOON")))
 
 	# The gear is not a tab: no active styling, never emits tab_changed. Its icon takes
 	# the idle ink once; the SVG itself is white so modulate can tint it.
@@ -77,6 +88,31 @@ func _ready() -> void:
 	EventBus.build_phase_changed.connect(_refresh_badges.unbind(1))
 	EventBus.game_loaded.connect(_refresh_badges.unbind(1))
 	_refresh_badges()
+	get_viewport().size_changed.connect(_apply_width)
+	EventBus.language_changed.connect(_apply_width.unbind(1))
+	_apply_width()
+
+
+## Etiketli ray ya da simge kipi, mantıksal genişliğe göre (üst barın sıkışık kipiyle aynı eşik).
+## Simge kipinde adlar ağaçta kalır, gizlenir ve ipucu olur.
+func _apply_width() -> void:
+	var icons: bool = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
+	custom_minimum_size.x = WIDTH_ICONS if icons else WIDTH
+	var badge_at: Vector2 = BADGE_AT_ICONS if icons else BADGE_AT
+	for btn: Button in tab_buttons + [settings_btn]:
+		var stack: HBoxContainer = btn.get_node("Stack")
+		stack.alignment = BoxContainer.ALIGNMENT_CENTER if icons else BoxContainer.ALIGNMENT_BEGIN
+		stack.offset_left = 0.0 if icons else STACK_LEFT
+		stack.offset_right = 0.0 if icons else -STACK_RIGHT
+		for part: Control in stack.get_children():
+			part.visible = not icons or part.name == &"Icon"
+		btn.tooltip_text = tr((stack.get_node("NameLabel") as Label).text) if icons else ""
+		var badge: Control = btn.get_node_or_null("Badge")
+		if badge != null:
+			badge.offset_left = badge_at.x
+			badge.offset_top = badge_at.y
+			badge.offset_right = badge_at.x + badge.custom_minimum_size.x
+			badge.offset_bottom = badge_at.y + badge.custom_minimum_size.y
 
 
 func _on_tab_button(idx: int) -> void:

@@ -3,8 +3,9 @@ extends Control
 # Yüzen takip kartı yığını — sağ üstte. Bu node bir şey çizmez: onaylı kartlar (BuildBar ·
 # ResearchBar) kendilerini çizer, burası onları taşır, gizler ve sürükletir.
 #
-# GÖRÜNÜRLÜK: herhangi bir çubuğun fingerprint()'i doluysa görünür, ofiste de pencerenin
-# üstünde de; yalnız şehir haritası açıkken gizli, çünkü haritanın ofis kartı sağ kenarı alır.
+# GÖRÜNÜRLÜK: herhangi bir çubuğun fingerprint()'i doluysa görünür. Pencerelerin altında çizilir
+# ve üstüne bir pencere binince gizlenir; şehir haritası açıkken de gizli, çünkü haritanın ofis
+# kartı sağ kenarı alır.
 # Çubuk başına görünürlük çubuğun kendi repaint'inin işidir; bu node onu yalnız OKUR,
 # yazsaydı iki yazar tek alan için yarışırdı.
 #
@@ -13,9 +14,10 @@ extends Control
 # büyüyünce ekran dışına taşardı. BuildBar'ın asgari boyu .tscn'de ev sahibince verilir:
 # FULL_RECT bir çocuk, container'ın asgari boyutuna hiçbir şey katmaz.
 #
-# SÜRÜKLEME: Root bu node'un rect'ine (CenterViewport) kelepçelenir, yani top bar / sol ray /
-# ticker yapısal olarak erişilemez. Tutamak kartların kendisidir: çubuk kökleri PASS, karar
-# satırı STOP — onun üstünde sürükleme başlamaz. Konum oturum boyunca kalır.
+# SÜRÜKLEME: Root bu node'un rect'ine kelepçelenir; WindowLayer onu rayın sağındaki alana
+# oturtur, yani top bar / sol ray / ticker yapısal olarak erişilemez. Tutamak kartların
+# kendisidir: çubuk kökleri PASS, karar satırı STOP — onun üstünde sürükleme başlamaz. Konum
+# oturum boyunca kalır.
 #
 # PROCESS_MODE_ALWAYS: ağaç duraklıyken de sürüklenebilsin ve kartlar canlı kalsın.
 
@@ -28,6 +30,7 @@ var _bars: Array[Control] = []
 var _dragging := false
 var _drag_free := false
 var _map_open := false
+var _window_cover := Rect2()
 
 
 func _ready() -> void:
@@ -58,9 +61,18 @@ func set_map_open(open: bool) -> void:
 	_refresh()
 
 
+## WindowLayer, açık pencerelerin kapladığı alanı her yerleşimde söyler.
+func set_window_cover(cover: Rect2) -> void:
+	_window_cover = cover
+	_refresh()
+
+
 func _refresh() -> void:
-	visible = not _map_open \
+	visible = not _map_open and not _window_cover.intersects(root.get_global_rect()) \
 		and _bars.any(func(bar: Control) -> bool: return String(bar.call("fingerprint")) != "")
+	# Gizlenen kart bırakışı duyamaz; yeniden görününce imleçle kaymasın.
+	if not visible:
+		_dragging = false
 
 
 # --- Sürükleme ----------------------------------------------------------------
@@ -86,9 +98,9 @@ func _on_card_gui_input(event: InputEvent) -> void:
 
 
 func _clamp_root() -> void:
-	if not _drag_free:
-		return
-	var limit: Vector2 = size - root.size
-	root.position = Vector2(
-		clampf(root.position.x, 0.0, maxf(0.0, limit.x)),
-		clampf(root.position.y, 0.0, maxf(0.0, limit.y)))
+	if _drag_free:
+		var limit: Vector2 = size - root.size
+		root.position = Vector2(
+			clampf(root.position.x, 0.0, maxf(0.0, limit.x)),
+			clampf(root.position.y, 0.0, maxf(0.0, limit.y)))
+	_refresh()

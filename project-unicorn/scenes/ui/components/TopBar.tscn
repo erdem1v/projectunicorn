@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/ui/components/top_bar.gd" id="1_topbar"]
 
 [node name="TopBar" type="Panel"]
-custom_minimum_size = Vector2(0, 54)
+custom_minimum_size = Vector2(0, 64)
 theme_type_variation = &"TopBarPanel"
 script = ExtResource("1_topbar")
 

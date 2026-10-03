@@ -21,6 +21,10 @@ var target := Vector3.ZERO
 var zoom := 1.0
 var fit_zoom := 1.0
 var fit_target := Vector3.ZERO
+## The fitted box across the view, in world units, and the zoom that fits it to the view's size
+## of the moment: refit scales every zoom by how much that changes.
+var _span := Vector2.ONE
+var _span_zoom := 1.0
 
 var _offset := Vector3(sin(PI / 4.0) * cos(ELEVATION), sin(ELEVATION), cos(PI / 4.0) * cos(ELEVATION)) * DISTANCE
 var _lowest := 0.0
@@ -48,11 +52,31 @@ func fit(bounds: AABB, lowest: float) -> void:
 		lo = lo.min(Vector2(p.x, p.y))
 		hi = hi.max(Vector2(p.x, p.y))
 	target += global_basis.x * (lo.x + hi.x) * 0.5 + global_basis.y * (lo.y + hi.y) * 0.5
-	var view := get_viewport().get_visible_rect().size
-	fit_zoom = minf(FH * view.x / view.y / (hi.x - lo.x), FH / (hi.y - lo.y)) * 0.9
+	_span = hi - lo
+	_span_zoom = _zoom_to_fit()
+	fit_zoom = _span_zoom
 	zoom = fit_zoom
 	fit_target = target
 	_place()
+
+
+## The view changed size: fit, frame and a running ease keep their ratio to the box's fit, so the
+## frame keeps its centre and its share of the box.
+func refit() -> void:
+	var now := _zoom_to_fit()
+	var k := now / _span_zoom
+	_span_zoom = now
+	fit_zoom *= k
+	zoom *= k
+	if not _anim.is_empty():
+		_anim.za *= k
+		_anim.zb *= k
+	_place()
+
+
+func _zoom_to_fit() -> float:
+	var view := get_viewport().get_visible_rect().size
+	return minf(FH * view.x / view.y / _span.x, FH / _span.y) * 0.9
 
 
 ## The opening frame: the design's snapshot framing (a point on the office floor and a zoom

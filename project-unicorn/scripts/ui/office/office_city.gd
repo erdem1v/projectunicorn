@@ -275,7 +275,7 @@ func _build_controls() -> void:
 		_add_chip(_map, hit, name_text, hit.office == OfficeSystem.current())
 	var panel := _make_panel()
 	_map.add_child(panel)
-	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_XL)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_3XL)
 	_hover_card = PanelContainer.new()
 	_hover_card.theme_type_variation = &"CardFloating"
 	_hover_card.hide()

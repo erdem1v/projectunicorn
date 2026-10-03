@@ -7,11 +7,6 @@ extends Panel
 # Canon terms, identical in both locales — keys only so no scene or script holds the words.
 const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SERIES_A"]
 
-# Yoğunluk kademesi: %150 UI ölçeği 1080p'de mantıksal viewport'u 1280×720'ye düşürür ve
-# içerik ~1331px ölçülür; şirket adı soldan, 2x/3x tuşları sağdan taşardı. Şerit bu
-# genişliğin altında KIRPILMAZ, SIKIŞIR. [WORKING] ölçülen taşmanın üstündeki ilk yuvarlak adım.
-const COMPACT_BELOW := 1600
-
 @onready var company_name_label: Label = $Margin/Row/IdentityGroup/CompanyNameLabel
 @onready var logo_square: ColorRect = $Margin/Row/IdentityGroup/LogoSquare
 @onready var finance_group: HBoxContainer = $Margin/Row/FinanceGroup
@@ -84,8 +79,9 @@ func _ready() -> void:
 	_apply_density()
 
 
+## Dar mantıksal genişlikte şerit kırpılmaz, sıkışır (rayın simge kipiyle aynı eşik).
 func _is_compact() -> bool:
-	return get_viewport_rect().size.x < float(COMPACT_BELOW)
+	return get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
 
 
 func _apply_density() -> void:
