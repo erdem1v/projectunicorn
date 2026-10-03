@@ -987,7 +987,7 @@ Katman 3 ve 4'e uygulanır. Katman 1 ve 2 sabittir (tekrar her zaman kötüdür)
 - Aktif bir modal yok
 **Davranış:**
 
-- Yalnızca **sessiz havuzdan** (`tag: quiet`) çekilir.
+- Yalnızca **sessiz havuzdan** (`tag: quiet`) çekilir. Sessiz kart sıradan havuza girmez; her biri kendi `cooldown_weeks`'ini taşır (§27.11).
 - Sessiz havuz kartları **kendi koşullarını geçmek zorundadır.** Kapı atlanmaz.
 - **Hiçbiri uymuyorsa hiçbir şey ateşlenmez.** Sessizlik saçmalıktan iyidir.
 - Katman 3 kotası tanınmaz; Katman 1 (`min_gap_weeks`) tanınır.
@@ -1130,6 +1130,7 @@ Build'i durduran (**E**) ve uyaran (**W**) kurallar.
 - **E** GDScript'te hardcode tetikleyici (I5) — statik tarama
 - **E** Kart ya da ark JSON'unda gün adlı anahtar ya da tanımlayıcı değer (`_days`, `days_since`, çıplak `days`). Süreler haftadır (§3.1)
 - **E** Metinde presenter'ın çözemediği ya da kayıtlı olmayan seam'i okuyan `{seam:}` jetonu (§8.4)
+- **E** Etiketsiz ya da `FinanceSystem.ONE_TIME_LABELS`'ta olmayan etiketli `add_cash` (§27.11)
 - **W** Tanımsız bayrağa referans (yazım hatası yakalar)
 - **W** Hiç okunmayan bayrak (ölü)
 
@@ -1863,12 +1864,10 @@ liste `docs/content/events_draft/_vocabulary.md` ve `docs/EVENT_SIGNAL_MANIFEST.
 (`data/product/sprint.json` `decision.rate`) `decision.cards`'tan bir kartı `EventGate.request` ile ister. Kabul
 edilirse kart karar bekler ve ilerlemez; "Karar ver" kağıdı açar. Seçim `event_resolved` ile kartı hemen serbest
 bırakır; süresi dolan kağıdın `on_expire`'ı motorun kendi yolundan koşar ve kart sonraki tikte serbest kalır. Kağıdın
-masada durup durmadığını okuyan bir seam olmadığı için sistem `EventGate.desk_papers`'ı tarar. Bugün listede yalnız
-`_fixtures/` kartları vardır (`fixture.sprint_two_paths`, `fixture.sprint_late`); normal koşuda G2 onları reddeder ve
-karar çıkmaz.
+masada durup durmadığını okuyan bir seam olmadığı için sistem `EventGate.desk_papers`'ı tarar. Liste bugün gerçek
+kartlardır (§27.11 madde 4).
 
-*Neden.* PRD §3.3 kart kapsamlı olayı ve dört sonuç değiştiricisini ister; kart içeriği yazılana kadar dikiş fikstürle
-sınanır.
+*Neden.* PRD §3.3 kart kapsamlı olayı ve dört sonuç değiştiricisini ister.
 
 **5. Eski ürün kartları havuzdan çıktı.**
 
@@ -1876,3 +1875,78 @@ sınanır.
 yükleyici o dizine girmez, metinleri korunur.
 
 *Neden.* Seçenekleri silinen fiilleri kullanıyordu; sürüm anını artık sprint ekranının sürüm notu taşır.
+
+### §27.11 · Ürün rev 7 kalibrasyon turu (sahip kararı 2026-10-02)
+
+Kalibrasyon turu (`GDDs/GUNCELLEMELER.md` "Kalibrasyon turu · ürün rev 7") desteye 27 kart ekledi ve motorun beş
+yerini değiştirdi. Kartların sayıları ve onay bekleyen değerler `docs/ACIK_ISLER/ACIK_KARARLAR.md` 97'dedir.
+
+**1. Sessiz kart sıradan havuza girmez.**
+
+*Belge ne diyordu.* §13.6: taban yalnız sessiz havuzdan çeker. Sessiz kartın sıradan havuza girip girmediğini
+söylemiyordu; kodda havuz (`EvCatalog.pool_candidates`) yalnız ark adımlarını ve `critical` kartları dışarıda
+bırakıyordu.
+
+*Ne yapıldı.* Havuz `quiet` etiketli kartı da almaz; sessiz kart yalnız taban tetiklendiğinde, boş geçen haftayı
+doldurur. Taban her boş haftada çalıştığı için her sessiz kart kendi `cooldown_weeks`'ini taşır (4, 6 ya da 8 hafta).
+Destede altı sessiz kart var; MVP öncesinde taban art arda boş dönmez (`quiet_cards_fill_empty_floor`).
+
+*Neden.* §13.6 sessiz havuzu ölü zamanın alt kümesi sayar. Havuzdan çekilen sessiz kart dolu bir haftada
+cooldown'unu harcıyor, boş hafta yine boş kalıyordu.
+
+**2. `add_cash` deftere yazılır; etiket zorunludur.**
+
+*Belge ne diyordu.* §8.1 `add_cash`'i durum fiili sayar, §8.3 yalnız seçenekten çağrılmasını ister; paranın hangi
+deftere yazıldığını söylemez. Kod kasayı doğrudan yazıyordu: tutar ay defterine, kâr serisine ve işlem listesine
+girmiyordu.
+
+*Ne yapıldı.* Eksi tutar `FinanceSystem.apply_one_time_cost`, artı tutar `apply_one_time_income` olur. Fiil `label`
+ister; etiket `FinanceSystem.ONE_TIME_LABELS`'tan gelir (her biri bir `FIN_ONETIME_*` anahtarıdır) ve işlem listesinde o
+satır okunur. §17.1'e kural eklendi: etiketsiz ya da bilinmeyen etiketli `add_cash` **E**'dir. Artı tutar tek seferlik
+gelirdir: işlem listesine yazılır, ay gelirine yazılmaz.
+
+*Neden.* Kartın parası oyuncunun Finans'ta gördüğü yere düşmeli; kâr serisini kesen harcama ay defterinde görünmeli.
+
+**3. Yeni seam'ler, seçiciler, fiil ve sinyal bağları.**
+
+*Ne yapıldı.*
+- Seam'ler: `musteri.broke_promise` (hesaba verilen söz kırılalı `PROMISE_RELOCK_WEEKS` olmadı mı), `musteri.promise_fits`
+  (hesabın istediği adım planlanabilir sprintin boş puanına sığar mı; `SprintSystem.fits_plannable`),
+  `urun.decision_card_late`, `urun.decision_card_effort`, `urun.capacity_state`, `urun.enterprise_trust`,
+  `destek.can_start_fix_run`, `rival.leader`. Planın `rival.segment_leader` adı lint'in gerçek marka listesine
+  (`EvLint.FORBIDDEN_TERMS`, "segment", §17.8) takıldı: liste kart gövdesini `{seam:}` jetonlarıyla birlikte tarar. Planın
+  `urun.decision_card_left_pct`'i okuyucusu kalmayınca silindi. `sales.growth_band` çevrilmiş sözcük yerine bant id'si
+  döndürür (`melting | flat | steady | fast`).
+- Seçiciler: customer `largest` (en yüksek MRR), employee `most_senior` (en yüksek seviye, eşitlikte en eski işe alım).
+- Fiil: nötr `fix_run_start` DESTEK'in düzeltme koşusunu başlatır (`SupportSystem.start_fix_run`), açılamazsa ret
+  gerekçesini döndürür; sabit çipi `EFFECT_FIX_RUN_STARTS`.
+- `EvSignals.BINDINGS`'e slotsuz `axis_floor_warning` ve `axis_floor_crossed` eklendi; B2C taban kartları onlarla
+  tetiklenir.
+
+*Neden.* Yeni kartların okuduğu durumun seam'i yoktu; içerik durumu yalnız seam'den okur (§6).
+
+**4. Sprint karar kartları gerçek destede.**
+
+*Belge ne diyordu.* §27.10 madde 4: karar listesinde yalnız `_fixtures/` kartları vardı; normal koşuda G2 onları
+reddediyor, karar çıkmıyordu.
+
+*Ne yapıldı.* `sprint.json` `decision.cards` `product.sprint_two_paths`, `product.sprint_late`,
+`product.sprint_contractor`'dır; oran 0,35; zar koşu tohumunu da okur (`GameState.run_seed`). `SprintSystem` kartın ve
+sprintin karar alanını `EventGate.request`'ten **önce** yazar, çünkü kartın koşulu bekleyen karar kartını
+`urun.decision_card*` ile okur; istek reddedilirse alanı siler ve listedeki sıradaki kartı dener. `product.sprint_late`
+yalnız kart ekibin hızıyla sprintte bitmeyecekse gelir (`urun.decision_card_late` kalan haftaları motorun kendi atama
+ve iş adımıyla, karar kilidi kalkmış kopyalarda oynar); öbür ikisi kart eforu en az 5 iken. Fikstürler `_fixtures/`'tan
+silindi.
+
+*Neden.* PRD §3.3'ün karar anı oyunda yoktu. Kartın koşulu kararın konusu olan kartı okuyabilmeli, bu yüzden alan
+istekten önce yazılır.
+
+**5. `sprint_hours` çarpımla yığılır.**
+
+*Belge ne diyordu.* §27.10 madde 2: `sprint_hours {mult}` koşan sprintin çalışma saatini çarpar. Kod çarpanı
+yazıyordu: aynı sprintte ikinci kart birincisini sessizce eziyordu.
+
+*Ne yapıldı.* Yeni çarpan mevcut olanla çarpılır ve `sprint.json` `hours_mult` aralığına (0,5–1,5) kenetlenir
+(`SprintSystem.hours_after`); çip kenetlenmiş sonucu yazar.
+
+*Neden.* İki kartın bedeli de oyuncunun gördüğü kapasiteye düşmeli.

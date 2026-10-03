@@ -196,6 +196,7 @@ kullanılan gün değişmez.
 | sabit | gün modeli (gün) | yürürlükte (hafta) | not |
 |---|---|---|---|
 | sprint (`data/product/sprint.json` `sprint_weeks`) | yok | 2 [WORKING] | Ürün rev 7: başlatıldığı tik 1. hafta, ertesi tik 2. hafta; çeyrek 6 sprint |
+| sprint karar kartı (`sprint.json` `decision`) | yok | 2. haftanın tikinde, oran 0,35 [WORKING]; kâğıt 1 hafta bekler | koşan kart başına koşu tohumlu zar; kartlar `product.sprint_two_paths`, `sprint_late`, `sprint_contractor` (§4.10); `sprint_hours` çarpımla yığılır, 0,5–1,5 (`hours_mult`) |
 | `BUG_HISTORY_*` | 7 günlük örnek | 2 haftalık örnek | ⚑ trend bu hafta ile geçen haftayı karşılaştırır; `TREND_DELTA` 2 / `TREND_SPIKE` 4 aynı |
 | `INFLOW_TAU` | 21 | 3 | §3.5 |
 | `INTEREST_HALF_LIFE` | 30 | 30 / 7 ≈ 4,29 | §3.5 |
@@ -249,12 +250,13 @@ kullanılan gün değişmez.
 | `CHURN_COUNTDOWN_*` | 7 | 2 | sahip kararı |
 | `EXPANSION_MATURE_*` | 45 | 6 | |
 | `RETAIN_DELAY_*` | 3 | 1 | |
-| `PROMISE_DEADLINE_*` | 14 | 2 | |
+| `PROMISE_DEADLINE_*` | 14 | 2 | yalnız ürün türü seçilmeden verilen söz; tür seçilmişse söz planlanabilir ilk sprintin kapanışına bağlıdır, adımın kartı betadaysa bir sprint pay |
+| `PROMISE_RELOCK_WEEKS` | yok | 8 | kırık sözden sonra o hesaba yeni söz yok |
 | `CS_REQUEST_INTERVAL_*` / `CS_PHASE_STRIDE` | 22 / 9 | 3 [WORKING] / 2 | adım aralıkla aralarında asal |
 | `CS_ESCALATION_WINDOW_*` / `CS_ESCALATE_AFTER_*` | 7 / 3 | 1 / 1 | haftalık tavan `CS_ESCALATION_WEEKLY_CAP` 2 aynı |
 | `TRUST_OFFSET_DECAY_PER_DAY` | 0,4 / gün | aynı, tik başına 2,8 | |
 | `CS_THROUGHPUT_BASE` / `_PER_PACE` | 0,5 / 0,15 gün başına | aynı, tik başına ×7 | banka tavanı aynı |
-| B2C memnuniyet kayması | ±1 / gün | ±7 / tik | |
+| B2C memnuniyet kayması | ±1 / gün | deneyim puanına doğru en çok 1,5 / gün (tik başına 10); canlı hata 5'i aşınca üstüne −1 / gün (−7 / tik) [WORKING] | kapı değil hedef (GUNCELLEMELER "Kalibrasyon turu · ürün rev 7") |
 | B2C saatlik kitle katsayıları | saatlik adımda ×1 | saatlik adımda ×7 | `growth_band` eşikleri aynı |
 | günde bir satış toplantısı | kural | haftada en fazla 4 (`MEETINGS_PER_WEEK` [WORKING]) + saat bütçesi | §8 |
 | `MEETING_SKIP_HOURS` | 2 saat [K] | 2 saat [K] | §8 |
@@ -302,7 +304,7 @@ kullanılan gün değişmez.
 | `SUBJECT_GAP_EMPLOYEE_*` / `CUSTOMER_*` | 14 / 30 | 2 / 4 | |
 | `CATEGORY_QUOTA_7D` → `CATEGORY_QUOTA_WEEK` penceresi | 7 (fiilen 8) | 1 tik | değerler aynı: ekip 2, müşteri 2, ürün 2, rakip 1, fon 1, kurucu 1, dünya 1 |
 | `MAX_INTERRUPTS_PER_DAY` | 2 / gün | 2 / tik | ad korunur: oyun günü tiktir |
-| `FLOOR_QUIET_*` | 5 | 1 | |
+| `FLOOR_QUIET_*` | 5 | 1 | taban yalnız sessiz (`quiet`) kartı çeker; sessiz kart sıradan havuza girmez ve kendi cooldown'unu taşır (4, 6 ya da 8 hafta) |
 | `FLOOR_EMPTY_REPORT_AFTER` | 3 | 3 | tetik sayısıdır |
 | `EXPIRY_DEFAULT` / `MONEY` / `LOW_STAKES` / `URGENT` | 7 / 30 / 14 / 3 | 1 / 4 / 2 / 1 | yalnız geri düşüş, §3.8 |
 | `ARC_AWAITING_SUBJECT_TIMEOUT_*` | 14 | 2 | |
@@ -349,6 +351,12 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 | `team.resignation` | kesinti, kritik | 1 | |
 | `world.final_stretch_press` | kâğıt, kritik | 4 | |
 | `world.final_stretch_comment`, `final_stretch_verdict` | kesinti, kritik | 1 | yumuşak tavana bağlı |
+| `product.sprint_two_paths`, `sprint_late`, `sprint_contractor` | kâğıt (istek) | 1 | sprintin 2. haftası; süresi dolunca geride kalan kart devreder, dış destek kartının eforu +1, iki yolda bilinen yol kalır |
+| `founder.side_contract` | kâğıt | 1 | süresi dolmak bedelsiz rettir |
+| `founder.meetup_talk`, `domain_name`, `friends_test`; `customer.security_review`, `b2c_refunds`; `world.trade_fair`, `app_placement`, `b2c_creator_feature` | kâğıt | 2 | |
+| `world.analyst_guide`, `newsletter_slot` | kâğıt, kritik | 2 | faz 3'ün ilk iki haftası |
+| `product.bug_pile`, `outage`, `b2c_floor_signal`, `b2c_floor_churn`; `rival.funding_round`, `price_cut`; `team.outside_offer` | kesinti | 1 | o haftanın olayı |
+| `founder.savings_note`, `unseen_build`, `company_of_one`; `product.working_parts`; `team.first_weeks`, `demo_day` | kesinti, sessiz | 1 | taban kartı (§4.8 `FLOOR_QUIET_*`) |
 
 `product.design_round_intro`, `first_ship` ve `version_ship` `data/events/cards/unwired/`'dadır; deste onları
 yüklemez, süreleri okunmaz.

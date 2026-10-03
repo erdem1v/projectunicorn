@@ -6,7 +6,7 @@ Açık işlerin tek yeri bu klasördür.
 
 ## Test paketi
 - Smoke ve probe paketi yalın bir paketle değiştirilecek (CLAUDE.md "Test"). Bugün `scripts/debug/endgame_smoke.gd`
-  328 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu ve CSV'de yalnız
+  345 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu ve CSV'de yalnız
   smoke'un okuduğu türetilmiş anahtar aileleri bu işle birlikte ele alınır; temizlik raporlarında "yalnız test" diye
   ayrılan maddeler de buraya girer.
 
@@ -15,6 +15,12 @@ Açık işlerin tek yeri bu klasördür.
   geçersizlendikten sonra G5'i hiç geçemez (§10.6'nın yasakladığı sessiz ölüm). Bugünkü kartlarda yok; kural eklenmeli.
 - "Kâğıt masada mı" okuması yok: `SprintSystem` bekleyen karar kâğıdını bulmak için `EventGate.desk_papers`'ı
   `DESK_SCAN` (64) kâğıda kadar tarıyor. `EventGate.has_paper(event_id)` gibi bir okuma kurulunca sabit silinir.
+- G6'nın faz koruması hiç geçmiyor: `EvGate._g6_guards` `guards.phase`'i JSON'un float dizisinde `Array.has` ile
+  arıyor ve Godot 4.6.2'de `[2.0, 3.0].has(2)` false döner (`scripts/events/gate/gate.gd`). Bugün kullanan kart yok;
+  kartlar evreyi `phase.current` seam'iyle okuyor. Karşılaştırma tam sayıyla yapılır.
+- `min_gap_weeks` 4'ün üstünde 4 gibi davranıyor: `EvTempo._prune` geçmişi `MIN_GAP_WEEKS_DEFAULT` ile özne
+  boşluklarının en büyüğü kadar (4 hafta) tutuyor (`scripts/events/present/tempo.gd`). `customer.security_review` ve
+  `team.outside_offer` 8 der. Budama kartların en büyük `min_gap_weeks`'ini de kapsar.
 
 ## Arayüz yeniden yapılırken
 Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktalar:
@@ -81,9 +87,49 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
     `launch()`'tı).
   - Okuyanı olmayan anahtarlar: `PROD_DEV_VERSION` (yalnız `loc_language_switch` smoke örneği), `PROD_MARKET_SHARE`
     (yalnız bir smoke yorumu anıyor).
-- **Sprint karar kartlarının içeriği.** `data/product/sprint.json` `decision.cards` yalnız `_fixtures/` kartlarını
-  adlıyor (`fixture.sprint_two_paths`, `fixture.sprint_late`); normal koşuda karar çıkmıyor. İçerik yazılınca liste
-  gerçek kartlara döner (PRD §3.3, "iki debug olayı"; metni kimin yazacağı ACIK_KARARLAR'da açık).
 - **Ar-Ge derin bağının `open_assign` argümanı.** `EventBus.rnd_node_requested`'ı artık yalnız Ar-Ge çubuğunun
   "ata"sı yayıyor ve hep `true` gönderiyor; Konsept'in `false` gönderen "→ Araştır" bağı silindi. Argüman sinyalden
   kalkabilir (`research_bar.gd`, `rnd_tab.select_node`).
+
+## Ürün rev 7 kalibrasyon turu
+- **Bayrakla ulaşılamayan görsel kabul yüzeyleri.** Turun görsel kabulü altı durumu repoda olmayan bir sürücüyle
+  kurdu; mevcut shot bayrakları bu durumlara gelemiyor. Her biri için bir shot türü yazılır (`--product-shot=live:`,
+  `--finance-shot=`, `--meeting-shot=`, `--event-shot=` ailelerinde):
+  - Sözlü sprint kartı ("söz verildi" damgası, öngörüde "{müşteri} sözü tutulur") ve Satış kartındaki "Sprint N sonuna
+    kadar" satırı.
+  - Canlı sürümlerin Geçmiş'teki gerçekleşen satırları (iki sürüm kapanmış koşu).
+  - Planlamadan sonra kapısı kapanan kart: başlatmada sonraki sütuna geçer, KİLİTLİ ve yalnız Çıkar.
+  - Finans gider dökümünde Servis maliyeti satırı (canlı ürün ve B2B defteri).
+  - Satış toplantısında "yer yok" gerekçesiyle kilitli söz cevabı.
+  - Koşan sprintte sprint karar kartları ve B2B söz satırının iki kilidi (kırık söz, yer yok); `--event-shot`'un
+    fikstür dünyasında bu kilitler doğmuyor.
+- **Ürün rev 7 denetiminin plan dışı bulguları.** Kalibrasyon turu bunlara dokunmadı:
+  - C-05: Penceresinde yapılabilir adım olmayan B2B talebi, adım açılınca aynı pencerenin sonraki bir tikinde doğuyor
+    (ACIK_KARARLAR 96 (28) ve PRD'nin zamanlamasıyla çelişir).
+  - C-07: Planlanmış düzeltme kartı, ticket sayısı acil eşiğini geçince planlama anındaki eforunda kalıyor (3 ticket'ta
+    efor 1); tersi de var.
+  - C-09: Öngörü durum sözcüğü değişmeyen seviye geçişini de yazıyor ("Çekirdek Yeterli → Yeterli").
+  - C-10: Ücretli plan özelliklerle aynı sürümde çıkınca fiyat sürüm öncesi eksenlerden kuruluyor (~%14 düşük).
+  - C-11: Müşteriler satırı betada bekleyen talep kartına "+" ve "→" gösteriyor; düğmeler bir şey yapmıyor.
+  - C-13: Alan cümlelerinin alt-tür boyutu yok: her alt-tür aynı Çekirdek cümlesini okuyor (PRD §2.1 "şablon alan ×
+    durum × alt-tür").
+  - INT-6: Koşan kartı "Çıkar"mak atananlarını haftanın kalanında boşta bırakıyor ve yapılmış puanı HIZ satırından
+    düşürüyor (`SprintSystem.remove` `_restaff` çağırmıyor).
+  - INT-9: v14 göçünden sonra ilk günlük tike kadar ticket defteri boş: yüklemede düzeltme kartı ve "!" yok.
+  - INT-10: Eski yapım motorunun bayrak artıkları: ölü bir bayrak türü öneki ve tek okuyucusu silinen iki beyaz
+    listeli bayrak.
+  - LC-9: PM kovulunca ya da izne çıkınca onaylı planları sprintleri yönlendirmeyi sürdürüyor; ÇEYREK kilitli, planlar
+    görünmüyor ve geri alınamıyor.
+- **Harness notları** (`scripts/debug/run_probe.gd`):
+  - Botun B2B işe alım kapısı (kasa ≥ 6 × (burn·30 + 6.000 − MRR), `_hire_after_the_seed`) Traction'ın erken
+    sonucunu belirliyor; `ONBOARDING_MRR_MULT` Traction düzeltmesi bu kapının etrafından dolandı (ACIK_KARARLAR 97,
+    98).
+  - `--event-harness=guided` yalnız `EvEngine`'i tikler: ürün türü seçilmez, sprint koşmaz; MVP öncesi ritmi ölçemez.
+    Ritim probe günlüklerinden okundu.
+  - Probe kurucusunun Müşteri İlişkileri'si 0'dır (`main.gd` debug yükü): masadaki kurucu doğrulama yapmaz, yalnız
+    düzeltir (ACIK_KARARLAR 99).
+  - Bot `rival.funding_round`'da hep ilk seçeneği alır: "bekle"nin zamanladığı `rival.price_cut` yolu hiçbir probe'da
+    koşmuyor. Sensible politika `founder.side_contract`'ta hep "al"ı seçer.
+  - Faz 3 giriş kartlarının (`world.analyst_guide`, `world.newsletter_slot`) ve sözün beta payının smoke vakası yok;
+    ilkini yalnız probe ve lint koruyor.
+  - `min_cash_pre_seed` haftalık `STATE` okumasından alınır, hafta içi dip değildir.

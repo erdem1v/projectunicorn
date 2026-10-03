@@ -303,20 +303,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     close politikasına geçer ve görünür bir kartla kapanır.
   - Kaynak: Olay motoru GDD §10.5, §18.3; CLAUDE.md §5.
 
-- **21 · Kurucu yaşam gideri hâlâ burn'ün tamamı.**
-  - Ne oluyor: `FinanceSystem.STARTING_BURN_BREAKDOWN` içinde `"founder": 50` $/gün [ÇALIŞMA] var ve 1. günün
-    burn'ünün tamamı bu. Finans'ta `FIN_BURN_FOUNDER` "Kurucu yaşam gideri / Founder living costs" satırı olarak
-    görünüyor. GDD yaşam giderini kaldırıyor: ch08 §1'e göre burn maaşlar + araçlar + servis + marketing'den oluşuyor
-    ve "araçlar" kalemi kodda yok.
-  - Nerede: `scripts/systems/finance_system.gd` (`STARTING_BURN_BREAKDOWN`, `BURN_IDS`); `localization/strings.csv`
-    (`FIN_BURN_FOUNDER`).
-  - Oyuncuya etkisi: Başlangıç runway'i (10K$ ile ~6,6 ay) bu kaleme dayanıyor ve oyuncu GDD'nin kaldırdığı bir gider
-    satırını görüyor. Kalem silinirse ilk maaşa kadar burn sıfıra iner.
-  - Seçenekler: A) Kalem ch08 §1'in "araçlar" kalemi olarak yeniden adlandırılır (aynı 50 $/gün, yeni `FIN_BURN_TOOLS`
-    metni; denge değişmez). B) Kalem silinir (0 $, erken oyun baskısı kalkar, yeniden kalibrasyon gerekir). C) Kalır,
-    ayrılık GDD'ye istisna olarak yazılır.
-  - Kaynak: GDD ch08 §1; ch02 §1; Ekip GDD §9.1 ("Yaşam maliyeti yoktur").
-
 - **23 · Aylık ürün notu Ar-Ge sekmesinde okunamıyor; rozet sönmüyor.**
   - Ne oluyor: Koşunun ilk notu bir kez modal açılıyor. Sonraki notların, ya da ilk modal Esc ile kapatıldıysa o
     notun, okunacağı bir yüzey yok. `RnDSystem._note_unread` true kalıyor, `mark_note_read`'i çağıran bir sekme yüzeyi
@@ -452,20 +438,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     "bandın üstünde" diye güncellenir.
   - Kaynak: Satış GDD §3 (yıldız karışımı), §7.3, §8, §10.
 
-- **34 · B2C memnuniyet kapısı 40'ın gerekçesi yok.**
-  - Ne oluyor: `SalesSystem.SATISFACTION_QUALITY_GATE = 40`: deneyim ekseni bu değere ulaşınca B2C memnuniyeti günde
-    +1 kayıyor. Eski türetme (axis(20 − 0,8·5) = 39) hata erozyonunu deneyim eksenine uyguluyordu; yanlıştı ve
-    silindi. Hata erozyonu olmadan `QualityModel` doygunluğu (`NORMALIZE_HALF_SAT` 25) axis(20) = 44,4 veriyor, 40
-    değil. Sabitin bugün yazılı bir gerekçesi yok.
-  - Nerede: `scripts/systems/sales_system.gd` (`SATISFACTION_QUALITY_GATE`, `_tick_satisfaction`);
-    `scripts/systems/quality_model.gd` (`NORMALIZE_HALF_SAT`, `_saturate`).
-  - Oyuncuya etkisi: B2C memnuniyetinin yükselip yükselmeyeceği bu eşiğe bağlı. Memnuniyet de ağızdan ağıza büyümeyi
-    (`WOM_*`) ve taban büyüme çarpanını oynatıyor, yani B2C MRR'ını.
-  - Seçenekler: A) 40 kalır; gerekçesi "deneyim ekseni ≈ 40" diye kayda geçer. B) Hatasız axis(20)'ye, 44'e çekilir.
-    C) `b2c_keep` ve `b2c_neglect` probe'larıyla ölçülüp yeniden ayarlanır.
-  - Kaynak: GDD sayı vermiyor (Ürün GDD (ch03) ve Satış §3.1 B2C memnuniyet kaymasını sayısal tanımlamıyor); değer bir
-    kod sabiti olarak doğdu, türetmesi e6aad53'te silindi.
-
 - **35 · Satış kartındaki sorumlu satırı kurucu masasını ve sahipsiz hesabı aynı ham "—" ile gösteriyor.**
   - Ne oluyor: `_add_steward_line` sorumlu adı bulamazsa CSV anahtarı olmayan sabit "—" yazıyor ("Müşteri temsilcisi:
     —"). Bu tek işaret iki ayrı durumu kapsıyor. (1) `assigned_to == ""`: hesap kurucunun masasında; `assign_customer`
@@ -568,20 +540,19 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     turuna bırakılır.
   - Kaynak: Ürün GDD (ch03) §10, §8.5 (uyarısız kayıp yok); ch11 §3.
 
-- **43 · Hat ürünlerinde karmaşıklık sıfır: hata riski, aşınma ve özellik sayısı.**
-  - Ne oluyor: Hat modeli `FeatureBuild.component_ids` / `feature_ids` alanlarını doldurmuyor; `ship_active_build`
-    yayında `mvp_components`'i boş yazıyor. Bu yüzden hat ürünlerinde `ProductSystem._shipped_total_complexity()` hep
-    0. Canlı aşınmanın karmaşıklık terimi (`WEAR_CPLX_COEF`) düşüyor. `product_bug_risk()` max(1,0)=1'e bölüyor: tek
-    açık hata "orta", iki ve fazlası "yüksek" okunuyor. Aynı boş liste `SalesSystem.product_value`'nun karmaşıklığını,
-    fiyat panelindeki özellik sayısını (`PROD_FEATURE_COUNT`) ve `publish_flow`'daki sayımı da 0'a çekiyor.
-    Kademelerde karmaşıklık alanı yok.
+- **43 · Hat ürünlerinde karmaşıklık sıfır: hata riski ve aşınma.**
+  - Ne oluyor: Sprint motoru `mvp_components`'i yazmıyor (yalnız fikstürler ve probe yazar); bu yüzden hat
+    ürünlerinde `ProductSystem._shipped_total_complexity()` hep 0. Canlı aşınmanın karmaşıklık terimi
+    (`WEAR_CPLX_COEF`) düşüyor. `product_bug_risk()` max(1,0)=1'e bölüyor: tek açık hata "orta", iki ve fazlası
+    "yüksek" okunuyor. Kademelerde karmaşıklık alanı yok. Kısmen kapandı (sahip kararı 2026-10-02, kalibrasyon turu):
+    `SalesSystem.product_value` artık canlı hatlardan okur, genişlik `ProductState.lines_open`, derinlik
+    `usage_weight_total` (A seçeneğinin ürün değeri yarısı; GUNCELLEMELER "Kalibrasyon turu · ürün rev 7").
   - Nerede: `scripts/systems/product_system.gd` (`_shipped_total_complexity`, `_post_ship_wear_hourly`,
-    `product_bug_risk`, `ship_active_build`); `scripts/systems/sales_system.gd` (`product_value`);
-    `scripts/tabs/product/pricing_panel.gd`; `scripts/tabs/product/publish_flow.gd`; `data/product/lines/*.json`.
-  - Oyuncuya etkisi: Ürün Detayı'ndaki hata riski rozeti tek hatada "orta"ya fırlıyor; karmaşık ürün daha hızlı
-    aşınmıyor; özellik sayısı 0 görünüyor; ürün değeri karmaşıklık katkısı almıyor.
+    `product_bug_risk`); `data/product/lines/*.json`.
+  - Oyuncuya etkisi: Karmaşık ürün daha hızlı aşınmıyor; hata riski zinciri (bugün yüzeyi yok, ISLER "Yeniden yuva
+    listesi") tek hatada "orta"ya fırlıyor.
   - Seçenekler: A) Payda yayınlanmış kademelerin efor toplamı ya da kullanım ağırlığı toplamı
-    (`ProductState.usage_weight_total`) olur; aşınma, risk ve `product_value` aynı sayıyı okur. B) Kademelere
+    (`ProductState.usage_weight_total`) olur; aşınma ve risk ürün değerinin okuduğu sayıyı okur. B) Kademelere
     `complexity` alanı eklenir (içerik işi, §12.12 şartnamesi). C) Risk rozeti DOĞRULANMIŞ hata sayısına göre mutlak
     eşiklerle okunur; karmaşıklık terimi aşınmayla birlikte kalkar (bkz. 45. madde).
   - Kaynak: Ürün GDD (ch03) §8, §9, §10 (kullanım ağırlığı), §12.4, §17, §21.
@@ -592,12 +563,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     `video_clip`, `erp`) hat alt-tipi. Bu yol `ProductCatalog.FEATURE_POOLS`, `ProductSystem.start_build` /
     `start_version_build`, `_tick_build_hourly`, TASARIM tur zinciri, `projected_axes`, `estimate_build_days` ve
     bunların sabitlerinden oluşuyor. Ama havuzlar üretimde hâlâ okunuyor: `B2BSalesSystem`'in pain feature seçimi,
-    `SalesSystem.product_value` karmaşıklığı, `ProductSystem` hata tohumu ve aşınma, `ProductState`'in feature
-    canlılık sorgusu.
+    `ProductSystem` hata tohumu ve aşınma, `ProductState`'in feature canlılık sorgusu.
   - Nerede: `scripts/systems/product_catalog.gd` (`FEATURE_POOLS`, `get_feature_pool`, `get_feature_by_id`,
     `sum_efor`, `sum_cost`); `scripts/systems/product_system.gd` (düz katalog bölümü ve sabitleri);
-    `scripts/systems/b2b_sales_system.gd`; `scripts/systems/sales_system.gd` (`product_value`);
-    `scripts/systems/product_state.gd`; `scripts/main/main.gd` debug tohumları; `localization/strings.csv`
+    `scripts/systems/b2b_sales_system.gd`; `scripts/systems/product_state.gd`; `scripts/main/main.gd` debug tohumları; `localization/strings.csv`
     (`PROD_FEAT_*` satırları).
   - Oyuncuya etkisi: Doğrudan görünmez; ölü yol her ürün işini pahalılaştırıyor (hat ürünlerinde karmaşıklık için bkz.
     43. madde).
@@ -613,7 +582,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     `_post_ship_wear_hourly` ile her saat kitle ve karmaşıklıkla büyüyor. Onu düşüren üretim yolu yok: hata sprinti
     yalnız testten çağrılıyor, düzeltme koşusu DOĞRULANMIŞ'ı eritiyor. Ürün GDD §8–§9'da aşınma yok. Aynı sayaç
     ekonomi Kararlılığını (`QualityModel.economy_dims_from_flags`), sağlık rozetini ve VC/term sheet kontrollerini de
-    oynatıyor.
+    oynatıyor. Ara karar (sahip kararı 2026-10-02, kalibrasyon turu): aşınma kalır ama kullanıcı terimi küçüldü,
+    `WEAR_AUD_COEF` 0,00004 → 0,000002 (1.000 kullanıcı haftada ~6,7 yerine ~0,3 canlı hata ekler); eski değerde
+    büyüyen B2C kitlesi hata yığınıyla memnuniyeti ve dönüşümü boğuyordu. Madde açık kalır.
   - Nerede: `scripts/systems/support_system.gd` (`reports_per_day`); `scripts/systems/product_system.gd`
     (`live_bug_count`, `_post_ship_wear_hourly`, `WEAR_*`, `health_state`, `product_bug_risk`);
     `scripts/systems/quality_model.gd` (`economy_dims_from_flags`); `vc_pitch_system.gd` ve
@@ -1087,18 +1058,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Kaynak: Satış GDD §4 (lead ömrü), §5.0 (giriş kapısı), §7.3 (haftalık özet); GDD Zaman Modeli §4.5, §8.2;
     Erdem, 2026-09-28 kararı (hafta içinde doğan lead'e ek hafta).
 
-- **80 · İki haftalık söz üç tik yaşıyor.**
-  - Ne oluyor: Söz vadesi bugün + `B2BConstants.PROMISE_DEADLINE_WEEKS` (2) olarak damgalanır; kırılma kuralı
-    değişmedi (`day > deadline_day`, vade tiki dahil). Söz sayacı 2, 1, 0 hafta okur ve teslim için üç tik verir. Gün
-    modelinde 14 günlük söz 15 gün yaşıyordu (bir gün fazla); haftada fark bir tam haftadır.
-  - Nerede: `scripts/autoload/promise_registry.gd` (`create`, `tick_deadlines`); `scripts/systems/b2b_constants.gd`
-    (`PROMISE_DEADLINE_WEEKS`); sayaç `scripts/tabs/sales_tab.gd`, `scripts/tabs/product/detail_view.gd`.
-  - Oyuncuya etkisi: Oyuncu "2 hafta" okur ve üçüncü haftanın sonuna kadar teslim edebilir; sayaç son tikte 0
-    gösterir.
-  - Seçenekler: A) Kalır (vade haftası dahil). B) Vade hariç olur (`day >= deadline_day`): söz tam iki tik yaşar;
-    mekanik değişikliğidir. C) Kural kalır, sayaç son tikte "bu hafta" der.
-  - Kaynak: Satış GDD §6 (söz kuralları); GDD Zaman Modeli §4.5.
-
 - **81 · Yatırım toplantısının haftalık takvimi: erteleme, kart saatleri, geç masa kilidi, giriş kapısı.**
   - Ne oluyor: (1) Erteleme tavansızdır: toplantı haftasından önceki her hafta "Ertele" randevuyu bir bekleme süresi
     (`PitchConstants.MEETING_LEAD_WEEKS`, 1) daha iter ve fona her seferinde `MEETING_RESCHEDULE_PENALTY` yazar; gün
@@ -1241,7 +1200,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
       uymayan kişi fazı %50 hızla yürütür, Test'e uyan kimse yoksa testsiz biten kart hatalıdır (`sprint.json`
       `roles`, `role_areas`, `no_role_speed`; `SprintSystem._fits`). (5) Sprint ekibi aktif kurucu ve ürün alanlı aktif
       çalışanlardır, Satış ve Müşteri Temsilcisi sayılmaz; beceri bandı rolün ana alanından okunur, ikincil alanla uyan
-      kişi aynı puanla çalışır; kurucu 0,75, moralsiz, yalnız Ürün ve Yazılım'a uyar (`SprintSystem.team`, `_points`).
+      kişi aynı puanla çalışır; kurucu moralsizdir, çarpanı ve rolleri sahip kararıdır (1,0; Ürün, Tasarım, Yazılım,
+      Test; GUNCELLEMELER "Kalibrasyon turu · ürün rev 7") (`SprintSystem.team`, `_points`).
       Ekip sekmesindeki iş ataması (Ar-Ge dışında, Yapım sütunu dahil) ve Ekip §12.1'in iki işte 0,50 odak katsayısı
       (`HRConstants.focus_mult`) sprint puanına girmez: Yapım ve Destek'teki yazılımcı sprintte de masada da tam çıktı
       verir.
@@ -1262,11 +1222,17 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
       0 Yok, beklentinin altı Zayıf, beklenti + 1'in altı Yeterli, üstü Güçlü; PRD'nin "±0,5 Yeterli"si "Zayıf"la
       çakışıyordu (`SprintCatalog.word_for`). (15) Rakibin kademesi taban tablo + her çıkış için +1; beklenti artışı
       birikimlidir (en çok +1); çip, cümle ve ses son 3 sprintin çıkışlarını okur (`SprintCatalog`, `rivals.json`).
-      (16) Lider kuralının açılımı: en yakın son tarihli açık talep ve acil düzeltmeler zorunlu seçimdir; MVP'den önce
-      zorunlu alan Çekirdek'tir (yoksa Tasarım ★ kilitli Onboarding "en zayıf" sayılıp yalnız araştırma verirdi);
-      zorunlular %125'e, dolgu %100'e kadar girer; boş sprint tavanı aşan zorunlu kartı da alır (yalnız kurucu kapasite
-      3 iken K2 5 puandır); etkisi 0 olan kart dolguya girmez; kilitli, başka sütunda duran ve PM'in onaylı planındaki
-      kart önerilmez (`SprintCatalog._suggest`). (17) Araştırmanın etki ağırlığı 0,5 → 0: araştırma yalnız zorunlu
+      (16) Lider kuralının açılımı: zorunlu seçimler sırasıyla verilmiş sözlerin kartları (son tarihi yakın önde), en
+      yakın son tarihli açık talep, B2C'de yayından sonra Ücretli plan, en zayıf alanın en iyi kartı ve acil
+      düzeltmelerdir; MVP'den önce zorunlu alan Çekirdek'tir (yoksa Tasarım ★ kilitli Onboarding "en zayıf" sayılıp
+      yalnız araştırma verirdi); küçük ekipte (sprint en çok `lead.small_team_cards` (2) K1 alıyorsa) tek açık kartı
+      araştırma olan alan en zayıf sayılmaz, bütün alanlar öyleyse araştırma zorunlu kalır; en zayıf alan yuvarlanmamış
+      seviyeyle seçilir, eşitlikte o alanın en iyi kartının etki/efor oranı yüksek olan; zorunlular %125'e, dolgu
+      %100'e kadar girer, yük kartın kalan puanıdır; boş sprint tavanı aşan zorunlu kartı da alır (yalnız kurucu
+      kapasite 4 iken K2 5 puandır); etkisi 0 olan kart dolguya girmez; kilitli, başka sütunda duran ve PM'in onaylı
+      planındaki kart önerilmez (`SprintCatalog._suggest`, `_weakest`). Söz kartının ve Ücretli planın zorunluluğu
+      sahip kararıdır (GUNCELLEMELER "Kalibrasyon turu · ürün rev 7"); sıra, küçük ekip eşiği ve eşitlik kuralı onay
+      bekler. (17) Araştırmanın etki ağırlığı 0,5 → 0: araştırma yalnız zorunlu
       seçim olarak gelir, yoksa her K2'yi geçip sprintleri dolduruyordu (`sprint.json` `impact.research`).
       (18) Ücretli plan MVP'ye kadar kilitlidir ("Kilit: Canlı ürün ✗"); "+", "→" ve lider onu almaz
       (`SprintCatalog.gate_reason`). (19) Kalibrasyon girdisi, değişiklik değil: dört kişi ve kurucuda sprintin
@@ -1305,12 +1271,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     - Silmeler. (42) `PROD_RIVAL_PASSED` ("{rival} seni geçti.") TR metniyle silindi; süpürme listesi onu sahip kararı
       diye işaretlemişti. (43) Frank anahtarları `PROD_MENTOR_LINE`, `PROD_TIP_BUGS`, `PROD_TIP_GOOD`, `PROD_TIP_WEAK`,
       `PROD_READY_TALK_FRANK` okuyucusuz kaldı; Frank külliyatı olduğu için silinmedi. (44) Probe preset'leri
-      `full_run_weak`, `b2c_keep`, `b2b_risk_keep`, `b2b_slip_keep` silindi (düz alt-tür, sprint oynayamaz); 34'ün C
-      seçeneği `b2c_keep`'i anıyor. (45) Konusu silinen yüzeyde kalan açık maddeler: 2'nin yapım lideri koltuğu
+      `full_run_weak`, `b2c_keep`, `b2b_risk_keep`, `b2b_slip_keep` silindi (düz alt-tür, sprint oynayamaz). (45) Konusu silinen yüzeyde kalan açık maddeler: 2'nin yapım lideri koltuğu
       (`set_build_lead` yok; sprint lideri yalnız öneri verir), 41 (yapım hızı yok), 43 (`FeatureBuild` yok), 46
       (Konsept'te boş ad; tür seçici adı boşken onaylamaz), 48 ve 51 (Ürün Detayı), 49 (Konsept onayı), 52 (fiyat
-      paneli ve detay üçgeni), 54 (DESTEK bloğunun masa cümlesi), 65'in ürün kurma yarısı, 80 ve 82'nin Ürün Detayı
-      sayacı; 44 (`start_build`, `start_version_build`, `sum_efor`, `sum_cost` ve havuzun efor, maliyet ve boyut katkısı
+      paneli ve detay üçgeni), 54 (DESTEK bloğunun masa cümlesi), 65'in ürün kurma yarısı, 82'nin Ürün Detayı sayacı; 44 (`start_build`, `start_version_build`, `sum_efor`, `sum_cost` ve havuzun efor, maliyet ve boyut katkısı
       alanları silindi; havuzların öbür okuyucuları kalır), 45 (sayaç artık her açık sürümde sıfırlanır, devir 0'dır,
       bkz. (50); `mvp_bug_count_at_launch` yok), 47 (`delay_days` ve `apply_speed_bonus` silindi), 50
       (`FeatureLinesView` ve Konsept yok; açıklamalar yine hiçbir ekranda görünmüyor), 61'in Build Bar 2. ve 3. tur
@@ -1322,9 +1286,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
       Faz A ekran anahtarları; `PRODUCT_LOCK_LIVE`, `PRODUCT_GOAL_CORE`, `PRODUCT_GOAL_ONBOARDING`,
       `PRODUCT_GOAL_GROWTH`, `PRODUCT_GOAL_INTEGRATIONS`, `PRODUCT_GOAL_TRUST`, `PRODUCT_GOAL_REVENUE`,
       `PRODUCT_GOAL_PROGRESS`; çipler `EFFECT_SPRINT_EFFORT`, `EFFECT_SPRINT_PROGRESS`, `EFFECT_SPRINT_CARRY`,
-      `EFFECT_SPRINT_HOURS`; `HR_TASK_ON_PRODUCT`. (47) Karar fikstürlerinin metni ve değerleri (efor −2, ilerleme −1,
-      saat ×1,25, moral −3, bekleme 2 hafta, süre 1 hafta; `data/events/cards/_fixtures/sprint_two_paths.json`,
-      `sprint_late.json`). (48) `rivals.json`'ın rakip seçimi, kademe tablosu ve çıkış takvimi. (49) "sprint",
+      `EFFECT_SPRINT_HOURS`; `HR_TASK_ON_PRODUCT`. (47) Karar fikstürleri silindi; gerçek sprint karar kartlarının metni
+      ve değerleri 97'dedir. (48) `rivals.json`'ın rakip seçimi, kademe tablosu ve çıkış takvimi. (49) "sprint",
       "ticket", "PM" ve "Onboarding" izinli ödünç listesinde yok; `docs/design/localization_glossary.md` satırı gerekir.
     - İnceleme turu. (50) Her açık sürüm canlı hata havuzunu sıfırlar (`mvp_live_bug_count` 0, `mvp_live_bug_progress`
       0,0): eski yayın sayacı BETA'nın devriyle başlıyordu, sprintte gizli hata devri yoktur, devir 0'dır; aşınma sonraki
@@ -1334,8 +1297,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
       aynı kademenin özellik kartı; `SprintSystem._close`, `plan_next`). (52) Düzeltme kartının ticket'ları kart
       koşmaya başlayana dek defterden okunur (koşunun erittikleri düşer, hattın yenileri eklenir); kapanış gerçekten
       kapananları sayar ve sürüm notuna onlar yazılır (`SprintSystem._refresh_fix_cards`, `SprintBridges.close_tickets`).
-      (53) Kartın yükü kart başına yuvarlanır (kalan puan); kapasite çubuğunun dilimleri ile "kullanılan" aynı sayıdır
-      (`SprintSystem.card_load`, `remaining`). (54) Etki satırının seviye geçişi kelimesini beklentiye göre taşır
+      (53) Kartın yükü kalan puanıdır ve kesirli toplanır; yuvarlama yalnız gösterimdedir (`ProductModel`), kapasite
+      çubuğunun dilimleri ile "kullanılan" aynı sayıdır; kalan puan her fazın eksik payının toplamıdır, efor indirimi
+      onu eksiye düşürmez (`SprintSystem.used`, `card_load`, `remaining`, `points_left`). (54) Etki satırının seviye geçişi kelimesini beklentiye göre taşır
       (`SprintCatalog.word_for`): öngörü, alan satırı ve sürüm notu aynı kelimeyi okur; yetenek geçişinin dilimleri de
       alanın beklentisiyle boyanır (`SprintCatalog.card_effect`, `forecast`).
   - Nerede: her maddenin parantezinde; ayrıntılı gerekçe ajan raporlarındadır.
@@ -1346,6 +1310,199 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     yerde), C) metin maddelerinde sahip yeniden yazar.
   - Kaynak: sahip kararı 2026-10-01; `docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md`; GUNCELLEMELER "Ürün rev 7";
     CLAUDE.md §3 (tasarım sabiti ve TR metni onay bekler).
+
+- **97 · Kalibrasyon turu · onay bekleyen değerler.**
+  - Ne oluyor: Ürün rev 7 kalibrasyon turu (sahip kararları 2026-10-02, GUNCELLEMELER "Kalibrasyon turu · ürün
+    rev 7") sabitleri değiştirdi ve desteye 27 kart ekledi. Sahip kararlarındaki ve onaylanan tur planındaki değerler
+    kayıt içindir; plandan sapanlar (±%50 ayar penceresinin kenarındakiler **kenarda** diye işaretli) ve planda
+    olmayanlar onay bekler. Biçim: eski → yeni, neden, ölçüm. Ölçüm: tohum 1–8, 120 hafta, `--lang=tr`; oynanan
+    sekiz preset (`full_run`, `full_run_lean`, `full_run_vc_cautious`, `full_run_b2c`, `full_run_b2c_video`,
+    `full_run_b2c_vc_cautious`, `full_run_b2c_vc_walk`, `full_run_b2c_k1`) ve 26 haftalık `b2c`, `b2c_neglect`
+    fikstürleri; 80 koşu, her biri tek `PROBE END`, hatasız. Son ölçümde 18 kabul satırının 17'si geçer (tutmayan: 98).
+    - Sprint (`data/product/sprint.json`). `founder_mult` 0,75 → 1,0 (karar 9): tek kurucunun sprinti 4 puan; MVP
+      64/64 oynanan koşuda 7. tikte (taban 13). `founder_roles` [Ürün, Yazılım] → [Ürün, Tasarım, Yazılım, Test]
+      (karar 2). `decision.rate` 0,25 → 0,35 (plan): ilk 6 haftada 3–4 ayrı karar haftası (taban 0); 0,175 kırık
+      sözü düşürmedi. `decision.cards` fikstür → `product.sprint_two_paths`, `product.sprint_late`,
+      `product.sprint_contractor` (plan). Yeni `hours_mult` {0,5–1,5}: `sprint_hours` çarpımla yığılır ve bu aralığa
+      kenetlenir (plan). Yeni `lead.small_team_cards` 2: sprint en çok iki K1 alıyorsa tek açık kartı araştırma olan
+      alan en zayıf sayılmaz (planda sayı yok).
+    - Söz. `B2BConstants.PROMISE_RELOCK_WEEKS` yok → 8 (karar 8). Kırık söz koşu başına 0–3 (taban 6–23); aynı
+      hesaba ikinci kırılma hiç yok, yani kilit ölçümde devreye girmedi.
+    - B2C (`sales_system.gd`, `product_system.gd`; B2B akışı bu sabitleri okumaz, B2B koşuları değişmedi):
+      - `WEAR_AUD_COEF` 0,00004 → 0,000002 (plan; 45'in ara kararı).
+      - `CHURN_COEF` 0,0002 → 0,000036 (plan 0,00003, +%20): plan değerinde yalnız K1'li ürün $15K'yı aşıyordu;
+        son değerde K1'li ürünün tepe MRR'ı 12.256–12.952 $.
+      - `EROSION_THRESHOLD` 42 → 25 (plan 30, −%17): 30'da B2C Series A kapısı hiç açılmadı; 15'te K1'in rakibe
+        göre kalitesi (16–18) eşiği aştı ve K1'li ürün 27–61K $'a çıktı.
+      - `WOM_COEF` 0,005 → 0,0012 (plan 0,0008, +%50, **kenarda**): kapıyı 70–95. hafta penceresine çeken değer.
+      - `WOM_SAT_GATE` 60 → 30 (plan 35, −%14): note_tool kapısı 8/8 pencerede.
+      - `WOM_MULT_PIVOT` 50 → 15 (plan 30, −%50, **kenarda**): ölçülen MVP deneyimi ~14, boş destek masasında
+        memnuniyet ~10; 30'da kapı açılmadı ve video 3 tohumun 2'sinde iflas etti.
+      - `SATISFACTION_QUALITY_GATE` 40 → silindi (kural değişti; 34 kapandı).
+      - `SATISFACTION_DRIFT_PER_DAY` yok → 1,5 (plan 1, +%50, **kenarda**): 1,0'da kapılar 92–102. haftada ya da
+        hiç; 1,25'te MVP sonrası kitle eridi.
+      - `SATISFACTION_BUG_PUSH_PER_DAY` yok → 1 (planın "itiş aynı kalır"ı; ilk iki ayar turunda itiş adıma bağlıydı
+        ve 1,5 / gün çalıştı): 60. haftadan sonra memnuniyeti ≤ 10 olan hafta 401 → 376 / 688.
+      - `VALUE_FEATURE_COEF` yayınlanan özellik başına 1,2 → açık hat başına 0,75 ve `VALUE_COMPLEXITY_COEF` 0,6 →
+        kullanım ağırlığı puanı başına 0,375 (plan 0,6 / 0,3, +%25): planda video ürünü 7,66K $'da kaldı (tasarımcı
+        basamağı 8K $), 0,6 / 0,3'te video kapısı 6/6 kapalı.
+      - İlginin B2C kazanımına çarpanı kendi sabitini taşımaz.
+    - Gider (`finance_system.gd`, `infra_system.gd`). `TOOLS_BASE_MONTHLY` {1: 1.500, 2: 1.500, 3: 5.500},
+      `TOOLS_PER_EMPLOYEE_MONTHLY` {1: 150, 2: 300, 3: 500}, `SERVICE_PER_ACCOUNT_B2B` 45, `SERVICE_PER_SEAT_B2B` 8 ×
+      yük, `SERVICE_PER_1K_USERS_B2C` 700 × yük: yok → plan değerleri. `STARTING_BURN_BREAKDOWN` "founder" 50 →
+      "tools" 1.500 / 30 = 50 (karar 7); `BURN_IDS`'ten "founder" çıktı, "tools" ve "service" girdi.
+      `ONBOARDING_MRR_MULT` yok → {1: 0, 2: **0,25**, 3: 3,0}: plan ve karar 6 Traction için 0,5 diyordu (−%50,
+      **kenarda**; planın iki ayar turundan sonra yapılan üçüncü adım). Neden: 0,5'te seed 2 üç B2B preset'inde 41.
+      günde iflas etti (3/24) ve `full_run_vc_cautious` s5'te marka < 15 payı 0,507 oldu. Mekanizma botun işe alım
+      kapısıdır (kasa ≥ 6 × aylık net çıkış): 15. gün kasa 26.577 $ < 35.010 $, test uzmanı gelmedi, K2 acıları
+      kilitlendi, 106 churn. 0,25'te test uzmanı 13. gün gelir, seed 23. gün, 29 churn; iflas 0/24, marka payı en çok
+      0,132. 0,375 iflası kaldırır ama marka 0,507'de kalır. B2C koşuları iki değerde bayt-aynıdır. Bedeli: B2B
+      Traction'da sonlu runway payı 0,13–0,29'dan 0,09–0,21'e iner (98). Kapı bir harness sezgisidir; onu değiştirip
+      0,5'i korumak da seçenektir.
+    - Tek seferlik etiketler (`FinanceSystem.ONE_TIME_LABELS`): planın dokuzu (incident, audit, retention,
+      contractor, outreach, refunds, side_work, meetup, sponsor) ve planda olmayan üç (domain, user_tests,
+      trade_fair).
+    - `SalesSystem.growth_band()` çevrilmiş sözcük yerine bant id'si döndürür (melting, flat, steady, fast); tek
+      okuyucusu `sales.growth_band` seam'idir, `world.b2c_creator_feature` bu sayede bağlandı ve okuyucusuz kalan
+      `GROWTH_*` anahtarları silindi. Plan dışı; geri alınırsa ikisi birlikte.
+    - Yeni kartlar (27, hepsi `demo`; Frank satırı yok; her kâğıt ve kesinti `expires_weeks`, `on_expire` ve not
+      taşır):
+      - MVP öncesi: `founder.meetup_talk` (kâğıt, tek sefer, 2. haftadan ve sprint koşarken; konuş −600 $, saat
+        ×0,9 ve marka +4, yalnız sprint koşarken açık; dinle −200 $ ve marka +1), `founder.side_contract` (kâğıt,
+        cooldown 10, 4. haftadan, runway < 24 hafta; al +3.000 $ ve saat ×0,6, yarım +1.200 $ ve ×0,85; ret satırı
+        yok, süresi dolmak bedelsiz rettir), `founder.domain_name` (planda yok; kâğıt, tek sefer, 1. sprintten; al
+        −900 $, bekle marka −2), `founder.friends_test` (planda yok; kâğıt, tek sefer, 2. sprintten; ağırla −300 $ ve
+        marka +2, gönder marka +1 ve itibar −1); quiet `founder.savings_note` (cooldown 8), `founder.unseen_build`
+        (6), `founder.company_of_one` (4; planda yok), `product.working_parts` (4; planda yok).
+      - Sprint kararları (istek kartı, kâğıt, 1 hafta): `product.sprint_two_paths` (cooldown 2, kart eforu ≥ 5; yeni
+        yol efor −3 ve ilerleme −2, bilinen yol bedelsiz), `product.sprint_late` (cooldown 2, kart ekibin hızıyla bu
+        sprintte bitmeyecekse; taşı ya da **yetiştir: saat ×1,25 ve marka −2**; süresi dolarsa taşınır),
+        `product.sprint_contractor` (cooldown 4, efor ≥ 5; dış kaynak −2.000 $ ve ilerleme +3, öğren efor +2; süresi
+        dolarsa efor +1). Plan "yetiştir" için moral −4 ve ekipsiz kilit diyordu: kurucunun morali hiçbir yere
+        işlemiyor, tek kurucuda satır açık olmalıydı. Efor ≥ 5 ve "geride" koşulları plandan farklıdır.
+      - Ekip: quiet `team.first_weeks` (tek sefer kişi başı; eşlik moral +6 ve saat ×0,95, not moral −3), quiet
+        `team.demo_day` (cooldown 8, 3+ kişi, sprintin 2. haftası; yap moral +3 ve saat ×0,95, atla moral −2),
+        `team.outside_offer` (tek sefer kişi başı, 5+ kişi, 12+ hafta kıdem; prim −5.000 $ ve moral +10, konuş moral
+        −6, bırak ayrılık ve itibar +1).
+      - Ürün ve destek: `product.bug_pile` (cooldown 8, 12+ doğrulanmış hata ve masa dolu; şimdi düzelt
+        `fix_run_start`, sonra itibar −1), `product.outage` (cooldown 26, Traction ve sonrası, kapasite aşımı ve 5+
+        hesap ya da 2.000+ kitle; seferberlik saat ×0,6 ve marka −1, kredi −6.000 $, sessiz düzelt marka −4 ve itibar
+        −2).
+      - B2B: `customer.security_review` (tek sefer hesap başı, Traction ve sonrası, ölçek ≥ 3, 6+ hafta, kurumsal
+        güven yok; denetim −8.000 $ ve memnuniyet +10, ekip saati ×0,8 ve +4, ret −12), `rival.funding_round`
+        (Traction ve sonrası, Series A yaklaşımı ≥ 2 ya da faz 3; kampanya **−18.000 $** (plan −12.000, +%50,
+        **kenarda**) ve marka +5, fonlara anlat saat ×0,9 ve itibar +2, bekle marka −3 ve 4 hafta sonra
+        `rival.price_cut`; **cooldown 8**: plan tek sefer diyordu, karar 12 tekrar dedi ama değer vermedi),
+        `rival.price_cut` (cooldown 16, 6+ hesap; indirim, söz, bekle memnuniyet −6 ve itibar +1), `world.trade_fair`
+        (planda yok; Traction ve sonrası, kasa ≥ 200.000 $, **cooldown 10**; stant −30.000 $ ve iki aday, geç marka
+        −2), `world.analyst_guide` (planda yok; faz 3'ün ilk iki haftası, kasa ≥ 120.000 $, tek sefer, **critical**;
+        brifing −30.000 $ ve iki aday, uzak dur marka −2).
+      - B2C: `customer.b2c_refunds` (cooldown 12, 8+ doğrulanmış hata ya da sıcak masa, 1.000+ kitle; iade −3.000 $
+        ve memnuniyet +6, politika −5 ve marka −1), `product.b2c_floor_signal` (cooldown 8, yayından 4+ hafta, bir
+        eksen tabana yakın; geri bildirim saat ×0,9 ve memnuniyet +3, not et −2), `product.b2c_floor_churn`
+        (cooldown 8, taban aşıldı ve uyarısı görüldü; bırak kitle −%15, kredi −1.000 $ ve −%5, yol haritası marka −2,
+        −%8 ve itibar +1), `world.b2c_creator_feature` (cooldown 26, büyüme bandı "fast", hiçbir taban aşılmamış;
+        sponsorluk −2.500 $, kitle +%10 ve marka +2, geç marka −2), `world.app_placement` (planda yok; Traction ve
+        sonrası; **−25.000 $, kasa ≥ 167.000 $, cooldown 10**; ilk yazılan −5.000 $ / 40.000 $ / 16'ydı: ×5 ve ×4,2,
+        **ayar penceresinin dışında**; "maliyet tabanın %15'i" kuralı `trade_fair`'in oranıdır, kart %12,5 yazılmıştı;
+        al kitle +%20, geç marka −2), `world.newsletter_slot` (planda yok; faz 3'ün ilk iki haftası, kasa ≥ 100.000 $,
+        tek sefer, **critical**; al −25.000 $ ve kitle +%20, geç marka −2).
+      - Faz 3 giriş kartları (`world.analyst_guide`, `world.newsletter_slot`): 56/56 faz 3 koşusunda faz 3'ün ilk
+        tikinden sonraki tikte geldi; `analyst_guide` önceki günün kasasının %9,2–13,6'sı (14 brifing, 10 uzak dur),
+        `newsletter_slot` %7,5–10,0 (32/32 alındı). `critical` etiketi Frank dışı iki harcama kartındadır: günlük
+        havuz tik başına tek kart aldığı için etiketsiz kart penceresini kaçırdı (öncül `world.final_stretch_press`).
+        Bedeli: `full_run_b2c_vc_walk` bootstrap'ı kartlar olmadan 8/8, kartlarla 5/8 (s3'te 84. günde kapanan ay
+        `newsletter_slot` −25K ve `funding_round` −18K ile eksiye düştü, kâr serisi 9 → 0).
+      - Değişen kartlar: `customer.retention`, `cs_escalation`, `request_feature`, `request_complaint` ve
+        `rival.price_cut`'ın söz satırları `musteri.broke_promise == false` (gerekçe `B2B_LOCK_PROMISE_BROKEN`) ve
+        `musteri.promise_fits` (gerekçe `SALES_LOCK_PROMISE_NO_ROOM`) ister.
+    - Ajan kararları (kod bu yorumlarla çalışır): (a) B2C memnuniyeti tik başına kenetle(hedef − memnuniyet, ±adım) −
+      itiş kadar değişir (adım 10, itiş 7): birikim varken tırmanış durur, hedefin üstünden hedef − 7'ye iner. (b)
+      Sözün beta payı: adımın kartı betada bekliyorsa bir sprint daha; talep pay almaz. Sürümde açık bulunan sprint
+      sözü hep tutulmuş sayılır (geç olan aynı tikte zaten kırılmıştır). (c) Sığma: yalnız planlanabilir sprinte
+      borçlu sözler sayılır, bir adım kaç hesaba söz verilmiş olursa olsun bir kez; koşan sprintte boş yer = kapasite /
+      saat çarpanı − sonraki sütunun kalan puanı. (d) Servis maliyeti B2C'de bütün kitleyi okur, ödeyenleri değil;
+      onboarding katı imzadan sonraki 4 tikte işler. (e) Artı `add_cash` tek seferlik gelirdir, ay gelirine ve kâr
+      serisine yazılmaz (yan iş +3.000 $). (f) Lint etiketi bütün `ONE_TIME_LABELS`'a karşı denetler; kart "hire" gibi
+      bir sistem etiketini de geçirebilir. (g) Planın `rival.segment_leader` seam'i `rival.leader` adını aldı: lint'in
+      gerçek marka listesi "segment"i kart gövdesinde reddediyor. (h) `product.b2c_floor_churn`'ün kaybı kitle
+      yüzdesidir (`churn_customer`'ın çipi "Bir müşteri kaybedildi" yazardı). (i) Faz 3 girişi
+      `funding.gate_series_a`'nın son çözümünden geçen haftayla okunur; motor faz değişiminde mandal sıfırlamadığı
+      için `trade_fair` ve `app_placement` yeniden açılmadı, iki yeni kart yazıldı.
+    - Metin (TR/EN onay bekliyor): 27 yeni kartın metni (`EV_FOUNDER_*`, `EV_PRODUCT_*`, `EV_TEAM_*`, `EV_RIVAL_*`,
+      `EV_WORLD_*`, `EV_CUSTOMER_*`, `EV_LOCK_NO_SPRINT`; seam okuyan gövdeler satır içi), `FIN_BURN_TOOLS`,
+      `FIN_BURN_SERVICE`, 12 `FIN_ONETIME_*`, `HR_ROW_TOOLS`, `PRODUCT_FX_PROMISE`, `PRODUCT_FX_PROMISE_KEPT`,
+      `PRODUCT_PROMISED`, `SALES_PROMISE_OPEN_SPRINT`, `B2B_LOCK_PROMISE_BROKEN`, `SALES_LOCK_PROMISE_NO_ROOM`,
+      `EFFECT_FIX_RUN_STARTS`; yeniden yazılan `EV_PRODUCT_SPRINT_LATE_CRUNCH`; silinen `FIN_BURN_FOUNDER` ve
+      `GROWTH_*`.
+  - Nerede: her maddenin parantezinde; ölçüm tabloları ve iz kayıtları kalibrasyon turunun raporundadır.
+  - Oyuncuya etkisi: Erken oyunun temposu (MVP 7. tik, ilk 6 haftada 3–4 karar), sözlerin kırılması, B2C'nin
+    büyümesi ve iki sonu, geç oyunun gider baskısı ve faz 3'ün harcama kararları.
+  - Seçenekler: Her madde için A) onaylanır, B) sahip değiştirir (değer parantezdeki yerde), C) metin maddelerinde
+    sahip yeniden yazar.
+  - Kaynak: sahip kararı 2026-10-02 (1–12); GUNCELLEMELER "Kalibrasyon turu · ürün rev 7"; CLAUDE.md §3.
+
+- **98 · B2B Traction'da sonlu runway hedefi tutmadı.**
+  - Ne oluyor: Turun kabul ölçütü Traction haftalarının en az %40'ında sonlu runway istiyordu (ch01 §5: her evre
+    runway'i yeniden daraltır). Ölçülen pay 0,09–0,21 (`full_run` 0,10–0,21, `full_run_lean` 0,09–0,20; taban
+    0,05–0,11). Gider kalemleri payı yükseltti ama hedefe varmadı; onboarding düzeltmesi (97) payı 0,13–0,29'dan
+    düşürdü. Traction gider kaldıraçlarını pencerenin üst ucuna çeken her ölçülen ayar (koltuk 12, hesap 67,
+    Traction onboarding katı 0,75, araç değerleri en üstte) en az bir tohumu seed'den önce iflas ettirdi (iflas
+    30.–35. gün; hayatta kalanlarda pay %32–54). Mekanizma: Frank'in çeki (~10. gün) ile seed (17.–23. gün) arası ek
+    gideri taşımıyor. Gider artınca bot işe almayı keser, gece churn'ü MRR'ı seed eşiğinin (20K $) altında tutar
+    (`SeedRoundSystem.daily_tick` MRR'ı gece churn'ünden sonra okur), seed gelmez.
+  - Nerede: `scripts/systems/infra_system.gd` (`SERVICE_*`, `ONBOARDING_MRR_MULT`); `finance_system.gd` (`TOOLS_*`);
+    `seed_round_system.gd` (kapı); `scripts/debug/run_probe.gd` (işe alım kapısı).
+  - Oyuncuya etkisi: Traction'da runway çoğu hafta sonsuz okunur; evre runway'i yeniden daraltmaz.
+  - Seçenekler: A) Ölçüt yumuşar ya da kalkar: Traction'ın baskısı seed öncesindeki dar penceredir. B) Seed'den sonra
+    başlayan Traction baskısı (seed imzasından sonra devreye giren gider ya da nakit maliyetli kartlar). C) Seed
+    kapısı değişir (eşik ya da okuma anı), kaldıraçlar yeniden ölçülür. D) Botun işe alım kapısı (harness) değişir,
+    yeniden ölçülür.
+  - Kaynak: ch01 §5; kalibrasyon turu ölçümü (sahip kararı 2026-10-02).
+
+- **99 · Geç B2C memnuniyeti 10'a çakılı; doğrulanmış hata birikimi büyüyor.**
+  - Ne oluyor: Büyüyen 16 B2C koşusunda (`full_run_b2c`, `full_run_b2c_video`) 60. haftadan sonraki 688 haftanın
+    376'sında memnuniyet ≤ 10 (koşu başına 43 haftanın 15–34'ü). Hedef (deneyim) sonda 54 iken memnuniyet 16 koşunun
+    15'inde 10'da biter, dip 3'tür. Doğrulanmış hata 60. haftadan sonra 248–895'e çıkar, sonda 182–686'dır. Kapıya
+    ağızdan ağıza değil taban büyüme ve ücretli kartlarla varılır. `full_run_b2c_k1` etkilenmez (memnuniyet ≥ 25,
+    doğrulanmış ≤ 12). Neden: düzeltme tarafı geç oyunda doyuyor. Bot düzeltme koşusuna tek geliştirici ödünç
+    veriyor; masadaki kurucu düzeltir ama doğrulamaz (probe kurucusunun Müşteri İlişkileri'si 0). Sprint puanı işi ve
+    odak payını okumadığı için (96 (5)) düzeltmeyi genişletmek sprintten bedava ödünç olurdu; bot genişletilmedi.
+  - Nerede: `scripts/systems/sales_system.gd` (`_tick_satisfaction`, `SATISFACTION_*`); `support_system.gd`;
+    `sprint_system.gd` (`team`, `_points`); `scripts/debug/run_probe.gd` (düzeltme koşusu, masa).
+  - Oyuncuya etkisi: Büyük B2C ürününde memnuniyet dipte kalır; ağızdan ağıza büyüme geç oyunda çalışmaz.
+  - Seçenekler: A) Kabul: B2C geç oyununun baskısı budur. B) Destek ve düzeltme sabitleri yeniden ayarlanır. C) Sprint
+    puanı işi ve odağı okur (96 (5)), sonra bot düzeltmeyi genişletir ve yeniden ölçülür. D) Memnuniyetin itişi
+    yeniden ayarlanır.
+  - Kaynak: Ürün GDD (ch03) §8–§9; kalibrasyon turu ölçümü.
+
+- **100 · Faz 3'te iki kararsız hafta üst üste gelebiliyor.**
+  - Ne oluyor: Karar 12'nin ölçütü (faz 3'te her 2 haftada en az 1 karar ve kasanın en az %5'ini harcatan en az 1
+    teklif) 56/56 faz 3 koşusunda tutar; oran en az 1,24 / 2 hafta. Daha sıkı okuma ("iki kararsız faz 3 haftası üst
+    üste gelmez") 23/56 koşuda tutar, en az 5 hafta faz 3'te kalan koşularda 9/41. Uzun koşularda en uzun boşluğun
+    ortancası 2 hafta, en kötüsü 5 (`full_run` s2, `full_run_b2c_vc_walk` s5). Series A kapı kartı sayılmasa da sonuç
+    aynı. Karar: iki ya da daha çok seçenekli, quiet olmayan kart.
+  - Nerede: faz 3 kartları (`rival.funding_round` cooldown 8, `world.trade_fair` ve `world.app_placement` cooldown 10,
+    giriş kartları tek sefer); `scripts/events/present/tempo.gd` (kotalar).
+  - Oyuncuya etkisi: Uzun bir faz 3'te art arda birkaç hafta karar gelmeyebilir.
+  - Seçenekler: A) Ölçüt "2 haftada en az 1 karar" olarak kalır. B) Faz 3'e içerik eklenir (yeni ya da daha kısa
+    cooldown'lı kart). C) Motor: faz 3'te taban ya da kategori kotası.
+  - Kaynak: sahip kararı 2026-10-02 (12); kalibrasyon turu ölçümü.
+
+- **102 · `meeting_during_kepenk` fikstürünün öncülü değişti: faz 3'te taze büyük hesap.**
+  - Ne oluyor: Ortak smoke fikstürü `_seed_b2b_series_a` kapıya 121K $ MRR'lı tek bir hesap imzalatır. Faz 3'ün
+    onboarding katı (3×) bu hesaba ilk 4 haftasında ayda ~363K $ servis maliyeti yükler; kasa erir, runway 1 ayın
+    altına iner ve toplantının "temiz" kolu da ince runway cezasını (`CONV_THIN_RUNWAY_PENALTY` −8) yer: vaka 32 − 25
+    = 7 okuyup düştü (beklenen 15). Fikstür artık hesabın onboarding penceresini kapatır (kapıda yerleşik defter,
+    taze imza değil) ve vaka geçer. Oyunda Series A Hunt'ta tek bir büyük imza ilk ayında MRR'ının üç katı servis
+    maliyeti taşır.
+  - Nerede: `scripts/debug/endgame_smoke.gd` (`_seed_b2b_series_a`); `scripts/systems/infra_system.gd`
+    (`ONBOARDING_MRR_MULT`, `monthly_service`).
+  - Oyuncuya etkisi: Series A Hunt'ta balina imzası ilk 4 haftada nakdi sert düşürür; o arada VC görüşmesine giren
+    oyuncu ince runway cezası alabilir.
+  - Seçenekler: A) Kabul; fikstürün yeni öncülü kalır. B) Faz 3 katı hesap başına tavanlanır ya da imzanın
+    büyüklüğüyle azalır (karar 6'nın 3×'i). C) Fikstür taze imzaya döner, vaka cezayı bekler.
+  - Kaynak: sahip kararı 2026-10-02 (6); smoke `meeting_during_kepenk`.
 
 ## Metin ve yerelleştirme
 
@@ -1370,10 +1527,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   Kaynak: ONERI_v3 K31, §5 ve §5.4; TOPLANTI_VE_SERIES_A_ONERI §A–§C.
 
 - **Olay içeriği eksik (ch11 §1–§2, ch14 §2).** ch11 dokuz ark ve Frank hariç ~40 düğüm, ch14 §2 demo için 40–60 düğüm,
-  en az bir rakip hamlesi ve bir olay (incident) istiyor. Canlı destede Frank'inkiler dahil 35 demo kartı var. Y3'te yalnız
-  istifa var; Y4 (Frank'in `hire_nudge`'ı dışında), Y7, Y8 ve Y9'un kartı yok. `quiet` etiketli kart yok, olay motoru GDD
-  §13.6'nın sessiz tabanı boş dönüyor. İlk adaylar: Y7 hata eşiği ve düzeltme koşusu kararı, Y4 ilk işe alım, Y8 rakibin
-  fiyat kırması. Kaynak: EVENT_REVISION §9.
+  en az bir rakip hamlesi ve bir olay (incident) istiyor. Canlı destede Frank'inkiler dahil 58 demo kartı var;
+  kalibrasyon turu 27 kart ekledi (97): Y3 `team.demo_day` ve `team.outside_offer`, Y4 `team.first_weeks`, Y7
+  `product.bug_pile`, Y8 `rival.funding_round` ve `rival.price_cut`, Y9 `product.outage`. Altı `quiet` kart olay motoru
+  GDD §13.6'nın sessiz tabanını doldurur. Açık kalan: ch11'in dokuz arkı. Kaynak: EVENT_REVISION §9.
 
 - **Son ve kapı metinleri (K23 dahil).** `END_BS_HEAD` "{company} Kimseye El Açmadan Ayakta", `END_BS_SUB` "Dışarıdan tek
   kuruş almadan büyüyen bir şirket…" diyor. Oysa Frank'in çeki normal modda reddedilemiyor ve seed alınmış koşu da
@@ -1670,6 +1827,21 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler: (1) A) Kural yazıldığı gibi kalır. B) Yalnız bildirime düşebilen kartlarda (kâğıt ve kritik olmayan
     kesinti) zorunludur; kritik kartlardaki değer silinir. (2) A) Değer denetimi kalır. B) Yalnız anahtarlar denetlenir.
   - Kaynak: olay motoru GDD §12, §13.2, §17.1, §17.7; GDD Zaman Modeli §3.8.
+
+- **101 · Ölçümde tohumdan bağımsız kalanlar: erken oyun ve iki B2C fikstürü.**
+  - Ne oluyor: Sprint karar zarı kalibrasyon turundan önce koşu tohumunu okumuyordu (kart, sprint ve hafta
+    hash'i); B2C ölçümleri alt-tür başına yaklaşık iki bağımsız gidişata iniyordu. Zar artık `GameState.run_seed`'i de
+    okur ve sekiz tohum ayrı akışlar verir. Kalanlar: (1) erken oyun tohumdan bağımsızdır: MVP bütün koşularda 7.,
+    B2C Traction 9., B2C Frank çeki note_tool'da 17., video'da 18. tikte (B2B Frank tohumla oynar); (2)
+    `b2c_neglect` fikstürünün akışları `BEGIN` satırı dışında sekiz tohumda bayt-aynı, `b2c` fikstürünün son ölçüleri
+    tohumlar arasında aynı: fikstür kabul satırındaki "8/8" fiilen tek gidişattır.
+  - Nerede: `scripts/systems/sprint_system.gd` (karar isteği); `scripts/debug/run_probe.gd` (`_seed_b2c_world`,
+    `_seed_b2c_neglect`).
+  - Oyuncuya etkisi: Yok; ölçümün gücü.
+  - Seçenekler: A) Kabul: fikstür tek gidişattır, çok tohumlu okuma oynanan koşulardan gelir. B) Fikstürler tohumdan
+    beslenen bir değişken alır (harness). C) Erken oyuna tohuma bağlı bir kaynak gerekir mi, tasarım olarak ayrıca
+    sorulur.
+  - Kaynak: kalibrasyon turu ölçümü.
 
 ## GDD'ye işlenmemiş sahip kararları
 

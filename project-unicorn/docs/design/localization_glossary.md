@@ -43,6 +43,10 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Yatırımcı iştahı | Investor appetite | Series A kapısının tek oyuncu-yüzü; rakam asla basılmaz. |
 | KAPALI · ISINIYOR · AÇIK *(iştah çipi)* | CLOSED · WARMING · OPEN | Üç durum; çip ALL-CAPS iki dilde. |
 | Gelir çıtası | Revenue bar | Kapının gelir koşulunun RAKAMSIZ adı (`altında` / `aşıldı` ↔ `below` / `cleared`). |
+| Araçlar | Tools | Gider dökümünün yazılım, lisans ve donanım kalemi (`FIN_BURN_TOOLS`); işten çıkarma onayında "Aylık araç gideri ↔ Monthly tools". TR/EN onay bekliyor. |
+| Servis maliyeti | Service costs | Müşteriyle ölçeklenen gider kalemi (`FIN_BURN_SERVICE`); "Sunucular ↔ Servers" faturasından ayrı. TR/EN onay bekliyor. |
+| Brüt marj | Gross margin | MRR − sunucu faturası − servis maliyeti. Bugün ekranda yok. |
+| Kesinti gideri · Güvenlik denetimi · Bağlılık primi · Dış kaynak ücreti · Tanıtım kampanyası · İadeler · Yan iş · Topluluk buluşması · Sponsorluk · Alan adı · Kullanıcı denemesi · Fuar standı | Incident costs · Security audit · Retention bonus · Contractor fee · Outreach campaign · Refunds · Side contract · Meetup · Sponsorship · Web address · User tests · Trade fair | İşlem listesinde olay kartlarının tek seferlik satırları (`FIN_ONETIME_*`). TR/EN onay bekliyor. |
 
 ## 3. Build & ürün
 
@@ -69,6 +73,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | devreden | carried over | Kart damgası küçük harf: devreden / carried. |
 | sürüm notu | release note | |
 | hız *(sprint)* | velocity | HIZ / VELOCITY. Kişi ekseni "Hız ↔ Pace"ten ayrı anlam. |
+| düzeltme koşusu | fix run | DESTEK'in doğrulanmış hataları eriten koşusu; olay çipi "Düzeltme başlar ↔ A fix run starts" (`EFFECT_FIX_RUN_STARTS`). TR/EN onay bekliyor. |
 
 ## 4. İnsanlar — eksenler, roller, bölümler, bantlar, HR
 
@@ -107,6 +112,10 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Memnuniyet | Satisfaction | |
 | Churn'e ~{n} hafta | ~{n} weeks to churn | Tekil: ~1 week to churn (`_ONE`). |
 | Söz / Söz teslimi | Promise / Promise due | |
+| söz verildi | promised | Sözlü sprint kartının damgası (`PRODUCT_PROMISED`), küçük harf. TR/EN onay bekliyor. |
+| Söz: {müşteri} / sözü tutulur | Promise: {customer} / promise kept | Kartın etki satırı ve sprint öngörüsü (`PRODUCT_FX_PROMISE`, `PRODUCT_FX_PROMISE_KEPT`). TR/EN onay bekliyor. |
+| Sprint {n} sonuna kadar | by the end of sprint {n} | Sözün son tarihi (`SALES_PROMISE_OPEN_SPRINT`); tür seçilmeden verilen söz hafta okur. TR/EN onay bekliyor. |
+| yer yok | no room | Sığmayan sözün kilidi: "Bir sonraki sprintte buna yer yok." ↔ "There is no room for it in the next sprint." (`SALES_LOCK_PROMISE_NO_ROOM`). TR/EN onay bekliyor. |
 | VC görüşmesi | VC meeting | |
 | Teklif / TEKLİF · {n} HAFTA | Offer / OFFER · {n} WEEKS | Tekil: OFFER · 1 WEEK (`_ONE`). |
 | SABIR | PATIENCE | Term-sheet kolu. |
