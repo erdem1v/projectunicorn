@@ -49,5 +49,4 @@ static func accept_offer() -> void:
 	GameState.record_angel_round(EQUITY_PCT, CASH_AMOUNT)      # cap table → equity_changed
 	FinanceSystem.apply_one_time_income(CASH_AMOUNT, TX_LABEL) # ledger row, then set_cash
 	GameState.set_flag(FLAG_ACCEPTED_DAY, GameState.day)       # funding.hire_nudge's delay reads this
-	GameState.submit_month_highlight(
-		TranslationServer.translate("ANGEL_MONTH_HIGHLIGHT"), 75)  # below advance_phase's 80
+	GameState.submit_month_highlight("ANGEL_MONTH_HIGHLIGHT", {}, 75)  # below advance_phase's 80

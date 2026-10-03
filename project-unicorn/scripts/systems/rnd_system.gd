@@ -426,10 +426,12 @@ static func _complete(node_id: String) -> void:
 		_note_last_day = GameState.day  # §6 — the report-period clock starts here.
 
 	EventBus.research_completed.emit(node_id)
-	# §5.8 — KISA BİR KEŞİF KARTI DÜŞER. Kart PanelLayer'a main.gd tarafından mount edilir;
-	# yükü yalnız düğüm kimliğidir, çünkü kartın okuduğu her şey (beat, açtığı şey, gizli hat)
-	# zaten ResearchSeam/ResearchTree'den türetilebilir ve ikinci bir kopya §9'u çiğnerdi.
+	# §5.8 — KISA BİR KEŞİF KARTI DÜŞER. Kart PanelLayer'a main.gd tarafından mount edilir ve
+	# gelen kutusuna mesaj olarak da düşer; ikisinin yükü yalnız düğüm kimliğidir, çünkü kartın
+	# okuduğu her şey (beat, açtığı şey, gizli hat) zaten ResearchSeam/ResearchTree'den
+	# türetilebilir ve ikinci bir kopya §9'u çiğnerdi.
 	EventBus.rnd_card_requested.emit("discovery", {"node": node_id})
+	MessageSystem.post("rnd_discovery", "RND_DISCOVERY_TITLE", {"node": node_id})
 	# §5.8 — NO ECONOMIC DELTA. No cash, no brand, no MRR. The discovery card is
 	# presentation; the door it opens is the whole reward.
 
@@ -497,6 +499,9 @@ static func _tick_note() -> void:
 		return                       # §6.2 — sessizce atlanır; sayaç yine de sıfırlanır
 	_note_pending = compose_note(author)
 	_note_unread = true
+	# The inbox keeps every note; the Ar-Ge tab reads the latest. The read state is owned here and
+	# mark_note_read carries it to the message.
+	MessageSystem.post("rnd_note", "RND_NOTE_TITLE", pending_note())
 	EventBus.product_note_issued.emit(GameState.day)
 
 
@@ -590,10 +595,14 @@ static func pending_note() -> Dictionary:
 	return _note_pending.duplicate(true)
 
 
+## The latest note's inbox message is read with it.
 static func mark_note_read() -> void:
 	if not _note_unread:
 		return
 	_note_unread = false
+	var notes: Array = GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "rnd_note")
+	if not notes.is_empty():   # a note loaded from an older save has no message
+		MessageSystem.mark_read(String(notes[-1].id))
 	EventBus.product_note_read.emit()
 
 

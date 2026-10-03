@@ -755,8 +755,8 @@ static func _close() -> void:
 		# Canlı hata havuzu her sürümle yeniden başlar; sprintte gizli hata devri yoktur, devir 0'dır.
 		GameState.set_flag("mvp_live_bug_count", 0)
 		GameState.set_flag("mvp_live_bug_progress", 0.0)
-		GameState.submit_month_highlight(TranslationServer.translate("PROD_SHIP_FIRST_TITLE") if n == 1
-			else TranslationServer.translate("PROD_SHIP_VERSION_TITLE").format({"version": version_text(n)}), 50)
+		GameState.submit_month_highlight("PROD_SHIP_FIRST_TITLE" if n == 1 else "PROD_SHIP_VERSION_TITLE",
+			{"version": version_text(n)}, 50)
 		ProductState.refresh_on_publish(new_code)
 		SprintBridges.push_axes()
 		if mvp:

@@ -21,6 +21,9 @@ Açık işlerin tek yeri bu klasördür.
 - `min_gap_weeks` 4'ün üstünde 4 gibi davranıyor: `EvTempo._prune` geçmişi `MIN_GAP_WEEKS_DEFAULT` ile özne
   boşluklarının en büyüğü kadar (4 hafta) tutuyor (`scripts/events/present/tempo.gd`). `customer.security_review` ve
   `team.outside_offer` 8 der. Budama kartların en büyük `min_gap_weeks`'ini de kapsar.
+- `info` ve `ambient` kart kategori kotası tüketiyor: `EvTempo.assign` her kabulü tempo penceresine yazar ve katman 3
+  penceredeki her kaydı sayar (`scripts/events/present/tempo.gd`); motor GDD §13.2 "bütçe tüketmez" der (§27.13).
+  Bugün canlı `info` ya da `ambient` kart yok. Bu iki sınıf katman 3'te sayılmaz.
 
 ## Arayüz yeniden yapılırken
 Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktalar:

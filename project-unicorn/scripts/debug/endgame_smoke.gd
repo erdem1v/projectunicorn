@@ -301,6 +301,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_no_double_resolution_after_load": fail = _case_event_no_double_resolution_after_load()
 		"event_history_names_survive":    fail = _case_event_history_names_survive()
 		"event_history_chip_matches_live": fail = _case_event_history_chip_matches_live()
+		"messages_save_round_trip":       fail = _case_messages_save_round_trip()
+		"sales_weekly_report_is_a_message": fail = _case_sales_weekly_report_is_a_message()
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
 		"loc_b5_derived_keys":       fail = _case_loc_b5_derived_keys()
 		"loc_language_switch":       fail = _case_loc_language_switch()
@@ -1203,12 +1205,12 @@ static func _case_month_summary() -> String:
 	EventBus.ticker_live_line.connect(func(_src: String, t: String) -> void: lines.append(t))
 
 	# Highlight registry rules: higher priority replaces, first-come wins ties.
-	GameState.submit_month_highlight("a", 50)
-	GameState.submit_month_highlight("b", 90)
-	GameState.submit_month_highlight("c", 90)
-	if GameState.month_highlight_text != "b":
-		return "highlight priority/tie rule broken (%s)" % GameState.month_highlight_text
-	GameState.month_highlight_text = ""
+	GameState.submit_month_highlight("a", {}, 50)
+	GameState.submit_month_highlight("b", {}, 90)
+	GameState.submit_month_highlight("c", {}, 90)
+	if String(GameState.month_highlight.get("key", "")) != "b":
+		return "highlight priority/tie rule broken (%s)" % str(GameState.month_highlight)
+	GameState.month_highlight.clear()
 	GameState.month_highlight_priority = -1
 
 	# Quiet January with one known delta: brand 50 → 60. No customers, no mvp flags → gates
@@ -1221,7 +1223,12 @@ static func _case_month_summary() -> String:
 	_sim_day()  # tick 6 = 5 Feb 2026 → January closes in slot 0, before this week's flow
 	if summaries.size() != 1 or closes.size() != 1:
 		return "expected one summary and one close at tick 6, got %d / %d" % [summaries.size(), closes.size()]
-	var m: Dictionary = summaries[0]
+	# The inbox keeps the same payload: numbers and keys, rendered when it is read.
+	var posted: Array = GameState.messages.filter(func(msg: Dictionary) -> bool: return msg.kind == "summary")
+	if posted.size() != 1 or posted[0].args != summaries[0] or posted[0].key != "MONTH_TITLE":
+		return "the summary was not posted to the inbox as its payload: %s" % str(posted)
+	var payload: Dictionary = summaries[0]
+	var m: Dictionary = SummarySystem.display(payload)
 	var want_title: String = Fmt.upper(TranslationServer.translate("MONTH_TITLE").format(
 		{"month": Fmt.month_name(1), "year": 2026}))
 	if String(m.title) != want_title:
@@ -1230,21 +1237,26 @@ static func _case_month_summary() -> String:
 		{"from": 1, "to": 5})
 	if String(m.range) != want_range:
 		return "range: %s (want %s)" % [String(m.range), want_range]
-	if int(m.brand.from) != 50 or int(m.brand.to) != 60:
-		return "brand delta: %s" % str(m.brand)
-	if int(m.mrr.from) != 0 or int(m.mrr.to) != 0:
-		return "mrr delta: %s" % str(m.mrr)
+	if int(payload.brand.from) != 50 or int(payload.brand.to) != 60:
+		return "brand delta: %s" % str(payload.brand)
+	if int(payload.mrr.from) != 0 or int(payload.mrr.to) != 0:
+		return "mrr delta: %s" % str(payload.mrr)
 	# Day 1 has no finance tick, so January carries ticks 2-5: four weeks, 28 days of $50 burn.
 	var jan_flow: int = 4 * TimeModel.DAYS_PER_TICK * 50
-	if int(m.cash.from) != 10000 or int(m.cash.to) != 10000 - jan_flow:
-		return "cash delta: %s (want 10000 → %d)" % [str(m.cash), 10000 - jan_flow]
+	if int(payload.cash.from) != 10000 or int(payload.cash.to) != 10000 - jan_flow:
+		return "cash delta: %s (want 10000 → %d)" % [str(payload.cash), 10000 - jan_flow]
 	if int(closes[0].expense) != jan_flow or int(closes[0].end_day) != 6:
 		return "January close: %s (want expense %d, end_day 6)" % [str(closes[0]), jan_flow]
-	if int(m.team.from) != 1 or int(m.team.to) != 1:
-		return "team delta: %s" % str(m.team)
+	if int(payload.team.from) != 1 or int(payload.team.to) != 1:
+		return "team delta: %s" % str(payload.team)
 	var quiet: String = TranslationServer.translate(String(SummarySystem.PERIOD_KEYS["monthly"].quiet))
 	if String(m.highlight) != quiet:
 		return "quiet month should use fallback highlight, got: %s" % String(m.highlight)
+	var lit: Dictionary = payload.duplicate(true)
+	lit.highlight = {"key": "GATE_OPENED", "args": {"phase": "Traction"}}
+	var want_lit: String = TranslationServer.translate("GATE_OPENED").format({"phase": "Traction"})
+	if String(SummarySystem.display(lit).highlight) != want_lit:
+		return "a submitted highlight did not render from its key and args"
 	# Which RULE fired is the assertion; the sentence is whatever the CSV says it is.
 	var want_frank: String = TranslationServer.translate("MONTH_FRANK_ANOTHER")
 	if String(m.frank_line) != want_frank:
@@ -4788,14 +4800,14 @@ static func _case_hotfix_new_account_auto_assigned() -> String:
 	return ""
 
 
-## F4 — A SUMMARY WITH NO ROWS SUMMARISES NOTHING. The weekly card carried one sentence and a
-## book count inside full decision chrome. §7.3 asks for the week's CLOSES; the rows are
-## composed in Sales (`SalesLedger.weekly_close_lines`) and the card names one seam.
+## F4 — A SUMMARY WITH NO ROWS SUMMARISES NOTHING. §7.3 asks for the week's CLOSES: the week's
+## rows come out of Sales (`SalesLedger.close_week`) and render one line each, plus a total
+## (`SalesLedger.weekly_close_lines`).
 ## FALSIFICATION: return "" from weekly_close_lines and every check below fails.
 static func _case_hotfix_weekly_summary_rows() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	if SalesLedger.weekly_close_lines() != "":
+	if SalesLedger.weekly_close_lines([]) != "":
 		return "a week with no closes produced rows"
 	var lead := Prospect.new()
 	lead.id = "wk_1"
@@ -4805,11 +4817,11 @@ static func _case_hotfix_weekly_summary_rows() -> String:
 	var c: Customer = _sign_fixture(lead, 1200, 70)
 	if c == null:
 		return "the fixture did not sign"
-	# The rows are the report of the last week the desk closed in.
-	SalesLedger.record_close(c, true)
-	if SalesLedger.close_week() != 1:
-		return "a week with one desk close did not report it"
-	var lines: String = SalesLedger.weekly_close_lines()
+	SalesLedger.record_close(c, "Burak Şahin")
+	var week: Array = SalesLedger.close_week()
+	if week.size() != 1:
+		return "a week with one close returned %d rows" % week.size()
+	var lines: String = SalesLedger.weekly_close_lines(week)
 	if not lines.contains("Hafta Corp"):
 		return "the week's close did not name its account"
 	if not lines.contains(str(c.seats)):
@@ -4824,11 +4836,8 @@ static func _case_hotfix_weekly_summary_rows() -> String:
 	var rows: PackedStringArray = lines.split("\n")
 	if rows.size() != 2:
 		return "one close plus a total should be 2 lines, got %d" % rows.size()
-	# A founder-only week raises no card, so it leaves the last report in place.
-	SalesLedger.record_close(c, false)
-	if SalesLedger.close_week() != 0 or SalesLedger.weekly_close_lines() != lines:
-		return "a founder-only week replaced the report"
-	if SalesLedger.close_week() != 0:
+	# The window resets, or the next week reports this week's work again.
+	if not SalesLedger.close_week().is_empty():
 		return "an empty week reported closes"
 	return ""
 
@@ -5352,6 +5361,91 @@ static func _case_event_history_chip_matches_live() -> String:
 		var shown: String = EvChips.text(EvChips.describe(deltas[i], ctx, {}, true)[0])
 		if shown != live[i]:
 			return "%s: the card showed '%s', its history row reads '%s'" % [effects[i].verb, live[i], shown]
+	return ""
+
+
+## The inbox's own messages survive a real save as keys and numbers: Frank's intro, a period
+## summary's payload with its highlight args, and the weekly sales report, whose rows travel
+## inside the message. After the load they render the same text. Past CAPACITY the oldest read
+## message goes and no unread one does; ids count the kind's messages of the day; a new run
+## starts with its own intro only.
+## FALSIFICATION: skip `messages` in SaveCodec.capture_game_state and the round trip fails;
+## trim without the read check and the unread count fails; drop `messages.clear()` from
+## GameState.initialize_run and the second run carries the first run's messages.
+static func _case_messages_save_round_trip() -> String:
+	if GameState.messages.size() != 1 or GameState.messages[0].kind != "intro":
+		return "a new run did not open with Frank's intro: %s" % str(GameState.messages)
+	MessageSystem.mark_read(String(GameState.messages[0].id))
+	_seed_b2b(500)
+	GameState.advance_day()   # on day 1 the anchor below would be 0, which reads as unset
+	SalesLedger.record_close(CustomerRegistry.get_by_market("b2b")[0], "Burak Şahin")
+	GameState.set_flag("sales_weekly_anchor_day",
+		GameState.day - TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS))
+	SalesRepSystem._tick_weekly_summary()
+	GameState.submit_month_highlight("GATE_OPENED", {"phase": "Traction"}, 70)
+	MessageSystem.post("summary", "MONTH_TITLE", SummarySystem._build_summary_data("monthly", GameState.day))
+	if GameState.messages.size() != 3 or String(GameState.messages[1].id) != "sales_week:%d:0" % GameState.day:
+		return "fixture: want intro, report and summary, got %s" % str(GameState.messages)
+	var before: String = str(GameState.messages)
+	var report: String = SalesLedger.weekly_close_lines(GameState.messages[1].args.rows)
+	var summary: String = str(SummarySystem.display(GameState.messages[2].args))
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		_cleanup_save_slots()
+		return "the slot did not load back"
+	_cleanup_save_slots()
+	if str(GameState.messages) != before:
+		return "the messages changed across the save:\n%s\n%s" % [before, str(GameState.messages)]
+	if SalesLedger.weekly_close_lines(GameState.messages[1].args.rows) != report \
+			or str(SummarySystem.display(GameState.messages[2].args)) != summary:
+		return "a loaded message renders differently"
+
+	for i in MessageSystem.CAPACITY:
+		MessageSystem.post("probe", "MONTH_TITLE")
+	if GameState.messages.size() != MessageSystem.CAPACITY + 2 or GameState.messages[0].kind != "sales_week":
+		return "the trim did not drop only the read intro: %d kept, first %s" \
+			% [GameState.messages.size(), GameState.messages[0].kind]
+	if String(GameState.messages[-1].id) != "probe:%d:%d" % [GameState.day, MessageSystem.CAPACITY - 1]:
+		return "ids do not count the day's messages: %s" % GameState.messages[-1].id
+
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 7})
+	if GameState.messages.size() != 1 or GameState.messages[0].kind != "intro":
+		return "a second run did not start with its own intro only: %d messages" % GameState.messages.size()
+	return ""
+
+
+## §7.3 — THE WEEKLY SALES REPORT IS A MESSAGE, NOT A CARD. It never becomes the active card and
+## never waits in the queue, so it never blocks the pump: a card raised right after it shows at
+## once. It carries the week's rows and the book as they stood; a founder-only week posts nothing.
+## FALSIFICATION: raise an info card from _tick_weekly_summary through EventGate.request and the
+## engine check fails.
+static func _case_sales_weekly_report_is_a_message() -> String:
+	_seed_b2b(500)
+	GameState.advance_day()   # on day 1 the anchor below would be 0, which reads as unset
+	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	var interval: int = TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS)
+	SalesLedger.record_close(c, "")
+	GameState.set_flag("sales_weekly_anchor_day", GameState.day - interval)
+	SalesRepSystem._tick_weekly_summary()
+	if GameState.messages.any(func(m: Dictionary) -> bool: return m.kind == "sales_week"):
+		return "a founder-only week posted a report"
+	SalesLedger.record_close(c, "")
+	SalesLedger.record_close(c, "Burak Şahin")
+	GameState.set_flag("sales_weekly_anchor_day", GameState.day - interval)
+	SalesRepSystem._tick_weekly_summary()
+	if EventGate.active_id() != "" or EventGate.queue_size() != 0:
+		return "the weekly report reached the event engine (active '%s', %d queued)" \
+			% [EventGate.active_id(), EventGate.queue_size()]
+	var week: Dictionary = GameState.messages[-1]
+	if week.kind != "sales_week" or (week.args.rows as Array).size() != 2 \
+			or int(week.args.accounts) != CustomerRegistry.account_count():
+		return "the report did not carry the week's two closes and the book: %s" % str(week)
+	var e: Character = _make_employee("char_wk_quit", "Selin Kaya", HRConstants.ROLE_TESTER, SEED_PACE, 7000, 22)
+	if not EventGate.request("team.resignation", {"employee": e.id}) \
+			or EventGate.active_id() != "team.resignation":
+		return "a card raised after the report did not show (active '%s')" % EventGate.active_id()
 	return ""
 
 
@@ -13681,7 +13775,8 @@ static func _node_tree_has_text(root: Node, needle: String) -> bool:
 ##
 ## FALSİFİKASYON: note_author'ı ham yıldıza çevir → müşteri temsilcisi yazar olur ve ilk
 ## iddia FAIL. _rival_name'in "+1"ini sil → dev seçilir ve o iddia FAIL. Havuzdaki bir
-## cümleye rakam ekle → basamak iddiası FAIL, anahtarı adıyla yazarak.
+## cümleye rakam ekle → basamak iddiası FAIL, anahtarı adıyla yazarak. mark_note_read'ten
+## MessageSystem.mark_read'i sil → kutudaki not okunmamış kalır ve son iddia FAIL.
 static func _case_rnd_note_author_and_lines() -> String:
 	ProductLines.reload()
 	ResearchTree.reload()
@@ -13752,6 +13847,17 @@ static func _case_rnd_note_author_and_lines() -> String:
 					TranslationServer.set_locale("tr")
 					return "%s (%s) carries a numeric claim; §14 forbids it: '%s'" % [k, loc, line]
 	TranslationServer.set_locale("tr")
+
+	# The inbox keeps the note, and reading it in the Ar-Ge tab reads the message too.
+	RnDSystem._note_last_day = 0
+	GameState.day = TimeModel.ticks(ResearchTree.report_period_weeks())
+	RnDSystem._tick_note()
+	var posted: Array = GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "rnd_note")
+	if posted.size() != 1 or posted[0].read:
+		return "the note did not reach the inbox unread: %s" % str(posted)
+	RnDSystem.mark_note_read()
+	if not posted[0].read:
+		return "a note read in the Ar-Ge tab stayed unread in the inbox"
 
 	CharacterRegistry.remove(dev.id)
 	CharacterRegistry.remove(rep.id)
@@ -14831,10 +14937,11 @@ static func _case_loc_sales_derived_keys() -> String:
 
 ## §7.3 PRESENTATION, both halves. The ticker sees NEWS ONLY — a routine close reaches the
 ## player through the account list and the weekly summary, never by scrolling past. And the
-## weekly card carries CLOSES ONLY: churn is the customer desk's surface, and a week with no
-## closes drops no card at all.
+## weekly report carries CLOSES ONLY: churn is the customer desk's surface, and a week with no
+## closes posts no report at all. A desk close carries its rep's name, the report's sender.
 ## FALSIFICATION: drop the newsworthy test from _maybe_ticker and the first branch fails on
-## the very first routine close.
+## the very first routine close; pass "" from SalesRepSystem._close to record_close and the
+## rep's name check fails.
 static func _case_sales_presentation_rules() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
@@ -14872,9 +14979,12 @@ static func _case_sales_presentation_rules() -> String:
 	if lines.is_empty():
 		return "a 3-star signing did not reach the ticker"
 
-	# THE WEEKLY CARD carries closes and nothing else, and a quiet week produces none.
+	# The closes above belong to an earlier window; the desk's close carries its rep's name.
+	var earlier: Array = SalesLedger.close_week()
+	if earlier.is_empty() or String(earlier[-1].rep) != rep.character_name:
+		return "the desk's close did not carry its rep's name: %s" % str(earlier)
+	# THE WEEKLY REPORT carries closes and nothing else, and a quiet week produces none.
 	var interval: int = TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS)
-	SalesLedger.close_week()   # the closes above belong to an earlier window
 	GameState.set_flag("sales_weekly_anchor_day", GameState.day - interval)
 	var reported: Array = []
 	var wprobe := func(closes: int) -> void: reported.append(closes)
@@ -14886,7 +14996,7 @@ static func _case_sales_presentation_rules() -> String:
 	# With desk closes in the window it does report, and it reports the COUNT.
 	var booked: Customer = CustomerRegistry.get_by_market("b2b")[0]
 	for i in 3:
-		SalesLedger.record_close(booked, true)
+		SalesLedger.record_close(booked, rep.character_name)
 	GameState.set_flag("sales_weekly_anchor_day", GameState.day - interval)
 	SalesRepSystem._tick_weekly_summary()
 	EventBus.weekly_sales_report_issued.disconnect(wprobe)

@@ -502,7 +502,7 @@ func _shot_fail(msg: String) -> void:
 	get_tree().quit(1)
 
 
-## --b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel|weekly>: one
+## --b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel>: one
 ## factory-built card in a real EventModal.
 func _run_b2b_shot(kind: String) -> void:
 	_begin_shot()
@@ -553,21 +553,6 @@ func _run_b2b_shot(kind: String) -> void:
 			# Frank's seed card: the KABUL effect chip (an undescribed modifier renders blind)
 			# and the locked REDDET row's treatment only show in a rendered frame.
 			card_id = "funding.frank_cheque"
-			scoped = false
-		"weekly":
-			# §7.3 haftalık özet: bilgi kartı karar giysisi taşımaz ve satır taşır.
-			CustomerRegistry.set_lifecycle_phase(c.id, "active")
-			SalesLedger.record_close(c, false)
-			var second := Prospect.new()
-			second.id = "lead_weekly_2"   # LOC-DATA debug seed / id
-			second.company_name = "Kuzey İnşaat"   # LOC-DATA debug seed / id
-			second.industry = "construction"   # LOC-DATA debug seed / id
-			second.star = 3
-			var c2: Customer = SalesSystem.add_b2b_customer(second, 24, 55, 70, "sales_rep:shot")
-			if c2 != null:
-				SalesLedger.record_close(c2, true)
-			SalesLedger.close_week()
-			card_id = "sales.weekly_summary"
 			scoped = false
 		_:
 			CustomerRegistry.set_lifecycle_phase(c.id, "risk")

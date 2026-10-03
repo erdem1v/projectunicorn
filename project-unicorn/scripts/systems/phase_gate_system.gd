@@ -84,8 +84,8 @@ static func _open_gate(gate: Dictionary) -> void:
 	GameState.pending_next_phase = int(gate.to)
 	EventBus.phase_gate_reached.emit(int(gate.to))
 	GameState.set_flag("gate_declines", 0)
-	GameState.submit_month_highlight(TranslationServer.translate("GATE_OPENED").format(
-		{"phase": GameState.phase_display_name(int(gate.to))}), 70)  # AYIN OLAYI
+	GameState.submit_month_highlight("GATE_OPENED",
+		{"phase": GameState.phase_display_name(int(gate.to))}, 70)  # AYIN OLAYI
 	# NOTHING IS PUSHED. `phase_gate_ready` is the ratchet the card's own condition reads
 	# through `phase.gate_ready`, and the daily sweep proposes it — the same day, because both
 	# gate cards are tagged `critical` and a critical card does not wait on a weighted draw.

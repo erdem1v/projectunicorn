@@ -212,7 +212,7 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, seat_price,
 		SalesSystem.signing_satisfaction_seed(), "sales_rep:%s" % rep.id)
 	ProspectRegistry.remove(lead.id)
-	SalesLedger.record_close(c, true)
+	SalesLedger.record_close(c, rep.character_name)
 	SalesSystem.record_sales_event("auto_close", rep.character_name, c.company_name, c.mrr)
 	EventBus.rep_deal_closed.emit(rep.id, c.id)
 	SalesLedger.announce_signing(c, lead.is_whale,
@@ -236,13 +236,14 @@ static func _seats_for(lead: Prospect) -> int:
 #  §7.3 · The weekly summary
 # ============================================================================
 
-# DESIGN-PARKED: a week with no closes drops NO card. §7.3 says the summary carries closes;
-# a card that reports none is a card that reports nothing. Alternative seen: always drop it
-# with a "no closes this week" line — noise, and the quiet-day floor is the engine's job
-# (§13.6), not this desk's.
+# DESIGN-PARKED: a week with no desk close posts NO report. §7.3 says the summary carries closes;
+# a report of none is a report of nothing. Alternative seen: always post it with a "no closes this
+# week" line — noise.
 ## "Haftalık satış özeti yalnız kapanışları taşır — temsilcinin sesiyle bilgi kartı. Churn
-## girmez. Karar butonu yok." Raised through the one door (EventGate.request), the way the
-## Sales tab already raises retention — the gate still runs G1-G8 over it.
+## girmez. Karar butonu yok." An inbox message, not an engine card: the week's rows (a desk close
+## names its rep, the voice the report is sent in) and the book's account count as they stand
+## when the report is written, so it never stops the clock, never waits in the event queue and
+## never reads a later week.
 static func _tick_weekly_summary() -> void:
 	var anchor: int = int(GameState.get_flag("sales_weekly_anchor_day", 0))
 	if anchor <= 0:
@@ -251,11 +252,14 @@ static func _tick_weekly_summary() -> void:
 	if GameState.day - anchor < TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS):
 		return
 	GameState.set_flag("sales_weekly_anchor_day", GameState.day)
-	var closes: int = SalesLedger.close_week()
+	var rows: Array = SalesLedger.close_week()
+	# A row loaded from an older save names no rep and counts as the founder's.
+	var closes: int = rows.filter(func(r: Dictionary) -> bool: return String(r.get("rep", "")) != "").size()
 	if closes <= 0:
 		return
 	EventBus.weekly_sales_report_issued.emit(closes)
-	EventGate.request(SalesConstants.WEEKLY_SUMMARY_CARD_ID)
+	MessageSystem.post("sales_week", "SALES_WEEKLY_TITLE",
+		{"rows": rows, "accounts": CustomerRegistry.account_count()})
 
 
 # ============================================================================

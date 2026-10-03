@@ -104,10 +104,6 @@ static func install() -> void:
 		"Sales", "WRAPPER; monthly price")
 	EvSeams.register("sales.growth_band", G, TYPE_STRING,
 		func() -> String: return SalesSystem.growth_band(), "Sales", "melting | flat | steady | fast")
-	# §7.3'ün haftalık özeti SATIR ister, cümle değil; aritmetik ve biçim Satış'ta durur.
-	EvSeams.register("sales.weekly_closes", G, TYPE_STRING,
-		func() -> String: return SalesLedger.weekly_close_lines(),
-		"Sales", "closes of the week that just ended, one line each, with a total")
 	# KAÇ HESAP — `musteri.count`'tan farkı B2C toplu kullanıcı tabanı kaydıdır: o bir KİTLE,
 	# hesap değil, sıfır koltukludur ve "defterde N hesap var" cümlesinde sayılmaz.
 	EvSeams.register("sales.account_count", G, TYPE_INT,

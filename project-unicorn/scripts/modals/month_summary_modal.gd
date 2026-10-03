@@ -1,7 +1,8 @@
 extends Control
 
 # Period summary modal; the period follows the player's summary frequency (week, month,
-# quarter, year). Populated from SummarySystem's payload (shape on _build_summary_data).
+# quarter, year). Populated from SummarySystem's payload (numbers on _build_summary_data, text
+# from SummarySystem.display).
 # Scannable in <15s: 4 delta rows + runway, the period's highlight, one Frank line, DEVAM ET.
 #
 # process_mode = ALWAYS in the .tscn — mounts on a paused tree.
@@ -33,7 +34,8 @@ func _ready() -> void:
 	_continue_btn.grab_focus()
 
 
-func populate(data: Dictionary) -> void:
+func populate(payload: Dictionary) -> void:
+	var data: Dictionary = SummarySystem.display(payload)
 	_title.text = data.title
 	_meta.text = "%s · %s" % [data.range, data.phase_name]
 	_highlight_caption.text = data.caption
@@ -42,10 +44,10 @@ func populate(data: Dictionary) -> void:
 	_frank_row.visible = String(data.frank_line) != ""   # outside monthly mode Frank may be silent
 	_footer_caption.text = data.footer
 
-	var mrr: Dictionary = data.mrr
-	var cash: Dictionary = data.cash
-	var team: Dictionary = data.team
-	var brand: Dictionary = data.brand
+	var mrr: Dictionary = payload.mrr
+	var cash: Dictionary = payload.cash
+	var team: Dictionary = payload.team
+	var brand: Dictionary = payload.brand
 	var cash_delta: int = int(cash.to) - int(cash.from)
 	var team_delta: int = int(team.to) - int(team.from)
 	var brand_delta: int = int(brand.to) - int(brand.from)

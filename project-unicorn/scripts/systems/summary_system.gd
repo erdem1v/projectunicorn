@@ -9,13 +9,14 @@ extends RefCounted
 # new month's ledger opens, so this week's money flow lands in the new month. When the player's
 # summary frequency closes a period on this tick, its payload is built from the state the last
 # week left and the next period opens.
-# Slot 10 (daily_tick), after the endings scan: the payload goes out as summary_ready and the
-# month-close and runway lines go to the ticker, only while the run is on, so an ending on the
-# same tick wins. A running Kepenk does not suppress the summary: it matters most mid-countdown.
+# Slot 10 (daily_tick), after the endings scan: the payload is posted to the inbox and goes out
+# as summary_ready, and the month-close and runway lines go to the ticker, only while the run is
+# on, so an ending on the same tick wins. A running Kepenk does not suppress the summary: it
+# matters most mid-countdown. The payload is numbers and keys; `display` renders it.
 #
 # Persistent state lives on GameState: month_ledger (the month's opening cash and customer
 # counts plus the accruals the two accrue_* seams write), month_history, summary_ledger (the
-# period's opening snapshot), month_highlight_* (the period's highlight) and runway_warn_band.
+# period's opening snapshot), month_highlight* (the period's highlight) and runway_warn_band.
 
 const SETTING_FREQUENCY := "summary_frequency"
 const FREQUENCIES: Array[String] = ["weekly", "monthly", "quarterly", "yearly"]
@@ -90,6 +91,7 @@ static func daily_tick() -> void:
 		if runway_line != "":
 			EventBus.ticker_live_line.emit(source, runway_line)
 	if not summary.is_empty():
+		MessageSystem.post("summary", String(PERIOD_KEYS[summary.freq].title), summary)
 		EventBus.summary_ready.emit(summary)
 
 
@@ -149,7 +151,7 @@ static func _open_period() -> void:
 		"employees": _team_size(),
 		"brand": GameState.brand,
 	}
-	GameState.month_highlight_text = ""
+	GameState.month_highlight.clear()
 	GameState.month_highlight_priority = -1
 
 
@@ -173,33 +175,50 @@ static func _runway_line() -> String:
 
 
 static func _build_summary_data(freq: String, last_day: int) -> Dictionary:
-	# Contract consumed by MonthSummaryModal.populate(): the period runs from the summary_ledger
-	# snapshot through the week of last_day.
+	# The period runs from the summary_ledger snapshot through the week of last_day.
 	var ledger: Dictionary = GameState.summary_ledger
-	var keys: Dictionary = PERIOD_KEYS[freq]
-	var start_day: int = int(ledger.get("start_day", 1))
-	var last: Dictionary = GameState.get_date_dict(last_day)
 	var data := {
+		"freq": freq,
+		"start_day": int(ledger.get("start_day", 1)),
+		"last_day": last_day,
+		"phase": GameState.phase,
+		"mrr": {"from": int(ledger.get("mrr", 0)), "to": GameState.mrr},
+		"cash": {"from": int(ledger.get("cash", 0)), "to": GameState.cash},
+		"team": {"from": int(ledger.get("employees", 1)), "to": _team_size()},
+		"brand": {"from": int(ledger.get("brand", 50)), "to": GameState.brand},
+		"net": GameState.get_net_daily_flow(),   # the runway is rebuilt from cash and this
+		"shutter": GameState.shutter_weeks_left >= 0,
+		"highlight": GameState.month_highlight.duplicate(true),
+	}
+	data["frank_key"] = _pick_frank_line(data, freq == "monthly")
+	return data
+
+
+## The payload's text in the current language, as MonthSummaryModal.populate() reads it.
+static func display(p: Dictionary) -> Dictionary:
+	var keys: Dictionary = PERIOD_KEYS[p.freq]
+	var start_day: int = int(p.start_day)
+	var last_day: int = int(p.last_day)
+	var last: Dictionary = GameState.get_date_dict(last_day)
+	var cash_to: int = int(p.cash.to)
+	var highlight: Dictionary = p.highlight
+	return {
 		"title": Fmt.upper(TranslationServer.translate(String(keys.title)).format({
 			"week": int(last.week), "month": Fmt.month_name(int(last.month)),
 			"quarter": ceili(int(last.month) / 3.0), "year": int(last.year)})),
 		"range": TranslationServer.translate(
 			Fmt.count_key("SUMMARY_RANGE", last_day - start_day + 1)).format(
 			{"from": int(GameState.get_date_dict(start_day).week), "to": int(last.week)}),
-		"phase_name": GameState.phase_display_name(GameState.phase),
-		"mrr": {"from": int(ledger.get("mrr", 0)), "to": GameState.mrr},
-		"cash": {"from": int(ledger.get("cash", 0)), "to": GameState.cash},
-		"team": {"from": int(ledger.get("employees", 1)), "to": _team_size()},
-		"brand": {"from": int(ledger.get("brand", 50)), "to": GameState.brand},
-		"runway_text": UiTokens.net_runway_text(GameState.get_runway_months()),
+		"phase_name": GameState.phase_display_name(int(p.phase)),
+		# A company in the red has no runway, whatever its flow.
+		"runway_text": UiTokens.net_runway_text(
+			0.0 if cash_to < 0 else GameState.runway_months_for(cash_to, int(p.net))),
 		"caption": TranslationServer.translate(String(keys.caption)),
-		"highlight": GameState.month_highlight_text if GameState.month_highlight_text != "" \
-			else TranslationServer.translate(String(keys.quiet)),
+		"highlight": TranslationServer.translate(String(keys.quiet)) if highlight.is_empty()
+			else TranslationServer.translate(String(highlight.key)).format(highlight.args),
 		"footer": TranslationServer.translate(String(keys.footer)),
-		"shutter_active": GameState.shutter_weeks_left >= 0,
+		"frank_line": TranslationServer.translate(String(p.frank_key)),
 	}
-	data["frank_line"] = _pick_frank_line(data, freq == "monthly")
-	return data
 
 
 static func _team_size() -> int:
@@ -212,24 +231,24 @@ static func _team_size() -> int:
 static func debug_force_summary(extreme: bool = false) -> void:
 	# F11: the period so far, with live data and no snapshot (layout/flow check without waiting
 	# for the period to end). Shift+F11: extreme-value fixture — the layout stress test
-	# ("$999.9K → $1.2M", 3-digit team) stays reproducible. Its strings are a FIXTURE, not
-	# shipped copy: the point is a long Turkish headline overflowing the band, so keying them
-	# would defeat the test. Debug build only (F11 is gated on it).
+	# ("$999.9K → $1.2M", 3-digit team, August 2026, weeks 31-35, 8 months of runway) stays
+	# reproducible. The highlight and Frank's line are FIXTURE strings in the key slots, not
+	# shipped copy: no key matches them, so the translation hands them back as they are, and the
+	# point is a long Turkish headline overflowing the band. Debug build only (F11 is gated on it).
 	if extreme:
 		EventBus.summary_ready.emit({
-			"title": "AĞUSTOS 2026",   # LOC-DATA layout fixture
-			"range": "Hafta 31-35",   # LOC-DATA layout fixture
-			"phase_name": "Series A",   # LOC-DATA layout fixture
+			"freq": "monthly",
+			"start_day": 31,
+			"last_day": 35,
+			"phase": 3,
 			"mrr": {"from": 999_900, "to": 1_200_000},
 			"cash": {"from": 999_900, "to": 1_200_000},
 			"team": {"from": 98, "to": 120},
 			"brand": {"from": 12, "to": 100},
-			"runway_text": "8 ay",   # LOC-DATA layout fixture
-			"caption": TranslationServer.translate("MONTH_EVENT_OF_THE_MONTH"),
-			"highlight": "Uzun bir başlık taşma testi — satın alma teklifi masada, Nordica $1.2K/ay imzalandı",   # LOC-DATA layout fixture
-			"footer": TranslationServer.translate("MONTH_AUTO_SUMMARY"),
-			"frank_line": "İyi bir ay. Not al — nadir gelirler.",   # LOC-DATA layout fixture
-			"shutter_active": false,
+			"net": -5_000,
+			"shutter": false,
+			"highlight": {"key": "Uzun bir başlık taşma testi — satın alma teklifi masada, Nordica $1.2K/ay imzalandı", "args": {}},   # LOC-DATA layout fixture
+			"frank_key": "İyi bir ay. Not al — nadir gelirler.",   # LOC-DATA layout fixture
 		})
 		return
 	EventBus.summary_ready.emit(_build_summary_data(_frequency(), GameState.day))
@@ -241,7 +260,7 @@ static func _pick_frank_line(data: Dictionary, monthly: bool) -> String:
 	var mrr_delta: int = int(data.mrr.to) - int(data.mrr.from)
 	var cash_delta: int = int(data.cash.to) - int(data.cash.from)
 	var rules := [
-		["MONTH_FRANK_SHUTTER", bool(data.shutter_active)],
+		["MONTH_FRANK_SHUTTER", bool(data.shutter)],
 		["MONTH_FRANK_BURNING_BUT_SELLING", cash_delta < 0 and mrr_delta > 0],
 		["MONTH_FRANK_SHRINKING", mrr_delta < 0],
 		["MONTH_FRANK_GOOD", mrr_delta > 0 and cash_delta > 0
@@ -250,5 +269,5 @@ static func _pick_frank_line(data: Dictionary, monthly: bool) -> String:
 	]
 	for rule in rules:
 		if rule[1] and (monthly or PERIOD_NEUTRAL_FRANK.has(rule[0])):
-			return TranslationServer.translate(rule[0])
+			return rule[0]
 	return ""

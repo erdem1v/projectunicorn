@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 142 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 143 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **142** |
+| Signals declared | **143** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **71** |
+| Emitted with **no production listener** | **72** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -135,6 +135,12 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `modal_requested` | `event: GameEvent` | engine | 1 | 1 | main |
 | `event_set_aside` | `event_id: String` | engine | 1 | 1 | save_manager |
 | `desk_changed` | `—` | papers | 4 | 0 | — |
+
+### Inbox messages
+
+| signal | payload | emitter(s) | E | L | listener(s) |
+|---|---|---|---|---|---|
+| `messages_changed` | `—` | message_system | 2 | 0 | — |
 
 ### Build / product signals
 

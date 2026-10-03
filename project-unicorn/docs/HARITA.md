@@ -183,7 +183,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Sahip:** sınıf `FinanceSystem`, `SummarySystem`, `FinanceOzetView`, `CashCurve`; kasa, ay defteri (`month_ledger`, `month_history`) ve dönem defteri (`summary_ledger`) `GameState`'te
 - **Giriş:**
   - `FinanceSystem.daily_tick` haftanın akışını uygular ve runway'i yeniden hesaplar: kasa tik başına 7 × (round(MRR / 30) − günlük burn) değişir. Oranlar (maaş ÷ 30, araçlar, sunucu faturası, servis maliyeti, ek mesai) günlük kalır (`daily_rate`, aylıktan günlüğe tek yuvarlama); ×7 yalnız burada yapılır. Gider kalemleri `BURN_IDS`'tir: maaşlar, ek mesai ve araçlar finans tikinde çekilir (`monthly_tools_for`: evre tabanı + evre oranı × bordrodaki çalışan, kurucu hariç; `TOOLS_*`), sunucular ve servis maliyetini `InfraSystem` yazar, pazarlama ve ofis 0'dır. `apply_one_time_cost`, `apply_one_time_income` (olay kartının `add_cash`'i de bunlardan geçer; satırın adı `ONE_TIME_LABELS`'tan, `EvLint` denetler), `get_burn_breakdown`, `set_burn_category`, `get_monthly_flow` (TopBar'ın ve Finans'ın canlı aylık burn ve neti). Runway eşikleri `RUNWAY_ALERT_MONTHS` (Finans rozeti ilkini, şerit satırı ikisini okur), `runway_band`.
-  - `SummarySystem` ay kapanışının ve dönem özetinin sahibidir. `begin_day` (yuva 0): tikin Perşembe'si yeni bir aya düştüyse biten ay `month_history`'ye itilir, `EventBus.month_ended` yayılır ve yeni ay defteri açılır; bu haftanın akışı yeni aya yazılır. Oyuncunun sıklığı (`summary_frequency`, `SummarySystem.FREQUENCIES`: haftalık, aylık, çeyreklik, yıllık) dönemi bu tikte kapatıyorsa özet yükü kurulur ve yeni dönem açılır. `daily_tick` (yuva 10, sonlardan sonra, yalnız koşu sürüyorsa): ay kapanışı satırı (`MONTH_CLOSED_TICKER`) ve runway eşiği satırı `EventBus.ticker_live_line` ile şeride, özet `EventBus.summary_ready` ile `main.gd` → `MonthSummaryModal`'a gider. `frequency_override` oyuncunun ayarını ezer (smoke); F11 dönemin şimdiye kadarki özetini yayar (`debug_force_summary`).
+  - `SummarySystem` ay kapanışının ve dönem özetinin sahibidir. `begin_day` (yuva 0): tikin Perşembe'si yeni bir aya düştüyse biten ay `month_history`'ye itilir, `EventBus.month_ended` yayılır ve yeni ay defteri açılır; bu haftanın akışı yeni aya yazılır. Oyuncunun sıklığı (`summary_frequency`, `SummarySystem.FREQUENCIES`: haftalık, aylık, çeyreklik, yıllık) dönemi bu tikte kapatıyorsa özet yükü kurulur ve yeni dönem açılır. `daily_tick` (yuva 10, sonlardan sonra, yalnız koşu sürüyorsa): ay kapanışı satırı (`MONTH_CLOSED_TICKER`) ve runway eşiği satırı `EventBus.ticker_live_line` ile şeride, özet `MessageSystem`'e gönderilir ve `EventBus.summary_ready` ile `main.gd` → `MonthSummaryModal`'a gider. Yük sayı ve anahtardır (vurgu `GameState.submit_month_highlight(key, args, priority)`); metnini okunduğu dilde `SummarySystem.display` kurar. `frequency_override` oyuncunun ayarını ezer (smoke); F11 dönemin şimdiye kadarki özetini yayar (`debug_force_summary`).
   - `finance_tab.gd` Yatırım alt sayfasında `HuntTab`'i barındırır (Fonlama). `FinanceOzetView` Özet'te faz hedefi kartını (`_refresh_goal`) ve pazar payı merdivenini (`_refresh_league`, `RivalRegistry.get_market_snapshot`) taşır.
   - Olay seam'leri `finance.*` (`seams_finance.gd`).
 - **Smoke:** `month_summary`, `summary_frequency_ticks`, `month_history_*`, `burn_*`, `runway_*`, `gross_runway_months`, `run_ledger`, `targeted_modifier_hits_named_customer`, `add_cash_writes_ledger`.
@@ -262,6 +262,15 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Smoke:** `event_*`, `ambient_*`, `harness_sniffer_matches_run_log`, `source_tag_speaker_wins`.
 - **Probe:** `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart).
 - **Görsel:** `--event-shot=<kart id>`, `--b2b-shot=<tür>`. Motorun kendi araçları Araçlar altında.
+
+## Gelen kutusu mesajları · GDD ch12 (Olaylar = gelen kutusu)
+
+- **Yer:** `scripts/systems/message_system.gd`
+- **Sahip:** sınıf `MessageSystem`; durum `GameState.messages` (`{id, kind, day, key, args, read}`, yalnız bu sınıf yazar). Motor kartları burada değil, `EvHistory`'dedir.
+- **Giriş:**
+  - `MessageSystem.post(kind, key, args)` kimliği `kind:gün:n` döner; `mark_read(id)`. İkisi de `EventBus.messages_changed` yayar. Mesaj metin değil anahtar ve argümandır. Kapasite `CAPACITY` [WORKING]: taşınca en eski okunmuş mesaj düşer, okunmamış hiç düşmez.
+  - Gönderenler: `GameState.initialize_run` (yeni koşu, `intro`), `SummarySystem.daily_tick` (`summary`), `RnDSystem` (`rnd_note`, okundu durumu `RnDSystem.mark_note_read`'te; `rnd_discovery`), `SalesRepSystem` (`sales_week`: haftanın satırları ve defterdeki hesap sayısı; masanın satırı kapatan temsilcinin adını taşır, satırlar `SalesLedger.weekly_close_lines` ile yazılır).
+- **Smoke:** `messages_*`, `sales_weekly_report_is_a_message`.
 
 ## Olay içeriği (data/events) · GDD ch11
 

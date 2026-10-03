@@ -72,7 +72,7 @@ static func _sign(result: Dictionary, ctx: Dictionary, lead_id: String) -> void:
 	# `whale_condition_met` is NOT emitted here: its single publisher is the faucet's daily
 	# sweep, which already announced the door opening (§14: one publisher per signal).
 	ProspectRegistry.remove(lead.id)
-	SalesLedger.record_close(c, false)
+	SalesLedger.record_close(c, "")
 	SalesSystem.record_sales_event("founder_close", "", c.company_name, c.mrr)
 	SalesLedger.announce_signing(c, bool(ctx.get("is_whale", false)),
 		TranslationServer.translate("SALES_TICKER_FOUNDER_SIGNED").format({"company": c.company_name}))

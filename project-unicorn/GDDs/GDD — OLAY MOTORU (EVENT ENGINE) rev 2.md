@@ -2016,3 +2016,29 @@ para, indirim ve hisse bedeldir. Melek çeki iki parça olur: nakit kazançtır,
 masa yüzeyleri (`DeskPapers.connect_changes`) onu dinler.
 
 *Neden.* Kağıt saatlik tikte de gelir; yalnız gün sonunda yenilenen yüzey bayat masa gösteriyordu.
+
+### §27.13 · Haftalık satış özeti motordan çıktı (Menajer Masası Faz E2)
+
+Gelen kutusu motor kartlarını `EvHistory`'den, etkin karttan ve masadan okur. Karar olmayan anlar (Frank'in tanışması,
+dönem özeti, Ar-Ge notu ve keşfi, haftalık satış özeti) motorun dışında `GameState.messages`'ta durur; yalnız
+`MessageSystem` yazar ve mesaj metin değil anahtar ve argümandır.
+
+*Belge ne diyordu.* §11.1: bilgi kartı rozette ya da raporda akar, zamanı durdurmaz. Canlı tek bilgi kartı
+`sales.weekly_summary`'ydi. Motor kağıt olmayan her kartı kuyruğa alıyordu; bilgi kartı da pompada etkin kart olup saati
+durduruyor, arkasındaki kartı bekletiyordu. Gövdesi `{seam:sales.weekly_closes}` ve `{seam:sales.account_count}` ile
+gösterildiği anda okunuyordu; geç gösterilen kart sonraki haftanın kapanışlarını sayabiliyordu (§27.9'daki
+`expires_weeks` notu bu kartı da anar).
+
+*Ne yapıldı.* `SalesRepSystem` haftanın kapanış satırlarını ve defterdeki hesap sayısını, yazıldığı anki hâliyle mesaj
+olarak gönderir (`sales_week`). Masanın kapanış satırı kapatan temsilcinin adını taşır (kurucununki boş); rapor onun
+sesiyle gelir ve temsilci ayrılsa da ad satırda kalır. Kart, `sales.weekly_closes` seam'i ve `--b2b-shot=weekly`
+silindi. Canlı içerikte `info` sınıflı kart kalmadı; sınıf ve motor yolu durur.
+
+*Neden.* Rapor karar değildir: kuyruğa girmez, pompayı tutmaz, saati durdurmaz. Satırlar yazıldığı haftanındır.
+
+*Yan etki.* §13.2'ye göre `info` ve `ambient` bütçe tüketmez. Kodda tüketiyor: `EvTempo.assign` her kabulü, bilgi kartı
+dahil, tempo penceresine yazar ve katman 3 (§13.3) penceredeki her kaydı sayar. Haftalık rapor bu yüzden müşteri
+kategorisinin haftalık kotasından bir yer tutuyordu. Rapor motordan çıkınca o yer havuzdaki müşteri kartlarına kalır;
+kotası dolu haftalarda büyüme kağıdı (`customer.expansion`) daha sık gelir. Bu, §13.2'nin istediği davranıştır; ayrılık
+ise kodda durur: sınıf ve motor yolu kaldığı için ileride bağlanan her `info` ya da `ambient` kart yine kategori kotası
+tüketir (`docs/ACIK_ISLER/ISLER.md`, Olay motoru).

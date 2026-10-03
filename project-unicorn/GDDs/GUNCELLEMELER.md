@@ -612,8 +612,8 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
 
 - **§7.3 Sunum, "Haftalık satış özeti … 7 günde bir"; §17 "haftalık özet günü"**
   - Eski metin: Haftalık satış özeti yalnız kapanışları taşıyan bir bilgi kartıdır ve 7 günde bir gelir [ÇALIŞMA].
-  - Yürürlükteki kural: Haftalık satış özeti her tikte, yani her hafta değerlendirilir (`SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS` 1 [ÇALIŞMA]); kart o haftanın masa kapanışlarını taşır; bilgi kartıdır, kuyrukta gösterilene kadar bekler (`expires_weeks` değeri okunmaz).
-  - Kaynak: `GDD — ZAMAN MODELİ.md` §3, §4; sahip kararı 2026-09-27/28.
+  - Yürürlükteki kural: Haftalık satış özeti her tikte, yani her hafta değerlendirilir (`SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS` 1 [ÇALIŞMA]). Olay kartı değil gelen kutusu mesajıdır: masanın kapanış yaptığı haftada o haftanın kapanış satırları ve defterdeki hesap sayısı, yazıldığı anki hâliyle gönderilir (`SalesRepSystem`, `MessageSystem`); masanın satırı kapatan temsilcinin adını taşır. Saati durdurmaz, olay kuyruğuna girmez.
+  - Kaynak: `GDD — ZAMAN MODELİ.md` §3, §4; sahip kararı 2026-09-27/28; Erdem, 2026-10-02 kararı (karar dışı anlar gelen kutusuna taşınır, haftalık satış özeti oyunu durdurmaz).
 
 - **§7.6 Kapanış modeli ve fiyat-kırma kartı: "işlemenin son günlerinde", "30 gün kilit", "HAYIR DİYEMEZ'li temsilcide kart daha sık [K]"; §17 "kart tetik günü + HAYIR DİYEMEZ çarpanı"**
   - Eski metin: Premium'da fiyat-duyarlı arketiplerde işlemenin son günlerinde fiyat-kırma kartı düşer; fiyatta kalınca deal düşer ve 30 günlük kilit gelir; HAYIR DİYEMEZ'li temsilcide kart daha sık düşer.

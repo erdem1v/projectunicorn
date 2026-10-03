@@ -340,7 +340,6 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 | `customer.cs_escalation`, `frank_intro` | kesinti, kritik | 1 | sayaç işliyor |
 | `customer.retention` | kesinti | 1 | churn sayacı işliyor |
 | `sales.price_break` | kesinti | 1 | teklifin son haftası |
-| `sales.weekly_summary` | bilgi | 1 | haftalık özet |
 | `funding.sheet_decision`, `last_answer`, `sheet_expiry` | kesinti, kritik | 1 | bu haftaya bağlı |
 | `funding.acquisition_offer` | kesinti, kritik | 1 | `ACQ_CARD_WINDOW_WEEKS` |
 | `funding.shutter_warning` | kesinti, kritik | 1 | hiç düşmez |

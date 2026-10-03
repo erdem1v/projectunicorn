@@ -339,42 +339,37 @@ static func spend_inner_voice() -> void:
 #
 # §7.3 asks for the week's CLOSES, and a summary with no rows summarises nothing.
 #
-# COMPOSED HERE, NOT IN THE CARD, because the card is data: it names one seam and the
-# arithmetic stays in the module that owns it.
-#
-# EACH CLOSE IS STAMPED AS IT SIGNS (company, star, seats, seat price, MRR) into the open
-# window's rows. The capped activity log can lose a week's closes behind the next tick's
-# expiries, and an account can churn before the card is read. When the window ends with a desk
-# close, its rows become the REPORT, and the card reads the report whenever it is shown.
+# EACH CLOSE IS STAMPED AS IT SIGNS (company, star, seats, seat price, MRR, the closing rep)
+# into the open window's rows. The capped activity log can lose a week's closes behind the next
+# tick's expiries, and an account can churn before the report is read. When the window ends with
+# a desk close, its rows become the week's report: SalesRepSystem posts them to the inbox as they
+# stand, and the report renders from those rows whenever it is opened.
 #
 # STATIC → `TranslationServer.translate`, never `tr()`: a static has no node to resolve
 # against, and `loc_residue` fails the build on it ([static-tr]).
 
-## One close into the open window. `by_rep` marks the desk's closes, the ones that raise the
-## card; the founder's closes are listed beside them.
-static func record_close(c: Customer, by_rep: bool) -> void:
+## One close into the open window, with the name of the rep who closed it, "" for the founder.
+## The desk's closes raise the report and sign it; the name is stored, not looked up, because
+## the rep can leave before the report is read. The founder's closes are listed beside them.
+static func record_close(c: Customer, rep: String) -> void:
 	var rows: Array = GameState.get_flag("sales_weekly_close_rows", [])
 	rows.append({"company": c.company_name, "star": c.scale, "seats": c.seats,
-		"price": c.seat_price, "mrr": c.mrr, "by_rep": by_rep})
+		"price": c.seat_price, "mrr": c.mrr, "rep": rep})
 	GameState.set_flag("sales_weekly_close_rows", rows)
 
 
-## Ends the open window and returns how many of its closes the desk made. Only a window with a
-## desk close raises the card, so only such a window replaces the report.
-static func close_week() -> int:
+## Ends the open window and returns its closes.
+static func close_week() -> Array:
 	var rows: Array = GameState.get_flag("sales_weekly_close_rows", [])
 	GameState.set_flag("sales_weekly_close_rows", [])
-	var by_desk: int = rows.filter(func(r: Variant) -> bool: return bool(r["by_rep"])).size()
-	if by_desk > 0:
-		GameState.set_flag("sales_weekly_report_rows", rows)
-	return by_desk
+	return rows
 
 
-## The report's closes, one line each, plus a total. "" when there is no report yet.
-static func weekly_close_lines() -> String:
+## A report's closes, one line each, plus a total. "" for no closes.
+static func weekly_close_lines(report: Array) -> String:
 	var rows: PackedStringArray = []
 	var total: int = 0
-	for entry in GameState.get_flag("sales_weekly_report_rows", []):
+	for entry in report:
 		var e: Dictionary = entry as Dictionary
 		var mrr: int = int(e["mrr"])
 		total += mrr

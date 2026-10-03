@@ -119,6 +119,10 @@ signal event_set_aside(event_id: String)
 # A paper landed on, left or expired off the desk (EvPapers).
 signal desk_changed
 
+# --- Inbox messages ---
+# GameState.messages changed: a message was posted or read (MessageSystem).
+signal messages_changed
+
 # --- Build / product signals ---
 # SprintSystem her açık sürümde "shipped" ile atar; PromiseRegistry sözü burada tutar.
 signal build_phase_changed(new_phase: String)

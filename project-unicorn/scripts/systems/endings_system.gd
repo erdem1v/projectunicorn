@@ -114,7 +114,7 @@ static func _tick_shutter() -> bool:
 			# Shutter starts: visible counter (TopBar via shutter_changed) +
 			# Frank warning scene. A queued gate scene is held.
 			GameState.set_shutter_weeks_left(TimeModel.ticks(SHUTTER_WEEKS))
-			GameState.submit_month_highlight(TranslationServer.translate("END_HL_SHUTTER_STARTED"), 90)  # AYIN OLAYI
+			GameState.submit_month_highlight("END_HL_SHUTTER_STARTED", {}, 90)  # AYIN OLAYI
 			PhaseGateSystem.on_shutter_started()
 			# Nothing is pushed. `funding.shutter_warning` reads
 			# `finance.cash < 0 AND finance.shutter_weeks_left >= 0` — the two facts the two

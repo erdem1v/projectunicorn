@@ -179,8 +179,7 @@ static func accept(vc_id: String, terms: Dictionary) -> void:
 	FinanceSystem.apply_one_time_income(amount, SeedConstants.TX_LABEL)  # ledger row, then set_cash
 	GameState.seed_closed_day = GameState.day                   # the expectation clock starts here
 	GameState.seed_sheet = null                                 # the offer is spent
-	GameState.submit_month_highlight(
-		TranslationServer.translate("SEED_MONTH_HIGHLIGHT"), 78)  # above the angel's 75, below advance_phase's 80
+	GameState.submit_month_highlight("SEED_MONTH_HIGHLIGHT", {}, 78)  # above the angel's 75, below advance_phase's 80
 	EventBus.seed_round_closed.emit(vc_id)
 
 

@@ -95,7 +95,6 @@ const FLAG_TYPES := {
 	"sales_first_top_star_id": TYPE_STRING,    # §7.3 — the run's first 3★ account, "" = none yet
 	"sales_weekly_anchor_day": TYPE_INT,       # §7.3 — the weekly summary's window start
 	"sales_weekly_close_rows": TYPE_ARRAY,     # §7.3 — the open week's closes, stamped at signing
-	"sales_weekly_report_rows": TYPE_ARRAY,    # §7.3 — the last reported week, which the card renders
 	# --- phase gate / endgame / VC ---
 	# How many times the founder has said "not yet"; the gate card's escalating body reads it.
 	"gate_declines": TYPE_INT,
@@ -160,9 +159,9 @@ var month_ledger: Dictionary = {}
 # One-time INCOME (the angel cheque) is financing and is not accrued.
 const MONTH_HISTORY_CAP := 12
 var month_history: Array[Dictionary] = []
-# The summary period's highlight: systems submit via submit_month_highlight(); SummarySystem
-# clears it when a period opens.
-var month_highlight_text: String = ""
+# The summary period's highlight, {key, args} or empty: systems submit via
+# submit_month_highlight(); SummarySystem clears it when a period opens.
+var month_highlight: Dictionary = {}
 var month_highlight_priority: int = -1
 # The summary period's opening snapshot (SummarySystem); the period follows the player's
 # summary frequency, the month ledger above does not.
@@ -296,6 +295,10 @@ var office_move_day: int = -1          # that move's arrival day; -1 = not movin
 var mentor_line_key: String = ""
 var mentor_line_args: Dictionary = {}
 
+# --- Inbox messages that are not engine cards (sole writer MessageSystem): oldest first,
+# {id, kind, day, key, args, read} ---
+var messages: Array[Dictionary] = []
+
 
 func _ready() -> void:
 	EventBus.mentor_advisory_changed.connect(func(key: String, args: Dictionary) -> void:
@@ -355,9 +358,7 @@ func advance_phase() -> void:
 	phase = clampi(pending_next_phase, 1, 3)
 	phase_gate_ready = false
 	pending_next_phase = 0
-	submit_month_highlight(
-		TranslationServer.translate("MONTH_HL_PHASE_ADVANCED").format(
-			{"phase": phase_display_name(phase)}), 80)
+	submit_month_highlight("MONTH_HL_PHASE_ADVANCED", {"phase": phase_display_name(phase)}, 80)
 	EventBus.phase_changed.emit(phase)
 
 
@@ -395,10 +396,10 @@ func register_look(sig: String) -> void:
 		issued_looks.append(sig)
 
 
-func submit_month_highlight(text: String, priority: int) -> void:
+func submit_month_highlight(key: String, args: Dictionary, priority: int) -> void:
 	# Higher priority replaces lower; first-come wins ties.
 	if priority > month_highlight_priority:
-		month_highlight_text = text
+		month_highlight = {"key": key, "args": args}
 		month_highlight_priority = priority
 
 # --- Flag accessors ---
@@ -771,7 +772,7 @@ func initialize_run(payload: Dictionary) -> void:
 	sales_log.clear()
 
 	# Month-End Summary + run counters (the ledgers are opened at the END: the period snapshot needs the roster)
-	month_highlight_text = ""
+	month_highlight.clear()
 	month_highlight_priority = -1
 	summary_ledger.clear()
 	runway_warn_band = 0
@@ -837,6 +838,7 @@ func initialize_run(payload: Dictionary) -> void:
 	office_move_day = -1
 	mentor_line_key = ""
 	mentor_line_args.clear()
+	messages.clear()
 
 	flags.clear()
 	# Origin flags, after the clear. RESERVED: nothing consumes them yet
@@ -880,6 +882,7 @@ func initialize_run(payload: Dictionary) -> void:
 
 	# Month-1 ledger after the roster so the team count is real.
 	SummarySystem.snapshot()
+	MessageSystem.post("intro", "MENTOR_INTRO_TITLE")
 
 
 func _build_founder(payload: Dictionary) -> Character:

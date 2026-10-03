@@ -159,7 +159,6 @@ const PRICE_BREAK_SIGNING_DISCOUNT := 0.15 # [K] the permanent trace a broken ba
 
 # §7.3 presentation. The summary covers the closes of the window that just ended.
 const WEEKLY_SUMMARY_INTERVAL_WEEKS := 1   # [ÇALIŞMA]
-const WEEKLY_SUMMARY_CARD_ID := "sales.weekly_summary"
 const TICKER_NEWSWORTHY_STAR := 3          # [ÇALIŞMA] a 3★ signing is news
 # §7.3 "Prestij: haber değeri VE MARKA ETKİSİ". A newsworthy signing (whale, above the
 # company's league, or the run's first 3★) lifts brand as well as reaching the ticker — one

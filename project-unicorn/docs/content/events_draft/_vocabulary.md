@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **178** |
+| Seams (read) | **177** |
 | Effect verbs (write) | **60** |
-| Cards in the catalogue | 67 |
+| Cards in the catalogue | 66 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -310,7 +310,6 @@ slot of that type (§17.12).
 | `sales.is_b2b` | global | bool | Sales | reads the SHIPPED market, not one being built |
 | `sales.market_share_pct` | global | float | Sales | one global figure; per-segment share does not exist yet |
 | `sales.pipeline_count` | global | int | Sales | live prospects |
-| `sales.weekly_closes` | global | string | Sales | closes of the week that just ended, one line each, with a total |
 
 ### `time.`
 
