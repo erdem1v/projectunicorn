@@ -14,8 +14,11 @@ extends RefCounted
 #
 # Papers are keyed by EvLatches.key_of. The key is also the desk's id for the paper, so a click
 # on its row opens the instance it shows.
+#
+# Every change to the desk emits EventBus.desk_changed: papers land on hourly ticks too, so a
+# surface that refreshed only on the day's end would show a stale desk.
 
-## key -> {event_id, context, expires_on, arc_id, opened_before, admitted_day}
+## key -> {event_id, context, expires_on, arc_id, opened_before, admitted_day, names}
 static var _papers: Dictionary = {}
 
 
@@ -30,19 +33,27 @@ static func place(event_id: String, context: Dictionary, expires_weeks: int,
 		"arc_id": arc_id,
 		"opened_before": false,
 		"admitted_day": GameState.day,
+		# The subject's name as it read when the paper landed, so the paper still names someone
+		# who left while it waited (EvPresenter.freeze_names).
+		"names": EvPresenter.freeze_names(context),
 	}
+	EventBus.desk_changed.emit()
 
 
 static func remove(key: String) -> void:
-	_papers.erase(key)
+	if _papers.erase(key):
+		EventBus.desk_changed.emit()
 
 
 static func drop_arc(arc_id: String) -> void:
 	if arc_id == "":
 		return
+	var before: int = _papers.size()
 	for key in _papers.keys():
 		if String((_papers[key] as Dictionary)["arc_id"]) == arc_id:
 			_papers.erase(key)
+	if _papers.size() != before:
+		EventBus.desk_changed.emit()
 
 
 static func mark_opened(key: String) -> void:
@@ -79,6 +90,8 @@ static func take_expired() -> Array:
 		if int((_papers[key] as Dictionary)["expires_on"]) <= GameState.day:
 			expired.append(_papers[key])
 			_papers.erase(key)
+	if not expired.is_empty():
+		EventBus.desk_changed.emit()
 	return expired
 
 
@@ -137,6 +150,10 @@ static func context_of(key: String) -> Dictionary:
 
 static func arc_of(key: String) -> String:
 	return String((_papers.get(key, {}) as Dictionary).get("arc_id", ""))
+
+
+static func names_of(key: String) -> Dictionary:
+	return (_papers.get(key, {}) as Dictionary).get("names", {})
 
 
 ## §13.6: the dead-time floor only fires when the desk is CLEAR. An unanswered paper means the

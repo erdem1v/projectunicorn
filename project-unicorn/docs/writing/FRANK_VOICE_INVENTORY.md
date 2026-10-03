@@ -221,7 +221,7 @@ Whitelist (from `ending_data` + run ledger, `endings_system.gd:232-254`, `game_s
 | `MENTOR_NAME`, `MENTOR_ROLE`, `MENTOR_ROLE_LINE`, `HR_ROLE_MENTOR`, `PROD_MENTOR_TAG`, `UI_AVATAR_INITIALS` (FK), `ODA_MENTOR_TAG_FALLBACK`, `EVENT_TAG_MENTOR`, `EVENT_MENTOR_ADVICE` | identity, caption and badge strings; no voice |
 | `PROD_READY_TALK_FRANK` | Product Detail badge ("HAZIR · FRANK'LE KONUŞ"), a signpost to the gate card |
 | `ODA_TOUR_PHONE_DESC` | tour narrator describing the phone as Frank's channel |
-| `ANGEL_TX_LABEL`, `ANGEL_CAP_ROW`, `ANGEL_CHIP_ACCEPT`, `ANGEL_MONTH_HIGHLIGHT`, `GATE_OPENED` | ledger row, cap-table row, effect chip, month highlights (narrator) |
+| `ANGEL_TX_LABEL`, `ANGEL_CAP_ROW`, `EFFECT_TO_FRANK`, `ANGEL_MONTH_HIGHLIGHT`, `GATE_OPENED` | ledger row, cap-table row, effect chip, month highlights (narrator) |
 | `VC_WHY_WARM_INTRO` | odds-breakdown reason chip |
 | `INV_ARCH_BOSPHORUS` ("İlişki adamı. Kapıyı Frank açar.") | investor archetype descriptor; also injected as `{line}` into row 20's body (borderline, attributed to the investor) |
 | `PITCH_INNER_CLOSED`, `PITCH_S0_INNER`, `PITCH_S0_NPC` | the founder's inner voice / the prospect speaking about Frank |

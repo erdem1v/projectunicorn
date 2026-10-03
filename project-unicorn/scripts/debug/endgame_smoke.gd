@@ -297,6 +297,10 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_thesis_day10_to_day90":    fail = _case_event_thesis_day10_to_day90()
 		"event_thesis_through_presenter": fail = _case_event_thesis_through_presenter()
 		"event_chip_coverage":       fail = _case_event_chip_coverage()
+		"event_set_aside_no_history":     fail = _case_event_set_aside_no_history()
+		"event_no_double_resolution_after_load": fail = _case_event_no_double_resolution_after_load()
+		"event_history_names_survive":    fail = _case_event_history_names_survive()
+		"event_history_chip_matches_live": fail = _case_event_history_chip_matches_live()
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
 		"loc_b5_derived_keys":       fail = _case_loc_b5_derived_keys()
 		"loc_language_switch":       fail = _case_loc_language_switch()
@@ -3625,9 +3629,8 @@ static func _case_source_tag_speaker_wins() -> String:
 	# Frank'in ağzından çıkan altı kart "PİYASA" okunuyordu — kepenk uyarısı, pivot teklifi,
 	# satın alma teklifi, VC daveti, teklif süresi uyarısı, son gün uyarısı. Etiket bir KONU,
 	# kaynak KONUŞANDIR.
-	# FALSİFİKASYON: _source_tag'de konuşmacı kontrolünü `has_endgame` dalının ALTINA taşı →
+	# FALSİFİKASYON: EvChips.source_tag'de konuşmacı kontrolünü `has_endgame` dalının ALTINA taşı →
 	# ilk iddia FAIL ("MENTOR bekleniyordu, PİYASA geldi").
-	var modal: GDScript = load("res://scripts/modals/event_modal.gd")
 	var mentor: String = TranslationServer.translate("EVENT_TAG_MENTOR")
 	var market: String = TranslationServer.translate("EVENT_TAG_MARKET")
 	var product: String = TranslationServer.translate("EVENT_TAG_PRODUCT")
@@ -3655,7 +3658,7 @@ static func _case_source_tag_speaker_wins() -> String:
 			tags.append(String(t))
 		ev.tags = tags
 		ev.character_id = String(probe[1])
-		var got: String = String(modal._source_tag(ev).get("text", ""))
+		var got: String = String(EvChips.source_tag(ev).get("text", ""))
 		if got != String(probe[2]):
 			return "%s: '%s' bekleniyordu, '%s' geldi" % [String(probe[3]), String(probe[2]), got]
 	return ""
@@ -5194,6 +5197,161 @@ static func _case_event_instance_per_subject() -> String:
 	if EventGate.desk_papers(8).size() != 1 \
 			or not EventGate.open_paper(String(EventGate.desk_papers(8)[0]["id"])):
 		return "a paper saved under its card id did not load onto the desk"
+	return ""
+
+
+## §11.4: an opened paper goes back on the desk unanswered. No history row; the paper keeps its
+## clock; the signal names it. An interrupt is answered, never put aside.
+## FALSIFICATION: record a row in EvEngine.set_aside, or drop its from-desk check, and this fails.
+static func _case_event_set_aside_no_history() -> String:
+	_seed_b2b(500)
+	var a: Customer = _add_risk_b2b("aside_a", 800)
+	EvPapers.place(RETAIN_ID, _ctx_customer(a), 2)
+	var key: String = String(EventGate.desk_papers(8)[0]["id"])
+	var left: int = EvPapers.weeks_left(key)
+	var rows: int = EvHistory.rows().size()
+	var heard: Array = []
+	EventBus.event_set_aside.connect(func(id: String) -> void: heard.append(id))
+	if not EventGate.open_paper(key) or not EventGate.set_aside():
+		return "the opened paper could not be put aside"
+	if EventGate.active_id() != "" or EvHistory.rows().size() != rows:
+		return "putting the paper aside answered it (active '%s', %d new row(s))" \
+			% [EventGate.active_id(), EvHistory.rows().size() - rows]
+	if not EvPapers.has(key) or EvPapers.weeks_left(key) != left:
+		return "the paper did not go back on the desk with its clock"
+	if heard != [RETAIN_ID]:
+		return "event_set_aside carried %s" % str(heard)
+	var b: Customer = _add_risk_b2b("aside_b", 900)
+	if not EventGate.request(RETAIN_ID, {"customer": b.id}) or EventGate.active_id() != RETAIN_ID:
+		return "B's interrupt did not show"
+	if EventGate.set_aside() or EventGate.active_id() != RETAIN_ID:
+		return "an interrupt was put aside"
+	return ""
+
+
+## A night's save keeps a paper's last warning queued beside the paper, and nothing pumps after a
+## load. Answered off the desk, the instance is answered once; put aside, its warning does not come
+## straight back; shown by the pump main runs after a load, answering it clears the paper.
+## FALSIFICATION: drop EvQueue.take from open_paper and the answered paper shows again.
+static func _case_event_no_double_resolution_after_load() -> String:
+	_seed_b2b(500)
+	var a: Customer = _add_risk_b2b("twice", 800)
+	var ctx: Dictionary = _ctx_customer(a)
+	EvPapers.place(RETAIN_ID, ctx, 2)
+	EvQueue.admit(RETAIN_ID, ctx, "interrupt")   # the warning EvEngine._step_last_warnings queues
+	var block: Dictionary = JSON.parse_string(JSON.stringify(EvSave.to_dict()))
+	EvSave.from_dict(block)
+	var key: String = String(EventGate.desk_papers(8)[0]["id"])
+	EventGate.open_paper(key)
+	EventGate.resolve(RETAIN_ID, "leave_alone")
+	if EventGate.active_id() != "" or EvHistory.chosen_count(RETAIN_ID) != 1:
+		return "the paper was answered, then shown again (active '%s', %d answer(s))" \
+			% [EventGate.active_id(), EvHistory.chosen_count(RETAIN_ID)]
+	EvSave.from_dict(block)
+	EventGate.open_paper(key)
+	EventGate.set_aside()
+	if EventGate.active_id() != "":
+		return "the paper's warning came straight back over the set-aside paper"
+	EvSave.from_dict(block)
+	EventGate.pump()
+	if EventGate.active_id() != RETAIN_ID:
+		return "the pump after a load showed nothing"
+	EventGate.resolve(RETAIN_ID, "leave_alone")
+	if EventGate.active_id() != "" or EvHistory.chosen_count(RETAIN_ID) != 1 \
+			or not EventGate.desk_papers(8).is_empty():
+		return "answering the warning after a load left the paper or a second showing"
+	return ""
+
+
+## §7.1 `names`: a row keeps who it was about. The resignation removes the employee and the
+## refusal loses the account, yet both rows read by name, the departure chip too; a desk paper
+## keeps its subject's name; the B2C userbase is kept as its key and argument.
+## FALSIFICATION: record without `names` in EvEngine.resolve and the first check fails.
+static func _case_event_history_names_survive() -> String:
+	var e: Character = _make_employee("char_nm", "Selin Kaya", HRConstants.ROLE_TESTER, SEED_PACE, 7000, 22)
+	if not EventGate.request("team.resignation", {"employee": e.id}) or not _drain_to("team.resignation"):
+		return "the resignation did not show"
+	EventGate.resolve("team.resignation", "acknowledge")
+	var row: Dictionary = EvHistory.rows()[-1]
+	if CharacterRegistry.get_character(e.id) != null \
+			or String((row.get("names", {}) as Dictionary).get("employee", "")) != "Selin Kaya":
+		return "the resignation row lost the name: %s" % str(row.get("names"))
+	var chip: String = EvChips.text(EvChips.describe(row["deltas"][0], row["entities"], row["names"], true)[0])
+	if not chip.contains("Selin"):
+		return "the departure chip does not name her: '%s'" % chip
+
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	var cs: Character = _make_cs("char_cs_nm", 4, 60)
+	var p := Prospect.new()
+	p.id = "esc_nm"
+	p.company_name = "Ege Sigorta"
+	p.industry = "insurance"
+	p.star = 1
+	p.pain_feature_id = "ai_vec_filter"
+	var c: Customer = _sign_fixture(p, 2000, 70)
+	CustomerRegistry.assign_customer(c.id, cs.id)
+	CustomerRegistry.set_satisfaction(c.id, 20)
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	EventGate.daily_tick()
+	if not _drain_to("customer.cs_escalation"):
+		return "the escalation did not show (%s)" % EventGate.active_id()
+	EventGate.resolve("customer.cs_escalation", "refuse")
+	row = EvHistory.rows()[-1]
+	var lost_name: String = EvPresenter.resolve_text("{customer}", row["entities"], row.get("names", {}))
+	if CustomerRegistry.get_customer(c.id) != null or lost_name != "Ege Sigorta":
+		return "the lost account's row reads '%s'" % lost_name
+
+	var gone: Customer = _add_risk_b2b("paper_nm", 800)
+	EvPapers.place(RETAIN_ID, _ctx_customer(gone), 2)
+	var key: String = EvLatches.key_of(RETAIN_ID, _ctx_customer(gone))
+	CustomerRegistry.remove(gone.id)
+	if EvPresenter.resolve_text("{customer}", EvPapers.context_of(key), EvPapers.names_of(key)) != gone.company_name:
+		return "the desk paper lost its subject's name"
+
+	_seed_b2c()
+	var users: Customer = CustomerRegistry.get_by_market("b2c")[0]
+	var kept: Variant = EvPresenter.freeze_names({"customer": {"type": "customer", "id": users.id}})["customer"]
+	if not kept is Dictionary or String(kept["key"]) != users.name_key \
+			or EvPresenter.name_text(kept) != users.display_name():
+		return "the B2C userbase was kept as %s" % str(kept)
+	return ""
+
+
+## A history row's chip reads what the card's chip showed: each delta records the value that
+## landed, worked out as the live chip works it out. Sprint hours clamped to the range, an effort
+## cut held above the work done, the retention discount and the expansion at the seat price.
+## FALSIFICATION: record the requested effort in EvEffects' sprint_card_effort arm, or drop
+## `hours` from its sprint_hours delta, and this fails.
+static func _case_event_history_chip_matches_live() -> String:
+	_seed_sprint()
+	SprintCatalog._data.decision.rate = 1.0
+	for line_id in SprintCatalog.capabilities("core").slice(0, 2):
+		SprintSystem.add("feat:%s_k1" % line_id)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_sim_day()
+	SprintCatalog._data.decision.rate = 0.0
+	if SprintSystem.mode() != "active" or SprintSystem.decision_card().is_empty():
+		return "fixture: no decision waits in a running sprint (%s)" % SprintSystem.mode()
+	_seed_b2b(500)
+	var ctx: Dictionary = _ctx_customer(_add_risk_b2b("chips", 830))
+	var effects: Array = [
+		{"verb": "sprint_hours", "mult": 2.0},
+		{"verb": "sprint_card_effort", "amount": -99},
+		{"verb": "b2b_retain_discount", "scope": "customer"},
+		{"verb": "b2b_expand", "scope": "customer"},
+	]
+	var live: Array = []
+	for e in effects:
+		live.append(EvChips.text(EvChips.describe(e, ctx, {}, false)[0]))
+	var deltas: Array = EvEffects.run_played(effects, ctx)
+	for i in effects.size():
+		var shown: String = EvChips.text(EvChips.describe(deltas[i], ctx, {}, true)[0])
+		if shown != live[i]:
+			return "%s: the card showed '%s', its history row reads '%s'" % [effects[i].verb, live[i], shown]
 	return ""
 
 
@@ -10914,19 +11072,16 @@ static func _case_audience_pct_modifier() -> String:
 	EventGate.debug_apply_effects([{"verb": "audience_delta", "delta": 30}])
 	if absf(float(GameState.get_flag("b2c_audience", 0.0)) - 1000.0) > 0.01:
 		return "flat delta regressed"
-	# event_modal.gd has no class_name; instantiate the script bare — _describe_modifier only
-	# needs tr() and Fmt, neither of which needs the node in the tree.
-	var modal: Node = (load("res://scripts/modals/event_modal.gd") as GDScript).new()
-	# `verb`, the shape a CARD carries. The chip builder reads `verb` first and falls back to
-	# `type`; asserting on the shape the cards actually use is what makes this case cover the
-	# path a player sees.
-	var badge: Dictionary = modal._describe_modifier({"verb": "audience_delta", "pct": -0.03})
-	modal.free()
-	var txt: String = String(badge.get("text", ""))
-	if txt == "" or txt.find("3") < 0 or txt.find("{") >= 0:
-		return "badge for the pct form is wrong: '%s'" % txt
-	if String(badge.get("kind", "")) != "negative":
-		return "badge kind for a negative pct should be negative, got %s" % str(badge.get("kind"))
+	# `verb`, the shape a CARD carries; asserting on the shape the cards actually use is what
+	# makes this case cover the path a player sees.
+	var parts: Array = EvChips.describe({"verb": "audience_delta", "pct": -0.03}, {}, {}, false)
+	if parts.size() != 1:
+		return "the pct form should be one part, got %d" % parts.size()
+	var txt: String = EvChips.text(parts[0])
+	if txt.find("3") < 0 or txt.find("{") >= 0 or String(parts[0]["value"]).find("3") < 0:
+		return "part for the pct form is wrong: '%s'" % txt
+	if String(parts[0]["polarity"]) != "cost":
+		return "a negative pct should be a cost, got %s" % str(parts[0]["polarity"])
 	return ""
 
 
@@ -13626,19 +13781,15 @@ static func _caps_tokens(node: Variant) -> Array:
 
 ## EFFECT-VISIBILITY, made mechanical. CLAUDE.md's rule says a modifier with no label renders a
 ## BLIND card; until now that was enforced by whoever remembered. Every verb any card actually
-## uses must either produce a chip or be named in EventModal.SILENT_VERBS.
+## uses must either produce a chip or be named in EvChips.SILENT_VERBS.
 ##
-## FALSIFICATION: delete one arm from _describe_modifier's match and this case names it.
+## FALSIFICATION: delete one arm from EvChips.describe's match and this case names it.
 static func _case_event_chip_coverage() -> String:
 	EvCatalog.reload()
-	var modal_script: GDScript = load("res://scripts/modals/event_modal.gd")
-	var modal: Control = modal_script.new()
 	var blind: Array = []
-	# GDScript.get() does not see `const`; the constant map is the documented way in.
-	var silent: Array = (modal_script.get_script_constant_map() as Dictionary).get("SILENT_VERBS", [])
+	var silent: Array = EvChips.SILENT_VERBS
 	if silent.is_empty():
-		modal.free()
-		return "EventModal.SILENT_VERBS is missing or empty — the rule has no exemption list"
+		return "EvChips.SILENT_VERBS is empty — the rule has no exemption list"
 	for id in EvCatalog.card_ids():
 		var card: Dictionary = EvCatalog.card(String(id))
 		for o in (card.get("options", []) as Array):
@@ -13652,11 +13803,10 @@ static func _case_event_chip_coverage() -> String:
 					var verb: String = String((e as Dictionary).get("verb", ""))
 					if verb == "" or silent.has(verb):
 						continue
-					if (modal._describe_modifier(e) as Dictionary).is_empty():
+					if EvChips.describe(e, {}, {}, false).is_empty():
 						var row: String = "%s/%s:%s" % [id, opt.get("id", "?"), verb]
 						if not blind.has(row):
 							blind.append(row)
-	modal.free()
 	if not blind.is_empty():
 		return "card rows that render no chip: %s" % ", ".join(blind)
 	return ""

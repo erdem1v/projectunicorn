@@ -2523,6 +2523,9 @@ func _load_slot(slot_id: String) -> bool:
 		return false
 	await _mount_shell()
 	EventBus.game_loaded.emit(slot_id)
+	# The save keeps the queue and nothing pumps it before the next tick: a waiting card shows now,
+	# over the paused clock.
+	EventGate.pump()
 	return true
 
 

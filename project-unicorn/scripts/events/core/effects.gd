@@ -373,18 +373,21 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 		# --- sprint -------------------------------------------------------------
 		# A decision card names no card in its scope (there is no card scope type): SprintSystem
 		# knows which card the pending decision is about and answers its id, or "" with none.
+		# Effort and hours record the clamped value that lands, the one the chip showed.
 		"sprint_card_effort":
-			return _on_decision_card(verb, SprintSystem.decision_effort(_amount(e)), _amount(e))
+			var effort: int = SprintSystem.effort_change(_amount(e))
+			return _on_decision_card(verb, SprintSystem.decision_effort(_amount(e)), effort)
 		"sprint_card_progress":
 			return _on_decision_card(verb, SprintSystem.decision_progress(_amount(e)), _amount(e))
 		"sprint_card_carry":
 			return _on_decision_card(verb, SprintSystem.decision_carry(), 0)
 		"sprint_hours":
 			var mult: float = float(e.get("mult", 1.0))
+			var hours: float = SprintSystem.hours_after(mult)
 			var sprint: int = SprintSystem.set_hours_mult(mult)
 			if sprint == 0:
 				return _no_target(verb, "")
-			return {"verb": verb, "sprint": sprint, "mult": mult}
+			return {"verb": verb, "sprint": sprint, "mult": mult, "hours": hours}
 		"fix_run_start":
 			if not SupportSystem.start_fix_run():
 				return {"verb": verb, "refused": SupportSystem.fix_run_refusal()}
@@ -485,9 +488,11 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			var dcust: Customer = CustomerRegistry.get_customer(dc)
 			if dcust == null:
 				return _no_target(verb, dc)
+			# The amount is what landed: the seam refuses a discount past its cap.
+			var cut_from: int = dcust.mrr
 			B2BSalesSystem.apply_discount(dc,
 				-int(round(float(dcust.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT)))
-			return {"verb": verb, "customer": dc}
+			return {"verb": verb, "customer": dc, "amount": dcust.mrr - cut_from}
 		"b2b_retain_ignore":
 			B2BSalesSystem.ignore_risk(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
 			return {"verb": verb}
@@ -496,9 +501,13 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			var ecust: Customer = CustomerRegistry.get_customer(ec)
 			if ecust == null:
 				return _no_target(verb, ec)
+			# What landed, at the account's own seat price (B2BSalesSystem.expand).
+			var seats_from: int = ecust.seats
+			var mrr_from: int = ecust.mrr
 			B2BSalesSystem.expand(ec, B2BConstants.expansion_seats(ecust.company_size),
 				B2BConstants.EXPANSION_PER_SEAT_MRR)
-			return {"verb": verb, "customer": ec}
+			return {"verb": verb, "customer": ec, "seats": ecust.seats - seats_from,
+				"amount": ecust.mrr - mrr_from}
 		"b2b_expand_decline":
 			B2BSalesSystem.decline_expansion(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
 			return {"verb": verb}

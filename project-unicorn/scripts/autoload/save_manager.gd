@@ -51,7 +51,8 @@ func _ready() -> void:
 	# a save hung off it would pair the new day number with yesterday's systems.
 	EventBus.day_tick_completed.connect(_on_day_tick_completed)
 	EventBus.month_ended.connect(_on_month_ended)
-	EventBus.event_resolved.connect(_on_event_resolved)
+	EventBus.event_resolved.connect(_retry_blocked_autosave.unbind(2))
+	EventBus.event_set_aside.connect(_retry_blocked_autosave.unbind(1))
 	for a in OS.get_cmdline_args() + OS.get_cmdline_user_args():
 		if _is_harness_arg(String(a)):
 			_autosave_enabled = false
@@ -329,8 +330,9 @@ func _on_month_ended(_close: Dictionary) -> void:
 		_autosave_pending = true
 
 
-# An autosave a card blocked lands once the queue is empty, not a week later.
-func _on_event_resolved(_event_id: String, _choice_index: int) -> void:
+# An autosave a card blocked lands once nothing is pending, not a week later: after an answer,
+# or after the opened paper goes back on the desk.
+func _retry_blocked_autosave() -> void:
 	if not EventGate.has_pending():
 		_try_autosave()
 

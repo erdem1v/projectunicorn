@@ -103,4 +103,9 @@ func update_health_from_satisfaction() -> void:
 func display_name() -> String:
 	if name_key == "":
 		return company_name
-	return TranslationServer.translate(name_key).format({"product": name_arg})
+	return localized_name(name_key, name_arg)
+
+
+## The composed name from its key and argument; a history row keeps the B2C name as that pair.
+static func localized_name(key: String, arg: String) -> String:
+	return TranslationServer.translate(key).format({"product": arg})

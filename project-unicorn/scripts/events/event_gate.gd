@@ -117,6 +117,18 @@ static func open_paper(key: String) -> bool:
 	return EvEngine.open_paper(key)
 
 
+## Puts the opened paper back on the desk unanswered (§11.4): no history row, its clock still
+## running. False when the active card did not come off the desk; an interrupt is answered.
+static func set_aside() -> bool:
+	return EvEngine.set_aside()
+
+
+## Shows the top queued card when none is showing. A load restores the queue and nothing pumps
+## it before the next tick, so main pumps once the loaded run stands.
+static func pump() -> void:
+	EvEngine.pump()
+
+
 ## The desk, most urgent first, capped at the layout's slot count.
 static func desk_papers(slots: int) -> Array:
 	return EvPresenter.desk_papers(slots)

@@ -60,7 +60,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   ("Fiyatlarını zaten iki kez indirdin", "Bu hesabı fiyat değil ürün tutar" değil). Gerçek marka, UI talimatı, sekme
   ya da düğüm adı yok. Gün sınırında ateşlenen kart saat yazmaz. Seçeneğin anlattığını modifier'ları yapar.
 - **EFFECT-VISIBILITY RULE.** Modifier oyuncuya okunur etiketle gösterilir, iç kodla değil. Etki çipini kuran tek yer
-  `event_modal._describe_modifier`; bilinçli etiketsiz fiiller `SILENT_VERBS`'te, `event_chip_coverage` smoke'u zorlar.
+  `EvChips.describe` (`scripts/events/present/chips.gd`; imzalı parçalar, kırmızı yalnız tehlike); bilinçli etiketsiz
+  fiiller `EvChips.SILENT_VERBS`'te, `event_chip_coverage` smoke'u zorlar.
 
 ## 6. Mimari
 - Godot 4.6 (Forward Plus), yalnız GDScript. Ana sahne `scenes/main/Main.tscn`; `main.gd` açılışı, modal montajını

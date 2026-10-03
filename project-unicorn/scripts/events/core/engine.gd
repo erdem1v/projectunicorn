@@ -102,9 +102,13 @@ static func _step_paper_expiry() -> void:
 
 		# §12.4: on_expire runs, history says `expired`, expire_note reaches the ticker. The
 		# note names a line of the card's text block (§3.2); a name the block lacks is the line.
+		# Names are taken before the penalties, which may remove the subject; the paper's own
+		# names cover a subject who left while it waited.
+		var names: Dictionary = EvPresenter.freeze_names(context)
+		names.merge(paper.get("names", {}))
 		var deltas: Array = EvEffects.run_expire(penalties, context)
 		EvHistory.record(event_id, EvHistory.RESOLUTION_EXPIRED, "", "expired",
-			context, deltas, arc_id)
+			context, deltas, arc_id, false, names)
 		var note: String = String(card.get("expire_note", ""))
 		if note != "":
 			EvTicker.push(String(EvPresenter.text_block(card).get(note, note)),
@@ -432,7 +436,7 @@ static func pump() -> bool:
 				context, [], String(next.get("arc_id", "")))
 			continue
 
-		EvQueue.set_active(event_id, context)
+		EvQueue.set_active(event_id, context, false)
 		_announce(event_id, context)
 		return true
 	return false
@@ -471,6 +475,9 @@ static func resolve(event_id: String, option_id: String) -> void:
 		pump()
 		return
 
+	# Before the effects: an option that loses the customer or the employee removes them, and the
+	# row must still say who it was about (§7.1 `names`).
+	var names: Dictionary = EvPresenter.freeze_names(context)
 	var deltas: Array
 	var outcome: String = String(option.get("outcome_id", option_id))
 	if option.has("check"):
@@ -489,7 +496,7 @@ static func resolve(event_id: String, option_id: String) -> void:
 	var forced: bool = _forced.has(key)
 	_forced.erase(key)
 	EvHistory.record(event_id, EvHistory.RESOLUTION_CHOSEN, option_id, outcome,
-		context, deltas, arc_id, forced)
+		context, deltas, arc_id, forced, names)
 
 	EvPapers.remove(key)
 	EvQueue.clear_active()
@@ -596,6 +603,25 @@ static func open_paper(key: String) -> bool:
 		EvHistory.record(event_id, EvHistory.RESOLUTION_DROPPED, "", verdict.step, context, [])
 		return false
 	EvPapers.mark_opened(key)
-	EvQueue.set_active(event_id, context)
+	# The paper's last warning may wait in the queue beside it (a night's save keeps both). It is
+	# this instance, picked up now: left queued it would come straight back after the paper is
+	# answered or put aside.
+	EvQueue.take(key)
+	EvQueue.set_active(event_id, context, true)
 	_announce(event_id, context)
+	return true
+
+
+## §11.4: "kapatıldığında masaya döner". The paper the player opened goes back to the desk
+## unanswered: no history row, its clock still running. False when the active card did not come
+## off the desk; an interrupt is answered, never put aside.
+static func set_aside() -> bool:
+	if not EvQueue.active_from_desk():
+		return false
+	var event_id: String = EvQueue.active_id()
+	EvQueue.clear_active()
+	# Before the pump, as in resolve(): a listener asking has_pending() sees the queue as the
+	# paper left it.
+	EventBus.event_set_aside.emit(event_id)
+	pump()
 	return true

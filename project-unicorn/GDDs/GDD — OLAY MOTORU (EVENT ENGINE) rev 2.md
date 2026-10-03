@@ -421,6 +421,7 @@ outcome_id          zar sonucu dahil nihai sonuç anahtarı
 entities            {slot: {type, id}}  çözüm anındaki kapsam
 deltas              uygulanan etkilerin özeti (debug + son ekranı için)
 arc_id              varsa
+names               {slot: ad} çözüm anında; özel ad metin, B2C kitlesi {key, arg} (§27.12)
 ```
 
 ### 7.2 Neden bu kadar kritik
@@ -1085,7 +1086,7 @@ event_engine:
   schedule[]         {event_id, fire_on_day, context, arc_id}
   arcs[]             §10.1 tam durum
   papers             {örnek_anahtarı: {event_id, context, expires_on,
-                      arc_id, opened_before, admitted_day}}   §20 E2
+                      arc_id, opened_before, admitted_day, names}}   §20 E2, §27.12
   budgets            {name: kalan}
   tempo_window       en geniş fren penceresi kadar geriye (bugün 4 hafta)
                      ateşleme kayıtları
@@ -1950,3 +1951,68 @@ yazıyordu: aynı sprintte ikinci kart birincisini sessizce eziyordu.
 (`SprintSystem.hours_after`); çip kenetlenmiş sonucu yazar.
 
 *Neden.* İki kartın bedeli de oyuncunun gördüğü kapasiteye düşmeli.
+
+### §27.12 · Gelen kutusunun motor hazırlığı (Menajer Masası Faz E1)
+
+Olaylar gelen kutusu olacak (sahip kararı 2026-10-02, `GDDs/GUNCELLEMELER.md` ch12). Kutu bir görünümdür; motorun
+bugünkü kayıtlarını okur. Bu adım kutunun okuyacağı ve kağıdın kapanacağı yerleri hazırlar; ekranda değişen yalnız etki
+çipleri (renk, melek çekinin iki parçası) ve konuşmacının ilişki sözcüğüdür.
+
+**1. Açılan kağıt cevapsız masaya döner.**
+
+*Belge ne diyordu.* §11.4: kağıt açıldığında modal gibi davranır, kapatıldığında masaya döner. Kodda kapatma yolu yoktu:
+açılan kağıt cevaplanmadan kapanamıyordu.
+
+*Ne yapıldı.* `EventGate.set_aside()` yalnız masadan açılan kartta çalışır (`EvQueue.set_active` kartın masadan gelip
+gelmediğini taşır; yalnız `open_paper` doğru verir). Kartı etkin olmaktan çıkarır, geçmişe satır yazmaz, kağıt saatiyle
+masada kalır, `EventBus.event_set_aside` yayılır ve sonra pompalanır. Kesme kartı kenara konamaz; cevaplanır.
+`SaveManager` engellenen autosave'i bu sinyalde de dener.
+
+*Neden.* Kenara koymak bir karar değildir: geçmiş satırı yalnız çözülen, süresi dolan ya da düşen kartındır (§7.1).
+
+**2. Aynı örnek iki kez çözülmez.**
+
+*Belge ne diyordu.* §20 E2 örneği tek tutar. Gece adımında pompa ertelenir ve autosave alınır; kayıt kağıdın son
+uyarısını kuyrukta, kağıdı masada birlikte taşıyabiliyordu. Yüklemeden sonra hiçbir şey pompalamıyordu; oyuncu kağıdı
+masadan açıp cevaplayınca kuyruktaki uyarı aynı kartı yeniden gösteriyor, etkiler iki kez uygulanıyordu (I2).
+
+*Ne yapıldı.* `open_paper` örneği kuyruktan da alır (`EvQueue.take`). `resolve`'un alması gerekmez: kart etkin olurken
+kuyruktan çıkar (pompa ya da `open_paper`) ve etkinken kuyruğa yeniden giremez (`EvQueue.holds` etkin kartı da sayar).
+`main` yüklemeden sonra `EventGate.pump()` çağırır; kuyrukta bekleyen kart hemen gösterilir.
+
+*Neden.* Masadaki kağıt ile kuyruktaki son uyarısı aynı örnektir; biri cevaplanınca öbürü de cevaplanmıştır.
+
+**3. Geçmiş satırı ve kağıt konusunun adını tutar; deltalar gerçekleşen tutarı yazar.**
+
+*Belge ne diyordu.* §7.1 `entities` yalnız kimlik tutar; §7.4 satırda etiket olmaz. Satır, etkiler koştuktan sonra
+yazılıyordu: müşteriyi kaybettiren ya da çalışanı ayıran seçenek varlığı silmiş oluyordu ve satır adı yalnız ham
+kimlikle verebiliyordu. Masadaki kağıt da konusu ayrılınca başlığında ham kimlik gösteriyordu.
+
+*Ne yapıldı.* `resolve` etkilerden ve süre dolumu cezalardan önce bağlı varlıkların adını dondurur
+(`EvPresenter.freeze_names`) ve `EvHistory.record`'a isteğe bağlı `names` olarak geçer. Özel ad metindir, çevrilmez;
+B2C kitlesinin adı `{key, arg}` olarak saklanır ve gösterildiği dilde kurulur. `EvPapers.place` de kağıdın konusunun
+adını dondurur; süresi dolan kağıt kendi adlarıyla satıra geçer. `b2b_retain_discount` deltası gerçekleşen MRR farkını
+(`amount`), `b2b_expand` deltası eklenen koltukları (`seats`) ve MRR farkını (`amount`) yazar. `sprint_card_effort`
+deltası uygulanan efor değişikliğini (`amount`), `sprint_hours` deltası sprintin vardığı çarpanı (`hours`) yazar: çipin
+gösterdiği kenetlenmiş değer (§27.11).
+
+*Neden.* Kutu geçmiş kararları sonuçlarıyla gösterir (ch11 §6). Satır gövdeyi yeniden çizmez (`{seam:}` canlı çözülür);
+başlık, seçilen seçenek ve delta çipleriyle okunur. Bunun için adın ve tutarın satırda kalması gerekir.
+
+**4. Tek çip kurucusu `EvChips`.**
+
+*Ne yapıldı.* Etki çipini kuran tek yer `EvChips.describe(item, ctx, names, is_delta)`'dır
+(`scripts/events/present/chips.gd`). Kart etkisini, kartın bağlı kapsamına göre motorun uygulayacağı biçimde; geçmiş
+deltasını kaydedilen tutarla okur. İmzalı parçalar döner: `{label, value, polarity, glyph}`; `polarity` kazanç, bedel,
+tehlike ya da nötrdür. Kırmızı yalnız tehlikedir (ayrılan çalışan, kaybedilen müşteri, kapanan yol, koşunun sonu); harcanan
+para, indirim ve hisse bedeldir. Melek çeki iki parça olur: nakit kazançtır, Frank'e giden hisse dilim glifli bedeldir. `SILENT_VERBS`,
+`FIXED_CHIPS` ve kaynak rozeti (`source_tag`) de buradadır. Statik olduğu için metni `TranslationServer` ile okur.
+
+*Neden.* Kutunun okuma bölmesi, geçmiş satırı ve olay kartı aynı çipi aynı kuralla göstermeli.
+
+**5. Masa değişikliği sinyali.**
+
+*Ne yapıldı.* `EvPapers` her yerleştirmede, kaldırmada, süre dolumunda ve ark düşüşünde `EventBus.desk_changed` yayar;
+masa yüzeyleri (`DeskPapers.connect_changes`) onu dinler.
+
+*Neden.* Kağıt saatlik tikte de gelir; yalnız gün sonunda yenilenen yüzey bayat masa gösteriyordu.

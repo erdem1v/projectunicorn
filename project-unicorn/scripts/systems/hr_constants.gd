@@ -357,6 +357,11 @@ static func group_label(group_id: String) -> String:
 	return _derived("HR_GROUP_", group_id)
 
 
+## Character.relationship (ally | friendly | neutral | wary | hostile) as a word.
+static func relationship_label(relationship: String) -> String:
+	return _derived("HR_RELATION_", relationship)
+
+
 ## Bu rolü işe almanın kurucu sesiyle tek satırlık getirisi; kurucu/mentor için boş.
 static func role_phase_hint(role_id: String) -> String:
 	if not is_employee_role(role_id):

@@ -53,11 +53,11 @@ static func gather() -> Array:
 	return papers
 
 
-## Masayı değiştiren sinyaller, iki yüzeyin tek listesi: kâğıtlar gün sonunda (motorun günlük
-## tiki) ve karar çözülünce, hatırlatıcılar ve Frank'in satırı sahiplerinin sinyalinde değişir.
-## `c` 0-2 argümanı kabul etmeli.
+## Masayı değiştiren sinyaller, iki yüzeyin tek listesi: kâğıtlar motorun her değişikliğinde
+## (`desk_changed`, saatlik tikte gelen kâğıt dahil) ve karar çözülünce, hatırlatıcılar ve Frank'in
+## satırı sahiplerinin sinyalinde değişir. `c` 0-2 argümanı kabul etmeli.
 static func connect_changes(c: Callable) -> void:
-	for sig in [EventBus.event_triggered, EventBus.event_resolved,
+	for sig in [EventBus.desk_changed, EventBus.event_triggered, EventBus.event_resolved,
 			EventBus.mentor_advisory_changed, EventBus.phase_changed, EventBus.day_tick_completed,
 			EventBus.sheet_granted, EventBus.sheet_expired, EventBus.sheet_walked,
 			EventBus.customer_added, EventBus.customer_removed, EventBus.customer_health_changed]:

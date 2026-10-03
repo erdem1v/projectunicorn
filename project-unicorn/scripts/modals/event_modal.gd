@@ -13,35 +13,8 @@ extends Control
 # EventGate.resolve() → event_resolved → main.gd frees this node.
 # process_mode = ALWAYS (.tscn) so input works while the tree is paused.
 
-## Effects a card carries deliberately and SILENTLY: bookkeeping with no player-visible
-## consequence of its own. `event_chip_coverage` in the smoke suite fails on any card verb
-## that is neither labelled in `_describe_modifier` nor listed here.
-const SILENT_VERBS := [
-	"set_flag", "set_game_flag", "stamp_day", "schedule_event", "cancel_scheduled",
-	"start_arc", "advance_arc", "end_arc", "abort_arc", "set_arc_var",
-	"mentor_advisory", "unlock_content", "spend_budget",
-]
-
-## Verbs whose chip is a fixed sentence: [CSV key, badge kind].
-const FIXED_CHIPS := {
-	"open_term_table": ["EFFECT_TERM_TABLE", &"accent"],
-	"open_seed_table": ["EFFECT_SEED_TABLE", &"accent"],
-	"decline_offer": ["EFFECT_FUND_CLOSES", &"negative"],
-	"trigger_ending": ["EFFECT_RUN_ENDS", &"accent"],
-	"decline_buyout": ["EFFECT_VC_ROAD_CLOSES", &"negative"],
-	"churn_customer": ["EFFECT_CHURN", &"negative"],
-	"add_prospect": ["EFFECT_NEW_PROSPECT", &"positive"],
-	"open_paid_tier": ["EFFECT_PAID_TIER", &"accent"],
-	"promise_create": ["EFFECT_PROMISE_CREATE", &"accent"],
-	"b2b_retain_delay": ["EFFECT_RETAIN_DELAY", &"neutral"],
-	"b2b_retain_ignore": ["EFFECT_RETAIN_IGNORE", &"neutral"],
-	"b2b_expand_decline": ["EFFECT_NO_CHANGE", &"neutral"],
-	"advance_phase": ["EFFECT_PHASE_ADVANCE", &"accent"],
-	"phase_gate_decline": ["EFFECT_PHASE_HOLD", &"neutral"],
-	"goto_tab": ["EFFECT_TAKES_YOU_THERE", &"neutral"],
-	"sprint_card_carry": ["EFFECT_SPRINT_CARRY", &"neutral"],
-	"fix_run_start": ["EFFECT_FIX_RUN_STARTS", &"accent"],
-}
+## A part's polarity as this card's badge: red is danger only, a cost reads in ink.
+const BADGE_KIND := {"gain": &"positive", "cost": &"neutral", "danger": &"negative", "neutral": &"neutral"}
 
 var _event: GameEvent = null
 var _resolved: bool = false  # one-shot guard against double-click
@@ -154,7 +127,7 @@ func _is_readout() -> bool:
 func _fill_header() -> void:
 	for child in _header_row.get_children():
 		child.queue_free()
-	var tag: Dictionary = _source_tag(_event)
+	var tag: Dictionary = EvChips.source_tag(_event)
 	_header_row.add_child(UiFactory.make_badge(String(tag.text), StringName(tag.kind)))
 	var day_key: String = "EVENT_READOUT_DAY" if _is_readout() else "EVENT_DECISION_DAY"
 	var meta := UiFactory.make_label(UiTokens.tr_upper(
@@ -189,34 +162,6 @@ static func _live_subtitle(raw: String) -> String:
 	return "%s · %02d:%s%s" % [raw.substr(0, sep), GameState.current_hour, mm, tail.substr(5)]
 
 
-## {text, kind} for the header's source chip. Order matters: families that NAME their source
-## (customer / team / phase gate / ship moment) first, then the speaker, then the generic
-## `endgame` topic, then GÜNDEM. `endgame` is a topic, not a source, so a Frank card tagged
-## `endgame` is still MENTOR; `ship_moment` beats the speaker because it is a product beat
-## even when Frank narrates it. Static (smoke calls it on the script), hence TranslationServer.
-static func _source_tag(ev: GameEvent) -> Dictionary:
-	var pick: Array = []
-	for s in ev.tags:
-		if s.begins_with("b2b_"):
-			pick = ["EVENT_TAG_CUSTOMER", &"accent"]
-		elif s.begins_with("hr_"):
-			pick = ["EVENT_TAG_TEAM", &"neutral"]
-		elif s == "phase_gate":
-			pick = ["EVENT_TAG_MENTOR", &"accent"]
-		elif s == "ship_moment":
-			pick = ["EVENT_TAG_PRODUCT", &"positive"]
-		if not pick.is_empty():
-			break
-	if pick.is_empty():
-		if ev.character_id == "char_mentor_frank":
-			pick = ["EVENT_TAG_MENTOR", &"accent"]
-		elif ev.tags.has("endgame"):
-			pick = ["EVENT_TAG_MARKET", &"attention"]
-		else:
-			pick = ["EVENT_TAG_AGENDA", &"neutral"]
-	return {"text": TranslationServer.translate(pick[0]), "kind": pick[1]}
-
-
 # --- Speaker strip (compact single line) ---
 
 func _build_speaker_row() -> void:
@@ -240,7 +185,7 @@ func _build_speaker_row() -> void:
 	name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_speaker_row.add_child(name_label)
 	var pal: Dictionary = UiTokens.relationship_palette(c.relationship)
-	_speaker_row.add_child(UiFactory.make_pill(c.relationship, pal.bg, pal.fg))
+	_speaker_row.add_child(UiFactory.make_pill(HRConstants.relationship_label(c.relationship), pal.bg, pal.fg))
 	for t in c.traits.slice(0, 2):
 		_speaker_row.add_child(UiFactory.make_badge(_trait_label(String(t)), &"neutral"))
 
@@ -301,9 +246,8 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, ctx: Dict
 
 	if unlocked:
 		for m in choice.modifiers:
-			var d: Dictionary = _describe_modifier(m)
-			if not d.is_empty():
-				var chip := UiFactory.make_badge(d.text, d.kind)
+			for part in EvChips.describe(m, ctx, {}, false):
+				var chip := UiFactory.make_badge(EvChips.text(part), BADGE_KIND[part.polarity])
 				chip.size_flags_horizontal = Control.SIZE_SHRINK_END
 				chip_col.add_child(chip)
 		root.gui_input.connect(_on_choice_input.bind(idx))
@@ -329,111 +273,6 @@ func _on_choice_input(event: InputEvent, idx: int) -> void:
 	if UiFactory.is_left_click(event):
 		_resolved = true
 		EventGate.resolve(_event.id, idx)
-
-
-# --- Effect chips ---
-
-## Player-facing badge {text, kind} for a card effect, or {} for a SILENT_VERBS row. Every
-## number is computed the way `EvEffects` will apply it (same amount key order, same target
-## resolution, same constants), so the chip cannot drift from the outcome.
-func _describe_modifier(m) -> Dictionary:
-	if typeof(m) != TYPE_DICTIONARY:
-		return {}
-	var t: String = String(m.get("verb", ""))
-	if FIXED_CHIPS.has(t):
-		return {"text": tr(FIXED_CHIPS[t][0]), "kind": FIXED_CHIPS[t][1]}
-	var d: int = int(m.get("amount", m.get("delta", m.get("value", 0))))
-	match t:
-		"add_cash": return _chip("EFFECT_CASH", _fmt_money_delta(d), d)
-		"add_brand": return _chip("EFFECT_BRAND", _fmt_signed(d), d)
-		"add_reputation": return _chip("EFFECT_REPUTATION", _fmt_signed(d), d)
-		"customer_mrr_delta": return _chip("EFFECT_CUSTOMER_MRR", _fmt_money_delta(d), d)
-		"satisfaction_delta": return _chip("EFFECT_SATISFACTION", _fmt_signed(d), d)
-		"seats": return _chip("EFFECT_SEATS", _fmt_signed(d), d)
-		"morale_all": return _chip("EFFECT_TEAM", _fmt_signed(d), d)
-		"sprint_card_effort":
-			var effort: int = SprintSystem.effort_change(d)
-			return _chip("EFFECT_SPRINT_EFFORT", _fmt_signed(effort), -effort)
-		"sprint_card_progress": return _chip("EFFECT_SPRINT_PROGRESS", _fmt_signed(d), d)
-		"sprint_hours":
-			var mult: float = float(m.get("mult", 1.0))
-			return {"text": tr("EFFECT_SPRINT_HOURS").format({"v": Fmt.number(SprintSystem.hours_after(mult), 2)}),
-				"kind": _kind(int(signf(mult - 1.0)))}
-		"change_morale":
-			var who: String = _first_name(_target(m, EvScope.TYPE_EMPLOYEE), tr("EFFECT_MORALE"))
-			return {"text": tr("EFFECT_AXIS").format({"axis": who, "v": _fmt_signed(d)}), "kind": _kind(d)}
-		"audience_delta":
-			if m.has("pct"):
-				# Fmt.percent is locale-aware (TR prefix, EN suffix); the sign rides the number.
-				var pts: int = int(round(float(m.get("pct", 0.0)) * 100.0))
-				var pct_txt: String = ("-" if pts < 0 else "+") + Fmt.percent(absi(pts), 0)
-				return {"text": tr("EFFECT_AUDIENCE_PCT").format({"pct": pct_txt}), "kind": _kind(pts)}
-			return _chip("EFFECT_AUDIENCE", _fmt_signed(d), d)
-		"convert_audience":
-			var conv: String = Fmt.percent(int(round(float(m.get("pct", 0.0)) * 100.0)), 0)
-			return {"text": tr("EFFECT_CONVERT_AUDIENCE").format({"pct": conv}), "kind": &"positive"}
-		# A person's name or the generic noun — never EFFECT_MORALE, which would read "Moral ayrılıyor".
-		"employee_leaves":
-			var leaver: String = _first_name(_target(m, EvScope.TYPE_EMPLOYEE), tr("EFFECT_AN_EMPLOYEE"))
-			return {"text": tr("EFFECT_DEPARTURE").format({"who": leaver}), "kind": &"negative"}
-		# The cut is derived at resolution time from the account's own MRR, exactly as the
-		# `b2b_retain_discount` effect derives it.
-		"b2b_retain_discount":
-			var rc: Customer = CustomerRegistry.get_customer(_target(m, EvScope.TYPE_CUSTOMER))
-			var cut: int = -int(round(float(rc.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT)) if rc != null else 0
-			return {"text": tr("EFFECT_RETAIN_DISCOUNT").format({"v": _fmt_money_delta(cut)}), "kind": &"negative"}
-		# Seats and rate as `b2b_expand` → B2BSalesSystem.expand computes them (the account's own
-		# seat price, the constant only as fallback). Satış §5.4.
-		"b2b_expand":
-			var ec: Customer = CustomerRegistry.get_customer(_target(m, EvScope.TYPE_CUSTOMER))
-			var seats: int = 0
-			var mrr: int = 0
-			if ec != null:
-				seats = B2BConstants.expansion_seats(ec.company_size)
-				mrr = seats * (ec.seat_price if ec.seat_price > 0 else B2BConstants.EXPANSION_PER_SEAT_MRR)
-			return {"text": tr("EFFECT_EXPAND").format({"seats": seats, "mrr": _fmt_money_delta(mrr)}), "kind": &"positive"}
-		# Two facts on one chip: the cost of the decision is the equity, not the cash, so both
-		# ride and the kind is "accent" (a trade) rather than "positive" (a gift).
-		"angel_accept":
-			return {"text": tr("ANGEL_CHIP_ACCEPT").format({
-					"cash": _fmt_money_delta(AngelRoundSystem.CASH_AMOUNT),
-					"equity": AngelRoundSystem.EQUITY_PCT}),
-				"kind": &"accent"}
-	if t != "" and not SILENT_VERBS.has(t):
-		push_warning("[EventModal] effect '%s' renders no chip — add a label or list it in SILENT_VERBS" % t)
-	return {}
-
-
-func _chip(key: String, value_text: String, sign_delta: int) -> Dictionary:
-	return {"text": tr(key).format({"v": value_text}), "kind": _kind(sign_delta)}
-
-
-## The entity id an effect will act on, resolved by the executor's own rule against the
-## card's frozen scope binding.
-static func _target(m: Dictionary, want_type: String) -> String:
-	return EvEffects.entity_of(m, EventGate.active_context(), want_type)
-
-
-static func _kind(delta: int) -> StringName:
-	if delta > 0: return &"positive"
-	if delta < 0: return &"negative"
-	return &"neutral"
-
-
-## First name of a registry character, or `fallback` when the id resolves to nobody.
-static func _first_name(id: String, fallback: String) -> String:
-	var c: Character = CharacterRegistry.get_character(id) if id != "" else null
-	return c.character_name.split(" ", false)[0] if c != null else fallback
-
-
-static func _fmt_signed(value: int) -> String:
-	return ("+%d" if value > 0 else "%d") % value
-
-
-# This chip is the player's source of truth for what a decision costs, so it uses the
-# locale-aware abbreviated money (Fmt.money_chip) with an explicit sign on both sides.
-static func _fmt_money_delta(value: int) -> String:
-	return ("+" if value >= 0 else "-") + Fmt.money_chip(absi(value))
 
 
 static func _markdown_to_bbcode(text: String) -> String:

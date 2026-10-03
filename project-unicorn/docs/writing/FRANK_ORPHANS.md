@@ -111,15 +111,15 @@ outside the document's scope by definition.
 
 `MENTOR_NAME` · `MENTOR_ROLE` · `HR_ROLE_MENTOR` · `UI_AVATAR_INITIALS` ("FK") ·
 `PROD_MENTOR_TAG` · `PROD_READY_TALK_FRANK` ("HAZIR · FRANK'LE KONUŞ") · `ODA_TOUR_PHONE_DESC` ·
-`ANGEL_TX_LABEL` · `ANGEL_CHIP_ACCEPT` · `ANGEL_MONTH_HIGHLIGHT` · `GATE_OPENED` ·
+`ANGEL_TX_LABEL` · `EFFECT_TO_FRANK` · `ANGEL_MONTH_HIGHLIGHT` · `GATE_OPENED` ·
 `ODA_EVENTS_FRANK_HEADER` ("Frank'ten not") · `ODA_MENTOR_TAG_FALLBACK` · `EVENT_TAG_MENTOR` ·
 `EVENT_MENTOR_ADVICE` · `INV_APPETITE_GATE_OPEN` ("Kapı açık · Frank'le konuş") ·
 `VC_WHY_WARM_INTRO` · `INV_ARCH_BOSPHORUS` · `PITCH_S0_NPC` · `PITCH_S0_INNER` ·
 `PITCH_INNER_CLOSED`.
 
-One of these is worth a second look even though it is not voice: `ANGEL_CHIP_ACCEPT` prints
-`%{equity}` in Turkish and `{equity}%` in English. Both parse as one token so the integrity gate
-passes, but the two columns are not symmetric.
+One of these is worth a second look even though it is not voice: the stake beside
+`EFFECT_TO_FRANK`, `EFFECT_EQUITY`, prints `%{equity}` in Turkish and `{equity}%` in English.
+Both parse as one token so the integrity gate passes, but the two columns are not symmetric.
 
 ---
 

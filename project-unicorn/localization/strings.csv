@@ -276,6 +276,11 @@ HR_GROUP_PRODUCT_DESIGN,Ürün & Tasarım,Product & Design
 HR_GROUP_DEVELOPMENT,Geliştirme Ekibi,Development
 HR_GROUP_SALES,Satış,Sales
 HR_GROUP_CUSTOMER_SUCCESS,Müşteri İlişkileri,Customer Success
+HR_RELATION_ALLY,Müttefik,Ally
+HR_RELATION_FRIENDLY,Dost,Friendly
+HR_RELATION_NEUTRAL,Nötr,Neutral
+HR_RELATION_WARY,Temkinli,Wary
+HR_RELATION_HOSTILE,Düşman,Hostile
 HR_COL_ROLES_LEADERSHIP,ROLLER · LİDERLİK,ROLES · LEADERSHIP
 HR_COL_TASK,GÖREV,TASK
 HR_COL_ROLES,ROLLER,ROLES
@@ -391,7 +396,6 @@ He waits for an answer."
 ANGEL_CHOICE_ACCEPT,Kabul et,Accept
 ANGEL_CHOICE_REFUSE,Reddet,Refuse
 ANGEL_CHOICE_REFUSE_LOCK,Zor modda açılır.,Unlocks in hard mode.
-ANGEL_CHIP_ACCEPT,Nakit {cash} · Frank'e %{equity} hisse,Cash {cash} · {equity}% to Frank
 ANGEL_TX_LABEL,Melek yatırımı · Frank,Angel investment · Frank
 ANGEL_CAP_ROW,Melek · %{pct},Angel · {pct}%
 ANGEL_MONTH_HIGHLIGHT,Frank çeki yazdı — melek turu kapandı,Frank wrote the cheque — angel round closed
@@ -1560,6 +1564,8 @@ EFFECT_PROMISE_HONOR,Müşteri kalır · söz borcu doğar · yol haritasına ek
 EFFECT_PROMISE_REFUSE,Müşteriyi kaybet,Lose the customer
 EFFECT_EXPAND,Koltuk +{seats} · MRR {mrr},Seats +{seats} · MRR {mrr}
 EFFECT_NO_CHANGE,Değişiklik yok,No change
+EFFECT_TO_FRANK,Frank'e,To Frank
+EFFECT_EQUITY,%{equity} hisse,{equity}% equity
 UI_CONFIRM_TITLE,Emin misin?,Are you sure?
 UI_CONFIRM,Onayla,Confirm
 MENTOR_NAME,Frank Köseoğlu,Frank Köseoğlu

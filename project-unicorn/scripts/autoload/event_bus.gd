@@ -114,6 +114,10 @@ signal promise_broken(promise_id: String)
 signal event_triggered(event_id: String)
 signal event_resolved(event_id: String, choice_index: int)
 signal modal_requested(event: GameEvent)
+# The opened paper went back on the desk unanswered (EventGate.set_aside).
+signal event_set_aside(event_id: String)
+# A paper landed on, left or expired off the desk (EvPapers).
+signal desk_changed
 
 # --- Build / product signals ---
 # SprintSystem her açık sürümde "shipped" ile atar; PromiseRegistry sözü burada tutar.

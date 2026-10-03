@@ -87,7 +87,7 @@ and brand, clamped — with the founder's share as `{offer}`, which is the only 
 which the shipped sentence is true. **`{investor}`** resolves through a new `seed_lead` scope
 selector, so the caller is the fund that led the seed; with no seed round the card does not
 fire, because there is nobody to make the call. **"Sat" is labelled**: `trigger_ending` now
-has a `_describe_modifier` row (`EFFECT_RUN_ENDS`), and `decline_buyout` has its own
+has a chip in `EvChips` (`EFFECT_RUN_ENDS`), and `decline_buyout` has its own
 (`EFFECT_VC_ROAD_CLOSES`) — the smoke case `event_chip_coverage` fails the build otherwise.
 
 The detail this file said not to lose is kept: **"Kendi paramla devam" carries both**

@@ -57,7 +57,7 @@
 ### 2.3 Bu oturumdaki yönetmen kararları (bağlayıcı)
 
 1. **Satış tek dikiş istisnası.** `SalesMeetingSystem._build_base_contributions`'a tek katkı terimi, `_modifier_labels`'a tek etiket girişi, `sales_meeting_adapter.CHIP_BY_SEAM`'e tek satır. Değer `GameState.rival_world.push.contest_by_archetype`'tan okunur. Satış GDD §5.1'in "Rakip seam'i açık" yuvasını doldurur. `SalesRepSystem` kapsam dışı.
-2. **`change_salary` fiili motorda uygulanır** (`effects.gd` + `event_modal._describe_modifier` kolu + `EFFECT_SALARY` anahtarı). Oran, seçenek metninde `{seam:}` ile görünür.
+2. **`change_salary` fiili motorda uygulanır** (`effects.gd` + `EvChips.describe` kolu + `EFFECT_SALARY` anahtarı). Oran, seçenek metninde `{seam:}` ile görünür.
 3. **"%70 kazanma hedefi"** = yetkin oyuncu koşularının yaklaşık %70'i bir zafer sonuyla (Series A ya da kârlı bootstrap) biter. §10.7 rakip kanallarının buna etkisini sınırlar.
 
 ### 2.4 Ön koşul (A1 başlamadan)
@@ -634,7 +634,7 @@ RivalsModel.live() = {
 **`change_salary` fiili (onaylı motor işi).**
 - `effects.gd _apply` kolu: `{verb, scope: employee, pct}` → `CharacterRegistry.set_salary(id, int(round(float(salary) * (1.0 + pct / 100.0))))`. Bu İK zammının formülüdür (`HRActions._raised_salary` [kod `hr_actions.gd:243-244`]); adım yuvarlaması yoktur; İK'nın özel fonksiyonu çağrılmaz.
 - `_is_negative`: `pct`'in yalnız işaretini okur. Kart `on_expire` taşımaz (kritik interrupt süresi dolmaz).
-- `event_modal._describe_modifier` kolu + `EFFECT_SALARY` ("Salary {pct} · {who}" · "Maaş {pct} · {who}"); `{pct}` = işaret + `Fmt.percent(absi(pct), 0)`; burada `pct` yüzde puanıdır (15 = %15), `audience_delta`/`convert_audience`'taki kesir `pct`'ten (0,05) farklıdır ve ×100 yapılmaz; kalıptan yalnız işaret ve `Fmt.percent` biçimi alınır; `{who}` = çalışanın ilk adı (`_first_name`) [kod `event_modal.gd:380-388`]; `event_chip_coverage` smoke'u yeşil.
+- `EvChips.describe` kolu (`scripts/events/present/chips.gd`) + `EFFECT_SALARY` ("Salary {pct} · {who}" · "Maaş {pct} · {who}"); `{pct}` = işaret + `Fmt.percent(absi(pct), 0)`; burada `pct` yüzde puanıdır (15 = %15), `audience_delta`/`convert_audience`'taki kesir `pct`'ten (0,05) farklıdır ve ×100 yapılmaz; kalıptan yalnız işaret ve `Fmt.percent` biçimi alınır; `{who}` = çalışanın ilk adı (`EvChips._first_name`); `event_chip_coverage` smoke'u yeşil.
 - Bilinen sınırlar: `salary_floor`, `last_raise_day` ve istihdam geçmişi yazılmaz (`HRActions.apply_raise`'in yaptıkları; İK koduna dokunulmaz); İK zammı hemen ardından yine yapılabilir. ACIK_KARARLAR madde 14'teki uygulanmamış fiillerden birini kapatır.
 
 **A2/A3 kartları:** `rival.player_poach` ve `rival.poach_back` (A2; aynı kalıp), `rival.acquisition_offer` (A2; mevcut `funding.acquisition_offer`'ın alıcısı adlı rakip olur, açık karar 4), `rival.partnership` ve `rival.press_reply` (A3).

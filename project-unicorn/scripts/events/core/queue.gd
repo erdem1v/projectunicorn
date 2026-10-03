@@ -22,6 +22,10 @@ static var _entries: Array = []
 ## The card on screen right now. "" when nothing is.
 static var _active_id: String = ""
 static var _active_context: Dictionary = {}
+## The active card is a paper the player picked up off the desk: it may go back unanswered
+## (EvEngine.set_aside), where an interrupt is answered. Never saved: a save is refused while a
+## card is active.
+static var _active_from_desk: bool = false
 ## event_id -> times it was offered and absorbed as a duplicate. The run log reads it.
 static var _absorbed: Dictionary = {}
 
@@ -96,14 +100,16 @@ static func take(key: String) -> Dictionary:
 
 # --- The active card -------------------------------------------------------
 
-static func set_active(event_id: String, context: Dictionary) -> void:
+static func set_active(event_id: String, context: Dictionary, from_desk: bool) -> void:
 	_active_id = event_id
 	_active_context = context.duplicate(true)
+	_active_from_desk = from_desk
 
 
 static func clear_active() -> void:
 	_active_id = ""
 	_active_context = {}
+	_active_from_desk = false
 
 
 static func active_id() -> String:
@@ -112,6 +118,10 @@ static func active_id() -> String:
 
 static func active_context() -> Dictionary:
 	return _active_context
+
+
+static func active_from_desk() -> bool:
+	return _active_from_desk
 
 
 # --- Reading ---------------------------------------------------------------

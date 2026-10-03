@@ -61,7 +61,7 @@ static func build_view(event_id: String, context: Dictionary) -> GameEvent:
 		# admission and display.
 		choice.unlock_condition = opt.get("requires", {})
 		choice.unlock_reason_text = resolve_text(reasons.get(opt_id, ""), context)
-		# Carried only for the modal's chip builder; EvEngine.resolve is the one path that
+		# Carried only for the chips (EvChips); EvEngine.resolve is the one path that
 		# applies effects and writes history.
 		choice.modifiers = opt.get("effects", [])
 		ev.choices.append(choice)
@@ -77,24 +77,45 @@ static func text_block(card: Dictionary) -> Dictionary:
 	return text if not text.is_empty() else all_text.get("tr", {})
 
 
-static func _display_name(entity_type: String, entity_id: String) -> String:
+## {slot: name} for every bound entity that still exists, taken before an option or an expiry
+## can remove it, so a history row or a desk paper still says who it was about (§7.1 `names`).
+static func freeze_names(context: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for slot in context:
+		var bound: Dictionary = context[slot]
+		var kept: Variant = _name_of(String(bound.get("type", "")), String(bound.get("id", "")))
+		if kept != null:
+			out[slot] = kept
+	return out
+
+
+## A kept name as the live language reads it.
+static func name_text(kept: Variant) -> String:
+	if kept is Dictionary:
+		return Customer.localized_name(String(kept["key"]), String(kept["arg"]))
+	return String(kept)
+
+
+## The entity's name as it can be kept, or null when it is gone. Proper nouns are text and do not
+## localize; the B2C userbase record has an EMPTY company_name and is kept as {key, arg}, so a
+## save does not freeze a language.
+static func _name_of(entity_type: String, entity_id: String) -> Variant:
 	match entity_type:
 		EvScope.TYPE_EMPLOYEE, EvScope.TYPE_FOUNDER:
 			var c: Character = CharacterRegistry.get_character(entity_id)
-			return c.character_name if c != null else entity_id
+			return c.character_name if c != null else null
 		EvScope.TYPE_CUSTOMER:
-			# display_name(), not company_name: the B2C userbase record has an EMPTY
-			# company_name and carries name_key + name_arg so a save does not freeze a language.
 			var cu: Customer = CustomerRegistry.get_customer(entity_id)
-			return cu.display_name() if cu != null else entity_id
+			if cu == null:
+				return null
+			return cu.company_name if cu.name_key == "" else {"key": cu.name_key, "arg": cu.name_arg}
 		EvScope.TYPE_RIVAL:
 			var r: Rival = RivalRegistry.get_rival(entity_id)
-			return r.company_name if r != null else entity_id
+			return r.company_name if r != null else null
 		EvScope.TYPE_INVESTOR:
-			# Investor names are proper nouns and do not localize.
 			var inv: Dictionary = InvestorRegistry.get_investor(entity_id)
-			return String(inv.get("display_name", entity_id))
-	return entity_id
+			return String(inv["display_name"]) if inv.has("display_name") else null
+	return null
 
 
 static func _subject_character(context: Dictionary) -> String:
@@ -118,7 +139,8 @@ static func desk_papers(visible_slots: int) -> Array:
 		var card: Dictionary = EvCatalog.card(EvPapers.event_id_of(key))
 		out.append({
 			"id": key,
-			"title": resolve_text(text_block(card).get("title", ""), EvPapers.context_of(key)),
+			"title": resolve_text(text_block(card).get("title", ""), EvPapers.context_of(key),
+				EvPapers.names_of(key)),
 			"category": String(card.get("category", "")),
 			"weeks_left": EvPapers.weeks_left(key),
 			# §11.4: remaining time is on the paper, emphasised in its last week — the only
@@ -138,21 +160,24 @@ static func desk_papers(visible_slots: int) -> Array:
 ##    ported content's reviewed text already lives in strings.csv, and copying it inline would
 ##    give one string two homes. New content writes prose inline.
 ## 3. Anything else -> literal prose, interpolated.
-static func resolve_text(value: Variant, context: Dictionary) -> String:
+##
+## `names` are the names a desk paper or a history row kept; a slot they name reads that name, so
+## a subject who has left still reads by name.
+static func resolve_text(value: Variant, context: Dictionary, names: Dictionary = {}) -> String:
 	if typeof(value) == TYPE_DICTIONARY:
-		return _resolve_variant(value as Dictionary, context)
+		return _resolve_variant(value as Dictionary, context, names)
 	var text: String = String(value)
 	if text == "":
 		return ""
 	if _KEY_RE.search(text) != null:
 		text = TranslationServer.translate(text)
-	return _interpolate(text, context)
+	return _interpolate(text, context, names)
 
 
 ## The variant with the largest key not above the seam's value; the lowest key when every key
 ## is above it. So a counter that grows past the authored range stays on the last variant, and
 ## a sparse map ({"0", "3"}) keeps "0" for the values in between.
-static func _resolve_variant(spec: Dictionary, context: Dictionary) -> String:
+static func _resolve_variant(spec: Dictionary, context: Dictionary, names: Dictionary) -> String:
 	var seam: String = String(spec.get("by_seam", ""))
 	var variants: Dictionary = spec.get("variants", {})
 	if variants.is_empty():
@@ -169,12 +194,12 @@ static func _resolve_variant(spec: Dictionary, context: Dictionary) -> String:
 	for k in keys:
 		if k <= value:
 			chosen = k
-	return resolve_text(variants[by_int[chosen]], context)
+	return resolve_text(variants[by_int[chosen]], context, names)
 
 
 ## `{slot}` / `{slot.name}` -> the bound entity's display name. `{seam:name}` -> a seam's value
 ## (§8.4): a number typed into prose goes stale silently, a number read from a seam cannot.
-static func _interpolate(text: String, context: Dictionary) -> String:
+static func _interpolate(text: String, context: Dictionary, names: Dictionary) -> String:
 	if not text.contains("{"):
 		return text
 	var out: String = text
@@ -200,6 +225,8 @@ static func _interpolate(text: String, context: Dictionary) -> String:
 
 	for slot in context:
 		var bound: Dictionary = context[slot]
-		var display: String = _display_name(String(bound.get("type", "")), String(bound.get("id", "")))
+		var kept: Variant = names[slot] if names.has(slot) \
+			else _name_of(String(bound.get("type", "")), String(bound.get("id", "")))
+		var display: String = String(bound.get("id", "")) if kept == null else name_text(kept)
 		out = out.replace("{%s}" % slot, display).replace("{%s.name}" % slot, display)
 	return out

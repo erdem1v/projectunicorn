@@ -6,7 +6,9 @@ extends RefCounted
 # ask what already happened.
 #
 # LANGUAGE INDEPENDENCE IS STRUCTURAL (§7.4). Rows store ids only — event_id, option_id,
-# outcome_id — never labels, so a callback survives a language switch mid-run.
+# outcome_id — never labels, so a callback survives a language switch mid-run. The one name a row
+# keeps is its subjects' (`names`): proper nouns, which do not localize, and the B2C userbase as
+# its {key, arg}.
 #
 # NO PRUNING (§7.5). A run resolves a few hundred cards; pruning would buy nothing and would
 # break exactly the long-horizon callback the engine is for.
@@ -27,7 +29,7 @@ static var _by_event: Dictionary = {}
 ## an expiry and a display-time drop are both facts a later card may need.
 static func record(event_id: String, resolution: String, option_id: String,
 		outcome_id: String, entities: Dictionary, deltas: Array,
-		arc_id: String = "", forced: bool = false) -> void:
+		arc_id: String = "", forced: bool = false, names: Dictionary = {}) -> void:
 	var row: Dictionary = {
 		"event_id": event_id,
 		"day": GameState.day,
@@ -37,13 +39,17 @@ static func record(event_id: String, resolution: String, option_id: String,
 		# {slot: {type, id}} — the scope AS RESOLVED, so a later card can ask "who was it
 		# about" even after that person has left the company.
 		"entities": entities.duplicate(true),
-		# What the effects actually did. Debug and the ending screen read it; no condition
-		# does — a card asking about a delta should ask the seam for the live number instead.
+		# What the effects actually did; EvChips renders it in delta mode. No condition reads it —
+		# a card asking about a delta should ask the seam for the live number instead.
 		"deltas": deltas.duplicate(true),
 		"arc_id": arc_id,
 	}
 	if forced:
 		row["forced"] = true
+	# {slot: name} as the subjects read when the card resolved (EvPresenter.freeze_names): the
+	# entity may since have left, and a row that names it by id says nothing.
+	if not names.is_empty():
+		row["names"] = names.duplicate(true)
 	_by_event.get_or_add(event_id, []).append(_rows.size())
 	_rows.append(row)
 
