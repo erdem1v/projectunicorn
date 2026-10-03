@@ -1146,7 +1146,7 @@ func _probe_variations(col: Control, th: Theme) -> void:
 				c.bbcode_enabled = true
 				c.fit_content = true
 				c.custom_minimum_size = Vector2(320, 0)
-				c.text = type + " [b]kalın[/b] [i]italik[/i]"
+				c.text = type + " [b]bold[/b] [i]italic[/i]"
 			&"Panel":
 				c = Panel.new()
 				c.custom_minimum_size = Vector2(24, 24)
