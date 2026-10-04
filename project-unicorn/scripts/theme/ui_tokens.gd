@@ -6,7 +6,7 @@ extends RefCounted
 # ============================================================================
 # UiTokens owns the VOCABULARY: every Color in the game (named), the type scale,
 # spacing / radius / border / padding tokens, leading, and the runtime colour
-# helpers a .tres cannot express (delta_color, badge_palette…).
+# helpers a .tres cannot express (badge_palette, D_delta_color…).
 # It knows nothing about Control types.
 #
 # themes/master_theme.tres owns the ASSIGNMENT (which type / variation gets which
@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 25
+const THEME_STAMP := 26
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -285,7 +285,6 @@ const BORDER_ACCENT := 3        # left accent bar (QuoteBox)
 # --- StyleBox content-margin pairs (h, v) — build_theme.gd only ---
 const PAD_CHIP := Vector2i(6, 2)          # UiFactory chip
 const PAD_BTN_XS := Vector2i(8, 3)        # SpeedButton / TabButton
-const PAD_DIAL := Vector2i(8, 4)          # StanceDial
 const PAD_BTN_S := Vector2i(10, 4)        # DialogueStepper
 const PAD_BTN_GHOST := Vector2i(10, 5)    # DialogueGhost
 const PAD_INPUT := Vector2i(10, 6)        # LineEdit
@@ -380,12 +379,6 @@ static func negative_rule() -> Color:
 # Runtime colour-decision helpers — the single home for sign/kind → colour.
 # All route through the accessors, so they inherit the palette swap.
 # ============================================================================
-
-## Delta color for body surfaces.
-static func delta_color(value: int) -> Color:
-	if value > 0: return positive()
-	if value < 0: return negative()
-	return INK_MUTED
 
 ## {bg, fg} for a tinted chip. kind: "positive" | "negative" | "neutral" | "accent" | "attention".
 static func badge_palette(kind: StringName) -> Dictionary:
@@ -805,6 +798,17 @@ const D_H_ROW_RELEASE := 36           # a release note's card row
 const D_W_RESULT_KEY := 96            # the release note's key column
 const D_H_GOAL := 56                  # the quarter's goal strip
 const D_W_GOAL_MENU := 560            # the quarter goal's menu
+const D_W_PIPELINE := 584             # the Sales window's pipeline column
+const D_H_EMPTY_STATE := 240          # a window body's one empty state
+const D_AVATAR_DESK := 40             # a rep's disc on the sales desk
+const D_ICON_STAR := 14               # a star of a rule unit: a lead's or an account's size, a rep's league
+const D_ICON_LINE := 14               # the glyph leading a card's caption line (time left, a rep at work, a promise)
+const D_SAT_BAR := Vector2i(112, 8)   # an account's satisfaction meter
+const D_W_SAT := 32                   # the satisfaction figure's column, right aligned, before its meter
+const D_PIP := 10                     # a week square of the churn countdown
+const D_H_PROMISE := 24               # an open promise's note on its account
+const D_LOAD_BAR := Vector2i(48, 4)   # a steward's load beside their name in the picker
+const D_W_STEWARD_MENU := 432         # the steward picker's rows, as wide as either language's widest
 
 const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
 const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]

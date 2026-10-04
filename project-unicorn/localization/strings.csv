@@ -88,12 +88,14 @@ ONB_SLOGAN_LABEL,SLOGAN (OPSİYONEL),SLOGAN (OPTIONAL)
 ONB_SLOGAN_PLACEHOLDER,Bir cümlede ne yapıyorsun,What you do in one sentence
 ONB_PREVIEW_LABEL,ÖNİZLEME,PREVIEW
 ONB_PREVIEW_FOUNDER_TAG,KURUCU · {year},FOUNDER · {year}
-SALES_PORTFOLIO_HEADER,MÜŞTERİ PORTFÖYÜ,CUSTOMER PORTFOLIO
+SALES_PORTFOLIO_HEADER,Müşteri portföyü,Customer portfolio
 SALES_CUSTOMERS_COUNT,{n} müşteri,{n} customers
-SALES_STRIP_CUSTOMERS,MÜŞTERİ,CUSTOMERS
-SALES_STRIP_SATISFACTION,ORT. MEMNUNİYET,AVG. SATISFACTION
-SALES_STRIP_GAINED,BU AY KAZANILAN,GAINED THIS MONTH
-SALES_STRIP_NET,BU AY NET,NET THIS MONTH
+SALES_CUSTOMERS_COUNT_ONE,{n} müşteri,{n} customer
+SALES_STRIP_CUSTOMERS,Müşteri,Customers
+SALES_STRIP_SATISFACTION,Ort. memnuniyet,Avg. satisfaction
+SALES_STRIP_GAINED,Bu ay kazanılan,Gained this month
+SALES_STRIP_NET,Bu ay net,Net this month
+SALES_ACCOUNT_SATISFACTION,Memnuniyet,Satisfaction
 SALES_PROSPECTS_EMPTY,Henüz aday yok.,No leads yet.
 SALES_CUSTOMERS_EMPTY,Henüz müşteri yok.,No customers yet.
 SALES_TIER2_TITLE,Kurumsal segment,Enterprise segment
@@ -101,14 +103,14 @@ SALES_PER_MONTH,/ay,/mo
 SALES_SEATS,{n} koltuk,{n} seats
 SALES_TENURE,{n} aydır müşteri,customer for {n} mo
 SALES_TENURE_NEW,yeni müşteri,new customer
-SALES_LOG_HEADER,SON HAREKETLER,RECENT ACTIVITY
+SALES_LOG_HEADER,Son hareketler,Recent activity
 SALES_LOG_CLOSE,{actor} · {company} anlaşmasını kapattı · {amount}/ay,{actor} · closed {company} · {amount}/mo
 SALES_LOG_ABSORB,{actor} · {company} tarafındaki talebi karşıladı,{actor} · handled a request from {company}
 SALES_FOUNDER_STRETCHED,Doğrudan yönettiğin {n} hesap var,You are managing {n} accounts directly
-SALES_CHIP_HEALTHY,SAĞLIKLI,HEALTHY
-SALES_CHIP_RISK,RİSK ALTINDA,AT RISK
-SALES_CHIP_EXPANSION,BÜYÜMEK İSTİYOR,WANTS TO GROW
-SALES_CHIP_NEW,YENİ,NEW
+SALES_CHIP_HEALTHY,Sağlıklı,Healthy
+SALES_CHIP_RISK,Risk altında,At risk
+SALES_CHIP_EXPANSION,Büyümek istiyor,Wants to grow
+SALES_CHIP_NEW,Yeni,New
 SALES_STEWARD,Müşteri temsilcisi: {name},Account manager: {name}
 SALES_CHURN_COUNTDOWN,Churn'e ~{n} hafta,~{n} weeks to churn
 SALES_CHURN_COUNTDOWN_ONE,Churn'e ~{n} hafta,~{n} week to churn
@@ -2241,24 +2243,24 @@ EFFECT_PHASE_HOLD,Şimdilik aynı evrede kalırsın,You stay in this phase for n
 EFFECT_TAKES_YOU_THERE,Seni oraya götürür,Takes you there
 DESK_PAPER_WEEKS,{n} hafta,{n} weeks
 DESK_PAPER_THIS_WEEK,bu hafta,this week
-SALES_PIPELINE_HEADER,BORU HATTI,PIPELINE
+SALES_PIPELINE_HEADER,Boru hattı,Pipeline
 SALES_LOCKED_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
+SALES_B2C_NOTE,Kitleden gelen gelir MRR'da sayılır. Hesaplar ve adaylar B2B ürünle gelir.,Consumer revenue counts in MRR. Accounts and leads come with a B2B product.
 SALES_FLOW_RATE,Akış: {n}/hafta,Flow: {n}/week
 SALES_DAYS_LEFT,{n} hafta,{n} weeks
 SALES_DAYS_LEFT_ONE,{n} hafta,{n} week
 SALES_ACTION_MEET,Görüşmeye git,Go to the meeting
 SALES_ROUTE_RESERVE,Ayır,Reserve
 SALES_ROUTE_GIVE,Temsilciye ver,Give to a rep
-SALES_ROUTE_RESERVED,AYRILDI,RESERVED
-SALES_ROUTE_REP,TEMSİLCİDE,WITH A REP
+SALES_ROUTE_RESERVED,Ayrıldı,Reserved
+SALES_ROUTE_REP,Temsilcide,With a rep
 SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.
 SALES_EXPIRED_LINE,Beklemekten vazgeçti.,They stopped waiting.
-SALES_DESK_HEADER,SATIŞ MASASI,SALES DESK
+SALES_DESK_HEADER,Satış masası,Sales desk
 SALES_DESK_EMPTY,Satış işine atanmış kimse yok.,Nobody is assigned to the sales job.
 SALES_REP_WORKING,{company} ile görüşüyor · {n}. hafta,Working {company} · week {n}
 SALES_BAND_CAPTION,Çalıştığı bant:,Working band:
 SALES_BAND_OWN,Kendi ligi,Own league
-SALES_BAND_STAR,{n}★,{n}★
 SALES_BAND_OWN_ONLY,Çalıştığı bant: kendi ligi.,Working band: own league.
 SALES_BAND_ABOVE_REP,Bu masa temsilcinin liginin üstünde.,This table is above the rep's league.
 SALES_BAND_ABOVE_CAP,Bu masa seçilen bandın üstünde.,This table is above the chosen band.
@@ -2362,7 +2364,7 @@ SALES_ANS_PROBE_SWITCHING_RISK_A_PROMISE,PH: Geçişi biz yürütürüz ve takvi
 SALES_ANS_PROBE_CAPACITY_A_ADMIT,PH: Yoğun günde kapasite zorlanıyor. Bugünkü hâli bu.,PH: Capacity strains on a heavy day. This is where it stands.
 SALES_ANS_PROBE_CAPACITY_A_PROMISE,PH: Kapasiteyi sizin yükünüze göre büyütürüm.,PH: I will size the capacity to your load.
 SALES_LOG_EXPIRED,{company} beklemekten vazgeçti,{company} stopped waiting
-SALES_LOG_FOUNDER_CLOSE,{company} anlaşmasını sen kapattın · {amount}/ay,you closed {company} · {amount}/mo
+SALES_LOG_FOUNDER_CLOSE,{company} anlaşmasını sen kapattın · {amount}/ay,You closed {company} · {amount}/mo
 NEG_LAST_OFFER,SON RAKAM,THEIR LAST NUMBER
 NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,Patience is out. Take this number or the table closes.
 B2B_LOCK_NO_PAIN_TARGET,Ne istediklerini söylemediler. Söz verilecek bir şey yok.,They haven't named what they want. There's nothing to promise yet.

@@ -109,7 +109,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
 ## 7. UI ve tema — UI/STYLE LAW
 1. **Sözlük `UiTokens`'ındır.** Her renk palet tablosunda adlıdır; her boyut merdivendendir (`SIZE_MICRO 9 · META 10
    · SMALL 11 · DATA 12 · BODY 13 · LEAD 15 · TITLE 16 · DISPLAY 22`; editorial `SIZE_ED_* 24 · 26 · 32 · 44 · 52`).
-   Ham `Color(...)` ya da ham boyut yazılmaz; duruma bağlı stil helper'dan okunur (`delta_color`, `badge_palette`, …).
+   Ham `Color(...)` ya da ham boyut yazılmaz; duruma bağlı stil helper'dan okunur (`badge_palette`, `D_delta_color`, …).
 2. **`themes/master_theme.tres` ve `themes/menajer_theme.tres` üretilmiştir.** Üretici `"$GODOT" --headless --path .
    -s res://scripts/theme/build_theme.gd` (temiz checkout önce `--import`). Token ya da `build_theme.gd` değişikliği
    aynı commit'te `UiTokens.THEME_STAMP`'i artırır ve iki temayı yeniden üretir; debug açılışı iki temadan biri
@@ -132,8 +132,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   TopBar, NewsTicker) ve `CREAM*`, `*_CHROME`, `*_BRIGHT` okur; sinematik koyu register
   (`DIALOGUE_*`) de `CREAM*` ve `VEIL_*_CHROME`. Tek ada gazetedir (`PaperPanel`, kendi `PAPER_*` merdiveni). 3B
   ofisin renkleri UI token'ı değil sahne verisidir: `OfficeConstants`, `scripts/ui/office/`, `scenes/office/shaders/`.
-- **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) yalnız TopBar ve NewsTicker'da kullanılır. Satış
-  sekmesinin `ChromeTabButton`'ı açık karardır (`docs/ACIK_ISLER/ACIK_KARARLAR.md`); yeni yüzey eklemek ayrı karardır.
+- **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) yalnız TopBar ve NewsTicker'da kullanılır; yeni yüzey eklemek
+  ayrı karardır.
 
 ## 8. Kod yazımı
 Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları tekrarlamaz.

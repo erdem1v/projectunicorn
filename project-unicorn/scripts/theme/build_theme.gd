@@ -93,7 +93,6 @@ func _initialize() -> void:
 	# Özet başlık satırında yaşar, asla kopuk bir alt şeritte değil.
 	_lbl(th, &"TitleRowSummary", mono_label, T.SIZE_SMALL, T.INK_DIM)
 	_lbl(th, &"EmptyRowLabel", mono_reg, T.SIZE_DATA, T.INK_FAINT)     # "Henüz kimse yok"
-	_lbl(th, &"LockedTelegraph", mono_label, T.SIZE_SMALL, T.INK_FAINT) # "EĞİTİM · KİLİTLİ"
 	_lbl(th, &"RowName", sans_sb, T.SIZE_BODY, T.INK)
 	_lbl(th, &"RowMeta", mono_reg, T.SIZE_SMALL, T.INK_MUTED)
 	_lbl(th, &"AvatarInitial", sans_sb, T.SIZE_BODY, T.CREAM)
@@ -281,29 +280,6 @@ func _initialize() -> void:
 		"focus": _no_focus(),
 	})
 
-	# StanceDial(+Active): the Sales tab's price dial. It is the single source of every B2B
-	# price, so the selected position cannot be missed: amber wash, amber edge, amber text.
-	for active in [false, true]:
-		var name: StringName = &"StanceDialActive" if active else &"StanceDial"
-		var ink: Color = T.ACCENT_DEEP if active else T.INK_DIM
-		var dial := _box(T.AMBER_BG if active else T.SURFACE_INPUT, T.RADIUS_S,
-			T.ACCENT_DEEP if active else T.BORDER_DISABLED, T.PAD_DIAL)
-		th.set_type_variation(name, &"Button")
-		_states(th, name, {"normal": dial, "hover": dial, "pressed": dial, "focus": _no_focus()})
-		th.set_font_size("font_size", name, T.SIZE_META)
-		th.set_color("font_color", name, ink)
-		th.set_color("font_hover_color", name, ink if active else T.INK)
-		th.set_color("font_pressed_color", name, ink)
-
-	# ========================================================================
-	# CHROME AİLESİ — koyu kabuk register'ı. Yasal yüzey listesi CLAUDE.md Chrome
-	# kuralında; gövdeyle birlikte değişen her renk *_CHROME ikizinden okunur.
-	# ========================================================================
-	# ChromeTabButton(+Active): TabButton'ın birebir aynısı; Satış sekmesinin bant tavanı
-	# seçicisi okur.
-	_tab_button(th, &"ChromeTabButton", false)
-	_tab_button(th, &"ChromeTabButtonActive", true)
-
 	# ---- RichTextLabel variations ----
 	# Godot 4's keys are "italics_font"/"bold_italics_font" (with the s); "italic_font"
 	# is silently ignored and *italic* spans fall back to the engine default.
@@ -447,7 +423,7 @@ func _initialize() -> void:
 	# rounds to SIZE_DATA. Rail labels are a step below (SIZE_META).
 	for pinned in [&"Button", &"CommitButton", &"LineEdit", &"DialogueInput", &"SettingsSwitch"]:
 		th.set_font_size("font_size", pinned, T.SIZE_DATA)
-	for rail in [&"TabButton", &"TabButtonActive", &"ChromeTabButton", &"ChromeTabButtonActive"]:
+	for rail in [&"TabButton", &"TabButtonActive"]:
 		th.set_font_size("font_size", rail, T.SIZE_META)
 	th.set_color("font_focus_color", &"Button", T.INK)
 
@@ -596,8 +572,7 @@ func _menajer(master: Theme) -> Theme:
 	_recolor(th, &"PortraitCellSelected", "panel", null, T.D_INK_1)
 	for state in ["normal", "hover", "pressed"]:
 		_recolor(th, &"SpeedButtonActive", state, null, T.D_ACCENT)
-		for tab in [&"TabButtonActive", &"ChromeTabButtonActive"]:
-			_recolor(th, tab, state, T.D_SURFACE_4, T.D_SELECTED_MARK)
+		_recolor(th, &"TabButtonActive", state, T.D_SURFACE_4, T.D_SELECTED_MARK)
 	for commit in [&"CommitButton", &"CommitButtonDark"]:
 		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
 			th.set_color(key, commit, T.D_ON_ACCENT)
@@ -855,7 +830,7 @@ func _menajer(master: Theme) -> Theme:
 	for cb in [false, true]:
 		T.set_colorblind(cb)
 		var twin := "Cb" if cb else ""
-		for row in [["TagRisk", &"negative"], ["TagWarn", &"accent"]]:
+		for row in [["TagRisk", &"negative"], ["TagWarn", &"accent"], ["TagPos", &"positive"]]:
 			var p: Dictionary = T.D_badge_palette(row[1])
 			_lbl(th, row[0] + twin, cond_b_caps, T.D_FS_13, p.fg)
 			th.set_stylebox("normal", row[0] + twin, _flat(p.bg, T.D_RADIUS_2, tag, p.line))
@@ -1116,6 +1091,32 @@ func _menajer(master: Theme) -> Theme:
 		"pressed": on, "disabled": [clear, clear, T.D_INK_OFF]}, sans_reg, T.D_FS_14, seg_pad, 0, under)
 	_dbtn(th, &"SegPickOn", {"normal": on, "hover": on, "pressed": on, "disabled": [T.D_SURFACE_5, T.D_INK_1, T.D_INK_OFF]},
 		sans_reg, T.D_FS_14, seg_pad, 0, under)
+	# A pick's glyph follows its number (the band picker's stars).
+	for seg in [&"SegPick", &"SegPickOn"]:
+		th.set_constant("icon_max_width", seg, T.D_ICON_STAR)
+		th.set_constant("h_separation", seg, T.SPACE_XS)
+
+	# ---- Satış: lead and account documents, the desk ----
+	# A lead or an account is a small document; an account at risk sits on the danger ground, in the
+	# palette in use. A rep's place on the desk is furniture: an inset box.
+	_panel(th, &"DealDoc", "PanelContainer", _doc(_flat(T.D_SURFACE_4, 0, card_pad, T.D_LINE_2), T.D_CUT_SM))
+	_panel(th, &"DeskCard", "PanelContainer", _flat(T.D_SURFACE_2, T.D_RADIUS_3, card_pad, T.D_LINE_1))
+	# An open promise's note; its host draws the dashed edge.
+	_panel(th, &"PromiseNote", "PanelContainer", _flat(clear, T.D_RADIUS_2,
+		_fit(sans_reg, T.D_FS_13, T.D_H_PROMISE, T.SPACE_M, T.SPACE_M)))
+	for cb in [false, true]:
+		T.set_colorblind(cb)
+		var twin := "Cb" if cb else ""
+		_panel(th, "DealRisk" + twin, "PanelContainer", _doc(_flat(T.D_neg_bg(), 0, card_pad, T.D_neg_rule()), T.D_CUT_SM))
+		# The churn countdown's weeks: the ones left filled.
+		_panel(th, "PipOn" + twin, "Panel", _flat(T.D_neg(), T.D_RADIUS_1, Vector4.ZERO, T.D_neg()))
+		_panel(th, "PipOff" + twin, "Panel", _flat(clear, T.D_RADIUS_1, Vector4.ZERO, T.D_badge_palette(&"negative").line))
+	T.set_colorblind(false)
+	for row in [
+		[&"SatValue", sans_b, T.D_FS_15, T.D_INK_2],   # its host paints the satisfaction band
+		[&"CaptionName", sans_sb, T.D_FS_13, T.D_INK_2],   # a name inside a caption's sentence
+	]:
+		_lbl(th, row[0], row[1], row[2], row[3])
 
 	# Message body and ticker text.
 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")

@@ -349,15 +349,7 @@ func _morale_cell(emp: Character, hours: int, away: bool) -> HBoxContainer:
 		if dir != null:
 			cell.add_child(dir)
 	var ink: Color = HRUiShared.D_morale_ink(emp.morale)
-	var track := Panel.new()
-	track.theme_type_variation = &"BarTrack"
-	track.custom_minimum_size = UiTokens.D_MORALE_BAR_SM
-	var fill := Panel.new()
-	fill.theme_type_variation = &"BarTint"
-	fill.self_modulate = ink
-	fill.size = Vector2(UiTokens.D_MORALE_BAR_SM.x * emp.morale / float(HRConstants.MORALE_MAX), UiTokens.D_MORALE_BAR_SM.y)
-	track.add_child(fill)
-	cell.add_child(track)
+	cell.add_child(HRUiShared.D_bar(UiTokens.D_MORALE_BAR_SM, emp.morale / float(HRConstants.MORALE_MAX), ink))
 	var value := UiFactory.make_label(str(emp.morale), &"MoraleValue", ink)
 	cell.add_child(value)
 	for part: Control in cell.get_children():

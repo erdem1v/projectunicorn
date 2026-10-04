@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 143 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 144 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **143** |
+| Signals declared | **144** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **71** |
+| Emitted with **no production listener** | **72** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 23 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 33 | 3 | main · left_tabs · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 34 | 3 | main · left_tabs · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 1 | finance_tab |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
@@ -220,6 +220,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `lead_expired` | `prospect_id: String` | sales_faucet_system | 1 | 0 | — |
 | `lead_reserved` | `prospect_id: String` | sales_ledger | 1 | 0 | — |
 | `lead_routed` | `prospect_id: String` | sales_ledger | 1 | 0 | — |
+| `lead_unrouted` | `prospect_id: String` | sales_ledger | 1 | 0 | — |
 | `meeting_entered` | `prospect_id: String` | sales_meeting_system | 1 | 0 | — |
 | `meeting_won` | `prospect_id: String` | sales_meeting_system | 1 | 0 | — |
 | `meeting_lost` | `account_key: String, reason: String` | sales_ledger | 1 | 0 | — |

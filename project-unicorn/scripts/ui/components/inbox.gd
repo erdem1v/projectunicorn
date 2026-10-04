@@ -171,6 +171,15 @@ static func mark_read(it: Dictionary) -> void:
 		MessageSystem.mark_read(String(it.msg.id))
 
 
+## The item an account's reminder is in the inbox: its expansion paper when one is on the desk (it stands for
+## the reminder), else the reminder itself.
+static func account_item(customer_id: String) -> String:
+	for p in EventGate.desk_papers():
+		if String(p.event_id) == EXPANSION_CARD and _bound(p.context, EvScope.TYPE_CUSTOMER) == customer_id:
+			return "paper:" + String(p.id)
+	return "r:customer:" + customer_id
+
+
 ## Why an account is in Risk, as the Sales tab says it.
 static func risk_reason() -> String:
 	return TranslationServer.translate("SALES_REASON_OUTAGE" if ProductSystem.live_bug_count() > B2BConstants.COMPLAINT_BUG_GATE

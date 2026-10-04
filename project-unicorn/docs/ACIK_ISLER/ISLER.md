@@ -88,8 +88,7 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
 - **Bayrakla ulaşılamayan görsel kabul yüzeyleri.** Turun görsel kabulü altı durumu repoda olmayan bir sürücüyle
   kurdu; mevcut shot bayrakları bu durumlara gelemiyor. Her biri için bir shot türü yazılır (`--product-shot=live:`,
   `--finance-shot=`, `--meeting-shot=`, `--event-shot=` ailelerinde):
-  - Sözlü sprint kartı ("söz verildi" damgası, öngörüde "{müşteri} sözü tutulur") ve Satış kartındaki "Sprint N sonuna
-    kadar" satırı.
+  - Sözlü sprint kartı ("söz verildi" damgası, öngörüde "{müşteri} sözü tutulur").
   - Canlı sürümlerin Geçmiş'teki gerçekleşen satırları (iki sürüm kapanmış koşu).
   - Planlamadan sonra kapısı kapanan kart: başlatmada sonraki sütuna geçer, KİLİTLİ ve yalnız Çıkar.
   - Finans gider dökümünde Servis maliyeti satırı (canlı ürün ve B2B defteri).

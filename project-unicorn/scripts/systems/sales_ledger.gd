@@ -46,17 +46,20 @@ static func lead_routing(lead_id: String) -> String:
 	return p.routing if p != null else SalesConstants.ROUTE_NONE
 
 
-## §7.2.1 — "Ayır" (the desk is the founder's) and "Temsilciye ver" (first in the band queue).
-## Reserving does NOT stop the clock (§7.2.1: "Rezerv süreyi durdurmaz").
+## §7.2.1 — "Ayır" (the desk is the founder's) and "Temsilciye ver" (first in the band queue), and
+## ROUTE_NONE taking either back. Reserving does NOT stop the clock (§7.2.1: "Rezerv süreyi durdurmaz").
 static func set_routing(lead_id: String, routing: String) -> void:
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
 	if p == null or p.routing == routing:
 		return
 	p.routing = routing
-	if routing == SalesConstants.ROUTE_RESERVED:
-		EventBus.lead_reserved.emit(lead_id)
-	elif routing == SalesConstants.ROUTE_REP:
-		EventBus.lead_routed.emit(lead_id)
+	match routing:
+		SalesConstants.ROUTE_RESERVED:
+			EventBus.lead_reserved.emit(lead_id)
+		SalesConstants.ROUTE_REP:
+			EventBus.lead_routed.emit(lead_id)
+		_:
+			EventBus.lead_unrouted.emit(lead_id)
 
 
 static func reach_band() -> int:

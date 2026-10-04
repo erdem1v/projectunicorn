@@ -19,6 +19,7 @@ var _panel: PanelContainer = null
 var _body: VBoxContainer = null
 var _anchor_rect: Rect2 = Rect2()
 var _below := false
+var _from_left := false
 
 
 func _ready() -> void:
@@ -42,9 +43,11 @@ func body() -> VBoxContainer:
 	return _body
 
 
-## below: panel çapanın altından başlar (çapayı örtmeyen menü, ürünün hedef şeridi).
-func open_at(anchor: Control, below := false) -> void:
+## below: panel çapanın altından başlar (çapayı örtmeyen menü, ürünün hedef şeridi). from_left: panelin sol
+## kenarı çapanınkinde (düğmesinin altına açılan seçici, Satış'ın sorumlu seçicisi).
+func open_at(anchor: Control, below := false, from_left := false) -> void:
 	_below = below
+	_from_left = from_left
 	if anchor != null and is_instance_valid(anchor) and anchor.is_inside_tree():
 		_anchor_rect = Rect2(anchor.global_position, anchor.size)
 	else:
@@ -60,9 +63,9 @@ func _place() -> void:
 	var screen: Vector2 = get_viewport_rect().size
 	var panel_size: Vector2 = _panel.get_combined_minimum_size()
 	panel_size.x = maxf(panel_size.x, float(MIN_WIDTH))
-	# Tek kural: panelin sağ kenarı çapanın sağ kenarıyla hizalı. Kelepçe bir konum
-	# seçimi değil korkuluk: çapa dar viewport'ta taşsa da panel ekranda kalır.
-	var x: float = _anchor_rect.position.x + _anchor_rect.size.x - panel_size.x
+	# Tek kural: panelin sağ kenarı çapanın sağ kenarıyla (from_left'te sol kenarı sol kenarıyla) hizalı.
+	# Kelepçe bir konum seçimi değil korkuluk: çapa dar viewport'ta taşsa da panel ekranda kalır.
+	var x: float = _anchor_rect.position.x if _from_left else _anchor_rect.end.x - panel_size.x
 	x = clampf(x, EDGE_MARGIN, maxf(EDGE_MARGIN, screen.x - panel_size.x - EDGE_MARGIN))
 	# Dikey: çapanın üstüyle (ya da altıyla) hizalı, ekrana kelepçeli.
 	var y: float = clampf(_anchor_rect.end.y + UiTokens.SPACE_M if _below else _anchor_rect.position.y - LIFT,

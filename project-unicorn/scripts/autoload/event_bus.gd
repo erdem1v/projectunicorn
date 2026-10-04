@@ -202,6 +202,7 @@ signal prospect_arrived(prospect_id: String)          # §3 — the faucet produ
 signal lead_expired(prospect_id: String)              # §4 — "Beklemekten vazgeçti."
 signal lead_reserved(prospect_id: String)             # §7.2.1 — "Ayır"
 signal lead_routed(prospect_id: String)               # §7.2.1 — "Temsilciye ver"
+signal lead_unrouted(prospect_id: String)             # §7.2.1 — either verb taken back
 signal meeting_entered(prospect_id: String)           # §5.0 — the founder sat down
 signal meeting_won(prospect_id: String)               # §5.1.1 — the customer cut to Act 2
 signal meeting_lost(account_key: String, reason: String)  # §5.2 — with the NAMED reason

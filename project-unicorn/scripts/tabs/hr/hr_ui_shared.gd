@@ -343,14 +343,8 @@ static func D_morale(morale: int, refs: Dictionary) -> HBoxContainer:
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	value.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(value)
-	var track := Panel.new()
-	track.theme_type_variation = &"BarTrack"
-	track.custom_minimum_size = UiTokens.D_MORALE_BAR
-	track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var track := D_bar(UiTokens.D_MORALE_BAR, morale / float(HRConstants.MORALE_MAX), D_morale_ink(morale))
 	row.add_child(track)
-	var fill := Panel.new()
-	fill.theme_type_variation = &"BarTint"
-	track.add_child(fill)
 	var notch := ColorRect.new()
 	notch.color = UiTokens.D_INK_4
 	notch.size = UiTokens.D_NOTCH
@@ -359,7 +353,7 @@ static func D_morale(morale: int, refs: Dictionary) -> HBoxContainer:
 	track.add_child(notch)
 	set_mouse_ignore(row)
 	refs["value"] = value
-	refs["fill"] = fill
+	refs["fill"] = track.get_child(0)
 	D_repaint_morale(refs, morale)
 	return row
 
@@ -372,6 +366,20 @@ static func D_repaint_morale(refs: Dictionary, morale: int) -> void:
 	var fill: Panel = refs["fill"]
 	fill.self_modulate = ink
 	fill.size = Vector2(UiTokens.D_MORALE_BAR.x * morale / float(HRConstants.MORALE_MAX), UiTokens.D_MORALE_BAR.y)
+
+
+## A meter: its track at `size` and, as the track's first child, its fill to `ratio` in `ink`.
+static func D_bar(size: Vector2, ratio: float, ink: Color) -> Panel:
+	var track := Panel.new()
+	track.theme_type_variation = &"BarTrack"
+	track.custom_minimum_size = size
+	track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var fill := Panel.new()
+	fill.theme_type_variation = &"BarTint"
+	fill.self_modulate = ink
+	fill.size = Vector2(size.x * clampf(ratio, 0.0, 1.0), size.y)
+	track.add_child(fill)
+	return track
 
 
 ## §7'nin bantları: 35 altı Ayrılabilir tehlikedir, 50 altı uyarı, üstü olumlu.
@@ -389,16 +397,7 @@ static func D_xp(c: Character) -> HBoxContainer:
 	var full: bool = ratio >= 1.0
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	var track := Panel.new()
-	track.theme_type_variation = &"BarTrack"
-	track.custom_minimum_size = UiTokens.D_XP_BAR
-	track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(track)
-	var fill := Panel.new()
-	fill.theme_type_variation = &"BarTint"
-	fill.self_modulate = UiTokens.D_BAR_EMPH if full else UiTokens.D_BAR_FILL
-	fill.size = Vector2(UiTokens.D_XP_BAR.x * clampf(ratio, 0.0, 1.0), UiTokens.D_XP_BAR.y)
-	track.add_child(fill)
+	row.add_child(D_bar(UiTokens.D_XP_BAR, ratio, UiTokens.D_BAR_EMPH if full else UiTokens.D_BAR_FILL))
 	var share := UiFactory.make_label(Fmt.percent(int(round(ratio * 100.0)), 0), &"MetaMuted",
 		UiTokens.D_INK_2 if full else null)
 	share.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -528,8 +527,8 @@ static func D_mono(letter: String, px: int) -> PanelContainer:
 	return box
 
 
-## Kesikli çerçeve (StyleBoxFlat kesik çizemez): kimsenin alamadığı iş kutusu, değerini devralan saat.
-static func D_dashed(box: Control) -> void:
+## Kesikli çerçeve (StyleBoxFlat kesik çizemez): kimsenin alamadığı iş kutusu, değerini devralan saat, açık söz.
+static func D_dashed(box: Control, color := UiTokens.D_LINE_2) -> void:
 	box.draw.connect(func() -> void:
 		var dash: float = UiTokens.SPACE_XS
 		var gap: float = UiTokens.SPACE_XXS
@@ -542,7 +541,7 @@ static func D_dashed(box: Control) -> void:
 			var step: Vector2 = (to - from) / maxf(length, 1.0)
 			var at := 0.0
 			while at < length:
-				box.draw_line(from + step * at, from + step * minf(at + dash, length), UiTokens.D_LINE_2, 1.0)
+				box.draw_line(from + step * at, from + step * minf(at + dash, length), color, 1.0)
 				at += dash + gap)
 
 

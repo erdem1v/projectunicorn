@@ -245,10 +245,11 @@ static func make_close_button(on_close: Callable, dark := false) -> Button:
 # builders above stay with the screens that have not moved.
 
 ## A caps tag: "" the plain outline, "neutral" quiet on a fill, "outline" quieter still, and the
-## meanings "risk" and "warn" in the palette in use.
+## meanings "risk", "warn" and "pos" in the palette in use.
 static func D_tag(text: String, kind: StringName = &"") -> Label:
 	var tag := make_label(Fmt.upper(text), {&"": &"Tag", &"neutral": &"TagNeutral", &"outline": &"TagOutline",
-		&"risk": UiTokens.D_variation(&"TagRisk"), &"warn": UiTokens.D_variation(&"TagWarn")}[kind])
+		&"risk": UiTokens.D_variation(&"TagRisk"), &"warn": UiTokens.D_variation(&"TagWarn"),
+		&"pos": UiTokens.D_variation(&"TagPos")}[kind])
 	tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return tag
@@ -317,6 +318,48 @@ static func _paint_seg_tabs(row: HBoxContainer, active: int) -> void:
 		for part: Control in row.get_child(i).get_children():
 			var base: String = "SegTab" if part is Button else "SegCount"
 			part.theme_type_variation = StringName(base + ("Active" if i == active else ""))
+
+
+## A rule unit in stars (a lead's or an account's size, a rep's league): five glyphs, the whole ones in
+## ink, a half where the value has one, the rest faint.
+static func D_stars(stars: float) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 0)
+	row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for i in HRConstants.STAR_MAX:
+		var look: String = "full" if stars >= i + 1 else ("half" if stars >= i + 0.5 else "empty")
+		row.add_child(make_glyph("res://assets/icons/util/star_%s.svg" % look, UiTokens.D_ICON_STAR,
+			UiTokens.D_LINE_3 if look == "empty" else UiTokens.D_INK_2))
+	return row
+
+
+## A segmented pick: its options side by side in one box, the one in force filled and underlined. Each
+## option is {text, tip?, icon?} (the icon after the text); a press on another calls `on_pick(index)`.
+## `off` reads only.
+static func D_seg_pick(options: Array, active: int, on_pick: Callable, off := false) -> PanelContainer:
+	var frame := PanelContainer.new()
+	frame.theme_type_variation = &"SegPickBox"
+	frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 0)
+	frame.add_child(row)
+	for i in options.size():
+		if i > 0:
+			row.add_child(VSeparator.new())
+		var b := Button.new()
+		b.theme_type_variation = &"SegPickOn" if i == active else &"SegPick"
+		b.text = options[i].text
+		b.tooltip_text = options[i].get("tip", "")
+		if options[i].has("icon"):
+			b.icon = load(options[i].icon)
+			b.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		b.focus_mode = Control.FOCUS_NONE
+		b.disabled = off
+		if i != active:
+			b.pressed.connect(on_pick.bind(i))
+		row.add_child(b)
+	return frame
 
 
 ## A cost: its value in ink behind the cost disc, never in red (a cost is not a danger).

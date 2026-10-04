@@ -240,17 +240,20 @@ static func _token_rows(T) -> Array:
 	var neg: Dictionary = T.D_badge_palette(&"negative")
 	var pos: Dictionary = T.D_badge_palette(&"positive")
 	var warn: Dictionary = T.D_badge_palette(&"accent")
+	# An account at risk is a whole card on the danger ground: its text, tags and meter read on it.
+	var risk_card := [["neg-bg", T.D_neg_bg()]]
 	var rows := [
-		["D_INK_1", T.D_INK_1, "body", win], ["D_INK_2", T.D_INK_2, "body", s], ["D_INK_3", T.D_INK_3, "body", s],
+		["D_INK_1", T.D_INK_1, "body", win + risk_card], ["D_INK_2", T.D_INK_2, "body", s + risk_card],
+		["D_INK_3", T.D_INK_3, "body", s + risk_card],
 		["D_INK_4", T.D_INK_4, "body", win], ["D_INK_OFF", T.D_INK_OFF, "off", win],
 		["D_ACCENT", T.D_ACCENT, "body", [s[1], s[4]]],
 		["D_ON_ACCENT", T.D_ON_ACCENT, "body", [["accent", T.D_ACCENT], ["accent-hover", T.D_ACCENT_HOVER],
 			["accent-pressed", T.D_ACCENT_PRESSED]]],
-		["D_pos", T.D_pos(), "body", win], ["D_warn", T.D_warn(), "body", win],
-		["D_neg", T.D_neg(), "body", win + [["neg-bg", T.D_neg_bg()]]],
+		["D_pos", T.D_pos(), "body", win + risk_card], ["D_warn", T.D_warn(), "body", win + risk_card],
+		["D_neg", T.D_neg(), "body", win + risk_card],
 		["D_info", T.D_info(), "ui", [s[2], s[3]]],
-		["D_neg_ink", T.D_neg_ink(), "body", [["neg-bg", T.D_neg_bg()]] + on.call("neg-tag", neg.bg, [s[2], s[3]])],
-		["positive tag", pos.fg, "body", on.call("pos-tag", pos.bg, [s[2], s[3]])],
+		["D_neg_ink", T.D_neg_ink(), "body", risk_card + on.call("neg-tag", neg.bg, [s[2], s[3]] + risk_card)],
+		["positive tag", pos.fg, "body", on.call("pos-tag", pos.bg, [s[2], s[3], s[4]])],
 		["attention tag", warn.fg, "body", on.call("warn-tag", warn.bg, [s[2], s[3]])],
 		["D_on_neg", T.D_on_neg(), "body", [["neg", T.D_neg()]]],
 		["D_STAMP", T.D_STAMP, "body", [s[2], s[3], s[4]]],

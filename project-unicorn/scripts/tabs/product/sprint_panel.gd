@@ -333,22 +333,8 @@ func _foot_row(beta: Variant, button: Button) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_L)
 	if beta != null:
 		row.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_BETA_CHANNEL")), &"KeyLabel"))
-		var frame := PanelContainer.new()
-		frame.theme_type_variation = &"SegPickBox"
-		frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var pick := SprintUiShared.box(0)
-		frame.add_child(pick)
-		for i in 2:
-			if i > 0:
-				pick.add_child(VSeparator.new())
-			var b := Button.new()
-			b.theme_type_variation = &"SegPickOn" if i == int(beta.open) else &"SegPick"
-			b.text = tr(["PRODUCT_OFF", "PRODUCT_ON"][i])
-			b.focus_mode = Control.FOCUS_NONE
-			if i != int(beta.open):
-				b.pressed.connect(action.emit.bind("beta", {"open": i == 1}))
-			pick.add_child(b)
-		row.add_child(frame)
+		row.add_child(UiFactory.D_seg_pick([{"text": tr("PRODUCT_OFF")}, {"text": tr("PRODUCT_ON")}], int(beta.open),
+			func(i: int) -> void: action.emit("beta", {"open": i == 1})))
 	row.add_child(RnDUiShared.spacer())
 	if button != null:
 		row.add_child(button)

@@ -616,8 +616,8 @@ func _run_event_shot(event_id: String) -> void:
 ##   offer · queue · customer (an option armed) · locked · history · paper · paper_open ·
 ##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
 ##   frank_moment · rnd_note · rnd_discovery · weekly_sales · empty · long · team_read_only (Ekip
-##   read-only over a decision) · team_tasks_read_only (its Görevler) · held_key (a speed key refused:
-##   the frame's blink and the toast)
+##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
+##   held_key (a speed key refused: the frame's blink and the toast)
 ## Cards come through force_fire; a past decision is resolved for real at an earlier week.
 func _run_inbox_shot(state: String) -> void:
 	_begin_shot()
@@ -637,9 +637,11 @@ func _run_inbox_shot(state: String) -> void:
 			return
 		"intro":
 			_open_note("intro")
-		"offer", "team_read_only", "team_tasks_read_only", "held_key":
+		"offer", "team_read_only", "team_tasks_read_only", "sales_read_only", "held_key":
 			_shot_card("funding.frank_cheque", {}, 8)
-			if state.begins_with("team_"):
+			if state == "sales_read_only":
+				EventBus.tab_changed.emit("sales")
+			elif state.begins_with("team_"):
 				EventBus.tab_changed.emit("hr")
 				if state == "team_tasks_read_only":
 					await get_tree().process_frame
@@ -838,19 +840,33 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 	pane.populate(INBOX.card_item("preview", card_id, ctx, {}, GameState.day), "preview")
 
 
-## --sales-shot=<pipeline|desk|b2c>. `b2c` photographs §3.1's locked pipeline with its reason line.
+## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|untyped>. `desk` puts a rep
+## mid-processing on the desk; `picker` opens the steward picker on the first account, `inbox` presses its İlgilen
+## (Olaylar opens on the account's mail); `edge` draws the rarer lines (a reserved lead, one given to a rep, a
+## whale's condition, tables above the founder's league, the week's meetings spent, an open promise by sprint, the
+## log) with three calm accounts, `edge_end` the same with both columns scrolled to their ends; `stretched` the
+## founder holding one account more than he can, a 1★ rep and a lead in its last week; `empty` an open market with
+## no lead, rep or account; `b2c` photographs §3.1's empty window in a B2C run, `untyped` before a type is picked.
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_sales_world()
 	GameState.day = 14
 	GameState.set_flag("mvp_live_bug_count", 12)  # risk reason → "sık kesinti şikayeti"
-	if kind == "b2c":
-		GameState.set_flag("mvp_market_type", "b2c")
-	else:
-		for star in [1, 2, 3]:
-			SalesFaucetSystem.spawn(star, "faucet")
-	if kind == "desk":
-		# A rep on the desk, mid-processing, so the band row and the working line both draw.
+	var edge: bool = kind.begins_with("edge")
+	match kind:
+		"b2c":
+			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
+		"untyped":
+			for flag in ["mvp_shipped", "mvp_market_type", "mvp_sub_product_type_id"]:
+				GameState.flags.erase(flag)
+		"empty":
+			pass
+		_:
+			for star in [1, 2, 3]:
+				SalesFaucetSystem.spawn(star, "faucet")
+	if kind in ["desk", "picker", "inbox", "stretched"]:
+		# A rep on the desk, mid-processing, so the band row and the working line both draw; at 1★ the band row
+		# is the line that says the rep works their own league only.
 		var rep := Character.new()
 		rep.id = "char_sr_shot"
 		rep.character_name = "Kerem Aydın"   # LOC-DATA debug seed / id
@@ -859,18 +875,38 @@ func _run_sales_shot(kind: String) -> void:
 		rep.level = HRConstants.LEVEL_MID
 		rep.monthly_salary = 3200
 		rep.morale = 62
-		rep.role_stats = HRConstants.seed_skills(rep.role, 5, 3)
+		rep.role_stats = HRConstants.seed_skills(rep.role, 2 if kind == "stretched" else 5, 3)
 		rep.traits = ["picks_it_up_fast"]
 		CharacterRegistry.add(rep)
 		rep.hire_day = GameState.day - 4   # add() stamps today
 		CharacterRegistry.assign_job(rep.id, HRConstants.JOB_SALES)
 		SalesRepSystem.daily_tick()
-	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
-	_shot_customer("co_palmiye", "Palmiye Holding", "insurance", "active", 1500, 16, 21, true)
-	_shot_customer("co_aras", "Aras Klinik", "health", "onboarding", 700, 6, 1, false)
-	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
-	CustomerRegistry.set_churn_countdown("co_ege", TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
-	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
+	if kind != "empty":
+		_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_palmiye", "Palmiye Holding", "insurance", "active", 1500, 16, 21, true)
+		_shot_customer("co_aras", "Aras Klinik", "health", "onboarding", 700, 6, 1, false)
+	if edge:
+		var leads: Array[Prospect] = ProspectRegistry.get_all()
+		SalesLedger.set_routing(leads[0].id, SalesConstants.ROUTE_RESERVED)
+		SalesLedger.set_routing(leads[1].id, SalesConstants.ROUTE_REP)
+		leads[2].whale_condition = "sla_promise"   # LOC-DATA debug seed / id
+		CharacterRegistry.get_founder().role_stats[HRConstants.AREA_SALES] = 2
+		GameState.sales_meetings_week = {"tick": GameState.day, "count": SalesConstants.MEETINGS_PER_WEEK}
+		# A shipped product has a type, and a typed product's promise is due by a sprint's end.
+		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+		PromiseRegistry.create("co_kuzey", "saas_ops_integration", 1)   # LOC-DATA debug seed / id
+		SalesSystem.record_sales_event("lead_expired", "", "Efes Emlak", 0)   # LOC-DATA debug seed / id
+		SalesSystem.record_sales_event("founder_close", "", "Aras Klinik", 700)   # LOC-DATA debug seed / id
+	elif kind != "empty":
+		_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
+		CustomerRegistry.set_churn_countdown("co_ege", TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
+		_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
+	if kind == "stretched":
+		_shot_customer("co_lale", "Lale Lojistik", "logistics", "active", 800, 8, 5, false)   # LOC-DATA debug seed / id
+		# The 3★ lead is above the 1★ rep's league, so it waits: three weeks on the board, one left.
+		var last: Prospect = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.star == 3)[0]
+		last.spawned_on_day = GameState.day - TimeModel.ticks(3)
+		last.expires_on_day = GameState.day + TimeModel.ticks(1)
 	# Monthly strip figures: gained 1 / lost 2 / net -1.
 	GameState.run_customers_signed = 5
 	GameState.run_customers_lost = 2
@@ -878,7 +914,17 @@ func _run_sales_shot(kind: String) -> void:
 	SalesSystem.reflect_mrr()
 	await _mount_shot_shell()
 	EventBus.tab_changed.emit("sales")
-	await _finish_shot("sales_shot_%s" % kind)
+	if kind in ["picker", "inbox", "edge_end"]:
+		await get_tree().process_frame
+		var page: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()
+		if kind == "edge_end":
+			await get_tree().create_timer(0.3).timeout
+			for scroll: ScrollContainer in page.find_children("*", "ScrollContainer", true, false):
+				scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+		elif not _press_button_labelled(page, tr("SALES_STEWARD_CHANGE" if kind == "picker" else "SALES_ACTION_RETAIN")):
+			_shot_fail("[SalesShot] %s: the first account's button is missing" % kind)
+			return
+	await _finish_shot("sales_shot_%s" % kind, 0.6)
 
 
 # Theme-matrix shots (--tab-shot / --modal-shot / --onboard-shot / --theme-audit) cover the
