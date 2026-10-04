@@ -1695,7 +1695,7 @@ func _run_hr_shot(kind: String) -> void:
 		return
 	match kind:
 		"atlas", "dosyalar", "atlas-secili":   # LOC-DATA debug seed / id
-			tab._open_atlas()
+			tab.open_atlas()
 			if kind == "atlas-secili":   # LOC-DATA debug seed / id
 				var atlas: Node = get_tree().get_root().find_child("PanelLayer", true, false).get_child(-1)
 				atlas._selected_role = HRConstants.ROLE_DEVELOPER
@@ -1904,8 +1904,11 @@ func _run_ending_shot(key: String) -> void:
 # --product-shot=<c1..c5|cards|flow|edge:<name>|live:<scenario>>: the Product tab. The first four
 # are fed by the debug fixture source (scripts/debug/product_fixtures.gd, edge names live there)
 # through the shell's debug relays, the same path an MCP session takes; flow starts from c1 and
-# saves one frame after each of start, advance and plan_next. live draws ProductModel.live() over a
-# run seeded through SprintSystem (_seed_product_live).
+# saves one frame after each of start, advance and plan_next; edge:goal_menu opens the quarter goal's
+# menu with a click on its strip, edge:voices_open scrolls the areas to the open one. live draws
+# ProductModel.live() over a run seeded through SprintSystem (_seed_product_live); live:pick_named is
+# the type picker with B2C, a type and a name picked; live:decision_paper presses the decision row's
+# Karara git, so the frame is Olaylar on the sprint paper.
 func _run_product_shot(id: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -1914,10 +1917,34 @@ func _run_product_shot(id: String) -> void:
 		_seed_product_live(id.trim_prefix("live:"))
 		await _mount_shot_shell()
 		EventBus.tab_changed.emit("product")
+		if id == "live:pick_named":
+			var picker: TypePicker = _shell.find_children("*", "TypePicker", true, false)[0]
+			picker._pick_market("b2c")
+			await get_tree().process_frame
+			picker._pick_type("note_tool")
+		if id == "live:decision_paper":
+			await get_tree().process_frame
+			for go: Button in _shell.find_children("*", "Button", true, false):
+				if go.text == tr("PRODUCT_GO_DECISION"):
+					go.pressed.emit()
+					break
 		await _finish_shot(stem)
 		return
 	await _mount_shot_shell()
 	_shell.debug_product_apply("c1" if id == "flow" else id.trim_prefix("edge:"))
+	if id == "edge:voices_open":
+		# The areas column starts at the open area's own row, so its voices are in view.
+		await get_tree().process_frame
+		var areas: AreaPanel = _shell.find_children("*", "AreaPanel", true, false)[0]
+		for row: Control in areas.get_children():
+			if row.get_meta(&"selected", false):
+				(areas.get_parent().get_parent() as ScrollContainer).scroll_vertical = int(row.position.y)
+	if id == "edge:goal_menu":
+		await get_tree().process_frame
+		var click := InputEventMouseButton.new()
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.pressed = true
+		(_shell.find_children("*", "QuarterView", true, false)[0] as QuarterView).get_child(0).gui_input.emit(click)
 	if id != "flow":
 		await _finish_shot(stem)
 		return
@@ -1929,14 +1956,14 @@ func _run_product_shot(id: String) -> void:
 	get_tree().quit()
 
 
-## live:<pick|plan|active|b2c_mvp|b2b_requests>. pick leaves the product untyped (the type picker).
-## The rest choose a type, staff it with the HR shot roster and play through SprintSystem with only
-## its own daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's
-## plan, active in its second week, b2c_mvp on the CANLI v1.0 release note. b2b_requests signs two
-## accounts once the faucet opens at MVP and plays one more sprint, so the next planning carries
-## their request cards.
+## live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests>. pick and pick_named leave the
+## product untyped (the type picker). The rest choose a type, staff it with the HR shot roster and play
+## through SprintSystem with only its own daily step ticking, so no card mounts: plan stops in Sprint 1
+## planning with the lead's plan, active and decision_paper in its second week with a sprint paper on the
+## desk, b2c_mvp on the CANLI v1.0 release note. b2b_requests signs two accounts once the faucet opens at
+## MVP and plays one more sprint, so the next planning carries their request cards.
 func _seed_product_live(scenario: String) -> void:
-	if scenario == "pick":
+	if scenario.begins_with("pick"):
 		return
 	var b2b: bool = scenario == "b2b_requests"
 	SprintSystem.choose_type("erp" if b2b else "note_tool", "Fatura" if b2b else "Notly")
@@ -1956,7 +1983,7 @@ func _seed_product_live(scenario: String) -> void:
 		return
 	SprintSystem.start()
 	day.call()
-	if scenario == "active":
+	if scenario in ["active", "decision_paper"]:
 		return
 	for i in 12:
 		sprint.call()

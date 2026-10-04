@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d3koavu4kyv3n"
-path="res://.godot/imported/role_dev.svg-1fb2d1f7eb7409e841a5be83d9e805c8.ctex"
+uid="uid://dhppwudrql8qa"
+path="res://.godot/imported/arrow_right.svg-8ce20063f52e57f5b67f9085c4d989c0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/product/role_dev.svg"
-dest_files=["res://.godot/imported/role_dev.svg-1fb2d1f7eb7409e841a5be83d9e805c8.ctex"]
+source_file="res://assets/icons/util/arrow_right.svg"
+dest_files=["res://.godot/imported/arrow_right.svg-8ce20063f52e57f5b67f9085c4d989c0.ctex"]
 
 [params]
 

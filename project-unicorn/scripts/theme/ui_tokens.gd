@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 23
+const THEME_STAMP := 25
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -125,16 +125,6 @@ const NEGATIVE_RULE_CB := Color(NEGATIVE_CB, 0.45)
 const POSITIVE_BRIGHT_CB := Color(0.337, 0.706, 0.914, 1) # #56B4E9 · on the dark frame
 const NEGATIVE_BRIGHT_CB := Color(0.902, 0.624, 0.0, 1)   # #E69F00 · on the dark frame
 const DOT_IDLE := Color(0.769, 0.718, 0.624, 1)          # #C4B79F · unearned milestone dot  # WORKING
-# Ürün sprint ekranının alan renkleri KATEGORİKTİR (kart kenarı, tür ikonu, kapasite dilimi) [WORKING].
-# Yuva 2 B2C'de Büyüme, B2B'de Entegrasyonlar; yuva 4 Gelir ya da Müşteriler. Yuva 0'ın mavisi
-# POSITIVE_CB'nin tonunda: CB paletinde "Güçlü" dilimleri o alanın rengi gibi okunurdu, bu yüzden
-# kendi CB ikizi var.
-const AREA_SLOT_0 := Color("#4F6C94")                    # Çekirdek
-const AREA_SLOT_0_CB := Color("#9A4F63")                 # CB Çekirdek · tozlu gül
-const AREA_SLOT_1 := Color("#2E7F87")                    # Onboarding & Erişim
-const AREA_SLOT_2 := Color("#86578A")                    # Büyüme / Entegrasyonlar
-const AREA_SLOT_3 := Color("#56606B")                    # Güven & Ölçek
-const AREA_SLOT_4 := Color("#7B7B3B")                    # Gelir / Müşteriler
 
 # --- BADGE / CHIP ---
 const BADGE_BG := Color(0.957, 0.769, 0.188, 1)          # #F4C430 · count badge (amber pill)
@@ -557,37 +547,6 @@ static func build_percent(progress: float) -> int:
 
 
 # ============================================================================
-# PRODUCT SPRINT SCREEN · [WORKING]
-# ============================================================================
-const AREA_COLORS := [AREA_SLOT_0, AREA_SLOT_1, AREA_SLOT_2, AREA_SLOT_3, AREA_SLOT_4]
-const PRODUCT_PANEL_RATIOS := [0.32, 0.44, 0.24]   # areas · this sprint · next sprint
-const PRODUCT_PANEL_GAP := 16
-const PRODUCT_WINDOW_PAD := Vector2i(20, 16)   # window inner pad; the page draws its own ×
-const PRODUCT_GOAL_STRIP_H := 56         # the quarter goal strip
-const PRODUCT_CARD_GAP := 8
-const PRODUCT_CARD_ROW_GAP := 6
-const PRODUCT_AREA_ROW_H := 72
-const PRODUCT_CAPACITY_BAR_H := 8
-const PRODUCT_SLICE_PX := 11
-const PRODUCT_SLICE_PX_SMALL := 7         # slices inside an effect line
-const PRODUCT_PHASE_DOT_PX := 9
-const PRODUCT_PHASE_RING_PX := 11
-const PRODUCT_FADED_ALPHA := 0.55         # a candidate already planned, a locked card
-const PRODUCT_QUARTER_AREA_W := 300
-const PRODUCT_ICON_PX := 12               # kind, role, bubble and effect-arrow glyphs
-const PRODUCT_BADGE_PX := 18              # the "!" attention badge
-## The paper cards and folder columns round one pixel more than RADIUS_M.
-const RADIUS_PAPER := 3
-# Content margins (h, v), build_theme.gd only.
-const PAD_PAPER_CARD := Vector2i(10, 7)   # PaperCard family · DecisionRow
-const PAD_STAMP := Vector2i(7, 2)         # Stamp family
-
-
-static func area_color(slot: int) -> Color:
-	return AREA_SLOT_0_CB if slot == 0 and _cb_palette else AREA_COLORS[slot]
-
-
-# ============================================================================
 # MENAJER MASASI · the dark language. themes/menajer_theme.tres reads these tokens (and PAPER_*),
 # and so does every screen whose root carries that theme; the cream tokens above stay with
 # master_theme.tres. Names are roles, never grounds: surfaces darken from 5 to 0, inks lighten
@@ -824,6 +783,28 @@ const D_ICON_ROW := 16       # a row's leading glyph
 const D_ICON_PART := 14      # a part's polarity glyph beside its value
 const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
 const D_ICON_ACTION := 12    # the glyph inside a float card's action
+const D_ICON_TAG := 12       # a tag's leading glyph
+const D_ICON_EMPTY := 32     # an empty state's glyph
+# --- the sprint screen (Ürün) ---
+const D_W_AREAS := 430                # the areas column, its scrollbar lane included
+const D_W_AREAS_NARROW := 280         # the areas column beside the quarter's sprints
+const D_W_PICKER := 640               # the type picker's column
+const D_H_SECTION := 28              # a section's caps label and its rule
+const D_H_SECTION_SM := 24           # a sub-section inside an open area row
+const D_SPRINT_COLUMNS := Vector2(590, 322)   # this sprint's column against the next one's
+const D_SQUARE := 10                  # a level square
+const D_SQUARE_SM := 8                # a level square in an effect line, a carry's progress square
+const D_H_BAR := 8                    # the capacity bar
+const D_BAR_TICK := Vector2i(2, 16)   # the capacity line across the bar
+const D_GOAL_TICK := Vector2i(2, 18)  # the target line across the goal meter
+const D_PHASE_DOT := 8                # a phase step's dot
+const D_PHASE_LINK := 16              # the line between two phase steps
+const D_W_PTS := 24                   # a card's points box, at its least
+const D_H_KEY_SM := 28                # a card's glyph keys (+, →, ↑)
+const D_H_ROW_RELEASE := 36           # a release note's card row
+const D_W_RESULT_KEY := 96            # the release note's key column
+const D_H_GOAL := 56                  # the quarter's goal strip
+const D_W_GOAL_MENU := 560            # the quarter goal's menu
 
 const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
 const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]

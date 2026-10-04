@@ -5,19 +5,20 @@ extends RefCounted
 # listeler arasında taşır. model() her çağrıda baştan kurulur, taşımalar günlükten yeniden
 # oynanır; metin o anki dilde çözülür (özel adlar düz).
 
+const INBOX := preload("res://scripts/ui/components/inbox.gd")
 ## Geçiş tablosu: eylem → [geçerli olduğu orta sütun kipi, varılan aşama].
 const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], "plan_next": ["release", "replan"]}
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
-const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "release": "c3", "no_release": "c3",
-	"beta_open": "c3", "b2b_no_requests": "c5"}
-## id → [renk yuvası, ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
+const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "auto_started": "c2", "release": "c3",
+	"no_release": "c3", "beta_open": "c3", "b2b_no_requests": "c5", "goal_menu": "c4", "approved": "c4"}
+## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
 const AREAS := {
-	"core": [0, "Çekirdek", "Core", "Çekirdek", "Core"],
-	"onboarding": [1, "Onboarding & Erişim", "Onboarding & Access", "Onboarding", "Onboarding"],
-	"growth": [2, "Büyüme", "Growth", "Büyüme", "Growth"],
-	"integrations": [2, "Entegrasyonlar", "Integrations", "Entegrasyonlar", "Integrations"],
-	"trust": [3, "Güven & Ölçek", "Trust & Scale", "Güven", "Trust"],
-	"revenue": [4, "Gelir", "Revenue", "Gelir", "Revenue"],
+	"core": ["Çekirdek", "Core", "Çekirdek", "Core"],
+	"onboarding": ["Onboarding & Erişim", "Onboarding & Access", "Onboarding", "Onboarding"],
+	"growth": ["Büyüme", "Growth", "Büyüme", "Growth"],
+	"integrations": ["Entegrasyonlar", "Integrations", "Entegrasyonlar", "Integrations"],
+	"trust": ["Güven & Ölçek", "Trust & Scale", "Güven", "Trust"],
+	"revenue": ["Gelir", "Revenue", "Gelir", "Revenue"],
 }
 ## Fikstür seviyesinin (0..3) kelimesi; fikstür beklentiyi her alanda aynı tutar.
 const WORDS := ["none", "weak", "enough", "strong"]
@@ -63,9 +64,11 @@ func _build(id: String) -> Dictionary:
 		"c5": m = _c5()
 		_: m = _c1()
 	match id:
-		"c4":
+		"c4", "goal_menu", "approved":
 			m.ui.view = "quarter"
 			m.quarter = _quarter()
+			if id == "approved":
+				_apply(m, "approve", {"sprint": 8})
 		"replan":
 			_place(m, "filtreli", "next")
 			m.next = _notly_next(true)
@@ -89,9 +92,10 @@ func _build(id: String) -> Dictionary:
 			onboarding["empty"] = true
 		"cap_zero":
 			m.center.capacity.total = 0
-			_clear_sprint(m)
 			m.center.team = []
-			m.center.warning_text = tr("PRODUCT_TEAM_NOBODY")
+			m.center.staffed = false
+			m.center.warning_text = ""
+			_clear_sprint(m)
 			m.center.lead_tip = null
 		"over_100":
 			_place(m, "mobil_giris", "center")
@@ -105,7 +109,7 @@ func _build(id: String) -> Dictionary:
 			m.center.release.version = ""
 			m.center.release.shipped = []
 			m.center.release.velocity.done = 0
-			m.center.release.press = ""
+			m.center.release.press = {}
 			m.center.release.result = null
 			m.header.live_version = "1.4"
 		"beta_open":
@@ -123,6 +127,11 @@ func _build(id: String) -> Dictionary:
 			m.versions = []
 			m.ui.history_open = true
 			m.header.live_version = ""
+		"history":
+			m.ui.history_open = true
+			m.ui.open_area = ""
+		"auto_started":
+			m.center.auto_started = true
 		"mvp":
 			m.versions = []
 			m.header.live_version = ""
@@ -157,8 +166,9 @@ func _apply(m: Dictionary, kind: String, args: Dictionary) -> void:
 			m.next.flags = col.flags
 			m.next.cards = col.cards
 		"pick_goal":
-			m.quarter.goal.slot = AREAS[args.area_id][0]
+			m.quarter.goal.area_id = args.area_id
 			m.quarter.goal.area_name = _short(args.area_id)
+			m.quarter.goal.text = _area_of(m, args.area_id).goal_text
 		"voices_seen":
 			var heard: Dictionary = _area_of(m, args.area)
 			heard.voices["new"] = 0
@@ -213,9 +223,9 @@ func _resum(c: Dictionary) -> void:
 	if c.mode != "plan":
 		return
 	var cap: Dictionary = c.capacity
-	c.can_add = cap.total > 0 and cap.used * 4 <= cap.total * 5   # yük %125'e kadar "+" açık
+	c.can_add = cap.total > 0 and cap.used * 100 <= cap.total * c.ceiling_pct
 	c.can_start = cap.total > 0 and not c.cards.is_empty()
-	c.start_block = c.cards.is_empty()
+	c.start_reason = "" if c.can_start else tr("PRODUCT_TEAM_NOBODY" if cap.total == 0 else "PRODUCT_START_NEED_CARD")
 
 
 ## Kapasiteyi aşan kart "devreder" der; devreden kart kalan puanıyla sayılır.
@@ -226,7 +236,7 @@ func _capacity(cards: Array, total: int, done: int) -> Dictionary:
 		var pts: int = card.remaining if card.remaining >= 0 else card.effort
 		used += pts
 		card.spills = used > total
-		segments.append({"slot": card.slot, "pts": pts})
+		segments.append({"pts": pts})
 	var state: String = "blocked" if total == 0 else ("over" if used > total else "ok")
 	return {"used": used, "total": total, "done": done, "state": state, "segments": segments}
 
@@ -235,7 +245,7 @@ func _capacity(cards: Array, total: int, done: int) -> Dictionary:
 
 func _c1() -> Dictionary:
 	return {
-		"header": _header("Notly", "B2C", _p("NOT & BİLGİ ARACI", "NOTES & KNOWLEDGE TOOL")),
+		"header": _header("Notly", "B2C", tr("PROD_TYPE_NOTE_TOOL_NAME")),
 		"versions": _versions(),
 		"quarter": {"state": "locked_no_pm", "goal": null, "columns": []},
 		"ui": _ui_state("onboarding", "kisa_kayit"),
@@ -270,11 +280,12 @@ func _c3() -> Dictionary:
 		"version": _version("1.5"),
 		"beta": false,
 		"shipped": [_deck("kisa_kayit", SprintCard.State.BITTI), _deck("kesinti", SprintCard.State.BITTI)],
-		"carried": [{"name": carried.name, "kind": carried.kind, "slot": carried.slot, "done": 3, "total": 5, "to_sprint": 8}],
+		"carried": [{"name": carried.name, "kind": carried.kind, "done": 3, "total": 5, "to_sprint": 8}],
 		"velocity": {"done": 8, "total": 12},
-		"result": {"kind": "actual", "text": _p("İlk hafta: 10 yeni kullanıcıdan 6'sı kaldı (önce 4).",
-			"First week: 6 of 10 new users stayed (4 before).")},
-		"press": _p("TeknoGündem · Notly kayıt akışını kısalttı.", "TeknoGündem · Notly shortened its sign-up flow."),
+		"result": {"kind": "actual", "text": _p("10 yeni kullanıcıdan 6'sı ilk hafta kaldı (önce 4).",
+			"6 of 10 new users stayed the first week (4 before).")},
+		"press": {"outlet": "WORLD_OUTLET_TEKNOGUNDEM",
+			"text": _p("Notly kayıt akışını kısalttı.", "Notly shortened its sign-up flow.")},
 		"lead": _lead(_p("Arama bir sprint daha ister.", "Search needs one more sprint.")),
 	}})
 	m.next = _notly_next(true)
@@ -286,7 +297,7 @@ func _c5() -> Dictionary:
 	var alinmis := SprintCard.State.ADAY_ALINMIS
 	var plan := SprintCard.State.SPRINT_PLAN
 	return {
-		"header": _header("Fatura", "B2B", _p("FATURALAMA SAAS'I", "INVOICING SAAS")),
+		"header": _header("Fatura", "B2B", _p("Faturalama SaaS'ı", "Invoicing SaaS")),
 		"versions": _versions(),
 		"quarter": {"state": "locked_no_pm", "goal": null, "columns": []},
 		"ui": _ui_state("trust", ""),
@@ -295,9 +306,8 @@ func _c5() -> Dictionary:
 				_heard([_p("Tahsilatı ayrı bir tabloda izliyoruz", "We track collections in a separate sheet")], 0)),
 			_area("onboarding", 2, _p("Kurulum bir günde bitiyor", "Setup is done in a day"), {}),
 			_area("integrations", 1, _p("Muhasebe programına aktarım yok", "No export to accounting software"),
-				_heard([_p("Muhasebeci her ay Excel istiyor", "Our accountant asks for Excel every month"),
+				_heard([_p("Muhasebeci her ay tablo istiyor", "Our accountant asks for a spreadsheet every month"),
 					_p("e-Fatura gönderemiyoruz", "We can't send e-invoices")], 0).merged({
-				"tone": "alert",
 				"candidates": [_deck("excel", alinmis, {"tag_sprint": 7}), _deck("efatura", alinmis, {"tag_sprint": 8})],
 			})),
 			_area("trust", 1, _p("Geçen hafta 2 saat kesinti oldu · SSO yok", "Two hours of downtime last week · no SSO"), {
@@ -310,9 +320,9 @@ func _c5() -> Dictionary:
 		],
 		"customers": [
 			_customer("Nordica", "SSO", "sso", 8, 12000, "trust"),
-			_customer("Palmiye", _p("Excel dışa aktarma", "Excel export"), "excel", 10, 4000, "integrations"),
+			_customer("Palmiye", _p("Tablo dışa aktarma", "Spreadsheet export"), "excel", 10, 4000, "integrations"),
 			{"name": "Beykoz", "request": "", "tickets": 2, "tag_sprint": -1, "due_sprint": -1, "value": 0,
-				"area_slot": -1, "area_name": "", "buttons": [], "card_id": ""},
+				"area_name": "", "buttons": [], "card_id": ""},
 		],
 		"center": _center("plan", [_deck("sso", plan), _deck("kesinti", plan), _deck("excel", plan)], {
 			"forecast": [_level("trust", 1, 2), {"k": "request_on_time", "customer": "Nordica"},
@@ -336,7 +346,6 @@ func _notly_areas(released: bool) -> Array:
 			_p("Doğrulama e-postası geç geliyor", "The verification email arrives late"),
 			_p("Kayıt formu çok uzun", "The sign-up form is too long"),
 			_p("Telefondan giriş yapamıyorum", "I can't log in from my phone")], 1)
-		onboarding.merge({"tone": "alert"})
 	return [
 		_area("core", 3, _p("Kullanıcılar arama ve editörü seviyor", "Users love the search and the editor"),
 			_heard([_p("Etikete göre arama olsa iyi olur", "Searching by tag would help")], 0).merged({
@@ -359,7 +368,7 @@ func _notly_areas(released: bool) -> Array:
 			"candidates": [_deck("baglanti", aday)],
 		})),
 		_area("trust", 1, _p("Geçen hafta 2 saat kesinti oldu", "Two hours of downtime last week"), {
-			"tone": "alert", "alert": not released,
+			"alert": not released,
 			"capabilities": [_cap(_p("Yedekleme", "Backups"), 0, ["Memora", "Pinbox"]),
 				_cap(_p("İzleme", "Monitoring"), 1, ["Memora", "Pinbox", "Defter"])],
 			"candidates": [_deck("kesinti", alinmis, {"tag_sprint": 7}), _deck("oto_yedek", alinmis, {"tag_sprint": 8})],
@@ -382,9 +391,8 @@ func _quarter() -> Dictionary:
 	var planned := SprintCard.State.PLANLANAN
 	return {
 		"state": "open",
-		"goal": {"slot": AREAS["onboarding"][0], "area_name": _short("onboarding"),
-			"text": _p("yeni kullanıcıların yarısı kalsın", "half of new users stay"),
-			"now": 4, "target": 5, "total": 10, "progress_text": _p("şu an 10'da 4", "now 4 of 10")},
+		"goal": {"area_id": "onboarding", "area_name": _short("onboarding"), "text": ProductModel.goal_text("onboarding"),
+			"now": 4, "target": 5, "total": 10, "progress_text": tr("PRODUCT_GOAL_PROGRESS").format({"now": 4, "total": 10})},
 		"columns": [
 			_column(7, "current", _sprint_cards(), []),
 			_column(8, "proposed", [_deck("ilk_tur", planned), _deck("mobil_giris", planned), _deck("oto_yedek", planned)],
@@ -408,12 +416,12 @@ func _column(sprint: int, kind: String, cards: Array, flags: Array) -> Dictionar
 ## c2'nin kartları: biten, test aşamasındaki ve karar bekleyen.
 func _active_cards() -> Array:
 	return [
-		_deck("kesinti", SprintCard.State.BITTI, {"phases": ["done", "done", "done"], "assignees": [_person("KA")]}),
+		_deck("kesinti", SprintCard.State.BITTI, {"phases": ["done", "done", "done"], "assignees": [_person("Kaan")]}),
 		_deck("kisa_kayit", SprintCard.State.SPRINT_AKTIF, {"phases": ["done", "done", "active"],
-			"assignees": [_person("EC"), _person("KA")]}),
+			"assignees": [_person("Ece"), _person("Kaan")]}),
 		_deck("filtreli", SprintCard.State.SPRINT_AKTIF, {"phases": ["done", "active", "waiting"],
-			"assignees": [_person("DE")], "decision": {"event_id": "fixture.thesis_open", "initials": "DE",
-			"speaker": "Deniz", "text": _p("Filtreli aramayı iki şekilde yapabiliriz.", "We can build filtered search two ways.")}}),
+			"assignees": [_person("Deniz")], "decision": {"event_id": "fixture.thesis_open", "item": "",
+			"sender": INBOX.named_employee("Deniz", ""), "subject": tr("EV_PRODUCT_SPRINT_TWO_PATHS_TITLE"), "weeks_left": 1, "last": true}}),
 	]
 
 
@@ -451,7 +459,7 @@ func _deck_table() -> Dictionary:
 			[_cap_fx(_p("Arama", "Search"), 2, 3)], []],
 		"sso": ["feature", "trust", ["dev", "test"], 5, "SSO (Nordica)",
 			[_level("trust", 1, 2), {"k": "request", "customer": "Nordica", "value": 12000}], [["Kaan", 2]]],
-		"excel": ["feature", "integrations", ["dev"], 3, _p("Excel dışa aktarma (Palmiye)", "Excel export (Palmiye)"),
+		"excel": ["feature", "integrations", ["dev"], 3, _p("Tablo dışa aktarma (Palmiye)", "Spreadsheet export (Palmiye)"),
 			[_level("integrations", 1, 2), {"k": "request", "customer": "Palmiye", "value": 4000}], [["Deniz", 1]]],
 		"efatura": ["feature", "integrations", ["dev", "test"], 5, _p("e-Fatura entegrasyonu", "e-Invoice integration"),
 			[_level("integrations", 1, 2), {"k": "voices", "n": 2}], [["Deniz", 2]]],
@@ -460,7 +468,7 @@ func _deck_table() -> Dictionary:
 
 func _deck(id: String, state: int, extra := {}) -> Dictionary:
 	var d: Array = _deck_table()[id]
-	var card := {"id": id, "name": d[4], "kind": d[0], "slot": AREAS[d[1]][0], "roles": d[2], "effort": d[3],
+	var card := {"id": id, "name": d[4], "kind": d[0], "roles": d[2], "effort": d[3],
 		"state": state, "effect": d[5], "tag_sprint": -1, "phases": [], "assignees": [], "decision": null,
 		"effort_split": d[6].map(func(s: Array) -> Dictionary: return {"name": s[0], "weeks": s[1]}),
 		"locked_node": "", "remaining": -1, "spills": false, "urgent": false,
@@ -470,9 +478,9 @@ func _deck(id: String, state: int, extra := {}) -> Dictionary:
 
 
 func _area(id: String, level: int, sentence: String, extra: Dictionary) -> Dictionary:
-	var area := {"id": id, "name": _p(AREAS[id][1], AREAS[id][2]), "slot": AREAS[id][0], "level": level,
-		"level_to": -1, "word": WORDS[level], "word_to": "", "sentence": sentence,
-		"tone": "normal", "voices": {"n": 0, "new": 0}, "alert": false, "rival_topic": "",
+	var area := {"id": id, "name": _p(AREAS[id][0], AREAS[id][1]), "level": level,
+		"level_to": -1, "word": WORDS[level], "word_to": "", "sentence": sentence, "goal_text": ProductModel.goal_text(id),
+		"voices": {"n": 0, "new": 0}, "alert": false, "rival_topic": "",
 		"capabilities": [], "candidates": [], "voices_list": [], "empty": false}
 	area.merge(extra, true)
 	return area
@@ -496,37 +504,37 @@ func _cap(cap_name: String, tier: int, rivals: Array) -> Dictionary:
 
 func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "capacity": {"total": 12, "done": 0},
-		"team": _team(), "warning_text": tr("PRODUCT_ROLE_MISSING").format({"role": _p("Test", "QA")}),
-		"cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "decisions": 0},
-		"next_version": null, "can_add": false, "can_start": false, "start_block": false,
+		"team": _team(), "staffed": true, "warning_text": tr("PRODUCT_ROLE_MISSING").format({"role": _p("Test", "QA")}),
+		"cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "decisions": 0}, "auto_started": false,
+		"next_version": null, "can_add": false, "ceiling_pct": 125, "can_start": false, "start_reason": "",
 		"beta": {"open": false}, "lead_tip": null, "release": null}
 	c.merge(extra, true)
 	_resum(c)
 	return c
 
 
+## Fikstürün kişilerinin görünüşü yok: yüzleri baş harfleridir.
 func _team() -> Array:
 	var engineering := _p("Yazılım", "Engineering")
 	return [
-		{"initials": _p("KU", "FO"), "name": _p("Kurucu", "Founder"), "role_text": _p("Ürün · Yazılım", "Product · Engineering"),
-			"me": true},
-		{"initials": "DE", "name": "Deniz", "role_text": engineering, "me": false},
-		{"initials": "EC", "name": "Ece", "role_text": _p("Tasarım", "Design"), "me": false},
-		{"initials": "KA", "name": "Kaan", "role_text": engineering, "me": false},
+		{"name": _p("Kurucu", "Founder"), "role_text": _p("Ürün · Yazılım", "Product · Engineering"), "look": {}},
+		{"name": "Deniz", "role_text": engineering, "look": {}},
+		{"name": "Ece", "role_text": _p("Tasarım", "Design"), "look": {}},
+		{"name": "Kaan", "role_text": engineering, "look": {}},
 	]
 
 
-func _person(initials: String) -> Dictionary:
-	return _team().filter(func(p: Dictionary) -> bool: return p.initials == initials)[0]
+func _person(person_name: String) -> Dictionary:
+	return _team().filter(func(p: Dictionary) -> bool: return p.name == person_name)[0]
 
 
 func _lead(text: String) -> Dictionary:
-	return {"initials": "DE", "name": "Deniz", "text": text}
+	return _person("Deniz").merged({"text": text})
 
 
 func _customer(customer: String, request: String, card_id: String, due: int, value: int, area: String) -> Dictionary:
 	return {"name": customer, "request": request, "tickets": 0, "tag_sprint": 7, "due_sprint": due, "value": value,
-		"area_slot": AREAS[area][0], "area_name": _short(area), "buttons": [], "card_id": card_id}
+		"area_name": _short(area), "buttons": [], "card_id": card_id}
 
 
 func _header(product: String, market: String, type_text: String) -> Dictionary:
@@ -565,7 +573,7 @@ func _clear(area: String) -> Dictionary:
 
 
 func _short(area: String) -> String:
-	return _p(AREAS[area][3], AREAS[area][4])
+	return _p(AREAS[area][2], AREAS[area][3])
 
 
 func _version(n: String) -> String:

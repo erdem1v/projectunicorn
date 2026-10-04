@@ -254,6 +254,21 @@ static func D_tag(text: String, kind: StringName = &"") -> Label:
 	return tag
 
 
+## A document's stamp, tilted as on paper. The holder is a plain Control that takes the stamp's size:
+## a container would lay the label out again and undo the tilt.
+static func D_stamp(text: String) -> Control:
+	var holder := Control.new()
+	holder.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mark := make_label(text, &"DocStamp")
+	mark.rotation_degrees = -3.0
+	mark.resized.connect(func() -> void:
+		holder.custom_minimum_size = mark.size
+		mark.pivot_offset = mark.size / 2.0)
+	holder.add_child(mark)
+	return holder
+
+
 ## A window header's figure: its caps key over its value, a rule on its left. An empty value keeps
 ## its line, so the key stays on the header's baseline.
 static func D_kpi(key: String, value: String) -> PanelContainer:

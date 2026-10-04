@@ -77,7 +77,6 @@ func _initialize() -> void:
 	_lbl(th, &"MetricCaption", mono_label, T.SIZE_META, T.INK_FAINT_CHROME)
 	_lbl(th, &"MetricValue", mono_sb, T.SIZE_LEAD, T.CREAM)
 	_lbl(th, &"MetricUnit", mono_reg, T.SIZE_META, T.INK_FAINT_CHROME)
-	_lbl(th, &"TabLabel", mono_label, T.SIZE_META, T.INK_DIM)
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_MICRO, T.INK)
 	_lbl(th, &"ChoiceLabelStrong", sans_sb, T.SIZE_LEAD, T.INK)
 	_lbl(th, &"ChoiceLabelLocked", sans_reg, T.SIZE_LEAD, T.INK_FAINT)   # an option that is not open
@@ -295,72 +294,6 @@ func _initialize() -> void:
 		th.set_color("font_color", name, ink)
 		th.set_color("font_hover_color", name, ink if active else T.INK)
 		th.set_color("font_pressed_color", name, ink)
-
-	# ========================================================================
-	# ÜRÜN SPRINT EKRANI — folder window, paper cards, stamps. No semantic green or
-	# red here: CANLI, the warning chip, "!", the Güçlü/Zayıf words and the over-capacity
-	# bar are painted at runtime through the colourblind helpers.
-	# ========================================================================
-	_panel(th, &"FolderWindow", "PanelContainer", window_sb)
-	_panel(th, &"FolderColumn", "PanelContainer", _box(T.CARD_BG, T.RADIUS_PAPER, T.CARD_BORDER, Vector2i(T.SPACE_M, T.SPACE_M)))
-	_panel(th, &"FolderColumnActive", "PanelContainer", _box(T.CARD_BG, T.RADIUS_PAPER, T.ACCENT_DEEP, Vector2i(T.SPACE_XL, T.SPACE_XL)))
-	# The dashed variants draw their outline in code: StyleBoxFlat cannot dash.
-	_panel(th, &"FolderColumnDashed", "PanelContainer", _box(Color.TRANSPARENT, T.RADIUS_PAPER, Color.TRANSPARENT, Vector2i(T.SPACE_XL, T.SPACE_XL)))
-	_panel(th, &"PaperCard", "PanelContainer", _box(T.CARD_BG, T.RADIUS_PAPER, T.CARD_BORDER, T.PAD_PAPER_CARD))
-	# Open area row and hovered card: PaperCard's margins, so the content does not move.
-	_panel(th, &"PaperCardOpen", "PanelContainer", _box(T.CARD_BG, T.RADIUS_PAPER, T.ACCENT_DEEP, T.PAD_PAPER_CARD, T.BORDER_FOCUS))
-	_panel(th, &"PaperCardDashed", "PanelContainer", _box(Color.TRANSPARENT, T.RADIUS_PAPER, Color.TRANSPARENT, T.PAD_PAPER_CARD))
-	var hover_sb := _box(T.CARD_BG, T.RADIUS_PAPER, T.ACCENT_DEEP, Vector2i(T.SPACE_L, T.SPACE_S))
-	hover_sb.shadow_color = T.SHADOW_SOFT
-	hover_sb.shadow_size = T.SPACE_S
-	hover_sb.shadow_offset = Vector2(0, T.SPACE_XXS)
-	_panel(th, &"HoverBox", "PanelContainer", hover_sb)
-	_panel(th, &"DecisionRow", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT_DEEP, T.PAD_PAPER_CARD))
-	_panel(th, &"GoalStrip", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_PAPER, T.ACCENT_DEEP, Vector2i(T.SPACE_XL, 0)))
-	_panel(th, &"QuarterHeaderBand", "PanelContainer", _sides_box(T.AMBER_BG, T.RADIUS_NONE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE), T.ACCENT_DEEP, Vector2i(T.SPACE_M, T.SPACE_M)))
-	_lbl(th, &"DataMono", mono_sb, T.SIZE_DATA, T.INK)
-	_lbl(th, &"DataMonoLarge", mono_sb, T.SIZE_ED_MODAL, T.INK)
-	_lbl(th, &"DataMonoHero", mono_sb, T.SIZE_ED_HEADLINE, T.INK)
-	_lbl(th, &"TickerLabel", serif_it, T.SIZE_BODY, T.INK)
-	_lbl(th, &"AreaName", mono_sb, T.SIZE_BODY, T.INK)
-	_lbl(th, &"RowMetaStrong", mono_sb, T.SIZE_SMALL, T.INK)   # the named part of an effect line beside RowMeta
-	_lbl(th, &"AreaSentence", sans_reg, T.SIZE_DATA, T.INK_MUTED)
-	_lbl(th, &"LeadQuote", serif_it, T.SIZE_LEAD, T.INK)
-	# Boxed labels. The host sets the minimum size and centres the text; AttentionBadge
-	# stays neutral here and turns red through the helpers.
-	var banner := _box(T.INK_DIM, T.RADIUS_S, Color.TRANSPARENT, T.PAD_STAMP)
-	banner.corner_radius_top_left = 0      # the flag's pole stands on the left
-	banner.corner_radius_bottom_left = 0
-	for boxed in [
-		[&"Stamp", T.SIZE_META, T.INK_MUTED, _box(T.SURFACE_FRAME, T.RADIUS_S, T.CARD_BORDER, T.PAD_STAMP)],
-		[&"StampAmber", T.SIZE_META, T.ACCENT_DEEP, _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT_DEEP, T.PAD_STAMP)],
-		[&"StampGrey", T.SIZE_MICRO, T.CARD_BG, banner],
-		[&"AttentionBadge", T.SIZE_SMALL, T.INK_MUTED, _box(T.SURFACE_FRAME, T.RADIUS_S, T.CARD_BORDER, Vector2i.ZERO)],
-		[&"DataMonoBox", T.SIZE_SMALL, T.INK, _box(T.SURFACE_FRAME, T.RADIUS_S, T.CARD_BORDER, Vector2i(T.SPACE_XS, 0))],
-		[&"AvatarChip", T.SIZE_MICRO, T.INK_MUTED, _box(T.BG_PANEL, T.RADIUS_S, T.BORDER_HOVER, Vector2i.ZERO)],
-		[&"AvatarChipMe", T.SIZE_MICRO, T.ACCENT_DEEP, _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT_DEEP, Vector2i.ZERO)],
-	]:
-		_lbl(th, boxed[0], mono_sb, boxed[1], boxed[2])
-		th.set_stylebox("normal", boxed[0], boxed[3])
-	_commit_button(th, &"PrimaryButton", false)
-	_commit_button(th, &"PrimaryButtonSmall", false, T.PAD_BTN)
-	th.set_font_size("font_size", &"PrimaryButtonSmall", T.SIZE_META)
-	# InkButton: a card's square + → buttons and its remove word.
-	th.set_type_variation(&"InkButton", &"Button")
-	var ink_hot := _box(T.CARD_BG, T.RADIUS_S, T.ACCENT_DEEP, T.PAD_BTN_XS)
-	_states(th, &"InkButton", {
-		"normal": _box(T.CARD_BG, T.RADIUS_S, T.CARD_BORDER, T.PAD_BTN_XS),
-		"hover": ink_hot,
-		"pressed": ink_hot,
-		"disabled": _box(Color.TRANSPARENT, T.RADIUS_S, T.BORDER_DISABLED, T.PAD_BTN_XS),
-		"focus": _no_focus(),
-	})
-	th.set_font("font", &"InkButton", mono_sb)
-	th.set_font_size("font_size", &"InkButton", T.SIZE_SMALL)
-	th.set_color("font_color", &"InkButton", T.INK_MUTED)
-	th.set_color("font_hover_color", &"InkButton", T.INK)
-	th.set_color("font_pressed_color", &"InkButton", T.INK)
-	th.set_color("font_disabled_color", &"InkButton", T.INK_FAINT)
 
 	# ========================================================================
 	# CHROME AİLESİ — koyu kabuk register'ı. Yasal yüzey listesi CLAUDE.md Chrome
@@ -665,13 +598,12 @@ func _menajer(master: Theme) -> Theme:
 		_recolor(th, &"SpeedButtonActive", state, null, T.D_ACCENT)
 		for tab in [&"TabButtonActive", &"ChromeTabButtonActive"]:
 			_recolor(th, tab, state, T.D_SURFACE_4, T.D_SELECTED_MARK)
-	for commit in [&"CommitButton", &"CommitButtonDark", &"PrimaryButton", &"PrimaryButtonSmall"]:
+	for commit in [&"CommitButton", &"CommitButtonDark"]:
 		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
 			th.set_color(key, commit, T.D_ON_ACCENT)
 	# A window's shadow is its halo over the office.
-	for window in [&"WindowPanel", &"FolderWindow"]:
-		th.set_stylebox("panel", window, _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_4,
-			_pad_of(th.get_stylebox("panel", window)), T.D_LINE_2), T.D_HALO, T.D_SHADOW_WINDOW))
+	th.set_stylebox("panel", &"WindowPanel", _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_4,
+		_pad_of(th.get_stylebox("panel", &"WindowPanel")), T.D_LINE_2), T.D_HALO, T.D_SHADOW_WINDOW))
 	# The newspaper stays cream with its own faces and sizes; its meta line is Plex Sans Condensed.
 	for row in [
 		[&"MastheadSerif", serif_sb, T.D_PAPER_FS_MASTHEAD, T.PAPER_INK_MAST],
@@ -772,6 +704,8 @@ func _menajer(master: Theme) -> Theme:
 		th.set_icon(key, &"CheckButton", load(DARK_ICONS + "switch_on.svg"))
 	for key in ["unchecked", "unchecked_disabled"]:
 		th.set_icon(key, &"CheckButton", load(DARK_ICONS + "switch_off.svg"))
+	# The switch keeps its drawn size: Button's glyph cap would scale it down to a glyph.
+	th.set_constant("icon_max_width", &"CheckButton", 0)
 
 	for arrow in ["up", "down"]:
 		th.set_stylebox(arrow + "_background", &"SpinBox", _flat(clear, T.D_RADIUS_2, Vector4.ZERO))
@@ -916,6 +850,8 @@ func _menajer(master: Theme) -> Theme:
 	# The risk and attention tags, the risk strip and the danger button bake both palettes from the D_
 	# helpers: the colour-blind one is the "Cb" twin, which the host picks through UiTokens.D_variation.
 	var strip_pad := Vector4(T.SPACE_XL, 0, T.SPACE_L, 0)
+	var chip_pad := _fit(sans_med, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S)
+	var flag_pad := Vector4(T.SPACE_M, chip_pad.y, T.SPACE_M, chip_pad.w)
 	for cb in [false, true]:
 		T.set_colorblind(cb)
 		var twin := "Cb" if cb else ""
@@ -934,6 +870,12 @@ func _menajer(master: Theme) -> Theme:
 		_panel(th, "FxChipDanger" + twin, "PanelContainer", _flat(risk.bg, T.D_RADIUS_2,
 			_fit(sans_med, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), risk.line))
 		_panel(th, "RiskStripHover" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg()))
+		# A deadline that ends this sprint or the next.
+		var warn: Dictionary = T.D_badge_palette(&"accent")
+		_panel(th, "FlagChipWarn" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_2, flag_pad, warn.line))
+		# The attention tag with a glyph before its word: the box holds both, the word is bare.
+		_panel(th, "TagWarnBox" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_2, tag, warn.line))
+		_lbl(th, "TagWarnInk" + twin, cond_b_caps, T.D_FS_13, warn.fg)
 	T.set_colorblind(false)
 
 	# Boxes. Rows and bands take their height from the host; a document has its corner cut.
@@ -1112,6 +1054,68 @@ func _menajer(master: Theme) -> Theme:
 	# A paused progress keeps its share in a neutral fill.
 	th.set_type_variation(&"ProgressPaused", &"ProgressBar")
 	th.set_stylebox("fill", &"ProgressPaused", _flat(T.D_LINE_3, T.D_RADIUS_1, Vector4.ZERO))
+
+	# ---- Ürün: the sprint screen ----
+	# A sprint card is a small document, raised on its column; inside an open area row it sits a step
+	# lower, and a card planned for the next sprint has no edge of its own (its host draws it dashed).
+	var card_pad := Vector4(T.SPACE_XL, T.SPACE_L, T.SPACE_XL, T.SPACE_L)
+	var mini_pad: Vector4 = Vector4.ONE * T.SPACE_M
+	for row in [
+		[&"SprintCard", T.D_SURFACE_4, T.D_LINE_2, card_pad],
+		[&"SprintCardHover", T.D_SURFACE_4, T.D_LINE_HOVER, card_pad],
+		[&"SprintCardLow", T.D_SURFACE_3, T.D_LINE_2, card_pad],
+		[&"SprintCardLowHover", T.D_SURFACE_3, T.D_LINE_HOVER, card_pad],
+		[&"SprintCardPlanned", T.D_SURFACE_3, clear, card_pad],
+		[&"SprintCardMini", T.D_SURFACE_4, T.D_LINE_2, mini_pad],
+		[&"SprintCardMiniPlanned", T.D_SURFACE_3, clear, mini_pad],
+	]:
+		_panel(th, row[0], "PanelContainer", _doc(_flat(row[1], 0, row[3], row[2]), T.D_CUT_SM))
+	# The current sprint's band at the top of its quarter column follows the column's corners.
+	var column_head := _flat(T.D_SURFACE_4, 0, Vector4.ZERO, T.D_LINE_1, bottom)
+	column_head.corner_radius_top_left = T.D_RADIUS_3 - T.BORDER_HAIRLINE
+	column_head.corner_radius_top_right = T.D_RADIUS_3 - T.BORDER_HAIRLINE
+	for row in [
+		# A sprint's column; the next sprint's is drawn dashed by its host.
+		[&"SprintColumn", _flat(T.D_SURFACE_2, T.D_RADIUS_3, Vector4.ZERO, T.D_LINE_1)],
+		[&"SprintColumnCurrent", _flat(T.D_SURFACE_2, T.D_RADIUS_3, Vector4.ZERO, T.D_LINE_3)],
+		[&"SprintColumnNext", _flat(clear, T.D_RADIUS_3, Vector4.ZERO)],
+		[&"SprintColumnHead", column_head],
+		[&"SprintColumnFoot", _flat(clear, 0, Vector4(T.SPACE_XXL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XL), T.D_LINE_1,
+			Vector4i(0, T.BORDER_HAIRLINE, 0, 0))],
+		# A card's hover keys sit on the end of its effect line, on the card's own ground.
+		[&"CardKeys", _flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_M, 0, 0, 0))],
+		[&"CardKeysPlanned", _flat(T.D_SURFACE_3, 0, Vector4(T.SPACE_M, 0, 0, 0))],
+		# An area row's count of voices, and a flag in sentence case (a rival's launch, an area).
+		[&"CountChip", _flat(clear, T.D_RADIUS_2, chip_pad, T.D_LINE_2)],
+		[&"FlagChip", _flat(clear, T.D_RADIUS_2, flag_pad, T.D_LINE_3)],
+		# The beta channel's two-way switch.
+		[&"SegPickBox", _flat(clear, T.D_RADIUS_2, hairline, T.D_LINE_2)],
+	]:
+		_panel(th, row[0], "PanelContainer", row[1])
+	# A card's points; a release note's row sits on the column, so its box is raised.
+	var pts := _fit(sans_b, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S)
+	for row in [[&"PtsBox", T.D_SURFACE_2], [&"PtsBoxRaised", T.D_SURFACE_4]]:
+		_lbl(th, row[0], sans_b, T.D_FS_13, T.D_INK_2)
+		th.set_stylebox("normal", row[0], _flat(row[1], T.D_RADIUS_2, pts, T.D_LINE_1))
+	for row in [
+		[&"ColumnTitle", cond_sb_caps, T.D_FS_18, T.D_INK_1],
+		[&"FigureValue", sans_sb, T.D_FS_22, T.D_INK_1],
+		[&"ReleaseValue", sans_b, T.D_FS_36, T.D_INK_1],
+		[&"MetaText", sans_reg, T.D_FS_14, T.D_INK_2],
+	]:
+		_lbl(th, row[0], row[1], row[2], row[3])
+	# A card's glyph keys (+, →, ↑): secondary keys the size their host gives them.
+	_dbtn(th, &"IconKey", secondary, sans_reg, T.D_FS_15, Vector4.ZERO)
+	th.set_constant("icon_max_width", &"IconKey", T.D_ICON_ROW)
+	# The card's word key (Çıkar) at the glyph keys' height.
+	_dbtn(th, &"CardKeyText", ghost, cond_sb, T.D_FS_16, _fit(cond_sb, T.D_FS_16, T.D_H_KEY_SM, T.SPACE_S, T.SPACE_S))
+	# The two-way switch's segments: the one that is on is filled and underlined in ink.
+	var seg_pad := _fit(sans_reg, T.D_FS_14, T.D_H_BTN_SM - 2 * T.BORDER_HAIRLINE, T.SPACE_L, T.SPACE_L)
+	var on := [T.D_SURFACE_5, T.D_INK_1, T.D_INK_1]
+	_dbtn(th, &"SegPick", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": on, "disabled": [clear, clear, T.D_INK_OFF]}, sans_reg, T.D_FS_14, seg_pad, 0, under)
+	_dbtn(th, &"SegPickOn", {"normal": on, "hover": on, "pressed": on, "disabled": [T.D_SURFACE_5, T.D_INK_1, T.D_INK_OFF]},
+		sans_reg, T.D_FS_14, seg_pad, 0, under)
 
 	# Message body and ticker text.
 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")

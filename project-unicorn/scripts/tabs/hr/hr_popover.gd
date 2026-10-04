@@ -18,6 +18,7 @@ const MIN_WIDTH := 268
 var _panel: PanelContainer = null
 var _body: VBoxContainer = null
 var _anchor_rect: Rect2 = Rect2()
+var _below := false
 
 
 func _ready() -> void:
@@ -41,7 +42,9 @@ func body() -> VBoxContainer:
 	return _body
 
 
-func open_at(anchor: Control) -> void:
+## below: panel çapanın altından başlar (çapayı örtmeyen menü, ürünün hedef şeridi).
+func open_at(anchor: Control, below := false) -> void:
+	_below = below
 	if anchor != null and is_instance_valid(anchor) and anchor.is_inside_tree():
 		_anchor_rect = Rect2(anchor.global_position, anchor.size)
 	else:
@@ -61,8 +64,8 @@ func _place() -> void:
 	# seçimi değil korkuluk: çapa dar viewport'ta taşsa da panel ekranda kalır.
 	var x: float = _anchor_rect.position.x + _anchor_rect.size.x - panel_size.x
 	x = clampf(x, EDGE_MARGIN, maxf(EDGE_MARGIN, screen.x - panel_size.x - EDGE_MARGIN))
-	# Dikey: çapanın üstüyle hizalı, ekrana kelepçeli.
-	var y: float = clampf(_anchor_rect.position.y - LIFT,
+	# Dikey: çapanın üstüyle (ya da altıyla) hizalı, ekrana kelepçeli.
+	var y: float = clampf(_anchor_rect.end.y + UiTokens.SPACE_M if _below else _anchor_rect.position.y - LIFT,
 		EDGE_MARGIN, maxf(EDGE_MARGIN, screen.y - panel_size.y - EDGE_MARGIN))
 	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_panel.position = Vector2(x, y)

@@ -6,10 +6,10 @@ extends Panel
 # DisplaySettings.COMPACT_SHELL_BELOW altındayken sıkışık kip: marka yalnız kare, kısa tarih, dar hız
 # tuşları (rayın simge kipiyle aynı eşik). Hafta çubuğu en çok MAX_WEEK_BAR uzar; daha geniş barda
 # Sıradaki yuvası ve saat bloğu gün bloğunun hemen ardından gelir, artan genişlik sağda boş kalır.
-# Sıradaki yuvası hep ayrılmıştır: teklif süresi, yoksa mesai bitimi. Bir karar beklerken yuva kapıdır:
-# amber nokta ve "Cevap bekliyor", altında göndericisi ya da bekleyen kararların sayısı; yuva ve saat
-# bloğu amber çerçevede, hız tuşları kapalı, tıklanınca karara dönülür. Ayırıcılar ve hafta çubuğu
-# _draw'da.
+# Sıradaki yuvası hep ayrılmıştır: teklif süresi, son haftasındaki sprint kararı, yoksa mesai bitimi. Bir
+# karar beklerken yuva kapıdır: amber nokta ve "Cevap bekliyor", altında göndericisi ya da bekleyen
+# kararların sayısı; yuva ve saat bloğu amber çerçevede, hız tuşları kapalı, tıklanınca karara dönülür.
+# Ayırıcılar ve hafta çubuğu _draw'da.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 
@@ -95,6 +95,7 @@ func _ready() -> void:
 	EventBus.event_triggered.connect(refresh)
 	EventBus.event_set_aside.connect(refresh)
 	EventBus.event_resolved.connect(_refresh.unbind(2))
+	EventBus.desk_changed.connect(_refresh)
 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
 	# Hız yalnız TimeManager üzerinden gidip gelir (speed_change_requested → speed_changed); gösterge
 	# buradan boyanır ki olay duraklatmasının dönüşü gibi başka değiştiriciler de görünsün.
@@ -182,7 +183,8 @@ func _refresh_metrics(g: Dictionary) -> void:
 
 
 ## Gün bloğu (tarih + hafta çubuğu ve uç saatleri) ve Sıradaki yuvası: teklif süresi uyarı rengindedir,
-## son haftasında kırmızı; teklif yoksa mesainin bitimine kalan saat.
+## son haftasında kırmızı; teklif yoksa son haftasındaki sprint kararı kâğıdı (uyarı renginde), o da yoksa
+## mesainin bitimine kalan saat.
 func _refresh_day(g: Dictionary) -> void:
 	var d: Dictionary = GameState.get_date_dict()
 	$Date.text = tr("TOPBAR_DATE_COMPACT").format({"week": int(d.week), "mon": Fmt.month_abbr(int(d.month))}) \
@@ -203,6 +205,9 @@ func _refresh_day(g: Dictionary) -> void:
 	elif _offer_weeks_left >= 0:
 		line = tr("TOPBAR_NEXT_OFFER_LAST")
 		ink = UiTokens.D_neg()
+	elif SprintSystem.decision_paper().get("last", false):
+		line = tr("TOPBAR_NEXT_SPRINT_FINAL")
+		ink = UiTokens.D_warn()
 	_paint($NextLine, line, ink)
 	_put($NextKey, _slot_x + g.pad, NEXT_KEY_LINE)
 	_put($NextLine, _slot_x + g.pad, NEXT_LINE, g.slot - 2 * g.pad)

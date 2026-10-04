@@ -53,14 +53,6 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   istiyor; proje ayarı farkı sahibin onayıyla commit'lenir (CLAUDE.md §12).
 
 ## Ürün rev 7
-- **Görsel kabul (CLAUDE.md §11).** Canlı sprint ekranı oyunda görsel olarak doğrulanmadı: tür seçici, planlama,
-  karar bekleyen kartla sprint içi, sürüm notu, beta sürümü, B2B talepleri, ÇEYREK (PM'li ve PM'siz). Kareler
-  `--product-shot=live:<pick|plan|active|b2c_mvp|b2b_requests>` ve fikstürle `--product-shot=<c1..c5|edge:<ad>>`;
-  PRD §7.24'ün kareleri `docs/audits/urun_rev7/` altına, §8'in kontrolleri sahibin.
-- **"Sprint otomatik başladı" notunun Ürün penceresindeki yeri.** Not BuildHUD'ın DESTEK kartındadır
-  (`build_bar.gd`). Kart yalnız ürün yayındayken vardır ve bir pencere üstüne gelince gizlenir
-  (`BuildHUDPanel.set_window_cover`); ürün yayına çıkmadan not hiç görünmez, Ürün penceresi açıkken de görünmez.
-  Notun ikinci yeri Ürün penceresidir; Ürün ekranı koyu dile taşınırken kurulur (`product_tab.gd`).
 - **Yeniden yuva listesi (PRD §5.9, §7.23).** GDD'de adı geçtiği ya da sahip tuttuğu için kalan, sprint geçişiyle
   oyun içi çağıranı kalmayan öğeler; her biri sprint ekranında bir yere bağlanır ya da sahibin kararıyla silinir:
   - Hata trendi zinciri (ch03 §8.4 yön okları; sahip): `ProductSystem.bug_trend`, `health_state`, `product_bug_risk`,

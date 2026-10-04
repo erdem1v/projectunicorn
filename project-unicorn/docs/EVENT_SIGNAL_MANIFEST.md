@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-03.
+Last generated 2026-10-04.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -65,10 +65,10 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 22 | 1 | time_manager |
+| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 23 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
-| `tab_changed` | `tab_id: String` | game_shell · main · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 30 | 3 | main · left_tabs · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 33 | 3 | main · left_tabs · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 1 | finance_tab |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
@@ -135,7 +135,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 7 | save_manager · main · sprint_system · left_tabs · top_bar · window_frame · office_hud |
 | `modal_requested` | `event: GameEvent` | engine | 1 | 1 | main |
 | `event_set_aside` | `event_id: String` | engine | 1 | 6 | save_manager · main · left_tabs · top_bar · window_frame · office_hud |
-| `desk_changed` | `—` | papers | 4 | 1 | left_tabs |
+| `desk_changed` | `—` | papers | 4 | 3 | product_tab · left_tabs · top_bar |
 
 ### Inbox messages
 

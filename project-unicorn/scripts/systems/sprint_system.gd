@@ -194,14 +194,6 @@ static func apply_lead() -> void:
 	_changed()
 
 
-## "Karar ver": kartın bekleyen olay kâğıdını açar.
-static func decide(card_id: String) -> void:
-	var decision: Dictionary = _p().decision
-	if decision.get("card_id", "") == card_id:
-		_watch_decision()
-		EventGate.request(String(decision.event_id))
-
-
 # --- Karar kartının etkileri (olay motorunun sprint fiilleri) --------------------------
 
 ## Bekleyen kararın kartının eforu ± puan; kartın kimliği, karar yoksa "".
@@ -658,6 +650,16 @@ static func _restaff() -> void:
 		busy.append_array(c.assignees)
 	_assign(_sprint_cards().filter(func(c: Dictionary) -> bool: return c.assignees.is_empty()),
 		people.filter(func(person: Dictionary) -> bool: return person.id not in busy))
+
+
+## Masada bekleyen sprint kararının kâğıdı (EventGate.desk_papers satırı), yoksa {}; `last` kâğıdın son
+## haftasıdır. Üst barın Sıradaki yuvası ve Ürün'ün karar satırı buradan okur.
+static func decision_paper() -> Dictionary:
+	var event_id: String = _p().get("decision", {}).get("event_id", "")
+	for p in EventGate.desk_papers():
+		if p.event_id == event_id:
+			return p.merged({"last": bool(p.expiring) or int(p.weeks_left) <= 1})
+	return {}
 
 
 ## Bekleyen kararın kartı; karar yoksa ya da kart artık saklanmıyorsa {}.

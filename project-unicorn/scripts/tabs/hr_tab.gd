@@ -144,7 +144,7 @@ func _build() -> void:
 	_hire.text = tr("HR_SEARCH_START")
 	_hire.focus_mode = Control.FOCUS_NONE
 	_hire.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_hire.pressed.connect(_open_atlas)
+	_hire.pressed.connect(open_atlas)
 	bar.add_child(_hire)
 	_outer.add_child(ctl)
 
@@ -257,7 +257,7 @@ func _rebuild() -> void:
 	if _view == VIEW_ASSIGNMENTS:
 		_paint_assignment_tags()
 		_head_slot.add_child(HRAssignments.head())
-		_list.add_child(HRAssignments.build(_on_assignment_toggled, _open_atlas, EventGate.active_id() != ""))
+		_list.add_child(HRAssignments.build(_on_assignment_toggled, open_atlas, EventGate.active_id() != ""))
 	else:
 		_head_slot.add_child(HRLedger.head(compact))
 		for group_id: String in HRConstants.ROSTER_GROUPS:
@@ -307,7 +307,7 @@ func _atlas_strip() -> Control:
 		text = tr("HR_FILES_ON_DESK").format({"n": HRSearchSystem.get_files().size()})
 		action.theme_type_variation = &"SecondaryButtonSmall"
 		action.text = tr("HR_OPEN_FILES")
-		action.pressed.connect(_open_atlas)
+		action.pressed.connect(open_atlas)
 	else:
 		# Arayış sürüyor: tek durum satırı — rol + dosyalara kalan hafta. "İade edilmez" uyarısı
 		# ödeme ve iptal anında yaşıyor, bekleme şeridinde değil.
@@ -388,7 +388,8 @@ func _open_hours_modal() -> void:
 	HRUiShared.mount_panel_modal(self, WORK_HOURS_MODAL, rebuild_view)
 
 
-func _open_atlas() -> void:
+## Atlas panelini açar; Ürün'ün boş sprint sütunu da buradan işe alım başlatır.
+func open_atlas() -> void:
 	# Motorun arayış geçişleri için sinyali yok; modal haber veriyor.
 	HRUiShared.mount_panel_modal(self, ATLAS_MODAL, _refresh)
 
@@ -409,7 +410,7 @@ func _add_group(group_id: String, compact: bool) -> void:
 	if folded:
 		return
 	if roster.is_empty():
-		_list.add_child(HRUiShared.D_empty_row(tr("HR_EMPTY_ROW"), tr("HR_SEARCH_START"), _open_atlas,
+		_list.add_child(HRUiShared.D_empty_row(tr("HR_EMPTY_ROW"), tr("HR_SEARCH_START"), open_atlas,
 			EventGate.active_id() != ""))
 		return
 	# Dikkat isteyen satırlar üste. sort_custom kararlı DEĞİL ve çoğu ağırlık 0, o yüzden

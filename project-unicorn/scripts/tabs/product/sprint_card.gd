@@ -1,27 +1,32 @@
 class_name SprintCard
 extends PanelContainer
 
-# Ürün sprint ekranının tek kartı: aday listesi, bu sprint, sonraki sprint ve çeyrek sütunu aynı
-# sahneyi kullanır. Kart yalnız sözlüğünü çizer: hangi düğmenin olduğu (`buttons`) ve "+"nın
-# açıklığı (`can_add`) modelden gelir.
+# Ürün sprint ekranının tek kartı, küçük bir belge: aday listesi, bu sprint, sonraki sprint ve çeyrek
+# sütunu aynı sahneyi kullanır. Kart yalnız sözlüğünü çizer: hangi düğmenin olduğu (`buttons`) ve
+# "+"nın açıklığı (`can_add`) modelden gelir. Sonraki sprinte planlanmış kart kesikli kenarlıdır.
 
 enum State { ADAY, ADAY_ALINMIS, SPRINT_PLAN, SPRINT_AKTIF, BITTI, DEVREDEN, PLANLANAN, KILITLI, BETA_BEKLIYOR }
+## WIDE orta sütun; NARROW sonraki sütun (ad iki satıra iner, durum etiketleri kendi satırında); LOW açık
+## alan satırının içindeki dar kart; MINI çeyrek sütunu.
+enum Look { WIDE, NARROW, LOW, MINI }
 
-## args her eylemde {card_id}; karar düğmesi "decide" yayar.
+## args her eylemde {card_id}; karar satırının düğmesi "decide" yayar ({card_id, item}).
 signal action(kind: String, args: Dictionary)
 
-## Aday kartında düğmeler hep görünür; sprint ve sonraki sütun kartında hover'da çıkar.
+## Aday kartında düğmeler hep görünür; sprint ve sonraki sütun kartında üstüne gelince.
 const BUTTONS_ALWAYS := [State.ADAY, State.KILITLI]
 const BUTTONS_ON_HOVER := [State.SPRINT_PLAN, State.SPRINT_AKTIF, State.PLANLANAN, State.DEVREDEN]
+const PLANNED := [State.PLANLANAN, State.DEVREDEN]
 const PHASE_KEYS := ["PRODUCT_PHASE_DESIGN", "PRODUCT_PHASE_DEV", "PRODUCT_PHASE_TEST"]
+const INBOX_GLYPH := "res://assets/icons/util/inbox.svg"
+const MAIL_PANE := preload("res://scripts/tabs/events/mail_pane.gd")
 
 @export var state: State
-## Çeyrek sütununun mini kartı: ikon, iki satıra sarılan ad, düz efor sayısı.
-@export var compact := false
 
 var _card: Dictionary
-var _hover_bar: HBoxContainer   # sonraki ve sprint kartının hover'da beliren düğmeleri
-## HoverEffort: efor dökümü; sütunun kırpmasından kaçsın diye top_level yüzer.
+var _look := Look.WIDE
+var _hover_bar: Control   # sprint ve sonraki sütun kartının üstüne gelince beliren düğmeleri
+## Efor dökümü: sütunun kırpmasından kaçsın diye top_level yüzer.
 var _effort_box: PanelContainer
 var _effort_parts: PackedStringArray
 var _column: Control   # kutunun sığacağı kaydırma sütunu; kutu her belirişte bir kez bulunur
@@ -29,229 +34,305 @@ var _hovered := false
 var _forced := false
 
 
-func setup(card: Dictionary, can_add: bool) -> void:
+## Geniş kartın adı ve hemen ardında durum etiketleri; yer daralınca etiketler kalır, ad üç noktayla
+## kısalır. Kutu kapsayıcısı adı ya tam genişlettiği ya da en kısa hâline indirdiği için ayrı dizer.
+class NameRow extends Container:
+	func _get_minimum_size() -> Vector2:
+		var least := Vector2(-UiTokens.SPACE_M, 0.0)
+		for part: Control in get_children():
+			var m := part.get_combined_minimum_size()
+			least = Vector2(least.x + m.x + UiTokens.SPACE_M, maxf(least.y, m.y))
+		return least
+
+	func _notification(what: int) -> void:
+		if what != NOTIFICATION_SORT_CHILDREN:
+			return
+		var title: Label = get_child(0)
+		var room: float = size.x
+		for i in range(1, get_child_count()):
+			room -= get_child(i).get_combined_minimum_size().x + UiTokens.SPACE_M
+		var x := 0.0
+		for part: Control in get_children():
+			var m := part.get_combined_minimum_size()
+			if part == title:
+				m.x = minf(ceilf(title.get_theme_font(&"font").get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+					title.get_theme_font_size(&"font_size")).x), room)
+			fit_child_in_rect(part, Rect2(x, (size.y - m.y) / 2.0, m.x, m.y))
+			x += m.x + UiTokens.SPACE_M
+
+
+func setup(card: Dictionary, can_add: bool, look := Look.WIDE) -> void:
 	_card = card
 	state = card.state
-	if state == State.ADAY_ALINMIS or state == State.KILITLI:
-		modulate.a = UiTokens.PRODUCT_FADED_ALPHA
-	if state == State.KILITLI:
-		tooltip_text = card.locked_node
+	_look = look
+	if state in PLANNED:
+		HRUiShared.D_dashed(self)
 	# Devreden kart sonraki sütunda kalan puanıyla durur.
 	var points: int = int(card.remaining) if int(card.remaining) >= 0 else int(card.effort)
-	var line := HBoxContainer.new()
-	line.add_theme_constant_override(&"separation", UiTokens.SPACE_M)
-	add_child(line)
-	if compact:
-		var title := _add_title(line, &"RowMetaStrong")
+	var body := SprintUiShared.column(UiTokens.SPACE_M)
+	add_child(body)
+	var top := SprintUiShared.box(UiTokens.SPACE_M if look != Look.MINI else UiTokens.SPACE_S)
+	body.add_child(top)
+	var ink := _ink()
+	if state == State.KILITLI:
+		top.add_child(UiFactory.make_glyph(SprintUiShared.LOCK, UiTokens.D_ICON_PART, UiTokens.D_INK_OFF))
+	top.add_child(UiFactory.make_glyph(SprintUiShared.KIND_ICON % _card.kind,
+		UiTokens.D_ICON_PART if look == Look.MINI else UiTokens.D_ICON_ROW, ink.glyph))
+	var title := UiFactory.make_label(String(_card.name), &"CaptionStrong" if look == Look.MINI else ink.title, ink.name)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var tags: Array = [] if look == Look.MINI else _tags()
+	if look == Look.WIDE:
+		title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		var name_row := NameRow.new()
+		name_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_row.add_child(title)
+		for t in tags:
+			name_row.add_child(t)
+		top.add_child(name_row)
+	else:
 		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		title.max_lines_visible = 2
-		line.add_child(SprintUiShared.stamp(str(points), &"RowMetaStrong"))
+		top.add_child(title)
+	if look == Look.MINI:
+		top.add_child(_points(points))
+		_align(top)
+		_paint()
+		return
+	if state == State.BITTI:
+		top.add_child(UiFactory.D_stamp(Fmt.upper(tr("PRODUCT_STATUS_DONE"))))
 	else:
-		_build_full(line, can_add, points)
+		var roles := SprintUiShared.box(UiTokens.SPACE_XS)
+		for role in _card.roles:
+			roles.add_child(UiFactory.make_glyph(SprintUiShared.ROLE_ICONS[String(role)], UiTokens.D_ICON_ROW, ink.glyph))
+		top.add_child(roles)
+	top.add_child(_points(points))
+	if state in BUTTONS_ALWAYS:
+		var acts := SprintUiShared.box(UiTokens.SPACE_XS)
+		for kind in _card.buttons:
+			# Kilitli kart iki sprinte de gidemez.
+			acts.add_child(_key(kind, (state == State.KILITLI and kind != "remove") or (kind == "add" and not can_add)))
+		top.add_child(acts)
+	if int(_card.tag_sprint) >= 0:
+		top.add_child(UiFactory.D_tag(tr("PRODUCT_TAG_SPRINT").format({"n": int(_card.tag_sprint)}), &"outline"))
+	_align(top)
+	if look != Look.WIDE and not tags.is_empty():
+		var row := HFlowContainer.new()
+		row.add_theme_constant_override("h_separation", UiTokens.SPACE_S)
+		for t in tags:
+			row.add_child(t)
+		body.add_child(row)
+
+	if state == State.SPRINT_AKTIF or state == State.BITTI:
+		body.add_child(_phase_row())
+	elif not _card.effect.is_empty():
+		body.add_child(SprintUiShared.effect_line(_card.effect))
+	if state == State.KILITLI:
+		body.add_child(UiFactory.make_label(String(_card.locked_node), &"Caption"))
+	if _card.decision != null:
+		_decision_rows(body, _card.decision)
+	if state in BUTTONS_ON_HOVER:
+		_hover_bar = _hover_keys()
+	_effort(points)
+	if _effort_box != null or _hover_bar != null:
+		mouse_entered.connect(_hover.bind(true))
+		mouse_exited.connect(_hover.bind(false))
 	_paint()
 
 
-## Çeyrek sütunu kartı ağaca kurulduktan sonra girer; motor _ready'de işlemeyi yeniden açar.
+## Ağaca kurulumdan sonra giren kartta motor işlemeyi _ready'de yeniden açar.
 func _ready() -> void:
 	_paint()
 
 
-## Fikstür hover'ı (`ui.hover_card`): efor kutusu ve amber kenar, düğmeler olmadan.
+## Fikstür hover'ı (`ui.hover_card`): efor kutusu, hover kenarı ve düğmeler.
 func show_effort() -> void:
 	_forced = true
-	_paint()
+	_hover(true)
 
 
-func _build_full(line: HBoxContainer, can_add: bool, points: int) -> void:
-	var body := VBoxContainer.new()
-	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override(&"separation", UiTokens.PRODUCT_CARD_ROW_GAP)
-	line.add_child(body)
-
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override(&"separation", UiTokens.SPACE_S)
-	body.add_child(head)
-	# Dar sonraki sütunda uzun ad kesilmez, ikinci satıra iner.
-	var title := _add_title(head, &"DataMono")
-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title.max_lines_visible = 2
+## {glyph, name, title}: alınmış aday ikincil mürekkepte, kilitli kart kapalı mürekkepte okunur.
+func _ink() -> Dictionary:
 	match state:
-		State.PLANLANAN: head.add_child(SprintUiShared.stamp(tr("PRODUCT_PLANNED"), &"MicroLabel"))
-		State.DEVREDEN: head.add_child(SprintUiShared.stamp(tr("PRODUCT_CARRIED"), &"StampAmber"))
-		State.BETA_BEKLIYOR: head.add_child(SprintUiShared.stamp(tr("PRODUCT_BETA_WAITING"), &"Stamp"))
-		State.KILITLI: head.add_child(HRUiShared.lock_glyph(UiTokens.PRODUCT_ICON_PX, UiTokens.INK_MUTED))
-	# Söz verilmiş kademe her yerde etiketli: planlamada da, sprint sürerken de.
-	if _card.effect.any(func(part: Dictionary) -> bool: return part.k == "promise"):
-		head.add_child(SprintUiShared.stamp(tr("PRODUCT_PROMISED"), &"StampAmber"))
-	if _card.urgent:
-		_add_alarm(head, tr("PRODUCT_URGENT"))
+		State.ADAY_ALINMIS:
+			return {"glyph": UiTokens.D_INK_4, "name": UiTokens.D_INK_3, "title": &"DataMedium"}
+		State.KILITLI:
+			return {"glyph": UiTokens.D_INK_OFF, "name": UiTokens.D_INK_OFF, "title": &"DataStrong"}
+		State.BITTI:
+			return {"glyph": UiTokens.D_INK_3, "name": UiTokens.D_INK_3, "title": &"DataStrong"}
+	return {"glyph": UiTokens.D_INK_3, "name": UiTokens.D_INK_1 if _look == Look.MINI else null, "title": &"DataStrong"}
+
+
+func _points(points: int) -> Label:
+	var pts := UiFactory.make_label(str(points), &"PtsBox")
+	pts.custom_minimum_size.x = UiTokens.D_W_PTS
+	pts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return pts
+
+
+## Durum etiketleri: devreder ve acil uyarı (acil uyarı üçgeniyle), ötekiler nötr. "Planlanan" etiketi
+## yok: kesikli kenar söyler.
+func _tags() -> Array:
+	var out: Array = []
 	if _card.spills:
-		_add_alarm(head, tr("PRODUCT_CARD_SPILLS"))
-	for role in _card.roles:
-		head.add_child(SprintUiShared.icon("role_" + String(role), UiTokens.PRODUCT_ICON_PX, UiTokens.INK_MUTED))
-	head.add_child(SprintUiShared._square(UiFactory.make_label(str(points), &"DataMonoBox"), UiTokens.SPACE_XXL))
-
-	if state == State.SPRINT_AKTIF or state == State.BITTI:
-		body.add_child(_phase_row())
-	else:
-		body.add_child(SprintUiShared.effect_line(_card.effect, "card"))
-	if _card.decision != null:
-		body.add_child(_decision_row(_card.decision))
-
-	# Kartın sağ ucu: sprinte alınmış adayın "Sprint N" damgası ve adayın hep görünen + →.
-	if int(_card.tag_sprint) >= 0:
-		line.add_child(SprintUiShared.stamp(tr("PRODUCT_TAG_SPRINT").format({"n": int(_card.tag_sprint)}), &"StampAmber"))
-	var on_hover: bool = state in BUTTONS_ON_HOVER
-	if on_hover or state in BUTTONS_ALWAYS:
-		var host: HBoxContainer = line
-		if on_hover:
-			# Hover düğmeleri kartın sağ üstüne biner: satırı daraltıp adı kesmez, kart zıplamaz.
-			host = HBoxContainer.new()
-			host.size_flags_horizontal = Control.SIZE_SHRINK_END
-			host.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-			host.add_theme_constant_override(&"separation", 0)
-			host.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			host.visible = false
-			add_child(host)
-			_hover_bar = host
-		for kind in _card.buttons:
-			var b := SprintUiShared.ink_button(kind, kind == "add" and (not can_add or state == State.KILITLI))
-			b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			# STOP olsaydı imleç düğmeye geçince kart hover'ı biter, hover düğmeleri kaybolurdu.
-			b.mouse_filter = Control.MOUSE_FILTER_PASS
-			b.pressed.connect(action.emit.bind(kind, {"card_id": String(_card.id)}))
-			host.add_child(b)
-
-	var split: Array = _card.effort_split
-	if not split.is_empty():
-		var parts: PackedStringArray = [tr(Fmt.count_key("PRODUCT_EFFORT_POINTS", points)).format({"n": points})]
-		for s in split:
-			var weeks: int = int(s.weeks)
-			parts.append(tr("PRODUCT_EFFORT_PERSON").format({"name": s.name,
-				"weeks": tr(Fmt.count_key("PRODUCT_WEEKS", weeks)).format({"n": weeks})}))
-		_effort_box = PanelContainer.new()
-		_effort_box.theme_type_variation = &"HoverBox"
-		_effort_box.top_level = true
-		_effort_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_effort_parts = parts
-		_effort_box.add_child(UiFactory.make_label(SprintUiShared.SEP.join(parts), &"DataMono"))
-		add_child(_effort_box)
-	if _effort_box != null or _hover_bar != null:
-		mouse_entered.connect(_hover.bind(true))
-		mouse_exited.connect(_hover.bind(false))
+		out.append(UiFactory.D_tag(tr("PRODUCT_CARD_SPILLS"), &"warn"))
+	if _card.urgent:
+		var urgent := PanelContainer.new()
+		urgent.theme_type_variation = UiTokens.D_variation(&"TagWarnBox")
+		urgent.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		urgent.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var row := SprintUiShared.box(UiTokens.SPACE_XS)
+		row.add_child(UiFactory.make_glyph(SprintUiShared.WARN, UiTokens.D_ICON_TAG, UiTokens.D_warn()))
+		row.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_URGENT")), UiTokens.D_variation(&"TagWarnInk")))
+		urgent.add_child(row)
+		out.append(urgent)
+	for row in [[state == State.DEVREDEN, "PRODUCT_CARRIED"], [state == State.BETA_BEKLIYOR, "PRODUCT_BETA_WAITING"],
+			[_card.effect.any(func(p: Dictionary) -> bool: return p.k == "promise"), "PRODUCT_PROMISED"]]:
+		if row[0]:
+			out.append(UiFactory.D_tag(tr(row[1]), &"outline"))
+	return out
 
 
-## Tür ikonu alan renginde ve ad: tam kartta ilk satırın, mini kartta tek satırın başı.
-func _add_title(row: HBoxContainer, variation: StringName) -> Label:
-	row.add_child(SprintUiShared.icon("kind_" + String(_card.kind), UiTokens.PRODUCT_ICON_PX, UiTokens.area_color(int(_card.slot))))
-	var title := UiFactory.make_label(String(_card.name), variation)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(title)
-	return title
+## Dar kartta ad iki satıra inebilir: satırın öbür parçaları üste yaslanır.
+func _align(top: HBoxContainer) -> void:
+	for part: Control in top.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER if _look == Look.WIDE else Control.SIZE_SHRINK_BEGIN
 
 
-## "! acil" ve "devreder": negatif anlamlı çip; fareyi geçirir ki kartın hover'ını kesmesin.
-func _add_alarm(row: HBoxContainer, text: String) -> void:
-	var chip := SprintUiShared.semantic_chip(text, &"negative")
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(chip)
+func _key(kind: String, disabled: bool) -> Button:
+	var b := SprintUiShared.key_button(kind, disabled)
+	# STOP olsaydı imleç düğmeye geçince kartın hover'ı biter, hover düğmeleri kaybolurdu.
+	b.mouse_filter = Control.MOUSE_FILTER_PASS
+	b.pressed.connect(action.emit.bind(kind, {"card_id": String(_card.id)}))
+	return b
 
 
-## Sprint içi satırı: Tasarım · Geliştirme · Test noktaları, o haftanın atananları, bitince tik.
+## Hover düğmeleri etki satırının sağ ucuna, kartın kendi zemininde biner: kart zıplamaz.
+func _hover_keys() -> Control:
+	var host := PanelContainer.new()
+	host.theme_type_variation = &"CardKeysPlanned" if state in PLANNED else &"CardKeys"
+	host.size_flags_horizontal = Control.SIZE_SHRINK_END
+	host.size_flags_vertical = Control.SIZE_SHRINK_END
+	host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	host.visible = false
+	var row := SprintUiShared.box(UiTokens.SPACE_XS)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for kind in _card.buttons:
+		row.add_child(_key(kind, false))
+	host.add_child(row)
+	add_child(host)
+	return host
+
+
+## Sprint içi satırı: Tasarım, Geliştirme ve Test adımları, sağda o haftanın atananları.
 func _phase_row() -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override(&"separation", UiTokens.SPACE_XS)
-	var steps := HBoxContainer.new()
-	steps.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	steps.add_theme_constant_override(&"separation", UiTokens.SPACE_S)
-	row.add_child(steps)
+	var row := SprintUiShared.box(UiTokens.SPACE_S)
 	var phases: Array = _card.phases
-	var all_done: bool = phases.count("done") == phases.size()
 	for i in phases.size():
 		var phase: String = phases[i]
-		var ink: Color = UiTokens.INK_FAINT
-		match phase:
-			"done": ink = UiTokens.positive() if all_done else UiTokens.INK_MUTED
-			"active": ink = UiTokens.ACCENT_DEEP
+		var ink: Color = {"done": UiTokens.D_INK_3, "active": UiTokens.D_INK_1}.get(phase, UiTokens.D_INK_4)
 		if i > 0:
 			var link := ColorRect.new()
-			link.color = UiTokens.CARD_BORDER if phase == "waiting" else UiTokens.INK_MUTED
-			link.custom_minimum_size = Vector2(UiTokens.SPACE_XXL, UiTokens.BORDER_HAIRLINE)
+			link.color = UiTokens.D_LINE_2
+			link.custom_minimum_size = Vector2(UiTokens.D_PHASE_LINK, UiTokens.BORDER_HAIRLINE)
 			link.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			link.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			steps.add_child(link)
-		steps.add_child(SprintUiShared.phase_dot(phase, ink))
-		steps.add_child(UiFactory.make_label(tr(PHASE_KEYS[i]), &"MicroLabel", ink))
+			row.add_child(link)
+		var dot := Control.new()
+		dot.custom_minimum_size = Vector2.ONE * UiTokens.D_PHASE_DOT
+		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		dot.draw.connect(func() -> void:
+			var r: float = UiTokens.D_PHASE_DOT / 2.0
+			if phase == "waiting":
+				dot.draw_arc(Vector2.ONE * r, r - UiTokens.BORDER_HAIRLINE / 2.0, 0.0, TAU, 24, UiTokens.D_LINE_3,
+					UiTokens.BORDER_HAIRLINE, true)
+			else:
+				dot.draw_circle(Vector2.ONE * r, r, ink))
+		row.add_child(dot)
+		row.add_child(SprintUiShared.label(tr(PHASE_KEYS[i]), &"Caption", ink))
+	row.add_child(RnDUiShared.spacer())
 	for a in _card.assignees:
-		row.add_child(SprintUiShared.avatar(a.initials,
-			tr("PRODUCT_PERSON_ROLE").format({"name": a.name, "role": a.role_text}), UiTokens.SPACE_XXL, false))
-	if state == State.BITTI:
-		var ring := StyleBoxFlat.new()
-		ring.bg_color = UiTokens.positive_bg()
-		ring.border_color = UiTokens.positive_rule()
-		ring.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-		ring.set_corner_radius_all(UiTokens.RADIUS_PILL)
-		var badge := PanelContainer.new()
-		badge.custom_minimum_size = Vector2.ONE * UiTokens.PRODUCT_BADGE_PX
-		badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		badge.add_theme_stylebox_override(&"panel", ring)
-		var tick := SprintUiShared.icon("tick", UiTokens.PRODUCT_ICON_PX, UiTokens.positive())
-		tick.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		badge.add_child(tick)
-		row.add_child(badge)
+		row.add_child(SprintUiShared.avatar(a, UiTokens.D_AVATAR_ROW_SM))
 	return row
 
 
-## Karar bekleyen kartın satırı: konuşan, cümlesi ve olay modalını açan düğme.
-func _decision_row(d: Dictionary) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"DecisionRow"
-	panel.mouse_filter = Control.MOUSE_FILTER_PASS
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override(&"separation", UiTokens.SPACE_M)
-	panel.add_child(row)
-	row.add_child(SprintUiShared.avatar(d.initials, d.speaker, UiTokens.SPACE_XXL, false))
-	row.add_child(SprintUiShared.stamp(tr("PRODUCT_DECISION_SPEAKER").format({"speaker": d.speaker}), &"RowMeta"))
-	var quote := UiFactory.make_label(d.text, &"QuoteSerif")
-	quote.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	quote.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row.add_child(quote)
+## Karar kartta cevaplanmaz: kağıt Olaylar'da bekler, satır göndericiyi, konuyu ve kalan süreyi söyler
+## ve oraya götürür.
+func _decision_rows(body: VBoxContainer, d: Dictionary) -> void:
+	body.add_child(HSeparator.new())
+	var row := SprintUiShared.box(UiTokens.SPACE_M)
+	row.add_child(MAIL_PANE.avatar(d.sender, UiTokens.D_AVATAR_ROW_SM))
+	row.add_child(SprintUiShared.label(String(d.sender.name), &"KeyText"))
+	row.add_child(SprintUiShared.label(SprintUiShared.SEP.strip_edges(), &"MetaMuted", UiTokens.D_INK_4))
+	var subject := SprintUiShared.label(String(d.subject), &"TipTitle")
+	subject.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	subject.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(subject)
 	var go := Button.new()
-	go.theme_type_variation = &"PrimaryButtonSmall"
-	go.text = tr("PRODUCT_DECIDE")
+	go.theme_type_variation = &"SecondaryButtonSmall"
+	go.text = tr("PRODUCT_GO_DECISION")
+	go.icon = load(INBOX_GLYPH)
+	go.focus_mode = Control.FOCUS_NONE
 	go.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	go.mouse_filter = Control.MOUSE_FILTER_PASS
-	go.pressed.connect(action.emit.bind("decide", {"card_id": String(_card.id)}))
+	go.pressed.connect(action.emit.bind("decide", {"card_id": String(_card.id), "item": String(d.item)}))
 	row.add_child(go)
-	return panel
+	body.add_child(row)
+	var last: bool = bool(d.last)
+	var ink: Color = UiTokens.D_warn() if last else UiTokens.D_INK_3
+	var wait := SprintUiShared.box(UiTokens.SPACE_S)
+	wait.add_child(UiFactory.make_glyph(INBOX_GLYPH, UiTokens.D_ICON_PART, UiTokens.D_INK_3))
+	wait.add_child(SprintUiShared.label(tr("PRODUCT_DECISION_IN_INBOX"), &"Caption"))
+	wait.add_child(SprintUiShared.label(SprintUiShared.SEP.strip_edges(), &"Caption", UiTokens.D_INK_4))
+	wait.add_child(UiFactory.make_glyph(SprintUiShared.CLOCK, UiTokens.D_ICON_PART, ink))
+	var weeks: int = int(d.weeks_left)
+	wait.add_child(SprintUiShared.label(tr("DESK_PAPER_THIS_WEEK") if last
+		else tr(Fmt.count_key("DESK_PAPER_WEEKS", weeks)).format({"n": weeks}), &"Caption", ink))
+	body.add_child(SprintUiShared.pad(wait, Vector4i(UiTokens.D_AVATAR_ROW_SM + UiTokens.SPACE_M, 0, 0, 0)))
+
+
+## Efor dökümü: "3 puan · Ece 1 hafta · Kaan 1 hafta", kartın üstüne gelince.
+func _effort(points: int) -> void:
+	var split: Array = _card.effort_split
+	if split.is_empty():
+		return
+	_effort_parts = [tr(Fmt.count_key("PRODUCT_EFFORT_POINTS", points)).format({"n": points})]
+	for s in split:
+		var weeks: int = int(s.weeks)
+		_effort_parts.append(tr("PRODUCT_EFFORT_PERSON").format({"name": s.name,
+			"weeks": tr(Fmt.count_key("PRODUCT_WEEKS", weeks)).format({"n": weeks})}))
+	_effort_box = PanelContainer.new()
+	_effort_box.theme_type_variation = &"TooltipPanel"
+	_effort_box.top_level = true
+	_effort_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_effort_box.add_child(UiFactory.make_label(SprintUiShared.SEP.join(_effort_parts), &"TooltipLabel"))
+	add_child(_effort_box)
 
 
 func _hover(on: bool) -> void:
 	_hovered = on
 	if _hover_bar != null:
-		_hover_bar.visible = on
+		_hover_bar.visible = on or _forced
 	_paint()
 
 
-## Hover kenarı: düz kartta PaperCardOpen, kesikli kartta _draw'daki amber kesik.
+## Hover bir kenardır: düz kartta açık kenar, kesikli kart kesik kalır.
 func _paint() -> void:
 	var hot: bool = _hovered or _forced
-	if _dashed():
-		theme_type_variation = &"PaperCardDashed"
+	if _look == Look.MINI:
+		theme_type_variation = &"SprintCardMiniPlanned" if state in PLANNED else &"SprintCardMini"
+	elif state in PLANNED:
+		theme_type_variation = &"SprintCardPlanned"
 	else:
-		theme_type_variation = &"PaperCardOpen" if hot else &"PaperCard"
+		theme_type_variation = StringName(("SprintCardLow" if _look == Look.LOW else "SprintCard") + ("Hover" if hot else ""))
 	if _effort_box != null:
 		_effort_box.visible = hot
 		if not hot:
 			_column = null
 	set_process(hot and _effort_box != null)
-	queue_redraw()
 
 
-## HoverEffort kartın sağ üstünde durur ve sütunun dışına taşmaz; üstte yer yoksa kartın altına
+## Efor kutusu kartın sağ üstünde durur ve sütunun dışına taşmaz; üstte yer yoksa kartın altına
 ## iner. Her karede yerleşir, çünkü sütun kaydıkça kartın ekrandaki yeri değişir.
 func _process(_delta: float) -> void:
 	if _column == null:
@@ -278,16 +359,3 @@ func _fit_effort() -> void:
 	var wide: float = effort.get_theme_font(&"font").get_string_size(one_line, HORIZONTAL_ALIGNMENT_LEFT, -1,
 		effort.get_theme_font_size(&"font_size")).x + _effort_box.get_theme_stylebox(&"panel").get_minimum_size().x
 	effort.text = one_line if wide <= _column.size.x else "\n".join(_effort_parts)
-
-
-## Sol kenarda alan rengi; sonraki sütunun kartları kesikli kenarlı (devreden ve çeyrekte önerilen amber).
-func _draw() -> void:
-	if _dashed():
-		var amber: bool = state == State.DEVREDEN or compact or _hovered or _forced
-		RnDUiShared.draw_dashed_rect(self, Rect2(Vector2.ZERO, size).grow(-UiTokens.BORDER_HAIRLINE / 2.0),
-			UiTokens.ACCENT_DEEP if amber else UiTokens.BORDER_DASHED)
-	SprintUiShared.draw_edge(self, int(_card.slot))
-
-
-func _dashed() -> bool:
-	return state == State.PLANLANAN or state == State.DEVREDEN

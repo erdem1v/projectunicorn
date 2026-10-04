@@ -944,79 +944,79 @@ PROD_FEAT_SAAS_OPS_SCHEDULING_VOICE,"Randevu ve planlamayı tek takvimde topla. 
 PROD_FEAT_SAAS_OPS_FIELD_VOICE,"Sahadaki ekip zayıf bağlantıda bile çalışır, sonra senkronlar. Sahanın bel kemiği.",The field crew keeps working on a weak signal and syncs later. The backbone of field work.
 PROD_FEAT_SAAS_OPS_MOBILE_VOICE,Saha ekibi telefondan girer. Sadece masaüstünde kalan ürün sahada ölür.,The field team gets in from a phone. A product that stays on the desktop dies in the field.
 PROD_TYPE_AI_ASSISTANT_NAME,Yapay Zeka Asistanı,AI Assistant
-PROD_TYPE_AI_ASSISTANT_CATEGORY,ASİSTAN,ASSISTANT
+PROD_TYPE_AI_ASSISTANT_CATEGORY,Asistan,Assistant
 PROD_TYPE_AI_ASSISTANT_DESC,Genel amaçlı sohbet asistanı.,A general-purpose chat assistant.
 PROD_TYPE_AI_ASSISTANT_TRADEOFF,Kitle büyük ama sadakat düşük; dev şirketlerin gölgesinde yaşarsın.,The audience is huge but loyalty is thin; you live in the shadow of giants.
 PROD_TYPE_AI_ASSISTANT_BET,"İnsanların her gün sorduğu şeye hızlı, temiz cevap. Refik'in üşendiği nişi kap.","A fast, clean answer to what people ask every day. Take the niche Refik cannot be bothered with."
 PROD_TYPE_AI_ASSISTANT_PITCH,Refik'in yetmediği yerlerde devreye giren asistan.,The assistant that steps in where Refik falls short.
 PROD_TYPE_AI_PHOTO_EDITOR_NAME,Görsel Düzenleyici,Photo Editor
-PROD_TYPE_AI_PHOTO_EDITOR_CATEGORY,GÖRSEL · ÜRETKEN,VISUAL · GENERATIVE
+PROD_TYPE_AI_PHOTO_EDITOR_CATEGORY,Görsel · üretken,Visual · generative
 PROD_TYPE_AI_PHOTO_EDITOR_DESC,Görsel düzenleme ve üretim aracı.,An image editing and generation tool.
 PROD_TYPE_AI_PHOTO_EDITOR_TRADEOFF,Viral büyüme şansı var; API maliyeti marjı yer.,There is a shot at viral growth; API cost eats the margin.
 PROD_TYPE_AI_PHOTO_EDITOR_BET,"PixelForge açmaya üşenen milyonlar var. Tek tıkla iyi görünsünler, para versinler.","Millions cannot be bothered to open PixelForge. Let them look good in one click, and pay for it."
 PROD_TYPE_AI_PHOTO_EDITOR_PITCH,PixelForge'un karmaşıklığını unutturan bir araç.,A tool that makes you forget how complicated PixelForge is.
 PROD_TYPE_AI_CODE_COPILOT_NAME,Kod Yazan Asistan,Code Copilot
-PROD_TYPE_AI_CODE_COPILOT_CATEGORY,GELİŞTİRİCİ,DEVELOPER
+PROD_TYPE_AI_CODE_COPILOT_CATEGORY,Geliştirici,Developer
 PROD_TYPE_AI_CODE_COPILOT_DESC,Kod yazımını hızlandıran yardımcı.,A helper that speeds up writing code.
 PROD_TYPE_AI_CODE_COPILOT_TRADEOFF,Geliştirici severse yayar; beğenmezse ilk gün siler.,If developers love it they spread it; if not they delete it on day one.
 PROD_TYPE_AI_CODE_COPILOT_BET,"Junior geliştiricinin yanında 7/24 duran bir kıdemli. Önce güvenini kazan, ekipler peşinden gelsin.","A senior sitting beside every junior, around the clock. Win their trust first and the teams follow."
 PROD_TYPE_AI_CODE_COPILOT_PITCH,"Kod yazarken öneren, tamamlayan, açıklayan asistan. Geliştiricinin yeni masa arkadaşı.","An assistant that suggests, completes and explains while you write. The developer's new desk mate."
 PROD_TYPE_AI_VECTOR_SEARCH_NAME,Kurumsal Arama,Enterprise Search
-PROD_TYPE_AI_VECTOR_SEARCH_CATEGORY,ARAMA,SEARCH
+PROD_TYPE_AI_VECTOR_SEARCH_CATEGORY,Arama,Search
 PROD_TYPE_AI_VECTOR_SEARCH_DESC,Anlamsal kurumsal arama motoru.,A semantic enterprise search engine.
 PROD_TYPE_AI_VECTOR_SEARCH_TRADEOFF,Bütçeler büyük ama karar yavaş; imza altı ay sürebilir.,The budgets are large but the decision is slow; a signature can take six months.
 PROD_TYPE_AI_VECTOR_SEARCH_BET,"Şirketler kendi verisinde kayboluyor. Anlamlı aramayı sat, IT bütçesi açılır.",Companies are lost inside their own data. Sell meaningful search and the IT budget opens.
 PROD_TYPE_AI_VECTOR_SEARCH_PITCH,Şirket verisinde kelimeyle değil anlamla arama yapan motor. Aradığını tarif edemesen de bulur.,An engine that searches company data by meaning rather than by word. It finds what you cannot quite describe.
 PROD_TYPE_SAAS_PROJECT_MGMT_NAME,Proje Yönetimi,Project Management
-PROD_TYPE_SAAS_PROJECT_MGMT_CATEGORY,İŞ AKIŞI,WORKFLOW
+PROD_TYPE_SAAS_PROJECT_MGMT_CATEGORY,İş akışı,Workflow
 PROD_TYPE_SAAS_PROJECT_MGMT_DESC,Ekiplerin işi tek panodan yürüttüğü araç.,One board for a team to run its work from.
 PROD_TYPE_SAAS_PROJECT_MGMT_TRADEOFF,Pazar kalabalık; ucuz ve hızlı olan sıyrılır.,The market is crowded; cheap and fast is what breaks through.
 PROD_TYPE_SAAS_PROJECT_MGMT_BET,"Vardiya'dan bıkan çok. Daha hafif, daha hızlı bir alternatif ol.","Plenty of people are tired of Vardiya. Be the lighter, faster alternative."
 PROD_TYPE_SAAS_PROJECT_MGMT_PITCH,Kim neyi ne zaman yapacak — ekiplerin işi tek panodan takip ettiği araç.,"Who does what, and when — one board a team runs its work from."
 PROD_TYPE_SAAS_CRM_NAME,Müşteri Takip (CRM),Customer Tracking (CRM)
-PROD_TYPE_SAAS_CRM_CATEGORY,SATIŞ,SALES
+PROD_TYPE_SAAS_CRM_CATEGORY,Satış,Sales
 PROD_TYPE_SAAS_CRM_DESC,Müşteri ve görüşmeleri tek ekranda toplar.,Customers and conversations gathered on one screen.
 PROD_TYPE_SAAS_CRM_TRADEOFF,"Her şirkete lazım; geçiş maliyeti seni de korur, rakibi de.",Every company needs one; switching cost protects you and your rival alike.
 PROD_TYPE_SAAS_CRM_BET,"Satış ekipleri deal kaybediyor. Hepsini tek ekranda topla, vazgeçemesinler.",Sales teams are losing deals. Put it all on one screen and they cannot walk away.
 PROD_TYPE_SAAS_CRM_PITCH,"Satış ekibinin müşterileri ve görüşmeleri tek ekranda takip ettiği sistem. Unutulan müşteri, kaçan satış kalmaz.","The system a sales team tracks its customers and conversations from. No forgotten customer, no lost sale."
 PROD_TYPE_SAAS_ANALYTICS_NAME,Veri Panosu,Analytics Dashboard
-PROD_TYPE_SAAS_ANALYTICS_CATEGORY,ANALİTİK,ANALYTICS
+PROD_TYPE_SAAS_ANALYTICS_CATEGORY,Analitik,Analytics
 PROD_TYPE_SAAS_ANALYTICS_DESC,Metrik ve gösterge paneli seti.,A set of metric and indicator panels.
 PROD_TYPE_SAAS_ANALYTICS_TRADEOFF,Yönetici grafiğe para öder; veri bağlantıları sürekli bakım ister.,Managers pay for charts; the data connectors want constant maintenance.
 PROD_TYPE_SAAS_ANALYTICS_BET,Yönetici grafiğe para verir. Karmaşık veriyi tek bakışta anlaşılır yap.,A manager will pay for a chart. Make complex data legible at a glance.
 PROD_TYPE_SAAS_ANALYTICS_PITCH,Dağınık şirket verisini yöneticinin tek bakışta anlayacağı grafiklere çevirir.,Turns scattered company data into charts a manager understands at a glance.
 PROD_TYPE_SAAS_BILLING_NAME,Faturalama Altyapısı,Billing Infrastructure
-PROD_TYPE_SAAS_BILLING_CATEGORY,FİNANS · ALTYAPI,FINANCE · INFRASTRUCTURE
+PROD_TYPE_SAAS_BILLING_CATEGORY,Finans · altyapı,Finance · infrastructure
 PROD_TYPE_SAAS_BILLING_DESC,Abonelik ve tahsilat altyapısı.,Subscription and collection infrastructure.
 PROD_TYPE_SAAS_BILLING_TRADEOFF,Sıkıcı ama vazgeçilmez; tek hata pahalıya patlar.,Boring but indispensable; one mistake is expensive.
 PROD_TYPE_SAAS_BILLING_BET,"Herkes tahsilat ister, kimse kurmak istemez. Sıkıcı ama vazgeçilmez ol.","Everyone wants collections, nobody wants to build it. Be boring and indispensable."
 PROD_TYPE_SAAS_BILLING_PITCH,"Abonelik, fatura ve tahsilatı şirketler adına yürüten altyapı. Sıkıcı, ama herkes muhtaç.","The infrastructure that runs subscriptions, invoices and collection on a company's behalf. Boring, and everyone depends on it."
 PROD_TYPE_SAAS_DEV_TOOLS_NAME,Geliştirici Araçları,Developer Tools
-PROD_TYPE_SAAS_DEV_TOOLS_CATEGORY,GELİŞTİRİCİ,DEVELOPER
+PROD_TYPE_SAAS_DEV_TOOLS_CATEGORY,Geliştirici,Developer
 PROD_TYPE_SAAS_DEV_TOOLS_DESC,Geliştiricinin günlük angaryasını üstlenir.,Takes the developer's daily drudgery off their hands.
 PROD_TYPE_SAAS_DEV_TOOLS_TRADEOFF,Mühendis severse şirketine sokar; o güven yavaş kazanılır.,If an engineer loves it they bring it into the company; that trust is slow to earn.
 PROD_TYPE_SAAS_DEV_TOOLS_BET,Mühendislerin günlük acısını çöz. Severlerse şirketlerine sokarlar.,"Solve the daily pain of engineers. If they love it, they carry it inside."
 PROD_TYPE_SAAS_DEV_TOOLS_PITCH,Geliştiricilerin her gün uğraştığı angaryayı üstlenen araç seti. Mühendisten mühendise.,A toolset that takes on the drudgery developers face every day. From engineer to engineer.
 PROD_TYPE_SAAS_OPS_NAME,Süreç Otomasyon Platformu,Process Automation Platform
-PROD_TYPE_SAAS_OPS_CATEGORY,OPERASYON,OPERATIONS
+PROD_TYPE_SAAS_OPS_CATEGORY,Operasyon,Operations
 PROD_TYPE_SAAS_OPS_DESC,Sahadan yönetime süreçleri tek yerde toplar.,Gathers processes from the field to management in one place.
 PROD_TYPE_SAAS_OPS_TRADEOFF,Sektörde para var ama satış döngüsü uzun.,There is money in the sector but the sales cycle is long.
 PROD_TYPE_SAAS_OPS_BET,"Sahada iş yürüten şirketler kâğıtla boğuluyor. Süreci dijitalleştir, vazgeçemesinler.",Companies running work in the field are drowning in paper. Digitise the process and they cannot go back.
 PROD_TYPE_SAAS_OPS_PITCH,"İnşaattan lojistiğe, süreçleri uçtan uca otomatikleştiren operasyon platformu.","An operations platform that automates processes end to end, from construction to logistics."
 PROD_TYPE_NOTE_TOOL_NAME,Not & Bilgi Aracı,Notes and Knowledge Tool
-PROD_TYPE_NOTE_TOOL_CATEGORY,ÇALIŞMA ALANI,WORKSPACE
+PROD_TYPE_NOTE_TOOL_CATEGORY,Çalışma alanı,Workspace
 PROD_TYPE_NOTE_TOOL_DESC,Not · bağlantı · arama tek çalışma alanında.,Notes · links · search in one workspace.
 PROD_TYPE_NOTE_TOOL_TRADEOFF,Herkesin bir not uygulaması var; seninkini ayıracak olan aramanın kalitesi.,Everyone already has a notes app; what will set yours apart is the quality of the search.
 PROD_TYPE_NOTE_TOOL_BET,İnsanlar not tutuyor ama bulamıyor. Sen bulmayı çöz; gerisi arkasından gelir.,People take notes and then cannot find them. Solve finding and the rest follows.
 PROD_TYPE_NOTE_TOOL_PITCH,Yazdığın her şeyi hatırlayan çalışma alanı.,The workspace that remembers everything you wrote.
 PROD_TYPE_VIDEO_CLIP_NAME,Video Klip Aracı,Video Clip Tool
-PROD_TYPE_VIDEO_CLIP_CATEGORY,İÇERİK,CONTENT
+PROD_TYPE_VIDEO_CLIP_CATEGORY,İçerik,Content
 PROD_TYPE_VIDEO_CLIP_DESC,Uzun videoyu kısa kliplere böler ve altyazılar.,Cuts long video into short clips and captions them.
 PROD_TYPE_VIDEO_CLIP_TRADEOFF,Pazar hızlı büyüyor ama her ay yeni bir rakip çıkıyor.,The market grows fast but a new rival turns up every month.
 PROD_TYPE_VIDEO_CLIP_BET,Üretici uzun çekiyor ve kısa yayınlıyor. Aradaki işi sen yap.,Creators shoot long and publish short. Do the work in between.
 PROD_TYPE_VIDEO_CLIP_PITCH,Uzun videodan yayına hazır klip çıkaran araç.,The tool that pulls publish-ready clips out of long video.
 PROD_TYPE_ERP_NAME,ERP,ERP
-PROD_TYPE_ERP_CATEGORY,İŞLETME,BUSINESS
+PROD_TYPE_ERP_CATEGORY,İşletme,Business
 PROD_TYPE_ERP_DESC,Ön muhasebe · stok · fatura tek defterde.,Bookkeeping · stock · invoicing in one ledger.
 PROD_TYPE_ERP_TRADEOFF,Bir kez kurulunca kimse çıkmaz; ama ilk kurulum uzun sürer.,Once it is in nobody leaves; but the first install takes a long time.
 PROD_TYPE_ERP_BET,Defter tutan herkes aynı üç şeyi arıyor. Üçünü de doğru yap; gerisini sürümler getirir.,Everyone keeping books wants the same three things. Get all three right and versions bring the rest.
@@ -1039,18 +1039,17 @@ PROD_RISK_MID,Orta,Medium
 PROD_RISK_HIGH,Yüksek,High
 PROD_PATH_TITLE,Yolunu seç,Choose your road
 PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan değişmez.,This choice decides how the product makes money. It cannot be changed later.
-PROD_PATH_B2C,KİTLE,CONSUMER
+PROD_PATH_B2C,Kitle,Consumer
 PROD_PATH_B2C_DESC,"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.","You sell to a crowd. Users arrive, users leave, the numbers swing."
 PROD_PATH_B2B_DESC,"Şirketlere satarsın. Her kontrat büyük para, her müşteri senin eserin.","You sell to companies. Every contract is real money, every customer is your own work."
 PROD_MENTOR_LINE,"B2C'de kalabalığa satarsın, kimseyi tanımazsın. B2B'de herkesi tanırsın, herkes seni tanır. İkisi de para. Farklı dertler.","In B2C you sell to a crowd and know nobody. In B2B you know everybody, and everybody knows you. Both are money. Different headaches."
 PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product type
 PROD_NAME_LABEL,Ürün adı,Product name
-PROD_NAME_SUGGEST,ÖNER,SUGGEST
-PROD_CONFIRM_START,Onayla ve Başlat,Confirm and Start
+PROD_NAME_SUGGEST,Öner,Suggest
+PROD_CONFIRM_START,Onayla ve başlat,Confirm and start
 PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
 PROD_MARKET_SHARE,pazar payı {share},market share {share}
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
-PROD_LIVE_VERSION_LC,CANLI v{version},LIVE v{version}
 PROD_HEALTHY,SAĞLIKLI,HEALTHY
 PROD_RISKY,RİSKLİ,AT RISK
 PROD_FLAT,SABİT,FLAT
@@ -1118,7 +1117,7 @@ PROD_EV_ITER_DECISION_BODY,"İlk tasarım turu bitti. Frank prototipin başında
 
 ""The rounds keep going on their own · each one burns time and polishes the design a little more. But every round returns less than the one before. The moment you say enough, we move to development; at some point you need better people, not more rounds."""
 PROD_ITER_KEEP_GOING,Turlar sürsün,Keep the rounds going
-PROD_PATH_B2B,KONTRAT,CONTRACT
+PROD_PATH_B2B,Kontrat,Contract
 PROD_FIX_RUN_START,Düzeltme başlat,Start a fix run
 PROD_FIX_RUN_END,Koşuyu bitir,End the run
 PROD_TREND_RISING,ARTIYOR,RISING
@@ -1496,6 +1495,7 @@ TOPBAR_SHUTTER_WEEKS_ONE,{n} hafta,{n} week
 TOPBAR_NEXT,Sıradaki,Up next
 TOPBAR_NEXT_OFFER,Teklif · {n} hafta kaldı,Offer · {n} weeks left
 TOPBAR_NEXT_OFFER_LAST,Teklif · bu hafta son,Offer · final week
+TOPBAR_NEXT_SPRINT_FINAL,Sprint kararı · bu hafta son,Sprint decision · final week
 TOPBAR_NEXT_WORKDAY_END,Mesai bitimi · {n} saat,Workday ends · {n} h
 MONTH_TITLE,{month} {year},{month} {year}
 SUMMARY_TITLE_WEEK,Hafta {week} · {year},Week {week} · {year}
@@ -2632,14 +2632,14 @@ FRANK_OFFICE_MOVE_BODY,"Frank'ten mesaj.
 FRANK_OFFICE_MOVE_OK,Bakacağım,I'll look into it
 FRANK_ADVISORY_MEETING_SET,Görüşme ayarlandı. Hazırlıklı git.,Meeting's set. Go in prepared.
 FRANK_ADVISORY_PAID_TIER,Artık ücret almanın vakti. Fiyatı belirle.,Time to start charging. Set the price.
-PRODUCT_AREAS,ALANLAR,AREAS
-PRODUCT_BUILT,YAPILANLAR,BUILT
-PRODUCT_POSSIBLE,YAPILABİLECEKLER,TO BUILD
-PRODUCT_VOICES,SESLER,VOICES
+PRODUCT_AREAS,Alanlar,Areas
+PRODUCT_BUILT,Yapılanlar,Built
+PRODUCT_POSSIBLE,Yapılabilecekler,To build
+PRODUCT_VOICES,Sesler,Voices
 PRODUCT_VOICES_COUNT,{n} ses,{n} voices
 PRODUCT_VOICES_COUNT_ONE,{n} ses,{n} voice
 PRODUCT_NEW_COUNT,{n} yeni,{n} new
-PRODUCT_NEW_STAMP,YENİ,NEW
+PRODUCT_NEW_STAMP,Yeni,New
 PRODUCT_RIVALS_HAVE,{have}/{total} rakipte var,{have}/{total} rivals have it
 PRODUCT_RIVAL_TOPIC,Rakip: {topic},Rival: {topic}
 PRODUCT_LEVEL_STRONG,Güçlü,Strong
@@ -2656,21 +2656,20 @@ PRODUCT_PER_YEAR,{amount}/yıl,{amount}/yr
 PRODUCT_CUSTOMER_TICKETS,{customer} · {n} ticket,{customer} · {n} tickets
 PRODUCT_CUSTOMER_TICKETS_ONE,{customer} · {n} ticket,{customer} · {n} ticket
 PRODUCT_TAG_SPRINT,Sprint {n},Sprint {n}
-PRODUCT_SPRINT_TITLE,SPRINT {n},SPRINT {n}
+PRODUCT_SPRINT_TITLE,Sprint {n},Sprint {n}
 PRODUCT_WEEKS,{n} hafta,{n} weeks
 PRODUCT_WEEKS_ONE,{n} hafta,{n} week
 PRODUCT_WEEK_OF,Hafta {w}/{t},Week {w}/{t}
-PRODUCT_THIS_SPRINT,BU SPRINT,THIS SPRINT
-PRODUCT_NEXT,SONRAKİ,NEXT
+PRODUCT_THIS_SPRINT,Bu sprint,This sprint
+PRODUCT_NEXT,Sonraki,Next
 PRODUCT_TEAM_NOBODY,Bu sprintte çalışacak kimse yok,Nobody can work this sprint
 PRODUCT_ROLE_MISSING,Ekipte {role} yok · kartlar hatalı çıkabilir,No {role} on the team · cards may ship buggy
 PRODUCT_CARD_SPILLS,devreder,carries over
-PRODUCT_PLANNED,planlanan,planned
 PRODUCT_CARRIED,devreden,carried
-PRODUCT_URGENT,! acil,! urgent
+PRODUCT_URGENT,Acil,Urgent
 PRODUCT_BETA_WAITING,beta bekliyor,in beta
 PRODUCT_LOCKED_NODE,Ar-Ge: {node},R&D: {node}
-PRODUCT_REMOVE,çıkar,remove
+PRODUCT_REMOVE,Çıkar,Remove
 PRODUCT_EFFORT_POINTS,{n} puan,{n} points
 PRODUCT_EFFORT_POINTS_ONE,{n} puan,{n} point
 PRODUCT_EFFORT_PERSON,{name} {weeks},{name} {weeks}
@@ -2687,8 +2686,8 @@ PRODUCT_FX_RIVAL_GAP,rakip açığını kapatır,closes the rival gap
 PRODUCT_FX_RESEARCH,beklentisi netleşir,expectations get clearer
 PRODUCT_FX_REQUEST,{customer} talebi,{customer} request
 PRODUCT_FX_ON_TIME,talebi zamanında,request on time
-PRODUCT_AT_SPRINT_END,SPRINT SONUNDA,AT SPRINT END
-PRODUCT_STATUS,DURUM,STATUS
+PRODUCT_AT_SPRINT_END,Sprint sonunda,At sprint end
+PRODUCT_STATUS,Durum,Status
 PRODUCT_STATUS_CARDS,{n} kart,{n} cards
 PRODUCT_STATUS_CARDS_ONE,{n} kart,{n} card
 PRODUCT_STATUS_DONE,bitti,done
@@ -2696,37 +2695,35 @@ PRODUCT_STATUS_RUNNING,sürüyor,in progress
 PRODUCT_STATUS_DECISIONS,{n} karar,{n} decisions
 PRODUCT_STATUS_DECISIONS_ONE,{n} karar,{n} decision
 PRODUCT_STATUS_WAITING,bekliyor,waiting
-PRODUCT_NEXT_RELEASE,SONRAKİ SÜRÜM,NEXT RELEASE
+PRODUCT_NEXT_RELEASE,Sonraki sürüm,Next release
 PRODUCT_IN_WEEKS,{n} hafta sonra,in {n} weeks
 PRODUCT_IN_WEEKS_ONE,{n} hafta sonra,in {n} week
 PRODUCT_PLUS_ONE_SPRINT,+1 sprint,+1 sprint
 PRODUCT_CARDS_LEFT,{n} kart kaldı,{n} cards left
 PRODUCT_CARDS_LEFT_ONE,{n} kart kaldı,{n} card left
-PRODUCT_LEAD_TIP,LİDERİN ÖNERİSİ · {name},LEAD'S PICK · {name}
-PRODUCT_LEAD_LINE,{name} · lider,{name} · lead
+PRODUCT_LEAD_TIP,Liderin önerisi,Lead's pick
+PRODUCT_LEAD_LINE,Lider,Lead
 PRODUCT_BETA_CHANNEL,Beta kanalı,Beta channel
 PRODUCT_OFF,Kapalı,Off
 PRODUCT_ON,Açık,On
 PRODUCT_START_SPRINT,Sprinti başlat,Start sprint
 PRODUCT_START_NEED_CARD,En az bir kart ekle,Add at least one card
 PRODUCT_PLAN_SPRINT,Sprint {n} planına geç,Plan sprint {n}
-PRODUCT_DECIDE,Karar ver,Decide
-PRODUCT_DECISION_SPEAKER,{speaker}:,{speaker}:
 PRODUCT_PHASE_DESIGN,Tasarım,Design
 PRODUCT_PHASE_DEV,Geliştirme,Development
 PRODUCT_PHASE_TEST,Test,Test
-PRODUCT_RELEASE_NOTE,SÜRÜM NOTU,RELEASE NOTE
+PRODUCT_RELEASE_NOTE,Sürüm notu,Release note
 PRODUCT_SPRINT_END,Sprint {n} sonu,End of sprint {n}
-PRODUCT_LIVE,CANLI,LIVE
-PRODUCT_SHIPPED,ÇIKANLAR,SHIPPED
-PRODUCT_CARRIED_OVER,DEVREDEN,CARRIED OVER
-PRODUCT_VELOCITY,HIZ,VELOCITY
+PRODUCT_LIVE,Canlı,Live
+PRODUCT_SHIPPED,Çıkanlar,Shipped
+PRODUCT_CARRIED_OVER,Devreden,Carried over
+PRODUCT_VELOCITY,Hız,Velocity
 PRODUCT_VELOCITY_LINE,Ekip {total} puanın {done} tanesini bitirdi.,The team finished {done} of {total} points.
 PRODUCT_VELOCITY_LINE_ONE,Ekip {total} puanın {done} tanesini bitirdi.,The team finished {done} of {total} point.
-PRODUCT_RESULT,SONUÇ,RESULT
-PRODUCT_RESULT_EXPECTED,Beklenen: {text},Expected: {text}
-PRODUCT_RESULT_ACTUAL,Gerçekleşen: {text},Actual: {text}
-PRODUCT_PRESS,BASIN,PRESS
+PRODUCT_RESULT,Sonuç,Result
+PRODUCT_RESULT_EXPECTED,Beklenen:,Expected:
+PRODUCT_RESULT_ACTUAL,Gerçekleşen:,Actual:
+PRODUCT_PRESS,Basın,Press
 PRODUCT_NO_RELEASE,Bu sprint sürüm çıkmadı,No release this sprint
 PRODUCT_RELEASE_BETA,Beta kanalında · bir sonraki sprintte yayına girer,In the beta channel · goes live next sprint
 PRODUCT_MVP_NOT_LIVE,MVP · yayında değil,MVP · not live
@@ -2734,17 +2731,17 @@ PRODUCT_HISTORY,Geçmiş,History
 PRODUCT_HISTORY_NONE,Henüz sürüm yok,No releases yet
 PRODUCT_HISTORY_CARDS,{n} kart,{n} cards
 PRODUCT_HISTORY_CARDS_ONE,{n} kart,{n} card
-PRODUCT_VIEW_SPRINT,SPRINT,SPRINT
-PRODUCT_VIEW_QUARTER,ÇEYREK,QUARTER
+PRODUCT_VIEW_SPRINT,Sprint,Sprint
+PRODUCT_VIEW_QUARTER,Çeyrek,Quarter
 PRODUCT_QUARTER_NEED_PM,PM işe alınca,Once you hire a PM
 PRODUCT_NEXT_EMPTY,→ ile kart gönder,Send cards with →
 PRODUCT_FLAG_DEADLINE,{customer} · {request} · son tarih,{customer} · {request} · deadline
-PRODUCT_THIS_QUARTER,BU ÇEYREK,THIS QUARTER
+PRODUCT_THIS_QUARTER,Bu çeyrek,This quarter
 PRODUCT_PM,PM,PM
 PRODUCT_APPROVE,Onayla,Approve
 PRODUCT_EDIT,Düzenle,Edit
 PRODUCT_APPROVE_ALL,Hepsini onayla,Approve all
-PRODUCT_APPROVED,ONAYLANDI,APPROVED
+PRODUCT_APPROVED,Onaylandı,Approved
 PRODUCT_FX_VOICES_CLOSED,{n} ses kapanır,{n} voices settle
 PRODUCT_FX_VOICES_CLOSED_ONE,{n} ses kapanır,{n} voice settles
 PRODUCT_AREA_CORE,Çekirdek,Core
@@ -2837,6 +2834,15 @@ PRODUCT_GOAL_PROGRESS,şu an {total} üzerinden {now},now {now} of {total}
 PRODUCT_FX_PROMISE,Söz: {customer},Promise: {customer}
 PRODUCT_FX_PROMISE_KEPT,sözü tutulur,promise kept
 PRODUCT_PROMISED,söz verildi,promised
+PRODUCT_VERSION_KEY,Sürüm,Version
+PRODUCT_DECISION_IN_INBOX,Olaylar'da bekliyor,Waiting in Events
+PRODUCT_GO_DECISION,Karara git,Go to the decision
+PRODUCT_LEAD_APPLY,Uygula,Apply
+PRODUCT_RELEASE_HOLD,Sürüm notu açıkken oyun durur,Paused while the release note is open
+PRODUCT_OVER_CAPACITY,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} cards carry over
+PRODUCT_OVER_CAPACITY_ONE,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} card carries over
+PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}
+PRODUCT_GO_TEAM,Ekip'e git,Go to Team
 SALES_PROMISE_OPEN_SPRINT,Açık söz: {feature} · Sprint {n} sonuna kadar,Open promise: {feature} · by the end of sprint {n}
 FIN_BURN_TOOLS,Araçlar,Tools
 FIN_BURN_SERVICE,Servis maliyeti,Service costs

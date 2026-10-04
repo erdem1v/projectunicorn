@@ -17,9 +17,8 @@ const Model := preload("res://scripts/ui/components/build_bar_model.gd")
 const BarKit := preload("res://scripts/ui/components/bar_kit.gd")
 const PRODUCT_ICON := preload("res://assets/icons/rail/product.svg")
 const SUPPORT_ICON := preload("res://assets/icons/util/shield.svg")
-const START_ICON := preload("res://assets/icons/util/play.svg")
+const PLAY_ICON := preload("res://assets/icons/util/play.svg")
 const END_ICON := preload("res://assets/icons/util/pause.svg")
-const AUTO_ICON := preload("res://assets/icons/product/kind_feature.svg")
 
 var _model = null
 
@@ -118,7 +117,7 @@ func _build_tree() -> void:
 	_auto_row = _box(col, &"FloatFoot")
 	var auto := BarKit.line()
 	_auto_row.add_child(auto)
-	auto.add_child(BarKit.glyph(AUTO_ICON, UiTokens.D_ICON_ROW, UiTokens.D_INK_4))
+	auto.add_child(BarKit.glyph(PLAY_ICON, UiTokens.D_ICON_ROW, UiTokens.D_INK_4))
 	_auto_label = UiFactory.make_label("", &"MetaMuted")
 	auto.add_child(_auto_label)
 
@@ -151,7 +150,7 @@ func _repaint() -> void:
 	_progress.value = m.percent
 	_progress.visible = m.fix_run_active
 	_action.text = tr(m.decision_key)
-	_action.icon = END_ICON if m.fix_run_active else START_ICON
+	_action.icon = END_ICON if m.fix_run_active else PLAY_ICON
 	_action.disabled = not m.decision_enabled
 	_refusal_label.text = tr(m.refusal_key)
 	_refusal_label.visible = m.refusal_key != ""

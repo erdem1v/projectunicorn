@@ -42,11 +42,11 @@
   "content": {"ticket_titles": 3, "press_core": 2, "press_area": 2, "rival_news": 2},
   "archetypes": {"tech_exacting": "core", "finance_brisk": "integrations", "ops_cautious": "trust", "default": "onboarding"},
   "areas": [
-    {"id": "core", "order": 0, "slot": 0, "markets": ["b2c", "b2b"], "identity": true, "lines": [], "name_key": "PRODUCT_AREA_CORE"},
-    {"id": "onboarding", "order": 1, "slot": 1, "markets": ["b2c", "b2b"], "lines": ["line_shared_mobile", "line_hidden_self_serve"], "name_key": "PRODUCT_AREA_ONBOARDING"},
-    {"id": "growth", "order": 2, "slot": 2, "markets": ["b2c"], "lines": ["line_shared_integrations"], "name_key": "PRODUCT_AREA_GROWTH"},
-    {"id": "integrations", "order": 2, "slot": 2, "markets": ["b2b"], "lines": ["line_shared_integrations"], "name_key": "PRODUCT_AREA_INTEGRATIONS"},
-    {"id": "trust", "order": 3, "slot": 3, "markets": ["b2c", "b2b"], "infra_alert": true, "lines": ["line_shared_security", "line_shared_durability"], "name_key": "PRODUCT_AREA_TRUST"},
-    {"id": "revenue", "order": 4, "slot": 4, "markets": ["b2c"], "lines": ["cap_paid_plan"], "name_key": "PRODUCT_AREA_REVENUE"}
+    {"id": "core", "order": 0, "markets": ["b2c", "b2b"], "identity": true, "lines": [], "name_key": "PRODUCT_AREA_CORE"},
+    {"id": "onboarding", "order": 1, "markets": ["b2c", "b2b"], "lines": ["line_shared_mobile", "line_hidden_self_serve"], "name_key": "PRODUCT_AREA_ONBOARDING"},
+    {"id": "growth", "order": 2, "markets": ["b2c"], "lines": ["line_shared_integrations"], "name_key": "PRODUCT_AREA_GROWTH"},
+    {"id": "integrations", "order": 2, "markets": ["b2b"], "lines": ["line_shared_integrations"], "name_key": "PRODUCT_AREA_INTEGRATIONS"},
+    {"id": "trust", "order": 3, "markets": ["b2c", "b2b"], "infra_alert": true, "lines": ["line_shared_security", "line_shared_durability"], "name_key": "PRODUCT_AREA_TRUST"},
+    {"id": "revenue", "order": 4, "markets": ["b2c"], "lines": ["cap_paid_plan"], "name_key": "PRODUCT_AREA_REVENUE"}
   ]
 }

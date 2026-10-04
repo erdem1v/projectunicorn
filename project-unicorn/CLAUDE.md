@@ -201,8 +201,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `city:<saat>:crown` kulenin tacı). Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff`,
   VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|confirm>`; en dar dok
   `--shot-scale=1.25`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug fikstürüyle
-  (`scripts/debug/product_fixtures.gd`), `--product-shot=live:<pick|plan|active|b2c_mvp|b2b_requests>` sprint motoruyla
-  kurulan koşuda. Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
+  (`scripts/debug/product_fixtures.gd`),
+  `--product-shot=live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests>` sprint motoruyla kurulan
+  koşuda. Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
   duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve
   `crowd_<ofis>_<kişi>_<hız>_NN.png`). Kurucunun toplantı yolculuğu: `--travel-shot=<home|ishani|plaza|loft>[:vc]`
   (10:00'da satış toplantısına, `:vc` ile Series A görüşmesine davet, gidiş, panel ve dönüş;

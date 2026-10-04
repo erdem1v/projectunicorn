@@ -1,82 +1,92 @@
 class_name SprintUiShared
 extends RefCounted
 
-# Sprint ekranı bileşenlerinin ortak parçaları. Hepsi statik: metin TranslationServer'dan
-# okunur, çünkü statik fonksiyonda tr() çalışmaz. Anlamsal renk (Güçlü/Zayıf, "!", CANLI,
-# taşma) burada renk körü yardımcılarıyla boyanır; tema bu rengi taşımaz.
+# Sprint ekranı bileşenlerinin ortak parçaları, koyu dilde. Hepsi statik: metin TranslationServer'dan
+# okunur, çünkü statik fonksiyonda tr() çalışmaz. Anlamın rengi (Güçlü, Zayıf, kalkan uyarı, aşım,
+# son tarih) D_ yardımcılarından gelir; alanlar renk taşımaz, adları, kareleri ve kelimeleriyle okunur.
 
 const SEP := " · "
-const ICON_DIR := "res://assets/icons/product/"
+const KIND_ICON := "res://assets/icons/product/kind_%s.svg"
+const ROLE_ICONS := {"design": "res://assets/icons/skill/design.svg", "dev": "res://assets/icons/skill/engineering.svg",
+	"test": "res://assets/icons/skill/qa.svg", "product": "res://assets/icons/skill/product.svg"}
+const VOICES := "res://assets/icons/product/voices.svg"
+const BUG := "res://assets/icons/product/bug.svg"
+const ARROW := "res://assets/icons/util/arrow_right.svg"
+const WARN := "res://assets/icons/util/warn.svg"
+const CHECK := "res://assets/icons/util/check.svg"
+const CLOCK := "res://assets/icons/util/clock.svg"
+const LOCK := "res://assets/icons/util/lock.svg"
+const GAIN := "res://assets/icons/stake/cash_in.svg"
 const LEVEL_KEYS := {
 	"strong": "PRODUCT_LEVEL_STRONG", "enough": "PRODUCT_LEVEL_ENOUGH",
 	"weak": "PRODUCT_LEVEL_WEAK", "none": "PRODUCT_LEVEL_NONE",
 }
+const RESULT_KEYS := {"expected": "PRODUCT_RESULT_EXPECTED", "actual": "PRODUCT_RESULT_ACTUAL"}
 ## Kart kipi "kapatır", öngörü kipi "kapanır" der.
 const COUNT_KEYS := {
 	"tickets": ["PRODUCT_FX_TICKETS_CLOSE", "PRODUCT_FX_TICKETS_CLOSED"],
 	"voices": ["PRODUCT_FX_VOICES_CLOSE", "PRODUCT_FX_VOICES_CLOSED"],
 }
-## Mürekkep düğmesinin glifi; listede olmayan tür (remove) kelimeyle yazılır.
-const BUTTON_GLYPHS := {"add": "+", "send_next": "→", "pull": "↑"}
+## Kartın glif tuşları; listede olmayan tür (remove) kelimeyle yazılır.
+const KEY_GLYPHS := {"add": "res://assets/icons/util/plus.svg", "send_next": ARROW,
+	"pull": "res://assets/icons/util/chevron_up.svg"}
 
 
-## `count` kare. Dolu kare verilen rengi alır; yarım seviye (cila) kareyi yarıya kadar doldurur.
-class Slices extends Control:
+## `count` seviye karesi: dolu kare kelimenin renginde, yarım seviye (cila) kareyi yarıya kadar
+## doldurur, boş kare çizgidir.
+class Squares extends Control:
 	var level: float
 	var color: Color
 	var count: int
 
 	func _draw() -> void:
-		var px: float = custom_minimum_size.y
+		var px: float = size.y
 		for i in count:
 			var r := Rect2(i * (px + UiTokens.SPACE_XXS), 0.0, px, px)
 			var fill: float = clampf(level - i, 0.0, 1.0)
 			if fill > 0.0:
 				draw_rect(Rect2(r.position, Vector2(px * fill, px)), color)
 			if fill < 1.0:
-				draw_rect(r.grow(-UiTokens.BORDER_HAIRLINE / 2.0), UiTokens.BORDER_HOVER, false, UiTokens.BORDER_HAIRLINE)
+				draw_rect(r.grow(-UiTokens.BORDER_HAIRLINE / 2.0), UiTokens.D_LINE_3, false, UiTokens.BORDER_HAIRLINE)
 
 
-## Kapasite çubuğu: dilimler alan renginde, kalan boşluk açık. Taşmada kapasitenin ötesi
-## negatif boyanır; sprint sürerken bitmiş puanlar koyulaşır.
+## Kapasite çubuğu: kart başına tek renk dilim, aralarında boşluk; bitmiş puanlar vurgulu, kapasitenin
+## ötesi uyarı renginde ve kapasite bir çizgiyle işaretli. Ekip yoksa (0/0) yalnız çerçeve.
 class CapacityBar extends Control:
-	var _cap: Dictionary
+	var cap: Dictionary
 
-	func _init() -> void:
-		custom_minimum_size.y = UiTokens.PRODUCT_CAPACITY_BAR_H
+	func _init(capacity: Dictionary) -> void:
+		cap = capacity
+		custom_minimum_size.y = UiTokens.D_BAR_TICK.y
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	func setup(capacity: Dictionary) -> void:
-		_cap = capacity
-		queue_redraw()
-
 	func _draw() -> void:
-		var frame := Rect2(Vector2.ZERO, size)
-		draw_rect(frame, UiTokens.BG_BODY)
-		draw_rect(frame.grow(-UiTokens.BORDER_HAIRLINE / 2.0), UiTokens.BORDER_HOVER, false, UiTokens.BORDER_HAIRLINE)
-		# Ekip yoksa (0/0) çubuk boş çerçevedir.
-		var span: int = maxi(int(_cap.total), int(_cap.used))
+		var bar := Rect2(0.0, (size.y - UiTokens.D_H_BAR) / 2.0, size.x, UiTokens.D_H_BAR)
+		var span: int = maxi(int(cap.total), int(cap.used))
 		if span == 0:
+			draw_rect(bar.grow(-UiTokens.BORDER_HAIRLINE / 2.0), UiTokens.D_LINE_2, false, UiTokens.BORDER_HAIRLINE)
 			return
-		var inner := frame.grow(-UiTokens.BORDER_HAIRLINE)
-		var unit: float = inner.size.x / span
-		var x: float = inner.position.x
-		for seg in _cap.segments:
+		draw_rect(bar, UiTokens.D_BAR_TRACK)
+		var unit: float = bar.size.x / span
+		var limit: float = int(cap.total) * unit
+		var done: float = int(cap.done) * unit
+		var x := 0.0
+		for seg in cap.segments:
 			var w: float = int(seg.pts) * unit
-			draw_rect(Rect2(x, inner.position.y, w, inner.size.y), UiTokens.area_color(int(seg.slot)))
+			for part in [[x, minf(x + w, done), UiTokens.D_BAR_EMPH], [maxf(x, done), minf(x + w, limit), UiTokens.D_BAR_FILL],
+					[maxf(x, limit), x + w, UiTokens.D_warn()]]:
+				var right: float = minf(part[1], x + w - UiTokens.SPACE_XXS)
+				if right > part[0]:
+					draw_rect(Rect2(part[0], bar.position.y, right - part[0], bar.size.y), part[2])
 			x += w
-			draw_line(Vector2(x, inner.position.y), Vector2(x, inner.end.y), UiTokens.CARD_BG)
-		if int(_cap.done) > 0:
-			draw_rect(Rect2(inner.position, Vector2(int(_cap.done) * unit, inner.size.y)), UiTokens.SHADOW_SOFT)
-		if _cap.state == "over":
-			var limit: float = inner.position.x + int(_cap.total) * unit
-			draw_rect(Rect2(limit, inner.position.y, inner.end.x - limit, inner.size.y), UiTokens.negative())
+		if cap.state == "over":
+			draw_rect(Rect2(limit - UiTokens.D_BAR_TICK.x / 2.0, 0.0, UiTokens.D_BAR_TICK.x, size.y), UiTokens.D_INK_1)
 
 
-static func slices(level: float, px: int, color: Color, count := 3) -> Control:
-	var s := Slices.new()
+static func squares(level: float, px: int, color: Color, count := 3) -> Control:
+	var s := Squares.new()
 	s.level = level
 	s.color = color
 	s.count = count
@@ -86,244 +96,207 @@ static func slices(level: float, px: int, color: Color, count := 3) -> Control:
 	return s
 
 
-## Kapasite çubuğu ve "kullanılan/toplam"; taşmada sayı da negatif boyanır.
+## Kapasite çubuğu ve "kullanılan/toplam"; aşımda sayı da uyarı renginde.
 static func capacity_row(cap: Dictionary, value_variation: StringName) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override(&"separation", UiTokens.SPACE_M)
-	var bar := CapacityBar.new()
-	bar.setup(cap)
-	row.add_child(bar)
-	var used := stamp("%d/%d" % [int(cap.used), int(cap.total)], value_variation)
-	if cap.state == "over":
-		used.add_theme_color_override(&"font_color", UiTokens.negative())
-	row.add_child(used)
+	var row := box(UiTokens.SPACE_L)
+	row.add_child(CapacityBar.new(cap))
+	row.add_child(label("%d/%d" % [int(cap.used), int(cap.total)], value_variation,
+		UiTokens.D_warn() if cap.state == "over" else null))
 	return row
 
 
-## Seviye kelimesinin ve dolu dilimin rengi.
+## Seviye kelimesinin ve dolu karenin rengi.
 static func word_color(word: String) -> Color:
 	match word:
-		"strong": return UiTokens.positive()
-		"enough": return UiTokens.INK_MUTED
-		"weak": return UiTokens.negative()
-	return UiTokens.INK_FAINT
+		"strong": return UiTokens.D_pos()
+		"enough": return UiTokens.D_INK_3
+		"weak": return UiTokens.D_warn()
+	return UiTokens.D_INK_4
 
 
-## ids: kind_feature · kind_polish · kind_fix · kind_research · role_design · role_dev ·
-## role_test (böcek; uyarı çipi de bunu kullanır) · role_product · bubble · tick · arrow.
-static func icon(id: String, px: int, color: Color) -> TextureRect:
-	return UiFactory.make_glyph(ICON_DIR + id + ".svg", px, color)
-
-
-static func stamp(text: String, variation: StringName) -> Label:
-	var l := UiFactory.make_label(text, variation)
+static func label(text: String, variation: StringName, color: Variant = null) -> Label:
+	var l := UiFactory.make_label(text, variation, color)
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return l
 
 
-## kind: &"positive" (CANLI) ya da &"negative" (uyarı, son tarih). Çocuk 0 etikettir.
-static func semantic_chip(text: String, kind: StringName) -> PanelContainer:
-	var p: Dictionary = UiTokens.badge_palette(kind)
-	var chip := UiFactory.make_state_chip(text, p.fg, p.bg,
-		UiTokens.positive_rule() if kind == &"positive" else UiTokens.negative_rule())
+static func prose(text: String, variation: StringName) -> Label:
+	var l := UiFactory.make_label(text, variation)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return l
+
+
+static func box(separation: int) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", separation)
+	return row
+
+
+static func column(separation: int) -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", separation)
+	return col
+
+
+## Margins (left, top, right, bottom) round a child.
+static func pad(child: Control, sides: Vector4i) -> MarginContainer:
+	var m := MarginContainer.new()
+	for i in 4:
+		m.add_theme_constant_override(["margin_left", "margin_top", "margin_right", "margin_bottom"][i], sides[i])
+	m.add_child(child)
+	return m
+
+
+## Sürümün sonuç satırı: anahtarı ikincil mürekkepte ("Gerçekleşen:"), cümlesi metin mürekkebinde.
+static func result_line(result: Dictionary, variation: StringName) -> HBoxContainer:
+	var line := box(UiTokens.SPACE_S)
+	var key := UiFactory.make_label(RnDUiShared.t(RESULT_KEYS[result.kind]), &"MetaMuted")
+	key.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	line.add_child(key)
+	line.add_child(prose(String(result.text), variation))
+	return line
+
+
+## Boş satır: glifi (varsa) ve notu.
+static func empty_line(text: String, glyph_path := "") -> MarginContainer:
+	var line := box(UiTokens.SPACE_M)
+	if glyph_path != "":
+		line.add_child(UiFactory.make_glyph(glyph_path, UiTokens.D_ICON_ROW, UiTokens.D_INK_4))
+	line.add_child(label(text, &"MetaMuted"))
+	return pad(line, Vector4i(0, UiTokens.SPACE_M, 0, UiTokens.SPACE_M))
+
+
+## Büyük harfli bölüm etiketi ve sağa uzanan çizgi; `small` açık alanın alt bölümleri.
+static func section(key: String, small := false) -> HBoxContainer:
+	var row := box(UiTokens.SPACE_L)
+	row.custom_minimum_size.y = UiTokens.D_H_SECTION_SM if small else UiTokens.D_H_SECTION
+	row.add_child(label(Fmt.upper(RnDUiShared.t(key)), &"KeySmall" if small else &"KeyLabel"))
+	var rule := HSeparator.new()
+	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(rule)
+	return row
+
+
+## Bir kişinin yüzü; üstüne gelince adı ve rolü.
+static func avatar(person: Dictionary, px: int) -> Panel:
+	var face := UiFactory.make_person_avatar(String(person.name), person.get("look", {}), px)
+	face.tooltip_text = String(person.name) if String(person.get("role_text", "")) == "" \
+		else RnDUiShared.t("PRODUCT_PERSON_ROLE").format({"name": person.name, "role": person.role_text})
+	face.mouse_filter = Control.MOUSE_FILTER_PASS
+	return face
+
+
+## Cümle düzeninde bayrak: rakip çıkışı nötr, bu ya da sonraki sprintte biten son tarih uyarı renginde.
+static func flag(text: String, warn := false) -> PanelContainer:
+	var chip := PanelContainer.new()
+	chip.theme_type_variation = UiTokens.D_variation(&"FlagChipWarn") if warn else &"FlagChip"
+	chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var row := box(UiTokens.SPACE_S)
+	if warn:
+		row.add_child(UiFactory.make_glyph(CLOCK, UiTokens.D_ICON_PART, UiTokens.D_warn()))
+	row.add_child(label(text, &"CaptionStrong", UiTokens.D_warn() if warn else null))
+	chip.add_child(row)
 	return chip
 
 
-static func attention_badge() -> Label:
-	var badge := UiFactory.make_label("!", &"AttentionBadge", UiTokens.negative())
-	var sb: StyleBoxFlat = ThemeDB.get_project_theme().get_stylebox(&"normal", &"AttentionBadge").duplicate()
-	sb.bg_color = UiTokens.negative_bg()
-	sb.border_color = UiTokens.negative_rule()
-	badge.add_theme_stylebox_override(&"normal", sb)
-	return _square(badge, UiTokens.PRODUCT_BADGE_PX)
-
-
-static func avatar(initials: String, tooltip: String, px: int, me: bool) -> Label:
-	var a := UiFactory.make_label(initials, &"AvatarChipMe" if me else &"AvatarChip")
-	a.tooltip_text = tooltip
-	a.mouse_filter = Control.MOUSE_FILTER_PASS   # Label varsayılanı IGNORE; ipucu fareyi ister
-	return _square(a, px)
-
-
-## Direk + afiş: rakip çıkışı gri afiş, son tarih renk körü güvenli kırmızı.
-static func flag(spec: Dictionary) -> HBoxContainer:
-	var deadline: bool = spec.k == "deadline"
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override(&"separation", 0)
-	var pole := ColorRect.new()
-	pole.color = UiTokens.negative() if deadline else UiTokens.INK_DIM
-	pole.custom_minimum_size = Vector2(UiTokens.SPACE_XXS, UiTokens.SPACE_XXL)
-	pole.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(pole)
-	var banner: Control
-	if deadline:
-		banner = semantic_chip(spec.text, &"negative")
-	else:
-		banner = stamp(spec.text, &"StampGrey")
-	banner.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	row.add_child(banner)
-	return row
-
-
-## Faz noktası: bitmiş faz dolu nokta, süren amber halka, bekleyen boş halka.
-static func phase_dot(phase: String, ink: Color) -> Control:
-	var dot := Control.new()
-	dot.custom_minimum_size = Vector2.ONE * UiTokens.PRODUCT_PHASE_RING_PX
-	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dot.draw.connect(_draw_phase_dot.bind(dot, phase, ink))
-	return dot
-
-
-static func _draw_phase_dot(dot: Control, phase: String, ink: Color) -> void:
-	var c: Vector2 = dot.size / 2.0
-	match phase:
-		"done":
-			dot.draw_circle(c, UiTokens.PRODUCT_PHASE_DOT_PX / 2.0, ink)
-		"active":
-			dot.draw_circle(c, UiTokens.PRODUCT_PHASE_RING_PX / 2.0, UiTokens.AMBER_BG)
-			dot.draw_arc(c, (UiTokens.PRODUCT_PHASE_RING_PX - UiTokens.BORDER_FOCUS) / 2.0, 0.0, TAU, 24,
-				UiTokens.ACCENT, UiTokens.BORDER_FOCUS, true)
-		_:
-			dot.draw_arc(c, (UiTokens.PRODUCT_PHASE_DOT_PX - UiTokens.BORDER_HAIRLINE) / 2.0, 0.0, TAU, 24,
-				ink, UiTokens.BORDER_HAIRLINE, true)
-
-
-## Kartın ve müşteri satırının mürekkep düğmesi.
-static func ink_button(kind: String, disabled: bool) -> Button:
+## Kartın glif tuşu (+, →, ↑); "+" kapalıyken de görünür.
+static func key_button(kind: String, disabled: bool) -> Button:
 	var b := Button.new()
-	b.theme_type_variation = &"InkButton"
-	b.text = BUTTON_GLYPHS.get(kind, RnDUiShared.t("PRODUCT_REMOVE"))
-	b.custom_minimum_size = Vector2.ONE * UiTokens.SPACE_3XL
+	if KEY_GLYPHS.has(kind):
+		b.theme_type_variation = &"IconKey"
+		b.icon = load(KEY_GLYPHS[kind])
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_SM
+	else:
+		b.theme_type_variation = &"CardKeyText"
+		b.text = RnDUiShared.t("PRODUCT_REMOVE")
 	b.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
 	b.disabled = disabled
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return b
 
 
-## Bölmeli seçici (StanceDial). Yalnız seçili olmayan bölme `on_pick(i)` çağırır: alıcı basışı
-## geçiş olarak okuyabilir, seçili tarafa basmak durumu ters çevirirdi.
-static func dial(labels: Array, selected: int, on_pick: Callable) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_theme_constant_override(&"separation", 0)
-	for i in labels.size():
-		var b := Button.new()
-		b.theme_type_variation = &"StanceDialActive" if i == selected else &"StanceDial"
-		b.text = labels[i]
-		b.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
-		if i != selected:
-			b.pressed.connect(on_pick.bind(i))
-		row.add_child(b)
-	return row
+## Sütun ve şerit düğmesi: metni ve görünümü, basılınca `on_press`.
+static func button(text: String, variation: StringName, on_press: Callable) -> Button:
+	var b := Button.new()
+	b.theme_type_variation = variation
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	b.pressed.connect(on_press)
+	return b
 
 
-## Alanın renk karesi.
-static func swatch(slot: int, px: int) -> ColorRect:
-	var s := ColorRect.new()
-	s.color = UiTokens.area_color(slot)
-	s.custom_minimum_size = Vector2.ONE * px
-	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	s.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return s
-
-
-## Sol kenarda alanın renk şeridi: kart ve alan satırı.
-static func draw_edge(ci: Control, slot: int) -> void:
-	ci.draw_rect(Rect2(0.0, 0.0, UiTokens.BORDER_ACCENT, ci.size.y), UiTokens.area_color(slot))
-
-
-## Boş ya da sonraki sütunun kesikli çerçevesi; StyleBoxFlat kesik çizemez.
-static func dashed_outline(column: Control) -> void:
-	column.draw.connect(_draw_dashed_outline.bind(column))
-
-
-static func _draw_dashed_outline(column: Control) -> void:
-	RnDUiShared.draw_dashed_rect(column, Rect2(Vector2.ZERO, column.size).grow(-UiTokens.BORDER_HAIRLINE / 2.0),
-		UiTokens.BORDER_HOVER)
-
-
-## Kartın etki satırı (mode "card": dilimler, "kapatır") ya da SPRINT SONUNDA öngörüsü
-## (mode "forecast": seviye kelimeleri, "kapanır"). Kartta parçalar SEP ile, öngörüde boşlukla ayrılır.
-static func effect_line(parts: Array, mode: String) -> HFlowContainer:
-	var forecast: bool = mode == "forecast"
+## Kartın etki satırı: parçalar arasında boşluk, ayraç yok; seviye geçişi karelerle.
+static func effect_line(parts: Array) -> HFlowContainer:
 	var flow := HFlowContainer.new()
-	flow.add_theme_constant_override(&"h_separation", UiTokens.SPACE_XL if forecast else UiTokens.SPACE_S)
-	flow.add_theme_constant_override(&"v_separation", UiTokens.SPACE_XS)
+	flow.add_theme_constant_override("h_separation", UiTokens.SPACE_L)
+	flow.add_theme_constant_override("v_separation", UiTokens.SPACE_XS)
 	for part in parts:
-		if not forecast and flow.get_child_count() > 0:
-			flow.add_child(_meta(SEP.strip_edges()))
-		flow.add_child(_part(part, forecast))
+		flow.add_child(_part(part, false))
 	return flow
 
 
-static func _part(part: Dictionary, forecast: bool) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override(&"separation", UiTokens.SPACE_S)
+## SPRINT SONUNDA öngörüsü: her parça kazanç glifiyle kendi kutusunda, seviye kelimeyle okunur.
+static func forecast(parts: Array) -> HFlowContainer:
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", UiTokens.SPACE_S)
+	flow.add_theme_constant_override("v_separation", UiTokens.SPACE_S)
+	for part in parts:
+		var chip := PanelContainer.new()
+		chip.theme_type_variation = &"FxChip"
+		var row := _part(part, true)
+		row.add_child(UiFactory.make_glyph(GAIN, UiTokens.D_ICON_PART, UiTokens.D_pos()))
+		row.move_child(row.get_child(-1), 0)
+		chip.add_child(row)
+		flow.add_child(chip)
+	return flow
+
+
+static func _part(part: Dictionary, forecast_mode: bool) -> HBoxContainer:
+	var row := box(UiTokens.SPACE_S)
+	var say: StringName = &"KeyText" if forecast_mode else &"MetaMuted"
 	match String(part.k):
-		"level":
-			row.add_child(_strong(part.area))
-			_transition(row, part, forecast)
-		"cap":
-			row.add_child(_strong(part.name))
-			_transition(row, part, false)
+		"level", "cap":
+			row.add_child(label(String(part.area if part.k == "level" else part.name), &"KeyText"))
+			for end in [["from", "from_word"], [], ["to", "to_word"]]:
+				if end.is_empty():
+					row.add_child(UiFactory.make_glyph(ARROW, UiTokens.D_ICON_MARK, UiTokens.D_INK_4))
+				elif forecast_mode and part.k == "level":
+					var word: String = part[end[1]]
+					row.add_child(label(RnDUiShared.t(LEVEL_KEYS[word]), &"KeyText", word_color(word)))
+				else:
+					row.add_child(squares(float(part[end[0]]), UiTokens.D_SQUARE_SM, word_color(String(part[end[1]]))))
 		"holds":
-			row.add_child(_strong(part.area))
-			row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_HOLDS").format({"level": RnDUiShared.t(LEVEL_KEYS[part.word])})))
+			row.add_child(label(String(part.area), &"KeyText"))
+			row.add_child(label(RnDUiShared.t("PRODUCT_FX_HOLDS").format(
+				{"level": RnDUiShared.t(LEVEL_KEYS[part.word])}), say))
 		"alert_clear":
-			row.add_child(_strong(part.area))
-			row.add_child(attention_badge())
-			row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_ALERT_CLEARS")))
+			row.add_child(label(String(part.area), &"KeyText"))
+			row.add_child(UiFactory.make_glyph(WARN, UiTokens.D_ICON_PART, UiTokens.D_warn()))
+			row.add_child(label(RnDUiShared.t("PRODUCT_FX_ALERT_CLEARS"), say))
 		"tickets", "voices":
-			if forecast:
-				row.add_child(icon("bubble", UiTokens.PRODUCT_ICON_PX, UiTokens.INK_MUTED))
 			var n: int = int(part.n)
-			row.add_child(_meta(RnDUiShared.t(Fmt.count_key(COUNT_KEYS[part.k][int(forecast)], n)).format({"n": n})))
+			row.add_child(label(RnDUiShared.t(Fmt.count_key(COUNT_KEYS[part.k][int(forecast_mode)], n)).format({"n": n}), say))
 		"request":
-			row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_REQUEST").format({"customer": part.customer}) + SEP
-				+ RnDUiShared.t("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(part.value))})))
+			row.add_child(label(RnDUiShared.t("PRODUCT_FX_REQUEST").format({"customer": part.customer}) + SEP
+				+ RnDUiShared.t("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(part.value))}), say))
 		"rival_gap":
-			row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_RIVAL_GAP")))
+			row.add_child(label(RnDUiShared.t("PRODUCT_FX_RIVAL_GAP"), say))
 		"research":
-			row.add_child(_strong(part.area))
-			row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_RESEARCH")))
+			row.add_child(label(String(part.area), &"KeyText"))
+			row.add_child(label(RnDUiShared.t("PRODUCT_FX_RESEARCH"), say))
 		"request_on_time":
-			row.add_child(_strong(part.customer))
-			row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_ON_TIME")))
+			row.add_child(label(String(part.customer), &"KeyText"))
+			row.add_child(label(RnDUiShared.t("PRODUCT_FX_ON_TIME"), say))
 		"promise":
-			if forecast:
-				row.add_child(_strong(part.customer))
-				row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_PROMISE_KEPT")))
+			if forecast_mode:
+				row.add_child(label(String(part.customer), &"KeyText"))
+				row.add_child(label(RnDUiShared.t("PRODUCT_FX_PROMISE_KEPT"), say))
 			else:
-				row.add_child(_meta(RnDUiShared.t("PRODUCT_FX_PROMISE").format({"customer": part.customer})))
+				row.add_child(label(RnDUiShared.t("PRODUCT_FX_PROMISE").format({"customer": part.customer}), say))
 	return row
-
-
-## from → to: kartta dilimlerle, öngörüde seviye kelimeleriyle; kelime ve renk parçanın taşıdığı
-## from_word / to_word'den.
-static func _transition(row: HBoxContainer, part: Dictionary, words: bool) -> void:
-	row.add_child(_level_mark(part.from, part.from_word, words))
-	row.add_child(icon("arrow", UiTokens.PRODUCT_ICON_PX, UiTokens.positive()))
-	row.add_child(_level_mark(part.to, part.to_word, words))
-
-
-static func _level_mark(level: float, word: String, as_word: bool) -> Control:
-	if as_word:
-		return UiFactory.make_label(RnDUiShared.t(LEVEL_KEYS[word]), &"RowMeta", word_color(word))
-	return slices(level, UiTokens.PRODUCT_SLICE_PX_SMALL, word_color(word))
-
-
-static func _square(l: Label, px: int) -> Label:
-	l.custom_minimum_size = Vector2(px, px)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	return l
-
-
-static func _strong(text: String) -> Label:
-	return UiFactory.make_label(text, &"RowMetaStrong")
-
-
-static func _meta(text: String) -> Label:
-	return UiFactory.make_label(text, &"RowMeta")

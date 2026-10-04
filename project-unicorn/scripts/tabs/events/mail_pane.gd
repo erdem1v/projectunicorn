@@ -555,15 +555,8 @@ func _answered() -> void:
 
 ## "CEVAPLANDI H11", tilted as a stamp is.
 static func stamp(key: String, week: int) -> Control:
-	var holder := Control.new()
-	var label := UiFactory.make_label(TranslationServer.translate("MAIL_STAMP_AT").format(
-		{"stamp": Fmt.upper(TranslationServer.translate(key)), "week": week}), &"DocStamp")
-	holder.add_child(label)
-	holder.custom_minimum_size = label.get_combined_minimum_size()
-	holder.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	label.pivot_offset = holder.custom_minimum_size / 2.0
-	label.rotation_degrees = -3.0
-	return holder
+	return UiFactory.D_stamp(TranslationServer.translate("MAIL_STAMP_AT").format(
+		{"stamp": Fmt.upper(TranslationServer.translate(key)), "week": week}))
 
 
 ## A history row's body is drawn again only when it is plain text: a {seam:} would read today.

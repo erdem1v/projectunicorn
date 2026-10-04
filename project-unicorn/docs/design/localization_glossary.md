@@ -61,7 +61,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Kararlılık *(monitör)* | Stability | Pitch KARARLILIK'ından AYRI anlam — anahtar paylaşılmaz. |
 | Teknik borç | Tech debt | |
 | Geliştirme bekleniyor | Awaiting development | |
-| sprint | sprint | `PRODUCT_SPRINT_TITLE` ve ürün ekranı. "sprint" izinli ödünç kelimelerde yok: TR onay bekliyor. |
+| sprint | sprint | `PRODUCT_SPRINT_TITLE` ve ürün ekranı; CSV cümle düzeninde, büyük hâli `Fmt.upper` ile SPRİNT. "sprint" izinli ödünç kelimelerde yok: TR onay bekliyor. |
 | PM | PM | `PRODUCT_PM`, Ürün Yöneticisi'nin çip kısaltması. "PM" izinli ödünç kelimelerde yok: TR onay bekliyor. |
 | ticket | ticket | `PRODUCT_CUSTOMER_TICKETS`, `PRODUCT_FX_TICKETS_*`. "ticket" izinli ödünç kelimelerde yok: TR onay bekliyor. |
 | puan *(efor)* | points | Tekil: point (`_ONE`). |
