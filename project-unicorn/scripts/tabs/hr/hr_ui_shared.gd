@@ -53,13 +53,6 @@ static func availability_text(c: Character) -> String:
 	return ""
 
 
-static func v_hairline(height: int = 26) -> Panel:
-	var line := hairline()
-	line.custom_minimum_size = Vector2(1, height)
-	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	return line
-
-
 ## Tooltip: ad ve etki alt alta. PASS, STOP DEĞİL: STOP tooltip'i çalıştırır ama satır
 ## tıklamasını yutar, ve menüyü açan tek yol o tıklama.
 static func _hoverable(node: Control, trait_id: String) -> Control:
@@ -78,21 +71,6 @@ static func worst_badge_severity(emp: Character) -> int:
 
 
 # --- Sayfa kromu ------------------------------------------------------------
-
-## Küçük mono büyük-harf başlık, sağa uzayan saç teli çizgiyle (§13.2).
-static func section_header(text: String, with_rule: bool = true, variation: StringName = &"SectionLabel") -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	var label := UiFactory.make_section_header(text)
-	label.theme_type_variation = variation
-	row.add_child(label)
-	if with_rule:
-		var rule := hairline()
-		rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(rule)
-	return row
-
 
 ## Renk parametre: başlık altında kart kenarı, satır altında kart içi saç teli.
 static func hairline(color: Color = UiTokens.DIVIDER_LIGHT) -> Panel:
@@ -387,13 +365,13 @@ static func D_morale_ink(morale: int) -> Color:
 	return UiTokens.D_pos()
 
 
-## Deneyim: kısa bar ve yüzdesi; bar dolunca vurgulanır.
-static func D_xp(c: Character) -> HBoxContainer:
+## Deneyim: `bar` boyunda bar ve yüzdesi; bar dolunca vurgulanır.
+static func D_xp(c: Character, bar := UiTokens.D_XP_BAR) -> HBoxContainer:
 	var ratio: float = CharacterRegistry.experience_ratio(c)
 	var full: bool = ratio >= 1.0
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	row.add_child(D_bar(UiTokens.D_XP_BAR, ratio, UiTokens.D_BAR_EMPH if full else UiTokens.D_BAR_FILL))
+	row.add_child(D_bar(bar, ratio, UiTokens.D_BAR_EMPH if full else UiTokens.D_BAR_FILL))
 	var share := UiFactory.make_label(Fmt.percent(int(round(ratio * 100.0)), 0), &"MetaMuted",
 		UiTokens.D_INK_2 if full else null)
 	share.size_flags_vertical = Control.SIZE_SHRINK_CENTER

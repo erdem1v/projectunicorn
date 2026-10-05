@@ -270,6 +270,19 @@ static func D_stamp(text: String) -> Control:
 	return holder
 
 
+## A portrait's well, a mail sender's or the founder's on Kişisel: `face` covers it, cropped to the well.
+static func D_portrait_well(face: TextureRect) -> PanelContainer:
+	var well := PanelContainer.new()
+	well.theme_type_variation = &"PortraitWell"
+	well.custom_minimum_size = UiTokens.D_PORTRAIT_WELL
+	well.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	face.clip_contents = true
+	well.add_child(face)
+	return well
+
+
 ## A window header's figure: its caps key over its value, a rule on its left. An empty value keeps
 ## its line, so the key stays on the header's baseline. A `cost` reads behind the cost disc; its host builds
 ## it anew rather than rewriting it in place.

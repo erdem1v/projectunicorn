@@ -50,27 +50,6 @@ static func make_stars(stars: float, glyph_px: int = 14, muted: bool = false,
 	return root
 
 
-## Etiket üstte, yıldızlar altında. `compact` = etiket gerekirse üç noktayla kısalabilir;
-## sütunun tabanı o zaman beş yıldız olur. Varsayılanı false, çünkü `clip_text` Label'ın
-## asgari genişliğini sıfıra indirir ve yer bol olsa bile uzun başlık kısalır. Yalnız
-## Kişisel'in sekiz sütunlu şeridi bunu ister: sayfayı %125'te ekranda tutan şey o.
-static func labelled(caption: String, points: int, glyph_px: int = 14,
-		muted: bool = false, compact: bool = false) -> Control:
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var cap := UiFactory.make_label(caption, &"RowMeta", UiTokens.INK_DIM)
-	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if compact:
-		cap.clip_text = true
-		cap.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	col.add_child(cap)
-	var stars: Control = make(points, glyph_px, muted)
-	stars.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	col.add_child(stars)
-	return col
-
-
 static func _glyph_label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text

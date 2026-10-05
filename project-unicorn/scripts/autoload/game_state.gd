@@ -225,8 +225,7 @@ var run_board_seats: int = 0
 var run_board_veto: bool = false
 
 # Frank's angel round, SEPARATE from the Series A terms above: those are written by plain
-# assignment at signing and would erase the angel slice (and earn the Personal page's
-# first-funding milestone, which reads run_investment_amount). Readers compose totals via
+# assignment at signing and would erase the angel slice. Readers compose totals via
 # get_investor_equity_pct / get_total_raised, never by summing raw fields.
 var run_angel_amount: int = 0
 var run_angel_equity_pct: int = 0
@@ -360,6 +359,10 @@ func advance_phase() -> void:
 	pending_next_phase = 0
 	submit_month_highlight("MONTH_HL_PHASE_ADVANCED", {"phase": phase_display_name(phase)}, 80)
 	EventBus.phase_changed.emit(phase)
+
+
+## The phases' CSV names, in order: the top bar's phase and Kişisel's ladder.
+const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SERIES_A"]
 
 
 ## Phase display name. Proper nouns, identical in both languages. Out-of-range clamps.
@@ -696,15 +699,18 @@ func get_run_ledger() -> Dictionary:
 
 ## The run's three milestones as {key, earned, meta}: key an untranslated CSV key, meta the date
 ## or amount to show. The engine keeps no milestone ledger, so they derive from persistent traces;
-## the funding day is not recorded, so that meta is the amount.
+## the funding day is not recorded, so that meta is the amount. The first funding is the run's first
+## cheque: Frank's, else the seed's, else the Series A's.
 func milestones() -> Array:
 	var launch_day: int = int(get_flag("mvp_launch_day", 0))
+	var cheques: Array = [run_angel_amount, run_seed_amount, run_investment_amount].filter(
+		func(amount: int) -> bool: return amount > 0)
 	return [
 		{"key": "MILESTONE_FOUNDING", "earned": true, "meta": _month_year(1)},
 		{"key": "MILESTONE_FIRST_SHIP", "earned": launch_day > 0,
 			"meta": _month_year(launch_day) if launch_day > 0 else ""},
-		{"key": "MILESTONE_FIRST_FUNDING", "earned": run_investment_amount > 0,
-			"meta": Fmt.money(run_investment_amount) if run_investment_amount > 0 else ""},
+		{"key": "MILESTONE_FIRST_FUNDING", "earned": not cheques.is_empty(),
+			"meta": Fmt.money(cheques[0]) if not cheques.is_empty() else ""},
 	]
 
 

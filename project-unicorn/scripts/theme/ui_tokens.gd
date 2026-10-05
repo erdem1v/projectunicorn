@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 27
+const THEME_STAMP := 28
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -123,7 +123,6 @@ const NEGATIVE_BG_CB := Color(0.945, 0.894, 0.820, 1)     # #F1E4D1
 const NEGATIVE_RULE_CB := Color(NEGATIVE_CB, 0.45)
 const POSITIVE_BRIGHT_CB := Color(0.337, 0.706, 0.914, 1) # #56B4E9 · on the dark frame
 const NEGATIVE_BRIGHT_CB := Color(0.902, 0.624, 0.0, 1)   # #E69F00 · on the dark frame
-const DOT_IDLE := Color(0.769, 0.718, 0.624, 1)          # #C4B79F · unearned milestone dot  # WORKING
 
 # --- BADGE / CHIP ---
 const BADGE_BG := Color(0.957, 0.769, 0.188, 1)          # #F4C430 · count badge (amber pill)
@@ -821,6 +820,14 @@ const D_W_INVESTORS := 704            # the funds' column on the Yatırım page
 const D_H_FUND := 76                  # a fund's row
 const D_H_HUNT_HEAD := 64             # the Yatırım page's title row
 const D_PIP_TABLE := 14               # a closed table's square
+const D_PORTRAIT_WELL := Vector2i(256, 320)   # a portrait's well: a mail's sender, the founder on Kişisel
+const D_H_PERSONAL_BODY := 680 - D_H_WIN_HEAD - 2 * BORDER_HAIRLINE   # Kişisel's body at least: a 680 window less head and frame
+const D_W_STANDING := 336             # the Kişisel window's right column: milestones, phases, the share
+const D_H_SHEET_ROW := 28             # a row of the founder's sheet: a skill on its meter, a phase
+const D_W_SKILL_FIGURE := 28          # a skill's figure after its meter, right aligned
+const D_XP_BAR_WIDE := Vector2i(140, 4)   # the founder's experience bar under the portrait
+const D_PHASE_MARK := Vector2i(24, 4)     # a phase's marker in the ladder
+const D_MILESTONE_DOT := 24           # a milestone's disc on the ledger
 
 const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
 const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]

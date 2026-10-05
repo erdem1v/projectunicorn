@@ -203,6 +203,7 @@ func _run_debug_harness() -> bool:
 		"--hr-shot=": _run_hr_shot,
 		"--finance-shot=": _run_finance_shot,
 		"--tab-shot=": _run_tab_shot,
+		"--personal-shot=": _run_personal_shot,
 		"--modal-shot=": _run_modal_shot,
 		"--onboard-shot=": func(v: String) -> void: _run_onboard_shot(int(v)),
 		"--theme-audit=": _run_theme_audit,
@@ -617,7 +618,8 @@ func _run_event_shot(event_id: String) -> void:
 ##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
 ##   frank_moment · rnd_note · rnd_discovery · weekly_sales · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
-##   finance_read_only (Finans read-only) ·
+##   finance_read_only (Finans read-only) · personal_read_only (Kişisel read-only) ·
+##   personal_cheque_read_only (Kişisel read-only after Frank's cheque, a customer's card waiting) ·
 ##   held_key (a speed key refused: the frame's blink and the toast)
 ## Cards come through force_fire; a past decision is resolved for real at an earlier week.
 func _run_inbox_shot(state: String) -> void:
@@ -638,9 +640,10 @@ func _run_inbox_shot(state: String) -> void:
 			return
 		"intro":
 			_open_note("intro")
-		"offer", "team_read_only", "team_tasks_read_only", "sales_read_only", "finance_read_only", "held_key":
+		"offer", "team_read_only", "team_tasks_read_only", "sales_read_only", "finance_read_only", "personal_read_only", \
+				"held_key":
 			_shot_card("funding.frank_cheque", {}, 8)
-			if state in ["sales_read_only", "finance_read_only"]:
+			if state in ["sales_read_only", "finance_read_only", "personal_read_only"]:
 				EventBus.tab_changed.emit(state.get_slice("_", 0))
 			elif state.begins_with("team_"):
 				EventBus.tab_changed.emit("hr")
@@ -654,6 +657,10 @@ func _run_inbox_shot(state: String) -> void:
 				key.keycode = KEY_SPACE
 				key.pressed = true
 				_shell._input(key)
+		"personal_cheque_read_only":
+			AngelRoundSystem.accept_offer()
+			_shot_card("customer.retention", {"customer": "co_ege"}, 8)
+			EventBus.tab_changed.emit("personal")
 		"queue":
 			_shot_card("funding.frank_cheque", {}, 8)
 			EventGate.force_fire("customer.retention", {"customer": "co_ege"})
@@ -935,6 +942,7 @@ func _seed_theme_surface() -> void:
 	_seed_run_reproducible()
 	GameState.day = 14
 	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_launch_day", 6)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 	GameState.set_flag("mvp_innovation", 45.0)
@@ -1279,6 +1287,31 @@ func _run_tab_shot(tab_id: String) -> void:
 	await _mount_shot_shell()
 	EventBus.tab_changed.emit(tab_id)
 	await _finish_shot("tab_shot_%s" % tab_id)
+
+
+# --personal-shot=<normal|cheque|ready|training|seed>: the Kişisel window on the theme seed. cheque: after Frank's
+# cheque, taken through its real seam (cash, the cap table's angel slice, the first funding); ready: the founder's
+# experience bar full, the training button on; training: the founder away on a course; seed: the Series A Hunt after
+# the cheque and a signed seed (three parts on the cap table).
+func _run_personal_shot(kind: String) -> void:
+	_begin_shot()
+	_seed_theme_surface()
+	var founder: Character = CharacterRegistry.get_founder()
+	match kind:
+		"cheque":
+			AngelRoundSystem.accept_offer()
+		"ready", "training":
+			CharacterRegistry.refresh_experience_threshold(founder)
+			founder.experience_raw = founder.experience_threshold
+			if kind == "training":
+				CharacterRegistry.begin_training(founder.id, HRConstants.AREAS[0])
+		"seed":
+			GameState.set_phase(3)
+			AngelRoundSystem.accept_offer()
+			SeedRoundSystem.accept("anchor", {"raise": 120000, "dilution_pct": 15})
+	await _mount_shot_shell()
+	EventBus.tab_changed.emit("personal")
+	await _finish_shot("personal_shot_%s" % kind)
 
 
 # --modal-shot=<confirm|confirm3|confirm_dark|settings|system|saveload>. Each goes through the REAL

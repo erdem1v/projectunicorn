@@ -170,28 +170,6 @@ corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b214e"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_df944"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6f464"]
 content_margin_left = 16.0
 content_margin_top = 8.0
@@ -2482,6 +2460,22 @@ shadow_color = Color(0, 0, 0, 0.42)
 shadow_size = 20
 shadow_offset = Vector2(0, 6)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0bc30"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.18039216, 0.16078432, 0.14117648, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.41568628, 0.37254903, 0.32156864, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bd967"]
 content_margin_left = 28.0
 content_margin_top = 22.0
@@ -3183,7 +3177,7 @@ corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_df944_2"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_df944"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -5275,9 +5269,6 @@ BodySerif/font_sizes/font_size = 13
 BodySerif/fonts/font = ExtResource("d_serif_reg_e6169")
 BrandMark/base_type = &"Panel"
 BrandMark/styles/panel = SubResource("StyleBoxFlat_77923")
-BuildProgress/base_type = &"ProgressBar"
-BuildProgress/styles/background = SubResource("StyleBoxFlat_b214e")
-BuildProgress/styles/fill = SubResource("StyleBoxFlat_df944")
 Button/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 Button/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
 Button/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
@@ -6110,6 +6101,8 @@ MicroLabel/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
 MicroLabel/constants/line_spacing = 3
 MicroLabel/font_sizes/font_size = 9
 MicroLabel/fonts/font = ExtResource("d_cond_sb_caps_de601")
+MilestoneDot/base_type = &"PanelContainer"
+MilestoneDot/styles/panel = SubResource("StyleBoxFlat_0bc30")
 ModalCard/base_type = &"PanelContainer"
 ModalCard/styles/panel = SubResource("StyleBoxFlat_bd967")
 ModalPanel/base_type = &"Panel"
@@ -6246,6 +6239,11 @@ OptionLabelLocked/base_type = &"Label"
 OptionLabelLocked/colors/font_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
 OptionLabelLocked/font_sizes/font_size = 20
 OptionLabelLocked/fonts/font = ExtResource("d_cond_b_f0c0d")
+OriginQuote/base_type = &"Label"
+OriginQuote/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+OriginQuote/constants/line_spacing = 2
+OriginQuote/font_sizes/font_size = 16
+OriginQuote/fonts/font = ExtResource("d_serif_reg_e6169")
 PageTitleSerif/base_type = &"Label"
 PageTitleSerif/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 PageTitleSerif/constants/line_spacing = 3
@@ -6399,7 +6397,7 @@ PrimaryButtonDarkSmall/styles/hover = SubResource("StyleBoxFlat_cf5c3")
 PrimaryButtonDarkSmall/styles/normal = SubResource("StyleBoxFlat_281c5")
 PrimaryButtonDarkSmall/styles/pressed = SubResource("StyleBoxFlat_38ac9")
 ProgressBar/styles/background = SubResource("StyleBoxFlat_07826")
-ProgressBar/styles/fill = SubResource("StyleBoxFlat_df944_2")
+ProgressBar/styles/fill = SubResource("StyleBoxFlat_df944")
 ProgressPaused/base_type = &"ProgressBar"
 ProgressPaused/styles/fill = SubResource("StyleBoxFlat_20fb1")
 PromiseNote/base_type = &"PanelContainer"
@@ -7093,7 +7091,7 @@ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
 TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
 TraitBox/base_type = &"PanelContainer"
 TraitBox/styles/panel = SubResource("StyleBoxFlat_e9fa3")
-UiTokensStamp/constants/stamp = 27
+UiTokensStamp/constants/stamp = 28
 VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")

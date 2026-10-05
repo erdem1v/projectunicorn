@@ -16,7 +16,6 @@ extends ScrollContainer
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const ENTER_GUARD_MS := 400
-const WELL := Vector2(256, 320)
 const AVATAR := 40
 const GLYPHS := {"up": "res://assets/icons/stake/cash_in.svg", "cost": "res://assets/icons/stake/cost.svg",
 	"warn": "res://assets/icons/util/warn.svg", "pie": "res://assets/icons/stake/equity.svg"}
@@ -248,21 +247,13 @@ func _signature(from: Dictionary) -> VBoxContainer:
 
 
 func _well(from: Dictionary) -> PanelContainer:
-	var well := PanelContainer.new()
-	well.theme_type_variation = &"PortraitWell"
-	well.custom_minimum_size = WELL
-	well.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var face: TextureRect
 	if from.well_portrait != "":
 		face = TextureRect.new()
 		face.texture = load(String(from.well_portrait))
-		face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	else:
-		face = UiFactory.make_bust(PersonBust.texture(from.look, int(WELL.y / 2)), false)
-	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	face.clip_contents = true
-	well.add_child(face)
-	return well
+		face = UiFactory.make_bust(PersonBust.texture(from.look, int(UiTokens.D_PORTRAIT_WELL.y / 2.0)), false)
+	return UiFactory.D_portrait_well(face)
 
 
 # --- The reply -----------------------------------------------------------------------------------

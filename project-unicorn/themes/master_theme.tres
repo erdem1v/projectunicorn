@@ -54,20 +54,6 @@ corner_radius_top_right = 999
 corner_radius_bottom_right = 999
 corner_radius_bottom_left = 999
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dcda1"]
-bg_color = Color(0.89, 0.855, 0.788, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c633a"]
-bg_color = Color(0.957, 0.769, 0.188, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bf6a0"]
 content_margin_left = 12.0
 content_margin_top = 6.0
@@ -893,14 +879,14 @@ corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dcda1_2"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dcda1"]
 bg_color = Color(0.89, 0.855, 0.788, 1)
 corner_radius_top_left = 2
 corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c633a_2"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c633a"]
 bg_color = Color(0.957, 0.769, 0.188, 1)
 corner_radius_top_left = 2
 corner_radius_top_right = 2
@@ -1122,7 +1108,7 @@ corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c633a_3"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c633a_2"]
 bg_color = Color(0.957, 0.769, 0.188, 1)
 corner_radius_top_left = 2
 corner_radius_top_right = 2
@@ -1305,9 +1291,6 @@ BodySerif/base_type = &"Label"
 BodySerif/colors/font_color = Color(0.169, 0.153, 0.133, 1)
 BodySerif/font_sizes/font_size = 13
 BodySerif/fonts/font = ExtResource("serif_reg_6137c")
-BuildProgress/base_type = &"ProgressBar"
-BuildProgress/styles/background = SubResource("StyleBoxFlat_dcda1")
-BuildProgress/styles/fill = SubResource("StyleBoxFlat_c633a")
 Button/colors/font_color = Color(0.357, 0.329, 0.29, 1)
 Button/colors/font_disabled_color = Color(0.541, 0.506, 0.459, 1)
 Button/colors/font_focus_color = Color(0.169, 0.153, 0.133, 1)
@@ -1611,8 +1594,8 @@ PortraitCellSelected/base_type = &"PanelContainer"
 PortraitCellSelected/styles/panel = SubResource("StyleBoxFlat_cb1ab")
 PortraitFrame/base_type = &"PanelContainer"
 PortraitFrame/styles/panel = SubResource("StyleBoxFlat_50b6f")
-ProgressBar/styles/background = SubResource("StyleBoxFlat_dcda1_2")
-ProgressBar/styles/fill = SubResource("StyleBoxFlat_c633a_2")
+ProgressBar/styles/background = SubResource("StyleBoxFlat_dcda1")
+ProgressBar/styles/fill = SubResource("StyleBoxFlat_c633a")
 QuoteBox/base_type = &"PanelContainer"
 QuoteBox/styles/panel = SubResource("StyleBoxFlat_743c2")
 QuoteSerif/base_type = &"Label"
@@ -1727,7 +1710,7 @@ SubtitleSerifCream/colors/font_color = Color(0.455, 0.51, 0.561, 1)
 SubtitleSerifCream/font_sizes/font_size = 13
 SubtitleSerifCream/fonts/font = ExtResource("serif_it_1e565")
 TabBadge/base_type = &"Panel"
-TabBadge/styles/panel = SubResource("StyleBoxFlat_c633a_3")
+TabBadge/styles/panel = SubResource("StyleBoxFlat_c633a_2")
 TabButton/base_type = &"Button"
 TabButton/colors/font_color = Color(0.541, 0.506, 0.459, 1)
 TabButton/colors/font_focus_color = Color(0.541, 0.506, 0.459, 1)
@@ -1770,7 +1753,7 @@ TooltipTitle/font_sizes/font_size = 9
 TooltipTitle/fonts/font = ExtResource("mono_label_dfe9c")
 TopBarPanel/base_type = &"Panel"
 TopBarPanel/styles/panel = SubResource("StyleBoxFlat_591af")
-UiTokensStamp/constants/stamp = 27
+UiTokensStamp/constants/stamp = 28
 VSeparator/constants/separation = 4
 VSeparator/styles/separator = SubResource("StyleBoxLine_8270b")
 ViewportPanel/base_type = &"Panel"

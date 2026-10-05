@@ -287,11 +287,6 @@ func _initialize() -> void:
 	th.set_font_size("normal_font_size", &"NewsRich", T.SIZE_SMALL)
 	th.set_color("default_color", &"NewsRich", T.CREAM_DIM)
 
-	# ---- ProgressBar variation (amber fill) ----
-	th.set_type_variation(&"BuildProgress", &"ProgressBar")
-	th.set_stylebox("background", &"BuildProgress", _box(T.SURFACE_SUNKEN, T.RADIUS_S))
-	th.set_stylebox("fill", &"BuildProgress", _box(T.ACCENT, T.RADIUS_S))
-
 	# ---- HSlider variation. VolumeSlider: a visible neutral groove with an amber fill
 	# up to the grabber. ----
 	var grabber: Texture2D = load("res://assets/icons/slider_grabber.svg")
@@ -565,7 +560,6 @@ func _menajer(master: Theme) -> Theme:
 		var disc: StyleBoxFlat = th.get_stylebox("panel", dot).duplicate()
 		disc.set_corner_radius_all(T.RADIUS_PILL)
 		th.set_stylebox("panel", dot, disc)
-	_recolor(th, &"BuildProgress", "fill", T.D_BAR_FILL)
 	_recolor(th, &"VolumeSlider", "grabber_area", T.D_INK_3)
 	_recolor(th, &"VolumeSlider", "grabber_area_highlight", T.D_INK_2)
 	_recolor(th, &"PortraitCellSelected", "panel", null, T.D_INK_1)
@@ -1135,7 +1129,7 @@ func _menajer(master: Theme) -> Theme:
 		_panel(th, "FrankNoteRisk" + ("Cb" if cb else ""), "PanelContainer",
 			_doc(_flat(T.D_SURFACE_4, 0, body_pad, T.D_neg_rule()), T.D_CUT))
 	T.set_colorblind(false)
-	# The locked fund's disc, round its lock.
+	# An open ring: round the locked fund's lock, and a milestone not yet earned.
 	_panel(th, &"LockDisc", "Panel", _flat(clear, T.RADIUS_PILL, Vector4.ZERO, T.D_LINE_2))
 	for row in [
 		[&"CardTitle", cond_sb, T.D_FS_15, T.D_INK_2],   # a card's title in its own case: the phase a goal leads to
@@ -1148,6 +1142,13 @@ func _menajer(master: Theme) -> Theme:
 		"pressed": on, "disabled": [clear, clear, T.D_INK_OFF]}, cond_sb_caps, T.D_FS_13, seg_sm, 0, under)
 	_dbtn(th, &"SegPickSmOn", {"normal": on, "hover": on, "pressed": on, "disabled": [T.D_SURFACE_5, T.D_INK_1, T.D_INK_OFF]},
 		cond_sb_caps, T.D_FS_13, seg_sm, 0, under)
+
+	# ---- Kişisel: the founder's sheet ----
+	# The founder's origin in their own words, under the name.
+	_lbl(th, &"OriginQuote", serif_reg, T.D_FS_16, T.D_INK_3)
+	th.set_constant("line_spacing", &"OriginQuote", T.D_LEADING_PARA)
+	# An earned milestone's disc, round its glyph.
+	_panel(th, &"MilestoneDot", "PanelContainer", _flat(T.D_SURFACE_5, T.RADIUS_PILL, Vector4.ZERO, T.D_LINE_3))
 
 	# Message body and ticker text.
 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")

@@ -1,426 +1,257 @@
 extends Control
 
-# ============================================================================
-# KİŞİSEL sekmesi (10a). Üstte KURUCU kartı, altında iki kolon: solda KİLOMETRE TAŞLARI,
-# sağda NEREDE DURUYORUM ve NET SERVET.
-#
-# Bu dosya hiçbir sonucu hesaplamaz. Tek istisna biçimleme ve hisse aritmetiği — o da
-# finance_ozet_view._refresh_captable'ın birebir eşi: aynı soruya iki ekran iki cevap
-# vermemeli.
-#
-# DEĞERLEME UYDURULMUYOR: normal oyunda canlı şirket değerlemesi yok (run_valuation_m
-# yalnız term sheet imzasında yazılıyor ve koşu o karede bitiyor), ZİRVE DEĞER için de
-# seam yok. Üç hücre "—" ve dürüst bir notla kapanıyor.
-# ============================================================================
+# Kişisel penceresi, kurucunun tek görüntüleme yüzeyi (Ekip GDD §2.5). Ortak koyu başlıkta kıdemi; gövdede üç
+# sütun: portre, görev, deneyim ve eğitim; ad, köken, beceriler ve huylar; kilometre taşları, evre merdiveni ve
+# hedefi, hisse. Bu dosya hiçbir sonucu hesaplamaz: hisse Finans'ın pay tablosudur (FinanceOzetView.cap_table).
+# Canlı değerleme yok (GameState.run_valuation_m yalnız Series A imzasında yazılır); o zamana kadar not bunu söyler.
 
-const RIGHT_COL_MIN := 430     # sağ kolonun tabanı: dar pencerede 2:1 oranı buna yer verir
-const PORTRAIT_SIZE := Vector2(150, 186)
-## §2.6'nın nötr huy yuvası — çalışan trait ikonuyla (28×28) aynı ailede, bir tık küçük.
-const TRAIT_SLOT_SIZE := Vector2(26, 26)
 const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
+const SKILL_ICON := "res://assets/icons/skill/%s.svg"
+const TRAINING_ICON := "res://assets/icons/world/training.svg"
+const MILESTONE_ICON := "res://assets/icons/world/milestone.svg"
+const GOAL_KEYS := ["PER_GOAL_BOOTSTRAP", "PER_GOAL_TRACTION", "PER_GOAL_SERIES_A"]
 ## Kazanılmış taşın tek cümle notu, taşın anahtarıyla (GameState.milestones).
 const MILESTONE_NOTES := {"MILESTONE_FOUNDING": "PERSONAL_MS_FOUNDING_NOTE",
 	"MILESTONE_FIRST_SHIP": "PERSONAL_MS_SHIP_NOTE",
 	"MILESTONE_FIRST_FUNDING": "PERSONAL_MS_FUNDING_NOTE"}
 
+## The window keeps its 680 and grows past it by what the page needs, within the area: the read-only strip, a
+## long note (WindowLayer reads fit_height).
+signal fit_changed
+
+## The window's head (WindowFrame reads it before the page is in the tree).
+var frame_options: Dictionary
+var _kpis: HBoxContainer
+var _body: MarginContainer
+var _cols: HBoxContainer
 var _signals: Array = []
-var _scroll: ScrollContainer
+
+
+func _init() -> void:
+	_kpis = SprintUiShared.box(0)
+	frame_options = {"title": "TAB_PERSONAL", "kpi": _kpis, "pad": Vector2i.ZERO}
 
 
 func _ready() -> void:
-	# Kenar boşluğu pencerenin (WindowFrame). Sayfa pencereden uzun, dikeyde kayar; kaydırıcı
-	# yeniden kurulumdan geçmez ki günlük tazeleme okunan yeri sıfırlamasın.
-	_scroll = ScrollContainer.new()
-	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(_scroll)
-	_signals = [
-		EventBus.cash_changed, EventBus.equity_changed, EventBus.phase_changed,
-		EventBus.hr_day_processed, EventBus.employee_experience_changed,
-		EventBus.employee_training_changed, EventBus.character_added,
-		EventBus.character_removed, EventBus.palette_changed, EventBus.version_shipped,
-	]
-	for sig in _signals:
-		sig.connect(_on_state_changed)
+	# A short window scrolls the page; the scroll lives outside the rebuild, so a tick keeps the place read.
+	var scroll := ScrollContainer.new()
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(scroll)
+	_cols = SprintUiShared.box(UiTokens.SPACE_3XL)
+	_body = SprintUiShared.pad(_cols, Vector4i(UiTokens.SPACE_3XL, UiTokens.SPACE_XL, UiTokens.SPACE_3XL,
+		UiTokens.SPACE_3XL))
+	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_body)
+	# Wrapped text knows its height only once it has its width: the window refits when it settles.
+	_body.minimum_size_changed.connect(fit_changed.emit)
+	_signals = [EventBus.equity_changed, EventBus.phase_changed, EventBus.hr_day_processed,
+		EventBus.employee_experience_changed, EventBus.employee_training_changed, EventBus.version_shipped,
+		# While a decision waits the training button is off.
+		EventBus.event_triggered, EventBus.event_resolved, EventBus.event_set_aside]
+	for sig: Signal in _signals:
+		sig.connect(_build)
 	_build()
 
 
 func _exit_tree() -> void:
-	for sig in _signals:
-		if sig.is_connected(_on_state_changed):
-			sig.disconnect(_on_state_changed)
+	for sig: Signal in _signals:
+		sig.disconnect(_build)
 
 
-func _on_state_changed(_a = null, _b = null, _c = null) -> void:
-	_build()
+## The page's height: its body, and never less than the 680 window leaves it.
+func fit_height() -> float:
+	return maxf(_body.get_combined_minimum_size().y, UiTokens.D_H_PERSONAL_BODY)
 
 
-func _build() -> void:
-	UiFactory.clear(_scroll)
-	var root := VBoxContainer.new()
-	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.add_theme_constant_override("separation", 16)
-	_scroll.add_child(root)
-
+func _build(_a = null, _b = null) -> void:
 	var founder: Character = CharacterRegistry.get_founder()
-	if founder == null:
-		root.add_child(UiFactory.make_label(tr("WIN_PAGE_PLACEHOLDER"), &"CaptionMuted"))
-		return
-
-	root.add_child(_header())
-	# Kurucu kartı tam genişlikte: sekiz yıldız sütunlu şeridi hiçbir kolona sığmaz.
-	root.add_child(_founder_card(founder))
-
-	var cols := HBoxContainer.new()
-	cols.add_theme_constant_override("separation", 22)
-	root.add_child(cols)
-
-	# İki kolon da esner, oran 2:1; pencere darsa oran sağ kolonun tabanına yer verir.
-	var left := _milestones()
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 2.0
-	# İçeriğe göre: kartın altındaki hava bilinçli (10a).
-	left.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	cols.add_child(left)
-
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 22)
-	right.custom_minimum_size = Vector2(RIGHT_COL_MIN, 0)
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.size_flags_stretch_ratio = 1.0
-	right.add_child(_where_i_stand())
-	right.add_child(_net_worth())
-	cols.add_child(right)
+	UiFactory.clear(_kpis)
+	# Tenure is the run's week: the founder was never hired.
+	_kpis.add_child(UiFactory.D_kpi(tr("PER_TENURE_KEY"), tr("PER_TENURE_VALUE").format({"n": GameState.day})))
+	UiFactory.clear(_cols)
+	_cols.add_child(_work(founder))
+	_cols.add_child(_sheet(founder))
+	_cols.add_child(_standing())
 
 
-# --- başlık ------------------------------------------------------------------
+## The portrait, what the founder is doing, the experience bar and the way to training.
+func _work(founder: Character) -> VBoxContainer:
+	var col := SprintUiShared.column(0)
+	col.custom_minimum_size.x = UiTokens.D_PORTRAIT_WELL.x
+	# A run saved before the portraits has none: the well stays empty.
+	var face := TextureRect.new()
+	var path: String = FounderConstants.portrait_path(GameState.founder_portrait)
+	if ResourceLoader.exists(path):
+		face.texture = load(path)
+	col.add_child(UiFactory.D_portrait_well(face))
+	col.add_child(_above(SprintUiShared.label(Fmt.upper(tr("PER_TASK_LABEL")), &"KeyLabel"), UiTokens.SPACE_XL))
+	col.add_child(SprintUiShared.prose(HRSystem.founder_task_label(), &"DataText"))
+	col.add_child(_above(SprintUiShared.label(Fmt.upper(tr("PER_EXPERIENCE")), &"KeyLabel"), UiTokens.SPACE_L))
+	col.add_child(_above(HRUiShared.D_xp(founder, UiTokens.D_XP_BAR_WIDE), UiTokens.SPACE_S))
+	var train := SprintUiShared.button(tr("HR_TRAINING_PICK_TITLE"), &"SecondaryButton", func() -> void:
+		HRUiShared.mount_panel_modal(self, TRAINING_MODAL, _build, [founder.id]))
+	train.icon = load(TRAINING_ICON)
+	train.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	var reason: String = CharacterRegistry.training_block_reason(founder.id)
+	train.disabled = reason != "" or EventGate.active_id() != ""
+	col.add_child(_above(train, UiTokens.SPACE_XXL))
+	# In training the task line says so; the registry's reason would speak of a bar that stays full till it ends.
+	if reason != "" and founder.status == HRConstants.STATUS_ACTIVE:
+		col.add_child(_above(SprintUiShared.prose(reason, &"Caption"), UiTokens.SPACE_M))
+	return col
 
-func _header() -> Control:
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 14)
-	head.alignment = BoxContainer.ALIGNMENT_CENTER
-	head.add_child(UiFactory.make_label(tr("TAB_PERSONAL"), &"PageTitleSerif"))
-	head.add_child(UiFactory.make_label(tr("PER_HEADER_META").format({
-		"origin": UiTokens.tr_upper(_origin_label()),
-		"phase": UiTokens.tr_upper(GameState.phase_display_name(GameState.phase)),
-		"n": _tenure_weeks(),
-	}), &"TitleRowSummary"))
-	var pad := Control.new()
-	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(pad)
-	return head
 
-
-func _origin_label() -> String:
+## The name and origin, the skills on their meters, the traits.
+func _sheet(founder: Character) -> VBoxContainer:
+	var col := SprintUiShared.column(0)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_child(SprintUiShared.prose(founder.character_name, &"TitleH2"))
 	var origin: Dictionary = FounderConstants.origin_by_id(GameState.origin)
-	return tr(String(origin.get("name_key", "")))
+	col.add_child(_above(UiFactory.D_tag(tr(String(origin.name_key)), &"outline"), UiTokens.SPACE_M))
+	col.add_child(_above(SprintUiShared.prose(tr(String(origin.quote_key)), &"OriginQuote"), UiTokens.SPACE_L))
+	col.add_child(_above(_section("HR_DOSSIER_SKILLS"), UiTokens.SPACE_XXL))
+	var skills := SprintUiShared.column(0)
+	col.add_child(_above(skills, UiTokens.SPACE_M))
+	for key: String in HRConstants.AREAS + [HRConstants.SKILL_LEADERSHIP, FounderConstants.SKILL_CHARISMA]:
+		if key == HRConstants.SKILL_LEADERSHIP:
+			skills.add_child(SprintUiShared.pad(HSeparator.new(), Vector4i(0, UiTokens.SPACE_S, 0, UiTokens.SPACE_S)))
+		skills.add_child(_skill_row(key, int(founder.role_stats.get(key, 0))))
+	# The traits' effects are not wired yet (Ekip §2.6): the picked ones by name, under SOON, on the neutral glyph.
+	var head := _section("PER_TRAITS")
+	var soon := UiFactory.D_tag(tr("SYS_SOON"), &"outline")
+	head.add_child(soon)
+	head.move_child(soon, 1)
+	col.add_child(_above(head, UiTokens.SPACE_XL))
+	var traits := SprintUiShared.box(UiTokens.SPACE_XL)
+	for trait_id: String in founder.traits:
+		var box := PanelContainer.new()
+		box.theme_type_variation = &"TraitBox"
+		box.add_child(UiFactory.make_glyph(HRUiShared.D_TRAIT_DIR + "unspecified.svg", UiTokens.D_ICON_ROW,
+			UiTokens.D_INK_3))
+		var cell := SprintUiShared.box(UiTokens.SPACE_S)
+		cell.add_child(box)
+		cell.add_child(SprintUiShared.label(tr(String(FounderConstants.trait_by_id(trait_id).name_key)), &"DataText"))
+		traits.add_child(cell)
+	col.add_child(_above(traits, UiTokens.SPACE_M))
+	return col
 
 
-## Kıdem = koşunun kaçıncı haftası. Kurucunun hire_day'i yok (işe alınmadı, kurdu).
-func _tenure_weeks() -> int:
-	return maxi(GameState.day, 1)
-
-
-# --- üst: KURUCU kartı --------------------------------------------------------
-
-func _founder_card(founder: Character) -> Control:
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanel"
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 16)
-	card.add_child(col)
-
-	col.add_child(HRUiShared.section_header(tr("PER_FOUNDER"), true))
-
-	var body := HBoxContainer.new()
-	body.add_theme_constant_override("separation", 22)
-	col.add_child(body)
-
-	body.add_child(_portrait())
-
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 16)
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_child(right)
-
-	# ad + köken · kıdem
-	var name_block := VBoxContainer.new()
-	name_block.add_theme_constant_override("separation", 6)
-	# founder_name onboarding'de yazılır ve debug koşularında boş olabilir; Character her
-	# zaman bir ad taşıyor, kart asla adsız çizilmez.
-	var shown_name: String = GameState.founder_name.strip_edges()
-	if shown_name == "":
-		shown_name = founder.character_name
-	name_block.add_child(UiFactory.make_label(shown_name, &"TitleSerif"))
-	var meta := HBoxContainer.new()
-	meta.add_theme_constant_override("separation", 12)
-	meta.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(_origin_label()), &"RowMeta", UiTokens.INK_DIM))
-	meta.add_child(HRUiShared.v_hairline(11))
-	meta.add_child(UiFactory.make_label(
-		tr("PER_TENURE").format({"n": _tenure_weeks()}), &"RowMeta", UiTokens.INK_DIM))
-	name_block.add_child(meta)
-	right.add_child(name_block)
-
-	# altı alan + hairline + Liderlik + Karizma, hepsi tek yıldız gramerinde
-	var skills := HBoxContainer.new()
-	skills.add_theme_constant_override("separation", 16)
-	skills.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for area_key in HRConstants.AREAS:
-		var cell: Control = StarRating.labelled(HRConstants.area_label(String(area_key)),
-			int(founder.role_stats.get(String(area_key), 0)), 15, false, true)
-		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		skills.add_child(cell)
-	skills.add_child(HRUiShared.v_hairline(30))
-	for skill_key in [HRConstants.SKILL_LEADERSHIP, FounderConstants.SKILL_CHARISMA]:
-		skills.add_child(StarRating.labelled(HRUiShared.skill_label(String(skill_key)),
-			int(founder.role_stats.get(String(skill_key), 0)), 15))
-	right.add_child(skills)
-
-	right.add_child(_founder_trait_area())
-
-	col.add_child(HRUiShared.hairline())
-	col.add_child(_founder_footer(founder))
-	return card
-
-
-## Portre çerçevesi ve huy yuvası: hairline kenarlı boş kare.
-func _frame(min_size: Vector2) -> PanelContainer:
-	var frame := PanelContainer.new()
-	frame.custom_minimum_size = min_size
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.SURFACE_FRAME
-	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	sb.border_color = UiTokens.CARD_BORDER
-	sb.set_corner_radius_all(UiTokens.RADIUS_S)
-	frame.add_theme_stylebox_override("panel", sb)
-	return frame
-
-
-func _portrait() -> Control:
-	var frame := _frame(PORTRAIT_SIZE)
-	frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	# Kurucunun portresi onboarding'de seçilen id'den (GameState.founder_portrait) çözülür.
-	var path: String = FounderConstants.portrait_path(GameState.founder_portrait, FounderConstants.PORTRAIT_CELL)
-	if path != "" and ResourceLoader.exists(path):
-		var tex := TextureRect.new()
-		tex.texture = load(path)
-		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		tex.custom_minimum_size = PORTRAIT_SIZE
-		frame.clip_contents = true
-		frame.add_child(tex)
-	return frame
-
-
-## §2.5 / §2.6 · KURUCU HUYLARI: ayrılmış, şu an NÖTR GLİFTE ve BAĞLANMAMIŞ. Huy etkilerini
-## hiçbir sistem tüketmediği için ad ve etki çizilmez. Yuva sayısı katalogdan okunur
-## (§15.2). Nötr glif: ikon yok (hangi huy olduğunu ima ederdi), renk yok (kutup ima ederdi).
-func _founder_trait_area() -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
-	box.add_child(UiFactory.make_label(tr("PER_TRAITS"), &"ColumnHeader", UiTokens.INK_DIM))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	for _i in FounderConstants.TRAITS.size():
-		row.add_child(_frame(TRAIT_SLOT_SIZE))
-	box.add_child(row)
-	return box
-
-
-func _founder_footer(founder: Character) -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-
-	# §2.5 · MEVCUT GÖREV DURUMU eğitim eyleminin yanında: "ne yapıyor · ne kadar
-	# yaklaştı · gönder" tek satırda okunuyor.
-	var task_row := HBoxContainer.new()
-	task_row.add_theme_constant_override("separation", 10)
-	task_row.add_child(UiFactory.make_label(tr("PER_TASK_LABEL"), &"RowMeta", UiTokens.INK_DIM))
-	task_row.add_child(UiFactory.make_label(HRSystem.founder_task_label(), &"RowMeta", UiTokens.INK))
-	row.add_child(task_row)
-	row.add_child(HRUiShared.v_hairline(13))
-
-	var exp_row := HBoxContainer.new()
-	exp_row.add_theme_constant_override("separation", 11)
-	exp_row.add_child(UiFactory.make_label(tr("PER_EXPERIENCE"), &"RowMeta", UiTokens.INK_DIM))
-	var bar := ProgressBar.new()
-	bar.theme_type_variation = &"BuildProgress"
-	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(120, 5)
-	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	# §5.1 tek bar; değişen arkasındaki eşiktir.
-	bar.max_value = maxi(founder.experience_threshold, 1)
-	bar.value = founder.experience_raw
-	exp_row.add_child(bar)
-	var pct: int = int(round(CharacterRegistry.experience_ratio(founder) * 100.0))
-	exp_row.add_child(UiFactory.make_label(Fmt.percent(pct, 0), &"RowMeta", UiTokens.INK_MUTED))
-	row.add_child(exp_row)
-
-	var pad := Control.new()
-	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(pad)
-
-	if CharacterRegistry.can_train(founder.id):
-		row.add_child(HRUiShared.action_button(
-			tr("HR_TRAINING_SEND"), _open_training.bind(founder.id), true))
-	else:
-		row.add_child(HRUiShared.disabled_button(
-			tr("HR_TRAINING_SEND"), CharacterRegistry.training_block_reason(founder.id)))
+## A skill: the area's glyph, its name, its meter and its figure in the ramp's ink.
+func _skill_row(key: String, value: int) -> HBoxContainer:
+	var row := SprintUiShared.box(UiTokens.SPACE_M)
+	row.custom_minimum_size.y = UiTokens.D_H_SHEET_ROW
+	var glyph: Control = UiFactory.make_glyph(SKILL_ICON % key, UiTokens.D_ICON_ROW, UiTokens.D_INK_3) \
+		if key in HRConstants.AREAS else Control.new()
+	glyph.custom_minimum_size.x = UiTokens.D_ICON_ROW
+	row.add_child(glyph)
+	var label := SprintUiShared.label(Fmt.upper(HRUiShared.skill_label(key)), &"KeyLabel")
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(label)
+	row.add_child(_meter(value))
+	var figure := HRUiShared.D_skill_figure(value, &"")
+	figure.custom_minimum_size.x = UiTokens.D_W_SKILL_FIGURE
+	figure.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(figure)
 	return row
 
 
-func _open_training(character_id: String) -> void:
-	HRUiShared.mount_panel_modal(self, TRAINING_MODAL, _on_state_changed, [character_id])
+## A cell a point, grouped by the stars of the rule; the first `value` cells in the ramp's ink.
+func _meter(value: int) -> Control:
+	var cell: int = UiTokens.D_SQUARE_SM
+	var per: int = HRConstants.POINTS_PER_STAR
+	var star_w: int = per * cell + (per - 1) * UiTokens.SPACE_XXS + UiTokens.SPACE_XS
+	var meter := Control.new()
+	meter.custom_minimum_size = Vector2(HRConstants.STAR_MAX * star_w - UiTokens.SPACE_XS, cell)
+	meter.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	meter.draw.connect(func() -> void:
+		for star in HRConstants.STAR_MAX:
+			for point in per:
+				meter.draw_rect(Rect2(star * star_w + point * (cell + UiTokens.SPACE_XXS), 0, cell, cell),
+					UiTokens.D_skill(value) if star * per + point < value else UiTokens.D_BAR_TRACK))
+	return meter
 
 
-# --- sol: KİLOMETRE TAŞLARI -------------------------------------------------
-
-## Mühür + ad + tarih/tutar; kazanılmışsa tek cümle not. Kazanılmamış taş sönük ve tutarsız.
-func _milestones() -> Control:
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanel"
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	card.add_child(col)
-	col.add_child(HRUiShared.section_header(tr("PERSONAL_MILESTONES_TITLE")))
-	for m in GameState.milestones():
-		var earned: bool = bool(m["earned"])
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", UiTokens.SPACE_L)
-		col.add_child(row)
-		row.add_child(UiFactory.make_dot(UiTokens.ACCENT_DEEP if earned else UiTokens.DOT_IDLE, 16))
-		var text_col := VBoxContainer.new()
-		text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		text_col.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
-		row.add_child(text_col)
-		text_col.add_child(UiFactory.make_label(tr(String(m["key"])), &"RowName",
-			UiTokens.INK if earned else UiTokens.INK_DIM))
-		if not earned:
-			continue
-		var note := UiFactory.make_label(tr(String(MILESTONE_NOTES[m["key"]])), &"CaptionMuted")
-		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		text_col.add_child(note)
-		var meta := UiFactory.make_label(String(m["meta"]), &"RowMeta")
-		meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(meta)
-	return card
-
-
-# --- sağ üst: NEREDE DURUYORUM -----------------------------------------------
-
-func _where_i_stand() -> Control:
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanel"
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 0)
-	card.add_child(col)
-	col.add_child(HRUiShared.section_header(tr("PER_WHERE_AM_I"), true))
-
-	for phase_no in [1, 2, 3]:
-		var active: bool = GameState.phase == phase_no
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
-		row.custom_minimum_size = Vector2(0, 30)
-		var pip := Panel.new()
-		pip.custom_minimum_size = Vector2(22, 4)
-		pip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var pip_sb := StyleBoxFlat.new()
-		pip_sb.bg_color = UiTokens.ACCENT if active else UiTokens.SURFACE_SUNKEN
-		pip.add_theme_stylebox_override("panel", pip_sb)
-		row.add_child(pip)
-		row.add_child(UiFactory.make_label(GameState.phase_display_name(phase_no),
-			&"RowName" if active else &"RowMeta",
-			UiTokens.INK if active else UiTokens.INK_DIM))
-		col.add_child(row)
-
-	# BU FAZIN HEDEFİ — sol amber kenarlı kutu.
-	var goal := PanelContainer.new()
-	var goal_sb := StyleBoxFlat.new()
-	goal_sb.bg_color = UiTokens.AMBER_WASH
-	goal_sb.border_width_left = UiTokens.BORDER_FOCUS
-	goal_sb.border_color = UiTokens.ACCENT_DEEP
-	goal_sb.content_margin_left = 14.0
-	goal_sb.content_margin_right = 14.0
-	goal_sb.content_margin_top = 12.0
-	goal_sb.content_margin_bottom = 12.0
-	goal.add_theme_stylebox_override("panel", goal_sb)
-	var goal_col := VBoxContainer.new()
-	goal_col.add_theme_constant_override("separation", 6)
-	goal_col.add_child(UiFactory.make_label(tr("PER_PHASE_GOAL"), &"ColumnHeader", UiTokens.INK_DIM))
-	var goal_key: String = {2: "PER_GOAL_TRACTION", 3: "PER_GOAL_SERIES_A"}.get(
-		GameState.phase, "PER_GOAL_BOOTSTRAP")
-	goal_col.add_child(UiFactory.make_label(tr(goal_key), &"RowName"))
-	goal.add_child(goal_col)
-	var pad := MarginContainer.new()
-	pad.add_theme_constant_override("margin_top", 12)
-	pad.add_child(goal)
-	col.add_child(pad)
-	return card
+## The milestones, where the run stands and its goal, the founder's share.
+func _standing() -> VBoxContainer:
+	var col := SprintUiShared.column(0)
+	col.custom_minimum_size.x = UiTokens.D_W_STANDING
+	col.add_child(_section("PERSONAL_MILESTONES_TITLE"))
+	col.add_child(_above(_milestones(), UiTokens.SPACE_L))
+	col.add_child(_above(_section("PER_WHERE_AM_I"), UiTokens.SPACE_3XL))
+	var ladder := SprintUiShared.column(0)
+	col.add_child(_above(ladder, UiTokens.SPACE_M))
+	for i in GameState.PHASE_KEYS.size():
+		var here: bool = GameState.phase == i + 1
+		var row := SprintUiShared.box(UiTokens.SPACE_L)
+		row.custom_minimum_size.y = UiTokens.D_H_SHEET_ROW
+		row.add_child(HRUiShared.D_bar(UiTokens.D_PHASE_MARK, 1.0 if here else 0.0, UiTokens.D_INK_1))
+		row.add_child(SprintUiShared.label(tr(GameState.PHASE_KEYS[i]), &"DataStrong" if here else &"NoteMuted"))
+		ladder.add_child(row)
+	var spot := MarginContainer.new()
+	spot.add_theme_constant_override("margin_top", UiTokens.SPACE_L)
+	col.add_child(spot)
+	var goal := UiFactory.D_card(spot)
+	goal.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+	goal.add_child(SprintUiShared.label(Fmt.upper(tr("PER_PHASE_GOAL")), &"KeyLabel"))
+	goal.add_child(SprintUiShared.label(tr(GOAL_KEYS[GameState.phase - 1]), &"SubjectStrong"))
+	col.add_child(_above(_section("PER_NET_WORTH"), UiTokens.SPACE_3XL))
+	var share := SprintUiShared.column(UiTokens.SPACE_M)
+	FinanceOzetView.cap_table(share)
+	if GameState.run_valuation_m == 0:
+		share.add_child(SprintUiShared.prose(tr("PER_NO_VALUATION"), &"Caption"))
+	col.add_child(_above(share, UiTokens.SPACE_M))
+	return col
 
 
-# --- sağ alt: NET SERVET ------------------------------------------------------
-
-func _net_worth() -> Control:
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanel"
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 0)
-	card.add_child(col)
-	col.add_child(HRUiShared.section_header(tr("PER_NET_WORTH"), true))
-
-	# finance_ozet_view._refresh_captable'ın birebir aritmetiği. Çalışan hissesinin motorda
-	# kaynağı yok (opsiyon havuzu kurulmadı).
-	var founder_pct: int = maxi(0, 100 - GameState.get_investor_equity_pct())
-
-	col.add_child(_kv(tr("PER_EQUITY"), Fmt.percent(founder_pct, 0), true))
-	# Değerleme seam'i yok (dosya başı); üçü de dürüstçe tire.
-	col.add_child(_kv(tr("PER_VALUATION"), "—", false))
-	col.add_child(_kv(tr("PER_NET_WORTH"), "—", false))
-	col.add_child(_kv(tr("PER_PEAK_VALUE"), "—", false))
-
-	var note := UiFactory.make_label(tr("PER_NO_VALUATION"), &"RowMeta", UiTokens.INK_DIM)
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var note_pad := MarginContainer.new()
-	note_pad.add_theme_constant_override("margin_top", 14)
-	note_pad.add_child(note)
-	col.add_child(note_pad)
-
-	# Kurucu payı şeridi.
-	var bar := Panel.new()
-	bar.custom_minimum_size = Vector2(0, 8)
-	var bar_sb := StyleBoxFlat.new()
-	bar_sb.bg_color = UiTokens.INK_MUTED
-	bar_sb.set_corner_radius_all(UiTokens.RADIUS_S)
-	bar.add_theme_stylebox_override("panel", bar_sb)
-	var strip := VBoxContainer.new()
-	strip.add_theme_constant_override("separation", 9)
-	strip.add_child(bar)
-	strip.add_child(UiFactory.make_label(
-		tr("PER_CAP_FOUNDER").format({"pct": founder_pct}), &"RowMeta", UiTokens.INK_MUTED))
-	var strip_pad := MarginContainer.new()
-	strip_pad.add_theme_constant_override("margin_top", 16)
-	strip_pad.add_child(strip)
-	col.add_child(strip_pad)
-	return card
+## A ledger down the column: each milestone's disc on a line to the next; an earned one in ink with its glyph,
+## date or sum and its note, the rest an open ring.
+func _milestones() -> VBoxContainer:
+	var ledger := SprintUiShared.column(0)
+	var rows: Array = GameState.milestones()
+	for i in rows.size():
+		var earned: bool = rows[i].earned
+		var last: bool = i == rows.size() - 1
+		var row := SprintUiShared.box(UiTokens.SPACE_L)
+		var rail := SprintUiShared.column(UiTokens.SPACE_XXS)
+		var dot: Control = PanelContainer.new() if earned else Panel.new()
+		dot.theme_type_variation = &"MilestoneDot" if earned else &"LockDisc"
+		dot.custom_minimum_size = Vector2.ONE * UiTokens.D_MILESTONE_DOT
+		if earned:
+			dot.add_child(UiFactory.make_glyph(MILESTONE_ICON, UiTokens.D_ICON_PART, UiTokens.D_INK_1))
+		rail.add_child(dot)
+		if not last:
+			var line := VSeparator.new()
+			line.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			rail.add_child(line)
+		row.add_child(rail)
+		var text := SprintUiShared.column(UiTokens.SPACE_XXS)
+		var head := SprintUiShared.box(UiTokens.SPACE_M)
+		var title := SprintUiShared.label(tr(String(rows[i].key)), &"SubjectStrong" if earned else &"SubjectLabel",
+			null if earned else UiTokens.D_INK_3)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.add_child(title)
+		head.add_child(SprintUiShared.label(String(rows[i].meta), &"MetaMuted"))
+		text.add_child(head)
+		if earned:
+			text.add_child(SprintUiShared.prose(tr(MILESTONE_NOTES[rows[i].key]), &"Caption"))
+		# The gap to the next milestone is inside the row, so the line runs through it.
+		var body: Control = text if last else SprintUiShared.pad(text, Vector4i(0, 0, 0, UiTokens.SPACE_L))
+		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(body)
+		ledger.add_child(row)
+	return ledger
 
 
-func _kv(caption: String, value: String, strong: bool) -> Control:
-	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0, 38)
-	var cap := UiFactory.make_label(caption, &"RowMeta", UiTokens.INK_DIM)
-	cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(cap)
-	var val := UiFactory.make_label(value, &"MetricValueInk",
-		UiTokens.INK if strong else UiTokens.INK_DIM)
-	val.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(val)
-	var wrap := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color.TRANSPARENT
-	sb.border_width_bottom = UiTokens.BORDER_HAIRLINE
-	sb.border_color = UiTokens.DIVIDER_LIGHT
-	wrap.add_theme_stylebox_override("panel", sb)
-	wrap.add_child(row)
-	return wrap
+## A section's caps key and its rule, as tall as the key: the sheet is dense.
+func _section(key: String) -> HBoxContainer:
+	var head := SprintUiShared.section(key)
+	head.custom_minimum_size.y = 0
+	return head
+
+
+## `child` a step below what comes before it.
+func _above(child: Control, gap: int) -> MarginContainer:
+	return SprintUiShared.pad(child, Vector4i(0, gap, 0, 0))

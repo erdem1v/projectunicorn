@@ -13,7 +13,6 @@ extends Panel
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 
-const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SERIES_A"]
 ## [tam, sıkışık]: marka bloğunun genişliği; anahtar (A, C, E, G) ve değer (B, D, F, H) sütunlarının
 ## sol kenarı; iki metrik grubunu ayıran kısa çizgi; gün bloğunun başı ve iç payı; yuva ve saat
 ## bloğunun genişliği, saatin sol payı, hız tuşunun genişliği ve saatle tuşlar arası.
@@ -130,9 +129,9 @@ func _refresh() -> void:
 ## Marka bloğu: turuncu kare + "Project Unicorn" ve evre; sıkışık kipte yalnız kare.
 func _refresh_brand(g: Dictionary) -> void:
 	$Logo.position = LOGO_COMPACT if _compact else LOGO
-	var phase: int = clampi(GameState.phase, 1, PHASE_KEYS.size())
+	var phase: int = clampi(GameState.phase, 1, GameState.PHASE_KEYS.size())
 	# Ham to_upper bilerek: İngilizce kanon terim; Fmt.upper'ın Türkçe dalı "TRACTİON" yapardı.
-	$Phase.text = tr(PHASE_KEYS[phase - 1]).to_upper()
+	$Phase.text = tr(GameState.PHASE_KEYS[phase - 1]).to_upper()
 	_put($LogoName, NAME_X, NAME_LINE, g.brand - NAME_X - NAME_RIGHT)
 	_put($Phase, NAME_X, PHASE_LINE)
 	for i in 3:

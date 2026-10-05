@@ -423,7 +423,7 @@ func _share_grid(columns: int) -> GridContainer:
 
 
 ## A part-to-whole bar: one segment a part, [share, ink]; a part with no ink is room left empty.
-func _stack(parts: Array) -> HBoxContainer:
+static func _stack(parts: Array) -> HBoxContainer:
 	var bar := SprintUiShared.box(UiTokens.SPACE_XXS)
 	bar.custom_minimum_size.y = UiTokens.D_H_SHARE
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -447,30 +447,38 @@ func _share(ratio: float, ink: Color) -> HBoxContainer:
 
 
 func _refresh_captable() -> void:
+	UiFactory.clear(_cap)
+	var raised: int = GameState.get_total_raised()
+	_cap.add_child(UiFactory.D_card_head(tr("FIN_CAPTABLE_HEADER"), UiFactory.make_label(tr("FIN_CAPTABLE_RAISED").format(
+		{"amount": Fmt.money(raised)}), &"Caption") if raised > 0 else null))
+	cap_table(_cap)
+
+
+## The cap table's bar and its parts, added to `parent`; the Kişisel window shows the same split.
+static func cap_table(parent: Control) -> void:
 	# Kurucu = 100 − yatırımcı payı. Yatırımcı dilimi TÜM turların toplamıdır (melek + seed +
 	# imzalanan Series A) ve toplamı GameState türetir — çağrı yerinde ham alanlar toplanmaz,
 	# yoksa bir sonraki tur eklendiğinde bu satır sessizce eksik kalır.
 	# Çalışan hissesinin motorda kaynağı yok ve bu bilerek böyle: Ekip GDD §9'da (maaş, zam,
 	# terfi) çalışan hissesi yok, opsiyon havuzu kurulmadı. Havuz gelirse dilimi buraya eklenir.
-	UiFactory.clear(_cap)
-	var raised: int = GameState.get_total_raised()
-	_cap.add_child(UiFactory.D_card_head(tr("FIN_CAPTABLE_HEADER"), UiFactory.make_label(tr("FIN_CAPTABLE_RAISED").format(
-		{"amount": Fmt.money(raised)}), &"Caption") if raised > 0 else null))
 	var investors: int = GameState.get_investor_equity_pct()
 	var founder: int = maxi(0, 100 - investors)
-	_cap.add_child(_stack([[float(founder), UiTokens.D_BAR_EMPH], [float(investors), UiTokens.D_BAR_FILL]]))
+	parent.add_child(_stack([[float(founder), UiTokens.D_BAR_EMPH], [float(investors), UiTokens.D_BAR_FILL]]))
 	var parts := SprintUiShared.box(UiTokens.SPACE_XL)
-	parts.add_child(SprintUiShared.label(tr("FIN_CAPTABLE_FOUNDER").format({"pct": Fmt.percent(founder, 0)}), &"MetaText"))
+	parts.add_child(SprintUiShared.label(RnDUiShared.t("FIN_CAPTABLE_FOUNDER").format({"pct": Fmt.percent(founder, 0)}),
+		&"MetaText"))
 	# Melek turu KENDİ satırını alır: kurucu melek çekini ve imzalanan turu ayrı okur; seed de kendi turu,
 	# yoksa kurucunun payı ekranda karşılığı olmadan on iki ile on sekiz puan düşerdi.
 	if GameState.run_angel_equity_pct > 0:
-		parts.add_child(SprintUiShared.label(tr("ANGEL_CAP_ROW").format({"pct": GameState.run_angel_equity_pct}), &"MetaText"))
+		parts.add_child(SprintUiShared.label(RnDUiShared.t("ANGEL_CAP_ROW").format({"pct": GameState.run_angel_equity_pct}),
+			&"MetaText"))
 	if GameState.run_seed_equity_pct > 0:
-		parts.add_child(SprintUiShared.label(tr("SEED_CAP_ROW").format({"pct": GameState.run_seed_equity_pct}), &"MetaText"))
+		parts.add_child(SprintUiShared.label(RnDUiShared.t("SEED_CAP_ROW").format({"pct": GameState.run_seed_equity_pct}),
+			&"MetaText"))
 	if GameState.run_equity_pct > 0:
-		parts.add_child(SprintUiShared.label(tr("FIN_CAPTABLE_INVESTORS").format(
+		parts.add_child(SprintUiShared.label(RnDUiShared.t("FIN_CAPTABLE_INVESTORS").format(
 			{"pct": Fmt.percent(GameState.run_equity_pct, 0)}), &"MetaText"))
-	_cap.add_child(parts)
+	parent.add_child(parts)
 
 
 func _refresh_mentor() -> void:

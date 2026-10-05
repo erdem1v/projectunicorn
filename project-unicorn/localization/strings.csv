@@ -312,12 +312,11 @@ HR_TRAINING_AT_CAP,Bu alan tavanda.,This area is already at the cap.
 HR_TRAINING_NOT_EARNED,Deneyim barı dolmadı.,The experience bar is not full yet.
 HR_DURATION_WEEKS,{n} hafta,{n} weeks
 HR_DURATION_WEEKS_ONE,1 hafta,1 week
-PER_HEADER_META,{origin} · {phase} · KIDEM {n}. HAFTA,{origin} · {phase} · TENURE WEEK {n}
-PER_FOUNDER,KURUCU,FOUNDER
-PER_TENURE,KIDEM · {n}. HAFTA,TENURE · WEEK {n}
 PER_EXPERIENCE,DENEYİM,EXPERIENCE
 PER_TASK_LABEL,GÖREV,TASK
 PER_TRAITS,HUYLAR,TRAITS
+PER_TENURE_KEY,Kıdem,Tenure
+PER_TENURE_VALUE,{n}. hafta,Week {n}
 HR_FOUNDER_STATE_BUILD,Yapımda görev alıyor,Working on the build
 HR_FOUNDER_STATE_SALES,Satışta,In sales
 HR_FOUNDER_STATE_SUPPORT,Destekte,On support
@@ -332,11 +331,7 @@ PER_GOAL_BOOTSTRAP,İlk ödeyen müşterilere ulaş,Reach your first paying cust
 PER_GOAL_TRACTION,Geliri büyüt ve markayı kur,Grow revenue and build the brand
 PER_GOAL_SERIES_A,Masaya otur ve turu kapat,Get to the table and close the round
 PER_NET_WORTH,NET SERVET,NET WORTH
-PER_EQUITY,HİSSE,EQUITY
-PER_VALUATION,SON DEĞERLEME,LATEST VALUATION
-PER_PEAK_VALUE,ZİRVE DEĞER,ALL-TIME PEAK
-PER_NO_VALUATION,Değerleme henüz yok — ilk yatırım turunda hesaplanır.,No valuation yet — calculated at the first funding round.
-PER_CAP_FOUNDER,Kurucu · %{pct},Founder · {pct}%
+PER_NO_VALUATION,Değerleme henüz yok. Series A imzasında belirlenir.,No valuation yet. It is set when the Series A is signed.
 HR_BADGE_IDLE,Boşta,Idle
 HR_BADGE_OVERLOADED_JOBS,Aşırı yük,Overloaded
 HR_IDLE_HINT,Hiçbir işe atanmadı — duruyor ve maaş alıyor.,Not assigned to any job — standing idle and still on payroll.
@@ -373,7 +368,6 @@ HR_SEARCH_START,İşe alım başlat,Start recruitment
 HR_EMPTY_ROW,Henüz kimse yok,Nobody here yet
 HR_STATE_TRAINING,Eğitimde · {n} hafta,In training · {n} weeks
 HR_STATE_TRAINING_ONE,Eğitimde · 1 hafta,In training · 1 week
-HR_TRAINING_SEND,EĞİTİME GÖNDER,SEND TO TRAINING
 HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
 HR_NEWS_TRAINING_DONE,{name} eğitimden döndü; uzmanlığı arttı.,{name} is back from training with sharper expertise.
 SET_UI_SCALE_TOO_LARGE,{pct}% bu pencere boyutunda arayüzü kırpar; daha büyük bir ekran gerekiyor.,{pct}% would crop the interface at this window size; it needs a larger display.
