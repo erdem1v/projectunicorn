@@ -6,8 +6,8 @@ RUNWAY_UNIT_WEEKS,hafta,wk
 RUNWAY_CROSS_TICKER,Runway {n} ayın altına indi,Runway fell below {n} months
 RUNWAY_CROSS_TICKER_ONE,Runway {n} ayın altına indi,Runway fell below {n} month
 SETTINGS_LANGUAGE,Dil,Language
-LANG_TR,Türkçe,Turkish
-LANG_EN,İngilizce,English
+LANG_TR,Türkçe,Türkçe
+LANG_EN,English,English
 SKILL_LABEL_SALES,satış,sales
 SKILL_LABEL_PRODUCT,ürün,product
 SKILL_LABEL_DESIGN,tasarım,design
@@ -192,8 +192,9 @@ SET_RESOLUTION,Çözünürlük,Resolution
 SET_RESOLUTION_LOCKED,Yalnız pencereli modda değiştirilebilir.,Adjustable in windowed mode only.
 SET_RESOLUTION_NATIVE,doğal,native
 SET_UI_SCALE,Arayüz ölçeği,Interface scale
-SET_UI_SCALE_TOO_SMALL,{pct}% bu pencere boyutunda okunmuyor; daha geniş bir ekran gerekiyor.,{pct}% is unreadable at this window size; it needs a wider display.
+SET_UI_SCALE_TOO_SMALL,%{pct} bu pencere boyutunda okunmuyor; daha geniş bir ekran gerekiyor.,{pct}% is unreadable at this window size; it needs a wider display.
 SET_VSYNC,Dikey eşitleme,Vertical sync
+SET_TICKER,Haber şeridi,News ticker
 SET_VOL_MASTER,Ana ses,Master volume
 SET_VOL_MUSIC,Müzik,Music
 SET_VOL_SFX,Efektler,Effects
@@ -223,7 +224,7 @@ SYS_SAVE,Kaydet,Save
 SYS_LOAD,Yükle,Load
 SYS_SETTINGS,Ayarlar,Settings
 SYS_MAIN_MENU,Ana menüye dön,Return to main menu
-SYS_SOON,YAKINDA,SOON
+SYS_SOON,Yakında,Soon
 SYS_QUIT,Masaüstüne çık,Quit to desktop
 SYS_QUIT_TITLE,Kaydedilmemiş ilerleme var.,You have unsaved progress.
 SYS_QUIT_BODY,Son kayıttan bu yana oynadığın haftalar kaybolur.,The weeks you have played since your last save will be lost.
@@ -240,6 +241,7 @@ SAVE_META_DAY,{date},{date}
 SAVE_META_CASH,Kasa {amount},Cash {amount}
 SAVE_META_MRR,MRR {amount},MRR {amount}
 SAVE_EMPTY,Henüz kayıt yok.,No saves yet.
+SAVE_LIST_HEADER,Kayıtlar,Saves
 SAVE_DELETE,Sil,Delete
 SAVE_OVERWRITE_TITLE,Üzerine yazılsın mı?,Overwrite?
 SAVE_OVERWRITE_BODY,{label} kaydının yerini bu kayıt alır.,This save takes the place of {label}.
@@ -254,6 +256,7 @@ SAVE_ERR_CORRUPT,Dosya okunamıyor.,This file cannot be read.
 SAVE_ERR_NEWER,Bu kayıt daha yeni bir sürümden; açılamıyor.,This save comes from a newer version and cannot be opened.
 SAVE_ERR_TOO_OLD,Bu kayıt eski bir sürümden; ürün verisi değiştiği için açılamıyor.,This save comes from an older version; the product data changed and it cannot be opened.
 SAVE_ERR_MODAL_OPEN,Bir karar ekranı açıkken kaydedilemez.,Saving is unavailable while a decision screen is open.
+SAVE_ERR_DECISION_WAITING,Karar beklerken kaydedilemez.,Not while a decision is waiting.
 SAVE_ERR_WRITE,Kayıt yazılamadı.,The save could not be written.
 SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.
 SAVE_TOAST_SAVED,Kaydedildi,Saved
@@ -370,7 +373,7 @@ HR_STATE_TRAINING,Eğitimde · {n} hafta,In training · {n} weeks
 HR_STATE_TRAINING_ONE,Eğitimde · 1 hafta,In training · 1 week
 HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
 HR_NEWS_TRAINING_DONE,{name} eğitimden döndü; uzmanlığı arttı.,{name} is back from training with sharper expertise.
-SET_UI_SCALE_TOO_LARGE,{pct}% bu pencere boyutunda arayüzü kırpar; daha büyük bir ekran gerekiyor.,{pct}% would crop the interface at this window size; it needs a larger display.
+SET_UI_SCALE_TOO_LARGE,%{pct} bu pencere boyutunda arayüzü kırpar; daha büyük bir ekran gerekiyor.,{pct}% would crop the interface at this window size; it needs a larger display.
 ANGEL_EVENT_TITLE,Frank'in teklifi,Frank's offer
 ANGEL_EVENT_BODY,"Ürün para kazandırmaya başladı.
 

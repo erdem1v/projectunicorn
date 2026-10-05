@@ -1,16 +1,17 @@
 extends Control
 
-# Ayarlar paneli — altı bölüm (GÖRÜNTÜ · SES · OYUN · DİL · ERİŞİLEBİLİRLİK · VERİ)
-# kaydırılabilir bir gövdede.
+# Ayarlar paneli — beş bölüm (GÖRÜNTÜ · SES · OYUN · ERİŞİLEBİLİRLİK · VERİ) kaydırılabilir bir
+# gövdede. Dil satırı Oyun'dadır; her dil kendi adıyla okunur.
 #
 # main.gd GameShell/ModalLayer'a mount eder, panel kendini `dismissed` ile serbest
 # bırakır. Kök process_mode = ALWAYS: ağaç durdurulmuşken de etkileşimli kalır ve ESC alır.
 #
 # Kontroller CANLI (Uygula butonu yok): her domain sistemi kendi değerini uygular ve
-# Settings'e yazar; Settings yazımı debounce eder, sürükleme diski dövmez.
+# Settings'e yazar; Settings yazımı debounce eder, sürükleme diski dövmez. Haber şeridinin
+# aç/kapası şeridin kendisinindir (NewsTicker.set_open).
 #
-# YERLEŞİM sahnede, İÇERİK burada: satırlar (etiket · boşluk · kontrol) tek bir
-# yardımcıdan üretilir ve yalnız theme_type_variation taşır (UI/STYLE LAW kural 4).
+# YERLEŞİM sahnede, İÇERİK burada: satırlar (etiket · kontrol) tek bir yardımcıdan üretilir ve
+# yalnız theme_type_variation taşır (UI/STYLE LAW kural 4).
 
 signal dismissed
 
@@ -24,39 +25,39 @@ const SUMMARY_FREQ_KEYS: Array[String] = [   # SummarySystem.FREQUENCIES sıras�
 const LANG_KEYS: Array[String] = ["LANG_TR", "LANG_EN"]   # Localization.SUPPORTED sırasıyla
 
 const KEY_COLORBLIND := "colorblind_palette"
+const KEY_TICKER := "ticker_open"
 
 # Bölüm başlıkları CSV'de doğal yazımda durur ve _retranslate'te büyütülür.
 const HEADER_KEYS := {
 	"%DisplayHeader": "SET_SEC_DISPLAY",
 	"%AudioHeader": "SET_SEC_AUDIO",
 	"%GameHeader": "SET_SEC_GAME",
-	"%LanguageHeader": "SETTINGS_LANGUAGE",
 	"%AccessibilityHeader": "SET_SEC_ACCESSIBILITY",
 	"%DataHeader": "SET_SEC_DATA",
 }
 
-# Satır geometrisi (YERLEŞİM — bu dosyanın sahip olduğu tek sayı ailesi).
-const ROW_SEP := 12
-const CONTROL_W := 230
-const SLIDER_W := 170
-const PCT_W := 44
+# Satır geometrisi (YERLEŞİM — bu dosyanın sahip olduğu tek sayı ailesi): satırın boyu, kontrol
+# sütunu, ses satırının yüzde sütunu.
+const ROW_H := 48
+const CONTROL_W := 260
+const PCT_W := 48
 
 @onready var _title: Label = %TitleLabel
 @onready var _close_btn: Button = %CloseBtn
 @onready var _display_body: VBoxContainer = %DisplayBody
 @onready var _audio_body: VBoxContainer = %AudioBody
 @onready var _game_body: VBoxContainer = %GameBody
-@onready var _lang_label: Label = %LangLabel
-@onready var _lang_option: OptionButton = %LanguageOption
 @onready var _a11y_body: VBoxContainer = %AccessibilityBody
-@onready var _data_body: VBoxContainer = %DataBody
+@onready var _data_body: HBoxContainer = %DataBody
 
 var _mode_option: OptionButton
 var _res_option: OptionButton
 var _res_list: Array[Vector2i] = []
-var _res_note: Label
+var _borderless_note: Control
+var _fullscreen_note: Control
 var _scale_option: OptionButton
 var _vsync_toggle: CheckButton
+var _ticker_toggle: CheckButton
 var _master_slider: HSlider
 var _music_toggle: CheckButton
 var _music_slider: HSlider
@@ -64,6 +65,7 @@ var _sfx_slider: HSlider
 var _mute_toggle: CheckButton
 var _autosave_option: OptionButton
 var _summary_option: OptionButton
+var _lang_option: OptionButton
 var _cb_toggle: CheckButton
 
 var _pct_labels: Dictionary = {}   # HSlider → yüzde Label'ı
@@ -72,11 +74,10 @@ var _label_keys: Dictionary = {}
 
 
 func _ready() -> void:
-	($Dimmer as ColorRect).color = UiTokens.SCRIM_MODAL
+	($Dimmer as ColorRect).color = UiTokens.D_SCRIM
 	_build_display_section()
 	_build_audio_section()
 	_build_game_section()
-	_build_language_section()
 	_build_accessibility_section()
 	_build_data_section()
 	_sync_from_state()
@@ -99,8 +100,9 @@ func _build_display_section() -> void:
 		DisplaySettingsLib.set_resolution(_res_list[idx])
 		_refresh_scale_options())
 	_add_row(_display_body, "SET_RESOLUTION", _res_option)
-	_res_note = _note_label("SET_RESOLUTION_LOCKED")
-	_display_body.add_child(_res_note)
+	# Çözünürlük yalnız pencereli modda değişir; iki tam ekran modu gerekçesini satırın altında söyler.
+	_borderless_note = _note(_display_body, "SET_RESOLUTION_BORDERLESS")
+	_fullscreen_note = _note(_display_body, "SET_RESOLUTION_LOCKED")
 
 	_scale_option = _dropdown(DisplaySettingsLib.UI_SCALE_STEPS.size())
 	_scale_option.item_selected.connect(func(idx: int) -> void:
@@ -108,15 +110,19 @@ func _build_display_section() -> void:
 		_refresh_scale_options())   # motor kırptıysa seçim de onu göstersin
 	_add_row(_display_body, "SET_UI_SCALE", _scale_option)
 
-	_vsync_toggle = _switch()
+	_vsync_toggle = CheckButton.new()
 	_vsync_toggle.toggled.connect(func(on: bool) -> void: DisplaySettingsLib.set_vsync(on))
 	_add_row(_display_body, "SET_VSYNC", _vsync_toggle)
+
+	_ticker_toggle = CheckButton.new()
+	_ticker_toggle.toggled.connect(func(on: bool) -> void: get_tree().call_group(&"news_ticker", &"set_open", on))
+	_add_row(_display_body, "SET_TICKER", _ticker_toggle)
 
 
 func _build_audio_section() -> void:
 	_master_slider = _add_volume_row("SET_VOL_MASTER", AudioManager.set_master_volume)
 
-	_music_toggle = _switch()
+	_music_toggle = CheckButton.new()
 	_music_toggle.toggled.connect(func(on: bool) -> void:
 		AudioManager.set_music_enabled(on)
 		_music_slider.editable = on)   # müzik kapalıyken seviye kontrolü sönükleşir
@@ -125,7 +131,7 @@ func _build_audio_section() -> void:
 	_music_slider = _add_volume_row("SET_VOL_MUSIC", AudioManager.set_music_volume)
 	_sfx_slider = _add_volume_row("SET_VOL_SFX", AudioManager.set_sfx_volume)
 
-	_mute_toggle = _switch()
+	_mute_toggle = CheckButton.new()
 	_mute_toggle.toggled.connect(AudioManager.set_mute_unfocused)
 	_add_row(_audio_body, "SET_MUTE_UNFOCUSED", _mute_toggle)
 
@@ -139,28 +145,25 @@ func _build_game_section() -> void:
 	_summary_option.item_selected.connect(func(idx: int) -> void:
 		Settings.set_value(SummarySystem.SETTING_FREQUENCY, SummarySystem.FREQUENCIES[idx]))
 	_add_row(_game_body, "SET_SUMMARY_FREQ", _summary_option)
-
-
-func _build_language_section() -> void:
-	_lang_option.get_popup().theme_type_variation = &"SettingsPopup"
-	for i in LANG_KEYS.size():
-		_lang_option.add_item("", i)
+	_lang_option = _dropdown(LANG_KEYS.size())
 	_lang_option.item_selected.connect(func(idx: int) -> void:
 		Localization.set_language(Localization.SUPPORTED[idx])
 		_retranslate())
+	_add_row(_game_body, "SETTINGS_LANGUAGE", _lang_option)
 
 
 func _build_accessibility_section() -> void:
-	_cb_toggle = _switch()
+	_cb_toggle = CheckButton.new()
 	_cb_toggle.toggled.connect(_on_colorblind_toggled)
 	_add_row(_a11y_body, "SET_COLORBLIND", _cb_toggle)
-	_a11y_body.add_child(_note_label("SET_COLORBLIND_NOTE"))
+	_note(_a11y_body, "SET_COLORBLIND_NOTE")
 
 
 func _build_data_section() -> void:
 	for entry in [["SET_OPEN_SAVE_FOLDER", _on_open_save_folder], ["SET_RESET_DEFAULTS", _on_reset_pressed]]:
 		var b := Button.new()
-		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		b.theme_type_variation = &"SecondaryButtonSmall"
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		b.pressed.connect(entry[1])
 		_data_body.add_child(b)
 		_label_keys[b] = entry[0]
@@ -178,7 +181,7 @@ func _on_window_mode_selected(idx: int) -> void:
 
 
 func _on_colorblind_toggled(on: bool) -> void:
-	# Semantik renk master_theme.tres'e pişmediği için bu saf bir çalışma zamanı
+	# Semantik renk temaya pişmediği için bu saf bir çalışma zamanı
 	# takasıdır: token'ı çevir, canlı yüzeylere haber ver.
 	UiTokens.set_colorblind(on)
 	Settings.set_value(KEY_COLORBLIND, on)
@@ -196,14 +199,16 @@ func _on_reset_pressed() -> void:
 	EventBus.confirm_requested.emit({
 		"title": tr("SET_RESET_CONFIRM_TITLE"),
 		"body": tr("SET_RESET_CONFIRM_BODY"),
-		"confirm_text": UiTokens.tr_upper(tr("SET_RESET_CONFIRM_OK")),
-		"cancel_text": UiTokens.tr_upper(tr("SET_RESET_CONFIRM_CANCEL")),
+		"confirm_text": tr("SET_RESET_CONFIRM_OK"),
+		"cancel_text": tr("SET_RESET_CONFIRM_CANCEL"),
 		"on_confirm": _apply_reset,
+		"danger": true,
 	})
 
 
 func _apply_reset() -> void:
 	Settings.reset_to_defaults()   # DEFAULTS anahtarları; dil ve tur bayrağı DOKUNULMAZ
+	get_tree().call_group(&"news_ticker", &"set_open", bool(Settings.get_value(KEY_TICKER)))
 	EventBus.palette_changed.emit(UiTokens.is_colorblind())
 	_sync_from_state()
 
@@ -218,6 +223,7 @@ func _sync_from_state() -> void:
 	_refresh_resolution_row()   # sıfırlama çözünürlük anahtarlarını SİLER: liste yeniden tespit edilir
 	_refresh_scale_options()
 	_vsync_toggle.set_pressed_no_signal(DisplaySettingsLib.get_vsync())
+	_ticker_toggle.set_pressed_no_signal(bool(Settings.get_value(KEY_TICKER)))
 	_master_slider.set_value_no_signal(AudioManager.get_master_volume() * 100.0)
 	_music_slider.set_value_no_signal(AudioManager.get_music_volume() * 100.0)
 	_sfx_slider.set_value_no_signal(AudioManager.get_sfx_volume() * 100.0)
@@ -251,13 +257,10 @@ func _refresh_resolution_row() -> void:
 		_res_option.add_item(label, i)
 	var idx: int = _res_list.find(DisplaySettingsLib.effective_resolution())
 	_res_option.select(idx if idx >= 0 else _res_list.find(DisplaySettingsLib.default_resolution()))
-
-	var editable: bool = DisplaySettingsLib.is_resolution_editable()
-	_res_option.disabled = not editable
-	_res_note.visible = not editable
-	var borderless: bool = DisplaySettingsLib.get_window_mode() == DisplaySettingsLib.MODE_BORDERLESS
-	_label_keys[_res_note] = "SET_RESOLUTION_BORDERLESS" if borderless else "SET_RESOLUTION_LOCKED"
-	_res_note.text = tr(_label_keys[_res_note])
+	_res_option.disabled = not DisplaySettingsLib.is_resolution_editable()
+	var mode: String = DisplaySettingsLib.get_window_mode()
+	_borderless_note.visible = mode == DisplaySettingsLib.MODE_BORDERLESS
+	_fullscreen_note.visible = mode == DisplaySettingsLib.MODE_FULLSCREEN
 
 
 ## Yasadışı adımlar DEVRE DIŞI kalır ve nedenlerini hover'da söyler. Seçim, motorun
@@ -284,13 +287,11 @@ func _update_pct_labels() -> void:
 		(_pct_labels[slider] as Label).text = Fmt.percent(int(round(slider.value)), 0)
 
 
-## UiTokens.tr_upper Türkçe'nin i→İ kuralını bilir, ham to_upper() bilmez ("Dil" → "DIL" olurdu).
+## Fmt.upper Türkçe'nin i→İ kuralını bilir, ham to_upper() bilmez ("Veri" → "VERI" olurdu).
 func _retranslate() -> void:
-	_title.text = tr("SET_TITLE")
-	_close_btn.text = UiTokens.tr_upper(tr("SET_CLOSE"))
+	_title.text = Fmt.upper(tr("SET_TITLE"))
 	for path in HEADER_KEYS:
-		(get_node(path) as Label).text = UiTokens.tr_upper(tr(HEADER_KEYS[path]))
-	_lang_label.text = tr("SETTINGS_LANGUAGE")
+		(get_node(path) as Label).text = Fmt.upper(tr(HEADER_KEYS[path]))
 	for i in LANG_KEYS.size():
 		_lang_option.set_item_text(i, tr(LANG_KEYS[i]))
 	for i in DisplaySettingsLib.MODE_KEYS.size():
@@ -312,26 +313,24 @@ func _retranslate() -> void:
 # Satır kurucuları — YERLEŞİM + theme_type_variation, başka hiçbir stil yok.
 # =============================================================================
 
+## A row: its label on the left, its control in the right column.
 func _add_row(parent: VBoxContainer, label_key: String, control: Control) -> void:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", ROW_SEP)
+	row.custom_minimum_size.y = ROW_H
+	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
 	parent.add_child(row)
-	var label := Label.new()
-	label.theme_type_variation = &"BodySerif"
+	var label := UiFactory.make_label("", &"BodyLabel")
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(label)
 	_label_keys[label] = label_key
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(spacer)
+	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(control)
 
 
-## Kaydırıcı 0..100, `setter` doğrusal 0..1 alır.
+## Kaydırıcı 0..100, `setter` doğrusal 0..1 alır; yüzdesi sabit sütunda.
 func _add_volume_row(label_key: String, setter: Callable) -> HSlider:
 	var s := HSlider.new()
-	s.theme_type_variation = &"VolumeSlider"
-	s.custom_minimum_size = Vector2(SLIDER_W, 24)
 	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	s.max_value = 100.0
@@ -339,15 +338,13 @@ func _add_volume_row(label_key: String, setter: Callable) -> HSlider:
 	s.value_changed.connect(func(v: float) -> void:
 		setter.call(v / 100.0)
 		_update_pct_labels())
-	var pct := Label.new()
-	pct.theme_type_variation = &"RowMeta"
-	pct.custom_minimum_size = Vector2(PCT_W, 0)
-	pct.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var pct := UiFactory.make_label("", &"NoteMuted")
+	pct.custom_minimum_size.x = PCT_W
 	pct.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_pct_labels[s] = pct
 	var holder := HBoxContainer.new()
-	holder.add_theme_constant_override("separation", ROW_SEP)
-	holder.custom_minimum_size = Vector2(CONTROL_W, 0)
+	holder.add_theme_constant_override("separation", UiTokens.SPACE_XXL)
+	holder.custom_minimum_size.x = CONTROL_W
 	holder.add_child(s)
 	holder.add_child(pct)
 	_add_row(_audio_body, label_key, holder)
@@ -357,32 +354,28 @@ func _add_volume_row(label_key: String, setter: Callable) -> HSlider:
 ## `count` boş öğe: metinleri _retranslate doldurur.
 func _dropdown(count: int) -> OptionButton:
 	var o := OptionButton.new()
-	o.theme_type_variation = &"SettingsDropdown"
-	o.get_popup().theme_type_variation = &"SettingsPopup"
-	o.custom_minimum_size = Vector2(CONTROL_W, 0)
-	o.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	o.custom_minimum_size.x = CONTROL_W
 	o.clip_text = true   # uzun EN metni satırı genişletip paneli şişirmesin
 	for i in count:
 		o.add_item("", i)
 	return o
 
 
-func _switch() -> CheckButton:
-	var c := CheckButton.new()
-	c.theme_type_variation = &"SettingsSwitch"
-	c.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	return c
-
-
-func _note_label(key: String) -> Label:
-	var l := Label.new()
-	l.theme_type_variation = &"CaptionMuted"
+## The note under a row: the info glyph and its line. Returned to be shown or hidden.
+func _note(parent: VBoxContainer, key: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	row.add_child(UiFactory.make_glyph("res://assets/icons/util/info.svg", UiTokens.D_ICON_PART, UiTokens.D_INK_4))
+	var line := UiFactory.make_label("", &"Caption")
 	# autowrap + EXPAND_FILL birlikte: yalnız autowrap'li etiket min genişliği olarak
 	# metnin tamamını ister ve kartı taşırır.
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_label_keys[l] = key
-	return l
+	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(line)
+	_label_keys[line] = key
+	var note := SprintUiShared.pad(row, Vector4i(0, 0, 0, UiTokens.SPACE_M))
+	parent.add_child(note)
+	return note
 
 
 func _unhandled_input(event: InputEvent) -> void:

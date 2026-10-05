@@ -9,14 +9,14 @@ extends PanelContainer
 # Dışarıdan preload ile erişilir: global class cache'e bağımlılık yok (headless tuzağı).
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
+const GATE_STRIP := preload("res://scripts/ui/components/gate_strip.gd")
 ## Glifin sayfa içeriğinden ayırdığı sağ şerit.
 const CLOSE_GUTTER := UiTokens.SPACE_3XL + UiTokens.SPACE_L
 const WHEEL := [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_LEFT,
 	MOUSE_BUTTON_WHEEL_RIGHT]
 
 var page: Control
-var _strip: PanelContainer
-var _strip_from: Label
+var _strip: GATE_STRIP
 var _close_slot: MarginContainer
 var _close_top := 0
 
@@ -51,7 +51,7 @@ func _init(body: Control, on_close: Callable, guarded := true) -> void:
 	if title != "":
 		col.add_child(_head(title, opts.get("kpi"), on_close))
 	if guarded:
-		_strip = _read_only_strip(0 if owns_close else CLOSE_GUTTER)
+		_strip = GATE_STRIP.new(tr("WIN_READ_ONLY"), INBOX.show.bind("active"), 0 if owns_close else CLOSE_GUTTER)
 		col.add_child(_strip)
 		EventBus.event_triggered.connect(_sync_gate.unbind(1))
 		EventBus.event_resolved.connect(_sync_gate.unbind(2))
@@ -93,51 +93,11 @@ func _head(title: String, kpi: Control, on_close: Callable) -> PanelContainer:
 	return head
 
 
-## The read-only strip, in the dark language on any window: the decision's sender and subject, and
-## the way back to it. `right` keeps it clear of a cream window's close glyph.
-func _read_only_strip(right: int) -> PanelContainer:
-	var strip := PanelContainer.new()
-	strip.theme = load(UiTokens.MENAJER_THEME)
-	strip.theme_type_variation = &"WinReadOnly"
-	strip.custom_minimum_size.y = UiTokens.D_H_BTN_SM + UiTokens.SPACE_M
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_right", right)
-	strip.add_child(margin)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	margin.add_child(row)
-	var dot := Panel.new()
-	dot.theme_type_variation = &"GateDot"
-	dot.custom_minimum_size = Vector2.ONE * UiTokens.SPACE_M
-	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(dot)
-	var say := UiFactory.make_label(tr("WIN_READ_ONLY"), &"DataStrong")
-	say.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(say)
-	_strip_from = UiFactory.make_label("", &"MetaMuted")
-	_strip_from.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_strip_from.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_strip_from.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	row.add_child(_strip_from)
-	var back := Button.new()
-	back.text = tr("WIN_BACK_TO_DECISION")
-	back.icon = load("res://assets/icons/util/reply.svg")
-	back.theme_type_variation = &"SecondaryButtonSmall"
-	back.focus_mode = Control.FOCUS_NONE
-	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	back.pressed.connect(INBOX.show.bind("active"))
-	row.add_child(back)
-	return strip
-
-
 func _sync_gate() -> void:
-	_strip.visible = EventGate.active_id() != ""
+	_strip.sync()
 	if _close_slot != null:
 		_close_slot.add_theme_constant_override("margin_top",
 			_close_top + (int(_strip.custom_minimum_size.y) if _strip.visible else 0))
-	if _strip.visible:
-		var it: Dictionary = INBOX.active_item()
-		_strip_from.text = "%s · %s" % [it.sender.name, it.subject]
 
 
 ## While the strip shows, a press on the page reaches only its scrollbars, the wheel and a control marked

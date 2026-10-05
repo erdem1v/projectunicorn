@@ -472,13 +472,15 @@ static func D_mono(letter: String, px: int) -> PanelContainer:
 
 
 ## Kesikli çerçeve (StyleBoxFlat kesik çizemez): kimsenin alamadığı iş kutusu, değerini devralan saat, açık söz.
-static func D_dashed(box: Control, color := UiTokens.D_LINE_2) -> void:
+## `cut` sağ üst köşeyi belge gibi keser (yeni kayıt yuvası).
+static func D_dashed(box: Control, color := UiTokens.D_LINE_2, cut := 0) -> void:
 	box.draw.connect(func() -> void:
 		var dash: float = UiTokens.SPACE_XS
 		var gap: float = UiTokens.SPACE_XXS
 		var r := Rect2(Vector2.ONE * 0.5, box.size - Vector2.ONE)
-		for edge in [[r.position, Vector2(r.end.x, r.position.y)], [Vector2(r.position.x, r.end.y), r.end],
-				[r.position, Vector2(r.position.x, r.end.y)], [Vector2(r.end.x, r.position.y), r.end]]:
+		var bevel := [Vector2(r.end.x - cut, r.position.y), Vector2(r.end.x, r.position.y + cut)]
+		for edge in [[r.position, bevel[0]], bevel, [Vector2(r.position.x, r.end.y), r.end],
+				[r.position, Vector2(r.position.x, r.end.y)], [bevel[1], r.end]]:
 			var from: Vector2 = edge[0]
 			var to: Vector2 = edge[1]
 			var length: float = from.distance_to(to)

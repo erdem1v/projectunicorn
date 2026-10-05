@@ -341,7 +341,6 @@ func _on_cancel_search() -> void:
 		"confirm_text": tr("HR_SEARCH_CANCEL_OK"),
 		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_cancel_search,
-		"theme": true,
 	})
 
 

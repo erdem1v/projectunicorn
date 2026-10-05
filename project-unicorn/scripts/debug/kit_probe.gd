@@ -244,7 +244,7 @@ static func _samples() -> VBoxContainer:
 	var when := _tr("SAVE_TOAST_WHEN").format({"week": 14, "time": "11:00"})
 	for t in [
 		["SAVE_TOAST_SAVED", when, "util/check", UiTokens.D_pos()],
-		["SAVE_TOAST_NOT_SAVED", _tr("SAVE_ERR_MODAL_OPEN"), "util/save", UiTokens.D_warn()],
+		["SAVE_TOAST_NOT_SAVED", _tr("SAVE_ERR_DECISION_WAITING"), "util/save", UiTokens.D_warn()],
 		["SAVE_TOAST_LOADED", _tr("SAVE_TOAST_LOADED_WHEN").format({"slot": _tr("SAVE_QUICK_SLOT"), "week": 14,
 			"time": "11:00"}), "util/load", UiTokens.D_pos()],
 		["OFFICE_TOAST_MOVE_STARTED", _tr("OFFICE_NAME_ISHANI"), "util/move", UiTokens.D_INK_3],

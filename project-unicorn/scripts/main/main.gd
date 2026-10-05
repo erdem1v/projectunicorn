@@ -747,7 +747,8 @@ func _run_inbox_shot(state: String) -> void:
 ## --inbox-shot=flow: the gate played through the shell's own input, a frame and a GATEFLOW line a
 ## step: the clock runs; a decision arrives (the clock is held, the inbox opens on it); Ekip opens
 ## and reads only (a click on its first button does nothing); a speed key is refused; Esc closes
-## Ekip, Esc again brings the inbox back; the decision is taken with a click; the clock runs again.
+## Ekip, Esc again brings the inbox back; Esc closes it and, the decision brought back once, the
+## next Esc opens the system menu; the decision is taken with a click; the clock runs again.
 func _gate_flow() -> void:
 	var mounted := [0]   # panels that reached the panel layer at all (main frees them under a gate)
 	_shell.get_node("PanelLayer").child_entered_tree.connect(func(_n: Node) -> void: mounted[0] += 1)
@@ -794,6 +795,10 @@ func _gate_flow() -> void:
 	await step.call(5, "esc_closes_hr")
 	await key.call(KEY_ESCAPE)
 	await step.call(6, "esc_reopens_inbox")
+	await key.call(KEY_ESCAPE)
+	await key.call(KEY_ESCAPE)
+	await step.call(7, "esc_again_opens_menu")
+	_system_menu.close()
 	# A file opened from the office over Ekip: its own way back to the decision sits on Ekip's page.
 	EventBus.tab_changed.emit("hr")
 	var layer: Node = get_tree().get_first_node_in_group(&"window_layer")
@@ -801,12 +806,12 @@ func _gate_flow() -> void:
 	await get_tree().process_frame
 	await click.call(layer.find_children("*", "Button", true, false).filter(
 		func(b: Button) -> bool: return b.text == tr("WIN_BACK_TO_DECISION") and b.is_visible_in_tree())[-1])
-	await step.call(7, "dossier_back_to_decision")
+	await step.call(8, "dossier_back_to_decision")
 	var label: String = (EventGate.active_card().choices[0] as EventChoice).label
 	var take: Array = get_tree().root.find_children("*", "Button", true, false).filter(
 		func(b: Button) -> bool: return b.text == label and b.is_visible_in_tree())
 	await click.call(take[0])
-	await step.call(8, "answered")
+	await step.call(9, "answered")
 
 
 ## A card through the real gate at `hour`: the clock stops there as at the week's start.
@@ -1452,43 +1457,122 @@ func _seed_rnd(week: int, note := true) -> void:
 		GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 
 
-# --modal-shot=<confirm|confirm3|confirm_dark|settings|system|saveload>. Each goes through the REAL
-# mount path (EventBus signal → handler here), so fixture and live behaviour cannot drift.
+# --modal-shot=<kind>: the four dialogs on the theme seed in the mockups' states, each through its REAL mount path
+# (EventBus signal → handler here, a button's own press), so fixture and live behaviour cannot drift.
+#   settings · settings_end (scrolled to its end) · settings_<mode|res|scale|autosave|summary|lang> (that list open,
+#   the pointer on an item; res on a windowed 1600×900 setting, scale on a 1280×720 window, which closes the
+#   unreadable steps) · settings_reset (the reset asked over it) · system · system_gate (a decision waiting) ·
+#   save_empty · save · save_overwrite (overwriting the quicksave asked) · load_empty · load · load_gate (a decision
+#   waiting) · load_delete (deleting Kayıt 1 asked) · confirm (the seed pitch) · confirm3 (quitting over the menu
+#   with weeks unsaved) · confirm3_gate (the same, a decision waiting) · f5_gate (F5 refused while a decision waits).
+# The save and load kinds write or delete four real saves (_shot_saves): run them with a private APPDATA.
 func _run_modal_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_theme_surface()
+	# What the settings kinds show is staged in memory only, never written to settings.json: the language row shows
+	# the locale on screen (`--lang` forces the locale alone), the resolution and scale lists open on a window.
+	if kind.begins_with("settings"):
+		Settings._data[Localization.KEY_LANGUAGE] = TranslationServer.get_locale()
+	if kind in ["settings_res", "settings_scale"]:
+		Settings._data[DisplaySettings.KEY_WINDOW_MODE] = DisplaySettings.MODE_WINDOWED
+		var res := Vector2i(1280, 720) if kind == "settings_scale" else Vector2i(1600, 900)
+		Settings._data[DisplaySettings.KEY_RES_W] = res.x
+		Settings._data[DisplaySettings.KEY_RES_H] = res.y
+		if kind == "settings_scale":
+			get_window().size = res
+	if kind.begins_with("save") or kind.begins_with("load"):
+		_shot_saves(not kind.ends_with("_empty"))
 	await _mount_shot_shell()
 	_wire_modal_signals()
+	if kind.ends_with("_gate"):
+		_shot_card("funding.frank_cheque", {}, 8)
+		EventBus.tab_changed.emit("")
 	match kind:
+		"settings", "settings_end", "settings_mode", "settings_res", "settings_scale", "settings_autosave", \
+				"settings_summary", "settings_lang", "settings_reset":
+			EventBus.settings_requested.emit()
+			await _shot_settings(kind.trim_prefix("settings").trim_prefix("_"))
+		"system", "system_gate":
+			EventBus.system_menu_requested.emit()
+		"save_empty", "save", "save_overwrite":
+			EventBus.save_load_requested.emit("save")
+			if kind == "save_overwrite":
+				_press_button_labelled(_save_load_modal, tr("SAVE_OVERWRITE_OK"))
+		"load_empty", "load", "load_gate", "load_delete":
+			EventBus.save_load_requested.emit("load")
+			if kind == "load_delete":
+				await get_tree().process_frame
+				_save_load_modal.find_children("*", "Button", true, false).filter(
+					func(b: Button) -> bool: return b.text == tr("SAVE_DELETE"))[2].pressed.emit()
 		"confirm":
 			EventBus.confirm_requested.emit({
-				"title": "Geliştirmeyi iptal et?",   # LOC-DATA debug seed / id
-				"body": "Nova v3 build'i durur ve harcanan efor geri gelmez.",   # LOC-DATA debug seed / id
-				"confirm_text": "İPTAL ET",   # LOC-DATA debug seed / id
-				"cancel_text": "VAZGEÇ",   # LOC-DATA debug seed / id
+				"title": tr("SEED_PITCH_CONFIRM_TITLE"),
+				"body": tr("SEED_PITCH_CONFIRM_BODY").format(
+					{"investor": InvestorRegistry.get_investor(SHOT_FUND).display_name}),
+				"confirm_text": tr("SEED_PITCH_CONFIRM_OK"),
+				"cancel_text": tr("UI_DISMISS"),
 			})
-		"confirm3", "confirm_dark":
-			# Üç butonlu hâl: alt_text varlığı üçüncü butonu açar. confirm_dark aynı onayı koyu dilde açar.
-			EventBus.confirm_requested.emit({
-				"title": tr("SYS_QUIT_TITLE"),
-				"body": tr("SYS_QUIT_BODY"),
-				"confirm_text": tr("SYS_QUIT_SAVE"),
-				"alt_text": tr("SYS_QUIT_DISCARD"),
-				"cancel_text": tr("SYS_CANCEL"),
-				"theme": kind == "confirm_dark",
-			})
-		"settings":
-			EventBus.settings_requested.emit()
-		"system":
+		"confirm3", "confirm3_gate":
 			EventBus.system_menu_requested.emit()
-		"saveload":
-			# Önce gerçek bir kayıt yaz ki YÜKLE listesinde gerçek bir slot satırı olsun.
-			SaveManager.quicksave()
-			EventBus.save_load_requested.emit("load")
+			SaveManager._dirty = true
+			(_system_menu.get_node("%QuitBtn") as Button).pressed.emit()
+		"f5_gate":
+			EventBus.quicksave_requested.emit()
 		_:
 			_shot_fail("[ThemeShot] unknown --modal-shot kind: %s" % kind)
 			return
-	await _finish_shot("modal_shot_%s" % kind)
+	get_tree().call_group(&"top_bar", &"_refresh")
+	await _finish_shot("modal_shot_%s" % kind, 0.6)
+
+
+## Ayarlar in the mockups' states: `state` "" as it opens, "end" scrolled to its end, "reset" its reset asked,
+## else that row's list open with the pointer on the item the mockup frames.
+func _shot_settings(state: String) -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if state in ["", "mode", "res", "scale"]:
+		if state != "":
+			_shot_open_list(["mode", "res", "scale"].find(state), {"mode": 2, "res": 4, "scale": 1}[state])
+		return
+	var scroll: ScrollContainer = _settings_modal.find_child("Scroll", true, false)
+	scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+	await get_tree().process_frame
+	match state:
+		"reset":
+			_press_button_labelled(_settings_modal, tr("SET_RESET_DEFAULTS"))
+		"autosave", "summary", "lang":
+			var hover: int = {"autosave": 2, "summary": 1, "lang": 0 if Fmt.is_english() else 1}[state]
+			_shot_open_list(3 + ["autosave", "summary", "lang"].find(state), hover)
+
+
+## Ayarlar's `index`th dropdown open as a click opens it (the field pressed) with the pointer on its `hover` item;
+## the open list holds the focus.
+func _shot_open_list(index: int, hover: int) -> void:
+	var option: OptionButton = _settings_modal.find_children("*", "OptionButton", true, false)[index]
+	get_viewport().gui_release_focus()
+	option.set_pressed_no_signal(true)
+	option.show_popup()
+	option.get_popup().set_focused_item(hover)
+
+
+## The mockups' four saves, newest first, written for a full list and deleted for an empty one: this run's quicksave
+## and autosave, another run's Kayıt 1 (week 23, the Series A, $24.000 cash and $6,4K MRR) and a Kayıt 2 too old to
+## open. Their meta is set on the written files.
+func _shot_saves(full: bool) -> void:
+	var now: int = int(Time.get_unix_time_from_system())
+	for row in [["quick", 0, {}], ["auto_1", 660, {}],
+			["manual_1", 224880, {"day": 23, "phase": 3, "cash": 24000, "mrr": 6400}], ["manual_2", 1532220, {}]]:
+		if not full:
+			SaveManager.delete_slot(row[0])
+			continue
+		SaveManager.save_to_slot(row[0])
+		var path: String = SaveManager.SAVE_DIR + row[0] + ".json"
+		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+		data.meta.merge(row[2], true)
+		data.meta.unix_time = now - int(row[1])
+		if row[0] == "manual_2":
+			data.schema_version = SaveManager.MIN_LOADABLE_VERSION - 1
+		FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(data, "\t", false))
 
 
 # --onboard-shot=<0|1|2|3>. Step 0 is the language gate, mounted directly: it is unreachable
@@ -3003,9 +3087,6 @@ func _on_confirm_requested(config: Dictionary) -> void:
 	EventBus.speed_change_requested.emit(0)
 	_confirm_modal = (HR_ACTION_MODAL if String(config.get("modal", "")) == "hr_action"
 		else CONFIRM_MODAL).instantiate()
-	# A screen in the dark language opens its confirmation in it ("theme": true).
-	if config.get("theme", false):
-		_confirm_modal.theme = load(UiTokens.MENAJER_THEME)
 	var on_confirm: Callable = config.get("on_confirm", Callable())
 	if on_confirm.is_valid():
 		_confirm_modal.confirmed.connect(on_confirm)
@@ -3024,8 +3105,8 @@ func _on_confirm_dismissed() -> void:
 	_pre_confirm_speed = -1
 
 
-# game_shell emits system_menu_requested only when ModalLayer AND PanelLayer are empty and no
-# decision waits: ESC over a waiting decision opens the inbox on it instead.
+# game_shell emits system_menu_requested only when ModalLayer AND PanelLayer are empty; with a
+# decision waiting, the first such ESC brings the inbox back on it instead (once per decision).
 func _on_system_menu_requested() -> void:
 	if _system_menu != null:
 		return
@@ -3096,7 +3177,7 @@ func _load_slot(slot_id: String) -> bool:
 	# The same rule as saving: a decision in progress (event card, VC meeting, term table, sales
 	# sitting, negotiation) is not carried over. F9 bypasses the menu gate and the ModalLayer
 	# guard, so it reaches here during any sitting.
-	if SaveManager.cannot_save_reason_key() == "SAVE_ERR_MODAL_OPEN":
+	if SaveManager.cannot_save_reason_key() in ["SAVE_ERR_DECISION_WAITING", "SAVE_ERR_MODAL_OPEN"]:
 		return false
 	var payload: Dictionary = SaveManager.read_slot(slot_id)
 	if not bool(payload.get("ok", false)):

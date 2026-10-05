@@ -72,8 +72,9 @@ func cannot_save_reason_key() -> String:
 	# queued event is data and is serialised; a presented-but-unanswered choice is not.
 	if not GameState.run_active:
 		return "SAVE_ERR_NO_RUN"
-	if EventGate.active_id() != "" \
-			or VCPitchSystem.is_active() or TermSheetTableSystem.is_active() \
+	if EventGate.active_id() != "":
+		return "SAVE_ERR_DECISION_WAITING"
+	if VCPitchSystem.is_active() or TermSheetTableSystem.is_active() \
 			or SalesMeetingSystem.is_active() or NegotiationSystem.is_active():
 		return "SAVE_ERR_MODAL_OPEN"
 	return ""
@@ -197,7 +198,6 @@ func build_meta() -> Dictionary:
 		"company_name": GameState.company_name,
 		"day": GameState.day,
 		"phase": GameState.phase,
-		"phase_name": GameState.phase_display_name(GameState.phase),
 		"cash": GameState.cash,
 		"mrr": GameState.mrr,
 		"unix_time": int(Time.get_unix_time_from_system()),
@@ -431,7 +431,7 @@ func _slot_row(slot_id: String) -> Dictionary:
 		"unix_time": unix_time,
 		"meta": {
 			"day": int(meta.get("day", 0)),
-			"phase_name": String(meta.get("phase_name", "")),
+			"phase": int(meta.get("phase", 1)),
 			"cash": int(meta.get("cash", 0)),
 			"mrr": int(meta.get("mrr", 0)),
 		},

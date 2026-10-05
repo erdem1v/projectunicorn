@@ -193,8 +193,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `--palette=cb` (renk körü paleti, yalnız o koşu). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner;
   EN `_en`, renk körü `_cb` alır. Gelen kutusu: `--inbox-shot=<durum>` (durumlar HARITA'da); `flow` karar kapısını
   kabuğun kendi girdisiyle oynar (karar gelir, saat tutulur, Ekip yalnız okunur, hız tuşu reddedilir, Esc Olaylar'a
-  döner, Ekip'in üstündeki dosyanın şeridi karara döner, karar verilir, saat döner) ve kare başına `GATEFLOW` satırı
-  basar.
+  döner, aynı karar için sonraki Esc sistem menüsünü açar, Ekip'in üstündeki dosyanın şeridi karara döner, karar
+  verilir, saat döner) ve kare başına `GATEFLOW` satırı basar.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
   founders|nav|crown|cast` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare; `founders` portre ile
   bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi;
@@ -232,8 +232,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   değişince headless koşulardan önce `--headless --import` çalıştırılır.
 - Editör `.tres` ve `project.godot`'u yeniden kaydeder (uid ekler, yorum siler); fark sahip onaylamadan commit'lenmez.
 - Dosya yazan bayraklar: `--event-lint=baseline` (taban dosyası), `--event-vocab` (`_vocabulary.md`), `--display-check`
-  (ayarlar), `--modal-shot=saveload` ve `--theme-audit=modal:saveload` (hızlı kayıt), `--ending-shot` (zaman damgalı
-  gazete PNG'si).
+  (ayarlar), `--modal-shot=save*|load*` ve `--theme-audit=modal:save*|load*` (kayıt yazar ya da siler), `--ending-shot`
+  (zaman damgalı gazete PNG'si).
 - Bazı smoke vakaları kaynak metni ve özel adları okur; ad değiştirmeden önce vakayı bul. `event_bus.gd`'deki
   `# --- X ---` başlıkları manifest bölümleri, `# LOC-DATA` işaretleri `loc_residue` istisnalarıdır; silinmez.
 

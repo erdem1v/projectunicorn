@@ -25,8 +25,9 @@ extends Panel
 # döngüyü doldurur. ANAHTAR ADLARI SABİT SÖZLEŞMEDİR.
 #
 #  - OPEN / CLOSED: the toggle cell collapses the ticker to that cell alone on the bottom-left; the
-#    choice is the player's (Settings "ticker_open") and GameShell lays the office and the rail out
-#    around it (open_changed). Lines that arrive while it is closed wait in the loop.
+#    choice is the player's (Settings "ticker_open"), made here or in Ayarlar (set_open, group
+#    news_ticker), and GameShell lays the office and the rail out around it (open_changed). Lines that
+#    arrive while it is closed wait in the loop.
 
 const SCROLL_SPEED := 50.0  # pixels per second
 const SEPARATOR := "   ·   "
@@ -58,9 +59,8 @@ var _live_lines: Array[Dictionary] = []
 
 
 func _ready() -> void:
-	_toggle.pressed.connect(func() -> void:
-		_set_open(not open)
-		Settings.set_value("ticker_open", open))
+	add_to_group(&"news_ticker")
+	_toggle.pressed.connect(func() -> void: set_open(not open))
 	_fade.draw.connect(_draw_fade)
 	_set_open(bool(Settings.get_value("ticker_open")))
 	EventBus.headline_added.connect(_on_live_line)
@@ -84,6 +84,12 @@ func _exit_tree() -> void:
 		EventBus.news_stream_changed.disconnect(_rebuild)
 	if EventBus.language_changed.is_connected(_on_language_changed):
 		EventBus.language_changed.disconnect(_on_language_changed)
+
+
+## The player's choice, from the toggle cell or Ayarlar: laid out and kept.
+func set_open(value: bool) -> void:
+	_set_open(value)
+	Settings.set_value("ticker_open", value)
 
 
 func _set_open(value: bool) -> void:

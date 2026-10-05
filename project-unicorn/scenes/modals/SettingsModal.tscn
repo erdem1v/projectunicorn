@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/modals/settings_modal.gd" id="1_modal"]
+[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_theme"]
 
 [node name="SettingsModal" type="Control"]
 process_mode = 3
@@ -11,6 +12,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
+theme = ExtResource("2_theme")
 script = ExtResource("1_modal")
 
 [node name="Dimmer" type="ColorRect" parent="."]
@@ -21,7 +23,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="CenterPanel" type="Panel" parent="."]
+[node name="CenterPanel" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -34,179 +36,164 @@ offset_right = 320.0
 offset_bottom = 410.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_type_variation = &"ModalPanel"
+theme_type_variation = &"DialogPanel"
 
-[node name="Body" type="VBoxContainer" parent="CenterPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 28.0
-offset_top = 24.0
-offset_right = -28.0
-offset_bottom = -24.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
+[node name="Col" type="VBoxContainer" parent="CenterPanel"]
+layout_mode = 2
+theme_override_constants/separation = 0
 
-[node name="TitleLabel" type="Label" parent="CenterPanel/Body"]
+[node name="Head" type="PanelContainer" parent="CenterPanel/Col"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_type_variation = &"DialogHead"
+
+[node name="TitleLabel" type="Label" parent="CenterPanel/Col/Head"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"TitleSerif"
-text = "SET_TITLE"
+theme_type_variation = &"TitleH1"
 
-[node name="Scroll" type="ScrollContainer" parent="CenterPanel/Body"]
+[node name="Scroll" type="ScrollContainer" parent="CenterPanel/Col"]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Sections" type="VBoxContainer" parent="CenterPanel/Body/Scroll"]
+[node name="Pad" type="MarginContainer" parent="CenterPanel/Col/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 18
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
 
-[node name="DisplaySection" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="DisplayHeader" type="Label" parent="CenterPanel/Body/Scroll/Sections/DisplaySection"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "SET_SEC_DISPLAY"
-
-[node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/DisplaySection"]
-layout_mode = 2
-theme_type_variation = &"CardPanel"
-
-[node name="DisplayBody" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections/DisplaySection/Card"]
-unique_name_in_owner = true
+[node name="Sections" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="AudioSection" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections"]
+[node name="DisplaySection" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 0
 
-[node name="AudioHeader" type="Label" parent="CenterPanel/Body/Scroll/Sections/AudioSection"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "SET_SEC_AUDIO"
-
-[node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/AudioSection"]
-layout_mode = 2
-theme_type_variation = &"CardPanel"
-
-[node name="AudioBody" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections/AudioSection/Card"]
-unique_name_in_owner = true
+[node name="DisplayHead" type="HBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/DisplaySection"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="GameSection" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="GameHeader" type="Label" parent="CenterPanel/Body/Scroll/Sections/GameSection"]
+[node name="DisplayHeader" type="Label" parent="CenterPanel/Col/Scroll/Pad/Sections/DisplaySection/DisplayHead"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "SET_SEC_GAME"
+theme_type_variation = &"KeyLabel"
 
-[node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/GameSection"]
-layout_mode = 2
-theme_type_variation = &"CardPanel"
-
-[node name="GameBody" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections/GameSection/Card"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="LanguageSection" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LanguageHeader" type="Label" parent="CenterPanel/Body/Scroll/Sections/LanguageSection"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "SETTINGS_LANGUAGE"
-
-[node name="LangCard" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/LanguageSection"]
-layout_mode = 2
-theme_type_variation = &"CardPanel"
-
-[node name="LangCardBody" type="HBoxContainer" parent="CenterPanel/Body/Scroll/Sections/LanguageSection/LangCard"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="LangLabel" type="Label" parent="CenterPanel/Body/Scroll/Sections/LanguageSection/LangCard/LangCardBody"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 4
-theme_type_variation = &"BodySerif"
-text = "SETTINGS_LANGUAGE"
-
-[node name="LangSpacer" type="Control" parent="CenterPanel/Body/Scroll/Sections/LanguageSection/LangCard/LangCardBody"]
+[node name="Rule" type="HSeparator" parent="CenterPanel/Col/Scroll/Pad/Sections/DisplaySection/DisplayHead"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="LanguageOption" type="OptionButton" parent="CenterPanel/Body/Scroll/Sections/LanguageSection/LangCard/LangCardBody"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(230, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_type_variation = &"SettingsDropdown"
-
-[node name="AccessibilitySection" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="AccessibilityHeader" type="Label" parent="CenterPanel/Body/Scroll/Sections/AccessibilitySection"]
+[node name="DisplayBody" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/DisplaySection"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "SET_SEC_ACCESSIBILITY"
+theme_override_constants/separation = 0
 
-[node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/AccessibilitySection"]
+[node name="AudioSection" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections"]
 layout_mode = 2
-theme_type_variation = &"CardPanel"
+theme_override_constants/separation = 0
 
-[node name="AccessibilityBody" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections/AccessibilitySection/Card"]
+[node name="AudioHead" type="HBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/AudioSection"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AudioHeader" type="Label" parent="CenterPanel/Col/Scroll/Pad/Sections/AudioSection/AudioHead"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_type_variation = &"KeyLabel"
 
-[node name="DataSection" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="DataHeader" type="Label" parent="CenterPanel/Body/Scroll/Sections/DataSection"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "SET_SEC_DATA"
-
-[node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/DataSection"]
-layout_mode = 2
-theme_type_variation = &"CardPanel"
-
-[node name="DataBody" type="VBoxContainer" parent="CenterPanel/Body/Scroll/Sections/DataSection/Card"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Footer" type="HBoxContainer" parent="CenterPanel/Body"]
-layout_mode = 2
-
-[node name="FooterSpacer" type="Control" parent="CenterPanel/Body/Footer"]
+[node name="Rule" type="HSeparator" parent="CenterPanel/Col/Scroll/Pad/Sections/AudioSection/AudioHead"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CloseBtn" type="Button" parent="CenterPanel/Body/Footer"]
+[node name="AudioBody" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/AudioSection"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(140, 38)
 layout_mode = 2
-size_flags_horizontal = 8
-theme_type_variation = &"CommitButton"
+theme_override_constants/separation = 0
+
+[node name="GameSection" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="GameHead" type="HBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/GameSection"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="GameHeader" type="Label" parent="CenterPanel/Col/Scroll/Pad/Sections/GameSection/GameHead"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"KeyLabel"
+
+[node name="Rule" type="HSeparator" parent="CenterPanel/Col/Scroll/Pad/Sections/GameSection/GameHead"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GameBody" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/GameSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="AccessibilitySection" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="AccessibilityHead" type="HBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/AccessibilitySection"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AccessibilityHeader" type="Label" parent="CenterPanel/Col/Scroll/Pad/Sections/AccessibilitySection/AccessibilityHead"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"KeyLabel"
+
+[node name="Rule" type="HSeparator" parent="CenterPanel/Col/Scroll/Pad/Sections/AccessibilitySection/AccessibilityHead"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AccessibilityBody" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/AccessibilitySection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="DataSection" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="DataHead" type="HBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/DataSection"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DataHeader" type="Label" parent="CenterPanel/Col/Scroll/Pad/Sections/DataSection/DataHead"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"KeyLabel"
+
+[node name="Rule" type="HSeparator" parent="CenterPanel/Col/Scroll/Pad/Sections/DataSection/DataHead"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DataBody" type="HBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/DataSection"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Foot" type="PanelContainer" parent="CenterPanel/Col"]
+layout_mode = 2
+theme_type_variation = &"PanelFoot"
+
+[node name="Footer" type="HBoxContainer" parent="CenterPanel/Col/Foot"]
+layout_mode = 2
+alignment = 2
+
+[node name="CloseBtn" type="Button" parent="CenterPanel/Col/Foot/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
 text = "SET_CLOSE"

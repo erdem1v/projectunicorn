@@ -11,6 +11,8 @@ const HELD_TOAST_MS := 3000
 
 var _vc_debug_idx: int = 0   # Shift+F5: cycles the VC roster
 var _held_toast_ms := -HELD_TOAST_MS
+## Esc has brought the waiting decision back once; the next Esc with no window opens the system menu.
+var _esc_reopened := false
 # Ürün sekmesinin fikstür röleleri. Fikstür betiği yalnız debug_product_apply'da yüklenir; oyun ona
 # dokunmaz.
 const PRODUCT_FIXTURES := "res://scripts/debug/product_fixtures.gd"
@@ -22,6 +24,7 @@ var _product_source: Object = null
 
 func _ready() -> void:
 	EventBus.sprint_closed.connect(_on_sprint_closed)
+	EventBus.event_resolved.connect(func(_id: String, _choice: int) -> void: _esc_reopened = false)
 	_ticker.open_changed.connect(_lay_ticker)
 	_lay_ticker(_ticker.open)
 
@@ -91,11 +94,12 @@ func _input(event: InputEvent) -> void:
 		if _layer_busy("PanelLayer"):
 			return
 		get_viewport().set_input_as_handled()
-		# Önce ayrıntı, sonra birincil pencere (× ile aynı kanal). Ofiste her şey kapalıyken karar
-		# bekliyorsa gelen kutusu kararla yeniden açılır, yoksa sistem menüsü.
+		# Önce ayrıntı, sonra birincil pencere (× ile aynı kanal). Ofiste her şey kapalıyken bekleyen
+		# karar gelen kutusuyla karar başına bir kez geri gelir; sonraki Esc sistem menüsünü açar.
 		if _windows.close_top():
 			return
-		if EventGate.active_id() != "":
+		if EventGate.active_id() != "" and not _esc_reopened:
+			_esc_reopened = true
 			INBOX.show("active")
 		else:
 			EventBus.system_menu_requested.emit()

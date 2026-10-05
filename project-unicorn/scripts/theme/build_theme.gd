@@ -119,7 +119,6 @@ func _initialize() -> void:
 	_panel(th, &"SideRailPanel", "Panel", _sides_box(T.BG_PANEL, T.RADIUS_NONE, Vector4i(0, 0, T.BORDER_HAIRLINE, 0), T.CARD_BORDER))
 	_panel(th, &"NewsPanel", "Panel", _sides_box(T.BG_NEWS, T.RADIUS_NONE, Vector4i(0, T.BORDER_HAIRLINE, 0, 0), T.SEPARATOR))
 	_panel(th, &"ViewportPanel", "Panel", _box(T.BG_BODY, T.RADIUS_NONE))
-	_panel(th, &"ModalPanel", "Panel", _box(T.CARD_BG, T.RADIUS_L, T.CARD_BORDER))
 	_panel(th, &"PhaseDotActive", "Panel", _box(T.ACCENT_CHROME, T.RADIUS_XS))
 	_panel(th, &"PhaseDotDim", "Panel", _box(T.DOT_IDLE_CHROME, T.RADIUS_XS))
 	_panel(th, &"TabBadge", "Panel", _box(T.ACCENT, T.RADIUS_XL))
@@ -247,71 +246,6 @@ func _initialize() -> void:
 	th.set_font_size("normal_font_size", &"NewsRich", T.SIZE_SMALL)
 	th.set_color("default_color", &"NewsRich", T.CREAM_DIM)
 
-	# ---- HSlider variation. VolumeSlider: a visible neutral groove with an amber fill
-	# up to the grabber. ----
-	var grabber: Texture2D = load("res://assets/icons/slider_grabber.svg")
-	th.set_type_variation(&"VolumeSlider", &"HSlider")
-	_states(th, &"VolumeSlider", {
-		"slider": _box(T.CARD_BORDER, T.RADIUS_S, Color.TRANSPARENT, Vector2i(-1, 2)),
-		"grabber_area": _box(T.ACCENT, T.RADIUS_S, Color.TRANSPARENT, Vector2i(-1, 2)),
-		"grabber_area_highlight": _box(T.ACCENT_HOVER, T.RADIUS_S, Color.TRANSPARENT, Vector2i(-1, 2)),
-	})
-	th.set_constant("center_grabber", &"VolumeSlider", 1)
-	for key in ["grabber", "grabber_highlight", "grabber_disabled"]:
-		th.set_icon(key, &"VolumeSlider", grabber)
-
-	# ---- SettingsSwitch: CheckButton stripped to its on/off pill graphics ----
-	var sw_on: Texture2D = load("res://assets/icons/switch_on.svg")
-	var sw_off: Texture2D = load("res://assets/icons/switch_off.svg")
-	th.set_type_variation(&"SettingsSwitch", &"CheckButton")
-	for sb in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
-		th.set_stylebox(sb, &"SettingsSwitch", StyleBoxEmpty.new())
-	th.set_icon("checked", &"SettingsSwitch", sw_on)
-	th.set_icon("checked_disabled", &"SettingsSwitch", sw_on)
-	th.set_icon("unchecked", &"SettingsSwitch", sw_off)
-	th.set_icon("unchecked_disabled", &"SettingsSwitch", sw_off)
-	th.set_color("font_color", &"SettingsSwitch", T.INK)
-
-	# ---- SettingsDropdown / SettingsPopup: the settings OptionButton and the PopupMenu
-	# it opens (a separate Window with its own theme type — the button's stylebox never
-	# reaches it). A dropdown reads as a FIELD you pick a value in, so it takes the
-	# LineEdit grammar (input fill + hairline, amber on focus), not the Button's. ----
-	th.set_type_variation(&"SettingsDropdown", &"OptionButton")
-	_states(th, &"SettingsDropdown", {
-		"normal": _box(T.SURFACE_INPUT, T.RADIUS_M, T.CARD_BORDER, T.PAD_INPUT),
-		"hover": _box(T.SURFACE_INPUT, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_INPUT),
-		"pressed": _box(T.SURFACE_PRESSED, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_INPUT),
-		"focus": _box(Color.TRANSPARENT, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_INPUT),
-		"disabled": _box(T.SURFACE_DISABLED, T.RADIUS_M, T.BORDER_DISABLED, T.PAD_INPUT),
-	})
-	th.set_font_size("font_size", &"SettingsDropdown", T.SIZE_BODY)
-	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color",
-			"font_hover_pressed_color"]:
-		th.set_color(key, &"SettingsDropdown", T.INK)
-	th.set_color("font_disabled_color", &"SettingsDropdown", T.INK_DIM)
-	# modulate_arrow tints the engine's arrow icon with the font colour; without it the
-	# arrow keeps the engine's default tint and does not follow the field's ink.
-	th.set_constant("modulate_arrow", &"SettingsDropdown", 1)
-	th.set_constant("arrow_margin", &"SettingsDropdown", T.SPACE_M)
-	th.set_constant("h_separation", &"SettingsDropdown", T.SPACE_XS)
-
-	# Assign in code: `option.get_popup().theme_type_variation = &"SettingsPopup"`.
-	th.set_type_variation(&"SettingsPopup", &"PopupMenu")
-	th.set_stylebox("panel", &"SettingsPopup", _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, Vector2i(T.SPACE_XS, T.SPACE_XS)))
-	th.set_stylebox("hover", &"SettingsPopup", _box(T.SURFACE_HOVER, T.RADIUS_S))
-	th.set_stylebox("separator", &"SettingsPopup", _rule(T.DIVIDER_LIGHT, false))
-	th.set_font_size("font_size", &"SettingsPopup", T.SIZE_BODY)
-	th.set_color("font_color", &"SettingsPopup", T.INK)
-	th.set_color("font_hover_color", &"SettingsPopup", T.INK)
-	th.set_color("font_accelerator_color", &"SettingsPopup", T.INK_DIM)
-	th.set_color("font_separator_color", &"SettingsPopup", T.INK_DIM)
-	# A row the readability floor has locked out must READ as unavailable.
-	th.set_color("font_disabled_color", &"SettingsPopup", T.INK_DIM)
-	th.set_constant("v_separation", &"SettingsPopup", T.SPACE_XS)
-	th.set_constant("h_separation", &"SettingsPopup", T.SPACE_M)
-	th.set_constant("item_start_padding", &"SettingsPopup", T.SPACE_S)
-	th.set_constant("item_end_padding", &"SettingsPopup", T.SPACE_S)
-
 	# ---- Base Button IS the ghost button (1px edge, mono, no fill). Hover moves the
 	# BORDER to amber and leaves the fill alone, so every un-varied Button obeys the
 	# hover law without a per-site decision. ----
@@ -375,7 +309,7 @@ func _initialize() -> void:
 	th.set_default_font_size(T.SIZE_BODY)
 	# Controls are mono and small: every button in the mockups is mono 10.5-11.5, which
 	# rounds to SIZE_DATA. Rail labels are a step below (SIZE_META).
-	for pinned in [&"Button", &"CommitButton", &"LineEdit", &"DialogueInput", &"SettingsSwitch"]:
+	for pinned in [&"Button", &"CommitButton", &"LineEdit", &"DialogueInput"]:
 		th.set_font_size("font_size", pinned, T.SIZE_DATA)
 	for rail in [&"TabButton", &"TabButtonActive"]:
 		th.set_font_size("font_size", rail, T.SIZE_META)
@@ -476,7 +410,7 @@ const DARK_OF := {
 		"PAPER_INK_MAST": "PAPER_INK_MAST", "PAPER_INK_META": "D_PAPER_INK_META",
 	},
 }
-## The slider grabber and the switch pair, drawn for the dark ground under the master files' names.
+## The dark theme's drawn controls: the slider grabber, the switch pair, the dropdown's arrow and its list's check.
 const DARK_ICONS := "res://assets/icons/dark/"
 const INK_OF := {"normal": "font_color", "hover": "font_hover_color", "pressed": "font_pressed_color",
 	"disabled": "font_disabled_color"}
@@ -520,8 +454,6 @@ func _menajer(master: Theme) -> Theme:
 		var disc: StyleBoxFlat = th.get_stylebox("panel", dot).duplicate()
 		disc.set_corner_radius_all(T.RADIUS_PILL)
 		th.set_stylebox("panel", dot, disc)
-	_recolor(th, &"VolumeSlider", "grabber_area", T.D_INK_3)
-	_recolor(th, &"VolumeSlider", "grabber_area_highlight", T.D_INK_2)
 	_recolor(th, &"PortraitCellSelected", "panel", null, T.D_INK_1)
 	for state in ["normal", "hover", "pressed"]:
 		_recolor(th, &"SpeedButtonActive", state, null, T.D_ACCENT)
@@ -613,6 +545,7 @@ func _menajer(master: Theme) -> Theme:
 		"pressed": [T.D_SURFACE_2, T.D_INK_3, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF],
 	}, sans_reg, T.D_FS_15, _fit(sans_reg, T.D_FS_15, T.D_H_INPUT, T.SPACE_L, T.SPACE_M))
 	th.set_stylebox("focus", &"OptionButton", ring)
+	th.set_icon("arrow", &"OptionButton", load(DARK_ICONS + "select_arrow.svg"))
 	th.set_constant("modulate_arrow", &"OptionButton", 1)
 	th.set_constant("arrow_margin", &"OptionButton", T.SPACE_M)
 	th.set_constant("h_separation", &"OptionButton", T.SPACE_M)
@@ -668,6 +601,8 @@ func _menajer(master: Theme) -> Theme:
 	for key in ["grabber", "grabber_highlight", "grabber_disabled"]:
 		th.set_icon(key, &"HSlider", load(DARK_ICONS + "slider_grabber.svg"))
 	th.set_stylebox("focus", &"HSlider", ring)
+	# The grabber sits centred on its value, past the track's ends at 0 and 100 %.
+	th.set_constant("center_grabber", &"HSlider", 1)
 
 	# A menu row is 32 tall; hover is a border, never a fill.
 	th.set_stylebox("panel", &"PopupMenu", _shadow(_flat(T.D_SURFACE_4, T.D_RADIUS_3,
@@ -686,6 +621,11 @@ func _menajer(master: Theme) -> Theme:
 	th.set_constant("v_separation", &"PopupMenu", int(T.D_H_MENU_ITEM - sans_reg.get_height(T.D_FS_15)))
 	for key in ["h_separation", "item_start_padding", "item_end_padding"]:
 		th.set_constant(key, &"PopupMenu", T.SPACE_M)
+	# A dropdown's list checks the value in force; the other items keep the check's room.
+	for key in ["radio_checked", "radio_checked_disabled"]:
+		th.set_icon(key, &"PopupMenu", load(DARK_ICONS + "menu_check.svg"))
+	for key in ["radio_unchecked", "radio_unchecked_disabled"]:
+		th.set_icon(key, &"PopupMenu", load(DARK_ICONS + "menu_blank.svg"))
 
 	th.set_stylebox("panel", &"TooltipPanel", _shadow(_flat(T.D_SURFACE_0, T.D_RADIUS_2,
 		_fit(sans_reg, T.D_FS_13, T.D_H_TOOLTIP, T.SPACE_L, T.SPACE_L), T.D_LINE_2), T.D_SHADOW_TOOLTIP, T.D_SHADOW_TIP))
@@ -823,11 +763,14 @@ func _menajer(master: Theme) -> Theme:
 	# Content inside a box's 1 px border: a card the player picks from and a document read in full lay
 	# out their own inset, since their selected marker sits on the box's own left edge.
 	var hairline: Vector4 = Vector4.ONE * T.BORDER_HAIRLINE
-	# A panel's foot follows the panel's rounded corners from inside its border.
+	# A panel's foot and a dialog's head band follow the frame's rounded corners from inside its border.
 	var foot := _flat(T.D_SURFACE_2, 0, Vector4(T.SPACE_3XL, T.SPACE_XL, T.SPACE_3XL, T.SPACE_XL), T.D_LINE_1,
 		Vector4i(0, T.BORDER_HAIRLINE, 0, 0))
 	foot.corner_radius_bottom_left = T.D_RADIUS_4 - T.BORDER_HAIRLINE
 	foot.corner_radius_bottom_right = T.D_RADIUS_4 - T.BORDER_HAIRLINE
+	var dialog_head := _flat(T.D_SURFACE_4, 0, band_pad, T.D_LINE_1, bottom)
+	dialog_head.corner_radius_top_left = T.D_RADIUS_4 - T.BORDER_HAIRLINE
+	dialog_head.corner_radius_top_right = T.D_RADIUS_4 - T.BORDER_HAIRLINE
 	# A document's head band follows its corners the same way, the cut one included.
 	var doc_head := _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_XXL, T.SPACE_XL, T.SPACE_L, T.SPACE_XL), T.D_LINE_1,
 		bottom), T.D_CUT - T.BORDER_HAIRLINE)
@@ -883,6 +826,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"DocWindow", _shadow(_doc(_flat(T.D_SURFACE_3, 0, hairline, T.D_LINE_2), T.D_CUT), T.D_HALO, T.D_SHADOW_WINDOW)],
 		[&"DocHead", doc_head],
 		[&"DialogPanel", _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_4, hairline, T.D_LINE_2), T.D_HALO, T.D_SHADOW_WINDOW)],
+		[&"DialogHead", dialog_head],
 		[&"PanelFoot", foot],
 		[&"PickCard", _flat(T.D_SURFACE_3, T.D_RADIUS_3, hairline, T.D_LINE_2)],
 		[&"PickCardHover", _flat(T.D_SURFACE_3, T.D_RADIUS_3, hairline, T.D_LINE_HOVER)],
@@ -1254,8 +1198,6 @@ func _copy_dark(master: Theme, th: Theme, faces: Dictionary) -> PackedStringArra
 							v = _tone(v, "OFF" if "disabled" in item else "FONT", dark_of, errors, at)
 						Theme.DATA_TYPE_FONT:
 							v = faces.get(v.resource_path.get_file().get_basename())
-						Theme.DATA_TYPE_ICON:
-							v = load(DARK_ICONS + v.resource_path.get_file())
 						Theme.DATA_TYPE_STYLEBOX:
 							if not boxes.has(v):
 								boxes[v] = _dark_box(v, dark_of, errors, at)

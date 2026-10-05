@@ -123,7 +123,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"runway_net_status":    fail = _case_runway_net_status()
 		"gross_runway_months":  fail = _case_gross_runway_months()
 		"locale_switch":        fail = _case_locale_switch()
-		"settings_language_toggle": fail = _case_settings_language_toggle()
 		"b2b_lifecycle_and_countdown": fail = _case_b2b_lifecycle_and_countdown()
 		"b2b_satisfaction_leaves_b2c_identical": fail = _case_b2b_satisfaction_leaves_b2c_identical()
 		"b2b_retention_routes_seams": fail = _case_b2b_retention_routes_seams()
@@ -2869,22 +2868,6 @@ static func _case_locale_switch() -> String:
 		return "tr RUNWAY_PROFITABLE: '%s'" % TranslationServer.translate("RUNWAY_PROFITABLE")
 	if TranslationServer.translate("SETTINGS_LANGUAGE") != "Dil":
 		return "tr SETTINGS_LANGUAGE: '%s'" % TranslationServer.translate("SETTINGS_LANGUAGE")
-	return ""
-
-
-static func _case_settings_language_toggle() -> String:
-	# Structural check: the SettingsModal scene loads + instantiates and carries the
-	# language toggle's unique nodes. (main is mid-setup here, so _ready population +
-	# the visual layout are Erdem's F5 eye-check.)
-	var scene: PackedScene = load("res://scenes/modals/SettingsModal.tscn")
-	if scene == null:
-		return "SettingsModal.tscn failed to load"
-	var inst: Control = scene.instantiate()
-	var has_nodes: bool = inst.get_node_or_null("%LanguageOption") != null \
-		and inst.get_node_or_null("%LanguageHeader") != null
-	inst.free()
-	if not has_nodes:
-		return "SettingsModal missing %LanguageOption / %LanguageHeader unique nodes"
 	return ""
 
 

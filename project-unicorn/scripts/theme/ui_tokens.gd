@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 30
+const THEME_STAMP := 31
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -63,10 +63,8 @@ const CARD_ATTENTION_BG := Color(NEGATIVE, 0.06)   # rgba(155,59,40,.06) · atte
 const CARD_FLOATING_BG := Color(CARD_BG, 0.98)     # card floating over the body (BuildHUD)
 
 # --- SURFACE · control states ---
-# Hover is EDGE emphasis, never a filled rect: SURFACE_HOVER equals the resting
-# card fill and a visible hover reaches for BORDER_HOVER.
+# Hover is EDGE emphasis, never a filled rect: a visible hover reaches for BORDER_HOVER.
 const SURFACE_INPUT := Color(1.0, 0.980, 0.941, 1)       # #FFFAF0 · input fill
-const SURFACE_HOVER := CARD_BG                            # #FBF7EE · hover keeps the resting fill
 const SURFACE_PRESSED := Color(0.937, 0.910, 0.855, 1)   # #EFE8DA · pressed / active key
 const SURFACE_DISABLED := Color(0.937, 0.910, 0.855, 1)  # #EFE8DA · disabled button fill
 const SURFACE_SUNKEN := Color(0.890, 0.855, 0.788, 1)    # #E3DAC9 · meter track

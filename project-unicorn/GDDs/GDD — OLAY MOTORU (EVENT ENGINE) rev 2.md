@@ -843,7 +843,7 @@ Aynı seviyede: **en eski kabul edilen önce.** Eşitlikte `event_id` alfabetik 
   çubuğu geçer. Panel katmanı kapanır ve yeni panel açılmaz; ofis taşıma ve şehir haritası kapalıdır, kişiye tıklama
   dosyayı yalnız okunur açar. `main` pitch, onay, satış ve sprint isteklerini ve term sheet masasını (kartın kendi
   seçeneğinin açtığı hariç) reddeder; çalan telefon açılmaz. Kayıt kapalıdır; sistem menüsü gerekçeyi yazar. Esc üstteki pencereyi kapatır;
-  pencere kalmamışsa Olaylar'ı kartın üstünde yeniden açar.
+  pencere kalmamışsa Olaylar'ı kartın üstünde karar başına bir kez yeniden açar, sonraki Esc sistem menüsünü açar.
 - **Kartın istediği sekme kapı kapanınca açılır** (`goto_tab`). Dönüm noktası kâğıdı da kapıyı bekler: kâğıt gece
   atlamasını durdurur, o atlamanın kabul ettiği kart altında açılırsa kâğıt karara yer açar ve kapı kapanınca geri
   gelir. Kuyruktaki kartların hepsi yeniden doğrulamada düşerse (§4.4) saat ve bekleyenler pompadan sonra döner.
