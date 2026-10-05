@@ -211,6 +211,7 @@ func _run_debug_harness() -> bool:
 		"--probe-shot=": _run_probe_shot,
 		"--office-shot=": _run_office_shot,
 		"--travel-shot=": _run_travel_shot,
+		"--invite-shot=": _run_invite_shot,
 		"--day-shot=": _run_day_shot,
 		"--office-crowd-probe=": _run_office_crowd_probe,
 	}
@@ -1070,9 +1071,10 @@ func _shot_toasts(view: Control) -> void:
 	GameState.run_active = true
 	await _toast_frame("not_saved")
 	var invite: MeetingInvite = view.invite
+	var caller: Dictionary = CounterpartSystem.lead(SHOT_FUND)
 	for kind in ["sales", "vc"]:
-		invite.ring({"line": "MEETING_INVITE_SALES", "args": {}, "open": false, "postpone": true, "note": "",
-			"note_args": {}, "toast": "MEETING_POSTPONED_" + kind.to_upper()})
+		invite.ring({"caller": caller, "vc_id": SHOT_FUND, "line": "MEETING_INVITE_SALES", "args": {}, "open": false,
+			"postpone": true, "note": "", "note_args": {}, "toast": "MEETING_POSTPONED_" + kind.to_upper()})
 		invite._postpone()
 		await _toast_frame("postponed_" + kind)
 		invite.stop()
@@ -1211,6 +1213,51 @@ func _run_travel_shot(spec: String) -> void:
 		frame += 1
 		await get_tree().create_timer(TRAVEL_SHOT_EVERY).timeout
 		_save_shot("%s_%02d" % [stem, frame])
+	get_tree().quit()
+
+
+# --invite-shot=<ring|card|vc|postpone|postpone_vc>: the call that opens an outside meeting, at İş hanı
+# with people at their desks, as the player meets it: ring = a prospect's call at 14:00 ringing over the
+# founder's head, its card shut; card = that card open; vc = a fund's call at 10:00, its card open from the
+# first ring and the clock stopped; postpone = the prospect's call put off, still ringing, the toast saying
+# so; postpone_vc = the fund's call put off, the ring gone and the toast saying the meeting moved on. The
+# notice stack holds three rows (a paper, an account at risk, someone who may leave), which an open card
+# stands clear of or hides. invite_shot_<kind>.png.
+func _run_invite_shot(kind: String) -> void:
+	var vc: bool = kind.ends_with("vc")
+	_begin_shot()
+	_travel_on = true
+	_seed_sales_world()
+	GameState.office_id = "ishani"
+	GameState.set_current_hour(10 if vc else 14)
+	TimeManager.sync_to_current_hour()
+	var lead: Prospect = SalesFaucetSystem.spawn(2, "faucet")
+	OfficeCrowdProbe.seed_staff(TRAVEL_SHOT_STAFF)
+	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
+	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
+	_shot_paper("customer.expansion", {"customer": "co_nordica"}, 2)
+	CharacterRegistry.set_morale("char_crowd_0", 22)
+	SalesSystem.reflect_mrr()
+	if vc:
+		GameState.set_phase(3)
+		GameState.pending_meeting = {"vc_id": SHOT_FUND, "day": GameState.day}
+	await _mount_shot_shell()
+	EventBus.speed_change_requested.emit(1)
+	await get_tree().create_timer(1.0).timeout
+	if not vc:
+		# A shot wires no signals: the tab's request is made directly.
+		_on_pitch_requested(lead.id)
+	await get_tree().create_timer(TRAVEL_SHOT_RING).timeout
+	var invite: MeetingInvite = _meeting_invite()
+	if not invite.is_ringing():
+		_shot_fail("[InviteShot] the phone never rang")
+		return
+	if kind != "ring":
+		invite._open_card()
+	if kind.begins_with("postpone"):
+		invite._postpone()
+	await get_tree().create_timer(0.5).timeout
+	_save_shot("invite_shot_" + kind)
 	get_tree().quit()
 
 
@@ -2220,8 +2267,11 @@ func _seed_sales_world() -> void:
 ## --vc-shot=<hunt|hunt_closed|hunt_meeting|hunt_seed|table|table_final|table_walk|table_other|seed_table|k10>:
 ## the Series A surfaces — the Hunt page (two offers and one queued; every fund closed; a meeting booked beside
 ## one offer; Traction with the seed door open), the term-sheet table in its states and the expired-offer
-## decision card. Pushes go through the real table system with the SkillCheck debug force.
-func _run_vc_shot(kind: String) -> void:
+## decision card. Pushes go through the real table system with the SkillCheck debug force. A table's kind
+## with ":shell" mounts it in the shell's ModalLayer, as the game does, over the shell (vc_shot_<kind>_shell).
+func _run_vc_shot(spec: String) -> void:
+	var kind: String = spec.get_slice(":", 0)
+	var shelled: bool = spec.get_slice(":", 1) == "shell"
 	_begin_shot()
 	_seed_run_reproducible()
 	GameState.company_name = "PromptPilot"
@@ -2300,10 +2350,13 @@ func _run_vc_shot(kind: String) -> void:
 			_shot_fail("[VcShot] funding.sheet_decision did not bind (no decision-due sheet)")
 			return
 		_shot_pane("funding.sheet_decision", ctx)
+	elif shelled:
+		await _mount_shot_shell()
+		_modal_layer().add_child(TERM_TABLE_SCENE.instantiate())
 	else:
 		_on_shot_layer(TERM_TABLE_SCENE.instantiate())
 	await get_tree().process_frame
-	await _finish_shot("vc_shot_%s" % kind, 0.5)
+	await _finish_shot("vc_shot_%s%s" % [kind, "_shell" if shelled else ""], 0.5)
 
 
 ## First open answer of the live sales table; `last` walks on to the weakest (last) open one.
@@ -2740,8 +2793,11 @@ func _process(_delta: float) -> void:
 func _ring_fund(vc_id: String) -> void:
 	EventBus.tab_changed.emit("")
 	var once: bool = VCPitchSystem.call_postponable()
-	_ring_call("vc", vc_id, {"line": "MEETING_INVITE_VC", "open": true, "postpone": once,
-		"args": {"fund": InvestorRegistry.get_investor(vc_id).display_name, "person": CounterpartSystem.lead(vc_id).name},
+	var fund: String = InvestorRegistry.get_investor(vc_id).display_name
+	var lead: Dictionary = CounterpartSystem.lead(vc_id)
+	_ring_call("vc", vc_id, fund, {"line": "MEETING_INVITE_VC", "open": true, "postpone": once,
+		"caller": lead, "vc_id": vc_id,
+		"args": {"fund": fund, "person": lead.name},
 		"note": "MEETING_POSTPONE_ONCE" if once else "MEETING_POSTPONED_ONCE",
 		"note_args": {"n": PitchConstants.MEETING_RESCHEDULE_PENALTY}, "toast": "MEETING_POSTPONED_VC"})
 	_pre_dialogue_speed = TimeManager.current_speed
@@ -2759,24 +2815,29 @@ func _on_pitch_requested(prospect_id: String) -> void:
 		return
 	EventBus.tab_changed.emit("")
 	var p: Prospect = ProspectRegistry.get_prospect(prospect_id)
-	_ring_call("sales", prospect_id, {"line": "MEETING_INVITE_SALES", "open": false, "postpone": true,
-		"args": {"company": p.company_name, "person": CounterpartSystem.prospect_people(p)[0].name},
+	var buyer: Dictionary = CounterpartSystem.prospect_people(p)[0]
+	_ring_call("sales", prospect_id, p.company_name, {"line": "MEETING_INVITE_SALES", "open": false, "postpone": true,
+		"caller": buyer, "vc_id": "",
+		"args": {"company": p.company_name, "person": buyer.name},
 		"note": "", "note_args": {}, "toast": "MEETING_POSTPONED_SALES"})
 
 
-## Rings the office phone for a call of `kind` ("vc" | "sales") about `id` (MeetingInvite.ring).
-func _ring_call(kind: String, id: String, spec: Dictionary) -> void:
+## Rings the office phone for a call of `kind` ("vc" | "sales") about `id` at `place` (MeetingInvite.ring);
+## the top bar's slot names it next.
+func _ring_call(kind: String, id: String, place: String, spec: Dictionary) -> void:
 	var invite := _meeting_invite()
 	_call = {"kind": kind, "id": id}
 	if not invite.accepted.is_connected(_on_call_accepted):
 		invite.accepted.connect(_on_call_accepted)
 		invite.postponed.connect(_on_call_postponed)
 	invite.ring(spec)
+	get_tree().call_group(&"top_bar", &"show_meeting", "call", place)
 
 
 func _end_call() -> void:
 	_meeting_invite().stop()
 	_call = {}
+	get_tree().call_group(&"top_bar", &"show_meeting", "")
 
 
 func _on_call_accepted() -> void:
@@ -2784,6 +2845,7 @@ func _on_call_accepted() -> void:
 		return
 	var call := _call
 	_call = {}
+	get_tree().call_group(&"top_bar", &"show_meeting", "")
 	if call.kind == "vc":
 		VCPitchSystem.begin_meeting(call.id)
 	else:
@@ -2820,12 +2882,14 @@ func _leave_office(side: Array, place: String) -> void:
 	TimeManager.freeze_clock(TRAVEL_FREEZE)
 	EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
 	get_tree().call_group(&"window_layer", &"set_veiled", true)
+	get_tree().call_group(&"top_bar", &"show_meeting", "trip", place)
 	var travel: Node = _office_travel()
 	if travel != null:
 		await travel.travel_out(side.map(func(q: Dictionary) -> Dictionary: return q.look), _trip_label)
 	EventBus.speed_change_requested.emit(0)
 	TimeManager.thaw_clock(TRAVEL_FREEZE)
 	_in_transit = false
+	get_tree().call_group(&"top_bar", &"show_meeting", "sitting", place)
 
 
 ## The sitting closed and its hours ran, in transit (a card they pumped waits): the trip home
@@ -2842,8 +2906,10 @@ func _return_to_office() -> void:
 	if travel != null:
 		TimeManager.freeze_clock(TRAVEL_FREEZE)
 		EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
+		get_tree().call_group(&"top_bar", &"show_meeting", "home")
 		await travel.travel_home(_trip_label)
 		TimeManager.thaw_clock(TRAVEL_FREEZE)
+	get_tree().call_group(&"top_bar", &"show_meeting", "")
 	_in_transit = false
 	get_tree().call_group(&"window_layer", &"set_veiled", false)
 	if _card_waiting:

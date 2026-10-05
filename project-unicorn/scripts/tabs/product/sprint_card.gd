@@ -176,15 +176,7 @@ func _tags() -> Array:
 	if _card.spills:
 		out.append(UiFactory.D_tag(tr("PRODUCT_CARD_SPILLS"), &"warn"))
 	if _card.urgent:
-		var urgent := PanelContainer.new()
-		urgent.theme_type_variation = UiTokens.D_variation(&"TagWarnBox")
-		urgent.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		urgent.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var row := SprintUiShared.box(UiTokens.SPACE_XS)
-		row.add_child(UiFactory.make_glyph(SprintUiShared.WARN, UiTokens.D_ICON_TAG, UiTokens.D_warn()))
-		row.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_URGENT")), UiTokens.D_variation(&"TagWarnInk")))
-		urgent.add_child(row)
-		out.append(urgent)
+		out.append(UiFactory.D_glyph_tag(SprintUiShared.WARN, tr("PRODUCT_URGENT"), &"warn"))
 	for row in [[state == State.DEVREDEN, "PRODUCT_CARRIED"], [state == State.BETA_BEKLIYOR, "PRODUCT_BETA_WAITING"],
 			[_card.effect.any(func(p: Dictionary) -> bool: return p.k == "promise"), "PRODUCT_PROMISED"]]:
 		if row[0]:

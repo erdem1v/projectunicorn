@@ -1,52 +1,27 @@
 extends PanelContainer
 
-# An option on the meeting panel's deck: its number on a cream disc, the label with the marker and
-# the sub-line under it, and at the right the die with its risk word when a roll decides it. An
-# option that is not open shows a lock and its reason. It reports a click and the pointer; the
-# panel owns the pick and plays it back through dim(), choose(), spin() and land().
+# An option on the meeting panel's deck: its number in a key, the label (the founder's sentence, or a
+# command at the price table) with the marker and the line under it, and at the right the die with its
+# risk word when a roll decides it. An option that is not open shows a lock and its reason; one past
+# the insult line takes the danger tone with its reason always under it. It reports a click and the
+# pointer; the panel owns the pick and plays it back through dim(), choose(), spin() and land().
 
 signal clicked
 signal hovered(on: bool)
 
-const NUMBER_PX := 24
-const LOCK_PX := 12
-## The die, drawn: its square and edge, and the pips on a 3x3 grid this many pixels apart.
-const DIE_PX := 20.0
-const DIE_LINE := 1.5
-const PIP_R := 1.5
-const PIP_STEP := 4.5
-## The face at rest, after a pass and after a fail.
-const REST_FACE := 5
-const PASS_FACE := 6
-const FAIL_FACE := 1
-## A spin turns the die once round and shows this many faces on the way.
-const SPIN_FACES := 9
-## The pips of faces 1-6, in grid steps from the die's centre.
-const FACES := [
-	[Vector2(0, 0)],
-	[Vector2(-1, -1), Vector2(1, 1)],
-	[Vector2(-1, -1), Vector2(0, 0), Vector2(1, 1)],
-	[Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)],
-	[Vector2(-1, -1), Vector2(1, -1), Vector2(0, 0), Vector2(-1, 1), Vector2(1, 1)],
-	[Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 0), Vector2(1, 0), Vector2(-1, 1), Vector2(1, 1)],
-]
-const DIM_ALPHA := 0.4
-## The edge an option takes under the pointer and once chosen; an alert option keeps its own.
-const HOT := {&"ChoiceCard": &"ChoiceCardHover"}
+const DIE := "res://assets/icons/util/dice.svg"
+## The die turns this many times round while it spins.
+const SPIN_TURNS := 2.0
 
 var id: String
 ## The die's odds and factors for the panel's tooltip; {} when there is no risk word to explain.
 var tip: Dictionary
 var has_die: bool
-var _variation: StringName
-var _die: Control
+var _look: StringName
+var _key: Label
+var _label: Label
+var _die: TextureRect
 var _risk: Label
-var _face := REST_FACE
-var _angle := 0.0
-var _ink: Color
-## A landed roll washes the card in the verdict's pale tint under an edge of its colour.
-var _flash := Color.TRANSPARENT
-var _wash: Color
 
 
 ## `number` is the option's key (1-5), 0 for one that is not open.
@@ -56,60 +31,49 @@ func _init(option: Dictionary, number: int) -> void:
 	var dice: Dictionary = option.get("dice", {})
 	has_die = not dice.is_empty() or option.get("dice_only", false)
 	tip = dice
-	_variation = &"ChoiceCardAlert" if option.get("tone", "normal") == "alert" else &"ChoiceCard"
-	theme_type_variation = _variation
-	tooltip_text = option.get("hint", "")
+	var alert: bool = option.get("tone", "normal") == "alert"
+	_look = UiTokens.D_variation(&"MeetOptionAlert") if alert else (&"MeetOption" if enabled else &"MeetOptionLocked")
+	theme_type_variation = _look
+	custom_minimum_size.y = UiTokens.D_H_OPTION
 
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	var row := SprintUiShared.box(UiTokens.SPACE_L)
 	add_child(row)
-	var disc := PanelContainer.new()
-	disc.theme_type_variation = &"NumberChip"
-	disc.custom_minimum_size = Vector2(NUMBER_PX, NUMBER_PX)
-	disc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var mark := CenterContainer.new()
-	disc.add_child(mark)
-	row.add_child(disc)
+	_key = UiFactory.D_key_cap(number)
+	row.add_child(_key)
 
-	var col := VBoxContainer.new()
+	var col := SprintUiShared.column(UiTokens.SPACE_XS)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
 	row.add_child(col)
-	var label := UiFactory.make_label(option.label, &"ChoiceLabelStrong")
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(label)
+	_label = SprintUiShared.prose(option.label, &"OptionLabel" if option.get("command", false) else &"SubjectStrong")
+	if not enabled:
+		_label.add_theme_color_override("font_color", UiTokens.D_INK_OFF)
+	elif alert:
+		_label.add_theme_color_override("font_color", UiTokens.D_neg_ink())
+	col.add_child(_label)
 	var marker: String = option.get("marker", "")
 	if marker != "":
-		var pill := UiFactory.make_badge(marker, &"accent")
-		pill.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		col.add_child(pill)
-	var sub := UiFactory.make_label(option.get("sub", ""), &"RowMeta")
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	if option.get("sub_danger", false):
-		sub.add_theme_color_override("font_color", UiTokens.negative())
-	col.add_child(sub)
-	if enabled:
-		mark.add_child(UiFactory.make_label(str(number), &"RowMeta"))
-	else:
-		mark.add_child(HRUiShared.lock_glyph(LOCK_PX, UiTokens.INK_FAINT))
-		label.theme_type_variation = &"ChoiceLabelLocked"
-		sub.text = option.get("lock_reason", "")
-	sub.visible = sub.text != ""
+		col.add_child(UiFactory.D_tag(marker, &"outline"))
+	# Under the label: a locked option's reason, an alert's, or the option's own line.
+	var sub: String = option.get("lock_reason", "") if not enabled else option.get("hint" if alert else "sub", "")
+	if sub != "":
+		var line := SprintUiShared.prose(sub, &"Caption")
+		if alert or option.get("sub_danger", false):
+			line.add_theme_color_override("font_color", UiTokens.D_neg_ink())
+		col.add_child(line)
 
 	if has_die:
-		var side := HBoxContainer.new()
+		var side := SprintUiShared.box(UiTokens.SPACE_S)
 		side.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		side.add_theme_constant_override("separation", UiTokens.SPACE_S)
 		row.add_child(side)
-		_die = Control.new()
-		_die.custom_minimum_size = Vector2(DIE_PX, DIE_PX)
-		_die.draw.connect(_draw_die)
-		side.add_child(_die)
 		# The last question of a sales meeting rolls with odds the table does not show: a die, no word.
-		_ink = UiTokens.INK_MUTED if tip.is_empty() else UiTokens.risk_ink(tip.chance)
+		var ink: Color = UiTokens.D_INK_3 if tip.is_empty() else UiTokens.D_risk_ink(tip.chance)
+		_die = UiFactory.make_glyph(DIE, UiTokens.D_ICON_DIE, ink)
+		_die.pivot_offset = Vector2.ONE * UiTokens.D_ICON_DIE * 0.5
+		side.add_child(_die)
 		if not tip.is_empty():
-			_risk = UiFactory.make_label(tr(tip.risk_key), &"RowMeta", _ink)
+			_risk = UiFactory.make_label(tr(tip.risk_key), &"Caption", ink)
+			_risk.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			side.add_child(_risk)
 
 	HRUiShared.set_mouse_ignore(row)
@@ -123,62 +87,39 @@ func _gui_input(event: InputEvent) -> void:
 		clicked.emit()
 
 
-## Another option was picked: this one fades back and takes no more pointer.
+## Another option was picked: this one goes off and takes no more pointer.
 func dim() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	theme_type_variation = _variation
-	modulate.a = DIM_ALPHA
+	theme_type_variation = _look
+	for part: Label in [_key, _label]:
+		part.add_theme_color_override("font_color", UiTokens.D_INK_OFF)
 
 
-## This option was picked: it keeps the amber edge and its die turns amber until the roll lands.
+## This option was picked: it keeps the hover edge while its die rolls.
 func choose() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	theme_type_variation = HOT.get(_variation, _variation)
-	_paint(UiTokens.ACCENT_DEEP)
+	if _look == &"MeetOption":
+		theme_type_variation = &"MeetOptionHover"
 
 
 ## The die mid-spin, `t` from 0 to 1.
 func spin(t: float) -> void:
-	_angle = t * TAU
-	_face = 1 + int(t * SPIN_FACES) % 6
-	_die.queue_redraw()
+	_die.rotation = t * TAU * SPIN_TURNS
 
 
+## The roll landed: a pass reads in the gain colour, a fail stays neutral (it is not a danger).
 func land(passed: bool) -> void:
-	_angle = 0.0
-	_face = PASS_FACE if passed else FAIL_FACE
-	_paint(UiTokens.positive() if passed else UiTokens.negative())
-	_flash = _ink
-	_wash = UiTokens.positive_bg() if passed else UiTokens.negative_bg()
-	queue_redraw()
-
-
-func _paint(ink: Color) -> void:
-	_ink = ink
+	_die.rotation = 0.0
+	var ink: Color = UiTokens.D_pos() if passed else UiTokens.D_INK_3
+	_die.modulate = ink
 	if _risk != null:
 		_risk.add_theme_color_override("font_color", ink)
-	if has_die:
-		_die.queue_redraw()
 
 
 ## A frozen option (picked, or passed over) ignores the pointer that is still on it.
 func _hover(on: bool) -> void:
 	if mouse_filter == Control.MOUSE_FILTER_IGNORE:
 		return
-	theme_type_variation = HOT.get(_variation, _variation) if on else _variation
+	if _look == &"MeetOption":
+		theme_type_variation = &"MeetOptionHover" if on else _look
 	hovered.emit(on)
-
-
-func _draw() -> void:
-	if _flash.a > 0.0:
-		var box := Rect2(Vector2.ZERO, size)
-		draw_rect(box, _wash)
-		draw_rect(box.grow(-UiTokens.BORDER_FOCUS * 0.5), _flash, false, UiTokens.BORDER_FOCUS)
-
-
-func _draw_die() -> void:
-	var edge := DIE_PX - DIE_LINE
-	_die.draw_set_transform(_die.size * 0.5, _angle)
-	_die.draw_rect(Rect2(Vector2.ONE * -edge * 0.5, Vector2.ONE * edge), _ink, false, DIE_LINE, true)
-	for pip: Vector2 in FACES[_face - 1]:
-		_die.draw_circle(pip * PIP_STEP, PIP_R, _ink, true, -1.0, true)

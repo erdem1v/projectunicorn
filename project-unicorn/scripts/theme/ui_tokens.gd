@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 29
+const THEME_STAMP := 30
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -82,7 +82,6 @@ const INK := Color(0.169, 0.153, 0.133, 1)         # #2B2722 · primary text / v
 const INK_MUTED := Color(0.357, 0.329, 0.290, 1)   # #5B544A · secondary / prose
 const INK_DIM := Color(0.541, 0.506, 0.459, 1)     # #8A8175 · column headers, labels, idle
 const INK_FAINT := Color(0.663, 0.620, 0.557, 1)   # #A99E8E · stat captions, units, locked telegraph
-const ON_INK := BG_BODY                            # #F6F1E6 · text ON an INK fill (the founder's speech bubble)
 
 # --- CREAM · text on the dark frame and the dark cinematic register ---
 const CREAM := Color(0.910, 0.929, 0.949, 1)       # #E8EDF2 · values/names on dark
@@ -107,7 +106,6 @@ const POSITIVE_RULE := Color(POSITIVE, 0.45)             # chip border
 const NEGATIVE := Color(0.608, 0.231, 0.157, 1)          # #9B3B28
 const NEGATIVE_BG := Color(0.953, 0.851, 0.816, 1)       # #F3D9D0
 const NEGATIVE_RULE := Color(NEGATIVE, 0.45)             # chip border
-const POSITIVE_BRIGHT := Color(0.247, 0.839, 0.549, 1)   # #3FD68C · on the dark frame
 const NEGATIVE_BRIGHT := Color(1.0, 0.361, 0.286, 1)     # #FF5C49 · on the dark frame
 
 # --- STATE · colourblind-safe counterparts (Settings > Erişilebilirlik) ---
@@ -120,8 +118,6 @@ const POSITIVE_CB := Color(0.173, 0.435, 0.682, 1)        # #2C6FAE · blue
 const POSITIVE_BG_CB := Color(0.851, 0.898, 0.941, 1)     # #D9E5F0
 const NEGATIVE_CB := Color(0.702, 0.420, 0.0, 1)          # #B36B00 · orange
 const NEGATIVE_BG_CB := Color(0.945, 0.894, 0.820, 1)     # #F1E4D1
-const NEGATIVE_RULE_CB := Color(NEGATIVE_CB, 0.45)
-const POSITIVE_BRIGHT_CB := Color(0.337, 0.706, 0.914, 1) # #56B4E9 · on the dark frame
 const NEGATIVE_BRIGHT_CB := Color(0.902, 0.624, 0.0, 1)   # #E69F00 · on the dark frame
 
 # --- BADGE / CHIP ---
@@ -138,21 +134,6 @@ const CARD_ATTENTION_BORDER := Color(NEGATIVE, 0.45)   # rgba(155,59,40,.45) · 
 const BORDER_DISABLED := Color(0.851, 0.816, 0.749, 1)   # #D9D0BF · disabled control edge
 const DIVIDER_LIGHT := Color(0.890, 0.855, 0.788, 1)     # #E3DAC9 · in-card hairline
 const SEPARATOR := Color(0.106, 0.137, 0.169, 1)         # #1B232B · chrome hairline
-
-# --- MEETING · the meeting dock on the cream body ---
-# TUTUM is one needle on a cold-to-warm gradient. Its end stops are too pale to be text,
-# so the band word reads a darker twin of the same hue (≥4.5:1 on BG_BODY and on the
-# header's SURFACE_ROW_TINT); the middle bands read the body's own inks (attitude_ink).
-const ATTITUDE_COLD := Color(0.624, 0.702, 0.784, 1)       # #9FB3C8 · gradient cold stop
-const ATTITUDE_MID := Color(0.851, 0.804, 0.706, 1)        # #D9CDB4 · gradient middle stop
-const ATTITUDE_WARM := Color(0.878, 0.576, 0.353, 1)       # #E0935A · gradient warm stop
-const ATTITUDE_COLD_INK := Color(0.310, 0.416, 0.522, 1)   # #4F6A85 · "cold" word
-const ATTITUDE_WARM_INK := Color(0.690, 0.290, 0.149, 1)   # #B04A26 · "warm" word
-# The other side's seats in MeetingCast order: portrait ring and transcript name ink, so
-# each is dark enough to be text on the body.
-const MEETING_SEAT_1 := Color(0.541, 0.353, 0.169, 1)      # #8A5A2B · lead / buyer
-const MEETING_SEAT_2 := Color(0.478, 0.247, 0.353, 1)      # #7A3F5A · partner / user lead
-const MEETING_SEAT_3 := Color(0.247, 0.435, 0.478, 1)      # #3F6F7A · analyst / finance
 
 # --- CHROME · the frame's own values ---
 # Twins pinned to what the frame shows, so a body reskin never moves the frame. The
@@ -176,7 +157,6 @@ const SCRIM_MODAL := Color(0.020, 0.027, 0.035, 0.62)  # rgba(5,7,9,.62) · moda
 const ROAD_CASING := Color(0.169, 0.153, 0.133, 0.55)  # #2B2722 .55 · road casing
 const ROAD_DASH := Color(1.0, 0.980, 0.941, 1)         # #FFFAF0 · road dashes
 const DIALOGUE_BG := Color(0.063, 0.086, 0.110, 1)   # #10161C · modal / Frank card ground
-const DIALOGUE_COLUMN_BG := Color(0.063, 0.086, 0.110, 0.92)  # floating column (art shows through)
 const DIALOGUE_CARD_BG := Color(0.059, 0.078, 0.102, 1)       # #0F141A · choice / quote card (recessed)
 const DIALOGUE_CARD_BORDER := Color(0.137, 0.173, 0.204, 1)   # #232C34 · card hairline
 const CONVICTION_TRACK_BG := Color(0.137, 0.173, 0.204, 1)    # #232C34 · unlit dot / segment groove
@@ -268,7 +248,6 @@ const RADIUS_S := 2             # chips, progress bars, speed buttons, sliders
 const RADIUS_M := 2             # DEFAULT — cards, buttons, inputs
 const RADIUS_L := 2             # modals, portrait cells
 const RADIUS_XL := 2            # dialogue choice cards, tab badge
-const RADIUS_XXL := 2           # dialogue column
 const RADIUS_PILL := 999        # toggle, rail badge, avatar
 const RADIUS_PORTRAIT := 2      # PortraitFrame
 const RADIUS_CARD_LG := 2       # DialogueCard
@@ -277,7 +256,7 @@ const RADIUS_WINDOW := 4        # window frame, rail tiles
 # --- Border widths ---
 const BORDER_HAIRLINE := 1      # cards, inputs, chips, tooltip
 const BORDER_FOCUS := 2         # selection ring (PortraitCellSelected), ActionRow hover rule
-const BORDER_ACCENT := 3        # left accent bar (QuoteBox)
+const BORDER_ACCENT := 3        # left accent bar (TabButtonActive)
 
 # --- StyleBox content-margin pairs (h, v) — build_theme.gd only ---
 const PAD_CHIP := Vector2i(6, 2)          # UiFactory chip
@@ -292,10 +271,8 @@ const PAD_CARD_TIGHT := Vector2i(10, 8)   # CardPanelTight
 const PAD_CARD := Vector2i(12, 10)        # CardPanel / CardCta / CardAttention
 const PAD_STRIP := Vector2i(12, 6)        # HeaderBand (same value as PAD_BTN, kept apart by role)
 const PAD_BAND := Vector2i(14, 8)         # AttentionStrip
-const PAD_ROW := Vector2i(14, 10)         # QuoteBox / DialogueChoice / MeetingFounderBubble
+const PAD_ROW := Vector2i(14, 10)         # DialogueChoice
 const PAD_CARD_RAIL := Vector2i(14, 12)   # RailCard
-const PAD_MEETING_HEADER := Vector2i(16, 14)  # MeetingHeader
-const PAD_MEETING_DECK := Vector2i(16, 12)    # MeetingDeck
 const PAD_CTA := Vector2i(16, 10)         # CommitButton(Dark)
 const PAD_ACTION_ROW := Vector2i(16, 0)   # ActionRow (the host sets the row height)
 const PAD_TOOLTIP := Vector2i(8, 4)       # tooltip panel
@@ -355,16 +332,8 @@ static func positive_bg() -> Color:
 static func negative_bg() -> Color:
 	return NEGATIVE_BG_CB if _cb_palette else NEGATIVE_BG
 
-static func positive_bright() -> Color:
-	return POSITIVE_BRIGHT_CB if _cb_palette else POSITIVE_BRIGHT
-
 static func negative_bright() -> Color:
 	return NEGATIVE_BRIGHT_CB if _cb_palette else NEGATIVE_BRIGHT
-
-## Çip kenarları da semantiktir: dolgu takas olup kenar sabit kalsaydı renk körü
-## modunda çip iki paletten karışık okunurdu.
-static func negative_rule() -> Color:
-	return NEGATIVE_RULE_CB if _cb_palette else NEGATIVE_RULE
 
 # ============================================================================
 # Runtime colour-decision helpers — the single home for sign/kind → colour.
@@ -402,13 +371,6 @@ static func risk_key(chance: float) -> String:
 	return "MEETING_RISK_DANGER"
 
 
-## Ink of the risk word, on risk_key's edges.
-static func risk_ink(chance: float) -> Color:
-	if chance >= RISK_SAFE_MIN: return positive()
-	if chance >= RISK_RISKY_MIN: return ACCENT_DEEP
-	return negative()
-
-
 ## TUTUM band of a 0-100 attitude: "warm" | "lukewarm" | "wary" | "cold". The warm and
 ## lukewarm edges are the meeting's own rule values, passed in by its adapter.
 static func attitude_band(value: int, warm_min: int, lukewarm_min: int) -> String:
@@ -421,38 +383,6 @@ static func attitude_band(value: int, warm_min: int, lukewarm_min: int) -> Strin
 ## Key of the TUTUM word for an attitude_band band.
 static func attitude_word_key(band: String) -> String:
 	return "MEETING_ATT_" + band.to_upper()
-
-
-## Ink of the TUTUM word for an attitude_band band.
-static func attitude_ink(band: String) -> Color:
-	match band:
-		"warm": return ATTITUDE_WARM_INK
-		"lukewarm": return ACCENT_DEEP
-		"wary": return INK_MUTED
-		_: return ATTITUDE_COLD_INK
-
-
-## Portrait ring of a meeting seat: 0 is the founder, 1-3 the other side in MeetingCast order.
-static func seat_ring(seat: int) -> Color:
-	match seat:
-		0: return ACCENT
-		1: return MEETING_SEAT_1
-		2: return MEETING_SEAT_2
-		_: return MEETING_SEAT_3
-
-
-## A seat's name as text on the cream dock: the founder's amber ring is too pale to read, so the
-## founder takes the deep amber.
-static func seat_ink(seat: int) -> Color:
-	return ACCENT_DEEP if seat == 0 else seat_ring(seat)
-
-
-## Ink of a die factor on the dark tooltip, by its tone: "pos" | "neg" | anything else neutral.
-static func tooltip_tone_ink(tone: String) -> Color:
-	match tone:
-		"pos": return positive_bright()
-		"neg": return negative_bright()
-	return CREAM
 
 
 # Formatting delegates kept for their existing call sites; the bodies live in Fmt,
@@ -849,6 +779,37 @@ const D_H_REQ_CHIP := 28              # a requirement on the node card: an area'
 const D_CHECK_BOX := 18               # a row's check box
 const D_RND_ASSIGN_COLUMNS := Vector3i(28, 32, 40)   # an assignment row's check, face and skill columns
 const D_SWATCH := Vector2i(22, 12)    # a tree key's sample
+# --- the meeting (Toplantı): the dock, its price ruler, the call, the term sheet table ---
+const D_W_DOCK_KEY := 88              # the dock head's key column: "AT THE TABLE", the widest key of either language
+const D_AVATAR_SPEAKER := 96          # the one speaking, at the dock's head
+const D_H_OPTION := 56                # a meeting option at its least
+const D_KEY_CAP := 24                 # an option's or a lever's number key
+const D_H_FLOW_MIN := 56              # the transcript at its least, one row over the deck
+const D_H_TUT_NOW := 16               # TUTUM's now mark across its track
+const D_PATIENCE := Vector2i(14, 16)  # a patience box: on the dock, on the term sheet table's head
+const D_H_FLOW_FADE := 24             # the fade over a transcript scrolled under the dock's head
+const D_FLOW_FADE := [D_SURFACE_3, Color(D_SURFACE_3, 0.0)]   # its top and its foot
+const D_H_RULER := 40                 # the price ruler's rail
+const D_RULER_TRACK := 4
+const D_RULER_ANCHOR := 20            # the tick where the talk opened
+const D_RULER_MARK := 14              # the tick of a number the customer wrote
+const D_RULER_HANDLE := Vector2i(12, 24)
+const D_ICON_DIE := 18                # the die beside a risk word
+const D_ICON_RESULT := 22             # the outcome's glyph on a meeting's result card
+const D_W_RESULT_ROW_KEY := 128       # the key column of a meeting's result card
+const D_CALL_RING := 52               # the phone's ring round the founder's head
+const D_CALL_GLOW := 6                # the ring's glow outside its line while the call's card is shut
+const D_W_CALL := 336                 # the call's card
+const D_STAGE := Vector3i(1600, 880, 48)   # the term sheet table's column, its sheet's column and the gap after it
+const D_H_STAGE_HEAD := 112
+const D_H_STAGE_FOOT := 120
+const D_H_LEVER := 136                # a lever's row on the sheet
+const D_W_SIGN := 220                 # the sign button at its least
+const D_DIAL := Vector2i(480, 240)    # the push dial's box: its arc, centred on the box's foot less the hub's room
+const D_DIAL_ARC := Vector2(200, 18)  # the arc's radius and stroke
+const D_DIAL_NEEDLE := Vector3(166, 4, 10)   # the needle's length and stroke, the hub's radius
+const D_KEY_ARC := Vector2i(16, 6)    # the dial key's sample of the arc
+const D_KEY_NEEDLE := Vector2i(3, 14) # and of the needle
 
 const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
 const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]
@@ -929,6 +890,14 @@ static func D_runway_reading() -> Dictionary:
 		"ink": D_pos() if p.positive else (D_neg() if alarm else null)}
 
 
+## An offer's time left, in the top bar's Sıradaki slot and at the head of the term sheet table: {text, ink},
+## in the warning colour, red in its final week. The Yatırım page's offers read its ink.
+static func D_offer_reading(weeks_left: int) -> Dictionary:
+	if weeks_left > TimeModel.ticks(PitchConstants.FINAL_WEEKS):
+		return {"text": TranslationServer.translate("TOPBAR_NEXT_OFFER").format({"n": weeks_left}), "ink": D_warn()}
+	return {"text": TranslationServer.translate("TOPBAR_NEXT_OFFER_LAST"), "ink": D_neg()}
+
+
 ## A monthly net in the money header: green when it gains, red only while cash is below zero; a loss with cash
 ## in hand is a cost, its own ink (null).
 static func D_net_ink(net: int) -> Variant:
@@ -984,12 +953,6 @@ static func D_risk_ink(chance: float) -> Color:
 	if chance >= RISK_SAFE_MIN: return D_pos()
 	if chance >= RISK_RISKY_MIN: return D_warn()
 	return D_neg()
-
-
-## A meeting seat's ring and name: the other side's lead (seat 1) in emphasis, every other seat in
-## secondary ink. The seats carry no hue.
-static func D_seat_ink(seat: int) -> Color:
-	return D_INK_1 if seat == 1 else D_INK_3
 
 
 ## The dark theme bakes a meaning variation in both palettes, the colour-blind one as its "Cb" twin:

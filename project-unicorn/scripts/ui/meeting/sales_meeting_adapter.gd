@@ -136,7 +136,8 @@ func _act1(vs: Dictionary, entries: Array, gestures: Array) -> Dictionary:
 		hover.append(("%s %s" % [m.sign, m.label]).strip_edges())
 	var step := {
 		"attitude": {"value": value, "word_key": UiTokens.attitude_word_key(band), "band": band,
-			"odds_text": tr("SALES_ODDS").format({"n": value}), "hover": hover},
+			"odds_text": tr("SALES_ODDS").format({"n": value}), "hover": hover,
+			"edges": [UiTokens.ATTITUDE_WARY_MIN, LUKEWARM_MIN, int(round(SalesConstants.CUT_HIGH * 100.0))]},
 		"entries": entries,
 		"gestures": gestures,
 		"roll": {"passed": vs.outcome == "won"} if vs.rolled else {},
@@ -194,8 +195,8 @@ func _open_table() -> Dictionary:
 		"is_whale": _prospect.is_whale,
 	})
 	return {
-		"kicker": tr("MEETING_KICKER_BEAT").format({"kicker": tr("MEETING_KICKER_SALES"),
-			"beat": tr(vs.title_key)}),
+		"kicker": tr("MEETING_KICKER_SALES"),
+		"beat": tr(vs.title_key),
 		"speaker": LEAD,
 		"attitude": {},
 		"patience": vs.patience,
@@ -236,6 +237,7 @@ func _move(id: String) -> Dictionary:
 			step.result = _card("positive", "MEETING_RES_SIGNED",
 				tr("MEETING_RES_PAIR").format({"first": deal[0], "second": deal[1]}),
 				B2BConstants.feature_label(promised) if promised != "" else "")
+			step.result.stamp = "HUNT_BADGE_SIGNED"
 		NegotiationSystem.OUTCOME_INSULTED:
 			step.gestures.append({"seat": LEAD, "name": "back"})
 			step.result = _card("negative", "MEETING_RES_INSULT",
@@ -255,9 +257,9 @@ func _move(id: String) -> Dictionary:
 	return step
 
 
-## The offer button carries the table's telegraphs in its tone, with the reason on hover (a
-## telegraph is a state, never a line): the last number on the table once patience is out, the
-## insult line once the price is past it.
+## The price table's moves are commands. The offer carries the table's telegraphs in its tone, its
+## reason always under it (a telegraph is a state, never a line): the last number on the table once
+## patience is out, the insult line once the price is past it.
 func _moves(vs: Dictionary) -> Array:
 	var offer := _option("offer", tr("NEG_OFFER"))
 	if vs.last_offer:
@@ -268,14 +270,19 @@ func _moves(vs: Dictionary) -> Array:
 	if vs.can_accept:
 		out.append(_option("accept", tr("NEG_ACCEPT")))
 	out.append(_option("walk", tr("NEG_WALK")))
+	for move: Dictionary in out:
+		move.command = true
 	return out
 
 
 ## NegotiationSystem's view with the ruler's words: the price caption, the locked zone's reason
-## and the deal the held price makes.
+## and the deal the held price makes; while their number stands under it, the deal accepting signs.
 func _instrument(vs: Dictionary) -> Dictionary:
+	var deal := _deal(vs)
+	if int(vs.confirm.unit_price) != int(vs.selected):
+		deal[0] = tr("NEG_DEAL_IF_ACCEPT").format({"line": deal[0]})
 	return vs.merged({"price_label": tr(vs.price_label_key), "locked_reason": tr(vs.locked_reason_key),
-		"deal": _deal(vs)})
+		"deal": deal})
 
 
 ## Seats × price = MRR, and the capacity those seats land in.

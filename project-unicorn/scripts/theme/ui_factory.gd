@@ -7,6 +7,7 @@ extends RefCounted
 # master theme supplies fonts and per-variation defaults.
 
 const CLOSE_ICON := preload("res://assets/icons/util/close.svg")
+const LOCK_ICON := "res://assets/icons/util/lock.svg"
 
 static var _bust_mats := {}   # (circle, grey) -> the bust's material (avatar_bust.gdshader)
 
@@ -242,6 +243,26 @@ static func D_tag(text: String, kind: StringName = &"") -> Label:
 	return tag
 
 
+## A caps tag with a glyph before its word, both in the tag's ink: "warn", "pos" or "outline".
+static func D_glyph_tag(glyph: String, text: String, kind: StringName) -> PanelContainer:
+	var outline := kind == &"outline"
+	var family := "TagOutline" if outline else ("TagWarn" if kind == &"warn" else "TagPos")
+	var ink: Color = UiTokens.D_INK_3 if outline \
+		else UiTokens.D_badge_palette(&"accent" if kind == &"warn" else &"positive").fg
+	var tag := PanelContainer.new()
+	tag.theme_type_variation = StringName(family + "Box") if outline else UiTokens.D_variation(family + "Box")
+	tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+	row.add_child(make_glyph(glyph, UiTokens.D_ICON_TAG, ink))
+	var word := make_label(Fmt.upper(text), StringName(family + "Ink") if outline else UiTokens.D_variation(family + "Ink"))
+	word.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(word)
+	tag.add_child(row)
+	return tag
+
+
 ## A document's stamp, tilted as on paper. The holder is a plain Control that takes the stamp's size:
 ## a container would lay the label out again and undo the tilt.
 static func D_stamp(text: String) -> Control:
@@ -360,7 +381,7 @@ static func D_locked_tab(label: String) -> Button:
 	var tab := Button.new()
 	tab.theme_type_variation = &"SegTab"
 	tab.text = Fmt.upper(label)
-	tab.icon = load("res://assets/icons/util/lock.svg")
+	tab.icon = load(LOCK_ICON)
 	tab.disabled = true
 	tab.focus_mode = Control.FOCUS_NONE
 	return tab
@@ -384,6 +405,57 @@ static func D_stars(stars: float) -> HBoxContainer:
 		var look: String = "full" if stars >= i + 1 else ("half" if stars >= i + 0.5 else "empty")
 		row.add_child(make_glyph("res://assets/icons/util/star_%s.svg" % look, UiTokens.D_ICON_STAR,
 			UiTokens.D_LINE_3 if look == "empty" else UiTokens.D_INK_2))
+	return row
+
+
+## A table's patience, `px` boxes: lit while a round lasts, hollow once spent, the last one left in the warning
+## colour.
+static func D_patience(left: int, total: int, px: int) -> Control:
+	var boxes := Control.new()
+	boxes.custom_minimum_size = Vector2(total * (px + UiTokens.SPACE_XS) - UiTokens.SPACE_XS, px)
+	boxes.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	boxes.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	boxes.draw.connect(func() -> void:
+		for i in total:
+			var box := Rect2(i * (px + UiTokens.SPACE_XS), 0.0, px, px)
+			if i < left:
+				boxes.draw_rect(box, UiTokens.D_warn() if left == 1 else UiTokens.D_INK_2)
+			else:
+				boxes.draw_rect(box.grow(-UiTokens.BORDER_HAIRLINE * 0.5), UiTokens.D_LINE_3, false, UiTokens.BORDER_HAIRLINE))
+	return boxes
+
+
+## An option's or a lever's key: its number in a cap, or a lock in the off cap where `number` is 0 (not open).
+static func D_key_cap(number: int) -> Label:
+	var key := make_label(str(number) if number > 0 else "", &"KeyCap" if number > 0 else &"KeyCapOff")
+	key.custom_minimum_size = Vector2.ONE * UiTokens.D_KEY_CAP
+	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	key.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	key.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	if number == 0:
+		var lock := make_glyph(LOCK_ICON, UiTokens.D_ICON_PART, UiTokens.D_INK_OFF)
+		lock.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		lock.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		lock.grow_vertical = Control.GROW_DIRECTION_BOTH
+		key.add_child(lock)
+	return key
+
+
+## A row someone speaks: their face, then their name over what they said. `gap` parts the face from the words,
+## `line_gap` the name from the line.
+static func D_said(face: Control, who: String, line: Label, gap := UiTokens.SPACE_L,
+		line_gap := UiTokens.SPACE_XXS) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", gap)
+	face.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(face)
+	var words := VBoxContainer.new()
+	words.add_theme_constant_override("separation", line_gap)
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.add_child(make_label(who, &"KeyTextMuted"))
+	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	words.add_child(line)
+	row.add_child(words)
 	return row
 
 

@@ -1,121 +1,95 @@
 class_name RadialDial
 extends Control
 
-# Push-roll dial. A top-semicircle gauge: the green arc = success odds, the red arc
-# = the rest, and a needle that rests at the odds boundary, then SWEEPS to a landing on a push
-# (green zone = won, red zone = lost). Custom-drawn with draw_arc / draw_line from token colors
-# and repainted with queue_redraw, since Godot has no radial gauge widget. Self-contained (no
-# .tscn): the % readout Label is built in _ready.
-#
-# Godot concept: overriding _draw() lets us paint at any size and re-solve on resize (no anchor
-# math); a Tween animates the needle via tween_method, and a left click finalizes it (skippable).
+# The push dial on the term sheet table: the selected lever's chance as an arc over the dial's track, and a
+# needle that rests on the arc's edge until a push, then sweeps from the left end and lands where the roll
+# fell, inside the arc on a pass and past it on a fail. The needle is ink whatever the roll: the table's
+# result line says how it went. Drawn, since Godot has no gauge; a click ends the sweep.
 
 signal spin_finished()
 
-var _chance: float = 0.5       # green fraction [0..1]
-var _needle_v: float = 0.5     # needle position along the arc [0..1] (0 = left / green end)
-var _result: String = ""       # "" | "success" | "failure" — colours the needle + readout
-var _readout: Label
-var _tween: Tween = null
+const ARC_POINTS := 64
+
+var _chance := 0.5
+var _needle := 0.5    # along the arc, 0 at its left end
+var _land := 0.0      # where the sweep under way ends
+var _landed := false  # a roll has put the needle where it fell
+var _tween: Tween
 
 
-func _ready() -> void:
-	custom_minimum_size = Vector2(0, 172)
-	mouse_filter = Control.MOUSE_FILTER_STOP   # catch clicks to skip the spin
-	_readout = Label.new()
-	_readout.name = "Readout"
-	_readout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_readout.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_readout.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_readout.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_readout.theme_type_variation = &"ConvictionValue"
-	add_child(_readout)
-	_sync_readout()
+func _init() -> void:
+	custom_minimum_size = UiTokens.D_DIAL
+	mouse_filter = Control.MOUSE_FILTER_STOP
 
 
-## Rest state — needle at the odds boundary, no landed result.
+## At rest: the needle on the arc's edge.
 func set_odds(chance: float) -> void:
-	_set_state(chance, "")
-	_needle_v = _chance
+	_kill()
+	_chance = chance
+	_needle = chance
+	_landed = false
+	queue_redraw()
 
 
-## Post-push rest — keep the needle where the spin landed, recolour the arc to the new odds,
-## keep the green/red result tint. Used by the scene's _render after a spin settles.
+## After a push: the arc takes the lever's chance now; the needle stays where the roll fell, or is put there
+## when the table opened on a roll already made.
 func show_result_rest(chance: float, passed: bool) -> void:
-	_set_state(chance, "success" if passed else "failure")
+	_kill()
+	_chance = chance
+	if not _landed:
+		_needle = _landing(chance, passed)
+		_landed = true
+	queue_redraw()
 
 
-## Animate a push: sweep the needle from the green end and land it in green (won) or red (lost).
+## A push rolled at `chance`: the needle sweeps from the arc's left end to where the roll fell.
 func spin(chance: float, passed: bool) -> void:
-	_set_state(chance, "success" if passed else "failure")
-	_needle_v = 0.0
+	_kill()
+	_chance = chance
+	_land = _landing(chance, passed)
 	_tween = create_tween()
-	_tween.tween_method(_set_needle, 0.0, _land_v(), PitchConstants.DIAL_SPIN_SECS) \
+	_tween.tween_method(_set_needle, 0.0, _land, PitchConstants.DIAL_SPIN_SECS) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_tween.finished.connect(spin_finished.emit)
+	_tween.finished.connect(_finish)
 
 
-## Click-to-finalize the current spin (skippable).
-func skip() -> void:
-	if _tween != null and _tween.is_valid() and _tween.is_running():
-		_kill_tween()
-		_needle_v = _land_v()
-		queue_redraw()
-		spin_finished.emit()
-
-
-func _land_v() -> float:
-	# Needle lands well inside the green zone on a win, the red zone on a loss.
-	return _chance * 0.45 if _result == "success" else _chance + (1.0 - _chance) * 0.55
+func _landing(chance: float, passed: bool) -> float:
+	return chance * 0.45 if passed else chance + (1.0 - chance) * 0.55
 
 
 func _set_needle(v: float) -> void:
-	_needle_v = v
+	_needle = v
 	queue_redraw()
 
 
-## Kill any spin, take the new odds and result, repaint.
-func _set_state(chance: float, result: String) -> void:
-	_kill_tween()
-	_chance = clampf(chance, 0.0, 1.0)
-	_result = result
-	_sync_readout()
+func _finish() -> void:
+	_tween = null
+	_needle = _land
+	_landed = true
 	queue_redraw()
+	spin_finished.emit()
 
 
-func _kill_tween() -> void:
+func _kill() -> void:
 	if _tween != null:
 		_tween.kill()
 		_tween = null
 
 
-func _sync_readout() -> void:
-	_readout.text = Fmt.percent(int(round(_chance * 100.0)), 0)
-	_readout.add_theme_color_override("font_color", _needle_color())
-
-
-func _needle_color() -> Color:
-	match _result:
-		"success": return UiTokens.positive_bright()
-		"failure": return UiTokens.negative_bright()
-		_: return UiTokens.ACCENT_CHROME
-
-
 func _draw() -> void:
-	var c: Vector2 = Vector2(size.x * 0.5, size.y * 0.84)
-	var r: float = minf(size.x * 0.44, size.y * 0.78)
-	if r <= 1.0:
-		return
-	var w: float = maxf(r * 0.15, 7.0)
-	var boundary: float = PI + _chance * PI          # top semicircle: PI (left) → TAU (right)
-	draw_arc(c, r, PI, boundary, 40, UiTokens.positive_bright(), w, true)
-	draw_arc(c, r, boundary, TAU, 40, UiTokens.negative_bright(), w, true)
-	var na: float = PI + clampf(_needle_v, 0.0, 1.0) * PI
-	var tip: Vector2 = c + Vector2(cos(na), sin(na)) * (r - w * 0.15)
-	draw_line(c, tip, _needle_color(), maxf(r * 0.045, 3.0), true)
-	draw_circle(c, maxf(r * 0.08, 5.0), _needle_color())
+	var radius: float = UiTokens.D_DIAL_ARC.x
+	var stroke: float = UiTokens.D_DIAL_ARC.y
+	var hub: float = UiTokens.D_DIAL_NEEDLE.z
+	var c := Vector2(size.x * 0.5, UiTokens.D_DIAL.y - hub - UiTokens.BORDER_FOCUS)
+	draw_arc(c, radius, PI, TAU, ARC_POINTS, UiTokens.D_BAR_TRACK, stroke, true)
+	if _chance > 0.0:
+		draw_arc(c, radius, PI, PI + _chance * PI, ARC_POINTS, UiTokens.D_BAR_EMPH, stroke, true)
+	var a := PI + clampf(_needle, 0.0, 1.0) * PI
+	draw_line(c, c + Vector2(cos(a), sin(a)) * UiTokens.D_DIAL_NEEDLE.x, UiTokens.D_INK_1, UiTokens.D_DIAL_NEEDLE.y, true)
+	draw_circle(c, hub, UiTokens.D_INK_1)
 
 
 func _gui_input(event: InputEvent) -> void:
-	if UiFactory.is_left_click(event):
-		skip()
+	if _tween != null and UiFactory.is_left_click(event):
+		_kill()
+		_finish()

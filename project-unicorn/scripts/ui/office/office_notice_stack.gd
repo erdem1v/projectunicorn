@@ -4,7 +4,8 @@ extends VBoxContainer
 # not read yet, then what waits in the inbox (papers, then reminders, in its order), at most MAX_CARDS cards
 # with a +N badge on the last for the rest. A row reads sender · subject · time left; a click opens it in the inbox.
 # The decision on screen is not a row: the top bar's gate slot is. Windows are later siblings of the
-# office, and the stack hides while one lies over it. In the dark language from its root.
+# office, and the stack hides while one lies over it, or while a call's card does. In the dark language from
+# its root.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const WIDTH := 352
@@ -16,6 +17,7 @@ var _seen := {}   # ids of cards already shown once; only a new one plays the ar
 var _queued := false
 var _map_open := false
 var _window_cover := Rect2()
+var _call_cover := Rect2()
 
 
 func _ready() -> void:
@@ -54,8 +56,15 @@ func set_window_cover(cover: Rect2) -> void:
 	_show()
 
 
+## MeetingInvite says where the call's card stands while it is open.
+func set_call_cover(cover: Rect2) -> void:
+	_call_cover = cover
+	_show()
+
+
 func _show() -> void:
-	visible = not _map_open and not _window_cover.intersects(get_global_rect())
+	var rect := get_global_rect()
+	visible = not _map_open and not _window_cover.intersects(rect) and not _call_cover.intersects(rect)
 
 
 ## One rebuild per frame however many signals land in it, so a new card's arrival is not cut.

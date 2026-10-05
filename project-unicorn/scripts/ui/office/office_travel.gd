@@ -7,8 +7,9 @@ extends Control
 # meeting room on its top floor (MeetingCast): the other side sits at the table and the founder
 # walks in from the lift and sits down. Home: the founder gets up for the lift, the road back, and
 # the office, where the founder walks back in and the one seated nearest looks up and asks how it
-# went. A click or Esc skips the trip; Space and the speed keys do nothing during it. The node is
-# the view's, so its waits and fades also run once the scene has paused the tree.
+# went. A click or Esc skips the trip, and a hint at the view's foot says so; Space and the speed keys
+# do nothing during it. The node is the view's, so its waits and fades also run once the scene has
+# paused the tree.
 
 const EXIT_S := 1.5    # [WORKING] the founder's walk out is watched this long at most
 const FADE_S := 0.25   # [WORKING] each half of a blink
@@ -21,17 +22,21 @@ const LEAVE_S := 1.6   # [WORKING] the founder gets up from the table this long 
 ## Seconds into the walk back in that the one seated nearest looks up and asks, and for how long.
 const ASK_AT := 1.3
 const ASK_S := 2.6
+const KEYBOARD := "res://assets/icons/util/keyboard.svg"
 
 var _view: Control
 var _people: OfficePeople
 var _city: OfficeCity
 var _skipped := false
+var _hint := PanelContainer.new()
+var _hint_text: Label
 
 
 func _init(view: Control, people: OfficePeople, city: OfficeCity) -> void:
 	_view = view
 	_people = people
 	_city = city
+	theme = load(UiTokens.MENAJER_THEME)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -39,6 +44,20 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# READY turns input on for a script with _input; the keys are the trip's only.
 	set_process_input(false)
+	_hint.theme_type_variation = &"TooltipPanel"
+	var line := SprintUiShared.box(UiTokens.SPACE_M)
+	line.add_child(UiFactory.make_glyph(KEYBOARD, UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
+	_hint_text = SprintUiShared.label("", &"Caption")
+	line.add_child(_hint_text)
+	_hint.add_child(line)
+	HRUiShared.set_mouse_ignore(_hint)
+	_hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_hint.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_hint.offset_top = -UiTokens.SPACE_4XL
+	_hint.offset_bottom = -UiTokens.SPACE_4XL
+	_hint.hide()
+	add_child(_hint)
 
 
 ## To the meeting room: `looks` sit at the table (lead first), `tower_label` names the tower on the
@@ -103,11 +122,14 @@ func _begin() -> void:
 	move_to_front()
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_process_input(true)
+	_hint_text.text = tr("TRIP_SKIP_HINT")
+	_hint.show()
 
 
 func _end() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process_input(false)
+	_hint.hide()
 
 
 ## Loads `layout_id` under a blink to black, the map in road mode; a skipped trip loads it with

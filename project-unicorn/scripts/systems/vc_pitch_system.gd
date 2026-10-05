@@ -177,7 +177,7 @@ static func _conviction_series_a(vc_id: String) -> Dictionary:
 	# Runway health.
 	if GameState.shutter_weeks_left >= 0:
 		why.append({"d": PitchConstants.CONV_SHUTTER_PENALTY, "l": _t("VC_WHY_SHUTTER")})
-	elif _gross_runway_months() < 1.0:
+	elif gross_runway_months() < 1.0:
 		why.append({"d": PitchConstants.CONV_THIN_RUNWAY_PENALTY, "l": _t("VC_WHY_RUNWAY_THIN")})
 
 	if GameState.unmanaged_major_scandal:
@@ -238,7 +238,7 @@ static func _conviction_seed(vc_id: String) -> Dictionary:
 
 	if GameState.shutter_weeks_left >= 0:
 		why.append({"d": SeedConstants.CONV_SHUTTER_PENALTY, "l": _t("VC_WHY_SHUTTER")})
-	elif _gross_runway_months() < 1.0:
+	elif gross_runway_months() < 1.0:
 		why.append({"d": SeedConstants.CONV_THIN_RUNWAY_PENALTY, "l": _t("VC_WHY_RUNWAY_THIN")})
 	# Character is the one thing a seed investor cannot diligence away, so this term is the
 	# same size it is at Series A.
@@ -991,7 +991,7 @@ static func _beat3_view_state(prev: Dictionary) -> Dictionary:
 	vs["choices"] = [
 		{"id": "b3_durust", "text": _t("VC_B3_HONEST"), "check": _check_view("VC_APPROACH_HONEST", PitchConstants.BEAT3_SKILL, _beat3_diff("durust"), _beat3_bonus("durust")), "caption": _t("VC_B3_HONEST_CAP"), "marked": prova, "marked_text": _t("VC_REHEARSED")},
 		{"id": "b3_spin", "text": _t("VC_B3_SPIN"), "check": _check_view("VC_APPROACH_SPIN", PitchConstants.BEAT3_SKILL, _beat3_diff("spin"), _beat3_bonus("spin")), "caption": _t("VC_B3_SPIN_CAP")},
-		{"id": "b3_gecistir", "text": _t("VC_B3_DEFLECT"), "check": _check_view("VC_APPROACH_DEFLECT", PitchConstants.BEAT3_SKILL, _beat3_diff("gecistir"), _beat3_bonus("gecistir")), "caption": _t("VC_B3_DEFLECT_CAP").format({"cap": PitchConstants.GECISTIR_CAP}), "caption_danger": true},
+		{"id": "b3_gecistir", "text": _t("VC_B3_DEFLECT"), "check": _check_view("VC_APPROACH_DEFLECT", PitchConstants.BEAT3_SKILL, _beat3_diff("gecistir"), _beat3_bonus("gecistir")), "caption": _t("VC_B3_DEFLECT_CAP").format({"cap": PitchConstants.GECISTIR_CAP})},
 	]
 	return vs
 
@@ -1043,7 +1043,7 @@ static func _result_view_state(kind: String) -> Dictionary:
 	vs["result_kind"] = kind
 	vs["active_line"] = line
 	if kind in ["cold", "zorla_ret", "ret"]:
-		vs["monologue_text"] = _cold_exit_text()     # the rejection's exit view
+		vs["frank_line"] = _t(_pick_cold_exit())     # the rejection's exit view
 	vs["beat_label"] = _t("VC_BEAT4_LABEL")
 	vs["choices"] = [{"id": "b4_close"}]
 	return vs
@@ -1065,10 +1065,6 @@ static func _pick_cold_exit() -> String:
 	else:
 		_cold_exit_key = "VC_FRANK_COLD_GENERAL_1"
 	return _cold_exit_key
-
-
-static func _cold_exit_text() -> String:
-	return _t("VC_FRANK_COLD_EXIT").format({"line": _t(_pick_cold_exit())})
 
 
 # ============================================================================
@@ -1186,7 +1182,7 @@ static func _vc(vc_id: String) -> Dictionary:
 	return GameState.vc_states[vc_id]
 
 
-static func _gross_runway_months() -> float:
+static func gross_runway_months() -> float:
 	# GROSS burn runway (revenue ignored — "if revenue went to zero, how long?"). The VC's
 	# question; deliberately distinct from the shell's revenue-aware NET runway. Always finite.
 	var burn: int = maxi(GameState.daily_burn, 1)

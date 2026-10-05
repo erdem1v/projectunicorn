@@ -6,10 +6,12 @@ extends Panel
 # DisplaySettings.COMPACT_SHELL_BELOW altındayken sıkışık kip: marka yalnız kare, kısa tarih, dar hız
 # tuşları (rayın simge kipiyle aynı eşik). Hafta çubuğu en çok MAX_WEEK_BAR uzar; daha geniş barda
 # Sıradaki yuvası ve saat bloğu gün bloğunun hemen ardından gelir, artan genişlik sağda boş kalır.
-# Sıradaki yuvası hep ayrılmıştır: teklif süresi, son haftasındaki sprint kararı, yoksa mesai bitimi. Bir
-# karar beklerken yuva kapıdır: amber nokta ve "Cevap bekliyor", altında göndericisi ya da bekleyen
+# Sıradaki yuvası hep ayrılmıştır: teklif süresi, son haftasındaki sprint kararı, çalan görüşme, yoksa mesai
+# bitimi. Bir karar beklerken yuva kapıdır: amber nokta ve "Cevap bekliyor", altında göndericisi ya da bekleyen
 # kararların sayısı; yuva ve saat bloğu amber çerçevede, hız tuşları kapalı, tıklanınca karara dönülür.
-# Ayırıcılar ve hafta çubuğu _draw'da.
+# Kurucu görüşmeye giderken, masadayken ve dönerken saat tutulur: yuva bunu söyler ("Şimdi", "Görüşmede"), hız
+# tuşları kapalıdır ve amber yoktur. Görüşmenin saati hafta çubuğunda elmastır. Ayırıcılar ve hafta çubuğu
+# _draw'da.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 
@@ -55,9 +57,11 @@ const KEYS_Y := 16.0
 const KEY_GAP := 4.0
 const UNIT_GAP := 2.0
 const RULE_INSET := 12.0
-## Hafta çubuğu: üst kenarı, uzunluk tavanı.
+## Hafta çubuğu: üst kenarı, uzunluk tavanı; görüşmenin elmasının yarı köşegeni ve ortası.
 const WEEK_Y := 38.0
 const MAX_WEEK_BAR := 720.0
+const MARK_HALF := 5.0
+const MARK_Y := WEEK_Y - 1.5
 
 @onready var speed_btns: Array[Button] = [
 	$TimeBlock/PauseBtn,
@@ -70,6 +74,9 @@ const MAX_WEEK_BAR := 720.0
 ## Teklif geri sayımı yalnız tikte yayılır; dil ya da palet değişince yeniden boyamak için tutulur.
 ## -1 = teklif yok.
 var _offer_weeks_left: int = -1
+## main.gd'nin oynattığı görüşme: {phase, place}. "call" çalan aramadır ve yuvada sırası gelince görünür;
+## "trip", "sitting" ve "home" saati tutar.
+var _meeting := {}
 var _compact := false
 var _slot_x := 0.0
 var _pulse: Tween
@@ -113,6 +120,17 @@ func _ready() -> void:
 func _on_offer_countdown_changed(weeks_left: int) -> void:
 	_offer_weeks_left = weeks_left
 	_refresh()
+
+
+## main.gd: `place`'teki görüşme çalıyor ("call"), yolda ("trip"), masada ("sitting"), dönüşte ("home") ya da
+## bitti ("").
+func show_meeting(phase: String, place := "") -> void:
+	_meeting = {"phase": phase, "place": place} if phase != "" else {}
+	_refresh()
+
+
+func _held() -> bool:
+	return _meeting.get("phase", "") in ["trip", "sitting", "home"]
 
 
 func _refresh() -> void:
@@ -174,8 +192,8 @@ func _refresh_metrics(g: Dictionary) -> void:
 
 
 ## Gün bloğu (tarih + hafta çubuğu ve uç saatleri) ve Sıradaki yuvası: teklif süresi uyarı rengindedir,
-## son haftasında kırmızı; teklif yoksa son haftasındaki sprint kararı kâğıdı (uyarı renginde), o da yoksa
-## mesainin bitimine kalan saat.
+## son haftasında kırmızı; teklif yoksa son haftasındaki sprint kararı kâğıdı (uyarı renginde), o da yoksa çalan
+## görüşme, o da yoksa mesainin bitimine kalan saat. Saat görüşme için tutulurken yuva görüşmenindir.
 func _refresh_day(g: Dictionary) -> void:
 	var d: Dictionary = GameState.get_date_dict()
 	$Date.text = tr("TOPBAR_DATE_COMPACT").format({"week": int(d.week), "mon": Fmt.month_abbr(int(d.month))}) \
@@ -190,30 +208,39 @@ func _refresh_day(g: Dictionary) -> void:
 	$NextKey.text = Fmt.upper(tr("TOPBAR_NEXT"))
 	var line: String = tr("TOPBAR_NEXT_WORKDAY_END").format({"n": maxi(end - GameState.current_hour, 0)})
 	var ink = null
-	if _offer_weeks_left > TimeModel.ticks(PitchConstants.FINAL_WEEKS):
-		line = tr("TOPBAR_NEXT_OFFER").format({"n": _offer_weeks_left})
-		ink = UiTokens.D_warn()
+	var phase: String = _meeting.get("phase", "")
+	var meeting: String = tr("TOPBAR_NEXT_MEETING").format({"time": "%02d:00" % GameState.current_hour,
+		"company": _meeting.get("place", "")})
+	if _held():
+		$NextKey.text = Fmt.upper(tr("TOPBAR_IN_MEETING" if phase == "sitting" else "TOPBAR_NOW"))
+		line = tr("TOPBAR_TRIP_HOME") if phase == "home" else meeting
+		ink = UiTokens.D_INK_1
 	elif _offer_weeks_left >= 0:
-		line = tr("TOPBAR_NEXT_OFFER_LAST")
-		ink = UiTokens.D_neg()
+		var offer: Dictionary = UiTokens.D_offer_reading(_offer_weeks_left)
+		line = offer.text
+		ink = offer.ink
 	elif SprintSystem.decision_paper().get("last", false):
 		line = tr("TOPBAR_NEXT_SPRINT_FINAL")
 		ink = UiTokens.D_warn()
+	elif phase == "call":
+		line = meeting
 	_paint($NextLine, line, ink)
 	_put($NextKey, _slot_x + g.pad, NEXT_KEY_LINE)
 	_put($NextLine, _slot_x + g.pad, NEXT_LINE, g.slot - 2 * g.pad)
 	_refresh_gate(g)
 
 
-## The gate: while a decision waits the slot says so and the clock's keys are off.
+## The gate: while a decision waits the slot says so and the clock's keys are off. A clock held for a meeting
+## turns the keys off too, without the gate's amber.
 func _refresh_gate(g: Dictionary) -> void:
-	var gated: bool = GameState.run_active and EventGate.active_id() != ""
+	var held := _held()
+	var gated: bool = GameState.run_active and EventGate.active_id() != "" and not held
 	for part: Control in [$NextKey, $NextLine]:
 		part.visible = not gated
 	for part: Control in [$GateDot, $GateRing, $GateLabel, $GateLine, $GateHit, $GateFrame]:
 		part.visible = gated
 	for b in speed_btns:
-		b.disabled = gated
+		b.disabled = gated or held
 	if not gated:
 		if _pulse != null:
 			_pulse.kill()
@@ -287,7 +314,7 @@ func _draw() -> void:
 
 
 ## Haftanın 08:00'den mesainin bitimine kadarki saatleri: mesai öncesi ince iz, geçen saatler dolgu,
-## her saat bir çentik (bitiş uzun), şimdi dikey işaret.
+## her saat bir çentik (bitiş uzun), görüşmenin saati elmas, şimdi dikey işaret.
 func _draw_week(x0: float, x1: float) -> void:
 	var start: int = TimeModel.WEEK_START_HOUR
 	var end: int = WorkHoursSystem.workday_end()
@@ -303,6 +330,10 @@ func _draw_week(x0: float, x1: float) -> void:
 			draw_rect(Rect2(x - 1, WEEK_Y - 4, 1, 12), UiTokens.D_INK_4)
 		else:
 			draw_rect(Rect2(x, WEEK_Y + 6, 1, 4), UiTokens.D_LINE_2)
+	# The meeting is now: its diamond sits under the now mark.
+	if _meeting.get("phase", "") in ["call", "trip", "sitting"]:
+		draw_colored_polygon(PackedVector2Array([Vector2(now, MARK_Y - MARK_HALF), Vector2(now + MARK_HALF, MARK_Y),
+			Vector2(now, MARK_Y + MARK_HALF), Vector2(now - MARK_HALF, MARK_Y)]), UiTokens.D_INK_2)
 	draw_rect(Rect2(now - 1, WEEK_Y - 5, 2, 14), UiTokens.D_INK_1)
 
 

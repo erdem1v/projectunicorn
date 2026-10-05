@@ -440,7 +440,7 @@ func _offer_doc(sheet: TermSheet) -> PanelContainer:
 	who.add_child(UiFactory.make_label(_vc_name(vc_id), &"SubjectStrong"))
 	var due: bool = sheet.is_decision_due(GameState.day)
 	var weeks: int = sheet.weeks_left(GameState.day)
-	var ink: Color = UiTokens.D_neg() if due or weeks <= TimeModel.ticks(PitchConstants.FINAL_WEEKS) else UiTokens.D_warn()
+	var ink: Color = UiTokens.D_offer_reading(weeks).ink
 	var left := SprintUiShared.box(UiTokens.SPACE_S)
 	left.add_child(UiFactory.make_glyph(CLOCK, UiTokens.D_ICON_LINE, ink))
 	# The window has closed; the decision card is up (or about to be). The same two answers live here so the

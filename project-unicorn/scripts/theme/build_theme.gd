@@ -78,36 +78,19 @@ func _initialize() -> void:
 	_lbl(th, &"MetricValue", mono_sb, T.SIZE_LEAD, T.CREAM)
 	_lbl(th, &"MetricUnit", mono_reg, T.SIZE_META, T.INK_FAINT_CHROME)
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_MICRO, T.INK)
-	_lbl(th, &"ChoiceLabelStrong", sans_sb, T.SIZE_LEAD, T.INK)
-	_lbl(th, &"ChoiceLabelLocked", sans_reg, T.SIZE_LEAD, T.INK_FAINT)   # an option that is not open
 	_lbl(th, &"ChromeValue", sans_sb, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"ChromeClock", mono_reg, T.SIZE_DATA, T.CREAM_DIM)   # TopBar tarih/saat
 	# ChromeAlert: KEPENK / TEKLİF geri sayımı. Tema statiktir; renk körü takası bu
 	# etiketi top_bar.gd'de yeniden boyar.
 	_lbl(th, &"ChromeAlert", mono_sb, T.SIZE_SMALL, T.NEGATIVE_BRIGHT)
-	_lbl(th, &"ColumnHeader", mono_label, T.SIZE_META, T.INK_DIM)  # defter sütun başlığı
-	_lbl(th, &"SectionAmber", mono_label, T.SIZE_SMALL, T.ACCENT_DEEP)  # kural çizgisiyle birlikte kullanılır
 	_lbl(th, &"RowName", sans_sb, T.SIZE_BODY, T.INK)
 	_lbl(th, &"RowMeta", mono_reg, T.SIZE_SMALL, T.INK_MUTED)
 	_lbl(th, &"AvatarInitial", sans_sb, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"MetricValueInk", sans_sb, T.SIZE_TITLE, T.INK)
 	_lbl(th, &"MetricCaptionInk", mono_label, T.SIZE_MICRO, T.INK_DIM)
 
-	# ---- Meeting dock (cream body): header and transcript ----
-	_lbl(th, &"MeetingSpeakerName", serif_sb, T.SIZE_ED_HEADLINE, T.INK)
-	_lbl(th, &"MeetingRole", mono_label, T.SIZE_SMALL, T.INK_MUTED)
-	_lbl(th, &"MeetingLine", serif_reg, T.SIZE_TITLE, T.INK)            # a counterpart's spoken line
-	_lbl(th, &"MeetingFounderLine", sans_reg, T.SIZE_LEAD, T.ON_INK)    # inside MeetingFounderBubble
-	_lbl(th, &"MeetingFounderName", mono_sb, T.SIZE_SMALL, T.ACCENT)
-	# The panel repaints it per band from UiTokens.attitude_ink.
-	_lbl(th, &"MeetingAttitudeWord", mono_sb, T.SIZE_SMALL, T.INK)
-	_lbl(th, &"MeetingFigure", mono_sb, T.SIZE_LEAD, T.INK)             # a number on the price table
-	# A sales table's percent: its own tone says the reasons are on hover.
-	_lbl(th, &"MeetingOdds", mono_reg, T.SIZE_SMALL, T.ACCENT_DEEP)
-
 	# ---- Cinematic dialogue register: text on the dark column ----
 	_lbl(th, &"DialogueName", sans_sb, T.SIZE_LEAD, T.CREAM)  # counterpart name (uppercased in code)
-	_lbl(th, &"DialogueRole", mono_label, T.SIZE_SMALL, T.CREAM_DIM)    # role line under the name
 	_lbl(th, &"DialogueTag", mono_label, T.SIZE_MICRO, T.CREAM_DIM)  # speaker-tag chip "ANCHOR — CANLI"
 	_lbl(th, &"QuoteSerifCream", serif_it, T.SIZE_LEAD, T.CREAM)     # spoken line
 	_lbl(th, &"DialogueMonologue", serif_it, T.SIZE_LEAD, T.CREAM_DIM) # interior voice
@@ -115,9 +98,6 @@ func _initialize() -> void:
 	_lbl(th, &"DialogueOdds", mono_reg, T.SIZE_SMALL, T.CREAM_DIM)   # odds / caption line
 	_lbl(th, &"DialogueNumber", mono_reg, T.SIZE_SMALL, T.CREAM_DIM) # step counter / numeric caption
 	_lbl(th, &"ZoneLabel", mono_label, T.SIZE_MICRO, T.CREAM_DIM)    # micro caption on the dark screens
-	_lbl(th, &"TooltipTitle", mono_label, T.SIZE_MICRO, T.ACCENT_CHROME)  # a dark tooltip's heading
-	_lbl(th, &"ConvictionValue", mono_reg, T.SIZE_BODY, T.CREAM)       # İKNA numeric readout
-	_lbl(th, &"StatStripLabel", mono_reg, T.SIZE_SMALL, T.CREAM)     # term-sheet pressure strip
 
 	# ---- Dark-register onboarding (3-page threshold ceremony) ----
 	_lbl(th, &"TitleSerifCream", serif_sb, T.SIZE_ED_CEREMONY, T.CREAM)  # page title on dark ("Karakter")
@@ -163,8 +143,6 @@ func _initialize() -> void:
 	_panel(th, &"ChipNegative", "PanelContainer", _box(T.NEGATIVE_BG, T.RADIUS_S, T.NEGATIVE_RULE, T.PAD_CHIP))
 	_panel(th, &"ChoiceCard", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_CHOICE))
 	_panel(th, &"ChoiceCardHover", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_CHOICE))
-	# A choice in the warning tone keeps the ChoiceCard padding, so turning alert moves no row.
-	_panel(th, &"ChoiceCardAlert", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.RADIUS_M, T.CARD_ATTENTION_BORDER, T.PAD_CHOICE))
 	_panel(th, &"HeaderBand", "PanelContainer", _sides_box(Color.TRANSPARENT, T.RADIUS_NONE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE), T.BORDER_DISABLED, T.PAD_STRIP))
 	# CardFloating: gövde üstünde yüzen kart (BuildHUD overlay'i).
 	var floating_sb := _box(T.CARD_FLOATING_BG, T.RADIUS_L, T.CARD_BORDER, T.PAD_CARD_TIGHT)
@@ -179,23 +157,10 @@ func _initialize() -> void:
 	window_sb.shadow_offset = Vector2(0, T.SPACE_XXS)
 	_panel(th, &"WindowPanel", "PanelContainer", window_sb)
 
-	# ---- Meeting dock (cream body) ----
-	# The dock's sections pad themselves, so the dock carries only its left hairline.
-	_panel(th, &"MeetingDock", "PanelContainer", _sides_box(T.BG_BODY, T.RADIUS_NONE, Vector4i(T.BORDER_HAIRLINE, 0, 0, 0), T.CARD_BORDER))
-	_panel(th, &"MeetingHeader", "PanelContainer", _sides_box(T.SURFACE_ROW_TINT, T.RADIUS_NONE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE), T.CARD_BORDER, T.PAD_MEETING_HEADER))
-	_panel(th, &"MeetingDeck", "PanelContainer", _sides_box(T.SURFACE_FRAME, T.RADIUS_NONE, Vector4i(0, T.BORDER_HAIRLINE, 0, 0), T.CARD_BORDER, T.PAD_MEETING_DECK))
-	_panel(th, &"MeetingFounderBubble", "PanelContainer", _box(T.INK, T.RADIUS_M, Color.TRANSPARENT, T.PAD_ROW))
-	# NumberChip: an option's number disc.
-	_panel(th, &"NumberChip", "PanelContainer", _box(T.SURFACE_SUNKEN, T.RADIUS_PILL))
-
 	# ---- Cinematic dialogue register: dark panels ----
-	# Column = floating semi-opaque charcoal (art shows through); Card = solid
-	# charcoal for the Frank popup; QuoteBox carries the amber left-edge bar;
-	# DialogueChoice(+Hover) swap on mouse-over.
-	_panel(th, &"DialogueColumn", "Panel", _box(T.DIALOGUE_COLUMN_BG, T.RADIUS_XXL))
+	# Card = solid charcoal for the Frank popup; DialogueChoice(+Hover) swap on mouse-over.
 	_panel(th, &"DialogueCard", "Panel", _box(T.DIALOGUE_BG, T.RADIUS_CARD_LG, T.DIALOGUE_CARD_BORDER))
 	_panel(th, &"PortraitFrame", "PanelContainer", _box(T.PORTRAIT_FRAME, T.RADIUS_PORTRAIT, Color.TRANSPARENT, T.PAD_FRAME))
-	_panel(th, &"QuoteBox", "PanelContainer", _sides_box(T.DIALOGUE_CARD_BG, T.RADIUS_M, Vector4i(T.BORDER_ACCENT, 0, 0, 0), T.ACCENT_CHROME, T.PAD_ROW))
 	_panel(th, &"DialogueChoice", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.DIALOGUE_CARD_BORDER, T.PAD_ROW))
 	_panel(th, &"DialogueChoiceHover", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.ACCENT_CHROME, T.PAD_ROW))
 
@@ -482,7 +447,7 @@ const DARK_OF := {
 		"BG_BODY": "D_SURFACE_0", "BG_TOPBAR": "D_SURFACE_1", "BG_PANEL": "D_SURFACE_1",
 		"DIALOGUE_CARD_BG": "D_SURFACE_2", "SURFACE_INPUT": "D_SURFACE_2", "VEIL_FAINT_CHROME": "D_SURFACE_2",
 		"CARD_BG": "D_SURFACE_3", "CARD_FLOATING_BG": "D_SURFACE_3", "DIALOGUE_BG": "D_SURFACE_3",
-		"DIALOGUE_COLUMN_BG": "D_SURFACE_3", "SURFACE_ROW_TINT": "D_SURFACE_4", "ACCENT_DIM": "D_SURFACE_4",
+		"SURFACE_ROW_TINT": "D_SURFACE_4", "ACCENT_DIM": "D_SURFACE_4",
 		"AMBER_BG": "D_SURFACE_4", "AMBER_WASH": "D_SURFACE_4", "VEIL_SOFT_CHROME": "D_SURFACE_4",
 		"SURFACE_FRAME": "D_SURFACE_5", "BG_AVATAR": "D_SURFACE_5", "INK": "D_SURFACE_5",
 		"SURFACE_SUNKEN": "D_BAR_TRACK", "CARD_BORDER": "D_BAR_TRACK", "DOT_IDLE_CHROME": "D_LINE_2",
@@ -506,7 +471,7 @@ const DARK_OF := {
 		"INK": "D_INK_2", "CREAM": "D_INK_2", "INK_MUTED": "D_INK_3", "INK_DIM": "D_INK_3",
 		"CREAM_DIM": "D_INK_3", "INK_FAINT_CHROME": "D_INK_3", "INK_DIM_CHROME": "D_INK_3",
 		"INK_FAINT": "D_INK_4", "ACCENT": "D_INK_1", "ACCENT_DEEP": "D_INK_1", "ACCENT_CHROME": "D_INK_1",
-		"INK_MUTED_CHROME": "D_INK_1", "ON_INK": "D_INK_1", "CARD_BG": "D_SURFACE_3", "NEGATIVE_BRIGHT": "D_NEG",
+		"INK_MUTED_CHROME": "D_INK_1", "CARD_BG": "D_SURFACE_3", "NEGATIVE_BRIGHT": "D_NEG",
 		"PAPER_INK": "PAPER_INK", "PAPER_INK_BODY": "PAPER_INK_BODY", "PAPER_INK_DECK": "PAPER_INK_DECK",
 		"PAPER_INK_MAST": "PAPER_INK_MAST", "PAPER_INK_META": "D_PAPER_INK_META",
 	},
@@ -750,6 +715,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"NavReason", cond_sb_caps, T.D_FS_12, T.D_INK_4],
 		[&"PartValue", sans_b, T.D_FS_36, T.D_INK_2],
 		[&"HeroValue", sans_sb, T.D_FS_30, T.D_INK_1],
+		[&"HeroArrow", sans_reg, T.D_FS_30, T.D_INK_3],
 		[&"KpiValue", sans_sb, T.D_FS_26, T.D_INK_2],
 		[&"PartValueArmed", sans_b, T.D_FS_26, T.D_INK_2],
 		[&"ClockLabel", sans_sb, T.D_FS_22, T.D_INK_2],
@@ -813,6 +779,7 @@ func _menajer(master: Theme) -> Theme:
 	# The risk and attention tags, the risk strip and the danger button bake both palettes from the D_
 	# helpers: the colour-blind one is the "Cb" twin, which the host picks through UiTokens.D_variation.
 	var strip_pad := Vector4(T.SPACE_XL, 0, T.SPACE_L, 0)
+	var meet_pad := Vector4(T.SPACE_L, T.SPACE_L, T.SPACE_XL, T.SPACE_L)
 	var chip_pad := _fit(sans_med, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S)
 	var flag_pad := Vector4(T.SPACE_M, chip_pad.y, T.SPACE_M, chip_pad.w)
 	for cb in [false, true]:
@@ -836,9 +803,14 @@ func _menajer(master: Theme) -> Theme:
 		# A deadline that ends this sprint or the next.
 		var warn: Dictionary = T.D_badge_palette(&"accent")
 		_panel(th, "FlagChipWarn" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_2, flag_pad, warn.line))
-		# The attention tag with a glyph before its word: the box holds both, the word is bare.
+		# A tag with a glyph before its word: the box holds both, the word is bare.
 		_panel(th, "TagWarnBox" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_2, tag, warn.line))
 		_lbl(th, "TagWarnInk" + twin, cond_b_caps, T.D_FS_13, warn.fg)
+		var gain: Dictionary = T.D_badge_palette(&"positive")
+		_panel(th, "TagPosBox" + twin, "PanelContainer", _flat(gain.bg, T.D_RADIUS_2, tag, gain.line))
+		_lbl(th, "TagPosInk" + twin, cond_b_caps, T.D_FS_13, gain.fg)
+		# A meeting option over the insult line, on the danger ground.
+		_panel(th, "MeetOptionAlert" + twin, "PanelContainer", _flat(risk.bg, T.D_RADIUS_3, meet_pad, risk.line))
 	T.set_colorblind(false)
 
 	# Boxes. Rows and bands take their height from the host; a document has its corner cut.
@@ -1182,6 +1154,52 @@ func _menajer(master: Theme) -> Theme:
 		var short: Dictionary = T.D_badge_palette(&"negative")
 		_panel(th, "ReqChipRisk" + ("Cb" if cb else ""), "PanelContainer", _flat(short.bg, T.D_RADIUS_2, req, short.line))
 	T.set_colorblind(false)
+
+	# ---- Toplantı: the meeting dock, the call, the term sheet table ----
+	# The dock stands over the office at its right; its head and its deck pad themselves. The founder's word
+	# in the transcript is a small document, a step lower once the sitting has moved on; the inner voice is a
+	# margin note on a 2 px rule. A result is a finished document, and so is the call's card.
+	var top := Vector4i(0, T.BORDER_HAIRLINE, 0, 0)
+	var say_pad := Vector4(T.SPACE_L, T.SPACE_M, T.SPACE_L, T.SPACE_L)
+	var wide_pad := Vector4(T.SPACE_XXL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XL)
+	for row in [
+		[&"Dock", _shadow(_flat(T.D_SURFACE_3, 0, Vector4.ZERO, T.D_LINE_2, Vector4i(T.BORDER_HAIRLINE, 0, 0, 0)),
+			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+		[&"DockHead", _flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_3XL, T.SPACE_XXL, T.SPACE_3XL, T.SPACE_XL), T.D_LINE_1, bottom)],
+		[&"DockDeck", _flat(T.D_SURFACE_3, 0, Vector4(T.SPACE_3XL, T.SPACE_XL, T.SPACE_3XL, T.SPACE_XXL), T.D_LINE_1, top)],
+		[&"SayDoc", _doc(_flat(T.D_SURFACE_4, 0, say_pad, T.D_LINE_2), T.D_CUT_SM)],
+		[&"SayDocPast", _doc(_flat(T.D_SURFACE_3, 0, say_pad, T.D_LINE_1), T.D_CUT_SM)],
+		[&"QuietNote", _flat(clear, 0, Vector4(T.SPACE_L, 0, 0, 0), T.D_LINE_2, Vector4i(T.BORDER_FOCUS, 0, 0, 0))],
+		[&"MeetOption", _flat(T.D_SURFACE_3, T.D_RADIUS_3, meet_pad, T.D_LINE_2)],
+		[&"MeetOptionHover", _flat(T.D_SURFACE_3, T.D_RADIUS_3, meet_pad, T.D_LINE_HOVER)],
+		[&"MeetOptionLocked", _flat(clear, T.D_RADIUS_3, meet_pad, T.D_LINE_1)],
+		[&"ResultDoc", _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_XXL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_M), T.D_LINE_2), T.D_CUT)],
+		[&"CallDoc", _shadow(_doc(_flat(T.D_SURFACE_3, 0, wide_pad, T.D_LINE_1), T.D_CUT), T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+		# The term sheet table: its head and foot bands, the head's figures (inset on their rule's side only, so the
+		# last ends on the column's edge), the sheet and its levers (their marker on the row's own edge, so the host
+		# insets their content), the fund's word, the other offer.
+		[&"StageHead", _flat(T.D_SURFACE_1, 0, Vector4.ZERO, T.D_LINE_1, bottom)],
+		[&"StageFoot", _flat(T.D_SURFACE_1, 0, Vector4.ZERO, T.D_LINE_1, top)],
+		[&"StageKpi", _flat(clear, 0, Vector4(T.SPACE_3XL, 0, 0, 0), T.D_LINE_1, Vector4i(T.BORDER_HAIRLINE, 0, 0, 0))],
+		[&"SheetDoc", _doc(_flat(T.D_SURFACE_3, 0, Vector4.ONE * T.SPACE_M, T.D_LINE_2), T.D_CUT)],
+		[&"LeverRow", _flat(clear, T.D_RADIUS_1, Vector4.ZERO)],
+		[&"LeverRowHover", _flat(clear, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_HOVER)],
+		[&"LeverRowSelected", _flat(T.D_SURFACE_4, T.D_RADIUS_1, Vector4.ZERO)],
+		[&"LeverRowSelectedHover", _flat(T.D_SURFACE_4, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_HOVER)],
+		[&"SayBox", _flat(T.D_SURFACE_2, T.D_RADIUS_3, wide_pad, T.D_LINE_1)],
+		[&"OtherDoc", _doc(_flat(T.D_SURFACE_3, 0, Vector4(T.SPACE_XXL, T.SPACE_L, T.SPACE_XL, T.SPACE_L), T.D_LINE_2), T.D_CUT_SM)],
+		[&"TagOutlineBox", _flat(clear, T.D_RADIUS_2, tag, T.D_LINE_2)],
+	]:
+		_panel(th, row[0], "PanelContainer", row[1])
+	# An option's or a lever's key: its number in a 24 px key, off when the option is not open.
+	for row in [[&"KeyCap", T.D_INK_3, T.D_LINE_3], [&"KeyCapOff", T.D_INK_OFF, T.D_LINE_1]]:
+		_lbl(th, row[0], cond_sb, T.D_FS_14, row[1])
+		th.set_stylebox("normal", row[0], _flat(clear, T.D_RADIUS_2, Vector4.ZERO, row[2]))
+	for row in [[&"SayLine", sans_reg, T.D_FS_16, T.D_INK_1], [&"FrankLine", serif_reg, T.D_FS_18, T.D_INK_1],
+			[&"TagOutlineInk", cond_b_caps, T.D_FS_13, T.D_INK_3]]:
+		_lbl(th, row[0], row[1], row[2], row[3])
+	for line in [&"SayLine", &"FrankLine"]:
+		th.set_constant("line_spacing", line, T.D_LEADING_PARA)
 
 	# Message body and ticker text.
 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")

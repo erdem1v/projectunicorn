@@ -687,11 +687,14 @@ static func view_state() -> Dictionary:
 			"terms": _terms_text(_other_terms)})
 	elif lev_active:
 		box_text = TranslationServer.translate("TERM_LEVERAGE_BOX").format({"investor": other_name})
+	var lead: Dictionary = CounterpartSystem.lead(_vc_id)
 	return {
 		"state": _state,
 		"display_name": inv.get("display_name", ""),
 		"archetype_line": InvestorRegistry.archetype_line(_vc_id),
-		"lead_look": CounterpartSystem.lead(_vc_id).look,
+		"lead": {"name": lead.name, "title": CounterpartSystem.title(lead, _vc_id), "look": lead.look},
+		# The offer's time left; -1 where it runs out on nothing: a seed offer, a fund that walked.
+		"weeks_left": -1 if is_seed() or _fund_walked else VCPitchSystem.sheet_for(_vc_id).weeks_left(GameState.day),
 		"patience": {"current": _patience, "max": _patience_max},
 		"levers": _lever_views(),
 		"selected_lever": _selected_lever,
@@ -745,6 +748,7 @@ static func _lever_views() -> Array:
 		out.append({
 			"id": lever,
 			"name_tr": _lever_name(lever),
+			"locked": _lever_locked(lever),
 			"current_text": _current_text(lever),
 			"ghost_text": _ghost_text(lever),
 			# The odds line is where the row explains itself, so a locked row says why
@@ -954,12 +958,10 @@ static func _lever_name(lever: String) -> String:
 
 
 static func _kasa_runway_text() -> String:
-	# GROSS runway in WEEKS — deliberate table lens (VC side ignores revenue; the player
-	# shell shows NET months). Floored at 0 like VCPitchSystem._gross_runway_months: a
-	# company in the red has no runway left, not a negative one.
-	var weeks: int = maxi(0, floori(float(GameState.cash) / TimeModel.per_tick(maxi(GameState.daily_burn, 1))))
-	return TranslationServer.translate(Fmt.count_key("TERM_CASH_RUNWAY", weeks)).format({
-		"cash": UiTokens.format_money(GameState.cash), "weeks": weeks})
+	# GROSS runway, the table's own lens (the fund ignores revenue; the shell shows the net), in the shell's
+	# months.
+	return TranslationServer.translate("TERM_CASH_RUNWAY").format({"cash": Fmt.money(GameState.cash),
+		"runway": UiTokens.net_runway_text(VCPitchSystem.gross_runway_months())})
 
 
 # ============================================================================

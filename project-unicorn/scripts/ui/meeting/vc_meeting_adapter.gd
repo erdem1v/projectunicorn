@@ -119,12 +119,12 @@ func _band(vs: Dictionary) -> String:
 func _beat_step(vs: Dictionary) -> Dictionary:
 	var band := _band(vs)
 	var step := {
-		"kicker": tr("MEETING_KICKER_BEAT").format({
-			"kicker": tr("MEETING_KICKER_SEED" if _seed else "MEETING_KICKER_VC"),
-			"beat": vs.beat_label}),
+		"kicker": tr("MEETING_KICKER_SEED" if _seed else "MEETING_KICKER_VC"),
+		"beat": vs.beat_label,
 		"speaker": _speaker(_beat),
 		"attitude": {"value": int(vs.conviction.value), "word_key": UiTokens.attitude_word_key(band),
-			"band": band, "odds_text": "", "hover": []},
+			"band": band, "odds_text": "", "hover": [],
+			"edges": [UiTokens.ATTITUDE_WARY_MIN, PitchConstants.ILIK_MIN, PitchConstants.WON_MIN]},
 		"can_withdraw": vs.can_withdraw,
 		"options": [],
 	}
@@ -142,8 +142,7 @@ func _beat_step(vs: Dictionary) -> Dictionary:
 
 
 ## What the other side says in a view. A reaction to the story comes from the partner before the
-## question; a quiet line follows: the founder's inner voice, or on the result Frank's word on the
-## way out.
+## question; the founder's inner voice follows, and on a rejection Frank's word on the way out.
 func _lines(vs: Dictionary) -> Array:
 	var out := []
 	if vs.get("reaction_line", "") != "":
@@ -152,6 +151,8 @@ func _lines(vs: Dictionary) -> Array:
 		out.append({"kind": "counterpart", "seat": _speaker(_beat), "text": vs.active_line})
 	if vs.get("monologue_text", "") != "":
 		out.append({"kind": "quiet", "text": vs.monologue_text})
+	if vs.get("frank_line", "") != "":
+		out.append({"kind": "frank", "text": vs.frank_line})
 	return out
 
 

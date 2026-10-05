@@ -1138,7 +1138,7 @@ VC_PREP_TOO_SOON_ONE,"Toplantı bu hafta, hazırlığa vakit kalmadı","The meet
 VC_BLOCK_LATE,Mesainin kalanı bir fonla masaya oturmaya yetmez. Artık gelecek hafta.,"Not enough of the workday left to sit down with a fund. Next week, then."
 VC_CALLBACK_REOPENED,Kapı yeniden açıldı: {investor}. Tekrar iste.,{investor}'s door is open again. Ask again.
 VC_REHEARSED,PROVA EDİLDİ,REHEARSED
-VC_BEAT1_LABEL,Odayı Oku · 1/4,Read the Room · 1/4
+VC_BEAT1_LABEL,Odayı oku · 1/4,Read the room · 1/4
 VC_B1_LINE,"""{investor}. Otur. Vaktim kısa — beni neden buraya çağırdığını göster.""","""{investor}. Sit. My time is short — show me why you called me here."""
 VC_B1_MONO,Odayı oku.,Read the room.
 VC_B1_MONO_WHY,Odayı oku: {reasons},Read the room: {reasons}
@@ -1207,7 +1207,6 @@ VC_RES_CALLBACK,"""Koşulu biliyorsun. Tuttur, kapı açık.""","""You know the 
 VC_RES_PUSH_WIN,"""Cesaretin varmış. Teklif yolda.""","""You had nerve. The offer is on its way."""
 VC_RES_PUSH_LOSS,"""Zorladın ve tutmadı. Kapı kapandı.""","""You pushed and it did not hold. The door is closed."""
 VC_RES_DEFAULT,"""Bugün olmadı.""","""Not today."""
-VC_FRANK_COLD_EXIT,"Frank: ""{line}""","Frank: ""{line}"""
 VC_FRANK_COLD_ANCHOR,"Onlar bir rakam istedi, sende yoktu. Git bul.",They wanted a number you didn't have. Go get it.
 VC_FRANK_COLD_NEXUS,Ürünü değil seni aldılar ya da almadılar. Bunu düşün.,They weren't buying the product. They were buying you. Think about that.
 VC_FRANK_COLD_BOSPHORUS,Bunu bana sorarlar. Ben hallederim.,I'll hear about this one. Let me handle it.
@@ -1271,17 +1270,18 @@ TERM_SPLIT_BASE,temel {pct},base {pct}
 TERM_SPLIT_SKILL, · +{pct} {skill}, · +{pct} {skill}
 TERM_SPLIT_LEVERAGE, · +{pct} kaldıraç, · +{pct} leverage
 TERM_SPLIT_DECAY, · −{pct} tekrar, · −{pct} repeat
-TERM_PATIENCE,SABIR,PATIENCE
-TERM_OFFER_HEADER,MASADAKİ TEKLİF,THE OFFER ON THE TABLE
-TERM_PUSH,İTİR,PUSH
+TERM_PATIENCE,Sabır,Patience
+TERM_OFFER_HEADER,Masadaki teklif,The offer on the table
+TERM_PUSH,İtir,Push
 TERM_RESULT_HEADER,SONUÇ,RESULT
+TERM_DIAL_CHANCE,İtme şansı,Push chance
+TERM_DIAL_ROLL,Son zar,Last roll
 TERM_LEVER_BOARD,Board,Board
 TERM_BOARD_CLEAN,temiz,clean
 TERM_BOARD_SEATS,{n} koltuk,{n} seats
 TERM_BOARD_VETO, + veto, + veto
 TERM_INVESTMENT,{amount} yatırım,{amount} investment
-TERM_CASH_RUNWAY,Kasa: {cash} · Runway: {weeks} hafta,Cash: {cash} · Runway: {weeks} weeks
-TERM_CASH_RUNWAY_ONE,Kasa: {cash} · Runway: {weeks} hafta,Cash: {cash} · Runway: {weeks} week
+TERM_CASH_RUNWAY,Kasa: {cash} · Runway: {runway},Cash: {cash} · Runway: {runway}
 TERM_TABLES_CLOSED,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
 TERM_LEVERAGE_BOX,Cebinde 2. term sheet var — {investor}. Bunu onlar da biliyor.,You have a second term sheet in your pocket — {investor}. They know it too.
 TERM_RESULT_ACCEPTED,Kabul ettiler. {move}.,They accepted. {move}.
@@ -1298,13 +1298,13 @@ TERM_FRANK_OPENING,İlk teklifleri bu. Zorla.,This is their opening offer. Push.
 TERM_FRANK_NEXT_MOVE,Sıradaki hamle senin.,Next move is yours.
 TERM_SIGN_Q,İmzala?,Sign?
 TERM_SIGN_BODY,{amount} yatırım · {terms} ile imzala? Bu turu kapatır.,Sign for {amount} on {terms}? That closes this round.
-TERM_SIGN_OK,İMZALA,SIGN
+TERM_SIGN_OK,İmzala,Sign
 TERM_WALK_Q,Masadan kalk?,Walk away?
 TERM_WALK_BODY,"Masadan kalkarsan bu teklif gider, fon da kapanır. Ret sayılmaz.","Walk away and this offer is gone, and so is the fund. It does not count as a rejection."
-TERM_WALK_OK,MASADAN KALK,WALK AWAY
-TERM_SHOW_OTHER,DİĞER TEKLİFİ GÖSTER,SHOW THE OTHER OFFER
+TERM_WALK_OK,Masadan kalk,Walk away
+TERM_SHOW_OTHER,Diğer teklifi göster,Show the other offer
 TERM_SHOW_OTHER_USED,Diğer teklifi zaten gösterdin.,You have already shown them the other offer.
-TERM_LEAVE,MASADAN AYRIL,LEAVE THE TABLE
+TERM_LEAVE,Masadan ayrıl,Leave the table
 TERM_OTHER_SHOWN_BOX,Diğer teklif · {investor}: {terms},The other offer · {investor}: {terms}
 TERM_RESULT_FINAL_MOVE,Bir kez daha esnediler: {move}. Bu son teklif. İmzala ya da masadan kalk.,"They gave a little more: {move}. This is final. Sign, or walk away from the table."
 TERM_RESULT_WALKED,Masadan kalktılar. Teklif gitti.,They left the table. The offer is gone.
@@ -1499,6 +1499,10 @@ TOPBAR_NEXT,Sıradaki,Up next
 TOPBAR_NEXT_OFFER,Teklif · {n} hafta kaldı,Offer · {n} weeks left
 TOPBAR_NEXT_OFFER_LAST,Teklif · bu hafta son,Offer · final week
 TOPBAR_NEXT_SPRINT_FINAL,Sprint kararı · bu hafta son,Sprint decision · final week
+TOPBAR_NEXT_MEETING,{time} · {company},{time} · {company}
+TOPBAR_NOW,Şimdi,Now
+TOPBAR_IN_MEETING,Görüşmede,In a meeting
+TOPBAR_TRIP_HOME,Ofise dönüş,Back to the office
 TOPBAR_NEXT_WORKDAY_END,Mesai bitimi · {n} saat,Workday ends · {n} h
 MONTH_TITLE,{month} {year},{month} {year}
 SUMMARY_TITLE_WEEK,Hafta {week} · {year},Week {week} · {year}
@@ -1743,7 +1747,7 @@ MEETING_ROLE_ANALYST,Analist,Analyst
 MEETING_ROLE_BUYER,Satın Alma Sorumlusu,Procurement Lead
 MEETING_ROLE_USER,Ekip Yöneticisi,Team Manager
 MEETING_ROLE_FINANCE,Finans Direktörü,Finance Director
-MEETING_INVITE_KICKER,GELEN ARAMA · {hour}:00,INCOMING CALL · {hour}:00
+MEETING_INVITE_KICKER,Gelen arama · {hour}:00,Incoming call · {hour}:00
 MEETING_INVITE_VC,{fund} adına {person} bu hafta görüşmek istiyor.,{person} of {fund} wants to meet this week.
 MEETING_INVITE_SALES,{company} adına {person} görüşmeye hazır.,{person} of {company} is ready to meet.
 MEETING_ACCEPT,Kabul et,Accept
@@ -1755,12 +1759,13 @@ MEETING_POSTPONED_ONCE,Bu toplantı bir kez ertelendi; bir daha ertelenemez.,Thi
 MEETING_POSTPONED_VC,Toplantı gelecek haftaya ertelendi. Bir daha ertelenemez.,The meeting moved to next week. It can't be put off again.
 MEETING_BACK_ASK,Nasıl geçti?,How did it go?
 MEETING_TOWER_CHIP,{place} · {person},{place} · {person}
-MEETING_KICKER_VC,YATIRIMCI GÖRÜŞMESİ,INVESTOR MEETING
-MEETING_KICKER_SEED,SEED GÖRÜŞMESİ,SEED MEETING
-MEETING_KICKER_SALES,SATIŞ GÖRÜŞMESİ,SALES MEETING
-MEETING_KICKER_BEAT,{kicker} · {beat},{kicker} · {beat}
-MEETING_ATTITUDE,TUTUM,ATTITUDE
-MEETING_MEMORY,HAFIZA,MEMORY
+TRIP_SKIP_HINT,Yolu geçmek için tıkla ya da Esc'ye bas.,Click or press Esc to skip the trip.
+MEETING_KICKER_VC,Yatırımcı görüşmesi,Investor meeting
+MEETING_KICKER_SEED,Seed görüşmesi,Seed meeting
+MEETING_KICKER_SALES,Satış görüşmesi,Sales meeting
+MEETING_ATTITUDE,Tutum,Attitude
+MEETING_MEMORY,Hafıza,Memory
+MEETING_AT_TABLE,Masada,At the table
 MEETING_ATT_COLD,soğuk,cold
 MEETING_ATT_WARY,temkinli,wary
 MEETING_ATT_LUKEWARM,ılık,lukewarm
@@ -1776,9 +1781,9 @@ MEETING_CHIP_ROOM,ODA,ROOM
 MEETING_CHIP_MEMORY,HAFIZA,MEMORY
 MEETING_MARK_FAVORED,SEVDİĞİ AÇI,THEIR ANGLE
 MEETING_CONTINUE,Devam,Continue
-MEETING_RES_EFFECT,MASAYA ETKİSİ,ON THE TABLE
-MEETING_RES_RELATION,İLİŞKİ,RELATIONSHIP
-MEETING_RES_MEMORY,HAFIZAYA YAZILAN,WHAT THEY'LL REMEMBER
+MEETING_RES_EFFECT,Masaya etkisi,On the table
+MEETING_RES_RELATION,İlişki,Relationship
+MEETING_RES_MEMORY,Hafızaya yazılan,What they'll remember
 MEETING_RES_RELATION_LINE,{name}: {from} → {to},{name}: {from} → {to}
 MEETING_RES_OFFER,Teklif gelecek,An offer is coming
 MEETING_RES_CALLBACK,Yeniden görüşülecek,They want to meet again
@@ -1793,7 +1798,7 @@ MEETING_RES_LOCK,{weeks} hafta bu şirkete dönülemez,No going back to this com
 MEETING_RES_NO_TRACE,İz bırakmadı,No trace left
 MEETING_RES_PRICE_OUT,Sabırları tükendi,Their patience ran out
 MEETING_RES_INSULT_MEMORY,Teklifin hakaret sayıldı,Your offer was taken as an insult
-MEETING_OFFER_ROW,TEKLİF · {price},OFFER · {price}
+MEETING_OFFER_ROW,Teklif · {price},Offer · {price}
 MEETING_ROLE_LINE,{role} · {company},{role} · {company}
 MEETING_RES_PAIR,{first} · {second},{first} · {second}
 MEETING_RES_COST_BRAND,Marka −{brand},Brand −{brand}
@@ -2297,13 +2302,14 @@ NEG_UNITS_SEATS,koltuk,seats
 NEG_UNITS_EQUITY,hisse,equity
 NEG_PRICE_SEAT,Koltuk fiyatı,Seat price
 NEG_PRICE_VALUATION,Değerleme,Valuation
-NEG_OFFER,TEKLİF ET,MAKE THE OFFER
-NEG_ACCEPT,KABUL ET,ACCEPT
-NEG_WALK,MASADAN KALK,WALK AWAY
-NEG_PATIENCE,SABIR,PATIENCE
-NEG_COUNTER,Karşı rakam {price},Their number {price}
+NEG_OFFER,Teklif et,Make the offer
+NEG_ACCEPT,Kabul et,Accept
+NEG_WALK,Masadan kalk,Walk away
+NEG_PATIENCE,Sabır,Patience
+NEG_COUNTER,Karşı rakam · {price},Their number · {price}
 NEG_CONFIRM_LINE,{units} {unit_label} × {price} = {mrr} MRR,{units} {unit_label} × {price} = {mrr} MRR
 NEG_CAPACITY,Kapasite: {used}/{cap},Capacity: {used}/{cap}
+NEG_DEAL_IF_ACCEPT,Kabul edersen: {line},If you accept: {line}
 NEG_LOCK_PROMISE,Verilen söz üst ucu kapattı.,The promise closed the top end.
 NEG_INSULT_REASON,Bu rakam masayı devirir.,That number tips the table over.
 SALES_ARCH_OPS_CAUTIOUS_LINE,PH: Ölçülü bir alıcı. Önce kararlılığı sorar.,PH: A measured buyer. Stability comes first.
@@ -2362,7 +2368,7 @@ SALES_ANS_PROBE_CAPACITY_A_ADMIT,PH: Yoğun günde kapasite zorlanıyor. Bugünk
 SALES_ANS_PROBE_CAPACITY_A_PROMISE,PH: Kapasiteyi sizin yükünüze göre büyütürüm.,PH: I will size the capacity to your load.
 SALES_LOG_EXPIRED,{company} beklemekten vazgeçti,{company} stopped waiting
 SALES_LOG_FOUNDER_CLOSE,{company} anlaşmasını sen kapattın · {amount}/ay,You closed {company} · {amount}/mo
-NEG_LAST_OFFER,SON RAKAM,THEIR LAST NUMBER
+NEG_LAST_OFFER,Son rakam,Their last number
 NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,Patience is out. Take this number or the table closes.
 B2B_LOCK_NO_PAIN_TARGET,Ne istediklerini söylemediler. Söz verilecek bir şey yok.,They haven't named what they want. There's nothing to promise yet.
 B2B_LOCK_PAIN_SHIPPED,İstedikleri şey zaten yayında.,What they asked for is already live.

@@ -58,7 +58,7 @@ func _ready() -> void:
 	load_layout(OfficeSystem.current())
 	travel = TRAVEL.new(self, _people, _city)
 	$Overlay.add_child(travel)
-	invite = MeetingInvite.new(self, _people)
+	invite = MeetingInvite.new(self, _people, $Overlay/NoticeStack)
 	$Overlay.add_child(invite)
 
 

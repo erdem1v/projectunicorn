@@ -242,7 +242,7 @@ static func _token_rows(T) -> Array:
 		["D_INK_1", T.D_INK_1, "body", win + risk_card], ["D_INK_2", T.D_INK_2, "body", s + risk_card],
 		["D_INK_3", T.D_INK_3, "body", s + risk_card],
 		["D_INK_4", T.D_INK_4, "body", win], ["D_INK_OFF", T.D_INK_OFF, "off", win],
-		["D_ACCENT", T.D_ACCENT, "body", [s[1], s[4]]],
+		["D_ACCENT", T.D_ACCENT, "body", [s[1], s[3], s[4]]],
 		["D_ON_ACCENT", T.D_ON_ACCENT, "body", [["accent", T.D_ACCENT], ["accent-hover", T.D_ACCENT_HOVER],
 			["accent-pressed", T.D_ACCENT_PRESSED]]],
 		["D_pos", T.D_pos(), "body", win + risk_card], ["D_warn", T.D_warn(), "body", win + risk_card],

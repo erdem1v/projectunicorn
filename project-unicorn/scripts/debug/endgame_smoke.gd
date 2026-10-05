@@ -2848,11 +2848,11 @@ static func _case_gross_runway_months() -> String:
 	# Gross burn runway = cash / daily_burn / 30, always finite, 0 at cash ≤ 0.
 	GameState.set_cash(30000)
 	GameState.set_daily_burn(50)   # 30000/50/30 = 20 months
-	var m: float = VCPitchSystem._gross_runway_months()
+	var m: float = VCPitchSystem.gross_runway_months()
 	if int(round(m)) != 20:
 		return "gross months wrong: %.2f (want ~20)" % m
 	GameState.set_cash(0)
-	if VCPitchSystem._gross_runway_months() != 0.0:
+	if VCPitchSystem.gross_runway_months() != 0.0:
 		return "gross at cash 0 should be 0"
 	return ""
 
@@ -9233,21 +9233,19 @@ static func _case_overload_costs_output() -> String:
 
 
 static func _case_star_ruler_contract() -> String:
-	# Onaylı tasarım her yeteneği BEŞ YILDIZ çiziyor ve yarım yıldızı destekliyor. Cetvel
-	# tek yerde yaşıyor: HRConstants.stars_for. İki uç da anlamlı olmalı — tavan tam beş,
-	# tek sayılar yarım.
+	# Yıldız bir kural birimidir: hat kapıları, Ar-Ge gereksinimi, satış ligi ve müşteri temsilcisinin
+	# kapasitesi yeteneği yıldıza çevirip okur, yarım yıldız dahil. Cetvel tek yerde yaşıyor:
+	# HRConstants.stars_for. İki uç da anlamlı olmalı: tavan tam beş, tek sayılar yarım.
 	# FALSİFİKASYON: AREA_MAX'i 9'a döndür → ikinci iddia FAIL (tavan 4,5 yıldız okur).
 	if HRConstants.POINTS_PER_STAR != 2:
 		return "POINTS_PER_STAR is %d; the half-star grammar needs exactly 2" % HRConstants.POINTS_PER_STAR
 	if not is_equal_approx(HRConstants.stars_for(HRConstants.AREA_MAX), float(HRConstants.STAR_MAX)):
 		return "the top of the ruler is %.1f stars, want a full %d — five can never fill" % [
 			HRConstants.stars_for(HRConstants.AREA_MAX), HRConstants.STAR_MAX]
-	# KURUCU DA BU CETVELDE (§2.4 + §5.3). Bu satır turdan ÖNCE DÜŞERDİ: SKILL_CEILING 5'ti
-	# ve stars_for(5) = 2,5 yıldız verirdi — Kişisel kartı kurucuya asla dolduramayacağı bir
-	# yıldız satırı çiziyordu. Cetvelin gerçekten birleştiğinin tek cümlelik ispatı.
+	# KURUCU DA BU CETVELDE (§2.4 + §5.3): tavanı tam beş yıldızdır.
 	if not is_equal_approx(HRConstants.stars_for(FounderConstants.SKILL_CEILING),
 			float(HRConstants.STAR_MAX)):
-		return "the founder ceiling renders %.1f stars, want a full %d — §2.4 puts him on the shared ruler" % [
+		return "the founder ceiling reads %.1f stars, want a full %d — §2.4 puts him on the shared ruler" % [
 			HRConstants.stars_for(FounderConstants.SKILL_CEILING), HRConstants.STAR_MAX]
 	if not is_equal_approx(HRConstants.stars_for(0), 0.0):
 		return "zero points is not zero stars"
