@@ -2071,10 +2071,6 @@ PROD_LOCK_RESEARCH,"Ar-Ge ""{node}"" {mark}","R&D ""{node}"" {mark}"
 PROD_LOCK_PERSON,{area} {stars} {mark},{area} {stars} {mark}
 PROD_LOCK_TOTAL,{area} toplam {stars} (sizde {have}) {mark},{area} total {stars} (you have {have}) {mark}
 PROD_TEAM_GROUP_COUNT,({n}),({n})
-PROD_TEAM_AVAIL_LEAVE,İzinde · {n} hafta sonra katılır,On leave · joins in {n} weeks
-PROD_TEAM_AVAIL_LEAVE_ONE,İzinde · gelecek hafta katılır,On leave · joins next week
-PROD_TEAM_AVAIL_TRAINING,Eğitimde · {n} hafta sonra katılır,In training · joins in {n} weeks
-PROD_TEAM_AVAIL_TRAINING_ONE,Eğitimde · gelecek hafta katılır,In training · joins next week
 PROD_RND_NODE_DATA_MODEL_DESC,Verinin ortak şeması. Her kayıt aynı dilden konuşur.,A common schema for the data. Every record starts speaking the same language.
 PROD_RND_NODE_DATA_MODEL_UNLOCK,Entegrasyonlar hattının son kademesi.,The last tier of the Integrations line.
 PROD_RND_NODE_AI_ENGINE_DESC,Dil modeli altyapısı. Ürününüz artık anlayabilir.,Language model infrastructure. Your product can understand now.
@@ -2117,14 +2113,14 @@ PROD_RND_NODE_PERSONALIZATION_DESC,Ürün kullanıcının alışkanlığını ö
 PROD_RND_NODE_PERSONALIZATION_UNLOCK,Uyarlanabilir Arayüz adında yeni bir özellik hattı. İçeriği Erken Erişim'de açılır.,A new feature line called Adaptive Interface. Its content opens in Early Access.
 PROD_RND_NODE_DATA_MODEL_DISCOVERY,Aynı müşteri üç ayrı tabloda üç ayrı isimle duruyordu. Perşembe akşamı üçü tek satırda birleşti. Ertesi sabah kimse hangi tablodan bakacağını sormadı.,The same customer sat in three tables under three different names. On Thursday evening the three became one row. The next morning nobody asked which table to look in.
 PROD_RND_NODE_SCALABLE_BACKEND_DISCOVERY,"Salı günü herkes aynı saatte girdi ve sayfa açılmadı. Cuma günü aynı kalabalık geldi, kimse fark etmedi. Aynı donanımla artık daha çok kullanıcı taşıyoruz.",On Tuesday everyone came in at the same hour and the page would not open. On Friday the same crowd arrived and nobody noticed. The same hardware carries more people now.
-PROD_RND_NODE_BUG_TRACKER_DISCOVERY,Hatalar sohbet penceresinde konuşuluyordu; ikisi orada kaldı. Şimdi her bildirimin bir numarası ve bir sahibi var. Masaya düşen bildirimin hepsini aynı gün doğruluyoruz.,"Bugs used to be talked over in a chat window, and two of them stayed there. Now every report has a number and an owner. Everything that reaches the desk is verified the same day."
-PROD_RND_NODE_DESIGN_SYSTEM_DISCOVERY,İki ekranda buton iki farklı maviydi ve kimse hangisinin doğru olduğunu bilmiyordu. Tasarımcı bir öğleden sonra hepsini tek dosyaya taşıdı. Deneyim kademelerini artık hazır parçalardan kuruyoruz.,The button was two different blues on two screens and nobody knew which one was right. In one afternoon the designer moved them all into a single file. We build the Experience tiers out of ready parts now.
+PROD_RND_NODE_BUG_TRACKER_DISCOVERY,Hatalar sohbet penceresinde konuşuluyordu; ikisi orada kaldı. Şimdi her bildirimin bir numarası ve bir sahibi var.,"Bugs used to be talked over in a chat window, and two of them stayed there. Now every report has a number and an owner."
+PROD_RND_NODE_DESIGN_SYSTEM_DISCOVERY,İki ekranda buton iki farklı maviydi ve kimse hangisinin doğru olduğunu bilmiyordu. Tasarımcı bir öğleden sonra hepsini tek dosyaya taşıdı.,The button was two different blues on two screens and nobody knew which one was right. In one afternoon the designer moved them all into a single file.
 PROD_RND_NODE_AI_ENGINE_DISCOVERY,Model üç haftadır saçmalıyordu. Bu sabah ilk defa doğru cevabı verdi. Kimse alkışlamadı; herkes ekrana baktı.,The model had been talking nonsense for three weeks. This morning it gave the right answer for the first time. Nobody clapped; everyone just looked at the screen.
 PROD_RND_NODE_SEMANTIC_INDEX_DISCOVERY,Kelime kelime arama bulmuyordu; kimse aradığı şeyi tam hatırlamıyordu. Bu hafta biri geçen ayki fiyat konuşmasını tarif etti. Doğru kayıt en üstte çıktı.,Searching word by word was finding nothing; nobody remembers the exact words. This week someone described last month's conversation about price. The right record came up first.
 PROD_RND_NODE_SECURITY_CERT_DISCOVERY,Denetçi iki gün ofiste oturdu ve her kalemi ayrı ayrı sordu. Cuma öğleden sonra imza geldi. Satış ekibi belgeyi bir sonraki görüşmede masaya koydu.,The auditor sat in the office for two days and asked about every item separately. On Friday afternoon the signature came. Sales put the certificate on the table in the next meeting.
 PROD_RND_NODE_ANALYTICS_ENGINE_DISCOVERY,Sorular hep aynıydı ve cevabı her seferinde biri elle çıkarıyordu. Bu sabah aynı soru ekranda kendi cevabını taşıyordu. Kimse tabloyu indirmedi.,The questions were always the same and someone worked the answer out by hand every time. This morning the question carried its own answer on the screen. Nobody downloaded a spreadsheet.
 PROD_RND_NODE_CICD_DISCOVERY,Cuma akşamı gönderilen değişiklik pazartesiye kadar kırık kaldı. Bu hafta aynı kırık daha kimse odadan çıkmadan geri döndü. Geliştirmeden artık daha az hata çıkıyor.,A change sent out on Friday evening stayed broken until Monday. This week the same break came back before anyone had left the room. Less comes out of development broken now.
-PROD_RND_NODE_TEST_AUTOMATION_DISCOVERY,Aynı hatayı üçüncü kez elle bulduk ve kimse gülmedi. Sınamalar o geceden beri kendi kendine koşuyor. Beta'da hata bulma temposu günler geçtikçe eskisi kadar düşmüyor.,We found the same bug by hand for the third time and nobody laughed. Since that night the tests have been running on their own. Beta keeps finding bugs later into the run than it used to.
+PROD_RND_NODE_TEST_AUTOMATION_DISCOVERY,Aynı hatayı üçüncü kez elle bulduk ve kimse gülmedi. Sınamalar o geceden beri kendi kendine koşuyor.,We found the same bug by hand for the third time and nobody laughed. Since that night the tests have been running on their own.
 PROD_RND_NODE_USER_RESEARCH_DISCOVERY,Ürün toplantısında herkes kullanıcının ne istediğini biliyordu ve üçü ayrı şey söyledi. Sonra biri gerçekten arayıp sordu. Odada uzun bir sessizlik oldu.,"In the product meeting everyone knew what the user wanted, and three of them said different things. Then somebody actually called and asked. The room went quiet for a while."
 PROD_RND_NODE_ONBOARDING_FLOW_DISCOVERY,Yeni gelenler ilk ekranda takılıp bir daha dönmüyordu. Bir hafta boyunca ilk beş dakikayı baştan yazdık. Ücretsiz deneyen artık daha sık ödemeye geçiyor.,New arrivals got stuck on the first screen and never came back. For a week we rewrote the first five minutes. More of the people who try it free stay and pay now.
 PROD_LINE_HIDDEN_SELF_SERVE,Kendi Kendine Servis,Self Service
@@ -2166,18 +2162,15 @@ RND_NOTE_TECH_B2C_1,Bu ay en çok paylaşılan video tek bir konuyu anlatıyor: 
 RND_NOTE_TECH_B2C_2,Stajyer öğle arasında bir demo açtı ve masanın yarısı başına toplandı. Kimse akşama kadar konuyu bırakmadı.,At lunch an intern opened a demo and half the desk gathered round. Nobody let the subject go until evening.
 RND_NOTE_TECH_B2C_3,Rakiplerin iş ilanları değişmiş; aradıkları unvanlar bizim listemizde yok. Bir yöne doğru işe alıyorlar.,"The rivals' job posts have changed, and the titles they are hiring for are not on our list. They are hiring toward something."
 RND_TREE_HINT,Araştırdıkça açılır.,It opens as you research.
-RND_TREE_PROGRESS,Tamamlanan {done} / {total},Completed {done} / {total}
 RND_FAMILY_CAPABILITY,İŞLEV,FUNCTION
 RND_FAMILY_PLATFORM,PLATFORM,PLATFORM
 RND_FAMILY_PRACTICE,SÜREÇ,PROCESS
 RND_FAMILY_DESIGN,TASARIM,DESIGN
-RND_COL_HEADER,{family} · {area} alanı · {done}/{total},{family} · {area} area · {done}/{total}
-RND_COL_HEADER_SHORT,{family} · {done}/{total},{family} · {done}/{total}
 RND_PLACE_ROOT,kök,root
 RND_PLACE_BRANCH,dal,branch
 RND_PLACE_CONT,devam,continuation
 RND_LOCKED_SLOT,? {area},? {area}
-RND_UNLOCKS_PREFIX,Açtığı şey:,What it opens:
+RND_UNLOCKS_PREFIX,Açtığı şey,What it opens
 RND_START,Başlat,Start
 RND_WEEKS_LEFT,~{n} hafta kaldı,~{n} weeks left
 RND_WEEKS_LEFT_ONE,~{n} hafta kaldı,~{n} week left
@@ -2198,7 +2191,6 @@ RND_REQ_UNMET,eksik,missing
 RND_BAR_TITLE,ARAŞTIRMA,RESEARCH
 RND_BAR_PAUSE,duraklat,pause
 RND_DISCOVERY_TITLE,Keşif,Discovery
-RND_OPENED_PREFIX,Açıldı:,Opened:
 RND_HIDDEN_LINE_OPENED,Yeni özellik hattı açıldı: {line},A new feature line has opened: {line}
 RND_EA_LINE_NOTE,Bu hattın içeriği Erken Erişim'de açılıyor.,The content of this line opens in Early Access.
 RND_NOTE_TITLE,Aylık ürün notu,Monthly product note
@@ -2212,15 +2204,13 @@ RND_LEGEND_CROSS,başka aileden gereksinim,a requirement from another family
 RND_LEGEND_LOCKED,kilitli yuva,a locked slot
 RND_LEGEND_AVAILABLE,araştırılabilir,can be researched
 RND_LEGEND_DONE,tamamlandı,completed
-RND_LEGEND_COUNT,{families} aile × {per} araştırma = {total},{families} families × {per} = {total}
 HR_JOB_RESEARCH,Araştırma,Research
 HR_ASSIGN_RESEARCH_ELSEWHERE,Araştırma ataması Ar-Ge sayfasında yapılır.,Research is assigned on the R&D page.
-RND_ACTION_APPLY,uygula,apply
-RND_ACTION_BACK,geri,back
+RND_ACTION_APPLY,Uygula,Apply
+RND_ACTION_BACK,Geri,Back
 RND_ASSIGN_PICK,Kimin çalışacağını seç.,Choose who works on it.
 RND_ASSIGN_ZERO,Seçtiklerinin hiçbiri bu alanda çalışmıyor.,None of the people you picked work in this area.
 RND_COMPLETED_UNLOCKED_ONE,Açtığı devam yuvası adlandı: {node},The continuation slot it opened now has a name: {node}
-RND_CROSS_MARK,⇠ {area},⇠ {area}
 RND_WEEKS_EST,~{n} hafta,~{n} weeks
 RND_WEEKS_EST_ONE,~{n} hafta,~{n} week
 RND_WEEKS_NONE,katkı yok,no contribution
@@ -2228,8 +2218,14 @@ RND_WEEKS_SOLO,~{n} hafta (Kurucu),~{n} weeks (Founder)
 RND_WEEKS_SOLO_ONE,~{n} hafta (Kurucu),~{n} week (Founder)
 RND_NODE_META,{family} · {tier},{family} · {tier}
 RND_REQ_CASH,{money},{money}
-RND_TIER_FROZEN,{tier} · donmuş,{tier} · frozen
+RND_TIER_FROZEN,donmuş,frozen
 RND_TREE_CLOSED,"Ar-Ge, ilk sürümünü yayınladıktan sonra açılır.",R&D opens once you ship your first version.
+RND_VIEW_TREE,Ağaç,Tree
+RND_VIEW_HISTORY,Geçmiş,History
+RND_TREE_DONE_KEY,Tamamlanan,Completed
+RND_SWITCH_NOTE,Başlatınca {node} durur; ilerlemesi korunur.,Starting this stops {node}. Its progress is kept.
+RND_NEED_AREA_AWAY,{name} izinde · katkı yok,{name} is on leave · no contribution
+RND_HISTORY_EMPTY,Henüz bir şey yok. Notlar ve keşifler burada toplanır.,Nothing yet. Notes and discoveries gather here.
 B2B_LOCK_PROMISE_OPEN,"Bu hesaba verilmiş, henüz tutulmamış bir söz var.",You already owe this account a word.
 B2B_LOCK_STALL_CAP,İki kez oyaladın. Üçüncüsünü kimse beklemez.,You've stalled them twice. Nobody waits for a third.
 B2B_EXPANSION_EXPIRED,{customer} o bütçeyi başka bir şeye harcadı.,{customer} spent that budget on something else.

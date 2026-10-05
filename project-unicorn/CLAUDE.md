@@ -188,7 +188,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer.
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
-  negotiation, meeting, product, hr, finance, personal, b2b, inbox), `--probe-shot[=menajer]`,
+  negotiation, meeting, product, hr, finance, personal, rnd, b2b, inbox), `--probe-shot[=menajer]`,
   `--theme-audit=<sekme | modal:<tür> | onboard:<adım>>`, `--shot-size=GxY`, `--lang=tr|en` (kayıtlı dili ezer),
   `--palette=cb` (renk körü paleti, yalnız o koşu). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner;
   EN `_en`, renk körü `_cb` alır. Gelen kutusu: `--inbox-shot=<durum>` (durumlar HARITA'da); `flow` karar kapısını

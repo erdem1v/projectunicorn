@@ -46,6 +46,7 @@ static var _freeze_cause: String = ""    # "" | RND_PAUSED_BUILD
 static var _note_last_day: int = -1      # -1 = user_research not complete yet
 static var _note_pending: Dictionary = {}
 static var _note_unread := false
+static var _notes_issued: int = 0
 
 # --- derived edge-detector memory. NOT saved, exactly like ProductRead's _prev_*: a load
 #     must not fire research_frozen for a state the player already saw.
@@ -72,6 +73,7 @@ static func reset() -> void:
 	_note_last_day = -1
 	_note_pending = {}
 	_note_unread = false
+	_notes_issued = 0
 	_freeze_cause = ""
 	_was_frozen = false
 	_seeded = false
@@ -375,11 +377,26 @@ static func missing_star_area(node_id: String) -> String:
 ## who can work today, so it reads effective output. Two different questions; they must not
 ## share a function. The assignment panel's met/unmet chip reads this same rule.
 static func area_has_star(node_id: String, area: String) -> bool:
+	return _star_holders(node_id, area).any(func(c: Character) -> bool: return HRSystem.effective_skill(c, area) > 0.0)
+
+
+## Who holds the missing area's stars but is on leave, so the gate does not count them today; null when no area
+## is missing or nobody on leave holds it. The assignment panel names them under the star refusal.
+static func away_star_holder(node_id: String) -> Character:
+	var area: String = missing_star_area(node_id)
+	if area == "":
+		return null
+	for c: Character in _star_holders(node_id, area):
+		if c.status == HRConstants.STATUS_ON_LEAVE:
+			return c
+	return null
+
+
+## The pool's people whose role holds `area` and whose raw skill there reaches the node's stars, at work or not.
+static func _star_holders(node_id: String, area: String) -> Array:
 	var want: int = ResearchTree.stars_of(node_id) * HRConstants.POINTS_PER_STAR
-	for c in eligible_assignees(node_id):
-		if int(c.role_stats.get(area, 0)) >= want and HRSystem.effective_skill(c, area) > 0.0:
-			return true
-	return false
+	return eligible_assignees(node_id).filter(func(c: Character) -> bool:
+		return HRConstants.can_hold_area(c.role, area, c.category) and int(c.role_stats.get(area, 0)) >= want)
 
 
 ## §5.3 — the assignment panel's pool. The founder ALWAYS, plus employees whose ROLE can
@@ -414,8 +431,17 @@ static func _complete(node_id: String) -> void:
 		return  # §7 — the same node cannot complete twice.
 	_states[node_id] = STATE_DONE
 	_active = ""
-	# The first of the team on it writes the discovery up (§5.8).
-	var author: Character = CharacterRegistry.get_character(_assignees[0]) if not _assignees.is_empty() else null
+	# Whoever puts in the most in the week it completes writes the discovery up (§5.8), the founder at the tick's
+	# meeting share; the founder's own is a note to self.
+	var author: Character = null
+	var most: float = -1.0
+	for cid in _assignees:
+		var rate: float = research_per_day(node_id, [cid], 1.0 - GameState.founder_meeting_share())
+		if rate > most:
+			author = CharacterRegistry.get_character(cid)
+			most = rate
+	if author != null and author.category == "founder":
+		author = null
 	_release_assignees()
 	_progress[node_id] = float(ResearchTree.effort_of(node_id))
 
@@ -499,6 +525,7 @@ static func _tick_note() -> void:
 		return                       # §6.2 — sessizce atlanır; sayaç yine de sıfırlanır
 	_note_pending = compose_note(author)
 	_note_unread = true
+	_notes_issued += 1
 	# The inbox keeps every note; the Ar-Ge tab reads the latest. The read state is owned here and
 	# mark_note_read carries it to the message.
 	MessageSystem.post("rnd_note", "RND_NOTE_TITLE", pending_note())
@@ -589,6 +616,11 @@ static func compose_note(author: Character) -> Dictionary:
 
 static func note_pending() -> bool:
 	return _note_unread
+
+
+## How many monthly notes the run has had; main opens the first one in the inbox.
+static func notes_issued() -> int:
+	return _notes_issued
 
 
 static func pending_note() -> Dictionary:
@@ -719,6 +751,7 @@ static func to_dict() -> Dictionary:
 		"note_last_day": _note_last_day,
 		"note_pending": _note_pending.duplicate(true),
 		"note_unread": _note_unread,
+		"notes_issued": _notes_issued,
 	}
 
 
@@ -737,6 +770,8 @@ static func from_dict(d: Dictionary) -> void:
 	_note_last_day = int(d.get("note_last_day", -1))
 	_note_pending = (d.get("note_pending", {}) as Dictionary).duplicate(true)
 	_note_unread = bool(d.get("note_unread", false))
+	# A save from before the count: a note in hand means the first one has come.
+	_notes_issued = int(d.get("notes_issued", 0 if _note_pending.is_empty() else 1))
 	_was_frozen = false
 	_seeded = false
 	_ensure_seeded()

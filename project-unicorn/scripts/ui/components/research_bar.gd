@@ -5,15 +5,16 @@ extends PanelContainer
 #
 # DÖRT SATIR:
 #   başlık   : ARAŞTIRMA + sağda TEK DURUM DİZGİSİ — koşarken "~{n} hafta kaldı",
-#              duraklamışken sebep cümlesi (§5.6.1). İkisi asla bir arada olamaz: katkı
-#              sıfırken hafta tahmini zaten -1'dir.
+#              duraklamışken sebep cümlesi (§5.6.1), atananların hepsi izinde ya da eğitimdeyse
+#              "katkı yok" (§5.5). Sayı hiçbir hâlde uydurulmaz.
 #   ad       : düğümün adı ve alanı; dar kartta kısalan alandır.
 #   ilerleme : çubuk ve yüzde.
-#   bağlar   : duraklat · ata.
+#   bağlar   : duraklat · ata; karar beklerken kapalı, gerekçesi sağda.
 #
 # %100'DE KART KAYBOLUR (§5.8): model false döner, `fingerprint()` "" olur, ev
 # sahibi kartı kaldırır. DURAKLAMIŞTA İLERLEME YANMAZ: dolgu nötrleşir, yüzde olduğu
 # yerde durur çünkü motor da progress'i korur (§5.7); sebep cümlesi öne çıkar.
+# Ar-Ge penceresi açıkken kart görünmez: aynı satır pencerenin şeridinde.
 #
 # `ata` BAĞI SEKMEYE GİDER, PANEL AÇMAZ. Akordeon Ar-Ge sayfasında yaşıyor; bu
 # kart her sayfanın üstünde yüzüyor, yani paneli kendi içinde açsaydı aynı panel
@@ -25,6 +26,7 @@ const BarKit := preload("res://scripts/ui/components/bar_kit.gd")
 const RESEARCH_ICON := preload("res://assets/icons/rail/rnd.svg")
 
 var _model: Model = null
+var _tab := ""
 
 var _title_label: Label = null
 var _status_label: Label = null      # hafta tahmini VEYA duraklama sebebi
@@ -32,14 +34,11 @@ var _name_label: Label = null
 var _area_label: Label = null
 var _progress: ProgressBar = null
 var _percent_label: Label = null
-var _pause_link: Button = null
-var _dot: Label = null
-var _assign_link: Button = null
+var _links: HBoxContainer = null
 
 
 func _ready() -> void:
-	# ALWAYS: ağaç duraklıyken (oyuncu karar verirken) de bağlar çalışsın.
-	# Varsayılan INHERIT'te kart ÇİZİLİR ama her tıklamayı YUTAR.
+	# ALWAYS: ağaç duraklıyken (oyuncu karar verirken) de kart canlı kalsın.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_tree()
 	var r1: Callable = refresh.unbind(1)
@@ -55,6 +54,10 @@ func _ready() -> void:
 	# diye okurdu.
 	EventBus.assignment_changed.connect(r1)
 	EventBus.employee_training_changed.connect(refresh.unbind(2))
+	EventBus.event_triggered.connect(r1)
+	EventBus.event_resolved.connect(refresh.unbind(2))
+	EventBus.event_set_aside.connect(r1)
+	EventBus.tab_changed.connect(_on_tab_changed)
 	refresh()
 
 
@@ -113,61 +116,52 @@ func _build_tree() -> void:
 	_percent_label = UiFactory.make_label("", &"KeyText")
 	bar.add_child(_percent_label)
 
-	var links := BarKit.line()
-	links.add_theme_constant_override(&"separation", UiTokens.SPACE_XS)
-	col.add_child(links)
-	_pause_link = _link(_on_pause)
-	links.add_child(_pause_link)
-	_dot = UiFactory.make_label("·", &"CaptionFaint")
-	links.add_child(_dot)
-	_assign_link = _link(_on_assign)
-	links.add_child(_assign_link)
-
-
-## Bağ: metin tuşu. Odak yok: game_shell Space'i hız tuşu olarak okur.
-func _link(handler: Callable) -> Button:
-	var b := Button.new()
-	b.theme_type_variation = &"FloatLink"
-	b.focus_mode = Control.FOCUS_NONE
-	b.pressed.connect(handler)
-	return b
+	_links = BarKit.line()
+	col.add_child(_links)
 
 
 # --- Boyama -------------------------------------------------------------------
 
 func _repaint() -> void:
-	visible = _model != null
+	visible = _model != null and _tab != "rnd"
 	if _model == null:
 		return
 	var m := _model
 	_title_label.text = Fmt.upper(tr("RND_BAR_TITLE"))
 	_status_label.text = _status_text(m)
-	_status_label.visible = _status_label.text != ""
 	_status_label.theme_type_variation = &"CaptionPrimary" if m.paused else &"Caption"
 	_name_label.text = m.node_name
 	_area_label.text = m.area_line
 	_progress.value = m.percent
 	_progress.theme_type_variation = &"ProgressPaused" if m.paused else &""
 	_percent_label.text = tr("PROD_PERCENT").format({"n": m.percent})
-	# DURAKLAMIŞTA `duraklat` DÜŞER: donmuş bir araştırmayı duraklatmak boş bir
-	# tıklamadır; sürdürmenin gerçek yolu birini oturtmaktır, yani `ata`.
-	_pause_link.text = tr("RND_BAR_PAUSE")
-	_pause_link.visible = not m.paused
-	_dot.visible = not m.paused
-	_assign_link.text = tr("RND_ASSIGN_TITLE")
-	_assign_link.tooltip_text = "" if m.assignee_names.is_empty() \
+	# Bağlar her boyamada yeniden kurulur: duraklamışta `duraklat` yok, karar beklerken ikisi de kapalı ve
+	# gerekçe sağda (kabuğun tutulan Ofisi taşı düğmesi gibi).
+	UiFactory.clear(_links)
+	var gated: bool = EventGate.active_id() != ""
+	var links := RnDUiShared.links(m.paused, gated, _on_pause, _on_assign)
+	_links.add_child(links)
+	var assign: Button = links.get_child(-1)
+	assign.tooltip_text = "" if m.assignee_names.is_empty() \
 		else tr("RND_WHO").format({"who": ", ".join(PackedStringArray(m.assignee_names))})
+	if gated:
+		_links.add_child(RnDUiShared.spacer())
+		_links.add_child(UiFactory.make_label(tr("TOPBAR_GATE"), &"Caption"))
 
 
-## Başlık satırının sağ yuvası. Duraklamışsa SEBEP CÜMLESİ, koşarken
-## "~{n} hafta kaldı". Katkı sıfırken (weeks_left == NO_WEEKS) sayı UYDURULMAZ; o
-## hâlin sebebini zaten sebep cümlesi söylüyor.
+## Başlık satırının sağ yuvası. Duraklamışsa SEBEP CÜMLESİ, koşarken "~{n} hafta kaldı",
+## kimse katkı vermiyorsa (weeks_left == NO_WEEKS) "katkı yok".
 func _status_text(m: Model) -> String:
 	if m.pause_note_key != "":
 		return tr(m.pause_note_key)
 	if m.weeks_left == Model.NO_WEEKS:
-		return ""
+		return tr("RND_WEEKS_NONE")
 	return RnDUiShared.weeks_text(m.weeks_left)
+
+
+func _on_tab_changed(tab: String) -> void:
+	_tab = tab
+	_repaint()
 
 
 # --- Bağlar ---------------------------------------------------------------------

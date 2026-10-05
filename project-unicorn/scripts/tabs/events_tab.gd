@@ -206,26 +206,20 @@ func _draw_list() -> void:
 	UiFactory.clear(_rows)
 	var shown: Array = _visible()
 	if shown.is_empty():
-		var center := CenterContainer.new()
-		center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var col := VBoxContainer.new()
-		col.add_theme_constant_override("separation", UiTokens.SPACE_L)
-		var glyph := UiFactory.make_glyph("res://assets/icons/util/inbox.svg", UiTokens.SPACE_3XL, UiTokens.D_INK_4)
-		glyph.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		col.add_child(glyph)
-		col.add_child(UiFactory.make_label(tr(EMPTY[_filter]), &"MetaMuted"))
-		center.add_child(col)
-		_rows.add_child(center)
+		var empty := UiFactory.D_empty("res://assets/icons/util/inbox.svg", tr(EMPTY[_filter]), &"MetaMuted")
+		empty.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_rows.add_child(empty)
 		return
 	var day: int = -1
 	for it in shown:
 		if it.kind in ["history", "message"] and int(it.day) != day:
 			day = int(it.day)
-			_rows.add_child(_band(day))
-		_rows.add_child(_queue_row(int(it.count)) if it.kind == "queue" else _row(it))
+			_rows.add_child(band(day))
+		_rows.add_child(_queue_row(int(it.count)) if it.kind == "queue" else row(it, it.id == _selected, true, select))
 
 
-func _band(day: int) -> PanelContainer:
+## A week's band over its rows (Ar-Ge's own history draws the same).
+static func band(day: int) -> PanelContainer:
 	var band := PanelContainer.new()
 	band.theme_type_variation = &"InboxBand"
 	band.custom_minimum_size.y = BAND_H
@@ -234,7 +228,7 @@ func _band(day: int) -> PanelContainer:
 
 
 func _queue_row(count: int) -> PanelContainer:
-	var row := _box(QUEUE_H)
+	var card := _box(QUEUE_H)
 	var line := HBoxContainer.new()
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -242,28 +236,29 @@ func _queue_row(count: int) -> PanelContainer:
 	line.add_child(UiFactory.make_label(tr(Fmt.count_key("INBOX_QUEUE", count)).format({"n": count}), &"DataText"))
 	line.add_child(RnDUiShared.spacer())
 	line.add_child(UiFactory.make_label(tr("INBOX_QUEUE_AFTER"), &"Caption"))
-	row.get_child(0).add_child(line)
-	return row
+	card.get_child(0).add_child(line)
+	return card
 
 
-## A row: who and the topic; the subject, with what it waits on; the first line, the choice or the
-## reason. An amber dot is the decision on screen, an ink dot an unread one.
-func _row(it: Dictionary) -> PanelContainer:
-	var selected: bool = it.id == _selected
-	var row := _box(ROW_H, selected)
+## A row: who and the topic's pill (`pill`; Ar-Ge's history leaves it off, every row there is the product's); the
+## subject, with what it waits on; the first line, the choice or the reason. An amber dot is the decision on
+## screen, an ink dot an unread one. A click calls `on_pick(id)`.
+static func row(it: Dictionary, selected: bool, pill: bool, on_pick: Callable) -> PanelContainer:
+	var card := _box(ROW_H, selected)
 	var lines := VBoxContainer.new()
 	lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lines.alignment = BoxContainer.ALIGNMENT_CENTER
 	lines.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	row.get_child(0).add_child(lines)
+	card.get_child(0).add_child(lines)
 	var one := HBoxContainer.new()
 	var from := UiFactory.make_label(String(it.sender.name), &"MetaMuted")
 	if it.sender.gone:
-		from.text = "%s · %s" % [it.sender.name, tr("MAIL_STAMP_LEFT")]
+		from.text = "%s · %s" % [it.sender.name, TranslationServer.translate("MAIL_STAMP_LEFT")]
 	from.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	from.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	one.add_child(from)
-	one.add_child(PANE.topic_pill(String(it.topic)))
+	if pill:
+		one.add_child(PANE.topic_pill(String(it.topic)))
 	lines.add_child(one)
 	var two := HBoxContainer.new()
 	two.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -284,25 +279,25 @@ func _row(it: Dictionary) -> PanelContainer:
 	line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lines.add_child(line)
-	var edge: Control = row.get_child(0).get_child(0)
+	var edge: Control = card.get_child(0).get_child(0)
 	if it.kind == "active":
 		edge.add_child(_dot(Panel.new(), &"GateDot", UiTokens.SPACE_M))
 	elif it.unread:
 		edge.add_child(_dot(UiFactory.make_dot(UiTokens.D_INK_2, UiTokens.SPACE_S), &"", UiTokens.SPACE_S))
-	HRUiShared.set_mouse_ignore(row.get_child(0))
-	row.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	row.gui_input.connect(func(e: InputEvent) -> void:
+	HRUiShared.set_mouse_ignore(card.get_child(0))
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	card.gui_input.connect(func(e: InputEvent) -> void:
 		if UiFactory.is_left_click(e):
-			select(String(it.id)))
+			on_pick.call(String(it.id)))
 	if not selected:
-		row.mouse_entered.connect(func() -> void: row.theme_type_variation = &"InboxRowHover")
-		row.mouse_exited.connect(func() -> void: row.theme_type_variation = &"InboxRow")
-	return row
+		card.mouse_entered.connect(func() -> void: card.theme_type_variation = &"InboxRowHover")
+		card.mouse_exited.connect(func() -> void: card.theme_type_variation = &"InboxRow")
+	return card
 
 
 ## Right of the subject: a paper's weeks, a reminder's figure, a report's kind, a past
 ## decision's stamp.
-func _row_right(it: Dictionary) -> Control:
+static func _row_right(it: Dictionary) -> Control:
 	match String(it.kind):
 		"paper":
 			var box := HBoxContainer.new()
@@ -311,14 +306,14 @@ func _row_right(it: Dictionary) -> Control:
 			var last: bool = it.expiring or weeks <= 1
 			var ink: Color = UiTokens.D_warn() if last else UiTokens.D_INK_3
 			box.add_child(UiFactory.make_glyph(PANE.CLOCK, UiTokens.D_ICON_PART, ink))
-			box.add_child(UiFactory.make_label(tr("DESK_PAPER_THIS_WEEK") if last
-				else tr(Fmt.count_key("DESK_PAPER_WEEKS", weeks)).format({"n": weeks}), &"Caption", ink))
+			box.add_child(UiFactory.make_label(TranslationServer.translate("DESK_PAPER_THIS_WEEK") if last
+				else TranslationServer.translate(Fmt.count_key("DESK_PAPER_WEEKS", weeks)).format({"n": weeks}), &"Caption", ink))
 			return box
 		"reminder":
 			if it.has("morale"):
 				var pair := HBoxContainer.new()
 				pair.add_theme_constant_override("separation", UiTokens.SPACE_S)
-				pair.add_child(UiFactory.make_label(Fmt.upper(tr("HR_COL_MORALE")), &"KeyLabel"))
+				pair.add_child(UiFactory.make_label(Fmt.upper(TranslationServer.translate("HR_COL_MORALE")), &"KeyLabel"))
 				pair.add_child(UiFactory.make_label(str(int(it.morale)), &"MoraleValue", UiTokens.D_neg()))
 				return pair
 			return UiFactory.make_label(String(it.get("value", "")), &"Caption") if it.has("value") else null
@@ -331,35 +326,29 @@ func _row_right(it: Dictionary) -> Control:
 			tag.add_theme_constant_override("separation", UiTokens.SPACE_S)
 			tag.add_child(UiFactory.make_glyph("res://assets/icons/util/%s.svg" % ("sparkle" if it.right == "INBOX_ROW_DISCOVERY" else "doc"),
 				UiTokens.D_ICON_PART, UiTokens.D_INK_3))
-			tag.add_child(UiFactory.make_label(tr(String(it.right)), &"Caption"))
+			tag.add_child(UiFactory.make_label(TranslationServer.translate(String(it.right)), &"Caption"))
 			return tag
 	return null
 
 
 ## A row's box: its marker-and-dot column, then its content.
-func _box(h: int, selected := false) -> PanelContainer:
-	var row := PanelContainer.new()
-	row.theme_type_variation = &"InboxRowSelected" if selected else &"InboxRow"
-	row.custom_minimum_size.y = h
+static func _box(h: int, selected := false) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.theme_type_variation = &"InboxRowSelected" if selected else &"InboxRow"
+	card.custom_minimum_size.y = h
 	var inner := HBoxContainer.new()
 	inner.add_theme_constant_override("separation", 0)
-	row.add_child(inner)
+	card.add_child(inner)
 	var edge := Control.new()
 	edge.custom_minimum_size.x = EDGE
 	inner.add_child(edge)
 	if selected:
-		var mark := Panel.new()
-		mark.theme_type_variation = &"RailMark"
-		mark.anchor_bottom = 1.0
-		mark.offset_top = UiTokens.D_MARK.y
-		mark.offset_bottom = -UiTokens.D_MARK.y
-		mark.offset_right = UiTokens.D_MARK.x
-		edge.add_child(mark)
-	return row
+		edge.add_child(HRUiShared.D_mark())
+	return card
 
 
 ## A dot centred in the row's edge column.
-func _dot(dot: Control, variation: StringName, px: int) -> Control:
+static func _dot(dot: Control, variation: StringName, px: int) -> Control:
 	if variation != &"":
 		dot.theme_type_variation = variation
 	dot.custom_minimum_size = Vector2(px, px)

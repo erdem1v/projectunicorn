@@ -24,8 +24,8 @@ extends RefCounted
 # [static-tr] tetiklenmesin.
 # ============================================================================
 
-## RnDSystem.weeks_estimate -1.0 döndüğünde (katkı yok) bu değer taşınır. Çubuk
-## hafta satırını hiç yazmaz; sebebi başlık satırındaki duraklama cümlesidir.
+## RnDSystem.weeks_estimate -1.0 döndüğünde (katkı yok) bu değer taşınır. Çubuk sayı
+## yerine "katkı yok" yazar.
 const NO_WEEKS := -1
 
 var node_id: String = ""

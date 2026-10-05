@@ -204,6 +204,7 @@ func _run_debug_harness() -> bool:
 		"--finance-shot=": _run_finance_shot,
 		"--tab-shot=": _run_tab_shot,
 		"--personal-shot=": _run_personal_shot,
+		"--rnd-shot=": _run_rnd_shot,
 		"--modal-shot=": _run_modal_shot,
 		"--onboard-shot=": func(v: String) -> void: _run_onboard_shot(int(v)),
 		"--theme-audit=": _run_theme_audit,
@@ -616,7 +617,8 @@ func _run_event_shot(event_id: String) -> void:
 ## states, through the real gate (main's handler holds the clock and opens the inbox on the card):
 ##   offer · queue · customer (an option armed) · locked · history · paper · paper_open ·
 ##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
-##   frank_moment · rnd_note · rnd_discovery · weekly_sales · empty · long · team_read_only (Ekip
+##   frank_moment · rnd_note (week 14's note) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
+##   weekly_sales · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
 ##   finance_read_only (Finans read-only) · personal_read_only (Kişisel read-only) ·
 ##   personal_cheque_read_only (Kişisel read-only after Frank's cheque, a customer's card waiting) ·
@@ -630,6 +632,8 @@ func _run_inbox_shot(state: String) -> void:
 		_seed_theme_surface()
 		GameState.current_hour = 11
 		TimeManager.sync_to_current_hour()
+	if state.begins_with("rnd_"):
+		_seed_rnd(16 if state == "rnd_discovery" else 14)
 	await _mount_shot_shell()
 	_wire_modal_signals()
 	var selina := "char_emp_shot_3"
@@ -708,14 +712,8 @@ func _run_inbox_shot(state: String) -> void:
 			var payload: Dictionary = SummarySystem._build_summary_data("quarterly", GameState.day - 1)
 			MessageSystem.post("summary", String(SummarySystem.PERIOD_KEYS.quarterly.title), payload)
 			EventBus.summary_ready.emit(payload)
-		"rnd_note":
-			var id: String = MessageSystem.post("rnd_note", "RND_NOTE_TITLE",
-				RnDSystem.compose_note(CharacterRegistry.get_character("char_emp_shot_0")))
-			INBOX.show("m:" + id)
-		"rnd_discovery":
-			var id: String = MessageSystem.post("rnd_discovery", "RND_DISCOVERY_TITLE", {"node": "test_automation",
-				"author_name": "Selin Kaya", "author_role": HRConstants.ROLE_TESTER})   # LOC-DATA debug seed / id
-			INBOX.show("m:" + id)
+		"rnd_note", "rnd_discovery":
+			INBOX.show("m:" + String(GameState.messages[-1].id))
 		"weekly_sales":
 			var rows := []
 			for c in CustomerRegistry.get_by_market("b2b").slice(0, 2):
@@ -1312,6 +1310,99 @@ func _run_personal_shot(kind: String) -> void:
 	await _mount_shot_shell()
 	EventBus.tab_changed.emit("personal")
 	await _finish_shot("personal_shot_%s" % kind)
+
+
+## --rnd-shot=<kind>: the Ar-Ge window and its research card on the mockups' timeline (_seed_rnd, week 14, 11:00).
+##   tree · detail (AI Engine picked) · detail_cash (the same with less cash than its cost: the card's one danger) ·
+##   assign (its assignment open, Elif ticked) · frozen (week 15: Selin has left,
+##   the research stands frozen, Mert on leave; its assignment open) · history (the window's own history, the week's
+##   note read) · history_empty (before any note or discovery) · read_only (AI Engine picked while Frank's offer
+##   waits) · closed (before v1, at home);
+##   no window: card (the card running) · card_frozen (paused, nobody on it) · card_build (its person taken by a
+##   build) · card_none (its person on leave: no contribution) · card_gate (while a decision waits) · discovery
+##   (week 16: Test Otomasyonu done, its discovery on the notice stack) · first_note (the run's first monthly note
+##   arrives through the engine and opens in the inbox).
+func _run_rnd_shot(kind: String) -> void:
+	_begin_shot()
+	if kind == "closed":
+		_seed_run_reproducible()
+		GameState.current_hour = 10
+	else:
+		_seed_theme_surface()
+		GameState.current_hour = 11
+		if kind != "history_empty":
+			_seed_rnd(16 if kind == "discovery" else 14, kind != "first_note")
+	TimeManager.sync_to_current_hour()
+	var selin := "char_emp_shot_3"
+	match kind:
+		"frozen":
+			RnDSystem.drop_assignee(selin)
+			CharacterRegistry.remove(selin)
+			GameState.day = 15
+		"detail_cash":
+			GameState.set_cash(ResearchTree.cash_of("ai_engine") / 2)
+		"card_frozen":
+			RnDSystem.pause()
+		"card_build":
+			RnDSystem.drop_assignee(selin, "RND_PAUSED_BUILD")
+		"card_none":
+			HRMoraleSystem.send_on_leave(CharacterRegistry.get_character(selin), HRConstants.LEAVE_WEEKS, false)
+	await _mount_shot_shell()
+	_wire_modal_signals()
+	match kind:
+		"tree", "history", "history_empty", "closed":
+			EventBus.tab_changed.emit("rnd")
+			if kind.begins_with("history"):
+				_shell.find_child("CenterViewport", true, false).get_current_page_body()._show_view(1)
+		"detail", "detail_cash", "assign", "frozen", "read_only":
+			if kind == "read_only":
+				_shot_card("funding.frank_cheque", {}, 11)
+			EventBus.tab_changed.emit("rnd")
+			EventBus.rnd_node_requested.emit("test_automation" if kind == "frozen" else "ai_engine", kind in ["assign", "frozen"])
+			if kind == "assign":
+				await get_tree().process_frame
+				get_tree().root.find_child("AssignPanel", true, false).toggle("char_emp_shot_0")
+		"card_gate":
+			_shot_card("funding.frank_cheque", {}, 11)
+			EventBus.tab_changed.emit("")
+		"first_note":
+			RnDSystem._tick_note()
+		"card", "card_frozen", "card_build", "card_none", "discovery":
+			pass
+		_:
+			_shot_fail("[RndShot] unknown kind: %s" % kind)
+			return
+	get_tree().call_group(&"top_bar", &"_refresh")
+	await _finish_shot("rnd_shot_%s" % kind, 0.6)
+
+
+## The Ar-Ge timeline the mockups draw, through the engine on the theme seed's people: Tasarım Sistemi (Deniz)
+## done week 8, Kullanıcı Araştırması (Deniz) 10, Veri Modeli (Elif) 11, Hata Takip Sistemi (Selin) 13; Test
+## Otomasyonu (Selin) from week 13, at 36 % on week 14, when the first monthly note comes (unless `note` is
+## false); what came before is read. Week 16 finishes it, the note read.
+func _seed_rnd(week: int, note := true) -> void:
+	for row in [["design_system", 1, 8], ["user_research", 1, 10], ["data_model", 0, 11], ["bug_tracker", 3, 13]]:
+		GameState.day = row[2]
+		RnDSystem.start(row[0], ["char_emp_shot_%d" % row[1]])
+		RnDSystem._complete(row[0])
+	RnDSystem.start("test_automation", ["char_emp_shot_3"])
+	var state: Dictionary = RnDSystem.to_dict()
+	state.progress["test_automation"] = 0.36 * ResearchTree.effort_of("test_automation")
+	RnDSystem.from_dict(state)
+	# The player has read the discoveries by now.
+	for m in GameState.messages:
+		MessageSystem.mark_read(String(m.id))
+	GameState.day = 14
+	if note:
+		RnDSystem._tick_note()
+	if week == 16:
+		RnDSystem.mark_note_read()
+		GameState.day = 16
+		# The theme seed's product type is not in the line catalogue: the line this research opens registers on a
+		# catalogued B2B type.
+		GameState.set_flag("mvp_sub_product_type_id", "erp")
+		RnDSystem._complete("test_automation")
+		GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 
 
 # --modal-shot=<confirm|confirm3|confirm_dark|settings|system|saveload>. Each goes through the REAL
@@ -2475,6 +2566,7 @@ func _wire_modal_signals() -> void:
 	EventBus.run_ended.connect(_on_run_ended)
 	EventBus.milestone_reached.connect(_on_milestone_reached)
 	EventBus.summary_ready.connect(_on_summary_ready)
+	EventBus.product_note_issued.connect(_on_product_note_issued)
 	EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
 	EventBus.term_table_requested.connect(_on_term_table_requested)
 	EventBus.system_menu_requested.connect(_on_system_menu_requested)
@@ -2962,6 +3054,13 @@ func _load_slot(slot_id: String) -> bool:
 # saved speed; the inbox closing last restores it.
 func _on_summary_ready(_data: Dictionary) -> void:
 	_open_note("summary")
+
+
+## The run's first monthly product note opens in the inbox once (Ar-Ge §6.1), as the intro does; the later
+## ones arrive unread.
+func _on_product_note_issued(_day: int) -> void:
+	if RnDSystem.notes_issued() == 1:
+		_open_note("rnd_note")
 
 
 # Terminal: the ending paper never restores speed. EndingsSystem already flushed the queue and

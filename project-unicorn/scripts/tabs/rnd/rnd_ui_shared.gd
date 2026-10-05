@@ -2,17 +2,13 @@ class_name RnDUiShared
 extends RefCounted
 
 # ============================================================================
-# Ar-Ge sayfasının paylaşılan çizim parçaları (HRUiShared deseni: class_name +
+# Ar-Ge sayfasının paylaşılan parçaları, koyu dilde (HRUiShared deseni: class_name +
 # yalnız static, hiç durum tutmaz).
 #
 # BURADA HİÇBİR SAYI TÜRETİLMEZ. Her değer bir motor çağrısından gelir
 # (`RnDSystem.*`, `ResearchTree.*`, `ResearchSeam.*`); bu dosya onları düğüme
 # çevirir. Tek istisna BİÇİMLEME: kesir → yüzde, float hafta → tavana yuvarlanmış
 # tam sayı.
-#
-# TEMA: sıfır yeni `theme_type_variation`. Durum-bağımlı her stil KODDA kurulmuş
-# `StyleBoxFlat`tır; tek seferlik şekiller için tema öğesi eklenmez, THEME_STAMP bu
-# yüzden yerinde duruyor.
 #
 # METİN: statikler `tr()` çağıramaz, o yüzden `TranslationServer.translate`.
 # Çözülmeyen anahtar kendine döner, yani eksik anahtar ekranda ham token olarak
@@ -21,7 +17,7 @@ extends RefCounted
 
 ## §3 — aile başlığının anahtarı. Aile ADI ile ALAN ADI ayrı şeylerdir: aile
 ## Ar-Ge'nin kendi sözcüğü (İŞLEV/PLATFORM/SÜREÇ/TASARIM), alan İK'nın cetveli
-## (Ürün/Yazılım/Test/Tasarım). Tasarım ailesinde ikisi çakışır (bkz. column_header).
+## (Ürün/Yazılım/Test/Tasarım). Tasarım ailesinde ikisi çakışır.
 const FAMILY_KEY := {
 	ResearchSeam.FAMILY_CAPABILITY: "RND_FAMILY_CAPABILITY",
 	ResearchSeam.FAMILY_PLATFORM: "RND_FAMILY_PLATFORM",
@@ -36,16 +32,25 @@ const TIER_KEY := {
 	ResearchSeam.PLACE_CONT: "RND_PLACE_CONT",
 }
 
-## Karo durumları, beş tane. Nakit engeli bir karo durumu DEĞİLDİR: kırmızı yalnız
-## kartın nakit satırında görünür, yeşil bu sayfada hiç kullanılmaz.
+## Karo durumları, beş tane. Nakit engeli bir karo durumu DEĞİLDİR: tehlike yalnız
+## kartın nakit çipinde görünür. Araştırma bir zaman durumu değil: sayfada amber yok.
 const TILE_LOCKED := "locked"
 const TILE_AVAILABLE := "available"
 const TILE_RUNNING := "running"
 const TILE_FROZEN := "frozen"
 const TILE_DONE := "done"
 
-const MARK_DONE := "✓"
-const HEX_PX := 18
+## Karonun adı, altıgeni ve kutusu durumuna göre (seçili karo kutusunu RndTileSelected'tan alır).
+const TILE_LOOKS := {
+	TILE_AVAILABLE: [UiTokens.D_INK_2, UiTokens.D_INK_2, &"RndTile"],
+	TILE_RUNNING: [UiTokens.D_INK_1, UiTokens.D_INK_1, &"RndTileActive"],
+	TILE_FROZEN: [UiTokens.D_INK_2, UiTokens.D_INK_3, &"RndTileFrozen"],
+	TILE_DONE: [UiTokens.D_INK_3, UiTokens.D_INK_4, &"RndTileDone"],
+}
+
+const ICON := "res://assets/icons/rail/rnd.svg"
+const STAR := "res://assets/icons/util/star_full.svg"
+const PAUSE := "res://assets/icons/util/pause.svg"
 
 
 # ---------------------------------------------------------------- metin
@@ -62,7 +67,6 @@ static func t_or(key: String, fallback: String) -> String:
 	return fallback if out == key else out
 
 
-## Ailenin anahtardaki adı; sütun başlığı bunu Fmt.upper'dan geçirir.
 static func family_name(family: String) -> String:
 	return t(String(FAMILY_KEY.get(family, "")))
 
@@ -81,33 +85,9 @@ static func area_parts(node_id: String) -> PackedStringArray:
 	return parts
 
 
-## §5.5 — düğümün okuduğu her alan için "{alan} ★N" parçası: kart eşiği Başlat'tan önce yazar.
-static func req_parts(node_id: String) -> PackedStringArray:
-	var parts := PackedStringArray()
-	for area in ResearchTree.areas_of(node_id):
-		parts.append(t("RND_REQ_STARS").format({"area": HRConstants.area_label(String(area)),
-			"stars": StarRating.FILLED + str(ResearchTree.stars_of(node_id))}))
-	return parts
-
-
-## Sütun başlığı — "{aile} · {alan} alanı · {bitti}/{toplam}". Tasarım ailesinde aile
-## adı ile alan adı AYNI sözcüktür ("TASARIM · Tasarım alanı"); o sütun kısa biçime
-## düşer. Karşılaştırma büyük harfte, çünkü iki metin farklı kaynaklardan geliyor ve
-## yalnız kasada ayrışabilirler. Fmt.upper yerelleşmiş büyütmedir: ham to_upper()
-## Türkçe noktalı i'yi I yapar.
-static func column_header(family: String, done: int, total: int) -> String:
-	var fam: String = Fmt.upper(family_name(family))
-	var area: String = area_name(family)
-	if Fmt.upper(area) == fam:
-		return t("RND_COL_HEADER_SHORT").format({"family": fam, "done": done, "total": total})
-	return t("RND_COL_HEADER").format({"family": fam, "area": area, "done": done, "total": total})
-
-
-## Karonun mertebe yazısı: kök / dal / devam, donmuşta "{mertebe} · donmuş". Ayraç
-## cümlenin parçası, o yüzden kodda değil anahtarda yaşıyor.
-static func tier_caption(node_id: String, frozen: bool = false) -> String:
-	var tier: String = t(String(TIER_KEY.get(ResearchSeam.placement(node_id), "")))
-	return t("RND_TIER_FROZEN").format({"tier": tier}) if frozen else tier
+## Karonun mertebe yazısı: kök / dal / devam.
+static func tier_caption(node_id: String) -> String:
+	return t(String(TIER_KEY.get(ResearchSeam.placement(node_id), "")))
 
 
 ## Hafta tahmini ekranda tavana yuvarlanır ve en az 1'dir; kart, panel ve çubuk aynı
@@ -134,17 +114,14 @@ static func percent_text(progress: float) -> String:
 
 
 ## Başlat'ın kapalı olma sebebi, oyuncunun cümlesiyle: hiçbir düğme sessizce sönmez
-## (§5.3). Kartın engel satırı, kapalı Başlat'ın ipucu ve atama panelinin sebep
-## satırı AYNI cümleyi buradan okur.
+## (§5.3). Kartın engel satırı ve atama panelinin sebep satırı AYNI cümleyi buradan okur;
+## yıldızlı cümle yıldız glifiyle kurulur (refusal_line).
 static func refusal_text(node_id: String, refusal: String) -> String:
 	match refusal:
 		RnDSystem.REFUSE_NOBODY:
 			return t("RND_ASSIGN_PICK")
 		RnDSystem.REFUSE_ZERO:
 			return t("RND_ASSIGN_ZERO")
-		RnDSystem.REFUSE_STARS:
-			return t("RND_NEED_AREA").format({"stars": StarRating.FILLED + str(ResearchTree.stars_of(node_id)),
-				"area": HRConstants.area_label(RnDSystem.missing_star_area(node_id))})
 		RnDSystem.REFUSE_CASH:
 			return t("RND_NEED_CASH").format({"amount": Fmt.money(ResearchTree.cash_of(node_id))})
 		RnDSystem.REFUSE_CROSS:
@@ -155,6 +132,30 @@ static func refusal_text(node_id: String, refusal: String) -> String:
 			return t("RND_NEED_PARENT").format({
 				"node": ResearchSeam.node_name(ResearchTree.parent_of(node_id))})
 	return t("RND_TREE_CLOSED")
+
+
+## The refusal as a line: the star rule's sentence with the star glyph, every other one in words.
+static func refusal_line(node_id: String, refusal: String, variation: StringName, ink: Variant = null) -> Control:
+	if refusal == RnDSystem.REFUSE_STARS:
+		var area: String = HRConstants.area_label(RnDSystem.missing_star_area(node_id))
+		return with_stars(t("RND_NEED_AREA").format({"area": area}), ResearchTree.stars_of(node_id), variation, ink)
+	return UiFactory.make_label(refusal_text(node_id, refusal), variation, ink)
+
+
+## A sentence whose `{stars}` is the rule's star glyph and its count: ★ is a rule unit, drawn as the glyph,
+## since the dark faces carry no ★.
+static func with_stars(text: String, stars: int, variation: StringName, ink: Variant = null) -> HBoxContainer:
+	var parts: PackedStringArray = text.split("{stars}")
+	var row := SprintUiShared.box(UiTokens.SPACE_XS)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if parts[0].strip_edges() != "":
+		row.add_child(SprintUiShared.label(parts[0].strip_edges(), variation, ink))
+	# The star and its count read as one unit.
+	var unit := SprintUiShared.box(UiTokens.SPACE_XXS)
+	unit.add_child(UiFactory.make_glyph(STAR, UiTokens.D_ICON_STAR, UiTokens.D_INK_2))
+	unit.add_child(SprintUiShared.label(str(stars) + (parts[1] if parts.size() > 1 else ""), variation, ink))
+	row.add_child(unit)
+	return row
 
 
 # ---------------------------------------------------------------- durum
@@ -169,121 +170,67 @@ static func tile_state(node_id: String) -> String:
 	return TILE_LOCKED
 
 
-## Durumun mürekkebi. AĞIRLIKLA okunur, RENKLE değil (§3: aile rengi yok) — bu
-## yüzden amber yalnız KENAR'da, mürekkepte hiç yok.
-static func state_ink(state: String) -> Color:
-	match state:
-		TILE_LOCKED: return UiTokens.INK_FAINT
-		TILE_FROZEN: return UiTokens.INK_MUTED
-		TILE_DONE: return UiTokens.INK_DIM
-		_: return UiTokens.INK
-
-
-## Kartın üst kenarındaki 2px şeridin rengi. Koşan ile araştırılabilir kremde ayrı okunmalı:
-## koşan derin amber (ACCENT_DEEP), araştırılabilir dolgu amberi (ACCENT).
-static func state_edge_color(state: String) -> Color:
-	match state:
-		TILE_RUNNING: return UiTokens.ACCENT_DEEP
-		TILE_AVAILABLE: return UiTokens.ACCENT
-		TILE_FROZEN: return UiTokens.BORDER_HOVER
-		TILE_DONE: return UiTokens.CARD_BORDER
-		_: return UiTokens.BORDER_DASHED
-
-
 # ---------------------------------------------------------------- düğümler
-
-## Bağ (link), buton DEĞİL: `duraklat` / `ata` metin olarak duruyor.
-class Link extends Label:
-	signal clicked
-
-	func _gui_input(event: InputEvent) -> void:
-		if UiFactory.is_left_click(event):
-			accept_event()
-			clicked.emit()
-
-
-static func link(text: String) -> Link:
-	var l := Link.new()
-	l.theme_type_variation = &"RowMeta"
-	l.text = text
-	l.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
-	l.mouse_filter = Control.MOUSE_FILTER_STOP
-	l.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	return l
-
 
 ## TEK GLİF, HER DÜĞÜMDE (§3: aile rengi yok, aile ikonu yok); hiyerarşi ÇİZGİ
 ## KALINLIĞINDAN okunur — kök kalın, dal orta, devam ince. `_draw` ile çiziliyor
 ## çünkü glif üç farklı kalınlıkta gerekiyor ve bir ikon dosyası bunu taşıyamaz.
 class HexGlyph extends Control:
-	var color: Color = UiTokens.INK
-	var weight: float = 1.5
+	var color: Color
+	var weight: float
 
 	func _draw() -> void:
-		var r: float = minf(size.x, size.y) * 0.5 - weight
-		if r <= 1.0:
-			return
 		var c: Vector2 = size * 0.5
-		var pts := PackedVector2Array()
-		for i in 6:
-			var a: float = deg_to_rad(-90.0 + 60.0 * float(i))
-			pts.append(c + Vector2(cos(a), sin(a)) * r)
-		pts.append(pts[0])
-		draw_polyline(pts, color, weight, true)
+		var h: Vector2 = UiTokens.D_RND_HEX
+		draw_polyline(PackedVector2Array([c + Vector2(0.0, -h.y), c + Vector2(h.x, -h.y * 0.5), c + Vector2(h.x, h.y * 0.5),
+			c + Vector2(0.0, h.y), c + Vector2(-h.x, h.y * 0.5), c + Vector2(-h.x, -h.y * 0.5), c + Vector2(0.0, -h.y)]),
+			color, weight, true)
 
 
 static func hex_glyph(node_id: String, color: Color) -> Control:
 	var g := HexGlyph.new()
 	g.color = color
-	match ResearchSeam.placement(node_id):
-		ResearchSeam.PLACE_ROOT: g.weight = 2.0
-		ResearchSeam.PLACE_BRANCH: g.weight = 1.5
-		_: g.weight = 1.0
-	g.custom_minimum_size = Vector2(HEX_PX, HEX_PX)
+	var s: Vector3 = UiTokens.D_RND_HEX_STROKE
+	g.weight = {ResearchSeam.PLACE_ROOT: s.x, ResearchSeam.PLACE_BRANCH: s.y}.get(ResearchSeam.placement(node_id), s.z)
+	g.custom_minimum_size = Vector2.ONE * UiTokens.D_ICON_PART
 	g.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return g
 
 
-## Efsane örneği. Metin tek başına "aile içi bağ" ile "çapraz bağ"ı ayırt ettiremez —
-## örnek çizgiyi GÖSTERİR, sayfadaki çizgiyle aynı token ve aynı ritimle.
-class Swatch extends Control:
-	var kind: String = ""
+## The tree key's line sample: a link inside the family or a requirement from another.
+class LineSwatch extends Control:
+	var cross: bool
 
 	func _draw() -> void:
-		var mid: float = size.y * 0.5
-		match kind:
-			"intra":
-				draw_line(Vector2(0, mid), Vector2(size.x, mid), UiTokens.CARD_BORDER, 1.5)
-			"cross":
-				draw_dashed_line(Vector2(0, mid), Vector2(size.x, mid), UiTokens.ACCENT_DEEP, 1.5, 4.0)
-			"locked":
-				RnDUiShared.draw_dashed_rect(self,
-					Rect2(Vector2(0.5, 2.5), Vector2(size.x - 1.0, size.y - 5.0)),
-					UiTokens.BORDER_DASHED, 1.0, 3.0)
-			"available", "done":
-				var r := Rect2(Vector2.ZERO, Vector2(size.x, size.y - 2.0))
-				draw_rect(r, UiTokens.CARD_BG, true)
-				draw_rect(r, UiTokens.ACCENT_DEEP if kind == "available" else UiTokens.CARD_BORDER,
-					false, 1.0)
-				if kind == "available":
-					draw_rect(Rect2(r.position, Vector2(2.0, r.size.y)), UiTokens.ACCENT, true)
+		var mid := Vector2(0.0, size.y * 0.5)
+		if cross:
+			draw_dashed_line(mid, mid + Vector2(size.x, 0.0), UiTokens.D_INK_4, UiTokens.D_RND_LINE, UiTokens.D_RND_DOT)
+		else:
+			draw_line(mid, mid + Vector2(size.x, 0.0), UiTokens.D_LINE_3, UiTokens.D_RND_LINE)
 
 
-## Efsanenin tek maddesi: örnek (kind "" ise yok) + yazı.
-static func legend_item(kind: String, text: String) -> Control:
+## The tree key's one entry: its sample (the line, the dashed slot, a tile's box) and its words.
+static func legend_item(kind: String, text: String) -> HBoxContainer:
+	var sample: Control
+	match kind:
+		"intra", "cross":
+			var line := LineSwatch.new()
+			line.cross = kind == "cross"
+			sample = line
+		"locked":
+			sample = Control.new()
+			HRUiShared.D_dashed(sample)
+		_:
+			sample = Panel.new()
+			sample.theme_type_variation = &"RndTileDone" if kind == "done" else &"RndTile"
+	sample.custom_minimum_size = UiTokens.D_SWATCH
+	sample.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiTokens.SPACE_S)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if kind != "":
-		var s := Swatch.new()
-		s.kind = kind
-		s.custom_minimum_size = Vector2(22, 12)
-		s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		s.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(s)
-	row.add_child(UiFactory.make_label(text, &"MicroLabel", UiTokens.INK_DIM))
+	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	row.add_child(sample)
+	row.add_child(UiFactory.make_label(text, &"Caption"))
+	HRUiShared.set_mouse_ignore(row)
 	return row
 
 
@@ -296,39 +243,26 @@ static func spacer(width := 0) -> Control:
 	return s
 
 
-## YÜZDE ÇAPALI DOLGU (build_bar'ın reçetesi). StyleBoxFlat bir yüzde İFADE EDEMEZ,
-## o yüzden dolgu ayrı bir düğümdür: sola çapalı Panel, genişliği `anchor_right`.
-## Kap `clip_contents` ile kırpar, yani kart genişleyince dolgu oranını korur ve
-## elle yeniden boyutlandırma hiç gerekmez. Kabı `parent`a ekler, dolguyu döndürür.
-static func fill_host(parent: Control) -> Panel:
-	var host := Control.new()
-	host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	host.clip_contents = true
-	host.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var fill := Panel.new()
-	fill.anchor_bottom = 1.0
-	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.AMBER_BG
-	sb.set_corner_radius_all(UiTokens.RADIUS_NONE)
-	sb.anti_aliasing = false
-	fill.add_theme_stylebox_override("panel", sb)
-	host.add_child(fill)
-	parent.add_child(host)
-	return fill
+## The research's two links (pause, assign) as the float card draws them, off while a decision waits. The pause
+## link is not there while the research is frozen: freezing a frozen research is an empty click.
+static func links(frozen: bool, off: bool, on_pause: Callable, on_assign: Callable) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+	if not frozen:
+		row.add_child(_link(t("RND_BAR_PAUSE"), off, on_pause))
+		row.add_child(UiFactory.make_label("·", &"CaptionFaint"))
+	row.add_child(_link(t("RND_ASSIGN_TITLE"), off, on_assign))
+	for part: Control in row.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return row
 
 
-static func set_fill(fill: Panel, fraction: float) -> void:
-	if fill != null and is_instance_valid(fill):
-		fill.anchor_right = clampf(fraction, 0.0, 1.0)
-
-
-## Kesikli dikdörtgen: StyleBoxFlat kesikli kenar taşımaz.
-static func draw_dashed_rect(ci: CanvasItem, r: Rect2, color: Color,
-		width: float = 1.0, dash: float = 5.0) -> void:
-	var b := Vector2(r.end.x, r.position.y)
-	var d := Vector2(r.position.x, r.end.y)
-	ci.draw_dashed_line(r.position, b, color, width, dash)
-	ci.draw_dashed_line(b, r.end, color, width, dash)
-	ci.draw_dashed_line(r.end, d, color, width, dash)
-	ci.draw_dashed_line(d, r.position, color, width, dash)
+## A link is a text key; no focus: game_shell reads Space as the speed key.
+static func _link(text: String, off: bool, on_press: Callable) -> Button:
+	var b := Button.new()
+	b.theme_type_variation = &"FloatLink"
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE
+	b.disabled = off
+	b.pressed.connect(on_press)
+	return b

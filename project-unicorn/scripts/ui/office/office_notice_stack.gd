@@ -1,8 +1,8 @@
 extends VBoxContainer
 
-# The notice stack at the office's bottom right: the inbox's preview. Frank's latest line, then what
-# waits in the inbox (papers, then reminders, in its order), at most MAX_CARDS cards with a +N badge
-# on the last for the rest. A row reads sender · subject · time left; a click opens it in the inbox.
+# The notice stack at the office's bottom right: the inbox's preview. Frank's latest line, the newest discovery
+# not read yet, then what waits in the inbox (papers, then reminders, in its order), at most MAX_CARDS cards
+# with a +N badge on the last for the rest. A row reads sender · subject · time left; a click opens it in the inbox.
 # The decision on screen is not a row: the top bar's gate slot is. Windows are later siblings of the
 # office, and the stack hides while one lies over it. In the dark language from its root.
 
@@ -87,7 +87,7 @@ func _refresh(arrive: bool) -> void:
 		# Keyed by the line, not its words: a language switch is not a new note.
 		_add(row, EventBus.tab_changed.emit.bind("events"),
 			"frank:%s%s" % [key, GameState.mentor_line_args], arrive)
-	var desk: Array = INBOX.desk()
+	var desk: Array = INBOX.unread_discovery() + INBOX.desk()
 	var shown: Array = desk.slice(0, room)
 	var hidden: int = desk.size() - shown.size()
 	for i in shown.size():

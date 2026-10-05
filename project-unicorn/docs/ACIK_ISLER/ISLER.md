@@ -29,7 +29,6 @@ Açık işlerin tek yeri bu klasördür.
 Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktalar:
 - Ham stil değerleri (UI/STYLE LAW; her biri yeni token ister): `OnboardingFlow.tscn` LoadingLabel 18,
   `origin_traits_step.gd` ve `character_step.gd` modulate'ları; bir yerde ham 24 punto ve CREAM rengi.
-- Ar-Ge atama panelindeki ayraç `HRUiShared.hairline` ile çiziliyor (eski kopya `anti_aliasing = false` diyordu).
 - Oyuncu metinlerinde tire (— –) kalan CSV satırları var (CLAUDE.md §5); mühürlü metinlerde sahibin kararı gerekir.
 - EN çoğul ikizi: `DESK_PAPER_ATLAS_TITLE` ("{n} candidate files ready") n=1'de çoğul okunuyor; tekil ikiz anahtar ve
   seçimi gerekir (TR sayıdan sonra çoğul eki almaz).

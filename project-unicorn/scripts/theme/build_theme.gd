@@ -87,11 +87,6 @@ func _initialize() -> void:
 	_lbl(th, &"ChromeAlert", mono_sb, T.SIZE_SMALL, T.NEGATIVE_BRIGHT)
 	_lbl(th, &"ColumnHeader", mono_label, T.SIZE_META, T.INK_DIM)  # defter sütun başlığı
 	_lbl(th, &"SectionAmber", mono_label, T.SIZE_SMALL, T.ACCENT_DEEP)  # kural çizgisiyle birlikte kullanılır
-	# Serif YALNIZ sayfa ve modal başlığıdır.
-	_lbl(th, &"PageTitleSerif", serif_sb, T.SIZE_ED_CEREMONY, T.INK)
-	# Özet başlık satırında yaşar, asla kopuk bir alt şeritte değil.
-	_lbl(th, &"TitleRowSummary", mono_label, T.SIZE_SMALL, T.INK_DIM)
-	_lbl(th, &"EmptyRowLabel", mono_reg, T.SIZE_DATA, T.INK_FAINT)     # "Henüz kimse yok"
 	_lbl(th, &"RowName", sans_sb, T.SIZE_BODY, T.INK)
 	_lbl(th, &"RowMeta", mono_reg, T.SIZE_SMALL, T.INK_MUTED)
 	_lbl(th, &"AvatarInitial", sans_sb, T.SIZE_BODY, T.CREAM)
@@ -1149,6 +1144,44 @@ func _menajer(master: Theme) -> Theme:
 	th.set_constant("line_spacing", &"OriginQuote", T.D_LEADING_PARA)
 	# An earned milestone's disc, round its glyph.
 	_panel(th, &"MilestoneDot", "PanelContainer", _flat(T.D_SURFACE_5, T.RADIUS_PILL, Vector4.ZERO, T.D_LINE_3))
+
+	# ---- Ar-Ge: the research tree, its node card and the tree's key ----
+	# A tile by its state, its inset laid out by the host; a frozen tile's dashed edge and a locked slot are
+	# drawn by their host.
+	for row in [
+		[&"RndTile", T.D_SURFACE_3, T.D_LINE_HOVER],
+		[&"RndTileHover", T.D_SURFACE_3, T.D_INK_3],
+		[&"RndTileActive", T.D_SURFACE_4, T.D_INK_2],
+		[&"RndTileDone", T.D_SURFACE_5, T.D_LINE_3],
+		[&"RndTileDoneHover", T.D_SURFACE_5, T.D_INK_3],
+		[&"RndTileFrozen", T.D_SURFACE_4, clear],
+		[&"RndTileSelected", T.D_SURFACE_4, T.D_INK_1],
+	]:
+		_panel(th, row[0], "Panel", _flat(row[1], T.D_RADIUS_2, Vector4.ZERO, row[2]))
+	var req := _fit(sans_med, T.D_FS_15, T.D_H_REQ_CHIP, T.SPACE_L, T.SPACE_L)
+	for row in [
+		# The node card is a document under the tree.
+		[&"NodeCard", _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_3XL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XL), T.D_LINE_2), T.D_CUT)],
+		[&"ReqChip", _flat(T.D_SURFACE_2, T.D_RADIUS_2, req, T.D_LINE_1)],
+		# A row's check box, empty and ticked; its glyph sits inside.
+		[&"CheckSquare", _flat(T.D_SURFACE_2, T.D_RADIUS_1, Vector4.ONE * T.SPACE_XXS, T.D_LINE_3)],
+		[&"CheckSquareOn", _flat(T.D_INK_2, T.D_RADIUS_1, Vector4.ONE * T.SPACE_XXS, T.D_INK_2)],
+		# A picked row on a raised card sits a step higher still.
+		[&"CardRowSelected", _flat(T.D_SURFACE_5, 0, Vector4.ZERO, T.D_ROW_RULE, bottom)],
+		[&"CardRowSelectedHover", _flat(T.D_SURFACE_5, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_HOVER)],
+		[&"WinFoot", _flat(clear, 0, Vector4(T.SPACE_3XL, 0, T.SPACE_3XL, 0), T.D_LINE_1, Vector4i(0, T.BORDER_HAIRLINE, 0, 0))],
+		# What a finished research opened, inside its mail.
+		[&"DiscBox", _doc(_flat(T.D_SURFACE_2, 0, Vector4(T.SPACE_XL, T.SPACE_L, T.SPACE_XL, T.SPACE_L), T.D_LINE_1), T.D_CUT_SM)],
+	]:
+		_panel(th, row[0], "PanelContainer", row[1])
+	th.set_type_variation(&"CardRow", &"TableRow")
+	th.set_type_variation(&"CardRowHover", &"TableRowHover")
+	# A cost the treasury cannot meet, in the palette in use.
+	for cb in [false, true]:
+		T.set_colorblind(cb)
+		var short: Dictionary = T.D_badge_palette(&"negative")
+		_panel(th, "ReqChipRisk" + ("Cb" if cb else ""), "PanelContainer", _flat(short.bg, T.D_RADIUS_2, req, short.line))
+	T.set_colorblind(false)
 
 	# Message body and ticker text.
 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")

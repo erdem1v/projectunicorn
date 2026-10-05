@@ -140,8 +140,9 @@ func _sync_gate() -> void:
 		_strip_from.text = "%s · %s" % [it.sender.name, it.subject]
 
 
-## While the strip shows, a press on the page reaches only its scrollbars and the wheel passes; the
-## hovered control says which window is on top. A focused control is let go before Enter presses it.
+## While the strip shows, a press on the page reaches only its scrollbars, the wheel and a control marked
+## `gate_reads` (picking what to read: an Ar-Ge tile, a history row); the hovered control says which window is
+## on top. A focused control is let go before Enter presses it.
 func _input(event: InputEvent) -> void:
 	if _strip == null or not _strip.visible or not is_visible_in_tree():
 		return
@@ -153,5 +154,6 @@ func _input(event: InputEvent) -> void:
 	if press == null or not press.pressed or press.button_index in WHEEL:
 		return
 	var hit: Control = get_viewport().gui_get_hovered_control()
-	if hit != null and (hit == page or page.is_ancestor_of(hit)) and not hit is ScrollBar:
+	if hit != null and (hit == page or page.is_ancestor_of(hit)) and not hit is ScrollBar \
+			and not hit.has_meta(&"gate_reads"):
 		get_viewport().set_input_as_handled()

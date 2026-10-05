@@ -42,19 +42,6 @@ static func make_badge(text: String, kind: StringName = &"neutral") -> PanelCont
 	return make_pill(text, p.bg, p.fg)
 
 
-## Terminal state chip: thin coloured edge over a pale tint of its hue. Built at runtime
-## rather than as a theme variation because the semantic pair's colourblind swap cannot live
-## in a static .tres.
-static func make_state_chip(text: String, fg: Color, bg: Color, border: Color) -> PanelContainer:
-	var chip := PanelContainer.new()
-	var sb := _chip_box(bg)
-	sb.border_color = border
-	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	chip.add_theme_stylebox_override("panel", sb)
-	chip.add_child(make_label(text, &"BadgeLabel", fg))
-	return chip
-
-
 ## A white glyph (SVG) tinted `color`, `px` square, centred in its row.
 static func make_glyph(path: String, px: int, color: Color) -> TextureRect:
 	var tex := TextureRect.new()
@@ -270,6 +257,19 @@ static func D_stamp(text: String) -> Control:
 	return holder
 
 
+## An empty state: its glyph over one line, centred in whatever room the caller gives it.
+static func D_empty(glyph: String, text: String, variation: StringName) -> CenterContainer:
+	var center := CenterContainer.new()
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	var icon := make_glyph(glyph, UiTokens.D_ICON_EMPTY, UiTokens.D_INK_4)
+	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(icon)
+	col.add_child(make_label(text, variation))
+	center.add_child(col)
+	return center
+
+
 ## A portrait's well, a mail sender's or the founder's on Kişisel: `face` covers it, cropped to the well.
 static func D_portrait_well(face: TextureRect) -> PanelContainer:
 	var well := PanelContainer.new()
@@ -304,7 +304,7 @@ static func D_kpi_value(cell: PanelContainer) -> Label:
 
 
 ## A window's section tabs, in caps: the active one in ink over its underline, each with its count
-## beside it when `counts` gives one. A click moves the underline and calls `on_pick(index)`.
+## beside it when `counts` gives one (null: none). A click moves the underline and calls `on_pick(index)`.
 static func D_seg_tabs(labels: Array, active: int, on_pick: Callable, counts: Array = []) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
@@ -318,7 +318,7 @@ static func D_seg_tabs(labels: Array, active: int, on_pick: Callable, counts: Ar
 			_paint_seg_tabs(row, i)
 			on_pick.call(i))
 		cell.add_child(tab)
-		if i < counts.size():
+		if i < counts.size() and counts[i] != null:
 			var count := make_label(str(counts[i]), &"SegCount")
 			count.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			cell.add_child(count)

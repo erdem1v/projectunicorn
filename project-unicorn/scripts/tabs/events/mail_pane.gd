@@ -7,7 +7,8 @@ extends ScrollContainer
 # Kip `populate(item, mode)`: "live" etkin karardır ve seçim yalnız orada EventGate.resolve'a gider;
 # "preview" kâğıdın önizlemesidir (seçenekler gizli, Cevapla açar) ya da harness'ın çizdiği karttır
 # (seçenekler görünür, tıklanmaz); "history" geçmiş karardır, gövdesi yalnız sabit metinse çizilir
-# ({seam:} bugünün sayısını okurdu). Bağlam her kipte öğenin kendisidir, etkin kartın değil.
+# ({seam:} bugünün sayısını okurdu); "rnd" Ar-Ge'nin kendi geçmişinde okunan nottur (Ar-Ge'ye dönüş
+# yolu yok, zaten oradadır). Bağlam her kipte öğenin kendisidir, etkin kartın değil.
 #
 # Seçenek grameri: tek açık seçenek kurulu gelir (bedel kutusu ve amber düğme); birden çoğunda
 # oyuncu önce kurar (tık ya da Enter), kurulu seçeneğin "Seç"i seçer, Vazgeç ya da Esc çözer. Karar
@@ -60,7 +61,9 @@ func populate(item: Dictionary, mode: String) -> void:
 	scroll_vertical = 0
 	if item.is_empty():
 		_col.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_col.add_child(_empty())
+		var empty := UiFactory.D_empty("res://assets/icons/util/mail_open.svg", tr("INBOX_PANE_EMPTY"), &"MetaMuted")
+		empty.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_col.add_child(empty)
 		return
 	_col.size_flags_vertical = Control.SIZE_FILL
 	match String(item.kind):
@@ -139,16 +142,17 @@ func _message() -> void:
 			_actions(SummarySystem.display(a).footer, [[tr("MAIL_CONTINUE"), _close, true]])
 		"sales_week":
 			_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)), "", _sales_report(a))
-		"rnd_note":
-			_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)), "\n\n".join(INBOX.note_lines(a)))
-			_actions("", [[tr("RND_NOTE_GO_PRODUCT"), _go.bind("product"), false],
-				[tr("RND_NOTE_GO_TREE"), _go.bind("rnd"), false]])
-		"rnd_discovery":
-			var node: String = String(a.node)
-			_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)),
-				RnDUiShared.t_or("PROD_RND_NODE_%s_DISCOVERY" % node.to_upper(), ""), _opened(node))
-			_actions("", [[tr("RND_NOTE_GO_TREE"), _go.bind("rnd"), false],
-				[tr("RND_NOTE_GO_PRODUCT"), _go.bind("product"), false]])
+		"rnd_note", "rnd_discovery":
+			var note: bool = m.kind == "rnd_note"
+			if note:
+				_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)), "\n\n".join(INBOX.note_lines(a)))
+			else:
+				_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)),
+					RnDUiShared.t_or("PROD_RND_NODE_%s_DISCOVERY" % String(a.node).to_upper(), ""), _opened(String(a.node)))
+			var product: Array = [tr("RND_NOTE_GO_PRODUCT"), _go.bind("product"), false]
+			var tree: Array = [tr("RND_NOTE_GO_TREE"), _go.bind("rnd"), false]
+			_actions("", [product] if _mode == "rnd" else ([product, tree] if note else [tree, product]),
+				_mode == "rnd" and EventGate.active_id() != "")
 
 
 ## The mail's top: kicker, subject, header, body, an extra block (a report's table) and the
@@ -645,26 +649,35 @@ func _sales_report(a: Dictionary) -> VBoxContainer:
 	return col
 
 
-## What a finished research opened (§5.8): no money, no chip, only the door.
+## What a finished research opened (§5.8): no money, no chip, only the door. Its sentence, the continuation
+## slots it named, and the new line, unless the sentence already names it.
 func _opened(node: String) -> PanelContainer:
-	var parts: PackedStringArray = []
+	var box := PanelContainer.new()
+	box.theme_type_variation = &"DiscBox"
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	box.add_child(col)
+	col.add_child(UiFactory.make_label(Fmt.upper(tr("RND_UNLOCKS_PREFIX")), &"KeyLabel"))
 	var unlock: String = RnDUiShared.t_or("PROD_RND_NODE_%s_UNLOCK" % node.to_upper(), "")
 	if unlock != "":
-		parts.append(unlock)
-	if ResearchTree.children_of(node).size() == 2:
-		parts.append(tr("RND_COMPLETED_UNLOCKED_TWO"))
-	var box := PanelContainer.new()
-	box.theme_type_variation = &"NoteBox"
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	box.add_child(col)
-	col.add_child(_wrapped("%s %s" % [tr("RND_OPENED_PREFIX"), " · ".join(parts)], &"DataText"))
+		col.add_child(_wrapped(unlock, &"DataText"))
+	var opened: Array = ResearchTree.children_of(node)
+	if opened.size() == 1:
+		col.add_child(_wrapped(tr("RND_COMPLETED_UNLOCKED_ONE").format({"node": ResearchSeam.node_name(String(opened[0]))}),
+			&"DataText"))
+	elif opened.size() == 2:
+		col.add_child(_wrapped(tr("RND_COMPLETED_UNLOCKED_TWO"), &"DataText"))
 	var line_id: String = ResearchTree.opens_line_of(node)
-	if line_id != "":
-		var line_name: String = RnDUiShared.t_or(ProductLines.line_name_key(line_id), "") \
-			if ResearchTree.hidden_line_authored(line_id) else ""
-		col.add_child(_wrapped(tr("RND_HIDDEN_LINE_OPENED").format({"line": line_name}) if line_name != ""
-			else tr("RND_EA_LINE_NOTE"), &"MetaMuted"))
+	var line_name: String = RnDUiShared.t_or(ProductLines.line_name_key(line_id), "") \
+		if line_id != "" and ResearchTree.hidden_line_authored(line_id) else ""
+	if line_id != "" and (line_name == "" or not unlock.contains(line_name)):
+		col.add_child(HSeparator.new())
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+		row.add_child(UiFactory.make_glyph("res://assets/icons/util/sparkle.svg", UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
+		row.add_child(_wrapped(tr("RND_HIDDEN_LINE_OPENED").format({"line": line_name}) if line_name != ""
+			else tr("RND_EA_LINE_NOTE"), &"DataText"))
+		col.add_child(row)
 	return box
 
 
@@ -750,19 +763,6 @@ func _go(tab: String, subpage := "") -> void:
 
 func _close() -> void:
 	EventBus.tab_changed.emit("")
-
-
-func _empty() -> CenterContainer:
-	var center := CenterContainer.new()
-	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	center.add_child(col)
-	var glyph := UiFactory.make_glyph("res://assets/icons/util/mail_open.svg", UiTokens.SPACE_3XL, UiTokens.D_INK_4)
-	glyph.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.add_child(glyph)
-	col.add_child(UiFactory.make_label(tr("INBOX_PANE_EMPTY"), &"MetaMuted"))
-	return center
 
 
 ## A sender's face at `px`: Frank's disc, a person's bust, or a box with initials or a glyph.

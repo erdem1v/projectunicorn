@@ -15,12 +15,7 @@ extends Control
 const MONO_FONT := preload("res://assets/fonts/variations/mono_reg.tres")
 const FILLED := "★"
 
-## Puanı yıldıza çeviren eşleme HRConstants.stars_for'da.
-static func make(points: int, glyph_px: int = 14, muted: bool = false) -> Control:
-	return make_stars(HRConstants.stars_for(points), glyph_px, muted)
-
-
-## Doğrudan yıldız değeriyle (0.0 .. STAR_MAX, yarımlar dahil).
+## Yıldız değeriyle (0.0 .. STAR_MAX, yarımlar dahil).
 static func make_stars(stars: float, glyph_px: int = 14, muted: bool = false,
 		on_dark: bool = false) -> Control:
 	var total: int = HRConstants.STAR_MAX

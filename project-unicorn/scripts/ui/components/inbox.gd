@@ -127,6 +127,16 @@ static func desk() -> Array:
 	return out
 
 
+## The newest discovery not read yet, as a list of one or none: the office's notice stack keeps it until it is
+## read (it does not wait on the player, so it is no paper). One is enough there, so the papers stay in sight.
+static func unread_discovery() -> Array:
+	for i in range(GameState.messages.size() - 1, -1, -1):
+		var m: Dictionary = GameState.messages[i]
+		if m.kind == "rnd_discovery" and not m.read:
+			return [_message_item(m)]
+	return []
+
+
 ## The signals that change what the inbox lists. `c` takes 0 to 2 arguments.
 static func connect_changes(c: Callable) -> void:
 	for sig in [EventBus.desk_changed, EventBus.event_triggered, EventBus.event_resolved,

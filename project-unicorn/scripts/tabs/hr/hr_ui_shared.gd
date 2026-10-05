@@ -38,21 +38,6 @@ static func roster_title(c: Character) -> String:
 	return HRConstants.job_title(c.role, c.level)
 
 
-## Müsait olan kimsede boş döner. Hafta sayıları izin ve eğitim domain'lerinin kendi okuma
-## seam'lerinden gelir; burada tarih aritmetiği yapılmaz.
-static func availability_text(c: Character) -> String:
-	if c.training_weeks_left > 0:
-		return TranslationServer.translate(Fmt.count_key("PROD_TEAM_AVAIL_TRAINING",
-			c.training_weeks_left)).format({"n": c.training_weeks_left})
-	if c.status == HRConstants.STATUS_ON_LEAVE:
-		var n: int = HRMoraleSystem.weeks_until_return(c)
-		return TranslationServer.translate(Fmt.count_key("PROD_TEAM_AVAIL_LEAVE", n)).format({"n": n})
-	if c.category == "founder" and HRSystem.is_busy(c):
-		# Kurucunun üçüncü meşguliyeti: yatırım hazırlığı.
-		return TranslationServer.translate("HR_FOUNDER_STATE_PITCH_PREP")
-	return ""
-
-
 ## Tooltip: ad ve etki alt alta. PASS, STOP DEĞİL: STOP tooltip'i çalıştırır ama satır
 ## tıklamasını yutar, ve menüyü açan tek yol o tıklama.
 static func _hoverable(node: Control, trait_id: String) -> Control:
@@ -83,34 +68,8 @@ static func hairline(color: Color = UiTokens.DIVIDER_LIGHT) -> Panel:
 	return line
 
 
-## Saatin moral YÖNÜ. Kademe ÇAĞIRANDA: kaç tane çizildiği kademedir (§8.5 katsayı yazdırmaz).
-static func chevron(px: int = 9, color: Color = UiTokens.ACCENT, up: bool = false) -> TextureRect:
-	return UiFactory.make_glyph("res://assets/icons/chevron_up.svg" if up
-		else "res://assets/icons/chevron_down.svg", px, color)
-
-
 static func lock_glyph(px: int, color: Color) -> TextureRect:
 	return UiFactory.make_glyph("res://assets/icons/lock.svg", px, color)
-
-
-static func action_button(label: String, on_press: Callable, primary: bool = false) -> Button:
-	var btn := Button.new()
-	btn.text = label
-	if primary:
-		btn.theme_type_variation = &"CommitButton"
-	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	if on_press.is_valid():
-		btn.pressed.connect(on_press)
-	return btn
-
-
-## Kapalı buton + GEREKÇE. Gerekçe motorun preview_*'ından gelir: can_* yalnız bool döner.
-static func disabled_button(label: String, reason: String) -> Button:
-	var btn := action_button(label, Callable())
-	btn.disabled = true
-	btn.tooltip_text = reason
-	return btn
 
 
 ## Personel modalları PanelLayer'a monte olur, ModalLayer'a değil: ModalLayer boşluk ve 1-4 hız
@@ -182,9 +141,11 @@ static func D_group(text: String, glyph_path: String, count: int, collapsed: boo
 
 
 ## Veri satırı; hücrelerini çağıran ekler. Üstüne gelince kenarı açılır, seçili satır yükselir ve sol
-## kenarında işaret taşır; seçim yerinde değişir (D_select_row).
-static func D_row(selected: bool) -> PanelContainer:
+## kenarında işaret taşır; seçim yerinde değişir (D_select_row). `look` kartın üstündeki satırın ailesidir
+## (CardRow: seçili satır kartın zemininden bir basamak yukarıda).
+static func D_row(selected: bool, look := &"TableRow") -> PanelContainer:
 	var row := PanelContainer.new()
+	row.set_meta(&"look", look)
 	row.custom_minimum_size.y = UiTokens.D_H_ROW
 	var layer := Control.new()
 	layer.add_child(D_mark())
@@ -215,7 +176,7 @@ static func D_select_row(row: PanelContainer, selected: bool) -> void:
 
 
 static func _paint_row(row: PanelContainer, hover: bool) -> void:
-	row.theme_type_variation = StringName("TableRow" + ("Selected" if row.get_meta(&"selected") else "")
+	row.theme_type_variation = StringName(String(row.get_meta(&"look")) + ("Selected" if row.get_meta(&"selected") else "")
 		+ ("Hover" if hover else ""))
 
 
@@ -405,6 +366,16 @@ static func D_trait_cell(trait_ids: Array, strong := false) -> HBoxContainer:
 	return _hoverable(cell, pick)
 
 
+## Someone away on leave or on a course: [their tag, the weeks still to go]; empty for anyone at work. The state
+## cell and Ar-Ge's assignment row read it.
+static func away_state(emp: Character) -> Array:
+	if emp.status == HRConstants.STATUS_ON_LEAVE:
+		return [TranslationServer.translate("HR_STATE_ON_LEAVE"), HRMoraleSystem.weeks_until_return(emp)]
+	if emp.training_weeks_left > 0:
+		return [TranslationServer.translate("HR_STATE_IN_TRAINING"), emp.training_weeks_left]
+	return []
+
+
 ## Durum hücresi, `width` genişliğinde. Etiketlerin ağırlık sırası: kaçma riski, aşırı yük, izin ya da
 ## eğitim (kalan haftasıyla), yeni, boşta. Kadro'nun sütunu birini taşır (en ağırı), Görevler hepsini
 ## (`all`); en sonda mesai istisnası, Mesai panelinin tonunda. Sütuna bütün sığmayan parça yarım
@@ -416,10 +387,9 @@ static func D_state_cell(emp: Character, all: bool, width: int) -> Control:
 			tags.append([HRConstants.badge_label(badge), &"risk", 0])
 		else:
 			tags.append([TranslationServer.translate("HR_BADGE_OVERLOADED_JOBS"), &"warn", 0])
-	if emp.status == HRConstants.STATUS_ON_LEAVE:
-		tags.append([TranslationServer.translate("HR_STATE_ON_LEAVE"), &"neutral", HRMoraleSystem.weeks_until_return(emp)])
-	elif emp.training_weeks_left > 0:
-		tags.append([TranslationServer.translate("HR_STATE_IN_TRAINING"), &"neutral", emp.training_weeks_left])
+	var away: Array = away_state(emp)
+	if not away.is_empty():
+		tags.append([away[0], &"neutral", away[1]])
 	if HRConstants.is_new_hire(emp.hire_day, GameState.day):
 		tags.append([TranslationServer.translate("HR_BADGE_NEW"), &"", 0])
 	if emp.status == HRConstants.STATUS_ACTIVE and HRSystem.is_idle(emp):

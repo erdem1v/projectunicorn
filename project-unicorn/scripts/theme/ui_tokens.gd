@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 28
+const THEME_STAMP := 29
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -136,7 +136,6 @@ const CARD_BORDER := Color(0.851, 0.816, 0.749, 1)       # #D9D0BF · 1px card b
 const BORDER_HOVER := Color(0.769, 0.718, 0.624, 1)      # #C4B79F · hover/ghost edge
 const CARD_ATTENTION_BORDER := Color(NEGATIVE, 0.45)   # rgba(155,59,40,.45) · attention-strip edge
 const BORDER_DISABLED := Color(0.851, 0.816, 0.749, 1)   # #D9D0BF · disabled control edge
-const BORDER_DASHED := Color(0.851, 0.816, 0.749, 1)     # #D9D0BF · empty-slot edge
 const DIVIDER_LIGHT := Color(0.890, 0.855, 0.788, 1)     # #E3DAC9 · in-card hairline
 const SEPARATOR := Color(0.106, 0.137, 0.169, 1)         # #1B232B · chrome hairline
 
@@ -828,6 +827,28 @@ const D_W_SKILL_FIGURE := 28          # a skill's figure after its meter, right 
 const D_XP_BAR_WIDE := Vector2i(140, 4)   # the founder's experience bar under the portrait
 const D_PHASE_MARK := Vector2i(24, 4)     # a phase's marker in the ladder
 const D_MILESTONE_DOT := 24           # a milestone's disc on the ledger
+const D_H_WIN_FOOT := 40              # a window's foot under its body: the Ar-Ge tree's key
+const D_RND_TILE_H := 72              # a research tile
+const D_RND_COL_GAP := 26             # between the tree's family columns
+const D_RND_ROW_GAP := 28             # between the tree's rows: a family's links and the guide's middle run
+const D_RND_CORRIDOR := 20            # a family's empty lane between its two branches
+const D_RND_LANE := 20                # under the tree, the lane the guide and a cross requirement run in
+const D_H_RND_CARD := 286             # the node card, fixed so the tree above it never moves
+const D_H_RND_HISTORY := 780 - D_H_WIN_HEAD - D_H_WIN_CTL - 2 * BORDER_HAIRLINE   # Ar-Ge's history: a 780 window less head, strip and frame
+const D_RND_LINE := 1.5               # the tree's links and a cross requirement
+const D_RND_DASH := 4.0               # a link to a locked slot
+const D_RND_DOT := 2.0                # a requirement from another family, dotted
+## The hexagon at a research tile's foot, in its D_ICON_PART box: half its width and half its height, and its stroke
+## for a root, a branch and a continuation. Godot's antialiased polyline under 1 px lays about 2.2 times its width
+## in ink, so these widths draw the mockup's 2, 1.5 and 1 px.
+const D_RND_HEX := Vector2(5.2, 5.8)
+const D_RND_HEX_STROKE := Vector3(0.88, 0.66, 0.48)
+const D_H_TILE_PROGRESS := 3          # a running research's progress along its tile's foot
+const D_W_RND_PROGRESS := 160         # the running research's progress in the window's strip
+const D_H_REQ_CHIP := 28              # a requirement on the node card: an area's stars, the weeks, the cost
+const D_CHECK_BOX := 18               # a row's check box
+const D_RND_ASSIGN_COLUMNS := Vector3i(28, 32, 40)   # an assignment row's check, face and skill columns
+const D_SWATCH := Vector2i(22, 12)    # a tree key's sample
 
 const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
 const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]

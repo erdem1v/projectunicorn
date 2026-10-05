@@ -13728,7 +13728,7 @@ static func _case_split_bars_name_their_cause() -> String:
 ##
 ## FALSİFİKASYON: `ui_tokens.gd`'nin rnd satırına `"lock": "v1_shipped"` geri koy → rozetsizlik
 ## iddiası FAIL. `left_tabs._refresh_rnd_badge`'deki `tree_open()` korumasını sil ve okunmamış
-## raporu zorla → rozet-sıfır iddiası FAIL. `_ready`'deki `make_placeholder_column` satırını `_build_chrome()` yap →
+## raporu zorla → rozet-sıfır iddiası FAIL. `_ready`'deki `add_child(_closed())` satırını `_build()` yap →
 ## bekleme satırı iddiası FAIL.
 static func _case_rnd_rail_open_with_waiting_page() -> String:
 	ProductLines.reload()
@@ -13772,7 +13772,7 @@ static func _case_rnd_rail_open_with_waiting_page() -> String:
 		shell.queue_free()
 		return "before v1 the page does not carry the waiting line"
 	# TEK SATIR: ağacın hiçbir parçası çizilmemeli.
-	if _node_tree_has_text(page, TranslationServer.translate("RND_LEGEND_COUNT")):
+	if _node_tree_has_text(page, TranslationServer.translate("RND_LEGEND_INTRA")):
 		shell.queue_free()
 		return "the waiting page drew the tree legend; it must be ONE line and nothing else"
 
