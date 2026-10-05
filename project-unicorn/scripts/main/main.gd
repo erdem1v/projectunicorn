@@ -617,6 +617,7 @@ func _run_event_shot(event_id: String) -> void:
 ##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
 ##   frank_moment · rnd_note · rnd_discovery · weekly_sales · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
+##   finance_read_only (Finans read-only) ·
 ##   held_key (a speed key refused: the frame's blink and the toast)
 ## Cards come through force_fire; a past decision is resolved for real at an earlier week.
 func _run_inbox_shot(state: String) -> void:
@@ -637,10 +638,10 @@ func _run_inbox_shot(state: String) -> void:
 			return
 		"intro":
 			_open_note("intro")
-		"offer", "team_read_only", "team_tasks_read_only", "sales_read_only", "held_key":
+		"offer", "team_read_only", "team_tasks_read_only", "sales_read_only", "finance_read_only", "held_key":
 			_shot_card("funding.frank_cheque", {}, 8)
-			if state == "sales_read_only":
-				EventBus.tab_changed.emit("sales")
+			if state in ["sales_read_only", "finance_read_only"]:
+				EventBus.tab_changed.emit(state.get_slice("_", 0))
 			elif state.begins_with("team_"):
 				EventBus.tab_changed.emit("hr")
 				if state == "team_tasks_read_only":
@@ -947,18 +948,6 @@ func _seed_theme_surface() -> void:
 	SalesFaucetSystem.spawn_prospect("small", "find")
 	SalesFaucetSystem.spawn_prospect("mid", "find")
 	SalesSystem.reflect_mrr()
-
-
-## Faz 2 sinyal fikstürü: dört artıda ay kapanışı, +%15/ay (üç büyüme ayı). Damgalar haftalık
-## tiktir; fikstürün ayı dört haftadır.
-func _seed_signal_months() -> void:
-	GameState.set_phase(2)
-	GameState.month_history.clear()
-	var start_day: int = 1
-	for m in [12000, 13900, 16000, 18400]:
-		GameState.push_month_close({"start_day": start_day, "end_day": start_day + 3, "mrr_close": m,
-			"income": m, "expense": 9000, "net": m - 9000, "red_weeks": 0})
-		start_day += 4
 
 
 # --office-shot=<home|ishani|plaza|loft|city|meet>:<hour>[:<extra>]: the office in the GameShell,
@@ -1600,13 +1589,15 @@ func _audit_color(c: Color) -> String:
 	return "%.3f,%.3f,%.3f,%.2f" % [c.r, c.g, c.b, c.a]
 
 
-# --finance-shot=<ozet|artida|uyari|kepenk|signal>: six weeks played through real seams (cash
+# --finance-shot=<ozet|artida|uyari|kepenk|signal|gider>: six weeks played through real seams (cash
 # ring buffer and transaction ledger fill from the real flow), framed on the Finance tab.
-#   ozet   — negatif net: çatallı projeksiyonlar, imza + retainer karışık işlemler
+#   ozet   — negatif net: mevcut gidiş projeksiyonu, iki imza; eğrinin 4. haftası üstüne gelinmiş
 #   artida — MRR > burn: yeşil ARTIDA, kırmızı erime projeksiyonu yok
-#   uyari  — runway < 6 ay: mentor kartı BAND 1 + ERTELE
-#   kepenk — kasa ekside, sayaç işliyor: aynı kartın BAND 2 satırı
-#   signal — faz 2 yatırımcı iştahı + artıda ay sayısı
+#   uyari  — runway < 3 ay: mentor kartı BAND 1 + ERTELE, mevcut gidiş sıfırı ufukta keser
+#   kepenk — uyari'nin akışı, kasa eksiye düşüp kepenk sayacı bir hafta işleyene kadar: BAND 2
+#   signal — artida'nın akışı, faz 2'de ayları takvimle kapanarak dört ay artıda kapanana kadar: yatırımcı iştahı
+#            + artıda ay sayısı
+#   gider  — on saatlik mesai, MVP'nin bulut sunucusu ve servis maliyeti: gider dağılımının bütün kalemleri
 func _run_finance_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -1618,33 +1609,60 @@ func _run_finance_shot(kind: String) -> void:
 	# The curve must start from the fixture cash, not initialize_run's day-1 sample — the one
 	# debug exception to the single-writer rule.
 	GameState.cash_history = [{"day": GameState.day, "cash": GameState.cash}]
+	if kind == "gider":   # LOC-DATA debug seed / id
+		WorkHoursSystem.set_company_hours(10)
+		# The server the MVP opens with (SprintBridges.on_mvp), so its bill is a line.
+		InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+		InfraSystem.set_capacity(InfraSystem.suggested_start_units())
 	# artida: 3 imza × 20K = 60K MRR → günlük gelir 2000 > kadro burn'ü (~1500).
-	var sign_mrr: int = 20000 if kind == "artida" else 1100   # LOC-DATA debug seed / id
+	var profitable: bool = kind in ["artida", "signal"]   # LOC-DATA debug seed / id
+	var sign_mrr: int = 20000 if profitable else 1100
 	for i in range(6):
 		GameState.advance_day()
-		if i == 1 or (kind == "artida" and (i == 2 or i == 3)):   # LOC-DATA debug seed / id
+		if kind == "signal":   # LOC-DATA debug seed / id
+			SummarySystem.begin_day()
+		if i == 1 or (profitable and (i == 2 or i == 3)):
 			var pr: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")
 			# §5.3 koltuk × koltuk fiyatı: 20.000 = 400 × $50, 1.100 = 22 × $50.
 			SalesSystem.add_b2b_customer(pr, sign_mrr / 50, 50, 70)
 			ProspectRegistry.remove(pr.id)
-		if i == 3 and kind != "artida":   # LOC-DATA debug seed / id
+		if i == 3 and not profitable:
 			# Bekleyen bir arayış; arama ücretsiz (§10), gider satırı eğitimden gelir.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
 		if i == 4 and kind == "ozet":
 			var pr2: Prospect = SalesFaucetSystem.spawn_prospect("small", "event")
 			SalesSystem.add_b2b_customer(pr2, 16, 50, 72)   # 16 × $50 = $800
 			ProspectRegistry.remove(pr2.id)
+		if kind == "gider":   # LOC-DATA debug seed / id
+			InfraSystem.daily_tick()
 		FinanceSystem.daily_tick()
 	if kind == "kepenk":   # LOC-DATA debug seed / id
-		GameState.set_cash(-4000)
-		GameState.set_shutter_weeks_left(TimeModel.ticks(EndingsSystem.SHUTTER_WEEKS - 1))
+		# The melt goes on through the real flow until the shutter's counter has run a week.
+		for _i in 52:
+			if GameState.shutter_weeks_left == TimeModel.ticks(EndingsSystem.SHUTTER_WEEKS - 1):
+				break
+			GameState.advance_day()
+			FinanceSystem.daily_tick()
+			EndingsSystem._tick_shutter()
+	if kind == "signal":   # LOC-DATA debug seed / id
+		# Traction goes on through the real flow, a month closing as the calendar turns, until four months have
+		# closed in the black.
+		GameState.set_phase(2)
+		for _i in 52:
+			if GameState.get_profitable_month_streak() >= 4:
+				break
+			GameState.advance_day()
+			SummarySystem.begin_day()
+			FinanceSystem.daily_tick()
 	# Açık pipeline: iyimser projeksiyon gerçek prospect'lerden beslenir.
 	SalesFaucetSystem.spawn_prospect("small", "find")
 	SalesFaucetSystem.spawn_prospect("mid", "find")
-	if kind == "signal":   # LOC-DATA debug seed / id
-		_seed_signal_months()
 	await _mount_shot_shell()
 	EventBus.tab_changed.emit("finance")
+	if kind == "ozet":
+		# The fourth week's note, as a pointer resting on it shows it.
+		await get_tree().process_frame
+		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._pages.ozet._curve._hover_at(3)
 	await _finish_shot("finance_shot_%s" % kind)
 
 
@@ -1698,6 +1716,8 @@ func _run_hr_shot(kind: String) -> void:
 			WorkHoursSystem.set_company_hours(10)
 			FinanceSystem.daily_tick()
 			FinanceSystem.apply_one_time_cost(HRConstants.commission_for(6000), "hire")
+			# The cash was written, not earned: the curve has today's point and an empty past.
+			GameState.cash_history = [{"day": GameState.day, "cash": GameState.cash}]
 		_:
 			# Aşırı yük: ilk kişi ikinci bir alanda; rozet DURUM sütununda çıkmalı.
 			var over: Array[Character] = CharacterRegistry.get_employees()
@@ -2073,8 +2093,9 @@ func _seed_sales_world() -> void:
 	founder.role_stats[FounderConstants.SKILL_CHARISMA] = 4
 
 
-## --vc-shot=<hunt|hunt_closed|table|table_final|table_walk|table_other|seed_table|k10>: the
-## Series A surfaces — the Hunt page, the term-sheet table in its states and the expired-offer
+## --vc-shot=<hunt|hunt_closed|hunt_meeting|hunt_seed|table|table_final|table_walk|table_other|seed_table|k10>:
+## the Series A surfaces — the Hunt page (two offers and one queued; every fund closed; a meeting booked beside
+## one offer; Traction with the seed door open), the term-sheet table in its states and the expired-offer
 ## decision card. Pushes go through the real table system with the SkillCheck debug force.
 func _run_vc_shot(kind: String) -> void:
 	_begin_shot()
@@ -2095,9 +2116,22 @@ func _run_vc_shot(kind: String) -> void:
 			VCPitchSystem._vc("bosphorus")["status"] = "pending_sheet"
 			VCPitchSystem._vc("bosphorus")["pending_sheet"] = true
 			VCPitchSystem._vc("nexus")["status"] = "rejected"
+			GameState.vc_rejections = 1
 		"hunt_closed":
 			for pair in [["anchor", "rejected"], ["nexus", "walked"], ["bosphorus", "expired"], ["meridian", "rejected"]]:
 				VCPitchSystem._vc(String(pair[0]))["status"] = String(pair[1])
+			# Walking away and letting an offer lapse close a fund without counting as a no.
+			GameState.vc_rejections = 2
+		"hunt_meeting":
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
+			VCPitchSystem._vc("anchor")["status"] = "offered"
+			VCPitchSystem._vc("nexus")["status"] = "rejected"
+			GameState.vc_rejections = 1
+			VCPitchSystem.request_meeting("bosphorus")
+		"hunt_seed":
+			GameState.set_phase(2)
+			GameState.mrr = 22000
+			GameState.seed_door_open_day = GameState.day
 		"table", "table_final", "table_walk":
 			var conv: int = 45 if kind == "table_walk" else (100 if kind == "table_final" else 83)
 			VCPitchSystem._vc("bosphorus")["sheet_conviction"] = conv
@@ -2131,7 +2165,7 @@ func _run_vc_shot(kind: String) -> void:
 		_:
 			_shot_fail("[VcShot] unknown --vc-shot kind: %s" % kind)
 			return
-	if kind in ["hunt", "hunt_closed"]:
+	if kind.begins_with("hunt"):
 		await _mount_shot_shell()
 		EventBus.tab_changed.emit("finance")
 		await get_tree().process_frame

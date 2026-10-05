@@ -492,7 +492,7 @@ static func _date_line(ledger: Dictionary) -> String:
 	var day := _day(ledger)
 	var issue := maxi(1, int(float(day) / TimeModel.ticks(ISSUE_PERIOD_WEEKS)))
 	return _t("END_DATE_LINE").format({
-		"date": Fmt.upper(Fmt.date_line(GameState.get_date_dict(day if day > 0 else -1))),
+		"date": Fmt.upper(Fmt.date_line(GameState.get_date_dict(day) if day > 0 else GameState.get_date_dict())),
 		"issue": issue})
 
 

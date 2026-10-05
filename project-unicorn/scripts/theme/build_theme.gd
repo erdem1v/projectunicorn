@@ -80,7 +80,6 @@ func _initialize() -> void:
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_MICRO, T.INK)
 	_lbl(th, &"ChoiceLabelStrong", sans_sb, T.SIZE_LEAD, T.INK)
 	_lbl(th, &"ChoiceLabelLocked", sans_reg, T.SIZE_LEAD, T.INK_FAINT)   # an option that is not open
-	_lbl(th, &"FeedDay", mono_reg, T.SIZE_SMALL, T.INK_MUTED)
 	_lbl(th, &"ChromeValue", sans_sb, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"ChromeClock", mono_reg, T.SIZE_DATA, T.CREAM_DIM)   # TopBar tarih/saat
 	# ChromeAlert: KEPENK / TEKLİF geri sayımı. Tema statiktir; renk körü takası bu
@@ -1117,6 +1116,38 @@ func _menajer(master: Theme) -> Theme:
 		[&"CaptionName", sans_sb, T.D_FS_13, T.D_INK_2],   # a name inside a caption's sentence
 	]:
 		_lbl(th, row[0], row[1], row[2], row[3])
+
+	# ---- Finans: furniture cards, Frank's notes, the offers ----
+	# A card in a window body is furniture on the inset ground; Frank's note and an offer are documents, the
+	# note in the shutter on the danger edge of the palette in use.
+	var body_pad := Vector4(T.SPACE_XXL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XL)
+	for row in [
+		[&"BodyCard", _flat(T.D_SURFACE_2, T.D_RADIUS_3, body_pad, T.D_LINE_1)],
+		[&"FrankNote", _doc(_flat(T.D_SURFACE_4, 0, body_pad, T.D_LINE_2), T.D_CUT)],
+		[&"FrankStrip", _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_M, T.SPACE_M, T.SPACE_XXL, T.SPACE_M), T.D_LINE_2),
+			T.D_CUT_SM)],
+		[&"OfferDoc", _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_XXL, T.SPACE_L, T.SPACE_XXL, T.SPACE_L), T.D_LINE_2),
+			T.D_CUT)],
+	]:
+		_panel(th, row[0], "PanelContainer", row[1])
+	for cb in [false, true]:
+		T.set_colorblind(cb)
+		_panel(th, "FrankNoteRisk" + ("Cb" if cb else ""), "PanelContainer",
+			_doc(_flat(T.D_SURFACE_4, 0, body_pad, T.D_neg_rule()), T.D_CUT))
+	T.set_colorblind(false)
+	# The locked fund's disc, round its lock.
+	_panel(th, &"LockDisc", "Panel", _flat(clear, T.RADIUS_PILL, Vector4.ZERO, T.D_LINE_2))
+	for row in [
+		[&"CardTitle", cond_sb, T.D_FS_15, T.D_INK_2],   # a card's title in its own case: the phase a goal leads to
+		[&"MetaStrong", sans_sb, T.D_FS_14, T.D_INK_1],   # the one name a list stresses: the player's on the ladder
+	]:
+		_lbl(th, row[0], row[1], row[2], row[3])
+	# The caps pick over a chart.
+	var seg_sm := _fit(cond_sb_caps, T.D_FS_13, T.D_H_PICK_SM - 2 * T.BORDER_HAIRLINE, T.SPACE_L, T.SPACE_L)
+	_dbtn(th, &"SegPickSm", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": on, "disabled": [clear, clear, T.D_INK_OFF]}, cond_sb_caps, T.D_FS_13, seg_sm, 0, under)
+	_dbtn(th, &"SegPickSmOn", {"normal": on, "hover": on, "pressed": on, "disabled": [T.D_SURFACE_5, T.D_INK_1, T.D_INK_OFF]},
+		cond_sb_caps, T.D_FS_13, seg_sm, 0, under)
 
 	# Message body and ticker text.
 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")

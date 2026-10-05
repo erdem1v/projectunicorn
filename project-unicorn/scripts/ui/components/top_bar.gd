@@ -147,27 +147,19 @@ func _refresh_brand(g: Dictionary) -> void:
 ## tehlikede: eksi kasa, kepenk, ilk runway eşiğinin altı; kasa artıdayken eksi NET mürekkeptir.
 func _refresh_metrics(g: Dictionary) -> void:
 	var flow: Dictionary = FinanceSystem.get_monthly_flow()
-	var shut: bool = GameState.cash < 0
 	var net: int = int(flow.net)
-	var months: float = GameState.get_runway_months()
-	_paint($CashValue, Fmt.money_exact(GameState.cash), UiTokens.D_neg() if shut else null)
-	var net_ink = UiTokens.D_pos() if net > 0 else (UiTokens.D_neg() if shut and net < 0 else null)
-	_paint($NetValue, ("+" if net > 0 else ("-" if net < 0 else "")) + Fmt.money_chip(absi(net)), net_ink)
-	var weeks: int = GameState.shutter_weeks_left
+	_paint($CashValue, Fmt.money_exact(GameState.cash), UiTokens.D_neg() if GameState.cash < 0 else null)
+	_paint($NetValue, ("+" if net > 0 else ("-" if net < 0 else "")) + Fmt.money_chip(absi(net)), UiTokens.D_net_ink(net))
 	# Kasa iki tik arasında eksiye düşebilir (olay, tek seferlik gider); kepenk sayacı sonraki tikte
 	# kurulur, o arada hücre RUNWAY kalır.
-	var shutter: bool = shut and weeks >= 0
-	var p: Dictionary = UiTokens.net_runway_parts(months)
-	var alarm: bool = shut or months < FinanceSystem.RUNWAY_ALERT_MONTHS[0]
-	var runway_ink = UiTokens.D_pos() if p.positive else (UiTokens.D_neg() if alarm else null)
-	$RunwayKey.text = Fmt.upper(tr("TOPBAR_SHUTTER" if shutter else "FIN_CAP_RUNWAY"))
+	var reading: Dictionary = UiTokens.D_runway_reading()
+	$RunwayKey.text = Fmt.upper(tr("TOPBAR_SHUTTER" if reading.shutter else "FIN_CAP_RUNWAY"))
 	var runway: Label = $RunwayValue
-	runway.theme_type_variation = &"ValueText" if runway_ink == null else &"ValueTextStrong"
-	_paint(runway, tr(Fmt.count_key("TOPBAR_SHUTTER_WEEKS", weeks)).format({"n": weeks})
-		if shutter else UiTokens.net_runway_text(months), runway_ink)
+	runway.theme_type_variation = &"ValueText" if reading.ink == null else &"ValueTextStrong"
+	_paint(runway, reading.text, reading.ink)
 	# Artıda olmanın nedeni ipucunda (Label varsayılanı IGNORE, ipucu üzerine gelmeyi ister).
-	runway.tooltip_text = p.note
-	runway.mouse_filter = Control.MOUSE_FILTER_STOP if p.positive else Control.MOUSE_FILTER_IGNORE
+	runway.tooltip_text = reading.note
+	runway.mouse_filter = Control.MOUSE_FILTER_STOP if reading.note != "" else Control.MOUSE_FILTER_IGNORE
 	$MrrValue.text = Fmt.money_chip(GameState.mrr)
 	$BrandValue.text = str(GameState.brand)
 	$BurnValue.text = Fmt.money_chip(int(flow.expense))
@@ -199,7 +191,7 @@ func _refresh_day(g: Dictionary) -> void:
 	$NextKey.text = Fmt.upper(tr("TOPBAR_NEXT"))
 	var line: String = tr("TOPBAR_NEXT_WORKDAY_END").format({"n": maxi(end - GameState.current_hour, 0)})
 	var ink = null
-	if _offer_weeks_left > 1:
+	if _offer_weeks_left > TimeModel.ticks(PitchConstants.FINAL_WEEKS):
 		line = tr("TOPBAR_NEXT_OFFER").format({"n": _offer_weeks_left})
 		ink = UiTokens.D_warn()
 	elif _offer_weeks_left >= 0:

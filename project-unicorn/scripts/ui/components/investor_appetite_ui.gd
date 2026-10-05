@@ -2,11 +2,10 @@ class_name InvestorAppetiteUi
 extends RefCounted
 
 # "Yatırımcı iştahı" — the ONLY player-facing reading of the Series A gate (GDD v2 ch. 01 §2:
-# the signal is shown, the revenue figure never is). Paints PhaseGateSystem.series_a_signal()
-# as a Terminal state chip + one line — no progress bar and no growth count. Whether the chip
-# stays or gives way to ch. 08 §5's one-line Frank note is open in docs/ACIK_ISLER/ACIK_KARARLAR.md.
-# Two surfaces read it — the Finance summary's appetite row and the product page's traction
-# strip — so the words and the palette live here once.
+# the signal is shown, the revenue figure never is). Words PhaseGateSystem.series_a_signal()
+# as a state tag + one line — no progress bar and no growth count; the Finans summary's goal card
+# draws them. Whether the tag stays or gives way to ch. 08 §5's one-line Frank note is open in
+# docs/ACIK_ISLER/ACIK_KARARLAR.md.
 #
 # Static: no Object, so TranslationServer.translate() rather than tr() (loc_residue bans
 # tr() in statics — it compiles and dies at runtime).
@@ -26,19 +25,7 @@ static func state_text(state: String) -> String:
 	return TranslationServer.translate(String(STATE_KEYS.get(state, "INV_APPETITE_CLOSED")))
 
 
-## Terminal DURUM ÇİPİ (UiFactory.make_state_chip): muted / amber / positive by state. Built
-## at runtime, never a theme variation — the colour-blind swap cannot be baked into a .tres.
-static func chip(state: String) -> PanelContainer:
-	match state:
-		"open":
-			return UiFactory.make_state_chip(state_text(state), UiTokens.positive(), UiTokens.positive_bg(), UiTokens.positive_rule())
-		"warming":
-			return UiFactory.make_state_chip(state_text(state), UiTokens.ACCENT_DEEP, UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP)
-		_:
-			return UiFactory.make_state_chip(state_text(state), UiTokens.INK_MUTED, UiTokens.NEUTRAL_BADGE_BG, UiTokens.BORDER_DISABLED)
-
-
-## The one line under the chip. The door is MRR only (ch. 08 §5) and the readout carries no
+## The one line under the tag. The door is MRR only (ch. 08 §5) and the readout carries no
 ## ratio: no growth months, no progress. Below the bar it says so without a figure;
 ## three special readings for "not asked yet" (phase 1), "door open" (phase 2, latched) and
 ## "hunt on" (phase 3). How near the bar is Frank's to say, once per mark, in his approach

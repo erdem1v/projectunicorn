@@ -92,6 +92,7 @@ const TERM_TABLE_HOURS := 1            # the term-sheet table
 const SHEET_VALIDITY_WEEKS := 3
 const MAX_SHEETS := 2
 const WARNING_WEEKS := 2                # expiry warning card + TopBar chip threshold
+const FINAL_WEEKS := 1                  # an offer's final week: its countdown reads red, on the offer and in the TopBar line
 
 # The offer row before the table shows an ESTIMATED range, never the number. The range
 # always contains the true opening term and never sits centred on it: the true value's position

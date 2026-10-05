@@ -567,7 +567,7 @@ static func walk_table(vc_id: String, reason: String = "declined") -> void:
 	# A fund that walked out on the player reads as a refusal on the Hunt tab ("Declined"),
 	# not as the player's own walk; both are closed for the run.
 	_vc(vc_id).status = "rejected" if reason == WALK_REASON_FUND else "walked"
-	EventBus.sheet_walked.emit(vc_id)  # HuntTab repaints after a table walk
+	EventBus.sheet_walked.emit(vc_id)  # the Yatırım page repaints after a table walk
 
 
 ## "Decline": the window closed and the player said no. The fund closes for the run, and

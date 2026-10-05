@@ -615,9 +615,10 @@ func get_founder_skill(skill_name: String) -> int:
 ## Tick N → Godot Time datetime dict {year, month, day, …} plus `week`. THE tick→calendar
 ## conversion: tick N is START_DATE + (N − 1) × DAYS_PER_TICK days, a Thursday, and its month is
 ## that Thursday's month (real 28/30/31-day months, never the economy DAYS_PER_MONTH). `week` is
-## the ISO week of the year, which for a Thursday is (day of year − 1) / 7 + 1. Default: now.
-func get_date_dict(for_day: int = -1) -> Dictionary:
-	var t: int = day if for_day < 0 else for_day
+## the ISO week of the year, which for a Thursday is (day of year − 1) / 7 + 1. Default: now; a tick
+## before the first is a date before the run.
+func get_date_dict(for_day: Variant = null) -> Dictionary:
+	var t: int = day if for_day == null else for_day
 	var unix: int = int(Time.get_unix_time_from_datetime_dict(START_DATE)) + (t - 1) * TimeModel.DAYS_PER_TICK * 86400
 	var d: Dictionary = Time.get_datetime_dict_from_unix_time(unix)
 	var year_start: int = int(Time.get_unix_time_from_datetime_dict({"year": d.year, "month": 1, "day": 1}))

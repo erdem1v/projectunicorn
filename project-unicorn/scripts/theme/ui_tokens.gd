@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 26
+const THEME_STAMP := 27
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -118,7 +118,6 @@ const NEGATIVE_BRIGHT := Color(1.0, 0.361, 0.286, 1)     # #FF5C49 · on the dar
 # ALL # WORKING — Erdem's F5 seals the hues.
 const POSITIVE_CB := Color(0.173, 0.435, 0.682, 1)        # #2C6FAE · blue
 const POSITIVE_BG_CB := Color(0.851, 0.898, 0.941, 1)     # #D9E5F0
-const POSITIVE_RULE_CB := Color(POSITIVE_CB, 0.45)
 const NEGATIVE_CB := Color(0.702, 0.420, 0.0, 1)          # #B36B00 · orange
 const NEGATIVE_BG_CB := Color(0.945, 0.894, 0.820, 1)     # #F1E4D1
 const NEGATIVE_RULE_CB := Color(NEGATIVE_CB, 0.45)
@@ -329,9 +328,6 @@ const TABS := [
 	{"id": "events"},
 ]
 
-## A muted sub-tab or a locked line fades as a whole.
-const TAB_LOCKED_ALPHA := 0.45
-
 # ============================================================================
 # SEMANTIC PALETTE SWITCH — the accessibility swap (Settings > Erişilebilirlik).
 # ============================================================================
@@ -369,9 +365,6 @@ static func negative_bright() -> Color:
 
 ## Çip kenarları da semantiktir: dolgu takas olup kenar sabit kalsaydı renk körü
 ## modunda çip iki paletten karışık okunurdu.
-static func positive_rule() -> Color:
-	return POSITIVE_RULE_CB if _cb_palette else POSITIVE_RULE
-
 static func negative_rule() -> Color:
 	return NEGATIVE_RULE_CB if _cb_palette else NEGATIVE_RULE
 
@@ -468,11 +461,6 @@ static func tooltip_tone_ink(tone: String) -> Color:
 # which owns the locale's separators. New code may call Fmt directly.
 static func format_money(amount: int) -> String:
 	return Fmt.money(amount)
-
-
-## Exact, thousands-grouped money. CASH is shown in full because money management is precise.
-static func format_money_exact(value: int) -> String:
-	return Fmt.money_exact(value)
 
 
 ## Kept for existing callers; new code calls Fmt.upper.
@@ -809,6 +797,30 @@ const D_PIP := 10                     # a week square of the churn countdown
 const D_H_PROMISE := 24               # an open promise's note on its account
 const D_LOAD_BAR := Vector2i(48, 4)   # a steward's load beside their name in the picker
 const D_W_STEWARD_MENU := 432         # the steward picker's rows, as wide as either language's widest
+const D_FINANCE_COLUMNS := Vector3i(584, 320, 360)   # the Finans summary's columns: the curve, the flows, Frank and the market
+const D_H_CHART := 216                # the cash curve with its axes
+const D_CHART_PAD := Vector4i(52, 22, 12, 26)   # the curve's plot in its box: the figures left, the marks' words over it, the months under it
+const D_CHART_DOT := 5.0              # today's point and the hovered week's
+const D_CHART_HALO := 1.5             # the ground round today's point, parting it from the lines
+const D_CHART_RING := 1.0             # the hovered week's ink ring, either side of its point's edge
+const D_CHART_STROKE := 2.0           # the realized line and the projections; two lines nearer than this read as one
+const D_DASH_CURRENT := Vector2(4, 4)   # the projection at the current course: dash and gap
+const D_DASH_TARGET := Vector2(12, 6)   # the projection if the sales target holds
+const D_DASH_MARK := Vector2(3, 3)      # today's line and the line where the cash reaches zero
+const D_W_CHART_TIP := 216            # the hovered week's note
+const D_H_PICK_SM := 28              # the caps pick over a chart
+const D_W_LEGEND := 32                # a legend's sample of its line
+const D_W_TX_DATE := 96               # a transaction's date column
+const D_H_SHARE := 8                  # a share's bar, and the part-to-whole bar over the shares
+const D_H_SHARE_ROW := 28             # a row of the market-share ladder
+const D_W_RANK := 20                  # the ladder's rank column
+const D_W_SHARE := 52                 # the ladder's share column
+const D_AVATAR_NOTE := 64             # Frank's disc on his note
+const D_ICON_FIGURE := 20             # the cost disc or the equity slice before a header's or an offer's figure
+const D_W_INVESTORS := 704            # the funds' column on the Yatırım page
+const D_H_FUND := 76                  # a fund's row
+const D_H_HUNT_HEAD := 64             # the Yatırım page's title row
+const D_PIP_TABLE := 14               # a closed table's square
 
 const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
 const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]
@@ -871,6 +883,30 @@ static func D_topic(tag_key: String) -> Color:
 
 static func D_outlet(outlet_key: String) -> Color:
 	return D_OUTLETS[outlet_key][int(_cb_palette)]
+
+
+## The money header's runway, the top bar's and the Finans window's: the shutter's weeks while cash is below zero
+## and the counter runs, else the runway. {shutter, text, ink, note}: ink null keeps the variation's own, green
+## when profitable, red under the first alert threshold or below zero.
+static func D_runway_reading() -> Dictionary:
+	var months: float = GameState.get_runway_months()
+	var weeks: int = GameState.shutter_weeks_left
+	var shut: bool = GameState.cash < 0
+	if shut and weeks >= 0:
+		return {"shutter": true, "ink": D_neg(), "note": "", "text": TranslationServer.translate(
+			Fmt.count_key("TOPBAR_SHUTTER_WEEKS", weeks)).format({"n": weeks})}
+	var p: Dictionary = net_runway_parts(months)
+	var alarm: bool = shut or months < FinanceSystem.RUNWAY_ALERT_MONTHS[0]
+	return {"shutter": false, "text": net_runway_text(months), "note": p.note,
+		"ink": D_pos() if p.positive else (D_neg() if alarm else null)}
+
+
+## A monthly net in the money header: green when it gains, red only while cash is below zero; a loss with cash
+## in hand is a cost, its own ink (null).
+static func D_net_ink(net: int) -> Variant:
+	if net > 0:
+		return D_pos()
+	return D_neg() if net < 0 and GameState.cash < 0 else null
 
 
 ## Delta colour on the dark ground.

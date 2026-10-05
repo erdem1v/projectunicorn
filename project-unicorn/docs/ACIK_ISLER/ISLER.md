@@ -27,13 +27,12 @@ Açık işlerin tek yeri bu klasördür.
 
 ## Arayüz yeniden yapılırken
 Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktalar:
-- Ham stil değerleri (UI/STYLE LAW; her biri yeni token ister): `finance_ozet_view.gd` modulate'ları; `hunt_tab.gd` `_label` boyutları (11–14; 14 merdivende yok)
-  ve disabled alfaları; `OnboardingFlow.tscn` LoadingLabel 18, `origin_traits_step.gd` ve `character_step.gd`
-  modulate'ları; bir yerde ham 24 punto ve CREAM rengi.
+- Ham stil değerleri (UI/STYLE LAW; her biri yeni token ister): `OnboardingFlow.tscn` LoadingLabel 18,
+  `origin_traits_step.gd` ve `character_step.gd` modulate'ları; bir yerde ham 24 punto ve CREAM rengi.
 - Ar-Ge atama panelindeki ayraç `HRUiShared.hairline` ile çiziliyor (eski kopya `anti_aliasing = false` diyordu).
 - Oyuncu metinlerinde tire (— –) kalan CSV satırları var (CLAUDE.md §5); mühürlü metinlerde sahibin kararı gerekir.
-- EN çoğul ikizleri: `DESK_PAPER_ATLAS_TITLE` ("{n} candidate files ready") ve `FIN_GOAL_P3_HUNT` ("{n} offers on the
-  table") n=1'de çoğul okunuyor; tekil ikiz anahtar ve seçimi gerekir (TR sayıdan sonra çoğul eki almaz).
+- EN çoğul ikizi: `DESK_PAPER_ATLAS_TITLE` ("{n} candidate files ready") n=1'de çoğul okunuyor; tekil ikiz anahtar ve
+  seçimi gerekir (TR sayıdan sonra çoğul eki almaz).
 
 ## Ofis ve pencereler
 - İlk açılış rehberi yok: mentor modalı kapanınca oyuncu ofise düşer, ofis, pencereler, not yığını ve "Ofisi taşı"
@@ -91,7 +90,6 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   - Sözlü sprint kartı ("söz verildi" damgası, öngörüde "{müşteri} sözü tutulur").
   - Canlı sürümlerin Geçmiş'teki gerçekleşen satırları (iki sürüm kapanmış koşu).
   - Planlamadan sonra kapısı kapanan kart: başlatmada sonraki sütuna geçer, KİLİTLİ ve yalnız Çıkar.
-  - Finans gider dökümünde Servis maliyeti satırı (canlı ürün ve B2B defteri).
   - Satış toplantısında "yer yok" gerekçesiyle kilitli söz cevabı.
   - Koşan sprintte sprint karar kartları ve B2B söz satırının iki kilidi (kırık söz, yer yok); `--event-shot`'un
     fikstür dünyasında bu kilitler doğmuyor.

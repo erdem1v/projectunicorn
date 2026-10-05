@@ -63,10 +63,6 @@ static func missing(th: Theme, master: Theme) -> PackedStringArray:
 				if v == null or (v is FontVariation and v.base_font == null) or (v is StyleBoxTexture and v.texture == null):
 					out.append("%s/%s/%s is null" % [type, DT[dt], item])
 	th.default_font = face
-	# HRUiShared.override_bar_fill recolours only a flat fill.
-	for type in ["ProgressBar", "BuildProgress"]:
-		if not th.get_stylebox("fill", type) is StyleBoxFlat:
-			out.append("%s fill is not a StyleBoxFlat" % type)
 	return out
 
 

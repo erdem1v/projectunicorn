@@ -69,15 +69,6 @@ static func _hoverable(node: Control, trait_id: String) -> Control:
 	return node
 
 
-## BuildProgress'in amber dolgusu → verilen renk. Varyasyon atandıktan SONRA çağrılmalı.
-static func override_bar_fill(bar: ProgressBar, c: Color) -> void:
-	var fill: StyleBox = bar.get_theme_stylebox("fill")
-	if fill is StyleBoxFlat:
-		var f: StyleBoxFlat = (fill as StyleBoxFlat).duplicate()
-		f.bg_color = c
-		bar.add_theme_stylebox_override("fill", f)
-
-
 ## Kart sıralaması için: badges_for en kötüsünü başta döndürüyor, ağırlık registry'de.
 static func worst_badge_severity(emp: Character) -> int:
 	var badges: Array[String] = HRSystem.badges_for(emp)
@@ -368,7 +359,8 @@ static func D_repaint_morale(refs: Dictionary, morale: int) -> void:
 	fill.size = Vector2(UiTokens.D_MORALE_BAR.x * morale / float(HRConstants.MORALE_MAX), UiTokens.D_MORALE_BAR.y)
 
 
-## A meter: its track at `size` and, as the track's first child, its fill to `ratio` in `ink`.
+## A meter: its track at `size` and, as the track's first child, its fill to `ratio` in `ink`. A track of no
+## width takes its row's, and its fill follows.
 static func D_bar(size: Vector2, ratio: float, ink: Color) -> Panel:
 	var track := Panel.new()
 	track.theme_type_variation = &"BarTrack"
@@ -377,8 +369,12 @@ static func D_bar(size: Vector2, ratio: float, ink: Color) -> Panel:
 	var fill := Panel.new()
 	fill.theme_type_variation = &"BarTint"
 	fill.self_modulate = ink
-	fill.size = Vector2(size.x * clampf(ratio, 0.0, 1.0), size.y)
+	var share: float = clampf(ratio, 0.0, 1.0)
+	fill.size = Vector2(size.x * share, size.y)
 	track.add_child(fill)
+	if size.x == 0.0:
+		track.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		track.resized.connect(func() -> void: fill.size = Vector2(track.size.x * share, size.y))
 	return track
 
 

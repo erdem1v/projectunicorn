@@ -176,13 +176,7 @@ func _build_ctl(m: Dictionary, view: String) -> void:
 	_ctl_row.add_child(UiFactory.D_seg_tabs(views.map(func(id: String) -> String: return tr(VIEW_KEYS[id])),
 		views.find(view), func(i: int) -> void: _set_ui(views[i], "view")))
 	if locked:
-		var quarter := Button.new()
-		quarter.theme_type_variation = &"SegTab"
-		quarter.text = Fmt.upper(tr("PRODUCT_VIEW_QUARTER"))
-		quarter.icon = load(SprintUiShared.LOCK)
-		quarter.disabled = true
-		quarter.focus_mode = Control.FOCUS_NONE
-		_ctl_row.add_child(quarter)
+		_ctl_row.add_child(UiFactory.D_locked_tab(tr("PRODUCT_VIEW_QUARTER")))
 		_ctl_row.add_child(SprintUiShared.label(tr("PRODUCT_QUARTER_NEED_PM"), &"Caption"))
 	_ctl_row.add_child(RnDUiShared.spacer())
 	_ctl_row.add_child(SprintUiShared.label(tr("PRODUCT_HISTORY"), &"MetaMuted"))

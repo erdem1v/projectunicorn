@@ -158,13 +158,13 @@ static func result_line(result: Dictionary, variation: StringName) -> HBoxContai
 	return line
 
 
-## Boş satır: glifi (varsa) ve notu.
-static func empty_line(text: String, glyph_path := "") -> MarginContainer:
+## Boş satır: glifi (varsa) ve notu; üstünde ve altında `room` boşluk (kartın başında ya da tek satırında 0).
+static func empty_line(text: String, glyph_path := "", room := UiTokens.SPACE_M) -> MarginContainer:
 	var line := box(UiTokens.SPACE_M)
 	if glyph_path != "":
 		line.add_child(UiFactory.make_glyph(glyph_path, UiTokens.D_ICON_ROW, UiTokens.D_INK_4))
 	line.add_child(label(text, &"MetaMuted"))
-	return pad(line, Vector4i(0, UiTokens.SPACE_M, 0, UiTokens.SPACE_M))
+	return pad(line, Vector4i(0, room, 0, room))
 
 
 ## Büyük harfli bölüm etiketi ve sağa uzanan çizgi; `small` açık alanın alt bölümleri.

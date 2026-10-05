@@ -271,15 +271,16 @@ static func D_stamp(text: String) -> Control:
 
 
 ## A window header's figure: its caps key over its value, a rule on its left. An empty value keeps
-## its line, so the key stays on the header's baseline.
-static func D_kpi(key: String, value: String) -> PanelContainer:
+## its line, so the key stays on the header's baseline. A `cost` reads behind the cost disc; its host builds
+## it anew rather than rewriting it in place.
+static func D_kpi(key: String, value: String, cost := false) -> PanelContainer:
 	var cell := PanelContainer.new()
 	cell.theme_type_variation = &"KpiCell"
 	var col := VBoxContainer.new()
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_theme_constant_override("separation", 0)
 	col.add_child(make_label(Fmt.upper(key), &"KeyLabel"))
-	col.add_child(make_label(value, &"KpiValue"))
+	col.add_child(D_cost(value, &"KpiValue", UiTokens.D_ICON_FIGURE) if cost else make_label(value, &"KpiValue"))
 	cell.add_child(col)
 	return cell
 
@@ -313,6 +314,45 @@ static func D_seg_tabs(labels: Array, active: int, on_pick: Callable, counts: Ar
 	return row
 
 
+## A furniture card on a window body's inset ground, in `parent`; its parts go into the column it returns.
+static func D_card(parent: Control) -> VBoxContainer:
+	var card := PanelContainer.new()
+	card.theme_type_variation = &"BodyCard"
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	card.add_child(body)
+	parent.add_child(card)
+	return body
+
+
+## A card's head: its caps key, a remark `beside` it and, at the far end, `right` (a figure, a count).
+static func D_card_head(key: String, right: Control = null, beside: Control = null) -> HBoxContainer:
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	head.add_child(make_label(Fmt.upper(key), &"KeyLabel"))
+	if beside != null:
+		head.add_child(beside)
+	if right != null:
+		var gap := Control.new()
+		gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.add_child(gap)
+		head.add_child(right)
+	for part: Control in head.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return head
+
+
+## A section tab that is not open yet: its glyph and caps label off; its host shows the reason beside it.
+static func D_locked_tab(label: String) -> Button:
+	var tab := Button.new()
+	tab.theme_type_variation = &"SegTab"
+	tab.text = Fmt.upper(label)
+	tab.icon = load("res://assets/icons/util/lock.svg")
+	tab.disabled = true
+	tab.focus_mode = Control.FOCUS_NONE
+	return tab
+
+
 static func _paint_seg_tabs(row: HBoxContainer, active: int) -> void:
 	for i in row.get_child_count():
 		for part: Control in row.get_child(i).get_children():
@@ -336,8 +376,8 @@ static func D_stars(stars: float) -> HBoxContainer:
 
 ## A segmented pick: its options side by side in one box, the one in force filled and underlined. Each
 ## option is {text, tip?, icon?} (the icon after the text); a press on another calls `on_pick(index)`.
-## `off` reads only.
-static func D_seg_pick(options: Array, active: int, on_pick: Callable, off := false) -> PanelContainer:
+## `off` reads only; `small` is the caps pick over a chart.
+static func D_seg_pick(options: Array, active: int, on_pick: Callable, off := false, small := false) -> PanelContainer:
 	var frame := PanelContainer.new()
 	frame.theme_type_variation = &"SegPickBox"
 	frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -348,8 +388,8 @@ static func D_seg_pick(options: Array, active: int, on_pick: Callable, off := fa
 		if i > 0:
 			row.add_child(VSeparator.new())
 		var b := Button.new()
-		b.theme_type_variation = &"SegPickOn" if i == active else &"SegPick"
-		b.text = options[i].text
+		b.theme_type_variation = StringName("SegPick" + ("Sm" if small else "") + ("On" if i == active else ""))
+		b.text = Fmt.upper(options[i].text) if small else options[i].text
 		b.tooltip_text = options[i].get("tip", "")
 		if options[i].has("icon"):
 			b.icon = load(options[i].icon)
@@ -363,10 +403,10 @@ static func D_seg_pick(options: Array, active: int, on_pick: Callable, off := fa
 
 
 ## A cost: its value in ink behind the cost disc, never in red (a cost is not a danger).
-static func D_cost(value: String, variation: StringName = &"DataText") -> HBoxContainer:
+static func D_cost(value: String, variation: StringName = &"DataText", px := UiTokens.D_ICON_PART) -> HBoxContainer:
 	var part := HBoxContainer.new()
 	part.add_theme_constant_override("separation", UiTokens.SPACE_S)
-	part.add_child(make_glyph("res://assets/icons/stake/cost.svg", UiTokens.D_ICON_PART, UiTokens.D_INK_3))
+	part.add_child(make_glyph("res://assets/icons/stake/cost.svg", px, UiTokens.D_INK_3))
 	var label := make_label(value, variation)
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	part.add_child(label)

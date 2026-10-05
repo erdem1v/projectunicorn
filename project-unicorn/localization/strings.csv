@@ -155,9 +155,10 @@ FIN_GOAL_P1_META,Sürüm + ilk müşteri + ilk gelir,Ship + first customer + fir
 FIN_GOAL_P2_LABEL,Series A'ya:,To Series A:
 FIN_GOAL_P3_LABEL,Series A avı:,Series A hunt:
 FIN_GOAL_P3_HUNT,{n} teklif masada,{n} offers on the table
+FIN_GOAL_P3_HUNT_ONE,{n} teklif masada,{n} offer on the table
 FIN_GOAL_P3_CLOSED,Series A kapandı,Series A closed
 FIN_MARKET_TITLE,Pazar payı,Market share
-FIN_MARKET_YOU,SEN,YOU
+FIN_MARKET_YOU,Sen,You
 MILESTONE_FOUNDING,Kuruluş,Founding
 MILESTONE_FIRST_SHIP,İlk sürüm,First release
 MILESTONE_FIRST_FUNDING,İlk yatırım,First funding
@@ -657,9 +658,9 @@ B2B_CHOICE_PROMISE_FIX,Düzeltme sözü ver,Promise a fix
 B2B_EV_RENEWAL_TITLE,Yenileme sinyali,Renewal signal
 PITCH_INNER_CLOSED,Olmadı. Frank ne der bilmiyorum ama bir sonraki var.,"It did not happen. I do not know what Frank will say, but there is a next one."
 HUNT_PAGE_TITLE,Series A Avı,The Series A Hunt
-HUNT_SEC_INVESTORS,YATIRIMCILAR,INVESTORS
-HUNT_SEC_OFFERS,TEKLİFLER,OFFERS
-HUNT_SEC_PENDING,BEKLEYEN,PENDING
+HUNT_SEC_INVESTORS,Yatırımcılar,Investors
+HUNT_SEC_OFFERS,Teklifler,Offers
+HUNT_SEC_PENDING,Bekleyen,Pending
 HUNT_LOCKED_SOON,Yakında,Soon
 HUNT_CONDITION,Koşul: {condition},Condition: {condition}
 HUNT_MEETING_SET,Toplantı ayarlandı.,Meeting is set.
@@ -667,12 +668,13 @@ HUNT_PREP_RUNNING,Hazırlık sürüyor.,Prep in progress.
 HUNT_PREP_REASON,Hazırlık: {reason},Prep: {reason}
 HUNT_NO_OFFERS,Henüz teklif yok.,No offers yet.
 HUNT_ROAD_CLOSED,Series A için kapısı açık fon kalmadı. Bu yolda oturulacak masa yok.,No fund is left open for a Series A. There is no table left on this road.
-HUNT_EMPTY_SLOT,— boş slot —,— empty slot —
-HUNT_TERMS,Tahmini: değerleme {valuation} · pay {equity},Estimated: valuation {valuation} · equity {equity}
+HUNT_EMPTY_SLOT,Boş teklif yeri,Empty offer slot
 HUNT_VALIDITY,Teklifte {n} hafta kaldı,{n} weeks left on the offer
 HUNT_VALIDITY_ONE,Teklifin son haftası,Final week of the offer
-HUNT_EST_VALUATION,~${lo}–{hi}M,~${lo}–{hi}M
-HUNT_EST_DILUTION,~%{lo}–{hi},~{lo}–{hi}%
+HUNT_EST_VALUATION,${lo}M ile ${hi}M,${lo}M to ${hi}M
+HUNT_EST_DILUTION,%{lo} ile %{hi},{lo}% to {hi}%
+HUNT_EST_VALUATION_KEY,Tahmini değerleme,Est. valuation
+HUNT_EST_EQUITY_KEY,Tahmini pay,Est. equity
 HUNT_DECISION_DUE,Süre doldu. Fon bir cevap bekliyor.,Time is up. The fund wants an answer.
 HUNT_QUEUED_OFFER,{investor} · sırada. Bir teklif kapanınca masaya gelir; süresi o hafta başlar ({n} hafta).,"{investor} · queued. It arrives when an offer slot frees up, with a fresh {n} weeks."
 HUNT_SIT_DOWN,Masaya otur,Sit down
@@ -1345,13 +1347,18 @@ FIN_SNOOZE,Ertele,Snooze
 FIN_CASH,Nakit,Cash
 FIN_MONTHLY_NET,Aylık net,Monthly net
 FIN_RUNWAY,Runway,Runway
-FIN_RANGE_6M,6 AY,6 MO
-FIN_RANGE_12M,12 AY,12 MO
-FIN_RANGE_ALL,TÜMÜ,ALL
+FIN_RANGE_6M,6 ay,6 mo
+FIN_RANGE_12M,12 ay,12 mo
+FIN_RANGE_ALL,Tümü,All
+FIN_CURVE_TODAY,Bugün · H{n},Today · W{n}
+FIN_CURVE_ZERO,Kasa sıfır · H{n},Cash hits zero · W{n}
+FIN_CURVE_TIP_CASH,Kasa {amount},Cash {amount}
 FIN_LEGEND_ACTUAL,Gerçekleşen nakit,Actual cash
 FIN_LEGEND_PROJECTION,Projeksiyon · mevcut gidiş,Projection · current course
 FIN_LEGEND_PROJECTION_TARGET,Projeksiyon · satış hedefi tutarsa,Projection · if the sales target holds
-FIN_MONTHLY_FLOW,Aylık akış · mevcut gidişle,Monthly flow · at the current pace
+FIN_LEGEND_BELOW_ZERO,Sıfırın altı,Below zero
+FIN_MONTHLY_FLOW,Aylık akış,Monthly flow
+FIN_MONTHLY_FLOW_PACE,mevcut gidişle,at the current pace
 FIN_INCOME,Gelir,Income
 FIN_EXPENSE,Gider,Expense
 FIN_NET,Net,Net
@@ -1360,7 +1367,7 @@ FIN_RECENT_TX,Son işlemler,Recent transactions
 FIN_NO_TX,Henüz işlem yok,No transactions yet
 FIN_TX_DATE,H{week} · {mon} {year},W{week} · {mon} {year}
 FIN_PER_MONTH,{amount} / ay,{amount} / mo
-FIN_REQ_OPENS,Series A Hunt'ta açılır: {reqs},Opens in the Series A Hunt: {reqs}
+FIN_REQ_OPENS,Series A Avı'nda açılır: {reqs},Opens in the Series A Hunt: {reqs}
 FIN_CAPTABLE_HEADER,Hisse dağılımı,Cap table
 FIN_CAPTABLE_FOUNDER,Kurucu · {pct},Founder · {pct}
 FIN_CAPTABLE_INVESTORS,Yatırımcılar · {pct},Investors · {pct}
@@ -1368,7 +1375,7 @@ FIN_CAPTABLE_RAISED,Toplanan · {amount},Raised · {amount}
 TERM_BOARD_SEAT_ONE,{n} koltuk,{n} seat
 FIN_SUBTAB_SUMMARY,Özet,Summary
 FIN_SUBTAB_INVESTMENT,Yatırım,Funding
-FIN_SUBTAB_LOCKED,Series A Hunt'ta açılır,Opens in the Series A Hunt
+FIN_SUBTAB_LOCKED,Series A Avı'nda açılır,Opens in the Series A Hunt
 COMPANY_BG_EGE_SIGORTA,"Bölgesel oyuncu; acente ağı geniş, evrak işi hâlâ kâğıtta.","A regional player; a wide agency network, and the paperwork is still on paper."
 COMPANY_BG_POYRAZ_SIGORTA,"Fiyat kırarak büyüdü, şimdi hasar dosyalarının altında eziliyor.","Grew by undercutting on price, and is now buried under the claims files."
 COMPANY_BG_DENIZ_SIGORTA,"Kurumsal müşteriye çalışır, temkinli; yeni tedarikçiyi zor kabul eder.","Works with corporate clients, cautious; slow to accept a new supplier."
@@ -1885,9 +1892,9 @@ END_RF_UNSIGNED_SHEET,Masada imzalanmamış bir teklif kaldı.,An unsigned offer
 END_SPAN_OVER_YEAR,bir yılı aşkın sürede,in over a year
 END_SPAN_NEAR_TWO_YEARS,iki yıla yakın sürede,in close to two years
 INV_APPETITE_TITLE,Yatırımcı iştahı,Investor appetite
-INV_APPETITE_CLOSED,KAPALI,CLOSED
-INV_APPETITE_WARMING,ISINIYOR,WARMING
-INV_APPETITE_OPEN,AÇIK,OPEN
+INV_APPETITE_CLOSED,Kapalı,Closed
+INV_APPETITE_WARMING,Isınıyor,Warming
+INV_APPETITE_OPEN,Açık,Open
 INV_APPETITE_TOO_EARLY,Series A henüz masada değil,Series A is not on the table yet
 INV_APPETITE_GATE_OPEN,Kapı açık · Frank'le konuş,The door is open · talk to Frank
 INV_APPETITE_HUNT,Series A avı sürüyor,The Series A hunt is on
@@ -2390,7 +2397,6 @@ SEED_BLOCK_BUSY,Önce masadaki işi bitir.,Finish what is on the table first.
 SEED_PITCH_SPENT_LINE,{investor} ile görüştün. Bu turun görüşmesi buydu.,You met {investor}. That was this round's meeting.
 SEED_OFFER_LINE,{investor} bir teklif bıraktı.,{investor} left an offer.
 SEED_OFFER_TERMS,{band} koşullar · süresiz,"{band} terms, no deadline"
-SEED_SIT_DOWN,MASAYA OTUR,SIT DOWN
 SEED_BAND_STRONG,Açık,Open-handed
 SEED_BAND_STANDARD,Ölçülü,Measured
 SEED_BAND_HARSH,Sıkı,Tight
