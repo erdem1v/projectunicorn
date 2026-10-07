@@ -11,7 +11,7 @@ zaman olmayacaktır.
 |---|---|---|
 | v4 | commit `c706349` (son dokunuş `c75d5d5`, çip yolu düzeltmesi) | 25 açık karar, Satış tek dikiş, ilk marka taraması |
 | v5 | **rafa kalktı** (2026-10-06) | 5.812 satır; görevler (M1-M3), rakip ekonomisi/defteri, 42 karar. Sahip "çok ağır" dedi; görev fikri tümüyle reddedildi. Yedek: oturum scratchpad `rival_page/prd.md` |
-| v6 | bu belge | Sahip kararları A-F üzerine yeniden kuruluş: sos, görevsiz. v5'ten yalnız Ek A yedek setleri ve sebepli haber disiplini taşındı (A.1 yöntemi karar G ile değişti). 2026-10-06: sahip v6'yı uygulama için onayladı ([ÇD] değerleri ve metin taslakları onay bekliyor kalır); parodi ad yönü (karar G) işlendi. 2026-10-07: karar H (sektör kurgusu: teknoloji + 5 finans), Ek A parodi kataloğu (tur 2 + teknoloji dolgusu) ve taraması |
+| v6 | bu belge | Sahip kararları A-F üzerine yeniden kuruluş: sos, görevsiz. v5'ten yalnız Ek A yedek setleri ve sebepli haber disiplini taşındı (A.1 yöntemi karar G ile değişti). 2026-10-06: sahip v6'yı uygulama için onayladı ([ÇD] değerleri ve metin taslakları onay bekliyor kalır); parodi ad yönü (karar G) işlendi. 2026-10-07: karar H (sektör kurgusu: teknoloji + 5 finans), Ek A parodi kataloğu (tur 2 + teknoloji dolgusu) ve taraması; P3 Piyasa maketleri onaylandı (V1 liste + rapor kartı; §3.4, §3.5, §3.8) |
 
 ## 1. Sahip kararları defteri (2026-10-06, bağlayıcı; bu belge bunları kodlar, yeniden açmaz)
 
@@ -19,7 +19,7 @@ zaman olmayacaktır.
 |---|---|---|
 | **A · Sos** | Rakip dünyası baharattır, çekirdek mekanik değil. **Görev yok, hiç kimseden, hiçbir zaman.** Rakipler oyuncuyu boğmaz | tüm belge; şerit tavanı §8 |
 | **B · Dönem** | Koşu Per 5 Oca 2012 başlar (kod herhangi bir Perşembe kabul eder, doğrulandı); demo 2012-13 dilimi, AI devrimi (2022-23) yalnız sezdirilir; tam oyunda perde 2+ kayıtlı `days_per_tick` kabalaşır; `start_date` kayıtlı olur, dönem içeriği takvimi, ekonomi tiki okur, `time.year` seam'i eklenir; 2009 "kriz başlangıcı" tek satır rezerv; dönem göçü kendi artırımıdır (I3) | §2 |
-| **C · Piyasa** | Yeni ray sekmesi: yalnız **halka açık (IPO yapmış)** kurgusal şirketler ("daha gerçekçi olur, hem tüm rakipleri de o listeye sokmayız"); ~40 dev + sektör devi + 1-2 küçük yerleşik; özel şirketler listede yok, turları şerit haberi; fiyat VE değer, fiyat sabit `shares_outstanding`'den türetilir; grafikler 13H/1Y/5Y/Tümü + yıl sonu tablosu; oyuncu listede değil, Seed sonrası sabit karşılaştırma satırı; IPO sonraki perdelerin özlemi; değer = yazarlı çapalar + sektör endeksi + splitmix gürültü + ShockLog; Perde 3 alanları rezerve-atıl; **oyuncu eylemleri çapalara asla geri beslemez**; Kişiler sekmesi I4; her devin kurgusal kurucu/CEO'su var | §3 |
+| **C · Piyasa** | Yeni ray sekmesi: yalnız **halka açık (IPO yapmış)** kurgusal şirketler ("daha gerçekçi olur, hem tüm rakipleri de o listeye sokmayız"); ~40 dev + sektör devi + 1-2 küçük yerleşik; özel şirketler listede yok, turları şerit haberi; fiyat VE değer, fiyat sabit `shares_outstanding`'den türetilir; grafikler 13H/1Y/5Y/Tümü + yıl sonu tablosu; oyuncu listede değil, Seed sonrası sabit karşılaştırma satırı; IPO sonraki perdelerin özlemi; değer = yazarlı çapalar + sektör endeksi + splitmix gürültü + ShockLog; Perde 3 alanları rezerve-atıl; **oyuncu eylemleri çapalara asla geri beslemez**; Kişiler sekmesi I4; her devin kurgusal kurucu/CEO'su var. **P3 düzeltmesi 2026-10-07:** karşılaştırma satırı yerine üçüncü KPI karosu, oyuncuya sıra yok; fiyat listede kalır (§3.4, §3.5, §3.8) | §3 |
 | **D · Hafif rakipler** | Alt-tür başına 6 kişilik (+ isteğe bağlı ikinci yerleşik), mevcut TEMPLATE slotlarına; ekonomi defteri yok, kişilik-tempolu deterministik takvim üreteci (çıkış, işe alım/çıkarma vuruşu, ShockLog); tek düzenli temas satış itirazı (aile başına toplantıda bir kez, MVP sonrası 12 hafta muafiyet, anılan özellik rakibin gerçek kademe tablosundan); kayıp anlaşma hattı kaydeder; özellik kararına etki ufak ("N rakipte var"); iki eski kart kalır, `rival.leader` ve `_rival_ahead()` lig liderine yeniden bağlanır | §4 |
 | **E · Kalite çıtası** | Aday C "Saat + Yayılım": R(hat, kademe) yazarlı tarihli `market_bar.json`'dan; lig çoğunluğu (M = ceil(lig/2)) tarihi L = 12 hafta gecikmeyle en çok P_max = 26 hafta öne çeker; tek rakip tabanı oynatamaz; dönem yetenekleri G = 78 hafta çıta-muaf; her yükseliş 8 hafta telgraflı; Güçlü = tüm R + (seviye ≥ E+1 **ya da** her hatta lidere eşit/üstün); `sprint.json` faz tablosu ve `rival_bump*` emekli; B2C aşınma/WOM şimdi bağlanmaz; hiçbir şey kaydedilmez; tüm sayılar [ÇD] onay bekliyor | §5 |
 | **F · Artırımlar** | I1 Piyasa salt-okunur (önce P3 maketleri) → I2 hafif rakipler + kalite çıtası → I3 dönem göçü (kendi işi) → I4 Kişiler + cila; I1 bugünkü 2026 başlangıcına karşı çıkar, çapalar veridir, I3'te yeniden çapalanır | §6 |
@@ -94,9 +94,9 @@ Tasarım araştırması ve kanıtlar: `piyasa_research/market_ui.md`, `market_mo
 |---|---|---|---|
 | Teknoloji devleri ve dolgusu + finans | ~48 | Gerçek zaman çizelgesi tablosunun analogları (cihaz devi, OS/bulut, e-ticaret/bulut, arama, sosyal, **GPU üreticisi**, EV, yayın, SaaS öncüsü, veritabanı dinozoru, eski CPU, çöken telefoncu, video-toplantı balonu) + teknoloji dolgusu (çip ve ağ, donanım, internet 1.0, Asya devleri, dönem halka arzları, kurumsal yazılım, teknoloji komşuları) + 5 finans kurumu (karar H). Adlar gerçek analogların **parodileridir** (karar G; hedefler `real_timeline.md` §1'deki gerçek devler, arketip eşlemesi §6; §6'nın yer tutucu adları yalnız aday havuzudur); **her ad ve kişi Ek A taramasından geçmeden yazılmaz** (P1) | Halka açık: fiyat + değer + grafik |
 | Sektör devi | 1 | SAP-benzeri "büyük rakip" = oyuncunun alt-türünün **mevcut dev slotu 0** [kod scripts/systems/rival_catalog.gd:22-31], listenin üstlerine terfi eder. Tek varlık, iki yüzey | Halka açık |
-| Küçük sektör şirketleri | 1-2 | Yerleşik slotlar (1-2), kuyruğa yakın $30-300M; Seed oyuncusu **ulaşılabilir bir basamağın** hemen altına düşer | Halka açık, liste kuyruğu |
+| Küçük sektör şirketleri | 1-2 | Yerleşik slotlar (1-2), kuyruğa yakın $30-300M; Seed değerlemesi kuyruğun altında kalır; ölçek karolardan okunur, sıra yok (§3.5) | Halka açık, liste kuyruğu |
 | Özel şirketler | — | Listede YOK. Fonlu girenin turu şerit haberidir; gizli özel, veri olarak var olup sonraki bir olayla yüzeye çıkar | Liste dışı |
-| Oyuncu | — | Listede YOK; Seed sonrası sabit karşılaştırma satırı (§3.5). IPO sonraki perdelerin özlemidir | Karşılaştırma satırı |
+| Oyuncu | — | Listede YOK; Seed sonrası üçüncü KPI karosunda değerlemesi (§3.5), sıra yok. IPO sonraki perdelerin özlemidir | KPI karosu |
 
 **Dev katalog kapsaması** (adsız arketip planı; adlar P1 taramasından sonra yazılır, eğri biçimleri
 `real_timeline.md` §1 ve §6'daki gerçek verinin yuvarlanmış hâlidir):
@@ -179,19 +179,24 @@ ln V(c,h) = ln anchors_c(yıl(h))        # yazarlı anahtar kareler, log-interp 
 | `mna` | yazarlı katalog olayı [Perde 3] | şimdi üretilmez; açılınca hedef `delisted_week`, alan +J, tek manşet |
 | `era` | dönem penceresi [I3+] | sektör endeksi kırılması (AI dalgası, çöküş) |
 
-### 3.4 Ekran: liste ve detay (öğe tablosu)
+### 3.4 Ekran: liste ve rapor kartı (öğe tablosu)
 
 | Öğe | İçerik | Kaynak |
 |---|---|---|
-| Liste satırı | `# · Δsıra(4h) · Ad · Kurucu/CEO · Değer · Fiyat · 4h % · 52h kıvılcım çizgisi` | değer fonksiyonu; sektör filtre çipidir, sütun değil |
-| Detay paneli (satır tıklaması) | Grafik, aralıklar **13H / 1Y / 5Y / Tümü** (1G/5G yok; tik haftalık) · **yıl sonu değer tablosu** (dönem hikâyesini taşıyan tablo) · kurucu satırı · tek paragraf Hakkında · benzerler şeridi. Sektörler-arası devde "Ürünleri" bölümü yoktur | değer fonksiyonu + katalog |
-| Sektör rakibi detayında ek: "Ürünleri" [I2] | Rakibin çıkmış 2-4 yetenek hattı; **satış itirazının andığı listeyle aynı** (§4.3) | birleşik `line_tiers` (I2) |
-| Oyuncu karşılaştırma satırı | §3.5 | `seed_post_money_m` / `run_valuation_m` |
-| "Sıradakiyle fark" satırı | Soluk tek satır, asla popup, asla hedef | değer fonksiyonu |
+| KPI karoları (pencere üstü, üç koyu karo) | **Liste değeri** (toplam + 4h %, 13 haftalık mini çubuk) · **Lider** (değer + 4h %, "ad · sektör · son 13 hafta", 13 çubuk) · **Senin değerlemen** (§3.5; sıra YOK) | değer fonksiyonu; `seed_post_money_m` / `run_valuation_m` |
+| Filtre çipleri (listenin üstü, her durumda) | Tümü · Teknoloji · Finans · Sektörüm; seçili ink kenar, amber değil | katalog `sector_id` |
+| Liste satırı (sol sütun 460 px; 1920'de 11 satır, 1536'da 8 + "ve N şirket daha") | `# (ink-4) · Ad + altında sektör · Değer · Fiyat`; ilk 3 satır büyük punto; Δsıra, 4h %, kıvılcım ve kurucu sütunu YOK (P3 kararı 2026-10-07: bilgi yoğunluğu); halka arz haftasında yeni satır "Yeni" etiketi | değer fonksiyonu; fiyat = değer / `shares_outstanding` (karar C) |
+| Rapor kartı (sağ sütun; liste kapanmaz, satır tıklaması kartı değiştirir) | Ad + sektör etiketi + Kurucu/CEO + "Halka arz {y}" · kahraman değer + "dört haftada" % · yıl sonu etiket:değer (5 satır) + "{y} sonundan beri" · yarım daire kadran **Listedeki payı** · **13H / 1Y / 5Y / Tümü** + tek grafik (yıl sonu çapaları işaretli; 1G/5G yok, tik haftalık) · Hakkında 2 cümle. Yeni halka arzda yıl sonu listesi boş, "Halka arz {month}" satırı | değer fonksiyonu + katalog |
+| Sektör rakibi kartında ek: "Ürünleri" [I2] | Rakibin çıkmış 2-4 yetenek hattı; **satış itirazının andığı listeyle aynı** (§4.3); listedeki payı %0,1'in altında "<%0,1" | birleşik `line_tiers` (I2) |
 | Son bakıştan beri deltaları | Pencere kapanışında anlık görüntü; yeniden açılışta oklar | [I4] |
 
-**Kadans** [ÇD tümü, §8]: haftalık değerlendirme (dev ±%0,5-2/h, küçük şirket %2-5); sıralar + Δsıra okları
-4 haftada bir, en çok bir geçiş manşeti; çeyreklik kazanç şokları ±%5-15 sebep satırıyla [I4]; manşet
+Onaylı maketler: `docs/mockups/menajer/screens/piyasa/` (9 çerçeve + INDEX.md; çalışma ağacında, izlenmez). Yön
+sahip seçimidir: 37 referans ekrandan beğenilen ikisi (Startup Company "Website Stats" rapor kartı, Plutocracy
+"Finances" karo panosu) → "liste + rapor kartı" (V1). İlk 11 karelik tablo seti ve dört yön eskizi reddedildi
+(`rounds/`).
+
+**Kadans** [ÇD tümü, §8]: haftalık değerlendirme (dev ±%0,5-2/h, küçük şirket %2-5); sıralar 4 haftada bir
+yeniden kesilir (listede Δsıra oku yok, P3 karar 6), en çok bir geçiş manşeti; çeyreklik kazanç şokları ±%5-15 sebep satırıyla [I4]; manşet
 tetikleri haftalık |Δ| > ~%8, ilk 10'a giriş/çıkış.
 
 **CSV taslak anahtarları** (onay bekliyor; EN önce, TR sonra; tire yok):
@@ -199,17 +204,44 @@ tetikleri haftalık |Δ| > ~%8, ilk 10'a giriş/çıkış.
 | Anahtar | EN | TR |
 |---|---|---|
 | `TAB_PIYASA` | Market | Piyasa |
-| `PIYASA_COL_RANK` | # | # |
+| `PIYASA_COL_RANK` (liste başlık satırı yok; COL_* yalnız sütun adı, erişilebilirlik) | # | # |
 | `PIYASA_COL_COMPANY` | Company | Şirket |
-| `PIYASA_COL_FOUNDER` | Founder/CEO | Kurucu/CEO |
 | `PIYASA_COL_VALUE` | Market value | Piyasa değeri |
 | `PIYASA_COL_PRICE` | Price | Fiyat |
-| `PIYASA_COL_4W` | 4 wk | 4H |
+| `PIYASA_KPI_LIST_VALUE` | List value | Liste değeri |
+| `PIYASA_KPI_LEADER` | Leader | Lider |
+| `PIYASA_KPI_YOUR_VALUATION` | Your valuation | Senin değerlemen |
+| `PIYASA_KPI_LIST_DESC` | {c} companies · last 13 weeks | {c} şirket · son 13 hafta |
+| `PIYASA_KPI_LEADER_DESC` | {name} · {sector} · last 13 weeks | {name} · {sector} · son 13 hafta |
+| `PIYASA_KPI_POST_SEED` | Post seed · {month} | Seed sonrası · {month} |
+| `PIYASA_KPI_SERIES_A` | Series A · Week {w} | Series A · Hafta {w} |
+| `PIYASA_FILTER_ALL` | All | Tümü |
+| `PIYASA_FILTER_TECH` | Technology | Teknoloji |
+| `PIYASA_FILTER_FIN` | Finance | Finans |
+| `PIYASA_FILTER_MINE` | My sector | Sektörüm |
+| `PIYASA_LIST_MORE` | and {c} more | ve {c} şirket daha |
+| `PIYASA_LIST_ABOVE` | {c} more above | {c} şirket yukarıda |
+| `PIYASA_TAG_NEW` | New | Yeni |
+| `PIYASA_LISTS_IN` | {name} · listing {month} | {name} · halka arz {month} |
+| `PIYASA_LISTED_YEAR` | Listed {y} | Halka arz {y} |
+| `PIYASA_FOUNDER_KEY` | Founder | Kurucu |
+| `PIYASA_CEO_KEY` | CEO | CEO |
+| `PIYASA_CARD_VALUE_DATE` | Market value · {month} | Piyasa değeri · {month} |
+| `PIYASA_FOUR_WEEKS` | over four weeks | dört haftada |
+| `PIYASA_EOY_FIRST` | Year end {y} | Yıl sonu {y} |
+| `PIYASA_SINCE_EOY` | Since end of {y} | {y} sonundan beri |
+| `PIYASA_SHARE` | Share of the list | Listedeki payı |
+| `PIYASA_SHARE_LT` | <{p} | <{p} |
+| `PIYASA_VALUE_TITLE` | Value | Değer |
+| `PIYASA_ABOUT_TITLE` | About | Hakkında |
+| `PIYASA_IPO_MARK` | listed | halka arz |
+| `PIYASA_CTX_2012` (aile `PIYASA_CTX_<yıl>`; I3 dönem tablosundan yıla göre seçilir, §2.3) | {month} · The smartphone wave carries the list | {month} · Akıllı telefon dalgası listeyi taşıyor |
+| `PIYASA_CTX_2013` | {month} · The year of mobile ads | {month} · Mobil reklam yılı |
 | `PIYASA_RANGE_13W` | 13W | 13H |
 | `PIYASA_RANGE_1Y` | 1Y | 1Y |
 | `PIYASA_RANGE_5Y` | 5Y | 5Y |
 | `PIYASA_RANGE_ALL` | All | Tümü |
-| `PIYASA_EOY_TITLE` | End of year value | Yıl sonu değeri |
+| `PIYASA_EOY_TITLE` (ekranda başlık yok; bölüm adı, erişilebilirlik) | End of year value | Yıl sonu değeri |
 | `PIYASA_PRODUCTS_TITLE` | Products | Ürünleri |
 | `PIYASA_SINCE_LAST` [I4] | Since your last look | Son bakışından beri |
 
@@ -220,7 +252,7 @@ adlandırma yalnız CSV'dir (Ek A.5 kuralı); `piyasa` kaynağı mevcut yayınla
 
 - `SeedRoundSystem.accept()` bugün yalnız miktar + hisse yazar [kod
   scripts/systems/seed_round_system.gd:169-184]. I1'de orada **`seed_post_money_m` kalıcılaşır**:
-  milyon $ cinsinden `round(amount_m × 100.0 / equity_pct)` (float hesaplanır, en yakın tama yuvarlanır).
+  milyon $ cinsinden `amount_m × 100.0 / equity_pct` (float hesaplanır; çözünürlük [ÇD], §8: önerilen 0,1M).
   Eski kayıtta Seed alınmış ve alan 0 ise yüklemede `run_seed_amount`/`run_seed_equity_pct`'ten aynı
   formülle doldurulur.
 - `finance.valuation()` seam'i eklenir (`seams_finance.gd`); ACIK_KARARLAR maddesinin sahip onayıyla
@@ -230,20 +262,21 @@ adlandırma yalnız CSV'dir (Ek A.5 kuralı); `piyasa` kaynağı mevcut yayınla
 - `PER_NO_VALUATION` çelişkisi düzelir: bugünkü metin "Series A imzasında belirlenir" diyor [kod
   strings.csv:337], Seed artık değerleme yazıyor. Taslak (onay bekliyor):
   - `PER_NO_VALUATION` · EN "No valuation yet. Your seed round sets it." · TR "Değerleme henüz yok. Seed turunda belirlenir."
-- Karşılaştırma satırı taslakları (onay bekliyor; sahibin sözünden):
-  - `PIYASA_PLAYER_ROW` · EN "You · {value} valuation · would sit near #{rank} on the list" · TR "Sen · {value} değerleme · listedeki karşılığın ~#{rank}"
-  - `PIYASA_GAP_NEXT` · EN "{company} is {gap} ahead" · TR "{company} {gap} önde"
-- **Sıra tanımı:** sıra = 1 + değeri satırdan büyük halka açık satır sayısı; oyuncunun sanal sırası aynı
-  formülle hesaplanır. Seed değerlemesi kuyruğun ($30M) altındaysa satır son sıranın bir altını söyler.
+- **Oyuncu için sıra YOK (P3 kararı 2026-10-07):** "oyuncu o sıralamada değil"; sanal sıra hesaplanmaz, hiçbir
+  yüzeyde yazılmaz. Oyuncu yalnız üçüncü KPI karosunda görünür (`PIYASA_KPI_YOUR_VALUATION`); ölçek üç karonun yan
+  yana durmasından okunur, "önündeki şirket" satırı yoktur.
+- **Yuvarlama [ÇD]:** formül kalır (P3 kararı); `seed_post_money_m` tam milyona yuvarlanırsa erken Seed
+  ($130K / %16 = $0,81M) karoda "$1M" okunur. Öneri: alan 0,1M çözünürlükle tutulur, karo "$0,8M" basar
+  (maket böyle çizildi).
 
-**Karşılaştırma satırının hâlleri:**
+**Oyuncu karosunun hâlleri:**
 
 | Hâl | Görünen |
 |---|---|
-| Seed öncesi | satır yok; pencere yalnız listeyi gösterir (hedef iması yok, karar A) |
-| Seed sonrası | sabit `PIYASA_PLAYER_ROW` + soluk `PIYASA_GAP_NEXT`; değer = `seed_post_money_m` |
-| Series A sonrası | aynı satır; değer = `run_valuation_m` (imza anında adım) |
-| Geçiş anı [I4] | oyuncunun sanal sırası bir şirketi geçerse soluk tek satır pencere içinde; asla popup, asla bildirim |
+| Seed öncesi | etiket var, değer BOŞ (kural 9), açıklama `PER_NO_VALUATION` ("Değerleme henüz yok. Seed turunda belirlenir."); hedef iması yok (karar A) |
+| Seed sonrası | değer = `seed_post_money_m`; açıklama `PIYASA_KPI_POST_SEED` ("Seed sonrası · {month}") |
+| Series A sonrası | değer = `run_valuation_m` (imza anında adım); açıklama `PIYASA_KPI_SERIES_A` |
+| Geçiş anı | **emekli**: sıra kavramı gerektirir; [I4] "son bakıştan beri" yalnız liste satırlarına uygulanır |
 
 ### 3.6 Şerit bağları
 
@@ -262,7 +295,7 @@ adlandırma yalnız CSV'dir (Ek A.5 kuralı); `piyasa` kaynağı mevcut yayınla
   `LeftTabs.tscn` düğmesi aynı sırada (sıra smoke'u `rail_tabs_match_scene_order` zorlar [kod
   endgame_smoke.gd:3663-3690]) + `window_layer.gd` `TAB_SCENES`/`SPECS` [kod
   scripts/ui/components/window_layer.gd:13-20, 36-39] + `frame_options` taşıyan sekme sahnesi +
-  `main.gd` tab-shot listesi. Sekmenin raydaki yeri P3 maketiyle kararlaştırılır.
+  `main.gd` tab-shot listesi. Sekmenin raydaki yeri P3 ile kararlaştırıldı: Finans'ın altı, Kişisel'in üstü (§3.8).
 - Kayıt ayak izi: `market_catalog_version`, ShockLog, Ownership, `status` değişiklikleri,
   `seed_post_money_m`. Birkaç KB; fiyat geçmişi asla kaydedilmez. **I1 şema artırmaz:** yeni alanlar
   GameState değişkeni olarak anlamlı varsayılan taşır ve SaveCodec bulur; şema 15 kalır (artış I3'te,
@@ -272,17 +305,24 @@ adlandırma yalnız CSV'dir (Ek A.5 kuralı); `piyasa` kaynağı mevcut yayınla
 
 | Maket | Ön koşul | Durum |
 |---|---|---|
-| Piyasa listesi (koyu Menajer dili, TR+EN, renk körü, 1.0 ve 1.25) + raydaki sekme düğmesi ve yeri + sektör filtre çipi + 4h % renk kuralı (düşüş kırmızı değil; SPEC kural 2) | I1 | **yok** |
-| Detay paneli ×2: sektörler-arası dev (Ürünleri'siz) ve sektör rakibi (grafik + yıl sonu tablosu; "Ürünleri" bölümü [I2]) | I1 | **yok** |
-| Oyuncu karşılaştırma satırı hâlleri (Seed öncesi / Seed sonrası / Series A sonrası; Geçiş anı [I4]) | I1 | **yok** |
+| Piyasa listesi + rapor kartı (koyu Menajer dili, TR+EN, renk körü, 1.0 ve 1.25) + raydaki sekme (Finans'ın altı, A2 `rail/rivals.svg`) + filtre çipleri + 4h % renk kuralı (düşüş kırmızı değil) | I1 | **onaylı 2026-10-07** (`screens/piyasa/`: liste, liste_en, renk_koru, 1536, filtre_sektor, ipo) |
+| Rapor kartı ×2: sektörler-arası dev (Ürünleri'siz) ve sektör rakibi (kadran, yıl sonu, "Ürünleri" [I2]); yeni halka arz kartı | I1 | **onaylı 2026-10-07** (liste, detay_sektor, ipo) |
+| Oyuncu karosu hâlleri (Seed öncesi boş / Seed sonrası / Series A sonrası) | I1 | **onaylı 2026-10-07** (seed_oncesi, liste, series_a) |
 | Ürün maketlerine ek (`urun/`): telgraf satırı, iki Zayıf hover çeşidi, lider dalından Güçlü, "N rakipte var" çipi | I2 | **yok** |
 | Toplantı maketlerine ek (`toplanti/`): rakip soru satırı, beş cevap (kilitli güç gerekçesi dahil), RAKİP kayıp çipi | I2 | **yok** |
 | Tip ekranı + Ar-Ge: "2015+" kilit etiketi, yıl kilitli AI tipleri | I3 | **yok** |
 | Kişiler sekmesi | I4 | yok |
 
 Maketler `docs/mockups/menajer/screens/` düzenindedir (SPEC: `docs/mockups/menajer/system/SPEC.md:101-130`;
-çalışma ağacında, commit'lenmemiş). I2 görsel kabulü için `main.gd`'ye **yeni** `--meeting-shot=rival`
-türü eklenir (bugünkü türler probe|locked|won|lost|handoff).
+çalışma ağacında, commit'lenmemiş).
+
+**P3 sahip kararları (2026-10-07):** (1) yön V1 "liste + rapor kartı" (referanslar: Startup Company rapor kartı,
+Plutocracy finans panosu); (2) **fiyat listede kalır** (karar C'nin fiyat maddesi aynen); (3) filtre çipleri her karede; (4) Seed
+formülü kalır, karo küçük sayıyı gösterir; (5) oyuncuya sıra yok; (6) liste satırında Δsıra, 4h %, kıvılcım ve
+kurucu yok; (7) ayrı "Liste" sayfası yok, liste sol sütundur. Maket kurgusu: halka arz yılları, yıl sonu değerleri
+ve Hakkında metinleri parodi dünya taslağıdır (TR/EN onay bekliyor); Facewall H20'de "Yeni", Werktag Ekim 2012.
+
+I2 görsel kabulü için `main.gd`'ye **yeni** `--meeting-shot=rival` türü eklenir (bugünkü türler probe|locked|won|lost|handoff).
 
 ### 3.9 Perde 3 rezervleri (şimdi saklanır, şimdi atıl)
 
@@ -558,10 +598,10 @@ Yeni `PROBE AREA` satırı (sprint başına alan: seviye, E, kelime, bağlayıc�
 
 | # | İçerik | Boy | Gerekçe ve görsel kabul |
 |---|---|---|---|
-| **I1 · Piyasa salt-okunur** | Önce P3 maketleri → `MarketCompany`/`MarketPerson` kataloğu (~48 halka açık satır + sektör katmanı, karar H; P1 taramalı) + saf değer fonksiyonu ve karıştırıcı + ray sekmesi (TABS/LeftTabs/window_layer/SPECS + sıra smoke'u) + liste/detay/grafikler + `seed_post_money_m` + `finance.valuation` seam'i + `PER_NO_VALUATION` düzeltmesi + `piyasa` şerit kaynağı + kayıt girişleri + kadro yeniden adlandırması (P1 parodi setleri, Ek A) | M | İlk teslim edilebilir: saf ekleme, denge riski yok, sahibin çekirdek fantezisini anında verir. 2026 başlangıcına karşı çıkar; çapalar veridir. Görsel kabul: `--tab-shot=piyasa` TR+EN+cb, maketle karşılaştırma |
+| **I1 · Piyasa salt-okunur** | Önce P3 maketleri → `MarketCompany`/`MarketPerson` kataloğu (~48 halka açık satır + sektör katmanı, karar H; P1 taramalı) + saf değer fonksiyonu ve karıştırıcı + ray sekmesi (TABS/LeftTabs/window_layer/SPECS + sıra smoke'u) + liste/rapor kartı/grafikler + `seed_post_money_m` + `finance.valuation` seam'i + `PER_NO_VALUATION` düzeltmesi + `piyasa` şerit kaynağı + kayıt girişleri + kadro yeniden adlandırması (P1 parodi setleri, Ek A) | M | İlk teslim edilebilir: saf ekleme, denge riski yok, sahibin çekirdek fantezisini anında verir. 2026 başlangıcına karşı çıkar; çapalar veridir. Görsel kabul: `--tab-shot=piyasa` TR+EN+cb, maketle karşılaştırma |
 | **I2 · Hafif rakipler + kalite çıtası** | Model birleşmesi + takvim üreteci + kişilikler + itiraz vuruşu (olgu/soru/fiiller/kayıp nedeni) + çıta hesabı + kelime kuralları + lider tacı + VC yeniden bağı + `PROBE AREA`; `rival_bump` aynı commit'te emekli; rakip hamleleri → ShockLog → liste görünür tepki verir | M | I1 varlıklarının üstüne; pencerenin "yaşamaya" başladığı yer. Görsel kabul: itiraz vuruşlu toplantı `--meeting-shot=rival` (**yeni** tür), Ürün alan hover'ı, telgraf satırı |
 | **I3 · Dönem göçü** | **Kendi işi.** Kayıtlı `start_date` (2012-01-05) + `days_per_tick`/`tick_epochs` + `time.year` seam'i + test yeniden sabitleri + `subgenre` varsayılanı "saas" + AI içeriği yıl etiketli + `ai_engine` yeniden çeşnisi + AI benimseme kartı + GDD ZAMAN MODELİ §5 yeniden yazımı + kayıt göçü + Piyasa kataloğu 2012'ye yeniden çapalı + sezdirme (düz GPU devi, kilitli "2015+" dal etiketi, AlexNet şerit selamı) | M-L | En geniş etki alanı (test, GDD, şema, ürün tipleri), sıfır yeni ekran; bütün inmek zorunda. Üçüncü sırada: I1/I2 görünür değeri önce gönderir, hiçbiri 2026'yı sert kodlamaz |
-| **I4 · Kişiler + cila** | Kişiler servet listesi (servet = pay × değer; oyuncunun kurucusu Seed sonrası `equity% × post-money`) + son bakıştan beri deltaları + geçiş satırları + çeyreklik kazanç şokları | S | I1 verisi üstünde katkısal UI. Görsel kabul: Kişiler maketi (P3) + `--tab-shot` |
+| **I4 · Kişiler + cila** | Kişiler servet listesi (servet = pay × değer; oyuncunun kurucusu Seed sonrası `equity% × post-money`) + son bakıştan beri deltaları + liste içi geçiş satırları (oyuncu değil; §3.5 Geçiş anı emekli) + çeyreklik kazanç şokları | S | I1 verisi üstünde katkısal UI. Görsel kabul: Kişiler maketi (P3) + `--tab-shot` |
 
 ### 6.1.1 Kaba dokunuş listeleri (en kısa yol; tam harita `piyasa_research/code_map.md`)
 
@@ -603,12 +643,12 @@ görüntüsü + çeyrek şok takvimi + geçiş manşet tetikleri.
 ## 7. Doğrulama listesi (artırım etiketli)
 
 1. [I1] Piyasa sekmesi rayda; sıra smoke'u `rail_tabs_match_scene_order` yeşil.
-2. [I1] Liste `companies.json` halka açık satır sayısıyla birebir (~48 + sektör devi + 1-2 yerleşik; 2012'de ~35'i listede, gerisi `listed_week`'te girer); hepsi fiyat + değer + kıvılcım çizgisi basar.
+2. [I1] Liste `companies.json` halka açık satır sayısıyla birebir (~48 + sektör devi + 1-2 yerleşik; 2012'de ~35'i listede, gerisi `listed_week`'te girer); hepsi fiyat + değer basar; satırda kıvılcım, Δsıra ve 4h % yok (P3 karar 6). Liste satırı `# · ad/sektör · değer · fiyat`, fiyat her satırda; filtre çipleri (Tümü/Teknoloji/Finans/Sektörüm) her karede, Sektörüm = oyuncunun `sector_id`'si, henüz girmemiş rakip `PIYASA_LISTS_IN` satırıyla; üç KPI karosu: Liste değeri = halka açık satırların toplamı, Lider = #1, Senin değerlemen = `finance.valuation`.
 3. [I1] Fiyat = değer / `shares_outstanding`; hiçbir fiyat serisi kayda yazılmaz (kayıt boyu ölçülür).
 4. [I1] Grafik aralıkları 13H/1Y/5Y/Tümü; yıl sonu tablosu her devde ilk haftadan dolu (koşu öncesi geçmiş çapalardan).
 5. [I1] Aynı seed + aynı ShockLog → bayt-aynı eğri (iki koşu karşılaştırması).
 6. [I1] Karıştırıcı dokusu: haftalık log-delta dağılımının standart sapması eşiğin üstünde [ÇD] ve ardışık iki haftada aynı delta yok (eski `_share_at` kırığının testi).
-7. [I1] Seed kabulünde `seed_post_money_m` yazılır; eski kayıtta Seed alınmışsa yüklemede türetilir; karşılaştırma satırı belirir, öncesinde yok.
+7. [I1] Seed kabulünde `seed_post_money_m` yazılır; eski kayıtta Seed alınmışsa yüklemede türetilir; oyuncu karosu değer kazanır, öncesinde değer hücresi boş + `PER_NO_VALUATION`; hiçbir yüzeyde oyuncu sırası yok.
 8. [I1] `finance.valuation()` seam kayıtlı; Kişisel servet bölümü aynı değeri okur (`run_valuation_m == 0` kontrolü kalktı).
 9. [I1] `PER_NO_VALUATION` yeni metni ekranda (TR+EN).
 10. [I1] Özel şirket listede yok; gizli özel hiçbir yüzeyde görünmez.
@@ -663,9 +703,10 @@ görüntüsü + çeyrek şok takvimi + geçiş manşet tetikleri.
 | Küçük şirket haftalık gürültü | %2-5 | [ÇD companies.json noise.sigma_smallcap] |
 | Çeyreklik kazanç şoku | ±%5-15 | [ÇD companies.json shocks.earnings_pct] |
 | Manşet eşiği | haftalık \|Δ\| > %8; ilk 10 giriş/çıkış; geçişte en çok 1 | [ÇD companies.json news.*] |
-| Sıra/Δsıra kadansı | 4 hafta | [ÇD companies.json news.rank_weeks] |
+| Sıra yeniden kesimi (manşet tetiği) | 4 hafta | [ÇD companies.json news.rank_weeks] |
 | Özel tur temposu | 18-30 ayda bir, ×1,5-3 ya da aşağı tur | [ÇD companies.json private_rounds.*] |
 | Kalıcı Zayıf tavanı (probe kapısı 1) | haftaların %40'ı | [ÇD scripts/debug/run_probe.gd gate] |
+| `seed_post_money_m` çözünürlüğü | 0,1M (karo "$0,8M"; tam milyon "$1M" okutur) | [ÇD seed_round_system.gd accept() + game_state.gd] |
 
 ## 9. Ön koşullar
 
