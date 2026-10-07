@@ -852,13 +852,15 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 	pane.populate(INBOX.card_item("preview", card_id, ctx, {}, GameState.day), "preview")
 
 
-## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|untyped>. `desk` puts a rep
+## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|untyped|morning|evening>. `desk` puts a rep
 ## mid-processing on the desk; `picker` opens the steward picker on the first account, `inbox` presses its İlgilen
 ## (Olaylar opens on the account's mail); `edge` draws the rarer lines (a reserved lead, one given to a rep, a
 ## whale's condition, tables above the founder's league, the week's meetings spent, an open promise by sprint, the
 ## log) with three calm accounts, `edge_end` the same with both columns scrolled to their ends; `stretched` the
 ## founder holding one account more than he can, a 1★ rep and a lead in its last week; `empty` an open market with
-## no lead, rep or account; `b2c` photographs §3.1's empty window in a B2C run, `untyped` before a type is picked.
+## no lead, rep or account; `b2c` photographs §3.1's empty window in a B2C run, `untyped` before a type is picked;
+## `morning` paints the page at 00:00 (every lead locked) and shoots it again once the clock reaches 08:00, `evening`
+## paints it at 10:00 and shoots it again at the founder's last workday hour: the entry gate follows the clock.
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_sales_world()
@@ -925,7 +927,22 @@ func _run_sales_shot(kind: String) -> void:
 	GameState.month_ledger = {"customers_signed": 4, "customers_lost": 0}
 	SalesSystem.reflect_mrr()
 	await _mount_shot_shell()
+	var paint_hour: int = -1   # morning/evening: the clock the page is painted at, then moved to shoot_hour
+	var shoot_hour: int = -1
+	match kind:
+		"morning":
+			paint_hour = 0
+			shoot_hour = TimeModel.WEEK_START_HOUR
+		"evening":
+			paint_hour = 10
+			shoot_hour = WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder()) - 1
+	if paint_hour >= 0:
+		GameState.set_current_hour(paint_hour)
 	EventBus.tab_changed.emit("sales")
+	if paint_hour >= 0:
+		await get_tree().create_timer(0.4).timeout
+		_save_shot("sales_shot_%s_painted" % kind)
+		GameState.set_current_hour(shoot_hour)
 	if kind in ["picker", "inbox", "edge_end"]:
 		await get_tree().process_frame
 		var page: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()

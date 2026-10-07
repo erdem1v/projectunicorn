@@ -43,6 +43,7 @@ var _left: VBoxContainer
 var _right: VBoxContainer
 var _empty: VBoxContainer
 var _signals: Array = []
+var _sitting_open: bool   # the clock half of SalesLedger.meeting_block_reason, as painted
 
 
 func _init() -> void:
@@ -75,6 +76,7 @@ func _ready() -> void:
 	]
 	for sig in _signals:
 		sig.connect(_on_state_changed)
+	EventBus.hour_changed.connect(_on_hour_changed)
 	_refresh()
 
 
@@ -82,11 +84,19 @@ func _exit_tree() -> void:
 	for sig in _signals:
 		if sig.is_connected(_on_state_changed):
 			sig.disconnect(_on_state_changed)
+	if EventBus.hour_changed.is_connected(_on_hour_changed):
+		EventBus.hour_changed.disconnect(_on_hour_changed)
 
 
 # Sinyaller 0 ile 3 argümanlı; tek işleyiciye bağlanabilsinler diye hepsi opsiyonel.
 func _on_state_changed(_a = null, _b = null, _c = null) -> void:
 	_refresh()
+
+
+## The entry gate opens and closes with the clock: the page repaints when it flips, not every hour.
+func _on_hour_changed(_hour: int) -> void:
+	if WorkHoursSystem.sitting_open(SalesConstants.MEETING_ENTRY_CUTOFF_HOURS) != _sitting_open:
+		_refresh()
 
 
 # --- Sayfa ------------------------------------------------------------------
@@ -154,6 +164,7 @@ func fit_height() -> float:
 
 
 func _refresh() -> void:
+	_sitting_open = WorkHoursSystem.sitting_open(SalesConstants.MEETING_ENTRY_CUTOFF_HOURS)
 	var open: bool = SalesFaucetSystem.market_open()
 	var off: bool = EventGate.active_id() != ""
 	_ctl.visible = open
