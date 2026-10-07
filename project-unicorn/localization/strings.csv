@@ -240,6 +240,7 @@ SAVE_MANUAL_SLOT,Kayıt {n},Save {n}
 SAVE_META_DAY,{date},{date}
 SAVE_META_CASH,Kasa {amount},Cash {amount}
 SAVE_META_MRR,MRR {amount},MRR {amount}
+SAVE_META_BACKUP,Yedekten,From backup
 SAVE_EMPTY,Henüz kayıt yok.,No saves yet.
 SAVE_LIST_HEADER,Kayıtlar,Saves
 SAVE_DELETE,Sil,Delete

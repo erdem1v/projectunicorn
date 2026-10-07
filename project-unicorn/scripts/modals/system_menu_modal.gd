@@ -72,8 +72,11 @@ func _on_quit() -> void:
 
 
 func _save_and_quit() -> void:
-	SaveManager.quicksave()
-	get_tree().quit()
+	# main.gd saves and toasts the result. Only a landed save clears the unsaved flag, so a
+	# refusal or a failed write keeps the game open.
+	EventBus.quicksave_requested.emit()
+	if not SaveManager.has_unsaved_progress():
+		get_tree().quit()
 
 
 func _unhandled_input(event: InputEvent) -> void:

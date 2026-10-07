@@ -265,6 +265,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_roundtrip_fingerprint":         fail = _case_save_roundtrip_fingerprint()
 		"save_continuity_seeded":             fail = _case_save_continuity_seeded()
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
+		"save_backup_fallback":               fail = _case_save_backup_fallback()
 		"save_v13_day_stamps_migrate":        fail = _case_save_v13_day_stamps_migrate()
 		"look_registry_unique_and_saved":     fail = _case_look_registry_unique_and_saved()
 		"meeting_cast_seeded_and_saved":      fail = _case_meeting_cast_seeded_and_saved()
@@ -8362,6 +8363,72 @@ static func _case_save_double_load_no_residue() -> String:
 
 	_cleanup_save_slots()
 	return ""
+
+
+# --- A corrupt target reads its .bak and says so; a refusal never falls back to an older state ---
+## FALSIFICATION: delete the fallback branch in SaveManager.read_slot -> the first torn read FAILs.
+static func _case_save_backup_fallback() -> String:
+	_seed_save_world()
+	var path: String = SaveManager.SAVE_DIR + SAVE_SLOT_A + ".json"
+	# Twice, so the second leaves the first as the .bak.
+	if not SaveManager.save_to_slot(SAVE_SLOT_A) or not SaveManager.save_to_slot(SAVE_SLOT_A):
+		_cleanup_save_slots()
+		return "save failed (%s)" % SaveManager.cannot_save_reason_key()
+	if not FileAccess.file_exists(path + ".bak") or FileAccess.file_exists(path + ".tmp"):
+		_cleanup_save_slots()
+		return "the second save left no .bak, or a .tmp survived it"
+	var whole: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	if not bool(whole.ok) or whole.has("from_backup"):
+		_cleanup_save_slots()
+		return "a whole target was read as %s" % str(whole.get("error_key", "a backup"))
+
+	var text: String = FileAccess.get_file_as_string(path)
+	_put_text(path, text.substr(0, int(text.length() * 0.5)))
+	var torn: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	if not bool(torn.ok) or not bool(torn.get("from_backup", false)):
+		_cleanup_save_slots()
+		return "a torn target did not read its .bak (ok %s, error %s)" % [torn.ok, torn.error_key]
+	if (torn.state as Dictionary).is_empty() or not SaveManager.apply_loaded_state(torn):
+		_cleanup_save_slots()
+		return "the .bak read did not apply"
+	var row: Dictionary = {}
+	for r: Dictionary in SaveManager.list_slots():
+		if r.slot_id == SAVE_SLOT_A:
+			row = r
+	if row.is_empty() or not bool(row.loadable) or not bool(row.from_backup):
+		_cleanup_save_slots()
+		return "the slot list did not offer the .bak as a loadable row marked from_backup: %s" % str(row)
+
+	_put_text(path + ".bak", "{")
+	var lost: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	if bool(lost.ok) or String(lost.error_key) != "SAVE_ERR_CORRUPT":
+		_cleanup_save_slots()
+		return "a torn target with a torn .bak read as ok %s, error %s" % [lost.ok, lost.error_key]
+
+	# A good save over the torn pair, then once more so the .bak is good again.
+	if not SaveManager.save_to_slot(SAVE_SLOT_A) or not SaveManager.save_to_slot(SAVE_SLOT_A):
+		_cleanup_save_slots()
+		return "re-save over a torn slot failed"
+	var old: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	old["schema_version"] = SaveManager.MIN_LOADABLE_VERSION - 1
+	_put_text(path, JSON.stringify(old, "\t"))
+	var refused: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	if bool(refused.ok) or String(refused.error_key) != "SAVE_ERR_TOO_OLD" or refused.has("from_backup"):
+		_cleanup_save_slots()
+		return "a too-old target fell back to its .bak (ok %s, error %s)" % [refused.ok, refused.error_key]
+
+	SaveManager.delete_slot(SAVE_SLOT_A)
+	if FileAccess.file_exists(path) or FileAccess.file_exists(path + ".bak"):
+		_cleanup_save_slots()
+		return "delete_slot left the slot or its .bak behind"
+	_cleanup_save_slots()
+	return ""
+
+
+static func _put_text(path: String, text: String) -> void:
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(text)
+	f.close()
 
 
 # --- Looks: one per person, everyone apart, Frank's his alone, kept by a save, redrawn the same

@@ -16,6 +16,7 @@ signal load_requested(slot_id: String)
 const GATE_STRIP := preload("res://scripts/ui/components/gate_strip.gd")
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const MODE_SAVE := "save"
+const NOT_SAVED_GLYPH := preload("res://assets/icons/util/save.svg")
 ## The window's height while it lists saves and, by mode, while it has none; a save's slot; the well of its glyph.
 const FULL_H := 660.0
 const EMPTY_H := {"save": 420.0, "load": 340.0}
@@ -146,12 +147,15 @@ func _meta_line(slot: Dictionary) -> String:
 	if not bool(slot.loadable):
 		return tr(String(slot.get("error_key", "SAVE_ERR_CORRUPT")))
 	var meta: Dictionary = slot.meta
-	return " · ".join([
+	var parts := PackedStringArray([
 		tr("SAVE_META_DAY").format({"date": Fmt.date_line(GameState.get_date_dict(int(meta.day)))}),
 		tr(GameState.PHASE_KEYS[int(meta.phase) - 1]),
 		tr("SAVE_META_CASH").format({"amount": Fmt.money_exact(int(meta.cash))}),
 		tr("SAVE_META_MRR").format({"amount": Fmt.money(int(meta.mrr))}),
 	])
+	if bool(slot.get("from_backup", false)):
+		parts.append(tr("SAVE_META_BACKUP"))
+	return " · ".join(parts)
 
 
 func _stamp(unix_time: int) -> String:
@@ -185,7 +189,9 @@ func _on_overwrite(slot_id: String, label: String) -> void:
 
 
 func _do_save(slot_id: String) -> void:
-	SaveManager.save_to_slot(slot_id)
+	if not SaveManager.save_to_slot(slot_id):
+		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_NOT_SAVED"), tr("SAVE_ERR_WRITE"),
+			NOT_SAVED_GLYPH, UiTokens.D_warn())
 	_rebuild()
 
 

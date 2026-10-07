@@ -58,6 +58,12 @@ func _ready() -> void:
 			_autosave_enabled = false
 
 
+# The engine quits by itself once the handlers return, so a failed write still lets the window close.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_autosave_on_close()
+
+
 # ============================================================================
 #  Queries
 # ============================================================================
@@ -113,8 +119,21 @@ func list_slots() -> Array:
 
 func read_slot(slot_id: String) -> Dictionary:
 	# Pure read + schema gate; mutates nothing, so the modal can show a file's error without
-	# having touched the live run.
+	# having touched the live run. A corrupt or missing target falls back to the slot's .bak
+	# (the previous save), marked `from_backup`. NEWER and TOO_OLD are valid files with a
+	# deliberate refusal and never fall back to an older state.
 	var path: String = _path_for(slot_id)
+	var read: Dictionary = _read_file(path)
+	if String(read.error_key) != "SAVE_ERR_CORRUPT":
+		return read
+	var backup: Dictionary = _read_file(path + ".bak")
+	if not bool(backup.ok):
+		return read
+	backup["from_backup"] = true
+	return backup
+
+
+func _read_file(path: String) -> Dictionary:
 	# file_exists first: open() on a missing path logs an engine error.
 	var file := FileAccess.open(path, FileAccess.READ) if FileAccess.file_exists(path) else null
 	if file == null:
@@ -354,6 +373,12 @@ func _try_autosave() -> void:
 		_last_autosave_msec = Time.get_ticks_msec()
 
 
+# Skips AUTOSAVE_MIN_REAL_SECONDS and _autosave_pending: the player is leaving, nothing waits.
+func _autosave_on_close() -> void:
+	if _autosave_enabled and _dirty and _autosave_frequency() != "off" and can_save():
+		save_to_slot(_next_auto_slot_id())
+
+
 func _next_auto_slot_id() -> String:
 	# Rolling three: overwrite the oldest (a missing file counts as oldest).
 	var oldest_id: String = AUTO_SLOT_IDS[0]
@@ -391,27 +416,49 @@ func _path_for(slot_id: String) -> String:
 
 
 func _write_atomic(path: String, text: String) -> bool:
-	# A crash mid-save must never cost both the new save and the old one.
-	#   1. write .tmp            — a crash here loses only the .tmp
-	#   2. delete stale .bak     — required on Windows: rename over an existing file fails
-	#   3. rename target → .bak  — the previous save is safe under a second name
-	#   4. rename .tmp → target  — target no longer exists, so this cannot collide
-	# The target is never parsed, so a good save can overwrite a corrupt one.
+	# A crash mid-save, or a write that did not land whole, must never cost both the new save
+	# and the old one.
+	#   1. write .tmp, read it back — a failed or short write loses only the .tmp
+	#   2. delete stale .bak        — required on Windows: rename over an existing file fails
+	#   3. rename target → .bak     — the previous save is safe under a second name
+	#   4. rename .tmp → target     — target no longer exists, so this cannot collide; a failure
+	#                                 puts the .bak back under the target's name
+	# The target is never parsed, so a good save can overwrite a corrupt one; read_slot reads
+	# the .bak when the target is corrupt.
 	var tmp: String = path + ".tmp"
 	var bak: String = path + ".bak"
-	var file := FileAccess.open(tmp, FileAccess.WRITE)
-	if file == null:
-		push_error("[SaveManager] cannot open %s for write (err %d)" % [tmp, FileAccess.get_open_error()])
+	if not _write_complete(tmp, text):
+		DirAccess.remove_absolute(tmp)
 		return false
-	file.store_string(text)
-	file.close()
 	if FileAccess.file_exists(bak):
 		DirAccess.remove_absolute(bak)
 	if FileAccess.file_exists(path) and DirAccess.rename_absolute(path, bak) != OK:
 		push_error("[SaveManager] could not roll %s to .bak" % path)
+		DirAccess.remove_absolute(tmp)
 		return false
 	if DirAccess.rename_absolute(tmp, path) != OK:
 		push_error("[SaveManager] could not move %s into place" % tmp)
+		if FileAccess.file_exists(bak):
+			DirAccess.rename_absolute(bak, path)
+		DirAccess.remove_absolute(tmp)
+		return false
+	return true
+
+
+## True when all of `text` is on disk: the write's error state is clean and the file is as
+## long as the text. Every handle is released before this returns, because Windows will not
+## rename an open file.
+func _write_complete(path: String, text: String) -> bool:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_error("[SaveManager] cannot open %s for write (err %d)" % [path, FileAccess.get_open_error()])
+		return false
+	file.store_string(text)
+	var clean: bool = file.get_error() == OK
+	file.close()
+	var check := FileAccess.open(path, FileAccess.READ) if clean else null
+	if check == null or check.get_length() != text.to_utf8_buffer().size():
+		push_error("[SaveManager] %s was not written in full" % path)
 		return false
 	return true
 
@@ -429,6 +476,7 @@ func _slot_row(slot_id: String) -> Dictionary:
 		"loadable": bool(read.get("ok", false)),
 		"error_key": String(read.get("error_key", "")),
 		"unix_time": unix_time,
+		"from_backup": bool(read.get("from_backup", false)),
 		"meta": {
 			"day": int(meta.get("day", 0)),
 			"phase": int(meta.get("phase", 1)),
