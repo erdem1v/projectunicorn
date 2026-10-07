@@ -8034,6 +8034,9 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 		return "rival source never fired over %d ticks" % ticks
 	if (GameState.news_feed["stream"] as Array).size() > NewsFeedSystem.STREAM_CAP:
 		return "stream exceeded its cap"
+	var problem: String = _news_stream_reads_per_locale()
+	if problem != "":
+		return problem
 	# Audit report for the done message (distribution header + every line).
 	var f: FileAccess = FileAccess.open("user://news_feed_audit_90d.txt", FileAccess.WRITE)
 	if f != null:
@@ -8043,6 +8046,45 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 			f.store_line(entry)
 		f.close()
 	return ""
+
+
+## The stream stores a line as data: every feed row is a key and args that read in the locale asked,
+## a legacy {txt} row (biz) reads the same in both, and a JSON round trip reads back the same text.
+static func _news_stream_reads_per_locale() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var stored: Array = (GameState.news_feed["stream"] as Array).duplicate()
+	stored.reverse()   # get_stream() is newest first
+	var reads: Dictionary = {}
+	var problem: String = ""
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		reads[loc] = NewsFeedSystem.get_stream()
+		var outlets: Array = NewsFeedSystem.OUTLET_KEYS.map(func(k: String) -> String: return TranslationServer.translate(k))
+		for i in stored.size():
+			var row: Dictionary = stored[i]
+			var read: Dictionary = reads[loc][i]
+			var txt: String = String(read["txt"])
+			if String(row["kind"]) != "biz" and not (row.has("key") and not row.has("txt") and outlets.has(read["src"])):
+				problem = "[%s] a %s row is not a key and args under an outlet: %s" % [loc, row["kind"], row]
+			elif txt.contains("{") or txt == String(row.get("key", "")):
+				problem = "[%s] a %s row reads as a raw key or placeholder: %s" % [loc, row["kind"], txt]
+	if problem == "":
+		for i in stored.size():
+			var same: bool = reads["tr"][i]["txt"] == reads["en"][i]["txt"]
+			if same != (String(stored[i]["kind"]) == "biz"):
+				problem = "a %s row %s in both languages: %s" % [stored[i]["kind"],
+					"reads the same" if same else "differs", reads["tr"][i]["txt"]]
+	if problem == "":
+		var live_feed: Dictionary = GameState.news_feed
+		GameState.news_feed = SaveCodec.from_json(JSON.parse_string(JSON.stringify(SaveCodec.to_json(live_feed))))
+		var restored: Array = NewsFeedSystem.get_stream()
+		GameState.news_feed = live_feed
+		for i in restored.size():
+			if restored[i]["txt"] != reads["en"][i]["txt"] or restored[i]["src"] != reads["en"][i]["src"]:
+				problem = "a JSON round trip read %s, not %s" % [restored[i]["txt"], reads["en"][i]["txt"]]
+				break
+	TranslationServer.set_locale(loc0)
+	return problem
 
 
 static func _case_cs_request_kind_state_driven() -> String:
@@ -17447,6 +17489,9 @@ static func _case_news_piyasa_reason_lines() -> String:
 		return "the piyasa count rose but no piyasa line is in the stream"
 	if GameState.news_feed["recent_piyasa"].get(String(mover["id"]), -1) != week:
 		return "the mover did not enter the cooldown window"
+	var problem: String = _news_stream_reads_per_locale()
+	if problem != "":
+		return problem
 	# The social network lists at week 20: one live IPO line that week, none the week after.
 	var live: Array = []
 	var ear := func(_src: String, txt: String) -> void: live.append(txt)

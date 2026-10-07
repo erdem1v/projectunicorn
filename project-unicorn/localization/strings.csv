@@ -3102,6 +3102,7 @@ PIYASA_WHY_DOWN_0,bir birimde işten çıkarma,layoffs in one unit
 PIYASA_WHY_DOWN_1,zayıf çeyrek,a weak quarter
 PIYASA_WHY_DOWN_2,büyük bir sözleşme kaybedildi,a large contract lost
 PIYASA_WHY_IPO,ilk işlem günü,first day of trading
+PIYASA_LINE,{headline} ({why}),{headline} ({why})
 PIYASA_SECTOR_AUTOMOTIVE,otomotiv,automotive
 PIYASA_SECTOR_BANK,banka,bank
 PIYASA_SECTOR_CHIPS,çip,chips

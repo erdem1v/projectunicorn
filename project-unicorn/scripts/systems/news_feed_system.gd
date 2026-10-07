@@ -20,9 +20,13 @@ extends RefCounted
 # Repeat yok: bir sektör satırı havuz tükenene dek tekrar etmez, sonra reshuffle.
 #
 # Ticker tüketici sözleşmesi: get_stream() (en yeni önce) + get_lines_for_day(day)
-# + EventBus.news_stream_changed (tik-sonu repaint kancası). Satır şekli:
+# + EventBus.news_stream_changed (tik-sonu repaint kancası). OKUMA şekli, o anki dilde çözülmüş:
 #   {day: int, kind: "sektor"|"rakip"|"piyasa"|"biz", src: String, txt: String}
-# news_ticker.gd'nin {src, txt} vokabüleriyle bire bir uyumlu.
+# Kayda giden şekil metin değil VERİdir (kayıt dil değiştirince de doğru okunsun):
+#   {day, kind, src, key, args}   src bir CSV anahtarı ya da düz ad; args değeri düz değer |
+#                                 iç içe satır {key, args} | {fmt, v} (ham sayı, Fmt'ten geçer)
+#   {day, kind, src, txt}         biz satırı: olayın doğduğu dilde çözülmüş metin
+# line_text ikisini de okur.
 #
 # # WORKING TR — NEWS_* metinleri (strings.csv) çalışma metnidir; ses geçişi content fazında.
 
@@ -192,7 +196,7 @@ static func on_headline_added(source: String, text: String) -> void:
 static func get_stream() -> Array:
 	# En yeni önce; derin kopya, çağıran akışı değiştiremez.
 	var nf: Dictionary = _ensure_state()
-	var out: Array = (nf["stream"] as Array).duplicate(true)
+	var out: Array = (nf["stream"] as Array).map(_read)
 	out.reverse()
 	return out
 
@@ -201,7 +205,34 @@ static func get_lines_for_day(day: int) -> Array:
 	var out: Array = []
 	for line in _ensure_state()["stream"]:
 		if int(line["day"]) == day:
-			out.append(line.duplicate(true))
+			out.append(_read(line))
+	return out
+
+
+## A line's text in the current locale: a {key, args} row is rendered, a {txt} row is already text,
+## and an args value that is a line or a {fmt, v} number is rendered first.
+static func line_text(line: Dictionary) -> String:
+	if line.has("txt"):
+		return String(line["txt"])
+	if line.has("fmt"):
+		match String(line["fmt"]):
+			"percent":
+				return Fmt.percent(float(line["v"]))
+			"share":
+				return RivalRegistry.format_share(float(line["v"]))
+		return ""
+	var args: Dictionary = (line.get("args", {}) as Dictionary).duplicate()
+	for k in args:
+		if args[k] is Dictionary:
+			args[k] = line_text(args[k])
+	return TranslationServer.translate(String(line["key"])).format(args)
+
+
+## The read shape of a stored row: a copy with the source and the text resolved.
+static func _read(row: Dictionary) -> Dictionary:
+	var out: Dictionary = row.duplicate(true)
+	out["src"] = String(TranslationServer.translate(String(row["src"])))
+	out["txt"] = line_text(row)
 	return out
 
 
@@ -264,8 +295,8 @@ static func _emit_sektor(nf: Dictionary, slot: int) -> void:
 	var idx: int = absi(hash("sektor|%d|%d|%d" % [GameState.day, slot, int(nf["reshuffles"])])) % eligible.size()   # LOC-DATA rng seed
 	var rec: Dictionary = eligible[idx]
 	(nf["used_sektor"] as Array).append(String(rec["id"]))
-	_append(nf, "sektor", outlet_name(absi(hash(String(rec["id"])))),   # LOC-DATA news line kind id
-		TranslationServer.translate("NEWS_" + String(rec["id"]).to_upper()))
+	_append(nf, "sektor", outlet_key(absi(hash(String(rec["id"])))),   # LOC-DATA news line kind id
+		{"key": "NEWS_" + String(rec["id"]).to_upper()})
 
 
 static func _eligible_sektor(nf: Dictionary) -> Array:
@@ -314,13 +345,10 @@ static func _emit_rakip(nf: Dictionary, rival_pool: Array) -> void:
 	var up: bool = int(row["trend"]) >= 0
 	var count: int = RIVAL_UP_COUNT if up else RIVAL_DOWN_COUNT
 	var idx: int = absi(hash("%s|%d" % [String(row["id"]), GameState.day])) % count
-	var tmpl: String = TranslationServer.translate(
-		"NEWS_RIVAL_%s_%d" % ["UP" if up else "DOWN", idx])
-	var txt: String = tmpl.format({
-		"name": String(row["name"]),
-		"share": RivalRegistry.format_share(float(row["share_pct"])),
+	_append(nf, "rakip", outlet_key(absi(hash(String(row["id"]) + str(GameState.day)))), {
+		"key": "NEWS_RIVAL_%s_%d" % ["UP" if up else "DOWN", idx],
+		"args": {"name": String(row["name"]), "share": {"fmt": "share", "v": float(row["share_pct"])}},
 	})
-	_append(nf, "rakip", outlet_name(absi(hash(String(row["id"]) + str(GameState.day)))), txt)
 
 
 ## This week's movers on the list: public rows whose value moved PIYASA_MOVE_PCT since last
@@ -345,46 +373,49 @@ static func _emit_piyasa(nf: Dictionary, piyasa_pool: Array) -> void:
 	var id: String = String(row["id"])
 	nf["recent_piyasa"][id] = GameState.day   # keyed by company: bounded by the list
 	var up: bool = float(row["delta"]) >= 0.0
-	var headline: String = TranslationServer.translate("PIYASA_NEWS_JUMP" if up else "PIYASA_NEWS_DROP").format({
-		"company": String(row["name"]),
-		"pct": Fmt.percent(absf(float(row["delta"])) * 100.0),
-	})
-	var why: String = TranslationServer.translate("PIYASA_WHY_%s_%d" % ["UP" if up else "DOWN",
-		absi(hash("%s|%d" % [id, GameState.day])) % PIYASA_WHY_COUNT])
-	_append(nf, "piyasa", outlet_name(absi(hash(id + str(GameState.day)))), _with_reason(headline, why))
+	_append(nf, "piyasa", outlet_key(absi(hash(id + str(GameState.day)))), {"key": "PIYASA_LINE", "args": {
+		"headline": {"key": "PIYASA_NEWS_JUMP" if up else "PIYASA_NEWS_DROP", "args": {
+			"company": String(row["name"]),
+			"pct": {"fmt": "percent", "v": absf(float(row["delta"])) * 100.0},
+		}},
+		"why": {"key": "PIYASA_WHY_%s_%d" % ["UP" if up else "DOWN",
+			absi(hash("%s|%d" % [id, GameState.day])) % PIYASA_WHY_COUNT]},
+	}})
 
 
 ## A company's first week on the list is one live line, outside the quota.
 static func _emit_listings() -> void:
 	for c in MarketCatalog.companies():
 		if String(c["status"]) == "public" and int(c["listed_week"]) == GameState.day:
-			var headline: String = TranslationServer.translate("PIYASA_NEWS_IPO").format({
-				"company": String(c["name"]),
-				"value": Fmt.money_market(MarketCatalog.value(c, GameState.day)),
-			})
-			EventBus.ticker_live_line.emit(outlet_name(absi(hash(String(c["id"])))),
-				_with_reason(headline, TranslationServer.translate("PIYASA_WHY_IPO")))
-
-
-static func _with_reason(headline: String, why: String) -> String:
-	return "%s (%s)" % [headline, why]
+			var line: Dictionary = {"key": "PIYASA_LINE", "args": {
+				"headline": {"key": "PIYASA_NEWS_IPO", "args": {
+					"company": String(c["name"]),
+					"value": Fmt.money_market(MarketCatalog.value(c, GameState.day)),
+				}},
+				"why": {"key": "PIYASA_WHY_IPO"},
+			}}
+			EventBus.ticker_live_line.emit(outlet_name(absi(hash(String(c["id"])))), line_text(line))
 
 
 static func _emit_biz(nf: Dictionary) -> void:
 	var item: Dictionary = (nf["biz_buffer"] as Array).pop_front()   # kronolojik: en eski milestone önce
-	_append(nf, "biz", String(item["src"]), String(item["txt"]))
+	_append(nf, "biz", String(item["src"]), {"txt": String(item["txt"])})
 
 
-static func _append(nf: Dictionary, kind: String, src: String, txt: String) -> void:
+static func _append(nf: Dictionary, kind: String, src: String, line: Dictionary) -> void:
 	var counts: Dictionary = nf["counts"]
 	counts[kind] = int(counts[kind]) + 1
 	var stream: Array = nf["stream"]
-	stream.append({"day": GameState.day, "kind": kind, "src": src, "txt": txt})
+	stream.append({"day": GameState.day, "kind": kind, "src": src}.merged(line))
 	while stream.size() > STREAM_CAP:
 		stream.pop_front()
 
 
-## Source badge for a line. `h` is a hash (feed lines) or a plain index (news_ticker
+## Source badge key for a line. `h` is a hash (feed lines) or a plain index (news_ticker
 ## fallback, EvTicker); outlet names stay CSV rows so no player-visible string is a literal here.
+static func outlet_key(h: int) -> String:
+	return OUTLET_KEYS[h % OUTLET_KEYS.size()]
+
+
 static func outlet_name(h: int) -> String:
-	return TranslationServer.translate(OUTLET_KEYS[h % OUTLET_KEYS.size()])
+	return TranslationServer.translate(outlet_key(h))

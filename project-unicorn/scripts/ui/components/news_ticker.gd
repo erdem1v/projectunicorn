@@ -6,28 +6,28 @@ extends Panel
 #  - Scrolls leftward at a fixed real-time pace, ignoring game speed
 #    and game pause. The Panel sets process_mode = PROCESS_MODE_ALWAYS
 #    so this _process keeps running even when SceneTree.paused is true.
-#  - Seamless loop via duplicated content + half-width wrap. The label
-#    contains two copies of the headline stream end-to-end; when the
-#    label has scrolled past one copy width we add the same amount
-#    back. Visual: zero gap, zero jump.
+#  - The label holds only the parts now on the run (_belt, left to right).
+#    A part that has scrolled fully off the left edge is popped and the label moves right by its
+#    width in the same frame, so the visible text never shifts; the tail is fed from _sources(),
+#    which _cursor walks round. New content only rewinds the cursor, so nothing on screen jumps and
+#    the newest lines are the next to enter at the right edge. A language or palette change is the
+#    one thing that clears the belt (the text on it was built in the old language and hues).
 #
 #  - LIVE LINES: EventBus.headline_added and EventBus.ticker_live_line push a real gameplay
-#    line, which is prepended to the loop and the stream is rebuilt. Only headline_added
-#    also reaches NewsFeedSystem's "Biz" archive; a ticker_live_line is shown once. This is
-#    the game's only non-modal notification channel — candidate arrival must raise a badge
-#    and a ticker line WITHOUT interrupting the player. Rebuilding resets the scroll
-#    position, so a line landing mid-scroll causes one visible jump; acceptable for a
-#    once-in-a-while beat (TODO: splice the line in without resetting the scroll).
+#    line, which leads _sources(). Only headline_added also reaches NewsFeedSystem's "Biz"
+#    archive; a ticker_live_line is shown once. This is the game's only non-modal notification
+#    channel — candidate arrival must raise a badge and a ticker line WITHOUT interrupting the
+#    player. Live lines are unsaved and built in the current language, so a language change drops them.
 #
 # Akış içeriği NewsFeedSystem.get_stream()'den gelir (sektör/rakip/piyasa/biz, 45/25/10/≤20) ve
 # tik sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10 anahtarları
 # SOĞUK-BAŞLANGIÇ yedeğidir: akış boşken (hafta 1, ilk tik öncesi) ve akış kısayken
-# döngüyü doldurur. ANAHTAR ADLARI SABİT SÖZLEŞMEDİR.
+# kaynak listesini doldurur. ANAHTAR ADLARI SABİT SÖZLEŞMEDİR.
 #
 #  - OPEN / CLOSED: the toggle cell collapses the ticker to that cell alone on the bottom-left; the
 #    choice is the player's (Settings "ticker_open"), made here or in Ayarlar (set_open, group
 #    news_ticker), and GameShell lays the office and the rail out around it (open_changed). Lines that
-#    arrive while it is closed wait in the loop.
+#    arrive while it is closed wait in the source list.
 
 const SCROLL_SPEED := 50.0  # pixels per second
 const SEPARATOR := "   ·   "
@@ -39,12 +39,12 @@ const RUN_PAD := 16.0
 const AMBIENT_KEYS := ["TICKER_01", "TICKER_02", "TICKER_03", "TICKER_04", "TICKER_05",
 	"TICKER_06", "TICKER_07", "TICKER_08", "TICKER_09", "TICKER_10"]
 
-# Akıştan ambient döngüye giren en yeni satır sayısı + döngünün hedef alt uzunluğu
-# (kısa döngü aynı üç cümleyi belirgin tekrar eder; eksik kalan ambient'ten dolar).
+# Akıştan kaynak listesine giren en yeni satır sayısı + listenin hedef alt uzunluğu
+# (kısa liste aynı üç cümleyi belirgin tekrar eder; eksik kalan ambient'ten dolar).
 const STREAM_SHOWN := 12
 const LOOP_MIN_PARTS := 8
 
-# Live gameplay lines, newest first, capped so the loop never grows without bound.
+# Live gameplay lines, newest first, capped so the source list never grows without bound.
 const MAX_LIVE_LINES := 6
 
 signal open_changed(open: bool)
@@ -54,8 +54,10 @@ signal open_changed(open: bool)
 @onready var _fade: Control = $Run/Fade
 
 var open: bool = true
-var _half_width: float = 0.0
 var _live_lines: Array[Dictionary] = []
+var _belt: Array[Dictionary] = []   # the parts on the run, left to right: {bbcode, txt, w}
+var _cursor: int = 0   # the next index of _sources() to feed the belt
+var _hues: Dictionary = {}   # outlet name -> hue
 
 
 func _ready() -> void:
@@ -67,12 +69,12 @@ func _ready() -> void:
 	EventBus.ticker_live_line.connect(_on_live_line)
 	# Tik-sonu akış tazelemesi (post-tick sinyal — day_advanced tik işlenmeden ÖNCE atılır,
 	# ona bağlanmak önceki tikin akışını okurdu; sinyalin kendi yorumuna bak).
-	EventBus.news_stream_changed.connect(_rebuild)
+	EventBus.news_stream_changed.connect(_refresh)
 	# Ambient yedek tr() anahtarlarından geliyor — dil değişince yeniden kur.
 	EventBus.language_changed.connect(_on_language_changed)
 	# Yayın renklerinin renk körü ikizi var.
-	EventBus.palette_changed.connect(_rebuild.unbind(1))
-	await _rebuild()
+	EventBus.palette_changed.connect(_reset.unbind(1))
+	_reset()
 
 
 func _exit_tree() -> void:
@@ -80,8 +82,8 @@ func _exit_tree() -> void:
 		EventBus.headline_added.disconnect(_on_live_line)
 	if EventBus.ticker_live_line.is_connected(_on_live_line):
 		EventBus.ticker_live_line.disconnect(_on_live_line)
-	if EventBus.news_stream_changed.is_connected(_rebuild):
-		EventBus.news_stream_changed.disconnect(_rebuild)
+	if EventBus.news_stream_changed.is_connected(_refresh):
+		EventBus.news_stream_changed.disconnect(_refresh)
 	if EventBus.language_changed.is_connected(_on_language_changed):
 		EventBus.language_changed.disconnect(_on_language_changed)
 
@@ -102,7 +104,8 @@ func _set_open(value: bool) -> void:
 
 
 func _on_language_changed(_locale: String) -> void:
-	await _rebuild()
+	_live_lines.clear()
+	_reset()
 
 
 func _on_live_line(source: String, text: String) -> void:
@@ -111,34 +114,33 @@ func _on_live_line(source: String, text: String) -> void:
 	_live_lines.push_front({"src": source, "txt": text})
 	while _live_lines.size() > MAX_LIVE_LINES:
 		_live_lines.pop_back()
-	await _rebuild()
+	_refresh()
 
 
-func _rebuild() -> void:
-	# Two identical copies of the stream end-to-end → seamless loop.
-	var single: String = _build_bbcode()
-	stream.text = single + single
+## New content: the belt keeps moving, and the newest lines are the next to be fed.
+func _refresh() -> void:
+	_cursor = 0
+
+
+## The text on the belt no longer fits the language or the hues: start the run over.
+func _reset() -> void:
+	_hues.clear()
+	for key: String in NewsFeedSystem.OUTLET_KEYS:
+		_hues[tr(key)] = UiTokens.D_outlet(key)
+	_belt.clear()
+	_cursor = 0
+	stream.text = ""
 	stream.position.x = RUN_PAD
 
-	# Layout needs one frame to settle before get_content_width returns
-	# a meaningful value. Same for get_content_height (used for y-center).
-	await get_tree().process_frame
-	_half_width = stream.get_content_width() / 2.0
-	stream.position.y = ($Run.size.y - stream.get_content_height()) / 2.0
 
-
-func _build_bbcode() -> String:
-	var parts: PackedStringArray = []
-	var hues := {}
-	for key: String in NewsFeedSystem.OUTLET_KEYS:
-		hues[tr(key)] = UiTokens.D_outlet(key)
-	# Canlı satırlar önde (anlık beat'ler); ardından haber akışı (en yeni STREAM_SHOWN
-	# satır). Biz-kaynaklı akış satırı zaten canlı satır olarak dönmüş olabilir —
-	# aynı cümle döngüde iki kez akmasın diye metin bazlı ayıklanır. Döngü kısa
-	# kalırsa (ilk haftalar) soğuk-başlangıç ambient anahtarları tamamlar.
+## What the belt cycles through, in order: live lines (newest first), then the stream's newest
+## STREAM_SHOWN lines, then ambient lines up to LOOP_MIN_PARTS. A stream line that already ran as
+## a live line is skipped, so one sentence never rides the belt twice.
+func _sources() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	var seen_txt: Dictionary = {}
 	for h in _live_lines:
-		parts.append(_part(h.src, h.txt, hues))
+		out.append(h)
 		seen_txt[String(h.txt)] = true
 	var shown: int = 0
 	for line in NewsFeedSystem.get_stream():
@@ -146,28 +148,49 @@ func _build_bbcode() -> String:
 			break
 		if seen_txt.has(String(line["txt"])):
 			continue
-		parts.append(_part(String(line["src"]), String(line["txt"]), hues))
+		out.append({"src": String(line["src"]), "txt": String(line["txt"])})
 		seen_txt[String(line["txt"])] = true
 		shown += 1
-	if parts.size() < LOOP_MIN_PARTS:
+	if out.size() < LOOP_MIN_PARTS:
 		# Dolgu, koşu tohumu + tikten türeyen deterministik bir kaydırmayla başlar (ev
 		# kuralı: RNG yok, hash var) ve AMBIENT_KEYS boyunca dolanır: on anahtarın hepsi
-		# sıra alır, açılış koşudan koşuya değişir. Rozet anahtarla eşleşir (döngü sırasıyla
+		# sıra alır, açılış koşudan koşuya değişir. Rozet anahtarla eşleşir (liste sırasıyla
 		# değil), böylece bir cümle hangi pencerede çıkarsa çıksın hep aynı yayının altında akar.
 		var offset: int = absi(hash("ticker_ambient|%d|%d" % [GameState.run_seed, GameState.day])) \
 			% AMBIENT_KEYS.size()
 		for i in AMBIENT_KEYS.size():
-			if parts.size() >= LOOP_MIN_PARTS:
+			if out.size() >= LOOP_MIN_PARTS:
 				break
 			var k: int = (offset + i) % AMBIENT_KEYS.size()
-			parts.append(_part(NewsFeedSystem.outlet_name(k), tr(String(AMBIENT_KEYS[k])), hues))
+			out.append({"src": NewsFeedSystem.outlet_name(k), "txt": tr(String(AMBIENT_KEYS[k]))})
+	return out
+
+
+## The first source at or after the cursor whose sentence is not already on the belt, as a belt
+## part; empty when every source is on it.
+func _next_part(sources: Array[Dictionary]) -> Dictionary:
+	for _i in sources.size():
+		var source: Dictionary = sources[_cursor % sources.size()]
+		_cursor += 1
+		if not _belt.any(func(p: Dictionary) -> bool: return p["txt"] == source["txt"]):
+			return _part(String(source["src"]), String(source["txt"]))
+	return {}
+
+
+## One belt part: an outlet name in its hue (a source that is not an outlet, İçeriden or a person,
+## in emphasis ink), the sentence and the separator, with the width the label will give it.
+func _part(src: String, txt: String) -> Dictionary:
+	var hue: Color = _hues.get(src, UiTokens.D_INK_1)
 	var sep: String = "[color=#%s]%s[/color]" % [UiTokens.D_INK_4.to_html(false), SEPARATOR]
-	return sep.join(parts) + sep
-
-
-## An outlet's name in its hue; a source that is not an outlet (İçeriden, a person) in emphasis ink.
-func _part(src: String, txt: String, hues: Dictionary) -> String:
-	return "[b][color=#%s]%s[/color][/b]  %s" % [(hues.get(src, UiTokens.D_INK_1) as Color).to_html(false), src, txt]
+	var badge_w: float = stream.get_theme_font(&"bold_font").get_string_size(
+		src, HORIZONTAL_ALIGNMENT_LEFT, -1, stream.get_theme_font_size(&"bold_font_size")).x
+	var body_w: float = stream.get_theme_font(&"normal_font").get_string_size(
+		"  " + txt + SEPARATOR, HORIZONTAL_ALIGNMENT_LEFT, -1, stream.get_theme_font_size(&"normal_font_size")).x
+	return {
+		"bbcode": "[b][color=#%s]%s[/color][/b]  %s%s" % [hue.to_html(false), src, txt, sep],
+		"txt": txt,
+		"w": badge_w + body_w,
+	}
 
 
 ## The stream fades out over the last pixels of the run.
@@ -179,8 +202,25 @@ func _draw_fade() -> void:
 
 
 func _process(delta: float) -> void:
-	if _half_width <= 0.0:
-		return
 	stream.position.x -= SCROLL_SPEED * delta
-	if stream.position.x <= -_half_width:
-		stream.position.x += _half_width
+	var changed: bool = false
+	# A part fully off the left edge leaves; the label moves right by its width so the rest stays put.
+	while not _belt.is_empty() and stream.position.x + float(_belt[0]["w"]) <= 0.0:
+		stream.position.x += float(_belt.pop_front()["w"])
+		changed = true
+	var edge: float = $Run.size.x
+	var tail: float = stream.position.x
+	for part in _belt:
+		tail += float(part["w"])
+	if tail < edge:
+		var sources: Array[Dictionary] = _sources()
+		while tail < edge:
+			var next: Dictionary = _next_part(sources)
+			if next.is_empty():
+				break
+			_belt.append(next)
+			tail += float(next["w"])
+			changed = true
+	if changed:
+		stream.text = "".join(_belt.map(func(p: Dictionary) -> String: return p["bbcode"]))
+		stream.position.y = ($Run.size.y - stream.get_content_height()) / 2.0

@@ -251,8 +251,8 @@ const TRUST_OFFSET_DECAY_PER_DAY := 0.4   # -12 → 0 in 30 days
 
 # --- Ticker attribution (EventBus.headline_added source; sibling of
 #     HRConstants.notice_source_hr(), kept here because the emitters are sales-domain). ---
-# Localized at EMIT time. The ticker stream is transient, so an item written before a
-# language switch keeps its old attribution until it scrolls off — the same accepted
-# staleness class as an already-open modal.
+# Localized at EMIT time and stored as the news-stream biz row's source, so a row written
+# before a language switch keeps its old attribution — the same accepted staleness class as
+# an already-open modal.
 static func notice_source_sales() -> String:
 	return TranslationServer.translate("NOTICE_SRC_SALES")
