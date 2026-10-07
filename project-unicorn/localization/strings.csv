@@ -2373,7 +2373,8 @@ SALES_ANS_PROBE_CAPACITY_A_ADMIT,PH: Yoğun günde kapasite zorlanıyor. Bugünk
 SALES_ANS_PROBE_CAPACITY_A_PROMISE,PH: Kapasiteyi sizin yükünüze göre büyütürüm.,PH: I will size the capacity to your load.
 SALES_LOG_EXPIRED,{company} beklemekten vazgeçti,{company} stopped waiting
 SALES_LOG_FOUNDER_CLOSE,{company} anlaşmasını sen kapattın · {amount}/ay,You closed {company} · {amount}/mo
-NEG_LAST_OFFER,Son rakam,Their last number
+NEG_HOLD,Rakamında ısrar et,Hold your number
+NEG_HOLD_REASON,Anlaşma olmaz. Fiyattan kalkarlar ve bunu hatırlarlar.,No deal. They walk on the price and remember it.
 NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,Patience is out. Take this number or the table closes.
 B2B_LOCK_NO_PAIN_TARGET,Ne istediklerini söylemediler. Söz verilecek bir şey yok.,They haven't named what they want. There's nothing to promise yet.
 B2B_LOCK_PAIN_SHIPPED,İstedikleri şey zaten yayında.,What they asked for is already live.

@@ -257,18 +257,20 @@ func _move(id: String) -> Dictionary:
 	return step
 
 
-## The price table's moves are commands. The offer carries the table's telegraphs in its tone, its
-## reason always under it (a telegraph is a state, never a line): the last number on the table once
-## patience is out, the insult line once the price is past it.
+## The price table's moves are commands. A telegraph is a state, never a line, so its reason sits
+## under the move it describes. Once patience is out their number is the only deal: Accept leads
+## with that reason and the offer holds our own number, in the danger tone with what it costs.
+## Before that the offer carries the insult line once the price is past it.
 func _moves(vs: Dictionary) -> Array:
 	var offer := _option("offer", tr("NEG_OFFER"))
+	var accept := _option("accept", tr("NEG_ACCEPT"))
+	var out := [offer, accept] if vs.can_accept else [offer]
 	if vs.last_offer:
-		offer.merge({"label": tr("NEG_LAST_OFFER"), "tone": "alert", "hint": tr("NEG_LAST_OFFER_REASON")}, true)
+		offer.merge({"label": tr("NEG_HOLD"), "tone": "alert", "hint": tr("NEG_HOLD_REASON")}, true)
+		accept.sub = tr("NEG_LAST_OFFER_REASON")
+		out = [accept, offer]
 	elif vs.insulting:
 		offer.merge({"tone": "alert", "hint": tr(vs.insult_reason_key)}, true)
-	var out := [offer]
-	if vs.can_accept:
-		out.append(_option("accept", tr("NEG_ACCEPT")))
 	out.append(_option("walk", tr("NEG_WALK")))
 	for move: Dictionary in out:
 		move.command = true

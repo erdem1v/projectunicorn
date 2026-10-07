@@ -2655,10 +2655,11 @@ func _probe_pause_interactivity(root: Node, label: String) -> void:
 	get_tree().paused = was
 
 
-## --negotiation-shot=<open|countered|insult|confirm>: Perde 2 in the meeting panel, after a Perde 1
+## --negotiation-shot=<open|countered|insult|last|confirm>: Perde 2 in the meeting panel, after a Perde 1
 ## won in it. Diyalog yok (§5.3.1): the ruler, the patience boxes and the options' tone. open = as
 ## the act opens; countered = an offer under the insult line and their counter; insult = a price
-## over the line picked on the ruler, the offer in its alert tone; confirm = the floor price offered
+## over the line picked on the ruler, the offer in its alert tone; last = the same offer held until
+## patience is out, Accept leading and the hold in its alert tone; confirm = the floor price offered
 ## and signed, its result card.
 func _run_negotiation_shot(kind: String) -> void:
 	_begin_shot()
@@ -2674,6 +2675,15 @@ func _run_negotiation_shot(kind: String) -> void:
 		"countered":
 			await _shot_price(insult_from - 4)
 			await _shot_pick("offer")
+		"last":
+			await _shot_price(insult_from - 4)
+			for _i in 8:
+				if not NegotiationSystem.is_active() or NegotiationSystem.view_state().last_offer:
+					break
+				await _shot_pick("offer")
+			if not NegotiationSystem.is_active():
+				_shot_fail("[NegotiationShot] the table closed before patience ran out: no last round to show")
+				return
 		"insult":
 			# A table whose insult line sits past the band's top cannot show it: the shot brings it in.
 			NegotiationSystem._insult_from = mini(insult_from, SalesConstants.SEAT_PRICE_MAX - 6)

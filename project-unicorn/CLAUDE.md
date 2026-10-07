@@ -201,7 +201,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   founders|nav|crown|cast` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare; `founders` portre ile
   bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi;
   `city:<saat>:crown` kulenin tacı). Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff`,
-  VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|confirm>`; en dar dok
+  VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc>`; term sheet masası kabuğun içinde
   `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug fikstürüyle
   (`scripts/debug/product_fixtures.gd`),
