@@ -121,6 +121,10 @@ func drop_open_for(customer_id: String) -> void:
 		var p: Promise = _promises[pid]
 		if p.customer_id == customer_id and p.status == "open":
 			_promises.erase(pid)
+	# The single-open PITCH lock is a flag only a resolution clears; a dropped word never
+	# resolves, so lift it here or the Söz row stays locked for a promise that no longer exists.
+	if SalesLedger.open_pitch_promise() == customer_id:
+		SalesLedger.clear_open_pitch_promise()
 
 
 # --- Resolution: ship-coupling keeps, deadline sweep breaks, late ship is partial ---

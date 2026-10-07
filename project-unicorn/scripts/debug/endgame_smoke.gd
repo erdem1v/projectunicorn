@@ -222,6 +222,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_expansion_no_refire":            fail = _case_b2b_expansion_no_refire()
 		"fumes_zero_revenue_ledger":          fail = _case_fumes_zero_revenue_ledger()
 		"promise_orphan_no_brand_hit":        fail = _case_promise_orphan_no_brand_hit()
+		"sales_open_promise_lifts_when_account_leaves": fail = _case_sales_open_promise_lifts_when_account_leaves()
 		"build_percent_single_source":        fail = _case_build_percent_single_source()
 		"runway_days_and_negative_cash":      fail = _case_runway_days_and_negative_cash()
 		"role_locks_and_runway_pair":         fail = _case_role_locks_and_runway_pair()
@@ -4421,6 +4422,41 @@ static func _case_promise_orphan_no_brand_hit() -> String:
 	PromiseRegistry.tick_deadlines(GameState.day)
 	if GameState.brand >= brand_before_break:
 		return "a live customer's broken promise stopped costing brand — the guard is a wall"
+	return ""
+
+
+static func _case_sales_open_promise_lifts_when_account_leaves() -> String:
+	# A departed account's dropped promise must lift the single-open PITCH lock, but only when
+	# the lock names that account; a drop is not a break (no brand move, no broken-promise lock).
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var p := Prospect.new()
+	p.id = "lead_holder"
+	p.company_name = "Holder A.Ş."
+	p.industry = "testing"
+	p.star = 1
+	var holder: Customer = _sign_fixture(p, 900, 70)
+	PromiseRegistry.create(holder.id, "ai_vec_filter", 3)
+	SalesLedger.set_open_pitch_promise(holder.id)
+
+	# Another account leaving must not lift a lock that names someone else, or the fix is an
+	# unconditional clear.
+	CustomerRegistry.remove("co_lead_smoke")
+	if SalesLedger.open_pitch_promise() != holder.id:
+		return "another account leaving lifted a lock that names '%s' (now '%s')" % [
+			holder.id, SalesLedger.open_pitch_promise()]
+	if not PromiseRegistry.has_open_for(holder.id):
+		return "another account leaving dropped the holder's open promise"
+
+	var brand_before: int = GameState.brand
+	CustomerRegistry.remove(holder.id)
+	if SalesLedger.open_pitch_promise() != "":
+		return "the Söz lock outlived its account: the flag still names '%s'" % [
+			SalesLedger.open_pitch_promise()]
+	if GameState.brand != brand_before:
+		return "dropping the word moved brand (%d -> %d)" % [brand_before, GameState.brand]
+	if SalesLedger.promise_locked_for(p.company_name):
+		return "a dropped promise was recorded as a broken one"
 	return ""
 
 
