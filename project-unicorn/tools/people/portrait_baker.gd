@@ -13,7 +13,7 @@ extends Node
 ## (the notice stack, the mail's header, the period summary, the Yatırım page's strip, his note in Finans).
 const MASTER := Vector2i(260, 325)
 const FOUNDER_SIZES := [MASTER, FounderConstants.PORTRAIT_CELL, FounderConstants.PORTRAIT_THUMB]
-const FRANK_SIZES := [Vector2i(256, 320), Vector2i(24, 24), Vector2i(40, 40), Vector2i(48, 48), Vector2i(64, 64)]
+const FRANK_SIZES := [Vector2i(256, 320), Vector2i(24, 24), Vector2i(32, 32), Vector2i(40, 40), Vector2i(48, 48), Vector2i(64, 64)]
 const SCALE := 2
 ## The camera: this far round from the face, raised as the bust's; the busts' Idle pose.
 const TURN := 0.3

@@ -425,10 +425,7 @@ func _queue_entry(entry: Dictionary, roll: Dictionary) -> void:
 			row = _founder_row(entry.get("pill", ""), roll, line)
 		"frank":
 			line = _typed(text, &"FrankLine")
-			# Frank's disc has no 32 bake: the 40 draws at a row's size.
-			var frank := UiFactory.make_mentor_avatar(UiTokens.D_AVATAR_DOC)
-			frank.custom_minimum_size = Vector2.ONE * UiTokens.D_AVATAR_ROW
-			row = _said(frank, tr("MENTOR_NAME"), line)
+			row = _said(UiFactory.make_mentor_avatar(UiTokens.D_AVATAR_ROW), tr("MENTOR_NAME"), line)
 		"state":
 			row = _said(_avatar(seat, UiTokens.D_AVATAR_ROW), _people[seat].name,
 				UiFactory.make_label(text, &"ValueText", UiTokens.D_INK_1))
