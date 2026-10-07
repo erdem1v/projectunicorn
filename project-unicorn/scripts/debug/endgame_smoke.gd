@@ -455,6 +455,13 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_v14_history_becomes_releases":     fail = _case_save_v14_history_becomes_releases()
 		"product_paid_plan_locked_until_mvp":    fail = _case_product_paid_plan_locked_until_mvp()
 		"product_pm_plan_opens_as_next_sprint":  fail = _case_product_pm_plan_opens_as_next_sprint()
+		"market_catalog_lint":              fail = _case_market_catalog_lint()
+		"market_value_deterministic":       fail = _case_market_value_deterministic()
+		"market_listed_week_gating":        fail = _case_market_listed_week_gating()
+		"market_price_band":                fail = _case_market_price_band()
+		"market_value_texture":             fail = _case_market_value_texture()
+		"market_year_end_follows_anchors":  fail = _case_market_year_end_follows_anchors()
+		"market_save_roundtrip":            fail = _case_market_save_roundtrip()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -17014,4 +17021,222 @@ static func _case_product_pm_plan_opens_as_next_sprint() -> String:
 		var missing: Array = approved.filter(func(id: String) -> bool: return id not in holder)
 		if not missing.is_empty():
 			return "at sprint %d %s is missing %s" % [n, "next" if n == 2 else "open", str(missing)]
+	return ""
+
+
+# --- Piyasa (MarketCatalog) ---
+
+# Real targets of the parody catalogue (PRD Ek A.8 keeps them in the document only): the company
+# targets and the founder/CEO surnames, plus the lint's trademark list; matched as whole words,
+# since Samdal and Candella are approved names. Surnames that are also common words or syllables
+# (su, ma, li, ek, jun, page, moore, yuan, houston, watson) stay out.
+const MARKET_REAL_TARGETS: Array[String] = [
+	"apple", "microsoft", "amazon", "google", "facebook", "nvidia", "tesla", "netflix", "oracle",
+	"intel", "blackberry", "zoom", "openai", "jpmorgan", "goldman", "morgan stanley", "citi", "visa",
+	"cisco", "qualcomm", "amd", "hewlett", "dell", "nokia", "xiaomi", "yahoo", "ebay", "paypal",
+	"baidu", "alibaba", "tencent", "linkedin", "twitter", "zynga", "groupon", "snap", "spotify",
+	"uber", "airbnb", "dropbox", "servicenow", "palantir", "shopify", "square", "sony", "samsung",
+	"ibm", "adobe", "sap", "netsuite", "workday", "evernote", "notion", "capcut", "kinemaster",
+	"jobs", "cook", "gates", "ballmer", "nadella", "bezos", "brin", "pichai", "zuckerberg", "huang",
+	"musk", "hastings", "benioff", "ellison", "grove", "lazaridis", "balsillie", "altman", "dimon",
+	"whitman", "elop", "mayer", "hoffman", "dorsey", "spiegel", "kalanick", "chesky", "karp", "lutke",
+	"morita", "plattner", "libin", "zhao", "zhang",
+]
+const MARKET_TEXTURE_MIN_STD := 0.004   # weekly log-delta std-dev floor  [ÇD]
+const MARKET_PRICE_MIN := 10.0          # $ per share at the 2012-13 anchors  [ÇD]
+const MARKET_PRICE_MAX := 1300.0        # [ÇD]
+
+
+static func _market_dump(week: int) -> String:
+	var parts: PackedStringArray = []
+	for c in MarketCatalog.listed(week):
+		parts.append("%s:%.9f" % [c["id"], MarketCatalog.value(c, week)])
+	return "|".join(parts)
+
+
+static func _case_market_catalog_lint() -> String:
+	var re := RegEx.new()
+	for path in [MarketCatalog.COMPANIES_PATH, MarketCatalog.PEOPLE_PATH]:
+		var text: String = FileAccess.get_file_as_string(path).to_lower()
+		for term in EvLint.FORBIDDEN_TERMS + MARKET_REAL_TARGETS:
+			re.compile("\\b%s\\b" % term)
+			if re.search(text) != null:
+				return "%s names the real target '%s'" % [path, term]
+		for i in text.length():
+			if text.unicode_at(i) > 127:
+				return "%s carries a non-ASCII character at %d (Ek A.6)" % [path, i]
+	var ids: Dictionary = {}
+	var public_rows: int = 0
+	for c in MarketCatalog.companies():
+		var id: String = String(c["id"])
+		if ids.has(id):
+			return "duplicate company id %s" % id
+		ids[id] = true
+		for key in ["founder_person_id", "ceo_person_id"]:
+			var pid: String = String(c[key])
+			if pid != "" and MarketCatalog.person(pid).is_empty():
+				return "%s.%s points at unknown person %s" % [id, key, pid]
+		if String(c["status"]) == "public":
+			public_rows += 1
+			if (c["anchors"] as Dictionary).is_empty() or int(c["shares_outstanding"]) <= 0 \
+					or int(c["listed_week"]) < 0 or int(c["ipo_year"]) <= 0:
+				return "public row %s lacks anchors, shares, listed_week or ipo_year" % id
+		elif int(c["listed_week"]) != -1 or not c.has("last_round"):
+			return "private row %s must carry listed_week -1 and a last_round" % id
+	if public_rows < 50:
+		return "only %d public rows; Ek A.8 (49) plus the sector slots expected" % public_rows
+	for subtype in ["erp", "note_tool", "video_clip"]:
+		var slots: Array = MarketCatalog.sector_slots(subtype)
+		if slots.size() != 3:
+			return "%s has %d sector slots, 3 expected" % [subtype, slots.size()]
+		for sid in slots:
+			if not ids.has(String(sid)):
+				return "%s sector slot %s is not a company" % [subtype, sid]
+	for p in MarketCatalog.people():
+		if not ids.has(String(p["company_id"])):
+			return "person %s points at an unknown company %s" % [p["id"], p["company_id"]]
+	return ""
+
+
+static func _case_market_value_deterministic() -> String:
+	var first: String = _market_dump(14)
+	if first != _market_dump(14):
+		return "two reads of the same week differ"
+	GameState.set_mrr(50_000)
+	GameState.set_cash(1_000_000)
+	if first != _market_dump(14):
+		return "a player action (MRR, cash) moved the list"
+	# The value is a pure function of run_seed; flipping the seed alone is the whole test.
+	var seed: int = GameState.run_seed
+	GameState.run_seed = 7
+	var other: String = _market_dump(14)
+	GameState.run_seed = seed
+	if first == other:
+		return "another run_seed produced the same list: the mixer ignores the seed"
+	if first != _market_dump(14):
+		return "the original seed did not reproduce its list"
+	return ""
+
+
+static func _case_market_listed_week_gating() -> String:
+	var ids_at := func(week: int) -> Array:
+		return MarketCatalog.listed(week).map(func(c): return String(c["id"]))
+	if ids_at.call(14).has("facewall") or not ids_at.call(20).has("facewall"):
+		return "the social network must be absent at week 14 and listed at week 20"
+	if ids_at.call(40).has("werktag") or not ids_at.call(41).has("werktag"):
+		return "werktag must list at week 41"
+	if ids_at.call(5000).has("ajar_labs"):
+		return "the private AI lab reached the list"
+	var rows: Array = MarketCatalog.listed(20)
+	for i in range(1, rows.size()):
+		if MarketCatalog.value(rows[i], 20) > MarketCatalog.value(rows[i - 1], 20):
+			return "listed() is not sorted by value at row %d" % i
+	if MarketCatalog.leader(20)["id"] != rows[0]["id"]:
+		return "leader() is not the first listed row"
+	return ""
+
+
+static func _case_market_price_band() -> String:
+	for c in MarketCatalog.companies():
+		if String(c["status"]) != "public":
+			continue
+		for year in [2012, 2013]:
+			if int(c["ipo_year"]) > year or not (c["anchors"] as Dictionary).has(str(year)):
+				continue
+			var p: float = MarketCatalog.price(c, MarketCatalog.week_at_year_end(year))
+			if p < MARKET_PRICE_MIN or p > MARKET_PRICE_MAX:
+				return "%s prices at $%.2f at the end of %d, outside [%d, %d]" \
+					% [c["id"], p, year, int(MARKET_PRICE_MIN), int(MARKET_PRICE_MAX)]
+	for c in MarketCatalog.listed(104):
+		var p: float = MarketCatalog.price(c, 104)
+		if p <= 0.0 or not is_finite(p):
+			return "%s has no finite positive price at week 104" % c["id"]
+	return ""
+
+
+static func _case_market_value_texture() -> String:
+	for c in MarketCatalog.listed(104):
+		var deltas: Array[float] = []
+		var prev: float = MarketCatalog.ln_value(c, 1)
+		for w in range(2, 105):
+			var cur: float = MarketCatalog.ln_value(c, w)
+			deltas.append(cur - prev)
+			prev = cur
+		var mean: float = 0.0
+		for d in deltas:
+			mean += d
+		mean /= deltas.size()
+		var var_sum: float = 0.0
+		for d in deltas:
+			var_sum += (d - mean) * (d - mean)
+		var std: float = sqrt(var_sum / deltas.size())
+		if std < MARKET_TEXTURE_MIN_STD:
+			return "%s weekly log-delta std %.5f is under %.3f" % [c["id"], std, MARKET_TEXTURE_MIN_STD]
+		for i in range(1, deltas.size()):
+			if deltas[i] == deltas[i - 1]:
+				return "%s repeats the weekly delta at week %d (%.6f)" % [c["id"], i + 2, deltas[i]]
+			if deltas[i] == 0.0:
+				return "%s stood still at week %d" % [c["id"], i + 2]
+	return ""
+
+
+static func _case_market_year_end_follows_anchors() -> String:
+	for c in MarketCatalog.companies():
+		if String(c["status"]) != "public":
+			continue
+		var rows: Dictionary = MarketCatalog.year_end_values(c, 2013)
+		for year in rows:
+			var anchor: Variant = (c["anchors"] as Dictionary).get(str(year), null)
+			if anchor == null:
+				continue
+			var ratio: float = float(rows[year]) / float(anchor)
+			if ratio < 0.75 or ratio > 1.33:
+				return "%s year end %d is %.2f times its anchor" % [c["id"], year, ratio]
+	if MarketCatalog.year_end_values(MarketCatalog.company("malus"), 2013).size() != 5:
+		return "malus should show five year-end rows up to 2013"
+	var galvani: Dictionary = MarketCatalog.year_end_values(MarketCatalog.company("galvani_motors"), 2013)
+	if galvani.has(2009) or not galvani.has(2010):
+		return "galvani_motors listed in 2010: 2009 must be absent, 2010 present (%s)" % str(galvani.keys())
+	return ""
+
+
+static func _case_market_save_roundtrip() -> String:
+	var malus: Dictionary = MarketCatalog.company("malus")
+	var base_before: float = MarketCatalog.ln_value(malus, 2)
+	var base_now: float = MarketCatalog.ln_value(malus, 3)
+	var base_later: float = MarketCatalog.ln_value(malus, 100)
+	GameState.market_shocks.append({"week": 3, "company_id": "malus", "kind": "earnings",
+		"J": 0.1, "rho": 0.5, "tau": 4.5, "cause_ref": "smoke"})
+	GameState.market_ownership.append({"holder_kind": "player", "holder_id": "founder",
+		"company_id": "malus", "shares": 10})
+	if MarketCatalog.ln_value(malus, 2) != base_before:
+		return "a shock leaked before its week"
+	if not is_equal_approx(MarketCatalog.ln_value(malus, 3) - base_now, 0.1):
+		return "a shock of J=0.1 did not land in full on its week"
+	var later: float = MarketCatalog.ln_value(malus, 100) - base_later
+	if later < 0.049 or later > 0.051:
+		return "the shock's permanent part should settle at J times rho = 0.05, got %.4f" % later
+	var expect: String = JSON.stringify([GameState.market_catalog_version, GameState.market_shocks, GameState.market_ownership])
+	var with_shock: String = _market_dump(10)
+
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var payload: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	var gs: Dictionary = (payload["state"] as Dictionary)["game_state"]
+	var market_keys: Array = gs.keys().filter(func(k): return String(k).begins_with("market_"))
+	market_keys.sort()
+	if market_keys != ["market_catalog_version", "market_ownership", "market_shocks"]:
+		_cleanup_save_slots()
+		return "the save carries %s under market_; no price series may be written" % str(market_keys)
+	GameState.market_shocks.clear()
+	GameState.market_ownership.clear()
+	if not SaveManager.apply_loaded_state(payload):
+		_cleanup_save_slots()
+		return "apply_loaded_state returned false"
+	_cleanup_save_slots()
+	var got: String = JSON.stringify([GameState.market_catalog_version, GameState.market_shocks, GameState.market_ownership])
+	if got != expect:
+		return "market vars did not round-trip: %s vs %s" % [got, expect]
+	if _market_dump(10) != with_shock:
+		return "the restored ShockLog does not reproduce the list"
 	return ""

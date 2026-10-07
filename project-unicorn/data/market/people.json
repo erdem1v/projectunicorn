@@ -1,0 +1,327 @@
+{
+ "people": [
+  {
+   "id": "stephan_laborde",
+   "name": "Stephan Laborde",
+   "role": "founder",
+   "birth_year": 1955,
+   "company_id": "malus"
+  },
+  {
+   "id": "timo_koch",
+   "name": "Timo Koch",
+   "role": "ceo",
+   "birth_year": 1960,
+   "company_id": "malus"
+  },
+  {
+   "id": "willard_yates",
+   "name": "Willard Yates",
+   "role": "founder",
+   "birth_year": 1955,
+   "company_id": "fenstra"
+  },
+  {
+   "id": "stefan_kugler",
+   "name": "Stefan Kugler",
+   "role": "ceo",
+   "birth_year": 1956,
+   "company_id": "fenstra"
+  },
+  {
+   "id": "raja_candella",
+   "name": "Raja Candella",
+   "role": "ceo",
+   "birth_year": 1967,
+   "company_id": "fenstra"
+  },
+  {
+   "id": "jeffrey_bezier",
+   "name": "Jeffrey Bezier",
+   "role": "founder",
+   "birth_year": 1964,
+   "company_id": "orinoco"
+  },
+  {
+   "id": "harlan_sage",
+   "name": "Harlan Sage",
+   "role": "founder",
+   "birth_year": 1973,
+   "company_id": "gogol"
+  },
+  {
+   "id": "sergei_brunov",
+   "name": "Sergei Brunov",
+   "role": "founder",
+   "birth_year": 1973,
+   "company_id": "gogol"
+  },
+  {
+   "id": "sundeep_pillai",
+   "name": "Sundeep Pillai",
+   "role": "ceo",
+   "birth_year": 1972,
+   "company_id": "gogol"
+  },
+  {
+   "id": "marcus_sugarhill",
+   "name": "Marcus Sugarhill",
+   "role": "founder",
+   "birth_year": 1984,
+   "company_id": "facewall"
+  },
+  {
+   "id": "jansen_leder",
+   "name": "Jansen Leder",
+   "role": "founder",
+   "birth_year": 1963,
+   "company_id": "graphyne"
+  },
+  {
+   "id": "eldon_musgrave",
+   "name": "Eldon Musgrave",
+   "role": "founder",
+   "birth_year": 1971,
+   "company_id": "galvani_motors"
+  },
+  {
+   "id": "reeve_hastwick",
+   "name": "Reeve Hastwick",
+   "role": "founder",
+   "birth_year": 1960,
+   "company_id": "seriatim"
+  },
+  {
+   "id": "matteo_benvolio",
+   "name": "Matteo Benvolio",
+   "role": "founder",
+   "birth_year": 1964,
+   "company_id": "venditor"
+  },
+  {
+   "id": "lorenzo_galleoni",
+   "name": "Lorenzo Galleoni",
+   "role": "founder",
+   "birth_year": 1944,
+   "company_id": "vatic_systems"
+  },
+  {
+   "id": "andor_grover",
+   "name": "Andor Grover",
+   "role": "founder",
+   "birth_year": 1936,
+   "company_id": "silicore"
+  },
+  {
+   "id": "graydon_heath",
+   "name": "Graydon Heath",
+   "role": "founder",
+   "birth_year": 1929,
+   "company_id": "silicore"
+  },
+  {
+   "id": "mikis_laskaris",
+   "name": "Mikis Laskaris",
+   "role": "founder",
+   "birth_year": 1961,
+   "company_id": "bramblewire"
+  },
+  {
+   "id": "jerome_balsam",
+   "name": "Jerome Balsam",
+   "role": "ceo",
+   "birth_year": 1961,
+   "company_id": "bramblewire"
+  },
+  {
+   "id": "eric_krone",
+   "name": "Eric Krone",
+   "role": "founder",
+   "birth_year": 1970,
+   "company_id": "mutely"
+  },
+  {
+   "id": "samuel_oldman",
+   "name": "Samuel Oldman",
+   "role": "founder",
+   "birth_year": 1985,
+   "company_id": "ajar_labs"
+  },
+  {
+   "id": "jeremy_diamant",
+   "name": "Jeremy Diamant",
+   "role": "ceo",
+   "birth_year": 1956,
+   "company_id": "jl_morrow"
+  },
+  {
+   "id": "lena_hsu",
+   "name": "Lena Hsu",
+   "role": "ceo",
+   "birth_year": 1969,
+   "company_id": "amber_microdevices"
+  },
+  {
+   "id": "meg_whitlock",
+   "name": "Meg Whitlock",
+   "role": "ceo",
+   "birth_year": 1956,
+   "company_id": "hewitt_packer"
+  },
+  {
+   "id": "mitchell_dalton",
+   "name": "Mitchell Dalton",
+   "role": "founder",
+   "birth_year": 1965,
+   "company_id": "dalton_technologies"
+  },
+  {
+   "id": "stewart_eloff",
+   "name": "Stewart Eloff",
+   "role": "ceo",
+   "birth_year": 1963,
+   "company_id": "nordlund_mobile"
+  },
+  {
+   "id": "lei_chun",
+   "name": "Lei Chun",
+   "role": "founder",
+   "birth_year": 1969,
+   "company_id": "shaomu_technology"
+  },
+  {
+   "id": "larissa_mayhew",
+   "name": "Larissa Mayhew",
+   "role": "ceo",
+   "birth_year": 1975,
+   "company_id": "huzzah"
+  },
+  {
+   "id": "robin_luo",
+   "name": "Robin Luo",
+   "role": "founder",
+   "birth_year": 1968,
+   "company_id": "baiyun"
+  },
+  {
+   "id": "jake_mu",
+   "name": "Jake Mu",
+   "role": "founder",
+   "birth_year": 1964,
+   "company_id": "sindbad_holdings"
+  },
+  {
+   "id": "pony_mun",
+   "name": "Pony Mun",
+   "role": "founder",
+   "birth_year": 1971,
+   "company_id": "tenpenny_holdings"
+  },
+  {
+   "id": "royce_hoffner",
+   "name": "Royce Hoffner",
+   "role": "founder",
+   "birth_year": 1967,
+   "company_id": "cufflink"
+  },
+  {
+   "id": "jacob_dorsett",
+   "name": "Jacob Dorsett",
+   "role": "founder",
+   "birth_year": 1976,
+   "company_id": "warbler"
+  },
+  {
+   "id": "ethan_spiegler",
+   "name": "Ethan Spiegler",
+   "role": "founder",
+   "birth_year": 1990,
+   "company_id": "blipframe"
+  },
+  {
+   "id": "dag_ekman",
+   "name": "Dag Ekman",
+   "role": "founder",
+   "birth_year": 1983,
+   "company_id": "jukewave"
+  },
+  {
+   "id": "trevor_kalinich",
+   "name": "Trevor Kalinich",
+   "role": "founder",
+   "birth_year": 1976,
+   "company_id": "hailway"
+  },
+  {
+   "id": "byron_chesley",
+   "name": "Byron Chesley",
+   "role": "founder",
+   "birth_year": 1981,
+   "company_id": "airnest"
+  },
+  {
+   "id": "drake_hewston",
+   "name": "Drake Hewston",
+   "role": "founder",
+   "birth_year": 1983,
+   "company_id": "dropcrate"
+  },
+  {
+   "id": "alec_karpell",
+   "name": "Alec Karpell",
+   "role": "founder",
+   "birth_year": 1967,
+   "company_id": "farsight_data"
+  },
+  {
+   "id": "toby_luedecke",
+   "name": "Toby Luedecke",
+   "role": "founder",
+   "birth_year": 1980,
+   "company_id": "shopstead",
+   "provisional": true
+  },
+  {
+   "id": "akio_moriyama",
+   "name": "Akio Moriyama",
+   "role": "founder",
+   "birth_year": 1921,
+   "company_id": "sonimoto"
+  },
+  {
+   "id": "thomas_watkins",
+   "name": "Thomas Watkins",
+   "role": "founder",
+   "birth_year": 1874,
+   "company_id": "cerulean"
+  },
+  {
+   "id": "hanno_blattner",
+   "name": "Hanno Blattner",
+   "role": "founder",
+   "birth_year": 1944,
+   "company_id": "datenwald"
+  },
+  {
+   "id": "zheng_yiran",
+   "name": "Zheng Yiran",
+   "role": "founder",
+   "birth_year": 1983,
+   "company_id": "bitwaltz"
+  },
+  {
+   "id": "pavel_lubin",
+   "name": "Pavel Lubin",
+   "role": "founder",
+   "birth_year": 1972,
+   "company_id": "elephanta"
+  },
+  {
+   "id": "ian_zhou",
+   "name": "Ian Zhou",
+   "role": "founder",
+   "birth_year": 1987,
+   "company_id": "surmise"
+  }
+ ]
+}

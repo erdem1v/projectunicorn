@@ -280,6 +280,11 @@ var group_work_hours_override: Dictionary = {}
 # the ≤20 % "biz" quota refused (calibration data). ---
 var news_feed: Dictionary = {}
 
+# --- Piyasa (MarketCatalog reads; the catalogue itself is data and is not saved) ---
+var market_catalog_version: int = MarketCatalog.version()
+var market_shocks: Array = []           # ShockLog rows {week, company_id, kind, J, rho, tau, cause_ref}
+var market_ownership: Array = []        # {holder_kind, holder_id, company_id, shares}
+
 # --- Product sprint state (writer SprintSystem; its bridge SprintBridges writes only tickets,
 # ticket_seq, requests and rival_hits): sprint, cards, releases, tickets, requests ---
 var product: Dictionary = {}
@@ -838,6 +843,9 @@ func initialize_run(payload: Dictionary) -> void:
 	company_work_hours = HRConstants.WORK_HOURS_DEFAULT
 	group_work_hours_override.clear()
 	news_feed.clear()
+	market_catalog_version = MarketCatalog.version()
+	market_shocks.clear()
+	market_ownership.clear()
 	product.clear()
 
 	office_id = "home"

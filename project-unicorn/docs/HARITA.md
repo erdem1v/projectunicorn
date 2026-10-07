@@ -237,7 +237,8 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - `RivalRegistry.advance_all` (günlük), `get_all`, `get_rival`, `get_market_snapshot`, `get_player_share_pct`, `format_share`; `RivalCatalog.build_all`.
   - `NewsFeedSystem.daily_tick`, `on_headline_added` (`EventBus.headline_added`), `get_stream`, `outlet_name`. Şerit `news_ticker.gd`; olay motoru satırlarını `EvTicker.push` aynı sinyalle gönderir.
   - Olay seam'leri `rival.*` (`seams_world.gd`); `rival.leader` alt-türün en çok çıkış yapmış rakibidir (`SprintCatalog.rival_leader`).
-- **Smoke:** `market_share_tracks_mrr`, `news_feed_weights_and_no_repeat`, `hotfix_ticker_routine_vs_news`, `rival_relative_uses_template_half_sat`.
+  - Piyasa kataloğu `MarketCatalog` (`scripts/systems/market_catalog.gd`, veri `data/market/{companies,people}.json`; katalog kaydedilmez): `companies`, `company`, `person`, `people`, `sector_slots`; saf değer fonksiyonu `value` / `ln_value` / `price` / `series` (çapalar + ortak pazar gürültüsü + şirket gürültüsü + `GameState.market_shocks`), liste `listed` / `leader` / `list_total` / `share_of_list` / `list_series`, yıl sonu `week_at_year_end` / `year_end_values`. Kayıt: `GameState.market_catalog_version`, `market_shocks`, `market_ownership`.
+- **Smoke:** `market_share_tracks_mrr`, `news_feed_weights_and_no_repeat`, `hotfix_ticker_routine_vs_news`, `rival_relative_uses_template_half_sat`; Piyasa `market_catalog_lint`, `market_value_deterministic`, `market_listed_week_gating`, `market_price_band`, `market_value_texture`, `market_year_end_follows_anchors`, `market_save_roundtrip`.
 - **Probe:** adanmış kayıt yok; `STATE` içindeki `q=` rakibe göre kalitedir.
 - **Görsel:** adanmış bayrak yok; şerit her kabuk karesinde görünür (`--tab-shot=`).
 
