@@ -1872,9 +1872,10 @@ func _audit_color(c: Color) -> String:
 	return "%.3f,%.3f,%.3f,%.2f" % [c.r, c.g, c.b, c.a]
 
 
-# --finance-shot=<ozet|artida|uyari|kepenk|signal|gider>: six weeks played through real seams (cash
+# --finance-shot=<ozet|ipucu|artida|uyari|kepenk|signal|gider>: six weeks played through real seams (cash
 # ring buffer and transaction ledger fill from the real flow), framed on the Finance tab.
-#   ozet   — negatif net: mevcut gidiş projeksiyonu, iki imza; eğrinin 4. haftası üstüne gelinmiş
+#   ozet   — negatif net: mevcut gidiş projeksiyonu, iki imza
+#   ipucu  — ozet'in akışı, eğrinin 4. haftası üstüne gelinmiş
 #   artida — MRR > burn: yeşil ARTIDA, kırmızı erime projeksiyonu yok
 #   uyari  — runway < 3 ay: mentor kartı BAND 1 + ERTELE, mevcut gidiş sıfırı ufukta keser
 #   kepenk — uyari'nin akışı, kasa eksiye düşüp kepenk sayacı bir hafta işleyene kadar: BAND 2
@@ -1912,7 +1913,7 @@ func _run_finance_shot(kind: String) -> void:
 		if i == 3 and not profitable:
 			# Bekleyen bir arayış; arama ücretsiz (§10), gider satırı eğitimden gelir.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
-		if i == 4 and kind == "ozet":
+		if i == 4 and kind in ["ozet", "ipucu"]:
 			var pr2: Prospect = SalesFaucetSystem.spawn_prospect("small", "event")
 			SalesSystem.add_b2b_customer(pr2, 16, 50, 72)   # 16 × $50 = $800
 			ProspectRegistry.remove(pr2.id)
@@ -1942,7 +1943,7 @@ func _run_finance_shot(kind: String) -> void:
 	SalesFaucetSystem.spawn_prospect("mid", "find")
 	await _mount_shot_shell()
 	EventBus.tab_changed.emit("finance")
-	if kind == "ozet":
+	if kind == "ipucu":
 		# The fourth week's note, as a pointer resting on it shows it.
 		await get_tree().process_frame
 		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._pages.ozet._curve._hover_at(3)

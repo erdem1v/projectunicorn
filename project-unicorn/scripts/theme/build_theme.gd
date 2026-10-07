@@ -1053,6 +1053,13 @@ func _menajer(master: Theme) -> Theme:
 		_panel(th, "FrankNoteRisk" + ("Cb" if cb else ""), "PanelContainer",
 			_doc(_flat(T.D_SURFACE_4, 0, body_pad, T.D_neg_rule()), T.D_CUT))
 	T.set_colorblind(false)
+	# Frank's line in his note: serif at body size on an amber rule, the one mark of his speaking.
+	_panel(th, &"FrankSaid", "PanelContainer", _flat(clear, 0, Vector4(T.SPACE_L, 0, 0, 0), T.D_ACCENT,
+		Vector4i(T.BORDER_FOCUS, 0, 0, 0)))
+	_lbl(th, &"FrankSaidText", serif_reg, T.D_FS_16, T.D_INK_2)
+	th.set_constant("line_spacing", &"FrankSaidText", T.D_LEADING_PARA)
+	# The note on a chart's hovered week: a raised card, no shadow.
+	_panel(th, &"ChartTip", "Panel", _flat(T.D_SURFACE_4, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_2))
 	# An open ring: round the locked fund's lock, and a milestone not yet earned.
 	_panel(th, &"LockDisc", "Panel", _flat(clear, T.RADIUS_PILL, Vector4.ZERO, T.D_LINE_2))
 	for row in [

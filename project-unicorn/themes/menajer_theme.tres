@@ -469,6 +469,22 @@ corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_56d5b"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.15294118, 0.13725491, 0.12156863, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_c6b6b"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -1878,6 +1894,15 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 corner_detail = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_082e2"]
+content_margin_left = 12.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 2
+border_color = Color(0.9490196, 0.70980394, 0.22745098, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7f0e5"]
 content_margin_left = 8.0
@@ -5897,6 +5922,8 @@ CardTitle/base_type = &"Label"
 CardTitle/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 CardTitle/font_sizes/font_size = 15
 CardTitle/fonts/font = ExtResource("d_cond_sb_6c810")
+ChartTip/base_type = &"Panel"
+ChartTip/styles/panel = SubResource("StyleBoxFlat_56d5b")
 CheckBox/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 CheckBox/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
 CheckBox/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
@@ -6340,6 +6367,13 @@ FrankQuote/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 FrankQuote/constants/line_spacing = 2
 FrankQuote/font_sizes/font_size = 20
 FrankQuote/fonts/font = ExtResource("d_serif_reg_e6169")
+FrankSaid/base_type = &"PanelContainer"
+FrankSaid/styles/panel = SubResource("StyleBoxFlat_082e2")
+FrankSaidText/base_type = &"Label"
+FrankSaidText/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+FrankSaidText/constants/line_spacing = 2
+FrankSaidText/font_sizes/font_size = 16
+FrankSaidText/fonts/font = ExtResource("d_serif_reg_e6169")
 FrankStrip/base_type = &"PanelContainer"
 FrankStrip/styles/panel = SubResource("StyleBoxFlat_7f0e5")
 FxChip/base_type = &"PanelContainer"
@@ -7648,7 +7682,7 @@ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
 TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
 TraitBox/base_type = &"PanelContainer"
 TraitBox/styles/panel = SubResource("StyleBoxFlat_e9fa3")
-UiTokensStamp/constants/stamp = 32
+UiTokensStamp/constants/stamp = 33
 VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")

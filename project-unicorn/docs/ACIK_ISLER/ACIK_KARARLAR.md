@@ -1555,7 +1555,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Ürün: `PROD_TYPE_*_{DESC,TRADEOFF}`, `PROD_TIP_{WEAK,GOOD,BUGS}`, `PROD_EV_{FIRST_SHIP,VERSION_SHIP,ITER_DECISION}_BODY`.
   - Finans ve VC: `VC_B1_*`…`VC_B4_*`, `VC_Q_*`, `VC_RES_*`, `VC_REACT_*`, `VC_WHY_*`, canlı `VC_EV_*` satırları
     (MEETING, OFFER_EXPIRING_TITLE, GO_FUNDING, DECISION, LAST_DAY), `GATE_TRACTION_*`, `GATE_SERIES_A_*`,
-    `TERM_FRANK_*`, `TERM_RESULT_*`, `FIN_MENTOR_QUOTE`, `FIN_LEGEND_PROJECTION_TARGET`.
+    `TERM_FRANK_*`, `TERM_RESULT_*`, `FIN_MENTOR_QUOTE`.
   - Dünya, olay, son: `NEWS_S_*`, `NEWS_RIVAL_{UP,DOWN}_*`, `MONTH_FRANK_*`, `EFFECT_*`, `MENTOR_INTRO_BODY`,
     `END_{SA,ACQ,BK,BC,VC,BS,RF,GENERIC}*`, `END_META_*`, `END_EV_SHUTTER_*`, `END_EV_ACQ_{TITLE,ACCEPT,DECLINE}`.
   Kayıttaki bekletilen Frank metni (`PROD_ITER_CEILING_NOTE`, üç `PITCH_*`, dört `VC_EV_*` ve `END_EV_PIVOT_*` satırları)

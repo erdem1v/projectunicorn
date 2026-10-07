@@ -1352,10 +1352,8 @@ FIN_RANGE_ALL,Tümü,All
 FIN_CURVE_TODAY,Bugün · H{n},Today · W{n}
 FIN_CURVE_ZERO,Kasa sıfır · H{n},Cash hits zero · W{n}
 FIN_CURVE_TIP_CASH,Kasa {amount},Cash {amount}
-FIN_LEGEND_ACTUAL,Gerçekleşen nakit,Actual cash
-FIN_LEGEND_PROJECTION,Projeksiyon · mevcut gidiş,Projection · current course
-FIN_LEGEND_PROJECTION_TARGET,Projeksiyon · satış hedefi tutarsa,Projection · if the sales target holds
-FIN_LEGEND_BELOW_ZERO,Sıfırın altı,Below zero
+FIN_CURVE_COURSE,mevcut gidiş,current course
+FIN_CURVE_TARGET,satış hedefi,sales target
 FIN_MONTHLY_FLOW,Aylık akış,Monthly flow
 FIN_MONTHLY_FLOW_PACE,mevcut gidişle,at the current pace
 FIN_INCOME,Gelir,Income

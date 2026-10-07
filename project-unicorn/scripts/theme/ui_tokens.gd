@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 32
+const THEME_STAMP := 33
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -571,6 +571,8 @@ const D_CHART_PROJ := D_INK_4
 const D_CHART_NEG_AREA := Color(D_NEG, 0.12)
 const D_CHART_NEG_AREA_CB := Color(D_NEG_CB, 0.12)
 const D_CHART_POS_AREA := Color(D_INK_2, 0.05)
+const D_CHART_FILL := Color(D_INK_2, 0.16)   # the cash curve's area at its line; it fades to nothing at the axis
+const D_CHART_FILL_FADE := Color(D_INK_2, 0.0)   # the fill's ink at the $0 line: same colour, no weight
 const D_BAR_TRACK := D_LINE_1
 const D_BAR_FILL := D_INK_3   # progress that is neither good nor bad
 const D_BAR_EMPH := D_INK_2   # the one share a part-to-whole bar highlights
@@ -725,24 +727,22 @@ const D_H_PROMISE := 24               # an open promise's note on its account
 const D_LOAD_BAR := Vector2i(48, 4)   # a steward's load beside their name in the picker
 const D_W_STEWARD_MENU := 432         # the steward picker's rows, as wide as either language's widest
 const D_FINANCE_COLUMNS := Vector3i(584, 320, 360)   # the Finans summary's columns: the curve, the flows, Frank and the market
-const D_H_CHART := 216                # the cash curve with its axes
+const D_H_CHART := 244                # the cash curve with its months
 const D_CHART_PAD := Vector4i(52, 22, 12, 26)   # the curve's plot in its box: the figures left, the marks' words over it, the months under it
 const D_CHART_DOT := 5.0              # today's point and the hovered week's
 const D_CHART_HALO := 1.5             # the ground round today's point, parting it from the lines
+const D_CHART_MARK := 3.5             # the point where the cash reaches zero
 const D_CHART_RING := 1.0             # the hovered week's ink ring, either side of its point's edge
-const D_CHART_STROKE := 2.0           # the realized line and the projections; two lines nearer than this read as one
+const D_CHART_STROKE := 2.0           # the realized line and the current-course projection; two lines nearer than this read as one
 const D_DASH_CURRENT := Vector2(4, 4)   # the projection at the current course: dash and gap
 const D_DASH_TARGET := Vector2(12, 6)   # the projection if the sales target holds
-const D_DASH_MARK := Vector2(3, 3)      # today's line and the line where the cash reaches zero
-const D_W_CHART_TIP := 216            # the hovered week's note
 const D_H_PICK_SM := 28              # the caps pick over a chart
-const D_W_LEGEND := 32                # a legend's sample of its line
 const D_W_TX_DATE := 96               # a transaction's date column
 const D_H_SHARE := 8                  # a share's bar, and the part-to-whole bar over the shares
 const D_H_SHARE_ROW := 28             # a row of the market-share ladder
 const D_W_RANK := 20                  # the ladder's rank column
 const D_W_SHARE := 52                 # the ladder's share column
-const D_AVATAR_NOTE := 64             # Frank's disc on his note
+const D_AVATAR_NOTE := 64             # the lead partner's disc at the head of the term sheet table
 const D_ICON_FIGURE := 20             # the cost disc or the equity slice before a header's or an offer's figure
 const D_W_INVESTORS := 704            # the funds' column on the Yatırım page
 const D_H_FUND := 76                  # a fund's row

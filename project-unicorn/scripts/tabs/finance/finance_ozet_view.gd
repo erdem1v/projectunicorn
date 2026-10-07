@@ -38,7 +38,6 @@ var _range: String = "6ay"
 var _notes: VBoxContainer
 var _range_slot: HBoxContainer
 var _curve: CashCurve
-var _legend: HFlowContainer
 var _tx: VBoxContainer
 var _cap_card: PanelContainer
 var _cap: VBoxContainer
@@ -134,44 +133,38 @@ func _build() -> void:
 func _build_curve_card() -> void:
 	var body := UiFactory.D_card(_cols[0])
 	body.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	var head := SprintUiShared.box(UiTokens.SPACE_XL)
-	body.add_child(head)
+	_range_slot = SprintUiShared.box(0)
+	body.add_child(UiFactory.D_card_head(tr("FIN_CAP_CASH"), _range_slot))
 	# Why the runway reads no months, and how far the profitability streak has come.
 	_notes = SprintUiShared.column(UiTokens.SPACE_XS)
-	_notes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(_notes)
-	_range_slot = SprintUiShared.box(0)
-	_range_slot.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	head.add_child(_range_slot)
+	body.add_child(_notes)
 	_curve = CashCurve.new()
 	_curve.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(_curve)
-	_legend = HFlowContainer.new()
-	_legend.add_theme_constant_override("h_separation", UiTokens.SPACE_XXL)
-	_legend.add_theme_constant_override("v_separation", UiTokens.SPACE_XS)
-	body.add_child(_legend)
 
 
-## Frank's note: his disc, name and title, then his line on the band the runway is in, and the snooze. The card's
-## look is the band's (_refresh_mentor).
+## Frank's note: his disc, name and title with the snooze at the row's end, then his line on the band the runway is
+## in. The card's look is the band's (_refresh_mentor).
 func _build_mentor_card() -> void:
 	var body := UiFactory.D_card(_cols[2])
 	_mentor_card = body.get_parent()
 	body.add_child(UiFactory.D_card_head(tr("FIN_MENTOR_WARNING")))
 	var who := SprintUiShared.box(UiTokens.SPACE_L)
-	who.add_child(UiFactory.make_mentor_avatar(UiTokens.D_AVATAR_NOTE))
+	who.add_child(UiFactory.make_mentor_avatar(UiTokens.D_AVATAR_DOC))
 	var names := SprintUiShared.column(0)
 	names.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	names.add_child(UiFactory.make_label(tr("MENTOR_NAME"), &"DataStrong"))
 	names.add_child(UiFactory.make_label(tr("HR_ROLE_MENTOR"), &"Caption"))
 	who.add_child(names)
-	body.add_child(who)
-	_mentor_quote = UiFactory.make_label("", &"FrankQuote", UiTokens.D_INK_1)
-	_mentor_quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(_mentor_quote)
+	who.add_child(RnDUiShared.spacer())
 	_snooze = SprintUiShared.button(tr("FIN_SNOOZE"), &"GhostButtonSmall", _on_snooze_pressed)
-	_snooze.size_flags_horizontal = Control.SIZE_SHRINK_END
-	body.add_child(_snooze)
+	who.add_child(_snooze)
+	body.add_child(who)
+	var said := PanelContainer.new()
+	said.theme_type_variation = &"FrankSaid"
+	_mentor_quote = SprintUiShared.prose("", &"FrankSaidText")
+	said.add_child(_mentor_quote)
+	body.add_child(said)
 
 
 # --- Tazeleme ----------------------------------------------------------------
@@ -199,6 +192,7 @@ func _refresh_curve() -> void:
 	if p.note != "":
 		_notes.add_child(SprintUiShared.prose(p.note, &"Caption"))
 	_add_profit_progress()
+	_notes.visible = _notes.get_child_count() > 0
 	UiFactory.clear(_range_slot)
 	var ids: Array = RANGES.keys()
 	_range_slot.add_child(UiFactory.D_seg_pick(ids.map(func(id: String) -> Dictionary:
@@ -209,9 +203,11 @@ func _refresh_curve() -> void:
 	var cfg: Dictionary = RANGES[_range]
 	var history: Array = GameState.get_cash_history()
 	var horizon: int = TimeModel.ticks(int(cfg.horizon))
-	# The plot follows the range: back from today by its window (the run's first sample for TÜMÜ).
-	var day_min: int = GameState.day - TimeModel.ticks(int(cfg.window)) if int(cfg.window) > 0 \
-		else int(history[0].day)
+	# The plot follows the range: back from today by its window, but never before the run's first sample (TÜMÜ
+	# starts there), so the history always begins at the plot's left edge.
+	var first: int = int(history[0].day)
+	var window: int = TimeModel.ticks(int(cfg.window))
+	var day_min: int = maxi(first, GameState.day - window) if window > 0 else first
 	var day_max: int = GameState.day + horizon
 	_curve.set_data({
 		"samples": history.filter(func(s: Dictionary) -> bool: return int(s.day) >= day_min),
@@ -224,15 +220,6 @@ func _refresh_curve() -> void:
 		"horizon": horizon,
 		"ticks": _month_ticks(day_min, day_max),
 	})
-	UiFactory.clear(_legend)
-	for row in [["actual", "FIN_LEGEND_ACTUAL", true], ["current", "FIN_LEGEND_PROJECTION", _curve.shows.current],
-			["target", "FIN_LEGEND_PROJECTION_TARGET", _curve.shows.target],
-			["below", "FIN_LEGEND_BELOW_ZERO", _curve.shows.below]]:
-		if row[2]:
-			var item := SprintUiShared.box(UiTokens.SPACE_S)
-			item.add_child(CashCurve.legend_sample(row[0]))
-			item.add_child(SprintUiShared.label(tr(row[1]), &"Caption"))
-			_legend.add_child(item)
 
 
 ## Kârlılık bitişi her tik değerlendirilen bir KOŞUL (PROFIT_STREAK_MONTHS ardışık artıda ay kapanışı + marj +
@@ -259,7 +246,7 @@ func _add_profit_progress() -> void:
 func _month_ticks(day_min: int, day_max: int) -> Array:
 	# Ay başlangıçları GERÇEK takvimden: bir tik Perşembesinin ayına aittir ve ayı, ayı bir
 	# önceki tikinkinden farklı olan tik açar (GameState.get_date_dict), asla ekonomi sabiti
-	# DAYS_PER_MONTH değil. Koşudan önceki tikler de takvimdedir. Etiket: Fmt.month_abbr (yerele göre).
+	# DAYS_PER_MONTH değil. Etiket: Fmt.month_abbr (yerele göre).
 	var ticks: Array = []
 	var prev_month: int = int(GameState.get_date_dict(day_min).month)
 	for d in range(day_min + 1, day_max + 1):
@@ -495,9 +482,8 @@ func _refresh_mentor() -> void:
 	_snooze.disabled = EventGate.active_id() != ""
 	# The threshold reaches the copy only through {months} (FIN_MENTOR_QUOTE), so moving
 	# RUNWAY_WARN_MONTHS cannot make the line disagree with the gate.
-	var body: String = tr("FIN_MENTOR_QUOTE_SHUTTER") if shuttered \
+	_mentor_quote.text = tr("FIN_MENTOR_QUOTE_SHUTTER") if shuttered \
 			else tr("FIN_MENTOR_QUOTE").format({"months": int(RUNWAY_WARN_MONTHS)})
-	_mentor_quote.text = tr("FIN_MENTOR_QUOTE_WRAPPED").format({"quote": body})
 
 
 func _on_snooze_pressed() -> void:
