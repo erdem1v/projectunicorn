@@ -251,11 +251,12 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Sahip:** sınıf `EndingsSystem`, `EndingsCopy`, `EndingScene`; autoload yok
 - **Giriş:**
   - `EndingsSystem.daily_tick` terminal koşulları öncelik sırasıyla tarar. Bitiş `trigger_ending`, kilometre taşı `trigger_milestone` ile tetiklenir.
+  - Kepenk sayacını kurduğu tikte `_tick_shutter` `funding.shutter_warning` kartını `EventGate.request(SHUTTER_CARD)` ile ister (sayaç olay yuvasından sonra yazıldığı için kart süpürülmez, istenir); her kepenk bölümü bir kez uyarır.
   - `build_scope()` build kapsamını (`BUILD_DEMO`, `BUILD_EA`, `BUILD_FULL`) export'ta özellik etiketinden (`ea`/`full`), debug build'de `--build=`'den (komut satırı ya da `main_args`) okur; etiketsiz ise demo. Smoke ve probe `build_scope_override` ile demoya sabitler; kart havuzu da aynı sabitlemeyi izler. Projede henüz export ön ayarı yok: `ea` etiketi olmayan bir EA export'u demo gibi davranır. `ending_mode`, `bootstrap_milestone_taken`, `profitability_signal`, `acquisition_valuation`, `road_over`.
   - `EndingsCopy.build` gazete görünümünü üretir; `EndingScene` yalnız onu boyar.
   - UI yolu: `EventBus.run_ended`, `milestone_reached` → `main.gd`.
   - Smoke'a sabit (başlıcası; bkz. Araçlar > Smoke): `trigger_ending` imzası (`event_i3_no_silent_loss`).
-- **Smoke:** `bankruptcy*`, `soft_cap_*`, `profit_*`, `ending_*`, `bootstrap_*`, `milestone_*`, `buyout_*`, `faced_flag_*`, `shutter_recovery`, `brand_collapse`, `cascade`, `pivot_accept`, `pivot_decline`, `terminal_kills_gate`, `fumes_zero_revenue_ledger`, `no_calendar_stop_before_cap`, `b2c_ending_reports_audience`, `frank_line_renders_outside_the_paper`.
+- **Smoke:** `bankruptcy*`, `soft_cap_*`, `profit_*`, `ending_*`, `bootstrap_*`, `milestone_*`, `buyout_*`, `faced_flag_*`, `shutter_recovery`, `shutter_warning_every_episode`, `brand_collapse`, `cascade`, `pivot_accept`, `pivot_decline`, `terminal_kills_gate`, `fumes_zero_revenue_ledger`, `no_calendar_stop_before_cap`, `b2c_ending_reports_audience`, `frank_line_renders_outside_the_paper`.
 - **Probe:** `END ... ending=` (`full_run*` preset'lerinde), `STATE` içinde `profit_streak=`.
 - **Görsel:** `--ending-shot=<ending_id>` (takma adlar dahil; sonda gazeteyi paylaşır ve toast'lı ikinci kareyi `_share` ekiyle çeker); EA/full akışı `--build=ea|full` ile.
 

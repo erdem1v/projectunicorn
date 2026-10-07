@@ -24,6 +24,7 @@ extends RefCounted
 # Working values — calibration items, numbers last.
 const SHUTTER_WEEKS := 4           # Kepenk (director ruling): four weeks is real recovery room,
                                    # one is a formality. The warning copy names no number.
+const SHUTTER_CARD := "funding.shutter_warning"   # Frank's call; also bankruptcy's telegraph
 const BRAND_COLLAPSE_FLOOR := 15
 const BRAND_COLLAPSE_WINDOW := 4   # weeks: "no recovery for a month"
 const CASCADE_TABLES := 3          # closed pitch tables
@@ -116,15 +117,13 @@ static func _tick_shutter() -> bool:
 			GameState.set_shutter_weeks_left(TimeModel.ticks(SHUTTER_WEEKS))
 			GameState.submit_month_highlight("END_HL_SHUTTER_STARTED", {}, 90)  # AYIN OLAYI
 			PhaseGateSystem.on_shutter_started()
-			# Nothing is pushed. `funding.shutter_warning` reads
-			# `finance.cash < 0 AND finance.shutter_weeks_left >= 0` — the two facts the two
-			# lines above have just written — and is tagged `critical`, so the daily sweep
-			# admits it on the same day the counter appears.
+			# Counter is written after the event slot swept, so the card is requested, not swept.
+			EventGate.request(SHUTTER_CARD)
 		else:
 			GameState.set_shutter_weeks_left(GameState.shutter_weeks_left - 1)
 			if GameState.shutter_weeks_left <= 0:
 				# The shutter card is the telegraph: SHUTTER_WEEKS of visible countdown.
-				trigger_ending("bankruptcy", "funding.shutter_warning")
+				trigger_ending("bankruptcy", SHUTTER_CARD)
 				return true
 	elif GameState.shutter_weeks_left >= 0:
 		# Cash recovered — full reset, the held gate scene returns.

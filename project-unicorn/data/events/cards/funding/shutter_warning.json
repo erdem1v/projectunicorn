@@ -1,16 +1,16 @@
 {
-  "_port_note": "The telegraph the bankruptcy ending depends on. EndingsSystem._tick_shutter passes it to trigger_ending(\"bankruptcy\", \"funding.shutter_warning\"), so if this card ever stops firing the ending says so out loud (I3) instead of arriving unannounced.",
+  "_port_note": "Requested by EndingsSystem._tick_shutter on the tick the counter starts; that call site is the once-per-episode brake (cooldown_weeks 0), so tick must stay request or a daily sweep would re-admit it every week. Also bankruptcy's telegraph: trigger_ending(\"bankruptcy\", \"funding.shutter_warning\") makes a missing card loud (I3).",
 
   "id": "funding.shutter_warning",
   "version_scope": "demo",
   "category": "funding",
-  "tick": "daily",
+  "tick": "request",
   "class": "interrupt",
   "expires_weeks": 1,
   "tags": ["critical", "terminal_warning"],
   "speaker": "char_mentor_frank",
 
-  "latch": { "one_shot": true },
+  "latch": { "cooldown_weeks": 0 },
 
   "condition": {
     "all": [

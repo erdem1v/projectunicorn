@@ -76,6 +76,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"traction_gate_one_option": fail = _case_traction_gate_is_one_option()
 		"bankruptcy":           fail = _case_bankruptcy()  # EXPECT-ERROR telegraph 'funding.shutter_warning' never did
 		"shutter_recovery":     fail = _case_shutter_recovery()
+		"shutter_warning_every_episode": fail = _case_shutter_warning_every_episode()
 		"brand_collapse":       fail = _case_brand_collapse()  # EXPECT-ERROR ended the run with NO TELEGRAPH
 		"cascade":              fail = _case_cascade()
 		"pivot_accept":         fail = _case_pivot_accept()
@@ -1071,6 +1072,31 @@ static func _case_shutter_recovery() -> String:
 		_sim_day()
 	if not GameState.run_active or not _endings.is_empty():
 		return "run ended after recovery: %s" % str(_endings)
+	return ""
+
+
+## Frank speaks on the tick the counter starts, and again in every later episode.
+static func _case_shutter_warning_every_episode() -> String:
+	for episode in 2:
+		GameState.set_cash(-1000)
+		_sim_day()
+		if GameState.shutter_weeks_left != TimeModel.ticks(EndingsSystem.SHUTTER_WEEKS):
+			return "episode %d: counter not started (%d)" % [episode, GameState.shutter_weeks_left]
+		if not _drain_to(EndingsSystem.SHUTTER_CARD):
+			return "episode %d: Frank is silent on the tick the counter starts (active '%s')" % [
+				episode, EventGate.active_id()]
+		EventGate.resolve(EndingsSystem.SHUTTER_CARD, 0)
+		_sim_day()
+		if EventGate.active_id() == EndingsSystem.SHUTTER_CARD:
+			return "episode %d: Frank repeated himself inside one episode" % episode
+		GameState.set_cash(5000)
+		_sim_day()
+		if GameState.shutter_weeks_left != -1:
+			return "episode %d: counter did not reset on recovery (%d)" % [
+				episode, GameState.shutter_weeks_left]
+	var fires: int = EvLatches.fires(EvLatches.key_for(EndingsSystem.SHUTTER_CARD, EvLatches.KEY_RUN, ""))
+	if fires != 2:
+		return "the card fired %d times over two episodes, want 2" % fires
 	return ""
 
 
