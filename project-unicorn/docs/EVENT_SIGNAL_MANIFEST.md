@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-04.
+Last generated 2026-10-08.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -19,7 +19,7 @@ signal with no emit point" a lint error, so the manifest is the lint rule's inpu
 |---|---|
 | Signals declared | **144** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **72** |
+| Emitted with **no production listener** | **74** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -56,8 +56,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `brand_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `reputation_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `day_advanced` | `new_day: int` | game_state | 1 | 3 | product_tab · research_bar · top_bar |
-| `hour_changed` | `hour: int` | game_state | 1 | 1 | top_bar |
-| `phase_changed` | `new_phase: int` | game_state | 2 | 2 | finance_tab · top_bar |
+| `hour_changed` | `hour: int` | game_state | 1 | 2 | sales_tab · top_bar |
+| `phase_changed` | `new_phase: int` | game_state | 2 | 1 | top_bar |
 | `runway_recalculated` | `months: float` | game_state | 1 | 2 | left_tabs · top_bar |
 | `equity_changed` | `investor_pct: int` | game_state | 2 | 0 | — |
 
@@ -65,11 +65,11 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 23 | 1 | time_manager |
+| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 34 | 3 | main · left_tabs · window_layer |
-| `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 1 | finance_tab |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 40 | 4 | main · left_tabs · research_bar · window_layer |
+| `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
 ### Settings signals
@@ -77,8 +77,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
-| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 14 | 1 | main |
-| `language_changed` | `locale: String` | localization | 1 | 8 | left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
+| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 13 | 1 | main |
+| `language_changed` | `locale: String` | localization | 1 | 9 | system_menu_modal · left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
 | `palette_changed` | `colorblind: bool` | settings_modal | 2 | 7 | hr_tab · left_tabs · news_ticker · top_bar · window_layer · office_city · office_notice_stack |
 
 ### Character signals
@@ -131,10 +131,10 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `event_triggered` | `event_id: String` | engine | 1 | 4 | left_tabs · top_bar · window_frame · office_hud |
-| `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 7 | save_manager · main · sprint_system · left_tabs · top_bar · window_frame · office_hud |
+| `event_triggered` | `event_id: String` | engine | 1 | 5 | left_tabs · research_bar · top_bar · window_frame · office_hud |
+| `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 9 | save_manager · game_shell · main · sprint_system · left_tabs · research_bar · top_bar · window_frame · office_hud |
 | `modal_requested` | `event: GameEvent` | engine | 1 | 1 | main |
-| `event_set_aside` | `event_id: String` | engine | 1 | 6 | save_manager · main · left_tabs · top_bar · window_frame · office_hud |
+| `event_set_aside` | `event_id: String` | engine | 1 | 7 | save_manager · main · left_tabs · research_bar · top_bar · window_frame · office_hud |
 | `desk_changed` | `—` | papers | 4 | 3 | product_tab · left_tabs · top_bar |
 
 ### Inbox messages
@@ -191,10 +191,10 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `research_resumed` | `node_id: String` | rnd_system | 1 | 2 | left_tabs · research_bar |
 | `node_revealed` | `node_id: String` | rnd_system | 1 | 0 | — |
 | `hidden_line_unlocked` | `line_id: String` | rnd_system | 1 | 0 | — |
-| `product_note_issued` | `day: int` | rnd_system | 1 | 1 | left_tabs |
+| `product_note_issued` | `day: int` | rnd_system | 1 | 2 | main · left_tabs |
 | `research_progress_changed` | `—` | time_manager | 1 | 2 | build_hud_panel · research_bar |
 | `product_note_read` | `—` | rnd_system | 1 | 1 | left_tabs |
-| `rnd_node_requested` | `node_id: String, open_assign: bool` | research_bar | 1 | 1 | rnd_tab |
+| `rnd_node_requested` | `node_id: String, open_assign: bool` | main · research_bar | 2 | 1 | rnd_tab |
 
 ### Rival signals
 
@@ -241,8 +241,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · vc_pitch_system | 2 | 3 | game_state · hunt_tab · office_notice_stack |
-| `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger · sprint_bridges | 8 | 2 | time_manager · news_ticker |
-| `ticker_live_line` | `source: String, text: String` | sprint_bridges · summary_system · office_travel | 4 | 1 | news_ticker |
+| `headline_added` | `source: String, line: Dictionary` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger · sprint_bridges | 8 | 2 | time_manager · news_ticker |
+| `ticker_live_line` | `source: String, line: Dictionary` | news_feed_system · sprint_bridges · summary_system · office_travel | 5 | 1 | news_ticker |
 
 ### Endgame signals
 
@@ -277,7 +277,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `seed_door_opened` | `—` | seed_round_system | 1 | 1 | finance_tab |
+| `seed_door_opened` | `—` | seed_round_system | 1 | 0 | — |
 | `seed_sheet_granted` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 | `seed_round_closed` | `vc_id: String` | seed_round_system | 1 | 0 | — |
 
@@ -294,9 +294,9 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `day_tick_completed` | `day: int` | time_manager | 1 | 1 | save_manager |
 | `game_loaded` | `slot_id: String` | main | 1 | 1 | left_tabs |
-| `system_menu_requested` | `—` | game_shell · main | 2 | 1 | main |
-| `save_load_requested` | `mode: String` | main · system_menu_modal | 3 | 1 | main |
-| `quicksave_requested` | `—` | game_shell · main | 3 | 1 | main |
+| `system_menu_requested` | `—` | game_shell · main | 3 | 1 | main |
+| `save_load_requested` | `mode: String` | main · system_menu_modal | 4 | 1 | main |
+| `quicksave_requested` | `—` | game_shell · main · system_menu_modal | 5 | 1 | main |
 | `quickload_requested` | `—` | game_shell · main | 2 | 1 | main |
 
 ### Debug signals (OS.is_debug_build only; emitter game_shell.gd)

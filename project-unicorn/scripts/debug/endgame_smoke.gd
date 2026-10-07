@@ -1240,7 +1240,7 @@ static func _case_month_summary() -> String:
 	var lines: Array = []
 	EventBus.summary_ready.connect(func(d: Dictionary) -> void: summaries.append(d))
 	EventBus.month_ended.connect(func(d: Dictionary) -> void: closes.append(d))
-	EventBus.ticker_live_line.connect(func(_src: String, t: String) -> void: lines.append(t))
+	EventBus.ticker_live_line.connect(func(_src: String, line: Dictionary) -> void: lines.append(line))
 
 	# Highlight registry rules: higher priority replaces, first-come wins ties.
 	GameState.submit_month_highlight("a", {}, 50)
@@ -1304,8 +1304,10 @@ static func _case_month_summary() -> String:
 	# The close itself is one live ticker line (runway is still above every alert band).
 	var want_line: String = TranslationServer.translate("MONTH_CLOSED_TICKER").format({
 		"month": Fmt.month_name(1), "mrr": Fmt.money(0), "delta": Fmt.money(-jan_flow)})
-	if lines != [want_line]:
+	if lines.size() != 1 or NewsFeedSystem.line_text(lines[0]) != want_line:
 		return "month close ticker lines: %s (want [%s])" % [str(lines), want_line]
+	if not _line_is_data(lines[0]):
+		return "the month close line is not data that reads per language: %s" % str(lines[0])
 
 	# Run counter seams (write-only; the period snapshot must not be affected).
 	var p := Prospect.new()
@@ -1357,7 +1359,7 @@ static func _case_summary_frequency_ticks() -> String:
 	var fired: Array = []
 	var lines: Array = []
 	EventBus.summary_ready.connect(func(_d: Dictionary) -> void: fired.append(GameState.day))
-	EventBus.ticker_live_line.connect(func(_src: String, _t: String) -> void: lines.append(GameState.day))
+	EventBus.ticker_live_line.connect(func(_src: String, _line: Dictionary) -> void: lines.append(GameState.day))
 	var month_turns: Array = [6, 10, 14, 19, 23, 27, 32, 36, 40, 45, 49, 54]
 	var want := {"weekly": range(2, 55), "monthly": month_turns, "quarterly": [14, 27, 40, 54],
 		"yearly": [54]}
@@ -8007,7 +8009,8 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 		# "Biz" injections through the real channel (TimeManager._ready wired the feed).
 		# EVERY TICK on purpose: with surplus supply the hard cap is what limits the source,
 		# so the ≤20% assertion below tests the cap, not the scarcity of milestones.
-		EventBus.headline_added.emit(B2BConstants.notice_source_sales(), "Smoke kapanışı %d" % i)
+		EventBus.headline_added.emit("NOTICE_SRC_SALES", {"txt": "Smoke kapanışı %d" % i} if i % 2 == 0 else
+			{"key": "SALES_TICKER_FOUNDER_SIGNED", "args": {"company": "Smoke %d" % i}})
 		var reshuffles_before: int = int(GameState.news_feed.get("reshuffles", 0))
 		NewsFeedSystem.daily_tick()
 		var boundary_day: bool = int(GameState.news_feed["reshuffles"]) != reshuffles_before
@@ -8037,6 +8040,11 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 	var problem: String = _news_stream_reads_per_locale()
 	if problem != "":
 		return problem
+	var biz_rows: Array = (GameState.news_feed["stream"] as Array).filter(func(r: Dictionary) -> bool: return r["kind"] == "biz")
+	var biz_data: bool = biz_rows.any(func(r: Dictionary) -> bool: return r.has("key"))
+	var biz_prose: bool = biz_rows.any(func(r: Dictionary) -> bool: return r.has("txt"))
+	if not (biz_data and biz_prose):
+		return "the stream's biz rows did not keep both shapes (a data line and a prose line): %s" % str(biz_rows)
 	# Audit report for the done message (distribution header + every line).
 	var f: FileAccess = FileAccess.open("user://news_feed_audit_90d.txt", FileAccess.WRITE)
 	if f != null:
@@ -8049,7 +8057,7 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 
 
 ## The stream stores a line as data: every feed row is a key and args that read in the locale asked,
-## a legacy {txt} row (biz) reads the same in both, and a JSON round trip reads back the same text.
+## a {txt} row (a biz line of prose) reads the same in both, and a JSON round trip reads back the same text.
 static func _news_stream_reads_per_locale() -> String:
 	var loc0: String = TranslationServer.get_locale()
 	var stored: Array = (GameState.news_feed["stream"] as Array).duplicate()
@@ -8064,14 +8072,15 @@ static func _news_stream_reads_per_locale() -> String:
 			var row: Dictionary = stored[i]
 			var read: Dictionary = reads[loc][i]
 			var txt: String = String(read["txt"])
-			if String(row["kind"]) != "biz" and not (row.has("key") and not row.has("txt") and outlets.has(read["src"])):
-				problem = "[%s] a %s row is not a key and args under an outlet: %s" % [loc, row["kind"], row]
+			var biz: bool = String(row["kind"]) == "biz"
+			if row.has("txt") == row.has("key") or (not biz and (row.has("txt") or not outlets.has(read["src"]))):
+				problem = "[%s] a %s row is not a key and args under an outlet (a biz row may be prose): %s" % [loc, row["kind"], row]
 			elif txt.contains("{") or txt == String(row.get("key", "")):
 				problem = "[%s] a %s row reads as a raw key or placeholder: %s" % [loc, row["kind"], txt]
 	if problem == "":
 		for i in stored.size():
 			var same: bool = reads["tr"][i]["txt"] == reads["en"][i]["txt"]
-			if same != (String(stored[i]["kind"]) == "biz"):
+			if same != stored[i].has("txt"):
 				problem = "a %s row %s in both languages: %s" % [stored[i]["kind"],
 					"reads the same" if same else "differs", reads["tr"][i]["txt"]]
 	if problem == "":
@@ -8085,6 +8094,19 @@ static func _news_stream_reads_per_locale() -> String:
 				break
 	TranslationServer.set_locale(loc0)
 	return problem
+
+
+## A signal line is data: it carries a key and args, never a sentence, and reads differently in the two languages.
+static func _line_is_data(line: Dictionary) -> bool:
+	if not line.has("key") or line.has("txt"):
+		return false
+	var loc0: String = TranslationServer.get_locale()
+	TranslationServer.set_locale("tr")
+	var in_tr: String = NewsFeedSystem.line_text(line)
+	TranslationServer.set_locale("en")
+	var in_en: String = NewsFeedSystem.line_text(line)
+	TranslationServer.set_locale(loc0)
+	return in_tr != in_en and not in_tr.contains("{") and not in_en.contains("{")
 
 
 static func _case_cs_request_kind_state_driven() -> String:
@@ -15126,7 +15148,7 @@ static func _case_sales_presentation_rules() -> String:
 	_seed_b2b(1000)
 	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)   # Satış 9 -> star 4, reach band 4
 	var lines: Array = []
-	var probe := func(_src: String, text: String) -> void: lines.append(text)
+	var probe := func(_src: String, line: Dictionary) -> void: lines.append(line)
 	EventBus.headline_added.connect(probe)
 
 	# A ROUTINE close: 1 star, well under the reach band. It must not reach the ticker.
@@ -15155,6 +15177,8 @@ static func _case_sales_presentation_rules() -> String:
 		return "the 3-star lead never closed"
 	if lines.is_empty():
 		return "a 3-star signing did not reach the ticker"
+	if not _line_is_data(lines[0]):
+		return "the signing line is not data that reads per language: %s" % str(lines[0])
 
 	# The closes above belong to an earlier window; the desk's close carries its rep's name.
 	var earlier: Array = SalesLedger.close_week()
@@ -17494,7 +17518,7 @@ static func _case_news_piyasa_reason_lines() -> String:
 		return problem
 	# The social network lists at week 20: one live IPO line that week, none the week after.
 	var live: Array = []
-	var ear := func(_src: String, txt: String) -> void: live.append(txt)
+	var ear := func(_src: String, line: Dictionary) -> void: live.append(line)
 	EventBus.ticker_live_line.connect(ear)
 	GameState.day = 20
 	NewsFeedSystem.daily_tick()
@@ -17504,6 +17528,9 @@ static func _case_news_piyasa_reason_lines() -> String:
 	EventBus.ticker_live_line.disconnect(ear)
 	if ipo_lines != 1 or live.size() != 1:
 		return "listing week emitted %d live lines, the week after %d (want 1 and 0)" % [ipo_lines, live.size() - ipo_lines]
-	if not String(live[0]).begins_with("Facewall") or re.search(String(live[0])) == null:
-		return "the IPO line is not a reasoned headline on the lister: %s" % String(live[0])
+	var ipo: String = NewsFeedSystem.line_text(live[0])
+	if not ipo.begins_with("Facewall") or re.search(ipo) == null:
+		return "the IPO line is not a reasoned headline on the lister: %s" % ipo
+	if not _line_is_data(live[0]):
+		return "the IPO line is not data that reads per language: %s" % str(live[0])
 	return ""

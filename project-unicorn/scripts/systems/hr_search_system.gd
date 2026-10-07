@@ -276,7 +276,5 @@ static func _deliver_files() -> void:
 		GameState.register_look(LookSystem.signature(file.look))
 	GameState.hr_search[KEY_FILES] = files
 	GameState.hr_search[KEY_STATE] = HRConstants.SEARCH_FILES_READY
-	EventBus.headline_added.emit(
-		HRConstants.search_agency_name(),
-		TranslationServer.translate("HR_NEWS_FILES_READY").format({"role": HRConstants.role_label(role_id), "n": files.size()})
-	)
+	EventBus.headline_added.emit(HRConstants.AGENCY_KEY, {"key": "HR_NEWS_FILES_READY",
+		"args": {"role": {"key": HRConstants.role_key(role_id)}, "n": files.size()}})

@@ -181,9 +181,14 @@ static func resolve_text(value: Variant, context: Dictionary, names: Dictionary 
 	var text: String = String(value)
 	if text == "":
 		return ""
-	if _KEY_RE.search(text) != null:
+	if is_key(text):
 		text = TranslationServer.translate(text)
 	return _interpolate(text, context, names)
+
+
+## True for a bare SCREAMING_SNAKE token, a localization key rather than prose.
+static func is_key(text: String) -> bool:
+	return _KEY_RE.search(text) != null
 
 
 ## The variant with the largest key not above the seam's value; the lowest key when every key

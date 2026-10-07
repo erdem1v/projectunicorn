@@ -131,9 +131,9 @@ static func tick_rivals(sprint: int) -> void:
 			continue
 		_p().rival_hits.append({"rival": int(launch.rival), "line": launch.line, "sprint": sprint})
 		var variant: int = absi(hash("%d|%s" % [sprint, launch.line])) % int(SprintCatalog.cfg("content.rival_news"))
-		EventBus.ticker_live_line.emit(NewsFeedSystem.outlet_name(absi(hash(launch.name))),
-			TranslationServer.translate("PRODUCT_NEWS_RIVAL_LAUNCH_%d" % variant).format(
-				{"rival": launch.name, "capability": launch.capability}))
+		EventBus.ticker_live_line.emit(NewsFeedSystem.outlet_key(absi(hash(launch.name))),
+			{"key": "PRODUCT_NEWS_RIVAL_LAUNCH_%d" % variant,
+			"args": {"rival": launch.name, "capability": {"key": launch.capability_key}}})
 
 
 ## Sürüm kapanışında bir kez: çekirdekte ikinci ya da üçüncü kademe canlıya geçtiyse onu, yoksa
@@ -159,7 +159,7 @@ static func press_line(release: Dictionary) -> Dictionary:
 	if out.is_empty():
 		return {}
 	out["outlet"] = NewsFeedSystem.OUTLET_KEYS[h % NewsFeedSystem.OUTLET_KEYS.size()]
-	EventBus.headline_added.emit(TranslationServer.translate(out.outlet), resolve(out))
+	EventBus.headline_added.emit(out.outlet, line_of(out))
 	return out
 
 
@@ -207,15 +207,20 @@ static func actual_sentence(release: Dictionary) -> Dictionary:
 ## kimliği, from/to durum kelimesi, capability kademe kimliğidir; öbürleri (sayı, özel ad) olduğu
 ## gibi yazılır.
 static func resolve(sentence: Dictionary) -> String:
+	return NewsFeedSystem.line_text(line_of(sentence))
+
+
+## Aynı cümle haber satırı olarak: kimlik taşıyan her arg, adının anahtarı olan iç içe satıra döner.
+static func line_of(sentence: Dictionary) -> Dictionary:
 	var args: Dictionary = sentence.args.duplicate()
 	if args.has("area"):
-		args.area = SprintCatalog.area_short(args.area)
+		args.area = {"key": SprintCatalog.area_short_key(args.area)}
 	for k in ["from", "to"]:
 		if args.has(k):
-			args[k] = TranslationServer.translate("PRODUCT_LEVEL_" + String(args[k]).to_upper())
+			args[k] = {"key": "PRODUCT_LEVEL_" + String(args[k]).to_upper()}
 	if args.has("capability"):
-		args.capability = TranslationServer.translate(ProductLines.step(args.capability).name_key)
-	return TranslationServer.translate(sentence.key).format(args)
+		args.capability = {"key": SprintCatalog.step_name_key(args.capability)}
+	return {"key": sentence.key, "args": args}
 
 
 # --- İç -------------------------------------------------------------------------------

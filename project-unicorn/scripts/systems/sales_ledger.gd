@@ -237,11 +237,11 @@ static func is_newsworthy_signing(c: Customer, is_whale: bool) -> bool:
 
 
 ## §7.3 — a newsworthy signing reaches the ticker and credits the brand. ONE home for both
-## signing paths (the founder's table and the rep desk); each brings its own headline.
-static func announce_signing(c: Customer, is_whale: bool, headline: String) -> void:
+## signing paths (the founder's table and the rep desk); each brings its own headline line.
+static func announce_signing(c: Customer, is_whale: bool, headline: Dictionary) -> void:
 	if not is_newsworthy_signing(c, is_whale):
 		return
-	EventBus.headline_added.emit(B2BConstants.notice_source_sales(), headline)
+	EventBus.headline_added.emit("NOTICE_SRC_SALES", headline)
 	GameState.set_brand(GameState.brand + SalesConstants.PRESTIGE_SIGNING_BRAND)
 
 

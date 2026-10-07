@@ -25,8 +25,9 @@ extends RefCounted
 # Kayda giden şekil metin değil VERİdir (kayıt dil değiştirince de doğru okunsun):
 #   {day, kind, src, key, args}   src bir CSV anahtarı ya da düz ad; args değeri düz değer |
 #                                 iç içe satır {key, args} | {fmt, v} (ham sayı, Fmt'ten geçer)
-#   {day, kind, src, txt}         biz satırı: olayın doğduğu dilde çözülmüş metin
-# line_text ikisini de okur.
+#   {day, kind, src, txt}         yalnız düz yazı satırı (EvTicker düz yazısı, notify fiili)
+# Sinyallerin taşıdığı satır (headline_added, ticker_live_line) aynı {key, args} / {txt} şeklidir
+# ve src sinyalin source'udur; line_text ikisini de okur.
 #
 # # WORKING TR — NEWS_* metinleri (strings.csv) çalışma metnidir; ses geçişi content fazında.
 
@@ -168,7 +169,7 @@ static func daily_tick() -> void:
 	EventBus.news_stream_changed.emit()
 
 
-static func on_headline_added(source: String, text: String) -> void:
+static func on_headline_added(source: String, line: Dictionary) -> void:
 	# "Biz" kaynağının pasif kulağı (TimeManager._ready bağlar). Buffer'a alınır;
 	# akışa girişi daily_tick'in kota yürüyüşü ve sert kapı belirler.
 	#
@@ -188,7 +189,7 @@ static func on_headline_added(source: String, text: String) -> void:
 		# (kotanın gerçek maliyeti kalibrasyon verisidir; bugün onu basan bir döküm yok).
 		nf["biz_dropped"] = int(nf.get("biz_dropped", 0)) + 1
 		return
-	buffer.append({"src": source, "txt": text})
+	buffer.append({"src": source}.merged(line))
 
 
 # --- Okuma API'si (ticker sözleşmesi) ------------------------------------
@@ -196,7 +197,7 @@ static func on_headline_added(source: String, text: String) -> void:
 static func get_stream() -> Array:
 	# En yeni önce; derin kopya, çağıran akışı değiştiremez.
 	var nf: Dictionary = _ensure_state()
-	var out: Array = (nf["stream"] as Array).map(_read)
+	var out: Array = (nf["stream"] as Array).map(read)
 	out.reverse()
 	return out
 
@@ -205,7 +206,7 @@ static func get_lines_for_day(day: int) -> Array:
 	var out: Array = []
 	for line in _ensure_state()["stream"]:
 		if int(line["day"]) == day:
-			out.append(_read(line))
+			out.append(read(line))
 	return out
 
 
@@ -220,6 +221,12 @@ static func line_text(line: Dictionary) -> String:
 				return Fmt.percent(float(line["v"]))
 			"share":
 				return RivalRegistry.format_share(float(line["v"]))
+			"market":
+				return Fmt.money_market(float(line["v"]))
+			"money":
+				return Fmt.money(int(line["v"]))
+			"delta":
+				return ("+" if int(line["v"]) > 0 else "") + Fmt.money(int(line["v"]))
 		return ""
 	var args: Dictionary = (line.get("args", {}) as Dictionary).duplicate()
 	for k in args:
@@ -228,8 +235,9 @@ static func line_text(line: Dictionary) -> String:
 	return TranslationServer.translate(String(line["key"])).format(args)
 
 
-## The read shape of a stored row: a copy with the source and the text resolved.
-static func _read(row: Dictionary) -> Dictionary:
+## The read shape of a row (a stream row, or a live line as {src} merged with its line): a copy
+## with the source and the text resolved.
+static func read(row: Dictionary) -> Dictionary:
 	var out: Dictionary = row.duplicate(true)
 	out["src"] = String(TranslationServer.translate(String(row["src"])))
 	out["txt"] = line_text(row)
@@ -390,16 +398,16 @@ static func _emit_listings() -> void:
 			var line: Dictionary = {"key": "PIYASA_LINE", "args": {
 				"headline": {"key": "PIYASA_NEWS_IPO", "args": {
 					"company": String(c["name"]),
-					"value": Fmt.money_market(MarketCatalog.value(c, GameState.day)),
+					"value": {"fmt": "market", "v": MarketCatalog.value(c, GameState.day)},
 				}},
 				"why": {"key": "PIYASA_WHY_IPO"},
 			}}
-			EventBus.ticker_live_line.emit(outlet_name(absi(hash(String(c["id"])))), line_text(line))
+			EventBus.ticker_live_line.emit(outlet_key(absi(hash(String(c["id"])))), line)
 
 
 static func _emit_biz(nf: Dictionary) -> void:
 	var item: Dictionary = (nf["biz_buffer"] as Array).pop_front()   # kronolojik: en eski milestone önce
-	_append(nf, "biz", String(item["src"]), {"txt": String(item["txt"])})
+	_append(nf, "biz", String(item["src"]), item)
 
 
 static func _append(nf: Dictionary, kind: String, src: String, line: Dictionary) -> void:

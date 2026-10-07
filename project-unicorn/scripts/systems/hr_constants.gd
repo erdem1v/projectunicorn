@@ -339,6 +339,11 @@ static func role_label(role_id: String) -> String:
 	return _derived("HR_ROLE_", role_id)
 
 
+## Rolün etiketinin CSV anahtarı, etiketi anahtar olarak taşıyan satır için.
+static func role_key(role_id: String) -> String:
+	return "HR_ROLE_" + role_id.to_upper()
+
+
 ## id -> yerel etiket. Bu dosya statik olduğu için tr() değil TranslationServer; çözülmeyen
 ## anahtar id'nin kendisini döndürür.
 static func _derived(prefix: String, id: String) -> String:
@@ -704,8 +709,9 @@ const TRIO_COST_TRAIT_MIN := 1
 
 # ========================= Arama (Atlas Seçme & Yerleştirme) =================
 # Ajans özel addır, iki dilde de aynı kalır (glossary §6).
+const AGENCY_KEY := "HR_AGENCY_NAME"
 static func search_agency_name() -> String:
-	return TranslationServer.translate("HR_AGENCY_NAME")
+	return TranslationServer.translate(AGENCY_KEY)
 ## §10 tek ücret: arama bedava, işe alımda bir aylık maaşın %50'si komisyon
 ## ("$3.000'lik bir çalışanın maliyeti $4.500").
 const SEARCH_COMMISSION_PCT := 0.50
@@ -796,9 +802,8 @@ static func cost_label_hire() -> String:
 static func cost_label_severance() -> String:
 	return TranslationServer.translate("HR_COST_SEVERANCE")
 
-# Ticker kaynağı (EventBus.headline_added); emit anında yerelleştirilir.
-static func notice_source_hr() -> String:
-	return TranslationServer.translate("HR_LABEL_HR")
+# Ticker kaynağı (EventBus.headline_added): bir CSV anahtarı, satırı okuyan çözer.
+const NEWS_SOURCE := "HR_LABEL_HR"
 
 # Arama durum makinesi (GameState.hr_search.state).
 const SEARCH_IDLE := "idle"

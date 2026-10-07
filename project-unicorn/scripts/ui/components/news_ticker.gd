@@ -17,7 +17,8 @@ extends Panel
 #    line, which leads _sources(). Only headline_added also reaches NewsFeedSystem's "Biz"
 #    archive; a ticker_live_line is shown once. This is the game's only non-modal notification
 #    channel — candidate arrival must raise a badge and a ticker line WITHOUT interrupting the
-#    player. Live lines are unsaved and built in the current language, so a language change drops them.
+#    player. A live line is kept as data (a source and a {key, args} line) and read in the
+#    current language when the belt is fed, so a language change keeps it.
 #
 # Akış içeriği NewsFeedSystem.get_stream()'den gelir (sektör/rakip/piyasa/biz, 45/25/10/≤20) ve
 # tik sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10 anahtarları
@@ -71,7 +72,7 @@ func _ready() -> void:
 	# ona bağlanmak önceki tikin akışını okurdu; sinyalin kendi yorumuna bak).
 	EventBus.news_stream_changed.connect(_refresh)
 	# Ambient yedek tr() anahtarlarından geliyor — dil değişince yeniden kur.
-	EventBus.language_changed.connect(_on_language_changed)
+	EventBus.language_changed.connect(_reset.unbind(1))
 	# Yayın renklerinin renk körü ikizi var.
 	EventBus.palette_changed.connect(_reset.unbind(1))
 	_reset()
@@ -84,8 +85,6 @@ func _exit_tree() -> void:
 		EventBus.ticker_live_line.disconnect(_on_live_line)
 	if EventBus.news_stream_changed.is_connected(_refresh):
 		EventBus.news_stream_changed.disconnect(_refresh)
-	if EventBus.language_changed.is_connected(_on_language_changed):
-		EventBus.language_changed.disconnect(_on_language_changed)
 
 
 ## The player's choice, from the toggle cell or Ayarlar: laid out and kept.
@@ -103,15 +102,10 @@ func _set_open(value: bool) -> void:
 	open_changed.emit(open)
 
 
-func _on_language_changed(_locale: String) -> void:
-	_live_lines.clear()
-	_reset()
-
-
-func _on_live_line(source: String, text: String) -> void:
-	if text.strip_edges() == "":
+func _on_live_line(source: String, line: Dictionary) -> void:
+	if NewsFeedSystem.line_text(line).strip_edges() == "":
 		return
-	_live_lines.push_front({"src": source, "txt": text})
+	_live_lines.push_front({"src": source}.merged(line))
 	while _live_lines.size() > MAX_LIVE_LINES:
 		_live_lines.pop_back()
 	_refresh()
@@ -139,16 +133,17 @@ func _reset() -> void:
 func _sources() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var seen_txt: Dictionary = {}
-	for h in _live_lines:
-		out.append(h)
-		seen_txt[String(h.txt)] = true
+	for row in _live_lines:
+		var read: Dictionary = NewsFeedSystem.read(row)
+		out.append(read)
+		seen_txt[String(read["txt"])] = true
 	var shown: int = 0
 	for line in NewsFeedSystem.get_stream():
 		if shown >= STREAM_SHOWN:
 			break
 		if seen_txt.has(String(line["txt"])):
 			continue
-		out.append({"src": String(line["src"]), "txt": String(line["txt"])})
+		out.append(line)
 		seen_txt[String(line["txt"])] = true
 		shown += 1
 	if out.size() < LOOP_MIN_PARTS:

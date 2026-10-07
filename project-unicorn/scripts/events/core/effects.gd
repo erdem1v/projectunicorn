@@ -407,7 +407,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 		"notify":
 			# class: info's surface. Badge state belongs to the owning module, so this nudges it
 			# rather than duplicating its counter.
-			EventBus.headline_added.emit(String(e.get("source", "")), String(e.get("text", "")))
+			EventBus.headline_added.emit(String(e.get("source", "")), {"txt": String(e.get("text", ""))})
 			return {"verb": verb, "module": e.get("module", "")}
 		"unlock_content":
 			EvFlags.set_flag("unlocked_%s" % String(e.get("content_id", "")), "card")

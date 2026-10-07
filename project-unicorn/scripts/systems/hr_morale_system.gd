@@ -42,8 +42,10 @@ static func tick_leave_returns() -> void:
 			apply_delta(emp, HRConstants.MORALE_VACATION_RETURN)
 		else:
 			apply_delta(emp, HRConstants.MORALE_LEAVE_RETURN)
-		var whence: String = TranslationServer.translate("HR_WHENCE_HOLIDAY" if was_manual else "HR_WHENCE_LEAVE")
-		EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate("HR_NEWS_BACK_FROM").format({"name": emp.character_name, "whence": whence}))
+		EventBus.headline_added.emit(HRConstants.NEWS_SOURCE, {"key": "HR_NEWS_BACK_FROM", "args": {
+			"name": emp.character_name,
+			"whence": {"key": "HR_WHENCE_HOLIDAY" if was_manual else "HR_WHENCE_LEAVE"},
+		}})
 
 
 static func tick_leave_departures() -> void:
@@ -247,8 +249,8 @@ static func send_on_leave(emp: Character, weeks: int, is_manual: bool) -> void:
 	GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, is_manual)
 	# Kimse izni ONAYLAMAZ (§11.4): modal değil ticker satırı.
 	var key: String = "HR_NEWS_ON_HOLIDAY" if is_manual else "HR_NEWS_ON_LEAVE"
-	EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate(
-		Fmt.count_key(key, weeks)).format({"name": emp.character_name, "n": weeks}))
+	EventBus.headline_added.emit(HRConstants.NEWS_SOURCE,
+		{"key": Fmt.count_key(key, weeks), "args": {"name": emp.character_name, "n": weeks}})
 
 
 ## hr_departure modifier'ı oyuncu istifayı kabul edince çağırır. İstifanın kadrodan çıktığı

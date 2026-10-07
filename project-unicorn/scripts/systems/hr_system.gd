@@ -95,10 +95,8 @@ static func tick_training() -> void:
 		if emp.training_weeks_left <= 0:
 			continue
 		if CharacterRegistry.tick_training(emp.id):
-			EventBus.headline_added.emit(HRConstants.notice_source_hr(),
-				TranslationServer.translate("HR_NEWS_TRAINING_DONE").format({
-					"name": emp.character_name,
-				}))
+			EventBus.headline_added.emit(HRConstants.NEWS_SOURCE,
+				{"key": "HR_NEWS_TRAINING_DONE", "args": {"name": emp.character_name}})
 
 
 ## Oyuncunun kararı: birini eğitime gönder, HANGİ ALANDA olduğunu söyleyerek (§5.2).

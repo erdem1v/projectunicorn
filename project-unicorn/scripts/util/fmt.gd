@@ -43,9 +43,14 @@ static func count_key(key: String, n: int) -> String:
 
 # --- Calendar ---------------------------------------------------------------
 
+## The localization key of a month's name, 1-based.
+static func month_key(month: int) -> String:
+	return "MONTH_%d" % clampi(month, 1, 12)
+
+
 ## Title-case month name, 1-based (1 = January / Ocak).
 static func month_name(month: int) -> String:
-	return _t("MONTH_%d" % clampi(month, 1, 12))
+	return _t(month_key(month))
 
 
 ## Three-letter month, derived from the canonical name (Eylül→Eyl, September→Sep).

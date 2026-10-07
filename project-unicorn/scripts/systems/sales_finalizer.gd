@@ -75,4 +75,4 @@ static func _sign(result: Dictionary, ctx: Dictionary, lead_id: String) -> void:
 	SalesLedger.record_close(c, "")
 	SalesSystem.record_sales_event("founder_close", "", c.company_name, c.mrr)
 	SalesLedger.announce_signing(c, bool(ctx.get("is_whale", false)),
-		TranslationServer.translate("SALES_TICKER_FOUNDER_SIGNED").format({"company": c.company_name}))
+		{"key": "SALES_TICKER_FOUNDER_SIGNED", "args": {"company": c.company_name}})

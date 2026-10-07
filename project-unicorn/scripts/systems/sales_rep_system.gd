@@ -216,8 +216,7 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	SalesSystem.record_sales_event("auto_close", rep.character_name, c.company_name, c.mrr)
 	EventBus.rep_deal_closed.emit(rep.id, c.id)
 	SalesLedger.announce_signing(c, lead.is_whale,
-		TranslationServer.translate("SALES_TICKER_SIGNED").format(
-			{"rep": rep.character_name, "company": c.company_name}))
+		{"key": "SALES_TICKER_SIGNED", "args": {"rep": rep.character_name, "company": c.company_name}})
 
 
 ## §5.3 — seats come from the star band, never from a negotiation. The placement inside the

@@ -42,7 +42,7 @@ static var frequency_override: String = ""
 
 # Built at slot 0, sent and cleared at slot 10 of the same tick.
 static var _summary: Dictionary = {}
-static var _month_line: String = ""
+static var _month_line: Dictionary = {}
 
 
 ## Run start (GameState.initialize_run, fresh runs): the first month and summary period open,
@@ -78,17 +78,17 @@ static func begin_day() -> void:
 ## Daily slot 10, after the endings scan.
 static func daily_tick() -> void:
 	var summary: Dictionary = _summary
-	var month_line: String = _month_line
+	var month_line: Dictionary = _month_line
 	_summary = {}
-	_month_line = ""
+	_month_line = {}
 	if not GameState.run_active:
 		return
-	var source: String = TranslationServer.translate("NOTICE_SRC_FINANCE")
-	if month_line != "":
+	var source: String = "NOTICE_SRC_FINANCE"
+	if not month_line.is_empty():
 		EventBus.ticker_live_line.emit(source, month_line)
 	if GameState.cash >= 0:
-		var runway_line: String = _runway_line()
-		if runway_line != "":
+		var runway_line: Dictionary = _runway_line()
+		if not runway_line.is_empty():
 			EventBus.ticker_live_line.emit(source, runway_line)
 	if not summary.is_empty():
 		MessageSystem.post("summary", String(PERIOD_KEYS[summary.freq].title), summary)
@@ -118,11 +118,11 @@ static func _close_month() -> void:
 	}
 	GameState.push_month_close(close)
 	var cash_delta: int = GameState.cash - int(l.get("cash", GameState.cash))
-	_month_line = TranslationServer.translate("MONTH_CLOSED_TICKER").format({
-		"month": Fmt.month_name(int(GameState.get_date_dict(GameState.day - 1).month)),
-		"mrr": Fmt.money(GameState.mrr),
-		"delta": ("+" if cash_delta > 0 else "") + Fmt.money(cash_delta),
-	})
+	_month_line = {"key": "MONTH_CLOSED_TICKER", "args": {
+		"month": {"key": Fmt.month_key(int(GameState.get_date_dict(GameState.day - 1).month))},
+		"mrr": {"fmt": "money", "v": GameState.mrr},
+		"delta": {"fmt": "delta", "v": cash_delta},
+	}}
 	_open_month()
 	EventBus.month_ended.emit(close)
 
@@ -157,7 +157,7 @@ static func _open_period() -> void:
 
 ## Announces only the lowest threshold crossed on the way down. A threshold re-arms once runway
 ## climbs RUNWAY_ALERT_REARM_MONTHS above it (an infinite runway re-arms them all).
-static func _runway_line() -> String:
+static func _runway_line() -> Dictionary:
 	var months: float = GameState.get_runway_months()
 	var alerts: Array = FinanceSystem.RUNWAY_ALERT_MONTHS
 	var band: int = GameState.runway_warn_band
@@ -165,11 +165,10 @@ static func _runway_line() -> String:
 		var i: int = alerts.find(band)
 		band = int(alerts[i - 1]) if i > 0 else 0
 	var now: int = FinanceSystem.runway_band(months)
-	var line: String = ""
+	var line: Dictionary = {}
 	if now > 0 and (band == 0 or now < band):
 		band = now
-		line = TranslationServer.translate(Fmt.count_key("RUNWAY_CROSS_TICKER", now)).format(
-			{"n": now})
+		line = {"key": Fmt.count_key("RUNWAY_CROSS_TICKER", now), "args": {"n": now}}
 	GameState.runway_warn_band = band
 	return line
 

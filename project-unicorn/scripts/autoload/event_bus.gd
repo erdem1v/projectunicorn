@@ -223,11 +223,12 @@ signal rep_band_cap_changed(rep_id: String)           # §7.2.2
 signal mentor_advisory_changed(key: String, args: Dictionary)
 
 # Archived ticker line: the non-modal notification channel the "Biz" news source keeps. `source` is the attribution shown
-# in accent ("Atlas Seçme & Yerleştirme", "İK"). For beats that must NOT interrupt the player.
-signal headline_added(source: String, text: String)
+# in accent: a CSV key ("HR_LABEL_HR") or a plain name. `line` is data, read in the language of the
+# reader (NewsFeedSystem.line_text): {key, args} or, for prose, {txt}. For beats that must NOT interrupt the player.
+signal headline_added(source: String, line: Dictionary)
 # A live-only ticker line (month close, runway warning): shown once, never kept in the "Biz"
-# archive, which drains at most one line a tick.
-signal ticker_live_line(source: String, text: String)
+# archive, which drains at most one line a tick. `source` and `line` as in headline_added.
+signal ticker_live_line(source: String, line: Dictionary)
 
 # --- Endgame signals ---
 # Gate condition satisfied. Phase has NOT changed yet; phase_changed fires after advance_phase().

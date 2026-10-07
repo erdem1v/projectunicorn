@@ -12,6 +12,7 @@ const DATA_PATH := "res://data/product/sprint.json"
 const RIVALS_PATH := "res://data/product/rivals.json"
 ## Gelir alanının tek yeteneği: katalogda hattı yok, ücretli katmanın açık olmasından okunur.
 const PAID_PLAN := "cap_paid_plan"
+const PAID_PLAN_NAME_KEY := "PRODUCT_CAP_PAID_PLAN"
 const SEP := " · "
 const STAR := "★"
 const MARK_UNMET := "✗"
@@ -73,7 +74,7 @@ static func capabilities(area_id: String) -> Array[String]:
 
 static func cap_name(line_id: String) -> String:
 	if line_id == PAID_PLAN:
-		return _t("PRODUCT_CAP_PAID_PLAN")
+		return _t(PAID_PLAN_NAME_KEY)
 	return _t(ProductLines.line(line_id).name_key)
 
 
@@ -93,7 +94,11 @@ static func area_name(area_id: String) -> String:
 
 ## Etki satırında ve hedefte kullanılan kısa ad.
 static func area_short(area_id: String) -> String:
-	return _t(area_def(area_id).name_key + "_SHORT")
+	return _t(area_short_key(area_id))
+
+
+static func area_short_key(area_id: String) -> String:
+	return area_def(area_id).name_key + "_SHORT"
 
 
 ## sprint.json'daki alan kaydı (ad anahtarı, renk yuvası, hatlar).
@@ -183,7 +188,7 @@ static func voices(area_id: String) -> Array:
 	if not launch.is_empty():
 		var is_new: bool = since_sprint and SprintSystem.sprint_number() - int(launch.sprint) <= 1
 		(fresh if is_new else old).append({"text": _t("PRODUCT_RIVAL_VOICE").format(
-			{"rival": launch.name, "capability": launch.capability}), "new": is_new})
+			{"rival": launch.name, "capability": _t(launch.capability_key)}), "new": is_new})
 	return fresh + old
 
 
@@ -549,7 +554,7 @@ static func rival_launch_in(sprint: int) -> Array:
 				and l.sprint <= launch.sprint).size()
 		var step: String = PAID_PLAN if launch.line == PAID_PLAN else ProductLines.step_at(launch.line, reached).id
 		out.append(launch.merged({"name": rival_name(int(launch.rival)), "topic": _t(launch.topic_key),
-			"capability": step_name(step)}))
+			"capability_key": step_name_key(step)}))
 	return out
 
 
@@ -580,7 +585,11 @@ static func _max_tier(line_id: String) -> int:
 
 
 static func step_name(step_id: String) -> String:
-	return cap_name(PAID_PLAN) if step_id == PAID_PLAN else _t(ProductLines.step(step_id).name_key)
+	return _t(step_name_key(step_id))
+
+
+static func step_name_key(step_id: String) -> String:
+	return PAID_PLAN_NAME_KEY if step_id == PAID_PLAN else ProductLines.step(step_id).name_key
 
 
 ## Etki satırının seviye geçişi parçası (level, cap) iki ucun kelimesini taşır; çizim kelimeyi

@@ -113,7 +113,7 @@ func _ask() -> void:
 	var a: OfficeActor = asker[0]
 	a.look_at = _people.founder()
 	a.gesture("lookup", ASK_S)
-	EventBus.ticker_live_line.emit(a.character.character_name, tr("MEETING_BACK_ASK"))
+	EventBus.ticker_live_line.emit(a.character.character_name, {"key": "MEETING_BACK_ASK"})
 	a.create_tween().tween_callback(func() -> void: a.look_at = null).set_delay(ASK_S)
 
 
