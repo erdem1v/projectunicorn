@@ -15,6 +15,7 @@ const TAB_SCENES := {
 	"hr": preload("res://scenes/tabs/HRTab.tscn"),
 	"sales": preload("res://scenes/tabs/SalesTab.tscn"),
 	"finance": preload("res://scenes/tabs/FinanceTab.tscn"),  # Yatırım alt sayfası burada
+	"piyasa": preload("res://scenes/tabs/PiyasaTab.tscn"),
 	"personal": preload("res://scenes/tabs/PersonalTab.tscn"),
 	"rnd": preload("res://scenes/tabs/RnDTab.tscn"),
 	"events": preload("res://scenes/tabs/EventsTab.tscn"),
@@ -29,12 +30,13 @@ const OFFICE := preload("res://scripts/ui/office/office_view.gd")
 ## 1920×1080 tabanında pencere boyları; pencere alanı daha darsa pencere ona sığacak kadar
 ## küçülür. Sahnesi olmayan sekme yer tutucunun (marketing) boyunu alır. Ekip 1352: kadronun EN
 ## sütunları; 1920'de BuildHUD'un 16 px solunda biter. Finans 1344 BuildHUD'un solunda biter; Ürün
-## 1424 ona biner ve BuildHUD gizlenir. `fit_height()` taşıyan sayfanın penceresi (Ekip, dosya)
+## 1424 ona biner ve BuildHUD gizlenir; Piyasa da 1424, dar alanda liste ve kart kendi içinde kayar.
+## `fit_height()` taşıyan sayfanın penceresi (Ekip, dosya)
 ## içeriği kadar uzar, boyu en çok buradaki kadardır. Kişisel 680'in altına inmez
 ## (`UiTokens.D_H_PERSONAL_BODY`); salt okunur şerit ve uzun hâller onu alan içinde uzatır. Ar-Ge
 ## ağaçla kısa, seçili düğümün kartıyla uzun açılır.
 const SPECS := {
-	"finance": Vector2(1344, 720), "hr": Vector2(1352, 928), "product": Vector2(1424, 928),
+	"finance": Vector2(1344, 720), "hr": Vector2(1352, 928), "product": Vector2(1424, 928), "piyasa": Vector2(1424, 928),
 	"sales": Vector2(1280, 760), "rnd": Vector2(1280, 928), "personal": Vector2(1000, 928),
 	"events": Vector2(1240, 900), "marketing": Vector2(900, 640), "hr_dossier": Vector2(320, 928),
 }

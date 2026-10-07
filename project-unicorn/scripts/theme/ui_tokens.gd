@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 31
+const THEME_STAMP := 32
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -295,6 +295,7 @@ const TABS := [
 	{"id": "sales"},
 	{"id": "hr"},
 	{"id": "finance"},
+	{"id": "piyasa"},
 	{"id": "personal"},
 	{"id": "marketing", "lock": "ea"},
 	{"id": "rnd"},
@@ -746,6 +747,23 @@ const D_ICON_FIGURE := 20             # the cost disc or the equity slice before
 const D_W_INVESTORS := 704            # the funds' column on the Yatırım page
 const D_H_FUND := 76                  # a fund's row
 const D_H_HUNT_HEAD := 64             # the Yatırım page's title row
+const D_W_MARKET_LIST := 460          # the Piyasa window's list column
+const D_W_MARKET_COLS := Vector3i(36, 76, 88)   # the list row's rank, price and value columns
+const D_H_MARKET_TILE := 120          # a KPI tile on the Piyasa window
+const D_H_MARKET_CHIP := 36           # a filter chip over the list
+const D_H_MARKET_ROW := 52            # a list row: the name over its sector
+const D_H_MARKET_NOTE := 40           # the line under or over the list ("and N more")
+const D_H_MARKET_PANE := 160          # the report card's three panes: hero, year ends, the dial
+const D_H_MARKET_CHART := 256         # the report card's chart
+const D_H_MARKET_RANGE := 28          # the chart's range row
+const D_W_MARKET_KEY := 88            # the card's section key column (About)
+const D_MARKET_BAR := Vector2i(6, 3)  # a tile's bar: width and gap
+const D_MARKET_BAR_H := Vector2i(5, 24)   # a tile's bar: the lowest and the highest
+const D_MARKET_DIAL := Vector2i(200, 104)   # the share dial's box
+const D_MARKET_DIAL_R := 88           # the dial's radius
+const D_MARKET_DIAL_W := 6            # the dial's stroke
+const D_MARKET_ANCHOR := 3.0          # a year-end anchor's disc on the chart
+const D_W_MARKET_LABEL := 100         # a year label nearer today's than this ends at its own tick
 const D_PIP_TABLE := 14               # a closed table's square
 const D_PORTRAIT_WELL := Vector2i(256, 320)   # a portrait's well: a mail's sender, the founder on Kişisel
 const D_H_PERSONAL_BODY := 680 - D_H_WIN_HEAD - 2 * BORDER_HAIRLINE   # Kişisel's body at least: a 680 window less head and frame

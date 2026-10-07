@@ -203,7 +203,7 @@ func _standing() -> VBoxContainer:
 	var valuation: float = GameState.get_valuation_m()
 	if valuation > 0.0:
 		share.add_child(SprintUiShared.label(tr("PER_VALUATION_ROW").format(
-			{"value": Fmt.money_chip(int(round(valuation * 1_000_000.0)))}), &"MetaText"))
+			{"value": Fmt.money_market(valuation)}), &"MetaText"))
 	else:
 		share.add_child(SprintUiShared.prose(tr("PER_NO_VALUATION"), &"Caption"))
 	col.add_child(_above(share, UiTokens.SPACE_M))

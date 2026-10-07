@@ -1329,14 +1329,42 @@ func _run_office_crowd_probe(spec: String) -> void:
 	get_tree().quit()
 
 
-# --tab-shot=<product|sales|hr|finance|personal|marketing|rnd|events>. tab_changed is emitted
-# directly, so a tab locked on the rail can still be framed — the lock lives on the rail.
-func _run_tab_shot(tab_id: String) -> void:
+# --tab-shot=<product|sales|hr|finance|piyasa[:<state>]|personal|marketing|rnd|events>. tab_changed is
+# emitted directly, so a tab locked on the rail can still be framed — the lock lives on the rail.
+# Piyasa states: seed_oncesi (no round yet) · seed_sonrasi (a $130K seed at 16 %) · series_a (week 72, an
+# $18M post-money signed) · ipo (week 20, the social network's listing week, its card) · filtre (My sector
+# on an erp run, the sector giant's card) · sektor (the erp league leader's card, the list scrolled to it).
+func _run_tab_shot(spec: String) -> void:
 	_begin_shot()
 	_seed_theme_surface()
+	var tab_id: String = spec.get_slice(":", 0)
+	var state: String = spec.get_slice(":", 1) if spec.contains(":") else ""
+	if tab_id == "piyasa":
+		_seed_piyasa(state)
 	await _mount_shot_shell()
 	EventBus.tab_changed.emit(tab_id)
-	await _finish_shot("tab_shot_%s" % tab_id)
+	if state in ["ipo", "filtre", "sektor"]:   # LOC-DATA debug fixture id
+		var page: Control = _shell.find_child("CenterViewport", true, false).get_current_page_body()
+		if state == "filtre":
+			page.set_filter("mine")
+		page.show_company({"ipo": "facewall", "filtre": "datenwald", "sektor": "pythia"}[state])   # LOC-DATA debug fixture id
+	await _finish_shot("tab_shot_%s" % spec.replace(":", "_"))
+
+
+func _seed_piyasa(state: String) -> void:
+	if state in ["seed_sonrasi", "series_a", "ipo", "filtre", "sektor"]:   # LOC-DATA debug fixture id
+		GameState.set_phase(2)
+		AngelRoundSystem.accept_offer()
+		SeedRoundSystem.accept("anchor", {"raise": 130000, "dilution_pct": 16})
+	match state:
+		"series_a":
+			GameState.set_phase(3)
+			GameState.day = 72
+			GameState.run_valuation_m = 18
+		"ipo":
+			GameState.day = 20
+		"filtre", "sektor":   # LOC-DATA debug fixture id
+			GameState.set_subgenre("erp")
 
 
 # --personal-shot=<normal|cheque|ready|training|seed>: the Kişisel window on the theme seed. cheque: after Frank's

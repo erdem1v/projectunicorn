@@ -422,6 +422,7 @@ NUM_DECIMAL_SEP,",",.
 TAB_PRODUCT,Ürün,Product
 TAB_HR,Ekip,Team
 TAB_FINANCE,Finans,Finance
+TAB_PIYASA,Piyasa,Market
 TAB_SALES,Satış,Sales
 TAB_MARKETING,Pazarlama,Marketing
 TAB_RND,Ar-Ge,R&D
@@ -3055,3 +3056,121 @@ SUMMARY_ROW_TEAM_FOUNDER,Ekip · kurucu dahil,Team · incl. founder
 REC_SATISFACTION,Memnuniyet,Satisfaction
 REC_TENURE,{n} aydır,{n} mo
 REC_AM_NONE,atanmadı,not assigned
+PIYASA_COL_VALUE,Piyasa değeri,Market value
+PIYASA_COL_PRICE,Fiyat,Price
+PIYASA_KPI_LIST_VALUE,Liste değeri,List value
+PIYASA_KPI_LEADER,Lider,Leader
+PIYASA_KPI_YOUR_VALUATION,Senin değerlemen,Your valuation
+PIYASA_KPI_LIST_DESC,{c} şirket · son 13 hafta,{c} companies · last 13 weeks
+PIYASA_KPI_LEADER_DESC,{name} · {sector} · son 13 hafta,{name} · {sector} · last 13 weeks
+PIYASA_KPI_POST_SEED,Seed sonrası · {month},Post seed · {month}
+PIYASA_KPI_SERIES_A,Series A,Series A
+PIYASA_FILTER_ALL,Tümü,All
+PIYASA_FILTER_TECH,Teknoloji,Technology
+PIYASA_FILTER_FIN,Finans,Finance
+PIYASA_FILTER_MINE,Sektörüm,My sector
+PIYASA_LIST_MORE,ve {c} şirket daha,and {c} more
+PIYASA_LIST_ABOVE,{c} şirket yukarıda,{c} more above
+PIYASA_TAG_NEW,Yeni,New
+PIYASA_LISTS_IN,{name} · halka arz {month},{name} · listing {month}
+PIYASA_LISTED_YEAR,Halka arz {y},Listed {y}
+PIYASA_FOUNDER_KEY,Kurucu,Founder
+PIYASA_CEO_KEY,CEO,CEO
+PIYASA_CARD_VALUE_DATE,Piyasa değeri · {month},Market value · {month}
+PIYASA_FOUR_WEEKS,dört haftada,over four weeks
+PIYASA_EOY_FIRST,Yıl sonu {y},Year end {y}
+PIYASA_SINCE_EOY,{y} sonundan beri,Since end of {y}
+PIYASA_SHARE,Listedeki payı,Share of the list
+PIYASA_SHARE_LT,<{p},<{p}
+PIYASA_VALUE_TITLE,Değer,Value
+PIYASA_ABOUT_TITLE,Hakkında,About
+PIYASA_IPO_MARK,halka arz,listed
+PIYASA_CTX_2012,{month} · Akıllı telefon dalgası listeyi taşıyor,{month} · The smartphone wave carries the list
+PIYASA_CTX_2013,{month} · Mobil reklam yılı,{month} · The year of mobile ads
+PIYASA_RANGE_13W,13H,13W
+PIYASA_RANGE_1Y,1Y,1Y
+PIYASA_RANGE_5Y,5Y,5Y
+PIYASA_RANGE_ALL,Tümü,All
+PIYASA_MONTH_YEAR,{month} {year},{month} {year}
+PIYASA_SECTOR_AUTOMOTIVE,otomotiv,automotive
+PIYASA_SECTOR_BANK,banka,bank
+PIYASA_SECTOR_CHIPS,çip,chips
+PIYASA_SECTOR_CLOUD,bulut,cloud
+PIYASA_SECTOR_DATA,veri,data
+PIYASA_SECTOR_DATABASE,veritabanı,database
+PIYASA_SECTOR_DEVICES,cihaz,devices
+PIYASA_SECTOR_E_COMMERCE,e-ticaret,e-commerce
+PIYASA_SECTOR_ELECTRONICS,elektronik,electronics
+PIYASA_SECTOR_ENTERPRISE,kurumsal,enterprise
+PIYASA_SECTOR_ERP,ERP,ERP
+PIYASA_SECTOR_GAMES,oyun,games
+PIYASA_SECTOR_HARDWARE,donanım,hardware
+PIYASA_SECTOR_INTERNET,internet,internet
+PIYASA_SECTOR_MOBILITY,ulaşım,mobility
+PIYASA_SECTOR_MUSIC,müzik,music
+PIYASA_SECTOR_NETWORKING,ağ,networking
+PIYASA_SECTOR_NOTES,not alma,notes
+PIYASA_SECTOR_PAYMENTS,ödeme,payments
+PIYASA_SECTOR_PHONES,telefon,phones
+PIYASA_SECTOR_SAAS,SaaS,SaaS
+PIYASA_SECTOR_SEARCH,arama,search
+PIYASA_SECTOR_SOCIAL,sosyal ağ,social
+PIYASA_SECTOR_SOFTWARE,yazılım,software
+PIYASA_SECTOR_STREAMING,yayın,streaming
+PIYASA_SECTOR_TRAVEL,konaklama,travel
+PIYASA_SECTOR_VIDEO,video,video
+PIYASA_ABOUT_MALUS,Cihazı ve işletim sistemini tek çatı altında yapan tüketici elektroniği devi. 2007'deki telefonu cep pazarını yeniden kurdu; gelirinin yarısından çoğu bugün o tek üründen geliyor.,A consumer electronics giant that builds the device and its operating system under one roof. Its 2007 phone remade the handset market; more than half its revenue now comes from that one product.
+PIYASA_ABOUT_FENSTRA,Şirketlerin çoğunun masaüstü işletim sistemi ve ofis paketi. Faturayı hâlâ lisans geliri öder; bulut bölümü yeni bir yöneticinin altında büyüyor.,The desktop operating system and the office suite most companies run on. Licence money still pays the bills while the cloud division grows under a new chief.
+PIYASA_ABOUT_ORINOCO,Her şeyi satan mağazaya dönüşen ve sonra sunucularını kiraya veren çevrimiçi kitapçı. Marj bilerek ince; hissedarlar kâr için yıllardır bekliyor.,An online bookshop that became the everything store and then rented out its servers. Margins are thin by choice; the shareholders have waited years for profit.
+PIYASA_ABOUT_GOGOL,Web'in başladığı arama motoru; gelirinin neredeyse tamamı sonuçların yanındaki reklam. Harita ve mobil işletim sistemi aramalar sürsün diye bedava.,The search engine the web starts from; almost all of its revenue is advertising beside the results. Maps and a mobile operating system are given away to keep the searches coming.
+PIYASA_ABOUT_FACEWALL,"Üniversite yurdunda doğan sosyal ağ, bugün dünyanın en kalabalık üyelik defteri. Geliri reklamdan; mobil geçişi henüz kanıtlanmadı.","The social network that started in a college dorm, today the largest membership roll in the world. Revenue is advertising; the move to mobile is still unproven."
+PIYASA_ABOUT_GRAPHYNE,Kartları oyun bilgisayarlarında ve birkaç araştırma laboratuvarında duran grafik çipi tasarımcısı. Çipler paralel hesapta iyi çıktı; şimdilik yalnız bilim insanları ilgileniyor.,A graphics chip designer whose cards sit in gaming PCs and a few research labs. The chips turn out to be good at parallel maths; so far only scientists care.
+PIYASA_ABOUT_GALVANI_MOTORS,Bir lüks modeli teslim edilmiş ve daha ucuz bir sedan vadedilmiş elektrikli otomobil üreticisi. Kurucu şirketten çok paylaşım yapıyor; hisse onunla oynuyor.,An electric car maker with one luxury model shipped and a cheaper sedan promised. The founder posts more than the company announces; the stock moves with him.
+PIYASA_ABOUT_SERIATIM,Postayla film kiralamadan yayına geçen ve artık kendi dizilerini ödeyen şirket. Aboneler yurt dışında artıyor; içerik faturası daha hızlı artıyor.,A mail-order film rental that moved to streaming and now pays for its own series. Subscribers grow abroad; the content bill grows faster.
+PIYASA_ABOUT_VENDITOR,Satış defterini tarayıcıya koyup adına abonelik diyen şirket. Her kurumsal yazılımcı artık modeli kopyalıyor; en kalabalık müşteri listesi hâlâ onda.,The company that put the sales ledger in the browser and called it a subscription. Every enterprise software vendor now copies the model; it still has the biggest customer list.
+PIYASA_ABOUT_VATIC_SYSTEMS,Büyük şirketlerin çoğunun kayıtlarını tuttuğu veritabanı; uzun sözleşme ve daha uzun denetimle satılır. Her yıl bir satın alma gelir; bulut yavaş gelir.,"The database that most large companies keep their records in, sold with a long contract and a longer audit. Acquisitions arrive every year; the cloud arrives slowly."
+PIYASA_ABOUT_SILICORE,Otuz yıldır neredeyse her masaüstünün ve sunucunun işlemcisi. Çipleri telefonu kaçırdı; fabrikaları sektörün en pahalısı.,The processor in nearly every desktop and server for three decades. Its chips missed the phone; the fabs are the most expensive in the industry.
+PIYASA_ABOUT_BRAMBLEWIRE,Beş yıl önce her yöneticinin taşıdığı klavyeli telefon. Pazarı dokunmatik ekranlar aldı; şirket üçüncü kurtarma planında.,The phone with the keyboard that every executive carried five years ago. Touchscreens took the market; the company is on its third turnaround plan.
+PIYASA_ABOUT_MUTELY,Tek bağlantıyla ve hesapsız katılınan görüntülü toplantı aracı. Ofisler çalıştığı için kullanıyor; soru odaya dönünce ne olacağı.,A video meeting tool that joins with one link and no account. Offices use it because it works; the question is what happens when they go back to the room.
+PIYASA_ABOUT_JL_MORROW,"Varlıklarıyla ülkenin en büyük bankası; bir yanda şubeler, öte yanda işlem salonu. Başındaki kişi onu bir krizden çoktan geçirdi.",The largest bank in the country by assets; retail branches on one side and the trading floor on the other. Its chief has run it through one crisis already.
+PIYASA_ABOUT_GALLMAN_SAXE,Adı her büyük halka arzda ve birleşmelerin çoğunda yazan yatırım bankası. Bu bahar sosyal ağın arzına aracılık ediyor; komisyon piyasanın konusu.,The investment bank whose name is on every large listing and most mergers. It underwrites the social network's offering this spring; the fee is the talk of the street.
+PIYASA_ABOUT_VISTO,"Dünya ödemelerinin çoğunun arkasındaki kart ağı; bankası yok, kredi vermez. Her geçişten alınan ücret listenin en kalın marjlarından birini yapıyor.",The card network behind most of the world's payments; it owns no bank and lends no money. A fee on every swipe adds up to one of the fattest margins on the list.
+PIYASA_ABOUT_URBIGROUP,Beş kıtada şubesi olan ve bilançosu dört yıl önce onu az kalsın batıran evrensel banka. Devlet payını sattı; hisse eski zirvenin hâlâ çok altında.,A universal bank with branches on five continents and a balance sheet that nearly sank it four years ago. The state has sold its stake; the shares are still far below the old high.
+PIYASA_ABOUT_MARGRAVE_STANFIELD,Anlaşmalara danışmanlık eden ve anlaşmayı yapanların servetini yöneten yatırım bankası. Adı bu bahar sosyal ağın halka arzında da yazıyor.,An investment bank that advises on deals and manages wealth for the people who make them. Its name is also on the social network's listing this spring.
+PIYASA_ABOUT_FRISCO_SYSTEMS,"İnternetin içinden aktığı yönlendiriciler ve anahtarlar; şirket kutuyu destek sözleşmesiyle satar. Büyüme yavaş, temettü güvenilir.",The routers and switches the internet runs through; the company sells boxes with a support contract attached. Growth is slow and the dividend is reliable.
+PIYASA_ABOUT_DRAGONWELL_SEMICONDUCTOR,Akıllı telefonların çoğundaki modem çipi ve her telefon üreticisinin ödediği patentler. Lisans ücretleri çipten çok getiriyor.,The modem chip inside most smartphones and the patents every phone maker pays for. Licence fees bring in more than the chips do.
+PIYASA_ABOUT_AMBER_MICRODEVICES,İkinci işlemci üreticisi; birincinin pahalı geldiği herkese satar. Koltuğa yeni bir başmühendis oturdu; yol haritası ona kaldı.,The second processor maker; it sells to whoever the first one is too expensive for. A new chief engineer just took the chair; the roadmap is hers to fix.
+PIYASA_ABOUT_HEWITT_PACKER,Vadiyi başlatan garajın yazıcıları ve kişisel bilgisayarları. Yönetim kurulu genel müdürü şirketin strateji değiştirdiğinden hızlı değiştiriyor.,Printers and personal computers from the garage that started the valley. The board changes chief executives faster than the company changes strategy.
+PIYASA_ABOUT_DALTON_TECHNOLOGIES,Siparişle üretilip telefonla ve web'den satılan bilgisayarlar; kurucu şirketi yönetmeye yeni döndü. Tablet dizüstünü yiyor; yeni sunum sunucu ve hizmet.,Computers built to order and sold by phone and web; the founder has just come back to run it. Tablets eat the laptop; servers and services are the new pitch.
+PIYASA_ABOUT_NORDLUND_MOBILE,On yıl boyunca herkesten çok telefon satan üretici. Şirketi başka bir firmanın işletim sistemine bağladı; hisse bahsi fiyatladı.,The handset maker that sold more phones than anyone for a decade. It bet the company on another firm's operating system; the shares priced the bet in.
+PIYASA_ABOUT_SHAOMU_TECHNOLOGY,Telefonu internetten maliyetine yakın satıp parayı sonra hizmetlerden kazanan üretici. Hayranlar anlık indirimlere kuyruk olur; marj bilerek ince.,A phone maker that sells near cost online and earns on the services afterwards. Fans queue for flash sales; the margins stay thin on purpose.
+PIYASA_ABOUT_HUZZAH,İlk web on yılının portalı: hiç ayrılmayan milyonlara posta ve haber. Her yıl yeni planla yeni bir yönetici geliyor.,The portal of the first web decade: mail and news for millions who never left. A new chief arrives each year with a new plan.
+PIYASA_ABOUT_BIDWELL,Koleksiyoncular için açılan ve herkesin pazar yerine dönen açık artırma sitesi. Sahip olduğu ödeme kolu pazar yerinden değerli.,An auction site for collectors that became a marketplace for everyone. The payments arm it owns is worth more than the marketplace.
+PIYASA_ABOUT_CHEQUEMATE,Hiç tanışmadığınız satıcılara ödeme yapan çevrimiçi cüzdan. Onu büyüten pazar yerinden ayrıldı; şimdi web'deki her ödeme sayfasının peşinde.,The online wallet that pays sellers you have never met. Spun out of the marketplace that raised it; now it chases every checkout page on the web.
+PIYASA_ABOUT_BAIYUN,"Asya'nın en büyük pazarının arama motoru; yabancı rakipler çekildi, trafik ona kaldı. Sıradaki kavga mobil arama.",The search engine of the largest market in Asia; foreign rivals left and it kept the traffic. Mobile search is the next fight.
+PIYASA_ABOUT_SINDBAD_HOLDINGS,Küçük fabrikaları dünyayla ve kendi alışverişçilerini birbiriyle buluşturan pazar yeri. Halka arzı geldiğinde tarihin en büyüğüydü.,A marketplace that connects small factories with the world and its own shoppers with each other. The listing was the largest ever when it came.
+PIYASA_ABOUT_TENPENNY_HOLDINGS,Yüz milyonlarca kullanıcılı bir sohbet uygulaması ve her şeyi ödeyen bir oyun işi. Son zamanlarda beğendiği her stüdyodan pay alıyor.,A chat app with hundreds of millions of users and a games business that pays for everything. Lately it buys a stake in every studio it likes.
+PIYASA_ABOUT_CUFFLINK,Özgeçmişin internette yaşadığı profesyonel ağ. Aramaya işe alımcılar para öder; üyeler ödemez ve geri gelir.,The professional network where the résumé lives online. Recruiters pay for the search; members pay nothing and keep coming back.
+PIYASA_ABOUT_WARBLER,Haber odasının yarısının okuduğu kısa açık mesajlar; halka arz zarar eden bir alışkanlığı borsa şirketi yaptı. Plan reklam.,Short public messages read by half the newsroom; the listing turned a loss-making habit into a public company. Advertising is the plan.
+PIYASA_ABOUT_ZENGARA,Sosyal ağın içinde oynanan ve sanal tohumla ödenen çiftlik ve şehir oyunları. Seyirci telefona oyunlardan önce taşındı.,"Farm and city games played inside the social network, paid for with virtual seeds. The audience moved to phones before the games did."
+PIYASA_ABOUT_DEALFLOCK,Sokağın ucundaki lokanta için binerle satılan günlük kuponlar. Halka arz hızlı geldi; tekrar gelen müşteri daha yavaş.,"Daily coupons for the restaurant down the street, sold by the thousand. The listing came fast; the repeat customers came slower."
+PIYASA_ABOUT_BLIPFRAME,"Bakınca kaybolan fotoğraflar; gençler seviyor, büyükler yanlış okuyor. Bir alıcıyı reddedip halka arzı seçti.","Photos that vanish after a look, loved by teenagers and misread by everyone older. It turned down a buyer and chose the listing."
+PIYASA_ABOUT_JUKEWAVE,Aylık ücrete her şarkı; ücretin çoğu plak şirketlerine gidiyor. Dinleyici her kıtada artıyor.,Every song on demand for a monthly fee; most of the fee goes to the labels. Listeners are growing on every continent.
+PIYASA_ABOUT_HAILWAY,"Altı yüz şehirde tek dokunuşla araç; sürücüler sözleşmeli, ücretler sübvansiyonlu. Kâr ileriki bir yılın sözü.",A ride at the tap of a button in six hundred cities; the drivers are contractors and the fares are subsidised. Profit is a promise for a later year.
+PIYASA_ABOUT_AIRNEST,Orada yaşayanlardan gecelik kiralanan boş odalar ve evler. Şehirler onunla tartışıyor; gezginler rezervasyona devam ediyor.,Spare rooms and whole homes rented by the night from the people who live there. Cities argue with it; travellers keep booking.
+PIYASA_ABOUT_DROPCRATE,Sahip olduğunuz her cihazda aynı olan bir klasör. Ünlendiren tüketiciler; para koltuk başına ödeyen şirketlerden geliyor.,A folder that is the same on every device you own. Consumers made it famous; the money comes from the companies that pay per seat.
+PIYASA_ABOUT_INSTANTER_SYSTEMS,BT bölümü hâlâ e-postayla dönen şirketler için tarayıcıda yardım masası. Halka arz bu yaz geldi; sözleşmeler yıllarca sürer.,A helpdesk in the browser for the companies whose IT departments still run on email. The listing came this summer; the contracts run for years.
+PIYASA_ABOUT_FARSIGHT_DATA,"Önce devletlere, sonra şirketlere satılan veri analizi. Sözleşmeler büyük ve az; her çeyrek bir avuç sözleşmeye bağlı.",Data analysis sold to governments first and to companies later. Contracts are large and few; every quarter depends on a handful of them.
+PIYASA_ABOUT_SHOPSTEAD,Bir milyon küçük web mağazasının arkasındaki mağaza kurucusu. Satıcılar aylık ücret ve her satıştan bir dilim öder.,The store builder behind a million small web shops. Merchants pay a monthly fee and a slice of each sale.
+PIYASA_ABOUT_TAPWORTH,Telefona takılan ve her tezgâhı dükkâna çeviren kart okuyucu. Kurucu şehrin öbür ucunda bir de sosyal ağ yönetiyor.,A card reader that plugs into a phone and turns any stall into a shop. The founder also runs a social network across town.
+PIYASA_ABOUT_SONIMOTO,Bir zamanlar cebe sığan kaset çaları yapan elektronik evinin televizyonları ve oyun konsolları. Konsol bölümü geri kalanı sırtlıyor.,Televisions and game consoles from the electronics house that once made the pocket cassette player. The console division carries the rest.
+PIYASA_ABOUT_SAMDAL,"Herkese ekran ve bellek çipi, kendine telefon; parça işi kendi telefon rakiplerine satar. Kurucu aile hâlâ karar verir.",Screens and memory chips for everyone and phones for itself; the parts business sells to its own phone rivals. The founding family still decides.
+PIYASA_ABOUT_CERULEAN,Ana bilgisayarı satan ve şimdi onu işleten danışmanları satan şirket. Bir asırlık; temettü hiç kesilmedi.,The company that sold the mainframe and now sells the consultants who run it. A century old; the dividend has never been cut.
+PIYASA_ABOUT_ADORNO,"Her stüdyonun ödediği tasarım ve fotoğraf yazılımı; kutudan aboneliğe geçiş yarı yolda. Tasarımcılar şikâyet etti, sonra yeniledi.",The design and photo software every studio pays for; the move from boxed copies to subscriptions is halfway done. Designers complained and then renewed.
+PIYASA_ABOUT_DATENWALD,"Avrupa'nın kurumsal yazılım devi; büyük şirketlerin çoğunun defteri onun sisteminde döner. Lisans geliri hâlâ sırtlıyor, bulut geçişi yavaş.","Europe's enterprise software giant; the books of most large companies run on its system. Licence revenue still carries it, and the move to the cloud is slow."
+PIYASA_ABOUT_PYTHIA,Küçük ve orta işletmelere bulutta muhasebe ve stok satan kurumsal yazılımcı; büyümesi yavaş ama kârlı.,An enterprise vendor selling cloud accounting and stock to small and mid-size firms; growth is slow but profitable.
+PIYASA_ABOUT_WERKTAG,Elektronik tabloyu aşan şirketler için tarayıcıda bordro ve personel kayıtları. Halka arz bu sonbahar; müşteriler şimdiden büyük.,Payroll and personnel records in the browser for companies that outgrew the spreadsheet. The listing comes this autumn; the customers are already large.
+PIYASA_ABOUT_ELEPHANTA,İçine attığınız her şeyi her cihazda hatırlayan not defteri. Ücretsiz kullanıcı çok; soru ödeyen kullanıcı.,"A notebook that remembers everything you clip into it, on every device. Free users are many; paying users are the question."
+PIYASA_ABOUT_SURMISE,"Ekiplerin birlikte düzenlediği tek sayfada notlar ve görev listeleri. Küçük şirketlere koltuk başına satar, ağızdan ağıza büyür.",Notes and task lists on one page that teams edit together. It sells to small companies by the seat and grows by word of mouth.
+PIYASA_ABOUT_BITWALTZ,Kısa video akışı ve onu besleyen telefon kurgusu; ürün öneri motorunun kendisi. Seyircisinin çoğu yirmi beş yaşın altında.,A short video feed and the phone editor that feeds it; the recommendation engine is the product. Most of its audience is under twenty-five.
+PIYASA_ABOUT_PIVOTREEL,İçerik üreticilerine abonelikle satılan telefon video kurgusu; parayı şablonlar ve müzik paketleri kazandırır. Küçük ve kârlı kaldı.,A phone video editor sold to creators by subscription; templates and music packs make the money. It has stayed small and in profit.

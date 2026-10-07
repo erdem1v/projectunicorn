@@ -42,6 +42,7 @@ const LOCK_ICON := preload("res://assets/icons/util/lock.svg")
 	$Margin/Col/SalesBtn,
 	$Margin/Col/HRBtn,
 	$Margin/Col/FinanceBtn,
+	$Margin/Col/PiyasaBtn,
 	$Margin/Col/PersonalBtn,
 	$Margin/Col/MarketingBtn,
 	$Margin/Col/RnDBtn,

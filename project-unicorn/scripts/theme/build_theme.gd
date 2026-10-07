@@ -636,6 +636,9 @@ func _menajer(master: Theme) -> Theme:
 	# ---- New variations: type roles in component inks ----
 	for row in [
 		[&"TitleH1", cond_b_caps, T.D_FS_40, T.D_INK_1],
+		[&"DisplayName", cond_b, T.D_FS_40, T.D_INK_1],   # a proper noun at title size: never caps
+		[&"TileValue", cond_b, T.D_FS_36, T.D_INK_1],
+		[&"HeroFigure", sans_sb, T.D_FS_40, T.D_INK_1],
 		[&"TitleH2", cond_b, T.D_FS_30, T.D_INK_1],
 		[&"DialogTitle", cond_b, T.D_FS_22, T.D_INK_1],
 		[&"NameTitle", cond_b, T.D_FS_20, T.D_INK_1],
@@ -782,6 +785,9 @@ func _menajer(master: Theme) -> Theme:
 		[&"WinCtl", _flat(clear, 0, Vector4(T.SPACE_3XL, 0, T.SPACE_3XL, 0), T.D_LINE_1, bottom)],
 		[&"WinReadOnly", _flat(T.D_SURFACE_2, 0, band_pad, T.D_LINE_1, bottom)],
 		[&"KpiCell", _flat(clear, 0, Vector4(T.SPACE_3XL, 0, T.SPACE_3XL, 0), T.D_LINE_1, Vector4i(T.BORDER_HAIRLINE, 0, 0, 0))],
+		[&"MarketTile", _flat(T.D_SURFACE_4, T.D_RADIUS_3, Vector4(T.SPACE_XXL, T.SPACE_L, T.SPACE_XXL, T.SPACE_L), T.D_LINE_1)],
+		[&"MarketCard", _flat(T.D_SURFACE_2, 0, Vector4(T.SPACE_4XL, T.SPACE_3XL, T.SPACE_4XL, T.SPACE_3XL), T.D_LINE_1,
+			Vector4i(T.BORDER_HAIRLINE, 0, 0, 0))],
 		[&"TimeBlock", _flat(T.D_SURFACE_4, 0, Vector4.ZERO, T.D_LINE_1, Vector4i(T.BORDER_HAIRLINE, 0, 0, 0))],
 		[&"TableHead", _flat(clear, 0, Vector4(0, 0, 0, T.SPACE_M), T.D_LINE_1, bottom)],
 		[&"TableRow", _flat(clear, 0, Vector4.ZERO, T.D_ROW_RULE, bottom)],
@@ -862,6 +868,13 @@ func _menajer(master: Theme) -> Theme:
 	_dbtn(th, &"ChipSmall", secondary, sans_reg, T.D_FS_13, _fit(sans_reg, T.D_FS_13, T.D_H_FX, T.SPACE_M, T.SPACE_M))
 	th.set_constant("icon_max_width", &"ChipSmall", T.D_ICON_MARK)
 	th.set_constant("h_separation", &"ChipSmall", T.SPACE_S)
+	# A filter chip over a list: the one in force is ink-edged on the raised ground, never amber.
+	var chip_pad_f := _fit(sans_reg, T.D_FS_15, T.D_H_MARKET_CHIP, T.SPACE_L, T.SPACE_L)
+	var chip_on := [T.D_SURFACE_4, T.D_INK_1, T.D_INK_1]
+	_dbtn(th, &"ChipFilter", {"normal": [clear, T.D_LINE_2, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": chip_on, "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}, sans_reg, T.D_FS_15, chip_pad_f)
+	_dbtn(th, &"ChipFilterOn", {"normal": chip_on, "hover": chip_on, "pressed": chip_on,
+		"disabled": [T.D_SURFACE_4, T.D_LINE_1, T.D_INK_OFF]}, sans_reg, T.D_FS_15, chip_pad_f)
 	# A chip's glyph stays quiet while its label lifts on hover.
 	for state in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
 		for chip in [&"ChipButton", &"ChipSmall"]:

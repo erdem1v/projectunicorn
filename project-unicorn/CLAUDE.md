@@ -217,7 +217,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   iki palette; gövde 4,5, büyük metin ve metin dışı işaret 3, devre dışı metin 1,6 ile 4,5 arası; düşen çiftte 1 ile
   çıkar. Glif denetimi `"$GODOT" --headless --path . -s res://scripts/debug/glyph_audit.gd`: CSV'nin, kod
   literallerinin ve `data/` metninin her karakterini koyu yüzlere ve zincirlerine sorar. `--probe-shot=menajer`
-  ThemeProbe'u koyu temanın altında, koyu temanın yeni varyasyonlarıyla çeker.
+  ThemeProbe'u koyu temanın altında, koyu temanın yeni varyasyonlarıyla çeker. Piyasa penceresi:
+  `--tab-shot=piyasa[:<seed_oncesi|seed_sonrasi|series_a|ipo|filtre|sektor>]` (oyuncu karosunun hâlleri, halka arz
+  haftası, Sektörüm filtresi, sektör rakibinin kartı) ve `--theme-audit=piyasa`.
 - **Ekran kartı.** Ekranlı Godot koşuları (shot, tema denetimi, görsel kabul) paralel değil sırayla koşar; ekran
   gerektirmeyen her koşu `--headless`.
 - Git kökündeki `.githooks/pre-commit` lint ve `loc_residue`'yu koşar; etkin değildir, etkinleştirmek sahibin kararıdır.

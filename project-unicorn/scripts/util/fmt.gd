@@ -131,6 +131,34 @@ static func money_exact(value: int) -> String:
 	return ("-$" if value < 0 else "$") + group(absi(value))
 
 
+## A market value or a valuation from $M, the Piyasa surfaces' one shape: "$3,0T"/"$3.0T" · "$560B" ·
+## "$9,2B" · "$236M" · "$0,8M". Trillions keep their decimal; billions and millions drop it from ten up.
+static func money_market(m: float) -> String:
+	# The band is picked on the tenth the decimal bands print, so 999.95 reads "$1.0B", not "$1000M",
+	# and 9.94 stays "$9.9M".
+	var t: float = snappedf(m / 1_000_000.0, 0.1)
+	var b: float = snappedf(m / 1_000.0, 0.1)
+	var mm: float = snappedf(m, 0.1)
+	var s: String
+	if t >= 1.0:
+		s = "$%.1fT" % t
+	elif b >= 10.0:
+		s = "$%dB" % roundi(m / 1_000.0)
+	elif b >= 1.0:
+		s = "$%.1fB" % b
+	elif mm >= 10.0:
+		s = "$%dM" % roundi(m)
+	else:
+		s = "$%.1fM" % mm
+	return s.replace(".", _t("NUM_DECIMAL_SEP"))
+
+
+## A share price to the cent, thousands-grouped: "$1.292,52"/"$1,292.52".
+static func price(v: float) -> String:
+	var cents: int = roundi(v * 100.0)
+	return "$%s%s%02d" % [group(cents / 100), _t("NUM_DECIMAL_SEP"), cents % 100]
+
+
 ## Swap printf's decimal point for the locale's mark and re-attach the sign.
 static func _localize_signed(value: int, s: String) -> String:
 	var sep: String = _t("NUM_DECIMAL_SEP")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/components/left_tabs.gd" id="1_lefttabs"]
 [ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_menajer"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/icons/rail/sales.svg" id="4_sales"]
 [ext_resource type="Texture2D" path="res://assets/icons/rail/hr.svg" id="5_hr"]
 [ext_resource type="Texture2D" path="res://assets/icons/rail/finance.svg" id="6_finance"]
+[ext_resource type="Texture2D" path="res://assets/icons/rail/piyasa.svg" id="12_piyasa"]
 [ext_resource type="Texture2D" path="res://assets/icons/rail/personal.svg" id="7_personal"]
 [ext_resource type="Texture2D" path="res://assets/icons/rail/marketing.svg" id="8_marketing"]
 [ext_resource type="Texture2D" path="res://assets/icons/rail/rnd.svg" id="9_rnd"]
@@ -238,6 +239,62 @@ text = "TAB_FINANCE"
 vertical_alignment = 1
 
 [node name="Badge" type="Label" parent="Margin/Col/FinanceBtn"]
+visible = false
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -36.0
+offset_top = -10.0
+offset_right = -16.0
+offset_bottom = 10.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"BadgeCount"
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PiyasaBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"RailRow"
+
+[node name="Stack" type="HBoxContainer" parent="Margin/Col/PiyasaBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_right = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Icon" type="TextureRect" parent="Margin/Col/PiyasaBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("12_piyasa")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="Margin/Col/PiyasaBtn/Stack"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_type_variation = &"NavLabel"
+text = "TAB_PIYASA"
+vertical_alignment = 1
+
+[node name="Badge" type="Label" parent="Margin/Col/PiyasaBtn"]
 visible = false
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 1
