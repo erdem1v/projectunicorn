@@ -769,6 +769,7 @@ HR_ERR_NO_SALARY,Maaş kaydı yok,No salary on record
 HR_RAISE_PERMANENT,"Zam kalıcıdır, geri alınmaz",A raise is permanent and cannot be undone
 HR_PROMOTION_PERMANENT,"Terfi kalıcıdır, geri alınmaz",A promotion is permanent and cannot be undone
 HR_ERR_TOP_LEVEL,En üst seviye,Top level
+HR_ERR_RAISE_COOLDOWN,Sonraki zam {time} sonra,Next raise in {time}
 HR_CARD_PROMOTE,Terfi ettir,Promote
 HR_APPLY_PROMOTE_PCT,Terfi ettir · +{pct},Promote · +{pct}
 HR_ROW_TITLE,Unvan,Title

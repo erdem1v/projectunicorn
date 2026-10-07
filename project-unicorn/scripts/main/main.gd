@@ -1985,12 +1985,15 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 
 
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
-# gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|cikar|cikar-eksi|bos|dosya|dosya-kurucu|kalabalik>:
+# gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
+# dosya-kurucu|kalabalik>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
 # list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
-# founder's file over the office; ekip-saat = Kadro with hours exceptions in Durum; atlas-secili = the
-# search with a role and a level picked; gorevler-arge = Görevler with someone researching.
+# founder's file over the office; menu-kilit and dosya-kilit = the row menu and the file of a first
+# employee raised today (the Zam yap row locked, with its cooldown reason); ekip-saat = Kadro with
+# hours exceptions in Durum; atlas-secili = the search with a role and a level picked; gorevler-arge =
+# Görevler with someone researching.
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -2002,6 +2005,8 @@ func _run_hr_shot(kind: String) -> void:
 		# Kasa ve burn maaşları görsün: üst bar ile önizlemeler aynı gerçeği okur.
 		GameState.set_cash(240000)
 		FinanceSystem.daily_tick()
+		if kind.ends_with("-kilit"):
+			CharacterRegistry.get_employees()[0].last_raise_day = GameState.day
 	match kind:
 		"gorevler-bos", "atlas", "atlas-secili", "dosya-kurucu":   # LOC-DATA debug seed / id
 			pass
@@ -2103,7 +2108,7 @@ func _run_hr_shot(kind: String) -> void:
 			var who: Array[Character] = CharacterRegistry.get_employees()
 			if not who.is_empty():
 				tab._on_card_action(who[0].id, HRLedger.ACTION_TRAIN, null)
-		"dosya":   # LOC-DATA debug seed / id
+		"dosya", "dosya-kilit":   # LOC-DATA debug seed / id
 			tab._on_card_action(CharacterRegistry.get_employees()[0].id, HRLedger.ACTION_DOSSIER, null)
 		"dosya-kurucu":   # LOC-DATA debug seed / id
 			EventBus.tab_changed.emit("")
@@ -2113,7 +2118,7 @@ func _run_hr_shot(kind: String) -> void:
 			tab._toggle_group(HRConstants.GROUP_DEVELOPMENT)
 			await get_tree().process_frame
 			tab._scroll.scroll_vertical = UiTokens.D_H_GROUP + UiTokens.D_H_ROW_SM * 2
-		"zam", "menu", "cikar", "cikar-eksi":
+		"zam", "menu", "menu-kilit", "cikar", "cikar-eksi":
 			# The row's REAL path: a row click opens the HRPopover anchored on that row.
 			var target: Character = CharacterRegistry.get_employees()[0]
 			var row: Control = tab._rows.get(target.id)

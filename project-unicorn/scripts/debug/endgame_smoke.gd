@@ -9663,9 +9663,10 @@ static func _case_promotion_and_raise_gate() -> String:
 	# İÇERİR ve bekleme süresini de kurar — ertesi gün üstüne ayrı bir zam alınabilseydi
 	# altı aylık kural anlamsız olurdu.
 	#
-	# FALSİFİKASYON: HRActions.can_raise'deki raise_cooldown_left kapısını sil → ikinci zam
-	# geçer ve "cooldown" iddiası FAIL eder. can_promote'taki LEVEL_SENIOR kapısını sil →
-	# "Kıdemli terfi aldı" iddiası FAIL eder.
+	# FALSİFİKASYON: HRActions.raise_block_reason'daki raise_cooldown_left kapısını sil → ikinci
+	# zam geçer ve "cooldown" iddiası FAIL eder. preview_raise'i raise_block_reason yerine kendi
+	# kapılarına (bekleme süresi yok) döndür → "preview stayed open" iddiası FAIL eder.
+	# can_promote'taki LEVEL_SENIOR kapısını sil → "Kıdemli terfi aldı" iddiası FAIL eder.
 	GameState.set_cash(500000)
 	var emp: Character = _make_employee("promo_a", "Promo A", HRConstants.ROLE_DEVELOPER,
 		SEED_PACE, 3000, 60)
@@ -9689,6 +9690,17 @@ static func _case_promotion_and_raise_gate() -> String:
 	if HRActions.raise_cooldown_left(emp) != TimeModel.ticks(HRConstants.RAISE_COOLDOWN_WEEKS):
 		return "cooldown reads %d weeks, want %d" % [
 			HRActions.raise_cooldown_left(emp), HRConstants.RAISE_COOLDOWN_WEEKS]
+	# Kart ne diyorsa uygulayıcı o: bekleme süresinde önizleme de kilitli ve gerekçeli kalır,
+	# yoksa satır açılır ve Uygula sessizce başarısız olur.
+	var locked: Dictionary = HRActions.preview_raise(emp, HRConstants.RAISE_MAX_PCT)
+	if bool(locked.get("ok", true)) or String(locked.get("reason", "")) == "":
+		return "the raise preview stayed open (or reasonless) during the cooldown"
+	var day_before: int = GameState.day
+	GameState.day += TimeModel.ticks(HRConstants.RAISE_COOLDOWN_WEEKS)
+	var reopened: bool = bool(HRActions.preview_raise(emp, HRConstants.RAISE_MAX_PCT).get("ok", false))
+	GameState.day = day_before
+	if not reopened:
+		return "the raise preview stayed locked after the cooldown elapsed"
 
 	# --- §9.3 TERFİ: tek adım, unvan değişir, maaş BANDA OTURMAZ ---
 	var level_before: int = emp.level

@@ -22,12 +22,21 @@ static func can_raise(emp: Character, pct: int) -> bool:
 	# `pct` is CLAMPED rather than rejected, so the slider never produces a refusal the player
 	# cannot understand. Refusing a raise that rounds to nothing here lets apply_raise trust
 	# that true means a real rise.
-	if _block_reason(emp) != "" or emp.monthly_salary <= 0:
-		return false
-	# §9.2: "Aynı çalışana ALTI AY geçmeden yeni zam verilemez."
-	if raise_cooldown_left(emp) > 0:
-		return false
-	return _raised_salary(emp.monthly_salary, _clamp_pct(pct)) > emp.monthly_salary
+	return raise_block_reason(emp) == "" and _raised_salary(emp.monthly_salary, _clamp_pct(pct)) > emp.monthly_salary
+
+
+## Kilitli satırın gerekçesi. §9.2: "Aynı çalışana ALTI AY geçmeden yeni zam verilemez."
+static func raise_block_reason(emp: Character) -> String:
+	var shared: String = _block_reason(emp)
+	if shared != "":
+		return shared
+	if emp.monthly_salary <= 0:
+		return TranslationServer.translate("HR_ERR_NO_SALARY")
+	var left: int = raise_cooldown_left(emp)
+	if left == 0:
+		return ""
+	var wait: String = TranslationServer.translate(Fmt.count_key("HR_DURATION_WEEKS", left)).format({"n": left})
+	return TranslationServer.translate("HR_ERR_RAISE_COOLDOWN").format({"time": wait})
 
 
 ## §9.2 bekleme süresinden KALAN hafta. 0 = zam verilebilir.
@@ -38,9 +47,7 @@ static func raise_cooldown_left(emp: Character) -> int:
 
 
 static func preview_raise(emp: Character, pct: int) -> Dictionary:
-	var reason: String = _block_reason(emp)
-	if reason == "" and emp.monthly_salary <= 0:
-		reason = TranslationServer.translate("HR_ERR_NO_SALARY")
+	var reason: String = raise_block_reason(emp)
 	if reason != "":
 		return _refusal(reason)
 	var p: int = _clamp_pct(pct)
