@@ -51,10 +51,13 @@ const NAMES := {
 	"saas_ops":          ["FlowSuite", "Prosedo", "Operanda", "Akista", "Otomo", "Süreçly", "Rutin", "Adımla"],   # LOC-DATA product name (proper noun)
 	# Ürün §12.11'in üç mühürlü demo alt-tipi. Bunlar OYUNCUNUN seçebildiği tiplerdir, yani
 	# rakip adlarının en çok görüldüğü yer — isimsiz bırakılsalardı board ve pazar payı
-	# merdiveni "note_tool #7" gibi HAM KİMLİK basardı.
-	"note_tool":         ["Kayıt", "Zihin Haritası", "Notably", "Bellek", "Kâğıtsız", "Fihrist", "Karalama", "Mürekkep"],   # LOC-DATA product name (proper noun)
-	"video_clip":        ["Kesit", "Klipsa", "Makas", "ShortForge", "Kadraj Kesit", "Altyazıcı", "Reelo", "Montajcı"],   # LOC-DATA product name (proper noun)
-	"erp":               ["Defterdar", "Kasa & Stok", "Muhasip", "Ledgero", "Envanter", "Sayman", "Faturacı", "Tezgâh"],   # LOC-DATA product name (proper noun)
+	# merdiveni "note_tool #7" gibi HAM KİMLİK basardı. Adlar PRD Rakip Dünyası Ek A.2-A.4'ün
+	# parodi setleridir: slot 0-2 Piyasa listesinin şirketleridir (company_id, MarketCatalog
+	# sector_slots), 3-7 özeldir. Hedefi çözülmemiş slot o setin yedek adını taşır.
+	# Geçici adların listesi: companies.json `provisional` bayrağı ve ISLER (Piyasa I1 sonrası).
+	"note_tool":         ["Unonote", "Elephanta", "Surmise", "Meander", "Ursa", "Dittofy", "Tezkire", "Monoline"],   # LOC-DATA product name (proper noun)
+	"video_clip":        ["Bitwaltz", "Pivotreel", "Tefrika", "Wunderreel", "Inset", "Watermarkt", "Joinery", "Cutaway"],   # LOC-DATA product name (proper noun)
+	"erp":               ["Datenwald", "Pythia", "Werktag", "Ardenna", "Tacita", "Raketenhaus", "Sumpter", "Thymeworks"],   # LOC-DATA product name (proper noun)
 }
 
 
@@ -93,11 +96,13 @@ static func build_all() -> Array:
 	for rec in ProductCatalog.get_all_sub_product_types():
 		var sub_id: String = String(rec["id"])
 		var names: Array = NAMES.get(sub_id, [])
+		var slots: Array = MarketCatalog.sector_slots(sub_id)
 		for i in TEMPLATE.size():
 			var t: Dictionary = TEMPLATE[i]
 			var r := Rival.new()
 			r.id = "rv_%s_%d" % [sub_id, i]   # LOC-DATA rival id
 			r.product_name = String(names[i]) if i < names.size() else "%s #%d" % [sub_id, i]
+			r.company_id = String(slots[i]) if i < slots.size() else ""
 			r.sub_product_type_id = sub_id
 			r.tier = String(t["tier"])
 			r.innovation = float(t["innovation"])

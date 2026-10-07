@@ -23,6 +23,7 @@ extends Resource
 @export var experience: float = 0.0
 @export var momentum: float = 0.0              # per-day dim growth rate (0 for giants)
 @export var status: String = "QUIET"           # status id (DOMINANT/STEADY/SCALING/QUIET), compared, never displayed
+@export var company_id: String = ""            # its Piyasa list row (MarketCatalog company id); "" when not listed
 
 # --- forward-compat reserves (mirror Customer/Character) ---
 @export var founder_name: String = ""

@@ -465,6 +465,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"valuation_seed_accept_rounds_tenth": fail = _case_valuation_seed_accept_rounds_tenth()
 		"valuation_old_save_derives_seed":  fail = _case_valuation_old_save_derives_seed()
 		"valuation_seam_seed_then_series_a": fail = _case_valuation_seam_seed_then_series_a()
+		"news_piyasa_reason_lines":         fail = _case_news_piyasa_reason_lines()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7991,7 +7992,7 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 					return "sektor line repeated before pool exhaustion: %s" % String(line["txt"])
 				sektor_seen[String(line["txt"])] = true
 	var counts: Dictionary = GameState.news_feed["counts"]
-	var total: float = float(int(counts["sektor"]) + int(counts["rakip"]) + int(counts["biz"]))
+	var total: float = float(int(counts["sektor"]) + int(counts["rakip"]) + int(counts["piyasa"]) + int(counts["biz"]))
 	if total < float(ticks * NewsFeedSystem.WEEKLY_LINES_MIN):
 		return "only %d lines over %d ticks" % [int(total), ticks]
 	var sektor_frac: float = float(counts["sektor"]) / total
@@ -17303,4 +17304,63 @@ static func _case_valuation_seam_seed_then_series_a() -> String:
 		return "after the Series A the seam reads %s, want 22" % EvSeams.read("finance.valuation")
 	if not is_equal_approx(GameState.seed_post_money_m, 0.8):
 		return "the Series A signature changed the Seed's post-money to %s" % GameState.seed_post_money_m
+	return ""
+
+
+static func _case_news_piyasa_reason_lines() -> String:
+	# The list's voice: a save from before it carries no piyasa counter and gets one on the next
+	# tick; a mover above PIYASA_MOVE_PCT becomes one "{headline} ({why})" line through the quota
+	# walk; the listing week is one live line, and only that week.
+	NewsFeedSystem.daily_tick()
+	GameState.news_feed["counts"].erase("piyasa")
+	GameState.news_feed.erase("recent_piyasa")
+	NewsFeedSystem.daily_tick()
+	var counts: Dictionary = GameState.news_feed["counts"]
+	if not counts.has("piyasa") or not GameState.news_feed.has("recent_piyasa"):
+		return "an old save's counts were not backfilled with the piyasa key"
+	# The first week with a mover is a pure function of the pinned run seed.
+	var week: int = 0
+	for w in range(2, 400):
+		GameState.day = w
+		if not NewsFeedSystem._piyasa_candidates(GameState.news_feed).is_empty():
+			week = w
+			break
+	if week == 0:
+		return "no listed company moved %.0f%% in 400 weeks: the threshold is unreachable" % (NewsFeedSystem.PIYASA_MOVE_PCT * 100.0)
+	var mover: Dictionary = NewsFeedSystem._piyasa_candidates(GameState.news_feed)[0]
+	var before: int = int(counts["piyasa"])
+	NewsFeedSystem.daily_tick()
+	if int(counts["piyasa"]) <= before:
+		return "week %d had a mover but the quota walk emitted no piyasa line" % week
+	var re := RegEx.new()
+	re.compile("^.+ \\(.+\\)$")
+	var seen: bool = false
+	for line in NewsFeedSystem.get_lines_for_day(week):
+		if String(line["kind"]) != "piyasa":
+			continue
+		seen = true
+		var txt: String = String(line["txt"])
+		if re.search(txt) == null or not txt.begins_with(String(mover["name"])):
+			return "piyasa line is not '{headline} ({why})' on the mover: %s" % txt
+		if txt.contains("{") or txt.contains("—") or txt.contains("–"):
+			return "piyasa line carries a raw placeholder or a dash: %s" % txt
+		break   # the biggest mover leads the week; the rest are ordered after it
+	if not seen:
+		return "the piyasa count rose but no piyasa line is in the stream"
+	if GameState.news_feed["recent_piyasa"].get(String(mover["id"]), -1) != week:
+		return "the mover did not enter the cooldown window"
+	# The social network lists at week 20: one live IPO line that week, none the week after.
+	var live: Array = []
+	var ear := func(_src: String, txt: String) -> void: live.append(txt)
+	EventBus.ticker_live_line.connect(ear)
+	GameState.day = 20
+	NewsFeedSystem.daily_tick()
+	var ipo_lines: int = live.size()
+	GameState.day = 21
+	NewsFeedSystem.daily_tick()
+	EventBus.ticker_live_line.disconnect(ear)
+	if ipo_lines != 1 or live.size() != 1:
+		return "listing week emitted %d live lines, the week after %d (want 1 and 0)" % [ipo_lines, live.size() - ipo_lines]
+	if not String(live[0]).begins_with("Facewall") or re.search(String(live[0])) == null:
+		return "the IPO line is not a reasoned headline on the lister: %s" % String(live[0])
 	return ""

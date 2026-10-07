@@ -3092,6 +3092,16 @@ PIYASA_RANGE_1Y,1Y,1Y
 PIYASA_RANGE_5Y,5Y,5Y
 PIYASA_RANGE_ALL,Tümü,All
 PIYASA_MONTH_YEAR,{month} {year},{month} {year}
+PIYASA_NEWS_JUMP,{company} {pct} yükseldi,{company} jumps {pct}
+PIYASA_NEWS_DROP,{company} {pct} düştü,{company} drops {pct}
+PIYASA_NEWS_IPO,{company} {value} değerle halka açıldı,{company} goes public at a {value} valuation
+PIYASA_WHY_UP_0,veri merkezi siparişi,data centre order
+PIYASA_WHY_UP_1,abonelik geliri planın üstünde,subscription revenue ahead of plan
+PIYASA_WHY_UP_2,yeni ürün iyi karşılandı,a product launch landed well
+PIYASA_WHY_DOWN_0,bir birimde işten çıkarma,layoffs in one unit
+PIYASA_WHY_DOWN_1,zayıf çeyrek,a weak quarter
+PIYASA_WHY_DOWN_2,büyük bir sözleşme kaybedildi,a large contract lost
+PIYASA_WHY_IPO,ilk işlem günü,first day of trading
 PIYASA_SECTOR_AUTOMOTIVE,otomotiv,automotive
 PIYASA_SECTOR_BANK,banka,bank
 PIYASA_SECTOR_CHIPS,çip,chips

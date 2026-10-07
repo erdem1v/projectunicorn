@@ -19,7 +19,7 @@ extends Panel
 #    position, so a line landing mid-scroll causes one visible jump; acceptable for a
 #    once-in-a-while beat (TODO: splice the line in without resetting the scroll).
 #
-# Akış içeriği NewsFeedSystem.get_stream()'den gelir (sektör/rakip/biz, 50/30/≤20) ve
+# Akış içeriği NewsFeedSystem.get_stream()'den gelir (sektör/rakip/piyasa/biz, 45/25/10/≤20) ve
 # tik sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10 anahtarları
 # SOĞUK-BAŞLANGIÇ yedeğidir: akış boşken (hafta 1, ilk tik öncesi) ve akış kısayken
 # döngüyü doldurur. ANAHTAR ADLARI SABİT SÖZLEŞMEDİR.

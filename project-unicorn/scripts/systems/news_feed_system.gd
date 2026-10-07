@@ -1,11 +1,14 @@
 class_name NewsFeedSystem
 extends RefCounted
 
-# Haber akışı motoru — ticker'ın VERİ kaynağı. Üç gerçek kaynaktan ağırlıklı akış:
+# Haber akışı motoru — ticker'ın VERİ kaynağı. Dört gerçek kaynaktan ağırlıklı akış:
 #
-#   Sektör (~%50)  — faz + subgenre etiketli küratörlü havuz (aşağıda)
-#   Rakip  (~%30)  — RivalRegistry.get_market_snapshot'taki GERÇEK hareketlerden
+#   Sektör (~%45)  — faz + subgenre etiketli küratörlü havuz (aşağıda)
+#   Rakip  (~%25)  — RivalRegistry.get_market_snapshot'taki GERÇEK hareketlerden
 #                    türetilir, asla uydurulmaz; ilgililik kapısından geçer
+#   Piyasa (~%10)  — MarketCatalog listesinin bu haftaki büyük hareketleri; her satır
+#                    "{manşet} ({sebep})" biçimindedir, sebepsiz satır akışa giremez.
+#                    Halka arz haftası kotayı beklemez: EventBus.ticker_live_line tek satır
 #   Biz    (≤%20)  — EventBus.headline_added kanalının pasif yakalanışı; SERT kapı:
 #                    marka ne kadar parlarsa parlasın akışın beşte birini aşamaz
 #                    (ticker dünyadır, bizim basın ofisimiz değil)
@@ -18,14 +21,15 @@ extends RefCounted
 #
 # Ticker tüketici sözleşmesi: get_stream() (en yeni önce) + get_lines_for_day(day)
 # + EventBus.news_stream_changed (tik-sonu repaint kancası). Satır şekli:
-#   {day: int, kind: "sektor"|"rakip"|"biz", src: String, txt: String}
+#   {day: int, kind: "sektor"|"rakip"|"piyasa"|"biz", src: String, txt: String}
 # news_ticker.gd'nin {src, txt} vokabüleriyle bire bir uyumlu.
 #
 # # WORKING TR — NEWS_* metinleri (strings.csv) çalışma metnidir; ses geçişi content fazında.
 
 # --- Ayar yüzeyi (tümü WORKING) ---------------------------
-const TARGET_SEKTOR := 0.5
-const TARGET_RAKIP := 0.3
+const TARGET_SEKTOR := 0.45
+const TARGET_RAKIP := 0.25
+const TARGET_PIYASA := 0.10
 const TARGET_BIZ := 0.2
 const BIZ_HARD_CAP := 0.20          # (biz+1)/(toplam+1) bu oranı AŞAMAZ — sert kapı
 const WEEKLY_LINES_MIN := 3
@@ -54,6 +58,12 @@ const RIVAL_COOLDOWN_WEEKS := 1
 # yoktur. Özel-durum yamamak yasak: yalan hareket üretir.
 const RIVAL_BIG_MOVE_PCT := 0.06
 const RIVAL_NEAR_BAND_PCT := 3.0    # startup, oyuncunun payına bu kadar yakınsa ilgilidir
+# Piyasa satırı: listedeki bir şirketin bir haftalık değer hareketi bu oranı aşarsa manşettir
+# (dev haftalık gürültüsü %1-2, küçük şirket %3; eşik yalnız gerçek sıçramayı yakalar). Aynı
+# şirket cooldown içinde ikinci kez manşet olmaz: pürüzsüz gürültü bir sıçramayı birkaç hafta
+# taşır, her haftası ayrı haber değildir.
+const PIYASA_MOVE_PCT := 0.08
+const PIYASA_COOLDOWN_WEEKS := 4
 
 # Kurgusal yayın adları (gerçek marka yok; Ekonomi Postası ending gazetesiyle aynı
 # evren). ÖZEL AD oldukları için iki dilde de aynı — CSV satırları kasten birebir.
@@ -124,6 +134,8 @@ const SEKTOR_POOL := [
 # değerlenir, o an henüz bir dil yok.
 const RIVAL_UP_COUNT := 4
 const RIVAL_DOWN_COUNT := 3
+# Piyasa sebep satırları: PIYASA_WHY_UP_<n> / PIYASA_WHY_DOWN_<n> (CSV), her yönde bu kadar.
+const PIYASA_WHY_COUNT := 3
 
 
 # --- Haftalık kompozisyon ----------------------------------------------------
@@ -135,12 +147,16 @@ static func daily_tick() -> void:
 	# Ship öncesi güvenli: ürün yokken rakip kaynağı susar, dünya (sektör) konuşur.
 	if sub_id != "":
 		rival_pool = _rival_candidates(RivalRegistry.get_market_snapshot(sub_id), nf)
+	var piyasa_pool: Array = _piyasa_candidates(nf)
+	_emit_listings()
 	var lines: int = WEEKLY_LINES_MIN \
 		+ absi(hash("nf_count|%d" % GameState.day)) % (WEEKLY_LINES_MAX - WEEKLY_LINES_MIN + 1)
 	for slot in lines:
-		match _pick_source(nf, rival_pool):
+		match _pick_source(nf, rival_pool, piyasa_pool):
 			"rakip":
 				_emit_rakip(nf, rival_pool)
+			"piyasa":
+				_emit_piyasa(nf, piyasa_pool)
 			"biz":
 				_emit_biz(nf)
 			_:
@@ -196,20 +212,25 @@ static func _ensure_state() -> Dictionary:
 	if nf.is_empty():
 		nf["used_sektor"] = []
 		nf["reshuffles"] = 0
-		nf["counts"] = {"sektor": 0, "rakip": 0, "biz": 0}   # LOC-DATA news line kind id
+		nf["counts"] = {"sektor": 0, "rakip": 0, "piyasa": 0, "biz": 0}   # LOC-DATA news line kind id
 		nf["biz_buffer"] = []
 		nf["biz_dropped"] = 0      # kuyruk doluyken geri çevrilen milestone sayısı
 		nf["recent_rivals"] = {}   # rival id -> son haber tiki (cooldown penceresi)
+		nf["recent_piyasa"] = {}   # company id -> son manşet tiki
 		nf["stream"] = []
+	elif not (nf["counts"] as Dictionary).has("piyasa"):
+		# Liste konuşmaya başlamadan önce yazılmış kayıt: piyasa sayacı sıfırdan katılır.
+		nf["counts"]["piyasa"] = 0
+		nf["recent_piyasa"] = {}
 	return nf
 
 
-static func _pick_source(nf: Dictionary, rival_pool: Array) -> String:
+static func _pick_source(nf: Dictionary, rival_pool: Array, piyasa_pool: Array) -> String:
 	# Deterministik kota yürüyüşü: kullanılabilir kaynaklar arasından, hedef orana
 	# göre en aç olanı seçilir. Biz'in sert kapısı burada — hedefe değil TAVANA
 	# bakar: bir sonraki satır biz olursa oran %20'yi aşacaksa biz seçilemez.
 	var counts: Dictionary = nf["counts"]
-	var total: float = float(int(counts["sektor"]) + int(counts["rakip"]) + int(counts["biz"]))   # LOC-DATA news line kind id
+	var total: float = float(int(counts["sektor"]) + int(counts["rakip"]) + int(counts["piyasa"]) + int(counts["biz"]))   # LOC-DATA news line kind id
 	var best: String = "sektor"   # LOC-DATA news line kind id
 	var best_deficit: float = TARGET_SEKTOR - (float(counts["sektor"]) / maxf(total, 1.0))   # LOC-DATA news line kind id
 	if not rival_pool.is_empty():
@@ -217,6 +238,11 @@ static func _pick_source(nf: Dictionary, rival_pool: Array) -> String:
 		if d > best_deficit:
 			best = "rakip"
 			best_deficit = d
+	if not piyasa_pool.is_empty():
+		var dp: float = TARGET_PIYASA - (float(counts["piyasa"]) / maxf(total, 1.0))
+		if dp > best_deficit:
+			best = "piyasa"
+			best_deficit = dp
 	var biz_allowed: bool = not (nf["biz_buffer"] as Array).is_empty() \
 		and float(int(counts["biz"]) + 1) / (total + 1.0) <= BIZ_HARD_CAP
 	if biz_allowed:
@@ -295,6 +321,53 @@ static func _emit_rakip(nf: Dictionary, rival_pool: Array) -> void:
 		"share": RivalRegistry.format_share(float(row["share_pct"])),
 	})
 	_append(nf, "rakip", outlet_name(absi(hash(String(row["id"]) + str(GameState.day)))), txt)
+
+
+## This week's movers on the list: public rows whose value moved PIYASA_MOVE_PCT since last
+## week, biggest move first. A row on its listing week is the IPO line's, not a jump.
+static func _piyasa_candidates(nf: Dictionary) -> Array:
+	var week: int = GameState.day
+	var recent: Dictionary = nf["recent_piyasa"]
+	var out: Array = []
+	for c in MarketCatalog.listed(week):
+		if int(c["listed_week"]) == week \
+			or week - int(recent.get(String(c["id"]), -999)) < TimeModel.ticks(PIYASA_COOLDOWN_WEEKS):
+			continue
+		var delta: float = MarketCatalog.value(c, week) / MarketCatalog.value(c, week - 1) - 1.0
+		if absf(delta) >= PIYASA_MOVE_PCT:
+			out.append({"id": c["id"], "name": c["name"], "delta": delta})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return absf(a["delta"]) > absf(b["delta"]))
+	return out
+
+
+static func _emit_piyasa(nf: Dictionary, piyasa_pool: Array) -> void:
+	var row: Dictionary = piyasa_pool.pop_front()
+	var id: String = String(row["id"])
+	nf["recent_piyasa"][id] = GameState.day   # keyed by company: bounded by the list
+	var up: bool = float(row["delta"]) >= 0.0
+	var headline: String = TranslationServer.translate("PIYASA_NEWS_JUMP" if up else "PIYASA_NEWS_DROP").format({
+		"company": String(row["name"]),
+		"pct": Fmt.percent(absf(float(row["delta"])) * 100.0),
+	})
+	var why: String = TranslationServer.translate("PIYASA_WHY_%s_%d" % ["UP" if up else "DOWN",
+		absi(hash("%s|%d" % [id, GameState.day])) % PIYASA_WHY_COUNT])
+	_append(nf, "piyasa", outlet_name(absi(hash(id + str(GameState.day)))), _with_reason(headline, why))
+
+
+## A company's first week on the list is one live line, outside the quota.
+static func _emit_listings() -> void:
+	for c in MarketCatalog.companies():
+		if String(c["status"]) == "public" and int(c["listed_week"]) == GameState.day:
+			var headline: String = TranslationServer.translate("PIYASA_NEWS_IPO").format({
+				"company": String(c["name"]),
+				"value": Fmt.money_market(MarketCatalog.value(c, GameState.day)),
+			})
+			EventBus.ticker_live_line.emit(outlet_name(absi(hash(String(c["id"])))),
+				_with_reason(headline, TranslationServer.translate("PIYASA_WHY_IPO")))
+
+
+static func _with_reason(headline: String, why: String) -> String:
+	return "%s (%s)" % [headline, why]
 
 
 static func _emit_biz(nf: Dictionary) -> void:

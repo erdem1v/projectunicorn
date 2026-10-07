@@ -122,3 +122,21 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   - Faz 3 giriş kartlarının (`world.analyst_guide`, `world.newsletter_slot`) ve sözün beta payının smoke vakası yok;
     ilkini yalnız probe ve lint koruyor.
   - `min_cash_pre_seed` haftalık `STATE` okumasından alınır, hafta içi dip değildir.
+
+## Rakip Dünyası · Piyasa I1 sonrası
+- **I2 · "Ürünleri" bölümü.** Sektör rakibinin rapor kartında çıkmış 2-4 yetenek hattı (PRD Rakip Dünyası §3.4);
+  `piyasa_tab.gd`'de yuva boş bırakıldı, birleşik `Rival.line_tiers` ile dolar; satış itirazının andığı listeyle aynı.
+- **I4 · Son bakıştan beri.** Pencere kapanışında anlık görüntü, yeniden açılışta liste satırlarında oklar
+  (`PIYASA_SINCE_LAST`); oyuncu karosuna uygulanmaz.
+- **Parodi adlarının yeniden taraması** (WebSearch bütçesi yenilenince, PRD Ek A.9): `companies.json`'da
+  `provisional: true` taşıyan satırlar ve `RivalCatalog.NAMES`'teki Tefrika (video_clip slot 2'nin ürün adı sahip
+  kararı), Tezkire (A.4 yedeği, taranmadı), Monoline (kanıtsız); çakışma alan iki slot (video_clip 1 KineMaster hedefi,
+  note_tool 6 Obsidian hedefi) tuvalde yeni seçim bekler, bugün yedek adlarını taşır. Pivotreel ile Wunderreel aynı
+  pazarda aynı kökü ("reel") taşıyor (Ek A.6). Bitwaltz'ın halka açık kurgusu (hedef özel şirket) sahip kararı.
+- **Eski kayıtta rakip adları.** `SaveCodec` her `Rival`'ı kaydın sözlüğünden kurar: eski kayıt `product_name`'i
+  (çakışma hükümlü eski adlar) ve boş `company_id`'yi getirir. Katalog alanlarının restore'da katalogdan okunması
+  (`RivalRegistry.insert_raw`) sahip onayı bekleyen küçük iş.
+- **Piyasa penceresi, sahip kararına göre:** 1536 karesinde kartın tekerlekle kaymasına karşı maketin sıkıştırması
+  (karo 100 / bölme 128 / grafik 140); Tümü grafiğinin başlangıç yılı (bugün halka arz yılından önceye gitmez);
+  kadran ondalığı (%1 altında bir basamak, üstünde tam yüzde); `Fmt.money_market` bantlaması (999,95 → $1,0B);
+  Sektörüm çipinin ürün tipi seçilmeden gizli kalması.

@@ -12,6 +12,7 @@ zaman olmayacaktır.
 | v4 | commit `c706349` (son dokunuş `c75d5d5`, çip yolu düzeltmesi) | 25 açık karar, Satış tek dikiş, ilk marka taraması |
 | v5 | **rafa kalktı** (2026-10-06) | 5.812 satır; görevler (M1-M3), rakip ekonomisi/defteri, 42 karar. Sahip "çok ağır" dedi; görev fikri tümüyle reddedildi. Yedek: oturum scratchpad `rival_page/prd.md` |
 | v6 | bu belge | Sahip kararları A-F üzerine yeniden kuruluş: sos, görevsiz. v5'ten yalnız Ek A yedek setleri ve sebepli haber disiplini taşındı (A.1 yöntemi karar G ile değişti). 2026-10-06: sahip v6'yı uygulama için onayladı ([ÇD] değerleri ve metin taslakları onay bekliyor kalır); parodi ad yönü (karar G) işlendi. 2026-10-07: karar H (sektör kurgusu: teknoloji + 5 finans), Ek A parodi kataloğu (tur 2 + teknoloji dolgusu) ve taraması; P3 Piyasa maketleri onaylandı (V1 liste + rapor kartı; §3.4, §3.5, §3.8) |
+| v6 · I1 | **teslim** (2026-10-07) | I1 teslim: C1 `69d21c0` · C2 `b131255` · C3 `6551024` · C4 (bu commit) |
 
 ## 1. Sahip kararları defteri (2026-10-06, bağlayıcı; bu belge bunları kodlar, yeniden açmaz)
 

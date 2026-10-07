@@ -45,6 +45,9 @@ extends RefCounted
 #               The burn ids are FinanceSystem.BURN_IDS, in its order.
 #   PROBE SPRINT day=<d> n=<n> label=<v1.x|-> shipped=<card ids> carried=<n> velocity=<done>/<capacity>
 #   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it)
+#   PROBE MARKET day=<d> total=<$M> leader=<id> leader_value=<$M> listed=<n> player=<valuation $M>
+#               (the Piyasa list at the week's open, every MARKET_LOG_WEEKS weeks from week 1;
+#               a pure read of MarketCatalog, so the line is byte-identical for one seed)
 #   PROBE VC_*  (the presets with a Series A policy): VC_CONFIG, VC_BOOK, VC_MEET,
 #               VC_TABLE_OPEN, VC_PUSH, VC_TABLE_END, VC_REPLAY, VC_REPLAY_SUM
 
@@ -196,6 +199,7 @@ static func run(spec: String, payload: Dictionary) -> void:
 	if _vc_policy != "":
 		print("PROBE VC_CONFIG policy=%s replay=%d" % [_vc_policy, _replay_k])
 	_log_state()
+	_log_market()
 	_play_the_week()                # the run opens at the first week's 08:00
 
 	if _mode == "sim":
@@ -284,6 +288,19 @@ static func _on_gate_reached(next_phase: int) -> void:
 static func _on_day_tick_completed(_day: int) -> void:
 	if _full_run:
 		_mb_add_tick()
+
+
+const MARKET_LOG_WEEKS := 4
+
+## PROBE MARKET — the Piyasa list this week: its total, its leader and the founder's valuation
+## beside them. Once every MARKET_LOG_WEEKS weeks keeps the ledger short; the list changes slowly.
+static func _log_market() -> void:
+	var week: int = GameState.day
+	var leader: Dictionary = MarketCatalog.leader(week)
+	print("PROBE MARKET day=%d total=%d leader=%s leader_value=%d listed=%d player=%.1f" % [
+		week, roundi(MarketCatalog.list_total(week)), String(leader["id"]),
+		roundi(MarketCatalog.value(leader, week)), MarketCatalog.listed(week).size(),
+		GameState.get_valuation_m()])
 
 
 ## This tick's burn, by category. The breakdown holds daily rates written in the finance slot,
@@ -636,6 +653,8 @@ static func _on_week_start() -> void:
 	_log_state()
 	_log_customers()
 	_log_b2c()
+	if (GameState.day - 1) % MARKET_LOG_WEEKS == 0:
+		_log_market()
 	if GameState.day >= _stop_day or not GameState.run_active:
 		_stopped = true
 		if _mode != "sim":
