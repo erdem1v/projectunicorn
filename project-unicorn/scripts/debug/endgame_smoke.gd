@@ -4466,6 +4466,19 @@ static func _case_fumes_zero_revenue_ledger() -> String:
 			found = true
 	if not found:
 		return "an earning run lost the revenue line entirely"
+	# Control: a B2B book that churned to zero accounts and zero MRR still earned once.
+	var churned: Dictionary = barren.duplicate()
+	churned["market"] = "b2b"
+	churned["customers_signed"] = 3
+	var vs3: Dictionary = EndingsCopy.build("running_on_fumes", churned, {})
+	var churned_found: bool = false
+	for line in (vs3.get("ledger_lines", []) as Array):
+		if String(line) == claim_none:
+			return "a B2B run that signed accounts and lost them all was told the first payment never came"
+		if String(line) == claim:
+			churned_found = true
+	if not churned_found:
+		return "a B2B run that signed accounts and lost them all lost the revenue line entirely"
 	return ""
 
 

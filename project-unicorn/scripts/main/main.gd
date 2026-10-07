@@ -2204,6 +2204,8 @@ func _run_ending_shot(key: String) -> void:
 	GameState.vc_rejections = 1
 	GameState.run_peak_mrr = 8200
 	GameState.cash = 24000
+	# The market flag is what makes the paper count accounts instead of paying users.
+	GameState.set_flag("mvp_market_type", "b2b")
 
 	# The MÜŞTERİ and ÇALIŞAN cells read live registries, not the run counters. The customer
 	# seam bumps run_customers_signed and reflects MRR, so both are written after it.

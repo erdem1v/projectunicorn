@@ -103,7 +103,7 @@ static func _series_a(ledger: Dictionary, data: Dictionary) -> Dictionary:
 		pool.append(board)
 	pool.append(_t("END_SA_OPENED").format(
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
-	pool.append(_people_line(ledger, "END_SA_CUSTOMERS", "END_SA_AUDIENCE"))
+	pool.append(_people_line(ledger, "END_SA_CUSTOMERS", "END_SA_AUDIENCE", "customers_signed"))
 	if int(ledger.get("employees", 0)) > 0:
 		pool.append(_t("END_SA_TEAM").format({"n": _num(int(ledger.get("employees", 0)))}))
 	if int(ledger.get("pitches", 0)) > 1:
@@ -278,7 +278,7 @@ static func _bootstrap(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	var pool: Array = []
 	pool.append(_t("END_BS_OWN_FEET").format(
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
-	pool.append(_people_line(ledger, "END_BS_BALANCED", "END_BS_AUDIENCE"))
+	pool.append(_people_line(ledger, "END_BS_BALANCED", "END_BS_AUDIENCE", "customers_signed"))
 	if int(ledger.get("hires", 0)) > 0:
 		pool.append(_t("END_BS_PAYROLL").format({"n": _num(int(ledger.get("employees", 0)))}))
 	if int(ledger.get("product_ships", 0)) > 1:
@@ -328,8 +328,8 @@ static func _fumes(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	# ELSE şart: satırı yalnızca koşullamak havuzu en kötü durumda 1 satır + 2 yedek = 3'e
 	# düşürür ve gazete eksik dizilirdi. Her iki dal da tam bir satır ekler.
 	# The consumer arm has to count paying users, or a B2C run with real revenue reads
-	# as one that never earned anything.
-	var had_customers: int = _people_count(ledger)
+	# as one that never earned anything. A B2B book that churned to zero still earned.
+	var had_customers: int = _people_count(ledger, "customers_signed")
 	if int(ledger.get("mrr", 0)) > 0 or had_customers > 0:
 		pool.append(_t("END_RF_REVENUE_SOME"))
 	else:
@@ -387,15 +387,18 @@ static func _is_b2c(ledger: Dictionary) -> bool:
 	return String(ledger.get("market", "b2c")) != "b2b"
 
 
-## The run's population: paying users on a B2C run, signed accounts on a B2B one.
-static func _people_count(ledger: Dictionary) -> int:
-	return int(ledger.get("paying_users" if _is_b2c(ledger) else "customers_signed", 0))
+## The run's population: paying users on a B2C run; on a B2B one the live book
+## (`customers_active`) by default, or `b2b_field` = "customers_signed" for the accounts
+## ever won, which churn never lowers.
+static func _people_count(ledger: Dictionary, b2b_field: String = "customers_active") -> int:
+	return int(ledger.get("paying_users" if _is_b2c(ledger) else b2b_field, 0))
 
 
 ## The population line for a template, or "" when there is nothing true to say.
 ## _assemble drops "", so a call site can append the result without a check.
-static func _people_line(ledger: Dictionary, b2b_key: String, b2c_key: String) -> String:
-	var n: int = _people_count(ledger)
+static func _people_line(ledger: Dictionary, b2b_key: String, b2c_key: String,
+		b2b_field: String = "customers_active") -> String:
+	var n: int = _people_count(ledger, b2b_field)
 	if n <= 0:
 		return ""
 	return _t(Fmt.count_key(b2c_key if _is_b2c(ledger) else b2b_key, n)).format({"n": n})
