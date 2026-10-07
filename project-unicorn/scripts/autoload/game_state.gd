@@ -254,6 +254,10 @@ var seed_closed_day: int = -1          # signing day — the growth expectation'
 # Separate from the Series A terms for the same reason as the angel pair.
 var run_seed_amount: int = 0
 var run_seed_equity_pct: int = 0
+## The Seed's post-money in $M, kept at a tenth of a million so an early round ($130K for
+## 16 %) reads $0.8M rather than $1M. A Series A's post-money lives in run_valuation_m.
+const POST_MONEY_STEP_M := 0.1
+var seed_post_money_m: float = 0.0
 
 # --- The Series A decision, and whether it was FACED (GDD v2 ch. 13 §1) ---
 # EndingsSystem.profitability_signal reads the flag; the buyout card reads the REASON.
@@ -595,8 +599,19 @@ func record_angel_round(equity_pct: int, amount: int) -> void:
 func record_seed_round(equity_pct: int, amount: int, vc_id: String) -> void:
 	run_seed_equity_pct = equity_pct
 	run_seed_amount = amount
+	seed_post_money_m = post_money_m(amount, equity_pct)
 	seed_lead = vc_id
 	EventBus.equity_changed.emit(get_investor_equity_pct())
+
+
+## A round's post-money in $M from its cheque and its slice, at POST_MONEY_STEP_M.
+static func post_money_m(amount: int, equity_pct: int) -> float:
+	return snappedf(amount * 100.0 / equity_pct / 1_000_000.0, POST_MONEY_STEP_M)
+
+
+## The company's post-money in $M: the signed Series A's, else the Seed's, else 0.0.
+func get_valuation_m() -> float:
+	return float(run_valuation_m) if run_valuation_m > 0 else seed_post_money_m
 
 
 ## Record that the Series A decision was FACED, and by which route (ch. 13 §1). UPGRADE-ONLY:
@@ -832,6 +847,7 @@ func initialize_run(payload: Dictionary) -> void:
 	seed_closed_day = -1
 	run_seed_amount = 0
 	run_seed_equity_pct = 0
+	seed_post_money_m = 0.0
 	faced_series_a = false
 	faced_series_a_by = ""
 	acq_road_over_day = -1
@@ -865,6 +881,9 @@ func initialize_run(payload: Dictionary) -> void:
 	# not carry keeps it (the whole forward-compat story).
 	if is_restore:
 		SaveCodec.apply_game_state(restore_block)
+		# A save written before the Seed kept its post-money carries the two numbers it comes from.
+		if seed_post_money_m == 0.0 and run_seed_amount > 0 and run_seed_equity_pct > 0:
+			seed_post_money_m = post_money_m(run_seed_amount, run_seed_equity_pct)
 
 	# 0 is ABSENT, not a seed: a literal 0 would pin every run to one sequence.
 	var seed_in: int = int(payload.get("seed", 0))

@@ -462,6 +462,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"market_value_texture":             fail = _case_market_value_texture()
 		"market_year_end_follows_anchors":  fail = _case_market_year_end_follows_anchors()
 		"market_save_roundtrip":            fail = _case_market_save_roundtrip()
+		"valuation_seed_accept_rounds_tenth": fail = _case_valuation_seed_accept_rounds_tenth()
+		"valuation_old_save_derives_seed":  fail = _case_valuation_old_save_derives_seed()
+		"valuation_seam_seed_then_series_a": fail = _case_valuation_seam_seed_then_series_a()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -17239,4 +17242,65 @@ static func _case_market_save_roundtrip() -> String:
 		return "market vars did not round-trip: %s vs %s" % [got, expect]
 	if _market_dump(10) != with_shock:
 		return "the restored ShockLog does not reproduce the list"
+	return ""
+
+
+static func _case_valuation_seed_accept_rounds_tenth() -> String:
+	# $130K for 16 % is $0.8125M post-money; the field keeps it at a tenth of a million, and
+	# the tenth is rounded, not cut ($250K for 12 % is $2.083M, so 2.1).
+	SeedRoundSystem.accept("anchor", {"raise": 130000, "dilution_pct": 16})
+	if not is_equal_approx(GameState.seed_post_money_m, 0.8):
+		return "seed_post_money_m is %s, want 0.8" % GameState.seed_post_money_m
+	if not is_equal_approx(GameState.get_valuation_m(), 0.8):
+		return "get_valuation_m reads %s after the Seed" % GameState.get_valuation_m()
+	if not is_equal_approx(GameState.post_money_m(250000, 12), 2.1):
+		return "post_money_m(250000, 12) is %s, want 2.1" % GameState.post_money_m(250000, 12)
+	GameState.initialize_run({"seed": 424242})
+	if GameState.seed_post_money_m != 0.0 or GameState.get_valuation_m() != 0.0:
+		return "a fresh run inherited a post-money of %s" % GameState.seed_post_money_m
+	return ""
+
+
+static func _case_valuation_old_save_derives_seed() -> String:
+	# A save from before the field existed carries the cheque and the slice; the load derives
+	# the post-money from them. A run with no Seed stays at 0.
+	GameState.record_seed_round(16, 130000, "anchor")
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var payload: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	_cleanup_save_slots()
+	var gs: Dictionary = (payload["state"] as Dictionary)["game_state"]
+	if not is_equal_approx(float(gs["seed_post_money_m"]), 0.8):
+		return "the save carries seed_post_money_m = %s" % gs["seed_post_money_m"]
+	gs["seed_post_money_m"] = 0
+	if not SaveManager.apply_loaded_state(payload):
+		return "apply_loaded_state returned false"
+	if not is_equal_approx(GameState.seed_post_money_m, 0.8):
+		return "the load derived %s from $130K at 16 %%, want 0.8" % GameState.seed_post_money_m
+	gs["seed_post_money_m"] = 0
+	gs["run_seed_amount"] = 0
+	gs["run_seed_equity_pct"] = 0
+	if not SaveManager.apply_loaded_state(payload):
+		return "apply_loaded_state returned false on the seedless save"
+	if GameState.seed_post_money_m != 0.0:
+		return "a save without a Seed derived %s" % GameState.seed_post_money_m
+	return ""
+
+
+static func _case_valuation_seam_seed_then_series_a() -> String:
+	# finance.valuation reads 0 before any round, the Seed's post-money after it, and the signed
+	# Series A's once that lands; the Seed's own number survives the signature.
+	if not EvSeams.has("finance.valuation"):
+		return "finance.valuation is not registered"
+	if float(EvSeams.read("finance.valuation")) != 0.0:
+		return "a run without a round values at %s" % EvSeams.read("finance.valuation")
+	GameState.record_seed_round(15, 120000, "anchor")
+	if not is_equal_approx(float(EvSeams.read("finance.valuation")), 0.8):
+		return "after the Seed the seam reads %s, want 0.8" % EvSeams.read("finance.valuation")
+	VCPitchSystem._persist_signed_terms({"valuation_m": 22, "dilution_pct": 18,
+		"board_seats": 1, "board_veto": false})
+	if not is_equal_approx(float(EvSeams.read("finance.valuation")), 22.0):
+		return "after the Series A the seam reads %s, want 22" % EvSeams.read("finance.valuation")
+	if not is_equal_approx(GameState.seed_post_money_m, 0.8):
+		return "the Series A signature changed the Seed's post-money to %s" % GameState.seed_post_money_m
 	return ""

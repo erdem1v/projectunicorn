@@ -2,8 +2,8 @@ extends Control
 
 # Kişisel penceresi, kurucunun tek görüntüleme yüzeyi (Ekip GDD §2.5). Ortak koyu başlıkta kıdemi; gövdede üç
 # sütun: portre, görev, deneyim ve eğitim; ad, köken, beceriler ve huylar; kilometre taşları, evre merdiveni ve
-# hedefi, hisse. Bu dosya hiçbir sonucu hesaplamaz: hisse Finans'ın pay tablosudur (FinanceOzetView.cap_table).
-# Canlı değerleme yok (GameState.run_valuation_m yalnız Series A imzasında yazılır); o zamana kadar not bunu söyler.
+# hedefi, hisse. Bu dosya hiçbir sonucu hesaplamaz: hisse Finans'ın pay tablosudur (FinanceOzetView.cap_table),
+# değerleme GameState.get_valuation_m'dir (Seed'in post-money'si, imzadan sonra Series A'nınki); tur yokken not bunu söyler.
 
 const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
 const SKILL_ICON := "res://assets/icons/skill/%s.svg"
@@ -200,7 +200,11 @@ func _standing() -> VBoxContainer:
 	col.add_child(_above(_section("PER_NET_WORTH"), UiTokens.SPACE_3XL))
 	var share := SprintUiShared.column(UiTokens.SPACE_M)
 	FinanceOzetView.cap_table(share)
-	if GameState.run_valuation_m == 0:
+	var valuation: float = GameState.get_valuation_m()
+	if valuation > 0.0:
+		share.add_child(SprintUiShared.label(tr("PER_VALUATION_ROW").format(
+			{"value": Fmt.money_chip(int(round(valuation * 1_000_000.0)))}), &"MetaText"))
+	else:
 		share.add_child(SprintUiShared.prose(tr("PER_NO_VALUATION"), &"Caption"))
 	col.add_child(_above(share, UiTokens.SPACE_M))
 	return col

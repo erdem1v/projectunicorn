@@ -334,7 +334,8 @@ PER_GOAL_BOOTSTRAP,İlk ödeyen müşterilere ulaş,Reach your first paying cust
 PER_GOAL_TRACTION,Geliri büyüt ve markayı kur,Grow revenue and build the brand
 PER_GOAL_SERIES_A,Masaya otur ve turu kapat,Get to the table and close the round
 PER_NET_WORTH,NET SERVET,NET WORTH
-PER_NO_VALUATION,Değerleme henüz yok. Series A imzasında belirlenir.,No valuation yet. It is set when the Series A is signed.
+PER_NO_VALUATION,Değerleme henüz yok. Seed turunda belirlenir.,No valuation yet. Your seed round sets it.
+PER_VALUATION_ROW,Değerleme · {value},Valuation · {value}
 HR_BADGE_IDLE,Boşta,Idle
 HR_BADGE_OVERLOADED_JOBS,Aşırı yük,Overloaded
 HR_IDLE_HINT,Hiçbir işe atanmadı — duruyor ve maaş alıyor.,Not assigned to any job — standing idle and still on payroll.

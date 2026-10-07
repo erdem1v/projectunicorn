@@ -12,7 +12,7 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **177** |
+| Seams (read) | **178** |
 | Effect verbs (write) | **60** |
 | Cards in the catalogue | 66 |
 | Arcs | 3 |
@@ -149,6 +149,7 @@ slot of that type (§17.12).
 | `finance.shutter_weeks_left` | global | int | Finance | WRAPPER; -1 when not counting, else weeks left |
 | `finance.shutter_weeks_total` | global | int | Finance | the shutter window in weeks; card text interpolates this rather than typing it |
 | `finance.total_raised` | global | int | Finance | cash in from all rounds |
+| `finance.valuation` | global | float | Finance | post-money in $M: the signed Series A's, else the Seed's, else 0.0 |
 
 ### `founder.`
 

@@ -61,3 +61,6 @@ static func install() -> void:
 		func() -> int: return GameState.get_investor_equity_pct(), "Finance", "0-100")
 	EvSeams.register("finance.total_raised", G, TYPE_INT,
 		func() -> int: return GameState.get_total_raised(), "Finance", "cash in from all rounds")
+	EvSeams.register("finance.valuation", G, TYPE_FLOAT,
+		func() -> float: return GameState.get_valuation_m(),
+		"Finance", "post-money in $M: the signed Series A's, else the Seed's, else 0.0")
