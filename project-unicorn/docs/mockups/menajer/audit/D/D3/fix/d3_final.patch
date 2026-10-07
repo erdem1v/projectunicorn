@@ -1,0 +1,2384 @@
+diff --git a/project-unicorn/assets/icons/build/decision.svg b/project-unicorn/assets/icons/build/decision.svg
+deleted file mode 100644
+index 479222d..0000000
+--- a/project-unicorn/assets/icons/build/decision.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 20 20" fill="#ffffff"><path d="M7 4.5l7 5.5-7 5.5z"/></svg>
+diff --git a/project-unicorn/assets/icons/build/decision.svg.import b/project-unicorn/assets/icons/build/decision.svg.import
+deleted file mode 100644
+index b547931..0000000
+--- a/project-unicorn/assets/icons/build/decision.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://drj2kkqfdh5qu"
+-path="res://.godot/imported/decision.svg-ccafd8850401bf3b70ac9fa11c3c5ec5.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/build/decision.svg"
+-dest_files=["res://.godot/imported/decision.svg-ccafd8850401bf3b70ac9fa11c3c5ec5.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=1.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/build/monitor.svg b/project-unicorn/assets/icons/build/monitor.svg
+deleted file mode 100644
+index ce65377..0000000
+--- a/project-unicorn/assets/icons/build/monitor.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 20 20" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="13" height="10" rx="1"/><path d="M3.5 8.4h13"/></svg>
+diff --git a/project-unicorn/assets/icons/build/monitor.svg.import b/project-unicorn/assets/icons/build/monitor.svg.import
+deleted file mode 100644
+index 69c67d5..0000000
+--- a/project-unicorn/assets/icons/build/monitor.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://w7y283qwxrbi"
+-path="res://.godot/imported/monitor.svg-21d4a22296e6e0b6aba6f4d6f42f67fd.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/build/monitor.svg"
+-dest_files=["res://.godot/imported/monitor.svg-21d4a22296e6e0b6aba6f4d6f42f67fd.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=1.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/build/phase_support.svg b/project-unicorn/assets/icons/build/phase_support.svg
+deleted file mode 100644
+index ed8326e..0000000
+--- a/project-unicorn/assets/icons/build/phase_support.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 20 20" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l5.5 2.2v4.6c0 3.3-2.3 5.4-5.5 6.2-3.2-.8-5.5-2.9-5.5-6.2V5.2z"/></svg>
+diff --git a/project-unicorn/assets/icons/build/phase_support.svg.import b/project-unicorn/assets/icons/build/phase_support.svg.import
+deleted file mode 100644
+index 029d297..0000000
+--- a/project-unicorn/assets/icons/build/phase_support.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://ccicu4ovl8ox7"
+-path="res://.godot/imported/phase_support.svg-7b37b89566c8cdd4288e5fc8da5558ec.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/build/phase_support.svg"
+-dest_files=["res://.godot/imported/phase_support.svg-7b37b89566c8cdd4288e5fc8da5558ec.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=1.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/close.svg b/project-unicorn/assets/icons/util/close.svg
+new file mode 100644
+index 0000000..97cba04
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/close.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M17.18 19 L17.5 19.2 L17.75 19.28 L18 19.3 L18.25 19.28 L18.5 19.2 L18.82 19 L19 18.82 L19.15 18.61 L19.28 18.25 L19.3 18 L19.28 17.75 L19.15 17.39 L18.92 17.08 L13.84 12 L19 6.82 L19.2 6.5 L19.28 6.25 L19.3 6 L19.28 5.75 L19.2 5.5 L19 5.18 L18.82 5 L18.61 4.85 L18.38 4.76 L18.13 4.71 L17.87 4.71 L17.62 4.76 L17.28 4.92 L17.08 5.08 L12 10.16 L6.82 5 L6.5 4.8 L6.25 4.72 L6 4.7 L5.75 4.72 L5.5 4.8 L5.18 5 L5 5.18 L4.85 5.39 L4.72 5.75 L4.7 6 L4.72 6.25 L4.8 6.5 L4.92 6.72 L5.08 6.92 L10.16 12 L5 17.18 L4.8 17.5 L4.72 17.75 L4.7 18 L4.72 18.25 L4.8 18.5 L5 18.82 L5.18 19 L5.39 19.15 L5.75 19.28 L6 19.3 L6.25 19.28 L6.5 19.2 L6.72 19.08 L6.92 18.92 L12 13.84 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/close.svg.import b/project-unicorn/assets/icons/util/close.svg.import
+new file mode 100644
+index 0000000..1f38212
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/close.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://bxm8tpu8igvva"
++path="res://.godot/imported/close.svg-b4b9449d61e0db090986bfc19efea3de.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/close.svg"
++dest_files=["res://.godot/imported/close.svg-b4b9449d61e0db090986bfc19efea3de.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/pause.svg b/project-unicorn/assets/icons/util/pause.svg
+new file mode 100644
+index 0000000..e6bdd95
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/pause.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M7.2 4.4 L6.97 4.42 L6.74 4.49 L6.53 4.6 L6.35 4.75 L6.2 4.93 L6.09 5.14 L6.01 5.48 L6.01 18.52 L6.09 18.86 L6.27 19.16 L6.53 19.4 L6.85 19.55 L7.2 19.6 L9.32 19.59 L9.55 19.55 L9.77 19.46 L10.05 19.25 L10.2 19.07 L10.31 18.86 L10.39 18.52 L10.39 5.48 L10.31 5.14 L10.13 4.84 L9.87 4.6 L9.55 4.45 L9.2 4.4 Z M14.8 4.4 L14.57 4.42 L14.34 4.49 L14.04 4.67 L13.87 4.84 L13.74 5.03 L13.65 5.25 L13.61 5.48 L13.61 18.52 L13.69 18.86 L13.87 19.16 L14.13 19.4 L14.45 19.55 L14.8 19.6 L16.92 19.59 L17.15 19.55 L17.37 19.46 L17.65 19.25 L17.86 18.97 L17.95 18.75 L17.99 18.52 L17.99 5.48 L17.91 5.14 L17.73 4.84 L17.47 4.6 L17.15 4.45 L16.8 4.4 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/pause.svg.import b/project-unicorn/assets/icons/util/pause.svg.import
+new file mode 100644
+index 0000000..dd6bd78
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/pause.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://bb66112h75hue"
++path="res://.godot/imported/pause.svg-2aa234c562d80069f2d6d9340e9c04e0.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/pause.svg"
++dest_files=["res://.godot/imported/pause.svg-2aa234c562d80069f2d6d9340e9c04e0.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/play.svg b/project-unicorn/assets/icons/util/play.svg
+new file mode 100644
+index 0000000..f760743
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/play.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M8.62 5.1 L8.3 4.97 L7.96 4.93 L7.62 4.99 L7.41 5.08 L7.14 5.3 L6.94 5.58 L6.82 5.9 L6.8 6.13 L6.81 17.98 L6.85 18.21 L6.94 18.42 L7.06 18.62 L7.22 18.78 L7.41 18.92 L7.62 19.01 L7.96 19.07 L8.3 19.03 L8.62 18.9 L18.31 13.03 L18.58 12.8 L18.72 12.61 L18.85 12.29 L18.88 12.06 L18.85 11.71 L18.77 11.49 L18.58 11.2 L18.4 11.04 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/play.svg.import b/project-unicorn/assets/icons/util/play.svg.import
+new file mode 100644
+index 0000000..a45a294
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/play.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://cxpktyu4gqwcd"
++path="res://.godot/imported/play.svg-556a5004c8729e5ec21e1b763e1596cc.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/play.svg"
++dest_files=["res://.godot/imported/play.svg-556a5004c8729e5ec21e1b763e1596cc.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/shield.svg b/project-unicorn/assets/icons/util/shield.svg
+new file mode 100644
+index 0000000..cc0fb55
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/shield.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M13 21.01 L14.19 20.44 L15.19 19.84 L16.12 19.16 L16.97 18.42 L17.73 17.6 L18.39 16.72 L18.95 15.77 L19.4 14.76 L19.73 13.7 L19.93 12.57 L20 11.4 L20 5.6 L13 2.98 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M4 5.6 L4 11.4 L4.07 12.57 L4.27 13.7 L4.6 14.76 L5.05 15.77 L5.61 16.72 L6.28 17.6 L7.03 18.42 L7.88 19.16 L8.81 19.84 L9.81 20.44 L11 21.01 L11 2.98 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/shield.svg.import b/project-unicorn/assets/icons/util/shield.svg.import
+new file mode 100644
+index 0000000..7f00ab5
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/shield.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://n6juqm4q8m43"
++path="res://.godot/imported/shield.svg-5455217fd3402dac436fa6f71ab1b1b7.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/shield.svg"
++dest_files=["res://.godot/imported/shield.svg-5455217fd3402dac436fa6f71ab1b1b7.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/docs/ACIK_ISLER/ISLER.md b/project-unicorn/docs/ACIK_ISLER/ISLER.md
+index c65002b..c3a4d4e 100644
+--- a/project-unicorn/docs/ACIK_ISLER/ISLER.md
++++ b/project-unicorn/docs/ACIK_ISLER/ISLER.md
+@@ -30,9 +30,6 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
+   modulate'ları; bir yerde ham 24 punto ve CREAM rengi.
+ - `hr_tab.gd` saat çipini (`_paint_hours_control`) ve Kadro/Görevler segmentini (`_paint_segments`) elle kurduğu
+   StyleBoxFlat'lerle çiziyor; ikisi de tema varyasyonu ister (UI/STYLE LAW 4).
+-- Çubukların tema bağımsızlığı: `bar_kit.gd`, `build_bar.gd` ve `research_bar.gd` bilerek tema varyasyonu kullanmıyor,
+-  yazdıkları gerekçe (ODA alt ağacının donmuş teması) ağaçta yok. Karar: varyasyonlara taşınırlar ya da bağımsızlık
+-  bugünkü bir gerekçeyle kalır.
+ - Ar-Ge atama panelindeki ayraç `HRUiShared.hairline` ile çiziliyor (eski kopya `anti_aliasing = false` diyordu).
+ - Oyuncu metinlerinde tire (— –) kalan CSV satırları var (CLAUDE.md §5); mühürlü metinlerde sahibin kararı gerekir.
+ - EN çoğul ikizleri: `DESK_PAPER_ATLAS_TITLE` ("{n} candidate files ready") ve `FIN_GOAL_P3_HUNT` ("{n} offers on the
+diff --git a/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md b/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md
+index ee5e74f..55e82e3 100644
+--- a/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md
++++ b/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md
+@@ -78,7 +78,7 @@ excluded from both counts and shown in the notes column when they are all a sign
+ | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
+ | `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 14 | 1 | main |
+ | `language_changed` | `locale: String` | localization | 1 | 8 | left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
+-| `palette_changed` | `colorblind: bool` | settings_modal | 2 | 8 | hr_tab · left_tabs · news_ticker · research_bar · top_bar · window_layer · office_city · office_notice_stack |
++| `palette_changed` | `colorblind: bool` | settings_modal | 2 | 7 | hr_tab · left_tabs · news_ticker · top_bar · window_layer · office_city · office_notice_stack |
+ 
+ ### Character signals
+ 
+diff --git a/project-unicorn/docs/HARITA.md b/project-unicorn/docs/HARITA.md
+index 70b336b..9b9323b 100644
+--- a/project-unicorn/docs/HARITA.md
++++ b/project-unicorn/docs/HARITA.md
+@@ -65,8 +65,8 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+   - `build_theme.gd` token → tema dönüştürücüsüdür: `godot --headless --path . -s res://scripts/theme/build_theme.gd`. Kaynak kimliklerini içerikten ve yoldan türetir: girdi değişmezse iki üretim bayt bayt aynıdır. Önce `master_theme.tres`'i (proje teması, krem), sonra `menajer_theme.tres`'i yazar: master'ın her tipi master'da çözdüğü öğelerle ve ölçüleriyle koyu token ve yüzlere çevrilir (`DARK_OF`), sonra koyu taban tipleri ve yeni varyasyonlar kurulur. Master'da olup koyu temada olmayan tip, taban ya da öğe, içerik payı açık kutu ve koyu karşılığı olmayan master rengi üretimi düşürür. `main.gd` açılışta iki temanın damgasını `THEME_STAMP` ile karşılaştırır.
+   - `theme_check.gd` tema denetçisidir: `godot --headless --path . -s res://scripts/theme/theme_check.gd [--theme=<yol>]`. Master'daki her tip, taban ve öğe yoksa, bir font, ikon veya kutu boşsa ya da master dışı bir temada kutu içerik payını kenarına bırakıyorsa 1 ile çıkar; her metin renginin altındaki opak kutuya WCAG kontrastını basar (4.5 altı `LOW`). `contrast_audit` koyu temanın kapısıdır (`--theme-contrast-audit`).
+   - `scripts/debug/glyph_audit.gd` (`-s`): CSV'nin, `scripts/debug` dışındaki kod literallerinin ve `data/*.json` metninin her karakterini koyu yüzlere ve `d_*` zincirlerine sorar, eksikleri `GLYPH|MISS` satırıyla basar.
+-  - Kabuk varyasyonları: pencere `WindowPanel` (krem kart, `RADIUS_WINDOW`, gölge; koyu temada `D_SURFACE_3`, `D_RADIUS_4` ve `D_HALO` hale gölgesi) ve köşesindeki × `WindowClose`; sol ray `SideRailPanel`, `TabButton` / `TabButtonActive`. Koyu çerçeve gövdeyle değişen her rengi `*_CHROME` ikizinden okur (`ACCENT_CHROME`, `INK_*_CHROME`, `VEIL_*_CHROME`); `Chrome*` ailesinin yasal yüzeyleri CLAUDE.md §7'de.
+-  - `bar_kit.gd` Build Bar ile Research Bar'ın ortak çizimidir. `DialoguePortraitCard`'ı onboarding'in karakter adımı kullanır.
++  - Kabuk varyasyonları: pencere `WindowPanel` (krem kart, `RADIUS_WINDOW`, gölge; koyu temada `D_SURFACE_3`, `D_RADIUS_4` ve `D_HALO` hale gölgesi) ve köşesindeki × `WindowClose`; koyu pencerenin başlık bandı `WinHead`, adı `TitleH1`, KPI hücresi `KpiCell` ve 40 px kapatması `WinClose` (`UiFactory.make_close_button(on_close, true)`); yüzen kartlar `FloatPanel`, `FloatHead`, `FloatRow`, `FloatFoot`, `FloatTitle`, `FloatKey`, eylemi `FloatAction`, bağı `FloatLink`, duraklamış ilerleme `ProgressPaused`; sol ray `SideRailPanel`, `TabButton` / `TabButtonActive`. Koyu çerçeve gövdeyle değişen her rengi `*_CHROME` ikizinden okur (`ACCENT_CHROME`, `INK_*_CHROME`, `VEIL_*_CHROME`); `Chrome*` ailesinin yasal yüzeyleri CLAUDE.md §7'de.
++  - `bar_kit.gd` DESTEK kartı ile araştırma kartının ortak parçalarıdır (ikon, satır, kısalan yazı). `DialoguePortraitCard`'ı onboarding'in karakter adımı kullanır.
+ - **Smoke:** `build_percent_single_source`, `star_ruler_contract`, `rail_tabs_match_scene_order`.
+ - **Probe:** yok.
+ - **Görsel:** `--theme-audit=<sekme id | modal:<tür> | onboard:<adım>>` (yüzeyi `--tab-shot`, `--modal-shot`, `--onboard-shot` gibi kurar; her Control'ün çözülmüş değerleri, içerik payı `cm`, en küçük boyu `min` ve öğeyi çözen tema `src`: `o` override, `a:<tema>` ata teması, `p` proje teması, `d` motor varsayılanı; `ov` Control'ün kendi üstüne koyduğu her tema öğesi), `--probe-shot` (ThemeProbe), `--probe-shot=menajer` (ThemeProbe koyu temanın altında, koyu temanın master dışı her varyasyonundan bir örnekle), `--theme-contrast-audit` (headless; koyu temanın her metin rengi çizildiği her zeminde ve `D_` yardımcılarının renkleri iki palette, `CONTRAST` satırları; düşen çiftte 1), `--tab-shot=`, `--shot-size=`.
+@@ -77,7 +77,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+ - **Sahip:** `main.gd` (ana sahne kökü), `game_shell.gd` (`GameShell.tscn`), `window_layer.gd` (`CenterViewport`, grup `window_layer`); `window_frame.gd` ve `desk_papers.gd` (yolla preload edilir, sınıf adı yok)
+ - **Giriş:**
+   - `main.gd` açılışta debug bayraklarını yönlendirir, sonra onboarding'i ya da kabuğu kurar. Oyunda modal ve sahneleri EventBus sinyalleriyle açar: `modal_requested`, `pitch_requested`, `meeting_scene_requested`, `term_table_requested`, `rnd_card_requested`, `confirm_requested` (`hr_action` dahil), `settings_requested`, `system_menu_requested`, `save_load_requested`, `summary_ready` (dönem özeti modalı), `run_ended`, `milestone_reached`, `product_note_issued` (ilk Ar-Ge notu). Ayrıca `quicksave_requested` / `quickload_requested`'i ve olay modalını kapatan `event_resolved`'u dinler.
+-  - `WindowLayer` (`CenterViewport`'un script'i) `EventBus.tab_changed`'i dinler ve sekmeyi ofisin üstünde sabit yuvalı bir pencerede açar: `TAB_SCENES` sekme sahneleri, `SPECS` 1920×1080 tabanında pencere boyları, `WindowFrame` kabuk (sağ üstte ×). Aynı anda en çok bir birincil ve ona bağlı bir ayrıntı penceresi (`DETAILS`: `hr_dossier`); sürükleme yok. `open_primary(id)`, `open_detail(kind, payload)`, `close_top()` (Esc: önce ayrıntı, sonra birincil; hiçbir pencere yoksa false döner ve `game_shell` sistem menüsünü açar), `get_current_page_body()` (harness). `hr_dossier` açılınca ofiste kişinin halkası yanar (`office_view.select_person`), ayrıntı kapanınca söner (`clear_selection`). `tab_changed("")` pencere yok demektir; ×, Esc ve aktif sekmeye tekrar tık bu sinyale çıkar. Dil ya da palet değişince açık pencereler yeniden kurulur. Çocuk sırası: `OfficeView`, `BuildHUD`, pencereler. Kabuk: üst bar 64, haber şeridi 40 px; ray `CenterViewport`'un sol kenarının üstüne opak biner ve `WindowLayer` onun canlı genişliğini izler (`rail`): ofis ve `BuildHUD` rayın sağındaki alana oturur (`OfficeView.set_safe_left`), pencereler o alanın 24 px içinde. Ofisin üstündeki yüzenler (`office_overlays`: `BuildHUD`, not yığını, Ofisi taşı) pencerelerin altında çizilir ve üstlerine pencere binince gizlenir (`set_window_cover`).
++  - `WindowLayer` (`CenterViewport`'un script'i) `EventBus.tab_changed`'i dinler ve sekmeyi ofisin üstünde sabit yuvalı bir pencerede açar: `TAB_SCENES` sekme sahneleri, `SPECS` 1920×1080 tabanında pencere boyları, `WindowFrame` kabuk (sağ üstte ×; sayfa `frame_options` ile `variation`, `pad`, `owns_close`, koyu dili ve haleyi açan `theme`, ortak koyu başlık bandını açan `title` ve onun KPI yuvası `kpi`'yi seçer, hepsi kapalı doğar). Aynı anda en çok bir birincil ve ona bağlı bir ayrıntı penceresi (`DETAILS`: `hr_dossier`); sürükleme yok. `open_primary(id)`, `open_detail(kind, payload)`, `close_top()` (Esc: önce ayrıntı, sonra birincil; hiçbir pencere yoksa false döner ve `game_shell` sistem menüsünü açar), `get_current_page_body()` (harness). `hr_dossier` açılınca ofiste kişinin halkası yanar (`office_view.select_person`), ayrıntı kapanınca söner (`clear_selection`). `tab_changed("")` pencere yok demektir; ×, Esc ve aktif sekmeye tekrar tık bu sinyale çıkar. Dil ya da palet değişince açık pencereler yeniden kurulur. Çocuk sırası: `OfficeView`, `BuildHUD`, pencereler. Kabuk: üst bar 64, haber şeridi 40 px; ray `CenterViewport`'un sol kenarının üstüne opak biner ve `WindowLayer` onun canlı genişliğini izler (`rail`): ofis ve `BuildHUD` rayın sağındaki alana oturur (`OfficeView.set_safe_left`), pencereler o alanın 24 px içinde. Ofisin üstündeki yüzenler (`office_overlays`: `BuildHUD`, not yığını, Ofisi taşı) pencerelerin altında çizilir ve üstlerine pencere binince gizlenir (`set_window_cover`); görünen pencere varken ofis kararır (`OfficeView.set_dimmed`).
+   - `DeskPapers` masadaki kâğıtların tek türetme ve çizim evidir: `gather()` motor kâğıtlarını (`EventGate.desk_papers`) ve durumdan türeyen hatırlatıcıları (faz kapısı, term sheet, Atlas dosyaları, B2B genişlemesi) verir, `make_row()` satırı çizer, `open()` motor kâğıdını `EventGate.open_paper` ile açar, hatırlatıcıyı sekmesine götürür. Kâğıdı değiştiren sinyallere `connect_changes(c)` ile abone olunur. Okuyanlar: Olaylar sayfası (`events_tab.gd`: Frank'in son satırı `GameState.mentor_line_key` + `mentor_line_args`, çizimde `tr(key).format(args)`, ve bütün kâğıtlar) ve ofisin not yığını.
+   - Üst bar, ray ve haber şeridi koyu temadadır (`menajer_theme.tres` köklerinde). `LeftTabs` ray, kilit ve rozetleri: satır durumu boşta, etkin (yükselmiş zemin ve sol kenarda işaret) ya da kilitli (ikon ve ad soluk, gerekçe adın altında: demoda `ENDING_BADGE_EA`); kırmızı rozet yalnız tehlikede (Ekip, Satış, Finans), öteki sayılar nötr. Mantıksal genişlik `DisplaySettings.COMPACT_SHELL_BELOW`'un altındayken simge kipine geçer (adlar gizli, ipucunda; rozet ve kilit ikonun köşesinde), üst bar aynı eşikte sıkışır. `TopBar` iki satırlık metrik ızgarasıdır, her yazı taban çizgisine göre yerleşir: marka bloğu, KASA (altında NET), RUNWAY (kasa eksiyken KEPENK sayacı), MRR/MARKA, BURN/İTİBAR, gün bloğu ve hafta çubuğu (08:00'den mesai bitimine, `WorkHoursSystem.workday_end`), Sıradaki yuvası (teklif süresi, yoksa mesai bitimi) ve saat bloğu; burn ve net canlı aylık hızdır (`FinanceSystem.get_monthly_flow`, `/ay`). Hız isteğini `EventBus.speed_change_requested` ile gönderir, düğmeleri `TimeManager.speed_changed` ile boyar. `NewsTicker` yayın adlarını kendi renginde akıtır; aç/kapa hücresi oyuncunun ayarıdır (`Settings` `ticker_open`), kapalıyken şerit sol altta yalnız o hücredir ve `game_shell` ofisi ve rayı alta indirir (`open_changed`). Sprint kendiliğinden başladığında not BuildHUD kartının altındadır (`build_bar.gd`).
+   - Görüşme daveti `main.gd`'dedir: satışta `_on_pitch_requested`, VC'de `_process` fonun çağrısını yoklar
+@@ -97,7 +97,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+ - **Sahip:** sınıf `OfficeSystem` (durumun tek yazarı), `OfficeConstants` (katalog, hepsi [WORKING]), `OfficeLayout`, `OfficeMaterials`, `OfficeLighting`, `OfficeCamera`, `OfficePeople` (kadro ve ritim), `OfficeActor` (kişi, ikon, halka), `OfficePerson` (gövde, yürüyüş, oturma, yatma), `OfficeVenue` (mola noktaları, kuyruk), `OfficeBody`, `OfficeGesture`, `PersonBust` (kart bust'ı), `LookSystem` ve `PeopleParts` (görünüm), `OfficeCity`, `MeetingCast` (toplantı odasındaki kişiler), `MeetingInvite` (davet telefonu ve kartı); `OfficeView` `GameShell.tscn` içinde kalıcı çocuktur (`CenterViewport/OfficeView`, grup `office_view`)
+ - **Giriş:**
+   - Durum `GameState.office_id`, `office_move_to`, `office_move_day`. `OfficeSystem.current`, `is_moving`, `arrival_day`, `requirement_state`, `can_move_to`, `move_to` (kasa hareketi yok, `FinanceSystem`'in "office" kalemi 0; taşınma `OfficeConstants.MOVE_WEEKS` sürer), `daily_tick` (taşınmayı varış tikinde indirir). Sinyaller `EventBus.office_move_started`, `office_changed`. Olay seam'i `office.current` (`seams_world.gd`); kart `funding.frank_office_move`.
+-  - `OfficeView.load_layout(id)` GLB'yi ve yan JSON'u (`OfficeLayout.load`) yükler, `office_changed`'de ofisi değiştirir; `current_layout`, `camera`, `lighting`, `show_tooltip` / `hide_tooltip`. Kişiye tık `window_layer` grubunda `open_detail("hr_dossier", {character_id})` çağırır.
++  - `OfficeView.load_layout(id)` GLB'yi ve yan JSON'u (`OfficeLayout.load`) yükler, `office_changed`'de ofisi değiştirir; `current_layout`, `camera`, `lighting`, `show_tooltip` / `hide_tooltip`. `set_dimmed(on)` açık pencerenin altında 3B görüntüyü `DIM` ile çarpar (`self_modulate`, `DIM_S` yumuşatmayla; gece ve yolculuk solmasıyla çarpılır, `Overlay`'e dokunmaz, harita aydınlık kalır). Kişiye tık `window_layer` grubunda `open_detail("hr_dossier", {character_id})` çağırır.
+   - Işık `TimeManager.day_minute()`'ı okur (`OfficeLighting.apply`, tasarımın gün boyu renk senaryosu). Kişiler `CharacterRegistry` ve `WorkHoursSystem`'i okur (`in_office`, `start_hour`, `end_hour_for`, `workday_end`): geliş ve çıkış oyun saatiyle, kişi başına tohumlu (`OfficeConstants.SALT_DAY`); molalar, kuyruk ve toplantılar ambiyans saniyesiyle (gerçek saniye × `k`, en fazla `VISUAL_CAP`, duraklatınca 0) akar. Yürüyüş `NavigationAgent3D` ile fırınlanmış zeminde; `OfficeView.load_layout` zemini (`nav_region`) ve bağlantıları kurar, `OfficePeople` harita senkronu gelince yerleştirir. Masalar işe alım sırasıyla kalıcıdır; Ev'de yalnız kurucu çizilir. Görünüm `Character.look`'tadır (`CharacterRegistry.add` damgalar, `GameState.issued_looks` tekrarını önler; aday görünümü `HRSearchSystem` dosyasında doğar).
+   - Gece kapısı: `OfficePeople` `TimeManager.register_night_gate(office_empty, OfficeConstants.NIGHT_WAIT_S)` ile kaydolur. Gece yalnız kapıya ya da yatağa yürüyenleri bekler; gece yeni yürüyüş başlamaz, içeride kalan herkes `CUT_FADE_S` kararmasının altında kesilir ve 08:00'de yeniden yerleşir. `OfficeView` `EventBus.night_skipped`'te kısa bir kararma oynar (`NIGHT_FADE_S`).
+   - Kurucunun toplantı yolculuğu `OfficeView.travel`'dir (`office_travel.gd`, sınıf adı yok; `main.gd` sürer, Kabuk bölümü). `travel_out(looks, tower_label)` kurucuyu çıkışa yürütür (`OfficePeople.send_founder_out`, en çok `EXIT_S`; en yakın iki oturan ona bakar), haritaya kararır (`load_layout("city", true)`), `OfficeCity.road(true, tower_label)` mevcut ofisten toplantı kulesine kesikli yolu, kurucunun diskini ve çipleri çizer, kulenin tacı parlar (`road_done`); sonra `meet` yerleşimi yüklenir, `MeetingCast.stage` karşı tarafı oturtur ve `walk_in` kurucuyu asansörden masaya yürütür. `travel_home(tower_label)` kurucuyu kaldırır, geri yolu çizer, ofisi yükler ve kurucuyu masasına yürütür; en yakın oturan başını kaldırır ve bant `MEETING_BACK_ASK` yazar. Tık ya da Esc yolculuğu atlar; shot'larda yolculuk yoktur (`--travel-shot` hariç).
+@@ -110,7 +110,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+ 
+ ## Ürün · PRD rev 7 (GUNCELLEMELER "Ürün rev 7"), GDD ch03, ch06
+ 
+-- **Yer:** `scripts/systems/{sprint_system,sprint_catalog,sprint_bridges,product_system,product_state,product_read,product_lines,product_catalog,line_gates,quality_model,infra_system,support_system}.gd`, `data/product/{sprint,rivals}.json`, `data/product/lines/`, `scripts/tabs/product_tab.gd`, `scenes/tabs/ProductTab.tscn`, `scripts/tabs/product/{product_model,type_picker,area_panel,sprint_panel,quarter_view,sprint_card,sprint_ui_shared}.gd`, `scenes/tabs/product/SprintCard.tscn`, `scripts/debug/product_fixtures.gd`, `assets/icons/product/`; DESTEK kartı `scripts/ui/components/{build_bar,build_bar_model,build_hud_panel}.gd`, `scenes/ui/components/{BuildBar,BuildHUDPanel}.tscn`, `assets/icons/build/`
++- **Yer:** `scripts/systems/{sprint_system,sprint_catalog,sprint_bridges,product_system,product_state,product_read,product_lines,product_catalog,line_gates,quality_model,infra_system,support_system}.gd`, `data/product/{sprint,rivals}.json`, `data/product/lines/`, `scripts/tabs/product_tab.gd`, `scenes/tabs/ProductTab.tscn`, `scripts/tabs/product/{product_model,type_picker,area_panel,sprint_panel,quarter_view,sprint_card,sprint_ui_shared}.gd`, `scenes/tabs/product/SprintCard.tscn`, `scripts/debug/product_fixtures.gd`, `assets/icons/product/`; DESTEK kartı `scripts/ui/components/{build_bar,build_bar_model,build_hud_panel}.gd`, `scenes/ui/components/{BuildBar,BuildHUDPanel}.tscn`
+ - **Sahip:** sınıf `SprintSystem` (`GameState.product`'ın yazarı), `SprintCatalog` (salt okur), `SprintBridges` (ürün durumunda yalnız `tickets`, `ticket_seq`, `requests`, `rival_hits`'i yazar), `ProductSystem`, `ProductState`, `ProductRead`, `ProductLines`, `ProductCatalog`, `LineGates`, `QualityModel`, `InfraSystem`, `SupportSystem`; UI `ProductModel`, `TypePicker`, `AreaPanel`, `SprintPanel`, `QuarterView`, `SprintCard`, `SprintUiShared`
+ - **Giriş:**
+   - Durum `GameState.product`: sprint, sonraki sprint, görünüm kipi (`plan`, `active`, `release`), saklanan kartlar, sürüm notu ve `releases`, cila, ticket defteri, talepler, rakip çıkışları, çeyrek. Tür seçilmemiş koşuda boştur. Aday kartlar saklanmaz; `SprintCatalog.candidates(area)` her çağrıda durumdan kurar. Çalışma değerleri `data/product/sprint.json`'dadır (`SprintCatalog.cfg("a.b")`), rakip tablosu `rivals.json`'dadır.
+@@ -120,7 +120,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+   - `ProductState` canlı ürün okumalarının ve kendi tanımladığı `mvp_*` adlarının tek evidir (`is_live`, `market_type`, `subtype`, `version`, `bugs_confirmed`, `line_tier`, `set_line_tier`, `adjust_confirmed`, `realized_dims`); eski `mvp_*` bayrakları (`mvp_shipped`, `mvp_live_bug_count`, `mvp_market_type`…) birçok sistemde hâlâ doğrudan okunur. `ProductSystem` canlı ürünün saatlik aşınmasını (havuzu her açık sürüm sıfırlar), hata geçmişini ve trend zincirini (`bug_trend`, `health_state`, `product_bug_risk`), `live_bug_count` ve `has_b2b_product`'ı taşır. `ProductRead` olay motoruna açılan `urun.*` okuma yüzeyidir. `ProductLines` (`data/product/lines/*.json`), `LineGates.is_unlocked` / `unmet_parts`, `ProductCatalog` (`playable_types`, `suggest_product_name`, `type_name`, `type_desc`, `type_tradeoff`), `QualityModel`.
+   - `InfraSystem.daily_tick` (sunucu faturasını "servers", servis maliyetini "service" burn kalemine yazar), `provider`, `capacity_state`, `monthly_bill`, `monthly_service` (B2B hesap başı, koltuk başı × yük ve onboarding'deki hesabın MRR × evre katı; B2C bin kullanıcı başı × yük; `SERVICE_*`, `ONBOARDING_MRR_MULT`), `gross_margin_monthly` (MRR − fatura − servis), `meets_enterprise_trust`, `set_provider` / `set_capacity` (MVP'de ve her sürümde `SprintBridges` çağırır; sürümün hedefi `units_for_occupancy`); `SupportSystem.daily_tick` / `hourly_tick`, `start_fix_run`, `end_fix_run`, `desk_staffed`.
+   - Sekme: `WindowLayer` Ürün yuvasına `ProductTab.tscn`'i takar (1424×960; sayfa `frame_options` ile kendi × düğmesini ve iç boşluğunu seçer). Ekran yalnız `ProductModel` sözlüğünü çizer (sözleşme `product_model.gd`'nin başında); kaynak `set_source(src)` (`model()`, `act(kind, args)`), kaynak yoksa `ProductModel.live()` ve eylemler `SprintSystem`'e gider; tür seçilmemişse ortada `TypePicker` durur. Sürüm notu açıkken saat `HOLD_RELEASE_NOTE` ile tutulur, sayfa kapanınca (`on_page_closing`) bırakılır. `GameShell` `sprint_closed`'da Ürün sekmesini açar. Debug röleleri `GameShell.debug_product_apply(fixture_id)`, `debug_product_act(kind)`.
+-  - DESTEK kartı (`build_bar.gd`, `build_bar_model.gd`) yalnız yayındaki ürünü, doğrulanmış hataları, düzeltme koşusunu ve kendiliğinden başlayan sprintin notunu çizer; `BuildHUDPanel` onu Ar-Ge çubuğuyla birlikte taşır.
++  - DESTEK kartı (`build_bar.gd`, `build_bar_model.gd`) yalnız yayındaki ürünü, doğrulanmış hataları, düzeltme koşusunu (kapalıyken motorun ret sebebinden gerekçesiyle, `REFUSAL_KEYS`) ve kendiliğinden başlayan sprintin notunu çizer; `BuildHUDPanel` onu araştırma kartıyla birlikte koyu temada (kökünde `menajer_theme.tres`) taşır.
+   - Sinyaller EventBus'ın Sprint bölümündedir (`sprint_planned`, `sprint_started`, `card_phase_changed`, `card_done`, `card_carried_over`, `sprint_closed`, `card_decision_requested`, `sprint_auto_started`, `product_state_changed`). Sürüm çıkaran kapanış `version_shipped` ve `build_phase_changed("shipped")` yayar (söz sistemi, Ar-Ge ve probe dinler).
+   - Olay seam'leri `urun.*` (`seams_product.gd`, `seams_ported.gd`); sprint okumaları `urun.sprint_number`, `urun.sprint_week`, `urun.sprint_running`, `urun.decision_card`, `urun.decision_card_late`, `urun.decision_card_effort`; altyapı `urun.capacity_state`, `urun.enterprise_trust`. Karar kartları `product.sprint_two_paths`, `product.sprint_late`, `product.sprint_contractor`'dır (`sprint.json` `decision.cards`, oran `decision.rate`; zar koşu tohumunu da okur).
+ - **Smoke:** `sprint_*`, `product_*`, `line_*`, `infra_*`, `destek_*`, `coupling_*` (Ekip ile ortak), `save_v14_*` (Kayıt ile ortak), `fix_run_ships_subset`, `support_desk_rates_stack`, `quality_half_sat_25`, `b2b_v1_lands_mid_band`, `b2c_satisfaction_drifts_to_experience`, `b2c_value_reads_live_lines`, `promise_row_locked_when_no_room`, `axis_reading_replaces_not_adds`, `gate_scope_and_halves`, `above_gate_bonus_ladder`, `type_screen_matches_line_content`, `split_bars_name_their_cause` (Ar-Ge ile ortak).
+diff --git a/project-unicorn/localization/strings.csv b/project-unicorn/localization/strings.csv
+index 0e10d07..7bdca5a 100644
+--- a/project-unicorn/localization/strings.csv
++++ b/project-unicorn/localization/strings.csv
+@@ -433,7 +433,7 @@ FIN_CAP_REPUTATION,İTİBAR,REPUTATION
+ FIN_VALUATION,Değerleme,Valuation
+ FIN_EQUITY,Hisse,Equity
+ BUILD_BUSY_NOBODY,Kimse üzerinde değil.,Nobody is on it.
+-BUILD_SPLIT_FOCUS,Ekip iki işte.,The team is on two jobs.
++BUILD_SPLIT_FOCUS,Ekip iki işte.,Split focus.
+ RND_PAUSED_BUILD,Ekip yapımda.,The team is on a build.
+ PROD_RND_NODE_DATA_MODEL,Veri Modeli,Data Model
+ PROD_RND_NODE_AI_ENGINE,AI Engine,AI Engine
+@@ -456,7 +456,8 @@ PROD_RND_NODE_ONBOARDING_FLOW,Onboarding Akışı,Onboarding Flow
+ PROD_RND_NODE_ACCESSIBILITY,Erişilebilirlik,Accessibility
+ PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
+ BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
+-BUILD_SUPPORT_CONFIRMED,DOĞRULANMIŞ {n},CONFIRMED {n}
++BUILD_SUPPORT_CONFIRMED,Doğrulanmış {n},Confirmed {n}
++FIX_RUN_REFUSED_NO_BUGS,Doğrulanmış hata yok.,No confirmed bugs.
+ PROD_PERCENT,%{n},{n}%
+ HR_ROLE_FOUNDER,Kurucu,Founder
+ HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
+diff --git a/project-unicorn/scenes/ui/components/BuildBar.tscn b/project-unicorn/scenes/ui/components/BuildBar.tscn
+index 121c9b8..cad278c 100644
+--- a/project-unicorn/scenes/ui/components/BuildBar.tscn
++++ b/project-unicorn/scenes/ui/components/BuildBar.tscn
+@@ -2,10 +2,10 @@
+ 
+ [ext_resource type="Script" path="res://scripts/ui/components/build_bar.gd" id="1_buildbar"]
+ 
+-[node name="BuildBar" type="Control"]
+-custom_minimum_size = Vector2(0, 44)
++[node name="BuildBar" type="PanelContainer"]
+ layout_mode = 3
+ anchors_preset = 0
+ size_flags_horizontal = 3
+-mouse_filter = 2
++mouse_filter = 1
++theme_type_variation = &"FloatPanel"
+ script = ExtResource("1_buildbar")
+diff --git a/project-unicorn/scenes/ui/components/BuildHUDPanel.tscn b/project-unicorn/scenes/ui/components/BuildHUDPanel.tscn
+index ed15edb..bbf6e0d 100644
+--- a/project-unicorn/scenes/ui/components/BuildHUDPanel.tscn
++++ b/project-unicorn/scenes/ui/components/BuildHUDPanel.tscn
+@@ -1,8 +1,9 @@
+-[gd_scene load_steps=4 format=3 uid="uid://buildhudpaneltscn001"]
++[gd_scene load_steps=5 format=3 uid="uid://buildhudpaneltscn001"]
+ 
+ [ext_resource type="Script" path="res://scripts/ui/components/build_hud_panel.gd" id="1_build_hud"]
+ [ext_resource type="PackedScene" path="res://scenes/ui/components/BuildBar.tscn" id="2_build_bar"]
+ [ext_resource type="PackedScene" path="res://scenes/ui/components/ResearchBar.tscn" id="3_research_bar"]
++[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="4_menajer"]
+ 
+ [node name="BuildHUDPanel" type="Control"]
+ layout_mode = 3
+@@ -12,6 +13,7 @@ anchor_bottom = 1.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
++theme = ExtResource("4_menajer")
+ script = ExtResource("1_build_hud")
+ 
+ [node name="Root" type="VBoxContainer" parent="."]
+@@ -28,7 +30,6 @@ grow_vertical = 1
+ theme_override_constants/separation = 8
+ 
+ [node name="BuildBar" parent="Root" instance=ExtResource("2_build_bar")]
+-custom_minimum_size = Vector2(0, 138)
+ layout_mode = 2
+ 
+ [node name="ResearchBar" parent="Root" instance=ExtResource("3_research_bar")]
+diff --git a/project-unicorn/scenes/ui/components/ResearchBar.tscn b/project-unicorn/scenes/ui/components/ResearchBar.tscn
+index d489db7..231a1e3 100644
+--- a/project-unicorn/scenes/ui/components/ResearchBar.tscn
++++ b/project-unicorn/scenes/ui/components/ResearchBar.tscn
+@@ -2,10 +2,10 @@
+ 
+ [ext_resource type="Script" path="res://scripts/ui/components/research_bar.gd" id="1_researchbar"]
+ 
+-[node name="ResearchBar" type="Control"]
+-custom_minimum_size = Vector2(0, 76)
++[node name="ResearchBar" type="PanelContainer"]
+ layout_mode = 3
+ anchors_preset = 0
+ size_flags_horizontal = 3
+ mouse_filter = 1
++theme_type_variation = &"FloatPanel"
+ script = ExtResource("1_researchbar")
+diff --git a/project-unicorn/scripts/main/main.gd b/project-unicorn/scripts/main/main.gd
+index 33153e4..91eb8cc 100644
+--- a/project-unicorn/scripts/main/main.gd
++++ b/project-unicorn/scripts/main/main.gd
+@@ -1084,6 +1084,8 @@ func _probe_variations(col: Control, th: Theme) -> void:
+ 		var base := th.get_type_variation_base(type)
+ 		if base == &"" or master_types.has(type):
+ 			continue
++		while th.get_type_variation_base(base) != &"":
++			base = th.get_type_variation_base(base)
+ 		var c: Control
+ 		match base:
+ 			&"Label":
+diff --git a/project-unicorn/scripts/theme/build_theme.gd b/project-unicorn/scripts/theme/build_theme.gd
+index 0e35e8e..72dce38 100644
+--- a/project-unicorn/scripts/theme/build_theme.gd
++++ b/project-unicorn/scripts/theme/build_theme.gd
+@@ -711,7 +711,8 @@ func _menajer(master: Theme) -> Theme:
+ 	th.set_stylebox("panel", &"Panel", _flat(T.D_SURFACE_3, T.D_RADIUS_1,
+ 		_pad_of(th.get_stylebox("panel", &"Panel")), T.D_LINE_1))
+ 	th.set_stylebox("panel", &"PanelContainer", _flat(T.D_SURFACE_3, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_1))
+-	th.set_stylebox("background", &"ProgressBar", _flat(T.D_BAR_TRACK, T.D_RADIUS_1, Vector4.ZERO))
++	var track := Vector4(0, T.D_H_PROGRESS * 0.5, 0, T.D_H_PROGRESS * 0.5)
++	th.set_stylebox("background", &"ProgressBar", _flat(T.D_BAR_TRACK, T.D_RADIUS_1, track))
+ 	th.set_stylebox("fill", &"ProgressBar", _flat(T.D_BAR_FILL, T.D_RADIUS_1, Vector4.ZERO))
+ 	th.set_stylebox("separator", &"HSeparator", _pin(_rule(T.D_LINE_1, false)))
+ 	th.set_stylebox("separator", &"VSeparator", _pin(_rule(T.D_LINE_1, true)))
+@@ -861,6 +862,7 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"KeyLabelStrong", cond_sb_caps, T.D_FS_14, T.D_INK_1],
+ 		[&"RiskKey", cond_sb_caps, T.D_FS_14, T.D_NEG_INK],
+ 		[&"KeySmall", cond_sb_caps, T.D_FS_12, T.D_INK_3],
++		[&"FloatKey", cond_sb_caps, T.D_FS_14, T.D_INK_2],
+ 		[&"NavReason", cond_sb_caps, T.D_FS_12, T.D_INK_4],
+ 		[&"PartValue", sans_b, T.D_FS_36, T.D_INK_2],
+ 		[&"HeroValue", sans_sb, T.D_FS_30, T.D_INK_1],
+@@ -887,6 +889,8 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"KeyTextMuted", sans_med, T.D_FS_14, T.D_INK_3],
+ 		[&"MetaMuted", sans_reg, T.D_FS_14, T.D_INK_3],
+ 		[&"Caption", sans_reg, T.D_FS_13, T.D_INK_3],
++		[&"CaptionPrimary", sans_reg, T.D_FS_13, T.D_INK_2],
++		[&"CaptionFaint", sans_reg, T.D_FS_13, T.D_INK_4],
+ 		[&"CondCaption", sansc, T.D_FS_13, T.D_INK_3],
+ 		[&"SegCount", sans_med, T.D_FS_13, T.D_INK_4],
+ 		[&"SegCountActive", sans_med, T.D_FS_13, T.D_INK_3],
+@@ -953,6 +957,9 @@ func _menajer(master: Theme) -> Theme:
+ 			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+ 		[&"FloatPanel", _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_3, Vector4.ZERO, T.D_LINE_1), T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+ 		[&"FloatHead", _flat(clear, 0, Vector4(T.SPACE_XL, T.SPACE_L, T.SPACE_XL, T.SPACE_L), T.D_LINE_1, bottom)],
++		[&"FloatRow", _flat(clear, 0, Vector4(T.SPACE_XL, T.SPACE_M, T.SPACE_XL, T.SPACE_M), T.D_LINE_1, bottom)],
++		[&"FloatFoot", _flat(clear, 0, Vector4(T.SPACE_XL, T.SPACE_M, T.SPACE_XL, T.SPACE_M), T.D_LINE_1,
++			Vector4i(0, T.BORDER_HAIRLINE, 0, 0))],
+ 		[&"NoticeDoc", _shadow(_doc(_flat(T.D_SURFACE_3, 0, Vector4(T.SPACE_XL, 0, T.SPACE_XL, 0), T.D_LINE_1), T.D_CUT_SM),
+ 			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+ 	]:
+@@ -1003,10 +1010,20 @@ func _menajer(master: Theme) -> Theme:
+ 	_dbtn(th, &"TickerToggle", {"normal": [clear, T.D_LINE_1, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+ 		"pressed": [clear, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]},
+ 		sans_reg, T.D_FS_14, Vector4.ZERO, 0, Vector4i(0, 0, T.BORDER_HAIRLINE, 0))
+-	for row in [["icon_normal_color", T.D_INK_3], ["icon_focus_color", T.D_INK_3], ["icon_hover_color", T.D_INK_1],
+-			["icon_pressed_color", T.D_INK_1], ["icon_hover_pressed_color", T.D_INK_1]]:
+-		th.set_color(row[0], &"TickerToggle", row[1])
+ 	th.set_constant("icon_max_width", &"TickerToggle", T.D_ICON_CONTROL)
++	# A window's close: its glyph in a 40 px key, hover a border.
++	_dbtn(th, &"WinClose", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
++		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]},
++		sans_reg, T.D_FS_14, Vector4.ZERO)
++	th.set_constant("icon_max_width", &"WinClose", T.D_ICON_CONTROL)
++	# A float card's action is a small ghost button with a smaller glyph; its links are text keys.
++	th.set_type_variation(&"FloatAction", &"GhostButtonSmall")
++	th.set_constant("icon_max_width", &"FloatAction", T.D_ICON_ACTION)
++	th.set_constant("h_separation", &"FloatAction", T.SPACE_S)
++	_dbtn(th, &"FloatLink", ghost, sans_reg, T.D_FS_13, _fit(sans_reg, T.D_FS_13, T.D_H_LINK, T.SPACE_S, T.SPACE_S))
++	# A paused progress keeps its share in a neutral fill.
++	th.set_type_variation(&"ProgressPaused", &"ProgressBar")
++	th.set_stylebox("fill", &"ProgressPaused", _flat(T.D_LINE_3, T.D_RADIUS_1, Vector4.ZERO))
+ 
+ 	# Message body and ticker text.
+ 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")
+@@ -1157,7 +1174,8 @@ func _shadow(sb: StyleBoxFlat, color: Color, shadow: Vector2i) -> StyleBoxFlat:
+ 
+ 
+ ## A dark button from {state: [fill, edge, ink]}; every state's box carries the same margins, so no
+-## state moves the label. A class is styled in place, any other name becomes a Button variation.
++## state moves the label, and a glyph takes its label's ink. A class is styled in place, any other
++## name becomes a Button variation.
+ func _dbtn(th: Theme, name: StringName, look: Dictionary, face: Font, size: int, pad: Vector4,
+ 		radius: int = T.D_RADIUS_2, widths := Vector4i(1, 1, 1, 1)) -> void:
+ 	if not ClassDB.class_exists(name):
+@@ -1165,8 +1183,10 @@ func _dbtn(th: Theme, name: StringName, look: Dictionary, face: Font, size: int,
+ 	for state in look:
+ 		th.set_stylebox(state, name, _flat(look[state][0], radius, pad, look[state][1], widths))
+ 		th.set_color(INK_OF[state], name, look[state][2])
+-	th.set_color("font_hover_pressed_color", name, look.pressed[2])
+-	th.set_color("font_focus_color", name, look.normal[2])
++		th.set_color("icon_%s_color" % state, name, look[state][2])
++	for part in ["font", "icon"]:
++		th.set_color(part + "_hover_pressed_color", name, look.pressed[2])
++		th.set_color(part + "_focus_color", name, look.normal[2])
+ 	th.set_font("font", name, face)
+ 	th.set_font_size("font_size", name, size)
+ 
+diff --git a/project-unicorn/scripts/theme/ui_factory.gd b/project-unicorn/scripts/theme/ui_factory.gd
+index 33d2414..1c195fa 100644
+--- a/project-unicorn/scripts/theme/ui_factory.gd
++++ b/project-unicorn/scripts/theme/ui_factory.gd
+@@ -6,6 +6,8 @@ extends RefCounted
+ # labels authored in the .tscn scenes. Colours/sizes come from UiTokens; the
+ # master theme supplies fonts and per-variation defaults.
+ 
++const CLOSE_ICON := preload("res://assets/icons/util/close.svg")
++
+ static var _bust_mats := {}   # circle -> the bust's material (avatar_bust.gdshader)
+ 
+ 
+@@ -203,14 +205,21 @@ static func make_placeholder_column(title: String, line: String) -> VBoxContaine
+ 
+ 
+ ## The × that closes a window or a card. No focus: game_shell reads Space as the speed key.
+-## WindowClose carries no margins, so this square is the button's size.
+-static func make_close_button(on_close: Callable) -> Button:
++## Its variation carries no margins, so this square is the button's size; `dark` is the Menajer
++## Masası's close, its glyph in a 40 px key.
++static func make_close_button(on_close: Callable, dark := false) -> Button:
+ 	var close := Button.new()
+-	close.theme_type_variation = &"WindowClose"
+ 	close.focus_mode = Control.FOCUS_NONE
+-	close.text = "×"
+ 	close.tooltip_text = TranslationServer.translate("WIN_CLOSE")
+-	close.custom_minimum_size = Vector2(UiTokens.SPACE_3XL, UiTokens.SPACE_3XL)
++	if dark:
++		close.theme_type_variation = &"WinClose"
++		close.icon = CLOSE_ICON
++		close.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
++		close.custom_minimum_size = Vector2.ONE * UiTokens.D_H_BTN
++	else:
++		close.theme_type_variation = &"WindowClose"
++		close.text = "×"
++		close.custom_minimum_size = Vector2(UiTokens.SPACE_3XL, UiTokens.SPACE_3XL)
+ 	close.pressed.connect(on_close)
+ 	return close
+ 
+diff --git a/project-unicorn/scripts/theme/ui_tokens.gd b/project-unicorn/scripts/theme/ui_tokens.gd
+index fa6ed70..117160a 100644
+--- a/project-unicorn/scripts/theme/ui_tokens.gd
++++ b/project-unicorn/scripts/theme/ui_tokens.gd
+@@ -41,7 +41,7 @@ extends RefCounted
+ 
+ ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
+ ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
+-const THEME_STAMP := 19
++const THEME_STAMP := 20
+ 
+ # ============================================================================
+ # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
+@@ -99,14 +99,6 @@ const AMBER_BG := Color(0.604, 0.416, 0.071, 0.10)     # rgba(154,106,18,.10) ·
+ const AMBER_WASH := Color(0.604, 0.416, 0.071, 0.06)   # rgba(154,106,18,.06) · selected-card wash
+ const ON_ACCENT := Color(0.169, 0.153, 0.133, 1)   # #2B2722 · text ON the amber fill
+ 
+-# --- Yüzen çubuklar · dolgu ve duraklamış zemin ---
+-# Dolgu çubuk renginin düşük alfasıdır; o kadar soluk kaldığı için sayaç dizgisi sınırın
+-# iki tarafında aynı kontrastta okunur ve kenar çizgisine gerek kalmaz.
+-const BUILD_FILL_ALPHA := 0.28                           # araştırma dolgusunun alfası  # WORKING
+-const BUILD_FILL_PAUSED := Color(0.937, 0.910, 0.855, 1) # #EFE8DA · durmuş dolgu, DÜZ
+-const BUILD_SUPPORT_FILL_ALPHA := 0.10                   # DESTEK koşusu daha da soluk
+-
+-
+ # --- STATE · semantic. Green/red carry MEANING ONLY; they are the pair the
+ # colourblind toggle swaps, so they are read through the accessors below. ---
+ const POSITIVE := Color(0.184, 0.420, 0.227, 1)          # #2F6B3A
+@@ -812,9 +804,15 @@ const D_H_TAG := 22
+ const D_H_PILL := 20
+ const D_H_BADGE := 20
+ const D_H_BADGE_ICON := 18   # a count on the corner of an icon (the rail's icon mode)
++const D_H_LINK := 24         # a text link on a float card (the research card's pause and assign)
++const D_H_PROGRESS := 6      # a progress track
++const D_H_WIN_HEAD := 72     # a window's header band
+ # --- glyph sizes ---
+-const D_ICON_CONTROL := 20   # a control's own glyph (the ticker toggle)
++const D_ICON_CONTROL := 20   # a control's own glyph (the ticker toggle, a window's close)
++const D_ICON_TITLE := 20     # a float card's title glyph
++const D_ICON_ROW := 16       # a row's leading glyph
+ const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
++const D_ICON_ACTION := 12    # the glyph inside a float card's action
+ 
+ const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
+ const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]
+diff --git a/project-unicorn/scripts/ui/components/bar_kit.gd b/project-unicorn/scripts/ui/components/bar_kit.gd
+index fc31e44..60744c4 100644
+--- a/project-unicorn/scripts/ui/components/bar_kit.gd
++++ b/project-unicorn/scripts/ui/components/bar_kit.gd
+@@ -1,112 +1,37 @@
+ extends RefCounted
+ 
+-# BarKit — yüzen çubukların (BuildBar, ResearchBar) ortak çizim ilkelleri.
++# BarKit — yüzen kartların (DESTEK kartı, araştırma kartı) ortak parçaları. Yazı ve kutu ev
++# sahibinin temasından çözülür (BuildHUDPanel'in menajer_theme'i): parça varyasyonu adlandırır,
++# ikonun tonu D_* token'ıdır. Parçalar fareyi geçirir; kartın boş yeri sürüklemeye kalır.
+ #
+-# TEMA-BAĞIMSIZ, BİLEREK: yazı boyu/rengi çağıranın verdiği UiTokens değerinden,
+-# yazı tipi PROJE temasından (ThemeDB) okunur; `get_theme_font` ya da
+-# `theme_type_variation` kullanılmaz.
+-#
+-# class_name yok, iki çubuk da `preload` eder: paylaşılan checkout'ta yeni bir
++# class_name yok, iki kart da `preload` eder: paylaşılan checkout'ta yeni bir
+ # class_name, öteki oturumların headless koşularını global class-cache yarım
+ # kalınca düşürüyor.
+ 
+-const ICON_DIR := "res://assets/icons/build/"
+-
+-
+-## Proje teması → MicroLabel varyasyonunun mono yüzü. Theme.get_font varyasyon
+-## zincirini yürümez, o yüzden önce has_font.
+-static func resolve_font(host: Control) -> Font:
+-	var th: Theme = ThemeDB.get_project_theme()
+-	if th != null:
+-		if th.has_font(&"font", &"MicroLabel"):
+-			return th.get_font(&"font", &"MicroLabel")
+-		if th.has_font(&"font", &"Label"):
+-			return th.get_font(&"font", &"Label")
+-	return host.get_theme_default_font()
+-
+-
+-static func label(font: Font, size_px: int, color: Color) -> Label:
+-	var l := Label.new()
+-	l.add_theme_font_override(&"font", font)
+-	l.add_theme_font_size_override(&"font_size", size_px)
+-	l.add_theme_color_override(&"font_color", color)
+-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+-	# clip_text kapalı kalmalı: açıkken Label'ın asgari genişliği sıfıra iner ve
+-	# yanındaki esneyen boşluk bütün satırı yutar. Dolgunun kenarı hiçbir yazıyı kesmez.
+-	l.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+-	return l
+-
+ 
+-static func glyph(name: String, px: int, color: Color) -> TextureRect:
++static func glyph(texture: Texture2D, px: int, tone: Color) -> TextureRect:
+ 	var t := TextureRect.new()
+-	t.texture = load(ICON_DIR + name + ".svg")
++	t.texture = texture
+ 	t.custom_minimum_size = Vector2(px, px)
+ 	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+ 	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+-	t.modulate = color
++	t.modulate = tone
+ 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+ 	return t
+ 
+ 
+-static func hairline() -> Panel:
+-	var p := Panel.new()
+-	p.custom_minimum_size = Vector2(0, 1)
+-	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	var sb := StyleBoxFlat.new()
+-	sb.bg_color = UiTokens.DIVIDER_LIGHT
+-	sb.anti_aliasing = false
+-	p.add_theme_stylebox_override(&"panel", sb)
+-	return p
+-
+-
+-## KAPAK ÇİZGİSİ. Ayrı bir Panel, çünkü StyleBoxFlat tek kenara ayrı RENK veremez
+-## ve kapak çizgisi gövde kenarından FARKLI renktedir (grubun durumu).
+-static func cap(height_px: int) -> Panel:
+-	var c := Panel.new()
+-	c.custom_minimum_size = Vector2(0, height_px)
+-	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	return c
+-
++static func line() -> HBoxContainer:
++	var h := HBoxContainer.new()
++	h.add_theme_constant_override(&"separation", UiTokens.SPACE_M)
++	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	return h
+ 
+-static func paint_cap(cap_panel: Panel, color: Color) -> void:
+-	var sb := StyleBoxFlat.new()
+-	sb.bg_color = color
+-	sb.anti_aliasing = false
+-	cap_panel.add_theme_stylebox_override(&"panel", sb)
+ 
+-
+-# --- Altıgen -------------------------------------------------------------------
+-# Ar-Ge düğümünün ağaçtaki şekli; çubuk aynı şekli taşır ki kart ile ağaç aynı nesneyi
+-# göstersin. Renk `meta`da durur çünkü `draw` sinyali argüman taşımaz.
+-
+-const HEX_META := &"bar_kit_hex_color"
+-
+-
+-static func hex(px: int, color: Color) -> Control:
+-	var c := Control.new()
+-	c.custom_minimum_size = Vector2(px, px)
+-	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	c.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+-	c.set_meta(HEX_META, color)
+-	c.draw.connect(_draw_hex.bind(c))
+-	return c
+-
+-
+-static func paint_hex(node: Control, color: Color) -> void:
+-	node.set_meta(HEX_META, color)
+-	node.queue_redraw()
+-
+-
+-static func _draw_hex(node: Control) -> void:
+-	var color: Color = node.get_meta(HEX_META, UiTokens.INK) as Color
+-	var mid: Vector2 = node.size * 0.5
+-	var r: float = minf(node.size.x, node.size.y) * 0.5 - 1.0
+-	if r <= 0.0:
+-		return
+-	var pts := PackedVector2Array()
+-	for i in 7:                       # 7. nokta = 1. nokta → kapalı çember
+-		var a: float = deg_to_rad(60.0 * float(i) - 90.0)
+-		pts.append(mid + Vector2(cos(a), sin(a)) * r)
+-	node.draw_polyline(pts, color, 1.0, true)
++## Satırın kalanını alan yazı; uzarsa üç noktayla kısalır.
++static func filler(variation: StringName) -> Label:
++	var l := UiFactory.make_label("", variation)
++	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	l.clip_text = true
++	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
++	return l
+diff --git a/project-unicorn/scripts/ui/components/build_bar.gd b/project-unicorn/scripts/ui/components/build_bar.gd
+index 48d4ab9..2cb5ff3 100644
+--- a/project-unicorn/scripts/ui/components/build_bar.gd
++++ b/project-unicorn/scripts/ui/components/build_bar.gd
+@@ -1,68 +1,48 @@
+-extends Control
++extends PanelContainer
+ 
+ # BuildBar — yüzen DESTEK kartı: yayındaki ürün, doğrulanmış hatalar ve düzeltme koşusu.
+ #
+-# Üç satır, hepsi modelden:
+-#   ürün  : hangi ürün ve sürüm + tek not etiketi.
+-#   faz   : satırın kendi zemini koşunun ilerlemesidir, ayrı çubuk yok. Ad + iş yükü + yüzde.
+-#   karar : karttaki TEK basılabilir şey.
++# Satırlar, hepsi modelden:
++#   başlık : ürünün adı ve sürümü; masadaki biri iki işteyse sağda bölünmüş odağın notu.
++#   destek : DESTEK ve doğrulanmış hatalar; koşu sürerken sağda yüzde, altında ilerleme.
++#   eylem  : karttaki TEK basılabilir şey, koşuyu başlatır ya da bitirir; kapalıyken gerekçesi
++#            yanında.
+ # Sprint planlamada bir gün bekleyip liderin önerisiyle kendiliğinden başladıysa, o sprint sürdükçe
+-# altta dördüncü bir not satırı. Kartın boyu ev sahibinin verdiği taban + o satır.
+-# Üstünde 2px kapak çizgisi: grubun durumu.
++# altta bir not satırı.
+ #
+-# Dolgu sınırında dikey çizgi yok: dolgu rengin %13 alfası olduğu için sınırın iki yanındaki
+-# yazı aynı kontrastta okunur; çizgi sayaç dizgisini keserdi.
+-#
+-# TEMA-BAĞIMSIZ, BİLEREK: boy ve renk UiTokens'tan, yazı tipi proje temasından (BarKit).
+-#
+-# PROCESS_MODE_ALWAYS: ağaç duraklıyken de gui_input dağıtılsın. INHERIT'te kart çizilir ama
+-# her tıklamayı yutar.
++# PROCESS_MODE_ALWAYS: ağaç duraklıyken de eylem çalışsın. INHERIT'te kart çizilir ama her
++# tıklamayı yutar.
+ 
+ const Model := preload("res://scripts/ui/components/build_bar_model.gd")
+ const BarKit := preload("res://scripts/ui/components/bar_kit.gd")
+-
+-const CAP_H := 2
+-const ROW_PRODUCT_H := 44
+-const ROW_PHASE_H := 48
+-const ROW_DECISION_H := 44
+-const PAD_X := 12
+-const GAP := 10
+-const MONITOR_PX := 16
+-const PHASE_PX := 15
+-const DECISION_PX := 13
++const PRODUCT_ICON := preload("res://assets/icons/rail/product.svg")
++const SUPPORT_ICON := preload("res://assets/icons/util/shield.svg")
++const START_ICON := preload("res://assets/icons/util/play.svg")
++const END_ICON := preload("res://assets/icons/util/pause.svg")
++const AUTO_ICON := preload("res://assets/icons/product/kind_feature.svg")
+ 
+ var _model = null
+-var _font: Font = null
+ 
+-var _cap: Panel = null
+ var _name_label: Label = null
+ var _busy_label: Label = null
+-var _fill: Panel = null
+-var _phase_icon: TextureRect = null
+-var _phase_label: Label = null
+-var _work_label: Label = null
++var _key_label: Label = null
++var _confirmed_label: Label = null
+ var _percent_label: Label = null
+-var _decision_row: PanelContainer = null
+-var _decision_icon: TextureRect = null
+-var _decision_label: Label = null
+-var _decision_hover := false
+-var _auto_rule: Panel = null
++var _progress: ProgressBar = null
++var _action: Button = null
++var _refusal_label: Label = null
+ var _auto_row: Control = null
+ var _auto_label: Label = null
+-var _base_h := 0.0
+ 
+ 
+ func _ready() -> void:
+ 	process_mode = Node.PROCESS_MODE_ALWAYS
+-	mouse_filter = Control.MOUSE_FILTER_PASS   # karar satırı tıklanabilir; kart kendisi değil
+-	_font = BarKit.resolve_font(self)
+-	_base_h = custom_minimum_size.y
+ 	_build_tree()
+ 	# Meşguliyet aynı karede okunsun: atama ya da eğitim değişimi bir sonraki oyun saatini
+ 	# beklerse oyuncu bunu takılma diye okur.
+ 	var r1: Callable = refresh.unbind(1)
+ 	for s: Signal in [EventBus.build_phase_changed, EventBus.day_advanced, EventBus.language_changed,
+-			EventBus.assignment_changed, EventBus.palette_changed]:
++			EventBus.assignment_changed]:
+ 		s.connect(r1)
+ 	EventBus.build_progress_changed.connect(refresh)
+ 	EventBus.employee_training_changed.connect(refresh.unbind(2))
+@@ -84,104 +64,72 @@ func fingerprint() -> String:
+ # --- Ağaç ---------------------------------------------------------------------
+ 
+ func _build_tree() -> void:
+-	var shell := PanelContainer.new()
+-	shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+-	shell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	var shell_sb := StyleBoxFlat.new()
+-	shell_sb.bg_color = UiTokens.CARD_BG
+-	shell_sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+-	shell_sb.border_color = UiTokens.CARD_BORDER
+-	shell_sb.set_corner_radius_all(UiTokens.RADIUS_S)
+-	shell_sb.corner_radius_top_left = 0
+-	shell_sb.corner_radius_top_right = 0
+-	shell_sb.anti_aliasing = false
+-	shell.add_theme_stylebox_override(&"panel", shell_sb)
+-	add_child(shell)
+-
+ 	var col := VBoxContainer.new()
+ 	col.add_theme_constant_override(&"separation", 0)
+-	shell.add_child(col)
+-
+-	_cap = BarKit.cap(CAP_H)
+-	col.add_child(_cap)
+-
+-	# Ürün satırı. Monitör glifi her durumda amber: satır durumu değil kimliği taşır.
+-	var product: HBoxContainer = _padded_row(col)
+-	product.custom_minimum_size = Vector2(0, ROW_PRODUCT_H)
+-	product.add_child(BarKit.glyph("monitor", MONITOR_PX, UiTokens.ACCENT_DEEP))
+-	_name_label = BarKit.label(_font, UiTokens.SIZE_BODY, UiTokens.INK)
+-	product.add_child(_name_label)
+-	product.add_child(_spacer())
+-	_busy_label = BarKit.label(_font, UiTokens.SIZE_META, UiTokens.INK_MUTED)
+-	product.add_child(_busy_label)
+-	col.add_child(BarKit.hairline())
+-
+-	# Faz satırı. Dolgu sola çapalı ve genişliği anchor_right'tır: kart genişleyince oranı
+-	# kendiliğinden korur.
+-	var phase_row := Control.new()
+-	phase_row.custom_minimum_size = Vector2(0, ROW_PHASE_H)
+-	phase_row.clip_contents = true
+-	phase_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	col.add_child(phase_row)
+-	_fill = Panel.new()
+-	_fill.anchor_bottom = 1.0
+-	_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	phase_row.add_child(_fill)
+-	var phase: HBoxContainer = _padded_row(phase_row)
+-	(phase.get_parent() as Control).set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+-	_phase_icon = BarKit.glyph("phase_support", PHASE_PX, UiTokens.positive())
+-	phase.add_child(_phase_icon)
+-	_phase_label = BarKit.label(_font, UiTokens.SIZE_DATA, UiTokens.positive())
+-	phase.add_child(_phase_label)
+-	_work_label = BarKit.label(_font, UiTokens.SIZE_META, UiTokens.INK_DIM)
+-	phase.add_child(_work_label)
+-	phase.add_child(_spacer())
+-	_percent_label = BarKit.label(_font, UiTokens.SIZE_LEAD, UiTokens.INK)
+-	phase.add_child(_percent_label)
+-	col.add_child(BarKit.hairline())
+-
+-	# Karar satırı: karttaki tek basılabilir şey.
+-	_decision_row = PanelContainer.new()
+-	_decision_row.custom_minimum_size = Vector2(0, ROW_DECISION_H)
+-	_decision_row.mouse_filter = Control.MOUSE_FILTER_STOP
+-	_decision_row.gui_input.connect(_on_decision_input)
+-	_decision_row.mouse_entered.connect(_on_decision_hover.bind(true))
+-	_decision_row.mouse_exited.connect(_on_decision_hover.bind(false))
+-	col.add_child(_decision_row)
+-	var decision: HBoxContainer = _padded_row(_decision_row)
+-	_decision_icon = BarKit.glyph("decision", DECISION_PX, UiTokens.ACCENT_DEEP)
+-	decision.add_child(_decision_icon)
+-	_decision_label = BarKit.label(_font, UiTokens.SIZE_SMALL, UiTokens.ACCENT_DEEP)
+-	decision.add_child(_decision_label)
+-
+-	_auto_rule = BarKit.hairline()
+-	col.add_child(_auto_rule)
+-	var auto: HBoxContainer = _padded_row(col)
+-	_auto_row = auto.get_parent()
+-	_auto_row.custom_minimum_size = Vector2(0, ROW_DECISION_H)
+-	_auto_label = BarKit.label(_font, UiTokens.SIZE_SMALL, UiTokens.INK_DIM)
++	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	add_child(col)
++
++	var head := BarKit.line()
++	_box(col, &"FloatHead").add_child(head)
++	head.add_child(BarKit.glyph(PRODUCT_ICON, UiTokens.D_ICON_TITLE, UiTokens.D_INK_3))
++	_name_label = BarKit.filler(&"FloatTitle")
++	head.add_child(_name_label)
++	_busy_label = UiFactory.make_label("", &"Caption")
++	head.add_child(_busy_label)
++
++	# Destek satırı; ilerleme yalnız koşu sürerken, satırın altında.
++	var stack := VBoxContainer.new()
++	stack.add_theme_constant_override(&"separation", UiTokens.SPACE_S)
++	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	_box(col, &"FloatRow").add_child(stack)
++	var support := BarKit.line()
++	stack.add_child(support)
++	support.add_child(BarKit.glyph(SUPPORT_ICON, UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
++	_key_label = UiFactory.make_label("", &"FloatKey")
++	support.add_child(_key_label)
++	_confirmed_label = UiFactory.make_label("", &"MetaMuted")
++	_confirmed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	support.add_child(_confirmed_label)
++	_percent_label = UiFactory.make_label("", &"KeyText")
++	support.add_child(_percent_label)
++	_progress = ProgressBar.new()
++	_progress.show_percentage = false
++	_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	stack.add_child(_progress)
++
++	var action_box := MarginContainer.new()
++	action_box.add_theme_constant_override(&"margin_left", UiTokens.SPACE_M)
++	action_box.add_theme_constant_override(&"margin_top", UiTokens.SPACE_M)
++	action_box.add_theme_constant_override(&"margin_right", UiTokens.SPACE_L)
++	action_box.add_theme_constant_override(&"margin_bottom", UiTokens.SPACE_M)
++	action_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	col.add_child(action_box)
++	var action := BarKit.line()
++	action_box.add_child(action)
++	# Odak yok: game_shell Space'i hız tuşu olarak okur.
++	_action = Button.new()
++	_action.theme_type_variation = &"FloatAction"
++	_action.focus_mode = Control.FOCUS_NONE
++	_action.pressed.connect(_on_action)
++	action.add_child(_action)
++	_refusal_label = UiFactory.make_label("", &"Caption")
++	action.add_child(_refusal_label)
++
++	_auto_row = _box(col, &"FloatFoot")
++	var auto := BarKit.line()
++	_auto_row.add_child(auto)
++	auto.add_child(BarKit.glyph(AUTO_ICON, UiTokens.D_ICON_ROW, UiTokens.D_INK_4))
++	_auto_label = UiFactory.make_label("", &"MetaMuted")
+ 	auto.add_child(_auto_label)
+ 
+ 
+-## Yatay dolgulu satır: dolgu `parent`'a eklenir, içerik kutusu döner.
+-func _padded_row(parent: Control) -> HBoxContainer:
+-	var pad := MarginContainer.new()
+-	pad.add_theme_constant_override(&"margin_left", PAD_X)
+-	pad.add_theme_constant_override(&"margin_right", PAD_X)
+-	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	parent.add_child(pad)
+-	var row := HBoxContainer.new()
+-	row.add_theme_constant_override(&"separation", GAP)
+-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	pad.add_child(row)
+-	return row
+-
+-
+-func _spacer() -> Control:
+-	var spacer := Control.new()
+-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	return spacer
++## Fareyi geçiren kutu; kartın boş yeri sürüklemeye kalır.
++func _box(parent: Control, variation: StringName) -> PanelContainer:
++	var box := PanelContainer.new()
++	box.theme_type_variation = variation
++	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	parent.add_child(box)
++	return box
+ 
+ 
+ # --- Boyama -------------------------------------------------------------------
+@@ -191,67 +139,32 @@ func _repaint() -> void:
+ 	if _model == null:
+ 		return
+ 	var m = _model
+-	# Yeşil palete bağlı (CB modu): her boyamada yeniden okunur.
+-	var tone: Color = UiTokens.positive()
+-	BarKit.paint_cap(_cap, tone)
+ 	_name_label.text = m.product_name
+-	_busy_label.text = tr(m.split_note_key) if m.split_note_key != "" else ""
++	_busy_label.text = tr(m.split_note_key)
+ 	_busy_label.visible = m.split_note_key != ""
+-	var fill_sb := StyleBoxFlat.new()
+-	fill_sb.bg_color = Color(tone, UiTokens.BUILD_SUPPORT_FILL_ALPHA)
+-	fill_sb.anti_aliasing = false
+-	_fill.add_theme_stylebox_override(&"panel", fill_sb)
+-	_fill.anchor_right = clampf(m.fill, 0.0, 1.0)
+-	_phase_icon.modulate = tone
+-	_phase_label.text = UiTokens.tr_upper(tr("BUILD_PHASE_SUPPORT"))
+-	_phase_label.add_theme_color_override(&"font_color", tone)
+-	# Yüzde yalnız koşu sürerken: dolacak bir şey yoksa sayı da yalan olurdu.
++	_key_label.text = Fmt.upper(tr("BUILD_PHASE_SUPPORT"))
++	# GELEN çizilmez: motorda karşılığı yok.
++	_confirmed_label.text = tr("BUILD_SUPPORT_CONFIRMED").format({"n": m.live_bugs})
++	# Yüzde ve ilerleme yalnız koşu sürerken: dolacak bir şey yoksa sayı da yalan olurdu.
+ 	_percent_label.text = tr("PROD_PERCENT").format({"n": m.percent})
+ 	_percent_label.visible = m.fix_run_active
+-	# GELEN çizilmez: motorda karşılığı yok.
+-	_work_label.text = tr("BUILD_SUPPORT_CONFIRMED").format({"n": m.live_bugs})
+-	_paint_decision(m)
+-	var auto: bool = SprintSystem.mode() == "active" \
++	_progress.value = m.percent
++	_progress.visible = m.fix_run_active
++	_action.text = tr(m.decision_key)
++	_action.icon = END_ICON if m.fix_run_active else START_ICON
++	_action.disabled = not m.decision_enabled
++	_refusal_label.text = tr(m.refusal_key)
++	_refusal_label.visible = m.refusal_key != ""
++	_auto_row.visible = SprintSystem.mode() == "active" \
+ 		and int(GameState.product.get("auto_started", -1)) == SprintSystem.sprint_number()
+-	_auto_rule.visible = auto
+-	_auto_row.visible = auto
+ 	_auto_label.text = tr("PRODUCT_AUTO_STARTED")
+-	custom_minimum_size.y = _base_h + (_auto_rule.custom_minimum_size.y + ROW_DECISION_H if auto else 0.0)
+-
+ 
+-func _paint_decision(m) -> void:
+-	_decision_label.text = UiTokens.tr_upper(tr(m.decision_key))
+-	var on: bool = m.decision_enabled
+-	var hot: bool = on and _decision_hover
+-	# El imleci yalnız satır canlıyken: ölü satırın üstündeki el, ok imlecinin söylemediği
+-	# bir şeyi vaat eder.
+-	_decision_row.mouse_default_cursor_shape = (Control.CURSOR_POINTING_HAND if on
+-		else Control.CURSOR_ARROW)
+-	var tone: Color = UiTokens.ACCENT_DEEP if on else UiTokens.INK_DIM
+-	_decision_icon.modulate = tone
+-	_decision_label.add_theme_color_override(&"font_color", UiTokens.INK if hot else tone)
+-	var sb := StyleBoxFlat.new()
+-	sb.bg_color = UiTokens.AMBER_WASH if hot else Color.TRANSPARENT
+-	if hot:
+-		sb.border_width_left = 2
+-		sb.border_color = UiTokens.ACCENT_DEEP
+-	sb.anti_aliasing = false
+-	_decision_row.add_theme_stylebox_override(&"panel", sb)
+-
+-
+-# --- Karar ---------------------------------------------------------------------
+-
+-func _on_decision_hover(entered: bool) -> void:
+-	_decision_hover = entered
+-	if _model != null:
+-		_paint_decision(_model)
+ 
++# --- Eylem ---------------------------------------------------------------------
+ 
+ ## §8.4 — düzeltme koşusu iki yönlüdür: yoksa başlatır, sürüyorsa bitirir. WRITE-THROUGH: kart
+ ## hiçbir alanı kendi yazmaz, sistemin seam'ini çağırır.
+-func _on_decision_input(ev: InputEvent) -> void:
+-	if not UiFactory.is_left_click(ev) or _model == null or not _model.decision_enabled:
+-		return
++func _on_action() -> void:
+ 	if ProductState.fix_run_active():
+ 		SupportSystem.end_fix_run()
+ 	else:
+diff --git a/project-unicorn/scripts/ui/components/build_bar_model.gd b/project-unicorn/scripts/ui/components/build_bar_model.gd
+index 910ed91..16c9c2e 100644
+--- a/project-unicorn/scripts/ui/components/build_bar_model.gd
++++ b/project-unicorn/scripts/ui/components/build_bar_model.gd
+@@ -11,6 +11,13 @@ extends RefCounted
+ # Sözcükler BuildBar'da çözülür; burada sayılar, kimlikler ve anahtar adları var. İstisna
+ # `product_name` (ad + sürüm).
+ 
++## Kapalı eylemin gerekçesi, motorun ret sebebinden. Kart yalnız yayındaki üründe var ve koşu
++## sürerken eylem bitirmedir: geriye bu iki sebep kalır.
++const REFUSAL_KEYS := {
++	SupportSystem.REFUSAL_NO_BUGS: "FIX_RUN_REFUSED_NO_BUGS",
++	SupportSystem.REFUSAL_DESK_SHUT: "BUILD_BUSY_NOBODY",
++}
++
+ var product_name: String = ""
+ var fill: float = 0.0            # düzeltme koşusunun havuzu ne kadar erittiği 0-1
+ var percent: int = 0
+@@ -19,6 +26,7 @@ var percent: int = 0
+ var split_note_key: String = ""
+ var decision_key: String = ""
+ var decision_enabled: bool = false
++var refusal_key: String = ""     # eylem kapalıyken gerekçesi
+ var live_bugs: int = 0           # doğrulanmış açık hata (§8.1)
+ var fix_run_active: bool = false
+ 
+@@ -42,9 +50,11 @@ func derive() -> bool:
+ 	fill = 0.0 if live_bugs + fixed <= 0 else float(fixed) / float(live_bugs + fixed)
+ 	# Dolum, yüzdenin tek evi UiTokens.build_percent'ten geçer: çubuk yanındaki sayıyla çelişmez.
+ 	percent = UiTokens.build_percent(fill)
+-	# §8.4 — koşu sürerken karar satırı düşmez, "bitir"e döner: koşuyu bitiren oyuncudur.
++	# §8.4 — koşu sürerken eylem düğmesi düşmez, "bitir"e döner: koşuyu bitiren oyuncudur.
+ 	decision_key = "PROD_FIX_RUN_END" if fix_run_active else "PROD_FIX_RUN_START"
+ 	decision_enabled = fix_run_active or SupportSystem.can_start_fix_run()
++	if not decision_enabled:
++		refusal_key = REFUSAL_KEYS[SupportSystem.fix_run_refusal()]
+ 	for c in SupportSystem.desk_roster():
+ 		if HRSystem.is_overloaded(c):
+ 			split_note_key = "BUILD_SPLIT_FOCUS"
+diff --git a/project-unicorn/scripts/ui/components/build_hud_panel.gd b/project-unicorn/scripts/ui/components/build_hud_panel.gd
+index 2432800..3681ea9 100644
+--- a/project-unicorn/scripts/ui/components/build_hud_panel.gd
++++ b/project-unicorn/scripts/ui/components/build_hud_panel.gd
+@@ -1,7 +1,8 @@
+ extends Control
+ 
+ # Yüzen takip kartı yığını — sağ üstte. Bu node bir şey çizmez: onaylı kartlar (BuildBar ·
+-# ResearchBar) kendilerini çizer, burası onları taşır, gizler ve sürükletir.
++# ResearchBar) kendilerini çizer, burası onları taşır, gizler ve sürükletir. Koyu tema bu kökte
++# (BuildHUDPanel.tscn); kartlar ondan çözülür.
+ #
+ # GÖRÜNÜRLÜK: herhangi bir çubuğun fingerprint()'i doluysa görünür. Pencerelerin altında çizilir
+ # ve üstüne bir pencere binince gizlenir; şehir haritası açıkken de gizli, çünkü haritanın ofis
+@@ -9,15 +10,14 @@ extends Control
+ # Çubuk başına görünürlük çubuğun kendi repaint'inin işidir; bu node onu yalnız OKUR,
+ # yazsaydı iki yazar tek alan için yarışırdı.
+ #
+-# BOY: Root bir VBoxContainer ve çocuklarına göre boylanır (araştırma başlar/biter), o yüzden
++# BOY: Root bir VBoxContainer ve kartlarına göre boylanır (araştırma başlar/biter), o yüzden
+ # kelepçe hem panelin hem Root'un `resized`'ını dinler; yoksa alt kenara sürüklenmiş yığın
+-# büyüyünce ekran dışına taşardı. BuildBar'ın asgari boyu .tscn'de ev sahibince verilir:
+-# FULL_RECT bir çocuk, container'ın asgari boyutuna hiçbir şey katmaz.
++# büyüyünce ekran dışına taşardı.
+ #
+ # SÜRÜKLEME: Root bu node'un rect'ine kelepçelenir; WindowLayer onu rayın sağındaki alana
+ # oturtur, yani top bar / sol ray / ticker yapısal olarak erişilemez. Tutamak kartların
+-# kendisidir: çubuk kökleri PASS, karar satırı STOP — onun üstünde sürükleme başlamaz. Konum
+-# oturum boyunca kalır.
++# kendisidir: kart kökleri PASS, düğme ve bağlar STOP — onların üstünde sürükleme başlamaz.
++# Konum oturum boyunca kalır.
+ #
+ # PROCESS_MODE_ALWAYS: ağaç duraklıyken de sürüklenebilsin ve kartlar canlı kalsın.
+ 
+diff --git a/project-unicorn/scripts/ui/components/research_bar.gd b/project-unicorn/scripts/ui/components/research_bar.gd
+index 8a9abc5..3617248 100644
+--- a/project-unicorn/scripts/ui/components/research_bar.gd
++++ b/project-unicorn/scripts/ui/components/research_bar.gd
+@@ -1,66 +1,46 @@
+-extends Control
++extends PanelContainer
+ 
+ # ============================================================================
+-# ResearchBar — ARAŞTIRMA çubuğu (Ar-Ge GDD §5.6). DESTEK kartının kardeşi, kopyası
+-# DEĞİL: DESTEK üç satırlık bir KART, araştırma iki satırlık bir ÇUBUKTUR (76px).
++# ResearchBar — ARAŞTIRMA kartı (Ar-Ge GDD §5.6), DESTEK kartının altında aynı sütunda.
+ #
+-# İKİ SATIR:
+-#   başlık : altıgen glif + düğüm adı + sağda TEK DURUM DİZGİSİ — koşarken
+-#            "~{n} hafta kaldı", duraklamışken sebep cümlesi (§5.6.1). İkisi asla
+-#            bir arada olamaz: katkı sıfırken hafta tahmini zaten -1'dir.
+-#   faz    : SATIRIN KENDİ ZEMİNİ İLERLEMEDİR — ayrı çubuk yok. ARAŞTIRMA + alan +
+-#            yüzde + iki bağ (duraklat · ata).
++# DÖRT SATIR:
++#   başlık   : ARAŞTIRMA + sağda TEK DURUM DİZGİSİ — koşarken "~{n} hafta kaldı",
++#              duraklamışken sebep cümlesi (§5.6.1). İkisi asla bir arada olamaz: katkı
++#              sıfırken hafta tahmini zaten -1'dir.
++#   ad       : düğümün adı ve alanı; dar kartta kısalan alandır.
++#   ilerleme : çubuk ve yüzde.
++#   bağlar   : duraklat · ata.
+ #
+-# HAFTA SAYISI BAŞLIK SATIRINDA: faz satırında olsaydı satır ~460px isterdi ve 360px'lik
+-# kartta `duraklat` ile `ata` kırpılırdı. Bölünen parça HAFTA, çünkü GDD süre tahminini tek
+-# sayı sayar (§8) ve taşan satırda elipsle ilk o yenirdi.
+-# Üstünde 2px KAPAK ÇİZGİSİ: durumun taşıyıcısı (amber koşuyor · nötr donmuş).
+-#
+-# %100'DE ÇUBUK KAYBOLUR (§5.8): model false döner, `fingerprint()` "" olur, ev
+-# sahibi kartı kaldırır. DURAKLAMIŞTA AMBER GİDER, İLERLEME YANMAZ: kapak ve dolgu
+-# nötrleşir, yüzde olduğu yerde durur çünkü motor da progress'i korur (§5.7).
++# %100'DE KART KAYBOLUR (§5.8): model false döner, `fingerprint()` "" olur, ev
++# sahibi kartı kaldırır. DURAKLAMIŞTA İLERLEME YANMAZ: dolgu nötrleşir, yüzde olduğu
++# yerde durur çünkü motor da progress'i korur (§5.7); sebep cümlesi öne çıkar.
+ #
+ # `ata` BAĞI SEKMEYE GİDER, PANEL AÇMAZ. Akordeon Ar-Ge sayfasında yaşıyor; bu
+-# çubuk her sayfanın üstünde yüzüyor, yani paneli kendi içinde açsaydı aynı panel
++# kart her sayfanın üstünde yüzüyor, yani paneli kendi içinde açsaydı aynı panel
+ # iki yerde iki hâlde bulunurdu.
+-#
+-# TEMA-BAĞIMSIZ, BİLEREK: her ölçü ve renk UiTokens'tan, yazı tipi BarKit üzerinden
+-# ThemeDB'den. İki çubuk BarKit'i paylaştığı için tema bağımsızlığı ortak sözleşmedir,
+-# ev sahibine göre değişmez.
+ # ============================================================================
+ 
+ const Model := preload("res://scripts/ui/components/research_bar_model.gd")
+ const BarKit := preload("res://scripts/ui/components/bar_kit.gd")
+-
+-# Onaylı ölçüler (360px tracker). TOPLAM 76 = 2 kapak + 32 + 1 kıl + 41.
+-const CAP_H := 2
+-const ROW_TITLE_H := 32
+-const ROW_PHASE_H := 41
+-const PAD_X := 12
+-const GAP := 8
+-const HEX_PX := 14
++const RESEARCH_ICON := preload("res://assets/icons/rail/rnd.svg")
+ 
+ var _model: Model = null
+-var _font: Font = null
+ 
+-var _cap: Panel = null
+-var _hex: Control = null
+-var _name_label: Label = null
+-var _status_label: Label = null      # hafta tahmini VEYA duraklama sebebi
+-var _fill: Panel = null
+ var _title_label: Label = null
++var _status_label: Label = null      # hafta tahmini VEYA duraklama sebebi
++var _name_label: Label = null
+ var _area_label: Label = null
++var _progress: ProgressBar = null
+ var _percent_label: Label = null
+-var _pause_link: Label = null
+-var _assign_link: Label = null
++var _pause_link: Button = null
++var _dot: Label = null
++var _assign_link: Button = null
+ 
+ 
+ func _ready() -> void:
+-	# ALWAYS: ağaç duraklıyken (oyuncu karar verirken) de gui_input dağıtılsın.
+-	# Varsayılan INHERIT'te çubuk ÇİZİLİR ama her tıklamayı YUTAR.
++	# ALWAYS: ağaç duraklıyken (oyuncu karar verirken) de bağlar çalışsın.
++	# Varsayılan INHERIT'te kart ÇİZİLİR ama her tıklamayı YUTAR.
+ 	process_mode = Node.PROCESS_MODE_ALWAYS
+-	mouse_filter = Control.MOUSE_FILTER_PASS   # bağlar tıklanabilir; çubuk kendisi değil
+-	_font = BarKit.resolve_font(self)
+ 	_build_tree()
+ 	var r1: Callable = refresh.unbind(1)
+ 	EventBus.research_progress_changed.connect(refresh)
+@@ -71,11 +51,10 @@ func _ready() -> void:
+ 	EventBus.day_advanced.connect(r1)
+ 	EventBus.language_changed.connect(r1)
+ 	# ATAMA AYNI KAREDE OKUNSUN (BuildBar'la aynı gerekçe): bir kişinin araştırmadan
+-	# düşmesi çubuğa ancak BİR SONRAKİ oyun gününde ulaşsaydı oyuncu bunu takılma
++	# düşmesi karta ancak BİR SONRAKİ oyun gününde ulaşsaydı oyuncu bunu takılma
+ 	# diye okurdu.
+ 	EventBus.assignment_changed.connect(r1)
+ 	EventBus.employee_training_changed.connect(refresh.unbind(2))
+-	EventBus.palette_changed.connect(r1)
+ 	refresh()
+ 
+ 
+@@ -94,110 +73,64 @@ func fingerprint() -> String:
+ # --- Ağaç ---------------------------------------------------------------------
+ 
+ func _build_tree() -> void:
+-	var shell := PanelContainer.new()
+-	shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+-	shell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	var shell_sb := StyleBoxFlat.new()
+-	shell_sb.bg_color = UiTokens.CARD_BG
+-	shell_sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+-	shell_sb.border_color = UiTokens.CARD_BORDER
+-	shell_sb.set_corner_radius_all(UiTokens.RADIUS_S)
+-	shell_sb.corner_radius_top_left = 0
+-	shell_sb.corner_radius_top_right = 0
+-	shell_sb.anti_aliasing = false
+-	shell.add_theme_stylebox_override(&"panel", shell_sb)
+-	add_child(shell)
+-
+-	var col := VBoxContainer.new()
+-	col.add_theme_constant_override(&"separation", 0)
+-	shell.add_child(col)
+-
+-	_cap = BarKit.cap(CAP_H)
+-	col.add_child(_cap)
+-	col.add_child(_build_title_row())
+-	col.add_child(BarKit.hairline())
+-	col.add_child(_build_phase_row())
+-
+-
+-func _build_title_row() -> Control:
+-	var row := HBoxContainer.new()
+-	row.custom_minimum_size = Vector2(0, ROW_TITLE_H)
+-	row.add_theme_constant_override(&"separation", GAP)
+-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	var pad := MarginContainer.new()
+-	pad.add_theme_constant_override(&"margin_left", PAD_X)
+-	pad.add_theme_constant_override(&"margin_right", PAD_X)
++	pad.add_theme_constant_override(&"margin_left", UiTokens.SPACE_XL)
++	pad.add_theme_constant_override(&"margin_top", UiTokens.SPACE_L)
++	pad.add_theme_constant_override(&"margin_right", UiTokens.SPACE_XL)
++	pad.add_theme_constant_override(&"margin_bottom", UiTokens.SPACE_L)
+ 	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	pad.add_child(row)
+-	# ALTIGEN, ağaçtaki düğümün şekli. Kimliğin taşıyıcısı — durumun değil, o yüzden
+-	# kapak çizgisiyle birlikte renklenir ama cümle taşımaz.
+-	_hex = BarKit.hex(HEX_PX, UiTokens.ACCENT_DEEP)
+-	row.add_child(_hex)
+-	# AD ESNEYEN ÖĞEDİR ve gerekirse ELİPSLE kısalır. BarKit'in clip_text = false
+-	# varsayılanı burada bilerek TERSİNE çevriliyor: o kural, YANINDA esneyen bir
+-	# boşluk düğümü olan sabit yazılar içindi. Burada esneyen öğe LABEL'IN KENDİSİ
+-	# ve kalan her şey sabit genişlikte — yani daralan tek şey ad, durum dizgisi
+-	# hiçbir koşulda kesilmiyor.
+-	_name_label = BarKit.label(_font, UiTokens.SIZE_BODY, UiTokens.INK)
+-	_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	_name_label.clip_text = true
+-	_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+-	row.add_child(_name_label)
+-	_status_label = BarKit.label(_font, UiTokens.SIZE_META, UiTokens.INK_MUTED)
+-	row.add_child(_status_label)
+-	return pad
+-
+-
+-func _build_phase_row() -> Control:
+-	var phase_row := Control.new()
+-	phase_row.custom_minimum_size = Vector2(0, ROW_PHASE_H)
+-	phase_row.clip_contents = true          # dolgu köşeden taşmasın
+-	phase_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-
+-	# DOLGU: sola çapalı, genişliği YÜZDE. anchor_right kullanmak manuel yeniden
+-	# boyutlandırmayı tamamen kaldırıyor — çubuk genişleyince dolgu oranını korur.
+-	_fill = Panel.new()
+-	_fill.anchor_bottom = 1.0
+-	_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	phase_row.add_child(_fill)
+-
+-	var pad := MarginContainer.new()
+-	pad.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+-	pad.add_theme_constant_override(&"margin_left", PAD_X)
+-	pad.add_theme_constant_override(&"margin_right", PAD_X)
+-	pad.mouse_filter = Control.MOUSE_FILTER_PASS   # bağlar tıklamayı alsın
+-	var row := HBoxContainer.new()
+-	row.add_theme_constant_override(&"separation", GAP)
+-	row.mouse_filter = Control.MOUSE_FILTER_PASS
+-	pad.add_child(row)
+-	phase_row.add_child(pad)
+-
+-	_title_label = BarKit.label(_font, UiTokens.SIZE_DATA, UiTokens.ACCENT_DEEP)
+-	row.add_child(_title_label)
+-	# ALAN ESNEYEN ÖĞEDİR ve ayrı bir boşluk düğümü YOKTUR — o rolü bu label taşıyor.
+-	# Yüzde ve iki bağ sabit genişlikte kalır, yani sıkışan tek şey açıklamadır.
+-	_area_label = BarKit.label(_font, UiTokens.SIZE_MICRO, UiTokens.INK_MUTED)
+-	_area_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	_area_label.clip_text = true
+-	_area_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+-	row.add_child(_area_label)
+-	_percent_label = BarKit.label(_font, UiTokens.SIZE_LEAD, UiTokens.INK)
+-	row.add_child(_percent_label)
+-	_pause_link = _make_link(_on_pause_input)
+-	row.add_child(_pause_link)
+-	_assign_link = _make_link(_on_assign_input)
+-	row.add_child(_assign_link)
+-	return phase_row
+-
+-
+-## Bağ reçetesi: amber + STOP + el imleci + gui_input. Düğme geometrisi YOK (kutu, kenar, dolgu) — çubuk üzerinde
+-## bir düğme, dolgunun sınırını ikinci bir kenar çizgisiyle keserdi.
+-func _make_link(handler: Callable) -> Label:
+-	var l := BarKit.label(_font, UiTokens.SIZE_META, UiTokens.ACCENT_DEEP)
+-	l.mouse_filter = Control.MOUSE_FILTER_STOP
+-	l.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+-	l.gui_input.connect(handler)
+-	return l
++	add_child(pad)
++	var col := VBoxContainer.new()
++	col.add_theme_constant_override(&"separation", UiTokens.SPACE_M)
++	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	pad.add_child(col)
++
++	var head := BarKit.line()
++	col.add_child(head)
++	head.add_child(BarKit.glyph(RESEARCH_ICON, UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
++	_title_label = UiFactory.make_label("", &"FloatKey")
++	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	head.add_child(_title_label)
++	_status_label = UiFactory.make_label("", &"Caption")
++	head.add_child(_status_label)
++
++	var names := BarKit.line()
++	col.add_child(names)
++	_name_label = UiFactory.make_label("", &"SubjectStrong")
++	names.add_child(_name_label)
++	_area_label = BarKit.filler(&"Caption")
++	names.add_child(_area_label)
++
++	var bar := BarKit.line()
++	bar.add_theme_constant_override(&"separation", UiTokens.SPACE_L)
++	col.add_child(bar)
++	_progress = ProgressBar.new()
++	_progress.show_percentage = false
++	_progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	_progress.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	bar.add_child(_progress)
++	_percent_label = UiFactory.make_label("", &"KeyText")
++	bar.add_child(_percent_label)
++
++	var links := BarKit.line()
++	links.add_theme_constant_override(&"separation", UiTokens.SPACE_XS)
++	col.add_child(links)
++	_pause_link = _link(_on_pause)
++	links.add_child(_pause_link)
++	_dot = UiFactory.make_label("·", &"CaptionFaint")
++	links.add_child(_dot)
++	_assign_link = _link(_on_assign)
++	links.add_child(_assign_link)
++
++
++## Bağ: metin tuşu. Odak yok: game_shell Space'i hız tuşu olarak okur.
++func _link(handler: Callable) -> Button:
++	var b := Button.new()
++	b.theme_type_variation = &"FloatLink"
++	b.focus_mode = Control.FOCUS_NONE
++	b.pressed.connect(handler)
++	return b
+ 
+ 
+ # --- Boyama -------------------------------------------------------------------
+@@ -207,38 +140,20 @@ func _repaint() -> void:
+ 	if _model == null:
+ 		return
+ 	var m := _model
+-	# DURAKLAMIŞTA AMBER GİDER. Kapak ve dolgu nötrleşir; renk durumun TEK
+-	# taşıyıcısı, ikinci bir rozet yok.
+-	var tone: Color = UiTokens.INK_MUTED if m.paused else UiTokens.ACCENT_DEEP
+-	BarKit.paint_cap(_cap, UiTokens.SURFACE_SUNKEN if m.paused else UiTokens.ACCENT)
+-	BarKit.paint_hex(_hex, tone)
+-
+-	_name_label.text = m.node_name
++	_title_label.text = Fmt.upper(tr("RND_BAR_TITLE"))
+ 	_status_label.text = _status_text(m)
+ 	_status_label.visible = _status_label.text != ""
+-
+-	var fill_sb := StyleBoxFlat.new()
+-	# Duraklamışta DÜZ donuk zemin; koşarken amberin
+-	# soluk hâli. İki hâlin de KENARI YOK: sınır renk değişiminin kendisi.
+-	fill_sb.bg_color = UiTokens.BUILD_FILL_PAUSED if m.paused \
+-		else Color(UiTokens.ACCENT, UiTokens.BUILD_FILL_ALPHA)
+-	fill_sb.anti_aliasing = false
+-	_fill.add_theme_stylebox_override(&"panel", fill_sb)
+-	_fill.anchor_right = m.fill
+-
+-	_title_label.text = Fmt.upper(tr("RND_BAR_TITLE"))
+-	_title_label.add_theme_color_override(&"font_color", tone)
+-	# GİZLENMEZ, BOŞALIR: bu label satırın ESNEYEN öğesidir, yani `visible = false`
+-	# olsaydı genişleten hiçbir şey kalmaz ve iki bağ yüzdenin dibine kayardı.
++	_status_label.theme_type_variation = &"CaptionPrimary" if m.paused else &"Caption"
++	_name_label.text = m.node_name
+ 	_area_label.text = m.area_line
++	_progress.value = m.percent
++	_progress.theme_type_variation = &"ProgressPaused" if m.paused else &""
+ 	_percent_label.text = tr("PROD_PERCENT").format({"n": m.percent})
+-	_percent_label.add_theme_color_override(&"font_color",
+-		UiTokens.INK_MUTED if m.paused else UiTokens.INK)
+-
+ 	# DURAKLAMIŞTA `duraklat` DÜŞER: donmuş bir araştırmayı duraklatmak boş bir
+ 	# tıklamadır; sürdürmenin gerçek yolu birini oturtmaktır, yani `ata`.
+ 	_pause_link.text = tr("RND_BAR_PAUSE")
+ 	_pause_link.visible = not m.paused
++	_dot.visible = not m.paused
+ 	_assign_link.text = tr("RND_ASSIGN_TITLE")
+ 	_assign_link.tooltip_text = "" if m.assignee_names.is_empty() \
+ 		else tr("RND_WHO").format({"who": ", ".join(PackedStringArray(m.assignee_names))})
+@@ -257,17 +172,13 @@ func _status_text(m: Model) -> String:
+ 
+ # --- Bağlar ---------------------------------------------------------------------
+ 
+-func _on_pause_input(ev: InputEvent) -> void:
+-	if _model == null or _model.paused or not UiFactory.is_left_click(ev):
+-		return
+-	# WRITE-THROUGH: çubuk hiçbir alanı kendi yazmaz, sistemin seam'ini çağırır.
++func _on_pause() -> void:
++	# WRITE-THROUGH: kart hiçbir alanı kendi yazmaz, sistemin seam'ini çağırır.
+ 	RnDSystem.pause()
+ 	refresh()
+ 
+ 
+-func _on_assign_input(ev: InputEvent) -> void:
+-	if _model == null or not UiFactory.is_left_click(ev):
+-		return
++func _on_assign() -> void:
+ 	# SIRA ÖNEMLİ: önce sayfa açılır, sonra düğüm kendini açar. Ters sırada
+ 	# `rnd_node_requested` henüz monte olmamış bir akordeona düşerdi.
+ 	EventBus.tab_changed.emit("rnd")
+diff --git a/project-unicorn/scripts/ui/components/research_bar_model.gd b/project-unicorn/scripts/ui/components/research_bar_model.gd
+index 9d53171..bfcfb14 100644
+--- a/project-unicorn/scripts/ui/components/research_bar_model.gd
++++ b/project-unicorn/scripts/ui/components/research_bar_model.gd
+@@ -31,7 +31,7 @@ const NO_WEEKS := -1
+ var node_id: String = ""
+ var node_name: String = ""
+ var area_line: String = ""        # "{area} alanı" — çözülmüş
+-var fill: float = 0.0             # faz satırının zemin dolumu 0-1
++var fill: float = 0.0             # araştırmanın ilerlemesi 0-1
+ var percent: int = 0              # ekrana yazılan yüzde, 0-99
+ var weeks_left: int = NO_WEEKS
+ var paused: bool = false          # §5.7 donmuş = aktif araştırma, üstünde kimse yok
+diff --git a/project-unicorn/scripts/ui/components/window_frame.gd b/project-unicorn/scripts/ui/components/window_frame.gd
+index 6b60d10..c020676 100644
+--- a/project-unicorn/scripts/ui/components/window_frame.gd
++++ b/project-unicorn/scripts/ui/components/window_frame.gd
+@@ -1,7 +1,8 @@
+ extends PanelContainer
+ 
+-# Pencere kabuğu: WindowPanel kartı, içinde sayfa, sağ üstte kapatma glifi. Başlık çerçevede
+-# yok, sayfanın kendi başlık satırında; sağ iç boşluk glife ayrıldığı için ikisi çakışmaz.
++# Pencere kabuğu: WindowPanel kartı, içinde sayfa, sağ üstte kapatma glifi. Krem sayfa başlığını
++# kendi satırında çizer; sağ iç boşluk glife ayrıldığı için ikisi çakışmaz. Koyu dile taşınan
++# sayfa ortak başlığı açar ve kendi başlığını siler.
+ # Dışarıdan preload ile erişilir: global class cache'e bağımlılık yok (headless tuzağı).
+ 
+ ## Glifin sayfa içeriğinden ayırdığı sağ şerit.
+@@ -12,20 +13,35 @@ var page: Control
+ 
+ ## `on_close` × basılınca ya da sayfa `close_requested` yayınca çağrılır (sayfanın konusu
+ ## ortadan kalkınca pencere kendini kapatabilsin).
+-## Sayfa `frame_options` ile görünümü (`variation`), iç boşluğu (`pad`) ve glifi kendi başlık
+-## satırına almayı (`owns_close`) seçebilir: ürün sprint ekranı genişliğini sağ şeride vermiyor.
++## Sayfa `frame_options` ile seçer; hepsi kapalı doğar:
++##   variation · görünüm; pad · iç boşluk; owns_close · glif sayfanın kendi başlık satırında (ürün
++##     sprint ekranı genişliğini sağ şeride vermiyor);
++##   theme · koyu dil: menajer_theme bu çerçevede başlar, WindowPanel'in gölgesi ofisin üstünde hale olur;
++##   title · ortak başlık bandı, koyu dilin parçası olduğu için theme'i de açar: CSV anahtarı büyük
++##     harfle, ardından sayfanın KPI yuvası (kpi, bir Control; değerlerini sayfa yazar) ve kapatma.
+ func _init(body: Control, on_close: Callable) -> void:
+ 	var opts: Dictionary = body.get(&"frame_options") if &"frame_options" in body else {}
+ 	theme_type_variation = opts.get("variation", &"WindowPanel")
++	var title: String = opts.get("title", "")
++	if opts.get("theme", false) or title != "":
++		theme = load(UiTokens.MENAJER_THEME)
+ 	var inset: Vector2i = opts.get("pad", UiTokens.PAD_PAGE)
+-	var owns_close: bool = opts.get("owns_close", false)
++	var owns_close: bool = opts.get("owns_close", false) or title != ""
+ 	page = body
+ 	var pad := MarginContainer.new()
+ 	pad.add_theme_constant_override("margin_left", inset.x)
+ 	pad.add_theme_constant_override("margin_top", inset.y)
+ 	pad.add_theme_constant_override("margin_right", inset.x + (0 if owns_close else CLOSE_GUTTER))
+ 	pad.add_theme_constant_override("margin_bottom", inset.y)
+-	add_child(pad)
++	if title == "":
++		add_child(pad)
++	else:
++		var col := VBoxContainer.new()
++		col.add_theme_constant_override("separation", 0)
++		col.add_child(_head(title, opts.get("kpi"), on_close))
++		pad.size_flags_vertical = Control.SIZE_EXPAND_FILL
++		col.add_child(pad)
++		add_child(col)
+ 	pad.add_child(body)
+ 	if body.has_signal(&"close_requested"):
+ 		body.connect(&"close_requested", on_close)
+@@ -40,3 +56,21 @@ func _init(body: Control, on_close: Callable) -> void:
+ 	slot.add_theme_constant_override("margin_right", inset.x)
+ 	add_child(slot)
+ 	slot.add_child(UiFactory.make_close_button(on_close))
++
++
++## Başlık bandı: ad, KPI yuvası (yoksa boşluk) ve kapatma; ad ile KPI'lar arası 32 px.
++func _head(title: String, kpi: Control, on_close: Callable) -> PanelContainer:
++	var head := PanelContainer.new()
++	head.theme_type_variation = &"WinHead"
++	head.custom_minimum_size.y = UiTokens.D_H_WIN_HEAD
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", UiTokens.SPACE_4XL)
++	head.add_child(row)
++	row.add_child(UiFactory.make_label(Fmt.upper(tr(title)), &"TitleH1"))
++	var slot: Control = kpi if kpi != null else Control.new()
++	slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	row.add_child(slot)
++	var close := UiFactory.make_close_button(on_close, true)
++	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	row.add_child(close)
++	return head
+diff --git a/project-unicorn/scripts/ui/components/window_layer.gd b/project-unicorn/scripts/ui/components/window_layer.gd
+index 885ac8a..8d91b2e 100644
+--- a/project-unicorn/scripts/ui/components/window_layer.gd
++++ b/project-unicorn/scripts/ui/components/window_layer.gd
+@@ -1,8 +1,9 @@
+ extends Panel
+ 
+ # Merkez alanın pencere yöneticisi. Arka plan (ilk çocuk) ofistir, ardından BuildHUD; üstlerinde en
+-# fazla bir birincil pencere (sekme) ve ona bağlı bir ayrıntı penceresi. Ray bu katmanın sol
+-# kenarının üstüne biner: ofis, BuildHUD ve pencereler rayın canlı genişliğinin sağında kalır.
++# fazla bir birincil pencere (sekme) ve ona bağlı bir ayrıntı penceresi. Açık pencerenin altında
++# ofis kararır. Ray bu katmanın sol kenarının üstüne biner: ofis, BuildHUD ve pencereler rayın
++# canlı genişliğinin sağında kalır.
+ # Yuvalar sabit, sürükleme yok. tab_changed("") = pencere yok; kapatmanın üç yolu (×, Esc,
+ # aktif sekmeye tekrar tıklama) bu sinyale çıkar. Pencereler ModalLayer'a ASLA gitmez:
+ # game_shell orada Space/1-4'ü yutuyor, pencere açıkken hız kontrolü çalışmalı. Kurucunun
+@@ -181,13 +182,15 @@ func _place() -> void:
+ 
+ 
+ ## Ofisin üstündeki yüzen denetimler (office_overlays) üstlerine pencere binince gizlenir; görünen
+-## pencerelerin kapladığı alanı onlara söyler.
++## pencerelerin kapladığı alanı onlara söyler. Görünen pencere varken ofis kararır; yolculukta
++## pencereler gizli olduğu için kararma da kalkar.
+ func _tell_floats() -> void:
+ 	var cover := Rect2()
+ 	for frame: Control in [_current_page, _detail]:
+ 		if frame != null and frame.visible:
+ 			cover = frame.get_global_rect() if not cover.has_area() else cover.merge(frame.get_global_rect())
+ 	get_tree().call_group(&"office_overlays", &"set_window_cover", cover)
++	_office.set_dimmed(cover.has_area())
+ 
+ 
+ ## Sahnesi olmayan sekme: ortalanmış başlık + tek satır. Başlık id'den türer (TAB_ + ID),
+diff --git a/project-unicorn/scripts/ui/office/office_view.gd b/project-unicorn/scripts/ui/office/office_view.gd
+index 6d2f6b9..6ab99ba 100644
+--- a/project-unicorn/scripts/ui/office/office_view.gd
++++ b/project-unicorn/scripts/ui/office/office_view.gd
+@@ -5,13 +5,17 @@ extends Control
+ # pointer: drag and wheel move the camera, clicks and hover go to the people, or to the city map
+ # while that is the loaded layout. Windows are later siblings, so they take the pointer first.
+ # The skipped night blinks: the 3D image drops to dark (the people may have faded it out first) and
+-# the 08:00 light fades in. The controls over the office (the office_overlays group) step aside for
+-# the map and for the founder's trip.
++# the 08:00 light fades in. Under an open window the image dims, on its own modulate, so the blink
++# multiplies with it and the controls over the office keep their colour. The controls over the
++# office (the office_overlays group) step aside for the map and for the founder's trip.
+ 
+ const TRAVEL := preload("res://scripts/ui/office/office_travel.gd")
+ ## The blink's dark end: the 3D view's own fade, scene data like the office's other colours.
+ const FADE_DARK := Color.BLACK
+ const NIGHT_FADE_S := 0.6     # [WORKING]
++## The office under an open window: the 3D image times DIM, eased in and out over DIM_S.
++const DIM := 0.84             # [WORKING]
++const DIM_S := 0.12
+ 
+ @onready var _container: SubViewportContainer = $Viewport3D
+ @onready var camera: OfficeCamera = $Viewport3D/SubViewport/World/Camera3D
+@@ -35,6 +39,8 @@ var _fitted := false
+ var _pointer_inside := false
+ var _fade: Tween
+ var _veiled := false   # the founder's trip is on: the layer shows the office alone
++var _dimmed := false   # a window is open over the view
++var _dim: Tween
+ 
+ 
+ func _ready() -> void:
+@@ -97,6 +103,7 @@ func load_layout(office_id: String, road := false) -> void:
+ 	if road:
+ 		_on_pointer_left()
+ 	_step_overlays()
++	_ease_dim()
+ 
+ 
+ ## WindowLayer keeps the view right of the rail (`left`, in the parent's space): the camera
+@@ -112,6 +119,12 @@ func set_veiled(veiled: bool) -> void:
+ 	_step_overlays()
+ 
+ 
++## WindowLayer dims the office while a window is open over it; the map stays lit.
++func set_dimmed(dimmed: bool) -> void:
++	_dimmed = dimmed
++	_ease_dim()
++
++
+ ## Eases the 3D image to FADE_DARK or back over `time` seconds. The tween is this node's, which
+ ## runs while the tree is paused.
+ func fade(dark: bool, time: float) -> Tween:
+@@ -192,6 +205,14 @@ func _step_overlays() -> void:
+ 	get_tree().call_group(&"office_overlays", &"set_map_open", _veiled or not layout.staffed())
+ 
+ 
++func _ease_dim() -> void:
++	var to := Color(DIM, DIM, DIM) if _dimmed and layout.id != "city" else Color.WHITE
++	if _dim != null:
++		_dim.kill()
++	_dim = create_tween()
++	_dim.tween_property(_container, "self_modulate", to, DIM_S)
++
++
+ func _on_night_skipped() -> void:
+ 	_container.modulate = FADE_DARK
+ 	fade(false, NIGHT_FADE_S)
+diff --git a/project-unicorn/themes/master_theme.tres b/project-unicorn/themes/master_theme.tres
+index 8b1b073..765ff08 100644
+--- a/project-unicorn/themes/master_theme.tres
++++ b/project-unicorn/themes/master_theme.tres
+@@ -2515,7 +2515,7 @@ TooltipTitle/font_sizes/font_size = 9
+ TooltipTitle/fonts/font = ExtResource("mono_label_dfe9c")
+ TopBarPanel/base_type = &"Panel"
+ TopBarPanel/styles/panel = SubResource("StyleBoxFlat_591af")
+-UiTokensStamp/constants/stamp = 19
++UiTokensStamp/constants/stamp = 20
+ VSeparator/constants/separation = 4
+ VSeparator/styles/separator = SubResource("StyleBoxLine_8270b")
+ ViewportPanel/base_type = &"Panel"
+diff --git a/project-unicorn/themes/menajer_theme.tres b/project-unicorn/themes/menajer_theme.tres
+index cd6ef9a..71954c2 100644
+--- a/project-unicorn/themes/menajer_theme.tres
++++ b/project-unicorn/themes/menajer_theme.tres
+@@ -1214,6 +1214,15 @@ shadow_color = Color(0, 0, 0, 0.42)
+ shadow_size = 20
+ shadow_offset = Vector2(0, 6)
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_638ce"]
++content_margin_left = 16.0
++content_margin_top = 8.0
++content_margin_right = 16.0
++content_margin_bottom = 8.0
++bg_color = Color(1, 1, 1, 0)
++border_width_top = 1
++border_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_382e7"]
+ content_margin_left = 16.0
+ content_margin_top = 12.0
+@@ -1223,6 +1232,60 @@ bg_color = Color(1, 1, 1, 0)
+ border_width_bottom = 1
+ border_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e6a21"]
++content_margin_left = 6.0
++content_margin_top = 3.0
++content_margin_right = 6.0
++content_margin_bottom = 3.0
++bg_color = Color(1, 1, 1, 0)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_9c5d8"]
++content_margin_left = 6.0
++content_margin_top = 3.0
++content_margin_right = 6.0
++content_margin_bottom = 3.0
++bg_color = Color(1, 1, 1, 0)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.58431375, 0.54901963, 0.49411765, 1)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e6a21_2"]
++content_margin_left = 6.0
++content_margin_top = 3.0
++content_margin_right = 6.0
++content_margin_bottom = 3.0
++bg_color = Color(1, 1, 1, 0)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cd574"]
++content_margin_left = 6.0
++content_margin_top = 3.0
++content_margin_right = 6.0
++content_margin_bottom = 3.0
++bg_color = Color(0.101960786, 0.09019608, 0.078431375, 1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.58431375, 0.54901963, 0.49411765, 1)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ec907"]
+ content_margin_left = 0.0
+ content_margin_top = 0.0
+@@ -1242,6 +1305,15 @@ shadow_color = Color(0, 0, 0, 0.42)
+ shadow_size = 20
+ shadow_offset = Vector2(0, 6)
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5985b"]
++content_margin_left = 16.0
++content_margin_top = 8.0
++content_margin_right = 16.0
++content_margin_bottom = 8.0
++bg_color = Color(1, 1, 1, 0)
++border_width_bottom = 1
++border_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d712a"]
+ content_margin_left = 8.0
+ content_margin_top = 8.0
+@@ -2498,11 +2570,11 @@ corner_radius_top_right = 2
+ corner_radius_bottom_right = 2
+ corner_radius_bottom_left = 2
+ 
+-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b214e_2"]
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_07826"]
+ content_margin_left = 0.0
+-content_margin_top = 0.0
++content_margin_top = 3.0
+ content_margin_right = 0.0
+-content_margin_bottom = 0.0
++content_margin_bottom = 3.0
+ bg_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
+ corner_radius_top_left = 2
+ corner_radius_top_right = 2
+@@ -2520,6 +2592,17 @@ corner_radius_top_right = 2
+ corner_radius_bottom_right = 2
+ corner_radius_bottom_left = 2
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_20fb1"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(0.41568628, 0.37254903, 0.32156864, 1)
++corner_radius_top_left = 2
++corner_radius_top_right = 2
++corner_radius_bottom_right = 2
++corner_radius_bottom_left = 2
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ab44d"]
+ content_margin_left = 8.0
+ content_margin_top = 8.0
+@@ -3808,6 +3891,60 @@ corner_radius_top_right = 2
+ corner_radius_bottom_right = 2
+ corner_radius_bottom_left = 2
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fbc91_5"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(1, 1, 1, 0)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_08a46_4"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(1, 1, 1, 0)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.58431375, 0.54901963, 0.49411765, 1)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fbc91_6"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(1, 1, 1, 0)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_faa9d_3"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(0.101960786, 0.09019608, 0.078431375, 1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.58431375, 0.54901963, 0.49411765, 1)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3a861"]
+ content_margin_left = 24.0
+ content_margin_top = 0.0
+@@ -3999,6 +4136,12 @@ Button/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ Button/colors/font_hover_color = Color(1, 1, 1, 1)
+ Button/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ Button/colors/font_pressed_color = Color(1, 1, 1, 1)
++Button/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++Button/colors/icon_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++Button/colors/icon_hover_color = Color(1, 1, 1, 1)
++Button/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++Button/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++Button/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ Button/font_sizes/font_size = 18
+ Button/fonts/font = ExtResource("d_cond_b_f0c0d")
+ Button/styles/disabled = SubResource("StyleBoxFlat_6f464")
+@@ -4010,11 +4153,19 @@ Caption/base_type = &"Label"
+ Caption/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ Caption/font_sizes/font_size = 13
+ Caption/fonts/font = ExtResource("d_sans_reg_96321")
++CaptionFaint/base_type = &"Label"
++CaptionFaint/colors/font_color = Color(0.6039216, 0.5686275, 0.5176471, 1)
++CaptionFaint/font_sizes/font_size = 13
++CaptionFaint/fonts/font = ExtResource("d_sans_reg_96321")
+ CaptionMuted/base_type = &"Label"
+ CaptionMuted/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ CaptionMuted/constants/line_spacing = 3
+ CaptionMuted/font_sizes/font_size = 11
+ CaptionMuted/fonts/font = ExtResource("d_serif_reg_e6169")
++CaptionPrimary/base_type = &"Label"
++CaptionPrimary/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++CaptionPrimary/font_sizes/font_size = 13
++CaptionPrimary/fonts/font = ExtResource("d_sans_reg_96321")
+ CardAttention/base_type = &"PanelContainer"
+ CardAttention/styles/panel = SubResource("StyleBoxFlat_a7b73")
+ CardCta/base_type = &"PanelContainer"
+@@ -4070,6 +4221,12 @@ ChipButton/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ ChipButton/colors/font_hover_color = Color(1, 1, 1, 1)
+ ChipButton/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ ChipButton/colors/font_pressed_color = Color(1, 1, 1, 1)
++ChipButton/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++ChipButton/colors/icon_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++ChipButton/colors/icon_hover_color = Color(1, 1, 1, 1)
++ChipButton/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++ChipButton/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++ChipButton/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ ChipButton/font_sizes/font_size = 15
+ ChipButton/fonts/font = ExtResource("d_sans_reg_96321")
+ ChipButton/styles/disabled = SubResource("StyleBoxFlat_a94e3")
+@@ -4201,6 +4358,12 @@ DangerButton/colors/font_focus_color = Color(0.95686275, 0.6392157, 0.6039216, 1
+ DangerButton/colors/font_hover_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
+ DangerButton/colors/font_hover_pressed_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
+ DangerButton/colors/font_pressed_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
++DangerButton/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++DangerButton/colors/icon_focus_color = Color(0.95686275, 0.6392157, 0.6039216, 1)
++DangerButton/colors/icon_hover_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
++DangerButton/colors/icon_hover_pressed_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
++DangerButton/colors/icon_normal_color = Color(0.95686275, 0.6392157, 0.6039216, 1)
++DangerButton/colors/icon_pressed_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
+ DangerButton/font_sizes/font_size = 18
+ DangerButton/fonts/font = ExtResource("d_cond_b_f0c0d")
+ DangerButton/styles/disabled = SubResource("StyleBoxFlat_6f464_2")
+@@ -4339,6 +4502,9 @@ FeedDay/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ FeedDay/constants/line_spacing = 3
+ FeedDay/font_sizes/font_size = 11
+ FeedDay/fonts/font = ExtResource("d_sans_reg_96321")
++FloatAction/base_type = &"GhostButtonSmall"
++FloatAction/constants/h_separation = 6
++FloatAction/constants/icon_max_width = 12
+ FloatButton/base_type = &"Button"
+ FloatButton/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ FloatButton/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
+@@ -4346,16 +4512,49 @@ FloatButton/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1
+ FloatButton/colors/font_hover_color = Color(1, 1, 1, 1)
+ FloatButton/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ FloatButton/colors/font_pressed_color = Color(1, 1, 1, 1)
++FloatButton/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++FloatButton/colors/icon_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++FloatButton/colors/icon_hover_color = Color(1, 1, 1, 1)
++FloatButton/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++FloatButton/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++FloatButton/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ FloatButton/font_sizes/font_size = 15
+ FloatButton/fonts/font = ExtResource("d_sans_med_8aa82")
+ FloatButton/styles/disabled = SubResource("StyleBoxFlat_78a5d")
+ FloatButton/styles/hover = SubResource("StyleBoxFlat_61495")
+ FloatButton/styles/normal = SubResource("StyleBoxFlat_78a5d_2")
+ FloatButton/styles/pressed = SubResource("StyleBoxFlat_66b79")
++FloatFoot/base_type = &"PanelContainer"
++FloatFoot/styles/panel = SubResource("StyleBoxFlat_638ce")
+ FloatHead/base_type = &"PanelContainer"
+ FloatHead/styles/panel = SubResource("StyleBoxFlat_382e7")
++FloatKey/base_type = &"Label"
++FloatKey/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++FloatKey/font_sizes/font_size = 14
++FloatKey/fonts/font = ExtResource("d_cond_sb_caps_de601")
++FloatLink/base_type = &"Button"
++FloatLink/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++FloatLink/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++FloatLink/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++FloatLink/colors/font_hover_color = Color(1, 1, 1, 1)
++FloatLink/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
++FloatLink/colors/font_pressed_color = Color(1, 1, 1, 1)
++FloatLink/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++FloatLink/colors/icon_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++FloatLink/colors/icon_hover_color = Color(1, 1, 1, 1)
++FloatLink/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++FloatLink/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++FloatLink/colors/icon_pressed_color = Color(1, 1, 1, 1)
++FloatLink/font_sizes/font_size = 13
++FloatLink/fonts/font = ExtResource("d_sans_reg_96321")
++FloatLink/styles/disabled = SubResource("StyleBoxFlat_e6a21")
++FloatLink/styles/hover = SubResource("StyleBoxFlat_9c5d8")
++FloatLink/styles/normal = SubResource("StyleBoxFlat_e6a21_2")
++FloatLink/styles/pressed = SubResource("StyleBoxFlat_cd574")
+ FloatPanel/base_type = &"PanelContainer"
+ FloatPanel/styles/panel = SubResource("StyleBoxFlat_ec907")
++FloatRow/base_type = &"PanelContainer"
++FloatRow/styles/panel = SubResource("StyleBoxFlat_5985b")
+ FloatTitle/base_type = &"Label"
+ FloatTitle/colors/font_color = Color(1, 1, 1, 1)
+ FloatTitle/font_sizes/font_size = 18
+@@ -4391,6 +4590,12 @@ GhostButton/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1
+ GhostButton/colors/font_hover_color = Color(1, 1, 1, 1)
+ GhostButton/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ GhostButton/colors/font_pressed_color = Color(1, 1, 1, 1)
++GhostButton/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++GhostButton/colors/icon_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++GhostButton/colors/icon_hover_color = Color(1, 1, 1, 1)
++GhostButton/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++GhostButton/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++GhostButton/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ GhostButton/font_sizes/font_size = 18
+ GhostButton/fonts/font = ExtResource("d_cond_b_f0c0d")
+ GhostButton/styles/disabled = SubResource("StyleBoxFlat_c0935")
+@@ -4404,6 +4609,12 @@ GhostButtonSmall/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.854901
+ GhostButtonSmall/colors/font_hover_color = Color(1, 1, 1, 1)
+ GhostButtonSmall/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ GhostButtonSmall/colors/font_pressed_color = Color(1, 1, 1, 1)
++GhostButtonSmall/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++GhostButtonSmall/colors/icon_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++GhostButtonSmall/colors/icon_hover_color = Color(1, 1, 1, 1)
++GhostButtonSmall/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++GhostButtonSmall/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++GhostButtonSmall/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ GhostButtonSmall/font_sizes/font_size = 16
+ GhostButtonSmall/fonts/font = ExtResource("d_cond_sb_6c810")
+ GhostButtonSmall/styles/disabled = SubResource("StyleBoxFlat_c00c3")
+@@ -4700,6 +4911,12 @@ OptionButton/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.85490197,
+ OptionButton/colors/font_hover_color = Color(1, 1, 1, 1)
+ OptionButton/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ OptionButton/colors/font_pressed_color = Color(1, 1, 1, 1)
++OptionButton/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++OptionButton/colors/icon_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++OptionButton/colors/icon_hover_color = Color(1, 1, 1, 1)
++OptionButton/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++OptionButton/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++OptionButton/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ OptionButton/constants/arrow_margin = 8
+ OptionButton/constants/h_separation = 8
+ OptionButton/constants/modulate_arrow = 1
+@@ -4807,6 +5024,12 @@ PrimaryButtonDark/colors/font_focus_color = Color(0.09019608, 0.07450981, 0.0392
+ PrimaryButtonDark/colors/font_hover_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDark/colors/font_hover_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDark/colors/font_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDark/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++PrimaryButtonDark/colors/icon_focus_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDark/colors/icon_hover_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDark/colors/icon_hover_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDark/colors/icon_normal_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDark/colors/icon_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDark/font_sizes/font_size = 18
+ PrimaryButtonDark/fonts/font = ExtResource("d_cond_b_f0c0d")
+ PrimaryButtonDark/styles/disabled = SubResource("StyleBoxFlat_bf71c")
+@@ -4820,6 +5043,12 @@ PrimaryButtonDarkLarge/colors/font_focus_color = Color(0.09019608, 0.07450981, 0
+ PrimaryButtonDarkLarge/colors/font_hover_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDarkLarge/colors/font_hover_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDarkLarge/colors/font_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkLarge/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++PrimaryButtonDarkLarge/colors/icon_focus_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkLarge/colors/icon_hover_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkLarge/colors/icon_hover_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkLarge/colors/icon_normal_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkLarge/colors/icon_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDarkLarge/font_sizes/font_size = 22
+ PrimaryButtonDarkLarge/fonts/font = ExtResource("d_cond_b_f0c0d")
+ PrimaryButtonDarkLarge/styles/disabled = SubResource("StyleBoxFlat_189bf")
+@@ -4833,6 +5062,12 @@ PrimaryButtonDarkSmall/colors/font_focus_color = Color(0.09019608, 0.07450981, 0
+ PrimaryButtonDarkSmall/colors/font_hover_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDarkSmall/colors/font_hover_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDarkSmall/colors/font_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkSmall/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++PrimaryButtonDarkSmall/colors/icon_focus_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkSmall/colors/icon_hover_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkSmall/colors/icon_hover_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkSmall/colors/icon_normal_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkSmall/colors/icon_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDarkSmall/font_sizes/font_size = 16
+ PrimaryButtonDarkSmall/fonts/font = ExtResource("d_cond_sb_6c810")
+ PrimaryButtonDarkSmall/styles/disabled = SubResource("StyleBoxFlat_dd167")
+@@ -4853,8 +5088,10 @@ PrimaryButtonSmall/styles/focus = SubResource("StyleBoxFlat_f3387_10")
+ PrimaryButtonSmall/styles/hover = SubResource("StyleBoxFlat_334f1")
+ PrimaryButtonSmall/styles/normal = SubResource("StyleBoxFlat_97d1a")
+ PrimaryButtonSmall/styles/pressed = SubResource("StyleBoxFlat_fb77f")
+-ProgressBar/styles/background = SubResource("StyleBoxFlat_b214e_2")
++ProgressBar/styles/background = SubResource("StyleBoxFlat_07826")
+ ProgressBar/styles/fill = SubResource("StyleBoxFlat_df944_2")
++ProgressPaused/base_type = &"ProgressBar"
++ProgressPaused/styles/fill = SubResource("StyleBoxFlat_20fb1")
+ QuarterHeaderBand/base_type = &"PanelContainer"
+ QuarterHeaderBand/styles/panel = SubResource("StyleBoxFlat_ab44d")
+ QuoteBox/base_type = &"PanelContainer"
+@@ -4882,6 +5119,12 @@ RailRow/colors/font_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ RailRow/colors/font_hover_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ RailRow/colors/font_hover_pressed_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ RailRow/colors/font_pressed_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++RailRow/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++RailRow/colors/icon_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++RailRow/colors/icon_hover_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++RailRow/colors/icon_hover_pressed_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++RailRow/colors/icon_normal_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++RailRow/colors/icon_pressed_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ RailRow/font_sizes/font_size = 16
+ RailRow/fonts/font = ExtResource("d_cond_sb_caps_de601")
+ RailRow/styles/disabled = SubResource("StyleBoxFlat_eb3f4")
+@@ -4895,6 +5138,12 @@ RailRowActive/colors/font_focus_color = Color(1, 1, 1, 1)
+ RailRowActive/colors/font_hover_color = Color(1, 1, 1, 1)
+ RailRowActive/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ RailRowActive/colors/font_pressed_color = Color(1, 1, 1, 1)
++RailRowActive/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++RailRowActive/colors/icon_focus_color = Color(1, 1, 1, 1)
++RailRowActive/colors/icon_hover_color = Color(1, 1, 1, 1)
++RailRowActive/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++RailRowActive/colors/icon_normal_color = Color(1, 1, 1, 1)
++RailRowActive/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ RailRowActive/font_sizes/font_size = 16
+ RailRowActive/fonts/font = ExtResource("d_cond_sb_caps_de601")
+ RailRowActive/styles/disabled = SubResource("StyleBoxFlat_219e3")
+@@ -4952,6 +5201,12 @@ SecondaryButtonSmall/colors/font_focus_color = Color(0.9137255, 0.89411765, 0.85
+ SecondaryButtonSmall/colors/font_hover_color = Color(1, 1, 1, 1)
+ SecondaryButtonSmall/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ SecondaryButtonSmall/colors/font_pressed_color = Color(1, 1, 1, 1)
++SecondaryButtonSmall/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++SecondaryButtonSmall/colors/icon_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++SecondaryButtonSmall/colors/icon_hover_color = Color(1, 1, 1, 1)
++SecondaryButtonSmall/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++SecondaryButtonSmall/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++SecondaryButtonSmall/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ SecondaryButtonSmall/font_sizes/font_size = 16
+ SecondaryButtonSmall/fonts/font = ExtResource("d_cond_sb_6c810")
+ SecondaryButtonSmall/styles/disabled = SubResource("StyleBoxFlat_a2090")
+@@ -4983,6 +5238,12 @@ SegTab/colors/font_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ SegTab/colors/font_hover_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ SegTab/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ SegTab/colors/font_pressed_color = Color(1, 1, 1, 1)
++SegTab/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++SegTab/colors/icon_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++SegTab/colors/icon_hover_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++SegTab/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++SegTab/colors/icon_normal_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++SegTab/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ SegTab/font_sizes/font_size = 18
+ SegTab/fonts/font = ExtResource("d_cond_sb_caps_de601")
+ SegTab/styles/disabled = SubResource("StyleBoxFlat_6196c")
+@@ -4996,6 +5257,12 @@ SegTabActive/colors/font_focus_color = Color(1, 1, 1, 1)
+ SegTabActive/colors/font_hover_color = Color(1, 1, 1, 1)
+ SegTabActive/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ SegTabActive/colors/font_pressed_color = Color(1, 1, 1, 1)
++SegTabActive/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++SegTabActive/colors/icon_focus_color = Color(1, 1, 1, 1)
++SegTabActive/colors/icon_hover_color = Color(1, 1, 1, 1)
++SegTabActive/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++SegTabActive/colors/icon_normal_color = Color(1, 1, 1, 1)
++SegTabActive/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ SegTabActive/font_sizes/font_size = 18
+ SegTabActive/fonts/font = ExtResource("d_cond_sb_caps_de601")
+ SegTabActive/styles/disabled = SubResource("StyleBoxFlat_93667_2")
+@@ -5098,6 +5365,12 @@ SpeedKey/colors/font_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ SpeedKey/colors/font_hover_color = Color(1, 1, 1, 1)
+ SpeedKey/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ SpeedKey/colors/font_pressed_color = Color(1, 1, 1, 1)
++SpeedKey/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++SpeedKey/colors/icon_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++SpeedKey/colors/icon_hover_color = Color(1, 1, 1, 1)
++SpeedKey/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++SpeedKey/colors/icon_normal_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++SpeedKey/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ SpeedKey/font_sizes/font_size = 16
+ SpeedKey/fonts/font = ExtResource("d_cond_b_f0c0d")
+ SpeedKey/styles/disabled = SubResource("StyleBoxFlat_2a884")
+@@ -5111,6 +5384,12 @@ SpeedKeyActive/colors/font_focus_color = Color(1, 1, 1, 1)
+ SpeedKeyActive/colors/font_hover_color = Color(1, 1, 1, 1)
+ SpeedKeyActive/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ SpeedKeyActive/colors/font_pressed_color = Color(1, 1, 1, 1)
++SpeedKeyActive/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++SpeedKeyActive/colors/icon_focus_color = Color(1, 1, 1, 1)
++SpeedKeyActive/colors/icon_hover_color = Color(1, 1, 1, 1)
++SpeedKeyActive/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++SpeedKeyActive/colors/icon_normal_color = Color(1, 1, 1, 1)
++SpeedKeyActive/colors/icon_pressed_color = Color(1, 1, 1, 1)
+ SpeedKeyActive/font_sizes/font_size = 16
+ SpeedKeyActive/fonts/font = ExtResource("d_cond_b_f0c0d")
+ SpeedKeyActive/styles/disabled = SubResource("StyleBoxFlat_2a884_2")
+@@ -5288,6 +5567,7 @@ TickerToggle/colors/font_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1
+ TickerToggle/colors/font_hover_color = Color(1, 1, 1, 1)
+ TickerToggle/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ TickerToggle/colors/font_pressed_color = Color(1, 1, 1, 1)
++TickerToggle/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
+ TickerToggle/colors/icon_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ TickerToggle/colors/icon_hover_color = Color(1, 1, 1, 1)
+ TickerToggle/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+@@ -5347,7 +5627,7 @@ TopicPill/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ TopicPill/font_sizes/font_size = 13
+ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
+ TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
+-UiTokensStamp/constants/stamp = 19
++UiTokensStamp/constants/stamp = 20
+ VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
+ VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
+ VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")
+@@ -5373,6 +5653,26 @@ VolumeSlider/icons/grabber_highlight = ExtResource("slider_grabber_f8f9b")
+ VolumeSlider/styles/grabber_area = SubResource("StyleBoxFlat_8f783_2")
+ VolumeSlider/styles/grabber_area_highlight = SubResource("StyleBoxFlat_1f119_2")
+ VolumeSlider/styles/slider = SubResource("StyleBoxFlat_4896e_2")
++WinClose/base_type = &"Button"
++WinClose/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++WinClose/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++WinClose/colors/font_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++WinClose/colors/font_hover_color = Color(1, 1, 1, 1)
++WinClose/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
++WinClose/colors/font_pressed_color = Color(1, 1, 1, 1)
++WinClose/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
++WinClose/colors/icon_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++WinClose/colors/icon_hover_color = Color(1, 1, 1, 1)
++WinClose/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++WinClose/colors/icon_normal_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++WinClose/colors/icon_pressed_color = Color(1, 1, 1, 1)
++WinClose/constants/icon_max_width = 20
++WinClose/font_sizes/font_size = 14
++WinClose/fonts/font = ExtResource("d_sans_reg_96321")
++WinClose/styles/disabled = SubResource("StyleBoxFlat_fbc91_5")
++WinClose/styles/hover = SubResource("StyleBoxFlat_08a46_4")
++WinClose/styles/normal = SubResource("StyleBoxFlat_fbc91_6")
++WinClose/styles/pressed = SubResource("StyleBoxFlat_faa9d_3")
+ WinCtl/base_type = &"PanelContainer"
+ WinCtl/styles/panel = SubResource("StyleBoxFlat_3a861")
+ WinHead/base_type = &"PanelContainer"

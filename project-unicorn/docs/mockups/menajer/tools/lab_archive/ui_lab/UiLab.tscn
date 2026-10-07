@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://sandbox/ui_lab/core/ui_lab.gd" id="1_lab"]
+
+[node name="UiLab" type="Node"]
+process_mode = 3
+script = ExtResource("1_lab")
+
+[node name="StageBox" type="SubViewportContainer" parent="."]
+mouse_filter = 2
+
+[node name="Stage" type="SubViewport" parent="StageBox"]
+handle_input_locally = false
+gui_disable_input = true
+size = Vector2i(1920, 1080)
+render_target_update_mode = 4
+
+[node name="ThemeRoot" type="Control" parent="StageBox/Stage"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ModalHost" type="Control" parent="StageBox/Stage/ThemeRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TileHost" type="Control" parent="StageBox/Stage/ThemeRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Hud" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="Box" type="PanelContainer" parent="Hud"]
+offset_left = 8.0
+offset_top = 8.0
+mouse_filter = 2
+
+[node name="Line" type="Label" parent="Hud/Box"]
+layout_mode = 2

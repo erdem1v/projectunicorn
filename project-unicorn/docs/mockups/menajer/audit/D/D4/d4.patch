@@ -1,0 +1,3401 @@
+diff --git a/project-unicorn/assets/icons/stake/cost.svg b/project-unicorn/assets/icons/stake/cost.svg
+new file mode 100644
+index 0000000..f936848
+--- /dev/null
++++ b/project-unicorn/assets/icons/stake/cost.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M21.75 11.04 L21.61 10.09 L21.38 9.16 L21.05 8.25 L20.64 7.38 L20.15 6.56 L19.58 5.78 L18.93 5.07 L18.22 4.42 L17.44 3.85 L16.62 3.36 L15.75 2.95 L14.84 2.62 L13.91 2.39 L12.96 2.25 L12 2.2 L11.04 2.25 L10.09 2.39 L9.16 2.62 L8.25 2.95 L7.38 3.36 L6.56 3.85 L5.78 4.42 L5.07 5.07 L4.42 5.78 L3.85 6.56 L3.36 7.38 L2.95 8.25 L2.62 9.16 L2.39 10.09 L2.25 11.04 L2.2 12 L2.25 12.96 L2.39 13.91 L2.62 14.84 L2.95 15.75 L3.36 16.62 L3.85 17.44 L4.42 18.22 L5.07 18.93 L5.78 19.58 L6.56 20.15 L7.38 20.64 L8.25 21.05 L9.16 21.38 L10.09 21.61 L11.04 21.75 L12 21.8 L12.96 21.75 L13.91 21.61 L14.84 21.38 L15.75 21.05 L16.62 20.64 L17.44 20.15 L18.22 19.58 L18.93 18.93 L19.58 18.22 L20.15 17.44 L20.64 16.62 L21.05 15.75 L21.38 14.84 L21.61 13.91 L21.75 12.96 L21.8 12 Z M7 13.2 L6.77 13.18 L6.54 13.11 L6.33 13 L6.15 12.85 L6 12.67 L5.89 12.46 L5.82 12.23 L5.8 12 L5.82 11.77 L5.89 11.54 L6.07 11.24 L6.24 11.07 L6.43 10.94 L6.65 10.85 L6.88 10.81 L17.12 10.81 L17.46 10.89 L17.67 11 L17.85 11.15 L18.06 11.43 L18.15 11.65 L18.19 11.88 L18.19 12.12 L18.15 12.35 L18.06 12.57 L17.93 12.76 L17.76 12.93 L17.57 13.06 L17.35 13.15 L17.12 13.19 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/stake/cost.svg.import b/project-unicorn/assets/icons/stake/cost.svg.import
+new file mode 100644
+index 0000000..245598e
+--- /dev/null
++++ b/project-unicorn/assets/icons/stake/cost.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://c7n6xchxu5awk"
++path="res://.godot/imported/cost.svg-060f2dca9f4a5e5a715fc163636860d6.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/stake/cost.svg"
++dest_files=["res://.godot/imported/cost.svg-060f2dca9f4a5e5a715fc163636860d6.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/trait/bag_packed.svg b/project-unicorn/assets/icons/trait/bag_packed.svg
+new file mode 100644
+index 0000000..c1a92bb
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/bag_packed.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M15.5 3 L15.48 2.79 L15.42 2.58 L15.31 2.39 L15.18 2.22 L15.01 2.09 L14.82 1.98 L14.51 1.91 L9.49 1.91 L9.18 1.98 L8.99 2.09 L8.82 2.22 L8.63 2.48 L8.52 2.79 L8.5 3 L8.5 7.4 L7.8 7.4 L7.37 7.44 L6.96 7.57 L6.58 7.77 L6.24 8.04 L5.97 8.38 L5.77 8.76 L5.64 9.17 L5.61 9.38 L5.61 17.02 L5.64 17.23 L5.77 17.64 L5.97 18.02 L6.24 18.36 L6.58 18.63 L6.76 18.74 L6.96 18.83 L7.37 18.96 L7.8 19 L16.42 18.99 L16.63 18.96 L17.04 18.83 L17.42 18.63 L17.76 18.36 L18.03 18.02 L18.14 17.84 L18.23 17.64 L18.36 17.23 L18.4 16.8 L18.4 9.6 L18.36 9.17 L18.23 8.76 L18.03 8.38 L17.76 8.04 L17.42 7.77 L17.04 7.57 L16.63 7.44 L16.2 7.4 L15.5 7.4 Z M13.3 7.4 L10.7 7.4 L10.7 4.1 L13.3 4.1 Z M9 9.5 L9.04 9.31 L9.12 9.13 L9.29 8.89 L9.44 8.77 L9.62 8.68 L9.8 8.62 L10 8.6 L10.2 8.62 L10.38 8.68 L10.56 8.77 L10.71 8.89 L10.88 9.13 L10.96 9.31 L11 9.5 L11 16.9 L10.92 17.18 L10.83 17.36 L10.71 17.51 L10.56 17.63 L10.38 17.72 L10.1 17.8 L9.9 17.8 L9.71 17.76 L9.53 17.68 L9.37 17.57 L9.23 17.43 L9.12 17.27 L9.04 17.09 L9 16.9 Z M13 9.5 L13.04 9.31 L13.12 9.13 L13.29 8.89 L13.44 8.77 L13.62 8.68 L13.8 8.62 L14 8.6 L14.2 8.62 L14.38 8.68 L14.56 8.77 L14.71 8.89 L14.88 9.13 L14.96 9.31 L15 9.5 L15 16.9 L14.92 17.18 L14.83 17.36 L14.71 17.51 L14.56 17.63 L14.38 17.72 L14.1 17.8 L13.9 17.8 L13.71 17.76 L13.53 17.68 L13.37 17.57 L13.23 17.43 L13.12 17.27 L13.04 17.09 L13 16.9 Z M10.24 20.56 L10.12 20.29 L9.96 20.05 L9.75 19.84 L9.51 19.68 L9.24 19.56 L8.95 19.51 L8.65 19.51 L8.36 19.56 L8.09 19.68 L7.85 19.84 L7.64 20.05 L7.48 20.29 L7.36 20.56 L7.31 20.85 L7.31 21.15 L7.36 21.44 L7.48 21.71 L7.64 21.95 L7.85 22.16 L8.09 22.32 L8.36 22.44 L8.65 22.49 L8.95 22.49 L9.24 22.44 L9.51 22.32 L9.75 22.16 L9.96 21.95 L10.12 21.71 L10.24 21.44 L10.29 21.15 L10.29 20.85 Z M16.64 20.56 L16.52 20.29 L16.36 20.05 L16.15 19.84 L15.91 19.68 L15.64 19.56 L15.35 19.51 L15.05 19.51 L14.76 19.56 L14.49 19.68 L14.25 19.84 L14.04 20.05 L13.88 20.29 L13.76 20.56 L13.71 20.85 L13.71 21.15 L13.76 21.44 L13.88 21.71 L14.04 21.95 L14.25 22.16 L14.49 22.32 L14.76 22.44 L15.05 22.49 L15.35 22.49 L15.64 22.44 L15.91 22.32 L16.15 22.16 L16.36 21.95 L16.52 21.71 L16.64 21.44 L16.69 21.15 L16.69 20.85 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/trait/bag_packed.svg.import b/project-unicorn/assets/icons/trait/bag_packed.svg.import
+new file mode 100644
+index 0000000..8644974
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/bag_packed.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://dpdrsu6dcih6k"
++path="res://.godot/imported/bag_packed.svg-3c7f2722fc4d0090163c2962af6e32ac.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/trait/bag_packed.svg"
++dest_files=["res://.godot/imported/bag_packed.svg-3c7f2722fc4d0090163c2962af6e32ac.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/trait/cant_say_no.svg b/project-unicorn/assets/icons/trait/cant_say_no.svg
+new file mode 100644
+index 0000000..161f8c2
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/cant_say_no.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M6.2 15.6 L6 15.62 L5.82 15.68 L5.64 15.77 L5.49 15.89 L5.37 16.04 L5.28 16.22 L5.22 16.4 L5.2 16.6 L5.22 17.2 L5.28 17.38 L5.37 17.56 L5.57 17.77 L5.73 17.88 L5.91 17.96 L6.1 18 L19.9 18 L20.09 17.96 L20.27 17.88 L20.51 17.71 L20.68 17.47 L20.76 17.29 L20.8 17.1 L20.8 16.6 L20.78 16.4 L20.72 16.22 L20.63 16.04 L20.43 15.83 L20.27 15.72 L20.09 15.64 L19.9 15.6 Z M4.2 19.6 L4 19.62 L3.82 19.68 L3.64 19.77 L3.49 19.89 L3.37 20.04 L3.28 20.22 L3.22 20.4 L3.2 20.6 L3.22 21.2 L3.28 21.38 L3.37 21.56 L3.57 21.77 L3.73 21.88 L3.91 21.96 L4.1 22 L17.9 22 L18.09 21.96 L18.27 21.88 L18.51 21.71 L18.68 21.47 L18.76 21.29 L18.8 21.1 L18.8 20.6 L18.78 20.4 L18.72 20.22 L18.63 20.04 L18.43 19.83 L18.27 19.72 L18.09 19.64 L17.9 19.6 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M6.59 2.2 L6.2 2.24 L5.94 2.3 L5.59 2.45 L5.36 2.59 L5.06 2.83 L4.79 3.16 L4.65 3.39 L4.5 3.74 L4.44 4 L4.4 4.41 L4.4 9.39 L4.45 9.85 L4.58 10.26 L4.79 10.64 L5.06 10.97 L5.4 11.24 L5.78 11.44 L6.2 11.56 L6.77 11.6 L6.45 12.42 L6.42 12.57 L6.46 12.81 L6.55 12.93 L6.66 13.03 L6.9 13.1 L7.09 13.07 L10.15 11.6 L17.64 11.59 L18.06 11.5 L18.26 11.42 L18.6 11.24 L18.97 10.94 L19.24 10.6 L19.42 10.26 L19.5 10.06 L19.59 9.59 L19.59 4.21 L19.51 3.79 L19.33 3.34 L19.12 3.02 L18.97 2.86 L18.6 2.56 L18.26 2.38 L18.01 2.29 L17.64 2.21 L17.41 2.2 Z M7.52 7.54 L7.39 7.39 L7.26 7.13 L7.21 6.94 L7.21 6.65 L7.3 6.37 L7.46 6.12 L7.69 5.94 L7.87 5.86 L8.06 5.81 L8.25 5.8 L8.45 5.83 L8.72 5.95 L8.88 6.06 L10.58 7.63 L14.71 3.68 L14.86 3.56 L15.04 3.47 L15.23 3.42 L15.42 3.4 L15.71 3.45 L15.89 3.53 L16.05 3.64 L16.19 3.78 L16.33 4.04 L16.38 4.23 L16.39 4.52 L16.32 4.8 L16.16 5.05 L11.29 9.72 L11.13 9.85 L10.95 9.94 L10.76 9.99 L10.46 9.99 L10.17 9.9 L10 9.8 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/trait/cant_say_no.svg.import b/project-unicorn/assets/icons/trait/cant_say_no.svg.import
+new file mode 100644
+index 0000000..1244bb5
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/cant_say_no.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://clv2rlach45be"
++path="res://.godot/imported/cant_say_no.svg-dd75defc92213abcf048b7b68b8c80ca.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/trait/cant_say_no.svg"
++dest_files=["res://.godot/imported/cant_say_no.svg-dd75defc92213abcf048b7b68b8c80ca.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/trait/double_checker.svg b/project-unicorn/assets/icons/trait/double_checker.svg
+new file mode 100644
+index 0000000..d9134a4
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/double_checker.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M5.68 17.72 L5.88 17.88 L6.11 18.01 L6.36 18.08 L6.62 18.1 L6.88 18.07 L7.13 17.99 L7.36 17.86 L7.55 17.68 L15.43 9.19 L15.62 8.85 L15.68 8.61 L15.7 8.35 L15.66 8.1 L15.58 7.86 L15.45 7.64 L15.28 7.45 L14.97 7.23 L14.73 7.14 L14.48 7.1 L14.22 7.11 L13.98 7.17 L13.75 7.28 L13.54 7.43 L6.57 14.93 L3.32 11.68 L3.12 11.52 L2.9 11.4 L2.65 11.32 L2.27 11.31 L1.9 11.4 L1.68 11.52 L1.48 11.68 L1.32 11.88 L1.2 12.1 L1.11 12.47 L1.12 12.85 L1.2 13.1 L1.32 13.32 L1.48 13.52 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M11.48 17.72 L11.68 17.88 L11.92 18.01 L12.17 18.08 L12.43 18.1 L12.69 18.07 L12.93 17.98 L13.16 17.85 L13.36 17.68 L22.64 7.58 L22.77 7.36 L22.86 7.13 L22.9 6.87 L22.89 6.62 L22.78 6.25 L22.65 6.03 L22.48 5.84 L22.28 5.69 L22.05 5.58 L21.8 5.52 L21.55 5.5 L21.17 5.57 L20.94 5.68 L20.73 5.83 L12.36 14.92 L11.12 13.68 L10.92 13.52 L10.7 13.4 L10.33 13.31 L9.95 13.32 L9.59 13.45 L9.28 13.68 L9.12 13.88 L9 14.1 L8.91 14.47 L8.92 14.85 L9.05 15.21 L9.28 15.52 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/trait/double_checker.svg.import b/project-unicorn/assets/icons/trait/double_checker.svg.import
+new file mode 100644
+index 0000000..14358eb
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/double_checker.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://ccihat8a3tuvi"
++path="res://.godot/imported/double_checker.svg-09458966d1cc8802f2052dac2fbb4984.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/trait/double_checker.svg"
++dest_files=["res://.godot/imported/double_checker.svg-09458966d1cc8802f2052dac2fbb4984.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/trait/last_one_out.svg b/project-unicorn/assets/icons/trait/last_one_out.svg
+new file mode 100644
+index 0000000..902a8d8
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/last_one_out.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M21.56 4.53 L20.72 4.03 L20.4 3.81 L19.76 3.24 L19.19 2.6 L18.79 1.99 L18.54 1.56 L18.47 1.44 L18.4 1.4 L18.33 1.44 L18.26 1.56 L18.01 1.99 L17.61 2.6 L17.04 3.24 L16.4 3.81 L15.79 4.21 L15.36 4.46 L15.24 4.53 L15.2 4.6 L15.24 4.67 L15.36 4.74 L15.79 4.99 L16.4 5.39 L17.04 5.96 L17.61 6.6 L18.01 7.21 L18.26 7.64 L18.33 7.76 L18.4 7.8 L18.47 7.76 L18.54 7.64 L18.79 7.21 L19.19 6.6 L19.76 5.96 L20.4 5.39 L20.72 5.17 L21.56 4.67 L21.6 4.6 Z M10.49 4.99 L10.51 4.79 L10.46 4.65 L10.32 4.51 L10.17 4.46 L9.34 4.56 L8.49 4.78 L7.69 5.06 L6.96 5.41 L6.24 5.84 L5.56 6.34 L4.91 6.93 L4.34 7.56 L3.84 8.24 L3.41 8.96 L3.06 9.69 L2.78 10.49 L2.57 11.3 L2.44 12.14 L2.4 12.98 L2.44 13.82 L2.56 14.66 L2.77 15.48 L3.05 16.27 L3.41 17.04 L3.84 17.76 L4.34 18.44 L4.91 19.07 L5.53 19.63 L6.21 20.14 L6.93 20.57 L7.69 20.94 L8.49 21.22 L9.3 21.43 L10.14 21.56 L10.98 21.6 L11.82 21.56 L12.7 21.43 L13.51 21.22 L14.27 20.95 L15.04 20.59 L15.76 20.16 L16.47 19.63 L17.07 19.09 L17.63 18.47 L18.16 17.76 L18.59 17.04 L18.94 16.31 L19.22 15.51 L19.32 15.07 L19.28 14.92 L19.19 14.79 L19.05 14.71 L18.94 14.69 L18.16 14.87 L17.5 14.96 L16.81 15 L16.1 14.96 L15.42 14.86 L14.76 14.7 L14.11 14.46 L13.51 14.18 L12.92 13.83 L12.35 13.4 L11.84 12.94 L11.4 12.45 L10.97 11.88 L10.63 11.31 L10.34 10.69 L10.1 10.02 L9.94 9.38 L9.84 8.7 L9.8 7.99 L9.84 7.3 L9.93 6.64 L10.1 5.96 L10.33 5.33 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/trait/last_one_out.svg.import b/project-unicorn/assets/icons/trait/last_one_out.svg.import
+new file mode 100644
+index 0000000..dfcc422
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/last_one_out.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://lduw2h34lr7r"
++path="res://.godot/imported/last_one_out.svg-b74a874470f46e7bdd889971d6a5684d.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/trait/last_one_out.svg"
++dest_files=["res://.godot/imported/last_one_out.svg-b74a874470f46e7bdd889971d6a5684d.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/trait/loyal.svg b/project-unicorn/assets/icons/trait/loyal.svg
+new file mode 100644
+index 0000000..7d8e3a0
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/loyal.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M14.87 3.73 L14.65 3.19 L14.32 2.7 L14.12 2.48 L13.67 2.11 L13.41 1.95 L12.87 1.73 L12.59 1.66 L12 1.6 L11.41 1.66 L11.13 1.73 L10.59 1.95 L10.1 2.28 L9.88 2.48 L9.51 2.93 L9.23 3.45 L9.06 4.01 L9 4.6 L9.01 4.89 L9.13 5.47 L9.23 5.75 L9.51 6.27 L9.68 6.5 L10.1 6.92 L10.33 7.09 L10.7 7.3 L10.7 9.2 L7.6 9.2 L7.37 9.22 L7.03 9.34 L6.75 9.55 L6.54 9.83 L6.45 10.05 L6.4 10.4 L6.42 10.63 L6.49 10.86 L6.6 11.07 L6.75 11.25 L6.93 11.4 L7.14 11.51 L7.37 11.58 L7.6 11.6 L10.7 11.6 L10.7 18.96 L9.93 18.76 L9.27 18.5 L8.65 18.17 L8.07 17.78 L7.54 17.32 L7.05 16.81 L6.63 16.25 L6.15 15.48 L5.97 15.29 L6.69 15.14 L6.84 15.08 L6.92 15.01 L7 14.87 L7.01 14.72 L6.97 14.57 L6.91 14.48 L4.63 12.05 L4.5 11.96 L4.34 11.93 L4.22 11.94 L4.08 12.02 L3.98 12.14 L2.67 15.35 L2.65 15.5 L2.7 15.65 L2.8 15.77 L2.94 15.84 L3.13 15.85 L3.95 15.69 L3.85 15.95 L3.81 16.2 L3.83 16.46 L3.94 16.82 L4.44 17.66 L5.03 18.44 L5.8 19.26 L6.56 19.89 L7.37 20.43 L8.25 20.89 L9.16 21.25 L10.11 21.5 L10.95 21.64 L11.25 21.66 L11.5 21.8 L11.75 21.88 L12.13 21.89 L12.5 21.8 L12.75 21.66 L13.05 21.64 L13.89 21.5 L14.84 21.25 L15.88 20.83 L16.75 20.36 L17.56 19.8 L18.3 19.16 L18.97 18.44 L19.56 17.66 L20 16.93 L20.11 16.7 L20.17 16.46 L20.19 16.2 L20.15 15.95 L20.05 15.69 L20.87 15.85 L20.99 15.86 L21.1 15.83 L21.2 15.77 L21.28 15.68 L21.33 15.58 L21.35 15.46 L21.32 15.31 L20.02 12.14 L19.92 12.02 L19.81 11.96 L19.66 11.93 L19.5 11.96 L19.37 12.05 L17.09 14.48 L17.03 14.57 L16.99 14.72 L17 14.87 L17.08 15.01 L17.16 15.08 L17.31 15.14 L18.03 15.29 L17.85 15.48 L17.37 16.25 L16.95 16.81 L16.46 17.32 L15.93 17.78 L15.35 18.17 L14.73 18.5 L14.07 18.76 L13.3 18.96 L13.3 11.6 L16.4 11.6 L16.75 11.55 L17.07 11.4 L17.33 11.16 L17.51 10.86 L17.59 10.52 L17.59 10.28 L17.55 10.05 L17.4 9.73 L17.25 9.55 L17.07 9.4 L16.75 9.25 L16.4 9.2 L13.3 9.2 L13.3 7.3 L13.67 7.09 L14.12 6.72 L14.49 6.27 L14.77 5.75 L14.94 5.19 L15 4.6 L14.94 4.01 Z M12.77 4.83 L12.71 4.98 L12.62 5.11 L12.51 5.22 L12.38 5.31 L12.23 5.37 L12.08 5.4 L11.92 5.4 L11.77 5.37 L11.62 5.31 L11.49 5.22 L11.38 5.11 L11.29 4.98 L11.23 4.83 L11.2 4.68 L11.2 4.52 L11.23 4.37 L11.29 4.22 L11.38 4.09 L11.49 3.98 L11.62 3.89 L11.77 3.83 L11.92 3.8 L12.08 3.8 L12.23 3.83 L12.38 3.89 L12.51 3.98 L12.62 4.09 L12.71 4.22 L12.77 4.37 L12.8 4.52 L12.8 4.68 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/trait/loyal.svg.import b/project-unicorn/assets/icons/trait/loyal.svg.import
+new file mode 100644
+index 0000000..f71fe8c
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/loyal.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://34l56vathqns"
++path="res://.godot/imported/loyal.svg-386629b9ae4b0cdd593a9a73734fe388.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/trait/loyal.svg"
++dest_files=["res://.godot/imported/loyal.svg-386629b9ae4b0cdd593a9a73734fe388.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/trait/mood_buster.svg b/project-unicorn/assets/icons/trait/mood_buster.svg
+new file mode 100644
+index 0000000..a086379
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/mood_buster.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M6.14 20.69 L6.1 21.01 L6.12 21.23 L6.19 21.43 L6.36 21.71 L6.51 21.86 L6.69 21.98 L7 22.08 L7.21 22.1 L7.43 22.08 L7.63 22.01 L7.82 21.91 L8.06 21.69 L8.22 21.41 L9.42 18.41 L9.48 18.2 L9.49 17.88 L9.41 17.57 L9.31 17.38 L9.09 17.14 L8.91 17.02 L8.71 16.94 L8.49 16.9 L8.28 16.91 L8.07 16.95 L7.87 17.04 L7.69 17.16 L7.54 17.31 L7.38 17.59 Z M10.12 20.8 L10.11 21.12 L10.15 21.33 L10.24 21.53 L10.36 21.71 L10.51 21.86 L10.79 22.02 L11.11 22.1 L11.32 22.09 L11.53 22.05 L11.82 21.91 L12.06 21.69 L12.22 21.41 L13.42 18.41 L13.48 18.2 L13.49 17.88 L13.41 17.57 L13.31 17.38 L13.09 17.14 L12.91 17.02 L12.71 16.94 L12.49 16.9 L12.28 16.91 L12.07 16.95 L11.87 17.04 L11.69 17.16 L11.54 17.31 L11.38 17.59 L10.18 20.59 Z M14.12 20.8 L14.11 21.12 L14.19 21.43 L14.29 21.62 L14.43 21.79 L14.69 21.98 L15 22.08 L15.21 22.1 L15.43 22.08 L15.63 22.01 L15.82 21.91 L16.06 21.69 L16.22 21.41 L17.42 18.41 L17.48 18.2 L17.49 17.88 L17.41 17.57 L17.31 17.38 L17.09 17.14 L16.91 17.02 L16.71 16.94 L16.49 16.9 L16.28 16.91 L16.07 16.95 L15.87 17.04 L15.69 17.16 L15.54 17.31 L15.38 17.59 L14.18 20.59 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M7.5 7.6 L6.98 7.62 L6.59 7.68 L6.21 7.78 L5.84 7.92 L5.49 8.09 L5.15 8.29 L4.89 8.49 L4.59 8.75 L4.33 9.04 L4.06 9.4 L3.86 9.74 L3.69 10.1 L3.57 10.47 L3.48 10.79 L3.42 11.18 L3.4 11.57 L3.42 12.02 L3.48 12.41 L3.58 12.79 L3.69 13.1 L3.86 13.46 L4.06 13.8 L4.29 14.11 L4.59 14.45 L4.89 14.71 L5.15 14.91 L5.49 15.11 L5.84 15.28 L6.21 15.42 L6.59 15.52 L6.98 15.58 L7.39 15.6 L17.39 15.6 L17.78 15.58 L18.13 15.52 L18.75 15.34 L19.12 15.16 L19.42 14.98 L19.92 14.57 L20.2 14.26 L20.56 13.72 L20.71 13.4 L20.85 13.02 L20.94 12.67 L20.98 12.32 L20.98 11.68 L20.92 11.27 L20.84 10.93 L20.59 10.33 L20.41 10.03 L20.2 9.74 L19.92 9.43 L19.66 9.2 L19.37 8.99 L19.07 8.81 L18.75 8.66 L18.42 8.55 L17.79 8.42 L17.77 8.06 L17.7 7.61 L17.57 7.06 L17.39 6.58 L17.2 6.18 L16.91 5.69 L16.6 5.28 L16.3 4.94 L15.92 4.6 L15.46 4.26 L15.08 4.03 L14.62 3.81 L14.14 3.63 L13.64 3.51 L13.08 3.42 L12.57 3.4 L12.06 3.43 L11.56 3.51 L11.12 3.62 L10.64 3.79 L10.18 4 L9.69 4.29 L9.28 4.6 L8.9 4.94 L8.56 5.32 L8.29 5.69 L8.03 6.12 L7.81 6.58 L7.63 7.06 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/trait/mood_buster.svg.import b/project-unicorn/assets/icons/trait/mood_buster.svg.import
+new file mode 100644
+index 0000000..cc1a412
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/mood_buster.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://buqc2qombc3uw"
++path="res://.godot/imported/mood_buster.svg-1f8e886b56286f370f6490b799020483.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/trait/mood_buster.svg"
++dest_files=["res://.godot/imported/mood_buster.svg-1f8e886b56286f370f6490b799020483.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/trait/picks_it_up_fast.svg b/project-unicorn/assets/icons/trait/picks_it_up_fast.svg
+new file mode 100644
+index 0000000..6d3bad1
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/picks_it_up_fast.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M11 13.8 L9.92 20 L9.94 20.19 L10.03 20.36 L10.18 20.48 L10.37 20.53 L10.61 20.5 L10.8 20.35 L18.72 10.82 L18.82 10.6 L18.81 10.36 L18.72 10.18 L18.57 10.06 L18.38 10 L13 10 L13.78 3.9 L13.75 3.7 L13.67 3.57 L13.52 3.44 L13.38 3.39 L13.14 3.4 L13 3.47 L12.89 3.57 L5.26 12.99 L5.19 13.11 L5.15 13.25 L5.17 13.45 L5.26 13.62 L5.41 13.74 L5.6 13.8 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/trait/picks_it_up_fast.svg.import b/project-unicorn/assets/icons/trait/picks_it_up_fast.svg.import
+new file mode 100644
+index 0000000..ac1241a
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/picks_it_up_fast.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://4xlaobwxysro"
++path="res://.godot/imported/picks_it_up_fast.svg-5827444f75b9f5476e5257aa9d01e522.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/trait/picks_it_up_fast.svg"
++dest_files=["res://.godot/imported/picks_it_up_fast.svg-5827444f75b9f5476e5257aa9d01e522.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/trait/takes_them_under.svg b/project-unicorn/assets/icons/trait/takes_them_under.svg
+new file mode 100644
+index 0000000..d6ec571
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/takes_them_under.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M14.39 14.56 L14.3 14.1 L14.12 13.67 L13.86 13.28 L13.52 12.94 L13.13 12.68 L12.7 12.5 L12.24 12.41 L11.76 12.41 L11.3 12.5 L10.87 12.68 L10.48 12.94 L10.14 13.28 L9.88 13.67 L9.7 14.1 L9.61 14.56 L9.61 15.04 L9.7 15.5 L9.88 15.93 L10.14 16.32 L10.48 16.66 L10.87 16.92 L11.3 17.1 L11.76 17.19 L12.24 17.19 L12.7 17.1 L13.13 16.92 L13.52 16.66 L13.86 16.32 L14.12 15.93 L14.3 15.5 L14.39 15.04 Z M7.76 20.75 L7.72 20.86 L7.71 21.04 L7.73 21.16 L7.8 21.32 L7.92 21.46 L8.02 21.53 L8.13 21.57 L8.3 21.6 L15.76 21.6 L15.93 21.55 L16.13 21.42 L16.23 21.27 L16.29 21.04 L16.29 20.92 L16.24 20.75 L16.13 20.56 L15.89 20.24 L15.61 19.95 L15.3 19.68 L14.96 19.44 L14.63 19.25 L14.19 19.03 L13.77 18.88 L13.39 18.77 L12.89 18.67 L12.44 18.62 L12.02 18.6 L11.52 18.62 L11.11 18.67 L10.66 18.76 L10.18 18.89 L9.81 19.03 L9.41 19.22 L9 19.47 L8.7 19.68 L8.39 19.95 L8.07 20.29 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M2.49 9.27 L2.49 9.46 L2.56 9.61 L2.71 9.73 L2.9 9.77 L3.05 9.73 L3.49 9.44 L3.7 9.34 L4.16 9.2 L4.66 9.15 L4.9 9.16 L5.35 9.25 L5.8 9.44 L6.2 9.7 L6.54 10.04 L6.83 10.45 L6.97 10.53 L7.08 10.55 L7.23 10.53 L7.37 10.45 L7.65 10.05 L7.81 9.87 L8.2 9.56 L8.6 9.34 L8.83 9.26 L9.32 9.16 L9.78 9.16 L10.04 9.2 L10.48 9.33 L10.7 9.44 L10.92 9.57 L11.28 9.86 L11.45 10.05 L11.73 10.45 L11.83 10.51 L11.98 10.55 L12.13 10.53 L12.27 10.45 L12.55 10.05 L12.71 9.87 L13.1 9.56 L13.52 9.33 L13.96 9.2 L14.2 9.16 L14.46 9.15 L14.92 9.2 L15.17 9.26 L15.6 9.44 L15.82 9.57 L16.18 9.86 L16.35 10.05 L16.63 10.45 L16.73 10.51 L16.88 10.55 L17.03 10.53 L17.17 10.45 L17.45 10.05 L17.61 9.87 L17.98 9.57 L18.4 9.34 L18.65 9.25 L19.1 9.16 L19.34 9.15 L19.84 9.2 L20.3 9.34 L20.51 9.44 L20.95 9.73 L21.1 9.77 L21.25 9.74 L21.39 9.66 L21.48 9.54 L21.52 9.39 L21.37 8.74 L21.05 7.83 L20.63 6.96 L20.16 6.17 L19.59 5.4 L18.94 4.68 L18.2 4.01 L17.43 3.44 L16.6 2.95 L15.77 2.55 L14.86 2.23 L13.89 1.99 L12.94 1.85 L12.02 1.8 L11.06 1.85 L10.11 1.99 L9.14 2.23 L8.23 2.55 L7.4 2.95 L6.57 3.44 L5.8 4.01 L5.08 4.66 L4.44 5.37 L3.84 6.17 L3.37 6.96 L2.95 7.83 L2.63 8.74 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/trait/takes_them_under.svg.import b/project-unicorn/assets/icons/trait/takes_them_under.svg.import
+new file mode 100644
+index 0000000..8a31e2b
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/takes_them_under.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://h1qn0nju5ofr"
++path="res://.godot/imported/takes_them_under.svg-edcc0e21fb55c22e8c86e21a3a9bc3e3.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/trait/takes_them_under.svg"
++dest_files=["res://.godot/imported/takes_them_under.svg-edcc0e21fb55c22e8c86e21a3a9bc3e3.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/trait/unspecified.svg b/project-unicorn/assets/icons/trait/unspecified.svg
+new file mode 100644
+index 0000000..1e1d8f4
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/unspecified.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M12.89 3.3 L12.66 3.15 L12.41 3.04 L12 2.98 L11.59 3.04 L11.34 3.15 L11.11 3.3 L3.39 11.01 L3.22 11.22 L3.09 11.46 L2.99 11.86 L3.01 12.27 L3.09 12.54 L3.22 12.78 L3.39 12.99 L11.01 20.61 L11.22 20.78 L11.46 20.91 L11.86 21.01 L12.27 20.99 L12.54 20.91 L12.78 20.78 L12.99 20.61 L20.61 12.99 L20.85 12.66 L20.96 12.41 L21.01 12.14 L20.99 11.73 L20.91 11.46 L20.78 11.22 L20.61 11.01 Z M14.59 12.25 L14.49 12.75 L14.29 13.23 L14.01 13.65 L13.65 14.01 L13.23 14.29 L12.75 14.49 L12.25 14.59 L11.75 14.59 L11.25 14.49 L10.77 14.29 L10.35 14.01 L9.99 13.65 L9.71 13.23 L9.51 12.75 L9.41 12.25 L9.41 11.75 L9.51 11.25 L9.71 10.77 L9.99 10.35 L10.35 9.99 L10.77 9.71 L11.25 9.51 L11.75 9.41 L12.25 9.41 L12.75 9.51 L13.23 9.71 L13.65 9.99 L14.01 10.35 L14.29 10.77 L14.49 11.25 L14.59 11.75 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/trait/unspecified.svg.import b/project-unicorn/assets/icons/trait/unspecified.svg.import
+new file mode 100644
+index 0000000..2fd1fd4
+--- /dev/null
++++ b/project-unicorn/assets/icons/trait/unspecified.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://dfdoeh2si2l5b"
++path="res://.godot/imported/unspecified.svg-de7e300a8166a60971142ed014fcc1c7.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/trait/unspecified.svg"
++dest_files=["res://.godot/imported/unspecified.svg-de7e300a8166a60971142ed014fcc1c7.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/calendar.svg b/project-unicorn/assets/icons/util/calendar.svg
+new file mode 100644
+index 0000000..8cc65c4
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/calendar.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M6.45 6.95 L6.6 7.27 L6.84 7.53 L7.14 7.71 L7.37 7.78 L7.6 7.8 L7.83 7.78 L8.06 7.71 L8.36 7.53 L8.6 7.27 L8.71 7.06 L8.78 6.83 L8.8 6.6 L8.8 2.2 L8.78 1.97 L8.66 1.63 L8.45 1.35 L8.17 1.14 L7.83 1.02 L7.6 1 L7.37 1.02 L7.14 1.09 L6.93 1.2 L6.75 1.35 L6.6 1.53 L6.49 1.74 L6.42 1.97 L6.4 2.2 L6.4 6.6 Z M15.29 7.06 L15.47 7.36 L15.64 7.53 L15.83 7.66 L16.17 7.78 L16.52 7.79 L16.86 7.71 L17.07 7.6 L17.25 7.45 L17.46 7.17 L17.58 6.83 L17.6 6.6 L17.6 2.2 L17.58 1.97 L17.46 1.63 L17.25 1.35 L16.97 1.14 L16.63 1.02 L16.4 1 L16.17 1.02 L15.94 1.09 L15.73 1.2 L15.55 1.35 L15.4 1.53 L15.29 1.74 L15.22 1.97 L15.2 2.2 L15.2 6.6 L15.22 6.83 Z M3.46 4.84 L3.13 5.05 L2.85 5.33 L2.64 5.66 L2.49 6.02 L2.44 6.21 L2.4 6.6 L2.4 8.6 L6.28 8.6 L5.95 8.34 L5.64 7.98 L5.41 7.57 L5.29 7.24 L5.24 7.01 L5.2 6.66 L5.2 4.6 L4.2 4.61 L3.82 4.69 Z M14.92 8.49 L14.58 8.17 L14.37 7.88 L14.16 7.46 L14.06 7.13 L14 6.6 L14 4.6 L10 4.6 L10 6.66 L9.98 6.89 L9.91 7.24 L9.79 7.57 L9.56 7.98 L9.25 8.34 L8.92 8.6 L15.08 8.6 Z M21.56 6.21 L21.51 6.02 L21.36 5.66 L21.15 5.33 L20.87 5.05 L20.54 4.84 L20.18 4.69 L19.8 4.61 L18.8 4.6 L18.8 6.66 L18.78 6.89 L18.71 7.24 L18.54 7.68 L18.36 7.98 L18.05 8.34 L17.72 8.6 L21.6 8.6 L21.6 6.6 Z M2.55 20.37 L2.74 20.71 L2.99 21.01 L3.13 21.15 L3.46 21.36 L3.82 21.51 L4.01 21.56 L4.4 21.6 L19.6 21.6 L19.99 21.56 L20.18 21.51 L20.54 21.36 L20.71 21.26 L21.01 21.01 L21.26 20.71 L21.36 20.54 L21.51 20.18 L21.59 19.8 L21.6 10.6 L2.4 10.6 L2.4 19.6 L2.44 19.99 Z M17.18 13.29 L17.31 13.38 L17.47 13.56 L17.57 13.77 L17.6 14 L17.6 17.08 L17.54 17.31 L17.47 17.44 L17.37 17.57 L17.24 17.67 L17.11 17.74 L16.96 17.78 L16.8 17.8 L13.72 17.8 L13.49 17.74 L13.36 17.67 L13.23 17.57 L13.13 17.44 L13.06 17.31 L13.02 17.16 L13 17 L13 13.92 L13.03 13.77 L13.09 13.62 L13.23 13.43 L13.36 13.33 L13.49 13.26 L13.64 13.22 L13.8 13.2 L16.8 13.2 L16.96 13.22 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/calendar.svg.import b/project-unicorn/assets/icons/util/calendar.svg.import
+new file mode 100644
+index 0000000..8a722de
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/calendar.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://b317o0roy5j4n"
++path="res://.godot/imported/calendar.svg-e3311ad9387bd5e5e042b96b2ea1b2a2.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/calendar.svg"
++dest_files=["res://.godot/imported/calendar.svg-e3311ad9387bd5e5e042b96b2ea1b2a2.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/check.svg b/project-unicorn/assets/icons/util/check.svg
+new file mode 100644
+index 0000000..37684ce
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/check.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M8.7 18.54 L8.9 18.7 L9.13 18.81 L9.38 18.88 L9.64 18.9 L9.89 18.87 L10.14 18.78 L10.36 18.65 L10.55 18.48 L20.64 7.59 L20.82 7.25 L20.88 7 L20.9 6.75 L20.86 6.5 L20.78 6.26 L20.65 6.04 L20.48 5.85 L20.17 5.63 L19.93 5.54 L19.68 5.5 L19.42 5.51 L19.18 5.57 L18.94 5.68 L18.74 5.83 L9.55 15.74 L5.3 11.66 L5.1 11.51 L4.75 11.35 L4.5 11.3 L4.25 11.31 L3.88 11.41 L3.66 11.53 L3.46 11.7 L3.24 12.01 L3.15 12.25 L3.1 12.5 L3.13 12.88 L3.21 13.12 L3.33 13.34 L3.5 13.54 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/check.svg.import b/project-unicorn/assets/icons/util/check.svg.import
+new file mode 100644
+index 0000000..04c4cd1
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/check.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://dhlt26bmowapu"
++path="res://.godot/imported/check.svg-93982abefbb4f80359b3c42182e8589b.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/check.svg"
++dest_files=["res://.godot/imported/check.svg-93982abefbb4f80359b3c42182e8589b.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/chevron_down.svg b/project-unicorn/assets/icons/util/chevron_down.svg
+new file mode 100644
+index 0000000..ee77539
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/chevron_down.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M11.08 16.72 L11.28 16.88 L11.5 17 L11.75 17.08 L12 17.1 L12.25 17.08 L12.5 17 L12.72 16.88 L12.92 16.72 L19.6 10.02 L19.8 9.7 L19.88 9.45 L19.9 9.2 L19.88 8.95 L19.8 8.7 L19.68 8.48 L19.52 8.28 L19.32 8.12 L19.1 8 L18.73 7.91 L18.47 7.91 L18.22 7.96 L17.99 8.05 L17.78 8.2 L12 13.96 L6.22 8.2 L6.01 8.05 L5.78 7.96 L5.53 7.91 L5.27 7.91 L4.9 8 L4.68 8.12 L4.48 8.28 L4.32 8.48 L4.2 8.7 L4.12 8.95 L4.1 9.2 L4.12 9.45 L4.2 9.7 L4.4 10.02 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/chevron_down.svg.import b/project-unicorn/assets/icons/util/chevron_down.svg.import
+new file mode 100644
+index 0000000..48505d3
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/chevron_down.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://btwnk7p7ep4fk"
++path="res://.godot/imported/chevron_down.svg-43273db834f828187437cf7a09594f9b.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/chevron_down.svg"
++dest_files=["res://.godot/imported/chevron_down.svg-43273db834f828187437cf7a09594f9b.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/chevron_right.svg b/project-unicorn/assets/icons/util/chevron_right.svg
+new file mode 100644
+index 0000000..ac81722
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/chevron_right.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M13.96 12 L8.28 17.68 L8.12 17.88 L8 18.1 L7.92 18.35 L7.9 18.6 L7.92 18.85 L8 19.1 L8.12 19.32 L8.28 19.52 L8.48 19.68 L8.82 19.84 L9.2 19.9 L9.45 19.88 L9.7 19.8 L10.02 19.6 L16.72 12.92 L16.88 12.72 L17 12.5 L17.08 12.25 L17.1 12 L17.08 11.75 L17 11.5 L16.88 11.28 L16.72 11.08 L10.02 4.4 L9.7 4.2 L9.33 4.11 L8.95 4.12 L8.7 4.2 L8.48 4.32 L8.28 4.48 L8.12 4.68 L8 4.9 L7.92 5.15 L7.9 5.4 L7.92 5.65 L8 5.9 L8.12 6.12 L8.28 6.32 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/chevron_right.svg.import b/project-unicorn/assets/icons/util/chevron_right.svg.import
+new file mode 100644
+index 0000000..2badc9a
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/chevron_right.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://cbgd2qidd256v"
++path="res://.godot/imported/chevron_right.svg-63424ef371d38f51f030cc297f9c0490.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/chevron_right.svg"
++dest_files=["res://.godot/imported/chevron_right.svg-63424ef371d38f51f030cc297f9c0490.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/load.svg b/project-unicorn/assets/icons/util/load.svg
+new file mode 100644
+index 0000000..6b16367
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/load.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M3.37 4.62 L3.03 4.74 L2.75 4.95 L2.6 5.13 L2.49 5.34 L2.41 5.68 L2.4 15.14 L3.86 10.95 L4.02 10.57 L4.3 10.16 L4.57 9.87 L4.97 9.57 L5.42 9.36 L5.89 9.23 L6.31 9.2 L19.4 9.2 L19.39 7.88 L19.31 7.54 L19.2 7.33 L19.05 7.15 L18.87 7 L18.55 6.85 L18.2 6.8 L10.8 6.8 L9.07 4.9 L8.87 4.76 L8.64 4.66 L8.27 4.6 L3.6 4.6 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M6.31 10.8 L6.03 10.84 L5.77 10.96 L5.56 11.14 L5.4 11.38 L2.66 19.27 L2.61 19.57 L2.62 19.77 L2.67 19.96 L2.82 20.22 L3.04 20.42 L3.31 20.56 L3.61 20.6 L17.89 20.6 L18.08 20.58 L18.35 20.49 L18.51 20.39 L18.7 20.18 L18.83 19.93 L21.57 12.03 L21.59 11.73 L21.53 11.44 L21.38 11.18 L21.16 10.98 L20.89 10.84 L20.59 10.8 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/load.svg.import b/project-unicorn/assets/icons/util/load.svg.import
+new file mode 100644
+index 0000000..34ab1a4
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/load.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://5ufdpokw38at"
++path="res://.godot/imported/load.svg-da271213a67d3c1fcc0c0af66c299ab7.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/load.svg"
++dest_files=["res://.godot/imported/load.svg-da271213a67d3c1fcc0c0af66c299ab7.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/move.svg b/project-unicorn/assets/icons/util/move.svg
+new file mode 100644
+index 0000000..bccfb9b
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/move.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M3.19 5.46 L2.82 5.64 L2.52 5.91 L2.31 6.26 L2.21 6.66 L2.2 15.4 L2.23 15.67 L2.31 15.94 L2.44 16.18 L2.61 16.39 L2.94 16.63 L3.28 16.76 L3.48 16.43 L3.87 15.96 L4.14 15.71 L4.55 15.4 L5.08 15.12 L5.56 14.95 L6.16 14.83 L6.53 14.8 L7.04 14.83 L7.64 14.95 L8.12 15.12 L8.45 15.28 L8.96 15.62 L9.33 15.96 L9.72 16.43 L9.94 16.8 L13.14 16.79 L13.54 16.69 L13.78 16.56 L13.99 16.39 L14.16 16.18 L14.29 15.94 L14.37 15.67 L14.4 15.4 L14.4 6.8 L14.37 6.53 L14.29 6.26 L14.16 6.02 L13.99 5.81 L13.78 5.64 L13.54 5.51 L13.27 5.43 L13 5.4 L3.6 5.4 Z M16.42 8.89 L16.29 8.98 L16.13 9.16 L16.03 9.37 L16 9.52 L16 15.16 L16.56 14.95 L16.93 14.86 L17.3 14.81 L17.67 14.8 L18.04 14.83 L18.64 14.95 L18.99 15.06 L19.33 15.22 L19.65 15.4 L19.96 15.62 L20.24 15.87 L20.49 16.14 L20.72 16.43 L20.94 16.8 L21.23 16.77 L21.44 16.67 L21.57 16.57 L21.67 16.44 L21.77 16.23 L21.8 16.08 L21.8 12.47 L21.77 12.25 L21.68 12.05 L19.44 9.11 L19.33 9 L19.2 8.9 L18.97 8.82 L18.8 8.8 L16.8 8.8 L16.64 8.82 Z M18.75 10.42 L18.89 10.54 L19.92 12.16 L19.95 12.33 L19.9 12.47 L19.79 12.57 L19.65 12.6 L17.5 12.6 L17.33 12.55 L17.24 12.44 L17.2 12.3 L17.2 10.7 L17.25 10.53 L17.33 10.45 L17.47 10.4 L18.64 10.4 Z M8.9 17.9 L8.72 17.47 L8.46 17.08 L8.12 16.74 L7.73 16.48 L7.3 16.3 L6.84 16.21 L6.36 16.21 L5.9 16.3 L5.47 16.48 L5.08 16.74 L4.74 17.08 L4.48 17.47 L4.3 17.9 L4.21 18.36 L4.21 18.84 L4.3 19.3 L4.48 19.73 L4.74 20.12 L5.08 20.46 L5.47 20.72 L5.9 20.9 L6.36 20.99 L6.84 20.99 L7.3 20.9 L7.73 20.72 L8.12 20.46 L8.46 20.12 L8.72 19.73 L8.9 19.3 L8.99 18.84 L8.99 18.36 Z M19.9 17.9 L19.72 17.47 L19.46 17.08 L19.12 16.74 L18.73 16.48 L18.3 16.3 L17.84 16.21 L17.36 16.21 L16.9 16.3 L16.47 16.48 L16.08 16.74 L15.74 17.08 L15.48 17.47 L15.3 17.9 L15.21 18.36 L15.21 18.84 L15.3 19.3 L15.48 19.73 L15.74 20.12 L16.08 20.46 L16.47 20.72 L16.9 20.9 L17.36 20.99 L17.84 20.99 L18.3 20.9 L18.73 20.72 L19.12 20.46 L19.46 20.12 L19.72 19.73 L19.9 19.3 L19.99 18.84 L19.99 18.36 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/move.svg.import b/project-unicorn/assets/icons/util/move.svg.import
+new file mode 100644
+index 0000000..2a586b8
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/move.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://ncsj63her1x"
++path="res://.godot/imported/move.svg-f00c5bf4e161f6188f2c003424879eea.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/move.svg"
++dest_files=["res://.godot/imported/move.svg-f00c5bf4e161f6188f2c003424879eea.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/plus.svg b/project-unicorn/assets/icons/util/plus.svg
+new file mode 100644
+index 0000000..32eacbd
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/plus.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M19.73 13.29 L20.1 13.2 L20.32 13.08 L20.52 12.92 L20.75 12.61 L20.88 12.25 L20.9 12 L20.88 11.75 L20.75 11.39 L20.52 11.08 L20.32 10.92 L20.1 10.8 L19.85 10.72 L19.6 10.7 L13.3 10.7 L13.3 4.4 L13.28 4.15 L13.15 3.79 L13 3.58 L12.82 3.4 L12.5 3.2 L12.13 3.11 L11.87 3.11 L11.62 3.16 L11.28 3.32 L11.08 3.48 L10.92 3.68 L10.8 3.9 L10.72 4.15 L10.7 4.4 L10.7 10.7 L4.4 10.7 L4.15 10.72 L3.79 10.85 L3.48 11.08 L3.32 11.28 L3.2 11.5 L3.11 11.87 L3.11 12.13 L3.16 12.38 L3.25 12.61 L3.4 12.82 L3.58 13 L3.79 13.15 L4.15 13.28 L4.4 13.3 L10.7 13.3 L10.7 19.6 L10.72 19.85 L10.85 20.21 L11.08 20.52 L11.28 20.68 L11.5 20.8 L11.87 20.89 L12.13 20.89 L12.38 20.84 L12.61 20.75 L12.82 20.6 L13 20.42 L13.15 20.21 L13.28 19.85 L13.3 19.6 L13.3 13.3 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/plus.svg.import b/project-unicorn/assets/icons/util/plus.svg.import
+new file mode 100644
+index 0000000..1f478b9
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/plus.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://8jrm63ly26lp"
++path="res://.godot/imported/plus.svg-9985304c4a5c7f220c2911319b81a7ed.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/plus.svg"
++dest_files=["res://.godot/imported/plus.svg-9985304c4a5c7f220c2911319b81a7ed.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/save.svg b/project-unicorn/assets/icons/util/save.svg
+new file mode 100644
+index 0000000..29b2bc8
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/save.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M4.44 3.01 L4.14 3.07 L3.99 3.12 L3.71 3.27 L3.47 3.47 L3.27 3.71 L3.12 3.99 L3.03 4.29 L3.01 4.44 L3 19.4 L3.03 19.71 L3.12 20.01 L3.27 20.29 L3.47 20.53 L3.71 20.73 L3.99 20.88 L4.29 20.97 L4.6 21 L19.4 21 L19.71 20.97 L20.01 20.88 L20.29 20.73 L20.53 20.53 L20.73 20.29 L20.88 20.01 L20.97 19.71 L21 19.4 L21 7.66 L20.97 7.35 L20.88 7.05 L20.73 6.77 L20.53 6.53 L17.47 3.47 L17.23 3.27 L16.95 3.12 L16.65 3.03 L16.34 3 L15.6 3 L15.6 8.8 L15.57 8.97 L15.53 9.08 L15.38 9.26 L15.17 9.37 L15 9.4 L7.48 9.39 L7.32 9.33 L7.18 9.22 L7.05 9.03 L7 8.86 L7 3 Z M16.6 12.8 L16.76 12.82 L16.91 12.86 L17.11 12.98 L17.22 13.09 L17.31 13.22 L17.37 13.37 L17.4 13.52 L17.4 18.28 L17.37 18.43 L17.27 18.64 L17.11 18.82 L16.98 18.91 L16.83 18.97 L16.6 19 L7.4 19 L7.17 18.97 L6.96 18.87 L6.78 18.71 L6.69 18.58 L6.63 18.43 L6.6 18.2 L6.6 13.52 L6.63 13.37 L6.73 13.16 L6.83 13.03 L7.02 12.89 L7.24 12.82 L7.4 12.8 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/save.svg.import b/project-unicorn/assets/icons/util/save.svg.import
+new file mode 100644
+index 0000000..2b08b13
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/save.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://d113o31i28c0"
++path="res://.godot/imported/save.svg-5ca53aceb6ac1b8629718903676652e1.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/save.svg"
++dest_files=["res://.godot/imported/save.svg-5ca53aceb6ac1b8629718903676652e1.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/warn.svg b/project-unicorn/assets/icons/util/warn.svg
+new file mode 100644
+index 0000000..1aad9ea
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/warn.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M13.2 4.57 L12.97 4.35 L12.84 4.26 L12.55 4.12 L12.24 4.04 L11.92 4.03 L11.6 4.07 L11.45 4.12 L11.16 4.26 L11.03 4.35 L10.8 4.57 L10.61 4.83 L2.9 18.35 L2.84 18.5 L2.77 18.81 L2.76 19.12 L2.82 19.44 L2.93 19.73 L3.11 20 L3.21 20.12 L3.46 20.32 L3.74 20.47 L3.89 20.53 L4.2 20.59 L4.36 20.6 L19.64 20.6 L19.8 20.59 L20.11 20.53 L20.41 20.41 L20.54 20.32 L20.79 20.12 L20.99 19.87 L21.13 19.59 L21.18 19.44 L21.24 19.12 L21.24 18.97 L21.23 18.81 L21.16 18.5 L21.03 18.21 L13.39 4.83 Z M10.81 8.88 L10.89 8.54 L11 8.33 L11.15 8.15 L11.33 8 L11.54 7.89 L11.77 7.82 L12 7.8 L12.23 7.82 L12.46 7.89 L12.76 8.07 L12.93 8.24 L13.06 8.43 L13.18 8.77 L13.2 9 L13.2 13.8 L13.18 14.03 L13.06 14.37 L12.85 14.65 L12.57 14.86 L12.23 14.98 L12 15 L11.77 14.98 L11.54 14.91 L11.33 14.8 L11.15 14.65 L11 14.47 L10.89 14.26 L10.82 14.03 L10.8 13.8 Z M13.39 17.34 L13.34 17.61 L13.23 17.86 L13.08 18.09 L12.89 18.28 L12.66 18.43 L12.41 18.54 L12.14 18.59 L11.86 18.59 L11.59 18.54 L11.34 18.43 L11.11 18.28 L10.92 18.09 L10.77 17.86 L10.66 17.61 L10.61 17.34 L10.61 17.06 L10.66 16.79 L10.77 16.54 L10.92 16.31 L11.11 16.12 L11.34 15.97 L11.59 15.86 L11.86 15.81 L12.14 15.81 L12.41 15.86 L12.66 15.97 L12.89 16.12 L13.08 16.31 L13.23 16.54 L13.34 16.79 L13.39 17.06 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/warn.svg.import b/project-unicorn/assets/icons/util/warn.svg.import
+new file mode 100644
+index 0000000..bebacbe
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/warn.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://b1yt6xslvvvqf"
++path="res://.godot/imported/warn.svg-9b73e2658a781bcf10745aee5b2186fc.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/warn.svg"
++dest_files=["res://.godot/imported/warn.svg-9b73e2658a781bcf10745aee5b2186fc.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md b/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md
+index 55e82e3..51560d1 100644
+--- a/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md
++++ b/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md
+@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
+ | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 22 | 1 | time_manager |
+ | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
+ | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
+-| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 22 | 2 | left_tabs · window_layer |
++| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 24 | 2 | left_tabs · window_layer |
+ | `finance_subpage_requested` | `page_id: String` | effects · main · desk_papers | 3 | 1 | finance_tab |
+ 
+ ### Settings signals
+@@ -276,8 +276,8 @@ excluded from both counts and shown in the notes column when they are all a sign
+ 
+ | signal | payload | emitter(s) | E | L | listener(s) |
+ |---|---|---|---|---|---|
+-| `office_move_started` | `office_id: String, arrival_day: int` | office_system | 1 | 1 | office_hud |
+-| `office_changed` | `office_id: String` | office_system | 1 | 1 | office_view |
++| `office_move_started` | `office_id: String, arrival_day: int` | main · office_system | 2 | 1 | office_hud |
++| `office_changed` | `office_id: String` | main · office_system | 2 | 2 | office_hud · office_view |
+ 
+ ### Save / system-menu signals
+ 
+@@ -287,8 +287,8 @@ excluded from both counts and shown in the notes column when they are all a sign
+ | `game_loaded` | `slot_id: String` | main | 1 | 1 | left_tabs |
+ | `system_menu_requested` | `—` | game_shell · main | 2 | 1 | main |
+ | `save_load_requested` | `mode: String` | main · system_menu_modal | 3 | 1 | main |
+-| `quicksave_requested` | `—` | game_shell | 1 | 1 | main |
+-| `quickload_requested` | `—` | game_shell | 1 | 1 | main |
++| `quicksave_requested` | `—` | game_shell · main | 3 | 1 | main |
++| `quickload_requested` | `—` | game_shell · main | 2 | 1 | main |
+ 
+ ### Debug signals (OS.is_debug_build only; emitter game_shell.gd)
+ 
+diff --git a/project-unicorn/docs/HARITA.md b/project-unicorn/docs/HARITA.md
+index 9b9323b..087e70a 100644
+--- a/project-unicorn/docs/HARITA.md
++++ b/project-unicorn/docs/HARITA.md
+@@ -35,7 +35,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+   - Durum tutan sistemler `to_dict` / `from_dict` verir; olay motoru `EvSave` üzerinden girer.
+   - `SaveCodec.capture_game_state`, `apply_game_state`, `capture_registries`, `restore_registries`. GameState değişkenlerini ve kayıtlı modellerin `@export` alanlarını kendisi bulur; yeni alan varsayılan değer ister.
+   - Sürüm sabitleri `SCHEMA_VERSION` (15) ve `MIN_LOADABLE_VERSION` (10); göçler `save_manager.gd` içinde `_migrate_*`, `read_slot` sırayla uygular. `_migrate_15` v14 → v15 göçüdür: türü seçilmiş koşuyu Sprint 1 planlamasında açar, sürmekte olan yapımın planlanan kademelerini özellik kartına, hat damgasını cilaya, sürüm geçmişini `releases`'a çevirir, yapımı ve bayraklarını düşürür (GUNCELLEMELER "Ürün rev 7"). `_migrate_14` v13 → v14 göçüdür: gün damgalarını ve gün sayaçlarını haftaya çevirir, adı değişen alanı yeni adla yazar, dönem defterini ve runway eşiğini türetir (kurallar ve alan listesi GDD Zaman Modeli §10).
+-  - UI yolu: `EventBus.save_load_requested`, `quicksave_requested`, `quickload_requested` → `main.gd`.
++  - UI yolu: `EventBus.save_load_requested`, `quicksave_requested`, `quickload_requested` → `main.gd`; F5 ve F9 sonucu kabuğun toast'ında söylenir (kaydedildi, kaydedilmedi ve nedeni, yüklendi).
+ - **Smoke:** `save_*`, `legacy_v12_save_opens_live_table`, `sales_save_roundtrip_rev6`, `sales_check_replays_after_load`, `account_ownership_round_trip`, `month_history_save_typing`, `seed_sheet_round_trips`, `loc_save_sector_migration`, `office_move_gates_and_save` (12→13 göçü), `save_v13_day_stamps_migrate` (13→14 göçü), `save_v14_build_becomes_sprint_plan` ve `save_v14_history_becomes_releases` (14→15 göçü).
+ - **Probe:** `VC_REPLAY`, `VC_REPLAY_SUM`. Masa tekrarlarının öncesini ve sonrasını `SaveCodec.capture_*` ve `SaveManager._capture_systems` ile yakalar; tekrar iz bırakırsa `ERROR` basar. Yalnız `full_run_vc_*` preset'lerinde.
+ - **Görsel:** `--modal-shot=saveload`. Gerçek bir quicksave yazar.
+@@ -57,11 +57,12 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+ 
+ ## Tema ve UI kiti · GDD ch12
+ 
+-- **Yer:** `scripts/theme/{ui_tokens,ui_factory,build_theme,theme_check}.gd`, `themes/master_theme.tres` ve `themes/menajer_theme.tres` (üretilmiş), `scripts/ui/components/{bar_kit,star_rating,value_slider,dialogue_portrait_card}.gd`, `scenes/ui/components/DialoguePortraitCard.tscn`, `scenes/debug/ThemeProbe.tscn`, `scripts/debug/glyph_audit.gd`, `assets/fonts/` (`cond/` Barlow Condensed, `sans/` IBM Plex Sans ve Plex Sans Condensed, `serif/`, `mono/`, `fallback/`; `variations/` üretilmiş, koyu yüzler `d_*`), `assets/icons/` kökündeki genel ikonlar, `assets/icons/dark/` koyu temanın kaydırıcı tutamağı ve anahtar ikilisi
++- **Yer:** `scripts/theme/{ui_tokens,ui_factory,build_theme,theme_check}.gd`, `themes/master_theme.tres` ve `themes/menajer_theme.tres` (üretilmiş), `scripts/ui/components/{bar_kit,star_rating,value_slider,dialogue_portrait_card}.gd`, `scenes/ui/components/DialoguePortraitCard.tscn`, `scenes/debug/ThemeProbe.tscn`, `scripts/debug/glyph_audit.gd`, `assets/fonts/` (`cond/` Barlow Condensed, `sans/` IBM Plex Sans ve Plex Sans Condensed, `serif/`, `mono/`, `fallback/`; `variations/` üretilmiş, koyu yüzler `d_*`), `assets/icons/` kökündeki genel ikonlar, `assets/icons/dark/` koyu temanın kaydırıcı tutamağı ve anahtar ikilisi, `assets/icons/stake/` bedel glifi, `scripts/ui/components/toast.gd`, `scripts/debug/kit_probe.gd`
+ - **Sahip:** sınıf `UiTokens`, `UiFactory`, `StarRating`, `ValueSlider`, `DialoguePortraitCard`
+ - **Giriş:**
+-  - `UiTokens`: palet, yazı merdiveni, `THEME_STAMP`; yardımcılar `format_money`, `positive`, `negative`, `badge_palette`, `build_percent`. Koyu dil (Menajer Masası) ayrı blokta: `D_*` token'ları, merdiven `D_FS_12` … `D_FS_40`, `MENAJER_THEME`; renk körü ikizini izleyen yardımcılar `D_pos`, `D_neg`, `D_warn`, `D_info`, `D_neg_bg`, `D_neg_rule`, `D_neg_ink`, `D_on_neg`, `D_chart_neg_area`, `D_skill`, `D_topic`, `D_outlet`, `D_delta_color`, `D_badge_palette`, `D_health_color`, `D_relationship_palette`, `D_risk_ink`, `D_seat_ink`.
+-  - `UiFactory.make_label`, `make_badge`, `make_card`, `make_pill`, `make_state_chip`, `make_section_header`, `make_centered_column`, `make_placeholder_column`, `initials_of`, `clear`, `is_left_click`.
++  - `UiTokens`: palet, yazı merdiveni, `THEME_STAMP`; yardımcılar `format_money`, `positive`, `negative`, `badge_palette`, `build_percent`. Koyu dil (Menajer Masası) ayrı blokta: `D_*` token'ları, merdiven `D_FS_12` … `D_FS_40`, `MENAJER_THEME`; renk körü ikizini izleyen yardımcılar `D_pos`, `D_neg`, `D_warn`, `D_info`, `D_neg_bg`, `D_neg_rule`, `D_neg_ink`, `D_on_neg`, `D_chart_neg_area`, `D_skill`, `D_topic`, `D_outlet`, `D_delta_color`, `D_badge_palette`, `D_health_color`, `D_relationship_palette`, `D_risk_ink`, `D_seat_ink`; iki paleti ayrı varyasyonda taşıyan öğenin (risk ve uyarı etiketi, risk şeridi ve yazıları) kullanılacak adı `D_variation` (renk körü ikizi `Cb` ekli).
++  - `UiFactory.make_label`, `make_glyph` (beyaz SVG glif, renk `modulate`), `make_badge`, `make_card`, `make_pill`, `make_state_chip`, `make_section_header`, `make_centered_column`, `make_placeholder_column`, `initials_of`, `clear`, `is_left_click`. Koyu dile taşınan ekranın giriş noktaları `D_` önekli: `D_tag` (büyük harfli etiket: düz, nötr, çizgi, risk, uyarı), `D_kpi` (pencere başlığının anahtar ve değer hücresi), `D_seg_tabs` (bölüm sekmeleri), `D_cost` (bedel diskiyle mürekkep tutar). Tablo kiti `HRUiShared`'dadır (Ekip).
++  - Tek toast `toast.gd`'dir (preload, sınıf adı yok; `Toast` varyasyonu): kuyulu glif, kalın baş ve soluk satır, 200 ms girer, 2,4 sn durur, 200 ms çıkar; yenisi eskisinin yerini alır. Kabuğun toast'ı `GameShell/ToastLayer` (katman 11, pencere ve modalların üstü) içindedir, rayın sağında ortalanır ve şeridin 24 px üstünde durur; kabuktaki herkes `toast` grubundan `show_toast(baş, satır, glif, ton)` çağırır. Son ekranının toast'ı rayın içindedir, eylemi vardır (`set_action`) ve imleç üstündeyken bekler.
+   - `build_theme.gd` token → tema dönüştürücüsüdür: `godot --headless --path . -s res://scripts/theme/build_theme.gd`. Kaynak kimliklerini içerikten ve yoldan türetir: girdi değişmezse iki üretim bayt bayt aynıdır. Önce `master_theme.tres`'i (proje teması, krem), sonra `menajer_theme.tres`'i yazar: master'ın her tipi master'da çözdüğü öğelerle ve ölçüleriyle koyu token ve yüzlere çevrilir (`DARK_OF`), sonra koyu taban tipleri ve yeni varyasyonlar kurulur. Master'da olup koyu temada olmayan tip, taban ya da öğe, içerik payı açık kutu ve koyu karşılığı olmayan master rengi üretimi düşürür. `main.gd` açılışta iki temanın damgasını `THEME_STAMP` ile karşılaştırır.
+   - `theme_check.gd` tema denetçisidir: `godot --headless --path . -s res://scripts/theme/theme_check.gd [--theme=<yol>]`. Master'daki her tip, taban ve öğe yoksa, bir font, ikon veya kutu boşsa ya da master dışı bir temada kutu içerik payını kenarına bırakıyorsa 1 ile çıkar; her metin renginin altındaki opak kutuya WCAG kontrastını basar (4.5 altı `LOW`). `contrast_audit` koyu temanın kapısıdır (`--theme-contrast-audit`).
+   - `scripts/debug/glyph_audit.gd` (`-s`): CSV'nin, `scripts/debug` dışındaki kod literallerinin ve `data/*.json` metninin her karakterini koyu yüzlere ve `d_*` zincirlerine sorar, eksikleri `GLYPH|MISS` satırıyla basar.
+@@ -69,14 +70,14 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+   - `bar_kit.gd` DESTEK kartı ile araştırma kartının ortak parçalarıdır (ikon, satır, kısalan yazı). `DialoguePortraitCard`'ı onboarding'in karakter adımı kullanır.
+ - **Smoke:** `build_percent_single_source`, `star_ruler_contract`, `rail_tabs_match_scene_order`.
+ - **Probe:** yok.
+-- **Görsel:** `--theme-audit=<sekme id | modal:<tür> | onboard:<adım>>` (yüzeyi `--tab-shot`, `--modal-shot`, `--onboard-shot` gibi kurar; her Control'ün çözülmüş değerleri, içerik payı `cm`, en küçük boyu `min` ve öğeyi çözen tema `src`: `o` override, `a:<tema>` ata teması, `p` proje teması, `d` motor varsayılanı; `ov` Control'ün kendi üstüne koyduğu her tema öğesi), `--probe-shot` (ThemeProbe), `--probe-shot=menajer` (ThemeProbe koyu temanın altında, koyu temanın master dışı her varyasyonundan bir örnekle), `--theme-contrast-audit` (headless; koyu temanın her metin rengi çizildiği her zeminde ve `D_` yardımcılarının renkleri iki palette, `CONTRAST` satırları; düşen çiftte 1), `--tab-shot=`, `--shot-size=`.
++- **Görsel:** `--theme-audit=<sekme id | modal:<tür> | onboard:<adım>>` (yüzeyi `--tab-shot`, `--modal-shot`, `--onboard-shot` gibi kurar; her Control'ün çözülmüş değerleri, içerik payı `cm`, en küçük boyu `min` ve öğeyi çözen tema `src`: `o` override, `a:<tema>` ata teması, `p` proje teması, `d` motor varsayılanı; `ov` Control'ün kendi üstüne koyduğu her tema öğesi), `--probe-shot` (ThemeProbe), `--probe-shot=menajer` (ThemeProbe koyu temanın altında, koyu temanın master dışı her varyasyonundan bir örnekle), `--probe-shot=kit` (koyu kitin bileşenleri durumlarıyla: Ekip satır ızgarası, etiketler, bedel, toast'lar, odak halkası), `--theme-contrast-audit` (headless; koyu temanın her metin rengi çizildiği her zeminde ve `D_` yardımcılarının renkleri iki palette, `CONTRAST` satırları; düşen çiftte 1), `--tab-shot=`, `--shot-size=`.
+ 
+ ## Kabuk (main.gd, GameShell, TopBar, LeftTabs, WindowLayer) · GDD ch12
+ 
+ - **Yer:** `scripts/main/{main,game_shell}.gd`, `scenes/main/{Main,GameShell}.tscn`, `scripts/ui/components/{top_bar,left_tabs,news_ticker,window_layer,window_frame,desk_papers}.gd`, `scenes/ui/components/{TopBar,LeftTabs,NewsTicker}.tscn`, `scripts/tabs/events_tab.gd`, `scenes/tabs/EventsTab.tscn`, `scripts/modals/confirm_modal.gd`, `scenes/modals/ConfirmModal.tscn`, `assets/icons/{rail,util}/`
+ - **Sahip:** `main.gd` (ana sahne kökü), `game_shell.gd` (`GameShell.tscn`), `window_layer.gd` (`CenterViewport`, grup `window_layer`); `window_frame.gd` ve `desk_papers.gd` (yolla preload edilir, sınıf adı yok)
+ - **Giriş:**
+-  - `main.gd` açılışta debug bayraklarını yönlendirir, sonra onboarding'i ya da kabuğu kurar. Oyunda modal ve sahneleri EventBus sinyalleriyle açar: `modal_requested`, `pitch_requested`, `meeting_scene_requested`, `term_table_requested`, `rnd_card_requested`, `confirm_requested` (`hr_action` dahil), `settings_requested`, `system_menu_requested`, `save_load_requested`, `summary_ready` (dönem özeti modalı), `run_ended`, `milestone_reached`, `product_note_issued` (ilk Ar-Ge notu). Ayrıca `quicksave_requested` / `quickload_requested`'i ve olay modalını kapatan `event_resolved`'u dinler.
++  - `main.gd` açılışta debug bayraklarını yönlendirir, sonra onboarding'i ya da kabuğu kurar. Oyunda modal ve sahneleri EventBus sinyalleriyle açar: `modal_requested`, `pitch_requested`, `meeting_scene_requested`, `term_table_requested`, `rnd_card_requested`, `confirm_requested` (`hr_action` dahil), `settings_requested`, `system_menu_requested`, `save_load_requested`, `summary_ready` (dönem özeti modalı), `run_ended`, `milestone_reached`, `product_note_issued` (ilk Ar-Ge notu). Ayrıca `quicksave_requested` / `quickload_requested`'i (sonuç toast'ta) ve olay modalını kapatan `event_resolved`'u dinler. `confirm_requested` yapılandırmasında `theme: true` onayı koyu dilde açar (koyu dile taşınmış ekranın onayı).
+   - `WindowLayer` (`CenterViewport`'un script'i) `EventBus.tab_changed`'i dinler ve sekmeyi ofisin üstünde sabit yuvalı bir pencerede açar: `TAB_SCENES` sekme sahneleri, `SPECS` 1920×1080 tabanında pencere boyları, `WindowFrame` kabuk (sağ üstte ×; sayfa `frame_options` ile `variation`, `pad`, `owns_close`, koyu dili ve haleyi açan `theme`, ortak koyu başlık bandını açan `title` ve onun KPI yuvası `kpi`'yi seçer, hepsi kapalı doğar). Aynı anda en çok bir birincil ve ona bağlı bir ayrıntı penceresi (`DETAILS`: `hr_dossier`); sürükleme yok. `open_primary(id)`, `open_detail(kind, payload)`, `close_top()` (Esc: önce ayrıntı, sonra birincil; hiçbir pencere yoksa false döner ve `game_shell` sistem menüsünü açar), `get_current_page_body()` (harness). `hr_dossier` açılınca ofiste kişinin halkası yanar (`office_view.select_person`), ayrıntı kapanınca söner (`clear_selection`). `tab_changed("")` pencere yok demektir; ×, Esc ve aktif sekmeye tekrar tık bu sinyale çıkar. Dil ya da palet değişince açık pencereler yeniden kurulur. Çocuk sırası: `OfficeView`, `BuildHUD`, pencereler. Kabuk: üst bar 64, haber şeridi 40 px; ray `CenterViewport`'un sol kenarının üstüne opak biner ve `WindowLayer` onun canlı genişliğini izler (`rail`): ofis ve `BuildHUD` rayın sağındaki alana oturur (`OfficeView.set_safe_left`), pencereler o alanın 24 px içinde. Ofisin üstündeki yüzenler (`office_overlays`: `BuildHUD`, not yığını, Ofisi taşı) pencerelerin altında çizilir ve üstlerine pencere binince gizlenir (`set_window_cover`); görünen pencere varken ofis kararır (`OfficeView.set_dimmed`).
+   - `DeskPapers` masadaki kâğıtların tek türetme ve çizim evidir: `gather()` motor kâğıtlarını (`EventGate.desk_papers`) ve durumdan türeyen hatırlatıcıları (faz kapısı, term sheet, Atlas dosyaları, B2B genişlemesi) verir, `make_row()` satırı çizer, `open()` motor kâğıdını `EventGate.open_paper` ile açar, hatırlatıcıyı sekmesine götürür. Kâğıdı değiştiren sinyallere `connect_changes(c)` ile abone olunur. Okuyanlar: Olaylar sayfası (`events_tab.gd`: Frank'in son satırı `GameState.mentor_line_key` + `mentor_line_args`, çizimde `tr(key).format(args)`, ve bütün kâğıtlar) ve ofisin not yığını.
+   - Üst bar, ray ve haber şeridi koyu temadadır (`menajer_theme.tres` köklerinde). `LeftTabs` ray, kilit ve rozetleri: satır durumu boşta, etkin (yükselmiş zemin ve sol kenarda işaret) ya da kilitli (ikon ve ad soluk, gerekçe adın altında: demoda `ENDING_BADGE_EA`); kırmızı rozet yalnız tehlikede (Ekip, Satış, Finans), öteki sayılar nötr. Mantıksal genişlik `DisplaySettings.COMPACT_SHELL_BELOW`'un altındayken simge kipine geçer (adlar gizli, ipucunda; rozet ve kilit ikonun köşesinde), üst bar aynı eşikte sıkışır. `TopBar` iki satırlık metrik ızgarasıdır, her yazı taban çizgisine göre yerleşir: marka bloğu, KASA (altında NET), RUNWAY (kasa eksiyken KEPENK sayacı), MRR/MARKA, BURN/İTİBAR, gün bloğu ve hafta çubuğu (08:00'den mesai bitimine, `WorkHoursSystem.workday_end`), Sıradaki yuvası (teklif süresi, yoksa mesai bitimi) ve saat bloğu; burn ve net canlı aylık hızdır (`FinanceSystem.get_monthly_flow`, `/ay`). Hız isteğini `EventBus.speed_change_requested` ile gönderir, düğmeleri `TimeManager.speed_changed` ile boyar. `NewsTicker` yayın adlarını kendi renginde akıtır; aç/kapa hücresi oyuncunun ayarıdır (`Settings` `ticker_open`), kapalıyken şerit sol altta yalnız o hücredir ve `game_shell` ofisi ve rayı alta indirir (`open_changed`). Sprint kendiliğinden başladığında not BuildHUD kartının altındadır (`build_bar.gd`).
+@@ -88,7 +89,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+   - Metni smoke'a sabit yerler (başlıcaları; bkz. Araçlar > Smoke): `window_layer.gd` içindeki `propagate_call("on_page_closing")`; `TopBar.tscn` ve `top_bar.gd`'deki hız düğmeleri (sahnedeki `PauseBtn` ve `Speed1Btn` ile `Speed4Btn` arası adlar sabit); `main.gd` özel adları `_on_milestone_reached`, `_on_milestone_continue`, `_keep_run_for_main_menu`, `_shell`, `_event_modal`, `_milestone_modal`; `left_tabs._refresh_rnd_badge`.
+ - **Smoke:** `rail_tabs_match_scene_order`, `topbar_speed_cluster_four_rungs`, `milestone_paper_under_card`, `rnd_rail_open_with_waiting_page`, `all_scripts_load`.
+ - **Probe:** yok (probe kabuk kurmaz).
+-- **Görsel:** `--tab-shot=<product|sales|hr|finance|personal|rnd|marketing|events>` (pencere ofisin önünde), `--modal-shot=confirm|confirm3`, `--shot-size=`, `--skip-onboarding`.
++- **Görsel:** `--tab-shot=<product|sales|hr|finance|personal|rnd|marketing|events>` (pencere ofisin önünde), `--modal-shot=confirm|confirm3|confirm_dark`, `--office-shot=<ofis>:<saat>:toast` (toast'ın bütün gerçek çağıranları sırayla, kare başına `office_shot_toast_<durum>.png`), `--shot-size=`, `--skip-onboarding`.
+ - **Ölçüm:** `--render-probe[=<sekme>]` (`--shot-size=` ile) kabuğu tek pencere boyutunda kurar, kare maliyetini ve doku ve video belleğini basar.
+ 
+ ## Ofis (3B) · GDD ch12
+@@ -102,11 +103,11 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+   - Gece kapısı: `OfficePeople` `TimeManager.register_night_gate(office_empty, OfficeConstants.NIGHT_WAIT_S)` ile kaydolur. Gece yalnız kapıya ya da yatağa yürüyenleri bekler; gece yeni yürüyüş başlamaz, içeride kalan herkes `CUT_FADE_S` kararmasının altında kesilir ve 08:00'de yeniden yerleşir. `OfficeView` `EventBus.night_skipped`'te kısa bir kararma oynar (`NIGHT_FADE_S`).
+   - Kurucunun toplantı yolculuğu `OfficeView.travel`'dir (`office_travel.gd`, sınıf adı yok; `main.gd` sürer, Kabuk bölümü). `travel_out(looks, tower_label)` kurucuyu çıkışa yürütür (`OfficePeople.send_founder_out`, en çok `EXIT_S`; en yakın iki oturan ona bakar), haritaya kararır (`load_layout("city", true)`), `OfficeCity.road(true, tower_label)` mevcut ofisten toplantı kulesine kesikli yolu, kurucunun diskini ve çipleri çizer, kulenin tacı parlar (`road_done`); sonra `meet` yerleşimi yüklenir, `MeetingCast.stage` karşı tarafı oturtur ve `walk_in` kurucuyu asansörden masaya yürütür. `travel_home(tower_label)` kurucuyu kaldırır, geri yolu çizer, ofisi yükler ve kurucuyu masasına yürütür; en yakın oturan başını kaldırır ve bant `MEETING_BACK_ASK` yazar. Tık ya da Esc yolculuğu atlar; shot'larda yolculuk yoktur (`--travel-shot` hariç).
+   - Toplantı odası `meet` yerleşimidir (şehirdeki yatırımcı kulesinin üst katı, `art/office3d/meet.*`; kule `OfficeLayout.meet_hit`). `MeetingCast` (World altında, People'ın kardeşi) odadaki kişileri sürer: `stage`, `walk_in`, `walk_out`, `look`, `post`, `speak`, `gesture`, `count`, `frame_table`; bakış, duruş ve jestler `OfficePerson` katmanındadır (`look_at`, `GESTURE_HANDS`). Görüşme sürerken kişiler ambiyans hızıyla oynar (ağaç duraklıyken de `k` 1). Davet `MeetingInvite`'tır (Overlay'de): `ring(spec)`, sinyaller `accepted`, `postponed`, `can_ring()`.
+-  - Şehir haritası `city` yerleşimidir (`OfficeCity`): ofis kartı `office_map_card.gd`, "Ofisi taşı" düğmesi ve taşınma sayacı `office_hud.gd` (sol alt).
++  - Şehir haritası `city` yerleşimidir (`OfficeCity`): ofis kartı `office_map_card.gd`, "Ofisi taşı" düğmesi ve taşınma sayacı `office_hud.gd` (sol alt). Taşınmanın başladığını ve varışı kabuğun toast'ı söyler (`office_hud.gd`); ertelenen görüşmeyi de (`MeetingInvite`).
+   - Not yığını `Overlay/NoticeStack` (`office_notice_stack.gd`, sağ alt): Frank'in son satırı (`GameState.mentor_line_key` + args) ve `DeskPapers` kâğıtları; açık pencere yığını örter.
+ - **Smoke:** `office_move_gates_and_save`; `look_registry_unique_and_saved` (görünümler eşsiz, Frank'inki kimseye çıkmaz ve eski kayıtta yüklemede yeniden çekilir, kayıtta korunur, adaydan işe alınana geçer). Kişilerin günü smoke değil probedir: `--office-crowd-probe` (`scripts/debug/office_crowd_probe.gd`).
+ - **Probe:** yok.
+-- **Görsel:** `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:full|card|<sekme>|hr_dossier|crowd40|founders|nav|crown|cast]` (ofis her zaman kabuğun içinde; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi, `city:<saat>:crown` kulenin tacı; `full` bütün masalar dolu, `card` yalnız `city`'de Plaza'nın kartı açık, `<sekme>` o sekmenin penceresi açık, `hr_dossier` Ekip penceresi ve ilk çalışanın dosyası, `crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare, `founders` kurucu portreleri ile render edildikleri görünüşün bust'ı yan yana, `nav` fırınlanmış zemin); kare süresini ve çizim sayılarını da basar. `--travel-shot=<home|ishani|plaza|loft>[:vc]` 10:00'da satış toplantısına (`:vc` ile Series A görüşmesine) davet, gidiş, panel ve dönüşü kare dizisi olarak çeker (`travel_shot_<ofis>[_vc]_NN.png`). `--day-shot=<ofis>:<hız>` bir haftayı gerçek saatle 08:00'den gece atlamasıyla ertesi 08:00'e çeker; hafta Ocak'ın sonudur, sessiz ay kapanışının şerit satırı karelerde görünür (`day_shot_<ofis>_<hız>_NN.png`, kare başına `DAYSHOT` satırı). `--tab-shot=` pencereyi ofisin önünde çeker. Dışa aktarım hattı Üçüncü taraf ve altyapı altında.
++- **Görsel:** `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:full|card|<sekme>|hr_dossier|toast|crowd40|founders|nav|crown|cast]` (ofis her zaman kabuğun içinde; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi, `city:<saat>:crown` kulenin tacı; `full` bütün masalar dolu, `card` yalnız `city`'de Plaza'nın kartı açık, `<sekme>` o sekmenin penceresi açık, `hr_dossier` Ekip penceresi ve ilk çalışanın dosyası, `toast` toast'ın gerçek çağıranları sırayla (F5 açık pencerenin üstünde, reddedilen F5, ertelenen satış ve VC görüşmesi, taşınma, varış, F9), `crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare, `founders` kurucu portreleri ile render edildikleri görünüşün bust'ı yan yana, `nav` fırınlanmış zemin); kare süresini ve çizim sayılarını da basar. `--travel-shot=<home|ishani|plaza|loft>[:vc]` 10:00'da satış toplantısına (`:vc` ile Series A görüşmesine) davet, gidiş, panel ve dönüşü kare dizisi olarak çeker (`travel_shot_<ofis>[_vc]_NN.png`). `--day-shot=<ofis>:<hız>` bir haftayı gerçek saatle 08:00'den gece atlamasıyla ertesi 08:00'e çeker; hafta Ocak'ın sonudur, sessiz ay kapanışının şerit satırı karelerde görünür (`day_shot_<ofis>_<hız>_NN.png`, kare başına `DAYSHOT` satırı). `--tab-shot=` pencereyi ofisin önünde çeker. Dışa aktarım hattı Üçüncü taraf ve altyapı altında.
+ 
+ ## Ürün · PRD rev 7 (GUNCELLEMELER "Ürün rev 7"), GDD ch03, ch06
+ 
+@@ -144,13 +145,13 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+ 
+ ## Ekip · GDD Ekip modülü, ch02
+ 
+-- **Yer:** `scripts/autoload/character_registry.gd`, `scripts/data_models/character.gd`, `scripts/systems/{hr_system,hr_constants,hr_actions,hr_candidate_generator,hr_search_system,hr_morale_system,work_hours_system,founder_constants}.gd`, `scripts/tabs/{hr_tab,personal_tab}.gd`, `scripts/tabs/hr/`, `scripts/modals/{hr_action_modal,training_modal,work_hours_modal}.gd`, `scenes/tabs/{HRTab,PersonalTab}.tscn`, `scenes/modals/{HRActionModal,HRAtlasModal,TrainingModal,WorkHoursModal}.tscn`, `assets/art/portraits/` (Frank'in ve 11 kurucunun önceden render edilmiş portreleri; yeniden üretim `tools/people/bake_portraits.gd`), `assets/icons/traits/`
++- **Yer:** `scripts/autoload/character_registry.gd`, `scripts/data_models/character.gd`, `scripts/systems/{hr_system,hr_constants,hr_actions,hr_candidate_generator,hr_search_system,hr_morale_system,work_hours_system,founder_constants}.gd`, `scripts/tabs/{hr_tab,personal_tab}.gd`, `scripts/tabs/hr/`, `scripts/modals/{hr_action_modal,training_modal,work_hours_modal}.gd`, `scenes/tabs/{HRTab,PersonalTab}.tscn`, `scenes/modals/{HRActionModal,HRAtlasModal,TrainingModal,WorkHoursModal}.tscn`, `assets/art/portraits/` (Frank'in ve 11 kurucunun önceden render edilmiş portreleri; yeniden üretim `tools/people/bake_portraits.gd`), `assets/icons/traits/` (krem), `assets/icons/trait/` (koyu, onaylı aile)
+ - **Sahip:** autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRConstants`, `HRActions`, `HRCandidateGenerator`, `HRSearchSystem`, `HRMoraleSystem`, `WorkHoursSystem`, `FounderConstants`; UI `HRUiShared`, `HRAssignments`, `HRLedger`, `HRPopover`
+ - **Giriş:**
+   - `CharacterRegistry.get_character`, `get_founder`, `get_employees`, `get_active_employees`, `add`, `assign_job`, `unassign_job`, `get_total_monthly_salaries`.
+   - `HRSystem.daily_tick` alt sistemlerin sırasını yönetir. Okumalar: `is_busy`, `assigned_to`, `skill`, `effective_skill`, `daily_contribution`, `is_overloaded`.
+   - `HRSearchSystem.start_search`, `hire`, `preview_hire` (maaş ve araç farkıyla burn ve runway); `HRMoraleSystem.apply_delta`, `send_on_leave`; `HRActions.apply_raise`, `apply_promotion`, `fire`, `preview_fire` (aylık araç satırı dahil); `WorkHoursSystem.hours_for`, `set_company_hours`, `end_hour_for`, `max_hours` (başlangıcın izin verdiği en uzun gün), `group_hours_in` (modal taslağının grup satırı), `in_office`, `workday_end` (gecenin tek girdisi, en geç 24), `sitting_open(hours)` (kurucunun dört oturumunun tek giriş kapısı: gece değil ve mesai bitimine en az `hours` var).
+-  - `HRConstants` rol, alan ve yıldız sözlüğüdür (`role_label`, `area_label`, `stars_for`). `FounderConstants` köken, trait ve beceri dağılımını verir. `HRUiShared` sekmeler arası UI yardımcılarının evidir.
++  - `HRConstants` rol, alan ve yıldız sözlüğüdür (`role_label`, `area_label`, `stars_for`). `FounderConstants` köken, trait ve beceri dağılımını verir. `HRUiShared` sekmeler arası UI yardımcılarının evidir; koyu tablo kiti `D_` önekli: `D_head` (sütun başlığı), `D_group` (açılır grup başlığı, kapalıyken sayı), `D_row` (satır: üstünde kenar, seçili yükselir ve işaret taşır), `D_skill_cell` (rampa renginde değer, ana alan altı çizili, rol bandı), `D_skill_legend`, `D_morale` / `D_repaint_morale` (35 çentikli bar), `D_trait_cell` (glif kutusu ve ad), `D_risk_strip` (kaçma riski şeridi), `D_empty_row`. `HRPopover.mount(anchor, true)` popover'ı koyu açar.
+   - Ekip dosyası (`scripts/tabs/hr/hr_dossier.gd`) kişinin ayrıntı penceresidir: `WindowLayer.open_detail("hr_dossier", {character_id})`. Kadro satırında ad ve avatar tıkı (`HRLedger.ACTION_DOSSIER`) ve ofiste kişiye tık açar, satırın gerisi menüyü (`ACTION_MENU`); aksiyonlar satır menüsüyle aynı kapıdan geçer (`HRLedger.action_list`). Kişi ayrılınca pencere kendini kapatır.
+   - Kişisel sayfasının Kilometre Taşları kartı `GameState.milestones()`'u okur.
+   - Olay seam'leri `hr.*` (`seams_hr.gd`, `seams_ported.gd`), `founder.*` (`seams_hr.gd`, `seams_world.gd`).
+@@ -243,7 +244,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+   - Smoke'a sabit (başlıcası; bkz. Araçlar > Smoke): `trigger_ending` imzası (`event_i3_no_silent_loss`).
+ - **Smoke:** `bankruptcy*`, `soft_cap_*`, `profit_*`, `ending_*`, `bootstrap_*`, `milestone_*`, `buyout_*`, `faced_flag_*`, `shutter_recovery`, `brand_collapse`, `cascade`, `pivot_accept`, `pivot_decline`, `terminal_kills_gate`, `fumes_zero_revenue_ledger`, `no_calendar_stop_before_cap`, `b2c_ending_reports_audience`, `frank_line_renders_outside_the_paper`.
+ - **Probe:** `END ... ending=` (`full_run*` preset'lerinde), `STATE` içinde `profit_streak=`.
+-- **Görsel:** `--ending-shot=<ending_id>` (takma adlar dahil); EA/full akışı `--build=ea|full` ile.
++- **Görsel:** `--ending-shot=<ending_id>` (takma adlar dahil; sonda gazeteyi paylaşır ve toast'lı ikinci kareyi `_share` ekiyle çeker); EA/full akışı `--build=ea|full` ile.
+ 
+ ## Olay motoru · GDD Olay Motoru rev 2 (.md)
+ 
+diff --git a/project-unicorn/localization/strings.csv b/project-unicorn/localization/strings.csv
+index 7bdca5a..b44d741 100644
+--- a/project-unicorn/localization/strings.csv
++++ b/project-unicorn/localization/strings.csv
+@@ -127,8 +127,8 @@ ENDING_RETRY,TEKRAR DENE,TRY AGAIN
+ ENDING_HARD_MODE,ZOR MOD · YAKINDA,HARD MODE · SOON
+ ENDING_SOON_TOOLTIP,Yakında,Coming soon
+ ENDING_SHARE,GAZETEYİ PAYLAŞ,SHARE THE PAPER
+-ENDING_SAVED_TOAST,Gazete kaydedildi: {path},Paper saved: {path}
+-ENDING_OPEN_FOLDER,KLASÖRÜ AÇ,OPEN FOLDER
++ENDING_SAVED_TOAST,Gazete kaydedildi,Paper saved
++ENDING_OPEN_FOLDER,Klasörü aç,Open folder
+ ENDING_ENGRAVING_SOON,GÖRSEL YAKINDA,ART COMING SOON
+ SALES_STEWARD_CHANGE,Değiştir,Change
+ SALES_STEWARD_PICK,Sorumlu ata,Assign account manager
+@@ -255,6 +255,11 @@ SAVE_ERR_TOO_OLD,Bu kayıt eski bir sürümden; ürün verisi değiştiği için
+ SAVE_ERR_MODAL_OPEN,Bir karar ekranı açıkken kaydedilemez.,Saving is unavailable while a decision screen is open.
+ SAVE_ERR_WRITE,Kayıt yazılamadı.,The save could not be written.
+ SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.
++SAVE_TOAST_SAVED,Kaydedildi,Saved
++SAVE_TOAST_NOT_SAVED,Kaydedilmedi,Not saved
++SAVE_TOAST_LOADED,Yüklendi,Loaded
++SAVE_TOAST_WHEN,Hafta {week} · {time},Week {week} · {time}
++SAVE_TOAST_LOADED_WHEN,{slot} · Hafta {week} · {time},{slot} · Week {week} · {time}
+ HR_COL_EMPLOYEE,ÇALIŞAN,EMPLOYEE
+ HR_COL_EXPERIENCE,DENEYİM,EXPERIENCE
+ HR_AREA_PRODUCT,Ürün,Product
+@@ -273,10 +278,13 @@ HR_GROUP_SALES,Satış,Sales
+ HR_GROUP_CUSTOMER_SUCCESS,Müşteri İlişkileri,Customer Success
+ HR_COL_ROLES_LEADERSHIP,ROLLER · LİDERLİK,ROLES · LEADERSHIP
+ HR_COL_TASK,GÖREV,TASK
++HR_COL_ROLES,ROLLER,ROLES
+ HR_COL_TRAIT,TRAIT,TRAIT
+ HR_TASK_NONE,—,—
+ HR_LEGEND_PRIMARY,ANA ALAN,PRIMARY AREA
+ HR_LEGEND_SECONDARY,İKİNCİL ALAN,SECONDARY AREA
++HR_SKILL_LEGEND_MAIN,ana,main
++HR_SKILL_LEGEND_SECONDARY,ikincil,secondary
+ HR_LEGEND_NO_AREA,ALANI YOK · ATANAMAZ,NO AREA · CANNOT ASSIGN
+ HR_CHIP_IDLE_COUNT,{n} BOŞTA,{n} IDLE
+ HR_CHIP_OVERLOAD_COUNT,{n} AŞIRI YÜK,{n} OVERLOADED
+@@ -1736,7 +1744,8 @@ MEETING_INVITE_VC,{fund} adına {person} bu hafta görüşmek istiyor.,{person}
+ MEETING_INVITE_SALES,{company} adına {person} görüşmeye hazır.,{person} of {company} is ready to meet.
+ MEETING_ACCEPT,Kabul et,Accept
+ MEETING_POSTPONE,Ertele,Postpone
+-MEETING_POSTPONED,Ertelendi. Telefon çalmaya devam ediyor.,Postponed. The phone keeps ringing.
++MEETING_POSTPONED,Ertelendi,Postponed
++MEETING_POSTPONED_SALES,Telefon çalmaya devam ediyor.,The phone keeps ringing.
+ MEETING_POSTPONE_ONCE,Toplantı yalnız bir kez ertelenebilir. Fonun bir sonraki toplantısında ikna −{n}.,The meeting can be put off only once. Conviction −{n} at this fund's next meeting.
+ MEETING_POSTPONED_ONCE,Bu toplantı bir kez ertelendi; bir daha ertelenemez.,This meeting was put off once; it can't be put off again.
+ MEETING_POSTPONED_VC,Toplantı gelecek haftaya ertelendi. Bir daha ertelenemez.,The meeting moved to next week. It can't be put off again.
+@@ -2593,7 +2602,8 @@ OFFICE_CARD_CANCEL,Vazgeç,Cancel
+ OFFICE_CARD_HERE,Buradasınız,You are here
+ OFFICE_CARD_MOVE_FOR,Taşın · {money},Move · {money}
+ OFFICE_CARD_UNMET,{n} şart karşılanmadı,{n} requirements unmet
+-OFFICE_TOAST_MOVED,Yeni ofis: {name},New office: {name}
++OFFICE_TOAST_MOVED,Yeni ofis,New office
++OFFICE_TOAST_MOVE_STARTED,Taşınma başladı,Move started
+ OFFICE_CHIP_CURRENT,MEVCUT · {name},CURRENT · {name}
+ OFFICE_HOVER_HOME,Kurucunun dairesi,The founder's flat
+ OFFICE_HOVER_LINE,{desks} masa · {money}/ay,{desks} desks · {money}/mo
+diff --git a/project-unicorn/scenes/main/GameShell.tscn b/project-unicorn/scenes/main/GameShell.tscn
+index 0f5a998..d1f1355 100644
+--- a/project-unicorn/scenes/main/GameShell.tscn
++++ b/project-unicorn/scenes/main/GameShell.tscn
+@@ -7,6 +7,7 @@
+ [ext_resource type="PackedScene" path="res://scenes/ui/components/BuildHUDPanel.tscn" id="6_buildhud"]
+ [ext_resource type="PackedScene" path="res://scenes/office/OfficeView.tscn" id="8_officeview"]
+ [ext_resource type="Script" path="res://scripts/main/game_shell.gd" id="7_shell"]
++[ext_resource type="Script" path="res://scripts/ui/components/toast.gd" id="9_toast"]
+ 
+ [node name="GameShell" type="Control" unique_id=1712078200]
+ process_mode = 3
+@@ -67,3 +68,10 @@ layer = 9
+ 
+ [node name="ModalLayer" type="CanvasLayer" parent="." unique_id=1292228396]
+ layer = 10
++
++[node name="ToastLayer" type="CanvasLayer" parent="." unique_id=1292228398]
++layer = 11
++
++[node name="Toast" type="PanelContainer" parent="ToastLayer" unique_id=1292228399 node_paths=PackedStringArray("rail")]
++script = ExtResource("9_toast")
++rail = NodePath("../../LeftTabs")
+diff --git a/project-unicorn/scripts/debug/kit_probe.gd b/project-unicorn/scripts/debug/kit_probe.gd
+new file mode 100644
+index 0000000..f50f6f6
+--- /dev/null
++++ b/project-unicorn/scripts/debug/kit_probe.gd
+@@ -0,0 +1,275 @@
++extends RefCounted
++
++# --probe-shot=kit: the dark kit's components in their states on a window body, laid out like the
++# approved Ekip row sheet (SPEC §3.4 grid), beside the tags, parts, toasts and focus rings. Debug
++# only: names and figures are samples, the strings come from the CSV.
++
++const TOAST := preload("res://scripts/ui/components/toast.gd")
++const GROUP_GLYPH := "res://assets/icons/rail/hr.svg"
++## SPEC §3.4, the 1352 px Ekip window: face, name, six skills, leadership, task, experience, state,
++## trait, salary, morale.
++const W := [48, 170, 44, 80, 172, 88, 142, 142, 80, 116]
++const ROWS := [
++	{"name": "Burak Şahin", "role": "SALES_REP", "skills": [3, 3, 3, 3, 6, 3], "main": 4, "lead": 2,   # LOC-DATA debug sample
++		"tags": [["HR_BADGE_NEW", &""]], "trait": "picks_it_up_fast", "salary": 8300, "morale": 55},
++	{"name": "Deniz Arslan", "role": "DESIGNER", "skills": [5, 6, 3, 3, 3, 3], "main": 1, "second": 0,   # LOC-DATA debug sample
++		"lead": 2, "tags": [], "trait": "last_one_out", "salary": 7400, "morale": 38, "hover": true},
++	{"name": "Elif Demir", "role": "PRODUCT_MANAGER", "skills": [7, 6, 4, 4, 4, 4], "main": 0, "second": 1,   # LOC-DATA debug sample
++		"lead": 6, "tags": [["HR_BADGE_NEW", &""]], "trait": "takes_them_under", "salary": 9800, "morale": 72,
++		"selected": true},
++	{"name": "Mert Yıldız", "role": "DEVELOPER", "skills": [4, 4, 8, 7, 4, 4], "main": 2, "second": 3,   # LOC-DATA debug sample
++		"lead": 3, "tags": [["HR_FOUNDER_STATE_TRAINING", &"neutral"]], "weeks": 2, "trait": "loyal",
++		"salary": 11200, "morale": 61, "away": true},
++	{"name": "Selin Kaya", "role": "TESTER", "skills": [3, 3, 4, 5, 3, 3], "main": 3, "second": 2,   # LOC-DATA debug sample
++		"lead": 1, "tags": [["HR_BADGE_FLIGHT_RISK", &"risk"]], "trait": "double_checker", "salary": 6900,
++		"morale": 22},
++	{"name": "Ece Aksoy", "role": "SALES_REP", "skills": [3, 3, 3, 3, 6, 3], "main": 4, "lead": 2,   # LOC-DATA debug sample
++		"tags": [["HR_BADGE_OVERLOADED_JOBS", &"warn"], ["HR_BADGE_NEW", &""]], "trait": "", "salary": 8300,
++		"morale": 50},
++	{"name": "Kaan Demir", "role": "CUSTOMER_REP", "skills": [3, 3, 3, 3, 3, 5], "main": 5, "lead": 1,   # LOC-DATA debug sample
++		"tags": [["HR_BADGE_IDLE", &"outline"]], "trait": "cant_say_no", "salary": 2250, "morale": 34, "idle": true},
++]
++
++
++static func page() -> Control:
++	var root := Control.new()
++	root.theme = load(UiTokens.MENAJER_THEME)
++	root.set_anchors_preset(Control.PRESET_FULL_RECT)
++	var ground := ColorRect.new()
++	ground.color = UiTokens.D_SURFACE_0
++	ground.set_anchors_preset(Control.PRESET_FULL_RECT)
++	root.add_child(ground)
++	var cols := HBoxContainer.new()
++	cols.position = Vector2(UiTokens.SPACE_3XL, UiTokens.SPACE_3XL)
++	cols.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
++	root.add_child(cols)
++	cols.add_child(_window())
++	cols.add_child(_samples())
++	return root
++
++
++static func _tr(key: String) -> String:
++	return TranslationServer.translate(key)
++
++
++static func _window() -> PanelContainer:
++	var win := PanelContainer.new()
++	win.theme_type_variation = &"WindowPanel"
++	win.custom_minimum_size.x = 1352
++	var col := VBoxContainer.new()
++	col.add_theme_constant_override("separation", 0)
++	win.add_child(col)
++
++	var head := PanelContainer.new()
++	head.theme_type_variation = &"WinHead"
++	head.custom_minimum_size.y = UiTokens.D_H_WIN_HEAD
++	var head_row := HBoxContainer.new()
++	head_row.add_theme_constant_override("separation", UiTokens.SPACE_4XL)
++	head.add_child(head_row)
++	head_row.add_child(UiFactory.make_label(Fmt.upper(_tr("TAB_HR")), &"TitleH1"))
++	var kpis := HBoxContainer.new()
++	kpis.add_theme_constant_override("separation", 0)
++	kpis.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	kpis.add_child(UiFactory.D_kpi(_tr("HR_COL_EMPLOYEE"), "5"))
++	kpis.add_child(UiFactory.D_kpi(_tr("HR_COL_MORALE"), ""))
++	kpis.add_child(UiFactory.D_kpi(_tr("HR_COL_SALARY"), Fmt.money_exact(43600)))
++	var gap := Control.new()
++	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	kpis.add_child(gap)
++	kpis.add_child(HRUiShared.D_skill_legend())
++	head_row.add_child(kpis)
++	col.add_child(head)
++
++	var ctl := PanelContainer.new()
++	ctl.theme_type_variation = &"WinCtl"
++	ctl.custom_minimum_size.y = 56
++	var ctl_row := HBoxContainer.new()
++	ctl_row.add_theme_constant_override("separation", UiTokens.SPACE_L)
++	ctl.add_child(ctl_row)
++	var tabs := UiFactory.D_seg_tabs([_tr("HR_TAB_ROSTER"), _tr("HR_TAB_ASSIGNMENTS")], 0, func(_i: int) -> void: pass)
++	tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	ctl_row.add_child(tabs)
++	var chip := Button.new()
++	chip.theme_type_variation = &"ChipButton"
++	chip.icon = load("res://assets/icons/clock.svg")
++	chip.text = _tr("HR_HOURS_WINDOW").format({"start": "09:00", "end": "17:00"})
++	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	ctl_row.add_child(chip)
++	var hire := Button.new()
++	hire.theme_type_variation = &"PrimaryButtonDark"
++	hire.icon = load("res://assets/icons/util/plus.svg")
++	hire.text = _tr("HR_SEARCH_START_INLINE")
++	hire.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	ctl_row.add_child(hire)
++	col.add_child(ctl)
++
++	var body := MarginContainer.new()
++	for side in ["left", "right", "bottom"]:
++		body.add_theme_constant_override("margin_" + side, UiTokens.SPACE_3XL)
++	body.add_theme_constant_override("margin_top", UiTokens.SPACE_XL)
++	col.add_child(body)
++	var list := VBoxContainer.new()
++	list.add_theme_constant_override("separation", 0)
++	body.add_child(list)
++	var risky := Character.new()
++	risky.character_name = String(ROWS[4].name)
++	risky.morale = int(ROWS[4].morale)
++	list.add_child(HRUiShared.D_risk_strip(risky, func() -> void: pass))
++	var space := Control.new()
++	space.custom_minimum_size.y = UiTokens.SPACE_L
++	list.add_child(space)
++	list.add_child(_head())
++	list.add_child(HRUiShared.D_group(_tr("HR_GROUP_PRODUCT_DESIGN"), GROUP_GLYPH, 0, false, func() -> void: pass))
++	for r: Dictionary in ROWS:
++		list.add_child(_row(r))
++	list.add_child(HRUiShared.D_group(_tr("HR_GROUP_DEVELOPMENT"), GROUP_GLYPH, 14, true, func() -> void: pass))
++	list.add_child(HRUiShared.D_group(_tr("HR_GROUP_CUSTOMER_SUCCESS"), GROUP_GLYPH, 0, false, func() -> void: pass))
++	list.add_child(HRUiShared.D_empty_row(_tr("HR_EMPTY_ROW"), _tr("HR_SEARCH_START_INLINE"), func() -> void: pass))
++	return win
++
++
++static func _head() -> PanelContainer:
++	var head := PanelContainer.new()
++	head.theme_type_variation = &"TableHead"
++	head.custom_minimum_size.y = 36
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", 0)
++	head.add_child(row)
++	var lead := Control.new()
++	lead.custom_minimum_size.x = W[0]
++	row.add_child(lead)
++	row.add_child(HRUiShared.D_head(_tr("HR_COL_EMPLOYEE"), W[1], HORIZONTAL_ALIGNMENT_LEFT))
++	row.add_child(HRUiShared.D_head(_tr("HR_COL_ROLES"), W[2] * 6))
++	var keys := ["HR_AREA_LEADERSHIP", "HR_COL_TASK", "HR_COL_EXPERIENCE", "HR_COL_STATE", "HR_COL_TRAIT",
++		"HR_COL_SALARY", "HR_COL_MORALE"]
++	for i in keys.size():
++		row.add_child(HRUiShared.D_head(_tr(keys[i]), W[i + 3], HORIZONTAL_ALIGNMENT_LEFT if i in [1, 3, 4] else
++			HORIZONTAL_ALIGNMENT_CENTER))
++	return head
++
++
++static func _row(r: Dictionary) -> PanelContainer:
++	var row := HRUiShared.D_row(r.get("selected", false))
++	if r.get("hover", false):
++		row.theme_type_variation = &"TableRowHover"
++	var cells := HBoxContainer.new()
++	cells.add_theme_constant_override("separation", 0)
++	row.add_child(cells)
++	var face := CenterContainer.new()
++	face.custom_minimum_size.x = W[0]
++	face.add_child(UiFactory.make_avatar(UiFactory.initials_of(r.name), UiTokens.D_AVATAR_ROW))
++	cells.add_child(face)
++	var who := VBoxContainer.new()
++	who.custom_minimum_size.x = W[1]
++	who.alignment = BoxContainer.ALIGNMENT_CENTER
++	who.add_theme_constant_override("separation", 0)
++	var away: bool = r.get("away", false)
++	who.add_child(UiFactory.make_label(r.name, &"DataMedium" if away else &"DataStrong", UiTokens.D_INK_3 if away else null))
++	who.add_child(UiFactory.make_label(_tr("HR_ROLE_" + r.role), &"CondCaption"))
++	cells.add_child(who)
++	for i in 6:
++		var rank: StringName = &"main" if i == r.main else (&"secondary" if i == r.get("second", -1) else &"")
++		cells.add_child(HRUiShared.D_skill_cell(r.skills[i], rank, W[2], rank != &""))
++	cells.add_child(_text(str(r.lead), W[3], &"DataText", HORIZONTAL_ALIGNMENT_CENTER))
++	cells.add_child(_text("" if r.get("idle", false) else _tr("HR_TASK_ON_JOB_BUILD"), W[4], &"CondData"))
++	cells.add_child(_xp(W[5]))
++	var state := HBoxContainer.new()
++	state.custom_minimum_size.x = W[6]
++	state.add_theme_constant_override("separation", UiTokens.SPACE_S)
++	for t: Array in r.tags:
++		state.add_child(UiFactory.D_tag(_tr(t[0]), t[1]))
++	if r.has("weeks"):
++		var weeks := UiFactory.make_label(_tr("DESK_PAPER_WEEKS").format({"n": r.weeks}), &"CondCaption")
++		weeks.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++		state.add_child(weeks)
++	cells.add_child(state)
++	var trait_cell := HRUiShared.D_trait_cell([r.trait] if r.trait != "" else [])
++	trait_cell.custom_minimum_size.x = W[7]
++	cells.add_child(trait_cell)
++	cells.add_child(_text(Fmt.money_exact(r.salary), W[8], &"DataText", HORIZONTAL_ALIGNMENT_RIGHT))
++	var morale := HRUiShared.D_morale(r.morale, {})
++	morale.custom_minimum_size.x = W[9]
++	morale.alignment = BoxContainer.ALIGNMENT_END
++	cells.add_child(morale)
++	return row
++
++
++static func _text(text: String, width: int, variation: StringName,
++		align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
++	var label := UiFactory.make_label(text, variation)
++	label.custom_minimum_size.x = width
++	label.horizontal_alignment = align
++	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
++	label.clip_text = true
++	return label
++
++
++static func _xp(width: int) -> HBoxContainer:
++	var xp := HBoxContainer.new()
++	xp.custom_minimum_size.x = width
++	xp.add_theme_constant_override("separation", UiTokens.SPACE_M)
++	var track := Panel.new()
++	track.theme_type_variation = &"BarTrack"
++	track.custom_minimum_size = Vector2(32, 4)
++	track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	xp.add_child(track)
++	var value := UiFactory.make_label(Fmt.percent(0, 0), &"MetaMuted")
++	value.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	xp.add_child(value)
++	return xp
++
++
++static func _samples() -> VBoxContainer:
++	var col := VBoxContainer.new()
++	col.custom_minimum_size.x = 472
++	col.add_theme_constant_override("separation", UiTokens.SPACE_XL)
++	var tags := HFlowContainer.new()
++	tags.add_theme_constant_override("h_separation", UiTokens.SPACE_M)
++	tags.add_theme_constant_override("v_separation", UiTokens.SPACE_M)
++	for t in [["HR_BADGE_NEW", &""], ["HR_BADGE_FLIGHT_RISK", &"risk"], ["SALES_CHIP_RISK", &"risk"],
++			["HR_BADGE_OVERLOADED_JOBS", &"warn"], ["HR_FOUNDER_STATE_TRAINING", &"neutral"],
++			["HR_BADGE_IDLE", &"outline"]]:
++		tags.add_child(UiFactory.D_tag(_tr(t[0]), t[1]))
++	col.add_child(tags)
++	var parts := HBoxContainer.new()
++	parts.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
++	parts.add_child(UiFactory.D_cost(Fmt.money_exact(2793)))
++	parts.add_child(UiFactory.D_cost(Fmt.money_exact(3267), &"DataStrong"))
++	parts.add_child(UiFactory.D_cost(Fmt.money_exact(294), &"MetaMuted"))
++	col.add_child(parts)
++	var when := _tr("SAVE_TOAST_WHEN").format({"week": 14, "time": "11:00"})
++	for t in [
++		["SAVE_TOAST_SAVED", when, "util/check", UiTokens.D_pos()],
++		["SAVE_TOAST_NOT_SAVED", _tr("SAVE_ERR_MODAL_OPEN"), "util/save", UiTokens.D_warn()],
++		["SAVE_TOAST_LOADED", _tr("SAVE_TOAST_LOADED_WHEN").format({"slot": _tr("SAVE_QUICK_SLOT"), "week": 14,
++			"time": "11:00"}), "util/load", UiTokens.D_pos()],
++		["OFFICE_TOAST_MOVE_STARTED", _tr("OFFICE_NAME_ISHANI"), "util/move", UiTokens.D_INK_3],
++		["MEETING_POSTPONED", _tr("MEETING_POSTPONED_SALES"), "util/calendar", UiTokens.D_INK_3],
++	]:
++		col.add_child(_toast(t[0], t[1], t[2], t[3]))
++	var share := _toast("ENDING_SAVED_TOAST", "gazete_series_a_close_20261003-114233.png", "util/check", UiTokens.D_pos())
++	share.size_flags_horizontal = Control.SIZE_FILL
++	share.set_action(_tr("ENDING_OPEN_FOLDER"), func() -> void: pass)
++	col.add_child(share)
++	var focus := HBoxContainer.new()
++	focus.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
++	var button := Button.new()
++	button.text = _tr("UI_DISMISS")
++	focus.add_child(button)
++	var slider := HSlider.new()
++	slider.custom_minimum_size.x = 200
++	slider.value = 40
++	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	focus.add_child(slider)
++	col.add_child(focus)
++	# Focus shows once the page is in the tree.
++	button.ready.connect(button.grab_focus)
++	return col
++
++
++## A toast in a column, shown once it is in the tree (its tween needs the tree).
++static func _toast(head: String, sub: String, glyph: String, tone: Color) -> PanelContainer:
++	var toast: PanelContainer = TOAST.new()
++	toast.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
++	toast.ready.connect(toast.show_toast.bind(_tr(head), sub, load("res://assets/icons/%s.svg" % glyph), tone))
++	return toast
+diff --git a/project-unicorn/scripts/debug/kit_probe.gd.uid b/project-unicorn/scripts/debug/kit_probe.gd.uid
+new file mode 100644
+index 0000000..a0e4dbd
+--- /dev/null
++++ b/project-unicorn/scripts/debug/kit_probe.gd.uid
+@@ -0,0 +1 @@
++uid://dha57c7xe0jjx
+diff --git a/project-unicorn/scripts/main/main.gd b/project-unicorn/scripts/main/main.gd
+index 91eb8cc..6289b7b 100644
+--- a/project-unicorn/scripts/main/main.gd
++++ b/project-unicorn/scripts/main/main.gd
+@@ -25,6 +25,9 @@ const TERM_TABLE_SCENE := preload("res://scenes/modals/TermSheetTableScene.tscn"
+ const SYSTEM_MENU_MODAL := preload("res://scenes/modals/SystemMenuModal.tscn")
+ const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
+ const RND_CARD_MODAL := preload("res://scenes/modals/RnDCardModal.tscn")
++const SAVED_GLYPH := preload("res://assets/icons/util/check.svg")
++const NOT_SAVED_GLYPH := preload("res://assets/icons/util/save.svg")
++const LOADED_GLYPH := preload("res://assets/icons/util/load.svg")
+ const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
+ const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason for the founder's trip
+ 
+@@ -720,6 +723,8 @@ func _run_office_shot(spec: String) -> void:
+ 			cam.focus(tower.get_center() + Vector3.UP * tower.size.y * 0.2, cam.fit_zoom * 2.2, 0.0)
+ 		"cast":
+ 			await _shot_meeting_cast(view, "office_shot_meet_%02d_cast" % hour)
++		"toast":
++			await _shot_toasts(view)
+ 		"hr_dossier":
+ 			EventBus.tab_changed.emit("hr")
+ 			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
+@@ -767,6 +772,42 @@ func _run_office_shot(spec: String) -> void:
+ 	get_tree().quit()
+ 
+ 
++## The shell's toast through its real callers, a frame each: F5 over an open window, F5 refused, a
++## sales and a VC call put off, a move under way and its arrival, then F9, which remounts the shell.
++func _shot_toasts(view: Control) -> void:
++	_wire_modal_signals()
++	# The toast places itself when shown: wait for --shot-scale, which _begin_shot applies late.
++	await get_tree().create_timer(0.4).timeout
++	EventBus.tab_changed.emit("hr")
++	EventBus.quicksave_requested.emit()
++	await _toast_frame("saved")
++	EventBus.tab_changed.emit("")
++	# The one refusal a shot can stage without opening a sitting.
++	GameState.run_active = false
++	EventBus.quicksave_requested.emit()
++	GameState.run_active = true
++	await _toast_frame("not_saved")
++	var invite: MeetingInvite = view.invite
++	for kind in ["sales", "vc"]:
++		invite.ring({"line": "MEETING_INVITE_SALES", "args": {}, "open": false, "postpone": true, "note": "",
++			"note_args": {}, "toast": "MEETING_POSTPONED_" + kind.to_upper()})
++		invite._postpone()
++		await _toast_frame("postponed_" + kind)
++		invite.stop()
++	EventBus.office_move_started.emit("plaza", GameState.day + 1)
++	await _toast_frame("move_started")
++	EventBus.office_changed.emit(GameState.office_id)
++	await _toast_frame("moved")
++	EventBus.quickload_requested.emit()
++	await get_tree().create_timer(0.5).timeout
++	await _toast_frame("loaded")
++
++
++func _toast_frame(name: String) -> void:
++	await get_tree().create_timer(0.5).timeout
++	_save_shot("office_shot_toast_" + name)
++
++
+ ## The meeting shots' other side: this fund's three.
+ const SHOT_FUND := "meridian"
+ ## The cast shot: seconds between the walk-in's frames and the most of them; how much closer the
+@@ -964,7 +1005,7 @@ func _run_tab_shot(tab_id: String) -> void:
+ 	await _finish_shot("tab_shot_%s" % tab_id)
+ 
+ 
+-# --modal-shot=<confirm|confirm3|settings|month|system|saveload|mentor|rnd-note|rnd-discovery|
++# --modal-shot=<confirm|confirm3|confirm_dark|settings|month|system|saveload|mentor|rnd-note|rnd-discovery|
+ # rnd-discovery-line>. Each goes through the REAL mount path (EventBus signal → handler here),
+ # so fixture and live behaviour cannot drift. `mentor` is the one surface whose body length is
+ # a design constraint (the longest text, no scrollbar) — pair it with --shot-size.
+@@ -981,14 +1022,15 @@ func _run_modal_shot(kind: String) -> void:
+ 				"confirm_text": "İPTAL ET",   # LOC-DATA debug seed / id
+ 				"cancel_text": "VAZGEÇ",   # LOC-DATA debug seed / id
+ 			})
+-		"confirm3":
+-			# Üç butonlu hâl: alt_text varlığı üçüncü butonu açar.
++		"confirm3", "confirm_dark":
++			# Üç butonlu hâl: alt_text varlığı üçüncü butonu açar. confirm_dark aynı onayı koyu dilde açar.
+ 			EventBus.confirm_requested.emit({
+ 				"title": tr("SYS_QUIT_TITLE"),
+ 				"body": tr("SYS_QUIT_BODY"),
+ 				"confirm_text": tr("SYS_QUIT_SAVE"),
+ 				"alt_text": tr("SYS_QUIT_DISCARD"),
+ 				"cancel_text": tr("SYS_CANCEL"),
++				"theme": kind == "confirm_dark",
+ 			})
+ 		"settings":
+ 			EventBus.settings_requested.emit()
+@@ -1054,10 +1096,15 @@ func _run_theme_audit(spec: String) -> void:
+ # --probe-shot: ThemeProbe.tscn, one unstyled instance of every basic Control class. Screenshot
+ # and audit dump come from the same run so pixels and resolved values verify each other.
+ # --probe-shot=menajer mounts it under menajer_theme.tres and adds one sample of every variation
+-# that theme holds beyond master's.
++# that theme holds beyond master's. --probe-shot=kit lays out the dark kit's components in their
++# states instead (scripts/debug/kit_probe.gd).
+ func _run_probe_shot(theme_name: String) -> void:
+ 	_begin_shot()
+-	var probe: Control = (load("res://scenes/debug/ThemeProbe.tscn") as PackedScene).instantiate()
++	var probe: Control
++	if theme_name == "kit":
++		probe = load("res://scripts/debug/kit_probe.gd").page()
++	else:
++		probe = (load("res://scenes/debug/ThemeProbe.tscn") as PackedScene).instantiate()
+ 	if theme_name == "menajer":
+ 		probe.theme = load(UiTokens.MENAJER_THEME)
+ 		_probe_variations(probe.get_node("Margin/Col"), probe.theme)
+@@ -1599,7 +1646,13 @@ func _run_ending_shot(key: String) -> void:
+ 	await get_tree().process_frame
+ 	await get_tree().create_timer(0.4).timeout
+ 	_save_shot("ending_shot_%s" % key)
+-	await scene._export_paper_png()
++	if data.get("mode", "") == EndingsSystem.MODE_MILESTONE:
++		await scene._export_paper_png()
++	else:
++		# Sharing writes the paper's PNG and shows its toast: a second frame.
++		await scene._on_share()
++		await get_tree().create_timer(0.4).timeout
++		_save_shot("ending_shot_%s_share" % key)
+ 	get_tree().quit()
+ 
+ 
+@@ -2151,7 +2204,7 @@ func _on_pitch_requested(prospect_id: String) -> void:
+ 	var p: Prospect = ProspectRegistry.get_prospect(prospect_id)
+ 	_ring_call("sales", prospect_id, {"line": "MEETING_INVITE_SALES", "open": false, "postpone": true,
+ 		"args": {"company": p.company_name, "person": CounterpartSystem.prospect_people(p)[0].name},
+-		"note": "", "note_args": {}, "toast": "MEETING_POSTPONED"})
++		"note": "", "note_args": {}, "toast": "MEETING_POSTPONED_SALES"})
+ 
+ 
+ ## Rings the office phone for a call of `kind` ("vc" | "sales") about `id` (MeetingInvite.ring).
+@@ -2324,6 +2377,9 @@ func _on_confirm_requested(config: Dictionary) -> void:
+ 	EventBus.speed_change_requested.emit(0)
+ 	_confirm_modal = (HR_ACTION_MODAL if String(config.get("modal", "")) == "hr_action"
+ 		else CONFIRM_MODAL).instantiate()
++	# A screen in the dark language opens its confirmation in it ("theme": true).
++	if config.get("theme", false):
++		_confirm_modal.theme = load(UiTokens.MENAJER_THEME)
+ 	var on_confirm: Callable = config.get("on_confirm", Callable())
+ 	if on_confirm.is_valid():
+ 		_confirm_modal.confirmed.connect(on_confirm)
+@@ -2417,37 +2473,57 @@ func _on_save_load_requested(mode: String) -> void:
+ 	_save_load_modal.populate(mode)   # add_child SONRASI — @onready ref'ler ancak o zaman dolu
+ 
+ 
++## F5 says whether the run was saved, and when it stands; a refusal says why.
+ func _on_quicksave_requested() -> void:
+-	if _shell_mounted and SaveManager.can_save():
+-		SaveManager.quicksave()
++	if not _shell_mounted:
++		return
++	var why: String = SaveManager.cannot_save_reason_key()
++	if why == "" and not SaveManager.quicksave():
++		why = "SAVE_ERR_WRITE"
++	if why == "":
++		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_SAVED"), _save_when("SAVE_TOAST_WHEN"),
++			SAVED_GLYPH, UiTokens.D_pos())
++	else:
++		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_NOT_SAVED"), tr(why), NOT_SAVED_GLYPH,
++			UiTokens.D_warn())
+ 
+ 
++## F9 says it loaded on the shell it remounted.
+ func _on_quickload_requested() -> void:
+-	if _shell_mounted:
+-		_load_slot(SaveManager.QUICK_SLOT_ID)
++	if _shell_mounted and await _load_slot(SaveManager.QUICK_SLOT_ID):
++		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_LOADED"), _save_when("SAVE_TOAST_LOADED_WHEN"),
++			LOADED_GLYPH, UiTokens.D_pos())
++
++
++## The week and the hour the run stands at, as the top bar shows them.
++func _save_when(key: String) -> String:
++	return tr(key).format({"slot": tr("SAVE_QUICK_SLOT"), "week": int(GameState.get_date_dict().week),
++		"time": "%02d:00" % GameState.current_hour})
+ 
+ 
+ # The single load path. The shell is torn down BEFORE state is applied, so initialize_run's
+ # "no listeners yet" assumption holds here too and no signal storm is needed. The save is read
+ # and validated before anything is touched: "file corrupt" in a half-torn world is the worst case.
+-func _load_slot(slot_id: String) -> void:
++# True once the loaded run stands on its new shell.
++func _load_slot(slot_id: String) -> bool:
+ 	# The same rule as saving: a decision in progress (event card, VC meeting, term table, sales
+ 	# sitting, negotiation) is not carried over. F9 bypasses the menu gate and the ModalLayer
+ 	# guard, so it reaches here during any sitting.
+ 	if SaveManager.cannot_save_reason_key() == "SAVE_ERR_MODAL_OPEN":
+-		return
++		return false
+ 	var payload: Dictionary = SaveManager.read_slot(slot_id)
+ 	if not bool(payload.get("ok", false)):
+ 		push_warning("[Main] yükleme reddedildi (%s): %s" % [slot_id, payload.get("error_key", "")])
+-		return
++		return false
+ 	_teardown_run_ui()
+ 	# queue_free is deferred; without a frame two GameShells would share the tree.
+ 	await get_tree().process_frame
+ 	if not SaveManager.apply_loaded_state(payload):
+ 		push_error("[Main] yükleme durumu uygulanamadı (%s)" % slot_id)
+-		return
++		return false
+ 	await _mount_shell()
+ 	EventBus.game_loaded.emit(slot_id)
++	return true
+ 
+ 
+ func _on_summary_ready(data: Dictionary) -> void:
+diff --git a/project-unicorn/scripts/modals/confirm_modal.gd b/project-unicorn/scripts/modals/confirm_modal.gd
+index 8aa1296..1dec6b5 100644
+--- a/project-unicorn/scripts/modals/confirm_modal.gd
++++ b/project-unicorn/scripts/modals/confirm_modal.gd
+@@ -4,6 +4,7 @@ extends Control
+ # ModalLayer'a mount eder; modal kendini `dismissed` ile serbest bırakır (main.gd hızı geri yükler).
+ # config: {title, body, confirm_text, cancel_text, on_confirm: Callable}
+ # İsteğe bağlı üçüncü yol: {alt_text, on_alt: Callable}; anahtar yoksa buton gizli kalır.
++# {theme: true} koyu dile taşınmış bir ekranın onayıdır: main kökü menajer_theme ile kurar.
+ # process_mode = ALWAYS (sahne pause'dayken de tıklanabilir); ESC = vazgeç.
+ 
+ signal confirmed
+@@ -23,7 +24,7 @@ const PANEL_HALF_W_3BTN := 260.0
+ 
+ 
+ func _ready() -> void:
+-	($Dimmer as ColorRect).color = UiTokens.SCRIM_MODAL
++	($Dimmer as ColorRect).color = UiTokens.D_SCRIM if theme != null else UiTokens.SCRIM_MODAL
+ 	_confirm_btn.pressed.connect(_close.bind(confirmed))
+ 	_alt_btn.pressed.connect(_close.bind(alt_selected))
+ 	_cancel_btn.pressed.connect(_close)
+diff --git a/project-unicorn/scripts/modals/ending_scene.gd b/project-unicorn/scripts/modals/ending_scene.gd
+index e3d91b1..432b951 100644
+--- a/project-unicorn/scripts/modals/ending_scene.gd
++++ b/project-unicorn/scripts/modals/ending_scene.gd
+@@ -34,6 +34,8 @@ extends Control
+ const STEAM_PAGE_URL := ""
+ 
+ const LOCK_ICON := "res://assets/icons/lock.svg"
++const TOAST := preload("res://scripts/ui/components/toast.gd")
++const SAVED_GLYPH := preload("res://assets/icons/util/check.svg")
+ 
+ signal continue_requested       # milestone mode: DEVAM ET
+ signal main_menu_requested      # milestone mode: ANA MENÜ
+@@ -41,8 +43,8 @@ signal main_menu_requested      # milestone mode: ANA MENÜ
+ var _rail_host: Control               # host for the rail panel
+ var _paper_panel: PanelContainer      # the cream page (PNG-crop target — rail excluded)
+ var _paper_col: VBoxContainer         # the page plus the Frank strip beneath it
+-var _toast: Label                     # share-confirmation line (hidden until GAZETEYİ PAYLAŞ)
+-var _open_folder_btn: Button          # reveals with the toast — opens the save folder
++var _toast: TOAST                     # the share's toast, its open-folder button inside
++var _notice: Label                    # milestone mode: why ANA MENÜ could not keep the save
+ 
+ var _data: Dictionary = {}            # the run_ended / milestone_reached payload
+ var _mode: String = EndingsSystem.MODE_ENDING   # payload "mode"; absent = ending
+@@ -349,7 +351,9 @@ func _build_rail() -> PanelContainer:
+ 	meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ 	col.add_child(meta)
+ 
+-	_build_share_toast(col)
++	_toast = TOAST.new()
++	_toast.set_action(tr("ENDING_OPEN_FOLDER"), _on_open_folder)
++	col.add_child(_toast)
+ 
+ 	var spacer := Control.new()
+ 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+@@ -395,18 +399,6 @@ func _build_coming_soon(col: VBoxContainer) -> void:
+ 	col.add_child(wishlist)
+ 
+ 
+-## Share-confirmation toast + open-folder button (hidden until GAZETEYİ PAYLAŞ writes a file).
+-func _build_share_toast(col: VBoxContainer) -> void:
+-	_toast = UiFactory.make_label("", &"ZoneLabel")
+-	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+-	_toast.visible = false
+-	col.add_child(_toast)
+-	_open_folder_btn = _button(&"DialogueGhost", "ENDING_OPEN_FOLDER")
+-	_open_folder_btn.visible = false
+-	_open_folder_btn.pressed.connect(_on_open_folder)
+-	col.add_child(_open_folder_btn)
+-
+-
+ func _add_hard_mode(actions: HBoxContainer) -> void:
+ 	var hard := _button(&"DialogueGhost", "ENDING_HARD_MODE")
+ 	hard.disabled = true                       # visible-LOCKED telegraph, no mechanic
+@@ -453,10 +445,10 @@ func _build_milestone_rail() -> PanelContainer:
+ 	cont.pressed.connect(func() -> void: continue_requested.emit())
+ 	col.add_child(cont)
+ 
+-	_toast = UiFactory.make_label("", &"ZoneLabel")
+-	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+-	_toast.visible = false
+-	col.add_child(_toast)
++	_notice = UiFactory.make_label("", &"ZoneLabel")
++	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	_notice.visible = false
++	col.add_child(_notice)
+ 
+ 	var spacer := Control.new()
+ 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+@@ -475,8 +467,8 @@ func _build_milestone_rail() -> PanelContainer:
+ ## main.gd's answer when ANA MENÜ could not keep the save (a decision screen is open under
+ ## the paper): the paper stays up and says why.
+ func show_notice(text: String) -> void:
+-	_toast.text = text
+-	_toast.visible = true
++	_notice.text = text
++	_notice.visible = true
+ 
+ 
+ func _build_tier_card(tag: String, title: String, badge_text: String, body: String) -> Control:
+@@ -534,9 +526,7 @@ func _on_share() -> void:
+ 	var path: String = await _export_paper_png()
+ 	if path == "":
+ 		return
+-	_toast.text = tr("ENDING_SAVED_TOAST").format({"path": ProjectSettings.globalize_path(path)})
+-	_toast.visible = true
+-	_open_folder_btn.visible = true
++	_toast.show_toast(tr("ENDING_SAVED_TOAST"), path.get_file(), SAVED_GLYPH, UiTokens.D_pos())
+ 
+ 
+ func _on_open_folder() -> void:
+diff --git a/project-unicorn/scripts/tabs/hr/hr_popover.gd b/project-unicorn/scripts/tabs/hr/hr_popover.gd
+index 5602681..78be927 100644
+--- a/project-unicorn/scripts/tabs/hr/hr_popover.gd
++++ b/project-unicorn/scripts/tabs/hr/hr_popover.gd
+@@ -8,7 +8,8 @@ extends Control
+ # yok, dolayısıyla çapanın global_position/size değerleri aynı uzayda okunur.
+ #
+ # Kapanma: ESC (ui_cancel) ve dışarı tıklama. Aynı anda tek popover: mount() eskisini kapatır.
+-# process_mode = ALWAYS: saat duruyorken de tıklanabilir olmalı.
++# process_mode = ALWAYS: saat duruyorken de tıklanabilir olmalı. Koyu dile taşınmış sayfa onu koyu
++# açar (mount(anchor, true)): menajer_theme kökte, kutu menü kutusu.
+ 
+ const LIFT := 6.0               # panel çapanın üst kenarından bu kadar yukarı başlar
+ const EDGE_MARGIN := 12.0       # ekran kenarına en az bu kadar yaklaşır
+@@ -26,7 +27,7 @@ func _ready() -> void:
+ 	# Kök tüm ekranı kaplar ve tıklamayı yutar: dışarı-tıklama kapatması böyle çalışır.
+ 	mouse_filter = Control.MOUSE_FILTER_STOP
+ 	_panel = PanelContainer.new()
+-	_panel.theme_type_variation = &"CardPanel"
++	_panel.theme_type_variation = &"MenuPanel" if theme != null else &"CardPanel"
+ 	_panel.custom_minimum_size = Vector2(MIN_WIDTH, 0)
+ 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP   # panel içi tıklama köke düşmesin
+ 	add_child(_panel)
+@@ -89,7 +90,7 @@ func close() -> void:
+ ## Açık popover'ı kapatır, yenisini monte edip döndürür. Sıra: mount → body()'yi doldur →
+ ## open_at(anchor). ModalLayer değil: orada game_shell Space/1-4'ü yutar ve bir panel
+ ## açmak saati durdurma yeteneğini elden alırdı. Popover bir panel, karar anı değil.
+-static func mount(anchor: Control) -> HRPopover:
++static func mount(anchor: Control, dark := false) -> HRPopover:
+ 	if anchor == null or not anchor.is_inside_tree():
+ 		return null
+ 	var layer: Node = anchor.get_tree().get_root().find_child("PanelLayer", true, false)
+@@ -100,5 +101,7 @@ static func mount(anchor: Control) -> HRPopover:
+ 		if child is HRPopover:
+ 			(child as HRPopover).close()
+ 	var pop := HRPopover.new()
++	if dark:
++		pop.theme = load(UiTokens.MENAJER_THEME)
+ 	layer.add_child(pop)
+ 	return pop
+diff --git a/project-unicorn/scripts/tabs/hr/hr_ui_shared.gd b/project-unicorn/scripts/tabs/hr/hr_ui_shared.gd
+index fb6e9a2..62022d9 100644
+--- a/project-unicorn/scripts/tabs/hr/hr_ui_shared.gd
++++ b/project-unicorn/scripts/tabs/hr/hr_ui_shared.gd
+@@ -100,7 +100,7 @@ static func v_hairline(height: int = 26) -> Panel:
+ 
+ static func trait_icon(trait_id: String, px: int = 18) -> TextureRect:
+ 	var file: String = trait_id if TRAIT_ICON_DRAWN.has(trait_id) else "unspecified"
+-	return _glyph(TRAIT_ICON_DIR + file + ".svg", px, UiTokens.INK_MUTED)
++	return UiFactory.make_glyph(TRAIT_ICON_DIR + file + ".svg", px, UiTokens.INK_MUTED)
+ 
+ 
+ ## Tooltip: ad ve etki alt alta. PASS, STOP DEĞİL: STOP tooltip'i çalıştırır ama satır
+@@ -328,38 +328,26 @@ static func hairline(color: Color = UiTokens.DIVIDER_LIGHT) -> Panel:
+ 
+ ## Saatin moral YÖNÜ. Kademe ÇAĞIRANDA: kaç tane çizildiği kademedir (§8.5 katsayı yazdırmaz).
+ static func chevron(px: int = 9, color: Color = UiTokens.ACCENT, up: bool = false) -> TextureRect:
+-	return _glyph("res://assets/icons/chevron_up.svg" if up
++	return UiFactory.make_glyph("res://assets/icons/chevron_up.svg" if up
+ 		else "res://assets/icons/chevron_down.svg", px, color)
+ 
+ 
+ ## 7 saat: erime durdu ama yükselmiyor, düz çizgi.
+ static func chevron_flat(px: int = 9, color: Color = UiTokens.POSITIVE) -> TextureRect:
+-	return _glyph("res://assets/icons/chevron_flat.svg", px, color)
++	return UiFactory.make_glyph("res://assets/icons/chevron_flat.svg", px, color)
+ 
+ 
+ static func revert_arrow_icon() -> Texture2D:
+ 	return load("res://assets/icons/revert_arrow.svg")
+ 
+ 
+-static func _glyph(path: String, px: int, color: Color) -> TextureRect:
+-	var tex := TextureRect.new()
+-	tex.texture = load(path)
+-	tex.custom_minimum_size = Vector2(px, px)
+-	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+-	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+-	tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+-	tex.modulate = color
+-	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	return tex
+-
+-
+ ## Uyarı "bak" der, kilit "yapamazsın": iki ayrı glif.
+ static func warning_glyph(px: int = 12, color: Color = UiTokens.NEGATIVE) -> TextureRect:
+-	return _glyph("res://assets/icons/warning.svg", px, color)
++	return UiFactory.make_glyph("res://assets/icons/warning.svg", px, color)
+ 
+ 
+ static func lock_glyph(px: int, color: Color) -> TextureRect:
+-	return _glyph("res://assets/icons/lock.svg", px, color)
++	return UiFactory.make_glyph("res://assets/icons/lock.svg", px, color)
+ 
+ 
+ static func action_button(label: String, on_press: Callable, primary: bool = false) -> Button:
+@@ -402,3 +390,261 @@ static func set_mouse_ignore(n: Node) -> void:
+ 		(n as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	for c in n.get_children():
+ 		set_mouse_ignore(c)
++
++
++# --- Koyu kit (Menajer Masası) ----------------------------------------------
++# Ekip koyu dile taşınınca kadro tablosu, şeritleri ve hücreleri buradan çizer; krem çizenler
++# yukarıda kalır. Renk D_ token'ı ya da D_ yardımcısıdır, kutu menajer_theme varyasyonudur.
++
++const D_TRAIT_DIR := "res://assets/icons/trait/"
++const D_SKILL_LOOKS := {&"": &"SkillValue", &"main": &"SkillMain", &"secondary": &"SkillSecondary"}
++
++
++## Sütun başlığı: büyük harfli anahtar, başlığın tabanına yaslı. `width` 0 ise kalan yeri alır.
++static func D_head(text: String, width: int, align := HORIZONTAL_ALIGNMENT_CENTER) -> Label:
++	var head := UiFactory.make_label(Fmt.upper(text), &"KeyLabel")
++	head.horizontal_alignment = align
++	head.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
++	if width > 0:
++		head.custom_minimum_size.x = width
++	else:
++		head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	return head
++
++
++## Grup başlığı: açma oku, grubun glifi, büyük harfli adı, sağa uzanan çizgi. Kapalı grup soluk okunur
++## ve içindeki kişi sayısını gösterir; tıklama `on_toggle`'ı çağırır.
++static func D_group(text: String, glyph_path: String, count: int, collapsed: bool,
++		on_toggle: Callable) -> HBoxContainer:
++	var row := HBoxContainer.new()
++	row.custom_minimum_size.y = UiTokens.D_H_GROUP
++	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
++	row.add_child(UiFactory.make_glyph("res://assets/icons/util/chevron_%s.svg" % ("right" if collapsed else "down"),
++		UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
++	row.add_child(UiFactory.make_glyph(glyph_path, UiTokens.D_ICON_GROUP, UiTokens.D_INK_3))
++	row.add_child(UiFactory.make_label(Fmt.upper(text), &"GroupLabel", UiTokens.D_INK_3 if collapsed else null))
++	if collapsed:
++		row.add_child(UiFactory.make_label(str(count), &"Caption"))
++	var rule := HSeparator.new()
++	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	row.add_child(rule)
++	for part: Control in row.get_children():
++		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	set_mouse_ignore(row)
++	row.mouse_filter = Control.MOUSE_FILTER_STOP
++	row.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
++	row.gui_input.connect(func(event: InputEvent) -> void:
++		if UiFactory.is_left_click(event):
++			on_toggle.call())
++	return row
++
++
++## Veri satırı; hücrelerini çağıran ekler. Üstüne gelince kenarı açılır, seçili satır yükselir ve sol
++## kenarında işaret taşır.
++static func D_row(selected: bool) -> PanelContainer:
++	var row := PanelContainer.new()
++	var looks: Array = [&"TableRowSelected", &"TableRowSelectedHover"] if selected else [&"TableRow", &"TableRowHover"]
++	row.theme_type_variation = looks[0]
++	row.custom_minimum_size.y = UiTokens.D_H_ROW
++	row.mouse_entered.connect(func() -> void: row.theme_type_variation = looks[1])
++	row.mouse_exited.connect(func() -> void: row.theme_type_variation = looks[0])
++	if selected:
++		var layer := Control.new()
++		var mark := Panel.new()
++		mark.theme_type_variation = &"RailMark"
++		mark.anchor_bottom = 1.0
++		mark.offset_top = UiTokens.D_MARK.y
++		mark.offset_right = UiTokens.D_MARK.x
++		mark.offset_bottom = -UiTokens.D_MARK.y
++		layer.add_child(mark)
++		set_mouse_ignore(layer)
++		row.add_child(layer)
++	return row
++
++
++## Beceri hücresi: değer rampanın renginde. `rank` "main" kalın ve altı çizili, "secondary" yarı kalın;
++## `band` rolün sütununu grubun boyunca aydınlatır.
++static func D_skill_cell(value: int, rank: StringName, width: int, band: bool) -> Control:
++	var cell := Control.new()
++	cell.custom_minimum_size.x = width
++	if band:
++		var ground := Panel.new()
++		ground.theme_type_variation = &"RoleBand"
++		ground.set_anchors_preset(Control.PRESET_FULL_RECT)
++		cell.add_child(ground)
++	var ink: Color = UiTokens.D_skill(value)
++	var figure := UiFactory.make_label(str(value), D_SKILL_LOOKS[rank], ink)
++	figure.set_anchors_preset(Control.PRESET_FULL_RECT)
++	figure.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++	figure.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
++	cell.add_child(figure)
++	if rank == &"main":
++		var mark := ColorRect.new()
++		mark.color = ink
++		mark.anchor_left = 0.5
++		mark.anchor_right = 0.5
++		mark.anchor_top = 1.0
++		mark.anchor_bottom = 1.0
++		mark.offset_left = -UiTokens.D_SKILL_MARK.x / 2.0
++		mark.offset_right = UiTokens.D_SKILL_MARK.x / 2.0
++		mark.offset_top = -UiTokens.SPACE_S - UiTokens.D_SKILL_MARK.y
++		mark.offset_bottom = -UiTokens.SPACE_S
++		cell.add_child(mark)
++	set_mouse_ignore(cell)
++	return cell
++
++
++## Başlığın beceri lejantı: rampanın beş basamağı kendi renginde, ana alanın altı çizili, ikincilin
++## yalın örneği.
++static func D_skill_legend() -> PanelContainer:
++	var cell := PanelContainer.new()
++	cell.theme_type_variation = &"KpiCell"
++	var col := VBoxContainer.new()
++	col.alignment = BoxContainer.ALIGNMENT_CENTER
++	col.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
++	cell.add_child(col)
++	col.add_child(UiFactory.make_label(Fmt.upper(TranslationServer.translate("HR_COL_ROLES")), &"KeyLabel"))
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
++	col.add_child(row)
++	for low in [1, 3, 5, 7, 9]:
++		row.add_child(UiFactory.make_label("%d-%d" % [low, low + 1], &"ValueTextStrong", UiTokens.D_skill(low)))
++	for sample in [["7", "HR_SKILL_LEGEND_MAIN"], ["6", "HR_SKILL_LEGEND_SECONDARY"]]:
++		var key := HBoxContainer.new()
++		key.add_theme_constant_override("separation", UiTokens.SPACE_XS)
++		key.size_flags_vertical = Control.SIZE_SHRINK_END
++		var figure := UiFactory.make_label(sample[0], &"CaptionStrong")
++		key.add_child(figure)
++		key.add_child(UiFactory.make_label(TranslationServer.translate(sample[1]), &"Caption"))
++		row.add_child(key)
++		if sample[1] == "HR_SKILL_LEGEND_MAIN":
++			var mark := ColorRect.new()
++			mark.color = UiTokens.D_INK_2
++			mark.anchor_right = 1.0
++			mark.anchor_top = 1.0
++			mark.anchor_bottom = 1.0
++			mark.offset_top = UiTokens.BORDER_HAIRLINE
++			mark.offset_bottom = UiTokens.BORDER_HAIRLINE + UiTokens.D_SKILL_MARK.y
++			figure.add_child(mark)
++	return cell
++
++
++## Moral hücresi: değer bandının renginde, sağa yaslı; yanında bar ve 35'teki kaçma çentiği. `refs`
++## değeri ve dolguyu tutar, D_repaint_morale yerinde boyar.
++static func D_morale(morale: int, refs: Dictionary) -> HBoxContainer:
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
++	var value := UiFactory.make_label("", &"MoraleValue")
++	value.custom_minimum_size.x = UiTokens.D_W_MORALE
++	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
++	value.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	row.add_child(value)
++	var track := Panel.new()
++	track.theme_type_variation = &"BarTrack"
++	track.custom_minimum_size = UiTokens.D_MORALE_BAR
++	track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	row.add_child(track)
++	var fill := Panel.new()
++	fill.theme_type_variation = &"BarTint"
++	track.add_child(fill)
++	var notch := ColorRect.new()
++	notch.color = UiTokens.D_INK_4
++	notch.size = UiTokens.D_NOTCH
++	var risk_at: float = UiTokens.D_MORALE_BAR.x * HRConstants.MORALE_FLIGHT_RISK / float(HRConstants.MORALE_MAX)
++	notch.position = Vector2(roundf(risk_at), (UiTokens.D_MORALE_BAR.y - UiTokens.D_NOTCH.y) / 2.0)
++	track.add_child(notch)
++	set_mouse_ignore(row)
++	refs["value"] = value
++	refs["fill"] = fill
++	D_repaint_morale(refs, morale)
++	return row
++
++
++static func D_repaint_morale(refs: Dictionary, morale: int) -> void:
++	var ink: Color = D_morale_ink(morale)
++	var value: Label = refs["value"]
++	value.text = str(morale)
++	value.add_theme_color_override("font_color", ink)
++	var fill: Panel = refs["fill"]
++	fill.self_modulate = ink
++	fill.size = Vector2(UiTokens.D_MORALE_BAR.x * morale / float(HRConstants.MORALE_MAX), UiTokens.D_MORALE_BAR.y)
++
++
++## §7'nin bantları: 35 altı Ayrılabilir tehlikedir, 50 altı uyarı, üstü olumlu.
++static func D_morale_ink(morale: int) -> Color:
++	if HRConstants.is_flight_risk(morale):
++		return UiTokens.D_neg()
++	if morale < HRConstants.MORALE_BAND_LOW:
++		return UiTokens.D_warn()
++	return UiTokens.D_pos()
++
++
++## Huy hücresi: kutusunda glifi ve yanında adı; üstüne gelince adı ve etkisi. Huyu olmayanın hücresi
++## boştur.
++static func D_trait_cell(trait_ids: Array) -> HBoxContainer:
++	var cell := HBoxContainer.new()
++	cell.add_theme_constant_override("separation", UiTokens.SPACE_S)
++	if trait_ids.is_empty():
++		return cell
++	var pick: String = String(trait_ids[0])
++	var box := PanelContainer.new()
++	box.theme_type_variation = &"TraitBox"
++	box.add_child(UiFactory.make_glyph(D_TRAIT_DIR + (pick if TRAIT_ICON_DRAWN.has(pick) else "unspecified") + ".svg",
++		UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
++	cell.add_child(box)
++	cell.add_child(UiFactory.make_label(HRConstants.trait_label(pick), &"CondCaption"))
++	for part: Control in cell.get_children():
++		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	set_mouse_ignore(cell)
++	return _hoverable(cell, pick)
++
++
++## Kaçma riski şeridi: tehlike glifi, kişinin yüzü ve adı, morali ve etiketi; tıklanınca `on_open`.
++static func D_risk_strip(emp: Character, on_open: Callable) -> PanelContainer:
++	var strip := PanelContainer.new()
++	var looks: Array = [UiTokens.D_variation(&"RiskStrip"), UiTokens.D_variation(&"RiskStripHover")]
++	strip.theme_type_variation = looks[0]
++	strip.custom_minimum_size.y = UiTokens.D_H_STRIP
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
++	strip.add_child(row)
++	row.add_child(UiFactory.make_glyph("res://assets/icons/util/warn.svg", UiTokens.D_ICON_STRIP, UiTokens.D_neg()))
++	row.add_child(UiFactory.make_person_avatar(emp.character_name, emp.look, UiTokens.D_AVATAR_ROW))
++	row.add_child(UiFactory.make_label(emp.character_name, &"RiskName"))
++	row.add_child(UiFactory.make_label(Fmt.upper(TranslationServer.translate("HR_COL_MORALE")),
++		UiTokens.D_variation(&"RiskKey")))
++	row.add_child(UiFactory.make_label(str(emp.morale), UiTokens.D_variation(&"RiskValue")))
++	row.add_child(UiFactory.D_tag(HRConstants.badge_label(HRConstants.BADGE_FLIGHT_RISK), &"risk"))
++	var gap := Control.new()
++	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	row.add_child(gap)
++	row.add_child(UiFactory.make_glyph("res://assets/icons/util/chevron_right.svg", UiTokens.D_ICON_STRIP,
++		UiTokens.D_neg_ink()))
++	for part: Control in row.get_children():
++		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	set_mouse_ignore(row)
++	strip.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
++	strip.mouse_entered.connect(func() -> void: strip.theme_type_variation = looks[1])
++	strip.mouse_exited.connect(func() -> void: strip.theme_type_variation = looks[0])
++	strip.gui_input.connect(func(event: InputEvent) -> void:
++		if UiFactory.is_left_click(event):
++			on_open.call())
++	return strip
++
++
++## Boş grup satırı: notu ve yanında grubu dolduracak eylemin küçük düğmesi.
++static func D_empty_row(note: String, action: String, on_action: Callable) -> HBoxContainer:
++	var row := HBoxContainer.new()
++	row.custom_minimum_size.y = UiTokens.D_H_EMPTY_ROW
++	row.add_theme_constant_override("separation", UiTokens.SPACE_XL)
++	row.add_child(UiFactory.make_label(note, &"NoteMuted"))
++	var go := Button.new()
++	go.theme_type_variation = &"SecondaryButtonSmall"
++	go.icon = load("res://assets/icons/util/plus.svg")
++	go.text = action
++	go.focus_mode = Control.FOCUS_NONE
++	go.pressed.connect(on_action)
++	row.add_child(go)
++	for part: Control in row.get_children():
++		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	return row
+diff --git a/project-unicorn/scripts/tabs/product/area_panel.gd b/project-unicorn/scripts/tabs/product/area_panel.gd
+index 28107bd..2dba548 100644
+--- a/project-unicorn/scripts/tabs/product/area_panel.gd
++++ b/project-unicorn/scripts/tabs/product/area_panel.gd
+@@ -276,7 +276,7 @@ func _edged_card(slot: int) -> PanelContainer:
+ func _chevron(open: bool) -> TextureRect:
+ 	if open:
+ 		return HRUiShared.chevron(UiTokens.PRODUCT_ICON_PX, UiTokens.ACCENT_DEEP)
+-	return HRUiShared._glyph("res://assets/icons/chevron_right.svg", UiTokens.PRODUCT_ICON_PX, UiTokens.INK_FAINT)
++	return UiFactory.make_glyph("res://assets/icons/chevron_right.svg", UiTokens.PRODUCT_ICON_PX, UiTokens.INK_FAINT)
+ 
+ 
+ func _hbox(separation: int) -> HBoxContainer:
+diff --git a/project-unicorn/scripts/tabs/product/sprint_ui_shared.gd b/project-unicorn/scripts/tabs/product/sprint_ui_shared.gd
+index 419211c..77e6841 100644
+--- a/project-unicorn/scripts/tabs/product/sprint_ui_shared.gd
++++ b/project-unicorn/scripts/tabs/product/sprint_ui_shared.gd
+@@ -112,7 +112,7 @@ static func word_color(word: String) -> Color:
+ ## ids: kind_feature · kind_polish · kind_fix · kind_research · role_design · role_dev ·
+ ## role_test (böcek; uyarı çipi de bunu kullanır) · role_product · bubble · tick · arrow.
+ static func icon(id: String, px: int, color: Color) -> TextureRect:
+-	return HRUiShared._glyph(ICON_DIR + id + ".svg", px, color)
++	return UiFactory.make_glyph(ICON_DIR + id + ".svg", px, color)
+ 
+ 
+ static func stamp(text: String, variation: StringName) -> Label:
+diff --git a/project-unicorn/scripts/theme/build_theme.gd b/project-unicorn/scripts/theme/build_theme.gd
+index 72dce38..5e92b69 100644
+--- a/project-unicorn/scripts/theme/build_theme.gd
++++ b/project-unicorn/scripts/theme/build_theme.gd
+@@ -734,8 +734,8 @@ func _menajer(master: Theme) -> Theme:
+ 		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}
+ 	var ghost := {"normal": [clear, clear, T.D_INK_2], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+ 		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]}
+-	# The danger button, the risk strip and the risk labels bake the standard palette; their host
+-	# repaints them from the D_ helpers when the colour-blind palette is on.
++	# The danger button bakes the standard palette; its host repaints it from the D_ helpers when the
++	# colour-blind palette is on.
+ 	var danger := {"normal": [clear, T.D_NEG_TAG_LINE, T.D_NEG_INK],
+ 		"hover": [clear, T.D_NEG, T.D_NEG], "pressed": [T.D_NEG_BG, T.D_NEG, T.D_NEG],
+ 		"disabled": [clear, T.D_LINE_1, T.D_INK_OFF]}
+@@ -751,6 +751,12 @@ func _menajer(master: Theme) -> Theme:
+ 		_dbtn(th, row[0], row[1], row[2][0], row[2][1], row[2][2])
+ 	th.set_stylebox("focus", &"Button", ring)
+ 	th.set_type_variation(&"SecondaryButton", &"Button")
++	# A glyph beside the label: 18 px on a button, 16 on a small one.
++	th.set_constant("icon_max_width", &"Button", T.D_ICON_BUTTON)
++	th.set_constant("h_separation", &"Button", T.SPACE_M)
++	for small_button in [&"SecondaryButtonSmall", &"PrimaryButtonDarkSmall", &"GhostButtonSmall"]:
++		th.set_constant("icon_max_width", small_button, T.D_ICON_BUTTON_SM)
++		th.set_constant("h_separation", small_button, T.SPACE_S)
+ 
+ 	var field := _fit(sans_reg, T.D_FS_15, T.D_H_INPUT, T.SPACE_L, T.SPACE_L)
+ 	_states(th, &"LineEdit", {
+@@ -820,6 +826,7 @@ func _menajer(master: Theme) -> Theme:
+ 	})
+ 	for key in ["grabber", "grabber_highlight", "grabber_disabled"]:
+ 		th.set_icon(key, &"HSlider", load(DARK_ICONS + "slider_grabber.svg"))
++	th.set_stylebox("focus", &"HSlider", ring)
+ 
+ 	# A menu row is 32 tall; hover is a border, never a fill.
+ 	th.set_stylebox("panel", &"PopupMenu", _shadow(_flat(T.D_SURFACE_4, T.D_RADIUS_3,
+@@ -860,7 +867,6 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"GroupLabel", cond_sb_caps, T.D_FS_15, T.D_INK_2],
+ 		[&"KeyLabel", cond_sb_caps, T.D_FS_14, T.D_INK_3],
+ 		[&"KeyLabelStrong", cond_sb_caps, T.D_FS_14, T.D_INK_1],
+-		[&"RiskKey", cond_sb_caps, T.D_FS_14, T.D_NEG_INK],
+ 		[&"KeySmall", cond_sb_caps, T.D_FS_12, T.D_INK_3],
+ 		[&"FloatKey", cond_sb_caps, T.D_FS_14, T.D_INK_2],
+ 		[&"NavReason", cond_sb_caps, T.D_FS_12, T.D_INK_4],
+@@ -869,7 +875,6 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"KpiValue", sans_sb, T.D_FS_26, T.D_INK_2],
+ 		[&"PartValueArmed", sans_b, T.D_FS_26, T.D_INK_2],
+ 		[&"ClockLabel", sans_sb, T.D_FS_22, T.D_INK_2],
+-		[&"RiskValue", sans_b, T.D_FS_18, T.D_NEG],
+ 		[&"ValueText", sans_med, T.D_FS_18, T.D_INK_2],
+ 		[&"ValueTextStrong", sans_sb, T.D_FS_18, T.D_INK_1],
+ 		[&"BodyLabel", sans_reg, T.D_FS_16, T.D_INK_2],
+@@ -878,6 +883,9 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"SubjectLabel", sans_med, T.D_FS_16, T.D_INK_2],
+ 		[&"SubjectStrong", sans_sb, T.D_FS_16, T.D_INK_1],
+ 		[&"SkillValue", sans_med, T.D_FS_16, T.D_SKILL_3],   # its host paints D_skill(value)
++		[&"SkillMain", sans_b, T.D_FS_16, T.D_SKILL_3],
++		[&"SkillSecondary", sans_sb, T.D_FS_16, T.D_SKILL_3],
++		[&"MoraleValue", sans_b, T.D_FS_16, T.D_INK_2],   # its host paints the morale band
+ 		[&"DataText", sans_reg, T.D_FS_15, T.D_INK_2],
+ 		[&"DataStrong", sans_sb, T.D_FS_15, T.D_INK_1],
+ 		[&"DataMedium", sans_med, T.D_FS_15, T.D_INK_2],
+@@ -889,6 +897,7 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"KeyTextMuted", sans_med, T.D_FS_14, T.D_INK_3],
+ 		[&"MetaMuted", sans_reg, T.D_FS_14, T.D_INK_3],
+ 		[&"Caption", sans_reg, T.D_FS_13, T.D_INK_3],
++		[&"CaptionStrong", sans_b, T.D_FS_13, T.D_INK_2],
+ 		[&"CaptionPrimary", sans_reg, T.D_FS_13, T.D_INK_2],
+ 		[&"CaptionFaint", sans_reg, T.D_FS_13, T.D_INK_4],
+ 		[&"CondCaption", sansc, T.D_FS_13, T.D_INK_3],
+@@ -900,8 +909,8 @@ func _menajer(master: Theme) -> Theme:
+ 		_lbl(th, row[0], row[1], row[2], row[3])
+ 	th.set_constant("line_spacing", &"FrankQuote", T.D_LEADING_PARA)
+ 
+-	# Boxed labels. Tags with a meaning (risk, gain, attention) and topic hues are painted at
+-	# runtime from the D_ helpers, so the colour-blind palette reaches them.
++	# Boxed labels. Topic hues are painted at runtime from the D_ helpers, so the colour-blind palette
++	# reaches them.
+ 	var tag := _fit(cond_b_caps, T.D_FS_13, T.D_H_TAG, T.SPACE_M, T.SPACE_M)
+ 	var pill := _fit(cond_b_caps, T.D_FS_13, T.D_H_PILL, T.SPACE_S, T.SPACE_S)
+ 	var badge := _fit(sans_b, T.D_FS_13, T.D_H_BADGE, T.SPACE_S, T.SPACE_S)
+@@ -923,6 +932,21 @@ func _menajer(master: Theme) -> Theme:
+ 	]:
+ 		_lbl(th, row[0], row[1], row[2], row[3])
+ 		th.set_stylebox("normal", row[0], row[4])
++	# The risk and attention tags and the risk strip bake both palettes from the D_ helpers: the
++	# colour-blind one is the "Cb" twin, which the host picks through UiTokens.D_variation.
++	var strip_pad := Vector4(T.SPACE_XL, 0, T.SPACE_L, 0)
++	for cb in [false, true]:
++		T.set_colorblind(cb)
++		var twin := "Cb" if cb else ""
++		for row in [["TagRisk", &"negative"], ["TagWarn", &"accent"]]:
++			var p: Dictionary = T.D_badge_palette(row[1])
++			_lbl(th, row[0] + twin, cond_b_caps, T.D_FS_13, p.fg)
++			th.set_stylebox("normal", row[0] + twin, _flat(p.bg, T.D_RADIUS_2, tag, p.line))
++		_lbl(th, "RiskKey" + twin, cond_sb_caps, T.D_FS_14, T.D_neg_ink())
++		_lbl(th, "RiskValue" + twin, sans_b, T.D_FS_18, T.D_neg())
++		_panel(th, "RiskStrip" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg_rule()))
++		_panel(th, "RiskStripHover" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg()))
++	T.set_colorblind(false)
+ 
+ 	# Boxes. Rows and bands take their height from the host; a document has its corner cut.
+ 	var bottom := Vector4i(0, 0, 0, T.BORDER_HAIRLINE)
+@@ -940,6 +964,10 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"TableRow", _flat(clear, 0, Vector4.ZERO, T.D_ROW_RULE, bottom)],
+ 		[&"TableRowHover", _flat(clear, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_HOVER)],
+ 		[&"TableRowSelected", _flat(T.D_SURFACE_4, 0, Vector4.ZERO, T.D_ROW_RULE, bottom)],
++		[&"TableRowSelectedHover", _flat(T.D_SURFACE_4, T.D_RADIUS_1, Vector4.ZERO, T.D_LINE_HOVER)],
++		[&"TraitBox", _flat(T.D_SURFACE_5, T.D_RADIUS_2, Vector4.ONE * (T.D_TRAIT_BOX - T.D_ICON_ROW) / 2.0,
++			T.D_LINE_2)],
++		[&"MenuPanel", th.get_stylebox("panel", &"PopupMenu")],
+ 		[&"InboxList", _flat(T.D_SURFACE_2, 0, Vector4(0, 0, T.SPACE_L, 0), T.D_LINE_1, Vector4i(0, 0, T.BORDER_HAIRLINE, 0))],
+ 		[&"InboxRow", _flat(clear, 0, row_pad, T.D_LINE_1, bottom)],
+ 		[&"InboxRowHover", _flat(clear, T.D_RADIUS_1, row_pad, T.D_LINE_HOVER)],
+@@ -952,7 +980,6 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"OptionBarHover", _flat(T.D_SURFACE_3, T.D_RADIUS_3, option_pad, T.D_LINE_HOVER)],
+ 		[&"OptionBarLocked", _flat(clear, T.D_RADIUS_3, option_pad, T.D_LINE_1)],
+ 		[&"OptionArmed", _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_3XL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XXL), T.D_LINE_HOVER), T.D_CUT)],
+-		[&"RiskStrip", _flat(T.D_NEG_BG, T.D_RADIUS_3, Vector4(T.SPACE_XL, 0, T.SPACE_L, 0), T.D_NEG_LINE)],
+ 		[&"Toast", _shadow(_doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_M, 0, T.SPACE_XXL, 0), T.D_LINE_2), T.D_CUT_SM),
+ 			T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+ 		[&"FloatPanel", _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_3, Vector4.ZERO, T.D_LINE_1), T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)],
+@@ -966,6 +993,10 @@ func _menajer(master: Theme) -> Theme:
+ 		_panel(th, row[0], "PanelContainer", row[1])
+ 	_panel(th, &"GateDot", "Panel", _flat(T.D_ACCENT, T.RADIUS_PILL, Vector4.ZERO))
+ 	_panel(th, &"IconWell", "Panel", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO))
++	_panel(th, &"RoleBand", "Panel", _flat(T.D_ROLE_BAND, 0, Vector4.ZERO))
++	_panel(th, &"BarTrack", "Panel", _flat(T.D_BAR_TRACK, T.RADIUS_PILL, Vector4.ZERO))
++	# A bar's fill is white so its host can tint it with the value's own colour.
++	_panel(th, &"BarTint", "Panel", _flat(Color.WHITE, T.RADIUS_PILL, Vector4.ZERO))
+ 	_panel(th, &"BrandMark", "Panel", _flat(T.D_BRAND_MARK, T.D_RADIUS_1, Vector4.ZERO))
+ 	var mark := _flat(T.D_SELECTED_MARK, T.D_RADIUS_1, Vector4.ZERO)
+ 	mark.corner_radius_top_left = 0
+@@ -974,6 +1005,9 @@ func _menajer(master: Theme) -> Theme:
+ 
+ 	# Clickable rows and keys.
+ 	_dbtn(th, &"ChipButton", secondary, sans_reg, T.D_FS_15, _fit(sans_reg, T.D_FS_15, T.D_H_BTN, T.SPACE_L, T.SPACE_L))
++	# A chip's glyph stays quiet while its label lifts on hover.
++	for state in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
++		th.set_color("icon_%s_color" % state, &"ChipButton", T.D_INK_3)
+ 	var under := Vector4i(0, 0, 0, T.BORDER_FOCUS)
+ 	var under_pad := Vector4(0, 0, 0, T.BORDER_FOCUS)
+ 	_dbtn(th, &"SegTab", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_3],
+diff --git a/project-unicorn/scripts/theme/theme_check.gd b/project-unicorn/scripts/theme/theme_check.gd
+index 2008eb5..186a067 100644
+--- a/project-unicorn/scripts/theme/theme_check.gd
++++ b/project-unicorn/scripts/theme/theme_check.gd
+@@ -146,6 +146,9 @@ const LAYERED_DARK := [
+ 	["RiskKey", "font_color", "RiskStrip", "panel"],
+ 	["RiskValue", "font_color", "RiskStrip", "panel"],
+ 	["RiskName", "font_color", "RiskStrip", "panel"],
++	["RiskKeyCb", "font_color", "RiskStripCb", "panel"],
++	["RiskValueCb", "font_color", "RiskStripCb", "panel"],
++	["RiskName", "font_color", "RiskStripCb", "panel"],
+ ]
+ const MIN_RATIO := {"body": 4.5, "large": 3.0, "ui": 3.0}
+ 
+diff --git a/project-unicorn/scripts/theme/ui_factory.gd b/project-unicorn/scripts/theme/ui_factory.gd
+index 1c195fa..6047f29 100644
+--- a/project-unicorn/scripts/theme/ui_factory.gd
++++ b/project-unicorn/scripts/theme/ui_factory.gd
+@@ -55,6 +55,19 @@ static func make_state_chip(text: String, fg: Color, bg: Color, border: Color) -
+ 	return chip
+ 
+ 
++## A white glyph (SVG) tinted `color`, `px` square, centred in its row.
++static func make_glyph(path: String, px: int, color: Color) -> TextureRect:
++	var tex := TextureRect.new()
++	tex.texture = load(path)
++	tex.custom_minimum_size = Vector2(px, px)
++	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
++	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
++	tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	tex.modulate = color
++	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	return tex
++
++
+ ## Generic themed label. Optional one-off color override.
+ static func make_label(text: String, variation: StringName = &"BodySerif", color: Variant = null) -> Label:
+ 	var lbl := Label.new()
+@@ -224,6 +237,63 @@ static func make_close_button(on_close: Callable, dark := false) -> Button:
+ 	return close
+ 
+ 
++# --- Menajer Masası: the dark language's entry points ---------------------------------------
++# A screen taken to the dark language builds these under its menajer_theme root; the cream
++# builders above stay with the screens that have not moved.
++
++## A caps tag: "" the plain outline, "neutral" quiet on a fill, "outline" quieter still, and the
++## meanings "risk" and "warn" in the palette in use.
++static func D_tag(text: String, kind: StringName = &"") -> Label:
++	var tag := make_label(Fmt.upper(text), {&"": &"Tag", &"neutral": &"TagNeutral", &"outline": &"TagOutline",
++		&"risk": UiTokens.D_variation(&"TagRisk"), &"warn": UiTokens.D_variation(&"TagWarn")}[kind])
++	tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
++	tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	return tag
++
++
++## A window header's figure: its caps key over its value, a rule on its left. An empty value keeps
++## its line, so the key stays on the header's baseline.
++static func D_kpi(key: String, value: String) -> PanelContainer:
++	var cell := PanelContainer.new()
++	cell.theme_type_variation = &"KpiCell"
++	var col := VBoxContainer.new()
++	col.alignment = BoxContainer.ALIGNMENT_CENTER
++	col.add_theme_constant_override("separation", 0)
++	col.add_child(make_label(Fmt.upper(key), &"KeyLabel"))
++	col.add_child(make_label(value, &"KpiValue"))
++	cell.add_child(col)
++	return cell
++
++
++## A window's section tabs, in caps: the active one in ink over its underline. A click moves the
++## underline and calls `on_pick(index)`.
++static func D_seg_tabs(labels: Array, active: int, on_pick: Callable) -> HBoxContainer:
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
++	for i in labels.size():
++		var tab := Button.new()
++		tab.text = Fmt.upper(labels[i])
++		tab.theme_type_variation = &"SegTabActive" if i == active else &"SegTab"
++		tab.focus_mode = Control.FOCUS_NONE
++		tab.pressed.connect(func() -> void:
++			for other: Button in row.get_children():
++				other.theme_type_variation = &"SegTabActive" if other == tab else &"SegTab"
++			on_pick.call(i))
++		row.add_child(tab)
++	return row
++
++
++## A cost: its value in ink behind the cost disc, never in red (a cost is not a danger).
++static func D_cost(value: String, variation: StringName = &"DataText") -> HBoxContainer:
++	var part := HBoxContainer.new()
++	part.add_theme_constant_override("separation", UiTokens.SPACE_S)
++	part.add_child(make_glyph("res://assets/icons/stake/cost.svg", UiTokens.D_ICON_PART, UiTokens.D_INK_3))
++	var label := make_label(value, variation)
++	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	part.add_child(label)
++	return part
++
++
+ ## Removes every child from the tree at once (so it cannot clash with the replacements
+ ## built in the same frame) and frees each one.
+ static func clear(node: Node) -> void:
+diff --git a/project-unicorn/scripts/theme/ui_tokens.gd b/project-unicorn/scripts/theme/ui_tokens.gd
+index 117160a..81ba1a7 100644
+--- a/project-unicorn/scripts/theme/ui_tokens.gd
++++ b/project-unicorn/scripts/theme/ui_tokens.gd
+@@ -41,7 +41,7 @@ extends RefCounted
+ 
+ ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
+ ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
+-const THEME_STAMP := 20
++const THEME_STAMP := 21
+ 
+ # ============================================================================
+ # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
+@@ -807,10 +807,29 @@ const D_H_BADGE_ICON := 18   # a count on the corner of an icon (the rail's icon
+ const D_H_LINK := 24         # a text link on a float card (the research card's pause and assign)
+ const D_H_PROGRESS := 6      # a progress track
+ const D_H_WIN_HEAD := 72     # a window's header band
++# --- sizes the host lays out ---
++const D_H_TOAST := 48
++const D_H_ROW := 40          # a table's data row
++const D_H_GROUP := 36        # a table's group header
++const D_H_STRIP := 52        # a strip over a table (the risk strip)
++const D_H_EMPTY_ROW := 52    # a group with nobody in it
++const D_TOAST_WELL := 32     # the square behind a toast's glyph
++const D_TRAIT_BOX := 24      # the square behind a trait's glyph
++const D_AVATAR_ROW := 32     # a person's disc in a row or strip
++const D_W_MORALE := 32       # the morale figure's column, right aligned, before its bar
++const D_MORALE_BAR := Vector2i(76, 6)
++const D_NOTCH := Vector2i(1, 12)        # the flight-risk notch across the morale bar
++const D_SKILL_MARK := Vector2i(16, 2)   # the main skill's underline, a 6 px step above the cell's foot
+ # --- glyph sizes ---
+ const D_ICON_CONTROL := 20   # a control's own glyph (the ticker toggle, a window's close)
+ const D_ICON_TITLE := 20     # a float card's title glyph
++const D_ICON_STRIP := 20     # a strip's leading and trailing glyphs
++const D_ICON_BUTTON := 18    # a button's or chip's glyph
++const D_ICON_GROUP := 18     # a table group's glyph
++const D_ICON_TOAST := 18     # the glyph in a toast's well
++const D_ICON_BUTTON_SM := 16 # a small button's glyph
+ const D_ICON_ROW := 16       # a row's leading glyph
++const D_ICON_PART := 14      # a part's polarity glyph beside its value
+ const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
+ const D_ICON_ACTION := 12    # the glyph inside a float card's action
+ 
+@@ -930,3 +949,9 @@ static func D_risk_ink(chance: float) -> Color:
+ ## secondary ink. The seats carry no hue.
+ static func D_seat_ink(seat: int) -> Color:
+ 	return D_INK_1 if seat == 1 else D_INK_3
++
++
++## The dark theme bakes a meaning variation in both palettes, the colour-blind one as its "Cb" twin:
++## the one the palette in use reads.
++static func D_variation(name: StringName) -> StringName:
++	return StringName(name + "Cb") if _cb_palette else name
+diff --git a/project-unicorn/scripts/ui/components/toast.gd b/project-unicorn/scripts/ui/components/toast.gd
+new file mode 100644
+index 0000000..f903578
+--- /dev/null
++++ b/project-unicorn/scripts/ui/components/toast.gd
+@@ -0,0 +1,97 @@
++extends PanelContainer
++
++# The one toast of the Menajer Masası: a glyph in its well, a bold head and a quieter line. It eases
++# in, holds and fades; a new toast takes the place of the one showing. The shell's toast floats
++# centred right of the rail, 24 px above the ticker, on its own layer over the windows and modals
++# (GameShell/ToastLayer); anything in the shell reaches it through the group. The ending's sits in
++# its rail with an action and waits while the pointer is on it.
++# Preloaded by path: no global class cache dependency (headless trap).
++
++const GROUP := &"toast"
++const IN_S := 0.2
++const HOLD_S := 2.4
++const OUT_S := 0.2
++const RISE := 8.0
++
++## The rail spans the band between the top bar and the ticker: the floating toast centres right of
++## it and sits above its bottom edge. A toast in a container has none.
++@export var rail: Control
++
++var _glyph := TextureRect.new()
++var _head := UiFactory.make_label("", &"DataStrong")
++var _sub := UiFactory.make_label("", &"NoteMuted")
++var _row := HBoxContainer.new()
++var _tween: Tween
++
++
++func _init() -> void:
++	theme = load(UiTokens.MENAJER_THEME)
++	theme_type_variation = &"Toast"
++	custom_minimum_size.y = UiTokens.D_H_TOAST
++	mouse_filter = Control.MOUSE_FILTER_IGNORE
++	_row.add_theme_constant_override("separation", UiTokens.SPACE_L)
++	add_child(_row)
++	var well := Panel.new()
++	well.theme_type_variation = &"IconWell"
++	well.custom_minimum_size = Vector2.ONE * UiTokens.D_TOAST_WELL
++	well.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	_row.add_child(well)
++	_glyph.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
++	_glyph.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
++	_glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE,
++		(UiTokens.D_TOAST_WELL - UiTokens.D_ICON_TOAST) / 2)
++	well.add_child(_glyph)
++	_row.add_child(_head)
++	_row.add_child(_sub)
++	for label in [_head, _sub]:
++		label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	hide()
++
++
++func _ready() -> void:
++	if rail != null:
++		add_to_group(GROUP)
++	set_process(rail == null)
++
++
++## The ending's toast carries an action: its line yields room to the button and shortens.
++func set_action(text: String, on_press: Callable) -> void:
++	mouse_filter = Control.MOUSE_FILTER_PASS
++	_sub.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	_sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
++	var action := Button.new()
++	action.theme_type_variation = &"GhostButtonSmall"
++	action.focus_mode = Control.FOCUS_NONE
++	action.text = text
++	action.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	action.pressed.connect(on_press)
++	_row.add_child(action)
++
++
++## `tone` is the glyph's ink: gain for a save or a load, attention for a refusal, ink-3 otherwise.
++func show_toast(head: String, sub: String, glyph: Texture2D, tone: Color) -> void:
++	_head.text = head
++	_sub.text = sub
++	_glyph.texture = glyph
++	_glyph.modulate = tone
++	modulate.a = 0.0
++	show()
++	if _tween != null:
++		_tween.kill()
++	_tween = create_tween()
++	_tween.tween_property(self, "modulate:a", 1.0, IN_S)
++	if rail != null:
++		reset_size()
++		var band: Rect2 = rail.get_rect()
++		position = Vector2(band.end.x + (get_viewport_rect().size.x - band.end.x - size.x) * 0.5,
++			band.end.y - UiTokens.SPACE_3XL - size.y + RISE)
++		_tween.parallel().tween_property(self, "position:y", position.y - RISE, IN_S)
++	_tween.tween_interval(HOLD_S)
++	_tween.tween_property(self, "modulate:a", 0.0, OUT_S)
++	_tween.tween_callback(hide)
++
++
++## A toast with an action waits while the pointer is on it.
++func _process(_delta: float) -> void:
++	if _tween != null and _tween.is_valid():
++		_tween.set_speed_scale(0.0 if get_global_rect().has_point(get_global_mouse_position()) else 1.0)
+diff --git a/project-unicorn/scripts/ui/components/toast.gd.uid b/project-unicorn/scripts/ui/components/toast.gd.uid
+new file mode 100644
+index 0000000..d1ae95c
+--- /dev/null
++++ b/project-unicorn/scripts/ui/components/toast.gd.uid
+@@ -0,0 +1 @@
++uid://co80sw5h8w040
+diff --git a/project-unicorn/scripts/ui/office/meeting_invite.gd b/project-unicorn/scripts/ui/office/meeting_invite.gd
+index e7d1479..d5d8f65 100644
+--- a/project-unicorn/scripts/ui/office/meeting_invite.gd
++++ b/project-unicorn/scripts/ui/office/meeting_invite.gd
+@@ -4,10 +4,10 @@ extends Control
+ # The call that opens an outside meeting: a phone rings over the founder's head in the office, a
+ # ring pulsing round it, and the camera closes on them; a click on it opens the call's card beside
+ # it (the hour, the caller's line, Accept and Postpone, and a note on what putting it off means),
+-# or the card is open from the first ring. Postponing closes the card and says so; main.gd rings
+-# it (a fund whose meeting week has come, a prospect the player asked to meet), decides what a
+-# postponement does, and stops it once the call is gone. With the founder out of sight (the map,
+-# the meeting room, a trip) nothing shows and the call waits.
++# or the card is open from the first ring. Postponing closes the card and the shell's toast says so;
++# main.gd rings it (a fund whose meeting week has come, a prospect the player asked to meet),
++# decides what a postponement does, and stops it once the call is gone. With the founder out of
++# sight (the map, the meeting room, a trip) nothing shows and the call waits.
+ 
+ signal accepted
+ signal postponed
+@@ -18,7 +18,7 @@ const RING_WIDTH := 2.0
+ const CARD_W := 272.0
+ ## The card sits right of the phone and up a little, kept inside the view.
+ const CARD_OFFSET := Vector2(30.0, -44.0)
+-const TOAST_S := 2.2
++const POSTPONE_GLYPH := preload("res://assets/icons/util/calendar.svg")
+ ## The camera closes on the founder as the phone starts: aimed this high above their feet, this
+ ## much closer than the office's fit, over this long.
+ const FOCUS_RISE := 0.9
+@@ -33,11 +33,8 @@ var _kicker: Label
+ var _line: Label
+ var _accept_button: Button
+ var _postpone_button: Button
+-var _toast: PanelContainer
+-var _toast_label: Label
+-var _toast_left := 0.0
+ var _note: Label
+-## The call as rung (ring()): its line, the note's and the toast's keys and their arguments,
++## The call as rung (ring()): its line, the note's and the toast line's keys and their arguments,
+ ## translated when shown.
+ var _spec := {}
+ 
+@@ -87,13 +84,6 @@ func _ready() -> void:
+ 	_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	col.add_child(_note)
+ 	add_child(_card)
+-	_toast = PanelContainer.new()
+-	_toast.theme_type_variation = &"CardFloating"
+-	_toast_label = UiFactory.make_label("", &"RowName")
+-	_toast.add_child(_toast_label)
+-	HRUiShared.set_mouse_ignore(_toast)
+-	_toast.hide()
+-	add_child(_toast)
+ 	EventBus.language_changed.connect(_retranslate.unbind(1))
+ 	_retranslate()
+ 	stop()
+@@ -101,7 +91,8 @@ func _ready() -> void:
+ 
+ ## Rings for a call, `spec`: `line` (the caller's line, a key formatted with `args`), `open` (the
+ ## card is open from the first ring), `postpone` (the call can be put off), `note` (a key under the
+-## buttons, formatted with `note_args`; "" for none) and `toast` (the key shown when it is put off).
++## buttons, formatted with `note_args`; "" for none) and `toast` (the key of the toast's line when it
++## is put off).
+ func ring(spec: Dictionary) -> void:
+ 	_spec = spec
+ 	_retranslate()
+@@ -121,7 +112,7 @@ func stop() -> void:
+ 	_ring.visible = false
+ 	_card.visible = false
+ 	_people.founder_calling = false
+-	set_process(_toast.visible)
++	set_process(false)
+ 
+ 
+ func is_ringing() -> bool:
+@@ -134,14 +125,7 @@ func can_ring() -> bool:
+ 	return founder != null and founder.visible and not _people.founder_away
+ 
+ 
+-func _process(delta: float) -> void:
+-	if _toast.visible:
+-		_toast_left -= delta
+-		_toast.visible = _toast_left > 0.0
+-		_toast.position = Vector2((size.x - _toast.size.x) * 0.5, size.y - _toast.size.y - UiTokens.SPACE_XL)
+-	if not is_ringing():
+-		set_process(_toast.visible)
+-		return
++func _process(_delta: float) -> void:
+ 	visible = can_ring()
+ 	if not visible:
+ 		return
+@@ -169,7 +153,6 @@ func _retranslate() -> void:
+ 		return
+ 	_line.text = tr(_spec.line).format(_spec.args)
+ 	_note.text = tr(_spec.note).format(_spec.note_args) if _spec.note != "" else ""
+-	_toast_label.text = tr(_spec.toast)
+ 
+ 
+ ## The card opens at the hour of the click.
+@@ -185,8 +168,6 @@ func _accept() -> void:
+ 
+ func _postpone() -> void:
+ 	_card.visible = false
+-	_toast.visible = true
+-	_toast.reset_size()
+-	_toast_left = TOAST_S
+-	set_process(true)
++	get_tree().call_group(&"toast", &"show_toast", tr("MEETING_POSTPONED"), tr(_spec.toast), POSTPONE_GLYPH,
++		UiTokens.D_INK_3)
+ 	postponed.emit()
+diff --git a/project-unicorn/scripts/ui/office/office_hud.gd b/project-unicorn/scripts/ui/office/office_hud.gd
+index 494f3c6..5fd4f26 100644
+--- a/project-unicorn/scripts/ui/office/office_hud.gd
++++ b/project-unicorn/scripts/ui/office/office_hud.gd
+@@ -1,8 +1,9 @@
+ extends Control
+ 
+ # The office view's own controls: the move button at the bottom left (windows dock at the top
+-# left), the countdown of a move under way beside it, and the toast that announces a move.
+-# OfficeCity mounts this on the view's overlay and opens the city map on move_pressed.
++# left) and the countdown of a move under way beside it. The shell's toast says when a move starts
++# and when it lands. OfficeCity mounts this on the view's overlay and opens the city map on
++# move_pressed.
+ 
+ signal move_pressed
+ 
+@@ -10,17 +11,13 @@ signal move_pressed
+ const PULSE_SCALE := 1.04     # [WORKING]
+ const PULSE_ALPHA := 0.8      # [WORKING]
+ const PULSE_TIME := 0.9       # [WORKING] seconds each way
+-const TOAST_TIME := 2.6
+-const TOAST_FADE := 0.3       # [WORKING]
++const MOVE_GLYPH := preload("res://assets/icons/util/move.svg")
+ 
+ var _row := HBoxContainer.new()
+ var _button := PanelContainer.new()
+ var _label: Label
+ var _badge: Control
+ var _pulse: Tween
+-var _toast := PanelContainer.new()
+-var _toast_label: Label
+-var _toast_tween: Tween
+ var _map_open := false
+ var _window_cover := Rect2()
+ 
+@@ -57,17 +54,11 @@ func _ready() -> void:
+ 	inner.add_child(_label)
+ 	HRUiShared.set_mouse_ignore(inner)
+ 
+-	_toast.theme_type_variation = &"CardFloating"
+-	_toast.hide()
+-	_toast_label = UiFactory.make_label("", &"RowName")
+-	_toast.add_child(_toast_label)
+-	HRUiShared.set_mouse_ignore(_toast)
+-	add_child(_toast)
+-
+ 	for s: Signal in [EventBus.day_advanced, EventBus.office_changed, EventBus.equity_changed,
+ 			EventBus.language_changed]:
+ 		s.connect(_refresh.unbind(1))
+ 	EventBus.office_move_started.connect(_on_move_started)
++	EventBus.office_changed.connect(_toast.bind("OFFICE_TOAST_MOVED"))
+ 	_refresh()
+ 
+ 
+@@ -117,14 +108,11 @@ func _refresh() -> void:
+ 
+ 
+ func _on_move_started(office_id: String, _arrival_day: int) -> void:
+-	_toast_label.text = tr("OFFICE_TOAST_MOVED").format({"name": tr(OfficeConstants.CATALOG[office_id].name_key)})
+-	_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_XL)
+-	_toast.modulate.a = 1.0
+-	_toast.show()
+-	if _toast_tween != null:
+-		_toast_tween.kill()
+-	_toast_tween = create_tween()
+-	_toast_tween.tween_interval(TOAST_TIME)
+-	_toast_tween.tween_property(_toast, "modulate:a", 0.0, TOAST_FADE)
+-	_toast_tween.tween_callback(_toast.hide)
++	_toast(office_id, "OFFICE_TOAST_MOVE_STARTED")
+ 	_refresh()
++
++
++## What happened to the move, and where to.
++func _toast(office_id: String, head_key: String) -> void:
++	get_tree().call_group(&"toast", &"show_toast", tr(head_key),
++		tr(OfficeConstants.CATALOG[office_id].name_key), MOVE_GLYPH, UiTokens.D_INK_3)
+diff --git a/project-unicorn/themes/master_theme.tres b/project-unicorn/themes/master_theme.tres
+index 765ff08..5beb991 100644
+--- a/project-unicorn/themes/master_theme.tres
++++ b/project-unicorn/themes/master_theme.tres
+@@ -2515,7 +2515,7 @@ TooltipTitle/font_sizes/font_size = 9
+ TooltipTitle/fonts/font = ExtResource("mono_label_dfe9c")
+ TopBarPanel/base_type = &"Panel"
+ TopBarPanel/styles/panel = SubResource("StyleBoxFlat_591af")
+-UiTokensStamp/constants/stamp = 20
++UiTokensStamp/constants/stamp = 21
+ VSeparator/constants/separation = 4
+ VSeparator/styles/separator = SubResource("StyleBoxLine_8270b")
+ ViewportPanel/base_type = &"Panel"
+diff --git a/project-unicorn/themes/menajer_theme.tres b/project-unicorn/themes/menajer_theme.tres
+index 71954c2..b3bebb6 100644
+--- a/project-unicorn/themes/menajer_theme.tres
++++ b/project-unicorn/themes/menajer_theme.tres
+@@ -169,6 +169,28 @@ corner_radius_top_right = 999
+ corner_radius_bottom_right = 999
+ corner_radius_bottom_left = 999
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_83c36"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(1, 1, 1, 1)
++corner_radius_top_left = 999
++corner_radius_top_right = 999
++corner_radius_bottom_right = 999
++corner_radius_bottom_left = 999
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_53b10"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
++corner_radius_top_left = 999
++corner_radius_top_right = 999
++corner_radius_bottom_right = 999
++corner_radius_bottom_left = 999
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_77923"]
+ content_margin_left = 0.0
+ content_margin_top = 0.0
+@@ -1895,6 +1917,25 @@ bg_color = Color(0.15294118, 0.13725491, 0.12156863, 1)
+ border_width_bottom = 1
+ border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1be6b"]
++content_margin_left = 4.0
++content_margin_top = 4.0
++content_margin_right = 4.0
++content_margin_bottom = 4.0
++bg_color = Color(0.15294118, 0.13725491, 0.12156863, 1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
++corner_radius_top_left = 6
++corner_radius_top_right = 6
++corner_radius_bottom_right = 6
++corner_radius_bottom_left = 6
++shadow_color = Color(0, 0, 0, 0.42)
++shadow_size = 20
++shadow_offset = Vector2(0, 6)
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bd967"]
+ content_margin_left = 28.0
+ content_margin_top = 22.0
+@@ -1959,7 +2000,7 @@ shadow_color = Color(0, 0, 0, 0.42)
+ shadow_size = 20
+ shadow_offset = Vector2(0, 6)
+ 
+-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_53b10"]
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_53b10_2"]
+ content_margin_left = 0.0
+ content_margin_top = 0.0
+ content_margin_right = 0.0
+@@ -2248,25 +2289,6 @@ content_margin_right = 0.0
+ content_margin_bottom = 0.5
+ color = Color(0.22745098, 0.20392157, 0.1764706, 1)
+ 
+-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1be6b"]
+-content_margin_left = 4.0
+-content_margin_top = 4.0
+-content_margin_right = 4.0
+-content_margin_bottom = 4.0
+-bg_color = Color(0.15294118, 0.13725491, 0.12156863, 1)
+-border_width_left = 1
+-border_width_top = 1
+-border_width_right = 1
+-border_width_bottom = 1
+-border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
+-corner_radius_top_left = 6
+-corner_radius_top_right = 6
+-corner_radius_bottom_right = 6
+-corner_radius_bottom_left = 6
+-shadow_color = Color(0, 0, 0, 0.42)
+-shadow_size = 20
+-shadow_offset = Vector2(0, 6)
+-
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8f2d8"]
+ content_margin_left = 3.0
+ content_margin_top = 3.0
+@@ -2777,6 +2799,61 @@ corner_radius_top_right = 6
+ corner_radius_bottom_right = 6
+ corner_radius_bottom_left = 6
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0874c"]
++content_margin_left = 16.0
++content_margin_top = 0.0
++content_margin_right = 12.0
++content_margin_bottom = 0.0
++bg_color = Color(0.18039216, 0.11372549, 0.07058824, 1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.47843137, 0.27058825, 0.13333334, 1)
++corner_radius_top_left = 6
++corner_radius_top_right = 6
++corner_radius_bottom_right = 6
++corner_radius_bottom_left = 6
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cb800"]
++content_margin_left = 16.0
++content_margin_top = 0.0
++content_margin_right = 12.0
++content_margin_bottom = 0.0
++bg_color = Color(0.16862746, 0.101960786, 0.09019608, 1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
++corner_radius_top_left = 6
++corner_radius_top_right = 6
++corner_radius_bottom_right = 6
++corner_radius_bottom_left = 6
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f790c"]
++content_margin_left = 16.0
++content_margin_top = 0.0
++content_margin_right = 12.0
++content_margin_bottom = 0.0
++bg_color = Color(0.18039216, 0.11372549, 0.07058824, 1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.9411765, 0.47843137, 0.23529412, 1)
++corner_radius_top_left = 6
++corner_radius_top_right = 6
++corner_radius_bottom_right = 6
++corner_radius_bottom_left = 6
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c555f"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(0.9137255, 0.89411765, 0.85490197, 0.05)
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a2090"]
+ content_margin_left = 12.0
+ content_margin_top = 5.0
+@@ -3641,6 +3718,22 @@ bg_color = Color(0.15294118, 0.13725491, 0.12156863, 1)
+ border_width_bottom = 1
+ border_color = Color(0.22745098, 0.20392157, 0.1764706, 0.75)
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e97ae_2"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(0.15294118, 0.13725491, 0.12156863, 1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.58431375, 0.54901963, 0.49411765, 1)
++corner_radius_top_left = 2
++corner_radius_top_right = 2
++corner_radius_bottom_right = 2
++corner_radius_bottom_left = 2
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_92168"]
+ content_margin_left = 8.0
+ content_margin_top = 2.0
+@@ -3684,6 +3777,70 @@ corner_radius_top_right = 4
+ corner_radius_bottom_right = 4
+ corner_radius_bottom_left = 4
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_693b8"]
++content_margin_left = 8.0
++content_margin_top = 2.0
++content_margin_right = 8.0
++content_margin_bottom = 2.0
++bg_color = Color(0.9254902, 0.41568628, 0.36862746, 0.16)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.9254902, 0.41568628, 0.36862746, 0.6)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2d08c"]
++content_margin_left = 8.0
++content_margin_top = 2.0
++content_margin_right = 8.0
++content_margin_bottom = 2.0
++bg_color = Color(0.9411765, 0.47843137, 0.23529412, 0.16)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.9411765, 0.47843137, 0.23529412, 0.6)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_34821"]
++content_margin_left = 8.0
++content_margin_top = 2.0
++content_margin_right = 8.0
++content_margin_bottom = 2.0
++bg_color = Color(0.9098039, 0.5686275, 0.22745098, 0.12)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.9098039, 0.5686275, 0.22745098, 0.55)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3e18b"]
++content_margin_left = 8.0
++content_margin_top = 2.0
++content_margin_right = 8.0
++content_margin_bottom = 2.0
++bg_color = Color(0.9647059, 0.91764706, 0.52156866, 0.1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.9647059, 0.91764706, 0.52156866, 0.5)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_da472"]
+ content_margin_left = 0.0
+ content_margin_top = 0.0
+@@ -3793,6 +3950,22 @@ corner_radius_top_right = 4
+ corner_radius_bottom_right = 4
+ corner_radius_bottom_left = 4
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e9fa3"]
++content_margin_left = 4.0
++content_margin_top = 4.0
++content_margin_right = 4.0
++content_margin_bottom = 4.0
++bg_color = Color(0.18039216, 0.16078432, 0.14117648, 1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
++corner_radius_top_left = 4
++corner_radius_top_right = 4
++corner_radius_bottom_right = 4
++corner_radius_bottom_left = 4
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1c24c"]
+ content_margin_left = 4.0
+ content_margin_top = 4.0
+@@ -4103,6 +4276,10 @@ BadgeLabel/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ BadgeLabel/constants/line_spacing = 3
+ BadgeLabel/font_sizes/font_size = 9
+ BadgeLabel/fonts/font = ExtResource("d_sans_reg_96321")
++BarTint/base_type = &"Panel"
++BarTint/styles/panel = SubResource("StyleBoxFlat_83c36")
++BarTrack/base_type = &"Panel"
++BarTrack/styles/panel = SubResource("StyleBoxFlat_53b10")
+ BodyLabel/base_type = &"Label"
+ BodyLabel/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ BodyLabel/font_sizes/font_size = 16
+@@ -4142,6 +4319,8 @@ Button/colors/icon_hover_color = Color(1, 1, 1, 1)
+ Button/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+ Button/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ Button/colors/icon_pressed_color = Color(1, 1, 1, 1)
++Button/constants/h_separation = 8
++Button/constants/icon_max_width = 18
+ Button/font_sizes/font_size = 18
+ Button/fonts/font = ExtResource("d_cond_b_f0c0d")
+ Button/styles/disabled = SubResource("StyleBoxFlat_6f464")
+@@ -4166,6 +4345,10 @@ CaptionPrimary/base_type = &"Label"
+ CaptionPrimary/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ CaptionPrimary/font_sizes/font_size = 13
+ CaptionPrimary/fonts/font = ExtResource("d_sans_reg_96321")
++CaptionStrong/base_type = &"Label"
++CaptionStrong/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++CaptionStrong/font_sizes/font_size = 13
++CaptionStrong/fonts/font = ExtResource("d_sans_b_51908")
+ CardAttention/base_type = &"PanelContainer"
+ CardAttention/styles/panel = SubResource("StyleBoxFlat_a7b73")
+ CardCta/base_type = &"PanelContainer"
+@@ -4222,11 +4405,11 @@ ChipButton/colors/font_hover_color = Color(1, 1, 1, 1)
+ ChipButton/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ ChipButton/colors/font_pressed_color = Color(1, 1, 1, 1)
+ ChipButton/colors/icon_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
+-ChipButton/colors/icon_focus_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+-ChipButton/colors/icon_hover_color = Color(1, 1, 1, 1)
+-ChipButton/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+-ChipButton/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+-ChipButton/colors/icon_pressed_color = Color(1, 1, 1, 1)
++ChipButton/colors/icon_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++ChipButton/colors/icon_hover_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++ChipButton/colors/icon_hover_pressed_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++ChipButton/colors/icon_normal_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++ChipButton/colors/icon_pressed_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ ChipButton/font_sizes/font_size = 15
+ ChipButton/fonts/font = ExtResource("d_sans_reg_96321")
+ ChipButton/styles/disabled = SubResource("StyleBoxFlat_a94e3")
+@@ -4615,6 +4798,8 @@ GhostButtonSmall/colors/icon_hover_color = Color(1, 1, 1, 1)
+ GhostButtonSmall/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+ GhostButtonSmall/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ GhostButtonSmall/colors/icon_pressed_color = Color(1, 1, 1, 1)
++GhostButtonSmall/constants/h_separation = 6
++GhostButtonSmall/constants/icon_max_width = 16
+ GhostButtonSmall/font_sizes/font_size = 16
+ GhostButtonSmall/fonts/font = ExtResource("d_cond_sb_6c810")
+ GhostButtonSmall/styles/disabled = SubResource("StyleBoxFlat_c00c3")
+@@ -4637,6 +4822,7 @@ HSeparator/styles/separator = SubResource("StyleBoxLine_70be9")
+ HSlider/icons/grabber = ExtResource("slider_grabber_f8f9b")
+ HSlider/icons/grabber_disabled = ExtResource("slider_grabber_f8f9b")
+ HSlider/icons/grabber_highlight = ExtResource("slider_grabber_f8f9b")
++HSlider/styles/focus = SubResource("StyleBoxFlat_a3e90")
+ HSlider/styles/grabber_area = SubResource("StyleBoxFlat_8f783")
+ HSlider/styles/grabber_area_highlight = SubResource("StyleBoxFlat_1f119")
+ HSlider/styles/slider = SubResource("StyleBoxFlat_4896e")
+@@ -4776,6 +4962,8 @@ MeetingSpeakerName/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197,
+ MeetingSpeakerName/constants/line_spacing = 3
+ MeetingSpeakerName/font_sizes/font_size = 32
+ MeetingSpeakerName/fonts/font = ExtResource("d_serif_sb_33ba7")
++MenuPanel/base_type = &"PanelContainer"
++MenuPanel/styles/panel = SubResource("StyleBoxFlat_1be6b")
+ MetaMuted/base_type = &"Label"
+ MetaMuted/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ MetaMuted/font_sizes/font_size = 14
+@@ -4819,6 +5007,10 @@ ModalTitleSerif/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ ModalTitleSerif/constants/line_spacing = 3
+ ModalTitleSerif/font_sizes/font_size = 24
+ ModalTitleSerif/fonts/font = ExtResource("d_serif_sb_33ba7")
++MoraleValue/base_type = &"Label"
++MoraleValue/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++MoraleValue/font_sizes/font_size = 16
++MoraleValue/fonts/font = ExtResource("d_sans_b_51908")
+ NameSerif/base_type = &"Label"
+ NameSerif/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ NameSerif/constants/line_spacing = 3
+@@ -4896,7 +5088,7 @@ NoticeText/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ NoticeText/font_sizes/font_size = 15
+ NoticeText/fonts/font = ExtResource("d_sans_med_8aa82")
+ NumberChip/base_type = &"PanelContainer"
+-NumberChip/styles/panel = SubResource("StyleBoxFlat_53b10")
++NumberChip/styles/panel = SubResource("StyleBoxFlat_53b10_2")
+ OptionArmed/base_type = &"PanelContainer"
+ OptionArmed/styles/panel = SubResource("StyleBoxFlat_4d145")
+ OptionBar/base_type = &"PanelContainer"
+@@ -5068,6 +5260,8 @@ PrimaryButtonDarkSmall/colors/icon_hover_color = Color(0.09019608, 0.07450981, 0
+ PrimaryButtonDarkSmall/colors/icon_hover_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDarkSmall/colors/icon_normal_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
+ PrimaryButtonDarkSmall/colors/icon_pressed_color = Color(0.09019608, 0.07450981, 0.039215688, 1)
++PrimaryButtonDarkSmall/constants/h_separation = 6
++PrimaryButtonDarkSmall/constants/icon_max_width = 16
+ PrimaryButtonDarkSmall/font_sizes/font_size = 16
+ PrimaryButtonDarkSmall/fonts/font = ExtResource("d_cond_sb_6c810")
+ PrimaryButtonDarkSmall/styles/disabled = SubResource("StyleBoxFlat_dd167")
+@@ -5166,16 +5360,32 @@ RiskKey/base_type = &"Label"
+ RiskKey/colors/font_color = Color(0.95686275, 0.6392157, 0.6039216, 1)
+ RiskKey/font_sizes/font_size = 14
+ RiskKey/fonts/font = ExtResource("d_cond_sb_caps_de601")
++RiskKeyCb/base_type = &"Label"
++RiskKeyCb/colors/font_color = Color(0.96862745, 0.7058824, 0.54901963, 1)
++RiskKeyCb/font_sizes/font_size = 14
++RiskKeyCb/fonts/font = ExtResource("d_cond_sb_caps_de601")
+ RiskName/base_type = &"Label"
+ RiskName/colors/font_color = Color(1, 1, 1, 1)
+ RiskName/font_sizes/font_size = 16
+ RiskName/fonts/font = ExtResource("d_sans_sb_3375b")
+ RiskStrip/base_type = &"PanelContainer"
+ RiskStrip/styles/panel = SubResource("StyleBoxFlat_912b3")
++RiskStripCb/base_type = &"PanelContainer"
++RiskStripCb/styles/panel = SubResource("StyleBoxFlat_0874c")
++RiskStripHover/base_type = &"PanelContainer"
++RiskStripHover/styles/panel = SubResource("StyleBoxFlat_cb800")
++RiskStripHoverCb/base_type = &"PanelContainer"
++RiskStripHoverCb/styles/panel = SubResource("StyleBoxFlat_f790c")
+ RiskValue/base_type = &"Label"
+ RiskValue/colors/font_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
+ RiskValue/font_sizes/font_size = 18
+ RiskValue/fonts/font = ExtResource("d_sans_b_51908")
++RiskValueCb/base_type = &"Label"
++RiskValueCb/colors/font_color = Color(0.9411765, 0.47843137, 0.23529412, 1)
++RiskValueCb/font_sizes/font_size = 18
++RiskValueCb/fonts/font = ExtResource("d_sans_b_51908")
++RoleBand/base_type = &"Panel"
++RoleBand/styles/panel = SubResource("StyleBoxFlat_c555f")
+ RowMeta/base_type = &"Label"
+ RowMeta/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ RowMeta/constants/line_spacing = 3
+@@ -5207,6 +5417,8 @@ SecondaryButtonSmall/colors/icon_hover_color = Color(1, 1, 1, 1)
+ SecondaryButtonSmall/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+ SecondaryButtonSmall/colors/icon_normal_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ SecondaryButtonSmall/colors/icon_pressed_color = Color(1, 1, 1, 1)
++SecondaryButtonSmall/constants/h_separation = 6
++SecondaryButtonSmall/constants/icon_max_width = 16
+ SecondaryButtonSmall/font_sizes/font_size = 16
+ SecondaryButtonSmall/fonts/font = ExtResource("d_cond_sb_6c810")
+ SecondaryButtonSmall/styles/disabled = SubResource("StyleBoxFlat_a2090")
+@@ -5324,6 +5536,14 @@ SettingsSwitch/styles/normal = SubResource("StyleBoxEmpty_c6b6b_6")
+ SettingsSwitch/styles/pressed = SubResource("StyleBoxEmpty_c6b6b_7")
+ SideRailPanel/base_type = &"Panel"
+ SideRailPanel/styles/panel = SubResource("StyleBoxFlat_21b63")
++SkillMain/base_type = &"Label"
++SkillMain/colors/font_color = Color(0.7882353, 0.7647059, 0.7058824, 1)
++SkillMain/font_sizes/font_size = 16
++SkillMain/fonts/font = ExtResource("d_sans_b_51908")
++SkillSecondary/base_type = &"Label"
++SkillSecondary/colors/font_color = Color(0.7882353, 0.7647059, 0.7058824, 1)
++SkillSecondary/font_sizes/font_size = 16
++SkillSecondary/fonts/font = ExtResource("d_sans_sb_3375b")
+ SkillValue/base_type = &"Label"
+ SkillValue/colors/font_color = Color(0.7882353, 0.7647059, 0.7058824, 1)
+ SkillValue/font_sizes/font_size = 16
+@@ -5528,6 +5748,8 @@ TableRowHover/base_type = &"PanelContainer"
+ TableRowHover/styles/panel = SubResource("StyleBoxFlat_6100b")
+ TableRowSelected/base_type = &"PanelContainer"
+ TableRowSelected/styles/panel = SubResource("StyleBoxFlat_e9428")
++TableRowSelectedHover/base_type = &"PanelContainer"
++TableRowSelectedHover/styles/panel = SubResource("StyleBoxFlat_e97ae_2")
+ Tag/base_type = &"Label"
+ Tag/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ Tag/font_sizes/font_size = 13
+@@ -5543,6 +5765,26 @@ TagOutline/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ TagOutline/font_sizes/font_size = 13
+ TagOutline/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
+ TagOutline/styles/normal = SubResource("StyleBoxFlat_2ab41")
++TagRisk/base_type = &"Label"
++TagRisk/colors/font_color = Color(0.95686275, 0.6392157, 0.6039216, 1)
++TagRisk/font_sizes/font_size = 13
++TagRisk/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
++TagRisk/styles/normal = SubResource("StyleBoxFlat_693b8")
++TagRiskCb/base_type = &"Label"
++TagRiskCb/colors/font_color = Color(0.96862745, 0.7058824, 0.54901963, 1)
++TagRiskCb/font_sizes/font_size = 13
++TagRiskCb/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
++TagRiskCb/styles/normal = SubResource("StyleBoxFlat_2d08c")
++TagWarn/base_type = &"Label"
++TagWarn/colors/font_color = Color(0.9098039, 0.5686275, 0.22745098, 1)
++TagWarn/font_sizes/font_size = 13
++TagWarn/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
++TagWarn/styles/normal = SubResource("StyleBoxFlat_34821")
++TagWarnCb/base_type = &"Label"
++TagWarnCb/colors/font_color = Color(0.9647059, 0.91764706, 0.52156866, 1)
++TagWarnCb/font_sizes/font_size = 13
++TagWarnCb/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
++TagWarnCb/styles/normal = SubResource("StyleBoxFlat_3e18b")
+ TickerLabel/base_type = &"Label"
+ TickerLabel/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ TickerLabel/constants/line_spacing = 3
+@@ -5627,7 +5869,9 @@ TopicPill/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ TopicPill/font_sizes/font_size = 13
+ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
+ TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
+-UiTokensStamp/constants/stamp = 20
++TraitBox/base_type = &"PanelContainer"
++TraitBox/styles/panel = SubResource("StyleBoxFlat_e9fa3")
++UiTokensStamp/constants/stamp = 21
+ VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
+ VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
+ VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")

@@ -1,0 +1,54 @@
+--- final/project-unicorn/scripts/main/main.gd	2026-10-03 07:21:29.900519300 +0300
++++ statesF/project-unicorn/scripts/main/main.gd	2026-10-03 07:26:24.770011700 +0300
+@@ -699,6 +699,7 @@
+ 		# Forty on the roster with the fixture's five and the founder.
+ 		OfficeCrowdProbe.seed_staff(34)
+ 	await _mount_shot_shell()
++	_d3_state()
+ 	var view: Control = get_tree().get_first_node_in_group(&"office_view")
+ 	var city: OfficeCity = view.get_node("Viewport3D/SubViewport/World/City")
+ 	var people: OfficePeople = view.get_node("Viewport3D/SubViewport/World/People")
+@@ -2627,3 +2628,43 @@
+ 	_pre_system_speed = -1
+ 	_pre_dialogue_speed = -1
+ 	_pre_milestone_speed = -1
++
++
++func _d3_state() -> void:
++	var founder: Character = CharacterRegistry.get_founder()
++	for st in _flag_value("--d3-state=").split(",", false):
++		GameState.set_flag("mvp_version", 1)
++		match st:
++			"ready", "run":
++				CharacterRegistry.clear_jobs(founder.id)
++				CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT)
++				GameState.set_flag(ProductState.BUGS_CONFIRMED, 3)
++				if st == "run":
++					GameState.set_flag(ProductState.FIX_RUN_ACTIVE, true)
++					GameState.set_flag(ProductState.FIX_RUN_FIXED, 2)
++			"desk":
++				for c in SupportSystem.desk_roster():
++					CharacterRegistry.clear_jobs(c.id)
++				GameState.set_flag(ProductState.BUGS_CONFIRMED, 3)
++			"split":
++				for area in HRConstants.AREAS:
++					founder.role_stats[area] = HRConstants.AREA_MAX
++				CharacterRegistry.clear_jobs(founder.id)
++				CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT)
++				CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
++				GameState.set_flag(ProductState.BUGS_CONFIRMED, 3)
++			"auto":
++				GameState.product["mode"] = "active"
++				GameState.product["auto_started"] = SprintSystem.sprint_number()
++			"research", "paused":
++				var ids: Array = RnDSystem.eligible_assignees("data_model").map(func(c): return c.id)
++				print("D3STATE research start=", RnDSystem.start("data_model", ids.slice(0, 1)), " ids=", ids)
++				RnDSystem._progress["data_model"] = 14.0
++				if st == "paused":
++					RnDSystem.pause()
++			"dim_off":
++				get_tree().call_group(&"office_view", &"set_dimmed", false)
++	print("D3STATE desk=", SupportSystem.desk_staffed(), " refusal=", SupportSystem.fix_run_refusal())
++	EventBus.product_state_changed.emit()
++	EventBus.build_progress_changed.emit()
++	EventBus.research_progress_changed.emit()

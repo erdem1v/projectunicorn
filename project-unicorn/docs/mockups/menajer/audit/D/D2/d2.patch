@@ -1,0 +1,4104 @@
+diff --git a/project-unicorn/assets/art/office/icons/LICENSE-lucide.txt b/project-unicorn/assets/art/office/icons/LICENSE-lucide.txt
+new file mode 100644
+index 0000000..718bb3f
+--- /dev/null
++++ b/project-unicorn/assets/art/office/icons/LICENSE-lucide.txt
+@@ -0,0 +1,43 @@
++ISC License
++
++Copyright (c) 2026 Lucide Icons and Contributors
++
++Permission to use, copy, modify, and/or distribute this software for any
++purpose with or without fee is hereby granted, provided that the above
++copyright notice and this permission notice appear in all copies.
++
++THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++
++---
++
++The following Lucide icons are derived from the Feather project:
++
++airplay, alert-circle, alert-octagon, alert-triangle, aperture, arrow-down-circle, arrow-down-left, arrow-down-right, arrow-down, arrow-left-circle, arrow-left, arrow-right-circle, arrow-right, arrow-up-circle, arrow-up-left, arrow-up-right, arrow-up, at-sign, calendar, cast, check, chevron-down, chevron-left, chevron-right, chevron-up, chevrons-down, chevrons-left, chevrons-right, chevrons-up, circle, clipboard, clock, code, columns, command, compass, corner-down-left, corner-down-right, corner-left-down, corner-left-up, corner-right-down, corner-right-up, corner-up-left, corner-up-right, crosshair, database, divide-circle, divide-square, dollar-sign, download, external-link, feather, frown, hash, headphones, help-circle, info, italic, key, layout, life-buoy, link-2, link, loader, lock, log-in, log-out, maximize, meh, minimize, minimize-2, minus-circle, minus-square, minus, monitor, moon, more-horizontal, more-vertical, move, music, navigation-2, navigation, octagon, pause-circle, percent, plus-circle, plus-square, plus, power, radio, rss, search, server, share, shopping-bag, sidebar, smartphone, smile, square, table-2, tablet, target, terminal, trash-2, trash, triangle, tv, type, upload, x-circle, x-octagon, x-square, x, zoom-in, zoom-out
++
++The MIT License (MIT) (for the icons listed above)
++
++Copyright (c) 2013-present Cole Bemis
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
+diff --git a/project-unicorn/assets/art/office/icons/code.svg b/project-unicorn/assets/art/office/icons/code.svg
+index 5ef2020..85a2b71 100644
+--- a/project-unicorn/assets/art/office/icons/code.svg
++++ b/project-unicorn/assets/art/office/icons/code.svg
+@@ -1,5 +1,5 @@
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+-<!-- Glyph: Lucide "code" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
++<!-- Glyph: Lucide "code" (ISC License, assets/art/office/icons/LICENSE-lucide.txt) -->
+ <circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+ <circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+ <circle cx="64" cy="62" r="49" fill="none" stroke="#2f3440" stroke-width="5"/>
+diff --git a/project-unicorn/assets/art/office/icons/coffee.svg b/project-unicorn/assets/art/office/icons/coffee.svg
+index 12ec767..2ef0e9f 100644
+--- a/project-unicorn/assets/art/office/icons/coffee.svg
++++ b/project-unicorn/assets/art/office/icons/coffee.svg
+@@ -1,5 +1,5 @@
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+-<!-- Glyph: Lucide "coffee" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
++<!-- Glyph: Lucide "coffee" (ISC License, assets/art/office/icons/LICENSE-lucide.txt) -->
+ <circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+ <circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+ <circle cx="64" cy="62" r="49" fill="none" stroke="#8a5a3c" stroke-width="5"/>
+diff --git a/project-unicorn/assets/art/office/icons/design.svg b/project-unicorn/assets/art/office/icons/design.svg
+index ce60d4b..b12c59c 100644
+--- a/project-unicorn/assets/art/office/icons/design.svg
++++ b/project-unicorn/assets/art/office/icons/design.svg
+@@ -1,5 +1,5 @@
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+-<!-- Glyph: Lucide "pen" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
++<!-- Glyph: Lucide "pen" (ISC License, assets/art/office/icons/LICENSE-lucide.txt) -->
+ <circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+ <circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+ <circle cx="64" cy="62" r="49" fill="none" stroke="#2f3440" stroke-width="5"/>
+diff --git a/project-unicorn/assets/art/office/icons/food.svg b/project-unicorn/assets/art/office/icons/food.svg
+index 34d3a73..4d68ec0 100644
+--- a/project-unicorn/assets/art/office/icons/food.svg
++++ b/project-unicorn/assets/art/office/icons/food.svg
+@@ -1,5 +1,5 @@
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+-<!-- Glyph: Lucide "utensils" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
++<!-- Glyph: Lucide "utensils" (ISC License, assets/art/office/icons/LICENSE-lucide.txt) -->
+ <circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+ <circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+ <circle cx="64" cy="62" r="49" fill="none" stroke="#4f8a4f" stroke-width="5"/>
+diff --git a/project-unicorn/assets/art/office/icons/meeting.svg b/project-unicorn/assets/art/office/icons/meeting.svg
+index a5619f3..be73667 100644
+--- a/project-unicorn/assets/art/office/icons/meeting.svg
++++ b/project-unicorn/assets/art/office/icons/meeting.svg
+@@ -1,5 +1,5 @@
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+-<!-- Glyph: Lucide "users" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
++<!-- Glyph: Lucide "users" (ISC License, assets/art/office/icons/LICENSE-lucide.txt) -->
+ <circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+ <circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+ <circle cx="64" cy="62" r="49" fill="none" stroke="#6d5aa0" stroke-width="5"/>
+diff --git a/project-unicorn/assets/art/office/icons/phone.svg b/project-unicorn/assets/art/office/icons/phone.svg
+index 91d2e29..8a10fa0 100644
+--- a/project-unicorn/assets/art/office/icons/phone.svg
++++ b/project-unicorn/assets/art/office/icons/phone.svg
+@@ -1,5 +1,5 @@
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+-<!-- Glyph: Lucide "phone" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
++<!-- Glyph: Lucide "phone" (ISC License, assets/art/office/icons/LICENSE-lucide.txt) -->
+ <circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+ <circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+ <circle cx="64" cy="62" r="49" fill="none" stroke="#2f3440" stroke-width="5"/>
+diff --git a/project-unicorn/assets/art/office/icons/research.svg b/project-unicorn/assets/art/office/icons/research.svg
+index dc05e7c..2070d57 100644
+--- a/project-unicorn/assets/art/office/icons/research.svg
++++ b/project-unicorn/assets/art/office/icons/research.svg
+@@ -1,5 +1,5 @@
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+-<!-- Glyph: Lucide "search" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
++<!-- Glyph: Lucide "search" (ISC License, assets/art/office/icons/LICENSE-lucide.txt) -->
+ <circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+ <circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+ <circle cx="64" cy="62" r="49" fill="none" stroke="#2f3440" stroke-width="5"/>
+diff --git a/project-unicorn/assets/art/office/icons/test.svg b/project-unicorn/assets/art/office/icons/test.svg
+index dffe0b6..1efb834 100644
+--- a/project-unicorn/assets/art/office/icons/test.svg
++++ b/project-unicorn/assets/art/office/icons/test.svg
+@@ -1,5 +1,5 @@
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+-<!-- Glyph: Lucide "check" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
++<!-- Glyph: Lucide "check" (ISC License, assets/art/office/icons/LICENSE-lucide.txt) -->
+ <circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+ <circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+ <circle cx="64" cy="62" r="49" fill="none" stroke="#2f3440" stroke-width="5"/>
+diff --git a/project-unicorn/assets/art/office/icons/wc.svg b/project-unicorn/assets/art/office/icons/wc.svg
+index eaf51d0..372d651 100644
+--- a/project-unicorn/assets/art/office/icons/wc.svg
++++ b/project-unicorn/assets/art/office/icons/wc.svg
+@@ -1,5 +1,5 @@
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+-<!-- Glyph: Lucide "door-open" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
++<!-- Glyph: Lucide "door-open" (ISC License, assets/art/office/icons/LICENSE-lucide.txt) -->
+ <circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+ <circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+ <circle cx="64" cy="62" r="49" fill="none" stroke="#3f7fb0" stroke-width="5"/>
+diff --git a/project-unicorn/assets/icons/rail/events.svg b/project-unicorn/assets/icons/rail/events.svg
+new file mode 100644
+index 0000000..4e397ab
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/events.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M4.2 4.61 L3.82 4.69 L3.46 4.84 L3.13 5.05 L2.96 5.22 L12 11.58 L20.07 5.9 L19.1 4.6 Z M2.4 17.4 L2.44 17.79 L2.55 18.17 L2.74 18.51 L2.99 18.81 L3.13 18.95 L3.46 19.16 L3.82 19.31 L4.2 19.39 L19.6 19.4 L19.99 19.36 L20.18 19.31 L20.54 19.16 L20.71 19.06 L21.01 18.81 L21.26 18.51 L21.36 18.34 L21.51 17.98 L21.59 17.6 L21.6 7.93 L21.27 7.5 L12.58 13.62 L12.3 13.75 L12 13.8 L11.7 13.75 L11.42 13.62 L2.4 7.27 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/rail/events.svg.import b/project-unicorn/assets/icons/rail/events.svg.import
+new file mode 100644
+index 0000000..d890339
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/events.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://b4cm0hgqj70ea"
++path="res://.godot/imported/events.svg-d46cf22b86f9d7c6764d88a31685240a.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/rail/events.svg"
++dest_files=["res://.godot/imported/events.svg-d46cf22b86f9d7c6764d88a31685240a.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/rail/finance.svg b/project-unicorn/assets/icons/rail/finance.svg
+new file mode 100644
+index 0000000..1a153e7
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/finance.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M21.75 11.24 L21.61 10.29 L21.38 9.36 L21.05 8.45 L20.64 7.58 L20.15 6.76 L19.58 5.98 L18.93 5.27 L18.22 4.62 L17.44 4.05 L16.62 3.56 L15.75 3.15 L14.84 2.82 L13.91 2.59 L12.96 2.45 L12 2.4 L11.04 2.45 L10.09 2.59 L9.16 2.82 L8.25 3.15 L7.38 3.56 L6.56 4.05 L5.78 4.62 L5.07 5.27 L4.42 5.98 L3.85 6.76 L3.36 7.58 L2.95 8.45 L2.62 9.36 L2.39 10.29 L2.25 11.24 L2.2 12.2 L2.25 13.16 L2.39 14.11 L2.62 15.04 L2.95 15.95 L3.36 16.82 L3.85 17.64 L4.42 18.42 L5.07 19.13 L5.78 19.78 L6.56 20.35 L7.38 20.84 L8.25 21.25 L9.16 21.58 L10.09 21.81 L11.04 21.95 L12 22 L12.96 21.95 L13.91 21.81 L14.84 21.58 L15.75 21.25 L16.62 20.84 L17.44 20.35 L18.22 19.78 L18.93 19.13 L19.58 18.42 L20.15 17.64 L20.64 16.82 L21.05 15.95 L21.38 15.04 L21.61 14.11 L21.75 13.16 L21.8 12.2 Z M11 5.7 L11 4.1 L11.04 3.91 L11.17 3.64 L11.29 3.49 L11.44 3.37 L11.62 3.28 L11.8 3.22 L12 3.2 L12.2 3.22 L12.38 3.28 L12.56 3.37 L12.71 3.49 L12.83 3.64 L12.92 3.82 L12.98 4 L13 4.2 L13 5.6 L12.94 5.93 L13.51 6.12 L13.94 6.35 L14.26 6.57 L14.76 7.03 L15.06 7.42 L15.18 7.68 L15.21 7.98 L15.16 8.26 L15.08 8.44 L14.97 8.6 L14.75 8.8 L14.48 8.91 L14.29 8.95 L14.09 8.94 L13.9 8.9 L13.64 8.77 L13.49 8.64 L13.16 8.26 L12.87 8.04 L12.71 7.96 L12.38 7.84 L12.02 7.8 L11.67 7.83 L11.49 7.88 L11.17 8.02 L10.88 8.23 L10.64 8.49 L10.45 8.8 L10.34 9.13 L10.3 9.49 L10.34 9.84 L10.38 10.02 L10.53 10.34 L10.73 10.63 L11 10.87 L11.15 10.97 L11.47 11.11 L11.65 11.16 L12.44 11.23 L12.82 11.29 L13.2 11.4 L13.56 11.55 L13.9 11.73 L14.44 12.12 L14.72 12.4 L14.97 12.7 L15.19 13.02 L15.37 13.36 L15.51 13.73 L15.61 14.1 L15.69 14.59 L15.68 15.26 L15.6 15.75 L15.49 16.12 L15.21 16.73 L15 17.06 L14.76 17.36 L14.49 17.64 L14.18 17.88 L13.86 18.1 L13.51 18.28 L12.94 18.47 L13 18.8 L13 20.2 L12.96 20.49 L12.83 20.76 L12.63 20.97 L12.38 21.12 L12.1 21.2 L11.8 21.18 L11.53 21.08 L11.37 20.97 L11.23 20.83 L11.08 20.58 L11.02 20.4 L11 20.2 L11 18.8 L11.06 18.47 L10.49 18.28 L10.15 18.1 L9.82 17.89 L9.44 17.57 L9.18 17.29 L8.9 16.9 L8.8 16.62 L8.79 16.42 L8.81 16.23 L8.92 15.96 L9.03 15.8 L9.17 15.66 L9.34 15.56 L9.52 15.49 L9.81 15.45 L10.1 15.5 L10.36 15.63 L10.51 15.76 L10.84 16.14 L10.98 16.26 L11.13 16.36 L11.45 16.51 L11.8 16.59 L12.16 16.59 L12.51 16.52 L12.67 16.46 L12.98 16.28 L13.25 16.05 L13.46 15.76 L13.55 15.6 L13.66 15.27 L13.7 14.91 L13.66 14.56 L13.62 14.38 L13.56 14.22 L13.38 13.91 L13.14 13.64 L12.85 13.43 L12.53 13.29 L12.35 13.24 L11.56 13.17 L11.18 13.11 L10.8 13 L10.19 12.73 L9.86 12.52 L9.56 12.28 L9.28 12 L9.03 11.7 L8.81 11.38 L8.63 11.04 L8.49 10.67 L8.39 10.3 L8.31 9.81 L8.32 9.14 L8.4 8.65 L8.61 8.01 L8.84 7.58 L9.06 7.26 L9.31 6.96 L9.82 6.52 L10.14 6.3 L10.49 6.12 L11.06 5.93 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/rail/finance.svg.import b/project-unicorn/assets/icons/rail/finance.svg.import
+new file mode 100644
+index 0000000..e504943
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/finance.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://jj2142h5g7hv"
++path="res://.godot/imported/finance.svg-6335f19dea3d5c4a23eee03d6bda3dbc.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/rail/finance.svg"
++dest_files=["res://.godot/imported/finance.svg-6335f19dea3d5c4a23eee03d6bda3dbc.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/rail/hr.svg b/project-unicorn/assets/icons/rail/hr.svg
+new file mode 100644
+index 0000000..76665c1
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/hr.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M19.84 6 L19.66 5.41 L19.38 4.88 L19.2 4.63 L18.77 4.2 L18.26 3.87 L17.7 3.63 L17.4 3.56 L16.8 3.5 L16.2 3.56 L15.61 3.74 L15.34 3.87 L14.83 4.2 L14.61 4.41 L14.28 4.8 L14.52 5.29 L14.72 5.82 L14.87 6.37 L14.96 6.93 L15 7.5 L14.98 8.07 L14.91 8.63 L14.83 8.99 L15.08 9.18 L15.61 9.46 L15.9 9.57 L16.5 9.69 L17.1 9.69 L17.4 9.64 L17.99 9.46 L18.26 9.33 L18.77 9 L19.2 8.57 L19.38 8.32 L19.66 7.79 L19.84 7.2 L19.89 6.9 L19.9 6.6 Z M21.42 17.66 L21.21 16.81 L20.96 16 L20.67 15.24 L20.32 14.5 L19.96 13.86 L19.6 13.35 L19.18 12.86 L18.74 12.46 L18.25 12.12 L17.77 11.89 L17.29 11.75 L16.8 11.7 L16.26 11.76 L15.83 11.89 L15.31 12.14 L14.86 12.46 L14.47 12.81 L14.1 13.23 L14.58 13.64 L15.29 14.37 L15.93 15.18 L16.47 16.02 L16.98 16.95 L17.38 17.87 L17.74 18.91 L17.87 19.4 L21.01 19.4 L21.19 19.37 L21.3 19.33 L21.45 19.22 L21.52 19.12 L21.57 19.02 L21.61 18.84 L21.58 18.51 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M12.98 7.23 L12.93 6.86 L12.84 6.5 L12.71 6.15 L12.55 5.81 L12.36 5.49 L12.14 5.19 L11.89 4.91 L11.61 4.66 L11.31 4.44 L10.99 4.25 L10.65 4.09 L10.3 3.96 L9.94 3.87 L9.57 3.82 L9.2 3.8 L8.83 3.82 L8.46 3.87 L8.1 3.96 L7.75 4.09 L7.41 4.25 L7.09 4.44 L6.79 4.66 L6.51 4.91 L6.26 5.19 L6.04 5.49 L5.85 5.81 L5.69 6.15 L5.56 6.5 L5.47 6.86 L5.42 7.23 L5.4 7.6 L5.42 7.97 L5.47 8.34 L5.56 8.7 L5.69 9.05 L5.85 9.39 L6.04 9.71 L6.26 10.01 L6.51 10.29 L6.79 10.54 L7.09 10.76 L7.41 10.95 L7.75 11.11 L8.1 11.24 L8.46 11.33 L8.83 11.38 L9.2 11.4 L9.57 11.38 L9.94 11.33 L10.3 11.24 L10.65 11.11 L10.99 10.95 L11.31 10.76 L11.61 10.54 L11.89 10.29 L12.14 10.01 L12.36 9.71 L12.55 9.39 L12.71 9.05 L12.84 8.7 L12.93 8.34 L12.98 7.97 L13 7.6 Z M16.08 20.48 L15.86 19.6 L15.56 18.71 L15.17 17.82 L14.78 17.08 L14.31 16.35 L13.79 15.69 L13.22 15.11 L12.62 14.6 L11.99 14.18 L11.25 13.82 L10.64 13.61 L9.95 13.46 L9.16 13.4 L8.45 13.46 L7.76 13.61 L7.08 13.85 L6.48 14.15 L5.78 14.6 L5.18 15.11 L4.65 15.65 L4.09 16.35 L3.62 17.08 L3.2 17.87 L2.84 18.71 L2.56 19.55 L2.32 20.48 L2.27 20.81 L2.31 21.04 L2.44 21.23 L2.64 21.36 L2.87 21.4 L15.53 21.4 L15.71 21.37 L15.82 21.33 L15.96 21.23 L16.06 21.09 L16.11 20.98 L16.13 20.81 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/rail/hr.svg.import b/project-unicorn/assets/icons/rail/hr.svg.import
+new file mode 100644
+index 0000000..69ef1cc
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/hr.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://cigag7768tbrn"
++path="res://.godot/imported/hr.svg-1d3c0478cfb350594994a8399c9572a8.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/rail/hr.svg"
++dest_files=["res://.godot/imported/hr.svg-1d3c0478cfb350594994a8399c9572a8.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/rail/marketing.svg b/project-unicorn/assets/icons/rail/marketing.svg
+new file mode 100644
+index 0000000..6588dc4
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/marketing.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M4.91 17 L4.88 17.19 L4.92 17.42 L6.25 20.82 L6.31 20.93 L6.42 21.06 L6.58 21.15 L6.75 21.2 L8.99 21.2 L9.16 21.17 L9.27 21.13 L9.45 20.98 L9.56 20.77 L9.59 20.6 L9.58 20.48 L8.74 17.72 L8.25 17.43 L8.1 17.31 L7.78 16.96 L7.4 17 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M3.8 9.02 L3.53 9.12 L3.29 9.29 L3.17 9.44 L3.08 9.62 L3 9.9 L3 14 L3.04 14.29 L3.17 14.56 L3.29 14.71 L3.53 14.88 L3.71 14.96 L3.9 15 L7.4 15 L7.4 9 L4 9 Z M15.49 19.23 L15.68 19.27 L15.88 19.28 L16.07 19.24 L16.35 19.12 L16.5 19 L16.68 18.76 L16.78 18.48 L16.8 18.28 L16.8 5.62 L16.76 5.42 L16.68 5.24 L16.5 5 L16.35 4.88 L16.17 4.79 L15.98 4.73 L15.78 4.72 L15.58 4.74 L15.31 4.85 L9.4 8.2 L9.4 15.8 L15.31 19.15 Z M20.23 10.74 L20.35 11.04 L20.43 11.36 L20.48 11.68 L20.5 12 L20.48 12.32 L20.43 12.64 L20.35 12.96 L20.23 13.26 L20.08 13.55 L19.91 13.82 L19.58 14.23 L19.47 14.45 L19.38 14.83 L19.38 15.08 L19.43 15.33 L19.53 15.56 L19.67 15.78 L19.85 15.95 L20.06 16.09 L20.3 16.19 L20.55 16.24 L20.81 16.24 L21.06 16.19 L21.29 16.09 L21.6 15.86 L22.05 15.29 L22.37 14.79 L22.63 14.26 L22.84 13.7 L22.96 13.25 L23.06 12.66 L23.1 12.07 L23.07 11.47 L22.99 10.88 L22.84 10.3 L22.58 9.62 L22.3 9.09 L22.05 8.71 L21.68 8.24 L21.4 7.98 L21.06 7.81 L20.81 7.76 L20.55 7.76 L20.3 7.81 L20.06 7.91 L19.85 8.05 L19.67 8.22 L19.53 8.44 L19.43 8.67 L19.38 8.92 L19.38 9.17 L19.47 9.55 L19.58 9.77 L19.91 10.18 L20.08 10.45 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/rail/marketing.svg.import b/project-unicorn/assets/icons/rail/marketing.svg.import
+new file mode 100644
+index 0000000..76505b1
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/marketing.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://dtsfvfyr80vq4"
++path="res://.godot/imported/marketing.svg-e8e4e9a61c654aa5b5039d8e8a8b6736.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/rail/marketing.svg"
++dest_files=["res://.godot/imported/marketing.svg-e8e4e9a61c654aa5b5039d8e8a8b6736.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/rail/personal.svg b/project-unicorn/assets/icons/rail/personal.svg
+new file mode 100644
+index 0000000..ef06112
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/personal.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M16.38 6.77 L16.32 6.34 L16.21 5.92 L16.07 5.52 L15.88 5.13 L15.66 4.76 L15.4 4.41 L15.11 4.09 L14.79 3.8 L14.44 3.54 L14.07 3.32 L13.68 3.13 L13.28 2.99 L12.86 2.88 L12.43 2.82 L12 2.8 L11.57 2.82 L11.14 2.88 L10.72 2.99 L10.32 3.13 L9.93 3.32 L9.56 3.54 L9.21 3.8 L8.89 4.09 L8.6 4.41 L8.34 4.76 L8.12 5.13 L7.93 5.52 L7.79 5.92 L7.68 6.34 L7.62 6.77 L7.6 7.2 L7.62 7.63 L7.68 8.06 L7.79 8.48 L7.93 8.88 L8.12 9.27 L8.34 9.64 L8.6 9.99 L8.89 10.31 L9.21 10.6 L9.56 10.86 L9.93 11.08 L10.32 11.27 L10.72 11.41 L11.14 11.52 L11.57 11.58 L12 11.6 L12.43 11.58 L12.86 11.52 L13.28 11.41 L13.68 11.27 L14.07 11.08 L14.44 10.86 L14.79 10.6 L15.11 10.31 L15.4 9.99 L15.66 9.64 L15.88 9.27 L16.07 8.88 L16.21 8.48 L16.32 8.06 L16.38 7.63 L16.4 7.2 Z M19.94 20.5 L19.68 19.64 L19.33 18.78 L18.89 17.91 L18.43 17.19 L17.89 16.48 L17.29 15.84 L16.63 15.26 L15.94 14.77 L15.2 14.36 L14.38 14.01 L13.65 13.8 L12.85 13.65 L11.97 13.6 L11.15 13.65 L10.35 13.8 L9.56 14.03 L8.85 14.33 L8.06 14.77 L7.37 15.26 L6.76 15.79 L6.11 16.48 L5.57 17.19 L5.09 17.96 L4.67 18.78 L4.34 19.59 L4.06 20.5 L4.01 20.79 L4.05 21.02 L4.18 21.22 L4.38 21.35 L4.61 21.4 L19.39 21.4 L19.51 21.39 L19.67 21.33 L19.77 21.26 L19.89 21.13 L19.95 21.02 L19.99 20.85 L19.99 20.73 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/rail/personal.svg.import b/project-unicorn/assets/icons/rail/personal.svg.import
+new file mode 100644
+index 0000000..ff8ff0d
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/personal.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://bew3ph7716lui"
++path="res://.godot/imported/personal.svg-8609ca6051b5bed8081ca1c0fac744c4.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/rail/personal.svg"
++dest_files=["res://.godot/imported/personal.svg-8609ca6051b5bed8081ca1c0fac744c4.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/rail/product.svg b/project-unicorn/assets/icons/rail/product.svg
+new file mode 100644
+index 0000000..a18ba8e
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/product.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M20.28 17.08 L20.51 16.91 L20.63 16.76 L20.73 16.59 L20.8 16.3 L20.8 8.41 L13 12.6 L13 21.05 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M12.3 2.58 L12.1 2.54 L11.9 2.54 L11.7 2.58 L11.52 2.66 L4.17 6.67 L12 10.87 L19.83 6.67 L12.48 2.66 Z M3.2 16.3 L3.27 16.59 L3.37 16.76 L3.56 16.97 L3.72 17.08 L11 21.05 L11 12.6 L3.2 8.41 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/rail/product.svg.import b/project-unicorn/assets/icons/rail/product.svg.import
+new file mode 100644
+index 0000000..3e40317
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/product.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://cavkygni01imr"
++path="res://.godot/imported/product.svg-2a84b9e26e68ec0ae86fb6eba61d127d.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/rail/product.svg"
++dest_files=["res://.godot/imported/product.svg-2a84b9e26e68ec0ae86fb6eba61d127d.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/rail/rnd.svg b/project-unicorn/assets/icons/rail/rnd.svg
+new file mode 100644
+index 0000000..b54da80
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/rnd.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M14.95 4.98 L15.31 4.85 L15.52 4.7 L15.7 4.52 L15.9 4.2 L15.98 3.95 L16 3.7 L15.98 3.45 L15.9 3.2 L15.7 2.88 L15.42 2.62 L15.08 2.46 L14.7 2.4 L9.3 2.4 L9.05 2.42 L8.8 2.5 L8.58 2.62 L8.38 2.78 L8.22 2.98 L8.1 3.2 L8.01 3.57 L8.01 3.83 L8.06 4.08 L8.22 4.42 L8.48 4.7 L8.8 4.9 L9.17 4.99 L9.76 5 L9.65 5.25 L9.6 5.6 L9.6 9.4 L8.31 11.4 L15.69 11.4 L14.4 9.4 L14.4 5.6 L14.35 5.25 L14.24 5 L14.7 5 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M3.68 18.57 L3.6 18.79 L3.56 19.01 L3.57 19.36 L3.64 19.58 L4.14 20.77 L4.35 21.05 L4.64 21.26 L4.97 21.38 L5.2 21.4 L18.8 21.4 L19.03 21.38 L19.26 21.31 L19.47 21.2 L19.65 21.05 L19.8 20.87 L19.91 20.66 L20.36 19.58 L20.43 19.36 L20.45 19.13 L20.4 18.79 L20.26 18.47 L16.98 13.4 L7.02 13.4 Z M14.59 17.32 L14.55 17.55 L14.46 17.77 L14.33 17.96 L14.16 18.13 L13.97 18.26 L13.75 18.35 L13.52 18.39 L13.28 18.39 L13.05 18.35 L12.83 18.26 L12.64 18.13 L12.47 17.96 L12.34 17.77 L12.25 17.55 L12.21 17.32 L12.21 17.08 L12.25 16.85 L12.34 16.63 L12.47 16.44 L12.64 16.27 L12.83 16.14 L13.05 16.05 L13.28 16.01 L13.52 16.01 L13.75 16.05 L13.97 16.14 L14.16 16.27 L14.33 16.44 L14.46 16.63 L14.55 16.85 L14.59 17.08 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/rail/rnd.svg.import b/project-unicorn/assets/icons/rail/rnd.svg.import
+new file mode 100644
+index 0000000..14d4baf
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/rnd.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://cooeu5sa7oxpe"
++path="res://.godot/imported/rnd.svg-77574e84745a55e23de2a48484c3393c.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/rail/rnd.svg"
++dest_files=["res://.godot/imported/rnd.svg-77574e84745a55e23de2a48484c3393c.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/rail/sales.svg b/project-unicorn/assets/icons/rail/sales.svg
+new file mode 100644
+index 0000000..799201b
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/sales.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M4.3 3.42 L4.13 3.47 L3.97 3.55 L3.84 3.66 L3.73 3.8 L3.64 3.95 L3.58 4.2 L3.58 4.38 L3.61 4.55 L3.67 4.72 L3.77 4.86 L5.48 7 L18.52 7 L20.23 4.86 L20.36 4.64 L20.42 4.38 L20.42 4.2 L20.39 4.03 L20.32 3.87 L20.22 3.73 L20.1 3.6 L19.95 3.51 L19.79 3.44 L19.62 3.4 L4.47 3.4 Z M9.8 12.42 L9.8 15.79 L9.84 15.96 L9.91 16.12 L10.06 16.34 L10.2 16.45 L10.36 16.53 L10.52 16.58 L10.7 16.6 L13.3 16.6 L13.48 16.58 L13.72 16.49 L13.94 16.34 L14.05 16.2 L14.13 16.04 L14.2 15.79 L14.2 12.4 L16.92 9 L7.08 9 Z M13.77 19.85 L13.66 19.51 L13.5 19.2 L13.27 18.93 L13 18.7 L12.69 18.54 L12.35 18.43 L12 18.4 L11.65 18.43 L11.31 18.54 L11 18.7 L10.73 18.93 L10.5 19.2 L10.34 19.51 L10.23 19.85 L10.2 20.2 L10.23 20.55 L10.34 20.89 L10.5 21.2 L10.73 21.47 L11 21.7 L11.31 21.86 L11.65 21.97 L12 22 L12.35 21.97 L12.69 21.86 L13 21.7 L13.27 21.47 L13.5 21.2 L13.66 20.89 L13.77 20.55 L13.8 20.2 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/rail/sales.svg.import b/project-unicorn/assets/icons/rail/sales.svg.import
+new file mode 100644
+index 0000000..a6db51c
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/sales.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://cigesblpmull3"
++path="res://.godot/imported/sales.svg-79740fda341a20a8307e7da3741bca61.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/rail/sales.svg"
++dest_files=["res://.godot/imported/sales.svg-79740fda341a20a8307e7da3741bca61.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/rail/settings.svg b/project-unicorn/assets/icons/rail/settings.svg
+new file mode 100644
+index 0000000..e40a341
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/settings.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M5.51 10.8 L5.43 11.39 L5.4 12.03 L5.43 12.61 L5.51 13.2 L3.14 14.58 L2.97 14.71 L2.86 14.88 L2.79 15.15 L2.81 15.35 L2.96 15.78 L3.34 16.59 L3.83 17.42 L4.45 18.24 L4.56 18.35 L4.74 18.44 L5.01 18.49 L5.27 18.42 L7.72 17.01 L8.31 17.47 L8.86 17.8 L9.44 18.08 L9.8 18.21 L9.81 21.11 L9.89 21.31 L10.02 21.47 L10.19 21.59 L10.33 21.64 L11.07 21.75 L12.03 21.8 L12.99 21.75 L13.67 21.64 L13.93 21.52 L14.11 21.31 L14.2 21.04 L14.2 18.21 L14.56 18.08 L15.14 17.8 L15.69 17.47 L16.28 17.01 L18.73 18.42 L18.93 18.48 L19.06 18.48 L19.2 18.46 L19.38 18.39 L19.6 18.19 L20.13 17.47 L20.63 16.65 L21.04 15.78 L21.19 15.35 L21.21 15.15 L21.17 14.94 L21.07 14.76 L20.92 14.61 L18.49 13.2 L18.57 12.61 L18.6 12.03 L18.57 11.39 L18.49 10.8 L20.92 9.39 L21.07 9.24 L21.17 9.06 L21.21 8.78 L21.17 8.58 L21.04 8.22 L20.63 7.35 L20.13 6.53 L19.6 5.81 L19.44 5.65 L19.2 5.54 L18.99 5.51 L18.73 5.58 L16.28 6.99 L15.69 6.53 L15.14 6.2 L14.56 5.92 L14.2 5.79 L14.19 2.9 L14.12 2.72 L14.01 2.55 L13.85 2.43 L13.67 2.36 L12.93 2.25 L11.97 2.2 L11.01 2.25 L10.33 2.36 L10.09 2.47 L9.91 2.66 L9.85 2.78 L9.8 2.97 L9.8 5.79 L9.44 5.92 L8.86 6.2 L8.31 6.53 L7.72 6.99 L5.21 5.55 L5.01 5.51 L4.8 5.54 L4.62 5.61 L4.46 5.74 L3.87 6.53 L3.34 7.41 L2.96 8.22 L2.83 8.58 L2.79 8.78 L2.81 8.99 L2.89 9.18 L3.08 9.39 Z M14.99 12.29 L14.87 12.87 L14.65 13.41 L14.32 13.9 L13.9 14.32 L13.41 14.65 L12.87 14.87 L12.29 14.99 L11.71 14.99 L11.13 14.87 L10.59 14.65 L10.1 14.32 L9.68 13.9 L9.35 13.41 L9.13 12.87 L9.01 12.29 L9.01 11.71 L9.13 11.13 L9.35 10.59 L9.68 10.1 L10.1 9.68 L10.59 9.35 L11.13 9.13 L11.71 9.01 L12.29 9.01 L12.87 9.13 L13.41 9.35 L13.9 9.68 L14.32 10.1 L14.65 10.59 L14.87 11.13 L14.99 11.71 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/rail/settings.svg.import b/project-unicorn/assets/icons/rail/settings.svg.import
+new file mode 100644
+index 0000000..92093c3
+--- /dev/null
++++ b/project-unicorn/assets/icons/rail/settings.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://c7fcposqbuj5"
++path="res://.godot/imported/settings.svg-046c51fa9353a93411c6ad9789996a1f.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/rail/settings.svg"
++dest_files=["res://.godot/imported/settings.svg-046c51fa9353a93411c6ad9789996a1f.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/tabs/LICENSE-lucide.txt b/project-unicorn/assets/icons/tabs/LICENSE-lucide.txt
+deleted file mode 100644
+index 718bb3f..0000000
+--- a/project-unicorn/assets/icons/tabs/LICENSE-lucide.txt
++++ /dev/null
+@@ -1,43 +0,0 @@
+-ISC License
+-
+-Copyright (c) 2026 Lucide Icons and Contributors
+-
+-Permission to use, copy, modify, and/or distribute this software for any
+-purpose with or without fee is hereby granted, provided that the above
+-copyright notice and this permission notice appear in all copies.
+-
+-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+-
+----
+-
+-The following Lucide icons are derived from the Feather project:
+-
+-airplay, alert-circle, alert-octagon, alert-triangle, aperture, arrow-down-circle, arrow-down-left, arrow-down-right, arrow-down, arrow-left-circle, arrow-left, arrow-right-circle, arrow-right, arrow-up-circle, arrow-up-left, arrow-up-right, arrow-up, at-sign, calendar, cast, check, chevron-down, chevron-left, chevron-right, chevron-up, chevrons-down, chevrons-left, chevrons-right, chevrons-up, circle, clipboard, clock, code, columns, command, compass, corner-down-left, corner-down-right, corner-left-down, corner-left-up, corner-right-down, corner-right-up, corner-up-left, corner-up-right, crosshair, database, divide-circle, divide-square, dollar-sign, download, external-link, feather, frown, hash, headphones, help-circle, info, italic, key, layout, life-buoy, link-2, link, loader, lock, log-in, log-out, maximize, meh, minimize, minimize-2, minus-circle, minus-square, minus, monitor, moon, more-horizontal, more-vertical, move, music, navigation-2, navigation, octagon, pause-circle, percent, plus-circle, plus-square, plus, power, radio, rss, search, server, share, shopping-bag, sidebar, smartphone, smile, square, table-2, tablet, target, terminal, trash-2, trash, triangle, tv, type, upload, x-circle, x-octagon, x-square, x, zoom-in, zoom-out
+-
+-The MIT License (MIT) (for the icons listed above)
+-
+-Copyright (c) 2013-present Cole Bemis
+-
+-Permission is hereby granted, free of charge, to any person obtaining a copy
+-of this software and associated documentation files (the "Software"), to deal
+-in the Software without restriction, including without limitation the rights
+-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-copies of the Software, and to permit persons to whom the Software is
+-furnished to do so, subject to the following conditions:
+-
+-The above copyright notice and this permission notice shall be included in all
+-copies or substantial portions of the Software.
+-
+-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-SOFTWARE.
+diff --git a/project-unicorn/assets/icons/tabs/events.svg b/project-unicorn/assets/icons/tabs/events.svg
+deleted file mode 100644
+index dae4b82..0000000
+--- a/project-unicorn/assets/icons/tabs/events.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+diff --git a/project-unicorn/assets/icons/tabs/events.svg.import b/project-unicorn/assets/icons/tabs/events.svg.import
+deleted file mode 100644
+index e02a305..0000000
+--- a/project-unicorn/assets/icons/tabs/events.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://ea6mbv1vnwtg"
+-path="res://.godot/imported/events.svg-feb8b1447e70e670bd98732ae94e0f59.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/tabs/events.svg"
+-dest_files=["res://.godot/imported/events.svg-feb8b1447e70e670bd98732ae94e0f59.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=2.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/tabs/finance.svg b/project-unicorn/assets/icons/tabs/finance.svg
+deleted file mode 100644
+index 943dd44..0000000
+--- a/project-unicorn/assets/icons/tabs/finance.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 18v-7"/><path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/></svg>
+diff --git a/project-unicorn/assets/icons/tabs/finance.svg.import b/project-unicorn/assets/icons/tabs/finance.svg.import
+deleted file mode 100644
+index 4e78cc0..0000000
+--- a/project-unicorn/assets/icons/tabs/finance.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://7tkt3rvk2oq1"
+-path="res://.godot/imported/finance.svg-f5bb2628403b94f0ea5acd606226d810.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/tabs/finance.svg"
+-dest_files=["res://.godot/imported/finance.svg-f5bb2628403b94f0ea5acd606226d810.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=2.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/tabs/hr.svg b/project-unicorn/assets/icons/tabs/hr.svg
+deleted file mode 100644
+index 1e0a9d9..0000000
+--- a/project-unicorn/assets/icons/tabs/hr.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+diff --git a/project-unicorn/assets/icons/tabs/hr.svg.import b/project-unicorn/assets/icons/tabs/hr.svg.import
+deleted file mode 100644
+index 2339bae..0000000
+--- a/project-unicorn/assets/icons/tabs/hr.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://buut4lck0jm42"
+-path="res://.godot/imported/hr.svg-5ee863f6b85f6983b7a26acfde15e752.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/tabs/hr.svg"
+-dest_files=["res://.godot/imported/hr.svg-5ee863f6b85f6983b7a26acfde15e752.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=2.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/tabs/marketing.svg b/project-unicorn/assets/icons/tabs/marketing.svg
+deleted file mode 100644
+index 07af8b2..0000000
+--- a/project-unicorn/assets/icons/tabs/marketing.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
+diff --git a/project-unicorn/assets/icons/tabs/marketing.svg.import b/project-unicorn/assets/icons/tabs/marketing.svg.import
+deleted file mode 100644
+index bb22c30..0000000
+--- a/project-unicorn/assets/icons/tabs/marketing.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://bfbsd5akncuw6"
+-path="res://.godot/imported/marketing.svg-4bafd6e4f10440ca3c9294789f364aa7.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/tabs/marketing.svg"
+-dest_files=["res://.godot/imported/marketing.svg-4bafd6e4f10440ca3c9294789f364aa7.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=2.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/tabs/personal.svg b/project-unicorn/assets/icons/tabs/personal.svg
+deleted file mode 100644
+index cb5d357..0000000
+--- a/project-unicorn/assets/icons/tabs/personal.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+diff --git a/project-unicorn/assets/icons/tabs/personal.svg.import b/project-unicorn/assets/icons/tabs/personal.svg.import
+deleted file mode 100644
+index b24fcc7..0000000
+--- a/project-unicorn/assets/icons/tabs/personal.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://1k33agl3jw2n"
+-path="res://.godot/imported/personal.svg-0c92c55982beb40ff71abf1c07be252c.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/tabs/personal.svg"
+-dest_files=["res://.godot/imported/personal.svg-0c92c55982beb40ff71abf1c07be252c.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=2.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/tabs/product.svg b/project-unicorn/assets/icons/tabs/product.svg
+deleted file mode 100644
+index 8a2e6d3..0000000
+--- a/project-unicorn/assets/icons/tabs/product.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/></svg>
+diff --git a/project-unicorn/assets/icons/tabs/product.svg.import b/project-unicorn/assets/icons/tabs/product.svg.import
+deleted file mode 100644
+index 64a7ceb..0000000
+--- a/project-unicorn/assets/icons/tabs/product.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://dom8bd8smib1c"
+-path="res://.godot/imported/product.svg-0a20e51ef7f4d301d98520323ee8dcde.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/tabs/product.svg"
+-dest_files=["res://.godot/imported/product.svg-0a20e51ef7f4d301d98520323ee8dcde.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=2.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/tabs/rnd.svg b/project-unicorn/assets/icons/tabs/rnd.svg
+deleted file mode 100644
+index 6b4c9a6..0000000
+--- a/project-unicorn/assets/icons/tabs/rnd.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>
+diff --git a/project-unicorn/assets/icons/tabs/rnd.svg.import b/project-unicorn/assets/icons/tabs/rnd.svg.import
+deleted file mode 100644
+index 436b01c..0000000
+--- a/project-unicorn/assets/icons/tabs/rnd.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://df1oln2mb2xx"
+-path="res://.godot/imported/rnd.svg-1685e2bf80d62be78261482a8d8b63cb.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/tabs/rnd.svg"
+-dest_files=["res://.godot/imported/rnd.svg-1685e2bf80d62be78261482a8d8b63cb.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=2.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/tabs/sales.svg b/project-unicorn/assets/icons/tabs/sales.svg
+deleted file mode 100644
+index 545ca8a..0000000
+--- a/project-unicorn/assets/icons/tabs/sales.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>
+diff --git a/project-unicorn/assets/icons/tabs/sales.svg.import b/project-unicorn/assets/icons/tabs/sales.svg.import
+deleted file mode 100644
+index 2c67cc3..0000000
+--- a/project-unicorn/assets/icons/tabs/sales.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://bg34ucp107i2j"
+-path="res://.godot/imported/sales.svg-87e6d7d71badf1cc0fe6bee040c254b3.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/tabs/sales.svg"
+-dest_files=["res://.godot/imported/sales.svg-87e6d7d71badf1cc0fe6bee040c254b3.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=2.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/tabs/settings.svg b/project-unicorn/assets/icons/tabs/settings.svg
+deleted file mode 100644
+index 0d37479..0000000
+--- a/project-unicorn/assets/icons/tabs/settings.svg
++++ /dev/null
+@@ -1 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
+diff --git a/project-unicorn/assets/icons/tabs/settings.svg.import b/project-unicorn/assets/icons/tabs/settings.svg.import
+deleted file mode 100644
+index 00b5566..0000000
+--- a/project-unicorn/assets/icons/tabs/settings.svg.import
++++ /dev/null
+@@ -1,43 +0,0 @@
+-[remap]
+-
+-importer="texture"
+-type="CompressedTexture2D"
+-uid="uid://c2buljbh8l20c"
+-path="res://.godot/imported/settings.svg-613829855c1178e8fbd86f03e250233e.ctex"
+-metadata={
+-"vram_texture": false
+-}
+-
+-[deps]
+-
+-source_file="res://assets/icons/tabs/settings.svg"
+-dest_files=["res://.godot/imported/settings.svg-613829855c1178e8fbd86f03e250233e.ctex"]
+-
+-[params]
+-
+-compress/mode=0
+-compress/high_quality=false
+-compress/lossy_quality=0.7
+-compress/uastc_level=0
+-compress/rdo_quality_loss=0.0
+-compress/hdr_compression=1
+-compress/normal_map=0
+-compress/channel_pack=0
+-mipmaps/generate=false
+-mipmaps/limit=-1
+-roughness/mode=0
+-roughness/src_normal=""
+-process/channel_remap/red=0
+-process/channel_remap/green=1
+-process/channel_remap/blue=2
+-process/channel_remap/alpha=3
+-process/fix_alpha_border=true
+-process/premult_alpha=false
+-process/normal_map_invert_y=false
+-process/hdr_as_srgb=false
+-process/hdr_clamp_exposure=false
+-process/size_limit=0
+-detect_3d/compress_to=1
+-svg/scale=2.0
+-editor/scale_with_editor_scale=false
+-editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/lock.svg b/project-unicorn/assets/icons/util/lock.svg
+new file mode 100644
+index 0000000..8d3e899
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/lock.svg
+@@ -0,0 +1,3 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-rule="evenodd" d="M17.7 8.2 L17.66 7.54 L17.59 7.08 L17.44 6.5 L17.18 5.82 L16.9 5.29 L16.65 4.91 L16.19 4.34 L15.86 4.01 L15.4 3.63 L14.91 3.3 L14.26 2.97 L13.7 2.76 L13.25 2.64 L12.53 2.53 L12.07 2.5 L11.47 2.53 L10.75 2.64 L10.3 2.76 L9.74 2.97 L9.09 3.3 L8.6 3.63 L8.24 3.92 L7.81 4.34 L7.35 4.91 L7.03 5.41 L6.77 5.94 L6.6 6.37 L6.44 6.95 L6.34 7.54 L6.3 8.13 L6.3 10.02 L5.96 10.09 L5.56 10.26 L5.38 10.37 L5.04 10.64 L4.77 10.98 L4.66 11.16 L4.57 11.36 L4.44 11.77 L4.4 12.2 L4.41 19.62 L4.44 19.83 L4.57 20.24 L4.77 20.62 L5.04 20.96 L5.38 21.23 L5.76 21.43 L6.17 21.56 L6.6 21.6 L17.62 21.59 L17.83 21.56 L18.24 21.43 L18.62 21.23 L18.96 20.96 L19.23 20.62 L19.43 20.24 L19.56 19.83 L19.59 19.62 L19.59 11.98 L19.56 11.77 L19.43 11.36 L19.23 10.98 L18.96 10.64 L18.62 10.37 L18.44 10.26 L18.04 10.09 L17.7 10.02 Z M9.05 7.24 L9.17 6.94 L9.32 6.65 L9.49 6.38 L9.7 6.13 L9.93 5.9 L10.18 5.69 L10.45 5.52 L10.74 5.37 L11.04 5.25 L11.36 5.17 L11.68 5.12 L12 5.1 L12.32 5.12 L12.64 5.17 L12.96 5.25 L13.26 5.37 L13.55 5.52 L13.82 5.69 L14.07 5.9 L14.3 6.13 L14.51 6.38 L14.68 6.65 L14.83 6.94 L14.95 7.24 L15.03 7.56 L15.08 7.88 L15.1 8.23 L15.1 10 L8.9 10 L8.9 8.23 L8.92 7.88 L8.97 7.56 Z M13.79 14.78 L13.72 15.12 L13.66 15.29 L13.5 15.6 L13.39 15.74 L13.14 15.99 L12.8 16.21 L12.8 17.68 L12.74 17.91 L12.67 18.04 L12.57 18.17 L12.44 18.27 L12.31 18.34 L12.16 18.38 L12 18.4 L11.84 18.38 L11.69 18.34 L11.56 18.27 L11.43 18.17 L11.33 18.04 L11.26 17.91 L11.22 17.76 L11.2 16.21 L10.86 15.99 L10.61 15.74 L10.41 15.45 L10.28 15.12 L10.23 14.95 L10.2 14.6 L10.23 14.25 L10.34 13.91 L10.5 13.6 L10.73 13.33 L11 13.1 L11.15 13.01 L11.48 12.88 L11.65 12.83 L12 12.8 L12.35 12.83 L12.52 12.88 L12.85 13.01 L13 13.1 L13.27 13.33 L13.5 13.6 L13.66 13.91 L13.77 14.25 L13.8 14.6 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/lock.svg.import b/project-unicorn/assets/icons/util/lock.svg.import
+new file mode 100644
+index 0000000..6a18565
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/lock.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://wr11mlflqx4k"
++path="res://.godot/imported/lock.svg-7fef8635d5f9b40efe91c12cc12c941b.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/lock.svg"
++dest_files=["res://.godot/imported/lock.svg-7fef8635d5f9b40efe91c12cc12c941b.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=1.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/assets/icons/util/news.svg b/project-unicorn/assets/icons/util/news.svg
+new file mode 100644
+index 0000000..c4324ad
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/news.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
++<path fill="#FFFFFF" fill-opacity="0.4" fill-rule="evenodd" d="M21.8 9.4 L21.75 9.05 L21.66 8.83 L21.53 8.64 L21.36 8.47 L21.17 8.34 L20.95 8.25 L20.72 8.21 L20.48 8.21 L20.25 8.25 L20.03 8.34 L19.84 8.47 L19.67 8.64 L19.54 8.83 L19.45 9.05 L19.41 9.28 L19.41 20.12 L19.45 20.35 L19.54 20.57 L19.75 20.85 L20.03 21.06 L20.25 21.15 L20.48 21.19 L20.72 21.19 L20.95 21.15 L21.17 21.06 L21.36 20.93 L21.53 20.76 L21.66 20.57 L21.75 20.35 L21.79 20.12 Z"/>
++<path fill="#FFFFFF" fill-rule="evenodd" d="M3.69 3.83 L3.39 3.92 L3.25 3.99 L3.11 4.07 L2.87 4.27 L2.67 4.51 L2.52 4.79 L2.43 5.09 L2.41 5.24 L2.4 19.6 L2.43 19.91 L2.52 20.21 L2.67 20.49 L2.76 20.62 L2.98 20.84 L3.25 21.01 L3.39 21.08 L3.69 21.17 L4 21.2 L16.4 21.2 L16.71 21.17 L17.01 21.08 L17.15 21.01 L17.42 20.84 L17.64 20.62 L17.81 20.35 L17.88 20.21 L17.97 19.91 L18 19.6 L18 7.13 L15.5 3.8 L4 3.8 Z M12.28 7.01 L12.39 7.05 L12.51 7.15 L12.58 7.28 L12.6 7.4 L12.6 10.24 L12.53 10.42 L12.39 10.55 L12.2 10.6 L5.6 10.6 L5.48 10.58 L5.38 10.53 L5.25 10.39 L5.2 10.2 L5.2 7.36 L5.27 7.18 L5.41 7.05 L5.6 7 Z M14.6 15 L5.5 15 L5.31 14.96 L5.13 14.88 L4.97 14.77 L4.83 14.63 L4.72 14.47 L4.64 14.29 L4.6 14.1 L4.6 13.9 L4.68 13.62 L4.77 13.44 L4.89 13.29 L5.13 13.12 L5.31 13.04 L5.5 13 L14.7 13 L14.89 13.04 L15.07 13.12 L15.31 13.29 L15.43 13.44 L15.52 13.62 L15.58 13.8 L15.6 14 L15.58 14.2 L15.52 14.38 L15.43 14.56 L15.31 14.71 L15.16 14.83 L14.98 14.92 L14.8 14.98 Z M11.6 18.6 L5.6 18.6 L5.4 18.58 L5.22 18.52 L5.04 18.43 L4.89 18.31 L4.77 18.16 L4.68 17.98 L4.62 17.8 L4.6 17.6 L4.62 17.4 L4.72 17.13 L4.83 16.97 L4.97 16.83 L5.22 16.68 L5.5 16.6 L11.6 16.6 L11.8 16.62 L12.07 16.72 L12.23 16.83 L12.37 16.97 L12.48 17.13 L12.56 17.31 L12.6 17.5 L12.6 17.7 L12.56 17.89 L12.48 18.07 L12.37 18.23 L12.23 18.37 L12.07 18.48 L11.89 18.56 Z"/>
++</svg>
+diff --git a/project-unicorn/assets/icons/util/news.svg.import b/project-unicorn/assets/icons/util/news.svg.import
+new file mode 100644
+index 0000000..69839a3
+--- /dev/null
++++ b/project-unicorn/assets/icons/util/news.svg.import
+@@ -0,0 +1,43 @@
++[remap]
++
++importer="texture"
++type="CompressedTexture2D"
++uid="uid://dc3d1dfb3jiso"
++path="res://.godot/imported/news.svg-3a8309da6dfe79879d19ae299632bcd6.ctex"
++metadata={
++"vram_texture": false
++}
++
++[deps]
++
++source_file="res://assets/icons/util/news.svg"
++dest_files=["res://.godot/imported/news.svg-3a8309da6dfe79879d19ae299632bcd6.ctex"]
++
++[params]
++
++compress/mode=0
++compress/high_quality=false
++compress/lossy_quality=0.7
++compress/uastc_level=0
++compress/rdo_quality_loss=0.0
++compress/hdr_compression=1
++compress/normal_map=0
++compress/channel_pack=0
++mipmaps/generate=false
++mipmaps/limit=-1
++roughness/mode=0
++roughness/src_normal=""
++process/channel_remap/red=0
++process/channel_remap/green=1
++process/channel_remap/blue=2
++process/channel_remap/alpha=3
++process/fix_alpha_border=true
++process/premult_alpha=false
++process/normal_map_invert_y=false
++process/hdr_as_srgb=false
++process/hdr_clamp_exposure=false
++process/size_limit=0
++detect_3d/compress_to=1
++svg/scale=2.0
++editor/scale_with_editor_scale=false
++editor/convert_colors_with_editor_theme=false
+diff --git a/project-unicorn/docs/ACIK_ISLER/ACIK_KARARLAR.md b/project-unicorn/docs/ACIK_ISLER/ACIK_KARARLAR.md
+index 4713a28..a59e41d 100644
+--- a/project-unicorn/docs/ACIK_ISLER/ACIK_KARARLAR.md
++++ b/project-unicorn/docs/ACIK_ISLER/ACIK_KARARLAR.md
+@@ -1886,3 +1886,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
+   (Konsept, yayın akışı, kapasite bloğu, fiyat paneli, Frank şeridi, monitör), ch12 .docx §3 ve §5 eski ev sahiplerini
+   ve onboarding'in Konsept'e açılmasını anlatıyor. Ajanın verdiği kararlar 96'dadır. Açık: ch03 ve ch12 .docx rev 7'ye
+   güncellensin mi. Kaynak: `docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md`; GUNCELLEMELER "Ürün rev 7".
++
++- **Üst barın saati kendi bloğunda (tasarım sistemi, sahip onayı 2026-10-02).** Üst bar tarihi ve saati ayrı
++  bloklarda gösterir: gün bloğu tarihi (`DATE_LINE`, "Hafta 14 · Nisan 2026"; dar genişlikte `TOPBAR_DATE_COMPACT`,
++  "H14 · Nis") ve hafta çubuğunu, saat bloğu saati ve hız tuşlarını taşır (`top_bar.gd`). ZAMAN MODELİ §5 TopBar'ın
++  saati tarih satırına eklediğini ("Hafta 14 · Nisan 2026 · 09:00") ve kısa biçimi `TOPBAR_CLOCK_COMPACT`
++  ("H14 · Nis · 09:00") anlatıyor; o anahtar silindi. Açık: ZAMAN MODELİ §5 ya da GUNCELLEMELER güncellensin mi.
++  Kaynak: Menajer Masası tasarım sistemi (Erdem 2026-10-02, "UI approved").
+diff --git a/project-unicorn/docs/ACIK_ISLER/ISLER.md b/project-unicorn/docs/ACIK_ISLER/ISLER.md
+index 6646334..c65002b 100644
+--- a/project-unicorn/docs/ACIK_ISLER/ISLER.md
++++ b/project-unicorn/docs/ACIK_ISLER/ISLER.md
+@@ -27,7 +27,7 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
+ - Ham stil değerleri (UI/STYLE LAW; her biri yeni token ister): `month_summary_modal.gd` font, yarıçap, margin;
+   `finance_ozet_view.gd` modulate'ları; `hunt_tab.gd` `_label` boyutları (11–14; 14 merdivende yok)
+   ve disabled alfaları; `OnboardingFlow.tscn` LoadingLabel 18, `origin_traits_step.gd` ve `character_step.gd`
+-  modulate'ları; `top_bar.gd` `_apply_density` aralıkları; bir yerde ham 24 punto ve CREAM rengi.
++  modulate'ları; bir yerde ham 24 punto ve CREAM rengi.
+ - `hr_tab.gd` saat çipini (`_paint_hours_control`) ve Kadro/Görevler segmentini (`_paint_segments`) elle kurduğu
+   StyleBoxFlat'lerle çiziyor; ikisi de tema varyasyonu ister (UI/STYLE LAW 4).
+ - Çubukların tema bağımsızlığı: `bar_kit.gd`, `build_bar.gd` ve `research_bar.gd` bilerek tema varyasyonu kullanmıyor,
+@@ -60,6 +60,10 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
+   karar bekleyen kartla sprint içi, sürüm notu, beta sürümü, B2B talepleri, ÇEYREK (PM'li ve PM'siz). Kareler
+   `--product-shot=live:<pick|plan|active|b2c_mvp|b2b_requests>` ve fikstürle `--product-shot=<c1..c5|edge:<ad>>`;
+   PRD §7.24'ün kareleri `docs/audits/urun_rev7/` altına, §8'in kontrolleri sahibin.
++- **"Sprint otomatik başladı" notunun Ürün penceresindeki yeri.** Not BuildHUD'ın DESTEK kartındadır
++  (`build_bar.gd`). Kart yalnız ürün yayındayken vardır ve bir pencere üstüne gelince gizlenir
++  (`BuildHUDPanel.set_window_cover`); ürün yayına çıkmadan not hiç görünmez, Ürün penceresi açıkken de görünmez.
++  Notun ikinci yeri Ürün penceresidir; Ürün ekranı koyu dile taşınırken kurulur (`product_tab.gd`).
+ - **Yeniden yuva listesi (PRD §5.9, §7.23).** GDD'de adı geçtiği ya da sahip tuttuğu için kalan, sprint geçişiyle
+   oyun içi çağıranı kalmayan öğeler; her biri sprint ekranında bir yere bağlanır ya da sahibin kararıyla silinir:
+   - Hata trendi zinciri (ch03 §8.4 yön okları; sahip): `ProductSystem.bug_trend`, `health_state`, `product_bug_risk`,
+diff --git a/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md b/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md
+index 7745a88..ee5e74f 100644
+--- a/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md
++++ b/project-unicorn/docs/EVENT_SIGNAL_MANIFEST.md
+@@ -77,8 +77,8 @@ excluded from both counts and shown in the notes column when they are all a sign
+ |---|---|---|---|---|---|
+ | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
+ | `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 14 | 1 | main |
+-| `language_changed` | `locale: String` | localization | 1 | 7 | news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
+-| `palette_changed` | `colorblind: bool` | settings_modal | 2 | 6 | hr_tab · research_bar · top_bar · window_layer · office_city · office_notice_stack |
++| `language_changed` | `locale: String` | localization | 1 | 8 | left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
++| `palette_changed` | `colorblind: bool` | settings_modal | 2 | 8 | hr_tab · left_tabs · news_ticker · research_bar · top_bar · window_layer · office_city · office_notice_stack |
+ 
+ ### Character signals
+ 
+@@ -170,7 +170,7 @@ excluded from both counts and shown in the notes column when they are all a sign
+ | `sprint_closed` | `number: int` | sprint_system | 1 | 1 | game_shell |
+ | `card_decision_requested` | `card_id: String` | sprint_system | 1 | 0 | — |
+ | `sprint_auto_started` | `number: int` | sprint_system | 1 | 0 | — |
+-| `product_state_changed` | `—` | sprint_system | 1 | 2 | product_tab · top_bar |
++| `product_state_changed` | `—` | sprint_system | 1 | 2 | product_tab · build_bar |
+ 
+ ### GDD AR-GE MODÜLÜ §10 · OKUMA YÜZEYİNİN SİNYALLERİ
+ 
+diff --git a/project-unicorn/docs/HARITA.md b/project-unicorn/docs/HARITA.md
+index 02ae57d..70b336b 100644
+--- a/project-unicorn/docs/HARITA.md
++++ b/project-unicorn/docs/HARITA.md
+@@ -73,13 +73,13 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+ 
+ ## Kabuk (main.gd, GameShell, TopBar, LeftTabs, WindowLayer) · GDD ch12
+ 
+-- **Yer:** `scripts/main/{main,game_shell}.gd`, `scenes/main/{Main,GameShell}.tscn`, `scripts/ui/components/{top_bar,left_tabs,window_layer,window_frame,desk_papers}.gd`, `scenes/ui/components/{TopBar,LeftTabs}.tscn`, `scripts/tabs/events_tab.gd`, `scenes/tabs/EventsTab.tscn`, `scripts/modals/confirm_modal.gd`, `scenes/modals/ConfirmModal.tscn`, `assets/icons/tabs/`
++- **Yer:** `scripts/main/{main,game_shell}.gd`, `scenes/main/{Main,GameShell}.tscn`, `scripts/ui/components/{top_bar,left_tabs,news_ticker,window_layer,window_frame,desk_papers}.gd`, `scenes/ui/components/{TopBar,LeftTabs,NewsTicker}.tscn`, `scripts/tabs/events_tab.gd`, `scenes/tabs/EventsTab.tscn`, `scripts/modals/confirm_modal.gd`, `scenes/modals/ConfirmModal.tscn`, `assets/icons/{rail,util}/`
+ - **Sahip:** `main.gd` (ana sahne kökü), `game_shell.gd` (`GameShell.tscn`), `window_layer.gd` (`CenterViewport`, grup `window_layer`); `window_frame.gd` ve `desk_papers.gd` (yolla preload edilir, sınıf adı yok)
+ - **Giriş:**
+   - `main.gd` açılışta debug bayraklarını yönlendirir, sonra onboarding'i ya da kabuğu kurar. Oyunda modal ve sahneleri EventBus sinyalleriyle açar: `modal_requested`, `pitch_requested`, `meeting_scene_requested`, `term_table_requested`, `rnd_card_requested`, `confirm_requested` (`hr_action` dahil), `settings_requested`, `system_menu_requested`, `save_load_requested`, `summary_ready` (dönem özeti modalı), `run_ended`, `milestone_reached`, `product_note_issued` (ilk Ar-Ge notu). Ayrıca `quicksave_requested` / `quickload_requested`'i ve olay modalını kapatan `event_resolved`'u dinler.
+   - `WindowLayer` (`CenterViewport`'un script'i) `EventBus.tab_changed`'i dinler ve sekmeyi ofisin üstünde sabit yuvalı bir pencerede açar: `TAB_SCENES` sekme sahneleri, `SPECS` 1920×1080 tabanında pencere boyları, `WindowFrame` kabuk (sağ üstte ×). Aynı anda en çok bir birincil ve ona bağlı bir ayrıntı penceresi (`DETAILS`: `hr_dossier`); sürükleme yok. `open_primary(id)`, `open_detail(kind, payload)`, `close_top()` (Esc: önce ayrıntı, sonra birincil; hiçbir pencere yoksa false döner ve `game_shell` sistem menüsünü açar), `get_current_page_body()` (harness). `hr_dossier` açılınca ofiste kişinin halkası yanar (`office_view.select_person`), ayrıntı kapanınca söner (`clear_selection`). `tab_changed("")` pencere yok demektir; ×, Esc ve aktif sekmeye tekrar tık bu sinyale çıkar. Dil ya da palet değişince açık pencereler yeniden kurulur. Çocuk sırası: `OfficeView`, `BuildHUD`, pencereler. Kabuk: üst bar 64, haber şeridi 40 px; ray `CenterViewport`'un sol kenarının üstüne opak biner ve `WindowLayer` onun canlı genişliğini izler (`rail`): ofis ve `BuildHUD` rayın sağındaki alana oturur (`OfficeView.set_safe_left`), pencereler o alanın 24 px içinde. Ofisin üstündeki yüzenler (`office_overlays`: `BuildHUD`, not yığını, Ofisi taşı) pencerelerin altında çizilir ve üstlerine pencere binince gizlenir (`set_window_cover`).
+   - `DeskPapers` masadaki kâğıtların tek türetme ve çizim evidir: `gather()` motor kâğıtlarını (`EventGate.desk_papers`) ve durumdan türeyen hatırlatıcıları (faz kapısı, term sheet, Atlas dosyaları, B2B genişlemesi) verir, `make_row()` satırı çizer, `open()` motor kâğıdını `EventGate.open_paper` ile açar, hatırlatıcıyı sekmesine götürür. Kâğıdı değiştiren sinyallere `connect_changes(c)` ile abone olunur. Okuyanlar: Olaylar sayfası (`events_tab.gd`: Frank'in son satırı `GameState.mentor_line_key` + `mentor_line_args`, çizimde `tr(key).format(args)`, ve bütün kâğıtlar) ve ofisin not yığını.
+-  - `LeftTabs` ray, kilit ve rozetleri; mantıksal genişlik `DisplaySettings.COMPACT_SHELL_BELOW`'un altındayken simge kipine geçer (adlar gizli, ipucunda), üst bar aynı eşikte sıkışır. `TopBar` kasa, MRR, runway, tarih ve hız düğmelerini taşır; burn ve net canlı aylık hızdır (`FinanceSystem.get_monthly_flow`, `/ay`). Hız isteğini `EventBus.speed_change_requested` ile gönderir, düğmeleri `TimeManager.speed_changed` ile boyar.
++  - Üst bar, ray ve haber şeridi koyu temadadır (`menajer_theme.tres` köklerinde). `LeftTabs` ray, kilit ve rozetleri: satır durumu boşta, etkin (yükselmiş zemin ve sol kenarda işaret) ya da kilitli (ikon ve ad soluk, gerekçe adın altında: demoda `ENDING_BADGE_EA`); kırmızı rozet yalnız tehlikede (Ekip, Satış, Finans), öteki sayılar nötr. Mantıksal genişlik `DisplaySettings.COMPACT_SHELL_BELOW`'un altındayken simge kipine geçer (adlar gizli, ipucunda; rozet ve kilit ikonun köşesinde), üst bar aynı eşikte sıkışır. `TopBar` iki satırlık metrik ızgarasıdır, her yazı taban çizgisine göre yerleşir: marka bloğu, KASA (altında NET), RUNWAY (kasa eksiyken KEPENK sayacı), MRR/MARKA, BURN/İTİBAR, gün bloğu ve hafta çubuğu (08:00'den mesai bitimine, `WorkHoursSystem.workday_end`), Sıradaki yuvası (teklif süresi, yoksa mesai bitimi) ve saat bloğu; burn ve net canlı aylık hızdır (`FinanceSystem.get_monthly_flow`, `/ay`). Hız isteğini `EventBus.speed_change_requested` ile gönderir, düğmeleri `TimeManager.speed_changed` ile boyar. `NewsTicker` yayın adlarını kendi renginde akıtır; aç/kapa hücresi oyuncunun ayarıdır (`Settings` `ticker_open`), kapalıyken şerit sol altta yalnız o hücredir ve `game_shell` ofisi ve rayı alta indirir (`open_changed`). Sprint kendiliğinden başladığında not BuildHUD kartının altındadır (`build_bar.gd`).
+   - Görüşme daveti `main.gd`'dedir: satışta `_on_pitch_requested`, VC'de `_process` fonun çağrısını yoklar
+     (`VCPitchSystem.call_waiting`) ve `_ring_fund` kartı hemen açıp saati durdurur; ikisi de `_ring_call` ile ofiste
+     `MeetingInvite`'ı çaldırır (Kabul et `_on_call_accepted`, Ertele `_on_call_postponed`). Kabulden sonra
+@@ -119,8 +119,8 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+   - `SprintBridges`: ticket defteri `sync_tickets`, `close_tickets` (gerçekten kapananları döndürür), `add_faulty_ticket` (sayacı `ProductState.adjust_confirmed` yazar; DESTEK'in kodu değişmez); B2B talepleri `tick_requests`, `on_release` (sürümde altyapı payını da büyütür); rakip `tick_rivals`, `press_line`; ekonomi `push_axes`, `on_mvp`, `open_paid_plan`; sürüm notu cümleleri `actual_sentence` ve `resolve` (saklanan {key, args}'ı ekranın dilinde okur).
+   - `ProductState` canlı ürün okumalarının ve kendi tanımladığı `mvp_*` adlarının tek evidir (`is_live`, `market_type`, `subtype`, `version`, `bugs_confirmed`, `line_tier`, `set_line_tier`, `adjust_confirmed`, `realized_dims`); eski `mvp_*` bayrakları (`mvp_shipped`, `mvp_live_bug_count`, `mvp_market_type`…) birçok sistemde hâlâ doğrudan okunur. `ProductSystem` canlı ürünün saatlik aşınmasını (havuzu her açık sürüm sıfırlar), hata geçmişini ve trend zincirini (`bug_trend`, `health_state`, `product_bug_risk`), `live_bug_count` ve `has_b2b_product`'ı taşır. `ProductRead` olay motoruna açılan `urun.*` okuma yüzeyidir. `ProductLines` (`data/product/lines/*.json`), `LineGates.is_unlocked` / `unmet_parts`, `ProductCatalog` (`playable_types`, `suggest_product_name`, `type_name`, `type_desc`, `type_tradeoff`), `QualityModel`.
+   - `InfraSystem.daily_tick` (sunucu faturasını "servers", servis maliyetini "service" burn kalemine yazar), `provider`, `capacity_state`, `monthly_bill`, `monthly_service` (B2B hesap başı, koltuk başı × yük ve onboarding'deki hesabın MRR × evre katı; B2C bin kullanıcı başı × yük; `SERVICE_*`, `ONBOARDING_MRR_MULT`), `gross_margin_monthly` (MRR − fatura − servis), `meets_enterprise_trust`, `set_provider` / `set_capacity` (MVP'de ve her sürümde `SprintBridges` çağırır; sürümün hedefi `units_for_occupancy`); `SupportSystem.daily_tick` / `hourly_tick`, `start_fix_run`, `end_fix_run`, `desk_staffed`.
+-  - Sekme: `WindowLayer` Ürün yuvasına `ProductTab.tscn`'i takar (1424×960; sayfa `frame_options` ile kendi × düğmesini ve iç boşluğunu seçer). Ekran yalnız `ProductModel` sözlüğünü çizer (sözleşme `product_model.gd`'nin başında); kaynak `set_source(src)` (`model()`, `act(kind, args)`), kaynak yoksa `ProductModel.live()` ve eylemler `SprintSystem`'e gider; tür seçilmemişse ortada `TypePicker` durur. Sürüm notu açıkken saat `HOLD_RELEASE_NOTE` ile tutulur, sayfa kapanınca (`on_page_closing`) bırakılır. `GameShell` `sprint_closed`'da Ürün sekmesini açar; TopBar `sprint_auto_started` notunu taşır. Debug röleleri `GameShell.debug_product_apply(fixture_id)`, `debug_product_act(kind)`.
+-  - DESTEK kartı (`build_bar.gd`, `build_bar_model.gd`) yalnız yayındaki ürünü, doğrulanmış hataları ve düzeltme koşusunu çizer; `BuildHUDPanel` onu Ar-Ge çubuğuyla birlikte taşır.
++  - Sekme: `WindowLayer` Ürün yuvasına `ProductTab.tscn`'i takar (1424×960; sayfa `frame_options` ile kendi × düğmesini ve iç boşluğunu seçer). Ekran yalnız `ProductModel` sözlüğünü çizer (sözleşme `product_model.gd`'nin başında); kaynak `set_source(src)` (`model()`, `act(kind, args)`), kaynak yoksa `ProductModel.live()` ve eylemler `SprintSystem`'e gider; tür seçilmemişse ortada `TypePicker` durur. Sürüm notu açıkken saat `HOLD_RELEASE_NOTE` ile tutulur, sayfa kapanınca (`on_page_closing`) bırakılır. `GameShell` `sprint_closed`'da Ürün sekmesini açar. Debug röleleri `GameShell.debug_product_apply(fixture_id)`, `debug_product_act(kind)`.
++  - DESTEK kartı (`build_bar.gd`, `build_bar_model.gd`) yalnız yayındaki ürünü, doğrulanmış hataları, düzeltme koşusunu ve kendiliğinden başlayan sprintin notunu çizer; `BuildHUDPanel` onu Ar-Ge çubuğuyla birlikte taşır.
+   - Sinyaller EventBus'ın Sprint bölümündedir (`sprint_planned`, `sprint_started`, `card_phase_changed`, `card_done`, `card_carried_over`, `sprint_closed`, `card_decision_requested`, `sprint_auto_started`, `product_state_changed`). Sürüm çıkaran kapanış `version_shipped` ve `build_phase_changed("shipped")` yayar (söz sistemi, Ar-Ge ve probe dinler).
+   - Olay seam'leri `urun.*` (`seams_product.gd`, `seams_ported.gd`); sprint okumaları `urun.sprint_number`, `urun.sprint_week`, `urun.sprint_running`, `urun.decision_card`, `urun.decision_card_late`, `urun.decision_card_effort`; altyapı `urun.capacity_state`, `urun.enterprise_trust`. Karar kartları `product.sprint_two_paths`, `product.sprint_late`, `product.sprint_contractor`'dır (`sprint.json` `decision.cards`, oran `decision.rate`; zar koşu tohumunu da okur).
+ - **Smoke:** `sprint_*`, `product_*`, `line_*`, `infra_*`, `destek_*`, `coupling_*` (Ekip ile ortak), `save_v14_*` (Kayıt ile ortak), `fix_run_ships_subset`, `support_desk_rates_stack`, `quality_half_sat_25`, `b2b_v1_lands_mid_band`, `b2c_satisfaction_drifts_to_experience`, `b2c_value_reads_live_lines`, `promise_row_locked_when_no_room`, `axis_reading_replaces_not_adds`, `gate_scope_and_halves`, `above_gate_bonus_ladder`, `type_screen_matches_line_content`, `split_bars_name_their_cause` (Ar-Ge ile ortak).
+@@ -307,5 +307,5 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
+ - **Ofis 3B dışa aktarım hattı (çevrim dışı; oyun yalnız çıktılarını yükler):**
+   - `tools/office3d/`: tasarımın Three.js kaynağının birebir kopyası (`src/`; kaynak ve deltalar `DESIGN_SOURCE.md`), dışa aktarım sayfası (`export_office.html`, `export_office.js`), `serve.py`, `run_export.sh` ve denetim `check_export.py`. Tarif ve tuzaklar `README.md`'de. `.gdignore` taşır.
+   - Çıktılar: `art/office3d/<id>.glb` ve `<id>.json` (`home`, `ishani`, `plaza`, `loft`, `city`), `assets/art/office/thumb_<id>.jpg`. Koşu Chrome'u ön planda açar ve ağ ister (esm.sh, Xbot). Sonra `--headless --import` ve bir ısınma koşusu (sınıf önbelleği tuzağı); içe aktarıcı GLB'nin gömülü dokularını `art/office3d/<id>_<n>.png` olarak çıkarır.
+-- **Üçüncü taraf varlıklar:** ray ikonları (`assets/icons/tabs/`) ve ofisin kafa üstü ikonlarındaki glifler Lucide'dir (ISC, `assets/icons/tabs/LICENSE-lucide.txt`); ofis kişileri Quaternius Ultimate Modular Men/Women ve Universal Animation Library 1/2 ile Mesh2Motion kliplerindendir (CC0; lisans metinleri `assets/art/people/LICENSES/`, kaynak ve rig hattı `assets/art/people/README.md`, `tools/people/README.md`); Frank'in ve kurucuların portreleri (`assets/art/portraits/`) bu gövdelerden `tools/people/bake_portraits.gd` ile pişirilir, dosya başına görünüş imzası ve sha256 `assets/art/portraits/README.md`'de.
++- **Üçüncü taraf varlıklar:** ofisin kafa üstü ikonlarındaki glifler Lucide'dir (ISC, `assets/art/office/icons/LICENSE-lucide.txt`); ofis kişileri Quaternius Ultimate Modular Men/Women ve Universal Animation Library 1/2 ile Mesh2Motion kliplerindendir (CC0; lisans metinleri `assets/art/people/LICENSES/`, kaynak ve rig hattı `assets/art/people/README.md`, `tools/people/README.md`); Frank'in ve kurucuların portreleri (`assets/art/portraits/`) bu gövdelerden `tools/people/bake_portraits.gd` ile pişirilir, dosya başına görünüş imzası ve sha256 `assets/art/portraits/README.md`'de.
+ - **Kök dosyalar:** `project.godot` (ana sahne, `main_args`, autoload sırası, viewport), `icon.svg`, `.editorconfig`, `.gitattributes`, `.gitignore`. Git kökündeki `.agents/`, `.claude/skills/` ve `skills-lock.json` projenin parçası değildir.
+diff --git a/project-unicorn/docs/writing/FRANK_VOICE_INVENTORY.md b/project-unicorn/docs/writing/FRANK_VOICE_INVENTORY.md
+index 5919f1d..5f89f18 100644
+--- a/project-unicorn/docs/writing/FRANK_VOICE_INVENTORY.md
++++ b/project-unicorn/docs/writing/FRANK_VOICE_INVENTORY.md
+@@ -189,7 +189,7 @@ Whitelist: `day == 179` (Sun 28 Jun 2026, provable); ≥ 1 active sheet; hour 00
+ - `[COND?]` none.
+ 
+ ### 23 · `ev_shutter_warning` — in the red
+-Whitelist: `cash < 0` for the first time since the last recovery; `shutter_days_left` just set to 7 ← `endings_system.gd:19, 96-106`; the counter is on the top bar (`FIN_SHUTTER_COUNTDOWN`); a queued gate card was pulled; hour 00. Not provable: MRR band; whether a recovery happened before (the card re-arms).
++Whitelist: `cash < 0` for the first time since the last recovery; `shutter_days_left` just set to 7 ← `endings_system.gd:19, 96-106`; the counter is the top bar's RUNWAY cell, keyed KEPENK (`TOPBAR_SHUTTER`); a queued gate card was pulled; hour 00. Not provable: MRR band; whether a recovery happened before (the card re-arms).
+ - `[COND?]` first-time vs repeat shutter (readable only by keeping a counter; none today)
+ 
+ ### 24 · `ev_pivot_offer` — the third no
+diff --git a/project-unicorn/localization/strings.csv b/project-unicorn/localization/strings.csv
+index 30cb837..0e10d07 100644
+--- a/project-unicorn/localization/strings.csv
++++ b/project-unicorn/localization/strings.csv
+@@ -423,8 +423,6 @@ TAB_SETTINGS,Ayarlar,Settings
+ FIN_PHASE_BOOTSTRAP,Bootstrap,Bootstrap
+ FIN_PHASE_TRACTION,Traction,Traction
+ FIN_PHASE_SERIES_A,Series A,Series A
+-FIN_SHUTTER_COUNTDOWN,KEPENK: {n} HAFTA,SHUTTER: {n} WEEKS
+-FIN_SHUTTER_COUNTDOWN_ONE,KEPENK: {n} HAFTA,SHUTTER: {n} WEEK
+ FIN_CAP_CASH,KASA,CASH
+ FIN_CAP_BURN,BURN,BURN
+ FIN_CAP_NET,NET,NET
+@@ -1479,10 +1477,15 @@ NEWS_RIVAL_UP_3,{name} fiyat kampanyasıyla alan kazanıyor; pazar payı {share}
+ NEWS_RIVAL_DOWN_0,{name} bu hafta pay kaybetti; koridorlarda indirim söylentisi dolaşıyor.,{name} lost share this week; there is a discount rumour going round the corridors.
+ NEWS_RIVAL_DOWN_1,{name} müşterilerinin yenileme pazarlığı sertleşti; payı {share} seviyesine geriledi.,{name}'s customers have hardened in renewal talks; its share has slipped to {share}.
+ NEWS_RIVAL_DOWN_2,{name} kilit bir hesabını kaybetti; pazar payı {share} bandına indi.,{name} lost a key account; its market share has dropped into the {share} band.
+-TOPBAR_CLOCK,{date} · {hour}:00,{date} · {hour}:00
+-TOPBAR_CLOCK_COMPACT,H{week} · {mon} · {hour}:00,W{week} · {mon} · {hour}:00
+-FIN_OFFER_COUNTDOWN,TEKLİF · {n} HAFTA,OFFER · {n} WEEKS
+-FIN_OFFER_COUNTDOWN_ONE,TEKLİF · {n} HAFTA,OFFER · {n} WEEK
++TOPBAR_BRAND,Project Unicorn,Project Unicorn
++TOPBAR_DATE_COMPACT,H{week} · {mon},W{week} · {mon}
++TOPBAR_SHUTTER,Kepenk,Shutter
++TOPBAR_SHUTTER_WEEKS,{n} hafta,{n} weeks
++TOPBAR_SHUTTER_WEEKS_ONE,{n} hafta,{n} week
++TOPBAR_NEXT,Sıradaki,Up next
++TOPBAR_NEXT_OFFER,Teklif · {n} hafta kaldı,Offer · {n} weeks left
++TOPBAR_NEXT_OFFER_LAST,Teklif · bu hafta son,Offer · final week
++TOPBAR_NEXT_WORKDAY_END,Mesai bitimi · {n} saat,Workday ends · {n} h
+ MONTH_TITLE,{month} {year},{month} {year}
+ SUMMARY_TITLE_WEEK,Hafta {week} · {year},Week {week} · {year}
+ SUMMARY_TITLE_QUARTER,{quarter}. Çeyrek {year},Q{quarter} {year}
+diff --git a/project-unicorn/scenes/ui/components/LeftTabs.tscn b/project-unicorn/scenes/ui/components/LeftTabs.tscn
+index b6cf17d..89bd31b 100644
+--- a/project-unicorn/scenes/ui/components/LeftTabs.tscn
++++ b/project-unicorn/scenes/ui/components/LeftTabs.tscn
+@@ -1,18 +1,20 @@
+-[gd_scene load_steps=11 format=3]
++[gd_scene load_steps=12 format=3]
+ 
+ [ext_resource type="Script" path="res://scripts/ui/components/left_tabs.gd" id="1_lefttabs"]
+-[ext_resource type="Texture2D" path="res://assets/icons/tabs/product.svg" id="2_product"]
+-[ext_resource type="Texture2D" path="res://assets/icons/tabs/hr.svg" id="3_hr"]
+-[ext_resource type="Texture2D" path="res://assets/icons/tabs/finance.svg" id="4_finance"]
+-[ext_resource type="Texture2D" path="res://assets/icons/tabs/sales.svg" id="5_sales"]
+-[ext_resource type="Texture2D" path="res://assets/icons/tabs/marketing.svg" id="6_marketing"]
+-[ext_resource type="Texture2D" path="res://assets/icons/tabs/rnd.svg" id="7_rnd"]
+-[ext_resource type="Texture2D" path="res://assets/icons/tabs/personal.svg" id="8_personal"]
+-[ext_resource type="Texture2D" path="res://assets/icons/tabs/events.svg" id="9_events"]
+-[ext_resource type="Texture2D" path="res://assets/icons/tabs/settings.svg" id="10_settings"]
++[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_menajer"]
++[ext_resource type="Texture2D" path="res://assets/icons/rail/product.svg" id="3_product"]
++[ext_resource type="Texture2D" path="res://assets/icons/rail/sales.svg" id="4_sales"]
++[ext_resource type="Texture2D" path="res://assets/icons/rail/hr.svg" id="5_hr"]
++[ext_resource type="Texture2D" path="res://assets/icons/rail/finance.svg" id="6_finance"]
++[ext_resource type="Texture2D" path="res://assets/icons/rail/personal.svg" id="7_personal"]
++[ext_resource type="Texture2D" path="res://assets/icons/rail/marketing.svg" id="8_marketing"]
++[ext_resource type="Texture2D" path="res://assets/icons/rail/rnd.svg" id="9_rnd"]
++[ext_resource type="Texture2D" path="res://assets/icons/rail/events.svg" id="10_events"]
++[ext_resource type="Texture2D" path="res://assets/icons/rail/settings.svg" id="11_settings"]
+ 
+ [node name="LeftTabs" type="Panel"]
+ custom_minimum_size = Vector2(184, 0)
++theme = ExtResource("2_menajer")
+ theme_type_variation = &"SideRailPanel"
+ script = ExtResource("1_lefttabs")
+ 
+@@ -23,29 +25,28 @@ anchor_right = 1.0
+ anchor_bottom = 1.0
+ grow_horizontal = 2
+ grow_vertical = 2
+-theme_override_constants/margin_left = 4
++theme_override_constants/margin_left = 0
+ theme_override_constants/margin_top = 12
+-theme_override_constants/margin_right = 4
++theme_override_constants/margin_right = 1
+ theme_override_constants/margin_bottom = 12
+ 
+ [node name="Col" type="VBoxContainer" parent="Margin"]
+ layout_mode = 2
+-theme_override_constants/separation = 4
++theme_override_constants/separation = 0
+ 
+ [node name="ProductBtn" type="Button" parent="Margin/Col"]
+ custom_minimum_size = Vector2(0, 48)
+ layout_mode = 2
+ focus_mode = 0
+-theme_type_variation = &"TabButton"
+-text = ""
++theme_type_variation = &"RailRow"
+ 
+ [node name="Stack" type="HBoxContainer" parent="Margin/Col/ProductBtn"]
+ layout_mode = 1
+ anchors_preset = 15
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+-offset_left = 16.0
+-offset_right = -12.0
++offset_left = 20.0
++offset_right = -16.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
+@@ -54,8 +55,9 @@ theme_override_constants/separation = 12
+ [node name="Icon" type="TextureRect" parent="Margin/Col/ProductBtn/Stack"]
+ custom_minimum_size = Vector2(24, 24)
+ layout_mode = 2
++size_flags_vertical = 4
+ mouse_filter = 2
+-texture = ExtResource("2_product")
++texture = ExtResource("3_product")
+ expand_mode = 1
+ stretch_mode = 5
+ 
+@@ -63,37 +65,27 @@ stretch_mode = 5
+ layout_mode = 2
+ size_flags_horizontal = 3
+ mouse_filter = 2
+-theme_type_variation = &"TabLabel"
++theme_type_variation = &"NavLabel"
+ text = "TAB_PRODUCT"
+ vertical_alignment = 1
+ 
+-[node name="Badge" type="Panel" parent="Margin/Col/ProductBtn"]
++[node name="Badge" type="Label" parent="Margin/Col/ProductBtn"]
+ visible = false
+-custom_minimum_size = Vector2(16, 16)
++custom_minimum_size = Vector2(20, 20)
+ layout_mode = 1
+ anchors_preset = 6
+ anchor_left = 1.0
+ anchor_top = 0.5
+ anchor_right = 1.0
+ anchor_bottom = 0.5
+-offset_left = -28.0
+-offset_top = -8.0
+-offset_right = -12.0
+-offset_bottom = 8.0
++offset_left = -36.0
++offset_top = -10.0
++offset_right = -16.0
++offset_bottom = 10.0
+ grow_horizontal = 0
+ grow_vertical = 2
+ mouse_filter = 2
+-theme_type_variation = &"TabBadge"
+-
+-[node name="BadgeLabel" type="Label" parent="Margin/Col/ProductBtn/Badge"]
+-layout_mode = 1
+-anchors_preset = 15
+-anchor_right = 1.0
+-anchor_bottom = 1.0
+-grow_horizontal = 2
+-grow_vertical = 2
+-mouse_filter = 2
+-theme_type_variation = &"BadgeLabel"
++theme_type_variation = &"BadgeCount"
+ text = "0"
+ horizontal_alignment = 1
+ vertical_alignment = 1
+@@ -102,16 +94,15 @@ vertical_alignment = 1
+ custom_minimum_size = Vector2(0, 48)
+ layout_mode = 2
+ focus_mode = 0
+-theme_type_variation = &"TabButton"
+-text = ""
++theme_type_variation = &"RailRow"
+ 
+ [node name="Stack" type="HBoxContainer" parent="Margin/Col/SalesBtn"]
+ layout_mode = 1
+ anchors_preset = 15
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+-offset_left = 16.0
+-offset_right = -12.0
++offset_left = 20.0
++offset_right = -16.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
+@@ -120,8 +111,9 @@ theme_override_constants/separation = 12
+ [node name="Icon" type="TextureRect" parent="Margin/Col/SalesBtn/Stack"]
+ custom_minimum_size = Vector2(24, 24)
+ layout_mode = 2
++size_flags_vertical = 4
+ mouse_filter = 2
+-texture = ExtResource("5_sales")
++texture = ExtResource("4_sales")
+ expand_mode = 1
+ stretch_mode = 5
+ 
+@@ -129,37 +121,27 @@ stretch_mode = 5
+ layout_mode = 2
+ size_flags_horizontal = 3
+ mouse_filter = 2
+-theme_type_variation = &"TabLabel"
++theme_type_variation = &"NavLabel"
+ text = "TAB_SALES"
+ vertical_alignment = 1
+ 
+-[node name="Badge" type="Panel" parent="Margin/Col/SalesBtn"]
++[node name="Badge" type="Label" parent="Margin/Col/SalesBtn"]
+ visible = false
+-custom_minimum_size = Vector2(16, 16)
++custom_minimum_size = Vector2(20, 20)
+ layout_mode = 1
+ anchors_preset = 6
+ anchor_left = 1.0
+ anchor_top = 0.5
+ anchor_right = 1.0
+ anchor_bottom = 0.5
+-offset_left = -28.0
+-offset_top = -8.0
+-offset_right = -12.0
+-offset_bottom = 8.0
++offset_left = -36.0
++offset_top = -10.0
++offset_right = -16.0
++offset_bottom = 10.0
+ grow_horizontal = 0
+ grow_vertical = 2
+ mouse_filter = 2
+-theme_type_variation = &"TabBadge"
+-
+-[node name="BadgeLabel" type="Label" parent="Margin/Col/SalesBtn/Badge"]
+-layout_mode = 1
+-anchors_preset = 15
+-anchor_right = 1.0
+-anchor_bottom = 1.0
+-grow_horizontal = 2
+-grow_vertical = 2
+-mouse_filter = 2
+-theme_type_variation = &"BadgeLabel"
++theme_type_variation = &"BadgeCount"
+ text = "0"
+ horizontal_alignment = 1
+ vertical_alignment = 1
+@@ -168,16 +150,15 @@ vertical_alignment = 1
+ custom_minimum_size = Vector2(0, 48)
+ layout_mode = 2
+ focus_mode = 0
+-theme_type_variation = &"TabButton"
+-text = ""
++theme_type_variation = &"RailRow"
+ 
+ [node name="Stack" type="HBoxContainer" parent="Margin/Col/HRBtn"]
+ layout_mode = 1
+ anchors_preset = 15
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+-offset_left = 16.0
+-offset_right = -12.0
++offset_left = 20.0
++offset_right = -16.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
+@@ -186,8 +167,9 @@ theme_override_constants/separation = 12
+ [node name="Icon" type="TextureRect" parent="Margin/Col/HRBtn/Stack"]
+ custom_minimum_size = Vector2(24, 24)
+ layout_mode = 2
++size_flags_vertical = 4
+ mouse_filter = 2
+-texture = ExtResource("3_hr")
++texture = ExtResource("5_hr")
+ expand_mode = 1
+ stretch_mode = 5
+ 
+@@ -195,37 +177,27 @@ stretch_mode = 5
+ layout_mode = 2
+ size_flags_horizontal = 3
+ mouse_filter = 2
+-theme_type_variation = &"TabLabel"
++theme_type_variation = &"NavLabel"
+ text = "TAB_HR"
+ vertical_alignment = 1
+ 
+-[node name="Badge" type="Panel" parent="Margin/Col/HRBtn"]
++[node name="Badge" type="Label" parent="Margin/Col/HRBtn"]
+ visible = false
+-custom_minimum_size = Vector2(16, 16)
++custom_minimum_size = Vector2(20, 20)
+ layout_mode = 1
+ anchors_preset = 6
+ anchor_left = 1.0
+ anchor_top = 0.5
+ anchor_right = 1.0
+ anchor_bottom = 0.5
+-offset_left = -28.0
+-offset_top = -8.0
+-offset_right = -12.0
+-offset_bottom = 8.0
++offset_left = -36.0
++offset_top = -10.0
++offset_right = -16.0
++offset_bottom = 10.0
+ grow_horizontal = 0
+ grow_vertical = 2
+ mouse_filter = 2
+-theme_type_variation = &"TabBadge"
+-
+-[node name="BadgeLabel" type="Label" parent="Margin/Col/HRBtn/Badge"]
+-layout_mode = 1
+-anchors_preset = 15
+-anchor_right = 1.0
+-anchor_bottom = 1.0
+-grow_horizontal = 2
+-grow_vertical = 2
+-mouse_filter = 2
+-theme_type_variation = &"BadgeLabel"
++theme_type_variation = &"BadgeCount"
+ text = "0"
+ horizontal_alignment = 1
+ vertical_alignment = 1
+@@ -234,16 +206,15 @@ vertical_alignment = 1
+ custom_minimum_size = Vector2(0, 48)
+ layout_mode = 2
+ focus_mode = 0
+-theme_type_variation = &"TabButton"
+-text = ""
++theme_type_variation = &"RailRow"
+ 
+ [node name="Stack" type="HBoxContainer" parent="Margin/Col/FinanceBtn"]
+ layout_mode = 1
+ anchors_preset = 15
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+-offset_left = 16.0
+-offset_right = -12.0
++offset_left = 20.0
++offset_right = -16.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
+@@ -252,8 +223,9 @@ theme_override_constants/separation = 12
+ [node name="Icon" type="TextureRect" parent="Margin/Col/FinanceBtn/Stack"]
+ custom_minimum_size = Vector2(24, 24)
+ layout_mode = 2
++size_flags_vertical = 4
+ mouse_filter = 2
+-texture = ExtResource("4_finance")
++texture = ExtResource("6_finance")
+ expand_mode = 1
+ stretch_mode = 5
+ 
+@@ -261,37 +233,27 @@ stretch_mode = 5
+ layout_mode = 2
+ size_flags_horizontal = 3
+ mouse_filter = 2
+-theme_type_variation = &"TabLabel"
++theme_type_variation = &"NavLabel"
+ text = "TAB_FINANCE"
+ vertical_alignment = 1
+ 
+-[node name="Badge" type="Panel" parent="Margin/Col/FinanceBtn"]
++[node name="Badge" type="Label" parent="Margin/Col/FinanceBtn"]
+ visible = false
+-custom_minimum_size = Vector2(16, 16)
++custom_minimum_size = Vector2(20, 20)
+ layout_mode = 1
+ anchors_preset = 6
+ anchor_left = 1.0
+ anchor_top = 0.5
+ anchor_right = 1.0
+ anchor_bottom = 0.5
+-offset_left = -28.0
+-offset_top = -8.0
+-offset_right = -12.0
+-offset_bottom = 8.0
++offset_left = -36.0
++offset_top = -10.0
++offset_right = -16.0
++offset_bottom = 10.0
+ grow_horizontal = 0
+ grow_vertical = 2
+ mouse_filter = 2
+-theme_type_variation = &"TabBadge"
+-
+-[node name="BadgeLabel" type="Label" parent="Margin/Col/FinanceBtn/Badge"]
+-layout_mode = 1
+-anchors_preset = 15
+-anchor_right = 1.0
+-anchor_bottom = 1.0
+-grow_horizontal = 2
+-grow_vertical = 2
+-mouse_filter = 2
+-theme_type_variation = &"BadgeLabel"
++theme_type_variation = &"BadgeCount"
+ text = "0"
+ horizontal_alignment = 1
+ vertical_alignment = 1
+@@ -300,16 +262,15 @@ vertical_alignment = 1
+ custom_minimum_size = Vector2(0, 48)
+ layout_mode = 2
+ focus_mode = 0
+-theme_type_variation = &"TabButton"
+-text = ""
++theme_type_variation = &"RailRow"
+ 
+ [node name="Stack" type="HBoxContainer" parent="Margin/Col/PersonalBtn"]
+ layout_mode = 1
+ anchors_preset = 15
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+-offset_left = 16.0
+-offset_right = -12.0
++offset_left = 20.0
++offset_right = -16.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
+@@ -318,8 +279,9 @@ theme_override_constants/separation = 12
+ [node name="Icon" type="TextureRect" parent="Margin/Col/PersonalBtn/Stack"]
+ custom_minimum_size = Vector2(24, 24)
+ layout_mode = 2
++size_flags_vertical = 4
+ mouse_filter = 2
+-texture = ExtResource("8_personal")
++texture = ExtResource("7_personal")
+ expand_mode = 1
+ stretch_mode = 5
+ 
+@@ -327,37 +289,27 @@ stretch_mode = 5
+ layout_mode = 2
+ size_flags_horizontal = 3
+ mouse_filter = 2
+-theme_type_variation = &"TabLabel"
++theme_type_variation = &"NavLabel"
+ text = "TAB_PERSONAL"
+ vertical_alignment = 1
+ 
+-[node name="Badge" type="Panel" parent="Margin/Col/PersonalBtn"]
++[node name="Badge" type="Label" parent="Margin/Col/PersonalBtn"]
+ visible = false
+-custom_minimum_size = Vector2(16, 16)
++custom_minimum_size = Vector2(20, 20)
+ layout_mode = 1
+ anchors_preset = 6
+ anchor_left = 1.0
+ anchor_top = 0.5
+ anchor_right = 1.0
+ anchor_bottom = 0.5
+-offset_left = -28.0
+-offset_top = -8.0
+-offset_right = -12.0
+-offset_bottom = 8.0
++offset_left = -36.0
++offset_top = -10.0
++offset_right = -16.0
++offset_bottom = 10.0
+ grow_horizontal = 0
+ grow_vertical = 2
+ mouse_filter = 2
+-theme_type_variation = &"TabBadge"
+-
+-[node name="BadgeLabel" type="Label" parent="Margin/Col/PersonalBtn/Badge"]
+-layout_mode = 1
+-anchors_preset = 15
+-anchor_right = 1.0
+-anchor_bottom = 1.0
+-grow_horizontal = 2
+-grow_vertical = 2
+-mouse_filter = 2
+-theme_type_variation = &"BadgeLabel"
++theme_type_variation = &"BadgeCount"
+ text = "0"
+ horizontal_alignment = 1
+ vertical_alignment = 1
+@@ -366,16 +318,15 @@ vertical_alignment = 1
+ custom_minimum_size = Vector2(0, 48)
+ layout_mode = 2
+ focus_mode = 0
+-theme_type_variation = &"TabButton"
+-text = ""
++theme_type_variation = &"RailRow"
+ 
+ [node name="Stack" type="HBoxContainer" parent="Margin/Col/MarketingBtn"]
+ layout_mode = 1
+ anchors_preset = 15
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+-offset_left = 16.0
+-offset_right = -12.0
++offset_left = 20.0
++offset_right = -16.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
+@@ -384,8 +335,9 @@ theme_override_constants/separation = 12
+ [node name="Icon" type="TextureRect" parent="Margin/Col/MarketingBtn/Stack"]
+ custom_minimum_size = Vector2(24, 24)
+ layout_mode = 2
++size_flags_vertical = 4
+ mouse_filter = 2
+-texture = ExtResource("6_marketing")
++texture = ExtResource("8_marketing")
+ expand_mode = 1
+ stretch_mode = 5
+ 
+@@ -393,37 +345,27 @@ stretch_mode = 5
+ layout_mode = 2
+ size_flags_horizontal = 3
+ mouse_filter = 2
+-theme_type_variation = &"TabLabel"
++theme_type_variation = &"NavLabel"
+ text = "TAB_MARKETING"
+ vertical_alignment = 1
+ 
+-[node name="Badge" type="Panel" parent="Margin/Col/MarketingBtn"]
++[node name="Badge" type="Label" parent="Margin/Col/MarketingBtn"]
+ visible = false
+-custom_minimum_size = Vector2(16, 16)
++custom_minimum_size = Vector2(20, 20)
+ layout_mode = 1
+ anchors_preset = 6
+ anchor_left = 1.0
+ anchor_top = 0.5
+ anchor_right = 1.0
+ anchor_bottom = 0.5
+-offset_left = -28.0
+-offset_top = -8.0
+-offset_right = -12.0
+-offset_bottom = 8.0
++offset_left = -36.0
++offset_top = -10.0
++offset_right = -16.0
++offset_bottom = 10.0
+ grow_horizontal = 0
+ grow_vertical = 2
+ mouse_filter = 2
+-theme_type_variation = &"TabBadge"
+-
+-[node name="BadgeLabel" type="Label" parent="Margin/Col/MarketingBtn/Badge"]
+-layout_mode = 1
+-anchors_preset = 15
+-anchor_right = 1.0
+-anchor_bottom = 1.0
+-grow_horizontal = 2
+-grow_vertical = 2
+-mouse_filter = 2
+-theme_type_variation = &"BadgeLabel"
++theme_type_variation = &"BadgeCount"
+ text = "0"
+ horizontal_alignment = 1
+ vertical_alignment = 1
+@@ -432,16 +374,15 @@ vertical_alignment = 1
+ custom_minimum_size = Vector2(0, 48)
+ layout_mode = 2
+ focus_mode = 0
+-theme_type_variation = &"TabButton"
+-text = ""
++theme_type_variation = &"RailRow"
+ 
+ [node name="Stack" type="HBoxContainer" parent="Margin/Col/RnDBtn"]
+ layout_mode = 1
+ anchors_preset = 15
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+-offset_left = 16.0
+-offset_right = -12.0
++offset_left = 20.0
++offset_right = -16.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
+@@ -450,8 +391,9 @@ theme_override_constants/separation = 12
+ [node name="Icon" type="TextureRect" parent="Margin/Col/RnDBtn/Stack"]
+ custom_minimum_size = Vector2(24, 24)
+ layout_mode = 2
++size_flags_vertical = 4
+ mouse_filter = 2
+-texture = ExtResource("7_rnd")
++texture = ExtResource("9_rnd")
+ expand_mode = 1
+ stretch_mode = 5
+ 
+@@ -459,37 +401,27 @@ stretch_mode = 5
+ layout_mode = 2
+ size_flags_horizontal = 3
+ mouse_filter = 2
+-theme_type_variation = &"TabLabel"
++theme_type_variation = &"NavLabel"
+ text = "TAB_RND"
+ vertical_alignment = 1
+ 
+-[node name="Badge" type="Panel" parent="Margin/Col/RnDBtn"]
++[node name="Badge" type="Label" parent="Margin/Col/RnDBtn"]
+ visible = false
+-custom_minimum_size = Vector2(16, 16)
++custom_minimum_size = Vector2(20, 20)
+ layout_mode = 1
+ anchors_preset = 6
+ anchor_left = 1.0
+ anchor_top = 0.5
+ anchor_right = 1.0
+ anchor_bottom = 0.5
+-offset_left = -28.0
+-offset_top = -8.0
+-offset_right = -12.0
+-offset_bottom = 8.0
++offset_left = -36.0
++offset_top = -10.0
++offset_right = -16.0
++offset_bottom = 10.0
+ grow_horizontal = 0
+ grow_vertical = 2
+ mouse_filter = 2
+-theme_type_variation = &"TabBadge"
+-
+-[node name="BadgeLabel" type="Label" parent="Margin/Col/RnDBtn/Badge"]
+-layout_mode = 1
+-anchors_preset = 15
+-anchor_right = 1.0
+-anchor_bottom = 1.0
+-grow_horizontal = 2
+-grow_vertical = 2
+-mouse_filter = 2
+-theme_type_variation = &"BadgeLabel"
++theme_type_variation = &"BadgeCount"
+ text = "0"
+ horizontal_alignment = 1
+ vertical_alignment = 1
+@@ -498,16 +430,15 @@ vertical_alignment = 1
+ custom_minimum_size = Vector2(0, 48)
+ layout_mode = 2
+ focus_mode = 0
+-theme_type_variation = &"TabButton"
+-text = ""
++theme_type_variation = &"RailRow"
+ 
+ [node name="Stack" type="HBoxContainer" parent="Margin/Col/EventsBtn"]
+ layout_mode = 1
+ anchors_preset = 15
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+-offset_left = 16.0
+-offset_right = -12.0
++offset_left = 20.0
++offset_right = -16.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
+@@ -516,8 +447,9 @@ theme_override_constants/separation = 12
+ [node name="Icon" type="TextureRect" parent="Margin/Col/EventsBtn/Stack"]
+ custom_minimum_size = Vector2(24, 24)
+ layout_mode = 2
++size_flags_vertical = 4
+ mouse_filter = 2
+-texture = ExtResource("9_events")
++texture = ExtResource("10_events")
+ expand_mode = 1
+ stretch_mode = 5
+ 
+@@ -525,37 +457,27 @@ stretch_mode = 5
+ layout_mode = 2
+ size_flags_horizontal = 3
+ mouse_filter = 2
+-theme_type_variation = &"TabLabel"
++theme_type_variation = &"NavLabel"
+ text = "TAB_EVENTS"
+ vertical_alignment = 1
+ 
+-[node name="Badge" type="Panel" parent="Margin/Col/EventsBtn"]
++[node name="Badge" type="Label" parent="Margin/Col/EventsBtn"]
+ visible = false
+-custom_minimum_size = Vector2(16, 16)
++custom_minimum_size = Vector2(20, 20)
+ layout_mode = 1
+ anchors_preset = 6
+ anchor_left = 1.0
+ anchor_top = 0.5
+ anchor_right = 1.0
+ anchor_bottom = 0.5
+-offset_left = -28.0
+-offset_top = -8.0
+-offset_right = -12.0
+-offset_bottom = 8.0
++offset_left = -36.0
++offset_top = -10.0
++offset_right = -16.0
++offset_bottom = 10.0
+ grow_horizontal = 0
+ grow_vertical = 2
+ mouse_filter = 2
+-theme_type_variation = &"TabBadge"
+-
+-[node name="BadgeLabel" type="Label" parent="Margin/Col/EventsBtn/Badge"]
+-layout_mode = 1
+-anchors_preset = 15
+-anchor_right = 1.0
+-anchor_bottom = 1.0
+-grow_horizontal = 2
+-grow_vertical = 2
+-mouse_filter = 2
+-theme_type_variation = &"BadgeLabel"
++theme_type_variation = &"BadgeCount"
+ text = "0"
+ horizontal_alignment = 1
+ vertical_alignment = 1
+@@ -564,23 +486,19 @@ vertical_alignment = 1
+ layout_mode = 2
+ size_flags_vertical = 3
+ 
+-[node name="Divider" type="HSeparator" parent="Margin/Col"]
+-layout_mode = 2
+-
+ [node name="SettingsBtn" type="Button" parent="Margin/Col"]
+ custom_minimum_size = Vector2(0, 48)
+ layout_mode = 2
+ focus_mode = 0
+-theme_type_variation = &"TabButton"
+-text = ""
++theme_type_variation = &"RailRow"
+ 
+ [node name="Stack" type="HBoxContainer" parent="Margin/Col/SettingsBtn"]
+ layout_mode = 1
+ anchors_preset = 15
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+-offset_left = 16.0
+-offset_right = -12.0
++offset_left = 20.0
++offset_right = -16.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ mouse_filter = 2
+@@ -589,8 +507,9 @@ theme_override_constants/separation = 12
+ [node name="Icon" type="TextureRect" parent="Margin/Col/SettingsBtn/Stack"]
+ custom_minimum_size = Vector2(24, 24)
+ layout_mode = 2
++size_flags_vertical = 4
+ mouse_filter = 2
+-texture = ExtResource("10_settings")
++texture = ExtResource("11_settings")
+ expand_mode = 1
+ stretch_mode = 5
+ 
+@@ -598,6 +517,6 @@ stretch_mode = 5
+ layout_mode = 2
+ size_flags_horizontal = 3
+ mouse_filter = 2
+-theme_type_variation = &"TabLabel"
++theme_type_variation = &"NavLabel"
+ text = "TAB_SETTINGS"
+ vertical_alignment = 1
+diff --git a/project-unicorn/scenes/ui/components/NewsTicker.tscn b/project-unicorn/scenes/ui/components/NewsTicker.tscn
+index 625108c..2f3569f 100644
+--- a/project-unicorn/scenes/ui/components/NewsTicker.tscn
++++ b/project-unicorn/scenes/ui/components/NewsTicker.tscn
+@@ -1,15 +1,42 @@
+-[gd_scene load_steps=2 format=3]
++[gd_scene load_steps=4 format=3]
+ 
+ [ext_resource type="Script" path="res://scripts/ui/components/news_ticker.gd" id="1_newsticker"]
++[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_menajer"]
++[ext_resource type="Texture2D" path="res://assets/icons/util/news.svg" id="3_news"]
+ 
+ [node name="NewsTicker" type="Panel"]
+ clip_contents = true
+ custom_minimum_size = Vector2(0, 40)
+ process_mode = 3
++theme = ExtResource("2_menajer")
+ theme_type_variation = &"NewsPanel"
+ script = ExtResource("1_newsticker")
+ 
+-[node name="Stream" type="RichTextLabel" parent="."]
++[node name="Toggle" type="Button" parent="."]
++custom_minimum_size = Vector2(56, 0)
++layout_mode = 1
++anchors_preset = 9
++anchor_bottom = 1.0
++offset_right = 56.0
++grow_vertical = 2
++focus_mode = 0
++theme_type_variation = &"TickerToggle"
++icon = ExtResource("3_news")
++icon_alignment = 1
++
++[node name="Run" type="Control" parent="."]
++clip_contents = true
++layout_mode = 1
++anchors_preset = 15
++anchor_right = 1.0
++anchor_bottom = 1.0
++offset_left = 56.0
++offset_top = 1.0
++grow_horizontal = 2
++grow_vertical = 2
++mouse_filter = 2
++
++[node name="Stream" type="RichTextLabel" parent="Run"]
+ layout_mode = 0
+ offset_right = 1.0
+ offset_bottom = 40.0
+@@ -18,4 +45,15 @@ bbcode_enabled = true
+ fit_content = true
+ scroll_active = false
+ autowrap_mode = 0
+-theme_type_variation = &"NewsRich"
++theme_type_variation = &"TickerRich"
++
++[node name="Fade" type="Control" parent="Run"]
++layout_mode = 1
++anchors_preset = 11
++anchor_left = 1.0
++anchor_right = 1.0
++anchor_bottom = 1.0
++offset_left = -48.0
++grow_horizontal = 0
++grow_vertical = 2
++mouse_filter = 2
+diff --git a/project-unicorn/scenes/ui/components/TopBar.tscn b/project-unicorn/scenes/ui/components/TopBar.tscn
+index 6ddd271..8eb0ef5 100644
+--- a/project-unicorn/scenes/ui/components/TopBar.tscn
++++ b/project-unicorn/scenes/ui/components/TopBar.tscn
+@@ -1,298 +1,180 @@
+-[gd_scene load_steps=2 format=3]
++[gd_scene load_steps=3 format=3]
+ 
+ [ext_resource type="Script" path="res://scripts/ui/components/top_bar.gd" id="1_topbar"]
++[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_menajer"]
+ 
+ [node name="TopBar" type="Panel"]
+ custom_minimum_size = Vector2(0, 64)
++theme = ExtResource("2_menajer")
+ theme_type_variation = &"TopBarPanel"
+ script = ExtResource("1_topbar")
+ 
+-[node name="Margin" type="MarginContainer" parent="."]
+-layout_mode = 1
+-anchors_preset = 15
+-anchor_right = 1.0
+-anchor_bottom = 1.0
+-grow_horizontal = 2
+-grow_vertical = 2
+-theme_override_constants/margin_left = 20
+-theme_override_constants/margin_top = 0
+-theme_override_constants/margin_right = 20
+-theme_override_constants/margin_bottom = 0
+-
+-[node name="Row" type="HBoxContainer" parent="Margin"]
+-layout_mode = 2
+-theme_override_constants/separation = 26
+-alignment = 1
+-
+-[node name="IdentityGroup" type="HBoxContainer" parent="Margin/Row"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 10
+-
+-[node name="LogoSquare" type="ColorRect" parent="Margin/Row/IdentityGroup"]
+-custom_minimum_size = Vector2(18, 18)
+-layout_mode = 2
+-size_flags_vertical = 4
+-
+-[node name="CompanyNameLabel" type="Label" parent="Margin/Row/IdentityGroup"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_type_variation = &"ChromeValue"
+-text = "—"
+-
+-[node name="FinanceGroup" type="HBoxContainer" parent="Margin/Row"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 28
+-
+-[node name="StatCol_Cash" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
+-custom_minimum_size = Vector2(104, 0)
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 2
+-
+-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Cash"]
+-layout_mode = 2
+-theme_type_variation = &"MetricCaption"
+-text = "FIN_CAP_CASH"
++[node name="Logo" type="Panel" parent="."]
++layout_mode = 0
++offset_right = 20.0
++offset_bottom = 20.0
++mouse_filter = 2
++theme_type_variation = &"BrandMark"
++
++[node name="LogoName" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"SubheadLabel"
++text = "TOPBAR_BRAND"
++text_overrun_behavior = 3
++
++[node name="Phase" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeySmall"
++
++[node name="PhaseDot1" type="Panel" parent="."]
++layout_mode = 0
++offset_right = 6.0
++offset_bottom = 6.0
++mouse_filter = 2
++theme_type_variation = &"PhaseDotDim"
+ 
+-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Cash"]
+-layout_mode = 2
+-theme_type_variation = &"MetricValue"
+-text = "$50,000"
+-clip_text = true
+-
+-[node name="StatCol_MRR" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
+-custom_minimum_size = Vector2(104, 0)
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 2
+-
+-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_MRR"]
+-layout_mode = 2
+-theme_type_variation = &"MetricCaption"
+-text = "FIN_CAP_MRR"
++[node name="PhaseDot2" type="Panel" parent="."]
++layout_mode = 0
++offset_right = 6.0
++offset_bottom = 6.0
++mouse_filter = 2
++theme_type_variation = &"PhaseDotDim"
+ 
+-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_MRR"]
+-layout_mode = 2
+-theme_type_variation = &"MetricValue"
+-text = "$0"
+-clip_text = true
++[node name="PhaseDot3" type="Panel" parent="."]
++layout_mode = 0
++offset_right = 6.0
++offset_bottom = 6.0
++mouse_filter = 2
++theme_type_variation = &"PhaseDotDim"
+ 
+-[node name="StatCol_Burn" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 2
++[node name="CashKey" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeyLabel"
++text = "FIN_CAP_CASH"
+ 
+-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn"]
+-layout_mode = 2
+-theme_type_variation = &"MetricCaption"
+-text = "FIN_CAP_BURN"
++[node name="CashValue" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"HeroValue"
+ 
+-[node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Burn"]
+-layout_mode = 2
+-theme_override_constants/separation = 2
++[node name="NetKey" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeySmall"
++text = "FIN_CAP_NET"
+ 
+-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn/ValueRow"]
+-layout_mode = 2
+-size_flags_vertical = 8
+-theme_type_variation = &"MetricValue"
+-text = "$500"
++[node name="NetValue" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"DataMedium"
+ 
+-[node name="UnitLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn/ValueRow"]
+-layout_mode = 2
+-size_flags_vertical = 8
+-theme_type_variation = &"MetricUnit"
++[node name="NetUnit" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"Caption"
+ text = "TOPBAR_UNIT_PER_MONTH"
+ 
+-[node name="StatCol_Net" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 2
+-
+-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net"]
+-layout_mode = 2
+-theme_type_variation = &"MetricCaption"
+-text = "FIN_CAP_NET"
++[node name="RunwayKey" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeyLabel"
+ 
+-[node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Net"]
+-layout_mode = 2
+-theme_override_constants/separation = 2
++[node name="RunwayValue" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"ValueText"
+ 
+-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net/ValueRow"]
+-layout_mode = 2
+-size_flags_vertical = 8
+-theme_type_variation = &"MetricValue"
+-text = "+$500"
++[node name="MrrKey" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeyLabel"
++text = "FIN_CAP_MRR"
+ 
+-[node name="UnitLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net/ValueRow"]
+-layout_mode = 2
+-size_flags_vertical = 8
+-theme_type_variation = &"MetricUnit"
+-text = "TOPBAR_UNIT_PER_MONTH"
++[node name="MrrValue" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"ValueText"
+ 
+-[node name="StatCol_Runway" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 2
+-
+-[node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway"]
+-layout_mode = 2
+-theme_type_variation = &"MetricCaption"
+-text = "FIN_CAP_RUNWAY"
+-
+-[node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Runway"]
+-layout_mode = 2
+-theme_override_constants/separation = 2
+-
+-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway/ValueRow"]
+-layout_mode = 2
+-size_flags_vertical = 8
+-theme_type_variation = &"MetricValue"
+-text = "3.3"
+-
+-[node name="UnitLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway/ValueRow"]
+-layout_mode = 2
+-size_flags_vertical = 8
+-theme_type_variation = &"MetricUnit"
+-text = "—"
+-
+-[node name="ReputationGroup" type="HBoxContainer" parent="Margin/Row"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 28
+-
+-[node name="StatCol_Brand" type="VBoxContainer" parent="Margin/Row/ReputationGroup"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 2
+-
+-[node name="HeaderLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Brand"]
+-layout_mode = 2
+-theme_type_variation = &"MetricCaption"
++[node name="BrandKey" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeySmall"
+ text = "FIN_CAP_BRAND"
+ 
+-[node name="ValueLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Brand"]
+-layout_mode = 2
+-theme_type_variation = &"MetricValue"
+-text = "50"
++[node name="BrandValue" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"DataText"
+ 
+-[node name="StatCol_Rep" type="VBoxContainer" parent="Margin/Row/ReputationGroup"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 2
++[node name="BurnKey" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeyLabel"
++text = "FIN_CAP_BURN"
++
++[node name="BurnValue" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"ValueText"
++
++[node name="BurnUnit" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"Caption"
++text = "TOPBAR_UNIT_PER_MONTH"
+ 
+-[node name="HeaderLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Rep"]
+-layout_mode = 2
+-theme_type_variation = &"MetricCaption"
++[node name="RepKey" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeySmall"
+ text = "FIN_CAP_REPUTATION"
+ 
+-[node name="ValueLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Rep"]
+-layout_mode = 2
+-theme_type_variation = &"MetricValue"
+-text = "0"
+-
+-[node name="Spacer" type="Control" parent="Margin/Row"]
+-custom_minimum_size = Vector2(24, 0)
+-layout_mode = 2
+-size_flags_horizontal = 3
+-
+-[node name="TimeGroup" type="HBoxContainer" parent="Margin/Row"]
+-custom_minimum_size = Vector2(360, 0)
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 16
+-
+-[node name="DayLabel" type="Label" parent="Margin/Row/TimeGroup"]
+-custom_minimum_size = Vector2(210, 0)
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_type_variation = &"ChromeClock"
+-text = "—"
+-
+-[node name="ShutterLabel" type="Label" parent="Margin/Row/TimeGroup"]
+-visible = false
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_type_variation = &"ChromeAlert"
+-text = "—"
+-
+-[node name="OfferLabel" type="Label" parent="Margin/Row/TimeGroup"]
+-visible = false
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_type_variation = &"ChromeAlert"
+-text = "—"
+-
+-[node name="PhaseGroup" type="VBoxContainer" parent="Margin/Row/TimeGroup"]
+-custom_minimum_size = Vector2(108, 0)
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 4
+-
+-[node name="PhaseNameLabel" type="Label" parent="Margin/Row/TimeGroup/PhaseGroup"]
+-layout_mode = 2
+-theme_type_variation = &"ChromeLabel"
+-text = "FIN_PHASE_BOOTSTRAP"
+-horizontal_alignment = 1
+-
+-[node name="PhaseDots" type="HBoxContainer" parent="Margin/Row/TimeGroup/PhaseGroup"]
+-layout_mode = 2
+-size_flags_horizontal = 4
+-theme_override_constants/separation = 6
+-
+-[node name="PhaseDot1" type="Panel" parent="Margin/Row/TimeGroup/PhaseGroup/PhaseDots"]
+-custom_minimum_size = Vector2(24, 4)
+-layout_mode = 2
+-theme_type_variation = &"PhaseDotActive"
+-
+-[node name="PhaseDot2" type="Panel" parent="Margin/Row/TimeGroup/PhaseGroup/PhaseDots"]
+-custom_minimum_size = Vector2(24, 4)
+-layout_mode = 2
+-theme_type_variation = &"PhaseDotDim"
++[node name="RepValue" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"DataText"
+ 
+-[node name="PhaseDot3" type="Panel" parent="Margin/Row/TimeGroup/PhaseGroup/PhaseDots"]
+-custom_minimum_size = Vector2(24, 4)
+-layout_mode = 2
+-theme_type_variation = &"PhaseDotDim"
++[node name="Date" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"BodyLabel"
+ 
+-[node name="SpeedControls" type="HBoxContainer" parent="Margin/Row/TimeGroup"]
+-layout_mode = 2
+-size_flags_vertical = 4
+-theme_override_constants/separation = 4
++[node name="WeekStart" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"SmallMuted"
+ 
+-[node name="PauseBtn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
+-custom_minimum_size = Vector2(26, 22)
+-layout_mode = 2
++[node name="WeekEnd" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"SmallMuted"
++
++[node name="NextKey" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeySmall"
++
++[node name="NextLine" type="Label" parent="."]
++layout_mode = 0
++theme_type_variation = &"KeyText"
++text_overrun_behavior = 3
++
++[node name="TimeBlock" type="Panel" parent="."]
++layout_mode = 0
++mouse_filter = 2
++theme_type_variation = &"TimeBlock"
++
++[node name="Clock" type="Label" parent="TimeBlock"]
++layout_mode = 0
++theme_type_variation = &"ClockLabel"
++
++[node name="PauseBtn" type="Button" parent="TimeBlock"]
++layout_mode = 0
+ focus_mode = 0
+-theme_type_variation = &"SpeedButton"
++theme_type_variation = &"SpeedKey"
+ text = "TOPBAR_PAUSE"
+ 
+-[node name="Speed1Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
+-custom_minimum_size = Vector2(26, 22)
+-layout_mode = 2
++[node name="Speed1Btn" type="Button" parent="TimeBlock"]
++layout_mode = 0
+ focus_mode = 0
+-theme_type_variation = &"SpeedButtonActive"
++theme_type_variation = &"SpeedKey"
+ text = "1x"
+ 
+-[node name="Speed2Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
+-custom_minimum_size = Vector2(26, 22)
+-layout_mode = 2
++[node name="Speed2Btn" type="Button" parent="TimeBlock"]
++layout_mode = 0
+ focus_mode = 0
+-theme_type_variation = &"SpeedButton"
++theme_type_variation = &"SpeedKey"
+ text = "2x"
+ 
+-[node name="Speed3Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
+-custom_minimum_size = Vector2(26, 22)
+-layout_mode = 2
++[node name="Speed3Btn" type="Button" parent="TimeBlock"]
++layout_mode = 0
+ focus_mode = 0
+-theme_type_variation = &"SpeedButton"
++theme_type_variation = &"SpeedKey"
+ text = "3x"
+ 
+-[node name="Speed4Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
+-custom_minimum_size = Vector2(26, 22)
+-layout_mode = 2
++[node name="Speed4Btn" type="Button" parent="TimeBlock"]
++layout_mode = 0
+ focus_mode = 0
+-theme_type_variation = &"SpeedButton"
++theme_type_variation = &"SpeedKey"
+ text = "4x"
+-
+diff --git a/project-unicorn/scripts/autoload/settings.gd b/project-unicorn/scripts/autoload/settings.gd
+index 3b8b566..35f328c 100644
+--- a/project-unicorn/scripts/autoload/settings.gd
++++ b/project-unicorn/scripts/autoload/settings.gd
+@@ -41,6 +41,8 @@ const DEFAULTS := {
+ 	"summary_frequency": "quarterly",   # SummarySystem.FREQUENCIES
+ 	# --- Erişilebilirlik (UiTokens applies) ---
+ 	"colorblind_palette": false,
++	# --- Kabuk (NewsTicker reads it; its toggle writes it) ---
++	"ticker_open": true,
+ }
+ 
+ # One volume-slider drag is a few hundred set_value calls: mark dirty and flush once
+diff --git a/project-unicorn/scripts/main/game_shell.gd b/project-unicorn/scripts/main/game_shell.gd
+index 6fbdf98..288a3ec 100644
+--- a/project-unicorn/scripts/main/game_shell.gd
++++ b/project-unicorn/scripts/main/game_shell.gd
+@@ -11,10 +11,22 @@ const PRODUCT_FIXTURES := "res://scripts/debug/product_fixtures.gd"
+ var _product_source: Object = null
+ 
+ @onready var _windows: Node = $CenterViewport   # WindowLayer: Esc en üstteki pencereyi kapatır
++@onready var _ticker: Control = $NewsTicker
+ 
+ 
+ func _ready() -> void:
+ 	EventBus.sprint_closed.connect(_on_sprint_closed)
++	_ticker.open_changed.connect(_lay_ticker)
++	_lay_ticker(_ticker.open)
++
++
++## Kapalı haber şeridi sol altta yalnız aç/kapa hücresidir: ofis ve ray ekranın altına iner, rayın
++## son satırı hücrenin üstünde kalır.
++func _lay_ticker(open: bool) -> void:
++	var band: float = _ticker.custom_minimum_size.y
++	$CenterViewport.offset_bottom = -band if open else 0.0
++	$LeftTabs.offset_bottom = -band if open else 0.0
++	$LeftTabs.set_bottom_clearance(0.0 if open else band)
+ 
+ 
+ ## Sprint kapanınca sürüm notu Ürün sekmesinde açılır; sekme zaten açıksa kendini yeniden çizer.
+diff --git a/project-unicorn/scripts/theme/build_theme.gd b/project-unicorn/scripts/theme/build_theme.gd
+index dd3d81f..0e35e8e 100644
+--- a/project-unicorn/scripts/theme/build_theme.gd
++++ b/project-unicorn/scripts/theme/build_theme.gd
+@@ -667,6 +667,12 @@ func _menajer(master: Theme) -> Theme:
+ 	_recolor(th, &"NewsPanel", "panel", T.D_SURFACE_0)
+ 	_recolor(th, &"PhaseDotActive", "panel", T.D_INK_2)
+ 	_recolor(th, &"TabBadge", "panel", T.D_SURFACE_5)
++	_recolor(th, &"SideRailPanel", "panel", null, T.D_LINE_1)
++	# The phase dots are 6 px discs on the dark top bar.
++	for dot in [&"PhaseDotActive", &"PhaseDotDim"]:
++		var disc: StyleBoxFlat = th.get_stylebox("panel", dot).duplicate()
++		disc.set_corner_radius_all(T.RADIUS_PILL)
++		th.set_stylebox("panel", dot, disc)
+ 	_recolor(th, &"BuildProgress", "fill", T.D_BAR_FILL)
+ 	_recolor(th, &"VolumeSlider", "grabber_area", T.D_INK_3)
+ 	_recolor(th, &"VolumeSlider", "grabber_area_highlight", T.D_INK_2)
+@@ -863,6 +869,7 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"ClockLabel", sans_sb, T.D_FS_22, T.D_INK_2],
+ 		[&"RiskValue", sans_b, T.D_FS_18, T.D_NEG],
+ 		[&"ValueText", sans_med, T.D_FS_18, T.D_INK_2],
++		[&"ValueTextStrong", sans_sb, T.D_FS_18, T.D_INK_1],
+ 		[&"BodyLabel", sans_reg, T.D_FS_16, T.D_INK_2],
+ 		[&"SenderName", sans_sb, T.D_FS_16, T.D_INK_2],
+ 		[&"RiskName", sans_sb, T.D_FS_16, T.D_INK_1],
+@@ -871,6 +878,7 @@ func _menajer(master: Theme) -> Theme:
+ 		[&"SkillValue", sans_med, T.D_FS_16, T.D_SKILL_3],   # its host paints D_skill(value)
+ 		[&"DataText", sans_reg, T.D_FS_15, T.D_INK_2],
+ 		[&"DataStrong", sans_sb, T.D_FS_15, T.D_INK_1],
++		[&"DataMedium", sans_med, T.D_FS_15, T.D_INK_2],
+ 		[&"NoticeText", sans_med, T.D_FS_15, T.D_INK_2],
+ 		[&"NoteMuted", sans_reg, T.D_FS_15, T.D_INK_3],
+ 		[&"CondData", sansc, T.D_FS_15, T.D_INK_2],
+@@ -892,14 +900,18 @@ func _menajer(master: Theme) -> Theme:
+ 	# runtime from the D_ helpers, so the colour-blind palette reaches them.
+ 	var tag := _fit(cond_b_caps, T.D_FS_13, T.D_H_TAG, T.SPACE_M, T.SPACE_M)
+ 	var pill := _fit(cond_b_caps, T.D_FS_13, T.D_H_PILL, T.SPACE_S, T.SPACE_S)
++	var badge := _fit(sans_b, T.D_FS_13, T.D_H_BADGE, T.SPACE_S, T.SPACE_S)
++	var badge_icon := _fit(sans_b, T.D_FS_12, T.D_H_BADGE_ICON, T.SPACE_XS, T.SPACE_XS)
+ 	for row in [
+ 		[&"Tag", cond_b_caps, T.D_FS_13, T.D_INK_2, _flat(clear, T.D_RADIUS_2, tag, T.D_LINE_3)],
+ 		[&"TagNeutral", cond_b_caps, T.D_FS_13, T.D_INK_3, _flat(T.D_SURFACE_5, T.D_RADIUS_2, tag)],
+ 		[&"TagOutline", cond_b_caps, T.D_FS_13, T.D_INK_3, _flat(clear, T.D_RADIUS_2, tag, T.D_LINE_2)],
+ 		[&"TopicPill", cond_b_caps, T.D_FS_13, T.D_TOPIC_AGENDA,
+ 			_flat(Color(T.D_TOPIC_AGENDA, T.D_PILL_FILL_ALPHA), T.D_RADIUS_2, pill, T.D_TOPIC_AGENDA)],
+-		[&"BadgeCount", sans_b, T.D_FS_13, T.D_INK_2, _flat(T.D_SURFACE_5, T.RADIUS_PILL,
+-			_fit(sans_b, T.D_FS_13, T.D_H_BADGE, T.SPACE_S, T.SPACE_S), T.D_LINE_2)],
++		[&"BadgeCount", sans_b, T.D_FS_13, T.D_INK_2, _flat(T.D_SURFACE_5, T.RADIUS_PILL, badge, T.D_LINE_2)],
++		[&"BadgeDanger", sans_b, T.D_FS_13, T.D_ON_NEG, _flat(T.D_NEG, T.RADIUS_PILL, badge)],
++		[&"BadgeCountIcon", sans_b, T.D_FS_12, T.D_INK_2, _flat(T.D_SURFACE_5, T.RADIUS_PILL, badge_icon, T.D_LINE_2)],
++		[&"BadgeDangerIcon", sans_b, T.D_FS_12, T.D_ON_NEG, _flat(T.D_NEG, T.RADIUS_PILL, badge_icon)],
+ 		[&"DocStamp", cond_b_caps, T.D_FS_14, T.D_STAMP, _flat(clear, T.D_RADIUS_1,
+ 			_fit(cond_b_caps, T.D_FS_14, T.D_H_STAMP, T.SPACE_M, T.SPACE_M), T.D_STAMP, thick)],
+ 		[&"FxPart", sans_med, T.D_FS_14, T.D_INK_2, _flat(T.D_SURFACE_2, T.D_RADIUS_2,
+@@ -947,6 +959,11 @@ func _menajer(master: Theme) -> Theme:
+ 		_panel(th, row[0], "PanelContainer", row[1])
+ 	_panel(th, &"GateDot", "Panel", _flat(T.D_ACCENT, T.RADIUS_PILL, Vector4.ZERO))
+ 	_panel(th, &"IconWell", "Panel", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO))
++	_panel(th, &"BrandMark", "Panel", _flat(T.D_BRAND_MARK, T.D_RADIUS_1, Vector4.ZERO))
++	var mark := _flat(T.D_SELECTED_MARK, T.D_RADIUS_1, Vector4.ZERO)
++	mark.corner_radius_top_left = 0
++	mark.corner_radius_bottom_left = 0
++	_panel(th, &"RailMark", "Panel", mark)
+ 
+ 	# Clickable rows and keys.
+ 	_dbtn(th, &"ChipButton", secondary, sans_reg, T.D_FS_15, _fit(sans_reg, T.D_FS_15, T.D_H_BTN, T.SPACE_L, T.SPACE_L))
+@@ -986,6 +1003,10 @@ func _menajer(master: Theme) -> Theme:
+ 	_dbtn(th, &"TickerToggle", {"normal": [clear, T.D_LINE_1, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+ 		"pressed": [clear, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]},
+ 		sans_reg, T.D_FS_14, Vector4.ZERO, 0, Vector4i(0, 0, T.BORDER_HAIRLINE, 0))
++	for row in [["icon_normal_color", T.D_INK_3], ["icon_focus_color", T.D_INK_3], ["icon_hover_color", T.D_INK_1],
++			["icon_pressed_color", T.D_INK_1], ["icon_hover_pressed_color", T.D_INK_1]]:
++		th.set_color(row[0], &"TickerToggle", row[1])
++	th.set_constant("icon_max_width", &"TickerToggle", T.D_ICON_CONTROL)
+ 
+ 	# Message body and ticker text.
+ 	th.set_type_variation(&"PaneBodyRich", &"RichTextLabel")
+diff --git a/project-unicorn/scripts/theme/ui_tokens.gd b/project-unicorn/scripts/theme/ui_tokens.gd
+index 2a7c45b..fa6ed70 100644
+--- a/project-unicorn/scripts/theme/ui_tokens.gd
++++ b/project-unicorn/scripts/theme/ui_tokens.gd
+@@ -41,7 +41,7 @@ extends RefCounted
+ 
+ ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
+ ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
+-const THEME_STAMP := 18
++const THEME_STAMP := 19
+ 
+ # ============================================================================
+ # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
+@@ -185,7 +185,7 @@ const MEETING_SEAT_3 := Color(0.247, 0.435, 0.478, 1)      # #3F6F7A · analyst
+ # --- CHROME · the frame's own values ---
+ # Twins pinned to what the frame shows, so a body reskin never moves the frame. The
+ # dark cinematic register reads them as well: its stages keep the frame's palette.
+-const ACCENT_CHROME := Color(1.0, 0.627, 0.157, 1)          # #FFA028 · logo, speed key, phase dot, offer countdown
++const ACCENT_CHROME := Color(1.0, 0.627, 0.157, 1)          # #FFA028 · accent of the dark registers (onboarding, dialogue, emblem)
+ const ACCENT_HOVER_CHROME := Color(1.0, 0.698, 0.353, 1)    # #FFB25A · CommitButtonDark hover  # WORKING
+ const ACCENT_PRESSED_CHROME := Color(0.878, 0.541, 0.110, 1)  # #E08A1C · CommitButtonDark pressed # WORKING
+ const INK_MUTED_CHROME := Color(0.624, 0.690, 0.749, 1)     # #9FB0BF · idle speed key, hover text
+@@ -340,10 +340,10 @@ const PAD_CELL := Vector2i(3, 3)          # PortraitCell
+ # draws it. LeftTabs.tscn's button order must match this
+ # array position-for-position (smoke `rail_tabs_match_scene_order`).
+ # `lock` names a gate for a visible-but-unreachable tab, resolved in
+-# LeftTabs._is_locked so UiTokens stays free of game state. The rail shows it
+-# dimmed with a YAKINDA pill. "ea" = Early Access scope, never opens in the demo;
+-# YAKINDA means only "not in this build", so Ar-Ge (built, gated on its own page)
+-# carries no lock.
++# LeftTabs._is_locked so UiTokens stays free of game state. The rail shows its icon
++# and name off with the reason under the name. "ea" = Early Access scope, never opens
++# in the demo; a lock means only "not in this build", so Ar-Ge (built, gated on its own
++# page) carries no lock.
+ const TABS := [
+ 	{"id": "product"},
+ 	{"id": "sales"},
+@@ -355,7 +355,7 @@ const TABS := [
+ 	{"id": "events"},
+ ]
+ 
+-## A locked rail tile fades as a whole; its YAKINDA pill says why.
++## A muted sub-tab or a locked line fades as a whole.
+ const TAB_LOCKED_ALPHA := 0.45
+ 
+ # ============================================================================
+@@ -415,12 +415,6 @@ static func delta_color(value: int) -> Color:
+ 	if value < 0: return negative()
+ 	return INK_MUTED
+ 
+-## Delta color for the dark chrome (top-bar metric deltas).
+-static func delta_color_bright(value: int) -> Color:
+-	if value > 0: return positive_bright()
+-	if value < 0: return negative_bright()
+-	return CREAM_DIM
+-
+ ## {bg, fg} for a tinted chip. kind: "positive" | "negative" | "neutral" | "accent" | "attention".
+ static func badge_palette(kind: StringName) -> Dictionary:
+ 	match kind:
+@@ -513,11 +507,6 @@ static func seat_ink(seat: int) -> Color:
+ 	return ACCENT_DEEP if seat == 0 else seat_ring(seat)
+ 
+ 
+-## BBCode form of ACCENT_CHROME (NewsTicker).
+-static func accent_hex() -> String:
+-	return "#" + ACCENT_CHROME.to_html(false)
+-
+-
+ ## Ink of a die factor on the dark tooltip, by its tone: "pos" | "neg" | anything else neutral.
+ static func tooltip_tone_ink(tone: String) -> Color:
+ 	match tone:
+@@ -532,12 +521,6 @@ static func format_money(amount: int) -> String:
+ 	return Fmt.money(amount)
+ 
+ 
+-## TopBar finance-chip format: abbreviated so MRR/BURN/NET cannot widen FinanceGroup.
+-## Its thresholds deliberately diverge from format_money.
+-static func format_money_chip(value: int) -> String:
+-	return Fmt.money_chip(value)
+-
+-
+ ## Exact, thousands-grouped money. CASH is shown in full because money management is precise.
+ static func format_money_exact(value: int) -> String:
+ 	return Fmt.money_exact(value)
+@@ -776,6 +759,9 @@ const D_STAMP := D_INK_3
+ const D_CUT := 12      # document corner bevel
+ const D_CUT_SM := 8    # small documents: toast, notice, selected inbox row
+ 
++# --- the brand square of the top bar: the logo's own orange, not a UI accent ---
++const D_BRAND_MARK := Color("#FFA028")
++
+ # --- newspaper island: cream in both themes; the dark theme's meta line reads at 4.5:1 ---
+ const D_PAPER_INK_META := Color("#6E6553")
+ 
+@@ -825,6 +811,10 @@ const D_H_FX := 24
+ const D_H_TAG := 22
+ const D_H_PILL := 20
+ const D_H_BADGE := 20
++const D_H_BADGE_ICON := 18   # a count on the corner of an icon (the rail's icon mode)
++# --- glyph sizes ---
++const D_ICON_CONTROL := 20   # a control's own glyph (the ticker toggle)
++const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
+ 
+ const D_SKILLS := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4, D_SKILL_5]
+ const D_SKILLS_CB := [D_SKILL_1, D_SKILL_2, D_SKILL_3, D_SKILL_4_CB, D_SKILL_5_CB]
+diff --git a/project-unicorn/scripts/ui/components/build_bar.gd b/project-unicorn/scripts/ui/components/build_bar.gd
+index 90a6b3f..48d4ab9 100644
+--- a/project-unicorn/scripts/ui/components/build_bar.gd
++++ b/project-unicorn/scripts/ui/components/build_bar.gd
+@@ -6,6 +6,8 @@ extends Control
+ #   ürün  : hangi ürün ve sürüm + tek not etiketi.
+ #   faz   : satırın kendi zemini koşunun ilerlemesidir, ayrı çubuk yok. Ad + iş yükü + yüzde.
+ #   karar : karttaki TEK basılabilir şey.
++# Sprint planlamada bir gün bekleyip liderin önerisiyle kendiliğinden başladıysa, o sprint sürdükçe
++# altta dördüncü bir not satırı. Kartın boyu ev sahibinin verdiği taban + o satır.
+ # Üstünde 2px kapak çizgisi: grubun durumu.
+ #
+ # Dolgu sınırında dikey çizgi yok: dolgu rengin %13 alfası olduğu için sınırın iki yanındaki
+@@ -44,12 +46,17 @@ var _decision_row: PanelContainer = null
+ var _decision_icon: TextureRect = null
+ var _decision_label: Label = null
+ var _decision_hover := false
++var _auto_rule: Panel = null
++var _auto_row: Control = null
++var _auto_label: Label = null
++var _base_h := 0.0
+ 
+ 
+ func _ready() -> void:
+ 	process_mode = Node.PROCESS_MODE_ALWAYS
+ 	mouse_filter = Control.MOUSE_FILTER_PASS   # karar satırı tıklanabilir; kart kendisi değil
+ 	_font = BarKit.resolve_font(self)
++	_base_h = custom_minimum_size.y
+ 	_build_tree()
+ 	# Meşguliyet aynı karede okunsun: atama ya da eğitim değişimi bir sonraki oyun saatini
+ 	# beklerse oyuncu bunu takılma diye okur.
+@@ -59,6 +66,7 @@ func _ready() -> void:
+ 		s.connect(r1)
+ 	EventBus.build_progress_changed.connect(refresh)
+ 	EventBus.employee_training_changed.connect(refresh.unbind(2))
++	EventBus.product_state_changed.connect(refresh)
+ 	refresh()
+ 
+ 
+@@ -146,6 +154,14 @@ func _build_tree() -> void:
+ 	_decision_label = BarKit.label(_font, UiTokens.SIZE_SMALL, UiTokens.ACCENT_DEEP)
+ 	decision.add_child(_decision_label)
+ 
++	_auto_rule = BarKit.hairline()
++	col.add_child(_auto_rule)
++	var auto: HBoxContainer = _padded_row(col)
++	_auto_row = auto.get_parent()
++	_auto_row.custom_minimum_size = Vector2(0, ROW_DECISION_H)
++	_auto_label = BarKit.label(_font, UiTokens.SIZE_SMALL, UiTokens.INK_DIM)
++	auto.add_child(_auto_label)
++
+ 
+ ## Yatay dolgulu satır: dolgu `parent`'a eklenir, içerik kutusu döner.
+ func _padded_row(parent: Control) -> HBoxContainer:
+@@ -195,6 +211,12 @@ func _repaint() -> void:
+ 	# GELEN çizilmez: motorda karşılığı yok.
+ 	_work_label.text = tr("BUILD_SUPPORT_CONFIRMED").format({"n": m.live_bugs})
+ 	_paint_decision(m)
++	var auto: bool = SprintSystem.mode() == "active" \
++		and int(GameState.product.get("auto_started", -1)) == SprintSystem.sprint_number()
++	_auto_rule.visible = auto
++	_auto_row.visible = auto
++	_auto_label.text = tr("PRODUCT_AUTO_STARTED")
++	custom_minimum_size.y = _base_h + (_auto_rule.custom_minimum_size.y + ROW_DECISION_H if auto else 0.0)
+ 
+ 
+ func _paint_decision(m) -> void:
+diff --git a/project-unicorn/scripts/ui/components/left_tabs.gd b/project-unicorn/scripts/ui/components/left_tabs.gd
+index abaf440..d19075d 100644
+--- a/project-unicorn/scripts/ui/components/left_tabs.gd
++++ b/project-unicorn/scripts/ui/components/left_tabs.gd
+@@ -1,16 +1,18 @@
+ extends Panel
+ 
+-# Left tab rail. Tab definitions live in UiTokens.TABS; the buttons below match that
+-# array position-for-position (guarded by the rail_tabs_match_scene_order smoke case).
+-# A tab with a `lock` gate is visible, dimmed, carries a YAKINDA pill and never connects
+-# `pressed`. The rail lies opaque over the office's left edge (GameShell); under
+-# DisplaySettings.COMPACT_SHELL_BELOW of logical width it narrows to its icons.
+-# This script owns the row geometry (rail width, Stack insets, Badge offsets) and sets it
+-# in _apply_width; the matching values in LeftTabs.tscn are only the editor's preview of
+-# the labelled rail.
++# Left tab rail, on the dark theme. Tab definitions live in UiTokens.TABS; the buttons below match
++# that array position-for-position (guarded by the rail_tabs_match_scene_order smoke case). The rail
++# lies opaque over the office's left edge (GameShell); under DisplaySettings.COMPACT_SHELL_BELOW of
++# logical width it narrows to its icons: the names stay in the tree, hidden, and become tooltips,
++# a count moves to the icon's corner and a locked row shows a small lock there.
++# This script owns the row geometry and every row state (_paint); the matching values in
++# LeftTabs.tscn are only the editor's preview of the labelled rail.
+ #
+-# Badges address a tab BY ID, never by index, so a reorder cannot shift a count onto
+-# the wrong tab. Sources:
++# Row states: idle, active (raised ground, a marker on the left edge), locked. A tab with a `lock`
++# gate is visible, its icon and name off, the reason under the name, and never connects `pressed`.
++#
++# Badges address a tab BY ID, never by index, so a reorder cannot shift a count onto the wrong tab.
++# Red is for danger only (DANGER_TABS); every other count is neutral. Sources:
+ #   hr       HRSystem.attention_count() (thresholds live in HRConstants)
+ #   sales    B2BSalesSystem.attention_count() (accounts in the RİSK phase)
+ #   finance  1 when runway is under FinanceSystem's first runway alert threshold
+@@ -19,13 +21,18 @@ extends Panel
+ 
+ const WIDTH := 184.0
+ const WIDTH_ICONS := 64.0
+-## Row geometry per mode: the labelled stack's insets from the button's left and right edges
+-## (icons: none), and the badge's top-left from the button's right middle (labelled: right of
+-## the name; icons: on the icon's corner).
+-const STACK_LEFT := 16.0
+-const STACK_RIGHT := 12.0
+-const BADGE_AT := Vector2(-28.0, -8.0)
+-const BADGE_AT_ICONS := Vector2(-26.0, -18.0)
++## The labelled row's insets from the button's left and right edges (icons: none).
++const STACK_LEFT := 20.0
++const STACK_RIGHT := 16.0
++## Labelled: the badge's right edge from the button's right. Icons: the badge's and the lock's
++## top-left on the row.
++const BADGE_RIGHT := 16.0
++const BADGE_AT_ICONS := Vector2(34, 6)
++const LOCK_AT_ICONS := Vector2(38, 28)
++## In icon mode a badge sits on the icon; a ring in the row's ground cuts it out.
++const BADGE_RING := 2
++const DANGER_TABS := ["hr", "sales", "finance"]
++const LOCK_ICON := preload("res://assets/icons/util/lock.svg")
+ 
+ @onready var tab_buttons: Array[Button] = [
+ 	$Margin/Col/ProductBtn,
+@@ -44,30 +51,49 @@ var current_tab_idx: int = -1  # -1 = hiçbir sekme açık değil, pencere yok
+ 
+ 
+ func _ready() -> void:
++	for btn: Button in tab_buttons + [settings_btn]:
++		var mark := Panel.new()
++		mark.name = "Mark"
++		mark.theme_type_variation = &"RailMark"
++		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		mark.anchor_bottom = 1.0
++		mark.offset_top = UiTokens.D_MARK.y
++		mark.offset_bottom = -UiTokens.D_MARK.y
++		mark.offset_right = UiTokens.D_MARK.x
++		btn.add_child(mark)
+ 	for i in tab_buttons.size():
+ 		var btn: Button = tab_buttons[i]
+ 		if not _is_locked(i):
+ 			btn.pressed.connect(_on_tab_button.bind(i))
+ 			continue
+-		# Görünür-ama-ölü. Bilerek Button.disabled DEĞİL: TabButton varyasyonu disabled
+-		# stylebox tanımlamıyor, taban Button stylebox'ı sızardı. Amber rozet DİKKAT
+-		# register'ıdır, kilitli kapı için yanlış ses.
++		# Görünür ama ölü; Button.disabled değil, satır kendi kilitli görünümünü taşır.
+ 		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 		btn.focus_mode = Control.FOCUS_NONE
+-		btn.modulate.a = UiTokens.TAB_LOCKED_ALPHA
+-		btn.get_node("Badge").visible = false
+-		# Pill akışa (Stack'e) girer, adın sağına; simge kipinde adla birlikte gizlenir.
+-		btn.get_node("Stack").add_child(UiFactory.make_badge(tr("SYS_SOON")))
++		# Gerekçe adın altında: ad ve gerekçe birlikte satırın ortasına oturur.
++		var name_label: Label = btn.get_node("Stack/NameLabel")
++		var reason := Label.new()
++		reason.name = "Reason"
++		reason.theme_type_variation = &"NavReason"
++		name_label.add_child(reason)
++		reason.position.y = name_label.get_line_height()
++		name_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
++		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++		name_label.custom_minimum_size.y = name_label.get_line_height() + reason.get_line_height()
++		var lock := TextureRect.new()
++		lock.name = "Lock"
++		lock.texture = LOCK_ICON
++		lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
++		lock.size = Vector2.ONE * UiTokens.D_ICON_MARK
++		lock.position = LOCK_AT_ICONS
++		lock.modulate = UiTokens.D_INK_4
++		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		btn.add_child(lock)
+ 
+-	# The gear is not a tab: no active styling, never emits tab_changed. Its icon takes
+-	# the idle ink once; the SVG itself is white so modulate can tint it.
+ 	settings_btn.pressed.connect(EventBus.settings_requested.emit)
+-	(settings_btn.get_node("Stack/Icon") as TextureRect).modulate = UiTokens.INK_DIM
+ 
+ 	# Rail clicks, the ✕/Esc close and programmatic switches (a closing sprint, goto_tab)
+ 	# all arrive here, so the highlight has a single painter.
+ 	EventBus.tab_changed.connect(_on_tab_changed)
+-	_apply_visual()
+ 
+ 	EventBus.morale_changed.connect(_refresh_hr_badge.unbind(2))
+ 	EventBus.character_added.connect(_refresh_hr_badge.unbind(1))
+@@ -88,31 +114,85 @@ func _ready() -> void:
+ 	EventBus.build_phase_changed.connect(_refresh_badges.unbind(1))
+ 	EventBus.game_loaded.connect(_refresh_badges.unbind(1))
+ 	_refresh_badges()
+-	get_viewport().size_changed.connect(_apply_width)
+-	EventBus.language_changed.connect(_apply_width.unbind(1))
+-	_apply_width()
++	get_viewport().size_changed.connect(_paint)
++	EventBus.language_changed.connect(_paint.unbind(1))
++	EventBus.palette_changed.connect(_paint.unbind(1))
++	_paint()
+ 
+ 
+-## Etiketli ray ya da simge kipi, mantıksal genişliğe göre (üst barın sıkışık kipiyle aynı eşik).
+-## Simge kipinde adlar ağaçta kalır, gizlenir ve ipucu olur.
+-func _apply_width() -> void:
++## Every row's look from its state and the rail's mode (labelled or icons, by logical width; the
++## same threshold as the top bar's compact mode).
++func _paint() -> void:
+ 	var icons: bool = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
+ 	custom_minimum_size.x = WIDTH_ICONS if icons else WIDTH
+-	var badge_at: Vector2 = BADGE_AT_ICONS if icons else BADGE_AT
+-	for btn: Button in tab_buttons + [settings_btn]:
+-		var stack: HBoxContainer = btn.get_node("Stack")
+-		stack.alignment = BoxContainer.ALIGNMENT_CENTER if icons else BoxContainer.ALIGNMENT_BEGIN
+-		stack.offset_left = 0.0 if icons else STACK_LEFT
+-		stack.offset_right = 0.0 if icons else -STACK_RIGHT
+-		for part: Control in stack.get_children():
+-			part.visible = not icons or part.name == &"Icon"
+-		btn.tooltip_text = tr((stack.get_node("NameLabel") as Label).text) if icons else ""
+-		var badge: Control = btn.get_node_or_null("Badge")
+-		if badge != null:
+-			badge.offset_left = badge_at.x
+-			badge.offset_top = badge_at.y
+-			badge.offset_right = badge_at.x + badge.custom_minimum_size.x
+-			badge.offset_bottom = badge_at.y + badge.custom_minimum_size.y
++	for i in tab_buttons.size():
++		var id: String = String(UiTokens.TABS[i].id)
++		# Kilitli sekme (--tab-shot=marketing onu açabilir) kilitli görünümde kalır, hiç vurgulanmaz.
++		var state: String = "locked" if _is_locked(i) else ("active" if i == current_tab_idx else "idle")
++		_paint_row(tab_buttons[i], "TAB_" + id.to_upper(), state, icons)
++		_paint_badge(tab_buttons[i].get_node("Badge"), id in DANGER_TABS, state == "active", icons)
++		if state == "locked":
++			var reason: Label = tab_buttons[i].get_node("Stack/NameLabel/Reason")
++			reason.text = Fmt.upper(tr(_lock_reason(String(UiTokens.TABS[i].lock))))
++			tab_buttons[i].get_node("Lock").visible = icons
++	_paint_row(settings_btn, "TAB_SETTINGS", "idle", icons)
++
++
++func _paint_row(btn: Button, key: String, state: String, icons: bool) -> void:
++	btn.theme_type_variation = &"RailRowActive" if state == "active" else &"RailRow"
++	btn.tooltip_text = tr(key) if icons else ""
++	btn.get_node("Mark").visible = state == "active"
++	var stack: HBoxContainer = btn.get_node("Stack")
++	stack.alignment = BoxContainer.ALIGNMENT_CENTER if icons else BoxContainer.ALIGNMENT_BEGIN
++	stack.offset_left = 0.0 if icons else STACK_LEFT
++	stack.offset_right = 0.0 if icons else -STACK_RIGHT
++	(stack.get_node("Icon") as TextureRect).modulate = {"idle": UiTokens.D_INK_4, "active": UiTokens.D_INK_2,
++		"locked": UiTokens.D_INK_OFF}[state]
++	var name_label: Label = stack.get_node("NameLabel")
++	name_label.visible = not icons
++	name_label.theme_type_variation = {"idle": &"NavLabel", "active": &"NavLabelActive",
++		"locked": &"NavLabelLocked"}[state]
++	name_label.text = Fmt.upper(tr(key))
++
++
++## Labelled: right of the name. Icons: on the icon's corner, smaller, with a ring in the row's ground.
++## The danger fill is read from D_neg() so the colour-blind palette reaches it.
++func _paint_badge(badge: Label, danger: bool, active: bool, icons: bool) -> void:
++	badge.theme_type_variation = StringName(("BadgeDanger" if danger else "BadgeCount") + ("Icon" if icons else ""))
++	var h: float = UiTokens.D_H_BADGE_ICON if icons else UiTokens.D_H_BADGE
++	badge.custom_minimum_size = Vector2.ONE * h
++	badge.set_anchors_preset(Control.PRESET_TOP_LEFT if icons else Control.PRESET_CENTER_RIGHT)
++	if icons:
++		badge.grow_horizontal = Control.GROW_DIRECTION_END
++		badge.offset_left = BADGE_AT_ICONS.x
++		badge.offset_top = BADGE_AT_ICONS.y
++		badge.offset_right = BADGE_AT_ICONS.x + h
++		badge.offset_bottom = BADGE_AT_ICONS.y + h
++	else:
++		badge.grow_horizontal = Control.GROW_DIRECTION_BEGIN
++		badge.offset_left = -BADGE_RIGHT - h
++		badge.offset_top = -h / 2.0
++		badge.offset_right = -BADGE_RIGHT
++		badge.offset_bottom = h / 2.0
++	badge.remove_theme_stylebox_override("normal")
++	badge.remove_theme_color_override("font_color")
++	if not (danger or icons):
++		return
++	var box: StyleBoxFlat = badge.get_theme_stylebox("normal").duplicate()
++	if danger:
++		box.bg_color = UiTokens.D_neg()
++		badge.add_theme_color_override("font_color", UiTokens.D_on_neg())
++	if icons:
++		box.set_border_width_all(BADGE_RING)
++		box.set_expand_margin_all(BADGE_RING)
++		box.border_color = UiTokens.D_SURFACE_4 if active else UiTokens.D_SURFACE_1
++	badge.add_theme_stylebox_override("normal", box)
++
++
++## The demo build says which build opens a tab gated "ea"; any other build, or gate, says "soon".
++func _lock_reason(gate: String) -> String:
++	return "ENDING_BADGE_EA" if gate == "ea" and EndingsSystem.build_scope() == EndingsSystem.BUILD_DEMO \
++		else "SYS_SOON"
+ 
+ 
+ func _on_tab_button(idx: int) -> void:
+@@ -122,26 +202,15 @@ func _on_tab_button(idx: int) -> void:
+ 
+ func _on_tab_changed(tab_id: String) -> void:
+ 	current_tab_idx = _index_of(tab_id)
+-	_apply_visual()
++	_paint()
+ 
+ 
+ ## UiTokens bir ADLI KAPI taşır, boolean değil, böylece oyun durumundan uzak kalır. Bugünkü
+-## tek kapı "ea" (bu yapıda yok) ve bilinmeyen bir kapı da KİLİTLİ sayılır: bitmemiş bir
+-## sayfa oyuncuya açılmasın.
++## tek kapı "ea" ve bilinmeyen bir kapı da KİLİTLİ sayılır: bitmemiş bir sayfa oyuncuya açılmasın.
+ func _is_locked(idx: int) -> bool:
+ 	return String(UiTokens.TABS[idx].get("lock", "")) != ""
+ 
+ 
+-func _apply_visual() -> void:
+-	for i in tab_buttons.size():
+-		# Kilitli sekme (--tab-shot=marketing onu açabilir) idle görünümde kalır, hiç vurgulanmaz.
+-		var is_active: bool = i == current_tab_idx and not _is_locked(i)
+-		tab_buttons[i].theme_type_variation = &"TabButtonActive" if is_active else &"TabButton"
+-		var color: Color = UiTokens.ACCENT_DEEP if is_active else UiTokens.INK_DIM
+-		(tab_buttons[i].get_node("Stack/Icon") as TextureRect).modulate = color
+-		(tab_buttons[i].get_node("Stack/NameLabel") as Label).add_theme_color_override("font_color", color)
+-
+-
+ func _index_of(tab_id: String) -> int:
+ 	for i in UiTokens.TABS.size():
+ 		if String(UiTokens.TABS[i].id) == tab_id:
+@@ -149,6 +218,12 @@ func _index_of(tab_id: String) -> int:
+ 	return -1
+ 
+ 
++## The ticker's collapsed tab sits on the rail's bottom-left corner; the rail's last row stays
++## above it.
++func set_bottom_clearance(px: float) -> void:
++	$Margin.add_theme_constant_override("margin_bottom", int(UiTokens.SPACE_L + px))
++
++
+ # --- Badges ---
+ 
+ func _refresh_badges() -> void:
+@@ -191,6 +266,6 @@ func _set_badge_count(tab_id: String, count: int) -> void:
+ 	if idx < 0:
+ 		push_error("LeftTabs: badge for unknown tab id '%s'" % tab_id)
+ 		return
+-	var badge: Panel = tab_buttons[idx].get_node("Badge")
++	var badge: Label = tab_buttons[idx].get_node("Badge")
+ 	badge.visible = count > 0
+-	(badge.get_node("BadgeLabel") as Label).text = str(count)
++	badge.text = str(count)
+diff --git a/project-unicorn/scripts/ui/components/news_ticker.gd b/project-unicorn/scripts/ui/components/news_ticker.gd
+index 7782c77..4e91b6a 100644
+--- a/project-unicorn/scripts/ui/components/news_ticker.gd
++++ b/project-unicorn/scripts/ui/components/news_ticker.gd
+@@ -1,6 +1,6 @@
+ extends Panel
+ 
+-# Bottom news ticker — ambient UI chrome.
++# Bottom news ticker, on the dark theme: outlet names in their own hue, the headline in tertiary ink.
+ #
+ # Design notes:
+ #  - Scrolls leftward at a fixed real-time pace, ignoring game speed
+@@ -23,9 +23,15 @@ extends Panel
+ # tik sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10 anahtarları
+ # SOĞUK-BAŞLANGIÇ yedeğidir: akış boşken (hafta 1, ilk tik öncesi) ve akış kısayken
+ # döngüyü doldurur. ANAHTAR ADLARI SABİT SÖZLEŞMEDİR.
++#
++#  - OPEN / CLOSED: the toggle cell collapses the ticker to that cell alone on the bottom-left; the
++#    choice is the player's (Settings "ticker_open") and GameShell lays the office and the rail out
++#    around it (open_changed). Lines that arrive while it is closed wait in the loop.
+ 
+ const SCROLL_SPEED := 50.0  # pixels per second
+ const SEPARATOR := "   ·   "
++## The stream starts this far right of the toggle cell.
++const RUN_PAD := 16.0
+ 
+ # Soğuk-başlangıç havuzunun anahtarları (içerik strings.csv'de; kaynak rozetleri
+ # NewsFeedSystem.outlet_name()'den döner — kurgusal yayın seti tek evde kalsın).
+@@ -40,13 +46,23 @@ const LOOP_MIN_PARTS := 8
+ # Live gameplay lines, newest first, capped so the loop never grows without bound.
+ const MAX_LIVE_LINES := 6
+ 
+-@onready var stream: RichTextLabel = $Stream
++signal open_changed(open: bool)
++
++@onready var stream: RichTextLabel = $Run/Stream
++@onready var _toggle: Button = $Toggle
++@onready var _fade: Control = $Run/Fade
+ 
++var open: bool = true
+ var _half_width: float = 0.0
+ var _live_lines: Array[Dictionary] = []
+ 
+ 
+ func _ready() -> void:
++	_toggle.pressed.connect(func() -> void:
++		_set_open(not open)
++		Settings.set_value("ticker_open", open))
++	_fade.draw.connect(_draw_fade)
++	_set_open(bool(Settings.get_value("ticker_open")))
+ 	EventBus.headline_added.connect(_on_live_line)
+ 	EventBus.ticker_live_line.connect(_on_live_line)
+ 	# Tik-sonu akış tazelemesi (post-tick sinyal — day_advanced tik işlenmeden ÖNCE atılır,
+@@ -54,6 +70,8 @@ func _ready() -> void:
+ 	EventBus.news_stream_changed.connect(_rebuild)
+ 	# Ambient yedek tr() anahtarlarından geliyor — dil değişince yeniden kur.
+ 	EventBus.language_changed.connect(_on_language_changed)
++	# Yayın renklerinin renk körü ikizi var.
++	EventBus.palette_changed.connect(_rebuild.unbind(1))
+ 	await _rebuild()
+ 
+ 
+@@ -68,6 +86,15 @@ func _exit_tree() -> void:
+ 		EventBus.language_changed.disconnect(_on_language_changed)
+ 
+ 
++func _set_open(value: bool) -> void:
++	open = value
++	$Run.visible = open
++	set_process(open)
++	anchor_right = 1.0 if open else 0.0
++	offset_right = 0.0 if open else _toggle.size.x
++	open_changed.emit(open)
++
++
+ func _on_language_changed(_locale: String) -> void:
+ 	await _rebuild()
+ 
+@@ -85,24 +112,27 @@ func _rebuild() -> void:
+ 	# Two identical copies of the stream end-to-end → seamless loop.
+ 	var single: String = _build_bbcode()
+ 	stream.text = single + single
+-	stream.position.x = 0.0
++	stream.position.x = RUN_PAD
+ 
+ 	# Layout needs one frame to settle before get_content_width returns
+ 	# a meaningful value. Same for get_content_height (used for y-center).
+ 	await get_tree().process_frame
+ 	_half_width = stream.get_content_width() / 2.0
+-	stream.position.y = (size.y - stream.get_content_height()) / 2.0
++	stream.position.y = ($Run.size.y - stream.get_content_height()) / 2.0
+ 
+ 
+ func _build_bbcode() -> String:
+ 	var parts: PackedStringArray = []
++	var hues := {}
++	for key: String in NewsFeedSystem.OUTLET_KEYS:
++		hues[tr(key)] = UiTokens.D_outlet(key)
+ 	# Canlı satırlar önde (anlık beat'ler); ardından haber akışı (en yeni STREAM_SHOWN
+ 	# satır). Biz-kaynaklı akış satırı zaten canlı satır olarak dönmüş olabilir —
+ 	# aynı cümle döngüde iki kez akmasın diye metin bazlı ayıklanır. Döngü kısa
+ 	# kalırsa (ilk haftalar) soğuk-başlangıç ambient anahtarları tamamlar.
+ 	var seen_txt: Dictionary = {}
+ 	for h in _live_lines:
+-		parts.append(_part(h.src, h.txt))
++		parts.append(_part(h.src, h.txt, hues))
+ 		seen_txt[String(h.txt)] = true
+ 	var shown: int = 0
+ 	for line in NewsFeedSystem.get_stream():
+@@ -110,7 +140,7 @@ func _build_bbcode() -> String:
+ 			break
+ 		if seen_txt.has(String(line["txt"])):
+ 			continue
+-		parts.append(_part(String(line["src"]), String(line["txt"])))
++		parts.append(_part(String(line["src"]), String(line["txt"]), hues))
+ 		seen_txt[String(line["txt"])] = true
+ 		shown += 1
+ 	if parts.size() < LOOP_MIN_PARTS:
+@@ -124,12 +154,22 @@ func _build_bbcode() -> String:
+ 			if parts.size() >= LOOP_MIN_PARTS:
+ 				break
+ 			var k: int = (offset + i) % AMBIENT_KEYS.size()
+-			parts.append(_part(NewsFeedSystem.outlet_name(k), tr(String(AMBIENT_KEYS[k]))))
+-	return SEPARATOR.join(parts) + SEPARATOR
++			parts.append(_part(NewsFeedSystem.outlet_name(k), tr(String(AMBIENT_KEYS[k])), hues))
++	var sep: String = "[color=#%s]%s[/color]" % [UiTokens.D_INK_4.to_html(false), SEPARATOR]
++	return sep.join(parts) + sep
++
++
++## An outlet's name in its hue; a source that is not an outlet (İçeriden, a person) in emphasis ink.
++func _part(src: String, txt: String, hues: Dictionary) -> String:
++	return "[b][color=#%s]%s[/color][/b]  %s" % [(hues.get(src, UiTokens.D_INK_1) as Color).to_html(false), src, txt]
+ 
+ 
+-func _part(src: String, txt: String) -> String:
+-	return "[color=%s]%s[/color]  %s" % [UiTokens.accent_hex(), src, txt]
++## The stream fades out over the last pixels of the run.
++func _draw_fade() -> void:
++	var clear := Color(UiTokens.D_SURFACE_0, 0.0)
++	var w: Vector2 = _fade.size
++	_fade.draw_polygon(PackedVector2Array([Vector2.ZERO, Vector2(w.x, 0), w, Vector2(0, w.y)]),
++		PackedColorArray([clear, UiTokens.D_SURFACE_0, UiTokens.D_SURFACE_0, clear]))
+ 
+ 
+ func _process(delta: float) -> void:
+diff --git a/project-unicorn/scripts/ui/components/top_bar.gd b/project-unicorn/scripts/ui/components/top_bar.gd
+index 7b8d3d9..504697e 100644
+--- a/project-unicorn/scripts/ui/components/top_bar.gd
++++ b/project-unicorn/scripts/ui/components/top_bar.gd
+@@ -1,211 +1,252 @@
+ extends Panel
+ 
+-# Persistent stat strip: paints from GameState on _ready, then follows EventBus signals.
+-# Active/idle look comes from theme variations (PhaseDotActive/PhaseDotDim,
+-# SpeedButtonActive/SpeedButton).
++# Üst bar: iki satırlık metrik ızgarası, koyu temada. Her yazı taban çizgisine göre yerleşir
++# (y = taban - ascent); sütunlar sabittir ve TR ile EN'in en geniş değerinden ölçülüdür, böylece gün
++# bloğu ve hafta çubuğu her durumda ve dilde aynı boydadır. Mantıksal genişlik
++# DisplaySettings.COMPACT_SHELL_BELOW altındayken sıkışık kip: marka yalnız kare, kısa tarih, dar hız
++# tuşları (rayın simge kipiyle aynı eşik). Hafta çubuğu en çok MAX_WEEK_BAR uzar; daha geniş barda
++# Sıradaki yuvası ve saat bloğu gün bloğunun hemen ardından gelir, artan genişlik sağda boş kalır.
++# Sıradaki yuvası hep ayrılmıştır: teklif süresi, yoksa mesai bitimi. Ayırıcılar ve hafta çubuğu
++# _draw'da.
+ 
+-# Canon terms, identical in both locales — keys only so no scene or script holds the words.
+ const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SERIES_A"]
+-
+-@onready var company_name_label: Label = $Margin/Row/IdentityGroup/CompanyNameLabel
+-@onready var logo_square: ColorRect = $Margin/Row/IdentityGroup/LogoSquare
+-@onready var finance_group: HBoxContainer = $Margin/Row/FinanceGroup
+-@onready var reputation_group: HBoxContainer = $Margin/Row/ReputationGroup
+-@onready var time_group: HBoxContainer = $Margin/Row/TimeGroup
+-@onready var cash_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Cash/ValueLabel
+-@onready var mrr_value_label: Label = $Margin/Row/FinanceGroup/StatCol_MRR/ValueLabel
+-@onready var burn_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Burn/ValueRow/ValueLabel
+-@onready var net_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Net/ValueRow/ValueLabel
+-@onready var runway_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Runway/ValueRow/ValueLabel
+-@onready var runway_unit_label: Label = $Margin/Row/FinanceGroup/StatCol_Runway/ValueRow/UnitLabel
+-@onready var brand_value_label: Label = $Margin/Row/ReputationGroup/StatCol_Brand/ValueLabel
+-@onready var rep_value_label: Label = $Margin/Row/ReputationGroup/StatCol_Rep/ValueLabel
+-@onready var day_label: Label = $Margin/Row/TimeGroup/DayLabel
+-@onready var shutter_label: Label = $Margin/Row/TimeGroup/ShutterLabel
+-@onready var offer_label: Label = $Margin/Row/TimeGroup/OfferLabel
+-@onready var phase_name_label: Label = $Margin/Row/TimeGroup/PhaseGroup/PhaseNameLabel
+-@onready var phase_dots: Array[Panel] = [
+-	$Margin/Row/TimeGroup/PhaseGroup/PhaseDots/PhaseDot1,
+-	$Margin/Row/TimeGroup/PhaseGroup/PhaseDots/PhaseDot2,
+-	$Margin/Row/TimeGroup/PhaseGroup/PhaseDots/PhaseDot3,
++## [tam, sıkışık]: marka bloğunun genişliği; anahtar (A, C, E, G) ve değer (B, D, F, H) sütunlarının
++## sol kenarı; iki metrik grubunu ayıran kısa çizgi; gün bloğunun başı ve iç payı; yuva ve saat
++## bloğunun genişliği, saatin sol payı, hız tuşunun genişliği ve saatle tuşlar arası.
++const GRID := [
++	{"brand": 184, "A": 204, "B": 246, "C": 414, "D": 480, "rule": 616, "E": 637, "F": 684, "G": 766,
++		"H": 843, "day": 943, "pad": 20, "slot": 248, "time": 335, "time_pad": 20, "key": 40, "gap": 16},
++	{"brand": 64, "A": 76, "B": 116, "C": 276, "D": 340, "rule": 468, "E": 481, "F": 526, "G": 600,
++		"H": 675, "day": 767, "pad": 16, "slot": 216, "time": 269, "time_pad": 12, "key": 30, "gap": 12},
+ ]
++## Taban çizgileri: iki metrik satırı, marka adı ve evre, tarih ve saat etiketleri, yuvanın iki
++## satırı, saat.
++const ROW_1 := 33.0
++const ROW_2 := 54.0
++const NAME_LINE := 31.0
++const PHASE_LINE := 50.0
++const DATE_LINE := 28.0
++const HOUR_LINE := 58.0
++const NEXT_KEY_LINE := 29.0
++const NEXT_LINE := 50.0
++const CLOCK_LINE := 41.0
++const LOGO := Vector2(20, 14)
++const LOGO_COMPACT := Vector2(22, 22)
++const NAME_X := 48.0
++const NAME_RIGHT := 12.0
++## Evre adının en geniş hâli; noktalar ondan PHASE_DOT_GAP sonra, aralarında PHASE_DOT_STEP.
++const PHASE_W := 65.0
++const PHASE_DOT_GAP := 8.0
++const PHASE_DOT_STEP := 12.0
++const PHASE_DOT_Y := 44.0
++const CLOCK_W := 67.0
++const KEYS_Y := 16.0
++const KEY_GAP := 4.0
++const UNIT_GAP := 2.0
++const RULE_INSET := 12.0
++## Hafta çubuğu: üst kenarı, uzunluk tavanı.
++const WEEK_Y := 38.0
++const MAX_WEEK_BAR := 720.0
++
+ @onready var speed_btns: Array[Button] = [
+-	$Margin/Row/TimeGroup/SpeedControls/PauseBtn,
+-	$Margin/Row/TimeGroup/SpeedControls/Speed1Btn,
+-	$Margin/Row/TimeGroup/SpeedControls/Speed2Btn,
+-	$Margin/Row/TimeGroup/SpeedControls/Speed3Btn,
+-	$Margin/Row/TimeGroup/SpeedControls/Speed4Btn,
++	$TimeBlock/PauseBtn,
++	$TimeBlock/Speed1Btn,
++	$TimeBlock/Speed2Btn,
++	$TimeBlock/Speed3Btn,
++	$TimeBlock/Speed4Btn,
+ ]
+ 
+-# Teklif geri sayımının sinyali yeniden atmaz; dil ya da palet değişince çipi yeniden
+-# boyayabilmek için son değer burada tutulur. -1 = çip gizli.
++## Teklif geri sayımı yalnız tikte yayılır; dil ya da palet değişince yeniden boyamak için tutulur.
++## -1 = teklif yok.
+ var _offer_weeks_left: int = -1
+-## "Sprint otomatik başladı": teklif çipinin kardeşi, ürün durumunun notunu okur.
+-var _auto_start_label: Label
++var _compact := false
++var _slot_x := 0.0
+ 
+ 
+ func _ready() -> void:
+-	logo_square.color = UiTokens.ACCENT_CHROME
+-	_auto_start_label = offer_label.duplicate()
+-	time_group.add_child(_auto_start_label)
+-	time_group.move_child(_auto_start_label, offer_label.get_index() + 1)
+-	_refresh_all()
+-
+-	EventBus.cash_changed.connect(_on_cash_changed)
+-	EventBus.mrr_changed.connect(_on_mrr_changed)
+-	EventBus.burn_changed.connect(_refresh_flow.unbind(1))
+-	EventBus.runway_recalculated.connect(_on_runway_changed)
+-	EventBus.brand_changed.connect(_on_brand_changed)
+-	EventBus.reputation_changed.connect(_on_reputation_changed)
+-	EventBus.day_advanced.connect(_update_day_label.unbind(1))
+-	EventBus.hour_changed.connect(_update_day_label.unbind(1))
+-	EventBus.phase_changed.connect(_on_phase_changed)
+-	EventBus.shutter_changed.connect(_on_shutter_changed)
++	# Bağlantılar tek tek yazılır: sinyal manifestinin üreticisi `EventBus.<ad>.connect` biçimini okur.
++	var refresh := _refresh.unbind(1)
++	EventBus.cash_changed.connect(refresh)
++	EventBus.mrr_changed.connect(refresh)
++	EventBus.burn_changed.connect(refresh)
++	EventBus.runway_recalculated.connect(refresh)
++	EventBus.brand_changed.connect(refresh)
++	EventBus.reputation_changed.connect(refresh)
++	EventBus.day_advanced.connect(refresh)
++	EventBus.hour_changed.connect(refresh)
++	EventBus.phase_changed.connect(refresh)
++	EventBus.shutter_changed.connect(refresh)
++	EventBus.language_changed.connect(refresh)
++	EventBus.palette_changed.connect(refresh)
++	EventBus.month_ended.connect(refresh)
+ 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
+-	EventBus.product_state_changed.connect(_refresh_auto_start)
+-	# Kod tarafında bestelenen metin (runway durumu, sayaçlar) ve örnek başına renk
+-	# override'ları kendiliğinden dönmez; ikisi de yeniden okunarak yenilenir.
+-	EventBus.language_changed.connect(_refresh_all.unbind(1))
+-	EventBus.palette_changed.connect(_refresh_all.unbind(1))
+-	# Ay kapanışı sessizdir; aylık rakamlar yine de kapanışta bir kez baştan okunur.
+-	EventBus.month_ended.connect(_refresh_all.unbind(1))
+-	# Hız yalnız TimeManager üzerinden gidip gelir (speed_change_requested → speed_changed);
+-	# gösterge buradan boyanır ki olay-duraklatma dönüşü gibi başka değiştiriciler de görünsün.
++	# Hız yalnız TimeManager üzerinden gidip gelir (speed_change_requested → speed_changed); gösterge
++	# buradan boyanır ki olay duraklatmasının dönüşü gibi başka değiştiriciler de görünsün.
+ 	TimeManager.speed_changed.connect(_apply_speed_visual)
+ 	for i in speed_btns.size():
+-		speed_btns[i].pressed.connect(_on_speed_button.bind(i))
+-
+-	get_viewport().size_changed.connect(_apply_density)
+-	_apply_density()
+-
+-
+-## Dar mantıksal genişlikte şerit kırpılmaz, sıkışır (rayın simge kipiyle aynı eşik).
+-func _is_compact() -> bool:
+-	return get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
+-
+-
+-func _apply_density() -> void:
+-	var compact: bool = _is_compact()
+-	company_name_label.visible = not compact
+-	# Sütunlar hiç gitmez, hiçbir sayı gizlenmez; yalnız aralarındaki boşluk daralır.
+-	var gap: int = 18 if compact else 28
+-	finance_group.add_theme_constant_override("separation", gap)
+-	reputation_group.add_theme_constant_override("separation", gap)
+-	time_group.add_theme_constant_override("separation", 10 if compact else 16)
+-	day_label.custom_minimum_size.x = 0.0 if compact else 210.0
+-	_update_day_label()
+-
+-
+-func _refresh_all() -> void:
+-	company_name_label.text = GameState.company_name
+-	_on_cash_changed(GameState.cash)
+-	_on_mrr_changed(GameState.mrr)
+-	_on_runway_changed(GameState.get_runway_months())
+-	_on_brand_changed(GameState.brand)
+-	_on_reputation_changed(GameState.reputation)
+-	_update_day_label()
+-	_on_phase_changed(GameState.phase)
+-	_on_shutter_changed(GameState.shutter_weeks_left)
+-	_on_offer_countdown_changed(_offer_weeks_left)
+-	_refresh_auto_start()
++		speed_btns[i].pressed.connect(EventBus.speed_change_requested.emit.bind(i))
++	resized.connect(_refresh)
++	_refresh()
+ 	_apply_speed_visual(TimeManager.current_speed)
+ 
+ 
+-func _on_cash_changed(value: int) -> void:
+-	cash_value_label.text = UiTokens.format_money_exact(value)
++func _on_offer_countdown_changed(weeks_left: int) -> void:
++	_offer_weeks_left = weeks_left
++	_refresh()
+ 
+ 
+-func _on_mrr_changed(value: int) -> void:
+-	mrr_value_label.text = UiTokens.format_money_chip(value)
+-	_refresh_flow()
++func _refresh() -> void:
++	_compact = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
++	var g: Dictionary = GRID[int(_compact)]
++	_refresh_brand(g)
++	_refresh_metrics(g)
++	_slot_x = minf(size.x - g.time - g.slot, g.day + g.pad + MAX_WEEK_BAR + g.pad)
++	_refresh_day(g)
++	_refresh_time(g)
++	queue_redraw()
+ 
+ 
+-func _refresh_flow() -> void:
+-	# Burn ve net canlı aylık hızdır (FinanceSystem.get_monthly_flow, Finans sekmesiyle aynı
+-	# kaynak); net işaret renkli, "/ay" birimi sahnede sabit.
++## Marka bloğu: turuncu kare + "Project Unicorn" ve evre; sıkışık kipte yalnız kare.
++func _refresh_brand(g: Dictionary) -> void:
++	$Logo.position = LOGO_COMPACT if _compact else LOGO
++	var phase: int = clampi(GameState.phase, 1, PHASE_KEYS.size())
++	# Ham to_upper bilerek: İngilizce kanon terim; Fmt.upper'ın Türkçe dalı "TRACTİON" yapardı.
++	$Phase.text = tr(PHASE_KEYS[phase - 1]).to_upper()
++	_put($LogoName, NAME_X, NAME_LINE, g.brand - NAME_X - NAME_RIGHT)
++	_put($Phase, NAME_X, PHASE_LINE)
++	for i in 3:
++		var dot: Panel = get_node("PhaseDot%d" % (i + 1))
++		dot.position = Vector2(NAME_X + PHASE_W + PHASE_DOT_GAP + i * PHASE_DOT_STEP, PHASE_DOT_Y)
++		dot.theme_type_variation = &"PhaseDotActive" if i < phase else &"PhaseDotDim"
++	for part: Control in [$LogoName, $Phase, $PhaseDot1, $PhaseDot2, $PhaseDot3]:
++		part.visible = not _compact
++
++
++## KASA tek kahraman, NET altında. Kepenk sayacı koşarken RUNWAY hücresi o sayaçtır. Kırmızı yalnız
++## tehlikede: eksi kasa, kepenk, ilk runway eşiğinin altı; kasa artıdayken eksi NET mürekkeptir.
++func _refresh_metrics(g: Dictionary) -> void:
+ 	var flow: Dictionary = FinanceSystem.get_monthly_flow()
+-	burn_value_label.text = UiTokens.format_money_chip(int(flow.expense))
++	var shut: bool = GameState.cash < 0
+ 	var net: int = int(flow.net)
+-	var sign_str: String = "+" if net > 0 else ("-" if net < 0 else "")
+-	net_value_label.text = "%s%s" % [sign_str, UiTokens.format_money_chip(absi(net))]
+-	net_value_label.add_theme_color_override("font_color", UiTokens.delta_color_bright(net))
+-
+-
+-func _on_runway_changed(months: float) -> void:
++	var months: float = GameState.get_runway_months()
++	_paint($CashValue, Fmt.money_exact(GameState.cash), UiTokens.D_neg() if shut else null)
++	var net_ink = UiTokens.D_pos() if net > 0 else (UiTokens.D_neg() if shut and net < 0 else null)
++	_paint($NetValue, ("+" if net > 0 else ("-" if net < 0 else "")) + Fmt.money_chip(absi(net)), net_ink)
++	var weeks: int = GameState.shutter_weeks_left
++	# Kasa iki tik arasında eksiye düşebilir (olay, tek seferlik gider); kepenk sayacı sonraki tikte
++	# kurulur, o arada hücre RUNWAY kalır.
++	var shutter: bool = shut and weeks >= 0
+ 	var p: Dictionary = UiTokens.net_runway_parts(months)
+-	runway_value_label.text = String(p.value)
+-	runway_unit_label.text = String(p.unit)
+-	runway_unit_label.visible = String(p.unit) != ""
+-	# Kârlı: durum kelimesi yeşil, nedeni hover notunda (Label varsayılanı IGNORE, tooltip hover ister).
+-	var positive: bool = bool(p.get("positive", false))
+-	if positive:
+-		runway_value_label.add_theme_color_override("font_color", UiTokens.positive_bright())
+-	else:
+-		runway_value_label.remove_theme_color_override("font_color")
+-	runway_value_label.tooltip_text = String(p.get("note", "")) if positive else ""
+-	runway_value_label.mouse_filter = Control.MOUSE_FILTER_STOP if positive else Control.MOUSE_FILTER_IGNORE
+-
+-
+-func _on_brand_changed(value: int) -> void:
+-	brand_value_label.text = "%d" % value
+-
+-
+-func _on_reputation_changed(value: int) -> void:
+-	rep_value_label.text = "%d" % value
+-
+-
+-func _update_day_label() -> void:
+-	# Dar viewport'ta yıl düşer ve ay kısalır ("H14 · Nis · 10:00"): yıl özet başlığında zaten
+-	# var. Kelimeler ve sıraları Fmt'nindir.
++	var alarm: bool = shut or months < FinanceSystem.RUNWAY_ALERT_MONTHS[0]
++	var runway_ink = UiTokens.D_pos() if p.positive else (UiTokens.D_neg() if alarm else null)
++	$RunwayKey.text = Fmt.upper(tr("TOPBAR_SHUTTER" if shutter else "FIN_CAP_RUNWAY"))
++	var runway: Label = $RunwayValue
++	runway.theme_type_variation = &"ValueText" if runway_ink == null else &"ValueTextStrong"
++	_paint(runway, tr(Fmt.count_key("TOPBAR_SHUTTER_WEEKS", weeks)).format({"n": weeks})
++		if shutter else UiTokens.net_runway_text(months), runway_ink)
++	# Artıda olmanın nedeni ipucunda (Label varsayılanı IGNORE, ipucu üzerine gelmeyi ister).
++	runway.tooltip_text = p.note
++	runway.mouse_filter = Control.MOUSE_FILTER_STOP if p.positive else Control.MOUSE_FILTER_IGNORE
++	$MrrValue.text = Fmt.money_chip(GameState.mrr)
++	$BrandValue.text = str(GameState.brand)
++	$BurnValue.text = Fmt.money_chip(int(flow.expense))
++	$RepValue.text = str(GameState.reputation)
++	for row in [[$CashKey, $CashValue, "A", "B", ROW_1], [$NetKey, $NetValue, "A", "B", ROW_2],
++			[$RunwayKey, runway, "C", "D", ROW_1], [$MrrKey, $MrrValue, "E", "F", ROW_1],
++			[$BrandKey, $BrandValue, "E", "F", ROW_2], [$BurnKey, $BurnValue, "G", "H", ROW_1],
++			[$RepKey, $RepValue, "G", "H", ROW_2]]:
++		_put(row[0], g[row[2]], row[4])
++		_put(row[1], g[row[3]], row[4])
++	for row in [[$NetUnit, $NetValue, ROW_2], [$BurnUnit, $BurnValue, ROW_1]]:
++		_put(row[0], row[1].position.x + row[1].get_minimum_size().x + UNIT_GAP, row[2])
++
++
++## Gün bloğu (tarih + hafta çubuğu ve uç saatleri) ve Sıradaki yuvası: teklif süresi uyarı rengindedir,
++## son haftasında kırmızı; teklif yoksa mesainin bitimine kalan saat.
++func _refresh_day(g: Dictionary) -> void:
+ 	var d: Dictionary = GameState.get_date_dict()
+-	var hour: String = "%02d" % GameState.current_hour
+-	if _is_compact():
+-		day_label.text = tr("TOPBAR_CLOCK_COMPACT").format({
+-			"week": int(d.week), "mon": Fmt.month_abbr(int(d.month)), "hour": hour})
+-	else:
+-		day_label.text = tr("TOPBAR_CLOCK").format({"date": Fmt.date_line(d), "hour": hour})
+-
+-
+-func _on_shutter_changed(weeks_left: int) -> void:
+-	# Kepenk sayacı: kasa eksideyken kırmızı geri sayım; -1 = gizli.
+-	shutter_label.visible = weeks_left >= 0
+-	shutter_label.add_theme_color_override("font_color", UiTokens.negative_bright())
+-	if weeks_left >= 0:
+-		shutter_label.text = tr(Fmt.count_key("FIN_SHUTTER_COUNTDOWN", weeks_left)).format(
+-			{"n": weeks_left})
+-
+-
+-func _on_offer_countdown_changed(weeks_left: int) -> void:
+-	# Term sheet geçerlilik çipi: son haftadan önce amber, son hafta kırmızı; -1 = gizli.
+-	_offer_weeks_left = weeks_left
+-	offer_label.visible = weeks_left >= 0
+-	if weeks_left >= 0:
+-		offer_label.text = tr(Fmt.count_key("FIN_OFFER_COUNTDOWN", weeks_left)).format(
+-			{"n": weeks_left})
+-		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT_CHROME if weeks_left > 1 else UiTokens.negative_bright())
+-
+-
+-## Planlamada bir gün geçince sprint liderin önerisiyle kendiliğinden başlar; not o sprint
+-## sürdükçe amber kalır.
+-func _refresh_auto_start() -> void:
+-	var auto_started: int = int(GameState.product.get("auto_started", -1))
+-	_auto_start_label.visible = SprintSystem.mode() == "active" and auto_started == SprintSystem.sprint_number()
+-	_auto_start_label.text = tr("PRODUCT_AUTO_STARTED")
+-	_auto_start_label.add_theme_color_override("font_color", UiTokens.ACCENT_CHROME)
++	$Date.text = tr("TOPBAR_DATE_COMPACT").format({"week": int(d.week), "mon": Fmt.month_abbr(int(d.month))}) \
++		if _compact else Fmt.date_line(d)
++	var x0: float = g.day + g.pad
++	_put($Date, x0, DATE_LINE)
++	var end: int = WorkHoursSystem.workday_end()
++	$WeekStart.text = "%02d:00" % TimeModel.WEEK_START_HOUR
++	$WeekEnd.text = "%02d:00" % (end % 24)
++	_put($WeekStart, x0, HOUR_LINE)
++	_put($WeekEnd, _slot_x - g.pad - $WeekEnd.get_minimum_size().x, HOUR_LINE)
++	$NextKey.text = Fmt.upper(tr("TOPBAR_NEXT"))
++	var line: String = tr("TOPBAR_NEXT_WORKDAY_END").format({"n": maxi(end - GameState.current_hour, 0)})
++	var ink = null
++	if _offer_weeks_left > 1:
++		line = tr("TOPBAR_NEXT_OFFER").format({"n": _offer_weeks_left})
++		ink = UiTokens.D_warn()
++	elif _offer_weeks_left >= 0:
++		line = tr("TOPBAR_NEXT_OFFER_LAST")
++		ink = UiTokens.D_neg()
++	_paint($NextLine, line, ink)
++	_put($NextKey, _slot_x + g.pad, NEXT_KEY_LINE)
++	_put($NextLine, _slot_x + g.pad, NEXT_LINE, g.slot - 2 * g.pad)
++
++
++func _refresh_time(g: Dictionary) -> void:
++	var block: Panel = $TimeBlock
++	block.position = Vector2(_slot_x + g.slot, 0)
++	block.size = Vector2(g.time, size.y)
++	$TimeBlock/Clock.text = "%02d:00" % GameState.current_hour
++	_put($TimeBlock/Clock, g.time_pad, CLOCK_LINE)
++	for i in speed_btns.size():
++		speed_btns[i].position = Vector2(g.time_pad + CLOCK_W + g.gap + i * (g.key + KEY_GAP), KEYS_Y)
++		speed_btns[i].size = Vector2(g.key, UiTokens.D_H_SPEED_KEY)
+ 
+ 
+-func _on_phase_changed(new_phase: int) -> void:
+-	var idx: int = clampi(new_phase - 1, 0, PHASE_KEYS.size() - 1)
+-	# Ham to_upper bilerek: İngilizce kanon terim; Fmt.upper'ın Türkçe dalı "TRACTİON" yapardı.
+-	phase_name_label.text = tr(PHASE_KEYS[idx]).to_upper()
+-	for i in phase_dots.size():
+-		phase_dots[i].theme_type_variation = &"PhaseDotActive" if i <= idx else &"PhaseDotDim"
++## Yazı taban çizgisine oturur; genişlik verilirse kutu o kadardır (taşan metin üç noktayla kısalır).
++func _put(label: Label, x: float, baseline: float, width := 0.0) -> void:
++	label.position = Vector2(x, baseline - label.get_theme_font("font").get_ascent(label.get_theme_font_size("font_size")))
++	if width > 0.0:
++		label.size.x = width
+ 
+ 
+-func _on_speed_button(idx: int) -> void:
+-	EventBus.speed_change_requested.emit(idx)
++## Durum rengi yalnız anlamı olan değerde; yoksa varyasyonun mürekkebi.
++func _paint(label: Label, text: String, ink) -> void:
++	label.text = text
++	if ink == null:
++		label.remove_theme_color_override("font_color")
++	else:
++		label.add_theme_color_override("font_color", ink)
++
++
++func _draw() -> void:
++	var g: Dictionary = GRID[int(_compact)]
++	var h: float = size.y
++	for x in [g.brand - 1, g.day, _slot_x]:
++		draw_rect(Rect2(x, 0, 1, h), UiTokens.D_LINE_1)
++	draw_rect(Rect2(g.rule, RULE_INSET, 1, h - 2 * RULE_INSET), UiTokens.D_LINE_1)
++	var time_end: float = _slot_x + g.slot + g.time
++	if time_end < size.x:
++		draw_rect(Rect2(time_end, 0, 1, h), UiTokens.D_LINE_1)
++	_draw_week(g.day + g.pad, _slot_x - g.pad)
++
++
++## Haftanın 08:00'den mesainin bitimine kadarki saatleri: mesai öncesi ince iz, geçen saatler dolgu,
++## her saat bir çentik (bitiş uzun), şimdi dikey işaret.
++func _draw_week(x0: float, x1: float) -> void:
++	var start: int = TimeModel.WEEK_START_HOUR
++	var end: int = WorkHoursSystem.workday_end()
++	var at := func(hour: float) -> float: return x0 + (hour - start) / float(end - start) * (x1 - x0)
++	var open: float = at.call(clampi(WorkHoursSystem.start_hour(), start, end))
++	var now: float = at.call(clampf(GameState.current_hour, start, end))
++	draw_rect(Rect2(x0, WEEK_Y + 1, open - x0, 2), UiTokens.D_BAR_TRACK)
++	draw_rect(Rect2(open, WEEK_Y, x1 - open, 4), UiTokens.D_BAR_TRACK)
++	draw_rect(Rect2(x0, WEEK_Y, now - x0, 4), UiTokens.D_BAR_FILL)
++	for hour in range(start + 1, end + 1):
++		var x: float = at.call(hour)
++		if hour == end:
++			draw_rect(Rect2(x - 1, WEEK_Y - 4, 1, 12), UiTokens.D_INK_4)
++		else:
++			draw_rect(Rect2(x, WEEK_Y + 6, 1, 4), UiTokens.D_LINE_2)
++	draw_rect(Rect2(now - 1, WEEK_Y - 5, 2, 14), UiTokens.D_INK_1)
+ 
+ 
+ func _apply_speed_visual(active_idx: int) -> void:
+ 	for i in speed_btns.size():
+-		speed_btns[i].theme_type_variation = &"SpeedButtonActive" if i == active_idx else &"SpeedButton"
++		speed_btns[i].theme_type_variation = &"SpeedKeyActive" if i == active_idx else &"SpeedKey"
+diff --git a/project-unicorn/themes/master_theme.tres b/project-unicorn/themes/master_theme.tres
+index 5c5162a..8b1b073 100644
+--- a/project-unicorn/themes/master_theme.tres
++++ b/project-unicorn/themes/master_theme.tres
+@@ -2515,7 +2515,7 @@ TooltipTitle/font_sizes/font_size = 9
+ TooltipTitle/fonts/font = ExtResource("mono_label_dfe9c")
+ TopBarPanel/base_type = &"Panel"
+ TopBarPanel/styles/panel = SubResource("StyleBoxFlat_591af")
+-UiTokensStamp/constants/stamp = 18
++UiTokensStamp/constants/stamp = 19
+ VSeparator/constants/separation = 4
+ VSeparator/styles/separator = SubResource("StyleBoxLine_8270b")
+ ViewportPanel/base_type = &"Panel"
+diff --git a/project-unicorn/themes/menajer_theme.tres b/project-unicorn/themes/menajer_theme.tres
+index d8de32f..cd6ef9a 100644
+--- a/project-unicorn/themes/menajer_theme.tres
++++ b/project-unicorn/themes/menajer_theme.tres
+@@ -131,6 +131,55 @@ corner_radius_top_right = 999
+ corner_radius_bottom_right = 999
+ corner_radius_bottom_left = 999
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b9c19"]
++content_margin_left = 4.0
++content_margin_top = 0.0
++content_margin_right = 4.0
++content_margin_bottom = 1.0
++bg_color = Color(0.18039216, 0.16078432, 0.14117648, 1)
++border_width_left = 1
++border_width_top = 1
++border_width_right = 1
++border_width_bottom = 1
++border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
++corner_radius_top_left = 999
++corner_radius_top_right = 999
++corner_radius_bottom_right = 999
++corner_radius_bottom_left = 999
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c3ec8"]
++content_margin_left = 6.0
++content_margin_top = 1.0
++content_margin_right = 6.0
++content_margin_bottom = 1.0
++bg_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
++corner_radius_top_left = 999
++corner_radius_top_right = 999
++corner_radius_bottom_right = 999
++corner_radius_bottom_left = 999
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45db1"]
++content_margin_left = 4.0
++content_margin_top = 0.0
++content_margin_right = 4.0
++content_margin_bottom = 1.0
++bg_color = Color(0.9254902, 0.41568628, 0.36862746, 1)
++corner_radius_top_left = 999
++corner_radius_top_right = 999
++corner_radius_bottom_right = 999
++corner_radius_bottom_left = 999
++
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_77923"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(1, 0.627451, 0.15686275, 1)
++corner_radius_top_left = 2
++corner_radius_top_right = 2
++corner_radius_bottom_right = 2
++corner_radius_bottom_left = 2
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b214e"]
+ content_margin_left = 0.0
+ content_margin_top = 0.0
+@@ -2082,27 +2131,27 @@ border_width_right = 1
+ border_width_bottom = 1
+ border_color = Color(0.227, 0.204, 0.165, 1)
+ 
+-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_50176"]
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_46f1e"]
+ content_margin_left = 0.0
+ content_margin_top = 0.0
+ content_margin_right = 0.0
+ content_margin_bottom = 0.0
+ bg_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+-corner_radius_top_left = 2
+-corner_radius_top_right = 2
+-corner_radius_bottom_right = 2
+-corner_radius_bottom_left = 2
++corner_radius_top_left = 999
++corner_radius_top_right = 999
++corner_radius_bottom_right = 999
++corner_radius_bottom_left = 999
+ 
+-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c5138"]
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b5c75"]
+ content_margin_left = 0.0
+ content_margin_top = 0.0
+ content_margin_right = 0.0
+ content_margin_bottom = 0.0
+ bg_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
+-corner_radius_top_left = 2
+-corner_radius_top_right = 2
+-corner_radius_bottom_right = 2
+-corner_radius_bottom_left = 2
++corner_radius_top_left = 999
++corner_radius_top_right = 999
++corner_radius_bottom_right = 999
++corner_radius_bottom_left = 999
+ 
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_08a46"]
+ content_margin_left = 0.0
+@@ -2509,6 +2558,15 @@ corner_radius_top_right = 2
+ corner_radius_bottom_right = 2
+ corner_radius_bottom_left = 2
+ 
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ae064"]
++content_margin_left = 0.0
++content_margin_top = 0.0
++content_margin_right = 0.0
++content_margin_bottom = 0.0
++bg_color = Color(1, 1, 1, 1)
++corner_radius_top_right = 2
++corner_radius_bottom_right = 2
++
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cd5d2"]
+ content_margin_left = 20.0
+ content_margin_top = 20.0
+@@ -2918,14 +2976,14 @@ content_margin_top = 0.0
+ content_margin_right = 0.0
+ content_margin_bottom = 0.0
+ 
+-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_96a1b"]
++[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_21b63"]
+ content_margin_left = 0.0
+ content_margin_top = 0.0
+ content_margin_right = 1.0
+ content_margin_bottom = 0.0
+ bg_color = Color(0.08235294, 0.07058824, 0.05882353, 1)
+ border_width_right = 1
+-border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
++border_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
+ 
+ [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f3387_11"]
+ content_margin_left = 0.0
+@@ -3888,6 +3946,21 @@ BadgeCount/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ BadgeCount/font_sizes/font_size = 13
+ BadgeCount/fonts/font = ExtResource("d_sans_b_51908")
+ BadgeCount/styles/normal = SubResource("StyleBoxFlat_2c56b")
++BadgeCountIcon/base_type = &"Label"
++BadgeCountIcon/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++BadgeCountIcon/font_sizes/font_size = 12
++BadgeCountIcon/fonts/font = ExtResource("d_sans_b_51908")
++BadgeCountIcon/styles/normal = SubResource("StyleBoxFlat_b9c19")
++BadgeDanger/base_type = &"Label"
++BadgeDanger/colors/font_color = Color(0.105882354, 0.05882353, 0.050980393, 1)
++BadgeDanger/font_sizes/font_size = 13
++BadgeDanger/fonts/font = ExtResource("d_sans_b_51908")
++BadgeDanger/styles/normal = SubResource("StyleBoxFlat_c3ec8")
++BadgeDangerIcon/base_type = &"Label"
++BadgeDangerIcon/colors/font_color = Color(0.105882354, 0.05882353, 0.050980393, 1)
++BadgeDangerIcon/font_sizes/font_size = 12
++BadgeDangerIcon/fonts/font = ExtResource("d_sans_b_51908")
++BadgeDangerIcon/styles/normal = SubResource("StyleBoxFlat_45db1")
+ BadgeLabel/base_type = &"Label"
+ BadgeLabel/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ BadgeLabel/constants/line_spacing = 3
+@@ -3915,6 +3988,8 @@ BodySerif/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ BodySerif/constants/line_spacing = 3
+ BodySerif/font_sizes/font_size = 13
+ BodySerif/fonts/font = ExtResource("d_serif_reg_e6169")
++BrandMark/base_type = &"Panel"
++BrandMark/styles/panel = SubResource("StyleBoxFlat_77923")
+ BuildProgress/base_type = &"ProgressBar"
+ BuildProgress/styles/background = SubResource("StyleBoxFlat_b214e")
+ BuildProgress/styles/fill = SubResource("StyleBoxFlat_df944")
+@@ -4132,6 +4207,10 @@ DangerButton/styles/disabled = SubResource("StyleBoxFlat_6f464_2")
+ DangerButton/styles/hover = SubResource("StyleBoxFlat_de673")
+ DangerButton/styles/normal = SubResource("StyleBoxFlat_b2386")
+ DangerButton/styles/pressed = SubResource("StyleBoxFlat_c268f")
++DataMedium/base_type = &"Label"
++DataMedium/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
++DataMedium/font_sizes/font_size = 15
++DataMedium/fonts/font = ExtResource("d_sans_med_8aa82")
+ DataMono/base_type = &"Label"
+ DataMono/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ DataMono/constants/line_spacing = 3
+@@ -4678,9 +4757,9 @@ PartValueArmed/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ PartValueArmed/font_sizes/font_size = 26
+ PartValueArmed/fonts/font = ExtResource("d_sans_b_51908")
+ PhaseDotActive/base_type = &"Panel"
+-PhaseDotActive/styles/panel = SubResource("StyleBoxFlat_50176")
++PhaseDotActive/styles/panel = SubResource("StyleBoxFlat_46f1e")
+ PhaseDotDim/base_type = &"Panel"
+-PhaseDotDim/styles/panel = SubResource("StyleBoxFlat_c5138")
++PhaseDotDim/styles/panel = SubResource("StyleBoxFlat_b5c75")
+ PopupMenu/colors/font_accelerator_color = Color(0.6039216, 0.5686275, 0.5176471, 1)
+ PopupMenu/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ PopupMenu/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
+@@ -4792,6 +4871,8 @@ QuoteSerifCream/font_sizes/font_size = 15
+ QuoteSerifCream/fonts/font = ExtResource("d_serif_it_9778e")
+ RailCard/base_type = &"PanelContainer"
+ RailCard/styles/panel = SubResource("StyleBoxFlat_fae3d")
++RailMark/base_type = &"Panel"
++RailMark/styles/panel = SubResource("StyleBoxFlat_ae064")
+ RailPanel/base_type = &"PanelContainer"
+ RailPanel/styles/panel = SubResource("StyleBoxFlat_cd5d2")
+ RailRow/base_type = &"Button"
+@@ -4975,7 +5056,7 @@ SettingsSwitch/styles/hover_pressed = SubResource("StyleBoxEmpty_c6b6b_5")
+ SettingsSwitch/styles/normal = SubResource("StyleBoxEmpty_c6b6b_6")
+ SettingsSwitch/styles/pressed = SubResource("StyleBoxEmpty_c6b6b_7")
+ SideRailPanel/base_type = &"Panel"
+-SideRailPanel/styles/panel = SubResource("StyleBoxFlat_96a1b")
++SideRailPanel/styles/panel = SubResource("StyleBoxFlat_21b63")
+ SkillValue/base_type = &"Label"
+ SkillValue/colors/font_color = Color(0.7882353, 0.7647059, 0.7058824, 1)
+ SkillValue/font_sizes/font_size = 16
+@@ -5207,6 +5288,12 @@ TickerToggle/colors/font_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1
+ TickerToggle/colors/font_hover_color = Color(1, 1, 1, 1)
+ TickerToggle/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+ TickerToggle/colors/font_pressed_color = Color(1, 1, 1, 1)
++TickerToggle/colors/icon_focus_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++TickerToggle/colors/icon_hover_color = Color(1, 1, 1, 1)
++TickerToggle/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
++TickerToggle/colors/icon_normal_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
++TickerToggle/colors/icon_pressed_color = Color(1, 1, 1, 1)
++TickerToggle/constants/icon_max_width = 20
+ TickerToggle/font_sizes/font_size = 14
+ TickerToggle/fonts/font = ExtResource("d_sans_reg_96321")
+ TickerToggle/styles/disabled = SubResource("StyleBoxFlat_da472")
+@@ -5260,7 +5347,7 @@ TopicPill/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+ TopicPill/font_sizes/font_size = 13
+ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
+ TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
+-UiTokensStamp/constants/stamp = 18
++UiTokensStamp/constants/stamp = 19
+ VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
+ VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
+ VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")
+@@ -5272,6 +5359,10 @@ ValueText/base_type = &"Label"
+ ValueText/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+ ValueText/font_sizes/font_size = 18
+ ValueText/fonts/font = ExtResource("d_sans_med_8aa82")
++ValueTextStrong/base_type = &"Label"
++ValueTextStrong/colors/font_color = Color(1, 1, 1, 1)
++ValueTextStrong/font_sizes/font_size = 18
++ValueTextStrong/fonts/font = ExtResource("d_sans_sb_3375b")
+ ViewportPanel/base_type = &"Panel"
+ ViewportPanel/styles/panel = SubResource("StyleBoxFlat_17c22")
+ VolumeSlider/base_type = &"HSlider"

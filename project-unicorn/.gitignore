@@ -1,3 +1,15 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Mockup workspace: sources and each screen's approved top-level renders are tracked;
+# working renders, reference screenshots, logs and caches stay local.
+/docs/mockups/**/*.png
+!/docs/mockups/menajer/screens/*/*.png
+!/docs/mockups/menajer/system/*.png
+/docs/mockups/**/*.jpg
+/docs/mockups/**/*.log
+/docs/mockups/**/*.txt
+/docs/mockups/**/*.pyc
+/docs/mockups/**/__pycache__/
+/docs/mockups/**/*.import

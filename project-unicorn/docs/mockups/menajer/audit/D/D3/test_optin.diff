@@ -1,0 +1,25 @@
+--- final/project-unicorn/scripts/tabs/hr_tab.gd	2026-10-03 07:21:30.033325900 +0300
++++ haloF/project-unicorn/scripts/tabs/hr_tab.gd	2026-10-03 07:26:28.376334000 +0300
+@@ -28,6 +28,22 @@
+ const VIEW_ASSIGNMENTS := "assignments"
+ 
+ var _signals: Array = []
++var frame_options := {"theme": true, "title": "TAB_HR", "kpi": _d3_kpi()}
++
++
++func _d3_kpi() -> Control:
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", 0)
++	for kv in [["HR_COL_EMPLOYEE", "5"], ["HR_COL_EMPLOYEE", "50"]]:
++		var cell := PanelContainer.new()
++		cell.theme_type_variation = &"KpiCell"
++		var col := VBoxContainer.new()
++		col.alignment = BoxContainer.ALIGNMENT_CENTER
++		cell.add_child(col)
++		col.add_child(UiFactory.make_label(Fmt.upper(tr(kv[0])), &"KeyLabel"))
++		col.add_child(UiFactory.make_label(kv[1], &"KpiValue"))
++		row.add_child(cell)
++	return row
+ var _list: VBoxContainer = null
+ var _summary: Label = null
+ var _hours_control: Button = null

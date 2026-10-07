@@ -1,0 +1,1 @@
+--render-probe (hr window open), two rounds each: base = HEAD d5e1db9, final = HEAD + d3.patch (office dimmed under the cream Ekip window), haloF = final + test_optin.diff (Ekip window on menajer_theme with the 96 px halo and the dark header).

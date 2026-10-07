@@ -1,0 +1,3226 @@
+{
+  "source": "main.gd _seed_theme_surface (run_seed 424242, week 14) then OfficeCrowdProbe.seed_staff(34), as --office-shot=<office>:<hour>:crowd40; order = founder, then CharacterRegistry.get_employees()",
+  "count": 40,
+  "people": [
+    {
+      "id": "char_founder",
+      "character_name": "Kurucu",
+      "role": "founder",
+      "category": "founder",
+      "look": {
+        "sex": "w",
+        "head": "w_scifi",
+        "body": "w_casual",
+        "legs": "w_casual",
+        "feet": "w_casual",
+        "skin": 4,
+        "hair": 1,
+        "top": 3,
+        "top2": 3,
+        "tie": 0,
+        "bottom": 2,
+        "shoe": 1,
+        "height": 2,
+        "girth": 1,
+        "glasses": false
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "visionary",
+        "stubborn"
+      ],
+      "role_stats": {
+        "product": 2,
+        "design": 0,
+        "engineering": 4,
+        "qa": 0,
+        "sales": 4,
+        "customer_success": 0,
+        "leadership": 0,
+        "charisma": 2
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 0,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design",
+        "engineering"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 0,
+      "work_hours_override": 0,
+      "leave_week": -1,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Kurucu",
+      "trait_labels": [
+        "Vizyoner",
+        "İnatçı"
+      ],
+      "trait_effects": [
+        "Ar-Ge sıçramaları daha sık",
+        "Pivot maliyeti yüksek"
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 0,
+      "bust64": "art/busts/crowd40/bust64_00_char_founder.png"
+    },
+    {
+      "id": "char_emp_shot_0",
+      "character_name": "Elif Demir",
+      "role": "product_manager",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_worker",
+        "body": "w_formal",
+        "legs": "w_formal",
+        "feet": "w_casual",
+        "skin": 0,
+        "hair": 0,
+        "top": 4,
+        "top2": 0,
+        "tie": -1,
+        "shoe": 2,
+        "height": 2,
+        "girth": 0,
+        "glasses": true,
+        "bottom": 5
+      },
+      "portrait_path": "",
+      "monthly_salary": 9800,
+      "morale": 72,
+      "traits": [
+        "takes_them_under"
+      ],
+      "role_stats": {
+        "product": 7,
+        "design": 6,
+        "engineering": 4,
+        "qa": 4,
+        "sales": 4,
+        "customer_success": 4,
+        "leadership": 6
+      },
+      "level": 1,
+      "salary_floor": 9800,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 250,
+      "work_hours_override": 0,
+      "leave_week": 0,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Ürün Yöneticisi",
+      "trait_labels": [
+        "GERÇEK LİDER"
+      ],
+      "trait_effects": [
+        "Sorumlusu olduğu alanda herkes daha hızlı öğrenir; ayrılıkları ağır alır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 1,
+      "bust64": "art/busts/crowd40/bust64_01_char_emp_shot_0.png"
+    },
+    {
+      "id": "char_emp_shot_1",
+      "character_name": "Deniz Arslan",
+      "role": "designer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_hoodie",
+        "body": "m_farmer",
+        "legs": "m_farmer",
+        "feet": "m_hoodie",
+        "skin": 2,
+        "hair": 4,
+        "top": 0,
+        "top2": 2,
+        "tie": 4,
+        "shoe": 1,
+        "height": 0,
+        "girth": 2,
+        "glasses": false,
+        "bottom": -1
+      },
+      "portrait_path": "",
+      "monthly_salary": 7400,
+      "morale": 38,
+      "traits": [
+        "last_one_out"
+      ],
+      "role_stats": {
+        "product": 5,
+        "design": 6,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 2
+      },
+      "level": 1,
+      "salary_floor": 7400,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 10,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 190,
+      "work_hours_override": 0,
+      "leave_week": 5,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "UX/UI Designer",
+      "trait_labels": [
+        "İŞKOLİK"
+      ],
+      "trait_effects": [
+        "Mesai morali onda çok daha yavaş erir."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 2,
+      "bust64": "art/busts/crowd40/bust64_02_char_emp_shot_1.png"
+    },
+    {
+      "id": "char_emp_shot_2",
+      "character_name": "Mert Yıldız",
+      "role": "developer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_farmer",
+        "body": "m_farmer",
+        "legs": "m_worker",
+        "feet": "m_adventurer",
+        "skin": 4,
+        "hair": 1,
+        "top": 0,
+        "top2": 11,
+        "tie": -1,
+        "shoe": 1,
+        "height": 4,
+        "girth": 2,
+        "glasses": false,
+        "bottom": 8
+      },
+      "portrait_path": "",
+      "monthly_salary": 11200,
+      "morale": 61,
+      "traits": [
+        "loyal"
+      ],
+      "role_stats": {
+        "product": 4,
+        "design": 4,
+        "engineering": 8,
+        "qa": 7,
+        "sales": 4,
+        "customer_success": 4,
+        "leadership": 3
+      },
+      "level": 1,
+      "salary_floor": 11200,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "on_leave",
+      "hire_day": 6,
+      "leave_until_day": 16,
+      "leave_taken_year": 2026,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "engineering"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 244,
+      "work_hours_override": 0,
+      "leave_week": 10,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Yazılım Mühendisi",
+      "trait_labels": [
+        "SADIK"
+      ],
+      "trait_effects": [
+        "Moral düşükken bile kolay kolay ayrılmaz; rakip teklifine dayanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 3,
+      "bust64": "art/busts/crowd40/bust64_03_char_emp_shot_2.png"
+    },
+    {
+      "id": "char_emp_shot_3",
+      "character_name": "Selin Kaya",
+      "role": "tester",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_adventurer",
+        "body": "w_soldier",
+        "legs": "w_punk",
+        "feet": "w_soldier",
+        "skin": 3,
+        "hair": 2,
+        "top": 1,
+        "top2": 4,
+        "tie": 3,
+        "shoe": 5,
+        "height": 1,
+        "girth": 0,
+        "glasses": false,
+        "bottom": 3
+      },
+      "portrait_path": "",
+      "monthly_salary": 6900,
+      "morale": 22,
+      "traits": [
+        "double_checker"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 4,
+        "qa": 5,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 6900,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 2,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "qa"
+      ],
+      "assigned_job_ids": [
+        "test"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 2,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Test Mühendisi",
+      "trait_labels": [
+        "TİTİZ"
+      ],
+      "trait_effects": [
+        "Geliştirmede çok daha az hata çıkarır, ama yavaş çalışır."
+      ],
+      "job_labels": [
+        "Test"
+      ],
+      "level_label": "Orta",
+      "index": 4,
+      "bust64": "art/busts/crowd40/bust64_04_char_emp_shot_3.png"
+    },
+    {
+      "id": "char_emp_shot_4",
+      "character_name": "Burak Şahin",
+      "role": "sales_rep",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_king",
+        "body": "m_suit",
+        "legs": "m_suit",
+        "feet": "m_suit",
+        "skin": 5,
+        "hair": 0,
+        "top": 4,
+        "top2": 2,
+        "tie": 0,
+        "shoe": 2,
+        "height": 3,
+        "girth": 0,
+        "glasses": false,
+        "bottom": -1
+      },
+      "portrait_path": "",
+      "monthly_salary": 8300,
+      "morale": 55,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 6,
+        "customer_success": 3,
+        "leadership": 2
+      },
+      "level": 1,
+      "salary_floor": 8300,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "sales"
+      ],
+      "assigned_job_ids": [
+        "sales"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 178,
+      "work_hours_override": 0,
+      "leave_week": 7,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Satış Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Satış"
+      ],
+      "level_label": "Orta",
+      "index": 5,
+      "bust64": "art/busts/crowd40/bust64_05_char_emp_shot_4.png"
+    },
+    {
+      "id": "char_crowd_0",
+      "character_name": "Kerem Aksoy",
+      "role": "product_manager",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_suit",
+        "body": "m_adventurer",
+        "legs": "m_casual",
+        "feet": "m_casual",
+        "skin": 0,
+        "hair": 2,
+        "top": 1,
+        "top2": 10,
+        "tie": -1,
+        "shoe": 2,
+        "height": 1,
+        "girth": 0,
+        "glasses": false,
+        "bottom": 4
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 5,
+        "design": 4,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 12,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Ürün Yöneticisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 6,
+      "bust64": "art/busts/crowd40/bust64_06_char_crowd_0.png"
+    },
+    {
+      "id": "char_crowd_1",
+      "character_name": "Baran Demir",
+      "role": "designer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_worker",
+        "body": "m_hoodie",
+        "legs": "m_worker",
+        "feet": "m_casual",
+        "skin": 3,
+        "hair": 1,
+        "top": 2,
+        "top2": 2,
+        "tie": 0,
+        "shoe": 0,
+        "height": 3,
+        "girth": 2,
+        "glasses": false,
+        "bottom": 7
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 4,
+        "design": 5,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 4,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "UX/UI Designer",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 7,
+      "bust64": "art/busts/crowd40/bust64_07_char_crowd_1.png"
+    },
+    {
+      "id": "char_crowd_2",
+      "character_name": "Nehir Yıldız",
+      "role": "developer",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_adventurer",
+        "body": "w_soldier",
+        "legs": "w_worker",
+        "feet": "w_punk",
+        "skin": 3,
+        "hair": 1,
+        "top": 9,
+        "top2": 3,
+        "tie": -1,
+        "shoe": 5,
+        "height": 1,
+        "girth": 2,
+        "glasses": true,
+        "bottom": 5
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 5,
+        "qa": 4,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "engineering"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 9,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Yazılım Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 8,
+      "bust64": "art/busts/crowd40/bust64_08_char_crowd_2.png"
+    },
+    {
+      "id": "char_crowd_3",
+      "character_name": "Mert Şahin",
+      "role": "tester",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_casual",
+        "body": "m_punk",
+        "legs": "m_punk",
+        "feet": "m_hoodie",
+        "skin": 5,
+        "hair": 6,
+        "top": 6,
+        "top2": 3,
+        "tie": -1,
+        "shoe": 2,
+        "height": 0,
+        "girth": 2,
+        "glasses": true,
+        "bottom": 7
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 4,
+        "qa": 5,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "qa"
+      ],
+      "assigned_job_ids": [
+        "test"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 1,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Test Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Test"
+      ],
+      "level_label": "Orta",
+      "index": 9,
+      "bust64": "art/busts/crowd40/bust64_09_char_crowd_3.png"
+    },
+    {
+      "id": "char_crowd_4",
+      "character_name": "Bilge Tekin",
+      "role": "sales_rep",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_adventurer",
+        "body": "w_suit",
+        "legs": "w_suit",
+        "feet": "w_formal",
+        "skin": 2,
+        "hair": 2,
+        "top": 2,
+        "top2": 4,
+        "tie": -1,
+        "shoe": 3,
+        "height": 0,
+        "girth": 2,
+        "glasses": false,
+        "bottom": 0
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 5,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "sales"
+      ],
+      "assigned_job_ids": [
+        "sales"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 6,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Satış Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Satış"
+      ],
+      "level_label": "Orta",
+      "index": 10,
+      "bust64": "art/busts/crowd40/bust64_10_char_crowd_4.png"
+    },
+    {
+      "id": "char_crowd_5",
+      "character_name": "Deniz Koç",
+      "role": "customer_rep",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_king",
+        "body": "m_adventurer",
+        "legs": "m_casual",
+        "feet": "m_suit",
+        "skin": 0,
+        "hair": 1,
+        "top": 6,
+        "top2": 9,
+        "tie": 3,
+        "shoe": 0,
+        "height": 2,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 5
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 5,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "customer_success"
+      ],
+      "assigned_job_ids": [
+        "support"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 11,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Müşteri Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Destek"
+      ],
+      "level_label": "Orta",
+      "index": 11,
+      "bust64": "art/busts/crowd40/bust64_11_char_crowd_5.png"
+    },
+    {
+      "id": "char_crowd_6",
+      "character_name": "Sena Kaya",
+      "role": "product_manager",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_adventurer",
+        "body": "w_casual",
+        "legs": "w_suit",
+        "feet": "w_suit",
+        "skin": 1,
+        "hair": 1,
+        "top": 11,
+        "top2": 3,
+        "tie": 1,
+        "shoe": 5,
+        "height": 1,
+        "girth": 1,
+        "glasses": true,
+        "bottom": 7
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 5,
+        "design": 4,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 3,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Ürün Yöneticisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 12,
+      "bust64": "art/busts/crowd40/bust64_12_char_crowd_6.png"
+    },
+    {
+      "id": "char_crowd_7",
+      "character_name": "Selin Çetin",
+      "role": "designer",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_formal",
+        "body": "w_soldier",
+        "legs": "w_soldier",
+        "feet": "w_soldier",
+        "skin": 1,
+        "hair": 1,
+        "top": 10,
+        "top2": 0,
+        "tie": -1,
+        "shoe": 4,
+        "height": 4,
+        "girth": 0,
+        "glasses": false,
+        "bottom": 8
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 4,
+        "design": 5,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 8,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "UX/UI Designer",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 13,
+      "bust64": "art/busts/crowd40/bust64_13_char_crowd_7.png"
+    },
+    {
+      "id": "char_crowd_8",
+      "character_name": "Elif Erdem",
+      "role": "developer",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_soldier",
+        "body": "w_casual",
+        "legs": "w_soldier",
+        "feet": "w_soldier",
+        "skin": 4,
+        "hair": 2,
+        "top": 8,
+        "top2": 0,
+        "tie": 0,
+        "shoe": 0,
+        "height": 1,
+        "girth": 0,
+        "glasses": true,
+        "bottom": 4
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 5,
+        "qa": 4,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "engineering"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 0,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Yazılım Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 14,
+      "bust64": "art/busts/crowd40/bust64_14_char_crowd_8.png"
+    },
+    {
+      "id": "char_crowd_9",
+      "character_name": "Emre Uysal",
+      "role": "tester",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_beach",
+        "body": "m_hoodie",
+        "legs": "m_casual",
+        "feet": "m_hoodie",
+        "skin": 0,
+        "hair": 0,
+        "top": 7,
+        "top2": 3,
+        "tie": -1,
+        "shoe": 2,
+        "height": 2,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 0
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 4,
+        "qa": 5,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "qa"
+      ],
+      "assigned_job_ids": [
+        "test"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 5,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Test Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Test"
+      ],
+      "level_label": "Orta",
+      "index": 15,
+      "bust64": "art/busts/crowd40/bust64_15_char_crowd_9.png"
+    },
+    {
+      "id": "char_crowd_10",
+      "character_name": "Zeynep Güneş",
+      "role": "sales_rep",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_soldier",
+        "body": "w_suit",
+        "legs": "w_suit",
+        "feet": "w_formal",
+        "skin": 0,
+        "hair": 3,
+        "top": 0,
+        "top2": 5,
+        "tie": 4,
+        "shoe": 5,
+        "height": 3,
+        "girth": 2,
+        "glasses": false,
+        "bottom": -1
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 5,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "sales"
+      ],
+      "assigned_job_ids": [
+        "sales"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 10,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Satış Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Satış"
+      ],
+      "level_label": "Orta",
+      "index": 16,
+      "bust64": "art/busts/crowd40/bust64_16_char_crowd_10.png"
+    },
+    {
+      "id": "char_crowd_11",
+      "character_name": "Tolga Arslan",
+      "role": "customer_rep",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_king",
+        "body": "m_casual",
+        "legs": "m_casual",
+        "feet": "m_casual",
+        "skin": 3,
+        "hair": 7,
+        "top": 10,
+        "top2": 10,
+        "tie": 4,
+        "shoe": 5,
+        "height": 0,
+        "girth": 0,
+        "glasses": false,
+        "bottom": 6
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 5,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "customer_success"
+      ],
+      "assigned_job_ids": [
+        "support"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 2,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Müşteri Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Destek"
+      ],
+      "level_label": "Orta",
+      "index": 17,
+      "bust64": "art/busts/crowd40/bust64_17_char_crowd_11.png"
+    },
+    {
+      "id": "char_crowd_12",
+      "character_name": "Ece Doğan",
+      "role": "product_manager",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_witch",
+        "body": "w_casual",
+        "legs": "w_casual",
+        "feet": "w_suit",
+        "skin": 4,
+        "hair": 0,
+        "top": 2,
+        "top2": 9,
+        "tie": -1,
+        "shoe": 4,
+        "height": 0,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 1
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 5,
+        "design": 4,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 7,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Ürün Yöneticisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 18,
+      "bust64": "art/busts/crowd40/bust64_18_char_crowd_12.png"
+    },
+    {
+      "id": "char_crowd_13",
+      "character_name": "Kaan Polat",
+      "role": "designer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_hoodie",
+        "body": "m_punk",
+        "legs": "m_adventurer",
+        "feet": "m_punk",
+        "skin": 2,
+        "hair": 6,
+        "top": 4,
+        "top2": 1,
+        "tie": -1,
+        "shoe": 3,
+        "height": 1,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 8
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 4,
+        "design": 5,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 12,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "UX/UI Designer",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 19,
+      "bust64": "art/busts/crowd40/bust64_19_char_crowd_13.png"
+    },
+    {
+      "id": "char_crowd_14",
+      "character_name": "Arda Aksoy",
+      "role": "developer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_hoodie",
+        "body": "m_farmer",
+        "legs": "m_adventurer",
+        "feet": "m_casual",
+        "skin": 1,
+        "hair": 1,
+        "top": 7,
+        "top2": 11,
+        "tie": -1,
+        "shoe": 2,
+        "height": 1,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 4
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 5,
+        "qa": 4,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "engineering"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 4,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Yazılım Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 20,
+      "bust64": "art/busts/crowd40/bust64_20_char_crowd_14.png"
+    },
+    {
+      "id": "char_crowd_15",
+      "character_name": "Onur Demir",
+      "role": "tester",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_hoodie",
+        "body": "m_adventurer",
+        "legs": "m_worker",
+        "feet": "m_adventurer",
+        "skin": 5,
+        "hair": 3,
+        "top": 5,
+        "top2": 11,
+        "tie": -1,
+        "shoe": 2,
+        "height": 4,
+        "girth": 0,
+        "glasses": true,
+        "bottom": 5
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 4,
+        "qa": 5,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "qa"
+      ],
+      "assigned_job_ids": [
+        "test"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 9,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Test Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Test"
+      ],
+      "level_label": "Orta",
+      "index": 21,
+      "bust64": "art/busts/crowd40/bust64_21_char_crowd_15.png"
+    },
+    {
+      "id": "char_crowd_16",
+      "character_name": "Kerem Yıldız",
+      "role": "sales_rep",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_farmer",
+        "body": "m_suit",
+        "legs": "m_suit",
+        "feet": "m_suit",
+        "skin": 1,
+        "hair": 5,
+        "top": 0,
+        "top2": 2,
+        "tie": 0,
+        "shoe": 4,
+        "height": 3,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 6
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 5,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "sales"
+      ],
+      "assigned_job_ids": [
+        "sales"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 1,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Satış Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Satış"
+      ],
+      "level_label": "Orta",
+      "index": 22,
+      "bust64": "art/busts/crowd40/bust64_22_char_crowd_16.png"
+    },
+    {
+      "id": "char_crowd_17",
+      "character_name": "Baran Şahin",
+      "role": "customer_rep",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_adventurer",
+        "body": "m_hoodie",
+        "legs": "m_suit",
+        "feet": "m_casual",
+        "skin": 3,
+        "hair": 0,
+        "top": 2,
+        "top2": 8,
+        "tie": 1,
+        "shoe": 3,
+        "height": 3,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 8
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 5,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "customer_success"
+      ],
+      "assigned_job_ids": [
+        "support"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 6,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Müşteri Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Destek"
+      ],
+      "level_label": "Orta",
+      "index": 23,
+      "bust64": "art/busts/crowd40/bust64_23_char_crowd_17.png"
+    },
+    {
+      "id": "char_crowd_18",
+      "character_name": "Nehir Tekin",
+      "role": "product_manager",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_worker",
+        "body": "w_casual",
+        "legs": "w_casual",
+        "feet": "w_casual",
+        "skin": 2,
+        "hair": 1,
+        "top": 3,
+        "top2": 6,
+        "tie": 4,
+        "shoe": 5,
+        "height": 0,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 4
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 5,
+        "design": 4,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 11,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Ürün Yöneticisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 24,
+      "bust64": "art/busts/crowd40/bust64_24_char_crowd_18.png"
+    },
+    {
+      "id": "char_crowd_19",
+      "character_name": "Mert Koç",
+      "role": "designer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_farmer",
+        "body": "m_adventurer",
+        "legs": "m_worker",
+        "feet": "m_worker",
+        "skin": 1,
+        "hair": 5,
+        "top": 4,
+        "top2": 5,
+        "tie": 0,
+        "shoe": 0,
+        "height": 3,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 5
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 4,
+        "design": 5,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 3,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "UX/UI Designer",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 25,
+      "bust64": "art/busts/crowd40/bust64_25_char_crowd_19.png"
+    },
+    {
+      "id": "char_crowd_20",
+      "character_name": "Bilge Kaya",
+      "role": "developer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_hoodie",
+        "body": "m_hoodie",
+        "legs": "m_punk",
+        "feet": "m_casual",
+        "skin": 1,
+        "hair": 0,
+        "top": 7,
+        "top2": 4,
+        "tie": 4,
+        "shoe": 4,
+        "height": 4,
+        "girth": 0,
+        "glasses": false,
+        "bottom": 7
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 5,
+        "qa": 4,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "engineering"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 8,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Yazılım Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 26,
+      "bust64": "art/busts/crowd40/bust64_26_char_crowd_20.png"
+    },
+    {
+      "id": "char_crowd_21",
+      "character_name": "Deniz Çetin",
+      "role": "tester",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_formal",
+        "body": "w_casual",
+        "legs": "w_soldier",
+        "feet": "w_soldier",
+        "skin": 3,
+        "hair": 4,
+        "top": 8,
+        "top2": 10,
+        "tie": 2,
+        "shoe": 1,
+        "height": 4,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 3
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 4,
+        "qa": 5,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "qa"
+      ],
+      "assigned_job_ids": [
+        "test"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 0,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Test Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Test"
+      ],
+      "level_label": "Orta",
+      "index": 27,
+      "bust64": "art/busts/crowd40/bust64_27_char_crowd_21.png"
+    },
+    {
+      "id": "char_crowd_22",
+      "character_name": "Sena Erdem",
+      "role": "sales_rep",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_scifi",
+        "body": "w_suit",
+        "legs": "w_suit",
+        "feet": "w_formal",
+        "skin": 1,
+        "hair": 0,
+        "top": 3,
+        "top2": 3,
+        "tie": 4,
+        "shoe": 4,
+        "height": 4,
+        "girth": 0,
+        "glasses": false,
+        "bottom": 7
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 5,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "sales"
+      ],
+      "assigned_job_ids": [
+        "sales"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 5,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Satış Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Satış"
+      ],
+      "level_label": "Orta",
+      "index": 28,
+      "bust64": "art/busts/crowd40/bust64_28_char_crowd_22.png"
+    },
+    {
+      "id": "char_crowd_23",
+      "character_name": "Selin Uysal",
+      "role": "customer_rep",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_suit",
+        "body": "w_casual",
+        "legs": "w_casual",
+        "feet": "w_casual",
+        "skin": 1,
+        "hair": 2,
+        "top": 11,
+        "top2": 0,
+        "tie": 1,
+        "shoe": 5,
+        "height": 2,
+        "girth": 0,
+        "glasses": true,
+        "bottom": 7
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 5,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "customer_success"
+      ],
+      "assigned_job_ids": [
+        "support"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 10,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Müşteri Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Destek"
+      ],
+      "level_label": "Orta",
+      "index": 29,
+      "bust64": "art/busts/crowd40/bust64_29_char_crowd_23.png"
+    },
+    {
+      "id": "char_crowd_24",
+      "character_name": "Elif Güneş",
+      "role": "product_manager",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_scifi",
+        "body": "w_formal",
+        "legs": "w_formal",
+        "feet": "w_suit",
+        "skin": 4,
+        "hair": 2,
+        "top": 3,
+        "top2": 8,
+        "tie": -1,
+        "shoe": 3,
+        "height": 4,
+        "girth": 0,
+        "glasses": false,
+        "bottom": 2
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 5,
+        "design": 4,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 2,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Ürün Yöneticisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 30,
+      "bust64": "art/busts/crowd40/bust64_30_char_crowd_24.png"
+    },
+    {
+      "id": "char_crowd_25",
+      "character_name": "Emre Arslan",
+      "role": "designer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_hoodie",
+        "body": "m_farmer",
+        "legs": "m_farmer",
+        "feet": "m_farmer",
+        "skin": 3,
+        "hair": 2,
+        "top": 5,
+        "top2": 1,
+        "tie": -1,
+        "shoe": 5,
+        "height": 4,
+        "girth": 1,
+        "glasses": true,
+        "bottom": -1
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 4,
+        "design": 5,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 7,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "UX/UI Designer",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 31,
+      "bust64": "art/busts/crowd40/bust64_31_char_crowd_25.png"
+    },
+    {
+      "id": "char_crowd_26",
+      "character_name": "Zeynep Doğan",
+      "role": "developer",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_worker",
+        "body": "w_soldier",
+        "legs": "w_soldier",
+        "feet": "w_soldier",
+        "skin": 4,
+        "hair": 2,
+        "top": 6,
+        "top2": 3,
+        "tie": 3,
+        "shoe": 3,
+        "height": 2,
+        "girth": 0,
+        "glasses": false,
+        "bottom": 6
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 5,
+        "qa": 4,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "engineering"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 12,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Yazılım Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 32,
+      "bust64": "art/busts/crowd40/bust64_32_char_crowd_26.png"
+    },
+    {
+      "id": "char_crowd_27",
+      "character_name": "Tolga Polat",
+      "role": "tester",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_worker",
+        "body": "m_farmer",
+        "legs": "m_farmer",
+        "feet": "m_farmer",
+        "skin": 2,
+        "hair": 1,
+        "top": 1,
+        "top2": 3,
+        "tie": -1,
+        "shoe": 3,
+        "height": 4,
+        "girth": 1,
+        "glasses": false,
+        "bottom": -1
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 4,
+        "qa": 5,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "qa"
+      ],
+      "assigned_job_ids": [
+        "test"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 4,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Test Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Test"
+      ],
+      "level_label": "Orta",
+      "index": 33,
+      "bust64": "art/busts/crowd40/bust64_33_char_crowd_27.png"
+    },
+    {
+      "id": "char_crowd_28",
+      "character_name": "Ece Aksoy",
+      "role": "sales_rep",
+      "category": "employee",
+      "look": {
+        "sex": "w",
+        "head": "w_suit",
+        "body": "w_suit",
+        "legs": "w_suit",
+        "feet": "w_formal",
+        "skin": 0,
+        "hair": 2,
+        "top": 4,
+        "top2": 3,
+        "tie": -1,
+        "shoe": 5,
+        "height": 3,
+        "girth": 1,
+        "glasses": true,
+        "bottom": -1
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 5,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "sales"
+      ],
+      "assigned_job_ids": [
+        "sales"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 9,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Satış Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Satış"
+      ],
+      "level_label": "Orta",
+      "index": 34,
+      "bust64": "art/busts/crowd40/bust64_34_char_crowd_28.png"
+    },
+    {
+      "id": "char_crowd_29",
+      "character_name": "Kaan Demir",
+      "role": "customer_rep",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_king",
+        "body": "m_adventurer",
+        "legs": "m_casual",
+        "feet": "m_suit",
+        "skin": 5,
+        "hair": 3,
+        "top": 9,
+        "top2": 10,
+        "tie": -1,
+        "shoe": 0,
+        "height": 2,
+        "girth": 2,
+        "glasses": false,
+        "bottom": 8
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 5,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "customer_success"
+      ],
+      "assigned_job_ids": [
+        "support"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 166,
+      "work_hours_override": 0,
+      "leave_week": 1,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Müşteri Temsilcisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Destek"
+      ],
+      "level_label": "Orta",
+      "index": 35,
+      "bust64": "art/busts/crowd40/bust64_35_char_crowd_29.png"
+    },
+    {
+      "id": "char_crowd_30",
+      "character_name": "Arda Yıldız",
+      "role": "product_manager",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_suit",
+        "body": "m_adventurer",
+        "legs": "m_suit",
+        "feet": "m_suit",
+        "skin": 2,
+        "hair": 1,
+        "top": 0,
+        "top2": 10,
+        "tie": -1,
+        "shoe": 3,
+        "height": 4,
+        "girth": 2,
+        "glasses": true,
+        "bottom": 2
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 5,
+        "design": 4,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 6,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Ürün Yöneticisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 36,
+      "bust64": "art/busts/crowd40/bust64_36_char_crowd_30.png"
+    },
+    {
+      "id": "char_crowd_31",
+      "character_name": "Onur Şahin",
+      "role": "designer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_suit",
+        "body": "m_farmer",
+        "legs": "m_punk",
+        "feet": "m_casual",
+        "skin": 4,
+        "hair": 0,
+        "top": 0,
+        "top2": 7,
+        "tie": -1,
+        "shoe": 0,
+        "height": 3,
+        "girth": 1,
+        "glasses": true,
+        "bottom": 7
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 4,
+        "design": 5,
+        "engineering": 3,
+        "qa": 3,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "product",
+        "design"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 11,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "UX/UI Designer",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 37,
+      "bust64": "art/busts/crowd40/bust64_37_char_crowd_31.png"
+    },
+    {
+      "id": "char_crowd_32",
+      "character_name": "Kerem Tekin",
+      "role": "developer",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_suit",
+        "body": "m_farmer",
+        "legs": "m_punk",
+        "feet": "m_punk",
+        "skin": 2,
+        "hair": 2,
+        "top": 7,
+        "top2": 1,
+        "tie": 3,
+        "shoe": 3,
+        "height": 2,
+        "girth": 0,
+        "glasses": false,
+        "bottom": 1
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 5,
+        "qa": 4,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "engineering"
+      ],
+      "assigned_job_ids": [
+        "build"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 3,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Yazılım Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Build ekibi"
+      ],
+      "level_label": "Orta",
+      "index": 38,
+      "bust64": "art/busts/crowd40/bust64_38_char_crowd_32.png"
+    },
+    {
+      "id": "char_crowd_33",
+      "character_name": "Baran Koç",
+      "role": "tester",
+      "category": "employee",
+      "look": {
+        "sex": "m",
+        "head": "m_suit",
+        "body": "m_adventurer",
+        "legs": "m_adventurer",
+        "feet": "m_farmer",
+        "skin": 3,
+        "hair": 2,
+        "top": 11,
+        "top2": 0,
+        "tie": 3,
+        "shoe": 4,
+        "height": 4,
+        "girth": 1,
+        "glasses": false,
+        "bottom": 0
+      },
+      "portrait_path": "",
+      "monthly_salary": 0,
+      "morale": 50,
+      "traits": [
+        "picks_it_up_fast"
+      ],
+      "role_stats": {
+        "product": 3,
+        "design": 3,
+        "engineering": 4,
+        "qa": 5,
+        "sales": 3,
+        "customer_success": 3,
+        "leadership": 1
+      },
+      "level": 1,
+      "salary_floor": 0,
+      "last_raise_day": 0,
+      "last_promotion_day": 0,
+      "status": "active",
+      "hire_day": 14,
+      "leave_until_day": 0,
+      "leave_taken_year": 0,
+      "flight_risk_weeks": 0,
+      "assigned_jobs": [
+        "qa"
+      ],
+      "assigned_job_ids": [
+        "test"
+      ],
+      "paused_job_ids": [],
+      "trainings_done": {
+
+      },
+      "training_weeks_left": 0,
+      "training_area": "",
+      "experience_raw": 0,
+      "experience_threshold": 172,
+      "work_hours_override": 0,
+      "leave_week": 8,
+      "leave_deferrals": 0,
+      "morale_target": -1.0,
+      "employment_history": [],
+      "relationship": "neutral",
+      "role_label": "Test Mühendisi",
+      "trait_labels": [
+        "ÇABUK KAPAR"
+      ],
+      "trait_effects": [
+        "Deneyimi belirgin şekilde hızlı kazanır."
+      ],
+      "job_labels": [
+        "Test"
+      ],
+      "level_label": "Orta",
+      "index": 39,
+      "bust64": "art/busts/crowd40/bust64_39_char_crowd_33.png"
+    }
+  ]
+}

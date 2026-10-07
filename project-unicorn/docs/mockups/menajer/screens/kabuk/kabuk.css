@@ -1,0 +1,176 @@
+/* Kabuk ve ofis katmanı (A4, grup "kabuk"). Only what the system lacks; every colour, size, radius and
+   space is a system token or on the spacing scale (2 4 6 8 12 16 20 24 32 40 48). Load after
+   ../../system/tokens.css and base.css. Raw numbers are layout (positions, fixed control sizes). */
+
+/* ---------------------------------------------------------------- frame */
+html, body { overflow: hidden; background: var(--surface-0); }
+.screen { position: relative; overflow: hidden; background: var(--surface-0); }
+.screen > .office { inset: auto; background-repeat: no-repeat; }
+.abs { position: absolute; }
+/* head icons over a "noicons" plate: the A2 office sprites (128 px files with their baked disc) */
+.head-ic { position: absolute; display: block; pointer-events: none; }
+/* the pointer drawn where a hover state needs one (decor, not UI) */
+.cursor { position: absolute; width: 20px; height: 24px; pointer-events: none; z-index: 30; }
+
+/* ---------------------------------------------------------------- brand block, decision 14 */
+/* (a) the old orange square beside "Project Unicorn". --brand-mark is the square's own colour (the old
+   ACCENT_CHROME #FFA028): a brand constant like the scene colours, not the UI accent, so the amber rule
+   does not count it. Same values as screens/olaylar/olaylar.css. */
+:root { --brand-mark: #FFA028; --emblem-cream: #E8EDF2; --emblem-ground: #10161C; }
+.brand-sq { position: absolute; width: 20px; height: 20px; border-radius: var(--r-1); background: var(--brand-mark); }
+/* (b) LogoEmblem as logo_emblem.gd draws it: the shape and letter colours are the game's own
+   (ACCENT_CHROME, CREAM, DIALOGUE_BG) until Faz B maps them; the letter is the theme's default face */
+.emblem { position: absolute; display: block; overflow: visible; }
+.emblem text { font-family: var(--f-sans); font-weight: 400; }
+
+/* ---------------------------------------------------------------- top bar additions */
+/* clock held without a decision (the founder's trip): keys off, no amber frame, the slot says Şimdi */
+.topbar.is-held .spd-k { background: var(--surface-2); color: var(--ink-off); box-shadow: none; }
+.nx-s.now { color: var(--ink-1); }
+/* wider than 1920 (2560): the time block sits next to the slot and the slack after it, closed by a hairline */
+.tb-time.has-slack { border-right: var(--bw-1) solid var(--line-1); }
+/* the rail ground under the brand block when the rail is in icon mode (compact) */
+.tb-brand-c { position: absolute; left: 0; top: 0; width: 64px; height: 64px; }
+
+/* ---------------------------------------------------------------- rail additions */
+/* icon mode: the name comes back as a tooltip to the right of the row */
+.rail-tip { position: absolute; z-index: 20; white-space: nowrap; }
+.rail-tip .tip-b { display: block; }
+.rr.kfocus::before { content: ""; position: absolute; inset: 4px 8px; border-radius: var(--r-2);
+  box-shadow: 0 0 0 2px var(--surface-1), 0 0 0 4px var(--focus); }
+
+/* ---------------------------------------------------------------- ticker additions */
+/* live lines from inside the company (TICKER_SRC_INTERNAL) and a person's line (MEETING_BACK_ASK):
+   no outlet hue, the source in ink-1 */
+.tk-pub.internal, .tk-pub.person { color: var(--ink-1); }
+.ticker.is-collapsed .tk-toggle.is-hover { color: var(--ink-1); box-shadow: inset 0 0 0 1px var(--line-hover); }
+
+/* ---------------------------------------------------------------- BuildHUD (the DESTEK card) states */
+.bh .bh-hd .note { margin-left: auto; font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.bh-phase { position: relative; flex-wrap: wrap; row-gap: var(--sp-6); }
+.bh-phase .pct { margin-left: auto; font-weight: 500; font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-2); }
+.bh-phase .prog { flex-basis: 100%; }
+.bh-act { display: flex; align-items: center; gap: var(--sp-8); }
+.bh-act .why { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+/* the sprint auto-start note left the top bar (SPEC §2.9): one ink-3 line at the card's foot */
+.bh-auto { display: flex; align-items: center; gap: var(--sp-8); padding: var(--sp-8) var(--sp-16); border-top: var(--bw-1) solid var(--line-1);
+  font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); white-space: nowrap; }
+.bh-auto .ic { width: 16px; height: 16px; color: var(--ink-4); }
+/* research card under the BuildHUD (page 11's research bar plus the game's two links) */
+.rb { width: 320px; padding: var(--sp-12) var(--sp-16) var(--sp-12); display: flex; flex-direction: column; gap: var(--sp-8); }
+.rb-hd { display: flex; align-items: center; gap: var(--sp-8); }
+.rb-hd .ic { width: 16px; height: 16px; color: var(--ink-3); }
+.rb-hd .t { color: var(--ink-2); }
+.rb-hd .st { margin-left: auto; font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.rb-nm { display: flex; align-items: baseline; gap: var(--sp-8); white-space: nowrap; }
+.rb-nm .n { font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); color: var(--ink-1); }
+.rb-nm .a { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+.rb-ft { display: flex; align-items: center; gap: var(--sp-4); }
+.rb-ft .lk { height: 24px; display: inline-flex; align-items: center; padding: 0 var(--sp-6); border: var(--bw-1) solid transparent; border-radius: var(--r-2);
+  font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-2); }
+.rb-ft .lk.is-hover { border-color: var(--line-hover); color: var(--ink-1); }
+.rb-ft .dot { color: var(--ink-4); font-size: var(--fs-13); }
+.rb.is-paused .prog-f { background: var(--line-3); }
+.rb.is-paused .rb-hd .st { color: var(--ink-2); }
+/* a float a window covers is not drawn; the sheet shows it as an outline only */
+.ghost-float { position: absolute; border: var(--bw-1) dashed var(--line-3); border-radius: var(--r-3); }
+
+/* ---------------------------------------------------------------- notice stack: inbox rows on the office */
+.notice { position: relative; }
+.notice .co { flex: none; }
+.notice .tx { flex: 1; min-width: 0; }
+.notice .nwk { flex: none; margin-left: var(--sp-8); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.notice .nwk.is-warn { color: var(--warn); }   /* a paper's last week; an offer's countdown, like its slot */
+.notice .nwk.is-neg { color: var(--neg); }     /* an offer's final week */
+.notice .dt.is-warn { background: var(--warn); box-shadow: 0 0 0 3px var(--warn-tag-bg); }
+.notice .badge { margin-left: var(--sp-8); }
+.notice.is-hover { border-color: var(--line-hover); }
+/* Frank's latest line: the sender over his words in his own face, two lines at most */
+.notice.frank { height: auto; align-items: flex-start; padding: var(--sp-12) var(--sp-16); }
+.notice.frank .fq { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.notice.frank .fq .co { font-size: var(--fs-13); line-height: var(--lh-13); }
+.notice.frank .fq .q { font-family: var(--f-serif); font-size: var(--fs-16); line-height: var(--lh-16p); color: var(--ink-2);
+  font-variation-settings: "opsz" 20; white-space: normal; }
+
+/* ---------------------------------------------------------------- floating button: Ofisi taşı */
+.fbtn { position: absolute; }
+.fbtn.is-disabled { color: var(--ink-off); }
+.fbtn.is-disabled .ic { color: var(--ink-off); }
+.fbtn .why { margin-left: var(--sp-4); padding-left: var(--sp-12); border-left: var(--bw-1) solid var(--line-1);
+  font-weight: 400; font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); }
+/* after Frank's cheque the button breathes until the first move: scale 1.04 and the hover border at the peak; floats
+   are opaque, so the game's PULSE_ALPHA 0.8 goes */
+.fbtn.is-breath-peak { transform: scale(1.04); border-color: var(--line-hover); }
+/* moving: the caps tag says what, the time left is plain text (split like the Ekip grid's İzinde) */
+.fbtn .left { font-family: var(--f-sansc); font-weight: 400; font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- unified toast placement */
+.toast.at { position: absolute; transform: translateX(-50%); }
+.toast .head { white-space: nowrap; }
+.toast.warn .well { color: var(--warn); }
+.toast.hold .well { color: var(--accent); }
+
+/* ---------------------------------------------------------------- trip: skip hint over the map */
+.skip { position: absolute; transform: translateX(-50%); display: inline-flex; align-items: center; gap: var(--sp-8); height: 32px;
+  padding: 0 var(--sp-12); background: var(--surface-0); border: var(--bw-1) solid var(--line-2); border-radius: var(--r-2);
+  box-shadow: var(--shadow-tooltip); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.skip .ic { width: 16px; height: 16px; color: var(--ink-3); }
+.skip kbd { font-family: var(--f-sans); font-weight: 600; font-size: var(--fs-12); color: var(--ink-2); padding: 0 var(--sp-4);
+  border: var(--bw-1) solid var(--line-3); border-radius: var(--r-1); }
+
+/* ---------------------------------------------------------------- city map: road, founder disc, chips, card, hover */
+.road { position: absolute; overflow: visible; pointer-events: none; }
+/* the road's casing and dashes are drawn over the 3D map (Line2D), scene colours like ROAD_CASING */
+.road .casing { fill: none; stroke: #15120F; stroke-width: 5; stroke-linecap: round; }
+.road .dash { fill: none; stroke: #F1ECE2; stroke-width: 2.2; stroke-dasharray: 7 7; stroke-linecap: butt; }
+/* founder's disc: 48 px (avatar ladder), a 3 px ring; the ring is ink-1, not amber (the founder is not a time state) */
+.road-disc { position: absolute; width: 48px; height: 48px; border-radius: 50%; box-shadow: 0 0 0 3px var(--ink-1), var(--shadow-float); }
+.road-disc .av { width: 48px; height: 48px; box-shadow: none; }
+.mchip { position: absolute; transform: translate(-50%, -50%); }
+.mchip.is-dest { border-color: var(--ink-2); }
+.mpanel { position: absolute; width: 340px; padding: var(--sp-12) var(--sp-16); display: flex; align-items: center; gap: var(--sp-12); }
+.mpanel .t { color: var(--ink-1); }
+.mpanel .s { color: var(--ink-3); }
+.mpanel .win-close { margin-left: auto; }
+.mcard { position: absolute; }
+.mcard .img { height: 188px; }
+.mcard .b { gap: var(--sp-12); }
+.mcard .head { display: flex; align-items: center; gap: var(--sp-8); }
+.mcard .head .t-micro { color: var(--ink-3); }
+.mcard .head .tag { margin-left: auto; }
+.mcard .nm { color: var(--ink-1); }
+.mcard .ds { color: var(--ink-3); margin-top: calc(-1 * var(--sp-8)); }
+.mcard .kv .k { color: var(--ink-3); }
+.mcard .kv .v { color: var(--ink-1); }
+.mcard .mv { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); margin-top: calc(-1 * var(--sp-4)); }
+.mcard .sec { display: flex; align-items: center; gap: var(--sp-8); color: var(--ink-3); }
+.mcard .sec::after { content: ""; flex: 1; height: 1px; background: var(--line-1); }
+.mcard .rooms { display: flex; flex-wrap: wrap; gap: var(--sp-4); }
+.mcard .rooms .tag { text-transform: none; letter-spacing: 0; font-family: var(--f-sans); font-weight: 500; font-size: var(--fs-13); }
+.mcard .acts { display: flex; gap: var(--sp-8); }
+.mcard .acts .btn:last-child { flex: 1; }
+.req .now { white-space: nowrap; }
+.mhover { position: absolute; }
+
+/* ---------------------------------------------------------------- person tooltip: one danger line only at risk */
+.ptip { position: absolute; }
+.ptip .risk-l { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--neg-ink); }
+.ptip .risk-l b { font-weight: 600; color: var(--neg); }
+
+/* ---------------------------------------------------------------- sheet pages (not game UI) */
+.sheet { position: relative; padding: var(--sp-32) var(--sp-48); }
+.sh-h { display: flex; align-items: baseline; gap: var(--sp-16); }
+.sh-h .n { color: var(--ink-3); }
+.sh-h .t { color: var(--ink-1); }
+.sh-h .d { color: var(--ink-3); }
+.sh-sec { display: flex; align-items: center; gap: var(--sp-12); color: var(--ink-2); margin: var(--sp-24) 0 var(--sp-12); }
+.sh-sec::after { content: ""; flex: 1; height: 1px; background: var(--line-1); }
+.sh-cap { color: var(--ink-3); font-size: var(--fs-13); line-height: var(--lh-13); }
+.sh-note { color: var(--ink-3); font-size: var(--fs-13); line-height: 20px; }
+.sh-note b { color: var(--ink-2); font-weight: 600; }
+.sh-lab { position: absolute; color: var(--ink-3); }
+.zoom { position: absolute; overflow: hidden; border: var(--bw-1) solid var(--line-2); border-radius: var(--r-2); }
+.zoom > .inner { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.cell-box { position: absolute; overflow: hidden; border: var(--bw-1) solid var(--line-1); border-radius: var(--r-2); }
+.opt-tag { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--r-2);
+  background: var(--surface-5); color: var(--ink-1); font-family: var(--f-cond); font-weight: 700; font-size: var(--fs-18); }

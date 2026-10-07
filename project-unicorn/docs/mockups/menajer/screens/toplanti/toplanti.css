@@ -1,0 +1,241 @@
+/* Toplantı (A4, group "toplanti"): the meeting dock, the price act, the call and the term sheet table.
+   Only what the system and the shell lack. Every colour, type size and radius is a system token; paddings, margins
+   and gaps use the spacing scale (2 4 6 8 12 16 20 24 32 40 48). A raw number is layout (a column, a position, a
+   fixed control size). Load after ../../system/tokens.css, base.css and ../kabuk/kabuk.css: the shell (top bar
+   states, brand block, head sprites, floats, toast, the city-map road and chips) is group kabuk's. */
+
+/* ---------------------------------------------------------------- frame */
+html, body { overflow: hidden; background: var(--surface-0); }
+.screen { position: relative; overflow: hidden; background: var(--surface-0); }
+.screen > .office { inset: auto; top: var(--h-topbar); background-repeat: no-repeat; }
+.abs { position: absolute; }
+
+/* ---------------------------------------------------------------- the dock: 0.34 of the office view, top bar to ticker */
+.dock { position: absolute; top: var(--h-topbar); bottom: var(--h-ticker); right: 0; display: flex; flex-direction: column;
+  background: var(--surface-3); border-left: var(--bw-1) solid var(--line-2); box-shadow: var(--shadow-float); }
+.dk-head { flex: none; padding: var(--sp-20) var(--sp-24) var(--sp-16); background: var(--surface-4); border-bottom: var(--bw-1) solid var(--line-1); }
+.dk-kick { display: flex; align-items: center; gap: var(--sp-8); height: 20px; color: var(--ink-3); white-space: nowrap; }
+.dk-kick .sep { color: var(--ink-4); }
+.dk-kick .now { color: var(--ink-2); }
+.dk-who { display: flex; align-items: flex-start; gap: var(--sp-16); margin-top: var(--sp-12); }
+.dk-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); padding-top: var(--sp-6); }
+.dk-name { color: var(--ink-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk-role { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk-read { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-6); color: var(--ink-3); }
+.dk-read .stars { display: inline-flex; gap: var(--sp-2); color: var(--ink-2); flex: none; }
+.dk-read .stars .ic { width: 14px; height: 14px; }
+.dk-read .stars .off { color: var(--ink-off); }
+/* who sits across the table: face and first name; the one speaking carries the ink ring (identity, not a score).
+   The key column of the head rows is 88: "AT THE TABLE", the worst TR or EN key, x 1.08 + 2 (SPEC §3.4) */
+.dk-seats { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-16); height: 24px; }
+.dk-seats .k { width: 88px; flex: none; color: var(--ink-3); }
+.dk-seats .v { display: flex; gap: var(--sp-16); min-width: 0; }
+.seat3 { display: inline-flex; align-items: center; gap: var(--sp-6); white-space: nowrap; font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); }
+.seat3.is-on .av { box-shadow: 0 0 0 2px var(--surface-4), 0 0 0 4px var(--ink-1); }
+.seat3.is-on .n { color: var(--ink-1); font-weight: 600; }
+
+/* TUTUM: one table-wide reading (VC conviction, sales odds), band notches like the morale notch */
+.tut { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-12); height: 24px; }
+.tut .k { width: 88px; flex: none; color: var(--ink-3); }
+.tut-track { position: relative; flex: 1; height: 6px; border-radius: 3px; background: var(--bar-track); }
+/* one neutral fill: the band is told by the notches and the word tag (a cold room is not danger) */
+.tut-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--bar-fill); }
+.tut-notch { position: absolute; top: -3px; width: 1px; height: 12px; background: var(--ink-4); }
+.tut-now { position: absolute; top: -5px; width: 2px; height: 16px; margin-left: -1px; border-radius: 1px; background: var(--ink-1); }
+.tut .odds { flex: none; color: var(--ink-2); text-decoration: underline dotted var(--ink-4); text-underline-offset: 4px; }
+/* patience: one box per round; lit ink-2, spent hollow, the last one left warn */
+.pat { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-12); height: 24px; }
+.pat .k { width: 88px; flex: none; color: var(--ink-3); }
+.pat .b { display: flex; gap: var(--sp-4); }
+.pat .b i { width: 14px; height: 14px; border-radius: var(--r-1); background: var(--ink-2); }
+.pat .b i.off { background: transparent; box-shadow: inset 0 0 0 1px var(--line-3); }
+.pat .b i.last { background: var(--warn); }
+.dk-mem { display: flex; align-items: baseline; gap: var(--sp-12); margin-top: var(--sp-12); }
+.dk-mem .k { width: 88px; flex: none; color: var(--ink-3); }
+.dk-mem .v { color: var(--ink-2); }
+
+/* transcript: the newest row sits on the deck; older rows scroll away under the head behind a 24 px fade */
+.dk-flow { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.dk-flow.is-scrolled::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 24px; z-index: 1;
+  background: linear-gradient(var(--surface-3), rgb(from var(--surface-3) r g b / 0)); }
+.dk-flow-in { position: absolute; left: 0; right: 0; bottom: 0; padding: var(--sp-20) var(--sp-32) var(--sp-20) var(--sp-24); display: flex; flex-direction: column; gap: var(--sp-16); }
+.tr { display: flex; gap: var(--sp-12); }
+.tr-b { flex: 1; min-width: 0; }
+.tr-n { display: flex; align-items: center; gap: var(--sp-8); color: var(--ink-3); }
+.tr-t { margin-top: var(--sp-2); color: var(--ink-1); }
+.tr.is-you .tr-b { padding: var(--sp-8) var(--sp-12) var(--sp-12); background: var(--surface-4); border: var(--bw-1) solid var(--line-2);
+  border-radius: var(--r-1) var(--cut-sm) var(--r-1) var(--r-1); corner-shape: bevel; }
+.tr.is-you .tag { height: 20px; }
+.tr.is-you .tag .ic { width: 12px; height: 12px; }
+/* the founder's inner voice and the room read: a margin note, no speaker, on the text column (32 face + 12 gap) */
+.tr-quiet { position: relative; left: 44px; width: calc(100% - 44px); padding-left: var(--sp-12); border-left: var(--bw-2) solid var(--line-2); color: var(--ink-3); }
+/* Frank speaks in his own face (Source Serif 4, opsz 20) */
+.tr.is-frank .tr-t { font-family: var(--f-serif); font-size: var(--fs-18); line-height: var(--lh-26); font-variation-settings: "opsz" 20; }
+/* the price act has no speech: whose number, then the number */
+.tr.is-figure .tr-t { font-weight: 500; font-size: var(--fs-18); line-height: var(--lh-18); }
+/* beats already played stay readable one ink step down */
+.tr.is-past .tr-t, .tr-quiet.is-past { color: var(--ink-3); }
+.tr.is-past.is-you .tr-b { background: var(--surface-3); border-color: var(--line-1); }
+.dk-sb { position: absolute; right: 8px; top: 12px; bottom: 12px; width: var(--sb-w); z-index: 2; }
+
+/* the deck: ruler, options, result card, footer */
+.dk-deck { flex: none; padding: var(--sp-16) var(--sp-24) var(--sp-20); border-top: var(--bw-1) solid var(--line-1); background: var(--surface-3); }
+.dk-opts { display: flex; flex-direction: column; gap: var(--sp-8); }
+.kcap { width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center; border: var(--bw-1) solid var(--line-3);
+  border-radius: var(--r-2); color: var(--ink-3); font-family: var(--f-cond); font-weight: 600; font-size: var(--fs-14); line-height: var(--lh-14); }
+.kcap .ic { width: 14px; height: 14px; }
+/* a meeting answer: the founder's own sentence, numbered 1-5 (the meeting is its own scene, SPEC §6) */
+.opt.mo { gap: var(--sp-12); padding: var(--sp-12) var(--sp-16) var(--sp-12) var(--sp-12); }
+.opt.mo + .opt.mo { margin-top: 0; }
+.mo-c { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
+.mo-l { font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); color: var(--ink-1); }
+.mo-l.cmd { font-family: var(--f-cond); font-weight: 700; font-size: var(--fs-20); line-height: var(--lh-20); }
+.mo-s { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+.mo-s.danger { color: var(--neg-ink); }
+.mo-c .tag { align-self: flex-start; }
+.mo-die { flex: none; display: flex; align-items: center; gap: var(--sp-6); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+.mo-die .ic { width: 18px; height: 18px; }
+.mo-die.safe { color: var(--pos); } .mo-die.risky { color: var(--warn); } .mo-die.danger { color: var(--neg); }
+.opt.mo.is-locked .kcap { border-color: var(--line-1); color: var(--ink-off); }
+.opt.mo.is-locked .mo-l { color: var(--ink-off); }
+.opt.mo.is-locked .mo-s { color: var(--ink-3); }
+/* an offer in the insult zone: danger tone, its reason always under it (no tooltip) */
+.opt.mo.is-alert { border-color: var(--neg-tag-line); background: var(--neg-tag-bg); }
+.opt.mo.is-alert .mo-l { color: var(--neg-ink); }
+.opt.mo.is-dim { opacity: 1; }
+.opt.mo.is-dim .mo-l, .opt.mo.is-dim .kcap { color: var(--ink-off); }
+
+/* result card: a finished document (cut corner); the title carries the outcome in word, glyph and colour */
+.mres { position: relative; padding: var(--sp-16) var(--sp-20) var(--sp-8); background: var(--surface-4); border: var(--bw-1) solid var(--line-2);
+  border-radius: var(--r-1) var(--cut) var(--r-1) var(--r-1); corner-shape: bevel; }
+.mres-h { display: flex; align-items: center; gap: var(--sp-8); padding-bottom: var(--sp-12); }
+.mres-h .ic { width: 22px; height: 22px; }
+.mres-h.pos { color: var(--pos); } .mres-h.neg { color: var(--neg-ink); } .mres-h.warn { color: var(--warn); }
+.mres-h .stamp { margin-left: auto; }
+.mres-r { display: grid; grid-template-columns: 128px 1fr; column-gap: var(--sp-12); align-items: baseline; padding: var(--sp-8) 0; border-top: var(--bw-1) solid var(--line-1); }
+.mres-r .k { color: var(--ink-3); }
+.mres-r .v { color: var(--ink-2); font-size: var(--fs-15); line-height: var(--lh-15); }
+.dk-foot { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-16); }
+.dk-foot .btn-primary { margin-left: auto; }
+.dk-foot .btn .ic { width: 16px; height: 16px; }
+
+/* the price ruler: the band, where the talk opened, their numbers, the held price, the insult line (drawn) */
+.rul { padding-top: var(--sp-4); }
+.rul-rail { position: relative; height: 40px; }
+.rul-t { position: absolute; left: 0; right: 0; top: 18px; height: 4px; border-radius: 2px; background: var(--bar-track); }
+.rul-ins { position: absolute; top: 18px; height: 4px; border-radius: 0 2px 2px 0; background: var(--neg); }
+.rul-anchor { position: absolute; top: 10px; width: 1px; height: 20px; background: var(--ink-4); }
+.rul-ctr { position: absolute; top: 13px; width: 1px; height: 14px; background: var(--ink-3); }
+.rul-ctr.is-now { width: 2px; margin-left: -1px; background: var(--ink-1); }
+.rul-g { position: absolute; top: 8px; width: 12px; height: 24px; margin-left: -6px; border-radius: var(--r-1); background: var(--ink-1); box-shadow: 0 0 0 2px var(--surface-3); }
+.rul-g.is-insult { background: var(--neg); }
+.rul-scale { display: flex; align-items: baseline; margin-top: var(--sp-2); }
+.rul-scale .end { font-size: var(--fs-12); line-height: var(--lh-12); color: var(--ink-3); }
+.rul-scale .held { flex: 1; display: flex; align-items: baseline; justify-content: center; gap: var(--sp-8); }
+.rul-scale .held .k { color: var(--ink-3); }
+.rul-scale .held .v { color: var(--ink-1); }
+.rul-scale .held .v.neg { color: var(--neg); }
+.rul-deal { margin-top: var(--sp-12); color: var(--ink-1); }
+.rul-cap { margin-top: var(--sp-2); color: var(--ink-3); }
+.rul + .dk-opts { margin-top: var(--sp-16); }
+
+/* ---------------------------------------------------------------- the call: ring in the founder's head slot, card beside it */
+/* centred on the head slot; the phone inside is the A2 office sprite, the family of kabuk's head sprites */
+.callring { position: absolute; width: 52px; height: 52px; transform: translate(-50%, -50%); border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--accent), 0 0 0 8px var(--accent-glow); }
+.callring .ph { position: absolute; left: 10px; top: 10px; width: 32px; height: 32px; }
+.callring .ph img { width: 32px; height: 32px; display: block; }
+.callring.is-open { box-shadow: 0 0 0 2px var(--accent); }
+.callcard { position: absolute; width: 336px; padding: var(--sp-16) var(--sp-20) var(--sp-16); }
+.callcard .kick { color: var(--accent); }
+.cc-who { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-12); }
+.cc-who .n { font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); color: var(--ink-1); }
+.cc-who .r { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+.cc-line { margin-top: var(--sp-12); color: var(--ink-1); }
+.cc-acts { display: flex; gap: var(--sp-8); margin-top: var(--sp-16); }
+.cc-acts .btn-primary { flex: 1; }
+.cc-note { margin-top: var(--sp-12); padding-top: var(--sp-12); border-top: var(--bw-1) solid var(--line-1); color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- term sheet table (its own full-screen scene) */
+.tt { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--surface-0); }
+/* head and footer bands run full width; their content sits in the stage's 1600 column (.tt-w) */
+.tt-w { width: 1600px; height: 100%; margin: 0 auto; }
+.tt-head { flex: none; height: 112px; background: var(--surface-1); border-bottom: var(--bw-1) solid var(--line-1); }
+.tt-head .tt-w { display: flex; align-items: center; gap: var(--sp-20); }
+.tt-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.tt-id .f { color: var(--ink-1); }
+.tt-id .p { color: var(--ink-2); }
+.tt-id .a { color: var(--ink-3); }
+.tt-kpi { display: flex; flex-direction: column; justify-content: center; gap: var(--sp-6); padding-left: var(--sp-24); border-left: var(--bw-1) solid var(--line-1); align-self: stretch; }
+.tt-kpi .k { color: var(--ink-3); }
+.tt-kpi .pat { margin-top: 0; height: auto; }
+.tt-kpi .pat .b i { width: 16px; height: 16px; }
+/* the offer's countdown: the top bar's term-sheet slot text, warn */
+.tt-due { flex-direction: row; align-items: center; gap: var(--sp-8); }
+.tt-due .ic { color: var(--warn); }
+.tt-due .v { color: var(--warn); white-space: nowrap; }
+.tt-body { flex: 1; min-height: 0; display: flex; align-items: flex-start; justify-content: center; padding: var(--sp-48) var(--sp-48) var(--sp-24); }
+.tt-stage { width: 1600px; display: grid; grid-template-columns: 880px 1fr; column-gap: var(--sp-48); align-items: start; }
+.tt-l { min-width: 0; display: flex; flex-direction: column; gap: var(--sp-12); }
+.tt-r { min-width: 0; display: flex; flex-direction: column; gap: var(--sp-16); }
+.tt-cap { color: var(--ink-3); }
+/* the term sheet is a document: three levers, the selected one marked in ink */
+.tt-sheet { position: relative; padding: var(--sp-8); background: var(--surface-3); border: var(--bw-1) solid var(--line-2);
+  border-radius: var(--r-1) var(--cut) var(--r-1) var(--r-1); corner-shape: bevel; }
+.lev { position: relative; display: flex; align-items: center; gap: var(--sp-20); min-height: 136px; padding: var(--sp-20) var(--sp-24) var(--sp-20) var(--sp-20);
+  border: var(--bw-1) solid transparent; border-radius: var(--r-1); }
+.lev + .lev { box-shadow: 0 -1px 0 var(--line-1); }
+.lev.is-sel { background: var(--surface-4); }
+.lev.is-sel::after { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: var(--bw-3); background: var(--selected-mark); border-radius: 0 2px 2px 0; }
+.lev.is-hover { border-color: var(--line-hover); }
+.lev-c { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); }
+.lev-k { color: var(--ink-3); }
+/* the arrow is a figure-size glyph in ink-3 on the figures' centre line */
+.lev-v { display: flex; align-items: center; gap: var(--sp-12); color: var(--ink-1); white-space: nowrap; }
+.lev-v .ar { color: var(--ink-3); font-weight: 400; }
+.lev-v .gh { color: var(--ink-3); }
+.lev-o { color: var(--ink-3); }
+.lev.is-locked .lev-k, .lev.is-locked .lev-v, .lev.is-locked .lev-v .gh { color: var(--ink-off); }
+.lev.is-locked .kcap { border-color: var(--line-1); color: var(--ink-off); }
+.lev.is-locked .lev-o { color: var(--ink-3); }
+.lev .btn { flex: none; }
+.lev.is-done .lev-v .gh, .lev.is-done .lev-v .ar { display: none; }
+/* the dial: the chance as an ink arc, the rest a track; the needle rests at the edge, lands on a push */
+.dial { position: relative; align-self: center; width: 480px; height: 324px; }
+.dial svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.dial .trk { fill: none; stroke: var(--bar-track); stroke-width: 18; }
+.dial .win { fill: none; stroke: var(--bar-emph); stroke-width: 18; }
+.dial .tick { stroke: var(--surface-0); stroke-width: 2; }
+/* the needle is ink whether the roll passed or not: the result line carries the outcome */
+.dial .needle { stroke: var(--ink-1); stroke-width: 4; stroke-linecap: round; }
+.dial .hub { fill: var(--ink-1); stroke: none; }
+.dial .pct { position: absolute; left: 0; right: 0; top: 248px; text-align: center; color: var(--ink-1); }
+/* the key under the figure: the arc is the push chance, the needle the last roll */
+.dial .dkey { position: absolute; left: 0; right: 0; top: 296px; display: flex; justify-content: center; gap: var(--sp-20); color: var(--ink-3); }
+.dial .dkey .k { display: inline-flex; align-items: center; gap: var(--sp-8); white-space: nowrap; }
+.dial .sw { display: inline-block; flex: none; }
+.dial .sw.arc { width: 16px; height: 6px; border-radius: 3px; background: var(--bar-emph); }
+.dial .sw.ndl { width: 3px; height: 14px; border-radius: 2px; background: var(--ink-1); }
+.tone-ink { color: var(--ink-1); } .tone-neg { color: var(--neg); } .tone-warn { color: var(--warn); }
+.tt-res { text-align: center; }
+.tt-say { display: flex; gap: var(--sp-12); padding: var(--sp-16) var(--sp-20); background: var(--surface-2); border: var(--bw-1) solid var(--line-1); border-radius: var(--r-3); }
+.tt-say .n { color: var(--ink-3); }
+.tt-say .t { margin-top: var(--sp-2); color: var(--ink-1); }
+.tt-other-w { display: flex; flex-direction: column; gap: var(--sp-4); }
+.tt-other { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16) var(--sp-12) var(--sp-20); background: var(--surface-3); border: var(--bw-1) solid var(--line-2);
+  border-radius: var(--r-1) var(--cut-sm) var(--r-1) var(--r-1); corner-shape: bevel; }
+.tt-other .v { flex: 1; min-width: 0; color: var(--ink-2); }
+.tt-frank { display: flex; gap: var(--sp-16); align-items: flex-start; padding-top: var(--sp-16); border-top: var(--bw-1) solid var(--line-1); }
+.tt-why { text-align: right; color: var(--ink-3); }
+.tt-frank .n { color: var(--ink-3); }
+.tt-frank .t { margin-top: var(--sp-4); color: var(--ink-1); font-family: var(--f-serif); font-size: var(--fs-20); line-height: var(--lh-20q); font-variation-settings: "opsz" 20; }
+/* footer: walk, the money with the cash and tables line under it, sign */
+.tt-foot { flex: none; height: 120px; background: var(--surface-1); border-top: var(--bw-1) solid var(--line-1); }
+.tt-foot .tt-w { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+.tt-foot .l { display: flex; align-items: center; gap: var(--sp-12); }
+.tt-foot .m { display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); }
+.tt-foot .m .v { color: var(--ink-1); }
+.tt-foot .m .d { color: var(--ink-3); }
+.tt-foot .rr2 { display: flex; justify-content: flex-end; }
+.tt-foot .btn-lg { min-width: 220px; }
+.tt-foot .why { color: var(--ink-3); }

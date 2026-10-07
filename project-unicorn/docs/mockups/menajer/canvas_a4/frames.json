@@ -1,0 +1,1450 @@
+{
+ "groups": [
+  {
+   "key": "kabuk",
+   "name": "Kabuk ve ofis",
+   "frames": [
+    {
+     "file": "up/kabuk/kabuk__normal.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kabuk, pencere yok (tohum, H14 11:00)"
+    },
+    {
+     "file": "up/kabuk/kabuk__pencere_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ekip penceresi açık, ofis kararmış"
+    },
+    {
+     "file": "up/kabuk/marka__secenekler.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Marka bloğu: (a) ve (b) yan yana"
+    },
+    {
+     "file": "up/kabuk/marka__b_kabukta.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Marka (b): şirket adı ve logo kabukta"
+    },
+    {
+     "file": "up/kabuk/ustbar__karar_bekliyor.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Tek karar bekliyor, saat 08:00'de tutulu"
+    },
+    {
+     "file": "up/kabuk/ustbar__karar_bekliyor_3.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Üç karar bekliyor, F5 reddedildi"
+    },
+    {
+     "file": "up/kabuk/ustbar__teklif_sayaci.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Teklif sayacı: 2 hafta kaldı"
+    },
+    {
+     "file": "up/kabuk/ustbar__runway_ay.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Hafta 1, evde: runway 7 ay"
+    },
+    {
+     "file": "up/kabuk/ustbar__runway_kirmizi.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Runway 2 ay, kırmızı"
+    },
+    {
+     "file": "up/kabuk/ustbar__kepenk.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kasa eksi: kepenk 3 hafta"
+    },
+    {
+     "file": "up/kabuk/ustbar__sprint_otomatik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sprint otomatik başladı notu"
+    },
+    {
+     "file": "up/kabuk/ustbar__yolculuk.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kurucunun yolculuğu, saat tutulu"
+    },
+    {
+     "file": "up/kabuk/ustbar__durumlar.jpg",
+     "w": 1920,
+     "h": 1808,
+     "title": "Üst barın bütün durumları"
+    },
+    {
+     "file": "up/kabuk/ray__durumlar.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ray: etiketli ve simge kipi durumları"
+    },
+    {
+     "file": "up/kabuk/ray__yapilar.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Pazarlama satırı: demo ve EA yapısı"
+    },
+    {
+     "file": "up/kabuk/serit__durumlar.jpg",
+     "w": 1920,
+     "h": 860,
+     "title": "Haber şeridinin durumları"
+    },
+    {
+     "file": "up/kabuk/serit__kapali.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Haber şeridi kapalı"
+    },
+    {
+     "file": "up/kabuk/buildhud__durumlar.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "BuildHUD ve araştırma kartı durumları"
+    },
+    {
+     "file": "up/kabuk/bildirim__yigin.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Bildirim yığını: 4 kart ve +1"
+    },
+    {
+     "file": "up/kabuk/toast__durumlar.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Toast çeşitleri, TR ve EN"
+    },
+    {
+     "file": "up/kabuk/ofis__tasi_dugmesi.jpg",
+     "w": 1920,
+     "h": 840,
+     "title": "Ofisi taşı düğmesinin halleri"
+    },
+    {
+     "file": "up/kabuk/ofis__tasinma_sayaci.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Taşınma başladı, düğmede 1 hafta"
+    },
+    {
+     "file": "up/kabuk/ofis__kisi_ipucu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kişi ipucu: Selin, moral 22"
+    },
+    {
+     "file": "up/kabuk/ipucu__cesitleri.jpg",
+     "w": 1920,
+     "h": 520,
+     "title": "Kişi ipucunun üç hali"
+    },
+    {
+     "file": "up/kabuk/harita__ofis_karti.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Şehir haritası: Plaza ofis kartı"
+    },
+    {
+     "file": "up/kabuk/harita__kart_durumlari.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ofis kartının halleri"
+    },
+    {
+     "file": "up/kabuk/ustbar__2560.jpg",
+     "w": 2560,
+     "h": 1080,
+     "title": "2560×1080 geniş ekran"
+    },
+    {
+     "file": "up/kabuk/ustbar__durumlar_en.jpg",
+     "w": 1920,
+     "h": 1808,
+     "title": "Üst barın bütün durumları (EN)"
+    },
+    {
+     "file": "up/kabuk/ustbar__1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sıkışık üst bar ve simge ray (1536)"
+    },
+    {
+     "file": "up/kabuk/ustbar__1536x960.jpg",
+     "w": 1920,
+     "h": 1200,
+     "title": "1536×960: daha uzun ofis"
+    },
+    {
+     "file": "up/kabuk/ustbar__1536_pencere.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ekip açık, yüzen öğeler gizli (1536)"
+    }
+   ]
+  },
+  {
+   "key": "olaylar",
+   "name": "Olaylar (mail)",
+   "frames": [
+    {
+     "file": "up/olaylar/olaylar__frank_teklif.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Frank'in teklifi, karar bekliyor (08:00)"
+    },
+    {
+     "file": "up/olaylar/olaylar__kuyruk.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Üç karar: biri açık, ikisi sırada"
+    },
+    {
+     "file": "up/olaylar/olaylar__musteri_secenek_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ege Sigorta riski, İndirim ver kurulu"
+    },
+    {
+     "file": "up/olaylar/olaylar__kilitli_secenek.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kilitli seçenek: Söz ver kapalı"
+    },
+    {
+     "file": "up/olaylar/olaylar__gecmis_karar.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Geçmiş karar: Hafta 11 cevabı"
+    },
+    {
+     "file": "up/olaylar/olaylar__kagit_onizleme.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Nordica kağıdı önizlemede, 2 hafta"
+    },
+    {
+     "file": "up/olaylar/olaylar__kagit_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kağıt açıldı: seçenekler ve Kenara koy"
+    },
+    {
+     "file": "up/olaylar/olaylar__kagit_son_hafta.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kağıt son haftasında"
+    },
+    {
+     "file": "up/olaylar/olaylar__kagit_karar_beklerken.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Karar beklerken kağıt kapalı"
+    },
+    {
+     "file": "up/olaylar/olaylar__bildirimler.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Hatırlatıcı kayıtları, Ege seçili"
+    },
+    {
+     "file": "up/olaylar/olaylar__calisan_ayrilik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Selin'in istifa maili"
+    },
+    {
+     "file": "up/olaylar/olaylar__ayrilmis_gonderici.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayrılmış gönderen: gri yüz, damga"
+    },
+    {
+     "file": "up/olaylar/olaylar__zar_secenegi.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Zarlı karar: oran ve modifier listesi"
+    },
+    {
+     "file": "up/olaylar/olaylar__zar_secenegi_renk_koru.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Zarlı karar, renk körü paleti"
+    },
+    {
+     "file": "up/olaylar/olaylar__donem_ozeti.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Dönem özeti: Muhasebe'den rapor"
+    },
+    {
+     "file": "up/olaylar/olaylar__frank_tanisma.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Frank'in tanışma maili, Hafta 1"
+    },
+    {
+     "file": "up/olaylar/olaylar__frank_ani.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Frank'in anı: Eski bir dost"
+    },
+    {
+     "file": "up/olaylar/olaylar__taslak_frank_ani_basin.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Taslak: Frank anı, basın, gönderen türleri"
+    },
+    {
+     "file": "up/olaylar/olaylar__arge_notu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Aylık ürün notu: Elif Demir"
+    },
+    {
+     "file": "up/olaylar/olaylar__haftalik_satis.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Haftalık satış raporu: Burak Şahin"
+    },
+    {
+     "file": "up/olaylar/olaylar__bos_kutu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Bekleyen süzgeci boş"
+    },
+    {
+     "file": "up/olaylar/olaylar__uzun_gecmis.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Uzun kutu, kaydırılmış geçmiş"
+    },
+    {
+     "file": "up/olaylar/ekip__salt_okunur_karar_bekliyor.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Karar beklerken Ekip salt okunur"
+    },
+    {
+     "file": "up/olaylar/olaylar__frank_teklif_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Frank'in teklifi (EN)"
+    },
+    {
+     "file": "up/olaylar/olaylar__musteri_secenek_acik_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Müşteri riski, İndirim ver kurulu (EN)"
+    },
+    {
+     "file": "up/olaylar/olaylar__taslak_frank_ani_basin_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Taslak: Frank anı ve basın (EN)"
+    }
+   ]
+  },
+  {
+   "key": "ekip",
+   "name": "Ekip",
+   "frames": [
+    {
+     "file": "up/ekip/ekip__kadro.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kadro, 5 kişi (Elif seçili)"
+    },
+    {
+     "file": "up/ekip/ekip__kadro_40.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kadro 39 çalışan, kaydırılmış"
+    },
+    {
+     "file": "up/ekip/ekip__kadro_40_siki.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sıkı kip: 32 px satır"
+    },
+    {
+     "file": "up/ekip/ekip__kadro_bos.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kurucu yalnız: boş kadro, Atlas şeridi"
+    },
+    {
+     "file": "up/ekip/ekip__satir_durumlari.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kadro satırının 11 hali ve şeritler"
+    },
+    {
+     "file": "up/ekip/ekip__gorevler.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Görevler: boşta ve aşırı yük"
+    },
+    {
+     "file": "up/ekip/ekip__gorevler_bos.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kurucu yalnız: boş Görevler"
+    },
+    {
+     "file": "up/ekip/ekip__menu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satır menüsü: Elif"
+    },
+    {
+     "file": "up/ekip/ekip__dosya.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Çalışan dosyası: Elif"
+    },
+    {
+     "file": "up/ekip/ekip__dosya_kurucu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kurucu dosyası"
+    },
+    {
+     "file": "up/ekip/ekip__zam.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Zam yap"
+    },
+    {
+     "file": "up/ekip/ekip__cikar.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "İşten çıkar"
+    },
+    {
+     "file": "up/ekip/ekip__cikar_eksi.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "İşten çıkar: kasa eksiye düşer"
+    },
+    {
+     "file": "up/ekip/ekip__egitim.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Eğitime gönder paneli"
+    },
+    {
+     "file": "up/ekip/ekip__egitim_kilitli.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Eğitim kilitli: deneyim barı dolmadı"
+    },
+    {
+     "file": "up/ekip/ekip__mesai.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Çalışma saatleri paneli"
+    },
+    {
+     "file": "up/ekip/ekip__mesai_gece.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Mesai taslağı gece yarısına kadar"
+    },
+    {
+     "file": "up/ekip/ekip__atlas_arama.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Atlas: işe alım araması"
+    },
+    {
+     "file": "up/ekip/ekip__atlas_dosyalar.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Atlas: üç aday dosyası"
+    },
+    {
+     "file": "up/ekip/ekip__kadro_renk_koru.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kadro, renk körü paleti"
+    },
+    {
+     "file": "up/ekip/ekip__gorevler_renk_koru.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Görevler, renk körü paleti"
+    },
+    {
+     "file": "up/ekip/ekip__kadro_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kadro (EN)"
+    },
+    {
+     "file": "up/ekip/ekip__kadro_40_siki_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sıkı kip (EN)"
+    },
+    {
+     "file": "up/ekip/ekip__menu_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satır menüsü (EN)"
+    },
+    {
+     "file": "up/ekip/ekip__mesai_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Çalışma saatleri (EN)"
+    },
+    {
+     "file": "up/ekip/ekip__atlas_dosyalar_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Atlas aday dosyaları (EN)"
+    },
+    {
+     "file": "up/ekip/ekip__atlas_arama_1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Atlas araması (1536)"
+    },
+    {
+     "file": "up/ekip/ekip__atlas_dosyalar_1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Atlas aday dosyaları (1536)"
+    }
+   ]
+  },
+  {
+   "key": "urun",
+   "name": "Ürün",
+   "frames": [
+    {
+     "file": "up/urun/urun__sprint_planlama.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sprint 7 planlama (C1)"
+    },
+    {
+     "file": "up/urun/urun__sprint_suruyor.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sprint sürüyor, karar satırı (C2)"
+    },
+    {
+     "file": "up/urun/urun__surum_notu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sürüm notu v1.5 (C3)"
+    },
+    {
+     "file": "up/urun/urun__ceyrek.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Çeyrek planı (C4)"
+    },
+    {
+     "file": "up/urun/urun__b2b_talepler.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "B2B müşteri talepleri (C5)"
+    },
+    {
+     "file": "up/urun/urun__sprint_otomatik_basladi.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sprint otomatik başladı"
+    },
+    {
+     "file": "up/urun/urun__sesler_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Alanın Sesler bölümü açık"
+    },
+    {
+     "file": "up/urun/urun__kapasite_asimi.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kapasite aşımı: 16/12"
+    },
+    {
+     "file": "up/urun/urun__ekip_yok.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kimse çalışamıyor: boş sprint sütunu"
+    },
+    {
+     "file": "up/urun/urun__kart_durumlari.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sprint kartının bütün halleri"
+    },
+    {
+     "file": "up/urun/urun__surum_notu_beta.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sürüm notu: beta kanalında"
+    },
+    {
+     "file": "up/urun/urun__ceyrek_hedef_menusu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Çeyrek hedef menüsü açık"
+    },
+    {
+     "file": "up/urun/urun__ceyrek_kilitli_pm_yok.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "PM yokken Çeyrek kilitli"
+    },
+    {
+     "file": "up/urun/urun__gecmis.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sürüm geçmişi açık"
+    },
+    {
+     "file": "up/urun/urun__tur_secici.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Tür seçici: B2C, Notly"
+    },
+    {
+     "file": "up/urun/urun__mvp_oncesi_karar.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "MVP öncesi Sprint 1, karar satırı"
+    },
+    {
+     "file": "up/urun/olaylar__sprint_karari_kagit.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sprint kararı kağıdı Olaylar'da"
+    },
+    {
+     "file": "up/urun/urun__b2c_mvp_surum.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "İlk sürüm notu v1.0"
+    },
+    {
+     "file": "up/urun/urun__sprint_planlama_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sprint planlama (EN)"
+    },
+    {
+     "file": "up/urun/urun__surum_notu_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sürüm notu (EN)"
+    },
+    {
+     "file": "up/urun/urun__sprint_planlama_1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sprint planlama (1536)"
+    }
+   ]
+  },
+  {
+   "key": "satis_finans",
+   "name": "Satış ve Finans",
+   "frames": [
+    {
+     "file": "up/satis_finans/satis__boru_hatti.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış: boru hattı, masa, portföy"
+    },
+    {
+     "file": "up/satis_finans/satis__masa_ve_portfoy.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış: 3 lead, 5 hesap, temsilci işliyor"
+    },
+    {
+     "file": "up/satis_finans/satis__temsilci_secici.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Temsilci seçici açık"
+    },
+    {
+     "file": "up/satis_finans/satis__b2c_bos.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "B2C koşuda Satış boş hali"
+    },
+    {
+     "file": "up/satis_finans/satis__renk_koru.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış, renk körü paleti"
+    },
+    {
+     "file": "up/satis_finans/finans__ozet.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Finans Özet: runway 5 ay"
+    },
+    {
+     "file": "up/satis_finans/finans__artida.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Finans Özet: artıda"
+    },
+    {
+     "file": "up/satis_finans/finans__uyari.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Finans: runway 2 ay, kırmızı"
+    },
+    {
+     "file": "up/satis_finans/finans__kepenk.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Finans: kepenk 3 hafta"
+    },
+    {
+     "file": "up/satis_finans/finans__sinyal.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Faz 2: Series A sinyali, iştah kapalı"
+    },
+    {
+     "file": "up/satis_finans/finans__gider_dokumu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Gider dağılımı ve son işlemler"
+    },
+    {
+     "file": "up/satis_finans/finans__yatirim_av_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Yatırım: Series A Avı, iki teklif"
+    },
+    {
+     "file": "up/satis_finans/finans__yatirim_av_kapali.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Yatırım: bütün fonlar kapalı"
+    },
+    {
+     "file": "up/satis_finans/satis__masa_ve_portfoy_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış masası ve portföy (EN)"
+    },
+    {
+     "file": "up/satis_finans/satis__temsilci_secici_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Temsilci seçici (EN)"
+    },
+    {
+     "file": "up/satis_finans/finans__ozet_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Finans Özet (EN)"
+    },
+    {
+     "file": "up/satis_finans/finans__yatirim_av_acik_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Series A Avı (EN)"
+    },
+    {
+     "file": "up/satis_finans/satis__1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış (1536)"
+    },
+    {
+     "file": "up/satis_finans/finans__1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Finans Özet (1536)"
+    }
+   ]
+  },
+  {
+   "key": "kisisel_arge",
+   "name": "Kişisel ve Ar-Ge",
+   "frames": [
+    {
+     "file": "up/kisisel_arge/kisisel__normal.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kişisel: kurucu sayfası"
+    },
+    {
+     "file": "up/kisisel_arge/kisisel__frank_sonrasi.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kişisel: Frank'in çekinden sonra"
+    },
+    {
+     "file": "up/kisisel_arge/arge__agac.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge ağacı, seçim yok"
+    },
+    {
+     "file": "up/kisisel_arge/arge__detay.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge: AI Engine detay kartı"
+    },
+    {
+     "file": "up/kisisel_arge/arge__atama.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge: atama paneli"
+    },
+    {
+     "file": "up/kisisel_arge/arge__donmus.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge: donmuş araştırma"
+    },
+    {
+     "file": "up/kisisel_arge/arge__gecmis.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge geçmişi: notlar ve keşifler"
+    },
+    {
+     "file": "up/kisisel_arge/arge__salt_okunur.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge, karar beklerken salt okunur"
+    },
+    {
+     "file": "up/kisisel_arge/arge__kapali.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge kapalı: ilk sürümden önce"
+    },
+    {
+     "file": "up/kisisel_arge/arge__parcalar.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge parçaları ve kart halleri"
+    },
+    {
+     "file": "up/kisisel_arge/olaylar__arge_kesif.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Keşif maili kutuda (H16)"
+    },
+    {
+     "file": "up/kisisel_arge/ofis__kesif_bildirimi.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Keşif bildirimi yığında"
+    },
+    {
+     "file": "up/kisisel_arge/ofis__arastirma_cubugu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ofiste araştırma kartı"
+    },
+    {
+     "file": "up/kisisel_arge/pazarlama__yer_tutucu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Pazarlama yer tutucusu (yalnız harness)"
+    },
+    {
+     "file": "up/kisisel_arge/kisisel__normal_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kişisel (EN)"
+    },
+    {
+     "file": "up/kisisel_arge/arge__detay_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge detay kartı (EN)"
+    },
+    {
+     "file": "up/kisisel_arge/kisisel__1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kişisel (1536)"
+    },
+    {
+     "file": "up/kisisel_arge/arge__1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ar-Ge (1536)"
+    }
+   ]
+  },
+  {
+   "key": "toplanti",
+   "name": "Toplantı",
+   "frames": [
+    {
+     "file": "up/toplanti/toplanti__satis_probe.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış görüşmesi açılıyor: ilk soru"
+    },
+    {
+     "file": "up/toplanti/toplanti__satis_locked.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış: kilitli seçenek, tutum temkinli"
+    },
+    {
+     "file": "up/toplanti/toplanti__satis_won.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış: masa rakama geçti"
+    },
+    {
+     "file": "up/toplanti/toplanti__satis_lost.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış: anlaşma olmadı"
+    },
+    {
+     "file": "up/toplanti/toplanti__satis_handoff.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Pazarlık açılışı: fiyat cetveli"
+    },
+    {
+     "file": "up/toplanti/toplanti__pazarlik_countered.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Pazarlık: karşı rakam $46"
+    },
+    {
+     "file": "up/toplanti/toplanti__pazarlik_insult.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Pazarlık: hakaret bölgesi"
+    },
+    {
+     "file": "up/toplanti/toplanti__pazarlik_confirm.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Pazarlık: anlaşma imzalandı"
+    },
+    {
+     "file": "up/toplanti/toplanti__vc_open.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "VC görüşmesi: Odayı oku 1/4"
+    },
+    {
+     "file": "up/toplanti/toplanti__vc_sorgu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "VC: Sorgu 3/4"
+    },
+    {
+     "file": "up/toplanti/toplanti__vc_sheet.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "VC kapanış: teklif gelecek"
+    },
+    {
+     "file": "up/toplanti/toplanti__vc_callback.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "VC: yeniden görüşülecek"
+    },
+    {
+     "file": "up/toplanti/toplanti__vc_ret.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "VC: bu sefer değil, Frank'in satırı"
+    },
+    {
+     "file": "up/toplanti/toplanti__vc_seed.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Seed görüşmesi kapanışı"
+    },
+    {
+     "file": "up/toplanti/toplanti__vc_long.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "VC: en dolu panel, dört adım"
+    },
+    {
+     "file": "up/toplanti/termsheet__table.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Term sheet masası: Bosphorus"
+    },
+    {
+     "file": "up/toplanti/termsheet__table_final.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Term sheet: sabır bitti, son teklif"
+    },
+    {
+     "file": "up/toplanti/termsheet__table_walk.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Term sheet: fon masadan kalktı"
+    },
+    {
+     "file": "up/toplanti/termsheet__table_other.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Term sheet: diğer teklif gösterildi"
+    },
+    {
+     "file": "up/toplanti/termsheet__seed_table.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Seed masası"
+    },
+    {
+     "file": "up/toplanti/davet__satis_halka.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Telefon çalıyor: kurucuda halka"
+    },
+    {
+     "file": "up/toplanti/davet__satis_kart.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Gelen arama kartı: satış"
+    },
+    {
+     "file": "up/toplanti/davet__ertele_satis.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış görüşmesi ertelendi"
+    },
+    {
+     "file": "up/toplanti/davet__vc_kart.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Fonun arama kartı, saat durdu"
+    },
+    {
+     "file": "up/toplanti/davet__ertele_vc.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "VC görüşmesi ertelendi"
+    },
+    {
+     "file": "up/toplanti/yolculuk__gidis.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Yolculuk: görüşmeye gidiş"
+    },
+    {
+     "file": "up/toplanti/yolculuk__donus.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Yolculuk: ofise dönüş"
+    },
+    {
+     "file": "up/toplanti/toplanti__satis_locked_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Satış: kilitli seçenek (EN)"
+    },
+    {
+     "file": "up/toplanti/toplanti__vc_sorgu_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "VC: Sorgu 3/4 (EN)"
+    },
+    {
+     "file": "up/toplanti/termsheet__table_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Term sheet masası (EN)"
+    },
+    {
+     "file": "up/toplanti/davet__satis_kart_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Gelen arama kartı (EN)"
+    },
+    {
+     "file": "up/toplanti/toplanti__pazarlik_open_1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Pazarlık açılışı (1536)"
+    },
+    {
+     "file": "up/toplanti/toplanti__vc_long_1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "VC: en dolu panel (1536)"
+    }
+   ]
+  },
+  {
+   "key": "modallar_acilis",
+   "name": "Modallar, açılış ve son",
+   "frames": [
+    {
+     "file": "up/modallar_acilis/sistem__normal.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sistem menüsü (Esc)"
+    },
+    {
+     "file": "up/modallar_acilis/sistem__karar_bekliyor.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sistem menüsü, karar beklerken"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__ust.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar: Görüntü ve Ses"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__alt.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar: Oyun, Erişilebilirlik, Veri"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__pencere_modu_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar: pencere modu listesi"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__cozunurluk_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar: çözünürlük listesi"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__olcek_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar: arayüz ölçeği, kapalı adımlar"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__oto_kayit_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar: otomatik kayıt sıklığı"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__ozet_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar: özet sıklığı"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__dil_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar: dil listesi"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__renk_koru_acik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar: renk körü paleti açık"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__sifirla_onay.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarları sıfırlama onayı"
+    },
+    {
+     "file": "up/modallar_acilis/kayit__bos.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kaydet: hiç kayıt yok"
+    },
+    {
+     "file": "up/modallar_acilis/kayit__dolu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kaydet: dört kayıt"
+    },
+    {
+     "file": "up/modallar_acilis/kayit__karar_bekliyor.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kaydet, karar beklerken (seçenek B)"
+    },
+    {
+     "file": "up/modallar_acilis/kayit__f5_reddedildi.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "F5 reddedildi: karar bekliyor"
+    },
+    {
+     "file": "up/modallar_acilis/yukle__bos.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Yükle: hiç kayıt yok"
+    },
+    {
+     "file": "up/modallar_acilis/yukle__dolu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Yükle: dört kayıt"
+    },
+    {
+     "file": "up/modallar_acilis/yukle__sil_onay.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kayıt silme onayı"
+    },
+    {
+     "file": "up/modallar_acilis/onay__iki_dugme.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Onay: iki düğme"
+    },
+    {
+     "file": "up/modallar_acilis/onay__uc_dugme.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Çıkış onayı: üç düğme"
+    },
+    {
+     "file": "up/modallar_acilis/onay__uc_dugme_karar_bekliyor.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Çıkış onayı, karar beklerken"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__dil_kapisi.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Açılış: dil kapısı"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__dil_kapisi_ustunde.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Dil kapısı, English üstünde"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__kurucu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Açılış 1: kurucu seçimi"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__kurucu_dolu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kurucu seçili, ad yazılıyor"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__koken.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Açılış 2: köken, huylar, beceriler"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__koken_negatif_eksik.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Köken: negatif huy eksik"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__koken_dolu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Köken adımı dolu"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__sirket.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Açılış 3: şirket, boş"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__sirket_dolu.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Şirket adı ve logo seçili"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__yukleniyor.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Yükleme perdesi"
+    },
+    {
+     "file": "up/modallar_acilis/son__series_a_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: Series A kapandı (demo)"
+    },
+    {
+     "file": "up/modallar_acilis/son__series_a_agresif_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: agresif şartlarla Series A"
+    },
+    {
+     "file": "up/modallar_acilis/son__satis_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: şirket satıldı"
+    },
+    {
+     "file": "up/modallar_acilis/son__marka_coktu_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: marka çöktü"
+    },
+    {
+     "file": "up/modallar_acilis/son__vc_ret_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: üç masa, üç ret"
+    },
+    {
+     "file": "up/modallar_acilis/son__ilgi_sondu_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: ilgi söndü (hafta 104)"
+    },
+    {
+     "file": "up/modallar_acilis/son__kendi_paranla_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: kendi paranla (demo)"
+    },
+    {
+     "file": "up/modallar_acilis/son__iflas_1_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: iflas, evre 1"
+    },
+    {
+     "file": "up/modallar_acilis/son__iflas_2_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: iflas, evre 2"
+    },
+    {
+     "file": "up/modallar_acilis/son__iflas_3_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: iflas, evre 3"
+    },
+    {
+     "file": "up/modallar_acilis/son__paylasildi_demo.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Gazete paylaşıldı: toast"
+    },
+    {
+     "file": "up/modallar_acilis/son__series_a_ea.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: Series A (EA, tam sürüm)"
+    },
+    {
+     "file": "up/modallar_acilis/son__kilometre_tasi_ea.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kilometre taşı (EA)"
+    },
+    {
+     "file": "up/modallar_acilis/son__kilometre_tasi_ea_kayit_engelli.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kilometre taşı: kayıt engellendi"
+    },
+    {
+     "file": "up/modallar_acilis/sistem__normal_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sistem menüsü (EN)"
+    },
+    {
+     "file": "up/modallar_acilis/sistem__karar_bekliyor_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Sistem menüsü, karar beklerken (EN)"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__ust_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar üst (EN)"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__alt_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar alt (EN)"
+    },
+    {
+     "file": "up/modallar_acilis/onay__uc_dugme_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Çıkış onayı (EN)"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__koken_dolu_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Köken adımı dolu (EN)"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__sirket_dolu_en.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Şirket adımı dolu (EN)"
+    },
+    {
+     "file": "up/modallar_acilis/ayarlar__ust_1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Ayarlar (1536)"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__kurucu_dolu_1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Kurucu seçimi (1536)"
+    },
+    {
+     "file": "up/modallar_acilis/acilis__koken_dolu_1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Köken adımı (1536)"
+    },
+    {
+     "file": "up/modallar_acilis/son__series_a_demo_1536.jpg",
+     "w": 1920,
+     "h": 1080,
+     "title": "Son: Series A (1536)"
+    }
+   ]
+  }
+ ]
+}

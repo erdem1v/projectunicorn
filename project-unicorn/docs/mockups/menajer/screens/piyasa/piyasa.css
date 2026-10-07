@@ -1,0 +1,106 @@
+/* Piyasa (group "piyasa", PRD_RAKIP_DUNYASI §3). Only what the system lacks; every colour, size, radius and gap is a
+   system token or on the spacing scale (2 4 6 8 12 16 20 24 32 40 48). Load after ../../system/tokens.css and
+   base.css. Frame, brand-block and office-layer rules repeat satis_finans.css so every group reads the same shell. */
+
+/* ---------------------------------------------------------------- frame (satis_finans.css) */
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--surface-0); }
+html.w1536, html.w1536 body { width: 1536px; height: 864px; }
+.screen { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--surface-0); }
+.w1536 .screen { width: 1536px; height: 864px; }
+.abs { position: absolute; }
+.head-ic { position: absolute; display: block; pointer-events: none; }
+.screen > .float, .screen > .fbtn { position: absolute; }
+:root { --brand-mark: #FFA028; }   /* the old orange square: a brand constant, not the UI accent */
+.brand-sq { position: absolute; width: 20px; height: 20px; border-radius: var(--r-1); background: var(--brand-mark); }
+
+/* ---------------------------------------------------------------- window: KPI colour, filter chips */
+/* the value line keeps its height when the cell is empty (rule 9), so every KPI key sits on one baseline */
+.win-kpis .kpi-val { display: block; min-height: var(--lh-26); }
+.kpi-val.pos { color: var(--pos); }
+.kpi-val .ic { width: 16px; height: 16px; margin-right: var(--sp-2); vertical-align: -1px; }
+/* filter chip: selected is ink (rule 3), never amber; 32 tall so the strip keeps the control height */
+.win-ctl .chip { height: var(--h-btn-sm); color: var(--ink-3); }
+.win-ctl .chip.is-on { background: var(--surface-4); border-color: var(--ink-1); color: var(--ink-1); }
+/* the body is two columns edge to edge: the list (own padding) and the detail panel (surface-2) */
+.win-body.market { display: flex; padding: 0; }
+.mk-list { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; padding: var(--sp-16) var(--sp-24) var(--sp-24); }
+/* the rows area is as tall as its rows (gen.py); a list that overflows fills the column and puts the strip at the bottom */
+.mk-rows { position: relative; flex: none; overflow: hidden; }
+.mk-list > .sb { right: 8px; }
+
+/* ---------------------------------------------------------------- change marks, on every surface of the window (list, KPI, panel) */
+/* rank move and a change in value: the glyph is the second channel (rule 5); a gain is pos + ▲, a drop is ink + U+2212 (rule 2) */
+.win .dl { display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); color: var(--ink-2); }
+.win .dl .ic { width: 12px; height: 12px; }
+.win .dl.up { color: var(--pos); }
+.win .pct { display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--sp-2); color: var(--ink-2); }
+.win .pct .ic { width: 12px; height: 12px; }
+.win .pct.up { color: var(--pos); }
+
+/* ---------------------------------------------------------------- list: grid columns, the name cell, sparkline */
+.mk .grid { grid-template-columns: 40px 48px 1fr 200px 128px 96px 80px 128px; column-gap: var(--sp-8); }
+.mk.narrow .grid { grid-template-columns: 40px 48px 1fr 128px 96px 80px 128px; }
+.mk.narrow .cell.founder, .mk.narrow .th.founder { display: none; }
+.mk .tbl-head { padding-left: var(--sp-4); }
+.mk .row { padding-left: var(--sp-4); }
+.mk .th.glyph { gap: 0; } .mk .th.glyph .ic { width: 12px; height: 12px; }
+.mk .cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mk .cell.c { display: flex; justify-content: center; }
+.mk .cell.rank { text-align: right; padding-right: var(--sp-4); font-size: var(--fs-14); color: var(--ink-3); }
+/* name cell, one line: name (ink-1) · sector (ink-3), or name + the sub-type tag on a rival of the player's sub-type */
+.mk .cell.co { display: flex; align-items: center; gap: var(--sp-6); min-width: 0; }
+.mk .cell.co .nm { color: var(--ink-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mk .cell.co .sec { color: var(--ink-3); white-space: nowrap; }
+.mk .cell.co .tag { height: 18px; padding: 0 var(--sp-4); font-size: var(--fs-12); }
+.mk .cell.founder { color: var(--ink-2); }
+.mk .cell.num { color: var(--ink-2); }
+.mk .cell.num.hi { color: var(--ink-1); font-weight: 500; }
+.mk .cell.spark { display: flex; align-items: center; justify-content: flex-end; padding-right: var(--sp-8); }
+.spark polyline { fill: none; stroke: var(--ink-3); stroke-width: 1.5; stroke-linejoin: round; }
+/* the last point: an ink-1 disc on a 1 px ring of the row's own ground, so it reads on top of the line */
+.spark circle { fill: var(--ink-1); stroke: var(--surface-3); stroke-width: 2; paint-order: stroke; }
+.row.is-selected .spark circle { stroke: var(--surface-4); }
+.mk .row.is-selected .cell.rank { color: var(--ink-2); }
+
+/* ---------------------------------------------------------------- the player's comparison strip (Seed and later): furniture, no cut corner */
+.you { flex: none; display: flex; flex-direction: column; justify-content: center; gap: var(--sp-2); height: 64px; margin-top: var(--sp-12);
+  padding: 0 var(--sp-20); background: var(--surface-4); border: var(--bw-1) solid var(--line-2); border-radius: var(--r-3); }
+.you .l1 { color: var(--ink-1); white-space: nowrap; }
+.you .l2 { color: var(--ink-3); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- detail panel: the right column of the window */
+.mk-detail { flex: none; width: 520px; display: flex; flex-direction: column; gap: var(--sp-12); padding: var(--sp-20) var(--sp-24) var(--sp-24);
+  background: var(--surface-2); border-left: var(--bw-1) solid var(--line-1); overflow: hidden; }
+.dt-head { display: flex; align-items: center; gap: var(--sp-12); }
+.dt-head .t { color: var(--ink-1); }
+.dt-head .btn { margin-left: auto; margin-right: calc(-1 * var(--sp-12)); }   /* the ghost button's text aligns with the panel's right edge */
+.dt-sub { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-2); color: var(--ink-3); }
+.dt-sub .whos { display: flex; gap: var(--sp-16); white-space: nowrap; }
+.dt-sub .whos .k { color: var(--ink-3); margin-right: var(--sp-4); }
+.dt-sub .whos .n { font-weight: 500; color: var(--ink-2); }
+.dt-val { display: flex; align-items: baseline; gap: var(--sp-12); }
+.dt-val .v { color: var(--ink-1); }
+.dt-val .p { color: var(--ink-2); }
+.dt-val .pct { margin-left: var(--sp-4); }
+.dt-sec { display: flex; flex-direction: column; gap: var(--sp-8); }
+.dt-sec .h { display: flex; align-items: center; gap: var(--sp-12); height: 28px; color: var(--ink-3); border-bottom: var(--bw-1) solid var(--line-1); }
+.dt-sec .h .seg { margin-left: auto; gap: var(--sp-16); }
+.dt-sec .h .seg-tab { font-size: var(--fs-14); line-height: var(--lh-14); }
+.dt-sec .p { color: var(--ink-2); text-wrap: pretty; }
+/* peers on one line: the caps key, then the chips as its sibling (a proper name is never set in caps, rule 7) */
+.dt-sec.inline { flex-direction: row; align-items: center; gap: var(--sp-12); }
+.dt-sec.inline .h { height: 32px; border-bottom: 0; }
+.dt-sec .chips { display: flex; gap: var(--sp-8); }
+.chip.sm { height: 28px; padding: 0 var(--sp-8); font-family: var(--f-sans); font-weight: 400; font-size: var(--fs-14); line-height: var(--lh-14); letter-spacing: 0; text-transform: none; }
+/* year-end value table: year · value · yearly change on the compact row (--h-row-sm); the today row is ink-1 */
+.eoy .grid { grid-template-columns: 112px 1fr 96px; column-gap: var(--sp-8); }
+.eoy .cell.y { color: var(--ink-3); }
+.eoy .row.is-today .cell { color: var(--ink-1); font-weight: 500; }
+/* products (sector rival only, I2): line name · the shipped step, the same words the sales objection uses */
+.prod-row { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--sp-8); align-items: center; height: var(--h-row-sm); border-bottom: var(--bw-1) solid var(--row-rule); }
+.prod-row:last-child { border-bottom: 0; }
+.prod-row .l { color: var(--ink-2); }
+.prod-row .s { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* the value chart: grid, axis month labels, the measured line, the last point */
+.ch-lbl.year { fill: var(--ink-2); }
+.ch-last { fill: var(--ink-1); stroke: var(--surface-2); stroke-width: 3; paint-order: stroke; }

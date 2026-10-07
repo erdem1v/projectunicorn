@@ -1,0 +1,255 @@
+/* Menajer Masası: design tokens. The single source every screen mockup imports.
+   Pages load the faces with this exact link (Godot ships the same static faces, see SPEC.md "Yazı"):
+   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans+Condensed:wght@400&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=block" rel="stylesheet">
+   Names are roles, never grounds; type sizes are numeric steps. Every hex here has a row in SPEC.md with its
+   contrast. tools/contrast.py reads this file; keep one declaration per line. */
+
+:root {
+  /* ---- surfaces: warm charcoal, darkest first ---- */
+  --surface-0: #100E0B;   /* ground: ticker, tooltip, page */
+  --surface-1: #15120F;   /* chrome: top bar and rail */
+  --surface-2: #1A1714;   /* inset column inside a window: inbox list, sticky table head, input field */
+  --surface-3: #1E1B18;   /* window body */
+  --surface-4: #27231F;   /* raised: window header, selected row, active rail row, time block, menu, stake box */
+  --surface-5: #2E2924;   /* control fill: idle speed key, trait box, switch track, count badge */
+
+  /* ---- lines ---- */
+  --line-1: #3A342D;      /* rules, separators, row rules */
+  --line-2: #4A4239;      /* component borders: window, outline button, input, tracks */
+  --line-3: #6A5F52;      /* strong outline: tag, relation chip, scrollbar thumb, avatar rim */
+  --line-hover: #958C7E;  /* hover is a border, never a fill */
+
+  /* ---- ink: lightest first ---- */
+  --ink-1: #FFFFFF;       /* emphasis: KASA, window title, row name, active label */
+  --ink-2: #E9E4DA;       /* primary text */
+  --ink-3: #B3AA9E;       /* secondary text, keys, column heads, idle rail name */
+  --ink-4: #9A9184;       /* tertiary: idle rail icon, lock reason on the rail, separators that carry meaning */
+  --ink-off: #6B6358;     /* disabled and locked label or glyph only (exempt, never a reason) */
+
+  /* ---- accent: one job. Fill = the single primary action. Outline or text = the time state ---- */
+  --accent: #F2B53A;          /* the single primary action fill; time-state outline and text */
+  --accent-hover: #F7C65F;    /* primary button hover */
+  --accent-pressed: #DDA12D;  /* primary button pressed */
+  --on-accent: #17130A;       /* text and glyph on amber */
+  --accent-glow: rgba(242, 181, 58, 0.24);  /* gate dot ring, time-state only */
+
+  /* ---- meaning ---- */
+  --pos: #4FD27A;         /* gain, Artıda, moral 50+, healthy dot */
+  --neg: #EC6A5E;         /* danger only: negative cash, departure, shutter, moral under 35 */
+  --warn: #E8913A;        /* attention, not danger: moral 35 to 49, last-week paper, offer countdown */
+  --info: #8CC2EC;        /* neutral notice dot, report rows */
+  --neg-bg: #2B1A17;      /* danger strip fill */
+  --neg-line: #6E3129;    /* danger strip border */
+  --neg-ink: #F4A39A;     /* soft danger text on neg-bg or in a risk tag */
+  --neg-tag-bg: rgba(236, 106, 94, 0.16);    /* risk tag and danger effect part fill */
+  --neg-tag-line: rgba(236, 106, 94, 0.60);  /* risk tag border, danger button border */
+  --pos-tag-bg: rgba(79, 210, 122, 0.12);    /* opportunity tag fill (Büyümek istiyor) */
+  --pos-tag-line: rgba(79, 210, 122, 0.55);  /* opportunity tag border */
+  --pos-ink: #8FE3A8;     /* soft positive text inside a pos tag */
+  --warn-tag-bg: rgba(232, 145, 58, 0.12);   /* last-week and countdown tag fill */
+  --warn-tag-line: rgba(232, 145, 58, 0.55); /* last-week and countdown tag border */
+  --on-neg: #1B0F0D;      /* text on a solid danger badge */
+  --row-rule: rgba(58, 52, 45, 0.75);   /* data row separator, softer than line-1 */
+  --zebra: rgba(233, 228, 218, 0.025);  /* optional zebra stripe (density: Ayrıntılı) */
+
+  /* ---- skill value ramp: luminance rises with the value (1-2 dimmest, 9-10 brightest) ---- */
+  --skill-1: #A09789;     /* 1-2 */
+  --skill-2: #B4AB9B;     /* 3-4 */
+  --skill-3: #C9C3B4;     /* 5-6 */
+  --skill-4: #BCDF72;     /* 7-8 */
+  --skill-5: #86F7A0;     /* 9-10 */
+  --role-band: rgba(233, 228, 218, 0.05);   /* the role's columns inside its group */
+
+  /* ---- topic pills: the event tag set (EVENT_TAG_* plus DESK_PAPER_TAG_FUNDING) ---- */
+  --topic-mentor: #C9A8E6;     /* MENTOR · EVENT_TAG_MENTOR */
+  --topic-customer: #6FC9B6;   /* MÜŞTERİ · EVENT_TAG_CUSTOMER */
+  --topic-team: #7FB6DE;       /* EKİP · EVENT_TAG_TEAM */
+  --topic-product: #9EB18C;    /* ÜRÜN · EVENT_TAG_PRODUCT; sage, kept 15 ΔE from the lime skill-4 */
+  --topic-funding: #E6A2C2;    /* YATIRIM · DESK_PAPER_TAG_FUNDING */
+  --topic-market: #D4BD8E;     /* PİYASA · EVENT_TAG_MARKET */
+  --topic-agenda: #B3AA9E;     /* GÜNDEM · EVENT_TAG_AGENDA, the generic topic stays neutral */
+  --pill-fill: 0.12;           /* pill fill = topic hue at this alpha over the row */
+
+  /* ---- outlets (ticker publication names, WORLD_OUTLET_*) ---- */
+  --outlet-sektor: #7FB6DE;      /* Sektör Telgrafı */
+  --outlet-ekonomi: #E6A2C2;     /* Ekonomi Postası */
+  --outlet-teknogundem: #6FC9B6; /* TeknoGündem */
+  --outlet-girisim: #C2ABEA;     /* Girişim Bülteni */
+
+  /* ---- data visualisation (charts, bars): ink-based, red only below zero ---- */
+  --chart-grid: #2F2A25;        /* gridline, one step above the window body */
+  --chart-axis: #6A5F52;        /* zero line and axis */
+  --chart-line: #E9E4DA;        /* the measured series */
+  --chart-proj: #9A9184;        /* projection, dashed */
+  --chart-neg-area: rgba(236, 106, 94, 0.12);  /* area below zero (danger) */
+  --chart-pos-area: rgba(233, 228, 218, 0.05); /* area above zero, neutral */
+  --bar-track: #3A342D;         /* progress and meter track */
+  --bar-fill: #B3AA9E;          /* progress that is neither good nor bad */
+  --bar-emph: #E9E4DA;          /* the one share a part-to-whole bar highlights; the rest is bar-fill */
+
+  /* ---- state and overlay ---- */
+  --focus: #FFFFFF;                 /* keyboard focus ring: 2 px ink-1 ring, 2 px gap */
+  --selected-mark: #FFFFFF;         /* 3 px inset marker on the selected row */
+  --scrim: rgba(10, 8, 6, 0.62);    /* true modals only (Ayarlar, Sistem, Kayıt, Onay) */
+  --dim: 0.84;                      /* office multiply while a window is open (Godot self_modulate) */
+  --halo: rgba(10, 8, 6, 0.66);     /* window shadow colour = the halo */
+  --shadow-float-c: rgba(0, 0, 0, 0.42);    /* float shadow colour */
+  --tooltip-shadow-c: rgba(0, 0, 0, 0.45);  /* tooltip shadow colour */
+
+  /* ---- portrait and avatar ground: the ink-outlined busts need a lit ground on charcoal ---- */
+  --portrait-lit: #574B3F;      /* radial centre behind the head (avatar disc, portrait well) */
+  --portrait-edge: #2A2520;     /* radial edge */
+  --av-rim: #6A5F52;            /* 1 px avatar rim (line-3) */
+
+  /* ---- desk motif: documents carry a cut corner, finished documents a stamp ---- */
+  --stamp: #B3AA9E;             /* stamp ink (ink-3): Cevaplandı, İmzalandı, Ayrıldı */
+  --cut: 12px;                  /* document corner bevel, top right (Godot corner_detail 1) */
+  --cut-sm: 8px;                /* small documents: toast, notice, inbox selection, stake parts */
+
+  /* ---- newspaper island (ending only): stays cream, own ladder, static Source Serif 4 at opsz 20 ---- */
+  --paper-bg: #EFE9DC;         /* newsprint */
+  --paper-edge: #3A342A;       /* sheet border */
+  --paper-rule: #2A241C;       /* masthead and section rules */
+  --paper-ink: #262019;        /* headline, stat figures */
+  --paper-ink-body: #3E362B;   /* body copy */
+  --paper-ink-deck: #6B6252;   /* italic deck */
+  --paper-ink-mast: #4A4238;   /* masthead */
+  --paper-ink-meta: #6E6553;   /* meta line; was #988E7B (2.95:1), darkened to pass 4.5 */
+
+  /* ---- families ---- */
+  --f-cond: 'Barlow Condensed', 'IBM Plex Sans', sans-serif;
+  --f-sans: 'IBM Plex Sans', sans-serif;
+  --f-sansc: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
+  --f-serif: 'Source Serif 4', serif;
+
+  /* ---- type ladder: 12 steps, 12 to 40, named by size. Line = the Godot Label height (face + Plex fallback, no Noto) ---- */
+  --fs-12: 12px;  --lh-12: 17px;
+  --fs-13: 13px;  --lh-13: 18px;
+  --fs-14: 14px;  --lh-14: 19px;
+  --fs-15: 15px;  --lh-15: 21px;
+  --fs-16: 16px;  --lh-16: 22px;  --lh-16p: 24px;   /* p = paragraph: Godot line_spacing +2 */
+  --fs-18: 18px;  --lh-18: 24px;
+  --fs-20: 20px;  --lh-20: 27px;  --lh-20q: 30px;   /* q = Frank's quote (serif 28 + line_spacing 2) */
+  --fs-22: 22px;  --lh-22: 30px;
+  --fs-26: 26px;  --lh-26: 35px;
+  --fs-30: 30px;  --lh-30: 40px;
+  --fs-36: 36px;  --lh-36: 47px;
+  --fs-40: 40px;  --lh-40: 52px;
+  --track-caps: 1px;   /* every caps label, every size: Godot spacing_glyph 1 */
+  --track-none: 0px;
+
+  /* ---- spacing: the only gaps and paddings allowed (tools/lint_spacing.py) ---- */
+  --sp-2: 2px;  --sp-4: 4px;  --sp-6: 6px;  --sp-8: 8px;  --sp-12: 12px; --sp-16: 16px;
+  --sp-20: 20px; --sp-24: 24px; --sp-32: 32px; --sp-40: 40px; --sp-48: 48px;
+
+  /* ---- radii (Godot StyleBoxFlat corner_detail 1 on every document box, so small radii read as bevels) ---- */
+  --r-1: 2px;     /* tracks, markers, underline, the three straight corners of a document */
+  --r-2: 4px;     /* buttons, tags, inputs, speed keys, tooltip, trait box */
+  --r-3: 6px;     /* floats, strips, option bar, portrait card, menu */
+  --r-4: 8px;     /* windows */
+  --r-pill: 999px;
+
+  /* ---- borders ---- */
+  --bw-1: 1px;   /* every rule and border */
+  --bw-2: 2px;   /* focus ring, time-state frame, active tab underline, main-skill underline, stamp */
+  --bw-3: 3px;   /* selected marker (inset, rounded, never a full-height card edge) */
+
+  /* ---- shadows: one shadow per box, because a Godot StyleBoxFlat carries one ---- */
+  --shadow-window: 0 12px 96px 0 var(--halo);           /* Godot shadow_size 96, offset (0,12) */
+  --shadow-float: 0 6px 20px 0 var(--shadow-float-c);    /* shadow_size 20, offset (0,6) */
+  --shadow-tooltip: 0 4px 12px 0 var(--tooltip-shadow-c);/* shadow_size 12, offset (0,4) */
+
+  /* ---- heights ---- */
+  --h-topbar: 64px;  --h-ticker: 40px;  --w-rail: 184px;  --w-rail-icons: 64px;  --inset: 24px;
+  --h-win-head: 72px; --h-ctl: 56px;
+  --h-row: 40px; --h-row-sm: 32px; --h-row-group: 36px; --h-row-head: 36px; --h-row-head-2: 56px;
+  --h-inbox-row: 96px; --h-rail-row: 48px;
+  --h-btn: 40px; --h-btn-sm: 32px; --h-btn-lg: 56px; --h-input: 40px;
+  --h-tag: 22px; --h-pill: 20px; --h-badge: 20px; --h-menu-item: 32px; --h-tooltip: 28px;
+  --h-toast: 48px; --h-notice: 52px; --h-option: 56px; --h-option-wrap: 88px; --h-stake: 104px; --sb-w: 8px;
+
+  /* ---- top bar baselines (labels are placed by baseline, not stacked: SPEC §10) ---- */
+  --tb-base-1: 33px;  /* row 1: KASA, RUNWAY, MRR, BURN; brand name; date; gate label; clock */
+  --tb-base-2: 54px;  /* row 2: NET, MARKA, İTİBAR; phase; week-bar hour labels; gate subline */
+
+  /* ---- motion ---- */
+  --dur-instant: 0ms;     /* tab switch, window open, hover border */
+  --dur-fast: 120ms;      /* office dim in and out, option arm */
+  --dur-base: 200ms;      /* toast in and out */
+  --dur-count: 400ms;     /* number count-up */
+  --dur-debounce: 400ms;  /* Enter is ignored this long after a decision opens or an option arms */
+  --dur-pulse: 1600ms;    /* gate ring period */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ---- colour-blind palette: same roles, Okabe-Ito based. Swapped by Settings (UiTokens.set_colorblind) ---- */
+[data-palette="cb"], body.cb {
+  --pos: #56B4E9;
+  --neg: #F07A3C;
+  --warn: #F6EA85;
+  --info: #C0E2F6;
+  --neg-bg: #2E1D12;
+  --neg-line: #7A4522;
+  --neg-ink: #F7B48C;
+  --neg-tag-bg: rgba(240, 122, 60, 0.16);
+  --neg-tag-line: rgba(240, 122, 60, 0.60);
+  --pos-tag-bg: rgba(86, 180, 233, 0.12);
+  --pos-tag-line: rgba(86, 180, 233, 0.55);
+  --pos-ink: #A6D6F5;
+  --warn-tag-bg: rgba(246, 234, 133, 0.10);
+  --warn-tag-line: rgba(246, 234, 133, 0.50);
+  --on-neg: #1F1206;
+  --chart-neg-area: rgba(240, 122, 60, 0.12);
+  --skill-1: #A09789;
+  --skill-2: #B4AB9B;
+  --skill-3: #C9C3B4;
+  --skill-4: #A3D2F7;
+  --skill-5: #D4EEFF;
+  --topic-mentor: #A985E0;
+  --topic-customer: #B6EDED;
+  --topic-team: #85C5E0;
+  --topic-product: #B6D175;
+  --topic-funding: #C9945E;
+  --topic-market: #DAC7A9;
+  --topic-agenda: #B3AA9E;
+  --outlet-sektor: #85C5E0;
+  --outlet-ekonomi: #C9945E;
+  --outlet-teknogundem: #B6EDED;
+  --outlet-girisim: #A985E0;
+}
+
+/* ---- type roles: one class per role. Godot mapping in SPEC.md "Yazı merdiveni" ---- */
+.t-h1        { font-family: var(--f-cond);  font-weight: 700; font-size: var(--fs-40); line-height: var(--lh-40); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.t-h2        { font-family: var(--f-cond);  font-weight: 700; font-size: var(--fs-30); line-height: var(--lh-30); letter-spacing: 0; }
+.t-cta       { font-family: var(--f-cond);  font-weight: 700; font-size: var(--fs-22); line-height: var(--lh-22); letter-spacing: 0; }
+.t-subhead   { font-family: var(--f-cond);  font-weight: 700; font-size: var(--fs-20); line-height: var(--lh-20); letter-spacing: 0; }
+.t-button    { font-family: var(--f-cond);  font-weight: 700; font-size: var(--fs-18); line-height: var(--lh-18); letter-spacing: 0; }
+.t-button-sm { font-family: var(--f-cond);  font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); letter-spacing: 0; }
+.t-tab       { font-family: var(--f-cond);  font-weight: 600; font-size: var(--fs-18); line-height: var(--lh-18); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.t-gate      { font-family: var(--f-cond);  font-weight: 700; font-size: var(--fs-18); line-height: var(--lh-18); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.t-nav       { font-family: var(--f-cond);  font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.t-group     { font-family: var(--f-cond);  font-weight: 600; font-size: var(--fs-15); line-height: var(--lh-15); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.t-label     { font-family: var(--f-cond);  font-weight: 600; font-size: var(--fs-14); line-height: var(--lh-14); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.t-tag       { font-family: var(--f-cond);  font-weight: 700; font-size: var(--fs-13); line-height: var(--lh-13); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.t-micro     { font-family: var(--f-cond);  font-weight: 600; font-size: var(--fs-12); line-height: var(--lh-12); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.t-stamp     { font-family: var(--f-cond);  font-weight: 700; font-size: var(--fs-14); line-height: var(--lh-14); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.t-stake     { font-family: var(--f-sans);  font-weight: 700; font-size: var(--fs-36); line-height: var(--lh-36); letter-spacing: 0; }
+.t-hero      { font-family: var(--f-sans);  font-weight: 600; font-size: var(--fs-30); line-height: var(--lh-30); letter-spacing: 0; }
+.t-kpi       { font-family: var(--f-sans);  font-weight: 600; font-size: var(--fs-26); line-height: var(--lh-26); letter-spacing: 0; }
+.t-clock     { font-family: var(--f-sans);  font-weight: 600; font-size: var(--fs-22); line-height: var(--lh-22); letter-spacing: 0; }
+.t-value     { font-family: var(--f-sans);  font-weight: 500; font-size: var(--fs-18); line-height: var(--lh-18); letter-spacing: 0; }
+.t-body      { font-family: var(--f-sans);  font-weight: 400; font-size: var(--fs-16); line-height: var(--lh-16); letter-spacing: 0; }
+.t-para      { font-family: var(--f-sans);  font-weight: 400; font-size: var(--fs-16); line-height: var(--lh-16p); letter-spacing: 0; }
+.t-body-strong { font-family: var(--f-sans); font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); letter-spacing: 0; }
+.t-skill     { font-family: var(--f-sans);  font-weight: 500; font-size: var(--fs-16); line-height: var(--lh-16); letter-spacing: 0; }
+.t-data      { font-family: var(--f-sans);  font-weight: 400; font-size: var(--fs-15); line-height: var(--lh-15); letter-spacing: 0; }
+.t-data-strong { font-family: var(--f-sans); font-weight: 600; font-size: var(--fs-15); line-height: var(--lh-15); letter-spacing: 0; }
+.t-data-med  { font-family: var(--f-sans);  font-weight: 500; font-size: var(--fs-15); line-height: var(--lh-15); letter-spacing: 0; }
+.t-meta      { font-family: var(--f-sans);  font-weight: 400; font-size: var(--fs-14); line-height: var(--lh-14); letter-spacing: 0; }
+.t-key       { font-family: var(--f-sans);  font-weight: 500; font-size: var(--fs-14); line-height: var(--lh-14); letter-spacing: 0; }
+.t-caption   { font-family: var(--f-sans);  font-weight: 400; font-size: var(--fs-13); line-height: var(--lh-13); letter-spacing: 0; }
+.t-badge     { font-family: var(--f-sans);  font-weight: 700; font-size: var(--fs-13); line-height: var(--lh-13); letter-spacing: 0; }
+.t-small     { font-family: var(--f-sans);  font-weight: 400; font-size: var(--fs-12); line-height: var(--lh-12); letter-spacing: 0; }
+.t-cdata     { font-family: var(--f-sansc); font-weight: 400; font-size: var(--fs-15); line-height: var(--lh-15); letter-spacing: 0; }
+.t-ccaption  { font-family: var(--f-sansc); font-weight: 400; font-size: var(--fs-13); line-height: var(--lh-13); letter-spacing: 0; }
+.t-quote     { font-family: var(--f-serif); font-weight: 400; font-size: var(--fs-20); line-height: var(--lh-20q); letter-spacing: 0; font-variation-settings: "opsz" 20; }

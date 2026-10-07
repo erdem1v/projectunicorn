@@ -1,0 +1,417 @@
+{
+  "funds": {
+    "anchor": {
+      "display_name": "Anchor Capital",
+      "people": [
+        {
+          "role": "vc_lead",
+          "name": "Kerem Kaya",
+          "title": "Kıdemli Ortak",
+          "look": {
+            "sex": "m",
+            "head": "m_hoodie",
+            "body": "m_suit",
+            "legs": "m_suit",
+            "feet": "m_suit",
+            "skin": 0,
+            "hair": 1,
+            "top": 0,
+            "top2": 2,
+            "tie": 0,
+            "shoe": 2,
+            "height": 2,
+            "girth": 1,
+            "glasses": false,
+            "bottom": -1
+          },
+          "bust512": "art/busts/vc/bust_anchor_0_vc_lead.png",
+          "bust192": "art/busts/vc/bust192_anchor_0_vc_lead.png",
+          "bust64": "art/busts/vc/bust64_anchor_0_vc_lead.png"
+        },
+        {
+          "role": "vc_partner",
+          "name": "Ece Aksoy",
+          "title": "Ortak",
+          "look": {
+            "sex": "w",
+            "head": "w_soldier",
+            "body": "w_suit",
+            "legs": "w_suit",
+            "feet": "w_formal",
+            "skin": 5,
+            "hair": 1,
+            "top": 6,
+            "top2": 3,
+            "tie": 4,
+            "shoe": 0,
+            "height": 0,
+            "girth": 1,
+            "glasses": true,
+            "bottom": -1
+          },
+          "bust512": "art/busts/vc/bust_anchor_1_vc_partner.png",
+          "bust192": "art/busts/vc/bust192_anchor_1_vc_partner.png",
+          "bust64": "art/busts/vc/bust64_anchor_1_vc_partner.png"
+        },
+        {
+          "role": "vc_analyst",
+          "name": "Selin Tekin",
+          "title": "Analist",
+          "look": {
+            "sex": "w",
+            "head": "w_adventurer",
+            "body": "w_casual",
+            "legs": "w_suit",
+            "feet": "w_casual",
+            "skin": 0,
+            "hair": 5,
+            "top": 1,
+            "top2": 3,
+            "tie": -1,
+            "shoe": 3,
+            "height": 1,
+            "girth": 1,
+            "glasses": false,
+            "bottom": 8
+          },
+          "bust512": "art/busts/vc/bust_anchor_2_vc_analyst.png",
+          "bust192": "art/busts/vc/bust192_anchor_2_vc_analyst.png",
+          "bust64": "art/busts/vc/bust64_anchor_2_vc_analyst.png"
+        }
+      ]
+    },
+    "nexus": {
+      "display_name": "Nexus Ventures",
+      "people": [
+        {
+          "role": "vc_lead",
+          "name": "Nehir Şahin",
+          "title": "Yönetici Ortak",
+          "look": {
+            "sex": "w",
+            "head": "w_witch",
+            "body": "w_suit",
+            "legs": "w_suit",
+            "feet": "w_suit",
+            "skin": 5,
+            "hair": 0,
+            "top": 7,
+            "top2": 4,
+            "tie": 1,
+            "shoe": 3,
+            "height": 4,
+            "girth": 1,
+            "glasses": false,
+            "bottom": -1
+          },
+          "bust512": "art/busts/vc/bust_nexus_0_vc_lead.png",
+          "bust192": "art/busts/vc/bust192_nexus_0_vc_lead.png",
+          "bust64": "art/busts/vc/bust64_nexus_0_vc_lead.png"
+        },
+        {
+          "role": "vc_partner",
+          "name": "Mert Yıldız",
+          "title": "Ortak",
+          "look": {
+            "sex": "m",
+            "head": "m_king",
+            "body": "m_suit",
+            "legs": "m_suit",
+            "feet": "m_suit",
+            "skin": 5,
+            "hair": 5,
+            "top": 2,
+            "top2": 1,
+            "tie": 4,
+            "shoe": 3,
+            "height": 3,
+            "girth": 1,
+            "glasses": false,
+            "bottom": -1
+          },
+          "bust512": "art/busts/vc/bust_nexus_1_vc_partner.png",
+          "bust192": "art/busts/vc/bust192_nexus_1_vc_partner.png",
+          "bust64": "art/busts/vc/bust64_nexus_1_vc_partner.png"
+        },
+        {
+          "role": "vc_analyst",
+          "name": "Zeynep Doğan",
+          "title": "Analist",
+          "look": {
+            "sex": "w",
+            "head": "w_witch",
+            "body": "w_suit",
+            "legs": "w_suit",
+            "feet": "w_casual",
+            "skin": 5,
+            "hair": 0,
+            "top": 2,
+            "top2": 2,
+            "tie": -1,
+            "shoe": 4,
+            "height": 0,
+            "girth": 2,
+            "glasses": true,
+            "bottom": -1
+          },
+          "bust512": "art/busts/vc/bust_nexus_2_vc_analyst.png",
+          "bust192": "art/busts/vc/bust192_nexus_2_vc_analyst.png",
+          "bust64": "art/busts/vc/bust64_nexus_2_vc_analyst.png"
+        }
+      ]
+    },
+    "bosphorus": {
+      "display_name": "Bosphorus Partners",
+      "people": [
+        {
+          "role": "vc_lead",
+          "name": "Tolga Polat",
+          "title": "Kurucu Ortak",
+          "look": {
+            "sex": "m",
+            "head": "m_casual",
+            "body": "m_suit",
+            "legs": "m_suit",
+            "feet": "m_suit",
+            "skin": 5,
+            "hair": 2,
+            "top": 6,
+            "top2": 4,
+            "tie": -1,
+            "shoe": 3,
+            "height": 1,
+            "girth": 1,
+            "glasses": false,
+            "bottom": -1
+          },
+          "bust512": "art/busts/vc/bust_bosphorus_0_vc_lead.png",
+          "bust192": "art/busts/vc/bust192_bosphorus_0_vc_lead.png",
+          "bust64": "art/busts/vc/bust64_bosphorus_0_vc_lead.png"
+        },
+        {
+          "role": "vc_partner",
+          "name": "Zeynep Şahin",
+          "title": "Ortak",
+          "look": {
+            "sex": "w",
+            "head": "w_scifi",
+            "body": "w_suit",
+            "legs": "w_suit",
+            "feet": "w_formal",
+            "skin": 2,
+            "hair": 0,
+            "top": 0,
+            "top2": 4,
+            "tie": 4,
+            "shoe": 1,
+            "height": 1,
+            "girth": 2,
+            "glasses": false,
+            "bottom": -1
+          },
+          "bust512": "art/busts/vc/bust_bosphorus_1_vc_partner.png",
+          "bust192": "art/busts/vc/bust192_bosphorus_1_vc_partner.png",
+          "bust64": "art/busts/vc/bust64_bosphorus_1_vc_partner.png"
+        },
+        {
+          "role": "vc_analyst",
+          "name": "Baran Tekin",
+          "title": "Analist",
+          "look": {
+            "sex": "m",
+            "head": "m_adventurer",
+            "body": "m_casual",
+            "legs": "m_casual",
+            "feet": "m_suit",
+            "skin": 1,
+            "hair": 7,
+            "top": 5,
+            "top2": 9,
+            "tie": 1,
+            "shoe": 3,
+            "height": 2,
+            "girth": 0,
+            "glasses": false,
+            "bottom": 7
+          },
+          "bust512": "art/busts/vc/bust_bosphorus_2_vc_analyst.png",
+          "bust192": "art/busts/vc/bust192_bosphorus_2_vc_analyst.png",
+          "bust64": "art/busts/vc/bust64_bosphorus_2_vc_analyst.png"
+        }
+      ]
+    },
+    "meridian": {
+      "display_name": "Meridian Growth",
+      "people": [
+        {
+          "role": "vc_lead",
+          "name": "Tolga Erdem",
+          "title": "Büyüme Ortağı",
+          "look": {
+            "sex": "m",
+            "head": "m_worker",
+            "body": "m_suit",
+            "legs": "m_suit",
+            "feet": "m_suit",
+            "skin": 1,
+            "hair": 0,
+            "top": 3,
+            "top2": 2,
+            "tie": 1,
+            "shoe": 2,
+            "height": 3,
+            "girth": 0,
+            "glasses": false,
+            "bottom": -1
+          },
+          "bust512": "art/busts/vc/bust_meridian_0_vc_lead.png",
+          "bust192": "art/busts/vc/bust192_meridian_0_vc_lead.png",
+          "bust64": "art/busts/vc/bust64_meridian_0_vc_lead.png"
+        },
+        {
+          "role": "vc_partner",
+          "name": "Sena Koç",
+          "title": "Ortak",
+          "look": {
+            "sex": "w",
+            "head": "w_scifi",
+            "body": "w_suit",
+            "legs": "w_suit",
+            "feet": "w_formal",
+            "skin": 5,
+            "hair": 0,
+            "top": 5,
+            "top2": 0,
+            "tie": -1,
+            "shoe": 2,
+            "height": 2,
+            "girth": 0,
+            "glasses": true,
+            "bottom": -1
+          },
+          "bust512": "art/busts/vc/bust_meridian_1_vc_partner.png",
+          "bust192": "art/busts/vc/bust192_meridian_1_vc_partner.png",
+          "bust64": "art/busts/vc/bust64_meridian_1_vc_partner.png"
+        },
+        {
+          "role": "vc_analyst",
+          "name": "Kaan Demir",
+          "title": "Analist",
+          "look": {
+            "sex": "m",
+            "head": "m_worker",
+            "body": "m_adventurer",
+            "legs": "m_casual",
+            "feet": "m_suit",
+            "skin": 4,
+            "hair": 2,
+            "top": 4,
+            "top2": 5,
+            "tie": 4,
+            "shoe": 0,
+            "height": 1,
+            "girth": 0,
+            "glasses": false,
+            "bottom": 3
+          },
+          "bust512": "art/busts/vc/bust_meridian_2_vc_analyst.png",
+          "bust192": "art/busts/vc/bust192_meridian_2_vc_analyst.png",
+          "bust64": "art/busts/vc/bust64_meridian_2_vc_analyst.png"
+        }
+      ]
+    }
+  },
+  "prospects": [
+    {
+      "id": "lead_14_1",
+      "company": "Efes Emlak",
+      "star": 1,
+      "industry": "real_estate",
+      "people": [
+        {
+          "role": "buyer",
+          "name": "Nehir Uysal",
+          "title": "Satın Alma Sorumlusu",
+          "look": {
+            "sex": "w",
+            "head": "w_soldier",
+            "body": "w_suit",
+            "legs": "w_suit",
+            "feet": "w_casual",
+            "skin": 4,
+            "hair": 2,
+            "top": 1,
+            "top2": 3,
+            "tie": -1,
+            "shoe": 2,
+            "height": 4,
+            "girth": 0,
+            "glasses": true,
+            "bottom": 3
+          },
+          "bust512": "art/busts/prospect/bust_lead_14_1_0_buyer.png",
+          "bust192": "art/busts/prospect/bust192_lead_14_1_0_buyer.png",
+          "bust64": "art/busts/prospect/bust64_lead_14_1_0_buyer.png"
+        }
+      ]
+    },
+    {
+      "id": "lead_14_2",
+      "company": "Karadeniz Fabrika",
+      "star": 2,
+      "industry": "manufacturing",
+      "people": [
+        {
+          "role": "buyer",
+          "name": "Elif Yıldız",
+          "title": "Satın Alma Sorumlusu",
+          "look": {
+            "sex": "w",
+            "head": "w_worker",
+            "body": "w_suit",
+            "legs": "w_casual",
+            "feet": "w_suit",
+            "skin": 3,
+            "hair": 6,
+            "top": 5,
+            "top2": 2,
+            "tie": 2,
+            "shoe": 3,
+            "height": 0,
+            "girth": 1,
+            "glasses": true,
+            "bottom": 8
+          },
+          "bust512": "art/busts/prospect/bust_lead_14_2_0_buyer.png",
+          "bust192": "art/busts/prospect/bust192_lead_14_2_0_buyer.png",
+          "bust64": "art/busts/prospect/bust64_lead_14_2_0_buyer.png"
+        },
+        {
+          "role": "user_lead",
+          "name": "Sena Uysal",
+          "title": "Ekip Yöneticisi",
+          "look": {
+            "sex": "w",
+            "head": "w_suit",
+            "body": "w_casual",
+            "legs": "w_worker",
+            "feet": "w_casual",
+            "skin": 3,
+            "hair": 2,
+            "top": 2,
+            "top2": 3,
+            "tie": 3,
+            "shoe": 0,
+            "height": 2,
+            "girth": 0,
+            "glasses": false,
+            "bottom": 3
+          },
+          "bust512": "art/busts/prospect/bust_lead_14_2_1_user_lead.png",
+          "bust192": "art/busts/prospect/bust192_lead_14_2_1_user_lead.png",
+          "bust64": "art/busts/prospect/bust64_lead_14_2_1_user_lead.png"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+/* Olaylar as mail (A4, group "olaylar"). Only what the system lacks; every value is a system token or on the
+   spacing scale (2 4 6 8 12 16 20 24 32 40 48). Load after ../../system/tokens.css and base.css. */
+
+/* ---------------------------------------------------------------- frame */
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--surface-0); }
+.screen { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--surface-0); }
+/* The shell (top bar and brand block, rail, ticker, office layer, BuildHUD, notice stack, Ofisi taşı) comes from the
+   kabuk group: its builders through tools/gen.py and its rules through ../../kabuk/kabuk.css, loaded before this file. */
+
+/* ---------------------------------------------------------------- kicker: kind and state, the date moves to the header */
+.pane-kicker .kind { color: var(--ink-3); }
+.pane-kicker .sep { color: var(--ink-4); }
+.pane-kicker .state { color: var(--ink-3); }
+.pane-kicker .state.is-gate { color: var(--accent); }
+.pane-kicker .state.is-warn { color: var(--warn); }
+.subj-row { display: flex; align-items: center; gap: var(--sp-16); margin-top: var(--sp-8); }
+.subj-row .pane-title { margin-top: 0; }
+.subj-row .stamp { margin-left: auto; }
+
+/* ---------------------------------------------------------------- mail header: who, to whom, when */
+.mh { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-12); padding-bottom: var(--sp-16);
+  border-bottom: var(--bw-1) solid var(--line-1); }
+.mh-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.mh-l1 { display: flex; align-items: baseline; gap: var(--sp-8); white-space: nowrap; min-width: 0; }
+.mh-l1 .n { font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); color: var(--ink-1); }
+.mh-l1 .r { font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; }
+.mh-l1 .gone { font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-4); }
+.mh-l1 .n { flex: none; }
+.mh-l1 .sep { flex: none; font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-4); }
+.mh-l2 { display: flex; align-items: baseline; gap: var(--sp-6); font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); white-space: nowrap; }
+.mh-l2 .k { flex: none; font-weight: 500; color: var(--ink-4); }
+.mh-l2 .v { min-width: 0; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; }
+/* the date: line 2, a fixed right column (width set by gen.py from the worst TR and EN value); To ellipsizes first */
+.mh-date { flex: none; margin-left: auto; padding-left: var(--sp-12); box-sizing: content-box; text-align: right;
+  font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); white-space: nowrap; }
+.mh .av.is-gone { opacity: 1; }
+/* sender tiles when there is no face: company monogram, outlet, report glyph */
+.mono.m40 { width: 40px; height: 40px; font-size: var(--fs-16); line-height: var(--lh-16); }
+.mono.m40 .ic { width: 20px; height: 20px; color: var(--ink-3); }
+.mono.outlet { background: var(--surface-1); }
+.mono.outlet.sektor { color: var(--outlet-sektor); border-color: var(--outlet-sektor); }
+.mono.outlet.ekonomi { color: var(--outlet-ekonomi); border-color: var(--outlet-ekonomi); }
+.mono.outlet.teknogundem { color: var(--outlet-teknogundem); border-color: var(--outlet-teknogundem); }
+.mono.outlet.girisim { color: var(--outlet-girisim); border-color: var(--outlet-girisim); }
+
+/* ---------------------------------------------------------------- mail body and signature */
+.mbody { margin-top: var(--sp-16); color: var(--ink-2); }
+.mbody p { font-size: var(--fs-16); line-height: var(--lh-16p); text-wrap: pretty; }
+.mbody p + p { margin-top: var(--sp-12); }
+/* Frank writes in his own face: the whole body of his mail is the quote register (Source Serif 4, 20/30) */
+.mbody.serif p { font-family: var(--f-serif); font-size: var(--fs-20); line-height: var(--lh-20q); color: var(--ink-1); }
+.mbody.serif p + p { margin-top: var(--sp-16); }
+.mbody .lead { color: var(--ink-3); }
+/* the structural signature: drawn rule, name, role and company; never typed by the writer */
+.msig { margin-top: var(--sp-20); display: flex; flex-direction: column; gap: var(--sp-2); }
+.msig::before { content: ""; width: 24px; height: 1px; background: var(--line-3); margin-bottom: var(--sp-8); }
+.msig .n { font-weight: 600; font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-2); }
+.msig .r { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+/* mockup annotation, not game UI: Frank's new lines are drafts until Erdem approves them (CLAUDE §3) */
+.msig-row { display: flex; align-items: flex-end; justify-content: space-between; }
+.draft-mark { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--sp-8); border: var(--bw-1) dashed var(--line-3);
+  border-radius: var(--r-1); color: var(--ink-3); text-transform: uppercase; letter-spacing: var(--track-caps); }
+
+/* ---------------------------------------------------------------- the reply: "Cevabın" */
+.reply { margin-top: var(--sp-24); }
+.reply-head { display: flex; align-items: center; gap: var(--sp-12); height: 24px; margin-bottom: var(--sp-12); }
+.reply-head .lbl { color: var(--ink-3); }
+.reply-head .perm { margin-left: auto; }
+.reply .opt.is-focus { outline: var(--bw-2) solid var(--focus); outline-offset: 2px; }
+/* a single open option is presented armed: the stake box, its one amber button */
+.stake .part-k { white-space: nowrap; }
+.stake.sm { min-height: 88px; }
+.stake.sm .part-v { font-size: var(--fs-26); line-height: var(--lh-26); }
+.stake.sm .part-v .ic { width: 22px; height: 22px; }
+.stake.sm .part-sep { margin: var(--sp-20) var(--sp-24); }
+/* history mode: what was chosen, then what it did */
+.chosen { display: flex; align-items: center; gap: var(--sp-8); }
+.chosen .k { color: var(--ink-3); }
+.chosen .v { color: var(--ink-1); }
+.chosen-fx { display: flex; gap: var(--sp-6); flex-wrap: wrap; margin-top: var(--sp-12); }
+/* one action row for messages, reports and records: right aligned, the primary rightmost, a note on the left */
+.reply-acts { display: flex; gap: var(--sp-12); align-items: center; justify-content: flex-end; }
+.reply-acts .note { margin-right: auto; color: var(--ink-3); }
+/* an opened paper: Esc sets it aside, its time keeps running */
+.reply-foot { display: flex; align-items: center; gap: var(--sp-16); margin-top: var(--sp-12); }
+.reply-foot .when { display: inline-flex; align-items: center; gap: var(--sp-6); color: var(--ink-3); }
+.reply-foot .when .ic { width: 14px; height: 14px; }
+.reply-foot kbd { margin-left: var(--sp-8); padding: 0 var(--sp-4); font-family: var(--f-sans); font-weight: 600; font-size: var(--fs-12);
+  line-height: 18px; color: var(--ink-3); border: var(--bw-1) solid var(--line-3); border-radius: var(--r-1); }
+.reply-note { margin-top: var(--sp-8); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- inbox list extras */
+.ib-row .ib-from .gone { color: var(--ink-4); }
+.ib-row.is-history .stamp { top: 40px; }
+.ib-row.is-gone .ib-from { color: var(--ink-3); }
+/* reminder rows carry a tag in place of a subject; no date, no read state */
+.ib-row.is-notice .ib-subj { display: flex; align-items: center; gap: var(--sp-8); }
+/* a reminder's line: upright meta, the key at medium weight (Plex Italic is not in the face list) */
+.ib-l3 .rk { font-weight: 500; }
+/* selected wins over dimmed: a blocked paper, a history row or a departed sender's row reads ink-2 while selected */
+.ib-row.is-selected.is-blocked .ib-subj, .ib-row.is-selected.is-history .ib-subj { color: var(--ink-2); }
+/* a long inbox scrolls inside the list; the 8 px bar sits in the 12 px gutter the rows never enter */
+.ib-scroll { flex: 1; min-height: 0; overflow: hidden; }
+.ib-rows { display: flex; flex-direction: column; }
+.ib-empty { flex: 1; }
+/* centred on the body area the list shares (below its 44 px filter head), so both empty states sit on one line */
+.pane-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-12); color: var(--ink-3);
+  padding-top: 44px; }
+.pane-empty .ic { width: 32px; height: 32px; color: var(--ink-4); }
+.pane-empty .t { font-size: var(--fs-15); line-height: var(--lh-15); }
+
+/* ---------------------------------------------------------------- report body (period summary, weekly sales) */
+.rpt { margin-top: var(--sp-16); }
+.rpt-grid { display: grid; align-items: center; column-gap: 0; }
+.rpt-grid > * { padding-right: var(--sp-16); }
+.rpt-grid > *:nth-last-child(1), .rpt-grid .r { padding-right: 0; }
+.rpt-grid .th { height: 32px; border-bottom: var(--bw-1) solid var(--line-1); }
+.rpt-grid .td { height: 40px; display: flex; align-items: center; border-bottom: var(--bw-1) solid var(--row-rule);
+  font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-2); white-space: nowrap; }
+.rpt-grid .td.k { color: var(--ink-3); font-weight: 500; }
+.rpt-grid .td.strong { font-weight: 600; color: var(--ink-1); }
+.rpt-grid .td.r { justify-content: flex-end; }
+.rpt-grid .td .ar { color: var(--ink-4); margin: 0 var(--sp-8); }
+/* sales stars run 1 to 3: the number and one star glyph (SALES_BAND_STAR "{n}" + util/star_full) */
+.rpt-grid .td .star1 { display: inline-flex; align-items: center; gap: var(--sp-4); }
+.rpt-grid .td .star1 .ic { width: 14px; height: 14px; color: var(--ink-2); }
+.rpt-total { display: flex; gap: var(--sp-24); margin-top: var(--sp-12); font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); }
+.rpt-total b { font-weight: 600; color: var(--ink-2); }
+.hl { display: flex; align-items: baseline; gap: var(--sp-12); margin-top: var(--sp-16); padding: var(--sp-12) var(--sp-16);
+  background: var(--surface-2); border: var(--bw-1) solid var(--line-1); border-radius: var(--r-1) var(--cut-sm) var(--r-1) var(--r-1); corner-shape: bevel; }
+.hl .k { color: var(--ink-3); flex: none; }
+.hl .v { font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-2); }
+
+/* ---------------------------------------------------------------- reminder record (risk account, flight risk, growth) */
+.rec-head { display: flex; align-items: center; gap: var(--sp-16); margin-top: var(--sp-8); }
+.rec-head .pane-title { margin-top: 0; }
+.rec-facts { display: flex; align-items: stretch; margin-top: var(--sp-16); padding: var(--sp-16) var(--sp-24);
+  background: var(--surface-4); border: var(--bw-1) solid var(--line-2); border-radius: var(--r-1) var(--cut) var(--r-1) var(--r-1); corner-shape: bevel; }
+.rec-facts .part-v { font-size: var(--fs-26); line-height: var(--lh-26); color: var(--ink-1); }
+.rec-facts .part-v.neg { color: var(--neg); }
+.rec-facts .part-sep { margin: var(--sp-4) var(--sp-24); }
+.rec-line { margin-top: var(--sp-12); color: var(--ink-3); }
+.rec-facts + .rec-line { margin-top: var(--sp-16); }
+
+/* a departed sender: the face goes grey at 55 % (Godot: avatar_grey.gdshader), the name stays */
+.portrait .gone-img { filter: grayscale(1); opacity: .55; }
+.mbody.serif p { font-variation-settings: "opsz" 20; }
+
+/* neutral effect part: no polarity, so no glyph (a flat bar reads as a dash); the word carries it */
+.fx.neutral { color: var(--ink-2); }
+/* history rows: the third line names the choice and stops short of the stamp */
+.ib-row.is-history .ib-l3 { padding-right: 132px; }
+.ib-row .ch-k { color: var(--ink-4); }
+/* the answered card: the option as it was chosen, what it did, the stamp; a finished document */
+.answered { position: relative; display: flex; align-items: center; gap: var(--sp-16); min-height: 88px; padding: var(--sp-16) var(--sp-24);
+  background: var(--surface-2); border: var(--bw-1) solid var(--line-2); border-radius: var(--r-1) var(--cut) var(--r-1) var(--r-1); corner-shape: bevel; }
+.answered-l { flex: 1; min-width: 0; }
+.answered .chosen-fx { margin-top: var(--sp-8); }
+.answered .stamp { margin-right: var(--sp-8); }
+/* one open option with worded outcomes: the armed box carries its parts as chips, no invented keys */
+.stake.sm .opt-fx { gap: var(--sp-8); }
+.stake.sm .opt-fx .fx { height: 28px; font-size: var(--fs-15); line-height: var(--lh-15); padding: 0 var(--sp-12); }
+.stake.sm .opt-fx .fx .ic { width: 16px; height: 16px; }
+/* drafts sheet only: one sender type per card */
+.gal { position: absolute; width: 600px; height: 116px; padding: var(--sp-12) var(--sp-16); background: var(--surface-3);
+  border: var(--bw-1) solid var(--line-2); border-radius: var(--r-3); }
+.gal-k { color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- the dice (motor GDD §9.2, §9.6) */
+/* the odds are always shown, in the info tone with a dotted rule: they can be hovered; the hover lists the signed
+   modifiers (chevron up for, down against), no numbers, at most four */
+.odds { color: var(--info); border-bottom: var(--bw-1) dotted var(--info); }
+.odds.is-hover { border-bottom-style: solid; }
+.part.chance .part-v .odds { line-height: 1.1; }
+.fx.has-tip { position: relative; }
+.odds-tip { position: absolute; left: 56px; top: calc(100% + 8px); z-index: 5; width: max-content; }   /* opens from the pointer, past the next row's chips */
+.odds-tip .mod { display: flex; align-items: center; gap: var(--sp-8); color: var(--ink-2); white-space: nowrap; }
+.odds-tip .mod.up .ic { color: var(--pos); }
+.odds-tip .mod.down .ic { color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- Ekip read-only strip: ends on the content edge (24) like the control strip */
+.win-ro { padding-right: var(--sp-24); }

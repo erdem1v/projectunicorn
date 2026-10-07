@@ -1,0 +1,105 @@
+{
+  "note": "Plate pixel coordinates (plate origin top left). Icons are the 3D head sprites.",
+  "people": [
+    {
+      "id": "char_founder",
+      "name": "Kurucu",
+      "status": "plan",
+      "icon_visible": true,
+      "founder": true,
+      "icon_xy": [
+        809,
+        492
+      ],
+      "head_xy": [
+        809,
+        513
+      ],
+      "feet_xy": [
+        812,
+        549
+      ],
+      "icon_px": 26
+    },
+    {
+      "id": "char_emp_shot_3",
+      "name": "Selin Kaya",
+      "status": "test",
+      "icon_visible": true,
+      "founder": false,
+      "icon_xy": [
+        681,
+        412
+      ],
+      "head_xy": [
+        681,
+        433
+      ],
+      "feet_xy": [
+        684,
+        469
+      ],
+      "icon_px": 26
+    },
+    {
+      "id": "char_emp_shot_1",
+      "name": "Deniz Arslan",
+      "status": "design",
+      "icon_visible": true,
+      "founder": false,
+      "icon_xy": [
+        634,
+        440
+      ],
+      "head_xy": [
+        634,
+        461
+      ],
+      "feet_xy": [
+        627,
+        502
+      ],
+      "icon_px": 26
+    },
+    {
+      "id": "char_emp_shot_0",
+      "name": "Elif Demir",
+      "status": "design",
+      "icon_visible": true,
+      "founder": false,
+      "icon_xy": [
+        590,
+        417
+      ],
+      "head_xy": [
+        590,
+        439
+      ],
+      "feet_xy": [
+        586,
+        478
+      ],
+      "icon_px": 26
+    },
+    {
+      "id": "char_emp_shot_4",
+      "name": "Burak Şahin",
+      "status": "phone",
+      "icon_visible": true,
+      "founder": false,
+      "icon_xy": [
+        553,
+        327
+      ],
+      "head_xy": [
+        553,
+        348
+      ],
+      "feet_xy": [
+        550,
+        392
+      ],
+      "icon_px": 26
+    }
+  ]
+}

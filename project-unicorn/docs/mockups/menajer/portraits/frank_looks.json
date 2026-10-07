@@ -1,0 +1,103 @@
+{
+  "studio": {
+    "render": [
+      1280,
+      1600
+    ],
+    "frame_h": 0.66,
+    "head_from_top": 0.29,
+    "texel": 10.9,
+    "turn": 0.3,
+    "rise": 0.12,
+    "pose": [
+      "ual1/Idle",
+      0.4
+    ],
+    "centre": "torso",
+    "face": {
+      "render": [
+        128,
+        128
+      ],
+      "frame_h": 0.5,
+      "head_from_top": 0.22,
+      "texel": 1.15,
+      "turn": 0.42,
+      "rise": 0.12,
+      "pose": [
+        "ual1/Idle",
+        0.4
+      ]
+    }
+  },
+  "looks": {
+    "a": {
+      "sex": "m",
+      "head": "m_king",
+      "body": "m_suit",
+      "legs": "m_suit",
+      "feet": "m_suit",
+      "skin": 2,
+      "hair": 7,
+      "top": 2,
+      "top2": 0,
+      "tie": 0,
+      "bottom": -1,
+      "shoe": 1,
+      "height": 3,
+      "girth": 2,
+      "glasses": false
+    },
+    "b": {
+      "sex": "m",
+      "head": "m_suit",
+      "body": "m_suit",
+      "legs": "m_suit",
+      "feet": "m_suit",
+      "skin": 1,
+      "hair": 7,
+      "top": 0,
+      "top2": 1,
+      "tie": 1,
+      "bottom": -1,
+      "shoe": 1,
+      "height": 2,
+      "girth": 1,
+      "glasses": true
+    },
+    "c": {
+      "sex": "m",
+      "head": "m_worker",
+      "body": "m_suit",
+      "legs": "m_suit",
+      "feet": "m_suit",
+      "skin": 2,
+      "hair": 7,
+      "top": 6,
+      "top2": 3,
+      "tie": 4,
+      "bottom": -1,
+      "shoe": 2,
+      "height": 2,
+      "girth": 2,
+      "glasses": false
+    },
+    "d": {
+      "sex": "m",
+      "head": "m_casual",
+      "body": "m_suit",
+      "legs": "m_suit",
+      "feet": "m_suit",
+      "skin": 1,
+      "hair": 7,
+      "top": 7,
+      "top2": 0,
+      "tie": -1,
+      "bottom": -1,
+      "shoe": 1,
+      "height": 4,
+      "girth": 0,
+      "glasses": true
+    }
+  }
+}

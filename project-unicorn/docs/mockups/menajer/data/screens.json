@@ -1,0 +1,1117 @@
+{
+  "meta": {
+    "source": "ref/explore_screens.md, checked against localization/strings.csv and sandbox/ui_lab/shots/baseline/*.png",
+    "seed": "main.gd _seed_theme_surface (run_seed 424242, week 14), office ishani, 11:00, locale tr",
+    "colour_note": "The baselines were shot with the colour-blind palette ON (positive = blue #2C6FAE, negative = orange #B36B00). Standard palette: positive #2F6B3A, negative #9B3B28.",
+    "shell_geometry": {
+      "stage": [
+        1920,
+        1080
+      ],
+      "topbar_h": 54,
+      "ticker_h": 34,
+      "rail_w": 84,
+      "office_rect": [
+        84,
+        54,
+        1836,
+        992
+      ]
+    },
+    "windows": {
+      "ekip": {
+        "rect": [
+          100,
+          70,
+          1200,
+          720
+        ]
+      },
+      "satis": {
+        "rect": [
+          100,
+          70,
+          1280,
+          760
+        ]
+      },
+      "frank_card": {
+        "width": 780,
+        "min_height": 420,
+        "centered": true
+      }
+    }
+  },
+  "maket_duzeltmeleri": [
+    {
+      "where": "Ekip column header",
+      "game": "TRAIT",
+      "mockup": "HUY"
+    },
+    {
+      "where": "Frank card relation pill",
+      "game": "NEUTRAL",
+      "mockup": "NÖTR"
+    },
+    {
+      "where": "Notice card tag",
+      "game": "NORDİCA",
+      "mockup": "NORDICA"
+    },
+    {
+      "where": "Satış prospect line, Karadeniz Fabrika",
+      "game": "PH: Ölçülü bir alıcı. Önce kararlılığı sorar.",
+      "mockup": "Ölçülü bir alıcı. Önce kararlılığı sorar."
+    },
+    {
+      "where": "Satış prospect line, Efes Emlak",
+      "game": "PH: Hızlı konuşur, rakama erken gelir.",
+      "mockup": "Hızlı konuşur, rakama erken gelir."
+    },
+    {
+      "where": "Ekip hours chip",
+      "game": "09:00–17:00",
+      "mockup": "09:00 ile 17:00 arası",
+      "mockup_compact": "09.00 · 17.00"
+    },
+    {
+      "where": "Ekip DURUM cell, Deniz Arslan",
+      "game": "—",
+      "mockup": ""
+    },
+    {
+      "where": "Satış portfolio steward line (all three cards)",
+      "game": "Müşteri temsilcisi: —",
+      "mockup": "Müşteri temsilcisi: atanmadı"
+    }
+  ],
+  "kept_as_csv": [
+    "Role titles (Ürün Yöneticisi, UX/UI Designer, Yazılım Mühendisi, Test Mühendisi, Satış Temsilcisi)",
+    "Operating Partner (HR_ROLE_MENTOR)"
+  ],
+  "art": {
+    "office_game": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/office_game.png",
+    "office_full": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/office_full.png",
+    "frank_portrait": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/frank.png",
+    "founder_portrait": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/founder_portrait.png",
+    "founder_bust": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust_kurucu.png",
+    "founder_bust64": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust64_kurucu.png",
+    "rail_icons_dir": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/",
+    "trait_icons_dir": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/traits/",
+    "avatar_disc": "#1B232B (BG_AVATAR), round"
+  },
+  "topbar": {
+    "company": "Unicorn Inc.",
+    "logo": "amber square, ACCENT_CHROME #FFA028",
+    "stats": [
+      {
+        "caption": "KASA",
+        "value": "$10.000"
+      },
+      {
+        "caption": "MRR",
+        "value": "$4,0K"
+      },
+      {
+        "caption": "BURN",
+        "value": "$1,5K",
+        "unit": "/ay"
+      },
+      {
+        "caption": "NET",
+        "value": "+$2,5K",
+        "unit": "/ay",
+        "tone": "positive"
+      },
+      {
+        "caption": "RUNWAY",
+        "value": "Artıda",
+        "tone": "positive",
+        "tooltip": "Gider gelirin altında; kasa erimiyor. Sayaç, net akış eksiye dönerse işler."
+      },
+      {
+        "caption": "MARKA",
+        "value": "50"
+      },
+      {
+        "caption": "İTİBAR",
+        "value": "0"
+      }
+    ],
+    "date": "Hafta 14 · Nisan 2026 · 11:00",
+    "date_compact": "H14 · Nis · 11:00",
+    "phase": {
+      "label": "BOOTSTRAP",
+      "dots": 3,
+      "active_dot": 0
+    },
+    "speed_keys": [
+      "II",
+      "1x",
+      "2x",
+      "3x",
+      "4x"
+    ],
+    "speed_active": "II",
+    "notes": "BURN $1,5K is starting_daily_burn, not the $43.600 payroll (clock held, no tick recomputed it)."
+  },
+  "rail": [
+    {
+      "id": "product",
+      "label": "Ürün",
+      "badge": null,
+      "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/product.svg"
+    },
+    {
+      "id": "sales",
+      "label": "Satış",
+      "badge": 1,
+      "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/sales.svg",
+      "badge_reason": "Ege Sigorta at risk"
+    },
+    {
+      "id": "hr",
+      "label": "Ekip",
+      "badge": 1,
+      "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/hr.svg",
+      "badge_reason": "Selin Kaya flight risk",
+      "active_in": "ekip"
+    },
+    {
+      "id": "finance",
+      "label": "Finans",
+      "badge": null,
+      "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/finance.svg"
+    },
+    {
+      "id": "personal",
+      "label": "Kişisel",
+      "badge": null,
+      "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/personal.svg"
+    },
+    {
+      "id": "marketing",
+      "label": "Pazarlama",
+      "badge": null,
+      "locked": true,
+      "pill": "YAKINDA",
+      "alpha": 0.45,
+      "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/marketing.svg"
+    },
+    {
+      "id": "rnd",
+      "label": "Ar-Ge",
+      "badge": null,
+      "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/rnd.svg"
+    },
+    {
+      "id": "events",
+      "label": "Olaylar",
+      "badge": null,
+      "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/events.svg"
+    },
+    {
+      "id": "settings",
+      "label": "Ayarlar",
+      "badge": null,
+      "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/tabs/settings.svg",
+      "position": "bottom"
+    }
+  ],
+  "rail_tint": {
+    "active": "#9A6A12 (ACCENT_DEEP)",
+    "idle": "#8A8175 (INK_DIM)",
+    "badge": "#F4C430 pill, #2B2722 text"
+  },
+  "ticker": {
+    "separator": "   ·   ",
+    "outlet_colour": "#FFA028 (ACCENT_CHROME)",
+    "items": [
+      {
+        "outlet": "Sektör Telgrafı",
+        "text": "Teknoloji kampüslerinde staj kontenjanları rekor kırdı.",
+        "key": "TICKER_04"
+      },
+      {
+        "outlet": "Ekonomi Postası",
+        "text": "Sunucu kiralarında indirim sezonu; altyapı ekipleri pazarlıkta.",
+        "key": "TICKER_05"
+      },
+      {
+        "outlet": "TeknoGündem",
+        "text": "Sanayi bölgelerinde dijital dönüşüm ihaleleri sıraya girdi.",
+        "key": "TICKER_06"
+      },
+      {
+        "outlet": "Girişim Bülteni",
+        "text": "Melek yatırım ağları yeni dönem başvurularını açtı.",
+        "key": "TICKER_07"
+      },
+      {
+        "outlet": "Sektör Telgrafı",
+        "text": "Yazılım ihracatçıları yeni pazar arayışında; fuar takvimi dolu.",
+        "key": "TICKER_08"
+      },
+      {
+        "outlet": "Ekonomi Postası",
+        "text": "Ofis pazarında küçülme sürüyor; paylaşımlı katlar dolu.",
+        "key": "TICKER_09"
+      },
+      {
+        "outlet": "TeknoGündem",
+        "text": "Teknoloji basınında değerleme sohbeti hiç bitmiyor.",
+        "key": "TICKER_10"
+      },
+      {
+        "outlet": "Ekonomi Postası",
+        "text": "Tohum yatırımcıları takvim dolduruyor; erken aşamada trafik yoğun.",
+        "key": "TICKER_01"
+      }
+    ]
+  },
+  "notice_card": {
+    "dot": "health_green (#2F6B3A; colour-blind #2C6FAE)",
+    "tag": "NORDICA",
+    "title": "Büyüme talebi masada",
+    "position": "office bottom right"
+  },
+  "office_move_button": {
+    "label": "Ofisi taşı",
+    "position": "office bottom left"
+  },
+  "build_hud": {
+    "title": "Unicorn Inc. v1",
+    "phase": "DESTEK",
+    "confirmed": "DOĞRULANMIŞ 0",
+    "action": "▸ DÜZELTME BAŞLAT",
+    "position": "top right over the office",
+    "notes": "DOĞRULANMIŞ 0 comes from ProductState.bugs_confirmed(); Ege's outage reason reads a different source (flag 12)."
+  },
+  "ekip": {
+    "title": "Ekip",
+    "summary": "ÇALIŞAN 5 · ORTALAMA MORAL 50 · AYLIK MAAŞ YÜKÜ $43.600",
+    "hours_chip": "09:00 ile 17:00 arası",
+    "hours_chip_compact": "09.00 · 17.00",
+    "hours_chip_icon": "clock, outline chip",
+    "cta": "+ İŞE ALIM BAŞLAT",
+    "segments": [
+      {
+        "label": "KADRO",
+        "active": true
+      },
+      {
+        "label": "GÖREVLER",
+        "active": false
+      }
+    ],
+    "risk_strip": [
+      {
+        "name": "Selin Kaya",
+        "text": "MORAL 22",
+        "glyph": "warning",
+        "tone": "negative"
+      }
+    ],
+    "columns": [
+      {
+        "label": "ÇALIŞAN"
+      },
+      {
+        "label": "ROLLER · LİDERLİK",
+        "width": 256
+      },
+      {
+        "label": "GÖREV",
+        "width": 150
+      },
+      {
+        "label": "DENEYİM",
+        "width": 72
+      },
+      {
+        "label": "DURUM",
+        "width": 140
+      },
+      {
+        "label": "HUY",
+        "width": 56
+      },
+      {
+        "label": "MAAŞ",
+        "width": 76
+      },
+      {
+        "label": "MORAL",
+        "width": 124
+      }
+    ],
+    "groups": [
+      {
+        "id": "product_design",
+        "label": "ÜRÜN & TASARIM",
+        "rows": [
+          "deniz",
+          "elif"
+        ]
+      },
+      {
+        "id": "development",
+        "label": "GELİŞTİRME EKİBİ",
+        "rows": [
+          "selin",
+          "mert"
+        ]
+      },
+      {
+        "id": "sales",
+        "label": "SATIŞ",
+        "rows": [
+          "burak"
+        ]
+      },
+      {
+        "id": "customer_success",
+        "label": "MÜŞTERİ İLİŞKİLERİ",
+        "rows": [],
+        "empty_row": "Henüz kimse yok",
+        "empty_cta": "İŞE ALIM BAŞLAT"
+      }
+    ],
+    "row_order_rule": "Inside a group: worst badge first, then oldest hire_day.",
+    "employees": {
+      "elif": {
+        "id": "char_emp_shot_0",
+        "name": "Elif Demir",
+        "first_lower": "elif",
+        "role_id": "product_manager",
+        "role_title": "Ürün Yöneticisi",
+        "role_title_shown": "ÜRÜN YÖNETİCİSİ",
+        "role_hint": "Ne yapılacağına karar verir, ekibi aynı hedefe bakar tutar.",
+        "group": "product_design",
+        "displayed_areas": [
+          {
+            "kind": "primary",
+            "id": "product",
+            "label": "Ürün",
+            "score": 7,
+            "stars": 3.5
+          },
+          {
+            "kind": "secondary",
+            "id": "design",
+            "label": "Tasarım",
+            "score": 6,
+            "stars": 3.0
+          },
+          {
+            "kind": "leadership",
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 6,
+            "stars": 3.0
+          }
+        ],
+        "skills": [
+          {
+            "id": "product",
+            "label": "Ürün",
+            "score": 7,
+            "stars": 3.5
+          },
+          {
+            "id": "design",
+            "label": "Tasarım",
+            "score": 6,
+            "stars": 3.0
+          },
+          {
+            "id": "eng",
+            "label": "Yazılım",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "id": "qa",
+            "label": "Test",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "id": "sales",
+            "label": "Satış",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "id": "cs",
+            "label": "Müşteri İlişkileri",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 6,
+            "stars": 3.0
+          }
+        ],
+        "task": "Yapımda görev alıyor",
+        "experience": {
+          "value": 0,
+          "shown": "%0",
+          "threshold": 250,
+          "bar_px": 4
+        },
+        "status": {
+          "kind": "chip_new",
+          "text": "YENİ"
+        },
+        "trait": {
+          "id": "takes_them_under",
+          "label": "GERÇEK LİDER",
+          "effect": "Sorumlusu olduğu alanda herkes daha hızlı öğrenir; ayrılıkları ağır alır.",
+          "tooltip": "GERÇEK LİDER\nSorumlusu olduğu alanda herkes daha hızlı öğrenir; ayrılıkları ağır alır.",
+          "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/traits/takes_them_under.svg"
+        },
+        "salary": 9800,
+        "salary_shown": "$9.800",
+        "morale": 72,
+        "dimmed": false,
+        "hire_day": 14,
+        "morale_band": "normal",
+        "bust": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust_elif.png",
+        "bust64": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust64_elif.png"
+      },
+      "deniz": {
+        "id": "char_emp_shot_1",
+        "name": "Deniz Arslan",
+        "first_lower": "deniz",
+        "role_id": "designer",
+        "role_title": "UX/UI Designer",
+        "role_title_shown": "UX/UI DESİGNER",
+        "role_hint": "Ürünün nasıl göründüğünü ve nasıl kullanıldığını kurar.",
+        "group": "product_design",
+        "displayed_areas": [
+          {
+            "kind": "primary",
+            "id": "design",
+            "label": "Tasarım",
+            "score": 6,
+            "stars": 3.0
+          },
+          {
+            "kind": "secondary",
+            "id": "product",
+            "label": "Ürün",
+            "score": 5,
+            "stars": 2.5
+          },
+          {
+            "kind": "leadership",
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 2,
+            "stars": 1.0
+          }
+        ],
+        "skills": [
+          {
+            "id": "product",
+            "label": "Ürün",
+            "score": 5,
+            "stars": 2.5
+          },
+          {
+            "id": "design",
+            "label": "Tasarım",
+            "score": 6,
+            "stars": 3.0
+          },
+          {
+            "id": "eng",
+            "label": "Yazılım",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "qa",
+            "label": "Test",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "sales",
+            "label": "Satış",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "cs",
+            "label": "Müşteri İlişkileri",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 2,
+            "stars": 1.0
+          }
+        ],
+        "task": "Yapımda görev alıyor",
+        "experience": {
+          "value": 0,
+          "shown": "%0",
+          "threshold": 190,
+          "bar_px": 4
+        },
+        "status": {
+          "kind": "none",
+          "text": ""
+        },
+        "trait": {
+          "id": "last_one_out",
+          "label": "İŞKOLİK",
+          "effect": "Mesai morali onda çok daha yavaş erir.",
+          "tooltip": "İŞKOLİK\nMesai morali onda çok daha yavaş erir.",
+          "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/traits/last_one_out.svg"
+        },
+        "salary": 7400,
+        "salary_shown": "$7.400",
+        "morale": 38,
+        "dimmed": false,
+        "hire_day": 10,
+        "morale_band": "low",
+        "bust": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust_deniz.png",
+        "bust64": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust64_deniz.png"
+      },
+      "mert": {
+        "id": "char_emp_shot_2",
+        "name": "Mert Yıldız",
+        "first_lower": "mert",
+        "role_id": "developer",
+        "role_title": "Yazılım Mühendisi",
+        "role_title_shown": "YAZILIM MÜHENDİSİ",
+        "role_hint": "Ürünü yazar. Kod tabanı ondan çıkar.",
+        "group": "development",
+        "displayed_areas": [
+          {
+            "kind": "primary",
+            "id": "eng",
+            "label": "Yazılım",
+            "score": 8,
+            "stars": 4.0
+          },
+          {
+            "kind": "secondary",
+            "id": "qa",
+            "label": "Test",
+            "score": 7,
+            "stars": 3.5
+          },
+          {
+            "kind": "leadership",
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 3,
+            "stars": 1.5
+          }
+        ],
+        "skills": [
+          {
+            "id": "product",
+            "label": "Ürün",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "id": "design",
+            "label": "Tasarım",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "id": "eng",
+            "label": "Yazılım",
+            "score": 8,
+            "stars": 4.0
+          },
+          {
+            "id": "qa",
+            "label": "Test",
+            "score": 7,
+            "stars": 3.5
+          },
+          {
+            "id": "sales",
+            "label": "Satış",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "id": "cs",
+            "label": "Müşteri İlişkileri",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 3,
+            "stars": 1.5
+          }
+        ],
+        "task": "Yapımda görev alıyor",
+        "experience": {
+          "value": 0,
+          "shown": "%0",
+          "threshold": 244,
+          "bar_px": 4
+        },
+        "status": {
+          "kind": "text",
+          "text": "İzinde · 2 hafta kaldı"
+        },
+        "trait": {
+          "id": "loyal",
+          "label": "SADIK",
+          "effect": "Moral düşükken bile kolay kolay ayrılmaz; rakip teklifine dayanır.",
+          "tooltip": "SADIK\nMoral düşükken bile kolay kolay ayrılmaz; rakip teklifine dayanır.",
+          "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/traits/loyal.svg"
+        },
+        "salary": 11200,
+        "salary_shown": "$11.200",
+        "morale": 61,
+        "dimmed": true,
+        "hire_day": 6,
+        "dimmed_note": "On leave: the whole row is drawn at TAB_LOCKED_ALPHA 0.45.",
+        "morale_band": "normal",
+        "bust": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust_mert.png",
+        "bust64": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust64_mert.png"
+      },
+      "selin": {
+        "id": "char_emp_shot_3",
+        "name": "Selin Kaya",
+        "first_lower": "selin",
+        "role_id": "tester",
+        "role_title": "Test Mühendisi",
+        "role_title_shown": "TEST MÜHENDİSİ",
+        "role_hint": "Ürünü kırmaya çalışır. Bulduğu her hata müşteriye gitmeyen hatadır.",
+        "group": "development",
+        "displayed_areas": [
+          {
+            "kind": "primary",
+            "id": "qa",
+            "label": "Test",
+            "score": 5,
+            "stars": 2.5
+          },
+          {
+            "kind": "secondary",
+            "id": "eng",
+            "label": "Yazılım",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "kind": "leadership",
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 1,
+            "stars": 0.5
+          }
+        ],
+        "skills": [
+          {
+            "id": "product",
+            "label": "Ürün",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "design",
+            "label": "Tasarım",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "eng",
+            "label": "Yazılım",
+            "score": 4,
+            "stars": 2.0
+          },
+          {
+            "id": "qa",
+            "label": "Test",
+            "score": 5,
+            "stars": 2.5
+          },
+          {
+            "id": "sales",
+            "label": "Satış",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "cs",
+            "label": "Müşteri İlişkileri",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 1,
+            "stars": 0.5
+          }
+        ],
+        "task": "Test ediyor",
+        "experience": {
+          "value": 0,
+          "shown": "%0",
+          "threshold": 172,
+          "bar_px": 4
+        },
+        "status": {
+          "kind": "chip_flight_risk",
+          "text": "AYRILABİLİR"
+        },
+        "trait": {
+          "id": "double_checker",
+          "label": "TİTİZ",
+          "effect": "Geliştirmede çok daha az hata çıkarır, ama yavaş çalışır.",
+          "tooltip": "TİTİZ\nGeliştirmede çok daha az hata çıkarır, ama yavaş çalışır.",
+          "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/traits/double_checker.svg"
+        },
+        "salary": 6900,
+        "salary_shown": "$6.900",
+        "morale": 22,
+        "dimmed": false,
+        "hire_day": 2,
+        "morale_band": "flight_risk",
+        "bust": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust_selin.png",
+        "bust64": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust64_selin.png"
+      },
+      "burak": {
+        "id": "char_emp_shot_4",
+        "name": "Burak Şahin",
+        "first_lower": "burak",
+        "role_id": "sales_rep",
+        "role_title": "Satış Temsilcisi",
+        "role_title_shown": "SATIŞ TEMSİLCİSİ",
+        "role_hint": "Aday müşteri bulur, anlaşmayı kapatır.",
+        "group": "sales",
+        "displayed_areas": [
+          {
+            "kind": "primary",
+            "id": "sales",
+            "label": "Satış",
+            "score": 6,
+            "stars": 3.0
+          },
+          {
+            "kind": "leadership",
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 2,
+            "stars": 1.0
+          }
+        ],
+        "displayed_areas_note": "No secondary area for the sales rep (hr_constants.gd:93).",
+        "skills": [
+          {
+            "id": "product",
+            "label": "Ürün",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "design",
+            "label": "Tasarım",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "eng",
+            "label": "Yazılım",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "qa",
+            "label": "Test",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "sales",
+            "label": "Satış",
+            "score": 6,
+            "stars": 3.0
+          },
+          {
+            "id": "cs",
+            "label": "Müşteri İlişkileri",
+            "score": 3,
+            "stars": 1.5
+          },
+          {
+            "id": "lead",
+            "label": "Liderlik",
+            "score": 2,
+            "stars": 1.0
+          }
+        ],
+        "task": "Satışta görev alıyor",
+        "experience": {
+          "value": 0,
+          "shown": "%0",
+          "threshold": 178,
+          "bar_px": 4
+        },
+        "status": {
+          "kind": "chip_new",
+          "text": "YENİ"
+        },
+        "trait": {
+          "id": "picks_it_up_fast",
+          "label": "ÇABUK KAPAR",
+          "effect": "Deneyimi belirgin şekilde hızlı kazanır.",
+          "tooltip": "ÇABUK KAPAR\nDeneyimi belirgin şekilde hızlı kazanır.",
+          "icon": "C:/Users/erdem/Desktop/project steam/project-unicorn/assets/icons/traits/picks_it_up_fast.svg"
+        },
+        "salary": 8300,
+        "salary_shown": "$8.300",
+        "morale": 55,
+        "dimmed": false,
+        "hire_day": 14,
+        "morale_band": "normal",
+        "bust": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust_burak.png",
+        "bust64": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/bust64_burak.png"
+      }
+    },
+    "morale": {
+      "bar": [
+        92,
+        6
+      ],
+      "thresholds": [
+        {
+          "value": 35,
+          "name": "MORALE_FLIGHT_RISK",
+          "meaning": "Below 35: AYRILABİLİR chip, red risk strip above the roster, Ekip rail badge, sorts first. After 2 weeks in flight risk a resignation roll starts; at 3 weeks it is certain."
+        },
+        {
+          "value": 50,
+          "name": "MORALE_BAND_LOW",
+          "meaning": "Below 50: amber colour and work speed ×0,85 (15% slower)."
+        },
+        {
+          "value": 80,
+          "name": "MORALE_BAND_HIGH",
+          "meaning": "At or above 80: work speed ×1,10 (10% faster)."
+        }
+      ],
+      "colours": "≥50 positive (blue in the colour-blind baseline), 35..49 amber, <35 negative",
+      "new_hire_start": 75,
+      "no_burnout_threshold": "The engine has no 'tükeniyor' threshold; only the glossary term exists."
+    },
+    "skill_rule": "main area = key, secondary = key minus 1, others = rest, leadership = lead; stars = score / 2 in half stars; cells shown: main, secondary, Leadership.",
+    "experience_rule": "4 px bar plus '%0'; threshold = 40 + 6 × sum of the seven skills."
+  },
+  "frank_card": {
+    "badge": "MENTOR",
+    "header": "KARAR · HAFTA 14 · NİSAN 2026",
+    "title": "Frank'in teklifi",
+    "body": [
+      "Ürün para kazandırmaya başladı.",
+      "Arayan yine Frank.",
+      "\"Buraya kadar kendi birikimin ve emeğinle geldin. İşleri hızlandırman için yirmi beş bin dolar koyuyorum, yüzde dört alıyorum. Pazarlık yok. Bir kere soruyorum: alıyor musun?\"",
+      "Cevap bekliyor."
+    ],
+    "speaker": {
+      "name": "Frank Köseoğlu",
+      "role": "Operating Partner",
+      "line": "Frank Köseoğlu · Operating Partner",
+      "portrait": "C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-project-steam/0e406678-a661-4d23-90af-2e43deb375cc/scratchpad/mockups/art/frank.png",
+      "relation": "NÖTR",
+      "traits": []
+    },
+    "options": [
+      {
+        "label": "Kabul et",
+        "chip": "NAKİT +$25K · FRANK'E %4 HİSSE",
+        "chip_tone": "accent",
+        "locked": false
+      },
+      {
+        "label": "Reddet",
+        "chip": "ZOR MODDA AÇILIR.",
+        "locked": true,
+        "lock_reason": "Zor modda açılır.",
+        "alpha": 0.5
+      }
+    ],
+    "footer": "SEÇİM KALICIDIR · OYUN DURAKLATILDI"
+  },
+  "satis": {
+    "title": "Satış",
+    "kpis": [
+      {
+        "label": "MÜŞTERİ",
+        "value": "3"
+      },
+      {
+        "label": "ORT. MEMNUNİYET",
+        "value": "%56"
+      },
+      {
+        "label": "BU AY KAZANILAN",
+        "value": "+0"
+      },
+      {
+        "label": "BU AY NET",
+        "value": "0"
+      }
+    ],
+    "price_stance": {
+      "caption": "Fiyat duruşu",
+      "options": [
+        {
+          "label": "Rekabetçi",
+          "hint": "Koltuk fiyatı bandın altında. Masa kolay açılır."
+        },
+        {
+          "label": "Standart",
+          "hint": "Koltuk fiyatı bandın ortasında.",
+          "active": true
+        },
+        {
+          "label": "Premium",
+          "hint": "Koltuk fiyatı bandın üstünde. Temsilcinin işlemesi uzar."
+        }
+      ]
+    },
+    "pipeline": {
+      "header": "BORU HATTI",
+      "flow": "Akış: 6,5/hafta",
+      "prospects": [
+        {
+          "company": "Karadeniz Fabrika",
+          "stars": 2,
+          "of": 5,
+          "time_left": "1 hafta",
+          "persona": "ops_cautious",
+          "line": "Ölçülü bir alıcı. Önce kararlılığı sorar.",
+          "buttons": [
+            "Ayır",
+            "Temsilciye ver",
+            "Görüşmeye git"
+          ],
+          "primary": "Görüşmeye git"
+        },
+        {
+          "company": "Efes Emlak",
+          "stars": 1,
+          "of": 5,
+          "time_left": "1 hafta",
+          "persona": "finance_brisk",
+          "line": "Hızlı konuşur, rakama erken gelir.",
+          "buttons": [
+            "Ayır",
+            "Temsilciye ver",
+            "Görüşmeye git"
+          ],
+          "primary": "Görüşmeye git"
+        }
+      ]
+    },
+    "sales_desk": {
+      "header": "SATIŞ MASASI",
+      "rep": "Burak Şahin",
+      "stars": 3,
+      "band_caption": "Çalıştığı bant:",
+      "bands": [
+        "1★",
+        "2★",
+        "3★",
+        "Kendi ligi"
+      ],
+      "band_active": "Kendi ligi"
+    },
+    "portfolio": {
+      "header": "MÜŞTERİ PORTFÖYÜ",
+      "count": "3 müşteri",
+      "cards": [
+        {
+          "company": "Ege Sigorta",
+          "chip": "RİSK ALTINDA",
+          "chip_tone": "negative",
+          "attention": true,
+          "stars": 3,
+          "meta": "$1,0K/ay · 12 koltuk · 2 aydır müşteri",
+          "line": "Sebep: sık kesinti şikayeti",
+          "line_style": "italic",
+          "steward": "Müşteri temsilcisi: atanmadı",
+          "change": "Değiştir",
+          "action": "İlgilen →",
+          "satisfaction": 25
+        },
+        {
+          "company": "Nordica",
+          "chip": "BÜYÜMEK İSTİYOR",
+          "chip_tone": "accent",
+          "stars": 3,
+          "meta": "$2,0K/ay · 20 koltuk · 6 aydır müşteri",
+          "line": "Başka departmana yaymak istiyor.",
+          "line_style": "italic",
+          "steward": "Müşteri temsilcisi: atanmadı",
+          "change": "Değiştir",
+          "action": "Değerlendir →",
+          "satisfaction": 72
+        },
+        {
+          "company": "Kuzey İnşaat",
+          "chip": "SAĞLIKLI",
+          "chip_tone": "positive",
+          "stars": 3,
+          "meta": "$1,0K/ay · 12 koltuk · 3 aydır müşteri",
+          "line": null,
+          "steward": "Müşteri temsilcisi: atanmadı",
+          "change": "Değiştir",
+          "action": null,
+          "satisfaction": 72
+        }
+      ]
+    }
+  },
+  "reference_tokens": {
+    "page": "#F6F1E6",
+    "card_window": "#FBF7EE",
+    "rail_bg": "#ECE5D6",
+    "ink": "#2B2722",
+    "ink_muted": "#5B544A",
+    "ink_dim": "#8A8175",
+    "ink_faint": "#A99E8E",
+    "card_border": "#D9D0BF",
+    "divider": "#E3DAC9",
+    "accent_fill": "#F4C430",
+    "accent_deep_text": "#9A6A12",
+    "amber_chip_bg": "rgba(154,106,18,.10)",
+    "chrome_bg": "#07090B",
+    "chrome_cream": "#E8EDF2",
+    "chrome_cream_dim": "#74828F",
+    "chrome_caption": "#46525D",
+    "accent_chrome": "#FFA028",
+    "avatar_disc": "#1B232B",
+    "positive": "#2F6B3A",
+    "negative": "#9B3B28",
+    "positive_cb": "#2C6FAE",
+    "negative_cb": "#B36B00",
+    "positive_bright": "#3FD68C",
+    "positive_bright_cb": "#56B4E9",
+    "health_amber": "#C9962E",
+    "fonts": "JetBrains Mono (mono), IBM Plex Sans (sans), Source Serif 4 (serif titles), files in assets/fonts/",
+    "source": "scripts/theme/ui_tokens.gd"
+  }
+}

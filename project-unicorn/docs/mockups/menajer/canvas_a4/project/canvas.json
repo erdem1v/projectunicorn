@@ -1,0 +1,2316 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-03T10:00:00Z"
+ },
+ "title": "Menajer Masası · Ekranlar",
+ "launch": {
+  "view": "canvas",
+  "page": "genel"
+ },
+ "pages": [
+  {
+   "id": "genel",
+   "name": "Genel sorular"
+  },
+  {
+   "id": "kabuk",
+   "name": "Kabuk ve ofis"
+  },
+  {
+   "id": "olaylar",
+   "name": "Olaylar (mail)"
+  },
+  {
+   "id": "ekip",
+   "name": "Ekip"
+  },
+  {
+   "id": "urun",
+   "name": "Ürün"
+  },
+  {
+   "id": "satis_finans",
+   "name": "Satış ve Finans"
+  },
+  {
+   "id": "kisisel_arge",
+   "name": "Kişisel ve Ar-Ge"
+  },
+  {
+   "id": "toplanti",
+   "name": "Toplantı"
+  },
+  {
+   "id": "modallar_acilis",
+   "name": "Modallar, açılış ve son"
+  }
+ ],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kabuk, pencere yok (tohum, H14 11:00)",
+   "page": "kabuk"
+  },
+  "kabuk_kabuk__pencere_acik.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ekip penceresi açık, ofis kararmış",
+   "page": "kabuk"
+  },
+  "kabuk_marka__secenekler.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Marka bloğu: (a) ve (b) yan yana",
+   "page": "kabuk"
+  },
+  "kabuk_marka__b_kabukta.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Marka (b): şirket adı ve logo kabukta",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__karar_bekliyor.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Tek karar bekliyor, saat 08:00'de tutulu",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__karar_bekliyor_3.dc.html": {
+   "x": 2000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Üç karar bekliyor, F5 reddedildi",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__teklif_sayaci.dc.html": {
+   "x": 4000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Teklif sayacı: 2 hafta kaldı",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__runway_ay.dc.html": {
+   "x": 6000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hafta 1, evde: runway 7 ay",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__runway_kirmizi.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Runway 2 ay, kırmızı",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__kepenk.dc.html": {
+   "x": 2000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kasa eksi: kepenk 3 hafta",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__sprint_otomatik.dc.html": {
+   "x": 4000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sprint otomatik başladı notu",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__yolculuk.dc.html": {
+   "x": 6000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kurucunun yolculuğu, saat tutulu",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__durumlar.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 1920,
+   "h": 1808,
+   "title": "Üst barın bütün durumları",
+   "page": "kabuk"
+  },
+  "kabuk_ray__durumlar.dc.html": {
+   "x": 2000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ray: etiketli ve simge kipi durumları",
+   "page": "kabuk"
+  },
+  "kabuk_ray__yapilar.dc.html": {
+   "x": 4000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Pazarlama satırı: demo ve EA yapısı",
+   "page": "kabuk"
+  },
+  "kabuk_serit__durumlar.dc.html": {
+   "x": 6000,
+   "y": 3600,
+   "w": 1920,
+   "h": 860,
+   "title": "Haber şeridinin durumları",
+   "page": "kabuk"
+  },
+  "kabuk_serit__kapali.dc.html": {
+   "x": 0,
+   "y": 5528,
+   "w": 1920,
+   "h": 1080,
+   "title": "Haber şeridi kapalı",
+   "page": "kabuk"
+  },
+  "kabuk_buildhud__durumlar.dc.html": {
+   "x": 2000,
+   "y": 5528,
+   "w": 1920,
+   "h": 1080,
+   "title": "BuildHUD ve araştırma kartı durumları",
+   "page": "kabuk"
+  },
+  "kabuk_bildirim__yigin.dc.html": {
+   "x": 4000,
+   "y": 5528,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bildirim yığını: 4 kart ve +1",
+   "page": "kabuk"
+  },
+  "kabuk_toast__durumlar.dc.html": {
+   "x": 6000,
+   "y": 5528,
+   "w": 1920,
+   "h": 1080,
+   "title": "Toast çeşitleri, TR ve EN",
+   "page": "kabuk"
+  },
+  "kabuk_ofis__tasi_dugmesi.dc.html": {
+   "x": 0,
+   "y": 6728,
+   "w": 1920,
+   "h": 840,
+   "title": "Ofisi taşı düğmesinin halleri",
+   "page": "kabuk"
+  },
+  "kabuk_ofis__tasinma_sayaci.dc.html": {
+   "x": 2000,
+   "y": 6728,
+   "w": 1920,
+   "h": 1080,
+   "title": "Taşınma başladı, düğmede 1 hafta",
+   "page": "kabuk"
+  },
+  "kabuk_ofis__kisi_ipucu.dc.html": {
+   "x": 4000,
+   "y": 6728,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kişi ipucu: Selin, moral 22",
+   "page": "kabuk"
+  },
+  "kabuk_ipucu__cesitleri.dc.html": {
+   "x": 6000,
+   "y": 6728,
+   "w": 1920,
+   "h": 520,
+   "title": "Kişi ipucunun üç hali",
+   "page": "kabuk"
+  },
+  "kabuk_harita__ofis_karti.dc.html": {
+   "x": 0,
+   "y": 7928,
+   "w": 1920,
+   "h": 1080,
+   "title": "Şehir haritası: Plaza ofis kartı",
+   "page": "kabuk"
+  },
+  "kabuk_harita__kart_durumlari.dc.html": {
+   "x": 2000,
+   "y": 7928,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ofis kartının halleri",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__2560.dc.html": {
+   "x": 4000,
+   "y": 7928,
+   "w": 2560,
+   "h": 1080,
+   "title": "2560×1080 geniş ekran",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__durumlar_en.dc.html": {
+   "x": 6640,
+   "y": 7928,
+   "w": 1920,
+   "h": 1808,
+   "title": "Üst barın bütün durumları (EN)",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__1536.dc.html": {
+   "x": 0,
+   "y": 9856,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sıkışık üst bar ve simge ray (1536)",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__1536x960.dc.html": {
+   "x": 2000,
+   "y": 9856,
+   "w": 1920,
+   "h": 1200,
+   "title": "1536×960: daha uzun ofis",
+   "page": "kabuk"
+  },
+  "kabuk_ustbar__1536_pencere.dc.html": {
+   "x": 4000,
+   "y": 9856,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ekip açık, yüzen öğeler gizli (1536)",
+   "page": "kabuk"
+  },
+  "olaylar_olaylar__frank_teklif.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Frank'in teklifi, karar bekliyor (08:00)",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__kuyruk.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Üç karar: biri açık, ikisi sırada",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__musteri_secenek_acik.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ege Sigorta riski, İndirim ver kurulu",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__kilitli_secenek.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kilitli seçenek: Söz ver kapalı",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__gecmis_karar.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Geçmiş karar: Hafta 11 cevabı",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__kagit_onizleme.dc.html": {
+   "x": 2000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Nordica kağıdı önizlemede, 2 hafta",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__kagit_acik.dc.html": {
+   "x": 4000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kağıt açıldı: seçenekler ve Kenara koy",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__kagit_son_hafta.dc.html": {
+   "x": 6000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kağıt son haftasında",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__kagit_karar_beklerken.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Karar beklerken kağıt kapalı",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__bildirimler.dc.html": {
+   "x": 2000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hatırlatıcı kayıtları, Ege seçili",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__calisan_ayrilik.dc.html": {
+   "x": 4000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Selin'in istifa maili",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__ayrilmis_gonderici.dc.html": {
+   "x": 6000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayrılmış gönderen: gri yüz, damga",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__zar_secenegi.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Zarlı karar: oran ve modifier listesi",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__zar_secenegi_renk_koru.dc.html": {
+   "x": 2000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Zarlı karar, renk körü paleti",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__donem_ozeti.dc.html": {
+   "x": 4000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Dönem özeti: Muhasebe'den rapor",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__frank_tanisma.dc.html": {
+   "x": 6000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Frank'in tanışma maili, Hafta 1",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__frank_ani.dc.html": {
+   "x": 0,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Frank'in anı: Eski bir dost",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__taslak_frank_ani_basin.dc.html": {
+   "x": 2000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Taslak: Frank anı, basın, gönderen türleri",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__arge_notu.dc.html": {
+   "x": 4000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Aylık ürün notu: Elif Demir",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__haftalik_satis.dc.html": {
+   "x": 6000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Haftalık satış raporu: Burak Şahin",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__bos_kutu.dc.html": {
+   "x": 0,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bekleyen süzgeci boş",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__uzun_gecmis.dc.html": {
+   "x": 2000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Uzun kutu, kaydırılmış geçmiş",
+   "page": "olaylar"
+  },
+  "olaylar_ekip__salt_okunur_karar_bekliyor.dc.html": {
+   "x": 4000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Karar beklerken Ekip salt okunur",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__frank_teklif_en.dc.html": {
+   "x": 6000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Frank'in teklifi (EN)",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__musteri_secenek_acik_en.dc.html": {
+   "x": 0,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Müşteri riski, İndirim ver kurulu (EN)",
+   "page": "olaylar"
+  },
+  "olaylar_olaylar__taslak_frank_ani_basin_en.dc.html": {
+   "x": 2000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Taslak: Frank anı ve basın (EN)",
+   "page": "olaylar"
+  },
+  "ekip_ekip__kadro.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kadro, 5 kişi (Elif seçili)",
+   "page": "ekip"
+  },
+  "ekip_ekip__kadro_40.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kadro 39 çalışan, kaydırılmış",
+   "page": "ekip"
+  },
+  "ekip_ekip__kadro_40_siki.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sıkı kip: 32 px satır",
+   "page": "ekip"
+  },
+  "ekip_ekip__kadro_bos.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kurucu yalnız: boş kadro, Atlas şeridi",
+   "page": "ekip"
+  },
+  "ekip_ekip__satir_durumlari.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kadro satırının 11 hali ve şeritler",
+   "page": "ekip"
+  },
+  "ekip_ekip__gorevler.dc.html": {
+   "x": 2000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Görevler: boşta ve aşırı yük",
+   "page": "ekip"
+  },
+  "ekip_ekip__gorevler_bos.dc.html": {
+   "x": 4000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kurucu yalnız: boş Görevler",
+   "page": "ekip"
+  },
+  "ekip_ekip__menu.dc.html": {
+   "x": 6000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satır menüsü: Elif",
+   "page": "ekip"
+  },
+  "ekip_ekip__dosya.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Çalışan dosyası: Elif",
+   "page": "ekip"
+  },
+  "ekip_ekip__dosya_kurucu.dc.html": {
+   "x": 2000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kurucu dosyası",
+   "page": "ekip"
+  },
+  "ekip_ekip__zam.dc.html": {
+   "x": 4000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Zam yap",
+   "page": "ekip"
+  },
+  "ekip_ekip__cikar.dc.html": {
+   "x": 6000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "İşten çıkar",
+   "page": "ekip"
+  },
+  "ekip_ekip__cikar_eksi.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "İşten çıkar: kasa eksiye düşer",
+   "page": "ekip"
+  },
+  "ekip_ekip__egitim.dc.html": {
+   "x": 2000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Eğitime gönder paneli",
+   "page": "ekip"
+  },
+  "ekip_ekip__egitim_kilitli.dc.html": {
+   "x": 4000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Eğitim kilitli: deneyim barı dolmadı",
+   "page": "ekip"
+  },
+  "ekip_ekip__mesai.dc.html": {
+   "x": 6000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Çalışma saatleri paneli",
+   "page": "ekip"
+  },
+  "ekip_ekip__mesai_gece.dc.html": {
+   "x": 0,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Mesai taslağı gece yarısına kadar",
+   "page": "ekip"
+  },
+  "ekip_ekip__atlas_arama.dc.html": {
+   "x": 2000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Atlas: işe alım araması",
+   "page": "ekip"
+  },
+  "ekip_ekip__atlas_dosyalar.dc.html": {
+   "x": 4000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Atlas: üç aday dosyası",
+   "page": "ekip"
+  },
+  "ekip_ekip__kadro_renk_koru.dc.html": {
+   "x": 6000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kadro, renk körü paleti",
+   "page": "ekip"
+  },
+  "ekip_ekip__gorevler_renk_koru.dc.html": {
+   "x": 0,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Görevler, renk körü paleti",
+   "page": "ekip"
+  },
+  "ekip_ekip__kadro_en.dc.html": {
+   "x": 2000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kadro (EN)",
+   "page": "ekip"
+  },
+  "ekip_ekip__kadro_40_siki_en.dc.html": {
+   "x": 4000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sıkı kip (EN)",
+   "page": "ekip"
+  },
+  "ekip_ekip__menu_en.dc.html": {
+   "x": 6000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satır menüsü (EN)",
+   "page": "ekip"
+  },
+  "ekip_ekip__mesai_en.dc.html": {
+   "x": 0,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Çalışma saatleri (EN)",
+   "page": "ekip"
+  },
+  "ekip_ekip__atlas_dosyalar_en.dc.html": {
+   "x": 2000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Atlas aday dosyaları (EN)",
+   "page": "ekip"
+  },
+  "ekip_ekip__atlas_arama_1536.dc.html": {
+   "x": 4000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Atlas araması (1536)",
+   "page": "ekip"
+  },
+  "ekip_ekip__atlas_dosyalar_1536.dc.html": {
+   "x": 6000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Atlas aday dosyaları (1536)",
+   "page": "ekip"
+  },
+  "urun_urun__sprint_planlama.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sprint 7 planlama (C1)",
+   "page": "urun"
+  },
+  "urun_urun__sprint_suruyor.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sprint sürüyor, karar satırı (C2)",
+   "page": "urun"
+  },
+  "urun_urun__surum_notu.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sürüm notu v1.5 (C3)",
+   "page": "urun"
+  },
+  "urun_urun__ceyrek.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Çeyrek planı (C4)",
+   "page": "urun"
+  },
+  "urun_urun__b2b_talepler.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "B2B müşteri talepleri (C5)",
+   "page": "urun"
+  },
+  "urun_urun__sprint_otomatik_basladi.dc.html": {
+   "x": 2000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sprint otomatik başladı",
+   "page": "urun"
+  },
+  "urun_urun__sesler_acik.dc.html": {
+   "x": 4000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Alanın Sesler bölümü açık",
+   "page": "urun"
+  },
+  "urun_urun__kapasite_asimi.dc.html": {
+   "x": 6000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kapasite aşımı: 16/12",
+   "page": "urun"
+  },
+  "urun_urun__ekip_yok.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kimse çalışamıyor: boş sprint sütunu",
+   "page": "urun"
+  },
+  "urun_urun__kart_durumlari.dc.html": {
+   "x": 2000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sprint kartının bütün halleri",
+   "page": "urun"
+  },
+  "urun_urun__surum_notu_beta.dc.html": {
+   "x": 4000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sürüm notu: beta kanalında",
+   "page": "urun"
+  },
+  "urun_urun__ceyrek_hedef_menusu.dc.html": {
+   "x": 6000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Çeyrek hedef menüsü açık",
+   "page": "urun"
+  },
+  "urun_urun__ceyrek_kilitli_pm_yok.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "PM yokken Çeyrek kilitli",
+   "page": "urun"
+  },
+  "urun_urun__gecmis.dc.html": {
+   "x": 2000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sürüm geçmişi açık",
+   "page": "urun"
+  },
+  "urun_urun__tur_secici.dc.html": {
+   "x": 4000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Tür seçici: B2C, Notly",
+   "page": "urun"
+  },
+  "urun_urun__mvp_oncesi_karar.dc.html": {
+   "x": 6000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "MVP öncesi Sprint 1, karar satırı",
+   "page": "urun"
+  },
+  "urun_olaylar__sprint_karari_kagit.dc.html": {
+   "x": 0,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sprint kararı kağıdı Olaylar'da",
+   "page": "urun"
+  },
+  "urun_urun__b2c_mvp_surum.dc.html": {
+   "x": 2000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "İlk sürüm notu v1.0",
+   "page": "urun"
+  },
+  "urun_urun__sprint_planlama_en.dc.html": {
+   "x": 4000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sprint planlama (EN)",
+   "page": "urun"
+  },
+  "urun_urun__surum_notu_en.dc.html": {
+   "x": 6000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sürüm notu (EN)",
+   "page": "urun"
+  },
+  "urun_urun__sprint_planlama_1536.dc.html": {
+   "x": 0,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sprint planlama (1536)",
+   "page": "urun"
+  },
+  "satis_finans_satis__boru_hatti.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış: boru hattı, masa, portföy",
+   "page": "satis_finans"
+  },
+  "satis_finans_satis__masa_ve_portfoy.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış: 3 lead, 5 hesap, temsilci işliyor",
+   "page": "satis_finans"
+  },
+  "satis_finans_satis__temsilci_secici.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Temsilci seçici açık",
+   "page": "satis_finans"
+  },
+  "satis_finans_satis__b2c_bos.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "B2C koşuda Satış boş hali",
+   "page": "satis_finans"
+  },
+  "satis_finans_satis__renk_koru.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış, renk körü paleti",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__ozet.dc.html": {
+   "x": 2000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Finans Özet: runway 5 ay",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__artida.dc.html": {
+   "x": 4000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Finans Özet: artıda",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__uyari.dc.html": {
+   "x": 6000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Finans: runway 2 ay, kırmızı",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__kepenk.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Finans: kepenk 3 hafta",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__sinyal.dc.html": {
+   "x": 2000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Faz 2: Series A sinyali, iştah kapalı",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__gider_dokumu.dc.html": {
+   "x": 4000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Gider dağılımı ve son işlemler",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__yatirim_av_acik.dc.html": {
+   "x": 6000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Yatırım: Series A Avı, iki teklif",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__yatirim_av_kapali.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Yatırım: bütün fonlar kapalı",
+   "page": "satis_finans"
+  },
+  "satis_finans_satis__masa_ve_portfoy_en.dc.html": {
+   "x": 2000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış masası ve portföy (EN)",
+   "page": "satis_finans"
+  },
+  "satis_finans_satis__temsilci_secici_en.dc.html": {
+   "x": 4000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Temsilci seçici (EN)",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__ozet_en.dc.html": {
+   "x": 6000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Finans Özet (EN)",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__yatirim_av_acik_en.dc.html": {
+   "x": 0,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Series A Avı (EN)",
+   "page": "satis_finans"
+  },
+  "satis_finans_satis__1536.dc.html": {
+   "x": 2000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış (1536)",
+   "page": "satis_finans"
+  },
+  "satis_finans_finans__1536.dc.html": {
+   "x": 4000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Finans Özet (1536)",
+   "page": "satis_finans"
+  },
+  "kisisel_arge_kisisel__normal.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kişisel: kurucu sayfası",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_kisisel__frank_sonrasi.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kişisel: Frank'in çekinden sonra",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__agac.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge ağacı, seçim yok",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__detay.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge: AI Engine detay kartı",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__atama.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge: atama paneli",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__donmus.dc.html": {
+   "x": 2000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge: donmuş araştırma",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__gecmis.dc.html": {
+   "x": 4000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge geçmişi: notlar ve keşifler",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__salt_okunur.dc.html": {
+   "x": 6000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge, karar beklerken salt okunur",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__kapali.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge kapalı: ilk sürümden önce",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__parcalar.dc.html": {
+   "x": 2000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge parçaları ve kart halleri",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_olaylar__arge_kesif.dc.html": {
+   "x": 4000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Keşif maili kutuda (H16)",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_ofis__kesif_bildirimi.dc.html": {
+   "x": 6000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Keşif bildirimi yığında",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_ofis__arastirma_cubugu.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ofiste araştırma kartı",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_pazarlama__yer_tutucu.dc.html": {
+   "x": 2000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Pazarlama yer tutucusu (yalnız harness)",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_kisisel__normal_en.dc.html": {
+   "x": 4000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kişisel (EN)",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__detay_en.dc.html": {
+   "x": 6000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge detay kartı (EN)",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_kisisel__1536.dc.html": {
+   "x": 0,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kişisel (1536)",
+   "page": "kisisel_arge"
+  },
+  "kisisel_arge_arge__1536.dc.html": {
+   "x": 2000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ar-Ge (1536)",
+   "page": "kisisel_arge"
+  },
+  "toplanti_toplanti__satis_probe.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış görüşmesi açılıyor: ilk soru",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__satis_locked.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış: kilitli seçenek, tutum temkinli",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__satis_won.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış: masa rakama geçti",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__satis_lost.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış: anlaşma olmadı",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__satis_handoff.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Pazarlık açılışı: fiyat cetveli",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__pazarlik_countered.dc.html": {
+   "x": 2000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Pazarlık: karşı rakam $46",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__pazarlik_insult.dc.html": {
+   "x": 4000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Pazarlık: hakaret bölgesi",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__pazarlik_confirm.dc.html": {
+   "x": 6000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Pazarlık: anlaşma imzalandı",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__vc_open.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "VC görüşmesi: Odayı oku 1/4",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__vc_sorgu.dc.html": {
+   "x": 2000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "VC: Sorgu 3/4",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__vc_sheet.dc.html": {
+   "x": 4000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "VC kapanış: teklif gelecek",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__vc_callback.dc.html": {
+   "x": 6000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "VC: yeniden görüşülecek",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__vc_ret.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "VC: bu sefer değil, Frank'in satırı",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__vc_seed.dc.html": {
+   "x": 2000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Seed görüşmesi kapanışı",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__vc_long.dc.html": {
+   "x": 4000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "VC: en dolu panel, dört adım",
+   "page": "toplanti"
+  },
+  "toplanti_termsheet__table.dc.html": {
+   "x": 6000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Term sheet masası: Bosphorus",
+   "page": "toplanti"
+  },
+  "toplanti_termsheet__table_final.dc.html": {
+   "x": 0,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Term sheet: sabır bitti, son teklif",
+   "page": "toplanti"
+  },
+  "toplanti_termsheet__table_walk.dc.html": {
+   "x": 2000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Term sheet: fon masadan kalktı",
+   "page": "toplanti"
+  },
+  "toplanti_termsheet__table_other.dc.html": {
+   "x": 4000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Term sheet: diğer teklif gösterildi",
+   "page": "toplanti"
+  },
+  "toplanti_termsheet__seed_table.dc.html": {
+   "x": 6000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Seed masası",
+   "page": "toplanti"
+  },
+  "toplanti_davet__satis_halka.dc.html": {
+   "x": 0,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Telefon çalıyor: kurucuda halka",
+   "page": "toplanti"
+  },
+  "toplanti_davet__satis_kart.dc.html": {
+   "x": 2000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Gelen arama kartı: satış",
+   "page": "toplanti"
+  },
+  "toplanti_davet__ertele_satis.dc.html": {
+   "x": 4000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış görüşmesi ertelendi",
+   "page": "toplanti"
+  },
+  "toplanti_davet__vc_kart.dc.html": {
+   "x": 6000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Fonun arama kartı, saat durdu",
+   "page": "toplanti"
+  },
+  "toplanti_davet__ertele_vc.dc.html": {
+   "x": 0,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "VC görüşmesi ertelendi",
+   "page": "toplanti"
+  },
+  "toplanti_yolculuk__gidis.dc.html": {
+   "x": 2000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Yolculuk: görüşmeye gidiş",
+   "page": "toplanti"
+  },
+  "toplanti_yolculuk__donus.dc.html": {
+   "x": 4000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Yolculuk: ofise dönüş",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__satis_locked_en.dc.html": {
+   "x": 6000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Satış: kilitli seçenek (EN)",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__vc_sorgu_en.dc.html": {
+   "x": 0,
+   "y": 8400,
+   "w": 1920,
+   "h": 1080,
+   "title": "VC: Sorgu 3/4 (EN)",
+   "page": "toplanti"
+  },
+  "toplanti_termsheet__table_en.dc.html": {
+   "x": 2000,
+   "y": 8400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Term sheet masası (EN)",
+   "page": "toplanti"
+  },
+  "toplanti_davet__satis_kart_en.dc.html": {
+   "x": 4000,
+   "y": 8400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Gelen arama kartı (EN)",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__pazarlik_open_1536.dc.html": {
+   "x": 6000,
+   "y": 8400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Pazarlık açılışı (1536)",
+   "page": "toplanti"
+  },
+  "toplanti_toplanti__vc_long_1536.dc.html": {
+   "x": 0,
+   "y": 9600,
+   "w": 1920,
+   "h": 1080,
+   "title": "VC: en dolu panel (1536)",
+   "page": "toplanti"
+  },
+  "modallar_acilis_sistem__normal.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sistem menüsü (Esc)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_sistem__karar_bekliyor.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sistem menüsü, karar beklerken",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__ust.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar: Görüntü ve Ses",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__alt.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar: Oyun, Erişilebilirlik, Veri",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__pencere_modu_acik.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar: pencere modu listesi",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__cozunurluk_acik.dc.html": {
+   "x": 2000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar: çözünürlük listesi",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__olcek_acik.dc.html": {
+   "x": 4000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar: arayüz ölçeği, kapalı adımlar",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__oto_kayit_acik.dc.html": {
+   "x": 6000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar: otomatik kayıt sıklığı",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__ozet_acik.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar: özet sıklığı",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__dil_acik.dc.html": {
+   "x": 2000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar: dil listesi",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__renk_koru_acik.dc.html": {
+   "x": 4000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar: renk körü paleti açık",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__sifirla_onay.dc.html": {
+   "x": 6000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarları sıfırlama onayı",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_kayit__bos.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kaydet: hiç kayıt yok",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_kayit__dolu.dc.html": {
+   "x": 2000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kaydet: dört kayıt",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_kayit__karar_bekliyor.dc.html": {
+   "x": 4000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kaydet, karar beklerken (seçenek B)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_kayit__f5_reddedildi.dc.html": {
+   "x": 6000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "F5 reddedildi: karar bekliyor",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_yukle__bos.dc.html": {
+   "x": 0,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Yükle: hiç kayıt yok",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_yukle__dolu.dc.html": {
+   "x": 2000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Yükle: dört kayıt",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_yukle__sil_onay.dc.html": {
+   "x": 4000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kayıt silme onayı",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_onay__iki_dugme.dc.html": {
+   "x": 6000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Onay: iki düğme",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_onay__uc_dugme.dc.html": {
+   "x": 0,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Çıkış onayı: üç düğme",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_onay__uc_dugme_karar_bekliyor.dc.html": {
+   "x": 2000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Çıkış onayı, karar beklerken",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__dil_kapisi.dc.html": {
+   "x": 4000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Açılış: dil kapısı",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__dil_kapisi_ustunde.dc.html": {
+   "x": 6000,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Dil kapısı, English üstünde",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__kurucu.dc.html": {
+   "x": 0,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Açılış 1: kurucu seçimi",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__kurucu_dolu.dc.html": {
+   "x": 2000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kurucu seçili, ad yazılıyor",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__koken.dc.html": {
+   "x": 4000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Açılış 2: köken, huylar, beceriler",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__koken_negatif_eksik.dc.html": {
+   "x": 6000,
+   "y": 7200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Köken: negatif huy eksik",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__koken_dolu.dc.html": {
+   "x": 0,
+   "y": 8400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Köken adımı dolu",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__sirket.dc.html": {
+   "x": 2000,
+   "y": 8400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Açılış 3: şirket, boş",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__sirket_dolu.dc.html": {
+   "x": 4000,
+   "y": 8400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Şirket adı ve logo seçili",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__yukleniyor.dc.html": {
+   "x": 6000,
+   "y": 8400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Yükleme perdesi",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__series_a_demo.dc.html": {
+   "x": 0,
+   "y": 9600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: Series A kapandı (demo)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__series_a_agresif_demo.dc.html": {
+   "x": 2000,
+   "y": 9600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: agresif şartlarla Series A",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__satis_demo.dc.html": {
+   "x": 4000,
+   "y": 9600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: şirket satıldı",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__marka_coktu_demo.dc.html": {
+   "x": 6000,
+   "y": 9600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: marka çöktü",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__vc_ret_demo.dc.html": {
+   "x": 0,
+   "y": 10800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: üç masa, üç ret",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__ilgi_sondu_demo.dc.html": {
+   "x": 2000,
+   "y": 10800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: ilgi söndü (hafta 104)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__kendi_paranla_demo.dc.html": {
+   "x": 4000,
+   "y": 10800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: kendi paranla (demo)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__iflas_1_demo.dc.html": {
+   "x": 6000,
+   "y": 10800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: iflas, evre 1",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__iflas_2_demo.dc.html": {
+   "x": 0,
+   "y": 12000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: iflas, evre 2",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__iflas_3_demo.dc.html": {
+   "x": 2000,
+   "y": 12000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: iflas, evre 3",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__paylasildi_demo.dc.html": {
+   "x": 4000,
+   "y": 12000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Gazete paylaşıldı: toast",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__series_a_ea.dc.html": {
+   "x": 6000,
+   "y": 12000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: Series A (EA, tam sürüm)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__kilometre_tasi_ea.dc.html": {
+   "x": 0,
+   "y": 13200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kilometre taşı (EA)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__kilometre_tasi_ea_kayit_engelli.dc.html": {
+   "x": 2000,
+   "y": 13200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kilometre taşı: kayıt engellendi",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_sistem__normal_en.dc.html": {
+   "x": 4000,
+   "y": 13200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sistem menüsü (EN)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_sistem__karar_bekliyor_en.dc.html": {
+   "x": 6000,
+   "y": 13200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Sistem menüsü, karar beklerken (EN)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__ust_en.dc.html": {
+   "x": 0,
+   "y": 14400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar üst (EN)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__alt_en.dc.html": {
+   "x": 2000,
+   "y": 14400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar alt (EN)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_onay__uc_dugme_en.dc.html": {
+   "x": 4000,
+   "y": 14400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Çıkış onayı (EN)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__koken_dolu_en.dc.html": {
+   "x": 6000,
+   "y": 14400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Köken adımı dolu (EN)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__sirket_dolu_en.dc.html": {
+   "x": 0,
+   "y": 15600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Şirket adımı dolu (EN)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_ayarlar__ust_1536.dc.html": {
+   "x": 2000,
+   "y": 15600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ayarlar (1536)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__kurucu_dolu_1536.dc.html": {
+   "x": 4000,
+   "y": 15600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kurucu seçimi (1536)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_acilis__koken_dolu_1536.dc.html": {
+   "x": 6000,
+   "y": 15600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Köken adımı (1536)",
+   "page": "modallar_acilis"
+  },
+  "modallar_acilis_son__series_a_demo_1536.dc.html": {
+   "x": 0,
+   "y": 16800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Son: Series A (1536)",
+   "page": "modallar_acilis"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "kabuk_kabuk__pencere_acik.dc.html",
+  "kabuk_marka__secenekler.dc.html",
+  "kabuk_marka__b_kabukta.dc.html",
+  "kabuk_ustbar__karar_bekliyor.dc.html",
+  "kabuk_ustbar__karar_bekliyor_3.dc.html",
+  "kabuk_ustbar__teklif_sayaci.dc.html",
+  "kabuk_ustbar__runway_ay.dc.html",
+  "kabuk_ustbar__runway_kirmizi.dc.html",
+  "kabuk_ustbar__kepenk.dc.html",
+  "kabuk_ustbar__sprint_otomatik.dc.html",
+  "kabuk_ustbar__yolculuk.dc.html",
+  "kabuk_ustbar__durumlar.dc.html",
+  "kabuk_ray__durumlar.dc.html",
+  "kabuk_ray__yapilar.dc.html",
+  "kabuk_serit__durumlar.dc.html",
+  "kabuk_serit__kapali.dc.html",
+  "kabuk_buildhud__durumlar.dc.html",
+  "kabuk_bildirim__yigin.dc.html",
+  "kabuk_toast__durumlar.dc.html",
+  "kabuk_ofis__tasi_dugmesi.dc.html",
+  "kabuk_ofis__tasinma_sayaci.dc.html",
+  "kabuk_ofis__kisi_ipucu.dc.html",
+  "kabuk_ipucu__cesitleri.dc.html",
+  "kabuk_harita__ofis_karti.dc.html",
+  "kabuk_harita__kart_durumlari.dc.html",
+  "kabuk_ustbar__2560.dc.html",
+  "kabuk_ustbar__durumlar_en.dc.html",
+  "kabuk_ustbar__1536.dc.html",
+  "kabuk_ustbar__1536x960.dc.html",
+  "kabuk_ustbar__1536_pencere.dc.html",
+  "olaylar_olaylar__frank_teklif.dc.html",
+  "olaylar_olaylar__kuyruk.dc.html",
+  "olaylar_olaylar__musteri_secenek_acik.dc.html",
+  "olaylar_olaylar__kilitli_secenek.dc.html",
+  "olaylar_olaylar__gecmis_karar.dc.html",
+  "olaylar_olaylar__kagit_onizleme.dc.html",
+  "olaylar_olaylar__kagit_acik.dc.html",
+  "olaylar_olaylar__kagit_son_hafta.dc.html",
+  "olaylar_olaylar__kagit_karar_beklerken.dc.html",
+  "olaylar_olaylar__bildirimler.dc.html",
+  "olaylar_olaylar__calisan_ayrilik.dc.html",
+  "olaylar_olaylar__ayrilmis_gonderici.dc.html",
+  "olaylar_olaylar__zar_secenegi.dc.html",
+  "olaylar_olaylar__zar_secenegi_renk_koru.dc.html",
+  "olaylar_olaylar__donem_ozeti.dc.html",
+  "olaylar_olaylar__frank_tanisma.dc.html",
+  "olaylar_olaylar__frank_ani.dc.html",
+  "olaylar_olaylar__taslak_frank_ani_basin.dc.html",
+  "olaylar_olaylar__arge_notu.dc.html",
+  "olaylar_olaylar__haftalik_satis.dc.html",
+  "olaylar_olaylar__bos_kutu.dc.html",
+  "olaylar_olaylar__uzun_gecmis.dc.html",
+  "olaylar_ekip__salt_okunur_karar_bekliyor.dc.html",
+  "olaylar_olaylar__frank_teklif_en.dc.html",
+  "olaylar_olaylar__musteri_secenek_acik_en.dc.html",
+  "olaylar_olaylar__taslak_frank_ani_basin_en.dc.html",
+  "ekip_ekip__kadro.dc.html",
+  "ekip_ekip__kadro_40.dc.html",
+  "ekip_ekip__kadro_40_siki.dc.html",
+  "ekip_ekip__kadro_bos.dc.html",
+  "ekip_ekip__satir_durumlari.dc.html",
+  "ekip_ekip__gorevler.dc.html",
+  "ekip_ekip__gorevler_bos.dc.html",
+  "ekip_ekip__menu.dc.html",
+  "ekip_ekip__dosya.dc.html",
+  "ekip_ekip__dosya_kurucu.dc.html",
+  "ekip_ekip__zam.dc.html",
+  "ekip_ekip__cikar.dc.html",
+  "ekip_ekip__cikar_eksi.dc.html",
+  "ekip_ekip__egitim.dc.html",
+  "ekip_ekip__egitim_kilitli.dc.html",
+  "ekip_ekip__mesai.dc.html",
+  "ekip_ekip__mesai_gece.dc.html",
+  "ekip_ekip__atlas_arama.dc.html",
+  "ekip_ekip__atlas_dosyalar.dc.html",
+  "ekip_ekip__kadro_renk_koru.dc.html",
+  "ekip_ekip__gorevler_renk_koru.dc.html",
+  "ekip_ekip__kadro_en.dc.html",
+  "ekip_ekip__kadro_40_siki_en.dc.html",
+  "ekip_ekip__menu_en.dc.html",
+  "ekip_ekip__mesai_en.dc.html",
+  "ekip_ekip__atlas_dosyalar_en.dc.html",
+  "ekip_ekip__atlas_arama_1536.dc.html",
+  "ekip_ekip__atlas_dosyalar_1536.dc.html",
+  "urun_urun__sprint_planlama.dc.html",
+  "urun_urun__sprint_suruyor.dc.html",
+  "urun_urun__surum_notu.dc.html",
+  "urun_urun__ceyrek.dc.html",
+  "urun_urun__b2b_talepler.dc.html",
+  "urun_urun__sprint_otomatik_basladi.dc.html",
+  "urun_urun__sesler_acik.dc.html",
+  "urun_urun__kapasite_asimi.dc.html",
+  "urun_urun__ekip_yok.dc.html",
+  "urun_urun__kart_durumlari.dc.html",
+  "urun_urun__surum_notu_beta.dc.html",
+  "urun_urun__ceyrek_hedef_menusu.dc.html",
+  "urun_urun__ceyrek_kilitli_pm_yok.dc.html",
+  "urun_urun__gecmis.dc.html",
+  "urun_urun__tur_secici.dc.html",
+  "urun_urun__mvp_oncesi_karar.dc.html",
+  "urun_olaylar__sprint_karari_kagit.dc.html",
+  "urun_urun__b2c_mvp_surum.dc.html",
+  "urun_urun__sprint_planlama_en.dc.html",
+  "urun_urun__surum_notu_en.dc.html",
+  "urun_urun__sprint_planlama_1536.dc.html",
+  "satis_finans_satis__boru_hatti.dc.html",
+  "satis_finans_satis__masa_ve_portfoy.dc.html",
+  "satis_finans_satis__temsilci_secici.dc.html",
+  "satis_finans_satis__b2c_bos.dc.html",
+  "satis_finans_satis__renk_koru.dc.html",
+  "satis_finans_finans__ozet.dc.html",
+  "satis_finans_finans__artida.dc.html",
+  "satis_finans_finans__uyari.dc.html",
+  "satis_finans_finans__kepenk.dc.html",
+  "satis_finans_finans__sinyal.dc.html",
+  "satis_finans_finans__gider_dokumu.dc.html",
+  "satis_finans_finans__yatirim_av_acik.dc.html",
+  "satis_finans_finans__yatirim_av_kapali.dc.html",
+  "satis_finans_satis__masa_ve_portfoy_en.dc.html",
+  "satis_finans_satis__temsilci_secici_en.dc.html",
+  "satis_finans_finans__ozet_en.dc.html",
+  "satis_finans_finans__yatirim_av_acik_en.dc.html",
+  "satis_finans_satis__1536.dc.html",
+  "satis_finans_finans__1536.dc.html",
+  "kisisel_arge_kisisel__normal.dc.html",
+  "kisisel_arge_kisisel__frank_sonrasi.dc.html",
+  "kisisel_arge_arge__agac.dc.html",
+  "kisisel_arge_arge__detay.dc.html",
+  "kisisel_arge_arge__atama.dc.html",
+  "kisisel_arge_arge__donmus.dc.html",
+  "kisisel_arge_arge__gecmis.dc.html",
+  "kisisel_arge_arge__salt_okunur.dc.html",
+  "kisisel_arge_arge__kapali.dc.html",
+  "kisisel_arge_arge__parcalar.dc.html",
+  "kisisel_arge_olaylar__arge_kesif.dc.html",
+  "kisisel_arge_ofis__kesif_bildirimi.dc.html",
+  "kisisel_arge_ofis__arastirma_cubugu.dc.html",
+  "kisisel_arge_pazarlama__yer_tutucu.dc.html",
+  "kisisel_arge_kisisel__normal_en.dc.html",
+  "kisisel_arge_arge__detay_en.dc.html",
+  "kisisel_arge_kisisel__1536.dc.html",
+  "kisisel_arge_arge__1536.dc.html",
+  "toplanti_toplanti__satis_probe.dc.html",
+  "toplanti_toplanti__satis_locked.dc.html",
+  "toplanti_toplanti__satis_won.dc.html",
+  "toplanti_toplanti__satis_lost.dc.html",
+  "toplanti_toplanti__satis_handoff.dc.html",
+  "toplanti_toplanti__pazarlik_countered.dc.html",
+  "toplanti_toplanti__pazarlik_insult.dc.html",
+  "toplanti_toplanti__pazarlik_confirm.dc.html",
+  "toplanti_toplanti__vc_open.dc.html",
+  "toplanti_toplanti__vc_sorgu.dc.html",
+  "toplanti_toplanti__vc_sheet.dc.html",
+  "toplanti_toplanti__vc_callback.dc.html",
+  "toplanti_toplanti__vc_ret.dc.html",
+  "toplanti_toplanti__vc_seed.dc.html",
+  "toplanti_toplanti__vc_long.dc.html",
+  "toplanti_termsheet__table.dc.html",
+  "toplanti_termsheet__table_final.dc.html",
+  "toplanti_termsheet__table_walk.dc.html",
+  "toplanti_termsheet__table_other.dc.html",
+  "toplanti_termsheet__seed_table.dc.html",
+  "toplanti_davet__satis_halka.dc.html",
+  "toplanti_davet__satis_kart.dc.html",
+  "toplanti_davet__ertele_satis.dc.html",
+  "toplanti_davet__vc_kart.dc.html",
+  "toplanti_davet__ertele_vc.dc.html",
+  "toplanti_yolculuk__gidis.dc.html",
+  "toplanti_yolculuk__donus.dc.html",
+  "toplanti_toplanti__satis_locked_en.dc.html",
+  "toplanti_toplanti__vc_sorgu_en.dc.html",
+  "toplanti_termsheet__table_en.dc.html",
+  "toplanti_davet__satis_kart_en.dc.html",
+  "toplanti_toplanti__pazarlik_open_1536.dc.html",
+  "toplanti_toplanti__vc_long_1536.dc.html",
+  "modallar_acilis_sistem__normal.dc.html",
+  "modallar_acilis_sistem__karar_bekliyor.dc.html",
+  "modallar_acilis_ayarlar__ust.dc.html",
+  "modallar_acilis_ayarlar__alt.dc.html",
+  "modallar_acilis_ayarlar__pencere_modu_acik.dc.html",
+  "modallar_acilis_ayarlar__cozunurluk_acik.dc.html",
+  "modallar_acilis_ayarlar__olcek_acik.dc.html",
+  "modallar_acilis_ayarlar__oto_kayit_acik.dc.html",
+  "modallar_acilis_ayarlar__ozet_acik.dc.html",
+  "modallar_acilis_ayarlar__dil_acik.dc.html",
+  "modallar_acilis_ayarlar__renk_koru_acik.dc.html",
+  "modallar_acilis_ayarlar__sifirla_onay.dc.html",
+  "modallar_acilis_kayit__bos.dc.html",
+  "modallar_acilis_kayit__dolu.dc.html",
+  "modallar_acilis_kayit__karar_bekliyor.dc.html",
+  "modallar_acilis_kayit__f5_reddedildi.dc.html",
+  "modallar_acilis_yukle__bos.dc.html",
+  "modallar_acilis_yukle__dolu.dc.html",
+  "modallar_acilis_yukle__sil_onay.dc.html",
+  "modallar_acilis_onay__iki_dugme.dc.html",
+  "modallar_acilis_onay__uc_dugme.dc.html",
+  "modallar_acilis_onay__uc_dugme_karar_bekliyor.dc.html",
+  "modallar_acilis_acilis__dil_kapisi.dc.html",
+  "modallar_acilis_acilis__dil_kapisi_ustunde.dc.html",
+  "modallar_acilis_acilis__kurucu.dc.html",
+  "modallar_acilis_acilis__kurucu_dolu.dc.html",
+  "modallar_acilis_acilis__koken.dc.html",
+  "modallar_acilis_acilis__koken_negatif_eksik.dc.html",
+  "modallar_acilis_acilis__koken_dolu.dc.html",
+  "modallar_acilis_acilis__sirket.dc.html",
+  "modallar_acilis_acilis__sirket_dolu.dc.html",
+  "modallar_acilis_acilis__yukleniyor.dc.html",
+  "modallar_acilis_son__series_a_demo.dc.html",
+  "modallar_acilis_son__series_a_agresif_demo.dc.html",
+  "modallar_acilis_son__satis_demo.dc.html",
+  "modallar_acilis_son__marka_coktu_demo.dc.html",
+  "modallar_acilis_son__vc_ret_demo.dc.html",
+  "modallar_acilis_son__ilgi_sondu_demo.dc.html",
+  "modallar_acilis_son__kendi_paranla_demo.dc.html",
+  "modallar_acilis_son__iflas_1_demo.dc.html",
+  "modallar_acilis_son__iflas_2_demo.dc.html",
+  "modallar_acilis_son__iflas_3_demo.dc.html",
+  "modallar_acilis_son__paylasildi_demo.dc.html",
+  "modallar_acilis_son__series_a_ea.dc.html",
+  "modallar_acilis_son__kilometre_tasi_ea.dc.html",
+  "modallar_acilis_son__kilometre_tasi_ea_kayit_engelli.dc.html",
+  "modallar_acilis_sistem__normal_en.dc.html",
+  "modallar_acilis_sistem__karar_bekliyor_en.dc.html",
+  "modallar_acilis_ayarlar__ust_en.dc.html",
+  "modallar_acilis_ayarlar__alt_en.dc.html",
+  "modallar_acilis_onay__uc_dugme_en.dc.html",
+  "modallar_acilis_acilis__koken_dolu_en.dc.html",
+  "modallar_acilis_acilis__sirket_dolu_en.dc.html",
+  "modallar_acilis_ayarlar__ust_1536.dc.html",
+  "modallar_acilis_acilis__kurucu_dolu_1536.dc.html",
+  "modallar_acilis_acilis__koken_dolu_1536.dc.html",
+  "modallar_acilis_son__series_a_demo_1536.dc.html"
+ ],
+ "notes": {
+  "t_genel": {
+   "x": 0,
+   "y": -300,
+   "text": "Menajer Masası · ekran maketleri",
+   "kind": "title1",
+   "maxW": 2400,
+   "page": "genel"
+  },
+  "s_genel": {
+   "x": 0,
+   "y": 0,
+   "text": "1. Marka bloğu: (a) turuncu kare + \"Project Unicorn\" mı, (b) oyuncunun şirket adı + kendi logosu mu? Karşılaştırma Kabuk sayfasında (marka__secenekler, marka__b_kabukta); bütün kareler şimdilik (a) ile. (öneri: a; turuncu kare marka sabiti olarak amber kuralından muaf, oyuncunun logosu açılıştaki kapı levhasında ve yükleme perdesinde kalır)\n2. Mail gönderenleri: her olay tek göndericiden gelen bir mail; dokuz tür: Frank, çalışan, müşteri muhatabı, aday, VC ortağı, basın, şirket masası, kurucunun kendi notu, dış gönderen (SENDERS.md). Tür listesi kabul mü? (öneri: kabul)\n3. Müşteri mailini kim yazar: satış masasında tanıştığın alıcı (adı ve yüzüyle) mı, yalnız sektör unvanı (\"BT Müdürü · Ege Sigorta\") mı? (öneri: tanıştığın alıcı; lead'i olmayan başlangıç hesaplarında unvan ve şirket monogramı)\n4. Kişisiz ve iç gönderenler: şirket masaları \"Muhasebe\" (dönem özeti) ve \"Destek\" (destek, kullanıcı geri bildirimi); yalnız kurucunun yapabileceği gözlemler \"Kendine not\" olarak kurucunun portresiyle. Adlar uygun mu, masa avatarı belge glifi mi oyuncunun logosu mu? (öneri: iki ad kalsın, avatar belge glifi; Kendine not kabul)\n5. İki sesli kartlar (satın alma teklifi, seed teklifi): önce VC'nin maili, Frank'in tek satırı aynı zincirde ikinci mail. (öneri: kabul)\n6. Basın gönderen olur: yayın kendi adıyla ve renginde monogramla yazar, ad EN'de de çevrilmez (\"Sektör Telgrafı\"). Bülten kurucuya \"sen\" mi \"siz\" mi der? (öneri: basın gönderen olsun; \"sen\", taslak öyle yazıldı ve oyunun geri kalanı da sen diyor)\n7. Kapı ve konu: üst barın karar yuvası ve salt okunur şerit göndericiyi yazar (\"Cevap bekliyor · Frank Köseoğlu\", \"Frank Köseoğlu · Teklif\"); kartlara göndericinin yazdığı yeni konu alanı gelir, eski başlık iç ad olarak geçmişte ve toastta kalır. Konu ile başlık tek alan mı olsun? (öneri: kapı göndericiyi yazsın, iki alan ayrı kalsın)\n8. Hatırlatıcılar (riskteki müşteri, ayrılabilir çalışan, büyüme isteği) mail değil kayıt kalır: tarih ve okundu yok, aynı konuda karar açıkken listede ve yığında gizli. Kayıtlar gönderen alsın mı (ör. Destek)? (öneri: kayıt kalsın, gönderensiz)\n9. Altı mail taslağı (DRAFTS.md: Frank'in teklifi, Eski bir dost, müşteri riski, Bir ekip daha, istifa, yıllık dosya) ve Frank'in tanışma ek taslağı. Hepsi taslak; Frank'in satırları senin onayın olmadan ekrana çıkmaz, çerçevelerde TASLAK işaretli. (öneri: altısını onayla, Frank'in satırlarını tek tek oku; kalan 50'yi aşkın kart onaydan sonra aynı kuralla dönüşür)\n10. Yeni ve değişen metinler: sekiz grubun INDEX tablolarında 161 satır, iki ortak anahtar (marka adı ve \"Karar beklerken kaydedilemez.\") bir kez sayılınca 158; bazı satırlar birden çok anahtar taşır, Ar-Ge ve Modallar'da tablo dışında yalnız harf düzeni değişiklikleri de var. Hepsi TR/EN onayı bekliyor; satış diyaloğu ve lead satırları hâlâ PH yer tutucu, onay listesine girmez. (öneri: grup grup onayla, önce Kabuk ve Olaylar, öteki gruplar onların metnini kullanıyor)\nBilgi, karar gerekmez: bugünkü oyunda bulunan hatalar\nH1. Dönem özeti yanlış çeyreği basıyor: hafta 14'te \"2. Çeyrek 2026, Hafta 1 ile 14\"; kapanan çeyrek 1. çeyrek, hafta 1 ile 13.\nH2. Satış'taki risk sebebi (\"sık kesinti\") canlı hata sayısını, müşterinin risk maili doğrulanmış hata sayısını okuyor; tohumda ikisi çelişiyor.\nH3. \"Eski bir dost\" kartında konuşmacı tanımlı değil: MENTOR rozeti ve Frank'in yüzü çıkmıyor.\nH4. Karar beklerken \"Kaydet ve çık\" kaydetmeden çıkıyor.\nH5. Ofis haritasında Ev kartı \"0 şart karşılanmadı\" ve \"Taşınabilir\" yazıyor; taşınma kartı \"$6,5K\" diyor ama kasadan para düşmüyor.\nH6. Kepenkte Finans Özet \"Runway 0 hafta\" yazıyor, üst bar \"Kepenk 3 hafta\"; bütün fonlar kapalıyken Frank'in Yatırım şeridi hâlâ \"Av açık\" diyor.\nH7. Ürün: kimse çalışamazken de Sprinti başlat'ın gerekçesi \"En az bir kart ekle\".\nH8. Gazete: B2B koşuda \"0 ÖDEYEN\" ve \"0 KİTLE\"; satış sonunda \"$147,8K\" bedel ile \"1 milyon dolar değerleme\" yan yana.\nH9. TR metinde İngilizce ve tire: köken adı CSV'de hâlâ \"Self-Made\" (2026-08-08 hükmü \"Sıfırdan\"), kayıt künyesinde \"Series A Hunt\", Yatırım kilidinde \"Series A Hunt'ta açılır\"; saat çipinde, VC değerleme aralıklarında ve 2. kademe fonunun adında tire var.\nH10. Tema tohumu (debug) burn'ü bordrodan hesaplamıyor: üst bar Artıda derken maaş yükü $43.600; maketlerin üst barı bu yüzden tohumda tutuldu.",
+   "w": 1600,
+   "maxH": 4000,
+   "size": "l",
+   "fill": "orange",
+   "page": "genel"
+  },
+  "t_kabuk": {
+   "x": 0,
+   "y": -300,
+   "text": "Kabuk ve ofis",
+   "kind": "title1",
+   "maxW": 8560,
+   "page": "kabuk"
+  },
+  "s_kabuk": {
+   "x": 8720,
+   "y": 0,
+   "text": "1. Saat kilidi toastı: \"Önce {başlık} cevapla.\" kalıbı Türkçede ek alamıyor; genel cümle \"Önce bekleyen kararı cevapla.\" (öneri: genel cümle)\n2. Para renkleri: runway 3 ayın altında kırmızı (Finans rozeti ve şerit uyarısıyla aynı eşik; Frank'in uyarı kartı 6 ayda çıkar ama sayı kırmızı olmaz); kasa artıdayken eksi NET mürekkep, kırmızı yalnız kepenkte. (öneri: kabul)\n3. Yolculuk: üst bar \"Şimdi\", hız tuşları kapalı, yeni ipucu \"Yolu geçmek için tıkla ya da Esc'ye bas.\"; kurucu diskinin halkası amber değil mürekkep. (öneri: kabul)\n4. Bildirim yığını gelen kutusunun önizlemesi: satır gönderen · konu · kalan süre, en çok 4 kart (oyunun bugünkü sınırı; SPEC 3 diyor). Term sheet satırı fondan \"Teklif\" konusuyla gelir. (öneri: kabul, sınır 4)\n5. Kişi ipucu bugün tek satır; yeni hali yüz, ad, unvan · iş ve riskteyse tek tehlike satırı (\"Moral 22 · ayrılabilir\"). (öneri: kabul)\n6. Pazarlama kilidi: demoda gerekçe \"Yakında\" mı, kapının adını söyleyen \"Erken Erişim'de\" mi? Sayfa EA'da da yalnız yer tutucuysa satır EA'da açılsın mı? (öneri: \"Erken Erişim'de\"; sayfa gelene kadar EA'da da kilitli)\n7. Karar beklerken yüzen kartlar: \"Düzeltme başlat\" ve araştırma kartının bağları da kapansın mı, yanında \"Cevap bekliyor\"? Karar 5 yalnız pencereleri ve taşınmayı söylüyor. (öneri: kapansın, Ar-Ge salt okunur karesi böyle)\n8. Şerit kapalıyken gelen canlı satır (ör. runway 3 ayın altına indi) nereye düşsün? Bugün yalnız şeritte. (öneri: başka yere düşmesin; aynı uyarı üst barda ve Finans rozetinde görünüyor)\n9. Taşınma bedeli: harita kartı \"Taşın · $6,5K\" diyor ama kasadan para düşmüyor (ACIK_KARARLAR 60). Bedel bağlansın mı, tutar karttan mı kalksın? (öneri: bağlansın, seçenek A; büyüyen ofis runway'i daraltır)\n10. Taşınma toastları: başlangıçta \"Taşınma başladı · İş hanı\" (bugünkü \"Yeni ofis\" varış gibi okunuyor); bir hafta sonra varışta da \"Yeni ofis · İş hanı\" çıksın mı? Bugün varışta toast yok. (öneri: ikisi de olsun)",
+   "w": 1400,
+   "maxH": 4000,
+   "size": "l",
+   "fill": "orange",
+   "page": "kabuk"
+  },
+  "t_olaylar": {
+   "x": 0,
+   "y": -300,
+   "text": "Olaylar (mail)",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "olaylar"
+  },
+  "s_olaylar": {
+   "x": 8080,
+   "y": 0,
+   "text": "1. Künyede tarih yok: künye yalnız tür (Karar, Kağıt, Rapor, Mesaj, Dikkat) ve durum; tarih başlığın ikinci satırında, sağda. (öneri: kabul)\n2. Frank'in maili selamsız ve kapanışsız, gövde baştan sona serif; müşteri \"Merhaba,\" ve \"Saygılarımla,\" yazar, çalışan kapanış yazmaz (imza adını taşır). (öneri: kabul)\n3. Tanışma: (A) Frank'in kısa maili \"Ben Frank\" (yeni Frank satırı ister, mühürlü sahne kısalır) mı, (B) mühürlü sahne olduğu gibi \"Kendine not\" olarak mı? Çerçeve A'yı çiziyor. (öneri: B, mühürlü metin dokunulmadan kalır)\n4. Dönem özeti Muhasebe'den kendiliğinden açılan rapor maili. Ekip satırı \"Ekip · kurucu dahil 1 → 6\" mı, Ekip penceresindeki ÇALIŞAN sayısı (0 → 5) mı? (öneri: \"kurucu dahil\" etiketi, çerçevedeki gibi)\n5. \"Eski bir dost\" maili gelince Frank'in danışma notu (\"Görüşme ayarlandı. Hazırlıklı git.\") mailin tekrarı oluyor; not yığında kalsın mı? (öneri: bu kartta düşsün, mail yeter)\n6. Kilit gerekçesi \"İki kez oyaladın. Üçüncüsünü kimse beklemez.\" ikinci cümlesiyle hüküm veriyor; gerekçe yalnız olgu söyler. (öneri: yalnız \"İki kez oyaladın.\")\n7. Açık kağıdın altında \"Kenara koy\" düğmesi ve Esc tuş görseli; SPEC Esc'i söylüyor ama ekranda göstermiyor. (öneri: kalsın)\n8. Kağıt önizlemesinde seçenekler gizli, Cevapla'dan sonra açılır. Etiketleri soluk bir satırda önceden görünsün mü? (öneri: gizli kalsın, sistem kuralı)\n9. Gün sınırında gelen mail saat yazmaz. Oyuncunun İlgilen ile açtığı karar saat yazsın mı? (öneri: yazsın, oyuncunun açtığı her mail saatli)\n10. Zar: oran hep görünür, bilgi renginde ve noktalı çizgili; üstüne gelince en çok 4 satırlık sayısız modifier listesi. Bugün hiçbir kartta zar yok; ilk zarlı kart hangisi? (öneri: ton kabul; ilk zarlı kart çerçevedeki istifa, Zam teklif et ve Kalması için konuş)",
+   "w": 1400,
+   "maxH": 4000,
+   "size": "l",
+   "fill": "orange",
+   "page": "olaylar"
+  },
+  "t_ekip": {
+   "x": 0,
+   "y": -300,
+   "text": "Ekip",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "ekip"
+  },
+  "s_ekip": {
+   "x": 8080,
+   "y": 0,
+   "text": "1. Sıkı kip (32 px satır, Deneyim sütunu dosyaya düşer) ne zaman açılsın: oyuncu ayarı mı, kişi sayısı eşiği mi? (öneri: kişi sayısı eşiğiyle kendiliğinden, eşik ayar sabiti)\n2. Kadro'nun Durum sütunu iki rozet taşıyamıyor (Ayrılabilir + Aşırı yük). Kadro'da yalnız en ağır rozet mi? (öneri: evet, aşırı yük Görevler'de görünür)\n3. Ekip ray rozeti kaçma riskini ve bekleyen aday dosyasını tek sayıda topluyor; risk varsa kırmızı, yalnız dosyada nötr. Bölünsün mü? (öneri: tek sayı kalsın, renk en ağır durumdan)\n4. Çalışan dosyasının genişliği 320 (çizilen) mi, SPEC'in 360'ı mı (Ekip penceresine 24 px biner)? (öneri: 320)\n5. Mesai paneli açıkken üst bar, saat çipi ve Kadro uygulanmış günü gösterir, taslak yalnız panelde; yeni \"Ofis günü\" bandı kalsın mı? (öneri: ikisi de kabul)\n6. Paneller (Eğitim, Mesai, Atlas) onları açan pencerenin ortasına, alanın tepesine oturur; alttaki pencere 0,84 kararır ve amber düğmesi söner. Kararma bu güçte mi? (öneri: kabul, 0,84 kalsın)\n7. Satır menüsüne \"Dosyayı aç\" eklendi; zam ve işten çıkarma diyalogları kişiyi adıyla anıyor (bugün başlıkta yalnız eylem). (öneri: ikisi de kabul)\n8. Kaçma riski üç yerde: Kadro'daki risk şeridi, gelen kutusundaki Dikkat kaydı, ofisteki yığın satırı. Üçü de kalsın mı? (öneri: kalsın, her biri kendi ekranında)\n9. Görevler'in Araştırma sütunu: kişi araştırmadayken salt okunur işaretli hal eklensin mi (atama Ar-Ge'de yapılır)? (öneri: evet, kimin araştırdığı matristen okunsun)\n10. TR'de kalan İngilizce: rol \"UX/UI Designer\" (sözlük \"Tasarımcı\" diyor), seviye \"Junior\", kilit gerekçesinde \"B2B\". (öneri: \"Tasarımcı\"ya dönsün; Junior GDD kararıyla kalsın; B2B ve B2C pazar adı olarak izinli listeye girsin)",
+   "w": 1400,
+   "maxH": 4000,
+   "size": "l",
+   "fill": "orange",
+   "page": "ekip"
+  },
+  "t_urun": {
+   "x": 0,
+   "y": -300,
+   "text": "Ürün",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "urun"
+  },
+  "s_urun": {
+   "x": 8080,
+   "y": 0,
+   "text": "1. Alan renkleri kalksın mı? Alan kimliği ad, üç kare ve kelimeyle okunur, kapasite çubuğu tek renk. (öneri: kalksın)\n2. Zayıf seviyesi ve kapasite aşımı uyarı renginde, kırmızı değil (kırmızı yalnız tehlike); \"!\" yalnız üçgen, satır boyanmaz. (öneri: kabul)\n3. Pencere başlığı: serif ürün adı yerine \"Ürün\" başlığı ve iki ölçü (tür ile ürün adı, Sürüm); \"Planlanan\" damgası kalkar, kesik çerçeve aynı şeyi söylüyor. (öneri: kabul; CANLI yalnız sürüm notunda)\n4. Sprint kararı kağıt olarak: kartta \"gönderen · konu\" ve ikincil \"Karara git\", Olaylar'ı kağıt seçili açar, saat ancak Cevapla'da durur; üst bar \"Sprint kararı · bu hafta son\", elmas yok. (öneri: kabul)\n5. Otomatik başlayan sprint notu Ürün'de, Ürün kapalıyken BuildHUD'da; iki yerde tek glif (oynat). (öneri: kabul)\n6. Sürüm notu açıkken oyun duraklar, üst barda kapı çerçevesi yok; notun altındaki \"Sürüm notu açıkken oyun durur\" satırı yeter mi? (öneri: yeter)\n7. SPRİNT mi SPRINT mi? Maket büyük harfi tek yoldan verdi, TR'de her yerde SPRİNT. \"Sprint\" izinli ödünç kelime değil; Onboarding, ticket, PM, Beta, SSO, MVP, SaaS da TR ekranda İngilizce. (öneri: sprint ve beta izinli listeye girsin, büyük hali SPRİNT; ötekiler için ayrı sözlük turu)\n8. Kimse çalışamazken boş sprint sütununun düğmesi \"İşe alım başlat\" mı, \"Ekip'e git\" mi? Kadro varken kurucu başka işteyse de kapasite 0 olur. (öneri: kadro boşsa İşe alım başlat, kadro varsa Ekip'e git)\n9. B2B'de Müşteriler satırı alanların altında; bir alan açıkken panelin dışına düşüyor. Üste alınsın mı? (öneri: alınsın, son tarihli talepler bir bakışta görünsün)\n10. Küçük etkileşimler: Liderin önerisi \"Uygula\" düğmesiyle (bugün satırın tamamı tıklanıyor), çeyrekte tek birincil \"Hepsini onayla\", çeyrek penceresi içeriğe göre kısalır (altta ~290 px boşluk kalıyor), geçmişte en yeni üstte. (öneri: dördü de kabul)",
+   "w": 1400,
+   "maxH": 4000,
+   "size": "l",
+   "fill": "orange",
+   "page": "urun"
+  },
+  "t_satis_finans": {
+   "x": 0,
+   "y": -300,
+   "text": "Satış ve Finans",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "satis_finans"
+  },
+  "s_satis_finans": {
+   "x": 8080,
+   "y": 0,
+   "text": "1. Kurucunun tuttuğu hesapta temsilci satırı \"Kurucu\" mu, \"Sen\" mi, \"atanmadı\" mı? Olaylar'daki hatırlatıcı kaydı bugün \"atanmadı\" diyor. (öneri: her yerde \"Kurucu\"; oyun bu hesapları kurucuya sayıyor)\n2. Kepenkte Finans başlığının üçüncü ölçüsü üst barla aynı \"Kepenk 3 hafta\" (bugün \"Runway 0 hafta\"). (öneri: kabul)\n3. Bütün fonlar kapalıyken Frank'in Yatırım şeridi hâlâ \"Av açık\" diyor: yeni Frank satırı mı (taslak gerekir), şerit mi gizlensin? (öneri: şerit gizlensin)\n4. Kasa eğrisinde ikinci projeksiyon (\"hedef tutarsa\") ufukta mevcut gidişe 2 px'ten yakınsa çizilmez ve lejantta görünmez. İkinci çizgi kalsın mı? (öneri: kalsın, bu kuralla)\n5. Satış ve Yatırım'da amber birincil eylem yok, her satırın eylemi ikincil; iki teklif varken de amber yok. (öneri: kabul)\n6. Teklif süresi tek eşik: uyarı rengi, kırmızı yalnız son haftada (üst bar, yığın ve belge aynı). Oyun bugün 2 hafta kalınca kırmızı; sabit değişir. (öneri: kabul)\n7. Yüzler: fon satırına lider ortağın yüzü ve adı eklendi (\"Kerem Kaya · Kıdemli Ortak\"); lead kartlarına da alıcının yüzü gelsin mi? (öneri: ikisi de evet)\n8. B2C koşuda Satış tek boş hal ve \"Kitleden gelen gelir MRR'da sayılır.\" satırı; yoksa sekme B2C'de kilitli mi görünsün? (öneri: boş hal, maketteki gibi)\n9. Pencere yüksekliği içeriğe göre, SPEC tablosu yalnız üst sınır; Ürün çeyreği ve Ar-Ge de aynı kurala bağlı. (öneri: içeriğe göre)\n10. Pazar payı merdiveni çubuksuz: sıra ve pay yazılı, %0,1'lik çubuk bilgi taşımıyordu. (öneri: çubuksuz)",
+   "w": 1400,
+   "maxH": 4000,
+   "size": "l",
+   "fill": "orange",
+   "page": "satis_finans"
+  },
+  "t_kisisel_arge": {
+   "x": 0,
+   "y": -300,
+   "text": "Kişisel ve Ar-Ge",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "kisisel_arge"
+  },
+  "s_kisisel_arge": {
+   "x": 8080,
+   "y": 0,
+   "text": "1. Ar-Ge penceresi açıkken sağdaki araştırma kartı da görünüyor, aynı bilgi pencerenin şeridinde. Pencere açıkken kart gizlensin mi? (öneri: gizlensin, kapalıyken görünür)\n2. Ar-Ge kendi geçmişini tutar: notlar ve keşifler, Olaylar'la aynı okuma bölmesi, tek okundu durumu. Sekmenin adı \"Geçmiş\" mi \"Notlar\" mı? (öneri: Geçmiş)\n3. Keşif mail olarak gelir: gönderen araştırmayı bitiren kişi (birden çoksa en büyük katkı), kurucu tek başınaysa \"Kendine not\"; kendiliğinden açılmaz, okunana dek yığında bilgi satırı olur. Yığın kuralına bu istisna eklensin mi? (öneri: kabul, istisna eklensin)\n4. Keşif mailinde tekrar: beat'in son cümlesi \"Açtığı şey\" satırının ikinci cümlesini tekrarlıyor (Test Otomasyonu, Tasarım Sistemi, Hata Takip Sistemi). Hangisi düşsün? (öneri: beat'in son cümlesi)\n5. İlk aylık ürün notu: GDD ilk raporun bir kez kendiliğinden açılmasını istiyor, çerçeveler \"gelir, okunmamış\" çizdi. (öneri: ilki kendiliğinden açılsın, GDD'deki gibi)\n6. İlk yatırım kilometre taşı yalnız Series A ile kazanılıyor, demoda hiç görünmüyor. Frank'in çeki de saysın mı? Kilometre taşının notu (\"İlk çek yazıldı...\") zaten ilk çeki anlatıyor. (öneri: saysın)\n7. Kurucu huyları: bugün 8 boş yuva ve \"Yakında\" etiketi. Oyuncunun açılışta seçtiği iki huy adıyla görünsün mü? (öneri: evet, etkiler bağlanana dek \"Yakında\" etiketiyle)\n8. Net servet: değerleme, net servet ve zirve değer satırları atıldı (demoda hiç dolmuyorlar); pay çubuğu \"Kurucu %96 · Melek %4\" ve not kalır. (öneri: kabul)\n9. Beceri gösterimi: 0 ile 10 arası sayı (renk rampasıyla) ve beş çift hücre, bir çift bir yıldız. (öneri: kabul)\n10. Süresi dolan kağıt (Nordica, Hafta 15 sonu) kutuda ne olsun: geçmiş satırı ve damga mı, hiç mi? (öneri: geçmiş satırı, \"Süresi doldu\" damgasıyla)",
+   "w": 1400,
+   "maxH": 4000,
+   "size": "l",
+   "fill": "orange",
+   "page": "kisisel_arge"
+  },
+  "t_toplanti": {
+   "x": 0,
+   "y": -300,
+   "text": "Toplantı",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "toplanti"
+  },
+  "s_toplanti": {
+   "x": 8080,
+   "y": 0,
+   "text": "1. Saat kuralı: davette saat işler (VC kartı saati durdurarak açılır); yolculukta ve görüşmede saat tutulur, hız tuşları kapalı, amber yok. (öneri: kabul)\n2. Masadakilerin üç koltuk rengi kalktı; kimlik yüz ve ad, konuşan mürekkep halkada. (öneri: kabul)\n3. Geri dönüş sonucu bugün amber bantlı; amber zaman durumuna ayrıldığı için uyarı rengi ve takvim glifi. (öneri: kabul)\n4. Term sheet masası kendi tam ekran sahnesi mi kalsın, toplantı odasının üstünde pencere mi olsun? (öneri: tam ekran sahne)\n5. Frank'in satırı dokta ve masada portreli kendi satırı, serif; bugünkü \"Frank: ...\" iç not biçimi kalkar. (öneri: kabul)\n6. Arama kartı kurucunun başına bağlı; yığınla çakışırsa hangisi çekilsin? (öneri: yığın gizlensin, kart yerinde kalsın)\n7. Görüşme seçenekleri tıkla ya da 1 ile 5 tuşuyla hemen seçilir (kur ve seç yalnız Olaylar'da); \"Toplantıdan çekil\" yalnız ilk adımda küçük ikincil düğme, Esc de çeker. (öneri: kabul)\n8. \"Seed\" TR'de kalsın mı (\"Seed görüşmesi\", \"Seed turu\"), \"Tohum\" mu? Haber şeridi bugün \"Tohum yatırımcıları\" diyor. (öneri: Seed kalsın, izinli ödünç kelimelere girsin)\n9. \"Spin\" TR'de izinli değil; maketteki karşılık \"Parlat\", öteki adaylar \"Tersine çevir\", \"Cilala\". (öneri: Parlat)\n10. Kırmızı yalnız tehlikede: başarısız zar ve tutum dolgusu nötr; kırmızı kalanlar \"Anlaşma olmadı\", \"Bu sefer değil\", hakaret bölgesi, fonun masadan kalkması ve Masayı zorla'nın \"Başarısızsan masa kapanır.\" satırı. (öneri: kabul)",
+   "w": 1400,
+   "maxH": 4000,
+   "size": "l",
+   "fill": "orange",
+   "page": "toplanti"
+  },
+  "t_modallar_acilis": {
+   "x": 0,
+   "y": -300,
+   "text": "Modallar, açılış ve son",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "modallar_acilis"
+  },
+  "s_modallar_acilis": {
+   "x": 8080,
+   "y": 0,
+   "text": "1. Karar beklerken Esc: ilk basış Olaylar'ı kararla açar (karar başına bir kez), sonraki Esc sistem menüsünü açar. (öneri: kabul)\n2. Kayıt engeli nerede okunur: A, menüde Kaydet kilitli ve gerekçesi yanında; B, Kaydet açık, kayıt penceresi şeritle açıklar. (öneri: A)\n3. Karar beklerken \"Kaydet ve çık\" bugün kaydetmeden çıkıyor; çerçevede kilitli, tek yol \"Çık\". (öneri: kilitli olsun)\n4. Çıkış onayında \"Çık\" iki durumda da tehlike düğmesi (son kayıttan beri oynananı siler); karar yokken amber \"Kaydet ve çık\" yanında durur. (öneri: kabul)\n5. Dil satırı Oyun bölümünde, her dil kendi adıyla (\"Türkçe\", \"English\"); bugün TR arayüzde \"İngilizce\". (öneri: kabul)\n6. Haber şeridini aç/kapa bir oyuncu ayarı ama Ayarlar'da satırı yok. Görüntü bölümüne \"Haber şeridi\" satırı eklensin mi? (öneri: evet)\n7. Açılış 2. adım: bölüm \"Huylar\" oldu, sayfa başlığı hâlâ \"Köken ve Karakter\"; huy adları cümle düzenine iner (Ağ kurucu, Mikro yönetici). Başlık \"Köken ve Huylar\" olsun mu? (öneri: evet)\n8. Son ekranı rayı: başlık sonun adı (bugün görünmüyor); EA sonunda tek birincil tam genişlik \"Tekrar dene\", rayın altı boş kalır. (öneri: kabul)\n9. Frank'in son ekranı satırlarında tire var (Series A ve iflas); tiresiz öneriler çerçevelerde TASLAK. Satırlar senin, onaylanana kadar ekrana çıkmaz. (öneri: önerileri oku, onayla ya da kendin yaz)\n10. \"Wishlist'e ekle\": \"Wishlist\" izinli kelime değil. (öneri: \"İstek listesine ekle\", Steam'in TR deyişi)",
+   "w": 1400,
+   "maxH": 4000,
+   "size": "l",
+   "fill": "orange",
+   "page": "modallar_acilis"
+  }
+ },
+ "designSystems": []
+}

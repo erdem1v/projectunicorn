@@ -1,0 +1,295 @@
+{
+  "shell": {
+    "top_bar": 64,
+    "rail": 184,
+    "ticker": 40
+  },
+  "source": "tools/capture_menajer.gd --menajer-shot=plates; OfficeView mounted at the plate size so the camera fits the visible office region; inner 3D SubViewport read (no Overlay). Seed main.gd _seed_theme_surface (run_seed 424242, week 14), clock held at 11:00, locale tr. meet = meridian fund (pinned) across the table from the founder; meet_dock = table framed left of the meeting dock (34% of the width). city chips: art/office_safe_1920_city_chips.json.",
+  "plates": [
+    {
+      "file": "art/office_safe_1536.png",
+      "size": [
+        1352,
+        760
+      ],
+      "logical_screen": [
+        1536,
+        864
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "ishani",
+      "hour": 11,
+      "variant": "plain",
+      "heads_json": "art/office_safe_1536_heads.json"
+    },
+    {
+      "file": "art/office_safe_1536_noicons.png",
+      "size": [
+        1352,
+        760
+      ],
+      "logical_screen": [
+        1536,
+        864
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "ishani",
+      "hour": 11,
+      "variant": "noicons",
+      "heads_json": null
+    },
+    {
+      "file": "art/office_safe_1920.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "ishani",
+      "hour": 11,
+      "variant": "plain",
+      "heads_json": "art/office_safe_1920_heads.json"
+    },
+    {
+      "file": "art/office_safe_1920_city.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "city",
+      "hour": 11,
+      "variant": "plain",
+      "heads_json": null
+    },
+    {
+      "file": "art/office_safe_1920_home.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "home",
+      "hour": 11,
+      "variant": "plain",
+      "heads_json": "art/office_safe_1920_home_heads.json"
+    },
+    {
+      "file": "art/office_safe_1920_home_noicons.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "home",
+      "hour": 11,
+      "variant": "noicons",
+      "heads_json": null
+    },
+    {
+      "file": "art/office_safe_1920_loft.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "loft",
+      "hour": 11,
+      "variant": "plain",
+      "heads_json": "art/office_safe_1920_loft_heads.json"
+    },
+    {
+      "file": "art/office_safe_1920_loft_noicons.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "loft",
+      "hour": 11,
+      "variant": "noicons",
+      "heads_json": null
+    },
+    {
+      "file": "art/office_safe_1920_meet.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "meet",
+      "hour": 11,
+      "variant": "plain",
+      "heads_json": null
+    },
+    {
+      "file": "art/office_safe_1920_meet_dock.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "meet",
+      "hour": 11,
+      "variant": "dock",
+      "heads_json": null
+    },
+    {
+      "file": "art/office_safe_1920_noicons.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "ishani",
+      "hour": 11,
+      "variant": "noicons",
+      "heads_json": null
+    },
+    {
+      "file": "art/office_safe_1920_plaza.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "plaza",
+      "hour": 11,
+      "variant": "plain",
+      "heads_json": "art/office_safe_1920_plaza_heads.json"
+    },
+    {
+      "file": "art/office_safe_1920_plaza_noicons.png",
+      "size": [
+        1736,
+        976
+      ],
+      "logical_screen": [
+        1920,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "plaza",
+      "hour": 11,
+      "variant": "noicons",
+      "heads_json": null
+    },
+    {
+      "file": "art/office_safe_2560.png",
+      "size": [
+        2376,
+        976
+      ],
+      "logical_screen": [
+        2560,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "ishani",
+      "hour": 11,
+      "variant": "plain",
+      "heads_json": "art/office_safe_2560_heads.json"
+    },
+    {
+      "file": "art/office_safe_2560_noicons.png",
+      "size": [
+        2376,
+        976
+      ],
+      "logical_screen": [
+        2560,
+        1080
+      ],
+      "place_at": [
+        184,
+        64
+      ],
+      "office": "ishani",
+      "hour": 11,
+      "variant": "noicons",
+      "heads_json": null
+    }
+  ]
+}

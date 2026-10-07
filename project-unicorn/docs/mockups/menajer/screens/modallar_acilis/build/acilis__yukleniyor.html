@@ -1,0 +1,9 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Acilis</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans+Condensed:wght@400&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=block" rel="stylesheet"><link rel="stylesheet" href="../../../system/tokens.css"><link rel="stylesheet" href="../../../system/base.css"><link rel="stylesheet" href="../../kabuk/kabuk.css"><link rel="stylesheet" href="../modallar.css"></head><body><div class="onb"><div class="curtain"><span class="emb playful" style="width:64px;height:64px"><svg viewBox="0 0 64 64"><rect x="2" y="2" width="60.0" height="60.0" rx="13.5" fill="var(--brand-mark)"/></svg><b style="font-size:34px">U</b></span><span class="t-h2" style="color:var(--ink-1)">Unicorn Inc.</span><span class="ld t-meta">Hazırlanıyor…</span><div class="prog" style="width:240px"><div class="prog-t"><div class="prog-f ind"></div></div></div></div></div><script>
+document.querySelectorAll('[data-pop-for]').forEach(function (p) {
+  var a = document.getElementById(p.dataset.popFor).getBoundingClientRect();
+  p.style.left = a.left + 'px'; p.style.top = (a.bottom + 4) + 'px'; p.style.width = a.width + 'px';
+  var tip = p.querySelector('.tip[data-tip-for]');
+  if (tip) { var r = document.getElementById(tip.dataset.tipFor).getBoundingClientRect();
+    tip.style.left = (a.width + 8) + 'px'; tip.style.top = (r.top - a.bottom - 4) + 'px'; }
+});
+</script></body></html>

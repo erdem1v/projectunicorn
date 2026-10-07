@@ -1,0 +1,228 @@
+/* Kişisel, Ar-Ge, araştırma kartı, Pazarlama (A4, group "kisisel_arge"). Only what the system lacks. Every colour is
+   a system token, every gap and padding on the spacing scale (2 4 6 8 12 16 20 24 32 40 48). Load after
+   ../../system/tokens.css, base.css, ./mail.css (the mail grammar of group "olaylar", snapshot) and
+   ../kabuk/kabuk.css (the shell, live: head sprites, BuildHUD states, notice stack, Ofisi taşı, research card). */
+
+/* ================================================================ frame helpers */
+.floatcol { position: absolute; display: flex; flex-direction: column; gap: var(--sp-8); width: 320px; }
+.floatcol .bh { width: 320px; }
+.sheet { position: relative; width: 1920px; height: 1080px; padding: 0; background: var(--surface-0); overflow: hidden; }
+.sheet .cap { position: absolute; color: var(--ink-3); }
+.sheet .note { position: absolute; color: var(--ink-3); font-size: var(--fs-13); line-height: var(--lh-13); }
+.win-body.flush { padding: 0; }
+/* the tree key in the window's foot (today's game keeps it there), the tree hint at the right end */
+.rfoot { position: absolute; left: 0; right: 0; bottom: 0; height: 40px; display: flex; align-items: center; gap: var(--sp-20);
+  padding: 0 var(--sp-24); border-top: var(--bw-1) solid var(--line-1); background: var(--surface-3); }
+.rfoot .it { display: inline-flex; align-items: center; gap: var(--sp-8); color: var(--ink-3); white-space: nowrap; }
+.rfoot svg { flex: none; }
+.rfoot .hint { margin-left: auto; color: var(--ink-4); white-space: nowrap; }
+
+/* ================================================================ R&D: hex glyph (tile identity; weight carries the tier) */
+.hex { flex: none; width: 14px; height: 14px; color: currentColor; }
+.hex polygon { fill: none; stroke: currentColor; stroke-linejoin: round; }
+.hex.root polygon { stroke-width: 2; } .hex.branch polygon { stroke-width: 1.5; } .hex.cont polygon { stroke-width: 1; }
+
+/* ================================================================ R&D: tree canvas, column heads, tiles */
+.tree { position: absolute; left: 24px; top: 16px; }
+.tree > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.rcol-h { position: absolute; height: 24px; display: flex; align-items: center; gap: var(--sp-8); border-bottom: var(--bw-1) solid var(--line-1); }
+.rcol-h .f { color: var(--ink-2); }
+.rcol-h .a { color: var(--ink-3); }
+.rcol-h .n { margin-left: auto; color: var(--ink-3); }
+.tree .rn, .sheet .rn { width: auto; height: auto; justify-content: space-between; padding: var(--sp-8) var(--sp-8) var(--sp-8) var(--sp-12); z-index: 1; }
+.rn .hd { display: block; }
+.rn .ft .hex { color: var(--ink-3); }
+.rn .t { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rn .ft { display: flex; align-items: center; gap: var(--sp-6); font-size: var(--fs-12); line-height: var(--lh-12); color: var(--ink-3); }
+.rn .ft .x { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--ink-3); }
+.rn .ft .x .ic { width: 12px; height: 12px; }
+.rn .ft .ok { margin-left: auto; color: var(--ink-3); }
+.rn .ft .ok .ic { width: 14px; height: 14px; }
+.rn.is-active .ft .hex { color: var(--ink-1); }
+.rn.is-done .ft .hex { color: var(--ink-4); }
+.rn.is-available .ft .hex { color: var(--ink-2); }
+/* running: a 4 px progress strip along the tile's foot, no colour judgement */
+.rn .rp { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 0 0 3px 3px; background: var(--bar-track); overflow: hidden; }
+.rn .rp i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-2); }
+/* frozen: still the active research, nobody on it; ink-2 like the research card's paused reason (kabuk .rb.is-paused) */
+.rn.is-frozen { background: var(--surface-4); border-color: var(--line-3); border-style: dashed; }
+.rn.is-frozen .t { color: var(--ink-2); }
+.rn.is-frozen .ft .fz { display: inline-flex; align-items: center; gap: var(--sp-4); color: var(--ink-2); }
+.rn.is-frozen .ft .fz .ic { width: 12px; height: 12px; }
+.rn.is-frozen .rp i { background: var(--line-3); }
+/* locked slot: only the area's name, centred (the tree's shape shows, never the node's name) */
+.rn.is-locked { align-items: center; justify-content: center; }
+.rn.is-locked .lk { color: var(--ink-off); font-size: var(--fs-13); line-height: var(--lh-13); }
+/* selected tile: ink, a 3 px marker inset on its own left edge (the row rule, finding 17) */
+.rn.is-selected { background: var(--surface-4); border-color: var(--ink-1); }
+.rn.is-selected::after { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: var(--bw-3); background: var(--selected-mark); border-radius: 0 2px 2px 0; }
+.rn.is-hover { border-color: var(--ink-3); }
+.re-guide { stroke: var(--ink-2); stroke-width: 2; fill: none; }
+
+/* ================================================================ R&D: control strip research line (in the window) */
+.rline { display: flex; align-items: center; gap: var(--sp-12); white-space: nowrap; }
+.rline .k { color: var(--ink-3); }
+.rline .nm { color: var(--ink-1); }
+.rline .faces { display: flex; gap: var(--sp-4); }
+.rline .prog { width: 160px; }
+.rline .prog-t { flex: none; width: 120px; }
+.rline .wks { color: var(--ink-3); }
+.rline .fz { display: inline-flex; align-items: center; gap: var(--sp-6); color: var(--ink-2); }
+.rline .fz .ic { width: 16px; height: 16px; }
+.rline .sep { width: 1px; align-self: stretch; margin: var(--sp-12) 0; background: var(--line-1); }
+.rline.is-frozen .prog-f { background: var(--line-3); }
+/* the two research links (kabuk's .rb-ft) inside the strip; off while a decision waits, with the reason */
+.rb-ft .lk.is-disabled { color: var(--ink-off); }
+.rb-ft .why { margin-left: auto; padding-left: var(--sp-12); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+
+/* ================================================================ R&D: node card (detail strip under the tree) */
+/* A document anchored under the selected column: fixed height, the layout never moves (rnd_tree_view anchor rule). */
+.rdp { position: absolute; display: flex; flex-direction: column; padding: var(--sp-16) var(--sp-20) var(--sp-16) var(--sp-24);
+  background: var(--surface-4); border: var(--bw-1) solid var(--line-2); border-radius: var(--r-1) var(--cut) var(--r-1) var(--r-1); corner-shape: bevel; z-index: 2; }
+.rdp-h { display: flex; align-items: baseline; gap: var(--sp-12); }
+.rdp-h .t { color: var(--ink-1); }
+.rdp-h .m { margin-left: auto; color: var(--ink-3); }
+.rdp-h .done { display: inline-flex; align-items: center; gap: var(--sp-4); color: var(--ink-3); }
+.rdp-desc { margin-top: var(--sp-8); font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-2); }
+.rdp-kv { display: flex; align-items: baseline; gap: var(--sp-12); margin-top: var(--sp-12); }
+.rdp-kv .k { flex: none; color: var(--ink-3); }
+.rdp-kv .v { font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-2); }
+.rdp-req { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-8); margin-top: var(--sp-16); }
+.req-p { display: inline-flex; align-items: center; gap: var(--sp-6); height: 28px; padding: 0 var(--sp-12); border-radius: var(--r-2);
+  background: var(--surface-2); border: var(--bw-1) solid var(--line-1); white-space: nowrap; font-weight: 500; font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-2); }
+.req-p .ic { width: 16px; height: 16px; color: var(--ink-3); }
+.req-p .sub { color: var(--ink-3); font-weight: 400; }
+.req-p.is-neg { color: var(--neg-ink); background: var(--neg-tag-bg); border-color: var(--neg-tag-line); }
+.rdp-line { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-12); font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); }
+.rdp-line .ic { width: 16px; height: 16px; color: var(--ink-4); }
+.rdp-line.warn { color: var(--warn); }
+.rdp-line.warn .ic { color: var(--warn); }
+.rdp-acts { display: flex; align-items: center; gap: var(--sp-12); margin-top: auto; padding-top: var(--sp-12); }
+.rdp-acts .locked { margin-left: auto; }
+.rdp-acts .btn-primary { margin-left: auto; }
+
+/* assignment inside the card: one group per required area, compact rows, the live estimate in the foot */
+.asg { display: flex; flex-direction: column; margin-top: var(--sp-12); }
+.asg-g { height: 32px; display: flex; align-items: center; gap: var(--sp-8); color: var(--ink-2); border-bottom: var(--bw-1) solid var(--line-1); }
+.asg-g .tw { width: 16px; height: 16px; color: var(--ink-3); }
+.asg-g .ic.sk { width: 18px; height: 18px; color: var(--ink-3); }
+.asg-g .n { font-family: var(--f-sans); font-weight: 400; font-size: var(--fs-13); letter-spacing: 0; text-transform: none; color: var(--ink-3); }
+.asg-g .tag { margin-left: auto; }
+/* fixed columns: check, face, name line, skill number; a leave row keeps the same number column */
+.asg-r { position: relative; height: var(--h-row-sm); display: grid; grid-template-columns: 28px 32px 1fr 40px; align-items: center; padding: 0 var(--sp-8) 0 var(--sp-6); border-bottom: var(--bw-1) solid var(--row-rule); }
+.asg-r .who { padding-left: 0; }
+.asg-r .who .n { font-size: var(--fs-15); overflow: visible; }
+.asg-r .who { flex: none; }
+.asg-r .rl { font-family: var(--f-sansc); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asg-r .wholine { display: flex; align-items: baseline; gap: var(--sp-8); min-width: 0; }
+.asg-r .sk { height: var(--h-row-sm); }
+.asg-r .wholine .tag { flex: none; align-self: center; }
+.asg-r .wholine .left { flex: none; font-family: var(--f-sansc); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+/* leave row (SPEC §5): grey face, name ink-3, the İzinde tag and weeks left in the name cell, numbers unchanged */
+.asg-r.is-away .who .n { color: var(--ink-3); }
+.asg-r.is-selected { background: var(--surface-5); }
+.asg-r.is-selected::after { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: var(--bw-3); background: var(--selected-mark); border-radius: 0 2px 2px 0; }
+.asg-r .check { justify-content: center; }
+.asg-empty { height: 40px; display: flex; align-items: center; padding-left: var(--sp-8); font-size: var(--fs-14); color: var(--ink-3); }
+.asg-f { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-12); }
+.asg-f .est { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-2); white-space: nowrap; }
+.asg-f .est .k { color: var(--ink-3); }
+.asg-f .grow { flex: 1; }
+/* the refusal and why the area's number does not count, side by side */
+.asg-why { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-12); margin-top: var(--sp-8); font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); white-space: nowrap; }
+.asg-why .need { color: var(--ink-2); }
+.asg-why .sep { width: 1px; height: 14px; background: var(--line-2); }
+.asg-why .st { display: inline-flex; align-items: center; vertical-align: -2px; }
+.asg-why .st .ic { width: 14px; height: 14px; }
+
+/* ================================================================ research card: kabuk's component (kabuk.css .rb) */
+.floatcol .rb { width: 320px; }
+
+/* ================================================================ Kişisel: the founder's sheet */
+.per { position: absolute; left: 24px; top: 16px; right: 24px; bottom: 24px; display: grid; grid-template-columns: 256px 1fr 336px; column-gap: var(--sp-24); }
+.per-col { display: flex; flex-direction: column; min-width: 0; }
+.per-name { color: var(--ink-1); }
+.per-origin { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-8); }
+.per-quote { margin-top: var(--sp-12); font-family: var(--f-serif); font-size: var(--fs-16); line-height: var(--lh-16p); color: var(--ink-3); font-variation-settings: "opsz" 20; text-wrap: pretty; }
+.sec { display: flex; align-items: center; gap: var(--sp-8); height: 19px; color: var(--ink-3); }
+.sec::after { content: ""; flex: 1; height: 1px; background: var(--line-1); }
+.sec .n { order: 2; font-family: var(--f-sans); font-weight: 400; font-size: var(--fs-13); letter-spacing: 0; text-transform: none; color: var(--ink-3); }
+/* skill meter: five pairs of cells, one pair per star of the rule (raw >= 2N); the value is the number */
+.fsk { display: flex; flex-direction: column; margin-top: var(--sp-8); }
+.fsk-r { height: 28px; display: grid; grid-template-columns: 20px 1fr 106px 28px; column-gap: var(--sp-8); align-items: center; }
+.fsk-r .ic { width: 18px; height: 18px; color: var(--ink-3); }
+.fsk-r .l { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fsk-r .v { text-align: right; font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); }
+.fsk-sep { height: 1px; margin: var(--sp-6) 0; background: var(--line-1); }
+.meter { display: flex; gap: var(--sp-4); }
+.meter .p { display: flex; gap: var(--sp-2); }
+.meter i { width: 8px; height: 8px; border-radius: 1px; background: var(--bar-track); }
+.v1 { color: var(--skill-1); } .v2 { color: var(--skill-2); } .v3 { color: var(--skill-3); } .v4 { color: var(--skill-4); } .v5 { color: var(--skill-5); }
+.meter i.on { background: currentColor; }
+.trslots { display: flex; gap: var(--sp-8); margin-top: var(--sp-8); }
+.sec .tag { flex: none; }
+.trslot { width: 24px; height: 24px; border-radius: var(--r-2); background: var(--surface-2); border: var(--bw-1) dashed var(--line-2); }
+.per-task { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-16); }
+.per-task .k { color: var(--ink-3); }
+.per-task .v { font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-2); }
+.per-xp { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-6); }
+.per-xp .prog-t { flex: none; width: 140px; height: 4px; }
+/* milestones: a vertical ledger; earned carries the milestone glyph, unearned is an empty ring */
+.ms { position: relative; display: flex; flex-direction: column; margin-top: var(--sp-12); }
+.ms-r { position: relative; display: grid; grid-template-columns: 24px 1fr auto; column-gap: var(--sp-12); padding-bottom: var(--sp-12); }
+.ms-r .d { grid-column: 2 / 4; }
+.ms-r:last-child { padding-bottom: 0; }
+.ms-r::before { content: ""; position: absolute; left: 11px; top: 26px; bottom: 2px; width: 1px; background: var(--line-1); }
+.ms-r:last-child::before { display: none; }
+.ms-dot { width: 24px; height: 24px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--surface-5); border: var(--bw-1) solid var(--line-3); color: var(--ink-1); }
+.ms-dot .ic { width: 14px; height: 14px; }
+.ms-r.is-off .ms-dot { background: transparent; border: var(--bw-1) dashed var(--line-2); }
+.ms-t { padding-top: var(--sp-2); }
+.ms-t .n { font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); color: var(--ink-1); }
+.ms-r .d { margin-top: var(--sp-2); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); text-wrap: pretty; }
+.ms-r.is-off .ms-t .n { font-weight: 500; color: var(--ink-3); }
+.ms-m { padding-top: var(--sp-2); font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); white-space: nowrap; }
+/* where I stand: the run's three phases, the one you are in carries ink and the marker bar */
+.phl { display: flex; flex-direction: column; margin-top: var(--sp-8); }
+.phl-r { height: 28px; display: flex; align-items: center; gap: var(--sp-12); font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-3); }
+.phl-r i { width: 24px; height: 4px; border-radius: 2px; background: var(--line-2); flex: none; }
+.phl-r.is-on { color: var(--ink-1); font-weight: 600; }
+.phl-r.is-on i { background: var(--ink-1); }
+.goalbox { margin-top: var(--sp-12); padding: var(--sp-12) var(--sp-16); background: var(--surface-2); border: var(--bw-1) solid var(--line-1); border-radius: var(--r-3); }
+.goalbox .k { color: var(--ink-3); }
+.goalbox .v { margin-top: var(--sp-4); font-weight: 500; font-size: var(--fs-16); line-height: var(--lh-16); color: var(--ink-1); }
+/* net worth: the founder's share as a number and a part-to-whole bar (bar-emph is the founder) */
+.nw-v { display: flex; align-items: baseline; gap: var(--sp-12); margin-top: var(--sp-8); }
+.nw-v .k { color: var(--ink-3); }
+.nw-v .v { color: var(--ink-1); }
+.capbar { display: flex; gap: var(--sp-2); height: 8px; margin-top: var(--sp-8); }
+.capbar span { display: block; height: 100%; border-radius: var(--r-1); }
+.capbar .f { background: var(--bar-emph); } .capbar .o { background: var(--bar-fill); }
+.caplg { display: flex; gap: var(--sp-16); margin-top: var(--sp-8); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.caplg b { font-weight: 600; color: var(--ink-2); }
+.nw-note { margin-top: var(--sp-8); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); text-wrap: pretty; }
+
+/* ================================================================ R&D history (its own view: notes and discoveries) */
+.hist .ib-list { width: 400px; }
+.ib-right .kd { color: var(--ink-3); }
+.disc-box { margin-top: var(--sp-16); padding: var(--sp-12) var(--sp-16); background: var(--surface-2); border: var(--bw-1) solid var(--line-1);
+  border-radius: var(--r-1) var(--cut-sm) var(--r-1) var(--r-1); corner-shape: bevel; }
+.disc-box .k { color: var(--ink-3); }
+.disc-box p { margin-top: var(--sp-6); font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-2); text-wrap: pretty; }
+.disc-box .line { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-12); padding-top: var(--sp-12); border-top: var(--bw-1) solid var(--line-1);
+  font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-2); }
+.disc-box .line .k { flex: none; }
+.disc-box .line b { font-weight: 600; color: var(--ink-1); }
+
+/* ================================================================ R&D page before v1 and the Pazarlama placeholder */
+.wait { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-12); text-align: center; }
+.wait .ic { width: 32px; height: 32px; color: var(--ink-4); }
+.wait .t { color: var(--ink-2); }
+.wait .s { font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); }
+.win-title + .tag { margin-left: calc(-1 * var(--sp-16)); }
+
+/* star requirement: the star and its number read as one unit (★ is the rule's glyph token) */
+.req-p .st { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.req-p .st .ic { width: 14px; height: 14px; color: var(--ink-2); }
+/* inside Ar-Ge every message is the product's: the topic pill would repeat itself on each row */
+.hist .ib-l1 .pill { display: none; }

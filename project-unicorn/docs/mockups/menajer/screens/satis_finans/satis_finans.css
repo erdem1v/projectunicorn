@@ -1,0 +1,240 @@
+/* Satış and Finans (A4, group "satis_finans"). Only what the system lacks; every colour, size, radius and gap is a
+   system token or on the spacing scale (2 4 6 8 12 16 20 24 32 40 48). Load after ../../system/tokens.css and
+   base.css. Frame and brand-block rules repeat the events group's so both groups read the same shell. */
+
+/* ---------------------------------------------------------------- frame */
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--surface-0); }
+html.w1536, html.w1536 body { width: 1536px; height: 864px; }
+.screen { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--surface-0); }
+.w1536 .screen { width: 1536px; height: 864px; }
+/* the office: kabuk's layer, the 'noicons' plate placed by cover in the safe rect with the A2 head sprites at the
+   plate's *_heads.json positions (screens/kabuk/tools/gen.py office()) */
+.abs { position: absolute; }
+.head-ic { position: absolute; display: block; pointer-events: none; }
+.screen > .float, .screen > .fbtn { position: absolute; }
+
+/* ---------------------------------------------------------------- brand block, decision 14 option (a) */
+:root { --brand-mark: #FFA028; }   /* the old orange square: a brand constant, not the UI accent */
+.brand-sq { position: absolute; width: 20px; height: 20px; border-radius: var(--r-1); background: var(--brand-mark); }
+
+/* ---------------------------------------------------------------- window: colour on KPI values, locked segment tab */
+.kpi-val.neg { color: var(--neg); }
+.kpi-val.pos { color: var(--pos); }
+.kpi-val.dim { color: var(--ink-3); }
+.kpi-val .cst { display: inline-flex; vertical-align: -1px; margin-right: var(--sp-8); }
+.kpi-val .cst .ic { width: 20px; height: 20px; color: var(--ink-3); }
+.kpi-val .u { margin-left: var(--sp-4); font-weight: 400; font-size: var(--fs-15); color: var(--ink-3); }
+.seg-tab .ic { width: 16px; height: 16px; }
+.seg-tab.is-disabled .ic { color: var(--ink-off); }
+.seg-why { color: var(--ink-3); white-space: nowrap; }
+.win-ctl .lbl { color: var(--ink-3); }
+.win-ctl .hint { color: var(--ink-3); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- body layout: columns of cards */
+.cols { display: flex; gap: var(--sp-16); height: 100%; min-height: 0; }
+.col { display: flex; flex-direction: column; gap: var(--sp-16); min-width: 0; min-height: 0; }
+.col.scroll { position: relative; overflow: hidden; padding-right: var(--sp-16); }
+.col.scroll > .sb { right: 0; }
+/* a furniture card inside a window body: inset ground, no cut corner (it is not a document) */
+.card { flex: none; background: var(--surface-2); border: var(--bw-1) solid var(--line-1); border-radius: var(--r-3); padding: var(--sp-16) var(--sp-20); }
+.card-h { display: flex; align-items: center; gap: var(--sp-8); height: var(--lh-14); color: var(--ink-3); }
+.card-h .m { margin-left: auto; font-family: var(--f-sans); font-weight: 400; font-size: var(--fs-13); line-height: var(--lh-13); letter-spacing: 0; text-transform: none; color: var(--ink-3); white-space: nowrap; }
+.card-h .cap { font-family: var(--f-sans); font-weight: 400; font-size: var(--fs-13); line-height: var(--lh-13); letter-spacing: 0; text-transform: none; color: var(--ink-3); white-space: nowrap; }
+.card-h .m.ink { color: var(--ink-1); font-weight: 600; font-size: var(--fs-15); }
+.card-b { margin-top: var(--sp-12); }
+.note-line { color: var(--ink-3); }
+.note-line + .note-line { margin-top: var(--sp-4); }
+/* the empty line inside a card: the same voice as .empty, one row */
+.empty-row { display: flex; align-items: center; gap: var(--sp-8); color: var(--ink-3); }
+.empty-row .ic { width: 18px; height: 18px; color: var(--ink-4); }
+
+/* ---------------------------------------------------------------- Finans: chart card */
+.chart-h { display: flex; align-items: center; gap: var(--sp-16); }
+.chart-h { min-height: 28px; }
+.chart-h > div { flex: 1; min-width: 0; }
+.chart-h .segpick { flex: none; }
+.chart-h .segpick { margin-left: auto; }
+.chart-legend { display: flex; flex-wrap: wrap; column-gap: var(--sp-20); row-gap: var(--sp-4); margin-top: var(--sp-8); }
+.chart-legend.ch-legend span { white-space: nowrap; }
+.chart-legend.ch-legend i { width: 32px; }
+.ch-legend i.proj { background: repeating-linear-gradient(90deg, var(--chart-proj) 0 4px, transparent 4px 8px); }
+.ch-legend i.proj2 { background: repeating-linear-gradient(90deg, var(--ink-3) 0 12px, transparent 12px 18px); }
+.ch-proj2 { fill: none; stroke: var(--ink-3); stroke-width: 2; stroke-dasharray: 12 6; }
+.ch-proj.cur { stroke-dasharray: 4 4; }
+.ch-today { fill: var(--ink-1); stroke: var(--surface-2); stroke-width: 3; paint-order: stroke; }
+.ch-lbl.ink { fill: var(--ink-2); }
+.ch-hover { stroke: var(--line-hover); stroke-width: 1; }
+.chart .tip { position: absolute; }
+.segpick.sm > span { height: 28px; font-family: var(--f-cond); font-weight: 600; font-size: var(--fs-13); letter-spacing: var(--track-caps); text-transform: uppercase; white-space: nowrap; }
+
+/* ---------------------------------------------------------------- Finans: rows (flow, expense breakdown, market share, cap table, transactions) */
+.share.flow { grid-template-columns: 60px 1fr 92px; }
+.share .v.cst { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-6); color: var(--ink-2); }
+.share .v.cst .ic { width: 14px; height: 14px; }
+.share .v.pos { color: var(--pos); } .share .v.neg { color: var(--neg); }
+.share .t span.pos { background: var(--pos); } .share .t span.neg { background: var(--neg); }
+.share.cost { grid-template-columns: 76px 1fr 60px 36px; }
+.share .a { text-align: right; font-size: var(--fs-14); color: var(--ink-3); }
+.stackbar.thin { height: 8px; margin-bottom: var(--sp-12); }
+.lg { display: flex; flex-direction: column; }
+.lg-row { display: grid; grid-template-columns: 20px 1fr 12px 52px; align-items: center; column-gap: var(--sp-8); height: 28px; padding: 0 var(--sp-8); }
+.lg-row .r { font-size: var(--fs-13); color: var(--ink-4); text-align: right; }
+.lg-row .n { display: flex; align-items: center; gap: var(--sp-6); min-width: 0; font-size: var(--fs-14); color: var(--ink-2); }
+.lg-row .n .nm { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lg-row .tr { width: 12px; height: 12px; color: var(--ink-3); }
+.lg-row .v { text-align: right; font-weight: 500; font-size: var(--fs-14); color: var(--ink-2); white-space: nowrap; }
+.lg-row.is-you .r { color: var(--ink-2); }
+.lg-row.is-you .n .nm { color: var(--ink-1); font-weight: 600; }
+.lg-row.is-you .n .tag { height: 18px; padding: 0 var(--sp-4); font-size: var(--fs-12); }
+.lg-row.is-you .v { color: var(--ink-1); font-weight: 600; }
+.lg-row.others .n, .lg-row.others .v { color: var(--ink-3); }
+.lg-gap { height: 0; margin: var(--sp-4) var(--sp-8) var(--sp-4) 36px; border-top: var(--bw-1) dashed var(--line-2); }
+.cap-row { display: flex; gap: var(--sp-16); margin-top: var(--sp-8); color: var(--ink-2); font-size: var(--fs-14); line-height: var(--lh-14); }
+.cap-row b { font-weight: 600; color: var(--ink-1); }
+.txn { display: grid; grid-template-columns: 112px 1fr auto; align-items: center; column-gap: var(--sp-12); height: 32px; border-bottom: var(--bw-1) solid var(--row-rule); }
+.txn:last-child { border-bottom: 0; }
+.txn .d { font-size: var(--fs-13); color: var(--ink-3); }
+.txn .l { font-size: var(--fs-15); color: var(--ink-2); }
+.txn .a { display: flex; align-items: center; gap: var(--sp-6); font-weight: 500; font-size: var(--fs-15); color: var(--ink-2); }
+.txn .a .ic { width: 14px; height: 14px; }
+.txn .a.pos { color: var(--pos); }
+
+/* phase goal with the investor-appetite readout under it (one card: the signal is the goal's gauge) */
+.goal-v { margin-top: var(--sp-8); color: var(--ink-1); }
+.card-h .ph { text-transform: none; letter-spacing: 0; color: var(--ink-2); font-size: var(--fs-15); }
+.goal-card .prog { margin-top: var(--sp-12); }
+.appetite { margin-top: var(--sp-12); padding-top: var(--sp-12); border-top: var(--bw-1) solid var(--line-1); }
+.appetite-r { display: flex; align-items: center; gap: var(--sp-8); }
+.appetite .k { color: var(--ink-3); }
+.appetite .l { margin-top: var(--sp-6); color: var(--ink-3); }
+.appetite.lead { margin-top: var(--sp-8); padding-top: 0; border-top: 0; }
+
+/* ---------------------------------------------------------------- Frank's note: the mentor card and the hunt strip */
+/* A note from Frank is a document (cut corner). His words are in his face (Source Serif 4), with the portrait
+   beside them: the same speaker grammar as the inbox mail, in a smaller box. */
+.fnote { position: relative; flex: none; padding: var(--sp-16) var(--sp-20) var(--sp-16); background: var(--surface-4);
+  border: var(--bw-1) solid var(--line-2); border-radius: var(--r-1) var(--cut) var(--r-1) var(--r-1); corner-shape: bevel; }
+.fnote.is-danger { border-color: var(--neg-line); }
+.fnote-who { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-12); }
+.fnote-who .n { font-weight: 600; font-size: var(--fs-15); line-height: var(--lh-15); color: var(--ink-1); }
+.fnote-who .r { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+.fnote-q { margin-top: var(--sp-12); font-family: var(--f-serif); font-size: var(--fs-20); line-height: var(--lh-20q); color: var(--ink-1);
+  font-variation-settings: "opsz" 20; text-wrap: pretty; }
+.fnote-f { display: flex; justify-content: flex-end; margin-top: var(--sp-12); }
+/* the strip: one line, portrait at the left, in the hunt page's title row */
+.fstrip { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-8) var(--sp-20) var(--sp-8) var(--sp-8); background: var(--surface-4);
+  border: var(--bw-1) solid var(--line-2); border-radius: var(--r-1) var(--cut-sm) var(--r-1) var(--r-1); corner-shape: bevel; }
+.fstrip .w { display: flex; flex-direction: column; min-width: 0; }
+.fstrip .n { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.fstrip .q { font-family: var(--f-serif); font-size: var(--fs-18); line-height: var(--lh-18); color: var(--ink-1); white-space: nowrap; font-variation-settings: "opsz" 20; margin-top: var(--sp-2); }
+
+/* ---------------------------------------------------------------- Satış: lanes, lead and account documents, the desk */
+.lane { gap: var(--sp-8); }
+.lane + .lane { margin-top: var(--sp-8); }
+.lane-h { height: 28px; }
+.deal .w { display: inline-flex; align-items: center; gap: var(--sp-4); }
+.deal .w .ic { width: 14px; height: 14px; color: var(--ink-4); }
+.deal .acts { justify-content: flex-end; margin-top: var(--sp-8); }
+.deal .work { display: flex; align-items: center; gap: var(--sp-6); margin-top: var(--sp-6);
+  font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+.deal .work .ic { width: 14px; height: 14px; color: var(--ink-3); }
+.deal .work b { font-weight: 600; color: var(--ink-2); }
+.deal .work.meet { color: var(--ink-2); }
+.deal-top .tag { margin-left: var(--sp-4); }
+.acct .line i { font-style: italic; }
+.acct-sat { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-8); }
+.acct-sat .k { color: var(--ink-3); }
+.acct-sat .sat-t { width: 112px; }
+.acct-sat .churn { margin-left: auto; }
+.acct-foot { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-12); }
+.acct-foot .stew { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.acct-foot .stew b { font-weight: 500; color: var(--ink-2); }
+.acct-foot .act { margin-left: auto; }
+.acct.is-risk { background: var(--neg-bg); border-color: var(--neg-line); }
+.acct.is-delegated .deal-top .t { color: var(--ink-2); font-weight: 500; }
+.rep { display: flex; flex-direction: column; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); background: var(--surface-2);
+  border: var(--bw-1) solid var(--line-1); border-radius: var(--r-3); }
+.rep-top { display: flex; align-items: center; gap: var(--sp-12); }
+.rep .who { padding-left: 0; }
+.rep .who .r.work { display: flex; align-items: center; gap: var(--sp-6); margin-top: var(--sp-2); }
+.rep .who .r.work .ic { width: 14px; height: 14px; }
+.rep .who .r.work b { font-weight: 600; color: var(--ink-2); }
+.rep .who .n { display: flex; align-items: center; gap: var(--sp-8); }
+.rep .rep-band { display: flex; align-items: center; gap: var(--sp-12); padding-top: var(--sp-12); border-top: var(--bw-1) solid var(--line-1); }
+.segpick > span { white-space: nowrap; }
+.rep .rep-band .k { color: var(--ink-3); white-space: nowrap; }
+
+/* the steward picker: a menu anchored under the account's Değiştir; each row carries its load */
+.menu.picker { position: absolute; z-index: 20; }
+.menu.picker .menu-item { justify-content: flex-start; }
+.load { margin-left: auto; display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-13); color: var(--ink-3); }
+.load .lt { position: relative; width: 48px; height: 4px; border-radius: 2px; background: var(--bar-track); }
+.load .lf { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--bar-fill); }
+.load.is-full .lf { background: var(--ink-3); }
+.menu-item.is-disabled .load { color: var(--ink-off); }
+.menu-item .why { margin-left: auto; padding-left: var(--sp-12); font-size: var(--fs-13); color: var(--ink-3); white-space: nowrap; }
+.menu-item .why + .load { margin-left: var(--sp-12); }
+
+/* B2C: one empty state for the whole body: the reason, then where consumer revenue shows */
+.b2c.empty { height: 240px; border: var(--bw-1) dashed var(--line-2); border-radius: var(--r-3); }
+.b2c .empty-t { max-width: 560px; }
+.b2c .empty-t b { display: block; font-weight: 600; color: var(--ink-2); margin-bottom: var(--sp-4); }
+
+/* ---------------------------------------------------------------- Finans · Yatırım: hunt */
+.hunt-top { display: flex; align-items: center; gap: var(--sp-24); height: 64px; }
+.hunt-top h2 { color: var(--ink-1); }
+.hunt-top .fstrip { margin-left: auto; }
+.fund { position: relative; display: flex; align-items: center; gap: var(--sp-16); height: 76px; padding: 0 var(--sp-12) 0 var(--sp-4); border-bottom: var(--bw-1) solid var(--row-rule); }
+.fund:last-child { border-bottom: 0; }
+.fund-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.fund-l1 { display: flex; align-items: center; gap: var(--sp-8); }
+.fund-l1 .n { font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); color: var(--ink-1); white-space: nowrap; }
+.fund-l1 .tag { height: 20px; font-size: var(--fs-12); }
+.fund-arch { font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fund-who { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.fund .st { flex: none; }
+.fund.is-closed .fund-l1 .n { color: var(--ink-3); font-weight: 500; }
+.fund.is-closed .fund-arch { color: var(--ink-3); }
+.fund.is-locked .n { color: var(--ink-off); }
+.fund .lockdisc { width: 40px; height: 40px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: var(--bw-1) dashed var(--line-2); color: var(--ink-off); }
+.fund .lockdisc .ic { width: 16px; height: 16px; }
+.offer { position: relative; flex: none; padding: var(--sp-12) var(--sp-20) var(--sp-12); background: var(--surface-4); border: var(--bw-1) solid var(--line-2);
+  border-radius: var(--r-1) var(--cut) var(--r-1) var(--r-1); corner-shape: bevel; }
+.offer + .offer { margin-top: var(--sp-8); }
+.offer-h { display: flex; align-items: center; gap: var(--sp-12); }
+.offer-who { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.offer-h .n { font-weight: 600; font-size: var(--fs-16); line-height: var(--lh-16); color: var(--ink-1); white-space: nowrap; }
+.offer-h .w { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: var(--fs-14); line-height: var(--lh-14); white-space: nowrap; }
+.offer-h .acts { margin-left: auto; display: flex; gap: var(--sp-8); }
+.offer-h .w .ic { width: 14px; height: 14px; }
+.offer-h .w.warn { color: var(--warn); } .offer-h .w.neg { color: var(--neg); }
+.offer-p { display: flex; align-items: center; margin-top: var(--sp-8); }
+.offer-p .part-v { font-weight: 600; font-size: var(--fs-20); line-height: var(--lh-20); color: var(--ink-1); }
+.offer-p .part-v .ic { width: 20px; height: 20px; }
+.offer-p .part-sep { margin: var(--sp-4) var(--sp-24); }
+.queued { display: flex; align-items: flex-start; gap: var(--sp-12); margin-top: var(--sp-8); padding: var(--sp-12) var(--sp-16); border: var(--bw-1) dashed var(--line-2);
+  border-radius: var(--r-1) var(--cut-sm) var(--r-1) var(--r-1); corner-shape: bevel; font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); }
+.queued .ic { width: 18px; height: 18px; flex: none; color: var(--ink-4); }
+.queued b { font-weight: 600; color: var(--ink-2); }
+.tables { margin-left: auto; display: flex; align-items: center; gap: var(--sp-8); text-transform: none; letter-spacing: 0; font-family: var(--f-sans); }
+.tables .k { color: var(--ink-3); }
+.tables .v { font-family: var(--f-sans); font-weight: 600; font-size: var(--fs-15); letter-spacing: 0; color: var(--ink-1); }
+.tables .pips { display: inline-flex; gap: var(--sp-4); margin-left: var(--sp-4); }
+.tables .pips i { width: 14px; height: 14px; border-radius: var(--r-1); border: var(--bw-1) solid var(--neg-tag-line); }
+.tables .pips i.on { background: var(--neg); border-color: var(--neg); }
+.road-closed { display: flex; align-items: flex-start; gap: var(--sp-12); color: var(--ink-2); font-size: var(--fs-15); line-height: var(--lh-15); }
+.road-closed .ic { width: 20px; height: 20px; flex: none; color: var(--ink-4); }
+
+/* ---------------------------------------------------------------- office floats (kabuk.css, one grammar for the shell) */
+.bh-act { display: flex; align-items: center; gap: var(--sp-8); }
+.bh-act .why { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.notice { position: relative; }
+.notice .co { flex: none; }
+.notice .tx { flex: 1; min-width: 0; }
+.notice .nwk { flex: none; margin-left: var(--sp-8); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+/* an empty Bekleyen is one row: the key left, the empty line right (the card lists meetings when there are any) */
+.card-h .empty-m { margin-left: auto; display: flex; align-items: center; gap: var(--sp-8); font-family: var(--f-sans); font-weight: 400; font-size: var(--fs-14); line-height: var(--lh-14); letter-spacing: 0; text-transform: none; color: var(--ink-3); }
+.card-h .empty-m .ic { width: 16px; height: 16px; color: var(--ink-4); }
+.notice .nwk.is-warn { color: var(--warn); }   /* a paper's last week; an offer's countdown, like its slot */
+.notice .nwk.is-neg { color: var(--neg); }     /* an offer's final week */
+.notice .dt.is-warn { background: var(--warn); box-shadow: 0 0 0 3px var(--warn-tag-bg); }

@@ -1,0 +1,25 @@
+{
+  "note": "Plate pixel coordinates (plate origin top left). Icons are the 3D head sprites.",
+  "people": [
+    {
+      "id": "char_founder",
+      "name": "Kurucu",
+      "status": "plan",
+      "icon_visible": true,
+      "founder": true,
+      "icon_xy": [
+        596,
+        372
+      ],
+      "head_xy": [
+        596,
+        415
+      ],
+      "feet_xy": [
+        602,
+        489
+      ],
+      "icon_px": 51
+    }
+  ]
+}

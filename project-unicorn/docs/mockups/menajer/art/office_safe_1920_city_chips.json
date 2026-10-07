@@ -1,0 +1,65 @@
+{
+  "note": "The map's 2D chips (drawn in the Overlay, not in the plate), plate coordinates.",
+  "chips": [
+    {
+      "office": "ishani",
+      "texts": [
+        "MEVCUT · İş hanı"
+      ],
+      "visible": true,
+      "xy": [
+        600,
+        266
+      ],
+      "size": [
+        99,
+        20
+      ]
+    },
+    {
+      "office": "plaza",
+      "texts": [
+        "Plaza katı"
+      ],
+      "visible": true,
+      "xy": [
+        901,
+        170
+      ],
+      "size": [
+        67,
+        20
+      ]
+    },
+    {
+      "office": "loft",
+      "texts": [
+        "Depo loft"
+      ],
+      "visible": true,
+      "xy": [
+        883,
+        574
+      ],
+      "size": [
+        61,
+        20
+      ]
+    },
+    {
+      "office": "home",
+      "texts": [
+        "Ev"
+      ],
+      "visible": true,
+      "xy": [
+        730,
+        248
+      ],
+      "size": [
+        23,
+        20
+      ]
+    }
+  ]
+}

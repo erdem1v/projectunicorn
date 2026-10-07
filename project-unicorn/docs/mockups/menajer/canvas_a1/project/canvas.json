@@ -1,0 +1,366 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-02T21:00:00Z"
+ },
+ "title": "Menajer Masası · Tasarım Sistemi",
+ "launch": {
+  "view": "canvas",
+  "page": "portre"
+ },
+ "pages": [
+  {
+   "id": "portre",
+   "name": "Portreler"
+  },
+  {
+   "id": "sistem",
+   "name": "Tasarım sistemi"
+  },
+  {
+   "id": "ikon",
+   "name": "İkonlar"
+  }
+ ],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1144,
+   "h": 490,
+   "title": "Frank adayları A, B, C, D",
+   "page": "portre"
+  },
+  "a02.dc.html": {
+   "x": 1224,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Frank adayları okuma bölmesinde",
+   "page": "portre"
+  },
+  "a03.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 2200,
+   "h": 1128,
+   "title": "Kurucular: yağlı boya ve render",
+   "page": "portre"
+  },
+  "a04.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ekran: Ekip, 1920",
+   "page": "sistem"
+  },
+  "a05.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Renk",
+   "page": "sistem"
+  },
+  "a06.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Yazı",
+   "page": "sistem"
+  },
+  "a07.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kontroller ve durumlar",
+   "page": "sistem"
+  },
+  "a08.dc.html": {
+   "x": 2000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Veri bileşenleri",
+   "page": "sistem"
+  },
+  "a09.dc.html": {
+   "x": 4000,
+   "y": 1200,
+   "w": 1920,
+   "h": 1080,
+   "title": "Gelen kutusu",
+   "page": "sistem"
+  },
+  "a10.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Karar parçaları",
+   "page": "sistem"
+  },
+  "a11.dc.html": {
+   "x": 2000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Kabuk",
+   "page": "sistem"
+  },
+  "a12.dc.html": {
+   "x": 4000,
+   "y": 2400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Renk körü paleti",
+   "page": "sistem"
+  },
+  "a13.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Yerleşim",
+   "page": "sistem"
+  },
+  "a14.dc.html": {
+   "x": 2000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Grafik ve ilerleme",
+   "page": "sistem"
+  },
+  "a15.dc.html": {
+   "x": 4000,
+   "y": 3600,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ürün, Ar-Ge, Satış parçaları",
+   "page": "sistem"
+  },
+  "a16.dc.html": {
+   "x": 0,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Toplantı ve açılış",
+   "page": "sistem"
+  },
+  "a17.dc.html": {
+   "x": 2000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Diyalog, tablo, metin",
+   "page": "sistem"
+  },
+  "a18.dc.html": {
+   "x": 4000,
+   "y": 4800,
+   "w": 1920,
+   "h": 1080,
+   "title": "İngilizce genişlik: kabuk ve kutu",
+   "page": "sistem"
+  },
+  "a19.dc.html": {
+   "x": 0,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "İngilizce genişlik: Ekip",
+   "page": "sistem"
+  },
+  "a20.dc.html": {
+   "x": 2000,
+   "y": 6000,
+   "w": 1536,
+   "h": 864,
+   "title": "Ekran: Ekip, 1536 (ölçek 1.25)",
+   "page": "sistem"
+  },
+  "a21.dc.html": {
+   "x": 3616,
+   "y": 6000,
+   "w": 1920,
+   "h": 1080,
+   "title": "Ekran: harita ve ofis katmanı",
+   "page": "sistem"
+  },
+  "a22.dc.html": {
+   "x": 0,
+   "y": 7200,
+   "w": 1280,
+   "h": 720,
+   "title": "Okunurluk 1280×720, %100",
+   "page": "sistem"
+  },
+  "a23.dc.html": {
+   "x": 1360,
+   "y": 7200,
+   "w": 1280,
+   "h": 720,
+   "title": "Okunurluk 1280×720, %125",
+   "page": "sistem"
+  },
+  "a24.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1680,
+   "h": 1373,
+   "title": "İkon 1: dil ve ray",
+   "page": "ikon"
+  },
+  "a25.dc.html": {
+   "x": 1760,
+   "y": 0,
+   "w": 1680,
+   "h": 1468,
+   "title": "İkon 2: beceri ve bölüm",
+   "page": "ikon"
+  },
+  "a26.dc.html": {
+   "x": 3520,
+   "y": 0,
+   "w": 1680,
+   "h": 1396,
+   "title": "İkon 3: huy",
+   "page": "ikon"
+  },
+  "a27.dc.html": {
+   "x": 5280,
+   "y": 0,
+   "w": 1680,
+   "h": 1164,
+   "title": "İkon 4: ürün ve bedel",
+   "page": "ikon"
+  },
+  "a28.dc.html": {
+   "x": 0,
+   "y": 1588,
+   "w": 1680,
+   "h": 1871,
+   "title": "İkon 5: yardımcı",
+   "page": "ikon"
+  },
+  "a29.dc.html": {
+   "x": 1760,
+   "y": 1588,
+   "w": 1680,
+   "h": 1729,
+   "title": "İkon 6: dünya, yer, köken",
+   "page": "ikon"
+  },
+  "a30.dc.html": {
+   "x": 3520,
+   "y": 1588,
+   "w": 1680,
+   "h": 1789,
+   "title": "İkon 7: ofis kafa ikonları",
+   "page": "ikon"
+  },
+  "a31.dc.html": {
+   "x": 5280,
+   "y": 1588,
+   "w": 1680,
+   "h": 1208,
+   "title": "İkon 8: Godot doğrulaması",
+   "page": "ikon"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "a02.dc.html",
+  "a03.dc.html",
+  "a04.dc.html",
+  "a05.dc.html",
+  "a06.dc.html",
+  "a07.dc.html",
+  "a08.dc.html",
+  "a09.dc.html",
+  "a10.dc.html",
+  "a11.dc.html",
+  "a12.dc.html",
+  "a13.dc.html",
+  "a14.dc.html",
+  "a15.dc.html",
+  "a16.dc.html",
+  "a17.dc.html",
+  "a18.dc.html",
+  "a19.dc.html",
+  "a20.dc.html",
+  "a21.dc.html",
+  "a22.dc.html",
+  "a23.dc.html",
+  "a24.dc.html",
+  "a25.dc.html",
+  "a26.dc.html",
+  "a27.dc.html",
+  "a28.dc.html",
+  "a29.dc.html",
+  "a30.dc.html",
+  "a31.dc.html"
+ ],
+ "notes": {
+  "t_portre": {
+   "x": 0,
+   "y": -300,
+   "text": "Frank adayları ve kurucu portreleri",
+   "kind": "title1",
+   "maxW": 3144,
+   "page": "portre"
+  },
+  "s_portre": {
+   "x": 3304,
+   "y": 0,
+   "text": "Frank ve kurucular\n\n1. Frank için bir aday seç: A, B, C ya da D.\nA: gri sakal, gri takım, bordo kravat. Başı ve saçı kadrodaki bir çalışanla ve bir VC analistiyle aynı; seçilirse onlarınki değişir.\nB: gözlük, lacivert takım; koyu zeminde eriyor.\nC: bıyık, kahverengi takım, yeşil kravat.\nD: gözlük, adaçayı takım, kravatsız; sayfalarda yer tutucu olarak duruyor.\nİstersen adaylardan parça birleştir (saç, sakal, takım rengi).\n\n2. Kurucular: 11 yağlı boyanın yerine kendi 3B görünüşlerinden portre. Bilinen kusurlar: açık ten soluk çıkıyor (04, 05, 10), saç tepesi kesik, gözlük kalın; ışık ve kadraj Faz C'de düzelir. Asıl soru: düşük poligon yüzler bu boyda yeterli mi, yoksa portre için özel ışık ya da yakın kadraj mı istersin?",
+   "w": 1200,
+   "maxH": 3200,
+   "size": "l",
+   "fill": "orange",
+   "page": "portre"
+  },
+  "t_sistem": {
+   "x": 0,
+   "y": -300,
+   "text": "Menajer Masası tasarım sistemi",
+   "kind": "title1",
+   "maxW": 5920,
+   "page": "sistem"
+  },
+  "s_sistem": {
+   "x": 6080,
+   "y": 0,
+   "text": "Karar bekleyen sorular (görselin üstüne yorum bırakabilir ya da numarayla cevap verebilirsin)\n\n4. Üst barda saat yuvası hep dolu: karar yoksa \"Sıradaki\" yazar. Öncelik: karar, kepenk, teklif, sprint kararı, görüşme, mesai bitimi. (Kabuk)\n5. Çok seçenekli kararda hiçbir seçenek amber değil: oyuncu bir seçeneği açar, sonra tek amber \"Seç\". Tek açık seçenek doğrudan birincil olur (Frank'in teklifi gibi). (Karar parçaları)\n6. Seçenekler için sayı kısayolu yok; 1-4 hız tuşu olarak kalır.\n7. Kâğıt olan her şeyin (karar, kağıt, rapor, toast) sağ üst köşesi pahlı; bitenlere damga basılır (Cevaplandı, Bitti, Ayrıldı). Sistemin imzası olsun mu?\n8. Pencere ölçüleri (Yerleşim): Ekip 1352 genişliğe çıkıyor ki İngilizce sığsın; Olaylar 1240×900; Finans 1344. BuildHUD pencerelerin altında; pencere üstüne binince gizlenir.\n9. Ofiste kurucunun halkası amber kalsın mı, yoksa kömür + beyaz iç çizgi mi?\n10. Renk körü paleti: olumlu mavi, uyarı açık sarı, olumsuz turuncu. (Renk körü)\n11. 1280×720 pencerede %100 ölçekte 12 px yazı ekranda 8 px çiziliyor. Orada %125'e izin verelim mi (yazı 10 px olur)? (Okunurluk)\n12. Gazetenin üst bilgi satırı mono'dan çıkıyor: IBM Plex Sans Condensed (öneri) mi, Source Serif küçük büyük harf mi?\n13. Haber şeridi kapatılabilsin: köşede küçük düğme kalır, tercih saklanır.\n14. İzindeki çalışan: sayılar tam renk; yüz gri, ad soluk, \"İzinde\" etiketi.\n15. Okuma bölmesi başlığı 30 px ve cümle düzeninde; bedel ekrandaki en büyük sayı kalır.\n16. İlişki kelimeleri: Müttefik / Dost / Nötr / Temkinli / Düşman.\n17. \"Sprint otomatik başladı\" notu üst bardan BuildHUD'a ve Ürün'e taşınsın.\n18. Metin bulguları (ayrı onay listesine gider): 36 Türkçe metinde tire var, bazıları Frank'in; \"UNİCORN INC.\" büyük harf hatası; rol unvanları bu sayfalarda CSV düzeninde (\"UX/UI Designer\").",
+   "w": 1200,
+   "maxH": 3200,
+   "size": "l",
+   "fill": "orange",
+   "page": "sistem"
+  },
+  "t_ikon": {
+   "x": 0,
+   "y": -300,
+   "text": "İkon ailesi",
+   "kind": "title1",
+   "maxW": 6960,
+   "page": "ikon"
+  },
+  "s_ikon": {
+   "x": 7120,
+   "y": 0,
+   "text": "İkon ailesi: dolu şekil, oyulmuş ayrıntı, iki ton; kâğıt olan nesnelerin köşesi pahlı. Lucide'in yerine 98 arayüz ikonu ve 9 ofis kafa ikonu.\n\n19. Anlamlar doğru mu? Gerçek lider: şemsiye altında kişi. Hayır diyemez: onaylı balon ve kâğıt yığını. Gözü yüksekte: bavul. Ürün becerisi: tabela. Test becerisi: onaylı böcek. Satış rayı: huni. Finans: dolar sikke.\n20. Ofis kafa ikonları: çalışırken koyu disk, molada krem disk (sayfa 7, oyunun kendi render'ında). Bugünkü açık diskin yerine geçsin mi?\n21. Kurucu huyları henüz çizilmedi, \"belirsiz\" glifine düşüyor. Onlar da çizilsin mi?",
+   "w": 1200,
+   "maxH": 3200,
+   "size": "l",
+   "fill": "orange",
+   "page": "ikon"
+  }
+ },
+ "designSystems": []
+}
