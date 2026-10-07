@@ -182,7 +182,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - Motor: `--event-probe`, `--why-fire=<kart id>`, `--event-harness=random:seeds=N:weeks=M | guided[:seeds=N:weeks=M]`,
   `--event-vocab` (`_vocabulary.md`'yi üretir, KEEP bloğu kalır); `python tools/gen_signal_manifest.py`.
 - Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te. Karar değil defter basar;
-  `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir.
+  `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
+  `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
+  sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
   `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`
   pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer.
@@ -230,8 +232,11 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `APPDATA` başka bir dizine verilirse `user://` oraya taşınır: her koşuya ayrı dizin gerçek kayıtları korur ve
   paralel koşuyu güvenli kılar.
 - `xargs -P 2` altında `CASE_TIMEOUT=300` verilir; varsayılan 120 sahte FAIL üretir. `--run-log` her zaman 0 ile çıkar;
-  başarılı koşunun çıktısında tam olarak bir `PROBE END` satırı vardır. `class_name` eklenince, silinince ya da adı
-  değişince headless koşulardan önce `--headless --import` çalıştırılır.
+  başarılı koşunun çıktısında tam olarak bir `PROBE END` satırı vardır; sonu ve hatayı `tools/run_gate.sh` çıktıdan
+  okur. `class_name` eklenince, silinince ya da adı değişince headless koşulardan önce `--headless --import`
+  çalıştırılır.
+- Smoke koşturucu motorun `ERROR:` satırı basan vakayı düşürür. Kuralı bilerek bozan vaka match kolunda
+  `# EXPECT-ERROR <ileti parçası>` der; koşturucu yalnız o parçayı bağışlar ve parça hiç basılmazsa vakayı düşürür.
 - Editör `.tres` ve `project.godot`'u yeniden kaydeder (uid ekler, yorum siler); fark sahip onaylamadan commit'lenmez.
 - Dosya yazan bayraklar: `--event-lint=baseline` (taban dosyası), `--event-vocab` (`_vocabulary.md`), `--display-check`
   (ayarlar), `--modal-shot=save*|load*` ve `--theme-audit=modal:save*|load*` (kayıt yazar ya da siler), `--ending-shot`

@@ -74,15 +74,15 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"gate2":                fail = _case_gate2()
 		"gate_decline_reminder": fail = _case_gate_decline_reminder()
 		"traction_gate_one_option": fail = _case_traction_gate_is_one_option()
-		"bankruptcy":           fail = _case_bankruptcy()
+		"bankruptcy":           fail = _case_bankruptcy()  # EXPECT-ERROR telegraph 'funding.shutter_warning' never did
 		"shutter_recovery":     fail = _case_shutter_recovery()
-		"brand_collapse":       fail = _case_brand_collapse()
+		"brand_collapse":       fail = _case_brand_collapse()  # EXPECT-ERROR ended the run with NO TELEGRAPH
 		"cascade":              fail = _case_cascade()
 		"pivot_accept":         fail = _case_pivot_accept()
 		"pivot_decline":        fail = _case_pivot_decline()
 		# fork_win / fork_loss retired 2026-08-19 with the Day-180 fork;
 		# the soft cap's guards live in the calibration block at the end of this match.
-		"terminal_kills_gate":  fail = _case_terminal_kills_gate()
+		"terminal_kills_gate":  fail = _case_terminal_kills_gate()  # EXPECT-ERROR telegraph 'funding.shutter_warning' never did
 		"speed_preserve":       fail = _case_speed_preserve()
 		"month_summary":        fail = _case_month_summary()
 		"summary_frequency_ticks": fail = _case_summary_frequency_ticks()
@@ -144,7 +144,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_prospect_pain_references_real_feature": fail = _case_b2b_prospect_pain_references_real_feature()
 		"b2b_promise_kept_on_ship": fail = _case_b2b_promise_kept_on_ship()
 		"b2b_promise_broken_on_deadline": fail = _case_b2b_promise_broken_on_deadline()
-		"founder_5skill_init":  fail = _case_founder_5skill_init()
+		"founder_5skill_init":  fail = _case_founder_5skill_init()  # EXPECT-ERROR read of renamed founder skill
 		"alloc_guard":          fail = _case_alloc_guard()
 		"trait_formula":        fail = _case_trait_formula()
 		"lever_skill_new_keys": fail = _case_lever_skill_new_keys()
@@ -286,11 +286,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_format_args":           fail = _case_loc_format_args()
 		"all_scripts_load":          fail = _case_all_scripts_load()
 		"event_i1_single_gate":           fail = _case_event_i1_single_gate()
-		"event_i2_economy_played_only":   fail = _case_event_i2_economy_played_only()
-		"event_i3_no_silent_loss":        fail = _case_event_i3_no_silent_loss()
+		"event_i2_economy_played_only":   fail = _case_event_i2_economy_played_only()  # EXPECT-ERROR refused 'add_cash' from
+		"event_i3_no_silent_loss":        fail = _case_event_i3_no_silent_loss()  # EXPECT-ERROR refused 'trigger_ending' from played: I3:
 		"event_i4_demoted_never_dropped": fail = _case_event_i4_demoted_never_dropped()
 		"event_i5_trigger_is_data":       fail = _case_event_i5_trigger_is_data()
-		"event_i6_dice_never_kill":       fail = _case_event_i6_dice_never_kill()
+		"event_i6_dice_never_kill":       fail = _case_event_i6_dice_never_kill()  # EXPECT-ERROR I6: a dice branch may not end the run
 		"event_i7_modifier_needs_seam":   fail = _case_event_i7_modifier_needs_seam()
 		"event_dice_is_stable":           fail = _case_event_dice_is_stable()
 		"event_thesis_day10_to_day90":    fail = _case_event_thesis_day10_to_day90()
@@ -311,9 +311,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_v1_lands_mid_band":           fail = _case_b2b_v1_lands_mid_band()
 		"b2c_satisfaction_drifts_to_experience": fail = _case_b2c_satisfaction_drifts_to_experience()
 		"rival_relative_uses_template_half_sat": fail = _case_rival_relative_uses_template_half_sat()
-		"soft_cap_ends_run_at_730":        fail = _case_soft_cap_ends_run_at_730()
+		"soft_cap_ends_run_at_730":        fail = _case_soft_cap_ends_run_at_730()  # EXPECT-ERROR telegraph 'soft_cap_telegraphed' never did
 		"no_calendar_stop_before_cap":     fail = _case_no_calendar_stop_before_cap()
-		"soft_cap_no_defer_for_sheet":     fail = _case_soft_cap_no_defer_for_sheet()
+		"soft_cap_no_defer_for_sheet":     fail = _case_soft_cap_no_defer_for_sheet()  # EXPECT-ERROR telegraph 'soft_cap_telegraphed' never did
 		"soft_cap_paper_names_unsigned_sheet": fail = _case_soft_cap_paper_names_unsigned_sheet()
 		"soft_cap_warns_open_hunt":        fail = _case_soft_cap_warns_open_hunt()
 		"month_history_close_and_cap":     fail = _case_month_history_close_and_cap()
@@ -335,7 +335,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"retention_gate_shared":           fail = _case_retention_gate_shared()
 		"manual_retention_respects_cap":   fail = _case_manual_retention_respects_cap()
 		"profit_condition_fires":          fail = _case_profit_condition_fires()
-		"ending_modes_by_build":           fail = _case_ending_modes_by_build()
+		"ending_modes_by_build":           fail = _case_ending_modes_by_build()  # EXPECT-ERROR telegraph 'soft_cap_telegraphed' never did
 		"bootstrap_milestone_keeps_the_run": fail = _case_bootstrap_milestone_keeps_the_run()
 		"ending_paper_modes_on_screen":    fail = _case_ending_paper_modes_on_screen()
 		"milestone_clock_hold":            fail = _case_milestone_clock_hold()
@@ -354,7 +354,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"rail_tabs_match_scene_order":     fail = _case_rail_tabs_match_scene_order()
 		# --- Ekip modülü · motor tarafı 2026-08-21 (alan modeli; rev 11 §4/§12). Dördü de ÖNCEKİ
 		#     motora karşı DÜŞER; her biri falsifikasyonla doğrulandı.
-		"job_assignment_and_idle":         fail = _case_job_assignment_and_idle()
+		"job_assignment_and_idle":         fail = _case_job_assignment_and_idle()  # EXPECT-ERROR assign_area with an unknown area
 		"overload_costs_output":           fail = _case_overload_costs_output()
 		"save_migration_v3_to_v4":         fail = _case_save_migration_v3_to_v4()
 		# --- Ekip arayüzü · onaylı tasarım 2026-08-22. Beşi de ÖNCEKİ motora karşı DÜŞER.
@@ -406,7 +406,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"seed_pitch_never_rejects":              fail = _case_seed_pitch_never_rejects()
 		"seed_bands_map_to_terms":               fail = _case_seed_bands_map_to_terms()
 		"seed_sheet_never_in_active_sheets":     fail = _case_seed_sheet_never_in_active_sheets()
-		"seed_table_walk_is_locked":             fail = _case_seed_table_walk_is_locked()
+		"seed_table_walk_is_locked":             fail = _case_seed_table_walk_is_locked()  # EXPECT-ERROR walk() at a seed table
 		"seed_sign_is_not_terminal":             fail = _case_seed_sign_is_not_terminal()
 		"seed_survives_series_a_sign":           fail = _case_seed_survives_series_a_sign()
 		"seed_expectation_grace_then_stall":     fail = _case_seed_expectation_grace_then_stall()
@@ -1808,7 +1808,7 @@ static func _case_patience_zero_locks_pushes() -> String:
 
 static func _case_push_decay_lowers_odds() -> String:
 	# Invariant: breakdown().total == chance_for() for a few inputs.
-	for combo in [["sales", 0, 0], ["negotiation", 1, 1], ["influence", 2, 0]]:
+	for combo in [["sales", 0, 0], ["leadership", 1, 1], ["charisma", 2, 0]]:
 		var bd0: Dictionary = SkillCheck.breakdown(combo[0], combo[1], combo[2])
 		if abs(float(bd0.total) - SkillCheck.chance_for(combo[0], combo[1], combo[2])) > 0.0000001:
 			return "breakdown.total != chance_for for %s" % str(combo)
@@ -4531,6 +4531,7 @@ static func _case_b2b_market_gate_b2c_run() -> String:
 	if c1 != c0:
 		return "a B2B contract was signed inside a B2C run (%d -> %d)" % [c0, c1]
 	# Control: the same roster in a B2B market DOES work, so the gate is a gate, not a wall.
+	GameState.set_cash(50000)   # the first 25 weeks drained the seed cash; the control must not end in a Kepenk
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 	for i in 25:
@@ -11288,7 +11289,6 @@ static func _case_risk_reentry_hysteresis() -> String:
 	_sim_day()   # D + the window
 	if c.lifecycle_phase != "risk" or c.churn_countdown < 0:
 		return "did not re-enter Risk when the window closed (tick %d, phase %s)" % [GameState.day, c.lifecycle_phase]
-	_drain_all_modals()
 	return ""
 
 
@@ -11335,14 +11335,7 @@ static func _case_discount_row_locked_past_cap() -> String:
 	if ev.choices[idx].unlock_reason_text != want or want == "B2B_DISCOUNT_SPENT_DESC":
 		return "capped row lacks the reason line ('%s')" % ev.choices[idx].unlock_reason_text
 	# The CS channel: a complaint card's discount row locks the same way.
-	var cs := Character.new()
-	cs.id = "char_cs_cap"
-	cs.character_name = "Cap Rep"
-	cs.role = HRConstants.ROLE_CUSTOMER_REP
-	cs.category = "employee"
-	cs.monthly_salary = 5000
-	cs.role_stats = {"expertise": 2, "pace": 5, "rapport": 5}
-	CharacterRegistry.add(cs)
+	var cs: Character = _make_employee("char_cs_cap", "Cap Rep", HRConstants.ROLE_CUSTOMER_REP, 5, 5000, 50, 2)
 	CustomerRegistry.assign_customer(c.id, cs.id)
 	CustomerRegistry.set_last_request_kind(c.id, "")
 	# The three request kinds are three cards now; complaint and renewal are the two that carry
@@ -11404,7 +11397,7 @@ static func _case_manual_retention_respects_cap() -> String:
 	if idx >= 0:
 		if _row_unlocked(ev, idx, ctx):
 			return "manual card offers an unlocked discount past the cap"
-		EventGate.debug_apply_effects(ev.choices[idx].modifiers)   # the bypass a UI bug could make
+		EventGate.debug_apply_effects(ev.choices[idx].modifiers, ctx)   # the bypass a UI bug could make
 	if c.mrr != mrr0 or c.retain_discounts != B2BConstants.RETAIN_DISCOUNT_MAX_USES:
 		return "a forced discount past the cap changed state (mrr %d→%d, uses %d)" % [mrr0, c.mrr, c.retain_discounts]
 	return ""

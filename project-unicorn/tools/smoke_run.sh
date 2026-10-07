@@ -18,18 +18,9 @@
 
 set -uo pipefail
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$(dirname "${BASH_SOURCE[0]}")/gate_common.sh"
 SMOKE="$HERE/scripts/debug/endgame_smoke.gd"
 CASE_TIMEOUT="${CASE_TIMEOUT:-120}"
-ERR_TOKENS='SCRIPT ERROR|Parse Error|Compile Error|Failed to instantiate|Failed to load script'
-
-if [ -z "${GODOT:-}" ]; then
-  for c in "$(command -v godot || true)" \
-           "$HOME/Desktop/Godot_v4.6.2-stable_win64_console.exe"; do
-    [ -n "$c" ] && [ -x "$c" ] && GODOT="$c" && break
-  done
-fi
-[ -n "${GODOT:-}" ] || { echo "smoke_run: no Godot binary; set GODOT=<path>" >&2; exit 2; }
 [ -f "$SMOKE" ] || { echo "smoke_run: cannot find $SMOKE" >&2; exit 2; }
 
 # The case list is the match table itself, so the runner can never drift from the suite.
@@ -38,17 +29,26 @@ list_cases() {
     | grep -oE '^\s*"[a-z0-9_]+":' | tr -d '\t ":'
 }
 
-run_one() {
-  local case_id="$1" log
-  log="$(mktemp)"
-  timeout "$CASE_TIMEOUT" "$GODOT" --path "$HERE" --headless --endgame-smoke="$case_id" >"$log" 2>&1
-  local ex=$? verdict errs
-  verdict="$(grep -aoE "SMOKE (PASS|FAIL).*" "$log" | head -1 | tr -d "\r")"
-  errs="$(grep -cE "$ERR_TOKENS" "$log")"
+# A case that breaks a rule on purpose says `# EXPECT-ERROR <message fragment>` on its match arm.
+expected_error() {
+  awk -v id="\"$1\":" '/^\tmatch case_name:/{on=1;next} on&&/^\t\t_:/{exit}
+    on&&$1==id&&/# EXPECT-ERROR /{sub(/.*# EXPECT-ERROR /,"");print;exit}' "$SMOKE" | tr -d '\r'
+}
 
-  if [ "$errs" -gt 0 ]; then
-    echo "SMOKE FAIL $case_id: $errs engine error line(s) — a throwing case is not a passing case"
-    grep -E "$ERR_TOKENS" "$log" | head -3 | sed 's/^/    /'
+run_one() {
+  local case_id="$1" log want
+  log="$(mktemp)"
+  want="$(expected_error "$case_id")"
+  timeout "$CASE_TIMEOUT" "$GODOT" --path "$HERE" --headless --endgame-smoke="$case_id" >"$log" 2>&1
+  local ex=$? verdict hits
+  verdict="$(grep -aoE "SMOKE (PASS|FAIL).*" "$log" | head -1 | tr -d "\r")"
+  hits="$(engine_errors "$log")"
+  # grep -v '' would drop every line, so only a declared fragment is exempt.
+  [ -z "$want" ] || hits="$(grep -avF -- "$want" <<<"$hits")"
+
+  if [ -n "$hits" ]; then
+    echo "SMOKE FAIL $case_id: $(wc -l <<<"$hits") engine error line(s) — a throwing case is not a passing case"
+    head -3 <<<"$hits" | sed 's/^/    /'
     rm -f "$log"; return 1
   fi
   if [ "$ex" -eq 124 ]; then
@@ -56,6 +56,9 @@ run_one() {
   fi
   if [ -z "$verdict" ]; then
     echo "SMOKE FAIL $case_id: no verdict printed (exit $ex)"; rm -f "$log"; return 1
+  fi
+  if [ -n "$want" ] && ! grep -aqF -- "$want" "$log"; then
+    echo "SMOKE FAIL $case_id: EXPECT-ERROR '$want' never printed (stale marker)"; rm -f "$log"; return 1
   fi
   echo "$verdict"
   rm -f "$log"

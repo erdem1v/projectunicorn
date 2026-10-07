@@ -925,7 +925,7 @@ func _build_founder(payload: Dictionary) -> Character:
 	var traits_arr: Array[String] = []
 	for trait_id in payload.get("trait_ids", []):
 		traits_arr.append(String(trait_id))
-	if not FounderConstants.validate_traits(traits_arr):
+	if payload.has("trait_ids") and not FounderConstants.validate_traits(traits_arr):
 		push_error("[GameState] trait_ids failed the trait formula: %s" % str(traits_arr))
 
 	var display_name: String = String(payload.get("founder_name", "")).strip_edges()
@@ -949,7 +949,7 @@ func _build_founder(payload: Dictionary) -> Character:
 	for k in skill_alloc.keys():
 		if not FounderConstants.SKILLS.has(k):
 			push_error("[GameState] stale skill key in onboarding payload: '%s' (SKILL-RENAME)" % k)
-	if not FounderConstants.validate_alloc(skill_alloc):
+	if payload.has("skill_alloc") and not FounderConstants.validate_alloc(skill_alloc):
 		push_error("[GameState] skill_alloc failed validation (pool %d, cap %d): %s"
 			% [FounderConstants.POINT_POOL, FounderConstants.ONBOARDING_CAP, str(skill_alloc)])
 	f.role_stats = stats
