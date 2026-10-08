@@ -230,7 +230,7 @@ static func card_roles(kind: String) -> Array:
 static func candidates(area_id: String) -> Array:
 	var stored: Dictionary = _p().get("cards", {})
 	var requests: Dictionary = {}
-	for r in _open_requests():
+	for r in open_requests():
 		requests[String(r.step)] = r
 	var out: Array = []
 	var caps: Array[String] = capabilities(area_id)
@@ -666,14 +666,14 @@ static func _launch_of(hit: Dictionary) -> Dictionary:
 
 ## Kartın karşıladığı açık talep: talep kartının kendisi ya da aynı kademeyi yapan özellik kartı.
 static func _request_of(card: Dictionary) -> Dictionary:
-	for r in _open_requests():
+	for r in open_requests():
 		if str(r.id) == card.request_id or (card.kind == "feature" and r.step == card.step):
 			return r
 	return {}
 
 
 ## Açık talepler. Hesabı kapanan müşterinin talebi ertesi tikte düşer; o arada sayılmaz.
-static func _open_requests() -> Array:
+static func open_requests() -> Array:
 	return (_p().get("requests", []) as Array).filter(func(r: Dictionary) -> bool:
 		return r.status == "open" and CustomerRegistry.get_customer(String(r.customer_id)) != null)
 

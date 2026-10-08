@@ -14018,14 +14018,20 @@ static func _node_tree_has_text(root: Node, needle: String) -> bool:
 ## raporu yazdırır. Kurucu da hariçtir ve KATEGORİYLE hariç tutulmak zorundadır, çünkü
 ## can_hold_area kurucu için her alanda true döner.
 ##
+## §6.3 · §6.4: talep satırı açık talepler ve ticket'lar arasında en çok oyu alan hattı söyler
+## (eşitlikte sıralı kimlik); hiçbiri açık değilken "kimse bir şey istemedi" doğrudur.
+##
 ## §14 (MÜHÜRLÜ): rakip satırında SAYISAL İDDİA YASAK. Bu, havuzun tamamı üzerinde
 ## makineyle kontrol edilebilen tek şeydir ve başka hiçbir kapı onu yakalamaz.
 ##
-## FALSİFİKASYON: note_author'ı ham yıldıza çevir → müşteri temsilcisi yazar olur ve ilk
-## iddia FAIL. _rival_name'in "+1"ini sil → dev seçilir ve o iddia FAIL. Havuzdaki bir
-## cümleye rakam ekle → basamak iddiası FAIL, anahtarı adıyla yazarak. mark_note_read'ten
-## MessageSystem.mark_read'i sil → kutudaki not okunmamış kalır ve son iddia FAIL.
+## FALSİFİKASYON: compose_note'ta demand_key'i "" yap → ticket iddiası FAIL. _demand_line'ın
+## karşılaştırıcısından eşitlik kolunu (`or (… a < b)`) sil → eşitlik iddiası FAIL. note_author'ı ham
+## yıldıza çevir → müşteri temsilcisi yazar olur ve ilk iddia FAIL. _rival_name'in "+1"ini sil →
+## dev seçilir ve o iddia FAIL. Havuzdaki bir cümleye rakam ekle → basamak iddiası FAIL, anahtarı
+## adıyla yazarak. mark_note_read'ten MessageSystem.mark_read'i sil → kutudaki not okunmamış
+## kalır ve son iddia FAIL.
 static func _case_rnd_note_author_and_lines() -> String:
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
 	ProductLines.reload()
 	ResearchTree.reload()
 	RnDSystem.reset()
@@ -14052,10 +14058,35 @@ static func _case_rnd_note_author_and_lines() -> String:
 	if author.category == "founder":
 		return "the founder was picked as the note author; §6.2 excludes him"
 
-	# --- §6.3 · ÜÇ SİNYAL ---
+	# --- §6.3 · TALEP SATIRI ---
+	# Açık talep ve ticket yokken "kimse bir şey istemedi" doğrudur; biri açılınca not o hattı söyler.
+	GameState.product.merge(SprintSystem.new_state(GameState.day), true)
 	var note: Dictionary = RnDSystem.compose_note(author)
-	if String(note.get("demand_key", "x")) != "":
-		return "the demand key is filled; §6.4 says it degrades until the generator ships"
+	var none: String = TranslationServer.translate("RND_NOTE_DEMAND_NONE")
+	var first_line: String = INBOX.note_lines(note)[0]
+	if String(note.get("demand_key", "x")) != "" or first_line != none:
+		return "nothing is open, yet the note's first line reads '%s' (key '%s'); want the nobody-asked sentence" % [
+			first_line, note.get("demand_key")]
+	var pair: Array = SprintCatalog.capabilities("core").slice(0, 2)
+	pair.sort()
+	var low: String = pair[0]
+	var high: String = pair[1]
+	SprintBridges.add_faulty_ticket(high)
+	var asked: Dictionary = RnDSystem.compose_note(author)
+	var asked_line: String = INBOX.note_lines(asked)[0]
+	var asked_key: String = String(asked.demand_key)
+	if RegEx.create_from_string("^RND_NOTE_DEMAND_B2C_[0-3]$").search(asked_key) == null \
+			or asked.demand_line != high or TranslationServer.translate(asked_key) == asked_key \
+			or not asked_line.contains(SprintCatalog.cap_name(high)) or asked_line.contains("{"):
+		return "one open ticket on %s: the note reads key '%s', line '%s', first line '%s'; want a resolving B2C demand key naming it" % [
+			high, asked_key, asked.demand_line, asked_line]
+	# Çoğunluk kazanır; eşitlikte sıralı hat kimliği, ticket'ın açılış sırası değil.
+	SprintBridges.add_faulty_ticket(low)
+	if RnDSystem.compose_note(author).demand_line != low:
+		return "one ticket each on %s and %s: the tie did not go to the lower line id" % [low, high]
+	SprintBridges.add_faulty_ticket(high)
+	if RnDSystem.compose_note(author).demand_line != high:
+		return "two tickets on %s against one on %s: the plurality did not win" % [high, low]
 	var rk: String = String(note.get("rival_key", ""))
 	var tk: String = String(note.get("tech_key", ""))
 	if rk == "" or tk == "":
@@ -14106,10 +14137,27 @@ static func _case_rnd_note_author_and_lines() -> String:
 	RnDSystem.mark_note_read()
 	if not posted[0].read:
 		return "a note read in the Ar-Ge tab stayed unread in the inbox"
+	# Mesaj hattın kimliğini saklar, adı değil: ad okunurken dile göre çözülür.
+	if posted[0].args.demand_line != high:
+		return "the inbox message stores '%s' as its demand line; want the line id '%s'" % [
+			posted[0].args.demand_line, high]
 
 	CharacterRegistry.remove(dev.id)
 	CharacterRegistry.remove(rep.id)
 	CharacterRegistry.remove(pm.id)
+
+	# --- Talep yolu: B2B'de açık talep kendi hattını söyler (ticket yok) ---
+	GameState.product.clear()
+	ProductState.adjust_confirmed(-ProductState.bugs_confirmed())
+	if _seed_open_request() == null:
+		return "fixture: the request sprint did not start"
+	var req: Dictionary = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.status == "open")[0]
+	var b2b: Dictionary = RnDSystem.compose_note(author)
+	if not SprintCatalog.tickets_by_line().is_empty() or b2b.demand_line != req.line \
+			or not String(b2b.demand_key).begins_with("RND_NOTE_DEMAND_B2B_") \
+			or not INBOX.note_lines(b2b)[0].contains(SprintCatalog.cap_name(req.line)):
+		return "an open request on %s and no ticket: the note reads key '%s', line '%s'; want the request's line" % [
+			req.line, b2b.demand_key, b2b.demand_line]
 	return ""
 
 
@@ -16415,10 +16463,9 @@ static func _case_sprint_auto_start_after_a_day() -> String:
 	return ""
 
 
-## B2B talebi: hesap imzadan bir sprint sonra sektörünün arketipine bağlı alandan bir kademe ister.
-## Talep kartı adaylarda, liderin önerisinde ve öngörüde "zamanında" olarak görünür; son tarihten
-## önce çıkan sürüm talebi karşılar ve aynı kademeye verilmiş sözü o sürümün "shipped"iyle tutar.
-static func _case_sprint_request_on_time_met() -> String:
+## Yayındaki bir ERP ürünü ve ona bağlı bir hesap; bir puanlık sprint oynanınca hesabın talebi açıktır
+## (talep sprintinin önünde taşınan kart yoktur). Sprint başlamazsa null.
+static func _seed_open_request() -> Customer:
 	_seed_sprint_live("erp")
 	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
 		_sprint_hire("char_req_" + role_id, role_id)
@@ -16428,8 +16475,15 @@ static func _case_sprint_request_on_time_met() -> String:
 	lead.industry = String(SalesArchetypes.sectors("tech_exacting")[0])
 	lead.star = 2
 	var account: Customer = SalesSystem.add_b2b_customer(lead, 12, 50, 85)
-	# A one-point sprint: the request's sprint starts with nothing carried in front of its card.
-	if not _play_sprint(["res:core"]):
+	return account if _play_sprint(["res:core"]) else null
+
+
+## B2B talebi: hesap imzadan bir sprint sonra sektörünün arketipine bağlı alandan bir kademe ister.
+## Talep kartı adaylarda, liderin önerisinde ve öngörüde "zamanında" olarak görünür; son tarihten
+## önce çıkan sürüm talebi karşılar ve aynı kademeye verilmiş sözü o sürümün "shipped"iyle tutar.
+static func _case_sprint_request_on_time_met() -> String:
+	var account: Customer = _seed_open_request()
+	if account == null:
 		return "fixture: sprint 1 did not start"
 	var open: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.status == "open")
 	if open.size() != 1 or open[0].customer_id != account.id:

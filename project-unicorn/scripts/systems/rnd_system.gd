@@ -549,7 +549,7 @@ static func note_author() -> Character:
 	return null
 
 
-## §12.1 — her havuz dört varyasyon taşır (RND_NOTE_{RIVAL,TECH}_{B2B,B2C}_0..3).
+## §12.1 — her havuz dört varyasyon taşır (RND_NOTE_{DEMAND,RIVAL,TECH}_{B2B,B2C}_0..3).
 const NOTE_POOL_COUNT := 4
 
 
@@ -584,21 +584,34 @@ static func _emerging_node(day: int) -> String:
 	return open_ids[_pick(open_ids.size(), "rnd_note_tech_node", day)]
 
 
+## §6.3 · §6.4 — açık talepler ve açık ticket'lar hat başına birer oydur; en çok oyu alan hat söylenir,
+## eşitlikte sıralı hat kimliği kazanır (Dictionary sırası sözleşme değil). Oy yoksa "".
+static func _demand_line() -> String:
+	var votes: Dictionary = {}
+	for r in SprintCatalog.open_requests():
+		votes[r.line] = votes.get(r.line, 0) + 1
+	var tickets: Dictionary = SprintCatalog.tickets_by_line()
+	for line_id in tickets:
+		votes[line_id] = votes.get(line_id, 0) + (tickets[line_id] as Array).size()
+	var ids: Array = votes.keys()
+	ids.sort_custom(func(a, b): return votes[a] > votes[b] or (votes[a] == votes[b] and a < b))
+	return "" if ids.is_empty() else String(ids[0])
+
+
 ## §6.3 — ÜÇ SİNYAL, SIFIR HÜKÜM. Kart hiçbir satırı işaretlemez, hiçbirini önermez.
-##
-## §6.4 ŞERHİ: talep üreteci Ürün paketinde inşa edilmedi, o yüzden `demand_key` BOŞ gelir ve
-## görünüm belgelenmiş bozunmuş hâline düşer ("Bu ay kimse bir şey istemedi."). Diğer iki
-## satırın havuzları buradan seçilir.
 ##
 ## TEK BESTECİ: harness de (--inbox-shot=rnd_note) bu fonksiyonu çağırır, sözlüğü elle
 ## kurmaz; elle kurulan bir kopya ayrışır.
 static func compose_note(author: Character) -> Dictionary:
 	var suffix: String = "B2B" if ProductState.market_type() == "b2b" else "B2C"
 	var day: int = GameState.day
+	var demand: String = _demand_line()
 	var rival: String = _rival_name(day)
 	var node: String = _emerging_node(day)
-	# Bir satırın anahtarı, DOLDURACAĞI DEĞER yoksa boş bırakılır: yarım bir cümle
-	# basmaktansa satır hiç çizilmez (kart da bunu bekliyor, `_note_line`).
+	# Bir satırın anahtarı, DOLDURACAĞI DEĞER yoksa boş bırakılır: yarım bir cümle basmaktansa
+	# satır çizilmez; yalnız talep satırı yerine "kimse bir şey istemedi" cümlesi çizilir.
+	var demand_key: String = "" if demand == "" \
+		else "RND_NOTE_DEMAND_%s_%d" % [suffix, _pick(NOTE_POOL_COUNT, "rnd_note_demand", day)]
 	var rival_key: String = "" if rival == "" \
 		else "RND_NOTE_RIVAL_%s_%d" % [suffix, _pick(NOTE_POOL_COUNT, "rnd_note_rival", day)]
 	var tech_key: String = "" if node == "" \
@@ -606,9 +619,10 @@ static func compose_note(author: Character) -> Dictionary:
 	return {
 		"author_name": author.character_name,
 		"author_role": author.role,
-		"demand_key": "",   # §6.4 — degraded until the demand generator ships
+		"demand_key": demand_key,
 		"rival_key": rival_key,
 		"tech_key": tech_key,
+		"demand_line": demand,
 		"rival": rival,
 		"node": node,
 	}

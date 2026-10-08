@@ -618,7 +618,8 @@ func _run_event_shot(event_id: String) -> void:
 ## states, through the real gate (main's handler holds the clock and opens the inbox on the card):
 ##   offer · queue · customer (an option armed) · locked · history · paper · paper_open ·
 ##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
-##   frank_moment · rnd_note (week 14's note) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
+##   frank_moment · rnd_note (week 14's note) · rnd_note_demand (the same note with a ticket open on an ERP
+##   line, so its first line names that line) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
 ##   weekly_sales · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
 ##   finance_read_only (Finans read-only) · personal_read_only (Kişisel read-only) ·
@@ -634,7 +635,12 @@ func _run_inbox_shot(state: String) -> void:
 		GameState.current_hour = 11
 		TimeManager.sync_to_current_hour()
 	if state.begins_with("rnd_"):
-		_seed_rnd(16 if state == "rnd_discovery" else 14)
+		_seed_rnd(16 if state == "rnd_discovery" else 14, state != "rnd_note_demand")
+	if state == "rnd_note_demand":
+		# A ticket needs a catalogued product type; the theme seed's has no lines.
+		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+		SprintBridges.add_faulty_ticket(SprintCatalog.capabilities("integrations")[0])
+		RnDSystem._tick_note()
 	await _mount_shot_shell()
 	_wire_modal_signals()
 	var selina := "char_emp_shot_3"
@@ -713,7 +719,7 @@ func _run_inbox_shot(state: String) -> void:
 			var payload: Dictionary = SummarySystem._build_summary_data("quarterly", GameState.day - 1)
 			MessageSystem.post("summary", String(SummarySystem.PERIOD_KEYS.quarterly.title), payload)
 			EventBus.summary_ready.emit(payload)
-		"rnd_note", "rnd_discovery":
+		"rnd_note", "rnd_note_demand", "rnd_discovery":
 			INBOX.show("m:" + String(GameState.messages[-1].id))
 		"weekly_sales":
 			var rows := []

@@ -588,6 +588,11 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
   - Yürürlükteki kural: Oyuncu metni önce İngilizce yazılır. Türkçe ayrı bir yerelleştirme adımıdır: çeviri değil, sahneyi Türk okur için yeniden yazmak. Mühürlü Türkçe metinler olduğu gibi kalır. Her metin bir anahtar olarak doğar; anahtarlar İngilizcedir. §12.2'nin geri kalanı değişmez. Metni kimin yazdığı açık karardır ("Oyuncu metnini kim yazar").
   - Kaynak: sahip kararı 2026-09-26, 61f38bc; CLAUDE.md §5.
 
+- **§6.3 "Talep baskısı" satırı ve cümle havuzu; §6.4 Talep baskısı verisi (veri kaynağı ve ŞERH)**
+  - Eski metin: Talep satırı Ürün §15'in talep üretecinin açık hat başına biriktirdiği baskı puanından okunur; üreteç inşa edilmediği için satır yerine "Bu ay kimse bir şey istemedi." düşer. Havuz cümleleri "Üç hesap", "ikisinde", "dört kez", "yarısı" gibi sayılar söyler.
+  - Yürürlükteki kural: Satır motorun bugün okuduğu iki kaynaktan beslenir: açık talepler (yalnız B2B) ve açık ticket'lar (iki pazar). Her açık talep ve her açık ticket kendi hattına bir oy verir; en çok oyu alan hat söylenir, eşitlikte sıralı hat kimliği kazanır (`RnDSystem._demand_line`). Mesaj hattın kimliğini saklar (`demand_line`), adı okunurken dile göre çözülür. Ne talep ne ticket açıkken "Bu ay kimse bir şey istemedi." doğru cümle olarak kalır. Motorun okumadığı sayıyı söylememek için dört cümle sayısız yazıldı (`RND_NOTE_DEMAND_B2B_0`, `_B2B_1`, `_B2B_2`, `_B2C_2`, aynı anahtarlar); havuzun anahtar kümesi ve öbür dört cümle değişmez.
+  - Kaynak: sahip kararı 2026-10-08 (Onarım 0 · A9: metin seçeneği a, kaynak açık talep ve açık ticket, çoğunluk kazanır); Ürün rev 7 sprint döngüsü (talep ve ticket defteri).
+
 ## GDD — SATIŞ MODÜLÜ (rev 6.1 · İNŞA SÜRÜMÜ)
 
 - **§3 MUSLUK, "Akış" satırı; §4 BORU HATTI, "Lead ömrü" ve "Dönüş kilidi" maddeleri; §12 "Süresi dolan lead" satırı; §17 "lead ömrü (7) · dönüş kilidi (30)"**

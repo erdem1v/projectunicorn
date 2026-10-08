@@ -276,11 +276,14 @@ static func _reminder(id: String, topic: String, from: Dictionary, subject: Stri
 		"sender": from, "subject": subject, "line": "", "tab": tab, "subpage": subpage}
 
 
-## The Ar-Ge note's three lines (§6.3), the empty ones dropped; the demand line falls back to its
-## documented degraded sentence (§6.4).
+## The Ar-Ge note's three lines (§6.3), the empty ones dropped; the demand line falls back to the
+## "nobody asked" sentence when no request or ticket was open. The note stores the product line's id,
+## the name is resolved here so it follows the language.
 static func note_lines(a: Dictionary) -> Array:
+	var demand: String = String(a.get("demand_line", ""))
 	var out: Array = []
-	for row in [[String(a.get("demand_key", "")), {"line": String(a.get("line", ""))}, "RND_NOTE_DEMAND_NONE"],
+	for row in [[String(a.get("demand_key", "")), {"line": SprintCatalog.cap_name(demand) if demand != "" else ""},
+			"RND_NOTE_DEMAND_NONE"],
 			[String(a.get("rival_key", "")), {"rival": String(a.get("rival", ""))}, ""],
 			[String(a.get("tech_key", "")), {"node": ResearchSeam.node_name(String(a.get("node", "")))}, ""]]:
 		var text: String = RnDUiShared.t_or(row[0], "").format(row[1]) if row[0] != "" \
