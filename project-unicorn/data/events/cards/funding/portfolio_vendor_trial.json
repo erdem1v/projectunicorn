@@ -1,0 +1,122 @@
+{
+  "id": "funding.portfolio_vendor_trial",
+  "version_scope": "demo",
+  "category": "funding",
+  "sender": "investor",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "weight": 3.0,
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "investor": {
+      "type": "investor",
+      "required": true,
+      "select": "seed_lead"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "history": "chose",
+        "event": "funding.portfolio_vendor",
+        "option": "month"
+      },
+      {
+        "history": "weeks_since",
+        "event": "funding.portfolio_vendor",
+        "op": ">=",
+        "value": 4
+      },
+      {
+        "history": "weeks_since",
+        "event": "funding.portfolio_vendor",
+        "op": "<=",
+        "value": 12
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "extend",
+      "outcome_id": "extended_year",
+      "requires": {
+        "seam": "finance.cash",
+        "op": ">=",
+        "value": 14000,
+        "reason": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_LOCK_CASH"
+      },
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -14000,
+          "label": "outreach"
+        },
+        {
+          "verb": "audience_delta",
+          "pct": 0.06
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "numbers",
+      "outcome_id": "documented_no",
+      "effects": [
+        {
+          "verb": "investor_strain",
+          "scope": "investor",
+          "amount": 4,
+          "weeks": 13
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_TITLE",
+      "body": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_BODY",
+      "options": {
+        "extend": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_EXTEND",
+        "numbers": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_NUMBERS"
+      },
+      "locked_reasons": {
+        "extend": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_LOCK_CASH"
+      },
+      "expire_note": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_TITLE",
+      "body": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_BODY",
+      "options": {
+        "extend": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_EXTEND",
+        "numbers": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_NUMBERS"
+      },
+      "locked_reasons": {
+        "extend": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_LOCK_CASH"
+      },
+      "expire_note": "EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "investor_strain",
+        "scope": "investor",
+        "amount": 8,
+        "weeks": 39
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

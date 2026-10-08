@@ -3201,3 +3201,163 @@ VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some frictio
 FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
 FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut
 FIN_ONETIME_DATA_PURCHASE,Veri alımı,Data purchase
+EV_TEAM_CONFERENCE_TRIP_TITLE,Konferans,The conference
+EV_TEAM_CONFERENCE_TRIP_BODY,"{employee} başka şehirde yapılacak bir konferansa gitmek istiyor. İki gün sürüyor; bilet, tren ve otelle $1.200 tutuyor. Bildiklerinin çoğunu bu konferansın internetteki ücretsiz kayıtlarından öğrendi. Şimdiye kadar hiçbir şey istememişti.","{employee} wants to attend a conference in another city: two days, $1,200 with the ticket, train and hotel. Most of what they know came from its free talk videos. It is the first thing they have asked for."
+EV_TEAM_CONFERENCE_TRIP_PAY,Bütün masrafı öde,Pay for the whole trip
+EV_TEAM_CONFERENCE_TRIP_DAYS,"İzni ver, parayı verme","Give the days, not the money"
+EV_TEAM_CONFERENCE_TRIP_NOT_NOW,Bu yıl olmaz de,Tell them not this year
+EV_TEAM_CONFERENCE_TRIP_EXPIRED,"Cevap gelmedi, biletler de tükendi.","No answer came, and the tickets sold out."
+EV_TEAM_LEAD_OVERTIME_TITLE,Kamp yatağı,A camp bed
+EV_TEAM_LEAD_OVERTIME_BODY,{employee} bu sprint için ofise kamp yatağı getirdi. İki kişi daha artık mesaiden sonra da kalıyor. Kimse onlardan böyle bir şey istemedi.,{employee} has brought a camp bed into the office for this sprint. Two others have stopped going home on time. Nobody asked them to.
+EV_TEAM_LEAD_OVERTIME_CARRY,Bırak devam etsinler,Let them keep going
+EV_TEAM_LEAD_OVERTIME_HOME,Herkesi vaktinde eve gönder,Send everyone home on time
+EV_TEAM_LEAD_OVERTIME_BONUS,Üstüne prim ver,Pay them a bonus on top
+EV_TEAM_LEAD_OVERTIME_EXPIRED,"Kimse bir şey demedi, mesaiden sonra kalmak alışkanlık oldu.","Nobody said anything, and the extra hours became a habit."
+EV_TEAM_PASSWORD_RULE_TITLE,Parola meselesi,The password question
+EV_TEAM_PASSWORD_RULE_BODY,"Sürüm çıkmadan kullanıcı parolaları şifrelensin istiyorsun. {employee} buna fazladan iş diyor: hiçbir müşteri istememiş, üstelik parola hatırlatma maili bozulurmuş. O mail, parolanın kendisini yolluyor.","You want user passwords encrypted before the release goes out. {employee} calls it extra work no customer has asked for, and says it would break the password reminder. The reminder mails out the password itself."
+EV_TEAM_PASSWORD_RULE_RULE,Şifrelemeyi şart koş,Make encryption the rule
+EV_TEAM_PASSWORD_RULE_SELF,Şifrelemeyi kendin yaz,Write the encryption yourself
+EV_TEAM_PASSWORD_RULE_OUTSIDE,Dışarıdan birine yaptır,Have a contractor do it
+EV_TEAM_PASSWORD_RULE_LEAVE,"Bırak, {employee} karar versin",Leave it to {employee}
+EV_TEAM_PASSWORD_RULE_EXPIRED,"Karar çıkmadı, hatırlatma maili parolaları yollamaya devam ediyor.","No ruling came, so the reminder still mails out passwords."
+EV_TEAM_WIPED_TABLE_TITLE,Boş filtre,An empty filter
+EV_TEAM_WIPED_TABLE_BODY,"Destek kuyruğu uzayınca {employee} işe el attı: yönetim panelinden çift açılmış kullanıcı hesaplarını siliyordu. Filtre boş kalmış, toplu silme bütün hesapları götürmüş. Elde iki ay önceki yedek var. {employee} istifasını sundu.","{employee} was helping with the support queue, deleting duplicate user accounts in the admin tool. The filter was empty, and the delete took every account. The last backup is two months old. {employee} has offered to resign."
+EV_TEAM_WIPED_TABLE_REBUILD,Hesapları {employee} geri getirsin,Let {employee} rebuild the accounts
+EV_TEAM_WIPED_TABLE_EXPERT,"Veri kurtarma uzmanı tut, {employee} kalsın","Keep {employee}, hire a recovery expert"
+EV_TEAM_WIPED_TABLE_ACCEPT,"İstifayı kabul et, yedeği geri yükle","Accept the resignation, restore the backup"
+EV_TEAM_WIPED_TABLE_EXPIRED,"Cevap gitmedi, istifa kabul edilmiş sayıldı.","No answer went back, and the resignation stood."
+EV_CUSTOMER_CHARGEBACK_TITLE,Muhasebecileri,Their bookkeeper
+EV_CUSTOMER_CHARGEBACK_BODY,{customer} şirketinin muhasebecisi son iki kart ödemesini bankadan geri çektirdi. Bazı koltukları kimsenin kullanmadığını söylüyor. Patronları bankaya yazdı: ekip ürünü her gün kullanıyor. Banka muhasebeciden yana çıktı.,The bookkeeper at {customer} had the bank reverse the last two card payments. She says some seats are never used. Their CEO told the bank the team uses it every day. The bank took her side.
+EV_CUSTOMER_CHARGEBACK_KEEP,"Bırak, para onda kalsın",Let her keep the money
+EV_CUSTOMER_CHARGEBACK_USED_SEATS,Kullanılan koltukları yeniden faturala,Invoice only the seats they use
+EV_CUSTOMER_CHARGEBACK_LAWYER,Avukata ihtarname çektir,Have a lawyer write to them
+EV_CUSTOMER_CHARGEBACK_EXPIRED,"Cevap gitmedi. Para onda kaldı, dört koltuğu da kesti.",Nobody answered. She kept the money and cut four seats.
+EV_CUSTOMER_NAMED_IN_LEAK_TITLE,Bir yazılım tedarikçisi,A software supplier
+EV_CUSTOMER_NAMED_IN_LEAK_BODY,"{customer} sızıntı yaşadı: bütün müşteri listesi dışarıda. Açıklamaları bir yazılım tedarikçisini işaret ediyor, bir teknoloji blogu da o tedarikçinin sen olduğunu yazdı. {employee} kayıtlara baktı: liste onların kendi çalışanlarından birinin şifresiyle indirilmiş. Sana soran olmadı.","{customer} had a leak: their whole client list. Their statement blames a software supplier, and a tech blog has named you. {employee} checked the logs: the list was downloaded with one of their own staff's passwords. Nobody has asked you."
+EV_CUSTOMER_NAMED_IN_LEAK_STATEMENT,Şifrenin onların olduğunu açıkla,Say publicly it was their password
+EV_CUSTOMER_NAMED_IN_LEAK_LAWYER,Avukatla bloga tekzip gönder,Send the blog a lawyer's letter
+EV_CUSTOMER_NAMED_IN_LEAK_HELP,{employee} incelemelerine yardım etsin,Lend {employee} to their investigation
+EV_CUSTOMER_NAMED_IN_LEAK_EXPIRED,Cevap gitmedi. Yazıda adın hâlâ geçiyor.,Nobody answered. The story still names you.
+EV_CUSTOMER_LEAK_QUESTIONS_TITLE,İkinci yazı,A second piece
+EV_CUSTOMER_LEAK_QUESTIONS_BODY,Teknoloji blogu bu kez tedarikçiler üzerine ikinci bir yazı hazırlıyor ve açıklamanı okumuş. Çalışanlarının müşteri verisine nasıl eriştiğini ve bunu kimin denetlediğini soruyorlar. Yazı gelecek hafta çıkıyor.,"The tech blog is writing a second piece, on the suppliers, and has read your statement. They ask how your staff reach customer data and who has tested it. It runs next week."
+EV_CUSTOMER_LEAK_QUESTIONS_AUDIT,Dış güvenlik denetimine para ver,Pay for an outside security audit
+EV_CUSTOMER_LEAK_QUESTIONS_TWO_STEP,Her girişi iki aşamalı yap,Make every login two-step
+EV_CUSTOMER_LEAK_QUESTIONS_EXPIRED,Yazı senin cevabın olmadan çıktı.,The piece ran without your answer.
+EV_CUSTOMER_NEW_OWNER_TITLE,Sahibi değişti,Under new ownership
+EV_CUSTOMER_NEW_OWNER_PASS_ON,Avukat parasını fiyata yansıt,Charge them for the lawyer
+EV_CUSTOMER_NEW_OWNER_SELF_READ,"Kendin oku, fiyatı yükselt","Read it yourself, raise the price"
+EV_CUSTOMER_NEW_OWNER_LOGO,İndirime karşılık logolarını iste,Trade the discount for their logo
+EV_CUSTOMER_NEW_OWNER_EXPIRED,"Cevap gitmedi, grup başka bir firmayla anlaştı.","No answer went back, and the group chose another vendor."
+EV_CUSTOMER_NEW_OWNER_GROUP_TITLE,Bir şirket daha,One more company
+EV_CUSTOMER_NEW_OWNER_GROUP_BODY,Doksan sayfayı gönderen satın alma ekibi yine yazdı. Gruptan bir şirket daha ürünü istiyor. Ekip bir grup fiyatı bekliyor.,The buying team that sent the ninety pages wrote again. Another of the group's companies wants the product. The team wants a group price.
+EV_CUSTOMER_NEW_OWNER_GROUP_PRICE,Gruba tek fiyat ver,Give the group one price
+EV_CUSTOMER_NEW_OWNER_GROUP_PITCH,"Fiyatı koru, gidip ürünü kendin anlat","Keep our price, pitch them yourself"
+EV_CUSTOMER_NEW_OWNER_GROUP_WRITE_IN,Şirketi avukatla sözleşmeye ekle,Add them in an addendum
+EV_CUSTOMER_NEW_OWNER_GROUP_EXPIRED,"Cevap gitmedi, şirket başka bir firmayla anlaştı.","No answer went back, and the company chose another vendor."
+EV_PRODUCT_LAUNCH_LEAK_TITLE,Başkasının hesabı,Someone else's account
+EV_PRODUCT_LAUNCH_LEAK_BODY,"Bir teknoloji forumunda okurun biri, sitendeki kendi profilini açmış, adres çubuğundaki sayıyı değiştirmiş ve başka birinin hesabına girmiş. Nasıl yaptığını, ürünü duyurduğun başlığın altına adım adım yazmış. Hâlâ çalışıyor.","A reader on a tech forum opened their profile on your site, changed the number in the address bar and was in someone else's account. The steps are written out under your launch post. They still work."
+EV_PRODUCT_LAUNCH_LEAK_TAKE_DOWN,Düzelene kadar siteyi kapat,Close the site until it's fixed
+EV_PRODUCT_LAUNCH_LEAK_THANK,Başlıkta açığı bulana teşekkür et,Thank the finder in the thread
+EV_PRODUCT_LAUNCH_LEAK_HIRE_FINDER,Açığı bulanı bir haftalığına tut,Hire the finder for a week
+EV_PRODUCT_LAUNCH_LEAK_ASK_DELETE,Gönderiyi silmesini rica et,Ask them to delete the post
+EV_PRODUCT_LAUNCH_LEAK_EXPIRED,Başlık senden cevap gelmeden büyüdü. Bazı kullanıcılar gitti.,The thread grew without a word from you. Some users left.
+EV_PRODUCT_REPEAT_REMINDERS_TITLE,Kırk kez,Forty times
+EV_PRODUCT_REPEAT_REMINDERS_BODY,"Yeni sürüm, {customer} müşterilerinden bazılarına aynı maili kırk kez atmış. {customer} bir haftadır onlardan özür diliyor. Ondan özür dileyen olmadı.",{customer} spent the week apologising to their own clients. The new version had sent some of them the same email forty times. Nobody has apologised to {customer}.
+EV_PRODUCT_REPEAT_REMINDERS_CALL,Arayıp özür dilemekle yetin,"Call and apologise, nothing more"
+EV_PRODUCT_REPEAT_REMINDERS_CREDIT,Bir sonraki faturayı düşür,Credit their next invoice
+EV_PRODUCT_REPEAT_REMINDERS_WRITE,Onların müşterilerine sen yaz,Write to their clients yourself
+EV_PRODUCT_REPEAT_REMINDERS_EXPIRED,"{customer} müşterilerinden tek başına özür diledi, yazılımın kimin olduğunu da söyledi.",{customer} apologised alone and told their clients whose software it was.
+EV_PRODUCT_SUPPORT_OVERFLOW_TITLE,Destekte kimse yok,Nobody on support
+EV_PRODUCT_SUPPORT_OVERFLOW_YOURSELF,Cevapları kendin yaz,Answer them yourself
+EV_PRODUCT_SUPPORT_OVERFLOW_HOURLY_HELP,Mesajlar için saat ücretiyle birini tut,Pay someone hourly to answer them
+EV_PRODUCT_SUPPORT_OVERFLOW_KNOWN_BUGS,Bilinen hataların listesini yayınla,Publish a list of known bugs
+EV_PRODUCT_SUPPORT_OVERFLOW_EXPIRED,"Kimse cevap yazmadı, mesajlar gelmeye devam etti.","Nobody wrote back, and the messages kept coming."
+EV_PRODUCT_SPRINT_HARDCODED_COLORS_TITLE,Kendi renkleri,Their own colours
+EV_PRODUCT_SPRINT_HARDCODED_COLORS_HAND,Renkleri elle değiştir,Change their colours by hand
+EV_PRODUCT_SPRINT_HARDCODED_COLORS_ONE_FILE,Bütün renkleri tek dosyaya topla,Pull every colour into one file
+EV_PRODUCT_SPRINT_HARDCODED_COLORS_FREELANCER,Renkleri bir serbest çalışana değiştirt,Have a freelancer change the colours
+EV_PRODUCT_SPRINT_HARDCODED_COLORS_AS_IS,Renkler değişmeyecek de,Tell them the colours stay
+EV_PRODUCT_SPRINT_HARDCODED_COLORS_EXPIRED,"Cevap gitmedi, {customer} bunu hayır diye anladı.","No answer went back, so {customer} took it as a no."
+EV_PRODUCT_SPRINT_COLORS_AGAIN_TITLE,Yine renkler,The colours again
+EV_PRODUCT_SPRINT_COLORS_AGAIN_EXPIRED,"{customer} şikâyet etti, ekip sayfaları elle değiştirdi.","{customer} complained, and the team changed the pages by hand."
+EV_PRODUCT_SPRINT_UNASKED_REWRITE_TITLE,Arayüz baştan yazılmış,"The front end, rewritten"
+EV_PRODUCT_SPRINT_UNASKED_REWRITE_REVIEW,"İncelet, yeni koda sonraki sprintte geç",Have the team review it first
+EV_PRODUCT_SPRINT_UNASKED_REWRITE_READ,"Otur, her satırı kendin oku",Read every line yourself
+EV_PRODUCT_SPRINT_UNASKED_REWRITE_MERGE,"Bırak incelemeyi, yeni koda geç","Switch now, skip the review"
+EV_PRODUCT_SPRINT_UNASKED_REWRITE_EXPIRED,"Kimse bakmadı, {employee} konuyu bir daha açmadı.","Nobody looked at it, and {employee} stopped bringing it up."
+EV_PRODUCT_SPRINT_REWRITE_BUGS_TITLE,Geçişten beri,Since the switch
+EV_PRODUCT_SPRINT_REWRITE_BUGS_BODY,"Yeni koda geçişten beri kullanıcılar, eskiden çalışan bir düzine şeyin artık çalışmadığını bildirdi. Hepsi yeni koddan çıkıyor. Her biri küçük.","Since the switch, users have reported a dozen things that used to work. All of them are in the new code. Each one is small."
+EV_PRODUCT_SPRINT_REWRITE_BUGS_FIX,Hataları {employee} düzeltsin,Have {employee} fix them
+EV_PRODUCT_SPRINT_REWRITE_BUGS_ROLLBACK,Eski arayüze geri dön,Roll back to the old code
+EV_PRODUCT_SPRINT_REWRITE_BUGS_FREEZE,"Yeni işi durdur, önce hataları düzelt","Stop new work, fix them first"
+EV_PRODUCT_SPRINT_REWRITE_BUGS_EXPIRED,"Kimse üstlenmedi, kullanıcılar yenilerini bulmaya devam etti.","Nobody took them on, and users kept finding more."
+EV_PRODUCT_SPRINT_REWRITE_OWNER_TITLE,Tek kişinin kodu,One person's code
+EV_PRODUCT_SPRINT_REWRITE_OWNER_BODY,"İnceleme bitti, ekip yeni koda geçti. İncelemenin çoğu {employee} yeni kodu anlatırken geçti. Başka kimse elini sürmedi.",The review is done and the team is on the new code. Most of the review was {employee} explaining it. Nobody else has touched it since.
+EV_PRODUCT_SPRINT_REWRITE_OWNER_PAIR,{employee} her birinin yanında çalışsın,Pair {employee} with each of them
+EV_PRODUCT_SPRINT_REWRITE_OWNER_TRAINER,Dışarıdan bir eğitmen getir,Bring in an outside trainer
+EV_PRODUCT_SPRINT_REWRITE_OWNER_OWN,Arayüzün sorumluluğunu {employee} alsın,Put {employee} in charge of it
+EV_PRODUCT_SPRINT_REWRITE_OWNER_EXPIRED,"Karar verilmedi, her soruyu yine {employee} cevapladı.","Nobody decided, so every question kept going to {employee}."
+EV_PRODUCT_SPRINT_REWRITE_READER_TITLE,Her değişiklik sana,"Every change, to you"
+EV_PRODUCT_SPRINT_REWRITE_READER_BODY,Yeni arayüzü satır satır okuduğun günden beri {employee} her değişikliği çıkmadan önce sana gönderiyor. Sen okumadan hiçbiri çıkmıyor. Dokuz tane bekliyor.,"Since you read the new front end line by line, {employee} has been sending you every change before it goes out. Nothing goes out until you read it. Nine are waiting."
+EV_PRODUCT_SPRINT_REWRITE_READER_KEEP,Hepsini okumaya devam et,Keep reading every change
+EV_PRODUCT_SPRINT_REWRITE_READER_PEER,Ekip birbirinin kodunu okusun,Have the team review each other
+EV_PRODUCT_SPRINT_REWRITE_READER_TRUST,Değişikliklerini {employee} kendisi çıkarsın,Let {employee} ship changes alone
+EV_PRODUCT_SPRINT_REWRITE_READER_EXPIRED,"Cevap gelmedi, {employee} değişiklikleri okunmadan çıkarmaya başladı.","No answer came, so {employee} started shipping them unread."
+EV_FUNDING_CLOSING_DOCS_TITLE,Evrak işleri,The paperwork
+EV_FUNDING_CLOSING_DOCS_BODY,"{investor} teklifi iki sayfa. Turun belgeleri de yanında geldi, fon bir ay içinde imza bekliyor. Avukatlarına göre hepsi standart. Series A fonları da okuyacak. Tam 114 sayfa.",The term sheet from {investor} is two pages. The documents for the round came with it. The fund wants them signed within a month. Its lawyers call them standard. Series A funds will read them too. All 114 pages.
+EV_FUNDING_CLOSING_DOCS_LAW_FIRM,Hukuk bürosuyla anlaş,Hire a startup law firm
+EV_FUNDING_CLOSING_DOCS_READ_FIRST,"Oku, takıldığın yerleri avukata sor","Read them, then ask a lawyer"
+EV_FUNDING_CLOSING_DOCS_READ_ALL,Her sayfayı kendin oku,Read every page yourself
+EV_FUNDING_CLOSING_DOCS_EXPIRED,"Fonun avukatları belgeleri kendileri bitirdi, faturayı şirkete kesti.",The fund's lawyers finished the documents and billed the company.
+EV_FUNDING_CLOSING_DOCS_DILIGENCE_TITLE,İki madde,Two clauses
+EV_FUNDING_CLOSING_DOCS_DILIGENCE_BODY,{investor} görüşmeden önce seed belgelerini istedi. Avukatlarına göre iki madde çıkmadan teklif yok. O maddeleri soran olmamıştı.,{investor} wanted the seed documents ahead of the meeting. Its lawyers marked two clauses that have to go before any offer. Nobody had asked about them.
+EV_FUNDING_CLOSING_DOCS_DILIGENCE_SEED_LAWYER,Seed avukatını yeniden ara,Call the seed lawyer back
+EV_FUNDING_CLOSING_DOCS_DILIGENCE_NEW_FIRM,Hukuk bürosuna düzelttir,Hire a firm to fix them
+EV_FUNDING_CLOSING_DOCS_DILIGENCE_WAIVER,Seed fonundan feragatname iste,Ask the seed fund for waivers
+EV_FUNDING_CLOSING_DOCS_DILIGENCE_LOCK_NO_LAWYER,Seed turunda kendi avukatın yoktu.,No lawyer of yours worked on the seed round.
+EV_FUNDING_CLOSING_DOCS_DILIGENCE_EXPIRED,"Turun avukatları maddeleri düzeltti, faturayı şirkete kesti.",Lawyers on the round fixed them and billed the company.
+EV_FUNDING_CLOSING_DOCS_SERIES_A_BODY,"{investor} teklifi iki sayfa. Turun belgeleri de yanında geldi, fon bir ay içinde imza bekliyor. Avukatlarına göre hepsi standart. Tam 114 sayfa.",The term sheet from {investor} is two pages. The documents for the round came with it. The fund wants them signed within a month. Its lawyers call them standard. All 114 pages.
+EV_FUNDING_MONTHLY_UPDATE_TITLE,Runway satırı,The runway line
+EV_FUNDING_MONTHLY_UPDATE_PAY_CUT,Maaşlarda indirime git,Announce a pay cut
+EV_FUNDING_MONTHLY_UPDATE_BRIDGE,Fondan ek yatırım iste,Ask for a seed extension
+EV_FUNDING_MONTHLY_UPDATE_BRIDGE_LOCK,{investor} bir kez ek yatırım yaptı.,{investor} has extended the seed once already.
+EV_FUNDING_MONTHLY_UPDATE_INTROS,Fondan müşteri tanıştırması iste,Ask for customer intros
+EV_FUNDING_MONTHLY_UPDATE_LINE_LAST,Notu iyi haberlerle aç,Lead with the good news
+EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK,{investor} geçen sefer o satırı sonda buldu.,{investor} found that line at the end last time.
+EV_FUNDING_MONTHLY_UPDATE_EXPIRED,Bu ay not gitmedi. {investor} fark etti.,"No update went out this month, and {investor} noticed."
+EV_FUNDING_PORTFOLIO_VENDOR_TITLE,Fonun öbür şirketi,The fund's other company
+EV_FUNDING_PORTFOLIO_VENDOR_BODY,"{investor}, turdan gelen paranın bir kısmını kendi yatırım yaptığı başka bir şirkete harcamanı istiyor. Fon bunu iki kez hatırlattı. Şirket, uygulamalara kullanıcı bulan bir reklam ağı. Bir yıllık anlaşmanın bedeli 18.000 dolar. Ağın müşterileri oyun şirketleri.","{investor} wants part of the round spent with another company it backs, and has asked twice. The company is an ad network that finds users for apps. A year with the network costs $18,000. Its clients make games."
+EV_FUNDING_PORTFOLIO_VENDOR_YEAR,Yıllık anlaşmayı imzala,Sign the annual deal
+EV_FUNDING_PORTFOLIO_VENDOR_MONTH,Önce bir ay dene,Try it for a month
+EV_FUNDING_PORTFOLIO_VENDOR_OWN_ADS,Parayı kendi reklamımıza harca,Spend it on our own ads
+EV_FUNDING_PORTFOLIO_VENDOR_DECLINE,Fona bize uymadığını söyle,Tell the fund it doesn't fit
+EV_FUNDING_PORTFOLIO_VENDOR_EXPIRED,Fonun maili iki hafta cevapsız kaldı.,The fund's email sat unanswered for two weeks.
+EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_TITLE,Deneme ayı,The trial month
+EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_BODY,Fonun reklam ağıyla deneme ayı bitti. {investor} yılın kalanı için sözleşmeyi gönderdi. Tutarı 14.000 dolar.,"The trial month with the fund's ad network is over. {investor} has sent the contract for the rest of the year. It comes to $14,000."
+EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_EXTEND,Sözleşmeyi imzala,Sign the contract
+EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_NUMBERS,"Rakamları gönder, hayır de",Send the numbers and say no
+EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_LOCK_CASH,Kasada 14.000 dolar yok.,"There isn't $14,000 in the bank."
+EV_FUNDING_PORTFOLIO_VENDOR_TRIAL_EXPIRED,Yılın kalanının sözleşmesi cevapsız kaldı.,The contract for the rest of the year went unanswered.
+EV_RIVAL_COPYCAT_TITLE,Yazım hatasına kadar,Down to the typo
+EV_RIVAL_COPYCAT_BODY,"Daha geçen ay bir milyon dolar yatırım alan bir ekip, senin son üç özelliğini yazım hatasına kadar aynen yayına aldı. Duyuruları seninkinden daha çok okundu. İlk müşterilerini adlarıyla anıyorlar.","A team that just raised a million shipped your last three features, down to the typo. Their launch post got more readers than yours. It thanks their first customers by name."
+EV_RIVAL_COPYCAT_LAWYER,Hukuk bürosu aracılığıyla ihtarname çek,Send a cease-and-desist letter
+EV_RIVAL_COPYCAT_PRESS,Basın bülteni yayınla,Put out a press release
+EV_RIVAL_COPYCAT_CUSTOMERS,Onların ilk müşterilerini bizzat ara,Call their first customers yourself
+EV_RIVAL_COPYCAT_EXPIRED,"Senden ses çıkmadı, onların duyurusu okunmaya devam etti.","Nothing went out, and their launch post kept its readers."
+EV_RIVAL_COPYCAT_REPLY_TITLE,Onların cevabı,Their answer
+EV_RIVAL_COPYCAT_REPLY_BODY,Kurucuları senin basın bültenine kendi yazısıyla cevap verdi. Üç özelliğin önce kendi yol haritalarında olduğunu yazıyor. Seninkinden daha çok okundu.,Their founder answered your press release with a post of their own. It says the three features were on their roadmap first. It got more readers than yours.
+EV_RIVAL_COPYCAT_REPLY_SIDE,İki sayfayı yazım hatasıyla birlikte yayınla,"Publish both pages, typo included"
+EV_RIVAL_COPYCAT_REPLY_UNANSWERED,Yazılarını cevapsız bırak,Leave their post unanswered
+EV_RIVAL_COPYCAT_REPLY_EXPIRED,"Cevap gitmedi, son söz onların yazısında kaldı.","No answer went out, and their post had the last word."
+EV_RIVAL_FALSE_PARTNER_TITLE,Sizin adınıza mı?,On your behalf?
+EV_RIVAL_FALSE_PARTNER_LAWYER,Avukatla ihtarname çek,Have a lawyer warn them off
+EV_RIVAL_FALSE_PARTNER_VISIT,Gidip yüz yüze konuş,Go see the buyer in person
+EV_RIVAL_FALSE_PARTNER_PUBLISH,Olanları {customer} adını vererek yayımla,Publish it and name {customer}
+EV_RIVAL_FALSE_PARTNER_CONTRACT,"Uzun vadeli, indirimli sözleşme öner","Offer them a longer, cheaper contract"
+EV_RIVAL_FALSE_PARTNER_EXPIRED,{customer} cevap alamayınca bir ekibini onlara taşıdı.,{customer} heard nothing back and moved a team over.
+EV_RIVAL_SHUTDOWN_NOTICE_TITLE,Veda yazısı,The farewell post
+EV_RIVAL_SHUTDOWN_NOTICE_BODY,Seninle aynı işi yapan küçük bir uygulama kapanıyor. Kullanıcılarına verilerini indirmeleri için iki hafta tanındı. Dosyayı başka hiçbir uygulama açamıyor. Kurucusunun veda yazısına dört yüz yorum geldi. Çoğu nereye gideceğini soruyor.,"A smaller app in your space is closing. Its users were given two weeks to download their data, in a file no other app can open. The founder's farewell post has four hundred comments. Most ask where to go."
+EV_RIVAL_SHUTDOWN_NOTICE_BUY_DATA,Verileri kurucusundan satın al,Pay the founder for the data
+EV_RIVAL_SHUTDOWN_NOTICE_MORE_MARKETING,Pazarlama harcamasını iki ay artır,Raise marketing spend for two months
+EV_RIVAL_SHUTDOWN_NOTICE_COMPARISON_POST,Karşılaştırma yazısını kendin yaz,Write a comparison post yourself
+EV_RIVAL_SHUTDOWN_NOTICE_EXPIRED,Alternatif listelerinin hepsinde başka adlar vardı.,Every list of alternatives named other apps.

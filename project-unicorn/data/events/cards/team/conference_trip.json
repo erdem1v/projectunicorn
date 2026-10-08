@@ -1,0 +1,153 @@
+{
+  "id": "team.conference_trip",
+  "version_scope": "demo",
+  "category": "team",
+  "sender": "employee",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "lowest_morale"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "entity",
+  "min_gap_weeks": 26,
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          1,
+          2
+        ]
+      },
+      {
+        "seam": "funding.seed_taken",
+        "op": "==",
+        "value": false
+      },
+      {
+        "entity_seam": "hr.level",
+        "scope": "employee",
+        "op": "<=",
+        "value": 1
+      },
+      {
+        "entity_seam": "hr.tenure_weeks",
+        "scope": "employee",
+        "op": ">=",
+        "value": 12
+      },
+      {
+        "entity_seam": "hr.status",
+        "scope": "employee",
+        "op": "==",
+        "value": "active"
+      },
+      {
+        "entity_seam": "hr.morale",
+        "scope": "employee",
+        "op": ">=",
+        "value": 40
+      },
+      {
+        "entity_seam": "hr.morale",
+        "scope": "employee",
+        "op": "<",
+        "value": 65
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "pay",
+      "outcome_id": "paid_trip",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1200,
+          "label": "training"
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -40,
+          "weeks": 1
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 7
+        }
+      ]
+    },
+    {
+      "id": "time_off",
+      "outcome_id": "own_dime",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -40,
+          "weeks": 1
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "not_now",
+      "outcome_id": "declined",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -6
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_TEAM_CONFERENCE_TRIP_TITLE",
+      "body": "EV_TEAM_CONFERENCE_TRIP_BODY",
+      "options": {
+        "pay": "EV_TEAM_CONFERENCE_TRIP_PAY",
+        "time_off": "EV_TEAM_CONFERENCE_TRIP_DAYS",
+        "not_now": "EV_TEAM_CONFERENCE_TRIP_NOT_NOW"
+      },
+      "expire_note": "EV_TEAM_CONFERENCE_TRIP_EXPIRED"
+    },
+    "en": {
+      "title": "EV_TEAM_CONFERENCE_TRIP_TITLE",
+      "body": "EV_TEAM_CONFERENCE_TRIP_BODY",
+      "options": {
+        "pay": "EV_TEAM_CONFERENCE_TRIP_PAY",
+        "time_off": "EV_TEAM_CONFERENCE_TRIP_DAYS",
+        "not_now": "EV_TEAM_CONFERENCE_TRIP_NOT_NOW"
+      },
+      "expire_note": "EV_TEAM_CONFERENCE_TRIP_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

@@ -1,0 +1,235 @@
+{
+  "id": "team.lead_overtime",
+  "version_scope": "demo",
+  "category": "team",
+  "sender": "self",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "most_senior",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "hr.status",
+            "scope": "employee",
+            "op": "==",
+            "value": "active"
+          },
+          {
+            "entity_seam": "hr.level",
+            "scope": "employee",
+            "op": ">=",
+            "value": 1
+          },
+          {
+            "entity_seam": "hr.tenure_weeks",
+            "scope": "employee",
+            "op": ">=",
+            "value": 12
+          },
+          {
+            "entity_seam": "hr.morale",
+            "scope": "employee",
+            "op": ">=",
+            "value": 50
+          },
+          {
+            "entity_seam": "hr.overtime_active",
+            "scope": "employee",
+            "op": "==",
+            "value": false
+          },
+          {
+            "entity_seam": "hr.is_idle",
+            "scope": "employee",
+            "op": "==",
+            "value": false
+          },
+          {
+            "entity_seam": "hr.account_count",
+            "scope": "employee",
+            "op": "==",
+            "value": 0
+          }
+        ]
+      }
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "entity",
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 2
+      },
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "seam": "office.current",
+        "op": "!=",
+        "value": "home"
+      },
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.sprint_week",
+        "op": "==",
+        "value": 2
+      },
+      {
+        "none": [
+          {
+            "all": [
+              {
+                "history": "chose",
+                "event": "product.sprint_late",
+                "option": "crunch"
+              },
+              {
+                "history": "weeks_since",
+                "event": "product.sprint_late",
+                "op": "<=",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "carry",
+      "outcome_id": "carried",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "sprint_hours",
+          "mult": 1.15
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -20,
+          "weeks": 2
+        },
+        {
+          "verb": "morale_all",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "home",
+      "outcome_id": "sent_home",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -6
+        },
+        {
+          "verb": "morale_all",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "bonus",
+      "outcome_id": "bonus_paid",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -6000,
+          "label": "retention"
+        },
+        {
+          "verb": "sprint_hours",
+          "mult": 1.15
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -20,
+          "weeks": 2
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 5
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_TEAM_LEAD_OVERTIME_TITLE",
+      "body": "EV_TEAM_LEAD_OVERTIME_BODY",
+      "options": {
+        "carry": "EV_TEAM_LEAD_OVERTIME_CARRY",
+        "home": "EV_TEAM_LEAD_OVERTIME_HOME",
+        "bonus": "EV_TEAM_LEAD_OVERTIME_BONUS"
+      },
+      "locked_reasons": {
+        "carry": "EV_LOCK_NO_SPRINT",
+        "bonus": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_TEAM_LEAD_OVERTIME_EXPIRED"
+    },
+    "en": {
+      "title": "EV_TEAM_LEAD_OVERTIME_TITLE",
+      "body": "EV_TEAM_LEAD_OVERTIME_BODY",
+      "options": {
+        "carry": "EV_TEAM_LEAD_OVERTIME_CARRY",
+        "home": "EV_TEAM_LEAD_OVERTIME_HOME",
+        "bonus": "EV_TEAM_LEAD_OVERTIME_BONUS"
+      },
+      "locked_reasons": {
+        "carry": "EV_LOCK_NO_SPRINT",
+        "bonus": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_TEAM_LEAD_OVERTIME_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "productivity_mod",
+        "scope": "employee",
+        "pct": -20,
+        "weeks": 2
+      },
+      {
+        "verb": "morale_all",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

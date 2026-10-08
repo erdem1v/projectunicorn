@@ -1,0 +1,114 @@
+{
+  "id": "rival.copycat_reply",
+  "version_scope": "demo",
+  "category": "rival",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "press",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "history": "chose",
+        "event": "rival.copycat",
+        "option": "press_release"
+      },
+      {
+        "history": "weeks_since",
+        "event": "rival.copycat",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "history": "weeks_since",
+        "event": "rival.copycat",
+        "op": "<=",
+        "value": 8
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "side_by_side",
+      "outcome_id": "showed_both_pages",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": 3
+        },
+        {
+          "verb": "add_reputation",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "lawyer",
+      "outcome_id": "sent_letter",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -5000,
+          "label": "legal"
+        },
+        {
+          "verb": "add_brand",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "unanswered",
+      "outcome_id": "left_unanswered",
+      "effects": [
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        },
+        {
+          "verb": "add_brand",
+          "amount": -3
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_RIVAL_COPYCAT_REPLY_TITLE",
+      "body": "EV_RIVAL_COPYCAT_REPLY_BODY",
+      "options": {
+        "side_by_side": "EV_RIVAL_COPYCAT_REPLY_SIDE",
+        "lawyer": "EV_RIVAL_COPYCAT_LAWYER",
+        "unanswered": "EV_RIVAL_COPYCAT_REPLY_UNANSWERED"
+      },
+      "expire_note": "EV_RIVAL_COPYCAT_REPLY_EXPIRED"
+    },
+    "en": {
+      "title": "EV_RIVAL_COPYCAT_REPLY_TITLE",
+      "body": "EV_RIVAL_COPYCAT_REPLY_BODY",
+      "options": {
+        "side_by_side": "EV_RIVAL_COPYCAT_REPLY_SIDE",
+        "lawyer": "EV_RIVAL_COPYCAT_LAWYER",
+        "unanswered": "EV_RIVAL_COPYCAT_REPLY_UNANSWERED"
+      },
+      "expire_note": "EV_RIVAL_COPYCAT_REPLY_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -3
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

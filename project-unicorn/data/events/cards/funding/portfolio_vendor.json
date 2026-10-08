@@ -1,0 +1,154 @@
+{
+  "id": "funding.portfolio_vendor",
+  "version_scope": "demo",
+  "category": "funding",
+  "sender": "investor",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "investor": {
+      "type": "investor",
+      "required": true,
+      "select": "seed_lead"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "funding.seed_taken",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "funding.seed_weeks_since_close",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "seam": "funding.seed_weeks_since_close",
+        "op": "<=",
+        "value": 8
+      },
+      {
+        "seam": "sales.b2c_audience",
+        "op": ">=",
+        "value": 1000
+      },
+      {
+        "seam": "finance.cash",
+        "op": ">=",
+        "value": 25000
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "year",
+      "outcome_id": "signed_year",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -18000,
+          "label": "outreach"
+        },
+        {
+          "verb": "audience_delta",
+          "pct": 0.08
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "month",
+      "outcome_id": "trial_month",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -5000,
+          "label": "outreach"
+        },
+        {
+          "verb": "audience_delta",
+          "pct": 0.02
+        }
+      ]
+    },
+    {
+      "id": "own_ads",
+      "outcome_id": "own_ads_instead",
+      "effects": [
+        {
+          "verb": "marketing_push",
+          "burn_pct": 25,
+          "growth_pct": 15,
+          "weeks": 8
+        },
+        {
+          "verb": "investor_strain",
+          "scope": "investor",
+          "amount": 5,
+          "weeks": 26
+        }
+      ]
+    },
+    {
+      "id": "decline",
+      "outcome_id": "declined",
+      "effects": [
+        {
+          "verb": "investor_strain",
+          "scope": "investor",
+          "amount": 8,
+          "weeks": 39
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FUNDING_PORTFOLIO_VENDOR_TITLE",
+      "body": "EV_FUNDING_PORTFOLIO_VENDOR_BODY",
+      "options": {
+        "year": "EV_FUNDING_PORTFOLIO_VENDOR_YEAR",
+        "month": "EV_FUNDING_PORTFOLIO_VENDOR_MONTH",
+        "own_ads": "EV_FUNDING_PORTFOLIO_VENDOR_OWN_ADS",
+        "decline": "EV_FUNDING_PORTFOLIO_VENDOR_DECLINE"
+      },
+      "expire_note": "EV_FUNDING_PORTFOLIO_VENDOR_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FUNDING_PORTFOLIO_VENDOR_TITLE",
+      "body": "EV_FUNDING_PORTFOLIO_VENDOR_BODY",
+      "options": {
+        "year": "EV_FUNDING_PORTFOLIO_VENDOR_YEAR",
+        "month": "EV_FUNDING_PORTFOLIO_VENDOR_MONTH",
+        "own_ads": "EV_FUNDING_PORTFOLIO_VENDOR_OWN_ADS",
+        "decline": "EV_FUNDING_PORTFOLIO_VENDOR_DECLINE"
+      },
+      "expire_note": "EV_FUNDING_PORTFOLIO_VENDOR_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "investor_strain",
+        "scope": "investor",
+        "amount": 10,
+        "weeks": 52
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

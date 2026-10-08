@@ -1,0 +1,177 @@
+{
+  "id": "customer.named_in_leak",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "self",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    },
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "most_senior",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "hr.job",
+            "scope": "employee",
+            "op": "in",
+            "value": [
+              "build",
+              "support"
+            ]
+          },
+          {
+            "entity_seam": "hr.status",
+            "scope": "employee",
+            "op": "==",
+            "value": "active"
+          }
+        ]
+      }
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 2
+      },
+      {
+        "seam": "sales.account_count",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "entity_seam": "musteri.scale",
+        "scope": "customer",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "entity_seam": "musteri.tenure_weeks",
+        "scope": "customer",
+        "op": ">=",
+        "value": 8
+      },
+      {
+        "entity_seam": "musteri.is_at_risk",
+        "scope": "customer",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "urun.enterprise_trust",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "statement",
+      "outcome_id": "spoke_up",
+      "effects": [
+        {
+          "verb": "add_reputation",
+          "amount": 4
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": -30
+        },
+        {
+          "verb": "set_flag",
+          "name": "leak_spoke"
+        }
+      ]
+    },
+    {
+      "id": "lawyer",
+      "outcome_id": "correction",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -3000,
+          "label": "legal"
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "help",
+      "outcome_id": "helped",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -40,
+          "weeks": 4
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 10
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_CUSTOMER_NAMED_IN_LEAK_TITLE",
+      "body": "EV_CUSTOMER_NAMED_IN_LEAK_BODY",
+      "options": {
+        "statement": "EV_CUSTOMER_NAMED_IN_LEAK_STATEMENT",
+        "lawyer": "EV_CUSTOMER_NAMED_IN_LEAK_LAWYER",
+        "help": "EV_CUSTOMER_NAMED_IN_LEAK_HELP"
+      },
+      "expire_note": "EV_CUSTOMER_NAMED_IN_LEAK_EXPIRED"
+    },
+    "en": {
+      "title": "EV_CUSTOMER_NAMED_IN_LEAK_TITLE",
+      "body": "EV_CUSTOMER_NAMED_IN_LEAK_BODY",
+      "options": {
+        "statement": "EV_CUSTOMER_NAMED_IN_LEAK_STATEMENT",
+        "lawyer": "EV_CUSTOMER_NAMED_IN_LEAK_LAWYER",
+        "help": "EV_CUSTOMER_NAMED_IN_LEAK_HELP"
+      },
+      "expire_note": "EV_CUSTOMER_NAMED_IN_LEAK_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -2
+      },
+      {
+        "verb": "add_reputation",
+        "amount": -3
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

@@ -1,0 +1,151 @@
+{
+  "id": "funding.closing_docs_diligence",
+  "version_scope": "demo",
+  "category": "funding",
+  "sender": "investor",
+  "tick": "signal",
+  "trigger": {
+    "signal": "meeting_day"
+  },
+  "class": "interrupt",
+  "tags": [],
+  "scope": {
+    "investor": {
+      "type": "investor",
+      "required": true
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 3
+      },
+      {
+        "seam": "investor.series_a_closed",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "investor.sheets_live",
+        "op": "==",
+        "value": 0,
+        "reason": "the clauses are raised before any offer, while the bill can still land"
+      },
+      {
+        "seam": "funding.seed_taken",
+        "op": "==",
+        "value": true
+      },
+      {
+        "any": [
+          {
+            "history": "chose",
+            "event": "funding.closing_docs",
+            "option": "read_first"
+          },
+          {
+            "history": "chose",
+            "event": "funding.closing_docs",
+            "option": "read_all"
+          },
+          {
+            "history": "resolution",
+            "event": "funding.closing_docs",
+            "value": "expired"
+          }
+        ],
+        "reason": "the seed documents were signed without a full review"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "seed_lawyer",
+      "outcome_id": "seed_lawyer_fixed",
+      "requires": {
+        "history": "chose",
+        "event": "funding.closing_docs",
+        "option": "read_first",
+        "reason": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_LOCK_NO_LAWYER"
+      },
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -8000,
+          "label": "legal"
+        }
+      ]
+    },
+    {
+      "id": "new_firm",
+      "outcome_id": "firm_fixed",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -18000,
+          "label": "legal"
+        }
+      ]
+    },
+    {
+      "id": "waiver",
+      "outcome_id": "waiver_chased",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -30,
+          "weeks": 2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_TITLE",
+      "body": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_BODY",
+      "options": {
+        "seed_lawyer": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_SEED_LAWYER",
+        "new_firm": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_NEW_FIRM",
+        "waiver": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_WAIVER"
+      },
+      "locked_reasons": {
+        "seed_lawyer": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_LOCK_NO_LAWYER"
+      },
+      "expire_note": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_TITLE",
+      "body": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_BODY",
+      "options": {
+        "seed_lawyer": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_SEED_LAWYER",
+        "new_firm": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_NEW_FIRM",
+        "waiver": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_WAIVER"
+      },
+      "locked_reasons": {
+        "seed_lawyer": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_LOCK_NO_LAWYER"
+      },
+      "expire_note": "EV_FUNDING_CLOSING_DOCS_DILIGENCE_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_cash",
+        "amount": -18000,
+        "label": "legal"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

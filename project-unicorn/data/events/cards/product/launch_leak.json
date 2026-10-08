@@ -1,0 +1,138 @@
+{
+  "id": "product.launch_leak",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "daily",
+  "class": "interrupt",
+  "sender": "desk",
+  "tags": [],
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.weeks_since_launch",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "seam": "urun.weeks_since_launch",
+        "op": "<=",
+        "value": 6
+      },
+      {
+        "seam": "urun.axis_stability",
+        "op": "<",
+        "value": 10
+      },
+      {
+        "seam": "urun.enterprise_trust",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "sales.b2c_audience",
+        "op": ">=",
+        "value": 30
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "take_down",
+      "outcome_id": "site_down",
+      "effects": [
+        {
+          "verb": "audience_delta",
+          "pct": -0.12
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "thank",
+      "outcome_id": "thanked",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -4
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "hire_finder",
+      "outcome_id": "finder_hired",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -2000,
+          "label": "contractor"
+        }
+      ]
+    },
+    {
+      "id": "ask_delete",
+      "outcome_id": "asked_delete",
+      "effects": [
+        {
+          "verb": "add_reputation",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_LAUNCH_LEAK_TITLE",
+      "body": "EV_PRODUCT_LAUNCH_LEAK_BODY",
+      "options": {
+        "take_down": "EV_PRODUCT_LAUNCH_LEAK_TAKE_DOWN",
+        "thank": "EV_PRODUCT_LAUNCH_LEAK_THANK",
+        "hire_finder": "EV_PRODUCT_LAUNCH_LEAK_HIRE_FINDER",
+        "ask_delete": "EV_PRODUCT_LAUNCH_LEAK_ASK_DELETE"
+      },
+      "expire_note": "EV_PRODUCT_LAUNCH_LEAK_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_LAUNCH_LEAK_TITLE",
+      "body": "EV_PRODUCT_LAUNCH_LEAK_BODY",
+      "options": {
+        "take_down": "EV_PRODUCT_LAUNCH_LEAK_TAKE_DOWN",
+        "thank": "EV_PRODUCT_LAUNCH_LEAK_THANK",
+        "hire_finder": "EV_PRODUCT_LAUNCH_LEAK_HIRE_FINDER",
+        "ask_delete": "EV_PRODUCT_LAUNCH_LEAK_ASK_DELETE"
+      },
+      "expire_note": "EV_PRODUCT_LAUNCH_LEAK_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "audience_delta",
+        "pct": -0.1
+      },
+      {
+        "verb": "add_brand",
+        "amount": -2
+      },
+      {
+        "verb": "add_reputation",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

@@ -36,7 +36,7 @@
   "research_users": 5,
   "request": {"deadline_sprints": 4, "first_after_sprints": 1, "before_renewal_sprints": 6, "contract_weeks": 52},
   "pm": {"horizon": 3, "goal_weight": 1.5, "low_skill_cards": 0.8, "goal_squares": 10, "goal_mark": 5},
-  "decision": {"rate": 0.35, "cards": ["product.sprint_two_paths", "product.sprint_late", "product.sprint_contractor"]},
+  "decision": {"rate": 0.35, "cards": ["product.sprint_two_paths", "product.sprint_late", "product.sprint_contractor", "product.sprint_hardcoded_colors", "product.sprint_colors_again", "product.sprint_unasked_rewrite"]},
   "paid_plan": {"effort": 3, "tiers": 1},
   "impact": {"step": 1.0, "level": 2.0, "rival_gap": 1.0, "request": 2.0, "mvp": 3.0, "ticket": 0.5, "alert": 2.0, "research": 0.0},
   "content": {"ticket_titles": 3, "press_core": 2, "press_area": 2, "rival_news": 2},

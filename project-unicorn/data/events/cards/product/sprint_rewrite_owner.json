@@ -1,0 +1,157 @@
+{
+  "id": "product.sprint_rewrite_owner",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "scheduled",
+  "class": "paper",
+  "sender": "self",
+  "tags": [],
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "entity_seam": "hr.job",
+        "scope": "employee",
+        "op": "==",
+        "value": "build"
+      },
+      {
+        "entity_seam": "hr.level",
+        "scope": "employee",
+        "op": ">=",
+        "value": 1
+      },
+      {
+        "entity_seam": "hr.tenure_weeks",
+        "scope": "employee",
+        "op": ">=",
+        "value": 16
+      },
+      {
+        "entity_seam": "hr.status",
+        "scope": "employee",
+        "op": "==",
+        "value": "active"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "pair",
+      "outcome_id": "paired",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -40,
+          "weeks": 2
+        },
+        {
+          "verb": "morale_all",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "trainer",
+      "outcome_id": "trained",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -3000,
+          "label": "training"
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "team",
+          "pct": 5,
+          "weeks": 6
+        }
+      ]
+    },
+    {
+      "id": "own",
+      "outcome_id": "owned",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 8
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -10,
+          "weeks": 6
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SPRINT_REWRITE_OWNER_TITLE",
+      "body": "EV_PRODUCT_SPRINT_REWRITE_OWNER_BODY",
+      "options": {
+        "pair": "EV_PRODUCT_SPRINT_REWRITE_OWNER_PAIR",
+        "trainer": "EV_PRODUCT_SPRINT_REWRITE_OWNER_TRAINER",
+        "own": "EV_PRODUCT_SPRINT_REWRITE_OWNER_OWN"
+      },
+      "locked_reasons": {
+        "trainer": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_REWRITE_OWNER_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SPRINT_REWRITE_OWNER_TITLE",
+      "body": "EV_PRODUCT_SPRINT_REWRITE_OWNER_BODY",
+      "options": {
+        "pair": "EV_PRODUCT_SPRINT_REWRITE_OWNER_PAIR",
+        "trainer": "EV_PRODUCT_SPRINT_REWRITE_OWNER_TRAINER",
+        "own": "EV_PRODUCT_SPRINT_REWRITE_OWNER_OWN"
+      },
+      "locked_reasons": {
+        "trainer": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_REWRITE_OWNER_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "productivity_mod",
+        "scope": "employee",
+        "pct": -10,
+        "weeks": 4
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

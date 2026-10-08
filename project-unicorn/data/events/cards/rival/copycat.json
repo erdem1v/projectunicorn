@@ -1,0 +1,134 @@
+{
+  "id": "rival.copycat",
+  "version_scope": "demo",
+  "category": "rival",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "self",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          1,
+          2
+        ]
+      },
+      {
+        "seam": "urun.weeks_since_launch",
+        "op": ">=",
+        "value": 8
+      },
+      {
+        "seam": "urun.steps_shipped",
+        "op": ">=",
+        "value": 6
+      },
+      {
+        "seam": "sales.account_count",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "seam": "funding.seed_taken",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "lawyer",
+      "outcome_id": "sent_letter",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -3000,
+          "label": "legal"
+        },
+        {
+          "verb": "add_brand",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "press_release",
+      "outcome_id": "went_public",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": 4
+        },
+        {
+          "verb": "add_reputation",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "their_customers",
+      "outcome_id": "called_their_customers",
+      "effects": [
+        {
+          "verb": "add_prospect",
+          "archetype": "small",
+          "source": "copycat_customers"
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -20,
+          "weeks": 2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_RIVAL_COPYCAT_TITLE",
+      "body": "EV_RIVAL_COPYCAT_BODY",
+      "options": {
+        "lawyer": "EV_RIVAL_COPYCAT_LAWYER",
+        "press_release": "EV_RIVAL_COPYCAT_PRESS",
+        "their_customers": "EV_RIVAL_COPYCAT_CUSTOMERS"
+      },
+      "expire_note": "EV_RIVAL_COPYCAT_EXPIRED"
+    },
+    "en": {
+      "title": "EV_RIVAL_COPYCAT_TITLE",
+      "body": "EV_RIVAL_COPYCAT_BODY",
+      "options": {
+        "lawyer": "EV_RIVAL_COPYCAT_LAWYER",
+        "press_release": "EV_RIVAL_COPYCAT_PRESS",
+        "their_customers": "EV_RIVAL_COPYCAT_CUSTOMERS"
+      },
+      "expire_note": "EV_RIVAL_COPYCAT_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -3
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

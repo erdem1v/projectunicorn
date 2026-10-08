@@ -1,0 +1,200 @@
+{
+  "id": "funding.monthly_update",
+  "version_scope": "demo",
+  "category": "funding",
+  "sender": "self",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "investor": {
+      "type": "investor",
+      "required": true,
+      "select": "seed_lead"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 12
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "funding.seed_taken",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "investor.series_a_closed",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "finance.runway_weeks",
+        "op": ">=",
+        "value": 2,
+        "reason": "the body prints the week count, and a single week would read as a plural"
+      },
+      {
+        "seam": "finance.runway_weeks",
+        "op": "<",
+        "value": 12
+      },
+      {
+        "seam": "finance.shutter_weeks_left",
+        "op": "<",
+        "value": 0
+      },
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 2,
+        "reason": "the body names the team as a reader, and two options move its morale"
+      },
+      {
+        "seam": "hr.headcount",
+        "op": "<",
+        "value": 8,
+        "reason": "the note goes to a team small enough to read it in one room"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "pay_cut",
+      "outcome_id": "pay_cut_announced",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": 10000,
+          "label": "pay_cut"
+        },
+        {
+          "verb": "morale_all",
+          "amount": -5
+        }
+      ]
+    },
+    {
+      "id": "bridge",
+      "outcome_id": "seed_extended",
+      "requires": {
+        "none": [
+          {
+            "history": "chose",
+            "event": "funding.monthly_update",
+            "option": "bridge"
+          }
+        ],
+        "reason": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE_LOCK"
+      },
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": 20000,
+          "label": "seed_round"
+        },
+        {
+          "verb": "investor_strain",
+          "scope": "investor",
+          "amount": 12,
+          "weeks": 26
+        }
+      ]
+    },
+    {
+      "id": "intros",
+      "outcome_id": "asked_for_intros",
+      "effects": [
+        {
+          "verb": "add_prospect",
+          "archetype": "mid",
+          "source": "referral"
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -25,
+          "weeks": 2
+        }
+      ]
+    },
+    {
+      "id": "line_last",
+      "outcome_id": "buried_runway",
+      "requires": {
+        "none": [
+          {
+            "history": "chose",
+            "event": "funding.monthly_update",
+            "option": "line_last"
+          }
+        ],
+        "reason": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK"
+      },
+      "effects": [
+        {
+          "verb": "morale_all",
+          "amount": 3
+        },
+        {
+          "verb": "investor_strain",
+          "scope": "investor",
+          "amount": 6,
+          "weeks": 16
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FUNDING_MONTHLY_UPDATE_TITLE",
+      "body": "{investor} bu ayın notunu bekliyor. Runway satırında {seam:finance.runway_weeks} hafta yazıyor. Notu ekip de okuyor.",
+      "options": {
+        "pay_cut": "EV_FUNDING_MONTHLY_UPDATE_PAY_CUT",
+        "bridge": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE",
+        "intros": "EV_FUNDING_MONTHLY_UPDATE_INTROS",
+        "line_last": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST"
+      },
+      "locked_reasons": {
+        "bridge": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE_LOCK",
+        "line_last": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK"
+      },
+      "expire_note": "EV_FUNDING_MONTHLY_UPDATE_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FUNDING_MONTHLY_UPDATE_TITLE",
+      "body": "This month's update to {investor} is due. The runway line says {seam:finance.runway_weeks} weeks. The team reads these too.",
+      "options": {
+        "pay_cut": "EV_FUNDING_MONTHLY_UPDATE_PAY_CUT",
+        "bridge": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE",
+        "intros": "EV_FUNDING_MONTHLY_UPDATE_INTROS",
+        "line_last": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST"
+      },
+      "locked_reasons": {
+        "bridge": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE_LOCK",
+        "line_last": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK"
+      },
+      "expire_note": "EV_FUNDING_MONTHLY_UPDATE_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "investor_strain",
+        "scope": "investor",
+        "amount": 12,
+        "weeks": 26
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

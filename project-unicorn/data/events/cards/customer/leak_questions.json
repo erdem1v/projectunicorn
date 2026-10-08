@@ -1,0 +1,115 @@
+{
+  "id": "customer.leak_questions",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "press",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "flag": "leak_spoke"
+      },
+      {
+        "history": "weeks_since",
+        "event": "customer.named_in_leak",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "history": "weeks_since",
+        "event": "customer.named_in_leak",
+        "op": "<=",
+        "value": 10
+      },
+      {
+        "seam": "urun.enterprise_trust",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "audit",
+      "outcome_id": "audited",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -8000,
+          "label": "audit"
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "two_step",
+      "outcome_id": "hardened",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "team",
+          "pct": -15,
+          "weeks": 3
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_CUSTOMER_LEAK_QUESTIONS_TITLE",
+      "body": "EV_CUSTOMER_LEAK_QUESTIONS_BODY",
+      "options": {
+        "audit": "EV_CUSTOMER_LEAK_QUESTIONS_AUDIT",
+        "two_step": "EV_CUSTOMER_LEAK_QUESTIONS_TWO_STEP"
+      },
+      "locked_reasons": {
+        "two_step": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_CUSTOMER_LEAK_QUESTIONS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_CUSTOMER_LEAK_QUESTIONS_TITLE",
+      "body": "EV_CUSTOMER_LEAK_QUESTIONS_BODY",
+      "options": {
+        "audit": "EV_CUSTOMER_LEAK_QUESTIONS_AUDIT",
+        "two_step": "EV_CUSTOMER_LEAK_QUESTIONS_TWO_STEP"
+      },
+      "locked_reasons": {
+        "two_step": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_CUSTOMER_LEAK_QUESTIONS_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_reputation",
+        "amount": -3
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

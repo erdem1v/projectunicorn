@@ -1,0 +1,146 @@
+{
+  "id": "product.support_overflow",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "desk",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 12
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "destek.warmth_band",
+        "op": "==",
+        "value": "hot"
+      },
+      {
+        "seam": "destek.desk_staffed",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "hr.headcount",
+        "op": "==",
+        "value": 0
+      },
+      {
+        "seam": "founder.task_state",
+        "op": "==",
+        "value": "build"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "yourself",
+      "outcome_id": "answered_yourself",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -20,
+          "weeks": 2
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "hourly_help",
+      "outcome_id": "helper_paid",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1200,
+          "label": "contractor"
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "known_bugs",
+      "outcome_id": "bugs_published",
+      "effects": [
+        {
+          "verb": "add_reputation",
+          "amount": -1
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SUPPORT_OVERFLOW_TITLE",
+      "body": "Destekte {seam:urun.bugs_unconfirmed} mesaj birikti ve birçoğu bir teşekkürle başlıyor. Bunlara cevap yazabilecek tek kişi ürünü yapmakla meşgul. {customer} bu hafta yine yazdı.",
+      "options": {
+        "yourself": "EV_PRODUCT_SUPPORT_OVERFLOW_YOURSELF",
+        "hourly_help": "EV_PRODUCT_SUPPORT_OVERFLOW_HOURLY_HELP",
+        "known_bugs": "EV_PRODUCT_SUPPORT_OVERFLOW_KNOWN_BUGS"
+      },
+      "expire_note": "EV_PRODUCT_SUPPORT_OVERFLOW_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SUPPORT_OVERFLOW_TITLE",
+      "body": "Support has {seam:urun.bugs_unconfirmed} messages piled up, and plenty of them open with a thank you. The only person who could answer them is busy building the product. {customer} wrote again this week.",
+      "options": {
+        "yourself": "EV_PRODUCT_SUPPORT_OVERFLOW_YOURSELF",
+        "hourly_help": "EV_PRODUCT_SUPPORT_OVERFLOW_HOURLY_HELP",
+        "known_bugs": "EV_PRODUCT_SUPPORT_OVERFLOW_KNOWN_BUGS"
+      },
+      "expire_note": "EV_PRODUCT_SUPPORT_OVERFLOW_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_reputation",
+        "amount": -2
+      },
+      {
+        "verb": "satisfaction_delta",
+        "scope": "customer",
+        "amount": -6
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

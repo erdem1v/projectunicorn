@@ -1,0 +1,165 @@
+{
+  "id": "product.sprint_hardcoded_colors",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "desk",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 2
+      },
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "entity_seam": "musteri.scale",
+        "scope": "customer",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "entity_seam": "musteri.lifecycle_phase",
+        "scope": "customer",
+        "op": "==",
+        "value": "active"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "by_hand",
+      "outcome_id": "by_hand",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        },
+        {
+          "verb": "b2b_expand",
+          "scope": "customer"
+        },
+        {
+          "verb": "set_flag",
+          "name": "colors_by_hand"
+        }
+      ]
+    },
+    {
+      "id": "one_file",
+      "outcome_id": "centralised",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 4
+        },
+        {
+          "verb": "b2b_expand",
+          "scope": "customer"
+        },
+        {
+          "verb": "set_flag",
+          "name": "colors_central"
+        }
+      ]
+    },
+    {
+      "id": "freelancer",
+      "outcome_id": "freelanced",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -5000,
+          "label": "contractor"
+        },
+        {
+          "verb": "b2b_expand",
+          "scope": "customer"
+        },
+        {
+          "verb": "set_flag",
+          "name": "colors_by_hand"
+        }
+      ]
+    },
+    {
+      "id": "as_is",
+      "outcome_id": "declined",
+      "effects": [
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": -5
+        },
+        {
+          "verb": "b2b_expand_decline",
+          "scope": "customer"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_TITLE",
+      "body": "{customer}, ürünü daha çok çalışanına açmadan önce kendi logosunu ve renklerini görmek istiyor. Renkleri içeride değiştirmek {seam:urun.decision_card} işini geciktirir. Her sayfanın renkleri koda tek tek yazılmış. Yeni sayfalar da öyle.",
+      "options": {
+        "by_hand": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_HAND",
+        "one_file": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_ONE_FILE",
+        "freelancer": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_FREELANCER",
+        "as_is": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_AS_IS"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_TITLE",
+      "body": "{customer} wants their logo and colours on the product before more of their staff use it. Changing them in house slows down {seam:urun.decision_card}. Every page has its colours written into the code. New pages are no different.",
+      "options": {
+        "by_hand": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_HAND",
+        "one_file": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_ONE_FILE",
+        "freelancer": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_FREELANCER",
+        "as_is": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_AS_IS"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "satisfaction_delta",
+        "scope": "customer",
+        "amount": -8
+      },
+      {
+        "verb": "b2b_expand_decline",
+        "scope": "customer"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

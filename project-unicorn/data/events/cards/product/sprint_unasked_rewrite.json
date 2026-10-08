@@ -1,0 +1,199 @@
+{
+  "id": "product.sprint_unasked_rewrite",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "most_senior",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "hr.job",
+            "scope": "employee",
+            "op": "==",
+            "value": "build"
+          },
+          {
+            "entity_seam": "hr.level",
+            "scope": "employee",
+            "op": ">=",
+            "value": 1
+          },
+          {
+            "entity_seam": "hr.tenure_weeks",
+            "scope": "employee",
+            "op": ">=",
+            "value": 12
+          },
+          {
+            "entity_seam": "hr.status",
+            "scope": "employee",
+            "op": "==",
+            "value": "active"
+          }
+        ]
+      }
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 5
+      },
+      {
+        "seam": "urun.decision_card_late",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "seam": "urun.weeks_since_launch",
+        "op": ">=",
+        "value": 24
+      },
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 3
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "review",
+      "outcome_id": "reviewed",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -1
+        },
+        {
+          "verb": "sprint_card_carry"
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 4
+        },
+        {
+          "verb": "schedule_event",
+          "event_id": "product.sprint_rewrite_owner",
+          "delay_weeks": 4
+        }
+      ]
+    },
+    {
+      "id": "read",
+      "outcome_id": "read_by_founder",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -1
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 6
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -40,
+          "weeks": 2
+        },
+        {
+          "verb": "schedule_event",
+          "event_id": "product.sprint_rewrite_reader",
+          "delay_weeks": 3
+        }
+      ]
+    },
+    {
+      "id": "merge",
+      "outcome_id": "merged",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -2
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 8
+        },
+        {
+          "verb": "add_reputation",
+          "amount": -2
+        },
+        {
+          "verb": "schedule_event",
+          "event_id": "product.sprint_rewrite_bugs",
+          "delay_weeks": 3
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_TITLE",
+      "body": "{employee} kimseye sormadan arayüzün tamamını baştan yazmış. {seam:urun.decision_card} bu sürüme yetişiyor ve yeni kodda daha az iş istiyor. Kodun tek satırına henüz kimse bakmadı. Hiçbir sayfa değişmemiş.",
+      "options": {
+        "review": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_REVIEW",
+        "read": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_READ",
+        "merge": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_MERGE"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_TITLE",
+      "body": "{employee} rewrote the whole front end without asking anyone. {seam:urun.decision_card} is on track for this release and would take less work on the new code. Nobody has reviewed a line of it. No page looks any different.",
+      "options": {
+        "review": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_REVIEW",
+        "read": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_READ",
+        "merge": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_MERGE"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_UNASKED_REWRITE_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -10
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

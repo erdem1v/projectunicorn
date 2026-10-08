@@ -1,0 +1,137 @@
+{
+  "id": "funding.closing_docs_series_a",
+  "version_scope": "demo",
+  "category": "funding",
+  "sender": "investor",
+  "tick": "signal",
+  "trigger": {
+    "signal": "sheet_granted"
+  },
+  "class": "paper",
+  "tags": [],
+  "scope": {
+    "investor": {
+      "type": "investor",
+      "required": true
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "funding.seed_pitch_used",
+        "op": "==",
+        "value": false,
+        "reason": "a run that sat the seed room got these documents with the seed offer"
+      },
+      {
+        "seam": "investor.sheets_live",
+        "op": ">",
+        "value": 0,
+        "reason": "the documents belong to an offer still on the table"
+      },
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 1,
+        "reason": "the founder's reading cost runs past the company-of-one cap"
+      },
+      {
+        "all": [
+          {
+            "seam": "founder.task_state",
+            "op": "!=",
+            "value": "idle"
+          },
+          {
+            "seam": "founder.task_state",
+            "op": "!=",
+            "value": "training"
+          }
+        ],
+        "reason": "the founder's weeks are going into the company's work, so reading them away costs something"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "law_firm",
+      "outcome_id": "lawyered",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -10000,
+          "label": "legal"
+        }
+      ]
+    },
+    {
+      "id": "read_first",
+      "outcome_id": "notes_to_lawyer",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -3000,
+          "label": "legal"
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -25,
+          "weeks": 2
+        }
+      ]
+    },
+    {
+      "id": "read_all",
+      "outcome_id": "read_it_all",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -50,
+          "weeks": 4
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_FUNDING_CLOSING_DOCS_TITLE",
+      "body": "EV_FUNDING_CLOSING_DOCS_SERIES_A_BODY",
+      "options": {
+        "law_firm": "EV_FUNDING_CLOSING_DOCS_LAW_FIRM",
+        "read_first": "EV_FUNDING_CLOSING_DOCS_READ_FIRST",
+        "read_all": "EV_FUNDING_CLOSING_DOCS_READ_ALL"
+      },
+      "expire_note": "EV_FUNDING_CLOSING_DOCS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_FUNDING_CLOSING_DOCS_TITLE",
+      "body": "EV_FUNDING_CLOSING_DOCS_SERIES_A_BODY",
+      "options": {
+        "law_firm": "EV_FUNDING_CLOSING_DOCS_LAW_FIRM",
+        "read_first": "EV_FUNDING_CLOSING_DOCS_READ_FIRST",
+        "read_all": "EV_FUNDING_CLOSING_DOCS_READ_ALL"
+      },
+      "expire_note": "EV_FUNDING_CLOSING_DOCS_EXPIRED"
+    }
+  },
+  "expires_weeks": 4,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_cash",
+        "amount": -12000,
+        "label": "legal"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

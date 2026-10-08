@@ -1,0 +1,199 @@
+{
+  "id": "rival.false_partner",
+  "version_scope": "demo",
+  "category": "rival",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "contact",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 2
+      },
+      {
+        "seam": "sales.account_count",
+        "op": ">=",
+        "value": 4
+      },
+      {
+        "seam": "rival.player_share_pct",
+        "op": ">=",
+        "value": 1.0
+      },
+      {
+        "seam": "rival.leader",
+        "op": "!=",
+        "value": ""
+      },
+      {
+        "entity_seam": "musteri.tenure_weeks",
+        "scope": "customer",
+        "op": ">=",
+        "value": 4
+      },
+      {
+        "entity_seam": "musteri.seats",
+        "scope": "customer",
+        "op": ">=",
+        "value": 15
+      },
+      {
+        "none": [
+          {
+            "history": "weeks_since",
+            "event": "rival.price_cut",
+            "op": "<",
+            "value": 8
+          }
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "lawyer",
+      "outcome_id": "warned_off",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -3000,
+          "label": "legal"
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 5
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "visit",
+      "outcome_id": "visited",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -30,
+          "weeks": 2
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "publish",
+      "outcome_id": "published",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": 4
+        },
+        {
+          "verb": "add_reputation",
+          "amount": -2
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": -5
+        }
+      ]
+    },
+    {
+      "id": "contract",
+      "outcome_id": "signed_longer",
+      "requires": {
+        "entity_seam": "musteri.discounts_used",
+        "scope": "customer",
+        "op": "<",
+        "value": 2,
+        "reason": "B2B_DISCOUNT_SPENT_DESC"
+      },
+      "effects": [
+        {
+          "verb": "b2b_retain_discount",
+          "scope": "customer"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_RIVAL_FALSE_PARTNER_TITLE",
+      "body": "Bu hafta {seam:rival.leader} satış ekibinden biri bizi aradı, sizin adınıza konuştuğunu söyledi. Ürününüz piyasadan çekiliyormuş. Ekiplerimizden birini kendi ürünlerine ücretsiz taşıyabilirlermiş. Doğru mu?",
+      "options": {
+        "lawyer": "EV_RIVAL_FALSE_PARTNER_LAWYER",
+        "visit": "EV_RIVAL_FALSE_PARTNER_VISIT",
+        "publish": "EV_RIVAL_FALSE_PARTNER_PUBLISH",
+        "contract": "EV_RIVAL_FALSE_PARTNER_CONTRACT"
+      },
+      "locked_reasons": {
+        "contract": "B2B_DISCOUNT_SPENT_DESC"
+      },
+      "expire_note": "EV_RIVAL_FALSE_PARTNER_EXPIRED"
+    },
+    "en": {
+      "title": "EV_RIVAL_FALSE_PARTNER_TITLE",
+      "body": "Someone from {seam:rival.leader} phoned us this week and said they were calling on your behalf. They told us your product was being retired, and offered to move one of our teams to theirs for free. Is that true?",
+      "options": {
+        "lawyer": "EV_RIVAL_FALSE_PARTNER_LAWYER",
+        "visit": "EV_RIVAL_FALSE_PARTNER_VISIT",
+        "publish": "EV_RIVAL_FALSE_PARTNER_PUBLISH",
+        "contract": "EV_RIVAL_FALSE_PARTNER_CONTRACT"
+      },
+      "locked_reasons": {
+        "contract": "B2B_DISCOUNT_SPENT_DESC"
+      },
+      "expire_note": "EV_RIVAL_FALSE_PARTNER_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "seats",
+        "scope": "customer",
+        "amount": -6
+      },
+      {
+        "verb": "customer_mrr_delta",
+        "scope": "customer",
+        "amount": -300
+      },
+      {
+        "verb": "satisfaction_delta",
+        "scope": "customer",
+        "amount": -6
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

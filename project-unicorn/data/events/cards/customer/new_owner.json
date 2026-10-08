@@ -1,0 +1,175 @@
+{
+  "id": "customer.new_owner",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "contact",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "musteri.scale",
+            "scope": "customer",
+            "op": "<=",
+            "value": 2
+          },
+          {
+            "entity_seam": "musteri.mrr",
+            "scope": "customer",
+            "op": ">=",
+            "value": 750
+          },
+          {
+            "entity_seam": "musteri.tenure_weeks",
+            "scope": "customer",
+            "op": ">=",
+            "value": 12
+          },
+          {
+            "entity_seam": "musteri.lifecycle_phase",
+            "scope": "customer",
+            "op": "==",
+            "value": "active"
+          },
+          {
+            "entity_seam": "musteri.under_tolerance",
+            "scope": "customer",
+            "op": "==",
+            "value": false
+          }
+        ]
+      }
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "seam": "sales.account_count",
+        "op": ">=",
+        "value": 3
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "pass_on",
+      "outcome_id": "priced_in",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -2500,
+          "label": "legal"
+        },
+        {
+          "verb": "customer_mrr_delta",
+          "scope": "customer",
+          "amount": 400
+        },
+        {
+          "verb": "schedule_event",
+          "event_id": "customer.new_owner_group",
+          "delay_weeks": 8
+        }
+      ]
+    },
+    {
+      "id": "self_read",
+      "outcome_id": "read_in_house",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -30,
+          "weeks": 2
+        },
+        {
+          "verb": "customer_mrr_delta",
+          "scope": "customer",
+          "amount": 200
+        },
+        {
+          "verb": "schedule_event",
+          "event_id": "customer.new_owner_group",
+          "delay_weeks": 8
+        }
+      ]
+    },
+    {
+      "id": "logo",
+      "outcome_id": "logo_for_discount",
+      "effects": [
+        {
+          "verb": "customer_mrr_delta",
+          "scope": "customer",
+          "amount": -150
+        },
+        {
+          "verb": "add_brand",
+          "amount": 3
+        },
+        {
+          "verb": "schedule_event",
+          "event_id": "customer.new_owner_group",
+          "delay_weeks": 8
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_CUSTOMER_NEW_OWNER_TITLE",
+      "body": "{customer}, kırk şirketli bir gruba satıldı. Grubun bütün satın almaları tek ekipten geçiyor, o ekip de yalnız kendi sözleşmesini imzalıyor. Sözleşme geldi: {seam:musteri.seats} koltuk için doksan sayfa. Fiyat hanesi boş bırakılmış. İndirim hanesi dolu.",
+      "options": {
+        "pass_on": "EV_CUSTOMER_NEW_OWNER_PASS_ON",
+        "self_read": "EV_CUSTOMER_NEW_OWNER_SELF_READ",
+        "logo": "EV_CUSTOMER_NEW_OWNER_LOGO"
+      },
+      "expire_note": "EV_CUSTOMER_NEW_OWNER_EXPIRED"
+    },
+    "en": {
+      "title": "EV_CUSTOMER_NEW_OWNER_TITLE",
+      "body": "{customer} was bought by a group of forty companies. One team does all the group's buying and signs only its own contract. It sent ninety pages for {seam:musteri.seats} seats. The price is blank. The discount isn't.",
+      "options": {
+        "pass_on": "EV_CUSTOMER_NEW_OWNER_PASS_ON",
+        "self_read": "EV_CUSTOMER_NEW_OWNER_SELF_READ",
+        "logo": "EV_CUSTOMER_NEW_OWNER_LOGO"
+      },
+      "expire_note": "EV_CUSTOMER_NEW_OWNER_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "churn_customer",
+        "scope": "customer"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

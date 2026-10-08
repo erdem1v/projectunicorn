@@ -1,0 +1,163 @@
+{
+  "id": "product.sprint_rewrite_reader",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "scheduled",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "entity_seam": "hr.job",
+        "scope": "employee",
+        "op": "==",
+        "value": "build"
+      },
+      {
+        "entity_seam": "hr.level",
+        "scope": "employee",
+        "op": ">=",
+        "value": 1
+      },
+      {
+        "entity_seam": "hr.tenure_weeks",
+        "scope": "employee",
+        "op": ">=",
+        "value": 15
+      },
+      {
+        "entity_seam": "hr.status",
+        "scope": "employee",
+        "op": "==",
+        "value": "active"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "keep",
+      "outcome_id": "kept_reading",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -20,
+          "weeks": 4
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "peer",
+      "outcome_id": "peer_review",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "team",
+          "pct": -10,
+          "weeks": 3
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "trust",
+      "outcome_id": "ships_alone",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": 10,
+          "weeks": 4
+        },
+        {
+          "verb": "add_reputation",
+          "amount": -1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SPRINT_REWRITE_READER_TITLE",
+      "body": "EV_PRODUCT_SPRINT_REWRITE_READER_BODY",
+      "options": {
+        "keep": "EV_PRODUCT_SPRINT_REWRITE_READER_KEEP",
+        "peer": "EV_PRODUCT_SPRINT_REWRITE_READER_PEER",
+        "trust": "EV_PRODUCT_SPRINT_REWRITE_READER_TRUST"
+      },
+      "locked_reasons": {
+        "peer": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_REWRITE_READER_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SPRINT_REWRITE_READER_TITLE",
+      "body": "EV_PRODUCT_SPRINT_REWRITE_READER_BODY",
+      "options": {
+        "keep": "EV_PRODUCT_SPRINT_REWRITE_READER_KEEP",
+        "peer": "EV_PRODUCT_SPRINT_REWRITE_READER_PEER",
+        "trust": "EV_PRODUCT_SPRINT_REWRITE_READER_TRUST"
+      },
+      "locked_reasons": {
+        "peer": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_REWRITE_READER_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_reputation",
+        "amount": -1
+      },
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -4
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

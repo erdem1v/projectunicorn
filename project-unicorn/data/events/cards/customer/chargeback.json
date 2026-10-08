@@ -1,0 +1,174 @@
+{
+  "id": "customer.chargeback",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "desk",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "smallest",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "musteri.scale",
+            "scope": "customer",
+            "op": "<=",
+            "value": 2
+          },
+          {
+            "entity_seam": "musteri.tenure_weeks",
+            "scope": "customer",
+            "op": ">=",
+            "value": 13
+          },
+          {
+            "entity_seam": "musteri.seats",
+            "scope": "customer",
+            "op": ">=",
+            "value": 10
+          },
+          {
+            "entity_seam": "musteri.mrr",
+            "scope": "customer",
+            "op": ">=",
+            "value": 600
+          },
+          {
+            "entity_seam": "musteri.mrr",
+            "scope": "customer",
+            "op": "<=",
+            "value": 1200
+          },
+          {
+            "entity_seam": "musteri.is_at_risk",
+            "scope": "customer",
+            "op": "==",
+            "value": false
+          },
+          {
+            "entity_seam": "musteri.satisfaction",
+            "scope": "customer",
+            "op": ">=",
+            "value": 50
+          }
+        ]
+      }
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "seam": "phase.current",
+    "op": "in",
+    "value": [
+      1,
+      2
+    ]
+  },
+  "options": [
+    {
+      "id": "keep",
+      "outcome_id": "written_off",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1800,
+          "label": "refunds"
+        }
+      ]
+    },
+    {
+      "id": "used_seats",
+      "outcome_id": "rebilled_used_seats",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -400,
+          "label": "refunds"
+        },
+        {
+          "verb": "seats",
+          "scope": "customer",
+          "amount": -4
+        },
+        {
+          "verb": "customer_mrr_delta",
+          "scope": "customer",
+          "amount": -200
+        }
+      ]
+    },
+    {
+      "id": "lawyer",
+      "outcome_id": "lawyer_letter",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -500,
+          "label": "legal"
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": -20
+        },
+        {
+          "verb": "add_reputation",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_CUSTOMER_CHARGEBACK_TITLE",
+      "body": "EV_CUSTOMER_CHARGEBACK_BODY",
+      "options": {
+        "keep": "EV_CUSTOMER_CHARGEBACK_KEEP",
+        "used_seats": "EV_CUSTOMER_CHARGEBACK_USED_SEATS",
+        "lawyer": "EV_CUSTOMER_CHARGEBACK_LAWYER"
+      },
+      "expire_note": "EV_CUSTOMER_CHARGEBACK_EXPIRED"
+    },
+    "en": {
+      "title": "EV_CUSTOMER_CHARGEBACK_TITLE",
+      "body": "EV_CUSTOMER_CHARGEBACK_BODY",
+      "options": {
+        "keep": "EV_CUSTOMER_CHARGEBACK_KEEP",
+        "used_seats": "EV_CUSTOMER_CHARGEBACK_USED_SEATS",
+        "lawyer": "EV_CUSTOMER_CHARGEBACK_LAWYER"
+      },
+      "expire_note": "EV_CUSTOMER_CHARGEBACK_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_cash",
+        "amount": -1800,
+        "label": "refunds"
+      },
+      {
+        "verb": "seats",
+        "scope": "customer",
+        "amount": -4
+      },
+      {
+        "verb": "customer_mrr_delta",
+        "scope": "customer",
+        "amount": -200
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

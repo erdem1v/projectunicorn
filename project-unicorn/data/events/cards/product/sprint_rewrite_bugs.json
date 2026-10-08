@@ -1,0 +1,152 @@
+{
+  "id": "product.sprint_rewrite_bugs",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "scheduled",
+  "class": "paper",
+  "sender": "desk",
+  "tags": [],
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "entity_seam": "hr.job",
+        "scope": "employee",
+        "op": "==",
+        "value": "build"
+      },
+      {
+        "entity_seam": "hr.level",
+        "scope": "employee",
+        "op": ">=",
+        "value": 1
+      },
+      {
+        "entity_seam": "hr.tenure_weeks",
+        "scope": "employee",
+        "op": ">=",
+        "value": 15
+      },
+      {
+        "entity_seam": "hr.status",
+        "scope": "employee",
+        "op": "==",
+        "value": "active"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "fix",
+      "outcome_id": "fixed_by_author",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -30,
+          "weeks": 3
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "rollback",
+      "outcome_id": "rolled_back",
+      "effects": [
+        {
+          "verb": "add_reputation",
+          "amount": 2
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -12
+        }
+      ]
+    },
+    {
+      "id": "freeze",
+      "outcome_id": "frozen",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_NO_SPRINT"
+      },
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "team",
+          "pct": -20,
+          "weeks": 2
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SPRINT_REWRITE_BUGS_TITLE",
+      "body": "EV_PRODUCT_SPRINT_REWRITE_BUGS_BODY",
+      "options": {
+        "fix": "EV_PRODUCT_SPRINT_REWRITE_BUGS_FIX",
+        "rollback": "EV_PRODUCT_SPRINT_REWRITE_BUGS_ROLLBACK",
+        "freeze": "EV_PRODUCT_SPRINT_REWRITE_BUGS_FREEZE"
+      },
+      "locked_reasons": {
+        "freeze": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_REWRITE_BUGS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SPRINT_REWRITE_BUGS_TITLE",
+      "body": "EV_PRODUCT_SPRINT_REWRITE_BUGS_BODY",
+      "options": {
+        "fix": "EV_PRODUCT_SPRINT_REWRITE_BUGS_FIX",
+        "rollback": "EV_PRODUCT_SPRINT_REWRITE_BUGS_ROLLBACK",
+        "freeze": "EV_PRODUCT_SPRINT_REWRITE_BUGS_FREEZE"
+      },
+      "locked_reasons": {
+        "freeze": "EV_LOCK_NO_SPRINT"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_REWRITE_BUGS_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_reputation",
+        "amount": -1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

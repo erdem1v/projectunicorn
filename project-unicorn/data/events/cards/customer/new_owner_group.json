@@ -1,0 +1,125 @@
+{
+  "id": "customer.new_owner_group",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "scheduled",
+  "class": "paper",
+  "sender": "contact",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "entity_seam": "musteri.lifecycle_phase",
+        "scope": "customer",
+        "op": "==",
+        "value": "active"
+      },
+      {
+        "entity_seam": "musteri.under_tolerance",
+        "scope": "customer",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "group_price",
+      "outcome_id": "group_price",
+      "effects": [
+        {
+          "verb": "customer_mrr_delta",
+          "scope": "customer",
+          "amount": -100
+        },
+        {
+          "verb": "add_prospect",
+          "archetype": "mid",
+          "source": "new_owner_group"
+        }
+      ]
+    },
+    {
+      "id": "pitch",
+      "outcome_id": "pitched_in_person",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -30,
+          "weeks": 2
+        },
+        {
+          "verb": "add_prospect",
+          "archetype": "mid",
+          "source": "new_owner_group"
+        }
+      ]
+    },
+    {
+      "id": "write_in",
+      "outcome_id": "added_by_addendum",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -2000,
+          "label": "legal"
+        },
+        {
+          "verb": "seats",
+          "scope": "customer",
+          "amount": 6
+        },
+        {
+          "verb": "customer_mrr_delta",
+          "scope": "customer",
+          "amount": 300
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_CUSTOMER_NEW_OWNER_GROUP_TITLE",
+      "body": "EV_CUSTOMER_NEW_OWNER_GROUP_BODY",
+      "options": {
+        "group_price": "EV_CUSTOMER_NEW_OWNER_GROUP_PRICE",
+        "pitch": "EV_CUSTOMER_NEW_OWNER_GROUP_PITCH",
+        "write_in": "EV_CUSTOMER_NEW_OWNER_GROUP_WRITE_IN"
+      },
+      "expire_note": "EV_CUSTOMER_NEW_OWNER_GROUP_EXPIRED"
+    },
+    "en": {
+      "title": "EV_CUSTOMER_NEW_OWNER_GROUP_TITLE",
+      "body": "EV_CUSTOMER_NEW_OWNER_GROUP_BODY",
+      "options": {
+        "group_price": "EV_CUSTOMER_NEW_OWNER_GROUP_PRICE",
+        "pitch": "EV_CUSTOMER_NEW_OWNER_GROUP_PITCH",
+        "write_in": "EV_CUSTOMER_NEW_OWNER_GROUP_WRITE_IN"
+      },
+      "expire_note": "EV_CUSTOMER_NEW_OWNER_GROUP_EXPIRED"
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

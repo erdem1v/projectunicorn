@@ -1,0 +1,160 @@
+{
+  "id": "team.wiped_table",
+  "version_scope": "demo",
+  "category": "team",
+  "sender": "self",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [],
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "newest_hire"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 2
+      },
+      {
+        "seam": "hr.headcount",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "seam": "sales.b2c_audience",
+        "op": ">=",
+        "value": 1000
+      },
+      {
+        "entity_seam": "hr.level",
+        "scope": "employee",
+        "op": "==",
+        "value": 0
+      },
+      {
+        "entity_seam": "hr.tenure_weeks",
+        "scope": "employee",
+        "op": ">=",
+        "value": 4
+      },
+      {
+        "entity_seam": "hr.status",
+        "scope": "employee",
+        "op": "==",
+        "value": "active"
+      },
+      {
+        "seam": "destek.warmth_band",
+        "op": "!=",
+        "value": "calm"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "rebuild",
+      "outcome_id": "rebuilt_by_employee",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -50,
+          "weeks": 4
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 8
+        },
+        {
+          "verb": "audience_delta",
+          "pct": -0.05
+        }
+      ]
+    },
+    {
+      "id": "expert",
+      "outcome_id": "recovered_by_expert",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -5000,
+          "label": "contractor"
+        },
+        {
+          "verb": "audience_delta",
+          "pct": -0.02
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "accept",
+      "outcome_id": "resignation_accepted",
+      "effects": [
+        {
+          "verb": "employee_leaves",
+          "scope": "employee",
+          "reason": "resigned"
+        },
+        {
+          "verb": "audience_delta",
+          "pct": -0.1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_TEAM_WIPED_TABLE_TITLE",
+      "body": "EV_TEAM_WIPED_TABLE_BODY",
+      "options": {
+        "rebuild": "EV_TEAM_WIPED_TABLE_REBUILD",
+        "expert": "EV_TEAM_WIPED_TABLE_EXPERT",
+        "accept": "EV_TEAM_WIPED_TABLE_ACCEPT"
+      },
+      "expire_note": "EV_TEAM_WIPED_TABLE_EXPIRED"
+    },
+    "en": {
+      "title": "EV_TEAM_WIPED_TABLE_TITLE",
+      "body": "EV_TEAM_WIPED_TABLE_BODY",
+      "options": {
+        "rebuild": "EV_TEAM_WIPED_TABLE_REBUILD",
+        "expert": "EV_TEAM_WIPED_TABLE_EXPERT",
+        "accept": "EV_TEAM_WIPED_TABLE_ACCEPT"
+      },
+      "expire_note": "EV_TEAM_WIPED_TABLE_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "employee_leaves",
+        "scope": "employee",
+        "reason": "resigned"
+      },
+      {
+        "verb": "audience_delta",
+        "pct": -0.1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

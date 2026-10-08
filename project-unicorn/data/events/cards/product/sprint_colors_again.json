@@ -1,0 +1,149 @@
+{
+  "id": "product.sprint_colors_again",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "desk",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 12
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "entity_seam": "musteri.scale",
+        "scope": "customer",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "entity_seam": "musteri.lifecycle_phase",
+        "scope": "customer",
+        "op": "==",
+        "value": "active"
+      },
+      {
+        "entity_seam": "musteri.tenure_weeks",
+        "scope": "customer",
+        "op": ">=",
+        "value": 12
+      },
+      {
+        "flag": "colors_by_hand"
+      },
+      {
+        "flag_unset": "colors_central"
+      },
+      {
+        "history": "weeks_since",
+        "event": "product.sprint_hardcoded_colors",
+        "op": ">=",
+        "value": 8
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "by_hand",
+      "outcome_id": "by_hand",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "one_file",
+      "outcome_id": "centralised",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 5
+        },
+        {
+          "verb": "set_flag",
+          "name": "colors_central"
+        }
+      ]
+    },
+    {
+      "id": "freelancer",
+      "outcome_id": "freelanced",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -6000,
+          "label": "contractor"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_SPRINT_COLORS_AGAIN_TITLE",
+      "body": "Renk değişikliğinden sonra eklenen her sayfa varsayılan renklerle çıktı. {customer} kendi renklerini her sayfada görmek istiyor. Bunu içeride yapmak {seam:urun.decision_card} işini geciktirir. Artık daha çok sayfa var.",
+      "options": {
+        "by_hand": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_HAND",
+        "one_file": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_ONE_FILE",
+        "freelancer": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_FREELANCER"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_COLORS_AGAIN_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_SPRINT_COLORS_AGAIN_TITLE",
+      "body": "Every page added since the colour change is in the default colours. {customer} wants their own on every page. Doing it in house slows down {seam:urun.decision_card}. There are more pages now.",
+      "options": {
+        "by_hand": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_HAND",
+        "one_file": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_ONE_FILE",
+        "freelancer": "EV_PRODUCT_SPRINT_HARDCODED_COLORS_FREELANCER"
+      },
+      "expire_note": "EV_PRODUCT_SPRINT_COLORS_AGAIN_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_effort",
+        "amount": 3
+      },
+      {
+        "verb": "satisfaction_delta",
+        "scope": "customer",
+        "amount": -5
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

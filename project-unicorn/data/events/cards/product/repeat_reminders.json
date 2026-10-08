@@ -1,0 +1,197 @@
+{
+  "id": "product.repeat_reminders",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "desk",
+  "tags": [],
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          1,
+          2
+        ]
+      },
+      {
+        "seam": "funding.seed_taken",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "urun.version",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "seam": "urun.version_age",
+        "op": "==",
+        "value": 1
+      },
+      {
+        "seam": "sales.account_count",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "seam": "urun.bugs_unconfirmed",
+        "op": ">=",
+        "value": 6
+      },
+      {
+        "entity_seam": "musteri.tenure_weeks",
+        "scope": "customer",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "entity_seam": "musteri.is_assigned",
+        "scope": "customer",
+        "op": "==",
+        "value": false
+      },
+      {
+        "entity_seam": "musteri.mrr",
+        "scope": "customer",
+        "op": ">=",
+        "value": 1000
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "call",
+      "outcome_id": "called",
+      "effects": [
+        {
+          "verb": "seats",
+          "scope": "customer",
+          "amount": -2
+        },
+        {
+          "verb": "customer_mrr_delta",
+          "scope": "customer",
+          "amount": -100
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "credit",
+      "outcome_id": "credited",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1000,
+          "label": "refunds"
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "write",
+      "outcome_id": "wrote",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -20,
+          "weeks": 2
+        },
+        {
+          "verb": "add_brand",
+          "amount": -2
+        },
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 10
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_PRODUCT_REPEAT_REMINDERS_TITLE",
+      "body": "EV_PRODUCT_REPEAT_REMINDERS_BODY",
+      "options": {
+        "call": "EV_PRODUCT_REPEAT_REMINDERS_CALL",
+        "credit": "EV_PRODUCT_REPEAT_REMINDERS_CREDIT",
+        "write": "EV_PRODUCT_REPEAT_REMINDERS_WRITE"
+      },
+      "expire_note": "EV_PRODUCT_REPEAT_REMINDERS_EXPIRED"
+    },
+    "en": {
+      "title": "EV_PRODUCT_REPEAT_REMINDERS_TITLE",
+      "body": "EV_PRODUCT_REPEAT_REMINDERS_BODY",
+      "options": {
+        "call": "EV_PRODUCT_REPEAT_REMINDERS_CALL",
+        "credit": "EV_PRODUCT_REPEAT_REMINDERS_CREDIT",
+        "write": "EV_PRODUCT_REPEAT_REMINDERS_WRITE"
+      },
+      "expire_note": "EV_PRODUCT_REPEAT_REMINDERS_EXPIRED"
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "seats",
+        "scope": "customer",
+        "amount": -4
+      },
+      {
+        "verb": "customer_mrr_delta",
+        "scope": "customer",
+        "amount": -200
+      },
+      {
+        "verb": "add_brand",
+        "amount": -3
+      },
+      {
+        "verb": "add_reputation",
+        "amount": -1
+      },
+      {
+        "verb": "satisfaction_delta",
+        "scope": "customer",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}
