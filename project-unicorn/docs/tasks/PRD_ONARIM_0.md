@@ -1,6 +1,6 @@
 # PRD · Onarım 0 · Kanıtlı kırıklar
 
-**Durum:** yardımcı yönetmen onaylı (2026-10-07). A9 dışındaki on madde uygulamaya hazır; A9 metin onayı bekliyor.
+**Durum:** A1-A8, A10, A11 uygulandı (2026-10-08, `3e44081`…`2e071b6`). A9 metni sahip onaylı, uygulanıyor.
 **Temel:** `main` @ `5965a20` (Piyasa I1 tamam, ağaç temiz). Her madde altı Sonnet araştırmacısıyla bu commit'te
 yeniden doğrulandı (iş akışı `wf_62be90e6-c48`); 11 maddenin 11'i bugün de kusurlu.
 **Tek cümle:** Oyuncunun bugün takıldığı, kodla kanıtlanmış kırıkları onar; yeni sistem, yeni denge, yeni içerik yok.
@@ -28,7 +28,7 @@ yeniden doğrulandı (iş akışı `wf_62be90e6-c48`); 11 maddenin 11'i bugün d
 | A8 | "Yol boyunca kazanılan" iki cümle kümülatif kalır; geri kalan her sayı canlı |
 | A10 | Eski kayıtlardaki bayat bayrak onarılmaz (yalnız geliştirici kayıtları) |
 | A11 | Son turda "Kabul et" birincil olur; teklif düğmesi "Rakamında ısrar et" olur (mekanik aynı) |
-| A9 | **Bekliyor.** Dört mevcut Türkçe cümlenin değişmesi sahip onayı ister (CLAUDE §3). Onay gelene kadar uygulanmaz |
+| A9 | **Onaylandı (Erdem, 2026-10-08).** Metin seçeneği (a): dört cümle (`RND_NOTE_DEMAND_B2B_0/1/2`, `RND_NOTE_DEMAND_B2C_2`) maddedeki "Yeni metin" alanındaki TR ve EN metinlerle yerinde değişir; talep kaynağı açık talepler + açık biletler, çoğunluk kazanır |
 
 ## 2. Sahibe giden notlar (uygulamayı durdurmaz)
 - **Şerit hızı:** 3× ve üstünde şerit haftada ~2,3 satır gösterebiliyor, akış ~4 satır üretiyor; kayış onarımı bunu
