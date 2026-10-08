@@ -94,7 +94,7 @@ static func row(emp: Character, compact: bool, selected: bool, on_action: Callab
 	var line := HRUiShared.D_row(selected)
 	if compact:
 		line.custom_minimum_size.y = UiTokens.D_H_ROW_SM
-	line.tooltip_text = HRConstants.role_phase_hint(emp.role)
+	line.tooltip_text = row_tip(emp)
 	line.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	line.gui_input.connect(_on_row_input.bind(emp.id, ACTION_MENU, on_action, line))
 	var away: bool = emp.status == HRConstants.STATUS_ON_LEAVE
@@ -149,6 +149,13 @@ static func row(emp: Character, compact: bool, selected: bool, on_action: Callab
 			hover.mouse_filter = Control.MOUSE_FILTER_PASS
 	cells.get_child(1).mouse_filter = Control.MOUSE_FILTER_STOP
 	return line
+
+
+## The row's tooltip: the person's pace and what moves it, then what the role does.
+static func row_tip(emp: Character) -> String:
+	var pace := PackedStringArray([tr_key("HR_PACE").format({"pct": HRSystem.productivity_figure(emp)})])
+	pace.append_array(HRSystem.productivity_lines(emp))
+	return "\n".join(pace) + "\n\n" + HRConstants.role_phase_hint(emp.role)
 
 
 ## Name and role title; the dossier opens from here, the menu from the rest of the row.

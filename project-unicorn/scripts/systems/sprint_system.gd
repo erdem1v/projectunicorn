@@ -936,15 +936,13 @@ static func _fits(c: Character) -> Array:
 	return areas.keys().filter(func(r: String) -> bool: return HRConstants.can_hold_area(c.role, areas[r], c.category))
 
 
-## Haftalık puan: 2 × beceri bandı (ana alanın 0-10 puanı; kurucu sabit) × moral bandı × çalışma saati.
+## Haftalık puan: 2 × beceri bandı (ana alanın 0-10 puanı; kurucu sabit) × verim × çalışma saati.
 static func _points(c: Character) -> float:
 	var mult: float = SprintCatalog.cfg("founder_mult")
-	var morale: float = 1.0
 	if c.category != "founder":
 		var stat: int = HRSystem.skill(c, HRConstants.role_key_area(c.role))
 		var bands: Array = SprintCatalog.cfg("skill.mult")
 		mult = bands[0] if stat <= int(SprintCatalog.cfg("skill.low_max")) \
 			else bands[1] if stat <= int(SprintCatalog.cfg("skill.mid_max")) else bands[2]
-		morale = HRConstants.morale_band_mult(c.morale)
-	return float(SprintCatalog.cfg("person_points_week")) * mult * morale \
+	return float(SprintCatalog.cfg("person_points_week")) * mult * HRSystem.productivity(c) \
 		* HRConstants.hours_output_mult(WorkHoursSystem.hours_for(c))

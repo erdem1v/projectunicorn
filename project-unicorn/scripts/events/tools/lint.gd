@@ -230,6 +230,9 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 				if economic and float(effect.get("amount", effect.get("delta", -1))) > 0.0:
 					_add(SEVERITY_ERROR, "17.3", where,
 						"I2: on_expire applies a POSITIVE '%s' — an expiry is a cost" % verb)
+				if verb == "marketing_push":
+					_add(SEVERITY_ERROR, "17.3", where,
+						"I2: on_expire buys a marketing push — an expiry is a cost, not a purchase")
 				if terminal:
 					_add(SEVERITY_ERROR, "17.4", where, "I3: an expiry may not end the run")
 			"check":
@@ -276,6 +279,8 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 			if not EvCatalog.has_arc(String(effect.get("arc_id", ""))):
 				_add(SEVERITY_ERROR, "17.1", where,
 					"%s names unknown arc '%s'" % [verb, effect.get("arc_id", "")])
+		if verb == "productivity_mod" and int(effect.get("pct", 0)) == 0:
+			_add(SEVERITY_ERROR, "17.1", where, "productivity_mod names no pct; a pace row must move the pace")
 		# A card's cash is a line in the month's books and the transactions list, so it names a
 		# label Finance can print.
 		if verb == "add_cash" and not FinanceSystem.ONE_TIME_LABELS.has(String(effect.get("label", ""))):
@@ -386,6 +391,10 @@ static func _lint_arc(arc_id: String, arc: Dictionary) -> void:
 
 	var on_inv: Dictionary = arc.get("on_invalidate", {})
 	var policy: String = String(on_inv.get("policy", ""))
+	# on_invalidate runs ambient, with no card: a pace row is keyed and titled by the card it came from.
+	for e in on_inv.get("penalties", []):
+		if typeof(e) == TYPE_DICTIONARY and String(e.get("verb", "")) == "productivity_mod":
+			_add(SEVERITY_ERROR, "17.1", where, "productivity_mod in on_invalidate: a pace row needs its card")
 
 	if arc_type == EvArcs.TYPE_PROMISE:
 		# §10.6 / I-ARK. The reasoning is the thesis itself: if something promised evaporates

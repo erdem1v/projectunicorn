@@ -2114,3 +2114,68 @@ açılmadığını da verir. `EventBus.desk_changed`'ı kutu, ofisin bildirim y�
 *Ne yapıldı.* Etki `EventBus.goto_tab_requested` yayar; `main` hedefi saklar ve kapı kapanınca açar.
 
 *Neden.* Sekme kartın altında açılırsa oyuncu cevaplamadan kartı kaybeder.
+
+### §27.15 · Yazar pilotu kartları için üç fiil ve iki sinyal tetiği (sahip kararı 2026-10-08)
+
+Sahip yazar pilotu kartlarının istediği motor parçalarının işe katılmasını istedi; verim kararları
+`docs/ACIK_ISLER/ACIK_KARARLAR.md` 103'tedir. Bütün sayılar [WORKING] ve sahibi olan sistemin sabitlerinde durur.
+
+**1. `productivity_mod` (nötr).**
+
+*Belge ne diyordu.* §8.1'de kişinin hızına yazan fiil yok; Ekip GDD §2.2 kısmi kapasiteyi, §8.4 ayrı hız çarpanını
+dışarıda bırakıyor.
+
+*Ne yapıldı.* `{"verb": "productivity_mod", "scope": "<employee slotu> | founder | team", "pct": -20, "weeks": 4}`
+kişiye süreli bir verim satırı yazar (`Character.productivity_mods`: `{pct, until_day, card_id, title_key}`,
+kart başına bir satır, `title_key` kartın başlık anahtarı; motor fiile kartın kimliğini `EvEffects.run_played`, `run_expire` ve `run_check_branch`'in
+`card_id`'siyle verir). `founder` kartın `founder` tipli slotudur; `team` koşan sprintin ekibidir
+(`SprintSystem.team()`), sprint yoksa hedef yoktur ve kart seçeneği `urun.sprint_running` ile `EV_LOCK_NO_SPRINT`
+üstünden kilitlenir. Sınırlar `HRConstants.PACE_*`: satır −%50 ile +%30 arası, 1 ile 8 hafta; tek başına kurucuya
+(ekip 0) yazılan eksi satır en çok −%30 ve 2 hafta. Aynı kartın ikinci satırı süreyi tazeler, farklı kartların
+satırları çarpılır ve çarpım 0,50 ile 1,30 arasına kenetlenir (`HRSystem.event_pace`). `HRSystem.productivity(c)` moral
+bandı (kurucuda 1) × bu çarpımdır; `SprintSystem._points` ve `HRSystem.effective_skill` moral bandının yerinde onu
+okur. Satış masası (`SalesRepSystem.close_chance`) yalnız `event_pace`'i okur: moral bandını bugün okumadığı için
+verim satırındaki moral satırı satışta etkisizdir (onay bekliyor, ACIK_KARARLAR 103). Satır, son
+haftası işlendiği tikte, haftayı okuyan sistemlerden sonra (günlük dağıtımda satıştan sonra) düşer. Lint §17.1: `pct` sıfır olamaz ve fiil bir arkın `on_invalidate`'inde duramaz (orada kart yoktur). Çip `EFFECT_PACE`,
+`EFFECT_PACE_FOUNDER`, `EFFECT_PACE_TEAM` (bedel ya da kazanç rengi; kırmızı değil). Ekip penceresinin satır ipucu
+ve ekip dosyasının VERİM bölümü verimi ve imzalı sebeplerini (`HRSystem.productivity_lines`) gösterir.
+
+*Neden.* Sahibin verim kararları 1, 3, 4 ve 5. Satır yokken sayılar bayt bayt aynıdır: moral bandı yalnız yer
+değiştirdi.
+
+**2. `investor_strain` (nötr).**
+
+*Ne yapıldı.* `{"verb": "investor_strain", "scope": "<investor slotu>", "amount": 8, "weeks": 26}` fonun
+durumuna (`GameState.vc_states`: `strain`, `strain_from`, `strain_until`) bir kırgınlık yazar. Fonun seed ve
+Series A odası `amount` puan düşük başlar; ceza doğrusal söner ve sıfırlanır (`VCPitchSystem.strain`); odanın sebep
+satırı `VC_WHY_STRAIN`. Sınırlar `PitchConstants.STRAIN_*`: 1 ile 15 puan, 4 ile 52 hafta. İkinci kırgınlık
+toplanmaz: bugünkü cezayla yenisinin büyüğü, iki bitişin geç olanına kadar söner. Çip `EFFECT_INVESTOR_STRAIN`.
+
+*Neden.* Reddedilen yatırımcıyla ilişki süreli soğur (portfolio_vendor_trial notu).
+
+**3. `marketing_push` (ekonomik).**
+
+*Belge ne diyordu.* `FinanceSystem`'in `marketing` gider kalemi sıfır değerli bir kancaydı; §8.3'ün `on_expire`
+istisnası negatif deltayı tanır, harcamayla büyüme alan bir fiili tanımaz.
+
+*Ne yapıldı.* `{"verb": "marketing_push", "burn_pct": 25, "growth_pct": 15, "weeks": 8}` `marketing` kalemini
+seçim anındaki pazarlama hariç burn'ün `burn_pct`'i kadar sabit bir tutara çeker; aynı süre B2C kitlesinin büyüme
+terimi (taban kazanım ve ağızdan ağıza artı yönü; erime değil) `1 + growth_pct/100` ile çarpılır
+(`FinanceSystem.marketing_growth_mult`). Durum `GameState.marketing_push`'tadır (`{growth_pct, until_day}`, boş
+sözlük kampanya yok demektir), tutar gider kalemindedir. Kampanya son haftasını tahsil eden finans tikinde biter;
+yenisi süren kampanyanın yerini alır. Sınırlar `FinanceSystem.MARKETING_*`: burn %5 ile %50, büyüme %5 ile %50, 2
+ile 12 hafta. `on_expire`'da motor reddeder (`EvEffects._is_negative`) ve lint §17.3 hata verir. Çip iki parçadır:
+`EFFECT_MARKETING_BURN` (bedel) ve `EFFECT_MARKETING_GROWTH` (kazanç).
+
+*Neden.* Pazarlama harcaması ekonomiyi oynatır ve şirketle ölçeklenmelidir (shutdown_notice notu).
+
+**4. Yatırım teklifi tetikleri.**
+
+*Ne yapıldı.* `sheet_granted` (Series A term sheet) ve `seed_sheet_granted` (seed teklifi) `EvSignals.BINDINGS`'e
+`investor` slotuyla girdi; manifest (`docs/EVENT_SIGNAL_MANIFEST.md`) yeniden üretildi.
+
+*Neden.* Herhangi bir yatırım teklifi geldiği anda kart ateşlenebilmelidir (closing_docs notu).
+
+**5. Küçük parçalar.** `hr.job` varlık seam'i: kişinin ilk işi (`build | test | support | accounts | sales |
+research`, işsizse boş). `add_cash` etiketleri `legal`, `pay_cut` (pozitif tutarla tek seferlik tasarruf) ve
+`data_purchase` (`FinanceSystem.ONE_TIME_LABELS`).

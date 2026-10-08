@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 144 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 145 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **144** |
+| Signals declared | **145** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **74** |
+| Emitted with **no production listener** | **75** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -31,7 +31,7 @@ cards the catalogue loads from `data/events/cards/`, and this generator reads th
 is 3 signal(s): `axis_floor_crossed`, `axis_floor_warning`, `customer_health_changed`. They are listed as `EvSignals (card trigger)` and are not counted
 as unheard.
 
-`EvSignals.BINDINGS` is an allowlist of the 13 signals a card MAY trigger on. A binding
+`EvSignals.BINDINGS` is an allowlist of the 15 signals a card MAY trigger on. A binding
 alone connects nothing, so the others are listed as `EvSignals (bindable)` and still
 count as unheard.
 
@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · product_tab · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 1 | signals |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 40 | 4 | main · left_tabs · research_bar · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 41 | 4 | main · left_tabs · research_bar · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
@@ -91,6 +91,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `employee_experience_changed` | `character_id: String, new_experience: int` | character_registry | 2 | 0 | — |
 | `employee_training_changed` | `character_id: String, weeks_left: int` | character_registry | 3 | 2 | build_bar · research_bar |
 | `employee_promoted` | `character_id: String, new_level: int` | hr_actions | 1 | 0 | — |
+| `productivity_changed` | `character_id: String` | character_registry | 2 | 0 | — |
 | `experience_bar_full` | `character_id: String` | character_registry | 1 | 0 | — |
 | `morale_band_changed` | `character_id: String, band_id: String` | character_registry | 1 | 0 | — |
 | `employee_eligible_for_promotion` | `character_id: String` | — | 0 | 0 | — |
@@ -265,7 +266,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `sheet_granted` | `vc_id: String` | vc_pitch_system | 2 | 0 | — |
+| `sheet_granted` | `vc_id: String` | vc_pitch_system | 2 | 0 | EvSignals (bindable) |
 | `sheet_expired` | `vc_id: String` | vc_pitch_system | 1 | 0 | EvSignals (bindable) |
 | `callback_ready` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 | `meeting_day` | `vc_id: String` | vc_pitch_system | 1 | 0 | EvSignals (bindable) |
@@ -278,7 +279,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `seed_door_opened` | `—` | seed_round_system | 1 | 0 | — |
-| `seed_sheet_granted` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
+| `seed_sheet_granted` | `vc_id: String` | vc_pitch_system | 1 | 0 | EvSignals (bindable) |
 | `seed_round_closed` | `vc_id: String` | seed_round_system | 1 | 0 | — |
 
 ### Office

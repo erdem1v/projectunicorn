@@ -79,6 +79,12 @@ const PREP_BONUS := 2                  # SkillCheck bonus units on the focused c
 # also shuts the booking desk for the rest of the week.
 const MEETING_CANCEL_PENALTY := 3      # conviction points off the fund's next meeting
 const MEETING_RESCHEDULE_PENALTY := 2  # ditto; reschedule = the same lead time again
+# A card's strain with a fund (investor_strain): the fund's rooms start this many conviction points
+# lower, fading linearly to nothing over the weeks. Stored per fund in vc_states. [WORKING]
+const STRAIN_MIN := 1
+const STRAIN_MAX := 15
+const STRAIN_WEEKS_MIN := 4
+const STRAIN_WEEKS_MAX := 52
 
 # --- The clock a sitting costs ---
 # A sitting stops the clock; when it ends the clock runs these hours (end_sitting). A pitch

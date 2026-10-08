@@ -81,6 +81,7 @@ func _ready() -> void:
 		# MT satırı canlı hesap sayısı taşıyor.
 		EventBus.customer_assigned,
 		EventBus.employee_experience_changed, EventBus.employee_training_changed,
+		EventBus.productivity_changed,
 		EventBus.event_triggered, EventBus.event_resolved, EventBus.event_set_aside,
 	]
 	for sig in _signals:
@@ -214,6 +215,8 @@ func _refresh() -> void:
 	for emp in CharacterRegistry.get_employees():
 		if _morale_refs.has(emp.id):
 			HRUiShared.D_repaint_morale(_morale_refs[emp.id], emp.morale)
+			# Pace follows the morale band and the card rows, neither of which rebuilds the row.
+			_rows[emp.id].tooltip_text = HRLedger.row_tip(emp)
 
 
 func _compute_structure_key() -> String:

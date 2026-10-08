@@ -12,8 +12,8 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **178** |
-| Effect verbs (write) | **60** |
+| Seams (read) | **179** |
+| Effect verbs (write) | **63** |
 | Cards in the catalogue | 66 |
 | Arcs | 3 |
 
@@ -48,6 +48,7 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `assign_to`
 - `send_on_leave`
 - `start_training`
+- `productivity_mod`
 - `damage_product`
 - `fix_run_start`
 - `sprint_card_effort`
@@ -68,6 +69,7 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `open_seed_table`
 - `decline_buyout`
 - `decline_offer`
+- `investor_strain`
 - `set_game_flag`
 - `mentor_advisory`
 - `b2b_retain_delay`
@@ -96,6 +98,7 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 - `angel_accept`
 - `b2b_expand`
 - `b2b_retain_discount`
+- `marketing_push`
 
 ### Terminal
 
@@ -202,6 +205,7 @@ slot of that type (§17.12).
 | `hr.is_busy` | entity | bool | HR | leave or training, plus pitch prep for the founder |
 | `hr.is_idle` | entity | bool | HR | an employee with no job at all |
 | `hr.is_overloaded` | entity | bool | HR | more than one job |
+| `hr.job` | entity | string | HR | WRAPPER: the first job held, build | test | support | accounts | sales | research; "" with none |
 | `hr.job_count` | entity | int | HR | 0, 1 or 2 |
 | `hr.level` | entity | int | HR | WRAPPER over Character.level. 0 = junior, 1 = mid, 2 = senior |
 | `hr.morale` | entity | int | HR | 0-100 |

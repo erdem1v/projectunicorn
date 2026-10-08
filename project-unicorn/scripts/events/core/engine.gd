@@ -108,7 +108,7 @@ static func _step_paper_expiry() -> void:
 		# names cover a subject who left while it waited.
 		var names: Dictionary = EvPresenter.freeze_names(context)
 		names.merge(paper.get("names", {}))
-		var deltas: Array = EvEffects.run_expire(penalties, context)
+		var deltas: Array = EvEffects.run_expire(penalties, context, event_id)
 		EvHistory.record(event_id, EvHistory.RESOLUTION_EXPIRED, "", "expired",
 			context, deltas, arc_id, false, names)
 		var note: String = String(card.get("expire_note", ""))
@@ -489,10 +489,10 @@ static func resolve(event_id: String, option_id: String) -> void:
 		var odds: float = float(EvSeams.read(String(check.get("odds_seam", ""))))
 		var passed: bool = EvDice.check(odds, event_id, option_id)
 		deltas = EvEffects.run_check_branch(check.get("on_pass" if passed else "on_fail", []),
-			context)
+			context, event_id)
 		outcome = "%s_%s" % [outcome, "pass" if passed else "fail"]
 	else:
-		deltas = EvEffects.run_played(option.get("effects", []), context)
+		deltas = EvEffects.run_played(option.get("effects", []), context, event_id)
 	_resolving = false
 
 	var arc_id: String = String(card.get("arc", ""))

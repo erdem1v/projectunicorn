@@ -2,7 +2,7 @@ extends VBoxContainer
 
 # Ekip dosyası: bir kişinin ayrıntı penceresi (WindowLayer.open_detail("hr_dossier",
 # {"character_id": id})), köşesi kesik bir belge. Başında yüzü, adı ve unvanı; altında ŞU AN, huy,
-# YETENEKLER (tablonun yedi sütunu, kurucuda Karizma da), DURUM ve satır menüsünün aksiyonları
+# YETENEKLER (tablonun yedi sütunu, kurucuda Karizma da), DURUM, VERİM ve satır menüsünün aksiyonları
 # (HRLedger.action_list: aynı kapı, aynı gerekçe, aynı sonuç metni). Ofisten kurucu için de açılır;
 # çalışana özgü satırlar (huy, moral, maaş, aksiyonlar) onda çizilmez. Pencere içeriği kadar uzar.
 # Bu dosya hiçbir sayı türetmez.
@@ -46,7 +46,7 @@ func _ready() -> void:
 	add_to_group(HRLedger.VIEWS_GROUP)
 	for sig in [EventBus.morale_changed, EventBus.employee_experience_changed,
 			EventBus.employee_training_changed, EventBus.employee_promoted,
-			EventBus.assignment_changed]:
+			EventBus.assignment_changed, EventBus.productivity_changed]:
 		sig.connect(_on_person_changed)
 	# İzin haftaları ve kurucunun hazırlık durumu tik sınırında değişir.
 	EventBus.hr_day_processed.connect(rebuild_view)
@@ -100,6 +100,16 @@ func rebuild_view() -> void:
 	if employee:
 		_col.add_child(_kv("HR_COL_MORALE", HRUiShared.D_morale(c.morale, {})))
 		_col.add_child(_kv("HR_COL_SALARY", UiFactory.make_label(Fmt.money_exact(c.monthly_salary), &"DataText")))
+	# VERİM: the Kadro row's tooltip as a standing list, the figure on the section's rule.
+	_col.add_child(_section("HR_DOSSIER_PACE", HRSystem.productivity_figure(c)))
+	var reasons: PackedStringArray = HRSystem.productivity_lines(c)
+	if not reasons.is_empty():
+		_col.add_child(_gap(UiTokens.SPACE_S))
+	for line in reasons:
+		var reason := UiFactory.make_label(line, &"DataText")
+		reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_col.add_child(reason)
+	if employee:
 		_col.add_child(_gap(UiTokens.SPACE_XXL))
 		_col.add_child(HSeparator.new())
 		_col.add_child(_gap(UiTokens.SPACE_M))
@@ -198,8 +208,9 @@ func _kv(label_key: String, value: Control) -> HBoxContainer:
 	return row
 
 
-## A section's caps key with its rule running right, a step below the last.
-func _section(title_key: String) -> VBoxContainer:
+## A section's caps key with its rule running right (to its figure, when it has one), a step below
+## the last.
+func _section(title_key: String, figure := "") -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
 	box.add_child(_gap(UiTokens.SPACE_XXL))
@@ -209,6 +220,8 @@ func _section(title_key: String) -> VBoxContainer:
 	var rule := HSeparator.new()
 	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(rule)
+	if figure != "":
+		row.add_child(UiFactory.make_label(figure, &"DataStrong"))
 	box.add_child(row)
 	return box
 

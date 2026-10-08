@@ -154,8 +154,7 @@ func _person_row(c: Character, area: String) -> PanelContainer:
 	var away: Array = HRUiShared.away_state(c)
 	if not away.is_empty():
 		line.add_child(UiFactory.D_tag(away[0], &"neutral"))
-		line.add_child(SprintUiShared.label(RnDUiShared.t(Fmt.count_key("HR_DURATION_WEEKS", away[1])).format(
-			{"n": away[1]}), &"CondCaption"))
+		line.add_child(SprintUiShared.label(Fmt.weeks(away[1]), &"CondCaption"))
 	var role := SprintUiShared.label(_role_line(c, away.is_empty()), &"CondCaption")
 	role.clip_text = true
 	role.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS

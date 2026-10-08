@@ -120,6 +120,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"burn_day1_breakdown":  fail = _case_burn_day1_breakdown()
 		"burn_tools_and_service": fail = _case_burn_tools_and_service()
 		"add_cash_writes_ledger": fail = _case_add_cash_writes_ledger()
+		"marketing_push_burns_and_ends": fail = _case_marketing_push_burns_and_ends()  # EXPECT-ERROR refused 'marketing_push' from expire
+		"investor_strain_fades_from_the_room": fail = _case_investor_strain_fades_from_the_room()
 		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
 		"runway_net_status":    fail = _case_runway_net_status()
 		"gross_runway_months":  fail = _case_gross_runway_months()
@@ -429,6 +431,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"office_move_gates_and_save":            fail = _case_office_move_gates_and_save()
 		"sprint_two_days_close":                 fail = _case_sprint_two_days_close()
 		"sprint_capacity_from_team":             fail = _case_sprint_capacity_from_team()
+		"productivity_mod_paces_the_sprint":     fail = _case_productivity_mod_paces_the_sprint()  # EXPECT-ERROR 'productivity_mod' found no target
 		"sprint_ceiling_125_blocks_add":         fail = _case_sprint_ceiling_125_blocks_add()
 		"sprint_carry_keeps_progress":           fail = _case_sprint_carry_keeps_progress()
 		"sprint_mvp_three_identity_k1":          fail = _case_sprint_mvp_three_identity_k1()
@@ -2852,6 +2855,81 @@ static func _case_add_cash_writes_ledger() -> String:
 		var row: Dictionary = rows[i]
 		if String(row.get("label", "")) != String(want_rows[i][0]) or int(row.get("amount", 0)) != int(want_rows[i][1]):
 			return "transactions row %d is %s, want %s" % [i, str(row), str(want_rows[i])]
+	return ""
+
+
+## A marketing push (marketing_push) sets the marketing line to its share of the burn without
+## marketing, lifts B2C audience growth, is replaced by a newer push, charges its weeks and ends on
+## the tick that charged the last one. An expiry cannot buy one.
+##
+## FALSIFICATION: drop the end-of-push block from FinanceSystem.daily_tick; the line outlives its weeks.
+static func _case_marketing_push_burns_and_ends() -> String:
+	GameState.set_cash(100000)
+	_seed_b2c()
+	_make_employee("char_mkt_dev", "Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000)
+	FinanceSystem.daily_tick()
+	var base: int = FinanceSystem.compute_total_burn()
+	var grow0: float = SalesSystem._audience_delta_per_hour()
+	EvEffects.run_played([{"verb": "marketing_push", "burn_pct": 25, "growth_pct": 15, "weeks": 2}], {})
+	var line: int = int(FinanceSystem.get_burn_breakdown()["marketing"])
+	if line != roundi(base * 0.25) or GameState.daily_burn != base + line:
+		return "a 25%% push on a %d burn set the line to %d (burn %d), want %d" % [base, line,
+			GameState.daily_burn, roundi(base * 0.25)]
+	if SalesSystem._audience_delta_per_hour() <= grow0:
+		return "the push left audience growth at %.4f (was %.4f)" % [SalesSystem._audience_delta_per_hour(), grow0]
+	EvEffects.run_played([{"verb": "marketing_push", "burn_pct": 10, "growth_pct": 20, "weeks": 2}], {})
+	line = int(FinanceSystem.get_burn_breakdown()["marketing"])
+	if line != roundi(base * 0.1) or not is_equal_approx(FinanceSystem.marketing_growth_mult(), 1.2):
+		return "a second push did not replace the first: line %d, growth x%.2f" % [line,
+			FinanceSystem.marketing_growth_mult()]
+	var cash0: int = GameState.cash
+	var week: int = int(TimeModel.per_tick(GameState.get_daily_revenue())) - int(TimeModel.per_tick(base + line))
+	for _i in 2:
+		GameState.advance_day()
+		FinanceSystem.daily_tick()
+	if GameState.cash != cash0 + 2 * week:
+		return "two weeks of the push moved the cash %d, want %d" % [GameState.cash - cash0, 2 * week]
+	if int(FinanceSystem.get_burn_breakdown()["marketing"]) != 0 or not GameState.marketing_push.is_empty() \
+			or GameState.daily_burn != base or FinanceSystem.marketing_growth_mult() != 1.0:
+		return "the push outlived its weeks: line %d, state %s" % [
+			int(FinanceSystem.get_burn_breakdown()["marketing"]), str(GameState.marketing_push)]
+	var log: Array = EvEffects.run_expire([{"verb": "marketing_push", "burn_pct": 25, "growth_pct": 15,
+		"weeks": 2}], {})
+	if not (log[0] as Dictionary).has("refused") or not GameState.marketing_push.is_empty():
+		return "an expiry bought a marketing push"
+	return ""
+
+
+## A card's strain with a fund (investor_strain) starts both of its rooms that many points lower and
+## fades linearly to nothing over its weeks; a second, smaller and shorter strain does not add up.
+##
+## FALSIFICATION: drop VC_WHY_STRAIN's term from _conviction_seed; the seed room keeps its warmth.
+static func _case_investor_strain_fades_from_the_room() -> String:
+	_seed_b2b_series_a()
+	var vc: String = String(InvestorRegistry.get_all()[0].id)
+	var series_a: int = int(VCPitchSystem._conviction_series_a(vc).value)
+	var seed: int = int(VCPitchSystem._conviction_seed(vc).value)
+	if mini(series_a, seed) < 9 or maxi(series_a, seed) > 100:
+		return "fixture: rooms at %d and %d leave no room for an 8-point strain" % [series_a, seed]
+	var strain := func(amount: int, weeks: int) -> void:
+		EvEffects.run_played([{"verb": "investor_strain", "scope": "investor", "amount": amount, "weeks": weeks}],
+			{"investor": {"type": "investor", "id": vc}})
+	strain.call(8, 26)
+	if int(VCPitchSystem._conviction_series_a(vc).value) != series_a - 8 \
+			or int(VCPitchSystem._conviction_seed(vc).value) != seed - 8:
+		return "an 8-point strain left the rooms at %d and %d, want %d and %d" % [
+			VCPitchSystem._conviction_series_a(vc).value, VCPitchSystem._conviction_seed(vc).value,
+			series_a - 8, seed - 8]
+	GameState.day += TimeModel.ticks(13)
+	if VCPitchSystem.strain(vc) != 4:
+		return "half way through 26 weeks the strain reads %d, want 4" % VCPitchSystem.strain(vc)
+	strain.call(2, 4)
+	if VCPitchSystem.strain(vc) != 4:
+		return "a smaller second strain moved it to %d, want the larger 4" % VCPitchSystem.strain(vc)
+	GameState.day += TimeModel.ticks(13)
+	if VCPitchSystem.strain(vc) != 0 or int(VCPitchSystem._conviction_series_a(vc).value) != series_a:
+		return "after 26 weeks the strain reads %d and the room %d, want 0 and %d" % [VCPitchSystem.strain(vc),
+			VCPitchSystem._conviction_series_a(vc).value, series_a]
 	return ""
 
 
@@ -16231,6 +16309,78 @@ static func _case_sprint_capacity_from_team() -> String:
 	if SprintSystem.capacity() != 0 or SprintSystem.can_add():
 		return "with the founder researching and the developer on leave the sprint holds %d points (+ open: %s)" % [
 			SprintSystem.capacity(), SprintSystem.can_add()]
+	return ""
+
+
+## Olay kartının verim satırı (productivity_mod) sprint puanını çarpar. Tek başına kurucuya yazılan
+## eksi satır kurucu tavanına iner ve çipi bunu söyler; ekibe yazılan satır sprint yokken hedefsizdir,
+## koşan sprintin ekibine iner; aynı kart ikinci kez yazınca süre tazelenir, çarpan katlanmaz; farklı
+## kartlar çarpılır ve çarpım tabana kenetlenir; her satır son haftasının işlendiği günlük dağıtımda düşer.
+##
+## FALSIFICATION: HRSystem.productivity'de olay satırlarını yok say; ilk çarpım denetimi düşer.
+static func _case_productivity_mod_paces_the_sprint() -> String:
+	_seed_sprint()
+	var founder: Character = CharacterRegistry.get_founder()
+	var as_founder := {"founder": {"type": "founder", "id": founder.id}}
+	var lone := {"verb": "productivity_mod", "scope": "founder", "pct": -50, "weeks": 8}
+	var loc0: String = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+	var chip: String = EvChips.text(EvChips.describe(lone, as_founder, {}, false)[0])
+	TranslationServer.set_locale(loc0)
+	if chip != "Your pace -30% · 2 weeks":
+		return "the lone founder's chip reads '%s', want 'Your pace -30%% · 2 weeks'" % chip
+	EvEffects.run_played([lone], as_founder, "team.demo_day")
+	var row: Dictionary = founder.productivity_mods[0] if founder.productivity_mods.size() == 1 else {}
+	if int(row.get("pct", 0)) != HRConstants.PACE_SOLO_PCT_MIN \
+			or int(row.get("until_day", 0)) != GameState.day + TimeModel.ticks(HRConstants.PACE_SOLO_WEEKS_MAX) \
+			or String(row.get("card_id", "")) != "team.demo_day" \
+			or String(row.get("title_key", "")) != "EV_TEAM_DEMO_DAY_TITLE":
+		return "a lone founder's -50%% for 8 weeks landed as %s, want the cap, the card and its title" % str(
+			founder.productivity_mods)
+	founder.productivity_mods.clear()
+
+	var dev: Character = _sprint_hire("char_pace_dev", HRConstants.ROLE_DEVELOPER)
+	var team_pace := [{"verb": "productivity_mod", "scope": "team", "pct": -10, "weeks": 2}]
+	if not (EvEffects.run_played(team_pace, {}, "team.demo_day")[0] as Dictionary).has("refused"):
+		return "a team row landed with no sprint running"
+	SprintSystem.add("feat:line_note_tool_capture_k1")
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	EvEffects.run_played(team_pace, {}, "team.demo_day")
+	for member in SprintSystem.team():
+		var rows: Array[Dictionary] = CharacterRegistry.get_character(member.id).productivity_mods
+		if rows.size() != 1:
+			return "%s in the sprint team holds %d team rows, want 1" % [member.id, rows.size()]
+		rows.clear()
+
+	var base: float = _sprint_points(dev.id)
+	var as_dev := {"employee": {"type": "employee", "id": dev.id}}
+	var pace := func(pct: int, weeks: int, card: String) -> void:
+		EvEffects.run_played([{"verb": "productivity_mod", "scope": "employee", "pct": pct, "weeks": weeks}],
+			as_dev, card)
+	pace.call(-20, 4, "team.demo_day")
+	if not is_equal_approx(_sprint_points(dev.id), base * 0.8):
+		return "-20%% left the developer at %.3f a week, want %.3f" % [_sprint_points(dev.id), base * 0.8]
+	pace.call(-20, 2, "team.demo_day")
+	if dev.productivity_mods.size() != 1 or not is_equal_approx(_sprint_points(dev.id), base * 0.8) \
+			or int(dev.productivity_mods[0].until_day) != GameState.day + TimeModel.ticks(2):
+		return "the same card twice stacked or kept its old end: %s" % str(dev.productivity_mods)
+	pace.call(-30, 3, "team.first_weeks")
+	if not is_equal_approx(_sprint_points(dev.id), base * 0.8 * 0.7):
+		return "two cards make %.3f a week, want their product %.3f" % [_sprint_points(dev.id), base * 0.56]
+	pace.call(-50, 1, "team.outside_offer")
+	if not is_equal_approx(_sprint_points(dev.id), base * HRConstants.PACE_MOD_MULT_MIN):
+		return "three cards make %.3f a week, want the floor %.3f" % [_sprint_points(dev.id),
+			base * HRConstants.PACE_MOD_MULT_MIN]
+	# The game's daily dispatch, a week at a time; morale is pinned so the band cannot move the figure.
+	for want: float in [0.8 * 0.7, 0.7, 1.0]:
+		_sim_day()
+		dev.morale = 60
+		if not is_equal_approx(_sprint_points(dev.id), base * want):
+			return "on day %d the developer works %.3f, want %.3f (rows %s)" % [GameState.day,
+				_sprint_points(dev.id), base * want, str(dev.productivity_mods)]
+	if not dev.productivity_mods.is_empty():
+		return "expired rows were kept: %s" % str(dev.productivity_mods)
 	return ""
 
 

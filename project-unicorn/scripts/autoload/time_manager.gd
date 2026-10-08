@@ -347,6 +347,8 @@ func _dispatch_daily_tick() -> void:
 	# 3 · HR, 4 · Sales (aggregates MRR), rivals, 5 · Finance (applies the week's net flow).
 	HRSystem.daily_tick()
 	SalesSystem.daily_tick()
+	# After the last reader of the week's pace (sprint, support, R&D, the customer desk).
+	CharacterRegistry.prune_productivity_mods()
 	RivalRegistry.advance_all()
 	FinanceSystem.daily_tick()
 	# A move lands before the event slot, so a card reading office.current sees today's office.

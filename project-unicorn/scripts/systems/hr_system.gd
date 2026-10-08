@@ -349,12 +349,67 @@ static func effective_skill(c: Character, area_key: String) -> float:
 	var area_coef: float = HRConstants.area_fatigue_mult(c.role, area_key)
 	# §12.1 odak katsayısı: tek iş 1,00 · iki iş 0,50, her iki işe AYRI AYRI.
 	var focus: float = HRConstants.focus_mult(job_count(c))
-	# §7 moral bandı. §2: KURUCUYA UYGULANMAZ — morali yoktur.
-	var morale_band: float = HRConstants.morale_band_mult(c.morale) if c.category == "employee" else 1.0
 	# §6 huy çarpanları. TİTİZ hız cezası öder, GÖZÜ YÜKSEKTE verimi yüksektir.
 	var traits: float = HRConstants.trait_mult(c.traits, "speed_mult") \
 		* HRConstants.trait_mult(c.traits, "output_mult")
-	return points * area_coef * focus * morale_band * traits
+	return points * area_coef * focus * productivity(c) * traits
+
+
+## Verim: kişinin bu haftaki hızı. Moral bandı (§7; kurucunun morali yoktur, 1,0) × olay satırları.
+## Satır yokken moral bandının kendisidir.
+static func productivity(c: Character) -> float:
+	var band: float = HRConstants.morale_band_mult(c.morale) if c.category == "employee" else 1.0
+	return band * event_pace(c)
+
+
+## Verimin olay kartlarından gelen payı: süreli satırların kenetli çarpımı, satır yokken 1,0. Satış
+## masası yalnız bunu okur (moral bandını okumaz).
+static func event_pace(c: Character) -> float:
+	var events: float = 1.0
+	for m in c.productivity_mods:
+		events *= 1.0 + float(m.pct) / 100.0
+	return clampf(events, HRConstants.PACE_MOD_MULT_MIN, HRConstants.PACE_MOD_MULT_MAX)
+
+
+## Bir olay satırının inen hâli {pct, weeks}: sınırlara kenetli. Çalışan yokken satır yalnız kurucuya
+## inebilir ve eksi satır kurucu tavanındadır.
+static func productivity_terms(pct: int, weeks: int) -> Dictionary:
+	var p: int = clampi(pct, HRConstants.PACE_MOD_PCT_MIN, HRConstants.PACE_MOD_PCT_MAX)
+	var w: int = clampi(weeks, HRConstants.PACE_MOD_WEEKS_MIN, HRConstants.PACE_MOD_WEEKS_MAX)
+	if p < 0 and headcount() == 0:
+		p = maxi(p, HRConstants.PACE_SOLO_PCT_MIN)
+		w = mini(w, HRConstants.PACE_SOLO_WEEKS_MAX)
+	return {"pct": p, "weeks": w}
+
+
+## Olay kartının kişiye yazdığı süreli verim satırı; inen {pct, weeks}'i döner.
+static func add_productivity_mod(id: String, pct: int, weeks: int, card_id: String, title_key: String) -> Dictionary:
+	var t: Dictionary = productivity_terms(pct, weeks)
+	CharacterRegistry.add_productivity_mod(id, t.pct, GameState.day + TimeModel.ticks(t.weeks), card_id, title_key)
+	return t
+
+
+## Verim ekranda: "%85" / "85%".
+static func productivity_figure(c: Character) -> String:
+	return Fmt.percent(roundi(productivity(c) * 100.0), 0)
+
+
+## Verimin imzalı sebepleri, Ekip satırının ipucu ve dosyanın verim bölümü için. Moral orta bantta
+## satır vermez; olay satırı kartın başlığını ve kalan haftasını söyler.
+static func productivity_lines(c: Character) -> PackedStringArray:
+	var lines := PackedStringArray()
+	var band: String = morale_band(c)
+	if c.category == "employee" and band != "mid":
+		lines.append(_t("HR_PACE_MORALE_HIGH" if band == "high" else "HR_PACE_MORALE_LOW").format(
+			{"pct": Fmt.signed_percent(roundi((HRConstants.morale_band_mult(c.morale) - 1.0) * 100.0))}))
+	for m in c.productivity_mods:
+		lines.append(_t("HR_PACE_EVENT").format({"title": _t(String(m.title_key)),
+			"pct": Fmt.signed_percent(int(m.pct)), "weeks": Fmt.weeks(int(m.until_day) - GameState.day)}))
+	return lines
+
+
+static func _t(key: String) -> String:
+	return TranslationServer.translate(key)
 
 
 ## §4.2 liderlik bonusu — ALANIN TOPLAMINA, yarım yıldız başına +%1 (beş yıldızda +%10).

@@ -80,6 +80,11 @@ static func _install_people() -> void:
 			var c: Character = _emp(id)
 			return CharacterRegistry.experience_ratio(c) if c != null else 0.0,
 		"HR", "0.0-1.0 toward the next threshold")
+	EvSeams.register("hr.job", E, TYPE_STRING,
+		func(id: String) -> String:
+			var c: Character = _emp(id)
+			return String(c.assigned_job_ids[0]) if c != null and not c.assigned_job_ids.is_empty() else "",
+		"HR", "WRAPPER: the first job held, build | test | support | accounts | sales | research; \"\" with none")
 	EvSeams.register("hr.flight_risk", E, TYPE_BOOL,
 		func(id: String) -> bool:
 			var c: Character = _emp(id)

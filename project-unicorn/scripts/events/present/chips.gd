@@ -85,12 +85,41 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		"change_morale":
 			var who: String = _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_MORALE"))
 			return [_figure("EFFECT_AXIS", _num(d), _signed(d), {"axis": who})]
+		# The row's figures, else the terms HRSystem lands them at (the lone founder's cap included).
+		"productivity_mod":
+			var pace: Dictionary = item if is_delta \
+				else HRSystem.productivity_terms(int(item.get("pct", 0)), int(item.get("weeks", 1)))
+			var words: Dictionary = {"pct": Fmt.signed_percent(int(pace.pct)), "weeks": Fmt.weeks(int(pace.weeks))}
+			var key: String = "EFFECT_PACE_TEAM"
+			if String(item.get("scope", "")) != "team":
+				var pid: String = _employee(item, ctx, is_delta)
+				var person: Character = CharacterRegistry.get_character(pid)
+				if person != null and person.category == "founder":
+					key = "EFFECT_PACE_FOUNDER"
+				else:
+					key = "EFFECT_PACE"
+					words["name"] = _first_name(pid, ctx, names, _t("EFFECT_AN_EMPLOYEE"))
+			return [_part(_t(key).format(words), "", _signed(int(pace.pct)))]
+		"investor_strain":
+			var vc: String = String(item.get("vc", "")) if is_delta \
+				else EvEffects.entity_of(item, ctx, EvScope.TYPE_INVESTOR)
+			var strain: Dictionary = item if is_delta else VCPitchSystem.strain_terms(d, int(item.get("weeks", 0)))
+			return [_part(_t("EFFECT_INVESTOR_STRAIN").format({
+				"investor": String(InvestorRegistry.get_investor(vc).get("display_name", "")),
+				"v": _num(-int(strain.amount)), "n": int(strain.weeks)}), "", "cost")]
+		# Spend for growth: the burn is the cost, the audience the gain, over the same weeks.
+		"marketing_push":
+			var push: Dictionary = item if is_delta else FinanceSystem.marketing_terms(
+				int(item.get("burn_pct", 0)), int(item.get("growth_pct", 0)), int(item.get("weeks", 0)))
+			var span: String = Fmt.weeks(int(push.weeks))
+			return [_part(_t("EFFECT_MARKETING_BURN").format({"pct": Fmt.signed_percent(int(push.burn_pct)),
+					"weeks": span}), "", "cost"),
+				_part(_t("EFFECT_MARKETING_GROWTH").format({"pct": Fmt.signed_percent(int(push.growth_pct)),
+					"weeks": span}), "", "gain")]
 		"audience_delta":
 			if item.has("pct"):
-				# Fmt.percent is locale-aware (TR prefix, EN suffix); the sign rides the number.
 				var pts: int = int(round(float(item["pct"]) * 100.0))
-				return [_figure("EFFECT_AUDIENCE_PCT", ("-" if pts < 0 else "+") + Fmt.percent(absi(pts), 0),
-					_signed(pts), {"pct": ""})]
+				return [_figure("EFFECT_AUDIENCE_PCT", Fmt.signed_percent(pts), _signed(pts), {"pct": ""})]
 			return [_figure("EFFECT_AUDIENCE", _num(d), _signed(d))]
 		"convert_audience":
 			var conv: String = Fmt.percent(int(round(float(item.get("pct", 0.0)) * 100.0)), 0)

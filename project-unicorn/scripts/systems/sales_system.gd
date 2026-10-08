@@ -189,6 +189,8 @@ static func _audience_delta_per_hour() -> float:
 	var sat: float = float(ub.satisfaction) if ub != null else WOM_MULT_PIVOT
 	grow *= clampf(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1.0)
 	grow += audience * WOM_COEF * maxf(0.0, sat - WOM_SAT_GATE) / 100.0
+	# A card's marketing push lifts the whole intake, word of mouth included; erosion is untouched.
+	grow *= FinanceSystem.marketing_growth_mult()
 	# A product below EROSION_THRESHOLD bleeds users (see CHURN_COEF). Price-independent, so
 	# it sits outside the multiplier.
 	return grow - CHURN_COEF * maxf(0.0, EROSION_THRESHOLD - quality_term) * audience

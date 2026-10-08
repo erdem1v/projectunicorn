@@ -405,7 +405,7 @@ static func D_state_cell(emp: Character, all: bool, width: int) -> Control:
 		cell.add_child(label)
 		said.append(tag[0])
 		if tag[2] > 0:
-			said.append(TranslationServer.translate(Fmt.count_key("HR_DURATION_WEEKS", tag[2])).format({"n": tag[2]}))
+			said.append(Fmt.weeks(tag[2]))
 			cell.add_child(_caption(said[-1]))
 	var delta: int = WorkHoursSystem.hours_for(emp) - HRConstants.WORK_HOURS_DEFAULT
 	if delta != 0:

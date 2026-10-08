@@ -91,6 +91,12 @@ extends Resource
 # listesinde yok; §7 kişi başına ikinci bir sayı olmadan uygulanamıyor.
 @export var morale_target: float = -1.0
 
+# --- Olay kartlarının yazdığı süreli verim satırları ---
+# {pct, until_day, card_id, title_key}: kart başına bir satır; title_key kartın başlık anahtarıdır
+# (birkaç kart aynı başlığı paylaşabilir). Yalnız CharacterRegistry yazar;
+# HRSystem.productivity okur, süresi dolan satırı günlük dağıtım budar.
+@export var productivity_mods: Array[Dictionary] = []
+
 # --- §15 employment_history: yalnız eklenir ---
 # {day, kind, old, new}: zam, terfi, eğitim, izin. Okuyan en sonuncuyu alır.
 @export var employment_history: Array[Dictionary] = []

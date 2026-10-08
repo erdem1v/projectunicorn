@@ -829,6 +829,19 @@ const MORALE_BAND_HIGH_MULT := 1.10
 const MORALE_BAND_MID_MULT := 1.0
 const MORALE_BAND_LOW_MULT := 0.85
 
+## Olay kartının kişiye yazdığı süreli verim satırı [WORKING]. Satır −%50 ile +%30 arasında, 1 ile 8
+## hafta sürer; kişinin bütün satırlarının çarpımı 0,50 ile 1,30 arasına kenetlenir ve moral bandıyla
+## çarpılır. Tek başına kurucuya (ekip 0) yazılan eksi satır en çok −%30 ve en çok 2 haftadır: yoksa
+## "ben yaparım" seçeneği tek kişilik şirkette ürünü durdururdu.
+const PACE_MOD_PCT_MIN := -50
+const PACE_MOD_PCT_MAX := 30
+const PACE_MOD_WEEKS_MIN := 1
+const PACE_MOD_WEEKS_MAX := 8
+const PACE_MOD_MULT_MIN := 0.5
+const PACE_MOD_MULT_MAX := 1.3
+const PACE_SOLO_PCT_MIN := -30
+const PACE_SOLO_WEEKS_MAX := 2
+
 ## §4.2 Liderlik katsayıları: liderlik bir İNSAN istatistiğidir. Çıktı tarafı ölçülü (moral bandı
 ## birincil hız kaldıracı kalsın), moral tarafı cömert. Yarım yıldız başına çıktı +%1 · moral
 ## düşüş hızı −%2. Yüzdeler ekranda görünmez (§4.2).
@@ -933,7 +946,7 @@ const TRAINING_WEEKS := 2            # §5.2: "Çalışan İKİ HAFTA eğitimde 
 
 ## §5.5: süre metni sabitten türetilir ki süre değişince metin yalan söylemesin.
 static func training_duration_text() -> String:
-	return TranslationServer.translate(Fmt.count_key("HR_DURATION_WEEKS", TRAINING_WEEKS)).format({"n": TRAINING_WEEKS})
+	return Fmt.weeks(TRAINING_WEEKS)
 
 
 static func trainable_keys() -> Array:

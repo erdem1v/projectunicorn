@@ -156,12 +156,13 @@ static func _start_processing(rep: Character, lead: Prospect) -> void:
 # ============================================================================
 
 ## The chance this deal closes on one processing tick: the league difference picks it and
-## Premium divides it, so the expected processing time grows by the same +30 %.
+## Premium divides it, so the expected processing time grows by the same +30 %. A card's pace rows
+## on the rep scale it (the event part of pace only; the desk does not read the morale band).
 static func close_chance(rep: Character, lead: Prospect) -> float:
 	var chance: float = float(SalesConstants.PROCESS_CLOSE_CHANCE[clampi(lead.star - rep_star(rep), -2, 0)])
 	if lead.work_stance == SalesConstants.STANCE_PREMIUM:
 		chance /= 1.0 + SalesConstants.PROCESS_PREMIUM_PENALTY
-	return chance
+	return chance * HRSystem.event_pace(rep)
 
 
 ## A lead started this tick is picked up after this sweep, so its first roll is the next tick.

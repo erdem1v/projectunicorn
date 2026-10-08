@@ -1893,3 +1893,22 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   saati tarih satırına eklediğini ("Hafta 14 · Nisan 2026 · 09:00") ve kısa biçimi `TOPBAR_CLOCK_COMPACT`
   ("H14 · Nis · 09:00") anlatıyor; o anahtar silindi. Açık: ZAMAN MODELİ §5 ya da GUNCELLEMELER güncellensin mi.
   Kaynak: Menajer Masası tasarım sistemi (Erdem 2026-10-02, "UI approved").
+
+- **103 · Verim: kişi başı haftalık çıktı yüzdesi (sahip kararı 2026-10-08, GDD'ye işlenmemiş).** Sahibin kararları:
+  (1) verim gelsin, çalışanın üstüne gelindiğinde görünsün (Software Inc'teki gibi) ve haftalık çıktı hızı gerçekten
+  ona bağlansın; (2) ofis kademesi gibi etkenler artı versin, düşük moral ve fazla mesai eksi ("90 yerine 80-85
+  çıktı"); (3) olay kartı bir kişinin hızını süreli düşürebilsin; (4) "ben yaparım" seçenekleri kurucunun verimine
+  yazılsın, kurucunun morali ve enerji barı yoktur hükmü değişmez; (5) olayların hız artışı kalsın, Ekip GDD §8.4'ün
+  "ayrı hız bonusu yoktur" cümlesi olay kartları için esnesin. Kodda olan: olay satırı ve moral bandı
+  (`HRSystem.productivity`, `productivity_mod`, Ekip satırının ipucu ve ekip dosyasının VERİM bölümü; olay motoru
+  md'si §27.15). Değişen hükümler: Ekip GDD §2.2 (kısmi kapasite yok), §4.2 ve §8.5 (yüzdeler ekranda görünmez),
+  §8.4 (ayrı hız çarpanı yok), §7 (süreli uyarı bu modülde yok). Açık: Ekip GDD'si ya da GUNCELLEMELER bu kararlarla
+  güncellensin mi. Altı alt karar **onay bekliyor**: (1) mesai yorgunluğu: ölçü son 4 haftanın ortalaması, sekizi
+  aşan her saat −%3, en çok −%15; (2) ofis artısı İş hanı +%3, Plaza katı +%6, Depo loft +%8 mi, yoksa ofisin başka
+  etkisi (moral) mi; (3) verimin kenet aralığı %40 ile %130 mu (bugün toplam verim kenetli değil: yalnız olay satırlarının
+  çarpımı 0,50 ile 1,30 arasına kenetli, moral bandıyla çarpılınca verim 0,425 ile 1,43 arasında kalır); (4) huy ve toplantı payı sprinte de girsin mi (çıktıyı değiştirir); (5) ipucunda yüzde mi
+  ("Verim %85"), kelime ve bar mı; (6) tek başına kurucu tavanı (en çok −%30, 2 hafta) uygun mu (tavan satır başınadır: iki kart birlikte
+  kurucuyu yine 0,50 tabanına indirebilir). Ayrıca **onay bekliyor**: satış masası (temsilcinin kapanış
+  ihtimali, `SalesRepSystem.close_chance`) verimin yalnız olay satırlarını okur; satış masası moral bandını okumaz,
+  verim satırındaki moral satırı satışta etkisizdir (bandı satışa sokmak kalibre ekonomiyi oynatır). Kaynak: yazar
+  pilotu klasöründeki `research/verimlilik/TASARIM_NOTU_VERIM.md` §1 ve §8 (repo dışında).

@@ -29,6 +29,8 @@ const BINDINGS := {
 	"version_shipped": {"slots": {}},
 	"build_phase_changed": {"slots": {}},
 	"sheet_expired": {"slots": {"investor": 0}},
+	"sheet_granted": {"slots": {"investor": 0}},
+	"seed_sheet_granted": {"slots": {"investor": 0}},
 	"meeting_day": {"slots": {"investor": 0}},
 	"phase_gate_reached": {"slots": {}},
 	"axis_floor_warning": {"slots": {}},

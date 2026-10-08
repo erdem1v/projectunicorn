@@ -569,6 +569,27 @@ func set_salary(id: String, value: int) -> void:
 	c.monthly_salary = maxi(value, 0)
 
 
+## Olay kartının süreli verim satırı. Aynı kartın satırı yenisiyle değişir (süre tazelenir, çarpan
+## katlanmaz); farklı kartların satırları yan yana durur.
+func add_productivity_mod(id: String, pct: int, until_day: int, card_id: String, title_key: String) -> void:
+	var c: Character = _characters[id]
+	c.productivity_mods = c.productivity_mods.filter(func(m: Dictionary) -> bool:
+		return String(m.card_id) != card_id)
+	c.productivity_mods.append({"pct": pct, "until_day": until_day, "card_id": card_id, "title_key": title_key})
+	EventBus.productivity_changed.emit(id)
+
+
+## Süresi dolan verim satırlarını düşürür: son haftası işlendiği tikte, haftayı okuyan her sistem onu
+## satırla saydıktan sonra (TimeManager'ın günlük dağıtımı, satıştan sonra).
+func prune_productivity_mods() -> void:
+	for c: Character in _characters.values():
+		var kept: Array[Dictionary] = c.productivity_mods.filter(func(m: Dictionary) -> bool:
+			return int(m.until_day) > GameState.day)
+		if kept.size() != c.productivity_mods.size():
+			c.productivity_mods = kept
+			EventBus.productivity_changed.emit(c.id)
+
+
 ## İstihdam durumu seam'i: kapasite, ekip hızı, SORUMLU listesi, CS sönümü ve mesai `status`
 ## okur; tek yerden yazılmalı.
 func set_status(id: String, value: String) -> void:

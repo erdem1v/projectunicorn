@@ -36,8 +36,8 @@ const NEUTRAL_VERBS := [
 	"schedule_event", "cancel_scheduled",
 	# arcs
 	"start_arc", "advance_arc", "set_arc_var", "abort_arc", "end_arc",
-	# people — morale and assignment are not economy; salary is, and lives below
-	"change_morale", "morale_all", "assign_to", "send_on_leave", "start_training",
+	# people — morale, pace and assignment are not economy; salary is, and lives below
+	"change_morale", "morale_all", "assign_to", "send_on_leave", "start_training", "productivity_mod",
 	# product — a fix run spends the desk's hours, not money
 	"damage_product", "fix_run_start",
 	# sprint — the card a sprint decision is about, and the sprint's work hours
@@ -52,8 +52,8 @@ const NEUTRAL_VERBS := [
 	# Seed rung: the money moves at the table's İMZALA, a played moment, not in a card effect;
 	# decline_buyout's declined cash is cash that never arrives.
 	"open_seed_table", "decline_buyout",
-	# Closes one fund's expired sheet; no money.
-	"decline_offer",
+	# Closes one fund's expired sheet; no money. A strain cools the fund's next room.
+	"decline_offer", "investor_strain",
 	"set_game_flag", "mentor_advisory",
 	# B2B outcomes that move no money; b2b_retain_discount and b2b_expand move MRR and are
 	# economic.
@@ -71,7 +71,7 @@ const ECONOMIC_VERBS := [
 	"add_customer", "churn_customer", "customer_mrr_delta", "seats",
 	"audience_delta", "convert_audience", "open_paid_tier",
 	"change_salary", "fire_employee", "employee_leaves",
-	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount",
+	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "marketing_push",
 ]
 
 ## Ends the run. Played decisions only — never a dice branch (I6), never an expiry, never an
@@ -101,33 +101,36 @@ static func reset_counters() -> void:
 
 
 # --- Entry points ----------------------------------------------------------
+#
+# `card_id` names the card the effects belong to ("" for an arc's own penalties): a pace row keeps
+# that card's title, so the Ekip tooltip can say what slowed the person.
 
 ## A decision the player made. The only origin with the full vocabulary.
-static func run_played(effects: Array, ctx: Dictionary) -> Array:
-	return _run(effects, ctx, Origin.PLAYED)
+static func run_played(effects: Array, ctx: Dictionary, card_id := "") -> Array:
+	return _run(effects, ctx, Origin.PLAYED, card_id)
 
 
 ## The cost of not answering (§8.3's one exception). Economic verbs only in the negative
 ## direction, checked per effect at dispatch, where a seam-derived amount is finally visible.
-static func run_expire(effects: Array, ctx: Dictionary) -> Array:
-	return _run(effects, ctx, Origin.EXPIRE)
+static func run_expire(effects: Array, ctx: Dictionary, card_id := "") -> Array:
+	return _run(effects, ctx, Origin.EXPIRE, card_id)
 
 
 ## Arc auto-steps, signal handlers, on_invalidate. Bookkeeping only.
 static func run_ambient(effects: Array, ctx: Dictionary) -> Array:
-	return _run(effects, ctx, Origin.AMBIENT)
+	return _run(effects, ctx, Origin.AMBIENT, "")
 
 
 ## A dice outcome. Full economy, no terminal — I6 ("zar öldürmez").
-static func run_check_branch(effects: Array, ctx: Dictionary) -> Array:
-	return _run(effects, ctx, Origin.CHECK_BRANCH)
+static func run_check_branch(effects: Array, ctx: Dictionary, card_id := "") -> Array:
+	return _run(effects, ctx, Origin.CHECK_BRANCH, card_id)
 
 
 # --- The dispatcher --------------------------------------------------------
 
 ## Returns the delta log: one entry per applied effect, for History's `deltas`, the debug panel
 ## and the ending screen. A refused effect is logged too, so a rule never acts invisibly.
-static func _run(effects: Array, ctx: Dictionary, origin: Origin) -> Array:
+static func _run(effects: Array, ctx: Dictionary, origin: Origin, card_id: String) -> Array:
 	var log: Array = []
 	for raw in effects:
 		if typeof(raw) != TYPE_DICTIONARY:
@@ -144,7 +147,7 @@ static func _run(effects: Array, ctx: Dictionary, origin: Origin) -> Array:
 			log.append({"verb": verb, "refused": refusal})
 			continue
 
-		var entry: Dictionary = _apply(verb, effect, ctx)
+		var entry: Dictionary = _apply(verb, effect, ctx, card_id)
 		if not entry.is_empty():
 			log.append(entry)
 	return log
@@ -198,6 +201,9 @@ static func _permitted(verb: String, effect: Dictionary, origin: Origin) -> Stri
 ## Is this economic effect a cost rather than a gain? Reads the amount AS COMPUTED, which is
 ## the whole point — a literal is easy, a seam-derived figure is what lint cannot see.
 static func _is_negative(effect: Dictionary) -> bool:
+	# A marketing push spends money to buy growth: never only a cost, so never an expiry's.
+	if String(effect.get("verb", "")) == "marketing_push":
+		return false
 	for key in ["amount", "delta", "value"]:
 		if effect.has(key):
 			return float(effect[key]) < 0.0
@@ -208,7 +214,7 @@ static func _is_negative(effect: Dictionary) -> bool:
 
 # --- Application -----------------------------------------------------------
 
-static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
+static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String) -> Dictionary:
 	match verb:
 		# --- economy -------------------------------------------------------
 		"add_cash":
@@ -277,6 +283,11 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			SalesFaucetSystem.spawn_prospect(String(e.get("archetype", "small")),
 				String(e.get("source", "event")))
 			return {"verb": verb, "archetype": e.get("archetype", "small")}
+		"marketing_push":
+			var push: Dictionary = FinanceSystem.start_marketing_push(int(e.get("burn_pct", 0)),
+				int(e.get("growth_pct", 0)), int(e.get("weeks", 0)))
+			push["verb"] = verb
+			return push
 
 		# --- flags and memory ----------------------------------------------
 		"set_flag":
@@ -343,6 +354,25 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			for worker in CharacterRegistry.get_employees():
 				HRMoraleSystem.apply_delta(worker, _amount(e))
 			return {"verb": verb, "amount": _amount(e)}
+		"productivity_mod":
+			# The row keeps the card's title key, not text, so the tooltip reads in the live language.
+			var title: String = String(EvPresenter.text_block(EvCatalog.card(card_id)).get("title", ""))
+			var pct: int = int(e.get("pct", 0))
+			var weeks: int = int(e.get("weeks", 1))
+			if String(e.get("scope", "")) == "team":
+				# The running sprint's team: the people whose points make its capacity.
+				var team: Array = SprintSystem.team()
+				if SprintSystem.mode() != "active" or team.is_empty():
+					return _no_target(verb, "team")
+				var landed_all: Dictionary
+				for member in team:
+					landed_all = HRSystem.add_productivity_mod(member.id, pct, weeks, card_id, title)
+				return {"verb": verb, "scope": "team", "pct": landed_all.pct, "weeks": landed_all.weeks}
+			var pid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
+			if CharacterRegistry.get_character(pid) == null:
+				return _no_target(verb, pid)
+			var landed: Dictionary = HRSystem.add_productivity_mod(pid, pct, weeks, card_id, title)
+			return {"verb": verb, "employee": pid, "pct": landed.pct, "weeks": landed.weeks}
 		"employee_leaves":
 			var lid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
 			if CharacterRegistry.get_character(lid) == null:
@@ -443,6 +473,12 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			if not VCPitchSystem.decline_expired_sheet(dvc):
 				return {"verb": verb, "refused": "no sheet awaiting a decision"}
 			return {"verb": verb, "vc": dvc}
+		"investor_strain":
+			var svc: String = entity_of(e, ctx, EvScope.TYPE_INVESTOR)
+			if svc == "":
+				return _no_target(verb, svc)
+			var strain: Dictionary = VCPitchSystem.add_strain(svc, _amount(e), int(e.get("weeks", 0)))
+			return {"verb": verb, "vc": svc, "amount": strain.amount, "weeks": strain.weeks}
 		"open_seed_table":
 			# The seed offer knows whose it is, and there is only ever one.
 			if GameState.seed_sheet == null:

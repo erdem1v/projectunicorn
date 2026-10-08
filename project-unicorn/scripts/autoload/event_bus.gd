@@ -56,6 +56,8 @@ signal employee_experience_changed(character_id: String, new_experience: int)
 signal employee_training_changed(character_id: String, weeks_left: int)
 ## §9.3 OLAN terfi. employee_eligible_for_promotion ile karıştırılmaz: o UYGUN HÂLE GELMEYİ bildirir.
 signal employee_promoted(character_id: String, new_level: int)
+## Kişinin süreli verim satırları değişti (olay kartı yazdı ya da süresi doldu). Tek yayıncı CharacterRegistry.
+signal productivity_changed(character_id: String)
 
 # Ekip GDD §15.3 · OLAY MOTORUNA AÇILAN SİNYAL LİSTESİ
 # Dinleyicisi olmasa da yayınlanır, adları KARARLIDIR: motor bunları okur, keşfetmez (§17.3).

@@ -17,14 +17,14 @@ const TOOLS_PER_EMPLOYEE_MONTHLY := {1: 150, 2: 300, 3: 500}
 # the phase-1 tools base. This const is its single home: burn_breakdown starts as a mutable copy
 # and GameState's starting daily_burn derives from it (starting_daily_burn()).
 # KATEGORİ VAR OLMA KURALI: bir kalem burada ya bir sistem YAZDIĞI için durur (salaries/overtime/
-# tools daily_tick pull'ları, servers ve service InfraSystem'in set_burn_category'si) ya da
-# 0-değerli TODO hook'tur (marketing, office) ve mekaniği gelene dek görünmez
+# tools daily_tick pull'ları, marketing olay kartının kampanyası, servers ve service InfraSystem'in
+# set_burn_category'si) ya da 0-değerli TODO hook'tur (office) ve mekaniği gelene dek görünmez
 # (get_burn_breakdown_pct sıfır satırı atlar). Uydurma sabit kalem YOK.
 const STARTING_BURN_BREAKDOWN := {
 	"salaries": 0,     # Overwritten every tick by pull from CharacterRegistry
 	"overtime": 0,     # Overwritten every tick by pull from WorkHoursSystem; 0 when nobody is over 8h
 	"tools": TOOLS_BASE_MONTHLY[1] / TimeModel.DAYS_PER_MONTH,   # Overwritten every tick (monthly_tools_for)
-	"marketing": 0,    # TODO hook: player marketing spend mechanic (set_burn_category ile yazar)
+	"marketing": 0,    # A card's marketing push while it runs (start_marketing_push); 0 otherwise
 	"office": 0,       # TODO hook: ofis/kira mekaniği; 0 iken görünmez
 	# Ürün rev 6.1 §10: sunucu faturası ve servis maliyeti. InfraSystem her gün aylık/30
 	# olarak yazar (set_burn_category). Ürün yayınlanana kadar 0, yani görünmez.
@@ -61,7 +61,21 @@ const ONE_TIME_LABELS := {
 	"domain": "FIN_ONETIME_DOMAIN",
 	"user_tests": "FIN_ONETIME_USER_TESTS",
 	"trade_fair": "FIN_ONETIME_TRADE_FAIR",
+	"legal": "FIN_ONETIME_LEGAL",
+	# A positive add_cash: the one-time saving of a salary cut.
+	"pay_cut": "FIN_ONETIME_PAY_CUT",
+	"data_purchase": "FIN_ONETIME_DATA_PURCHASE",
 }
+
+# A card's marketing push (marketing_push) [WORKING]: for `weeks` the marketing line costs `burn_pct`
+# of the burn without marketing at the moment of the choice, and B2C audience growth runs at
+# 1 + growth_pct/100.
+const MARKETING_BURN_PCT_MIN := 5
+const MARKETING_BURN_PCT_MAX := 50
+const MARKETING_GROWTH_PCT_MIN := 5
+const MARKETING_GROWTH_PCT_MAX := 50
+const MARKETING_WEEKS_MIN := 2
+const MARKETING_WEEKS_MAX := 12
 
 # Runway thresholds (months), highest first. The Finance tab badge lights under the first; the
 # ticker announces each one once on the way down (SummarySystem) and re-arms it when runway
@@ -137,6 +151,34 @@ static func daily_tick() -> void:
 	# write site needs no ordering assumptions on slots 6-10.
 	GameState.append_cash_sample(new_cash)
 	GameState.set_cash(new_cash)
+	# A push ends on the tick that charged its last week.
+	if not GameState.marketing_push.is_empty() and int(GameState.marketing_push.until_day) <= GameState.day:
+		GameState.marketing_push.clear()
+		set_burn_category("marketing", 0)
+
+
+# --- A card's marketing push ---
+
+## What a marketing_push card lands at: {burn_pct, growth_pct, weeks} inside the bounds above.
+static func marketing_terms(burn_pct: int, growth_pct: int, weeks: int) -> Dictionary:
+	return {"burn_pct": clampi(burn_pct, MARKETING_BURN_PCT_MIN, MARKETING_BURN_PCT_MAX),
+		"growth_pct": clampi(growth_pct, MARKETING_GROWTH_PCT_MIN, MARKETING_GROWTH_PCT_MAX),
+		"weeks": clampi(weeks, MARKETING_WEEKS_MIN, MARKETING_WEEKS_MAX)}
+
+
+## Starts a push, replacing a running one. The marketing line is a fixed share of the burn without
+## marketing at this moment, so it scales with the company and does not chase later hires.
+static func start_marketing_push(burn_pct: int, growth_pct: int, weeks: int) -> Dictionary:
+	var t: Dictionary = marketing_terms(burn_pct, growth_pct, weeks)
+	var base: int = compute_total_burn() - int(burn_breakdown["marketing"])
+	GameState.marketing_push = {"growth_pct": t.growth_pct, "until_day": GameState.day + TimeModel.ticks(t.weeks)}
+	set_burn_category("marketing", roundi(float(base) * t.burn_pct / 100.0))
+	return t
+
+
+## B2C audience growth under a running push (SalesSystem); 1.0 without one.
+static func marketing_growth_mult() -> float:
+	return 1.0 + float(GameState.marketing_push.get("growth_pct", 0)) / 100.0
 
 
 # --- One-time cash movements (Write-Through: Finance owns cash) ---

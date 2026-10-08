@@ -35,8 +35,7 @@ static func raise_block_reason(emp: Character) -> String:
 	var left: int = raise_cooldown_left(emp)
 	if left == 0:
 		return ""
-	var wait: String = TranslationServer.translate(Fmt.count_key("HR_DURATION_WEEKS", left)).format({"n": left})
-	return TranslationServer.translate("HR_ERR_RAISE_COOLDOWN").format({"time": wait})
+	return TranslationServer.translate("HR_ERR_RAISE_COOLDOWN").format({"time": Fmt.weeks(left)})
 
 
 ## §9.2 bekleme süresinden KALAN hafta. 0 = zam verilebilir.

@@ -41,6 +41,11 @@ static func count_key(key: String, n: int) -> String:
 	return key + "_ONE" if n == 1 else key
 
 
+## A count of weeks: "3 hafta" / "3 weeks", "1 week".
+static func weeks(n: int) -> String:
+	return _t(count_key("HR_DURATION_WEEKS", n)).format({"n": n})
+
+
 # --- Calendar ---------------------------------------------------------------
 
 ## The localization key of a month's name, 1-based.
@@ -92,6 +97,11 @@ static func number(v: float, decimals: int = 1) -> String:
 ## Percent in the locale's shape: Turkish "%12,5", English "12.5%" (PCT_PATTERN).
 static func percent(v: float, decimals: int = 1) -> String:
 	return _t("PCT_PATTERN").format({"v": number(v, decimals)})
+
+
+## Whole percentage points with their sign outside the locale's shape: "-%20" / "-20%", "+%15" / "+15%".
+static func signed_percent(points: int) -> String:
+	return ("-" if points < 0 else "+") + percent(absi(points), 0)
 
 
 # --- Money ------------------------------------------------------------------

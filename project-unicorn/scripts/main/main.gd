@@ -1904,7 +1904,8 @@ func _audit_color(c: Color) -> String:
 #   kepenk — uyari'nin akışı, kasa eksiye düşüp kepenk sayacı bir hafta işleyene kadar: BAND 2
 #   signal — artida'nın akışı, faz 2'de ayları takvimle kapanarak dört ay artıda kapanana kadar: yatırımcı iştahı
 #            + artıda ay sayısı
-#   gider  — on saatlik mesai, MVP'nin bulut sunucusu ve servis maliyeti: gider dağılımının bütün kalemleri
+#   gider  — on saatlik mesai, MVP'nin bulut sunucusu ve servis maliyeti, bir kartın pazarlama kampanyası:
+#            gider dağılımının bütün kalemleri; son işlemlerde kartların hukuk, veri alımı ve maaş indirimi satırı
 func _run_finance_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -1951,6 +1952,11 @@ func _run_finance_shot(kind: String) -> void:
 			GameState.advance_day()
 			FinanceSystem.daily_tick()
 			EndingsSystem._tick_shutter()
+	if kind == "gider":   # LOC-DATA debug seed / id
+		EvEffects.run_played([{"verb": "marketing_push", "burn_pct": 25, "growth_pct": 15, "weeks": 8},
+			{"verb": "add_cash", "amount": -1800, "label": "legal"},
+			{"verb": "add_cash", "amount": -900, "label": "data_purchase"},
+			{"verb": "add_cash", "amount": 2400, "label": "pay_cut"}], {})
 	if kind == "signal":   # LOC-DATA debug seed / id
 		# Traction goes on through the real flow, a month closing as the calendar turns, until four months have
 		# closed in the black.
@@ -1992,14 +1998,16 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
 # gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
-# dosya-kurucu|kalabalik>:
+# dosya-kurucu|kalabalik|verim>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
 # list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
 # founder's file over the office; menu-kilit and dosya-kilit = the row menu and the file of a first
 # employee raised today (the Zam yap row locked, with its cooldown reason); ekip-saat = Kadro with
 # hours exceptions in Durum; atlas-secili = the search with a role and a level picked; gorevler-arge =
-# Görevler with someone researching.
+# Görevler with someone researching; verim = card pace rows on the low-morale designer and the founder:
+# the designer's Kadro tooltip (hr_shot_verim_ipucu), her file (hr_shot_verim_dosya), the founder's
+# file (hr_shot_verim_kurucu).
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -2040,6 +2048,11 @@ func _run_hr_shot(kind: String) -> void:
 			HRSearchSystem.start_search(HRConstants.ROLE_DESIGNER, HRConstants.LEVEL_SENIOR)
 			GameState.day += 1
 			HRSearchSystem.daily_tick()
+	if kind == "verim":   # LOC-DATA debug seed / id
+		HRSystem.add_productivity_mod("char_emp_shot_1", -20, 3, "team.demo_day", "EV_TEAM_DEMO_DAY_TITLE")
+		HRSystem.add_productivity_mod("char_emp_shot_1", 10, 1, "team.first_weeks", "EV_TEAM_FIRST_WEEKS_TITLE")
+		HRSystem.add_productivity_mod(CharacterRegistry.get_founder().id, -30, 2, "team.outside_offer",
+			"EV_TEAM_OUTSIDE_OFFER_TITLE")
 	await _mount_shot_shell()
 	_wire_modal_signals()   # cikar / zam open their modal through confirm_requested
 	if kind == "egitim-secili":   # LOC-DATA debug seed / id
@@ -2120,6 +2133,26 @@ func _run_hr_shot(kind: String) -> void:
 			EventBus.tab_changed.emit("")
 			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
 				{"character_id": CharacterRegistry.get_founder().id})
+		"verim":   # LOC-DATA debug seed / id
+			# The pointer rests on the designer's Görev cell, as a player's would.
+			var row: Control = tab._rows["char_emp_shot_1"]
+			var rest := InputEventMouseMotion.new()
+			rest.position = row.get_global_rect().position + Vector2(648, row.size.y / 2.0)
+			rest.global_position = rest.position
+			get_viewport().push_input(rest)
+			await get_tree().create_timer(1.2).timeout
+			_save_shot("hr_shot_verim_ipucu")
+			rest.position = Vector2.ZERO
+			rest.global_position = rest.position
+			get_viewport().push_input(rest)
+			tab._on_card_action("char_emp_shot_1", HRLedger.ACTION_DOSSIER, null)
+			await get_tree().create_timer(0.5).timeout
+			_save_shot("hr_shot_verim_dosya")
+			EventBus.tab_changed.emit("")
+			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
+				{"character_id": CharacterRegistry.get_founder().id})
+			await _finish_shot("hr_shot_verim_kurucu", 0.5)
+			return
 		"kalabalik":   # LOC-DATA debug seed / id
 			tab._toggle_group(HRConstants.GROUP_DEVELOPMENT)
 			await get_tree().process_frame

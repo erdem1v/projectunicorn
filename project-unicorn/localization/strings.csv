@@ -3186,3 +3186,18 @@ PIYASA_ABOUT_ELEPHANTA,İçine attığınız her şeyi her cihazda hatırlayan n
 PIYASA_ABOUT_SURMISE,"Ekiplerin birlikte düzenlediği tek sayfada notlar ve görev listeleri. Küçük şirketlere koltuk başına satar, ağızdan ağıza büyür.",Notes and task lists on one page that teams edit together. It sells to small companies by the seat and grows by word of mouth.
 PIYASA_ABOUT_BITWALTZ,Kısa video akışı ve onu besleyen telefon kurgusu; ürün öneri motorunun kendisi. Seyircisinin çoğu yirmi beş yaşın altında.,A short video feed and the phone editor that feeds it; the recommendation engine is the product. Most of its audience is under twenty-five.
 PIYASA_ABOUT_PIVOTREEL,İçerik üreticilerine abonelikle satılan telefon video kurgusu; parayı şablonlar ve müzik paketleri kazandırır. Küçük ve kârlı kaldı.,A phone video editor sold to creators by subscription; templates and music packs make the money. It has stayed small and in profit.
+HR_PACE,Verim {pct},Pace {pct}
+HR_PACE_MORALE_HIGH,Moral yüksek {pct},High morale {pct}
+HR_PACE_MORALE_LOW,Moral düşük {pct},Low morale {pct}
+HR_PACE_EVENT,{title} {pct} · {weeks},{title} {pct} · {weeks}
+HR_DOSSIER_PACE,Verim,Pace
+EFFECT_PACE,{name} verimi {pct} · {weeks},{name} pace {pct} · {weeks}
+EFFECT_PACE_FOUNDER,Senin verimin {pct} · {weeks},Your pace {pct} · {weeks}
+EFFECT_PACE_TEAM,Ekibin verimi {pct} · {weeks},Team pace {pct} · {weeks}
+EFFECT_INVESTOR_STRAIN,{investor} ile ilişki {v} · {n} haftada geçer,{investor}: relationship {v} · fades over {n} weeks
+EFFECT_MARKETING_BURN,Pazarlama: burn {pct} · {weeks},Marketing: burn {pct} · {weeks}
+EFFECT_MARKETING_GROWTH,Kitle büyümesi {pct} · {weeks},Audience growth {pct} · {weeks}
+VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some friction between you.
+FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
+FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut
+FIN_ONETIME_DATA_PURCHASE,Veri alımı,Data purchase

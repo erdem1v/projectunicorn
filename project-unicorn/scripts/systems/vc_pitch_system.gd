@@ -200,6 +200,9 @@ static func _conviction_series_a(vc_id: String) -> Dictionary:
 	var moved: int = int(_vc(vc_id).get("move_penalty", 0))
 	if moved > 0:
 		why.append({"d": -moved, "l": _t("VC_WHY_MOVED")})
+	var strained: int = strain(vc_id)
+	if strained > 0:
+		why.append({"d": -strained, "l": _t("VC_WHY_STRAIN")})
 
 	return _finish_conviction(PitchConstants.CONV_BASE, why)
 
@@ -244,8 +247,38 @@ static func _conviction_seed(vc_id: String) -> Dictionary:
 	# same size it is at Series A.
 	if GameState.unmanaged_major_scandal:
 		why.append({"d": SeedConstants.CONV_SCANDAL_PENALTY, "l": _t("VC_WHY_SCANDAL")})
+	var strained: int = strain(vc_id)
+	if strained > 0:
+		why.append({"d": -strained, "l": _t("VC_WHY_STRAIN")})
 
 	return _finish_conviction(SeedConstants.CONV_BASE, why)
+
+
+## What an investor_strain card lands at: {amount, weeks} inside PitchConstants' bounds.
+static func strain_terms(amount: int, weeks: int) -> Dictionary:
+	return {"amount": clampi(amount, PitchConstants.STRAIN_MIN, PitchConstants.STRAIN_MAX),
+		"weeks": clampi(weeks, PitchConstants.STRAIN_WEEKS_MIN, PitchConstants.STRAIN_WEEKS_MAX)}
+
+
+## A card's strain with this fund. A second one does not add up: the larger of today's strain and
+## the new amount fades from today to the later of the two ends.
+static func add_strain(vc_id: String, amount: int, weeks: int) -> Dictionary:
+	var t: Dictionary = strain_terms(amount, weeks)
+	var st: Dictionary = _vc(vc_id)
+	st["strain"] = maxi(strain(vc_id), t.amount)
+	st["strain_until"] = maxi(int(st.get("strain_until", 0)), GameState.day + TimeModel.ticks(t.weeks))
+	st["strain_from"] = GameState.day
+	return t
+
+
+## The strain's conviction points today: linear from its start to zero at its end.
+static func strain(vc_id: String) -> int:
+	var st: Dictionary = GameState.vc_states.get(vc_id, {})
+	var until: int = int(st.get("strain_until", 0))
+	if GameState.day >= until:
+		return 0
+	var from: int = int(st["strain_from"])
+	return roundi(float(st["strain"]) * float(until - GameState.day) / float(until - from))
 
 
 ## The shared tail: the value (base + every reason's delta, clamped) and the top-3 reasons by
