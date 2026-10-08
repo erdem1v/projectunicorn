@@ -249,6 +249,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
 		"event_instance_per_subject":         fail = _case_event_instance_per_subject()
 		"scope_given_subject_gone_refused":   fail = _case_scope_given_subject_gone_refused()
+		"event_scope_where_filters_pool":     fail = _case_event_scope_where_filters_pool()
 		# --- Driver-run fixes, 2026-08-17. Each one FAILS against the pre-fix engine;
 		#     each was found by a 90-day driver run (--run-log), not by reading.
 		"promise_no_duplicate_word":          fail = _case_promise_no_duplicate_word()
@@ -5588,6 +5589,31 @@ static func _case_sales_weekly_report_is_a_message() -> String:
 	if not EventGate.request("team.resignation", {"employee": e.id}) \
 			or EventGate.active_id() != "team.resignation":
 		return "a card raised after the report did not show (active '%s')" % EventGate.active_id()
+	return ""
+
+
+## A slot's `where` runs the selector over only the candidates it holds for; a slot without one
+## binds exactly as before, a `where` nobody meets leaves the slot unfilled, and a given account
+## that fails it refuses the card.
+## FALSIFICATION: drop the `where` filter in EvScope.resolve → the filtered slot binds the $3,000
+## account; drop `_passes_where` from the given check → the $3,000 account binds as given.
+static func _case_event_scope_where_filters_pool() -> String:
+	_seed_b2b(500)
+	var big: Customer = _add_risk_b2b("big", 3000)
+	_add_risk_b2b("small", 300)
+	var slot := {"type": "customer", "select": "largest"}
+	var under := {"entity_seam": "musteri.mrr", "scope": "customer", "op": "<", "value": 1000}
+	var plain: String = EvScope.resolve({"customer": slot}).context.customer.id
+	if plain != big.id:
+		return "without where, largest bound %s, want %s" % [plain, big.id]
+	var filtered: Dictionary = EvScope.resolve({"customer": slot.merged({"where": under})})
+	var mrr: int = CustomerRegistry.get_customer(filtered.context.customer.id).mrr if filtered.ok else -1
+	if mrr != 500:
+		return "largest under $1,000 bound an account of $%d, want the $500 one" % mrr
+	if EvScope.resolve({"customer": slot.merged({"where": under.merged({"value": 100}, true)})}).ok:
+		return "a where nobody meets still filled the slot"
+	if EvScope.resolve({"customer": slot.merged({"where": under})}, {"customer": big.id}).ok:
+		return "a given account that fails the where still bound"
 	return ""
 
 

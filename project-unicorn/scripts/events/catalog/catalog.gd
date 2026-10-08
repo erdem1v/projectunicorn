@@ -130,6 +130,9 @@ static func _coerce_conditions(card: Dictionary) -> void:
 	for opt in (card["options"] as Array):
 		if typeof(opt) == TYPE_DICTIONARY and typeof((opt as Dictionary).get("requires", null)) == TYPE_DICTIONARY:
 			trees.append(opt["requires"])
+	for spec in (card.get("scope", {}) as Dictionary).values():
+		if typeof((spec as Dictionary).get("where", null)) == TYPE_DICTIONARY:
+			trees.append(spec["where"])
 
 	for tree in trees:
 		for leaf in EvCondition.leaves(tree):

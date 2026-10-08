@@ -113,6 +113,7 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 
 	for tree in _trees_of(card):
 		_lint_condition(where, tree as Dictionary)
+	_lint_where(where, card)
 
 	# §17.7 paper ----------------------------------------------------------
 	var is_paper: bool = String(card["class"]) == "paper"
@@ -515,6 +516,28 @@ static func _lint_condition(where: String, tree: Dictionary) -> void:
 		if unset_flags.has(f):
 			_add(SEVERITY_ERROR, "17.2", where,
 				"unreachable: the tree requires flag '%s' to be both set and unset" % f)
+
+
+## A slot's `where` filters the slot's candidates one at a time, so every leaf reads that
+## candidate: an entity_seam naming the slot, with a seam of the slot's type.
+static func _lint_where(path: String, card: Dictionary) -> void:
+	var slots: Dictionary = card.get("scope", {})
+	for slot in slots:
+		var spec: Dictionary = slots[slot]
+		if not spec.has("where"):
+			continue
+		if typeof(spec["where"]) != TYPE_DICTIONARY or (spec["where"] as Dictionary).is_empty():
+			_add(SEVERITY_ERROR, "17.1", path, "slot '%s': where is not a condition tree" % slot)
+			continue
+		_lint_condition(path, spec["where"])
+		for leaf in EvCondition.leaves(spec["where"]):
+			var d: Dictionary = leaf
+			var seam: String = String(d.get("entity_seam", ""))
+			# An unknown seam is _lint_condition's finding; its namespace would only say it twice.
+			var other_type: bool = EvSeams.has(seam) and EvScope._type_for_seam(seam) != String(spec.get("type", ""))
+			if seam == "" or String(d.get("scope", "")) != slot or other_type:
+				_add(SEVERITY_ERROR, "17.1", path,
+					"slot '%s': a where leaf must be an entity_seam of this slot and its type, not %s" % [slot, str(d)])
 
 
 # --- §17.1 / §15.2 signals -------------------------------------------------

@@ -601,17 +601,32 @@ func _run_b2b_shot(kind: String) -> void:
 	await _finish_shot("b2b_shot_%s" % kind, 0.35)
 
 
-## --event-shot=<card id>: any catalogued card, `version_scope: fixture` ones included, in the
-## reading pane's preview (its options drawn, not taken).
-func _run_event_shot(event_id: String) -> void:
+## --event-shot=<card id>[:<slot>=<entity id>...]: any catalogued card, `version_scope: fixture` ones
+## included, in the reading pane's preview (its options drawn, not taken). A given slot binds that
+## entity instead of running its selector (the shot seed has no seed lead, for one) and names the
+## PNG; a given slot that cannot bind fails the shot.
+func _run_event_shot(spec: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
+	var parts: PackedStringArray = spec.split(":")
+	var event_id: String = parts[0]
 	if not EventGate.is_catalogued(event_id):
 		_shot_fail("[EventShot] no card with id: %s" % event_id)
 		return
-	_shot_pane(event_id, EventGate.bind_scope(event_id))
+	var given: Dictionary = {}
+	for pair in parts.slice(1):
+		if not pair.contains("="):
+			_shot_fail("[EventShot] '%s' is not <slot>=<entity id>" % pair)
+			return
+		given[pair.get_slice("=", 0)] = pair.get_slice("=", 1)
+	var ctx: Dictionary = EventGate.bind_scope(event_id, given)
+	for slot in given:
+		if String(ctx.get(slot, {}).get("id", "")) != given[slot]:
+			_shot_fail("[EventShot] %s: slot '%s' did not bind '%s'" % [event_id, slot, given[slot]])
+			return
+	_shot_pane(event_id, ctx)
 	await get_tree().process_frame
-	await _finish_shot("event_shot_%s" % event_id, 0.35)
+	await _finish_shot("event_shot_%s" % spec.replace(":", "_"), 0.35)
 
 
 ## --inbox-shot=<state>: the Olaylar inbox over the theme seed (week 14, İş hanı) in the mockups'
@@ -855,7 +870,7 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 	var pane: ScrollContainer = MAIL_PANE.new()
 	back.add_child(pane)
 	_on_shot_layer(back)
-	pane.populate(INBOX.card_item("preview", card_id, ctx, {}, GameState.day), "preview")
+	pane.populate(INBOX.card_item("preview", card_id, ctx, {}, GameState.day).merged({"kind": "active"}), "preview")
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|untyped|morning|evening>. `desk` puts a rep

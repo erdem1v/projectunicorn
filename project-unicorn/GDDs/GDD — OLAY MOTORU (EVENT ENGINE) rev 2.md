@@ -273,14 +273,16 @@ Bu kural, iki çalışan arasındaki çatışma gibi çoklu-özne kartlarını b
 
 ```
   employee   lowest_morale · newest_hire
+             most_senior    en yüksek seviye, eşitlikte en eski işe alım
              account_rep    bağlı `customer` slotundaki hesabın temsilcisi
              support_lead   destek sıralamasının ilk temsilcisi
   customer   at_risk · escalated · expansion_ready · open_request
+             largest        en yüksek MRR · smallest   en düşük MRR
   investor   expiring_sheet (süresi en az kalan teklif) · decision_sheet (karar
              günü gelmiş teklif) · seed_lead
 ```
 
-`founder`, `prospect` ve `rival` seçici almaz. Koşul bağlanan tek özneye karşı sınanır; hangi özneye sorulacağını seçici söyler (gerekçe §27.4).
+`founder`, `prospect` ve `rival` seçici almaz. Koşul bağlanan tek özneye karşı sınanır (slot süzgeci `where`: §27.16); hangi özneye sorulacağını seçici söyler (gerekçe §27.4).
 
 **Seçici önceki slotları görür (`bound`).** Önce zorunlu slotlar, sonra opsiyoneller, her grup bildirim sırasıyla çözülür; her seçici o ana kadar bağlanmış slotları okur. `account_rep` böyle çalışır: temsilciyi kartın zaten bağladığı hesaptan bulur.
 
@@ -2178,4 +2180,23 @@ ile 12 hafta. `on_expire`'da motor reddeder (`EvEffects._is_negative`) ve lint �
 
 **5. Küçük parçalar.** `hr.job` varlık seam'i: kişinin ilk işi (`build | test | support | accounts | sales |
 research`, işsizse boş). `add_cash` etiketleri `legal`, `pay_cut` (pozitif tutarla tek seferlik tasarruf) ve
-`data_purchase` (`FinanceSystem.ONE_TIME_LABELS`).
+`data_purchase` (`FinanceSystem.ONE_TIME_LABELS`). Customer seçicisi `smallest`: en düşük MRR'lı etkin hesap
+(eşitlikte kimlik).
+
+### §27.16 · Slotun aday süzgeci `where`
+
+*Belge ne diyordu.* §4.3: seçici bir özne seçer, koşul o tek özneye karşı sınanır.
+
+*Ne yapıldı.* Slot isteğe bağlı `where` taşır: kart koşulunun dilinde, yaprakları yalnız bu slotun `entity_seam`'i
+olan bir ağaç (`{"entity_seam": "hr.job", "scope": "employee", "op": "==", "value": "build"}`). `EvScope.resolve`
+seçiciyi yalnız ağacın tuttuğu adaylar üstünde koşar: her aday geçici bağlamayla `EvCondition.eval`'den geçer,
+tutmayan seçiciye bağlanmış gibi görünmez. Verilen slot (sinyal, zamanlama, ark bağlamı, gösterimdeki yeniden
+doğrulama) süzülmez ama sınanır: ağacı tutmayan verilen özne, yanlış tipteki özne gibi kartı reddeder. Aynı gruptaki
+(zorunlu ya da opsiyonel) slotlar bildirim sırasıyla bağlanır; önce bildirilen süzgeçsiz slot, sonraki aynı tipteki
+`where` slotunun istediği tek adayı alabilir. `where`'i olmayan slot önceki gibi bağlanır. `EvCatalog` ağacın
+değerlerini yüklemede seam tipine çevirir, bilinmeyen seam'i yükleme hatasına yazar. Lint §17.1: `where` boş olmayan
+bir ağaçtır, her yaprağı bu slotu adlandıran ve slotun tipine ait bir `entity_seam`'dir, seam'leri kayıtlıdır.
+
+*Neden.* Seçici ile koşul ayrıyken "en kıdemli kişi, eğer yapım ekibindeyse" türü kart, yapım ekibinde biri varken
+bile en kıdemli kişi orada olmadığı için hiç ateşlenmez; küçük hesabı anlatan kart en büyük ya da en küçük hesabı
+bağlayıp bandın dışında kalır. Süzgeç kartın anlattığı özneyi bağlar.

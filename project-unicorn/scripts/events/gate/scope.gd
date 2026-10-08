@@ -40,6 +40,12 @@ const TYPES := [TYPE_EMPLOYEE, TYPE_FOUNDER, TYPE_CUSTOMER, TYPE_PROSPECT, TYPE_
 ## selector. A signal can drain after its entity is gone, and the selector would then put the
 ## card on a different entity.
 ##
+## A slot's optional `where` is a condition tree over that slot alone: the selector chooses only
+## among the candidates it holds for, so a card about "a builder" binds a builder instead of
+## binding the most senior person and then failing its condition on them. A given subject that
+## fails it is refused like one of the wrong type. Slots of one group bind in declaration order,
+## so an unfiltered slot declared first can take the only candidate a later `where` wanted.
+##
 ## REQUIRED SLOTS ARE RESOLVED FIRST. With two slots of one type and one candidate, declaration
 ## order could hand the only candidate to an optional slot and then fail the required one.
 static func resolve(slots: Dictionary, given: Dictionary = {}) -> Dictionary:
@@ -60,22 +66,35 @@ static func resolve(slots: Dictionary, given: Dictionary = {}) -> Dictionary:
 			chosen = String((g as Dictionary).get("id", "")) \
 				if typeof(g) == TYPE_DICTIONARY else String(g)
 			# Type-checked too: binding the wrong kind would make the card lie about its subject.
-			if not _exists(chosen, type_id) or used.has(chosen):
+			if not _exists(chosen, type_id) or used.has(chosen) or not _passes_where(spec, slot_name, chosen):
 				return {"ok": false, "context": context,
-					"reason": "slot '%s': the given %s '%s' is not a live %s or is already bound"
+					"reason": "slot '%s': the given %s '%s' is not a live %s, is already bound or fails its where"
 						% [slot_name, type_id, chosen, type_id]}
 		else:
-			chosen = _select(type_id, String(spec.get("select", "")), used, context)
+			var hidden: Dictionary = used
+			if spec.has("where"):
+				hidden = used.duplicate()
+				for candidate in _ids(type_id):
+					if not _passes_where(spec, slot_name, candidate):
+						hidden[candidate] = slot_name
+			chosen = _select(type_id, String(spec.get("select", "")), hidden, context)
 			if chosen == "":
 				if bool(spec.get("required", true)):
 					return {"ok": false, "context": context,
-						"reason": "slot '%s' could not be filled" % slot_name}
+						"reason": "slot '%s' could not be filled%s" % [slot_name, " (where)" if spec.has("where") else ""]}
 				continue
 
 		used[chosen] = slot_name
 		context[slot_name] = {"type": type_id, "id": chosen, "bound_day": GameState.day}
 
 	return {"ok": true, "context": context, "reason": ""}
+
+
+## Does the entity meet the slot's `where`? A slot without one admits every candidate.
+static func _passes_where(spec: Dictionary, slot_name: String, entity_id: String) -> bool:
+	if not spec.has("where"):
+		return true
+	return EvCondition.eval(spec["where"], {slot_name: {"type": String(spec["type"]), "id": entity_id}})
 
 
 static func _required_first(slots: Dictionary) -> Array:
@@ -138,14 +157,21 @@ static func _type_for_seam(seam_name: String) -> String:
 # --- Counting (the entity_count leaf) --------------------------------------
 
 static func count_of(type_id: String) -> int:
+	return _ids(type_id).size()
+
+
+## The live ids of a type: the population a selector and a slot's `where` choose from.
+static func _ids(type_id: String) -> Array:
 	match type_id:
-		TYPE_EMPLOYEE: return CharacterRegistry.get_employees().size()
-		TYPE_FOUNDER:  return 1 if CharacterRegistry.get_founder() != null else 0
-		TYPE_CUSTOMER: return CustomerRegistry.get_active().size()
-		TYPE_PROSPECT: return ProspectRegistry.count()
-		TYPE_RIVAL:    return RivalRegistry.get_all().size()
-		TYPE_INVESTOR: return InvestorRegistry.get_active().size()
-	return 0
+		TYPE_EMPLOYEE: return CharacterRegistry.get_employees().map(func(c): return c.id)
+		TYPE_FOUNDER:
+			var f: Character = CharacterRegistry.get_founder()
+			return [f.id] if f != null else []
+		TYPE_CUSTOMER: return CustomerRegistry.get_active().map(func(c): return c.id)
+		TYPE_PROSPECT: return ProspectRegistry.get_all().map(func(o): return o.id)
+		TYPE_RIVAL:    return RivalRegistry.get_all().map(func(o): return o.id)
+		TYPE_INVESTOR: return InvestorRegistry.get_active().map(func(inv): return String(inv.get("id", "")))
+	return []
 
 
 static func _exists(entity_id: String, type_id: String) -> bool:
@@ -181,14 +207,9 @@ static func _exists(entity_id: String, type_id: String) -> bool:
 static func _select(type_id: String, mode: String, used: Dictionary, bound: Dictionary) -> String:
 	match type_id:
 		TYPE_EMPLOYEE: return _select_employee(mode, used, bound)
-		TYPE_FOUNDER:
-			var f: Character = CharacterRegistry.get_founder()
-			return f.id if f != null and not used.has(f.id) else ""
 		TYPE_CUSTOMER: return _select_customer(mode, used)
-		TYPE_PROSPECT: return _first_free(ProspectRegistry.get_all().map(func(o): return o.id), used)
-		TYPE_RIVAL:    return _first_free(RivalRegistry.get_all().map(func(o): return o.id), used)
 		TYPE_INVESTOR: return _select_investor(mode, used)
-	return ""
+	return _first_free(_ids(type_id), used)
 
 
 static func _select_employee(mode: String, used: Dictionary, bound: Dictionary) -> String:
@@ -246,8 +267,7 @@ static func _select_investor(mode: String, used: Dictionary) -> String:
 			var sheet: TermSheet = GameState.seed_sheet
 			var lead: String = String(sheet.vc_id) if sheet != null else String(GameState.seed_lead)
 			return "" if lead == "" or used.has(lead) else lead
-	return _first_free(InvestorRegistry.get_active().map(
-		func(inv): return String((inv as Dictionary).get("id", ""))), used)
+	return _first_free(_ids(TYPE_INVESTOR), used)
 
 
 static func _select_customer(mode: String, used: Dictionary) -> String:
@@ -269,6 +289,8 @@ static func _select_customer(mode: String, used: Dictionary) -> String:
 				func(c): return c.support_request_since_day)
 		"largest":
 			return _first_by(pool, func(c): return -c.mrr)
+		"smallest":
+			return _first_by(pool, func(c): return c.mrr)
 	return _first_by(pool, func(c): return c.id)
 
 

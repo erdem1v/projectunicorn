@@ -185,9 +185,10 @@ static func render(event_id: String, context: Dictionary = {}, names: Dictionary
 	return EvPresenter.build_view(event_id, context, names)
 
 
-## Bind a card's scope slots against the world as it is. Empty when a required slot cannot fill.
-static func bind_scope(event_id: String) -> Dictionary:
-	var result: Dictionary = EvScope.resolve(EvCatalog.card(event_id).get("scope", {}))
+## Bind a card's scope slots against the world as it is; a `given` slot binds that id instead of
+## running its selector. Empty when a required slot cannot fill or a given id does not bind.
+static func bind_scope(event_id: String, given: Dictionary = {}) -> Dictionary:
+	var result: Dictionary = EvScope.resolve(EvCatalog.card(event_id).get("scope", {}), given)
 	return result.get("context", {}) if bool(result.get("ok", false)) else {}
 
 
