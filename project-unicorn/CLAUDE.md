@@ -200,7 +200,12 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
   founders|nav|crown|cast` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare; `founders` portre ile
   bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi;
-  `city:<saat>:crown` kulenin tacı). Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff`,
+  `city:<saat>:crown` kulenin tacı). `--office-shot`'a `--pan=<adım;…>` eklenirse koşu yalnız 3B görüntüyü kamera
+  ofsetlerinde kaydeder ve `PAN|` satırı basar (gölge kutusu ve ilk kareye fark; adım `dx,dy[,zm]`,
+  `sweep:<baş>:<son>:<adım>:<x|y>:<zm>`, `fit[:zm]` ya da `drag:<dx>:<dy>[:olay]`); `--pan-set=<küme>|<küme>` yalıtım
+  düğmeleri (ilk küme taban, `SETDIFF|`), `--pan-gpu=<A>/<B>[;…]` alt görüntünün GPU ve CPU süresi (`GPU|`, `MEM|`);
+  değerlerdeki `;` ve `|` tırnaklanır, düğme listesi `scripts/debug/office_pan_probe.gd` başındadır.
+  Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff`,
   VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc>`; term sheet masası kabuğun içinde
   `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug fikstürüyle

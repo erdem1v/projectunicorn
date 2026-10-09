@@ -27,6 +27,7 @@ const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
 const SAVED_GLYPH := preload("res://assets/icons/util/check.svg")
 const NOT_SAVED_GLYPH := preload("res://assets/icons/util/save.svg")
 const LOADED_GLYPH := preload("res://assets/icons/util/load.svg")
+const OFFICE_PAN := preload("res://scripts/debug/office_pan_probe.gd")
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
 const EVENT_CLOCK_HOLD := "event"                 # TimeManager hold reason while a decision waits
 const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason for the founder's trip
@@ -1012,6 +1013,8 @@ func _seed_theme_surface() -> void:
 # and the founder seated, sitting and looking as at a meeting's start; cast (meet only) = the founder
 # walks in from the lift (a frame every CAST_WALK_EVERY, _cast_NN), the table at rest (_NN_rest),
 # then close up the lead speaking (_NN_speak) and each gesture at its middle (_NN_<gesture>).
+# With --pan / --pan-gpu (OFFICE_PAN) the shot is handed over after the extra: the camera moves by pixel
+# offsets, the 3D image alone is saved and measured, and the process ends there.
 func _run_office_shot(spec: String) -> void:
 	var parts: PackedStringArray = spec.split(":")
 	var office_id: String = parts[0]
@@ -1086,6 +1089,10 @@ func _run_office_shot(spec: String) -> void:
 				lighting.set_station_state(desk, true)
 		_:
 			EventBus.tab_changed.emit(extra)
+	if _flag_value("--pan=") != "" or _flag_value("--pan-gpu=") != "":
+		await OFFICE_PAN.new(_flag_value).run(view, "office_pan_%s_%02d%s" % [office_id, hour, "_" + extra if extra != "" else ""])
+		get_tree().quit()
+		return
 	await get_tree().create_timer(1.2).timeout
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	var start: int = Time.get_ticks_usec()
