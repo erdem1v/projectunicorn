@@ -7,9 +7,10 @@ extends RefCounted
 #                     sweep:<from>:<to>:<step>:<x|y>:<zm>  one step per value, only the first and last save
 #                     fit[:zm]    drag:<dx>:<dy>[:<events>]  the same offset as synthetic mouse events
 #   --pan-set=<set>|<set>...  knob lists "k=v,k=v": set 0 is the base, every other set adds to it
-#   --pan-gpu=<A>/<B>[;<C>/<D>]  GPU and CPU time of the sub-viewport under two knob lists, ABAB
+#   --pan-gpu=<A>/<B>[;<C>/<D>]  GPU and CPU time of the sub-viewport under two knob lists, ABAB, at the opening pose
 # Knobs: the keys of PROPS, tf=1 (TopFill casts the shadow, not the Sun), vig, gk (glow level factor), lamps=0,
-# atlas, soft (0 hard .. 5), min (minutes past midnight). resid_* is -1 for a zoom group's first frame and fit steps.
+# topk (TopFill energy factor), atlas, soft (0 hard .. 5), min (minutes past midnight). resid_* is -1 for a zoom
+# group's first frame and fit steps.
 
 const SHADOWS := "rendering/lights_and_shadows/directional_shadow/"
 const BIG := 8   # n8 counts the pixels where a channel differs by more than this (0..255)
@@ -22,7 +23,7 @@ const PROPS := {
 	"ink": ["World/InkPass", "visible"], "people": ["World/People", "visible"], "quads": ["World/Glows", "visible"],
 	"fxaa": [".", "screen_space_aa"], "msaa": [".", "msaa_3d"], "glow": ["env", "glow_enabled"],
 	"hs": ["env", "glow_hdr_scale"], "gt": ["env", "glow_hdr_threshold"], "gb": ["env", "glow_blend_mode"],
-	"ssao": ["env", "ssao_enabled"],
+	"ssao": ["env", "ssao_enabled"], "lowest": ["World/Camera3D", "_lowest"],
 }
 
 var _flag: Callable
@@ -32,6 +33,7 @@ var _cam: OfficeCamera
 var _sub: SubViewport
 var _world: Node
 var _sun: DirectionalLight3D
+var _top: DirectionalLight3D
 var _env: Environment
 var _ink: ShaderMaterial
 var _stem: String
@@ -56,6 +58,7 @@ func run(view: Control, stem: String) -> void:
 	_sub = view.get_node("Viewport3D/SubViewport")
 	_world = _sub.get_node("World")
 	_sun = _world.get_node("Sun")
+	_top = _world.get_node("TopFill")
 	_env = (_world.get_node("WorldEnvironment") as WorldEnvironment).environment
 	_ink = (_world.get_node("InkPass") as MeshInstance3D).material_override as ShaderMaterial
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
@@ -79,6 +82,8 @@ func run(view: Control, stem: String) -> void:
 	var gpu_spec: String = _flag.call("--pan-gpu=")
 	if gpu_spec != "":
 		await _gpu(gpu_spec)
+	# A frame_pre_draw handler still connected when the engine shuts down crashes it.
+	_apply("")
 	print("PANDONE|sets=%d|steps=%d|ms=%d" % [sets.size(), steps.size(), Time.get_ticks_msec() - t0])
 
 
@@ -222,11 +227,10 @@ func _knob(key: String, v: float) -> void:
 	match key:
 		"tf":
 			# The Sun's shadow settings go with it: the fill light's own are four cascade splits.
-			var top := _world.get_node("TopFill")
 			for p in ["shadow_blur", "shadow_bias", "shadow_normal_bias", "directional_shadow_fade_start"]:
-				_put(top, p, _sun.get(p))
-			_put(top, "directional_shadow_mode", 0)
-			_put(top, "shadow_enabled", true)
+				_put(_top, p, _sun.get(p))
+			_put(_top, "directional_shadow_mode", 0)
+			_put(_top, "shadow_enabled", true)
 			_put(_sun, "shadow_enabled", false)
 		"vig":
 			# Null puts the shader's own default back.
@@ -237,6 +241,11 @@ func _knob(key: String, v: float) -> void:
 			for level in [2, 3, 4]:
 				var p := "glow_levels/%d" % level
 				_put(_env, p, float(_env.get(p)) * v)
+		"topk":
+			# OfficeLighting writes the fill's energy every frame: scale it after that, before the draw.
+			var scale := func() -> void: _top.light_energy *= v
+			RenderingServer.frame_pre_draw.connect(scale)
+			_undo.append(func() -> void: RenderingServer.frame_pre_draw.disconnect(scale))
 		"lamps":
 			# OfficeLighting switches these lights every frame, but never their energy.
 			if v == 0.0:
@@ -271,8 +280,7 @@ func _box(vp: Vector2) -> Dictionary:
 	var center: Vector3 = pts.reduce(func(a: Vector3, b: Vector3) -> Vector3: return a + b) / 8.0
 	var r: float = pts.map(func(p: Vector3) -> float: return center.distance_to(p)).max() * _n / (_n - 2.0)
 	var unit := r * 4.0 / _n
-	var top: DirectionalLight3D = _world.get_node("TopFill")
-	var basis := (top if top.shadow_enabled else _sun).global_transform.basis.orthonormalized()
+	var basis := (_top if _top.shadow_enabled else _sun).global_transform.basis.orthonormalized()
 	var w: Array[int] = []
 	var e: Array[int] = []
 	for axis: Vector3 in [basis.x, basis.y]:
@@ -294,6 +302,8 @@ func _gpu(spec: String) -> void:
 		for b in 8:
 			var a := b % 2
 			_apply(arms[a])
+			# Posing re-places the camera, which re-reads lowest; every arm measures at the opening pose.
+			_pose(0.0, 0.0, 1.0)
 			await _tree.create_timer(0.5).timeout
 			await _settle(10)
 			for f in 120:
