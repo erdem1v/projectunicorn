@@ -1,0 +1,43 @@
+{
+	"packs": {
+		"fur": {"dir": "kenney-furniture-kit/Models/GLTF format", "ext": "glb", "unit": 2.0, "row": "kenney"},
+		"bld": {"dir": "kenney-building-kit/Models/GLB format", "ext": "glb", "unit": 1.0, "row": "kenney"},
+		"kay": {"dir": "kaykit-furniture-bits/KayKit-Furniture-Bits-1.0-96d5930a8dbdb363409bbc2d3341718b00e17c9c/addons/kaykit_furniture_bits/Assets/gltf", "ext": "gltf", "unit": 0.7, "row": "kaykit"},
+		"qua": {"dir": "quaternius-polypizza", "ext": "glb", "unit": 1.0, "row": "quaternius"}
+	},
+	"inline": [
+		{"ops": [
+			{"op": "floor", "x": [-1.6, 13.4], "z": [-2.2, 2.2], "y": 0.005, "mat": "oakF"},
+			{"op": "model", "model": "fur/desk", "at": [0, 0, 0]},
+			{"op": "model", "model": "fur/chairDesk", "at": [2.4, 0, 0]},
+			{"op": "model", "model": "fur/loungeSofa", "at": [4.8, 0, 0]},
+			{"op": "model", "model": "fur/bookcaseClosedWide", "at": [7.4, 0, 0]},
+			{"op": "model", "model": "bld/door-rotate-square-a", "at": [9.6, 0, 0], "front": -1.5708},
+
+			{"op": "floor", "x": [-1.6, 13.4], "z": [2.8, 7.2], "y": 0.005, "mat": "carpet"},
+			{"op": "model", "model": "kay/table_medium", "at": [0, 0, 5]},
+			{"op": "model", "model": "kay/chair_A", "at": [2.4, 0, 5]},
+			{"op": "model", "model": "kay/couch", "at": [4.8, 0, 5]},
+			{"op": "model", "model": "kay/cabinet_medium_decorated", "at": [7.4, 0, 5]},
+			{"op": "model", "model": "kay/lamp_standing", "at": [9.6, 0, 5]},
+
+			{"op": "floor", "x": [-1.6, 13.4], "z": [7.8, 12.2], "y": 0.005, "mat": "tile"},
+			{"op": "model", "model": "qua/V86Go2rlnq", "at": [0, 0, 10], "fit": {"h": 0.75}},
+			{"op": "model", "model": "qua/UfKvrZBK6C", "at": [2.4, 0, 10], "fit": {"h": 1.1}},
+			{"op": "model", "model": "qua/vuo7KBehok", "at": [4.8, 0, 10], "fit": {"h": 0.85}},
+			{"op": "model", "model": "qua/tACDGJ4CGW", "at": [7.4, 0, 10], "fit": {"h": 1.9}},
+			{"op": "model", "model": "qua/eBQtooeh43", "at": [9.6, 0, 10], "fit": {"h": 1.75}}
+		]}
+	],
+	"cast": [
+		{"look": 1, "pose": "stand", "pos": [12.0, 0, 0], "face": 0.7854, "act": "idle"},
+		{"look": 0, "pose": "stand", "pos": [12.0, 0, 5], "face": 0.7854, "act": "idle"},
+		{"look": 2, "pose": "stand", "pos": [12.0, 0, 10], "face": 0.7854, "act": "idle"}
+	],
+	"cameras": {
+		"kenney": [[5.8, 0.9, 0.0], 1.4],
+		"kaykit": [[5.8, 0.9, 5.0], 1.4],
+		"quaternius": [[5.8, 0.9, 10.0], 1.4],
+		"hepsi": [[5.9, 0.9, 5.0], 1.0]
+	}
+}
