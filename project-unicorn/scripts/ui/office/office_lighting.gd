@@ -228,6 +228,9 @@ func apply(t: float) -> void:
 	_energy("facade", (1.0 - day_k) * 1.25)
 	_energy("crown", maxf(crown_glow * 1.7, (1.0 - day_k) * 0.75))
 	_energy("ferry_win", 1.4 if (day_k < 0.5 if _layout.id == "city" else night_windows) else 0.0)
+	_scaled("taxi", post_on)
+	# On by day and while anyone is in, at full strength: inter dims the night to .55.
+	_scaled("device", maxf(inter_day, night_in))
 	# The map's water runs on OfficeCity's own clock.
 	if _layout.id != "city":
 		for m: ShaderMaterial in _mats.get("water", []):
@@ -278,6 +281,12 @@ func _albedo(material_name: String, linear: Color) -> void:
 func _energy(material_name: String, value: float) -> void:
 	for m: ShaderMaterial in _mats.get(material_name, []):
 		m.set_shader_parameter("emission_energy", value)
+
+
+## Emission at k times the strength the design gave the material (OfficeMaterials.EMITTERS).
+func _scaled(material_name: String, k: float) -> void:
+	for m: ShaderMaterial in _mats.get(material_name, []):
+		m.set_shader_parameter("emission_energy", m.get_meta("emission_energy") * k)
 
 
 func _glow_quad(g: Dictionary, material: Material) -> MeshInstance3D:

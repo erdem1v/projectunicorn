@@ -14,10 +14,15 @@ const STATION := "^station_(\\d+|f)_(lamp|screen)(_\\d+)?$"
 ## and the slab trade the depth test in a band along the facade as the camera moves. The slab steps back.
 const SLAB := "7d746a"
 const SLAB_INSET := 0.01
+## The design's unnamed emissive props, told by emission colour and strength, -> the light they go with: a taxi's
+## roof sign is a street light; the screens, signs and LEDs inside are on while the office is. The city map's
+## selection frames and pin are UI markers and stay as exported.
+const EMITTERS := {"ffe08a 0.60": "taxi", "ffffff 0.30": "device", "9fd3ff 1.20": "device", "2a3b55 0.50": "device",
+	"4dd9ff 0.90": "device", "f4c542 0.50": "device", "3fd07a 0.80": "device"}
 
 
 ## Converts every surface under root and hides the layout's hidden nodes. Returns material name
-## -> Array[Material] for the names the layout lists; one entry per imported material.
+## -> Array[Material] for the names the layout lists and the EMITTERS roles; one entry per imported material.
 static func convert_scene(root: Node3D, layout: OfficeLayout) -> Dictionary:
 	var done := {}
 	var named := {}
@@ -31,8 +36,12 @@ static func convert_scene(root: Node3D, layout: OfficeLayout) -> Dictionary:
 			var src: BaseMaterial3D = mi.mesh.surface_get_material(i)
 			if not done.has(src):
 				done[src] = _convert(src)
+				var signature := "%s %.2f" % [src.emission.to_html(false), src.emission_energy_multiplier]
 				if named.has(src.resource_name):
 					named[src.resource_name].append(done[src])
+				elif EMITTERS.has(signature):
+					done[src].set_meta("emission_energy", src.emission_energy_multiplier)
+					named.get_or_add(EMITTERS[signature], []).append(done[src])
 			mi.set_surface_override_material(i, done[src])
 	for node_name in layout.hidden:
 		root.find_child(node_name, true, false).visible = false
