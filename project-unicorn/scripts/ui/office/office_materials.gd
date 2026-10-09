@@ -10,6 +10,10 @@ const TOON := preload("res://scenes/office/shaders/office_toon.gdshader")
 ## The design keeps these out of its ink pass (userData.noEdge); the flag rides in roughness.
 const NO_EDGE := ["ground", "walk", "road", "grass", "line", "water"]
 const STATION := "^station_(\\d+|f)_(lamp|screen)(_\\d+)?$"
+## The design's floor slab, told by its colour: its outer faces lie in the facade skin's plane, so the skin
+## and the slab trade the depth test in a band along the facade as the camera moves. The slab steps back.
+const SLAB := "7d746a"
+const SLAB_INSET := 0.01
 
 
 ## Converts every surface under root and hides the layout's hidden nodes. Returns material name
@@ -87,4 +91,6 @@ static func _convert(src: BaseMaterial3D) -> Material:
 	toon.set_shader_parameter("emission_uv_scale", uv_scale)
 	toon.set_shader_parameter("emission_uv_offset", uv_offset)
 	toon.set_shader_parameter("no_edge", src.resource_name in NO_EDGE)
+	if src.albedo_color.to_html(false) == SLAB:
+		toon.set_shader_parameter("inset", SLAB_INSET)
 	return toon

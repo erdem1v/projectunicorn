@@ -20,6 +20,14 @@ uniform bool use_vertex_color = false;
 // People take only outline ink: their hair and folds would draw as streaks. Roughness 0.5 tells
 // office_ink so.
 uniform bool outline_only = false;
+// A surface that shares a plane with another moves back this many metres along its normals, so the depth
+// test settles the same way from every camera position instead of trading bands as the view pans.
+uniform float inset = 0.0;
+
+void vertex() {
+	// GLB meshes are often unit boxes under a non-uniform node scale; divide it out of the model-space shift.
+	VERTEX -= NORMAL * inset / vec3(length(MODEL_MATRIX[0].xyz), length(MODEL_MATRIX[1].xyz), length(MODEL_MATRIX[2].xyz));
+}
 
 void fragment() {
 	ALBEDO = albedo.rgb * texture(albedo_texture, UV * uv1_scale + uv1_offset).rgb * (use_vertex_color ? COLOR.rgb : vec3(1.0));
