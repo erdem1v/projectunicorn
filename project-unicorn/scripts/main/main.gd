@@ -2983,6 +2983,7 @@ func _process(_delta: float) -> void:
 		"sales":
 			if SalesLedger.meeting_block_reason(_call.id) != "":
 				_end_call()
+				_pre_dialogue_speed = -1   # the clock ran again under the ring: no speed to hand back
 		_:
 			var caller: String = VCPitchSystem.call_waiting()
 			if caller != "" and not _in_transit and _meeting_panel == null and _term_table == null \
@@ -3008,12 +3009,15 @@ func _ring_fund(vc_id: String) -> void:
 
 
 ## "Görüşmeye git" on a prospect: the windows close and the phone rings in the office, in place of
-## any call ringing; picking it up goes to the meeting, putting it off lets it ring on. With no
-## office view (shots without the trip) the meeting opens at once.
+## any call ringing. With the founder there to answer, the clock stops until they do, so the
+## sitting's cut-off cannot take the call within seconds at the fast speeds; picking it up goes to
+## the meeting, putting it off runs the clock again and lets it ring on. With no office view (shots
+## without the trip) the meeting opens at once.
 func _on_pitch_requested(prospect_id: String) -> void:
 	if EventGate.active_id() != "":
 		return
-	if _meeting_invite() == null:
+	var invite := _meeting_invite()
+	if invite == null:
 		_open_sales_meeting(prospect_id)
 		return
 	EventBus.tab_changed.emit("")
@@ -3023,6 +3027,9 @@ func _on_pitch_requested(prospect_id: String) -> void:
 		"caller": buyer, "vc_id": "",
 		"args": {"company": p.company_name, "person": buyer.name},
 		"note": "", "note_args": {}, "toast": "MEETING_POSTPONED_SALES"})
+	if invite.can_ring() and _pre_dialogue_speed < 0:
+		_pre_dialogue_speed = TimeManager.current_speed
+		EventBus.speed_change_requested.emit(0)
 
 
 ## Rings the office phone for a call of `kind` ("vc" | "sales") about `id` at `place` (MeetingInvite.ring);
@@ -3055,14 +3062,15 @@ func _on_call_accepted() -> void:
 		_open_sales_meeting(call.id)
 
 
-## A fund's call put off moves its meeting on and the clock runs again; a prospect's rings on.
+## A call put off runs the clock again; a fund's moves its meeting on, a prospect's rings on and
+## can be put off again with the clock already running.
 func _on_call_postponed() -> void:
-	if _call.kind != "vc":
-		return
-	VCPitchSystem.postpone_call()
-	_end_call()
-	_restore_speed(_pre_dialogue_speed)
-	_pre_dialogue_speed = -1
+	if _call.kind == "vc":
+		VCPitchSystem.postpone_call()
+		_end_call()
+	if _pre_dialogue_speed >= 0:
+		_restore_speed(_pre_dialogue_speed)
+		_pre_dialogue_speed = -1
 
 
 ## The office view's call, or null where there is no trip (shots, no office view).

@@ -500,7 +500,9 @@ yüklemez, süreleri okunmaz.
   başlar ve kapıdan tek tek geçilir. Sırası günün sonundan sonraya düşen ya da günü yürüyüşe yetmeyecek kadar kısa olan
   masasında kalır; gece yeni yürüyüş başlamaz, yüklem yalnız kapıya ya da yatağa yürüyenleri bekler, içeride kalan
   herkes kararma altında kesilir (`OfficePeople.CUT_FADE_S` kararması, sonra atlama).
-- Kurucu şirket penceresini izler: pencere başında gelir, sonunda çıkar. Evde pencere dışı yeri yataktır.
+- Kurucu şirket penceresini izler: pencere başında gelir, sonunda çıkar. Evde pencere dışı yeri yataktır; yatağa
+  gidiş ve dönüş pencerenin yarısından fazlasını alıyorsa 08:00'den masasındadır ve gece kararmasında kesilir
+  (açık: ACIK_KARARLAR 104).
 - Atlamanın ardından kısa kararma ve 08:00 ışığı (`NIGHT_FADE_S` 0,6 sn [WORKING]).
 
 ## 8. Toplantılar
@@ -567,7 +569,8 @@ mekanik ondan bağımsızdır ve headless güvenlidir.
 
 0. Davet: satışta "Görüşmeye git", Series A'da görüşme haftasının çağrısı (§8.6) ofiste kurucunun başının üstünde
    telefonu çaldırır; davet kartı Kabul et / Ertele sorar (`MeetingInvite`). Satışta Ertele kartı kapatır ve telefon
-   çalmaya devam eder. Kabul et geçişi başlatır.
+   çalmaya devam eder; kurucu istek anında ofiste görünürse saat cevaba kadar durur ve Ertele onu yeniden açar
+   (açık: ACIK_KARARLAR 104). Kabul et geçişi başlatır.
 1. Saat donar (`freeze_clock("travel")`); oturum geçişten önce açılır ve kurucu meşgul olur.
 2. Pencere katmanı perdelenir; pencereler kapanmaz, dönüşte aynı pencere açık gelir.
 3. Kurucu masadan kalkar ve çıkışa doğal hızla yürür, en yakın iki oturan çalışan başını ona çevirir; yürüyüş en

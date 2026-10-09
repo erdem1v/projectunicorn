@@ -242,13 +242,17 @@ func _process(delta: float) -> void:
 ## Where `a` belongs this minute: their seat through their day, the bed out of hours for the
 ## founder at home, {} (out of the office) otherwise. The walk in starts early enough to land when
 ## they are due, the walk out EXIT_SLACK times its length before their end; a day too short for
-## the walk out keeps them seated for the night's cut.
+## the walk out keeps them seated for the night's cut. At home, a day too short for the walks to
+## and from bed keeps the founder at the desk the same way.
 func _wanted(a: OfficeActor, minute: float) -> Dictionary:
 	if a.ghost or a.seat.is_empty() or not WorkHoursSystem.in_office(a.character) or (a.founder and founder_away):
 		return {}
 	var day := _hours(a)
 	if a.founder and not _bed.is_empty():
-		return a.seat if minute >= day.x and minute < day.y - _walk_minutes(a.bed_len, BED_LEG_S) else _bed
+		var bed := _walk_minutes(a.bed_len, BED_LEG_S)
+		if day.y - day.x - 2.0 * bed < OfficeConstants.MIN_PRESENCE * (day.y - day.x):
+			return a.seat
+		return a.seat if minute >= day.x and minute < day.y - bed else _bed
 	var walk := _walk_minutes(a.in_len, SEAT_LEG_S)
 	if not a.cut_in and minute < day.x - walk:
 		return {}
