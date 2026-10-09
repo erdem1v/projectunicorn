@@ -9,8 +9,11 @@ extends RefCounted
 #   --pan-set=<set>|<set>...  knob lists "k=v,k=v": set 0 is the base, every other set adds to it
 #   --pan-gpu=<A>/<B>[;<C>/<D>]  GPU and CPU time of the sub-viewport under two knob lists, ABAB, at the opening pose
 # Knobs: the keys of PROPS, tf=1 (TopFill casts the shadow, not the Sun), vig, gk (glow level factor), lamps=0,
-# topk (TopFill energy factor), atlas, soft (0 hard .. 5), min (minutes past midnight). resid_* is -1 for a zoom
-# group's first frame and fit steps.
+# topk (TopFill energy factor), atlas, soft (0 hard .. 5), min (minutes past midnight), native (the view at the
+# screen's pixels: factor over the base, 1.3333 at 1440p), inkcode=1 and tooncode=1 (the ink or toon shader's code
+# from the file PAN_INK_CODE or PAN_TOON_CODE names), inkw (ink width, px), ext=<variant> (a trial from the
+# script PAN_EXT names). resid_* is -1 for a zoom group's first frame and fit steps, and SETDIFF when a set's view
+# size differs from set 0's.
 
 const SHADOWS := "rendering/lights_and_shadows/directional_shadow/"
 const BIG := 8   # n8 counts the pixels where a channel differs by more than this (0..255)
@@ -24,6 +27,8 @@ const PROPS := {
 	"fxaa": [".", "screen_space_aa"], "msaa": [".", "msaa_3d"], "glow": ["env", "glow_enabled"],
 	"hs": ["env", "glow_hdr_scale"], "gt": ["env", "glow_hdr_threshold"], "gb": ["env", "glow_blend_mode"],
 	"ssao": ["env", "ssao_enabled"], "lowest": ["World/Camera3D", "_lowest"],
+	"scale": [".", "scaling_3d_scale"], "smode": [".", "scaling_3d_mode"], "aniso": [".", "anisotropic_filtering_level"],
+	"mipbias": [".", "texture_mipmap_bias"], "taa": [".", "use_taa"], "deband": [".", "use_debanding"],
 }
 
 var _flag: Callable
@@ -39,6 +44,7 @@ var _ink: ShaderMaterial
 var _stem: String
 var _base: Vector3
 var _z0: float
+var _host0: Vector2   # the container's size at the opening pose: native multiplies it, never the current size
 var _first0: Image   # set 0's first frame, which every other set's first frame is compared to
 var _n: float   # the directional atlas size the shadow box is fitted to
 var _undo: Array[Callable] = []   # replayed in reverse before every knob list
@@ -68,6 +74,7 @@ func run(view: Control, stem: String) -> void:
 	await _settle(10)
 	_base = _cam.target
 	_z0 = _cam.zoom
+	_host0 = (_sub.get_parent() as Control).size
 	_report()
 	var steps := _steps(_flag.call("--pan="))
 	var sets: PackedStringArray = String(_flag.call("--pan-set=")).split("|")
@@ -75,7 +82,8 @@ func run(view: Control, stem: String) -> void:
 		_apply(sets[0] if j == 0 else sets[0] + "," + sets[j])
 		await _tree.create_timer(0.5).timeout
 		await _settle(10)
-		print("PANSET|%d|%s|video_mib=%.1f" % [j, sets[j], Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0])
+		print("PANSET|%d|%s|video_mib=%.1f|sv=%dx%d" % [j, sets[j],
+			Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, _sub.size.x, _sub.size.y])
 		var refs := {}
 		for i in steps.size():
 			await _step(steps[i], i, j, refs)
@@ -129,7 +137,7 @@ func _step(s: Dictionary, i: int, j: int, refs: Dictionary) -> void:
 		if j == 0:
 			_first0 = img
 		else:
-			var f := residual(img, _first0, Vector2i.ZERO)
+			var f := residual(img, _first0, Vector2i.ZERO) if img.get_size() == _first0.get_size() else d
 			print("SETDIFF|%d|%.4f|%d|%d" % [j, f.mean, f.max, f.n8])
 
 
@@ -246,6 +254,30 @@ func _knob(key: String, v: float) -> void:
 			var scale := func() -> void: _top.light_energy *= v
 			RenderingServer.frame_pre_draw.connect(scale)
 			_undo.append(func() -> void: RenderingServer.frame_pre_draw.disconnect(scale))
+		"native":
+			# The container stops stretching the view to its own size, so the view can take the screen's pixels.
+			# Unstretched it grows to the view, so the undo shrinks it back last. Past 4K the view's buffers, times
+			# the MSAA samples, can exhaust video memory and stall the driver.
+			if v > 2.0:
+				push_error("[PanProbe] native=%s is past 4K" % v)
+				return
+			var host := _sub.get_parent() as SubViewportContainer
+			_undo.append(func() -> void: host.size = _host0)
+			_put(host, "stretch", false)
+			_put(_sub, "size", _host0 * v)
+		"inkw":
+			# The ink cross in pixels: a view at more pixels than the base needs a wider one for the same line.
+			_undo.append(Callable(_ink, "set_shader_parameter").bind("texel", null))
+			_ink.set_shader_parameter("texel", v)
+		"inkcode":
+			# A trial shader replaces the shared resource's code for this run only; the game's file stays as it is.
+			_put(_ink.shader, "code", FileAccess.get_file_as_string(OS.get_environment("PAN_INK_CODE")))
+		"tooncode":
+			_put(OfficeMaterials.TOON, "code", FileAccess.get_file_as_string(OS.get_environment("PAN_TOON_CODE")))
+		"ext":
+			# A trial that needs nodes or resources: the script PAN_EXT names gets the variant and this probe, and
+			# changes the view through _put and _undo.
+			load(OS.get_environment("PAN_EXT")).new().apply(int(v), self)
 		"lamps":
 			# OfficeLighting switches these lights every frame, but never their energy.
 			if v == 0.0:
