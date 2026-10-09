@@ -1,0 +1,65 @@
+Quaternius models taken from Poly Pizza (style test only)
+Retrieved: 2026-10-09 (UTC)
+Acceptance rule: the model page JSON field "Licence" must be exactly "CC0 1.0" and "Creator.Username" must be "Quaternius".
+CC0 1.0 legal text: https://creativecommons.org/publicdomain/zero/1.0/
+Poly Pizza: https://poly.pizza
+
+[V86Go2rlnq]
+page:     https://poly.pizza/m/V86Go2rlnq
+id:       V86Go2rlnq
+title:    Desk
+author:   Quaternius
+licence:  CC0 1.0
+uploaded: 2021-08-24
+category: Furniture & Decor
+glb:      https://static.poly.pizza/91c2bf8d-0876-4801-abd3-8dd5d017ecbd.glb
+file:     packs/quaternius-polypizza/V86Go2rlnq.glb (135916 bytes, sha256 3878f6d93d946d77f3e1be55919627a81435696252137ae33c22391c0411f3ce)
+retrieved: 2026-10-09
+
+[UfKvrZBK6C]
+page:     https://poly.pizza/m/UfKvrZBK6C
+id:       UfKvrZBK6C
+title:    Office Chair
+author:   Quaternius
+licence:  CC0 1.0
+uploaded: 2021-08-24
+category: Furniture & Decor
+glb:      https://static.poly.pizza/ac2301f3-af86-435a-885a-d8f1a32f9f76.glb
+file:     packs/quaternius-polypizza/UfKvrZBK6C.glb (115760 bytes, sha256 0f1a9180dbe0dc4116fa17b9b03e6002f75110e2a0f4ed0ff20a40b384240a76)
+retrieved: 2026-10-09
+
+[vuo7KBehok]
+page:     https://poly.pizza/m/vuo7KBehok
+id:       vuo7KBehok
+title:    Sofa
+author:   Quaternius
+licence:  CC0 1.0
+uploaded: 2021-08-24
+category: Furniture & Decor
+glb:      https://static.poly.pizza/433ac6c3-e7ae-45e8-b1bf-f28e6dea79ef.glb
+file:     packs/quaternius-polypizza/vuo7KBehok.glb (200528 bytes, sha256 bae7821f9c97ff21c90d8f05dae0730cddd82ca0734d744a583971a78545cc63)
+retrieved: 2026-10-09
+
+[tACDGJ4CGW]
+page:     https://poly.pizza/m/tACDGJ4CGW
+id:       tACDGJ4CGW
+title:    Bookcase with Books
+author:   Quaternius
+licence:  CC0 1.0
+uploaded: 2021-08-24
+category: Furniture & Decor
+glb:      https://static.poly.pizza/7d59d0aa-6447-4bbb-afc7-0452e9a34353.glb
+file:     packs/quaternius-polypizza/tACDGJ4CGW.glb (589464 bytes, sha256 d2e2cd56498bec39dae1d8cf0b776bbfaaf25694a2abb845633515a248b0e5de)
+retrieved: 2026-10-09
+
+[eBQtooeh43]
+page:     https://poly.pizza/m/eBQtooeh43
+id:       eBQtooeh43
+title:    Light Floor
+author:   Quaternius
+licence:  CC0 1.0
+uploaded: 2021-10-03
+category: Furniture & Decor
+glb:      https://static.poly.pizza/19259c43-99cb-43c6-aaee-dcf8d1d36fdb.glb
+file:     packs/quaternius-polypizza/eBQtooeh43.glb (10112 bytes, sha256 72d57153e3f1f57e9d920cba1b83fbcd3882cc81769d5ccac64010c04a95b5e8)
+retrieved: 2026-10-09

@@ -1,0 +1,49 @@
+> CLAUDE.md §8 exception: kept in the repo by the PRD (`docs/tasks/PRD_RENDER_ASSETLAB.md`) and the owner's decision.
+
+# Asset lab pack manifest
+
+Downloaded on 2026-10-09 (times are UTC). `packs/` and `out/` are gitignored. Archives sit in `packs/_zips/`; each pack is extracted into its own folder `packs/<slug>/` with the internal layout intact (external `Textures/` paths must survive). Licence texts are copied verbatim to `licences/<slug>.txt`; the verdicts are in `docs/audits/asset_lab/LISANS.md`.
+
+`u` is the model unit stored in the glTF. `scale` is metres per `u`, read off reference models (basis below): a starting hint for the placement fit, not a fit.
+
+| slug | pack | version | download URL | licence | downloaded (UTC) | zip bytes | zip sha256 | files used | scale (u to m) | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| kenney-furniture-kit | Kenney Furniture Kit | 2.0 | https://kenney.nl/media/pages/assets/furniture-kit/440e0608a4-1677580847/kenney_furniture-kit.zip | CC0 1.0 | 2026-10-09 15:56 | 5130729 | `e67652d0932cee41683f74711c03d3e192a2af9979ef8e6b237711f5482d46b0` | TBD (B3) | ~2.0 | 140 GLB in `Models/GLTF format/`; flat material colours, no textures; 18 models have BLEND materials (glass panes); `KHR_materials_unlit` is declared but no material uses it |
+| kenney-building-kit | Kenney Building Kit | 1.0 | https://kenney.nl/media/pages/assets/building-kit/0de7aaa492-1743244741/kenney_building-kit.zip | CC0 1.0 | 2026-10-09 15:56 | 1598905 | `2740ef5772fb5fb3d7aab881db22d129f6b68afe711b1a79e6d5e9e19cf3eec6` | TBD (B3) | 1.0 | 79 GLB in `Models/GLB format/` with external `Textures/colormap.png` (512x512); the 10 glass models are BLEND with nonzero emissive |
+| kenney-city-kit-commercial | Kenney City Kit (Commercial) | 2.1 | https://kenney.nl/media/pages/assets/city-kit-commercial/a742d900eb-1753115042/kenney_city-kit-commercial_2.1.zip | CC0 1.0 | 2026-10-09 15:56 | 4096974 | `f8b09b081c2bb88bcc126e2dec1cb40fd0dad7e7e591b6c26aaefe96fb35276b` | TBD (B3) | tile pack, fit to footprint | 41 GLB in `Models/GLB format/`, external colormap; do not mix its unit with Building Kit |
+| kenney-city-kit-suburban | Kenney City Kit (Suburban) | 2.0 (zip name `_20`) | https://kenney.nl/media/pages/assets/city-kit-suburban/2c871b7af2-1745479373/kenney_city-kit-suburban_20.zip | CC0 1.0 | 2026-10-09 15:56 | 3038740 | `5869c35cf30b1c87bdb2d197b6d325eebadd2ef08ea27f04797e8e08d77a9a39` | TBD (B3) | tile pack, fit to footprint | 40 GLB in `Models/GLB format/`, external colormap |
+| kenney-city-kit-roads | Kenney City Kit (Roads) | 2.1 | https://kenney.nl/media/pages/assets/city-kit-roads/74288c9459-1787042796/kenney_city-kit-roads.zip | CC0 1.0 | 2026-10-09 15:56 | 2849382 | `22058af3d68173a7cf9bda9f0e243a8cef6bd68168c302ebc76327063849674e` | TBD (B3) | tile pack, height-fit props | 95 GLB in `Models/GLB format/`, external colormap; road tiles are 1 x 1 u |
+| kenney-modular-buildings | Kenney Modular Buildings | 2.1 | https://kenney.nl/media/pages/assets/modular-buildings/3253b4219a-1707397411/kenney_modular-buildings.zip | CC0 1.0 | 2026-10-09 15:56 | 1825490 | `47e1614686b4c0fe55190e88b22ff2b8b10935edf61f37f478a9b6a99477edc6` | TBD (B3) | tile pack, fit to footprint | 108 GLB in `Models/GLB format/`, external colormap; storey module 1.0 x 0.625 x 1.0 u; standalone `window-white-*` and `window-brown-*` inserts |
+| kenney-car-kit | Kenney Car Kit | 3.1 | https://kenney.nl/media/pages/assets/car-kit/1a312ec241-1775131960/kenney_car-kit.zip | CC0 1.0 | 2026-10-09 15:56 | 4814237 | `fac7dacac5c7874348cf19729af3ef205f3d366493edaf0a827d93f4fdf3d0c4` | TBD (B3) | length-fit | 50 GLB in `Models/GLB format/`, external colormap; `sedan` is 1.5 x 1.3 x 2.55 u |
+| kenney-nature-kit | Kenney Nature Kit | 2.1 | https://kenney.nl/media/pages/assets/nature-kit/37ac38a37b-1677698939/kenney_nature-kit.zip | CC0 1.0 | 2026-10-09 15:57 | 10537521 | `fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d` | TBD (B3) | ~1.9-2.0 | 329 GLB in `Models/GLTF format/`; flat material colours, no textures; `tree_default` is 1.708 u tall with min y -0.05; `KHR_materials_unlit` is declared but unused |
+| kaykit-furniture-bits | KayKit Furniture Bits | 1.0, commit `96d5930a8dbdb363409bbc2d3341718b00e17c9c` | https://github.com/KayKit-Game-Assets/KayKit-Furniture-Bits-1.0/archive/96d5930a8dbdb363409bbc2d3341718b00e17c9c.zip | CC0 1.0 | 2026-10-09 15:58 | 683587 | `84be044ad8aa6d7b2e5e6e01ce6f2cc97133c07c04f9de7d98dc2677a0234242` | TBD (B3) | ~0.7 | GitHub archive pinned by commit; 53 `.gltf` + `.bin` in `addons/kaykit_furniture_bits/Assets/gltf/` sharing the atlas `furniturebits_texture.png` (1024x1024); no desk or monitor; the only licence file in the archive is `Assets/LICENSE.txt` |
+| kaykit-city-builder-bits | KayKit City Builder Bits | 1.0, commit `63976910ca04d16f0fc531b9c614244be8128713` | https://github.com/KayKit-Game-Assets/KayKit-City-Builder-Bits-1.0/archive/63976910ca04d16f0fc531b9c614244be8128713.zip | CC0 1.0 | 2026-10-09 15:58 | 974356 | `dc101668e104968509740fcad1ed2a12f6123e1a75185f050abeef76dbefd151` | TBD (B3) | tile pack, fit to footprint | GitHub archive pinned by commit; 41 `.gltf` + `.bin` in `addons/kaykit_city_builder_bits/Assets/gltf/` sharing the atlas `citybits_texture.png`; buildings A-H, cars, streetlight, bench |
+| mreliptik-office | Office Low Poly Pack (MrEliptik) | `office_pack.zip`, itch upload 3515521; licence file dated 2020-11-08 | https://mreliptik.itch.io/office-low-poly-pack | CC0 1.0 | 2026-10-09 15:59 | 20132622 | `e5927bbe3379c5da94379a9f007a6999cdcced5fc08d6efdb0928a10bb6d0615` | TBD (B3) | no single factor, fit per type | itch.io signed-link flow, upload chosen by name; 28 GLB in `gLTF/` (lower-case g), flat material factors, no images; `all_objects.glb` is a combined scene (320k tris), `desktop.glb` and `mousepad.glb` are empty containers, `keyboard*` and `laptop` are 93-95k tris each |
+| quaternius-polypizza | Quaternius pieces via Poly Pizza (style test only) | model pages uploaded 2021-08-24 and 2021-10-03 | https://poly.pizza (pages below) | CC0 1.0 (model page field) | 2026-10-09 16:02 | 1051780 (5 single GLB files, no archive) | per file below | TBD (B3) | no single factor, fit per piece | exactly the 5 models below; FBX2glTF export, flat named materials, no textures; the full Ultimate House Interior pack is a Google Drive folder and was not fetched |
+
+## Quaternius pieces (Poly Pizza)
+
+| id | title | author | licence field | page | glb bytes | glb sha256 | size u (x, y, z) |
+|---|---|---|---|---|---|---|---|
+| V86Go2rlnq | Desk | Quaternius | CC0 1.0 | https://poly.pizza/m/V86Go2rlnq | 135916 | `3878f6d93d946d77f3e1be55919627a81435696252137ae33c22391c0411f3ce` | 1.822, 0.922, 0.847 |
+| UfKvrZBK6C | Office Chair | Quaternius | CC0 1.0 | https://poly.pizza/m/UfKvrZBK6C | 115760 | `0f1a9180dbe0dc4116fa17b9b03e6002f75110e2a0f4ed0ff20a40b384240a76` | 0.722, 1.128, 0.807 |
+| vuo7KBehok | Sofa | Quaternius | CC0 1.0 | https://poly.pizza/m/vuo7KBehok | 200528 | `bae7821f9c97ff21c90d8f05dae0730cddd82ca0734d744a583971a78545cc63` | 4.003, 1.452, 1.541 |
+| tACDGJ4CGW | Bookcase with Books | Quaternius | CC0 1.0 | https://poly.pizza/m/tACDGJ4CGW | 589464 | `d2e2cd56498bec39dae1d8cf0b776bbfaaf25694a2abb845633515a248b0e5de` | 1.842, 3.371, 0.664 |
+| eBQtooeh43 | Light Floor | Quaternius | CC0 1.0 | https://poly.pizza/m/eBQtooeh43 | 10112 | `72d57153e3f1f57e9d920cba1b83fbcd3882cc81769d5ccac64010c04a95b5e8` | 0.281, 1.603, 0.295 |
+
+## Scale basis
+
+Heights come from the POSITION accessor boxes pushed through the node transforms; Godot's own AABB at placement time stays the authority.
+
+- Furniture Kit ~2.0: `doorway` 1.010 u for a 2.05 m door gives 2.03; `desk` 0.384 u for 0.735 m gives 1.91; `chair` 0.47 u for 0.93 m gives 1.98; `chairDesk` 0.608 u for 1.08 m gives 1.78; `loungeSofa` 0.46 u for 0.85 m gives 1.85.
+- Building Kit 1.0: `wall` is 2.0 x 2.4 x 0.1 u, `door-rotate-square-a` is 2.1 u tall, `floor` is 2 x 2 u.
+- Nature Kit ~1.9-2.0: `tree_default` 1.708 u for a 3.2-3.4 m tree gives 1.87-1.99.
+- KayKit Furniture Bits ~0.7: `chair_A` 1.258 u for 0.9 m gives 0.72; `table_medium` 1.0 u for 0.75 m gives 0.75; `couch` 3.0 u wide for 2.0 m gives 0.67; `lamp_standing` 2.52 u for 1.6 m gives 0.63.
+- MrEliptik: props are not mutually consistent. `monitor` 1.009 u wide for ~0.55 m gives ~0.55; `office_chair` 1.608 u for ~1.05 m gives ~0.65; `desk_big` 3.146 u long for ~1.5 m gives ~0.48; `mug` is already ~1.0.
+- Quaternius pieces: `Office Chair` 1.128 u is already about 1.0; `Light Floor` 1.603 u is about 1.0; `Sofa` 4.003 u wide for ~2.2 m gives ~0.55; `Bookcase with Books` 3.371 u tall for ~2.0 m gives ~0.6.
+- Tile packs: City Kit Commercial `building-a` 0.884 x 1.293 x 0.940 u and `building-skyscraper-a` 1.36 x 2.88 x 1.36 u; City Kit Suburban `building-type-a` 1.30 x 0.834 x 1.028 u; City Kit Roads tile 1 x 0.02 x 1 u, `light-square` 0.6 u tall; Modular Buildings storey 1.0 x 0.625 x 1.0 u, window insert `window-white` 0.3125 x 0.38 u; KayKit City Builder tile 2 x 0.1 x 2 u, `building_A` 2 x 1.65 x 2 u. Fit these to the neighbour block footprints instead of using a factor.
+- Car Kit: `sedan` 1.5 x 1.3 x 2.55 u and `taxi` 1.5 x 1.5 x 2.75 u; fit by length.
+
+## Index
+
+`out/pack_index.json` is the generated per-model index (1009 models over 12 pack folders): pack, path, name, triangles, AABB, material names, external texture status and a few render flags. No primitive in any pack carries `COLOR_0`; every external texture reference resolves inside its pack folder.
