@@ -55,5 +55,6 @@ theme/custom="res://themes/master_theme.tres"
 
 [rendering]
 
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=0
 reflections/sky_reflections/roughness_layers=7
 rendering_device/driver.windows="d3d12"
