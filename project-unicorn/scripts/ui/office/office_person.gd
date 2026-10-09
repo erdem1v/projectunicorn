@@ -8,9 +8,10 @@ extends Node3D
 #
 # The contract: setup() once, then place() before anything else, in the same frame as add_child.
 # place() is a cut (a scene's first frame, a load, a skip under black); go_to() never jumps. `k` is
-# the visual speed: in the office OfficePeople sets it every frame to the game's tempo capped at 2;
-# a meeting's people keep 1. At 0 the person holds still in whatever pose they are in, and carries
-# on from it.
+# the visual speed: in the office OfficePeople sets it every frame to the game's tempo; a meeting's
+# people keep 1. At 0 the person holds still in whatever pose they are in, and carries on from it.
+# Up to OfficeConstants.AVOID_MAX_K the agent's avoidance steers walkers round each other; faster,
+# its steps are too long for it, and they walk their paths straight, through each other.
 
 const LIBS := {
 	"ual1": "res://assets/art/people/anims/ual1.glb",
@@ -123,10 +124,12 @@ const FLOOR_EASE := 0.02
 const FLOOR_RISE := 0.6
 ## A walk that ends further than this from where it was going did not get there.
 const UNREACHED := 0.5
-## A walker that gets less than STALL_GAIN closer in STALL_S is jammed: within JAM_NEAR of the way
+## A walker that gets less than STALL_GAIN closer in STALL_S (ambient seconds, and STALL_MIN_S real
+## ones at the least, so the avoidance gets its ticks at any k) is jammed: within JAM_NEAR of the way
 ## in it takes the last metres straight; held up by someone standing at a spot in the way (a visitor
 ## in an aisle), it squeezes past them for SQUEEZE_S; otherwise it asks for a new path.
 const STALL_S := 1.0
+const STALL_MIN_S := 0.25      # [WORKING]
 const STALL_GAIN := 0.1
 const JAM_NEAR := 0.8
 const SQUEEZE_S := 1.5
@@ -153,6 +156,11 @@ enum Phase { STILL, WALK, FOLLOW, TURN, SIT_DOWN, SEATED, STAND_UP, LIE_DOWN, LY
 ## Phases off the feet (no avoidance, no one's way blocked) and on the move (the walk space blends).
 const DOWN := [Phase.SEATED, Phase.SIT_DOWN, Phase.LYING, Phase.LIE_DOWN]
 const MOVING := [Phase.WALK, Phase.FOLLOW, Phase.WAIT_LINK]
+## The looped states' own speed, under the state machine's.
+const LOOP_PACES := [&"parameters/stand/pace/scale", &"parameters/seated/pace/scale", &"parameters/sleep/pace/scale"]
+## The agent takes a path's next point from this close; a straight walker cuts a corner by at most
+## this much.
+const PATH_NEAR := 0.3
 ## Walkers give way to everyone else: people standing, stepping along a path or getting up
 ## hold their line (avoidance_priority).
 const PRIORITY_WALK := 0.5
@@ -229,6 +237,7 @@ var _nod := 0.0
 var _slide := 0.0
 var _turn := 0.0
 var _clock := 0.0                        # the hands' motions and the head's turns
+var _loop := 0.0                         # the looped states' pace, as last set
 var _props := {}                         # name -> the prop's node, made at first use
 var _pose_slot := 0                      # which frame of six this body poses on (tiers: 1, 2, 3)
 var _idle_offset := 0.0                  # how far into its idles this body starts
@@ -295,7 +304,7 @@ func setup(look: Dictionary) -> void:
 	add_child(_agent)
 	_agent.radius = RADIUS
 	_agent.max_neighbors = 6
-	_agent.path_desired_distance = 0.3
+	_agent.path_desired_distance = PATH_NEAR
 	_agent.target_desired_distance = 0.1
 	_agent.path_height_offset = NAV_LIFT
 	_agent.avoidance_enabled = true
@@ -354,7 +363,7 @@ func place(at: Dictionary, what: String) -> void:
 	_set_act(what)
 	_ease_hands(INF)
 	# Posed before it is first drawn, and a room placed at once does not idle in step.
-	_pose(_idle_offset)
+	_pose(_idle_offset * maxf(1.0, k / OfficeConstants.ANIM_LOOP_MAX))
 
 
 ## Walks to `to` and does `what` there, up from a seat or bed first. Sent to the spot they are in
@@ -404,7 +413,7 @@ func _physics_process(delta: float) -> void:
 	var dt := delta * k
 	var seated := phase in DOWN
 	_squeeze = maxf(0.0, _squeeze - dt)
-	_agent.avoidance_enabled = visible and not seated and _squeeze == 0.0
+	_agent.avoidance_enabled = visible and not seated and _squeeze == 0.0 and k <= OfficeConstants.AVOID_MAX_K
 	var steering := phase in [Phase.WALK, Phase.WAIT_LINK]
 	_agent.avoidance_priority = PRIORITY_WALK if steering else PRIORITY_HOLD
 	_agent.neighbor_distance = 3.0 * maxf(1.0, k)
@@ -463,8 +472,7 @@ func _physics_process(delta: float) -> void:
 			else:
 				var d := _wait_at - position
 				d.y = 0.0
-				_agent.max_speed = WALK_SPEED * k
-				_agent.velocity = d.normalized() * WALK_SPEED * k * 0.5 * _accel if d.length() > 0.15 else Vector3.ZERO
+				_go_towards(d if d.length() > 0.15 else Vector3.ZERO, 0.5, delta)
 
 
 func _step_walk(delta: float) -> void:
@@ -474,13 +482,16 @@ func _step_walk(delta: float) -> void:
 	if _agent.is_navigation_finished():
 		_end_walk()
 		return
+	# Handed a link's mouth: the link takes the walker from here.
+	if phase != Phase.WALK:
+		return
 	var left := _agent.distance_to_target()
 	if left < _stall_best - STALL_GAIN:
 		_stall_best = left
 		_stall = 0.0
 	elif k > 0.0:
 		_stall += delta
-	if _stall > STALL_S:
+	if _stall * k > STALL_S and _stall > STALL_MIN_S:
 		_stall = 0.0
 		_stall_best = INF
 		if left < JAM_NEAR:
@@ -490,10 +501,40 @@ func _step_walk(delta: float) -> void:
 			_squeeze = SQUEEZE_S
 		else:
 			_agent.target_position = _agent.target_position
-	var next := _agent.get_next_path_position()
-	var dir := Vector3(next.x - position.x, 0.0, next.z - position.z)
-	_agent.max_speed = WALK_SPEED * k
-	_agent.velocity = dir.normalized() * WALK_SPEED * k * _accel if dir.length() > 0.01 else Vector3.ZERO
+	if _agent.avoidance_enabled:
+		var next := _agent.get_next_path_position()
+		_go_towards(Vector3(next.x - position.x, 0.0, next.z - position.z), 1.0, delta)
+		return
+	# Along the path by the tick's walk, round as many corners as it takes: the agent hands on each
+	# point reached, and says when it is a link's.
+	var budget := WALK_SPEED * delta * k * _accel
+	var dir := Vector3.ZERO
+	while budget > 0.0 and not _agent.is_navigation_finished():
+		var next := _agent.get_next_path_position()
+		if phase != Phase.WALK:
+			break
+		var d := Vector3(next.x - position.x, 0.0, next.z - position.z)
+		if d.length() < 0.001:
+			break
+		dir = d.normalized()
+		var go := minf(budget, d.length())
+		_stride(dir * go)
+		budget -= go
+	if phase == Phase.WALK:
+		_velocity = dir * (WALK_SPEED * k * _accel - budget / delta)
+
+
+## Towards the end of the flat `d` at `share` of full speed, asking for no step past it: steered by
+## the avoidance, or with it off (fast, or squeezing past), straight.
+func _go_towards(d: Vector3, share: float, delta: float) -> void:
+	var speed := minf(WALK_SPEED * k * share * _accel, d.length() / delta)
+	if _agent.avoidance_enabled:
+		_agent.max_speed = WALK_SPEED * k
+		_agent.velocity = d.normalized() * speed
+		return
+	_velocity = d.normalized() * speed
+	if speed > 0.0:
+		_stride(_velocity * delta)
 
 
 func _process(delta: float) -> void:
@@ -502,7 +543,7 @@ func _process(delta: float) -> void:
 	# The root moves at the physics tick; the body is drawn between the last two ticks.
 	var f := Engine.get_physics_interpolation_fraction()
 	var shown := _prev_pos.lerp(position, f)
-	_ease_hands(delta * k)
+	_ease_hands(delta * minf(k, OfficeConstants.ANIM_LOOP_MAX))
 	_body.position = (shown - position).rotated(Vector3.UP, -rotation.y) + Vector3(0.0, 0.0, _slide)
 	_body.rotation.y = angle_difference(rotation.y, lerp_angle(_prev_yaw, rotation.y, f))
 	# Paused (k = 0), the pose holds with the root, so it carries on from where it stopped.
@@ -553,7 +594,10 @@ func _ease_hands(by: float) -> void:
 
 ## Moves the pose on by `dt`: the hands and bends of the act, the walk space, the clips.
 func _pose(dt: float) -> void:
-	_clock += dt
+	# Loops (the idles, the stride, the hands' motions) show at most ANIM_LOOP_MAX times their own
+	# speed; the state machine's one-shots and fades keep k, in step with the phases that time them.
+	var loop := minf(1.0, OfficeConstants.ANIM_LOOP_MAX / k) if k > 0.0 else 1.0
+	_clock += dt * loop
 	var a := _hand_act()
 	var motion: String = a.get("motion", "")
 	for side in 2:
@@ -580,7 +624,13 @@ func _pose(dt: float) -> void:
 		var local := Vector2(v.x, v.z).limit_length(1.0) if moving else Vector2.ZERO
 		_blend = _blend.move_toward(local, dt / XFADE)
 		_tree.set(_walk_param, _blend)
-		_tree.set(&"parameters/move/pace/scale", maxf(0.6, _velocity.length() / k / CLIP_PACE) if moving else 1.0)
+		# The stride keeps up with the root, to the loops' cap.
+		var stride := minf(maxf(0.6 * k, _velocity.length() / CLIP_PACE), OfficeConstants.ANIM_LOOP_MAX) / k
+		_tree.set(&"parameters/move/pace/scale", stride if moving else loop)
+		if loop != _loop:
+			_loop = loop
+			for pace: StringName in LOOP_PACES:
+				_tree.set(pace, loop)
 	_tree.advance(dt)
 	_skel.advance(dt)
 
@@ -664,6 +714,7 @@ func _end_walk() -> void:
 					or (door and is_same(p._here, _goal) and p.position.distance_to(_goal.pos) < reach))):
 			_hold += get_physics_process_delta_time() * k
 			_agent.velocity = Vector3.ZERO
+			_velocity = Vector3.ZERO
 			return
 		_last_metres()
 		return
@@ -771,22 +822,25 @@ func _step_follow(dt: float) -> void:
 		else:
 			_start_walk()
 		return
-	var to := _follow[0]
-	var d := to - position
+	var d := _follow[0] - position
 	# Held by someone ahead for at most FOLLOW_WAIT a stretch, so a knot always comes undone; into
 	# a door the one ahead goes through it, so the wait there is longer.
 	var wait := DOOR_WAIT if _after_follow == Phase.TURN and _goal.pose == "out" else FOLLOW_WAIT
-	if not _lane.is_valid() and _hold < wait and _blocked(d):
+	# The tick's walk, past as many points as it reaches.
+	var step := WALK_SPEED * dt * _accel
+	if not _lane.is_valid() and _hold < wait and _blocked(d, step):
 		_hold += dt
 		_accel = 0.0
 		_velocity = Vector3.ZERO
 		return
-	var step := WALK_SPEED * dt * _accel
-	if d.length() <= step:
-		position = to
+	while d.length() <= step:
+		position = _follow[0]
+		step -= d.length()
 		_follow.remove_at(0)
 		_hold = 0.0
-		return
+		if _follow.is_empty():
+			return
+		d = _follow[0] - position
 	_velocity = d.normalized() * WALK_SPEED * k * _accel
 	position += d.normalized() * step
 	var flat := Vector2(d.x, d.z)
@@ -794,17 +848,17 @@ func _step_follow(dt: float) -> void:
 		rotation.y = lerp_angle(rotation.y, atan2(d.x, d.z), minf(1.0, dt * TURN_RATE))
 
 
-## Someone on their feet within FOLLOW_CLEAR ahead along `d` (inside 60 degrees of it); head on,
-## one walking out of a spot goes before one walking in, and of two walking into the same spot the
-## nearer goes first.
-func _blocked(d: Vector3) -> bool:
+## Someone on their feet within FOLLOW_CLEAR and the tick's `step` ahead along `d` (inside 60
+## degrees of it); head on, one walking out of a spot goes before one walking in, and of two walking
+## into the same spot the nearer goes first.
+func _blocked(d: Vector3, step: float) -> bool:
 	var ahead := Vector3(d.x, 0.0, d.z).normalized()
 	for p: OfficePerson in _people:
 		if p == self or not p.visible or p.phase in DOWN:
 			continue
 		var gap := p.position - position
 		gap.y = 0.0
-		if gap.length() < FOLLOW_CLEAR and gap.dot(ahead) > gap.length() * 0.5:
+		if gap.length() < FOLLOW_CLEAR + step and gap.dot(ahead) > gap.length() * 0.5:
 			if p.phase == Phase.FOLLOW and p._after_follow == Phase.TURN and _after_follow == Phase.WALK:
 				continue
 			if p.phase == Phase.FOLLOW and is_same(p._goal, _goal) \
@@ -819,20 +873,24 @@ func _on_safe_velocity(v: Vector3) -> void:
 	# after it, and is held to the speed now.
 	if phase not in [Phase.WALK, Phase.WAIT_LINK] or k == 0.0:
 		return
+	_velocity = v.limit_length(WALK_SPEED * k)
+	_stride(_velocity * get_physics_process_delta_time())
+
+
+## A step `by` across the floor, turning the way it goes.
+func _stride(by: Vector3) -> void:
 	var dt := get_physics_process_delta_time()
-	v = v.limit_length(WALK_SPEED * k)
-	_velocity = v
-	position += v * dt
+	position += by
 	# Kept on the floor: up and down its ramps and steps, and back from a wall avoidance pushed
-	# it into, by at most half a step a tick.
+	# it into, by at most half the step.
 	var ground := NavigationServer3D.map_get_closest_point(_agent.get_navigation_map(), position + Vector3.UP * NAV_LIFT) - Vector3.UP * NAV_LIFT
 	var off := Vector3(ground.x - position.x, 0.0, ground.z - position.z)
 	# A link's mouth may lie a little off the floor: near the next point of the way, no pull.
 	if position.distance_to(_agent.get_next_path_position()) > 1.0:
-		position += off.limit_length(v.length() * dt * 0.5)
-	position.y = move_toward(position.y, ground.y, maxf(FLOOR_EASE, v.length() * dt * 0.5))
-	if v.length() > 0.05:
-		rotation.y = lerp_angle(rotation.y, atan2(v.x, v.z), minf(1.0, dt * k * TURN_RATE))
+		position += off.limit_length(by.length() * 0.5)
+	position.y = move_toward(position.y, ground.y, maxf(FLOOR_EASE, by.length() * 0.5))
+	if by.length() > 0.05 * dt:
+		rotation.y = lerp_angle(rotation.y, atan2(by.x, by.z), minf(1.0, dt * k * TURN_RATE))
 
 
 func _on_link_reached(details: Dictionary) -> void:
@@ -979,7 +1037,8 @@ static func _libraries() -> Dictionary:
 
 
 ## The shared graph: move (gait → 8-way walk space → pace), sit down → seated → stand up,
-## stand (acts), seated ⇄ sleep (a bed). One-shots hand on at their end.
+## stand (acts), seated ⇄ sleep (a bed); each looped state out through its own pace. One-shots hand
+## on at their end.
 static func _state_machine() -> AnimationNodeStateMachine:
 	if _tree_root:
 		return _tree_root
@@ -998,15 +1057,13 @@ static func _state_machine() -> AnimationNodeStateMachine:
 		space.add_blend_point(_clip("m2m/Strafe_right"), Vector2(-1, 0))
 		move.add_node(StringName("walk_%d" % g), space)
 		move.connect_node(&"gait", g, StringName("walk_%d" % g))
-	var pace := AnimationNodeTimeScale.new()
-	move.add_node(&"pace", pace)
-	move.connect_node(&"pace", 0, &"gait")
-	move.connect_node(&"output", 0, &"pace")
-	sm.add_node(&"move", move)
+	sm.add_node(&"move", _paced(move, &"gait"))
 	sm.add_node(&"stand", _acts(STAND_ACTS))
 	sm.add_node(&"seated", _acts(SEAT_ACTS))
-	for s: Array in [["sit_down", "ual1/Sitting_Enter"], ["stand_up", "ual1/Sitting_Exit"],
-			["sleep", "m2m/Sleeping"]]:
+	var sleep := AnimationNodeBlendTree.new()
+	sleep.add_node(&"clip", _clip("m2m/Sleeping"))
+	sm.add_node(&"sleep", _paced(sleep, &"clip"))
+	for s: Array in [["sit_down", "ual1/Sitting_Enter"], ["stand_up", "ual1/Sitting_Exit"]]:
 		sm.add_node(StringName(s[0]), _clip(s[1]))
 	for t: Array in [["move", "stand", false], ["stand", "move", false], ["move", "sit_down", false],
 			["sit_down", "seated", true], ["seated", "stand_up", false], ["stand_up", "move", true],
@@ -1032,7 +1089,15 @@ static func _acts(acts: Dictionary) -> AnimationNodeBlendTree:
 		tree.add_node(StringName(name), _clip(acts[name]))
 		tree.connect_node(&"act", i, StringName(name))
 		i += 1
-	tree.connect_node(&"output", 0, &"act")
+	return _paced(tree, &"act")
+
+
+## `tree` out through `node` and a TimeScale, `pace`: a looped state's own speed (LOOP_PACES; the
+## walk's follows its stride).
+static func _paced(tree: AnimationNodeBlendTree, node: StringName) -> AnimationNodeBlendTree:
+	tree.add_node(&"pace", AnimationNodeTimeScale.new())
+	tree.connect_node(&"pace", 0, node)
+	tree.connect_node(&"output", 0, &"pace")
 	return tree
 
 

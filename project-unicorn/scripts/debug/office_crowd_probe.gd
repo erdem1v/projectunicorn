@@ -11,10 +11,15 @@ extends Node
 
 const CROWD := 0.3          # metres between two people on their feet
 const STALL_S := 6.0        # ambient seconds a walker may go without getting anywhere
+## Frames a pose may trail its phase: a body poses every few frames (its LOD), and the tree may take
+## a few of those to travel to the phase's state.
+const POSE_LAG := 3 * OfficePerson.OFF_SCREEN
 const DOOR := 0.5           # metres from the door where people may appear and vanish
 const PAUSE_S := 1.0        # real seconds of pause at noon
-const MORNING_S := 3.0      # real seconds kept after the night skip
+const MORNING_MIN := 72.0   # game minutes kept after the night skip, the same morning at every speed
 const SHOTS := [0.02, 0.3, 0.6]   # shares of the working day a frame is saved at
+const WARM_UP := "crowd_probe"    # the clock's freeze while the people take their first frames
+const WARM_FRAMES := 3
 const NAV_FLOOR := Color(0.1, 0.9, 0.2, 0.45)
 const NAV_WAY := Color(0.9, 0.1, 0.1)
 const NAV_DOOR := Color(0.1, 0.2, 0.95)
@@ -83,32 +88,50 @@ func run(view: Control, speed: int, label: String, save: Callable) -> void:
 			_notes.append("still walking at the cap: %s" % ", ".join(walking.map(func(a: OfficeActor) -> String:
 				return "%s %s" % [a.character.id, OfficePerson.Phase.keys()[a.phase]])))
 	EventBus.night_skipped.connect(on_skip, CONNECT_ONE_SHOT)
+	# The probe's own work (the draws above, a shot's save) and the people's first frames off the
+	# pause are kept off the clock: a slow frame at 4× is four times the game minutes, and the door
+	# lets in one a frame. The first frames run at 1×, the same at every speed.
+	TimeManager.freeze_clock(WARM_UP)
+	EventBus.speed_change_requested.emit(1)
+	for _i in WARM_FRAMES:
+		await get_tree().process_frame
 	EventBus.speed_change_requested.emit(speed)
+	TimeManager.thaw_clock(WARM_UP)
 	var start := TimeModel.WEEK_START_HOUR * 60.0
 	var end := WorkHoursSystem.workday_end() * 60.0
 	var shot := 0
 	var paused := false
-	var after := 0.0
-	while after < MORNING_S:
+	# The frame times are the people's: the frame after the start, a shot's save or the pause's end,
+	# and a frame with a step of the clock's hour (its systems' tick, the night's start and skip),
+	# carry the probe's or the clock's work, the same at every speed, and are left out.
+	var hitch := true
+	while not skipped[0] or TimeManager.day_minute() < start + MORNING_MIN:
+		var hour: int = GameState.current_hour
 		await get_tree().process_frame
 		var dt := get_process_delta_time()
-		_frame_ms.append(dt * 1000.0)
+		if not hitch and GameState.current_hour == hour:
+			_frame_ms.append(dt * 1000.0)
+		hitch = false
 		var share := (TimeManager.day_minute() - start) / (end - start)
 		if shot < SHOTS.size() and share >= SHOTS[shot] and not skipped[0]:
+			EventBus.speed_change_requested.emit(0)
 			save.call("crowd_%s_%02d" % [label, shot])
+			await get_tree().process_frame
+			EventBus.speed_change_requested.emit(speed)
 			shot += 1
+			hitch = true
 		if not paused and share >= 0.5:
 			paused = true
 			EventBus.speed_change_requested.emit(0)
 			await get_tree().create_timer(PAUSE_S).timeout
 			EventBus.speed_change_requested.emit(speed)
+			hitch = true
 		if TimeManager.is_night() and not skipped[0]:
 			if _night_s < 0.0:
 				_night_s = 0.0
 				save.call("crowd_%s_%02d" % [label, SHOTS.size()])
+				hitch = true
 			_night_s += dt
-		if skipped[0]:
-			after += dt
 	save.call("crowd_%s_%02d" % [label, SHOTS.size() + 1])
 	var ms := Array(_frame_ms)
 	ms.sort()
@@ -118,8 +141,11 @@ func run(view: Control, speed: int, label: String, save: Callable) -> void:
 	print("CROWD doors %s" % _pick(["walk_in", "cut_in", "walk_out", "cut_out", "pop", "vanish"]))
 	print("CROWD rhythm queued=%d longest=%s meetings=%d" % [_counts.queued, _lines, _counts.meetings])
 	print("CROWD night wait_s=%.2f capped=%s" % [_night_s, str(_night_s >= OfficeConstants.NIGHT_WAIT_S - 0.05)])
-	print("CROWD frames n=%d mean_ms=%.2f p99_ms=%.2f max_ms=%.2f probe_ms=%.2f" % [ms.size(),
-		ms.reduce(func(a: float, b: float) -> float: return a + b, 0.0) / ms.size(), ms[int(ms.size() * 0.99)], ms[-1],
+	# Without the frames that step the clock's hour, so not every frame the player sees; at 4× a day
+	# has a quarter of the frames, so its p99 is a handful of them: slow is the share over a tick.
+	print("CROWD frames n=%d mean_ms=%.2f p99_ms=%.2f max_ms=%.2f slow=%.1f%% probe_ms=%.2f (no hour steps)" % [
+		ms.size(), ms.reduce(func(a: float, b: float) -> float: return a + b, 0.0) / ms.size(), ms[int(ms.size() * 0.99)],
+		ms[-1], 100.0 * ms.filter(func(m: float) -> bool: return m > 1000.0 / 60.0).size() / ms.size(),
 		_probe_us / 1000.0 / maxi(1, _ticks)])
 	print("CROWD crowded %s" % ", ".join(places.slice(0, 3).map(func(k: String) -> String: return "%s %d" % [k, _crowded[k]])))
 	for n in _notes:
@@ -151,14 +177,16 @@ func _physics_process(delta: float) -> void:
 		_prev_k[a] = a.k
 		var key := "%d" % a.phase
 		if _since.get(a, [""])[0] != key:
-			_since[a] = [key, 0.0, at]
+			_since[a] = [key, 0.0, at, Engine.get_process_frames()]
 		else:
 			_since[a][1] += delta * a.k
 		if a.phase == OfficePerson.Phase.WALK and _since[a][1] > STALL_S:
 			if at.distance_to(_since[a][2]) < 0.2:
 				_count("stall", "stall %s at %s" % [a.character.id, at])
-			_since[a] = [key, 0.0, at]
-		if _since[a][1] > 1.0 and a.visible and not _pose_matches(a):
+			_since[a][1] = 0.0
+			_since[a][2] = at
+		if _since[a][1] > 1.0 and Engine.get_process_frames() - _since[a][3] > POSE_LAG and a.visible \
+				and not _pose_matches(a):
 			_count("pose", "pose %s in %s" % [a._playback.get_current_node(), OfficePerson.Phase.keys()[a.phase]])
 			_since[a][1] = -INF
 		if a.queued and not _queued.get(a, false):
@@ -281,13 +309,16 @@ static func _down(p: OfficePerson) -> bool:
 	return p.phase in OfficePerson.DOWN or p.phase in [OfficePerson.Phase.STAND_UP, OfficePerson.Phase.GET_UP]
 
 
+## The tree is in the phase's state, or still in the one-shot that hands on to it at its end: after
+## a slow frame the physics catch-up can run a whole sit-down or stand-up before the tree starts it.
 static func _pose_matches(p: OfficePerson) -> bool:
 	var node := p._playback.get_current_node()
+	var leading := p._playback.get_current_play_position() < p._playback.get_current_length()
 	match p.phase:
 		OfficePerson.Phase.WALK, OfficePerson.Phase.FOLLOW, OfficePerson.Phase.WAIT_LINK, OfficePerson.Phase.TURN:
-			return node == &"move"
+			return node == &"move" or (node == &"stand_up" and leading)
 		OfficePerson.Phase.SEATED:
-			return node == &"seated"
+			return node == &"seated" or (node == &"sit_down" and leading)
 		OfficePerson.Phase.LYING:
 			return node == &"sleep"
 		OfficePerson.Phase.STILL:

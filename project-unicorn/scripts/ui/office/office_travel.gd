@@ -112,7 +112,10 @@ func _ask() -> void:
 		return
 	var a: OfficeActor = asker[0]
 	a.look_at = _people.founder()
-	a.gesture("lookup", ASK_S)
+	# The trip is over and the office back on its pace: the look lasts ASK_S real seconds, and the
+	# gesture as long (paused, the office holds still and there is none).
+	if a.k > 0.0:
+		a.gesture("lookup", ASK_S * a.k)
 	EventBus.ticker_live_line.emit(a.character.character_name, {"key": "MEETING_BACK_ASK"})
 	a.create_tween().tween_callback(func() -> void: a.look_at = null).set_delay(ASK_S)
 

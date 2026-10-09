@@ -6,18 +6,19 @@ extends Node3D
 # little after the start and gone a little before their end (the founder keeps the company
 # window), and a walk starts early enough to land on time; the way out takes one at a time. A walk
 # that cannot fit is cut instead, under the morning's or the night's black. The rest runs on
-# ambient seconds (real seconds times k, the clock's pace capped at VISUAL_CAP, 0 when paused):
-# breaks with a line at the coffee and the restrooms, small idles at the desk, lunch, team
-# meetings, the loft's all-hands. At home only the founder is drawn, sleeping out of hours; the
-# staff work remotely. The night waits on office_empty() (TimeManager's night gate). The founder's
-# trip to a meeting walks them out.
+# ambient seconds (real seconds times k, the clock's pace, TRIP_K as the founder walks out to a
+# meeting, 0 when paused): breaks with a line at the coffee and the restrooms, small idles at the
+# desk, lunch, team meetings, the loft's all-hands. At home only the founder is drawn, sleeping out
+# of hours; the staff work remotely. The night waits on office_empty() (TimeManager's night gate).
+# The founder's trip to a meeting walks them out.
 
 signal founder_arrived   # the founder sent out reached the door
 
 const LIFT_EASE := 6.0    # the design's lift easing, per second
 const ICON_PX := 26.0     # the design's iconS: a head icon this many pixels tall,
 const ICON_MIN := 0.6     # but never under this many world units
-const CUT_FADE_S := 0.25  # [WORKING] the view fades to black before the night cuts those still in
+const CUT_FADE_S := 0.25  # [WORKING] the view fades to black before the night cuts those still in, at 1×;
+                          # shorter as the clock runs faster
 ## A spot's way in starts at the first point of its chain this close to the baked floor.
 const ON_FLOOR := 0.3
 ## Seconds of getting up and sitting down a walk to a seat adds, and one to bed.
@@ -66,6 +67,7 @@ var _clock := 0.0        # ambient seconds in this office
 var _door_turn := 0.0    # the ambient second of the next turn out through the door
 var _fade: Tween         # the view going dark for the night's cut
 var _founder_told := true
+var _walk_back := false  # back from a meeting before the office is placed: the founder starts at the door
 var _rooms: Array[float] = []   # per meeting room: ambient seconds to its next team meeting
 var _kickoff: Array = []   # character ids the next kick-off gathers; empty = none due
 var _all_hands_day := -1
@@ -108,7 +110,7 @@ func office_empty() -> bool:
 	if not cutting:
 		return true
 	if _fade == null and _k > 0.0:
-		_fade = _view.fade(true, CUT_FADE_S)
+		_fade = _view.fade(true, CUT_FADE_S * _pace(1) / _pace(_speed()))
 	return _fade != null and not _fade.is_running()
 
 
@@ -123,9 +125,11 @@ func send_founder_out() -> void:
 		_founder.go_to(_entry, "idle")
 
 
-## Back from the meeting: the day walks the founder in, or at home past the window to bed.
+## Back from the meeting: the day walks the founder in from the door, or at home past the window
+## to bed. The trip home calls this as it loads the office, before the office is placed.
 func founder_back() -> void:
 	founder_away = false
+	_walk_back = true
 
 
 ## The founder in this office, or null before the office is placed or on the map.
@@ -198,7 +202,8 @@ func select(character_id: String) -> void:
 
 func _physics_process(_delta: float) -> void:
 	# Ahead of the people's own ticks (children tick after their parent): a pause stops them in this one.
-	_k = 0.0 if get_tree().paused else _pace(TimeManager.current_speed)
+	# Out on the founder's trip, the clock frozen, the office keeps one pace whatever the speed.
+	_k = 0.0 if get_tree().paused else (OfficeConstants.TRIP_K if founder_away else _pace(TimeManager.current_speed))
 	for a: OfficeActor in _actors.values():
 		a.k = _k
 
@@ -401,7 +406,8 @@ func _drop_errand(a: OfficeActor) -> void:
 
 
 ## Team meetings in each free room (a role group with two or more at their desks, sometimes with
-## the founder), the kick-off when a sprint starts, and the loft's all-hands at its hour.
+## the founder; one due waits for such a group), the kick-off when a sprint starts, and the loft's
+## all-hands at its hour.
 func _meetings(dt: float, minute: float) -> void:
 	if _layout.spots.has("trib") and minute >= OfficeConstants.ALL_HANDS_MINUTE and _all_hands_day != GameState.day:
 		_all_hands_day = GameState.day
@@ -425,14 +431,15 @@ func _meetings(dt: float, minute: float) -> void:
 		_rooms[i] -= dt
 		if _rooms[i] > 0.0:
 			continue
-		_rooms[i] = _rng.randf_range(OfficeConstants.MEETING_EVERY.x, OfficeConstants.MEETING_EVERY.y)
 		var groups := {}
 		for a: OfficeActor in _free_hands():
 			if not a.founder:
 				groups.get_or_add(HRConstants.ROLE_GROUP[a.character.role], []).append(a)
 		var teams: Array = groups.values().filter(func(g: Array) -> bool: return g.size() >= 2)
 		if teams.is_empty():
+			_rooms[i] = OfficeConstants.MEETING_RETRY
 			continue
+		_rooms[i] = _rng.randf_range(OfficeConstants.MEETING_EVERY.x, OfficeConstants.MEETING_EVERY.y)
 		var team: Array = teams[_rng.randi_range(0, teams.size() - 1)]
 		if _free_hands().has(_founder) and _rng.randf() < OfficeConstants.MEETING_FOUNDER:
 			team.push_front(_founder)
@@ -537,20 +544,25 @@ static func _walk_s(metres: float, extra_s: float) -> float:
 
 
 ## Game minutes the same walk takes at the game's speed.
-func _walk_minutes(metres: float, extra_s: float) -> float:
+static func _walk_minutes(metres: float, extra_s: float) -> float:
 	return _game_minutes(_walk_s(metres, extra_s))
 
 
-## Game minutes `ambient_s` ambient seconds take at the game's speed (paused, the speed it resumes at).
-func _game_minutes(ambient_s: float) -> float:
-	var speed: int = TimeManager.current_speed if TimeManager.current_speed > 0 else TimeManager.last_running_speed
+## Game minutes `ambient_s` ambient seconds take at the game's speed.
+static func _game_minutes(ambient_s: float) -> float:
+	var speed := _speed()
 	return 60.0 * TimeManager.hours_per_real_second(speed) * ambient_s / _pace(speed)
 
 
-## k at game speed `speed`: the clock's game minutes per real second over the people's own pace,
-## capped at VISUAL_CAP.
+## The game's speed; paused, the speed it resumes at.
+static func _speed() -> int:
+	return TimeManager.current_speed if TimeManager.current_speed > 0 else TimeManager.last_running_speed
+
+
+## k at game speed `speed`: the clock's game minutes per real second over the people's own pace, so
+## an ambient second covers PACE_MINUTES game minutes at every speed.
 static func _pace(speed: int) -> float:
-	return minf(60.0 * TimeManager.hours_per_real_second(speed) / OfficeConstants.PACE_MINUTES, OfficeConstants.VISUAL_CAP)
+	return 60.0 * TimeManager.hours_per_real_second(speed) / OfficeConstants.PACE_MINUTES
 
 
 ## Matches the actors to the roster. A newcomer starts out of sight at the door; someone gone from
@@ -610,8 +622,9 @@ func _place(a: OfficeActor, minute: float) -> void:
 	_drop_errand(a)
 	_plan_day(a, minute)
 	var want := _wanted(a, minute)
-	# Not due yet and in time on foot: they walk in from the door.
-	if want.is_empty() or (is_same(want, a.seat) and _bed.is_empty() and not a.cut_in and minute < _hours(a).x):
+	# Not due yet and in time on foot, or back from a meeting: they walk in from the door.
+	if want.is_empty() or (a.founder and _walk_back and not TimeManager.is_night()) \
+			or (is_same(want, a.seat) and _bed.is_empty() and not a.cut_in and minute < _hours(a).x):
 		a.status = ""
 		a.place(_entry, "idle")
 	else:
@@ -688,6 +701,7 @@ func _on_map_changed(map: RID) -> void:
 	for room: Array in _layout.meet_rooms:
 		_rooms.append(_rng.randf_range(OfficeConstants.MEETING_EVERY.x, OfficeConstants.MEETING_EVERY.y))
 	_sync(true)
+	_walk_back = false
 
 
 ## 08:00 under the night's black: the ghosts are gone and everyone is placed for the new day.

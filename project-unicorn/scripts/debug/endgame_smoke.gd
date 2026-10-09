@@ -193,6 +193,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_constants_contract":    fail = _case_hr_constants_contract()
 		"speed_ladder":            fail = _case_speed_ladder()
 		"speed_day_invariant":     fail = _case_speed_day_invariant()
+		"office_pace_linear":      fail = _case_office_pace_linear()
 		# --- Product×HR Coupling (task 2 of 3) ---
 		"coupling_wear_team_average":    fail = _case_coupling_wear_team_average()
 		"coupling_cs_dampen_axis":       fail = _case_coupling_cs_dampen_axis()
@@ -7248,6 +7249,15 @@ static func _case_speed_day_invariant() -> String:
 		return "24:00 end: clock order %s" % str(late["log"])
 	if absf(late_secs - late_want) > float(TimeModel.SECONDS_PER_HOUR[1]) / 100.0 + 0.0001:
 		return "24:00 end took %.3f real s, want %.3f" % [late_secs, late_want]
+	return ""
+
+
+## The office people's pace is linear in the speed, uncapped: k at speed s is s times k at 1×.
+static func _case_office_pace_linear() -> String:
+	var one := OfficePeople._pace(1)
+	for s in range(2, TimeModel.SECONDS_PER_HOUR.size()):
+		if absf(OfficePeople._pace(s) - s * one) > 1e-6:
+			return "k at speed %d is %.4f, want %d × %.4f" % [s, OfficePeople._pace(s), s, one]
 	return ""
 
 

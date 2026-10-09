@@ -77,9 +77,16 @@ const CATALOG := {
 }
 
 ## The office people's day: arrivals and departures run on the game clock, the rest on ambient
-## seconds (real seconds times k, the visual speed). [WORKING], each awaiting the owner.
-const PACE_MINUTES := 6.0                   # game minutes an ambient second covers at k 1, the people's own pace
-const VISUAL_CAP := 2.0                     # people move at most this many times their own pace
+## seconds (real seconds times k, the visual speed). PACE_MINUTES is the owner's; the rest is
+## [WORKING], each awaiting the owner.
+const PACE_MINUTES := 6.0                   # game minutes an ambient second covers at every speed: k is the
+                                            # clock's game minutes per real second over this (1× 4, 4× 16)
+const AVOID_MAX_K := 6.0                    # [WORKING] walkers steer round each other up to this k (1×'s 4,
+                                            # not 2×'s 8); faster, they walk their paths through each other
+const ANIM_LOOP_MAX := 3.0                  # [WORKING] looped clips (idles, the stride, the hands) show at most
+                                            # this many times their own speed
+const TRIP_K := 2.0                         # [WORKING] k as the founder walks out to a meeting, the clock frozen,
+                                            # whatever the speed
 const ARRIVE_JITTER := Vector2(0.0, 60.0)   # game minutes after the start someone is due in
 const LATE_SHARE := 0.1                     # this share of days someone is late, by LATE_EXTRA more
 const LATE_EXTRA := Vector2(30.0, 75.0)
@@ -109,6 +116,7 @@ const DESK_IDLE_S := Vector2(4.0, 8.0)
 const MEETING_EVERY := Vector2(40.0, 80.0)  # ambient seconds between team meetings, per room
 const MEETING_LEN := Vector2(20.0, 30.0)
 const MEETING_ACT_S := 5.0                  # a seat at the table changes what it does this often
+const MEETING_RETRY := 1.0                  # [WORKING] ambient seconds a meeting due with no team waits to look again
 const MEETING_FOUNDER := 0.3                # the chance the founder sits in on a team meeting
 const ALL_HANDS_MINUTE := 1020.0            # the loft's all-hands, once a week at 17:00 game time
 const ALL_HANDS_S := 20.0

@@ -485,6 +485,9 @@ yüklemez, süreleri okunmaz.
 - Gece başlayınca saat donar (`freeze_clock("night")`). Ofis görünümü "ofis boş" yüklemini kaydetmişse gece onu her
   kare yoklar ve en fazla `OfficeConstants.NIGHT_WAIT_S` = 3,5 gerçek saniye [WORKING] bekler. Bekleme yalnız kare
   süresiyle sayılır; duraklatma sayacı da yürüyüşü de birlikte dondurur.
+- İçeride kalanları kesen kararma hızla kısalır (§7.4; onay bekliyor: ACIK_KARARLAR 91): haftanın gerçek süresine her hızda aynı payı ekler. Ölçüm
+  (`--tempo-probe=<hız>:shell`, 2026-10-09): 1×'te hafta 22,46 ve 22,47 sn, 4×'te 5,66 ve 5,68 sn; 4× 1×'in 3,96–3,97
+  katı hızdadır.
 - Kayıtlı yüklem yoksa (headless, smoke, probe) atlama hemen olur.
 - Atlamadan hemen önce gece yeniden okunur: oyuncu çıkış sırasında mesaiyi uzatmış olabilir.
 - Atlama mutlak hedefe gider: bir sonraki 08:00. Bitiş E ise atlanan saatler E+1'den 23'e, 0 (devir, günlük tik, ay
@@ -499,7 +502,20 @@ yüklemez, süreleri okunmaz.
 - Kişiler kendi yürüyüşlerinin süresine göre çıkar: çıkış yürüyüşü, yürüme süresinin `EXIT_SLACK` katı kadar önce
   başlar ve kapıdan tek tek geçilir. Sırası günün sonundan sonraya düşen ya da günü yürüyüşe yetmeyecek kadar kısa olan
   masasında kalır; gece yeni yürüyüş başlamaz, yüklem yalnız kapıya ya da yatağa yürüyenleri bekler, içeride kalan
-  herkes kararma altında kesilir (`OfficePeople.CUT_FADE_S` kararması, sonra atlama).
+  herkes kararma altında kesilir, sonra atlama gelir. Kararma `OfficePeople.CUT_FADE_S` [WORKING] 1×'te 0,25 sn'dir ve
+  hızla kısalır (onay bekliyor: ACIK_KARARLAR 91): `CUT_FADE_S × SECONDS_PER_HOUR[hız] / SECONDS_PER_HOUR[1]` (4×'te 0,0625 sn).
+- Kişilerin temposu (sahip kararı 2026-10-09: eski 90 saniyelik haftanın ritmi, Software Inc. modeli): bir ambiyans
+  saniyesi her hızda 6 oyun dakikasıdır (`OfficeConstants.PACE_MINUTES`). Görsel hız `k` saatin oyun dakikası/sn'sinin
+  6'ya bölümüdür ve tavanı yoktur: 1×'te 4, 2×'te 8, 3×'te 12, 4×'te 16; duraklatınca 0, toplantı odasının kadrosunda 1.
+  Mola, kalış, toplantı ve kapı süreleri ambiyans saniyesiyle yazılıdır, oyun saatindeki karşılıkları her hızda aynıdır;
+  yürüyüş ambiyans saniyesi başına 2,4 m'dir (1×'te 9,6, 4×'te 38,4 m/sn).
+- Ajan değerleri (onay bekliyor: ACIK_KARARLAR 91): `k` `AVOID_MAX_K` 6'yı geçmedikçe (1×) kişiler kaçınmayla
+  birbirinin etrafından dolaşır, üstünde (2× ve üstü) yollarını düz yürür ve birbirinin içinden geçebilir; döngü
+  animasyonları (idle'lar, adım, el hareketleri) en çok `ANIM_LOOP_MAX` 3 katı hızla görünür; `k` her hızda 3'ün
+  üstünde olduğundan tavan 1×'te de devrededir ve döngüler her hızda aynı hızla oynar, hızla doğrusal olan kök hareketi
+  ile oturma ve kalkma gibi tek seferlik kliplerdir, ayak kayması kabuldür; kurucu toplantıya çıkarken (saat donuk)
+  ofisteki kişiler hızdan bağımsız `TRIP_K` 2 ile yürür. Dönüşte geçiş ofis yüklenince biter (§8.5): kurucunun içeri
+  yürüyüşü saat akarken hızın `k`'sıyla oynar; soranın bakışı ve baş jesti her hızda `ASK_S` 2,6 gerçek saniye sürer.
 - Kurucu şirket penceresini izler: pencere başında gelir, sonunda çıkar. Evde pencere dışı yeri yataktır; yatağa
   gidiş ve dönüş pencerenin yarısından fazlasını alıyorsa 08:00'den masasındadır ve gece kararmasında kesilir
   (açık: ACIK_KARARLAR 104).

@@ -1516,43 +1516,45 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     1×'te 16 kesinti eder. Harness (`--event-harness=random:seeds=10:weeks=104`, 4 farklı kart ateşlendi): 1×'te 1,4
     dakikada bir karar; en yoğun 3 dakika 1×'te 4, 2×'te 5, 3×'te 7, 4×'te 9 kesinti; en uzun sessizlik 1×'te 68,
     4×'te 17 sn.
-    (3) Ofis kişileri (ajan kararı): görsel hız `k` 1×'e göre değil saatin hızına göre hesaplanır
-    (`OfficeConstants.PACE_MINUTES` 6, k 1'de bir ambiyans saniyesinin oyun dakikası), böylece her saat hızında
-    eskisiyle aynı görünür ve yeni 1× eski 4×'tür. 2×, 3× ve 4×'te ambiyans saniyesi 24, 36 ve 48 oyun dakikasıdır:
-    yürüyüşler sığmaz, çoğu kişi sabah kararmasında masasında belirir ve gece kararmasında kesilir; kesilecek olan
-    mola, ekip toplantısı ve kickoff'a gitmez, ofis masa başı tablosu olur. Ölçüm (`--office-crowd-probe`, kapıdan
-    giriş / kapıdan çıkış / kesmeyle çıkış): İş hanı 11 kişi 1×'te 20 / 6 / 4, 4×'te kapı sayaçlarının hepsi 0;
-    Plaza 40 kişi 1×'te 50 / 4 / 34, 2×'te 10 / 2 / 3, 4×'te hepsi 0; Depo loft 70 kişi 1×'te 38 / 3 / 17. Ekip
-    toplantısı hiçbir ölçümde olmadı; çakışma sayacı Plaza 2×'te 7, Depo loft 1×'te 25.
+    (3) Kapandı (sahip kararı 2026-10-09, eski 90 sn haftanın ritmi, Software Inc. modeli): `k` saatin hızıyla
+    doğrusaldır, ambiyans saniyesi her hızda 6 oyun dakikasıdır; GUNCELLEMELER ch12 §6, GDD Zaman Modeli §7.4.
     (4) Ev'de kurucu (ajan kararı): yatağa gidiş ve dönüş yürüyüşleri pencerenin yarısından fazlasını alıyorsa
-    08:00'den masasındadır, yatakta görünmez ve gece kararmasında kesilir (personelin `MIN_PRESENCE` kuralı); bugünkü
-    merdivende bu 2× ve üstündedir. Eski kuralla kurucu 3× ve 4×'te masasına hiç varamıyordu.
+    08:00'den masasındadır, yatakta görünmez ve gece kararmasında kesilir (personelin `MIN_PRESENCE` kuralı). Ambiyans
+    saniyesi her hızda 6 oyun dakikası olduğundan kural hızdan bağımsızdır: Ev'in yatak yürüyüşü (zincirler boyunca
+    yaklaşık 14,5 m, kalkıp yatmayla) yaklaşık 60 oyun dakikasıdır ve kural ancak 4 saatten kısa bir pencerede
+    devreye girer, varsayılan 09:00–17:00'de girmez. `--day-shot=home:4`'te kurucu 09:17'ye kadar uyur, 09:40'ta
+    masasındadır, 16:31'de yatağa yürür, 16:54'te yataktadır.
     (5) Satış görüşmesinin telefonu (ajan kararı): istek anında kurucu ofiste görünürse saat cevaba kadar durur,
     Ertele yeniden açar (VC çağrısı gibi). Eskiden saat akarken çalıyordu; 4×'te giriş kesimine (mesai bitimi eksi 2
     saat) birkaç saniye kalıyordu. Kurucu sabah daha gelmemişken istenen görüşmenin telefonu sonradan görünür ve saat
     akar.
-    (6) İş hanında kurucu 1×'te 14:00'ten önce çıkış yürüyüşüne başlar (eski 4×'te de öyleydi): giriş 15:00'e kadar
-    açık olduğu hâlde bu arada istenen satış görüşmesinin telefonu görünmez ve kesimde sessizce düşer.
-    (7) 63. maddenin kapanış gerekçesi: 8 saatlik mesai bugün 1×'te 20, 4×'te 5 sn. 78 ve 91'deki sayılar eski
-    tempoyla yazılıdır.
+    (6) İş hanında kurucunun çıkış anı (`bitiş − EXIT_SLACK × yürüyüş`) 12 oyun dk/ambiyans sn'lik eski tempoyla
+    14:00'ten önceydi; giriş 15:00'e kadar açık olduğu hâlde bu arada istenen satış görüşmesinin telefonu görünmüyor ve
+    kesimde sessizce düşüyordu. 6 dk/as ile çıkış anı yaklaşık 16:00'dır (köşe odaya dönüş yürüyüşü `--travel-shot`'ta
+    1×'te yaklaşık 1,75 sn, 7 ambiyans sn): `--day-shot=ishani:4`'te kurucu 15:17'de mutfakta, 16:48'de masasındadır,
+    15:00 kesiminden önce çıkmaz. Akşam kapıdan da çıkmaz: bitişi günün bitişine eşitken çıkış anında kapı sırası
+    (`_head_out`) günün bitişini geçer, kurucu masasında kalır ve gece kararmasında kesilir (aynı karelerde 16:48'de
+    ofiste yalnız kurucu kalmıştır, masasındadır).
+    (7) 63. maddenin kapanış gerekçesi: 8 saatlik mesai bugün 1×'te 20, 4×'te 5 sn. 78'deki 90 saniyelik hafta eski
+    tempoyla yazılıdır; 91'in ambiyans değerleri, ambiyans saniyesi yeniden her hızda 6 oyun dakikası olduğundan
+    yazıldıkları oyun dakikasını tutar.
     (8) Haftalık otomatik kayıt 3× ve 4×'te 10 sn tabanı (`AUTOSAVE_MIN_REAL_SECONDS`) yüzünden iki haftada bir iner.
-    (9) Gerçek oran: `--tempo-probe=1:shell` haftası 22,47 sn, `=4:shell` 5,88 sn (+%4,4, gece kesmesinin 0,25 sn
-    kararması); 4× 1×'ten 3,8 kat hızlıdır.
+    (9) Sahibin hedefi (2026-10-09) 4×'in 1×'in gerçekten dört katı olmasıdır; çözüm ajanındır ve onay bekler (91):
+    gece kesmesinin kararması (`CUT_FADE_S`) hızla kısalır, GDD Zaman Modeli §7.3–7.4. Ölçüm: `--tempo-probe=1:shell` haftası 22,47 ve 22,46 sn (−%0,1, −%0,2), `=4:shell` 5,68 ve 5,66 sn
+    (+%0,9, +%0,6); 4× 1×'in 3,96 ve 3,97 katı (eskiden 3,8).
     (10) Depo loft'un feribotu ve suyu oyun dakikasıyla akar: 4×'te feribot ekranı yaklaşık 4,6 sn'de geçer. B2C
     ücretli koşuda Finans sayfası her MRR değişiminde (her oyun saati) baştan kurulur, gizli Yatırım sayfası da:
     4×'te saniyede 1,6 kez; maliyeti ölçülmedi.
-  - Nerede: `scripts/systems/time_model.gd`; `scripts/ui/office/office_people.gd` (`_pace`, `_wanted`),
+  - Nerede: `scripts/systems/time_model.gd`; `scripts/ui/office/office_people.gd` (`_wanted`, `_head_out`),
     `scripts/systems/office_constants.gd`; `scripts/main/main.gd` (`_on_pitch_requested`, `_on_call_postponed`);
     `scripts/events/core/tuning.gd`; `scripts/autoload/save_manager.gd`; `scripts/ui/office/office_lighting.gd`;
     `scripts/tabs/finance/finance_ozet_view.gd`, `scripts/tabs/hunt_tab.gd`.
-  - Oyuncuya etkisi: Koşu dört kat kısadır; hızlı basamaklarda ofis donuk bir tablodur ve kararlar gerçek zamanda
-    dört kat sık gelir.
-  - Seçenekler: (1) A) dakika hedefi kalır, duraklama ve karar süresi de sayılır; B) dakika hedefi kısalır;
-    C) tavan uzar. (2) A) çapa yeni tempoya göre yeniden yazılır; B) tik tavanı düşer; C) kalır, yalnız raporlanır.
-    (3) A) kabul; B) kesilecek olan da mola ve toplantıya gider; C) `VISUAL_CAP` yükselir. (4) ve (5) A) kabul;
-    B) geri alınır. (6) A) kabul; B) kurucunun çıkış yürüyüşü görüşme kesiminden önce başlamaz; C) kurucu ofiste
-    değilken görüşme doğrudan açılır. (8) A) kabul; B) taban düşer. (10) A) kabul; B) feribot ve su gerçek saniyeye
-    bağlanır; C) Finans ve Yatırım sayfaları kare başına bir kez ve yalnız görünürken kurulur.
+  - Oyuncuya etkisi: Koşu dört kat kısadır ve kararlar gerçek zamanda dört kat sık gelir.
+  - Seçenekler: (1) A) dakika hedefi kalır, duraklama ve karar süresi de sayılır; B) dakika hedefi kısalır; C) tavan
+    uzar. (2) A) çapa yeni tempoya göre yeniden yazılır; B) tik tavanı düşer; C) kalır, yalnız raporlanır. (4) ve (5)
+    A) kabul; B) geri alınır. (6) A) kabul; B) kurucunun çıkış yürüyüşü görüşme kesiminden önce başlamaz; C) kurucu
+    ofiste değilken görüşme doğrudan açılır. (8) A) kabul; B) taban düşer. (10) A) kabul; B) feribot ve su gerçek
+    saniyeye bağlanır; C) Finans ve Yatırım sayfaları kare başına bir kez ve yalnız görünürken kurulur.
   - Kaynak: sahip kararı 2026-10-09 ("4x kaç saniye sürüyorsa onu 1x yapalım. Gerçekten 4x'i de 4 kat
     hızlandıralım."); GDD Zaman Modeli §2.
 
@@ -1730,27 +1732,50 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     §5, §6.3; olay motoru GDD §8.4.
 
 - **91 · Ofis kişilerinin ritim değerleri onay bekliyor.**
-  - Ne oluyor: Kişilerin günü şu [WORKING] değerlerle akar (`OfficeConstants`): görsel hız tavanı `VISUAL_CAP` 2;
-    geliş gecikmesi 0–60 oyun dk, haftaların %10'unda +30–75 dk; çıkış erkenliği 0–45 dk; yürüyerek geç gelme payı
-    `ARRIVE_LATE_OK` 90 dk; çıkış yürüyüşü süresinin `EXIT_SLACK` 1,5 katı önce başlar; `MIN_PRESENCE` pencerenin
-    %50'si; kapı: `DOOR_CLEAR` 0,9 m (gelenler arası), `DOOR_S` 0,5 ambiyans sn (çıkanlar arası), içeri beklemenin
-    tavanı `OfficePerson.DOOR_WAIT` 6 sn; `NIGHT_WAIT_S` 3,5 gerçek sn; gece kesmesinin kararması
-    `OfficePeople.CUT_FADE_S` 0,25 sn; ilk mola 10–30, molalar arası 25–60, ertelenen mola 15–30 ambiyans sn; mola
-    ağırlıkları çalışan/kurucu: kahve 3/2, WC 2/1, masa ziyareti 1/4, kabin 2/0 (yalnız satışçı); kalış: kahve 6–10,
-    WC 5–8, kabin 10–16, ziyaret 5–8, öğle 15–25 sn; öğle penceresi 12:00–13:30; masa başı hareket her 12–30 sn,
-    4–8 sn sürer; ekip toplantısı oda başına 40–80 sn arayla, 20–30 sn, kurucu %30 katılır, masada hareket 5 sn'de
-    bir; all-hands 17:00, 20 sn; kuyruk en çok 3 kişi, 0,75 m aralık (`OfficeVenue`). Kahvenin kapasitesi tasarımın
-    kahve noktası sayısıdır: İş hanı 4, Plaza 4, Depo loft 5; Ev'de kettle 1.
+  - Ne oluyor: Kişilerin günü şu [WORKING] değerlerle akar (`OfficeConstants`): kaçınma sınırı `AVOID_MAX_K` 6 (bu
+    `k`'ya kadar kişiler birbirinin etrafından dolaşır, üstünde yollarını düz yürür ve birbirinin içinden geçebilir;
+    1×'in 4'ü kaçınır, 2×'in 8'i kaçınmaz); döngü animasyonlarının tavanı `ANIM_LOOP_MAX` doğal hızın 3 katı
+    (idle'lar, adım, el hareketleri; `k` her hızda 3'ün üstünde olduğundan döngüler her hızda bu tavanda oynar; kök
+    hareketi ve tek seferlik klipler `k` ile oynar, ayak kayar); kurucu toplantıya çıkarken (saat donuk) kişilerin
+    temposu `TRIP_K` 2 (hızdan bağımsız; dönüşte içeri yürüyüş hızın `k`'sıyla oynar); takılan yürüyüşün gerçek-zaman
+    tabanı `OfficePerson.STALL_MIN_S` 0,25 sn; geliş gecikmesi 0–60 oyun dk, haftaların %10'unda +30–75 dk; çıkış
+    erkenliği 0–45 dk; yürüyerek geç gelme payı `ARRIVE_LATE_OK` 90 dk; çıkış yürüyüşü süresinin `EXIT_SLACK` 1,5 katı
+    önce başlar; `MIN_PRESENCE` pencerenin %50'si; kapı: `DOOR_CLEAR` 0,9 m (gelenler arası), `DOOR_S` 0,5 ambiyans sn
+    (çıkanlar arası), içeri beklemenin tavanı `OfficePerson.DOOR_WAIT` 6 sn; `NIGHT_WAIT_S` 3,5 gerçek sn; gece
+    kesmesinin kararması `OfficePeople.CUT_FADE_S` 1×'te 0,25 sn (hızla kısalır); ilk mola 10–30, molalar arası 25–60,
+    ertelenen mola 15–30 ambiyans sn; mola ağırlıkları çalışan/kurucu: kahve 3/2, WC 2/1, masa ziyareti 1/4, kabin 2/0
+    (yalnız satışçı); kalış: kahve 6–10, WC 5–8, kabin 10–16, ziyaret 5–8, öğle 15–25 sn; öğle penceresi 12:00–13:30;
+    masa başı hareket her 12–30 sn, 4–8 sn sürer; ekip toplantısı oda başına 40–80 sn arayla (sırası gelen toplantı,
+    masasında iki kişisi olan bir rol grubu çıkana kadar bekler ve `MEETING_RETRY` 1 sn'de bir yeniden bakar; eskiden
+    grup yoksa yeni aralık çekilip toplantı düşüyordu, bu davranış değişikliği de onay bekliyor), 20–30 sn, kurucu %30
+    katılır, masada hareket 5 sn'de bir; all-hands 17:00, 20 sn; kuyruk en çok 3 kişi, 0,75 m aralık (`OfficeVenue`).
+    Kahvenin kapasitesi tasarımın kahve noktası sayısıdır: İş hanı 4, Plaza 4, Depo loft 5; Ev'de kettle 1.
   - Plandan ayrılan iki nokta: kapıdan iki geliş arası 2 ambiyans saniyesi (`ARRIVAL_GAP`) 40 kişide sabahı 80 saniyeye
     yayıyordu; yerine gelen, bir öncekinin kapıdan `DOOR_CLEAR` uzaklaşmasını bekler. Çıkışta fiziksel kuyruk Plaza'da
     koridoru tıkadı; yerine kapı sırası (`DOOR_S`) geldi, sırası günün sonundan sonraya düşen masasında kalıp kesilir.
-  - Ölçüm (`--office-crowd-probe`, bu makine; sıçrama, duraklatmada kıpırtı, takılma, poz hatası ve hata 0): İş hanı
-    11 kişi 1×: 7 kapıdan yürüyerek, 3 kesmeyle çıktı; Plaza 40 kişi 1×: 22 / 18; Plaza 40 kişi 4×: 7 / 31; Depo loft
-    70 kişi 4×: 4 / 19. Gece kapısı hiçbirinde 3,5 sn tavanına düşmedi. Varsayılan 09:00–17:00 mesaide all-hands hiç
-    olmuyor (17:00'de ofis boş).
+  - Ölçüm (`--office-crowd-probe`, 2026-10-09, bu makine; sıçrama, duraklatmada kıpırtı, takılma, poz hatası ve hata
+    her koşuda 0; gece kapısı 0,14–0,26 sn, tavana hiç düşmedi). Kapıdan yürüyerek / kesmeyle çıkan, 1× / 2× / 4×: İş
+    hanı 11 kişi her hızda 9 / 1, toplantı 2; Plaza 40 kişi 10 / 29, 10 / 29, 9 / 30, kuyruğa giren 9, 9, 10; Depo
+    loft 70 kişi 7 / 59, 6 / 60, 5–6 / 60–61, kuyruğa giren 7–8, 4, 0. Çakışma sayacı (ayaktaki iki kişi 0,3 m'den
+    yakın, kare başına), 1× / 2× / 4×: İş hanı 0 / 85 / 21, Plaza 15 / 537 / 145–157, Depo loft 16 / 39 / 93; 2× ve
+    üstünde kaçınma kapalı olduğu için çakışmalar Plaza'da asansör önü koridorda, Depo loft'ta merdiven ağzında
+    toplanır. Eski 1× ölçümüne göre (İş hanı 7 / 3, Plaza 22
+    / 18) İş hanı daha iyi, Plaza akşamı daha kötüdür; sırası gelen toplantının grup beklemesi bunun nedeni değildir
+    (eski toplantı kuralıyla Plaza 1× yine 10 / 29), akşamı kapı sırası belirler (`DOOR_S` kişi başına 3 oyun
+    dakikası). Depo loft'ta sabah kapısı doludur (70 kişi tek tek, kişi başına yaklaşık 0,53 ambiyans sn); yavaş bir
+    kare 4×'te dört kat oyun dakikası sürer ve kapı karede bir kişi alır, bu yüzden 4×'te gelişler ortalama yaklaşık
+    15 oyun dakikası geç kalır (masaya oturuşun ortancası 1×'te 10:47, 4×'te 11:14), ilk molalar öğle penceresine
+    kayar (kısa mola 1×'te 23–25, 4×'te 10–18; öğle 1×'te 12–15, 4×'te 14–16) ve kahve kuyruğu oluşmaz. Depo loft'ta
+    4×'in kare p99'u dokuz çiftin sekizinde 1×'ten %4–38 yüksektir (ortalama −%4…+%20, makine yüküyle değişir); aynı
+    günün işi dört kat az kareye sığar: poz kare başına +0,6 ms, gün akışı +0,24 ms, kişilerin fizik tiki 2,0 ms'ye
+    karşı 0,5 ms (tik başına dört kat yürüyüş; 1×'te bir kısmı kaçınma geri çağrısında koşar). Varsayılan 09:00–17:00
+    mesaide all-hands hiç olmuyor (17:00'de ofis boş).
   - Nerede: `scripts/systems/office_constants.gd`; `scripts/ui/office/office_venue.gd`, `office_people.gd`,
     `office_person.gd`.
-  - Oyuncuya etkisi: Ofisin görünen günü; 4×'te büyük ofislerde çoğu kişi kararma altında gelir ve gider.
+  - Oyuncuya etkisi: İş hanı ve Plaza'da ofisin günü oyun saatinde her hızda aynıdır; Plaza 40'ta akşam kişilerin
+    dörtte üçü masada kesilir. 2× ve üstünde kalabalık ofiste kişiler koridorda ve merdiven ağzında birbirinin içinden
+    geçer. Depo loft'ta 4×'te sabah kapı kuyruğu yavaş karelerle uzar, kahve kuyruğu oluşmaz ve
+    kare süresi 1×'ten biraz yüksektir.
   - Seçenekler: A) Değerler mühürlenir. B) Sahip değiştirir (ör. all-hands 16:00, daha kısa `DOOR_S`). C) Huylar
     ritmi etkiler (trait task'ı; ISLER).
   - Kaynak: ofis karakterleri planı §2, §9 (Erdem, 2026-09-28).
