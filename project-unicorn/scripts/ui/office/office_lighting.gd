@@ -184,10 +184,12 @@ func apply(t: float) -> void:
 
 	_sun.light_color = v.sun.linear_to_srgb()
 	_sun.light_energy = v.si * LIGHT_SCALE
-	var night_k := t > 1165.0
-	var u := 0.35 if night_k else clampf((t - 425.0) / 740.0, 0.0, 1.0)
-	var el := deg_to_rad(55.0 if night_k else 10.0 + 48.0 * sin(PI * u))
-	var az := PI / 4.0 + (u - 0.5) * 2.0
+	# The Sun is the moon at night: it swings there over the minutes its colour blends to the moon's
+	# (CS rows 1150 and 1200), so no shadow turns in one frame.
+	var moon_k := smoothstep(1150.0, 1200.0, t)
+	var u := clampf((t - 425.0) / 740.0, 0.0, 1.0)
+	var el := deg_to_rad(lerpf(10.0 + 48.0 * sin(PI * u), 55.0, moon_k))
+	var az := PI / 4.0 + (lerpf(u, 0.35, moon_k) - 0.5) * 2.0
 	_sun.basis = Basis.looking_at(-Vector3(sin(az) * cos(el), sin(el), cos(az) * cos(el)))
 	_top.light_energy = (inter_day * TOP_FILL_DAY + night_in * (1.0 - inter_day)) * LIGHT_SCALE
 
