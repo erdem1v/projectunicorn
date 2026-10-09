@@ -13,3 +13,11 @@
 /docs/mockups/**/*.pyc
 /docs/mockups/**/__pycache__/
 /docs/mockups/**/*.import
+
+# Render and asset-lab audits: the PNG frames stay local, the md reports are tracked. The lab's downloaded
+# packs, capture output and node_modules stay local.
+/docs/audits/render/**/*.png
+/docs/audits/asset_lab/**/*.png
+/sandbox/asset_lab/packs/
+/sandbox/asset_lab/out/
+/sandbox/asset_lab/tools/**/node_modules/
