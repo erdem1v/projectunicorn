@@ -77,8 +77,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   `EventBus.day_advanced` adlarını korur ve tik sayar; her tik 24 saatlik tik ve bir günlük tik taşır. Zaman
   sabitlerinin ve birim dönüştürücülerinin tek evi `TimeModel`'dir: süre hafta verisidir ve `TimeModel.ticks()` ile
   okunur, `*_PER_DAY` oranları gün verisi kalır ve tikte `TimeModel.per_tick()` ile ×7 uygulanır. Hız merdiveni
-  `TimeModel.SECONDS_PER_HOUR = [0.0, 10.0, 5.0, 10.0 / 3.0, 2.5]` saniye / oyun saati: duraklat / 1× / 2× / 3× / 4×
-  [WORKING]. Hafta 08:00'de başlar; varsayılan mesaide (09:00'dan 17:00'ye) hafta 1×'te 90, 4×'te 22,5 saniye sürer.
+  `TimeModel.SECONDS_PER_HOUR = [0.0, 2.5, 1.25, 2.5 / 3.0, 0.625]` saniye / oyun saati: duraklat / 1× / 2× / 3× / 4×
+  [WORKING]. Hafta 08:00'de başlar; varsayılan mesaide (09:00'dan 17:00'ye) hafta 1×'te 22,5, 4×'te 5,625 saniye sürer.
   Mesai bitip ofis boşalınca gecenin saatleri tek toplu adımda koşar (`TimeManager.skip_night`); saati dışarıdan
   ileri taşıyan öbür kapı `TimeManager.advance_hours(n)`'dir (toplantı kapanışı, smoke, probe).
 - Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber

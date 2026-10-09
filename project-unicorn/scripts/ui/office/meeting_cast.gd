@@ -5,8 +5,9 @@ extends Node3D
 # other side sat at the table from the start, lead in the middle, and the founder, who walks in
 # from the lift and sits across from them. The meeting says whom each one looks at, how they sit,
 # who speaks and what they do; this moves the bodies and the pen on the table, lights the
-# founder's place and frames the table beside the meeting panel. The people move at 1× whatever
-# the clock does: the meeting holds it, stopped, and the office view runs through a paused tree.
+# founder's place and frames the table beside the meeting panel. The people move at their own pace
+# (k 1) whatever the clock does: the meeting holds it, stopped, and the office view runs through a
+# paused tree.
 #
 # People by index: 0 is the founder, 1.. the other side in the order staged.
 

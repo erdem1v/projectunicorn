@@ -7101,7 +7101,7 @@ static func _case_hr_constants_contract() -> String:
 
 static func _case_speed_ladder() -> String:
 	var ladder: Array = TimeModel.SECONDS_PER_HOUR
-	var want: Array = [0.0, 10.0, 5.0, 10.0 / 3.0, 2.5]
+	var want: Array = [0.0, 2.5, 1.25, 2.5 / 3.0, 0.625]
 	if ladder.size() != want.size():
 		return "the ladder has %d entries, want %d (pause + 1x/2x/3x/4x)" % [ladder.size(), want.size()]
 	for i in ladder.size():

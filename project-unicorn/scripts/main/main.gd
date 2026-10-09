@@ -30,6 +30,7 @@ const LOADED_GLYPH := preload("res://assets/icons/util/load.svg")
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
 const EVENT_CLOCK_HOLD := "event"                 # TimeManager hold reason while a decision waits
 const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason for the founder's trip
+const SHOT_FREEZE := "shot"                       # TimeManager freeze reason holding a shot's hour
 
 var _flow: Node = null
 var _shell: Node = null
@@ -1260,7 +1261,7 @@ func _run_travel_shot(spec: String) -> void:
 
 
 # --invite-shot=<ring|card|vc|postpone|postpone_vc>: the call that opens an outside meeting, at İş hanı
-# with people at their desks, as the player meets it: ring = a prospect's call at 14:00 ringing over the
+# with people at their desks, as the player meets it: ring = a prospect's call at 11:00 ringing over the
 # founder's head, its card shut; card = that card open; vc = a fund's call at 10:00, its card open from the
 # first ring and the clock stopped; postpone = the prospect's call put off, still ringing, the toast saying
 # so; postpone_vc = the fund's call put off, the ring gone and the toast saying the meeting moved on. The
@@ -1272,8 +1273,9 @@ func _run_invite_shot(kind: String) -> void:
 	_travel_on = true
 	_seed_sales_world()
 	GameState.office_id = "ishani"
-	GameState.set_current_hour(10 if vc else 14)
+	GameState.set_current_hour(10 if vc else 11)
 	TimeManager.sync_to_current_hour()
+	TimeManager.freeze_clock(SHOT_FREEZE)   # the hour stays the call's at any speed
 	var lead: Prospect = SalesFaucetSystem.spawn(2, "faucet")
 	OfficeCrowdProbe.seed_staff(TRAVEL_SHOT_STAFF)
 	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)

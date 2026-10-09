@@ -1504,6 +1504,58 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     büyüklüğüyle azalır (karar 6'nın 3×'i). C) Fikstür taze imzaya döner, vaka cezayı bekler.
   - Kaynak: sahip kararı 2026-10-02 (6); smoke `meeting_during_kepenk`.
 
+- **104 · Hız merdiveni dört kat hızlandı: bağlı hedefler ve hızlı basamakların yan etkileri.**
+  - Ne oluyor: Sahip kararıyla `TimeModel.SECONDS_PER_HOUR` [0.0, 2.5, 1.25, 2.5 / 3.0, 0.625]'tir; varsayılan
+    mesaide hafta 1×'te 22,5, 2×'te 11,25, 3×'te 7,5, 4×'te 5,625 sn sürer (eski 4× yeni 1×'tir). Kararın açtığı
+    sorular ve işi yapan ajanın verdiği kararlar:
+    (1) Demo hedefi 60–90 dk [WORKING] (CLAUDE.md §1; GUNCELLEMELER ch01 §1, ch14 §1) eskiden 1×'te 40–60 haftaya
+    denk geliyordu. Bugün 60–90 dk saf 1× saatiyle 160–240 hafta eder, 104 haftalık tavanın üstü; 104 haftalık koşu
+    1×'te, duraklama ve toplantı hariç, yaklaşık 39 dk.
+    (2) Olay temposu çapası (motor md §13.7; `EvTuning.ANCHOR_MINUTES_PER_DECISION` 2,5,
+    `ANCHOR_MAX_INTERRUPTS_PER_3_MIN` 3): 3 gerçek dakika artık 1×'te 8, 4×'te 32 haftadır; tik tavanı (2) dolarsa
+    1×'te 16 kesinti eder. Harness (`--event-harness=random:seeds=10:weeks=104`, 4 farklı kart ateşlendi): 1×'te 1,4
+    dakikada bir karar; en yoğun 3 dakika 1×'te 4, 2×'te 5, 3×'te 7, 4×'te 9 kesinti; en uzun sessizlik 1×'te 68,
+    4×'te 17 sn.
+    (3) Ofis kişileri (ajan kararı): görsel hız `k` 1×'e göre değil saatin hızına göre hesaplanır
+    (`OfficeConstants.PACE_MINUTES` 6, k 1'de bir ambiyans saniyesinin oyun dakikası), böylece her saat hızında
+    eskisiyle aynı görünür ve yeni 1× eski 4×'tür. 2×, 3× ve 4×'te ambiyans saniyesi 24, 36 ve 48 oyun dakikasıdır:
+    yürüyüşler sığmaz, çoğu kişi sabah kararmasında masasında belirir ve gece kararmasında kesilir; kesilecek olan
+    mola, ekip toplantısı ve kickoff'a gitmez, ofis masa başı tablosu olur. Ölçüm (`--office-crowd-probe`, kapıdan
+    giriş / kapıdan çıkış / kesmeyle çıkış): İş hanı 11 kişi 1×'te 20 / 6 / 4, 4×'te kapı sayaçlarının hepsi 0;
+    Plaza 40 kişi 1×'te 50 / 4 / 34, 2×'te 10 / 2 / 3, 4×'te hepsi 0; Depo loft 70 kişi 1×'te 38 / 3 / 17. Ekip
+    toplantısı hiçbir ölçümde olmadı; çakışma sayacı Plaza 2×'te 7, Depo loft 1×'te 25.
+    (4) Ev'de kurucu (ajan kararı): yatağa gidiş ve dönüş yürüyüşleri pencerenin yarısından fazlasını alıyorsa
+    08:00'den masasındadır, yatakta görünmez ve gece kararmasında kesilir (personelin `MIN_PRESENCE` kuralı); bugünkü
+    merdivende bu 2× ve üstündedir. Eski kuralla kurucu 3× ve 4×'te masasına hiç varamıyordu.
+    (5) Satış görüşmesinin telefonu (ajan kararı): istek anında kurucu ofiste görünürse saat cevaba kadar durur,
+    Ertele yeniden açar (VC çağrısı gibi). Eskiden saat akarken çalıyordu; 4×'te giriş kesimine (mesai bitimi eksi 2
+    saat) birkaç saniye kalıyordu. Kurucu sabah daha gelmemişken istenen görüşmenin telefonu sonradan görünür ve saat
+    akar.
+    (6) İş hanında kurucu 1×'te 14:00'ten önce çıkış yürüyüşüne başlar (eski 4×'te de öyleydi): giriş 15:00'e kadar
+    açık olduğu hâlde bu arada istenen satış görüşmesinin telefonu görünmez ve kesimde sessizce düşer.
+    (7) 63. maddenin kapanış gerekçesi: 8 saatlik mesai bugün 1×'te 20, 4×'te 5 sn. 78 ve 91'deki sayılar eski
+    tempoyla yazılıdır.
+    (8) Haftalık otomatik kayıt 3× ve 4×'te 10 sn tabanı (`AUTOSAVE_MIN_REAL_SECONDS`) yüzünden iki haftada bir iner.
+    (9) Gerçek oran: `--tempo-probe=1:shell` haftası 22,47 sn, `=4:shell` 5,88 sn (+%4,4, gece kesmesinin 0,25 sn
+    kararması); 4× 1×'ten 3,8 kat hızlıdır.
+    (10) Depo loft'un feribotu ve suyu oyun dakikasıyla akar: 4×'te feribot ekranı yaklaşık 4,6 sn'de geçer. B2C
+    ücretli koşuda Finans sayfası her MRR değişiminde (her oyun saati) baştan kurulur, gizli Yatırım sayfası da:
+    4×'te saniyede 1,6 kez; maliyeti ölçülmedi.
+  - Nerede: `scripts/systems/time_model.gd`; `scripts/ui/office/office_people.gd` (`_pace`, `_wanted`),
+    `scripts/systems/office_constants.gd`; `scripts/main/main.gd` (`_on_pitch_requested`, `_on_call_postponed`);
+    `scripts/events/core/tuning.gd`; `scripts/autoload/save_manager.gd`; `scripts/ui/office/office_lighting.gd`;
+    `scripts/tabs/finance/finance_ozet_view.gd`, `scripts/tabs/hunt_tab.gd`.
+  - Oyuncuya etkisi: Koşu dört kat kısadır; hızlı basamaklarda ofis donuk bir tablodur ve kararlar gerçek zamanda
+    dört kat sık gelir.
+  - Seçenekler: (1) A) dakika hedefi kalır, duraklama ve karar süresi de sayılır; B) dakika hedefi kısalır;
+    C) tavan uzar. (2) A) çapa yeni tempoya göre yeniden yazılır; B) tik tavanı düşer; C) kalır, yalnız raporlanır.
+    (3) A) kabul; B) kesilecek olan da mola ve toplantıya gider; C) `VISUAL_CAP` yükselir. (4) ve (5) A) kabul;
+    B) geri alınır. (6) A) kabul; B) kurucunun çıkış yürüyüşü görüşme kesiminden önce başlamaz; C) kurucu ofiste
+    değilken görüşme doğrudan açılır. (8) A) kabul; B) taban düşer. (10) A) kabul; B) feribot ve su gerçek saniyeye
+    bağlanır; C) Finans ve Yatırım sayfaları kare başına bir kez ve yalnız görünürken kurulur.
+  - Kaynak: sahip kararı 2026-10-09 ("4x kaç saniye sürüyorsa onu 1x yapalım. Gerçekten 4x'i de 4 kat
+    hızlandıralım."); GDD Zaman Modeli §2.
+
 ## Metin ve yerelleştirme
 
 - **`TERM_INV_*` masa satırları (15 TR + 15 EN).** TR 95bc9ea'da, EN 8457ce3'te yazıldı; ikisi de onay bekliyor.

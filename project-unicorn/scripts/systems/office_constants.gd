@@ -78,7 +78,8 @@ const CATALOG := {
 
 ## The office people's day: arrivals and departures run on the game clock, the rest on ambient
 ## seconds (real seconds times k, the visual speed). [WORKING], each awaiting the owner.
-const VISUAL_CAP := 2.0                     # people move at most this many times their 1× pace
+const PACE_MINUTES := 6.0                   # game minutes an ambient second covers at k 1, the people's own pace
+const VISUAL_CAP := 2.0                     # people move at most this many times their own pace
 const ARRIVE_JITTER := Vector2(0.0, 60.0)   # game minutes after the start someone is due in
 const LATE_SHARE := 0.1                     # this share of days someone is late, by LATE_EXTRA more
 const LATE_EXTRA := Vector2(30.0, 75.0)

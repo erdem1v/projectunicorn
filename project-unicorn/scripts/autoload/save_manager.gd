@@ -31,7 +31,7 @@ const MANUAL_SLOT_PREFIX := "manual_"
 const SETTING_AUTOSAVE_FREQUENCY := "autosave_frequency"
 const AUTOSAVE_FREQUENCIES: Array[String] = ["off", "weekly", "monthly"]
 
-# Real-time floor between two autosaves: a short workday at 4x is about 20 real seconds. A
+# Real-time floor between two autosaves, so fast play does not write every few seconds. A
 # skipped write stays pending and lands at the next safe boundary: coalesced, never lost.
 const AUTOSAVE_MIN_REAL_SECONDS := 10                      # [WORKING]
 

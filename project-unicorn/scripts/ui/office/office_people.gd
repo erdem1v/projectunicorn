@@ -6,7 +6,7 @@ extends Node3D
 # little after the start and gone a little before their end (the founder keeps the company
 # window), and a walk starts early enough to land on time; the way out takes one at a time. A walk
 # that cannot fit is cut instead, under the morning's or the night's black. The rest runs on
-# ambient seconds (real seconds times k, the game's speed capped at VISUAL_CAP, 0 when paused):
+# ambient seconds (real seconds times k, the clock's pace capped at VISUAL_CAP, 0 when paused):
 # breaks with a line at the coffee and the restrooms, small idles at the desk, lunch, team
 # meetings, the loft's all-hands. At home only the founder is drawn, sleeping out of hours; the
 # staff work remotely. The night waits on office_empty() (TimeManager's night gate). The founder's
@@ -543,9 +543,10 @@ func _game_minutes(ambient_s: float) -> float:
 	return 60.0 * TimeManager.hours_per_real_second(speed) * ambient_s / _pace(speed)
 
 
-## k at game speed `speed`: its pace as a multiple of 1×, capped at VISUAL_CAP.
+## k at game speed `speed`: the clock's game minutes per real second over the people's own pace,
+## capped at VISUAL_CAP.
 static func _pace(speed: int) -> float:
-	return minf(TimeManager.hours_per_real_second(speed) / TimeManager.hours_per_real_second(1), OfficeConstants.VISUAL_CAP)
+	return minf(60.0 * TimeManager.hours_per_real_second(speed) / OfficeConstants.PACE_MINUTES, OfficeConstants.VISUAL_CAP)
 
 
 ## Matches the actors to the roster. A newcomer starts out of sight at the door; someone gone from

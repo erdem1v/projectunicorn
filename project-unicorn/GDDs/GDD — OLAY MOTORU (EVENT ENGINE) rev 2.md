@@ -449,7 +449,7 @@ History **yalnızca id** saklar (`option_id`, `outcome_id`). Etiket saklamaz. Oy
 
 ### 7.5 Budama yok
 
-History koşu boyunca budanmaz. Yumuşak tavana kadar süren bir koşu 104 tiktir (`EndingsSystem.SOFT_CAP_WEEK`); 1×'te varsayılan mesaide bu yaklaşık 2,6 gerçek saat eder. Böyle bir koşuda ~150-400 satır beklenir; bellek ve save boyutu ihmal edilebilir.
+History koşu boyunca budanmaz. Yumuşak tavana kadar süren bir koşu 104 tiktir (`EndingsSystem.SOFT_CAP_WEEK`); 1×'te varsayılan mesaide bu yaklaşık 39 gerçek dakika eder. Böyle bir koşuda ~150-400 satır beklenir; bellek ve save boyutu ihmal edilebilir.
 
 ## 8. ETKİ SÖZLÜĞÜ
 
@@ -865,9 +865,9 @@ Aynı seviyede: **en eski kabul edilen önce.** Eşitlikte `event_id` alfabetik 
 
 ### 11.5 Maksimum hız
 
-Oyunun maksimum hızı **4×**'tür. Hız merdiveni oyun saati başına gerçek saniyedir (`TimeModel.SECONDS_PER_HOUR`: duraklat, 10, 5, 10/3, 2,5). Hafta 08:00'de başlar ve ofis boşalınca gece atlanır; varsayılan 09-17 mesaide bir hafta 1×'te 90, 2×'te 45, 3×'te 30, 4×'te 22,5 sn sürer (`TimeModel.seconds_per_tick`).
+Oyunun maksimum hızı **4×**'tür. Hız merdiveni oyun saati başına gerçek saniyedir (`TimeModel.SECONDS_PER_HOUR`: duraklat, 2,5, 1,25, 2,5/3, 0,625). Hafta 08:00'de başlar ve ofis boşalınca gece atlanır; varsayılan 09-17 mesaide bir hafta 1×'te 22,5, 2×'te 11,25, 3×'te 7,5, 4×'te 5,625 sn sürer (`TimeModel.seconds_per_tick`).
 
-4× bir ara modal yoğunluğu sebebiyle kaldırılmıştı: gün modelinde 3×'te bir oyun günü 3 sn sürüyordu. Haftalık modelde 4×'te bile bir hafta 22,5 sn sürdüğü için geri geldi (§27.9). Tempo bütçesi tik (hafta) bazlıdır; hız yalnız bütçenin gerçek zamandaki sıklığını değiştirir, fazlası kağıda düşer (I4).
+4× bir ara modal yoğunluğu sebebiyle kaldırılmıştı: gün modelinde 3×'te bir oyun günü 3 sn sürüyordu. Haftalık modelde 4×'te bir hafta 22,5 sn sürdüğü için geri geldi (§27.9); sahip kararıyla (2026-10-09) merdiven dört kat hızlandı ve 4×'te bir hafta 5,625 sn sürer. Tempo bütçesi tik (hafta) bazlıdır; hız yalnız bütçenin gerçek zamandaki sıklığını değiştirir, fazlası kağıda düşer (I4).
 
 ### 11.6 Tutorial kancası
 
@@ -987,7 +987,7 @@ Pencere tek tiktir: kota yalnız bu tikin (bu haftanın) kabullerini sayar.
 
 Yan fayda: kota çeşitliliği zorlar. Müşteri kotası dolduysa motor başka kategoriye bakmak zorundadır; oyuncunun haftası tek renk olmaz.
 
-**Katman 4 — Tik tavanı** Tik (hafta) başına max **2 interrupt** (`MAX_INTERRUPTS_PER_DAY`; ad korunur, bir oyun günü bir tiktir). Üçüncüsü kağıda düşer. Tavan dolarsa 1×'te 3 gerçek dakika iki hafta, yani 4 kesinti eder; bu, §13.7 çapasının (3) üstüdür. Harness bunu her hız için ölçer ve raporlar (§19.3).
+**Katman 4 — Tik tavanı** Tik (hafta) başına max **2 interrupt** (`MAX_INTERRUPTS_PER_DAY`; ad korunur, bir oyun günü bir tiktir). Üçüncüsü kağıda düşer. Tavan dolarsa 1×'te 3 gerçek dakika sekiz hafta, yani 16 kesinti eder; bu, §13.7 çapasının (3) üstüdür. Harness bunu her hız için ölçer ve raporlar (§19.3).
 
 ### 13.4 Faz çarpanı
 
@@ -1032,7 +1032,7 @@ Normal hızda ortalama **2-3 dakikada bir** karar yüzeyi. Hiçbir 3 dakikalık 
 
 Bu çapa auto-play harness'ında otomatik ölçülür (§19.3): binlerce koşuda "en yoğun 3 dakika" ve "en uzun sessizlik" raporlanır. Kalibrasyon gözle değil, veriyle yapılır.
 
-Gerçek zaman ile oyun zamanı arasındaki bağ `TimeModel.seconds_per_tick`'tir. Varsayılan mesaide bir hafta 1×'te 90 sn sürdüğü için 3 dakika 1×'te 2, 2×'te 4, 3×'te 6, 4×'te 8 haftadır. Harness pencereyi her hız için ayrı hesaplar ve çapayı dört basamakta ayrı raporlar.
+Gerçek zaman ile oyun zamanı arasındaki bağ `TimeModel.seconds_per_tick`'tir. Varsayılan mesaide bir hafta 1×'te 22,5 sn sürdüğü için 3 dakika 1×'te 8, 2×'te 16, 3×'te 24, 4×'te 32 haftadır. Harness pencereyi her hız için ayrı hesaplar ve çapayı dört basamakta ayrı raporlar.
 
 ### 13.8 ⚠️ ÖLÇÜLMEDİ
 
@@ -1821,9 +1821,10 @@ autosave'ini engellemez. Günlük tikin bütün kartları böylece 08:00'de, haf
 *Belge ne diyordu.* §11.5: maksimum hız 3x, 4x modal yoğunluğu sebebiyle kaldırıldı (§26 madde 18).
 
 *Ne yapıldı.* Hız merdiveni oyun saati başına gerçek saniyedir ve beş basamaklıdır (`TimeModel.SECONDS_PER_HOUR`:
-duraklat, 10, 5, 10/3, 2,5). Varsayılan 09-17 mesaide bir hafta 1×'te 90, 4×'te 22,5 sn sürer.
+duraklat, 2,5, 1,25, 2,5/3, 0,625). Varsayılan 09-17 mesaide bir hafta 1×'te 22,5, 4×'te 5,625 sn sürer.
 
-*Neden.* Gün modelinde 3×'te bir oyun günü 3 sn sürüyordu. Haftalık modelde 4×'te bile bir hafta 22,5 sn sürer.
+*Neden.* Gün modelinde 3×'te bir oyun günü 3 sn sürüyordu. Haftalık modelde 4×'te bir hafta 22,5 sn sürüyordu.
+Sahip kararı (2026-10-09): koşu fazla uzundu; eski 4×'ün temposu 1× oldu, her basamak dört kat hızlandı.
 Tempo bütçesi tik başınadır; 4×'teki gerçek zaman yoğunluğunu harness her basamakta ayrı raporlar (§13.7, §19.3).
 
 **7. Tempo sayılarının haftalık hâli ölçülmedi.**
@@ -1834,7 +1835,7 @@ cooldown 30; harness 50 günde bir kayıt, 365 günlük koşu.
 *Ne yapıldı.* 4, 2 / 4, 1, 2, 4 hafta; harness 7 haftada bir kayıt, 52 haftalık koşu. Tik tavanı tik başına 2 kaldı.
 
 *Neden.* Gün değeri 7'ye bölünüp anlamlı en yakın haftaya yuvarlandı; sıfıra düşen süre en az 1 hafta oldu. §13.8
-geçerlidir: hiçbiri ölçülmedi. Tavan dolarsa 1×'te 3 gerçek dakika (iki hafta) 4 kesinti eder, §13.7 çapasının (3)
+geçerlidir: hiçbiri ölçülmedi. Tavan dolarsa 1×'te 3 gerçek dakika (sekiz hafta) 16 kesinti eder, §13.7 çapasının (3)
 üstü; harness bunu ölçer ve raporlar.
 
 ### §27.10 · Ürün rev 7: yapım motoru silindi, sprint dikişleri eklendi

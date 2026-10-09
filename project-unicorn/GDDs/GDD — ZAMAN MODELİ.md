@@ -3,7 +3,7 @@
 **YÜRÜRLÜK: rev 1 · İNŞA SÜRÜMÜ · 2026-09-28**
 
 **Proje:** Project Unicorn · **Kapsam:** oyun zamanı, tempo, süre ve oran birimleri, takvim, ay kapanışı ve özet,
-gece atlaması, toplantıların saat bütçesi, mesai, kayıt göçü · **Kaynak:** sahip kararları 2026-09-27 ve 2026-09-28
+gece atlaması, toplantıların saat bütçesi, mesai, kayıt göçü · **Kaynak:** sahip kararları 2026-09-27, 2026-09-28 ve 2026-10-09 (hız merdiveni)
 
 ## Bu belgenin yeri
 
@@ -76,7 +76,7 @@ Günün süresi ve birimler tek dosyadadır: `scripts/systems/time_model.gd` (`T
 
 | sabit | değer | anlamı |
 |---|---|---|
-| `SECONDS_PER_HOUR` | `[0.0, 10.0, 5.0, 10.0 / 3.0, 2.5]` [WORKING] | oyun saati başına gerçek saniye: duraklat, 1×, 2×, 3×, 4× |
+| `SECONDS_PER_HOUR` | `[0.0, 2.5, 1.25, 2.5 / 3.0, 0.625]` [WORKING] | oyun saati başına gerçek saniye: duraklat, 1×, 2×, 3×, 4× |
 | `WEEK_START_HOUR` | 8 | hafta 08:00'de başlar |
 | `WORKDAY_LATEST_END` | 24 | mesai en geç 00:00'da biter |
 | `OVERTIME_HOUR_YIELD` | 0,5 [WORKING] | sekizi aşan her saatin verimi (§9) |
@@ -92,13 +92,15 @@ vardır (`TimeModel.seconds_per_tick(hız)`):
 | hız | sn / oyun saati | varsayılan günün gerçek süresi |
 |---|---|---|
 | duraklat | 0 | durur |
-| 1× | 10 | 90 sn |
-| 2× | 5 | 45 sn |
-| 3× | 3,33 | 30 sn |
-| 4× | 2,5 | 22,5 sn |
+| 1× | 2,5 | 22,5 sn |
+| 2× | 1,25 | 11,25 sn |
+| 3× | 0,83 | 7,5 sn |
+| 4× | 0,625 | 5,625 sn |
 
+- Merdiven sahip kararıdır (2026-10-09): koşu fazla uzundu; eski 4×'ün temposu 1× oldu ve her basamak dört kat
+  hızlandı.
 - Hız yalnız gerçek zamanı değiştirir; oyun zamanındaki davranış her hızda aynıdır. Gece için hız hiç değişmez.
-- 08:00'den şirket başlangıcına kadar ofis görünür ve boştur: 09:00 başlangıçta 1×'te 10 sn, 11:00'de 30 sn.
+- 08:00'den şirket başlangıcına kadar ofis görünür ve boştur: 09:00 başlangıçta 1×'te 2,5 sn, 11:00'de 7,5 sn.
 - Dört hız düğmesi vardır; 1-4 tuşları basamakları seçer. Kayıttaki son hız 1 ile 4 arasına kırpılır.
 - Ölçüm: `--tempo-probe=<hız>` gerçek saatle 08:00'den 08:00'e ölçer; `:shell` eki ofisi kurar ve çıkış kapısının
   gerçek maliyetini de ölçer.
@@ -185,7 +187,7 @@ kullanılan gün değişmez.
 
 | sabit | gün modeli | yürürlükte | not |
 |---|---|---|---|
-| `TimeManager.SECONDS_PER_DAY` → `TimeModel.SECONDS_PER_HOUR` | [0, 12, 6, 3] sn/gün | [0, 10, 5, 3,33, 2,5] sn/saat [WORKING] | varsayılan gün 90 / 45 / 30 / 22,5 sn; 4× vardır |
+| `TimeManager.SECONDS_PER_DAY` → `TimeModel.SECONDS_PER_HOUR` | [0, 12, 6, 3] sn/gün | [0, 2,5, 1,25, 0,83, 0,625] sn/saat [WORKING] | varsayılan gün 22,5 / 11,25 / 7,5 / 5,625 sn; 4× vardır |
 | `INITIAL_HOUR` → `WEEK_START_HOUR` | 9 | 8 | |
 | `DAYS_PER_MONTH` | 30 (GameState) | 30 (`TimeModel`) | ekonomi ayı |
 | `HOURS_PER_DAY` | 24 (TimeManager) | 24 (`TimeModel`) | `HOURS_PER_BUILD_DAY` yoktur |
@@ -325,7 +327,7 @@ kullanılan gün değişmez.
 | rakip ivmesi | gün başına | tik başına ×7 | |
 | `MOVE_*` | 7 gün | 1 hafta [WORKING] | |
 | autosave aralığı | gün / hafta / ay | kapalı / her hafta (1 tik) / her ay (ay kapanışı) [WORKING] | varsayılan her hafta |
-| `AUTOSAVE_MIN_REAL_SECONDS` | 20 sn | 10 sn [WORKING] | 4×'te kısa gün 20 sn eder |
+| `AUTOSAVE_MIN_REAL_SECONDS` | 20 sn | 10 sn [WORKING] | 3× ve 4×'te hafta daha kısadır; haftalık yazım bir sonraki haftaya kalır |
 | `BIZ_BUFFER_CAP` / `MAX_LIVE_LINES` | 10 / 6 | aynı | sayılar aynı; tik başına 7 günün satırı birikir |
 
 ### 4.10 Kart başına bekleme süresi
