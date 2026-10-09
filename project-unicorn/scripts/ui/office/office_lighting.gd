@@ -27,6 +27,9 @@ const AMBIENT := Color("#fff3e0")
 const AMBIENT_DAY := 0.45                # the ambient's share of the hemisphere by day
 const TOP_FILL := Color("#fff0dc")
 const TOP_FILL_DAY := 0.3                # the top fill's intensity by day
+## The top fill's intensity at night with people in. At the design's 1 this shadowless fill dominates the night
+## frame: walls, furniture, street and facades glow.
+const TOP_FILL_NIGHT := 0.5
 const TOP_FILL_DIR := Vector3(3.0, 30.0, 4.0)
 const DESK_LAMP := Color("#ffb468")     # intensity 3
 const SCREEN_LIGHT := Color("#8fb8ff")  # intensity .9
@@ -191,7 +194,7 @@ func apply(t: float) -> void:
 	var el := deg_to_rad(lerpf(10.0 + 48.0 * sin(PI * u), 55.0, moon_k))
 	var az := PI / 4.0 + (lerpf(u, 0.35, moon_k) - 0.5) * 2.0
 	_sun.basis = Basis.looking_at(-Vector3(sin(az) * cos(el), sin(el), cos(az) * cos(el)))
-	_top.light_energy = (inter_day * TOP_FILL_DAY + night_in * (1.0 - inter_day)) * LIGHT_SCALE
+	_top.light_energy = lerpf(night_in * TOP_FILL_NIGHT, TOP_FILL_DAY, inter_day) * LIGHT_SCALE
 
 	var dk2 := day_k * day_k
 	for material_name: String in STREET:
