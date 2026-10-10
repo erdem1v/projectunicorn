@@ -326,7 +326,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **`tools/`:** `smoke_run.sh`, `run_gate.sh`, `gate_common.sh` (ikisinin ortak Godot yolu ve hata ayracı), `gen_signal_manifest.py` (`event_bus.gd` sinyalleri ve `# --- X ---` başlıkları, `scripts/` altındaki emit/connect satırları, `EvSignals.BINDINGS` ve `data/events/cards` kart tetiklerinden `docs/EVENT_SIGNAL_MANIFEST.md` üretir), `lint_baseline.json`.
 - **Görsel ve ölçüm bayrakları** yalnız debug build'de çalışır. Bayraklar `--` ayıracının arkasına konmaz.
   - `*-shot` bayrakları (`--probe-shot` dahil) pencereli açılır ve kareyi kullanıcı dizinine (`%APPDATA%/Godot/app_userdata/Project Unicorn/`) yazar. `--theme-audit` pencereli açılır, kare yazmaz, denetim satırlarını basar.
-  - Ölçüm bayrakları (`--tempo-probe`, `--render-probe`, `--display-check`, `--theme-contrast-audit`) kare yazmaz, ölçüm satırlarını basar.
+  - Ölçüm bayrakları (`--tempo-probe`, `--tick-probe`, `--render-probe`, `--display-check`, `--theme-contrast-audit`) kare yazmaz, ölçüm satırlarını basar.
   - Dosya yazanlar: `--event-lint=baseline`, `--modal-shot=save*|load*` ve `--theme-audit=modal:save*|load*` (kayıt yazar ya da siler), `--office-shot=<ofis>:<saat>:toast` (quicksave yazar ve yükler), `--event-vocab`, `--display-check` (`settings.json`'a yazar ve geri yükler), `--tick-probe` (`auto_*` kayıt yuvalarına yazar).
 
 ## Üçüncü taraf ve altyapı

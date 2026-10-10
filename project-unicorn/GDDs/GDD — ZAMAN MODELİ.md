@@ -3,7 +3,8 @@
 **YÜRÜRLÜK: rev 1 · İNŞA SÜRÜMÜ · 2026-09-28**
 
 **Proje:** Project Unicorn · **Kapsam:** oyun zamanı, tempo, süre ve oran birimleri, takvim, ay kapanışı ve özet,
-gece atlaması, toplantıların saat bütçesi, mesai, kayıt göçü · **Kaynak:** sahip kararları 2026-09-27, 2026-09-28 ve 2026-10-09 (hız merdiveni)
+gece atlaması, toplantıların saat bütçesi, mesai, kayıt göçü · **Kaynak:** sahip kararları 2026-09-27, 2026-09-28,
+2026-10-09 (hız merdiveni) ve 2026-10-10 (üç basamak, saat yalnız oyuncuyla)
 
 ## Bu belgenin yeri
 
@@ -17,7 +18,7 @@ Başlıca yerine geçtiği yerler:
 - ch08 §4 "Monthly close (one screen)": ay kapanışı ekran açmaz; özet ekranı oyuncunun seçtiği sıklıkta gelir (§6).
 - ch08 §6 ve ch13 §1: 30 günlük kepenk → 4 hafta (§4.8).
 - ch09 §4: VC toplantısı saati durdurur ve kapanışta kendi süresi kadar atlatır (§8).
-- ch12 §2: hız merdiveni 1×/2×/3× → dört basamak, 1× ile 4× arası (§2).
+- ch12 §2: hız merdiveni üç basamaktır, 1× ile 3× arası; saat yalnız oyuncu sürdürünce akar (§1.2, §2).
 - Ekip §8.1, §8.2, §8.4 ve §17.5'in "Kurucunun uzun gün verimi" park maddesi: mesai (§9).
 - Satış §5.0 (günde bir toplantı, atlanan saatlerde kurucu katkısı sıfır), §7.2 (işleme süresi), §7.6 (fiyat-kırma
   penceresi): §8 ve §4.5.
@@ -336,7 +337,7 @@ kullanılan gün değişmez.
 | rakip ivmesi | gün başına | tik başına ×7 | |
 | `MOVE_*` | 7 gün | 1 hafta [WORKING] | |
 | autosave aralığı | gün / hafta / ay | kapalı / her hafta (1 tik) / her ay (ay kapanışı) [WORKING] | varsayılan her hafta |
-| `AUTOSAVE_MIN_REAL_SECONDS` | 20 sn | 10 sn [WORKING] | 3× ve 4×'te hafta daha kısadır; haftalık yazım bir sonraki haftaya kalır |
+| `AUTOSAVE_MIN_REAL_SECONDS` | 20 sn | 10 sn [WORKING] | 3×'te hafta daha kısadır; haftalık yazım bir sonraki haftaya kalır |
 | `BIZ_BUFFER_CAP` / `MAX_LIVE_LINES` | 10 / 6 | aynı | sayılar aynı; tik başına 7 günün satırı birikir |
 
 ### 4.10 Kart başına bekleme süresi
@@ -499,7 +500,7 @@ yüklemez, süreleri okunmaz.
   kare yoklar ve en fazla `OfficeConstants.NIGHT_WAIT_S` = 3,5 gerçek saniye [WORKING] bekler. Bekleme yalnız kare
   süresiyle sayılır; duraklatma sayacı da yürüyüşü de birlikte dondurur.
 - Gece atlamasından önceki kararma hızla kısalır (§7.4; onay bekliyor: ACIK_KARARLAR 91): haftanın gerçek süresine her hızda aynı payı ekler. Ölçüm
-  (`--tempo-probe=<hız>:shell`, 2026-10-09): 1×'te hafta 22,46 ve 22,47 sn, 4×'te 5,66 ve 5,68 sn; 4× 1×'in 3,96–3,97
+  (`--tempo-probe=<hız>:shell`, 2026-10-10): 1×'te hafta 22,65 ve 22,73 sn, 3×'te 7,55 ve 7,58 sn; 3× 1×'in 3,00
   katı hızdadır.
 - Kayıtlı yüklem yoksa (headless, smoke, probe) atlama hemen olur.
 - Atlamadan hemen önce gece yeniden okunur: oyuncu çıkış sırasında mesaiyi uzatmış olabilir.
@@ -518,12 +519,12 @@ yüklemez, süreleri okunmaz.
   gece kararır, içeride kalan herkes kararmanın altında kesilir, sonra atlama gelir (harita, toplantı odası ve başsız
   koşuda kararma yoktur; saat dururken başlamaz; bir tutuş atlamayı 08:00'den önce keserse görünüm geri gelir,
   sürdürülen atlama yeniden kararır). Kararma `OfficePeople.CUT_FADE_S` [WORKING] 1×'te 0,25 sn'dir ve
-  hızla kısalır (onay bekliyor: ACIK_KARARLAR 91): `CUT_FADE_S × SECONDS_PER_HOUR[hız] / SECONDS_PER_HOUR[1]` (4×'te 0,0625 sn).
+  hızla kısalır (onay bekliyor: ACIK_KARARLAR 91): `CUT_FADE_S × SECONDS_PER_HOUR[hız] / SECONDS_PER_HOUR[1]` (3×'te 0,083 sn).
 - Kişilerin temposu (sahip kararı 2026-10-09: eski 90 saniyelik haftanın ritmi, Software Inc. modeli): bir ambiyans
   saniyesi her hızda 6 oyun dakikasıdır (`OfficeConstants.PACE_MINUTES`). Görsel hız `k` saatin oyun dakikası/sn'sinin
-  6'ya bölümüdür ve tavanı yoktur: 1×'te 4, 2×'te 8, 3×'te 12, 4×'te 16; duraklatınca 0, toplantı odasının kadrosunda 1.
+  6'ya bölümüdür ve tavanı yoktur: 1×'te 4, 2×'te 8, 3×'te 12; duraklatınca 0, toplantı odasının kadrosunda 1.
   Mola, kalış, toplantı ve kapı süreleri ambiyans saniyesiyle yazılıdır, oyun saatindeki karşılıkları her hızda aynıdır;
-  yürüyüş ambiyans saniyesi başına 2,4 m'dir (1×'te 9,6, 4×'te 38,4 m/sn).
+  yürüyüş ambiyans saniyesi başına 2,4 m'dir (1×'te 9,6, 3×'te 28,8 m/sn).
 - Ajan değerleri (onay bekliyor: ACIK_KARARLAR 91): `k` `AVOID_MAX_K` 6'yı geçmedikçe (1×) kişiler kaçınmayla
   birbirinin etrafından dolaşır, üstünde (2× ve üstü) yollarını düz yürür ve birbirinin içinden geçebilir; döngü
   animasyonları (idle'lar, adım, el hareketleri) en çok `ANIM_LOOP_MAX` 3 katı hızla görünür; `k` her hızda 3'ün

@@ -1538,8 +1538,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     yazıldıkları oyun dakikasını tutar.
     (8) Haftalık otomatik kayıt 3×'te 10 sn tabanı (`AUTOSAVE_MIN_REAL_SECONDS`) yüzünden iki haftada bir iner.
     (9) Sahibin hedefi (2026-10-09) hızlı basamağın 1×'in gerçekten o katı olmasıdır; çözüm ajanındır ve onay bekler (91):
-    gece kesmesinin kararması (`CUT_FADE_S`) hızla kısalır, GDD Zaman Modeli §7.3–7.4. Ölçüm (ikinci hafta, 2026-10-10): `--tempo-probe=1:shell` haftası 22,48 sn (−%0,1), `=3:shell` 7,48 ve 7,47 sn
-    (−%0,2, −%0,4); 3× 1×'in 3,00 ve 3,01 katı.
+    gece kesmesinin kararması (`CUT_FADE_S`) hızla kısalır, GDD Zaman Modeli §7.3–7.4. Ölçüm (gece kararması dahil, 2026-10-10): `--tempo-probe=1:shell` haftası 22,65 ve 22,73 sn (+%0,7, +%1,0),
+    `=3:shell` 7,55 ve 7,58 sn (+%0,6, +%1,1); 3× 1×'in 3,00 katı.
     (10) Depo loft'un feribotu ve suyu oyun dakikasıyla akar: 4×'te feribot ekranı yaklaşık 4,6 sn'de geçer. B2C
     ücretli koşuda Finans sayfası her MRR değişiminde (her oyun saati) baştan kurulur, gizli Yatırım sayfası da:
     4×'te saniyede 1,6 kez; maliyeti ölçülmedi.
