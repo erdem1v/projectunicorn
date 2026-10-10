@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **179** |
+| Seams (read) | **190** |
 | Effect verbs (write) | **63** |
-| Cards in the catalogue | 66 |
+| Cards in the catalogue | 94 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -123,6 +123,20 @@ slot of that type (§17.12).
 | `arge.note_pending` | global | bool | R&D | an unread monthly product note is waiting |
 | `arge.tree_open` | global | bool | R&D | the tab is reachable |
 
+### `build.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `build.module_unlocked.events` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the events page is reachable in this build |
+| `build.module_unlocked.finance` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the finance page is reachable in this build |
+| `build.module_unlocked.hr` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the hr page is reachable in this build |
+| `build.module_unlocked.marketing` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the marketing page is reachable in this build |
+| `build.module_unlocked.personal` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the personal page is reachable in this build |
+| `build.module_unlocked.piyasa` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the piyasa page is reachable in this build |
+| `build.module_unlocked.product` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the product page is reachable in this build |
+| `build.module_unlocked.rnd` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the rnd page is reachable in this build. Never gated; the Ar-Ge tree's own door is arge.tree_open |
+| `build.module_unlocked.sales` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the sales page is reachable in this build |
+
 ### `destek.`
 
 | seam | scope | type | owner | note |
@@ -215,12 +229,14 @@ slot of that type (§17.12).
 | `hr.payroll_monthly` | global | int | HR | not status-filtered: leave is paid |
 | `hr.raise_cooldown_left` | entity | int | HR | weeks until a raise is allowed again; 0 means now |
 | `hr.resign_voice` | entity | string | HR | the per-person resignation line |
+| `hr.run_hires` | global | int | HR | WRAPPER; hires made this run, the founder excluded. Counts a person who has since left |
 | `hr.salary` | entity | int | HR | WRAPPER over Character.monthly_salary, USD/month |
 | `hr.salary_band_position` | entity | float | HR | WRAPPER: <0 under the band, 0..1 inside it |
 | `hr.short_day_active` | entity | bool | HR | hours below 8 |
 | `hr.status` | entity | string | HR | active | on_leave | training |
 | `hr.tenure_weeks` | entity | int | HR | weeks on the payroll; 0 when hire_day was never stamped |
 | `hr.unstaffed_job_count` | global | int | HR | jobs nobody is assigned to |
+| `hr.weeks_since_last_hire` | global | int | HR | the youngest active employee's tenure in weeks; -1 while there is nobody |
 | `hr.work_hours` | entity | int | HR | 5-16, the resolved inheritance chain, default 8 |
 | `hr.work_hours_company` | global | int | HR | the company base, 5-16 |
 

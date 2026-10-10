@@ -22,6 +22,8 @@ extends Panel
 #            gate dot instead
 #   rnd      RnDSystem.attention_count() (frozen research + unread report)
 
+const ModuleLocks := preload("res://scripts/systems/module_locks.gd")
+
 const WIDTH := 184.0
 const WIDTH_ICONS := 64.0
 ## The labelled row's insets from the button's left and right edges (icons: none).
@@ -232,10 +234,9 @@ func _on_tab_changed(tab_id: String) -> void:
 	_paint()
 
 
-## UiTokens bir ADLI KAPI taşır, boolean değil, böylece oyun durumundan uzak kalır. Bugünkü
-## tek kapı "ea" ve bilinmeyen bir kapı da KİLİTLİ sayılır: bitmemiş bir sayfa oyuncuya açılmasın.
+## Kuralın evi ModuleLocks'tur: içerik aynı soruyu `build.module_unlocked.<id>` seam'iyle sorar.
 func _is_locked(idx: int) -> bool:
-	return String(UiTokens.TABS[idx].get("lock", "")) != ""
+	return not ModuleLocks.is_open(String(UiTokens.TABS[idx].id))
 
 
 func _index_of(tab_id: String) -> int:

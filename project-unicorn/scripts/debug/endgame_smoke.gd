@@ -476,6 +476,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"valuation_old_save_derives_seed":  fail = _case_valuation_old_save_derives_seed()
 		"valuation_seam_seed_then_series_a": fail = _case_valuation_seam_seed_then_series_a()
 		"news_piyasa_reason_lines":         fail = _case_news_piyasa_reason_lines()
+		"event_v3_seams":                   fail = _case_event_v3_seams()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -17993,4 +17994,37 @@ static func _case_news_piyasa_reason_lines() -> String:
 		return "the IPO line is not a reasoned headline on the lister: %s" % ipo
 	if not _line_is_data(live[0]):
 		return "the IPO line is not data that reads per language: %s" % str(live[0])
+	return ""
+
+
+static func _case_event_v3_seams() -> String:
+	# R2 · MODÜL KİLİDİ VE SON İŞE ALIM, İÇERİĞİN GÖZÜNDEN. Ray ile içerik aynı kuralı okuyor
+	# (ModuleLocks), ve bir kart "Pazarlama açıldıysa" diyebilmek için bir seam'e muhtaç.
+	# FALSİFİKASYON: ModuleLocks.is_open'ın _override dalını sil → dördüncü iddia FAIL;
+	# hr.weeks_since_last_hire'ı en BÜYÜK kıdeme çevir → sonuncusu FAIL.
+	const ModuleLocks := preload("res://scripts/systems/module_locks.gd")
+	var want: Dictionary = {"marketing": false, "product": true, "rnd": true}
+	for id in want:
+		if EvSeams.read("build.module_unlocked." + String(id)) != want[id]:
+			return "build.module_unlocked.%s demo build'de %s olmalı" % [id, want[id]]
+	ModuleLocks.set_override("marketing", true)
+	if EvSeams.read("build.module_unlocked.marketing") != true:
+		return "set_override kilitli modülü açmadı"
+	ModuleLocks.clear_overrides()
+	if EvSeams.read("build.module_unlocked.marketing") != false:
+		return "clear_overrides override'ı kaldırmadı"
+	var weeks: int = int(EvSeams.read("hr.weeks_since_last_hire"))
+	if weeks != -1:
+		return "çalışan yokken hr.weeks_since_last_hire = %d" % weeks
+	var hires0: int = int(EvSeams.read("hr.run_hires"))
+	_make_employee("char_seam_dev", "Seam Dev", HRConstants.ROLE_DEVELOPER)
+	weeks = int(EvSeams.read("hr.weeks_since_last_hire"))
+	if weeks != 0:
+		return "işe alım haftasında kıdem %d" % weeks
+	if int(EvSeams.read("hr.run_hires")) != hires0 + 1:
+		return "hr.run_hires işe alımı saymadı: %d" % int(EvSeams.read("hr.run_hires"))
+	_sim_day()
+	weeks = int(EvSeams.read("hr.weeks_since_last_hire"))
+	if weeks != 1:
+		return "bir tik sonra kıdem %d" % weeks
 	return ""
