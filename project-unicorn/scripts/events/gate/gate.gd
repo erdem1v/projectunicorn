@@ -226,10 +226,6 @@ static func start_immunity_weeks_left(card: Dictionary, origin: Origin) -> int:
 	var tags: Array = card["tags"]
 	if bool(card.get("system", false)) or tags.has("tutorial") or tags.has("terminal_warning"):
 		return 0
-	# Until the corpus carries `system` (schema v3 migration), the cards that will claim it are
-	# the ones EvTempo already keeps off the budget.
-	if not card.has("system") and EvTempo.budget_exempt(card):
-		return 0
 	return EvTuning.START_IMMUNITY_WEEKS + 1 - GameState.day
 
 

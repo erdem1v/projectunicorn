@@ -18198,7 +18198,7 @@ static func _plain_card(id: String, extra: Dictionary) -> Dictionary:
 ## gün 1'de gelmez. Muafiyetler kuralın kendisi kadar önemli — sistem kendi haftasını bilir,
 ## sessiz taban sessizliği doldurur (hüküm E4), istek ve ark kendi saatlerinde koşar.
 ## FALSİFİKASYON: `_g4_window`'un koruma satırını sil → ilk döngü FAIL; `start_immunity_weeks_left`'ten
-## FLOOR kolunu çıkar → taban iddiası FAIL; `budget_exempt` geçiş kolunu sil → son iddia FAIL.
+## FLOOR kolunu çıkar → taban iddiası FAIL; bir muafiyet etiketini listeden çıkar → o iddia FAIL.
 static func _case_event_start_immunity() -> String:
 	const ID := "fixture.immunity"
 	const RETIRED := "team.first_weeks"
@@ -18218,10 +18218,9 @@ static func _case_event_start_immunity() -> String:
 
 	GameState.day = 1
 	# Kartın kendisi muaf olabilir: `system` zamanını bir sistemden alır, `tutorial` öğreticinin
-	# kartıdır, `terminal_warning` sonun telgrafıdır. Son satır V3-V6 geçiş kolu: `system` alanı
-	# henüz hiçbir kartta yok, ve onu alacak kartlar bugün bütçeden muaf olanlardır.
+	# kartıdır, `terminal_warning` sonun telgrafıdır.
 	var exemptions: Array = [{"system": true}, {"tags": ["tutorial"]},
-		{"tags": ["terminal_warning"]}, {"tags": ["critical"]}]
+		{"tags": ["terminal_warning"]}]
 	for i in exemptions.size():
 		var probe: Dictionary = card.duplicate(true)
 		probe["id"] = "%s_exempt_%d" % [ID, i]

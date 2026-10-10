@@ -1,7 +1,19 @@
 {
-	"_comment": "Accepted lint findings, by fingerprint. A finding here does NOT suppress its rule: change the card and the fingerprint changes and it comes back. Regenerate with --event-lint-baseline. Every addition should be defensible.",
+	"_comment": "Accepted lint findings, by fingerprint. A finding here does NOT suppress its rule: change the card and the fingerprint changes and it comes back. Regenerate with --event-lint=baseline. Every addition should be defensible.",
 	"accepted": [
+		"17.15|res://data/events/cards/customer/chargeback.json|O4: option 'keep' drops nothing on the subject the card is about",
+		"17.15|res://data/events/cards/customer/named_in_leak.json|O4: option 'lawyer' drops nothing on the subject the card is about",
+		"17.15|res://data/events/cards/customer/new_owner_group.json|O4: option 'pitch' drops nothing on the subject the card is about",
+		"17.15|res://data/events/cards/funding/portfolio_vendor.json|O5: option 'own_ads' spends marketing, which the demo never opens",
+		"17.15|res://data/events/cards/product/sprint_colors_again.json|O4: option 'by_hand' drops nothing on the subject the card is about",
+		"17.15|res://data/events/cards/product/sprint_colors_again.json|O4: option 'one_file' drops nothing on the subject the card is about",
+		"17.15|res://data/events/cards/product/sprint_colors_again.json|O4: option 'freelancer' drops nothing on the subject the card is about",
+		"17.15|res://data/events/cards/product/sprint_rewrite_bugs.json|O4: option 'freeze' drops nothing on the subject the card is about",
+		"17.15|res://data/events/cards/product/sprint_rewrite_owner.json|O4: option 'trainer' drops nothing on the subject the card is about",
+		"17.15|res://data/events/cards/product/sprint_rewrite_reader.json|O4: option 'peer' drops nothing on the subject the card is about",
+		"17.15|res://data/events/cards/rival/shutdown_notice.json|O5: option 'more_marketing' spends marketing, which the demo never opens",
+		"17.15|res://data/events/cards/team/wiped_table.json|T3: slot 'employee' picks the newest hire with a floor of 4 weeks",
 		"17.2|res://data/events/arcs/fixture_subject.json|arc 'arc_fixture_subject' is never started by any card"
 	],
-	"generated_day": "2026-08-31"
+	"generated_day": "2026-10-10"
 }

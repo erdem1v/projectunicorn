@@ -306,9 +306,9 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 ## Which §17 subsection a rule belongs to, by its initial.
 const RULE_FAMILY := {"P": "17.13", "C": "17.14", "V": "17.14", "O": "17.15", "T": "17.15"}
 
-## Advisory for every card: a migration that has not happened yet, and a claim the engine reads
-## as neither true nor false because nothing evaluates it.
-const V3_WARN_RULES := ["P2", "P3"]
+## Advisory for every card: a window the demo never reaches, and a claim the engine reads as
+## neither true nor false because nothing evaluates it.
+const V3_WARN_RULES := ["P3"]
 
 ## Rules the migration could not satisfy card by card. A warning on the frozen list, an error on
 ## anything written since.
