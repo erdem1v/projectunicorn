@@ -1538,10 +1538,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     (7) 63. maddenin kapanış gerekçesi: 8 saatlik mesai bugün 1×'te 20, 4×'te 5 sn. 78'deki 90 saniyelik hafta eski
     tempoyla yazılıdır; 91'in ambiyans değerleri, ambiyans saniyesi yeniden her hızda 6 oyun dakikası olduğundan
     yazıldıkları oyun dakikasını tutar.
-    (8) Haftalık otomatik kayıt 3× ve 4×'te 10 sn tabanı (`AUTOSAVE_MIN_REAL_SECONDS`) yüzünden iki haftada bir iner.
-    (9) Sahibin hedefi (2026-10-09) 4×'in 1×'in gerçekten dört katı olmasıdır; çözüm ajanındır ve onay bekler (91):
-    gece kesmesinin kararması (`CUT_FADE_S`) hızla kısalır, GDD Zaman Modeli §7.3–7.4. Ölçüm: `--tempo-probe=1:shell` haftası 22,47 ve 22,46 sn (−%0,1, −%0,2), `=4:shell` 5,68 ve 5,66 sn
-    (+%0,9, +%0,6); 4× 1×'in 3,96 ve 3,97 katı (eskiden 3,8).
+    (8) Haftalık otomatik kayıt 3×'te 10 sn tabanı (`AUTOSAVE_MIN_REAL_SECONDS`) yüzünden iki haftada bir iner.
+    (9) Sahibin hedefi (2026-10-09) hızlı basamağın 1×'in gerçekten o katı olmasıdır; çözüm ajanındır ve onay bekler (91):
+    gece kesmesinin kararması (`CUT_FADE_S`) hızla kısalır, GDD Zaman Modeli §7.3–7.4. Ölçüm (ikinci hafta, 2026-10-10): `--tempo-probe=1:shell` haftası 22,48 sn (−%0,1), `=3:shell` 7,48 ve 7,47 sn
+    (−%0,2, −%0,4); 3× 1×'in 3,00 ve 3,01 katı.
     (10) Depo loft'un feribotu ve suyu oyun dakikasıyla akar: 4×'te feribot ekranı yaklaşık 4,6 sn'de geçer. B2C
     ücretli koşuda Finans sayfası her MRR değişiminde (her oyun saati) baştan kurulur, gizli Yatırım sayfası da:
     4×'te saniyede 1,6 kez; maliyeti ölçülmedi.

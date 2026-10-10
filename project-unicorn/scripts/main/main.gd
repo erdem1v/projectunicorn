@@ -149,6 +149,15 @@ func _quit_with(ok: bool) -> void:
 	get_tree().quit(0 if ok else 1)
 
 
+## A harness speed off the ladder's running rungs prints an ERROR line and ends the run.
+func _speed_refused(tag: String, idx: int) -> bool:
+	if idx > 0 and idx < TimeModel.SECONDS_PER_HOUR.size():
+		return false
+	print("%s ERROR bad speed index %d" % [tag, idx])
+	get_tree().quit()
+	return true
+
+
 ## Each harness owns the boot and ends the process itself. Returns true when one took over.
 func _run_debug_harness() -> bool:
 	var smoke_case: String = _flag_value("--endgame-smoke=", _run_args())
@@ -325,6 +334,9 @@ const RENDER_PROBE_REBUILDS := 12
 # stored vsync is never touched.
 func _run_render_probe(spec: String) -> void:
 	var parts: PackedStringArray = spec.split(":")
+	var speed: int = int(parts[2]) if parts.size() > 2 else 0
+	if speed != 0 and _speed_refused("RENDER_PROBE", speed):
+		return
 	_begin_shot()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	_seed_theme_surface()
@@ -349,7 +361,6 @@ func _run_render_probe(spec: String) -> void:
 			rebuild_ms.append(float(Time.get_ticks_usec() - t0) / 1000.0)
 		rebuild_ms.sort()
 
-	var speed: int = int(parts[2]) if parts.size() > 2 else 0
 	var hour0: int = GameState.current_hour
 	if speed > 0:
 		EventBus.speed_change_requested.emit(speed)
@@ -401,9 +412,7 @@ const TEMPO_STOP_DAY := 3
 func _run_tempo_probe(spec: String) -> void:
 	var parts: PackedStringArray = spec.split(":")
 	var idx: int = int(parts[0])
-	if idx <= 0 or idx >= TimeModel.SECONDS_PER_HOUR.size():
-		print("TEMPO ERROR bad speed index %d" % idx)
-		get_tree().quit()
+	if _speed_refused("TEMPO", idx):
 		return
 	_seed_run_reproducible()
 	# Give the HOURLY path real work (B2C audience flow, post-ship wear and bug accrual) and the
@@ -1317,7 +1326,7 @@ const DAY_SHOT_FRAMES := 24        # frames across one visible day, whatever the
 const DAY_SHOT_AFTER := 3          # frames kept after the night skip lands on the new week
 
 
-# --day-shot=<home|ishani|plaza|loft>:<speed 1-4>: one working week on the real clock, 08:00
+# --day-shot=<home|ishani|plaza|loft>:<speed 1-3>: one working week on the real clock, 08:00
 # through the walk-out and the night skip to the next 08:00, as the player sees it. The week is
 # the last of January, so the silent month close lands in the skip and its ticker line shows.
 # day_shot_<office>_<speed>_NN.png plus one DAYSHOT line per frame (real ms, week, clock, night).
@@ -1325,6 +1334,8 @@ func _run_day_shot(spec: String) -> void:
 	var parts: PackedStringArray = spec.split(":")
 	var office_id: String = parts[0]
 	var speed: int = int(parts[1]) if parts.size() > 1 else 1
+	if _speed_refused("DAYSHOT", speed):
+		return
 	_begin_shot()
 	_seed_theme_surface()
 	GameState.office_id = office_id
@@ -1351,13 +1362,16 @@ func _run_day_shot(spec: String) -> void:
 	get_tree().quit()
 
 
-# --office-crowd-probe=<home|ishani|plaza|loft>:<people>:<speed 1-4>: that many people (the
+# --office-crowd-probe=<home|ishani|plaza|loft>:<people>:<speed 1-3>: that many people (the
 # founder and a seeded staff, roles in turn) through one working week of the office on the real
 # clock, 08:00 through the night skip into the next morning, with a second's pause at noon.
 # OfficeCrowdProbe prints the CROWD lines; crowd_<office>_<people>_<speed>_NN.png at the start,
 # through the day, as the night begins and after the skip.
 func _run_office_crowd_probe(spec: String) -> void:
 	var parts: PackedStringArray = spec.split(":")
+	var speed: int = int(parts[2])
+	if _speed_refused("CROWD", speed):
+		return
 	_begin_shot()
 	_seed_run_reproducible()
 	GameState.set_cash(500000)
@@ -1368,11 +1382,11 @@ func _run_office_crowd_probe(spec: String) -> void:
 	OfficeCrowdProbe.seed_staff(int(parts[1]) - 1)
 	# Paused on the speed it will run at: the opening plans the walks in at that pace.
 	EventBus.speed_change_requested.emit(0)
-	TimeManager.last_running_speed = int(parts[2])
+	TimeManager.last_running_speed = speed
 	await _mount_shot_shell()
 	var probe := OfficeCrowdProbe.new()
 	add_child(probe)
-	await probe.run(get_tree().get_first_node_in_group(&"office_view"), int(parts[2]), "_".join(parts), _save_shot)
+	await probe.run(get_tree().get_first_node_in_group(&"office_view"), speed, "_".join(parts), _save_shot)
 	get_tree().quit()
 
 

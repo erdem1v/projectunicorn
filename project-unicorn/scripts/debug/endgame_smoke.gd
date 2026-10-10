@@ -350,7 +350,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_gate_holds_clock":          fail = _case_event_gate_holds_clock()
 		"profit_predicate_margin_scale_red": fail = _case_profit_predicate_margin_scale_red()
 		"speed_save_clamps_to_ladder":     fail = _case_speed_save_clamps_to_ladder()
-		"topbar_speed_cluster_four_rungs": fail = _case_topbar_speed_cluster_four_rungs()
+		"topbar_speed_cluster_three_rungs": fail = _case_topbar_speed_cluster_three_rungs()
 		"smoke_seed_pinned":               fail = _case_smoke_seed_pinned()
 		"ambient_hourly_chance_exact":     fail = _case_ambient_hourly_chance_exact()
 		"ambient_hourly_never_at_night": fail = _case_ambient_hourly_never_at_night()
@@ -7102,9 +7102,9 @@ static func _case_hr_constants_contract() -> String:
 
 static func _case_speed_ladder() -> String:
 	var ladder: Array = TimeModel.SECONDS_PER_HOUR
-	var want: Array = [0.0, 2.5, 1.25, 2.5 / 3.0, 0.625]
+	var want: Array = [0.0, 2.5, 1.25, 2.5 / 3.0]
 	if ladder.size() != want.size():
-		return "the ladder has %d entries, want %d (pause + 1x/2x/3x/4x)" % [ladder.size(), want.size()]
+		return "the ladder has %d entries, want %d (pause + 1x/2x/3x)" % [ladder.size(), want.size()]
 	for i in ladder.size():
 		if not is_equal_approx(float(ladder[i]), float(want[i])):
 			return "speed %d is %.3f s/hour, want %.3f" % [i, ladder[i], want[i]]
@@ -7132,9 +7132,9 @@ static func _case_speed_ladder() -> String:
 	if TimeManager.current_speed != top:
 		return "index %d was accepted (current %d)" % [top + 1, TimeManager.current_speed]
 
-	# Pause/resume round-trip at the top index (speed_preserve covers idx 2).
+	# Pause and Space round-trip at the top index (speed_preserve covers idx 2).
 	EventBus.speed_change_requested.emit(0)
-	TimeManager.resume_if_paused()
+	EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
 	if TimeManager.current_speed != top:
 		return "paused game did not resume to last_running_speed (%d)" % TimeManager.current_speed
 	if TimeManager.get_tree().paused:
@@ -12140,7 +12140,7 @@ static func _case_profit_predicate_margin_scale_red() -> String:
 	return ""
 
 
-# --- The speed ladder is 1×/2×/3×/4× ---
+# --- The speed ladder is 1×/2×/3× ---
 
 static func _case_speed_save_clamps_to_ladder() -> String:
 	# last_running_speed past the ladder's top clamps to it on load, and the resume lands there.
@@ -12159,9 +12159,9 @@ static func _case_speed_save_clamps_to_ladder() -> String:
 	return ""
 
 
-static func _case_topbar_speed_cluster_four_rungs() -> String:
-	# The TopBar scene carries pause + four rungs; the script's button array matches the ladder
-	# (index == speed index) and the shell binds KEY_4 to the top rung.
+static func _case_topbar_speed_cluster_three_rungs() -> String:
+	# The TopBar scene carries pause + three rungs; the script's button array matches the ladder
+	# (index == speed index) and the shell binds KEY_3 to the top rung and nothing to KEY_4.
 	var packed: PackedScene = load("res://scenes/ui/components/TopBar.tscn")
 	if packed == null:
 		return "TopBar.tscn failed to load"
@@ -12169,17 +12169,19 @@ static func _case_topbar_speed_cluster_four_rungs() -> String:
 	var names: Array = []
 	for i in state.get_node_count():
 		names.append(String(state.get_node_name(i)))
-	for want in ["PauseBtn", "Speed1Btn", "Speed2Btn", "Speed3Btn", "Speed4Btn"]:
+	for want in ["PauseBtn", "Speed1Btn", "Speed2Btn", "Speed3Btn"]:
 		if not names.has(want):
 			return "TopBar.tscn is missing %s" % want
-	if names.has("Speed5Btn"):
-		return "TopBar.tscn carries a fifth rung"
+	if names.has("Speed4Btn"):
+		return "TopBar.tscn carries a fourth rung"
 	var src: String = (load("res://scripts/ui/components/top_bar.gd") as GDScript).source_code
-	if src.find("Speed4Btn") < 0:
-		return "top_bar.gd does not wire Speed4Btn"
+	if src.contains("Speed4Btn"):
+		return "top_bar.gd still wires Speed4Btn"
 	var shell: String = (load("res://scripts/main/game_shell.gd") as GDScript).source_code
-	if not shell.contains("KEY_4, KEY_KP_4: speed_idx = 4"):
-		return "game_shell.gd does not bind KEY_4 to speed 4"
+	if not shell.contains("KEY_3, KEY_KP_3: speed_idx = 3"):
+		return "game_shell.gd does not bind KEY_3 to speed 3"
+	if shell.contains("KEY_4"):
+		return "game_shell.gd still binds KEY_4"
 	return ""
 
 

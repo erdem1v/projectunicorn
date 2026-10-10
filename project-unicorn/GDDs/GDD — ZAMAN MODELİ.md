@@ -76,7 +76,7 @@ Günün süresi ve birimler tek dosyadadır: `scripts/systems/time_model.gd` (`T
 
 | sabit | değer | anlamı |
 |---|---|---|
-| `SECONDS_PER_HOUR` | `[0.0, 2.5, 1.25, 2.5 / 3.0, 0.625]` [WORKING] | oyun saati başına gerçek saniye: duraklat, 1×, 2×, 3×, 4× |
+| `SECONDS_PER_HOUR` | `[0.0, 2.5, 1.25, 2.5 / 3.0]` [WORKING] | oyun saati başına gerçek saniye: duraklat, 1×, 2×, 3× |
 | `WEEK_START_HOUR` | 8 | hafta 08:00'de başlar |
 | `WORKDAY_LATEST_END` | 24 | mesai en geç 00:00'da biter |
 | `OVERTIME_HOUR_YIELD` | 0,5 [WORKING] | sekizi aşan her saatin verimi (§9) |
@@ -95,13 +95,12 @@ vardır (`TimeModel.seconds_per_tick(hız)`):
 | 1× | 2,5 | 22,5 sn |
 | 2× | 1,25 | 11,25 sn |
 | 3× | 0,83 | 7,5 sn |
-| 4× | 0,625 | 5,625 sn |
 
 - Merdiven sahip kararıdır (2026-10-09): koşu fazla uzundu; eski 4×'ün temposu 1× oldu ve her basamak dört kat
-  hızlandı.
+  hızlandı. 4× basamağı 2026-10-10 sahip kararıyla kalktı.
 - Hız yalnız gerçek zamanı değiştirir; oyun zamanındaki davranış her hızda aynıdır. Gece için hız hiç değişmez.
 - 08:00'den şirket başlangıcına kadar ofis görünür ve boştur: 09:00 başlangıçta 1×'te 2,5 sn, 11:00'de 7,5 sn.
-- Dört hız düğmesi vardır; 1-4 tuşları basamakları seçer. Kayıttaki son hız 1 ile 4 arasına kırpılır.
+- Üç hız düğmesi vardır; 1-3 tuşları basamakları seçer. Kayıttaki son hız 1 ile 3 arasına kırpılır.
 - Ölçüm: `--tempo-probe=<hız>` gerçek saatle 08:00'den 08:00'e ölçer; `:shell` eki ofisi kurar ve çıkış kapısının
   gerçek maliyetini de ölçer.
 
@@ -187,7 +186,7 @@ kullanılan gün değişmez.
 
 | sabit | gün modeli | yürürlükte | not |
 |---|---|---|---|
-| `TimeManager.SECONDS_PER_DAY` → `TimeModel.SECONDS_PER_HOUR` | [0, 12, 6, 3] sn/gün | [0, 2,5, 1,25, 0,83, 0,625] sn/saat [WORKING] | varsayılan gün 22,5 / 11,25 / 7,5 / 5,625 sn; 4× vardır |
+| `TimeManager.SECONDS_PER_DAY` → `TimeModel.SECONDS_PER_HOUR` | [0, 12, 6, 3] sn/gün | [0, 2,5, 1,25, 0,83] sn/saat [WORKING] | varsayılan gün 22,5 / 11,25 / 7,5 sn |
 | `INITIAL_HOUR` → `WEEK_START_HOUR` | 9 | 8 | |
 | `DAYS_PER_MONTH` | 30 (GameState) | 30 (`TimeModel`) | ekonomi ayı |
 | `HOURS_PER_DAY` | 24 (TimeManager) | 24 (`TimeModel`) | `HOURS_PER_BUILD_DAY` yoktur |

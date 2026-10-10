@@ -207,12 +207,6 @@ focus_mode = 0
 theme_type_variation = &"SpeedKey"
 text = "3x"
 
-[node name="Speed4Btn" type="Button" parent="TimeBlock"]
-layout_mode = 0
-focus_mode = 0
-theme_type_variation = &"SpeedKey"
-text = "4x"
-
 [node name="GateFrame" type="Panel" parent="."]
 visible = false
 layout_mode = 0

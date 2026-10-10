@@ -68,7 +68,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_debug_fkey(key)
 		return
-	# Hız: Space pause/devam, 1-4 hız basamağı. 1-4 toplantı panelinde (MeetingPanel) ve
+	# Hız: Space pause/devam, 1-3 hız basamağı. Rakamlar toplantı panelinde (MeetingPanel, 1-5) ve
 	# TermSheetTable'da seçenek seçimi de; ikisi de ModalLayer'da, Guard 2 ayrımı sağlar.
 	# Kurucunun toplantı yolculuğunda bu tuşları OfficeTravel yutar.
 	var speed_idx: int = -1
@@ -76,7 +76,6 @@ func _input(event: InputEvent) -> void:
 		KEY_1, KEY_KP_1: speed_idx = 1
 		KEY_2, KEY_KP_2: speed_idx = 2
 		KEY_3, KEY_KP_3: speed_idx = 3
-		KEY_4, KEY_KP_4: speed_idx = 4
 	if speed_idx < 0 and key.keycode != KEY_SPACE and key.keycode != KEY_ESCAPE:
 		return
 	# Guard 1: metin alanı odaklı → tuş karakterini yazsın. Esc'te LineEdit odağı

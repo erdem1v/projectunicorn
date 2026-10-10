@@ -168,7 +168,7 @@ func _input(event: InputEvent) -> void:
 	match key.keycode:
 		KEY_ESCAPE:
 			_skipped = true
-		KEY_SPACE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_KP_1, KEY_KP_2, KEY_KP_3, KEY_KP_4:
+		KEY_SPACE, KEY_1, KEY_2, KEY_3, KEY_KP_1, KEY_KP_2, KEY_KP_3:
 			pass
 		_:
 			return

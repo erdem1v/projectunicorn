@@ -68,7 +68,6 @@ const MARK_Y := WEEK_Y - 1.5
 	$TimeBlock/Speed1Btn,
 	$TimeBlock/Speed2Btn,
 	$TimeBlock/Speed3Btn,
-	$TimeBlock/Speed4Btn,
 ]
 
 ## Teklif geri sayımı yalnız tikte yayılır; dil ya da palet değişince yeniden boyamak için tutulur.
