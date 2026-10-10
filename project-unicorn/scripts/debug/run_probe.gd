@@ -775,13 +775,17 @@ static func _play_the_hour() -> void:
 
 
 ## The Product tab at the week's 08:00. Sprints close in the night's daily tick, so the morning
-## finds either a running sprint or the release note: the note is read, the next sprint planned
-## (the promised steps first, on B2C the paid plan, the lead's suggestion around them) and
-## started. A decision paper waiting on a card was already answered off the desk (_drain_modals).
+## finds either a running sprint or the release note: at the MVP gate the founder ships, then the
+## note is read, the next sprint planned (the promised steps first, on B2C the paid plan, the
+## lead's suggestion around them) and started. A decision paper waiting on a card was already
+## answered off the desk (_drain_modals).
 static func _plan_the_sprint() -> void:
 	if not SprintSystem.is_typed():
 		SprintSystem.choose_type(_subtype, PRODUCT_NAMES[_subtype])
 		print("PROBE PLAY day=%d choose_type %s market=%s" % [GameState.day, _subtype, ProductState.market_type()])
+	if GameState.product.release.get("gate", false):
+		print("PROBE PLAY day=%d publish" % GameState.day)
+		SprintSystem.publish()
 	if SprintSystem.mode() == "release":
 		SprintSystem.plan_next()
 	if SprintSystem.mode() != "plan":
@@ -1548,12 +1552,14 @@ static func _seed_live_product(market: String, subtype: String, components: Arra
 
 
 ## The tended consumer product, built by the sprint engine itself: the note app and the founder
-## alone, Sprint 1 started on the lead's plan and every later sprint auto-started on it. The MVP
-## release brings the launch audience and opens the paid tier.
+## alone, Sprint 1 started on the lead's plan and every later sprint auto-started on it. The founder
+## ships at the MVP gate the night it opens; the release brings the launch audience and opens the
+## paid tier.
 static func _seed_b2c_world() -> void:
 	SprintSystem.choose_type("note_tool", PRODUCT_NAMES["note_tool"])
 	SprintSystem.apply_lead()
 	SprintSystem.start()
+	EventBus.sprint_closed.connect(func(_n: int) -> void: SprintSystem.publish())
 	EventBus.version_shipped.connect(func(_n: int) -> void:
 		SalesSystem.add_b2c_audience(200)
 		SalesSystem.open_b2c_paid_tier(15), CONNECT_ONE_SHOT)

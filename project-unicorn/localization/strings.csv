@@ -2796,7 +2796,11 @@ PRODUCT_PRESS,Basın,Press
 PRODUCT_NO_RELEASE,Bu sprint sürüm çıkmadı,No release this sprint
 PRODUCT_MVP_LEFT,{version} için {n} kart kaldı,{n} cards left for {version}
 PRODUCT_MVP_LEFT_ONE,{version} için {n} kart kaldı,{n} card left for {version}
+PRODUCT_GATE_TITLE,{version} hazır,{version} is ready
+PRODUCT_GATE_BODY,{area} kartları bitti. Yayınlarsan kullanıcılar bu hafta gelmeye başlar. Bir sprint daha beklersen ürün sonraki kapanışa kadar kapalı kalır.,The {area} cards are done. Ship now and users start arriving this week. Wait one more sprint and the product stays closed until the next close.
+PRODUCT_GATE_ONE_MORE,Bir sprint daha,One more sprint
 PRODUCT_RELEASE_BETA,Beta kanalında · bir sonraki sprintte yayına girer,In the beta channel · goes live next sprint
+PRODUCT_RELEASE_RND_OPEN,Ar-Ge açıldı,R&D is open
 PRODUCT_MVP_NOT_LIVE,MVP · yayında değil,MVP · not live
 PRODUCT_HISTORY,Geçmiş,History
 PRODUCT_HISTORY_NONE,Henüz sürüm yok,No releases yet
@@ -2883,6 +2887,7 @@ PRODUCT_RESULT_TICKETS_ACTUAL,{n} ticket kapandı,{n} tickets closed
 PRODUCT_RESULT_TICKETS_ACTUAL_ONE,{n} ticket kapandı,{n} ticket closed
 PRODUCT_RESULT_NONE_EXPECTED,Görünür bir değişiklik beklenmiyor,No visible change expected
 PRODUCT_RESULT_NONE_ACTUAL,Görünür bir değişiklik olmadı,Nothing visible changed
+PRODUCT_RESULT_MVP_EXPECTED,Ürün yayında · ilk kullanıcılar bu hafta gelir,The product is live · first users arrive this week
 PRODUCT_LEAD_TWO,{first} ve {second} bu sprintte bitmeli.,{first} and {second} should land this sprint.
 PRODUCT_LEAD_ONE,{card} bu sprintte bitmeli.,{card} should land this sprint.
 PRODUCT_LEAD_REQUEST,{request} gecikirse {customer} yenilemez.,"If {request} slips, {customer} won't renew."

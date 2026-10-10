@@ -5834,7 +5834,7 @@ static func _case_b2b_onboarding_to_prospect_visible() -> String:
 	# REAL integrated path (NOT the _seed_b2b skip fixture that sets mvp_* flags directly):
 	# onboarding payload → the type chosen in the Product tab (market, subtype and subgenre
 	# through their seams) → sprints planned with the lead's suggestion until three identity
-	# lines reach K1 → Frank's intro beat → add_prospect → spawn_prospect → ProspectRegistry
+	# lines reach K1 and the gate is published → Frank's intro beat → add_prospect → spawn_prospect → ProspectRegistry
 	# (the source the Sales list renders). Guards the whole spawn chain on the path a fresh
 	# game actually takes; the skip-path suite never exercises it.
 	GameState.initialize_run({"company_name": "Test Inc.", "founder_name": "Dev"})
@@ -5847,6 +5847,7 @@ static func _case_b2b_onboarding_to_prospect_visible() -> String:
 	if String(GameState.get_flag("mvp_sub_product_type_id", "")) != "erp":
 		return "mvp_sub_product_type_id not set by the type"
 	for i in 40:
+		SprintSystem.publish()
 		if ProductState.is_live():
 			break
 		if SprintSystem.mode() == "release":
@@ -16937,42 +16938,96 @@ static func _case_sprint_carry_keeps_progress() -> String:
 	return ""
 
 
-## MVP: Çekirdek'in kimlik yeteneklerinden üçü K1'e varınca ürün CANLI v1.0 olur. Öncesindeki
-## sprint sürüm çıkarmaz; MVP'nin sinyalleri (version_shipped ve "shipped") tam bir kez atılır ve
-## MVP bayrakları o kapanışta yazılır. Sonraki sürüm v1.1'dir.
+## MVP: Çekirdek'in kimlik yeteneklerinden üçü K1'e varınca kapanış sürüm kapısında durur: sürüm 0, ürün
+## kapalı, sinyal ve MVP bayrağı yok; bir gün geçmesi kapıyı atlamaz. "Bir sprint daha" (plan_next) o sprintte
+## K1 çıkmasa da sonraki kapanışta aynı kapıya varır. Kapıda bir gün geçtikten sonra Yayınla (publish) ürünü
+## CANLI v1.0 yapar: sinyaller (version_shipped ve "shipped") tam bir kez atılır, MVP bayrakları o gün yazılır;
+## not ve kaydı aynıdır, yayın gününe tarihlenir, beklenen satırı MVP'nindir ve kapıda yazılan sonucu taşımaz;
+## ikinci publish bir şey yapmaz. Sonraki sürüm v1.1'dir. Beta açıkken biten kartlar bir sprint bekler, kapı da
+## bir kapanış sonra açılır.
 static func _case_sprint_mvp_three_identity_k1() -> String:
-	_seed_sprint()
-	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
-		_sprint_hire("char_mvp_" + role_id, role_id)
 	var versions: Array = []
 	var ships: Array = []
 	EventBus.version_shipped.connect(func(n: int) -> void: versions.append(n))
 	EventBus.build_phase_changed.connect(func(phase: String) -> void: ships.append(phase))
-	var lines: Array = SprintCatalog.capabilities("core")
-	if not _play_sprint(["feat:%s_k1" % lines[0]]) or ProductState.line_tier(lines[0]) != 1:
-		return "fixture: sprint 1 did not ship %s" % lines[0]
-	if ProductState.is_live() or int(GameState.product.release.number) != 0 or not versions.is_empty() \
-			or not ships.is_empty():
-		return "one identity line at K1 went public: live %s, release %d, versions %s, ship signals %s" % [
-			ProductState.is_live(), int(GameState.product.release.number), versions, ships]
-	if not _play_sprint(["feat:%s_k1" % lines[1], "feat:%s_k1" % lines[2]]):
-		return "fixture: sprint 2 did not start"
-	if not ProductState.is_live() or versions != [1] or ships != ["shipped"]:
-		return "three identity lines at K1: live %s, versions %s, ship signals %s; want CANLI v1.0 once" % [
-			ProductState.is_live(), versions, ships]
-	var launch: int = GameState.day
-	if int(GameState.product.release.number) != 1 \
-			or int(GameState.get_flag("mvp_launch_day", -1)) != launch \
-			or (GameState.get_flag("mvp_version_history", []) as Array).size() != 1:
-		return "the MVP release reads %d, launch day %s, history %s" % [int(GameState.product.release.number),
-			GameState.get_flag("mvp_launch_day", -1), GameState.get_flag("mvp_version_history", [])]
-	if not _play_sprint(["feat:%s_k1" % lines[3]]):
+	var lines: Array = []
+	# Sprint 1 brings one identity line to K1, sprint 2 (Beta as given) the other two.
+	var to_three := func(beta: bool) -> String:
+		_seed_sprint()
+		for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
+			_sprint_hire("char_mvp_" + role_id, role_id)
+		lines.assign(SprintCatalog.capabilities("core"))
+		if not _play_sprint(["feat:%s_k1" % lines[0]]) or ProductState.line_tier(lines[0]) != 1:
+			return "fixture: sprint 1 did not ship %s" % lines[0]
+		if GameState.product.release.gate or ProductState.is_live() or not versions.is_empty() or not ships.is_empty():
+			return "one identity line at K1: gate %s, live %s, versions %s, ship signals %s; want neither" % [
+				GameState.product.release.gate, ProductState.is_live(), versions, ships]
+		SprintSystem.plan_next()
+		SprintSystem.set_beta(beta)
+		if not _play_sprint(["feat:%s_k1" % lines[1], "feat:%s_k1" % lines[2]]):
+			return "fixture: sprint 2 did not start"
+		return ""
+	var at_gate := func(sprint: int) -> String:
+		if SprintSystem.mode() != "release":
+			return "sprint %d's close: the product is in %s, want the gate's release note" % [sprint, SprintSystem.mode()]
+		var r: Dictionary = GameState.product.release
+		if not r.gate or int(r.sprint) != sprint or int(r.number) != 0 or ProductState.is_live() \
+				or not versions.is_empty() or not ships.is_empty() or GameState.has_flag("mvp_launch_day"):
+			return "sprint %d's close: gate %s (sprint %d), release %d, live %s, versions %s, ship signals %s, launch %s; want the gate, closed" % [
+				sprint, r.gate, int(r.sprint), int(r.number), ProductState.is_live(), versions, ships,
+				GameState.get_flag("mvp_launch_day", -1)]
+		return ""
+	var fail: String = to_three.call(false)
+	if fail == "":
+		fail = at_gate.call(2)
+	if fail != "":
+		return fail
+	_sim_day()
+	fail = at_gate.call(2)
+	if fail != "":
+		return "a day on the gate: " + fail
+	SprintSystem.plan_next()
+	if not _play_sprint(["res:core"]):
 		return "fixture: sprint 3 did not start"
+	fail = at_gate.call(3)
+	if fail != "":
+		return "one more sprint: " + fail
+	# A day on the gate writes the closed product's result into the note.
+	_sim_day()
+	SprintSystem.publish()
+	SprintSystem.publish()
+	var launch: int = GameState.day
+	var r: Dictionary = GameState.product.release
+	var record: Dictionary = GameState.product.releases.back()
+	if not ProductState.is_live() or versions != [1] or ships != ["shipped"] or r.gate or int(r.number) != 1 \
+			or r.expected.key != "PRODUCT_RESULT_MVP_EXPECTED" or not r.actual.is_empty() or int(r.day) != launch \
+			or record != r or int(GameState.get_flag("mvp_launch_day", -1)) != launch \
+			or (GameState.get_flag("mvp_version_history", []) as Array).size() != 1:
+		return "published twice a day after the gate: live %s, versions %s, ship signals %s, gate %s, release %d (record %d), expected %s, actual %s, dated %d (record %d), launch %s, history %s; want CANLI v1.0 once, dated today, its result still to come" % [
+			ProductState.is_live(), versions, ships, r.gate, int(r.number), int(record.number), r.expected, r.actual,
+			int(r.day), int(record.day), GameState.get_flag("mvp_launch_day", -1),
+			GameState.get_flag("mvp_version_history", [])]
+	if not _play_sprint(["feat:%s_k1" % lines[3]]):
+		return "fixture: sprint 4 did not start"
 	if versions != [1, 2] or ships.size() != 2 or int(GameState.get_flag("mvp_launch_day", -1)) != launch \
 			or int(GameState.product.release.number) != 2:
 		return "the release after MVP: versions %s, ship signals %d, launch day %s, release %d; want v1.1" % [
 			versions, ships.size(), GameState.get_flag("mvp_launch_day", -1), int(GameState.product.release.number)]
-	return ""
+	# Beta: sprint 2's cards wait in it, so its close is no gate; the next close is.
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	versions.clear()
+	ships.clear()
+	fail = to_three.call(true)
+	if fail != "":
+		return "beta: " + fail
+	if GameState.product.release.gate or ProductState.is_live():
+		return "beta: sprint 2's close reads gate %s, live %s with its cards still in beta" % [
+			GameState.product.release.gate, ProductState.is_live()]
+	if not _play_sprint(["res:core"]):
+		return "fixture: beta sprint 3 did not start"
+	fail = at_gate.call(3)
+	return "" if fail == "" else "beta: " + fail
 
 
 ## Test rolü olmayan ekipte kartın Test fazı rolsüz, yarı hızla yapılır ve kart hatalı işaretlenir.
@@ -17299,7 +17354,7 @@ static func _case_sprint_beta_card_cannot_be_added() -> String:
 
 ## Açık sürüm canlı hata havuzunu sıfırlar: sayaç ve aşınma ilerlemesi 0'dan başlar. Sürüm
 ## çıkarmayan kapanış (araştırma) havuza dokunmaz.
-## FALSİFİKASYON: SprintSystem._close'taki mvp_live_bug_count sıfırlamasını sil → FAIL.
+## FALSİFİKASYON: SprintSystem._go_public'teki mvp_live_bug_count sıfırlamasını sil → FAIL.
 static func _case_sprint_release_resets_live_bugs() -> String:
 	_seed_sprint_live("note_tool")
 	_sprint_hire("char_bugs_dev", HRConstants.ROLE_DEVELOPER)
@@ -17476,7 +17531,7 @@ static func _case_sprint_lead_offers_paid_plan_b2c() -> String:
 
 
 ## Tek kurucu dört rolün hepsinde tam hızdadır: liderin önerisiyle her sprint bir K1 biter ve MVP
-## üçüncü kapanışta, türün seçildiği günden en geç altı tik sonra çıkar.
+## üçüncü kapanışta, kapıda yayınlanınca türün seçildiği günden en geç altı tik sonra çıkar.
 ## FALSİFİKASYON: sprint.json founder_roles'u ["product", "dev"] yap → FAIL.
 static func _case_sprint_solo_mvp_by_week_six() -> String:
 	_seed_sprint()
@@ -17489,6 +17544,7 @@ static func _case_sprint_solo_mvp_by_week_six() -> String:
 			return "sprint %d did not start from the lead's plan" % SprintSystem.sprint_number()
 		_sim_day()
 		_sim_day()
+		SprintSystem.publish()
 	var launch: int = int(GameState.get_flag("mvp_launch_day", -1))
 	if not ProductState.is_live() or launch - start > 6:
 		return "the solo founder's MVP: live %s, %d ticks after the type; want live within 6" % [
@@ -17533,6 +17589,7 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 	while weeks < 12:
 		GameState.set_cash(5000)
 		_sim_day_full()
+		SprintSystem.publish()
 		if ProductState.is_live():
 			break
 		weeks += 1

@@ -1,12 +1,14 @@
 extends RefCounted
 
 # --sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:start=<hour>][:seeds=1][:seed=424242][:events=0|1][:rate=<r>]
-# [:beta=0|1][:lead=0|1]: does the Product screen's sprint plan come true? A solo founder builds
+# [:beta=0|1][:lead=0|1][:gate=publish|more]: does the Product screen's sprint plan come true? A solo founder builds
 # note_tool for t ticks on each of the seeds seed, seed+1, …, the company working h hours from start
 # (the game's default start hour unless given). Every sprint is planned and started here on the tick it
 # opens, so the ledger measures the engine, not a player's delay: cards=N tops it up to N cards (the
 # carried ones stay, the open Core K1 candidates follow by effort, each through SprintSystem.add),
 # lead=1 takes the lead's plan instead, beta=1 opens Beta; a sprint with nothing to start ends the seed.
+# The MVP gate is answered on the tick it opens: gate=publish (the default) ships v1.0 there, gate=more takes
+# one more sprint and ships at the next close's gate.
 # The plan the screen draws (SprintSystem.plan_outcome) is read when its sprint starts and checked when it
 # closes. events=0 runs only the sprint's daily step, with no decision paper; events=1 runs the whole clock
 # in batches (each visible hour, then the night up to 08:00), answers the desk through RunProbe after every
@@ -35,9 +37,13 @@ static var _seen: Array = []
 
 static func run(spec: String, payload: Dictionary) -> bool:
 	var o: Dictionary = {"start": HRConstants.START_HOUR_DEFAULT, "seeds": 1, "seed": 424242, "events": 0,
-		"beta": 0, "lead": 0}
+		"beta": 0, "lead": 0, "gate": "publish"}
 	for part in spec.split(":"):
-		o[part.get_slice("=", 0)] = part.get_slice("=", 1).to_float()
+		var key: String = part.get_slice("=", 0)
+		if key == "gate":
+			o.gate = part.get_slice("=", 1)
+		else:
+			o[key] = part.get_slice("=", 1).to_float()
 	var events: bool = o.events == 1
 	(SprintCatalog.cfg("decision") as Dictionary).rate = o.get("rate", SprintCatalog.cfg("decision.rate")) \
 		if events else 0.0
@@ -90,6 +96,10 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 			verdicts.append(verdict)
 			print("SPRINTPROBE CLOSE|%d|%d|%s|%d|%s|%s" % [seed_value, p.release.sprint, id, int(carried.is_empty()),
 				"-" if carried.is_empty() else "%.2f" % got, verdict])
+		# gate=more answers the first gate with one more sprint (plan_next below) and publishes the next one:
+		# the unpublished gate's record keeps its gate.
+		if o.gate == "publish" or p.releases.filter(func(r: Dictionary) -> bool: return r.gate).size() > 1:
+			SprintSystem.publish()
 		if GameState.get_flag("mvp_launch_day", -1) == GameState.day:
 			print("SPRINTPROBE MVP|%d|%d" % [seed_value, GameState.day])
 		SprintSystem.plan_next()

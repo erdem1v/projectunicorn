@@ -10,8 +10,8 @@ const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], "plan_next": ["release", "replan"]}
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
 const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "auto_started": "c2", "release": "c3",
-	"no_release": "c3", "no_release_beta": "c3", "beta_open": "c3", "b2b_no_requests": "c5", "goal_menu": "c4",
-	"approved": "c4"}
+	"no_release": "c3", "no_release_beta": "c3", "gate": "c3", "beta_open": "c3", "b2b_no_requests": "c5",
+	"goal_menu": "c4", "approved": "c4"}
 ## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
 const AREAS := {
 	"core": ["Çekirdek", "Core", "Çekirdek", "Core"],
@@ -123,6 +123,15 @@ func _build(id: String) -> Dictionary:
 			m.center.release.velocity.done = 0
 			m.center.release.press = {}
 			m.center.release.result = null
+		"gate":
+			# MVP kapısı: Çekirdek'in üç kartı bitti, ürün oyuncunun Yayınla'sını bekliyor; sürüm ve basın yok.
+			m.versions = []
+			m.header.live_version = ""
+			m.center.mvp_line = _mvp_line().merged({"done": 3}, true)
+			m.center.release.version = ""
+			m.center.release.gate = true
+			m.center.release.press = {}
+			m.center.release.result = null
 		"beta_open":
 			m.center.release.beta = true
 			m.center.beta.open = true
@@ -167,6 +176,15 @@ func _apply(m: Dictionary, kind: String, args: Dictionary) -> void:
 				m.center.next_version.beta_extra = beta.open
 		"apply_lead":
 			m.center.lead_tip = null   # fikstür yuvaları doldurmaz; öneri kullanıldı diye düşer
+		"publish":
+			# Kapıdaki not v1.0'ın sürüm notu olur: ürün canlı, Ar-Ge açık.
+			var r: Dictionary = m.center.release
+			r.gate = false
+			r.rnd_open = true
+			r.version = _version("1.0")
+			r.result = {"kind": "expected", "text": tr("PRODUCT_RESULT_MVP_EXPECTED")}
+			m.header.live_version = "1.0"
+			m.center.mvp_line = null
 		"approve", "approve_all":
 			for col in m.quarter.columns:
 				if col.kind == "proposed" and (kind == "approve_all" or col.sprint == args.sprint):
@@ -295,6 +313,8 @@ func _c3() -> Dictionary:
 	m.center = _center("release", [], {"week": 2, "release": {
 		"version": _version("1.5"),
 		"beta": false,
+		"gate": false,
+		"rnd_open": false,
 		"shipped": [_deck("kisa_kayit", SprintCard.State.BITTI), _deck("kesinti", SprintCard.State.BITTI)],
 		"carried": [{"name": carried.name, "kind": carried.kind, "done": 3, "total": 5, "to_sprint": 8}],
 		"velocity": {"done": 8, "total": 12},

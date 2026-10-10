@@ -70,7 +70,7 @@ static func new_state(day: int) -> Dictionary:
 		"tickets": [], "ticket_seq": 0, "requests": [], "rival_hits": [],
 		"voices_seen": {}, "research_done": {}, "decision": {}, "auto_started": -1,
 		"quarter": {"goal_area": "", "start_sprint": 1, "plans": []},
-		"worked": {"day": -1, "ids": []},
+		"worked": {"day": -1, "ids": []}, "gate_faulty": [],
 	}
 
 
@@ -176,6 +176,28 @@ static func plan_next() -> void:
 		if int(plan.number) == number + 1:
 			_to_next(SprintCatalog.still_open(plan.cards))
 	EventBus.sprint_planned.emit(number)
+	_changed()
+
+
+## Kapıda "Yayınla": ürün CANLI v1.0 olur, kapanışın notu v1.0'ın sürüm notu olur; kapıda bekleyen
+## hatalı hatlar şimdi ticket doğurur. "Bir sprint daha" plan_next'tir. Not yayın gününe tarihlenir:
+## kapıda geçen günün yazdığı sonuç kapalı ürünündü, v1.0'ınki ertesi gün yazılır.
+static func publish() -> void:
+	var p: Dictionary = _p()
+	if not p.release.get("gate", false):
+		return
+	_go_public(1, _shipped_code(), p.gate_faulty)
+	p.gate_faulty = []
+	var release: Dictionary = p.release
+	release.number = 1
+	release.day = GameState.day
+	release.actual = {}
+	release.press = SprintBridges.press_line(release)
+	release.expected = {"key": "PRODUCT_RESULT_MVP_EXPECTED", "args": {}}
+	release.gate = false
+	p.releases[-1] = release.duplicate(true)
+	EventBus.build_phase_changed.emit("shipped")
+	EventBus.version_shipped.emit(1)
 	_changed()
 
 
@@ -772,8 +794,11 @@ static func decision_card() -> Dictionary:
 
 ## Planlamada ya da sürüm notunda bir gün geçti: liderin önerisiyle sprint kendiliğinden başlar.
 ## Öneri boşsa sonraki sütunun kartları, o da boşsa boş sprint başlar: sprint numarası ilerler,
-## talep, söz ve araştırma sprint sayar. Ekip yoksa başlamaz.
+## talep, söz ve araştırma sprint sayar. Ekip yoksa başlamaz. MVP kapısı oyuncuyu bekler: gün geçse
+## de ürün ne kendiliğinden yayınlanır ne bir sprint daha bekler.
 static func _auto_start() -> void:
+	if _p().release.get("gate", false):
+		return
 	if mode() == "release":
 		plan_next()
 	if capacity() == 0:
@@ -789,7 +814,8 @@ static func _auto_start() -> void:
 
 ## Sprint kapanışı: önceki sprintten betada bekleyenler ve bu sprintte bitenler (beta kapalıysa)
 ## çıkar, etkileri uygulanır; bitmeyenler ilerlemesiyle sonraki sprinte devreder. Kimlik
-## yeteneklerinden üçü K1'e varınca ürün CANLI v1.0 olur; canlıda çıkan kart her sürümde +0.1.
+## yeteneklerinden üçü K1'e varınca kapanış sürüm kapısında durur, ürünü CANLI v1.0 yapan publish'tir;
+## canlıda çıkan kart her sürümde +0.1.
 ## Hâlâ bekleyen karar açık kalır: kâğıdı aynı dağıtımın olay yuvasında süresi dolup on_expire
 ## ile çözülür ve ertesi okumada kart serbest kalır; beklerken ilerlemediği için devretmiştir.
 static func _close() -> void:
@@ -845,31 +871,15 @@ static func _close() -> void:
 	# sonraki sürümü anmaz.
 	var releases := func(c: Dictionary) -> bool:
 		return c.kind != "research" and not (c.kind == "fix" and c.tickets.is_empty())
-	var mvp: bool = not ProductState.is_live() and SprintCatalog.mvp_cards_left() == 0
-	var public: bool = mvp or (ProductState.is_live() and ship.any(releases))
+	# MVP'ye varan kapanış kapıda durur: ürün oyuncu yayınlayana dek kapalı kalır, kapanışın hatalı
+	# hatları yayını bekler.
+	var gate: bool = not ProductState.is_live() and SprintCatalog.mvp_cards_left() == 0
+	var public: bool = ProductState.is_live() and ship.any(releases)
 	var n: int = ProductState.version() + 1 if public else 0
 	if public:
-		if mvp:
-			GameState.set_flag("mvp_shipped", true)
-			GameState.set_flag("mvp_launch_day", GameState.day)
-			new_code = _shipped_code()
-		GameState.set_flag("mvp_version", n)
-		var history: Array = GameState.get_flag("mvp_version_history", [])
-		history.append({"version": n, "day": GameState.day})
-		GameState.set_flag("mvp_version_history", history)
-		# Canlı hata havuzu her sürümle yeniden başlar; sprintte gizli hata devri yoktur, devir 0'dır.
-		GameState.set_flag("mvp_live_bug_count", 0)
-		GameState.set_flag("mvp_live_bug_progress", 0.0)
-		GameState.submit_month_highlight("PROD_SHIP_FIRST_TITLE" if n == 1 else "PROD_SHIP_VERSION_TITLE",
-			{"version": version_text(n)}, 50)
-		ProductState.refresh_on_publish(new_code)
-		SprintBridges.push_axes()
-		if mvp:
-			SprintBridges.on_mvp()
-		SprintBridges.on_release()
-		# Hatayı bulan kullanıcıdır: yayına girmeyen kart ticket doğurmaz.
-		for line in faulty:
-			SprintBridges.add_faulty_ticket(line)
+		_go_public(n, new_code, faulty)
+	elif gate:
+		p.gate_faulty = p.get("gate_faulty", []) + faulty
 	for c in to_beta:
 		c.state = "beta"
 	for c in carried:
@@ -892,7 +902,8 @@ static func _close() -> void:
 		"carried": (carried + _carried_out()).map(func(c: Dictionary) -> Dictionary:
 			return {"id": c.id, "done": total(c) - remaining(c), "total": roundi(total(c)), "to_sprint": number + 1}),
 		"velocity": velocity, "expected": _expected(changed, closed), "actual": {}, "press": {},
-		"beta": to_beta.any(releases), "day": GameState.day, "changed_areas": changed, "alerts_cleared": cleared}
+		"beta": to_beta.any(releases), "gate": gate, "day": GameState.day, "changed_areas": changed,
+		"alerts_cleared": cleared}
 	release.press = SprintBridges.press_line(release)
 	var carried_ids: Array = carried.map(func(c: Dictionary) -> String: return c.id)
 	p.next.cards = carried_ids + p.next.cards.filter(func(id: String) -> bool: return id not in carried_ids)
@@ -907,6 +918,32 @@ static func _close() -> void:
 		EventBus.build_phase_changed.emit("shipped")
 		EventBus.version_shipped.emit(n)
 	EventBus.sprint_closed.emit(number)
+
+
+## Ürün kamuya açılır: sürüm bayrakları ve geçmişi, ayın öne çıkanı, eksenler ve köprüler; hatalı
+## hatlar ticket doğurur. v1.0 MVP'dir: ürün canlıya geçer, sunucu açılır. Sinyalleri çağıran sürüm
+## kaydını yazdıktan sonra atar.
+static func _go_public(n: int, new_code: float, faulty: Array) -> void:
+	if n == 1:
+		GameState.set_flag("mvp_shipped", true)
+		GameState.set_flag("mvp_launch_day", GameState.day)
+	GameState.set_flag("mvp_version", n)
+	var history: Array = GameState.get_flag("mvp_version_history", [])
+	history.append({"version": n, "day": GameState.day})
+	GameState.set_flag("mvp_version_history", history)
+	# Canlı hata havuzu her sürümle yeniden başlar; sprintte gizli hata devri yoktur, devir 0'dır.
+	GameState.set_flag("mvp_live_bug_count", 0)
+	GameState.set_flag("mvp_live_bug_progress", 0.0)
+	GameState.submit_month_highlight("PROD_SHIP_FIRST_TITLE" if n == 1 else "PROD_SHIP_VERSION_TITLE",
+		{"version": version_text(n)}, 50)
+	ProductState.refresh_on_publish(new_code)
+	SprintBridges.push_axes()
+	if n == 1:
+		SprintBridges.on_mvp()
+	SprintBridges.on_release()
+	# Hatayı bulan kullanıcıdır: yayına girmeyen kart ticket doğurmaz.
+	for line in faulty:
+		SprintBridges.add_faulty_ticket(line)
 
 
 ## Sürümde beklenen: değişen ilk alanın yeni durumu, yoksa kapanan ticket'lar, yoksa değişiklik yok.

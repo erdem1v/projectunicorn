@@ -219,6 +219,7 @@ func _act(kind: String, args: Dictionary) -> void:
 		"remove": SprintSystem.remove(args.card_id)
 		"start": SprintSystem.start()
 		"plan_next": SprintSystem.plan_next()
+		"publish": SprintSystem.publish()
 		"beta": SprintSystem.set_beta(args.open)
 		"apply_lead": SprintSystem.apply_lead()
 		"decide": INBOX.show(args.item)

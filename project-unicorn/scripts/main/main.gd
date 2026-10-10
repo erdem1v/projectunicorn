@@ -2664,7 +2664,8 @@ func _run_ending_shot(key: String) -> void:
 # menu with a click on its strip, edge:voices_open scrolls the areas to the open one. live draws
 # ProductModel.live() over a run seeded through SprintSystem (_seed_product_live); live:pick_named is
 # the type picker with B2C, a type and a name picked; live:decision_paper presses the decision row's
-# Karara git, so the frame is Olaylar on the sprint paper.
+# Karara git, so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
+# Yayınla and saves the v1.0 note (<stem>_publish).
 func _run_product_shot(id: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -2688,6 +2689,12 @@ func _run_product_shot(id: String) -> void:
 			await get_tree().process_frame
 			(_shell.find_children("*", "SprintCard", true, false).filter(func(card: SprintCard) -> bool:
 				return card.state == SprintCard.State.SPRINT_PLAN).back() as SprintCard).show_effort()
+		if id == "live:gate":
+			await get_tree().process_frame
+			await get_tree().create_timer(0.4).timeout
+			_save_shot(stem)
+			_press_button_labelled(_shell, tr("PROD_SHIP_PUBLISH"))
+			stem += "_publish"
 		await _finish_shot(stem)
 		return
 	await _mount_shot_shell()
@@ -2716,15 +2723,16 @@ func _run_product_shot(id: String) -> void:
 	get_tree().quit()
 
 
-## live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests|solo15|solo15_tip|solo12_active>.
+## live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests|gate|solo15|solo15_tip|solo12_active>.
 ## pick and pick_named leave the product untyped (the type picker). The solo ones leave the founder alone
 ## from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with the lead's plan
 ## applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active starts the
 ## lead's plan at 12 hours, two cards over capacity (6/5). The rest choose a type, staff it with the HR shot
-## roster and play through SprintSystem with only its own daily step ticking, so no card mounts: plan stops
-## in Sprint 1 planning with the lead's plan, active and decision_paper in its second week with a sprint
-## paper on the desk, b2c_mvp on the CANLI v1.0 release note. b2b_requests signs two accounts once the
-## faucet opens at MVP and plays one more sprint, so the next planning carries their request cards.
+## roster (gate keeps the founder alone at the default hours) and play through SprintSystem with only its own
+## daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's plan, active and
+## decision_paper in its second week with a sprint paper on the desk, gate on the MVP gate, b2c_mvp on the
+## CANLI v1.0 release note it publishes. b2b_requests signs two accounts once the faucet opens at MVP and
+## plays one more sprint, so the next planning carries their request cards.
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
 		return
@@ -2737,7 +2745,8 @@ func _seed_product_live(scenario: String) -> void:
 		if scenario == "solo12_active":
 			SprintSystem.start()
 		return
-	_seed_hr_roster()
+	if scenario != "gate":
+		_seed_hr_roster()
 	var day := func() -> void:
 		GameState.advance_day()
 		SprintSystem.daily_tick()
@@ -2757,6 +2766,10 @@ func _seed_product_live(scenario: String) -> void:
 		return
 	for i in 12:
 		sprint.call()
+		if GameState.product.release.get("gate", false):
+			if scenario == "gate":
+				return
+			SprintSystem.publish()
 		if ProductState.is_live():
 			break
 	if not b2b:

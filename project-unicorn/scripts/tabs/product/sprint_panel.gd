@@ -123,7 +123,7 @@ func _center(model: Dictionary) -> void:
 				var why := _note(SprintUiShared.LOCK, c.start_reason, UiTokens.D_INK_3)
 				why.size_flags_horizontal = Control.SIZE_SHRINK_END
 				col.foot().add_child(why)
-			col.foot().add_child(_foot_row(c, start))
+			col.foot().add_child(_foot_row(c, [start]))
 		"active":
 			col.stack.add_child(SprintUiShared.section("PRODUCT_STATUS"))
 			col.stack.add_child(_status(c.status))
@@ -139,7 +139,7 @@ func _center(model: Dictionary) -> void:
 				version.add_child(SprintUiShared.label(String(nv.label), &"FigureValue"))
 				version.add_child(SprintUiShared.label(SprintUiShared.SEP.join(eta), &"MetaMuted"))
 				col.foot().add_child(version)
-			col.foot().add_child(_foot_row(c, null))
+			col.foot().add_child(_foot_row(c, []))
 
 
 ## Kimse çalışamıyorken sütunun gövdesi: ekip glifi, not ve çıkış yolu (kadro yoksa işe alım, varsa Ekip).
@@ -193,8 +193,12 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 	head.add_child(SprintUiShared.label(tr("PRODUCT_SPRINT_END").format({"n": c.sprint}), &"MetaMuted"))
 	col.head.add_child(head)
 
-	# MVP öncesi kapanış sürüm çıkarmaz: başlığın altında sürüm koşulu, notta v1.0'a kalan kart.
-	if c.mvp_line != null:
+	# MVP'ye varan kapanış kapıdır: v1.0 hazır, yayın oyuncunun. Öncesindeki kapanış sürüm çıkarmaz:
+	# başlığın altında sürüm koşulu, notta v1.0'a kalan kart.
+	if r.gate:
+		col.stack.add_child(SprintUiShared.label(tr("PRODUCT_GATE_TITLE").format(c.mvp_line), &"ReleaseValue"))
+		col.stack.add_child(SprintUiShared.prose(tr("PRODUCT_GATE_BODY").format(c.mvp_line), &"DataText"))
+	elif c.mvp_line != null:
 		col.head.add_child(_mvp_rule(c.mvp_line))
 		var left: int = c.mvp_line.need - c.mvp_line.done
 		col.stack.add_child(SprintUiShared.label(tr(Fmt.count_key("PRODUCT_MVP_LEFT", left)).format(
@@ -254,13 +258,19 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 		pair[1].size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(pair[1])
 	col.stack.add_child(SprintUiShared.pad(grid, Vector4i(0, UiTokens.SPACE_L, 0, UiTokens.SPACE_M)))
+	if r.rnd_open:
+		col.stack.add_child(_note(RnDUiShared.ICON, tr("PRODUCT_RELEASE_RND_OPEN"), UiTokens.D_INK_2))
 	col.stack.add_child(_lead_row(r.lead, "PRODUCT_LEAD_LINE", null))
 
 	var hold := _note(PAUSE, tr("PRODUCT_RELEASE_HOLD"), UiTokens.D_INK_3)
 	hold.size_flags_horizontal = Control.SIZE_SHRINK_END
 	col.foot().add_child(hold)
-	col.foot().add_child(_foot_row(c, SprintUiShared.button(tr("PRODUCT_PLAN_SPRINT").format({"n": next_sprint}),
-		&"PrimaryButtonDark", action.emit.bind("plan_next", {"sprint": next_sprint}))))
+	var plan_next := action.emit.bind("plan_next", {"sprint": next_sprint})
+	col.foot().add_child(_foot_row(c, [
+		SprintUiShared.button(tr("PRODUCT_GATE_ONE_MORE"), &"SecondaryButton", plan_next),
+		SprintUiShared.button(tr("PROD_SHIP_PUBLISH"), &"PrimaryButtonDark", action.emit.bind("publish", {})),
+	] if r.gate else [SprintUiShared.button(tr("PRODUCT_PLAN_SPRINT").format({"n": next_sprint}), &"PrimaryButtonDark",
+		plan_next)]))
 
 
 func _next(next: Dictionary) -> void:
@@ -347,8 +357,8 @@ func _mvp_rule(line: Dictionary) -> Label:
 
 ## Alt satır: solda beta kanalı (model veriyorsa) iki konumlu anahtarıyla, yalnız açık olmayan bölme
 ## basılır; anahtar yalnız planlamada değişir ve orada altında kuralını yazar, öbür kiplerde sönüktür. Sağda
-## birincil düğme (varsa).
-func _foot_row(c: Dictionary, button: Button) -> HBoxContainer:
+## düğmeler, birincil en sağda.
+func _foot_row(c: Dictionary, buttons: Array) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_L)
 	if c.beta != null:
 		var plan: bool = c.mode == "plan"
@@ -362,7 +372,7 @@ func _foot_row(c: Dictionary, button: Button) -> HBoxContainer:
 			beta.add_child(_note("", tr("PRODUCT_BETA_RULE"), UiTokens.D_INK_3))
 		row.add_child(beta)
 	row.add_child(RnDUiShared.spacer())
-	if button != null:
+	for button: Button in buttons:
 		row.add_child(button)
 	return row
 

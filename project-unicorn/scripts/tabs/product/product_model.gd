@@ -44,7 +44,8 @@ extends RefCounted
 #           ceiling_pct (yükün "+" kapanan eşiği, yüzde), can_start,
 #           start_reason: "" or String (başlat kapalıysa kapanan koşul), beta: {open} or null,
 #           lead_tip: person + {text, self (lider kurucunun kendisi)} or null,
-#           release: {version: "v5" or "" (sürüm çıkmadı), beta, shipped: [card],
+#           release: {version: "v5" or "" (sürüm çıkmadı), beta, gate (MVP kapısı: Yayınla / Bir sprint daha;
+#                     başlık ve gövde mvp_line'dan), rnd_open (v1.0 notu: Ar-Ge açıldı), shipped: [card],
 #                     carried: [{name, kind, done (kesirli), total, to_sprint}], velocity: {done, total} (kesirli),
 #                     result: {kind: "expected"|"actual", text} or null, press: {outlet (anahtar), text} or {},
 #                     lead: person + {text, self}} or null}
@@ -272,6 +273,9 @@ static func _release(r: Dictionary, lead: Character) -> Dictionary:
 		"version": SprintSystem.version_label(ProductState.version() + 1 if r.beta and int(r.number) == 0
 			and ProductState.is_live() else int(r.number)),
 		"beta": r.beta,
+		"gate": r.get("gate", false),
+		# Ar-Ge ağacı v1.0 ile açılır.
+		"rnd_open": int(r.number) == 1,
 		"shipped": r.shipped.map(func(c: Dictionary) -> Dictionary: return _card(c, SprintCard.State.BITTI)),
 		"carried": r.carried.map(func(item: Dictionary) -> Dictionary:
 			var c: Dictionary = SprintCatalog.card_by_id(item.id)
