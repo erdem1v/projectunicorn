@@ -30,6 +30,7 @@ const RETAIN_ID := "customer.retention"
 const EXPANSION_ID := "customer.expansion"
 const SHEET_WARN_ID := "funding.sheet_expiry"
 const SHEET_DECISION_ID := "funding.sheet_decision"
+const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
 
 # Fixture skill defaults. The names are kept because fifty-odd call sites pass them
 # positionally; what they set are areas:
@@ -267,6 +268,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"angel_one_shot_falsified":           fail = _case_angel_one_shot_falsified()
 		"angel_survives_series_a":            fail = _case_angel_survives_series_a()
 		"angel_hire_nudge":                   fail = _case_angel_hire_nudge()
+		"cheque_read_steps":                  fail = _case_cheque_read_steps()
 		# --- SaveManager task 2026-08-08. Bunlar ŞEMAYI değil RESET MİMARİSİNİ ölçer:
 		#     serileştirme biçimi kolay %20; zor %80, yüklemenin ÇALIŞAN bir süreci
 		#     eskiden yalnız bir OS restart'ının üretebildiği duruma döndürmesi.
@@ -4251,6 +4253,91 @@ static func _case_angel_hire_nudge() -> String:
 	if HRSystem.attention_count() != badge0:
 		return "the HR badge survived the hire (%d, wanted %d)" % [HRSystem.attention_count(), badge0]
 	return ""
+
+
+## ChequeRead is the run's one goal source. Frank's cheque list walks 0 to 5 on a B2C and on a B2B
+## product, its paying and revenue steps read live; once the cheque is answered the seed list walks 0
+## to 2 and stays open at 2/2 until the signature, and a pitch burned without an offer closes it too.
+## A dropped cheque row keeps the cheque list open, an expired or a declined one closes it. No daily
+## tick runs: no card arrives, the fixture sets every step.
+##
+## FALSIFICATION: cut step 2 down to `mode() != "plan"` and sprint 2's planning fails; read the
+## cheque's history through `fire_count` and the dropped row fails; let a `chosen` row keep the list
+## open and the declined row fails.
+static func _case_cheque_read_steps() -> String:
+	var bad: Array[String] = []
+	var reads := func(when: String, want: String) -> void:
+		var s: Dictionary = ChequeRead.summary()
+		var got: String = "none" if s.is_empty() else "%s %d/%d %s" % [s.list, s.done, s.total,
+			"-" if s.next.is_empty() else "%s@%s" % [s.next.id, s.next.tab]]
+		if got != want:
+			bad.append("%s: %s, want %s" % [when, got, want])
+	var bar := func(when: String, target: int) -> void:
+		var step: Dictionary = ChequeRead.summary().get("next", {})
+		var got: Array = [step.get("value"), step.get("target")]
+		if got != [GameState.mrr, target]:
+			bad.append("%s: the MRR step reads %s, want %s" % [when, got, [GameState.mrr, target]])
+	var build := func(subtype: String, money_tab: String) -> void:
+		reads.call(subtype, "cheque 0/5 type@product")
+		SprintSystem.choose_type(subtype, "Notly")
+		reads.call(subtype + " typed", "cheque 1/5 sprint@product")
+		SprintSystem.apply_lead()
+		SprintSystem.start()
+		reads.call(subtype + " sprint 1", "cheque 2/5 ship@product")
+		SprintSystem._close()
+		SprintSystem.plan_next()
+		if SprintSystem.mode() != "plan" or SprintSystem.sprint_number() != 2:
+			bad.append("fixture: %s is in %s of sprint %d, want sprint 2 planning" % [
+				subtype, SprintSystem.mode(), SprintSystem.sprint_number()])
+		reads.call(subtype + " sprint 2 planning", "cheque 2/5 ship@product")
+		GameState.set_flag("mvp_shipped", true)
+		reads.call(subtype + " shipped", "cheque 3/5 paying@" + money_tab)
+
+	var b2c: String = ChequeRead.B2C_MONEY_TAB
+	build.call("note_tool", b2c)
+	SalesSystem.open_b2c_paid_tier(15)   # the userbase record, nobody paying yet
+	reads.call("b2c tier open", "cheque 3/5 paying@" + b2c)
+	CustomerRegistry.set_seats(SalesSystem.B2C_USERBASE_ID, 1)
+	reads.call("b2c paying", "cheque 4/5 mrr@" + b2c)
+	bar.call("b2c paying", AngelRoundSystem.MRR_THRESHOLD)
+	CustomerRegistry.set_mrr(SalesSystem.B2C_USERBASE_ID, AngelRoundSystem.MRR_THRESHOLD)
+	SalesSystem.reflect_mrr()
+	reads.call("b2c at the bar", "cheque 5/5 -")
+	CustomerRegistry.set_seats(SalesSystem.B2C_USERBASE_ID, 0)
+	reads.call("b2c payers gone", "cheque 4/5 paying@" + b2c)
+	EvHistory.record(ANGEL_ID, EvHistory.RESOLUTION_DROPPED, "", "", {}, [])
+	reads.call("cheque dropped", "cheque 4/5 paying@" + b2c)
+	EvHistory.record(ANGEL_ID, EvHistory.RESOLUTION_EXPIRED, "", "", {}, [])
+	reads.call("cheque expired", "seed 0/2 traction@" + b2c)
+	EvHistory.record(ANGEL_ID, EvHistory.RESOLUTION_CHOSEN, "decline", "refused", {}, [])
+	reads.call("cheque declined", "seed 0/2 traction@" + b2c)
+	GameState.seed_pitch_used = true
+	reads.call("seed pitch burned", "none")
+
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	build.call("erp", "sales")
+	_seed_b2b(AngelRoundSystem.MRR_THRESHOLD - 1)
+	reads.call("b2b account", "cheque 4/5 mrr@sales")
+	bar.call("b2b account", AngelRoundSystem.MRR_THRESHOLD)
+	CustomerRegistry.set_mrr("co_lead_smoke", AngelRoundSystem.MRR_THRESHOLD)
+	SalesSystem.reflect_mrr()
+	reads.call("b2b at the bar", "cheque 5/5 -")
+	AngelRoundSystem.accept_offer()
+	reads.call("cheque taken", "seed 0/2 traction@sales")
+	GameState.phase_gate_ready = true
+	GameState.pending_next_phase = 2
+	GameState.advance_phase()
+	reads.call("traction", "seed 1/2 seed@finance")
+	bar.call("traction", SeedConstants.DOOR_MRR)
+	GameState.seed_door_open_day = GameState.day
+	reads.call("seed door open", "seed 2/2 -")
+	GameState.seed_pitch_used = true
+	GameState.seed_sheet = TermSheet.new()   # the offer waits on the table: the round is not burned
+	reads.call("seed offer waiting", "seed 2/2 -")
+	GameState.record_seed_round(15, 120000, "anchor")
+	reads.call("seed signed", "none")
+	return "; ".join(bad)
 
 
 static func _case_promise_no_duplicate_word() -> String:
