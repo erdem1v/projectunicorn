@@ -313,6 +313,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_no_double_resolution_after_load": fail = _case_event_no_double_resolution_after_load()
 		"event_history_names_survive":    fail = _case_event_history_names_survive()
 		"event_history_chip_matches_live": fail = _case_event_history_chip_matches_live()
+		"event_beat_is_note":             fail = _case_event_beat_is_note()
+		"event_beat_freezes_seams":       fail = _case_event_beat_freezes_seams()
 		"messages_save_round_trip":       fail = _case_messages_save_round_trip()
 		"sales_weekly_report_is_a_message": fail = _case_sales_weekly_report_is_a_message()
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
@@ -5617,6 +5619,59 @@ static func _case_event_history_chip_matches_live() -> String:
 		var shown: String = EvChips.text(EvChips.describe(deltas[i], ctx, {}, true)[0])
 		if shown != live[i]:
 			return "%s: the card showed '%s', its history row reads '%s'" % [effects[i].verb, live[i], shown]
+	return ""
+
+
+## §27.17: a one-option beat with nothing to decide is a note. Admitted, it neither asks for the gate nor waits;
+## its row is its only option, unread, with the runway its body read. The inbox lists it unmarked, the office
+## stack shows it until it is read, and reading it clears the mark.
+## FALSIFICATION: drop the note branch from EvEngine._admit (note = false) → the beat asks for the gate and waits.
+static func _case_event_beat_is_note() -> String:
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
+	GameState.set_cash(5000)
+	GameState.day = 5
+	var asked: Array = []
+	EventBus.modal_requested.connect(func(ev: GameEvent) -> void: asked.append(ev.id))
+	if not EventGate.request("founder.savings_note"):
+		return "fixture: the savings note was refused"
+	if asked.has("founder.savings_note") or EventGate.has_pending():
+		return "the beat asked for the gate (%s) or waits (pending %s)" % [str(asked), EventGate.has_pending()]
+	var i: int = EventGate.history().size() - 1
+	var row: Dictionary = EventGate.history()[i]
+	if row.event_id != "founder.savings_note" or row.option_id != "ok" or not row.get("note", false) \
+			or not row.get("unread", false) or not (row.get("names", {}) as Dictionary).has("seam:finance.runway_weeks"):
+		return "the note's row is %s" % str(row)
+	var listed: Array = INBOX.items().filter(func(it: Dictionary) -> bool: return it.id == "h:%d" % i)
+	if listed.is_empty() or listed[0].unread or not listed[0].note_unread \
+			or INBOX.unread_discovery().map(func(it: Dictionary) -> String: return it.id) != ["h:%d" % i]:
+		return "the inbox marks the note in its list or the office stack misses it"
+	INBOX.mark_read(listed[0])
+	if EventGate.history()[i].unread or not INBOX.unread_discovery().is_empty():
+		return "reading the note left it unread"
+	return ""
+
+
+## §27.17: a history row prints what its card read when it resolved, not today's state. The bug count in a played
+## card's body stays the week's; a flag-picked variant keeps the variant the flag chose.
+## FALSIFICATION: drop the names lookup from EvPresenter._interpolate → the row prints today's count; drop it from
+## _resolve_variant → the variant follows the flag.
+static func _case_event_beat_freezes_seams() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	EvSeams.mock("urun.bugs_confirmed", 14)
+	EvSeams.mock("destek.desk_staffed", true)
+	if not EventGate.request("product.bug_pile") or EventGate.active_id() != "product.bug_pile":
+		return "fixture: the bug pile did not show (%s)" % EventGate.active_id()
+	EventGate.resolve("product.bug_pile", "later")
+	var row: Dictionary = EventGate.history()[-1]
+	EvSeams.mock("urun.bugs_confirmed", 3)
+	var body: String = EventGate.render(row.event_id, row.entities, row.get("names", {})).body_text
+	if not body.contains("14"):
+		return "the row reads today's count: '%s'" % body
+	var card := {"text": {"en": {"body": {"by_seam": "destek.desk_staffed", "variants": {"0": "nobody", "1": "staffed"}}}}}
+	var kept: Dictionary = EvPresenter.freeze_seams(card, {})
+	EvSeams.mock("destek.desk_staffed", false)
+	if EvPresenter.resolve_text(card.text.en.body, {}, kept) != "staffed":
+		return "the flag-picked variant followed the flag: kept %s" % str(kept)
 	return ""
 
 

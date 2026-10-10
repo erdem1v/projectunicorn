@@ -4,7 +4,7 @@ extends RefCounted
 # Olaylar rozetinin tek görünüm modeli. Kendi durumu yoktur, her okumada kurulur: etkin karar,
 # kuyruktakilerin sayısı, masadaki kâğıtlar, canlı durumdan türeyen hatırlatıcılar (saatleri ve
 # okundu işaretleri yoktur), geçmiş kararlar (EventGate.history) ve motor dışı mesajlar
-# (GameState.messages). Yazdığı tek şey bir mesajın okundu işaretidir, sahibinin yolundan.
+# (GameState.messages). Yazdığı tek şey bir mesajın ya da notun okundu işaretidir, sahibinin yolundan.
 # Her öğe bir göndericiden gelmiş mail gibi okunur: kartın `sender`'ı, Frank konuşuyorsa Frank,
 # yoksa kartın bağlı öznesi ya da kategorisi göndericiyi adlandırır.
 # Dışarıdan preload ile erişilir: global class cache'e bağımlılık yok (headless tuzağı).
@@ -127,14 +127,20 @@ static func desk() -> Array:
 	return out
 
 
-## The newest discovery not read yet, as a list of one or none: the office's notice stack keeps it until it is
-## read (it does not wait on the player, so it is no paper). One is enough there, so the papers stay in sight.
+## The newest discovery and the newest note not read yet, at most one of each: the office's notice stack keeps
+## them until they are read (neither waits on the player, so neither is a paper), and it is the only place a note
+## shows unread. One of each is enough there, so the papers stay in sight.
 static func unread_discovery() -> Array:
+	var out: Array = []
 	for i in range(GameState.messages.size() - 1, -1, -1):
 		var m: Dictionary = GameState.messages[i]
 		if m.kind == "rnd_discovery" and not m.read:
-			return [_message_item(m)]
-	return []
+			out.append(_message_item(m))
+			break
+	var note: Dictionary = EvHistory.newest_unread_note()
+	if not note.is_empty() and EventGate.is_catalogued(String(note.row.event_id)):
+		out.append(_history_item(int(note.index), note.row))
+	return out
 
 
 ## The signals that change what the inbox lists. `c` takes 0 to 2 arguments.
@@ -170,8 +176,12 @@ static func active_item() -> Dictionary:
 	return it
 
 
-## Marks a message read on its owner's path: the latest Ar-Ge note's read state is RnDSystem's.
+## Marks a message or a note read on its owner's path: the latest Ar-Ge note's read state is RnDSystem's, a
+## note's is its history row's.
 static func mark_read(it: Dictionary) -> void:
+	if it.get("note_unread", false):
+		EventGate.mark_read(int(String(it.id).trim_prefix("h:")))
+		return
 	if it.get("kind", "") != "message" or not it.unread:
 		return
 	var notes: Array = GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "rnd_note")
@@ -223,9 +233,14 @@ static func _history_item(i: int, row: Dictionary) -> Dictionary:
 	for c in (it.event as GameEvent).choices.size():
 		if String(EventGate.catalogue_card(String(row.event_id)).options[c].get("id", "")) == String(row.option_id):
 			label = ((it.event as GameEvent).choices[c] as EventChoice).label
-	it.merge({"kind": "history", "row": row, "option": label, "expired": expired,
-		"stamp": "MAIL_STAMP_EXPIRED" if expired else ("MAIL_STAMP_LEFT" if it.sender.gone else "MAIL_STAMP_ANSWERED"),
-		"line": "" if expired else TranslationServer.translate("INBOX_CHOICE").format({"option": label})}, true)
+	var note: bool = row.get("note", false)
+	# A note is not unread in the list (its mark is the office stack's alone): it reads as its body's first line
+	# and carries no stamp, nothing was answered.
+	it.merge({"kind": "history", "row": row, "option": label, "expired": expired, "note": note,
+		"note_unread": bool(row.get("unread", false))}, true)
+	if not note:
+		it.merge({"stamp": "MAIL_STAMP_EXPIRED" if expired else ("MAIL_STAMP_LEFT" if it.sender.gone else "MAIL_STAMP_ANSWERED"),
+			"line": "" if expired else TranslationServer.translate("INBOX_CHOICE").format({"option": label})}, true)
 	return it
 
 

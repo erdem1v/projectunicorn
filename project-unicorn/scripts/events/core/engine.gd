@@ -25,9 +25,9 @@ extends RefCounted
 #                            before Finance ran. So they BUFFER and drain here, in emission order.
 #   h. tick proposals        the per-tick sweep.
 #   i. pool draw             after the authored beats — the pool fills what they left.
-#   j. floor                 only if (a)-(i) produced nothing at all.
+#   j. floor                 only if (a)-(i) admitted nothing but notes.
 #   k. class assignment      §13's budget, applied to the whole day's admissions AT ONCE.
-#   l. pump                  show the top card.
+#   l. pump                  name the notes, then show the top card.
 #
 # STEP (k) IS NOT WHERE §4.1 PUTS IT, deliberately. §4.1 lists G8 inside propose(), which would
 # demote the THIRD-ARRIVING card — possibly the arc payoff. Assigning classes top-down by §11.2
@@ -48,6 +48,8 @@ static var _today_admissions: Array = []
 static var _forced: Array = []
 ## True while the chosen option's effects run: a sitting the option opens is the card's own.
 static var _resolving: bool = false
+## Notes written since the last pump, which names them to the inbox outside a batch of hours.
+static var _unannounced: Array = []
 
 
 static func empty_floor_ticks() -> int:
@@ -104,10 +106,13 @@ static func _step_paper_expiry() -> void:
 
 		# §12.4: on_expire runs, history says `expired`, expire_note reaches the ticker. The
 		# note names a line of the card's text block (§3.2); a name the block lacks is the line.
-		# Names are taken before the penalties, which may remove the subject; the paper's own
-		# names cover a subject who left while it waited.
+		# Names and seam values are taken before the penalties, which may remove the subject; the
+		# paper's own names cover a subject who left while it waited, and that subject's seams
+		# would read a fallback, so its body is not drawn again.
 		var names: Dictionary = EvPresenter.freeze_names(context)
 		names.merge(paper.get("names", {}))
+		if EvScope.still_valid(context):
+			names.merge(EvPresenter.freeze_seams(card, context))
 		var deltas: Array = EvEffects.run_expire(penalties, context, event_id)
 		EvHistory.record(event_id, EvHistory.RESOLUTION_EXPIRED, "", "expired",
 			context, deltas, arc_id, false, names)
@@ -381,12 +386,26 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) ->
 	var key: String = EvLatches.key_of(event_id, verdict.context)
 	if EvPapers.has(key):
 		return false
+	var card: Dictionary = EvCatalog.card(event_id)
+	var note: bool = EvPresenter.is_note(card)
 
+	# A NOTE IS ANSWERED ON ARRIVAL (§27.17): it has nothing to decide, so it neither holds the clock
+	# nor waits; its only option is written down, unread, and the next pump names it to the inbox.
 	# A PAPER IS NOT QUEUED. `has_pending()` gates the clock and the save, so a queued paper
 	# would hold the game paused for its whole week; and `pump()` would mount it as a modal,
 	# the opposite of §11.4, where a paper waits until the player picks it up.
-	if verdict.card_class == "paper":
-		EvPapers.place(event_id, verdict.context, _expiry_weeks(EvCatalog.card(event_id)), arc_id)
+	if note:
+		var only: Dictionary = card["options"][0]
+		var names: Dictionary = EvPresenter.freeze_names(verdict.context)
+		names.merge(EvPresenter.freeze_seams(card, verdict.context))
+		EvHistory.record(event_id, EvHistory.RESOLUTION_CHOSEN, String(only["id"]),
+			String(only.get("outcome_id", only["id"])), verdict.context, [], arc_id, false, names, true)
+		# As in resolve(): an arc step answered moves its arc on, and the only option has no arc verb.
+		if card.has("arc"):
+			EvArcs.advance(String(card["arc"]))
+		_unannounced.append(event_id)
+	elif verdict.card_class == "paper":
+		EvPapers.place(event_id, verdict.context, _expiry_weeks(card), arc_id)
 	elif not EvQueue.admit(event_id, verdict.context, verdict.card_class, arc_id):
 		return false
 
@@ -395,7 +414,9 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) ->
 	EvLatches.spend(key)
 	# A forced instance dropped unanswered left its mark; this one arrived on its own.
 	_forced.erase(key)
-	_today_admissions.append({"event_id": event_id, "context": verdict.context})
+	# A note never interrupts, so it takes nothing from the tick's interrupt budget.
+	if not note:
+		_today_admissions.append({"event_id": event_id, "context": verdict.context})
 	return true
 
 
@@ -416,9 +437,15 @@ static func _expiry_weeks(card: Dictionary) -> int:
 ##
 ## Deferred while the clock runs a batch of hours (a meeting's skip, the night): the batch's end
 ## pumps once (EvSignals connects it), so the card is re-validated at the hour it is seen, the
-## most important one comes first and an open card does not block the 00:00 autosave.
+## most important one comes first and an open card does not block the 00:00 autosave. The notes
+## written since are named to the inbox at the same moment, so no listener runs inside the batch.
 static func pump() -> bool:
-	if not GameState.run_active or EvQueue.active_id() != "" or TimeManager.is_batching():
+	if not GameState.run_active or TimeManager.is_batching():
+		return false
+	for event_id in _unannounced:
+		EventBus.event_triggered.emit(event_id)
+	_unannounced.clear()
+	if EvQueue.active_id() != "":
 		return false
 
 	while true:
@@ -444,9 +471,10 @@ static func pump() -> bool:
 	return false
 
 
-## The engine's only words to the UI. `event_triggered` feeds the left rail's badge;
-## `modal_requested` is what main.gd opens the decision gate on — without it nothing reaches the
-## screen. The view is built here so the receiver never has to know which id is active.
+## A shown card's words to the UI (pump() names a note with `event_triggered` alone).
+## `event_triggered` feeds the left rail's badge; `modal_requested` is what main.gd opens the
+## decision gate on — without it no decision reaches the screen. The view is built here so the
+## receiver never has to know which id is active.
 static func _announce(event_id: String, context: Dictionary) -> void:
 	EventBus.event_triggered.emit(event_id)
 	EventBus.modal_requested.emit(EvPresenter.build_view(event_id, context))
@@ -478,8 +506,9 @@ static func resolve(event_id: String, option_id: String) -> void:
 		return
 
 	# Before the effects: an option that loses the customer or the employee removes them, and the
-	# row must still say who it was about (§7.1 `names`).
+	# row must still say who it was about (§7.1 `names`) and what its text read (§27.17).
 	var names: Dictionary = EvPresenter.freeze_names(context)
+	names.merge(EvPresenter.freeze_seams(card, context))
 	var deltas: Array
 	var outcome: String = String(option.get("outcome_id", option_id))
 	_resolving = true
@@ -539,6 +568,7 @@ static func reset() -> void:
 	_quiet_ticks = 0
 	_today_admissions.clear()
 	_forced.clear()
+	_unannounced.clear()
 	EvSave.reset()
 
 

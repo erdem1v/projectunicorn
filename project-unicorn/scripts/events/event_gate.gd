@@ -84,6 +84,11 @@ static func history() -> Array:
 	return EvHistory.rows()
 
 
+## The player opened the note at `index` in history() (§27.17).
+static func mark_read(index: int) -> void:
+	EvHistory.mark_read(index)
+
+
 static func is_catalogued(event_id: String) -> bool:
 	return EvCatalog.has_card(event_id)
 

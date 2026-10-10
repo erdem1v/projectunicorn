@@ -2201,3 +2201,71 @@ bir ağaçtır, her yaprağı bu slotu adlandıran ve slotun tipine ait bir `ent
 *Neden.* Seçici ile koşul ayrıyken "en kıdemli kişi, eğer yapım ekibindeyse" türü kart, yapım ekibinde biri varken
 bile en kıdemli kişi orada olmadığı için hiç ateşlenmez; küçük hesabı anlatan kart en büyük ya da en küçük hesabı
 bağlayıp bandın dışında kalır. Süzgeç kartın anlattığı özneyi bağlar.
+
+### §27.17 · Tek seçenekli beat notu ve donmuş seam değerleri
+
+Sahip kararı 2026-10-10: tek düğmeli beat kartı saati tutmaz, nota döner, geçmişte gövdesi kalır.
+
+**1. Not kuralı.**
+
+*Belge ne diyordu.* §11.1: interrupt karar kapısıdır; kutu kartın üstünde açılır ve saat tutulur (§27.14). Seçeneği
+tek ve etkisiz olan kart da (`founder.company_of_one`, `founder.savings_note`, `founder.unseen_build`,
+`product.working_parts`) saati durdurup pencereyi kaplıyordu; taban (§13.6) bu kartları bir sessiz haftada getirir.
+
+*Ne yapıldı.* Kart tek seçenekliyse, o seçenekte `effects` (boş liste etkisiz sayılır), `check` ve `requires` yoksa,
+kart `critical` değilse ve sınıfı `paper` değilse nottur (`EvPresenter.is_note`; motor ve harness aynı yerden okur).
+`quiet` etiketi gerekmez. Kural bugün yukarıdaki dört kartı tutar; `critical` kartlar (Frank'in yaklaşma kartları,
+`gate_traction`, `hire_nudge`, `paid_tier`, `frank_intro`, `resignation`) ve kâğıt `funding.seed_stalled` karar kalır.
+
+`_admit` notu ne kuyruğa ne masaya koyar. Mandal harcanır; geçmişe tek seçeneğin `chosen` satırı yazılır (`outcome_id`
+seçeneğinki, `deltas` boş, `names` = `freeze_names` ile madde 2'nin donmuş seam değerleri) ve satır `note: true`,
+`unread: true` taşır (`EvHistory.record`'un `note` parametresi). `EventBus.modal_requested` ve `event_resolved`
+yayılmaz: kapı açılmaz, saat tutulmaz, `has_pending()` notu görmez, otomatik kayıt onu beklemez; satır kayda girer.
+Not kutuya ve ofis yığınına `EventBus.event_triggered` ile duyurulur. Duyuru bir sonraki pompadadır; toplu saat
+adımında (gece, toplantı atlaması) pompa adımın sonuna ertelendiği için dinleyiciler adımın içinde koşmaz. Not yolu
+yalnız `_admit`'tir (istek, havuz, taban, takvim, ark adımı, sinyal); tarama yalnız `critical` kart önerdiği için not
+getirmez, `force_fire` `_admit`'i atlar ve kartı kapıda gösterir. Ark adımı olan not, `resolve` gibi arkını bir adım
+ilerletir: tek seçeneğinde ark fiili yoktur.
+
+Bütçe ve taban: not `_today_admissions`'a girmez, `EvTempo` penceresine yazılmaz; tikin kesinti tavanından (§13.3
+katman 4) ve kategori kotasından (katman 3) pay almaz. Not tabanın sessiz haftasını bitirmez: yalnız not gelen hafta
+taban için sessizdir (§13.6). Taban seçtiğinde kendi sayacını sıfırlar ve quiet kartın kendi `cooldown_weeks`
+mandalı onu seyreltir; bu yüzden not her hafta yeniden gelmez. `fire_count` not satırını sayar; mandal ve `history`
+yaprakları için not bir çözümdür.
+
+Kutu: not listede okunmamış sayılmaz (liste noktası ve Okunmamış süzgeci saymaz); okunmamışlığını `note_unread`
+alanından yalnız ofisin bildirim yığını gösterir (`Inbox.unread_discovery` en yeni okunmamış keşfi ve en yeni
+okunmamış notu verir; `EvHistory.newest_unread_note` geçmişi sondan tarar). Ray rozeti kuyruğu ve masayı sayar,
+notu saymaz. Not kutuda okununca `EventGate.mark_read(i)` (`i`, satırın `history()`'deki yeri) satırı okundu yapar ve
+`EventBus.messages_changed` yayar. Listede notun ikinci satırı gövdenin ilk satırıdır, damgası yoktur; okuma
+bölmesinin türü karar değil mesajdır (`MAIL_KIND_MESSAGE`), "Seçimin" kutusu ve damga yerine tek düğme vardır:
+kartın seçenek etiketi, kutuyu kapatır.
+
+Harness `modal_requested`'i sayar: not kartı kapıyı isterse `BEAT_MODAL <id> <n>` basar ve koşu `HARNESS FAIL` olur.
+Harness kararı yalnız etkin kartta saydığı için not karar sayılmaz; `CARDS`, `TEMPO` ve sessizlik değerleri değişir,
+not kartları `COVERAGE`'da hiç ateşlenmemiş görünür. Ark adımını ise motorun `event_triggered` duyurusunda sayar;
+not olan adım da ziyaret edilmiş sayılır.
+
+*Neden.* Karar olmayan an saati durdurmaz (§27.13'teki rapor gibi); gövdesi geçmişte okunur kalır.
+
+**2. Seam değerleri satırda donar.**
+
+*Belge ne diyordu.* §27.12 madde 3: satır gövdeyi yeniden çizmez, `{seam:}` canlı çözülür. Okuma bölmesi geçmiş
+gövdesini yalnız `{seam:}` taşımayan düz metinde çiziyordu; `{seam:}` ya da `by_seam` varyantı taşıyan her kartın
+gövdesi geçmişte düşüyordu.
+
+*Ne yapıldı.* `EvPresenter.freeze_seams(card, context)` kartın iki dildeki başlık ve gövdesinin okuduğu her seam'i
+(varyant metninin `by_seam` seçicisi ve varyantlarındaki seam'ler dahil) `names["seam:<ad>"]` olarak verir. Sayı
+`str(değer)`, bool `"0"` ya da `"1"` olarak donar; varlık seam'i bağlamın bağladığı özneden okunur. TYPE_STRING seam
+donmaz: satır çevrilmiş metin taşımaz (§7.4). Dondurma çözümde (`resolve`, etkilerden önce), süre dolumunda (cezalardan
+önce ve yalnız kâğıdın öznesi hâlâ varken: bekleyişte ayrılan öznenin seam'i yedek değeri okurdu; satır adını
+kâğıttan alır, seam okuyan gövdesi çizilmez) ve not yazılırken olur. `_interpolate` ve `_resolve_variant` önce
+`names`'e bakar; varyant donmuş değeri `int()` ile okur. Okuma bölmesi geçmiş satırın gövdesini, gövdenin okuduğu
+her seam satırda donmuşsa çizer (`EvPresenter.seams_of`); donmayan seam'li gövde ve dondurmadan önce yazılmış
+satırlar gövdesiz kalır. Katalogda gövdesi donan 12 kart vardır (dört not ve varlık seam'i `musteri.seats` ile
+`customer.new_owner` dahil); TYPE_STRING seam taşıyan 15 kartın gövdesi geçmişte düşmeye devam eder.
+
+*Neden.* Geçmiş kartın yazıldığı haftayı söyler; canlı okunan sayı bugünü söylerdi.
+
+**3. Kayıt.** Şema 15 kalır. Yeni alanlar satırın içindedir (`note`, `unread`, `names["seam:*"]`); eski satır
+`row.get("note", false)` ile not sayılmaz, göç yoktur.

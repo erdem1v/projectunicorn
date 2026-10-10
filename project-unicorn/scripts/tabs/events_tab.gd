@@ -318,7 +318,7 @@ static func _row_right(it: Dictionary) -> Control:
 				return pair
 			return UiFactory.make_label(String(it.get("value", "")), &"Caption") if it.has("value") else null
 		"history":
-			return PANE.stamp(String(it.stamp), int(GameState.get_date_dict(int(it.day)).week))
+			return null if it.note else PANE.stamp(String(it.stamp), int(GameState.get_date_dict(int(it.day)).week))
 		"message":
 			if it.right == "":
 				return null

@@ -6,9 +6,10 @@ extends ScrollContainer
 #
 # Kip `populate(item, mode)`: "live" etkin karardır ve seçim yalnız orada EventGate.resolve'a gider;
 # "preview" kâğıdın önizlemesidir (seçenekler gizli, Cevapla açar) ya da harness'ın çizdiği karttır
-# (seçenekler görünür, tıklanmaz); "history" geçmiş karardır, gövdesi yalnız sabit metinse çizilir
-# ({seam:} bugünün sayısını okurdu); "rnd" Ar-Ge'nin kendi geçmişinde okunan nottur (Ar-Ge'ye dönüş
-# yolu yok, zaten oradadır). Bağlam her kipte öğenin kendisidir, etkin kartın değil.
+# (seçenekler görünür, tıklanmaz); "history" geçmiş karardır, gövdesi okuduğu her seam satırda donmuşsa
+# çizilir (donmayan {seam:} bugünü okurdu), not satırı seçimsiz ve damgasız, tek düğmeyle kapanır; "rnd"
+# Ar-Ge'nin kendi geçmişinde okunan nottur (Ar-Ge'ye dönüş yolu yok, zaten oradadır). Bağlam her kipte
+# öğenin kendisidir, etkin kartın değil.
 #
 # Seçenek grameri: tek açık seçenek kurulu gelir (bedel kutusu ve amber düğme); birden çoğunda
 # oyuncu önce kurar (tık ya da Enter), kurulu seçeneğin "Seç"i seçer, Vazgeç ya da Esc çözer. Karar
@@ -107,7 +108,8 @@ func on_key(key: Key) -> bool:
 
 func _card() -> void:
 	var ev: GameEvent = _item.event
-	var kind: String = "MAIL_KIND_PAPER" if _item.get("paper", false) else "MAIL_KIND_DECISION"
+	var kind: String = "MAIL_KIND_PAPER" if _item.get("paper", false) \
+		else ("MAIL_KIND_MESSAGE" if _item.get("note", false) else "MAIL_KIND_DECISION")
 	var state := ""
 	var ink = null
 	if _mode == "live":
@@ -120,7 +122,9 @@ func _card() -> void:
 	var hour: int = GameState.current_hour if _mode == "live" and _item.hourly else -1
 	_mail(_kicker(kind, state, ink), ev.title, INBOX.date_text(int(_item.day), hour),
 		ev.body_text if static_body else "")
-	if _mode == "history":
+	if _mode == "history" and _item.note:
+		_actions("", [[_item.option, _close, true]])
+	elif _mode == "history":
 		_answered()
 	elif _item.kind == "paper":
 		_reply_head(false)
@@ -554,10 +558,11 @@ static func stamp(key: String, week: int) -> Control:
 		{"stamp": Fmt.upper(TranslationServer.translate(key)), "week": week}))
 
 
-## A history row's body is drawn again only when it is plain text: a {seam:} would read today.
+## A history row's body is drawn again only when every seam it reads, a variant's selector too, kept its value in
+## the row: a seam the row did not keep (text, or a row older than the freezing) would read today.
 func _static_body() -> bool:
 	var body: Variant = EvPresenter.text_block(EventGate.catalogue_card(String(_item.event_id))).get("body", "")
-	return body is String and not String(body).contains("{seam:")
+	return EvPresenter.seams_of(body).all(func(seam: String) -> bool: return _item.names.has("seam:" + seam))
 
 
 # --- Messages ------------------------------------------------------------------------------------

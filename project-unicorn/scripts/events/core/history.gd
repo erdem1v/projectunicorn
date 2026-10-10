@@ -26,10 +26,11 @@ static var _by_event: Dictionary = {}
 # --- Writing ---------------------------------------------------------------
 
 ## The single write. Every resolution goes through here, including the ones nobody played:
-## an expiry and a display-time drop are both facts a later card may need.
+## an expiry and a display-time drop are both facts a later card may need. A `note` is a beat
+## written down instead of shown (§27.17); it stays unread until the player opens it.
 static func record(event_id: String, resolution: String, option_id: String,
 		outcome_id: String, entities: Dictionary, deltas: Array,
-		arc_id: String = "", forced: bool = false, names: Dictionary = {}) -> void:
+		arc_id: String = "", forced: bool = false, names: Dictionary = {}, note: bool = false) -> void:
 	var row: Dictionary = {
 		"event_id": event_id,
 		"day": GameState.day,
@@ -50,8 +51,17 @@ static func record(event_id: String, resolution: String, option_id: String,
 	# entity may since have left, and a row that names it by id says nothing.
 	if not names.is_empty():
 		row["names"] = names.duplicate(true)
+	if note:
+		row["note"] = true
+		row["unread"] = true
 	_by_event.get_or_add(event_id, []).append(_rows.size())
 	_rows.append(row)
+
+
+## The player opened the note at `index` (its place in rows()).
+static func mark_read(index: int) -> void:
+	_rows[index]["unread"] = false
+	EventBus.messages_changed.emit()
 
 
 # --- The query surface §5.2's history leaves read --------------------------
@@ -132,6 +142,15 @@ static func telegraph_fired(reference: String) -> bool:
 
 static func rows() -> Array:
 	return _rows.duplicate(true)
+
+
+## The newest unread note as {index, row}, or {}. Scanned from the end without copying the rest:
+## the office's notice stack asks on every refresh.
+static func newest_unread_note() -> Dictionary:
+	for i in range(_rows.size() - 1, -1, -1):
+		if _rows[i].get("unread", false):
+			return {"index": i, "row": _rows[i].duplicate(true)}
+	return {}
 
 
 static func _rows_for(event_id: String) -> Array:

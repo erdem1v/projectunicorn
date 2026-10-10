@@ -70,6 +70,8 @@ class Result:
 	var longest_silence_s: Dictionary = {}
 	## §13.6: weeks in which the floor was reached and found nothing. A content hole, counted.
 	var empty_floor_weeks: int = 0
+	## §27.17: a note asked to open as a decision, by card id. Any is a failure.
+	var beat_modals: Dictionary = {}
 	var run_lengths: Array = []
 	var endings: Dictionary = {}
 
@@ -94,6 +96,15 @@ static func run(spec: String) -> bool:
 			weeks = int(kv[1])
 
 	_result = Result.new()
+	EventBus.modal_requested.connect(func(ev: GameEvent) -> void:
+		if EvPresenter.is_note(EvCatalog.card(ev.id)):
+			_result.beat_modals[ev.id] = int(_result.beat_modals.get(ev.id, 0)) + 1)
+	# An arc step is visited when the engine names it: a note never becomes the active card.
+	EventBus.event_triggered.connect(func(id: String) -> void:
+		var card: Dictionary = EvCatalog.card(id)
+		if card.has("arc"):
+			var step_key: String = "%s/%s" % [card["arc"], id]
+			_result.steps_seen[step_key] = int(_result.steps_seen.get(step_key, 0)) + 1)
 	print("=== EVENT HARNESS · %s · %d seed(s) · %d week(s) ===" % [mode, seeds, weeks])
 
 	for i in seeds:
@@ -234,9 +245,6 @@ static func _drain_active(mode: String) -> void:
 				int(_result.interrupts_by_week.get(GameState.day, 0)) + 1
 		_result.decisions_by_week[GameState.day] = \
 			int(_result.decisions_by_week.get(GameState.day, 0)) + 1
-		if card.has("arc"):
-			var step_key: String = "%s/%s" % [card["arc"], event_id]
-			_result.steps_seen[step_key] = int(_result.steps_seen.get(step_key, 0)) + 1
 
 		var option_id: String = _pick(mode, card, event_id)
 		if option_id == "":
@@ -353,6 +361,8 @@ static func _report(mode: String) -> bool:
 	print("")
 	print("CRASHES   %d" % r.crashes)
 	print("DANGLING  %d" % r.dangling)
+	for id in r.beat_modals:
+		print("BEAT_MODAL %s %d" % [id, r.beat_modals[id]])
 	# §19.3's third clean-run condition. A refusal here is the executor stopping a card from
 	# ending the run with no telegraph declared or on one that never fired — so nonzero is
 	# CONTENT that would have shipped a silent loss, not an engine failure.
@@ -360,7 +370,7 @@ static func _report(mode: String) -> bool:
 		% r.untelegraphed + "or on one that never fired")
 	if r.untelegraphed > 0:
 		ok = false
-	if r.crashes > 0 or r.dangling > 0:
+	if r.crashes > 0 or r.dangling > 0 or not r.beat_modals.is_empty():
 		ok = false
 
 	if mode.begins_with("guided"):

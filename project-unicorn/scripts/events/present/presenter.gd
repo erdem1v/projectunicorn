@@ -95,6 +95,44 @@ static func freeze_names(context: Dictionary) -> Dictionary:
 	return out
 
 
+## {"seam:<name>": value} for every number and flag the card's titles and bodies read, a variant's
+## selector included, as it reads now: a history row prints the week it was written. A number keeps
+## its printed form, a flag "0" or "1"; a text seam is not kept, a row holds no translated words (§7.4).
+static func freeze_seams(card: Dictionary, context: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for block in (card.get("text", {}) as Dictionary).values():
+		for field in ["title", "body"]:
+			for seam_name in seams_of((block as Dictionary).get(field, "")):
+				var value: Variant = _seam_value(seam_name, context)
+				match typeof(value):
+					TYPE_INT, TYPE_FLOAT:
+						out["seam:" + seam_name] = str(value)
+					TYPE_BOOL:
+						out["seam:" + seam_name] = str(int(value))
+	return out
+
+
+## The seams a text value reads: its {seam:} tokens; for variant text, every variant's and the selector.
+static func seams_of(value: Variant) -> Array:
+	if typeof(value) != TYPE_DICTIONARY:
+		return SEAM_RE.search_all(String(value)).map(func(m: RegExMatch) -> String: return m.get_string(1))
+	var out: Array = []
+	for text in (value.get("variants", {}) as Dictionary).values():
+		out.append_array(seams_of(text))
+	var selector: String = String(value.get("by_seam", ""))
+	return out + [selector] if selector != "" else out
+
+
+## A one-option beat with nothing to decide (§27.17): the option has no effects, no dice and no lock,
+## and the card is neither critical nor a paper. The engine writes it down instead of showing it.
+static func is_note(card: Dictionary) -> bool:
+	var options: Array = card["options"]
+	if options.size() != 1 or (card["tags"] as Array).has("critical") or card["class"] == "paper":
+		return false
+	var only: Dictionary = options[0]
+	return (only.get("effects", []) as Array).is_empty() and not only.has("check") and not only.has("requires")
+
+
 ## A kept name as the live language reads it.
 static func name_text(kept: Variant) -> String:
 	if kept is Dictionary:
@@ -174,7 +212,7 @@ static func desk_papers(visible_slots: int) -> Array:
 ## 3. Anything else -> literal prose, interpolated.
 ##
 ## `names` are the names a desk paper or a history row kept; a slot they name reads that name, so
-## a subject who has left still reads by name.
+## a subject who has left still reads by name, and a seam they kept reads the value it had.
 static func resolve_text(value: Variant, context: Dictionary, names: Dictionary = {}) -> String:
 	if typeof(value) == TYPE_DICTIONARY:
 		return _resolve_variant(value as Dictionary, context, names)
@@ -199,7 +237,11 @@ static func _resolve_variant(spec: Dictionary, context: Dictionary, names: Dicti
 	var variants: Dictionary = spec.get("variants", {})
 	if variants.is_empty():
 		return ""
-	var value: int = int(EvSeams.read(seam)) if seam != "" and EvSeams.has(seam) else 0
+	var value: int = 0
+	if names.has("seam:" + seam):
+		value = int(names["seam:" + seam])
+	elif seam != "" and EvSeams.has(seam):
+		value = int(EvSeams.read(seam))
 	# Keyed back to the authored spelling, so "01" is found as written; lint refuses a key
 	# that is not an integer at all.
 	var by_int: Dictionary = {}
@@ -229,14 +271,12 @@ static func _interpolate(text: String, context: Dictionary, names: Dictionary) -
 		guard += 1
 		var seam_name: String = m.get_string(1)
 		var value: String = ""
-		if not EvSeams.has(seam_name):
+		if names.has("seam:" + seam_name):
+			value = String(names["seam:" + seam_name])
+		elif not EvSeams.has(seam_name):
 			push_error("[EvPresenter] card text reads unknown seam '%s'" % seam_name)
-		elif EvSeams.kind_of(seam_name) == EvSeams.Kind.ENTITY:
-			var entity_id: String = EvScope.id_in(context, "", seam_name)
-			if entity_id != "":
-				value = str(EvSeams.read_for(seam_name, entity_id))
 		else:
-			value = str(EvSeams.read(seam_name))
+			value = str(_seam_value(seam_name, context))
 		out = out.replace(m.get_string(0), value)
 		m = SEAM_RE.search(out)
 
@@ -247,3 +287,11 @@ static func _interpolate(text: String, context: Dictionary, names: Dictionary) -
 		var display: String = String(bound.get("id", "")) if kept == null else name_text(kept)
 		out = out.replace("{%s}" % slot, display).replace("{%s.name}" % slot, display)
 	return out
+
+
+## A seam's value now; an entity seam reads the subject the context binds, empty without one.
+static func _seam_value(seam_name: String, context: Dictionary) -> Variant:
+	if EvSeams.kind_of(seam_name) != EvSeams.Kind.ENTITY:
+		return EvSeams.read(seam_name)
+	var entity_id: String = EvScope.id_in(context, "", seam_name)
+	return EvSeams.read_for(seam_name, entity_id) if entity_id != "" else ""
