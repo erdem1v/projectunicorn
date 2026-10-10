@@ -53,6 +53,11 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="Reason" type="Label" parent="Layout/Footer"]
+layout_mode = 2
+theme_type_variation = &"DialogueOdds"
+vertical_alignment = 1
+
 [node name="BackBtn" type="Button" parent="Layout/Footer"]
 layout_mode = 2
 custom_minimum_size = Vector2(120, 38)

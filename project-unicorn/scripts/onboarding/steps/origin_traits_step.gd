@@ -100,24 +100,21 @@ func _make_origin_card(origin: Dictionary) -> PanelContainer:
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(name_lbl)
 	if origin["locked"]:
-		head.add_child(UiFactory.make_pill(tr(origin["locked_note_key"]),
-			Color(1, 1, 1, 0.05), UiTokens.CREAM_DIM))
+		head.add_child(UiFactory.make_pill(tr("LOCK_FULL"), UiTokens.VEIL_SOFT_CHROME, UiTokens.CREAM_DIM))
 
 	var quote := UiFactory.make_label("\"%s\"" % tr(origin["quote_key"]), &"QuoteSerifCream")
 	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(quote)
 
-	var chips := HBoxContainer.new()
-	chips.add_theme_constant_override("separation", 6)
-	col.add_child(chips)
 	if origin["locked"]:
-		chips.add_child(UiFactory.make_pill(tr("LOCK_CHIP"),
-			Color(1, 1, 1, 0.05), UiTokens.CREAM_DIM))
 		# Locked origin: visible but inert.
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.focus_mode = Control.FOCUS_NONE
-		card.modulate = Color(1, 1, 1, 0.45)
+		card.modulate = Color(Color.WHITE, UiTokens.DIALOGUE_LOCKED_ALPHA)
 	else:
+		var chips := HBoxContainer.new()
+		chips.add_theme_constant_override("separation", 6)
+		col.add_child(chips)
 		for chip in origin.get("chips", []):
 			var fg: Color = UiTokens.ACCENT_CHROME if chip["kind"] == "plus" else UiTokens.negative_bright()
 			chips.add_child(UiFactory.make_pill(tr(chip["key"]), Color(fg, 0.12), fg))
@@ -275,7 +272,8 @@ func _make_skill_column(skill_key: String) -> PanelContainer:
 	col.add_child(UiFactory.make_label(tr(FounderConstants.SKILL_NAME_KEYS[skill_key]), &"DialogueChoiceLabel"))
 	var desc := UiFactory.make_label(tr(FounderConstants.SKILL_DESC_KEYS[skill_key]), &"DialogueOdds")
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size = Vector2(0, 30)
+	# The descriptions wrap to different heights: the slack goes here so every bar sits level.
+	desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(desc)
 
 	var bar := SegmentBar.new()
@@ -347,12 +345,10 @@ func _refresh_skills() -> void:
 	var remaining: int = FounderConstants.alloc_remaining(_alloc)
 	for skill_key in FounderConstants.SKILLS:
 		var v: int = int(_alloc[skill_key])
-		# Sayac DAGITIM puanini gosterir (+/- onu adimlar), cubuk onun CETVEL karsiligini
-		# cizer: kurucu calisanla ayni 0-10 cetvelde (Ekip GDD §2.4 + §4.1) ve kaydedilen
-		# deger de odur (GameState._build_founder). Yoksa 3 puan harcayan oyuncu kurucunun
-		# 6/10 tasidigini hicbir yerde okuyamaz.
-		(_skill_bars[skill_key] as SegmentBar).set_filled(FounderConstants.to_ruler(v))
-		(_skill_values[skill_key] as Label).text = str(v)
+		# The figure shows the 0-10 ruler, as Kişisel does; +/- and KALAN PUAN count allocation points.
+		var ruler: int = FounderConstants.to_ruler(v)
+		(_skill_bars[skill_key] as SegmentBar).set_filled(ruler)
+		(_skill_values[skill_key] as Label).text = str(ruler)
 		(_skill_minus[skill_key] as Button).disabled = v <= 0
 		(_skill_plus[skill_key] as Button).disabled = v >= FounderConstants.ONBOARDING_CAP or remaining <= 0
 	_points_value.text = str(remaining)
@@ -374,11 +370,16 @@ func prefill(draft: Dictionary) -> void:
 	_refresh_skills()
 
 
-func is_valid() -> bool:
-	return _origin_id != "" \
-		and not FounderConstants.origin_by_id(_origin_id).get("locked", true) \
-		and FounderConstants.validate_traits(_trait_ids) \
-		and FounderConstants.alloc_remaining(_alloc) == 0
+func invalid_reason() -> String:
+	if FounderConstants.origin_by_id(_origin_id).get("locked", true):
+		return tr("LOCK_FULL")
+	var trait_why: String = FounderConstants.validate_traits(_trait_ids)
+	if trait_why != "":
+		return tr(trait_why)
+	var left: int = FounderConstants.alloc_remaining(_alloc)
+	if left != 0:
+		return tr(Fmt.count_key("ONB_WHY_POINTS", left)).format({"n": left})
+	return ""
 
 
 func collect_payload() -> Dictionary:

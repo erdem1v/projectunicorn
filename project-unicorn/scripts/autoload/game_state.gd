@@ -929,7 +929,7 @@ func _build_founder(payload: Dictionary) -> Character:
 	var traits_arr: Array[String] = []
 	for trait_id in payload.get("trait_ids", []):
 		traits_arr.append(String(trait_id))
-	if payload.has("trait_ids") and not FounderConstants.validate_traits(traits_arr):
+	if payload.has("trait_ids") and FounderConstants.validate_traits(traits_arr) != "":
 		push_error("[GameState] trait_ids failed the trait formula: %s" % str(traits_arr))
 
 	var display_name: String = String(payload.get("founder_name", "")).strip_edges()

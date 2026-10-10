@@ -117,12 +117,7 @@ func _sheet(founder: Character) -> VBoxContainer:
 		if key == HRConstants.SKILL_LEADERSHIP:
 			skills.add_child(SprintUiShared.pad(HSeparator.new(), Vector4i(0, UiTokens.SPACE_S, 0, UiTokens.SPACE_S)))
 		skills.add_child(_skill_row(key, int(founder.role_stats.get(key, 0))))
-	# The traits' effects are not wired yet (Ekip §2.6): the picked ones by name, under SOON, on the neutral glyph.
-	var head := _section("PER_TRAITS")
-	var soon := UiFactory.D_tag(tr("SYS_SOON"), &"outline")
-	head.add_child(soon)
-	head.move_child(soon, 1)
-	col.add_child(_above(head, UiTokens.SPACE_XL))
+	col.add_child(_above(_section("PER_TRAITS"), UiTokens.SPACE_XL))
 	var traits := SprintUiShared.box(UiTokens.SPACE_XL)
 	for trait_id: String in founder.traits:
 		var box := PanelContainer.new()

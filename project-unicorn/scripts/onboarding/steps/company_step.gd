@@ -188,8 +188,12 @@ func prefill(draft: Dictionary) -> void:
 	_refresh_visual()
 
 
-func is_valid() -> bool:
-	return _name_input.text.strip_edges() != "" and _logo_style != ""
+func invalid_reason() -> String:
+	if _name_input.text.strip_edges() == "":
+		return tr("ONB_WHY_COMPANY")
+	if _logo_style == "":
+		return tr("ONB_WHY_LOGO")
+	return ""
 
 
 func collect_payload() -> Dictionary:

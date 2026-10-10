@@ -5915,26 +5915,27 @@ static func _case_alloc_guard() -> String:
 
 static func _case_trait_formula() -> String:
 	# validate_traits: >=1 positive; 1 pos -> negative optional; 2 pos -> exactly 1 negative.
-	if not FounderConstants.validate_traits(["visionary"]):
+	# A refusal names the rule by the key İleri shows; "" passes.
+	if FounderConstants.validate_traits(["visionary"]) != "":
 		return "1 positive rejected"
-	if not FounderConstants.validate_traits(["visionary", "stubborn"]):
+	if FounderConstants.validate_traits(["visionary", "stubborn"]) != "":
 		return "1 positive + 1 negative rejected"
-	if not FounderConstants.validate_traits(["visionary", "networker", "stubborn"]):
+	if FounderConstants.validate_traits(["visionary", "networker", "stubborn"]) != "":
 		return "2 positives + 1 negative rejected"
-	if FounderConstants.validate_traits([]):
-		return "empty selection accepted"
-	if FounderConstants.validate_traits(["visionary", "networker"]):
-		return "2 positives without the required negative accepted"
-	if FounderConstants.validate_traits(["visionary", "networker", "disciplined", "stubborn"]):
+	if FounderConstants.validate_traits([]) != "ONB_WHY_TRAIT_POS":
+		return "empty selection not refused for its missing positive"
+	if FounderConstants.validate_traits(["visionary", "networker"]) != "ONB_WHY_TRAIT_NEG":
+		return "2 positives without the required negative not refused for the negative"
+	if FounderConstants.validate_traits(["visionary", "networker", "disciplined", "stubborn"]) == "":
 		return "3 positives accepted"
-	if FounderConstants.validate_traits(["visionary", "stubborn", "lone_wolf"]):
+	if FounderConstants.validate_traits(["visionary", "stubborn", "lone_wolf"]) == "":
 		return "2 negatives accepted"
-	if FounderConstants.validate_traits(["charismatic"]):
+	if FounderConstants.validate_traits(["charismatic"]) == "":
 		return "unknown trait id accepted"
-	if FounderConstants.validate_traits(["visionary", "visionary"]):
+	if FounderConstants.validate_traits(["visionary", "visionary"]) == "":
 		return "duplicate trait id accepted"
-	if FounderConstants.validate_traits(["stubborn"]):
-		return "negative-only selection accepted"
+	if FounderConstants.validate_traits(["stubborn"]) != "ONB_WHY_TRAIT_POS":
+		return "negative-only selection not refused for its missing positive"
 	return ""
 
 

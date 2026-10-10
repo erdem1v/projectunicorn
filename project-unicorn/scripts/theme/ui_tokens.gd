@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 33
+const THEME_STAMP := 34
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -157,6 +157,7 @@ const ROAD_DASH := Color(1.0, 0.980, 0.941, 1)         # #FFFAF0 · road dashes
 const DIALOGUE_BG := Color(0.063, 0.086, 0.110, 1)   # #10161C · modal / Frank card ground
 const DIALOGUE_CARD_BG := Color(0.059, 0.078, 0.102, 1)       # #0F141A · choice / quote card (recessed)
 const DIALOGUE_CARD_BORDER := Color(0.137, 0.173, 0.204, 1)   # #232C34 · card hairline
+const DIALOGUE_LOCKED_ALPHA := 0.45                           # locked choice card · modulate alpha
 const CONVICTION_TRACK_BG := Color(0.137, 0.173, 0.204, 1)    # #232C34 · unlit dot / segment groove
 const PORTRAIT_FRAME := Color(0.910, 0.929, 0.949, 1)         # #E8EDF2 · portrait rule
 

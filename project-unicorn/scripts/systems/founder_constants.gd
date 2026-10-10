@@ -68,11 +68,9 @@ const ORIGINS := [
 		"starting_cash": STARTING_CASH,
 		"reserved_flags": ["origin_press_sympathy", "origin_low_capital"]},
 	{"id": "heir", "locked": true,
-		"name_key": "ONB_ORIGIN_HEIR_NAME", "quote_key": "ONB_ORIGIN_HEIR_QUOTE",
-		"locked_note_key": "LOCK_FULL"},
+		"name_key": "ONB_ORIGIN_HEIR_NAME", "quote_key": "ONB_ORIGIN_HEIR_QUOTE"},
 	{"id": "corporate_refugee", "locked": true,
-		"name_key": "ONB_ORIGIN_CORP_NAME", "quote_key": "ONB_ORIGIN_CORP_QUOTE",
-		"locked_note_key": "LOCK_SOON"},
+		"name_key": "ONB_ORIGIN_CORP_NAME", "quote_key": "ONB_ORIGIN_CORP_QUOTE"},
 ]
 
 # --- Portraits, pre-rendered from LookSystem.FOUNDER_LOOKS (in PORTRAIT_IDS order) and
@@ -152,26 +150,28 @@ static func validate_alloc(alloc: Dictionary) -> bool:
 
 
 ## Trait formula guard: known unique ids; 1..TRAIT_MAX_POSITIVE positives; at most
-## TRAIT_MAX_NEGATIVE negatives; max positives force exactly one negative.
-static func validate_traits(trait_ids: Array) -> bool:
+## TRAIT_MAX_NEGATIVE negatives; max positives force exactly one negative. Returns "" when
+## the selection passes, else the key İleri shows: ONB_WHY_TRAIT_NEG when the negatives
+## break the rule, ONB_WHY_TRAIT_POS for any other failure.
+static func validate_traits(trait_ids: Array) -> String:
 	var pos: int = 0
 	var neg: int = 0
 	var seen: Array = []
 	for raw_id in trait_ids:
 		var trait_id: String = String(raw_id)
-		if seen.has(trait_id):
-			return false
-		seen.append(trait_id)
 		var t: Dictionary = trait_by_id(trait_id)
-		if t.is_empty():
-			return false
+		if t.is_empty() or seen.has(trait_id):
+			return "ONB_WHY_TRAIT_POS"
+		seen.append(trait_id)
 		if t["polarity"] == "positive":
 			pos += 1
 		else:
 			neg += 1
-	if pos < 1 or pos > TRAIT_MAX_POSITIVE or neg > TRAIT_MAX_NEGATIVE:
-		return false
-	return pos < TRAIT_MAX_POSITIVE or neg == 1
+	if pos < 1 or pos > TRAIT_MAX_POSITIVE:
+		return "ONB_WHY_TRAIT_POS"
+	if neg > TRAIT_MAX_NEGATIVE or (pos == TRAIT_MAX_POSITIVE and neg != 1):
+		return "ONB_WHY_TRAIT_NEG"
+	return ""
 
 
 static func trait_by_id(trait_id: String) -> Dictionary:

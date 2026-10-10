@@ -31,7 +31,7 @@ const STEP_NAME_KEYS := ["ONB_STEP_CHARACTER", "ONB_STEP_ORIGIN", "ONB_STEP_COMP
 var draft: Dictionary = {
 	"founder_name": "",
 	"portrait_id": "",
-	"origin_id": "",
+	"origin_id": "self_made",
 	"trait_ids": [],
 	"skill_alloc": {},
 	"company_name": "",
@@ -49,6 +49,7 @@ var _step_counter: Label = null
 @onready var step_host: Control = $Layout/StepHost
 @onready var header: HBoxContainer = $Layout/Header
 @onready var footer_step_label: Label = $Layout/Footer/StepLabel
+@onready var reason_label: Label = $Layout/Footer/Reason
 @onready var back_btn: Button = $Layout/Footer/BackBtn
 @onready var next_btn: Button = $Layout/Footer/NextBtn
 @onready var loading_overlay: Control = $LoadingOverlay
@@ -130,13 +131,14 @@ func _mount_step(index: int) -> void:
 	footer_step_label.text = tr("ONB_STEP_COUNTER").format({"step": index + 1, "total": STEPS.size()})
 	back_btn.disabled = index == 0
 	next_btn.text = tr("ONB_START") if index == STEPS.size() - 1 else tr("ONB_NEXT")
-	next_btn.disabled = not _current_step_node.is_valid()
+	_on_step_validity_changed(_current_step_node.is_valid())
 
 
 # --- Signal handlers ---
 
 func _on_step_validity_changed(valid: bool) -> void:
 	next_btn.disabled = not valid
+	reason_label.text = _current_step_node.invalid_reason()
 
 
 # Back is disabled on the first page and during the commit, so it never fires there.

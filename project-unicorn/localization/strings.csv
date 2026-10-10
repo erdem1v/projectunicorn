@@ -34,14 +34,13 @@ ONB_P2_TITLE,Köken ve Karakter,Origin and Character
 ONB_P2_SUB,"Nereden geldiğin, neyi kolay, neyi zor yaşayacağını belirler.","Where you come from decides what will come easy, and what will not."
 ONB_ORIGIN_HEADER,KÖKEN,ORIGIN
 ONB_ORIGIN_SUB,"Nereden geldiğin, nereden başladığını belirler.",Where you come from decides where you start.
-ONB_ORIGIN_SELF_MADE_NAME,Self-Made,Self-Made
+ONB_ORIGIN_SELF_MADE_NAME,Sıfırdan,Self-Made
 ONB_ORIGIN_SELF_MADE_QUOTE,Hiçbir şey yoktu. Her satırı ben yazdım.,There was nothing. I wrote every line myself.
-ONB_ORIGIN_HEIR_NAME,The Heir,The Heir
+ONB_ORIGIN_HEIR_NAME,Mirasyedi,The Heir
 ONB_ORIGIN_HEIR_QUOTE,Aile sermayesi arkanda. Ama gözler de üzerinde.,Family money at your back. And every eye on you.
-ONB_ORIGIN_CORP_NAME,Corporate Refugee,Corporate Refugee
+ONB_ORIGIN_CORP_NAME,Kurumsal Firari,Corporate Refugee
 ONB_ORIGIN_CORP_QUOTE,On yıl büyük şirkette. Şimdi kendi adına.,Ten years in a big company. Now in your own name.
 LOCK_FULL,TAM SÜRÜMDE,IN THE FULL GAME
-LOCK_SOON,ÇOK YAKINDA,COMING SOON
 LOCK_CHIP,KİLİTLİ,LOCKED
 ONB_ORIGIN_SM_CHIP_RESILIENT,DAYANIKLI,RESILIENT
 ONB_ORIGIN_SM_CHIP_LOW_CAPITAL,DÜŞÜK SERMAYE,LOW CAPITAL
@@ -51,29 +50,35 @@ ONB_TRAITS_SUB,Bir pozitif seçebilirsin. İki pozitif seçersen bir negatif se�
 ONB_TRAITS_POSITIVE,POZİTİF,POSITIVE
 ONB_TRAITS_NEGATIVE,NEGATİF,NEGATIVE
 TRAIT_VISIONARY_NAME,Vizyoner,Visionary
-TRAIT_VISIONARY_EFFECT,Ar-Ge sıçramaları daha sık,R&D breakthroughs come more often
+TRAIT_VISIONARY_EFFECT,Pazarın nereye gittiğini oraya varmadan görür.,Sees where the market is going before it gets there.
 TRAIT_DISCIPLINED_NAME,Disiplinli,Disciplined
-TRAIT_DISCIPLINED_EFFECT,Geliştirme süreleri kısalır,Development cycles run shorter
+TRAIT_DISCIPLINED_EFFECT,Hafta hafta plana sadık kalır.,"Keeps to the plan, week after week."
 TRAIT_NETWORKER_NAME,Ağ Kurucu,Networker
-TRAIT_NETWORKER_EFFECT,Müşteri adayı kalitesi artar,Prospect quality improves
+TRAIT_NETWORKER_EFFECT,Önemli her şirkette bir tanıdığı vardır.,Knows someone at every company worth knowing.
 TRAIT_RESILIENT_NAME,Dayanıklı,Resilient
-TRAIT_RESILIENT_EFFECT,Kriz sonrası hızlı toparlar,Recovers quickly after a crisis
+TRAIT_RESILIENT_EFFECT,"Darbeyi yer, ertesi sabah yine masasındadır.",Takes a hit and is back at the desk the next morning.
 TRAIT_STUBBORN_NAME,İnatçı,Stubborn
-TRAIT_STUBBORN_EFFECT,Pivot maliyeti yüksek,Pivots cost more
+TRAIT_STUBBORN_EFFECT,"Bir kez karar verdi mi, döndürmesi zordur.","Once decided, hard to turn."
 TRAIT_MICROMANAGER_NAME,Mikro Yönetici,Micromanager
-TRAIT_MICROMANAGER_EFFECT,Ekip morali daha hızlı erir,Team morale erodes faster
+TRAIT_MICROMANAGER_EFFECT,Çıkan her satırı önce kendisi görmek ister.,Wants to see every line before it ships.
 TRAIT_RISK_BLIND_NAME,Risk Körü,Risk-Blind
-TRAIT_RISK_BLIND_EFFECT,Erken çıkış cazibesi artar,Early launches tempt harder
+TRAIT_RISK_BLIND_EFFECT,"Önce kazancı, en son uçurumu görür.",Sees the upside first and the cliff last.
 TRAIT_LONE_WOLF_NAME,Yalnız Kurt,Lone Wolf
-TRAIT_LONE_WOLF_EFFECT,Mentor etkisi azalır,Mentor guidance lands weaker
+TRAIT_LONE_WOLF_EFFECT,Sormaktansa tek başına çözmeyi seçer.,Would rather work it out alone than ask.
 ONB_SKILLS_HEADER,YETENEKLER,SKILLS
 ONB_SKILLS_SUB,Masaya ne getiriyorsun.,What you bring to the table.
 ONB_SKILL_SALES,Satış,Sales
-ONB_SKILL_SALES_DESC,Müşteri adayı kalitesi ve anlaşma kapama.,Prospect quality and closing deals.
+ONB_SKILL_SALES_DESC,Ulaşabildiğin adaylar ve toplantıdaki şansın.,"Which leads you can reach, and your odds in the meeting."
 ONB_SKILL_LEADERSHIP,Liderlik,Leadership
-ONB_SKILL_LEADERSHIP_DESC,Ekip morali ve kriz yönetimi.,Team morale and crisis management.
+ONB_SKILL_LEADERSHIP_DESC,Ekibin morali ve öğrenme hızı.,"Team morale, and how fast the team learns."
 ONB_POINTS_LEFT,KALAN PUAN,POINTS LEFT
 ONB_POINTS_HINT,tümünü dağıt,spend them all
+ONB_WHY_TRAIT_POS,En az bir pozitif seç,Pick at least one strength
+ONB_WHY_TRAIT_NEG,"İki pozitif seçtin, bir negatif de seç",Two strengths owe a flaw
+ONB_WHY_POINTS,Dağıtılacak {n} puan kaldı,{n} points left to spend
+ONB_WHY_POINTS_ONE,Dağıtılacak {n} puan kaldı,{n} point left to spend
+ONB_WHY_COMPANY,Şirkete bir ad ver,Name the company
+ONB_WHY_LOGO,Bir logo stili seç,Pick a logo style
 ONB_P3_TITLE,Şirket,Company
 ONB_P3_SUB,Kapıya asılacak isim. Bundan sonra herkes bu adı anacak.,The name on the door. From now on this is what they will call you.
 ONB_COMPANY_LABEL,ŞİRKET ADI,COMPANY NAME
@@ -389,17 +394,17 @@ HR_AREA_MEANING_SALES_REP_SALES,Kapanış olasılığı ve anlaşma boyutu,Close
 HR_AREA_MEANING_CUSTOMER_REP_CUSTOMER_SUCCESS,Bilet çözümü ve churn,Ticket resolution and churn
 SKILL_LABEL_CHARISMA,karizma,charisma
 ONB_SKILL_PRODUCT,Ürün,Product
-ONB_SKILL_PRODUCT_DESC,Özellik kararları ve tasarım turları.,Feature decisions and design rounds.
+ONB_SKILL_PRODUCT_DESC,Özellik kartlarında Ürün yıldızı isteyen kademeler; ürün araştırması.,Product-star tiers on feature cards; product research.
 ONB_SKILL_DESIGN,Tasarım,Design
-ONB_SKILL_DESIGN_DESC,Tasarım tavanı ve ürün deneyimi.,The design ceiling and product experience.
+ONB_SKILL_DESIGN_DESC,Özellik kartlarında Tasarım yıldızı isteyen kademeler; tasarım araştırması.,Design-star tiers on feature cards; design research.
 ONB_SKILL_ENGINEERING,Yazılım,Engineering
-ONB_SKILL_ENGINEERING_DESC,Geliştirme hızı ve hata oranı.,Development speed and bug rate.
+ONB_SKILL_ENGINEERING_DESC,Özellik kartlarında Yazılım yıldızı isteyen kademeler; teknik araştırma.,Engineering-star tiers on feature cards; technical research.
 ONB_SKILL_QA,Test,QA
-ONB_SKILL_QA_DESC,Hata bulma ve canlı ürünün aşınması.,Finding bugs and live product wear.
+ONB_SKILL_QA_DESC,Test yıldızı isteyen kademeler ve canlı ürünün aşınma hızı.,"Test-star tiers, and how fast the live product wears."
 ONB_SKILL_CUSTOMER_SUCCESS,Müşteri Başarısı,Customer Success
-ONB_SKILL_CUSTOMER_SUCCESS_DESC,"Bilet çözümü, memnuniyet ve churn.","Ticket resolution, satisfaction and churn."
+ONB_SKILL_CUSTOMER_SUCCESS_DESC,Destek masasının hızı ve hesaplarının memnuniyetinin ne yavaş düştüğü.,"Support desk speed, and how slowly your accounts sour."
 ONB_SKILL_CHARISMA,Karizma,Charisma
-ONB_SKILL_CHARISMA_DESC,"Yatırımcı ikna gücü, şartlar ve kriz anları.","Investor persuasion, terms and moments of crisis."
+ONB_SKILL_CHARISMA_DESC,Yatırımcı görüşmeleri ve term sheet pazarlığı.,Investor meetings and term sheet pushes.
 HR_COL_STATE,DURUM,STATE
 HR_COL_SALARY,MAAŞ,SALARY
 HR_COL_MORALE,MORAL,MORALE
