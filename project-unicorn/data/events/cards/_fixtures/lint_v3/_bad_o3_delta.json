@@ -1,0 +1,57 @@
+{
+  "_port_note": "O3: a founder's card spending the whole team's morale through `delta`, the key the executor reads beside `amount`.",
+  "id": "fixture.bad_o3_delta",
+  "schema": 3,
+  "category": "founder",
+  "tick": "daily",
+  "class": "info",
+  "tags": [],
+  "family": "bad_fixture",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    1,
+    4
+  ],
+  "plausibility": {
+    "phase_band": [
+      "traction"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "done",
+      "effects": [
+        {
+          "verb": "morale_all",
+          "delta": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kötü kart",
+      "body": "Lint kuralını bilerek bozar.",
+      "options": {
+        "ok": "Tamam"
+      }
+    },
+    "en": {
+      "title": "Bad card",
+      "body": "Breaks one lint rule on purpose.",
+      "options": {
+        "ok": "OK"
+      }
+    }
+  }
+}

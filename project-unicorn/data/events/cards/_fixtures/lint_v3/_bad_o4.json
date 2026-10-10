@@ -1,0 +1,64 @@
+{
+  "_port_note": "O4: a card about an account whose only option never touches the account.",
+  "id": "fixture.bad_o4",
+  "schema": 3,
+  "category": "team",
+  "tick": "daily",
+  "class": "info",
+  "tags": [],
+  "family": "bad_fixture",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    1,
+    4
+  ],
+  "plausibility": {
+    "phase_band": [
+      "traction"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "done",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1000,
+          "label": "incident"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kötü kart",
+      "body": "Lint kuralını bilerek bozar.",
+      "options": {
+        "ok": "Tamam"
+      }
+    },
+    "en": {
+      "title": "Bad card",
+      "body": "Breaks one lint rule on purpose.",
+      "options": {
+        "ok": "OK"
+      }
+    }
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true
+    }
+  }
+}

@@ -25,3 +25,9 @@ refusal is asserted on its own.
 week 1, a card with no options mounts a modal that can never be dismissed and so disables
 saving (SaveManager.can_save refuses while an event is active), and an unrecognised condition
 leaf evaluates FALSE with a push_error on every evaluation.
+
+`lint_v3/` holds the linter's own counter-examples, one per schema v3 rule, and they are the one
+place here that does **not** carry `version_scope: fixture` — that scope is exactly what exempts a
+card from those rules, so a card meant to break one must ship-scope itself. What keeps them out of
+the catalogue is the `_bad_` filename instead. `event_lint_v3_rules` reads each file, normalises it
+and asserts it produces its own rule.

@@ -22,6 +22,14 @@ const MIN_GAP_WEEKS_DEFAULT := 4
 const SUBJECT_GAP_EMPLOYEE_WEEKS := 2
 const SUBJECT_GAP_CUSTOMER_WEEKS := 4
 
+# --- §3.1 Plausibility: the family's seniority floor -----------------------
+#
+# What a FAMILY of cards needs of its subject, whatever the single card asks for: the catalogue
+# compiles the higher of the two into the slot's selector. A family absent here has no floor,
+# and the card's own figure stands alone.
+
+const FAMILY_SUBJECT_TENURE := {"employee_asks_money": 26}
+
 # --- §13.3 Layer 3: category quota per week ----------------------------------
 #
 # The side benefit is the real one: a full quota forces the engine to look at another category,

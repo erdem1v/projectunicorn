@@ -41,8 +41,6 @@ const VARIANTS := ["plain", "early"]
 const EARLY_ROLES := ["developer", "customer_rep", "tester"]
 ## The origin a card's own tick field declares.
 const SRC_BY_TICK := {"signal": "signal", "request": "request", "scheduled": "schedule"}
-## Which seam reads a slot's standing, by the slot's entity type.
-const TENURE_SEAMS := {"employee": "hr.tenure_weeks", "customer": "musteri.tenure_weeks"}
 
 # The thresholds the rules judge against (R13, PRD section 8), each written under the name its
 # owner will carry, so a rename lands as an edit here and not as a rule that quietly cannot fail.
@@ -248,7 +246,7 @@ static func _options(card: Dictionary, context: Dictionary) -> String:
 
 static func _tenure(context: Dictionary, slot: String) -> int:
 	var bound: Dictionary = context[slot]
-	var seam: String = String(TENURE_SEAMS.get(String(bound["type"]), ""))
+	var seam: String = String(EvCatalog.TENURE_SEAMS.get(String(bound["type"]), ""))
 	return -1 if seam == "" else int(EvSeams.read_for(seam, String(bound["id"])))
 
 

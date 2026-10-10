@@ -1,0 +1,61 @@
+{
+  "_port_note": "T2: a card about an employee with no family_subject, so the family can name the same person every month.",
+  "id": "fixture.bad_t2",
+  "schema": 3,
+  "category": "team",
+  "tick": "daily",
+  "class": "info",
+  "tags": [],
+  "family": "bad_fixture",
+  "delay_weeks": [
+    1,
+    4
+  ],
+  "plausibility": {
+    "phase_band": [
+      "traction"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "done",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -5
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kötü kart",
+      "body": "Lint kuralını bilerek bozar.",
+      "options": {
+        "ok": "Tamam"
+      }
+    },
+    "en": {
+      "title": "Bad card",
+      "body": "Breaks one lint rule on purpose.",
+      "options": {
+        "ok": "OK"
+      }
+    }
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  }
+}

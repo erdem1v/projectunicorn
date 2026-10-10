@@ -477,6 +477,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"valuation_seam_seed_then_series_a": fail = _case_valuation_seam_seed_then_series_a()
 		"news_piyasa_reason_lines":         fail = _case_news_piyasa_reason_lines()
 		"event_v3_seams":                   fail = _case_event_v3_seams()
+		"event_plausibility_compiles":      fail = _case_event_plausibility_compiles()
+		"event_lint_v3_rules":              fail = _case_event_lint_v3_rules()  # EXPECT-ERROR unknown seam 'build.module_unlocked.pazarlama'
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -18027,4 +18029,119 @@ static func _case_event_v3_seams() -> String:
 	weeks = int(EvSeams.read("hr.weeks_since_last_hire"))
 	if weeks != 1:
 		return "bir tik sonra kıdem %d" % weeks
+	return ""
+
+
+## R1 · ŞEMA v3 DERLEYİCİSİ. Makullük bloğu koşul yapraklarına ve seçici süzgecine dönüşüyor:
+## kural tek yerde yaşıyor, kapı ile lint aynı yaprakları okuyor, ve kıdem kartın değil ailenin
+## tabanını alıyor.
+## FALSİFİKASYON: _compile_plausibility'nin bant kolunu sil → üçüncü iddia FAIL; kıdem yaprağını
+## koşula (where yerine) yaz → kıdem 3 olan aday yine seçilir ve dördüncü iddia FAIL.
+static func _case_event_plausibility_compiles() -> String:
+	var shipped: Array = EvTuning.SHIPPED_SCOPES.duplicate()
+	EvTuning.SHIPPED_SCOPES.append("fixture")
+	var fail: String = _plausibility_compiles()
+	EvTuning.SHIPPED_SCOPES.assign(shipped)
+	return fail
+
+
+## Gövde ayrı duruyor ki `SHIPPED_SCOPES` genişletmesi tek bir yerde açılıp aynı yerde kapansın.
+static func _plausibility_compiles() -> String:
+	EvCatalog.reload()
+	var card: Dictionary = EvCatalog.card("fixture.v3_compile")
+	if card.is_empty():
+		return "fixture.v3_compile katalogda yok"
+
+	# Op ve değerle: bandın kadro tabanı 1, bloğun 2 ve tavanı 3, yani üç yaprağın da sahibi
+	# ayrıdır ve derleyicinin hangi kolu düşerse o yaprak kaybolur.
+	var seen: Array = []
+	for leaf in EvCondition.leaves(card["condition"]):
+		var d: Dictionary = leaf
+		if String(d.get("_from", "")) == "plausibility":
+			seen.append("%s %s %s" % [d.get("seam", ""), d["op"], d["value"]])
+	for want in ["phase.current == 1", "hr.headcount >= 1", "hr.headcount >= 2",
+			"hr.headcount <= 3", "urun.is_live == false",
+			"build.module_unlocked.product == true", "time.week >= 1"]:
+		if not seen.has(want):
+			return "'%s' yaprağı derlenmedi; derlenenler: %s" % [want, str(seen)]
+
+	var slot: Dictionary = card["scope"]["employee"]
+	var tenure: Array = EvCondition.leaves_named(
+		slot.get("where", {}), "entity_seam", "hr.tenure_weeks")
+	if tenure.size() != 1 or int((tenure[0] as Dictionary)["value"]) != 4:
+		return "slot süzgecine kıdem yaprağı yazılmadı: %s" % str(tenure)
+
+	GameState.day = 10
+	var verdict: EvGate.Verdict = EvGate.propose("fixture.v3_compile", EvGate.Origin.TICK_DAILY)
+	if verdict.admitted or verdict.step != "G7":
+		return "kadrosuz koşuda bootstrap_team kartı G7'de reddedilmeliydi, adım '%s'" % verdict.step
+
+	# Bloğun kadro tabanı 2, bandın 1: kart ancak ikinci çalışanla aday olur. Dolgunun kıdemi slot
+	# süzgecinin altında kalır, yani özne hep char_v3_subject'tir.
+	var filler: Character = _make_employee("char_v3_filler", "V3 Filler", HRConstants.ROLE_DEVELOPER)
+	filler.hire_day = GameState.day - 3
+	var emp: Character = _make_employee("char_v3_subject", "V3 Subject", HRConstants.ROLE_DEVELOPER)
+	emp.hire_day = GameState.day - 3
+	verdict = EvGate.propose("fixture.v3_compile", EvGate.Origin.TICK_DAILY)
+	if not verdict.admitted:
+		return "kadro 2'de kart %s ile reddedildi: %s" % [verdict.step, verdict.reason]
+	if verdict.context.has("employee"):
+		return "kıdemi 3 hafta olan aday seçildi"
+
+	emp.hire_day = GameState.day - 5
+	verdict = EvGate.propose("fixture.v3_compile", EvGate.Origin.TICK_DAILY)
+	if not verdict.context.has("employee"):
+		return "kıdemi 5 hafta olan aday seçilmedi: %s" % verdict.reason
+
+	# Ailenin tabanı kartın kendi sayısını ezer: para kartları kıdemsiz özneye gitmez.
+	var family_card: Dictionary = {
+		"id": "fixture.v3_family",
+		"schema": EvCatalog.SCHEMA_PLAUSIBILITY,
+		"family": "employee_asks_money",
+		"plausibility": {"phase_band": ["traction"], "headcount": [1, null],
+			"subject_tenure_weeks": 4, "product": "any", "modules": [], "min_week": 0},
+		"scope": {"employee": {"type": "employee", "select": "most_senior"}},
+	}
+	EvCatalog._normalise_card(family_card)
+	var floored: Array = EvCondition.leaves_named(
+		family_card["scope"]["employee"]["where"], "entity_seam", "hr.tenure_weeks")
+	var want_floor: int = int(EvTuning.FAMILY_SUBJECT_TENURE["employee_asks_money"])
+	if floored.is_empty() or int((floored[0] as Dictionary)["value"]) != want_floor:
+		return "aile tabanı kartın 4 haftasını ezmedi: %s" % str(floored)
+	return ""
+
+
+## R9 · ŞEMA v3 LİNT KURALLARI. Her kural için bilerek bozuk bir kart: dosya `_` önekli olduğu
+## için kataloğa hiç girmez, ama lint dizini değil dosyayı gördüğü için hâlâ karttır. Dizindeki
+## HER dosya okunur, yani oraya denenmemiş bir şey konamaz.
+## FALSİFİKASYON: bir kuralın gövdesini sil → o dosya kendi kimliğini üretmez ve vaka düşer.
+static func _case_event_lint_v3_rules() -> String:
+	const BAD_DIR := "res://data/events/cards/_fixtures/lint_v3/"
+	EvCatalog.reload()
+	var dir := DirAccess.open(BAD_DIR)
+	if dir == null:
+		return "%s dizini açılamadı" % BAD_DIR
+	var covered: Array = []
+	for name in dir.get_files():
+		var f := FileAccess.open(BAD_DIR + name, FileAccess.READ)
+		var parsed: Variant = JSON.parse_string(f.get_as_text())
+		if typeof(parsed) != TYPE_DICTIONARY:
+			return "%s geçerli bir kart nesnesi değil" % name
+		var card: Dictionary = parsed
+		card["_path"] = BAD_DIR + name
+		EvCatalog._normalise_card(card)
+		EvLint._findings.clear()
+		EvLint._lint_card(String(card["id"]), card)
+		var rules: Array = []
+		for finding in EvLint._findings:
+			rules.append(String((finding as Dictionary)["message"]).get_slice(":", 0))
+		var want: String = name.trim_prefix("_bad_").trim_suffix(".json").split("_")[0].to_upper()
+		if not rules.has(want):
+			return "%s, %s kuralını üretmedi; ürettikleri: %s" % [name, want, str(rules)]
+		if not covered.has(want):
+			covered.append(want)
+	for rule in ["P1", "P2", "P3", "C1", "V1", "V2", "V3",
+			"O1", "O2", "O3", "O4", "O5", "T1", "T2", "T3"]:
+		if not covered.has(rule):
+			return "%s kuralının bozuk fikstürü yok" % rule
 	return ""

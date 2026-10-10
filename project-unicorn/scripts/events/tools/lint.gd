@@ -34,6 +34,7 @@ extends RefCounted
 # changes and the finding comes back.
 
 const BASELINE_PATH := "res://tools/lint_baseline.json"
+const FROZEN_PATH := "res://tools/lint_v3_frozen.json"
 
 const SEVERITY_ERROR := "E"
 const SEVERITY_WARN := "W"
@@ -61,6 +62,8 @@ static var _identifier_re: RegEx = RegEx.create_from_string("^[a-z0-9_.]+$")
 
 static var _findings: Array = []
 static var _baseline: Dictionary = {}
+## Card ids on the frozen list, as a set.
+static var _frozen: Dictionary = {}
 
 
 # --- Entry point -----------------------------------------------------------
@@ -68,7 +71,8 @@ static var _baseline: Dictionary = {}
 ## Returns true when nothing new broke.
 static func run(write_baseline: bool = false) -> bool:
 	_findings.clear()
-	_load_baseline()
+	_baseline = _load_id_set(BASELINE_PATH, "accepted")
+	_frozen = _load_id_set(FROZEN_PATH, "cards")
 	EvCatalog.reload()
 	EvSeams.ensure_installed()
 
@@ -155,6 +159,7 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 
 	_lint_options(id, card, where)
 	_lint_text(id, card, where)
+	_lint_v3(id, card, where)
 
 
 static func _lint_options(id: String, card: Dictionary, where: String) -> void:
@@ -218,8 +223,7 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 		var effect: Dictionary = e
 		var verb: String = String(effect.get("verb", ""))
 
-		if not (EvEffects.NEUTRAL_VERBS.has(verb) or EvEffects.ECONOMIC_VERBS.has(verb)
-				or EvEffects.TERMINAL_VERBS.has(verb)):
+		if not _engine_knows(verb):
 			_add(SEVERITY_ERROR, "17.1", where, "unknown effect verb '%s'" % verb)
 			continue
 
@@ -288,6 +292,345 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 			_add(SEVERITY_ERROR, "17.1", where,
 				"add_cash has no known label ('%s'); FinanceSystem.ONE_TIME_LABELS lists them"
 				% effect.get("label", ""))
+
+
+# --- §17.13-17.15 schema v3 ------------------------------------------------
+#
+# Three rule families over a MIGRATED card: the plausibility block (§17.13), the effect
+# vocabulary (§17.14) and the options (§17.15). A card with no `schema` gets P2 and nothing
+# else — every other rule would be asking a v2 card about fields v2 never had.
+#
+# Content that never ships is exempt: a fixture exists to break a rule on purpose, and a retired
+# card is kept only so an old save can read its own history.
+
+## Which §17 subsection a rule belongs to, by its initial.
+const RULE_FAMILY := {"P": "17.13", "C": "17.14", "V": "17.14", "O": "17.15", "T": "17.15"}
+
+## Advisory for every card: a migration that has not happened yet, and a claim the engine reads
+## as neither true nor false because nothing evaluates it.
+const V3_WARN_RULES := ["P2", "P3"]
+
+## Rules the migration could not satisfy card by card. A warning on the frozen list, an error on
+## anything written since.
+const FROZEN_SOFT_RULES := ["O2", "O4", "O5", "T2", "T3"]
+
+## V1: the verbs an author may write. Each has a working arm in EvEffects._apply AND a chip in
+## EvChips, so what the option promises is what the player is shown and what lands.
+const WRITER_VERBS := [
+	"add_cash", "add_brand", "add_reputation", "customer_mrr_delta", "seats", "churn_customer",
+	"audience_delta", "add_prospect", "employee_leaves", "b2b_retain_discount", "b2b_expand",
+	"change_morale", "morale_all", "satisfaction_delta", "promise_create", "sprint_hours",
+	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "fix_run_start",
+	"b2b_retain_delay", "b2b_retain_ignore", "b2b_expand_decline", "set_flag", "stamp_day",
+	"schedule_event", "cancel_scheduled", "productivity_mod", "investor_strain", "marketing_push",
+]
+
+## V2: reserved for a system card. Each moves the run itself — a phase, a table, an arc, an
+## ending — so a story card reaching for one would be deciding the run instead of colouring it.
+const SYSTEM_VERBS := [
+	"advance_phase", "phase_gate_decline", "angel_accept", "open_term_table", "open_seed_table",
+	"decline_offer", "decline_buyout", "trigger_ending", "mentor_advisory", "goto_tab",
+	"unlock_content", "spend_budget", "set_game_flag", "start_arc", "advance_arc", "end_arc",
+	"abort_arc", "set_arc_var",
+]
+
+## O2: a chip whose CONSEQUENCE is the cost — the sprint carries the card over, the fix run
+## spends the desk's week, the account is left waiting, the promise becomes a debt. Read here
+## rather than off the chip, so a polarity edit cannot move the rule.
+const CONSEQUENCE_VERBS := ["sprint_card_carry", "fix_run_start", "b2b_retain_delay",
+	"b2b_retain_ignore", "b2b_expand_decline", "promise_create"]
+
+## O4: the verbs that land on a subject, and the slot type each lands on.
+const SUBJECT_VERBS := {
+	"change_morale": "employee", "productivity_mod": "employee", "employee_leaves": "employee",
+	"satisfaction_delta": "customer", "customer_mrr_delta": "customer", "seats": "customer",
+	"churn_customer": "customer", "promise_create": "customer", "b2b_retain_discount": "customer",
+	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",
+	"b2b_expand_decline": "customer",
+}
+
+## O5: a verb that spends a module the build may not have opened.
+const MODULE_VERBS := {"marketing_push": "marketing"}
+
+## P3: the demo's window in weeks. A card that cannot arrive inside it is content nobody plays.
+const DEMO_WINDOW_WEEKS := 130
+
+## T2: weeks before the same family may name the same person again.
+const SUBJECT_FAMILY_COOLDOWN_WEEKS := 26
+
+## T3: the newest hire still has to have been here this long to be worth a card.
+const NEWEST_HIRE_TENURE_WEEKS := 8
+
+
+static func _lint_v3(id: String, card: Dictionary, where: String) -> void:
+	if String(card.get("version_scope", "demo")) in ["fixture", "retired"]:
+		return
+	if int(card.get("schema", 0)) != EvCatalog.SCHEMA_PLAUSIBILITY:
+		_v3(id, "P2", where, "no schema field, so §3.1's plausibility block is missing")
+		return
+	_lint_v3_block(id, card, where)
+	_lint_v3_verbs(id, card, where)
+	_lint_v3_options(id, card, where)
+	_lint_v3_repeats(id, card, where)
+
+
+## P1, P3 — the block itself, and the chain it claims to hang from.
+static func _lint_v3_block(id: String, card: Dictionary, where: String) -> void:
+	var p: Dictionary = card.get("plausibility", {})
+	var system: bool = bool(card.get("system", false))
+
+	for field in ["phase_band", "headcount", "product", "modules", "min_week"]:
+		if not p.has(field):
+			_v3(id, "P1", where, "plausibility declares no '%s'" % field)
+	if p.has("headcount") and (p["headcount"] as Array).size() != 2:
+		_v3(id, "P1", where, "headcount is not [min, max]")
+	if p.has("phase_band") and (p["phase_band"] as Array).is_empty():
+		_v3(id, "P1", where, "phase_band is empty; a card lives in at least one band")
+	for band in (p.get("phase_band", []) as Array):
+		if EvCatalog.band_leaves(String(band)).is_empty():
+			_v3(id, "P1", where, "unknown phase_band '%s'" % band)
+	for module in (p.get("modules", []) as Array):
+		if not UiTokens.TABS.any(func(row): return String(row.id) == String(module)):
+			_v3(id, "P1", where, "modules names '%s', which is not a module page" % module)
+	if String(card.get("family", "")) == "":
+		_v3(id, "P1", where, "no family, so the family brake has nothing to hold")
+	var product: String = String(p.get("product", "any"))
+	if product != "any" and not EvCatalog.PRODUCT_LIVE.has(product):
+		_v3(id, "P1", where, "unknown plausibility.product '%s'" % product)
+	# Under "any" the compiler writes no urun.is_live leaf at all, so a guard beside it locks the
+	# card where the block says it is free, whichever way the guard points.
+	if (card["guards"] as Dictionary).has("product_live") \
+			and (product == "any" or bool(card["guards"]["product_live"]) != (product == "live")):
+		_v3(id, "P1", where, "plausibility.product is '%s' and guards.product_live is %s"
+			% [product, card["guards"]["product_live"]])
+	# A system card is handed its week and its subject, so neither the delay window nor the
+	# seniority floor is asked of it (§3.1).
+	if not system:
+		if not card.has("delay_weeks"):
+			_v3(id, "P1", where, "no delay_weeks; a story card arrives inside a window, "
+				+ "not on the week its condition first held")
+		elif int(card["delay_weeks"][0]) == 0 and int(card["delay_weeks"][1]) == 0 \
+				and String(card.get("delay_reason", "")) == "":
+			_v3(id, "P1", where, "delay_weeks [0,0] with no delay_reason")
+		for slot in (card["scope"] as Dictionary):
+			var spec: Dictionary = card["scope"][slot]
+			if not spec.has("select") \
+					or not EvCatalog.TENURE_SEAMS.has(String(spec.get("type", ""))):
+				continue
+			if not (p.has("subject_tenure_weeks")
+					or (p.get("subject_tenure_by_slot", {}) as Dictionary).has(slot)):
+				_v3(id, "P1", where, "slot '%s' picks its own subject but no subject_tenure_weeks "
+					% slot + "says how long that subject has been here")
+			elif EvCatalog.tenure_floor(card, slot) == 0 \
+					and String(p.get("fresh_reason", "")) == "":
+				_v3(id, "P1", where, "slot '%s' admits a brand new subject and no fresh_reason "
+					% slot + "says why that is plausible")
+
+	if int(p.get("min_week", 0)) > DEMO_WINDOW_WEEKS:
+		_v3(id, "P3", where, "min_week %d is past the demo's %d weeks"
+			% [int(p.get("min_week", 0)), DEMO_WINDOW_WEEKS])
+	var trigger: Dictionary = card.get("trigger", {})
+	if typeof(trigger.get("condition", null)) == TYPE_DICTIONARY \
+			and not (trigger["condition"] as Dictionary).is_empty():
+		_v3(id, "P3", where, "trigger.condition is never evaluated; the gate reads condition")
+
+	if card.has("follows"):
+		var parent: String = String(card["follows"])
+		if not EvCatalog.has_card(parent):
+			_v3(id, "P1", where, "follows names unknown card '%s'" % parent)
+		elif not _is_chained(parent, id, card):
+			_v3(id, "P1", where, "follows '%s', but that card never schedules this one and "
+				% parent + "this card never reads its history")
+
+
+## Is `parent` really upstream: does it schedule this card, or does this card read its history?
+static func _is_chained(parent: String, id: String, card: Dictionary) -> bool:
+	for o in (EvCatalog.card(parent).get("options", []) as Array):
+		for e in ((o as Dictionary).get("effects", []) as Array):
+			var effect: Dictionary = e
+			if String(effect.get("verb", "")) == "schedule_event" \
+					and String(effect.get("event_id", "")) == id:
+				return true
+	return not EvCondition.leaves_named(card.get("condition", {}), "event", parent).is_empty()
+
+
+## C1, V1-V3 — who may say what.
+static func _lint_v3_verbs(id: String, card: Dictionary, where: String) -> void:
+	var system: bool = bool(card.get("system", false))
+	var tags: Array = card["tags"]
+	if tags.has("critical") and not system and not tags.has("terminal_warning"):
+		_v3(id, "C1", where, "tag critical on a card that is neither system nor terminal_warning")
+
+	for e in _card_effects(card):
+		var verb: String = String((e as Dictionary).get("verb", ""))
+		# An unrecognised verb is §17.1's finding; saying it twice helps nobody.
+		if not _engine_knows(verb):
+			continue
+		if not WRITER_VERBS.has(verb) and not SYSTEM_VERBS.has(verb):
+			_v3(id, "V1", where, "'%s' has no working arm or no chip, so it may not be written" % verb)
+		elif SYSTEM_VERBS.has(verb) and not system:
+			_v3(id, "V2", where, "'%s' is reserved for a system card" % verb)
+		if verb.begins_with("sprint_card_") and String(card["tick"]) != "request":
+			_v3(id, "V3", where, "'%s' belongs to a tick:request sprint decision" % verb)
+
+
+## O1-O5 — every option is a real move, and it costs the subject something.
+static func _lint_v3_options(id: String, card: Dictionary, where: String) -> void:
+	var options: Array = card["options"]
+	var slots: Dictionary = card["scope"]
+	# O4 is asked of the slots a verb can reach and of no others: an investor or a prospect slot
+	# has no subject verb at all, so the rule there would read "do not use that slot".
+	var subject_types: Array = SUBJECT_VERBS.values()
+	var subject_slots: Dictionary = {}
+	for slot in slots:
+		if subject_types.has(String((slots[slot] as Dictionary).get("type", ""))):
+			subject_slots[slot] = slots[slot]
+	# One person's card: the founder alone, or a single named employee. Either way the team's
+	# hours and the team's morale are not theirs to spend.
+	var one_person: bool = String(card["category"]) == "founder" \
+		or _slots_of_type(slots, "employee").size() == 1
+	# A system card is the run speaking, so it owes the player no price. A note owes none either,
+	# and needs no clause here: its one option carries nothing, so it is O1's branch (C R5).
+	var system: bool = bool(card.get("system", false))
+	var scope: String = String(card.get("version_scope", "demo"))
+
+	for o in options:
+		var opt: Dictionary = o
+		var opt_id: String = String(opt.get("id", ""))
+		var effects: Array = _option_effects(opt)
+		# An option with no effects and no dice is O1's finding, never O2's: it is not a free exit,
+		# it is standing still.
+		if (opt.get("effects", []) as Array).is_empty() and not opt.has("check"):
+			if not system and options.size() > 1 \
+					and String(opt.get("status_quo_reason", "")) == "":
+				_v3(id, "O1", where, "option '%s' changes nothing and no status_quo_reason "
+					% opt_id + "says why standing still is a move")
+		elif not system and not _has_cost(effects):
+			_v3(id, "O2", where, "option '%s' costs nothing; a free exit is not a choice" % opt_id)
+
+		for e in effects:
+			var effect: Dictionary = e
+			var verb: String = String(effect.get("verb", ""))
+			if one_person and (verb == "sprint_hours" or (verb == "morale_all"
+					and int(effect.get("amount", effect.get("delta", effect.get("value", 0)))) < 0)):
+				_v3(id, "O3", where, "option '%s' spends the team's '%s' on a card about "
+					% [opt_id, verb] + "one person")
+			var module: String = String(MODULE_VERBS.get(verb, ""))
+			if module == "":
+				continue
+			if scope == "demo":
+				_v3(id, "O5", where, "option '%s' spends %s, which the demo never opens"
+					% [opt_id, module])
+			elif EvCondition.leaves_named(opt.get("requires", {}), "seam",
+					"build.module_unlocked." + module).is_empty():
+				_v3(id, "O5", where, "option '%s' spends %s without requiring the module to be open"
+					% [opt_id, module])
+
+		if not subject_slots.is_empty() and _touched_slots(effects, subject_slots).is_empty():
+			_v3(id, "O4", where, "option '%s' drops nothing on the subject the card is about" % opt_id)
+
+
+## T1-T3 — the same card may not arrive at every hire, every week or on a stranger.
+static func _lint_v3_repeats(id: String, card: Dictionary, where: String) -> void:
+	if String((card.get("trigger", {}) as Dictionary).get("signal", "")) == "employee_hired":
+		if bool((card["latch"] as Dictionary).get("one_shot", false)) \
+				and String(card["latch_key"]) != EvLatches.KEY_ENTITY:
+			_v3(id, "T1", where, "a run-scoped one_shot on employee_hired fires at the first "
+				+ "hire and is silent at every hire after it")
+		if EvCondition.leaves_named(card.get("condition", {}), "seam", "hr.run_hires").is_empty():
+			_v3(id, "T1", where, "a card on employee_hired reads no hr.run_hires leaf, so it "
+				+ "arrives at the tenth hire exactly as it did at the first")
+
+	if not _slots_of_type(card["scope"], "employee").is_empty():
+		var repeat: Dictionary = card.get("family_subject", {})
+		if not bool(repeat.get("once", false)) \
+				and int(repeat.get("cooldown_weeks", 0)) < SUBJECT_FAMILY_COOLDOWN_WEEKS:
+			_v3(id, "T2", where, "a card about an employee needs family_subject once or a "
+				+ "cooldown of at least %d weeks" % SUBJECT_FAMILY_COOLDOWN_WEEKS)
+
+	for slot in (card["scope"] as Dictionary):
+		if String((card["scope"][slot] as Dictionary).get("select", "")) != "newest_hire":
+			continue
+		var floor_weeks: int = EvCatalog.tenure_floor(card, slot)
+		if floor_weeks < NEWEST_HIRE_TENURE_WEEKS:
+			_v3(id, "T3", where, "slot '%s' picks the newest hire with a floor of %d weeks"
+				% [slot, floor_weeks])
+
+
+# --- §17.13-17.15 helpers --------------------------------------------------
+
+static func _v3(card_id: String, rule: String, where: String, message: String) -> void:
+	var warn: bool = V3_WARN_RULES.has(rule) \
+		or (FROZEN_SOFT_RULES.has(rule) and _frozen.has(card_id))
+	_add(SEVERITY_WARN if warn else SEVERITY_ERROR,
+		String(RULE_FAMILY[rule.substr(0, 1)]), where, "%s: %s" % [rule, message])
+
+
+## Every verb the executor dispatches, whatever origin may reach it.
+static func _engine_knows(verb: String) -> bool:
+	return EvEffects.NEUTRAL_VERBS.has(verb) or EvEffects.ECONOMIC_VERBS.has(verb) \
+		or EvEffects.TERMINAL_VERBS.has(verb)
+
+
+## Everything one option can run: the played list and both dice branches.
+static func _option_effects(opt: Dictionary) -> Array:
+	var out: Array = (opt.get("effects", []) as Array).duplicate()
+	var check: Dictionary = opt.get("check", {})
+	out.append_array(check.get("on_pass", []))
+	out.append_array(check.get("on_fail", []))
+	return out
+
+
+## Every effect list a card carries, for the rules that ask about vocabulary rather than choice.
+static func _card_effects(card: Dictionary) -> Array:
+	var expiry: Dictionary = card.get("on_expire", {})
+	var out: Array = (expiry.get("penalties", []) as Array).duplicate()
+	for o in (card["options"] as Array):
+		out.append_array(_option_effects(o as Dictionary))
+	return out
+
+
+## Does any of these effects cost the player something? EvChips owns polarity, so the rule reads
+## the same part the card will draw — as a delta, because a linter has no run: that arm reads the
+## figures the effect itself writes instead of asking the live sprint, HR and finance systems what
+## they would land today.
+static func _has_cost(effects: Array) -> bool:
+	for e in effects:
+		if CONSEQUENCE_VERBS.has(String((e as Dictionary).get("verb", ""))):
+			return true
+		for part in EvChips.describe(e as Dictionary, {}, {}, true):
+			if String((part as Dictionary)["polarity"]) in ["cost", "danger"]:
+				return true
+	return false
+
+
+## The card's slot names of one type, in declaration order.
+static func _slots_of_type(slots: Dictionary, type_id: String) -> Array:
+	var out: Array = []
+	for name in slots:
+		if String((slots[name] as Dictionary).get("type", "")) == type_id:
+			out.append(String(name))
+	return out
+
+
+## Which of the card's slots these effects land on. An effect names its slot in `scope`; one that
+## does not falls to the first slot of its verb's type, the way EvEffects resolves it.
+static func _touched_slots(effects: Array, slots: Dictionary) -> Array:
+	var out: Array = []
+	for e in effects:
+		var effect: Dictionary = e
+		var type_id: String = String(SUBJECT_VERBS.get(String(effect.get("verb", "")), ""))
+		if type_id == "":
+			continue
+		var slot: String = String(effect.get("scope", ""))
+		if slot == "":
+			var of_type: Array = _slots_of_type(slots, type_id)
+			if of_type.is_empty():
+				continue
+			slot = String(of_type[0])
+		if slots.has(slot) and not out.has(slot):
+			out.append(slot)
+	return out
 
 
 # --- §17.8 text ------------------------------------------------------------
@@ -693,15 +1036,17 @@ static func _fingerprint(f: Dictionary) -> String:
 
 # --- Baseline and reporting ------------------------------------------------
 
-static func _load_baseline() -> void:
-	_baseline = {}
-	var f := FileAccess.open(BASELINE_PATH, FileAccess.READ)
+## The strings listed under `key`, as a set; empty when the file is not there.
+static func _load_id_set(path: String, key: String) -> Dictionary:
+	var out: Dictionary = {}
+	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
-		return
+		return out
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
 	if typeof(parsed) == TYPE_DICTIONARY:
-		for fp in ((parsed as Dictionary).get("accepted", []) as Array):
-			_baseline[String(fp)] = true
+		for id in ((parsed as Dictionary).get(key, []) as Array):
+			out[String(id)] = true
+	return out
 
 
 static func _write_baseline() -> void:

@@ -1,0 +1,69 @@
+{
+  "_port_note": "P3: a min_week past the demo window, and a trigger.condition the gate never reads.",
+  "id": "fixture.bad_p3",
+  "schema": 3,
+  "category": "team",
+  "tick": "daily",
+  "class": "info",
+  "tags": [],
+  "family": "bad_fixture",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    1,
+    4
+  ],
+  "plausibility": {
+    "phase_band": [
+      "traction"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 200
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "done",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1000,
+          "label": "incident"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kötü kart",
+      "body": "Lint kuralını bilerek bozar.",
+      "options": {
+        "ok": "Tamam"
+      }
+    },
+    "en": {
+      "title": "Bad card",
+      "body": "Breaks one lint rule on purpose.",
+      "options": {
+        "ok": "OK"
+      }
+    }
+  },
+  "trigger": {
+    "condition": {
+      "all": [
+        {
+          "seam": "urun.is_live",
+          "op": "==",
+          "value": true
+        }
+      ]
+    }
+  }
+}
