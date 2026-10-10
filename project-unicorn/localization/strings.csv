@@ -1567,7 +1567,7 @@ MONTH_AUTO_SUMMARY,Otomatik özet · her ay sonu,Automatic summary · at each mo
 SUMMARY_AUTO_WEEK,Otomatik özet · her haftanın sonunda,Automatic summary · at the end of each week
 SUMMARY_AUTO_QUARTER,Otomatik özet · her çeyrek sonu,Automatic summary · at each quarter end
 SUMMARY_AUTO_YEAR,Otomatik özet · her yıl sonu,Automatic summary · at each year end
-MONTH_CLOSED_TICKER,{month} kapandı · MRR {mrr} · nakit {delta},{month} closed · MRR {mrr} · cash {delta}
+MONTH_CLOSED_TICKER,{month} kapandı · MRR {mrr} · takvim ayında nakit {delta},{month} closed · MRR {mrr} · cash over the calendar month {delta}
 FIN_GOAL_PROGRESS,{met}/{total},{met}/{total}
 MONTH_ROW_CASH,Kasa,Cash
 MONTH_ROW_BRAND,Marka,Brand
@@ -2867,7 +2867,7 @@ PRODUCT_AUTO_STARTED,Sprint otomatik başladı,Sprint started automatically
 EFFECT_SPRINT_EFFORT,Efor {v},Effort {v}
 EFFECT_SPRINT_PROGRESS,İlerleme {v},Progress {v}
 EFFECT_SPRINT_CARRY,Sonraki sprinte devreder,Carries over to the next sprint
-EFFECT_SPRINT_HOURS,Bu sprint çalışma saati ×{v},Work hours ×{v} this sprint
+EFFECT_SPRINT_HOURS,Bu sprint ekibin çalışma saati ×{v},Team work hours ×{v} this sprint
 HR_TASK_ON_PRODUCT,{product} {version} üzerinde çalışıyor,Working on {product} {version}
 PRODUCT_LOCK_LIVE,Canlı ürün {mark},Live product {mark}
 PRODUCT_GOAL_CORE,kullanıcıların yarısı asıl işini burada bitirsin,half of users get their main job done here
@@ -2911,7 +2911,7 @@ EV_FOUNDER_MEETUP_TALK,Konuşmayı üstlen,Take the slot
 EV_FOUNDER_MEETUP_LISTEN,"Bilet al, dinle",Buy a ticket and listen
 EV_FOUNDER_MEETUP_EXPIRED,Buluşma sensiz yapıldı.,The meetup went ahead without you.
 EV_FOUNDER_SIDE_CONTRACT_TITLE,Yan iş,Side work
-EV_FOUNDER_SIDE_CONTRACT_BODY,"Eski bir iş arkadaşının şirketinde küçük bir entegrasyon yapılacak ve aklına sen gelmişsin. Para iyi, işi de çabuk istiyorlar. Harcadığın her saat üründen eksilecek.",A former colleague needs a small integration built at their company and thought of you. The pay is good and they want it soon. Every hour it takes comes out of the product.
+EV_FOUNDER_SIDE_CONTRACT_BODY,"Eski bir iş arkadaşının şirketinde küçük bir entegrasyon yapılacak ve aklına sen gelmişsin. Para iyi, işi de çabuk istiyorlar. Bu iş bitene kadar bütün ekibin sprint saati kısalır.",A former colleague needs a small integration built at their company and thought of you. The pay is good and they want it soon. Until it is done the whole team's sprint hours shrink.
 EV_FOUNDER_SIDE_CONTRACT_TAKE,İşin tamamını al,Take the whole job
 EV_FOUNDER_SIDE_CONTRACT_HALF,Bir kısmını al,Take only part of it
 EV_FOUNDER_SIDE_CONTRACT_EXPIRED,"Cevap gitmedi, başka birini buldular.","No answer went back, so they found someone else."
