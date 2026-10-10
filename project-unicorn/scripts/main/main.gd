@@ -1114,6 +1114,8 @@ func _seed_goal(state: String) -> void:
 # card_ishani / card_home (city only) = the company still in the flat, İş hanı's / the flat's card
 # open; card_tick (city only) = Plaza's card open through one daily tick: a _before frame, and an
 # OFFICECARD line with the cash reading the card draws before and after.
+# desk_shut = a live B2C product, the founder on the build, nobody at the support desk and twelve
+# reports in: the DESTEK card's counts and its refusal.
 # With --pan / --pan-gpu (OFFICE_PAN) the shot is handed over after the extra: the camera moves by pixel
 # offsets, the 3D image alone is saved and measured, and the process ends there.
 func _run_office_shot(spec: String) -> void:
@@ -1179,6 +1181,11 @@ func _run_office_shot(spec: String) -> void:
 			GameState.advance_day()
 			TimeManager._dispatch_daily_tick()
 			print("OFFICECARD|cash_now_before=%s|after=%s" % [before, on_card.call()])
+		"desk_shut":
+			GameState.set_flag("mvp_market_type", "b2c")
+			GameState.set_flag("mvp_sub_product_type_id", "note_tool")
+			GameState.set_flag(ProductState.REPORTS_INCOMING, 12)
+			EventBus.build_progress_changed.emit()
 		"crown":
 			(view.lighting as OfficeLighting).crown_glow = 1.0
 			var cam: OfficeCamera = view.camera

@@ -4,7 +4,8 @@ extends PanelContainer
 #
 # Satırlar, hepsi modelden:
 #   başlık : ürünün adı ve sürümü; masadaki biri iki işteyse sağda bölünmüş odağın notu.
-#   destek : DESTEK ve doğrulanmış hatalar; koşu sürerken sağda yüzde, altında ilerleme.
+#   destek : DESTEK, doğrulanmış hatalar ve gelen bildirimler; koşu sürerken sağda yüzde, altında
+#            ilerleme.
 #   eylem  : karttaki TEK basılabilir şey, koşuyu başlatır ya da bitirir; kapalıyken gerekçesi
 #            yanında.
 # Sprint planlamada bir gün bekleyip liderin önerisiyle kendiliğinden başladıysa, o sprint sürdükçe
@@ -26,6 +27,7 @@ var _name_label: Label = null
 var _busy_label: Label = null
 var _key_label: Label = null
 var _confirmed_label: Label = null
+var _incoming_label: Label = null
 var _percent_label: Label = null
 var _progress: ProgressBar = null
 var _action: Button = null
@@ -43,7 +45,8 @@ func _ready() -> void:
 	for s: Signal in [EventBus.build_phase_changed, EventBus.day_advanced, EventBus.language_changed,
 			EventBus.assignment_changed]:
 		s.connect(r1)
-	EventBus.build_progress_changed.connect(refresh)
+	# Destek'in saati bu sinyalden sonra işler: boyama ertelenmezse sayılar bir saat geride kalır.
+	EventBus.build_progress_changed.connect(refresh, CONNECT_DEFERRED)
 	EventBus.employee_training_changed.connect(refresh.unbind(2))
 	EventBus.product_state_changed.connect(refresh)
 	refresh()
@@ -87,8 +90,10 @@ func _build_tree() -> void:
 	_key_label = UiFactory.make_label("", &"FloatKey")
 	support.add_child(_key_label)
 	_confirmed_label = UiFactory.make_label("", &"MetaMuted")
-	_confirmed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	support.add_child(_confirmed_label)
+	_incoming_label = UiFactory.make_label("", &"MetaMuted")
+	_incoming_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	support.add_child(_incoming_label)
 	_percent_label = UiFactory.make_label("", &"KeyText")
 	support.add_child(_percent_label)
 	_progress = ProgressBar.new()
@@ -142,8 +147,8 @@ func _repaint() -> void:
 	_busy_label.text = tr(m.split_note_key)
 	_busy_label.visible = m.split_note_key != ""
 	_key_label.text = Fmt.upper(tr("BUILD_PHASE_SUPPORT"))
-	# GELEN çizilmez: motorda karşılığı yok.
 	_confirmed_label.text = tr("BUILD_SUPPORT_CONFIRMED").format({"n": m.live_bugs})
+	_incoming_label.text = tr("BUILD_SUPPORT_INCOMING").format({"n": m.incoming})
 	# Yüzde ve ilerleme yalnız koşu sürerken: dolacak bir şey yoksa sayı da yalan olurdu.
 	_percent_label.text = tr("PROD_PERCENT").format({"n": m.percent})
 	_percent_label.visible = m.fix_run_active

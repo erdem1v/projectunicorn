@@ -287,16 +287,17 @@ static func apply_daily_satisfaction_damage() -> void:
 # =========================================================================
 
 ## §8.4 — "DOĞRULANMIŞ birikince DÜZELTME BAŞLAT açılır (DOĞRULANMIŞ 0 iken kapalıdır)."
-## Masa kapalıysa da açılmaz: kimse yokken başlatılan koşu boş bir kabuk olurdu.
+## Masa kapalıysa da açılmaz: kimse yokken başlatılan koşu boş bir kabuk olurdu. Masa önce sorulur:
+## boş masada hiçbir şey doğrulanmaz, gelen bildirimler birikirken "hata yok" sebebi saklardı.
 static func fix_run_refusal() -> String:
 	if not ProductState.is_live():
 		return REFUSAL_NOT_LIVE
 	if ProductState.fix_run_active():
 		return REFUSAL_ALREADY_RUNNING
-	if ProductState.bugs_confirmed() <= 0:
-		return REFUSAL_NO_BUGS
 	if not desk_staffed():
 		return REFUSAL_DESK_SHUT
+	if ProductState.bugs_confirmed() <= 0:
+		return REFUSAL_NO_BUGS
 	return ""
 
 

@@ -12734,7 +12734,7 @@ static func _case_borderless_note_key_exists() -> String:
 # ============================================================================
 
 ## R5: YAYINLAMAK BİR SON DEĞİLDİR. Yayından sonra kart kaybolmaz, DESTEK'e döner
-## ve ürün yaşadıkça yaşar. DOĞRULANMIŞ gerçek veriyi okur; GELEN ÇİZİLMEZ.
+## ve ürün yaşadıkça yaşar. DOĞRULANMIŞ gerçek veriyi okur.
 ## FALSİFİKASYON: `_derive_support`'ı `return false` yap → ikinci iddia FAIL.
 ##
 ## rev 6.1 (router devri): kart artık ESKİ hata sprintini değil §8/§9'un düzeltme
@@ -12984,7 +12984,8 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 ## "az doğrulama" durumu değil, TAM OLARAK SIFIR durumudur.
 ##
 ## FALSİFİKASYON: validation_per_day'i atanmamış herkesi de sayacak şekilde değiştir →
-## "confirmed stayed flat" iddiası FAIL.
+## "confirmed stayed flat" iddiası FAIL. fix_run_refusal'da masa denetimini "hata yok"un arkasına al →
+## ret sebebi iddiası FAIL.
 static func _case_destek_empty_desk_piles_up() -> String:
 	_seed_support_fixture("b2c")
 	GameState.set_flag("b2c_audience", 4000.0)
@@ -13023,6 +13024,10 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	# Ve düzeltme koşusu da açılmaz: doğrulanmamış hata düzeltilemez.
 	if SupportSystem.can_start_fix_run():
 		return "a fix run could start with an empty desk and zero confirmed bugs"
+	# Kart sebebi söyler, sonucu değil: doğrulanmış sıfır, çünkü masada kimse yok.
+	if SupportSystem.fix_run_refusal() != SupportSystem.REFUSAL_DESK_SHUT:
+		return "an empty desk with zero confirmed bugs refused as '%s', not as the shut desk" \
+			% SupportSystem.fix_run_refusal()
 
 	# --- masaya biri oturunca doğrulama BAŞLAR ---
 	var rep: Character = _make_employee("desk_rep", "Desk Rep", HRConstants.ROLE_CUSTOMER_REP)

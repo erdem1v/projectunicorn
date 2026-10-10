@@ -510,6 +510,7 @@ PROD_RND_NODE_ACCESSIBILITY,Erişilebilirlik,Accessibility
 PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
 BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
 BUILD_SUPPORT_CONFIRMED,Doğrulanmış {n},Confirmed {n}
+BUILD_SUPPORT_INCOMING,Gelen {n},Incoming {n}
 FIX_RUN_REFUSED_NO_BUGS,Doğrulanmış hata yok.,No confirmed bugs.
 PROD_PERCENT,%{n},{n}%
 HR_ROLE_FOUNDER,Kurucu,Founder
