@@ -1652,6 +1652,7 @@ He hangs up. Five past ten. Nothing else on today."
 TOPBAR_UNIT_PER_MONTH,/ay,/mo
 MEETING_WITHDRAW,Toplantıdan çekil,Withdraw from the meeting
 TOPBAR_PAUSE,II,II
+TOPBAR_PAUSED,DURDU · Boşluk ile sürdür,PAUSED · Space to resume
 NUM_0,sıfır,zero
 NUM_1,bir,one
 NUM_2,iki,two
@@ -3038,6 +3039,8 @@ TOPBAR_GATE,Cevap bekliyor,Answer needed
 TOPBAR_GATE_COUNT,{n} karar bekliyor,{n} decisions waiting
 CLOCK_HELD,Saat kilitli,Clock held
 GATE_ANSWER_FIRST,Önce bekleyen kararı cevapla.,Answer the waiting decision first.
+CLOCK_HOLD_RELEASE_NOTE,Sürüm notu açık,Release note open
+CLOCK_HOLD_MILESTONE,Dönüm noktası açık,Milestone open
 WIN_READ_ONLY,Karar bekliyor. Bu pencere yalnız okunur.,A decision is waiting. This window is read only.
 WIN_BACK_TO_DECISION,Karara dön,Back to the decision
 INBOX_SOONEST,En yakın süre,Soonest deadline

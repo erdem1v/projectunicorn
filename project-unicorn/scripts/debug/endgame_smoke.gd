@@ -12102,6 +12102,47 @@ static func _case_clock_resumes_only_by_player() -> String:
 	product.call("on_page_closing")
 	check.call("the closing product page")
 	product.free()
+	# A held clock opens no sitting: the sales pitch, the term-sheet table and the seed pitch refuse it.
+	# FALSIFICATION: drop _meeting_refused from main._on_pitch_requested → the sales sitting opens.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	_seed_b2b_lines("erp", 2)
+	GameState.set_current_hour(10)
+	TimeManager.sync_to_current_hour()
+	GameState.set_phase(3)
+	_grant("anchor")
+	var lead: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	if lead == null or SalesLedger.meeting_block_reason(lead.id) != "":
+		bad.append("fixture: no lead a sitting could open on")
+	else:
+		TimeManager.hold_clock("smoke_hold")
+		host.call("_on_pitch_requested", lead.id)
+		host.call("_on_term_table_requested", "anchor", PitchConstants.STAGE_SERIES_A)
+		var hunt := preload("res://scripts/tabs/hunt_tab.gd").new()
+		if SalesMeetingSystem.is_active():
+			bad.append("the sales pitch opened a sitting under a hold")
+		if TermSheetTableSystem.is_active():
+			bad.append("the term-sheet table opened under a hold")
+		if hunt._seed_block("anchor") != TimeManager.hold_label():
+			bad.append("the seed pitch did not name the hold (%s)" % hunt._seed_block("anchor"))
+		hunt.free()
+		# A card's own option lets go of its own hold only: under another hold its table is refused too,
+		# with none it opens.
+		# FALSIFICATION: let _meeting_refused pass while a card resolves → the first table opens; release the
+		# card's hold below it in main._on_term_table_requested → the second is refused.
+		EvEngine._resolving = true
+		TimeManager.hold_clock("event")
+		host.call("_on_term_table_requested", "anchor", PitchConstants.STAGE_SERIES_A)
+		if TermSheetTableSystem.is_active():
+			bad.append("a card's table opened under another hold")
+		TimeManager.release_clock("smoke_hold")
+		TimeManager.hold_clock("event")
+		host.call("_on_term_table_requested", "anchor", PitchConstants.STAGE_SERIES_A)
+		EvEngine._resolving = false
+		if not TermSheetTableSystem.is_active() or TimeManager.is_clock_held():
+			bad.append("a card's own table did not open past its own hold (holds %s)" % TimeManager.holds())
+		TermSheetTableSystem.reset()
+		host.call("_close_term_table")
 	host.set("_shell", prev_shell)
 	shell.queue_free()
 	# A hold swallows the player's speed; a second hold for one reason is silent, so a tree a shot

@@ -183,6 +183,11 @@ theme_type_variation = &"TimeBlock"
 layout_mode = 0
 theme_type_variation = &"ClockLabel"
 
+[node name="State" type="Label" parent="TimeBlock"]
+layout_mode = 0
+theme_type_variation = &"KeySmall"
+text_overrun_behavior = 3
+
 [node name="PauseBtn" type="Button" parent="TimeBlock"]
 layout_mode = 0
 focus_mode = 0

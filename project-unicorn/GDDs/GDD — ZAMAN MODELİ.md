@@ -592,6 +592,11 @@ mekanik ondan bağımsızdır ve headless güvenlidir.
 0. Davet: satışta "Görüşmeye git", Series A'da görüşme haftasının çağrısı (§8.6) ofiste kurucunun başının üstünde
    telefonu çaldırır; davet kartı Kabul et / Ertele sorar (`MeetingInvite`). Satışta kurucu istek anında ofiste
    görünürse saat durur. Ertele kartı kapatır ve saati başlatmaz; satışta telefon saat duruk çalmaya devam eder.
+   Saat tutuluyken (`TimeManager.is_clock_held()`) görüşmeye girilmez: "Görüşmeye git", Kabul et, term sheet masası
+   ve seed pitch'i reddedilir, neden söylenir (`TimeManager.hold_label()`); telefon çalmaya devam eder. Kararın kendi
+   seçeneği masayı açarken kararın kendi tutuşu sayılmaz, başka tutuş masayı da reddeder. Saat akarken çalan satış
+   telefonu giriş kesimine (§8.2) cevapsız kalırsa çağrı biter ve tost nedenini söyler; VC çağrısı sessiz düşer, fon
+   uygun ilk gün yeniden arar (§8.6).
    Kabul et geçişi başlatır.
 1. Saat donar, ağaç koşar (`freeze_clock("travel", true)`); oturum geçişten önce açılır ve kurucu meşgul olur.
 2. Pencere katmanı perdelenir; pencereler kapanmaz, dönüşte aynı pencere açık gelir.

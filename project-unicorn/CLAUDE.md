@@ -191,7 +191,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `--tick-probe=<hız>[:<pencere>]` headless'tır, kabuğu tempo dünyasıyla kurar ve beş haftayı gerçek saatle koşar;
   saat adımı, gece, sonraki kare ve ilk saat karelerinin süresini, TopBar'ın gece başına yenilemesini ve otomatik
   kaydın karesini `TICK` satırlarında basar. `auto_*` yazar: ayrı `APPDATA` ile koşulur (`TICK START udir=`); kayıt
-  taşıyan kullanıcı dizininde çalışmaz.
+  taşıyan kullanıcı dizininde çalışmaz. Üst barın saat hâlleri: `--clock-shot=<running|paused|held|released|gate>`
+  (`CLOCKSHOT` satırı: birincil pencere, sprint kipi, tutuşlar, hız; dar bar `paused` ve `--shot-scale=1.25`).
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
   negotiation, meeting, invite, product, hr, finance, personal, rnd, b2b, inbox), `--probe-shot[=menajer]`,
@@ -211,9 +212,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   değerlerdeki `;` ve `|` tırnaklanır, düğme listesi `scripts/debug/office_pan_probe.gd` başındadır.
   Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff`,
   VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
-  `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc>`; term sheet masası kabuğun içinde
-  `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug fikstürüyle
-  (`scripts/debug/product_fixtures.gd`),
+  `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse>`; term sheet masası
+  kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
+  fikstürüyle (`scripts/debug/product_fixtures.gd`),
   `--product-shot=live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests>` sprint motoruyla kurulan
   koşuda. Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
   duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve

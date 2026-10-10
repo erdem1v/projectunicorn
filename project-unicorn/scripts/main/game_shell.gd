@@ -6,7 +6,7 @@ extends Control
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const HELD_GLYPH := preload("res://assets/icons/util/pause.svg")
-## A refused speed key says why at most this often.
+## A request the hold refuses says why at most this often.
 const HELD_TOAST_MS := 3000
 
 var _vc_debug_idx: int = 0   # Shift+F5: cycles the VC roster
@@ -23,6 +23,7 @@ var _product_source: Object = null
 
 
 func _ready() -> void:
+	add_to_group(&"game_shell")
 	EventBus.sprint_closed.connect(_on_sprint_closed)
 	EventBus.event_resolved.connect(func(_id: String, _choice: int) -> void: _esc_reopened = false)
 	_ticker.open_changed.connect(_lay_ticker)
@@ -108,20 +109,25 @@ func _input(event: InputEvent) -> void:
 
 
 ## Oyuncunun klavyeden hız isteği; idx -1 Space'tir: akan saati durdurur, duranı son hızla
-## başlatır. Saati oyuncu başlatır; karar saati tutarken hız değişmez: kapı çerçevesi yanıp
-## söner, toast nedenini söyler.
+## başlatır. Saati oyuncu başlatır; saat tutulurken hız değişmez, neden söylenir.
 func request_speed(idx := -1) -> void:
-	if EventGate.active_id() != "":
-		get_tree().call_group(&"top_bar", &"blink_gate")
-		if Time.get_ticks_msec() - _held_toast_ms >= HELD_TOAST_MS:
-			_held_toast_ms = Time.get_ticks_msec()
-			get_tree().call_group(&"toast", &"show_toast", tr("CLOCK_HELD"), tr("GATE_ANSWER_FIRST"),
-				HELD_GLYPH, UiTokens.D_ACCENT)
+	if TimeManager.is_clock_held():
+		say_held()
 		return
 	if idx < 0:
 		idx = 0 if TimeManager.current_speed > 0 else TimeManager.last_running_speed
 	# TopBar butonlarıyla aynı sinyal, TopBar senkron kalsın.
 	EventBus.speed_change_requested.emit(idx)
+
+
+## Tutuşun reddettiği istek: üst bar tutanı yakar, tost onun adını en çok HELD_TOAST_MS'de bir söyler.
+## Görüşme girişleri de `game_shell` grubuyla buraya gelir.
+func say_held() -> void:
+	get_tree().call_group(&"top_bar", &"blink_held")
+	if Time.get_ticks_msec() - _held_toast_ms >= HELD_TOAST_MS:
+		_held_toast_ms = Time.get_ticks_msec()
+		get_tree().call_group(&"toast", &"show_toast", tr("CLOCK_HELD"), tr(TimeManager.hold_label()),
+			HELD_GLYPH, UiTokens.D_ACCENT)
 
 
 # --- Debug F-tuşları (yalnız debug build) ---

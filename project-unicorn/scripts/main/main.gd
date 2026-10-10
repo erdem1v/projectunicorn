@@ -27,6 +27,7 @@ const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
 const SAVED_GLYPH := preload("res://assets/icons/util/check.svg")
 const NOT_SAVED_GLYPH := preload("res://assets/icons/util/save.svg")
 const LOADED_GLYPH := preload("res://assets/icons/util/load.svg")
+const DROPPED_CALL_GLYPH := preload("res://assets/icons/util/close.svg")
 const OFFICE_PAN := preload("res://scripts/debug/office_pan_probe.gd")
 const TICK_PROBE := preload("res://scripts/debug/tick_probe.gd")
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
@@ -55,7 +56,8 @@ var _card_waiting := false
 # paper, whose [id, data] stays here from the milestone to DEVAM ET so a decision can set it aside.
 var _goto_after_gate: Array = []
 var _milestone_paper: Array = []
-var _call := {}                    # the call ringing in the office: {kind: "vc" | "sales", id}
+var _table_from_card := false      # the open term table is a card's answer: its close counts as one
+var _call := {}                    # the call ringing in the office: {kind: "vc" | "sales", id, place}
 var _trip_label := ""              # the tower's chip on the map, both ways of a meeting's trip
 var _travel_on: bool = true          # shots stage their surfaces without the trip
 var _audit_spec := ""                # --theme-audit: the staged surface prints its audit, no frame
@@ -213,6 +215,7 @@ func _run_debug_harness() -> bool:
 		"--office-shot=": _run_office_shot,
 		"--travel-shot=": _run_travel_shot,
 		"--invite-shot=": _run_invite_shot,
+		"--clock-shot=": _run_clock_shot,
 		"--day-shot=": _run_day_shot,
 		"--office-crowd-probe=": _run_office_crowd_probe,
 	}
@@ -1323,13 +1326,16 @@ func _run_travel_shot(spec: String) -> void:
 	get_tree().quit()
 
 
-# --invite-shot=<ring|card|vc|postpone|postpone_vc>: the call that opens an outside meeting, at İş hanı
+# --invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse>: the call that opens an outside meeting, at İş hanı
 # with people at their desks, as the player meets it: ring = a prospect's call at 11:00 ringing over the
 # founder's head, its card shut; card = that card open; vc = a fund's call at 10:00, its card open from the
 # first ring and the clock stopped; postpone = the prospect's call put off, still ringing, the toast saying
-# so; postpone_vc = the fund's call put off, the ring gone and the toast saying the meeting moved on. The
-# notice stack holds three rows (a paper, an account at risk, someone who may leave), which an open card
-# stands clear of or hides. invite_shot_<kind>.png.
+# so; postpone_vc = the fund's call put off, the ring gone and the toast saying the meeting moved on; held =
+# the prospect's card open under a clock hold, Kabul et refused, the ring and the card staying and the toast
+# saying why; lapse = the prospect's call left ringing until the founder's last entry hour has passed, then
+# the clock run as the player would and the call dropping with a toast (an INVITE line). The notice stack
+# holds three rows (a paper, an account at risk, someone who may leave), which an open card stands clear of
+# or hides. invite_shot_<kind>.png.
 func _run_invite_shot(kind: String) -> void:
 	var vc: bool = kind.ends_with("vc")
 	_begin_shot()
@@ -1362,10 +1368,84 @@ func _run_invite_shot(kind: String) -> void:
 		return
 	if kind != "ring":
 		invite._open_card()
-	if kind.begins_with("postpone"):
-		invite._postpone()
+	match kind:
+		"postpone", "postpone_vc":
+			invite._postpone()
+		"held":
+			TimeManager.hold_clock(MILESTONE_CLOCK_HOLD)
+			invite._accept()
+			if not invite.is_ringing():
+				_shot_fail("[InviteShot] the call was taken under a hold")
+				return
+		"lapse":
+			TimeManager.advance_hours(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder())
+				- SalesConstants.MEETING_ENTRY_CUTOFF_HOURS + 1 - GameState.current_hour)
+			await get_tree().create_timer(0.5).timeout
+			_save_shot("invite_shot_lapse_ring")
+			# The ring stopped the clock, and main's _process with the tree: the player runs it again (the
+			# shot's freeze keeps the hour).
+			EventBus.speed_change_requested.emit(1)
+			await get_tree().create_timer(0.5).timeout
+			print("INVITE|lapse|ringing=%d|why=%s" % [int(invite.is_ringing()),
+				SalesLedger.meeting_block_reason(lead.id)])
 	await get_tree().create_timer(0.5).timeout
 	_save_shot("invite_shot_" + kind)
+	get_tree().quit()
+
+
+# --clock-shot=<running|paused|held|released|gate>: the top bar's clock states over the shell,
+# clock_shot_<state>[_1].png and a CLOCKSHOT line a frame (the primary window, the sprint's mode, the holds,
+# the speed). running: 1×, two frames; paused: as every shot opens, two frames a second apart (the compact
+# bar under --shot-scale=1.25). held: a B2C run on its release note with Ürün open (the note holds the
+# clock), two frames, then Görüşmeye git refused under the hold (_meet, the toast); released: the note left
+# through the page's own plan_next and the sprint started on the lead's plan; gate: a card takes Ürün's
+# place and is answered, and Ürün comes back.
+func _run_clock_shot(kind: String) -> void:
+	var note: bool = kind in ["held", "released", "gate"]
+	_begin_shot()
+	_seed_run_reproducible()
+	if note:
+		_seed_product_live("b2c_mvp")
+	await _mount_shot_shell()
+	# The gate's handlers as the game has them: the card opens the inbox in Ürün's place.
+	_wire_modal_signals()
+	if note:
+		EventBus.tab_changed.emit("product")
+	var layer: Node = get_tree().get_first_node_in_group(&"window_layer")
+	var frame := func(stem: String) -> void:
+		await get_tree().create_timer(0.4).timeout
+		print("CLOCKSHOT|%s|window=%s|mode=%s|holds=%s|speed=%d" % [stem, layer._primary_id, SprintSystem.mode(),
+			TimeManager.holds(), TimeManager.current_speed])
+		_save_shot("clock_shot_" + stem)
+	match kind:
+		"running":
+			EventBus.speed_change_requested.emit(1)
+			await frame.call("running")
+			await frame.call("running_1")
+		"paused":
+			await frame.call("paused")
+			await get_tree().create_timer(0.6).timeout
+			await frame.call("paused_1")
+		"held":
+			await frame.call("held")
+			await get_tree().create_timer(0.6).timeout
+			await frame.call("held_1")
+			_on_pitch_requested("")
+			await frame.call("held_meet")
+		"released":
+			SprintSystem.plan_next()
+			SprintSystem.apply_lead()
+			SprintSystem.start()
+			layer.get_current_page_body().set_source(null)
+			await frame.call("released")
+		"gate":
+			GameState.set_mrr(AngelRoundSystem.MRR_THRESHOLD)   # Frank's cheque asks for it
+			_shot_card("funding.frank_cheque", {}, GameState.current_hour)
+			EventGate.resolve(EventGate.active_id(), 0)
+			await frame.call("gate")
+		_:
+			_shot_fail("[ClockShot] unknown state: %s" % kind)
+			return
 	get_tree().quit()
 
 
@@ -2937,32 +3017,34 @@ func _on_event_modal_requested(_event: GameEvent) -> void:
 # A choice can also OPEN a cinematic surface (open_term_table runs before event_resolved), whose trip
 # may still be on its way to it; that surface's close opens what waited for the gate.
 func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
-	_on_gate_closed()
+	_on_gate_closed(true)
 
 
 func _on_event_set_aside(_event_id: String) -> void:
-	_on_gate_closed()
+	_on_gate_closed(false)
 
 
 ## The queue's next card opens on the pump that follows; the pump may drop every queued card, so
 ## with a queue the gate settles after it.
-func _on_gate_closed() -> void:
+func _on_gate_closed(answered: bool) -> void:
 	TimeManager.release_clock(EVENT_CLOCK_HOLD)
 	if EventGate.has_pending():
-		_settle_gate.call_deferred()
+		_settle_gate.call_deferred(answered)
 	else:
-		_settle_gate()
+		_settle_gate(answered)
 
 
 ## No decision on screen: what waited for the gate opens and the clock stays stopped for the player.
 ## A sitting the answer opened owns that until it closes.
-func _settle_gate() -> void:
+func _settle_gate(answered: bool) -> void:
 	if _term_table == null and not _in_transit:
-		_open_after_gate()
+		_open_after_gate(answered)
 
 
-## What waited for the gate: the card's goto_tab, then the milestone paper.
-func _open_after_gate() -> void:
+## What waited for the gate: the card's goto_tab, else, after an answer, the release note or the sprint plan
+## the card may have taken the place of (mode() reads "plan" before a type is picked), then the milestone
+## paper. A paper put back is the player's own move: the window they chose stays.
+func _open_after_gate(answered: bool) -> void:
 	if EventGate.active_id() != "" or not GameState.run_active:
 		return
 	if not _goto_after_gate.is_empty():
@@ -2970,6 +3052,8 @@ func _open_after_gate() -> void:
 		if _goto_after_gate[1] != "":
 			EventBus.finance_subpage_requested.emit(_goto_after_gate[1])
 		_goto_after_gate = []
+	elif answered and SprintSystem.is_typed() and SprintSystem.mode() in ["release", "plan"]:
+		EventBus.tab_changed.emit("product")
 	if not _milestone_paper.is_empty() and _milestone_modal == null:
 		_on_milestone_reached(_milestone_paper[0], _milestone_paper[1])
 
@@ -2977,7 +3061,7 @@ func _open_after_gate() -> void:
 ## A card's goto_tab runs while the card is still on screen: the tab opens once nothing waits.
 func _on_goto_tab_requested(tab_id: String, subpage: String) -> void:
 	_goto_after_gate = [tab_id, subpage]
-	_open_after_gate()
+	_open_after_gate(true)
 
 
 ## Leaving the inbox puts an opened paper back on the desk; an interrupt stays, the gate slot shows it.
@@ -3008,8 +3092,17 @@ func _gate_shut() -> bool:
 	return EventGate.active_id() != "" and not EventGate.resolving()
 
 
+## A held clock refuses every sitting and the shell's toast names the hold.
+func _meeting_refused() -> bool:
+	if not TimeManager.is_clock_held():
+		return false
+	get_tree().call_group(&"game_shell", &"say_held")
+	return true
+
+
 ## The fund whose meeting week has come calls while a sitting fits the founder's day, when nothing
-## else holds the founder; a call whose moment has passed stops ringing.
+## else holds the founder; a call whose moment has passed stops ringing, a prospect's with a toast saying
+## why (a fund's calls again the next day a sitting fits).
 func _process(_delta: float) -> void:
 	var invite := _meeting_invite()
 	if invite == null:
@@ -3019,7 +3112,10 @@ func _process(_delta: float) -> void:
 			if VCPitchSystem.call_waiting() != _call.id:
 				_end_call()
 		"sales":
-			if SalesLedger.meeting_block_reason(_call.id) != "":
+			var why: String = SalesLedger.meeting_block_reason(_call.id)
+			if why != "":
+				get_tree().call_group(&"toast", &"show_toast", _call.place, tr(why), DROPPED_CALL_GLYPH,
+					UiTokens.D_ACCENT)
 				_end_call()
 		_:
 			var caller: String = VCPitchSystem.call_waiting()
@@ -3050,7 +3146,7 @@ func _ring_fund(vc_id: String) -> void:
 ## it off lets it ring on with the clock still stopped. With no office view (shots without the trip)
 ## the meeting opens at once.
 func _on_pitch_requested(prospect_id: String) -> void:
-	if EventGate.active_id() != "":
+	if _meeting_refused() or EventGate.active_id() != "":
 		return
 	var invite := _meeting_invite()
 	if invite == null:
@@ -3071,7 +3167,7 @@ func _on_pitch_requested(prospect_id: String) -> void:
 ## the top bar's slot names it next.
 func _ring_call(kind: String, id: String, place: String, spec: Dictionary) -> void:
 	var invite := _meeting_invite()
-	_call = {"kind": kind, "id": id}
+	_call = {"kind": kind, "id": id, "place": place}
 	if not invite.accepted.is_connected(_on_call_accepted):
 		invite.accepted.connect(_on_call_accepted)
 		invite.postponed.connect(_on_call_postponed)
@@ -3419,7 +3515,12 @@ func _keep_run_for_main_menu() -> String:
 
 
 func _on_term_table_requested(vc_id: String, stage: String) -> void:
-	if _term_table != null or _in_transit or _gate_shut():
+	# A card's own option opens the table under the card's hold, which it lets go; any other hold refuses the
+	# table, whose hour steps only with nothing holding the clock.
+	var from_card := EventGate.resolving()
+	if from_card:
+		TimeManager.release_clock(EVENT_CLOCK_HOLD)
+	if _meeting_refused() or _term_table != null or _in_transit or _gate_shut():
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
@@ -3427,6 +3528,7 @@ func _on_term_table_requested(vc_id: String, stage: String) -> void:
 	if TermSheetTableSystem.open(vc_id, stage).is_empty():
 		push_warning("[Main] term_table_requested for %s/%s with no live sheet" % [vc_id, stage])
 		return
+	_table_from_card = from_card
 	await _leave_office(CounterpartSystem.investor_people(vc_id), InvestorRegistry.get_investor(vc_id).display_name)
 	_term_table = TERM_TABLE_SCENE.instantiate()
 	_term_table.closed.connect(_close_term_table)
@@ -3443,7 +3545,7 @@ func _close_term_table() -> void:
 	_in_transit = true
 	TermSheetTableSystem.end_sitting()
 	await _return_to_office()
-	_open_after_gate()
+	_open_after_gate(_table_from_card)
 
 
 # --- Debug (debug builds only) ---

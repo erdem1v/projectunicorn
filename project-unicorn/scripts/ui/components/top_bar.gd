@@ -10,7 +10,8 @@ extends Panel
 # bitimi. Bir karar beklerken yuva kapıdır: amber nokta ve "Cevap bekliyor", altında göndericisi ya da bekleyen
 # kararların sayısı; yuva ve saat bloğu amber çerçevede, hız tuşları kapalı, tıklanınca karara dönülür.
 # Kurucu görüşmeye giderken, masadayken ve dönerken saat tutulur: yuva bunu söyler ("Şimdi", "Görüşmede"), hız
-# tuşları kapalıdır ve amber yoktur. Görüşmenin saati hafta çubuğunda elmastır. Ayırıcılar ve hafta çubuğu
+# tuşları kapalıdır ve amber yoktur. Görüşmenin saati hafta çubuğunda elmastır. Bunların dışında saatin altındaki
+# satır saatin neden durduğunu söyler: tutanın adı (tuşlar kapalı) ya da duraklı hâl. Ayırıcılar ve hafta çubuğu
 # _draw'da.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
@@ -20,12 +21,12 @@ const INBOX := preload("res://scripts/ui/components/inbox.gd")
 ## bloğunun genişliği, saatin sol payı, hız tuşunun genişliği ve saatle tuşlar arası.
 const GRID := [
 	{"brand": 184, "A": 204, "B": 246, "C": 414, "D": 480, "rule": 616, "E": 637, "F": 684, "G": 766,
-		"H": 843, "day": 943, "pad": 20, "slot": 248, "time": 335, "time_pad": 20, "key": 40, "gap": 16},
+		"H": 843, "day": 943, "pad": 20, "slot": 248, "time": 291, "time_pad": 20, "key": 40, "gap": 16},
 	{"brand": 64, "A": 76, "B": 116, "C": 276, "D": 340, "rule": 468, "E": 481, "F": 526, "G": 600,
-		"H": 675, "day": 767, "pad": 16, "slot": 216, "time": 269, "time_pad": 12, "key": 30, "gap": 12},
+		"H": 675, "day": 767, "pad": 16, "slot": 216, "time": 235, "time_pad": 12, "key": 30, "gap": 12},
 ]
-## Taban çizgileri: iki metrik satırı, marka adı ve evre, tarih ve saat etiketleri, yuvanın iki
-## satırı, saat.
+## Taban çizgileri: iki metrik satırı, marka adı ve evre, tarih ve hafta çubuğunun saatleri (saatin durum
+## satırı da bu alt çizgiye oturur), yuvanın iki satırı, saat.
 const ROW_1 := 33.0
 const ROW_2 := 54.0
 const NAME_LINE := 31.0
@@ -40,9 +41,9 @@ const GATE_SUB_LINE := 51.0
 const PULSE_S := 1.6
 const PULSE_SCALE := 4.0
 const PULSE_ALPHA := 0.55
-## A refused speed key blinks the frame: twice, each way this long.
+## blink_held's blink: twice, each way this long.
 const BLINK_S := 0.09
-const CLOCK_LINE := 41.0
+const CLOCK_LINE := 35.0
 const LOGO := Vector2(20, 14)
 const LOGO_COMPACT := Vector2(22, 22)
 const NAME_X := 48.0
@@ -53,7 +54,7 @@ const PHASE_DOT_GAP := 8.0
 const PHASE_DOT_STEP := 12.0
 const PHASE_DOT_Y := 44.0
 const CLOCK_W := 67.0
-const KEYS_Y := 16.0
+const KEYS_Y := 10.0
 const KEY_GAP := 4.0
 const UNIT_GAP := 2.0
 const RULE_INSET := 12.0
@@ -104,9 +105,11 @@ func _ready() -> void:
 	EventBus.event_resolved.connect(_refresh.unbind(2))
 	EventBus.desk_changed.connect(_refresh)
 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
-	# Hız yalnız TimeManager üzerinden gidip gelir (speed_change_requested → speed_changed); gösterge
-	# buradan boyanır ki olay duraklatmasının dönüşü gibi başka değiştiriciler de görünsün.
+	# Hız ve tutuş yalnız TimeManager üzerinden gelir (speed_changed, hold_changed); tuşlar ve durum satırı
+	# buradan boyanır ki tutuş ve yükleme gibi başka değiştiriciler de görünsün.
 	TimeManager.speed_changed.connect(_apply_speed_visual)
+	TimeManager.speed_changed.connect(_refresh_state.unbind(1))
+	TimeManager.hold_changed.connect(_refresh)
 	for i in speed_btns.size():
 		speed_btns[i].pressed.connect(EventBus.speed_change_requested.emit.bind(i))
 	resized.connect(_refresh)
@@ -232,8 +235,8 @@ func _refresh_day(g: Dictionary) -> void:
 	_refresh_gate(g)
 
 
-## The gate: while a decision waits the slot says so and the clock's keys are off. A clock held for a meeting
-## turns the keys off too, without the gate's amber.
+## The gate: while a decision waits the slot says so and the clock's keys are off. A meeting or any other
+## hold turns the keys off too, without the gate's amber.
 func _refresh_gate(g: Dictionary) -> void:
 	var held := _held()
 	var gated: bool = GameState.run_active and EventGate.active_id() != "" and not held
@@ -242,7 +245,7 @@ func _refresh_gate(g: Dictionary) -> void:
 	for part: Control in [$GateDot, $GateRing, $GateLabel, $GateLine, $GateHit, $GateFrame]:
 		part.visible = gated
 	for b in speed_btns:
-		b.disabled = gated or held
+		b.disabled = gated or held or TimeManager.is_clock_held()
 	if not gated:
 		if _pulse != null:
 			_pulse.kill()
@@ -268,12 +271,14 @@ func _refresh_gate(g: Dictionary) -> void:
 		_pulse.parallel().tween_property($GateRing, "modulate:a", 0.0, PULSE_S).from(PULSE_ALPHA)
 
 
-## A speed key pressed while the decision holds the clock: the frame blinks twice.
-func blink_gate() -> void:
+## A request the hold refuses (a speed key, a meeting entry): the gate's frame blinks twice, or with no gate
+## the state line.
+func blink_held() -> void:
+	var part: Control = $GateFrame if EventGate.active_id() != "" and not _held() else $TimeBlock/State
 	var tw := create_tween()
 	for i in 2:
-		tw.tween_property($GateFrame, "modulate:a", 0.4, BLINK_S)
-		tw.tween_property($GateFrame, "modulate:a", 1.0, BLINK_S)
+		tw.tween_property(part, "modulate:a", 0.4, BLINK_S)
+		tw.tween_property(part, "modulate:a", 1.0, BLINK_S)
 
 
 func _refresh_time(g: Dictionary) -> void:
@@ -282,9 +287,24 @@ func _refresh_time(g: Dictionary) -> void:
 	block.size = Vector2(g.time, size.y)
 	$TimeBlock/Clock.text = "%02d:00" % GameState.current_hour
 	_put($TimeBlock/Clock, g.time_pad, CLOCK_LINE)
+	_put($TimeBlock/State, g.time_pad, HOUR_LINE, g.time - 2 * g.time_pad)
 	for i in speed_btns.size():
 		speed_btns[i].position = Vector2(g.time_pad + CLOCK_W + g.gap + i * (g.key + KEY_GAP), KEYS_Y)
 		speed_btns[i].size = Vector2(g.key, UiTokens.D_H_SPEED_KEY)
+	_refresh_state()
+
+
+## Saatin altındaki satır saatin neden durduğunu söyler: tutanın adı, tutuş yoksa duraklı hâl. Görüşme ve
+## bekleyen karar bunu yuvada söyler.
+func _refresh_state() -> void:
+	var key := ""
+	if not _held() and EventGate.active_id() == "":
+		if TimeManager.is_clock_held():
+			key = TimeManager.hold_label()
+		elif GameState.run_active and TimeManager.current_speed == 0:
+			key = "TOPBAR_PAUSED"
+	$TimeBlock/State.text = Fmt.upper(tr(key))
+	$TimeBlock/State.visible = key != ""
 
 
 ## Yazı taban çizgisine oturur; genişlik verilirse kutu o kadardır (taşan metin üç noktayla kısalır).

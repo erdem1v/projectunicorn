@@ -26,12 +26,21 @@ extends Node
 # yoksa akümülatör geride kalır ve saatlik tik atılmaz.
 
 const _NIGHT := "night"
+## Hold reason → the key that names it on screen. The order is the priority: the first reason held
+## names the hold.
+const HOLD_LABELS := {
+	"event": "GATE_ANSWER_FIRST",
+	"milestone_paper": "CLOCK_HOLD_MILESTONE",
+	"product_release_note": "CLOCK_HOLD_RELEASE_NOTE",
+}
 
 var current_speed: int = 1
 var last_running_speed: int = 1                  # last non-zero speed; Space-toggle resumes to it
 
 # Emitted after current_speed actually changes, whoever initiated it (TopBar paints from this).
 signal speed_changed(new_speed: int)
+# Emitted when a hold is taken or released; a reason already held, or never taken, emits nothing.
+signal hold_changed
 var _in_game_hours: float = float(TimeModel.WEEK_START_HOUR)   # accumulator within the day (0-24)
 
 # Hard stop for _process, held by SaveManager.apply_loaded_state for a whole load. The tree is
@@ -319,11 +328,13 @@ func hold_clock(reason: String) -> void:
 		return
 	_holds[reason] = true
 	_on_speed_change_requested(0)
+	hold_changed.emit()
 
 
 ## Drop one hold. Nothing resumes: only the player starts the clock.
 func release_clock(reason: String) -> void:
-	_holds.erase(reason)
+	if _holds.erase(reason):
+		hold_changed.emit()
 
 
 func is_clock_held() -> bool:
@@ -332,6 +343,15 @@ func is_clock_held() -> bool:
 
 func holds() -> Array:
 	return _holds.keys()
+
+
+## The key naming what holds the clock: the first held reason in HOLD_LABELS, CLOCK_HELD for a reason
+## the table does not name.
+func hold_label() -> String:
+	for reason in HOLD_LABELS:
+		if _holds.has(reason):
+			return HOLD_LABELS[reason]
+	return "CLOCK_HELD"
 
 
 # --- Daily tick dispatch ---

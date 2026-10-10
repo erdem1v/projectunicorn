@@ -50,6 +50,8 @@ func _ready() -> void:
 		# Series A roster stops being telegraphed-locked on the same tick.
 		EventBus.phase_changed,
 		EventBus.event_triggered, EventBus.event_resolved, EventBus.event_set_aside,
+		# A held clock shuts the seed pitch, its reason under the buttons.
+		TimeManager.hold_changed,
 	]
 	for sig in _signals:
 		sig.connect(_on_changed)
@@ -172,8 +174,8 @@ func _paint_seed() -> void:
 	card.add_child(SprintUiShared.prose(tr("SEED_DOOR_LINE"), &"DataText"))
 	card.add_child(SprintUiShared.prose(tr("SEED_DOOR_HINT"), &"Caption"))
 	var row := SprintUiShared.box(UiTokens.SPACE_M)
-	# The open funds share one lock: the rung's own or the sitting gate. Its reason sits under the buttons that
-	# would otherwise quietly do nothing (no fake choices).
+	# The open funds share one lock (_seed_block); its reason sits under the buttons that would otherwise
+	# quietly do nothing (no fake choices).
 	var blocked: String = _seed_block(String(InvestorRegistry.get_active()[0].get("id", "")))
 	for inv in InvestorRegistry.get_active():
 		# CONFIRMED, because it cannot be taken back: one seed pitch per run, and the
@@ -187,8 +189,10 @@ func _paint_seed() -> void:
 		card.add_child(SprintUiShared.label(tr(blocked), &"Caption"))
 
 
-## The seed pitch's lock reason: the rung's own first, then the sitting gate.
+## The seed pitch's lock reason: a held clock first, then the rung's own, then the sitting gate.
 func _seed_block(vc_id: String) -> String:
+	if TimeManager.is_clock_held():
+		return TimeManager.hold_label()
 	var why: String = SeedRoundSystem.pitch_blocked_reason(vc_id)
 	return "VC_BLOCK_LATE" if why == "" and not _pitch_open else why
 

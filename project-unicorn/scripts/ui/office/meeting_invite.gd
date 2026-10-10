@@ -180,7 +180,11 @@ func _open_card() -> void:
 	_card.visible = true
 
 
+## A held clock does not take the call: the ring and the card stay, the shell's toast says why.
 func _accept() -> void:
+	if TimeManager.is_clock_held():
+		get_tree().call_group(&"game_shell", &"say_held")
+		return
 	stop()
 	accepted.emit()
 
