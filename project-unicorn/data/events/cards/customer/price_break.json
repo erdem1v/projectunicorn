@@ -67,20 +67,20 @@
   ],
   "text": {
     "tr": {
-      "title": "PH: Fiyat sorusu",
-      "body": "PH: Masadaki rakam Premium bandında duruyor ve karşı taraf kırılmasını bekliyor. Standart fiyattan kapanır, ya da bu anlaşma düşer.",
+      "title": "Fiyat sorusu",
+      "body": "Masadaki rakam Premium bandında duruyor ve karşı taraf kırılmasını bekliyor. Standart fiyattan kapanır, ya da bu anlaşma düşer.",
       "options": {
-        "break_the_band": "PH: Standart fiyattan kapat",
-        "hold_the_price": "PH: Fiyatta kal"
+        "break_the_band": "Standart fiyattan kapat",
+        "hold_the_price": "Fiyatta kal"
       },
       "expire_note": "Fiyat konusu kapandı."
     },
     "en": {
-      "title": "PH: A question of price",
-      "body": "PH: The number on the table sits in the Premium band and they are waiting for it to break. It closes at the Standard price, or this deal drops.",
+      "title": "A question of price",
+      "body": "The number on the table sits in the Premium band and they are waiting for it to break. It closes at the Standard price, or this deal drops.",
       "options": {
-        "break_the_band": "PH: Close at the Standard price",
-        "hold_the_price": "PH: Hold the price"
+        "break_the_band": "Close at the Standard price",
+        "hold_the_price": "Hold the price"
       },
       "expire_note": "The price question closed."
     }

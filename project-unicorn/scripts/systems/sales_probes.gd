@@ -15,13 +15,13 @@ extends RefCounted
 # loses to one it has not) and then on a deterministic hash, so the same state on the same day
 # produces the same interrogation after a reload.
 #
-# ALL PROSE IS A TAGGED PLACEHOLDER (§11.5). Every key below resolves to a `PH:`-prefixed row
-# in strings.csv. The writing round replaces them wholesale and the prefix is how it finds
-# them; the MACHINE is what ships here.
+# THE LINES ARE CSV KEYS DERIVED FROM IDS: `SALES_PROBE_<ID>`, `SALES_ANS_<ID>_<ANSWER>` and
+# `SALES_LOCK_<FACT>`. No grep for a literal finds them, so `loc_sales_derived_keys` walks this
+# catalogue and asks the translation server for each one.
 #
 # ANSWER VERBS (§5.1, internal taxonomy — never drawn as a fixed palette, §5.1.1):
 #   strength   "Gücü göster"     — open ONLY on a real strength; otherwise a locked row that
-#                                  names the actual gap ("Sağlayıcın kurumsal kademede değil.")
+#                                  names the actual gap ("Altyapın yerel bir sağlayıcıda.")
 #   admit      "Kabul et"        — always open; some archetypes pay an honesty premium
 #   promise    "Söz ver"         — §6's single-open-promise lock; narrows the Act 2 band
 #   charisma   "Yönü çevir"      — open only when the founder HAS Charisma (§5.1, moment 1)

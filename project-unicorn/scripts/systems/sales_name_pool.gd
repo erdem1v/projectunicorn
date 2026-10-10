@@ -15,8 +15,7 @@ extends RefCounted
 #
 # THESE ARE THE PLACEHOLDER SET §11.3 ASKS FOR. The director scans and revises them; the two
 # tables below are the whole surface, so "find every generated name" is one grep, not an
-# archaeology dig. They deliberately do NOT carry the `PH:` prose tag: a lead card reading
-# "PH: Kuzey Lojistik" is unreadable, and a proper noun is not a narrative string.
+# archaeology dig.
 #
 # DETERMINISM. No RNG. Every draw is integer arithmetic over the seed, on SalesConstants' mixer
 # constants. Two runs with the same seed meet the same companies.

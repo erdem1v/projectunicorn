@@ -2354,60 +2354,60 @@ NEG_CAPACITY,Kapasite: {used}/{cap},Capacity: {used}/{cap}
 NEG_DEAL_IF_ACCEPT,Kabul edersen: {line},If you accept: {line}
 NEG_LOCK_PROMISE,Verilen söz üst ucu kapattı.,The promise closed the top end.
 NEG_INSULT_REASON,Bu rakam masayı devirir.,That number tips the table over.
-SALES_ARCH_OPS_CAUTIOUS_LINE,PH: Ölçülü bir alıcı. Önce kararlılığı sorar.,PH: A measured buyer. Stability comes first.
-SALES_ARCH_TECH_EXACTING_LINE,PH: Teknik taraf soruyor. Merdivenin nerede bittiğini bilmek ister.,PH: The technical side is asking. They want to know where the ladder ends.
-SALES_ARCH_FINANCE_BRISK_LINE,"PH: Hızlı konuşur, rakama erken gelir.","PH: Talks fast, gets to the number early."
-SALES_PROBE_PROBE_STABILITY_RECORD,PH: Bizim için birinci konu kararlılık. Bugüne kadar kesinti yaşadınız mı?,PH: Stability is our first question. Have you had outages?
-SALES_PROBE_PROBE_STABILITY_BUGS,PH: Açık hata sayınızı duydum. Bunlar bizim işimizi nasıl etkiler?,PH: I hear about your open bugs. How does that reach our work?
-SALES_PROBE_PROBE_LADDER_REACH,"PH: Ürün nereye kadar gidiyor? Bugün ne var, bu çeyrek ne çıkıyor?","PH: How far does the product go? What is live, what ships this quarter?"
-SALES_PROBE_PROBE_LADDER_LOCKED,PH: İhtiyacımız olan kademe listede var ama kapalı görünüyor.,PH: The tier we need is on the list but it reads as closed.
-SALES_PROBE_PROBE_PROVIDER_TRUST,PH: Veri nerede duruyor? Altyapıyı kimden alıyorsunuz?,PH: Where does the data sit? Who do you buy infrastructure from?
-SALES_PROBE_PROBE_WHO_DO_I_CALL,PH: Bir sorun çıktığında kimi arıyorum?,"PH: When something breaks, who do I call?"
-SALES_PROBE_PROBE_SWITCHING_RISK,"PH: Geçiş ne kadar sürer? İki kere sistem değiştirdik, ikisi de uzadı.",PH: How long is the switch? We have done this twice and both ran long.
-SALES_PROBE_PROBE_CAPACITY,PH: Yoğun günde ne oluyor? Bizim yükümüz sabit değil.,PH: What happens on a heavy day? Our load is not flat.
-SALES_INNER_VOICE_0,PH: Masadaki üç kişiden ikisi not alıyor.,PH: Two of the three at the table are taking notes.
-SALES_INNER_VOICE_1,PH: Sorular hazırlanmış. Bu görüşmeye çalışmışlar.,PH: The questions were prepared. They worked on this meeting.
-SALES_INNER_VOICE_2,PH: Kimse acele etmiyor. Bu iyiye de kötüye de gidebilir.,PH: Nobody is hurrying. That can go either way.
-SALES_WIN_CUT,PH: Sorularım bitti. Rakamı konuşalım.,PH: I am out of questions. Let us talk numbers.
-SALES_LOSS_STABILITY,PH: Kararlılık bizim için birinci konu ve orası bugün açık.,PH: Stability is our first question and it is open today.
-SALES_LOSS_MISSING_TIER,PH: İhtiyacımız olan kademe yok. Onsuz alamayız.,PH: The tier we need is not there. We cannot buy without it.
-SALES_LOSS_PROVIDER_TRUST,PH: Altyapı tarafı bizim eşiğimizi geçmiyor.,PH: The infrastructure side does not clear our bar.
-SALES_LOSS_PRICE,PH: Rakam bu iş için bizde karşılık bulmuyor.,PH: The number does not land for this piece of work.
-SALES_LOSS_SWITCHING_RISK,PH: Geçişi kimin yürüteceği belli değil. Riski taşıyamayız.,PH: It is unclear who runs the switch. We cannot carry that risk.
-SALES_MEMORY_STABILITY,PH: Geçen sefer kesintiler konuşulmuştu.,PH: Last time we talked about outages.
-SALES_MEMORY_MISSING_TIER,PH: Geçen sefer eksik kademe konuşulmuştu.,PH: Last time we talked about the missing tier.
-SALES_MEMORY_PROVIDER_TRUST,PH: Geçen sefer altyapı konuşulmuştu.,PH: Last time we talked about infrastructure.
-SALES_MEMORY_PRICE,PH: Geçen sefer rakamda anlaşamamıştık.,PH: Last time we did not meet on the number.
-SALES_MEMORY_SWITCHING_RISK,PH: Geçen sefer geçiş konuşulmuştu.,PH: Last time we talked about the switch.
-SALES_LOCK_AXIS_STABILITY,PH: Kararlılık tarafın bunu söyleyecek durumda değil.,PH: Your stability side cannot claim that.
-SALES_LOCK_STEPS_SHIPPED,PH: Yayınlanmış kademe sayın bunu taşımıyor.,PH: You have not shipped enough tiers to claim that.
-SALES_LOCK_PROVIDER,PH: Sağlayıcın kurumsal kademede değil.,PH: Your provider is not on the enterprise tier.
-SALES_LOCK_CS_STAFFED,PH: Kadronda Müşteri Temsilcisi yok.,PH: You have no Customer Success rep on staff.
-SALES_LOCK_AXIS_EXPERIENCE,PH: Deneyim tarafın bunu söyleyecek durumda değil.,PH: Your experience side cannot claim that.
-SALES_LOCK_OPEN_PITCH_PROMISE,PH: Verilmiş bir sözün var. Önce onu kapat.,PH: You already gave your word. Close that one first.
-SALES_ANS_PROBE_STABILITY_RECORD_A_STRENGTH,PH: Kesinti kaydımız temiz. Kayıtları paylaşabilirim.,PH: Our outage record is clean. I can share the log.
-SALES_ANS_PROBE_STABILITY_RECORD_A_ADMIT,PH: Kesinti yaşadık. İkisi de aynı gün kapandı.,PH: We have had outages. Both closed the same day.
-SALES_ANS_PROBE_STABILITY_RECORD_A_CHARISMA,PH: Kesintiyi ben karşılarım. Numaram sizde olur.,PH: Outages come to me. You will have my number.
-SALES_ANS_PROBE_STABILITY_BUGS_A_ADMIT,PH: Açık hatalarımız var ve listesi bende.,PH: We have open bugs and I have the list.
-SALES_ANS_PROBE_STABILITY_BUGS_A_PROMISE,PH: Sizi etkileyen kalemi bu ay kapatırım.,PH: The item that touches you closes this month.
-SALES_ANS_PROBE_STABILITY_BUGS_A_REFERENCE,PH: Sizin ölçeğinizde bir müşterimiz var. Onu arayın.,PH: We carry an account your size. Call them.
-SALES_ANS_PROBE_LADDER_REACH_A_STRENGTH,PH: Merdivenin büyük kısmı canlıda. Bugün kullanabilirsiniz.,PH: Most of the ladder is live. You can use it today.
-SALES_ANS_PROBE_LADDER_REACH_A_ADMIT,PH: Merdivenin bir kısmı henüz yok. Bugün olanı gösterebilirim.,PH: Part of the ladder is not there yet. I can show you what is.
-SALES_ANS_PROBE_LADDER_REACH_A_PROMISE,PH: İhtiyacınız olan kademeyi öne alırım.,PH: I will move the tier you need forward.
-SALES_ANS_PROBE_LADDER_LOCKED_A_ADMIT,PH: O kademe kapalı. Açması bize bir çeyrek iş.,PH: That tier is closed. Opening it is a quarter of work for us.
-SALES_ANS_PROBE_LADDER_LOCKED_A_PROMISE,PH: O kademeyi açarız ve tarihini yazılı veririm.,PH: We will open that tier and I will put the date in writing.
-SALES_ANS_PROBE_LADDER_LOCKED_A_CHARISMA,PH: Kapalı kademe bir liste maddesi. Asıl soru neye yaradığı.,PH: A closed tier is a line on a list. The question is what it buys you.
-SALES_ANS_PROBE_PROVIDER_TRUST_A_STRENGTH,PH: Altyapı kurumsal kademede. Güvence tarafı hazır.,PH: Infrastructure is on the enterprise tier. The assurance side is ready.
-SALES_ANS_PROBE_PROVIDER_TRUST_A_ADMIT,PH: Altyapı henüz o kademede değil. Bugünkü hâli bu.,PH: Infrastructure is not on that tier yet. This is where it stands.
-SALES_ANS_PROBE_PROVIDER_TRUST_A_REFERENCE,PH: Aynı soruyu soran bir müşterimiz var. Onunla konuşun.,PH: An account of ours asked the same thing. Talk to them.
-SALES_ANS_PROBE_WHO_DO_I_CALL_A_STRENGTH,PH: Müşteri temsilcimiz sizinle ilgilenir.,PH: Our customer success rep takes you.
-SALES_ANS_PROBE_WHO_DO_I_CALL_A_ADMIT,PH: Ayrı bir müşteri ekibimiz yok. Bu yüzden bizzat ben ilgileniyorum.,PH: We have no customer team yet. That is why it is me.
-SALES_ANS_PROBE_WHO_DO_I_CALL_A_CHARISMA,PH: Sizin ölçeğinizde bir müşteriyle zaten bizzat ben ilgilenirim.,PH: At your size I would take the call myself anyway.
-SALES_ANS_PROBE_SWITCHING_RISK_A_STRENGTH,PH: Geçiş paralel yürür. İlk hafta iki sistem birlikte çalışır.,PH: The switch runs in parallel. Both systems run together the first week.
-SALES_ANS_PROBE_SWITCHING_RISK_A_ADMIT,PH: Verinizi görmeden tarih vermek istemem.,PH: I will not give you a date before I see your data.
-SALES_ANS_PROBE_SWITCHING_RISK_A_PROMISE,PH: Geçişi biz yürütürüz ve takvimi yazılı veririm.,PH: We run the switch and I put the schedule in writing.
-SALES_ANS_PROBE_CAPACITY_A_ADMIT,PH: Yoğun günde kapasite zorlanıyor. Bugünkü hâli bu.,PH: Capacity strains on a heavy day. This is where it stands.
-SALES_ANS_PROBE_CAPACITY_A_PROMISE,PH: Kapasiteyi sizin yükünüze göre büyütürüm.,PH: I will size the capacity to your load.
+SALES_ARCH_OPS_CAUTIOUS_LINE,Ölçülü bir alıcı. Kararlılık onun için her şeyden önce gelir.,A measured buyer. Stability comes first.
+SALES_ARCH_TECH_EXACTING_LINE,Teknik taraf soruyor. Ürünün nereye kadar gittiğini bilmek ister.,The technical side is asking. They want to know how far the product goes.
+SALES_ARCH_FINANCE_BRISK_LINE,"Hızlı konuşur, düşük rakam ister.",Talks fast and wants a low number.
+SALES_PROBE_PROBE_STABILITY_RECORD,Bizim için en önemli konu kararlılık. Bugüne kadar kesinti yaşadınız mı?,Stability matters most to us. Have you had outages?
+SALES_PROBE_PROBE_STABILITY_BUGS,Açık hata sayınızı duydum. Bunlar bizim işimizi nasıl etkiler?,We hear you have open bugs. How do they affect our work?
+SALES_PROBE_PROBE_LADDER_REACH,"Ürün nereye kadar gidiyor? Bugün ne var, bu çeyrek ne çıkıyor?","How far does the product go? What is live, what ships this quarter?"
+SALES_PROBE_PROBE_LADDER_LOCKED,İhtiyacımız olan kademe listede var ama kapalı görünüyor.,The tier we need is on the list but it reads as closed.
+SALES_PROBE_PROBE_PROVIDER_TRUST,Veri nerede duruyor? Altyapıyı kimden alıyorsunuz?,Where does the data sit? Who do you buy infrastructure from?
+SALES_PROBE_PROBE_WHO_DO_I_CALL,Bir sorun çıktığında kimi arıyorum?,"When something breaks, who do I call?"
+SALES_PROBE_PROBE_SWITCHING_RISK,"Geçiş ne kadar sürer? İki kere sistem değiştirdik, ikisi de uzadı.",How long is the switch? We have done this twice and both ran long.
+SALES_PROBE_PROBE_CAPACITY,Yoğun günde ne oluyor? Bizim yükümüz sabit değil.,What happens on a heavy day? Our load is not flat.
+SALES_INNER_VOICE_0,Her cevap not ediliyor.,Every answer is being written down.
+SALES_INNER_VOICE_1,Sorular hazırlanmış. Bu görüşmeye çalışmışlar.,The questions were prepared. They worked on this meeting.
+SALES_INNER_VOICE_2,Kimse acele etmiyor. Bu iyiye de kötüye de gidebilir.,Nobody is hurrying. That can go either way.
+SALES_WIN_CUT,Bu kadar soru yeter. Rakamı konuşalım.,Enough questions. Let's talk numbers.
+SALES_LOSS_STABILITY,Kararlılık bizim için hâlâ açık bir soru.,Stability is still an open question for us.
+SALES_LOSS_MISSING_TIER,İhtiyacımız olan kademe yok. Onsuz alamayız.,The tier we need is not there. We cannot buy without it.
+SALES_LOSS_PROVIDER_TRUST,Altyapı tarafı bizim eşiğimizi geçmiyor.,The infrastructure side does not clear our bar.
+SALES_LOSS_PRICE,Rakam bu iş için bizde karşılık bulmuyor.,The number does not land for this piece of work.
+SALES_LOSS_SWITCHING_RISK,Sizde müşteri ilişkilerine ayrılmış kimse yok. Bu riski taşıyamayız.,Nobody on your side is dedicated to customer success. We cannot carry that risk.
+SALES_MEMORY_STABILITY,Geçen sefer kararlılık konuşulmuştu.,Last time we talked about stability.
+SALES_MEMORY_MISSING_TIER,Geçen sefer eksik kademe konuşulmuştu.,Last time we talked about the missing tier.
+SALES_MEMORY_PROVIDER_TRUST,Geçen sefer altyapı konuşulmuştu.,Last time we talked about infrastructure.
+SALES_MEMORY_PRICE,Geçen sefer rakamda anlaşamamıştık.,Last time we did not meet on the number.
+SALES_MEMORY_SWITCHING_RISK,Geçen sefer bizimle kimin ilgileneceği konuşulmuştu.,Last time we talked about who would look after us.
+SALES_LOCK_AXIS_STABILITY,Kararlılık bunu henüz desteklemiyor.,Stability does not back that up yet.
+SALES_LOCK_STEPS_SHIPPED,Yayınlanmış kademeler bunu henüz desteklemiyor.,Shipped tiers do not back that up yet.
+SALES_LOCK_PROVIDER,Altyapın yerel bir sağlayıcıda.,Your infrastructure is with a local provider.
+SALES_LOCK_CS_STAFFED,Müşteri ilişkilerine atanmış kimse yok.,Nobody is assigned to customer success.
+SALES_LOCK_AXIS_EXPERIENCE,Deneyim bunu henüz desteklemiyor.,Experience does not back that up yet.
+SALES_LOCK_OPEN_PITCH_PROMISE,Verilmiş bir sözün var.,You already gave your word.
+SALES_ANS_PROBE_STABILITY_RECORD_A_STRENGTH,"Kararlılık yerinde, açık hata listesi kısa. Gösterebilirim.",Stability holds and the open bug list is short. I can show you.
+SALES_ANS_PROBE_STABILITY_RECORD_A_ADMIT,Her şey sorunsuz gitmedi. Kaydı olduğu gibi gösteririm.,Not everything has run clean. I will show you the record as it is.
+SALES_ANS_PROBE_STABILITY_RECORD_A_CHARISMA,Kesintiyi ben karşılarım. Numaram sizde olur.,Outages come to me. You will have my number.
+SALES_ANS_PROBE_STABILITY_BUGS_A_ADMIT,Açık hatalarımız var ve listesi bende.,We have open bugs and I have the list.
+SALES_ANS_PROBE_STABILITY_BUGS_A_PROMISE,İhtiyacınız olan kademeyi bir sonraki sprintimize alırım. Yazılı veririm.,The tier you need goes into our next sprint. I will put it in writing.
+SALES_ANS_PROBE_STABILITY_BUGS_A_REFERENCE,Sizin ölçeğinizde bir müşterimiz var. Onu arayın.,We carry an account your size. Call them.
+SALES_ANS_PROBE_LADDER_REACH_A_STRENGTH,Birkaç kademe şimdiden canlıda. Bugün kullanabilirsiniz.,Several tiers are already live. You can use them today.
+SALES_ANS_PROBE_LADDER_REACH_A_ADMIT,Ürünün bir kısmı henüz yok. Bugün olanı gösterebilirim.,Part of the product is not there yet. I can show you what is.
+SALES_ANS_PROBE_LADDER_REACH_A_PROMISE,İhtiyacınız olan kademeyi öne alırım.,I will move the tier you need forward.
+SALES_ANS_PROBE_LADDER_LOCKED_A_ADMIT,O kademe kapalı. Henüz açamıyoruz.,That tier is closed. We cannot open it yet.
+SALES_ANS_PROBE_LADDER_LOCKED_A_PROMISE,Bir sonraki sprintte sizin için yapacağımız kademeyi yazılı veririm.,I will put in writing which tier we build for you next sprint.
+SALES_ANS_PROBE_LADDER_LOCKED_A_CHARISMA,Kapalı kademe bir liste maddesi. Asıl soru neye yaradığı.,A closed tier is a line on a list. The question is what it buys you.
+SALES_ANS_PROBE_PROVIDER_TRUST_A_STRENGTH,Veri bir bulut sağlayıcısında duruyor. Kurulumu gösterebilirim.,The data sits with a cloud provider. I can show you the setup.
+SALES_ANS_PROBE_PROVIDER_TRUST_A_ADMIT,Henüz kurumsal bulutta değiliz. Bugünkü hâli bu.,We are not on an enterprise cloud yet. This is where it stands.
+SALES_ANS_PROBE_PROVIDER_TRUST_A_REFERENCE,Aynı soruyu soran bir müşterimiz var. Onunla konuşun.,An account of ours asked the same thing. Talk to them.
+SALES_ANS_PROBE_WHO_DO_I_CALL_A_STRENGTH,Müşteri ilişkilerinden biri sizinle ilgilenir.,Someone in customer success takes your call.
+SALES_ANS_PROBE_WHO_DO_I_CALL_A_ADMIT,Açıkçası çoğu zaman beni ararsınız.,"Honestly, it will be me more often than not."
+SALES_ANS_PROBE_WHO_DO_I_CALL_A_CHARISMA,Sizin ölçeğinizde bir müşteriyle zaten bizzat ben ilgilenirim.,At your size I would take the call myself anyway.
+SALES_ANS_PROBE_SWITCHING_RISK_A_STRENGTH,Ürün kolay öğreniliyor. Ekibinizin alışması uzun sürmez.,The product is easy to learn. Your people will not need long.
+SALES_ANS_PROBE_SWITCHING_RISK_A_ADMIT,Verinizi görmeden tarih vermek istemem.,I will not give you a date before I see your data.
+SALES_ANS_PROBE_SWITCHING_RISK_A_PROMISE,İmzalarsanız ihtiyacınız olan kademeyi bir sonraki sprintimize yazarım.,"Sign, and the tier you need goes into our next sprint, in writing."
+SALES_ANS_PROBE_CAPACITY_A_ADMIT,Yoğun günde kapasite zorlanıyor. Bugünkü hâli bu.,Capacity strains on a heavy day. This is where it stands.
+SALES_ANS_PROBE_CAPACITY_A_PROMISE,İhtiyacınız olan kademeyi yazılı olarak bir sonraki sprintimize alırım.,"I will put the tier you need into our next sprint, in writing."
 SALES_LOG_EXPIRED,{company} beklemekten vazgeçti,{company} stopped waiting
 SALES_LOG_FOUNDER_CLOSE,{company} anlaşmasını sen kapattın · {amount}/ay,You closed {company} · {amount}/mo
 NEG_HOLD,Rakamında ısrar et,Hold your number
@@ -2421,7 +2421,7 @@ SALES_PROMISE_OPEN,Açık söz: {feature} · {n} hafta,Open promise: {feature} �
 SALES_PROMISE_OPEN_ONE,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} week
 SALES_PROMISE_OPEN_THIS_WEEK,Açık söz: {feature} · bu hafta,Open promise: {feature} · this week
 SALES_WEEKLY_TOTAL,Toplam: {n} anlaşma · {mrr}/ay,Total: {n} deals · {mrr}/mo
-HR_FOUNDER_STATE_CARE,PH: Müşterilerle ilgileniyor,PH: Looking after customers
+HR_FOUNDER_STATE_CARE,Müşterilerle ilgileniyor,Looking after customers
 SEED_SECTION_TITLE,Seed turu,Seed round
 SEED_DOOR_LINE,"Gelir bir tura yetecek kadar düzenli. Dört fondan biriyle oturabilirsin; bir tur, bir fon.","Revenue is steady enough to carry a round. You can sit down with one of the four funds: one round, one fund."
 SEED_DOOR_HINT,Masaya oturmadan önce seçtiğin fon değişmez.,"Once you sit down, the fund you chose is the fund you have."

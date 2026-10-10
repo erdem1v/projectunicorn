@@ -27,8 +27,7 @@ extends RefCounted
 #   conditions      → the ordered whale condition list (§8); empty = never a whale
 #
 # NO LOCALISED TEXT LIVES HERE. Ids in, sentences at render time. Player-facing archetype
-# voice is a CSV key derived from the id (`SALES_ARCH_<ID>_LINE`), and it is a tagged
-# placeholder until the writing round lands.
+# voice is a CSV key derived from the id (`SALES_ARCH_<ID>_LINE`).
 
 const DEFAULT_ID := "ops_cautious"
 
@@ -131,8 +130,7 @@ static func _row(archetype_id: String) -> Dictionary:
 	return TABLE.get(archetype_id, TABLE[DEFAULT_ID]) as Dictionary
 
 
-## Player-facing single line (§4 "arketip sesi tek satır"). A tagged PLACEHOLDER until the
-## writing round replaces it wholesale; the tag is what makes them mechanically findable.
+## Player-facing single line (§4 "arketip sesi tek satır").
 static func voice_line(archetype_id: String) -> String:
 	return TranslationServer.translate("SALES_ARCH_%s_LINE" % archetype_id.to_upper())
 

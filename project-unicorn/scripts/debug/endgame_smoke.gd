@@ -142,6 +142,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sales_seat_price_stamp_and_expansion": fail = _case_sales_seat_price_stamp_and_expansion()
 		"sales_save_roundtrip_rev6": fail = _case_sales_save_roundtrip_rev6()
 		"loc_sales_derived_keys": fail = _case_loc_sales_derived_keys()
+		"loc_no_placeholder_text": fail = _case_loc_no_placeholder_text()
 		"sales_presentation_rules": fail = _case_sales_presentation_rules()
 		"sales_candidate_curve_and_traits": fail = _case_sales_candidate_curve_and_traits()
 		"b2b_prospect_pain_references_real_feature": fail = _case_b2b_prospect_pain_references_real_feature()
@@ -15505,14 +15506,27 @@ static func _case_loc_sales_derived_keys() -> String:
 				TranslationServer.set_locale(loc0)
 				return "%s does not resolve in %s" % [k, locale]
 	TranslationServer.set_locale(loc0)
-	# The narrative half must be TAGGED, so the writing round can find every line it owns.
-	TranslationServer.set_locale("tr")
-	for row2 in SalesProbes.CATALOGUE:
-		var key2: String = "SALES_PROBE_%s" % String((row2 as Dictionary).get("id", "")).to_upper()
-		if not TranslationServer.translate(key2).begins_with("PH:"):
-			TranslationServer.set_locale(loc0)
-			return "%s is not tagged as a placeholder" % key2
-	TranslationServer.set_locale(loc0)
+	return ""
+
+
+## No player text ships as a placeholder: no CSV value and no event card string, in either
+## language, starts with "PH:". The cards under _fixtures/ are test data, not player text.
+## FALSIFICATION: put "PH: " back in front of one CSV value or one card title and the case names
+## the key or the file.
+static func _case_loc_no_placeholder_text() -> String:
+	var f := FileAccess.open("res://localization/strings.csv", FileAccess.READ)
+	while not f.eof_reached():
+		var row: PackedStringArray = f.get_csv_line()
+		for i in range(1, row.size()):
+			if row[i].begins_with("PH:"):
+				return "%s is a placeholder" % row[0]
+	var cards: Array[String] = []
+	_collect_by_ext("res://data/events/cards", "json", cards)
+	if cards.is_empty():
+		return "no card found under data/events/cards: the scan is not looking where it thinks"
+	for path in cards:
+		if not path.contains("/_fixtures/") and FileAccess.get_file_as_string(path).contains("\"PH:"):
+			return "%s carries a placeholder" % path.get_file()
 	return ""
 
 
