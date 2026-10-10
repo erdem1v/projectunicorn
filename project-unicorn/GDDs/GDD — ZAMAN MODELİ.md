@@ -42,7 +42,7 @@ söyler.
 
 - Üretim kodunda saati dışarıdan ileri taşıyan iki kapı vardır: `TimeManager.advance_hours(n)` (toplantı kapanışı,
   smoke, probe) ve `TimeManager.skip_night()` (gece). İkisi de aynı saatlik adımdan geçer ve her adımda akümülatörü
-  saate eşitler, çünkü 00:00 autosave'i adımın içinde yazılır.
+  saate eşitler, çünkü 00:00 autosave'i adımın içinde yakalanır.
 - Toplu adım her adımda koşunun sürdüğüne ve tutma olmadığına bakar. Koşu biterse (sonun kâğıdı) ya da bir tutma
   alınırsa (kilometre taşı kâğıdı) durur. Gece türetildiği için kalan gece, tutma kalkıp oyuncu saati sürdürünce
   sürer.
@@ -451,8 +451,12 @@ yüklemez, süreleri okunmaz.
 - Seçenekler: kapalı, her hafta (her tik), her ay (`month_ended`). Varsayılan her hafta [WORKING]. Kayıtlı eski
   "her gün" değeri varsayılan olarak okunur.
 - Autosave arası en az 10 gerçek saniyedir (`AUTOSAVE_MIN_REAL_SECONDS` [WORKING]).
-- 00:00 autosave'i gece atlamasının içinde yazılır ve aktif kartla engellenmez (§1.2). Engellenen autosave, kart
-  kuyruğu boşalınca `event_resolved`'da yeniden dener.
+- 00:00 autosave'i gece atlamasının içinde yakalanır ve aktif kartla engellenmez (§1.2); metne çevrilmesi ve diske
+  yazılması bir işçi iş parçacığında koşar, gece karesi yazımı beklemez. Engellenen autosave, kart kuyruğu boşalınca
+  `event_resolved`'da yeniden dener.
+- Yazım sürerken yeni autosave başlamaz, bekleyen kalır. El ile kayıt, hızlı kayıt ve kapanış kaydı senkrondur; kayıt
+  klasörünü okuyan ya da yazan her yol (kayıt, yükleme, liste, silme, pencere kapanışı, oyundan çıkış) önce süren
+  yazımı bekler.
 
 ## 7. Günün akışı ve gece atlaması
 
@@ -481,7 +485,7 @@ yüklemez, süreleri okunmaz.
   (başlangıç ≥ 8, süre ≥ 5).
 - Mesai bitişi `WorkHoursSystem.workday_end()`'dir: kurucunun bitişi taban, ofisteki her çalışanın bitişi onu
   uzatabilir, en geç 24. Değer oyun durumundan belirlenir, görünüme bağlı değildir.
-- Gece her karede türetilir; bir saat sınırında bir kez tetiklenmez. Gece saatinde yüklenen kayıt ve 00:00'da yazılan
+- Gece her karede türetilir; bir saat sınırında bir kez tetiklenmez. Gece saatinde yüklenen kayıt ve 00:00'da yakalanan
   autosave aynı kurala düşer.
 - Bir karenin birden çok saat taşıdığı takılmada adım geceye inerse karenin kalan saatleri düşer: kare takılması
   mesai bitişini aşamaz.

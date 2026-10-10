@@ -43,6 +43,8 @@ var _last_autosave_msec: int = 0
 # "Days have been played since the last save." Raised at the day-tick boundary, cleared by a
 # successful save and by a load.
 var _dirty: bool = false
+# The autosave a worker is writing, -1 when none. Waited for exactly once, in _join_write.
+var _write_task: int = -1
 
 
 func _ready() -> void:
@@ -62,6 +64,11 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		_autosave_on_close()
+
+
+## get_tree().quit() frees this node before the engine waits for its workers: a write in flight lands first.
+func _exit_tree() -> void:
+	_join_write()
 
 
 # ============================================================================
@@ -102,6 +109,7 @@ func next_manual_slot_id() -> String:
 func list_slots() -> Array:
 	# Newest first. Unloadable rows still appear with their reason: a save that silently
 	# vanishes from the list reads as the game having eaten it.
+	_join_write()
 	var rows: Array = []
 	var dir := DirAccess.open(SAVE_DIR)
 	if dir == null:
@@ -122,6 +130,7 @@ func read_slot(slot_id: String) -> Dictionary:
 	# having touched the live run. A corrupt or missing target falls back to the slot's .bak
 	# (the previous save), marked `from_backup`. NEWER and TOO_OLD are valid files with a
 	# deliberate refusal and never fall back to an older state.
+	_join_write()
 	var path: String = _path_for(slot_id)
 	var read: Dictionary = _read_file(path)
 	if String(read.error_key) != "SAVE_ERR_CORRUPT":
@@ -177,10 +186,18 @@ func _refused(error_key: String, meta: Dictionary = {}) -> Dictionary:
 # ============================================================================
 
 func save_to_slot(slot_id: String) -> bool:
+	_join_write()
 	if not can_save():
 		push_warning("[SaveManager] save refused: %s" % cannot_save_reason_key())
 		return false
-	var payload := {
+	if not _write_atomic(_path_for(slot_id), _payload()):
+		return false
+	_dirty = false
+	return true
+
+
+func _payload() -> Dictionary:
+	return {
 		"schema_version": SCHEMA_VERSION,
 		"game_version": _game_version(),
 		"meta": build_meta(),
@@ -190,12 +207,6 @@ func save_to_slot(slot_id: String) -> bool:
 			"systems": _capture_systems(),
 		},
 	}
-	# Keys keep their order: the sprint ships beta cards in the order they were stored, and a
-	# sorted save would replay a different release after loading.
-	if not _write_atomic(_path_for(slot_id), JSON.stringify(payload, "\t", false)):
-		return false
-	_dirty = false
-	return true
 
 
 func quicksave() -> bool:
@@ -203,6 +214,7 @@ func quicksave() -> bool:
 
 
 func delete_slot(slot_id: String) -> bool:
+	_join_write()
 	var ok: bool = true
 	for path in [_path_for(slot_id), _path_for(slot_id) + ".bak"]:
 		if FileAccess.file_exists(path) and DirAccess.remove_absolute(path) != OK:
@@ -231,6 +243,7 @@ func build_meta() -> Dictionary:
 
 func apply_loaded_state(payload: Dictionary) -> bool:
 	# Takes the dict read_slot returned.
+	_join_write()
 	var state: Dictionary = payload.get("state", {}) as Dictionary
 	if state.is_empty():
 		push_error("[SaveManager] apply_loaded_state called with no state block")
@@ -365,19 +378,49 @@ func _autosave_frequency() -> String:
 func _try_autosave() -> void:
 	# A pending autosave that cannot be taken now waits for the next safe boundary.
 	if not _autosave_enabled or not _autosave_pending or _autosave_frequency() == "off" \
-			or not can_save():
+			or not can_save() or _write_task != -1:
 		return
 	if Time.get_ticks_msec() - _last_autosave_msec < AUTOSAVE_MIN_REAL_SECONDS * 1000:
 		return
-	if save_to_slot(_next_auto_slot_id()):
-		_autosave_pending = false
-		_last_autosave_msec = Time.get_ticks_msec()
+	_save_in_background(_next_auto_slot_id())
+	_autosave_pending = false
+	_last_autosave_msec = Time.get_ticks_msec()
 
 
-# Skips AUTOSAVE_MIN_REAL_SECONDS and _autosave_pending: the player is leaving, nothing waits.
+# Skips AUTOSAVE_MIN_REAL_SECONDS and _autosave_pending: the player is leaving, nothing waits. A
+# write in flight lands first: the rolling slot is picked from finished files.
 func _autosave_on_close() -> void:
+	_join_write()
 	if _autosave_enabled and _dirty and _autosave_frequency() != "off" and can_save():
 		save_to_slot(_next_auto_slot_id())
+
+
+## Captured on this thread, written by a worker. The run keeps changing while the worker reads and a
+## to_dict may hand out live containers, so the worker gets a deep copy and touches only the slot's files.
+func _save_in_background(slot_id: String) -> void:
+	var payload: Dictionary = _payload().duplicate(true)
+	var path: String = _path_for(slot_id)
+	var day: int = GameState.day
+	_write_task = WorkerThreadPool.add_task(func() -> void:
+		_on_write_done.call_deferred(_write_atomic(path, payload), day))
+
+
+## Back on the main thread. A day ticked since the capture keeps the run dirty; a failed write waits
+## for the next boundary like a skipped one.
+func _on_write_done(ok: bool, day: int) -> void:
+	_join_write()
+	if not ok:
+		_autosave_pending = true
+	elif day == GameState.day:
+		_dirty = false
+
+
+## Mid-write a slot's file is briefly missing (rolled to .bak) and a second writer would share its
+## .tmp, so whatever reads or writes the save folder lets the write in flight land first.
+func _join_write() -> void:
+	if _write_task != -1:
+		WorkerThreadPool.wait_for_task_completion(_write_task)
+		_write_task = -1
 
 
 func _next_auto_slot_id() -> String:
@@ -416,7 +459,10 @@ func _path_for(slot_id: String) -> String:
 	return "%s%s.json" % [SAVE_DIR, slot_id]
 
 
-func _write_atomic(path: String, text: String) -> bool:
+func _write_atomic(path: String, payload: Dictionary) -> bool:
+	# Keys keep their order: the sprint ships beta cards in the order they were stored, and a
+	# sorted save would replay a different release after loading.
+	var text: String = JSON.stringify(payload, "\t", false)
 	# A crash mid-save, or a write that did not land whole, must never cost both the new save
 	# and the old one.
 	#   1. write .tmp, read it back — a failed or short write loses only the .tmp

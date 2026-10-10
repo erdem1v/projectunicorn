@@ -113,8 +113,7 @@ func run(speed: int, win: String) -> void:
 
 func _on_day_done(_day: int) -> void:
 	_saved = SaveManager._last_autosave_msec != _save_mark
-	var task = SaveManager.get("_write_task")
-	_async = _saved and task != null and task != -1
+	_async = _saved and SaveManager._write_task != -1
 
 
 ## What a player does about a stop: closes the window that holds the clock, sets the speed again and

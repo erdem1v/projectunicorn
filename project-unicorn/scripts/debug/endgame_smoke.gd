@@ -271,6 +271,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_continuity_seeded":             fail = _case_save_continuity_seeded()
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
 		"save_backup_fallback":               fail = _case_save_backup_fallback()
+		"autosave_writes_off_thread":         fail = _case_autosave_writes_off_thread()
 		"save_v13_day_stamps_migrate":        fail = _case_save_v13_day_stamps_migrate()
 		"look_registry_unique_and_saved":     fail = _case_look_registry_unique_and_saved()
 		"meeting_cast_seeded_and_saved":      fail = _case_meeting_cast_seeded_and_saved()
@@ -8647,6 +8648,32 @@ static func _case_save_backup_fallback() -> String:
 	return ""
 
 
+## The autosave leaves the calling thread: the call returns with its task in flight, _join_write waits
+## for it and the slot then reads back the day it captured. A save_to_slot taken while a write is in
+## flight lets it land first, so two writers never share the slot's .tmp. The slot is the case's own,
+## never the player's auto_*.
+## FALSIFICATION: empty _join_write → save_to_slot returns with the task still in flight.
+static func _case_autosave_writes_off_thread() -> String:
+	var slot: String = "smoke_async_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	_seed_save_world()
+	SaveManager._save_in_background(slot)
+	if SaveManager._write_task == -1:
+		return done.call("the autosave was written on the calling thread")
+	SaveManager._join_write()
+	var read: Dictionary = SaveManager.read_slot(slot)
+	if not bool(read.ok) or int(read.meta.day) != GameState.day:
+		return done.call("after the join the slot does not read back day %d" % GameState.day)
+	SaveManager._save_in_background(slot)
+	if not SaveManager.save_to_slot(slot):
+		return done.call("a save taken during the write failed (%s)" % SaveManager.cannot_save_reason_key())
+	if SaveManager._write_task != -1:
+		return done.call("save_to_slot returned with the autosave still in flight")
+	return done.call("")
+
+
 static func _put_text(path: String, text: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	f.store_string(text)
@@ -16870,7 +16897,7 @@ static func _case_sprint_paid_plan_opens_paid_tier() -> String:
 ## Ürün durumu kayıtla gidip gelir: sprintin ortasında alınan kayıt kartları, ilerlemeyi, sürüm
 ## geçmişini ve ticket defterini aynen ve aynı sırayla geri verir (betadaki kartlar saklandıkları
 ## sırayla çıkar) ve yüklenen dünya sprinti kapatır.
-## FALSİFİKASYON: SaveManager.save_to_slot'taki JSON.stringify'a sort_keys=true geri koy → FAIL.
+## FALSİFİKASYON: SaveManager._write_atomic'teki JSON.stringify'a sort_keys=true geri koy → FAIL.
 static func _case_sprint_save_roundtrip() -> String:
 	var slot: String = "smoke_sprint_%d" % OS.get_process_id()
 	var done := func(why: String) -> String:

@@ -21,7 +21,7 @@ extends Node
 # SENKRON KURALI: _in_game_hours ile GameState.current_hour bağımsız sayaçlar. Üretim kodunda
 # saati ileri taşıyan iki dış kapı var: advance_hours(n) (toplantı kapanışı, smoke, probe) ve
 # skip_night() (gece). İkisi de _run_batch → _step_hour'dan geçer ve her adım akümülatörü saate
-# eşitler, çünkü 00:00 autosave'i adımın içinde yazılır.
+# eşitler, çünkü 00:00 autosave'i adımın içinde yakalanır.
 # current_hour başka bir yoldan yazılırsa (initialize_run) sync_to_current_hour() ÇAĞRILMALI,
 # yoksa akümülatör geride kalır ve saatlik tik atılmaz.
 
