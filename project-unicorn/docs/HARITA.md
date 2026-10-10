@@ -40,19 +40,20 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Probe:** `VC_REPLAY`, `VC_REPLAY_SUM`. Masa tekrarlarının öncesini ve sonrasını `SaveCodec.capture_*` ve `SaveManager._capture_systems` ile yakalar; tekrar iz bırakırsa `ERROR` basar. Yalnız `full_run_vc_*` preset'lerinde.
 - **Görsel:** `--modal-shot=save_empty|save|save_overwrite|load_empty|load|load_gate|load_delete` (Kayıt / Yükle penceresi maketlerin durumlarında, üzerine yazma onayı, karar beklerken Yükle; dört kaydı yazar ya da siler, özel APPDATA ile koşulur).
 
-## Platform (Settings, Localization, Audio, Display)
+## Platform (Settings, Localization, Audio, Display, Graphics)
 
-- **Yer:** `scripts/autoload/{settings,localization,audio_manager}.gd`, `scripts/systems/display_settings.gd`, `scripts/modals/{settings_modal,system_menu_modal}.gd`, `scenes/modals/{SettingsModal,SystemMenuModal}.tscn`, `localization/strings.csv`, `assets/audio/`
-- **Sahip:** autoload `Settings`, `Localization`, `AudioManager`; sınıf `DisplaySettings`
+- **Yer:** `scripts/autoload/{settings,localization,audio_manager}.gd`, `scripts/systems/{display_settings,graphics_settings}.gd`, `data/graphics/presets.json`, `scripts/modals/{settings_modal,system_menu_modal}.gd`, `scenes/modals/{SettingsModal,SystemMenuModal}.tscn`, `localization/strings.csv`, `assets/audio/`
+- **Sahip:** autoload `Settings`, `Localization`, `AudioManager`; sınıf `DisplaySettings`; yol ile yüklenen `graphics_settings.gd`
 - **Giriş:**
   - `Settings.get_value`, `set_value`, `has_stored`, `reset_to_defaults`, `flush`. Dosya `user://settings.json`, kayıtlardan bağımsızdır.
   - `Localization` `strings.csv`'yi (`keys,tr,en`) kendisi ayrıştırıp TranslationServer'a yükler. `set_language`, `get_language`, `pick`. `--lang=` bayrağını okur.
   - `AudioManager` ses düzeylerini tutar; yalnız ayarlar modalı kullanır.
   - `DisplaySettings` çözünürlük, pencere kipi ve vsync'i yönetir. `BASE_VIEWPORT` `project.godot`'taki viewport'u elle yansıtır. Debug bayrakları (`SaveManager._is_harness_arg`, autosave'i kapatan listeyle aynı tek liste) onu etkisiz kılar; `--display-check` bilerek bu listenin dışındadır.
+  - `graphics_settings.gd` 3B görüntünün kalitesini yönetir: `presets.json`'daki dört ön ayar (Orta sahne dosyasının kendisidir) ve altındaki seçenekler; `graphics_preset` tabanı, `graphics` ondan ayrılan seçenekleri saklar, saklı ön ayar yoksa `_detect` ekran kartına göre seçer (kendiliğinden Ultra yok). Genel durumu (gölge atlası ve süzgeci, SSAO kalitesi, kare sınırı) kendisi, görüntünün düğümlerini `OfficeView.apply_graphics` üzerinden uygular; görüntü ekran pikselinde çizilirken kamera `size_2d_override` ile mantıksal pikselde kalır. Debug bayraklarında etkisizdir; `--gfx=<low|medium|high|ultra>` bir ön ayarı ayarlara yazmadan zorlar.
   - UI yolu: `EventBus.settings_requested`, `system_menu_requested` → `main.gd`. Sistem menüsü (grup `system_menu`) şu an çalışmayan satırı kapatır ve gerekçesini satırın sağına yazar (kaydedilemezken Kaydet, ana menü).
 - **Smoke:** `loc_*`, `locale_switch`, `ui_scale_ladder_fits_settings`, `borderless_note_key_exists`.
 - **Probe:** adanmış kayıt yok. `PICK` etiketi seçili dilde basıldığı için probe `--lang=tr` ile koşturulur.
-- **Görsel:** `--modal-shot=settings|settings_end|settings_<mode|res|scale|autosave|summary|lang>|settings_reset|system|system_gate` (açık liste maketin üstündeki öğesiyle; `settings_scale` 1280×720 pencerede), `--lang=en`, `--shot-scale=`, `--palette=cb`. Metin kapısı `scripts/debug/loc_residue.gd` (Araçlar).
+- **Görsel:** `--modal-shot=settings|settings_end|settings_<mode|res|scale|autosave|summary|lang|graphics|gfx>|settings_reset|system|system_gate` (açık liste maketin üstündeki öğesiyle; `settings_scale` 1280×720 pencerede), `--lang=en`, `--shot-scale=`, `--palette=cb`. Metin kapısı `scripts/debug/loc_residue.gd` (Araçlar).
 - **Ölçüm:** `--display-check` gerçek pencereyi tam ekran, çerçevesiz ve pencereli kiplerden, çözünürlüklerden ve vsync'ten geçirip DisplayServer'ın bildirdiğini basar. Kalıcı ayarlayıcıları kullandığı için `settings.json`'a yazar ve sonda eski değerleri geri yükler; zaman aşımı ya da çökmede ayarlar değişmiş kalır.
 
 ## Tema ve UI kiti · GDD ch12

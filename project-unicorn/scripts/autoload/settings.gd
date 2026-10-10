@@ -14,6 +14,7 @@ const SCHEMA_VERSION := 1
 # the script-class cache, and an autoload that fails to resolve an identifier takes
 # the whole game down.
 const DisplaySettingsLib := preload("res://scripts/systems/display_settings.gd")
+const GraphicsSettingsLib := preload("res://scripts/systems/graphics_settings.gd")
 
 # The settings SCHEMA: every key the settings screen writes, with its first-run value.
 # A missing key reads its default from here, so adding a key is the whole migration.
@@ -30,6 +31,10 @@ const DEFAULTS := {
 	"resolution_h": 1080,
 	"vsync": true,
 	"ui_scale": 1.0,                    # one of DisplaySettings.UI_SCALE_STEPS
+	# --- Grafik (GraphicsSettings applies) ---
+	# Saklı ön ayar yoksa GraphicsSettings makineye göre seçer; tabloda durmaları sıfırlamanın onları silmesi için.
+	"graphics_preset": "medium",        # GraphicsSettings.ORDER
+	"graphics": {},                     # ön ayardan ayrılan seçenekler
 	# --- Ses (AudioManager applies; linear 0..1, mute at ≤0) ---
 	"master_volume": 1.0,
 	"music_enabled": true,
@@ -106,6 +111,7 @@ func reset_to_defaults() -> void:
 ## Push every persisted value at the system that owns its live state.
 func apply_all() -> void:
 	DisplaySettingsLib.apply_all()
+	GraphicsSettingsLib.apply()
 	# The theme generator runs with `-s` before autoloads exist, so ui_tokens.gd
 	# (which references GameState) fails to compile there and its statics are
 	# unreachable. The generator paints nothing; skip the palette.

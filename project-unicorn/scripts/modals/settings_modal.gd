@@ -1,6 +1,6 @@
 extends Control
 
-# Ayarlar paneli — beş bölüm (GÖRÜNTÜ · SES · OYUN · ERİŞİLEBİLİRLİK · VERİ) kaydırılabilir bir
+# Ayarlar paneli — altı bölüm (GÖRÜNTÜ · GRAFİK · SES · OYUN · ERİŞİLEBİLİRLİK · VERİ) kaydırılabilir bir
 # gövdede. Dil satırı Oyun'dadır; her dil kendi adıyla okunur.
 #
 # main.gd GameShell/ModalLayer'a mount eder, panel kendini `dismissed` ile serbest
@@ -16,6 +16,7 @@ extends Control
 signal dismissed
 
 const DisplaySettingsLib := preload("res://scripts/systems/display_settings.gd")
+const GraphicsSettingsLib := preload("res://scripts/systems/graphics_settings.gd")
 
 const AUTOSAVE_KEYS: Array[String] = [   # SaveManager.AUTOSAVE_FREQUENCIES sırasıyla
 	"SET_AUTOSAVE_OFF", "SET_AUTOSAVE_WEEKLY", "SET_AUTOSAVE_MONTHLY"]
@@ -23,6 +24,27 @@ const SUMMARY_FREQ_KEYS: Array[String] = [   # SummarySystem.FREQUENCIES sıras�
 	"SET_SUMMARY_FREQ_WEEKLY", "SET_SUMMARY_FREQ_MONTHLY", "SET_SUMMARY_FREQ_QUARTERLY",
 	"SET_SUMMARY_FREQ_YEARLY"]
 const LANG_KEYS: Array[String] = ["LANG_TR", "LANG_EN"]   # Localization.SUPPORTED sırasıyla
+# GraphicsSettings.ORDER sırasıyla, sonda Özel: seçilemez, yalnız seçenekler hiçbir ön ayara uymadığını söyler.
+const GFX_PRESET_KEYS: Array[String] = ["SET_GFX_PRESET_LOW", "SET_GFX_PRESET_MEDIUM", "SET_GFX_PRESET_HIGH",
+	"SET_GFX_PRESET_ULTRA", "SET_GFX_PRESET_CUSTOM"]
+# Ön ayarın altındaki satırlar sırasıyla: seçenek → [etiket, değerler, öğe metinleri]. Yalnız etiketi olan satır
+# aç/kapadır.
+const GFX_ROWS := {
+	"resolution": ["SET_GFX_RESOLUTION", ["fsr", "logical", "native", "super"],
+		["SET_GFX_RES_FSR", "SET_GFX_RES_LOGICAL", "SET_GFX_RES_NATIVE", "SET_GFX_RES_SUPER"]],
+	"aa": ["SET_GFX_AA", [0, 1, 2], ["SET_GFX_OFF", "SET_GFX_AA_FXAA", "SET_GFX_AA_SMAA"]],
+	"msaa": ["SET_GFX_MSAA", [0, 1, 2, 3], ["SET_GFX_OFF", "SET_GFX_MSAA_2X", "SET_GFX_MSAA_4X", "SET_GFX_MSAA_8X"]],
+	"shadow_size": ["SET_GFX_SHADOW_SIZE", [4096, 8192], ["SET_GFX_SHADOW_STANDARD", "SET_GFX_SHADOW_HIGH"]],
+	"soft_shadows": ["SET_GFX_SOFT_SHADOWS"],
+	"lamp_shadows": ["SET_GFX_LAMP_SHADOWS"],
+	"small_shadows": ["SET_GFX_SMALL_SHADOWS"],
+	"ssao": ["SET_GFX_SSAO"],
+	"glow": ["SET_GFX_GLOW"],
+	"tilt_shift": ["SET_GFX_TILT_SHIFT"],
+	"vignette": ["SET_GFX_VIGNETTE"],
+	"deband": ["SET_GFX_DEBAND"],
+	"fps_cap": ["SET_GFX_FPS_CAP", [0, 30, 60, 120, 144], ["SET_GFX_FPS_UNLIMITED", "30", "60", "120", "144"]],
+}
 
 const KEY_COLORBLIND := "colorblind_palette"
 const KEY_TICKER := "ticker_open"
@@ -30,6 +52,7 @@ const KEY_TICKER := "ticker_open"
 # Bölüm başlıkları CSV'de doğal yazımda durur ve _retranslate'te büyütülür.
 const HEADER_KEYS := {
 	"%DisplayHeader": "SET_SEC_DISPLAY",
+	"%GraphicsHeader": "SET_SEC_GRAPHICS",
 	"%AudioHeader": "SET_SEC_AUDIO",
 	"%GameHeader": "SET_SEC_GAME",
 	"%AccessibilityHeader": "SET_SEC_ACCESSIBILITY",
@@ -45,6 +68,7 @@ const PCT_W := 48
 @onready var _title: Label = %TitleLabel
 @onready var _close_btn: Button = %CloseBtn
 @onready var _display_body: VBoxContainer = %DisplayBody
+@onready var _graphics_body: VBoxContainer = %GraphicsBody
 @onready var _audio_body: VBoxContainer = %AudioBody
 @onready var _game_body: VBoxContainer = %GameBody
 @onready var _a11y_body: VBoxContainer = %AccessibilityBody
@@ -58,6 +82,8 @@ var _fullscreen_note: Control
 var _scale_option: OptionButton
 var _vsync_toggle: CheckButton
 var _ticker_toggle: CheckButton
+var _gfx_preset: OptionButton
+var _gfx_controls: Dictionary = {}   # GFX_ROWS seçeneği → OptionButton ya da CheckButton
 var _master_slider: HSlider
 var _music_toggle: CheckButton
 var _music_slider: HSlider
@@ -76,6 +102,7 @@ var _label_keys: Dictionary = {}
 func _ready() -> void:
 	($Dimmer as ColorRect).color = UiTokens.D_SCRIM
 	_build_display_section()
+	_build_graphics_section()
 	_build_audio_section()
 	_build_game_section()
 	_build_accessibility_section()
@@ -117,6 +144,26 @@ func _build_display_section() -> void:
 	_ticker_toggle = CheckButton.new()
 	_ticker_toggle.toggled.connect(func(on: bool) -> void: get_tree().call_group(&"news_ticker", &"set_open", on))
 	_add_row(_display_body, "SET_TICKER", _ticker_toggle)
+
+
+func _build_graphics_section() -> void:
+	_gfx_preset = _dropdown(GFX_PRESET_KEYS.size())
+	_gfx_preset.set_item_disabled(GFX_PRESET_KEYS.size() - 1, true)
+	_gfx_preset.item_selected.connect(func(idx: int) -> void:
+		GraphicsSettingsLib.set_preset(GraphicsSettingsLib.ORDER[idx])
+		_sync_graphics())
+	_add_row(_graphics_body, "SET_GFX_PRESET", _gfx_preset)
+	for key: String in GFX_ROWS:
+		var row: Array = GFX_ROWS[key]
+		if row.size() == 1:
+			var toggle := CheckButton.new()
+			toggle.toggled.connect(func(on: bool) -> void: _set_graphics(key, on))
+			_gfx_controls[key] = toggle
+		else:
+			var option := _dropdown(row[1].size())
+			option.item_selected.connect(func(idx: int) -> void: _set_graphics(key, row[1][idx]))
+			_gfx_controls[key] = option
+		_add_row(_graphics_body, row[0], _gfx_controls[key])
 
 
 func _build_audio_section() -> void:
@@ -180,6 +227,12 @@ func _on_window_mode_selected(idx: int) -> void:
 	_refresh_scale_options()
 
 
+## Bir seçenek değişince ön ayar satırı ona uyan ön ayara ya da Özel'e döner.
+func _set_graphics(key: String, value: Variant) -> void:
+	GraphicsSettingsLib.set_option(key, value)
+	_sync_graphics()
+
+
 func _on_colorblind_toggled(on: bool) -> void:
 	# Semantik renk temaya pişmediği için bu saf bir çalışma zamanı
 	# takasıdır: token'ı çevir, canlı yüzeylere haber ver.
@@ -224,6 +277,7 @@ func _sync_from_state() -> void:
 	_refresh_scale_options()
 	_vsync_toggle.set_pressed_no_signal(DisplaySettingsLib.get_vsync())
 	_ticker_toggle.set_pressed_no_signal(bool(Settings.get_value(KEY_TICKER)))
+	_sync_graphics()
 	_master_slider.set_value_no_signal(AudioManager.get_master_volume() * 100.0)
 	_music_slider.set_value_no_signal(AudioManager.get_music_volume() * 100.0)
 	_sfx_slider.set_value_no_signal(AudioManager.get_sfx_volume() * 100.0)
@@ -282,6 +336,17 @@ func _refresh_scale_options() -> void:
 	_scale_option.select(maxi(0, matched))
 
 
+func _sync_graphics() -> void:
+	var shown: String = GraphicsSettingsLib.shown_preset()
+	_gfx_preset.select(GFX_PRESET_KEYS.size() - 1 if shown == GraphicsSettingsLib.CUSTOM else GraphicsSettingsLib.ORDER.find(shown))
+	var now: Dictionary = GraphicsSettingsLib.options()
+	for key: String in _gfx_controls:
+		if _gfx_controls[key] is CheckButton:
+			_gfx_controls[key].set_pressed_no_signal(now[key])
+		else:
+			_gfx_controls[key].select((GFX_ROWS[key][1] as Array).find(now[key]))
+
+
 func _update_pct_labels() -> void:
 	for slider: HSlider in _pct_labels:
 		(_pct_labels[slider] as Label).text = Fmt.percent(int(round(slider.value)), 0)
@@ -300,6 +365,13 @@ func _retranslate() -> void:
 		_autosave_option.set_item_text(i, tr(AUTOSAVE_KEYS[i]))
 	for i in SUMMARY_FREQ_KEYS.size():
 		_summary_option.set_item_text(i, tr(SUMMARY_FREQ_KEYS[i]))
+	for i in GFX_PRESET_KEYS.size():
+		_gfx_preset.set_item_text(i, tr(GFX_PRESET_KEYS[i]))
+	for key: String in _gfx_controls:
+		if _gfx_controls[key] is OptionButton:
+			var items: Array = GFX_ROWS[key][2]
+			for i in items.size():
+				_gfx_controls[key].set_item_text(i, tr(items[i]))
 	for i in DisplaySettingsLib.UI_SCALE_STEPS.size():   # yüzde kalıbı dile göre değişir
 		_scale_option.set_item_text(i, Fmt.percent(int(round(DisplaySettingsLib.UI_SCALE_STEPS[i] * 100.0)), 0))
 	for node in _label_keys:

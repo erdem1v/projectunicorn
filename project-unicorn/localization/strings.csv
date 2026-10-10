@@ -195,6 +195,39 @@ SET_UI_SCALE,Arayüz ölçeği,Interface scale
 SET_UI_SCALE_TOO_SMALL,%{pct} bu pencere boyutunda okunmuyor; daha geniş bir ekran gerekiyor.,{pct}% is unreadable at this window size; it needs a wider display.
 SET_VSYNC,Dikey eşitleme,Vertical sync
 SET_TICKER,Haber şeridi,News ticker
+SET_SEC_GRAPHICS,Grafik,Graphics
+SET_GFX_PRESET,Kalite ön ayarı,Quality preset
+SET_GFX_PRESET_LOW,Düşük,Low
+SET_GFX_PRESET_MEDIUM,Orta,Medium
+SET_GFX_PRESET_HIGH,Yüksek,High
+SET_GFX_PRESET_ULTRA,Ultra,Ultra
+SET_GFX_PRESET_CUSTOM,Özel,Custom
+SET_GFX_RESOLUTION,3B çözünürlük,3D resolution
+SET_GFX_RES_FSR,Büyütülmüş (FSR),Upscaled (FSR)
+SET_GFX_RES_LOGICAL,Standart,Standard
+SET_GFX_RES_NATIVE,Ekran çözünürlüğü,Native
+SET_GFX_RES_SUPER,Süper örnekleme (2×),Supersampled (2×)
+SET_GFX_OFF,Kapalı,Off
+SET_GFX_AA,Kenar yumuşatma,Edge smoothing
+SET_GFX_AA_FXAA,FXAA,FXAA
+SET_GFX_AA_SMAA,SMAA,SMAA
+SET_GFX_MSAA,Çoklu örnekleme (MSAA),Multisampling (MSAA)
+SET_GFX_MSAA_2X,2×,2×
+SET_GFX_MSAA_4X,4×,4×
+SET_GFX_MSAA_8X,8×,8×
+SET_GFX_SHADOW_SIZE,Gölge ayrıntısı,Shadow detail
+SET_GFX_SHADOW_STANDARD,Standart,Standard
+SET_GFX_SHADOW_HIGH,Yüksek,High
+SET_GFX_SOFT_SHADOWS,Yumuşak gölgeler,Soft shadows
+SET_GFX_LAMP_SHADOWS,Lamba gölgeleri,Lamp shadows
+SET_GFX_SMALL_SHADOWS,Küçük eşya gölgeleri,Small object shadows
+SET_GFX_SSAO,Ortam gölgelemesi,Ambient occlusion
+SET_GFX_GLOW,Işık parlaması,Light glow
+SET_GFX_TILT_SHIFT,Minyatür odak,Miniature focus
+SET_GFX_VIGNETTE,Köşe karartma,Vignette
+SET_GFX_DEBAND,Renk bandı giderme,Debanding
+SET_GFX_FPS_CAP,Kare hızı sınırı,Frame rate limit
+SET_GFX_FPS_UNLIMITED,Sınırsız,Unlimited
 SET_VOL_MASTER,Ana ses,Master volume
 SET_VOL_MUSIC,Müzik,Music
 SET_VOL_SFX,Efektler,Effects

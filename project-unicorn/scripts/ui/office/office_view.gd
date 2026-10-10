@@ -10,6 +10,7 @@ extends Control
 # office (the office_overlays group) step aside for the map and for the founder's trip.
 
 const TRAVEL := preload("res://scripts/ui/office/office_travel.gd")
+const GraphicsSettingsLib := preload("res://scripts/systems/graphics_settings.gd")
 ## The blink's dark end: the 3D view's own fade, scene data like the office's other colours.
 const FADE_DARK := Color.BLACK
 const NIGHT_FADE_S := 0.6     # [WORKING]
@@ -18,6 +19,8 @@ const DIM := 0.84             # [WORKING]
 const DIM_S := 0.12
 
 @onready var _container: SubViewportContainer = $Viewport3D
+@onready var _sub: SubViewport = $Viewport3D/SubViewport
+@onready var _world: Node3D = $Viewport3D/SubViewport/World
 @onready var camera: OfficeCamera = $Viewport3D/SubViewport/World/Camera3D
 @onready var _scene_root: Node3D = $Viewport3D/SubViewport/World/SceneRoot
 @onready var _people: OfficePeople = $Viewport3D/SubViewport/World/People
@@ -44,13 +47,17 @@ var _dim: Tween
 
 
 func _ready() -> void:
-	lighting = OfficeLighting.new($Viewport3D/SubViewport/World)
+	lighting = OfficeLighting.new(_world)
 	cast = MeetingCast.new()
-	$Viewport3D/SubViewport/World.add_child(cast)
-	_container.gui_input.connect(camera.handle_input)
+	_world.add_child(cast)
+	# The container is drawn scaled down from physical pixels: its events come in physical pixels.
+	_container.gui_input.connect(func(event: InputEvent) -> void:
+		camera.handle_input(event.xformed_by(_container.get_transform())))
+	resized.connect(apply_graphics)
+	get_window().size_changed.connect(apply_graphics)
 	_container.mouse_entered.connect(func() -> void: _pointer_inside = true)
 	_container.mouse_exited.connect(_on_pointer_left)
-	# Deferred: the container says it resized before it resizes the SubViewport the camera fits to.
+	# Deferred: the container resizes before apply_graphics sets the logical size the camera fits to.
 	_container.resized.connect(_fit, CONNECT_DEFERRED)
 	camera.clicked.connect(_on_clicked)
 	EventBus.office_changed.connect(load_layout)
@@ -81,6 +88,7 @@ func load_layout(office_id: String, road := false) -> void:
 		_lowest = minf(_lowest, (mi.global_transform * mi.get_aabb()).position.y)
 	var materials := OfficeMaterials.convert_scene(scene, layout)
 	lighting.set_layout(layout, scene, materials, OfficeMaterials.stations(scene))
+	apply_graphics()
 	_fitted = false
 	_fit()
 	nav_region = null
@@ -167,7 +175,7 @@ func _process(_delta: float) -> void:
 	lighting.apply(TimeManager.day_minute())
 	if not _pointer_inside or camera.is_dragging():
 		return
-	var at := _container.get_local_mouse_position()
+	var at := get_local_mouse_position()
 	var label := _city.hover(at) if layout.id == "city" else _people.hover(at)
 	# The map draws its own hover card and gives no text, so it answers for the cursor itself.
 	var over := _city.is_hovering() or not label.is_empty()
@@ -176,6 +184,22 @@ func _process(_delta: float) -> void:
 		hide_tooltip()
 	else:
 		show_tooltip(label, at)
+
+
+## Settings → Graphics, a new layout and every resize: the image's pixel density, then the view's nodes.
+func apply_graphics() -> void:
+	var o := GraphicsSettingsLib.options()
+	var density := GraphicsSettingsLib.density(get_window(), o)
+	var phys := (size * density).floor()
+	if phys.x < 1.0 or phys.y < 1.0:
+		return
+	# The container holds the image at its physical size and is scaled back down; the 3D camera keeps
+	# answering in logical pixels through the override.
+	_container.size = phys
+	_container.scale = size / phys
+	_container.texture_filter = CanvasItem.TEXTURE_FILTER_PARENT_NODE if density == 1.0 else CanvasItem.TEXTURE_FILTER_NEAREST
+	_sub.size_2d_override = Vector2i(size)
+	GraphicsSettingsLib.apply_view(_sub, _world, _scene_root, o, density)
 
 
 ## The first time the view has a size, frame the office; a later resize (the rail's mode, the UI

@@ -1536,7 +1536,8 @@ func _seed_rnd(week: int, note := true) -> void:
 # (EventBus signal → handler here, a button's own press), so fixture and live behaviour cannot drift.
 #   settings · settings_end (scrolled to its end) · settings_<mode|res|scale|autosave|summary|lang> (that list open,
 #   the pointer on an item; res on a windowed 1600×900 setting, scale on a 1280×720 window, which closes the
-#   unreadable steps) · settings_reset (the reset asked over it) · system · system_gate (a decision waiting) ·
+#   unreadable steps) · settings_graphics (scrolled to Grafik) · settings_gfx (its preset list open) ·
+#   settings_reset (the reset asked over it) · system · system_gate (a decision waiting) ·
 #   save_empty · save · save_overwrite (overwriting the quicksave asked) · load_empty · load · load_gate (a decision
 #   waiting) · load_delete (deleting Kayıt 1 asked) · confirm (the seed pitch) · confirm3 (quitting over the menu
 #   with weeks unsaved) · confirm3_gate (the same, a decision waiting) · f5_gate (F5 refused while a decision waits).
@@ -1564,7 +1565,7 @@ func _run_modal_shot(kind: String) -> void:
 		EventBus.tab_changed.emit("")
 	match kind:
 		"settings", "settings_end", "settings_mode", "settings_res", "settings_scale", "settings_autosave", \
-				"settings_summary", "settings_lang", "settings_reset":
+				"settings_summary", "settings_lang", "settings_reset", "settings_graphics", "settings_gfx":
 			EventBus.settings_requested.emit()
 			await _shot_settings(kind.trim_prefix("settings").trim_prefix("_"))
 		"system", "system_gate":
@@ -1600,30 +1601,33 @@ func _run_modal_shot(kind: String) -> void:
 	await _finish_shot("modal_shot_%s" % kind, 0.6)
 
 
-## Ayarlar in the mockups' states: `state` "" as it opens, "end" scrolled to its end, "reset" its reset asked,
-## else that row's list open with the pointer on the item the mockup frames.
+## Ayarlar in the mockups' states: `state` "" as it opens, "end" scrolled to its end, "graphics" to its Grafik section,
+## "reset" its reset asked, else that row's list open with the pointer on the item the mockup frames.
 func _shot_settings(state: String) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if state in ["", "mode", "res", "scale"]:
 		if state != "":
-			_shot_open_list(["mode", "res", "scale"].find(state), {"mode": 2, "res": 4, "scale": 1}[state])
+			_shot_open_list("%DisplayBody", ["mode", "res", "scale"].find(state), {"mode": 2, "res": 4, "scale": 1}[state])
 		return
 	var scroll: ScrollContainer = _settings_modal.find_child("Scroll", true, false)
-	scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+	var section := _settings_modal.get_node("%GraphicsSection") as Control
+	scroll.scroll_vertical = int(section.position.y if state in ["graphics", "gfx"] else scroll.get_v_scroll_bar().max_value)
 	await get_tree().process_frame
 	match state:
+		"gfx":
+			_shot_open_list("%GraphicsBody", 0, 3)
 		"reset":
 			_press_button_labelled(_settings_modal, tr("SET_RESET_DEFAULTS"))
 		"autosave", "summary", "lang":
 			var hover: int = {"autosave": 2, "summary": 1, "lang": 0 if Fmt.is_english() else 1}[state]
-			_shot_open_list(3 + ["autosave", "summary", "lang"].find(state), hover)
+			_shot_open_list("%GameBody", ["autosave", "summary", "lang"].find(state), hover)
 
 
-## Ayarlar's `index`th dropdown open as a click opens it (the field pressed) with the pointer on its `hover` item;
-## the open list holds the focus.
-func _shot_open_list(index: int, hover: int) -> void:
-	var option: OptionButton = _settings_modal.find_children("*", "OptionButton", true, false)[index]
+## The `index`th dropdown of an Ayarlar section's `body` open as a click opens it (the field pressed) with the pointer
+## on its `hover` item; the open list holds the focus.
+func _shot_open_list(body: String, index: int, hover: int) -> void:
+	var option: OptionButton = _settings_modal.get_node(body).find_children("*", "OptionButton", true, false)[index]
 	get_viewport().gui_release_focus()
 	option.set_pressed_no_signal(true)
 	option.show_popup()

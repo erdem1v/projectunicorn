@@ -1,0 +1,14 @@
+{
+	"_": "Grafik ön ayarları (GraphicsSettings). resolution: fsr (FSR 1.0, mantıksal boyutun %67'si ekran pikseline büyütülür), logical (mantıksal boyut, ekrana gerilir), native (ekran pikseli), super (ekran pikselinin 2 katı çizilip küçültülür). msaa: Viewport.MSAA (0 kapalı, 1 2x, 2 4x, 3 8x); aa: Viewport.ScreenSpaceAA (0 kapalı, 1 FXAA, 2 SMAA); shadow_size: güneş gölgesi atlası; fps_cap 0 sınırsız. medium sahne dosyasının kendisidir. large_screen satırı 2160 piksel ve üstü ekranda ön ayarın üstüne yazılır. detect ilk açılışın kuralları [WORKING]: ekran kartının adı low ya da medium listesine uyarsa o ön ayar; uymazsa tümleşik kart low, harici kart high, bilinmeyen medium. Kendiliğinden ultra seçilmez.",
+	"presets": {
+		"low": {"resolution": "fsr", "msaa": 0, "aa": 1, "shadow_size": 4096, "soft_shadows": false, "lamp_shadows": false, "small_shadows": false, "ssao": false, "glow": false, "tilt_shift": false, "vignette": true, "deband": false, "fps_cap": 60},
+		"medium": {"resolution": "logical", "msaa": 2, "aa": 1, "shadow_size": 4096, "soft_shadows": false, "lamp_shadows": false, "small_shadows": false, "ssao": false, "glow": true, "tilt_shift": false, "vignette": true, "deband": false, "fps_cap": 0},
+		"high": {"resolution": "native", "msaa": 2, "aa": 2, "shadow_size": 4096, "soft_shadows": false, "lamp_shadows": true, "small_shadows": false, "ssao": false, "glow": true, "tilt_shift": false, "vignette": true, "deband": true, "fps_cap": 0},
+		"ultra": {"resolution": "super", "msaa": 0, "aa": 0, "shadow_size": 8192, "soft_shadows": false, "lamp_shadows": true, "small_shadows": false, "ssao": true, "glow": true, "tilt_shift": false, "vignette": true, "deband": true, "fps_cap": 0,
+			"large_screen": {"resolution": "native", "msaa": 2, "aa": 2}}
+	},
+	"detect": {
+		"low": "GTX ?(9\\d\\d|10[56]0)|GT \\d|RX ?[45]\\d\\d\\b|Vega \\d|Iris|UHD|HD Graphics|Radeon\\(TM\\) Graphics|Radeon Graphics|Custom GPU",
+		"medium": "GTX ?(10[78]0|16\\d\\d)|RTX ?20\\d\\d|RTX ?30[56]0\\b|RTX ?40[56]0\\b|RX ?5\\d\\d\\d|RX ?6[56]\\d\\d|Arc"
+	}
+}

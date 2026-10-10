@@ -21,6 +21,8 @@ sky = SubResource("Sky_office")
 ambient_light_source = 3
 reflected_light_source = 1
 tonemap_mode = 3
+ssao_light_affect = 0.4
+ssao_ao_channel_affect = 1.0
 glow_enabled = true
 glow_blend_mode = 0
 fog_mode = 1
@@ -48,17 +50,13 @@ script = ExtResource("1_view")
 
 [node name="Viewport3D" type="SubViewportContainer" parent="."]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="Viewport3D"]
 own_world_3d = true
 handle_input_locally = false
 gui_disable_input = true
+size_2d_override_stretch = true
 msaa_3d = 2
 screen_space_aa = 1
 

@@ -16,6 +16,9 @@ uniform float texel = 1.15;
 uniform float vignette = 0.22;
 // A bust (person_bust) is drawn on a clear background: only the figure and its lines stay opaque.
 uniform bool cutout = false;
+// How much of the lighter line on dark surfaces shows (OfficeLighting fades it out at night): by night
+// every surface is dark, and the lighter line would outline the whole room.
+uniform float light_line = 1.0;
 
 // The design's lighter line on dark surfaces, a linear colour as it writes it.
 const vec3 DARK_LINE = vec3(0.55, 0.62, 0.95);
@@ -89,7 +92,10 @@ void fragment() {
 	float ne = smoothstep(normal_threshold, normal_threshold * 2.0, nd) * fg * crease;
 	vec3 col = texture(screen_texture, SCREEN_UV).rgb;
 	float lum = dot(col, vec3(0.299, 0.587, 0.114));
-	vec3 line = (lum < 0.18 && ne > de) ? mix(col, DARK_LINE, 0.3) : mix(col * 0.3, ink, 0.55);
+	vec3 line = mix(col * 0.3, ink, 0.55);
+	if (lum < 0.18 && ne > de) {
+		line = mix(line, mix(col, DARK_LINE, 0.3), light_line);
+	}
 	col = mix(col, line, max(de, ne) * 0.92);
 	// The design darkens the tonemapped frame; the ACES round trip does it before Godot tonemaps.
 	vec2 q = SCREEN_UV - 0.5;

@@ -92,6 +92,30 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 0
 
+[node name="GraphicsSection" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="GraphicsHead" type="HBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/GraphicsSection"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="GraphicsHeader" type="Label" parent="CenterPanel/Col/Scroll/Pad/Sections/GraphicsSection/GraphicsHead"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"KeyLabel"
+
+[node name="Rule" type="HSeparator" parent="CenterPanel/Col/Scroll/Pad/Sections/GraphicsSection/GraphicsHead"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GraphicsBody" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections/GraphicsSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0
+
 [node name="AudioSection" type="VBoxContainer" parent="CenterPanel/Col/Scroll/Pad/Sections"]
 layout_mode = 2
 theme_override_constants/separation = 0

@@ -60,6 +60,7 @@ var _lamps: Array[SpotLight3D] = []
 var _screens: Array[OmniLight3D] = []
 var _env: Environment
 var _sky: ShaderMaterial
+var _ink: ShaderMaterial
 var _glow_root: Node3D
 var _keys: Array[Dictionary] = []
 
@@ -89,6 +90,7 @@ func _init(world: Node3D) -> void:
 	_screens.assign([world.get_node("Screen0"), world.get_node("Screen1")])
 	_env = (world.get_node("WorldEnvironment") as WorldEnvironment).environment
 	_sky = _env.sky.sky_material
+	_ink = (world.get_node("InkPass") as MeshInstance3D).material_override
 	_glow_root = world.get_node("Glows")
 	_env.tonemap_exposure = ACES_EXPOSURE
 	_env.tonemap_white = ACES_WHITE
@@ -184,6 +186,7 @@ func apply(t: float) -> void:
 	_sky.set_shader_parameter("hemi_ground", rgb((v.hg * v.hi + ambient) * LIGHT_SCALE))
 	_env.fog_light_color = v.bot.linear_to_srgb()
 	_env.glow_intensity = 0.2 + 0.3 * (1.0 - sqrt(f))
+	_ink.set_shader_parameter("light_line", day_k)
 
 	_sun.light_color = v.sun.linear_to_srgb()
 	_sun.light_energy = v.si * LIGHT_SCALE
