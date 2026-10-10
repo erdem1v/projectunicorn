@@ -135,6 +135,9 @@ const TENURE_SEAMS := {"employee": "hr.tenure_weeks", "customer": "musteri.tenur
 ## writes no leaf at all.
 const PRODUCT_LIVE := {"pre_launch": false, "live": true}
 
+## §3.1's phase bands; `band_leaves` spells what each one stands for.
+const PHASE_BANDS := ["bootstrap_solo", "bootstrap_team", "traction", "series_a"]
+
 
 static func _compile_plausibility(card: Dictionary) -> void:
 	var p: Dictionary = card.get("plausibility", {})
@@ -192,8 +195,8 @@ static func _compile_plausibility(card: Dictionary) -> void:
 		spec["where"] = {"all": ([where] if not where.is_empty() else []) + [leaf]}
 
 
-## The leaves a phase band stands for, empty for a band §3.1 does not name. The four names live
-## here alone, so the linter reads an unknown band off an empty answer.
+## The leaves a phase band stands for, empty for a band §3.1 does not name, so the linter reads
+## an unknown band off an empty answer.
 static func band_leaves(band: String) -> Array:
 	match band:
 		"bootstrap_solo":

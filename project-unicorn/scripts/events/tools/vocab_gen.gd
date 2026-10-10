@@ -10,6 +10,8 @@ extends RefCounted
 # WHAT IT DOES NOT TOUCH: the hand-written block between the KEEP markers is preserved
 # verbatim. Nobody would reconstruct it from source.
 
+const ModuleLocks := preload("res://scripts/systems/module_locks.gd")
+
 const OUT_PATH := "res://docs/content/events_draft/_vocabulary.md"
 const KEEP_BEGIN := "<!-- HAND-WRITTEN — REGENERATION SKIPS THIS BLOCK -->"
 const KEEP_END := "<!-- END HAND-WRITTEN -->"
@@ -151,6 +153,135 @@ static func run() -> bool:
 			(arc.get("steps", []) as Array).size()])
 	L.append("")
 
+	# --- schema v3 ----------------------------------------------------------
+	L.append("## e · Schema v3 — the plausibility block")
+	L.append("")
+	L.append("Every card carries one and the engine compiles it into ordinary condition leaves")
+	L.append("(GDD §3.1, §27.20). The block's SHAPE is §3.1's table; what follows is the value each")
+	L.append("field accepts, read off the engine.")
+	L.append("")
+	L.append("### `phase_band` — where in the run the card lives")
+	L.append("")
+	L.append("| band | compiles to |")
+	L.append("|---|---|")
+	for band in EvCatalog.PHASE_BANDS:
+		L.append("| `%s` | %s |" % [band, _leaves(EvCatalog.band_leaves(band))])
+	L.append("")
+	L.append("### `product` — which side of the launch")
+	L.append("")
+	L.append("| value | compiles to |")
+	L.append("|---|---|")
+	for state in EvCatalog.PRODUCT_LIVE:
+		L.append("| `%s` | `urun.is_live == %s` |"      # LOC-DATA seam name
+			% [state, EvCatalog.PRODUCT_LIVE[state]])
+	L.append("| `any` | nothing; the card lives on both sides |")
+	L.append("")
+	L.append("### `modules` — the module pages a card may require")
+	L.append("")
+	L.append("Each name becomes a `build.module_unlocked.<id>` leaf (§27.22).")
+	L.append("")
+	for id in ModuleLocks.ids():
+		L.append("- `%s`" % id)
+	L.append("")
+	L.append("### `subject_tenure_weeks` — where seniority is readable")
+	L.append("")
+	L.append("The floor filters the slot's SELECTOR, so the card binds someone who has been here")
+	L.append("that long rather than binding anyone and refusing at the gate. A slot of any other")
+	L.append("type has no seniority, and a `system` card is given its subject, so it gets no filter.")
+	L.append("")
+	L.append("| slot type | seam the floor reads |")
+	L.append("|---|---|")
+	for slot_type in EvCatalog.TENURE_SEAMS:
+		L.append("| `%s` | `%s` |" % [slot_type, EvCatalog.TENURE_SEAMS[slot_type]])
+	L.append("")
+	L.append("A family may impose a floor of its own, and the higher of the two is compiled:")
+	L.append("")
+	for family in EvTuning.FAMILY_SUBJECT_TENURE:
+		L.append("- `%s` — %d weeks" % [family, EvTuning.FAMILY_SUBJECT_TENURE[family]])
+	L.append("")
+	L.append("### `family` — the brake the card pays")
+	L.append("")
+	L.append("Another card from the same family waits out the gap (§13.3 layer 1b); with")
+	L.append("`family_subject` the family also waits per person or account (layer 2b). The families")
+	L.append("the catalogue already uses, and the gap each pays:")
+	L.append("")
+	L.append("| family | gap (weeks) | cards |")
+	L.append("|---|---|---|")
+	var families: Dictionary = {}
+	for id in EvCatalog.card_ids():
+		var card: Dictionary = EvCatalog.card(id)
+		# The same exemption the linter's §17.13 grants: a fixture is reachable only from a shot
+		# and a retired card from no week at all, so neither is a family an author may reach for.
+		if String(card.get("version_scope", "demo")) in ["fixture", "retired"]:
+			continue
+		var family: String = String(card.get("family", ""))
+		if family != "":
+			families[family] = int(families.get(family, 0)) + 1
+	var family_keys: Array = families.keys()
+	family_keys.sort()
+	for family: String in family_keys:
+		L.append("| `%s` | %d | %d |" % [family, EvTuning.family_gap(family), families[family]])
+	L.append("")
+	L.append("A family absent from `EvTuning.FAMILY_GAP_WEEKS` pays the default, %d weeks."
+		% EvTuning.FAMILY_GAP_WEEKS_DEFAULT)
+	L.append("")
+	L.append("### The window, the immunity and the demo's reach")
+	L.append("")
+	L.append("- `delay_weeks: [N, M]` — the week the condition first holds arms a window and the")
+	L.append("  card is a candidate `N..M` weeks later (§27.19). `[0, 0]` needs a `delay_reason`.")
+	L.append("- A condition un-held for more than %d weeks running throws its window away."
+		% EvTuning.DISARM_WEEKS)
+	L.append("- The pool is silent for the first %d weeks (§27.21); the quiet floor, requests,"
+		% EvTuning.START_IMMUNITY_WEEKS)
+	L.append("  arc steps, `system` cards and the `tutorial` / `terminal_warning` tags are exempt.")
+	L.append("- `min_week` past week %d is a warning: the demo never reaches it."
+		% EvLint.DEMO_WINDOW_WEEKS)
+	L.append("")
+
+	# --- who may write a verb -----------------------------------------------
+	L.append("## f · Who may write each verb")
+	L.append("")
+	L.append("Section a groups verbs by the ORIGIN that may run them. This groups them by")
+	L.append("AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a")
+	L.append("working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises")
+	L.append("is what the player is shown and what lands.")
+	L.append("")
+	L.append("### Writer verbs (%d) — any card, inside the two rules below"
+		% EvLint.WRITER_VERBS.size())
+	L.append("")
+	for verb in EvLint.WRITER_VERBS:
+		L.append("- `%s`" % verb)
+	L.append("")
+	L.append("Two rules narrow the list. A `sprint_card_*` verb belongs to a `tick: request` sprint")
+	L.append("decision and to no other card (§17.14, V3). A module verb spends a page the build may")
+	L.append("not have opened: never in a demo card, and past the demo only in an option whose")
+	L.append("`requires` names the module as open (§17.15, O5).")
+	L.append("")
+	for verb in EvLint.MODULE_VERBS:
+		L.append("- `%s` — needs `build.module_unlocked.%s`"
+			% [verb, EvLint.MODULE_VERBS[verb]])
+	L.append("")
+	L.append("### Reserved (%d) — a `system` card only" % EvLint.SYSTEM_VERBS.size())
+	L.append("")
+	L.append("Each moves the run itself — a phase, a table, an arc, an ending — so a story card")
+	L.append("reaching for one would be deciding the run instead of colouring it.")
+	L.append("")
+	for verb in EvLint.SYSTEM_VERBS:
+		L.append("- `%s`" % verb)
+	L.append("")
+	var unwritable: Array = []
+	for verb in EvEffects.NEUTRAL_VERBS + EvEffects.ECONOMIC_VERBS + EvEffects.TERMINAL_VERBS:
+		if not EvLint.WRITER_VERBS.has(verb) and not EvLint.SYSTEM_VERBS.has(verb):
+			unwritable.append(verb)
+	L.append("### Not writable (%d) — no working arm or no chip" % unwritable.size())
+	L.append("")
+	L.append("The executor dispatches these, so they are not unknown names; they are names a card")
+	L.append("may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.")
+	L.append("")
+	for verb in unwritable:
+		L.append("- `%s`" % verb)
+	L.append("")
+
 	L.append(KEEP_BEGIN)
 	L.append(kept if kept != "" else _kept_placeholder())
 	L.append(KEEP_END)
@@ -179,8 +310,16 @@ static func _extract_kept() -> String:
 	return text.substr(a + KEEP_BEGIN.length(), b - a - KEEP_BEGIN.length()).strip_edges()
 
 
+## A compiled leaf list, as the condition an author would have written by hand.
+static func _leaves(leaves: Array) -> String:
+	var parts: PackedStringArray = []
+	for leaf: Dictionary in leaves:
+		parts.append("`%s %s %s`" % [leaf["seam"], leaf["op"], leaf["value"]])
+	return " ∧ ".join(parts)
+
+
 static func _kept_placeholder() -> String:
-	return ("\n## e · Hand-written notes\n\n"
+	return ("\n## g · Hand-written notes\n\n"
 		+ "This block survives regeneration: editorial notes nobody would reconstruct from\n"
 		+ "source, such as the list of **known gaps** the engine has not closed.\n")
 

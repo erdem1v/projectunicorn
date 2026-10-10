@@ -419,8 +419,215 @@ so `flag_unset` would silently read true forever.
 | `arc_fixture_subject` | assignment | reassign | 1 |
 | `arc_fixture_thesis` | promise | close | 2 |
 
+## e · Schema v3 — the plausibility block
+
+Every card carries one and the engine compiles it into ordinary condition leaves
+(GDD §3.1, §27.20). The block's SHAPE is §3.1's table; what follows is the value each
+field accepts, read off the engine.
+
+### `phase_band` — where in the run the card lives
+
+| band | compiles to |
+|---|---|
+| `bootstrap_solo` | `phase.current == 1` ∧ `hr.headcount == 0` |
+| `bootstrap_team` | `phase.current == 1` ∧ `hr.headcount >= 1` |
+| `traction` | `phase.current == 2` |
+| `series_a` | `phase.current == 3` |
+
+### `product` — which side of the launch
+
+| value | compiles to |
+|---|---|
+| `pre_launch` | `urun.is_live == false` |
+| `live` | `urun.is_live == true` |
+| `any` | nothing; the card lives on both sides |
+
+### `modules` — the module pages a card may require
+
+Each name becomes a `build.module_unlocked.<id>` leaf (§27.22).
+
+- `product`
+- `sales`
+- `hr`
+- `finance`
+- `piyasa`
+- `personal`
+- `marketing`
+- `rnd`
+- `events`
+
+### `subject_tenure_weeks` — where seniority is readable
+
+The floor filters the slot's SELECTOR, so the card binds someone who has been here
+that long rather than binding anyone and refusing at the gate. A slot of any other
+type has no seniority, and a `system` card is given its subject, so it gets no filter.
+
+| slot type | seam the floor reads |
+|---|---|
+| `employee` | `hr.tenure_weeks` |
+| `customer` | `musteri.tenure_weeks` |
+
+A family may impose a floor of its own, and the higher of the two is compiled:
+
+- `employee_asks_money` — 26 weeks
+
+### `family` — the brake the card pays
+
+Another card from the same family waits out the gap (§13.3 layer 1b); with
+`family_subject` the family also waits per person or account (layer 2b). The families
+the catalogue already uses, and the gap each pays:
+
+| family | gap (weeks) | cards |
+|---|---|---|
+| `customer_escalation` | 6 | 1 |
+| `customer_feedback` | 6 | 1 |
+| `customer_growth` | 6 | 1 |
+| `customer_money_dispute` | 6 | 2 |
+| `customer_ownership` | 6 | 2 |
+| `customer_requests` | 6 | 3 |
+| `customer_risk` | 2 | 1 |
+| `customer_security` | 6 | 1 |
+| `employee_asks_money` | 12 | 2 |
+| `employee_mistake` | 6 | 1 |
+| `founder_money` | 6 | 2 |
+| `founder_network` | 4 | 2 |
+| `founder_setup` | 6 | 1 |
+| `founder_solitude` | 3 | 2 |
+| `frank_mentor` | 6 | 9 |
+| `funding_paperwork` | 6 | 3 |
+| `hr_departure` | 6 | 1 |
+| `investor_favor` | 6 | 2 |
+| `investor_pressure` | 6 | 1 |
+| `leak_story` | 6 | 2 |
+| `phase_gate` | 6 | 2 |
+| `product_floor` | 4 | 2 |
+| `product_ops` | 6 | 1 |
+| `product_progress` | 6 | 1 |
+| `product_quality` | 6 | 1 |
+| `product_security` | 6 | 1 |
+| `product_support` | 6 | 1 |
+| `rival_exit` | 6 | 1 |
+| `rival_funding` | 6 | 1 |
+| `rival_imitation` | 6 | 2 |
+| `rival_poaching` | 6 | 2 |
+| `run_end` | 6 | 5 |
+| `sales_negotiation` | 6 | 1 |
+| `seed_round` | 6 | 4 |
+| `series_a_table` | 6 | 3 |
+| `sprint_capacity` | 6 | 3 |
+| `sprint_rewrite` | 6 | 4 |
+| `sprint_scope_creep` | 6 | 2 |
+| `team_overload` | 6 | 1 |
+| `team_ritual` | 6 | 1 |
+| `team_security` | 6 | 1 |
+| `world_offer_b2b` | 8 | 2 |
+| `world_offer_b2c` | 8 | 3 |
+
+A family absent from `EvTuning.FAMILY_GAP_WEEKS` pays the default, 6 weeks.
+
+### The window, the immunity and the demo's reach
+
+- `delay_weeks: [N, M]` — the week the condition first holds arms a window and the
+  card is a candidate `N..M` weeks later (§27.19). `[0, 0]` needs a `delay_reason`.
+- A condition un-held for more than 4 weeks running throws its window away.
+- The pool is silent for the first 3 weeks (§27.21); the quiet floor, requests,
+  arc steps, `system` cards and the `tutorial` / `terminal_warning` tags are exempt.
+- `min_week` past week 130 is a warning: the demo never reaches it.
+
+## f · Who may write each verb
+
+Section a groups verbs by the ORIGIN that may run them. This groups them by
+AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
+working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
+is what the player is shown and what lands.
+
+### Writer verbs (30) — any card, inside the two rules below
+
+- `add_cash`
+- `add_brand`
+- `add_reputation`
+- `customer_mrr_delta`
+- `seats`
+- `churn_customer`
+- `audience_delta`
+- `add_prospect`
+- `employee_leaves`
+- `b2b_retain_discount`
+- `b2b_expand`
+- `change_morale`
+- `morale_all`
+- `satisfaction_delta`
+- `promise_create`
+- `sprint_hours`
+- `sprint_card_effort`
+- `sprint_card_progress`
+- `sprint_card_carry`
+- `fix_run_start`
+- `b2b_retain_delay`
+- `b2b_retain_ignore`
+- `b2b_expand_decline`
+- `set_flag`
+- `stamp_day`
+- `schedule_event`
+- `cancel_scheduled`
+- `productivity_mod`
+- `investor_strain`
+- `marketing_push`
+
+Two rules narrow the list. A `sprint_card_*` verb belongs to a `tick: request` sprint
+decision and to no other card (§17.14, V3). A module verb spends a page the build may
+not have opened: never in a demo card, and past the demo only in an option whose
+`requires` names the module as open (§17.15, O5).
+
+- `marketing_push` — needs `build.module_unlocked.marketing`
+
+### Reserved (18) — a `system` card only
+
+Each moves the run itself — a phase, a table, an arc, an ending — so a story card
+reaching for one would be deciding the run instead of colouring it.
+
+- `advance_phase`
+- `phase_gate_decline`
+- `angel_accept`
+- `open_term_table`
+- `open_seed_table`
+- `decline_offer`
+- `decline_buyout`
+- `trigger_ending`
+- `mentor_advisory`
+- `goto_tab`
+- `unlock_content`
+- `spend_budget`
+- `set_game_flag`
+- `start_arc`
+- `advance_arc`
+- `end_arc`
+- `abort_arc`
+- `set_arc_var`
+
+### Not writable (15) — no working arm or no chip
+
+The executor dispatches these, so they are not unknown names; they are names a card
+may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.
+
+- `clear_flag`
+- `set_timed_flag`
+- `assign_to`
+- `send_on_leave`
+- `start_training`
+- `damage_product`
+- `ticker_push`
+- `notify`
+- `open_negotiation`
+- `add_mrr`
+- `add_customer`
+- `convert_audience`
+- `open_paid_tier`
+- `change_salary`
+- `fire_employee`
+
 <!-- HAND-WRITTEN — REGENERATION SKIPS THIS BLOCK -->
-## e · Hand-written notes
+## g · Hand-written notes
 
 This block survives regeneration. The three sections worth keeping here are the ones
 the old file carried and nobody would reconstruct: the **trigger-hook map** (draft

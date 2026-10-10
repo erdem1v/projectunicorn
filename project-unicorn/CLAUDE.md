@@ -181,6 +181,12 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   → hedefli smoke (`smoke_run.sh <vaka>`, önekler HARITA'da); tam smoke (`--all`) yalnız push öncesi.
 - Motor: `--event-probe`, `--why-fire=<kart id>`, `--event-harness=random:seeds=N:weeks=M | guided[:seeds=N:weeks=M]`,
   `--event-vocab` (`_vocabulary.md`'yi üretir, KEEP bloğu kalır); `python tools/gen_signal_manifest.py`.
+- Makullük defteri: `--event-plausibility=<spec>` (kabuğun içinden) ya da
+  `-s res://scripts/events/tools/plausibility_main.gd -- --event-plausibility-probe=<spec>`; spec
+  `seeds=<N|A-B>:weeks=<N>:variant=<plain|early|both>:preset=<RunProbe preset>`. Ekrana gelen her kartı şema v3'ün
+  kurallarına (koruma, makullük, bilinen saçmalık, aile aralığı, `critical` kapsamı) sınar ve `PLAUS FIRE` / `PLAUS FAIL` /
+  `PLAUS RATE` / `PLAUS SUMMARY` basar; kapısı `bash tools/plausibility_run.sh` (40 koşu × 16 hafta + `PLAUS LONG` 4 × 60
+  hafta, koşu başına ayrı süreç ve kullanıcı dizini; `fails=0` ister).
 - Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te. Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir

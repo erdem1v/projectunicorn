@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-10.
+Last generated 2026-10-11.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
