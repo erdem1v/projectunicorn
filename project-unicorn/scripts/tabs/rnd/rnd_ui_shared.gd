@@ -243,14 +243,16 @@ static func spacer(width := 0) -> Control:
 	return s
 
 
-## The research's two links (pause, assign) as the float card draws them, off while a decision waits. The pause
-## link is not there while the research is frozen: freezing a frozen research is an empty click.
+## The research's two links as the float card draws them, off while a decision waits: pause and assign while it runs.
+## Freezing a frozen research is an empty click, so while it stands frozen the first link drops it.
 static func links(frozen: bool, off: bool, on_pause: Callable, on_assign: Callable) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	if not frozen:
+	if frozen:
+		row.add_child(_link(t("RND_ABANDON"), off, func() -> void: RnDSystem.abandon()))
+	else:
 		row.add_child(_link(t("RND_BAR_PAUSE"), off, on_pause))
-		row.add_child(UiFactory.make_label("·", &"CaptionFaint"))
+	row.add_child(UiFactory.make_label("·", &"CaptionFaint"))
 	row.add_child(_link(t("RND_ASSIGN_TITLE"), off, on_assign))
 	for part: Control in row.get_children():
 		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER

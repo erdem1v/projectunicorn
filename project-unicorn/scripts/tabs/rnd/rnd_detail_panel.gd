@@ -182,7 +182,7 @@ func _lines(state: String) -> Array:
 			out.append(SprintUiShared.label(", ".join(names), &"MetaMuted"))
 		RnDUiShared.TILE_FROZEN:
 			# §5.6.1 — duraklamanın SEBEBİ yazılır, çubukla aynı motor okumasından.
-			var why := _note(RnDUiShared.PAUSE, RnDUiShared.t(RnDSystem.freeze_note_key()), UiTokens.D_INK_2)
+			var why := _note(RnDUiShared.PAUSE, RnDSystem.freeze_note(), UiTokens.D_INK_2)
 			why.add_child(SprintUiShared.label("·", &"CaptionFaint"))
 			why.add_child(SprintUiShared.label(RnDUiShared.t("RND_FROZEN_KEEPS"), &"MetaMuted"))
 			out.append(why)
@@ -227,15 +227,18 @@ func _note(glyph: String, text: String, ink: Variant = null) -> HBoxContainer:
 # ---------------------------------------------------------------- eylemler
 
 ## The card's foot: Başlat for a research to start (it opens the assignment), with what holds it back beside it;
-## the research's own links while it runs or stands frozen. Off while a decision waits.
+## the research's own links while it runs or stands frozen, a frozen one's with what dropping it keeps. Off while a
+## decision waits.
 func _actions(state: String) -> Control:
 	var gated: bool = EventGate.active_id() != ""
 	var row := SprintUiShared.box(UiTokens.SPACE_L)
 	row.add_child(RnDUiShared.spacer())
 	match state:
 		RnDUiShared.TILE_RUNNING, RnDUiShared.TILE_FROZEN:
-			row.add_child(RnDUiShared.links(state == RnDUiShared.TILE_FROZEN, gated, func() -> void: RnDSystem.pause(),
-				_set_assign_open.bind(true)))
+			var frozen: bool = state == RnDUiShared.TILE_FROZEN
+			if frozen:
+				row.add_child(SprintUiShared.label(RnDUiShared.t("RND_ABANDON_NOTE"), &"NoteMuted"))
+			row.add_child(RnDUiShared.links(frozen, gated, func() -> void: RnDSystem.pause(), _set_assign_open.bind(true)))
 		RnDUiShared.TILE_AVAILABLE:
 			var refusal: String = _refusal()
 			if gated:

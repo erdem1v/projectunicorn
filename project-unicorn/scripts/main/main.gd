@@ -1598,9 +1598,10 @@ func _run_personal_shot(kind: String) -> void:
 ## --rnd-shot=<kind>: the Ar-Ge window and its research card on the mockups' timeline (_seed_rnd, week 14, 11:00).
 ##   tree · detail (AI Engine picked) · detail_cash (the same with less cash than its cost: the card's one danger) ·
 ##   assign (its assignment open, Elif ticked) · frozen (week 15: Selin has left,
-##   the research stands frozen, Mert on leave; its assignment open) · history (the window's own history, the week's
-##   note read) · history_empty (before any note or discovery) · read_only (AI Engine picked while Frank's offer
-##   waits) · closed (before v1, at home);
+##   the research stands frozen, Mert on leave; its assignment open) · detail_frozen (Selin moved to the test job:
+##   the frozen research's card with its reason, its drop and the drop's note) · history (the window's own history,
+##   the week's note read) · history_empty (before any note or discovery) · read_only (AI Engine picked while Frank's
+##   offer waits) · closed (before v1, at home);
 ##   no window: card (the card running) · card_frozen (paused, nobody on it) · card_build (its person taken by a
 ##   build) · card_none (its person on leave: no contribution) · card_gate (while a decision waits) · discovery
 ##   (week 16: Test Otomasyonu done, its discovery on the notice stack) · first_note (the run's first monthly note
@@ -1622,12 +1623,14 @@ func _run_rnd_shot(kind: String) -> void:
 			RnDSystem.drop_assignee(selin)
 			CharacterRegistry.remove(selin)
 			GameState.day = 15
+		"detail_frozen":
+			CharacterRegistry.assign_job(selin, HRConstants.JOB_TEST)
 		"detail_cash":
 			GameState.set_cash(ResearchTree.cash_of("ai_engine") / 2)
 		"card_frozen":
 			RnDSystem.pause()
 		"card_build":
-			RnDSystem.drop_assignee(selin, "RND_PAUSED_BUILD")
+			RnDSystem.drop_assignee(selin, HRConstants.JOB_BUILD)
 		"card_none":
 			HRMoraleSystem.send_on_leave(CharacterRegistry.get_character(selin), HRConstants.LEAVE_WEEKS, false)
 	await _mount_shot_shell()
@@ -1637,11 +1640,12 @@ func _run_rnd_shot(kind: String) -> void:
 			EventBus.tab_changed.emit("rnd")
 			if kind.begins_with("history"):
 				_shell.find_child("CenterViewport", true, false).get_current_page_body()._show_view(1)
-		"detail", "detail_cash", "assign", "frozen", "read_only":
+		"detail", "detail_cash", "detail_frozen", "assign", "frozen", "read_only":
 			if kind == "read_only":
 				_shot_card("funding.frank_cheque", {}, 11)
 			EventBus.tab_changed.emit("rnd")
-			EventBus.rnd_node_requested.emit("test_automation" if kind == "frozen" else "ai_engine", kind in ["assign", "frozen"])
+			EventBus.rnd_node_requested.emit("test_automation" if kind.ends_with("frozen") else "ai_engine",
+				kind in ["assign", "frozen"])
 			if kind == "assign":
 				await get_tree().process_frame
 				get_tree().root.find_child("AssignPanel", true, false).toggle("char_emp_shot_0")

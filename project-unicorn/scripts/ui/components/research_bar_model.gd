@@ -17,11 +17,10 @@ extends RefCounted
 # BİLİNÇLİ class_name YOK: çubuk `preload` eder. Yeni bir class_name, global
 # class-cache tazelenene dek headless koşuları düşürür (BuildBarModel'le aynı ihtiyat).
 #
-# SÖZCÜKLER: `pause_note_key` bir ANAHTAR'dır ve çubukta çözülür. `node_name` ile
-# `area_line` çözülmüş metindir çünkü ikisi de bir KİMLİKTEN türüyor ve o çeviriyi
-# yapan tek yer ResearchSeam/HRConstants. Çeviri `tr()` değil
-# `TranslationServer.translate` ile, ki bu kod statiğe taşınırsa loc_residue
-# [static-tr] tetiklenmesin.
+# SÖZCÜKLER: `node_name`, `area_line` ve `pause_note` çözülmüş metindir çünkü üçü de bir
+# KİMLİKTEN türüyor ve o çeviriyi yapan tek yer ResearchSeam/HRConstants/RnDSystem.
+# Çeviri `tr()` değil `TranslationServer.translate` ile, ki bu kod statiğe taşınırsa
+# loc_residue [static-tr] tetiklenmesin.
 # ============================================================================
 
 ## RnDSystem.weeks_estimate -1.0 döndüğünde (katkı yok) bu değer taşınır. Çubuk sayı
@@ -35,7 +34,7 @@ var fill: float = 0.0             # araştırmanın ilerlemesi 0-1
 var percent: int = 0              # ekrana yazılan yüzde, 0-99
 var weeks_left: int = NO_WEEKS
 var paused: bool = false          # §5.7 donmuş = aktif araştırma, üstünde kimse yok
-var pause_note_key: String = ""   # "" | BUILD_BUSY_NOBODY | RND_PAUSED_BUILD
+var pause_note: String = ""       # donmanın sebep cümlesi; koşarken ""
 var assignee_names: Array[String] = []
 
 
@@ -63,7 +62,7 @@ func derive() -> bool:
 
 	paused = RnDSystem.is_frozen()
 	# DONMA SEBEBİ MOTORDAN OKUNUR (§5.6.1), burada tahmin edilmez.
-	pause_note_key = RnDSystem.freeze_note_key()
+	pause_note = RnDSystem.freeze_note()
 
 	var ids: Array = RnDSystem.assigned(id)
 	for cid in ids:
@@ -83,5 +82,5 @@ func derive() -> bool:
 ## aynı resim.
 func fingerprint() -> String:
 	return "%s|%.3f|%d|%d|%d|%s|%d" % [
-		node_id, fill, percent, weeks_left, int(paused), pause_note_key,
+		node_id, fill, percent, weeks_left, int(paused), pause_note,
 		assignee_names.size()]

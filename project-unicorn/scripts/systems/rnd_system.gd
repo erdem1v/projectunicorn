@@ -10,7 +10,7 @@ extends RefCounted
 #  Research is a bet paid in PEOPLE and TIME (§1): whoever researches does not make product.
 #  That occupation (§5.0) does not live here — it is HRConstants.JOB_EXCLUSIVE plus
 #  CharacterRegistry's displacement, and the sprint team leaves a researcher out
-#  (SprintSystem.team). This file only starts, accrues, freezes and completes.
+#  (SprintSystem.team). This file only starts, accrues, freezes, drops and completes.
 #
 #  §9 SINGLE SOURCE:
 #    · research speed  → HRSystem.daily_contribution(). Ar-Ge keeps NO copy of the formula.
@@ -42,16 +42,15 @@ static var _progress: Dictionary = {}    # node_id -> accrued effort (float). KE
 static var _active: String = ""          # §5.1 — the ONE active node; "" = none
 static var _assignees: Array[String] = []
 static var _paid: Dictionary = {}        # node_id -> cash already charged (no refund, no double charge)
-static var _freeze_cause: String = ""    # "" | RND_PAUSED_BUILD
+static var _freeze_job: String = ""      # the job its last person moved to; "" = pulled off or gone
 static var _note_last_day: int = -1      # -1 = user_research not complete yet
 static var _note_pending: Dictionary = {}
 static var _note_unread := false
 static var _notes_issued: int = 0
 
-# --- derived edge-detector memory. NOT saved, exactly like ProductRead's _prev_*: a load
-#     must not fire research_frozen for a state the player already saw.
+# --- derived edge-detector memory. NOT saved: a load sets it from the loaded state, so nothing
+#     fires for a state the player already saw and the first change after the load does.
 static var _was_frozen := false
-static var _seeded := false
 
 
 # ============================================================================
@@ -74,9 +73,8 @@ static func reset() -> void:
 	_note_pending = {}
 	_note_unread = false
 	_notes_issued = 0
-	_freeze_cause = ""
+	_freeze_job = ""
 	_was_frozen = false
-	_seeded = false
 	_seed_states()
 
 
@@ -138,13 +136,8 @@ static func _prune_assignees() -> void:
 ## The ONE door for every freeze cause — player pull, departure, a fix run stealing the
 ## person, a build displacing the founder. All of them route through CharacterRegistry and
 ## end up changing `_assignees`, so one publisher catches them all (§10's one-emitter rule).
-## `_seeded` guards the first call after a load so it emits nothing.
 static func emit_edges() -> void:
 	var frozen: bool = is_frozen()
-	if not _seeded:
-		_seeded = true
-		_was_frozen = frozen
-		return
 	if frozen == _was_frozen:
 		return
 	_was_frozen = frozen
@@ -263,7 +256,7 @@ static func start(node_id: String, assignee_ids: Array) -> String:
 
 	_active = node_id
 	_states[node_id] = STATE_ACTIVE
-	_freeze_cause = ""
+	_freeze_job = ""
 	set_assignees(assignee_ids)
 	if _assignees.is_empty():
 		# HR seated nobody (every pick was refused, e.g. inactive). Starting a research
@@ -321,30 +314,45 @@ static func set_assignees(ids: Array) -> void:
 static func pause() -> void:
 	if _active == "":
 		return
-	_freeze_cause = ""          # oyuncunun kendi duraklatması: "Kimse üzerinde değil."
+	_freeze_job = ""            # oyuncunun kendi duraklatması: "Kimse üzerinde değil."
 	_release_assignees()
+	emit_edges()
+
+
+## §5.7 — a frozen research's `vazgeç`: its slot clears and the node goes back to the tree. Its progress and the
+## cash paid stay with it, as when a start switches away from it, so a later start picks up where it stood and
+## charges nothing. Only a frozen research is dropped, so nobody is on it to release.
+static func abandon() -> void:
+	_states[_active] = STATE_REVEALED
+	_active = ""
 	emit_edges()
 
 
 ## Called BY CharacterRegistry when a displacement or a departure takes this person off
 ## research. Must not call back into assign/unassign — that is the loop. Whatever removes the
-## LAST person is the freeze's cause; a departure passes "" and reads "Kimse üzerinde değil."
-static func drop_assignee(char_id: String, cause: String = "") -> void:
+## LAST person is the freeze's cause: a displacement passes the job it moved them to, a departure
+## passes "" and reads "Kimse üzerinde değil."
+static func drop_assignee(char_id: String, job_id: String = "") -> void:
 	if not _assignees.has(char_id):
 		return
 	_assignees.erase(char_id)
 	if _assignees.is_empty():
-		_freeze_cause = cause
+		_freeze_job = job_id
 	emit_edges()
 
 
 ## §5.6.1 · §5.7 — DONMUŞ BARIN NOTU SEBEBİNİ SÖYLER. İki sebep vardır ve ayrı cümleleri olmalı:
 ## oyuncu insanları çekti (bar "Kimse üzerinde değil." der), ya da taşıyıcı sürekli bir işe
-## geçti ve araştırma yerinden edildi ("Ekip yapımda.").
-static func freeze_note_key() -> String:
+## geçti ve araştırma yerinden edildi: not o işi adıyla söyler, yapımın kendi cümlesi var ("Ekip yapımda.").
+static func freeze_note() -> String:
 	if not is_frozen():
 		return ""
-	return _freeze_cause if _freeze_cause != "" else "BUILD_BUSY_NOBODY"
+	match _freeze_job:
+		"":
+			return TranslationServer.translate("BUILD_BUSY_NOBODY")
+		HRConstants.JOB_BUILD:
+			return TranslationServer.translate("RND_PAUSED_BUILD")
+	return TranslationServer.translate("RND_PAUSED_JOB").format({"job": HRConstants.job_label(_freeze_job)})
 
 
 static func _release_assignees() -> void:
@@ -743,7 +751,7 @@ static func is_frozen() -> bool:
 #      catalog is their reader, so Ürün's state block owns them.
 #    · jobs paused by research → Character.paused_job_ids, walked by SaveCodec with the
 #      rest of the roster. It is per-person data and it belongs next to assigned_job_ids.
-#    · _was_frozen / _seeded → derived edge memory; see their declaration.
+#    · _was_frozen → derived edge memory; see its declaration.
 #
 #  SaveCodec hazard, named: _progress is {node_id: float} inside an untyped bag, and
 #  _normalize_number turns an integral float into an int — so {"data_model": 40.0} returns
@@ -761,7 +769,7 @@ static func to_dict() -> Dictionary:
 		"active": _active,
 		"assignees": _assignees.duplicate(),
 		"paid": _paid.duplicate(),
-		"freeze_cause": _freeze_cause,
+		"freeze_job": _freeze_job,
 		"note_last_day": _note_last_day,
 		"note_pending": _note_pending.duplicate(true),
 		"note_unread": _note_unread,
@@ -780,13 +788,12 @@ static func from_dict(d: Dictionary) -> void:
 	for cid in (d.get("assignees", []) as Array):
 		_assignees.append(String(cid))
 	_paid = (d.get("paid", {}) as Dictionary).duplicate()
-	_freeze_cause = String(d.get("freeze_cause", ""))
+	_freeze_job = String(d.get("freeze_job", ""))
 	_note_last_day = int(d.get("note_last_day", -1))
 	_note_pending = (d.get("note_pending", {}) as Dictionary).duplicate(true)
 	_note_unread = bool(d.get("note_unread", false))
 	# A save from before the count: a note in hand means the first one has come.
 	_notes_issued = int(d.get("notes_issued", 0 if _note_pending.is_empty() else 1))
-	_was_frozen = false
-	_seeded = false
+	_was_frozen = is_frozen()
 	_ensure_seeded()
 	restore_hidden_lines()

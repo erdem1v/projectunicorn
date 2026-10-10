@@ -218,7 +218,7 @@ func assign_job(id: String, job_id: String) -> String:
 	for d in displaced:
 		if HRConstants.is_exclusive_job(d):
 			ended_exclusive = true
-		_displace_job(c, d)
+		_displace_job(c, d, job_id)
 
 	# Araştırma hangi yoldan biterse bitsin duraklamış işler geri döner (Ar-Ge §5.0); yoksa
 	# araştırmadan doğrudan yapıma dönen birinin desteği defterde sessizce park kalırdı.
@@ -235,11 +235,11 @@ func assign_job(id: String, job_id: String) -> String:
 
 
 ## Yerinden edilen iş: araştırma deftere park edilmez — kişi düğümden iner, düğüm ilerlemesi
-## korunarak donar (Ar-Ge §5.7) ve notu "Ekip yapımda." olur. Sürekli iş deftere park edilir.
-func _displace_job(c: Character, job_id: String) -> void:
+## korunarak donar (Ar-Ge §5.7) ve notu kişinin geçtiği işi (`incoming`) söyler. Sürekli iş deftere park edilir.
+func _displace_job(c: Character, job_id: String, incoming: String) -> void:
 	c.assigned_job_ids.erase(job_id)
 	if HRConstants.is_exclusive_job(job_id):
-		RnDSystem.drop_assignee(c.id, "RND_PAUSED_BUILD")
+		RnDSystem.drop_assignee(c.id, incoming)
 		return
 	if not c.paused_job_ids.has(job_id):
 		c.paused_job_ids.append(job_id)

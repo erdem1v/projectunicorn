@@ -264,7 +264,7 @@ func _paint_line() -> void:
 	_line.add_child(SprintUiShared.label(RnDUiShared.percent_text(progress), &"KeyText"))
 	if frozen:
 		_line.add_child(UiFactory.make_glyph(RnDUiShared.PAUSE, UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
-		_line.add_child(SprintUiShared.label(tr(RnDSystem.freeze_note_key()), &"MetaText"))
+		_line.add_child(SprintUiShared.label(RnDSystem.freeze_note(), &"MetaText"))
 	else:
 		var weeks: float = RnDSystem.weeks_estimate(active, RnDSystem.assigned(active))
 		_line.add_child(SprintUiShared.label(RnDUiShared.weeks_text(weeks) if weeks > 0.0 else tr("RND_WEEKS_NONE"),
@@ -273,5 +273,8 @@ func _paint_line() -> void:
 	rule.custom_minimum_size.y = UiTokens.D_H_BTN_SM
 	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_line.add_child(rule)
-	_line.add_child(RnDUiShared.links(frozen, EventGate.active_id() != "", func() -> void: RnDSystem.pause(),
-		select_node.bind(active, true)))
+	var links := RnDUiShared.links(frozen, EventGate.active_id() != "", func() -> void: RnDSystem.pause(),
+		select_node.bind(active, true))
+	if frozen:
+		links.get_child(0).tooltip_text = tr("RND_ABANDON_NOTE")
+	_line.add_child(links)

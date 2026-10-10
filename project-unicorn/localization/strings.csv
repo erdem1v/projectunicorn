@@ -481,6 +481,7 @@ FIN_EQUITY,Hisse,Equity
 BUILD_BUSY_NOBODY,Kimse üzerinde değil.,Nobody is on it.
 BUILD_SPLIT_FOCUS,Ekip iki işte.,Split focus.
 RND_PAUSED_BUILD,Ekip yapımda.,The team is on a build.
+RND_PAUSED_JOB,Başka işe geçti: {job}.,Moved to another job: {job}.
 PROD_RND_NODE_DATA_MODEL,Veri Modeli,Data Model
 PROD_RND_NODE_AI_ENGINE,AI Engine,AI Engine
 PROD_RND_NODE_SEMANTIC_INDEX,Semantik İndeks,Semantic Index
@@ -2237,6 +2238,8 @@ RND_REQ_MET,karşılandı,met
 RND_REQ_UNMET,eksik,missing
 RND_BAR_TITLE,ARAŞTIRMA,RESEARCH
 RND_BAR_PAUSE,duraklat,pause
+RND_ABANDON,Vazgeç,Drop it
+RND_ABANDON_NOTE,"İlerleme korunur, araştırma yeri boşalır.",Progress is kept and the slot clears.
 RND_DISCOVERY_TITLE,Keşif,Discovery
 RND_HIDDEN_LINE_OPENED,Yeni özellik hattı açıldı: {line},A new feature line has opened: {line}
 RND_EA_LINE_NOTE,Bu hattın içeriği Erken Erişim'de açılıyor.,The content of this line opens in Early Access.

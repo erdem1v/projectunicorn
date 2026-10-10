@@ -401,6 +401,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"research_occupies_person":       fail = _case_research_occupies_person()
 		"research_and_build_pause_each_other": fail = _case_research_and_build_pause_each_other()
 		"research_freezes_and_resumes":   fail = _case_research_freezes_and_resumes()
+		"research_abandon_keeps_progress": fail = _case_research_abandon_keeps_progress()
 		"research_completion_no_economic_delta": fail = _case_research_completion_no_economic_delta()
 		"paused_job_resumes_on_direct_return": fail = _case_paused_job_resumes_on_direct_return()
 		"split_bars_name_their_cause": fail = _case_split_bars_name_their_cause()
@@ -14068,6 +14069,46 @@ static func _case_research_freezes_and_resumes() -> String:
 	RnDSystem.daily_tick()
 	if RnDSystem.progress_effort("data_model") <= p1 + 0.0001:
 		return "a resumed research did not accrue"
+	return ""
+
+
+## §5.7 — DONMUŞ ARAŞTIRMADAN VAZGEÇİLİR: yeri boşalır, rozet düşer, düğüm ağaca döner. İlerleme ve ödenen nakit
+## düğümde kalır: yeniden başlatma kaldığı yerden akar, ikinci kez ödemez.
+##
+## FALSİFİKASYON: abandon()'a `_paid.erase(_active)` ekle → yeniden başlatma nakdi ikinci kez düşer, son iddia FAIL.
+static func _case_research_abandon_keeps_progress() -> String:
+	ResearchTree.reload()
+	RnDSystem.reset()
+	GameState.set_cash(50000)
+	GameState.set_flag("mvp_shipped", true)
+	var founder: Character = CharacterRegistry.get_founder()
+	founder.role_stats[HRConstants.AREA_PRODUCT] = HRConstants.AREA_MAX
+	CharacterRegistry.clear_jobs(founder.id)
+	# ai_engine is data_model's paid branch.
+	RnDSystem._complete("data_model")
+	if RnDSystem.start("ai_engine", [founder.id]) != "":
+		return "fixture: ai_engine would not start"
+	RnDSystem.daily_tick()
+	var p1: float = RnDSystem.progress_effort("ai_engine")
+	if p1 <= 0.0 or RnDSystem.node_completed("ai_engine"):
+		return "fixture: a tick did not leave ai_engine part done (%.1f)" % p1
+
+	RnDSystem.pause()
+	if RnDSystem.attention_count() != 1:
+		return "a frozen research put %d on the badge, want 1" % RnDSystem.attention_count()
+	RnDSystem.abandon()
+	if RnDSystem.attention_count() != 0:
+		return "the badge kept %d after the research was dropped" % RnDSystem.attention_count()
+	if RnDSystem.active() != "" or not RnDSystem.available("ai_engine"):
+		return "a dropped research did not clear its slot and go back to the tree"
+
+	var cash: int = GameState.cash
+	if RnDSystem.start("ai_engine", [founder.id]) != "":
+		return "a dropped research would not start again"
+	if absf(RnDSystem.progress_effort("ai_engine") - p1) > 0.0001:
+		return "dropping lost progress (%.4f -> %.4f)" % [p1, RnDSystem.progress_effort("ai_engine")]
+	if GameState.cash != cash:
+		return "restarting a dropped research charged $%d again" % (cash - GameState.cash)
 	return ""
 
 

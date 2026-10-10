@@ -9,7 +9,8 @@ extends PanelContainer
 #              "katkı yok" (§5.5). Sayı hiçbir hâlde uydurulmaz.
 #   ad       : düğümün adı ve alanı; dar kartta kısalan alandır.
 #   ilerleme : çubuk ve yüzde.
-#   bağlar   : duraklat · ata; karar beklerken kapalı, gerekçesi sağda.
+#   bağlar   : duraklat · ata, donmuşken vazgeç · ata ve altında vazgeçin notu; karar beklerken
+#              kapalı, gerekçesi sağda.
 #
 # %100'DE KART KAYBOLUR (§5.8): model false döner, `fingerprint()` "" olur, ev
 # sahibi kartı kaldırır. DURAKLAMIŞTA İLERLEME YANMAZ: dolgu nötrleşir, yüzde olduğu
@@ -35,6 +36,7 @@ var _area_label: Label = null
 var _progress: ProgressBar = null
 var _percent_label: Label = null
 var _links: HBoxContainer = null
+var _abandon_note: Label = null
 
 
 func _ready() -> void:
@@ -118,6 +120,8 @@ func _build_tree() -> void:
 
 	_links = BarKit.line()
 	col.add_child(_links)
+	_abandon_note = SprintUiShared.prose("", &"Caption")
+	col.add_child(_abandon_note)
 
 
 # --- Boyama -------------------------------------------------------------------
@@ -135,12 +139,14 @@ func _repaint() -> void:
 	_progress.value = m.percent
 	_progress.theme_type_variation = &"ProgressPaused" if m.paused else &""
 	_percent_label.text = tr("PROD_PERCENT").format({"n": m.percent})
-	# Bağlar her boyamada yeniden kurulur: duraklamışta `duraklat` yok, karar beklerken ikisi de kapalı ve
-	# gerekçe sağda (kabuğun tutulan Ofisi taşı düğmesi gibi).
+	# Bağlar her boyamada yeniden kurulur: duraklamışta `duraklat` yerine `vazgeç` ve altında notu, karar
+	# beklerken ikisi de kapalı ve gerekçe sağda (kabuğun tutulan Ofisi taşı düğmesi gibi).
 	UiFactory.clear(_links)
 	var gated: bool = EventGate.active_id() != ""
 	var links := RnDUiShared.links(m.paused, gated, _on_pause, _on_assign)
 	_links.add_child(links)
+	_abandon_note.text = tr("RND_ABANDON_NOTE")
+	_abandon_note.visible = m.paused
 	var assign: Button = links.get_child(-1)
 	assign.tooltip_text = "" if m.assignee_names.is_empty() \
 		else tr("RND_WHO").format({"who": ", ".join(PackedStringArray(m.assignee_names))})
@@ -152,8 +158,8 @@ func _repaint() -> void:
 ## Başlık satırının sağ yuvası. Duraklamışsa SEBEP CÜMLESİ, koşarken "~{n} hafta kaldı",
 ## kimse katkı vermiyorsa (weeks_left == NO_WEEKS) "katkı yok".
 func _status_text(m: Model) -> String:
-	if m.pause_note_key != "":
-		return tr(m.pause_note_key)
+	if m.pause_note != "":
+		return m.pause_note
 	if m.weeks_left == Model.NO_WEEKS:
 		return tr("RND_WEEKS_NONE")
 	return RnDUiShared.weeks_text(m.weeks_left)
