@@ -133,6 +133,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_pitch_meeting_signs": fail = _case_b2b_pitch_meeting_signs()
 		"sales_meeting_replays_identically": fail = _case_sales_meeting_replays_identically()
 		"sales_inner_voice_reaches_view": fail = _case_sales_inner_voice_reaches_view()
+		"sales_loss_reason_from_asked": fail = _case_sales_loss_reason_from_asked()
 		"sales_faucet_guard_b2c": fail = _case_sales_faucet_guard_b2c()
 		"sales_lead_expiry_and_return_lock": fail = _case_sales_lead_expiry_and_return_lock()
 		"sales_meeting_time_skip_founder_share": fail = _case_sales_meeting_time_skip_founder_share()
@@ -3435,6 +3436,27 @@ static func _case_sales_inner_voice_reaches_view() -> String:
 		return "the budget moved %d for one line, want 1" \
 			% (SalesConstants.INNER_VOICE_BUDGET_PER_RUN - left)
 	SalesMeetingSystem.close()
+	return ""
+
+
+## §5.2 — the customer walks out over a gap it ASKED about. Every gap is open at each table below
+## (stability zero, the provider short, the next step locked): one that only asked about the switch
+## names it while nobody is on customer success and falls to price once someone is; one that asked
+## about stability names stability; one that asked about nothing a reason names walks out over price.
+## FALSIFICATION: drop any family test from SalesMeetingSystem._derive_loss_reason and a row walks out
+## over the wrong reason.
+static func _case_sales_loss_reason_from_asked() -> String:
+	for row in [[["switching"], false, SalesConstants.LOSS_SWITCHING_RISK],
+			[["switching"], true, SalesConstants.LOSS_PRICE],
+			[["stability"], true, SalesConstants.LOSS_STABILITY],
+			[["capacity"], false, SalesConstants.LOSS_PRICE]]:
+		SalesMeetingSystem._used_families = row[0]
+		SalesMeetingSystem._facts = {"axis_stability": 0, "cs_staffed": row[1], "provider_enterprise_ok": false,
+			"has_locked_next_step": true}
+		var reason: String = SalesMeetingSystem._derive_loss_reason()
+		if reason != row[2]:
+			return "asked %s, customer success staffed %s: walked out over %s, want %s" % [
+				str(row[0]), str(row[1]), reason, row[2]]
 	return ""
 
 

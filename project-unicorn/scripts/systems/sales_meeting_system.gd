@@ -327,16 +327,18 @@ static func _lose(reason: String) -> Dictionary:
 # who carries the switch — with price as the falling branch. Alternatives seen: weight by the
 # archetype's own axis priorities; or name whichever modifier is most negative (which turns a
 # number into a sentence and reads against §9.6's no-numbers rule).
-## §5.2 — the customer names its reason FROM REAL STATE. The order is the order a buyer would
-## actually weigh them, and every branch is a query the meeting already read.
+## §5.2 — the customer names its reason FROM REAL STATE, and only a gap it ASKED about this sitting;
+## price is open at every table, so every other loss falls to it.
 static func _derive_loss_reason() -> String:
-	if _facts.get("confirmed_bugs", 0) >= 3 or int(_facts.get("axis_stability", 0)) < 40:
+	if _used_families.has("stability") \
+			and (_facts.get("confirmed_bugs", 0) >= 3 or int(_facts.get("axis_stability", 0)) < 40):
 		return SalesConstants.LOSS_STABILITY
-	if not bool(_facts.get("provider_enterprise_ok", true)):
+	if _used_families.has("provider") and not bool(_facts.get("provider_enterprise_ok", true)):
 		return SalesConstants.LOSS_PROVIDER_TRUST
-	if bool(_facts.get("has_locked_next_step", false)):
+	if _used_families.has("ladder") and bool(_facts.get("has_locked_next_step", false)):
 		return SalesConstants.LOSS_MISSING_TIER
-	if not bool(_facts.get("cs_staffed", false)):
+	if (_used_families.has("support") or _used_families.has("switching")) \
+			and not bool(_facts.get("cs_staffed", false)):
 		return SalesConstants.LOSS_SWITCHING_RISK
 	return SalesConstants.LOSS_PRICE
 
