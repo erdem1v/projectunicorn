@@ -680,14 +680,24 @@ func _run_event_shot(spec: String) -> void:
 ##   personal_cheque_read_only (Kişisel read-only after Frank's cheque, a customer's card waiting) ·
 ##   held_key (a speed key refused: the frame's blink and the toast)
 ## Cards come through force_fire; a past decision is resolved for real at an earlier week.
+## The opening's states: cheque · seed (the goal list's paper, on _seed_goal's week 1) · intro_go (the intro's way to
+## Ürün; GATEFLOW tab, picking, speed) · beat (founder.savings_note through EventGate.request in week 5: the office's
+## notice stack as _stack, then the inbox on its history row) · dying (a card arriving in the frame a tab change frees
+## the open inbox; GATEFLOW window, active, pane).
 func _run_inbox_shot(state: String) -> void:
 	_begin_shot()
-	if state == "intro":
+	if state in ["intro", "intro_go", "beat"]:
 		_seed_run_reproducible()
+	elif state in ["cheque", "seed"]:
+		_seed_goal(state)
 	else:
 		_seed_theme_surface()
 		GameState.current_hour = 11
 		TimeManager.sync_to_current_hour()
+	if state == "beat":
+		# founder.savings_note's ground: week 5, no product, savings for fewer than 24 weeks.
+		GameState.day = 5
+		GameState.set_cash(5000)
 	if state.begins_with("rnd_"):
 		_seed_rnd(16 if state == "rnd_discovery" else 14, state != "rnd_note_demand")
 	if state == "rnd_note_demand":
@@ -705,6 +715,33 @@ func _run_inbox_shot(state: String) -> void:
 			return
 		"intro":
 			_open_note("intro")
+		"intro_go":
+			_open_note("intro")
+			await get_tree().process_frame
+			get_tree().get_first_node_in_group(INBOX.GROUP)._pane._go("product")
+			var layer: Node = get_tree().get_first_node_in_group(&"window_layer")
+			print("GATEFLOW tab=%s picking=%s speed=%d" % [layer._primary_id,
+				layer.get_current_page_body()._picker_view.is_visible_in_tree(), TimeManager.current_speed])
+		"cheque", "seed":
+			INBOX.show("r:goal")
+		"beat":
+			if not EventGate.request("founder.savings_note"):
+				_shot_fail("[InboxShot] founder.savings_note was refused")
+				return
+			await get_tree().create_timer(0.6).timeout
+			_save_shot("inbox_shot_beat_stack")
+			INBOX.show("h:%d" % (EventGate.history().size() - 1))
+		"dying":
+			EventBus.tab_changed.emit("events")
+			await get_tree().process_frame
+			# Opening Ürün frees the open inbox at this frame's end, and the card arrives in the same frame.
+			EventBus.tab_changed.emit("product")
+			_shot_card("funding.frank_cheque", {}, 11)
+			await get_tree().process_frame
+			var inbox: Node = get_tree().get_first_node_in_group(INBOX.GROUP)
+			print("GATEFLOW window=%s active=%s pane=%s" % [
+				get_tree().get_first_node_in_group(&"window_layer")._primary_id, EventGate.active_id(),
+				inbox._pane._item.get("event_id", "") if inbox != null else ""])
 		"offer", "team_read_only", "team_tasks_read_only", "sales_read_only", "finance_read_only", "personal_read_only", \
 				"held_key":
 			_shot_card("funding.frank_cheque", {}, 8)
@@ -1044,6 +1081,22 @@ func _seed_theme_surface() -> void:
 	SalesSystem.reflect_mrr()
 
 
+## The goal lists' fixture: week 1 at 08:00 as the run opens, `state` how far the first minute got. untyped · typed
+## (an ERP picked and the lead's plan in, as the type picker does: Frank's cheque 1/5) · cheque (its first sprint
+## started, 2/5) · seed (the cheque taken too: the seed list, 0/2).
+func _seed_goal(state: String) -> void:
+	_seed_run_reproducible()
+	if state == "untyped":
+		return
+	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+	SprintSystem.apply_lead()
+	if state == "typed":
+		return
+	SprintSystem.start()
+	if state == "seed":
+		AngelRoundSystem.accept_offer()
+
+
 # --office-shot=<home|ishani|plaza|loft|city|meet>:<hour>[:<extra>]: the office in the GameShell,
 # the clock stopped on the hour; prints frame time and render counts. extra: full = every desk
 # taken and people in (the lit night interior); crowd40 = forty on the roster, a LOOKS line and four
@@ -1055,6 +1108,9 @@ func _seed_theme_surface() -> void:
 # and the founder seated, sitting and looking as at a meeting's start; cast (meet only) = the founder
 # walks in from the lift (a frame every CAST_WALK_EVERY, _cast_NN), the table at rest (_NN_rest),
 # then close up the lead speaking (_NN_speak) and each gesture at its middle (_NN_<gesture>).
+# untyped, cheque and v1 open on the goal lists' week 1 (_seed_goal), not the theme seed: untyped before a type is
+# picked; cheque the type picked (_01), then the first sprint started (_02); v1 the sprint running, then v1.0 shipped
+# (_01) and Ar-Ge opened (_02).
 # With --pan / --pan-gpu (OFFICE_PAN) the shot is handed over after the extra: the camera moves by pixel
 # offsets, the 3D image alone is saved and measured, and the process ends there.
 func _run_office_shot(spec: String) -> void:
@@ -1063,7 +1119,11 @@ func _run_office_shot(spec: String) -> void:
 	var hour: int = int(parts[1])
 	var extra: String = parts[2] if parts.size() > 2 else ""
 	_begin_shot()
-	_seed_theme_surface()
+	var goal: String = {"untyped": "untyped", "cheque": "typed", "v1": "cheque"}.get(extra, "")
+	if goal == "":
+		_seed_theme_surface()
+	else:
+		_seed_goal(goal)
 	EventBus.speed_change_requested.emit(0)
 	# Debug path: the shot writes the office straight past OfficeSystem. The map and the meeting
 	# room are no office: the company sits in a real one, which the map's pin and chips read.
@@ -1084,8 +1144,18 @@ func _run_office_shot(spec: String) -> void:
 		if extra.is_empty():
 			_shot_meeting_posts(view.cast)
 	match extra:
-		"":
+		"", "untyped":
 			pass
+		"cheque":
+			await _shot_step("office_shot_%s_%02d_cheque" % [office_id, hour], func() -> void: SprintSystem.start())
+			return
+		"v1":
+			# v1.0 without playing the sprint out: the two flags the screens read, then the release's signal.
+			GameState.set_flag("mvp_shipped", true)
+			GameState.set_flag("mvp_version", 1)
+			EventBus.version_shipped.emit(1)
+			await _shot_step("office_shot_%s_%02d_v1" % [office_id, hour], EventBus.tab_changed.emit.bind("rnd"))
+			return
 		"card":
 			city.debug_pick("plaza")
 		"crown":
@@ -1184,6 +1254,14 @@ func _shot_toasts(view: Control) -> void:
 func _toast_frame(name: String) -> void:
 	await get_tree().create_timer(0.5).timeout
 	_save_shot("office_shot_toast_" + name)
+
+
+## Two frames of the settled office a step apart: _01, then `step` and _02 half a second later. The run ends there.
+func _shot_step(stem: String, step: Callable) -> void:
+	await get_tree().create_timer(1.2).timeout
+	_save_shot(stem + "_01")
+	step.call()
+	await _finish_shot(stem + "_02", 0.5)
 
 
 ## The meeting shots' other side: this fund's three.
@@ -1547,11 +1625,15 @@ func _run_office_crowd_probe(spec: String) -> void:
 # Piyasa states: seed_oncesi (no round yet) · seed_sonrasi (a $130K seed at 16 %) · series_a (week 72, an
 # $18M post-money signed) · ipo (week 20, the social network's listing week, its card) · filtre (My sector
 # on an erp run, the sector giant's card) · sektor (the erp league leader's card, the list scrolled to it).
+# cheque or seed opens any tab on the goal lists' week 1 (_seed_goal) in place of the theme seed.
 func _run_tab_shot(spec: String) -> void:
 	_begin_shot()
-	_seed_theme_surface()
 	var tab_id: String = spec.get_slice(":", 0)
 	var state: String = spec.get_slice(":", 1) if spec.contains(":") else ""
+	if state in ["cheque", "seed"]:
+		_seed_goal(state)
+	else:
+		_seed_theme_surface()
 	if tab_id == "piyasa":
 		_seed_piyasa(state)
 	await _mount_shot_shell()
@@ -1840,6 +1922,9 @@ func _run_onboard_shot(step: int) -> void:
 		await get_tree().process_frame
 		await get_tree().process_frame
 		var idx: int = clampi(step - 1, 0, 2)
+		if step == 2:
+			# Two allocation points in one skill: its figure reads on the 0-10 ruler.
+			_flow.draft.skill_alloc = {"engineering": 2}
 		if idx > 0:
 			_flow._mount_step(idx)   # doğrudan seam: adım geçerliliği fixture'da dolu olmayabilir
 	await _finish_shot("onboard_shot_%d" % step)
