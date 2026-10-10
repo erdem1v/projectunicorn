@@ -446,17 +446,19 @@ export default function neighbourhood(id, L, H) {
   // ---------- buildings ----------
   // Blocks of flats are kept for the balcony pass; shopfronts take the first three wall colours of the palette.
   const flats = [], shopWalls = P.palette.slice(0, 3);
+  const kerbs = paved.filter(([, , , x0, x1, z0, z1]) => Math.min(x1 - x0, z1 - z0) <= 10).map(p => p.slice(3));
   // `r` is the stream a block draws from: the layout stream, or a landmark's own so that adding or removing the
   // landmark never moves its neighbours. `cuts` are stretches along x that stay open (a street, the end of a row): the
   // block stands only outside them, and an east face that meets one gets an awning like every other shop front. All the
   // draws are made for the whole block, so a cut never moves the blocks after it. A generated road or walk inside the
   // block cuts it too: one across it opens its stretch, one along it (a row along z over a street along x) the whole
-  // block. Returns the pieces that stand, none where the ground is taken.
+  // block. So does a walk the builder paved (its paved plain is ground and stays). Returns the pieces that stand, none
+  // where the ground is taken.
   function building({ x0, x1, z0, z1, fl, col, kind, roof, cast, shop, sides = [], r = R, cuts = [] }) {
     if (!isFree(x0 + 1.05, x1 - 1.05, z0 + 1.05, z1 - 1.05)) return [];
     const up = shop ? fl - 1 : fl, y0 = GY + (shop ? SF : 0), top = y0 + up * FL, ou = Math.floor(r() * 4), ov = Math.floor(r() * 4);
     const skin = shop && facade('shop', pick(shopWalls, r).col), first = shop && Math.floor(r() * 4), tile = roof === 'flat' ? 0 : Math.floor(r() * 3);
-    const open = [...cuts, ...roads.concat(walks).filter(([a0, a1, b0, b1]) => a0 < x1 - .05 && a1 > x0 + .05 && b0 < z1 - .05 && b1 > z0 + .05)];
+    const open = [...cuts, ...roads.concat(walks, kerbs).filter(([a0, a1, b0, b1]) => a0 < x1 - .05 && a1 > x0 + .05 && b0 < z1 - .05 && b1 > z0 + .05)];
     const stood = [];
     for (const [a0, a1] of cutOut(x0, x1, open).filter(([p, q]) => q - p >= 3)) {
       const w = a1 - a0, d = z1 - z0, cx = (a0 + a1) / 2, cz = (z0 + z1) / 2;
