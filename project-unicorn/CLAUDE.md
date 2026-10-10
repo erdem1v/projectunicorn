@@ -187,7 +187,11 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
   `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`
-  pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer.
+  pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer. Kare maliyeti:
+  `--tick-probe=<hız>[:<pencere>]` headless'tır, kabuğu tempo dünyasıyla kurar ve beş haftayı gerçek saatle koşar;
+  saat adımı, gece, sonraki kare ve ilk saat karelerinin süresini, TopBar'ın gece başına yenilemesini ve otomatik
+  kaydın karesini `TICK` satırlarında basar. `auto_*` yazar: ayrı `APPDATA` ile koşulur (`TICK START udir=`); kayıt
+  taşıyan kullanıcı dizininde çalışmaz.
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
   negotiation, meeting, invite, product, hr, finance, personal, rnd, b2b, inbox), `--probe-shot[=menajer]`,
@@ -245,7 +249,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - Editör `.tres` ve `project.godot`'u yeniden kaydeder (uid ekler, yorum siler); fark sahip onaylamadan commit'lenmez.
 - Dosya yazan bayraklar: `--event-lint=baseline` (taban dosyası), `--event-vocab` (`_vocabulary.md`), `--display-check`
   (ayarlar), `--modal-shot=save*|load*` ve `--theme-audit=modal:save*|load*` (kayıt yazar ya da siler), `--ending-shot`
-  (zaman damgalı gazete PNG'si).
+  (zaman damgalı gazete PNG'si), `--tick-probe` (`auto_*` kayıt yuvaları; kayıt taşıyan dizinde çalışmaz).
 - Bazı smoke vakaları kaynak metni ve özel adları okur; ad değiştirmeden önce vakayı bul. `event_bus.gd`'deki
   `# --- X ---` başlıkları manifest bölümleri, `# LOC-DATA` işaretleri `loc_residue` istisnalarıdır; silinmez.
 

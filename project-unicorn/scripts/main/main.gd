@@ -28,6 +28,7 @@ const SAVED_GLYPH := preload("res://assets/icons/util/check.svg")
 const NOT_SAVED_GLYPH := preload("res://assets/icons/util/save.svg")
 const LOADED_GLYPH := preload("res://assets/icons/util/load.svg")
 const OFFICE_PAN := preload("res://scripts/debug/office_pan_probe.gd")
+const TICK_PROBE := preload("res://scripts/debug/tick_probe.gd")
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
 const EVENT_CLOCK_HOLD := "event"                 # TimeManager hold reason while a decision waits
 const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason for the founder's trip
@@ -201,6 +202,7 @@ func _run_debug_harness() -> bool:
 		"--why-fire=": _run_why_fire,
 		"--event-harness=": func(v: String) -> void: _quit_with(EvHarness.run(v)),
 		"--tempo-probe=": _run_tempo_probe,
+		"--tick-probe=": _run_tick_probe,
 		"--render-probe=": _run_render_probe,
 		"--b2b-shot=": _run_b2b_shot,
 		"--event-shot=": _run_event_shot,
@@ -414,22 +416,8 @@ func _run_tempo_probe(spec: String) -> void:
 	var idx: int = int(parts[0])
 	if _speed_refused("TEMPO", idx):
 		return
-	_seed_run_reproducible()
-	# Give the HOURLY path real work (B2C audience flow, post-ship wear and bug accrual) and the
-	# daily path a sprint, because that is where a speed-coupled bug would surface. mvp_shipped is
-	# load-bearing: SalesSystem.hourly_tick gates the whole B2C half on it and ProductSystem
-	# gates post-ship wear on it. Real bools, not strings: event conditions compare via bool().
-	GameState.set_cash(50000)
-	SprintSystem.choose_type("note_tool", "Nova")
-	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_innovation", 20.0)
-	GameState.set_flag("mvp_stability", 25.0)
-	GameState.set_flag("mvp_experience", 22.0)
-	GameState.set_flag("mvp_version", 2)
-	GameState.set_flag("b2c_audience", 4000)
-	SalesSystem.open_b2c_paid_tier(15)   # makes MRR derive hourly too
-	# The sprint stays in planning: the first tick starts it with the lead's plan and it closes after
-	# the stop day, so no release note holds the clock under `:shell`.
+	_seed_tempo_state()
+	# The sprint closes after the stop day, so no release note holds the clock under `:shell`.
 	if parts.size() > 1 and parts[1] == "shell":
 		_begin_shot()
 		await _mount_shot_shell()
@@ -451,6 +439,52 @@ func _run_tempo_probe(spec: String) -> void:
 	)
 	_tempo_last_msec = Time.get_ticks_msec()
 	EventBus.speed_change_requested.emit(idx)
+
+
+## The tempo and tick probes' world on the pinned seed. The HOURLY path gets real work (B2C audience
+## flow, post-ship wear and bug accrual) and the daily path a sprint, because that is where a
+## speed-coupled bug would surface. mvp_shipped is load-bearing: SalesSystem.hourly_tick gates the
+## whole B2C half on it and ProductSystem gates post-ship wear on it. Real bools, not strings: event
+## conditions compare via bool(). The sprint stays in planning: the first tick starts it with the
+## lead's plan.
+func _seed_tempo_state() -> void:
+	_seed_run_reproducible()
+	GameState.set_cash(50000)
+	SprintSystem.choose_type("note_tool", "Nova")
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_innovation", 20.0)
+	GameState.set_flag("mvp_stability", 25.0)
+	GameState.set_flag("mvp_experience", 22.0)
+	GameState.set_flag("mvp_version", 2)
+	GameState.set_flag("b2c_audience", 4000)
+	SalesSystem.open_b2c_paid_tier(15)   # makes MRR derive hourly too
+
+
+# --tick-probe=<speed idx>[:<window>]: the cost of the frames that step the hour or the night, five
+# weeks on the real clock over the tempo world, headless, with that window open (finance, piyasa,
+# ...); tick_probe.gd times and prints them. The autosave is on, the night's frame must carry it,
+# and the headless frame sleep is off, it would sit inside every frame time. It writes auto_*
+# slots, so it refuses a user dir that holds saves: run it on an APPDATA of its own.
+func _run_tick_probe(spec: String) -> void:
+	var speed: int = int(spec.get_slice(":", 0))
+	if _speed_refused("TICK", speed):
+		return
+	if not SaveManager.list_slots().is_empty():
+		print("TICK ERROR %s holds saves: run on an APPDATA of its own" % OS.get_user_data_dir())
+		get_tree().quit()
+		return
+	var win: String = spec.get_slice(":", 1) if spec.contains(":") else ""
+	_seed_tempo_state()
+	_begin_shot()
+	await _mount_shot_shell()
+	OS.low_processor_usage_mode_sleep_usec = 0
+	SaveManager._autosave_enabled = true
+	if win != "":
+		EventBus.tab_changed.emit(win)
+	var probe := TICK_PROBE.new()
+	add_child(probe)
+	await probe.run(speed, win)
+	get_tree().quit()
 
 
 # ============================================================================

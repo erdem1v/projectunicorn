@@ -22,7 +22,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - Olay seam'leri `time.*` (`seams_world.gd`: `time.week`, `time.hour`, `time.speed`).
 - **Smoke:** her vaka `GameState.initialize_run`'dan geçer. Adanmış: `speed_*`, `smoke_seed_pinned`, `run_ledger`, `growth_streak_semantics`, `month_history_*`.
 - **Probe:** `BEGIN`, `STATE`, `WEEK`, `END`, `ERROR`. Gerçek saat modları (`:1|2|3`) probe'da `TimeManager._drain_boundaries`'ı gerçek saatle süren tek moddur.
-- **Ölçüm:** `--tempo-probe=<hız>[:shell]` gerçek saatle koşar; her haftayı 08:00'den 08:00'e (gece atlamasının indiği an) ölçer, `TimeModel.seconds_per_tick` hedefinden sapmayı basar ve üçüncü haftada durur. Çıplak hâli kabuk kurmaz; `:shell` kabuğu ve ofisi kurar, gece çıkış kapısının maliyeti de ölçülür.
+- **Ölçüm:** `--tempo-probe=<hız>[:shell]` gerçek saatle koşar; her haftayı 08:00'den 08:00'e (gece atlamasının indiği an) ölçer, `TimeModel.seconds_per_tick` hedefinden sapmayı basar ve üçüncü haftada durur. Çıplak hâli kabuk kurmaz; `:shell` kabuğu ve ofisi kurar, gece çıkış kapısının maliyeti de ölçülür. `--tick-probe=<hız>[:<pencere>]` (`scripts/debug/tick_probe.gd`) aynı tempo dünyasını (`main._seed_tempo_state`) başsız kabukla ve isteğe bağlı açık pencereyle beş hafta gerçek saatle koşar; her kareyi iki `process_frame` arası ölçer ve içinde yayılan sinyalle sınıflar (gece `night_skipped`, saat `hour_changed`, onlardan sonraki kare, koşunun ilk saati), TopBar'ın kare başına yenilemesini (`refresh_count`) ve otomatik kaydın karesini sayar, `TICK` satırları basar. Karar kapısı bağlı değildir (shot kabuğu): kart saati tutmaz, geldiği kare sayılır; bot kartı sonraki kare ölçülünce `RunProbe._drain_modals` ile cevaplar, duruşu (sürüm notu tutuşu) oyuncu gibi kaldırır. Duruşla biten adım `TICK|stopped` satırında haftasıyla ayrı basılır, müdahale kareleri sayılmaz. `auto_*` yazar: kayıt taşıyan kullanıcı dizininde çalışmaz, ayrı `APPDATA` ile koşulur.
 
 ## Kayıt
 
@@ -326,7 +326,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Görsel ve ölçüm bayrakları** yalnız debug build'de çalışır. Bayraklar `--` ayıracının arkasına konmaz.
   - `*-shot` bayrakları (`--probe-shot` dahil) pencereli açılır ve kareyi kullanıcı dizinine (`%APPDATA%/Godot/app_userdata/Project Unicorn/`) yazar. `--theme-audit` pencereli açılır, kare yazmaz, denetim satırlarını basar.
   - Ölçüm bayrakları (`--tempo-probe`, `--render-probe`, `--display-check`, `--theme-contrast-audit`) kare yazmaz, ölçüm satırlarını basar.
-  - Dosya yazanlar: `--event-lint=baseline`, `--modal-shot=save*|load*` ve `--theme-audit=modal:save*|load*` (kayıt yazar ya da siler), `--office-shot=<ofis>:<saat>:toast` (quicksave yazar ve yükler), `--event-vocab`, `--display-check` (`settings.json`'a yazar ve geri yükler).
+  - Dosya yazanlar: `--event-lint=baseline`, `--modal-shot=save*|load*` ve `--theme-audit=modal:save*|load*` (kayıt yazar ya da siler), `--office-shot=<ofis>:<saat>:toast` (quicksave yazar ve yükler), `--event-vocab`, `--display-check` (`settings.json`'a yazar ve geri yükler), `--tick-probe` (`auto_*` kayıt yuvalarına yazar).
 
 ## Üçüncü taraf ve altyapı
 

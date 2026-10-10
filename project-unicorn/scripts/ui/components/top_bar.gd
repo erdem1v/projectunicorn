@@ -79,6 +79,8 @@ var _meeting := {}
 var _compact := false
 var _slot_x := 0.0
 var _pulse: Tween
+## Ölçüm sayacı: --tick-probe bir karedeki yenilemeleri buradan sayar.
+var refresh_count := 0
 
 
 func _ready() -> void:
@@ -133,6 +135,7 @@ func _held() -> bool:
 
 
 func _refresh() -> void:
+	refresh_count += 1
 	_compact = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
 	var g: Dictionary = GRID[int(_compact)]
 	_refresh_brand(g)
