@@ -404,9 +404,10 @@ static func forecast(card_ids: Array) -> Array:
 
 # --- Lider ---------------------------------------------------------------------------
 
-## Onaylı PM planlarının kartları o sprintlere ayrılmıştır; lider onlara dokunmaz.
+## Onaylı PM planlarının kartları o sprintlere ayrılmıştır; lider onlara dokunmaz. Lider bu sprinti
+## oynatarak doldurur: yalnız bitecek kartlar ve en çok bir devreden kart.
 static func lead_suggestion() -> Array:
-	return _suggest(SprintSystem.capacity(), SprintSystem.used(), _approved_ahead())
+	return _suggest(SprintSystem.capacity(), SprintSystem.used(), _approved_ahead(), "", true)
 
 
 ## "{kart1} ve {kart2} bu sprintte bitmeli."; öneride zamanında yetişecek talep varsa son tarihi en
@@ -427,12 +428,15 @@ static func lead_sentence(ids: Array) -> String:
 	return _t("PRODUCT_LEAD_TWO").format({"first": card_name(cards[0]), "second": card_name(cards[1])})
 
 
-## Sürüm notundaki lider cümlesi: devreden kartı anar, yoksa en zayıf alanı.
+## Sürüm notundaki lider cümlesi: devreden kartı anar, yoksa liderin sıradaki alanını; seçilecek kart
+## kalmadıysa boştur.
 static func release_lead_sentence(release: Dictionary) -> String:
 	var carried: Array = release.get("carried", [])
 	if not carried.is_empty():
 		return _t("PRODUCT_LEAD_CARRIED").format({"card": card_name(card_by_id(carried[0].id))})
-	return _t("PRODUCT_LEAD_WEAKEST").format({"area": area_short(_weakest(area_ids(), _open_cards([])))})
+	var pool: Array = _open_cards([])
+	return "" if pool.is_empty() else _t("PRODUCT_LEAD_WEAKEST").format(
+		{"area": area_short(_lead_area(pool, SprintSystem.capacity()))})
 
 
 ## Çekirdek'te K1'e varması gereken kimlik yeteneği sayısı; canlı üründe 0.
@@ -754,16 +758,33 @@ static func _open_cards(taken: Array) -> Array:
 	return out
 
 
+## Liderin alanı: kartı olan alanların en zayıfı. Araştırmanın etkisi yoktur: küçük ekipte (sprint en
+## çok `lead.small_team_cards` K1 alır) tek kartı araştırma olan alan en zayıf sayılmaz, yoksa ekibin
+## haftaları alanı ilerletmeyen işe bağlanırdı. Yayında olmayan ürünün tek hedefi MVP'dir: açık kartı
+## kaldıkça Çekirdek.
+static func _lead_area(pool: Array, capacity: float) -> String:
+	var areas: Array = area_ids().filter(func(a: String) -> bool:
+		return pool.any(func(c: Dictionary) -> bool: return c.area == a))
+	if floori(capacity / float(cfg("effort.k1"))) <= int(cfg("lead.small_team_cards")):
+		var built: Array = areas.filter(func(a: String) -> bool:
+			return pool.any(func(c: Dictionary) -> bool: return c.area == a and c.kind != "research"))
+		if not built.is_empty():
+			areas = built
+	if mvp_cards_left() > 0 and _identity_area() in areas:
+		return _identity_area()
+	return _weakest(areas, pool)
+
+
 ## Liderin kuralı. Zorunlu kartlar sırasıyla tavana (%125) kadar: verilmiş sözlerin kartları (son
 ## tarihi yakın önde), son tarihi en yakın talep, ücretli plan (B2C'de yayından sonra gelirin
-## kapısıdır), en zayıf alanın (MVP öncesi Çekirdek'in) en iyi kartı ve açık acil düzeltmeler;
-## boş sprint, "+" gibi, tavanı aşan kartı da alır. Kalan yer etkisi olan, etki/efor oranı en
-## yüksek kartlarla kapasiteye kadar dolar. Araştırmanın etkisi yoktur: küçük ekipte (sprint en çok
-## `lead.small_team_cards` K1 alır) tek kartı araştırma olan alan en zayıf sayılmaz, yoksa ekibin
-## haftaları alanı ilerletmeyen işe bağlanırdı. Bu ya da sonraki sprintte duran ve kilitli kartlar
-## önerilmez. `taken` başka sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki
-## sütunları). PM aynı kuralla planlar; `goal` alanının kartları sırada hedef ağırlığıyla öne çıkar.
-static func _suggest(capacity: float, used: float, taken: Array = [], goal := "") -> Array:
+## kapısıdır), liderin alanının en iyi kartı ve açık acil düzeltmeler; boş sprint, "+" gibi, tavanı
+## aşan kartı da alır. Kalan yer etkisi olan, etki/efor oranı en yüksek kartlarla dolar: PM kapasiteye
+## kadar; `played` (bu sprintin lideri) sprinti oynatarak, önceki seçilenlerin hepsi bitiyor, yeni kart
+## puan alıyor ve yük tavanı aşmıyorsa; bitmeyecek kartı aldıktan sonra durur, sprint en çok bir
+## devreden kart taşır. Bu ya da sonraki sprintte duran ve kilitli kartlar önerilmez. `taken` başka
+## sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki sütunları). PM aynı kuralla planlar;
+## `goal` alanının kartları sırada hedef ağırlığıyla öne çıkar.
+static func _suggest(capacity: float, used: float, taken: Array = [], goal := "", played := false) -> Array:
 	var pool: Array = _open_cards(taken)
 	if pool.is_empty():
 		return []
@@ -772,17 +793,7 @@ static func _suggest(capacity: float, used: float, taken: Array = [], goal := ""
 		score[c.id] = _ratio(c) * (float(cfg("pm.goal_weight")) if c.area == goal else 1.0)
 	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return score[a.id] > score[b.id] if score[a.id] != score[b.id] else a.id < b.id)
-	var areas: Array = area_ids().filter(func(a: String) -> bool:
-		return pool.any(func(c: Dictionary) -> bool: return c.area == a))
-	if floori(capacity / float(cfg("effort.k1"))) <= int(cfg("lead.small_team_cards")):
-		var built: Array = areas.filter(func(a: String) -> bool:
-			return pool.any(func(c: Dictionary) -> bool: return c.area == a and c.kind != "research"))
-		if not built.is_empty():
-			areas = built
-	var weakest: String = _weakest(areas, pool)
-	# Yayında olmayan ürünün tek hedefi MVP'dir: zorunlu kart, açık kartı kaldıkça Çekirdek'ten.
-	if mvp_cards_left() > 0 and _identity_area() in areas:
-		weakest = _identity_area()
+	var weakest: String = _lead_area(pool, capacity)
 	var must: Array = pool.filter(func(c: Dictionary) -> bool: return not _promises_on(c.step).is_empty())
 	must.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return _promises_on(a.step)[0].due_sprint < _promises_on(b.step)[0].due_sprint)
@@ -802,7 +813,15 @@ static func _suggest(capacity: float, used: float, taken: Array = [], goal := ""
 			used += load
 	for c in pool:
 		var load: float = SprintSystem.remaining(c)
-		if not picks.has(c.id) and score[c.id] > 0.0 and used + load <= capacity:
-			picks.append(c.id)
-			used += load
+		if picks.has(c.id) or score[c.id] <= 0.0 or used + load > (ceiling if played else capacity):
+			continue
+		if played:
+			var plan: Dictionary = SprintSystem.plan_outcome(_p().sprint.cards + picks + [c.id]).cards
+			if picks.any(func(id: String) -> bool: return not plan[id].finishes) or plan[c.id].done <= SprintSystem.EPS:
+				continue
+			if not plan[c.id].finishes:
+				picks.append(c.id)
+				break
+		picks.append(c.id)
+		used += load
 	return picks

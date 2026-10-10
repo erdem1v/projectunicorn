@@ -31,19 +31,21 @@ extends RefCounted
 #         capabilities: [{name, tier 0..3, rivals_have, rivals_total, rival_names: [String]}],
 #         candidates: [card], voices_list: [{text, new}], empty (aday kalmadı)}
 # customer = {name, request: "" or String, tickets, tag_sprint: -1 or int, due_sprint: -1 or int,
-#             value (yıllık $), area_name: "" or String, card_id (talebin kartı), buttons: [...]}
+#             value (yıllık $), area_name: "" or String, card_id (talebin kartı), buttons: [...],
+#             addable ("+" bu talep için açık)}
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks, week (active),
 #           capacity: {used, total, done, state: "ok"|"over"|"blocked", segments: [{pts}]} or null (puanlar kesirli),
 #           team: [person], staffed (kadroda çalışan var), warning_text: "" or String (eksik rol),
 #           cards: [card], forecast: [part], status: {done, running, decisions}, auto_started,
 #           next_version: {label, weeks: int or -1, beta_extra, cards_left: int or -1} or null,
-#           can_add, ceiling_pct (yükün "+" kapanan eşiği, yüzde), can_start,
+#           can_add (sprint kart alıyor, kartsız soru), spare (planda hiçbir karta gitmeyen puan var),
+#           ceiling_pct (yükün "+" kapanan eşiği, yüzde), can_start,
 #           start_reason: "" or String (başlat kapalıysa kapanan koşul), beta: {open} or null,
-#           lead_tip: person + {text} or null,
+#           lead_tip: person + {text, self (lider kurucunun kendisi)} or null,
 #           release: {version: "v5" or "" (sürüm çıkmadı), beta, shipped: [card],
 #                     carried: [{name, kind, done (kesirli), total, to_sprint}], velocity: {done, total} (kesirli),
 #                     result: {kind: "expected"|"actual", text} or null, press: {outlet (anahtar), text} or {},
-#                     lead: person + {text}} or null}
+#                     lead: person + {text, self}} or null}
 # person = {name, role_text, look ({} ise baş harfler)}
 # column = {sprint, kind: "current"|"proposed"|"empty", capacity: {...} or null, pm, flags: [...], cards: [card], approved}
 # card = {id, name, kind, roles: [...], effort, state: SprintCard.State, effect: [part], tag_sprint: -1 or int,
@@ -51,8 +53,10 @@ extends RefCounted
 #         decision: {event_id, item (gelen kutusundaki kâğıt), sender (Inbox'un göndericisi), subject, weeks_left,
 #                    last} or null,
 #         effort_split: [{name, weeks}],
-#         locked_node: "" or String, remaining: -1 or float (kesirli), spills, urgent,
-#         buttons: ["add"|"send_next"|"pull"|"remove"]}   # var olan düğmeler; "+" can_add ile açılır
+#         locked_node: "" or String, remaining: -1 or float (kesirli), urgent,
+#         spills (planda puan alır ama bitmez), no_start: -1 or int (planda puan almaz, kaydığı sprint),
+#         planned_done (kesirli, planda sprint sonunda biten puan), addable ("+" bu aday için açık),
+#         buttons: ["add"|"send_next"|"pull"|"remove"]}   # var olan düğmeler; "+" addable ile açılır
 # part = {k: "level", area, from, to, from_word, to_word} | {k: "holds", area, word} | {k: "alert_clear", area}
 #      | {k: "cap", name, from, to, from_word, to_word} | {k: "tickets", n} | {k: "voices", n}
 #      | {k: "request", customer, value} | {k: "rival_gap"} | {k: "research", area} | {k: "request_on_time", customer}
@@ -61,7 +65,7 @@ extends RefCounted
 #   kelimesidir (SprintCatalog.word_for), kelime ve renk ondan.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
-## Kartın bulunduğu yerdeki düğmeleri; "+" modelin can_add'iyle açılır.
+## Kartın bulunduğu yerdeki düğmeleri; "+" kartın addable'ıyla açılır.
 const BUTTONS := {
 	SprintCard.State.ADAY: ["add", "send_next"],
 	SprintCard.State.KILITLI: ["add", "send_next"],
@@ -151,7 +155,7 @@ static func _candidate(c: Dictionary, tags: Dictionary) -> Dictionary:
 	var lock: String = SprintCatalog.gate_reason(c.step)
 	if lock != "":
 		return _card(c, SprintCard.State.KILITLI, {"locked_node": lock})
-	return _card(c, SprintCard.State.ADAY)
+	return _card(c, SprintCard.State.ADAY, {"addable": SprintSystem.can_add(c.id)})
 
 
 ## Açık talepler; hesabı kapanmış müşterinin talebi yazılmaz. Talep kartı aday kartın aynısıdır:
@@ -169,7 +173,7 @@ static func _customers(tags: Dictionary) -> Array:
 		out.append({"name": customer, "request": SprintCatalog.step_name(r.step), "tickets": 0,
 			"tag_sprint": tag, "due_sprint": int(r.due_sprint), "value": int(r.value),
 			"area_name": SprintCatalog.area_short(area_id), "card_id": card_id,
-			"buttons": BUTTONS[SprintCard.State.ADAY] if tag < 0 else []})
+			"buttons": BUTTONS[SprintCard.State.ADAY] if tag < 0 else [], "addable": tag < 0 and SprintSystem.can_add(card_id)})
 	return out
 
 
@@ -185,6 +189,8 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 	var lead: Character = _lead()
 	var sprint_cards: Array = sprint.get("cards", [])
 	var decision: Variant = _decision()
+	# Plan ekranı motorun oynatmasını söyler: kim kaç hafta, devreden, başlamayan ve SPRİNT SONUNDA.
+	var outcome: Dictionary = SprintSystem.plan_outcome() if mode == "plan" and n > 0 else {}
 	var cards: Array = []
 	var segments: Array = []
 	var load: float = 0.0
@@ -195,9 +201,10 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 		var pts: float = SprintSystem.card_load(c)
 		match [mode, c.state]:
 			["plan", _]:
-				card = _planned(c, SprintCard.State.SPRINT_PLAN, {"remaining": _remaining(c),
-					"effort_split": SprintSystem.effort_split(id)})
-				card.spills = load + pts > total + SprintSystem.EPS
+				var o: Dictionary = outcome.cards[id]
+				card = _planned(c, SprintCard.State.SPRINT_PLAN, {"remaining": _remaining(c), "effort_split": o.split,
+					"spills": not o.finishes and o.done > SprintSystem.EPS, "no_start": n + 1 if o.done <= SprintSystem.EPS else -1,
+					"planned_done": SprintSystem.total(c) - SprintSystem.remaining(c) + o.done})
 			[_, "done"]:
 				card = _card(c, SprintCard.State.BITTI, {"phases": _phases(c), "assignees": _people(c.assignees, team)})
 				status.done += 1
@@ -227,16 +234,19 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 		"team": team.map(func(t: Dictionary) -> Dictionary: return _person(CharacterRegistry.get_character(t.id))),
 		"staffed": not CharacterRegistry.get_employees().is_empty(),
 		"warning_text": warning, "cards": cards,
-		"forecast": SprintCatalog.forecast(sprint_cards) if mode == "plan" else [],
+		"forecast": SprintCatalog.forecast(sprint_cards.filter(func(id: String) -> bool: return outcome.cards[id].finishes))
+			if mode == "plan" else [],
 		"status": status,
 		"auto_started": mode == "active" and int(p.get("auto_started", -1)) == n,
 		"next_version": {"label": SprintSystem.version_label(ProductState.version() + 1),
 			"weeks": weeks - maxi(SprintSystem.week(), 1) + 1, "beta_extra": bool(sprint.get("beta", false)),
 			"cards_left": -1 if ProductState.is_live() else SprintCatalog.mvp_cards_left()} if n > 0 else null,
-		"can_add": SprintSystem.can_add(), "ceiling_pct": roundi(float(SprintCatalog.cfg("cap_ceiling")) * 100.0),
+		"can_add": SprintSystem.can_add(), "spare": outcome.get("spare", 0.0) > SprintSystem.EPS,
+		"ceiling_pct": roundi(float(SprintCatalog.cfg("cap_ceiling")) * 100.0),
 		"can_start": can_start, "start_reason": reason,
 		"beta": {"open": bool(sprint.get("beta", false))} if n > 0 else null,
-		"lead_tip": null if lead_ids.is_empty() else _person(lead).merged({"text": SprintCatalog.lead_sentence(lead_ids)}),
+		"lead_tip": null if lead_ids.is_empty() else _person(lead).merged({"text": SprintCatalog.lead_sentence(lead_ids),
+			"self": lead.category == "founder"}),
 		"release": _release(release, lead) if not release.is_empty() else null,
 	}
 
@@ -257,7 +267,7 @@ static func _release(r: Dictionary, lead: Character) -> Dictionary:
 		"velocity": r.velocity,
 		"result": _result(r),
 		"press": {} if press.is_empty() else {"outlet": press.outlet, "text": SprintBridges.resolve(press)},
-		"lead": _person(lead).merged({"text": SprintCatalog.release_lead_sentence(r)}),
+		"lead": _person(lead).merged({"text": SprintCatalog.release_lead_sentence(r), "self": lead.category == "founder"}),
 	}
 
 
@@ -357,7 +367,8 @@ static func _card(c: Dictionary, state: SprintCard.State, extra := {}) -> Dictio
 	var card := {"id": c.id, "name": SprintCatalog.card_name(c), "kind": _kind(c), "roles": c.roles,
 		"effort": roundi(SprintSystem.total(c)), "state": state, "effect": SprintCatalog.card_effect(c),
 		"tag_sprint": -1, "phases": [], "assignees": [], "decision": null, "effort_split": [], "locked_node": "",
-		"remaining": -1, "spills": false, "urgent": SprintCatalog.is_urgent(c), "buttons": BUTTONS.get(state, [])}
+		"remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0, "addable": false,
+		"urgent": SprintCatalog.is_urgent(c), "buttons": BUTTONS.get(state, [])}
 	card.merge(extra, true)
 	return card
 

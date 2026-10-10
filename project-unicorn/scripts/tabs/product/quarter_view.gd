@@ -169,7 +169,7 @@ func _column(col: Dictionary, editable: bool) -> PanelContainer:
 	for c in col.cards:
 		var card: SprintCard = SPRINT_CARD.instantiate()
 		stack.add_child(card)
-		card.setup(c, false, SprintCard.Look.MINI)
+		card.setup(c, SprintCard.Look.MINI)
 
 	if col.kind != "proposed":
 		return column

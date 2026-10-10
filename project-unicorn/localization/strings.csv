@@ -2725,7 +2725,8 @@ PRODUCT_THIS_SPRINT,Bu sprint,This sprint
 PRODUCT_NEXT,Sonraki,Next
 PRODUCT_TEAM_NOBODY,Bu sprintte çalışacak kimse yok,Nobody can work this sprint
 PRODUCT_ROLE_MISSING,Ekipte {role} yok · kartlar hatalı çıkabilir,No {role} on the team · cards may ship buggy
-PRODUCT_CARD_SPILLS,devreder,carries over
+PRODUCT_CARD_SPILLS_PTS,devreder · {done}/{total},carries over · {done}/{total}
+PRODUCT_CARD_NO_START,Bu sprint başlamaz → Sprint {n},Won't start this sprint → Sprint {n}
 PRODUCT_CARRIED,devreden,carried
 PRODUCT_URGENT,Acil,Urgent
 PRODUCT_BETA_WAITING,beta bekliyor,in beta
@@ -2763,6 +2764,7 @@ PRODUCT_PLUS_ONE_SPRINT,+1 sprint,+1 sprint
 PRODUCT_CARDS_LEFT,{n} kart kaldı,{n} cards left
 PRODUCT_CARDS_LEFT_ONE,{n} kart kaldı,{n} card left
 PRODUCT_LEAD_TIP,Liderin önerisi,Lead's pick
+PRODUCT_LEAD_TIP_SELF,Kendi notun,Your own note
 PRODUCT_LEAD_LINE,Lider,Lead
 PRODUCT_BETA_CHANNEL,Beta kanalı,Beta channel
 PRODUCT_OFF,Kapalı,Off
@@ -2903,6 +2905,7 @@ PRODUCT_RELEASE_HOLD,Sürüm notu açıkken oyun durur,Paused while the release 
 PRODUCT_OVER_CAPACITY,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} cards carry over
 PRODUCT_OVER_CAPACITY_ONE,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} card carries over
 PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}
+PRODUCT_ADD_CLOSED_FULL,Bu sprintte boş puan kalmadı,No spare points left this sprint
 PRODUCT_GO_TEAM,Ekip'e git,Go to Team
 SALES_PROMISE_OPEN_SPRINT,Açık söz: {feature} · Sprint {n} sonuna kadar,Open promise: {feature} · by the end of sprint {n}
 FIN_BURN_TOOLS,Geçim ve araçlar,Living and tools

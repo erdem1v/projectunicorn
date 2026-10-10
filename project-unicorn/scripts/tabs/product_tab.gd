@@ -81,8 +81,10 @@ func _ready() -> void:
 	frame.custom_minimum_size.x = UiTokens.D_W_PICKER
 	center.add_child(frame)
 	var picker := TypePicker.new()
+	# Tür seçilince liderin planı hazırdır: ilk sprint tek tıkla başlar.
 	picker.chosen.connect(func(subtype: String, product_name: String) -> void:
-		SprintSystem.choose_type(subtype, product_name))
+		SprintSystem.choose_type(subtype, product_name)
+		SprintSystem.apply_lead())
 	frame.add_child(SprintUiShared.pad(picker, Vector4i.ONE * UiTokens.SPACE_3XL))
 	picker.setup()
 	for view: Control in [_sprint_view, _quarter, _picker_view]:

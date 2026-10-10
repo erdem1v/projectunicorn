@@ -2599,6 +2599,10 @@ func _run_product_shot(id: String) -> void:
 				if go.text == tr("PRODUCT_GO_DECISION"):
 					go.pressed.emit()
 					break
+		if id == "live:solo15":
+			await get_tree().process_frame
+			(_shell.find_children("*", "SprintCard", true, false).filter(func(card: SprintCard) -> bool:
+				return card.state == SprintCard.State.SPRINT_PLAN).back() as SprintCard).show_effort()
 		await _finish_shot(stem)
 		return
 	await _mount_shot_shell()
@@ -2627,17 +2631,27 @@ func _run_product_shot(id: String) -> void:
 	get_tree().quit()
 
 
-## live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests>. pick and pick_named leave the
-## product untyped (the type picker). The rest choose a type, staff it with the HR shot roster and play
-## through SprintSystem with only its own daily step ticking, so no card mounts: plan stops in Sprint 1
-## planning with the lead's plan, active and decision_paper in its second week with a sprint paper on the
-## desk, b2c_mvp on the CANLI v1.0 release note. b2b_requests signs two accounts once the faucet opens at
-## MVP and plays one more sprint, so the next planning carries their request cards.
+## live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests|solo15|solo15_tip|solo12_active>.
+## pick and pick_named leave the product untyped (the type picker). The solo ones leave the founder alone
+## from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with the lead's plan
+## applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active starts the
+## lead's plan at 12 hours, two cards over capacity (6/5). The rest choose a type, staff it with the HR shot
+## roster and play through SprintSystem with only its own daily step ticking, so no card mounts: plan stops
+## in Sprint 1 planning with the lead's plan, active and decision_paper in its second week with a sprint
+## paper on the desk, b2c_mvp on the CANLI v1.0 release note. b2b_requests signs two accounts once the
+## faucet opens at MVP and plays one more sprint, so the next planning carries their request cards.
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
 		return
 	var b2b: bool = scenario == "b2b_requests"
 	SprintSystem.choose_type("erp" if b2b else "note_tool", "Fatura" if b2b else "Notly")
+	if scenario.begins_with("solo"):
+		WorkHoursSystem.set_company_hours(12 if scenario == "solo12_active" else 15)
+		if scenario != "solo15_tip":
+			SprintSystem.apply_lead()
+		if scenario == "solo12_active":
+			SprintSystem.start()
+		return
 	_seed_hr_roster()
 	var day := func() -> void:
 		GameState.advance_day()

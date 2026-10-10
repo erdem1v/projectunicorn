@@ -59,7 +59,7 @@ func _init() -> void:
 func setup(model: Dictionary) -> void:
 	UiFactory.clear(self)
 	_center(model)
-	_next(model.next, model.center.can_add)
+	_next(model.next)
 
 
 func _center(model: Dictionary) -> void:
@@ -86,20 +86,23 @@ func _center(model: Dictionary) -> void:
 		if c.warning_text != "":
 			team.add_child(_note(SprintUiShared.BUG, c.warning_text, UiTokens.D_warn()))
 		col.head.add_child(team)
-	if cap.state == "over":
+	# Aşım ve kapalı "+" plan uyarısıdır (koşan sprintin kartları kilitli). Sığan ama boş puanı kalmayan
+	# sprintte de "+" kapanır; not nedenini orada da söyler.
+	if c.mode == "plan" and (cap.state == "over" or (cap.state == "ok" and not c.can_add)):
 		var over := SprintUiShared.box(UiTokens.SPACE_XL)
-		var n: int = c.cards.filter(func(card: Dictionary) -> bool: return card.spills).size()
-		over.add_child(_note(SprintUiShared.WARN, tr(Fmt.count_key("PRODUCT_OVER_CAPACITY", n)).format({"n": n}),
-			UiTokens.D_warn()))
+		if cap.state == "over":
+			var n: int = c.cards.filter(func(card: Dictionary) -> bool: return card.spills or int(card.no_start) >= 0).size()
+			over.add_child(_note(SprintUiShared.WARN, tr(Fmt.count_key("PRODUCT_OVER_CAPACITY", n)).format({"n": n}),
+				UiTokens.D_warn()))
 		if not c.can_add:
-			over.add_child(_note("", tr("PRODUCT_ADD_CLOSED").format({"pct": Fmt.percent(c.ceiling_pct, 0)}),
-				UiTokens.D_INK_3))
+			over.add_child(_note("", tr("PRODUCT_ADD_CLOSED").format({"pct": Fmt.percent(c.ceiling_pct, 0)}) if c.spare
+				else tr("PRODUCT_ADD_CLOSED_FULL"), UiTokens.D_INK_3))
 		col.head.add_child(over)
 
 	if c.team.is_empty() and c.cards.is_empty():
 		col.stack.add_child(_nobody(c.staffed))
 	for card in c.cards:
-		var node := _add_card(col.stack, card, c.can_add, SprintCard.Look.WIDE)
+		var node := _add_card(col.stack, card, SprintCard.Look.WIDE)
 		if card.id == model.ui.hover_card:
 			node.show_effort()
 
@@ -254,7 +257,7 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 		&"PrimaryButtonDark", action.emit.bind("plan_next", {"sprint": next_sprint}))))
 
 
-func _next(next: Dictionary, can_add: bool) -> void:
+func _next(next: Dictionary) -> void:
 	var col := Column.new(&"SprintColumnNext", UiTokens.D_SPRINT_COLUMNS.y)
 	HRUiShared.D_dashed(col)
 	add_child(col)
@@ -269,7 +272,7 @@ func _next(next: Dictionary, can_add: bool) -> void:
 			flags.add_child(SprintUiShared.flag(flag.text, flag.k == "deadline"))
 		col.head.add_child(flags)
 	for card in next.cards:
-		_add_card(col.stack, card, can_add, SprintCard.Look.NARROW)
+		_add_card(col.stack, card, SprintCard.Look.NARROW)
 	if next.cards.is_empty():
 		col.stack.add_child(SprintUiShared.empty_line(tr("PRODUCT_NEXT_EMPTY")))
 
@@ -287,10 +290,10 @@ func _title_row(sprint: int, meta: String, tag_key: String) -> HBoxContainer:
 	return row
 
 
-func _add_card(box: VBoxContainer, card: Dictionary, can_add: bool, look: SprintCard.Look) -> SprintCard:
+func _add_card(box: VBoxContainer, card: Dictionary, look: SprintCard.Look) -> SprintCard:
 	var node: SprintCard = CARD_SCENE.instantiate()
 	box.add_child(node)
-	node.setup(card, can_add, look)
+	node.setup(card, look)
 	node.action.connect(action.emit)
 	return node
 
@@ -311,15 +314,16 @@ func _release_row(box: VBoxContainer, kind: String, card_name: String) -> HBoxCo
 
 
 ## Liderin önerisi (planlama) ve sürüm notundaki lider cümlesi: yüz, anahtar ve ad, cümle; planlamada
-## öneriyi uygulayan düğme.
+## öneriyi uygulayan düğme. Lider kurucunun kendisiyse not onundur: "Kendi notun", ad yazılmaz.
 func _lead_row(lead: Dictionary, key: String, apply: Button) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_L)
 	row.add_child(SprintUiShared.avatar(lead, UiTokens.D_AVATAR_ROW))
 	var words := SprintUiShared.column(UiTokens.SPACE_XXS)
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var caption := SprintUiShared.box(UiTokens.SPACE_S)
-	caption.add_child(SprintUiShared.label(Fmt.upper(tr(key)), &"KeyLabel"))
-	caption.add_child(SprintUiShared.label(String(lead.name), &"KeyText"))
+	caption.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_LEAD_TIP_SELF" if lead["self"] else key)), &"KeyLabel"))
+	if not lead["self"]:
+		caption.add_child(SprintUiShared.label(String(lead.name), &"KeyText"))
 	words.add_child(caption)
 	words.add_child(SprintUiShared.prose(String(lead.text), &"DataText"))
 	row.add_child(words)

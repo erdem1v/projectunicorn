@@ -37,6 +37,10 @@ func model() -> Dictionary:
 	var m: Dictionary = _build(_stage)
 	for entry in _log:
 		_apply(m, entry[0], entry[1])
+	# Fikstürde "+" sprintin geneline bağlıdır: her aday ve talep satırı merkezin can_add'ini okur.
+	for list in m.areas.map(func(a: Dictionary) -> Array: return a.candidates) + [m.customers if m.customers != null else []]:
+		for c in list:
+			c.addable = m.center.can_add
 	return m
 
 
@@ -75,9 +79,10 @@ func _build(id: String) -> Dictionary:
 			m.header.live_version = "1.5"
 		"cards":
 			m.center.cards = [
-				_deck("gorusme", SprintCard.State.ADAY, {"urgent": true}),
+				_deck("gorusme", SprintCard.State.ADAY, {"urgent": true, "addable": true}),
 				_deck("ilk_tur", SprintCard.State.ADAY_ALINMIS, {"tag_sprint": 8}),
-				_deck("mobil_giris", SprintCard.State.SPRINT_PLAN, {"spills": true}),
+				_deck("mobil_giris", SprintCard.State.SPRINT_PLAN, {"spills": true, "planned_done": 1.5}),
+				_deck("ucretli", SprintCard.State.SPRINT_PLAN, {"no_start": 8}),
 				_deck("oto_yedek", SprintCard.State.DEVREDEN, {"remaining": 0.25}),
 				_deck("etiketler", SprintCard.State.PLANLANAN),
 				_deck("akilli_arama", SprintCard.State.KILITLI, {"locked_node": tr("PRODUCT_LOCKED_NODE").format({"node": _p("Gelişmiş arama", "Advanced search")})}),
@@ -217,25 +222,29 @@ func _clear_sprint(m: Dictionary) -> void:
 	m.center.forecast = []
 
 
-## Kapasite kartlardan toplanır; planlamada "+" ve başlat izinleri de buradan.
+## Kapasite kartlardan toplanır; planlamada "+" ve başlat izinleri de buradan: "+" boş puan kaldıkça açık.
 func _resum(c: Dictionary) -> void:
-	c.capacity = _capacity(c.cards, c.capacity.total, c.capacity.done)
+	c.capacity = _capacity(c.cards, c.capacity.total, c.capacity.done, c.sprint + 1)
 	if c.mode != "plan":
 		return
 	var cap: Dictionary = c.capacity
-	c.can_add = cap.total > 0 and cap.used * 100 <= cap.total * c.ceiling_pct
+	c.spare = cap.used < cap.total
+	c.can_add = c.spare
 	c.can_start = cap.total > 0 and not c.cards.is_empty()
 	c.start_reason = "" if c.can_start else tr("PRODUCT_TEAM_NOBODY" if cap.total == 0 else "PRODUCT_START_NEED_CARD")
 
 
-## Kapasiteyi aşan kart "devreder" der; devreden kart kalan puanıyla sayılır.
-func _capacity(cards: Array, total: float, done: float) -> Dictionary:
+## Kapasiteyi aşan kart sırayla dolar: bir kısmını alan "devreder · x/y" der, hiç alamayan sonraki
+## sprinte kayar (`next`); devreden kart kalan puanıyla sayılır.
+func _capacity(cards: Array, total: float, done: float, next: int) -> Dictionary:
 	var used := 0.0
 	var segments: Array = []
 	for card in cards:
 		var pts: float = card.remaining if card.remaining >= 0 else card.effort
+		card.spills = used < total and used + pts > total
+		card.no_start = next if used >= total else -1
+		card.planned_done = card.effort - pts + clampf(total - used, 0.0, pts)
 		used += pts
-		card.spills = used > total
 		segments.append({"pts": pts})
 	var state: String = "blocked" if total == 0 else ("over" if used > total else "ok")
 	return {"used": used, "total": total, "done": done, "state": state, "segments": segments}
@@ -409,7 +418,7 @@ func _column(sprint: int, kind: String, cards: Array, flags: Array) -> Dictionar
 	var col := {"sprint": sprint, "kind": kind, "capacity": null, "pm": kind == "proposed", "flags": flags,
 		"cards": cards, "approved": false}
 	if kind != "empty":
-		col.capacity = _capacity(cards, 12, 0)
+		col.capacity = _capacity(cards, 12, 0, sprint + 1)
 	return col
 
 
@@ -471,8 +480,8 @@ func _deck(id: String, state: int, extra := {}) -> Dictionary:
 	var card := {"id": id, "name": d[4], "kind": d[0], "roles": d[2], "effort": d[3],
 		"state": state, "effect": d[5], "tag_sprint": -1, "phases": [], "assignees": [], "decision": null,
 		"effort_split": d[6].map(func(s: Array) -> Dictionary: return {"name": s[0], "weeks": s[1]}),
-		"locked_node": "", "remaining": -1, "spills": false, "urgent": false,
-		"buttons": ProductModel.BUTTONS.get(state, [])}
+		"locked_node": "", "remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0, "addable": false,
+		"urgent": false, "buttons": ProductModel.BUTTONS.get(state, [])}
 	card.merge(extra, true)
 	return card
 
@@ -506,7 +515,7 @@ func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "capacity": {"total": 12, "done": 0},
 		"team": _team(), "staffed": true, "warning_text": tr("PRODUCT_ROLE_MISSING").format({"role": _p("Test", "QA")}),
 		"cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "decisions": 0}, "auto_started": false,
-		"next_version": null, "can_add": false, "ceiling_pct": 125, "can_start": false, "start_reason": "",
+		"next_version": null, "can_add": false, "spare": false, "ceiling_pct": 125, "can_start": false, "start_reason": "",
 		"beta": {"open": false}, "lead_tip": null, "release": null}
 	c.merge(extra, true)
 	_resum(c)
@@ -529,7 +538,7 @@ func _person(person_name: String) -> Dictionary:
 
 
 func _lead(text: String) -> Dictionary:
-	return _person("Deniz").merged({"text": text})
+	return _person("Deniz").merged({"text": text, "self": false})
 
 
 func _customer(customer: String, request: String, card_id: String, due: int, value: int, area: String) -> Dictionary:

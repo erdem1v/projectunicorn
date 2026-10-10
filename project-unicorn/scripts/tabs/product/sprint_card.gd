@@ -3,7 +3,7 @@ extends PanelContainer
 
 # Ürün sprint ekranının tek kartı, küçük bir belge: aday listesi, bu sprint, sonraki sprint ve çeyrek
 # sütunu aynı sahneyi kullanır. Kart yalnız sözlüğünü çizer: hangi düğmenin olduğu (`buttons`) ve
-# "+"nın açıklığı (`can_add`) modelden gelir. Sonraki sprinte planlanmış kart kesikli kenarlıdır.
+# "+"nın açıklığı (`addable`) modelden gelir. Sonraki sprinte planlanmış kart kesikli kenarlıdır.
 
 enum State { ADAY, ADAY_ALINMIS, SPRINT_PLAN, SPRINT_AKTIF, BITTI, DEVREDEN, PLANLANAN, KILITLI, BETA_BEKLIYOR }
 ## WIDE orta sütun; NARROW sonraki sütun (ad iki satıra iner, durum etiketleri kendi satırında); LOW açık
@@ -61,7 +61,7 @@ class NameRow extends Container:
 			x += m.x + UiTokens.SPACE_M
 
 
-func setup(card: Dictionary, can_add: bool, look := Look.WIDE) -> void:
+func setup(card: Dictionary, look := Look.WIDE) -> void:
 	_card = card
 	state = card.state
 	_look = look
@@ -110,7 +110,7 @@ func setup(card: Dictionary, can_add: bool, look := Look.WIDE) -> void:
 		var acts := SprintUiShared.box(UiTokens.SPACE_XS)
 		for kind in _card.buttons:
 			# Kilitli kart iki sprinte de gidemez.
-			acts.add_child(_key(kind, (state == State.KILITLI and kind != "remove") or (kind == "add" and not can_add)))
+			acts.add_child(_key(kind, (state == State.KILITLI and kind != "remove") or (kind == "add" and not _card.addable)))
 		top.add_child(acts)
 	if int(_card.tag_sprint) >= 0:
 		top.add_child(UiFactory.D_tag(tr("PRODUCT_TAG_SPRINT").format({"n": int(_card.tag_sprint)}), &"outline"))
@@ -169,12 +169,15 @@ func _points(points: float) -> Label:
 	return pts
 
 
-## Durum etiketleri: devreder ve acil uyarı (acil uyarı üçgeniyle), ötekiler nötr. "Planlanan" etiketi
-## yok: kesikli kenar söyler.
+## Durum etiketleri: devreder ("devreder · 2,75/3"), başlamaz ve acil uyarı (acil uyarı üçgeniyle), ötekiler
+## nötr. "Planlanan" etiketi yok: kesikli kenar söyler.
 func _tags() -> Array:
 	var out: Array = []
 	if _card.spills:
-		out.append(UiFactory.D_tag(tr("PRODUCT_CARD_SPILLS"), &"warn"))
+		out.append(UiFactory.D_tag(tr("PRODUCT_CARD_SPILLS_PTS").format({"done": SprintUiShared.points(_card.planned_done),
+			"total": SprintUiShared.points(_card.effort)}), &"warn"))
+	if int(_card.no_start) >= 0:
+		out.append(UiFactory.D_tag(tr("PRODUCT_CARD_NO_START").format({"n": int(_card.no_start)}), &"warn"))
 	if _card.urgent:
 		out.append(UiFactory.D_glyph_tag(SprintUiShared.WARN, tr("PRODUCT_URGENT"), &"warn"))
 	for row in [[state == State.DEVREDEN, "PRODUCT_CARRIED"], [state == State.BETA_BEKLIYOR, "PRODUCT_BETA_WAITING"],

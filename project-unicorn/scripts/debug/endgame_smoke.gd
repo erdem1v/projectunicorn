@@ -5585,11 +5585,13 @@ static func _case_event_history_names_survive() -> String:
 
 ## A history row's chip reads what the card's chip showed: each delta records the value that
 ## landed, worked out as the live chip works it out. Sprint hours clamped to the range, an effort
-## cut held above the work done, the retention discount and the expansion at the seat price.
+## cut held above the work done, the retention discount and the expansion at the seat price. A
+## solo founder at 12 hours takes two K1, so the second waits behind the first.
 ## FALSIFICATION: record the requested effort in EvEffects' sprint_card_effort arm, or drop
 ## `hours` from its sprint_hours delta, and this fails.
 static func _case_event_history_chip_matches_live() -> String:
 	_seed_sprint()
+	WorkHoursSystem.set_company_hours(12)
 	SprintCatalog._data.decision.rate = 1.0
 	for line_id in SprintCatalog.capabilities("core").slice(0, 2):
 		SprintSystem.add("feat:%s_k1" % line_id)
@@ -16814,27 +16816,32 @@ static func _case_productivity_mod_paces_the_sprint() -> String:
 	return ""
 
 
-## "+" yük tavanında (%125) kapanır: tavanın altındaki sprint kart alır, alınan kart kapasiteyi
-## aşabilir ("devreder" uyarısı), tavanı geçmiş sprint yeni kart almaz.
+## "+" kartı ancak bu sprintte puan alacaksa ve eklendikten sonra yük tavanı (%125) aşmıyorsa alır;
+## boş sprint her kartı alır. Tek kurucu 8 saatte: ikinci K1 boş puana rağmen tavanı aşar, Çekirdek'in
+## araştırması kalan puanı alıp girer, ondan sonra tavanın altındaki kart da boş puan kalmadığı için girmez.
 static func _case_sprint_ceiling_125_blocks_add() -> String:
 	_seed_sprint()
-	_sprint_hire("char_ceil_dev", HRConstants.ROLE_DEVELOPER)
 	var ceiling: float = SprintSystem.capacity() * float(SprintCatalog.cfg("cap_ceiling"))
-	var refused: int = 0
-	for c in SprintCatalog.candidates("core"):
-		if c.kind != "feature" or SprintCatalog.gate_reason(c.step) != "":
+	var refused: Dictionary = {"full": 0, "ceiling": 0}
+	for c in SprintCatalog.candidates("core") + SprintCatalog.candidates("onboarding"):
+		if SprintCatalog.gate_reason(c.step) != "":
 			continue
-		var open: bool = SprintSystem.can_add()
-		if open != (SprintSystem.used() <= ceiling):
-			return "+ reads %s at a load of %d against a ceiling of %.2f" % [open, SprintSystem.used(), ceiling]
+		var used: float = SprintSystem.used()
+		var spare: bool = SprintSystem.plan_outcome().spare > SprintSystem.EPS
+		var fits: bool = used + SprintSystem.remaining(c) <= ceiling
+		var open: bool = SprintSystem.can_add(c.id)
+		if open != (used <= SprintSystem.EPS or (spare and fits)):
+			return "+ reads %s for %s at a load of %.2f (spare %s) against a ceiling of %.2f" % [
+				open, c.id, used, spare, ceiling]
 		SprintSystem.add(c.id)
 		if GameState.product.sprint.cards.has(c.id) != open:
-			return "add() %s %s with + reading %s at a load of %d" % [
-				"took" if not open else "refused", c.id, open, SprintSystem.used()]
-		refused += int(not open)
-	if refused == 0:
-		return "fixture: the core cards never pushed the load over the ceiling (load %d, ceiling %.2f)" % [
-			SprintSystem.used(), ceiling]
+			return "add() %s %s with + reading %s at a load of %.2f" % [
+				"took" if not open else "refused", c.id, open, used]
+		if not open:
+			refused["ceiling" if spare else "full"] += 1
+	if refused.full == 0 or refused.ceiling == 0:
+		return "fixture: the core cards never met both closures (refused %s, load %.2f, ceiling %.2f)" % [
+			refused, SprintSystem.used(), ceiling]
 	return ""
 
 
@@ -17493,13 +17500,15 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 
 ## Sprint karar kartları gerçek destededir: istek oranı 1 iken koşan sprintin ilk haftasından sonra
 ## geride kalan kart bir product.sprint_* kâğıdını masaya koyar ve gövdesi beklenen kartın adını
-## okur. Vaka fikstür kapsamını açmaz; oranı (test sabiti) kendi süresince açar ve geri koyar.
+## okur. Vaka fikstür kapsamını açmaz; oranı (test sabiti) kendi süresince açar ve geri koyar. Tek
+## kurucu 12 saatte iki K1 alır; ikincisi ilk hafta geride kalır.
 ## FALSİFİKASYON: kartlardan birinin version_scope'unu "fixture" yap ya da sprint.json
 ## decision.cards'ı fixture kimliklerine çevir → karar istenmez.
 static func _case_sprint_decision_card_fires_shipped() -> String:
 	if EvTuning.SHIPPED_SCOPES.has("fixture"):
 		return "fixture: the shipped scopes already admit fixtures"
 	_seed_sprint()
+	WorkHoursSystem.set_company_hours(12)
 	var rate: Variant = SprintCatalog.cfg("decision.rate")
 	SprintCatalog._data.decision.rate = 1.0
 	for line_id in SprintCatalog.capabilities("core").slice(0, 2):

@@ -161,7 +161,7 @@ func _add_open_body(col: VBoxContainer, area: Dictionary) -> void:
 	for c in area.candidates:
 		var card: SprintCard = CARD_SCENE.instantiate()
 		body.add_child(card)
-		card.setup(c, bool(_model.center.can_add), SprintCard.Look.LOW)
+		card.setup(c, SprintCard.Look.LOW)
 		card.action.connect(action.emit)
 
 	var voices: Dictionary = area.voices
@@ -246,7 +246,7 @@ func _customer_card(c: Dictionary) -> PanelContainer:
 	if int(c.tag_sprint) >= 0:
 		top.add_child(UiFactory.D_tag(tr("PRODUCT_TAG_SPRINT").format({"n": int(c.tag_sprint)}), &"outline"))
 	for kind in c.buttons:
-		var b := SprintUiShared.key_button(kind, kind == "add" and not _model.center.can_add)
+		var b := SprintUiShared.key_button(kind, kind == "add" and not c.addable)
 		b.pressed.connect(action.emit.bind(kind, {"card_id": c.card_id}))
 		top.add_child(b)
 

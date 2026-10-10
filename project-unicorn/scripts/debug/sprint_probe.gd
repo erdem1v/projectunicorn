@@ -7,24 +7,27 @@ extends RefCounted
 # opens, so the ledger measures the engine, not a player's delay: cards=N tops it up to N cards (the
 # carried ones stay, the open Core K1 candidates follow by effort, each through SprintSystem.add),
 # lead=1 takes the lead's plan instead, beta=1 opens Beta; a sprint with nothing to start ends the seed.
-# What the screen says of each card is read when its sprint starts and checked when it closes. events=0
-# runs only the sprint's daily step, with no decision paper; events=1 runs the whole clock in batches
-# (each visible hour, then the night up to 08:00), answers the desk through RunProbe after every batch
-# and draws sprint decisions at sprint.json's rate unless rate= is given.
+# The plan the screen draws (SprintSystem.plan_outcome) is read when its sprint starts and checked when it
+# closes. events=0 runs only the sprint's daily step, with no decision paper; events=1 runs the whole clock
+# in batches (each visible hour, then the night up to 08:00), answers the desk through RunProbe after every
+# batch and draws sprint decisions at sprint.json's rate unless rate= is given.
 #
-#   SPRINTPROBE SKIP|<seed>|<sprint>|<card>|ceiling   add() refused the card, the sprint stays short
+#   SPRINTPROBE SKIP|<seed>|<sprint>|<card>|full|ceiling   add() refused the card (no point left for it, or
+#                                                         the load past the ceiling), the sprint stays short
 #   SPRINTPROBE SKIP|<seed>|<sprint>|-|empty          the sprint has nothing to start, the seed ends
+#   SPRINTPROBE PRED|<seed>|<sprint>|<card>|<split id:weeks+…>|<done>|<finishes 1|0>|<no_start 1|0>
 #   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|MATCH|MISMATCH[|cause=<event id>|cause=team]
 #   SPRINTPROBE MVP|<seed>|<tick>
 #   SPRINTPROBE SUMMARY|match=<matched>/<closes>|mvp_days=<tick>x<seeds>,…   (- = no MVP within t ticks)
-# carried_done is the points a carried card got in this sprint, - for a card that finished.
+# done and carried_done are the points the card gets in this sprint (carried_done - for a card that
+# finished).
 #
-# MATCH: the card finished in its sprint exactly when the screen did not tag it as carrying over. A
-# mismatch is named when, inside its sprint, an answered event changed the team's points or a card's
-# effort, progress or place (cause=<event id>), or the week's tick changed the team (cause=team). The
-# run passes when no mismatch is unnamed.
+# MATCH: the card finished in its sprint exactly when the plan said it finishes, and a carried card got
+# the points the plan gave it. A mismatch is named when, inside its sprint, an answered event changed the
+# team's points or a card's effort, progress or place (cause=<event id>), or the week's tick changed the
+# team (cause=team). The run passes when no mismatch is unnamed.
 
-static var _said: Dictionary = {}   # the running sprint: card id -> [the screen says it finishes, points done]
+static var _said: Dictionary = {}   # the running sprint: card id -> [plan finishes, plan's points, points before]
 static var _cause: String = ""      # the first change that names the running sprint's mismatches
 static var _seen: Array = []
 
@@ -79,11 +82,13 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 	if SprintSystem.mode() == "release":
 		for id in _said:
 			var carried: Array = p.release.carried.filter(func(c: Dictionary) -> bool: return c.id == id)
+			var got: float = 0.0 if carried.is_empty() else float(carried[0].done) - _said[id][2]
 			var verdict: String = "MATCH" if carried.is_empty() == _said[id][0] \
+				and (carried.is_empty() or absf(got - _said[id][1]) <= SprintSystem.EPS) \
 				else "MISMATCH" + ("" if _cause == "" else "|cause=" + _cause)
 			verdicts.append(verdict)
 			print("SPRINTPROBE CLOSE|%d|%d|%s|%d|%s|%s" % [seed_value, p.release.sprint, id, int(carried.is_empty()),
-				"-" if carried.is_empty() else "%.2f" % (float(carried[0].done) - _said[id][1]), verdict])
+				"-" if carried.is_empty() else "%.2f" % got, verdict])
 		if GameState.get_flag("mvp_launch_day", -1) == GameState.day:
 			print("SPRINTPROBE MVP|%d|%d" % [seed_value, GameState.day])
 		SprintSystem.plan_next()
@@ -101,14 +106,18 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 				break
 			SprintSystem.add(c.id)
 			if not p.sprint.cards.has(c.id):
-				# add() refuses an open card only when the load is past the ceiling.
-				print("SPRINTPROBE SKIP|%d|%d|%s|ceiling" % [seed_value, SprintSystem.sprint_number(), c.id])
+				# add() refuses an open card when no point is left for it or the load would pass the ceiling.
+				print("SPRINTPROBE SKIP|%d|%d|%s|%s" % [seed_value, SprintSystem.sprint_number(), c.id,
+					"ceiling" if SprintSystem.plan_outcome().spare > SprintSystem.EPS else "full"])
 				break
+	var plan: Dictionary = SprintSystem.plan_outcome().cards
 	_said = {}
-	for card in ProductModel.live().center.cards:
-		if card.id in p.sprint.cards:
-			var c: Dictionary = p.cards[card.id]
-			_said[card.id] = [not card.spills, SprintSystem.total(c) - SprintSystem.remaining(c)]
+	for id in p.sprint.cards:
+		var card: Dictionary = plan[id]
+		_said[id] = [card.finishes, card.done, SprintSystem.total(p.cards[id]) - SprintSystem.remaining(p.cards[id])]
+		print("SPRINTPROBE PRED|%d|%d|%s|%s|%.2f|%d|%d" % [seed_value, SprintSystem.sprint_number(), id,
+			"+".join(card.split.map(func(w: Dictionary) -> String: return "%s:%d" % [w.id, w.weeks])), card.done,
+			int(card.finishes), int(card.done <= SprintSystem.EPS)])
 	if not SprintSystem.start():
 		print("SPRINTPROBE SKIP|%d|%d|-|empty" % [seed_value, SprintSystem.sprint_number()])
 		return false

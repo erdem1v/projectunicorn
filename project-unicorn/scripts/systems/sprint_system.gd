@@ -74,10 +74,10 @@ static func new_state(day: int) -> Dictionary:
 
 # --- Eylemler (arayüz ve bot) -------------------------------------------------------
 
-## "+" ve "↑": kapasite var, yük tavanı aşmamış ve kart yerinden oynayabiliyorsa bu sprinte girer.
+## "+" ve "↑": kart yerinden oynayabiliyor ve "+" onun için açıksa (can_add) bu sprinte girer.
 static func add(card_id: String) -> void:
 	var card: Dictionary = SprintCatalog.card_by_id(card_id)
-	if _movable(card) and can_add():
+	if _movable(card) and can_add(card_id):
 		_place(card, true)
 		_changed()
 
@@ -413,10 +413,20 @@ static func team() -> Array:
 	return out
 
 
-## "+" yalnız planlamada, kapasite varken ve yük %125'i aşmamışken açıktır.
-static func can_add() -> bool:
+## "+" yalnız planlamada ve kapasite varken açıktır. Boş sprint her kartı alır, tavanı aşanı da (yoksa
+## tek kurucu büyük kartı hiç alamazdı). Dolu sprintte kart bu sprintte puan almalı (planın boş puanı
+## kalmalı) ve eklendikten sonra yük kapasitenin %125'ini aşmamalı; bitmeyecek kart devreder. Kart
+## verilmezse yalnız bugünkü yük sorulur.
+static func can_add(card_id := "") -> bool:
 	var cap: float = capacity()
-	return mode() == "plan" and cap > 0 and used() <= cap * float(SprintCatalog.cfg("cap_ceiling"))
+	if mode() != "plan" or cap <= 0:
+		return false
+	var load: float = used()
+	if load <= EPS:
+		return true
+	if card_id != "":
+		load += remaining(SprintCatalog.card_by_id(card_id))
+	return load <= cap * float(SprintCatalog.cfg("cap_ceiling")) and plan_outcome().spare > EPS
 
 
 ## Başlatmak ekip ve kapısı açık en az bir kart ister.
@@ -425,10 +435,21 @@ static func can_start() -> bool:
 		and _sprint_cards().any(func(c: Dictionary) -> bool: return SprintCatalog.gate_reason(c.step) == "")
 
 
-## Otomatik atamanın ön izlemesi: kartta çalışacak her kişi ve haftası, [{id, name, weeks}].
-static func effort_split(card_id: String) -> Array:
-	var cards: Array = _sprint_cards().map(func(c: Dictionary) -> Dictionary: return c.duplicate(true))
-	return (_play_out(cards).get(card_id, {}) as Dictionary).values()
+## Planın oynatması: kartlar verilen sırayla (liste boşsa bu sprintin kartları) bugünkü ekiple, sprintin
+## kalan haftalarında kopyalarda oynanır. Plan ekranı, "+" ve lider aynı oynatmayı okur.
+## {cards: {kart: {split: [{id, name, weeks}], done, finishes}}, spare}: done kartın bu sprintte alacağı
+## puan, spare hiçbir karta gitmeyen puan.
+static func plan_outcome(ids: Array = []) -> Dictionary:
+	var cards: Array = (ids if not ids.is_empty() else _p().sprint.cards).map(
+		func(id: String) -> Dictionary: return SprintCatalog.card_by_id(id).duplicate(true))
+	var before: Array = cards.map(remaining)
+	var played: Dictionary = _play_out(cards)
+	var out: Dictionary = {}
+	for i in cards.size():
+		var c: Dictionary = cards[i]
+		out[c.id] = {"split": (played.split.get(c.id, {}) as Dictionary).values(), "done": before[i] - remaining(c),
+			"finishes": phase(c) == PHASE_DONE}
+	return {"cards": out, "spare": played.spare}
 
 
 ## Bekleyen kararın kartı bu sprintte yetişmez mi: kalan haftalar bugünkü ekiple, kart karar
@@ -562,12 +583,13 @@ static func _work(c: Dictionary, person: Dictionary, budget: float) -> float:
 
 
 ## Sprintin kalan haftaları bugünkü ekiple kartların kopyalarında oynanır; hafta _end_week gibi atama
-## sırasıyla dökülür. Kart başına çalışan kişiler ve haftaları, {kart: {kişi: {id, name, weeks}}}.
+## sırasıyla dökülür. {split: {kart: {kişi: {id, name, weeks}}}, spare: hiçbir karta harcanmayan puan}.
 static func _play_out(cards: Array) -> Dictionary:
 	var by_id: Dictionary = {}
 	for person in team():
 		by_id[person.id] = person
 	var split: Dictionary = {}
+	var spare: float = 0.0
 	for _w in int(SprintCatalog.cfg("sprint_weeks")) - maxi(week(), 1) + 1:
 		_assign(cards, by_id.values())
 		var budget: Dictionary = {}
@@ -577,7 +599,9 @@ static func _play_out(cards: Array) -> Dictionary:
 				var row: Dictionary = (split.get_or_add(c.id, {}) as Dictionary).get_or_add(id,
 					{"id": id, "name": by_id[id].name, "weeks": 0})
 				row.weeks += 1
-	return split
+		for id in by_id:
+			spare += budget.get(id, by_id[id].points)
+	return {"split": split, "spare": spare}
 
 
 ## Haftada bir: sürmekte olan bir kart için deterministik bir karar kartı istenir; olay motoru
