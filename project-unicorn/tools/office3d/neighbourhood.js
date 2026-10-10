@@ -182,13 +182,13 @@ export default function neighbourhood(id, L, H) {
   const cellAt = (x, z) => { const i = Math.floor(x - ax0), j = Math.floor(z - az0); return i >= 0 && i < NX && j >= 0 && j < NZ ? occ[i * NZ + j] : 0; };
   G.updateMatrixWorld(true);
   const box = new T.Box3();
-  // Small props (trees, lamps, benches), which a generated road may displace, and the walks and plains the builder
-  // paved above road level, which a generated road crosses.
+  // Small props (trees, lamps, benches), which a generated road may displace, and the builder's walks and paved plain,
+  // which a street may cross.
   const props = [], paved = [];
   G.traverse(o => {
     if (!o.isMesh || o.material === H.groundMat) return;
     box.setFromObject(o);
-    if (o.material === H.walkMat) paved.push([box.max.y, box.min.x, box.max.x, box.min.z, box.max.z]);
+    if (o.material === H.walkMat) paved.push([o, box.min.y, box.max.y, box.min.x, box.max.x, box.min.z, box.max.z]);
     if (box.max.x - box.min.x > 150 || box.max.y - box.min.y > 60) return;
     mark(box.min.x, box.max.x, box.min.z, box.max.z, box.max.y < GY + .2 ? 2 : 1);
     if (box.max.y - box.min.y < 6 && Math.max(box.max.x - box.min.x, box.max.z - box.min.z) < 4) props.push([o, box.min.x, box.max.x, box.min.z, box.max.z]);
@@ -313,17 +313,23 @@ export default function neighbourhood(id, L, H) {
   slabMesh(T, G, roads.filter(shown), GY + roadLo, GY + roadHi, H.roadMat);
   slabMesh(T, G, walks.filter(shown), GY + walkLo, GY + walkHi, H.walkMat);
   slabMesh(T, G, dashes.filter(shown), CAR, CAR + .01, H.lineMat, false);
-  // Where a builder's walk crosses a generated road, or the loft's paved plain (paving wider than any walk) covers a
-  // street, the road is laid over it, so the street runs on through the crossing instead of stopping at a kerb.
-  const overlays = new Map();
-  for (const [top, ...pave] of paved) {
-    if (top <= CAR + .01) continue;
-    for (const band of Math.min(pave[1] - pave[0], pave[3] - pave[2]) > 10 ? roads.concat(exBands) : roads) {
-      const r = [Math.max(band[0], pave[0]), Math.min(band[1], pave[1]), Math.max(band[2], pave[2]), Math.min(band[3], pave[3])];
-      if (r[1] > r[0] && r[3] > r[2] && shown(r)) overlays.set(top, [...overlays.get(top) || [], r]);
-    }
+  // A builder's walk, or the loft's paved plain, that runs across a street stops at its kerbs as the generated walks do,
+  // so every road lies at one level through a crossing.
+  const minus = (w, [a0, a1, b0, b1]) => {
+    const [x0, x1, z0, z1] = w;
+    if (a0 >= x1 - .05 || a1 <= x0 + .05 || b0 >= z1 - .05 || b1 <= z0 + .05) return [w];
+    const p = Math.max(x0, a0), q = Math.min(x1, a1);
+    return [[x0, a0, z0, z1], [a1, x1, z0, z1], [p, q, z0, b0], [p, q, b1, z1]].filter(([u, v, r, t]) => v - u > .01 && t - r > .01);
+  };
+  const recut = new Map();
+  for (const [o, y0, y1, ...w] of paved) {
+    const left = roads.concat(exBands).reduce((rs, band) => rs.flatMap(r => minus(r, band)), [w]);
+    if (left.length === 1 && left[0] === w) continue;
+    o.removeFromParent();
+    const key = y0 + ' ' + y1;
+    recut.set(key, [...recut.get(key) || [], ...left]);
   }
-  for (const [top, rects] of overlays) slabMesh(T, G, rects, top - .02, top + .01, H.roadMat);
+  for (const [key, rects] of recut) if (rects.length) slabMesh(T, G, rects, ...key.split(' ').map(Number), H.walkMat);
   // A builder's tree or lamp whose middle stands on a generated road comes out, with every part within 1.5 m of it.
   const mid = ([, x0, x1, z0, z1]) => [(x0 + x1) / 2, (z0 + z1) / 2];
   const gone = props.map(mid).filter(([x, z]) => roads.some(r => r[0] < x && x < r[1] && r[2] < z && z < r[3]));
