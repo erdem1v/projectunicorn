@@ -1918,6 +1918,23 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     sorulur.
   - Kaynak: kalibrasyon turu ölçümü.
 
+- **105 · Piyasa artımlı kurulmuyor: pencere açıkken her hafta bir kare takılıyor.**
+  - Ne oluyor: Piyasa penceresi her hafta dönümünde (`day_advanced`) ve hisse dağılımı değişince (`equity_changed`:
+    Frank'in çeki, seed imzası) baştan kurulur: üç karo, listenin bütün satırları ve seçili şirketin kartı. Kurulum
+    gece adımının karesinden çıkarıldı, adımdan sonraki karede koşar; işi aynıdır, yalnız karesi değişti. Ölçüm
+    (başsız, iki koşu): `--tick-probe=1:piyasa` gece karesi (`TICK|night` max) 38,3 ve 62,7 ms, pencere kapalıyken
+    (`--tick-probe=1`) 65,3 ve 52,1 ms; kurulumun karesi (`TICK|after_night` max) 112,3 ve 113,6 ms, pencere
+    kapalıyken 0,4 ve 0,3 ms; kare bütçesi 60 Hz'te 16,7 ms.
+    Artımlı kurulum yapılmadı: sayfanın tek kurulum yolu baştan kurmaktır (`UiFactory.clear` ve yeniden kurma);
+    değeri yerinde yazmak satır, karo ve kart düğümlerinin tutulmasını ister.
+  - Nerede: `scripts/tabs/piyasa_tab.gd` (`_queue_build`, `_build`, `_build_tiles`, `_build_list`, `_build_card`).
+  - Oyuncuya etkisi: Piyasa açıkken her hafta, gece bittikten hemen sonra bir takılma; pencere kapalıyken yok.
+  - Seçenekler: A) Kabul: takılma yalnız Piyasa açıkken ve haftada bir. B) Artımlı kurulum: satır, karo ve kart
+    düğümleri kalır; haftada yalnız rakamlar, sıra ve grafik verisi yazılır. C) Kurulum birkaç kareye bölünür
+    (karolar ve kart önce, liste sonra).
+  - Kaynak: `--tick-probe` ölçümü (2026-10-10); yardımcı yönetmen hükmü A9, 2026-10-10 (kurulum gece karesinden
+    ayrı kareye taşınır, artımlı kurulum ayrı iştir).
+
 ## GDD'ye işlenmemiş sahip kararları
 
 - **Satın alma sonu.** ch01 §3, ch13 §1 ve ch14 §6 "CUT: acquisition" diyor. Oysa `funding.acquisition_offer` kartı (Frank v6

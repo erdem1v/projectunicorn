@@ -31,6 +31,7 @@ var _pitch_open: bool = true
 var _table_open: bool = true
 var _off := false   # a decision waits: the page reads only
 var _gate_signals: Array = []
+var _stale := false
 
 
 func _ready() -> void:
@@ -59,6 +60,9 @@ func _ready() -> void:
 	_gate_signals = [EventBus.hour_changed, EventBus.assignment_changed]
 	for sig in _gate_signals:
 		sig.connect(_on_gate_input)
+	visibility_changed.connect(func() -> void:
+		if _stale and is_visible_in_tree():
+			_refresh())
 	_refresh()
 
 
@@ -73,24 +77,30 @@ func _exit_tree() -> void:
 			sig.disconnect(_on_gate_input)
 
 
+## A repaint rebuilds the whole page: out of view (Özet shown, or the trip's veil) a change only marks it stale,
+## and it repaints once when it shows.
 func _on_changed(_a = null, _b = null) -> void:
-	_refresh()
+	if is_visible_in_tree():
+		_refresh()
+	else:
+		_stale = true
 
 
 ## Once a phone advisory has taken the strip it keeps it; until then the line is re-read on every refresh so
 ## {n} (tables already closed) follows vc_rejections.
 func _on_advisory(key: String, args: Dictionary) -> void:
 	_frank_line = tr(key).format(args)
-	_refresh()
+	_on_changed()
 
 
 func _on_gate_input(_arg = null) -> void:
 	if WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS) != _pitch_open \
 			or WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS) != _table_open:
-		_refresh()
+		_on_changed()
 
 
 func _refresh() -> void:
+	_stale = false
 	_pitch_open = WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS)
 	_table_open = WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS)
 	_off = EventGate.active_id() != ""

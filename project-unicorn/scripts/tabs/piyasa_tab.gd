@@ -81,16 +81,22 @@ func _ready() -> void:
 	body.add_child(card)
 	_signals = [EventBus.day_advanced, EventBus.equity_changed]
 	for sig: Signal in _signals:
-		sig.connect(_build)
+		sig.connect(_queue_build)
 	_build()
 
 
 func _exit_tree() -> void:
 	for sig: Signal in _signals:
-		sig.disconnect(_build)
+		sig.disconnect(_queue_build)
 
 
-func _build(_a = null) -> void:
+## The rebuild waits for the next frame: the week turns inside the night's batch, already the longest frame.
+func _queue_build(_a = null) -> void:
+	if not get_tree().process_frame.is_connected(_build):
+		get_tree().process_frame.connect(_build, CONNECT_ONE_SHOT)
+
+
+func _build() -> void:
 	_week = GameState.day
 	_rows = MarketCatalog.listed(_week)
 	if MarketCatalog.company(_selected).is_empty():

@@ -92,10 +92,13 @@ func _exit_tree() -> void:
 			(s[0] as Signal).disconnect(s[1])
 
 
+## Bir karedeki sinyaller (saat adımında kasa, MRR, gider) sonraki karede tek boyamaya iner; boyama adımın karesine
+## binmez.
 func _on_state_changed(_a = null, _b = null, _c = null) -> void:
 	if not is_visible_in_tree():
 		return  # gizliyken boyama yok — host görünür yaparken refresh() çağırır
-	refresh()
+	if not get_tree().process_frame.is_connected(refresh):
+		get_tree().process_frame.connect(refresh, CONNECT_ONE_SHOT)
 
 
 # --- Kurulum -----------------------------------------------------------------

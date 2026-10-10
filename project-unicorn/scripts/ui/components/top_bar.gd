@@ -80,6 +80,7 @@ var _meeting := {}
 var _compact := false
 var _slot_x := 0.0
 var _pulse: Tween
+var _queued := false
 ## Ölçüm sayacı: --tick-probe bir karedeki yenilemeleri buradan sayar.
 var refresh_count := 0
 var _week_end := 0      # gün bloğunun kurulduğu mesai bitimi; hafta çubuğu orada biter
@@ -89,30 +90,29 @@ var _now_px := -1       # hafta çubuğunun şimdi işareti, tam piksel
 
 func _ready() -> void:
 	# Bağlantılar tek tek yazılır: sinyal manifestinin üreticisi `EventBus.<ad>.connect` biçimini okur.
-	var refresh := _refresh.unbind(1)
-	EventBus.cash_changed.connect(refresh)
-	EventBus.mrr_changed.connect(refresh)
-	EventBus.burn_changed.connect(refresh)
-	EventBus.runway_recalculated.connect(refresh)
-	EventBus.brand_changed.connect(refresh)
-	EventBus.reputation_changed.connect(refresh)
-	EventBus.day_advanced.connect(refresh)
-	EventBus.hour_changed.connect(refresh)
-	EventBus.phase_changed.connect(refresh)
-	EventBus.shutter_changed.connect(refresh)
-	EventBus.language_changed.connect(refresh)
-	EventBus.palette_changed.connect(refresh)
-	EventBus.month_ended.connect(refresh)
-	EventBus.event_triggered.connect(refresh)
-	EventBus.event_set_aside.connect(refresh)
-	EventBus.event_resolved.connect(_refresh.unbind(2))
-	EventBus.desk_changed.connect(_refresh)
+	EventBus.cash_changed.connect(_queue_refresh)
+	EventBus.mrr_changed.connect(_queue_refresh)
+	EventBus.burn_changed.connect(_queue_refresh)
+	EventBus.runway_recalculated.connect(_queue_refresh)
+	EventBus.brand_changed.connect(_queue_refresh)
+	EventBus.reputation_changed.connect(_queue_refresh)
+	EventBus.day_advanced.connect(_queue_refresh)
+	EventBus.hour_changed.connect(_queue_refresh)
+	EventBus.phase_changed.connect(_queue_refresh)
+	EventBus.shutter_changed.connect(_queue_refresh)
+	EventBus.language_changed.connect(_queue_refresh)
+	EventBus.palette_changed.connect(_queue_refresh)
+	EventBus.month_ended.connect(_queue_refresh)
+	EventBus.event_triggered.connect(_queue_refresh)
+	EventBus.event_set_aside.connect(_queue_refresh)
+	EventBus.event_resolved.connect(_queue_refresh)
+	EventBus.desk_changed.connect(_queue_refresh)
 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
 	# Hız ve tutuş yalnız TimeManager üzerinden gelir (speed_changed, hold_changed); tuşlar ve durum satırı
 	# buradan boyanır ki tutuş ve yükleme gibi başka değiştiriciler de görünsün.
 	TimeManager.speed_changed.connect(_apply_speed_visual)
 	TimeManager.speed_changed.connect(_refresh_state.unbind(1))
-	TimeManager.hold_changed.connect(_refresh)
+	TimeManager.hold_changed.connect(_queue_refresh)
 	for i in speed_btns.size():
 		speed_btns[i].pressed.connect(EventBus.speed_change_requested.emit.bind(i))
 	resized.connect(_refresh)
@@ -135,7 +135,14 @@ func _process(_delta: float) -> void:
 
 func _on_offer_countdown_changed(weeks_left: int) -> void:
 	_offer_weeks_left = weeks_left
-	_refresh()
+	_queue_refresh()
+
+
+## Bir karede ne kadar sinyal gelirse gelsin tek boyama: gecenin toplu adımı onlarcasını yollar.
+func _queue_refresh(_a = null, _b = null) -> void:
+	if not _queued:
+		_queued = true
+		_refresh.call_deferred()
 
 
 ## main.gd: `place`'teki görüşme çalıyor ("call"), yolda ("trip"), masada ("sitting"), dönüşte ("home") ya da
@@ -151,6 +158,7 @@ func _held() -> bool:
 
 func _refresh() -> void:
 	refresh_count += 1
+	_queued = false
 	_compact = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
 	var g: Dictionary = GRID[int(_compact)]
 	_refresh_brand(g)
