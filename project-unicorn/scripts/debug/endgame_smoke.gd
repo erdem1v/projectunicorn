@@ -269,6 +269,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"angel_survives_series_a":            fail = _case_angel_survives_series_a()
 		"angel_hire_nudge":                   fail = _case_angel_hire_nudge()
 		"cheque_read_steps":                  fail = _case_cheque_read_steps()
+		"event_critical_drop_refunds_latch":  fail = _case_event_critical_drop_refunds_latch()
 		# --- SaveManager task 2026-08-08. Bunlar ŞEMAYI değil RESET MİMARİSİNİ ölçer:
 		#     serileştirme biçimi kolay %20; zor %80, yüklemenin ÇALIŞAN bir süreci
 		#     eskiden yalnız bir OS restart'ının üretebildiği duruma döndürmesi.
@@ -4340,6 +4341,37 @@ static func _case_cheque_read_steps() -> String:
 	GameState.record_seed_round(15, 120000, "anchor")
 	reads.call("seed signed", "none")
 	return "; ".join(bad)
+
+
+## §27.18: Frank's cheque, queued behind another card while the revenue slips under the bar, is dropped when its
+## turn comes and gives its one-shot latch back. The cheque list stays open, and the first day over the bar again
+## the card returns and pays.
+## FALSIFICATION: drop the refund from EvEngine.pump → the dropped cheque keeps its latch and never comes back.
+static func _case_event_critical_drop_refunds_latch() -> String:
+	var c: Customer = _seed_angel_world(AngelRoundSystem.MRR_THRESHOLD)
+	var e: Character = _make_employee("char_drop", "Selin Kaya", HRConstants.ROLE_TESTER)
+	if not EventGate.request("team.resignation", {"employee": e.id}) or not EventGate.request(ANGEL_ID) \
+			or EventGate.queued_ids() != [ANGEL_ID]:
+		return "fixture: the cheque is not queued behind another card ('%s' on screen, %s queued)" \
+			% [EventGate.active_id(), str(EventGate.queued_ids())]
+	CustomerRegistry.set_mrr(c.id, AngelRoundSystem.MRR_THRESHOLD - 500)
+	SalesSystem.reflect_mrr()
+	EventGate.resolve("team.resignation", "acknowledge")
+	var row: Dictionary = EventGate.history()[-1]
+	if [row.event_id, row.resolution, row.outcome_id] != [ANGEL_ID, EvHistory.RESOLUTION_DROPPED, "G7"] \
+			or ChequeRead.list() != "cheque":
+		return "under the bar the cheque left %s and the list '%s'" % [str(row), ChequeRead.list()]
+	var latched: bool = _card_fired(ANGEL_ID)
+	CustomerRegistry.set_mrr(c.id, AngelRoundSystem.MRR_THRESHOLD)
+	SalesSystem.reflect_mrr()
+	_sim_day_full()
+	var back: bool = _drain_to(ANGEL_ID)
+	if latched or not back:
+		return "the dropped cheque kept its latch: %s; back over the bar: %s" % [latched, back]
+	EventGate.resolve(ANGEL_ID, "accept")
+	if GameState.run_angel_amount <= 0:
+		return "the returned cheque paid nothing"
+	return ""
 
 
 static func _case_promise_no_duplicate_word() -> String:

@@ -95,6 +95,15 @@ static func spend(key: String) -> void:
 	_state[key] = {"fires": fires(key) + 1, "last_day": GameState.day}
 
 
+## Give back what spend took (§27.18): a critical card whose condition lapsed in the queue may come
+## again. A key back at zero fires holds no record, as if never spent.
+static func refund(key: String) -> void:
+	if fires(key) > 1:
+		_state[key]["fires"] -= 1
+	else:
+		_state.erase(key)
+
+
 # --- Introspection (the debug panel) ---------------------------------------
 
 static func fires(key: String) -> int:

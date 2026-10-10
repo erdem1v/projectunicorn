@@ -2269,3 +2269,28 @@ satırlar gövdesiz kalır. Katalogda gövdesi donan 12 kart vardır (dört not 
 
 **3. Kayıt.** Şema 15 kalır. Yeni alanlar satırın içindedir (`note`, `unread`, `names["seam:*"]`); eski satır
 `row.get("note", false)` ile not sayılmaz, göç yoktur.
+
+### §27.18 · Kritik kartın mandal iadesi
+
+Karar 2026-10-10: kuyrukta koşulu bozulup düşen kritik kart mandalını geri alır.
+
+*Belge ne diyordu.* §4.4: mandal kabulde harcanır, gösterimde G3 yeniden koşmaz; kuyruktaki kart gösterileceği saatte
+G5, G6 ve G7'yi yeniden geçer, geçemezse `dropped` satırıyla sessizce düşer. Düşen `one_shot` kartın mandalı harcanmış
+kalıyordu: `funding.frank_cheque` gece 00:00'da kabul edilip gece atlamasının sonunda gösterilene dek B2C'nin MRR'ı
+eşiğin altına inerse çek koşu boyunca bir daha gelmiyordu; kepenk başladığında kuyrukta bekleyen `gate_traction` da öyle.
+
+*Ne yapıldı.* `EvEngine.pump` kuyruktaki kartı G7'de (koşul ağacı) düşürdüğünde kart `critical` etiketli ve mandalı
+`one_shot` ise mandalı `EvLatches.refund(key)` ile geri verir: `spend`'in tersidir, `fires` bir azalır, sıfıra inen
+kayıt silinir (`clear_one` yalnız debug ve smoke içindir). `dropped` satırı yine yazılır. G5 (özne gitti) ve G6 (koruma)
+düşüşü iade etmez; `resolve`'un G5 düşüşü, `open_paper`'ın masadan açarken düşüşü ve mandal harcamayan `force_fire`
+örneğinin (yalnız debug) düşüşü de etmez. Kritik `one_shot` kâğıdın son haftasında kuyruğa giren son uyarısı (§12.4)
+pompada G7'de düşerse kâğıt masadan kalkar ve mandalı iade edilir; koşul yeniden tutunca kâğıt taze süreyle masaya
+döner. Kartı öneren yol (günlük tarama ya da ark adımı) koşul yeniden tuttuğunda onu tekrar kabul eder. Koşul kabul ile
+gösterim arasında her gece bozulursa her gece bir `dropped` satırı yazılır; her yeniden kabul o hafta `EvTempo`
+penceresinde sayılır (§13.3) ve tabanın sessiz hafta sayacını sıfırlar (§13.6). `fire_count` ve `history` yaprakları
+düşüşü çözüm sayar; çek listesi düşüşte açık kalır, yalnız `chosen` ve `expired` satırı kapatır. Mandalı okuyan araçlar
+(`--why-fire`, smoke'un `_card_fired`'ı) iadeden sonra kartı hiç ateşlenmemiş görür. Şema 15 kalır. Smoke
+`event_critical_drop_refunds_latch`.
+
+*Neden.* Kritik kart koşunun omurgasıdır (para, faz kapısı, Frank); oyuncunun görmediği birkaç saatlik dalgalanma onu
+koşudan silmemeli.

@@ -463,6 +463,12 @@ static func pump() -> bool:
 			EvPapers.remove(key)
 			EvHistory.record(event_id, EvHistory.RESOLUTION_DROPPED, "", verdict.step,
 				context, [], String(next.get("arc_id", "")))
+			# §27.18: a critical one-shot whose condition lapsed in the queue may come back when it holds
+			# again; a subject gone (G5) or a guard shut (G6) is final, and a forced instance spent no latch.
+			var card: Dictionary = EvCatalog.card(event_id)
+			if verdict.step == "G7" and (card["tags"] as Array).has("critical") \
+					and bool(card["latch"].get(EvLatches.ONE_SHOT, false)) and not _forced.has(key):
+				EvLatches.refund(key)
 			continue
 
 		EvQueue.set_active(event_id, context, false)
