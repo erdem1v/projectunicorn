@@ -36,6 +36,11 @@
         "seam": "finance.cash",
         "op": ">=",
         "value": 167000
+      },
+      {
+        "seam": "sales.b2c_audience",
+        "op": ">=",
+        "value": 2000
       }
     ]
   },

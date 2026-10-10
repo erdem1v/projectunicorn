@@ -90,6 +90,12 @@
     {
       "id": "more_marketing",
       "outcome_id": "raised_marketing",
+      "requires": {
+        "seam": "build.module_unlocked.marketing",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_MARKETING_EA"
+      },
       "effects": [
         {
           "verb": "marketing_push",
@@ -125,6 +131,9 @@
         "more_marketing": "EV_RIVAL_SHUTDOWN_NOTICE_MORE_MARKETING",
         "comparison_post": "EV_RIVAL_SHUTDOWN_NOTICE_COMPARISON_POST"
       },
+      "locked_reasons": {
+        "more_marketing": "EV_LOCK_MARKETING_EA"
+      },
       "expire_note": "EV_RIVAL_SHUTDOWN_NOTICE_EXPIRED"
     },
     "en": {
@@ -134,6 +143,9 @@
         "buy_data": "EV_RIVAL_SHUTDOWN_NOTICE_BUY_DATA",
         "more_marketing": "EV_RIVAL_SHUTDOWN_NOTICE_MORE_MARKETING",
         "comparison_post": "EV_RIVAL_SHUTDOWN_NOTICE_COMPARISON_POST"
+      },
+      "locked_reasons": {
+        "more_marketing": "EV_LOCK_MARKETING_EA"
       },
       "expire_note": "EV_RIVAL_SHUTDOWN_NOTICE_EXPIRED"
     }

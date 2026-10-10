@@ -5,7 +5,7 @@ extends RefCounted
 # SAMENESS: three cards about one account in a week reads as a bug. Every layer aims at that.
 #
 #   Layer 1   the same CARD         min_gap_weeks, default in EvTuning
-#   Layer 1b  the same FAMILY       a gap per family — every origin but an arc and a request
+#   Layer 1b  the same FAMILY       a gap per family — the pool, the floor and a dated origin
 #   Layer 2   the same SUBJECT      a gap per subject type — POOL CARDS ONLY
 #   Layer 2b  the family × SUBJECT  once ever, or a cooldown, per person
 #   Layer 3   the same CATEGORY     a quota per week (tick)
@@ -159,8 +159,9 @@ static func pool_blocked_reason(card: Dictionary, subject_id: String) -> String:
 ## floor origins pay these two layers without paying the pool's three — and because a signal
 ## that these refuse is re-dated by `weeks` instead of being dropped (EvEngine._deferral_weeks).
 ##
-## The family's rhythm is what the week already felt like, so no card tag buys past it: an arc,
-## a request and a force are exempt by ORIGIN — they never ask — and `follows` by layer 1b alone.
+## The family's rhythm is what the week already felt like: the pool, the floor and a dated signal
+## all pay it. An arc, a request, a force and the per-tick sweep that carries the critical cards
+## are exempt by ORIGIN — they never ask — and `follows` by layer 1b alone.
 static func family_brake(card: Dictionary, subject_id: String) -> Dictionary:
 	var family: String = String(card.get("family", ""))
 	if family == "":

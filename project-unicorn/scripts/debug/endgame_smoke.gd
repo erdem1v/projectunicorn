@@ -485,6 +485,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_family_gap":                 fail = _case_event_family_gap()
 		"event_delay_window":               fail = _case_event_delay_window()
 		"event_on_action_bindings":         fail = _case_event_on_action_bindings()
+		"cs_renewal_floor":                 fail = _case_cs_renewal_floor()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -8330,9 +8331,11 @@ static func _case_cs_request_kind_state_driven() -> String:
 	c.retain_stalls = 1
 	if CustomerRepSystem.pick_request_kind(c) != B2BConstants.CS_KIND_RENEWAL:
 		return "long-tenure account did not reach renewal (got %s)" % CustomerRepSystem.pick_request_kind(c)
-	# No-repeat korunuyor: A az önce şikâyet açtıysa bir daha şikâyet açamaz.
-	a.last_request_kind = B2BConstants.CS_KIND_COMPLAINT
-	if CustomerRepSystem.pick_request_kind(a) == B2BConstants.CS_KIND_COMPLAINT:
+	# No-repeat korunuyor, ama yalnız geriye iki tür kalıyorsa: C yenileme masasından
+	# kalktıysa aynı türü bir daha açmaz. A'nın kıdemi yenileme tabanının altında olduğu için
+	# onda dışlama tek tür bırakırdı (cs_renewal_floor).
+	c.last_request_kind = B2BConstants.CS_KIND_RENEWAL
+	if CustomerRepSystem.pick_request_kind(c) == B2BConstants.CS_KIND_RENEWAL:
 		return "no-repeat rule broken by the state scorer"
 	# Determinizm: aynı durum + aynı gün → aynı sonuç.
 	if CustomerRepSystem.pick_request_kind(b) != CustomerRepSystem.pick_request_kind(b):
@@ -18198,6 +18201,7 @@ static func _plain_card(id: String, extra: Dictionary) -> Dictionary:
 ## FLOOR kolunu çıkar → taban iddiası FAIL; `budget_exempt` geçiş kolunu sil → son iddia FAIL.
 static func _case_event_start_immunity() -> String:
 	const ID := "fixture.immunity"
+	const RETIRED := "team.first_weeks"
 	var card: Dictionary = _plain_card(ID, {})
 	for day in range(1, EvTuning.START_IMMUNITY_WEEKS + 1):
 		GameState.day = day
@@ -18226,6 +18230,22 @@ static func _case_event_start_immunity() -> String:
 		var v: EvGate.Verdict = EvGate.propose(String(probe["id"]), EvGate.Origin.TICK_DAILY)
 		if not v.admitted:
 			return "gün 1'de %s muafiyeti tutmadı: %s %s" % [str(exemptions[i]), v.step, v.reason]
+
+	# §11.6 · EMEKLİ KART. `retired` hiçbir build'de gönderilmez ama katalogdan DÜŞMEZ: eski
+	# bir kaydın geçmiş satırı adını okur ve mandalı çözülür. Reddi G2'nin işi.
+	# FALSİFİKASYON: `first_weeks.json`'ın `version_scope`'unu `demo` yap → son iddia FAIL;
+	# kartı sil → katalog iddiası FAIL.
+	EvHistory.record(RETIRED, "resolved", "pair", "pair", {}, [])
+	var block: Dictionary = JSON.parse_string(JSON.stringify(EvSave.to_dict()))
+	EvSave.reset()
+	EvSave.from_dict(block)
+	if EvHistory.fire_count(RETIRED) != 1:
+		return "emekli kartın geçmiş satırı kayıt gidiş dönüşünde kayboldu"
+	if EvCatalog.card(RETIRED).is_empty():
+		return "emekli kart katalogdan düştü"
+	var gone: EvGate.Verdict = EvGate.propose(RETIRED, EvGate.Origin.TICK_DAILY)
+	if gone.admitted or gone.step != "G2" or not gone.reason.begins_with("version_scope 'retired'"):
+		return "emekli kart %s '%s' ile karşılandı" % [gone.step, gone.reason]
 	return ""
 
 
@@ -18520,6 +18540,50 @@ static func _on_action_bindings() -> String:
 	EvEngine._step_signal_drain()
 	if seen.size() != 1 or EvQueue.has(MOD_ID):
 		return "açık kalan modül ikinci tikte yeniden açıldı sayıldı: %s" % str(seen)
+	return ""
+
+
+## R12 · YENİLEME TABANI VE ONBOARDING SESİ. Bir hesap kıdemi sözleşmenin son iki ayına
+## varmadan yenileme masasına oturmaz, ve yenileme aday değilken no repeat kuralı sağlıklı
+## genç hesaba şikâyet açtırmaz. Riske giren taze hesap da geçmişinden değil kurulumundan
+## konuşur: ilk haftaların sesi ayrı.
+## FALSİFİKASYON: `pick_request_kind`'ın kıdem süzgecini sil → ilk döngü FAIL; `fresh.size()`
+## koşulunu kaldır → şikâyet iddiası FAIL; `risk_voice`'un onboarding kolunu sil → son üçlü FAIL.
+static func _case_cs_renewal_floor() -> String:
+	GameState.day = 500
+	var c := Customer.new()
+	c.id = "co_renewal_floor"
+	c.company_name = "Yenileme"
+	c.industry = "technology"
+	c.satisfaction = 80
+	c.tolerance = 40
+	c.retain_stalls = 1     # yenilemenin kendi aciliyet izi: onu tutan tek şey taban kalsın
+	for weeks in B2BConstants.RENEWAL_MIN_TENURE_WEEKS:
+		c.acquired_on_day = GameState.day - TimeModel.ticks(weeks)
+		var kind: String = CustomerRepSystem.pick_request_kind(c)
+		if kind == B2BConstants.CS_KIND_RENEWAL:
+			return "kıdem %d haftada yenileme açıldı" % weeks
+		if kind == B2BConstants.CS_KIND_COMPLAINT:
+			return "sağlıklı hesap kıdem %d haftada şikâyet açtı" % weeks
+		c.last_request_kind = kind
+	c.acquired_on_day = GameState.day - TimeModel.ticks(B2BConstants.RENEWAL_MIN_TENURE_WEEKS)
+	if CustomerRepSystem.pick_request_kind(c) != B2BConstants.CS_KIND_RENEWAL:
+		return "taban tuttuğu hafta yenileme açılmadı: %s" % CustomerRepSystem.pick_request_kind(c)
+
+	var onboarding_voice: Callable = func(cust: Customer) -> bool:
+		var voice: String = B2BSalesSystem.risk_voice(cust)
+		return B2BSalesSystem.RISK_VOICE_ONBOARDING_KEYS.any(
+			func(k: String) -> bool: return TranslationServer.translate(k) == voice)
+	c.lifecycle_phase = "risk"
+	if onboarding_voice.call(c):
+		return "kıdemli hesap kurulumdan konuştu"
+	c.acquired_on_day = GameState.day - 1
+	if not onboarding_voice.call(c):
+		return "taze hesabın sesi onboarding anahtarı değil: '%s'" % B2BSalesSystem.risk_voice(c)
+	c.acquired_on_day = GameState.day - TimeModel.ticks(B2BConstants.RENEWAL_MIN_TENURE_WEEKS)
+	c.lifecycle_phase = "onboarding"
+	if not onboarding_voice.call(c):
+		return "onboarding fazındaki hesap kurulumdan konuşmadı"
 	return ""
 
 

@@ -13,7 +13,7 @@
     "headcount": [0, null],
     "product": "live",
     "modules": [],
-    "min_week": 0
+    "min_week": 8
   },
   "guards": {
     "market": "b2c",
@@ -28,6 +28,16 @@
         "seam": "sales.growth_band",
         "op": "==",
         "value": "fast"
+      },
+      {
+        "seam": "sales.b2c_audience",
+        "op": ">=",
+        "value": 3000
+      },
+      {
+        "seam": "finance.cash",
+        "op": ">=",
+        "value": 10000
       },
       {
         "seam": "urun.floor_innovation",

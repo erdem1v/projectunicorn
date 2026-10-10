@@ -31,10 +31,10 @@ extends RefCounted
 #   PLAUS SUMMARY runs= fires= fails=          fails>0, or no run at all, returns false
 #
 # THE RULES, R13's numbering: 1 start_immunity, 2 plausibility, 3 known_absurd, 4 first_weeks,
-# 5 family_gap, 6 critical_scope. Rule 7 (the error patterns in the log) belongs to the runner,
-# which owns the log file. Rule 8 (a signal refused by a brake without a PLAUS DEFER line) is
-# not judged here: EvEngine re-dates such a proposal without telling anyone, so this ledger has
-# no deferral to read.
+# 5 family_gap (the engine's own reading: FAMILY_BRAKED_SRC), 6 critical_scope. Rule 7 (the
+# error patterns in the log) belongs to the runner, which owns the log file. Rule 8 (a signal
+# refused by a brake without a PLAUS DEFER line) is not judged here: EvEngine re-dates such a
+# proposal without telling anyone, so this ledger has no deferral to read.
 
 const DEFAULT_SEEDS := 20
 const DEFAULT_WEEKS := 16
@@ -42,6 +42,10 @@ const VARIANTS := ["plain", "early"]
 const EARLY_ROLES := ["developer", "customer_rep", "tester"]
 ## The origin a card's own tick field declares.
 const SRC_BY_TICK := {"signal": "signal", "request": "request", "scheduled": "schedule"}
+## The origins that pay the family brake: the pool asks through EvTempo.pool_blocked_reason,
+## the floor asks for itself, and a signal or a schedule asks through EvEngine._deferral_weeks.
+## A tick sweep, an arc, a request and a force never ask it, so neither does rule 5.
+const FAMILY_BRAKED_SRC := ["pool", "floor", "signal", "schedule"]
 
 # The thresholds the rules judge against (R13, PRD section 8), each written under the name its
 # owner will carry, so a rename lands as an edit here and not as a rule that quietly cannot fail.
@@ -74,7 +78,7 @@ static var _fails: int = 0
 static var _rate: Dictionary = {}
 ## This run only: week -> {phase, fires, pool, empty}.
 static var _weeks: Dictionary = {}
-## family -> the week its last card fired.
+## family -> {week, event_id} of its last fire; the id is what layer 1b brakes on.
 static var _family_week: Dictionary = {}
 static var _empty_base: int = 0
 static var _variant: String = ""
@@ -301,19 +305,24 @@ static func _plausibility_nodes(node: Dictionary, out: Array) -> void:
 		out.append(node)
 
 
-## R5's brake: two cards of one family may not land closer than the family's gap. A chain step
-## and a system request are exempt.
+## R5's brake: two DIFFERENT cards of one family may not land closer than the family's gap. A
+## chain step is exempt, and so is a card's own return — that is layer 1's `min_gap_weeks` and
+## the latch's cooldown, not the family's rhythm (EvTempo.family_brake). Every fire is recorded
+## even when its own origin never asked the brake, exactly as EvTempo records it: the next
+## pool card of the family answers to it.
 static func _judge_family(card: Dictionary, src: String, week: int) -> void:
 	var family: String = String(card.get("family", ""))
 	if family == "":
 		return
+	var id: String = String(card["id"])
 	var gap: int = int(FAMILY_GAP_WEEKS.get(family, FAMILY_GAP_WEEKS_DEFAULT))
-	var last: int = int(_family_week.get(family, -gap))
-	if week - last < gap and String(card.get("follows", "")) == "" \
-			and src != "request":
-		_fail("family_gap", "%s family=%s week=%d last=%d gap=%d"
-			% [String(card["id"]), family, week, last, gap])
-	_family_week[family] = week
+	var last: Dictionary = _family_week.get(family, {})
+	if FAMILY_BRAKED_SRC.has(src) and not last.is_empty() \
+			and String(last["event_id"]) != id and week - int(last["week"]) < gap \
+			and String(card.get("follows", "")) == "":
+		_fail("family_gap", "%s family=%s week=%d last=%s@%d gap=%d"
+			% [id, family, week, last["event_id"], last["week"], gap])
+	_family_week[family] = {"week": week, "event_id": id}
 
 
 ## R13 rule 3: the nine fires the research confirmed absurd, each returning why it is absurd;

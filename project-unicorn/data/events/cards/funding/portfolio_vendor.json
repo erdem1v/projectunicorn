@@ -97,6 +97,12 @@
     {
       "id": "own_ads",
       "outcome_id": "own_ads_instead",
+      "requires": {
+        "seam": "build.module_unlocked.marketing",
+        "op": "==",
+        "value": true,
+        "reason": "EV_LOCK_MARKETING_EA"
+      },
       "effects": [
         {
           "verb": "marketing_push",
@@ -135,6 +141,9 @@
         "own_ads": "EV_FUNDING_PORTFOLIO_VENDOR_OWN_ADS",
         "decline": "EV_FUNDING_PORTFOLIO_VENDOR_DECLINE"
       },
+      "locked_reasons": {
+        "own_ads": "EV_LOCK_MARKETING_EA"
+      },
       "expire_note": "EV_FUNDING_PORTFOLIO_VENDOR_EXPIRED"
     },
     "en": {
@@ -145,6 +154,9 @@
         "month": "EV_FUNDING_PORTFOLIO_VENDOR_MONTH",
         "own_ads": "EV_FUNDING_PORTFOLIO_VENDOR_OWN_ADS",
         "decline": "EV_FUNDING_PORTFOLIO_VENDOR_DECLINE"
+      },
+      "locked_reasons": {
+        "own_ads": "EV_LOCK_MARKETING_EA"
       },
       "expire_note": "EV_FUNDING_PORTFOLIO_VENDOR_EXPIRED"
     }

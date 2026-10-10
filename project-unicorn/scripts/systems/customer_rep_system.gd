@@ -321,7 +321,8 @@ static func pick_request_kind(c: Customer) -> String:
 	# karşılanmamış acı özelliği. Şirketin sektörü yalnız ÜSLUBU boyar (şikâyet kartındaki
 	# `musteri.complaint_voice`), konuyu ASLA seçmez: tekstilciye satmak tekstil olayı üretmez.
 	#
-	# NO-REPEAT: aynı hesap aynı türü üst üste iki kez açmaz (last_request_kind dışlaması).
+	# NO-REPEAT: aynı hesap aynı türü üst üste iki kez açmaz, ama ancak geriye iki tür
+	# kalıyorsa (last_request_kind dışlaması).
 	# RNG YASAĞI: skorlar tamsayı aritmetiği, eşitlik bozucu hesabın kendi faz imzası.
 	#
 	# NOT: support_request_since_day burada OKUNMAZ — seçim anında talep hep açıktır
@@ -336,8 +337,8 @@ static func pick_request_kind(c: Customer) -> String:
 	if c.risk_streak > 0 or c.churn_countdown >= 0:
 		complaint += 10
 	# Yenileme: kıdem büyüdükçe sözleşme masası yaklaşır; sayaç/oyalama izi acilleştirir.
-	var tenure_months: int = int(TimeModel.months(GameState.day - c.acquired_on_day))
-	var renewal: int = 6 * tenure_months
+	var tenure: int = GameState.day - c.acquired_on_day
+	var renewal: int = 6 * int(TimeModel.months(tenure))
 	if c.churn_countdown >= 0:
 		renewal += 20
 	if c.retain_stalls > 0:
@@ -364,9 +365,16 @@ static func pick_request_kind(c: Customer) -> String:
 		B2BConstants.CS_KIND_RENEWAL: renewal,
 		B2BConstants.CS_KIND_FEATURE: feature,
 	}
-	# Three distinct kinds, at most one excluded: never empty.
+	# YENİLEME TABANI: yenileme masası sözleşmenin son iki ayıdır, tanışma haftası değil.
+	# Kıdemi tabanın altındaki hesap yenilemeyi hiç açmaz.
+	var renewable: bool = tenure >= TimeModel.ticks(B2BConstants.RENEWAL_MIN_TENURE_WEEKS)
 	var eligible: Array = B2BConstants.CS_REQUEST_KINDS.filter(
-		func(k: String) -> bool: return k != c.last_request_kind)
+		func(k: String) -> bool: return renewable or k != B2BConstants.CS_KIND_RENEWAL)
+	# No-repeat yalnız seçenek bırakıyorsa uygulanır: yenileme aday değilken dışlama,
+	# sağlıklı yeni bir hesaba yapacak şikâyeti yokken şikâyet açtırırdı.
+	var fresh: Array = eligible.filter(func(k: String) -> bool: return k != c.last_request_kind)
+	if fresh.size() >= 2:
+		eligible = fresh
 	var best_score: int = eligible.map(func(k: String) -> int: return scores[k]).max()
 	var tied: Array = eligible.filter(func(k: String) -> bool: return scores[k] == best_score)
 	return tied[c.cs_request_phase % tied.size()]
