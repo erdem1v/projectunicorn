@@ -64,17 +64,17 @@ class CapacityBar extends Control:
 
 	func _draw() -> void:
 		var bar := Rect2(0.0, (size.y - UiTokens.D_H_BAR) / 2.0, size.x, UiTokens.D_H_BAR)
-		var span: int = maxi(int(cap.total), int(cap.used))
+		var span: float = maxf(cap.total, cap.used)
 		if span == 0:
 			draw_rect(bar.grow(-UiTokens.BORDER_HAIRLINE / 2.0), UiTokens.D_LINE_2, false, UiTokens.BORDER_HAIRLINE)
 			return
 		draw_rect(bar, UiTokens.D_BAR_TRACK)
 		var unit: float = bar.size.x / span
-		var limit: float = int(cap.total) * unit
-		var done: float = int(cap.done) * unit
+		var limit: float = cap.total * unit
+		var done: float = cap.done * unit
 		var x := 0.0
 		for seg in cap.segments:
-			var w: float = int(seg.pts) * unit
+			var w: float = seg.pts * unit
 			for part in [[x, minf(x + w, done), UiTokens.D_BAR_EMPH], [maxf(x, done), minf(x + w, limit), UiTokens.D_BAR_FILL],
 					[maxf(x, limit), x + w, UiTokens.D_warn()]]:
 				var right: float = minf(part[1], x + w - UiTokens.SPACE_XXS)
@@ -100,9 +100,20 @@ static func squares(level: float, px: int, color: Color, count := 3) -> Control:
 static func capacity_row(cap: Dictionary, value_variation: StringName) -> HBoxContainer:
 	var row := box(UiTokens.SPACE_L)
 	row.add_child(CapacityBar.new(cap))
-	row.add_child(label("%d/%d" % [int(cap.used), int(cap.total)], value_variation,
+	row.add_child(label("%s/%s" % [points(cap.used), points(cap.total)], value_variation,
 		UiTokens.D_warn() if cap.state == "over" else null))
 	return row
+
+
+## Sprint puanı iki ondalıkla, tam sayı ondalıksız ("4", "5,75"): Fmt.number tam sayıya da bir
+## ondalık yazar ("4,0"), yuvarlanınca tamlaşana da ("4,996" → "5,0").
+static func points(v: float) -> String:
+	return Fmt.number(v, 2).trim_suffix(TranslationServer.translate("NUM_DECIMAL_SEP") + "0")
+
+
+## Puan sayan anahtarın tekili, ekranda "1" okunan puandır: count_key tam sayı alır, 1,5'i 1'e keserdi.
+static func points_key(key: String, shown: String) -> String:
+	return Fmt.count_key(key, 1 if shown == "1" else 0)
 
 
 ## Seviye kelimesinin ve dolu karenin rengi.

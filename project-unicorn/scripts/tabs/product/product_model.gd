@@ -33,7 +33,7 @@ extends RefCounted
 # customer = {name, request: "" or String, tickets, tag_sprint: -1 or int, due_sprint: -1 or int,
 #             value (yıllık $), area_name: "" or String, card_id (talebin kartı), buttons: [...]}
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks, week (active),
-#           capacity: {used, total, done, state: "ok"|"over"|"blocked", segments: [{pts}]} or null,
+#           capacity: {used, total, done, state: "ok"|"over"|"blocked", segments: [{pts}]} or null (puanlar kesirli),
 #           team: [person], staffed (kadroda çalışan var), warning_text: "" or String (eksik rol),
 #           cards: [card], forecast: [part], status: {done, running, decisions}, auto_started,
 #           next_version: {label, weeks: int or -1, beta_extra, cards_left: int or -1} or null,
@@ -41,7 +41,7 @@ extends RefCounted
 #           start_reason: "" or String (başlat kapalıysa kapanan koşul), beta: {open} or null,
 #           lead_tip: person + {text} or null,
 #           release: {version: "v5" or "" (sürüm çıkmadı), beta, shipped: [card],
-#                     carried: [{name, kind, done (kesirli), total, to_sprint}], velocity: {done, total},
+#                     carried: [{name, kind, done (kesirli), total, to_sprint}], velocity: {done, total} (kesirli),
 #                     result: {kind: "expected"|"actual", text} or null, press: {outlet (anahtar), text} or {},
 #                     lead: person + {text}} or null}
 # person = {name, role_text, look ({} ise baş harfler)}
@@ -51,7 +51,7 @@ extends RefCounted
 #         decision: {event_id, item (gelen kutusundaki kâğıt), sender (Inbox'un göndericisi), subject, weeks_left,
 #                    last} or null,
 #         effort_split: [{name, weeks}],
-#         locked_node: "" or String, remaining: -1 or int, spills, urgent,
+#         locked_node: "" or String, remaining: -1 or float (kesirli), spills, urgent,
 #         buttons: ["add"|"send_next"|"pull"|"remove"]}   # var olan düğmeler; "+" can_add ile açılır
 # part = {k: "level", area, from, to, from_word, to_word} | {k: "holds", area, word} | {k: "alert_clear", area}
 #      | {k: "cap", name, from, to, from_word, to_word} | {k: "tickets", n} | {k: "voices", n}
@@ -180,8 +180,7 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 	var sprint: Dictionary = p.get("sprint", {})
 	var n: int = SprintSystem.sprint_number()
 	var weeks: int = int(SprintCatalog.cfg("sprint_weeks"))
-	var total: int = SprintSystem.capacity()
-	var used: int = roundi(SprintSystem.used())
+	var total: float = SprintSystem.capacity()
 	var team: Array = SprintSystem.team()
 	var lead: Character = _lead()
 	var sprint_cards: Array = sprint.get("cards", [])
@@ -190,8 +189,6 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 	var segments: Array = []
 	var load: float = 0.0
 	var status := {"done": 0, "running": 0, "decisions": 0}
-	# Kapasite çubuğunun dilimleri kartların yüküdür (SprintSystem.card_load); puan yalnız burada
-	# yuvarlanır, birikerek: dilimlerin toplamı "kullanılan" sayısıdır.
 	for id in sprint_cards:
 		var c: Dictionary = p.cards[id]
 		var card: Dictionary
@@ -209,7 +206,7 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 					"assignees": _people(c.assignees, team), "decision": decision if c.decision else null})
 				status.running += 1
 				status.decisions += int(c.decision)
-		segments.append({"pts": roundi(load + pts) - roundi(load)})
+		segments.append({"pts": pts})
 		load += pts
 		cards.append(card)
 	# Betada bekleyen kartlar bu sprintin sonunda yayına girer; kapasite tüketmez.
@@ -226,7 +223,7 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 		reason = _t("PRODUCT_TEAM_NOBODY" if total == 0 else "PRODUCT_START_NEED_CARD")
 	return {
 		"mode": mode, "sprint": n if n > 0 else -1, "weeks": weeks, "week": SprintSystem.week(),
-		"capacity": _bar(used, total, SprintSystem.done_points(), segments) if n > 0 else null,
+		"capacity": _bar(load, total, SprintSystem.done_points(), segments) if n > 0 else null,
 		"team": team.map(func(t: Dictionary) -> Dictionary: return _person(CharacterRegistry.get_character(t.id))),
 		"staffed": not CharacterRegistry.get_employees().is_empty(),
 		"warning_text": warning, "cards": cards,
@@ -317,16 +314,16 @@ static func _quarter(center: Dictionary, next: Dictionary) -> Dictionary:
 		return {"state": "locked_no_pm", "goal": null, "columns": []}
 	if center.sprint < 0:
 		return {"state": "open", "goal": null, "columns": []}
-	var total: int = SprintSystem.capacity()
+	var total: float = SprintSystem.capacity()
 	var columns: Array = [{"sprint": center.sprint, "kind": "current", "capacity": center.capacity, "pm": false,
 		"flags": _flags(center.sprint), "cards": center.cards, "approved": false}]
 	for plan in SprintCatalog.pm_plans():
 		var cards: Array = (next.cards if plan.number == next.sprint else []) + plan.cards.map(
 			func(id: String) -> Dictionary: return _card(SprintCatalog.card_by_id(id), SprintCard.State.PLANLANAN))
-		var used: int = 0
+		var used: float = 0.0
 		var segments: Array = []
 		for c in cards:
-			var pts: int = c.remaining if c.remaining >= 0 else c.effort
+			var pts: float = c.remaining if c.remaining >= 0 else c.effort
 			used += pts
 			segments.append({"pts": pts})
 		columns.append({"sprint": plan.number, "kind": "proposed", "capacity": _bar(used, total, 0, segments),
@@ -381,9 +378,9 @@ static func _kind(c: Dictionary) -> String:
 
 ## Önceki sprintten ilerlemeyle gelen kartın kalan puanı; ilerlemesi eforundan bir şey eksiltmediyse
 ## -1 (kart eforuyla durur).
-static func _remaining(c: Dictionary) -> int:
-	var left: int = roundi(SprintSystem.remaining(c))
-	return left if left < roundi(SprintSystem.total(c)) else -1
+static func _remaining(c: Dictionary) -> float:
+	var left: float = SprintSystem.remaining(c)
+	return left if left < SprintSystem.total(c) - SprintSystem.EPS else -1.0
 
 
 ## Faz noktası: sıradaki fazdan öncekiler bitti, o sürüyor, sonrakiler bekliyor.
@@ -432,9 +429,9 @@ static func _person(c: Character) -> Dictionary:
 # --- Yardımcılar -------------------------------------------------------------------------
 
 ## Kapasite çubuğu: kapasite yoksa kilitli, aşılmışsa taşkın.
-static func _bar(used: int, total: int, done: int, segments: Array) -> Dictionary:
+static func _bar(used: float, total: float, done: float, segments: Array) -> Dictionary:
 	return {"used": used, "total": total, "done": done,
-		"state": "blocked" if total == 0 else ("over" if used > total else "ok"), "segments": segments}
+		"state": "blocked" if total == 0 else ("over" if used > total + SprintSystem.EPS else "ok"), "segments": segments}
 
 
 static func _t(key: String) -> String:

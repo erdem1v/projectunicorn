@@ -68,7 +68,7 @@ func setup(card: Dictionary, can_add: bool, look := Look.WIDE) -> void:
 	if state in PLANNED:
 		HRUiShared.D_dashed(self)
 	# Devreden kart sonraki sütunda kalan puanıyla durur.
-	var points: int = int(card.remaining) if int(card.remaining) >= 0 else int(card.effort)
+	var points: float = card.remaining if card.remaining >= 0 else card.effort
 	var body := SprintUiShared.column(UiTokens.SPACE_M)
 	add_child(body)
 	var top := SprintUiShared.box(UiTokens.SPACE_M if look != Look.MINI else UiTokens.SPACE_S)
@@ -162,8 +162,8 @@ func _ink() -> Dictionary:
 	return {"glyph": UiTokens.D_INK_3, "name": UiTokens.D_INK_1 if _look == Look.MINI else null, "title": &"DataStrong"}
 
 
-func _points(points: int) -> Label:
-	var pts := UiFactory.make_label(str(points), &"PtsBox")
+func _points(points: float) -> Label:
+	var pts := UiFactory.make_label(SprintUiShared.points(points), &"PtsBox")
 	pts.custom_minimum_size.x = UiTokens.D_W_PTS
 	pts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	return pts
@@ -284,11 +284,12 @@ func _decision_rows(body: VBoxContainer, d: Dictionary) -> void:
 
 
 ## Efor dökümü: "3 puan · Ece 1 hafta · Kaan 1 hafta", kartın üstüne gelince.
-func _effort(points: int) -> void:
+func _effort(points: float) -> void:
 	var split: Array = _card.effort_split
 	if split.is_empty():
 		return
-	_effort_parts = [tr(Fmt.count_key("PRODUCT_EFFORT_POINTS", points)).format({"n": points})]
+	var n: String = SprintUiShared.points(points)
+	_effort_parts = [tr(SprintUiShared.points_key("PRODUCT_EFFORT_POINTS", n)).format({"n": n})]
 	for s in split:
 		var weeks: int = int(s.weeks)
 		_effort_parts.append(tr("PRODUCT_EFFORT_PERSON").format({"name": s.name,

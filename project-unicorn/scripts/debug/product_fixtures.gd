@@ -78,7 +78,7 @@ func _build(id: String) -> Dictionary:
 				_deck("gorusme", SprintCard.State.ADAY, {"urgent": true}),
 				_deck("ilk_tur", SprintCard.State.ADAY_ALINMIS, {"tag_sprint": 8}),
 				_deck("mobil_giris", SprintCard.State.SPRINT_PLAN, {"spills": true}),
-				_deck("oto_yedek", SprintCard.State.DEVREDEN, {"remaining": 2}),
+				_deck("oto_yedek", SprintCard.State.DEVREDEN, {"remaining": 0.25}),
 				_deck("etiketler", SprintCard.State.PLANLANAN),
 				_deck("akilli_arama", SprintCard.State.KILITLI, {"locked_node": tr("PRODUCT_LOCKED_NODE").format({"node": _p("Gelişmiş arama", "Advanced search")})}),
 				_deck("baglanti", SprintCard.State.BETA_BEKLIYOR),
@@ -229,11 +229,11 @@ func _resum(c: Dictionary) -> void:
 
 
 ## Kapasiteyi aşan kart "devreder" der; devreden kart kalan puanıyla sayılır.
-func _capacity(cards: Array, total: int, done: int) -> Dictionary:
-	var used := 0
+func _capacity(cards: Array, total: float, done: float) -> Dictionary:
+	var used := 0.0
 	var segments: Array = []
 	for card in cards:
-		var pts: int = card.remaining if card.remaining >= 0 else card.effort
+		var pts: float = card.remaining if card.remaining >= 0 else card.effort
 		used += pts
 		card.spills = used > total
 		segments.append({"pts": pts})

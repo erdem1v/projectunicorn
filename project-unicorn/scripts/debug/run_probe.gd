@@ -809,8 +809,8 @@ static func _plan_the_sprint() -> void:
 				SprintSystem.add(research[0].id)
 				break
 	if SprintSystem.start():
-		print("PROBE PLAY day=%d sprint %d start cards=%s used=%d capacity=%d" % [GameState.day,
-			SprintSystem.sprint_number(), ",".join(GameState.product.sprint.cards), roundi(SprintSystem.used()),
+		print("PROBE PLAY day=%d sprint %d start cards=%s used=%.2f capacity=%.2f" % [GameState.day,
+			SprintSystem.sprint_number(), ",".join(GameState.product.sprint.cards), SprintSystem.used(),
 			SprintSystem.capacity()])
 
 

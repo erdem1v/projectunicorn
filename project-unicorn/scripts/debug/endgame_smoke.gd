@@ -2543,7 +2543,7 @@ static func _case_series_a_road_closed_when_all_funds_close() -> String:
 static func _case_prep_bonus_and_capacity() -> String:
 	GameState.set_phase(3)
 	_park_leave([_make_employee("char_prep_dev", "Prep Dev", HRConstants.ROLE_DEVELOPER)])
-	var capacity: int = SprintSystem.capacity()
+	var capacity: float = SprintSystem.capacity()
 	if not VCPitchSystem.request_meeting("anchor"):
 		return "request refused"
 	if not VCPitchSystem.start_prep("anchor", "rakamlar"):
@@ -2553,7 +2553,7 @@ static func _case_prep_bonus_and_capacity() -> String:
 	# Hazırlık yalnız kurucuyu tutar: canlı ürüne meşgul sayılır, sprintin haftalık puanına
 	# dokunmaz (sprint ekibinden yalnız izin ve Ar-Ge düşürür).
 	if SprintSystem.capacity() != capacity:
-		return "VC prep moved the sprint capacity (%d -> %d)" % [capacity, SprintSystem.capacity()]
+		return "VC prep moved the sprint capacity (%.2f -> %.2f)" % [capacity, SprintSystem.capacity()]
 	var founder: Character = CharacterRegistry.get_founder()
 	if ProductSystem._is_free(founder):
 		return "a founder in VC prep still counts as FREE for the live product"
@@ -6549,7 +6549,7 @@ static func _case_hr_leave_cycle() -> String:
 		_sim_day()
 	e.leave_week = 0
 	e.leave_taken_year = 0
-	var cap0: int = SprintSystem.capacity()
+	var cap0: float = SprintSystem.capacity()
 	_sim_day()
 	if e.status != HRConstants.STATUS_ON_LEAVE:
 		return "leave month reached but status is '%s'" % e.status
@@ -6729,7 +6729,7 @@ static func _case_hr_raise_and_leave() -> String:
 		return "the raise did not flow to burn"
 	# İzin tek kanaldan gelir, otomatik yıllık izin: biri gider, kapasite düşer, dönüşte moral
 	# tazelenir.
-	var cap0: int = SprintSystem.capacity()
+	var cap0: float = SprintSystem.capacity()
 	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_WEEKS, false)
 	if e.status != HRConstants.STATUS_ON_LEAVE:
 		return "annual leave did not take the employee out of capacity"
@@ -16586,8 +16586,8 @@ static func _case_sprint_two_days_close() -> String:
 	return ""
 
 
-## Kapasite Ekip'ten okunur: kişi başına haftada iki puan × beceri bandı × moral bandı × çalışma
-## saati, iki hafta; kurucunun bandı sabittir. Moral bandı kişinin puanını değiştirir, Ar-Ge'ye
+## Kapasite Ekip'ten okunur ve yuvarlanmaz: kişi başına haftada iki puan × beceri bandı × moral
+## bandı × çalışma saati, iki hafta; kurucunun bandı sabittir. Moral bandı kişinin puanını değiştirir, Ar-Ge'ye
 ## alınan ve izne çıkan kişi ekipten düşer; kimse kalmayınca "+" kapanır.
 static func _case_sprint_capacity_from_team() -> String:
 	ResearchTree.reload()
@@ -16597,17 +16597,19 @@ static func _case_sprint_capacity_from_team() -> String:
 	var point: float = float(SprintCatalog.cfg("person_points_week"))
 	var founder_pts: float = point * float(SprintCatalog.cfg("founder_mult"))
 	var mid: float = point * float((SprintCatalog.cfg("skill.mult") as Array)[1])
-	if SprintSystem.capacity() != roundi(founder_pts * weeks):
-		return "a solo founder's sprint holds %d points, want %d" % [SprintSystem.capacity(), roundi(founder_pts * weeks)]
+	if not is_equal_approx(SprintSystem.capacity(), founder_pts * weeks):
+		return "a solo founder's sprint holds %.2f points, want %.2f" % [SprintSystem.capacity(), founder_pts * weeks]
 	var dev: Character = _sprint_hire("char_cap_dev", HRConstants.ROLE_DEVELOPER)
-	if not is_equal_approx(_sprint_points(dev.id), mid) or SprintSystem.capacity() != roundi((founder_pts + mid) * weeks):
-		return "a mid developer works %.2f a week for a capacity of %d, want %.2f and %d" % [
-			_sprint_points(dev.id), SprintSystem.capacity(), mid, roundi((founder_pts + mid) * weeks)]
+	if not is_equal_approx(_sprint_points(dev.id), mid) \
+			or not is_equal_approx(SprintSystem.capacity(), (founder_pts + mid) * weeks):
+		return "a mid developer works %.2f a week for a capacity of %.2f, want %.2f and %.2f" % [
+			_sprint_points(dev.id), SprintSystem.capacity(), mid, (founder_pts + mid) * weeks]
 	dev.morale = HRConstants.MORALE_BAND_LOW - 1
 	var low: float = mid * HRConstants.MORALE_BAND_LOW_MULT
-	if not is_equal_approx(_sprint_points(dev.id), low) or SprintSystem.capacity() != roundi((founder_pts + low) * weeks):
-		return "low morale left the developer at %.2f a week for a capacity of %d, want %.2f and %d" % [
-			_sprint_points(dev.id), SprintSystem.capacity(), low, roundi((founder_pts + low) * weeks)]
+	if not is_equal_approx(_sprint_points(dev.id), low) \
+			or not is_equal_approx(SprintSystem.capacity(), (founder_pts + low) * weeks):
+		return "low morale left the developer at %.2f a week for a capacity of %.2f, want %.2f and %.2f" % [
+			_sprint_points(dev.id), SprintSystem.capacity(), low, (founder_pts + low) * weeks]
 	dev.morale = HRConstants.MORALE_BAND_LOW
 	var founder: Character = CharacterRegistry.get_founder()
 	for area in HRConstants.AREAS:
@@ -16615,12 +16617,12 @@ static func _case_sprint_capacity_from_team() -> String:
 	GameState.set_flag("mvp_shipped", true)   # Ar-Ge yayından sonra açılır
 	if RnDSystem.start("data_model", [founder.id]) != "":
 		return "fixture: the founder could not start research"
-	if _sprint_points(founder.id) > 0.0 or SprintSystem.capacity() != roundi(mid * weeks):
-		return "a researching founder still counts: capacity %d, want the developer's %d" % [
-			SprintSystem.capacity(), roundi(mid * weeks)]
+	if _sprint_points(founder.id) > 0.0 or not is_equal_approx(SprintSystem.capacity(), mid * weeks):
+		return "a researching founder still counts: capacity %.2f, want the developer's %.2f" % [
+			SprintSystem.capacity(), mid * weeks]
 	HRMoraleSystem.send_on_leave(dev, HRConstants.LEAVE_WEEKS, false)
 	if SprintSystem.capacity() != 0 or SprintSystem.can_add():
-		return "with the founder researching and the developer on leave the sprint holds %d points (+ open: %s)" % [
+		return "with the founder researching and the developer on leave the sprint holds %.2f points (+ open: %s)" % [
 			SprintSystem.capacity(), SprintSystem.can_add()]
 	return ""
 
@@ -16723,17 +16725,22 @@ static func _case_sprint_ceiling_125_blocks_add() -> String:
 
 ## Devreden kart ilerlemesini korur: sürüm notu biten ve toplam puanı yazar, kart sonraki sprintte
 ## kaldığı yerden sürer ve planlamada yalnız kalan puanı yükler. Puan tamdır: notun bitenine ve
-## planlamanın yüküne aynı kalan girer. Kurucu ilk haftada araştırmayı bitirir, kartı yalnız ikinci
-## haftada işler.
+## planlamanın yüküne aynı kalan girer. Tek kurucu 12 saatte ilk K1'i ikinci haftada bitirir;
+## haftanın artanı ikinci K1'e geçer ve o kart onunla devreder.
 static func _case_sprint_carry_keeps_progress() -> String:
 	_seed_sprint()
-	var id: String = "feat:line_note_tool_capture_k1"
-	var total: int = SprintCatalog.step_effort("line_note_tool_capture_k1")
-	if not _play_sprint(["res:core", id]):
+	WorkHoursSystem.set_company_hours(12)
+	var id: String = "feat:line_note_tool_editor_k1"
+	var total: int = SprintCatalog.step_effort("line_note_tool_editor_k1")
+	if not _play_sprint(["feat:line_note_tool_capture_k1", id]):
 		return "fixture: sprint 1 did not start"
+	if ProductState.line_tier("line_note_tool_capture") != 1:
+		return "fixture: the first K1 did not ship in sprint 1"
 	var worked: float = _card_worked(id)
-	if worked <= 0.0 or worked >= total:
-		return "a solo founder's K1 should carry out of sprint 1 part done, worked %.2f of %d" % [worked, total]
+	var residual: float = SprintSystem.capacity() - SprintCatalog.step_effort("line_note_tool_capture_k1")
+	if not is_equal_approx(worked, residual):
+		return "the second K1 carried %.2f of %d out of sprint 1, want the %.2f the first card left" % [
+			worked, total, residual]
 	var rows: Array = GameState.product.release.carried.filter(func(r: Dictionary) -> bool: return r.id == id)
 	if rows.size() != 1 or not is_equal_approx(float(rows[0].done), worked) or int(rows[0].total) != total \
 			or int(rows[0].to_sprint) != 2:
@@ -16747,7 +16754,7 @@ static func _case_sprint_carry_keeps_progress() -> String:
 			SprintSystem.used(), total - worked]
 	if not _play_sprint([]):
 		return "fixture: sprint 2 did not start"
-	if ProductState.line_tier("line_note_tool_capture") != 1:
+	if ProductState.line_tier("line_note_tool_editor") != 1:
 		return "the carried card never shipped in sprint 2 (worked %.2f)" % _card_worked(id)
 	return ""
 
@@ -17048,9 +17055,10 @@ static func _case_sprint_save_roundtrip() -> String:
 ## Karar bekleyen kart ilerlemez: kâğıt masadayken haftanın işi ona dökülmez ve ona kimse atanmaz;
 ## sprint kapanınca ilerlemesiyle devreder, kâğıt kapanınca yeniden yürür. Kararlar ürünün gerçek
 ## sprint kartlarıdır; vaka istek oranını (test sabiti, her hafta) kendi süresince açar ve geri koyar.
-## Tek kurucu ilk haftayı sıradaki ilk karta verir; geride kalan ikinci kart kararı alır.
+## Tek kurucu 12 saatte ilk haftayı sıradaki ilk karta verir; geride kalan ikinci kart kararı alır.
 static func _case_sprint_decision_blocks_progress() -> String:
 	_seed_sprint()
+	WorkHoursSystem.set_company_hours(12)
 	var rate: Variant = SprintCatalog.cfg("decision.rate")
 	SprintCatalog._data.decision.rate = 1.0
 	var run := func() -> String:
@@ -17477,7 +17485,7 @@ static func _case_promise_row_locked_when_no_room() -> String:
 			and card.step not in [pain, pitch]
 	# Two steps given to the other accounts: each fits beside either word once, not twice, so the
 	# first leaves room for the word and the two together do not.
-	var cap: int = SprintSystem.capacity()
+	var cap: float = SprintSystem.capacity()
 	var word: Array = [SprintCatalog.step_effort(pain), SprintCatalog.step_effort(pitch)]
 	var owed: Array = []
 	for area_id in SprintCatalog.area_ids():
@@ -17486,7 +17494,7 @@ static func _case_promise_row_locked_when_no_room() -> String:
 					and cap - 2 * SprintCatalog.step_effort(card.step) < word.min():
 				owed.append(card.step)
 	if owed.size() < 2:
-		return "fixture: no two steps that fit beside the word once but not twice (capacity %d)" % cap
+		return "fixture: no two steps that fit beside the word once but not twice (capacity %.2f)" % cap
 	# Feature steps that are no word go to `place` until fewer than three points are free.
 	var fill := func(place: Callable, load: Callable) -> float:
 		for area_id in SprintCatalog.area_ids():
@@ -17530,9 +17538,9 @@ static func _case_promise_row_locked_when_no_room() -> String:
 
 
 ## product.sprint_late yalnız gerçekten geride kalan kartta açılır: sprintin kalan haftası bugünkü
-## ekiple oynanır. Kurucuyla geliştirici ilk haftayı ilk karta verir; ikinci kart hiç ilerlememiştir
-## ama ikinci hafta ikisi ona yetişir, kâğıt istenmez. Tek kurucunun ikinci kartı yetişmez: kâğıt
-## gelir ve fazla mesai satırı ekipsiz de açıktır.
+## ekiple oynanır. Kurucuyla geliştirici ilk haftayı ilk karta verir, ikinci karta yalnız haftanın
+## artanı düşer; ikinci hafta ikisi ona yetişir, kâğıt istenmez. Tek kurucunun 12 saatte ikinci
+## kartı yetişmez: kâğıt gelir ve fazla mesai satırı ekipsiz de açıktır.
 ## FALSİFİKASYON: sprint_late.json'un koşulundan urun.decision_card_late yaprağını sil → ilk sprintte
 ## kâğıt istenir.
 static func _case_sprint_late_only_when_behind() -> String:
@@ -17551,13 +17559,17 @@ static func _case_sprint_late_only_when_behind() -> String:
 		if not SprintSystem.start():
 			return "fixture: sprint 1 did not start"
 		_sim_day()
-		if _card_worked("feat:%s_k1" % lines[1]) > 0.0:
-			return "fixture: the second card got work in the first week"
+		# Geliştiricinin tam bir haftası ikinci kartın Tasarım'ına yarı hızla bile haftasının yarısını
+		# döker; yalnız artanı alan kart bunun altında kalır.
+		var second: float = _card_worked("feat:%s_k1" % lines[1])
+		if second <= 0.0 or second >= _sprint_points(dev.id) * float(SprintCatalog.cfg("no_role_speed")):
+			return "the second card got %.2f in the first week, want only the week's residual" % second
 		if not asked.is_empty():
 			return "sprint_late asked about %s, which the founder and the developer finish this week" % asked
 		_sim_day()
 		SprintSystem.plan_next()
 		CharacterRegistry.remove(dev.id)
+		WorkHoursSystem.set_company_hours(12)
 		for line_id in lines.slice(2, 4):
 			SprintSystem.add("feat:%s_k1" % line_id)
 		if not SprintSystem.start():

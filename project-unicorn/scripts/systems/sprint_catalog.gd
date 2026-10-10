@@ -475,7 +475,7 @@ static func pm_plans() -> Array:
 	var taken: Array = _approved_ahead()
 	var keep: float = float(cfg("pm.low_skill_cards")) \
 		if HRSystem.skill(pm, HRConstants.role_key_area(pm.role)) <= int(cfg("skill.low_max")) else 1.0
-	var capacity: int = SprintSystem.capacity()
+	var capacity: float = SprintSystem.capacity()
 	var goal: String = quarter_goal()
 	var first: int = int(_p().next.number)
 	var out: Array = []
@@ -763,7 +763,7 @@ static func _open_cards(taken: Array) -> Array:
 ## haftaları alanı ilerletmeyen işe bağlanırdı. Bu ya da sonraki sprintte duran ve kilitli kartlar
 ## önerilmez. `taken` başka sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki
 ## sütunları). PM aynı kuralla planlar; `goal` alanının kartları sırada hedef ağırlığıyla öne çıkar.
-static func _suggest(capacity: int, used: float, taken: Array = [], goal := "") -> Array:
+static func _suggest(capacity: float, used: float, taken: Array = [], goal := "") -> Array:
 	var pool: Array = _open_cards(taken)
 	if pool.is_empty():
 		return []

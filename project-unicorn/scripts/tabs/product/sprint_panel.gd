@@ -221,10 +221,11 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 		row.add_child(SprintUiShared.label(tr("PRODUCT_TAG_SPRINT").format({"n": item.to_sprint}), &"KeyText"))
 
 	var v: Dictionary = r.velocity
+	var pts := {"done": SprintUiShared.points(v.done), "total": SprintUiShared.points(v.total)}
 	var speed := SprintUiShared.box(UiTokens.SPACE_L)
-	speed.add_child(SprintUiShared.label("%d/%d" % [v.done, v.total], &"FigureValue"))
-	speed.add_child(SprintUiShared.prose(tr(Fmt.count_key("PRODUCT_VELOCITY_LINE", v.total)).format(
-		{"done": v.done, "total": v.total}), &"MetaMuted"))
+	speed.add_child(SprintUiShared.label("%s/%s" % [pts.done, pts.total], &"FigureValue"))
+	speed.add_child(SprintUiShared.prose(tr(SprintUiShared.points_key("PRODUCT_VELOCITY_LINE", pts.total)).format(pts),
+		&"MetaMuted"))
 	var rows: Array = [["PRODUCT_VELOCITY", speed]]
 	if r.result != null:
 		rows.append(["PRODUCT_RESULT", SprintUiShared.result_line(r.result, &"DataText")])

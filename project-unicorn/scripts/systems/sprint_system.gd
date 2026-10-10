@@ -218,7 +218,7 @@ static func decision_progress(amount: int) -> String:
 	if c.is_empty():
 		return ""
 	if amount >= 0:
-		_work(c, {"points": float(amount), "fits": SprintCatalog.cfg("roles." + String(c.kind))})
+		_work(c, {"fits": SprintCatalog.cfg("roles." + String(c.kind))}, float(amount))
 	else:
 		var left: float = -amount
 		for i in range(TEST_PHASE, -1, -1):
@@ -334,11 +334,11 @@ static func week() -> int:
 
 
 ## Ekibin iki haftalık puanı.
-static func capacity() -> int:
+static func capacity() -> float:
 	var points: float = 0.0
 	for person in team():
 		points += person.points
-	return roundi(points * int(SprintCatalog.cfg("sprint_weeks")))
+	return points * int(SprintCatalog.cfg("sprint_weeks"))
 
 
 ## Sprintteki kartların yükü; kapasite çubuğunun dilimleri kart yükleridir. Puanlar tamdır,
@@ -375,13 +375,13 @@ static func points_left(ids: Array) -> float:
 
 
 ## Bu sprintte bitirilen puan (yarım kalan ve kararla erken devreden işler dahil).
-static func done_points() -> int:
+static func done_points() -> float:
 	if mode() != "active":
-		return 0
+		return 0.0
 	var done: float = 0.0
 	for card in _sprint_cards() + _carried_out():
 		done += _worked(card) - float(card.base)
-	return roundi(done)
+	return done
 
 
 ## Bu sprintte çalışabilecekler: aktif kurucu ve ürün tarafındaki aktif çalışanlar, Ar-Ge'dekiler
@@ -404,7 +404,7 @@ static func team() -> Array:
 
 ## "+" yalnız planlamada, kapasite varken ve yük %125'i aşmamışken açıktır.
 static func can_add() -> bool:
-	var cap: int = capacity()
+	var cap: float = capacity()
 	return mode() == "plan" and cap > 0 and used() <= cap * float(SprintCatalog.cfg("cap_ceiling"))
 
 
@@ -478,11 +478,13 @@ static func worked(character_id: String) -> bool:
 # --- Hafta ve kapanış ----------------------------------------------------------------
 
 ## Biten haftanın işi kartlara dökülür; ikinci haftanın sonunda sprint kapanır, değilse
-## yeni haftanın kararı ve ataması yapılır.
+## yeni haftanın kararı ve ataması yapılır. Kişinin haftalık puanı atamanın sırasıyla harcanır:
+## ekip hafta içinde değişmediyse sonuç önizlemeyle aynıdır.
 static func _end_week() -> void:
 	var people: Dictionary = {}
 	for person in team():
 		people[person.id] = person
+	var budget: Dictionary = {}
 	var worked_ids: Array = []
 	for c in _sprint_cards():
 		if c.decision or c.state == "done":
@@ -490,7 +492,7 @@ static func _end_week() -> void:
 		var before: int = phase(c)
 		for id in c.assignees:
 			if people.has(id):
-				_work(c, people[id])
+				budget[id] = _work(c, people[id], budget.get(id, people[id].points))
 				worked_ids.append(id)
 		var after: int = phase(c)
 		if after != before:
@@ -507,10 +509,11 @@ static func _end_week() -> void:
 		_assign(_sprint_cards(), team())
 
 
-## Haftanın ataması: kartlar sprint sırasıyla, kişi haftada tek kart. Kartın sıradaki fazına
-## uyan kişi önce, sonra puanı yüksek olan; kart bu hafta bitecek kadar kişi alır.
+## Haftanın ataması: kartlar sprint sırasıyla. Kartın sıradaki fazına uyan kişi önce, sonra
+## haftasından çok puanı kalan; kart bu hafta bitecek kadar kişi alır. Kartını bitirenin kalan
+## puanı sıradaki karta geçer.
 static func _assign(cards: Array, people: Array) -> void:
-	var free: Array = people.duplicate()
+	var free: Array = people.map(func(person: Dictionary) -> Dictionary: return person.merged({"left": person.points}))
 	for c in cards:
 		c.assignees = []
 		if c.decision:
@@ -521,18 +524,19 @@ static func _assign(cards: Array, people: Array) -> void:
 			free.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 				if (role in a.fits) != (role in b.fits):
 					return role in a.fits
-				if a.points != b.points:
-					return a.points > b.points
+				if a.left != b.left:
+					return a.left > b.left
 				return a.id < b.id)
 			var person: Dictionary = free.pop_front()
-			_work(probe, person)
+			person.left = _work(probe, person, person.left)
 			c.assignees.append(person.id)
+			if person.left > EPS:
+				free.append(person)
 
 
-## Kişinin haftalık puanı kartın sıradaki fazlarına dökülür; uymadığı rolün fazında yarı hızla.
-## Test fazı Test rolü olmadan yapılırsa kart sürümde hatalı çıkabilir.
-static func _work(c: Dictionary, person: Dictionary) -> void:
-	var budget: float = person.points
+## Kişinin bütçesi kartın sıradaki fazlarına dökülür, harcanmayanı döner; uymadığı rolün fazında
+## yarı hızla. Test fazı Test rolü olmadan yapılırsa kart sürümde hatalı çıkabilir.
+static func _work(c: Dictionary, person: Dictionary, budget: float) -> float:
 	var effort: float = total(c)
 	var at: int = phase(c)
 	while at < PHASE_DONE and budget > EPS:
@@ -543,10 +547,11 @@ static func _work(c: Dictionary, person: Dictionary) -> void:
 		if at == TEST_PHASE and speed < 1.0:
 			c.faulty = true
 		at = phase(c)
+	return budget
 
 
-## Sprintin kalan haftaları bugünkü ekiple kartların kopyalarında oynanır; kart başına çalışan
-## kişiler ve haftaları, {kart: {kişi: {id, name, weeks}}}.
+## Sprintin kalan haftaları bugünkü ekiple kartların kopyalarında oynanır; hafta _end_week gibi atama
+## sırasıyla dökülür. Kart başına çalışan kişiler ve haftaları, {kart: {kişi: {id, name, weeks}}}.
 static func _play_out(cards: Array) -> Dictionary:
 	var by_id: Dictionary = {}
 	for person in team():
@@ -554,9 +559,10 @@ static func _play_out(cards: Array) -> Dictionary:
 	var split: Dictionary = {}
 	for _w in int(SprintCatalog.cfg("sprint_weeks")) - maxi(week(), 1) + 1:
 		_assign(cards, by_id.values())
+		var budget: Dictionary = {}
 		for c in cards:
 			for id in c.assignees:
-				_work(c, by_id[id])
+				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points))
 				var row: Dictionary = (split.get_or_add(c.id, {}) as Dictionary).get_or_add(id,
 					{"id": id, "name": by_id[id].name, "weeks": 0})
 				row.weeks += 1
@@ -693,7 +699,7 @@ static func _close() -> void:
 	var p: Dictionary = _p()
 	var sprint: Dictionary = p.sprint
 	var number: int = int(sprint.number)
-	var velocity: Dictionary = {"done": done_points(), "total": int(sprint.capacity)}
+	var velocity: Dictionary = {"done": done_points(), "total": sprint.capacity}
 	var ship: Array = p.cards.values().filter(func(c: Dictionary) -> bool: return c.state == "beta")
 	var to_beta: Array = []
 	var carried: Array = []
