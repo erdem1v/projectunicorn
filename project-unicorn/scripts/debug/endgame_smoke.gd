@@ -10922,8 +10922,9 @@ static func _case_harness_sniffer_matches_run_log() -> String:
 	# rule (a bare project path must never match).
 	if not SaveManager._is_harness_arg("--run-log=b2c:180:sim"):
 		return "--run-log is not recognised as a harness flag (probe runs would autosave)"
-	if not SaveManager._is_harness_arg("--endgame-smoke=x") or not SaveManager._is_harness_arg("--tab-shot=finance"):
-		return "existing harness flags stopped matching"
+	if not SaveManager._is_harness_arg("--endgame-smoke=x") or not SaveManager._is_harness_arg("--tab-shot=finance") \
+			or not SaveManager._is_harness_arg("--event-plausibility=seeds=20:weeks=16"):
+		return "a harness flag stopped matching the sniffer"
 	if SaveManager._is_harness_arg("C:/games/screenshots/project-unicorn") or SaveManager._is_harness_arg("res://run-log"):
 		return "a bare (non --) argument matched the sniffer"
 	return ""

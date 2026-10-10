@@ -445,7 +445,7 @@ func _next_auto_slot_id() -> String:
 static func _is_harness_arg(arg: String) -> bool:
 	if not arg.begins_with("--"):
 		return false
-	for part in ["smoke", "-shot", "audit", "probe", "run-log"]:
+	for part in ["smoke", "-shot", "audit", "probe", "run-log", "plausibility"]:
 		if arg.contains(part):
 			return true
 	return false

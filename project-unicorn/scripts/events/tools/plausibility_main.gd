@@ -1,6 +1,7 @@
 extends SceneTree
 
-# Until main.gd carries the flag, the entry to the plausibility ledger is this SceneTree script:
+# The plausibility ledger's own entry, the one tools/plausibility_run.sh drives (main.gd's
+# --event-plausibility= reaches the same ledger from inside a booted game):
 #
 #   godot --headless --path . -s res://scripts/events/tools/plausibility_main.gd \
 #         -- --event-plausibility-probe=seeds=1-1:weeks=16:variant=early
