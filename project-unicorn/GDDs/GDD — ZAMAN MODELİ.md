@@ -494,7 +494,7 @@ yüklemez, süreleri okunmaz.
 - Gece başlayınca saat donar (`freeze_clock("night")`). Ofis görünümü "ofis boş" yüklemini kaydetmişse gece onu her
   kare yoklar ve en fazla `OfficeConstants.NIGHT_WAIT_S` = 3,5 gerçek saniye [WORKING] bekler. Bekleme yalnız kare
   süresiyle sayılır; duraklatma sayacı da yürüyüşü de birlikte dondurur.
-- İçeride kalanları kesen kararma hızla kısalır (§7.4; onay bekliyor: ACIK_KARARLAR 91): haftanın gerçek süresine her hızda aynı payı ekler. Ölçüm
+- Gece atlamasından önceki kararma hızla kısalır (§7.4; onay bekliyor: ACIK_KARARLAR 91): haftanın gerçek süresine her hızda aynı payı ekler. Ölçüm
   (`--tempo-probe=<hız>:shell`, 2026-10-09): 1×'te hafta 22,46 ve 22,47 sn, 4×'te 5,66 ve 5,68 sn; 4× 1×'in 3,96–3,97
   katı hızdadır.
 - Kayıtlı yüklem yoksa (headless, smoke, probe) atlama hemen olur.
@@ -510,8 +510,10 @@ yüklemez, süreleri okunmaz.
 
 - Kişiler kendi yürüyüşlerinin süresine göre çıkar: çıkış yürüyüşü, yürüme süresinin `EXIT_SLACK` katı kadar önce
   başlar ve kapıdan tek tek geçilir. Sırası günün sonundan sonraya düşen ya da günü yürüyüşe yetmeyecek kadar kısa olan
-  masasında kalır; gece yeni yürüyüş başlamaz, yüklem yalnız kapıya ya da yatağa yürüyenleri bekler, içeride kalan
-  herkes kararma altında kesilir, sonra atlama gelir. Kararma `OfficePeople.CUT_FADE_S` [WORKING] 1×'te 0,25 sn'dir ve
+  masasında kalır; gece yeni yürüyüş başlamaz, yüklem yalnız kapıya ya da yatağa yürüyenleri bekler; sonra görünüm her
+  gece kararır, içeride kalan herkes kararmanın altında kesilir, sonra atlama gelir (harita, toplantı odası ve başsız
+  koşuda kararma yoktur; saat dururken başlamaz; bir tutuş atlamayı 08:00'den önce keserse görünüm geri gelir,
+  sürdürülen atlama yeniden kararır). Kararma `OfficePeople.CUT_FADE_S` [WORKING] 1×'te 0,25 sn'dir ve
   hızla kısalır (onay bekliyor: ACIK_KARARLAR 91): `CUT_FADE_S × SECONDS_PER_HOUR[hız] / SECONDS_PER_HOUR[1]` (4×'te 0,0625 sn).
 - Kişilerin temposu (sahip kararı 2026-10-09: eski 90 saniyelik haftanın ritmi, Software Inc. modeli): bir ambiyans
   saniyesi her hızda 6 oyun dakikasıdır (`OfficeConstants.PACE_MINUTES`). Görsel hız `k` saatin oyun dakikası/sn'sinin

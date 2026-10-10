@@ -19,8 +19,8 @@ signal founder_settled   # the founder back from a meeting is at their place, or
 const LIFT_EASE := 6.0    # the design's lift easing, per second
 const ICON_PX := 26.0     # the design's iconS: a head icon this many pixels tall,
 const ICON_MIN := 0.6     # but never under this many world units
-const CUT_FADE_S := 0.25  # [WORKING] the view fades to black before the night cuts those still in, at 1×;
-                          # shorter as the clock runs faster
+const CUT_FADE_S := 0.25  # [WORKING] the office view fades to black before the night skip, at 1×; shorter
+                          # as the clock runs faster
 ## A spot's way in starts at the first point of its chain this close to the baked floor.
 const ON_FLOOR := 0.3
 ## Seconds of getting up and sitting down a walk to a seat adds, and one to bed.
@@ -67,7 +67,7 @@ var _placed := false     # the office's floor is on the navigation map and every
 var _k := 0.0
 var _clock := 0.0        # ambient seconds in this office
 var _door_turn := 0.0    # the ambient second of the next turn out through the door
-var _fade: Tween         # the view going dark for the night's cut
+var _fade: Tween         # the view going dark before the night's skip
 var _founder_told := true
 var _returning := false  # back from a meeting until at their place: starts at the door, the office at TRIP_K
 var _rooms: Array[float] = []   # per meeting room: ambient seconds to its next team meeting
@@ -82,6 +82,12 @@ func _ready() -> void:
 	EventBus.character_removed.connect(_on_roster_changed.unbind(1))
 	EventBus.assignment_changed.connect(_on_assignment_changed)
 	EventBus.night_skipped.connect(_on_night_skipped)
+	# A hold that stops the night's batch short of 08:00 (the release note at the 00:00 sprint close) leaves the
+	# night on: the view comes back, and the resumed skip fades again.
+	EventBus.clock_batch_ended.connect(func() -> void:
+		if _fade != null and TimeManager.is_night():
+			_fade = null
+			_view.fade(false, CUT_FADE_S))
 	# A sprint's kick-off waits for a free room; an office without rooms has none.
 	EventBus.sprint_started.connect(func(_n: int) -> void:
 		_kickoff = SprintSystem.team().map(func(p: Dictionary) -> String: return p.id) \
@@ -94,23 +100,17 @@ func _exit_tree() -> void:
 	TimeManager.unregister_night_gate()
 
 
-## The night gate: nobody is on the way out of the door or to bed. Anyone else still in the office
-## (left seated for the cut, waiting for their turn at the door) is cut under black, so the view
-## goes dark over them first; out of sight or asleep counts as out.
+## The night gate: nobody is on the way out of the door or to bed, and the view faded to black over whoever
+## is still in, so the skip lands under black unless the night's wait runs out first. A stopped clock starts
+## no fade; the night waits for it anyway.
 func office_empty() -> bool:
 	if not _layout.staffed() or _headless():
 		return true
 	if not _placed:
 		return false
-	var cutting := false
 	for a: OfficeActor in _actors.values():
-		if not a.visible or a.phase == OfficePerson.Phase.LYING:
-			continue
-		if a.is_walking() and (is_same(a.spot, _entry) or is_same(a.spot, _bed)):
+		if a.visible and a.is_walking() and (is_same(a.spot, _entry) or is_same(a.spot, _bed)):
 			return false
-		cutting = true
-	if not cutting:
-		return true
 	if _fade == null and _k > 0.0:
 		_fade = _view.fade(true, CUT_FADE_S * _pace(1) / _pace(_speed()))
 	return _fade != null and not _fade.is_running()

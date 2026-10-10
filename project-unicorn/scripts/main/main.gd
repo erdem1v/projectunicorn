@@ -531,6 +531,7 @@ func _mount_shot_shell() -> void:
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	_shell_mounted = true
+	_warm_catalogs()
 	await get_tree().process_frame
 	await get_tree().process_frame
 
@@ -2966,9 +2967,17 @@ func _mount_shell() -> void:
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	_shell_mounted = true
+	_warm_catalogs()
 	# One frame so TopBar/OfficeView finish their initial paint before anything mounts on top.
 	await get_tree().process_frame
 	_wire_modal_signals()
+
+
+## The event cards and the sprint catalogue load with the shell, in a frame that is a load anyway, not
+## lazily inside the clock's first hour.
+func _warm_catalogs() -> void:
+	EvCatalog.ensure_loaded()
+	SprintCatalog.load_data()
 
 
 func _wire_modal_signals() -> void:
