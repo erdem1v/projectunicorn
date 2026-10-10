@@ -419,20 +419,23 @@ export default function neighbourhood(id, L, H) {
   // `r` is the stream a block draws from: the layout stream, or a landmark's own so that adding or removing the
   // landmark never moves its neighbours. `cuts` are stretches along x that stay open (a street, the end of a row): the
   // block stands only outside them, and an east face that meets one gets an awning like every other shop front. All the
-  // draws are made for the whole block, so a cut never moves the blocks after it. Returns the block's footprint, or
-  // nothing where the ground is taken.
+  // draws are made for the whole block, so a cut never moves the blocks after it. A generated road or walk inside the
+  // block cuts it too: one across it opens its stretch, one along it (a row along z over a street along x) the whole
+  // block. Returns the pieces that stand, none where the ground is taken.
   function building({ x0, x1, z0, z1, fl, col, kind, roof, cast, shop, sides = [], r = R, cuts = [] }) {
-    if (!isFree(x0 + 1.05, x1 - 1.05, z0 + 1.05, z1 - 1.05)) return;
+    if (!isFree(x0 + 1.05, x1 - 1.05, z0 + 1.05, z1 - 1.05)) return [];
     const up = shop ? fl - 1 : fl, y0 = GY + (shop ? SF : 0), top = y0 + up * FL, ou = Math.floor(r() * 4), ov = Math.floor(r() * 4);
     const skin = shop && facade('shop', pick(shopWalls, r).col), first = shop && Math.floor(r() * 4), tile = roof === 'flat' ? 0 : Math.floor(r() * 3);
-    for (const [a0, a1] of cutOut(x0, x1, cuts).filter(([p, q]) => q - p >= 3)) {
+    const open = [...cuts, ...roads.concat(walks).filter(([a0, a1, b0, b1]) => a0 < x1 - .05 && a1 > x0 + .05 && b0 < z1 - .05 && b1 > z0 + .05)];
+    const stood = [];
+    for (const [a0, a1] of cutOut(x0, x1, open).filter(([p, q]) => q - p >= 3)) {
       const w = a1 - a0, d = z1 - z0, cx = (a0 + a1) / 2, cz = (z0 + z1) / 2;
       if (up > 0) part(wallGeometry(T, w, up * FL, d, BAY, FL, ou, ov), facade(kind, col), cx, y0 + up * FL / 2, cz, 1, 1, 1, cast);
       if (shop) {
         // One storefront per 7 m or so; each carries its own awning on the faces that front a street or a lane.
         const unit = Math.max(w, d) / Math.ceil(Math.max(w, d) / 7);
         part(wallGeometry(T, w, SF, d, unit, SF, ou, 0), skin, cx, GY + SF / 2, cz, 1, 1, 1, cast);
-        for (const side of cuts.some(([c0]) => Math.abs(c0 - a1) < .01) ? [...sides, 'x1'] : sides) {
+        for (const side of open.some(([c0]) => Math.abs(c0 - a1) < .01) ? [...sides, 'x1'] : sides) {
           const along = side[0] === 'z' ? w : d, n = Math.ceil(along / 7), len = along / n;
           for (let k = 0; k < n; k++) {
             const span = side[0] === 'z' ? [a0 + k * len, a0 + (k + 1) * len, z0, z1] : [a0, a1, z0 + k * len, z0 + (k + 1) * len];
@@ -455,8 +458,9 @@ export default function neighbourhood(id, L, H) {
         bx(a0 + w * .7, a0 + w * .7 + .6, top, top + rh + .7, cz, cz + .6, m.plaster);
       }
       mark(a0, a1, z0, z1);
+      stood.push({ x0: a0, x1: a1, z0, z1, fl });
     }
-    return { x0, x1, z0, z1, fl };
+    return stood;
   }
   // Buildings side by side along `axis` between r0 and r1, spanning p0..p1 across; neighbours never share a wall colour.
   // o: castR shadow reach, brickMax thins out brick, shop storefronts with awnings on `sides`, cuts the passages of an
@@ -479,8 +483,8 @@ export default function neighbourhood(id, L, H) {
       if (!visible(x0, x1, z0, z1, fl * FL + 2)) continue;
       const { kind, col } = pal[prev], dist = nearLot((x0 + x1) / 2, (z0 + z1) / 2);
       const roof = P.mixedRoofs ? (R() < o.flat ? 'flat' : 'tile') : kind === 'shed' ? 'metal' : 'flat';
-      const block = building({ x0, x1, z0, z1, fl, col, kind, roof, cast: dist < (o.castR ?? P.castR), shop: o.shop, sides: o.sides, cuts });
-      if (block && !o.shop) flats.push(block);
+      const stood = building({ x0, x1, z0, z1, fl, col, kind, roof, cast: dist < (o.castR ?? P.castR), shop: o.shop, sides: o.sides, cuts });
+      if (!o.shop) flats.push(...stood);
     }
   }
   // Rows of blocks between the streets of a district; the row on a block's south edge faces the street the camera sees.
@@ -607,7 +611,7 @@ export default function neighbourhood(id, L, H) {
       pitch(41, 53, -3.2, 9.4);
       stalls(29.4, -20, 8);
       for (const b of flats) if (b.fl >= 3 && nearLot((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2) < 60) balconies(b);
-      if (landmark) balconies(landmark, R4, R4);
+      for (const b of landmark) balconies(b, R4, R4);
     },
     // Brick and stone rows in a grid, with shop rows on the south side of the main street.
     ishani() {
