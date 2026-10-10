@@ -30,6 +30,7 @@ const LOADED_GLYPH := preload("res://assets/icons/util/load.svg")
 const DROPPED_CALL_GLYPH := preload("res://assets/icons/util/close.svg")
 const OFFICE_PAN := preload("res://scripts/debug/office_pan_probe.gd")
 const TICK_PROBE := preload("res://scripts/debug/tick_probe.gd")
+const SPRINT_PROBE := preload("res://scripts/debug/sprint_probe.gd")
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
 const EVENT_CLOCK_HOLD := "event"                 # TimeManager hold reason while a decision waits
 const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason for the founder's trip
@@ -202,6 +203,7 @@ func _run_debug_harness() -> bool:
 		"--negotiation-shot=": _run_negotiation_shot,
 		"--sales-shot=": _run_sales_shot,
 		"--product-shot=": _run_product_shot,
+		"--sprint-probe=": func(v: String) -> void: _quit_with(SPRINT_PROBE.run(v, _debug_payload())),
 		"--ending-shot=": _run_ending_shot,
 		"--hr-shot=": _run_hr_shot,
 		"--finance-shot=": _run_finance_shot,
