@@ -48,6 +48,7 @@ var _history: HISTORY
 var _view := VIEW_TREE
 var _signals: Array = []
 var _structure_key := ""
+var _share := 0.0     # the founder's meeting share the strip's estimate was painted at
 var _selected := ""
 
 
@@ -84,6 +85,7 @@ func _ready() -> void:
 	for sig: Signal in _signals:
 		sig.connect(_on_state_changed)
 	EventBus.rnd_node_requested.connect(select_node)
+	EventBus.clock_batch_ended.connect(_on_clock_batch)
 	_refresh()
 	select_node(stashed)
 
@@ -103,6 +105,8 @@ func _exit_tree() -> void:
 		sig.disconnect(_on_state_changed)
 	if EventBus.rnd_node_requested.is_connected(select_node):
 		EventBus.rnd_node_requested.disconnect(select_node)
+	if EventBus.clock_batch_ended.is_connected(_on_clock_batch):
+		EventBus.clock_batch_ended.disconnect(_on_clock_batch)
 
 
 ## Router sayfayı bırakmadan önce çağırır (propagate_call). Seçili düğüm saklanır; `_ready` onu
@@ -242,8 +246,15 @@ func _paint_tabs() -> void:
 
 ## The running research, as the float card reads it (§5.6): its name and who is on it, its progress, the weeks
 ## left or why it stands frozen, and its two links, off while a decision waits (the read-only strip says why).
+## A clock batch can move the founder's meeting share, and the strip's week estimate counts it.
+func _on_clock_batch() -> void:
+	if GameState.founder_meeting_share() != _share:
+		_on_state_changed()
+
+
 func _paint_line() -> void:
 	UiFactory.clear(_line)
+	_share = GameState.founder_meeting_share()
 	var active: String = RnDSystem.active()
 	if active == "":
 		return

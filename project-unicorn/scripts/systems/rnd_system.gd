@@ -161,7 +161,7 @@ static func emit_edges() -> void:
 ## `ids` is exactly the set being asked about; an empty set contributes nothing.
 ## HRSystem.is_busy is the freeness gate: effective_skill checks only `status`, so a founder
 ## in pitch_prep_active would otherwise keep researching at full rate.
-## `founder_share` scales the founder's term; only the tick passes the week's meeting share.
+## `founder_share` scales the founder's term; the tick and the week estimate pass the week's meeting share.
 static func research_per_day(node_id: String, ids: Array, founder_share: float = 1.0) -> float:
 	var areas: Array = ResearchTree.areas_of(node_id)
 	var total: float = 0.0
@@ -176,11 +176,11 @@ static func research_per_day(node_id: String, ids: Array, founder_share: float =
 	return total * ResearchTree.k_arge()
 
 
-## §5.5 — THE number, and the only one on the card, in weeks. Returns -1.0 for "no
-## contribution" so no caller ever divides by zero or prints ∞; the caller writes the reason
-## line instead.
+## §5.5 — THE number, and the only one on the card, in weeks, at the founder's meeting share as `_accrue`
+## takes it. Returns -1.0 for "no contribution" so no caller ever divides by zero or prints ∞; the caller
+## writes the reason line instead.
 static func weeks_estimate(node_id: String, ids: Array) -> float:
-	var rate: float = research_per_day(node_id, ids)
+	var rate: float = research_per_day(node_id, ids, 1.0 - GameState.founder_meeting_share())
 	if rate <= 0.0:
 		return -1.0
 	var left: float = maxf(0.0, float(ResearchTree.effort_of(node_id)) - progress_effort(node_id))

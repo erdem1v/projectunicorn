@@ -37,6 +37,7 @@ var _progress: ProgressBar = null
 var _percent_label: Label = null
 var _links: HBoxContainer = null
 var _abandon_note: Label = null
+var _share := 0.0                    # the founder's meeting share the estimate was painted at
 
 
 func _ready() -> void:
@@ -60,14 +61,22 @@ func _ready() -> void:
 	EventBus.event_resolved.connect(refresh.unbind(2))
 	EventBus.event_set_aside.connect(r1)
 	EventBus.tab_changed.connect(_on_tab_changed)
+	EventBus.clock_batch_ended.connect(_on_clock_batch)
 	refresh()
 
 
 ## Modeli yeniden türet ve boya. Ev sahipleri bunu ÇAĞIRMAZ (widget kendi dinler).
 func refresh() -> void:
+	_share = GameState.founder_meeting_share()
 	var m := Model.new()
 	_model = m if m.derive() else null
 	_repaint()
+
+
+## A clock batch can move the founder's meeting share, and the week estimate counts it.
+func _on_clock_batch() -> void:
+	if GameState.founder_meeting_share() != _share:
+		refresh()
 
 
 ## Ev sahibi "çizilecek bir şey var mı"yı bundan okur ("" = yok).

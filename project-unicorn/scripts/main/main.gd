@@ -1604,8 +1604,9 @@ func _run_personal_shot(kind: String) -> void:
 ##   offer waits) · closed (before v1, at home);
 ##   no window: card (the card running) · card_frozen (paused, nobody on it) · card_build (its person taken by a
 ##   build) · card_none (its person on leave: no contribution) · card_gate (while a decision waits) · discovery
-##   (week 16: Test Otomasyonu done, its discovery on the notice stack) · first_note (the run's first monthly note
-##   arrives through the engine and opens in the inbox).
+##   (week 16: Test Otomasyonu done, its discovery on the notice stack) · discovery_design (no timeline: Tasarım
+##   Sistemi completes with nobody on it and the founder's own discovery opens from the notice stack) · first_note
+##   (the run's first monthly note arrives through the engine and opens in the inbox).
 func _run_rnd_shot(kind: String) -> void:
 	_begin_shot()
 	if kind == "closed":
@@ -1614,7 +1615,7 @@ func _run_rnd_shot(kind: String) -> void:
 	else:
 		_seed_theme_surface()
 		GameState.current_hour = 11
-		if kind != "history_empty":
+		if kind not in ["history_empty", "discovery_design"]:
 			_seed_rnd(16 if kind == "discovery" else 14, kind != "first_note")
 	TimeManager.sync_to_current_hour()
 	var selin := "char_emp_shot_3"
@@ -1633,6 +1634,8 @@ func _run_rnd_shot(kind: String) -> void:
 			RnDSystem.drop_assignee(selin, HRConstants.JOB_BUILD)
 		"card_none":
 			HRMoraleSystem.send_on_leave(CharacterRegistry.get_character(selin), HRConstants.LEAVE_WEEKS, false)
+		"discovery_design":
+			RnDSystem._complete("design_system")
 	await _mount_shot_shell()
 	_wire_modal_signals()
 	match kind:
@@ -1656,6 +1659,8 @@ func _run_rnd_shot(kind: String) -> void:
 			RnDSystem._tick_note()
 		"card", "card_frozen", "card_build", "card_none", "discovery":
 			pass
+		"discovery_design":
+			INBOX.show("m:" + String(GameState.messages[-1].id))
 		_:
 			_shot_fail("[RndShot] unknown kind: %s" % kind)
 			return

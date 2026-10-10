@@ -13919,11 +13919,13 @@ static func _seed_build_crew() -> Character:
 
 ## Bir kurucu araştırmaya geçince: (a) araştırma İŞİ üstünde, (b) türetilmiş ALAN AYNASI
 ## boşalır, (c) eski işi SİLİNMEZ, duraklar, (d) odak 1,00 kalır (araştırma iki-iş bölmesine
-## tabi değil), (e) sprint ekibinden düşer ve kartına iş dökmez.
+## tabi değil), (e) sprint ekibinden düşer ve kartına iş dökmez, (f) hafta tahmini kurucunun
+## toplantı payını birikimin düştüğü gibi düşer.
 ##
 ## FALSİFİKASYON: HRConstants.areas_for_jobs'tan `is_exclusive_job` continue'sunu kaldır →
 ## (b) FAIL. `_displace_job`'u paused_job_ids'e yazmayacak şekilde değiştir → (c) FAIL.
-## SprintSystem.team'den JOB_RESEARCH süzgecini kaldır → (e) FAIL.
+## SprintSystem.team'den JOB_RESEARCH süzgecini kaldır → (e) FAIL. weeks_estimate'in
+## research_per_day çağrısından toplantı payını sil → (f) FAIL.
 static func _case_research_occupies_person() -> String:
 	ResearchTree.reload()
 	RnDSystem.reset()
@@ -13965,6 +13967,16 @@ static func _case_research_occupies_person() -> String:
 	_sim_day()
 	if _card_worked(card_id) > frozen + 0.0001:
 		return "a researching founder's card kept moving (%.4f -> %.4f)" % [frozen, _card_worked(card_id)]
+
+	# (f) data_model bitti; ai_engine'de pay 0,2 iken bir tik tahminden tam bir hafta siler.
+	GameState.add_founder_meeting_hours(0.2 * TimeModel.WEEK_WORK_HOURS)
+	if RnDSystem.start("ai_engine", [founder.id]) != "":
+		return "fixture: ai_engine would not start once data_model was done"
+	var before: float = RnDSystem.weeks_estimate("ai_engine", [founder.id])
+	RnDSystem.daily_tick()
+	var drop: float = before - RnDSystem.weeks_estimate("ai_engine", [founder.id])
+	if absf(drop - 1.0) > 0.001:
+		return "at a 0,2 meeting share one tick took %.3f weeks off the estimate, not one" % drop
 	return ""
 
 
