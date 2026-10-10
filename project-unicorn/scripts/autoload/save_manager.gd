@@ -318,6 +318,8 @@ func _capture_systems() -> Dictionary:
 
 func _restore_systems(state: Dictionary) -> void:
 	var sys: Dictionary = state.get("systems", {}) as Dictionary
+	# Before the empty-block return: every load comes back paused.
+	TimeManager.from_dict(sys.get("time", {}) as Dictionary)
 	if sys.is_empty():
 		return
 	ProductSystem.from_dict(sys.get("product", {}) as Dictionary)
@@ -327,7 +329,6 @@ func _restore_systems(state: Dictionary) -> void:
 	FinanceSystem.from_dict(sys.get("finance", {}) as Dictionary)
 	EvSave.from_dict(sys.get(EvSave.BLOCK_KEY, {}) as Dictionary)
 	HRSystem.from_dict(sys.get("hr", {}) as Dictionary)
-	TimeManager.from_dict(sys.get("time", {}) as Dictionary)
 	# Overwrites the keys initialize_run's RngStreams.reseed(run_seed) laid down, so the load
 	# resumes the saved sequences.
 	RngStreams.from_dict(sys.get("rng", {}) as Dictionary)

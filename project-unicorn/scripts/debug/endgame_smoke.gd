@@ -348,6 +348,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"milestone_clock_hold":            fail = _case_milestone_clock_hold()
 		"milestone_paper_waits_for_card":  fail = _case_milestone_paper_waits_for_card()
 		"event_gate_holds_clock":          fail = _case_event_gate_holds_clock()
+		"clock_resumes_only_by_player":    fail = _case_clock_resumes_only_by_player()
 		"profit_predicate_margin_scale_red": fail = _case_profit_predicate_margin_scale_red()
 		"speed_save_clamps_to_ladder":     fail = _case_speed_save_clamps_to_ladder()
 		"topbar_speed_cluster_three_rungs": fail = _case_topbar_speed_cluster_three_rungs()
@@ -1220,16 +1221,10 @@ static func _case_pivot_decline() -> String:
 # --- Kapasite havuzu + freeze-silme case'leri ---
 
 static func _case_speed_preserve() -> String:
-	# İş-3 fix'i: aksiyon butonları (build commit, sprint start) artık
-	# TimeManager.resume_if_paused() çağırır — koşan hız KORUNUR, pause'dan
-	# last_running_speed'e dönülür. Buton→handler kablosu windowed'da bir kez
-	# elle doğrulanır (2x'te commit → 2x kalır).
+	# Space on a paused clock: the last running speed, the tree running again.
 	EventBus.speed_change_requested.emit(2)
-	TimeManager.resume_if_paused()
-	if TimeManager.current_speed != 2:
-		return "running speed hijacked (%d, want 2)" % TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
-	TimeManager.resume_if_paused()
+	EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
 	if TimeManager.current_speed != 2:
 		return "paused game did not resume to last_running_speed (%d)" % TimeManager.current_speed
 	if TimeManager.get_tree().paused:
@@ -11954,9 +11949,8 @@ static func _case_ending_paper_modes_on_screen() -> String:
 	return ""
 
 
-## The milestone paper holds the clock: while a hold is up, the speed restores that other
-## surfaces send when THEY close (a card, the month summary, settings) cannot start time
-## behind the paper; after the holder releases, its own restore does.
+## The milestone paper holds the clock: while a hold is up, a speed request cannot start time
+## behind the paper. The release starts nothing; the player's next request does.
 static func _case_milestone_clock_hold() -> String:
 	EventBus.speed_change_requested.emit(2)
 	if TimeManager.current_speed != 2:
@@ -11966,21 +11960,19 @@ static func _case_milestone_clock_hold() -> String:
 	if TimeManager.current_speed != 0:
 		fail = "the hold did not stop the clock"
 	if fail == "":
-		EventBus.speed_change_requested.emit(1)   # what a closing card or the month summary sends
+		EventBus.speed_change_requested.emit(1)   # the player's key under the paper
 		if TimeManager.current_speed != 0:
-			fail = "a restore under the hold started the clock"
-	if fail == "":
-		TimeManager.resume_if_paused()
-		if TimeManager.current_speed != 0:
-			fail = "resume_if_paused went around the hold"
+			fail = "a speed request under the hold started the clock"
 	TimeManager.release_clock("smoke_hold")
 	if fail == "":
 		if TimeManager.is_clock_held():
 			fail = "the hold survived its release"
+		elif TimeManager.current_speed != 0:
+			fail = "the release started the clock (%d)" % TimeManager.current_speed
 		else:
 			EventBus.speed_change_requested.emit(2)
 			if TimeManager.current_speed != 2:
-				fail = "the holder's restore after release did not take (%d)" % TimeManager.current_speed
+				fail = "the player's request after the release did not take (%d)" % TimeManager.current_speed
 	return fail
 
 
@@ -11997,7 +11989,7 @@ static func _stand_in_shell(host: Node) -> Node:
 
 ## THE DECISION GATE HOLDS THE CLOCK FROM THE CARD TO ITS ANSWER, and it is main's handler that
 ## holds it: the engine only announces, so a harness with no shell never freezes. Between the two
-## a speed key does nothing; the answer gives back the speed the card found.
+## a speed key does nothing; the answer releases the hold and leaves the clock stopped.
 ## FALSIFICATION: drop TimeManager.hold_clock from main._on_event_modal_requested → the speed key
 ## goes through; drop release_clock from main._on_gate_closed → the clock stays held.
 static func _case_event_gate_holds_clock() -> String:
@@ -12023,12 +12015,121 @@ static func _case_event_gate_holds_clock() -> String:
 		host.call("_on_event_resolved", "fixture.thesis_close", 0)
 		if TimeManager.is_clock_held():
 			fail = "the answer did not release the clock"
-		elif TimeManager.current_speed != 2:
-			fail = "the answer did not give back the speed the card found (%d)" % TimeManager.current_speed
+		elif TimeManager.current_speed != 0:
+			fail = "the answer started the clock (%d)" % TimeManager.current_speed
 	host.set("_shell", prev_shell)
 	TimeManager.release_clock("event")
 	shell.queue_free()
 	return fail
+
+
+## A sitting with nothing to end: the one call main._close_meeting makes on its adapter.
+class SittingStub extends RefCounted:
+	func end_sitting() -> void:
+		pass
+
+
+## ONLY THE PLAYER RUNS THE CLOCK. Every surface that stops it (the answered card, the paper put
+## back, the intro left for Ekip, DEVAM ET, Ayarlar, a confirm, the system menu, Ertele, the
+## sitting's and the term table's close, the release note) opens at 2x and closes with the clock stopped and nothing
+## holding it; the ring and the trip need the office view, so their stop is made here and their
+## close driven. A hold swallows a speed request, a second hold for its reason is silent, an index
+## off the ladder is refused and a save with no clock block loads paused.
+## FALSIFICATION: add EventBus.speed_change_requested.emit(2) to main._on_settings_dismissed → FAIL.
+static func _case_clock_resumes_only_by_player() -> String:
+	var host: Node = _ui_host()
+	if host == null or not host.has_method("_on_event_modal_requested"):
+		return "no main.gd host to drive the surfaces"
+	var shell: Node = _stand_in_shell(host)
+	var prev_shell: Variant = host.get("_shell")
+	host.set("_shell", shell)
+	var bad: Array[String] = []
+	# After each close the clock is stopped and nothing holds it; then it runs again for the next.
+	var check := func(surface: String) -> void:
+		if TimeManager.current_speed != 0 or TimeManager.is_clock_held():
+			bad.append("%s closed on speed %d, holds %s" % [surface, TimeManager.current_speed, TimeManager.holds()])
+		EventBus.speed_change_requested.emit(2)
+	EventBus.speed_change_requested.emit(2)
+	if not EventGate.force_fire("fixture.thesis_close"):
+		bad.append("fixture: the card did not fire")
+	host.call("_on_event_modal_requested", EventGate.active_card())
+	EventGate.resolve("fixture.thesis_close", 0)
+	host.call("_on_event_resolved", "fixture.thesis_close", 0)
+	check.call("the answered card")
+	EvPapers.place("fixture.concurrent", {}, 2)
+	if not EventGate.open_paper("fixture.concurrent"):
+		bad.append("fixture: the paper did not open from the desk")
+	host.call("_on_event_modal_requested", EventGate.active_card())
+	EventGate.set_aside()
+	host.call("_on_event_set_aside", "fixture.concurrent")
+	check.call("the paper put back")
+	host.call("_open_note", "intro")   # the intro initialize_run posted
+	host.call("_on_tab_changed", "hr")
+	check.call("the intro left for Ekip")
+	var scope: String = EndingsSystem.build_scope_override
+	EndingsSystem.build_scope_override = EndingsSystem.BUILD_EA
+	var milestone: Dictionary = EndingsSystem._build_ending_data("profitable_bootstrap", {})
+	milestone["mode"] = EndingsSystem.MODE_MILESTONE
+	host.call("_on_milestone_reached", "profitable_bootstrap", milestone)
+	host.call("_on_milestone_continue")
+	EndingsSystem.build_scope_override = scope
+	check.call("DEVAM ET")
+	host.call("_on_settings_requested")
+	host.call("_on_settings_dismissed")
+	check.call("Ayarlar")
+	host.call("_on_confirm_requested", {})
+	host.call("_on_confirm_dismissed")
+	check.call("the confirm")
+	host.call("_on_system_menu_requested")
+	host.call("_on_system_menu_dismissed")
+	check.call("the system menu")
+	EventBus.speed_change_requested.emit(0)   # the ring
+	host.set("_call", {"kind": "sales", "id": "lead_clock"})
+	host.call("_on_call_postponed")
+	check.call("Ertele")
+	EventBus.speed_change_requested.emit(0)   # the trip
+	host.set("_meeting_panel", MeetingPanel.new())
+	host.call("_close_meeting", SittingStub.new())
+	check.call("the sitting")
+	EventBus.speed_change_requested.emit(0)   # the trip to the table
+	host.call("_close_term_table")
+	check.call("the term table")
+	var product: Node = (load("res://scripts/tabs/product_tab.gd") as GDScript).new()
+	product.call("_hold_clock", true)
+	product.call("_hold_clock", false)
+	check.call("the release note")
+	product.call("_hold_clock", true)
+	product.call("on_page_closing")
+	check.call("the closing product page")
+	product.free()
+	host.set("_shell", prev_shell)
+	shell.queue_free()
+	# A hold swallows the player's speed; a second hold for one reason is silent, so a tree a shot
+	# opened by hand stays open.
+	TimeManager.hold_clock("smoke_hold")
+	EventBus.speed_change_requested.emit(2)
+	if TimeManager.current_speed != 0:
+		bad.append("a speed request went through the hold (%d)" % TimeManager.current_speed)
+	var heard: Array[int] = []
+	var hear := func(speed: int) -> void: heard.append(speed)
+	TimeManager.speed_changed.connect(hear)
+	TimeManager.get_tree().paused = false
+	TimeManager.hold_clock("smoke_hold")
+	TimeManager.speed_changed.disconnect(hear)
+	if TimeManager.get_tree().paused or not heard.is_empty():
+		bad.append("the second hold stopped the clock again (paused %s, speed_changed %s)" % [
+			TimeManager.get_tree().paused, heard])
+	TimeManager.release_clock("smoke_hold")
+	EventBus.speed_change_requested.emit(2)
+	EventBus.speed_change_requested.emit(TimeModel.SECONDS_PER_HOUR.size())   # off the ladder: a WARNING
+	if TimeManager.current_speed != 2:
+		bad.append("an index off the ladder was taken (%d)" % TimeManager.current_speed)
+	TimeManager.reset()
+	TimeManager.from_dict({})
+	if TimeManager.current_speed != 0 or not TimeManager.get_tree().paused:
+		bad.append("a save with no clock block loaded running (speed %d, paused %s)" % [
+			TimeManager.current_speed, TimeManager.get_tree().paused])
+	return "; ".join(bad)
 
 
 ## main.gd's milestone handlers, driven directly with a stand-in shell, in the order a run brings
@@ -12037,7 +12138,7 @@ static func _case_event_gate_holds_clock() -> String:
 ##      admitted pumps under it, and the paper steps aside for the decision (it would cover the inbox,
 ##      and ANA MENÜ would refuse to save for a decision the player cannot see) with its hold;
 ##   2. the answered decision brings the paper back, holding the clock;
-##   3. DEVAM ET frees the paper, releases the hold and gives back the speed from before the paper;
+##   3. DEVAM ET frees the paper and releases the hold, the clock left stopped for the player;
 ##   4. ANA MENÜ keeps the run in a MANUAL slot — the rolling autosave would be overwritten by
 ##      the next run's third weekly autosave.
 ## FALSIFICATION: drop the step-aside from _on_event_modal_requested → the paper stays over the card;
@@ -12064,7 +12165,7 @@ static func _case_milestone_paper_waits_for_card() -> String:
 		host.call("_on_event_modal_requested", EventGate.active_card())
 		if host.get("_milestone_modal") != null:
 			fail = "the paper stayed over the decision that came under it"
-		elif TimeManager._holds.has("milestone_paper"):
+		elif TimeManager.holds().has("milestone_paper"):
 			fail = "the paper stepped aside but kept the clock held"
 	if fail == "":
 		EventGate.resolve("fixture.thesis_close", 0)
@@ -12079,8 +12180,8 @@ static func _case_milestone_paper_waits_for_card() -> String:
 			fail = "DEVAM ET left the paper up"
 		elif TimeManager.is_clock_held():
 			fail = "DEVAM ET did not release the hold"
-		elif TimeManager.current_speed != 2:
-			fail = "DEVAM ET did not give back the speed from before the paper (%d)" % TimeManager.current_speed
+		elif TimeManager.current_speed != 0:
+			fail = "DEVAM ET started the clock (%d)" % TimeManager.current_speed
 	if fail == "":
 		var slot: String = String(host.call("_keep_run_for_main_menu"))
 		if slot == "":
@@ -12143,15 +12244,15 @@ static func _case_profit_predicate_margin_scale_red() -> String:
 # --- The speed ladder is 1×/2×/3× ---
 
 static func _case_speed_save_clamps_to_ladder() -> String:
-	# last_running_speed past the ladder's top clamps to it on load, and the resume lands there.
+	# last_running_speed past the ladder's top clamps to it on load, and Space resumes there.
 	var top: int = TimeModel.SECONDS_PER_HOUR.size() - 1
 	TimeManager.from_dict({"in_game_hours": float(GameState.current_hour), "current_speed": top + 1,
 		"last_running_speed": top + 1})
 	if TimeManager.last_running_speed != top:
 		return "stored speed %d came back as %d, want %d" % [top + 1, TimeManager.last_running_speed, top]
-	TimeManager.resume_if_paused()
+	EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
 	if TimeManager.current_speed != top:
-		return "resume after a speed-%d save landed on %d, want %d" % [top + 1, TimeManager.current_speed, top]
+		return "Space after a speed-%d save landed on %d, want %d" % [top + 1, TimeManager.current_speed, top]
 	if not is_equal_approx(TimeManager.hours_per_real_second(top + 1), 0.0):
 		return "index %d yields a live multiplier" % (top + 1)
 	if is_equal_approx(TimeManager.hours_per_real_second(top), 0.0):

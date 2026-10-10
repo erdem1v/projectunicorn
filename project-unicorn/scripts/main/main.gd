@@ -38,8 +38,7 @@ var _flow: Node = null
 var _shell: Node = null
 var _shell_mounted: bool = false
 var _event_signals_wired: bool = false
-# Currently-open surfaces (null = closed). Each pausing surface remembers the speed it
-# found (-1 = none) and hands it back on close.
+# Currently-open surfaces (null = closed).
 var _settings_modal: Node = null
 var _confirm_modal: Node = null
 var _ending_modal: Node = null       # mounts once, never dismissed back to gameplay
@@ -48,19 +47,8 @@ var _meeting_panel: MeetingPanel = null   # a VC or a sales sitting
 var _term_table: Node = null
 var _system_menu: Node = null
 var _save_load_modal: Node = null
-# Speed from BEFORE the first event of a chain: cascading events re-enter the handler with
-# the clock already paused by the previous card, so only the first capture counts.
-var _pre_event_speed: int = -1
-var _pre_settings_speed: int = -1
-var _pre_confirm_speed: int = -1
-var _pre_system_speed: int = -1
-# The intro or the period summary opened itself in the inbox and paused the game; closing the
-# inbox hands this speed back.
-var _pre_note_speed: int = -1
-var _pre_dialogue_speed: int = -1
-var _pre_milestone_speed: int = -1
-# The founder's trip to an outside meeting: set before the trip's first await, so the event
-# restore and the sitting guards see it; a card that arrives during it waits for the sitting.
+# The founder's trip to an outside meeting: set before the trip's first await, so the gate and the
+# sitting guards see it; a card that arrives during it waits for the sitting.
 var _in_transit: bool = false
 var _card_waiting := false
 # A card's goto_tab ([tab, subpage]) waits for the decision gate to close; so does the milestone
@@ -814,7 +802,8 @@ func _run_inbox_shot(state: String) -> void:
 ## step: the clock runs; a decision arrives (the clock is held, the inbox opens on it); Ekip opens
 ## and reads only (a click on its first button does nothing); a speed key is refused; Esc closes
 ## Ekip, Esc again brings the inbox back; Esc closes it and, the decision brought back once, the
-## next Esc opens the system menu; the decision is taken with a click; the clock runs again.
+## next Esc opens the system menu; the decision is taken with a click and the clock stays stopped;
+## Space runs it.
 func _gate_flow() -> void:
 	var mounted := [0]   # panels that reached the panel layer at all (main frees them under a gate)
 	_shell.get_node("PanelLayer").child_entered_tree.connect(func(_n: Node) -> void: mounted[0] += 1)
@@ -878,6 +867,8 @@ func _gate_flow() -> void:
 		func(b: Button) -> bool: return b.text == label and b.is_visible_in_tree())
 	await click.call(take[0])
 	await step.call(9, "answered")
+	await key.call(KEY_SPACE)
+	await step.call(10, "running")
 
 
 ## A card through the real gate at `hour`: the clock stops there as at the week's start.
@@ -1245,26 +1236,35 @@ func _shot_meeting_cast(view: Control, stem: String) -> void:
 
 const TRAVEL_SHOT_EVERY := 0.25    # seconds between frames
 const TRAVEL_SHOT_MAX := 80        # frames of the trip out before the shot gives up on the scene
-const TRAVEL_SHOT_BACK := 48       # frames of the trip home and the walk back in
+const TRAVEL_SHOT_BACK := 60       # frames of the trip home and the walk back in, at most
 const TRAVEL_SHOT_RING := 2.4      # the phone rings this long, the camera closing on the founder
 const TRAVEL_SHOT_STAFF := 6
 
 
-# --travel-shot=<home|ishani|plaza|loft>[:vc]: the founder's trip to a meeting from that office at
-# 10:00, as the player sees it: the phone ringing, its card, then frames of the walk out, the
-# map's road and the walk in to the table, one of the meeting panel beside the table, and the trip
-# home to the walk back in. A sales meeting by default; vc books the shot's fund for this week,
-# whose call rings. travel_shot_<office>[_vc]_NN.png, in order.
+# --travel-shot=<home|ishani|plaza|loft>[:vc|:night]: the founder's trip to a meeting from that
+# office at 10:00, as the player sees it: the phone ringing, its card, then frames of the walk out,
+# the map's road and the walk in to the table, one of the meeting panel beside the table, and the
+# trip home until the founder is back at their place with the clock stopped. A sales meeting by
+# default; vc books the shot's fund for this week, whose call rings; night holds the clock at the
+# founder's end less the sitting's hours, so the sitting ends with the workday and the night waits
+# for the player. travel_shot_<office>[_vc|_night]_NN.png, in order, then a TRAVEL|settled line: real
+# ms from the panel's close to founder_settled (capped=1 when it never came), the speed, the week and
+# whether it is night.
 func _run_travel_shot(spec: String) -> void:
-	var office_id: String = spec.get_slice(":", 0)
-	var vc: bool = spec.get_slice(":", 1) == "vc"
-	var stem: String = "travel_shot_%s%s" % [office_id, "_vc" if vc else ""]
+	var parts: PackedStringArray = spec.split(":")
+	var office_id: String = parts[0]
+	var vc: bool = parts.has("vc")
+	var night: bool = parts.has("night")
+	var stem: String = "travel_shot_" + "_".join(parts)
 	_begin_shot()
 	_travel_on = true
 	_seed_sales_world()
 	GameState.office_id = office_id
-	GameState.set_current_hour(10)
+	GameState.set_current_hour(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder())
+		- SalesConstants.MEETING_SKIP_HOURS if night else 10)
 	TimeManager.sync_to_current_hour()
+	if night:
+		TimeManager.freeze_clock(SHOT_FREEZE)   # the last hour the sitting fits, at any speed
 	var lead: Prospect = SalesFaucetSystem.spawn(2, "faucet")
 	# People at their desks, who look up as the founder leaves and asks how it went on the way back.
 	OfficeCrowdProbe.seed_staff(TRAVEL_SHOT_STAFF)
@@ -1301,12 +1301,25 @@ func _run_travel_shot(spec: String) -> void:
 	await get_tree().create_timer(0.4).timeout
 	frame += 1
 	_save_shot("%s_%02d" % [stem, frame])
-	# The sitting ends where it stands, through the panel's own close.
+	# The sitting ends where it stands, through the panel's own close; the trip home runs until the
+	# founder is back at their place.
+	var people: OfficePeople = get_tree().get_first_node_in_group(&"office_view") \
+		.get_node("Viewport3D/SubViewport/World/People")
+	var closed_ms: int = Time.get_ticks_msec()
+	var settled_ms := [-1]
+	people.founder_settled.connect(func() -> void: settled_ms[0] = Time.get_ticks_msec() - closed_ms, CONNECT_ONE_SHOT)
 	_meeting_panel.closed.emit()
 	for _i in TRAVEL_SHOT_BACK:
+		if not _in_transit:
+			break
 		frame += 1
 		await get_tree().create_timer(TRAVEL_SHOT_EVERY).timeout
 		_save_shot("%s_%02d" % [stem, frame])
+	if _in_transit:
+		_shot_fail("[TravelShot] the trip home did not end in %d frames" % TRAVEL_SHOT_BACK)
+		return
+	print("TRAVEL|settled ms=%d capped=%d speed=%d day=%d night=%d" % [settled_ms[0], int(settled_ms[0] < 0),
+		TimeManager.current_speed, GameState.day, int(TimeManager.is_night())])
 	get_tree().quit()
 
 
@@ -2848,8 +2861,7 @@ func _swap_to_shell_and_modal() -> void:
 		_flow.queue_free()
 		_flow = null
 	await _mount_shell()
-	# The clock stays paused past the intro: the player's first decision (the build commit) is
-	# what unpauses.
+	# The clock stays paused past the intro until the player starts it.
 	_open_note("intro")
 
 
@@ -2898,13 +2910,6 @@ func _modal_layer() -> CanvasLayer:
 	return layer
 
 
-## Hands the clock back after a pausing surface closes: to the speed it found (-1 → the last
-## running speed). A pending event chain owns the pause itself, and a dead run stays frozen.
-func _restore_speed(pre: int) -> void:
-	if GameState.run_active and not EventGate.has_pending():
-		EventBus.speed_change_requested.emit(pre if pre >= 0 else TimeManager.last_running_speed)
-
-
 # THE DECISION GATE. A card on screen opens the inbox on it and holds the clock until it is
 # answered (or, a paper the player picked up, put back on the desk). The hold is taken here, in the
 # shell's handler, so a harness with no shell never freezes. While it holds, every other window
@@ -2921,11 +2926,6 @@ func _on_event_modal_requested(_event: GameEvent) -> void:
 		_milestone_modal.queue_free()
 		_milestone_modal = null
 		TimeManager.release_clock(MILESTONE_CLOCK_HOLD)
-	# A card that lands as a sitting closes, or on the period summary, finds the clock stopped by
-	# that surface; the speed to hand back is the one from before it.
-	if _pre_event_speed < 0:
-		_pre_event_speed = _pre_dialogue_speed if _pre_dialogue_speed >= 0 \
-			else (_pre_note_speed if _pre_note_speed >= 0 else TimeManager.current_speed)
 	TimeManager.hold_clock(EVENT_CLOCK_HOLD)
 	for panel in _shell.get_node("PanelLayer").get_children():
 		panel.queue_free()
@@ -2933,10 +2933,9 @@ func _on_event_modal_requested(_event: GameEvent) -> void:
 	INBOX.show("active")
 
 
-# event_resolved fires BEFORE the engine pumps its queue, so has_pending() still sees the next card
-# and the clock stays stopped for it. A choice can also OPEN a cinematic surface (open_term_table
-# runs before event_resolved), whose trip may still be on its way to it; that surface's close owns
-# the restore. The period summary still open in the inbox restores the speed when it closes.
+# event_resolved fires BEFORE the engine pumps its queue, so has_pending() still sees the next card.
+# A choice can also OPEN a cinematic surface (open_term_table runs before event_resolved), whose trip
+# may still be on its way to it; that surface's close opens what waited for the gate.
 func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
 	_on_gate_closed()
 
@@ -2955,15 +2954,11 @@ func _on_gate_closed() -> void:
 		_settle_gate()
 
 
-## No decision on screen: the clock comes back and what waited for the gate opens. A sitting the
-## answer opened owns both until it closes.
+## No decision on screen: what waited for the gate opens and the clock stays stopped for the player.
+## A sitting the answer opened owns that until it closes.
 func _settle_gate() -> void:
-	if EventGate.active_id() != "" or _term_table != null or _in_transit:
-		return
-	if _pre_note_speed < 0:
-		_restore_speed(_pre_event_speed)
-	_pre_event_speed = -1
-	_open_after_gate()
+	if _term_table == null and not _in_transit:
+		_open_after_gate()
 
 
 ## What waited for the gate: the card's goto_tab, then the milestone paper.
@@ -2985,16 +2980,11 @@ func _on_goto_tab_requested(tab_id: String, subpage: String) -> void:
 	_open_after_gate()
 
 
-## Leaving the inbox puts an opened paper back on the desk (an interrupt stays: the gate slot shows
-## it) and hands back the speed an intro or a summary paused, unless the player has set one since.
+## Leaving the inbox puts an opened paper back on the desk; an interrupt stays, the gate slot shows it.
 func _on_tab_changed(tab_id: String) -> void:
 	if tab_id == "events":
 		return
 	EventGate.set_aside()
-	if _pre_note_speed >= 0:
-		if TimeManager.current_speed == 0:
-			_restore_speed(_pre_note_speed)
-		_pre_note_speed = -1
 
 
 ## The intro and the period summary open themselves in the inbox and pause the game: speed 0, not a
@@ -3003,8 +2993,6 @@ func _open_note(kind: String) -> void:
 	var notes: Array = GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == kind)
 	if notes.is_empty() or EventGate.active_id() != "":
 		return
-	if _pre_note_speed < 0:
-		_pre_note_speed = TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
 	INBOX.show("m:" + String(notes[-1].id))
 
@@ -3020,15 +3008,6 @@ func _gate_shut() -> bool:
 	return EventGate.active_id() != "" and not EventGate.resolving()
 
 
-## A cinematic surface opened from an event choice finds the clock held by the card; it releases
-## the hold, inherits the card's stored speed and owns restoring it.
-func _claim_pre_dialogue_speed() -> void:
-	TimeManager.release_clock(EVENT_CLOCK_HOLD)
-	if _pre_dialogue_speed < 0:
-		_pre_dialogue_speed = _pre_event_speed if _pre_event_speed >= 0 else TimeManager.current_speed
-	_pre_event_speed = -1
-
-
 ## The fund whose meeting week has come calls while a sitting fits the founder's day, when nothing
 ## else holds the founder; a call whose moment has passed stops ringing.
 func _process(_delta: float) -> void:
@@ -3042,7 +3021,6 @@ func _process(_delta: float) -> void:
 		"sales":
 			if SalesLedger.meeting_block_reason(_call.id) != "":
 				_end_call()
-				_pre_dialogue_speed = -1   # the clock ran again under the ring: no speed to hand back
 		_:
 			var caller: String = VCPitchSystem.call_waiting()
 			if caller != "" and not _in_transit and _meeting_panel == null and _term_table == null \
@@ -3063,15 +3041,14 @@ func _ring_fund(vc_id: String) -> void:
 		"args": {"fund": fund, "person": lead.name},
 		"note": "MEETING_POSTPONE_ONCE" if once else "MEETING_POSTPONED_ONCE",
 		"note_args": {"n": PitchConstants.MEETING_RESCHEDULE_PENALTY}, "toast": "MEETING_POSTPONED_VC"})
-	_pre_dialogue_speed = TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
 
 
 ## "Görüşmeye git" on a prospect: the windows close and the phone rings in the office, in place of
-## any call ringing. With the founder there to answer, the clock stops until they do, so the
-## sitting's cut-off cannot take the call within seconds at the fast speeds; picking it up goes to
-## the meeting, putting it off runs the clock again and lets it ring on. With no office view (shots
-## without the trip) the meeting opens at once.
+## any call ringing. With the founder there to answer, the clock stops, so the sitting's cut-off
+## cannot take the call within seconds at the fast speeds; picking it up goes to the meeting, putting
+## it off lets it ring on with the clock still stopped. With no office view (shots without the trip)
+## the meeting opens at once.
 func _on_pitch_requested(prospect_id: String) -> void:
 	if EventGate.active_id() != "":
 		return
@@ -3086,8 +3063,7 @@ func _on_pitch_requested(prospect_id: String) -> void:
 		"caller": buyer, "vc_id": "",
 		"args": {"company": p.company_name, "person": buyer.name},
 		"note": "", "note_args": {}, "toast": "MEETING_POSTPONED_SALES"})
-	if invite.can_ring() and _pre_dialogue_speed < 0:
-		_pre_dialogue_speed = TimeManager.current_speed
+	if invite.can_ring():
 		EventBus.speed_change_requested.emit(0)
 
 
@@ -3121,15 +3097,12 @@ func _on_call_accepted() -> void:
 		_open_sales_meeting(call.id)
 
 
-## A call put off runs the clock again; a fund's moves its meeting on, a prospect's rings on and
-## can be put off again with the clock already running.
+## A call put off leaves the clock stopped: a fund's moves its meeting on, a prospect's rings on and
+## can be put off again.
 func _on_call_postponed() -> void:
 	if _call.kind == "vc":
 		VCPitchSystem.postpone_call()
 		_end_call()
-	if _pre_dialogue_speed >= 0:
-		_restore_speed(_pre_dialogue_speed)
-		_pre_dialogue_speed = -1
 
 
 ## The office view's call, or null where there is no trip (shots, no office view).
@@ -3149,8 +3122,7 @@ func _leave_office(side: Array, place: String) -> void:
 	_in_transit = true
 	_trip_label = tr("MEETING_TOWER_CHIP").format({"place": place, "person": side[0].name}) \
 		if not side.is_empty() else place
-	TimeManager.freeze_clock(TRAVEL_FREEZE)
-	EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
+	TimeManager.freeze_clock(TRAVEL_FREEZE, true)
 	get_tree().call_group(&"window_layer", &"set_veiled", true)
 	get_tree().call_group(&"top_bar", &"show_meeting", "trip", place)
 	var travel: Node = _office_travel()
@@ -3163,10 +3135,10 @@ func _leave_office(side: Array, place: String) -> void:
 
 
 ## The sitting closed and its hours ran, in transit (a card they pumped waits): the trip home
-## plays as the trip out did (the clock frozen, the tree running), the founder walking back in
-## (not past the workday); then the windows come back and a card that arrived meanwhile is shown.
-## A sitting that ended the run (a Series A signature) leaves the ending paper alone: no trip
-## home, and the held card goes.
+## plays as the trip out did (the clock frozen, the tree running) until the founder is back at the
+## desk, or placed for the night when the sitting ran to the workday's end; then the tree stops with
+## the clock, the windows come back and a card that arrived meanwhile is shown. A sitting that ended
+## the run (a Series A signature) leaves the ending paper alone: no trip home, and the held card goes.
 func _return_to_office() -> void:
 	if not GameState.run_active:
 		_in_transit = false
@@ -3174,8 +3146,7 @@ func _return_to_office() -> void:
 		return
 	var travel: Node = _office_travel()
 	if travel != null:
-		TimeManager.freeze_clock(TRAVEL_FREEZE)
-		EventBus.speed_change_requested.emit(TimeManager.last_running_speed)
+		TimeManager.freeze_clock(TRAVEL_FREEZE, true)
 		get_tree().call_group(&"top_bar", &"show_meeting", "home")
 		await travel.travel_home(_trip_label)
 		TimeManager.thaw_clock(TRAVEL_FREEZE)
@@ -3222,7 +3193,6 @@ func _open_sales_meeting(prospect_id: String) -> void:
 ## The founder's trip to the sitting (`side` across the table, `place` on the map), then the panel
 ## over the meeting room with its people.
 func _open_meeting(adapter: RefCounted, side: Array, place: String) -> void:
-	_claim_pre_dialogue_speed()
 	await _leave_office(side, place)
 	var view: Node = get_tree().get_first_node_in_group(&"office_view")
 	_meeting_panel = MeetingPanel.new()
@@ -3239,8 +3209,6 @@ func _close_meeting(adapter: RefCounted) -> void:
 	_in_transit = true
 	adapter.end_sitting()
 	await _return_to_office()
-	_restore_speed(_pre_dialogue_speed)
-	_pre_dialogue_speed = -1
 
 
 func _on_settings_requested() -> void:
@@ -3249,7 +3217,6 @@ func _on_settings_requested() -> void:
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
 		return
-	_pre_settings_speed = TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
 	_settings_modal = SETTINGS_MODAL.instantiate()
 	_settings_modal.dismissed.connect(_on_settings_dismissed)
@@ -3258,8 +3225,6 @@ func _on_settings_requested() -> void:
 
 func _on_settings_dismissed() -> void:
 	_settings_modal = null
-	_restore_speed(_pre_settings_speed)
-	_pre_settings_speed = -1
 
 
 func _on_confirm_requested(config: Dictionary) -> void:
@@ -3269,7 +3234,6 @@ func _on_confirm_requested(config: Dictionary) -> void:
 	# While a decision waits only a modal's own question passes (the system menu's quit).
 	if modal_layer == null or (EventGate.active_id() != "" and modal_layer.get_child_count() == 0):
 		return
-	_pre_confirm_speed = TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
 	_confirm_modal = (HR_ACTION_MODAL if String(config.get("modal", "")) == "hr_action"
 		else CONFIRM_MODAL).instantiate()
@@ -3287,8 +3251,6 @@ func _on_confirm_requested(config: Dictionary) -> void:
 
 func _on_confirm_dismissed() -> void:
 	_confirm_modal = null
-	_restore_speed(_pre_confirm_speed)
-	_pre_confirm_speed = -1
 
 
 # game_shell emits system_menu_requested only when ModalLayer AND PanelLayer are empty; with a
@@ -3299,7 +3261,6 @@ func _on_system_menu_requested() -> void:
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
 		return
-	_pre_system_speed = TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
 	_system_menu = SYSTEM_MENU_MODAL.instantiate()
 	_system_menu.dismissed.connect(_on_system_menu_dismissed)
@@ -3308,11 +3269,9 @@ func _on_system_menu_requested() -> void:
 
 func _on_system_menu_dismissed() -> void:
 	_system_menu = null
-	_restore_speed(_pre_system_speed)
-	_pre_system_speed = -1
 
 
-# Stacks on the system menu, which already paused the game — so no speed capture of its own.
+# Stacks on the system menu, which already paused the game.
 # ESC closes only the topmost (the last-added child sees _unhandled_input first).
 func _on_save_load_requested(mode: String) -> void:
 	if _save_load_modal != null:
@@ -3383,8 +3342,6 @@ func _load_slot(slot_id: String) -> bool:
 	return true
 
 
-# The week's cards pump after the night batch, so a card lands on the open summary and inherits its
-# saved speed; the inbox closing last restores it.
 func _on_summary_ready(_data: Dictionary) -> void:
 	_open_note("summary")
 
@@ -3396,8 +3353,8 @@ func _on_product_note_issued(_day: int) -> void:
 		_open_note("rnd_note")
 
 
-# Terminal: the ending paper never restores speed. EndingsSystem already flushed the queue and
-# paused the clock, and TimeManager swallows unpause requests once run_active is false.
+# Terminal: EndingsSystem already flushed the queue and paused the clock, and TimeManager swallows
+# unpause requests once run_active is false.
 func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
 	if not _call.is_empty():
 		_end_call()
@@ -3412,10 +3369,10 @@ func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
 
 
 # The ending paper in milestone mode (EA / full): a win the run lives through. The clock is
-# HELD while it is up, so a card, the period summary or settings closing on top of it cannot
-# restart time behind it; DEVAM ET releases the hold and restores the player's speed. A decision
-# is answered first: the paper would cover the inbox, and ANA MENÜ would refuse to save for a
-# decision the player cannot see. It opens when the gate closes.
+# HELD while it is up: the night's batch stops under it and no speed request starts time behind it;
+# DEVAM ET releases the hold and the player starts the clock. A decision is answered first: the paper would
+# cover the inbox, and ANA MENÜ would refuse to save for a decision the player cannot see. It opens
+# when the gate closes.
 func _on_milestone_reached(milestone_id: String, data: Dictionary) -> void:
 	if _ending_modal != null or _milestone_modal != null:
 		return
@@ -3425,7 +3382,6 @@ func _on_milestone_reached(milestone_id: String, data: Dictionary) -> void:
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
 		return
-	_pre_milestone_speed = TimeManager.current_speed
 	TimeManager.hold_clock(MILESTONE_CLOCK_HOLD)
 	_milestone_modal = ENDING_MODAL.instantiate()
 	_milestone_modal.continue_requested.connect(_on_milestone_continue)
@@ -3440,12 +3396,6 @@ func _on_milestone_continue() -> void:
 	_milestone_modal = null
 	_milestone_paper = []
 	TimeManager.release_clock(MILESTONE_CLOCK_HOLD)
-	# The period summary still open in the inbox owns the pause and restores it itself. `> 0`, not
-	# `>= 0`: DEVAM ET always resumes, so a paper that found the clock paused hands back the
-	# last running speed.
-	if _pre_note_speed < 0:
-		_restore_speed(_pre_milestone_speed if _pre_milestone_speed > 0 else -1)
-	_pre_milestone_speed = -1
 
 
 ## ANA MENÜ: keep the run in a save slot, then go where a run starts — today the boot flow,
@@ -3477,16 +3427,15 @@ func _on_term_table_requested(vc_id: String, stage: String) -> void:
 	if TermSheetTableSystem.open(vc_id, stage).is_empty():
 		push_warning("[Main] term_table_requested for %s/%s with no live sheet" % [vc_id, stage])
 		return
-	_claim_pre_dialogue_speed()
 	await _leave_office(CounterpartSystem.investor_people(vc_id), InvestorRegistry.get_investor(vc_id).display_name)
 	_term_table = TERM_TABLE_SCENE.instantiate()
 	_term_table.closed.connect(_close_term_table)
 	modal_layer.add_child(_term_table)
 
 
-# A signature ends the run (no restore and no return to the office: the ending owns the screen
-# and the freeze); a walk-out leaves it alive and restores the pre-table speed. The table's hour
-# runs once the scene is gone. A card's option that opened the table left what waits for its gate.
+# A signature ends the run (no return to the office: the ending owns the screen and the freeze); a
+# walk-out leaves it alive. The table's hour runs once the scene is gone. A card's option that opened
+# the table left what waits for its gate.
 func _close_term_table() -> void:
 	if _term_table != null:
 		_term_table.queue_free()
@@ -3494,8 +3443,6 @@ func _close_term_table() -> void:
 	_in_transit = true
 	TermSheetTableSystem.end_sitting()
 	await _return_to_office()
-	_restore_speed(_pre_dialogue_speed)
-	_pre_dialogue_speed = -1
 	_open_after_gate()
 
 
@@ -3526,8 +3473,8 @@ func _on_debug_onboarding_retrigger() -> void:
 	_mount_flow()
 
 
-# Frees the shell (and its ModalLayer/PanelLayer children) and drops EVERY surface ref and
-# speed tracker, so nothing from the outgoing run leaks into the next — a stale dialogue ref
+# Frees the shell (and its ModalLayer/PanelLayer children) and drops EVERY surface ref, so
+# nothing from the outgoing run leaks into the next — a stale dialogue ref
 # would misroute the next run's first meeting choice. Shared by Shift+F4 and save loading.
 func _teardown_run_ui() -> void:
 	if _shell != null:
@@ -3547,10 +3494,3 @@ func _teardown_run_ui() -> void:
 	_goto_after_gate = []
 	_milestone_paper = []
 	_call = {}
-	_pre_event_speed = -1
-	_pre_settings_speed = -1
-	_pre_confirm_speed = -1
-	_pre_note_speed = -1
-	_pre_system_speed = -1
-	_pre_dialogue_speed = -1
-	_pre_milestone_speed = -1

@@ -44,11 +44,18 @@ söyler.
   smoke, probe) ve `TimeManager.skip_night()` (gece). İkisi de aynı saatlik adımdan geçer ve her adımda akümülatörü
   saate eşitler, çünkü 00:00 autosave'i adımın içinde yazılır.
 - Toplu adım her adımda koşunun sürdüğüne ve tutma olmadığına bakar. Koşu biterse (sonun kâğıdı) ya da bir tutma
-  alınırsa (kilometre taşı kâğıdı) durur. Gece türetildiği için tutma kalkınca kalan gece sürer.
+  alınırsa (kilometre taşı kâğıdı) durur. Gece türetildiği için kalan gece, tutma kalkıp oyuncu saati sürdürünce
+  sürer.
 - Toplu adım sürerken olay kartı gösterilmez. Motorun gösterimi toplu adımın sonunda (`clock_batch_ended`) bir kez
   koşar: kart 08:00'de yeniden doğrulanıp kurulur, en önemli kart önce gelir, aktif kart 00:00 autosave'ini engellemez.
-- `freeze_clock(neden)` / `thaw_clock(neden)` yalnız saatin birikimini durdurur; ağaç ve hız yürür (ofisteki
-  yürüyüş, asansör, trafik sürer). `hold_clock` ağacı da duraklatır.
+- `freeze_clock(neden, tree_runs)` / `thaw_clock(neden)` yalnız saatin birikimini durdurur; ağaca yalnız
+  `tree_runs` dokunur. Yolculuk dondurması onu taşır: ağaç hız 0'da da koşar (kurucunun yürüyüşü, asansör, trafik) ve
+  dondurma çözülünce yeniden hıza bağlanır. Gece dondurması ağaca dokunmaz; duraklatma gece yürüyüşünü de durdurur.
+  `hold_clock` hızı 0'da tutar ve ağacı duraklatır; aynı nedenle ikinci çağrı sessizdir.
+- Saat yalnız oyuncunun girdisiyle akar: Boşluk, 1-3 tuşları ve üst barın hız düğmeleri. Sistem yüzeyleri (karar
+  kartı, dönüm noktası kâğıdı, tanışma ve dönem özeti, sürüm notu, Ayarlar, onay, sistem menüsü, görüşme telefonu ve
+  oturumu) saati yalnız durdurur; kapanmaları da tutuşun bırakılması da saati başlatmaz. Tutuş sürerken hız 0'dır ve
+  oyuncunun hız isteği yutulur. Kayıt her zaman duraklı yüklenir; kayıttaki son hız Boşluk'un döneceği hızdır.
 
 ### 1.3 Adlandırma
 
@@ -512,9 +519,9 @@ yüklemez, süreleri okunmaz.
   birbirinin etrafından dolaşır, üstünde (2× ve üstü) yollarını düz yürür ve birbirinin içinden geçebilir; döngü
   animasyonları (idle'lar, adım, el hareketleri) en çok `ANIM_LOOP_MAX` 3 katı hızla görünür; `k` her hızda 3'ün
   üstünde olduğundan tavan 1×'te de devrededir ve döngüler her hızda aynı hızla oynar, hızla doğrusal olan kök hareketi
-  ile oturma ve kalkma gibi tek seferlik kliplerdir, ayak kayması kabuldür; kurucu toplantıya çıkarken (saat donuk)
-  ofisteki kişiler hızdan bağımsız `TRIP_K` 2 ile yürür. Dönüşte geçiş ofis yüklenince biter (§8.5): kurucunun içeri
-  yürüyüşü saat akarken hızın `k`'sıyla oynar; soranın bakışı ve baş jesti her hızda `ASK_S` 2,6 gerçek saniye sürer.
+  ile oturma ve kalkma gibi tek seferlik kliplerdir, ayak kayması kabuldür; kurucu toplantıya çıkarken ve dönüşte
+  masasına oturana dek (saat donuk) ofisteki kişiler hızdan bağımsız `TRIP_K` 2 ile yürür; dönüşte geçiş kurucu
+  masasına oturunca biter (§8.5). Soranın bakışı ve baş jesti her hızda `ASK_S` 2,6 gerçek saniye sürer.
 - Kurucu şirket penceresini izler: pencere başında gelir, sonunda çıkar. Evde pencere dışı yeri yataktır; yatağa
   gidiş ve dönüş pencerenin yarısından fazlasını alıyorsa 08:00'den masasındadır ve gece kararmasında kesilir
   (açık: ACIK_KARARLAR 104).
@@ -583,10 +590,10 @@ Kurucunun dış toplantıya gidişi yürüyüş değil geçiştir. Geçiş yaln�
 mekanik ondan bağımsızdır ve headless güvenlidir.
 
 0. Davet: satışta "Görüşmeye git", Series A'da görüşme haftasının çağrısı (§8.6) ofiste kurucunun başının üstünde
-   telefonu çaldırır; davet kartı Kabul et / Ertele sorar (`MeetingInvite`). Satışta Ertele kartı kapatır ve telefon
-   çalmaya devam eder; kurucu istek anında ofiste görünürse saat cevaba kadar durur ve Ertele onu yeniden açar
-   (açık: ACIK_KARARLAR 104). Kabul et geçişi başlatır.
-1. Saat donar (`freeze_clock("travel")`); oturum geçişten önce açılır ve kurucu meşgul olur.
+   telefonu çaldırır; davet kartı Kabul et / Ertele sorar (`MeetingInvite`). Satışta kurucu istek anında ofiste
+   görünürse saat durur. Ertele kartı kapatır ve saati başlatmaz; satışta telefon saat duruk çalmaya devam eder.
+   Kabul et geçişi başlatır.
+1. Saat donar, ağaç koşar (`freeze_clock("travel", true)`); oturum geçişten önce açılır ve kurucu meşgul olur.
 2. Pencere katmanı perdelenir; pencereler kapanmaz, dönüşte aynı pencere açık gelir.
 3. Kurucu masadan kalkar ve çıkışa doğal hızla yürür, en yakın iki oturan çalışan başını ona çevirir; yürüyüş en
    fazla `EXIT_S` 1,5 sn [WORKING] izlenir.
@@ -599,15 +606,16 @@ mekanik ondan bağımsızdır ve headless güvenlidir.
 6. Kararma, toplantı odası: karşı taraf masada oturur, kurucu asansörden yürüyüp oturur (`MeetingCast`). Görüşme
    paneli ofis görünümünün sağına takılır, saat duraklatılır, gezi donması çözülür.
 7. Kapanışta panel kalkar, saat toplantı süresi kadar atlar (§8.1), kurucu kalkar ve harita üzerinden geri yol
-   çizilir (`ROAD_HOME` [WORKING]); perde kalkar, hız geri gelir. Kurucu girişten masasına yürür, en yakın oturan
-   çalışan başını kaldırır ve haber bandına "{ad}: Nasıl geçti?" düşer; atlama mesai bitişine ya da ötesine
-   indiyse yürüyüş olmaz, gece başlar.
+   çizilir (`ROAD_HOME` [WORKING]). Kurucu saat donukken girişten masasına yürür, en yakın oturan çalışan başını
+   kaldırır ve haber bandına "{ad}: Nasıl geçti?" düşer; kurucu masasına oturunca geçiş biter, perde kalkar ve saat
+   duruk kalır. Atlama mesai bitişine ya da ötesine indiyse yürüyüş olmaz, gece saat duruk bekler.
 
 - Geçiş sırasında gelen kart istekleri ertelenir ve toplantıdan sonra gösterilir; kart gösterildiği anda yeniden
-  kurulur (`EventGate.active_card()`). Boşluk ve 1-4 tuşları geçişte yutulur, Ayarlar açılmaz. Tık ya da Esc geçişi
-  atlar.
-- Görsel kontrol: `--travel-shot=<ofis>[:vc]` davet, çıkış, harita, oda, panel ve dönüş karelerini çeker. Shot ve harness koşularında
-  geçiş yoktur.
+  kurulur (`EventGate.active_card()`). Boşluk ve 1-3 tuşları geçişte yutulur, Ayarlar açılmaz. Tık ya da Esc geçişi
+  atlar; dönüşte kurucu masasına konur.
+- Görsel kontrol: `--travel-shot=<ofis>[:vc|:night]` davet, çıkış, harita, oda, panel ve dönüş karelerini çeker ve
+  kurucu masasına oturunca `TRAVEL|settled` satırını basar; `:night` toplantıyı kurucunun mesai bitişine indirir.
+  Shot ve harness koşularında geçiş yoktur.
 
 ### 8.6 VC randevusu
 

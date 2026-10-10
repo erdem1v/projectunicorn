@@ -130,5 +130,5 @@ func _clear_stop(speed: int, win: String) -> bool:
 		EventBus.tab_changed.emit(win)
 	if TimeManager.current_speed == speed:
 		return true
-	print("TICK|stall hold=%s" % ",".join(TimeManager._holds.keys()))
+	print("TICK|stall hold=%s" % ",".join(TimeManager.holds()))
 	return false

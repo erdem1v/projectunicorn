@@ -200,7 +200,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   EN `_en`, renk körü `_cb` alır. Gelen kutusu: `--inbox-shot=<durum>` (durumlar HARITA'da); `flow` karar kapısını
   kabuğun kendi girdisiyle oynar (karar gelir, saat tutulur, Ekip yalnız okunur, hız tuşu reddedilir, Esc Olaylar'a
   döner, aynı karar için sonraki Esc sistem menüsünü açar, Ekip'in üstündeki dosyanın şeridi karara döner, karar
-  verilir, saat döner) ve kare başına `GATEFLOW` satırı basar.
+  verilir, saat durmuş kalır, Boşluk saati sürdürür) ve kare başına `GATEFLOW` satırı basar.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
   founders|nav|crown|cast` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare; `founders` portre ile
   bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi;
@@ -217,9 +217,10 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `--product-shot=live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests>` sprint motoruyla kurulan
   koşuda. Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
   duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve
-  `crowd_<ofis>_<kişi>_<hız>_NN.png`). Kurucunun toplantı yolculuğu: `--travel-shot=<home|ishani|plaza|loft>[:vc]`
-  (10:00'da satış toplantısına, `:vc` ile Series A görüşmesine davet, gidiş, panel ve dönüş;
-  `travel_shot_<ofis>[_vc]_NN.png` dizisi). Bir hafta gerçek
+  `crowd_<ofis>_<kişi>_<hız>_NN.png`). Kurucunun toplantı yolculuğu: `--travel-shot=<home|ishani|plaza|loft>[:vc|:night]`
+  (10:00'da satış toplantısına, `:vc` ile Series A görüşmesine davet, gidiş, panel ve dönüş; `:night` toplantıyı
+  kurucunun mesai bitişine indirir; `travel_shot_<ofis>[_vc|_night]_NN.png` dizisi ve kurucu masasına oturunca
+  `TRAVEL|settled` satırı). Bir hafta gerçek
   saatle: `--day-shot=<ofis>:<hız>` (08:00'den çıkış ve gece atlamasıyla ertesi 08:00'e,
   `day_shot_<ofis>_<hız>_NN.png` ve kare başına `DAYSHOT` satırı).
 - Tema denetçisi: `"$GODOT" --headless --path . -s res://scripts/theme/theme_check.gd [--theme=<yol>]` master'a göre

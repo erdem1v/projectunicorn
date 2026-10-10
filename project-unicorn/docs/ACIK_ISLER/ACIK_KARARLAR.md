@@ -1524,10 +1524,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     yaklaşık 14,5 m, kalkıp yatmayla) yaklaşık 60 oyun dakikasıdır ve kural ancak 4 saatten kısa bir pencerede
     devreye girer, varsayılan 09:00–17:00'de girmez. `--day-shot=home:4`'te kurucu 09:17'ye kadar uyur, 09:40'ta
     masasındadır, 16:31'de yatağa yürür, 16:54'te yataktadır.
-    (5) Satış görüşmesinin telefonu (ajan kararı): istek anında kurucu ofiste görünürse saat cevaba kadar durur,
-    Ertele yeniden açar (VC çağrısı gibi). Eskiden saat akarken çalıyordu; 4×'te giriş kesimine (mesai bitimi eksi 2
-    saat) birkaç saniye kalıyordu. Kurucu sabah daha gelmemişken istenen görüşmenin telefonu sonradan görünür ve saat
-    akar.
+    (5) Kapandı (sahip kararı 2026-10-10, saati yalnız oyuncu başlatır): istek anında kurucu ofiste görünürse saat
+    durur; Ertele kartı kapatır, saati başlatmaz, telefon saat duruk çalmaya devam eder; GDD Zaman Modeli §8.5.
     (6) İş hanında kurucunun çıkış anı (`bitiş − EXIT_SLACK × yürüyüş`) 12 oyun dk/ambiyans sn'lik eski tempoyla
     14:00'ten önceydi; giriş 15:00'e kadar açık olduğu hâlde bu arada istenen satış görüşmesinin telefonu görünmüyor ve
     kesimde sessizce düşüyordu. 6 dk/as ile çıkış anı yaklaşık 16:00'dır (köşe odaya dönüş yürüyüşü `--travel-shot`'ta
@@ -1551,7 +1549,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     `scripts/tabs/finance/finance_ozet_view.gd`, `scripts/tabs/hunt_tab.gd`.
   - Oyuncuya etkisi: Koşu dört kat kısadır ve kararlar gerçek zamanda dört kat sık gelir.
   - Seçenekler: (1) A) dakika hedefi kalır, duraklama ve karar süresi de sayılır; B) dakika hedefi kısalır; C) tavan
-    uzar. (2) A) çapa yeni tempoya göre yeniden yazılır; B) tik tavanı düşer; C) kalır, yalnız raporlanır. (4) ve (5)
+    uzar. (2) A) çapa yeni tempoya göre yeniden yazılır; B) tik tavanı düşer; C) kalır, yalnız raporlanır. (4)
     A) kabul; B) geri alınır. (6) A) kabul; B) kurucunun çıkış yürüyüşü görüşme kesiminden önce başlamaz; C) kurucu
     ofiste değilken görüşme doğrudan açılır. (8) A) kabul; B) taban düşer. (10) A) kabul; B) feribot ve su gerçek
     saniyeye bağlanır; C) Finans ve Yatırım sayfaları kare başına bir kez ve yalnız görünürken kurulur.

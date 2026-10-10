@@ -19,7 +19,6 @@ const BODY_PAD := Vector4i(UiTokens.SPACE_3XL, UiTokens.SPACE_XL, UiTokens.SPACE
 var frame_options: Dictionary
 var _source: Object = null
 var _ui: Dictionary = {}
-var _held_speed := -1   # saati tutarken saklanan hız; -1 = bu sekme saati tutmuyor
 var _closing := false   # pencere kapanıyor: ertelenmiş kurulum ölmekte olan sayfada saati yeniden tutmasın
 var _rebuild_queued := false
 var _kpis: HBoxContainer
@@ -106,12 +105,10 @@ func set_source(src: Object) -> void:
 		_rebuild()
 
 
-## Hızı bir sonraki ekranın sahibi geri verir: başka bir yüzeyin duraklatmasının altında saat
-## yürümesin.
+## Kapanan sayfa sürüm notunun tutuşunu bırakır; saati oyuncu başlatır.
 func on_page_closing() -> void:
 	_closing = true
 	TimeManager.release_clock(HOLD_RELEASE_NOTE)
-	_held_speed = -1
 
 
 ## ÇEYREK'te pencere içeriği kadar uzar; öbür görünümler pencerenin boyunu doldurur.
@@ -242,17 +239,9 @@ func _queue_rebuild() -> void:
 		_rebuild.call_deferred()
 
 
-## Hız saklanırken saat duruksa son yürüyen hız alınır: başka bir yüzeyin duraklatmasının altında saat
-## yürümesin.
+## Sürüm notu açıkken saat tutulur. Her kurulumda yeniden tutmak sessizdir; bırakmak saati başlatmaz.
 func _hold_clock(on: bool) -> void:
-	if on == (_held_speed >= 0):
-		return
 	if on:
-		_held_speed = TimeManager.current_speed if TimeManager.current_speed > 0 else TimeManager.last_running_speed
 		TimeManager.hold_clock(HOLD_RELEASE_NOTE)
-		return
-	TimeManager.release_clock(HOLD_RELEASE_NOTE)
-	# Bekleyen olay saati kendisi bırakır.
-	if not EventGate.has_pending():
-		EventBus.speed_change_requested.emit(_held_speed)
-	_held_speed = -1
+	else:
+		TimeManager.release_clock(HOLD_RELEASE_NOTE)

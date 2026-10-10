@@ -13,7 +13,7 @@ extends Control
 
 const EXIT_S := 1.5    # [WORKING] the founder's walk out is watched this long at most
 const FADE_S := 0.25   # [WORKING] each half of a blink
-const SEAT_S := 8.0    # [WORKING] the walk to the table is watched this long at most
+const SEAT_S := 8.0    # [WORKING] a walk to a seat (the meeting table, the desk back home) is watched this long at most
 ## Seconds into the walk out that the two seated nearest look up, and how long they look on once
 ## the founder is out.
 const LOOK_AT := [0.5, 1.2]
@@ -90,7 +90,8 @@ func travel_out(looks: Array, tower_label: String) -> void:
 
 
 ## Back to the office from the meeting room, `tower_label` naming the tower on the map again.
-## Ends as the founder walks back in; the ask comes after.
+## Ends once the founder is back at their place or gone for the day, SEAT_S at most; skipped or out
+## of time, they are put there with no walk. The one seated nearest asks how it went as they walk in.
 func travel_home(tower_label: String) -> void:
 	_begin()
 	_view.cast.walk_out()
@@ -101,8 +102,10 @@ func travel_home(tower_label: String) -> void:
 		await _until(_city.road_done)
 	await _blink(OfficeSystem.current())
 	_people.founder_back()
-	_end()
 	get_tree().create_timer(ASK_AT).timeout.connect(_ask)
+	await _until(_people.founder_settled, SEAT_S)
+	_people.seat_founder_now()
+	_end()
 
 
 ## The one seated nearest looks up at the founder walking back in and asks how it went.
@@ -112,8 +115,9 @@ func _ask() -> void:
 		return
 	var a: OfficeActor = asker[0]
 	a.look_at = _people.founder()
-	# The trip is over and the office back on its pace: the look lasts ASK_S real seconds, and the
-	# gesture as long (paused, the office holds still and there is none).
+	# At the trip's pace the look lasts ASK_S real seconds and the gesture as long; a trip already over
+	# (skipped, or no walk at night) left the office paused at k 0, with no gesture. A walk that ends
+	# first leaves both held under the paused office.
 	if a.k > 0.0:
 		a.gesture("lookup", ASK_S * a.k)
 	EventBus.ticker_live_line.emit(a.character.character_name, {"key": "MEETING_BACK_ASK"})

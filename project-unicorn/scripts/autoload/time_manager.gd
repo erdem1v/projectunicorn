@@ -11,7 +11,8 @@ extends Node
 # simulated in one batch, so its hours still tick and only their real time is skipped.
 #
 # Speed 0 flips get_tree().paused: every PAUSABLE node stops while NewsTicker (ALWAYS) keeps
-# scrolling. freeze_clock only stops accumulation and leaves the tree and the speed alone.
+# scrolling. Only the player raises the speed; every other surface only stops the clock.
+# freeze_clock stops accumulation and leaves the speed alone; it runs the tree only when asked.
 #
 # GameState owns day and current_hour; this node writes the clock through advance_day() /
 # set_current_hour() / start_work_week().
@@ -39,16 +40,16 @@ var _in_game_hours: float = float(TimeModel.WEEK_START_HOUR)   # accumulator wit
 var _suspended: bool = false
 
 # Clock holds: a surface that must keep the clock stopped until IT closes, whatever opens and
-# closes on top of it (the milestone paper). A hold swallows every speed > 0 request until the
-# holder releases it and restores the speed itself.
+# closes on top of it (the milestone paper). A hold swallows every speed > 0 request; the holder
+# releases it and the player starts the clock.
 var _holds: Dictionary = {}                      # reason -> true
 
-# Freezes stop accumulation only: the office keeps walking under them (the founder's trip out,
-# the night walk-out), which a paused tree would not.
-var _freezes: Dictionary = {}                    # reason -> true
+# Freezes stop accumulation. The founder's trip runs the tree under its freeze, so the office walks
+# at speed 0; the night's leaves the tree alone, so a pause stops the walk-out with the clock.
+var _freezes: Dictionary = {}                    # reason -> the tree runs under it
 
 # The office view's "everyone is out" predicate and how long the night waits for it. Counted
-# from _process delta, so a pause holds the wait and the walk together.
+# from _process delta while the clock runs, so a pause holds the wait and the walk together.
 var _night_gate: Callable = Callable()
 var _night_max_wait_s: float = 0.0
 var _night_wait_s: float = 0.0
@@ -95,11 +96,12 @@ func _advance_real(delta: float) -> void:
 			return
 		delta = 0.0                              # the night began inside this frame's hours
 	freeze_clock(_NIGHT)
+	# A stopped clock keeps the night behind it: a surface that paused inside this frame's steps, or the
+	# trip home, whose tree runs at speed 0.
+	if current_speed == 0:
+		return
 	_night_wait_s += delta
 	if _night_gate.is_valid() and not bool(_night_gate.call()) and _night_wait_s < _night_max_wait_s:
-		return
-	# A surface that paused inside this frame's steps keeps the night behind it.
-	if current_speed == 0:
 		return
 	# is_night() was read in this frame, so the player cannot have lengthened the day since.
 	skip_night()
@@ -138,7 +140,8 @@ func _step_hour(frac: float) -> void:
 
 
 ## Every step stops when the run ended (the ending paper) or a hold was taken (the milestone
-## paper). The night is derived, so an interrupted skip resumes once the hold is released.
+## paper). The night is derived, so an interrupted skip resumes once the hold is released and the
+## player runs the clock.
 func _can_step() -> bool:
 	return GameState.run_active and _holds.is_empty()
 
@@ -218,11 +221,17 @@ func day_minute() -> float:
 
 # --- Freezes and the night gate ---
 
-func freeze_clock(reason: String) -> void:
-	_freezes[reason] = true
+## Stops accumulation until thaw_clock(reason). With tree_runs the tree runs under it at any speed
+## (the founder's trip); otherwise the tree is left as it is (a shot opens it by hand).
+func freeze_clock(reason: String, tree_runs := false) -> void:
+	_freezes[reason] = tree_runs
+	if tree_runs:
+		get_tree().paused = false
 
 
 func thaw_clock(reason: String) -> void:
+	if _freezes.get(reason, false):
+		get_tree().paused = current_speed == 0
 	_freezes.erase(reason)
 
 
@@ -266,20 +275,20 @@ func to_dict() -> Dictionary:
 	}
 
 
+## A save without a clock block keeps the run's clock and last speed; every load comes back paused.
 func from_dict(d: Dictionary) -> void:
-	if d.is_empty():
-		return
-	# Outside a step int(_in_game_hours) == current_hour, except the moment a 24:00 workday has
-	# ended (24 against hour 23). Any other disagreement is corrupt, and trusting the float would
-	# replay or skip part of the day.
-	var restored_hours: float = minf(float(d.get("in_game_hours", float(GameState.current_hour))),
-		float(TimeModel.HOURS_PER_DAY))
-	if mini(int(restored_hours), TimeModel.HOURS_PER_DAY - 1) != GameState.current_hour:
-		push_warning("[TimeManager] save disagrees with itself: in_game_hours %.3f vs current_hour %d — using the hour"
-			% [restored_hours, GameState.current_hour])
-		restored_hours = float(GameState.current_hour)
-	_in_game_hours = restored_hours
-	last_running_speed = clampi(int(d.get("last_running_speed", 1)), 1, TimeModel.SECONDS_PER_HOUR.size() - 1)
+	if not d.is_empty():
+		# Outside a step int(_in_game_hours) == current_hour, except the moment a 24:00 workday has
+		# ended (24 against hour 23). Any other disagreement is corrupt, and trusting the float would
+		# replay or skip part of the day.
+		var restored_hours: float = minf(float(d.get("in_game_hours", float(GameState.current_hour))),
+			float(TimeModel.HOURS_PER_DAY))
+		if mini(int(restored_hours), TimeModel.HOURS_PER_DAY - 1) != GameState.current_hour:
+			push_warning("[TimeManager] save disagrees with itself: in_game_hours %.3f vs current_hour %d — using the hour"
+				% [restored_hours, GameState.current_hour])
+			restored_hours = float(GameState.current_hour)
+		_in_game_hours = restored_hours
+		last_running_speed = clampi(int(d.get("last_running_speed", 1)), 1, TimeModel.SECONDS_PER_HOUR.size() - 1)
 	# A load always comes back PAUSED: the player may not have seen this company for days.
 	# The saved speed survives as last_running_speed for the Space-toggle.
 	current_speed = 0
@@ -299,17 +308,20 @@ func _on_speed_change_requested(speed: int) -> void:
 	current_speed = speed
 	if speed > 0:
 		last_running_speed = speed
-	get_tree().paused = (speed == 0)
+	get_tree().paused = speed == 0 and not _freezes.values().has(true)
 	speed_changed.emit(speed)
 
 
-## Stop the clock and keep it stopped until release_clock(reason). Idempotent per reason.
+## Stop the clock and keep it stopped until release_clock(reason). A second hold for a held reason
+## does nothing: a page that rebuilds holds again, and a tree a shot opened by hand stays open.
 func hold_clock(reason: String) -> void:
+	if _holds.has(reason):
+		return
 	_holds[reason] = true
 	_on_speed_change_requested(0)
 
 
-## Drop one hold. The caller restores the speed it wants; this does not resume anything.
+## Drop one hold. Nothing resumes: only the player starts the clock.
 func release_clock(reason: String) -> void:
 	_holds.erase(reason)
 
@@ -318,10 +330,8 @@ func is_clock_held() -> bool:
 	return not _holds.is_empty()
 
 
-## Resume to the last running speed if paused; a running speed is left alone.
-func resume_if_paused() -> void:
-	if current_speed == 0:
-		_on_speed_change_requested(last_running_speed)
+func holds() -> Array:
+	return _holds.keys()
 
 
 # --- Daily tick dispatch ---

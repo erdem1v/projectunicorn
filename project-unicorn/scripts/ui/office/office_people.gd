@@ -7,12 +7,14 @@ extends Node3D
 # window), and a walk starts early enough to land on time; the way out takes one at a time. A walk
 # that cannot fit is cut instead, under the morning's or the night's black. The rest runs on
 # ambient seconds (real seconds times k, the clock's pace, TRIP_K as the founder walks out to a
-# meeting, 0 when paused): breaks with a line at the coffee and the restrooms, small idles at the
-# desk, lunch, team meetings, the loft's all-hands. At home only the founder is drawn, sleeping out
-# of hours; the staff work remotely. The night waits on office_empty() (TimeManager's night gate).
-# The founder's trip to a meeting walks them out.
+# meeting and back to their place, 0 when paused): breaks with a line at the coffee and the
+# restrooms, small idles at the desk, lunch, team meetings, the loft's all-hands. At home only the
+# founder is drawn, sleeping out of hours; the staff work remotely. The night waits on
+# office_empty() (TimeManager's night gate). The founder's trip to a meeting walks them out and
+# back in.
 
 signal founder_arrived   # the founder sent out reached the door
+signal founder_settled   # the founder back from a meeting is at their place, or gone for the day
 
 const LIFT_EASE := 6.0    # the design's lift easing, per second
 const ICON_PX := 26.0     # the design's iconS: a head icon this many pixels tall,
@@ -67,7 +69,7 @@ var _clock := 0.0        # ambient seconds in this office
 var _door_turn := 0.0    # the ambient second of the next turn out through the door
 var _fade: Tween         # the view going dark for the night's cut
 var _founder_told := true
-var _walk_back := false  # back from a meeting before the office is placed: the founder starts at the door
+var _returning := false  # back from a meeting until at their place: starts at the door, the office at TRIP_K
 var _rooms: Array[float] = []   # per meeting room: ambient seconds to its next team meeting
 var _kickoff: Array = []   # character ids the next kick-off gathers; empty = none due
 var _all_hands_day := -1
@@ -126,10 +128,23 @@ func send_founder_out() -> void:
 
 
 ## Back from the meeting: the day walks the founder in from the door, or at home past the window
-## to bed. The trip home calls this as it loads the office, before the office is placed.
+## to bed; founder_settled says they are at their place, or gone for the day. The trip home calls
+## this as it loads the office, before the office is placed. Headless nobody is drawn: settled next
+## frame.
 func founder_back() -> void:
 	founder_away = false
-	_walk_back = true
+	_returning = true
+	if _headless():
+		founder_settled.emit.call_deferred()
+
+
+## The trip home skipped or out of time: a founder still on the way back is put at their place with
+## no walk, now or as the office is placed. founder_settled is not said.
+func seat_founder_now() -> void:
+	if _returning:
+		_returning = false
+		if _placed:
+			_place(_founder, TimeManager.day_minute())
 
 
 ## The founder in this office, or null before the office is placed or on the map.
@@ -202,8 +217,10 @@ func select(character_id: String) -> void:
 
 func _physics_process(_delta: float) -> void:
 	# Ahead of the people's own ticks (children tick after their parent): a pause stops them in this one.
-	# Out on the founder's trip, the clock frozen, the office keeps one pace whatever the speed.
-	_k = 0.0 if get_tree().paused else (OfficeConstants.TRIP_K if founder_away else _pace(TimeManager.current_speed))
+	# On the founder's trip out and back to their place, the clock frozen, the office keeps one pace
+	# whatever the speed.
+	_k = 0.0 if get_tree().paused \
+		else (OfficeConstants.TRIP_K if founder_away or _returning else _pace(TimeManager.current_speed))
 	for a: OfficeActor in _actors.values():
 		a.k = _k
 
@@ -212,6 +229,10 @@ func _process(delta: float) -> void:
 	if founder_away and not _founder_told and not _founder.visible:
 		_founder_told = true
 		founder_arrived.emit()
+	# Before _steer: a founder who just sat down is caught before a break sends them off again.
+	if _returning and not _founder.is_walking() and not is_same(_founder.spot, _entry):
+		_returning = false
+		founder_settled.emit()
 	var dt := delta * _k
 	_clock += dt
 	# At night nobody sets off: those on the way arrive, and the cut takes everyone still in.
@@ -617,16 +638,20 @@ func _sync(cut: bool) -> void:
 			_place(a, minute)
 
 
-## Puts `a` where they belong at `minute` with no walk: under a black frame or a load.
+## Puts `a` where they belong at `minute` with no walk: under a black frame or a load. A founder back
+## from a meeting with nowhere to walk to (their day over) is settled out of sight.
 func _place(a: OfficeActor, minute: float) -> void:
 	_drop_errand(a)
 	_plan_day(a, minute)
 	var want := _wanted(a, minute)
 	# Not due yet and in time on foot, or back from a meeting: they walk in from the door.
-	if want.is_empty() or (a.founder and _walk_back and not TimeManager.is_night()) \
+	if want.is_empty() or (a.founder and _returning and not TimeManager.is_night()) \
 			or (is_same(want, a.seat) and _bed.is_empty() and not a.cut_in and minute < _hours(a).x):
 		a.status = ""
 		a.place(_entry, "idle")
+		if a.founder and _returning and want.is_empty():
+			_returning = false
+			founder_settled.emit()
 	else:
 		var doing := _doing(a, want)
 		a.status = doing[0]
@@ -701,7 +726,6 @@ func _on_map_changed(map: RID) -> void:
 	for room: Array in _layout.meet_rooms:
 		_rooms.append(_rng.randf_range(OfficeConstants.MEETING_EVERY.x, OfficeConstants.MEETING_EVERY.y))
 	_sync(true)
-	_walk_back = false
 
 
 ## 08:00 under the night's black: the ghosts are gone and everyone is placed for the new day.

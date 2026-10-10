@@ -83,8 +83,8 @@ func _input(event: InputEvent) -> void:
 	var focus: Control = get_viewport().gui_get_focus_owner()
 	if focus is LineEdit or focus is TextEdit:
 		return
-	# Guard 2: bloklayan modal pause'u main.gd üzerinden yönetir (_pre_*_speed durum
-	# makinesi bozulmasın). HANDLED işaretlemeden dön — Esc modalın ui_cancel'ına aksın.
+	# Guard 2: bloklayan modal açıkken tuşlar onundur (toplantı paneli ve term sheet masası rakamla
+	# seçer); saati main.gd durdurmuştur. HANDLED işaretlemeden dön — Esc modalın ui_cancel'ına aksın.
 	if _layer_busy("ModalLayer"):
 		return
 	if key.keycode == KEY_ESCAPE:
@@ -104,7 +104,13 @@ func _input(event: InputEvent) -> void:
 			EventBus.system_menu_requested.emit()
 		return
 	get_viewport().set_input_as_handled()
-	# Karar saati tutarken hız değişmez: kapı çerçevesi yanıp söner, toast nedenini söyler.
+	request_speed(speed_idx)
+
+
+## Oyuncunun klavyeden hız isteği; idx -1 Space'tir: akan saati durdurur, duranı son hızla
+## başlatır. Saati oyuncu başlatır; karar saati tutarken hız değişmez: kapı çerçevesi yanıp
+## söner, toast nedenini söyler.
+func request_speed(idx := -1) -> void:
 	if EventGate.active_id() != "":
 		get_tree().call_group(&"top_bar", &"blink_gate")
 		if Time.get_ticks_msec() - _held_toast_ms >= HELD_TOAST_MS:
@@ -112,10 +118,10 @@ func _input(event: InputEvent) -> void:
 			get_tree().call_group(&"toast", &"show_toast", tr("CLOCK_HELD"), tr("GATE_ANSWER_FIRST"),
 				HELD_GLYPH, UiTokens.D_ACCENT)
 		return
+	if idx < 0:
+		idx = 0 if TimeManager.current_speed > 0 else TimeManager.last_running_speed
 	# TopBar butonlarıyla aynı sinyal, TopBar senkron kalsın.
-	if speed_idx < 0:
-		speed_idx = 0 if TimeManager.current_speed > 0 else TimeManager.last_running_speed
-	EventBus.speed_change_requested.emit(speed_idx)
+	EventBus.speed_change_requested.emit(idx)
 
 
 # --- Debug F-tuşları (yalnız debug build) ---
