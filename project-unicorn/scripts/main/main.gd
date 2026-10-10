@@ -1164,8 +1164,9 @@ func _shot_toasts(view: Control) -> void:
 	var invite: MeetingInvite = view.invite
 	var caller: Dictionary = CounterpartSystem.lead(SHOT_FUND)
 	for kind in ["sales", "vc"]:
-		invite.ring({"caller": caller, "vc_id": SHOT_FUND, "line": "MEETING_INVITE_SALES", "args": {}, "open": false,
-			"postpone": true, "note": "", "note_args": {}, "toast": "MEETING_POSTPONED_" + kind.to_upper()})
+		invite.ring({"kind": kind, "caller": caller, "vc_id": SHOT_FUND, "line": "MEETING_INVITE_SALES",
+			"args": {}, "open": false, "postpone": true, "note": "", "note_args": {},
+			"toast": "MEETING_POSTPONED_" + kind.to_upper()})
 		invite._postpone()
 		await _toast_frame("postponed_" + kind)
 		invite.stop()
@@ -1329,16 +1330,18 @@ func _run_travel_shot(spec: String) -> void:
 	get_tree().quit()
 
 
-# --invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse>: the call that opens an outside meeting, at İş hanı
-# with people at their desks, as the player meets it: ring = a prospect's call at 11:00 ringing over the
+# --invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>: the call that opens an outside meeting,
+# at İş hanı with people at their desks, as the player meets it: ring = a prospect's call at 11:00 ringing over the
 # founder's head, its card shut; card = that card open; vc = a fund's call at 10:00, its card open from the
 # first ring and the clock stopped; postpone = the prospect's call put off, still ringing, the toast saying
 # so; postpone_vc = the fund's call put off, the ring gone and the toast saying the meeting moved on; held =
 # the prospect's card open under a clock hold, Kabul et refused, the ring and the card staying and the toast
 # saying why; lapse = the prospect's call left ringing until the founder's last entry hour has passed, then
-# the clock run as the player would and the call dropping with a toast (an INVITE line). The notice stack
-# holds three rows (a paper, an account at risk, someone who may leave), which an open card stands clear of
-# or hides. invite_shot_<kind>.png.
+# the clock run as the player would and the call dropping with a toast; lapse_vc = the fund's call left
+# ringing until no sitting fits the founder's day, then the clock run and the call dropping without a toast,
+# its meeting moved on at a postponement's cost (each an INVITE line). The notice stack holds three rows (a
+# paper, an account at risk, someone who may leave), which an open card stands clear of or hides.
+# invite_shot_<kind>.png; a lapse saves invite_shot_<kind>_ring.png first.
 func _run_invite_shot(kind: String) -> void:
 	var vc: bool = kind.ends_with("vc")
 	_begin_shot()
@@ -1380,17 +1383,22 @@ func _run_invite_shot(kind: String) -> void:
 			if not invite.is_ringing():
 				_shot_fail("[InviteShot] the call was taken under a hold")
 				return
-		"lapse":
+		"lapse", "lapse_vc":
 			TimeManager.advance_hours(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder())
-				- SalesConstants.MEETING_ENTRY_CUTOFF_HOURS + 1 - GameState.current_hour)
+				- (PitchConstants.MEETING_HOURS if vc else SalesConstants.MEETING_ENTRY_CUTOFF_HOURS) + 1
+				- GameState.current_hour)
 			await get_tree().create_timer(0.5).timeout
-			_save_shot("invite_shot_lapse_ring")
+			_save_shot("invite_shot_%s_ring" % kind)
 			# The ring stopped the clock, and main's _process with the tree: the player runs it again (the
 			# shot's freeze keeps the hour).
 			EventBus.speed_change_requested.emit(1)
 			await get_tree().create_timer(0.5).timeout
-			print("INVITE|lapse|ringing=%d|why=%s" % [int(invite.is_ringing()),
-				SalesLedger.meeting_block_reason(lead.id)])
+			if vc:
+				print("INVITE|lapse_vc|ringing=%d|penalty=%d" % [int(invite.is_ringing()),
+					int(GameState.vc_states.get(SHOT_FUND, {}).get("move_penalty", 0))])
+			else:
+				print("INVITE|lapse|ringing=%d|why=%s" % [int(invite.is_ringing()),
+					SalesLedger.meeting_block_reason(lead.id)])
 	await get_tree().create_timer(0.5).timeout
 	_save_shot("invite_shot_" + kind)
 	get_tree().quit()
@@ -3134,7 +3142,7 @@ func _meeting_refused() -> bool:
 
 ## The fund whose meeting week has come calls while a sitting fits the founder's day, when nothing
 ## else holds the founder; a call whose moment has passed stops ringing, a prospect's with a toast saying
-## why (a fund's calls again the next day a sitting fits).
+## why, a fund's silently, its meeting moved on at a postponement's cost (VCPitchSystem.lapse_call).
 func _process(_delta: float) -> void:
 	var invite := _meeting_invite()
 	if invite == null:
@@ -3142,6 +3150,7 @@ func _process(_delta: float) -> void:
 	match _call.get("kind", ""):
 		"vc":
 			if VCPitchSystem.call_waiting() != _call.id:
+				VCPitchSystem.lapse_call()
 				_end_call()
 		"sales":
 			var why: String = SalesLedger.meeting_block_reason(_call.id)
@@ -3203,7 +3212,7 @@ func _ring_call(kind: String, id: String, place: String, spec: Dictionary) -> vo
 	if not invite.accepted.is_connected(_on_call_accepted):
 		invite.accepted.connect(_on_call_accepted)
 		invite.postponed.connect(_on_call_postponed)
-	invite.ring(spec)
+	invite.ring(spec.merged({"kind": kind}))
 	get_tree().call_group(&"top_bar", &"show_meeting", "call", place)
 
 

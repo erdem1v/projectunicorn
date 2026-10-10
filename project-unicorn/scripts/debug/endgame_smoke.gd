@@ -8817,7 +8817,8 @@ static func _case_look_registry_unique_and_saved() -> String:
 # --- The people across the table: each fund's three drawn once and kept, a prospect's drawn from
 # its id each time, everyone named from the pool of the language the run began in ---
 # --- A fund's call can be put off once: the meeting moves a lead time on and the fund remembers
-# (as a reschedule), it calls again, and that call can only be answered ---
+# (as a reschedule), it calls again, and that call cannot be put off; left ringing until no sitting
+# fits the founder's day it lapses at the same cost, and the fund calls again ---
 static func _case_vc_call_postpones_once() -> String:
 	GameState.set_phase(3)
 	_seed_b2b_series_a()
@@ -8843,6 +8844,22 @@ static func _case_vc_call_postpones_once() -> String:
 		return "the fund did not call again"
 	if VCPitchSystem.postpone_call():
 		return "the call was put off twice"
+	# Left ringing past the sitting: main's _process would lapse it, and this static case does so by hand.
+	TimeManager.advance_hours(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder())
+		- PitchConstants.MEETING_HOURS + 1 - GameState.current_hour)
+	if VCPitchSystem.call_waiting() != "":
+		return "the fund still calls once no sitting fits the founder's day"
+	if not VCPitchSystem.lapse_call():
+		return "the unanswered call did not lapse"
+	var lapsed: int = int(GameState.vc_states.anchor.move_penalty)
+	if lapsed != after + PitchConstants.MEETING_RESCHEDULE_PENALTY:
+		return "the unanswered call cost %d, want the reschedule's %d" % [lapsed - after,
+			PitchConstants.MEETING_RESCHEDULE_PENALTY]
+	if int(GameState.pending_meeting.day) != GameState.day + TimeModel.ticks(PitchConstants.MEETING_LEAD_WEEKS):
+		return "the unanswered call moved the meeting to tick %d, want a lead time after %d" % [
+			int(GameState.pending_meeting.day), GameState.day]
+	if call.call() != "anchor":
+		return "the fund did not call after the unanswered call"
 	VCPitchSystem.begin_meeting(VCPitchSystem.call_waiting())
 	if not VCPitchSystem.is_active():
 		return "the answered call did not start the meeting"

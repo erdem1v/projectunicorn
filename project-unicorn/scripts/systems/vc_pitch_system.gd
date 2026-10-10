@@ -755,8 +755,7 @@ static func request_meeting(vc_id: String) -> bool:
 
 ## The fund whose booked meeting's week has come, on the phone while a sitting still fits the
 ## founder's day (WorkHoursSystem.sitting_open); "" when no one is calling. Answered, the meeting
-## begins (begin_meeting); unanswered, the booking stands and the fund calls again the next day
-## the sitting fits.
+## begins (begin_meeting); left ringing until no sitting fits, the call lapses (lapse_call).
 static func call_waiting() -> String:
 	var pm: Dictionary = GameState.pending_meeting
 	if pm.is_empty() or int(pm.get("day", 0)) > GameState.day or _active or not GameState.run_active \
@@ -765,16 +764,22 @@ static func call_waiting() -> String:
 	return String(pm.get("vc_id", ""))
 
 
-## The fund's call put off: the meeting moves the booking's lead time on and the fund remembers,
-## as a reschedule (MEETING_RESCHEDULE_PENALTY). A booking's call can be put off only once
-## (call_postponable).
+## The fund's call put off costs what an unanswered one does (lapse_call); a booking's call can be put
+## off only once (call_postponable).
 static func postpone_call() -> bool:
-	if call_waiting() == "" or not call_postponable():
-		return false
+	return call_waiting() != "" and call_postponable() and lapse_call()
+
+
+## A booked meeting's call gone unanswered: the meeting moves the booking's lead time on and the fund
+## remembers, as a reschedule (MEETING_RESCHEDULE_PENALTY), each time; from the first, the call can no
+## longer be put off. Guarded by the booking: call_waiting() is already "" when a call lapses.
+static func lapse_call() -> bool:
 	var pm: Dictionary = GameState.pending_meeting
+	if pm.is_empty() or int(pm.day) > GameState.day or _active:
+		return false
 	pm["day"] = GameState.day + TimeModel.ticks(PitchConstants.MEETING_LEAD_WEEKS)
 	pm["postponed"] = true
-	_add_move_penalty(String(pm.get("vc_id", "")), PitchConstants.MEETING_RESCHEDULE_PENALTY)
+	_add_move_penalty(pm.vc_id, PitchConstants.MEETING_RESCHEDULE_PENALTY)
 	return true
 
 

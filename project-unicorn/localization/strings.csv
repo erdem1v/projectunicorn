@@ -1791,6 +1791,7 @@ MEETING_ROLE_BUYER,Satın Alma Sorumlusu,Procurement Lead
 MEETING_ROLE_USER,Ekip Yöneticisi,Team Manager
 MEETING_ROLE_FINANCE,Finans Direktörü,Finance Director
 MEETING_INVITE_KICKER,Gelen arama · {hour}:00,Incoming call · {hour}:00
+MEETING_INVITE_KICKER_ASKED,İstenen görüşme · {hour}:00,Requested meeting · {hour}:00
 MEETING_INVITE_VC,{fund} adına {person} bu hafta görüşmek istiyor.,{person} of {fund} wants to meet this week.
 MEETING_INVITE_SALES,{company} adına {person} görüşmeye hazır.,{person} of {company} is ready to meet.
 MEETING_ACCEPT,Kabul et,Accept

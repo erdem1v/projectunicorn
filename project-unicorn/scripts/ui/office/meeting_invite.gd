@@ -91,7 +91,8 @@ func _ready() -> void:
 ## Rings for a call, `spec`: `caller` (the one calling, as CounterpartSystem draws them), `vc_id` (their fund
 ## on a fund's call, "" otherwise), `line` (the caller's line, a key formatted with `args`), `open` (the card is
 ## open from the first ring), `postpone` (the call can be put off), `note` (a key under the buttons, formatted
-## with `note_args`; "" for none) and `toast` (the key of the toast's line when it is put off).
+## with `note_args`; "" for none), `toast` (the key of the toast's line when it is put off) and `kind` ("vc", or
+## "sales" for a meeting the player asked for, which the kicker says).
 func ring(spec: Dictionary) -> void:
 	_spec = spec
 	UiFactory.clear(_who)
@@ -164,11 +165,12 @@ func _draw_ring() -> void:
 
 
 func _retranslate() -> void:
-	_kicker.text = tr("MEETING_INVITE_KICKER").format({"hour": "%02d" % GameState.current_hour})
 	_accept_button.text = tr("MEETING_ACCEPT")
 	_postpone_button.text = tr("MEETING_POSTPONE")
 	if _spec.is_empty():
 		return
+	_kicker.text = tr("MEETING_INVITE_KICKER_ASKED" if _spec.kind == "sales" else "MEETING_INVITE_KICKER").format(
+		{"hour": "%02d" % GameState.current_hour})
 	_title.text = CounterpartSystem.title(_spec.caller, _spec.vc_id)
 	_line.text = tr(_spec.line).format(_spec.args)
 	_note_text.text = tr(_spec.note).format(_spec.note_args) if _spec.note != "" else ""
