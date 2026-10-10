@@ -2201,7 +2201,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
 # gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
-# dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz>:
+# dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
 # list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
@@ -2215,11 +2215,15 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # urunsuz = no roster: a developer and a customer rep, no product type yet (hr_shot_urunsuz), then the type
 # chosen (hr_shot_urunsuz_tur) and Görevler with it (hr_shot_urunsuz_tur_gorevler); each state prints
 # HRSHOT|<state>|idle=<n>|waiting=<n>.
+# dosyalar-tehlike, dosyalar-onay, dosyalar-mesai = no roster: the founder alone, no revenue, $10,000 in the bank,
+# a Senior developer's files on the table (the first one picked); onay with the hire's confirmation open, mesai on
+# a 15-hour company day.
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
 	GameState.day = 10
-	if kind not in ["bos", "gorevler-bos", "saatler-sprint", "urunsuz"]:
+	if kind not in ["bos", "gorevler-bos", "saatler-sprint", "urunsuz", "dosyalar-tehlike", "dosyalar-onay",
+			"dosyalar-mesai"]:   # LOC-DATA debug seed / id
 		_seed_hr_roster()
 		if kind == "kalabalik":   # LOC-DATA debug seed / id
 			OfficeCrowdProbe.seed_staff(34)
@@ -2251,6 +2255,14 @@ func _run_hr_shot(kind: String) -> void:
 		"dosyalar":
 			# Files on the table: the arrival window's worth of real generator output.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
+			for _i in TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS):
+				GameState.day += 1
+				HRSearchSystem.daily_tick()
+		"dosyalar-tehlike", "dosyalar-onay", "dosyalar-mesai":   # LOC-DATA debug seed / id
+			GameState.set_cash(10000)
+			if kind == "dosyalar-mesai":   # LOC-DATA debug seed / id
+				WorkHoursSystem.set_company_hours(15)
+			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_SENIOR)
 			for _i in TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS):
 				GameState.day += 1
 				HRSearchSystem.daily_tick()
@@ -2316,6 +2328,11 @@ func _run_hr_shot(kind: String) -> void:
 				atlas._selected_role = HRConstants.ROLE_DEVELOPER
 				atlas._selected_level = HRConstants.LEVEL_MID
 				atlas._rebuild()
+		"dosyalar-tehlike", "dosyalar-onay", "dosyalar-mesai":   # LOC-DATA debug seed / id
+			tab.open_atlas()
+			if kind == "dosyalar-onay":   # LOC-DATA debug seed / id
+				# The hire button's own handler: with no revenue it asks first.
+				get_tree().get_root().find_child("PanelLayer", true, false).get_child(-1)._on_hire_pressed()
 		"ekip-saat":   # LOC-DATA debug seed / id
 			# Durum's hours exceptions: Geliştirme on overtime, the first employee on a short day.
 			WorkHoursSystem.set_group_hours(HRConstants.GROUP_DEVELOPMENT, 10)

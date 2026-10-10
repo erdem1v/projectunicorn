@@ -9,9 +9,11 @@ extends "res://scripts/tabs/hr/hr_panel.gd"
 # ADIM 2 SEVİYEDİR (§3): seviye kişide saklanır, unvanı türetir ve terfinin değiştirdiği
 # alandır.
 #
-# ARAMA ÜCRETSİZDİR (§10): adım 2'de para okunmaz. Tek ücret komisyondur ve işe alımda,
-# aday kartından okunarak ödenir; runway satırı da orada — ekonomik bağlam somut maaşın
-# olduğu ana aittir.
+# ARAMA ÜCRETSİZDİR (§10); FİYAT SEVİYEDE OKUNUR, KOMİSYON İŞE ALIMDA ÖDENİR. Rol seçilince her
+# seviye kartının altında o seviyenin aylık maaş bandı ve bandın iki ucunun komisyonu durur: oyuncu
+# bir haftayı harcamadan önce neyi göze aldığını görür. Somut maaş, devralınan mesai ve runway aday
+# kartındadır. Gelir yokken ya da runway ilk alarm eşiğinin altına inerken kart runway'i kırmızı
+# yazar ve "İşe al" önce sorar.
 #
 # Her rakam motordan: preview_search ve preview_hire.
 # ============================================================================
@@ -81,7 +83,19 @@ func _build_search_step() -> void:
 		card[1].add_child(UiFactory.make_label(HRConstants.level_label(lv), &"FloatTitle"))
 		if _selected_level == lv:
 			_corner_disc(card[2], true)
-		levels.add_child(card[0])
+		var column := VBoxContainer.new()
+		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		column.add_theme_constant_override("separation", UiTokens.SPACE_S)
+		column.add_child(card[0])
+		# Bant rolün bandıdır: rol seçilmeden okunacak bir fiyat yok.
+		if _selected_role != "":
+			var price: Dictionary = HRSearchSystem.preview_search(_selected_role, lv)
+			var band: Array = price["band"]
+			var fees: Array = price["commission_band"]
+			column.add_child(UiFactory.make_label(tr("HR_ATLAS_LEVEL_BAND").format({
+				"min": Fmt.money_exact(int(band[0])), "max": Fmt.money_exact(int(band[1])),
+				"fee_min": Fmt.money_exact(int(fees[0])), "fee_max": Fmt.money_exact(int(fees[1]))}), &"MetaMuted"))
+		levels.add_child(column)
 	body.add_child(spaced(levels, UiTokens.SPACE_L))
 
 	# §10'un iki cümlesi: "bir hafta sonra aday listesi gelir" ve "ücretsizdir; tek ücret
@@ -228,15 +242,18 @@ func _build_files_step() -> void:
 	var file: Dictionary = files[_selected_file]
 	var pv: Dictionary = HRSearchSystem.preview_hire(_selected_file)
 	var affordable: bool = bool(pv.get("affordable", false))
+	# Bir uyarı varsa seçim özetinin yerini o alır: gelir öncesi işe alım da burada söylenir.
+	var warning: String = _first_warning(pv)
 	foot.add_child(UiFactory.make_label("%s · %s" % [String(file.get("name", "")),
-		String(pv.get("job_title", HRConstants.role_label(String(file.get("role", "")))))] if affordable
-		else _first_warning(pv), &"MetaMuted"))
+		String(pv.get("job_title", HRConstants.role_label(String(file.get("role", "")))))] if warning == ""
+		else warning, &"MetaMuted"))
 	foot.add_child(button(tr("HR_ATLAS_HIRE").format({"amount": Fmt.money_exact(int(file.get("salary", 0)))}),
 		&"PrimaryButtonDark", _on_hire_pressed if affordable else Callable()))
 
 
 ## Aday dosyası (11b), köşesi kesik bir belge: künye ve seçim diski · yüz, ad, unvan · rol açıklaması ·
-## iki alan ve Liderlik · huy · esneyen boşluk (dosyalar eşit boyda) · maaş talebi · komisyon · runway.
+## iki alan ve Liderlik · huy · esneyen boşluk (dosyalar eşit boyda) · maaş talebi · komisyon · devralınan
+## mesai (sekizi aşan saatte) · runway.
 func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	var pv: Dictionary = HRSearchSystem.preview_hire(index)
 	var role_id: String = String(file.get("role", ""))
@@ -325,13 +342,21 @@ func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	col.add_child(spaced(ask, UiTokens.SPACE_L))
 	# Komisyon bir bedeldir: bedel diskiyle, mürekkeple.
 	var commission := Fmt.money_exact(int(pv.get("commission", 0)))
-	col.add_child(_file_row("stake/cost", "HR_ATLAS_COMMISSION_LABEL", [[tr("HR_ATLAS_COMMISSION_ONCE"), &"Caption"],
-		[commission, &"DataStrong"]]))
+	col.add_child(_file_row("stake/cost", UiFactory.make_label(Fmt.upper(tr("HR_ATLAS_COMMISSION_LABEL")), &"KeyLabel"),
+		[[tr("HR_ATLAS_COMMISSION_ONCE"), &"Caption"], [commission, &"DataStrong"]]))
+	# Sekizi aşan devralınan saat ilk günden mesai ödenir; runway onu zaten sayıyor, bu satır nedenini söyler.
+	if HRConstants.is_overtime_hours(int(pv["hours"])):
+		var note := UiFactory.make_label(tr("HR_ATLAS_INHERITED_HOURS").format({"hours": pv["hours"],
+			"money": Fmt.money_exact(int(pv["overtime"]))}), &"Caption")
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		col.add_child(_file_row("util/clock", note, []))
 	# RUNWAY şeridi: "5 ay → 4 ay". Çift okuma tek seam'den (UiTokens.net_runway_pair): iki taraf aynı
-	# okunuyorsa iki taraf da aynı yazılır. Kısalan runway bir bedeldir, tehlike değil.
+	# okunuyorsa iki taraf da aynı yazılır. Kısalan runway bir bedeldir; tehlike yalnız gelir yokken ya da
+	# ilk alarm eşiğinin altında, o zaman varılan değer kırmızıdır.
 	var pair: Dictionary = UiTokens.net_runway_pair(float(pv.get("runway_before", 0.0)), float(pv.get("runway_after", 0.0)))
-	col.add_child(_file_row("world/runway", "HR_ATLAS_RUNWAY_LABEL", [[String(pair["before"]), &"Caption"],
-		["→", &"CaptionFaint"], [String(pair["after"]), &"DataStrong"]]))
+	col.add_child(_file_row("world/runway", UiFactory.make_label(Fmt.upper(tr("HR_ATLAS_RUNWAY_LABEL")), &"KeyLabel"),
+		[[String(pair["before"]), &"Caption"], ["→", &"CaptionFaint"],
+		[String(pair["after"]), &"DataStrong", UiTokens.D_neg() if bool(pv["danger"]) else null]]))
 	HRUiShared.set_mouse_ignore(col)
 	for hover: Control in col.find_children("*", "Control", true, false):
 		if hover.tooltip_text != "":
@@ -339,17 +364,17 @@ func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	return card[0]
 
 
-## A file's fact row: glyph, caps key, then its parts at the right.
-func _file_row(glyph: String, key: String, parts: Array) -> HBoxContainer:
+## A file's fact row: glyph, its lead label (a caps key or a note) filling the width, then its parts at
+## the right; a part is `[text, look]` or `[text, look, ink]`.
+func _file_row(glyph: String, lead: Label, parts: Array) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.custom_minimum_size.y = UiTokens.D_H_FACT_ROW
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	row.add_child(UiFactory.make_glyph("res://assets/icons/%s.svg" % glyph, UiTokens.D_ICON_PART, UiTokens.D_INK_3))
-	var k := UiFactory.make_label(Fmt.upper(tr(key)), &"KeyLabel")
-	k.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(k)
+	lead.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(lead)
 	for part: Array in parts:
-		row.add_child(UiFactory.make_label(part[0], part[1]))
+		row.add_child(UiFactory.make_label(part[0], part[1], part[2] if part.size() > 2 else null))
 	for part: Control in row.get_children():
 		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return row
@@ -361,7 +386,27 @@ func _on_start_pressed() -> void:
 		close()
 
 
+## Tehlikeli işe alım (gelir yok ya da runway ilk alarm eşiğinin altına iniyor) önce sorar: maaş,
+## komisyon ve mesai dahil runway önce → sonra. Öbür durumda tek tık.
 func _on_hire_pressed() -> void:
+	var pv: Dictionary = HRSearchSystem.preview_hire(_selected_file)
+	if not bool(pv["danger"]):
+		_do_hire()
+		return
+	var file: Dictionary = HRSearchSystem.get_files()[_selected_file]
+	var pair: Dictionary = UiTokens.net_runway_pair(float(pv["runway_before"]), float(pv["runway_after"]))
+	var salary: String = Fmt.money_exact(int(file.get("salary", 0)))
+	EventBus.confirm_requested.emit({
+		"title": tr("HR_HIRE_CONFIRM_TITLE").format({"name": String(file.get("name", ""))}),
+		"body": tr("HR_HIRE_CONFIRM_BODY").format({"salary": salary,
+			"commission": Fmt.money_exact(int(pv["commission"])), "before": pair["before"], "after": pair["after"]}),
+		"confirm_text": tr("HR_ATLAS_HIRE").format({"amount": salary}),
+		"cancel_text": tr("UI_DISMISS"),
+		"on_confirm": _do_hire,
+	})
+
+
+func _do_hire() -> void:
 	if HRSearchSystem.hire(_selected_file) != null:
 		state_changed.emit()
 		close()

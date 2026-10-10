@@ -338,6 +338,7 @@ HR_ATLAS_FILE_N,Dosya {i}/{n},File {i}/{n}
 HR_ATLAS_SALARY_LABEL,MAAŞ TALEBİ,SALARY ASK
 HR_ATLAS_COMMISSION_LABEL,KOMİSYON,COMMISSION
 HR_ATLAS_COMMISSION_ONCE,tek seferlik,one-off
+HR_ATLAS_INHERITED_HOURS,Şirketin {hours} saatini devralır · aylık mesai {money},Takes the company's {hours} hours · overtime {money} a month
 HR_ATLAS_RUNWAY_LABEL,RUNWAY,RUNWAY
 HR_PER_MONTH,/ay,/mo
 HR_TRAINING_COL_AREA,ALAN,AREA
@@ -822,6 +823,7 @@ HR_ERR_LEAVING,Ayrılık bekliyor,A departure is already pending
 HR_WARN_SEARCH_OPEN,"Zaten açık bir arayış var, kapanmadan yenisi başlamaz.",A search is already open; another cannot start until it closes.
 HR_WARN_COMMISSION_CASH,"Komisyon kasadaki nakitten fazla, bu ödeme kasayı eksiye düşürür.",The commission is more than the cash on hand; this payment puts the treasury below zero.
 HR_WARN_SALARY_CASHFLOW,"Bu maaş nakit akışını eksiye çevirir, kasa erimeye başlar.",This salary turns cash flow negative and the treasury starts draining.
+HR_WARN_NO_REVENUE,Henüz gelir yok: bu maaş kasadan ödenir.,No revenue yet: this salary comes out of the treasury.
 HR_NEWS_FILES_READY,{role} arayışı için {n} aday dosyası masanda.,{n} candidate files for the {role} search are on your desk.
 HR_EV_RESIGN_TITLE,Ayrılık,A departure
 HR_EV_RESIGN_ACK,Anlaşıldı,Understood
@@ -847,12 +849,15 @@ HR_FIRE_CONFIRM_OK,İşten çıkar,Let go
 HR_FIRE_CASH_NEGATIVE,Kasa eksiye düşer. {n} haftalık kepenk sayacı başlar.,Cash goes below zero. The {n}-week shutter countdown starts.
 HR_ATLAS_STEP_ROLE,Adım 1 · Rol,Step 1 · Role
 HR_ATLAS_STEP_LEVEL,Adım 2 · Seviye,Step 2 · Level
+HR_ATLAS_LEVEL_BAND,Aylık {min} ile {max} arası · komisyon {fee_min} ile {fee_max},Monthly {min} to {max} · commission {fee_min} to {fee_max}
 HR_ATLAS_FREE_NOTE,Arama ücretsiz · komisyon işe alımda ödenir,The search is free · commission is paid on the hire
 HR_ATLAS_START,Arayış başlat,Start search
 HR_ATLAS_NEED_SELECTION,Rol ve seviye seçilmeli.,Pick a role and a level.
 HR_ATLAS_FILES_COUNT,Aday dosyaları · {n},Candidate files · {n}
 HR_ATLAS_TAKE_NONE,Hiçbirini alma,Take none
 HR_ATLAS_HIRE,İşe al · {amount}/ay,Hire · {amount}/mo
+HR_HIRE_CONFIRM_TITLE,İşe alım: {name},Hire {name}?
+HR_HIRE_CONFIRM_BODY,Aylık {salary} ve tek seferlik {commission} komisyon. Runway {before} → {after}.,{salary} a month and a one-off commission of {commission}. Runway {before} → {after}.
 HR_ATLAS_CLOSE_BODY,Dosyalar kapanır. Yeni bir arayış başlatırsan adaylar {span} sonra gelir.,The files close. If you start a new search the candidates arrive in {span}.
 HR_ATLAS_CLOSE_OK,Dosyaları kapat,Close the files
 HR_CARD_RAISE,Zam yap,Give a raise

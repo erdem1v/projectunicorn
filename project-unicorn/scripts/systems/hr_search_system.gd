@@ -196,16 +196,20 @@ static func hire(candidate_index: int) -> Character:
 # --- Previews (what the UI prints BEFORE the player commits) ---
 
 static func preview_search(role_id: String, level: int) -> Dictionary:
-	# §10 THE SEARCH IS FREE, so there is no cash question here: the economic reading belongs
-	# to preview_hire.
+	# §10 THE SEARCH IS FREE, but the price is read on the level, before the week is spent: the
+	# role's monthly salary band there and the commission at each end of it. The concrete salary,
+	# its hours and the runway belong to preview_hire.
 	var warnings: Array[String] = []
 	if not can_start():
 		warnings.append(TranslationServer.translate("HR_WARN_SEARCH_OPEN"))
+	var band: Array = HRConstants.salary_band_for_level(role_id, level)
 	return {
 		"can_start": can_start(),
 		# §3's derived unvan, so the player reads "Kıdemli Yazılım Mühendisi" rather than a role
 		# and a level they have to combine. job_title push_errors on an unknown role.
 		"job_title": HRConstants.job_title(role_id, level) if HRConstants.is_employee_role(role_id) else role_id,
+		"band": band,
+		"commission_band": [HRConstants.commission_for(int(band[0])), HRConstants.commission_for(int(band[1]))],
 		"warnings": warnings,
 	}
 
@@ -219,9 +223,13 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	var out: Dictionary = {
 		"job_title": "",
 		"commission": 0,
+		"hours": 0,
+		"overtime": 0,
+		"burn_after": GameState.daily_burn,
 		"runway_before": runway_before,
 		"runway_after": runway_before,
 		"affordable": true,
+		"danger": false,
 		"warnings": warnings,
 	}
 	var files: Array = get_files()
@@ -232,6 +240,11 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	var role_id: String = String(file.get("role", ""))
 	var salary: int = int(file.get("salary", 0))
 	var commission: int = HRConstants.commission_for(salary)
+	# The hire takes their group's hours (the company's otherwise) from the first day, and Finance
+	# accrues the overtime past eight every tick: left out, a long-day company reads a runway the
+	# first weeks take back.
+	var hours: int = WorkHoursSystem.group_hours_in(WorkHoursSystem.draft_state(), HRConstants.ROLE_GROUP[role_id])
+	var overtime: int = HRConstants.overtime_pay_for_day(salary, hours)
 	# FinanceSystem PULLS the whole payroll and the tools bill and converts each in ONE rounding
 	# pass, so tomorrow's burn is today's published total with those two slices swapped out.
 	# Adding this salary rounded on its own would sit a dollar off, and would double-count a hire
@@ -240,22 +253,30 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	var tools_after: int = FinanceSystem.monthly_tools_for(CharacterRegistry.get_employees().size() + 1)
 	var published: Dictionary = FinanceSystem.burn_breakdown
 	var burn_after: int = GameState.daily_burn - int(published["salaries"]) - int(published["tools"]) \
-		+ FinanceSystem.daily_rate(payroll_after) + FinanceSystem.daily_rate(tools_after)
+		+ FinanceSystem.daily_rate(payroll_after) + FinanceSystem.daily_rate(tools_after) + overtime
 	var net_after: int = GameState.get_daily_revenue() - burn_after
 	var cash_after: int = GameState.cash - commission
 	if GameState.cash < commission:
 		warnings.append(TranslationServer.translate("HR_WARN_COMMISSION_CASH"))
 	if GameState.get_net_daily_flow() >= 0 and net_after < 0:
 		warnings.append(TranslationServer.translate("HR_WARN_SALARY_CASHFLOW"))
+	if GameState.mrr == 0:
+		warnings.append(TranslationServer.translate("HR_WARN_NO_REVENUE"))
 
 	var level: int = clampi(int(file.get("level", HRConstants.LEVEL_JUNIOR)),
 		HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
 	# §10.3 aday kartı "ad, UNVAN, rol açıklaması" istiyor — unvan türetilir (§3).
 	out["job_title"] = HRConstants.job_title(role_id, level) if HRConstants.is_employee_role(role_id) else role_id
 	out["commission"] = commission
+	out["hours"] = hours
+	out["overtime"] = overtime * TimeModel.DAYS_PER_MONTH
+	out["burn_after"] = burn_after
 	# An empty account reads 0.0 rather than a negative month count; maxf leaves INF alone.
 	out["runway_after"] = maxf(0.0, GameState.runway_months_for(cash_after, net_after))
 	out["affordable"] = GameState.cash >= commission
+	# Under the first runway alert, or any hire before revenue: the card paints the runway and the
+	# hire asks before it charges.
+	out["danger"] = float(out["runway_after"]) < FinanceSystem.RUNWAY_ALERT_MONTHS[0] or GameState.mrr == 0
 	return out
 
 

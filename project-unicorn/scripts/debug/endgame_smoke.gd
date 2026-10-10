@@ -168,6 +168,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_archetype_trio":        fail = _case_hr_archetype_trio()
 		"hr_training_locks":        fail = _case_hr_training_locks()
 		"hr_search_cycle":          fail = _case_hr_search_cycle()
+		"hire_preview_counts_inherited_overtime": fail = _case_hire_preview_counts_inherited_overtime()
 		"hr_search_cancel_dismiss": fail = _case_hr_search_cancel_dismiss()
 		"hr_fire_path":             fail = _case_hr_fire_path()
 		"hr_resignation_path":      fail = _case_hr_resignation_path()
@@ -6408,6 +6409,33 @@ static func _case_hr_search_cycle() -> String:
 	FinanceSystem.daily_tick()
 	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(float(salary) / float(TimeModel.DAYS_PER_MONTH))):
 		return "the new hire's salary is not in the burn breakdown"
+	return ""
+
+
+static func _case_hire_preview_counts_inherited_overtime() -> String:
+	# The Atlas promises tomorrow's burn before the hire. A hire takes the company's hours from the
+	# first day and Finance accrues the overtime past eight every tick, so on a 15-hour day the
+	# promise must already carry it. Runway is not compared: the tick also takes a week's burn out
+	# of the cash.
+	#
+	# FALSIFICATION: drop the overtime term from preview_hire's burn_after -> the last check FAILS.
+	GameState.set_cash(100000)
+	WorkHoursSystem.set_company_hours(15)
+	if not HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR):
+		return "start_search refused"
+	for _i in TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS):
+		_sim_day()
+	if not HRSearchSystem.has_files_ready():
+		return "the files did not arrive"
+	var pv: Dictionary = HRSearchSystem.preview_hire(0)
+	if not HRConstants.is_overtime_hours(int(pv["hours"])):
+		return "fixture: the hire inherits %d hours, no overtime to count" % int(pv["hours"])
+	if HRSearchSystem.hire(0) == null:
+		return "hire returned null"
+	FinanceSystem.daily_tick()
+	if absi(int(pv["burn_after"]) - GameState.daily_burn) > 1:
+		return "the preview promised a daily burn of %d, the first tick after the hire published %d" % [
+			int(pv["burn_after"]), GameState.daily_burn]
 	return ""
 
 
