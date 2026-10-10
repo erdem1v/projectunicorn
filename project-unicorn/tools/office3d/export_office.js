@@ -11,6 +11,7 @@ import { buildPlaza } from './src/office-plaza-v2.js';
 import { buildLoft } from './src/office-loft-v2.js';
 import { buildCity } from './src/office-city-v2.js';
 import { buildMeet } from './src/office-meet.js';
+import neighbourhood from './neighbourhood.js';
 
 const { say, done, post } = window.office3d;
 const seen = new Set();
@@ -276,6 +277,8 @@ async function thumbnails(ids) {
     const t0 = performance.now();
     setTier(tierOf(o.k));
     const L = build(o.k, H);
+    // Fills the camera frame around home, ishani and loft (neighbourhood.js); bake() then merges it with the rest.
+    neighbourhood(o.id, L, H);
     // Kept whole so they can be named; bake() would merge them into the scenery otherwise.
     if (L.boats) L.keep.push(...L.boats);
     bake(L);

@@ -53,6 +53,12 @@ const ACES_WHITE := 25.6684 / 1.8
 const GRADE_CONTRAST := 1.05
 const GRADE_SATURATION := 1.08
 const BLOOM_THRESHOLD := 0.95
+## The loft's ferry on the river (steer_ferry): the x of the two ends of its run, the far one in front of the loft so
+## it swings round in view at midday; game minutes to swing round; metres a game minute for one round trip a day, so
+## the clock's wrap at midnight finds it where it started.
+const FERRY_ENDS := Vector2(-100.0, 20.0)
+const FERRY_TURN := 90.0
+const FERRY_SPEED := (FERRY_ENDS.y - FERRY_ENDS.x) / (720.0 - FERRY_TURN)
 
 var _sun: DirectionalLight3D
 var _top: DirectionalLight3D
@@ -239,10 +245,22 @@ func apply(t: float) -> void:
 		for m: ShaderMaterial in _mats.get("water", []):
 			m.set_shader_parameter("uv1_offset", Vector2(fmod(t * 0.0015, 1.0), sin(t * 0.02) * 0.02))
 	if _ferry:
-		_ferry.position.x = -80.0 + fmod(t * 0.45, 200.0)
+		steer_ferry(_ferry, t, FERRY_ENDS, FERRY_SPEED, FERRY_TURN)
 	_glow_mats.pool.albedo_color = Color(1, 1, 1, (0.35 if anyone_in else 0.75) if lamp_hour else 0.0)
 	_glow_mats.street.albedo_color = Color(1, 1, 1, 0.55 * post_on)
 	_apply_stations(t > 1050.0 or f < 0.35, 0.6 if inter > 0.5 and f > 0.3 else 1.5, t > 1100.0)
+
+
+## Runs `ferry` back and forth between `ends` x at `speed` per unit of `t`, swinging round over `turn` at each end.
+static func steer_ferry(ferry: Node3D, t: float, ends: Vector2, speed: float, turn: float) -> void:
+	var leg := (ends.y - ends.x) / speed
+	var half := leg + turn
+	var k := fmod(t, 2.0 * half)
+	var back := k >= half
+	k = fmod(k, half)
+	var x := ends.x + minf(k, leg) * speed
+	ferry.position.x = ends.x + ends.y - x if back else x
+	ferry.rotation.y = PI * (smoothstep(leg, half, k) + float(back))
 
 
 func _apply_stations(lamp_on: bool, screen: float, late: bool) -> void:

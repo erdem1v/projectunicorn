@@ -19,8 +19,10 @@ const ZOOM_RANGE := Vector2(0.6, 8.0)   # × fit zoom
 ## the half width in metres of the ground the frame may span at its widest (0: never past the fit), y how far
 ## in metres the frame's centre on the ground may stand from the fit's once zoomed right in. A place without
 ## one (the meeting room, which floats over the city) keeps ZOOM_RANGE and free panning.
-const LOCKS := {"home": Vector2(41.4, 31.5), "ishani": Vector2(53.6, 31.9), "plaza": Vector2(92.0, 26.0),
-	"loft": Vector2(72.9, 43.5), "city": Vector2(0.0, 66.0)}
+## Home, ishani and the loft have a neighbourhood (tools/office3d/neighbourhood.js) built out to the 0.6 × fit frame
+## of a 21:9 view; their x is about that frame's half width.
+const LOCKS := {"home": Vector2(65.0, 31.5), "ishani": Vector2(95.0, 31.9), "plaza": Vector2(92.0, 26.0),
+	"loft": Vector2(132.0, 43.5), "city": Vector2(0.0, 66.0)}
 const WHEEL_STEP := 0.15    # the design's exp(-deltaY * .0015) at a wheel notch of 100
 
 var target := Vector3.ZERO

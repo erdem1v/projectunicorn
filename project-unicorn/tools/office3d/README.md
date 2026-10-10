@@ -31,8 +31,10 @@ hata ve uyarılar dahil), `DONE.txt` (`ok` ya da `ERR` + özet), `serve.log`, `c
 Sorgu bayrakları: `only=<id,...>` yalnız o ofisleri yazar, `thumbs=0` küçük resimleri atlar.
 Commit'e giren dosyalar `only=` olmadan, tam koşudan gelir: builder'lar yuvarlak kenarlı kutu
 geometrisini boyutu üç haneye yuvarlanmış anahtarla önbellekte paylaşır (`rbg`), kurulum sırası
-değişince köşeler 0,5 mm'den az kayar. Tam koşu GLB ve JSON'da bayt-deterministiktir; küçük resimler
-değildir (Xbot animasyon fazı).
+değişince köşeler 0,5 mm'den az kayar. Tam koşunun geometrisi ve JSON'u bayt-deterministiktir; GLB'ye gömülü dokuların
+baytları ise koşudan koşuya değişebilir (tuvalin rasterlenmesi ve GLTFExporter'ın eşzamansız görüntü sırası). Commit'lenecek
+koşuda kaynağı değişmeyen yerlerin GLB'si repodakiyle aynı çıkmalıdır; çıkmazsa koşu yinelenir. Küçük resimler
+bayt-deterministik değildir (Xbot animasyon fazı).
 
 **Tuzaklar**
 - Arka plandaki sekme `canvas.toBlob` ve `fetch().then()`'i dondurur; pencere önde bir `--app` penceresidir,
@@ -62,6 +64,16 @@ Her ofis için, `createOffice.rebuildLayout`'un sırasıyla:
 9. `GLTFExporter`: `binary`, dokular gömülü, `onlyVisible: false`.
 10. Küçük resimler: tasarımın `createOffice`'i 960×600 bir kutuya kurulur (DPR 2), `loadXbot()` beklenir,
     `snapshot(k)` k = 0..3 (home, ishani, plaza, loft) 480×300 JPEG verir.
+
+**Mahalle.** `neighbourhood.js` her ofis için builder'dan sonra, `bake()`'ten önce çağrılır (`export_office.js`'te
+`build`'in hemen altı) ve `home`, `ishani` ile `loft`'un çevresini oyun kamerasının en geniş çerçevesine (0,6 × sığdırma,
+16:9 ve 21:9) kadar doldurur: sokak ızgarası, apartman ve dükkân blokları, ağaç, park etmiş araba, sokak lambası. Ev'de ayrıca
+park, okul ve spor sahası, pazar yeri ve bir apartman bloğu, ishani'de ana caddenin güney yakasında yan sokaklarda kesilen,
+bir ucu iki katlı dükkân sıraları vardır. Renkler tasarımın paletindendir (birkaç nötr rengi biz ekledik, modülün başında
+sayılı); rastlantı tohumlu akımlardan gelir ve modül kendi başına belirsizlik eklemez; düğüm adı verilmez; pencereler `facade`
+malzemesiyle gece yanar, şehirdekiyle aynı yasa. plaza, city ve meet'e dokunulmaz. Küçük resimler (adım 10) tasarımın
+`createOffice`'inden gelir ve mahalleyi göstermez. Çerçeve ve sokak ızgarası sayıları builder'ların ve `office_camera.gd`'nin
+sayılarından ölçülmüştür; onlar değişirse modül yeniden ölçülür.
 
 ## Bağlama sözleşmesi
 
@@ -100,7 +112,7 @@ almaz), `noEdge` (tasarımın mürekkep kenarı geçişinden hariç; saydam malz
 | `haze` | `hazeMat` (unlit) | `extras.base` `#rrggbb`, sisle karışan taban renk |
 | `tower` | kule cephesi | gündüz dokusu `map`, gece dokusu `emissiveMap`, emisyon gücü 0, `extras.unlit` |
 | `water` | loft ve şehir suyu (haritası tasarımın `wtex`'i) | UV kaydırma |
-| `facade` | şehir binası cephesi (depo tipi hariç) | gece pencere ışığı `emissiveMap`; `extras.emissiveUv` o dokunun kendi ölçeği, çünkü Godot'nun içe aktarıcısı yalnız taban dokunun UV dönüşümünü tutar |
+| `facade` | şehir binası cephesi (depo tipi hariç); home, ishani ve loft'ta mahalle binalarının cepheleri | gece pencere ışığı `emissiveMap`; `extras.emissiveUv` o dokunun kendi ölçeği, çünkü Godot'nun içe aktarıcısı yalnız taban dokunun UV dönüşümünü tutar |
 | `ferry_win` | feribot camları | |
 | `station_lamp`, `station_screen` | istasyon başına bir örnek | emisyon gücü 0 |
 | `crown` | şehir: yatırımcı kulesinin tacı | emisyon gücü 0; gece ve varışta parlar |
@@ -137,5 +149,5 @@ Sayılar 4 haneye yuvarlanır; vektörler `[x, y, z]`.
 
 `bake()` aynı malzemeli ve aynı gölge bayraklı en az üç mesh'i tek tampona birleştirir. En ağır
 tamponlar yuvarlak kenarlı kutulardır (kutu başına 588 üçgen): loft'ta monitör gövdeleri (`0xc6c9ce`,
-370 bin üçgen) ve `X.black` (287 bin), plaza'da aynı ikisi. İndekslemeden sonra loft 37 MB, plaza 18 MB,
-İş hanı 7,6 MB, ev ve şehir 4,3 MB.
+370 bin üçgen) ve `X.black` (287 bin), plaza'da aynı ikisi. İndekslemeden sonra loft 37,7 MB, plaza 18 MB,
+İş hanı 8,3 MB, ev 5,4 MB, şehir 4,3 MB. Mahallenin payı: ev +23 bin üçgen ve +1,2 MB, İş hanı +10 bin ve +0,7 MB, loft +8 bin ve +0,5 MB.

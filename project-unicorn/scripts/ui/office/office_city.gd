@@ -35,10 +35,11 @@ const PIN_RISE := 3.4
 const PIN_BOB := 0.7
 const PIN_BOB_RATE := 2.2
 const PIN_SPIN := 1.1
-## The ferry's run past the quay: start x, loop length, speed.
-const FERRY_START := -94.0
-const FERRY_LOOP := 140.0
+## The ferry on the front water (OfficeLighting.steer_ferry): the x of the two ends of its run, metres a second,
+## seconds to swing round at an end.
+const FERRY_ENDS := Vector2(-72.0, 100.0)
 const FERRY_SPEED := 3.4
+const FERRY_TURN := 6.0
 const CAR_Y := 0.04
 ## The water's drift: loop speed along u, sway size and rate along v.
 const WATER_DRIFT := 0.004
@@ -230,7 +231,7 @@ func _process(delta: float) -> void:
 		var run: Vector2 = lane.b - lane.a
 		var at: Vector2 = lane.a + run * (fmod(_now * lane.v + lane.ph, run.length()) / run.length())
 		c[0].position = Vector3(at.x, CAR_Y, at.y)
-	_ferry.position.x = FERRY_START + fmod(_now * FERRY_SPEED, FERRY_LOOP)
+	OfficeLighting.steer_ferry(_ferry, _now, FERRY_ENDS, FERRY_SPEED, FERRY_TURN)
 	for m: ShaderMaterial in _water:
 		m.set_shader_parameter("uv1_offset", Vector2(fmod(_now * WATER_DRIFT, 1.0), sin(_now * WATER_SWAY_RATE) * WATER_SWAY))
 

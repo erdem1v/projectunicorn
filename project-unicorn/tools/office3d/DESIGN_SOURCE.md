@@ -46,3 +46,6 @@ Deltalardan sonra: `office-sim-v12.js` `fd075441c435578838e8115aa135663664d800bf
 `office-loft-v2.js` `eb7faced966c454bb72c9f27a4e0f1315487b079913db6ae35df17a225ed05cb`,
 `office-city-v2.js` `0db02b70f3878550d3cab2d22ee993f11d4a3210a04218836923a4d77114d5e8`,
 `office-meet.js` `9916f728a9d55aa20b24b6f3cce553657a7230fc595f34e2da175cc905209746`.
+
+`neighbourhood.js` tasarımın değil, `export_office.js`'in `bake()`'ten önce çağırdığı ek modüldür (README, "Mahalle") ve
+`src/` altında hiçbir bayt değiştirmez: yukarıdaki dokuz sha256 ve deltalardan sonraki dört değer olduğu gibi geçerlidir.
