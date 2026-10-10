@@ -211,7 +211,7 @@ func _fit() -> void:
 		camera.refit()
 		return
 	_fitted = true
-	camera.fit(layout.bounds, _lowest)
+	camera.fit(layout.bounds, _lowest, layout.id)
 	camera.frame(layout.thumb_targets)
 
 

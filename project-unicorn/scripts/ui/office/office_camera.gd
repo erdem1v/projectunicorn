@@ -15,6 +15,12 @@ const HEIGHT_PAD := 10.0
 const DEPTH_MARGIN := 5.0
 const CLICK_SLOP := 5.0     # px between press and release that still count as a click
 const ZOOM_RANGE := Vector2(0.6, 8.0)   # × fit zoom
+## The zoom-out lock of a place, so the frame stays on the scenery built round the office [WORKING]: x is
+## the half width in metres of the ground the frame may span at its widest (0: never past the fit), y how far
+## in metres the frame's centre on the ground may stand from the fit's once zoomed right in. A place without
+## one (the meeting room, which floats over the city) keeps ZOOM_RANGE and free panning.
+const LOCKS := {"home": Vector2(41.4, 31.5), "ishani": Vector2(53.6, 31.9), "plaza": Vector2(92.0, 26.0),
+	"loft": Vector2(72.9, 43.5), "city": Vector2(0.0, 66.0)}
 const WHEEL_STEP := 0.15    # the design's exp(-deltaY * .0015) at a wheel notch of 100
 
 var target := Vector3.ZERO
@@ -33,12 +39,14 @@ var _press := Vector2.ZERO
 var _last := Vector2.ZERO
 var _held := false
 var _anim := {}
+var _lock := Vector2.ZERO
 
 
 ## Centres the box and zooms until it fills 90% of the frame, as the design's fitView.
-## `lowest` is the world y of the scene's lowest geometry.
-func fit(bounds: AABB, lowest: float) -> void:
+## `lowest` is the world y of the scene's lowest geometry, `place` the layout's id in LOCKS.
+func fit(bounds: AABB, lowest: float, place := "") -> void:
 	_anim = {}
+	_lock = LOCKS.get(place, Vector2.ZERO)
 	_lowest = lowest
 	_highest = bounds.end.y + HEIGHT_PAD
 	target = bounds.get_center()
@@ -71,6 +79,8 @@ func refit() -> void:
 	if not _anim.is_empty():
 		_anim.za *= k
 		_anim.zb *= k
+	# A wider view spans more ground at the same zoom.
+	zoom = maxf(zoom, _floor())
 	_place()
 
 
@@ -135,7 +145,9 @@ func handle_input(event: InputEvent) -> void:
 		var step := motion.position - _last
 		_last = motion.position
 		var units := FH / (zoom * get_viewport().get_visible_rect().size.y)
+		var from := target
 		target += global_basis.x * (-step.x * units) + global_basis.y * (step.y * units)
+		_confine(from, zoom)
 		_place()
 
 
@@ -156,12 +168,55 @@ func _process(delta: float) -> void:
 func _zoom_at(screen_pos: Vector2, to_zoom: float) -> void:
 	_anim = {}
 	var view := get_viewport().get_visible_rect().size
-	var zn := clampf(to_zoom, fit_zoom * ZOOM_RANGE.x, fit_zoom * ZOOM_RANGE.y)
+	var zn := clampf(to_zoom, _floor(), fit_zoom * ZOOM_RANGE.y)
 	var n := screen_pos / view * 2.0 - Vector2.ONE
 	var shift := 1.0 / zoom - 1.0 / zn
+	var from := target
+	var from_zoom := zoom
 	target += global_basis.x * (n.x * FH * view.x / view.y * 0.5 * shift) - global_basis.y * (n.y * FH * 0.5 * shift)
 	zoom = zn
+	_confine(from, from_zoom)
 	_place()
+
+
+## The widest zoom: the lock's ground half width at this view's aspect, between ZOOM_RANGE's and the fit. The
+## frame's ground footprint is a rectangle turned 45°, whose square bounds reach
+## FH / 2 × (aspect + 1 / sin(ELEVATION)) × √½ metres each way per unit of 1 / zoom.
+func _floor() -> float:
+	if _lock == Vector2.ZERO:
+		return fit_zoom * ZOOM_RANGE.x
+	if _lock.x == 0.0:
+		return fit_zoom
+	var view := get_viewport().get_visible_rect().size
+	var reach := FH * 0.5 * (view.x / view.y + 1.0 / sin(ELEVATION)) * sqrt(0.5)
+	return clampf(reach / _lock.x, fit_zoom * ZOOM_RANGE.x, fit_zoom)
+
+
+## How far the frame's ground centre may stand from the fit's at `at_zoom`: nothing at the widest zoom.
+func _room(at_zoom: float) -> float:
+	return _lock.y * maxf(0.0, 1.0 - _floor() / at_zoom)
+
+
+## Pulls a drag or a wheel step back so the frame's ground centre stays within the room of the new zoom. A
+## frame the game put further out (a focus) may stay where it is, and comes in with the room as it narrows.
+func _confine(from: Vector3, from_zoom: float) -> void:
+	if _lock == Vector2.ZERO:
+		return
+	var room := _room(zoom)
+	var before := _room(from_zoom)
+	var was := _ground_offset(from).length()
+	if was > before:
+		room = was * room / before if before > 0.0 else maxf(room, was)
+	var off := _ground_offset(target)
+	var to := off.limit_length(room)
+	target += global_basis.x * (to.x - off.x) + global_basis.y * ((to.y - off.y) * sin(ELEVATION))
+
+
+## Where the frame's centre lands on the ground relative to the fit's: across, and in depth, where one unit
+## up the screen covers 1 / sin(ELEVATION) of ground.
+func _ground_offset(at: Vector3) -> Vector2:
+	var d := at - fit_target
+	return Vector2(d.dot(global_basis.x), d.dot(global_basis.y) / sin(ELEVATION))
 
 
 func _place() -> void:
