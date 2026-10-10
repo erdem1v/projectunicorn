@@ -56,6 +56,8 @@ func _rebuild() -> void:
 	body.add_child(_day_band(roster))
 	body.add_child(_column_head(roster.is_empty()))
 	body.add_child(_company_row(roster.size()))
+	if SprintSystem.is_typed():
+		body.add_child(_sprint_row())
 	for group_id: String in HRConstants.ROSTER_GROUPS:
 		# Boş grup da satırını taşır: grup istisnası o gruba SONRADAN katılanı da kapsar (§8.1).
 		body.add_child(_group_row(group_id))
@@ -200,6 +202,26 @@ func _company_row(headcount: int) -> PanelContainer:
 		_source_text(tr("HR_HOURS_SOURCE_BASE")),
 		Control.new(),
 	])
+
+
+## Saatin sprinte etkisi, kurucu tek başınayken de (bedel bloğu o zaman hiç açılmaz): ekibin haftalık
+## puanı önce bugünkü saatlerle, sonra taslakla; ekranda aynı okunan iki değer tek sayı yazılır. Şirket
+## mesaideyse yarım verim kuralı altında.
+func _sprint_row() -> PanelContainer:
+	# Fmt.number tam sayıya da ondalık yazar ("2,0"); tam puan "2" okunur.
+	var zero: String = tr("NUM_DECIMAL_SEP") + "0"
+	var before: String = Fmt.number(SprintSystem.week_points(), 1).trim_suffix(zero)
+	var after: String = Fmt.number(SprintSystem.week_points(_draft), 1).trim_suffix(zero)
+	var points: String = tr("HR_HOURS_SPRINT_POINTS_NOW").format({"n": before}) if before == after \
+		else tr("HR_HOURS_SPRINT_POINTS").format({"before": before, "after": after})
+	var lines := VBoxContainer.new()
+	lines.add_theme_constant_override("separation", 0)
+	lines.add_child(UiFactory.make_label(points, &"DataText"))
+	var overtime: bool = HRConstants.is_overtime_hours(WorkHoursSystem.hours_in(_draft, null))
+	if overtime:
+		lines.add_child(UiFactory.make_label(tr("HR_HOURS_RULE_OVERTIME_OUTPUT"), &"MetaMuted"))
+	# İki satır, şirket satırının iki satırlı yüksekliğini alır.
+	return _row(H_COMPANY if overtime else UiTokens.D_H_ROW, UiTokens.SPACE_L, &"TableRow", [lines])
 
 
 func _group_row(group_id: String) -> PanelContainer:

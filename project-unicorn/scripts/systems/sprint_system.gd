@@ -384,6 +384,17 @@ static func done_points() -> float:
 	return done
 
 
+## Ekibin haftalık sprint puanı; mesai modali taslağın saatleriyle sorar (WorkHoursSystem.draft_state
+## biçimi), boş taslak bugünkü saatlerdir. Koşan sprintin mesai kararı çarpanı sayılmaz: saat ayarı
+## sprintten uzun yaşar.
+static func week_points(draft: Dictionary = {}) -> float:
+	var points: float = 0.0
+	for person in team():
+		var c: Character = CharacterRegistry.get_character(person.id)
+		points += _points(c, WorkHoursSystem.hours_for(c) if draft.is_empty() else WorkHoursSystem.hours_in(draft, c))
+	return points
+
+
 ## Bu sprintte çalışabilecekler: aktif kurucu ve ürün tarafındaki aktif çalışanlar, Ar-Ge'dekiler
 ## hariç. {id, name, points (haftalık), fits (uyduğu roller), founder}.
 static func team() -> Array:
@@ -397,8 +408,8 @@ static func team() -> Array:
 		var fits: Array = _fits(c)
 		if fits.is_empty() or c.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
 			continue
-		out.append({"id": c.id, "name": c.character_name, "points": _points(c) * hours, "fits": fits,
-			"founder": c.category == "founder"})
+		out.append({"id": c.id, "name": c.character_name, "points": _points(c, WorkHoursSystem.hours_for(c)) * hours,
+			"fits": fits, "founder": c.category == "founder"})
 	return out
 
 
@@ -943,7 +954,7 @@ static func _fits(c: Character) -> Array:
 
 
 ## Haftalık puan: 2 × beceri bandı (ana alanın 0-10 puanı; kurucu sabit) × verim × çalışma saati.
-static func _points(c: Character) -> float:
+static func _points(c: Character, hours: int) -> float:
 	var mult: float = SprintCatalog.cfg("founder_mult")
 	if c.category != "founder":
 		var stat: int = HRSystem.skill(c, HRConstants.role_key_area(c.role))
@@ -951,4 +962,4 @@ static func _points(c: Character) -> float:
 		mult = bands[0] if stat <= int(SprintCatalog.cfg("skill.low_max")) \
 			else bands[1] if stat <= int(SprintCatalog.cfg("skill.mid_max")) else bands[2]
 	return float(SprintCatalog.cfg("person_points_week")) * mult * HRSystem.productivity(c) \
-		* HRConstants.hours_output_mult(WorkHoursSystem.hours_for(c))
+		* HRConstants.hours_output_mult(hours)

@@ -547,7 +547,9 @@ HR_HOURS_BACK_TO_COMPANY,şirkete dön,back to company
 HR_HOURS_BACK_TO_GROUP,gruba dön,back to the group
 HR_HOURS_COL_SCOPE,KAPSAM,SCOPE
 HR_HOURS_COL_START,BAŞLANGIÇ,START
-HR_HOURS_COMPANY_SUB,{n} çalışan,{n} employees
+HR_HOURS_COMPANY_SUB,Kurucu + {n} çalışan,Founder + {n} employees
+HR_HOURS_SPRINT_POINTS,Haftalık sprint puanı {before} → {after},Weekly sprint points {before} → {after}
+HR_HOURS_SPRINT_POINTS_NOW,Haftalık sprint puanı {n},Weekly sprint points {n}
 HR_HOURS_SOURCE_BASE,temel,base
 HR_HOURS_SOURCE_FROM_COMPANY,şirketten,from the company
 HR_HOURS_SOURCE_FROM_GROUP,gruptan,from the group
@@ -564,6 +566,7 @@ HR_HOURS_COST_BURN,Aylık burn,Monthly burn
 HR_HOURS_FACT_OVER,{n} çalışan mesaide,{n} on overtime
 HR_HOURS_FACT_SHORT,{n} çalışan kısa günde,{n} on a short day
 HR_HOURS_RULE_OVERTIME,Mesai saatleri %50 fazla ücretle ödenir,Overtime hours are paid at 50% above the hourly rate
+HR_HOURS_RULE_OVERTIME_OUTPUT,Sekiz saatin üstündeki saatler yarım verimle sayılır,Hours past eight count at half output
 HR_HOURS_RULE_SHORT,Kısa gün maaş yükünü düşürmez,A short day does not lower the payroll
 HR_BADGE_FLIGHT_RISK,Ayrılabilir,At risk of leaving
 HR_SEARCH_CANCEL,Arayışı iptal et,Cancel search

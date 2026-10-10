@@ -2201,7 +2201,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
 # gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
-# dosya-kurucu|kalabalik|verim>:
+# dosya-kurucu|kalabalik|verim|saatler-sprint>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
 # list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
@@ -2210,12 +2210,13 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # hours exceptions in Durum; atlas-secili = the search with a role and a level picked; gorevler-arge =
 # Görevler with someone researching; verim = card pace rows on the low-morale designer and the founder:
 # the designer's Kadro tooltip (hr_shot_verim_ipucu), her file (hr_shot_verim_dosya), the founder's
-# file (hr_shot_verim_kurucu).
+# file (hr_shot_verim_kurucu). saatler-sprint = no roster: the founder alone with a product type chosen, the
+# hours panel's draft at 15 hours.
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
 	GameState.day = 10
-	if kind != "bos" and kind != "gorevler-bos":
+	if kind not in ["bos", "gorevler-bos", "saatler-sprint"]:
 		_seed_hr_roster()
 		if kind == "kalabalik":   # LOC-DATA debug seed / id
 			OfficeCrowdProbe.seed_staff(34)
@@ -2227,6 +2228,8 @@ func _run_hr_shot(kind: String) -> void:
 	match kind:
 		"gorevler-bos", "atlas", "atlas-secili", "dosya-kurucu":   # LOC-DATA debug seed / id
 			pass
+		"saatler-sprint":   # LOC-DATA debug seed / id
+			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
 		"dosyalar":
 			# Files on the table: the arrival window's worth of real generator output.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
@@ -2312,6 +2315,10 @@ func _run_hr_shot(kind: String) -> void:
 			if not crew.is_empty():
 				WorkHoursSystem.set_person_hours(crew[0].id, 6)
 			tab._open_hours_modal()
+		"saatler-sprint":   # LOC-DATA debug seed / id
+			# The live day stays 09:00 + 8 hours; the stepper's own write puts the draft at 15 (its top at 09:00).
+			tab._open_hours_modal()
+			get_tree().get_root().find_child("PanelLayer", true, false).get_child(-1)._set_scope(15, "company")
 		"gorevler", "gorevler-arge":   # LOC-DATA debug seed / id
 			# §12.0 matrisi dört hâliyle: testçi iki işte (üçüncü hücresi §12.1'e göre kilitli),
 			# tasarımcı boşta (gorevler-arge'de araştırmada), gerisi normal.
