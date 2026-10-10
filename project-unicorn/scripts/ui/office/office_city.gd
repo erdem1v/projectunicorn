@@ -99,6 +99,7 @@ var _now := 0.0
 func _ready() -> void:
 	EventBus.language_changed.connect(_rebuild_controls.unbind(1))
 	EventBus.palette_changed.connect(_rebuild_controls.unbind(1))
+	EventBus.day_tick_completed.connect(_rebuild_controls.unbind(1))
 
 
 func set_layout(layout: OfficeLayout, view: Node, water: Array, road := false) -> void:
@@ -310,7 +311,8 @@ func _make_panel() -> PanelContainer:
 	return panel
 
 
-## Language and palette changes redraw the map's text and chips; the pick and the camera stay.
+## Language and palette changes redraw the map's text and chips, and a daily tick its card
+## (opening the map holds no clock); the pick and the camera stay.
 func _rebuild_controls() -> void:
 	if _map == null:
 		return
@@ -383,7 +385,7 @@ func _move() -> void:
 	if OfficeSystem.move_to(_selected.office):
 		close()
 	else:
-		# The clock ran on while the card was open: draw it again with today's readings.
+		# A reading moved between two ticks, after the card was drawn: draw it again.
 		_show_card()
 
 

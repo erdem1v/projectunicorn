@@ -1111,6 +1111,9 @@ func _seed_goal(state: String) -> void:
 # untyped, cheque and v1 open on the goal lists' week 1 (_seed_goal), not the theme seed: untyped before a type is
 # picked; cheque the type picked (_01), then the first sprint started (_02); v1 the sprint running, then v1.0 shipped
 # (_01) and Ar-Ge opened (_02).
+# card_ishani / card_home (city only) = the company still in the flat, İş hanı's / the flat's card
+# open; card_tick (city only) = Plaza's card open through one daily tick: a _before frame, and an
+# OFFICECARD line with the cash reading the card draws before and after.
 # With --pan / --pan-gpu (OFFICE_PAN) the shot is handed over after the extra: the camera moves by pixel
 # offsets, the 3D image alone is saved and measured, and the process ends there.
 func _run_office_shot(spec: String) -> void:
@@ -1128,6 +1131,9 @@ func _run_office_shot(spec: String) -> void:
 	# Debug path: the shot writes the office straight past OfficeSystem. The map and the meeting
 	# room are no office: the company sits in a real one, which the map's pin and chips read.
 	GameState.office_id = "ishani" if office_id in OfficeLayout.AWAY else office_id
+	if extra in ["card_ishani", "card_home"]:
+		# The flat's card, and İş hanı's as the move out of it: the company still lives in the flat.
+		GameState.office_id = "home"
 	GameState.set_current_hour(hour)
 	TimeManager.sync_to_current_hour()
 	if extra == "crowd40":
@@ -1158,6 +1164,21 @@ func _run_office_shot(spec: String) -> void:
 			return
 		"card":
 			city.debug_pick("plaza")
+		"card_ishani", "card_home":
+			city.debug_pick(extra.trim_prefix("card_"))
+		"card_tick":
+			city.debug_pick("plaza")
+			# Today's cash as the card's reading draws it, if one of its labels does.
+			var on_card := func() -> String:
+				var now: String = tr("OFFICE_REQ_NOW").format({"value": UiTokens.format_money(GameState.cash)})
+				return now if city._card.find_children("*", "Label", true, false).any(
+					func(l: Label) -> bool: return l.text == now) else "absent"
+			await get_tree().create_timer(1.2).timeout
+			_save_shot("office_shot_city_%02d_card_tick_before" % hour)
+			var before: String = on_card.call()
+			GameState.advance_day()
+			TimeManager._dispatch_daily_tick()
+			print("OFFICECARD|cash_now_before=%s|after=%s" % [before, on_card.call()])
 		"crown":
 			(view.lighting as OfficeLighting).crown_glow = 1.0
 			var cam: OfficeCamera = view.camera

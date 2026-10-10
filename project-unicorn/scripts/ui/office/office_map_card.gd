@@ -2,7 +2,8 @@ extends PanelContainer
 
 # The office card on the city map: what an office is and brings, what it would cost (shown,
 # charged nowhere), what it asks for today, and the move. Built for one office at the top right
-# of the view; OfficeCity builds a new one when the pick or the language changes.
+# of the view; OfficeCity builds a new one when the pick or the language changes, and after every
+# daily tick while the map is open, so today's readings stay today's.
 
 signal cancel_pressed
 signal move_pressed
@@ -41,7 +42,10 @@ func _init(office_id: String) -> void:
 
 	var head := HBoxContainer.new()
 	col.add_child(head)
-	var tier := UiFactory.make_label(UiTokens.tr_upper(tr(office.tier_key)), &"MicroLabel")
+	# The flat is no step of the ladder (the map counts three tiers): its card names no tier, and the
+	# empty label keeps the pill at the right.
+	var tier := UiFactory.make_label("" if office_id == "home" else UiTokens.tr_upper(tr(office.tier_key)),
+		&"MicroLabel")
 	tier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(tier)
 	if current:

@@ -2602,7 +2602,6 @@ ENDING_MILESTONE_HEAD,KİLOMETRE TAŞI,MILESTONE
 ENDING_MILESTONE_BODY,Bu bir son değil. Şirket yoluna devam ediyor.,This isn't the end. The company keeps going.
 ENDING_MAIN_MENU,ANA MENÜ,MAIN MENU
 END_SPAN_OVER_TWO_YEARS,iki yılı aşkın sürede,in over two years
-OFFICE_TIER_HOME,Perde 1,Act 1
 OFFICE_TIER_ISHANI,Başlangıç,Starter
 OFFICE_TIER_PLAZA,Orta,Mid
 OFFICE_TIER_LOFT,Yüksek,High
@@ -2639,7 +2638,7 @@ OFFICE_ROOM_EXECUTIVE,Yönetim salonu,Executive room
 OFFICE_ROOM_FOUNDER_OFFICE,Kurucu ofisi,Founder's office
 OFFICE_REQ_ANGEL,Frank'in çeki alındı,Frank's cheque taken
 OFFICE_REQ_TEAM,Ekip en az {n} kişi,Team of at least {n}
-OFFICE_REQ_CASH,Kasada {money},{money} in the bank
+OFFICE_REQ_CASH,Kasada en az {money},At least {money} in the bank
 OFFICE_REQ_BRAND,Marka en az {n},Brand at least {n}
 OFFICE_REQ_NOW,şu an {value},now {value}
 OFFICE_REQ_NOW_CLOSED,alındı,taken

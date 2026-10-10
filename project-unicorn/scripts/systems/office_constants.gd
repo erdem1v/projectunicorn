@@ -9,12 +9,12 @@ extends RefCounted
 ## OFFICE_MAP_SUB spells this out as "a week": a change here changes that row too.
 const MOVE_WEEKS := 1                       # [WORKING] weeks from move_to to arrival
 
-## id -> {tier_key, name_key, desc_key, desks, rent, deposit, move_cost, room_keys, reqs}.
+## id -> {tier_key, name_key, desc_key, desks, rent, deposit, move_cost, room_keys, reqs}; the flat
+## has no tier_key, being no step of the ladder.
 ## A req is {kind, value}: angel (Frank's cheque taken, value true), or team (headcount), cash
 ## and brand, each met at >= value.
 const CATALOG := {
 	"home": {
-		"tier_key": "OFFICE_TIER_HOME",
 		"name_key": "OFFICE_NAME_HOME",
 		"desc_key": "OFFICE_DESC_HOME",
 		"desks": 1,                         # [WORKING]
