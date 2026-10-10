@@ -222,9 +222,9 @@ func _refresh() -> void:
 func _compute_structure_key() -> String:
 	# Satır KÜMESİNİ ve satırların şeklini değiştiren her şey buraya girer; moral GİRMEZ
 	# (yerinde boyanır). Rozet ağırlığı moralle değiştiği için ayrıca yazılıyor, yoksa eşik
-	# geçildiğinde satırın sırası güncellenmez. Eğitim ve izin sayaçları ile YENİ rozeti
-	# yalnız yeniden kurulurken çizilir, o yüzden onlar da anahtarda. Karar kapısı boş grubun
-	# düğmesini kapatır.
+	# geçildiğinde satırın sırası güncellenmez. Eğitim ve izin sayaçları, YENİ rozeti ve
+	# bekleme hâli (cümle, Boşta, çip) yalnız yeniden kurulurken çizilir, o yüzden onlar da
+	# anahtarda; uyuyan iş ürünün çıktığı tikte uyanır. Karar kapısı boş grubun düğmesini kapatır.
 	var parts := PackedStringArray()
 	parts.append("%s|%d|%s" % [HRSearchSystem.get_state(), HRSearchSystem.weeks_until_arrival(),
 		EventGate.active_id() != ""])
@@ -236,10 +236,10 @@ func _compute_structure_key() -> String:
 	for rep in CustomerRepSystem.ranked_reps():
 		parts.append("cs%s%d" % [rep.id, CustomerRepSystem.roster_size(rep.id)])
 	for emp in CharacterRegistry.get_employees():
-		parts.append("%s|%s|%d|%d|%d|%d|%d|%s" % [emp.id, emp.status, emp.monthly_salary,
+		parts.append("%s|%s|%d|%d|%d|%d|%d|%d|%s" % [emp.id, emp.status, emp.monthly_salary,
 			HRUiShared.worst_badge_severity(emp), emp.training_weeks_left,
 			HRMoraleSystem.weeks_until_return(emp), int(HRConstants.is_new_hire(emp.hire_day, GameState.day)),
-			",".join(PackedStringArray(emp.assigned_job_ids))])
+			int(HRSystem.is_waiting(emp)), ",".join(PackedStringArray(emp.assigned_job_ids))])
 	return "/".join(parts)
 
 
@@ -459,10 +459,10 @@ func _show_view(view_id: String) -> void:
 	rebuild_view()
 
 
-## Görevler'de sekmelerin yanında: kaç kişi boşta (çizgi etiket) ve kaçı aşırı yükte (uyarı). Sıfır
-## olan çizilmez — sıfırı göstermek bir uyarıyı gürültüye çevirir.
+## Görevler'de sekmelerin yanında: kaç kişi boşta (çizgi etiket; işi uykuda olan da) ve kaçı aşırı
+## yükte (uyarı). Sıfır olan çizilmez — sıfırı göstermek bir uyarıyı gürültüye çevirir.
 func _paint_assignment_tags() -> void:
-	var idle: int = HRSystem.idle_count()
+	var idle: int = HRSystem.idle_count() + HRSystem.waiting_count()
 	if idle > 0:
 		_ctl_tags.add_child(UiFactory.D_tag(tr("HR_CHIP_IDLE_COUNT").format({"n": idle}), &"outline"))
 	var over: int = 0

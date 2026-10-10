@@ -529,6 +529,8 @@ HR_TASK_ON_JOB_TEST,Test ediyor,Testing
 HR_TASK_ON_JOB_SUPPORT,Destekte görev alıyor,Working support
 HR_TASK_ON_JOB_ACCOUNTS,Hesaplarda görev alıyor,Working the accounts
 HR_TASK_ON_JOB_SALES,Satışta görev alıyor,Working sales
+HR_TASK_WAITING_PRODUCT,Henüz yapılacak ürün yok,No product to build yet
+HR_TASK_WAITING_LIVE,Henüz canlı ürün yok,No live product yet
 HR_STATE_HOURS_OVER,+{n}s mesai,+{n}h overtime
 HR_STATE_HOURS_SHORT,−{n}s kısa,−{n}h short
 HR_ASSIGN_JOB_CAP,En fazla iki iş.,Two jobs is the limit.

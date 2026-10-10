@@ -228,7 +228,8 @@ static func task_text(emp: Character) -> String:
 
 
 ## §12.2 iş metni. Sprint koşarken Build çıkacak sürümün adıyla okunur ("Notly v1.5"):
-## oyuncunun kafasındaki şey o sürümdür. `short` iki iş hâlinin kısa etiketidir.
+## oyuncunun kafasındaki şey o sürümdür. `short` iki iş hâlinin kısa etiketidir: yalnız işin
+## adı, bir iddia değil. Uykudaki işin cümlesi "görev alıyor" yerine neyi beklediğini söyler.
 static func _job_text(job_id: String, short: bool) -> String:
 	if job_id == HRConstants.JOB_BUILD:
 		if SprintSystem.mode() == "active":
@@ -239,6 +240,9 @@ static func _job_text(job_id: String, short: bool) -> String:
 			return tr_key("HR_TASK_ON_PRODUCT").format({"product": product, "version": label})
 	if short:
 		return HRConstants.job_label(job_id)
+	var waiting: String = HRSystem.job_waiting_key(job_id)
+	if waiting != "":
+		return tr_key(waiting)
 	var key: String = "HR_TASK_ON_JOB_%s" % job_id.to_upper()
 	var sentence: String = tr_key(key)
 	# Cümlesi olmayan iş (Araştırma) adıyla okunur; ham anahtar ekrana düşmez.

@@ -2201,7 +2201,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
 # gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
-# dosya-kurucu|kalabalik|verim|saatler-sprint>:
+# dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
 # list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
@@ -2212,11 +2212,14 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # the designer's Kadro tooltip (hr_shot_verim_ipucu), her file (hr_shot_verim_dosya), the founder's
 # file (hr_shot_verim_kurucu). saatler-sprint = no roster: the founder alone with a product type chosen, the
 # hours panel's draft at 15 hours.
+# urunsuz = no roster: a developer and a customer rep, no product type yet (hr_shot_urunsuz), then the type
+# chosen (hr_shot_urunsuz_tur) and Görevler with it (hr_shot_urunsuz_tur_gorevler); each state prints
+# HRSHOT|<state>|idle=<n>|waiting=<n>.
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
 	GameState.day = 10
-	if kind not in ["bos", "gorevler-bos", "saatler-sprint"]:
+	if kind not in ["bos", "gorevler-bos", "saatler-sprint", "urunsuz"]:
 		_seed_hr_roster()
 		if kind == "kalabalik":   # LOC-DATA debug seed / id
 			OfficeCrowdProbe.seed_staff(34)
@@ -2230,6 +2233,21 @@ func _run_hr_shot(kind: String) -> void:
 			pass
 		"saatler-sprint":   # LOC-DATA debug seed / id
 			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
+		"urunsuz":   # LOC-DATA debug seed / id
+			# add() seats each on the role's first job (build, support); hired four weeks ago, so YENİ does not
+			# take Kadro's one Durum tag.
+			for hire: Array in [["Mert Yıldız", HRConstants.ROLE_DEVELOPER],   # LOC-DATA debug seed / id
+					["Burcu Çetin", HRConstants.ROLE_CUSTOMER_REP]]:   # LOC-DATA debug seed / id
+				var emp := Character.new()
+				emp.id = "char_emp_shot_%s" % hire[1]
+				emp.character_name = hire[0]
+				emp.role = hire[1]
+				emp.category = "employee"
+				emp.monthly_salary = 6000
+				emp.role_stats = HRConstants.seed_skills(emp.role, 5, 3)
+				emp.traits = ["picks_it_up_fast"]
+				CharacterRegistry.add(emp)
+				emp.hire_day = GameState.day - 4
 		"dosyalar":
 			# Files on the table: the arrival window's worth of real generator output.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
@@ -2319,6 +2337,19 @@ func _run_hr_shot(kind: String) -> void:
 			# The live day stays 09:00 + 8 hours; the stepper's own write puts the draft at 15 (its top at 09:00).
 			tab._open_hours_modal()
 			get_tree().get_root().find_child("PanelLayer", true, false).get_child(-1)._set_scope(15, "company")
+		"urunsuz":   # LOC-DATA debug seed / id
+			# With the type the developer's build wakes; the rep's support still waits for a live product.
+			await get_tree().create_timer(0.5).timeout
+			print("HRSHOT|urunsuz|idle=%d|waiting=%d" % [HRSystem.idle_count(), HRSystem.waiting_count()])
+			_save_shot("hr_shot_urunsuz")
+			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
+			tab.rebuild_view()
+			await get_tree().create_timer(0.5).timeout
+			print("HRSHOT|urunsuz-tur|idle=%d|waiting=%d" % [HRSystem.idle_count(), HRSystem.waiting_count()])
+			_save_shot("hr_shot_urunsuz_tur")
+			tab._show_view(tab.VIEW_ASSIGNMENTS)
+			await _finish_shot("hr_shot_urunsuz_tur_gorevler", 0.5)
+			return
 		"gorevler", "gorevler-arge":   # LOC-DATA debug seed / id
 			# §12.0 matrisi dört hâliyle: testçi iki işte (üçüncü hücresi §12.1'e göre kilitli),
 			# tasarımcı boşta (gorevler-arge'de araştırmada), gerisi normal.

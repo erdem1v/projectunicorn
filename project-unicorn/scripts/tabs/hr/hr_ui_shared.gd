@@ -392,7 +392,7 @@ static func D_state_cell(emp: Character, all: bool, width: int) -> Control:
 		tags.append([away[0], &"neutral", away[1]])
 	if HRConstants.is_new_hire(emp.hire_day, GameState.day):
 		tags.append([TranslationServer.translate("HR_BADGE_NEW"), &"", 0])
-	if emp.status == HRConstants.STATUS_ACTIVE and HRSystem.is_idle(emp):
+	if emp.status == HRConstants.STATUS_ACTIVE and (HRSystem.is_idle(emp) or HRSystem.is_waiting(emp)):
 		tags.append([TranslationServer.translate("HR_BADGE_IDLE"), &"outline", 0])
 	var cell := HBoxContainer.new()
 	cell.add_theme_constant_override("separation", UiTokens.SPACE_S)

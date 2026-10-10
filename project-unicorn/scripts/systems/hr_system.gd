@@ -224,7 +224,9 @@ static func founder_task_label() -> String:
 		for job in f.assigned_job_ids:
 			parts.append(HRConstants.job_label(String(job)))
 		return " · ".join(parts)
-	return TranslationServer.translate("HR_FOUNDER_STATE_%s" % founder_task_state().to_upper())
+	var state: String = founder_task_state()
+	var waiting: String = job_waiting_key(HRConstants.JOB_BUILD) if state == FOUNDER_STATE_BUILD else ""
+	return TranslationServer.translate(waiting if waiting != "" else "HR_FOUNDER_STATE_%s" % state.to_upper())
 
 
 static func founder_task_state() -> String:
@@ -289,6 +291,29 @@ static func is_idle(c: Character) -> bool:
 	return c != null and c.category == "employee" and c.assigned_job_ids.is_empty()
 
 
+## UYKUDAKİ İŞ: üzerinde çalışılacak bir şey henüz yok. Dönen, Ekip'in bekleme cümlesinin anahtarıdır; iş koşuyorsa boş.
+static func job_waiting_key(job_id: String) -> String:
+	match job_id:
+		HRConstants.JOB_BUILD, HRConstants.JOB_TEST:
+			return "" if SprintSystem.is_typed() else "HR_TASK_WAITING_PRODUCT"
+		HRConstants.JOB_SUPPORT, HRConstants.JOB_ACCOUNTS:
+			return "" if ProductState.is_live() else "HR_TASK_WAITING_LIVE"
+		HRConstants.JOB_SALES:
+			return "" if SalesFaucetSystem.market_open() else "HR_TASK_WAITING_LIVE"
+	return ""
+
+
+## BEKLEYEN çalışan: işi var ama her işi uykuda; maaş yer, hiçbir şey üretmez ve Ekip onu da
+## "Boşta" çizer. `is_idle`'dan ayrı durur: `hr.idle_count` seam'i yalnız işi olmayanı sayar.
+static func is_waiting(c: Character) -> bool:
+	if c.assigned_job_ids.is_empty():
+		return false
+	for job in c.assigned_job_ids:
+		if job_waiting_key(job) == "":
+			return false
+	return true
+
+
 ## §15.3 hr.job_count(kişi) → 0, 1 ya da 2.
 static func job_count(c: Character) -> int:
 	return 0 if c == null else c.assigned_job_ids.size()
@@ -306,6 +331,15 @@ static func idle_count() -> int:
 	var n: int = 0
 	for c in CharacterRegistry.get_active_employees():
 		if c.assigned_job_ids.is_empty():
+			n += 1
+	return n
+
+
+## Görevler çipi bunu `idle_count()`'a ekler: işi uykuda olan da boşta sayılır.
+static func waiting_count() -> int:
+	var n: int = 0
+	for c in CharacterRegistry.get_active_employees():
+		if is_waiting(c):
 			n += 1
 	return n
 
