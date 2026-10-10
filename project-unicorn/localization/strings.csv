@@ -2905,7 +2905,7 @@ PRODUCT_OVER_CAPACITY_ONE,Kapasite aşıldı · {n} kart devreder,Over capacity 
 PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}
 PRODUCT_GO_TEAM,Ekip'e git,Go to Team
 SALES_PROMISE_OPEN_SPRINT,Açık söz: {feature} · Sprint {n} sonuna kadar,Open promise: {feature} · by the end of sprint {n}
-FIN_BURN_TOOLS,Araçlar,Tools
+FIN_BURN_TOOLS,Geçim ve araçlar,Living and tools
 FIN_BURN_SERVICE,Servis maliyeti,Service costs
 FIN_ONETIME_INCIDENT,Kesinti gideri,Incident costs
 FIN_ONETIME_AUDIT,Güvenlik denetimi,Security audit
