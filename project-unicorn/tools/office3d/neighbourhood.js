@@ -69,8 +69,8 @@ const PLACES = {
     lot: [-16, 72, -26, 36],
     area: [-170, 190, -135, 49.3], sheet: { y: -.32, mat: 'walkMat' }, reserve: [-17, 47.5, -25, 35],
     road: 3.1, walk: 2.6, slab: { walk: [-.3, 0], road: [-.45, -.14] },
-    ew: [{ z: -80, x0: -160, x1: 180 }, { z: -42, x0: -160, x1: 49.5 }, { z: -42, x0: 126, x1: 180 }, { z: 40.75, x0: -160, x1: 180, ex: [-60, 106], wN: 3.3, wS: 5 }],
-    ns: [{ x: -76, z0: -130, z1: 40 }, { x: -34, z0: -130, z1: 40 }, { x: 52.75, z0: -130, z1: 40, ex: [-60, 44] }, { x: 132, z0: -130, z1: 40 }],
+    ew: [{ z: -80, x0: -160, x1: 180 }, { z: -39.5, x0: -160, x1: 49.5 }, { z: -39.5, x0: 126, x1: 180 }, { z: 40.75, x0: -160, x1: 180, ex: [-60, 106], wN: 3.3, wS: 5 }],
+    ns: [{ x: -76, z0: -130, z1: 40 }, { x: -42, z0: -130, z1: 40 }, { x: 52.75, z0: -130, z1: 40, ex: [-60, 44] }, { x: 132, z0: -130, z1: 40 }],
     palette: walls([['shed', 0xb07a5c], ['render', 0xcdbfa9], ['brick', 0xd7b08c], ['shed', 0xa8765c], ['render', 0xc9b49a], ['brick', 0xc07a5c],
       ['shed', 0xc2b5a0], ['render', 0xd6c7ae], ['brick', 0xd2a07a]]),
     streams: [101, 909],
@@ -182,11 +182,16 @@ export default function neighbourhood(id, L, H) {
   const cellAt = (x, z) => { const i = Math.floor(x - ax0), j = Math.floor(z - az0); return i >= 0 && i < NX && j >= 0 && j < NZ ? occ[i * NZ + j] : 0; };
   G.updateMatrixWorld(true);
   const box = new T.Box3();
+  // Small props (trees, lamps, benches), which a generated road may displace, and the walks and plains the builder
+  // paved above road level, which a generated road crosses.
+  const props = [], paved = [];
   G.traverse(o => {
     if (!o.isMesh || o.material === H.groundMat) return;
     box.setFromObject(o);
+    if (o.material === H.walkMat) paved.push([box.max.y, box.min.x, box.max.x, box.min.z, box.max.z]);
     if (box.max.x - box.min.x > 150 || box.max.y - box.min.y > 60) return;
     mark(box.min.x, box.max.x, box.min.z, box.max.z, box.max.y < GY + .2 ? 2 : 1);
+    if (box.max.y - box.min.y < 6 && Math.max(box.max.x - box.min.x, box.max.z - box.min.z) < 4) props.push([o, box.min.x, box.max.x, box.min.z, box.max.z]);
   });
 
   // ---------- the frame ----------
@@ -285,7 +290,7 @@ export default function neighbourhood(id, L, H) {
   // ---------- streets ----------
   const RH = P.road, WK = P.walk, [walkLo, walkHi] = P.slab.walk, [roadLo, roadHi] = P.slab.road;
   const FOOT = GY + walkHi, CAR = GY + roadHi;
-  const roads = [], walks = [], dashes = [];
+  const roads = [], walks = [], dashes = [], exBands = [];
   const corridor = c => [c - RH - WK, c + RH + WK];
   const roadsNS = P.ns.map(s => [s.x - RH, s.x + RH]), roadsEW = P.ew.map(s => [s.z - RH, s.z + RH]);
   for (const [streets, alongX] of [[P.ew, true], [P.ns, false]]) for (const s of streets) {
@@ -293,6 +298,7 @@ export default function neighbourhood(id, L, H) {
     // p..q along the street, lo..hi across it
     const rect = (p, q, lo, hi) => alongX ? [p, q, lo, hi] : [lo, hi, p, q];
     const wn = s.wN || WK, ws = s.wS || WK, [d0, d1] = s.dashEx || s.ex || [0, 0];
+    if (s.ex) exBands.push(rect(s.ex[0], s.ex[1], c - RH, c + RH));
     for (const [p, q] of s.ex ? cutOut(a0, a1, [s.ex]) : [[a0, a1]]) {
       roads.push(rect(p, q, c - RH, c + RH));
       for (const [u, v] of cutOut(p, q, across)) walks.push(rect(u, v, c - RH - wn, c - RH), rect(u, v, c + RH, c + RH + ws));
@@ -307,6 +313,24 @@ export default function neighbourhood(id, L, H) {
   slabMesh(T, G, roads.filter(shown), GY + roadLo, GY + roadHi, H.roadMat);
   slabMesh(T, G, walks.filter(shown), GY + walkLo, GY + walkHi, H.walkMat);
   slabMesh(T, G, dashes.filter(shown), CAR, CAR + .01, H.lineMat, false);
+  // Where a builder's walk crosses a generated road, or the loft's paved plain (paving wider than any walk) covers a
+  // street, the road is laid over it, so the street runs on through the crossing instead of stopping at a kerb.
+  const overlays = new Map();
+  for (const [top, ...pave] of paved) {
+    if (top <= CAR + .01) continue;
+    for (const band of Math.min(pave[1] - pave[0], pave[3] - pave[2]) > 10 ? roads.concat(exBands) : roads) {
+      const r = [Math.max(band[0], pave[0]), Math.min(band[1], pave[1]), Math.max(band[2], pave[2]), Math.min(band[3], pave[3])];
+      if (r[1] > r[0] && r[3] > r[2] && shown(r)) overlays.set(top, [...overlays.get(top) || [], r]);
+    }
+  }
+  for (const [top, rects] of overlays) slabMesh(T, G, rects, top - .02, top + .01, H.roadMat);
+  // A builder's tree or lamp whose middle stands on a generated road comes out, with every part within 1.5 m of it.
+  const mid = ([, x0, x1, z0, z1]) => [(x0 + x1) / 2, (z0 + z1) / 2];
+  const gone = props.map(mid).filter(([x, z]) => roads.some(r => r[0] < x && x < r[1] && r[2] < z && z < r[3]));
+  for (const p of props) {
+    const [x, z] = mid(p);
+    if (gone.some(([gx, gz]) => Math.abs(x - gx) < 1.5 && Math.abs(z - gz) < 1.5)) p[0].removeFromParent();
+  }
   if (P.reserve) mark(...P.reserve);
   // The builder's ground sheet ends short of the frame at ishani and is missing on the loft's land side.
   if (P.sheet) {
