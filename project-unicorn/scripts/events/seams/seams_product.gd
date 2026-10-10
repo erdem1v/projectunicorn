@@ -51,6 +51,18 @@ static func _install_product() -> void:
 			var card: Dictionary = SprintSystem.decision_card()
 			return 0 if card.is_empty() else roundi(SprintSystem.total(card)),
 		"Product", "the decision card's effort in points; 0 when none waits")
+	EvSeams.register("urun.sprint_single_card", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.sprint_card_count() == 1,
+		"Product", "the open sprint holds one card; carried over, it leaves the sprint nothing to work on")
+	EvSeams.register("urun.crunch_finishes", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.crunch_finishes(),
+		"Product", "the crunch's hours finish the decision card this sprint; false when none waits")
+	EvSeams.register("urun.paid_plan_set", G, TYPE_BOOL,
+		func() -> bool:
+			var p: Dictionary = GameState.product
+			return SprintCatalog.tier(SprintCatalog.PAID_PLAN) > 0 or ("plan:" + SprintCatalog.PAID_PLAN) in \
+				p.get("sprint", {}).get("cards", []) + p.get("next", {}).get("cards", []),
+		"Product", "the paid plan is open, or its card is in the running or the planned sprint")
 
 	# Quality. Axis readings, not a single score — §17's triangle rule says the player reads
 	# the asymmetry, so content asks about an axis and never about "quality" as one number.

@@ -18,6 +18,8 @@ const EPS := 0.001
 const DESK_SCAN := 64
 ## MVP tahmininin ufku (hafta); ötesinde tahmin yoktur.
 const MVP_HORIZON := 24
+## product.sprint_late kartının fazla mesai seçeneğinin çarpanı (sprint_hours fiili); kartın değeriyle aynı kalır.
+const CRUNCH_MULT := 1.25
 
 
 static func daily_tick() -> void:
@@ -93,7 +95,8 @@ static func send_next(card_id: String) -> void:
 
 
 ## Kart adaylara döner; ilerlemesi, ödenmiş lisansı ya da bekleyen kararı varsa saklanır ve yeniden
-## alındığında kaldığı yerden, bedeli yeniden kesilmeden sürer.
+## alındığında kaldığı yerden, bedeli yeniden kesilmeden sürer. Koşan sprintte kartın kişileri
+## haftanın kalanında kimsesiz kartlara geçer.
 static func remove(card_id: String) -> void:
 	var p: Dictionary = _p()
 	var card: Dictionary = p.cards.get(card_id, {})
@@ -106,6 +109,8 @@ static func remove(card_id: String) -> void:
 		card.assignees = []
 	else:
 		p.cards.erase(card_id)
+	if mode() == "active":
+		_restaff()
 	_changed()
 
 
@@ -254,6 +259,7 @@ static func decision_progress(amount: int) -> String:
 
 
 ## Bekleyen kararın kartı ilerlemesiyle sonraki sprinte devreder; sprint kapandıysa zaten oradadır.
+## Koşan sprintte boştakiler haftanın kalanında kimsesiz kartlara geçer.
 static func decision_carry() -> String:
 	var c: Dictionary = decision_card()
 	if c.is_empty():
@@ -267,6 +273,8 @@ static func decision_carry() -> String:
 		c.state = "carried"
 		c.assignees = []
 		EventBus.card_carried_over.emit(c.id)
+		if mode() == "active":
+			_restaff()
 		_changed()
 	return c.id
 
@@ -539,14 +547,41 @@ static func mvp_eta() -> Dictionary:
 ## Bekleyen kararın kartı bu sprintte yetişmez mi: kalan haftalar bugünkü ekiple, kart karar
 ## beklemiyormuş gibi oynanır.
 static func decision_card_late() -> bool:
-	var id: String = decision_card().get("id", "")
-	if mode() != "active" or id not in _p().sprint.cards:
+	if not _decision_in_sprint():
 		return false
+	var id: String = decision_card().id
 	var cards: Array = _sprint_cards().map(func(c: Dictionary) -> Dictionary: return c.duplicate(true))
 	for c in cards:
 		c.decision = false
 	_play_out(cards, weeks_left(), team())
 	return cards.any(func(c: Dictionary) -> bool: return c.id == id and phase(c) < PHASE_DONE)
+
+
+## Fazla mesai seçeneği bekleyen kararın kartını bu sprintte yetiştirir mi; karar yoksa yanlış. Karar
+## sprintin son haftasında gelir ve seçim onu hafta ortasında kaldırır: kart, motorda olduğu gibi
+## (_restaff), yalnız hiçbir kartta olmayanları alır; puanları seçeneğin varacağı mesai çarpanıyla.
+static func crunch_finishes() -> bool:
+	if not _decision_in_sprint():
+		return false
+	var id: String = decision_card().id
+	var busy: Array = []
+	for c in _sprint_cards():
+		busy.append_array(c.assignees)
+	var open: Array = _sprint_cards().filter(func(c: Dictionary) -> bool: return c.assignees.is_empty()).map(
+		func(c: Dictionary) -> Dictionary: return c.duplicate(true).merged({"decision": false}, true))
+	var scale: float = hours_after(CRUNCH_MULT) / float(_p().sprint.get("hours_mult", 1.0))
+	_play_out(open, weeks_left(), team().filter(func(t: Dictionary) -> bool: return t.id not in busy).map(
+		func(t: Dictionary) -> Dictionary: return t.merged({"points": t.points * scale}, true)))
+	return open.any(func(c: Dictionary) -> bool: return c.id == id and phase(c) == PHASE_DONE)
+
+
+static func _decision_in_sprint() -> bool:
+	return mode() == "active" and decision_card().get("id", "") in _p().sprint.cards
+
+
+## Bu sprintin kart sayısı (bitenler dahil); tür seçilmeden 0.
+static func sprint_card_count() -> int:
+	return _sprint_cards().size()
 
 
 ## Söz kilidi: kademe planlanabilir sprintte yetişir mi. Kartı koşan ya da planlanabilir sprintte

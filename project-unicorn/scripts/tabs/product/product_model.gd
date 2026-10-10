@@ -36,7 +36,7 @@ extends RefCounted
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks, week (active),
 #           capacity: {used, total, done, state: "ok"|"over"|"blocked", segments: [{pts}]} or null (puanlar kesirli),
 #           team: [person], staffed (kadroda çalışan var), warning_text: "" or String (eksik rol),
-#           cards: [card], forecast: [part], status: {done, running, decisions}, auto_started,
+#           cards: [card], forecast: [part], status: {done, running (işçili), queued, decisions}, auto_started,
 #           next_version: {label, weeks: int or -1, beta_extra} or null (MVP öncesi),
 #           mvp_line: {version, area, need, done (biten ve betada bekleyen dahil), sprint (-1 = tahmin yok), week}
 #                     or null (canlıda),
@@ -52,9 +52,11 @@ extends RefCounted
 # person = {name, role_text, look ({} ise baş harfler)}
 # column = {sprint, kind: "current"|"proposed"|"empty", capacity: {...} or null, pm, flags: [...], cards: [card], approved}
 # card = {id, name, kind, roles: [...], effort, state: SprintCard.State, effect: [part], tag_sprint: -1 or int,
-#         phases: [] or [3 states], assignees: [person],
+#         phases: [] or [3 states] (karar bekleyen ve sıradaki kartta üçü waiting),
+#         phase_pts: {done, total} (sıradaki fazın puanları, kesirli) or null, assignees: [person],
+#         queued (aktifte işçisi ve kararı olmayan, bitmemiş kart: "Sırada"),
 #         decision: {event_id, item (gelen kutusundaki kâğıt), sender (Inbox'un göndericisi), subject, weeks_left,
-#                    last} or null,
+#                    last} or null (kart "İş durdu · karar bekliyor"),
 #         effort_split: [{name, weeks}],
 #         locked_node: "" or String, remaining: -1 or float (kesirli), urgent,
 #         spills (planda puan alır ama bitmez), no_start: -1 or int (planda puan almaz, kaydığı sprint),
@@ -202,7 +204,7 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 	var cards: Array = []
 	var segments: Array = []
 	var load: float = 0.0
-	var status := {"done": 0, "running": 0, "decisions": 0}
+	var status := {"done": 0, "running": 0, "queued": 0, "decisions": 0}
 	for id in sprint_cards:
 		var c: Dictionary = p.cards[id]
 		var card: Dictionary
@@ -217,10 +219,17 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 				card = _card(c, SprintCard.State.BITTI, {"phases": _phases(c), "assignees": _people(c.assignees, team)})
 				status.done += 1
 			_:
-				card = _card(c, SprintCard.State.SPRINT_AKTIF, {"phases": _phases(c),
-					"assignees": _people(c.assignees, team), "decision": decision if c.decision else null})
-				status.running += 1
-				status.decisions += int(c.decision)
+				# Karar bekleyen ve işçisi olmayan kart ilerlemez: fazları bekler, sayaçta kendi parçasındadır.
+				var at: int = SprintSystem.phase(c)
+				var people: Array = _people(c.assignees, team)
+				var part: String = "decisions" if c.decision \
+					else ("queued" if people.is_empty() and at < SprintSystem.PHASE_DONE else "running")
+				status[part] += 1
+				card = _card(c, SprintCard.State.SPRINT_AKTIF, {"assignees": people, "queued": part == "queued",
+					"phases": _phases(c) if part == "running" else ["waiting", "waiting", "waiting"],
+					"phase_pts": {"done": float(c.progress[at]), "total": float(c.shares[at]) * SprintSystem.total(c)}
+						if at < SprintSystem.PHASE_DONE else null,
+					"decision": decision if c.decision else null})
 		segments.append({"pts": pts})
 		load += pts
 		cards.append(card)
@@ -383,7 +392,8 @@ static func goal_text(area_id: String) -> String:
 static func _card(c: Dictionary, state: SprintCard.State, extra := {}) -> Dictionary:
 	var card := {"id": c.id, "name": SprintCatalog.card_name(c), "kind": _kind(c), "roles": c.roles,
 		"effort": roundi(SprintSystem.total(c)), "state": state, "effect": SprintCatalog.card_effect(c),
-		"tag_sprint": -1, "phases": [], "assignees": [], "decision": null, "effort_split": [], "locked_node": "",
+		"tag_sprint": -1, "phases": [], "phase_pts": null, "assignees": [], "queued": false, "decision": null,
+		"effort_split": [], "locked_node": "",
 		"remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0, "addable": false,
 		"urgent": SprintCatalog.is_urgent(c), "buttons": BUTTONS.get(state, [])}
 	card.merge(extra, true)

@@ -162,17 +162,14 @@ func _nobody(staffed: bool) -> VBoxContainer:
 	return empty
 
 
-## DURUM: "1 kart bitti · 2 sürüyor · 1 karar bekliyor".
+## DURUM: "1 kart bitti · 2 sürüyor · 1 sırada · 1 karar bekliyor"; sürüyor işçili kartlardır.
 func _status(s: Dictionary) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_M)
-	var dot := Control.new()
-	dot.custom_minimum_size = Vector2.ONE * UiTokens.D_PHASE_DOT
-	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	dot.draw.connect(func() -> void: dot.draw_circle(dot.size / 2.0, UiTokens.D_PHASE_DOT / 2.0, UiTokens.D_INK_1))
 	for item in [
 		[UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_pos()),
 			tr(Fmt.count_key("PRODUCT_STATUS_CARDS", s.done)).format({"n": s.done}), "PRODUCT_STATUS_DONE"],
-		[dot, str(s.running), "PRODUCT_STATUS_RUNNING"],
+		[SprintUiShared.phase_dot(false, UiTokens.D_INK_1), str(s.running), "PRODUCT_STATUS_RUNNING"],
+		[SprintUiShared.phase_dot(true, UiTokens.D_INK_1), str(s.queued), "PRODUCT_STATUS_QUEUED"],
 		[UiFactory.make_glyph(INBOX_GLYPH, UiTokens.D_ICON_ROW, UiTokens.D_INK_3),
 			tr(Fmt.count_key("PRODUCT_STATUS_DECISIONS", s.decisions)).format({"n": s.decisions}), "PRODUCT_STATUS_WAITING"],
 	]:

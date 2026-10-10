@@ -181,6 +181,7 @@ func _tags() -> Array:
 	if _card.urgent:
 		out.append(UiFactory.D_glyph_tag(SprintUiShared.WARN, tr("PRODUCT_URGENT"), &"warn"))
 	for row in [[state == State.DEVREDEN, "PRODUCT_CARRIED"], [state == State.BETA_BEKLIYOR, "PRODUCT_BETA_WAITING"],
+			[_card.queued, "PRODUCT_QUEUED"], [_card.decision != null, "PRODUCT_DECISION_HALTED"],
 			[_card.effect.any(func(p: Dictionary) -> bool: return p.k == "promise"), "PRODUCT_PROMISED"]]:
 		if row[0]:
 			out.append(UiFactory.D_tag(tr(row[1]), &"outline"))
@@ -218,7 +219,8 @@ func _hover_keys() -> Control:
 	return host
 
 
-## Sprint içi satırı: Tasarım, Geliştirme ve Test adımları, sağda o haftanın atananları.
+## Sprint içi satırı: Tasarım, Geliştirme ve Test adımları (süren fazın yanında puanları, "1,4/1,8"), sağda o
+## haftanın atananları.
 func _phase_row() -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_S)
 	var phases: Array = _card.phases
@@ -232,19 +234,11 @@ func _phase_row() -> HBoxContainer:
 			link.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			link.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			row.add_child(link)
-		var dot := Control.new()
-		dot.custom_minimum_size = Vector2.ONE * UiTokens.D_PHASE_DOT
-		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		dot.draw.connect(func() -> void:
-			var r: float = UiTokens.D_PHASE_DOT / 2.0
-			if phase == "waiting":
-				dot.draw_arc(Vector2.ONE * r, r - UiTokens.BORDER_HAIRLINE / 2.0, 0.0, TAU, 24, UiTokens.D_LINE_3,
-					UiTokens.BORDER_HAIRLINE, true)
-			else:
-				dot.draw_circle(Vector2.ONE * r, r, ink))
-		row.add_child(dot)
+		row.add_child(SprintUiShared.phase_dot(phase == "waiting", ink))
 		row.add_child(SprintUiShared.label(tr(PHASE_KEYS[i]), &"Caption", ink))
+		if phase == "active":
+			row.add_child(SprintUiShared.label("%s/%s" % [SprintUiShared.points(_card.phase_pts.done),
+				SprintUiShared.points(_card.phase_pts.total)], &"Caption", ink))
 	row.add_child(RnDUiShared.spacer())
 	for a in _card.assignees:
 		row.add_child(SprintUiShared.avatar(a, UiTokens.D_AVATAR_ROW_SM))

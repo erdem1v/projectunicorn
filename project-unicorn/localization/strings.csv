@@ -2735,6 +2735,7 @@ PRODUCT_CARD_NO_START,Bu sprint başlamaz → Sprint {n},Won't start this sprint
 PRODUCT_CARRIED,devreden,carried
 PRODUCT_URGENT,Acil,Urgent
 PRODUCT_BETA_WAITING,beta bekliyor,in beta
+PRODUCT_QUEUED,Sırada,Queued
 PRODUCT_LOCKED_NODE,Ar-Ge: {node},R&D: {node}
 PRODUCT_REMOVE,Çıkar,Remove
 PRODUCT_EFFORT_POINTS,{n} puan,{n} points
@@ -2759,6 +2760,7 @@ PRODUCT_STATUS_CARDS,{n} kart,{n} cards
 PRODUCT_STATUS_CARDS_ONE,{n} kart,{n} card
 PRODUCT_STATUS_DONE,bitti,done
 PRODUCT_STATUS_RUNNING,sürüyor,in progress
+PRODUCT_STATUS_QUEUED,sırada,queued
 PRODUCT_STATUS_DECISIONS,{n} karar,{n} decisions
 PRODUCT_STATUS_DECISIONS_ONE,{n} karar,{n} decision
 PRODUCT_STATUS_WAITING,bekliyor,waiting
@@ -2912,6 +2914,7 @@ PRODUCT_FX_PROMISE_KEPT,sözü tutulur,promise kept
 PRODUCT_PROMISED,söz verildi,promised
 PRODUCT_VERSION_KEY,Sürüm,Version
 PRODUCT_DECISION_IN_INBOX,Olaylar'da bekliyor,Waiting in Events
+PRODUCT_DECISION_HALTED,İş durdu · karar bekliyor,Work stopped · decision waiting
 PRODUCT_GO_DECISION,Karara git,Go to the decision
 PRODUCT_LEAD_APPLY,Uygula,Apply
 PRODUCT_RELEASE_HOLD,Sürüm notu açıkken oyun durur,Paused while the release note is open

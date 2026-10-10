@@ -96,6 +96,22 @@ static func squares(level: float, px: int, color: Color, count := 3) -> Control:
 	return s
 
 
+## Faz noktası: bekleyen faz halkadır, öbürü `ink` renginde dolu daire.
+static func phase_dot(waiting: bool, ink: Color) -> Control:
+	var dot := Control.new()
+	dot.custom_minimum_size = Vector2.ONE * UiTokens.D_PHASE_DOT
+	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dot.draw.connect(func() -> void:
+		var r: float = UiTokens.D_PHASE_DOT / 2.0
+		if waiting:
+			dot.draw_arc(Vector2.ONE * r, r - UiTokens.BORDER_HAIRLINE / 2.0, 0.0, TAU, 24, UiTokens.D_LINE_3,
+				UiTokens.BORDER_HAIRLINE, true)
+		else:
+			dot.draw_circle(Vector2.ONE * r, r, ink))
+	return dot
+
+
 ## Kapasite çubuğu ve "kullanılan/toplam"; aşımda sayı da uyarı renginde.
 static func capacity_row(cap: Dictionary, value_variation: StringName) -> HBoxContainer:
 	var row := box(UiTokens.SPACE_L)

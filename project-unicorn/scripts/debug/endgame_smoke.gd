@@ -17324,12 +17324,20 @@ static func _case_sprint_save_roundtrip() -> String:
 
 ## Karar bekleyen kart ilerlemez: kâğıt masadayken haftanın işi ona dökülmez ve ona kimse atanmaz;
 ## sprint kapanınca ilerlemesiyle devreder, kâğıt kapanınca yeniden yürür. Kararlar ürünün gerçek
-## sprint kartlarıdır; vaka istek oranını (test sabiti, her hafta) kendi süresince açar ve geri koyar.
+## sprint kartlarıdır; vaka istek oranını (test sabiti, her hafta) ve fazla mesai için desteyi kendi
+## süresince değiştirir ve geri koyar.
 ## Tek kurucu 12 saatte ilk haftayı sıradaki ilk karta verir; geride kalan ikinci kart kararı alır.
+## Kararla devredince ya da koşan kart çıkarılınca kurucu haftanın kalanında kalan kartta. Fazla
+## mesai (×1,25) product.sprint_late kâğıdından seçilir: kurucu 15 saatte de ilk karttaysa kararı
+## kalkan karta geçmez ve kart devreder; ilk kart çıkarılınca boştaki kurucu onu 12 saatte bitirir
+## (3,1 puan). crunch_finishes ikisini de seçimden önce söyler.
+## FALSİFİKASYON: SprintSystem.remove'daki _restaff çağrısını sil ya da crunch_finishes'i 1 çarpanla
+## veya meşgul kurucuyla oynat → FAIL.
 static func _case_sprint_decision_blocks_progress() -> String:
 	_seed_sprint()
 	WorkHoursSystem.set_company_hours(12)
 	var rate: Variant = SprintCatalog.cfg("decision.rate")
+	var events: Variant = SprintCatalog.cfg("decision.cards")
 	SprintCatalog._data.decision.rate = 1.0
 	var run := func() -> String:
 		var asked: Array = []
@@ -17365,9 +17373,53 @@ static func _case_sprint_decision_blocks_progress() -> String:
 		_sim_day()
 		if _card_worked(held) <= resumed:
 			return "the released card did not move again"
+		# Yeni dünyalarda aynı iki kartlı sprint: kararla devretme, sonra koşan karttan çıkarma.
+		var world := func() -> bool:
+			SaveManager.reset_all_owners()
+			GameState.initialize_run({"seed": 424242})
+			_seed_sprint()
+			WorkHoursSystem.set_company_hours(12)
+			SprintCatalog._data.decision.rate = 1.0
+			SprintSystem.add(free)
+			SprintSystem.add(held)
+			return SprintSystem.start()
+		if not world.call():
+			return "fixture: the carry world's sprint did not start"
+		_sim_day()
+		if SprintSystem.decision_carry() != held or held in GameState.product.sprint.cards:
+			return "fixture: the carry world's decision is not on %s" % held
+		if CharacterRegistry.get_founder().id not in GameState.product.cards[free].assignees:
+			return "carrying %s took the founder off %s (%s)" % [held, free, GameState.product.cards[free].assignees]
+		if not world.call():
+			return "fixture: the remove world's sprint did not start"
+		SprintSystem.remove(free)
+		if CharacterRegistry.get_founder().id not in GameState.product.cards[held].assignees:
+			return "removing the running %s left the founder idle beside %s (%s)" % [free, held,
+				GameState.product.cards[held].assignees]
+		SprintCatalog._data.decision.cards = ["product.sprint_late"]
+		for solo in [false, true]:
+			if not world.call():
+				return "fixture: the crunch world's sprint did not start"
+			_sim_day()
+			if GameState.product.decision.get("card_id", "") != held or not EventGate.open_paper("product.sprint_late"):
+				return "fixture: no sprint_late paper waits on %s (%s)" % [held, GameState.product.decision]
+			if solo:
+				SprintSystem.remove(free)
+			else:
+				WorkHoursSystem.set_company_hours(15)
+			var said: bool = SprintSystem.crunch_finishes()
+			if said != solo:
+				return "with the founder %s crunch_finishes() says %s" % [
+					"idle" if solo else "on %s at 15 hours" % free, said]
+			EventGate.resolve("product.sprint_late", "crunch")
+			_sim_day()
+			if GameState.product.release.shipped.any(func(r: Dictionary) -> bool: return r.id == held) != said:
+				return "crunch_finishes() said %s, the chosen crunch %s %s" % [said,
+					"carried" if said else "shipped", held]
 		return ""
 	var fail: String = run.call()
 	SprintCatalog._data.decision.rate = rate
+	SprintCatalog._data.decision.cards = events
 	return fail
 
 

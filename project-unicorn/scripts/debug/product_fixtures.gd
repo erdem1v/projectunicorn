@@ -25,6 +25,8 @@ const AREAS := {
 const WORDS := ["none", "weak", "enough", "strong"]
 ## c1'in bu sprinti; çeyreğin ilk sütunu ve sprinti boşaltan uç durumlar da bunu okur.
 const C1_SPRINT := ["kesinti", "kisa_kayit", "filtreli"]
+## Karar bekleyen ve sıradaki kartın fazları.
+const WAITING := ["waiting", "waiting", "waiting"]
 
 var _stage: String
 var _log: Array = []
@@ -88,6 +90,7 @@ func _build(id: String) -> Dictionary:
 				_deck("etiketler", SprintCard.State.PLANLANAN),
 				_deck("akilli_arama", SprintCard.State.KILITLI, {"locked_node": tr("PRODUCT_LOCKED_NODE").format({"node": _p("Gelişmiş arama", "Advanced search")})}),
 				_deck("baglanti", SprintCard.State.BETA_BEKLIYOR),
+				_deck("efatura", SprintCard.State.SPRINT_AKTIF, {"phases": WAITING, "queued": true}),
 			] + _active_cards()
 			m.ui.hover_card = "mobil_giris"
 			# Mini kartlar çeyrek sütunlarında: ÇEYREK görünümü açık.
@@ -298,7 +301,7 @@ func _c2() -> Dictionary:
 	m.ui = _ui_state("", "")
 	m.center = _center("active", _active_cards(), {
 		"capacity": {"total": 12, "done": 2},
-		"status": {"done": 1, "running": 2, "decisions": 1},
+		"status": {"done": 1, "running": 1, "queued": 0, "decisions": 1},
 		"next_version": {"label": _version("1.5"), "weeks": 1, "beta_extra": false},
 	})
 	return m
@@ -454,10 +457,10 @@ func _active_cards() -> Array:
 	return [
 		_deck("kesinti", SprintCard.State.BITTI, {"phases": ["done", "done", "done"], "assignees": [_person("Kaan")]}),
 		_deck("kisa_kayit", SprintCard.State.SPRINT_AKTIF, {"phases": ["done", "done", "active"],
-			"assignees": [_person("Ece"), _person("Kaan")]}),
-		_deck("filtreli", SprintCard.State.SPRINT_AKTIF, {"phases": ["done", "active", "waiting"],
-			"assignees": [_person("Deniz")], "decision": {"event_id": "fixture.thesis_open", "item": "",
-			"sender": INBOX.named_employee("Deniz", ""), "subject": tr("EV_PRODUCT_SPRINT_TWO_PATHS_TITLE"), "weeks_left": 1, "last": true}}),
+			"phase_pts": {"done": 0.4, "total": 0.6}, "assignees": [_person("Ece"), _person("Kaan")]}),
+		_deck("filtreli", SprintCard.State.SPRINT_AKTIF, {"phases": WAITING, "decision": {"event_id": "fixture.thesis_open",
+			"item": "", "sender": INBOX.named_employee("Deniz", ""), "subject": tr("EV_PRODUCT_SPRINT_TWO_PATHS_TITLE"),
+			"weeks_left": 1, "last": true}}),
 	]
 
 
@@ -505,7 +508,8 @@ func _deck_table() -> Dictionary:
 func _deck(id: String, state: int, extra := {}) -> Dictionary:
 	var d: Array = _deck_table()[id]
 	var card := {"id": id, "name": d[4], "kind": d[0], "roles": d[2], "effort": d[3],
-		"state": state, "effect": d[5], "tag_sprint": -1, "phases": [], "assignees": [], "decision": null,
+		"state": state, "effect": d[5], "tag_sprint": -1, "phases": [], "phase_pts": null, "assignees": [],
+		"queued": false, "decision": null,
 		"effort_split": d[6].map(func(s: Array) -> Dictionary: return {"name": s[0], "weeks": s[1]}),
 		"locked_node": "", "remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0, "addable": false,
 		"urgent": false, "buttons": ProductModel.BUTTONS.get(state, [])}
@@ -541,7 +545,8 @@ func _cap(cap_name: String, tier: int, rivals: Array) -> Dictionary:
 func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "capacity": {"total": 12, "done": 0},
 		"team": _team(), "staffed": true, "warning_text": tr("PRODUCT_ROLE_MISSING").format({"role": _p("Test", "QA")}),
-		"cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "decisions": 0}, "auto_started": false,
+		"cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "queued": 0, "decisions": 0},
+		"auto_started": false,
 		"next_version": null, "mvp_line": null, "can_add": false, "spare": false, "ceiling_pct": 125, "can_start": false,
 		"start_reason": "", "beta": {"open": false}, "lead_tip": null, "release": null}
 	c.merge(extra, true)
