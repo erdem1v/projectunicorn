@@ -82,6 +82,9 @@ var _slot_x := 0.0
 var _pulse: Tween
 ## Ölçüm sayacı: --tick-probe bir karedeki yenilemeleri buradan sayar.
 var refresh_count := 0
+var _week_end := 0      # gün bloğunun kurulduğu mesai bitimi; hafta çubuğu orada biter
+var _clock_min := -1    # saatin gösterdiği an: gece yarısından beri dakika, CLOCK_STEP_MIN adımlı
+var _now_px := -1       # hafta çubuğunun şimdi işareti, tam piksel
 
 
 func _ready() -> void:
@@ -121,6 +124,15 @@ func _ready() -> void:
 	_apply_speed_visual(TimeManager.current_speed)
 
 
+## Saat ve hafta çubuğunun şimdi işareti akümülatörü her karede okur; yalnız gösterdikleri değişince boyanır.
+func _process(_delta: float) -> void:
+	_show_clock()
+	var px := int(_week_x(TimeManager.day_minute() / 60.0))
+	if px != _now_px:
+		_now_px = px
+		queue_redraw()
+
+
 func _on_offer_countdown_changed(weeks_left: int) -> void:
 	_offer_weeks_left = weeks_left
 	_refresh()
@@ -144,8 +156,8 @@ func _refresh() -> void:
 	_refresh_brand(g)
 	_refresh_metrics(g)
 	_slot_x = minf(size.x - g.time - g.slot, g.day + g.pad + MAX_WEEK_BAR + g.pad)
-	_refresh_day(g)
 	_refresh_time(g)
+	_refresh_day(g)
 	queue_redraw()
 
 
@@ -205,16 +217,16 @@ func _refresh_day(g: Dictionary) -> void:
 		if _compact else Fmt.date_line(d)
 	var x0: float = g.day + g.pad
 	_put($Date, x0, DATE_LINE)
-	var end: int = WorkHoursSystem.workday_end()
+	_week_end = WorkHoursSystem.workday_end()
 	$WeekStart.text = "%02d:00" % TimeModel.WEEK_START_HOUR
-	$WeekEnd.text = "%02d:00" % (end % 24)
+	$WeekEnd.text = "%02d:00" % (_week_end % 24)
 	_put($WeekStart, x0, HOUR_LINE)
 	_put($WeekEnd, _slot_x - g.pad - $WeekEnd.get_minimum_size().x, HOUR_LINE)
 	$NextKey.text = Fmt.upper(tr("TOPBAR_NEXT"))
-	var line: String = tr("TOPBAR_NEXT_WORKDAY_END").format({"n": maxi(end - GameState.current_hour, 0)})
+	var line: String = tr("TOPBAR_NEXT_WORKDAY_END").format({"n": maxi(_week_end - GameState.current_hour, 0)})
 	var ink = null
 	var phase: String = _meeting.get("phase", "")
-	var meeting: String = tr("TOPBAR_NEXT_MEETING").format({"time": "%02d:00" % GameState.current_hour,
+	var meeting: String = tr("TOPBAR_NEXT_MEETING").format({"time": $TimeBlock/Clock.text,
 		"company": _meeting.get("place", "")})
 	if _held():
 		$NextKey.text = Fmt.upper(tr("TOPBAR_IN_MEETING" if phase == "sitting" else "TOPBAR_NOW"))
@@ -285,7 +297,7 @@ func _refresh_time(g: Dictionary) -> void:
 	var block: Panel = $TimeBlock
 	block.position = Vector2(_slot_x + g.slot, 0)
 	block.size = Vector2(g.time, size.y)
-	$TimeBlock/Clock.text = "%02d:00" % GameState.current_hour
+	_show_clock()
 	_put($TimeBlock/Clock, g.time_pad, CLOCK_LINE)
 	_put($TimeBlock/State, g.time_pad, HOUR_LINE, g.time - 2 * g.time_pad)
 	for i in speed_btns.size():
@@ -305,6 +317,14 @@ func _refresh_state() -> void:
 			key = "TOPBAR_PAUSED"
 	$TimeBlock/State.text = Fmt.upper(tr(key))
 	$TimeBlock/State.visible = key != ""
+
+
+## HH:MM, CLOCK_STEP_MIN dakikalık adımlarla; 24:00'te biten mesai gece beklerken 00:00 okunur.
+func _show_clock() -> void:
+	var m: int = int(TimeManager.day_minute()) / TimeModel.CLOCK_STEP_MIN * TimeModel.CLOCK_STEP_MIN
+	if m != _clock_min:
+		_clock_min = m
+		$TimeBlock/Clock.text = "%02d:%02d" % [(m / 60) % 24, m % 60]
 
 
 ## Yazı taban çizgisine oturur; genişlik verilirse kutu o kadardır (taşan metin üç noktayla kısalır).
@@ -332,23 +352,29 @@ func _draw() -> void:
 	var time_end: float = _slot_x + g.slot + g.time
 	if time_end < size.x:
 		draw_rect(Rect2(time_end, 0, 1, h), UiTokens.D_LINE_1)
-	_draw_week(g.day + g.pad, _slot_x - g.pad)
+	_draw_week()
 
 
-## Haftanın 08:00'den mesainin bitimine kadarki saatleri: mesai öncesi ince iz, geçen saatler dolgu,
-## her saat bir çentik (bitiş uzun), görüşmenin saati elmas, şimdi dikey işaret.
-func _draw_week(x0: float, x1: float) -> void:
+## Hafta çubuğunda `hour`'un x'i: 08:00 sol uçta, mesainin bitimi sağ uçta; aralık dışındaki saat uca oturur.
+func _week_x(hour: float) -> float:
+	var g: Dictionary = GRID[int(_compact)]
 	var start: int = TimeModel.WEEK_START_HOUR
-	var end: int = WorkHoursSystem.workday_end()
-	var at := func(hour: float) -> float: return x0 + (hour - start) / float(end - start) * (x1 - x0)
-	var open: float = at.call(clampi(WorkHoursSystem.start_hour(), start, end))
-	var now: float = at.call(clampf(GameState.current_hour, start, end))
+	return remap(clampf(hour, start, _week_end), start, _week_end, g.day + g.pad, _slot_x - g.pad)
+
+
+## Haftanın 08:00'den mesainin bitimine kadarki saatleri: mesai öncesi ince iz, geçen süre dolgu,
+## her saat bir çentik (bitiş uzun), görüşmenin saati elmas, şimdi dikey işaret.
+func _draw_week() -> void:
+	var x0: float = _week_x(TimeModel.WEEK_START_HOUR)
+	var x1: float = _week_x(_week_end)
+	var open: float = _week_x(WorkHoursSystem.start_hour())
+	var now: float = _week_x(TimeManager.day_minute() / 60.0)
 	draw_rect(Rect2(x0, WEEK_Y + 1, open - x0, 2), UiTokens.D_BAR_TRACK)
 	draw_rect(Rect2(open, WEEK_Y, x1 - open, 4), UiTokens.D_BAR_TRACK)
 	draw_rect(Rect2(x0, WEEK_Y, now - x0, 4), UiTokens.D_BAR_FILL)
-	for hour in range(start + 1, end + 1):
-		var x: float = at.call(hour)
-		if hour == end:
+	for hour in range(TimeModel.WEEK_START_HOUR + 1, _week_end + 1):
+		var x: float = _week_x(hour)
+		if hour == _week_end:
 			draw_rect(Rect2(x - 1, WEEK_Y - 4, 1, 12), UiTokens.D_INK_4)
 		else:
 			draw_rect(Rect2(x, WEEK_Y + 6, 1, 4), UiTokens.D_LINE_2)

@@ -90,6 +90,7 @@ Günün süresi ve birimler tek dosyadadır: `scripts/systems/time_model.gd` (`T
 | `WORKDAY_LATEST_END` | 24 | mesai en geç 00:00'da biter |
 | `OVERTIME_HOUR_YIELD` | 0,5 [WORKING] | sekizi aşan her saatin verimi (§9) |
 | `WEEK_WORK_HOURS` | 40 [WORKING] | toplantının kurucu çıktı payı = saat / 40 (§8.4) |
+| `CLOCK_STEP_MIN` | 5 | üst barın saati bu kadar oyun dakikasıyla ilerler |
 | `DAYS_PER_TICK` | 7 | tik başına takvim günü |
 | `DAYS_PER_MONTH` | 30 | ekonomi ayı (oranlar ve runway) |
 | `HOURS_PER_DAY` | 24 | tik başına saatlik tik |

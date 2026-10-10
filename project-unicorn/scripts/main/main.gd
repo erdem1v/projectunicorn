@@ -998,11 +998,13 @@ func _run_sales_shot(kind: String) -> void:
 			shoot_hour = WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder()) - 1
 	if paint_hour >= 0:
 		GameState.set_current_hour(paint_hour)
+		TimeManager.sync_to_current_hour()
 	EventBus.tab_changed.emit("sales")
 	if paint_hour >= 0:
 		await get_tree().create_timer(0.4).timeout
 		_save_shot("sales_shot_%s_painted" % kind)
 		GameState.set_current_hour(shoot_hour)
+		TimeManager.sync_to_current_hour()
 	if kind in ["picker", "inbox", "edge_end"]:
 		await get_tree().process_frame
 		var page: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()
@@ -1466,7 +1468,8 @@ const DAY_SHOT_AFTER := 3          # frames kept after the night skip lands on t
 # --day-shot=<home|ishani|plaza|loft>:<speed 1-3>: one working week on the real clock, 08:00
 # through the walk-out and the night skip to the next 08:00, as the player sees it. The week is
 # the last of January, so the silent month close lands in the skip and its ticker line shows.
-# day_shot_<office>_<speed>_NN.png plus one DAYSHOT line per frame (real ms, week, clock, night).
+# day_shot_<office>_<speed>_NN.png plus one DAYSHOT line per frame (real ms, week, clock, night, speed, the top
+# bar's clock label).
 func _run_day_shot(spec: String) -> void:
 	var parts: PackedStringArray = spec.split(":")
 	var office_id: String = parts[0]
@@ -1488,9 +1491,10 @@ func _run_day_shot(spec: String) -> void:
 	var after: int = 0
 	for frame in DAY_SHOT_FRAMES * 3:
 		await get_tree().create_timer(every).timeout
-		print("DAYSHOT|%02d|ms=%d|week=%d|clock=%02d:%02d|night=%s|speed=%d" % [frame,
+		print("DAYSHOT|%02d|ms=%d|week=%d|clock=%02d:%02d|night=%s|speed=%d|label=%s" % [frame,
 			Time.get_ticks_msec() - start, GameState.day, int(TimeManager.day_minute()) / 60,
-			int(TimeManager.day_minute()) % 60, str(TimeManager.is_night()), TimeManager.current_speed])
+			int(TimeManager.day_minute()) % 60, str(TimeManager.is_night()), TimeManager.current_speed,
+			(_shell.get_node("TopBar/TimeBlock/Clock") as Label).text])
 		_save_shot("day_shot_%s_%d_%02d" % [office_id, speed, frame])
 		if landed[0]:
 			after += 1
@@ -3414,10 +3418,10 @@ func _on_quickload_requested() -> void:
 			LOADED_GLYPH, UiTokens.D_pos())
 
 
-## The week and the hour the run stands at, as the top bar shows them.
+## The week and the time the run stands at, as the top bar shows them.
 func _save_when(key: String) -> String:
 	return tr(key).format({"slot": tr("SAVE_QUICK_SLOT"), "week": int(GameState.get_date_dict().week),
-		"time": "%02d:00" % GameState.current_hour})
+		"time": (_shell.get_node("TopBar/TimeBlock/Clock") as Label).text})
 
 
 # The single load path. The shell is torn down BEFORE state is applied, so initialize_run's

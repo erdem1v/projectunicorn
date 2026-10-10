@@ -11,6 +11,7 @@ const WEEK_START_HOUR := 8            # a new week starts at 08:00
 const WORKDAY_LATEST_END := 24        # the workday ends at 00:00 at the latest
 const OVERTIME_HOUR_YIELD := 0.5      # output of each hour past eight [WORKING]
 const WEEK_WORK_HOURS := 40           # a meeting costs the founder hours / 40 of the week [WORKING]
+const CLOCK_STEP_MIN := 5             # the clock on screen moves in steps of this many game minutes
 
 # --- Units ---
 const DAYS_PER_TICK := 7
