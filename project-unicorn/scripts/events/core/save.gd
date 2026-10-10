@@ -32,6 +32,7 @@ static func to_dict() -> Dictionary:
 	block.merge(EvBudgets.to_dict())
 	block.merge(EvTicker.to_dict())
 	block.merge(EvTempo.to_dict())
+	block.merge(EvDelays.to_dict())
 	return block
 
 
@@ -57,6 +58,7 @@ static func from_dict(block: Dictionary) -> void:
 	EvBudgets.from_dict(block)
 	EvTicker.from_dict(block)
 	EvTempo.from_dict(block)
+	EvDelays.from_dict(block)
 
 
 static func reset() -> void:
@@ -70,6 +72,7 @@ static func reset() -> void:
 	EvBudgets.reset()
 	EvTicker.reset()
 	EvTempo.reset()
+	EvDelays.reset()
 	EvSeams.reset()
 
 

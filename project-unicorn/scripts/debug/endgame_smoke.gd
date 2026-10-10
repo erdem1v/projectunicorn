@@ -479,6 +479,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_v3_seams":                   fail = _case_event_v3_seams()
 		"event_plausibility_compiles":      fail = _case_event_plausibility_compiles()
 		"event_lint_v3_rules":              fail = _case_event_lint_v3_rules()  # EXPECT-ERROR unknown seam 'build.module_unlocked.pazarlama'
+		"event_start_immunity":             fail = _case_event_start_immunity()
+		"event_pool_nothing_weight":        fail = _case_event_pool_nothing_weight()
+		"event_family_gap":                 fail = _case_event_family_gap()
+		"event_delay_window":               fail = _case_event_delay_window()
+		"event_on_action_bindings":         fail = _case_event_on_action_bindings()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -5316,6 +5321,10 @@ static func _case_event_queue_dedupe_by_id() -> String:
 ## keyed its desk by card id. FALSIFICATION: key EvQueue by event_id again, drop _admit's desk
 ## check, or take request()'s open-paper path out, and the case fails.
 static func _case_event_instance_per_subject() -> String:
+	# Past the start immunity (§27.21): the suite starts every case in week 1, and a SIGNAL
+	# proposal in week 1 is re-dated rather than raised. What this case measures is instance
+	# identity, not the calendar.
+	GameState.day = EvTuning.START_IMMUNITY_WEEKS + 1
 	_seed_b2b(500)
 	var a: Customer = _add_risk_b2b("inst_a", 800)
 	# A's card, demoted to the desk earlier; A's Risk edge is still buffered, so the drain re-asks A.
@@ -18145,3 +18154,372 @@ static func _case_event_lint_v3_rules() -> String:
 		if not covered.has(rule):
 			return "%s kuralının bozuk fikstürü yok" % rule
 	return ""
+
+
+## Elde kurulan bir kart, kataloğa konmuş hâli: V3'ün motor kuralları kartın ALANLARI üzerine
+## kuraldır, ve her kural için bir disk fikstürü yazmak §5'in göçünün zaten aynı alanları
+## bütün külliyata taşıyacağı yerde on yeni dosya demekti. `version_scope` verilmez: kart diske
+## hiç inmediği için lint onu görmez, ve varsayılan "demo" G2'den geçer.
+static func _install_test_card(card: Dictionary) -> Dictionary:
+	EvCatalog.ensure_loaded()
+	EvCatalog._normalise_card(card)
+	EvCatalog._cards[String(card["id"])] = card
+	return card
+
+
+## Tek şıklı, koşulsuz, günlük bir kart gövdesi: V3 vakalarının ölçtüğü şey hiçbir zaman kartın
+## içeriği değil, motorun ona ne yaptığı.
+static func _plain_card(id: String, extra: Dictionary) -> Dictionary:
+	var card: Dictionary = {
+		"id": id,
+		"category": "team",
+		"tick": "daily",
+		"class": "info",
+		"latch": {EvLatches.COOLDOWN: 0},
+		"options": [{"id": "ok", "outcome_id": "done", "effects": []}],
+	}
+	card.merge(extra, true)
+	return _install_test_card(card)
+
+
+## R3 · BAŞLANGIÇ KORUMASI. İlk üç hafta havuzun değil öğreticinin: eşiği gün 1'de tutan kart
+## gün 1'de gelmez. Muafiyetler kuralın kendisi kadar önemli — sistem kendi haftasını bilir,
+## sessiz taban sessizliği doldurur (hüküm E4), istek ve ark kendi saatlerinde koşar.
+## FALSİFİKASYON: `_g4_window`'un koruma satırını sil → ilk döngü FAIL; `start_immunity_weeks_left`'ten
+## FLOOR kolunu çıkar → taban iddiası FAIL; `budget_exempt` geçiş kolunu sil → son iddia FAIL.
+static func _case_event_start_immunity() -> String:
+	const ID := "fixture.immunity"
+	var card: Dictionary = _plain_card(ID, {})
+	for day in range(1, EvTuning.START_IMMUNITY_WEEKS + 1):
+		GameState.day = day
+		var v: EvGate.Verdict = EvGate.propose(ID, EvGate.Origin.TICK_DAILY)
+		if v.admitted or v.step != "G4" or not v.reason.begins_with("start immunity"):
+			return "gün %d: %s '%s' (koruma bekleniyordu)" % [day, v.step, v.reason]
+		for origin in [EvGate.Origin.FLOOR, EvGate.Origin.REQUEST, EvGate.Origin.ARC_STEP]:
+			if not EvGate.propose(ID, origin).admitted:
+				return "gün %d: %s kökeni korumaya takıldı" % [day, EvGate.origin_name(origin)]
+	GameState.day = EvTuning.START_IMMUNITY_WEEKS + 1
+	var after: EvGate.Verdict = EvGate.propose(ID, EvGate.Origin.TICK_DAILY)
+	if not after.admitted:
+		return "koruma bittiği hafta kart %s ile reddedildi: %s" % [after.step, after.reason]
+
+	GameState.day = 1
+	# Kartın kendisi muaf olabilir: `system` zamanını bir sistemden alır, `tutorial` öğreticinin
+	# kartıdır, `terminal_warning` sonun telgrafıdır. Son satır V3-V6 geçiş kolu: `system` alanı
+	# henüz hiçbir kartta yok, ve onu alacak kartlar bugün bütçeden muaf olanlardır.
+	var exemptions: Array = [{"system": true}, {"tags": ["tutorial"]},
+		{"tags": ["terminal_warning"]}, {"tags": ["critical"]}]
+	for i in exemptions.size():
+		var probe: Dictionary = card.duplicate(true)
+		probe["id"] = "%s_exempt_%d" % [ID, i]
+		probe.merge(exemptions[i], true)
+		_install_test_card(probe)
+		var v: EvGate.Verdict = EvGate.propose(String(probe["id"]), EvGate.Origin.TICK_DAILY)
+		if not v.admitted:
+			return "gün 1'de %s muafiyeti tutmadı: %s %s" % [str(exemptions[i]), v.step, v.reason]
+	return ""
+
+
+## R4 · "BU HAFTA HİÇBİR ŞEY". Havuzun çekilişi sanal bir adayla koşar: ince bir destenin her
+## sessiz haftaya kendini boşaltması gerekmiyor. Çekiliş EvDice hash'i olduğu için boş hafta da
+## kayıt-yükle altında aynı haftadır.
+## FALSİFİKASYON: `_weighted_pick`'in sanal aday dalını sil → ilk iddia FAIL (hiç boş dönüş yok);
+## `EvDice.unit`'i bir üretece çevir → ikinci koşu ilkinden ayrılır.
+static func _case_event_pool_nothing_weight() -> String:
+	var candidates: Array = [{"card": {"weight": 1.0}}]
+	var first: PackedStringArray = []
+	var empty: int = 0
+	for day in range(1, 201):
+		GameState.day = day
+		var picked: Dictionary = EvEngine._weighted_pick(candidates, 1.0)
+		first.append("1" if picked.is_empty() else "0")
+		if picked.is_empty():
+			empty += 1
+	# Eşit ağırlık, eşit pay: 200 haftada 0,40-0,60 arası boş hafta.
+	if empty < 80 or empty > 120:
+		return "200 haftada %d boş çekiliş (80-120 bekleniyor)" % empty
+
+	var again: PackedStringArray = []
+	for day in range(1, 201):
+		GameState.day = day
+		again.append("1" if EvEngine._weighted_pick(candidates, 1.0).is_empty() else "0")
+	if "".join(first) != "".join(again):
+		return "aynı tohumda çekiliş dizisi değişti"
+
+	# Ağırlıksız çekiliş bugünkü davranıştır: sanal aday hiç kurulmaz, yani taban ve saatlik
+	# havuz her zaman bir kart döndürür.
+	for day in range(1, 201):
+		GameState.day = day
+		if EvEngine._weighted_pick(candidates).is_empty():
+			return "ağırlıksız çekiliş gün %d'de boş döndü" % day
+	return ""
+
+
+## R5 · AİLE VE ÖZNE FRENLERİ. Bulgu şuydu: aynı çalışan iki kez para istedi, ve aynı aileden
+## üç ayrı kart bir ayda geldi. Aile aralığı kartın değil ailenin ritmini tutar; `once` bir
+## aileyi bir kişiye bir kez açar. Freni yiyen SİNYAL düşmez, freninin bittiği güne tarihlenir.
+## FALSİFİKASYON: `family_brake`'in 1b dalını sil → ikinci iddia FAIL; `_record`'un aile satırını
+## sil → hepsi FAIL; `_deferral_weeks`'i 0 döndür → sinyal iddiası FAIL.
+static func _case_event_family_gap() -> String:
+	const FAMILY := "employee_asks_money"
+	var gap: int = TimeModel.ticks(EvTuning.family_gap(FAMILY))
+	var a: Dictionary = _plain_card("fixture.family_a", {"family": FAMILY})
+	var b: Dictionary = _plain_card("fixture.family_b", {"family": FAMILY})
+	var chained: Dictionary = _plain_card("fixture.family_follows",
+		{"family": FAMILY, "follows": "fixture.family_a"})
+
+	GameState.day = 10
+	EvTempo.assign([{"event_id": "fixture.family_a", "context": {}}])
+	if not EvTempo.family_brake(a, "").is_empty():
+		return "kart kendi ateşlenmesiyle 1b'ye takıldı: %s" % str(EvTempo.family_brake(a, ""))
+	if not EvTempo.family_brake(chained, "").is_empty():
+		return "zincir düğümü aile aralığına takıldı"
+
+	GameState.day = 10 + gap - 1
+	var blocked: String = EvTempo.pool_blocked_reason(b, "")
+	if not blocked.begins_with("layer 1b"):
+		return "aralık bitmeden kardeş kart geçti: '%s'" % blocked
+	GameState.day = 10 + gap
+	blocked = EvTempo.pool_blocked_reason(b, "")
+	if blocked != "":
+		return "aralık bittiği hafta kardeş kart hâlâ engelli: '%s'" % blocked
+
+	# 2b · aile × özne. `once` bir kişiye bir kez; başkasına açık kalır.
+	var once: Dictionary = _plain_card("fixture.family_once",
+		{"family": "founder_network", "family_subject": {"once": true}})
+	GameState.day = 30
+	EvTempo.assign([{"event_id": "fixture.family_once",
+		"context": {"employee": {"type": "employee", "id": "char_one"}}}])
+	GameState.day = 60
+	if int(EvTempo.family_brake(once, "char_one").get("weeks", 0)) != -1:
+		return "once ailesi aynı özneye ikinci kez açıldı: %s" % str(EvTempo.family_brake(once, "char_one"))
+	if not EvTempo.family_brake(once, "char_two").is_empty():
+		return "once ailesi başka özneye kapandı"
+
+	# Sinyal bir kez gelir (§13.3): 1b onu reddederse beat kaybolmaz, freninin bittiği güne
+	# `delayed` girdi olarak kurulur ve oradan SCHEDULE_DELAYED ile kapıya döner.
+	_plain_card("fixture.family_signal",
+		{"family": FAMILY, "tick": "signal", "trigger": {"signal": "promise_broken"}})
+	GameState.day = 100
+	EvTempo.assign([{"event_id": "fixture.family_a", "context": {}}])
+	GameState.day = 101
+	EvEngine.on_signal("promise_broken", {})
+	EvEngine._step_signal_drain()
+	if EvQueue.has("fixture.family_signal"):
+		return "1b'nin reddettiği sinyal aynı hafta kuyruğa girdi"
+	var entry: Dictionary = _pending_entry("fixture.family_signal")
+	if int(entry.get("fire_on_day", -1)) != 100 + gap or not bool(entry.get("delayed", false)):
+		return "sinyal freninin bittiği güne tarihlenmedi: %s" % str(entry)
+	GameState.day = 100 + gap
+	EvEngine._step_schedule()
+	if not EvQueue.has("fixture.family_signal"):
+		return "aralık bittiği gün SCHEDULE_DELAYED girdisi kabul edilmedi"
+
+	# Kayıt gidiş-dönüşü aynı kararı verir; aile defteri pencerenin budamasından bağımsızdır.
+	var block: Dictionary = JSON.parse_string(JSON.stringify(EvSave.to_dict()))
+	EvSave.reset()
+	EvSave.from_dict(block)
+	if int(EvTempo.family_brake(once, "char_one").get("weeks", 0)) != -1:
+		return "kayıt gidiş-dönüşünden sonra once kaydı kayboldu"
+	GameState.day = 100 + gap - 1
+	if not EvTempo.family_brake(b, "").get("reason", "").begins_with("layer 1b"):
+		return "kayıt gidiş-dönüşünden sonra aile aralığı kayboldu"
+	return ""
+
+
+static func _pending_entry(event_id: String) -> Dictionary:
+	for e in EvSchedule.pending():
+		if String((e as Dictionary)["event_id"]) == event_id:
+			return e
+	return {}
+
+
+## R6 · GECİKME PENCERESİ. Eşik bir tarih değil bir kapıdır: koşul ilk tuttuğu hafta pencere
+## kurulur, kart vadesinde gelir, ve vade EvDice hash'i olduğu için kayıt-yükle onu yeniden
+## çekmez. Koşul art arda DISARM_WEEKS hafta tutmazsa pencere atılır.
+## FALSİFİKASYON: `touch`'ın vade karşılaştırmasını `true` yap → ikinci iddia FAIL; `_span`'i
+## `[0,0]`'ı da pencere sayacak hâle getir → sinyalsiz kartlar bekler ve bütün paket düşer;
+## `window`'un söküm karşılaştırmasını `>=` yap → sprint kadansı iddiası FAIL;
+## `_step_signal_drain`'in `has_dated_for`'unu `has`'a çevir → iki özne iddiası FAIL.
+static func _case_event_delay_window() -> String:
+	const ID := "fixture.delay"
+	var card: Dictionary = _plain_card(ID, {"delay_weeks": [2, 5]})
+	var key: String = EvLatches.key_of(ID, {})
+
+	GameState.day = 10
+	var want: int = EvDelays.draw_weeks(card, {})
+	# Formülün bağımsız bir yazımıyla: `floorf` yerine `roundf`, ya da zar koordinatı başka bir
+	# gün olursa vaka buradan düşer.
+	if want != 2 + int(floorf(EvDice.unit("delay", 10, ID, "") * 4.0)):
+		return "çekilen gecikme %d, [2, 5] formülüyle uyuşmadı" % want
+	if EvDelays.touch(card, {}):
+		return "pencerenin kurulduğu hafta kart vadesinde sayıldı"
+	var win: Dictionary = EvDelays.window(key)
+	if int(win["d0"]) != 10 or int(win["due"]) != 10 + want:
+		return "pencere d0=%s due=%s (10 ve %d bekleniyordu)" % [win["d0"], win["due"], 10 + want]
+	for day in range(11, 10 + want):
+		GameState.day = day
+		if EvDelays.touch(card, {}):
+			return "vade öncesi gün %d'de kart aday oldu" % day
+
+	# Kayıt gidiş-dönüşü KARARI taşır, yeniden çekilişi değil.
+	var block: Dictionary = JSON.parse_string(JSON.stringify(EvSave.to_dict()))
+	EvSave.reset()
+	EvSave.from_dict(block)
+	if int(EvDelays.window(key).get("due", -1)) != 10 + want:
+		return "kayıt gidiş-dönüşünden sonra vade %s" % str(EvDelays.window(key).get("due", "yok"))
+
+	GameState.day = 10 + want
+	if not EvDelays.touch(card, {}):
+		return "vadesinde kart aday olmadı"
+
+	# Söküm eşiği KOŞULUN TUTTUĞU son haftadan sayılır: DISARM_WEEKS hafta sonra yine tutan
+	# sprint koşulu penceresini bir kez geçirir, bir hafta fazlası onu atar.
+	GameState.day = 10 + want + TimeModel.ticks(EvTuning.DISARM_WEEKS)
+	if EvDelays.window(key).is_empty():
+		return "sprint kadansı (%d hafta sonra yine tutan koşul) penceresini kaybetti" \
+			% EvTuning.DISARM_WEEKS
+	GameState.day += 1
+	if not EvDelays.window(key).is_empty():
+		return "koşul %d hafta tutmadığı hâlde pencere ayakta" % (EvTuning.DISARM_WEEKS + 1)
+	if EvDelays.touch(card, {}):
+		return "söküm sonrası kart yeni pencere beklemeden aday oldu"
+
+	# Sinyal penceresi: sinyal pencerenin AÇILDIĞI andır, kartın geldiği an değil.
+	const SIG_ID := "fixture.delay_signal"
+	_plain_card(SIG_ID, {"tick": "signal", "trigger": {"signal": "promise_broken"},
+		"delay_weeks": [3, 3]})
+	GameState.day = 50
+	EvEngine.on_signal("promise_broken", {})
+	EvEngine._step_signal_drain()
+	if EvQueue.has(SIG_ID):
+		return "pencereli sinyal kartı sinyalin geldiği hafta kuyruğa girdi"
+	var entry: Dictionary = _pending_entry(SIG_ID)
+	if int(entry.get("fire_on_day", -1)) != 53 or not bool(entry.get("delayed", false)):
+		return "sinyal cevabı üç hafta sonraya tarihlenmedi: %s" % str(entry)
+	GameState.day = 53
+	EvEngine._step_schedule()
+	if not EvQueue.has(SIG_ID):
+		return "vadesinde SCHEDULE_DELAYED girdisi kabul edilmedi"
+
+	# `delayed` taşımayan eski girdi SCHEDULE gibidir, ve SCHEDULE bir sinyal kartını almaz.
+	EvQueue.reset()
+	EvSchedule.from_dict({"schedule": [{"event_id": SIG_ID, "fire_on_day": 60,
+		"context": {}, "arc_id": ""}]})
+	GameState.day = 60
+	EvEngine._step_schedule()
+	if EvQueue.has(SIG_ID):
+		return "`delayed` taşımayan eski girdi sinyal kartını kabul etti"
+
+	# `conference_trip` biçimi: kıdem eşiği de bir kapıdır. Kıdem 26'da pencere kurulur, kart
+	# iki hafta sonra gelir — ikisi arasındaki fark koşunun artık okumadığı takvimdir.
+	_make_employee("char_delay", "Delay Dev", HRConstants.ROLE_DEVELOPER)
+	EvSeams.mock("hr.tenure_weeks@char_delay", 26)
+	var tenure_card: Dictionary = _plain_card("fixture.delay_tenure", {
+		"delay_weeks": [2, 2],
+		"scope": {"employee": {"type": "employee", "required": true, "select": "most_senior"}},
+		"condition": {"entity_seam": "hr.tenure_weeks", "scope": "employee",
+			"op": ">=", "value": 26},
+	})
+	GameState.day = 70
+	var v: EvGate.Verdict = EvGate.propose("fixture.delay_tenure", EvGate.Origin.POOL)
+	if not v.admitted:
+		return "kıdem 26'da kart kapıdan geçmedi: %s %s" % [v.step, v.reason]
+	if EvDelays.touch(tenure_card, v.context):
+		return "kıdem eşiğinin geçildiği hafta kart geldi"
+	GameState.day = 72
+	if not EvDelays.touch(tenure_card, v.context):
+		return "kıdem 28'de kart aday olmadı"
+
+	# Pencere ÖRNEK başınadır: A için tarihlenen girdi B'nin sinyalini yutmaz, ama A'nın aynı
+	# hafta yeniden yayılan sinyali ikinci girdi satın almaz. En sonda, çünkü yeni çalışanlar
+	# yukarıdaki `most_senior` seçimini değiştirir.
+	const SUBJ_ID := "fixture.delay_subject"
+	_make_employee("char_sig_a", "Sig A", HRConstants.ROLE_DEVELOPER)
+	_make_employee("char_sig_b", "Sig B", HRConstants.ROLE_DEVELOPER)
+	_plain_card(SUBJ_ID, {"tick": "signal", "trigger": {"signal": "employee_departed"},
+		"delay_weeks": [3, 3],
+		"scope": {"employee": {"type": "employee", "required": true}}})
+	GameState.day = 80
+	for subject in ["char_sig_a", "char_sig_a", "char_sig_b"]:
+		EvEngine.on_signal("employee_departed", {"employee": subject})
+	EvEngine._step_signal_drain()
+	var dated: int = EvSchedule.pending().filter(
+		func(e): return String(e["event_id"]) == SUBJ_ID).size()
+	if dated != 2:
+		return "iki özne bir tekrar: %d girdi tarihlendi (2 bekleniyordu)" % dated
+	return ""
+
+
+## R8 · on_action KANCALARI. "İlk müşteri" bir sinyal artı bir sayıdır, ve bir modülün sayfası
+## açıldığında bunu söyleyen kimse yoktu: kilit bir kuraldır, bir sistemin durumu değil, o yüzden
+## yayan motorun kendi nöbetidir. Görüntü boşken ilk tik tohumlar ve yaymaz — yoksa her yeni koşu
+## açılışta dokuz modülü birden "açıldı" diye bağırırdı.
+## FALSİFİKASYON: `customer_added` bağlamasını sil → ilk iddia FAIL (sinyal hiç bağlanmaz);
+## `module_openings`'in boş-görüntü dalını sil → tohumlama iddiası FAIL.
+static func _case_event_on_action_bindings() -> String:
+	var shipped: Array = EvTuning.SHIPPED_SCOPES.duplicate()
+	EvTuning.SHIPPED_SCOPES.append("fixture")
+	var fail: String = _on_action_bindings()
+	EvTuning.SHIPPED_SCOPES.assign(shipped)
+	return fail
+
+
+## Gövde ayrı duruyor ki `SHIPPED_SCOPES` genişletmesi tek bir yerde açılıp aynı yerde kapansın.
+static func _on_action_bindings() -> String:
+	const ModuleLocks := preload("res://scripts/systems/module_locks.gd")
+	EvCatalog.reload()
+	GameState.day = EvTuning.START_IMMUNITY_WEEKS + 1
+	if EvCatalog.card("fixture.first_customer").is_empty():
+		return "fixture.first_customer katalogda yok"
+
+	_add_customer("co_first", "İlk Hesap")
+	EvEngine._step_signal_drain()
+	if not EvQueue.has("fixture.first_customer"):
+		return "ilk müşteride kart önerilmedi"
+	_add_customer("co_second", "İkinci Hesap")
+	var v: EvGate.Verdict = EvGate.propose("fixture.first_customer", EvGate.Origin.SIGNAL,
+		{"customer": "co_second"})
+	if v.admitted or v.step != "G7":
+		return "ikinci müşteride kart G7 yerine '%s' ile karşılandı" % v.step
+
+	var seen: Array = []
+	EventBus.module_unlocked.connect(func(id: String) -> void: seen.append(id))
+	EvEngine._step_module_watch()
+	if not seen.is_empty():
+		return "boş görüntüyle ilk tik %s yaydı" % str(seen)
+
+	const MOD_ID := "fixture.module_opened"
+	_plain_card(MOD_ID, {
+		"category": "product", "tick": "signal", "trigger": {"signal": "module_unlocked"},
+		"latch": {EvLatches.ONE_SHOT: true},
+		"condition": {"seam": "build.last_unlocked_module", "op": "==", "value": "marketing"},
+	})
+	EvSignals.install()
+	ModuleLocks.set_override("marketing", true)
+	EvEngine._step_module_watch()
+	EvEngine._step_signal_drain()
+	if seen != ["marketing"]:
+		return "modül açılışında yayılanlar: %s" % str(seen)
+	if String(EvSeams.read("build.last_unlocked_module")) != "marketing":
+		return "build.last_unlocked_module '%s'" % str(EvSeams.read("build.last_unlocked_module"))
+	if not EvQueue.has(MOD_ID):
+		return "module_unlocked kartı önerilmedi"
+
+	EvQueue.reset()
+	EvEngine._step_module_watch()
+	EvEngine._step_signal_drain()
+	if seen.size() != 1 or EvQueue.has(MOD_ID):
+		return "açık kalan modül ikinci tikte yeniden açıldı sayıldı: %s" % str(seen)
+	return ""
+
+
+static func _add_customer(id: String, company_name: String) -> Customer:
+	var c := Customer.new()
+	c.id = id
+	c.company_name = company_name
+	c.industry = "technology"
+	c.market_type = "b2b"
+	c.acquired_on_day = GameState.day
+	CustomerRegistry.add(c)
+	return c

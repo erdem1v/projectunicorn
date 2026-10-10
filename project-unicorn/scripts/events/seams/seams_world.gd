@@ -143,13 +143,18 @@ static func _install_office() -> void:
 # --- Build ------------------------------------------------------------------
 
 ## One seam per rail tab, so a card can say "only once Pazarlama is open" without knowing
-## what gates it. Registered from UiTokens.TABS, which is the whole set of module pages.
+## what gates it. The set of pages comes from ModuleLocks, which owns the lock rule.
 static func _install_build() -> void:
-	for row in UiTokens.TABS:
-		var id: String = String(row.id)
+	for id: String in ModuleLocks.ids():
 		var note: String = "WRAPPER over ModuleLocks.is_open; the %s page is reachable in this build" % id
 		if id == "rnd":
 			note += ". Never gated; the Ar-Ge tree's own door is arge.tree_open"
 		EvSeams.register("build.module_unlocked." + id, EvSeams.Kind.GLOBAL, TYPE_BOOL,
 			func() -> bool: return ModuleLocks.is_open(id),
 			"Build", note)
+
+	# Which module just opened, for the card that answers `module_unlocked`. A STRING rather than
+	# a signal argument: EvSignals binds arguments to entity slots, and a module is not an entity.
+	EvSeams.register("build.last_unlocked_module", EvSeams.Kind.GLOBAL, TYPE_STRING,
+		func() -> String: return EvDelays.last_unlocked_module(),
+		"Build", "the module whose page opened most recently; empty before any does")

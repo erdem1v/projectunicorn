@@ -20,6 +20,10 @@ extends RefCounted
 #   · latch state: last fire, cooldown remaining
 #   · what it is waiting on: a signal, an arc, a week
 #   · and — the one nobody thinks to ask — whether the signal it waits on has EVER been emitted
+#   · what the card says about where it is PLAUSIBLE, whatever the gate answered: the gate stops
+#     at the first refusal, and "it failed G4" tells you nothing about the band or the seniority
+#     the author meant. Plus the family brakes, the armed delay window and the start immunity,
+#     none of which the Verdict can carry.
 
 static func report(event_id: String) -> String:
 	var out: PackedStringArray = []
@@ -56,13 +60,17 @@ static func report(event_id: String) -> String:
 	if not papers.is_empty():
 		out.append("IT IS ON THE DESK as a paper, %d week(s) left." % EvPapers.weeks_left(String(papers[0])))
 		return "\n".join(out)
-	if EvSchedule.has(event_id):
-		for e in EvSchedule.pending():
-			if String((e as Dictionary)["event_id"]) == event_id:
-				out.append("IT IS SCHEDULED for week %d — %d week(s) away."
-					% [int((e as Dictionary)["fire_on_day"]),
-						int((e as Dictionary)["fire_on_day"]) - GameState.day])
-				return "\n".join(out)
+	# Not a return, unlike the three above: a card waiting on a date is exactly the one whose
+	# leaves, brakes and window the rest of the report is asked about (§27.20).
+	for e in EvSchedule.pending():
+		if String((e as Dictionary)["event_id"]) == event_id:
+			out.append("IT IS SCHEDULED for week %d — %d week(s) away.%s"
+				% [int((e as Dictionary)["fire_on_day"]),
+					int((e as Dictionary)["fire_on_day"]) - GameState.day,
+					" The ENGINE dated it (§27.19), not a card."
+						if bool((e as Dictionary).get("delayed", false)) else ""])
+			out.append("")
+			break
 
 	# --- history and latch --------------------------------------------------
 	var fires: int = EvHistory.fire_count(event_id)
@@ -121,6 +129,10 @@ static func report(event_id: String) -> String:
 			_print_report(verdict.report, out, "          ")
 
 	out.append("")
+	out.append("PLAUSIBILITY")
+	_print_plausibility(card, verdict, origin, out)
+
+	out.append("")
 	out.append("SEAMS THIS CARD READS")
 	var seams: Array = []
 	for tree in [card.get("condition", {}), trigger.get("condition", {})]:
@@ -168,6 +180,42 @@ static func _detail_line(detail: Dictionary) -> String:
 			bits.append("%s=%s" % [k, str(detail[k])])
 		return ", ".join(bits)
 	return str(detail)
+
+
+## §27.20's block, the brakes and the window — the state no Verdict carries. Printed whatever
+## the gate said, because the gate stops at its first refusal and the author's question ("is
+## this card even meant to be possible here?") is about every leaf at once.
+static func _print_plausibility(card: Dictionary, verdict: EvGate.Verdict,
+		origin: EvGate.Origin, out: PackedStringArray) -> void:
+	var leaves: Array = EvCondition.leaves_named(card.get("condition", {}), "_from", "plausibility")
+	for slot in (card["scope"] as Dictionary):
+		leaves += EvCondition.leaves_named(
+			(card["scope"] as Dictionary)[slot].get("where", {}), "_from", "plausibility")
+	if leaves.is_empty():
+		out.append("          (no plausibility block — this card is not on schema v3 yet)")
+	for leaf in leaves:
+		var d: Dictionary = leaf
+		if d.has("seam"):
+			out.append("          [plausibility] %-32s %s %s   (live %s)"
+				% [d["seam"], d["op"], str(d["value"]), str(EvSeams.read(String(d["seam"])))])
+			continue
+		# A slot filter, so there is no one entity to read: this leaf is what the SELECTOR
+		# refused with, which is why an unfilled slot is not the same as a failed condition.
+		out.append("          [plausibility] %-32s %s %s   (slot '%s' selector)"
+			% [d["entity_seam"], d["op"], str(d["value"]), d.get("scope", "?")])
+
+	var immunity: int = EvGate.start_immunity_weeks_left(card, origin)
+	if immunity > 0:
+		out.append("          START IMMUNITY: %d week(s) left (§27.21)" % immunity)
+	var brake: Dictionary = EvTempo.family_brake(card, EvGate.subject_of(verdict.context))
+	if not brake.is_empty():
+		out.append("          FAMILY BRAKE: %s%s" % [brake["reason"],
+			"" if int(brake["weeks"]) < 0 else " — %d week(s) left" % int(brake["weeks"])])
+	var armed: Dictionary = EvDelays.window(
+		EvLatches.key_of(String(card["id"]), verdict.context))
+	if not armed.is_empty():
+		out.append("          armed d0=%d due=%d D=%d" % [int(armed["d0"]), int(armed["due"]),
+			int(armed["due"]) - int(armed["d0"])])
 
 
 static func _origin_for(tick: String) -> EvGate.Origin:

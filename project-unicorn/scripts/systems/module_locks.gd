@@ -12,6 +12,12 @@ extends RefCounted
 static var _override: Dictionary = {}
 
 
+## Every module the build knows, in rail order. The one walk over UiTokens.TABS, so a caller
+## that needs the set does not grow a second copy of the rule's vocabulary.
+static func ids() -> Array:
+	return UiTokens.TABS.map(func(row): return String(row.id))
+
+
 static func is_open(id: String) -> bool:
 	if _override.has(id):
 		return bool(_override[id])

@@ -128,6 +128,10 @@ signal desk_changed
 signal messages_changed
 
 # --- Build / product signals ---
+# A module's page became reachable in this build. The only emitter is the event engine's own
+# watch (EvEngine._step_module_watch): the lock is a rule over the build, not a system's state,
+# so there is no unlock site to emit from.
+signal module_unlocked(module_id: String)
 # SprintSystem her açık sürümde "shipped" ile atar; PromiseRegistry sözü burada tutar.
 signal build_phase_changed(new_phase: String)
 # ProductSystem's hourly wear moved the live bug counters.

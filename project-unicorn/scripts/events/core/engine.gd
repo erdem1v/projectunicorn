@@ -20,6 +20,8 @@ extends RefCounted
 #                            re-subjected in one tick.
 #   e. schedule              §20 B1: an overdue entry fires, never skips.
 #   f. arc steps             each live arc proposes the card at its current step.
+#   f2. module watch         emits for a page that became reachable, BEFORE the drain, so the
+#                            beat it answers is drained in the tick it happened.
 #   g. signal drain          signals fire during the systems' own slots, while Product, HR and
 #                            Sales are still moving; proposing inline would judge a slot-1 edge
 #                            before Finance ran. So they BUFFER and drain here, in emission order.
@@ -32,6 +34,10 @@ extends RefCounted
 # STEP (k) IS NOT WHERE §4.1 PUTS IT, deliberately. §4.1 lists G8 inside propose(), which would
 # demote the THIRD-ARRIVING card — possibly the arc payoff. Assigning classes top-down by §11.2
 # priority over the day's admissions demotes the least important card, which is what I4 is for.
+
+## The origins that speak once and so are re-dated rather than refused; see _deferral_weeks.
+const DEFERRABLE_ORIGINS := [EvGate.Origin.SIGNAL, EvGate.Origin.SCHEDULE,
+	EvGate.Origin.SCHEDULE_DELAYED]
 
 ## Signals proposed during the systems' own slots, drained at step (g).
 static var _signal_buffer: Array = []
@@ -67,6 +73,7 @@ static func daily_tick() -> void:
 	_step_awaiting_timeout()
 	_step_schedule()
 	_step_arc_steps()
+	_step_module_watch()
 	_step_signal_drain()
 	_step_tick_proposals(EvGate.Origin.TICK_DAILY, "daily")
 	_step_pool("daily")
@@ -213,7 +220,11 @@ static func _arc_context(arc_id: String) -> Dictionary:
 
 static func _step_schedule() -> void:
 	for entry in EvSchedule.take_due():
-		_propose(String(entry["event_id"]), EvGate.Origin.SCHEDULE,
+		# §27.19: an entry the engine itself dated — a drawn delay window, or a beat a brake
+		# pushed out — is not a consequence a card scheduled, and its card may say `tick: signal`.
+		var origin: EvGate.Origin = EvGate.Origin.SCHEDULE_DELAYED \
+			if bool(entry.get("delayed", false)) else EvGate.Origin.SCHEDULE
+		_propose(String(entry["event_id"]), origin,
 			entry.get("context", {}), String(entry.get("arc_id", "")))
 
 
@@ -241,6 +252,16 @@ static func _step_arc_steps() -> void:
 		_propose(event_id, EvGate.Origin.ARC_STEP, _arc_context(arc_id), arc_id)
 
 
+# --- (f2) The module watch -------------------------------------------------
+
+## A module's page becoming reachable is a beat content can bind to, and nothing emitted it.
+## Read here rather than at an unlock site: the lock is a rule over the build and UiTokens, not
+## a state any one system owns, so there is no site to emit from.
+static func _step_module_watch() -> void:
+	for id: String in EvDelays.module_openings():
+		EventBus.module_unlocked.emit(id)
+
+
 # --- (g) Signals -----------------------------------------------------------
 
 ## Called from a signal handler during the systems' slots. Buffers rather than proposing.
@@ -253,7 +274,14 @@ static func _step_signal_drain() -> void:
 	_signal_buffer.clear()
 	for entry in buffered:
 		for id in EvCatalog.card_ids():
-			if String(EvCatalog.card(id).get("trigger", {}).get("signal", "")) == entry["signal"]:
+			if String(EvCatalog.card(id).get("trigger", {}).get("signal", "")) != entry["signal"]:
+				continue
+			# An INSTANCE the engine has already dated — a drawn window (§27.19) or a beat a
+			# brake pushed out — is on its way to the player, and a signal that speaks every week
+			# must not put a second one beside it. Per instance, because this subject's beat is
+			# not the one already waiting (§13.3). The window itself is drawn in _propose, where
+			# the gate has already said whether the card may come at all.
+			if not EvSchedule.has_dated_for(id, entry["payload"]):
 				_propose(id, EvGate.Origin.SIGNAL, entry["payload"])
 
 
@@ -278,10 +306,19 @@ static func _step_tick_proposals(origin: EvGate.Origin, tick: String) -> void:
 static func _step_pool(tick: String) -> void:
 	var candidates: Array = []
 	for card in EvCatalog.pool_candidates(tick):
-		var verdict: EvGate.Verdict = EvGate.propose(String(card["id"]), EvGate.Origin.POOL)
-		# §13.3 layers 1-3 are a refusal here, not a demotion.
-		if verdict.admitted \
-				and EvTempo.pool_blocked_reason(card, EvGate.subject_of(verdict.context)) == "":
+		var id: String = String(card["id"])
+		var verdict: EvGate.Verdict = EvGate.propose(id, EvGate.Origin.POOL)
+		if not verdict.admitted:
+			continue
+		# §27.19: eligible is not due. Arming belongs right here, after the gate and before the
+		# brakes: R6 measures the disarm against the WEEK THE CONDITION HELD, and a brake that
+		# ate the window would send the card back to the start of its wait.
+		var due: bool = EvDelays.touch(card, verdict.context)
+		# §13.3 layers 1-3 and the family's 1b/2b are a refusal here, not a demotion.
+		var subject: String = EvGate.subject_of(verdict.context)
+		if EvTempo.pool_blocked_reason(card, subject) != "":
+			continue
+		if due:
 			candidates.append({"card": card, "verdict": verdict})
 	if candidates.is_empty():
 		return
@@ -289,18 +326,30 @@ static func _step_pool(tick: String) -> void:
 	# §14.3: a deterministic weighted draw. NOT RngStreams — that generator is position-resuming,
 	# so a reload that spent a different number of draws would pick a different card. A pure hash
 	# of (seed, day, "pool") cannot drift.
-	var picked: Dictionary = _weighted_pick(candidates)
+	#
+	# §14.1: the daily draw also carries "nothing this week". The hourly pool does not — an hour
+	# that draws a blank is every hour, and the phase weight is a figure per WEEK.
+	var picked: Dictionary = _weighted_pick(candidates,
+		float(EvTuning.POOL_NOTHING_WEIGHT.get(GameState.phase, 0.0)) if tick == "daily" else 0.0)
+	# Ruling E1: a blank week cuts the pool's story card and nothing else. _step_floor runs in
+	# this same tick and fills a clear desk, so "nothing" is quiet, never dead.
+	if picked.is_empty():
+		return
 	_admit(String(picked["card"]["id"]), picked["verdict"], "")
 
 
-static func _weighted_pick(candidates: Array) -> Dictionary:
-	var total: float = 0.0
+## `nothing_weight` enters the draw as a virtual candidate: the roll landing on it returns {},
+## which is the pool deciding this week has no story in it.
+static func _weighted_pick(candidates: Array, nothing_weight: float = 0.0) -> Dictionary:
+	var total: float = nothing_weight
 	for c in candidates:
 		total += maxf(0.0, float(c["card"]["weight"]))
 	if total <= 0.0:
 		return candidates[0]
 	var roll: float = EvDice.unit("pool", GameState.day, "", "") * total
-	var running: float = 0.0
+	if nothing_weight > 0.0 and roll <= nothing_weight:
+		return {}
+	var running: float = nothing_weight
 	for c in candidates:
 		running += maxf(0.0, float(c["card"]["weight"]))
 		if roll <= running:
@@ -331,7 +380,10 @@ static func _step_floor() -> void:
 		if not (card["tags"] as Array).has("quiet"):
 			continue
 		var verdict: EvGate.Verdict = EvGate.propose(id, EvGate.Origin.FLOOR)
-		if verdict.admitted:
+		# The floor pays the family's brakes but not the pool's three layers: it fills a silence,
+		# and a quota is about a crowded week. _propose is not its path, so it asks here.
+		if verdict.admitted and EvTempo.family_brake(card,
+				EvGate.subject_of(verdict.context)).is_empty():
 			quiet_pool.append({"card": card, "verdict": verdict})
 
 	if quiet_pool.is_empty():
@@ -372,7 +424,44 @@ static func _step_assign_classes() -> void:
 static func _propose(event_id: String, origin: EvGate.Origin, given: Dictionary,
 		arc_id: String = "") -> bool:
 	var verdict: EvGate.Verdict = EvGate.propose(event_id, origin, given)
+	if DEFERRABLE_ORIGINS.has(origin):
+		var wait: int = _deferral_weeks(event_id, origin, verdict)
+		if wait != 0:
+			if wait > 0:
+				EvSchedule.add(event_id, wait, given, arc_id, true)
+			return false
 	return verdict.admitted and _admit(event_id, verdict, arc_id)
+
+
+## Weeks to re-date a proposal by: the longest of a family brake's remainder, the start
+## immunity's remainder and a signal card's drawn window, or 0 when nothing of ours holds it;
+## -1 when its family has already happened to this subject and no week brings it back.
+##
+## A SIGNAL SPEAKS ONCE (§13.3). A family brake or the start immunity refusing one would lose
+## the beat outright — the second account to go to Risk inside the gap would simply get no card
+## — so the refusal becomes a date instead. A REQUEST and a FORCE are deliberately absent: the
+## asking system re-opens a refused request next week, and an arc's clock is the arc's.
+static func _deferral_weeks(event_id: String, origin: EvGate.Origin,
+		verdict: EvGate.Verdict) -> int:
+	var card: Dictionary = EvCatalog.card(event_id)
+	var weeks: int = 0
+	if verdict.admitted:
+		weeks = int(EvTempo.family_brake(card,
+			EvGate.subject_of(verdict.context)).get("weeks", 0))
+	else:
+		# G4 also refuses a card proposed from the wrong clock, and that is no wait: the immunity
+		# reports zero weeks and the card is simply not this origin's.
+		weeks = EvGate.start_immunity_weeks_left(card, origin) if verdict.step == "G4" else 0
+		if weeks == 0:
+			return 0
+	# §27.19: a signal card with a window is DATED rather than admitted now, and the draw belongs
+	# here because the gate has already run: a spent latch, a dead subject or an unmet condition
+	# buys no entry. The entry comes back as SCHEDULE_DELAYED, which is not this arm, so the wait
+	# is drawn once. A refusal longer than the window still wins; it is a refusal, not a choice,
+	# and the immunity refuses before scope, so a card it dates draws with no subject in the hash.
+	if weeks >= 0 and origin == EvGate.Origin.SIGNAL:
+		weeks = maxi(weeks, EvDelays.draw_weeks(card, verdict.context))
+	return weeks
 
 
 ## An instance whose paper is on the desk is refused: queued beside its own paper it would pass
@@ -393,6 +482,9 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) ->
 	# The latch is spent AT ADMISSION, so a card waiting in the queue or on the desk is not
 	# re-proposed every tick, and only then, so a refused duplicate costs its subject nothing.
 	EvLatches.spend(key)
+	# The window is spent with the latch: a card that comes back later draws a new wait, and the
+	# save keeps no row for a window whose week has already arrived.
+	EvDelays.disarm(key)
 	# A forced instance dropped unanswered left its mark; this one arrived on its own.
 	_forced.erase(key)
 	_today_admissions.append({"event_id": event_id, "context": verdict.context})

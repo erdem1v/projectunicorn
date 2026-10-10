@@ -9,9 +9,8 @@ That is deliberate: one mechanism, not two. A second "is this a test card" flag 
 second thing to forget.
 
 The probe (`--event-probe`) widens `SHIPPED_SCOPES` for its own run and narrows it again
-afterwards, and three smoke cases do the same for the length of one case
-(`event_thesis_day10_to_day90`, `event_thesis_through_presenter`,
-`ambient_hourly_never_at_night`). Nothing in production code does, and nothing should:
+afterwards, and the smoke cases whose subject is a fixture do the same for the length of one
+case (grep `SHIPPED_SCOPES.append`). Nothing in production code does, and nothing should:
 the widening is always paired with a restore in the same function.
 
 `hourly_ambient.json` is the subject of `ambient_hourly_never_at_night`, which asserts

@@ -32,8 +32,9 @@ extends RefCounted
 #
 # THE RULES, R13's numbering: 1 start_immunity, 2 plausibility, 3 known_absurd, 4 first_weeks,
 # 5 family_gap, 6 critical_scope. Rule 7 (the error patterns in the log) belongs to the runner,
-# which owns the log file. Rule 8 (a signal refused by a brake without a PLAUS DEFER line) has
-# nothing to print: nothing defers until the brakes exist.
+# which owns the log file. Rule 8 (a signal refused by a brake without a PLAUS DEFER line) is
+# not judged here: EvEngine re-dates such a proposal without telling anyone, so this ledger has
+# no deferral to read.
 
 const DEFAULT_SEEDS := 20
 const DEFAULT_WEEKS := 16

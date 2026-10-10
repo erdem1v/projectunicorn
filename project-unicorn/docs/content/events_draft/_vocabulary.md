@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **190** |
+| Seams (read) | **191** |
 | Effect verbs (write) | **63** |
-| Cards in the catalogue | 94 |
+| Cards in the catalogue | 96 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -127,6 +127,7 @@ slot of that type (§17.12).
 
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
+| `build.last_unlocked_module` | global | string | Build | the module whose page opened most recently; empty before any does |
 | `build.module_unlocked.events` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the events page is reachable in this build |
 | `build.module_unlocked.finance` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the finance page is reachable in this build |
 | `build.module_unlocked.hr` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the hr page is reachable in this build |
