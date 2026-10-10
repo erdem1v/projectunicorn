@@ -5,6 +5,16 @@
   "tick": "daily",
   "class": "interrupt",
   "tags": [],
+  "schema": 3,
+  "family": "rival_funding",
+  "delay_weeks": [1, 4],
+  "plausibility": {
+    "phase_band": ["series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "product_live": true
   },

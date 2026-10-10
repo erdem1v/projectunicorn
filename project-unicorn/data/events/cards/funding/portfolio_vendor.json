@@ -6,6 +6,16 @@
   "tick": "daily",
   "class": "paper",
   "tags": [],
+  "schema": 3,
+  "family": "investor_favor",
+  "delay_weeks": [0, 3],
+  "plausibility": {
+    "phase_band": ["traction"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2c",
     "product_live": true

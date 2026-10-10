@@ -5,6 +5,16 @@
   "tick": "daily",
   "class": "interrupt",
   "tags": [],
+  "schema": 3,
+  "family": "product_quality",
+  "delay_weeks": [1, 3],
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "product_live": true
   },

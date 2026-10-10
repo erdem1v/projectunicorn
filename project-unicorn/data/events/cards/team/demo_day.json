@@ -7,6 +7,17 @@
   "tags": [
     "quiet"
   ],
+  "schema": 3,
+  "family": "team_ritual",
+  "delay_weeks": [0, 0],
+  "delay_reason": "sprint week",
+  "plausibility": {
+    "phase_band": ["bootstrap_team", "traction", "series_a"],
+    "headcount": [3, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "product_live": true
   },

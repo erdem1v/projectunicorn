@@ -6,6 +6,19 @@
   "class": "paper",
   "sender": "desk",
   "tags": [],
+  "schema": 3,
+  "family": "sprint_scope_creep",
+  "follows": "product.sprint_hardcoded_colors",
+  "delay_weeks": [0, 0],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": ["traction", "series_a"],
+    "headcount": [0, null],
+    "subject_tenure_weeks": 12,
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2b",
     "product_live": true

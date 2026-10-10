@@ -10,6 +10,16 @@
     "low_stakes",
     "terminal_warning"
   ],
+  "schema": 3,
+  "system": true,
+  "family": "run_end",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 91
+  },
   "latch": {
     "one_shot": true
   },

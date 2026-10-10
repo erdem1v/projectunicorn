@@ -6,6 +6,17 @@
   "tick": "signal",
   "class": "interrupt",
   "tags": [],
+  "schema": 3,
+  "family": "product_floor",
+  "delay_weeks": [0, 0],
+  "delay_reason": "signal",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2c",
     "product_live": true

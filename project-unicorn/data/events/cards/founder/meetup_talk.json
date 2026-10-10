@@ -5,8 +5,24 @@
   "tick": "daily",
   "class": "paper",
   "tags": [],
+  "schema": 3,
+  "family": "founder_network",
+  "delay_weeks": [1, 3],
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team"],
+    "headcount": [0, 2],
+    "product": "pre_launch",
+    "modules": [],
+    "min_week": 2
+  },
   "guards": {
     "product_live": false
+  },
+  "scope": {
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
   },
   "latch": {
     "one_shot": true
@@ -47,8 +63,10 @@
           "label": "meetup"
         },
         {
-          "verb": "sprint_hours",
-          "mult": 0.9
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -20,
+          "weeks": 1
         },
         {
           "verb": "add_brand",

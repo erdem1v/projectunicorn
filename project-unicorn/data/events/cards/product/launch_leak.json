@@ -6,6 +6,16 @@
   "class": "interrupt",
   "sender": "desk",
   "tags": [],
+  "schema": 3,
+  "family": "product_security",
+  "delay_weeks": [0, 2],
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2c",
     "product_live": true

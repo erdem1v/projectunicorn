@@ -5,6 +5,16 @@
   "tick": "daily",
   "class": "interrupt",
   "tags": [],
+  "schema": 3,
+  "family": "product_ops",
+  "delay_weeks": [0, 2],
+  "plausibility": {
+    "phase_band": ["traction", "series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "product_live": true
   },

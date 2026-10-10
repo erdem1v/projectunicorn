@@ -6,6 +6,18 @@
   "class": "paper",
   "sender": "contact",
   "tags": [],
+  "schema": 3,
+  "family": "customer_ownership",
+  "follows": "customer.new_owner",
+  "delay_weeks": [0, 0],
+  "delay_reason": "chain",
+  "plausibility": {
+    "phase_band": ["traction", "series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2b",
     "product_live": true

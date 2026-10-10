@@ -27,6 +27,7 @@ const DOOR_OPEN_ID := "funding.frank_door_open"   # Frank speaks first, the gate
 const ANGEL_ID := "funding.frank_cheque"
 const NUDGE_ID := "funding.hire_nudge"
 const RETAIN_ID := "customer.retention"
+const ESC_ID := "customer.cs_escalation"
 const EXPANSION_ID := "customer.expansion"
 const SHEET_WARN_ID := "funding.sheet_expiry"
 const SHEET_DECISION_ID := "funding.sheet_decision"
@@ -3556,6 +3557,21 @@ static func _make_cs(id: String, expertise: int, morale: int = 60) -> Character:
 	return cs
 
 
+## The pair is aged into each slot's §3.1 tenure floor first, and the card is then asked for by
+## name rather than left to the sweep: it is no longer `critical`, and a young failing account
+## churns inside the window the weighted pool would need to offer it.
+static func _escalation_lands(c: Customer, rep: Character) -> bool:
+	var card: Dictionary = EventGate.catalogue_card(ESC_ID)
+	var cust_weeks: int = EvCatalog.tenure_floor(card, "customer")
+	var rep_weeks: int = EvCatalog.tenure_floor(card, "rep")
+	GameState.day += TimeModel.ticks(maxi(cust_weeks, rep_weeks))
+	rep.hire_day = GameState.day - TimeModel.ticks(rep_weeks)
+	c.acquired_on_day = GameState.day - TimeModel.ticks(cust_weeks)
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()   # writes cs_escalated — the EDGE, and nothing else
+	return EventGate.request(ESC_ID, {"customer": c.id, "rep": rep.id}) and _drain_to(ESC_ID)
+
+
 static func _case_b2b_cs_absorbs_routine() -> String:
 	# A CS-managed account erodes SLOWER than a founder-managed twin and produces NO
 	# routine events (no retention/escalation while above the critical threshold).
@@ -3583,7 +3599,7 @@ static func _case_b2b_cs_absorbs_routine() -> String:
 		return "CS-managed did not erode slower (cs=%d founder=%d)" % [cs_mgd.satisfaction, founder_mgd.satisfaction]
 	if _instances_of(RETAIN_ID) != 0:
 		return "CS-managed produced a routine retention event"
-	if _instances_of("customer.cs_escalation") != 0:
+	if _instances_of(ESC_ID) != 0:
 		return "CS-managed escalated while still above the critical threshold"
 	return ""
 
@@ -3604,16 +3620,12 @@ static func _case_b2b_cs_escalation_refuse() -> String:
 	var c: Customer = _sign_fixture(p, 2000, 70)
 	CustomerRegistry.assign_customer(c.id, cs.id)
 	CustomerRegistry.set_satisfaction(c.id, 20)  # below the critical threshold
-	GameState.advance_day()
-	B2BSalesSystem.daily_tick()      # writes cs_escalated — the EDGE, and nothing else
-	EventGate.daily_tick()           # the sweep reads it and admits the card
-	var esc_id: String = "customer.cs_escalation"
-	if not _drain_to(esc_id):
+	if not _escalation_lands(c, cs):
 		return "escalation not active (%s)" % EventGate.active_id()
 	var brand0: int = GameState.brand
 	var lost0: int = GameState.run_customers_lost
 	var morale0: int = cs.morale
-	EventGate.resolve(esc_id, "refuse")
+	EventGate.resolve(ESC_ID, "refuse")
 	if CustomerRegistry.get_customer(c.id) != null:
 		return "refuse did not churn the account"
 	if GameState.run_customers_lost != lost0 + 1:
@@ -5456,12 +5468,9 @@ static func _case_event_history_names_survive() -> String:
 	var c: Customer = _sign_fixture(p, 2000, 70)
 	CustomerRegistry.assign_customer(c.id, cs.id)
 	CustomerRegistry.set_satisfaction(c.id, 20)
-	GameState.advance_day()
-	B2BSalesSystem.daily_tick()
-	EventGate.daily_tick()
-	if not _drain_to("customer.cs_escalation"):
+	if not _escalation_lands(c, cs):
 		return "the escalation did not show (%s)" % EventGate.active_id()
-	EventGate.resolve("customer.cs_escalation", "refuse")
+	EventGate.resolve(ESC_ID, "refuse")
 	row = EvHistory.rows()[-1]
 	var lost_name: String = EvPresenter.resolve_text("{customer}", row["entities"], row.get("names", {}))
 	if CustomerRegistry.get_customer(c.id) != null or lost_name != "Ege Sigorta":
@@ -17320,7 +17329,7 @@ static func _case_promise_row_locked_after_break() -> String:
 		return "fixture: the promise did not break this week (broken on %d)" % c.promise_broken_day
 	c.pain_feature_id = "saas_ops_field"
 	var ctx: Dictionary = _ctx_customer(c)
-	var cards: Array = [RETAIN_ID, "customer.cs_escalation", "customer.request_feature",
+	var cards: Array = [RETAIN_ID, ESC_ID, "customer.request_feature",
 		"customer.request_complaint", "rival.price_cut"]
 	for id in cards:
 		var ev: GameEvent = EventGate.render(id, ctx)
@@ -17365,7 +17374,7 @@ static func _case_promise_row_locked_when_no_room() -> String:
 	var pitch: String = SalesMeetingSystem._promise_step()
 	var ctx: Dictionary = _ctx_customer(c)
 	var check := func(open: bool, when: String) -> String:
-		for id in [RETAIN_ID, "customer.cs_escalation", "customer.request_feature", "customer.request_complaint",
+		for id in [RETAIN_ID, ESC_ID, "customer.request_feature", "customer.request_complaint",
 				"rival.price_cut"]:
 			var ev: GameEvent = EventGate.render(id, ctx)
 			var idx: int = _promise_row_index(ev)

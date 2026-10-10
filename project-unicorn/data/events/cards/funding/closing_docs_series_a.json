@@ -9,6 +9,17 @@
   },
   "class": "paper",
   "tags": [],
+  "schema": 3,
+  "family": "funding_paperwork",
+  "delay_weeks": [0, 0],
+  "delay_reason": "signal",
+  "plausibility": {
+    "phase_band": ["series_a"],
+    "headcount": [1, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
   "scope": {
     "investor": {
       "type": "investor",
