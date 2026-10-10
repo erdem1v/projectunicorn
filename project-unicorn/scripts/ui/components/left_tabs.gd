@@ -8,8 +8,8 @@ extends Panel
 # This script owns the row geometry and every row state (_paint); the matching values in
 # LeftTabs.tscn are only the editor's preview of the labelled rail.
 #
-# Row states: idle, active (raised ground, a marker on the left edge), locked. A tab with a `lock`
-# gate is visible, its icon and name off, the reason under the name, and never connects `pressed`.
+# Row states: idle, active (raised ground, a marker on the left edge), locked. A tab whose `lock`
+# gate is shut is visible, its icon and name off, the reason under the name, and takes no click.
 #
 # Badges address a tab BY ID, never by index, so a reorder cannot shift a count onto the wrong tab.
 # Red is for danger only (DANGER_TABS, and Ekip while someone may leave); every other count is
@@ -68,22 +68,16 @@ func _ready() -> void:
 		btn.add_child(mark)
 	for i in tab_buttons.size():
 		var btn: Button = tab_buttons[i]
-		if not _is_locked(i):
-			btn.pressed.connect(_on_tab_button.bind(i))
+		btn.pressed.connect(_on_tab_button.bind(i))
+		if not UiTokens.TABS[i].has("lock"):
 			continue
-		# Görünür ama ölü; Button.disabled değil, satır kendi kilitli görünümünü taşır.
-		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		btn.focus_mode = Control.FOCUS_NONE
-		# Gerekçe adın altında: ad ve gerekçe birlikte satırın ortasına oturur.
+		# A gate can open during the run: every gated row keeps its reason and lock, _paint shows them.
 		var name_label: Label = btn.get_node("Stack/NameLabel")
 		var reason := Label.new()
 		reason.name = "Reason"
 		reason.theme_type_variation = &"NavReason"
 		name_label.add_child(reason)
 		reason.position.y = name_label.get_line_height()
-		name_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		name_label.custom_minimum_size.y = name_label.get_line_height() + reason.get_line_height()
 		var lock := TextureRect.new()
 		lock.name = "Lock"
 		lock.texture = LOCK_ICON
@@ -130,6 +124,8 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_paint)
 	EventBus.language_changed.connect(_paint.unbind(1))
 	EventBus.palette_changed.connect(_paint.unbind(1))
+	# v1.0 opens the tabs gated "live".
+	EventBus.version_shipped.connect(_paint.unbind(1))
 	_paint()
 
 
@@ -147,10 +143,20 @@ func _paint() -> void:
 			state == "active", icons)
 		if id == "events":
 			_place_gate_dot(tab_buttons[i].get_node("GateDot"), icons)
-		if state == "locked":
-			var reason: Label = tab_buttons[i].get_node("Stack/NameLabel/Reason")
-			reason.text = Fmt.upper(tr(_lock_reason(String(UiTokens.TABS[i].lock))))
-			tab_buttons[i].get_node("Lock").visible = icons
+		if not UiTokens.TABS[i].has("lock"):
+			continue
+		# Görünür ama ölü; Button.disabled değil, satır kendi kilitli görünümünü taşır. Gerekçe adın
+		# altında: ad ve gerekçe birlikte satırın ortasına oturur; açık satırın adı öbürleri gibi tek başına.
+		var locked: bool = state == "locked"
+		var name_label: Label = tab_buttons[i].get_node("Stack/NameLabel")
+		var reason: Label = name_label.get_node("Reason")
+		tab_buttons[i].mouse_filter = Control.MOUSE_FILTER_IGNORE if locked else Control.MOUSE_FILTER_STOP
+		tab_buttons[i].get_node("Lock").visible = locked and icons
+		reason.visible = locked
+		reason.text = Fmt.upper(tr(_lock_reason(String(UiTokens.TABS[i].lock))))
+		name_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP if locked else VERTICAL_ALIGNMENT_CENTER
+		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER if locked else Control.SIZE_FILL
+		name_label.custom_minimum_size.y = name_label.get_line_height() + reason.get_line_height() if locked else 0.0
 	_paint_row(settings_btn, "TAB_SETTINGS", "idle", icons)
 
 
@@ -216,13 +222,18 @@ func _place_gate_dot(dot: Panel, icons: bool) -> void:
 	dot.offset_bottom = at.y + px
 
 
-## The demo build says which build opens a tab gated "ea"; any other build, or gate, says "soon".
+## A tab gated "live" waits for v1.0; the demo build says which build opens a tab gated "ea"; any
+## other build, or gate, says "soon".
 func _lock_reason(gate: String) -> String:
+	if gate == "live":
+		return "RAIL_LOCK_AFTER_V1"
 	return "ENDING_BADGE_EA" if gate == "ea" and EndingsSystem.build_scope() == EndingsSystem.BUILD_DEMO \
 		else "SYS_SOON"
 
 
 func _on_tab_button(idx: int) -> void:
+	if _is_locked(idx):
+		return
 	# Aktif sekmeye tekrar tıklama = kapat → ofise dön (✕ ve Esc ile aynı kanal).
 	EventBus.tab_changed.emit("" if idx == current_tab_idx else String(UiTokens.TABS[idx].id))
 
@@ -232,10 +243,14 @@ func _on_tab_changed(tab_id: String) -> void:
 	_paint()
 
 
-## UiTokens bir ADLI KAPI taşır, boolean değil, böylece oyun durumundan uzak kalır. Bugünkü
-## tek kapı "ea" ve bilinmeyen bir kapı da KİLİTLİ sayılır: bitmemiş bir sayfa oyuncuya açılmasın.
+## UiTokens bir ADLI KAPI taşır, boolean değil, böylece oyun durumundan uzak kalır: "ea" bu yapıda
+## yok, "live" v1.0'a kadar kapalı. Bilinmeyen bir kapı da KİLİTLİ sayılır: bitmemiş bir sayfa
+## oyuncuya açılmasın.
 func _is_locked(idx: int) -> bool:
-	return String(UiTokens.TABS[idx].get("lock", "")) != ""
+	match String(UiTokens.TABS[idx].get("lock", "")):
+		"": return false
+		"live": return not ProductState.is_live()
+		_: return true
 
 
 func _index_of(tab_id: String) -> int:

@@ -140,7 +140,7 @@ func _message() -> void:
 	match String(m.kind):
 		"intro":
 			_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)), tr("MENTOR_INTRO_BODY"))
-			_actions("", [[tr("MENTOR_INTRO_CTA"), _close, true]])
+			_actions("", [[tr("MENTOR_INTRO_CTA"), _go.bind("product"), true]])
 		"summary":
 			_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)), "", _summary(a))
 			_actions(SummarySystem.display(a).footer, [[tr("MAIL_CONTINUE"), _close, true]])

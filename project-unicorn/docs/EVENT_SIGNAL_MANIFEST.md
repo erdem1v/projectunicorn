@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-10.
+Last generated 2026-10-11.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 4 | signals · rnd_tab · research_bar · office_people |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 44 | 4 | main · left_tabs · research_bar · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 47 | 4 | main · left_tabs · research_bar · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
@@ -148,15 +148,15 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `build_phase_changed` | `new_phase: String` | sprint_system | 1 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
-| `build_progress_changed` | `—` | product_system | 1 | 2 | build_bar · build_hud_panel |
+| `build_phase_changed` | `new_phase: String` | sprint_system | 2 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
+| `build_progress_changed` | `—` | main · product_system | 2 | 2 | build_bar · build_hud_panel |
 | `infra_changed` | `—` | product_state | 2 | 0 | — |
 
 ### GDD ÜRÜN rev 6.1 §19 · OKUMA YÜZEYİNİN SİNYALLERİ
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `version_shipped` | `version: int` | sprint_system | 1 | 1 | rnd_tab · EvSignals (bindable) |
+| `version_shipped` | `version: int` | main · sprint_system | 3 | 2 | rnd_tab · left_tabs · EvSignals (bindable) |
 | `fix_run_started` | `confirmed: int` | support_system | 1 | 0 | — |
 | `fix_run_finished` | `shipped: int, remaining: int` | support_system | 1 | 0 | — |
 | `bug_confirmed` | `total_confirmed: int` | product_read | 1 | 0 | — |
@@ -293,7 +293,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `day_tick_completed` | `day: int` | time_manager | 1 | 1 | save_manager |
+| `day_tick_completed` | `day: int` | time_manager | 1 | 2 | save_manager · office_city |
 | `game_loaded` | `slot_id: String` | main | 1 | 1 | left_tabs |
 | `system_menu_requested` | `—` | game_shell · main | 3 | 1 | main |
 | `save_load_requested` | `mode: String` | main · system_menu_modal | 4 | 1 | main |

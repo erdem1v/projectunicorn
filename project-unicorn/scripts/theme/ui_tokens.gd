@@ -296,7 +296,7 @@ const TABS := [
 	{"id": "sales"},
 	{"id": "hr"},
 	{"id": "finance"},
-	{"id": "piyasa"},
+	{"id": "piyasa", "lock": "live"},
 	{"id": "personal"},
 	{"id": "marketing", "lock": "ea"},
 	{"id": "rnd"},
