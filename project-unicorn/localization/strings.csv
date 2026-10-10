@@ -233,6 +233,7 @@ SET_VOL_MUSIC,Müzik,Music
 SET_VOL_SFX,Efektler,Effects
 SET_MUSIC_ENABLED,Arka plan müziği,Background music
 SET_MUTE_UNFOCUSED,Odak kaybında sessize al,Mute when unfocused
+SET_PAUSE_UNFOCUSED,Odak kaybında duraklat,Pause when unfocused
 SET_AUTOSAVE,Otomatik kayıt sıklığı,Autosave frequency
 SET_AUTOSAVE_OFF,Kapalı,Off
 SET_AUTOSAVE_WEEKLY,Her hafta,Every week
@@ -242,6 +243,7 @@ SET_SUMMARY_FREQ_WEEKLY,Her hafta,Every week
 SET_SUMMARY_FREQ_MONTHLY,Her ay,Every month
 SET_SUMMARY_FREQ_QUARTERLY,Her çeyrek,Every quarter
 SET_SUMMARY_FREQ_YEARLY,Her yıl,Every year
+SET_SUMMARY_FREQ_NOTE,Her özet saati durdurur ve Olaylar'ı açar.,Each summary stops the clock and opens Events.
 SET_COLORBLIND,Renk körü dostu palet,Colourblind-friendly palette
 SET_COLORBLIND_NOTE,Olumlu ve olumsuz renk çifti maviye ve turuncuya döner.,The positive and negative colour pair becomes blue and orange.
 SET_OPEN_SAVE_FOLDER,Kayıt klasörünü aç,Open save folder

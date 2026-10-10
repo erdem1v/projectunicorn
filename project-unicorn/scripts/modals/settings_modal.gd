@@ -91,6 +91,7 @@ var _sfx_slider: HSlider
 var _mute_toggle: CheckButton
 var _autosave_option: OptionButton
 var _summary_option: OptionButton
+var _pause_toggle: CheckButton
 var _lang_option: OptionButton
 var _cb_toggle: CheckButton
 
@@ -192,6 +193,10 @@ func _build_game_section() -> void:
 	_summary_option.item_selected.connect(func(idx: int) -> void:
 		Settings.set_value(SummarySystem.SETTING_FREQUENCY, SummarySystem.FREQUENCIES[idx]))
 	_add_row(_game_body, "SET_SUMMARY_FREQ", _summary_option)
+	_note(_game_body, "SET_SUMMARY_FREQ_NOTE")
+	_pause_toggle = CheckButton.new()
+	_pause_toggle.toggled.connect(func(on: bool) -> void: Settings.set_value(TimeManager.SETTING_PAUSE_UNFOCUSED, on))
+	_add_row(_game_body, "SET_PAUSE_UNFOCUSED", _pause_toggle)
 	_lang_option = _dropdown(LANG_KEYS.size())
 	_lang_option.item_selected.connect(func(idx: int) -> void:
 		Localization.set_language(Localization.SUPPORTED[idx])
@@ -289,6 +294,7 @@ func _sync_from_state() -> void:
 		Settings.get_choice(SaveManager.SETTING_AUTOSAVE_FREQUENCY, SaveManager.AUTOSAVE_FREQUENCIES)))
 	_summary_option.select(SummarySystem.FREQUENCIES.find(
 		Settings.get_choice(SummarySystem.SETTING_FREQUENCY, SummarySystem.FREQUENCIES)))
+	_pause_toggle.set_pressed_no_signal(bool(Settings.get_value(TimeManager.SETTING_PAUSE_UNFOCUSED)))
 	_lang_option.select(Localization.SUPPORTED.find(Localization.get_language()))
 	_cb_toggle.set_pressed_no_signal(UiTokens.is_colorblind())
 	_update_pct_labels()

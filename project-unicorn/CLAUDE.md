@@ -191,8 +191,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `--tick-probe=<hız>[:<pencere>]` headless'tır, kabuğu tempo dünyasıyla kurar ve beş haftayı gerçek saatle koşar;
   saat adımı, gece, sonraki kare ve ilk saat karelerinin süresini, TopBar'ın gece başına yenilemesini ve otomatik
   kaydın karesini `TICK` satırlarında basar. `auto_*` yazar: ayrı `APPDATA` ile koşulur (`TICK START udir=`); kayıt
-  taşıyan kullanıcı dizininde çalışmaz. Üst barın saat hâlleri: `--clock-shot=<running|paused|held|released|gate>`
-  (`CLOCKSHOT` satırı: birincil pencere, sprint kipi, tutuşlar, hız; dar bar `paused` ve `--shot-scale=1.25`).
+  taşıyan kullanıcı dizininde çalışmaz. Üst barın saat hâlleri:
+  `--clock-shot=<running|paused|held|released|gate|focus_out|focus_out_off>` (`CLOCKSHOT` satırı: birincil pencere,
+  sprint kipi, tutuşlar, hız; odak kollarında önce ve sonraki hız; dar bar `paused` ve `--shot-scale=1.25`).
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
   negotiation, meeting, invite, product, hr, finance, personal, rnd, b2b, inbox), `--probe-shot[=menajer]`,

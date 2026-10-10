@@ -56,6 +56,8 @@ söyler.
   kartı, dönüm noktası kâğıdı, tanışma ve dönem özeti, sürüm notu, Ayarlar, onay, sistem menüsü, görüşme telefonu ve
   oturumu) saati yalnız durdurur; kapanmaları da tutuşun bırakılması da saati başlatmaz. Tutuş sürerken hız 0'dır ve
   oyuncunun hız isteği yutulur. Kayıt her zaman duraklı yüklenir; kayıttaki son hız Boşluk'un döneceği hızdır.
+- Oyuncu oyundan çıkınca (uygulama odağı kaybolunca) saat Boşluk'a basılmış gibi durur; dönünce hiçbir şey başlamaz.
+  Ayar `pause_unfocused` (Ayarlar > Oyun, varsayılan açık); araç koşularında (`DisplaySettings.is_inert()`) kapalıdır.
 
 ### 1.3 Adlandırma
 

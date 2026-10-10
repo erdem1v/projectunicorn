@@ -1393,13 +1393,15 @@ func _run_invite_shot(kind: String) -> void:
 	get_tree().quit()
 
 
-# --clock-shot=<running|paused|held|released|gate>: the top bar's clock states over the shell,
-# clock_shot_<state>[_1].png and a CLOCKSHOT line a frame (the primary window, the sprint's mode, the holds,
-# the speed). running: 1×, two frames; paused: as every shot opens, two frames a second apart (the compact
-# bar under --shot-scale=1.25). held: a B2C run on its release note with Ürün open (the note holds the
+# --clock-shot=<running|paused|held|released|gate|focus_out|focus_out_off>: the top bar's clock states over the
+# shell, clock_shot_<state>[_1].png and a CLOCKSHOT line a frame (the primary window, the sprint's mode, the
+# holds, the speed). running: 1×, two frames; paused: as every shot opens, two frames a second apart (the
+# compact bar under --shot-scale=1.25). held: a B2C run on its release note with Ürün open (the note holds the
 # clock), two frames, then Görüşmeye git refused under the hold (_meet, the toast); released: the note left
 # through the page's own plan_next and the sprint started on the lead's plan; gate: a card takes Ürün's
-# place and is answered, and Ürün comes back.
+# place and is answered, and Ürün comes back. focus_out: at 1×, the window losing the application's focus
+# pauses the clock (CLOCKSHOT before/after); focus_out_off: the same with the setting off, held in memory
+# only, and the clock runs on.
 func _run_clock_shot(kind: String) -> void:
 	var note: bool = kind in ["held", "released", "gate"]
 	_begin_shot()
@@ -1438,6 +1440,14 @@ func _run_clock_shot(kind: String) -> void:
 			SprintSystem.start()
 			layer.get_current_page_body().set_source(null)
 			await frame.call("released")
+		"focus_out", "focus_out_off":
+			Settings._data[TimeManager.SETTING_PAUSE_UNFOCUSED] = kind == "focus_out"
+			EventBus.speed_change_requested.emit(1)
+			var before: int = TimeManager.current_speed
+			TimeManager.focus_pause_armed = true
+			get_tree().root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+			print("CLOCKSHOT|%s|before=%d|after=%d" % [kind, before, TimeManager.current_speed])
+			await frame.call(kind)
 		"gate":
 			GameState.set_mrr(AngelRoundSystem.MRR_THRESHOLD)   # Frank's cheque asks for it
 			_shot_card("funding.frank_cheque", {}, GameState.current_hour)

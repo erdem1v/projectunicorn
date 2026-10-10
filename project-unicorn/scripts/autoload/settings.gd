@@ -41,9 +41,10 @@ const DEFAULTS := {
 	"music_volume": 0.35,
 	"sfx_volume": 0.7,
 	"mute_unfocused": true,
-	# --- Oyun (SaveManager and SummarySystem read these lazily) ---
+	# --- Oyun (SaveManager, SummarySystem and TimeManager read these lazily) ---
 	"autosave_frequency": "weekly",     # SaveManager.AUTOSAVE_FREQUENCIES  [WORKING]
 	"summary_frequency": "quarterly",   # SummarySystem.FREQUENCIES
+	"pause_unfocused": true,
 	# --- Erişilebilirlik (UiTokens applies) ---
 	"colorblind_palette": false,
 	# --- Kabuk (NewsTicker reads it; its toggle writes it) ---

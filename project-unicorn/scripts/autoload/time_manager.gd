@@ -26,6 +26,7 @@ extends Node
 # yoksa akümülatör geride kalır ve saatlik tik atılmaz.
 
 const _NIGHT := "night"
+const SETTING_PAUSE_UNFOCUSED := "pause_unfocused"
 ## Hold reason → the key that names it on screen. The order is the priority: the first reason held
 ## names the hold.
 const HOLD_LABELS := {
@@ -47,6 +48,9 @@ var _in_game_hours: float = float(TimeModel.WEEK_START_HOUR)   # accumulator wit
 # not paused during a load, so one frame mid-restore would tick a day against a half-restored
 # world. Speed 0 cannot do this job: speed is player state the restore itself overwrites.
 var _suspended: bool = false
+
+# Off in harness runs, whose windows lose focus while they measure; --clock-shot arms it by hand.
+var focus_pause_armed: bool
 
 # Clock holds: a surface that must keep the clock stopped until IT closes, whatever opens and
 # closes on top of it (the milestone paper). A hold swallows every speed > 0 request; the holder
@@ -72,6 +76,7 @@ func _ready() -> void:
 	get_tree().paused = false
 	GameState.set_current_hour(TimeModel.WEEK_START_HOUR)
 	EventBus.speed_change_requested.connect(_on_speed_change_requested)
+	focus_pause_armed = not DisplaySettings.is_inert()
 	# The news feed's "Biz" source captures the non-modal notification channel; wired here so
 	# the static system needs no bootstrap.
 	EventBus.headline_added.connect(NewsFeedSystem.on_headline_added)
@@ -319,6 +324,14 @@ func _on_speed_change_requested(speed: int) -> void:
 		last_running_speed = speed
 	get_tree().paused = speed == 0 and not _freezes.values().has(true)
 	speed_changed.emit(speed)
+
+
+## Leaving the game pauses it as Space would; coming back starts nothing. The application's focus, not the
+## window's: an open dropdown takes the window's focus too.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and focus_pause_armed \
+			and bool(Settings.get_value(SETTING_PAUSE_UNFOCUSED)):
+		_on_speed_change_requested(0)
 
 
 ## Stop the clock and keep it stopped until release_clock(reason). A second hold for a held reason
