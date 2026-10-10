@@ -447,6 +447,16 @@ static func mvp_cards_left() -> int:
 	return maxi(0, int(cfg("mvp_lines")) - shipped)
 
 
+## Çekirdek'in açık K1 adayları efor, eşitse id sırasıyla; MVP tahmini ve sprint probe'u sprinti bu sırayla
+## doldurur.
+static func mvp_candidates() -> Array:
+	var open: Array = candidates(_identity_area()).filter(func(c: Dictionary) -> bool:
+		return c.state == "candidate" and int(c.target_tier) == 1)
+	open.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.effort < b.effort if a.effort != b.effort else a.id < b.id)
+	return open
+
+
 # --- Çeyrek ve PM ----------------------------------------------------------------------
 
 ## Çeyreği planlayan PM: ilk aktif Ürün Yöneticisi, yoksa null (ÇEYREK kapalı).

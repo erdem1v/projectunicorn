@@ -78,6 +78,8 @@ func _center(model: Dictionary) -> void:
 		col.head.add_child(_note(PLAY, tr("PRODUCT_AUTO_STARTED"), UiTokens.D_INK_3))
 	var cap: Dictionary = c.capacity
 	col.head.add_child(SprintUiShared.capacity_row(cap, &"ValueTextStrong"))
+	if c.mvp_line != null:
+		col.head.add_child(_mvp_rule(c.mvp_line))
 	if not c.team.is_empty():
 		var team := SprintUiShared.box(UiTokens.SPACE_S)
 		for p in c.team:
@@ -121,7 +123,7 @@ func _center(model: Dictionary) -> void:
 				var why := _note(SprintUiShared.LOCK, c.start_reason, UiTokens.D_INK_3)
 				why.size_flags_horizontal = Control.SIZE_SHRINK_END
 				col.foot().add_child(why)
-			col.foot().add_child(_foot_row(c.beta, start))
+			col.foot().add_child(_foot_row(c, start))
 		"active":
 			col.stack.add_child(SprintUiShared.section("PRODUCT_STATUS"))
 			col.stack.add_child(_status(c.status))
@@ -132,14 +134,12 @@ func _center(model: Dictionary) -> void:
 					eta.append(tr(Fmt.count_key("PRODUCT_IN_WEEKS", nv.weeks)).format({"n": nv.weeks}))
 				if nv.beta_extra:
 					eta.append(tr("PRODUCT_PLUS_ONE_SPRINT"))
-				if nv.cards_left >= 0:
-					eta.append(tr(Fmt.count_key("PRODUCT_CARDS_LEFT", nv.cards_left)).format({"n": nv.cards_left}))
 				var version := SprintUiShared.box(UiTokens.SPACE_L)
 				version.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_NEXT_RELEASE")), &"KeyLabel"))
 				version.add_child(SprintUiShared.label(String(nv.label), &"FigureValue"))
 				version.add_child(SprintUiShared.label(SprintUiShared.SEP.join(eta), &"MetaMuted"))
 				col.foot().add_child(version)
-			col.foot().add_child(_foot_row(c.beta, null))
+			col.foot().add_child(_foot_row(c, null))
 
 
 ## Kimse çalışamıyorken sütunun gövdesi: ekip glifi, not ve çıkış yolu (kadro yoksa işe alım, varsa Ekip).
@@ -193,7 +193,13 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 	head.add_child(SprintUiShared.label(tr("PRODUCT_SPRINT_END").format({"n": c.sprint}), &"MetaMuted"))
 	col.head.add_child(head)
 
-	if r.version == "":
+	# MVP öncesi kapanış sürüm çıkarmaz: başlığın altında sürüm koşulu, notta v1.0'a kalan kart.
+	if c.mvp_line != null:
+		col.head.add_child(_mvp_rule(c.mvp_line))
+		var left: int = c.mvp_line.need - c.mvp_line.done
+		col.stack.add_child(SprintUiShared.label(tr(Fmt.count_key("PRODUCT_MVP_LEFT", left)).format(
+			{"n": left, "version": c.mvp_line.version}), &"DataText"))
+	elif r.version == "":
 		col.stack.add_child(SprintUiShared.label(tr("PRODUCT_NO_RELEASE"), &"DataText"))
 	else:
 		var version := SprintUiShared.box(UiTokens.SPACE_XXL)
@@ -253,7 +259,7 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 	var hold := _note(PAUSE, tr("PRODUCT_RELEASE_HOLD"), UiTokens.D_INK_3)
 	hold.size_flags_horizontal = Control.SIZE_SHRINK_END
 	col.foot().add_child(hold)
-	col.foot().add_child(_foot_row(c.beta, SprintUiShared.button(tr("PRODUCT_PLAN_SPRINT").format({"n": next_sprint}),
+	col.foot().add_child(_foot_row(c, SprintUiShared.button(tr("PRODUCT_PLAN_SPRINT").format({"n": next_sprint}),
 		&"PrimaryButtonDark", action.emit.bind("plan_next", {"sprint": next_sprint}))))
 
 
@@ -332,14 +338,29 @@ func _lead_row(lead: Dictionary, key: String, apply: Button) -> HBoxContainer:
 	return row
 
 
+## Sürüm koşulu: "v1.0 = 3 Çekirdek kartı · 1/3 bitti · tahmin Sprint 3 sonu (Hafta 6)"; motorun tahmini
+## yoksa yalnız koşul.
+func _mvp_rule(line: Dictionary) -> Label:
+	return SprintUiShared.prose(tr("PRODUCT_MVP_RULE" if line.sprint >= 0 else "PRODUCT_MVP_RULE_NO_ETA").format(line),
+		&"MetaMuted")
+
+
 ## Alt satır: solda beta kanalı (model veriyorsa) iki konumlu anahtarıyla, yalnız açık olmayan bölme
-## basılır; sağda birincil düğme (varsa).
-func _foot_row(beta: Variant, button: Button) -> HBoxContainer:
+## basılır; anahtar yalnız planlamada değişir ve orada altında kuralını yazar, öbür kiplerde sönüktür. Sağda
+## birincil düğme (varsa).
+func _foot_row(c: Dictionary, button: Button) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_L)
-	if beta != null:
-		row.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_BETA_CHANNEL")), &"KeyLabel"))
-		row.add_child(UiFactory.D_seg_pick([{"text": tr("PRODUCT_OFF")}, {"text": tr("PRODUCT_ON")}], int(beta.open),
-			func(i: int) -> void: action.emit("beta", {"open": i == 1})))
+	if c.beta != null:
+		var plan: bool = c.mode == "plan"
+		var beta := SprintUiShared.column(UiTokens.SPACE_XS)
+		var toggle := SprintUiShared.box(UiTokens.SPACE_L)
+		toggle.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_BETA_CHANNEL")), &"KeyLabel"))
+		toggle.add_child(UiFactory.D_seg_pick([{"text": tr("PRODUCT_OFF")}, {"text": tr("PRODUCT_ON")}], int(c.beta.open),
+			func(i: int) -> void: action.emit("beta", {"open": i == 1}), not plan))
+		beta.add_child(toggle)
+		if plan:
+			beta.add_child(_note("", tr("PRODUCT_BETA_RULE"), UiTokens.D_INK_3))
+		row.add_child(beta)
 	row.add_child(RnDUiShared.spacer())
 	if button != null:
 		row.add_child(button)

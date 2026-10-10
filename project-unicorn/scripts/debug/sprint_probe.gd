@@ -15,12 +15,13 @@ extends RefCounted
 #   SPRINTPROBE SKIP|<seed>|<sprint>|<card>|full|ceiling   add() refused the card (no point left for it, or
 #                                                         the load past the ceiling), the sprint stays short
 #   SPRINTPROBE SKIP|<seed>|<sprint>|-|empty          the sprint has nothing to start, the seed ends
-#   SPRINTPROBE PRED|<seed>|<sprint>|<card>|<split id:weeks+…>|<done>|<finishes 1|0>|<no_start 1|0>
+#   SPRINTPROBE PRED|<seed>|<sprint>|<card>|<split id:weeks+…>|<done>|<finishes 1|0>|<no_start 1|0>|<mvp_eta>
 #   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|MATCH|MISMATCH[|cause=<event id>|cause=team]
 #   SPRINTPROBE MVP|<seed>|<tick>
 #   SPRINTPROBE SUMMARY|match=<matched>/<closes>|mvp_days=<tick>x<seeds>,…   (- = no MVP within t ticks)
 # done and carried_done are the points the card gets in this sprint (carried_done - for a card that
-# finished).
+# finished). mvp_eta is the screen's MVP forecast when the sprint starts (SprintSystem.mvp_eta),
+# <sprint>/<week>: the sprint whose close ships v1.0 and the week before that close's tick (- = none).
 #
 # MATCH: the card finished in its sprint exactly when the plan said it finishes, and a carried card got
 # the points the plan gave it. A mismatch is named when, inside its sprint, an answered event changed the
@@ -97,11 +98,7 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 	if o.lead == 1:
 		SprintSystem.apply_lead()
 	else:
-		var open: Array = SprintCatalog.candidates("core").filter(func(c: Dictionary) -> bool:
-			return c.kind == "feature" and int(c.target_tier) == 1 and c.state == "candidate")
-		open.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-			return a.effort < b.effort if a.effort != b.effort else a.id < b.id)
-		for c in open:
+		for c in SprintCatalog.mvp_candidates():
 			if p.sprint.cards.size() >= int(o.cards):
 				break
 			SprintSystem.add(c.id)
@@ -111,13 +108,15 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 					"ceiling" if SprintSystem.plan_outcome().spare > SprintSystem.EPS else "full"])
 				break
 	var plan: Dictionary = SprintSystem.plan_outcome().cards
+	var eta: Dictionary = SprintSystem.mvp_eta()
 	_said = {}
 	for id in p.sprint.cards:
 		var card: Dictionary = plan[id]
 		_said[id] = [card.finishes, card.done, SprintSystem.total(p.cards[id]) - SprintSystem.remaining(p.cards[id])]
-		print("SPRINTPROBE PRED|%d|%d|%s|%s|%.2f|%d|%d" % [seed_value, SprintSystem.sprint_number(), id,
+		print("SPRINTPROBE PRED|%d|%d|%s|%s|%.2f|%d|%d|%s" % [seed_value, SprintSystem.sprint_number(), id,
 			"+".join(card.split.map(func(w: Dictionary) -> String: return "%s:%d" % [w.id, w.weeks])), card.done,
-			int(card.finishes), int(card.done <= SprintSystem.EPS)])
+			int(card.finishes), int(card.done <= SprintSystem.EPS),
+			"-" if eta.is_empty() else "%d/%d" % [eta.sprint, eta.week]])
 	if not SprintSystem.start():
 		print("SPRINTPROBE SKIP|%d|%d|-|empty" % [seed_value, SprintSystem.sprint_number()])
 		return false

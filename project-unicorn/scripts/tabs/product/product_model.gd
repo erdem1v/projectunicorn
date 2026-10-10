@@ -37,7 +37,9 @@ extends RefCounted
 #           capacity: {used, total, done, state: "ok"|"over"|"blocked", segments: [{pts}]} or null (puanlar kesirli),
 #           team: [person], staffed (kadroda çalışan var), warning_text: "" or String (eksik rol),
 #           cards: [card], forecast: [part], status: {done, running, decisions}, auto_started,
-#           next_version: {label, weeks: int or -1, beta_extra, cards_left: int or -1} or null,
+#           next_version: {label, weeks: int or -1, beta_extra} or null (MVP öncesi),
+#           mvp_line: {version, area, need, done (biten ve betada bekleyen dahil), sprint (-1 = tahmin yok), week}
+#                     or null (canlıda),
 #           can_add (sprint kart alıyor, kartsız soru), spare (planda hiçbir karta gitmeyen puan var),
 #           ceiling_pct (yükün "+" kapanan eşiği, yüzde), can_start,
 #           start_reason: "" or String (başlat kapalıysa kapanan koşul), beta: {open} or null,
@@ -189,6 +191,11 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 	var lead: Character = _lead()
 	var sprint_cards: Array = sprint.get("cards", [])
 	var decision: Variant = _decision()
+	var eta: Dictionary = SprintSystem.mvp_eta() if n > 0 else {}
+	var need: int = int(SprintCatalog.cfg("mvp_lines"))
+	# Sürüm koşulunda bu sprintte biten ve betada bekleyen Çekirdek K1'i de bitmiş sayılır.
+	var finished: int = p.get("cards", {}).values().filter(func(c: Dictionary) -> bool:
+		return c.area == "core" and int(c.target_tier) == 1 and c.state in ["done", "beta"]).size()
 	# Plan ekranı motorun oynatmasını söyler: kim kaç hafta, devreden, başlamayan ve SPRİNT SONUNDA.
 	var outcome: Dictionary = SprintSystem.plan_outcome() if mode == "plan" and n > 0 else {}
 	var cards: Array = []
@@ -238,9 +245,14 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 			if mode == "plan" else [],
 		"status": status,
 		"auto_started": mode == "active" and int(p.get("auto_started", -1)) == n,
+		# MVP öncesi v1.0'ın tarihini sürüm koşulu verir; bu sprintin sonu onu vaat etmez.
 		"next_version": {"label": SprintSystem.version_label(ProductState.version() + 1),
-			"weeks": weeks - maxi(SprintSystem.week(), 1) + 1, "beta_extra": bool(sprint.get("beta", false)),
-			"cards_left": -1 if ProductState.is_live() else SprintCatalog.mvp_cards_left()} if n > 0 else null,
+			"weeks": SprintSystem.weeks_left(),
+			"beta_extra": bool(sprint.get("beta", false))} if n > 0 and ProductState.is_live() else null,
+		"mvp_line": null if n <= 0 or ProductState.is_live() else {"version": SprintSystem.version_label(1),
+			"area": SprintCatalog.area_short("core"), "need": need,
+			"done": need - SprintCatalog.mvp_cards_left() + finished,
+			"sprint": eta.get("sprint", -1), "week": eta.get("week", -1)},
 		"can_add": SprintSystem.can_add(), "spare": outcome.get("spare", 0.0) > SprintSystem.EPS,
 		"ceiling_pct": roundi(float(SprintCatalog.cfg("cap_ceiling")) * 100.0),
 		"can_start": can_start, "start_reason": reason,
@@ -255,9 +267,10 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 static func _release(r: Dictionary, lead: Character) -> Dictionary:
 	var press: Dictionary = r.get("press", {})
 	return {
-		# Betaya giden kartların sürümü bir sprint sonra çıkar: not o sürümün numarasını taşır.
-		"version": SprintSystem.version_label(int(r.number) if int(r.number) > 0 or not r.beta
-			else ProductState.version() + 1),
+		# Betaya giden kartların sürümü bir sprint sonra çıkar: canlıda not o sürümün numarasını taşır. MVP
+		# öncesi kapanış sürüm çıkarmaz, beta açıkken de etiketsizdir.
+		"version": SprintSystem.version_label(ProductState.version() + 1 if r.beta and int(r.number) == 0
+			and ProductState.is_live() else int(r.number)),
 		"beta": r.beta,
 		"shipped": r.shipped.map(func(c: Dictionary) -> Dictionary: return _card(c, SprintCard.State.BITTI)),
 		"carried": r.carried.map(func(item: Dictionary) -> Dictionary:

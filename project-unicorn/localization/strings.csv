@@ -2766,12 +2766,13 @@ PRODUCT_NEXT_RELEASE,Sonraki sürüm,Next release
 PRODUCT_IN_WEEKS,{n} hafta sonra,in {n} weeks
 PRODUCT_IN_WEEKS_ONE,{n} hafta sonra,in {n} week
 PRODUCT_PLUS_ONE_SPRINT,+1 sprint,+1 sprint
-PRODUCT_CARDS_LEFT,{n} kart kaldı,{n} cards left
-PRODUCT_CARDS_LEFT_ONE,{n} kart kaldı,{n} card left
+PRODUCT_MVP_RULE,{version} = {need} {area} kartı · {done}/{need} bitti · tahmin Sprint {sprint} sonu (Hafta {week}),{version} = {need} {area} cards · {done}/{need} done · forecast end of Sprint {sprint} (Week {week})
+PRODUCT_MVP_RULE_NO_ETA,{version} = {need} {area} kartı · {done}/{need} bitti,{version} = {need} {area} cards · {done}/{need} done
 PRODUCT_LEAD_TIP,Liderin önerisi,Lead's pick
 PRODUCT_LEAD_TIP_SELF,Kendi notun,Your own note
 PRODUCT_LEAD_LINE,Lider,Lead
 PRODUCT_BETA_CHANNEL,Beta kanalı,Beta channel
+PRODUCT_BETA_RULE,"Biten kartlar bir sprint bekler, hatalı çıkma ihtimali yarıya iner",Done cards wait one sprint; the chance of a faulty card halves
 PRODUCT_OFF,Kapalı,Off
 PRODUCT_ON,Açık,On
 PRODUCT_START_SPRINT,Sprinti başlat,Start sprint
@@ -2793,6 +2794,8 @@ PRODUCT_RESULT_EXPECTED,Beklenen:,Expected:
 PRODUCT_RESULT_ACTUAL,Gerçekleşen:,Actual:
 PRODUCT_PRESS,Basın,Press
 PRODUCT_NO_RELEASE,Bu sprint sürüm çıkmadı,No release this sprint
+PRODUCT_MVP_LEFT,{version} için {n} kart kaldı,{n} cards left for {version}
+PRODUCT_MVP_LEFT_ONE,{version} için {n} kart kaldı,{n} card left for {version}
 PRODUCT_RELEASE_BETA,Beta kanalında · bir sonraki sprintte yayına girer,In the beta channel · goes live next sprint
 PRODUCT_MVP_NOT_LIVE,MVP · yayında değil,MVP · not live
 PRODUCT_HISTORY,Geçmiş,History

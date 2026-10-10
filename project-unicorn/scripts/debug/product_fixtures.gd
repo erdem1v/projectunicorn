@@ -10,7 +10,8 @@ const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], "plan_next": ["release", "replan"]}
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
 const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "auto_started": "c2", "release": "c3",
-	"no_release": "c3", "beta_open": "c3", "b2b_no_requests": "c5", "goal_menu": "c4", "approved": "c4"}
+	"no_release": "c3", "no_release_beta": "c3", "beta_open": "c3", "b2b_no_requests": "c5", "goal_menu": "c4",
+	"approved": "c4"}
 ## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
 const AREAS := {
 	"core": ["Çekirdek", "Core", "Çekirdek", "Core"],
@@ -109,14 +110,19 @@ func _build(id: String) -> Dictionary:
 			_place(m, "ilk_tur", "center")
 		"empty_start":
 			_clear_sprint(m)
-		"no_release":
-			# Hiç kart bitmedi: çıkan yok, hız sıfır, basın satırı yok.
+		"no_release", "no_release_beta":
+			# MVP öncesi kapanış, hiç kart bitmedi: sürüm yok, çıkan yok, hız sıfır, basın satırı yok; v1.0'a
+			# iki kart kaldı. Beta varyantında kanal açık (release.beta): not yine etiketsiz, beta satırı yok.
+			m.versions = []
+			m.header.live_version = ""
+			m.center.mvp_line = _mvp_line()
 			m.center.release.version = ""
+			m.center.release.beta = id == "no_release_beta"
+			m.center.beta.open = id == "no_release_beta"
 			m.center.release.shipped = []
 			m.center.release.velocity.done = 0
 			m.center.release.press = {}
 			m.center.release.result = null
-			m.header.live_version = "1.4"
 		"beta_open":
 			m.center.release.beta = true
 			m.center.beta.open = true
@@ -140,7 +146,8 @@ func _build(id: String) -> Dictionary:
 		"mvp":
 			m.versions = []
 			m.header.live_version = ""
-			m.center.next_version = {"label": _version("1.0"), "weeks": 1, "beta_extra": false, "cards_left": 3}
+			m.center.next_version = null
+			m.center.mvp_line = _mvp_line()
 		"quarter_no_pm":
 			m.quarter.state = "locked_no_pm"
 		"voices_open":
@@ -274,7 +281,7 @@ func _c2() -> Dictionary:
 	m.center = _center("active", _active_cards(), {
 		"capacity": {"total": 12, "done": 2},
 		"status": {"done": 1, "running": 2, "decisions": 1},
-		"next_version": {"label": _version("1.5"), "weeks": 1, "beta_extra": false, "cards_left": -1},
+		"next_version": {"label": _version("1.5"), "weeks": 1, "beta_extra": false},
 	})
 	return m
 
@@ -515,8 +522,8 @@ func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "capacity": {"total": 12, "done": 0},
 		"team": _team(), "staffed": true, "warning_text": tr("PRODUCT_ROLE_MISSING").format({"role": _p("Test", "QA")}),
 		"cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "decisions": 0}, "auto_started": false,
-		"next_version": null, "can_add": false, "spare": false, "ceiling_pct": 125, "can_start": false, "start_reason": "",
-		"beta": {"open": false}, "lead_tip": null, "release": null}
+		"next_version": null, "mvp_line": null, "can_add": false, "spare": false, "ceiling_pct": 125, "can_start": false,
+		"start_reason": "", "beta": {"open": false}, "lead_tip": null, "release": null}
 	c.merge(extra, true)
 	_resum(c)
 	return c
@@ -548,6 +555,11 @@ func _customer(customer: String, request: String, card_id: String, due: int, val
 
 func _header(product: String, market: String, type_text: String) -> Dictionary:
 	return {"name": product, "live_version": "1.4", "market": market, "type_text": type_text}
+
+
+## MVP öncesi sürüm koşulu: v1.0'a iki Çekirdek kartı kaldı, motor Sprint 8 sonunu tahmin ediyor.
+func _mvp_line() -> Dictionary:
+	return {"version": _version("1.0"), "area": _short("core"), "need": 3, "done": 1, "sprint": 8, "week": 16}
 
 
 func _versions() -> Array:
