@@ -19,7 +19,7 @@ signal with no emit point" a lint error, so the manifest is the lint rule's inpu
 |---|---|
 | Signals declared | **145** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **72** |
+| Emitted with **no production listener** | **70** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -109,7 +109,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `customer_added` | `customer_id: String` | customer_registry | 1 | 0 | — |
+| `customer_added` | `customer_id: String` | customer_registry | 1 | 1 | top_bar |
 | `customer_removed` | `customer_id: String` | customer_registry | 1 | 2 | promise_registry · left_tabs |
 | `customer_mrr_changed` | `customer_id: String, new_mrr: int` | customer_registry | 1 | 0 | — |
 | `customer_seats_changed` | `customer_id: String, new_seats: int` | customer_registry | 1 | 0 | — |
@@ -156,7 +156,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `version_shipped` | `version: int` | main · sprint_system | 3 | 2 | rnd_tab · left_tabs · EvSignals (bindable) |
+| `version_shipped` | `version: int` | main · sprint_system | 3 | 3 | rnd_tab · left_tabs · top_bar · EvSignals (bindable) |
 | `fix_run_started` | `confirmed: int` | support_system | 1 | 0 | — |
 | `fix_run_finished` | `shipped: int, remaining: int` | support_system | 1 | 0 | — |
 | `bug_confirmed` | `total_confirmed: int` | product_read | 1 | 0 | — |
@@ -172,8 +172,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `sprint_planned` | `number: int` | sprint_system | 2 | 0 | — |
-| `sprint_started` | `number: int` | sprint_system | 1 | 1 | office_people |
+| `sprint_planned` | `number: int` | sprint_system | 2 | 1 | top_bar |
+| `sprint_started` | `number: int` | sprint_system | 1 | 2 | top_bar · office_people |
 | `card_phase_changed` | `card_id: String, phase: int` | sprint_system | 1 | 0 | — |
 | `card_done` | `card_id: String` | sprint_system | 1 | 0 | — |
 | `card_carried_over` | `card_id: String` | sprint_system | 2 | 0 | — |

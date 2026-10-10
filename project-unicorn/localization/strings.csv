@@ -162,6 +162,13 @@ FIN_GOAL_P3_LABEL,Series A avı:,Series A hunt:
 FIN_GOAL_P3_HUNT,{n} teklif masada,{n} offers on the table
 FIN_GOAL_P3_HUNT_ONE,{n} teklif masada,{n} offer on the table
 FIN_GOAL_P3_CLOSED,Series A kapandı,Series A closed
+CHEQUE_STEP_TYPE,Ürün tipini seç,Pick a product type
+CHEQUE_STEP_SPRINT,İlk sprinti başlat,Start the first sprint
+CHEQUE_STEP_SHIP,v1.0'ı yayınla,Ship v1.0
+CHEQUE_STEP_PAYING,İlk ödeyen müşteri,First paying customer
+CHEQUE_STEP_MRR,Aylık gelir {bar},Monthly revenue {bar}
+GOAL_STEP_TRACTION,Traction'a geç,Reach Traction
+GOAL_STEP_SEED,Seed turu: aylık gelir {bar},Seed round: monthly revenue {bar}
 FIN_MARKET_TITLE,Pazar payı,Market share
 FIN_MARKET_YOU,Sen,You
 MILESTONE_FOUNDING,Kuruluş,Founding
@@ -1558,6 +1565,7 @@ TOPBAR_NEXT,Sıradaki,Up next
 TOPBAR_NEXT_OFFER,Teklif · {n} hafta kaldı,Offer · {n} weeks left
 TOPBAR_NEXT_OFFER_LAST,Teklif · bu hafta son,Offer · final week
 TOPBAR_NEXT_SPRINT_FINAL,Sprint kararı · bu hafta son,Sprint decision · final week
+TOPBAR_NEXT_PAPER_FINAL,{subject} · bu hafta son,{subject} · final week
 TOPBAR_NEXT_MEETING,{time} · {company},{time} · {company}
 TOPBAR_NOW,Şimdi,Now
 TOPBAR_IN_MEETING,Görüşmede,In a meeting
