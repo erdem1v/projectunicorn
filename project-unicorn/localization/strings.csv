@@ -2675,6 +2675,7 @@ OFFICE_MAP_TITLE,Ofis seç,Choose an office
 OFFICE_MAP_SUB,3 kademe · taşınma bir hafta sürer,3 tiers · moving takes a week
 OFFICE_MAP_LOADING,Şehir haritası hazırlanıyor,Preparing the city map
 OFFICE_MOVE_BTN,Ofisi taşı,Move the office
+OFFICE_MOVE_AFTER_CHEQUE,Frank'in çekinden sonra,After Frank's cheque
 OFFICE_CARD_DESKS,MASA,DESKS
 OFFICE_CARD_RENT,KİRA / AY,RENT / MO
 OFFICE_CARD_MOVE,TAŞINMA,MOVE

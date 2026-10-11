@@ -3,7 +3,8 @@ extends Control
 # The office view's own controls: the move button at the bottom left (windows dock at the top
 # left) and the countdown of a move under way beside it. The shell's toast says when a move starts
 # and when it lands. OfficeCity mounts this on the view's overlay and opens the city map on
-# move_pressed. While a decision waits the button is off and says so: no move, no map.
+# move_pressed. While a decision waits the button is off and says so: no move, no map. Until Frank's
+# cheque is taken it says under its label what the move waits for.
 
 signal move_pressed
 
@@ -18,6 +19,7 @@ var _button := PanelContainer.new()
 var _label: Label
 var _badge: Control
 var _waiting: Label
+var _note: Label
 var _pulse: Tween
 var _map_open := false
 var _window_cover := Rect2()
@@ -43,9 +45,12 @@ func _ready() -> void:
 	_button.resized.connect(func() -> void: _button.pivot_offset = _button.size * 0.5)
 	_row.resized.connect(_show_row)
 	_row.add_child(_button)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+	_button.add_child(column)
 	var inner := HBoxContainer.new()
 	inner.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	_button.add_child(inner)
+	column.add_child(inner)
 	var glyph := Panel.new()
 	glyph.theme_type_variation = &"TabBadge"
 	glyph.custom_minimum_size = Vector2.ONE * UiTokens.SPACE_M
@@ -56,7 +61,9 @@ func _ready() -> void:
 	_waiting = UiFactory.make_label("", &"CaptionMuted")
 	_waiting.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	inner.add_child(_waiting)
-	HRUiShared.set_mouse_ignore(inner)
+	_note = UiFactory.make_label("", &"CaptionMuted")
+	column.add_child(_note)
+	HRUiShared.set_mouse_ignore(column)
 
 	for s: Signal in [EventBus.day_advanced, EventBus.office_changed, EventBus.equity_changed,
 			EventBus.language_changed]:
@@ -92,6 +99,8 @@ func _refresh() -> void:
 	var gated: bool = EventGate.active_id() != ""
 	_waiting.text = tr("TOPBAR_GATE")
 	_waiting.visible = gated
+	_note.text = tr("OFFICE_MOVE_AFTER_CHEQUE")
+	_note.visible = GameState.run_angel_amount == 0
 	_button.mouse_default_cursor_shape = Control.CURSOR_ARROW if gated else Control.CURSOR_POINTING_HAND
 	if _badge != null:
 		_badge.free()

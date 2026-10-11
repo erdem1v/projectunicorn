@@ -8,6 +8,8 @@ extends PanelContainer
 signal cancel_pressed
 signal move_pressed
 
+const INBOX := preload("res://scripts/ui/components/inbox.gd")
+const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
 const WIDTH := 340.0
 const THUMB_ASPECT := 1.6        # the 480x300 thumbnails
 
@@ -137,7 +139,9 @@ func _requirement_row(r: Dictionary) -> HBoxContainer:
 	var now: String = tr("OFFICE_REQ_NOW").format({"value": UiTokens.format_money(r.now) if r.kind == "cash" else str(r.now)})
 	match r.kind:
 		"angel":
-			text = tr("OFFICE_REQ_ANGEL")
+			# While the cheque list is open the row counts its steps, as the goal toast does.
+			var goal: Dictionary = ChequeRead.summary()
+			text = INBOX.goal_head(goal) if goal.get("list", "") == "cheque" else tr("OFFICE_REQ_ANGEL")
 			now = tr("OFFICE_REQ_NOW_CLOSED" if r.now else "OFFICE_REQ_NOW_OPEN")
 		"team":
 			text = tr("OFFICE_REQ_TEAM").format({"n": r.value})
