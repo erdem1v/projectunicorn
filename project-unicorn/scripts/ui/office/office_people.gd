@@ -26,17 +26,19 @@ const ON_FLOOR := 0.3
 ## Seconds of getting up and sitting down a walk to a seat adds, and one to bed.
 const SEAT_LEG_S := 2.5
 const BED_LEG_S := 4.0
-## What each job is at the desk (the icon and tooltip), and what the body does for each.
+## What each job is at the desk without a sprint card (the icon and tooltip), and what the body does for each.
 const JOB_WORK := {
-	HRConstants.JOB_BUILD: "code",
-	HRConstants.JOB_TEST: "test",
+	HRConstants.JOB_BUILD: "coffee",
+	HRConstants.JOB_TEST: "coffee",
 	HRConstants.JOB_RESEARCH: "research",
 	HRConstants.JOB_SALES: "phone",
 	HRConstants.JOB_SUPPORT: "phone",
 	HRConstants.JOB_ACCOUNTS: "phone",
 }
 const WORK_BODY := {"code": "type", "test": "type", "design": "notes", "research": "read", "plan": "notes",
-	"phone": "phone"}
+	"phone": "phone", "coffee": "drink"}
+## Sprint card role to desk work.
+const SPRINT_WORK := {"design": "design", "dev": "code", "test": "test", "product": "plan"}
 ## What each errand from the desk shows and does: [status, body act].
 const ERRANDS := {"coffee": ["coffee", "drink"], "wc": ["wc", "idle"], "visit": ["visit", "talk"],
 	"booth": ["phone", "phone"], "eat": ["food", "talk"], "meeting": ["meeting", "talk"]}
@@ -88,8 +90,10 @@ func _ready() -> void:
 		if _fade != null and TimeManager.is_night():
 			_fade = null
 			_view.fade(false, CUT_FADE_S))
-	# A sprint's kick-off waits for a free room; an office without rooms has none.
 	EventBus.sprint_started.connect(func(_n: int) -> void:
+		for id in _actors:
+			_on_assignment_changed(id)
+		# A sprint's kick-off waits for a free room; an office without rooms has none.
 		_kickoff = SprintSystem.team().map(func(p: Dictionary) -> String: return p.id) \
 			if _placed and not _rooms.is_empty() else [])
 	NavigationServer3D.map_changed.connect(_on_map_changed)
@@ -658,13 +662,14 @@ func _place(a: OfficeActor, minute: float) -> void:
 		a.place(want, doing[1])
 
 
+## What the person is really doing this week: their sprint card's phase first, then their job.
 static func _work_of(c: Character) -> String:
+	var role: String = SprintSystem.role_of(c.id)
+	if role != "":
+		return SPRINT_WORK[role]
 	if c.category == "founder":
-		return "plan"
-	if c.assigned_job_ids.is_empty():
-		return "research"
-	var work: String = JOB_WORK[c.assigned_job_ids[0]]
-	return "design" if work == "code" and not c.assigned_jobs.has(HRConstants.AREA_ENGINEERING) else work
+		return "phone" if SupportSystem.founder_passive_care() else "plan"
+	return "coffee" if c.assigned_job_ids.is_empty() else JOB_WORK[c.assigned_job_ids[0]]
 
 
 ## Metres along the floor from one spot to another, their own last metres included.

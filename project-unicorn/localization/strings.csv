@@ -3224,33 +3224,33 @@ PIYASA_WHY_DOWN_1,zayıf çeyrek,a weak quarter
 PIYASA_WHY_DOWN_2,büyük bir sözleşme kaybedildi,a large contract lost
 PIYASA_WHY_IPO,ilk işlem günü,first day of trading
 PIYASA_LINE,{headline} ({why}),{headline} ({why})
-PIYASA_SECTOR_AUTOMOTIVE,otomotiv,automotive
-PIYASA_SECTOR_BANK,banka,bank
-PIYASA_SECTOR_CHIPS,çip,chips
-PIYASA_SECTOR_CLOUD,bulut,cloud
-PIYASA_SECTOR_DATA,veri,data
-PIYASA_SECTOR_DATABASE,veritabanı,database
-PIYASA_SECTOR_DEVICES,cihaz,devices
-PIYASA_SECTOR_E_COMMERCE,e-ticaret,e-commerce
-PIYASA_SECTOR_ELECTRONICS,elektronik,electronics
-PIYASA_SECTOR_ENTERPRISE,kurumsal,enterprise
+PIYASA_SECTOR_AUTOMOTIVE,Otomotiv,Automotive
+PIYASA_SECTOR_BANK,Banka,Bank
+PIYASA_SECTOR_CHIPS,Çip,Chips
+PIYASA_SECTOR_CLOUD,Bulut,Cloud
+PIYASA_SECTOR_DATA,Veri,Data
+PIYASA_SECTOR_DATABASE,Veritabanı,Database
+PIYASA_SECTOR_DEVICES,Tüketici elektroniği,Consumer electronics
+PIYASA_SECTOR_E_COMMERCE,E-ticaret,E-commerce
+PIYASA_SECTOR_ELECTRONICS,Elektronik,Electronics
+PIYASA_SECTOR_ENTERPRISE,Kurumsal,Enterprise
 PIYASA_SECTOR_ERP,ERP,ERP
-PIYASA_SECTOR_GAMES,oyun,games
-PIYASA_SECTOR_HARDWARE,donanım,hardware
-PIYASA_SECTOR_INTERNET,internet,internet
-PIYASA_SECTOR_MOBILITY,ulaşım,mobility
-PIYASA_SECTOR_MUSIC,müzik,music
-PIYASA_SECTOR_NETWORKING,ağ,networking
-PIYASA_SECTOR_NOTES,not alma,notes
-PIYASA_SECTOR_PAYMENTS,ödeme,payments
-PIYASA_SECTOR_PHONES,telefon,phones
+PIYASA_SECTOR_GAMES,Oyun,Games
+PIYASA_SECTOR_HARDWARE,Donanım,Hardware
+PIYASA_SECTOR_INTERNET,İnternet,Internet
+PIYASA_SECTOR_MOBILITY,Ulaşım,Mobility
+PIYASA_SECTOR_MUSIC,Müzik,Music
+PIYASA_SECTOR_NETWORKING,Ağ,Networking
+PIYASA_SECTOR_NOTES,Not alma,Notes
+PIYASA_SECTOR_PAYMENTS,Ödeme,Payments
+PIYASA_SECTOR_PHONES,Telefon,Phones
 PIYASA_SECTOR_SAAS,SaaS,SaaS
-PIYASA_SECTOR_SEARCH,arama,search
-PIYASA_SECTOR_SOCIAL,sosyal ağ,social
-PIYASA_SECTOR_SOFTWARE,yazılım,software
-PIYASA_SECTOR_STREAMING,yayın,streaming
-PIYASA_SECTOR_TRAVEL,konaklama,travel
-PIYASA_SECTOR_VIDEO,video,video
+PIYASA_SECTOR_SEARCH,Arama,Search
+PIYASA_SECTOR_SOCIAL,Sosyal ağ,Social
+PIYASA_SECTOR_SOFTWARE,Yazılım,Software
+PIYASA_SECTOR_STREAMING,Yayın,Streaming
+PIYASA_SECTOR_TRAVEL,Konaklama,Travel
+PIYASA_SECTOR_VIDEO,Video,Video
 PIYASA_ABOUT_MALUS,Cihazı ve işletim sistemini tek çatı altında yapan tüketici elektroniği devi. 2007'deki telefonu cep pazarını yeniden kurdu; gelirinin yarısından çoğu bugün o tek üründen geliyor.,A consumer electronics giant that builds the device and its operating system under one roof. Its 2007 phone remade the handset market; more than half its revenue now comes from that one product.
 PIYASA_ABOUT_FENSTRA,Şirketlerin çoğunun masaüstü işletim sistemi ve ofis paketi. Faturayı hâlâ lisans geliri öder; bulut bölümü yeni bir yöneticinin altında büyüyor.,The desktop operating system and the office suite most companies run on. Licence money still pays the bills while the cloud division grows under a new chief.
 PIYASA_ABOUT_ORINOCO,Her şeyi satan mağazaya dönüşen ve sonra sunucularını kiraya veren çevrimiçi kitapçı. Marj bilerek ince; hissedarlar kâr için yıllardır bekliyor.,An online bookshop that became the everything store and then rented out its servers. Margins are thin by choice; the shareholders have waited years for profit.

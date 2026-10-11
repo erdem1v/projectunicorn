@@ -304,7 +304,7 @@ func _row(c: Dictionary, rank: int, index: int) -> PanelContainer:
 	if _is_new(c):
 		name_line.add_child(UiFactory.D_tag(tr("PIYASA_TAG_NEW"), &"neutral"))
 	who.add_child(name_line)
-	who.add_child(UiFactory.make_label(_sector(c), &"SmallMuted"))
+	who.add_child(UiFactory.make_label(tr(FILTERS[String(c["group"])]), &"SmallMuted"))
 	grid.add_child(who)
 	var price := UiFactory.make_label(Fmt.price(MarketCatalog.price(c, _week)), &"DataText" if top else &"CaptionPrimary")
 	price.custom_minimum_size.x = cols.y

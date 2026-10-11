@@ -1193,6 +1193,17 @@ static func _role(c: Dictionary, at: int) -> String:
 	return (SprintCatalog.cfg("roles." + String(c.kind)) as Array)[at]
 
 
+## Kişinin koşan sprintte bu hafta çalıştığı fazın rolü; kartı yoksa "".
+static func role_of(person_id: String) -> String:
+	if mode() != "active":
+		return ""
+	for c in _sprint_cards():
+		var at: int = phase(c)
+		if person_id in c.assignees and at < PHASE_DONE:
+			return _role(c, at)
+	return ""
+
+
 ## Kişinin uyduğu sprint rolleri: kurucu sprint.json'daki rollerde, çalışan ana ya da ikincil
 ## alanında.
 static func _fits(c: Character) -> Array:
