@@ -184,6 +184,8 @@ func _apply(m: Dictionary, kind: String, args: Dictionary) -> void:
 			beta.open = not beta.open
 			if m.center.next_version != null:
 				m.center.next_version.beta_extra = beta.open
+		"weeks":
+			m.center.weeks = args.weeks
 		"apply_lead":
 			m.center.lead_tip = null   # fikstür yuvaları doldurmaz; öneri kullanıldı diye düşer
 		"publish":
@@ -519,7 +521,7 @@ func _deck(id: String, state: int, extra := {}) -> Dictionary:
 		"queued": false, "decision": null,
 		"effort_split": d[6].map(func(s: Array) -> Dictionary: return {"name": s[0], "weeks": s[1]}),
 		"locked_node": "", "locked_rnd": "", "remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0,
-		"addable": false, "urgent": false, "buttons": ProductModel.BUTTONS.get(state, [])}
+		"addable": false, "ready": -1.0, "urgent": false, "buttons": ProductModel.BUTTONS.get(state, [])}
 	card.merge(extra, true)
 	return card
 
@@ -550,9 +552,9 @@ func _cap(cap_name: String, tier: int, rivals: Array) -> Dictionary:
 
 
 func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
-	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "capacity": {"total": 12, "done": 0},
+	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "lengths": [1, 2], "capacity": {"total": 12, "done": 0},
 		"team": _team(), "staffed": true, "warning_text": tr("PRODUCT_ROLE_MISSING").format({"role": _p("Test", "QA")}),
-		"cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "queued": 0, "decisions": 0},
+		"idle_text": "", "cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "queued": 0, "decisions": 0},
 		"empty": false, "pm_started": "", "plan_hold": false, "delegate": null,
 		"next_version": null, "mvp_line": null, "can_add": false, "spare": false, "ceiling_pct": 125, "can_start": false,
 		"start_reason": "", "rnd_node": null, "beta": {"open": false}, "lead_tip": null, "release": null}

@@ -3112,9 +3112,10 @@ func _run_ending_shot(key: String) -> void:
 # English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the decision row's
 # Karara git, so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
 # Yayınla and saves the v1.0 note (<stem>_publish); live:plan saves the plan, presses Bu sprinti boş
-# geçir (<stem>_skip, its confirm row open) and then Sprinti başlat (<stem>_start); live:rnd saves the
-# planning with the founder in R&D, presses Ar-Ge'ye git and saves R&D with the founder's node selected
-# (<stem>_go).
+# geçir (<stem>_skip, its confirm row open) and then Sprinti başlat (<stem>_start); live:week1 saves the
+# 1-week plan, presses Sprinti başlat (<stem>_run) and plays the week, the sprint closing onto its release note
+# (<stem>_close); live:rnd saves the planning with the founder in R&D, presses Ar-Ge'ye git and saves R&D with the
+# founder's node selected (<stem>_go).
 func _run_product_shot(id: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -3144,8 +3145,12 @@ func _run_product_shot(id: String) -> void:
 		var to_en := func() -> void:
 			TranslationServer.set_locale("en")
 			EventBus.language_changed.emit("en")
+		var week := func() -> void:
+			GameState.advance_day()
+			SprintSystem.daily_tick()
 		var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
 			"live:plan": [[press.call("PRODUCT_SKIP_SPRINT"), "_skip"], [press.call("PRODUCT_START_SPRINT"), "_start"]],
+			"live:week1": [[press.call("PRODUCT_START_SPRINT"), "_run"], [week, "_close"]],
 			"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
 			"live:pick_relang": [[to_en, "_rebuilt"]]}
 		var base := stem
@@ -3199,14 +3204,16 @@ func _run_product_shot(id: String) -> void:
 	get_tree().quit()
 
 
-## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2b_requests|gate|rnd|delegate|
-## solo15|solo15_tip|solo12_active>. The pick ones leave the product untyped (the type picker). The solo ones
+## live:<pick|pick_named|pick_relang|plan|week1|active|decision_paper|b2c_mvp|b2c_live|b2b_requests|gate|rnd|
+## delegate|solo15|solo15_tip|solo12_active>. The pick ones leave the product untyped (the type picker). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
 ## the lead's plan applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active
 ## starts the lead's plan at 12 hours, two cards over capacity (6/5). The rest choose a type, staff it with the
 ## HR shot roster (gate and rnd keep the founder alone at the default hours) and play through SprintSystem with
-## only its own daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's plan,
-## active and decision_paper in its second week with a sprint paper on the desk, gate on the MVP gate, rnd
+## only its own daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's plan and
+## the first open card in the next column (the product and design roles go ahead on it), week1 the same with the
+## 1-week length picked before the lead plans, active (that card too) and decision_paper in its second week with
+## a sprint paper on the desk (drawn at rate 1), gate on the MVP gate, rnd
 ## publishes it, plans the next sprint and puts the founder on the Data Model research, b2c_mvp on the CANLI
 ## v1.0 release note it publishes, delegate on Sprint 2, started by the PM once Sprint 1's note is left (shipped
 ## at the gate) with planning delegated. b2c_live publishes as b2c_mvp and plays four weeks with the audience
@@ -3239,9 +3246,16 @@ func _seed_product_live(scenario: String) -> void:
 		start_next.call()
 		while SprintSystem.mode() == "active":
 			day.call()
+	if scenario == "week1":
+		SprintSystem.set_weeks(1)
 	SprintSystem.apply_lead()
-	if scenario == "plan":
+	if scenario in ["plan", "week1", "active"]:
+		SprintSystem.send_next(SprintCatalog.open_cards([])[0].id)
+	if scenario in ["plan", "week1"]:
 		return
+	if scenario in ["active", "decision_paper"]:
+		# The week's tick draws the paper at once; the late card takes it.
+		(SprintCatalog.cfg("decision") as Dictionary).rate = 1.0
 	SprintSystem.start()
 	day.call()
 	if scenario in ["active", "decision_paper"]:

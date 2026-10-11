@@ -180,7 +180,8 @@ func _points(points: float) -> Label:
 
 
 ## Durum etiketleri: devreder ("devreder · 2,75/3"), başlamaz ve acil uyarı (acil uyarı üçgeniyle), ötekiler
-## nötr. "Planlanan" etiketi yok: kesikli kenar söyler.
+## nötr; önden hazırlanan kart hazır payını ("%40 hazır", tamamsa "Geliştirmeye hazır") taşır. "Planlanan"
+## etiketi yok: kesikli kenar söyler.
 func _tags() -> Array:
 	var out: Array = []
 	if _card.spills:
@@ -195,6 +196,9 @@ func _tags() -> Array:
 			[_card.effect.any(func(p: Dictionary) -> bool: return p.k == "promise"), "PRODUCT_PROMISED"]]:
 		if row[0]:
 			out.append(UiFactory.D_tag(tr(row[1]), &"outline"))
+	if _card.ready >= 0.0:
+		out.append(UiFactory.D_tag(tr("PRODUCT_CARD_READY") if _card.ready >= 1.0 else tr("PRODUCT_CARD_READY_PCT").format(
+			{"pct": Fmt.percent(floorf(_card.ready * 100.0), 0)}), &"outline"))
 	return out
 
 

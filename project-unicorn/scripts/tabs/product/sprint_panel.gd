@@ -69,9 +69,17 @@ func _center(model: Dictionary) -> void:
 	if c.mode == "release":
 		_release(col, c, model.next.sprint)
 		return
-	var weeks: String = (tr("PRODUCT_WEEK_OF").format({"w": c.week, "t": c.weeks}) if c.mode == "active"
-		else tr(Fmt.count_key("PRODUCT_WEEKS", c.weeks)).format({"n": c.weeks}))
-	col.head.add_child(_title_row(c.sprint, weeks, "PRODUCT_THIS_SPRINT"))
+	var meta: Control
+	if c.mode == "active":
+		meta = SprintUiShared.label(SprintUiShared.SEP.strip_edges() + " " + tr("PRODUCT_WEEK_OF").format(
+			{"w": c.week, "t": c.weeks}), &"MetaMuted")
+	else:
+		# Süre planlamada seçilir: başlıktaki süre iki konumlu seçicidir.
+		var lengths: Array = c.lengths
+		meta = UiFactory.D_seg_pick(lengths.map(func(n: int) -> Dictionary:
+			return {"text": tr(Fmt.count_key("PRODUCT_WEEKS", n)).format({"n": n})}), lengths.find(c.weeks),
+			func(i: int) -> void: action.emit("weeks", {"weeks": lengths[i]}))
+	col.head.add_child(_title_row(c.sprint, meta, "PRODUCT_THIS_SPRINT"))
 	if c.sprint < 0:
 		return
 	if c.empty:
@@ -89,6 +97,8 @@ func _center(model: Dictionary) -> void:
 		team.add_child(RnDUiShared.spacer())
 		if c.warning_text != "":
 			team.add_child(_note(SprintUiShared.BUG, c.warning_text, UiTokens.D_warn()))
+		if c.idle_text != "":
+			team.add_child(_note(PAUSE, c.idle_text, UiTokens.D_INK_3))
 		col.head.add_child(team)
 	elif c.mode == "active" and c.rnd_node != null:
 		# Ekip satırı yokken araştıran kurucu başlıkta yazar; planlamada aynı satır başlatmanın gerekçesidir.
@@ -297,7 +307,7 @@ func _next(next: Dictionary) -> void:
 	var col := Column.new(&"SprintColumnNext", UiTokens.D_SPRINT_COLUMNS.y)
 	HRUiShared.D_dashed(col)
 	add_child(col)
-	col.head.add_child(_title_row(next.sprint, "", "PRODUCT_NEXT"))
+	col.head.add_child(_title_row(next.sprint, null, "PRODUCT_NEXT"))
 	if next.sprint < 0:
 		return
 	if not next.flags.is_empty():
@@ -313,14 +323,15 @@ func _next(next: Dictionary) -> void:
 		col.stack.add_child(SprintUiShared.empty_line(tr("PRODUCT_NEXT_EMPTY")))
 
 
-## "SPRINT 7 · 2 hafta ... BU SPRINT". Sprint yokken (canlı model) yalnız sağdaki etiket kalır.
-func _title_row(sprint: int, meta: String, tag_key: String) -> HBoxContainer:
+## "SPRINT 7 · Hafta 1/2 ... BU SPRINT"; `meta` başlığın ardındaki parçadır (süre seçici ya da hafta). Sprint
+## yokken (canlı model) yalnız sağdaki etiket kalır.
+func _title_row(sprint: int, meta: Control, tag_key: String) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_M)
 	row.custom_minimum_size.y = UiTokens.D_H_FX
 	if sprint >= 0:
 		row.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_SPRINT_TITLE").format({"n": sprint})), &"ColumnTitle"))
-		if meta != "":
-			row.add_child(SprintUiShared.label(SprintUiShared.SEP.strip_edges() + " " + meta, &"MetaMuted"))
+		if meta != null:
+			row.add_child(meta)
 	row.add_child(RnDUiShared.spacer())
 	row.add_child(SprintUiShared.label(Fmt.upper(tr(tag_key)), &"KeyLabel"))
 	return row
@@ -389,7 +400,10 @@ func _foot_row(c: Dictionary, buttons: Array) -> HBoxContainer:
 			func(i: int) -> void: action.emit("beta", {"open": i == 1}), not plan))
 		beta.add_child(toggle)
 		if plan:
-			beta.add_child(_note("", tr("PRODUCT_BETA_RULE"), UiTokens.D_INK_3))
+			# Kural anahtarın genişliğinde sarar: tek satırı orta sütunu genişletip sonraki sütunu daraltırdı.
+			var rule := SprintUiShared.label(tr("PRODUCT_BETA_RULE"), &"Caption", UiTokens.D_INK_3)
+			rule.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			beta.add_child(rule)
 		row.add_child(beta)
 	row.add_child(RnDUiShared.spacer())
 	for button: Button in buttons:

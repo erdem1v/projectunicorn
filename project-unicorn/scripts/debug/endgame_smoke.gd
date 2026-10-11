@@ -17097,7 +17097,7 @@ static func _card_worked(card_id: String) -> float:
 	return 0.0 if c.is_empty() else float(c.progress[0]) + float(c.progress[1]) + float(c.progress[2])
 
 
-## Kartları bu sprinte koyar, başlatır ve iki haftasını oyunun günlük dağıtımıyla oynar; sürüm
+## Kartları bu sprinte koyar, başlatır ve kapanana dek oyunun günlük dağıtımıyla oynar; sürüm
 ## notundaysa önce sonraki sprintin planlamasına geçer. Sprint başlamazsa false.
 static func _play_sprint(card_ids: Array) -> bool:
 	if SprintSystem.mode() == "release":
@@ -17106,8 +17106,8 @@ static func _play_sprint(card_ids: Array) -> bool:
 		SprintSystem.add(id)
 	if not SprintSystem.start():
 		return false
-	_sim_day()
-	_sim_day()
+	while SprintSystem.mode() == "active":
+		_sim_day()
 	return true
 
 
@@ -17616,8 +17616,9 @@ static func _case_sprint_starts_only_with_consent() -> String:
 	return done.call("")
 
 
-## Yayındaki bir ERP ürünü ve ona bağlı bir hesap; bir puanlık sprint oynanınca hesabın talebi açıktır
-## (talep sprintinin önünde taşınan kart yoktur). Sprint başlamazsa null.
+## Yayındaki bir ERP ürünü ve ona bağlı bir hesap; bir puanlık sprint oynanıp sürüm notunun haftası da
+## geçince hesabın talebi açıktır (talep sprintinin önünde taşınan kart yoktur): talep imzadan varsayılan
+## sprint süresi kadar sonra doğar, kartı ilk haftada biten sprint ise o hafta kapanır. Sprint başlamazsa null.
 static func _seed_open_request() -> Customer:
 	_seed_sprint_live("erp")
 	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
@@ -17628,7 +17629,10 @@ static func _seed_open_request() -> Customer:
 	lead.industry = String(SalesArchetypes.sectors("tech_exacting")[0])
 	lead.star = 2
 	var account: Customer = SalesSystem.add_b2b_customer(lead, 12, 50, 85)
-	return account if _play_sprint(["res:core"]) else null
+	if not _play_sprint(["res:core"]):
+		return null
+	_sim_day()
+	return account
 
 
 ## B2B talebi: hesap imzadan bir sprint sonra sektörünün arketipine bağlı alandan bir kademe ister.
@@ -17682,8 +17686,8 @@ static func _case_sprint_paid_plan_opens_paid_tier() -> String:
 	SprintSystem.add(id)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
-	_sim_day()
-	# Kapanış katmanı, sürümün henüz itmediği eksenlerle açar: değer o günün başında okunur.
+	# Kart ilk haftada biter, sprint o haftanın sonunda kapanır. Kapanış katmanı, sürümün henüz itmediği
+	# eksenlerle açar: değer o günün başında okunur.
 	var price: int = int(SalesSystem.product_value().optimal)
 	_sim_day()
 	if not GameState.get_flag("b2c_paid_tier_open", false) or int(GameState.get_flag("b2c_price", 0)) != price:
@@ -17994,9 +17998,8 @@ static func _case_promise_due_sprint_breaks_after_close() -> String:
 	_sim_day()
 	_sim_day()
 	SprintSystem.plan_next()
-	SprintSystem.add("res:onboarding")
-	if not SprintSystem.start():
-		return "fixture: sprint 2 did not start"
+	# Boş geçirilen sprint süresini doldurur; kartı olan sprint kartları bitince erken kapanırdı.
+	SprintSystem.skip()
 	_sim_day()
 	if promise.status != "open":
 		return "the word broke in its own sprint's second week (%s)" % promise.status

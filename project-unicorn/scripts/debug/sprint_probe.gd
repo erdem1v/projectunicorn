@@ -1,11 +1,13 @@
 extends RefCounted
 
 # --sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:start=<hour>][:seeds=1][:seed=424242][:events=0|1][:rate=<r>]
-# [:beta=0|1][:lead=0|1][:gate=publish|more]: does the Product screen's sprint plan come true? A solo founder builds
-# note_tool for t ticks on each of the seeds seed, seed+1, …, the company working h hours from start
-# (the game's default start hour unless given). Every sprint is planned and started here on the tick it
-# opens, so the ledger measures the engine, not a player's delay: cards=N tops it up to N cards (the
+# [:beta=0|1][:lead=0|1][:gate=publish|more][:team=<n>][:weeks=<1|2>][:fill=0|1]: does the Product screen's sprint
+# plan come true? A founder builds note_tool for t ticks on each of the seeds seed, seed+1, …, the company working
+# h hours from start (the game's default start hour unless given); team=N adds N-1 mid-skilled employees in HIRES
+# order, weeks= picks the sprint length in Sprint 1's planning. Every sprint is planned and started here on the tick
+# it opens, so the ledger measures the engine, not a player's delay: cards=N tops it up to N cards (the
 # carried ones stay, the open Core K1 candidates follow by effort, each through SprintSystem.add),
+# fill=1 adds every open card the way "+" takes them instead (SprintCatalog.open_cards, cards= is not read),
 # lead=1 takes the lead's plan instead, beta=1 opens Beta; a sprint with nothing to start ends the seed.
 # The MVP gate is answered on the tick it opens: gate=publish (the default) ships v1.0 there, gate=more takes
 # one more sprint and ships at the next close's gate.
@@ -20,24 +22,34 @@ extends RefCounted
 #   SPRINTPROBE PRED|<seed>|<sprint>|<card>|<split id:weeks+…>|<done>|<finishes 1|0>|<no_start 1|0>|<mvp_eta>
 #   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|MATCH|MISMATCH[|cause=<event id>|cause=team]
 #   SPRINTPROBE MVP|<seed>|<tick>
+#   SPRINTPROBE LOAD|<seed>|<sprint>|<planned>|<finished>|<idle>|<limit>   one closed sprint
 #   SPRINTPROBE SUMMARY|match=<matched>/<closes>|mvp_days=<tick>x<seeds>,…   (- = no MVP within t ticks)
+#   SPRINTPROBE LOADSUM|team=<n>|weeks=<w>|sprints=<n>|planned=<n>|finished=<n>|idle=<n>|limits=<limit>:<n>,…
 # done and carried_done are the points the card gets in this sprint (carried_done - for a card that
 # finished). mvp_eta is the screen's MVP forecast when the sprint starts (SprintSystem.mvp_eta),
 # <sprint>/<week>: the sprint whose close ships v1.0 and the week before that close's tick (- = none).
+# planned is the sprint's cards when it starts, finished those done when it closes, idle the person-weeks with
+# no card (SprintSystem's worked list), limit why the plan stopped: ceiling or full (add refused a card), pool
+# (fill=1: every open card is in), cards (cards=N reached) or lead.
 #
 # MATCH: the card finished in its sprint exactly when the plan said it finishes, and a carried card got
 # the points the plan gave it. A mismatch is named when, inside its sprint, an answered event changed the
 # team's points or a card's effort, progress or place (cause=<event id>), or the week's tick changed the
 # team (cause=team). The run passes when no mismatch is unnamed.
 
+const HIRES := [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER,
+	HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_PRODUCT_MANAGER]
+
 static var _said: Dictionary = {}   # the running sprint: card id -> [plan finishes, plan's points, points before]
 static var _cause: String = ""      # the first change that names the running sprint's mismatches
 static var _seen: Array = []
+static var _tally: Dictionary = {}  # the running sprint: {planned, idle, limit}
+static var _sum: Dictionary = {}
 
 
 static func run(spec: String, payload: Dictionary) -> bool:
 	var o: Dictionary = {"start": HRConstants.START_HOUR_DEFAULT, "seeds": 1, "seed": 424242, "events": 0,
-		"beta": 0, "lead": 0, "gate": "publish"}
+		"beta": 0, "lead": 0, "gate": "publish", "team": 1, "fill": 0}
 	for part in spec.split(":"):
 		var key: String = part.get_slice("=", 0)
 		if key == "gate":
@@ -51,15 +63,20 @@ static func run(spec: String, payload: Dictionary) -> bool:
 	EventBus.day_tick_completed.connect(func(_day: int) -> void: _changed_by("team"))
 	var verdicts: Array = []
 	var days: Dictionary = {}
+	_sum = {"sprints": 0, "planned": 0, "finished": 0, "idle": 0, "limits": {}}
 	for i in int(o.seeds):
 		var seed_value: int = int(o.seed) + i
 		# initialize_run alone would keep the previous seed's registries and event pipeline.
 		SaveManager.reset_all_owners()
 		GameState.initialize_run(payload.merged({"seed": seed_value}))
 		SprintSystem.choose_type("note_tool", "Notly")
+		for n in int(o.team) - 1:
+			_hire(n)
 		WorkHoursSystem.set_company_start_hour(int(o.start))
 		WorkHoursSystem.set_company_hours(int(o.hours))
 		SprintSystem.set_beta(o.beta == 1)
+		if o.has("weeks"):
+			SprintSystem.set_weeks(int(o.weeks))
 		var going: bool = _plan(seed_value, o, verdicts)
 		while going and GameState.day < int(o.ticks) and GameState.run_active:
 			if events:
@@ -73,6 +90,7 @@ static func run(spec: String, payload: Dictionary) -> bool:
 			else:
 				GameState.advance_day()
 				SprintSystem.daily_tick()
+			_count_idle()
 			going = _plan(seed_value, o, verdicts)
 		var mvp: int = GameState.get_flag("mvp_launch_day", -1)
 		days[mvp] = days.get(mvp, 0) + 1
@@ -80,6 +98,9 @@ static func run(spec: String, payload: Dictionary) -> bool:
 	order.sort()
 	print("SPRINTPROBE SUMMARY|match=%d/%d|mvp_days=%s" % [verdicts.count("MATCH"), verdicts.size(),
 		",".join(order.map(func(d: int) -> String: return "%sx%d" % ["-" if d < 0 else str(d), days[d]]))])
+	print("SPRINTPROBE LOADSUM|team=%d|weeks=%d|sprints=%d|planned=%d|finished=%d|idle=%d|limits=%s" % [int(o.team),
+		SprintSystem.sprint_weeks(), _sum.sprints, _sum.planned, _sum.finished, _sum.idle,
+		",".join(_sum.limits.keys().map(func(k: String) -> String: return "%s:%d" % [k, _sum.limits[k]]))])
 	# A named mismatch carries its cause in the verdict; a bare one is unnamed.
 	return not verdicts.has("MISMATCH")
 
@@ -87,6 +108,7 @@ static func run(spec: String, payload: Dictionary) -> bool:
 static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 	var p: Dictionary = GameState.product
 	if SprintSystem.mode() == "release":
+		var finished: int = 0
 		for id in _said:
 			var carried: Array = p.release.carried.filter(func(c: Dictionary) -> bool: return c.id == id)
 			var got: float = 0.0 if carried.is_empty() else float(carried[0].done) - _said[id][2]
@@ -96,6 +118,14 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 			verdicts.append(verdict)
 			print("SPRINTPROBE CLOSE|%d|%d|%s|%d|%s|%s" % [seed_value, p.release.sprint, id, int(carried.is_empty()),
 				"-" if carried.is_empty() else "%.2f" % got, verdict])
+			finished += int(carried.is_empty())
+		print("SPRINTPROBE LOAD|%d|%d|%d|%d|%d|%s" % [seed_value, p.release.sprint, _tally.planned, finished,
+			_tally.idle, _tally.limit])
+		_sum.sprints += 1
+		_sum.planned += _tally.planned
+		_sum.finished += finished
+		_sum.idle += _tally.idle
+		_sum.limits[_tally.limit] = _sum.limits.get(_tally.limit, 0) + 1
 		# gate=more answers the first gate with one more sprint (plan_next below) and publishes the next one:
 		# the unpublished gate's record keeps its gate.
 		if o.gate == "publish" or p.releases.filter(func(r: Dictionary) -> bool: return r.gate).size() > 1:
@@ -105,17 +135,20 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 		SprintSystem.plan_next()
 	if SprintSystem.mode() != "plan":
 		return true
+	var limit: String = "lead"
 	if o.lead == 1:
 		SprintSystem.apply_lead()
 	else:
-		for c in SprintCatalog.mvp_candidates():
-			if p.sprint.cards.size() >= int(o.cards):
+		limit = "pool"
+		for c in (SprintCatalog.open_cards([]) if o.fill == 1 else SprintCatalog.mvp_candidates()):
+			if o.fill != 1 and p.sprint.cards.size() >= int(o.cards):
+				limit = "cards"
 				break
 			SprintSystem.add(c.id)
 			if not p.sprint.cards.has(c.id):
 				# add() refuses an open card when no point is left for it or the load would pass the ceiling.
-				print("SPRINTPROBE SKIP|%d|%d|%s|%s" % [seed_value, SprintSystem.sprint_number(), c.id,
-					"ceiling" if SprintSystem.plan_outcome().spare > SprintSystem.EPS else "full"])
+				limit = "ceiling" if SprintSystem.plan_outcome().spare > SprintSystem.EPS else "full"
+				print("SPRINTPROBE SKIP|%d|%d|%s|%s" % [seed_value, SprintSystem.sprint_number(), c.id, limit])
 				break
 	var plan: Dictionary = SprintSystem.plan_outcome().cards
 	var eta: Dictionary = SprintSystem.mvp_eta()
@@ -132,7 +165,34 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 		return false
 	_cause = ""
 	_seen = _inputs()
+	_tally = {"planned": p.sprint.cards.size(), "idle": 0, "limit": limit}
 	return true
+
+
+## A mid-skilled, mid-morale employee whose annual leave never comes (team=).
+static func _hire(n: int) -> void:
+	var c := Character.new()
+	c.id = "char_probe_%d" % n
+	c.character_name = c.id
+	c.role = HIRES[n]
+	c.category = "employee"
+	c.morale = 60
+	c.role_stats = HRConstants.seed_skills(c.role, 5, 3, 2)
+	c.traits = ["picks_it_up_fast"]
+	c.status = HRConstants.STATUS_ACTIVE
+	c.leave_week = -1
+	CharacterRegistry.add(c)
+
+
+## The week the tick closed: team members on no card, by the engine's worked list.
+static func _count_idle() -> void:
+	var worked: Dictionary = GameState.product.worked
+	if int(worked.day) != GameState.day:
+		return
+	var ids: Dictionary = {}
+	for id in worked.ids:
+		ids[id] = true
+	_tally.idle += SprintSystem.team().size() - ids.size()
 
 
 ## What the running sprint works with: the team at its weekly points and each card's remaining effort.

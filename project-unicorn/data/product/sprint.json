@@ -1,5 +1,6 @@
 {
   "sprint_weeks": 2,
+  "sprint_lengths": [1, 2],
   "quarter_sprints": 6,
   "mvp_lines": 3,
   "effort": {"k1": 3, "k2": 5, "k3": 8, "fix": 1, "fix_urgent": 2, "research": 1},
