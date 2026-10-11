@@ -285,6 +285,19 @@ SYS_QUIT_SAVE,Kaydet ve çık,Save and quit
 SYS_QUIT_DISCARD,Çık,Quit
 SYS_CANCEL,Vazgeç,Cancel
 MADE_WITH_GODOT,Godot Engine ile yapıldı.,Made with Godot Engine.
+MENU_VERSION,{build} · Sürüm {version},{build} · Version {version}
+MENU_BUILD_DEMO,Demo,Demo
+MENU_BUILD_EA,Erken Erişim,Early Access
+MENU_BUILD_FULL,Tam sürüm,Full
+CREDITS_TITLE,Jenerik,Credits
+CREDITS_LICENSES,Lisanslar,Licenses
+CREDITS_ROLE_DESIGN,Oyun tasarımı ve yapım,Game design and production
+CREDITS_ROLE_CODE,Programlama,Programming
+CREDITS_ROLE_WRITING,Yazı,Writing
+CREDITS_ROLE_ART3D,3B ofis ve karakterler,3D office and characters
+CREDITS_ROLE_UI,Arayüz,Interface
+CREDITS_COPYRIGHT,© {year} {holder}. Tüm hakları saklıdır.,© {year} {holder}. All rights reserved.
+LIC_GODOT_HEAD,"This game uses Godot Engine, available under the following license:","This game uses Godot Engine, available under the following license:"
 LIC_THIRD_PARTY,Third-party notices,Third-party notices
 LIC_FREETYPE,Portions of this software are copyright © {year} The FreeType Project (https://freetype.org). All rights reserved.,Portions of this software are copyright © {year} The FreeType Project (https://freetype.org). All rights reserved.
 LIC_GODOT_LOGO,"Godot logo by Andrea Calabró, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).","Godot logo by Andrea Calabró, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)."

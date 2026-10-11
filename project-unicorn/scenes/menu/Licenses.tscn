@@ -1,0 +1,94 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/menu/licenses.gd" id="1_lic"]
+[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_theme"]
+
+[node name="Licenses" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_lic")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -480.0
+offset_top = -460.0
+offset_right = 480.0
+offset_bottom = 460.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"DialogPanel"
+
+[node name="Col" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Head" type="PanelContainer" parent="Panel/Col"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_type_variation = &"DialogHead"
+
+[node name="TitleLabel" type="Label" parent="Panel/Col/Head"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitleH1"
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/Col"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Pad" type="MarginContainer" parent="Panel/Col/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 32
+
+[node name="Sections" type="VBoxContainer" parent="Panel/Col/Scroll/Pad"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Foot" type="PanelContainer" parent="Panel/Col"]
+layout_mode = 2
+theme_type_variation = &"PanelFoot"
+
+[node name="Footer" type="HBoxContainer" parent="Panel/Col/Foot"]
+layout_mode = 2
+
+[node name="BackBtn" type="Button" parent="Panel/Col/Foot/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"GhostButton"
+text = "ONB_BACK"
+
+[node name="Spring" type="Control" parent="Panel/Col/Foot/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="CloseBtn" type="Button" parent="Panel/Col/Foot/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "SET_CLOSE"

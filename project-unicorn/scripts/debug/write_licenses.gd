@@ -10,6 +10,7 @@ const FONT_FAMILIES := {
 }
 const LUCIDE := "res://assets/art/office/icons/LICENSE-lucide.txt"
 const CC0_DIR := "res://assets/art/people/LICENSES/"
+const LICENSES_SCREEN := preload("res://scripts/menu/licenses.gd")
 
 
 # The work waits for the first frame: Localization loads the CSV in its _ready.
@@ -24,7 +25,7 @@ func _process(_delta: float) -> bool:
 		"LICENSE-lucide.txt": FileAccess.get_file_as_string(LUCIDE),
 	}
 	var notices := PackedStringArray([en.get_message(&"LIC_THIRD_PARTY"), "",
-		en.get_message(&"LIC_FREETYPE").format({"year": _freetype_year()}), "",
+		en.get_message(&"LIC_FREETYPE").format({"year": LICENSES_SCREEN.freetype_year()}), "",
 		en.get_message(&"LIC_GODOT_LOGO"), "", en.get_message(&"LIC_FONTS")])
 	for dir in FONT_FAMILIES:
 		var rel: String = "fonts/%s-OFL.txt" % FONT_FAMILIES[dir]
@@ -55,11 +56,3 @@ func _copyright() -> String:
 			lines.append(" " + line if line != "" else " .")
 		lines.append("")
 	return "\n".join(lines)
-
-
-## The end of FreeType's copyright range ("1996-2025, David Turner, …").
-func _freetype_year() -> String:
-	for c in Engine.get_copyright_info():
-		if c.name == "The FreeType Project":
-			return String(c.parts[0].copyright[0]).get_slice(",", 0).get_slice("-", 1)
-	return ""

@@ -17,6 +17,7 @@ signal dismissed
 
 const DisplaySettingsLib := preload("res://scripts/systems/display_settings.gd")
 const GraphicsSettingsLib := preload("res://scripts/systems/graphics_settings.gd")
+const LICENSES := preload("res://scenes/menu/Licenses.tscn")
 
 const AUTOSAVE_KEYS: Array[String] = [   # SaveManager.AUTOSAVE_FREQUENCIES sırasıyla
 	"SET_AUTOSAVE_OFF", "SET_AUTOSAVE_WEEKLY", "SET_AUTOSAVE_MONTHLY"]
@@ -212,7 +213,8 @@ func _build_accessibility_section() -> void:
 
 
 func _build_data_section() -> void:
-	for entry in [["SET_OPEN_SAVE_FOLDER", _on_open_save_folder], ["SET_RESET_DEFAULTS", _on_reset_pressed]]:
+	for entry in [["SET_OPEN_SAVE_FOLDER", _on_open_save_folder], ["SET_RESET_DEFAULTS", _on_reset_pressed],
+			["CREDITS_LICENSES", _on_open_licenses]]:
 		var b := Button.new()
 		b.theme_type_variation = &"SecondaryButtonSmall"
 		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -251,6 +253,13 @@ func _on_open_save_folder() -> void:
 	var path: String = ProjectSettings.globalize_path(SaveManager.SAVE_DIR)
 	DirAccess.make_dir_recursive_absolute(path)
 	OS.shell_show_in_file_manager(path)
+
+
+## Licenses opens over this panel without Back; closing it hands focus back to the row that opened it.
+func _on_open_licenses() -> void:
+	var licenses := LICENSES.instantiate()
+	licenses.dismissed.connect(get_viewport().gui_get_focus_owner().grab_focus)
+	add_child(licenses)
 
 
 func _on_reset_pressed() -> void:

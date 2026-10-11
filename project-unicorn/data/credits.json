@@ -1,0 +1,12 @@
+{
+	"_": "Jenerik verisi, sahip doldurur. role bir strings.csv anahtarıdır; adı boş rol çizilmez, holder boşken © satırı yoktur.",
+	"year": 2026,
+	"holder": "",
+	"roles": [
+		{"role": "CREDITS_ROLE_DESIGN", "names": []},
+		{"role": "CREDITS_ROLE_CODE", "names": []},
+		{"role": "CREDITS_ROLE_WRITING", "names": []},
+		{"role": "CREDITS_ROLE_ART3D", "names": []},
+		{"role": "CREDITS_ROLE_UI", "names": []}
+	]
+}

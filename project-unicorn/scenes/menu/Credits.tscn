@@ -1,0 +1,141 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/menu/credits.gd" id="1_credits"]
+[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://assets/brand/lockup.svg" id="3_lockup"]
+[ext_resource type="Texture2D" path="res://assets/brand/godot_logo_mono.svg" id="4_mark"]
+
+[node name="Credits" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_credits")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -440.0
+offset_top = -350.0
+offset_right = 440.0
+offset_bottom = 350.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"DialogPanel"
+
+[node name="Col" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Head" type="PanelContainer" parent="Panel/Col"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_type_variation = &"DialogHead"
+
+[node name="TitleLabel" type="Label" parent="Panel/Col/Head"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitleH1"
+
+[node name="Pad" type="MarginContainer" parent="Panel/Col"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 40
+
+[node name="Body" type="VBoxContainer" parent="Panel/Col/Pad"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Lockup" type="TextureRect" parent="Panel/Col/Pad/Body"]
+custom_minimum_size = Vector2(139.125, 49.5)
+layout_mode = 2
+size_flags_horizontal = 0
+texture = ExtResource("3_lockup")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VersionLabel" type="Label" parent="Panel/Col/Pad/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MetaMuted"
+
+[node name="Gap" type="Control" parent="Panel/Col/Pad/Body"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Roles" type="GridContainer" parent="Panel/Col/Pad/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/v_separation = 24
+columns = 2
+
+[node name="Spring" type="Control" parent="Panel/Col/Pad/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Made" type="HBoxContainer" parent="Panel/Col/Pad/Body"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="GodotMark" type="TextureRect" parent="Panel/Col/Pad/Body/Made"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("4_mark")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MadeLabel" type="Label" parent="Panel/Col/Pad/Body/Made"]
+layout_mode = 2
+theme_type_variation = &"BodyLabel"
+text = "MADE_WITH_GODOT"
+
+[node name="CopyrightLabel" type="Label" parent="Panel/Col/Pad/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MetaMuted"
+
+[node name="Foot" type="PanelContainer" parent="Panel/Col"]
+layout_mode = 2
+theme_type_variation = &"PanelFoot"
+
+[node name="Footer" type="HBoxContainer" parent="Panel/Col/Foot"]
+layout_mode = 2
+
+[node name="LicensesBtn" type="Button" parent="Panel/Col/Foot/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"GhostButton"
+text = "CREDITS_LICENSES"
+
+[node name="Spring" type="Control" parent="Panel/Col/Foot/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="CloseBtn" type="Button" parent="Panel/Col/Foot/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "SET_CLOSE"
