@@ -22,7 +22,7 @@ const LOG_ROWS := 5
 const ATTENTION_RANK := {"risk": 2, "expansion": 1}
 ## A phase's tag on its account; any other phase reads healthy.
 const PHASE_TAGS := {"risk": ["SALES_CHIP_RISK", &"risk"], "expansion": ["SALES_CHIP_EXPANSION", &"pos"],
-	"onboarding": ["SALES_CHIP_NEW", &"neutral"]}
+	"onboarding": ["SALES_CHIP_ONBOARDING", &"neutral"]}
 ## Under SAT_MID the satisfaction meter reads as a warning [WORKING]; danger is the Risk phase's alone.
 const SAT_MID := 50
 ## Week columns on the live B2C page; SalesSystem.daily_tick keeps the same number of samples.
@@ -532,6 +532,8 @@ func _account_card(c: Customer, off: bool) -> PanelContainer:
 		words.add_child(_line(tr("SALES_REASON_PREFIX").format({"reason": INBOX.risk_reason()}), &"MetaMuted"))
 	elif c.lifecycle_phase == "expansion":
 		words.add_child(_line(tr("SALES_EXPANSION_FICTION"), &"MetaMuted"))
+	elif B2BSalesSystem.onboarding_ends_under_bar(c):
+		words.add_child(_line(tr("SALES_ONBOARDING_ENDS"), &"MetaMuted"))
 	col.add_child(words)
 	_add_promise(col, c)
 	col.add_child(_satisfaction_row(c))

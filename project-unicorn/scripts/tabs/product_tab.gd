@@ -1,7 +1,7 @@
 extends Control
 
 # Ürün penceresi, sprint ekranı. Ortak koyu başlıkta Ürün ve iki ölçü (tür ile ürün adı, sürüm); altında
-# denetim şeridi (SPRİNT | ÇEYREK, PM yokken gerekçesiyle kilitli; Geçmiş ve devir anahtarı), gövdede SPRİNT
+# denetim şeridi (SPRINT | ÇEYREK, PM yokken gerekçesiyle kilitli; Geçmiş ve devir anahtarı), gövdede SPRINT
 # görünümü (alanlar · bu sprint · sonraki) ya da ÇEYREK görünümü. Her değişiklikte kaynağın modelinden
 # baştan kurulur; kaynak yoksa canlı model ve eylemler SprintSystem'e gider, ürün türü seçilmemişse
 # şerit yoktur ve ortada tür seçici durur. Akordeon, ses katlaması, geçmiş ve görünüm sekmenin yerel
@@ -128,7 +128,7 @@ func _rebuild() -> void:
 	if _ui.is_empty():
 		_ui = m.ui.duplicate()
 	m.ui = _ui
-	# Sürüm notu yalnız SPRİNT görünümünde durur ve saat onun için tutulur: notta görünüm SPRİNT'tir.
+	# Sürüm notu yalnız SPRINT görünümünde durur ve saat onun için tutulur: notta görünüm SPRINT'tir.
 	var view: String = _ui.view if m.quarter.state == "open" and m.center.mode != "release" else "sprint"
 	var picking: bool = _source == null and not SprintSystem.is_typed()
 	_build_head(m.header)
@@ -172,7 +172,7 @@ func _build_head(h: Dictionary) -> void:
 		_kpis.add_child(UiFactory.D_kpi(tr("PRODUCT_KPI_PAYING"), Fmt.group(h.paying)))
 
 
-## SPRİNT | ÇEYREK (PM yokken ÇEYREK kilitli, gerekçesi yanında) ... Geçmiş anahtarı; PM varken planlamayı ona
+## SPRINT | ÇEYREK (PM yokken ÇEYREK kilitli, gerekçesi yanında) ... Geçmiş anahtarı; PM varken planlamayı ona
 ## devretme anahtarı.
 func _build_ctl(m: Dictionary, view: String) -> void:
 	UiFactory.clear(_ctl_row)

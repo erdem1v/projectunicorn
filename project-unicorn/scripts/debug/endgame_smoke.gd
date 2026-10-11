@@ -129,6 +129,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"gross_runway_months":  fail = _case_gross_runway_months()
 		"locale_switch":        fail = _case_locale_switch()
 		"b2b_lifecycle_and_countdown": fail = _case_b2b_lifecycle_and_countdown()
+		"b2b_onboarding_grace_floor": fail = _case_b2b_onboarding_grace_floor()
 		"b2b_satisfaction_leaves_b2c_identical": fail = _case_b2b_satisfaction_leaves_b2c_identical()
 		"b2b_retention_routes_seams": fail = _case_b2b_retention_routes_seams()
 		"b2b_ignore_then_churn": fail = _case_b2b_ignore_then_churn()
@@ -528,6 +529,11 @@ static func _sign_fixture(p: Prospect, mrr: int, satisfaction: int,
 		CustomerRegistry.set_mrr(c.id, mrr)
 		SalesSystem.reflect_mrr()
 	return c
+
+
+## An established account: signed long enough ago that its onboarding floor has lifted.
+static func _past_onboarding(c: Customer) -> void:
+	c.acquired_on_day = GameState.day - TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
 
 ## "Teklife geç" opens FROM THE SECOND probe (§5.1.1), so a case that wants the skip has to
 ## reach it first. Takes the first OPEN answer each turn until the skip is available, then
@@ -3068,6 +3074,70 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 	return ""
 
 
+static func _case_b2b_onboarding_grace_floor() -> String:
+	# A 2★ account signed at satisfaction 0 on a stability-0 product opens neutral, holds over its
+	# bar for the onboarding floor's weeks, its card warns in the last one, and it enters Risk the
+	# tick the floor lifts. A word broken inside the window still lowers the target.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_stability", 0.0)
+	GameState.set_flag("mvp_live_bug_count", 0)
+	var open_account := func(id: String) -> Customer:
+		var p := Prospect.new()
+		p.id = id
+		p.company_name = id
+		p.industry = "testing"
+		p.star = 2
+		return _sign_fixture(p, 1000, 0)
+	var c: Customer = open_account.call("lead_floor_a")
+	var start: int = maxi(c.tolerance + B2BConstants.SIGNING_SAT_OVER_TOL, B2BConstants.SIGNING_SAT_MIN)
+	if c.satisfaction != start:
+		return "signed at satisfaction 0, the account opens at %d (want max(tolerance %d + %d, %d) = %d)" % [
+			c.satisfaction, c.tolerance, B2BConstants.SIGNING_SAT_OVER_TOL, B2BConstants.SIGNING_SAT_MIN, start]
+	var health: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
+	if health >= c.tolerance:
+		return "test misconfigured: the product (%.1f) is not under the bar (%d)" % [health, c.tolerance]
+	var weeks: int = TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
+	for w in weeks - 1:
+		_sim_day()
+		if c.satisfaction < c.tolerance or c.lifecycle_phase != "onboarding":
+			return "week %d inside the floor: satisfaction %d under the bar %d, phase %s" % [
+				w + 1, c.satisfaction, c.tolerance, c.lifecycle_phase]
+		if B2BSalesSystem.onboarding_ends_under_bar(c) != (w == weeks - 2):
+			return "the last-week warning reads %s in week %d of %d" % [
+				str(B2BSalesSystem.onboarding_ends_under_bar(c)), w + 1, weeks]
+	_sim_day()
+	if B2BSalesSystem.satisfaction_target(c) != clampi(int(round(health + c.trust_offset)), 0, 100):
+		return "target %d once the floor lifted (want stability %.1f + trust %.1f)" % [
+			B2BSalesSystem.satisfaction_target(c), health, c.trust_offset]
+	if c.lifecycle_phase != "risk":
+		return "the floor lifted over a product under the bar and the account did not enter Risk (%s, %d/%d)" % [
+			c.lifecycle_phase, c.satisfaction, c.tolerance]
+	var b: Customer = open_account.call("lead_floor_b")
+	var pr: Promise = PromiseRegistry.create(b.id, "ai_vec_filter", 1)
+	while pr.status == "open" and GameState.day < B2BSalesSystem.onboarding_floor_until(b):
+		_sim_day()
+	if pr.status != "broken" or GameState.day >= B2BSalesSystem.onboarding_floor_until(b):
+		return "test misconfigured: the promise did not break inside the window (%s, day %d)" % [pr.status, GameState.day]
+	if B2BSalesSystem.satisfaction_target(b) >= b.tolerance + B2BConstants.ONBOARDING_GRACE_MARGIN:
+		return "a word broken inside the window left the target on the floor (%d, trust %.1f)" % [
+			B2BSalesSystem.satisfaction_target(b), b.trust_offset]
+	# A 1★ bar plus the margin sits under the scale's middle: such an account opens on the middle.
+	var p1 := Prospect.new()
+	p1.id = "lead_floor_c"
+	p1.company_name = "lead_floor_c"
+	p1.industry = "testing"
+	p1.star = 1
+	var small: Customer = _sign_fixture(p1, 500, 0)
+	if small.tolerance + B2BConstants.SIGNING_SAT_OVER_TOL >= B2BConstants.SIGNING_SAT_MIN:
+		return "test misconfigured: the 1★ bar %d + %d is not under the middle %d" % [
+			small.tolerance, B2BConstants.SIGNING_SAT_OVER_TOL, B2BConstants.SIGNING_SAT_MIN]
+	if small.satisfaction != B2BConstants.SIGNING_SAT_MIN:
+		return "a 1★ account signed at satisfaction 0 opens at %d (want the middle %d)" % [
+			small.satisfaction, B2BConstants.SIGNING_SAT_MIN]
+	return ""
+
+
 static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
 	# Regression guard: with a B2B account beside it, the B2C aggregate still moves by its own
 	# drift rule and nothing else, and the B2B account is not dragged through that rule (it is
@@ -3112,6 +3182,7 @@ static func _add_risk_b2b(pid: String, mrr: int) -> Customer:
 	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = _sign_fixture(p, mrr, 70)
+	_past_onboarding(c)
 	CustomerRegistry.set_tolerance(c.id, 50)
 	CustomerRegistry.set_satisfaction(c.id, 20)
 	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
@@ -3650,6 +3721,7 @@ static func _case_b2b_cs_escalation_refuse() -> String:
 	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = _sign_fixture(p, 2000, 70)
+	_past_onboarding(c)
 	CustomerRegistry.assign_customer(c.id, cs.id)
 	CustomerRegistry.set_satisfaction(c.id, 20)  # below the critical threshold
 	if not _escalation_lands(c, cs):
@@ -5620,6 +5692,7 @@ static func _case_event_history_names_survive() -> String:
 	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = _sign_fixture(p, 2000, 70)
+	_past_onboarding(c)
 	CustomerRegistry.assign_customer(c.id, cs.id)
 	CustomerRegistry.set_satisfaction(c.id, 20)
 	if not _escalation_lands(c, cs):
@@ -9639,6 +9712,19 @@ static func _case_loc_format_locale_flip() -> String:
 	if Fmt.upper("Display") != "DISPLAY":
 		TranslationServer.set_locale(loc0)
 		return "en upper('Display') = '%s', want DISPLAY (the tr i→İ rule leaked)" % Fmt.upper("Display")
+	# A loanword stem keeps the Latin I in Turkish caps and its Turkish suffix takes İ; English
+	# caps every i as I.
+	var caps := {
+		"tr": {"Sprint": "SPRINT", "Onboarding": "ONBOARDING", "İlk sprinti": "İLK SPRINTİ", "Veri": "VERİ"},
+		"en": {"Sprint": "SPRINT", "Onboarding": "ONBOARDING", "İlk sprinti": "İLK SPRINTI", "Veri": "VERI"},
+	}
+	for loc in caps:
+		TranslationServer.set_locale(loc)
+		for text in caps[loc]:
+			var got: String = Fmt.upper(text)
+			if got != caps[loc][text]:
+				TranslationServer.set_locale(loc0)
+				return "%s upper('%s') = '%s', want %s" % [loc, text, got, caps[loc][text]]
 	TranslationServer.set_locale(loc0)
 	return ""
 

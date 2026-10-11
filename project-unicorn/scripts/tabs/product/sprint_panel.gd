@@ -313,7 +313,7 @@ func _next(next: Dictionary) -> void:
 		col.stack.add_child(SprintUiShared.empty_line(tr("PRODUCT_NEXT_EMPTY")))
 
 
-## "SPRİNT 7 · 2 hafta ... BU SPRİNT". Sprint yokken (canlı model) yalnız sağdaki etiket kalır.
+## "SPRINT 7 · 2 hafta ... BU SPRINT". Sprint yokken (canlı model) yalnız sağdaki etiket kalır.
 func _title_row(sprint: int, meta: String, tag_key: String) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_M)
 	row.custom_minimum_size.y = UiTokens.D_H_FX

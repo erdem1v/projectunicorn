@@ -458,10 +458,10 @@ static func _log_state() -> void:
 
 
 static func _log_customers() -> void:
-	# The churn autopsy's raw material. TARGET is the number the whole B2B book drifts
-	# toward (B2BSalesSystem._satisfaction_target: the stability axis + trust_offset), and
-	# it is printed beside satisfaction and tolerance because "why did nobody slide" and
-	# "why did everybody slide" are the same question asked of these three numbers.
+	# The churn autopsy's raw material. TARGET is the number each account drifts toward
+	# (B2BSalesSystem.satisfaction_target), and it is printed beside satisfaction and tolerance
+	# because "why did nobody slide" and "why did everybody slide" are the same question asked
+	# of these three numbers. The SAT line's target is the bare stability axis.
 	var health: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
 	var book: Array = CustomerRegistry.get_by_market("b2b")
 	var satisfied: int = 0
@@ -470,7 +470,7 @@ static func _log_customers() -> void:
 			satisfied += 1
 		print("PROBE CUST day=%d id=%s sat=%d tol=%d target=%d trust=%.1f phase=%s streak=%d cd=%d mrr=%d bugs=%d" % [
 			GameState.day, c.id, c.satisfaction, c.tolerance,
-			clampi(int(round(health + c.trust_offset)), 0, 100), c.trust_offset,
+			B2BSalesSystem.satisfaction_target(c), c.trust_offset,
 			c.lifecycle_phase, c.risk_streak, c.churn_countdown, c.mrr,
 			int(GameState.get_flag("mvp_live_bug_count", 0))])
 	# The fraction of the book at or above its bar — the number the
@@ -1633,6 +1633,9 @@ static func _seed_stability_fixture(preset: String, raw_stability: float, bugs: 
 		preset, raw_stability, bugs, live_axis, clear_axis, int(_bar_small()), int(_bar_mid())])
 	if not ok:
 		print("PROBE ERROR fixture drifted: %s no longer satisfies its intent inequality (re-derive after a tolerance move)" % preset)
+	# The pressure presets call this again once the book is signed: every account's onboarding floor has lifted.
+	for c in CustomerRegistry.get_by_market("b2b"):
+		c.acquired_on_day = GameState.day - TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
 
 
 static func _seed_b2b_world(rep_count: int) -> void:
@@ -1656,15 +1659,16 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	# phase 3 in two days and the log stops describing the early game it is supposed to
 	# describe.
 	#
-	# Satisfaction seeds straddle the tolerance seeds on purpose: probe_c and probe_e start
-	# close enough to their bar that ordinary product wear can push them under, which is the
-	# only way the retention → promise → churn chain is reachable without hand-forcing it.
+	# Satisfaction seeds straddle the tolerance seeds on purpose: probe_c and probe_e open at
+	# the neutral signing start (their bar + SIGNING_SAT_OVER_TOL), the lowest a signing allows,
+	# so ordinary product wear can push them under once their onboarding floor has lifted, which
+	# is the only way the retention → promise → churn chain is reachable without hand-forcing it.
 	var specs := [
 		{"id": "probe_a", "name": "Kuzey Lojistik", "industry": "logistics", "star": 1, "seats": 7, "price": 50, "sat": 72},
 		{"id": "probe_b", "name": "Ege Sağlık", "industry": "health", "star": 2, "seats": 16, "price": 50, "sat": 64},
-		{"id": "probe_c", "name": "Marmara İnşaat", "industry": "construction", "star": 2, "seats": 14, "price": 50, "sat": 52},
+		{"id": "probe_c", "name": "Marmara İnşaat", "industry": "construction", "star": 2, "seats": 14, "price": 50, "sat": 57},
 		{"id": "probe_d", "name": "Toros Sigorta", "industry": "insurance", "star": 1, "seats": 6, "price": 50, "sat": 68},
-		{"id": "probe_e", "name": "Anadolu Üretim", "industry": "manufacturing", "star": 3, "seats": 11, "price": 50, "sat": 57},
+		{"id": "probe_e", "name": "Anadolu Üretim", "industry": "manufacturing", "star": 3, "seats": 11, "price": 50, "sat": 61},
 	]
 	for s in specs:
 		var p := Prospect.new()

@@ -1077,6 +1077,9 @@ func _run_sales_shot(kind: String) -> void:
 		PromiseRegistry.create("co_kuzey", "saas_ops_integration", 1)   # LOC-DATA debug seed / id
 		SalesSystem.record_sales_event("lead_expired", "", "Efes Emlak", 0)   # LOC-DATA debug seed / id
 		SalesSystem.record_sales_event("founder_close", "", "Aras Klinik", 700)   # LOC-DATA debug seed / id
+		# Aras in its onboarding floor's last week, the product under its bar: the card warns.
+		CustomerRegistry.get_customer("co_aras").acquired_on_day = \
+			GameState.day + 1 - TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
 	elif kind != "empty":
 		_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
 		CustomerRegistry.set_churn_countdown("co_ege", TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))

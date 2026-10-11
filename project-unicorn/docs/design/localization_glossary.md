@@ -7,8 +7,10 @@ Dokuz kapı kararı (2026-08-08) işlenmiştir. Yeni terim ekleyen task bu dosya
 **Register:** EN, İngilizce yazılmış oyunun kendi sesi — kuru, düşük ateşli, satış-katı/haber-odası
 kayıtları yerinde. Makine-çeviri kokusu ve pazarlama İngilizcesi yasak. ALL-CAPS yüzey EN'de de
 ALL-CAPS; uzun çip = daha kısa kelime, asla daha geniş konteyner. INTEGRITY-law loanword seti
-(`pitch, startup, demo, momentum, MRR, runway, churn, burn` + `laptop, mail, VC` + özel adlar) iki
-dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
+(`pitch, startup, demo, momentum, MRR, runway, churn, burn` + `laptop, mail, VC` + `onboarding` (sahip kararı
+2026-10-11) + özel adlar) iki dilde aynıdır. Türkçe büyük harfte ödünç kelime gövdesi Latin I'yı korur, ardındaki
+Türkçe ek Türkçe kurala uyar (`Fmt.LOANWORD_STEMS`: `mail, onboarding, pitch, sprint`; "İlk sprinti" → "İLK SPRINTİ";
+sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 
 ## 1. Kilit & erişilebilirlik grameri (her yüzeyde bağlayıcı)
 
@@ -20,7 +22,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | TAM SÜRÜMDE | IN THE FULL GAME | **Kapı kararı 1** — eski shipped "IN FULL RELEASE" revize edildi. |
 | İNŞA EDİLİYOR · SEÇİM KİLİTLİ | BUILD IN PROGRESS · CHOICES LOCKED | |
 | CANLI | LIVE | `CANLI V{n}` → `LIVE V{n}`. |
-| YENİ | NEW | Müşteri çipi + HR rozeti ortak. |
+| YENİ | NEW | HR rozeti. |
 
 ## 2. Şirket yayı & finans durumu
 
@@ -61,7 +63,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Kararlılık *(monitör)* | Stability | Pitch KARARLILIK'ından AYRI anlam — anahtar paylaşılmaz. |
 | Teknik borç | Tech debt | |
 | Geliştirme bekleniyor | Awaiting development | |
-| sprint | sprint | `PRODUCT_SPRINT_TITLE` ve ürün ekranı; CSV cümle düzeninde, büyük hâli `Fmt.upper` ile SPRİNT. "sprint" izinli ödünç kelimelerde yok: TR onay bekliyor. |
+| sprint | sprint | `PRODUCT_SPRINT_TITLE` ve ürün ekranı; CSV cümle düzeninde, büyük hâli `Fmt.upper` ile SPRINT. "sprint" izinli ödünç kelimelerde yok: TR onay bekliyor. |
 | PM | PM | `PRODUCT_PM`, Ürün Yöneticisi'nin çip kısaltması. "PM" izinli ödünç kelimelerde yok: TR onay bekliyor. |
 | ticket | ticket | `PRODUCT_CUSTOMER_TICKETS`, `PRODUCT_FX_TICKETS_*`. "ticket" izinli ödünç kelimelerde yok: TR onay bekliyor. |
 | puan *(efor)* | points | Tekil: point (`_ONE`). |
@@ -110,6 +112,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | aday | lead | Sayımlar ve akış (`{n} leads`). |
 | prospect | prospect | Panodaki varlık. Kural: **lead gelir, prospect panoda oturur** — shipped ayrım kanonlaştı. |
 | Memnuniyet | Satisfaction | |
+| Onboarding | Onboarding | Yeni hesabın ilk haftaları: hesap kartının etiketi (`SALES_CHIP_ONBOARDING`) ve son haftasının satırı (`SALES_ONBOARDING_ENDS`). Ödünç kelime, iki dilde aynı: sahip kararı 2026-10-11. |
 | Churn'e ~{n} hafta | ~{n} weeks to churn | Tekil: ~1 week to churn (`_ONE`). |
 | Söz / Söz teslimi | Promise / Promise due | |
 | söz verildi | promised | Sözlü sprint kartının damgası (`PRODUCT_PROMISED`), küçük harf. TR/EN onay bekliyor. |

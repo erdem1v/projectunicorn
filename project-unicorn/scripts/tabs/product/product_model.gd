@@ -208,7 +208,7 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 	# Sürüm koşulunda bu sprintte biten ve betada bekleyen Çekirdek K1'i de bitmiş sayılır.
 	var finished: int = p.get("cards", {}).values().filter(func(c: Dictionary) -> bool:
 		return c.area == "core" and int(c.target_tier) == 1 and c.state in ["done", "beta"]).size()
-	# Plan ekranı motorun oynatmasını söyler: kim kaç hafta, devreden, başlamayan ve SPRİNT SONUNDA.
+	# Plan ekranı motorun oynatmasını söyler: kim kaç hafta, devreden, başlamayan ve SPRINT SONUNDA.
 	var outcome: Dictionary = SprintSystem.plan_outcome() if mode == "plan" and n > 0 else {}
 	var cards: Array = []
 	var segments: Array = []

@@ -8,6 +8,16 @@ extends RefCounted
 
 # ================================ Lifecycle ==================================
 const ONBOARDING_WEEKS := 4            # first-impressions window after signing
+# ONBOARDING FLOOR: for this many weeks after signing the health term of an account's satisfaction target is at least
+# its tolerance + ONBOARDING_GRACE_MARGIN, whatever the product earns, so a first version gets time
+# to catch up before its first accounts can leave. On screen the floor is the account's Onboarding
+# tag, which is the onboarding phase that ONBOARDING_WEEKS closes: the two stay equal.
+const ONBOARDING_GRACE_WEEKS := 4       # [WORKING]
+const ONBOARDING_GRACE_MARGIN := 2      # [WORKING] points over tolerance the floor holds
+# SIGNING START: a new account opens neutral, over its bar and never under the middle of the
+# scale, whatever the closing seed; a higher seed is kept.
+const SIGNING_SAT_OVER_TOL := 10        # [ÇALIŞMA] points over tolerance a new account opens at
+const SIGNING_SAT_MIN := 50             # [ÇALIŞMA] lowest satisfaction a new account opens at
 const RISK_TRIGGER_WEEKS := 1           # consecutive ticks under tolerance → Risk phase
 # HYSTERESIS: after an account LEAVES Risk it cannot re-enter for this many weeks, however far
 # under its bar it drifts (the streak keeps counting; the countdown and the retention card do

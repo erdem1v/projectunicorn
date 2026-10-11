@@ -25,13 +25,24 @@ static func is_english() -> bool:
 
 # --- Case -------------------------------------------------------------------
 
+## English loanwords Turkish text keeps as written: in caps they keep the Latin I (SPRINT, not SPRİNT).
+const LOANWORD_STEMS: Array[String] = ["mail", "onboarding", "pitch", "sprint"]
+
+
 ## Locale-correct uppercase. String.to_upper() maps "i"→"I", which is wrong in Turkish, so the
 ## Turkish branch pre-substitutes i→İ ("ı"→"I" already maps correctly). English text must not
-## take the Turkish rule (Display→DİSPLAY).
+## take the Turkish rule (Display→DİSPLAY), nor must a loanword stem inside Turkish text; the
+## Turkish suffix after it does (sprinti → SPRINTİ).
 static func upper(s: String) -> String:
 	if is_english():
 		return s.to_upper()
-	return s.replace("i", "İ").to_upper()   # LOC-DATA Turkish dotted-i mapping
+	var out: String = s.replace("i", "İ").to_upper()   # LOC-DATA Turkish dotted-i mapping
+	for stem in LOANWORD_STEMS:
+		var at: int = s.findn(stem)
+		while at >= 0:
+			out = out.left(at) + stem.to_upper() + out.substr(at + stem.length())
+			at = s.findn(stem, at + stem.length())
+	return out
 
 
 # --- Counts -----------------------------------------------------------------

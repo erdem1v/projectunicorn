@@ -354,6 +354,10 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	# longer. The model's defaults already read onboarding / no countdown / no risk streak.
 	c.scale = prospect.star
 	c.tolerance = B2BConstants.seed_tolerance(prospect.star, prospect.industry)
+	# A new account opens neutral: a fresh signature is not unhappy yet, and a seed under the bar
+	# would flash Risk and the retention card on the first tick, before the floor could raise it.
+	c.satisfaction = maxi(c.satisfaction,
+		maxi(c.tolerance + B2BConstants.SIGNING_SAT_OVER_TOL, B2BConstants.SIGNING_SAT_MIN))
 	c.onboarding_until = GameState.day + TimeModel.ticks(B2BConstants.ONBOARDING_WEEKS)
 	# Request-channel phase, assigned ONCE here and never moved. A stride walk over a counter
 	# coprime with the interval spreads the book by construction; an id.hash() would not —

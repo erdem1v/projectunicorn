@@ -115,7 +115,7 @@ SALES_FOUNDER_STRETCHED,Doğrudan yönettiğin {n} hesap var,You are managing {n
 SALES_CHIP_HEALTHY,Sağlıklı,Healthy
 SALES_CHIP_RISK,Risk altında,At risk
 SALES_CHIP_EXPANSION,Büyümek istiyor,Wants to grow
-SALES_CHIP_NEW,Yeni,New
+SALES_CHIP_ONBOARDING,Onboarding,Onboarding
 SALES_STEWARD,Müşteri temsilcisi: {name},Account manager: {name}
 SALES_CHURN_COUNTDOWN,Churn'e ~{n} hafta,~{n} weeks to churn
 SALES_CHURN_COUNTDOWN_ONE,Churn'e ~{n} hafta,~{n} week to churn
@@ -123,6 +123,7 @@ SALES_REASON_PREFIX,Sebep: {reason},Reason: {reason}
 SALES_REASON_OUTAGE,sık kesinti şikayeti,frequent outage complaints
 SALES_REASON_SATISFACTION,memnuniyet düşüyor,satisfaction is falling
 SALES_EXPANSION_FICTION,Başka departmana yaymak istiyor.,Wants to roll it out to another department.
+SALES_ONBOARDING_ENDS,Onboarding gelecek hafta bitiyor. Ürüne henüz ısınmadı.,Onboarding ends next week. Not sold on the product yet.
 SALES_ACTION_RETAIN,İlgilen,Check in
 SALES_ACTION_EXPAND,Değerlendir,Evaluate
 ENDING_NEXT,SIRADA NE VAR?,WHAT'S NEXT?
@@ -1766,7 +1767,7 @@ END_STAT_LAST_MRR,SON MRR,FINAL MRR
 END_STAT_BRAND,MARKA,BRAND
 END_STAT_CUSTOMERS_LOST,KAYBEDİLEN MÜŞTERİ,CUSTOMERS LOST
 END_STAT_REJECTIONS,RET,REJECTIONS
-END_STAT_PITCHES,PİTCH,PITCHES
+END_STAT_PITCHES,PITCH,PITCHES
 END_SA_HEAD_FF,{company} Series A Turunu Kapattı,{company} Closes Its Series A
 END_SA_SUB_FF,"""Temiz bir tur; kurucu masaya sağlam oturmuş."" değerlendirmesi yatırım çevrelerinde dolaşıyor.","""A clean round; the founder sat down at that table from a position of strength."" The assessment is going round the investment community."
 END_SA_CAP_FF,İmza töreninden bir an.,A moment from the signing.

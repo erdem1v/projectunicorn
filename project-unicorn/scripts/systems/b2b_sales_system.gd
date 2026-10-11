@@ -49,8 +49,7 @@ static func _tick_customer(c: Customer) -> void:
 	# already reflects the (slightly smaller) grudge — a broken promise makes an account
 	# fragile for a month, not forever.
 	if not is_zero_approx(c.trust_offset):
-		CustomerRegistry.set_trust_offset(c.id,
-			move_toward(c.trust_offset, 0.0, TimeModel.per_tick(B2BConstants.TRUST_OFFSET_DECAY_PER_DAY)))
+		CustomerRegistry.set_trust_offset(c.id, _forgiven_trust(c))
 	_tick_satisfaction(c)
 	# A delegated account raises ONE escalation when it sinks past the level its rep can hold;
 	# recovery above the threshold re-arms it. The flag IS the edge: `customer.cs_escalation`
@@ -71,7 +70,7 @@ static func _tick_customer(c: Customer) -> void:
 
 # --- Layer 1: visible satisfaction drifts toward a product-health target ---
 static func _tick_satisfaction(c: Customer) -> void:
-	var target: int = _satisfaction_target(c)
+	var target: int = satisfaction_target(c)
 	var step: int = B2BConstants.SAT_DRIFT_STEP
 	# Onboarding window (first ONBOARDING_WEEKS after signing): first impressions
 	# swing harder — a bug-heavy product at signing bites more, a solid one wins faster.
@@ -121,7 +120,12 @@ static func _account_owner(c: Customer) -> Character:
 	return owner
 
 
-static func _satisfaction_target(c: Customer) -> int:
+static func satisfaction_target(c: Customer) -> int:
+	return _target_on(c, GameState.day, c.trust_offset)
+
+
+## An account's satisfaction target on tick `day` with the trust ledger at `trust`.
+static func _target_on(c: Customer, day: int, trust: float) -> int:
 	# Product-health channel — the SAME effective-stability signal the rest of the
 	# economy reads (bugs already folded into effective stability via economy dims,
 	# so there is no separate bug subtractor). NO price link (B2B is not price-driven).
@@ -129,7 +133,29 @@ static func _satisfaction_target(c: Customer) -> int:
 	# ledger: that is what makes a broken word DURABLE (the drift would otherwise walk
 	# PROMISE_BROKEN_SAT back within one tick) and gives each account its own target.
 	var health: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
-	return clampi(int(round(health + c.trust_offset)), 0, 100)
+	# The onboarding floor holds a new account just over its bar. The trust ledger lands on top
+	# of it, so a word broken inside the window still bites.
+	if day < onboarding_floor_until(c):
+		health = maxf(health, c.tolerance + B2BConstants.ONBOARDING_GRACE_MARGIN)
+	return clampi(int(round(health + trust)), 0, 100)
+
+
+## The trust ledger one tick on: each tick forgives a little before its target is read.
+static func _forgiven_trust(c: Customer) -> float:
+	return move_toward(c.trust_offset, 0.0, TimeModel.per_tick(B2BConstants.TRUST_OFFSET_DECAY_PER_DAY))
+
+
+## The tick an account's onboarding floor lifts.
+static func onboarding_floor_until(c: Customer) -> int:
+	return c.acquired_on_day + TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
+
+
+## The floor's last week, with the target the lifting tick will read (its forgiven trust
+## included) under the account's bar: the account slides under it then, and its card says so a
+## week ahead.
+static func onboarding_ends_under_bar(c: Customer) -> bool:
+	var lift: int = onboarding_floor_until(c)
+	return lift - GameState.day == 1 and _target_on(c, lift, _forgiven_trust(c)) < c.tolerance
 
 
 # --- Layer 2 + phase machine: hidden tolerance vs satisfaction → churn countdown ---
