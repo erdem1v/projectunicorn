@@ -632,8 +632,17 @@ static func _run_sim() -> void:
 	# The game's clock, hour by hour: a visible hour is its own batch, so its cards are shown at
 	# that hour and answered before the next, as a player answers them; an unanswered modal
 	# would hold every later card behind it. The night is one batch that ends at 08:00, where
-	# night_skipped opens the week (_on_week_start).
+	# night_skipped opens the week (_on_week_start). A sprint waiting on its plan holds the clock until the
+	# founder starts it; any other hold is an error.
 	while GameState.run_active and not _stopped:
+		if SprintSystem.awaits_plan():
+			if _full_run:
+				_plan_the_sprint()
+			else:
+				_start_on_lead()
+			if SprintSystem.awaits_plan():
+				print("PROBE ERROR day=%d plan unstartable" % GameState.day)
+				break
 		if TimeManager.is_clock_held():
 			print("PROBE ERROR day=%d the clock is held" % GameState.day)
 			break
@@ -804,8 +813,7 @@ static func _plan_the_sprint() -> void:
 				SprintSystem.remove(id)
 	if b2c:
 		_keep_building()
-	# With no K1 step or fix left to plan, a research sprint: a plan left unstarted is auto-started
-	# overnight on the lead's suggestion, K2 steps and all.
+	# With no K1 step or fix left to plan, a research sprint; a plan that still cannot start is _run_sim's error.
 	if _k1_only and not SprintSystem.can_start():
 		for area in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
 			var research: Array = SprintCatalog.candidates(area.id).filter(func(c: Dictionary) -> bool: return c.kind == "research")
@@ -816,6 +824,16 @@ static func _plan_the_sprint() -> void:
 		print("PROBE PLAY day=%d sprint %d start cards=%s used=%.2f capacity=%.2f" % [GameState.day,
 			SprintSystem.sprint_number(), ",".join(GameState.product.sprint.cards), SprintSystem.used(),
 			SprintSystem.capacity()])
+
+
+## A sprint waiting on its plan starts on the lead's plan the morning its note opens, as the Product page
+## starts it: at the MVP gate the founder ships first, then the next sprint is planned. The presets that
+## seed a product and --tick-probe play it so; the sprint that cannot start is the caller's error.
+static func _start_on_lead() -> void:
+	SprintSystem.publish()
+	SprintSystem.plan_next()
+	SprintSystem.apply_lead()
+	SprintSystem.start()
 
 
 ## A sprint with research alone (or nothing) in it releases nothing, so while a step is open the
@@ -1552,14 +1570,12 @@ static func _seed_live_product(market: String, subtype: String, components: Arra
 
 
 ## The tended consumer product, built by the sprint engine itself: the note app and the founder
-## alone, Sprint 1 started on the lead's plan and every later sprint auto-started on it. The founder
-## ships at the MVP gate the night it opens; the release brings the launch audience and opens the
-## paid tier.
+## alone, Sprint 1 started on the lead's plan; every later sprint is started on it by _start_on_lead.
+## The release brings the launch audience and opens the paid tier.
 static func _seed_b2c_world() -> void:
 	SprintSystem.choose_type("note_tool", PRODUCT_NAMES["note_tool"])
 	SprintSystem.apply_lead()
 	SprintSystem.start()
-	EventBus.sprint_closed.connect(func(_n: int) -> void: SprintSystem.publish())
 	EventBus.version_shipped.connect(func(_n: int) -> void:
 		SalesSystem.add_b2c_audience(200)
 		SalesSystem.open_b2c_paid_tier(15), CONNECT_ONE_SHOT)

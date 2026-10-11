@@ -2788,6 +2788,8 @@ PRODUCT_BETA_RULE,"Biten kartlar bir sprint bekler, hatalı çıkma ihtimali yar
 PRODUCT_OFF,Kapalı,Off
 PRODUCT_ON,Açık,On
 PRODUCT_START_SPRINT,Sprinti başlat,Start sprint
+PRODUCT_SKIP_SPRINT,Bu sprinti boş geçir,Skip this sprint
+PRODUCT_SKIP_CONFIRM,Bu sprint kimse kart üstünde çalışmaz.,No one works on a card this sprint.
 PRODUCT_START_NEED_CARD,En az bir kart ekle,Add at least one card
 PRODUCT_PLAN_SPRINT,Sprint {n} planına geç,Plan sprint {n}
 PRODUCT_PHASE_DESIGN,Tasarım,Design
@@ -2815,6 +2817,7 @@ PRODUCT_RELEASE_BETA,Beta kanalında · bir sonraki sprintte yayına girer,In th
 PRODUCT_RELEASE_RND_OPEN,Ar-Ge açıldı,R&D is open
 PRODUCT_MVP_NOT_LIVE,MVP · yayında değil,MVP · not live
 PRODUCT_HISTORY,Geçmiş,History
+PRODUCT_DELEGATE,Planlamayı devret: {name},Delegate planning: {name}
 PRODUCT_HISTORY_NONE,Henüz sürüm yok,No releases yet
 PRODUCT_HISTORY_CARDS,{n} kart,{n} cards
 PRODUCT_HISTORY_CARDS_ONE,{n} kart,{n} card
@@ -2906,6 +2909,8 @@ PRODUCT_LEAD_REQUEST,{request} gecikirse {customer} yenilemez.,"If {request} sli
 PRODUCT_LEAD_CARRIED,{card} bir sprint daha ister.,{card} needs one more sprint.
 PRODUCT_LEAD_WEAKEST,{area} sırada.,{area} is next.
 PRODUCT_AUTO_STARTED,Sprint otomatik başladı,Sprint started automatically
+PRODUCT_EMPTY_SPRINT,Boş sprint · kimse kart üstünde çalışmıyor,Empty sprint · no one is working on a card
+PRODUCT_PM_STARTED,Sprint {name} tarafından başlatıldı,{name} started the sprint
 EFFECT_SPRINT_EFFORT,Efor {v},Effort {v}
 EFFECT_SPRINT_PROGRESS,İlerleme {v},Progress {v}
 EFFECT_SPRINT_CARRY,Sonraki sprinte devreder,Carries over to the next sprint
@@ -2928,6 +2933,7 @@ PRODUCT_DECISION_HALTED,İş durdu · karar bekliyor,Work stopped · decision wa
 PRODUCT_GO_DECISION,Karara git,Go to the decision
 PRODUCT_LEAD_APPLY,Uygula,Apply
 PRODUCT_RELEASE_HOLD,Sürüm notu açıkken oyun durur,Paused while the release note is open
+PRODUCT_PLAN_HOLD,Sprint başlayana kadar oyun durur,Paused until the sprint starts
 PRODUCT_OVER_CAPACITY,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} cards carry over
 PRODUCT_OVER_CAPACITY_ONE,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} card carries over
 PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}
@@ -3086,6 +3092,7 @@ TOPBAR_GATE_COUNT,{n} karar bekliyor,{n} decisions waiting
 CLOCK_HELD,Saat kilitli,Clock held
 GATE_ANSWER_FIRST,Önce bekleyen kararı cevapla.,Answer the waiting decision first.
 CLOCK_HOLD_RELEASE_NOTE,Sürüm notu açık,Release note open
+CLOCK_HOLD_SPRINT_PLAN,Sprint planı bekliyor,Sprint plan waiting
 CLOCK_HOLD_MILESTONE,Dönüm noktası açık,Milestone open
 WIN_READ_ONLY,Karar bekliyor. Bu pencere yalnız okunur.,A decision is waiting. This window is read only.
 WIN_BACK_TO_DECISION,Karara dön,Back to the decision

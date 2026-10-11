@@ -36,7 +36,9 @@ extends RefCounted
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks, week (active),
 #           capacity: {used, total, done, state: "ok"|"over"|"blocked", segments: [{pts}]} or null (puanlar kesirli),
 #           team: [person], staffed (kadroda çalışan var), warning_text: "" or String (eksik rol),
-#           cards: [card], forecast: [part], status: {done, running (işçili), queued, decisions}, auto_started,
+#           cards: [card], forecast: [part], status: {done, running (işçili), queued, decisions},
+#           empty (koşan sprint kartsız başladı), pm_started: "" or String (sprinti devirle başlatan PM'in adı),
+#           plan_hold (planlama oyuncuyu bekliyor, saat duruyor), delegate: {on, name (PM)} or null (PM yok),
 #           next_version: {label, weeks: int or -1, beta_extra} or null (MVP öncesi),
 #           mvp_line: {version, area, need, done (biten ve betada bekleyen dahil), sprint (-1 = tahmin yok), week}
 #                     or null (canlıda),
@@ -192,6 +194,7 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 	var total: float = SprintSystem.capacity()
 	var team: Array = SprintSystem.team()
 	var lead: Character = _lead()
+	var pm: Character = SprintCatalog.quarter_pm()
 	var sprint_cards: Array = sprint.get("cards", [])
 	var decision: Variant = _decision()
 	var eta: Dictionary = SprintSystem.mvp_eta() if n > 0 else {}
@@ -254,7 +257,12 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 		"forecast": SprintCatalog.forecast(sprint_cards.filter(func(id: String) -> bool: return outcome.cards[id].finishes))
 			if mode == "plan" else [],
 		"status": status,
-		"auto_started": mode == "active" and int(p.get("auto_started", -1)) == n,
+		"empty": mode == "active" and int(p.get("empty_sprint", -1)) == n,
+		# Devir dışında sprint yalnız planlanacak kart yokken kendiliğinden başlar, o da boş başlar.
+		"pm_started": pm.character_name if pm != null and mode == "active" and int(p.get("auto_started", -1)) == n
+			and int(p.get("empty_sprint", -1)) != n else "",
+		"plan_hold": mode == "plan" and SprintSystem.awaits_plan(),
+		"delegate": {"on": bool(p.get("delegate", false)), "name": pm.character_name} if pm != null else null,
 		# MVP öncesi v1.0'ın tarihini sürüm koşulu verir; bu sprintin sonu onu vaat etmez.
 		"next_version": {"label": SprintSystem.version_label(ProductState.version() + 1),
 			"weeks": SprintSystem.weeks_left(),

@@ -438,8 +438,8 @@ func _run_tempo_probe(spec: String) -> void:
 ## flow, post-ship wear and bug accrual) and the daily path a sprint, because that is where a
 ## speed-coupled bug would surface. mvp_shipped is load-bearing: SalesSystem.hourly_tick gates the
 ## whole B2C half on it and ProductSystem gates post-ship wear on it. Real bools, not strings: event
-## conditions compare via bool(). The sprint stays in planning: the first tick starts it with the
-## lead's plan.
+## conditions compare via bool(). Sprint 1 starts on the lead's plan as the player starts it: a plan
+## holds the clock.
 func _seed_tempo_state() -> void:
 	_seed_run_reproducible()
 	GameState.set_cash(50000)
@@ -451,6 +451,8 @@ func _seed_tempo_state() -> void:
 	GameState.set_flag("mvp_version", 2)
 	GameState.set_flag("b2c_audience", 4000)
 	SalesSystem.open_b2c_paid_tier(15)   # makes MRR derive hourly too
+	SprintSystem.apply_lead()
+	SprintSystem.start()
 
 
 # --tick-probe=<speed idx>[:<window>]: the cost of the frames that step the hour or the night, five
@@ -2693,7 +2695,8 @@ func _run_ending_shot(key: String) -> void:
 # ProductModel.live() over a run seeded through SprintSystem (_seed_product_live); live:pick_named is
 # the type picker with B2C, a type and a name picked; live:decision_paper presses the decision row's
 # Karara git, so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
-# Yayınla and saves the v1.0 note (<stem>_publish).
+# Yayınla and saves the v1.0 note (<stem>_publish); live:plan saves the plan, presses Bu sprinti boş
+# geçir (<stem>_skip, its confirm row open) and then Sprinti başlat (<stem>_start).
 func _run_product_shot(id: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -2723,6 +2726,14 @@ func _run_product_shot(id: String) -> void:
 			_save_shot(stem)
 			_press_button_labelled(_shell, tr("PROD_SHIP_PUBLISH"))
 			stem += "_publish"
+		if id == "live:plan":
+			var base := stem
+			for press in [["PRODUCT_SKIP_SPRINT", "_skip"], ["PRODUCT_START_SPRINT", "_start"]]:
+				await get_tree().process_frame
+				await get_tree().create_timer(0.4).timeout
+				_save_shot(stem)
+				_press_button_labelled(_shell, tr(press[0]))
+				stem = base + press[1]
 		await _finish_shot(stem)
 		return
 	await _mount_shot_shell()
@@ -2751,7 +2762,7 @@ func _run_product_shot(id: String) -> void:
 	get_tree().quit()
 
 
-## live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests|gate|solo15|solo15_tip|solo12_active>.
+## live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests|gate|delegate|solo15|solo15_tip|solo12_active>.
 ## pick and pick_named leave the product untyped (the type picker). The solo ones leave the founder alone
 ## from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with the lead's plan
 ## applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active starts the
@@ -2759,8 +2770,9 @@ func _run_product_shot(id: String) -> void:
 ## roster (gate keeps the founder alone at the default hours) and play through SprintSystem with only its own
 ## daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's plan, active and
 ## decision_paper in its second week with a sprint paper on the desk, gate on the MVP gate, b2c_mvp on the
-## CANLI v1.0 release note it publishes. b2b_requests signs two accounts once the faucet opens at MVP and
-## plays one more sprint, so the next planning carries their request cards.
+## CANLI v1.0 release note it publishes, delegate on Sprint 2, started by the PM once Sprint 1's note is
+## left (shipped at the gate) with planning delegated. b2b_requests signs two accounts once the faucet
+## opens at MVP and plays one more sprint, so the next planning carries their request cards.
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
 		return
@@ -2791,6 +2803,12 @@ func _seed_product_live(scenario: String) -> void:
 	SprintSystem.start()
 	day.call()
 	if scenario in ["active", "decision_paper"]:
+		return
+	if scenario == "delegate":
+		day.call()
+		SprintSystem.publish()
+		SprintSystem.set_delegate(true)
+		SprintSystem.plan_next()
 		return
 	for i in 12:
 		sprint.call()

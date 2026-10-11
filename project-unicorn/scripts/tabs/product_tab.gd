@@ -1,7 +1,7 @@
 extends Control
 
 # Ürün penceresi, sprint ekranı. Ortak koyu başlıkta Ürün ve iki ölçü (tür ile ürün adı, sürüm); altında
-# denetim şeridi (SPRİNT | ÇEYREK, PM yokken gerekçesiyle kilitli, ve Geçmiş anahtarı), gövdede SPRİNT
+# denetim şeridi (SPRİNT | ÇEYREK, PM yokken gerekçesiyle kilitli; Geçmiş ve devir anahtarı), gövdede SPRİNT
 # görünümü (alanlar · bu sprint · sonraki) ya da ÇEYREK görünümü. Her değişiklikte kaynağın modelinden
 # baştan kurulur; kaynak yoksa canlı model ve eylemler SprintSystem'e gider, ürün türü seçilmemişse
 # şerit yoktur ve ortada tür seçici durur. Akordeon, ses katlaması, geçmiş ve görünüm sekmenin yerel
@@ -167,7 +167,8 @@ func _build_head(h: Dictionary) -> void:
 	_kpis.add_child(version)
 
 
-## SPRİNT | ÇEYREK (PM yokken ÇEYREK kilitli, gerekçesi yanında) ... Geçmiş anahtarı.
+## SPRİNT | ÇEYREK (PM yokken ÇEYREK kilitli, gerekçesi yanında) ... Geçmiş anahtarı; PM varken planlamayı ona
+## devretme anahtarı.
 func _build_ctl(m: Dictionary, view: String) -> void:
 	UiFactory.clear(_ctl_row)
 	var locked: bool = m.quarter.state != "open"
@@ -178,13 +179,22 @@ func _build_ctl(m: Dictionary, view: String) -> void:
 		_ctl_row.add_child(UiFactory.D_locked_tab(tr("PRODUCT_VIEW_QUARTER")))
 		_ctl_row.add_child(SprintUiShared.label(tr("PRODUCT_QUARTER_NEED_PM"), &"Caption"))
 	_ctl_row.add_child(RnDUiShared.spacer())
-	_ctl_row.add_child(SprintUiShared.label(tr("PRODUCT_HISTORY"), &"MetaMuted"))
-	var history := CheckButton.new()
-	history.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	history.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
-	history.button_pressed = _ui.history_open
-	history.toggled.connect(_set_ui.bind("history_open"))
-	_ctl_row.add_child(history)
+	_add_switch(tr("PRODUCT_HISTORY"), _ui.history_open, _set_ui.bind("history_open"))
+	var delegate: Variant = m.center.delegate
+	if delegate != null:
+		_add_switch(tr("PRODUCT_DELEGATE").format(delegate), delegate.on,
+			func(on: bool) -> void: _on_action("delegate", {"on": on}))
+
+
+## Şeridin etiketli anahtarı.
+func _add_switch(text: String, on: bool, toggled: Callable) -> void:
+	_ctl_row.add_child(SprintUiShared.label(text, &"MetaMuted"))
+	var toggle := CheckButton.new()
+	toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	toggle.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
+	toggle.button_pressed = on
+	toggle.toggled.connect(toggled)
+	_ctl_row.add_child(toggle)
 
 
 ## Yalnız yerel durum: geçmiş anahtarı ve görünüm.
@@ -218,6 +228,8 @@ func _act(kind: String, args: Dictionary) -> void:
 		"send_next": SprintSystem.send_next(args.card_id)
 		"remove": SprintSystem.remove(args.card_id)
 		"start": SprintSystem.start()
+		"skip": SprintSystem.skip()
+		"delegate": SprintSystem.set_delegate(args.on)
 		"plan_next": SprintSystem.plan_next()
 		"publish": SprintSystem.publish()
 		"beta": SprintSystem.set_beta(args.open)

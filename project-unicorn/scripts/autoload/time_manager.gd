@@ -33,6 +33,7 @@ const HOLD_LABELS := {
 	"event": "GATE_ANSWER_FIRST",
 	"milestone_paper": "CLOCK_HOLD_MILESTONE",
 	"product_release_note": "CLOCK_HOLD_RELEASE_NOTE",
+	"sprint_plan": "CLOCK_HOLD_SPRINT_PLAN",
 }
 
 var current_speed: int = 1

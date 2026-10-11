@@ -434,7 +434,7 @@ static func release_lead_sentence(release: Dictionary) -> String:
 	var carried: Array = release.get("carried", [])
 	if not carried.is_empty():
 		return _t("PRODUCT_LEAD_CARRIED").format({"card": card_name(card_by_id(carried[0].id))})
-	var pool: Array = _open_cards([])
+	var pool: Array = open_cards([])
 	return "" if pool.is_empty() else _t("PRODUCT_LEAD_WEAKEST").format(
 		{"area": area_short(_lead_area(pool, SprintSystem.capacity()))})
 
@@ -470,7 +470,7 @@ static func quarter_pm() -> Character:
 ## Çeyreğin hedef alanı: oyuncunun seçtiği, seçmediyse PM'in önerisi olan en zayıf alan.
 static func quarter_goal() -> String:
 	var goal: String = _p().quarter.goal_area
-	return goal if goal != "" else _weakest(area_ids(), _open_cards([]))
+	return goal if goal != "" else _weakest(area_ids(), open_cards([]))
 
 
 ## PM'in planı: sonraki sprintten başlayıp ufuk kadar sprint, bugünkü ekibin kapasitesiyle.
@@ -760,7 +760,7 @@ static func _weakest(area_ids: Array, pool: Array) -> String:
 
 
 ## Liderin ve PM'in seçebileceği kartlar: aday, kilitsiz ve başka sprinte ayrılmamış.
-static func _open_cards(taken: Array) -> Array:
+static func open_cards(taken: Array) -> Array:
 	var out: Array = []
 	for area_id in area_ids():
 		out.append_array(candidates(area_id).filter(func(c: Dictionary) -> bool:
@@ -795,7 +795,7 @@ static func _lead_area(pool: Array, capacity: float) -> String:
 ## sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki sütunları). PM aynı kuralla planlar;
 ## `goal` alanının kartları sırada hedef ağırlığıyla öne çıkar.
 static func _suggest(capacity: float, used: float, taken: Array = [], goal := "", played := false) -> Array:
-	var pool: Array = _open_cards(taken)
+	var pool: Array = open_cards(taken)
 	if pool.is_empty():
 		return []
 	var score: Dictionary = {}

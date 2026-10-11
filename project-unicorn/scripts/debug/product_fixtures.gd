@@ -9,7 +9,7 @@ const INBOX := preload("res://scripts/ui/components/inbox.gd")
 ## Geçiş tablosu: eylem → [geçerli olduğu orta sütun kipi, varılan aşama].
 const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], "plan_next": ["release", "replan"]}
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
-const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "auto_started": "c2", "release": "c3",
+const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "pm_started": "c2", "release": "c3",
 	"no_release": "c3", "no_release_beta": "c3", "gate": "c3", "beta_open": "c3", "b2b_no_requests": "c5",
 	"goal_menu": "c4", "approved": "c4"}
 ## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
@@ -153,8 +153,9 @@ func _build(id: String) -> Dictionary:
 		"history":
 			m.ui.history_open = true
 			m.ui.open_area = ""
-		"auto_started":
-			m.center.auto_started = true
+		"pm_started":
+			m.center.pm_started = "Deniz"
+			m.center.delegate = {"on": true, "name": "Deniz"}
 		"mvp":
 			m.versions = []
 			m.header.live_version = ""
@@ -546,7 +547,7 @@ func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "capacity": {"total": 12, "done": 0},
 		"team": _team(), "staffed": true, "warning_text": tr("PRODUCT_ROLE_MISSING").format({"role": _p("Test", "QA")}),
 		"cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "queued": 0, "decisions": 0},
-		"auto_started": false,
+		"empty": false, "pm_started": "", "plan_hold": false, "delegate": null,
 		"next_version": null, "mvp_line": null, "can_add": false, "spare": false, "ceiling_pct": 125, "can_start": false,
 		"start_reason": "", "beta": {"open": false}, "lead_tip": null, "release": null}
 	c.merge(extra, true)

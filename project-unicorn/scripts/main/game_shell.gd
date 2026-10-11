@@ -25,6 +25,7 @@ var _product_source: Object = null
 func _ready() -> void:
 	add_to_group(&"game_shell")
 	EventBus.sprint_closed.connect(_on_sprint_closed)
+	SprintSystem.sync_plan_hold()   # kabuk durum yüklendikten sonra kurulur: yüklenen planın tutuşu döner
 	EventBus.event_resolved.connect(func(_id: String, _choice: int) -> void: _esc_reopened = false)
 	_ticker.open_changed.connect(_lay_ticker)
 	_lay_ticker(_ticker.open)

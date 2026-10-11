@@ -74,8 +74,10 @@ func _center(model: Dictionary) -> void:
 	col.head.add_child(_title_row(c.sprint, weeks, "PRODUCT_THIS_SPRINT"))
 	if c.sprint < 0:
 		return
-	if c.auto_started:
-		col.head.add_child(_note(PLAY, tr("PRODUCT_AUTO_STARTED"), UiTokens.D_INK_3))
+	if c.empty:
+		col.head.add_child(_note(PLAY, tr("PRODUCT_EMPTY_SPRINT"), UiTokens.D_INK_3))
+	elif c.pm_started != "":
+		col.head.add_child(_note(PLAY, tr("PRODUCT_PM_STARTED").format({"name": c.pm_started}), UiTokens.D_INK_3))
 	var cap: Dictionary = c.capacity
 	col.head.add_child(SprintUiShared.capacity_row(cap, &"ValueTextStrong"))
 	if c.mvp_line != null:
@@ -123,7 +125,21 @@ func _center(model: Dictionary) -> void:
 				var why := _note(SprintUiShared.LOCK, c.start_reason, UiTokens.D_INK_3)
 				why.size_flags_horizontal = Control.SIZE_SHRINK_END
 				col.foot().add_child(why)
-			col.foot().add_child(_foot_row(c, [start]))
+			if c.plan_hold:
+				var hold := _note(PAUSE, tr("PRODUCT_PLAN_HOLD"), UiTokens.D_INK_3)
+				hold.size_flags_horizontal = Control.SIZE_SHRINK_END
+				col.foot().add_child(hold)
+			# Boş geçirmek oyuncunun açık onayıdır: ilk tık onay satırını açar, Onayla geçirir.
+			var confirm := SprintUiShared.box(UiTokens.SPACE_L)
+			confirm.visible = false
+			confirm.add_child(RnDUiShared.spacer())
+			confirm.add_child(_note("", tr("PRODUCT_SKIP_CONFIRM"), UiTokens.D_INK_3))
+			confirm.add_child(SprintUiShared.button(tr("UI_CONFIRM"), &"SecondaryButtonSmall",
+				action.emit.bind("skip", {})))
+			var skip := SprintUiShared.button(tr("PRODUCT_SKIP_SPRINT"), &"SecondaryButton", func() -> void:
+				confirm.visible = true)
+			col.foot().add_child(_foot_row(c, [skip, start]))
+			col.foot().add_child(confirm)
 		"active":
 			col.stack.add_child(SprintUiShared.section("PRODUCT_STATUS"))
 			col.stack.add_child(_status(c.status))

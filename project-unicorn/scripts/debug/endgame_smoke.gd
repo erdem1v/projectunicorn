@@ -451,7 +451,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_faulty_ticket_deterministic":    fail = _case_sprint_faulty_ticket_deterministic()
 		"sprint_fix_card_closes_tickets":        fail = _case_sprint_fix_card_closes_tickets()
 		"sprint_beta_delays_release":            fail = _case_sprint_beta_delays_release()
-		"sprint_auto_start_after_a_day":         fail = _case_sprint_auto_start_after_a_day()
+		"sprint_starts_only_with_consent":       fail = _case_sprint_starts_only_with_consent()
 		"sprint_request_on_time_met":            fail = _case_sprint_request_on_time_met()
 		"sprint_paid_plan_opens_paid_tier":      fail = _case_sprint_paid_plan_opens_paid_tier()
 		"sprint_save_roundtrip":                 fail = _case_sprint_save_roundtrip()
@@ -17181,26 +17181,102 @@ static func _case_sprint_beta_delays_release() -> String:
 	return fail
 
 
-## Planlamada ya da sürüm notunda bir gün geçerse sprint liderin önerisiyle kendiliğinden başlar
-## ve sprint_auto_started yayılır.
-static func _case_sprint_auto_start_after_a_day() -> String:
+## Sprint oyuncunun onayı olmadan başlamaz. Planlanacak kart varken plan saati tutar, gün geçse de sprint
+## başlamaz; kurucu Ar-Ge'ye oturunca kimse çalışamaz, tutuş kalkar; işe alınan geliştiriciyle geri gelir,
+## geliştirici eğitime gidince yine kalkar, kurucu dönünce geri gelir. "Sprinti başlat"
+## tutuşu kaldırır, saati akıtmaz. "Bu sprinti boş geçir" planın kartlarını sonraki sprinte geçirip sprinti
+## kartsız başlatır. Devirde PM sprinti sürüm notunda Space'te ve plan_next'te bir kez başlatır; sprintin
+## ilk çizimi (BuildBar) auto_started'ı okur, o yüzden damga başlatmanın sinyallerinden önce yazılır. Gece
+## kapanan sprintin tutuşu gece toplu adımını kesmez, 08:00'de alınır; yüklemede kabuğun çağırdığı
+## sync_plan_hold tutuşu geri alır ve motorun ekip ve hız dinleyicilerini bağlar, Space saati akıtmaz.
+## FALSİFİKASYON: SprintSystem.sync_plan_hold'da toplu adım ertelemesini sil → gece 00:00'da durur.
+static func _case_sprint_starts_only_with_consent() -> String:
+	var slot: String = "smoke_consent_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	var held := func() -> bool: return TimeManager.holds().has(SprintSystem.HOLD_PLAN)
 	_seed_sprint()
-	var auto: Array = []
-	EventBus.sprint_auto_started.connect(func(n: int) -> void: auto.append(n))
 	_sim_day()
-	if SprintSystem.mode() != "active" or auto != [1] or int(GameState.product.auto_started) != 1:
-		return "a day in planning: %s, auto starts %s; want sprint 1 running" % [SprintSystem.mode(), auto]
-	if GameState.product.sprint.cards.is_empty():
-		return "the auto-started sprint carries no cards; the lead's plan was not applied"
+	if SprintSystem.mode() != "plan" or not held.call():
+		return "a day in planning with no PM: %s, holds %s; want the plan waiting and the clock held" % [
+			SprintSystem.mode(), TimeManager.holds()]
+	var founder_id: String = CharacterRegistry.get_founder().id
+	CharacterRegistry.assign_job(founder_id, HRConstants.JOB_RESEARCH)
+	var seated: bool = held.call()
+	var dev: Character = _sprint_hire("char_consent_dev", HRConstants.ROLE_DEVELOPER)
+	var hired: bool = held.call()
+	CharacterRegistry.begin_training(dev.id, HRConstants.AREAS[0])
+	var trained: bool = held.call()
+	CharacterRegistry.remove(dev.id)
+	CharacterRegistry.unassign_job(founder_id, HRConstants.JOB_RESEARCH)
+	if seated or not hired or trained or not held.call():
+		return "held with the founder on R&D, a hire, the hire in training, the founder back: %s; want %s" % [
+			[seated, hired, trained, held.call()], [false, true, false, true]]
+	SprintSystem.apply_lead()
+	if not SprintSystem.start() or held.call() or TimeManager.current_speed != 0:
+		return "Sprinti başlat: %s, holds %s, speed %d; want sprint 1 running, no hold and the clock still stopped" % [
+			SprintSystem.mode(), TimeManager.holds(), TimeManager.current_speed]
 	_sim_day()
 	_sim_day()
-	if SprintSystem.mode() != "release":
-		return "fixture: sprint 1 did not close (%s)" % SprintSystem.mode()
+	SprintSystem.plan_next()
+	SprintSystem.apply_lead()
+	var planned: Array = GameState.product.sprint.cards.duplicate()
+	SprintSystem.skip()
+	var p: Dictionary = GameState.product
+	if planned.is_empty() or SprintSystem.mode() != "active" or not (p.sprint.cards as Array).is_empty() \
+			or int(p.empty_sprint) != SprintSystem.sprint_number() or held.call() \
+			or planned.any(func(id: String) -> bool: return id not in p.next.cards):
+		return "skipping %s: %s with %s, empty_sprint %d, next %s; want an empty sprint 2 running, the plan next" % [
+			planned, SprintSystem.mode(), p.sprint.cards, int(p.empty_sprint), p.next.cards]
+	_sprint_hire("char_consent_pm", HRConstants.ROLE_PRODUCT_MANAGER)
+	SprintSystem.set_delegate(true)
 	_sim_day()
-	if SprintSystem.mode() != "active" or SprintSystem.sprint_number() != 2 or auto != [1, 2]:
-		return "a day on the release note: %s sprint %d, auto starts %s; want sprint 2 running" % [
-			SprintSystem.mode(), SprintSystem.sprint_number(), auto]
-	return ""
+	_sim_day()
+	if SprintSystem.mode() != "release" or held.call():
+		return "the empty sprint's close with planning delegated: %s, holds %s; want its note, no hold" % [
+			SprintSystem.mode(), TimeManager.holds()]
+	var started: Array = []   # [sprint, auto_started as the start's own signal sees it]
+	EventBus.sprint_started.connect(func(n: int) -> void: started.append([n, int(p.auto_started)]))
+	TimeManager._on_speed_change_requested(1)
+	TimeManager._on_speed_change_requested(0)
+	if SprintSystem.mode() != "active" or started != [[3, 3]]:
+		return "Space on the note, planning delegated: %s, [sprint_started, auto_started] %s; want [[3, 3]]" % [
+			SprintSystem.mode(), started]
+	_sim_day()
+	_sim_day()
+	SprintSystem.plan_next()
+	if SprintSystem.mode() != "active" or started != [[3, 3], [4, 4]]:
+		return "plan_next, planning delegated: %s, [sprint_started, auto_started] %s; want [[3, 3], [4, 4]]" % [
+			SprintSystem.mode(), started]
+	SprintSystem.set_delegate(false)
+	_sim_day()
+	GameState.set_current_hour(23)
+	TimeManager.sync_to_current_hour()
+	TimeManager.skip_night()
+	if SprintSystem.mode() != "release" or GameState.current_hour != TimeModel.WEEK_START_HOUR or not held.call():
+		return "sprint 4 closed in the night batch: %s at %02d:00, holds %s; want its note at %02d:00, the clock held" % [
+			SprintSystem.mode(), GameState.current_hour, TimeManager.holds(), TimeModel.WEEK_START_HOUR]
+	_drain_all_modals()   # a card on screen refuses the save (can_save)
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(slot)):
+		return done.call("apply_loaded_state returned false")
+	# A fresh process has none of the engine's listeners: the shell's sync_plan_hold connects them.
+	TimeManager.speed_changed.disconnect(SprintSystem._on_speed_changed)
+	EventBus.hr_day_processed.disconnect(SprintSystem._on_team_changed)
+	EventBus.character_removed.disconnect(SprintSystem._on_team_changed.unbind(1))
+	EventBus.assignment_changed.disconnect(SprintSystem._on_assignment_changed)
+	EventBus.employee_hired.disconnect(SprintSystem._on_assignment_changed)
+	EventBus.training_started.disconnect(SprintSystem._on_assignment_changed.unbind(1))
+	SprintSystem.sync_plan_hold()
+	TimeManager._on_speed_change_requested(1)
+	var watching: bool = TimeManager.speed_changed.is_connected(SprintSystem._on_speed_changed) \
+		and EventBus.assignment_changed.is_connected(SprintSystem._on_assignment_changed)
+	if not held.call() or TimeManager.current_speed != 0 or not watching:
+		return done.call("the loaded note: holds %s, Space gives speed %d, listeners %s; want the hold, speed 0, listeners" % [
+			TimeManager.holds(), TimeManager.current_speed, watching])
+	return done.call("")
 
 
 ## Yayındaki bir ERP ürünü ve ona bağlı bir hesap; bir puanlık sprint oynanınca hesabın talebi açıktır
@@ -17496,7 +17572,7 @@ static func _case_sprint_departure_restaffs_card() -> String:
 
 
 ## Planlama donmaz: önerecek kart kalmayınca sprint boş başlar ve numara ilerler; araştırma bir
-## kapanış sonra yeniden açılır ve lider onu alır.
+## kapanış sonra yeniden açılır, sprint oyuncuyu bekler ve liderin planı onu alır.
 ## FALSİFİKASYON: SprintSystem._auto_start'ta _begin() yerine start() çağır → FAIL.
 static func _case_sprint_never_stalls_in_plan() -> String:
 	_seed_sprint_live("note_tool")
@@ -17513,14 +17589,20 @@ static func _case_sprint_never_stalls_in_plan() -> String:
 	if SprintCatalog.area_ids().any(func(a: String) -> bool: return not SprintCatalog.candidates(a).is_empty()):
 		return "fixture: a card is left to plan after the research sprint"
 	_sim_day()
-	if SprintSystem.mode() != "active" or SprintSystem.sprint_number() != 2:
-		return "a day with nothing to plan left sprint %d in %s, want sprint 2 running empty" % [
-			SprintSystem.sprint_number(), SprintSystem.mode()]
+	if SprintSystem.mode() != "active" or SprintSystem.sprint_number() != 2 \
+			or int(GameState.product.empty_sprint) != 2:
+		return "a day with nothing to plan left sprint %d in %s (empty_sprint %d), want sprint 2 running empty" % [
+			SprintSystem.sprint_number(), SprintSystem.mode(), int(GameState.product.empty_sprint)]
 	for _d in 3:
 		_sim_day()
-	if SprintSystem.mode() != "active" or SprintSystem.sprint_number() != 3 \
-			or (GameState.product.sprint.cards as Array).is_empty():
-		return "after the empty sprint: sprint %d %s with %s; want sprint 3 running research again" % [
+	if SprintSystem.mode() != "release" or not SprintSystem.awaits_plan():
+		return "a day on the empty sprint's note with research open again: %s, awaits_plan %s; want it waiting" % [
+			SprintSystem.mode(), SprintSystem.awaits_plan()]
+	SprintSystem.plan_next()
+	SprintSystem.apply_lead()
+	if not SprintSystem.start() or SprintSystem.sprint_number() != 3 \
+			or not (GameState.product.sprint.cards as Array).any(func(id: String) -> bool: return id.begins_with("res:")):
+		return "the lead's plan for sprint 3: %s %s with %s; want it running research again" % [
 			SprintSystem.sprint_number(), SprintSystem.mode(), GameState.product.sprint.cards]
 	return ""
 
@@ -17677,6 +17759,10 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 	var weeks: int = 0
 	while weeks < 12:
 		GameState.set_cash(5000)
+		# The plan holds the clock: each sprint starts on the lead's plan, the gate ships.
+		SprintSystem.plan_next()
+		SprintSystem.apply_lead()
+		SprintSystem.start()
 		_sim_day_full()
 		SprintSystem.publish()
 		if ProductState.is_live():

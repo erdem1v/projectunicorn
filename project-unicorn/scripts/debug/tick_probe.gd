@@ -117,13 +117,13 @@ func _on_day_done(_day: int) -> void:
 
 
 ## What a player does about a stop: closes the window that holds the clock, sets the speed again and
-## opens the window again; a hold that stays, or a sprint waiting in planning, is started the way the
-## Product page starts it. False when the clock still does not run (TICK|stall says what holds it).
+## opens the window again; a sprint waiting on its plan is started on the lead's plan as the bot starts
+## it (RunProbe._start_on_lead). False when the clock still does not run, an unstartable plan or another
+## hold (TICK|stall says what holds it).
 func _clear_stop(speed: int, win: String) -> bool:
 	EventBus.tab_changed.emit("")
-	if TimeManager.is_clock_held() or SprintSystem.mode() == "plan":
-		SprintSystem.apply_lead()
-		SprintSystem.start()
+	if SprintSystem.awaits_plan():
+		RunProbe._start_on_lead()
 	EventBus.speed_change_requested.emit(speed)
 	if win != "":
 		EventBus.tab_changed.emit(win)

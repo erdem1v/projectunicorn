@@ -20,12 +20,13 @@ const DESK_SCAN := 64
 const MVP_HORIZON := 24
 ## product.sprint_late kartının fazla mesai seçeneğinin çarpanı (sprint_hours fiili); kartın değeriyle aynı kalır.
 const CRUNCH_MULT := 1.25
+## Sprint oyuncunun planını beklerken saati tutan neden (TimeManager.HOLD_LABELS).
+const HOLD_PLAN := "sprint_plan"
 
 
 static func daily_tick() -> void:
 	if not is_typed():
 		return
-	_watch_team()
 	SprintBridges.sync_tickets()
 	_settle_decision()
 	_refresh_fix_cards()
@@ -36,10 +37,10 @@ static func daily_tick() -> void:
 		"active":
 			_end_week()
 		"plan":
-			if GameState.day > int(p.sprint.start_day):
+			if GameState.day > int(p.sprint.start_day) and not awaits_plan():
 				_auto_start()
 		"release":
-			if GameState.day > int(p.release.day):
+			if GameState.day > int(p.release.day) and not awaits_plan():
 				_auto_start()
 	_changed()
 
@@ -72,7 +73,7 @@ static func new_state(day: int) -> Dictionary:
 		"tickets": [], "ticket_seq": 0, "requests": [], "rival_hits": [],
 		"voices_seen": {}, "research_done": {}, "decision": {}, "auto_started": -1,
 		"quarter": {"goal_area": "", "start_sprint": 1, "plans": []},
-		"worked": {"day": -1, "ids": []}, "gate_faulty": [],
+		"worked": {"day": -1, "ids": []}, "gate_faulty": [], "delegate": false, "empty_sprint": -1,
 	}
 
 
@@ -114,7 +115,8 @@ static func remove(card_id: String) -> void:
 	_changed()
 
 
-## Sprinti başlatır. Düzeltme kartları kilitlemeden önce defterden okunur.
+## Sprinti başlatır; planın tutuşu kalkar, saati oyuncu sürdürür. Düzeltme kartları kilitlemeden önce
+## defterden okunur.
 static func start() -> bool:
 	_settle_decision()
 	_refresh_fix_cards()
@@ -125,14 +127,15 @@ static func start() -> bool:
 
 
 ## Başlatmanın kendisi: kapısı sonradan kapanmış kart sonraki sütuna geçer, kalanlar kilitlenir,
-## lisans bedeli bir kez alınır, ilk haftanın ataması yapılır. Otomatik başlangıç kartsız
-## sprinti de başlatır.
+## lisans bedeli bir kez alınır, ilk haftanın ataması yapılır. Kartsız başlayan sprint (boş geçirme,
+## planlanacak kart yokken otomatik başlangıç) boş sprinttir; damgası ilk çizimden önce yazılır.
 static func _begin() -> void:
-	_watch_team()
 	var p: Dictionary = _p()
 	for card in _sprint_cards():
 		if SprintCatalog.gate_reason(card.step) != "":
 			_place(card, false)
+	if _sprint_cards().is_empty():
+		p.empty_sprint = int(p.sprint.number)
 	var sprint: Dictionary = p.sprint
 	sprint.status = "running"
 	sprint.start_day = GameState.day
@@ -181,6 +184,22 @@ static func plan_next() -> void:
 		if int(plan.number) == number + 1:
 			_to_next(SprintCatalog.still_open(plan.cards))
 	EventBus.sprint_planned.emit(number)
+	_changed()
+	if delegated():
+		_auto_start()
+
+
+## "Bu sprinti boş geçir", oyuncunun onayıyla: planın kartları sonraki sprinte geçer, sprint kartsız başlar.
+static func skip() -> void:
+	if mode() != "plan":
+		return
+	_to_next(_p().sprint.cards.duplicate())
+	_begin()
+
+
+## Planlamayı PM'e devretme anahtarı: devirde sprint oyuncuyu beklemeden PM'in planıyla başlar.
+static func set_delegate(on: bool) -> void:
+	_p().delegate = on
 	_changed()
 
 
@@ -343,6 +362,24 @@ static func is_typed() -> bool:
 
 static func mode() -> String:
 	return String(GameState.product.get("mode", "plan"))
+
+
+## Sprint oyuncunun planını bekler: MVP kapısında her zaman; planlamada ve sürüm notunda ekip ve
+## planlanacak kart (sprintte ya da sonraki sütunda kapısı açık kart, ya da açık aday) varken, devir
+## yoksa. Bekleyen sprint saati tutar.
+static func awaits_plan() -> bool:
+	if not is_typed() or mode() == "active":
+		return false
+	var p: Dictionary = _p()
+	if p.release.get("gate", false):
+		return true
+	return capacity() > 0 and not delegated() and ((p.sprint.cards + p.next.cards).any(func(id: String) -> bool:
+		return SprintCatalog.gate_reason(p.cards[id].step) == "") or not SprintCatalog.open_cards([]).is_empty())
+
+
+## Planlama PM'e devredilmiş ve çeyreği planlayan PM var.
+static func delegated() -> bool:
+	return bool(_p().get("delegate", false)) and SprintCatalog.quarter_pm() != null
 
 
 static func sprint_number() -> int:
@@ -787,17 +824,41 @@ static func _clear_decision() -> void:
 
 
 ## Hafta ortasında ekipten ayrılan, Ekip'in gününde izne ya da Ar-Ge'ye giden ve izinden dönen kişi
-## haftanın atamasını değiştirir.
+## haftanın atamasını değiştirir. Sprint koşmuyorken ekibin her değişikliği (Ar-Ge'ye oturan, işe alınan,
+## eğitime giden, ayrılan) planın tutuşunu yeniden okur: kimse çalışamıyorsa plan saati tutmaz.
 static func _watch_team() -> void:
 	if not EventBus.hr_day_processed.is_connected(_on_team_changed):
 		EventBus.hr_day_processed.connect(_on_team_changed)
 		EventBus.character_removed.connect(_on_team_changed.unbind(1))
+		EventBus.assignment_changed.connect(_on_assignment_changed)
+		EventBus.employee_hired.connect(_on_assignment_changed)
+		EventBus.training_started.connect(_on_assignment_changed.unbind(1))
 
 
 static func _on_team_changed() -> void:
-	if is_typed() and mode() == "active":
+	if not is_typed():
+		return
+	if mode() == "active":
 		_restaff()
+	_changed()
+
+
+## Koşan sprintin ataması hafta içindeki iş değişikliğiyle, işe alımla ya da eğitimle değil Ekip'in
+## gününde yenilenir.
+static func _on_assignment_changed(_id: String) -> void:
+	if is_typed() and mode() != "active":
 		_changed()
+
+
+## Devirde oyuncu saati sürdürünce sprint başlar: hafta planda ya da sürüm notunda geçmez.
+static func _watch_speed() -> void:
+	if not TimeManager.speed_changed.is_connected(_on_speed_changed):
+		TimeManager.speed_changed.connect(_on_speed_changed)
+
+
+static func _on_speed_changed(speed: int) -> void:
+	if speed > 0 and mode() != "active" and delegated():
+		_auto_start()
 
 
 ## Ekipte olmayan kişi karttan düşer; boştakiler kimsesiz kalan kartlara haftanın kalanında atanır.
@@ -827,23 +888,26 @@ static func decision_card() -> Dictionary:
 	return _p().get("cards", {}).get(String(_p().get("decision", {}).get("card_id", "")), {})
 
 
-## Planlamada ya da sürüm notunda bir gün geçti: liderin önerisiyle sprint kendiliğinden başlar.
-## Öneri boşsa sonraki sütunun kartları, o da boşsa boş sprint başlar: sprint numarası ilerler,
-## talep, söz ve araştırma sprint sayar. Ekip yoksa başlamaz. MVP kapısı oyuncuyu bekler: gün geçse
-## de ürün ne kendiliğinden yayınlanır ne bir sprint daha bekler.
+## Oyuncuyu beklemeyen sprint kendiliğinden başlar: devirde PM'in planıyla, planlanacak kart yokken boş.
+## Liderin önerisi, o boşsa sonraki sütunun kartları alınır; kapısı açık kart kalmazsa boş sprint başlar:
+## sprint numarası ilerler, talep, söz ve araştırma sprint sayar. Ekip yoksa başlamaz. MVP kapısı oyuncuyu
+## bekler: ürün ne kendiliğinden yayınlanır ne bir sprint daha bekler.
 static func _auto_start() -> void:
 	if _p().release.get("gate", false):
 		return
 	if mode() == "release":
 		plan_next()
+		# Devirde plan_next sprinti başlattı.
+		if mode() != "plan":
+			return
 	if capacity() == 0:
 		return
 	apply_lead()
 	if _sprint_cards().is_empty():
 		for id in _p().next.cards.duplicate():
 			_place(_p().cards[id], true)
-	_begin()
 	_p().auto_started = sprint_number()
+	_begin()
 	EventBus.sprint_auto_started.emit(sprint_number())
 
 
@@ -1019,7 +1083,25 @@ static func _p() -> Dictionary:
 
 
 static func _changed() -> void:
+	sync_plan_hold()
 	EventBus.product_state_changed.emit()
+
+
+## Saat sprint planını bekler (awaits_plan): tutuş alınır ya da bırakılır, hız değişmez. Toplu adımın
+## içinde (gece, toplantı) adımın sonuna ertelenir: gece kapanışında alınan tutuş toplu adımı 08:00'den
+## önce keserdi. Kabuk kurulurken de çağrılır (yükleme tutuşları siler, TimeManager.reset); ekip ve hız
+## dinleyicileri burada bağlanır, yüklenen oyunda ilk tikten önce de.
+static func sync_plan_hold() -> void:
+	_watch_team()
+	_watch_speed()
+	if TimeManager.is_batching():
+		if not EventBus.clock_batch_ended.is_connected(sync_plan_hold):
+			EventBus.clock_batch_ended.connect(sync_plan_hold, CONNECT_ONE_SHOT)
+		return
+	if awaits_plan():
+		TimeManager.hold_clock(HOLD_PLAN)
+	else:
+		TimeManager.release_clock(HOLD_PLAN)
 
 
 ## Tür seçilmeden de okunur (lider önerisi used()'i sorar); o zaman boştur.
