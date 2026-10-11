@@ -138,6 +138,7 @@ static func start() -> bool:
 ## Başlatmanın kendisi: kapısı sonradan kapanmış kart sonraki sütuna geçer, kalanlar kilitlenir,
 ## lisans bedeli bir kez alınır, ilk haftanın ataması yapılır. Kartsız başlayan sprint (boş geçirme,
 ## planlanacak kart yokken otomatik başlangıç) boş sprinttir; damgası ilk çizimden önce yazılır.
+## Kapanmayan haftası olmayan 1 haftalık sprint, karar kâğıdını ve demo gününü başlarken çeker.
 static func _begin() -> void:
 	var p: Dictionary = _p()
 	for card in _sprint_cards():
@@ -161,14 +162,17 @@ static func _begin() -> void:
 		FinanceSystem.apply_one_time_cost(cost, "build_commit")
 	p.mode = "active"
 	SprintBridges.tick_rivals(int(sprint.number))
+	if sprint_weeks() == 1:
+		_request_decision()
+		EventGate.request("team.demo_day")
 	_assign(_sprint_cards(), team(), _ahead_cards())
 	EventBus.sprint_started.emit(int(sprint.number))
 	_changed()
 
 
 ## Sürüm notundan sonraki sprintin planlamasına: sonraki sütun (devredenler önde) bu sprint olur,
-## yeni sonraki sütuna onaylı PM planı geçer. Altı sprintte bir çeyrek döner, hedef PM'in
-## önerisine (en zayıf alan) geri düşer. Kademesine başka bir kartla varılmış saklı kart düşer
+## yeni sonraki sütuna onaylı PM planı geçer. Çeyreğin haftaları sprintlerle dolunca çeyrek döner, hedef
+## PM'in önerisine (en zayıf alan) geri düşer. Kademesine başka bir kartla varılmış saklı kart düşer
 ## (geç kalan talebin kartı ile aynı kademenin özellik kartı ikisi de saklanabilir).
 static func plan_next() -> void:
 	if mode() != "release":
@@ -185,7 +189,7 @@ static func plan_next() -> void:
 	p.release = {}
 	p.mode = "plan"
 	var quarter: Dictionary = p.quarter
-	if number >= int(quarter.start_sprint) + int(SprintCatalog.cfg("quarter_sprints")):
+	if number >= int(quarter.start_sprint) + sprints_in(int(SprintCatalog.cfg("quarter_weeks"))):
 		quarter.start_sprint = number
 		quarter.goal_area = ""
 	quarter.plans = quarter.plans.filter(func(plan: Dictionary) -> bool: return int(plan.number) > number)
@@ -418,6 +422,12 @@ static func plannable_sprint() -> int:
 ## Sprintin süresi (hafta), oyuncunun seçimi; seçimden önceki kayıtta ve tür seçilmeden varsayılan.
 static func sprint_weeks() -> int:
 	return int(_p().get("sprint", {}).get("weeks", SprintCatalog.cfg("sprint_weeks")))
+
+
+## Haftayla sayılan süre seçilen sprint süresiyle kaç sprint eder: talep ve söz son tarihi, çeyrek,
+## rakip penceresi ve Sesler'in "yeni"si hafta sayar ve sprint sırasıyla okunur.
+static func sprints_in(weeks: int) -> int:
+	return int(float(weeks) / sprint_weeks())
 
 
 ## Koşan sprintin haftası (1..süre); başka kipte 0.

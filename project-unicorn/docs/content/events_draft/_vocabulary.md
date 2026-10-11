@@ -12,7 +12,7 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **196** |
+| Seams (read) | **197** |
 | Effect verbs (write) | **64** |
 | Cards in the catalogue | 98 |
 | Arcs | 3 |
@@ -371,6 +371,7 @@ slot of that type (§17.12).
 | `urun.lines_open` | global | int | Product | 0-9 feature lines opened |
 | `urun.market_type` | global | string | Product | b2b | b2c; empty until the product type is chosen |
 | `urun.paid_plan_set` | global | bool | Product | the paid plan is open, or its card is in the running or the planned sprint |
+| `urun.sprint_last_week` | global | bool | Product | a running sprint is in its last week: week 2 of a two-week sprint, the only week of a one-week one |
 | `urun.sprint_number` | global | int | Product | the open sprint; 0 before the product type is chosen |
 | `urun.sprint_running` | global | bool | Product | a sprint is under way: not planning, not the release note |
 | `urun.sprint_single_card` | global | bool | Product | the open sprint holds one card; carried over, it leaves the sprint nothing to work on |

@@ -373,9 +373,10 @@ static func _flags(n: int) -> Array:
 
 # --- Çeyrek ----------------------------------------------------------------------------
 
-## ÇEYREK PM varken açılır. Sütunlar bu sprint, PM'in planladığı sprintler ve çeyreği altı sütuna
-## tamamlayan boşlardır; sonraki sprintin sütunu orada duran kartların üstüne PM'in önerisini
-## ekler. Gelecek sprintin kapasitesi bugünkü ekiptir.
+## ÇEYREK PM varken açılır. Sütunlar bu sprint, PM'in planladığı sprintler ve çeyreği varsayılan sprint
+## süresiyle altı sütuna tamamlayan boşlardır (1 haftalık sprintin on iki sütunu pencereye sığmaz);
+## sonraki sprintin sütunu orada duran kartların üstüne PM'in önerisini ekler. Gelecek sprintin
+## kapasitesi bugünkü ekiptir.
 static func _quarter(center: Dictionary, next: Dictionary) -> Dictionary:
 	if SprintCatalog.quarter_pm() == null:
 		return {"state": "locked_no_pm", "goal": null, "columns": []}
@@ -395,7 +396,8 @@ static func _quarter(center: Dictionary, next: Dictionary) -> Dictionary:
 			segments.append({"pts": pts})
 		columns.append({"sprint": plan.number, "kind": "proposed", "capacity": _bar(used, total, 0, segments),
 			"pm": true, "flags": _flags(plan.number), "cards": cards, "approved": plan.approved})
-	for n in range(columns.back().sprint + 1, center.sprint + int(SprintCatalog.cfg("quarter_sprints"))):
+	for n in range(columns.back().sprint + 1,
+			center.sprint + int(SprintCatalog.cfg("quarter_weeks") / SprintCatalog.cfg("sprint_weeks"))):
 		columns.append({"sprint": n, "kind": "empty", "capacity": null, "pm": false, "flags": _flags(n), "cards": [],
 			"approved": false})
 	return {"state": "open", "goal": _goal(), "columns": columns}

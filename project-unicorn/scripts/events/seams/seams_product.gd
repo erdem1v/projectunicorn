@@ -37,6 +37,9 @@ static func _install_product() -> void:
 	EvSeams.register("urun.sprint_week", G, TYPE_INT,
 		func() -> int: return SprintSystem.week(),
 		"Product", "1 or 2 inside a running sprint")
+	EvSeams.register("urun.sprint_last_week", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.week() == SprintSystem.sprint_weeks(),
+		"Product", "a running sprint is in its last week: week 2 of a two-week sprint, the only week of a one-week one")
 	EvSeams.register("urun.sprint_running", G, TYPE_BOOL,
 		func() -> bool: return SprintSystem.mode() == "active",
 		"Product", "a sprint is under way: not planning, not the release note")

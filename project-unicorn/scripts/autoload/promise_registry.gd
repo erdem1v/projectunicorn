@@ -64,10 +64,11 @@ func create(customer_id: String, feature_id: String, deadline_weeks: int) -> Pro
 	p.customer_id = customer_id
 	p.feature_id = feature_id
 	p.deadline_day = GameState.day + maxi(TimeModel.ticks(deadline_weeks), 1)
-	# A product with a sprint loop is promised by sprint, not by weeks: a two-week word given while
-	# a two-week sprint runs with its cards locked could never be kept.
+	# A product with a sprint loop is promised by sprint: the word's weeks count from the first sprint the
+	# player can still plan, in sprints of the chosen length, that sprint at least. A two-week word given
+	# while a two-week sprint runs with its cards locked could never be kept.
 	if SprintSystem.is_typed():
-		p.due_sprint = SprintSystem.plannable_sprint()
+		p.due_sprint = SprintSystem.plannable_sprint() + maxi(SprintSystem.sprints_in(deadline_weeks) - 1, 0)
 	p.status = "open"
 	# Guard against a duplicate id in the same-day/same-feature edge (append a suffix).
 	if _promises.has(p.id):

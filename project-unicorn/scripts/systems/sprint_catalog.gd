@@ -26,7 +26,7 @@ static func load_data() -> void:
 	_rivals = JSON.parse_string(FileAccess.get_file_as_string(RIVALS_PATH))
 
 
-## sprint.json'a nokta yolu: cfg("effort.k1"), cfg("request.deadline_sprints").
+## sprint.json'a nokta yolu: cfg("effort.k1"), cfg("request.deadline_weeks").
 static func cfg(path: String) -> Variant:
 	if _data.is_empty():
 		load_data()
@@ -169,24 +169,27 @@ static func area_sentence(area_id: String) -> String:
 
 
 ## SESLER: açık ticket başlıkları, araştırma cümlesi ve rakip çıkışı; yeniler önde. Yeni = son
-## sprintte gelmiş ve katlama o günden beri açılmamış.
+## `voices_new_weeks` haftada (araştırma ve rakip çıkışı o haftaların sprintlerinde) gelmiş ve katlama
+## o günden beri açılmamış.
 static func voices(area_id: String) -> Array:
 	var seen: int = int(_p().get("voices_seen", {}).get(area_id, -1))
 	var since_sprint: bool = seen < int(_p().get("sprint", {}).get("start_day", 0))
+	var weeks: int = int(cfg("voices_new_weeks"))
+	var sprints: int = SprintSystem.sprints_in(weeks)
 	var fresh: Array = []
 	var old: Array = []
 	var caps: Array[String] = capabilities(area_id)
 	for t in _p().get("tickets", []):
 		if String(t.line) in caps:
-			var is_new: bool = int(t.day) > seen and GameState.day - int(t.day) < int(cfg("sprint_weeks"))
+			var is_new: bool = int(t.day) > seen and GameState.day - int(t.day) < TimeModel.ticks(weeks)
 			(fresh if is_new else old).append({"text": ticket_title(t), "new": is_new})
 	var research: Dictionary = _p().get("research_done", {})
 	if research.has(area_id):
-		var is_new: bool = since_sprint and SprintSystem.sprint_number() - int(research[area_id]) <= 1
+		var is_new: bool = since_sprint and SprintSystem.sprint_number() - int(research[area_id]) <= sprints
 		(fresh if is_new else old).append({"text": _t("PRODUCT_RESEARCH_VOICE_" + area_id.to_upper()), "new": is_new})
 	var launch: Dictionary = _launch_of(_recent_hit(area_id))
 	if not launch.is_empty():
-		var is_new: bool = since_sprint and SprintSystem.sprint_number() - int(launch.sprint) <= 1
+		var is_new: bool = since_sprint and SprintSystem.sprint_number() - int(launch.sprint) <= sprints
 		(fresh if is_new else old).append({"text": _t("PRODUCT_RIVAL_VOICE").format(
 			{"rival": launch.name, "capability": _t(launch.capability_key)}), "new": is_new})
 	return fresh + old
@@ -658,12 +661,13 @@ static func _closes_rival_gap(card: Dictionary) -> bool:
 	return best > tier(card.line) and int(card.target_tier) >= best
 
 
-## Alanın son rakip çıkışı (son `rival_window_sprints` sprintte), yoksa {}.
+## Alanın son rakip çıkışı (son `rival_window_weeks` haftanın sprintlerinde), yoksa {}.
 static func _recent_hit(area_id: String) -> Dictionary:
 	var caps: Array[String] = capabilities(area_id)
+	var window: int = SprintSystem.sprints_in(int(cfg("rival_window_weeks")))
 	var latest: Dictionary = {}
 	for h in _p().get("rival_hits", []):
-		if String(h.line) in caps and SprintSystem.sprint_number() - int(h.sprint) < int(cfg("rival_window_sprints")) \
+		if String(h.line) in caps and SprintSystem.sprint_number() - int(h.sprint) < window \
 				and int(h.sprint) >= int(latest.get("sprint", -1)):
 			latest = h
 	return latest

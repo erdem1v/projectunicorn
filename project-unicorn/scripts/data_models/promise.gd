@@ -13,7 +13,8 @@ extends Resource
 @export var customer_id: String = ""      # the account the word was given to
 @export var feature_id: String = ""       # the ProductCatalog feature that must ship
 @export var deadline_day: int = 0         # GameState.day by which it must ship, when due_sprint is -1
-# The sprint whose close it must ship by: the first sprint the player could still plan when the
-# word was given. -1 = counted in days (given before a product type was chosen, or an old save).
+# The sprint whose close it must ship by: the last one the word's weeks cover, counted from the first
+# sprint the player could still plan when the word was given. -1 = counted in days (given before a
+# product type was chosen, or an old save).
 @export var due_sprint: int = -1
 @export var status: String = "open"       # "open" | "kept" | "broken" | "partial"

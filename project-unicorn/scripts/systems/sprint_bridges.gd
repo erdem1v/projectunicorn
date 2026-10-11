@@ -63,10 +63,11 @@ static func add_faulty_ticket(line: String) -> void:
 
 # --- Talepler (B2B) ---------------------------------------------------------------------
 
-## Günlük. Her aktif B2B hesabı en çok bir açık talep taşır; talep imzadan bir sprint sonra ve
-## her yenilemeden altı sprint önce açılan pencerede bir kez doğar, kaçırılan eski pencere
-## atlanır. Yetenek hesabın sektörünün arketipine bağlı alandan, kilidi açık ve başka açık
-## talepte olmayan sonraki kademelerden hash'le seçilir. Son tarih sprinti kapanmış ya da hesabı
+## Günlük. Her aktif B2B hesabı en çok bir açık talep taşır; talep imzadan `first_after_weeks` sonra
+## ve her yenilemeden `before_renewal_weeks` önce açılan pencerede bir kez doğar, kaçırılan eski
+## pencere atlanır. Yetenek hesabın sektörünün arketipine bağlı alandan, kilidi açık ve başka açık
+## talepte olmayan sonraki kademelerden hash'le seçilir. Son tarih planlanabilir sprintten
+## `deadline_weeks` sonraki sprinttir (seçilen süreyle sayılır); o sprint kapanmış ya da hesabı
 ## kapanan açık talep sessizce düşer (zamanında olan kapanışta on_release'te karşılanmıştır).
 static func tick_requests() -> void:
 	var last_closed: int = SprintSystem.last_closed()
@@ -77,10 +78,9 @@ static func tick_requests() -> void:
 	for r in requests:
 		if r.status == "open" and (int(r.due_sprint) <= last_closed or not account_ids.has(r.customer_id)):
 			r.status = "late"
-	var weeks: int = int(SprintCatalog.cfg("sprint_weeks"))
 	var term: int = TimeModel.ticks(int(SprintCatalog.cfg("request.contract_weeks")))
-	var lead: int = TimeModel.ticks(weeks * int(SprintCatalog.cfg("request.before_renewal_sprints")))
-	var first: int = TimeModel.ticks(weeks * int(SprintCatalog.cfg("request.first_after_sprints")))
+	var lead: int = TimeModel.ticks(int(SprintCatalog.cfg("request.before_renewal_weeks")))
+	var first: int = TimeModel.ticks(int(SprintCatalog.cfg("request.first_after_weeks")))
 	var area_of: Dictionary = SprintCatalog.cfg("archetypes")
 	for c in accounts:
 		var renewals: int = int(float(GameState.day - c.acquired_on_day + lead) / term)
@@ -105,7 +105,7 @@ static func tick_requests() -> void:
 		var id: String = "%s.%d" % [c.id, window]
 		requests.append({"id": id, "customer_id": c.id, "line": pick.line_id, "step": pick.id,
 			"created_sprint": plannable,
-			"due_sprint": plannable + int(SprintCatalog.cfg("request.deadline_sprints")),
+			"due_sprint": plannable + SprintSystem.sprints_in(int(SprintCatalog.cfg("request.deadline_weeks"))),
 			"value": c.mrr * 12, "status": "open", "card_id": "req:" + id, "day": GameState.day})
 
 

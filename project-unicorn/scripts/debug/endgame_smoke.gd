@@ -17697,8 +17697,9 @@ static func _case_sprint_request_on_time_met() -> String:
 	if open.size() != 1 or open[0].customer_id != account.id:
 		return "a sprint after signing the account holds requests %s, want one from %s" % [open, account.id]
 	var req: Dictionary = open[0]
+	var deadline: int = SprintSystem.sprints_in(int(SprintCatalog.cfg("request.deadline_weeks")))
 	if SprintCatalog.area_of_line(req.line) != String(SprintCatalog.cfg("archetypes.tech_exacting")) \
-			or int(req.due_sprint) != int(req.created_sprint) + int(SprintCatalog.cfg("request.deadline_sprints")) \
+			or int(req.due_sprint) != int(req.created_sprint) + deadline \
 			or int(req.value) != account.mrr * 12:
 		return "the request reads %s; want the archetype's area, the deadline sprint and a year of MRR" % req
 	SprintSystem.plan_next()
@@ -18186,9 +18187,11 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 ## Sprint karar kartları gerçek destededir: istek oranı 1 iken koşan sprintin ilk haftasından sonra
 ## geride kalan kart bir product.sprint_* kâğıdını masaya koyar ve gövdesi beklenen kartın adını
 ## okur. Vaka fikstür kapsamını açmaz; oranı (test sabiti) kendi süresince açar ve geri koyar. Tek
-## kurucu 12 saatte iki K1 alır; ikincisi ilk hafta geride kalır.
+## kurucu 12 saatte iki K1 alır; ikincisi ilk hafta geride kalır. Kapanmayan haftası olmayan 1 haftalık
+## sprintte varsayılan mesaideki kurucunun tek K1'i geride kalır ve kararını sprint başlarken çeker.
 ## FALSİFİKASYON: kartlardan birinin version_scope'unu "fixture" yap ya da sprint.json
-## decision.cards'ı fixture kimliklerine çevir → karar istenmez.
+## decision.cards'ı fixture kimliklerine çevir → karar istenmez; SprintSystem._begin'deki
+## _request_decision çağrısını sil → 1 haftalık sprint karar çekmez.
 static func _case_sprint_decision_card_fires_shipped() -> String:
 	if EvTuning.SHIPPED_SCOPES.has("fixture"):
 		return "fixture: the shipped scopes already admit fixtures"
@@ -18213,6 +18216,17 @@ static func _case_sprint_decision_card_fires_shipped() -> String:
 	var body: String = EventGate.render(event_id).body_text
 	if name == "" or not body.contains(name) or body.contains("{"):
 		return "the decision paper reads '%s', want it to name '%s'" % [body, name]
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint()
+	SprintSystem.set_weeks(1)
+	SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
+	SprintCatalog._data.decision.rate = 1.0
+	started = SprintSystem.start()
+	SprintCatalog._data.decision.rate = rate
+	if not started or GameState.product.decision.get("event_id", "") != "product.sprint_late":
+		return "a one-week sprint started (%s) with decision %s, want product.sprint_late drawn at its start" % [
+			started, GameState.product.decision]
 	return ""
 
 

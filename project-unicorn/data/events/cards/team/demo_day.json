@@ -37,9 +37,9 @@
         "value": true
       },
       {
-        "seam": "urun.sprint_week",
+        "seam": "urun.sprint_last_week",
         "op": "==",
-        "value": 2
+        "value": true
       }
     ]
   },

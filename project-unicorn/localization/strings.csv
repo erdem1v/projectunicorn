@@ -2845,8 +2845,8 @@ PRODUCT_NEXT,Sonraki,Next
 PRODUCT_TEAM_NOBODY,Bu sprintte çalışacak kimse yok,Nobody can work this sprint
 PRODUCT_TEAM_IN_RND,Kurucu Ar-Ge'de: {node},The founder is in R&D: {node}
 PRODUCT_ROLE_MISSING,Ekipte {role} yok · kartlar hatalı çıkabilir,No {role} on the team · cards may ship buggy
-PRODUCT_IDLE,{n} kişi boşta · kart hazır değil,{n} people idle · no card ready
-PRODUCT_IDLE_ONE,{n} kişi boşta · kart hazır değil,{n} person idle · no card ready
+PRODUCT_IDLE,{n} kişi boşta · iş bekliyor,{n} idle · waiting for work
+PRODUCT_IDLE_ONE,{n} kişi boşta · iş bekliyor,{n} idle · waiting for work
 PRODUCT_IDLE_FIX,hata düzeltmeyi başlat,start bug fixing
 PRODUCT_IDLE_PLAN,sonraki sprinti planla,plan the next sprint
 PRODUCT_CARD_SPILLS_PTS,devreder · {done}/{total},carries over · {done}/{total}
@@ -3107,7 +3107,7 @@ EV_TEAM_FIRST_WEEKS_PAIR,Birkaç gün yanında otur,Sit with them for a few days
 EV_TEAM_FIRST_WEEKS_NOTES,Notlara yönlendir,Point them to the notes
 EV_TEAM_FIRST_WEEKS_EXPIRED,{employee} işin içinden tek başına çıktı.,{employee} worked it out alone.
 EV_TEAM_DEMO_DAY_TITLE,Demo günü,Demo day
-EV_TEAM_DEMO_DAY_BODY,"Sprintin ikinci haftası. Biri, sürüm çıkmadan herkesin yaptığını ötekilere göstermesini öneriyor.",It is the second week of the sprint. Someone suggests everyone shows the others what they built before the release goes out.
+EV_TEAM_DEMO_DAY_BODY,"Sprintin son haftası. Biri, sürüm çıkmadan herkesin yaptığını ötekilere göstermesini öneriyor.",It is the last week of the sprint. Someone suggests everyone shows the others what they built before the release goes out.
 EV_TEAM_DEMO_DAY_HOLD,Demoyu yap,Hold the demo
 EV_TEAM_DEMO_DAY_SKIP,Çalışmaya devam,Keep working
 EV_TEAM_DEMO_DAY_EXPIRED,Demo yapılmadı.,The demo never happened.
