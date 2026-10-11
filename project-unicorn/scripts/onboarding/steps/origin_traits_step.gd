@@ -1,390 +1,332 @@
 extends OnboardingStep
 
-# Page 2 — Köken ve Karakter. Three sections on one page, all data-driven from
-# FounderConstants (origins / traits / skills — never inline catalogs):
-#   KÖKEN      — self_made selectable; heir + corporate_refugee visible-locked
-#                (GDD ch14 §3: other origins are locked-visible in the demo).
-#   KARAKTER   — Software-Inc trait formula: 1 positive free; 2 positives force
-#                exactly 1 negative (FounderConstants.validate_traits).
-#   YETENEKLER — POINT_POOL points across FounderConstants.SKILLS, per-skill cap
-#                ONBOARDING_CAP; SegmentBar shows the shared 0-10 ruler; İleri stays
-#                blocked until every point is spent.
-#
-# Trait EFFECTS are reserved (no system consumes them yet) — this page only
-# stores the chosen ids into the draft.
+# Step 2, Köken: three columns, all data from FounderConstants.
+#   Origin  - Self-Made selectable; the others visible and locked (GDD ch14 §3).
+#   Traits  - the Software Inc. formula: one positive free, two positives owe exactly one negative
+#             (FounderConstants.validate_traits).
+#   Skills  - POINT_POOL points over FounderConstants.SKILLS, each capped at ONBOARDING_CAP; the figure reads on
+#             the 0-10 ruler. Next stays shut until every point is spent.
+# A skill whose effect the engine computes today says that effect for the points it holds; the others keep their
+# description.
 
-var _origin_id: String = ""
+const COLUMNS := [[352, 400], [300, 332]]   # origin and traits widths, the skills take the rest
+const SKILL_ROW_H := [58, 51]
+const TRAIT_ROW_H := [44, 40]
+const BAR_W := [100, 72]
+
+var _origin_id := ""
 var _trait_ids: Array[String] = []
-var _alloc: Dictionary = {}            # skill -> points; prefill writes every SKILLS key
+var _alloc := {}   # skill -> points; prefill writes every SKILLS key
 
-var _origin_cards: Dictionary = {}     # selectable origin_id -> PanelContainer
-var _trait_checks: Dictionary = {}     # trait_id -> check Panel
-var _pos_counter: Label = null
-var _neg_counter: Label = null
-var _skill_bars: Dictionary = {}       # skill -> SegmentBar
-var _skill_values: Dictionary = {}     # skill -> Label
-var _skill_minus: Dictionary = {}      # skill -> Button
-var _skill_plus: Dictionary = {}       # skill -> Button
-var _points_value: Label = null
-
-var _check_on: StyleBoxFlat = null
-var _check_off: StyleBoxFlat = null
+var _origin_cards := {}   # selectable origin_id -> PanelContainer
+var _trait_rows := {}     # trait_id -> [check box, name, effect]
+var _counters := {}       # polarity -> Label
+var _skill_rows := {}     # skill -> {name, word, line, bar, value, minus, plus}
+var _points: Label
+var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
-	_check_on = StyleBoxFlat.new()
-	_check_on.bg_color = UiTokens.ACCENT_CHROME
-	_check_on.set_corner_radius_all(3)
-	_check_off = StyleBoxFlat.new()
-	_check_off.bg_color = Color.TRANSPARENT
-	_check_off.set_border_width_all(1)
-	_check_off.border_color = UiTokens.CREAM_DIM
-	_check_off.set_corner_radius_all(3)
-
-	var scroll := ScrollContainer.new()
-	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
-
-	var page := VBoxContainer.new()
-	page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	page.add_theme_constant_override("separation", 8)
-	scroll.add_child(page)
-
-	page.add_child(UiFactory.make_label(tr("ONB_P2_TITLE"), &"TitleSerifCream"))
-	page.add_child(UiFactory.make_label(tr("ONB_P2_SUB"), &"SubtitleSerifCream"))
-
-	page.add_child(_section_header("ONB_ORIGIN_HEADER", "ONB_ORIGIN_SUB"))
-	page.add_child(_build_origins())
-	page.add_child(_section_header("ONB_TRAITS_HEADER", "ONB_TRAITS_SUB"))
-	page.add_child(_build_traits())
-	page.add_child(_section_header("ONB_SKILLS_HEADER", "ONB_SKILLS_SUB"))
-	page.add_child(_build_skills())
+	var cols := HBoxContainer.new()
+	cols.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cols.add_theme_constant_override("separation", UiTokens.SPACE_3XL if short else UiTokens.SPACE_4XL)
+	add_child(cols)
+	cols.add_child(_build_origins())
+	cols.add_child(_build_traits())
+	cols.add_child(_build_skills())
 
 
-func _section_header(title_key: String, sub_key: String) -> Control:
-	var wrap := VBoxContainer.new()
-	wrap.add_child(_spacer(8))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	wrap.add_child(row)
-	row.add_child(UiFactory.make_label(tr(title_key), &"ZoneLabel", UiTokens.ACCENT_CHROME))
-	row.add_child(UiFactory.make_label(tr(sub_key), &"SubtitleSerifCream"))
-	return wrap
+func _column(width: int, head: Control) -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.custom_minimum_size.x = width
+	col.size_flags_horizontal = Control.SIZE_FILL if width > 0 else Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override("separation", UiTokens.SPACE_M if short else UiTokens.SPACE_L)
+	col.add_child(head)
+	return col
 
 
-# --- KÖKEN ---
+# --- Origin ---
 
 func _build_origins() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	for origin in FounderConstants.ORIGINS:
-		row.add_child(_make_origin_card(origin))
-	return row
+	var col := _column(COLUMNS[int(short)][0], _head("ONB_ORIGIN_HEADER", "ONB_ORIGIN_SUB"))
+	for origin: Dictionary in FounderConstants.ORIGINS:
+		col.add_child(_origin_card(origin))
+	return col
 
 
-func _make_origin_card(origin: Dictionary) -> PanelContainer:
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"DialogueChoice"
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 118)
-
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 6)
-	card.add_child(col)
-
+func _origin_card(origin: Dictionary) -> PanelContainer:
+	var locked: bool = origin.locked
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var card := _card(box, not locked)
 	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 8)
-	col.add_child(head)
-	var name_lbl := UiFactory.make_label(tr(origin["name_key"]), &"DialogueName")
-	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(name_lbl)
-	if origin["locked"]:
-		head.add_child(UiFactory.make_pill(tr("LOCK_FULL"), UiTokens.VEIL_SOFT_CHROME, UiTokens.CREAM_DIM))
-
-	var quote := UiFactory.make_label("\"%s\"" % tr(origin["quote_key"]), &"QuoteSerifCream")
+	head.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	var title := UiFactory.make_label(tr(origin.name_key), &"OptionLabelLocked" if locked else &"OptionLabel")
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(title)
+	if locked:
+		head.add_child(UiFactory.make_glyph(UiFactory.LOCK_ICON, UiTokens.D_ICON_PART, UiTokens.D_INK_OFF))
+		head.add_child(UiFactory.D_tag(tr("LOCK_FULL"), &"outline"))
+	box.add_child(head)
+	var quote := UiFactory.make_label("\"%s\"" % tr(origin.quote_key), &"CaptionFaint" if locked else &"OriginQuote")
 	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(quote)
-
-	if origin["locked"]:
-		# Locked origin: visible but inert.
-		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.focus_mode = Control.FOCUS_NONE
-		card.modulate = Color(Color.WHITE, UiTokens.DIALOGUE_LOCKED_ALPHA)
-	else:
-		var chips := HBoxContainer.new()
-		chips.add_theme_constant_override("separation", 6)
-		col.add_child(chips)
-		for chip in origin.get("chips", []):
-			var fg: Color = UiTokens.ACCENT_CHROME if chip["kind"] == "plus" else UiTokens.negative_bright()
-			chips.add_child(UiFactory.make_pill(tr(chip["key"]), Color(fg, 0.12), fg))
-		var origin_id := String(origin["id"])
-		card.gui_input.connect(_on_origin_input.bind(origin_id))
-		_origin_cards[origin_id] = card
+	# The narrow paper keeps a locked origin to its title row.
+	quote.visible = not (locked and short)
+	box.add_child(quote)
+	if locked:
+		return card
+	var chips := HFlowContainer.new()
+	chips.add_theme_constant_override("h_separation", UiTokens.SPACE_S)
+	chips.add_theme_constant_override("v_separation", UiTokens.SPACE_S)
+	for chip: Dictionary in origin.chips:
+		chips.add_child(UiFactory.D_tag(tr(chip.key)))
+	box.add_child(chips)
+	box.add_child(HSeparator.new())
+	box.add_child(UiFactory.make_label(tr("ONB_ORIGIN_PLACE").format({"place": tr("OFFICE_NAME_HOME")}), &"MetaText"))
+	card.gui_input.connect(func(event: InputEvent) -> void:
+		if UiFactory.is_left_click(event):
+			_origin_id = origin.id
+			_refresh()
+			changed.emit())
+	_origin_cards[origin.id] = card
 	return card
 
 
-func _on_origin_input(event: InputEvent, origin_id: String) -> void:
-	if UiFactory.is_left_click(event):
-		_origin_id = origin_id
-		_refresh_origins()
-		validity_changed.emit(is_valid())
-
-
-func _refresh_origins() -> void:
-	for origin_id in _origin_cards:
-		(_origin_cards[origin_id] as PanelContainer).theme_type_variation = \
-			&"DialogueChoiceHover" if origin_id == _origin_id else &"DialogueChoice"
-
-
-# --- KARAKTER (traits) ---
+# --- Traits ---
 
 func _build_traits() -> Control:
+	var col := _column(COLUMNS[int(short)][1], _head("ONB_TRAITS_HEADER", "ONB_TRAITS_SUB", true))
+	for polarity: String in ["positive", "negative"]:
+		var box := VBoxContainer.new()
+		box.add_theme_constant_override("separation", 0)
+		var head := HBoxContainer.new()
+		var title := UiFactory.make_label(Fmt.upper(tr("ONB_TRAITS_" + polarity.to_upper())), &"KeyLabel")
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.add_child(title)
+		_counters[polarity] = UiFactory.make_label("", &"DataStrong")
+		head.add_child(_counters[polarity])
+		box.add_child(head)
+		for t: Dictionary in FounderConstants.TRAITS:
+			if t.polarity == polarity:
+				box.add_child(_trait_row(t))
+		col.add_child(_card(box))
+	return col
+
+
+func _trait_row(t: Dictionary) -> Control:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	row.add_child(_make_trait_column("ONB_TRAITS_POSITIVE", "positive"))
-	row.add_child(_make_trait_column("ONB_TRAITS_NEGATIVE", "negative"))
-	return row
-
-
-func _make_trait_column(title_key: String, polarity: String) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"DialogueChoice"
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 0)
-	panel.add_child(col)
-
-	var head := HBoxContainer.new()
-	col.add_child(head)
-	var title := UiFactory.make_label(tr(title_key), &"ZoneLabel", UiTokens.ACCENT_CHROME)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(title)
-	var counter := UiFactory.make_label("", &"DialogueNumber")
-	head.add_child(counter)
-	if polarity == "positive":
-		_pos_counter = counter
-	else:
-		_neg_counter = counter
-
-	for t in FounderConstants.TRAITS:
-		if t["polarity"] != polarity:
-			continue
-		var sep := Panel.new()
-		sep.custom_minimum_size = Vector2(0, 1)
-		var sep_sb := StyleBoxFlat.new()
-		sep_sb.bg_color = UiTokens.SEPARATOR
-		sep.add_theme_stylebox_override("panel", sep_sb)
-		col.add_child(sep)
-		col.add_child(_make_trait_row(t))
-	return panel
-
-
-func _make_trait_row(t: Dictionary) -> Control:
-	var trait_id: String = String(t["id"])
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	row.mouse_filter = Control.MOUSE_FILTER_STOP
-
-	var pad := Control.new()
-	pad.custom_minimum_size = Vector2(0, 44)
-	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(pad)
-
-	var check := Panel.new()
-	check.custom_minimum_size = Vector2(15, 15)
+	row.custom_minimum_size.y = TRAIT_ROW_H[int(short)]
+	row.add_theme_constant_override("separation", UiTokens.SPACE_M if short else UiTokens.SPACE_L)
+	var check := PanelContainer.new()
 	check.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	check.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	check.add_theme_stylebox_override("panel", _check_off)
+	check.add_child(UiFactory.make_glyph("res://assets/icons/util/check.svg", UiTokens.D_ICON_PART, UiTokens.D_SURFACE_2))
 	row.add_child(check)
-
-	var text_col := VBoxContainer.new()
-	text_col.add_theme_constant_override("separation", 1)
-	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	text_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var name_lbl := UiFactory.make_label(tr(t["name_key"]), &"DialogueChoiceLabel")
-	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text_col.add_child(name_lbl)
-	var effect_lbl := UiFactory.make_label(tr(t["effect_key"]), &"DialogueOdds")
-	effect_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text_col.add_child(effect_lbl)
-	row.add_child(text_col)
-
-	row.gui_input.connect(_on_trait_input.bind(trait_id))
-	_trait_checks[trait_id] = check
+	var text := VBoxContainer.new()
+	text.add_theme_constant_override("separation", 0)
+	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var name := UiFactory.make_label(tr(t.name_key), &"DataStrong")
+	text.add_child(name)
+	var effect := UiFactory.make_label(tr(t.effect_key), &"CondCaption" if short else &"Caption")
+	text.add_child(effect)
+	row.add_child(text)
+	row.gui_input.connect(func(event: InputEvent) -> void:
+		if UiFactory.is_left_click(event):
+			_toggle_trait(t))
+	_trait_rows[t.id] = [check, name, effect]
 	return row
 
 
-func _on_trait_input(event: InputEvent, trait_id: String) -> void:
-	if not UiFactory.is_left_click(event):
-		return
-	if _trait_ids.has(trait_id):
-		_trait_ids.erase(trait_id)
+func _toggle_trait(t: Dictionary) -> void:
+	if _trait_ids.has(t.id):
+		_trait_ids.erase(t.id)
+	elif _count(t.polarity) < _cap(t.polarity):
+		_trait_ids.append(t.id)
 	else:
-		# Clicks past the polarity cap are ignored — the counter reads full.
-		var polarity: String = String(FounderConstants.trait_by_id(trait_id)["polarity"])
-		var cap: int = FounderConstants.TRAIT_MAX_POSITIVE if polarity == "positive" else FounderConstants.TRAIT_MAX_NEGATIVE
-		if _count_polarity(polarity) >= cap:
-			return
-		_trait_ids.append(trait_id)
-	_refresh_traits()
-	validity_changed.emit(is_valid())
+		return   # past the polarity's cap: the counter already reads full
+	_refresh()
+	changed.emit()
 
 
-func _count_polarity(polarity: String) -> int:
-	var n: int = 0
-	for trait_id in _trait_ids:
-		if String(FounderConstants.trait_by_id(trait_id).get("polarity", "")) == polarity:
-			n += 1
-	return n
+func _count(polarity: String) -> int:
+	return _trait_ids.filter(func(id: String) -> bool: return FounderConstants.trait_by_id(id).polarity == polarity).size()
 
 
-func _refresh_traits() -> void:
-	for trait_id in _trait_checks:
-		(_trait_checks[trait_id] as Panel).add_theme_stylebox_override(
-			"panel", _check_on if _trait_ids.has(trait_id) else _check_off)
-	_pos_counter.text = "%d / %d" % [_count_polarity("positive"), FounderConstants.TRAIT_MAX_POSITIVE]
-	_neg_counter.text = "%d / %d" % [_count_polarity("negative"), FounderConstants.TRAIT_MAX_NEGATIVE]
+func _cap(polarity: String) -> int:
+	return FounderConstants.TRAIT_MAX_POSITIVE if polarity == "positive" else FounderConstants.TRAIT_MAX_NEGATIVE
 
 
-# --- YETENEKLER (skills) ---
+# --- Skills ---
 
 func _build_skills() -> Control:
+	var head := _head("ONB_SKILLS_HEADER", "ONB_SKILLS_SUB")
+	var left := HBoxContainer.new()
+	left.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	left.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	left.add_child(UiFactory.make_label(Fmt.upper(tr("ONB_POINTS_LEFT")), &"KeyLabel"))
+	_points = UiFactory.make_label("", &"DataStrong")
+	left.add_child(_points)
+	head.add_child(left)
+	var col := _column(0, head)
+	col.add_theme_constant_override("separation", 0)
+	for skill: String in FounderConstants.SKILLS:
+		col.add_child(_skill_row(skill))
+	return col
+
+
+func _skill_row(skill: String) -> Control:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	for skill_key in FounderConstants.SKILLS:
-		row.add_child(_make_skill_column(skill_key))
-	row.add_child(_make_points_card())
+	row.custom_minimum_size.y = SKILL_ROW_H[int(short)]
+	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	var text := VBoxContainer.new()
+	text.add_theme_constant_override("separation", 0)
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	# The narrow paper holds a row to the name's line and two of the description's: the name takes the caption's size,
+	# and the ruler moves up beside it so the description has the whole row.
+	var parts := {"name": UiFactory.make_label(tr(FounderConstants.SKILL_NAME_KEYS[skill]),
+			&"CaptionStrong" if short else &"DataStrong"),
+		"word": UiFactory.make_label("", &"KeySmall"),
+		"line": UiFactory.make_label("", &"CondCaption" if short else &"Caption")}
+	top.add_child(parts.name)
+	top.add_child(parts.word)
+	text.add_child(top)
+	parts.line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.add_child(parts.line)
+	row.add_child(text)
+	parts.bar = SegmentBar.new()
+	parts.bar.custom_minimum_size.x = BAR_W[int(short)]
+	parts.bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	if short:
+		parts.bar.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_END
+		top.add_child(parts.bar)
+	else:
+		row.add_child(parts.bar)
+	var stepper := PanelContainer.new()
+	stepper.theme_type_variation = &"StepperBox"
+	stepper.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var keys := HBoxContainer.new()
+	keys.add_theme_constant_override("separation", 0)
+	stepper.add_child(keys)
+	parts.minus = _step_key(keys, "minus", skill, -1)
+	parts.value = UiFactory.make_label("", &"DataStrong")
+	parts.value.custom_minimum_size.x = UiTokens.D_H_BTN_SM
+	parts.value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	keys.add_child(parts.value)
+	parts.plus = _step_key(keys, "plus", skill, 1)
+	row.add_child(stepper)
+	_skill_rows[skill] = parts
 	return row
 
 
-func _make_skill_column(skill_key: String) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"DialogueChoice"
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 6)
-	panel.add_child(col)
-
-	col.add_child(UiFactory.make_label(tr(FounderConstants.SKILL_NAME_KEYS[skill_key]), &"DialogueChoiceLabel"))
-	var desc := UiFactory.make_label(tr(FounderConstants.SKILL_DESC_KEYS[skill_key]), &"DialogueOdds")
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# The descriptions wrap to different heights: the slack goes here so every bar sits level.
-	desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	col.add_child(desc)
-
-	var bar := SegmentBar.new()
-	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_child(bar)
-	_skill_bars[skill_key] = bar
-
-	var controls := HBoxContainer.new()
-	controls.add_theme_constant_override("separation", 6)
-	col.add_child(controls)
-
-	_skill_minus[skill_key] = _add_stepper(controls, "−", skill_key, -1)
-
-	var value := UiFactory.make_label("0", &"MetricValue", UiTokens.ACCENT_CHROME)
-	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	value.add_theme_font_size_override("font_size", 20)
-	controls.add_child(value)
-	_skill_values[skill_key] = value
-
-	_skill_plus[skill_key] = _add_stepper(controls, "+", skill_key, 1)
-	return panel
-
-
-func _add_stepper(parent: Control, glyph: String, skill_key: String, delta: int) -> Button:
+func _step_key(parent: Control, glyph: String, skill: String, delta: int) -> Button:
 	var b := Button.new()
-	b.theme_type_variation = &"DialogueStepper"
-	b.text = glyph
+	b.theme_type_variation = &"StepKey"
+	b.icon = load("res://assets/icons/util/%s.svg" % glyph)
+	b.custom_minimum_size = Vector2.ONE * (UiTokens.D_H_KEY_SM if short else UiTokens.D_H_BTN_SM)
 	b.focus_mode = Control.FOCUS_NONE
-	b.pressed.connect(_on_skill_delta.bind(skill_key, delta))
+	# Disabled exactly when the step would leave 0..ONBOARDING_CAP or overspend the pool (_refresh).
+	b.pressed.connect(func() -> void:
+		_alloc[skill] += delta
+		_refresh()
+		changed.emit())
 	parent.add_child(b)
 	return b
 
 
-func _make_points_card() -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"DialogueChoiceHover"   # standing amber border — the page's checksum
-	panel.custom_minimum_size = Vector2(128, 0)
-
-	var col := VBoxContainer.new()
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", 4)
-	panel.add_child(col)
-
-	var title := UiFactory.make_label(tr("ONB_POINTS_LEFT"), &"ZoneLabel", UiTokens.ACCENT_CHROME)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(title)
-
-	_points_value = UiFactory.make_label("0", &"MetricValue", UiTokens.ACCENT_CHROME)
-	_points_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_points_value.add_theme_font_size_override("font_size", 30)
-	col.add_child(_points_value)
-
-	var hint := UiFactory.make_label(tr("ONB_POINTS_HINT"), &"DialogueOdds")
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(hint)
-	return panel
+## What `points` in `skill` does where the engine computes it today; the description elsewhere.
+func _skill_line(skill: String, points: int) -> String:
+	var ruler := FounderConstants.to_ruler(points)
+	match skill:
+		"sales":
+			return tr("ONB_EFFECT_SALES" if ruler >= SkillCheck.SALES_READ_THRESHOLD else "ONB_EFFECT_SALES_NO_READ").format({
+				"stars": maxi(int(HRConstants.stars_for(ruler)), 1),
+				"n": ceili(float(SkillCheck.SALES_READ_THRESHOLD) / FounderConstants.RULER_SCALE)})
+		"leadership":
+			# HRMoraleSystem slows the team's morale loss by this share per ruler point of the lead's Liderlik.
+			var pct := roundi(HRConstants.LEAD_MORALE_PER_POINT * 100.0 * (ruler if points > 0 else FounderConstants.RULER_SCALE))
+			return tr("ONB_EFFECT_LEAD" if points > 0 else "ONB_EFFECT_LEAD_NONE").format({"pct": pct})
+		"charisma":
+			# VCPitchSystem's seed room reads the founder strong from 9 conviction up.
+			if points == 0:
+				return tr("ONB_EFFECT_CHARISMA_NONE")
+			var strong := roundi(ruler / 10.0 * SeedConstants.CONV_FOUNDER_MAX) >= 9
+			return tr("ONB_EFFECT_CHARISMA_STRONG" if strong else "ONB_EFFECT_CHARISMA")
+	return tr(FounderConstants.SKILL_DESC_KEYS[skill])
 
 
-# The +/- buttons are disabled exactly when a step would leave 0..ONBOARDING_CAP or
-# overspend the pool (_refresh_skills), so a press is always a legal step.
-func _on_skill_delta(skill_key: String, delta: int) -> void:
-	_alloc[skill_key] = int(_alloc[skill_key]) + delta
-	_refresh_skills()
-	validity_changed.emit(is_valid())
-
-
-func _refresh_skills() -> void:
-	var remaining: int = FounderConstants.alloc_remaining(_alloc)
-	for skill_key in FounderConstants.SKILLS:
-		var v: int = int(_alloc[skill_key])
-		# The figure shows the 0-10 ruler, as Kişisel does; +/- and KALAN PUAN count allocation points.
-		var ruler: int = FounderConstants.to_ruler(v)
-		(_skill_bars[skill_key] as SegmentBar).set_filled(ruler)
-		(_skill_values[skill_key] as Label).text = str(ruler)
-		(_skill_minus[skill_key] as Button).disabled = v <= 0
-		(_skill_plus[skill_key] as Button).disabled = v >= FounderConstants.ONBOARDING_CAP or remaining <= 0
-	_points_value.text = str(remaining)
-	_points_value.add_theme_color_override("font_color", UiTokens.CREAM if remaining == 0 else UiTokens.ACCENT_CHROME)
+func _refresh() -> void:
+	for id: String in _origin_cards:
+		show_pick(_origin_cards[id], id == _origin_id)
+	for id: String in _trait_rows:
+		var t: Dictionary = FounderConstants.trait_by_id(id)
+		var on := _trait_ids.has(id)
+		var off := not on and _count(t.polarity) >= _cap(t.polarity)
+		var row: Array = _trait_rows[id]
+		row[0].theme_type_variation = &"CheckSquareOn" if on else &"CheckSquare"
+		row[1].theme_type_variation = &"MetaFaint" if off else &"DataStrong"
+		row[2].add_theme_color_override("font_color", UiTokens.D_INK_4 if off else UiTokens.D_INK_3)
+	for polarity: String in _counters:
+		_counters[polarity].text = "%d / %d" % [_count(polarity), _cap(polarity)]
+	var remaining := FounderConstants.alloc_remaining(_alloc)
+	for skill: String in FounderConstants.SKILLS:
+		var v: int = _alloc[skill]
+		var parts: Dictionary = _skill_rows[skill]
+		parts.word.text = Fmt.upper(tr("ONB_SKILL_WORD_%d" % mini(v, 3)))
+		parts.line.text = _skill_line(skill, v)
+		parts.bar.set_filled(FounderConstants.to_ruler(v))
+		parts.value.text = str(FounderConstants.to_ruler(v))
+		parts.minus.disabled = v <= 0
+		parts.plus.disabled = v >= FounderConstants.ONBOARDING_CAP or remaining <= 0
+	_points.text = str(remaining)
 
 
 # --- OnboardingStep contract ---
 
 func prefill(draft: Dictionary) -> void:
-	_origin_id = draft.get("origin_id", "")
-	_trait_ids.clear()
-	for trait_id in draft.get("trait_ids", []):
-		_trait_ids.append(String(trait_id))
+	_origin_id = draft.get("origin_id", FounderConstants.ORIGINS[0].id)
+	_trait_ids.assign(draft.get("trait_ids", []))
 	var alloc: Dictionary = draft.get("skill_alloc", {})
-	for skill_key in FounderConstants.SKILLS:
-		_alloc[skill_key] = int(alloc.get(skill_key, 0))
-	_refresh_origins()
-	_refresh_traits()
-	_refresh_skills()
+	for skill: String in FounderConstants.SKILLS:
+		_alloc[skill] = int(alloc.get(skill, 0))
+	_refresh()
 
 
 func invalid_reason() -> String:
 	if FounderConstants.origin_by_id(_origin_id).get("locked", true):
 		return tr("LOCK_FULL")
-	var trait_why: String = FounderConstants.validate_traits(_trait_ids)
+	var trait_why := FounderConstants.validate_traits(_trait_ids)
 	if trait_why != "":
 		return tr(trait_why)
-	var left: int = FounderConstants.alloc_remaining(_alloc)
+	var left := FounderConstants.alloc_remaining(_alloc)
 	if left != 0:
 		return tr(Fmt.count_key("ONB_WHY_POINTS", left)).format({"n": left})
 	return ""
 
 
 func collect_payload() -> Dictionary:
-	return {
-		"origin_id": _origin_id,
-		"trait_ids": _trait_ids.duplicate(),
-		"skill_alloc": _alloc.duplicate(),
-	}
+	return {"origin_id": _origin_id, "trait_ids": _trait_ids.duplicate(), "skill_alloc": _alloc.duplicate()}
+
+
+## Traits the formula takes (one or two positives, the negative two of them owe) and the whole pool spent.
+func roll() -> void:
+	var positives: Array = FounderConstants.TRAITS.filter(func(t: Dictionary) -> bool: return t.polarity == "positive")
+	var negatives: Array = FounderConstants.TRAITS.filter(func(t: Dictionary) -> bool: return t.polarity == "negative")
+	var picks := _rng.randi_range(1, FounderConstants.TRAIT_MAX_POSITIVE)
+	_trait_ids.clear()
+	for _i in picks:
+		_trait_ids.append(positives.pop_at(_rng.randi_range(0, positives.size() - 1)).id)
+	if picks == FounderConstants.TRAIT_MAX_POSITIVE or _rng.randi_range(0, 1) == 1:
+		_trait_ids.append(negatives[_rng.randi_range(0, negatives.size() - 1)].id)
+	for skill: String in FounderConstants.SKILLS:
+		_alloc[skill] = 0
+	for _i in FounderConstants.POINT_POOL:
+		var open: Array = FounderConstants.SKILLS.filter(func(s: String) -> bool: return _alloc[s] < FounderConstants.ONBOARDING_CAP)
+		_alloc[open[_rng.randi_range(0, open.size() - 1)]] += 1
+	_refresh()
+	changed.emit()
+

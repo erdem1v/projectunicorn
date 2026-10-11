@@ -30,10 +30,6 @@ const MAX_PRINTED := 600
 const SKIP_PREFIXES := [
 	"res://scripts/debug/",            # developer surfaces: smoke fixtures, probes, this file
 	"res://scenes/debug/",             # ThemeProbe etc.
-	# The first-boot language gate names its two options in their OWN languages
-	# ("Türkçe" / "English") ON PURPOSE — an option rendered in a language the player
-	# cannot read is not an option. This is the one sanctioned player-visible literal.
-	"res://scripts/onboarding/language_gate.gd",
 ]
 
 # ASCII-only Turkish wordlist — folded forms with no Turkish charclass character left.

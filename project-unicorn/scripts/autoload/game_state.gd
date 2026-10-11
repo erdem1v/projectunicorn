@@ -15,11 +15,11 @@ var company_name: String = "Unicorn Inc."
 var origin: String = "self_made"      # "self_made" | "heir" | "corporate_refugee" (demo: self_made only)
 var subgenre: String = "ai"           # "ai" | "saas" | "social" (demo: ai|saas only)
 var logo_style: String = "minimalist" # "minimalist" | "tech" | "playful" | "serious"
-var slogan: String = ""               # Optional free text — may be empty
 var founder_name: String = ""         # Player's name; "" means the founder Character defaults to "Founder"
 # The founder was left unnamed and is called by the role, in the language on screen (CharacterRegistry renames them).
 var founder_name_default: bool = false
 var founder_portrait: String = ""     # Portrait id (e.g. "founder_03"); art via FounderConstants.portrait_path()
+var difficulty: String = "normal"     # FounderConstants.DIFFICULTY_CASH_MULT key: the opening cash only
 # THE RNG SEED, 0 = unseeded. Not the funding round (run_seed_amount / run_seed_equity_pct).
 var run_seed: int = 0
 # The language the run began in ("tr" | "en"): everyone new is named from its pool (candidates,
@@ -773,13 +773,13 @@ func initialize_run(payload: Dictionary) -> void:
 	subgenre = payload.get("subgenre_id", "ai")   # the committed product overwrites it later
 	company_name = payload.get("company_name", "Unicorn Inc.")
 	logo_style = payload.get("logo_style", "minimalist")
-	slogan = payload.get("slogan", "")
 	founder_name = payload.get("founder_name", "")
 	founder_name_default = false
 	founder_portrait = payload.get("portrait_id", "")
 	name_lang = "en" if Fmt.is_english() and not is_restore else "tr"
 
-	cash = int(FounderConstants.origin_by_id(origin).get("starting_cash", FounderConstants.STARTING_CASH))
+	difficulty = payload.get("difficulty", "normal")
+	cash = FounderConstants.starting_cash(origin, difficulty)
 	mrr = 0
 	daily_burn = FinanceSystem.starting_daily_burn()
 	brand = 50
@@ -932,6 +932,9 @@ func initialize_run(payload: Dictionary) -> void:
 	# Month-1 ledger after the roster so the team count is real.
 	SummarySystem.snapshot()
 	MessageSystem.post("intro", "MENTOR_INTRO_TITLE")
+	# The engine's tutorial hook: while the flag stands only tutorial cards reach the screen.
+	if payload.get("frank_guided", false):
+		EvFlags.set_flag("tutorial_active", "onboarding")
 
 
 func _build_founder(payload: Dictionary) -> Character:

@@ -21,17 +21,17 @@ ONB_STEP_COMPANY,ŞİRKET,COMPANY
 ONB_STEP_COUNTER,ADIM {step} / {total},STEP {step} / {total}
 ONB_BACK,Geri,Back
 ONB_NEXT,İleri,Next
-ONB_START,Kur ve Başla,Found and Begin
+ONB_START,Kur ve başla,Found and start
 ONB_PREPARING,Hazırlanıyor…,Preparing…
-ONB_P1_TITLE,Karakter,Character
-ONB_P1_SUB,"Bu, aynada göreceğin yüz. Bir istatistik değil, bir kimlik.","The face you will see in the mirror. Not a statistic, an identity."
-ONB_NAME_LABEL,ADIN,YOUR NAME
-ONB_NAME_PLACEHOLDER,Boş bırakırsan 'Kurucu' kullanılır,Leave empty to use 'Founder'
-ONB_FOUNDER_TAG,KURUCU,FOUNDER
-ONB_PORTRAIT_HEADER,PORTRE SEÇ · {n} SEÇENEK,CHOOSE A PORTRAIT · {n} OPTIONS
-ONB_SELECTED_CHIP,SEÇİLİ · PORTRE {id},SELECTED · PORTRAIT {id}
-ONB_P2_TITLE,Köken ve Karakter,Origin and Character
-ONB_P2_SUB,"Nereden geldiğin, neyi kolay, neyi zor yaşayacağını belirler.","Where you come from decides what will come easy, and what will not."
+ONB_CANCEL_TITLE,Kurulum iptal edilsin mi?,Cancel setup?
+ONB_CANCEL_BODY,Seçimlerin kaydedilmez.,Your choices won't be saved.
+ONB_CANCEL_STAY,Kuruluma devam et,Continue setup
+ONB_NAME_LABEL,Adın,Your name
+ONB_STEP1_INTRO,"Bu, aynada göreceğin yüz. Arkadaki odada seni böyle görecekler.",The face in the mirror. This is how they will see you in the room behind.
+ONB_NAME_HINT,Boş bırakırsan 'Kurucu' kullanılır.,Leave it empty and you are 'Founder'.
+ONB_PORTRAIT_SOON,Yeni portre,New portrait
+ONB_RANDOM,Rastgele,Randomize
+ONB_RESET,Sıfırla,Reset
 ONB_ORIGIN_HEADER,KÖKEN,ORIGIN
 ONB_ORIGIN_SUB,"Nereden geldiğin, nereden başladığını belirler.",Where you come from decides where you start.
 ONB_ORIGIN_SELF_MADE_NAME,Sıfırdan,Self-Made
@@ -40,6 +40,7 @@ ONB_ORIGIN_HEIR_NAME,Mirasyedi,The Heir
 ONB_ORIGIN_HEIR_QUOTE,Aile sermayesi arkanda. Ama gözler de üzerinde.,Family money at your back. And every eye on you.
 ONB_ORIGIN_CORP_NAME,Kurumsal Firari,Corporate Refugee
 ONB_ORIGIN_CORP_QUOTE,On yıl büyük şirkette. Şimdi kendi adına.,Ten years in a big company. Now in your own name.
+ONB_ORIGIN_PLACE,Başlangıç yeri · {place},Starting place · {place}
 LOCK_FULL,TAM SÜRÜMDE,IN THE FULL GAME
 LOCK_CHIP,KİLİTLİ,LOCKED
 ONB_ORIGIN_SM_CHIP_RESILIENT,DAYANIKLI,RESILIENT
@@ -67,32 +68,54 @@ TRAIT_LONE_WOLF_NAME,Yalnız Kurt,Lone Wolf
 TRAIT_LONE_WOLF_EFFECT,Sormaktansa tek başına çözmeyi seçer.,Would rather work it out alone than ask.
 ONB_SKILLS_HEADER,YETENEKLER,SKILLS
 ONB_SKILLS_SUB,Masaya ne getiriyorsun.,What you bring to the table.
+ONB_SKILL_WORD_0,Yok,None
+ONB_SKILL_WORD_1,Zayıf,Weak
+ONB_SKILL_WORD_2,Yeterli,Fair
+ONB_SKILL_WORD_3,İyi,Good
+ONB_EFFECT_SALES,{stars} yıldızlı hesaplara uzanırsın · adayı okursun,You reach {stars}-star accounts · you can read a prospect
+ONB_EFFECT_SALES_NO_READ,{stars} yıldızlı hesaplara uzanırsın · adayı okumak {n} puan ister,You reach {stars}-star accounts · reading a prospect needs {n} points
+ONB_EFFECT_LEAD_NONE,Ekip morali tam hızla düşer · her puan %{pct} yavaşlatır,Team morale falls at full speed · each point slows it {pct}%
+ONB_EFFECT_LEAD,Ekip morali %{pct} daha yavaş düşer,Team morale falls {pct}% slower
+ONB_EFFECT_CHARISMA_NONE,Yatırımcıyı ikna etmeye yetmez · büyük masa cezası tam,Not enough to win an investor · bigger tables cost in full
+ONB_EFFECT_CHARISMA,Yatırımcıyı ikna etmeye yetmez · büyük masa cezası yarıda,Not enough to win an investor · bigger tables cost half
+ONB_EFFECT_CHARISMA_STRONG,Yatırımcıyı ikna etmeye yeter · büyük masa cezası yarıda,Enough to win an investor · bigger tables cost half
 ONB_SKILL_SALES,Satış,Sales
 ONB_SKILL_SALES_DESC,Ulaşabildiğin adaylar ve toplantıdaki şansın.,"Which leads you can reach, and your odds in the meeting."
 ONB_SKILL_LEADERSHIP,Liderlik,Leadership
 ONB_SKILL_LEADERSHIP_DESC,Ekibin morali ve öğrenme hızı.,"Team morale, and how fast the team learns."
 ONB_POINTS_LEFT,KALAN PUAN,POINTS LEFT
-ONB_POINTS_HINT,tümünü dağıt,spend them all
 ONB_WHY_TRAIT_POS,En az bir pozitif seç,Pick at least one strength
 ONB_WHY_TRAIT_NEG,"İki pozitif seçtin, bir negatif de seç",Two strengths owe a flaw
 ONB_WHY_POINTS,Dağıtılacak {n} puan kaldı,{n} points left to spend
 ONB_WHY_POINTS_ONE,Dağıtılacak {n} puan kaldı,{n} point left to spend
 ONB_WHY_COMPANY,Şirkete bir ad ver,Name the company
-ONB_WHY_LOGO,Bir logo stili seç,Pick a logo style
-ONB_P3_TITLE,Şirket,Company
-ONB_P3_SUB,Kapıya asılacak isim. Bundan sonra herkes bu adı anacak.,The name on the door. From now on this is what they will call you.
+ONB_WHY_LOGO,Bir logo seç,Pick a logo
+ONB_STEP3_INTRO,Kapıya asılacak isim. Bundan sonra herkes bu adı anacak.,The name on the door. From now on this is what they will call you.
 ONB_COMPANY_LABEL,ŞİRKET ADI,COMPANY NAME
 ONB_COMPANY_PLACEHOLDER,Örn. Synaptik,e.g. Synaptik
-ONB_COMPANY_EMPTY,[Şirket adı],[Company name]
-ONB_LOGO_LABEL,LOGO STİLİ,LOGO STYLE
+ONB_FIRST_WEEK,İlk hafta,Week one
+ONB_WEEK_ONE,Hafta 1 · {month} {year},Week 1 · {month} {year}
+ONB_FOUNDER_LINE,Kurucu · {name},Founder · {name}
+ONB_DOC_COMPANY_EMPTY,3. adımda: ad ve logo,Step 3: name and logo
+ONB_DOC_STEP2,"Köken, huylar ve yetenekler 2. adımda.","Origin, traits and skills come in step 2."
+ONB_DOC_BURN,Geçim ve araçlar,Living and tools
+ONB_DOC_OFFICE,Ofis,Office
+ONB_DOC_TEAM,Ekip,Team
+ONB_TEAM_SOLO,Yalnız sen,Just you
+ONB_DIFFICULTY,Zorluk,Difficulty
+ONB_DIFFICULTY_NOTE,Başlangıç kasasını belirler,Sets your starting cash
+ONB_DIFF_EASY,Kolay,Easy
+ONB_DIFF_NORMAL,Normal,Normal
+ONB_DIFF_HARD,Zor,Hard
+ONB_DIFF_HARD_LOCKED,"Zor, bir koşuyu bitirince açılır.",Hard opens once you finish a run.
+ONB_GUIDED,Frank'le rehberli başla,Guided start with Frank
+ONB_GUIDED_NOTE,"İlk haftalarda Frank'in notları gelen kutuna düşer, öteki olaylar bekler.",In the first weeks Frank's notes reach your inbox and other events wait.
+ONB_GUIDED_LOCKED,Rehber yazılıyor.,The guide is being written.
+ONB_LOGO_LABEL,Logo,Logo
 LOGO_STYLE_MINIMALIST,MİNİMALİST,MINIMALIST
 LOGO_STYLE_TECH,TEKNO,TECH
 LOGO_STYLE_PLAYFUL,OYUNCUL,PLAYFUL
 LOGO_STYLE_SERIOUS,CİDDİ,SERIOUS
-ONB_SLOGAN_LABEL,SLOGAN (OPSİYONEL),SLOGAN (OPTIONAL)
-ONB_SLOGAN_PLACEHOLDER,Bir cümlede ne yapıyorsun,What you do in one sentence
-ONB_PREVIEW_LABEL,ÖNİZLEME,PREVIEW
-ONB_PREVIEW_FOUNDER_TAG,KURUCU · {year},FOUNDER · {year}
 SALES_PORTFOLIO_HEADER,Müşteri portföyü,Customer portfolio
 SALES_CUSTOMERS_COUNT,{n} müşteri,{n} customers
 SALES_CUSTOMERS_COUNT_ONE,{n} müşteri,{n} customer

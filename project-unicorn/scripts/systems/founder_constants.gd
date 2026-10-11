@@ -55,6 +55,10 @@ const TRAITS := [
 # Self-Made opening cash; the origin catalog and GameState's defaults both read it.
 const STARTING_CASH := 10000
 
+# Difficulty only scales the origin's opening cash. Hard opens once the profile has finished this many runs.
+const DIFFICULTY_CASH_MULT := {"easy": 1.5, "normal": 1.0, "hard": 0.6}   # [WORKING]
+const HARD_OPENS_AFTER_RUNS := 1   # [WORKING]
+
 # Origin catalog. starting_cash is a working placeholder. reserved_flags are SET by
 # initialize_run but consumed nowhere yet — future press/network systems read them.
 const ORIGINS := [
@@ -186,6 +190,10 @@ static func origin_by_id(origin_id: String) -> Dictionary:
 		if o["id"] == origin_id:
 			return o
 	return {}
+
+
+static func starting_cash(origin_id: String, difficulty: String) -> int:
+	return roundi(int(origin_by_id(origin_id).get("starting_cash", STARTING_CASH)) * DIFFICULTY_CASH_MULT[difficulty])
 
 
 ## `portrait_id`'s master, or its crop cut at `size` (a square one is a disc, named for its width).

@@ -152,7 +152,17 @@ func _mount_flow() -> void:
 	_state = "flow"
 	_flow = ONBOARDING_FLOW.instantiate()
 	_flow.completed.connect(_swap_to_shell_and_modal)
+	_flow.cancelled.connect(func() -> void:
+		_free_flow()
+		_mount_menu())
 	add_child(_flow)
+
+
+func _free_flow() -> void:
+	if _flow != null:
+		_flow.get_node("%Stage").stop()
+		_flow.queue_free()
+		_flow = null
 
 
 # ============================================================================
@@ -255,7 +265,7 @@ func _run_debug_harness() -> bool:
 		"--modal-shot=": _run_modal_shot,
 		"--menu-shot=": _run_menu_shot,
 		"--backdrop-probe=": func(v: String) -> void: _run_backdrop_probe(v.get_slice(":", 0), _hhmm_minute(v.get_slice(":", 1))),
-		"--onboard-shot=": func(v: String) -> void: _run_onboard_shot(int(v)),
+		"--onboard-shot=": _run_onboard_shot,
 		"--theme-audit=": _run_theme_audit,
 		"--probe-shot=": _run_probe_shot,
 		"--office-shot=": _run_office_shot,
@@ -296,7 +306,6 @@ func _debug_payload() -> Dictionary:
 		"company_name": "Unicorn Inc.",
 		"founder_name": "",
 		"logo_style": "minimalist",
-		"slogan": "",
 	}
 
 
@@ -2276,22 +2285,51 @@ func _run_backdrop_probe(office: String, minute: float) -> void:
 	get_tree().quit()
 
 
-# --onboard-shot=<1|2|3>. Prints the node count and texture memory of the set-up, which NEW GAME from the menu
-# matches (--backdrop-probe).
-func _run_onboard_shot(step: int) -> void:
+# --onboard-shot=<1|2|3>[:<state>] | curtain. Prints the node count and texture memory of the set-up, which NEW GAME
+# from the menu matches (--backdrop-probe), and ONB|stage=live|figure=<id> once the flat is up; the frame waits for
+# it. States: 1:plate (the plate and portrait the flat stands on until it is up), 1:cancel (a name typed, then Esc),
+# 2:random (Randomize), 2:hard_locked and 2:hard_open (the profile's finished runs, written to this run's settings),
+# 3:guided_locked; curtain is the curtain over step 3. Steps 2 and 3 are mounted straight: their draft need not be
+# whole.
+func _run_onboard_shot(spec: String) -> void:
+	var state: String = spec.get_slice(":", 1) if ":" in spec else ""
+	if state.begins_with("hard_"):
+		Settings.set_value("runs_finished", int(state == "hard_open"))
 	_begin_shot()
 	_mount_flow()
+	var stage: Control = _flow.get_node("%Stage")
+	var live := [false]
+	stage.live_ready.connect(func() -> void:
+		live[0] = true
+		print("ONB|stage=live|figure=%s" % _flow.draft.portrait_id))
 	await get_tree().process_frame
 	await get_tree().process_frame
 	print("ONB|nodes=%d|tex_mib=%.2f" % [Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
 		Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED) / 1048576.0])
-	var idx: int = clampi(step - 1, 0, 2)
+	var step: int = 3 if spec == "curtain" else int(spec.get_slice(":", 0))
 	if step == 2:
 		# Two allocation points in one skill: its figure reads on the 0-10 ruler.
 		_flow.draft.skill_alloc = {"engineering": 2}
-	if idx > 0:
-		_flow._mount_step(idx)   # doğrudan seam: adım geçerliliği fixture'da dolu olmayabilir
-	await _finish_shot("onboard_shot_%d" % step)
+	if step > 1:
+		_flow._mount_step(step - 1)
+	match state:
+		"plate":
+			stage.stop()
+		"cancel":
+			_flow._step.prefill({"founder_name": "Deniz"})
+			_flow._ask_cancel()
+		"random":
+			_flow._step.roll()
+		"":
+			if spec == "curtain":
+				_flow.draft.company_name = "Unicorn Inc."
+				_flow.draft.logo_style = "tech"
+				_flow.show_curtain()
+	if stage.get_node("Live").get_child_count() > 0:
+		while not live[0]:
+			await get_tree().process_frame
+		await get_tree().create_timer(stage.MENU_FADE_S).timeout
+	await _finish_shot("onboard_shot_" + spec.replace(":", "_"))
 
 
 # --theme-audit=<tab_id | menu | modal:<kind> | onboard:<step>> stages the surface as --tab-shot,
@@ -2306,7 +2344,7 @@ func _run_theme_audit(spec: String) -> void:
 		"modal":
 			_run_modal_shot(kind)
 		"onboard":
-			_run_onboard_shot(int(kind))
+			_run_onboard_shot(kind)
 		_:
 			_run_tab_shot(spec)
 
@@ -3586,10 +3624,12 @@ func _shot_customer(id: String, cname: String, industry: String, phase: String, 
 
 func _swap_to_shell_and_modal() -> void:
 	_free_menu()
-	if _flow != null:
-		_flow.queue_free()
-		_flow = null
 	await _mount_shell()
+	# The flow's curtain stands until the shell has drawn its first frame.
+	if _flow != null:
+		await RenderingServer.frame_post_draw
+		print("ONB|curtain_ms=%d" % (Time.get_ticks_msec() - _flow.curtain_msec))
+		_free_flow()
 	# The clock stays paused past the intro until the player starts it.
 	_open_note("intro")
 
@@ -4157,6 +4197,9 @@ func _on_product_note_issued(_day: int) -> void:
 # Terminal: EndingsSystem already flushed the queue and paused the clock, and TimeManager swallows
 # unpause requests once run_active is false.
 func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
+	# The profile counts finished runs (Hard opens on it); a harness's run is not the player's.
+	if not Array(OS.get_cmdline_args()).any(SaveManager._is_harness_arg):
+		Settings.set_value("runs_finished", int(Settings.get_value("runs_finished", 0)) + 1)
 	if not _call.is_empty():
 		_end_call()
 	if _ending_modal != null:
@@ -4268,6 +4311,24 @@ func _skip_to_shell() -> void:
 ## The window's X for the MCP bridge.
 func _dbg_close_request() -> void:
 	get_tree().root.propagate_notification(NOTIFICATION_WM_CLOSE_REQUEST)
+
+
+## Randomize on the first two onboarding steps twenty times, for the MCP bridge: how many drafts came out whole.
+func _dbg_onb_random_x20() -> int:
+	var whole := 0
+	for _i in 20:
+		for step in 2:
+			_flow._mount_step(step)
+			_flow._step.roll()
+		var d: Dictionary = _flow.draft
+		if d.portrait_id != "" and FounderConstants.validate_traits(d.trait_ids) == "" and FounderConstants.validate_alloc(d.skill_alloc):
+			whole += 1
+	return whole
+
+
+## Ends the run with the Series A signature, for the MCP bridge: the profile counts it. Run it in its own APPDATA.
+func _dbg_finish_run() -> void:
+	EndingsSystem.trigger_ending("series_a_close", EndingsSystem.TELEGRAPH_WIN)
 
 
 ## The boot's state for the MCP bridge, whose calls carry no arguments.

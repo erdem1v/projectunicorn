@@ -1,34 +1,39 @@
 extends Control
 
-# Onboarding flow controller — 3-page dark-register threshold ceremony
-# (KARAKTER → KÖKEN → ŞİRKET). Sequences the step scenes, holds the in-progress
-# draft in memory, calls GameState.initialize_run on the final "Kur ve Başla".
-# Nothing is written to GameState or CharacterRegistry before that commit.
+# New game, set in the founder's flat on its first evening: three tabbed papers (Karakter · Köken · Şirket) on the
+# desk, the first-week document beside them, the chosen founder standing in the room behind. The draft is the one
+# source of in-progress truth; nothing reaches GameState before Found and start, and the curtain covers the run and
+# the shell being built.
 #
-# Architecture:
-#   - Each step scene is instantiated on mount and freed on leave; only one
-#     step is live at a time.
-#   - draft Dictionary is the single source of in-progress truth.
-#   - Steps implement the OnboardingStep contract (step_base.gd) and don't
-#     know about the controller or each other.
-#
-# Tree-pause handling:
-#   - main.gd pauses the tree before instancing this scene.
-#   - Root process_mode = ALWAYS (set in the .tscn) so input + buttons work
-#     while paused. TimeManager stays paused; day/hour don't advance.
+# One step scene lives at a time (OnboardingStep). The root runs while the tree is paused (process_mode ALWAYS):
+# main pauses the clock before mounting the flow.
 
-signal completed   # main.gd listens; frees this scene and instances GameShell
+signal completed   # the run is initialised: main swaps the flow for GameShell
+signal cancelled   # back to the main menu, nothing kept
 
+const MAIN_MENU_SCRIPT := preload("res://scripts/menu/main_menu.gd")
 const STEPS: Array[PackedScene] = [
 	preload("res://scenes/onboarding/steps/CharacterStep.tscn"),
 	preload("res://scenes/onboarding/steps/OriginTraitsStep.tscn"),
 	preload("res://scenes/onboarding/steps/CompanyStep.tscn"),
 ]
-
-# Named stepper: one CSV key per page (KARAKTER · KÖKEN · ŞİRKET).
 const STEP_NAME_KEYS := ["ONB_STEP_CHARACTER", "ONB_STEP_ORIGIN", "ONB_STEP_COMPANY"]
+const CONFIRM_MODAL := preload("res://scenes/modals/ConfirmModal.tscn")
+const STAGE_OFFICE := "home"
+const MENU_STAGE_MINUTE := 1170.0   # [WORKING] 19:30
+# The layout of a screen 1080 tall, then of a shorter one (1536×864 logical): the raised paper, the first-week
+# document, the portrait standing in for the founder until the flat is up, the lock-up's S.
+const PAPER := [Rect2(48, 388, 1348, 660), Rect2(24, 260, 1088, 588)]
+const DOC := [Rect2(1428, 88, 444, 960), Rect2(1136, 80, 376, 768)]
+const BUST := [Rect2(930, 66, 384, 480), Rect2(720, 62, 300, 375)]
+const TAB_H := 44
+const TAB_H_NOW := 53
+const LOCKUP_S := 40
+const CURTAIN_EMBLEM := 112
+const CURTAIN_MARK_S := 24
+const CANCEL_W := 480
 
-var draft: Dictionary = {
+var draft := {
 	"founder_name": "",
 	"portrait_id": "",
 	"origin_id": "self_made",
@@ -36,141 +41,172 @@ var draft: Dictionary = {
 	"skill_alloc": {},
 	"company_name": "",
 	"logo_style": "",
-	"slogan": "",
+	"difficulty": "normal",
+	"frank_guided": false,
 }
+## When the curtain was first drawn: main measures the build behind it from here.
+var curtain_msec := 0
 
-var _current_step_index: int = 0
-var _current_step_node: OnboardingStep = null
-var _stepper_dots: Array[Panel] = []
-var _stepper_labels: Array[Label] = []
-var _step_counter: Label = null
-
-@onready var background: Panel = $Background
-@onready var step_host: Control = $Layout/StepHost
-@onready var header: HBoxContainer = $Layout/Header
-@onready var footer_step_label: Label = $Layout/Footer/StepLabel
-@onready var reason_label: Label = $Layout/Footer/Reason
-@onready var back_btn: Button = $Layout/Footer/BackBtn
-@onready var next_btn: Button = $Layout/Footer/NextBtn
-@onready var loading_overlay: Control = $LoadingOverlay
-@onready var loading_label: Label = $LoadingOverlay/CenterPanel/LoadingLabel
+var _index := 0
+var _step: OnboardingStep
+var _pristine := {}
+var _confirm: Control
+var _committing := false
 
 
 func _ready() -> void:
-	# Colors come from tokens in code, never inline in the .tscn (UiTokens law).
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UiTokens.DIALOGUE_BG
-	background.add_theme_stylebox_override("panel", bg)
-	($LoadingOverlay/Dimmer as ColorRect).color = UiTokens.SCRIM_MODAL
-	_build_header()
-	back_btn.text = tr("ONB_BACK")
-	back_btn.pressed.connect(_on_back_pressed)
-	next_btn.pressed.connect(_on_next_pressed)
-	_mount_step(0)
+	%Curtain.color = UiTokens.D_SURFACE_0
+	%Doc.picked.connect(func(field: String, value: Variant) -> void:
+		draft[field] = value
+		_refresh())
+	%Exit.icon = load("res://assets/icons/util/chevron_left.svg")
+	%Exit.pressed.connect(_ask_cancel)
+	%Back.pressed.connect(func() -> void: _mount_step(_index - 1))
+	%Next.pressed.connect(_on_next)
+	_apply_layout()
+	get_viewport().size_changed.connect(_apply_layout)
+	_pristine = draft.duplicate(true)
+	%Stage.live_ready.connect(%Bust.hide)
+	%Stage.start(STAGE_OFFICE, MENU_STAGE_MINUTE, LookSystem.founder(draft.portrait_id))
 
 
-func _build_header() -> void:
-	# Brand mark (left) + named stepper (right). Separators are drawn hairlines,
-	# not glyphs — no dash characters in player-facing chrome.
-	header.add_theme_constant_override("separation", 10)
-	var brand := HBoxContainer.new()
-	brand.add_theme_constant_override("separation", 0)
-	header.add_child(brand)
-	brand.add_child(UiFactory.make_label("PROJECT ", &"ZoneLabel"))
-	brand.add_child(UiFactory.make_label("UNICORN", &"ZoneLabel", UiTokens.ACCENT_CHROME))
+## Places the papers for the logical screen, and rebuilds what sizes itself by it.
+func _apply_layout() -> void:
+	var short := int(get_viewport_rect().size.y < 1080.0)
+	%Doc.lay_out(bool(short))
+	_mount_step(_index)
+	# Sized once the new content is sorted: a Control never takes a size below its minimum of that moment, and a
+	# wrapping label's minimum is known only once it has a width.
+	(func() -> void:
+		for part: Array in [[%Paper, PAPER], [%Doc, DOC], [%Bust, BUST]]:
+			var at: Rect2 = part[1][short]
+			part[0].position = at.position
+			part[0].size = at.size).call_deferred()
+	%Tabs.position = PAPER[short].position - Vector2(0, TAB_H_NOW)
+	%Tabs.size.y = TAB_H_NOW
+	%Lockup.custom_minimum_size = %Lockup.texture.get_size() * LOCKUP_S / MAIN_MENU_SCRIPT.LOCKUP_AUTHORED_S
+	%Mark.custom_minimum_size = %Mark.texture.get_size() * CURTAIN_MARK_S / MAIN_MENU_SCRIPT.LOCKUP_AUTHORED_S
 
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(spacer)
-
-	for i in STEPS.size():
-		if i > 0:
-			var line := Panel.new()
-			line.custom_minimum_size = Vector2(18, 1)
-			line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			var line_sb := StyleBoxFlat.new()
-			line_sb.bg_color = UiTokens.SEPARATOR
-			line.add_theme_stylebox_override("panel", line_sb)
-			header.add_child(line)
-		var dot := UiFactory.make_dot(UiTokens.CREAM_DIM, 6)
-		header.add_child(dot)
-		_stepper_dots.append(dot)
-		var lbl := UiFactory.make_label(tr(STEP_NAME_KEYS[i]), &"ZoneLabel")
-		header.add_child(lbl)
-		_stepper_labels.append(lbl)
-
-	_step_counter = UiFactory.make_label("", &"DialogueNumber")
-	header.add_child(_step_counter)
-
-
-func _refresh_stepper(index: int) -> void:
-	for i in _stepper_labels.size():
-		var reached: bool = i <= index
-		_stepper_labels[i].add_theme_color_override("font_color",
-			UiTokens.ACCENT_CHROME if i == index else (UiTokens.CREAM if reached else UiTokens.CREAM_DIM))
-		# make_dot gives every dot its own override stylebox — recolor it in place.
-		(_stepper_dots[i].get_theme_stylebox("panel") as StyleBoxFlat).bg_color = \
-			UiTokens.ACCENT_CHROME if reached else UiTokens.CREAM_DIM
-	_step_counter.text = "%d / %d" % [index + 1, STEPS.size()]
-
-
-# --- Step lifecycle ---
 
 func _mount_step(index: int) -> void:
-	if _current_step_node != null:
-		_current_step_node.validity_changed.disconnect(_on_step_validity_changed)
-		_current_step_node.queue_free()
-
-	_current_step_index = index
-	_current_step_node = STEPS[index].instantiate()
-	step_host.add_child(_current_step_node)
-	_current_step_node.prefill(draft)
-	_current_step_node.validity_changed.connect(_on_step_validity_changed)
-
-	_refresh_stepper(index)
-	footer_step_label.text = tr("ONB_STEP_COUNTER").format({"step": index + 1, "total": STEPS.size()})
-	back_btn.disabled = index == 0
-	next_btn.text = tr("ONB_START") if index == STEPS.size() - 1 else tr("ONB_NEXT")
-	_on_step_validity_changed(_current_step_node.is_valid())
+	if _step != null:
+		draft.merge(_step.collect_payload(), true)
+		_step.free()
+	_index = index
+	_step = STEPS[index].instantiate()
+	_step.set_anchors_preset(Control.PRESET_FULL_RECT)
+	%Body.add_child(_step)
+	_step.prefill(draft)
+	_step.changed.connect(_on_step_changed)
+	%Counter.text = tr("ONB_STEP_COUNTER").format({"step": index + 1, "total": STEPS.size()})
+	%Back.disabled = index == 0
+	%Next.text = tr("ONB_START") if index == STEPS.size() - 1 else tr("ONB_NEXT")
+	_on_step_changed()
 
 
-# --- Signal handlers ---
-
-func _on_step_validity_changed(valid: bool) -> void:
-	next_btn.disabled = not valid
-	reason_label.text = _current_step_node.invalid_reason()
-
-
-# Back is disabled on the first page and during the commit, so it never fires there.
-func _on_back_pressed() -> void:
-	# Capture any partial selections before leaving so they reappear on Forward.
-	draft.merge(_current_step_node.collect_payload(), true)
-	_mount_step(_current_step_index - 1)
+func _on_step_changed() -> void:
+	var face: String = draft.portrait_id
+	draft.merge(_step.collect_payload(), true)
+	if draft.portrait_id != face:
+		%Bust.texture = load(FounderConstants.portrait_path(draft.portrait_id))
+		%Stage.set_figure(LookSystem.founder(draft.portrait_id))
+	_refresh()
 
 
-func _on_next_pressed() -> void:
-	if not _current_step_node.is_valid():
-		return
-	draft.merge(_current_step_node.collect_payload(), true)
-	if _current_step_index < STEPS.size() - 1:
-		_mount_step(_current_step_index + 1)
+func _refresh() -> void:
+	%Reason.text = _step.invalid_reason()
+	%Next.disabled = %Reason.text != ""
+	%Doc.show_draft(draft, _index)
+	_build_tabs()
+
+
+## A tab per step over the paper: the one in hand raised; a finished one ticked, with what it settled.
+func _build_tabs() -> void:
+	UiFactory.clear(%Tabs)
+	for i in STEPS.size():
+		var tab := PanelContainer.new()
+		tab.theme_type_variation = &"PickCardSelected" if i == _index else &"PickCard"
+		tab.custom_minimum_size.y = TAB_H_NOW if i == _index else TAB_H
+		tab.size_flags_vertical = Control.SIZE_SHRINK_END
+		var pad := MarginContainer.new()
+		pad.add_theme_constant_override("margin_left", UiTokens.SPACE_L)
+		pad.add_theme_constant_override("margin_right", UiTokens.SPACE_XXL)
+		tab.add_child(pad)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+		pad.add_child(row)
+		if i < _index:
+			row.add_child(UiFactory.make_glyph("res://assets/icons/util/check.svg", UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
+		else:
+			row.add_child(UiFactory.D_key_cap(i + 1))
+		row.add_child(UiFactory.make_label(Fmt.upper(tr(STEP_NAME_KEYS[i])), &"NavLabelActive" if i == _index else &"NavLabel"))
+		if i < _index:
+			row.add_child(UiFactory.make_label(_settled(i), &"MetaMuted"))
+		%Tabs.add_child(tab)
+
+
+func _settled(step: int) -> String:
+	if step == 1:
+		return tr(FounderConstants.origin_by_id(draft.origin_id).name_key)
+	return draft.founder_name if draft.founder_name != "" else tr("HR_ROLE_FOUNDER")
+
+
+func _on_next() -> void:
+	if _index < STEPS.size() - 1:
+		_mount_step(_index + 1)
 	else:
 		_commit()
 
 
-# --- Commit (final state-write) ---
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel") and not _committing:
+		get_viewport().set_input_as_handled()
+		_ask_cancel()
 
+
+## Leaving with nothing chosen goes straight back; anything chosen asks first, staying the safe answer.
+func _ask_cancel() -> void:
+	draft.merge(_step.collect_payload(), true)
+	if draft == _pristine:
+		cancelled.emit()
+		return
+	if _confirm != null:
+		return
+	_confirm = CONFIRM_MODAL.instantiate()
+	_confirm.confirmed.connect(cancelled.emit)
+	_confirm.dismissed.connect(func() -> void: _confirm = null)
+	add_child(_confirm)
+	_confirm.populate({"title": tr("ONB_CANCEL_TITLE"), "body": tr("ONB_CANCEL_BODY"), "confirm_text": tr("SYS_MAIN_MENU"),
+		"cancel_text": tr("ONB_CANCEL_STAY")})
+	# Staying is the answer offered: the amber button, last in the row and holding the focus; leaving is the outline.
+	var stay: Button = _confirm.get_node("%CancelBtn")
+	stay.theme_type_variation = &"PrimaryButtonDark"
+	stay.get_parent().move_child(stay, -1)
+	_confirm.get_node("%ConfirmBtn").theme_type_variation = &""
+	_confirm.get_node("%Panel").custom_minimum_size.x = CANCEL_W
+
+
+## The curtain is drawn before the flat stops, and the flat is gone before the run starts: the people it stood in
+## the room are a static list the shell's own crowd reads.
 func _commit() -> void:
-	# Typing into the still-focused name field during the beat would re-enable Next.
-	_current_step_node.validity_changed.disconnect(_on_step_validity_changed)
-	back_btn.disabled = true
-	next_btn.disabled = true
-	loading_overlay.visible = true
-	loading_label.text = tr("ONB_PREPARING")
-
-	# A short loading beat so the transition feels intentional; the overlay
-	# stays up while main.gd builds GameShell on completed.
-	await get_tree().create_timer(1.0).timeout
-
+	_committing = true
+	%Next.disabled = true
+	_step.changed.disconnect(_on_step_changed)
+	draft.merge(_step.collect_payload(), true)
+	show_curtain()
+	await RenderingServer.frame_post_draw
+	curtain_msec = Time.get_ticks_msec()
+	%Stage.stop()
+	await RenderingServer.frame_post_draw
 	GameState.initialize_run(draft)
 	completed.emit()
+
+
+func show_curtain() -> void:
+	var emblem := LogoEmblem.new(CURTAIN_EMBLEM)
+	emblem.configure(draft.logo_style, draft.company_name)
+	%EmblemSlot.add_child(emblem)
+	%CurtainName.text = draft.company_name
+	var d: Dictionary = GameState.get_date_dict(1)
+	%CurtainWeek.text = tr("ONB_WEEK_ONE").format({"month": Fmt.month_name(d.month), "year": d.year})
+	%Curtain.show()

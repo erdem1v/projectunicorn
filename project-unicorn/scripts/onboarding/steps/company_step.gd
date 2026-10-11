@@ -1,191 +1,81 @@
 extends OnboardingStep
 
-# Page 3 — Şirket. Company name + logo style (LogoEmblem auto-renders the
-# name's initial per style — no image assets) + optional slogan + live preview
-# (emblem + name + founder portrait + KURUCU · start year). "Kur ve Başla" on
-# the controller commits from here — there is no separate confirm page.
-#
-# Founder name and portrait come from Page 1: this step reads them from the
-# draft via prefill, for the preview only.
+# Step 3, Şirket: the company's name and its logo, a style LogoEmblem draws from the name's initial. The first-week
+# document's letterhead shows both as they are picked; Found and start commits from here.
 
-var _logo_style: String = ""
+const NAME_W := 520
+const EMBLEM := 56
 
-var _name_input: LineEdit = null
-var _slogan_input: LineEdit = null
-var _style_cards: Dictionary = {}      # style_id -> PanelContainer
-var _card_emblems: Array[LogoEmblem] = []
-var _preview_emblem: LogoEmblem = null
-var _preview_name: Label = null
-var _preview_founder: Label = null
-var _preview_portrait: TextureRect = null
+var _logo_style := ""
+var _name_input: LineEdit
+var _style_cards := {}   # style_id -> PanelContainer
+var _emblems: Array[LogoEmblem] = []
 
 
 func _ready() -> void:
 	var page := VBoxContainer.new()
 	page.set_anchors_preset(Control.PRESET_FULL_RECT)
-	page.add_theme_constant_override("separation", 6)
+	page.add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	add_child(page)
+	page.add_child(_head("ONB_STEP_COMPANY", "ONB_STEP3_INTRO"))
 
-	page.add_child(UiFactory.make_label(tr("ONB_P3_TITLE"), &"TitleSerifCream"))
-	page.add_child(UiFactory.make_label(tr("ONB_P3_SUB"), &"SubtitleSerifCream"))
-	page.add_child(_spacer(10))
-
-	var content := HBoxContainer.new()
-	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 28)
-	page.add_child(content)
-
-	# --- Left: fields ---
-	var left := VBoxContainer.new()
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 1.6
-	left.add_theme_constant_override("separation", 8)
-	content.add_child(left)
-
-	left.add_child(UiFactory.make_label(tr("ONB_COMPANY_LABEL"), &"ZoneLabel"))
+	page.add_child(UiFactory.make_label(Fmt.upper(tr("ONB_COMPANY_LABEL")), &"KeyLabel"))
 	_name_input = LineEdit.new()
-	_name_input.theme_type_variation = &"DialogueInput"
+	_name_input.custom_minimum_size.x = NAME_W
+	_name_input.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_name_input.max_length = 40
 	_name_input.placeholder_text = tr("ONB_COMPANY_PLACEHOLDER")
-	_name_input.text_changed.connect(_on_name_changed)
-	left.add_child(_name_input)
+	_name_input.text_changed.connect(func(_t: String) -> void:
+		_refresh()
+		changed.emit())
+	page.add_child(_name_input)
 
-	left.add_child(_spacer(8))
-	left.add_child(UiFactory.make_label(tr("ONB_LOGO_LABEL"), &"ZoneLabel"))
+	page.add_child(UiFactory.make_label(Fmt.upper(tr("ONB_LOGO_LABEL")), &"KeyLabel"))
 	var cards := HBoxContainer.new()
-	cards.add_theme_constant_override("separation", 12)
-	left.add_child(cards)
-	for style in FounderConstants.LOGO_STYLES:
-		cards.add_child(_make_style_card(style))
-
-	left.add_child(_spacer(8))
-	left.add_child(UiFactory.make_label(tr("ONB_SLOGAN_LABEL"), &"ZoneLabel"))
-	_slogan_input = LineEdit.new()
-	_slogan_input.theme_type_variation = &"DialogueInput"
-	_slogan_input.max_length = 80
-	_slogan_input.placeholder_text = tr("ONB_SLOGAN_PLACEHOLDER")
-	left.add_child(_slogan_input)
-
-	# --- Right: live preview ---
-	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_theme_constant_override("separation", 6)
-	content.add_child(right)
-
-	right.add_child(UiFactory.make_label(tr("ONB_PREVIEW_LABEL"), &"ZoneLabel"))
-	var preview := PanelContainer.new()
-	preview.theme_type_variation = &"DialogueCard"
-	preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(preview)
-
-	var pv := VBoxContainer.new()
-	pv.alignment = BoxContainer.ALIGNMENT_CENTER
-	pv.add_theme_constant_override("separation", 14)
-	preview.add_child(pv)
-
-	var emblem_center := CenterContainer.new()
-	_preview_emblem = LogoEmblem.new(96.0)
-	emblem_center.add_child(_preview_emblem)
-	pv.add_child(emblem_center)
-
-	_preview_name = UiFactory.make_label(tr("ONB_COMPANY_EMPTY"), &"TitleSerifCream")
-	_preview_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	pv.add_child(_preview_name)
-
-	pv.add_child(_spacer(24))
-
-	var founder_row := HBoxContainer.new()
-	founder_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	founder_row.add_theme_constant_override("separation", 10)
-	pv.add_child(founder_row)
-
-	var frame := PanelContainer.new()
-	frame.theme_type_variation = &"PortraitFrame"
-	frame.custom_minimum_size = Vector2(40, 48)
-	frame.clip_contents = true
-	_preview_portrait = TextureRect.new()
-	_preview_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_preview_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	frame.add_child(_preview_portrait)
-	founder_row.add_child(frame)
-
-	var founder_col := VBoxContainer.new()
-	founder_col.alignment = BoxContainer.ALIGNMENT_CENTER
-	founder_col.add_theme_constant_override("separation", 1)
-	founder_row.add_child(founder_col)
-	_preview_founder = UiFactory.make_label("", &"DialogueName")
-	founder_col.add_child(_preview_founder)
-	founder_col.add_child(UiFactory.make_label(
-		tr("ONB_PREVIEW_FOUNDER_TAG").format({"year": GameState.START_DATE.year}), &"DialogueTag"))
+	cards.add_theme_constant_override("separation", UiTokens.SPACE_XL)
+	page.add_child(cards)
+	for style: Dictionary in FounderConstants.LOGO_STYLES:
+		cards.add_child(_style_card(style))
 
 
-func _make_style_card(style: Dictionary) -> PanelContainer:
-	var style_id: String = String(style["id"])
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"DialogueChoice"
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 92)
-
+func _style_card(style: Dictionary) -> PanelContainer:
 	var col := VBoxContainer.new()
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", 8)
+	col.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card.add_child(col)
-
-	var emblem_center := CenterContainer.new()
-	emblem_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var emblem := LogoEmblem.new(40.0)
-	emblem.style_id = style_id
+	var card := _card(col, true)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var emblem := LogoEmblem.new(EMBLEM)
+	emblem.style_id = style.id
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	emblem_center.add_child(emblem)
-	col.add_child(emblem_center)
-	_card_emblems.append(emblem)
-
-	var name_lbl := UiFactory.make_label(tr(style["name_key"]), &"ZoneLabel")
-	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(name_lbl)
-
-	card.gui_input.connect(_on_style_input.bind(style_id))
-	_style_cards[style_id] = card
+	emblem.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(emblem)
+	_emblems.append(emblem)
+	var label := UiFactory.make_label(tr(style.name_key), &"KeyLabel")
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(label)
+	card.gui_input.connect(func(event: InputEvent) -> void:
+		if UiFactory.is_left_click(event):
+			_logo_style = style.id
+			_refresh()
+			changed.emit())
+	_style_cards[style.id] = card
 	return card
 
 
-func _on_style_input(event: InputEvent, style_id: String) -> void:
-	if UiFactory.is_left_click(event):
-		_logo_style = style_id
-		_refresh_visual()
-		validity_changed.emit(is_valid())
-
-
-func _on_name_changed(_text: String) -> void:
-	_refresh_visual()
-	validity_changed.emit(is_valid())
-
-
-func _refresh_visual() -> void:
-	var company: String = _name_input.text.strip_edges()
-	for style_id in _style_cards:
-		(_style_cards[style_id] as PanelContainer).theme_type_variation = \
-			&"DialogueChoiceHover" if style_id == _logo_style else &"DialogueChoice"
-	for emblem in _card_emblems:
-		emblem.configure(emblem.style_id, company)
-	_preview_emblem.configure(_logo_style, company)
-	_preview_name.text = company if company != "" else tr("ONB_COMPANY_EMPTY")
+func _refresh() -> void:
+	for style_id: String in _style_cards:
+		show_pick(_style_cards[style_id], style_id == _logo_style)
+	for emblem in _emblems:
+		emblem.configure(emblem.style_id, _name_input.text)
 
 
 # --- OnboardingStep contract ---
 
 func prefill(draft: Dictionary) -> void:
 	_name_input.text = draft.get("company_name", "")
-	_slogan_input.text = draft.get("slogan", "")
 	_logo_style = draft.get("logo_style", "")
-	var founder: String = String(draft.get("founder_name", "")).strip_edges()
-	_preview_founder.text = founder if founder != "" else tr("HR_ROLE_FOUNDER")
-	var portrait_id: String = draft.get("portrait_id", "")
-	var path: String = FounderConstants.portrait_path(portrait_id, FounderConstants.PORTRAIT_THUMB)
-	_preview_portrait.texture = load(path) if portrait_id != "" and ResourceLoader.exists(path) else null
-	_refresh_visual()
+	_refresh()
 
 
 func invalid_reason() -> String:
@@ -197,8 +87,4 @@ func invalid_reason() -> String:
 
 
 func collect_payload() -> Dictionary:
-	return {
-		"company_name": _name_input.text.strip_edges(),
-		"slogan": _slogan_input.text.strip_edges(),
-		"logo_style": _logo_style,
-	}
+	return {"company_name": _name_input.text.strip_edges(), "logo_style": _logo_style}

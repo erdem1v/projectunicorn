@@ -6250,12 +6250,12 @@ static func _case_onboarding_pages_contract() -> String:
 		# sales 2 holds SkillCheck.SALES_READ_THRESHOLD, charisma 1 holds the pitch beats
 		# non-zero, and the spare point goes to product so the İnovasyon ceiling is not flat.
 		"skill_alloc": {"product": 1, "design": 0, "engineering": 2, "qa": 0, "sales": 2, "customer_success": 0, "leadership": 0, "charisma": 1},
-		"company_name": "Synaptik", "logo_style": "tech", "slogan": "",
+		"company_name": "Synaptik", "logo_style": "tech",
 	}
 	var expected_keys := {
 		"character": ["founder_name", "portrait_id"],
 		"origin_traits": ["origin_id", "trait_ids", "skill_alloc"],
-		"company": ["company_name", "slogan", "logo_style"],
+		"company": ["company_name", "logo_style"],
 	}
 	for key in scenes:
 		var ps: PackedScene = scenes[key]
