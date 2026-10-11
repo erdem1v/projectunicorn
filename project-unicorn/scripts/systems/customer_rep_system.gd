@@ -65,7 +65,7 @@ static func throughput_of(rep: Character) -> float:
 	# Requests one rep clears per day; the queue applies seven days of it per tick. Public so
 	# desk_throughput and the smoke suite read the same number.
 	# §4.5: kişinin ne ürettiği TEK EVDE (HRSystem.effective_skill) — alan katsayısı, odak,
-	# moral bandı ve huy çarpanları orada. Masanın kendi şekli (taban + kişi başı kapasite, ve
+	# moral payı ve huy çarpanları orada. Masanın kendi şekli (taban + kişi başı kapasite, ve
 	# ranked_reps'in istif sırası) burada kalıyor.
 	return B2BConstants.CS_THROUGHPUT_BASE \
 		+ HRSystem.daily_contribution(rep, HRConstants.AREA_CUSTOMER_SUCCESS) \

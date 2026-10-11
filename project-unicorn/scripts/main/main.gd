@@ -2660,9 +2660,9 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # employee raised today (the Zam yap row locked, with its cooldown reason); ekip-saat = Kadro with
 # hours exceptions in Durum; atlas-secili = the search with a role and a level picked; gorevler-arge =
 # Görevler with someone researching; verim = card pace rows on the low-morale designer and the founder:
-# the designer's Kadro tooltip (hr_shot_verim_ipucu), her file (hr_shot_verim_dosya), the founder's
-# file (hr_shot_verim_kurucu). saatler-sprint = no roster: the founder alone with a product type chosen, the
-# hours panel's draft at 15 hours.
+# the designer's Kadro tooltip (hr_shot_verim_ipucu), the on-leave developer's (hr_shot_verim_izin), her file
+# (hr_shot_verim_dosya), the founder's file (hr_shot_verim_kurucu). saatler-sprint = no roster: the founder alone
+# with a product type chosen, the hours panel's draft at 15 hours.
 # urunsuz = no roster: a developer and a customer rep, no product type yet (hr_shot_urunsuz), then the type
 # chosen (hr_shot_urunsuz_tur) and Görevler with it (hr_shot_urunsuz_tur_gorevler); each state prints
 # HRSHOT|<state>|idle=<n>|waiting=<n>.
@@ -2864,6 +2864,12 @@ func _run_hr_shot(kind: String) -> void:
 			get_viewport().push_input(rest)
 			await get_tree().create_timer(1.2).timeout
 			_save_shot("hr_shot_verim_ipucu")
+			# The developer on leave: his tooltip reads the leave in place of a pace.
+			rest.position = tab._rows["char_emp_shot_2"].get_global_rect().position + Vector2(648, row.size.y / 2.0)
+			rest.global_position = rest.position
+			get_viewport().push_input(rest)
+			await get_tree().create_timer(1.2).timeout
+			_save_shot("hr_shot_verim_izin")
 			rest.position = Vector2.ZERO
 			rest.global_position = rest.position
 			get_viewport().push_input(rest)

@@ -640,7 +640,7 @@ HR_HOURS_COST_BURN,Aylık burn,Monthly burn
 HR_HOURS_FACT_OVER,{n} çalışan mesaide,{n} on overtime
 HR_HOURS_FACT_SHORT,{n} çalışan kısa günde,{n} on a short day
 HR_HOURS_RULE_OVERTIME,Mesai saatleri %50 fazla ücretle ödenir,Overtime hours are paid at 50% above the hourly rate
-HR_HOURS_RULE_OVERTIME_OUTPUT,Sekiz saatin üstündeki saatler yarım verimle sayılır,Hours past eight count at half output
+HR_HOURS_RULE_OVERTIME_OUTPUT,"Verim her saat düşer, sekiz saatten sonra daha hızlı","Pace falls every hour, faster after eight hours"
 HR_HOURS_RULE_SHORT,Kısa gün maaş yükünü düşürmez,A short day does not lower the payroll
 HR_BADGE_FLIGHT_RISK,Ayrılabilir,At risk of leaving
 HR_SEARCH_CANCEL,Arayışı iptal et,Cancel search
@@ -3370,6 +3370,7 @@ HR_PACE,Verim {pct},Pace {pct}
 HR_PACE_MORALE_HIGH,Moral yüksek {pct},High morale {pct}
 HR_PACE_MORALE_LOW,Moral düşük {pct},Low morale {pct}
 HR_PACE_EVENT,{title} {pct} · {weeks},{title} {pct} · {weeks}
+HR_PACE_HOURS,Günde {n} saat {pct},{n} hours a day {pct}
 HR_DOSSIER_PACE,Verim,Pace
 EFFECT_PACE,{name} verimi {pct} · {weeks},{name} pace {pct} · {weeks}
 EFFECT_PACE_FOUNDER,Senin verimin {pct} · {weeks},Your pace {pct} · {weeks}

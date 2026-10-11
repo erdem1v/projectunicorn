@@ -389,11 +389,15 @@ static func effective_skill(c: Character, area_key: String) -> float:
 	return points * area_coef * focus * productivity(c) * traits
 
 
-## Verim: kişinin bu haftaki hızı. Moral bandı (§7; kurucunun morali yoktur, 1,0) × olay satırları.
-## Satır yokken moral bandının kendisidir.
+## Verim: kişinin bu haftaki gün başı hızı, moral payı (§7) × olay satırları. Gün içinde saatle düşer
+## (HRConstants.hours_output_mult).
 static func productivity(c: Character) -> float:
-	var band: float = HRConstants.morale_band_mult(c.morale) if c.category == "employee" else 1.0
-	return band * event_pace(c)
+	return (1.0 + morale_pace(c)) * event_pace(c)
+
+
+## Verimin moralden gelen payı; kurucunun morali yoktur.
+static func morale_pace(c: Character) -> float:
+	return HRConstants.morale_pace(c.morale) if c.category == "employee" else 0.0
 
 
 ## Verimin olay kartlarından gelen payı: süreli satırların kenetli çarpımı, satır yokken 1,0.
@@ -422,22 +426,33 @@ static func add_productivity_mod(id: String, pct: int, weeks: int, card_id: Stri
 	return t
 
 
-## Verim ekranda: "%85" / "85%".
+## Verim ekranda, gün başından günün son saatine: "%105 → %88" / "105% → 88%". İşte olmayanın verimi
+## yerine izni ya da eğitimi okunur.
 static func productivity_figure(c: Character) -> String:
-	return Fmt.percent(roundi(productivity(c) * 100.0), 0)
+	if c.status != HRConstants.STATUS_ACTIVE:
+		return leave_line(c) if c.status == HRConstants.STATUS_ON_LEAVE else training_line(c)
+	var start: float = productivity(c)
+	return Fmt.percent(roundi(start * 100.0), 0) + " → " \
+		+ Fmt.percent(roundi(start * HRConstants.hour_yield(WorkHoursSystem.hours_for(c)) * 100.0), 0)
 
 
-## Verimin imzalı sebepleri, Ekip satırının ipucu ve dosyanın verim bölümü için. Moral orta bantta
-## satır vermez; olay satırı kartın başlığını ve kalan haftasını söyler.
+## Verimin imzalı sebepleri, Ekip satırının ipucu ve dosyanın verim bölümü için: moral payı (sıfırken
+## satır vermez), olay satırları (kartın başlığı ve kalan haftası) ve günün son saatindeki düşüş. İşte
+## olmayanın sebebi yoktur.
 static func productivity_lines(c: Character) -> PackedStringArray:
 	var lines := PackedStringArray()
-	var band: String = morale_band(c)
-	if c.category == "employee" and band != "mid":
-		lines.append(_t("HR_PACE_MORALE_HIGH" if band == "high" else "HR_PACE_MORALE_LOW").format(
-			{"pct": Fmt.signed_percent(roundi((HRConstants.morale_band_mult(c.morale) - 1.0) * 100.0))}))
+	if c.status != HRConstants.STATUS_ACTIVE:
+		return lines
+	var pace: float = morale_pace(c)
+	if pace != 0.0:
+		lines.append(_t("HR_PACE_MORALE_HIGH" if pace > 0.0 else "HR_PACE_MORALE_LOW").format(
+			{"pct": Fmt.signed_percent(roundi(pace * 100.0))}))
 	for m in c.productivity_mods:
 		lines.append(_t("HR_PACE_EVENT").format({"title": _t(String(m.title_key)),
 			"pct": Fmt.signed_percent(int(m.pct)), "weeks": Fmt.weeks(int(m.until_day) - GameState.day)}))
+	var hours: int = WorkHoursSystem.hours_for(c)
+	lines.append(_t("HR_PACE_HOURS").format({"n": hours,
+		"pct": Fmt.signed_percent(roundi((HRConstants.hour_yield(hours) - 1.0) * 100.0))}))
 	return lines
 
 

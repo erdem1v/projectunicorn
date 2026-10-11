@@ -215,7 +215,7 @@ func _refresh() -> void:
 	for emp in CharacterRegistry.get_employees():
 		if _morale_refs.has(emp.id):
 			HRUiShared.D_repaint_morale(_morale_refs[emp.id], emp.morale)
-			# Pace follows the morale band and the card rows, neither of which rebuilds the row.
+			# Pace follows morale and the card rows, neither of which rebuilds the row.
 			_rows[emp.id].tooltip_text = HRLedger.row_tip(emp)
 
 

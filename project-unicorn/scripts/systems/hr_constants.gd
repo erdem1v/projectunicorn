@@ -764,14 +764,27 @@ const OVERTIME_WAGE_MULT := 1.5
 ## aylık maaştır.
 const HOURS_PER_MONTH := 176
 
+## Gün içi verim [WORKING]: kişi güne gün başı veriminde başlar; her mesai saati bunun DECAY_PER_HOUR'u
+## kadar, sekizi aşan saatler DECAY_OVERTIME_PER_HOUR'u kadar düşer; düşüş gün başının YIELD_FLOOR'unda durur.
+const DECAY_PER_HOUR := 0.02
+const DECAY_OVERTIME_PER_HOUR := 0.03
+const YIELD_FLOOR := 0.5
 
-## §8.4 saatin çıktıya ORANI: sekiz saat 1,0, yani diğer modüllerin kalibre sabitleri ölçek
-## değiştirmez. Sekizi aşan her saat TimeModel.OVERTIME_HOUR_YIELD kadar verir, uzayan gün
-## yorar: 11 saat → 1,1875, 16 saat → 1,5, 5 saat → 0,625 (§8.1/§8.3).
+
+## Günün `hour`'uncu saatinin (birden sayılır) verimi, gün başı verime oranla.
+static func hour_yield(hour: int) -> float:
+	return maxf(1.0 - DECAY_PER_HOUR * float(mini(hour, WORK_HOURS_DEFAULT) - 1)
+		- DECAY_OVERTIME_PER_HOUR * float(maxi(hour - WORK_HOURS_DEFAULT, 0)), YIELD_FLOOR)
+
+
+## §8.4 saatin çıktıya ORANI: günün çıktısı saatlerinin toplamıdır ve sekiz saatlik günün toplamına bölünür;
+## sekiz saat 1,0, yani diğer modüllerin kalibre sabitleri ölçek değiştirmez.
 static func hours_output_mult(hours: int) -> float:
-	var h: int = clampi(hours, WORK_HOURS_MIN, WORK_HOURS_MAX)
-	return (float(mini(h, WORK_HOURS_DEFAULT))
-		+ float(maxi(h - WORK_HOURS_DEFAULT, 0)) * TimeModel.OVERTIME_HOUR_YIELD) / float(WORK_HOURS_DEFAULT)
+	return _day_yield(clampi(hours, WORK_HOURS_MIN, WORK_HOURS_MAX)) / _day_yield(WORK_HOURS_DEFAULT)
+
+
+static func _day_yield(hours: int) -> float:
+	return range(1, hours + 1).reduce(func(sum: float, hour: int) -> float: return sum + hour_yield(hour), 0.0)
 
 
 static func hour_morale_mult(hours: int) -> float:
@@ -829,15 +842,16 @@ static func commission_for(monthly_salary: int) -> int:
 const MORALE_MIN := 0
 const MORALE_MAX := 100
 
-## §7 bantları. Moral yalnız HIZI etkiler; kalite yıldızlarda ve TİTİZ huyunda.
-const MORALE_BAND_HIGH := 80        # ve üstü → +%10 hız
-const MORALE_BAND_LOW := 50         # altı → −%15 hız
-const MORALE_BAND_HIGH_MULT := 1.10
-const MORALE_BAND_MID_MULT := 1.0
-const MORALE_BAND_LOW_MULT := 0.85
+## §7 bantları: olayların okuduğu bant kimliği (hr.morale_band) ve moralin rengi.
+const MORALE_BAND_HIGH := 80        # ve üstü "high"
+const MORALE_BAND_LOW := 50         # altı "low"
+
+## Moral payı [WORKING]: çalışanın gün başı verimine moralinden gelen pay; eşik ve üstü → pay. Moral
+## yalnız HIZI etkiler; kalite yıldızlarda ve TİTİZ huyunda. Kurucunun morali yoktur.
+const MORALE_PACE_STEPS := {0: -0.10, 30: -0.05, 50: 0.0, 75: 0.05, 90: 0.10}
 
 ## Olay kartının kişiye yazdığı süreli verim satırı [WORKING]. Satır −%50 ile +%30 arasında, 1 ile 8
-## hafta sürer; kişinin bütün satırlarının çarpımı 0,50 ile 1,30 arasına kenetlenir ve moral bandıyla
+## hafta sürer; kişinin bütün satırlarının çarpımı 0,50 ile 1,30 arasına kenetlenir ve moral payıyla
 ## çarpılır. Tek başına kurucuya (ekip 0) yazılan eksi satır en çok −%30 ve en çok 2 haftadır: yoksa
 ## "ben yaparım" seçeneği tek kişilik şirkette ürünü durdururdu.
 const PACE_MOD_PCT_MIN := -50
@@ -849,7 +863,7 @@ const PACE_MOD_MULT_MAX := 1.3
 const PACE_SOLO_PCT_MIN := -30
 const PACE_SOLO_WEEKS_MAX := 2
 
-## §4.2 Liderlik katsayıları: liderlik bir İNSAN istatistiğidir. Çıktı tarafı ölçülü (moral bandı
+## §4.2 Liderlik katsayıları: liderlik bir İNSAN istatistiğidir. Çıktı tarafı ölçülü (moral payı
 ## birincil hız kaldıracı kalsın), moral tarafı cömert. Yarım yıldız başına çıktı +%1 · moral
 ## düşüş hızı −%2. Yüzdeler ekranda görünmez (§4.2).
 const LEAD_OUTPUT_PER_POINT := 0.01
@@ -868,13 +882,12 @@ const MORALE_PROMOTION_AT_MIN_PCT := 8   # %10 terfi zammında
 const MORALE_PROMOTION_AT_MAX_PCT := 20  # %25 terfi zammında
 
 
-static func morale_band_mult(morale: int) -> float:
-	match morale_band_id(morale):
-		"high":
-			return MORALE_BAND_HIGH_MULT
-		"low":
-			return MORALE_BAND_LOW_MULT
-	return MORALE_BAND_MID_MULT
+static func morale_pace(morale: int) -> float:
+	var pace: float = 0.0
+	for at: int in MORALE_PACE_STEPS:
+		if morale >= at:
+			pace = MORALE_PACE_STEPS[at]
+	return pace
 
 
 ## §15.3 hr.morale_band(kişi) — bant kimliği, sayı değil.

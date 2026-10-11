@@ -7446,11 +7446,12 @@ static func _case_hr_constants_contract() -> String:
 	if absi(month_ot - want_month) > 30:
 		return "3000 on a 15-hour day bills %d a month, want %d ±30 (7 hours at 1.5x over 22 working days)" % [
 			month_ot, want_month]
-	# §8.4 ORAN: sekizin üstündeki her saat yarım verim. 11 saat 1,1875, 16 saat 1,5, 5 saat 0,625.
-	if not is_equal_approx(HRConstants.hours_output_mult(11), 1.1875) \
-			or not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MAX), 1.5) \
-			or not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MIN), 0.625):
-		return "the hour-to-output ratio drifted from the diminishing-yield numbers"
+	# §8.4 ORAN: verim her saat %2, sekizi aşan saatte %3 düşer; gün saatlerinin toplamıdır ve sekiz saatin
+	# toplamı 7,44'tür. 11 saat 9,84, 16 saat 13,24, 5 saat 4,80.
+	if not is_equal_approx(HRConstants.hours_output_mult(11), 9.84 / 7.44) \
+			or not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MAX), 13.24 / 7.44) \
+			or not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MIN), 4.8 / 7.44):
+		return "the hour-to-output ratio drifted from the in-day yield curve"
 	if not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_DEFAULT), 1.0):
 		return "the standard day is not neutral — every calibrated constant would move"
 
@@ -7482,7 +7483,7 @@ static func _case_hr_constants_contract() -> String:
 	if not HRConstants.is_flight_risk(HRConstants.MORALE_FLIGHT_RISK - 1):
 		return "one under the flight-risk threshold is not at risk"
 	# TÜKENİYOR bandı §7'de YOK — sabiti, karşılaştırıcısı ve rozeti birlikte gitti. §7'nin
-	# dört bandı 80 / 50 / 35 eşikleriyle ölçülüyor ve onları morale_band_mult pinliyor.
+	# dört bandı 80 / 50 / 35 eşikleriyle ölçülüyor.
 
 	# --- §11.4 IZIN DAGILIMI: YAZ PENCERESI ICINDE, HAFTA HAFTA ---
 	# Buradaki blok AY dagilimini olcuyordu (leave_month_for + LEAVE_MONTH_*); §11.4 izni
@@ -10437,7 +10438,7 @@ static func _case_hr_read_catalogue() -> String:
 static func _case_effective_skill_formula() -> String:
 	# §4.5 KANONİK FORMÜL, beş çarpanın hepsi elle hesaplanmış değerlere karşı sabitleniyor:
 	#
-	#   etkin çıktı = yıldız × alan katsayısı × odak × moral bandı × huy
+	#   etkin çıktı = yıldız × alan katsayısı × odak × moral payı × huy
 	#
 	# Liderlik BİLEREK burada değil: §4.2 onu ALANIN TOPLAMINA uyguluyor, kişi başına değil.
 	# Ayrı bir iddiayla aşağıda ölçülüyor.
@@ -10446,8 +10447,8 @@ static func _case_effective_skill_formula() -> String:
 	# sabit bir katsayıyla ayrışıyor ve formülün ŞEKLİ aynı; yıldıza geçmek her çıktıyı
 	# yarıya indirir ve puana göre kalibre edilmiş her aşağı akış sabitini kaydırırdı.
 	#
-	# FALSİFİKASYON: effective_skill'den moral bandı satırını sil → "morale band" iddiası
-	# FAIL. focus_mult'u 1.0 sabitle → "two jobs" iddiası FAIL.
+	# FALSİFİKASYON: productivity'den moral payını sil → "morale pace" iddiası FAIL. focus_mult'u
+	# 1.0 sabitle → "two jobs" iddiası FAIL.
 	GameState.set_flag("debug_hr_force", "fail")
 	var dev: Character = _make_employee("eff_dev", "Eff Dev", HRConstants.ROLE_DEVELOPER,
 		SEED_PACE, 4000, 60, 8, 2)
@@ -10485,17 +10486,17 @@ static func _case_effective_skill_formula() -> String:
 		return "splitting produced MORE than one person's work (%.3f > 8.0)" % split_total
 	CharacterRegistry.unassign_job(dev.id, HRConstants.JOB_SUPPORT)
 
-	# --- 4 · MORAL BANDI (§7) ---
+	# --- 4 · MORAL PAYI (§7) ---
 	# Bu, rev 11'in en büyük davranış değişikliği: ÖNCEDEN HİÇBİR üretim formülü
 	# Character.morale okumuyordu.
-	CharacterRegistry.set_morale(dev.id, 90)          # 80+ → +%10
+	CharacterRegistry.set_morale(dev.id, 90)          # 90 ve üstü → +%10
 	v = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
 	if absf(v - 8.8) > 0.001:
-		return "high morale band: %.3f, want 8.800" % v
-	CharacterRegistry.set_morale(dev.id, 40)          # 50 altı → −%15
+		return "high morale pace: %.3f, want 8.800" % v
+	CharacterRegistry.set_morale(dev.id, 40)          # 30-49 → −%5
 	v = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
-	if absf(v - 6.8) > 0.001:
-		return "low morale band: %.3f, want 6.800" % v
+	if absf(v - 7.6) > 0.001:
+		return "low morale pace: %.3f, want 7.600" % v
 	CharacterRegistry.set_morale(dev.id, 60)          # nötr
 
 	# --- 5 · HUY ÇARPANI (§6) ---
@@ -10515,13 +10516,13 @@ static func _case_effective_skill_formula() -> String:
 		return "an in-training employee still produced"
 	CharacterRegistry.set_status(dev.id, HRConstants.STATUS_ACTIVE)
 
-	# --- §2 KURUCUYA MORAL BANDI UYGULANMAZ ---
+	# --- §2 KURUCUYA MORAL PAYI UYGULANMAZ ---
 	var founder: Character = CharacterRegistry.get_founder()
 	founder.role_stats[HRConstants.AREA_ENGINEERING] = 6
-	CharacterRegistry.set_morale(founder.id, 10)      # bandı olsaydı −%15 yerdi
+	CharacterRegistry.set_morale(founder.id, 10)      # payı olsaydı −%10 yerdi
 	var fv: float = HRSystem.effective_skill(founder, HRConstants.AREA_ENGINEERING)
 	if absf(fv - 6.0 * HRConstants.focus_mult(HRSystem.job_count(founder))) > 0.001:
-		return "the founder took a morale band — §2 says he has no morale (%.3f)" % fv
+		return "the founder took a morale pace — §2 says he has no morale (%.3f)" % fv
 
 	# --- §4.2 LİDERLİK ALANIN TOPLAMINA, KİŞİ BAŞINA DEĞİL ---
 	# Yarım yıldız başına +%1, beş yıldızda +%10. Kişi başına katlansaydı kadro sayısıyla
@@ -10535,23 +10536,22 @@ static func _case_effective_skill_formula() -> String:
 	# Saat formülün İÇİNDE değil DIŞINDA: yetenek bir SAATTE ne çıktığını, süre KAÇ SAAT
 	# çıktığını belirler. Çarpan STANDART GÜNE göre normalize (HRConstants.hours_output_mult):
 	# sekiz saat 1,0'dır, yani sekiz saatlik bir günde daily_contribution == effective_skill
-	# ve Ürün/Satış/CS'nin bütün kalibre sabitleri yerinde kalır. §8.1 ile §8.3 oranı zaten
-	# kendileri veriyor ve normalize hâl tam o iki sayıdır.
+	# ve Ürün/Satış/CS'nin bütün kalibre sabitleri yerinde kalır.
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
 	var per_hour: float = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
 	var daily: float = HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING)
 	if absf(daily - per_hour) > 0.001:
 		return "the standard day is not neutral (%.3f vs %.3f)" % [daily, per_hour]
-	# EN UZUN GÜN: sekizin üstündeki saatler yarım verimle, on altı saat +%50 çıktı. On altı saat
-	# ancak 08:00 başlangıcına sığar; gün en geç 00:00'da biter.
+	# EN UZUN GÜN: saatlerin toplamı 13,24, sekiz saatin 7,44'üne karşı. On altı saat ancak 08:00
+	# başlangıcına sığar; gün en geç 00:00'da biter.
 	WorkHoursSystem.set_company_start_hour(TimeModel.WEEK_START_HOUR)
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
-	if absf(HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING) - per_hour * 1.5) > 0.001:
-		return "the longest day did not raise the daily contribution by 50%"
-	# BEŞ SAAT: §8.3'ün kendi cümlesi, "sekiz saatlik günün %62,5'i".
+	if absf(HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING) - per_hour * 13.24 / 7.44) > 0.001:
+		return "the longest day did not give 13.24 / 7.44 of the standard day"
+	# BEŞ SAAT: saatlerin toplamı 4,80.
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MIN)
-	if absf(HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING) - per_hour * 0.625) > 0.001:
-		return "a five-hour day did not cut the daily contribution to 62.5%"
+	if absf(HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING) - per_hour * 4.8 / 7.44) > 0.001:
+		return "a five-hour day did not give 4.80 / 7.44 of the standard day"
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
 	var longer: float = HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING)
@@ -17110,7 +17110,7 @@ static func _case_sprint_two_days_close() -> String:
 
 
 ## Kapasite Ekip'ten okunur ve yuvarlanmaz: kişi başına haftada iki puan × beceri bandı × moral
-## bandı × çalışma saati, iki hafta; kurucunun bandı sabittir. Moral bandı kişinin puanını değiştirir, Ar-Ge'ye
+## payı × çalışma saati, iki hafta; kurucunun bandı sabittir. Moral payı kişinin puanını değiştirir, Ar-Ge'ye
 ## alınan ve izne çıkan kişi ekipten düşer; kimse kalmayınca "+" kapanır.
 static func _case_sprint_capacity_from_team() -> String:
 	ResearchTree.reload()
@@ -17127,8 +17127,8 @@ static func _case_sprint_capacity_from_team() -> String:
 			or not is_equal_approx(SprintSystem.capacity(), (founder_pts + mid) * weeks):
 		return "a mid developer works %.2f a week for a capacity of %.2f, want %.2f and %.2f" % [
 			_sprint_points(dev.id), SprintSystem.capacity(), mid, (founder_pts + mid) * weeks]
-	dev.morale = HRConstants.MORALE_BAND_LOW - 1
-	var low: float = mid * HRConstants.MORALE_BAND_LOW_MULT
+	dev.morale = 40   # 30-49 → −%5
+	var low: float = mid * 0.95
 	if not is_equal_approx(_sprint_points(dev.id), low) \
 			or not is_equal_approx(SprintSystem.capacity(), (founder_pts + low) * weeks):
 		return "low morale left the developer at %.2f a week for a capacity of %.2f, want %.2f and %.2f" % [
@@ -17210,7 +17210,7 @@ static func _case_productivity_mod_paces_the_sprint() -> String:
 	if not is_equal_approx(_sprint_points(dev.id), base * HRConstants.PACE_MOD_MULT_MIN):
 		return "three cards make %.3f a week, want the floor %.3f" % [_sprint_points(dev.id),
 			base * HRConstants.PACE_MOD_MULT_MIN]
-	# The game's daily dispatch, a week at a time; morale is pinned so the band cannot move the figure.
+	# The game's daily dispatch, a week at a time; morale is pinned so its pace cannot move the figure.
 	for want: float in [0.8 * 0.7, 0.7, 1.0]:
 		_sim_day()
 		dev.morale = 60

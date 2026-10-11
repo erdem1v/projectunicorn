@@ -152,9 +152,12 @@ static func row(emp: Character, compact: bool, selected: bool, on_action: Callab
 	return line
 
 
-## The row's tooltip: the person's pace and what moves it, then what the role does.
+## The row's tooltip: the person's pace and what moves it, then what the role does. Someone away reads their
+## leave or training in the pace's place.
 static func row_tip(emp: Character) -> String:
-	var pace := PackedStringArray([tr_key("HR_PACE").format({"pct": HRSystem.productivity_figure(emp)})])
+	var figure: String = HRSystem.productivity_figure(emp)
+	var pace := PackedStringArray([tr_key("HR_PACE").format({"pct": figure})
+		if emp.status == HRConstants.STATUS_ACTIVE else figure])
 	pace.append_array(HRSystem.productivity_lines(emp))
 	return "\n".join(pace) + "\n\n" + HRConstants.role_phase_hint(emp.role)
 

@@ -100,17 +100,15 @@ func rebuild_view() -> void:
 	if employee:
 		_col.add_child(_kv("HR_COL_MORALE", HRUiShared.D_morale(c.morale, {})))
 		_col.add_child(_kv("HR_COL_SALARY", UiFactory.make_label(Fmt.money_exact(c.monthly_salary), &"DataText")))
-	# VERİM: the Kadro row's tooltip as a standing list, the figure on the section's rule.
+	# VERİM: the Kadro row's tooltip as a standing list, the figure on the section's rule. Everyone at work
+	# has at least the hours line, so the list sits close and small enough for a usual file to fit its window.
 	_col.add_child(_section("HR_DOSSIER_PACE", HRSystem.productivity_figure(c)))
-	var reasons: PackedStringArray = HRSystem.productivity_lines(c)
-	if not reasons.is_empty():
-		_col.add_child(_gap(UiTokens.SPACE_S))
-	for line in reasons:
-		var reason := UiFactory.make_label(line, &"DataText")
+	for line in HRSystem.productivity_lines(c):
+		var reason := UiFactory.make_label(line, &"CaptionPrimary")
 		reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_col.add_child(reason)
 	if employee:
-		_col.add_child(_gap(UiTokens.SPACE_XXL))
+		_col.add_child(_gap(UiTokens.SPACE_M))
 		_col.add_child(HSeparator.new())
 		_col.add_child(_gap(UiTokens.SPACE_M))
 		_col.add_child(HRLedger.action_list(c, func(act: String) -> void: HRLedger.run_action(self, c, act), false))

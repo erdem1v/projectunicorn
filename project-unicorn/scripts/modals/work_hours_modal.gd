@@ -210,7 +210,7 @@ func _company_row(headcount: int) -> PanelContainer:
 
 ## Saatin sprinte etkisi, kurucu tek başınayken de (bedel bloğu o zaman hiç açılmaz): ekibin haftalık
 ## puanı önce bugünkü saatlerle, sonra taslakla; ekranda aynı okunan iki değer tek sayı yazılır. Şirket
-## mesaideyse yarım verim kuralı altında.
+## fazla mesaideyse altına kural satırı gelir: puan saatle doğrusal artmaz.
 func _sprint_row() -> PanelContainer:
 	# Fmt.number tam sayıya da ondalık yazar ("2,0"); tam puan "2" okunur.
 	var zero: String = tr("NUM_DECIMAL_SEP") + "0"
