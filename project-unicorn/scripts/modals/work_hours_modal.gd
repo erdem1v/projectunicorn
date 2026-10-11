@@ -58,6 +58,10 @@ func _rebuild() -> void:
 	body.add_child(_company_row(roster.size()))
 	if SprintSystem.is_typed():
 		body.add_child(_sprint_row())
+	# Tek başına kurucuya da: onun uzun günü bedelsizdir, ilk işe alım aynı saati devralır ve sekizi aşanı
+	# ilk günden mesai olarak alır.
+	body.add_child(_row(UiTokens.D_H_ROW, UiTokens.SPACE_L, &"TableRow",
+		[UiFactory.make_label(tr("HR_HOURS_INHERIT_NOTE"), &"MetaMuted")]))
 	for group_id: String in HRConstants.ROSTER_GROUPS:
 		# Boş grup da satırını taşır: grup istisnası o gruba SONRADAN katılanı da kapsar (§8.1).
 		body.add_child(_group_row(group_id))

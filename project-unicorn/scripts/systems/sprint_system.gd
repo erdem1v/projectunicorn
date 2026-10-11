@@ -1202,13 +1202,19 @@ static func _fits(c: Character) -> Array:
 	return areas.keys().filter(func(r: String) -> bool: return HRConstants.can_hold_area(c.role, areas[r], c.category))
 
 
+## Kişisiz haftalık puan (işe alım dosyası da okur): 2 × beceri bandı (rolün ana alanının 0-10 puanı) ×
+## çalışma saati; verim kişinindir, burada yok.
+static func points_for(role_id: String, role_stats: Dictionary, hours: int) -> float:
+	var stat: int = int(role_stats.get(HRConstants.role_key_area(role_id), 0))
+	var bands: Array = SprintCatalog.cfg("skill.mult")
+	var mult: float = bands[0] if stat <= int(SprintCatalog.cfg("skill.low_max")) \
+		else bands[1] if stat <= int(SprintCatalog.cfg("skill.mid_max")) else bands[2]
+	return float(SprintCatalog.cfg("person_points_week")) * mult * HRConstants.hours_output_mult(hours)
+
+
 ## Haftalık puan: 2 × beceri bandı (ana alanın 0-10 puanı; kurucu sabit) × verim × çalışma saati.
 static func _points(c: Character, hours: int) -> float:
-	var mult: float = SprintCatalog.cfg("founder_mult")
 	if c.category != "founder":
-		var stat: int = HRSystem.skill(c, HRConstants.role_key_area(c.role))
-		var bands: Array = SprintCatalog.cfg("skill.mult")
-		mult = bands[0] if stat <= int(SprintCatalog.cfg("skill.low_max")) \
-			else bands[1] if stat <= int(SprintCatalog.cfg("skill.mid_max")) else bands[2]
-	return float(SprintCatalog.cfg("person_points_week")) * mult * HRSystem.productivity(c) \
-		* HRConstants.hours_output_mult(hours)
+		return points_for(c.role, c.role_stats, hours) * HRSystem.productivity(c)
+	return float(SprintCatalog.cfg("person_points_week")) * float(SprintCatalog.cfg("founder_mult")) \
+		* HRSystem.productivity(c) * HRConstants.hours_output_mult(hours)
