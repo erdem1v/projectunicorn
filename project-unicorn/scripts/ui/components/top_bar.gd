@@ -12,8 +12,8 @@ extends Panel
 # kapalı, tıklanınca karara dönülür.
 # Kurucu görüşmeye giderken, masadayken ve dönerken saat tutulur: yuva bunu söyler ("Şimdi", "Görüşmede"), hız
 # tuşları kapalıdır ve amber yoktur. Görüşmenin saati hafta çubuğunda elmastır. Bunların dışında saatin altındaki
-# satır saatin neden durduğunu söyler: tutanın adı (tuşlar kapalı) ya da duraklı hâl. Ayırıcılar ve hafta çubuğu
-# _draw'da.
+# satır saatin neden durduğunu söyler: tutanın adı (tuşlar kapalı) ya da duraklı hâl (II yanıp söner). Ayırıcılar
+# ve hafta çubuğu _draw'da.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
@@ -45,6 +45,9 @@ const PULSE_SCALE := 4.0
 const PULSE_ALPHA := 0.55
 ## blink_held's blink: twice, each way this long.
 const BLINK_S := 0.09
+## The paused II's blink: one full cycle this long, dimming to this alpha and back.
+const PAUSE_BLINK_S := 0.8
+const PAUSE_BLINK_ALPHA := 0.45
 const CLOCK_LINE := 35.0
 const LOGO := Vector2(20, 14)
 const LOGO_COMPACT := Vector2(22, 22)
@@ -82,6 +85,7 @@ var _meeting := {}
 var _compact := false
 var _slot_x := 0.0
 var _pulse: Tween
+var _pause_blink: Tween
 var _queued := false
 ## Ölçüm sayacı: --tick-probe bir karedeki yenilemeleri buradan sayar.
 var refresh_count := 0
@@ -349,7 +353,7 @@ func _refresh_time(g: Dictionary) -> void:
 
 
 ## Saatin altındaki satır saatin neden durduğunu söyler: tutanın adı, tutuş yoksa duraklı hâl. Görüşme ve
-## bekleyen karar bunu yuvada söyler.
+## bekleyen karar bunu yuvada söyler. Duraklı hâl satırı varken II de yanıp söner.
 func _refresh_state() -> void:
 	var key := ""
 	if not _held() and EventGate.active_id() == "":
@@ -359,6 +363,16 @@ func _refresh_state() -> void:
 			key = "TOPBAR_PAUSED"
 	$TimeBlock/State.text = Fmt.upper(tr(key))
 	$TimeBlock/State.visible = key != ""
+	var pause_btn: Button = $TimeBlock/PauseBtn
+	if key != "TOPBAR_PAUSED":
+		if _pause_blink != null:
+			_pause_blink.kill()
+			_pause_blink = null
+			pause_btn.modulate.a = 1.0
+	elif _pause_blink == null:
+		_pause_blink = create_tween().set_loops()
+		_pause_blink.tween_property(pause_btn, "modulate:a", PAUSE_BLINK_ALPHA, PAUSE_BLINK_S / 2)
+		_pause_blink.tween_property(pause_btn, "modulate:a", 1.0, PAUSE_BLINK_S / 2)
 
 
 ## HH:MM, CLOCK_STEP_MIN dakikalık adımlarla; 24:00'te biten mesai gece beklerken 00:00 okunur.

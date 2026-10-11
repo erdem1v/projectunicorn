@@ -267,7 +267,7 @@ SET_RESET_CONFIRM_OK,Sıfırla,Reset
 SET_RESET_CONFIRM_CANCEL,Vazgeç,Cancel
 SET_CLOSE,Kapat,Close
 SYS_TITLE,Menü,Menu
-SYS_RESUME,Devam,Resume
+SYS_RESUME,Oyuna dön,Back to game
 SYS_SAVE,Kaydet,Save
 SYS_LOAD,Yükle,Load
 SYS_SETTINGS,Ayarlar,Settings
