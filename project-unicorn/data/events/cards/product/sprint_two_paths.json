@@ -5,6 +5,17 @@
   "tick": "request",
   "class": "paper",
   "tags": [],
+  "schema": 3,
+  "family": "sprint_capacity",
+  "delay_weeks": [0, 0],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
   "latch": {
     "cooldown_weeks": 2
   },
@@ -40,7 +51,8 @@
     {
       "id": "known_way",
       "outcome_id": "kept",
-      "effects": []
+      "effects": [],
+      "status_quo_reason": "ilerlemesi yüksek kartta bilinen yol doğrudur"
     }
   ],
   "text": {

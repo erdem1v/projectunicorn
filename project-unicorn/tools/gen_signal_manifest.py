@@ -43,9 +43,12 @@ def scan():
     emit_re = {n: re.compile(r'EventBus\.' + n + r'\.emit\b') for n in names}
     conn_re = {n: re.compile(r'EventBus\.' + n + r'\.connect\b') for n in names}
 
+    # Sorted, like the card walk below: an unsorted os.walk orders the emitter and listener
+    # columns by the filesystem, so the same tree regenerated on another machine rewrites half
+    # the table with no change behind it.
     for root, dirs, files in os.walk(ROOT):
-        dirs[:] = [d for d in dirs if not d.startswith('.')]
-        for fn in files:
+        dirs[:] = sorted(d for d in dirs if not d.startswith('.'))
+        for fn in sorted(files):
             if not fn.endswith('.gd'):
                 continue
             rel = os.path.join(root, fn).replace(os.sep, '/')

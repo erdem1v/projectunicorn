@@ -23,6 +23,8 @@ extends Panel
 #   rnd      RnDSystem.attention_count() (frozen research + unread report), and one for the tree v1.0
 #            opens until Ar-Ge is opened (this session only, never saved)
 
+const ModuleLocks := preload("res://scripts/systems/module_locks.gd")
+
 const WIDTH := 184.0
 const WIDTH_ICONS := 64.0
 ## The labelled row's insets from the button's left and right edges (icons: none).
@@ -255,14 +257,9 @@ func _on_version_shipped(version: int) -> void:
 	_paint()
 
 
-## UiTokens bir ADLI KAPI taşır, boolean değil, böylece oyun durumundan uzak kalır: "ea" bu yapıda
-## yok, "live" v1.0'a kadar kapalı. Bilinmeyen bir kapı da KİLİTLİ sayılır: bitmemiş bir sayfa
-## oyuncuya açılmasın.
+## Kuralın evi ModuleLocks'tur: içerik aynı soruyu `build.module_unlocked.<id>` seam'iyle sorar.
 func _is_locked(idx: int) -> bool:
-	match String(UiTokens.TABS[idx].get("lock", "")):
-		"": return false
-		"live": return not ProductState.is_live()
-		_: return true
+	return not ModuleLocks.is_open(String(UiTokens.TABS[idx].id))
 
 
 func _index_of(tab_id: String) -> int:

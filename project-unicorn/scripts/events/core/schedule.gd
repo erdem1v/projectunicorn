@@ -3,7 +3,7 @@ extends RefCounted
 
 # DEFERRED CONSEQUENCES, AS PURE DATA (GDD §16.2). One entry:
 #
-#     {event_id, fire_on_day, context, arc_id}
+#     {event_id, fire_on_day, context, arc_id, delayed}
 #
 # A FUNCTION POINTER IS NEVER STORED HERE (§16.2). A serialised Callable may name an object or
 # method that no longer exists after a load or a patch, and fails as a consequence that silently
@@ -21,8 +21,12 @@ static var _entries: Array = []
 
 # --- Writing ---------------------------------------------------------------
 
+## `delayed` marks an entry the ENGINE dated rather than one a card scheduled: a drawn delay
+## window (§27.19) or a beat a brake pushed out. It changes the origin the entry is proposed
+## from, and so which ticks G4 accepts it on. An entry from a save that predates the flag is
+## not one of those.
 static func add(event_id: String, delay_weeks: int, context: Dictionary = {},
-		arc_id: String = "") -> void:
+		arc_id: String = "", delayed: bool = false) -> void:
 	_entries.append({
 		"event_id": event_id,
 		"fire_on_day": GameState.day + TimeModel.ticks(maxi(0, delay_weeks)),
@@ -30,6 +34,7 @@ static func add(event_id: String, delay_weeks: int, context: Dictionary = {},
 		# would come back on load as a private copy of a dead entity.
 		"context": context.duplicate(true),
 		"arc_id": arc_id,
+		"delayed": delayed,
 	})
 	_sort()
 
@@ -102,6 +107,20 @@ static func pending() -> Array:
 static func has(event_id: String) -> bool:
 	for e in _entries:
 		if String((e as Dictionary)["event_id"]) == event_id:
+			return true
+	return false
+
+
+## Has the ENGINE dated this exact INSTANCE? A window and a deferral are per instance, so the
+## next account to go to Risk is a different beat from the one already waiting, and asking by id
+## alone would drop it. A card with no scope carries {} on both sides and reads as it always did.
+## Only `delayed` entries answer yes: an entry a card's `schedule_event` effect set is content's
+## own beat, and it must not swallow a signal.
+static func has_dated_for(event_id: String, context: Dictionary) -> bool:
+	for e in _entries:
+		var entry: Dictionary = e
+		if String(entry["event_id"]) == event_id and bool(entry.get("delayed", false)) \
+				and (entry.get("context", {}) as Dictionary).recursive_equal(context, 0):
 			return true
 	return false
 

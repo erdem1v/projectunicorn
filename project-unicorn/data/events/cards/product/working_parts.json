@@ -8,6 +8,17 @@
   "tags": [
     "quiet"
   ],
+  "schema": 3,
+  "family": "product_progress",
+  "delay_weeks": [0, 0],
+  "delay_reason": "floor",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team"],
+    "headcount": [0, 2],
+    "product": "pre_launch",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "product_live": false
   },

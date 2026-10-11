@@ -1,0 +1,47 @@
+{
+  "id": "fixture.first_customer",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "customer",
+  "tick": "signal",
+  "class": "info",
+  "tags": [],
+  "family": "fixture_first_customer",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a signal card answers the moment it names",
+  "trigger": { "signal": "customer_added" },
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the card is about the account arriving, so its subject is one week old by definition",
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "condition": { "seam": "musteri.count", "op": "==", "value": 1 },
+  "scope": {
+    "customer": { "type": "customer", "required": true }
+  },
+  "latch": { "cooldown_weeks": 0 },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "seen",
+      "effects": [{ "verb": "set_flag", "name": "fixture_first_customer_seen" }]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "İlk müşteri",
+      "body": "Fixture.",
+      "options": { "ok": "Tamam" }
+    },
+    "en": {
+      "title": "First customer",
+      "body": "Fixture.",
+      "options": { "ok": "All right" }
+    }
+  },
+  "_note": "Subject of `event_on_action_bindings`. It is the `customer_added` binding's only consumer, which is also what makes EvSignals connect that signal at all: the engine listens to exactly the signals the loaded catalogue triggers on. `musteri.count == 1` is the whole \"first customer\" pattern — the signal says an account arrived, the count says it is the first — and the second account is refused at G7 rather than by a latch, which is why the latch is a zero cooldown."
+}

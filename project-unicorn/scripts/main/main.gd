@@ -31,6 +31,7 @@ const DROPPED_CALL_GLYPH := preload("res://assets/icons/util/close.svg")
 const OFFICE_PAN := preload("res://scripts/debug/office_pan_probe.gd")
 const TICK_PROBE := preload("res://scripts/debug/tick_probe.gd")
 const SPRINT_PROBE := preload("res://scripts/debug/sprint_probe.gd")
+const PLAUSIBILITY := preload("res://scripts/events/tools/plausibility.gd")
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
 const EVENT_CLOCK_HOLD := "event"                 # TimeManager hold reason while a decision waits
 const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason for the founder's trip
@@ -192,6 +193,7 @@ func _run_debug_harness() -> bool:
 		"--event-lint=": func(v: String) -> void: _quit_with(EvLint.run(v == "baseline")),
 		"--why-fire=": _run_why_fire,
 		"--event-harness=": func(v: String) -> void: _quit_with(EvHarness.run(v)),
+		"--event-plausibility=": _run_event_plausibility,
 		"--tempo-probe=": _run_tempo_probe,
 		"--tick-probe=": _run_tick_probe,
 		"--render-probe=": _run_render_probe,
@@ -234,6 +236,12 @@ func _run_debug_harness() -> bool:
 func _run_why_fire(card_id: String) -> void:
 	print(EvWhy.report(card_id))
 	get_tree().quit(0)
+
+
+## --event-plausibility=<spec>: the plausibility ledger over RunProbe's played runs. It plays
+## the tool's own founder, so this entry and the -s one judge the same world.
+func _run_event_plausibility(spec: String) -> void:
+	_quit_with(PLAUSIBILITY.run(spec))
 
 
 func _debug_payload() -> Dictionary:

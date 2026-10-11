@@ -1,0 +1,59 @@
+{
+  "_port_note": "The subject of event_plausibility_compiles: one card carrying every schema v3 plausibility field, so the compiler's condition leaves and its slot seniority filter are asserted on real loaded content rather than on a hand-built Dictionary. Every figure here is asserted by op and value: the headcount floor is 2 where the bootstrap_team band's is 1, so the floor and the ceiling the block compiles are each a leaf only the block can write, and with the employee slot optional the floor is also what G7 refuses while the team is smaller.",
+  "id": "fixture.v3_compile",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "team",
+  "tick": "daily",
+  "class": "info",
+  "tags": [],
+  "family": "fixture_compile",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is proposed by its own test, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_team"],
+    "headcount": [2, 3],
+    "subject_tenure_weeks": 4,
+    "product": "pre_launch",
+    "modules": ["product"],
+    "min_week": 1
+  },
+  "latch": {
+    "cooldown_weeks": 0
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": false,
+      "select": "most_senior"
+    }
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "done",
+      "effects": [
+        {
+          "verb": "set_flag",
+          "name": "fixture_v3_compile_landed"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Makullük",
+      "body": "Bu kart yalnız şema derleyicisini ölçer.",
+      "options": {
+        "ok": "Tamam"
+      }
+    },
+    "en": {
+      "title": "Plausibility",
+      "body": "This card measures the schema compiler and nothing else.",
+      "options": {
+        "ok": "OK"
+      }
+    }
+  }
+}

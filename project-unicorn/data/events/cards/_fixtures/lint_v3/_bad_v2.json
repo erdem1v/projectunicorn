@@ -1,0 +1,61 @@
+{
+  "_port_note": "V2: advance_phase moves the run, so only a system card may write it.",
+  "id": "fixture.bad_v2",
+  "schema": 3,
+  "category": "team",
+  "tick": "daily",
+  "class": "info",
+  "tags": [],
+  "family": "bad_fixture",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    1,
+    4
+  ],
+  "plausibility": {
+    "phase_band": [
+      "traction"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "done",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1000,
+          "label": "incident"
+        },
+        {
+          "verb": "advance_phase"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kötü kart",
+      "body": "Lint kuralını bilerek bozar.",
+      "options": {
+        "ok": "Tamam"
+      }
+    },
+    "en": {
+      "title": "Bad card",
+      "body": "Breaks one lint rule on purpose.",
+      "options": {
+        "ok": "OK"
+      }
+    }
+  }
+}

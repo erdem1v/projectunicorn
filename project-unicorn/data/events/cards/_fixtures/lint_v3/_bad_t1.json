@@ -1,0 +1,64 @@
+{
+  "_port_note": "T1: a run scoped one_shot on employee_hired, with no hr.run_hires leaf to bound it.",
+  "id": "fixture.bad_t1",
+  "schema": 3,
+  "category": "team",
+  "tick": "signal",
+  "class": "info",
+  "tags": [],
+  "family": "bad_fixture",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    1,
+    4
+  ],
+  "plausibility": {
+    "phase_band": [
+      "traction"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "done",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1000,
+          "label": "incident"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kötü kart",
+      "body": "Lint kuralını bilerek bozar.",
+      "options": {
+        "ok": "Tamam"
+      }
+    },
+    "en": {
+      "title": "Bad card",
+      "body": "Breaks one lint rule on purpose.",
+      "options": {
+        "ok": "OK"
+      }
+    }
+  },
+  "trigger": {
+    "signal": "employee_hired"
+  },
+  "latch": {
+    "one_shot": true
+  }
+}

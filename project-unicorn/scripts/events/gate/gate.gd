@@ -14,7 +14,7 @@ extends RefCounted
 #     G1  is this real content
 #     G2  does this build ship it, and is a tutorial suppressing it
 #     G3  latch                     (one_shot / max_fires / cooldown)
-#     G4  tick, phase window, allowed_hours
+#     G4  tick, allowed_hours
 #     G5  scope                     (can the slots fill, with the right types)
 #     G6  guards                    (market, subtype, phase, product_live)
 #     G7  condition tree
@@ -31,7 +31,8 @@ extends RefCounted
 # G3 AND G8 DO NOT RE-RUN AT DISPLAY (§4.4). Re-charging either would let a queued card die on
 # a rule it has already passed.
 
-enum Origin { TICK_DAILY, TICK_HOURLY, SIGNAL, SCHEDULE, ARC_STEP, POOL, FLOOR, FORCE, REQUEST }
+enum Origin { TICK_DAILY, TICK_HOURLY, SIGNAL, SCHEDULE, SCHEDULE_DELAYED, ARC_STEP, POOL,
+	FLOOR, FORCE, REQUEST }
 
 ## §20 B10: undeclared means daytime. A card that says nothing about its hour is not a card
 ## that fires at 03:00.
@@ -165,7 +166,11 @@ static func _g2_scope(card: Dictionary) -> String:
 
 # --- G4: tick, window ------------------------------------------------------
 
+## Also the home of the start immunity (§27.21): the opening weeks are the tutorial's, and a
+## pool card that happens to be eligible in week 1 is eligible by accident.
 static func _g4_window(card: Dictionary, origin: Origin) -> String:
+	if start_immunity_weeks_left(card, origin) > 0:
+		return "start immunity: week %d" % GameState.day
 	var tick: String = String(card["tick"])
 
 	# A card declares which clock it lives on, and the proposer must match it.
@@ -182,6 +187,11 @@ static func _g4_window(card: Dictionary, origin: Origin) -> String:
 		Origin.SCHEDULE:
 			if tick != "scheduled" and tick != "daily":
 				return "card is tick:%s, proposed from the schedule" % tick
+		Origin.SCHEDULE_DELAYED:
+			# A delayed entry carries a signal card as often as a scheduled one: §27.19 dates the
+			# answer to a signal, and the card still says `tick: signal`.
+			if tick != "signal" and tick != "scheduled" and tick != "daily":
+				return "card is tick:%s, proposed from a delayed schedule entry" % tick
 		Origin.REQUEST:
 			# DELIBERATELY UNCHECKED. `tick` says which clock SWEEPS a card, not who may name
 			# it; a caller that names a card has already seen the edge. A `tick: "request"` card
@@ -199,6 +209,24 @@ static func _g4_window(card: Dictionary, origin: Origin) -> String:
 		if not _hour_in(GameState.current_hour, window):
 			return "hour %d outside allowed_hours %s" % [GameState.current_hour, str(window)]
 	return ""
+
+
+## Weeks before the start immunity (§27.21) lets this card past G4, 0 when it does not hold it.
+## Public because the engine re-dates a signal the immunity refuses rather than losing it.
+##
+## Exempt origins: a REQUEST comes from a system that has already seen the edge, an arc's clock
+## is the arc, and the quiet FLOOR is the opening's own content (ruling E4) — holding it back
+## would hand the player three empty weeks and trip the floor's content-hole warning. A FORCE
+## never reaches this question at all: `propose` skips G4 for it (§4.5).
+static func start_immunity_weeks_left(card: Dictionary, origin: Origin) -> int:
+	if GameState.day > EvTuning.START_IMMUNITY_WEEKS:
+		return 0
+	if origin == Origin.REQUEST or origin == Origin.ARC_STEP or origin == Origin.FLOOR:
+		return 0
+	var tags: Array = card["tags"]
+	if bool(card.get("system", false)) or tags.has("tutorial") or tags.has("terminal_warning"):
+		return 0
+	return EvTuning.START_IMMUNITY_WEEKS + 1 - GameState.day
 
 
 static func _hour_in(hour: int, window: Array) -> bool:

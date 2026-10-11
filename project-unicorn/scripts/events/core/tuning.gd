@@ -22,6 +22,37 @@ const MIN_GAP_WEEKS_DEFAULT := 4
 const SUBJECT_GAP_EMPLOYEE_WEEKS := 2
 const SUBJECT_GAP_CUSTOMER_WEEKS := 4
 
+# --- §13.3 Layers 1b and 2b: the same FAMILY -------------------------------
+#
+# Layer 1 asks how soon the SAME card may return. These two ask how soon its FAMILY may: three
+# different cards about an employee asking for money inside a month is one card as far as the
+# week feels. Rhythm families are short, money families long.
+
+const FAMILY_GAP_WEEKS_DEFAULT := 6
+
+const FAMILY_GAP_WEEKS := {
+	"employee_asks_money": 12,
+	"world_offer_b2c": 8,
+	"world_offer_b2b": 8,
+	"founder_solitude": 3,
+	"founder_network": 4,
+	"customer_risk": 2,
+	"product_floor": 4,
+}
+
+
+static func family_gap(family: String) -> int:
+	return int(FAMILY_GAP_WEEKS.get(family, FAMILY_GAP_WEEKS_DEFAULT))
+
+
+# --- §3.1 Plausibility: the family's seniority floor -----------------------
+#
+# What a FAMILY of cards needs of its subject, whatever the single card asks for: the catalogue
+# compiles the higher of the two into the slot's selector. A family absent here has no floor,
+# and the card's own figure stands alone.
+
+const FAMILY_SUBJECT_TENURE := {"employee_asks_money": 26}
+
 # --- §13.3 Layer 3: category quota per week ----------------------------------
 #
 # The side benefit is the real one: a full quota forces the engine to look at another category,
@@ -67,6 +98,28 @@ const FLOOR_QUIET_WEEKS := 1
 ## Three consecutive floor triggers that find nothing is a CONTENT HOLE, and the harness says
 ## so rather than letting randomness cover it (§13.6's last clause).
 const FLOOR_EMPTY_REPORT_AFTER := 3
+
+# --- §14.1 The pool's "nothing this week" ----------------------------------
+#
+# A virtual candidate in the pool's draw: without it the deck empties itself into every quiet
+# week and a threshold reads as a firing date. Bootstrap's deck is thin and its weeks should
+# breathe; a Series A week is full on its own. The floor is NOT governed by it (ruling E1) — a
+# drawn blank still leaves a clear desk, and a clear desk is what the quiet pool is for.
+
+const POOL_NOTHING_WEIGHT := {1: 1.5, 2: 1.0, 3: 0.6}
+
+# --- §27.19 The delay window -----------------------------------------------
+
+## Weeks a card's condition may go un-held before its armed window is thrown away and redrawn.
+## One sprint cycle, so a condition that comes and goes with the sprint keeps its window.
+const DISARM_WEEKS := 4
+
+# --- §27.21 The first weeks ------------------------------------------------
+
+## Game weeks in which the pool says nothing at all: the opening belongs to the tutorial and to
+## the systems that name their own moment. The quiet floor, requests, arcs and system cards are
+## exempt (ruling E4), so the opening is not silent — it is only not random.
+const START_IMMUNITY_WEEKS := 3
 
 # --- §12 Expiry ------------------------------------------------------------
 #

@@ -6,6 +6,18 @@
   "tick": "daily",
   "class": "paper",
   "tags": [],
+  "schema": 3,
+  "family": "investor_favor",
+  "follows": "funding.portfolio_vendor",
+  "delay_weeks": [0, 0],
+  "delay_reason": "chain",
+  "plausibility": {
+    "phase_band": ["traction"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "weight": 3.0,
   "guards": {
     "market": "b2c",

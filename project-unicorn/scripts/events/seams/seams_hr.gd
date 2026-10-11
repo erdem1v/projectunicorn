@@ -145,6 +145,18 @@ static func _install_company() -> void:
 	EvSeams.register("hr.candidates_ready", G, TYPE_BOOL,
 		func() -> bool: return HRSearchSystem.has_files_ready(),
 		"HR", "the Atlas search has delivered")
+	EvSeams.register("hr.weeks_since_last_hire", G, TYPE_INT,
+		func() -> int:
+			var best: int = -1
+			for c in CharacterRegistry.get_active_employees():
+				var weeks: int = HRSystem.tenure_weeks(c)
+				if best < 0 or weeks < best:
+					best = weeks
+			return best,
+		"HR", "the youngest active employee's tenure in weeks; -1 while there is nobody")
+	EvSeams.register("hr.run_hires", G, TYPE_INT,
+		func() -> int: return GameState.run_hires,
+		"HR", "WRAPPER; hires made this run, the founder excluded. Counts a person who has since left")
 
 
 # --- Founder ----------------------------------------------------------------

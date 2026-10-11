@@ -9,6 +9,16 @@
   "tags": [
     "critical"
   ],
+  "schema": 3,
+  "system": true,
+  "family": "frank_mentor",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
   "speaker": "char_mentor_frank",
   "latch": {
     "one_shot": true

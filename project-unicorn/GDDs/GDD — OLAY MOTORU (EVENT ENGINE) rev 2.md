@@ -159,6 +159,29 @@ arc                 opsiyonel: bu kart hangi arkın adımı
 
 **Süreler haftadır.** Kart JSON'unda süre ya da sayaç taşıyan her alan hafta sayar (`cooldown_weeks`, `min_gap_weeks`, `expires_weeks`, `deadline_weeks`, `delay_weeks`). Gün adlı bir anahtar E-lint'tir (§17.1): okuyucular eski anahtarı görmeyince sessizce varsayılana düşerdi.
 
+**Şema v3 — makullük bloğu.** `schema: 3` taşıyan kart mantık bloğuna aşağıdaki alanları ekler: kart hangi evrede, hangi kadroda, hangi kıdemde ve hangi ürün durumunda yaşadığını kendisi söyler. Motor bloğu yüklemede sıradan koşul yapraklarına derler (§27.20); yazar yalnız JSON yazar, kural tek yerde durur. Blok eksikse lint durdurur (§17.13).
+
+| Alan | Tür | Zorunlu | Anlam ve derleme |
+|---|---|---|---|
+| `schema` | `3` | evet | Göç işareti. Yoksa P2, ve kartın öbür v3 kuralları hiç sorulmaz: v2 kartına v2'de olmayan alanı sormak olurdu |
+| `system` | bool | hayır (`false`) | Kartın zamanını bir oyun sistemi verir (kapı, Frank, seed, sheet, kepenk, istifa, sistem istekleri). `critical` etiketini yalnız `system` ya da `terminal_warning` kart taşıyabilir (C1); ayrılmış fiili yalnız `system` kart kullanabilir (V2); `system` kart oyuncuya bedel borçlu değildir (O1, O2) ve kıdem süzgeci almaz |
+| `plausibility.phase_band` | liste ⊂ {`bootstrap_solo`, `bootstrap_team`, `traction`, `series_a`} | evet, boş olamaz | `bootstrap_solo` = `phase.current == 1 ∧ hr.headcount == 0`; `bootstrap_team` = `phase.current == 1 ∧ hr.headcount >= 1`; `traction` = `phase.current == 2`; `series_a` = `phase.current == 3`. Koşul ağacına `any` olarak girer |
+| `plausibility.headcount` | `[min, max]` (`max` `null` = sınırsız) | evet | `hr.headcount` aralığı (kurucu ve mentor hariç). Sıfır taban ve sınırsız tavan yaprak yazmaz: her karta hep doğru bir yaprak asmak `--why-fire`'ın raporunu gömerdi |
+| `plausibility.subject_tenure_weeks` | int ≥ 0 | `system` olmayan kartta `select`li her employee/customer slotu varsa evet | Slotun `where`'ine `hr.tenure_weeks >=` ya da `musteri.tenure_weeks >=` yaprağı; değer kartın kendi sayısıyla ailesinin tabanının (`EvTuning.FAMILY_SUBJECT_TENURE`) büyüğüdür. Slot başına: `subject_tenure_by_slot: {rep: 4}`. Süzgeç seçiciye uygulanır, karta değil: kart kıdemli adayı BAĞLAR, herkesi bağlayıp kapıda reddetmez. `system` kartta derlenmez; verilen özne G5'te reddedilse istek kaybolurdu |
+| `plausibility.fresh_reason` | string | `subject_tenure_weeks == 0` ise evet | Taze öznenin neden makul olduğu (ör. yenileme kartının onboarding sesi) |
+| `plausibility.product` | `pre_launch` \| `live` \| `any` | evet | `urun.is_live` yaprağı; `any` yaprak yazmaz. `guards.product_live` varsa aynı değeri söylemek zorundadır (P1) |
+| `plausibility.modules` | liste (`UiTokens.TABS` id'leri) | evet (boş olabilir) | Her biri bir `build.module_unlocked.<id> == true` yaprağı (§27.22) |
+| `plausibility.min_week` | int ≥ 0 | evet | `time.week >= N`. Demo penceresinin (130 hafta) dışındaysa P3 |
+| `family` | string | evet | Aile kimliği; Katman 1b ve 2b'nin freni (§13.3) |
+| `family_subject` | `{"once": true}` \| `{"cooldown_weeks": N}` | hayır | Aynı aileden bir kart aynı özne için bir kez ya da N haftada bir |
+| `follows` | kart id | hayır | Zincir düğümü: ebeveyn ya kartı `schedule_event` ile zamanlar ya da kartın koşulu ebeveynin `history` yaprağını okur (P1). Katman 1b'den muaf, 2b'den değil |
+| `delay_weeks` | `[N, M]`, 0 ≤ N ≤ M ≤ 26 (lint aralığı denetlemez) | `system` değilse evet | Koşul ilk tuttuğu hafta pencere kurulur; kart `N..M` hafta sonra aday olur (§27.19) |
+| `delay_reason` | string | `delay_weeks == [0,0]` ise evet | Neden anında geliyor (sinyal tepkisi, sprint haftası, dar pencere, zincir, sessiz taban) |
+| `delay_mult` | `[{<koşul yaprağı>, "factor": f}]` | hayır | Kurulum anında tutan her yaprak beklemeyi `f` ile çarpar (ör. moral < 40 → 0,5) |
+| seçenek `status_quo_reason` | string | etkisiz seçenekte evet | "Hiçbir şey değiştirme" seçeneğinin neden gerçek bir hamle olduğu (O1) |
+
+`version_scope` ayrıca `retired` alır: kart hiçbir build'de gönderilmez (G2) ama katalogda kalır, eski kaydın geçmiş satırı ve mandalı çözülsün diye (§22.1). Derlenmiş yapraklar `"_from": "plausibility"` taşır; `--why-fire` ve lint onları yazılmış yapraklardan böyle ayırır.
+
 ### 3.2 Metin bloğu (locale başına)
 
 text:
@@ -972,6 +995,14 @@ Kağıda inen her şeyin bir cevap süresi vardır (§12), yani unutulmaz.
 - Müşteri: **4 hafta** (`SUBJECT_GAP_CUSTOMER_WEEKS`)
 **KRİTİK MUAFİYET:** Bu katman **yalnızca havuz kartlarına** uygulanır. `tag: critical` kartları ve **ark adımları muaftır.** Bir ark aynı çalışan hakkında art arda kartlar ateşleyebilir — arkın anlamı budur.
 
+**Katman 1b — Aynı aile** Kart `family` taşır (§3.1). Aynı aileden BAŞKA bir kart N hafta desteye dönmez: **varsayılan 6** (`FAMILY_GAP_WEEKS_DEFAULT`), aile başına tablo `FAMILY_GAP_WEEKS`'te — ritim aileleri kısa, para aileleri uzun. Bir çalışanın para istediği üç ayrı kart bir ay içinde, haftanın hissi bakımından tek karttır. Kartın KENDİ dönüşü bu katmanın değil, Katman 1'in ve mandalın işidir. `follows` taşıyan zincir düğümü 1b'den muaftır: ebeveynine cevap verir, ailesinin ritmine değil.
+
+**Katman 2b — Aynı aile, aynı özne** Kart `family_subject` taşırsa aynı aile aynı kişi ya da hesap hakkında bir kez (`{"once": true}`) ya da N haftada bir (`{"cooldown_weeks": N}`) konuşur. Bir aile iki kez haklı olabilir, ama aynı kişi hakkında iki kez haklı olması ayrı bir iddiadır.
+
+**Köken muafiyeti.** 1b ve 2b'yi havuz, sessiz taban, sinyal ve zamanlama öder; ark, istek, `force_fire` ve `critical` kartları taşıyan tik süpürmesi bu iki katmanı hiç sormaz. Katman 1-3 yalnız havuzun kapısıdır.
+
+**Erteleme — sinyal bir kez konuşur.** 1b, 2b ya da başlangıç koruması (§27.21) bir sinyal ya da zamanlama önerisini reddederse beat düşmez, TARİHLENİR: frenin kalan haftası kadar ileriye bir `SCHEDULE_DELAYED` girdisi kurulur (§27.19). Düşürmek, aralığın içinde riske giren ikinci hesabı kartsız bırakırdı. İstek muaftır, çünkü isteyen sistem reddedilen isteği haftaya yeniden açar; oradaki düzeltme kartta değil sistemdedir.
+
 **Katman 3 — Kategori kotası (hafta başına, `CATEGORY_QUOTA_WEEK`)**
 
 Pencere tek tiktir: kota yalnız bu tikin (bu haftanın) kabullerini sayar.
@@ -1052,6 +1083,8 @@ tag: critical    → koşul sağlandığında gelir. Ağırlık yok, kota yok, a
 `weight` yazmak **zorunlu değildir.** Korpusun büyük çoğunluğunda boş kalır. Bir kartın belirgin şekilde daha nadir/sık olması istendiğinde tek satır eklenir.
 
 **Ark adımları havuza giremez** (§10.10).
+
+**"Bu hafta hiçbir şey."** Günlük çekiliş havuzun yanında sanal bir aday taşır: `POOL_NOTHING_WEIGHT` faz başına tek bir ağırlıktır (Bootstrap 1,5 · Traction 1,0 · Series A 0,6 [ÇALIŞMA]) ve zar ona düşerse o hafta havuzdan kart gelmez. Olmadığında deste kendini her sessiz haftaya boşaltır ve bir eşik ateşlenme tarihi gibi okunur; Bootstrap'in destesi ince olduğu için haftaları nefes almalı, Series A haftası kendi başına doludur. Saatlik çekiliş onu taşımaz: boş geçen bir saat her saattir, ağırlık ise hafta başına bir sayıdır. Taban bu ağırlığa tabi değildir: çekilen boş hafta masayı temiz bırakır, temiz masa da sessiz havuzun işidir (§13.6).
 
 ### 14.2 Neden bu ölçekleniyor
 
@@ -1230,6 +1263,39 @@ Linter **baseline dosyası** destekler. Bilinen ve kabul edilmiş uyarılar `lin
 - **E** Aynı tipten birden fazla slot var ama slot adları yazılmamış
 - **E** `entity_seam` çoklu slot durumunda `scope` alanı taşımıyor
 - **E** Effect hedefi tanımsız slota işaret ediyor
+
+### 17.13 Makullük bloğu (şema v3)
+
+- **E** `P2` Kartta `schema` alanı yok, yani §3.1'in makullük bloğu eksik. Kart öbür v3 kurallarına hiç sorulmaz
+- **E** `P1` Blok `phase_band`, `headcount`, `product`, `modules` ya da `min_week`'i yazmamış; `phase_band` boş; `headcount` `[min, max]` değil; bant, `product` değeri ya da modül adı tanınmıyor
+- **E** `P1` `family` yok — aile freninin tutacağı bir şey yok
+- **E** `P1` `plausibility.product` ile `guards.product_live` farklı şey söylüyor
+- **E** `P1` `system` olmayan kartta `delay_weeks` yok; `delay_weeks` `[0,0]` ama `delay_reason` yok
+- **E** `P1` Kendi öznesini seçen employee ya da customer slotu var ama `subject_tenure_weeks` yok; taban 0 ama `fresh_reason` yok
+- **E** `P1` `follows` bilinmeyen kartı adlandırıyor, ya da adlandırdığı kart bu kartı ne zamanlıyor ne de kart onun geçmişini okuyor
+- **W** `P3` `min_week` demo penceresinin (130 hafta) dışında; `trigger.condition` yazılmış — motor onu değerlendirmez, kapı `condition`'ı okur
+
+`version_scope` `fixture` ya da `retired` olan kart §17.13-17.15'ten muaftır, yalnız §17.1'in yapı kuralları koşar: fikstür bir kuralı bilerek kırmak için vardır, emekli kart yalnız eski kaydın kendi geçmişini okuması için durur.
+
+### 17.14 Fiil yetkisi
+
+- **E** `C1` `critical` etiketi `system` ya da `terminal_warning` olmayan kartta
+- **E** `V1` Yazılamaz fiil: `EvEffects._apply`'da çalışan kolu ya da `EvChips`'te etiketi olmayan fiil. Seçeneğin verdiği söz ile oyuncunun gördüğü ve inen şey aynı olmak zorundadır
+- **E** `V2` Ayrılmış fiil (`system` kartının fiili: faz, masa, ark, son) hikâye kartında. Koşuyu renklendiren kart koşuya karar vermez
+- **E** `V3` `sprint_card_*` `tick: request` olmayan kartta
+
+### 17.15 Seçenekler ve tekrar
+
+- **E** `O1` Etkisi ve zarı olmayan seçenekte `status_quo_reason` yok (tek seçenekli kart ve `system` kart hariç)
+- **E** `O2` Etkisi olan seçeneğin bedeli yok; bedava çıkış seçenek değildir
+- **E** `O3` Tek kişilik kart (kurucu kartı ya da tek employee slotu) ekibin saatini ya da ekibin moralini harcıyor
+- **E** `O4` Seçenek kartın anlattığı özneye hiçbir şey düşürmüyor
+- **E** `O5` Modül harcayan fiil demo kartında, ya da modülün açıklığını `requires` etmeyen seçenekte
+- **E** `T1` `employee_hired` kartı koşu kapsamlı `one_shot` taşıyor ya da `hr.run_hires` yaprağı okumuyor: onuncu işe alımda birincideki kadar yeni görünür
+- **E** `T2` Çalışan hakkındaki kart `family_subject`'te `once` ya da en az 26 hafta cooldown istemiyor
+- **E** `T3` `newest_hire` seçen slotun kıdem tabanı 8 haftadan az
+
+`O2`, `O4`, `O5`, `T2` ve `T3`, şema v3 indiğinde ağaçta olan hikâye kartlarında uyarıdır: liste `tools/lint_v3_frozen.json`'dadır, büyümez, yeniden yazılan kart listeden çıkar. Sonradan yazılan kartta hepsi hatadır.
 
 ## 18. TICKER SÖZLEŞMESİ
 
@@ -1519,7 +1585,7 @@ Araştırma raporunun önerdiği ama reddettiğimiz kalemler. Kayda geçsin ki i
 | Rapor önerisi | Karar | Gerekçe |
 |---|---|---|
 | Rimworld-tarzı storyteller / director | Red | Gerilim eğrimiz faz + ekonomide. Dinamik yoğunluk ayarı "kararım oyunu değiştiriyor" hissini bozar; kalibrasyon yasası 3'e aykırı |
-| MTTH (mean time to happen) | Red | CK3 kendisi terk etti (performans + istatistiksel anomali); bizim ölçekte zaten anlamsız |
+| MTTH (mean time to happen) | Kısmen | Haftalık şans reddedildi: CK3 kendisi terk etti (performans + istatistiksel anomali). Yerinde deterministik gecikme penceresi var (§27.19): bekleme kart kurulurken bir kez çekilir, her hafta zar atılmaz |
 | Paradox-tarzı custom DSL + parser | Red | JSON ağacı aynı işi yapıyor, onda bir iş |
 | Türkçe suffix helper | Red | İki dili elle yazıyoruz; yazım disiplini daha temiz metin üretir |
 | ODA masası kapasite tavanı | Red | §12.1 (her kağıdın süresi var) sorunu zaten çözüyor |
@@ -2294,3 +2360,122 @@ düşüşü çözüm sayar; çek listesi düşüşte açık kalır, yalnız `cho
 
 *Neden.* Kritik kart koşunun omurgasıdır (para, faz kapısı, Frank); oyuncunun görmediği birkaç saatlik dalgalanma onu
 koşudan silmemeli.
+
+### §27.19 · Gecikme penceresi ve `SCHEDULE_DELAYED`
+
+*Belge ne diyordu.* §14.1 havuzu düz ağırlıkla çekiyor, §25 MTTH'yi reddediyor; ikisi arasında zamanlamanın
+nerede yaşadığına dair bir katman yok.
+
+*Ne yapıldı.* Kart `delay_weeks: [N, M]` taşır (§3.1). Koşulun ilk tuttuğu hafta bir pencere kurulur
+(`EvDelays.touch`, kapıdan sonra ve frenlerden önce): `d0 = GameState.day`, bekleme
+`N + floor(EvDice.unit("delay", d0, kart, özne) × (M − N + 1))`, kurulum anında tutan her `delay_mult` yaprağı
+beklemeyi çarpar, sonuç yuvarlanıp `[N, M]`'e kenetlenir. `d0 + bekleme` gelmeden kart aday değildir. Pencere örnek
+başınadır (`EvLatches.key_of`): aynı kartın iki hesabı ayrı bekler. Koşul art arda `EvTuning.DISARM_WEEKS`
+(4) haftadan uzun süre tutmazsa pencere atılır ve bir dahaki tutuşta yeniden çekilir; altındaki boşluklar penceresini
+korur, çünkü sprint biçimli koşullar tam böyle gidip gelir. Okumak (`EvDelays.window`) ne kurar ne söker:
+`--why-fire` havuzun sorduğu soruyu sorar ve cevabı değiştirmemelidir.
+
+Sinyal kartı anında kabul edilmez, TARİHLENİR: `_propose` kapıdan sonra `_deferral_weeks`'i sorar ve penceresi olan
+sinyal önerisini `EvDelays.draw_weeks` ile vadesine kurar (`EvSchedule.add(..., delayed = true)`), kabul etmez;
+`_step_signal_drain` zaten tarihlenmiş örneği (`EvSchedule.has_dated_for`) ikinci kez önermez; `_step_schedule` o
+girdiyi yeni `EvGate.Origin.SCHEDULE_DELAYED` köken koduyla önerir. G4'ün o kolu `signal`, `scheduled` ve `daily`
+tick'ini kabul eder, çünkü gecikmiş girdi bir sinyal kartını taşıdığı kadar bir zamanlama kartını da taşır ve kart
+hâlâ `tick: signal` der. Aynı yol frenlerin ve başlangıç korumasının ertelemesini de taşır (§13.3); bekleme bir kez
+çekilir, geri dönen girdi yeniden çekmez. Pencereler, modül görüntüsü ve en son açılan modül
+`EvDelays.to_dict/from_dict` ile olay bloğunda durur; eski kayıtta boş açılır.
+
+*Neden.* Eşik bir tarih değil, bir kapıdır. İnce havuzda "uygun" ile "ateşlendi" tek olaydı: `conference_trip`
+ölçülen koşuların ikisinde de tam kıdem 12'de geldi, oyuncu şirketi değil takvimi öğrenir. Zar
+`EvDice`'ın hash'i olduğu için yeniden yükleme yeni bir atış almaz; MTTH'nin haftalık yazı-turası alırdı.
+
+### §27.20 · Makullük bloğu bir derleyicidir
+
+*Belge ne diyordu.* §3.1 koşulu tamamen yazarın ağacına bırakıyor; §5 evre, kadro, kıdem ve ürün durumu için
+primitive veriyor ama hiçbirini zorunlu kılmıyor.
+
+*Ne yapıldı.* `schema: 3` kartında `EvCatalog._normalise_card` makullük bloğunu §3.1'in tablosundaki
+yapraklara derler ve `condition`'ı `{"all": [<yazılmış ağaç>, <derlenmiş yapraklar>]}` yapar; derleme
+`_coerce_conditions`'dan önce koşar, böylece yeni yapraklar da yazılanlar gibi seam tipine çevrilir. Kıdem
+yaprağı koşula değil slotun `where`'ine girer (§27.16): kart kıdemli adayı bağlar, herkesi bağlayıp kapıda
+reddetmez. Taban kartın kendi sayısıyla ailesinin tabanının büyüğüdür (`EvTuning.FAMILY_SUBJECT_TENURE`).
+Tanınmayan bant, `product` değeri ya da `[min, max]` olmayan `headcount` hiç yaprak yazmaz ve lint'in P1'idir:
+boş bir `all` TRUE okunacağı için (§5.3) tahmin, bulgunun tam tersini yapardı. Her derlenmiş yaprak
+`"_from": "plausibility"` taşır.
+
+*Neden.* Makullük yazarın değil şemanın işidir. Blok zorunlu olunca unutmak bir lint hatasıdır, kural motorda
+tek yerde yaşar, ve kapı, lint ile `--why-fire` yaprak okumaya devam ettiği için hiçbiri bloğun varlığını
+bilmek zorunda kalmaz.
+
+### §27.21 · Aile frenleri ve başlangıç koruması
+
+*Belge ne diyordu.* §13.3 üç fren tanıyor: aynı kart, aynı özne, kategori kotası. Bir "aile" kavramı yok ve
+koşunun ilk haftalarına dair bir kural yok.
+
+*Ne yapıldı.* Katman 1b (aynı aileden başka bir kart) ve 2b (aynı aile, aynı özne) `EvTempo.family_brake`'te,
+`pool_blocked_reason`'dan ayrı sorulur: sinyal, zamanlama ve taban kökenleri bu iki katmanı havuzun üçünü
+ödemeden öder, ve iki katmanın reddi bir süre döndürdüğü için sinyal düşürülmek yerine tarihlenir (§13.3).
+Başlangıç koruması G4'tedir (`EvGate.start_immunity_weeks_left`): ilk `EvTuning.START_IMMUNITY_WEEKS` (3)
+haftada havuz konuşmaz. Muaf olanlar: `system` kart, `tutorial` ve `terminal_warning` etiketi, REQUEST,
+ARC_STEP ve FLOOR kökenleri; FORCE soruyu hiç görmez (§4.5). Sessiz taban muafiyeti bilinçlidir: koruma onu
+da tutsaydı oyuncuya üç boş hafta düşerdi ve tabanın içerik açığı uyarısı boşa çalardı (§13.6). Not (§27.17)
+pencereye yazılmaz ama ailesinin gününü yazar (`EvTempo.record_family`): tabanın kurucu kartları nottur ve
+`founder_solitude` ile `founder_money` aralıkları onlar içindir.
+
+*Neden.* Bulgular: aynı çalışan iki kez para istedi ve yedi kart korumanın yerine kendi `time.week >= N`
+satırını yazmıştı. Aile, "haftanın hissi" ile "kartın kimliği" arasındaki boşluğu kapatır; koruma, ilk
+haftada tesadüfen uygun olan havuz kartının açılışı çalmasını engeller — açılış öğreticinin ve kendi anını
+adlandıran sistemlerindir.
+
+### §27.22 · Modül kilidi, iki HR seam'i ve iki kanca
+
+*Belge ne diyordu.* §6.5'in seam tabanında modülün açık olup olmadığını okuyan bir seam yok; §15.1'in
+manifestinde modül açılışının sinyali yok, `customer_added` de bağlı değil.
+
+*Ne yapıldı.* `build.module_unlocked.<id>` (GLOBAL, bool) `UiTokens.TABS`'taki her modül için kayıtlıdır;
+değerin tek evi `scripts/systems/module_locks.gd`'dir (`ModuleLocks.is_open`), rayın `_is_locked`'ı da oraya
+devreder — kilit build üstüne bir kuraldır, tek bir sistemin durumu değil. Smoke için `set_override`. Yanında
+`build.last_unlocked_module` (GLOBAL, string) ve HR'ın iki sayacı: `hr.weeks_since_last_hire` (en genç etkin
+çalışanın kıdemi, kimse yoksa −1) ve `hr.run_hires`.
+
+Kancalar: `customer_added` `EvSignals.BINDINGS`'e `customer` slotuyla girdi ("ilk müşteri" deseni
+`customer_added` + `musteri.count == 1`'dir). `EventBus.module_unlocked(module_id)` yeni bir sinyaldir ve onu
+yayan motorun kendisidir: günlük tikte, sinyal boşaltmasından önce `_step_module_watch` `ModuleLocks.is_open`
+görüntüsünü dünküyle karşılaştırır ve kapalıdan açığa dönen her id için sinyali yayar. Görüntü boşsa (yeni
+koşu, eski kayıt) ilk tik onu sessizce tohumlar ve kimseyi adlandırmaz: açılışta açık olan her şey hep
+açıktı. Kart hangi modülün açıldığını `build.last_unlocked_module` seam'inden okur, çünkü modül bir varlık
+değildir ve bağlanacak bir slotu yoktur.
+
+*Neden.* Modül açılışı içeriğin bağlanabileceği bir beat'ti ve kimse onu yaymıyordu; "ilk müşteri" ise motorun
+en çok istenen tetiğiydi ve sinyali bağlı olmadığı için yazılamıyordu.
+
+### §27.23 · `critical` daraltıldı, emeklilik yolu `retired`
+
+*Belge ne diyordu.* §14.1 `critical`'i yazarın tek kararı olarak veriyor ("bu kart omurga mı"); §13.5 onu
+bütçeden, §13.3 Katman 2'den muaf tutuyor.
+
+*Ne yapıldı.* `critical` yalnız `system` ya da `terminal_warning` kartın etiketi olabilir (lint C1). Frenleri
+ve kotayı atlamak koşunun kendi anlarının hakkıdır; hikâye kartı havuzda sırasını bekler. `version_scope`
+yeni bir değer alır: `retired` kart hiçbir build'de gönderilmez (G2) ama katalogda kalır, eski kaydın geçmiş
+satırı ve mandalı çözülebilsin diye (§22.1).
+
+*Neden.* 26 kart `critical` taşıyordu ve üçü hikâye kartıydı (`customer.cs_escalation`,
+`world.analyst_guide`, `world.newsletter_slot`): ateşlendiklerinde haftanın kotası ve özne freni yok
+sayılıyordu, yani havuzun ritmi tek bir etiketle delinebiliyordu. Emeklilikte dosyayı silmek eski kaydın
+okuyamadığı bir geçmiş satırı bırakırdı.
+
+### §27.24 · Lint'in v3 kuralları ve dondurulmuş liste
+
+*Belge ne diyordu.* §17 yapıyı, ulaşılabilirliği, ekonomiyi ve metni denetliyor; şıkkın gerçek bir hamle olup
+olmadığını, fiili kimin yazabileceğini ve kartın makul olup olmadığını sormuyor.
+
+*Ne yapıldı.* Üç yeni kural ailesi: §17.13 makullük bloğu (P1-P3), §17.14 fiil yetkisi (C1, V1-V3), §17.15
+şıklar ve tekrar (O1-O5, T1-T3). Kimlikler `17.13`, `17.14`, `17.15`'tir ve her ileti kural adıyla başlar
+("O2: ..."), böylece baseline'ın parmak izi kuralı adlandırır. Fikstür ve `retired` kart muaftır. Göçün kart
+kart sağlayamadığı beş kural (`O2`, `O4`, `O5`, `T2`, `T3`) `tools/lint_v3_frozen.json`'daki kartlarda
+uyarıdır; liste büyümez, yeniden yazılan kart listeden çıkar, sonradan yazılan kart hatayı alır. Yazılabilir
+fiil kümesi lint'te durur (`WRITER_VERBS` 30, `SYSTEM_VERBS` 18): bir fiil ancak `EvEffects._apply`'da çalışan
+bir kolu VE `EvChips`'te bir etiketi varsa yazılabilir.
+
+*Neden.* Lint eskiden yalnız fiilin listede olmasını soruyordu; listedeki 63 fiilin 15'i ya kolsuz ya
+çipsizdi, yani kart yazarının elinde çalışmayan bir söz vardı. Şıkların bedeli ve öznesi de kural olmadan
+denetlenemiyordu: bedava çıkış ve "kartın anlattığı kişiye hiçbir şey düşmeyen" şık sessizce geçiyordu.

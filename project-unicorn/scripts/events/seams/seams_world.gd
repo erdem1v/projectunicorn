@@ -1,7 +1,10 @@
 class_name EvSeamsWorld
 extends RefCounted
 
-# The `phase.`, `rival.`, `investor.`, `time.` and `office.` namespaces.
+# The `phase.`, `rival.`, `investor.`, `time.`, `office.` and `build.` namespaces.
+
+const ModuleLocks := preload("res://scripts/systems/module_locks.gd")
+
 
 static func install() -> void:
 	_install_phase()
@@ -9,6 +12,7 @@ static func install() -> void:
 	_install_rival()
 	_install_investor()
 	_install_office()
+	_install_build()
 
 
 static func _install_phase() -> void:
@@ -134,3 +138,23 @@ static func _install_office() -> void:
 	EvSeams.register("office.moving", EvSeams.Kind.GLOBAL, TYPE_BOOL,
 		func() -> bool: return OfficeSystem.is_moving(),
 		"Office", "WRAPPER; a move to the next office is under way")
+
+
+# --- Build ------------------------------------------------------------------
+
+## One seam per rail tab, so a card can say "only once Pazarlama is open" without knowing
+## what gates it. The set of pages comes from ModuleLocks, which owns the lock rule.
+static func _install_build() -> void:
+	for id: String in ModuleLocks.ids():
+		var note: String = "WRAPPER over ModuleLocks.is_open; the %s page is reachable in this build" % id
+		if id == "rnd":
+			note += ". Never gated; the Ar-Ge tree's own door is arge.tree_open"
+		EvSeams.register("build.module_unlocked." + id, EvSeams.Kind.GLOBAL, TYPE_BOOL,
+			func() -> bool: return ModuleLocks.is_open(id),
+			"Build", note)
+
+	# Which module just opened, for the card that answers `module_unlocked`. A STRING rather than
+	# a signal argument: EvSignals binds arguments to entity slots, and a module is not an entity.
+	EvSeams.register("build.last_unlocked_module", EvSeams.Kind.GLOBAL, TYPE_STRING,
+		func() -> String: return EvDelays.last_unlocked_module(),
+		"Build", "the module whose page opened most recently; empty before any does")

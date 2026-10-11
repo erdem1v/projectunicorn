@@ -7,6 +7,17 @@
   "tags": [
     "quiet"
   ],
+  "schema": 3,
+  "family": "founder_solitude",
+  "delay_weeks": [0, 0],
+  "delay_reason": "floor",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo"],
+    "headcount": [0, 0],
+    "product": "pre_launch",
+    "modules": [],
+    "min_week": 3
+  },
   "guards": {
     "product_live": false
   },

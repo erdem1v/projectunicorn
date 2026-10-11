@@ -463,10 +463,12 @@ static func _pick_line_pain(sub_id: String, index: int) -> String:
 
 
 const RISK_VOICE_SHORT_KEYS := ["B2B_RISK_VOICE_SHORT_1", "B2B_RISK_VOICE_SHORT_2", "B2B_RISK_VOICE_SHORT_3"]
+## The lines an account still in its first weeks has instead: the setup, not the history.
+const RISK_VOICE_ONBOARDING_KEYS := ["B2B_RISK_VOICE_ONBOARDING_1", "B2B_RISK_VOICE_ONBOARDING_2"]
 
 ## What an account in Risk actually says, chosen by WHY it is in Risk, in the order a customer
-## would lead with them: a word you broke, a product that is visibly failing, a product that
-## has stopped being enough.
+## would lead with them: a word you broke, a product that is visibly failing, a fresh account
+## that cannot get started, a product that has stopped being enough.
 static func risk_voice(c: Customer) -> String:
 	if c == null:
 		return ""
@@ -474,6 +476,12 @@ static func risk_voice(c: Customer) -> String:
 		return TranslationServer.translate("B2B_RISK_VOICE_BROKEN")
 	if ProductState.bugs_confirmed() > B2BConstants.COMPLAINT_BUG_GATE or InfraSystem.is_over_capacity():
 		return B2BConstants.complaint_voice(c.industry)
+	# A broken word and a failing product come first on purpose: they are louder than newness.
+	# After them, an account with no history yet cannot be disappointed by one.
+	if c.lifecycle_phase == "onboarding" or GameState.day - c.acquired_on_day \
+			< TimeModel.ticks(B2BConstants.ONBOARDING_VOICE_TENURE_WEEKS):
+		return TranslationServer.translate(
+			RISK_VOICE_ONBOARDING_KEYS[absi(c.id.hash()) % RISK_VOICE_ONBOARDING_KEYS.size()])
 	return TranslationServer.translate(RISK_VOICE_SHORT_KEYS[absi(c.id.hash()) % RISK_VOICE_SHORT_KEYS.size()])
 
 

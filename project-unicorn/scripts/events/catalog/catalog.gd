@@ -111,7 +111,117 @@ static func _normalise_card(card: Dictionary) -> void:
 	card["latch_key"] = String(card.get("latch_key", EvLatches.KEY_RUN))
 	if not card.has("latch"):
 		card["latch"] = {EvLatches.COOLDOWN: EvLatches.DEFAULT_COOLDOWN_WEEKS}
+	if int(card.get("schema", 0)) == SCHEMA_PLAUSIBILITY:
+		_compile_plausibility(card)
+	# After the compiler, so the leaves it writes are typed like the authored ones.
 	_coerce_conditions(card)
+
+
+# --- Schema v3: the plausibility block --------------------------------------
+#
+# A card says where it is PLAUSIBLE — phase band, headcount, subject seniority, product state,
+# open modules, earliest week — in one mandatory block, and the engine turns that block into
+# ordinary condition leaves. One rule, one place: the gate, the linter and --why-fire all read
+# leaves, so none of them needs to know the block exists.
+#
+# Compiled leaves carry `_from: plausibility` so a tool can tell them from authored ones.
+
+const SCHEMA_PLAUSIBILITY := 3
+
+## Where seniority is readable, by EvScope slot type. A slot of any other type has none.
+const TENURE_SEAMS := {"employee": "hr.tenure_weeks", "customer": "musteri.tenure_weeks"}
+
+## §2's product states, as the `urun.is_live` each one compiles to. "any" is absent because it
+## writes no leaf at all.
+const PRODUCT_LIVE := {"pre_launch": false, "live": true}
+
+## §3.1's phase bands; `band_leaves` spells what each one stands for.
+const PHASE_BANDS := ["bootstrap_solo", "bootstrap_team", "traction", "series_a"]
+
+
+static func _compile_plausibility(card: Dictionary) -> void:
+	var p: Dictionary = card.get("plausibility", {})
+	var compiled: Array = []
+
+	var bands: Array = []
+	for band in (p.get("phase_band", []) as Array):
+		var leaves: Array = band_leaves(String(band))
+		# An unknown band is the linter's error (P1). Compiling it as an empty `all` would read
+		# TRUE (§5.3) and admit the card in every phase, which is the opposite of the finding.
+		if not leaves.is_empty():
+			bands.append({"all": leaves})
+	if not bands.is_empty():
+		compiled.append({"any": bands})
+
+	# A headcount floor of nobody and a min_week of zero say nothing, and compiling them would
+	# hang an always-true leaf on nearly every card, burying --why-fire's plausibility block. A
+	# shape other than [min, max] is the linter's error (P1), so the loader writes no leaf for it.
+	var headcount: Array = p.get("headcount", [])
+	if headcount.size() == 2:
+		if int(headcount[0]) > 0:
+			compiled.append(_plaus_leaf("hr.headcount", ">=", int(headcount[0])))
+		if headcount[1] != null:
+			compiled.append(_plaus_leaf("hr.headcount", "<=", int(headcount[1])))
+
+	# An unknown product state is the linter's error (P1), like an unknown band: compiling a guess
+	# would pin the card to one side of the launch while the block names neither.
+	var product: String = String(p.get("product", "any"))
+	if PRODUCT_LIVE.has(product):
+		compiled.append(_plaus_leaf("urun.is_live", "==", bool(PRODUCT_LIVE[product])))
+
+	for module in (p.get("modules", []) as Array):
+		compiled.append(_plaus_leaf("build.module_unlocked." + String(module), "==", true))
+
+	var min_week: int = int(p.get("min_week", 0))
+	if min_week > 0:
+		compiled.append(_plaus_leaf("time.week", ">=", min_week))
+
+	var authored: Dictionary = card.get("condition", {})
+	card["condition"] = {"all": ([authored] if not authored.is_empty() else []) + compiled}
+
+	# Seniority filters the SELECTOR, not the card: a card about someone who has been here a
+	# while must BIND such a person, not bind anyone and then refuse at the gate. A system card
+	# is given its subject, so filtering would only lose the request (§3.1).
+	if bool(card.get("system", false)):
+		return
+	for slot in (card["scope"] as Dictionary):
+		var spec: Dictionary = card["scope"][slot]
+		var seam: String = String(TENURE_SEAMS.get(String(spec.get("type", "")), ""))
+		if seam == "" or not spec.has("select"):
+			continue
+		var leaf: Dictionary = {"entity_seam": seam, "scope": slot, "op": ">=",
+			"value": tenure_floor(card, slot), "_from": "plausibility"}
+		var where: Dictionary = spec.get("where", {})
+		spec["where"] = {"all": ([where] if not where.is_empty() else []) + [leaf]}
+
+
+## The leaves a phase band stands for, empty for a band §3.1 does not name, so the linter reads
+## an unknown band off an empty answer.
+static func band_leaves(band: String) -> Array:
+	match band:
+		"bootstrap_solo":
+			return [_plaus_leaf("phase.current", "==", 1), _plaus_leaf("hr.headcount", "==", 0)]
+		"bootstrap_team":
+			return [_plaus_leaf("phase.current", "==", 1), _plaus_leaf("hr.headcount", ">=", 1)]
+		"traction":
+			return [_plaus_leaf("phase.current", "==", 2)]
+		"series_a":
+			return [_plaus_leaf("phase.current", "==", 3)]
+	return []
+
+
+static func _plaus_leaf(seam: String, op: String, value: Variant) -> Dictionary:
+	return {"seam": seam, "op": op, "value": value, "_from": "plausibility"}
+
+
+## Weeks the subject of `slot` must have been aboard: the card's own figure (per slot where it
+## names one) or its family's floor, whichever is higher. The linter asks for the same number.
+static func tenure_floor(card: Dictionary, slot: String) -> int:
+	var p: Dictionary = card.get("plausibility", {})
+	var own: Variant = (p.get("subject_tenure_by_slot", {}) as Dictionary) \
+		.get(slot, p.get("subject_tenure_weeks", 0))
+	return maxi(int(own),
+		int(EvTuning.FAMILY_SUBJECT_TENURE.get(String(card.get("family", "")), 0)))
 
 
 ## Coerce every condition literal to its seam's declared type, once, here. Godot's JSON parser

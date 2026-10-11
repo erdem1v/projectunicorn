@@ -236,6 +236,11 @@ const CS_KIND_FEATURE := "feature"      # özellik isteği
 const CS_KIND_COMPLAINT := "complaint"  # şikâyet
 const CS_KIND_RENEWAL := "renewal"      # yenileme sinyali
 const CS_REQUEST_KINDS := [CS_KIND_FEATURE, CS_KIND_COMPLAINT, CS_KIND_RENEWAL]
+# Yenileme masası 12 aylık sözleşmenin son iki ayıdır: daha kıdemsiz bir hesabın yenileyeceği
+# bir şey yoktur, o yüzden `renewal` aday bile olmaz.
+const RENEWAL_MIN_TENURE_WEEKS := 44    # [ÇALIŞMA] hesap kıdemi, hafta
+# İlk ay taze hesaptır: riske girse de geçmişinden değil kurulumundan konuşur.
+const ONBOARDING_VOICE_TENURE_WEEKS := 4  # [ÇALIŞMA] hesap kıdemi, hafta
 
 # --- Söz dayanıklılığı (Customer.trust_offset) ---
 # Kept/broken promises shift the account's satisfaction TARGET, not just its current value.

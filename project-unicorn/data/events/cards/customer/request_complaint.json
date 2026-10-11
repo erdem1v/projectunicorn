@@ -4,6 +4,17 @@
   "tick": "request",
   "class": "paper",
   "tags": [],
+  "schema": 3,
+  "system": true,
+  "family": "customer_requests",
+  "family_subject": {"cooldown_weeks": 26},
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2b"
   },

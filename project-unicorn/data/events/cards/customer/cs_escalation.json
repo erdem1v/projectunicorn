@@ -1,13 +1,23 @@
 {
-  "_port_note": "Reaches the player through the assigned Customer Rep — Ekip §10.4: 'bir müşteri olayı ateşlendiğinde bu olay onun aracılığıyla oyuncuya ulaşır'. The condition reads B2BSalesSystem's own `cs_escalated` fact rather than re-deriving it from a satisfaction threshold, so it cannot drift from the system's hysteresis. Tagged critical because the rep raising the alarm is the edge, and the sweep — not the weighted pool — is what fires on an edge the same week it appears. 'Ask them to be patient' exists so a locked promise never leaves 'No' as the only open row: refusing the rep's word is what ENDS the account, so 'No' churns it.",
+  "_port_note": "Reaches the player through the assigned Customer Rep — Ekip §10.4: 'bir müşteri olayı ateşlendiğinde bu olay onun aracılığıyla oyuncuya ulaşır'. The condition reads B2BSalesSystem's own `cs_escalated` fact rather than re-deriving it from a satisfaction threshold, so it cannot drift from the system's hysteresis. The flag is the edge that opens the window; the rep system's weekly escalation cap and the family brake decide when it lands. 'Ask them to be patient' exists so a locked promise never leaves 'No' as the only open row: refusing the rep's word is what ENDS the account, so 'No' churns it.",
   "id": "customer.cs_escalation",
   "version_scope": "demo",
   "category": "customer",
   "tick": "daily",
   "class": "interrupt",
-  "tags": [
-    "critical"
-  ],
+  "tags": [],
+  "schema": 3,
+  "family": "customer_escalation",
+  "family_subject": {"cooldown_weeks": 26},
+  "delay_weeks": [0, 1],
+  "plausibility": {
+    "phase_band": ["bootstrap_team", "traction", "series_a"],
+    "headcount": [1, null],
+    "subject_tenure_weeks": 4,
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2b"
   },

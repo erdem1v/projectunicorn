@@ -1,0 +1,65 @@
+{
+  "_port_note": "O1: a second option that changes nothing and says nothing about why.",
+  "id": "fixture.bad_o1",
+  "schema": 3,
+  "category": "team",
+  "tick": "daily",
+  "class": "info",
+  "tags": [],
+  "family": "bad_fixture",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    1,
+    4
+  ],
+  "plausibility": {
+    "phase_band": [
+      "traction"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "options": [
+    {
+      "id": "pay",
+      "outcome_id": "paid",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount": -1000,
+          "label": "incident"
+        }
+      ]
+    },
+    {
+      "id": "wait",
+      "outcome_id": "waited",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kötü kart",
+      "body": "Lint kuralını bilerek bozar.",
+      "options": {
+        "pay": "Öde",
+        "wait": "Bekle"
+      }
+    },
+    "en": {
+      "title": "Bad card",
+      "body": "Breaks one lint rule on purpose.",
+      "options": {
+        "pay": "Pay",
+        "wait": "Wait"
+      }
+    }
+  }
+}

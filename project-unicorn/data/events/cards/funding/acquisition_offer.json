@@ -10,6 +10,16 @@
     "critical",
     "terminal_warning"
   ],
+  "schema": 3,
+  "system": true,
+  "family": "series_a_table",
+  "plausibility": {
+    "phase_band": ["traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
   "speaker": "char_mentor_frank",
   "scope": {
     "investor": {

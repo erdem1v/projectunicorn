@@ -9,6 +9,17 @@
   "tags": [
     "critical"
   ],
+  "schema": 3,
+  "system": true,
+  "family": "hr_departure",
+  "family_subject": {"cooldown_weeks": 26},
+  "plausibility": {
+    "phase_band": ["bootstrap_team", "traction", "series_a"],
+    "headcount": [1, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
   "scope": {
     "employee": {
       "type": "employee",

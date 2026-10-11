@@ -1,6 +1,6 @@
 {
   "id": "team.first_weeks",
-  "version_scope": "demo",
+  "version_scope": "retired",
   "category": "team",
   "sender": "self",
   "tick": "daily",
@@ -8,6 +8,7 @@
   "tags": [
     "quiet"
   ],
+  "family": "new_hire_onboarding",
   "scope": {
     "employee": {
       "type": "employee",

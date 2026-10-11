@@ -6,6 +6,16 @@
   "tick": "daily",
   "class": "paper",
   "tags": [],
+  "schema": 3,
+  "system": true,
+  "family": "seed_round",
+  "plausibility": {
+    "phase_band": ["traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
   "scope": {
     "investor": {
       "type": "investor",

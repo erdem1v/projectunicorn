@@ -5,6 +5,17 @@
   "tick": "signal",
   "class": "interrupt",
   "tags": [],
+  "schema": 3,
+  "family": "product_floor",
+  "delay_weeks": [0, 1],
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "subject_tenure_weeks": 4,
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2c",
     "product_live": true

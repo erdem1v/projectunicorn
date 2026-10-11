@@ -6,6 +6,19 @@
   "tick": "daily",
   "class": "paper",
   "tags": [],
+  "schema": 3,
+  "family": "team_overload",
+  "family_subject": {"cooldown_weeks": 26},
+  "delay_weeks": [0, 0],
+  "delay_reason": "sprint week",
+  "plausibility": {
+    "phase_band": ["traction"],
+    "headcount": [3, null],
+    "subject_tenure_weeks": 12,
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "scope": {
     "employee": {
       "type": "employee",
@@ -123,17 +136,14 @@
       },
       "effects": [
         {
-          "verb": "sprint_hours",
-          "mult": 1.15
-        },
-        {
           "verb": "productivity_mod",
           "scope": "employee",
           "pct": -20,
           "weeks": 2
         },
         {
-          "verb": "morale_all",
+          "verb": "change_morale",
+          "scope": "employee",
           "amount": -2
         }
       ]
@@ -167,10 +177,6 @@
           "verb": "add_cash",
           "amount": -6000,
           "label": "retention"
-        },
-        {
-          "verb": "sprint_hours",
-          "mult": 1.15
         },
         {
           "verb": "productivity_mod",
@@ -226,7 +232,8 @@
         "weeks": 2
       },
       {
-        "verb": "morale_all",
+        "verb": "change_morale",
+        "scope": "employee",
         "amount": -2
       }
     ]

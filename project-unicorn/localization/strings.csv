@@ -684,6 +684,8 @@ B2B_RISK_VOICE_BROKEN,"Olacak dediniz, olmadı. Başka seçeneklere bakmaya baş
 B2B_RISK_VOICE_SHORT_1,İlk gün ne yapıyorsa bugün de onu yapıyor. Şimdiye kadar daha fazlasını bekliyorduk.,It does what it did on day one. We needed it to do more by now.
 B2B_RISK_VOICE_SHORT_2,Ekibim sistemin içinde çalışmaktan çok etrafından dolanıyor. Bu böyle sürmez.,My team works around it more than they work in it. That has to stop.
 B2B_RISK_VOICE_SHORT_3,Yönetim bunun için neden hâlâ para ödediğimizi sordu. İyi bir cevabım yoktu.,Management asked why we're still paying for this. I didn't have a good answer.
+B2B_RISK_VOICE_ONBOARDING_1,"Hâlâ kurulumdayız ve ekibim şimdiden doğru karar mıydı diye soruyor.","We're still setting it up, and my team is already asking if this was the right call."
+B2B_RISK_VOICE_ONBOARDING_2,"Başlamak, demonuzda göründüğünden zor oldu.",Getting started has been harder than your demo made it look.
 B2B_EV_RISK_EXPIRED,{customer} bir daha aramadı.,{customer} didn't call again.
 B2B_PAIN_AI_VEC_EMBED_API,"Verimizi anlamlandıracak bir altyapı arıyoruz, kelime eşleşmesi yetmiyor.",We need something that understands our data — keyword matching is not enough.
 B2B_PAIN_AI_VEC_SEARCH_API,"Aradığımızı tarif edebilmek istiyoruz, birebir kelime değil.",We want to describe what we are looking for rather than guess the exact word.
@@ -2992,6 +2994,7 @@ FIN_ONETIME_MEETUP,Topluluk buluşması,Meetup
 FIN_ONETIME_SPONSOR,Sponsorluk,Sponsorship
 HR_ROW_TOOLS,Aylık araç gideri,Monthly tools
 EV_LOCK_NO_SPRINT,Süren bir sprint yok.,No sprint is running.
+EV_LOCK_MARKETING_EA,Pazarlama Erken Erişim'de açılır.,Marketing opens in Early Access.
 B2B_LOCK_PROMISE_BROKEN,Bu hesaba verdiğin son söz tutulmadı.,Your last promise to them was not kept.
 EFFECT_FIX_RUN_STARTS,Düzeltme başlar,A fix run starts
 EV_FOUNDER_MEETUP_TITLE,Konuşma daveti,A speaking slot

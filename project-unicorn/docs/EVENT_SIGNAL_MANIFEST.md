@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 145 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 146 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **145** |
+| Signals declared | **146** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **68** |
+| Emitted with **no production listener** | **69** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -28,10 +28,10 @@ so the engine finds a vocabulary rather than having to discover one.
 The event engine connects signals by NAME at runtime, which a static scan for `.connect(`
 cannot see. `EvSignals.install()` (`scripts/events/core/signals.gd`) connects exactly the `trigger.signal` of the
 cards the catalogue loads from `data/events/cards/`, and this generator reads the same cards. Today that
-is 7 signal(s): `axis_floor_crossed`, `axis_floor_warning`, `customer_health_changed`, `meeting_day`, `seed_sheet_granted`, `sheet_granted`, `version_shipped`. They are listed as `EvSignals (card trigger)` and are not counted
+is 8 signal(s): `axis_floor_crossed`, `axis_floor_warning`, `customer_added`, `customer_health_changed`, `meeting_day`, `seed_sheet_granted`, `sheet_granted`, `version_shipped`. They are listed as `EvSignals (card trigger)` and are not counted
 as unheard.
 
-`EvSignals.BINDINGS` is an allowlist of the 15 signals a card MAY trigger on. A binding
+`EvSignals.BINDINGS` is an allowlist of the 17 signals a card MAY trigger on. A binding
 alone connects nothing, so the others are listed as `EvSignals (bindable)` and still
 count as unheard.
 
@@ -66,9 +66,9 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
-| `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
+| `night_skipped` | `—` | time_manager | 1 | 5 | plausibility · main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 5 | signals · sprint_system · rnd_tab · research_bar · office_people |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 47 | 4 | main · left_tabs · research_bar · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · rnd_ui_shared · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 52 | 4 | main · left_tabs · research_bar · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
@@ -78,7 +78,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
 | `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 14 | 1 | main |
-| `language_changed` | `locale: String` | localization | 1 | 9 | system_menu_modal · left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
+| `language_changed` | `locale: String` | localization · main | 2 | 9 | system_menu_modal · left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
 | `palette_changed` | `colorblind: bool` | settings_modal | 2 | 7 | hr_tab · left_tabs · news_ticker · top_bar · window_layer · office_city · office_notice_stack |
 
 ### Character signals
@@ -109,7 +109,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `customer_added` | `customer_id: String` | customer_registry | 1 | 1 | top_bar |
+| `customer_added` | `customer_id: String` | customer_registry | 1 | 1 | top_bar · EvSignals (card trigger) |
 | `customer_removed` | `customer_id: String` | customer_registry | 1 | 2 | promise_registry · left_tabs |
 | `customer_mrr_changed` | `customer_id: String, new_mrr: int` | customer_registry | 1 | 0 | — |
 | `customer_seats_changed` | `customer_id: String, new_seats: int` | customer_registry | 1 | 0 | — |
@@ -132,7 +132,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `event_triggered` | `event_id: String` | engine | 2 | 6 | harness · left_tabs · research_bar · top_bar · window_frame · office_hud |
+| `event_triggered` | `event_id: String` | engine | 2 | 7 | harness · plausibility · left_tabs · research_bar · top_bar · window_frame · office_hud |
 | `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 9 | save_manager · game_shell · main · sprint_system · left_tabs · research_bar · top_bar · window_frame · office_hud |
 | `modal_requested` | `event: GameEvent` | engine | 1 | 2 | harness · main |
 | `event_set_aside` | `event_id: String` | engine | 1 | 7 | save_manager · main · left_tabs · research_bar · top_bar · window_frame · office_hud |
@@ -148,6 +148,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
+| `module_unlocked` | `module_id: String` | engine | 1 | 0 | EvSignals (bindable) |
 | `build_phase_changed` | `new_phase: String` | sprint_system | 2 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
 | `build_progress_changed` | `—` | main · product_system | 2 | 2 | build_bar · build_hud_panel |
 | `infra_changed` | `—` | product_state | 2 | 0 | — |
@@ -195,7 +196,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `product_note_issued` | `day: int` | rnd_system | 1 | 2 | main · left_tabs |
 | `research_progress_changed` | `—` | time_manager | 1 | 2 | build_hud_panel · research_bar |
 | `product_note_read` | `—` | rnd_system | 1 | 1 | left_tabs |
-| `rnd_node_requested` | `node_id: String, open_assign: bool` | main · research_bar | 2 | 1 | rnd_tab |
+| `rnd_node_requested` | `node_id: String, open_assign: bool` | main · product_tab · research_bar | 4 | 1 | rnd_tab |
 
 ### Rival signals
 
@@ -241,7 +242,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · vc_pitch_system | 2 | 3 | game_state · hunt_tab · office_notice_stack |
+| `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · sprint_bridges · vc_pitch_system | 3 | 3 | game_state · hunt_tab · office_notice_stack |
 | `headline_added` | `source: String, line: Dictionary` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger · sprint_bridges | 8 | 2 | time_manager · news_ticker |
 | `ticker_live_line` | `source: String, line: Dictionary` | news_feed_system · sprint_bridges · summary_system · office_travel | 5 | 1 | news_ticker |
 
@@ -293,7 +294,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `day_tick_completed` | `day: int` | time_manager | 1 | 2 | save_manager · office_city |
+| `day_tick_completed` | `day: int` | time_manager | 1 | 3 | save_manager · plausibility · office_city |
 | `game_loaded` | `slot_id: String` | main | 1 | 1 | left_tabs |
 | `system_menu_requested` | `—` | game_shell · main | 3 | 1 | main |
 | `save_load_requested` | `mode: String` | main · system_menu_modal | 4 | 1 | main |

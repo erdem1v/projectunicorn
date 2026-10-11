@@ -4,9 +4,17 @@
   "category": "world",
   "tick": "daily",
   "class": "paper",
-  "tags": [
-    "critical"
-  ],
+  "tags": [],
+  "schema": 3,
+  "family": "world_offer_b2b",
+  "delay_weeks": [0, 1],
+  "plausibility": {
+    "phase_band": ["series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2b",
     "product_live": true
@@ -25,7 +33,7 @@
         "history": "weeks_since",
         "event": "funding.gate_series_a",
         "op": "<=",
-        "value": 2
+        "value": 4
       },
       {
         "seam": "finance.cash",

@@ -8,6 +8,16 @@
   "class": "interrupt",
   "expires_weeks": 1,
   "tags": ["critical", "terminal_warning"],
+  "schema": 3,
+  "system": true,
+  "family": "run_end",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
   "speaker": "char_mentor_frank",
 
   "latch": { "cooldown_weeks": 0 },

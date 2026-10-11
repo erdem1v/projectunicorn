@@ -6,6 +6,19 @@
   "class": "paper",
   "sender": "self",
   "tags": [],
+  "schema": 3,
+  "family": "sprint_rewrite",
+  "family_subject": {"cooldown_weeks": 26},
+  "follows": "product.sprint_unasked_rewrite",
+  "delay_weeks": [0, 0],
+  "delay_reason": "chain",
+  "plausibility": {
+    "phase_band": ["traction", "series_a"],
+    "headcount": [3, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "product_live": true
   },

@@ -9,6 +9,16 @@
   "tags": [
     "critical"
   ],
+  "schema": 3,
+  "system": true,
+  "family": "seed_round",
+  "plausibility": {
+    "phase_band": ["traction"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
   "speaker": "char_mentor_frank",
   "scope": {
     "investor": {

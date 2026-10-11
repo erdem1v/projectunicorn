@@ -20,6 +20,7 @@ extends RefCounted
 ## A signal not listed here cannot trigger a card. A card naming an unlisted signal is a build
 ## error, raised at install time rather than discovered as a beat that never fires.
 const BINDINGS := {
+	"customer_added": {"slots": {"customer": 0}},
 	"customer_health_changed": {"slots": {"customer": 0}},
 	"customer_churned": {"slots": {"customer": 0}},
 	"customer_expanded": {"slots": {"customer": 0}},
@@ -35,6 +36,9 @@ const BINDINGS := {
 	"phase_gate_reached": {"slots": {}},
 	"axis_floor_warning": {"slots": {}},
 	"axis_floor_crossed": {"slots": {}},
+	# No slot: a module is not an entity, so a card reads which one through the
+	# `build.last_unlocked_module` seam rather than from a bound argument.
+	"module_unlocked": {"slots": {}},
 }
 
 static var _connected: Array = []

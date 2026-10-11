@@ -5,6 +5,16 @@
   "tick": "daily",
   "class": "paper",
   "tags": [],
+  "schema": 3,
+  "family": "world_offer_b2c",
+  "delay_weeks": [1, 6],
+  "plausibility": {
+    "phase_band": ["traction", "series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "guards": {
     "market": "b2c",
     "product_live": true
@@ -26,6 +36,11 @@
         "seam": "finance.cash",
         "op": ">=",
         "value": 167000
+      },
+      {
+        "seam": "sales.b2c_audience",
+        "op": ">=",
+        "value": 2000
       }
     ]
   },

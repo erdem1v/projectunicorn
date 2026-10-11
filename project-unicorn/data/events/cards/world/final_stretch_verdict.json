@@ -10,6 +10,16 @@
     "critical",
     "terminal_warning"
   ],
+  "schema": 3,
+  "system": true,
+  "family": "run_end",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 103
+  },
   "arc": "arc_final_stretch",
   "speaker": "char_mentor_frank",
   "latch": {

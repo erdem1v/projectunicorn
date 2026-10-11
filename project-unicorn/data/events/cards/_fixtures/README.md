@@ -9,9 +9,8 @@ That is deliberate: one mechanism, not two. A second "is this a test card" flag 
 second thing to forget.
 
 The probe (`--event-probe`) widens `SHIPPED_SCOPES` for its own run and narrows it again
-afterwards, and three smoke cases do the same for the length of one case
-(`event_thesis_day10_to_day90`, `event_thesis_through_presenter`,
-`ambient_hourly_never_at_night`). Nothing in production code does, and nothing should:
+afterwards, and the smoke cases whose subject is a fixture do the same for the length of one
+case (grep `SHIPPED_SCOPES.append`). Nothing in production code does, and nothing should:
 the widening is always paired with a restore in the same function.
 
 `hourly_ambient.json` is the subject of `ambient_hourly_never_at_night`, which asserts
@@ -25,3 +24,9 @@ refusal is asserted on its own.
 week 1, a card with no options mounts a modal that can never be dismissed and so disables
 saving (SaveManager.can_save refuses while an event is active), and an unrecognised condition
 leaf evaluates FALSE with a push_error on every evaluation.
+
+`lint_v3/` holds the linter's own counter-examples, one per schema v3 rule, and they are the one
+place here that does **not** carry `version_scope: fixture` — that scope is exactly what exempts a
+card from those rules, so a card meant to break one must ship-scope itself. What keeps them out of
+the catalogue is the `_bad_` filename instead. `event_lint_v3_rules` reads each file, normalises it
+and asserts it produces its own rule.

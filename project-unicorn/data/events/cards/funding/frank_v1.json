@@ -9,6 +9,16 @@
   },
   "class": "interrupt",
   "tags": [],
+  "schema": 3,
+  "system": true,
+  "family": "frank_mentor",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
   "latch": {
     "one_shot": true
   },

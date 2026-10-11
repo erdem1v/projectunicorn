@@ -4,10 +4,12 @@ extends RefCounted
 # THE FOUR-LAYER BRAKE (GDD §13). The problem was never the NUMBER of cards, it was the
 # SAMENESS: three cards about one account in a week reads as a bug. Every layer aims at that.
 #
-#   Layer 1  the same CARD          min_gap_weeks, default in EvTuning
-#   Layer 2  the same SUBJECT       a gap per subject type — POOL CARDS ONLY
-#   Layer 3  the same CATEGORY      a quota per week (tick)
-#   Layer 4  the per-tick ceiling   interrupts over it become paper
+#   Layer 1   the same CARD         min_gap_weeks, default in EvTuning
+#   Layer 1b  the same FAMILY       a gap per family — the pool, the floor and a dated origin
+#   Layer 2   the same SUBJECT      a gap per subject type — POOL CARDS ONLY
+#   Layer 2b  the family × SUBJECT  once ever, or a cooldown, per person
+#   Layer 3   the same CATEGORY     a quota per week (tick)
+#   Layer 4   the per-tick ceiling  interrupts over it become paper
 #
 # I4: NOTHING IS EVER DROPPED (§13.2). A card over budget falls interrupt → paper and stops.
 # Never to ambient: the ticker is lossy, so that would keep the letter of I4 and lose its point.
@@ -25,6 +27,13 @@ extends RefCounted
 
 ## Rolling window of admissions: [{day (tick), event_id, category, subject, class}]
 static var _window: Array = []
+
+## family -> {day, event_id} of its last fire. Kept apart from the window and NOT pruned: the
+## widest family gap outruns the window's cutoff, and layer 2b's `once` has to remember a whole
+## run. One entry per family, one per family × subject — a few dozen numbers.
+static var _family_days: Dictionary = {}
+## "family|subject_id" -> the tick that family last fired about that subject.
+static var _family_subject_days: Dictionary = {}
 
 
 # --- The per-tick assignment -----------------------------------------------
@@ -109,6 +118,9 @@ static func budget_exempt(card: Dictionary) -> bool:
 ##
 ## Critical cards and arc steps never reach this — G8 does not run for them (§13.5).
 static func pool_blocked_reason(card: Dictionary, subject_id: String) -> String:
+	var brake: Dictionary = family_brake(card, subject_id)
+	if not brake.is_empty():
+		return String(brake["reason"])
 	if budget_exempt(card):
 		return ""
 	_prune()
@@ -138,6 +150,58 @@ static func pool_blocked_reason(card: Dictionary, subject_id: String) -> String:
 		return "layer 3: category '%s' is at %d of %d this week" % [category, used, quota]
 
 	return ""
+
+
+## Layers 1b and 2b, as both an explanation and a wait: {} when the family allows the card,
+## else {reason, weeks} where `weeks` is how long the brake has left and -1 means never again.
+##
+## Asked on its own rather than folded into pool_blocked_reason because the signal, schedule and
+## floor origins pay these two layers without paying the pool's three — and because a signal
+## that these refuse is re-dated by `weeks` instead of being dropped (EvEngine._deferral_weeks).
+##
+## The family's rhythm is what the week already felt like: the pool, the floor and a dated signal
+## all pay it. An arc, a request, a force and the per-tick sweep that carries the critical cards
+## are exempt by ORIGIN — they never ask — and `follows` by layer 1b alone.
+static func family_brake(card: Dictionary, subject_id: String) -> Dictionary:
+	var family: String = String(card.get("family", ""))
+	if family == "":
+		return {}
+
+	# Layer 1b — ANOTHER card from this family. Three different cards about an employee asking
+	# for money inside a month is one card as far as the week feels. The card's own return is
+	# layer 1's business and its latch's, so its own last fire does not brake it. A `follows`
+	# card pays this layer alone no brake: a chain node answers to its parent, not to its
+	# family's rhythm — and 2b still holds it, because one person is still one person.
+	var last: Dictionary = _family_days.get(family, {})
+	if not card.has("follows") and not last.is_empty() \
+			and String(last["event_id"]) != String(card["id"]):
+		var since: int = GameState.day - int(last["day"])
+		var gap: int = TimeModel.ticks(EvTuning.family_gap(family))
+		if since < gap:
+			return {"weeks": gap - since,
+				"reason": "layer 1b: family '%s' fired %d week(s) ago, gap is %d"
+					% [family, since, gap]}
+
+	# Layer 2b — this family about THIS person. The finding that started all of it: the same
+	# employee asked for money twice, and a family may be right twice without being right twice
+	# about one person.
+	var rule: Dictionary = card.get("family_subject", {})
+	if subject_id == "" or rule.is_empty():
+		return {}
+	var seen: int = int(_family_subject_days.get(family + "|" + subject_id, -1))
+	if seen < 0:
+		return {}
+	if bool(rule.get("once", false)):
+		return {"weeks": -1,
+			"reason": "layer 2b: family '%s' already happened to this subject in week %d"
+				% [family, seen]}
+	var since: int = GameState.day - seen
+	var cooldown: int = TimeModel.ticks(int(rule.get("cooldown_weeks", 0)))
+	if since < cooldown:
+		return {"weeks": cooldown - since,
+			"reason": "layer 2b: family '%s' was about this subject %d week(s) ago, cooldown is %d"
+				% [family, since, cooldown]}
+	return {}
 
 
 static func _subject_gap_for(card: Dictionary) -> int:
@@ -174,6 +238,20 @@ static func _record(event_id: String, card: Dictionary, final_class: String, sub
 		"subject": subject,
 		"class": final_class,
 	})
+	record_family(event_id, card, subject)
+
+
+## The fire layers 1b and 2b read. Public because a note (§27.17) never reaches assign(): it
+## takes no room in the window, but its family has still spoken that week.
+static func record_family(event_id: String, card: Dictionary, subject: String) -> void:
+	var family: String = String(card.get("family", ""))
+	if family == "":
+		return
+	# The firing card's id too: layer 1b asks about ANOTHER card from the family, and without
+	# the id a card's own fire would brake its own return a second time.
+	_family_days[family] = {"day": GameState.day, "event_id": event_id}
+	if subject != "":
+		_family_subject_days[family + "|" + subject] = GameState.day
 
 
 static func _prune() -> void:
@@ -220,11 +298,19 @@ static func _last_day_about(subject_id: String) -> int:
 
 static func reset() -> void:
 	_window.clear()
+	_family_days.clear()
+	_family_subject_days.clear()
 
 
 static func to_dict() -> Dictionary:
-	return {"tempo_window": _window.duplicate(true)}
+	return {
+		"tempo_window": _window.duplicate(true),
+		"tempo_families": _family_days.duplicate(true),
+		"tempo_family_subjects": _family_subject_days.duplicate(),
+	}
 
 
 static func from_dict(d: Dictionary) -> void:
 	_window = (d.get("tempo_window", []) as Array).duplicate(true)
+	_family_days = (d.get("tempo_families", {}) as Dictionary).duplicate(true)
+	_family_subject_days = (d.get("tempo_family_subjects", {}) as Dictionary).duplicate()

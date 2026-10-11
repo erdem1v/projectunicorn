@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **179** |
+| Seams (read) | **194** |
 | Effect verbs (write) | **63** |
-| Cards in the catalogue | 66 |
+| Cards in the catalogue | 97 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -123,6 +123,21 @@ slot of that type (§17.12).
 | `arge.note_pending` | global | bool | R&D | an unread monthly product note is waiting |
 | `arge.tree_open` | global | bool | R&D | the tab is reachable |
 
+### `build.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `build.last_unlocked_module` | global | string | Build | the module whose page opened most recently; empty before any does |
+| `build.module_unlocked.events` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the events page is reachable in this build |
+| `build.module_unlocked.finance` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the finance page is reachable in this build |
+| `build.module_unlocked.hr` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the hr page is reachable in this build |
+| `build.module_unlocked.marketing` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the marketing page is reachable in this build |
+| `build.module_unlocked.personal` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the personal page is reachable in this build |
+| `build.module_unlocked.piyasa` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the piyasa page is reachable in this build |
+| `build.module_unlocked.product` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the product page is reachable in this build |
+| `build.module_unlocked.rnd` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the rnd page is reachable in this build. Never gated; the Ar-Ge tree's own door is arge.tree_open |
+| `build.module_unlocked.sales` | global | bool | Build | WRAPPER over ModuleLocks.is_open; the sales page is reachable in this build |
+
 ### `destek.`
 
 | seam | scope | type | owner | note |
@@ -215,12 +230,14 @@ slot of that type (§17.12).
 | `hr.payroll_monthly` | global | int | HR | not status-filtered: leave is paid |
 | `hr.raise_cooldown_left` | entity | int | HR | weeks until a raise is allowed again; 0 means now |
 | `hr.resign_voice` | entity | string | HR | the per-person resignation line |
+| `hr.run_hires` | global | int | HR | WRAPPER; hires made this run, the founder excluded. Counts a person who has since left |
 | `hr.salary` | entity | int | HR | WRAPPER over Character.monthly_salary, USD/month |
 | `hr.salary_band_position` | entity | float | HR | WRAPPER: <0 under the band, 0..1 inside it |
 | `hr.short_day_active` | entity | bool | HR | hours below 8 |
 | `hr.status` | entity | string | HR | active | on_leave | training |
 | `hr.tenure_weeks` | entity | int | HR | weeks on the payroll; 0 when hire_day was never stamped |
 | `hr.unstaffed_job_count` | global | int | HR | jobs nobody is assigned to |
+| `hr.weeks_since_last_hire` | global | int | HR | the youngest active employee's tenure in weeks; -1 while there is nobody |
 | `hr.work_hours` | entity | int | HR | 5-16, the resolved inheritance chain, default 8 |
 | `hr.work_hours_company` | global | int | HR | the company base, 5-16 |
 
@@ -338,6 +355,7 @@ slot of that type (§17.12).
 | `urun.bugs_unconfirmed` | global | int | Product | incoming, unvalidated reports |
 | `urun.capacity_state` | global | string | Product | normal | amber | over | unprovisioned |
 | `urun.capacity_tier` | global | int | Product | provisioned infra units |
+| `urun.crunch_finishes` | global | bool | Product | the crunch's hours finish the decision card this sprint; false when none waits |
 | `urun.decision_card` | global | string | Product | name of the card a sprint decision waits on; empty when none |
 | `urun.decision_card_effort` | global | int | Product | the decision card's effort in points; 0 when none waits |
 | `urun.decision_card_late` | global | bool | Product | at the team's pace the decision card will not finish this sprint; false when none waits |
@@ -349,8 +367,10 @@ slot of that type (§17.12).
 | `urun.is_live` | global | bool | Product | something has shipped |
 | `urun.lines_open` | global | int | Product | 0-9 feature lines opened |
 | `urun.market_type` | global | string | Product | b2b | b2c; empty until the product type is chosen |
+| `urun.paid_plan_set` | global | bool | Product | the paid plan is open, or its card is in the running or the planned sprint |
 | `urun.sprint_number` | global | int | Product | the open sprint; 0 before the product type is chosen |
 | `urun.sprint_running` | global | bool | Product | a sprint is under way: not planning, not the release note |
+| `urun.sprint_single_card` | global | bool | Product | the open sprint holds one card; carried over, it leaves the sprint nothing to work on |
 | `urun.sprint_week` | global | int | Product | 1 or 2 inside a running sprint |
 | `urun.steps_shipped` | global | int | Product | feature steps live |
 | `urun.subtype` | global | string | Product | one of the sub-product ids |
@@ -402,8 +422,215 @@ so `flag_unset` would silently read true forever.
 | `arc_fixture_subject` | assignment | reassign | 1 |
 | `arc_fixture_thesis` | promise | close | 2 |
 
+## e · Schema v3 — the plausibility block
+
+Every card carries one and the engine compiles it into ordinary condition leaves
+(GDD §3.1, §27.20). The block's SHAPE is §3.1's table; what follows is the value each
+field accepts, read off the engine.
+
+### `phase_band` — where in the run the card lives
+
+| band | compiles to |
+|---|---|
+| `bootstrap_solo` | `phase.current == 1` ∧ `hr.headcount == 0` |
+| `bootstrap_team` | `phase.current == 1` ∧ `hr.headcount >= 1` |
+| `traction` | `phase.current == 2` |
+| `series_a` | `phase.current == 3` |
+
+### `product` — which side of the launch
+
+| value | compiles to |
+|---|---|
+| `pre_launch` | `urun.is_live == false` |
+| `live` | `urun.is_live == true` |
+| `any` | nothing; the card lives on both sides |
+
+### `modules` — the module pages a card may require
+
+Each name becomes a `build.module_unlocked.<id>` leaf (§27.22).
+
+- `product`
+- `sales`
+- `hr`
+- `finance`
+- `piyasa`
+- `personal`
+- `marketing`
+- `rnd`
+- `events`
+
+### `subject_tenure_weeks` — where seniority is readable
+
+The floor filters the slot's SELECTOR, so the card binds someone who has been here
+that long rather than binding anyone and refusing at the gate. A slot of any other
+type has no seniority, and a `system` card is given its subject, so it gets no filter.
+
+| slot type | seam the floor reads |
+|---|---|
+| `employee` | `hr.tenure_weeks` |
+| `customer` | `musteri.tenure_weeks` |
+
+A family may impose a floor of its own, and the higher of the two is compiled:
+
+- `employee_asks_money` — 26 weeks
+
+### `family` — the brake the card pays
+
+Another card from the same family waits out the gap (§13.3 layer 1b); with
+`family_subject` the family also waits per person or account (layer 2b). The families
+the catalogue already uses, and the gap each pays:
+
+| family | gap (weeks) | cards |
+|---|---|---|
+| `customer_escalation` | 6 | 1 |
+| `customer_feedback` | 6 | 1 |
+| `customer_growth` | 6 | 1 |
+| `customer_money_dispute` | 6 | 2 |
+| `customer_ownership` | 6 | 2 |
+| `customer_requests` | 6 | 3 |
+| `customer_risk` | 2 | 1 |
+| `customer_security` | 6 | 1 |
+| `employee_asks_money` | 12 | 2 |
+| `employee_mistake` | 6 | 1 |
+| `founder_money` | 6 | 2 |
+| `founder_network` | 4 | 2 |
+| `founder_setup` | 6 | 1 |
+| `founder_solitude` | 3 | 2 |
+| `frank_mentor` | 6 | 10 |
+| `funding_paperwork` | 6 | 3 |
+| `hr_departure` | 6 | 1 |
+| `investor_favor` | 6 | 2 |
+| `investor_pressure` | 6 | 1 |
+| `leak_story` | 6 | 2 |
+| `phase_gate` | 6 | 2 |
+| `product_floor` | 4 | 2 |
+| `product_ops` | 6 | 1 |
+| `product_progress` | 6 | 1 |
+| `product_quality` | 6 | 1 |
+| `product_security` | 6 | 1 |
+| `product_support` | 6 | 1 |
+| `rival_exit` | 6 | 1 |
+| `rival_funding` | 6 | 1 |
+| `rival_imitation` | 6 | 2 |
+| `rival_poaching` | 6 | 2 |
+| `run_end` | 6 | 5 |
+| `sales_negotiation` | 6 | 1 |
+| `seed_round` | 6 | 4 |
+| `series_a_table` | 6 | 3 |
+| `sprint_capacity` | 6 | 3 |
+| `sprint_rewrite` | 6 | 4 |
+| `sprint_scope_creep` | 6 | 2 |
+| `team_overload` | 6 | 1 |
+| `team_ritual` | 6 | 1 |
+| `team_security` | 6 | 1 |
+| `world_offer_b2b` | 8 | 2 |
+| `world_offer_b2c` | 8 | 3 |
+
+A family absent from `EvTuning.FAMILY_GAP_WEEKS` pays the default, 6 weeks.
+
+### The window, the immunity and the demo's reach
+
+- `delay_weeks: [N, M]` — the week the condition first holds arms a window and the
+  card is a candidate `N..M` weeks later (§27.19). `[0, 0]` needs a `delay_reason`.
+- A condition un-held for more than 4 weeks running throws its window away.
+- The pool is silent for the first 3 weeks (§27.21); the quiet floor, requests,
+  arc steps, `system` cards and the `tutorial` / `terminal_warning` tags are exempt.
+- `min_week` past week 130 is a warning: the demo never reaches it.
+
+## f · Who may write each verb
+
+Section a groups verbs by the ORIGIN that may run them. This groups them by
+AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
+working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
+is what the player is shown and what lands.
+
+### Writer verbs (30) — any card, inside the two rules below
+
+- `add_cash`
+- `add_brand`
+- `add_reputation`
+- `customer_mrr_delta`
+- `seats`
+- `churn_customer`
+- `audience_delta`
+- `add_prospect`
+- `employee_leaves`
+- `b2b_retain_discount`
+- `b2b_expand`
+- `change_morale`
+- `morale_all`
+- `satisfaction_delta`
+- `promise_create`
+- `sprint_hours`
+- `sprint_card_effort`
+- `sprint_card_progress`
+- `sprint_card_carry`
+- `fix_run_start`
+- `b2b_retain_delay`
+- `b2b_retain_ignore`
+- `b2b_expand_decline`
+- `set_flag`
+- `stamp_day`
+- `schedule_event`
+- `cancel_scheduled`
+- `productivity_mod`
+- `investor_strain`
+- `marketing_push`
+
+Two rules narrow the list. A `sprint_card_*` verb belongs to a `tick: request` sprint
+decision and to no other card (§17.14, V3). A module verb spends a page the build may
+not have opened: never in a demo card, and past the demo only in an option whose
+`requires` names the module as open (§17.15, O5).
+
+- `marketing_push` — needs `build.module_unlocked.marketing`
+
+### Reserved (18) — a `system` card only
+
+Each moves the run itself — a phase, a table, an arc, an ending — so a story card
+reaching for one would be deciding the run instead of colouring it.
+
+- `advance_phase`
+- `phase_gate_decline`
+- `angel_accept`
+- `open_term_table`
+- `open_seed_table`
+- `decline_offer`
+- `decline_buyout`
+- `trigger_ending`
+- `mentor_advisory`
+- `goto_tab`
+- `unlock_content`
+- `spend_budget`
+- `set_game_flag`
+- `start_arc`
+- `advance_arc`
+- `end_arc`
+- `abort_arc`
+- `set_arc_var`
+
+### Not writable (15) — no working arm or no chip
+
+The executor dispatches these, so they are not unknown names; they are names a card
+may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.
+
+- `clear_flag`
+- `set_timed_flag`
+- `assign_to`
+- `send_on_leave`
+- `start_training`
+- `damage_product`
+- `ticker_push`
+- `notify`
+- `open_negotiation`
+- `add_mrr`
+- `add_customer`
+- `convert_audience`
+- `open_paid_tier`
+- `change_salary`
+- `fire_employee`
+
 <!-- HAND-WRITTEN — REGENERATION SKIPS THIS BLOCK -->
-## e · Hand-written notes
+## g · Hand-written notes
 
 This block survives regeneration. The three sections worth keeping here are the ones
 the old file carried and nobody would reconstruct: the **trigger-hook map** (draft
