@@ -10,11 +10,12 @@ extends Control
 # butona tıklamaktır.
 #
 # Şu an çalışmayan satır kapalıdır ve gerekçesi satırının sağında okunur: Kaydet kaydedilemezken
-# (SaveManager'ın tek kapısı), ana menü henüz yokken. Yükle penceresinin "Karara dön"ü menüyü de
-# kapatır (grup system_menu). Dil menü açıkken değişebilir (Ayarlar üstünde): düğmeler ve gerekçeler
-# anahtardır ve kendilerini çevirir, başlık ve tarih yeniden yazılır.
+# (SaveManager'ın tek kapısı). Yükle penceresinin "Karara dön"ü menüyü de kapatır (grup system_menu).
+# Dil menü açıkken değişebilir (Ayarlar üstünde): düğmeler ve gerekçeler anahtardır ve kendilerini
+# çevirir, başlık ve tarih yeniden yazılır.
 
 signal dismissed
+signal main_menu_requested
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 
@@ -26,11 +27,11 @@ func _ready() -> void:
 	EventBus.language_changed.connect(_retranslate.unbind(1))
 	if not SaveManager.can_save():
 		_lock(%SaveBtn, SaveManager.cannot_save_reason_key())
-	_lock(%MainMenuBtn, "SYS_SOON")
 	%ResumeBtn.pressed.connect(close)
 	%SaveBtn.pressed.connect(EventBus.save_load_requested.emit.bind("save"))
 	%LoadBtn.pressed.connect(EventBus.save_load_requested.emit.bind("load"))
 	%SettingsBtn.pressed.connect(EventBus.settings_requested.emit)
+	%MainMenuBtn.pressed.connect(_on_main_menu)
 	%QuitBtn.pressed.connect(_on_quit)
 	%ResumeBtn.grab_focus()   # varsayılan odak GÜVENLİ taraf: yanlış Enter oyuna döner
 
@@ -52,31 +53,41 @@ func _lock(button: Button, why_key: String) -> void:
 	reason.offset_right = -UiTokens.SPACE_XL
 
 
+func _on_main_menu() -> void:
+	var weeks: int = GameState.day - SaveManager.last_save_day
+	_leave(main_menu_requested.emit, "SYS_MENU_TITLE",
+		tr("SYS_MENU_BODY_WEEKS").format({"n": weeks}) if weeks > 0 else tr("SYS_QUIT_BODY"), "SYS_MENU_SAVE",
+		"SYS_MENU_DISCARD")
+
+
 func _on_quit() -> void:
-	# Kaydedilmemiş ilerleme yoksa doğrudan çık — boş bir onayla durdurmayız.
+	_leave(get_tree().quit, "SYS_QUIT_TITLE", tr("SYS_QUIT_BODY"), "SYS_QUIT_SAVE", "SYS_QUIT_DISCARD")
+
+
+## Kaydedilmemiş ilerleme yoksa doğrudan `leave`: boş bir onayla durdurmayız. Varsa üç yol: kaydet ve git /
+## kaydetmeden git / vazgeç. Kaydedilemezken (bir karar beklerken) kaydet ve git kapalıdır, gerekçesi altında.
+func _leave(leave: Callable, title_key: String, body: String, save_key: String, discard_key: String) -> void:
 	if not SaveManager.has_unsaved_progress():
-		get_tree().quit()
+		leave.call()
 		return
-	# Üç yol: kaydet ve çık / kaydetmeden çık / vazgeç. Kaydedilemezken (bir karar beklerken) Kaydet ve çık kapalıdır,
-	# gerekçesi altında.
 	EventBus.confirm_requested.emit({
-		"title": tr("SYS_QUIT_TITLE"),
-		"body": tr("SYS_QUIT_BODY"),
-		"confirm_text": tr("SYS_QUIT_SAVE"),
+		"title": tr(title_key),
+		"body": body,
+		"confirm_text": tr(save_key),
 		"locked": tr(SaveManager.cannot_save_reason_key()),
-		"alt_text": tr("SYS_QUIT_DISCARD"),
+		"alt_text": tr(discard_key),
 		"cancel_text": tr("SYS_CANCEL"),
-		"on_confirm": _save_and_quit,
-		"on_alt": get_tree().quit,
+		"on_confirm": _save_and.bind(leave),
+		"on_alt": leave,
 	})
 
 
-func _save_and_quit() -> void:
+func _save_and(leave: Callable) -> void:
 	# main.gd saves and toasts the result. Only a landed save clears the unsaved flag, so a
 	# refusal or a failed write keeps the game open.
 	EventBus.quicksave_requested.emit()
 	if not SaveManager.has_unsaved_progress():
-		get_tree().quit()
+		leave.call()
 
 
 func _unhandled_input(event: InputEvent) -> void:

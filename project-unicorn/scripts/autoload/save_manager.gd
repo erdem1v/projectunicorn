@@ -45,6 +45,8 @@ var _last_autosave_msec: int = 0
 # "Days have been played since the last save." Raised at the day-tick boundary, cleared by a
 # successful save and by a load.
 var _dirty: bool = false
+# The day of the run's last save or load; a fresh run starts on day 1.
+var last_save_day: int = 1
 # The autosave a worker is writing, -1 when none. Waited for exactly once, in _join_write.
 var _write_task: int = -1
 
@@ -209,6 +211,7 @@ func save_to_slot(slot_id: String) -> bool:
 	if not _write_atomic(_path_for(slot_id), _payload()):
 		return false
 	_dirty = false
+	last_save_day = GameState.day
 	return true
 
 
@@ -298,6 +301,8 @@ func apply_loaded_state(payload: Dictionary) -> bool:
 
 	TimeManager.set_suspended(false)
 	_dirty = false
+	# The loaded week is where the player's progress was last kept.
+	last_save_day = GameState.day
 	return true
 
 
@@ -335,6 +340,17 @@ func reset_all_owners() -> void:
 
 	# RNG last, so nothing above draws from a stream that is about to be re-keyed.
 	RngStreams.reset()
+
+
+## The run ends without leaving the process: a write in flight lands, every owner of run state resets and nothing
+## is left to save. TimeManager.reset unpauses the tree at speed 1, so stopping the clock comes last.
+func end_run() -> void:
+	_join_write()
+	reset_all_owners()
+	GameState.set_run_active(false)
+	_dirty = false
+	last_save_day = 1
+	EventBus.speed_change_requested.emit(0)
 
 
 # ============================================================================
@@ -435,7 +451,9 @@ func _on_write_done(ok: bool, day: int) -> void:
 	_join_write()
 	if not ok:
 		_autosave_pending = true
-	elif day == GameState.day:
+		return
+	last_save_day = day
+	if day == GameState.day:
 		_dirty = false
 
 

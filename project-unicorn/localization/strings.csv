@@ -277,6 +277,10 @@ SYS_SAVE,Kaydet,Save
 SYS_LOAD,Yükle,Load
 SYS_SETTINGS,Ayarlar,Settings
 SYS_MAIN_MENU,Ana menüye dön,Return to main menu
+SYS_MENU_TITLE,Ana menüye dönülsün mü?,Return to main menu?
+SYS_MENU_BODY_WEEKS,Son kayıttan bu yana {n} hafta geçti. Kaydedilmemiş ilerleme kaybolur.,{n} weeks have passed since your last save. Unsaved progress will be lost.
+SYS_MENU_SAVE,Kaydet ve dön,Save and return
+SYS_MENU_DISCARD,Kaydetmeden dön,Return without saving
 SYS_SOON,Yakında,Soon
 SYS_QUIT,Masaüstüne çık,Quit to desktop
 SYS_QUIT_TITLE,Kaydedilmemiş ilerleme var.,You have unsaved progress.

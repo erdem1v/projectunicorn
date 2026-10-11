@@ -8948,14 +8948,15 @@ static func _case_autosave_writes_off_thread() -> String:
 
 
 ## The menu's boot and the saves it offers. The first boot's language is Turkish for a Turkish Steam or system
-## language and English for any other, and Steam's answer beats the system's. A new run on a seed is the same state
-## after three weeks of an earlier run as on a clean slate, its id apart (the endings' latches and the sprint are
-## GameState's, so the print holds them). A run's quicksave and autosaves are its own: run B's four autosaves roll
+## language and English for any other, and Steam's answer beats the system's. Ending a run in the process leaves no
+## run to save, nothing unsaved and the tree paused at speed 0. A new run on a seed after three weeks of an earlier run
+## ended so is the same state as on a clean slate, its id apart (the endings' latches and the sprint are GameState's,
+## so the print holds them). A run's quicksave and autosaves are its own: run B's four autosaves roll
 ## over its own three and leave run A's files byte for byte; Continue is the newest save that opens, never a newer
 ## file that cannot be read; the Load list holds the two runs apart. The saves are written to a folder of the case's
 ## own.
 ## FALSIFICATION: read os_lang before steam_lang in Localization.detect_language and the third pair fails; drop
-## RivalRegistry.reset() from reset_all_owners and run B starts on A's rivals; build _next_auto_slot_id's ids without
+## reset_all_owners() from SaveManager.end_run and run B starts on A's world; build _next_auto_slot_id's ids without
 ## GameState.run_id and run B's third autosave rolls over run A's.
 static func _case_menu_state_machine() -> String:
 	for row in [["", "tr", "tr"], ["", "de", "en"], ["turkish", "en", "tr"], ["english", "tr", "en"]]:
@@ -8991,7 +8992,11 @@ static func _case_menu_state_machine() -> String:
 	var a_files: Dictionary = {}
 	for f in DirAccess.get_files_at(dir):
 		a_files[f] = FileAccess.get_file_as_bytes(dir + f)
-	SaveManager.reset_all_owners()
+	SaveManager.end_run()
+	var ended: Array = [GameState.run_active, SaveManager.has_unsaved_progress(), SaveManager.cannot_save_reason_key(),
+		TimeManager.current_speed, (Engine.get_main_loop() as SceneTree).paused]
+	if ended != [false, false, "SAVE_ERR_NO_RUN", 0, true]:
+		return done.call("after end_run [run_active, unsaved, save gate, speed, paused] = %s" % str(ended))
 	GameState.initialize_run({"seed": 7})
 	var run_b: String = GameState.run_id
 	if run_b == run_a:

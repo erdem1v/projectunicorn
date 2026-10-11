@@ -123,8 +123,7 @@ func _mount_godot_card() -> void:
 ## The menu is where no run is: the save gate reads "no run", nothing is unsaved and the clock stops.
 func _mount_menu() -> void:
 	_state = "menu"
-	GameState.set_run_active(false)
-	EventBus.speed_change_requested.emit(0)
+	SaveManager.end_run()
 	_menu = MAIN_MENU.instantiate()
 	_menu.new_game_requested.connect(func() -> void:
 		_free_menu()
@@ -138,6 +137,13 @@ func _free_menu() -> void:
 		_menu.get_node("%MenuBackdrop").stop()
 		_menu.queue_free()
 		_menu = null
+
+
+## The run's screens leave a frame before its state resets, so none of them reads the reset world.
+func _return_to_menu() -> void:
+	_teardown_run_ui()
+	await get_tree().process_frame
+	_mount_menu()
 
 
 func _mount_flow() -> void:
@@ -1920,7 +1926,8 @@ func _seed_rnd(week: int, note := true) -> void:
 #   settings_reset (the reset asked over it) · system · system_gate (a decision waiting) ·
 #   save_empty · save · save_overwrite (overwriting the quicksave asked) · load_empty · load · load_gate (a decision
 #   waiting) · load_delete (deleting Kayıt 1 asked) · confirm (the seed pitch) · confirm3 (quitting over the menu
-#   with weeks unsaved) · confirm3_gate (the same, a decision waiting) · f5_gate (F5 refused while a decision waits).
+#   with weeks unsaved) · confirm3_gate (the same, a decision waiting) · return_confirm, return_confirm_gate (the same
+#   two returning to the main menu, three weeks unsaved) · f5_gate (F5 refused while a decision waits).
 # The save and load kinds write or delete six real saves (_shot_saves): run them with a private APPDATA.
 func _run_modal_shot(kind: String) -> void:
 	_begin_shot()
@@ -1972,10 +1979,12 @@ func _run_modal_shot(kind: String) -> void:
 				"confirm_text": tr("SEED_PITCH_CONFIRM_OK"),
 				"cancel_text": tr("UI_DISMISS"),
 			})
-		"confirm3", "confirm3_gate":
+		"confirm3", "confirm3_gate", "return_confirm", "return_confirm_gate":
 			EventBus.system_menu_requested.emit()
 			SaveManager._dirty = true
-			(_system_menu.get_node("%QuitBtn") as Button).pressed.emit()
+			SaveManager.last_save_day = GameState.day - 3
+			var row: String = "%QuitBtn" if kind.begins_with("confirm3") else "%MainMenuBtn"
+			(_system_menu.get_node(row) as Button).pressed.emit()
 		"f5_gate":
 			EventBus.quicksave_requested.emit()
 		_:
@@ -2070,7 +2079,11 @@ const MENU_SHOT_PRESS := {"load": "LOAD", "settings": "SETTINGS", "credits": "CR
 ## menu two frames on. live waits for the live scene to fade in; every other kind stands on the plate (plate itself,
 ## bare), the live scene arriving at no fixed frame. Prints the MENU line of the frame. bake_plate:<office>:<HHMM> draws
 ## a backdrop's live scene alone, as the plate it becomes: backdrop_<office>_<HHMM>.png, copied to assets/art/menu/.
+## return_confirm[:gate] is --modal-shot=return_confirm[_gate], the return asked over the shell.
 func _run_menu_shot(kind: String) -> void:
+	if kind.begins_with("return_confirm"):
+		_run_modal_shot(kind.replace(":", "_"))
+		return
 	_begin_shot()
 	if kind.begins_with("bake_plate:"):
 		var at: PackedStringArray = kind.split(":")
@@ -3924,6 +3937,7 @@ func _on_system_menu_requested() -> void:
 	EventBus.speed_change_requested.emit(0)
 	_system_menu = SYSTEM_MENU_MODAL.instantiate()
 	_system_menu.dismissed.connect(_on_system_menu_dismissed)
+	_system_menu.main_menu_requested.connect(_return_to_menu)
 	modal_layer.add_child(_system_menu)
 
 
@@ -3998,6 +4012,8 @@ func _load_slot(slot_id: String) -> bool:
 	await get_tree().process_frame
 	if not SaveManager.apply_loaded_state(payload):
 		push_error("[Main] yükleme durumu uygulanamadı (%s)" % slot_id)
+		# The run it was to replace is gone: the menu is what is left to stand on.
+		_mount_menu()
 		return false
 	await _mount_shell()
 	EventBus.game_loaded.emit(slot_id)
@@ -4063,17 +4079,14 @@ func _on_milestone_continue() -> void:
 	TimeManager.release_clock(MILESTONE_CLOCK_HOLD)
 
 
-## ANA MENÜ: keep the run in a save slot, then go where a run starts — today the boot flow,
-## reached the way TEKRAR DENE reaches it (a process relaunch). A MANUAL slot, not the rolling
-## autosave: the new run's third weekly autosave would overwrite the kept run.
+## ANA MENÜ: keep the run in a new manual slot, apart from its rolling autosaves, then return to the menu.
 func _on_milestone_main_menu() -> void:
 	if _keep_run_for_main_menu() == "":
 		var why: String = SaveManager.cannot_save_reason_key()
 		if _milestone_modal != null:
 			_milestone_modal.show_notice(tr(why if why != "" else "SAVE_ERR_WRITE"))
 		return
-	OS.set_restart_on_exit(true)
-	get_tree().quit()
+	_return_to_menu()
 
 
 ## The save half of ANA MENÜ, apart so the smoke can prove it without quitting the process.
@@ -4139,21 +4152,18 @@ func _dbg_menu_digest() -> Dictionary:
 		"speed": TimeManager.current_speed, "paused": get_tree().paused}
 
 
-# Shift+F4: tears down the shell and every modal and remounts OnboardingFlow from step 1, as a
-# fresh launch presents it. The in-progress run is discarded (onboarding's only exit is a new
-# run). SaveManager.reset_all_owners is the one reset path, shared with save loading.
+# Shift+F4: the return to the menu straight on to NEW GAME. The in-progress run is discarded.
 func _on_debug_onboarding_retrigger() -> void:
 	if _flow != null:
 		return
 	_teardown_run_ui()
-	SaveManager.reset_all_owners()
-	EventBus.speed_change_requested.emit(0)
+	SaveManager.end_run()
 	_mount_flow()
 
 
 # Frees the menu or the shell (and its ModalLayer/PanelLayer children) and drops EVERY surface ref, so
 # nothing from the outgoing run leaks into the next — a stale dialogue ref
-# would misroute the next run's first meeting choice. Shared by Shift+F4 and save loading.
+# would misroute the next run's first meeting choice. Shared by Shift+F4, save loading and the return to the menu.
 func _teardown_run_ui() -> void:
 	_free_menu()
 	if _shell != null:
