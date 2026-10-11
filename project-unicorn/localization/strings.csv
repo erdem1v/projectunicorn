@@ -1916,7 +1916,10 @@ MEETING_RES_RELATION_LINE,{name}: {from} → {to},{name}: {from} → {to}
 MEETING_RES_OFFER,Teklif gelecek,An offer is coming
 MEETING_RES_CALLBACK,Yeniden görüşülecek,They want to meet again
 MEETING_RES_NO,Bu sefer değil,Not this time
-MEETING_RES_SIGNED,Anlaşma imzalandı,Deal signed
+MEETING_RES_AGREED,Şartlarda anlaşıldı,Terms agreed
+SALES_DEAL_SIGNS_IN,İmza {n} hafta sonra,Signs in {n} weeks
+SALES_DEAL_SIGNS_IN_ONE,İmza {n} hafta sonra,Signs in {n} week
+SALES_DEAL_STAMP,Anlaşıldı,Agreed
 MEETING_RES_LOST,Anlaşma olmadı,No deal
 MEETING_RES_WITHDREW,Görüşmeden çekildin,You withdrew
 MEETING_RES_INSULT,Masadan kalktılar,They left the table
@@ -2401,7 +2404,16 @@ SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.
 SALES_EXPIRED_LINE,Beklemekten vazgeçti.,They stopped waiting.
 SALES_DESK_HEADER,Satış masası,Sales desk
 SALES_DESK_EMPTY,Satış işine atanmış kimse yok.,Nobody is assigned to the sales job.
-SALES_REP_WORKING,{company} ile görüşüyor · {n}. hafta,Working {company} · week {n}
+SALES_REP_DEAL,{company} · {deal},{company} · {deal}
+SALES_DEAL_YOURS,Sen,You
+SALES_DEAL_LINE,{stage} · {done}/{total} hafta,{stage} · {done}/{total} weeks
+SALES_DEAL_LINE_ONE,{stage} · {done}/{total} hafta,{stage} · {done}/{total} week
+SALES_STAGE_DISCOVERY,Keşif görüşmesi,Discovery stage
+SALES_STAGE_DEMO,Demo aşaması,Demo stage
+SALES_STAGE_PROPOSAL,Teklif aşaması,Proposal stage
+SALES_STAGE_NEGOTIATION,Pazarlık aşaması,Negotiation stage
+SALES_STAGE_PROCUREMENT,Satın alma onayı,Procurement stage
+SALES_STAGE_SIGNING,İmza aşaması,Signing stage
 SALES_BAND_CAPTION,Çalıştığı bant:,Working band:
 SALES_BAND_OWN,Kendi ligi,Own league
 SALES_BAND_OWN_ONLY,Çalıştığı bant: kendi ligi.,Working band: own league.
@@ -2432,6 +2444,7 @@ SALES_BLOCK_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
 SALES_BLOCK_WEEK_FULL,Bu haftaki toplantı hakların doldu. Yeni hafta başında yenilenir.,This week's meetings are spent. They come back when the new week starts.
 SALES_BLOCK_TOO_LATE,Mesai bitiyor. Bu hafta yeni bir masaya oturulmaz.,The workday is ending. No new table this week.
 SALES_BLOCK_NO_LEAD,Bu aday artık boru hattında değil.,That lead is no longer in the pipeline.
+SALES_BLOCK_IN_DEAL,Bu şirketle anlaşma sürüyor.,A deal with them is under way.
 SALES_BLOCK_REASON_UNCHANGED,Aynı sebep hâlâ ortada. Değişmeden aynı cevabı verirler.,"The same reason still stands. Unchanged, they answer the same way."
 SALES_WHALE_PROVIDER_OR_CERT,Altyapı güvencesi istiyor.,They want an infrastructure assurance.
 SALES_WHALE_LOCKED_TIER,Kapalı bir kademeyi şart koşuyor.,They want a tier you have not opened.

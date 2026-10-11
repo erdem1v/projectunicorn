@@ -2079,3 +2079,19 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler (karara bağlandı): (a) A) onboarding tabanı (seçildi, 4 hafta), B) tolerans oturtma, C) dokunma.
     (d) A) 0,5 (seçildi), B) başka değer, C) dokunma.
   - Kaynak: `docs/tasks/PRD_ONARIM_1.md` §2.3, §4.2, §6, §11; ölçüm ve model kayıtları repo dışında.
+- **108 · Traction gerilimi gider tarafından.**
+  - Ne oluyor: Onboarding tabanı (O19 `419ee6e`) erken B2B hesaplarını tutunca Traction haftalarında runway'in sonlu
+    kaldığı pay (`finite_runway_p2`, 98'in ölçüsü) 0,24'ten 0,09'a indi; satış süreci (O22) onu 0,13'e getirdi. Ölçüm
+    (`full_run:40:sim:1..20`, bot; taban O19 ve O20): O22'nin taban süreleri 2/3/6/8/12 hafta ile 0,13; 2/4/6/8/12 ile
+    0,14; 3/4/6/8/12 ile 0,12. Süreyi uzatmak payı yükseltmiyor: gelir gecikince botun Frank çeki, seed'i ve işe alımı da
+    gecikiyor (`run_probe.gd` `STAFF_LADDER`: test uzmanı 3K, satış temsilcisi 4K MRR'da; `_hire_after_the_seed`), yakma
+    MRR'ı izliyor. Gerilim gelir tarafından gelmiyor, gider tarafında aranır.
+  - Nerede: Traction'ın gider kalemleri (`FinanceSystem`; 98'in ölçtüğü kaldıraçlar: koltuk, hesap, araç değerleri),
+    maaşlar (`HRConstants` seviye bantları), işe alımın temposu (büyümenin ekip gereksinimi; botta `STAFF_LADDER`).
+  - Oyuncuya etkisi: B2B koşusunda Traction'ın çoğu haftası nakit fazlası verir; runway baskısı erken oyunda zayıf kalır.
+  - Seçenekler (uygulama yok): A) Traction'a faza bağlı gider (ofis, araç, pazarlama), 98'in seed öncesi iflas
+    uyarısıyla birlikte ölçülür. B) Maaşlar: seviye fiyatı ya da Traction'da artış. C) İşe alım temposu: büyümenin ekip
+    gereksinimi (ör. hesap başına destek, sürüm başına test). D) Bekle: EKIP V1 (verim eğrisi) ve PRD_URUN_DERINLIK
+    ekonomiyi yeniden oynatacak; ölçüm o işlerden sonra tekrarlanır.
+  - Kaynak: sahip kararı 2026-10-11 (yardımcı yönetmen iletti: 0,15 eşiği O22'nin emniyetiydi, O22 süreleriyle olduğu
+    gibi girdi; gider tarafı bu maddede, uygulama yok); 98; O19 `419ee6e`; O22; ölçüm kayıtları repo dışında.

@@ -36,7 +36,7 @@ extends RefCounted
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
 #   PROBE SIGN  day=<d> hour=<h> id=<cid> by=<founder|rep> star=<n> weeks=<w> mrr=<n>
 #                                           (every B2B signing; weeks is the deal's planned length,
-#                                           0: a deal signs as it closes; mrr is the account's)
+#                                           0 for a fixture account; mrr is the account's)
 #   PROBE TALLY <id> fires=<n> picks=<n>    (one per id, at the end)
 #   PROBE WEEK  w=<w> fires=<n> meetings=<n> signs=<n>   (one per week, at the end: card fires,
 #                                           the founder's sittings, B2B signings)
@@ -436,13 +436,16 @@ static func _on_churn(customer_id: String) -> void:
 
 
 static func _on_signed(customer_id: String, _seats: int, _seat_price: int) -> void:
-	# SalesSystem.add_b2b_customer emits once the account is on the books, so the record is readable.
+	# SalesSystem.add_b2b_customer emits once the account is on the books and before its lead leaves the
+	# registry, so both records are readable. A fixture account signs without a lead.
 	var c: Customer = CustomerRegistry.get_customer(customer_id)
+	var lead: Prospect = ProspectRegistry.get_prospect(customer_id.trim_prefix("co_"))
 	_signs_by_day[GameState.day] = int(_signs_by_day.get(GameState.day, 0)) + 1
 	if _first_sign_day < 0:
 		_first_sign_day = GameState.day
-	print("PROBE SIGN day=%d hour=%d id=%s by=%s star=%d weeks=0 mrr=%d" % [GameState.day, GameState.current_hour,
-		customer_id, "founder" if c.acquisition_source == "founder_pitch" else "rep", c.scale, c.mrr])
+	print("PROBE SIGN day=%d hour=%d id=%s by=%s star=%d weeks=%.1f mrr=%d" % [GameState.day, GameState.current_hour,
+		customer_id, "founder" if c.acquisition_source == "founder_pitch" else "rep", c.scale,
+		lead.deal_halfweeks / 2.0 if lead != null else 0.0, c.mrr])
 
 
 static func _log_promise(promise_id: String, stage: String) -> void:
@@ -984,7 +987,7 @@ static func _meet(p: Prospect) -> void:
 	SalesMeetingSystem.close()
 	# A won table carries the deal's planned length (PROBE SIGN's weeks).
 	print("PROBE PLAY day=%d meeting %s -> %s (mrr %d -> %d)%s" % [GameState.day, p.company_name, outcome,
-		mrr_before, GameState.mrr, " weeks=0" if outcome == "won" else ""])
+		mrr_before, GameState.mrr, " weeks=%.1f" % (p.deal_halfweeks / 2.0) if outcome == "won" else ""])
 
 
 ## The B2B run's staffing ladder: a founder who is growing

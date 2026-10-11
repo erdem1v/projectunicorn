@@ -96,9 +96,11 @@ func _on_state_changed(_a = null, _b = null, _c = null) -> void:
 	_refresh()
 
 
-## The entry gate opens and closes with the clock: the page repaints when it flips, not every hour.
-func _on_hour_changed(_hour: int) -> void:
-	if WorkHoursSystem.sitting_open(SalesConstants.MEETING_ENTRY_CUTOFF_HOURS) != _sitting_open:
+## The entry gate opens and closes with the clock, and a deal steps into its afternoon half at noon: the page
+## repaints then, not every hour.
+func _on_hour_changed(hour: int) -> void:
+	if hour == SalesConstants.DEAL_HALF_WEEK_HOUR \
+			or WorkHoursSystem.sitting_open(SalesConstants.MEETING_ENTRY_CUTOFF_HOURS) != _sitting_open:
 		_refresh()
 
 
@@ -340,26 +342,28 @@ func _lead_card(p: Prospect, off: bool) -> PanelContainer:
 	elif p.routing == SalesConstants.ROUTE_REP:
 		head.add_child(UiFactory.D_tag(tr("SALES_ROUTE_REP")))
 	head.add_child(RnDUiShared.spacer())
-	head.add_child(_weeks_left(p))
+	# Anlaşmadaki lead'in sayacı donar: kartta tek hafta sayacı kalır, anlaşmanınki.
+	if not p.is_being_worked():
+		head.add_child(_weeks_left(p))
 	words.add_child(head)
 	words.add_child(_line(SalesArchetypes.voice_line(p.archetype_id), &"MetaMuted"))
-	# §7.2: işlenen lead kimin masasında ve kaçıncı hafta.
+	# §7.2: anlaşma kimin (temsilci ya da sen), hangi aşamada ve kaç haftası geride.
 	if p.is_being_worked():
-		var rep: Character = CharacterRegistry.get_character(p.worked_by)
-		if rep != null:
+		var seller: Character = CharacterRegistry.get_character(p.worked_by)
+		if seller != null:
 			var who := HBoxContainer.new()
 			who.add_theme_constant_override("separation", UiTokens.SPACE_S)
-			who.add_child(UiFactory.make_label(rep.character_name, &"CaptionName"))
+			who.add_child(UiFactory.make_label(
+				tr("SALES_DEAL_YOURS") if seller.category == "founder" else seller.character_name, &"CaptionName"))
 			who.add_child(UiFactory.make_label("·", &"Caption"))
-			who.add_child(UiFactory.make_label(tr("SALES_REP_WORKING").format({"company": p.company_name,
-				"n": GameState.day - p.work_started_day + 1}), &"Caption"))
+			who.add_child(UiFactory.make_label(_deal_line(p), &"Caption"))
 			words.add_child(_glyph_line(CLOCK, UiTokens.D_INK_3, who))
 	# §8: şart masaya oturmadan telgraflanır.
 	if p.whale_condition != "":
 		words.add_child(_glyph_line(INFO, UiTokens.D_INK_3, UiFactory.make_label(
 			tr("SALES_WHALE_" + p.whale_condition.to_upper()), &"CaptionPrimary")))
 	# §4: kilit değil telgraf, kurucu her masaya oturabilir.
-	if p.is_above_league(int(HRConstants.stars_for(GameState.get_founder_skill(HRConstants.AREA_SALES)))):
+	if p.is_above_league(SalesLedger.founder_star()):
 		words.add_child(_line(tr("SALES_ABOVE_LEAGUE"), &"Caption"))
 	top.add_child(words)
 	col.add_child(top)
@@ -368,11 +372,10 @@ func _lead_card(p: Prospect, off: bool) -> PanelContainer:
 
 
 ## Kalan süre. Son hafta yalnız birden uzun yaşamış lead'de uyarı renginde: bir haftalık lead hep son haftasındadır
-## ve hiç değişmeyen renk bir şey söylemez. Temsilcinin masasındaki lead yaşlanmaz.
+## ve hiç değişmeyen renk bir şey söylemez.
 func _weeks_left(p: Prospect) -> HBoxContainer:
 	var n: int = p.weeks_left()
-	var urgent: bool = n <= 1 and not p.is_being_worked() \
-		and p.expires_on_day - p.spawned_on_day > TimeModel.ticks(1)
+	var urgent: bool = n <= 1 and p.expires_on_day - p.spawned_on_day > TimeModel.ticks(1)
 	return _glyph_line(CLOCK, UiTokens.D_warn() if urgent else UiTokens.D_INK_4, UiFactory.make_label(
 		tr(Fmt.count_key("SALES_DAYS_LEFT", n)).format({"n": n}), &"Caption", UiTokens.D_warn() if urgent else null))
 
@@ -387,7 +390,9 @@ func _lead_actions(p: Prospect, off: bool) -> VBoxContainer:
 	row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	col.add_child(row)
-	var rep_block: String = SalesLedger.route_block_reason(p)
+	# Masanın anlaştığı lead'de üç düğme de kapalı; gerekçesi giriş kapısının satırıdır.
+	off = off or p.is_table_deal()
+	var rep_block: String = "" if p.is_table_deal() else SalesLedger.route_block_reason(p)
 	var block: String = SalesLedger.meeting_block_reason(p.id)
 	for key in [rep_block, block]:
 		if key != "":
@@ -418,8 +423,8 @@ func _paint_desk(off: bool) -> void:
 		lane.add_child(_rep_card(r, off))
 
 
-## Temsilci: yüzü, adı ve ligi; altında unvanı ya da şu an kimle görüştüğü ("Palmiye ile görüşüyor · 2. hafta"),
-## çizginin altında çalıştığı bant.
+## Temsilci: yüzü, adı ve ligi; altında unvanı ya da anlaşması ("Palmiye · Teklif aşaması · 2/6 hafta"), çizginin
+## altında çalıştığı bant.
 func _rep_card(rep: Character, off: bool) -> PanelContainer:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiTokens.SPACE_L)
@@ -431,12 +436,12 @@ func _rep_card(rep: Character, off: bool) -> PanelContainer:
 	who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	who.add_child(_name_row(rep.character_name, &"DataStrong",
 		HRConstants.stars_for(HRSystem.skill(rep, HRConstants.AREA_SALES))))
-	var work: Dictionary = SalesRepSystem.processing_view(rep)
-	if work.is_empty():
+	var deal: Prospect = ProspectRegistry.get_prospect(SalesLedger.rep_busy(rep.id))
+	if deal == null:
 		who.add_child(UiFactory.make_label(HRUiShared.roster_title(rep), &"CondCaption"))
 	else:
-		who.add_child(_glyph_line(CLOCK, UiTokens.D_INK_3, _slotted("SALES_REP_WORKING", "company",
-			String(work.company_name), {"n": int(work.week)})))
+		who.add_child(_glyph_line(CLOCK, UiTokens.D_INK_3, _slotted("SALES_REP_DEAL", "company",
+			deal.company_name, {"deal": _deal_line(deal)})))
 	top.add_child(who)
 	col.add_child(top)
 	col.add_child(HSeparator.new())
@@ -772,6 +777,15 @@ func _line(text: String, look: StringName) -> Label:
 	var line := UiFactory.make_label(text, look)
 	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return line
+
+
+## "Teklif aşaması · 2/6 hafta": the deal's stage, the whole weeks behind it and its plan, a decimal only on a half
+## week ("2,5"); a plan of two half weeks is one week.
+func _deal_line(p: Prospect) -> String:
+	var progress: int = p.deal_progress()
+	return tr(Fmt.count_key("SALES_DEAL_LINE", 1 if p.deal_halfweeks == 2 else 0)).format({
+		"stage": tr("SALES_STAGE_" + SalesConstants.deal_stage(p.deal_halfweeks, progress, p.is_table_deal()).to_upper()),
+		"done": progress / 2, "total": Fmt.half_weeks(p.deal_halfweeks)})
 
 
 ## A glyph, then the line's words.

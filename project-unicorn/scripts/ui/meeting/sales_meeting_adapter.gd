@@ -104,7 +104,7 @@ func select(value: int) -> Dictionary:
 	return {"instrument": _instrument(vs), "options": _moves(vs)}
 
 
-## Devam: a won first act opens the price act; a closed price act is signed into the world here
+## Devam: a won first act opens the price act; a closed price act is written onto the lead as the agreed deal here
 ## (SalesFinalizer), while SalesMeetingSystem still holds the sitting and no save can land.
 func proceed() -> Dictionary:
 	if _at_table:
@@ -232,13 +232,16 @@ func _move(id: String) -> Dictionary:
 	var lock := tr("MEETING_RES_LOCK")
 	match String(result.outcome_id):
 		NegotiationSystem.OUTCOME_SIGNED:
+			# The table agrees the terms; the account signs when the deal's plan has run.
 			var promised: String = result.context.promised
 			step.gestures.append({"seat": LEAD, "name": "nod"})
-			var deal := _deal(vs)
-			step.result = _card("positive", "MEETING_RES_SIGNED",
-				tr("MEETING_RES_PAIR").format({"first": deal[0], "second": deal[1]}),
+			var plan: int = SalesFinalizer.table_halfweeks(_prospect)
+			var signs_in: String = tr(Fmt.count_key("SALES_DEAL_SIGNS_IN", 1 if plan == 2 else 0)).format(
+				{"n": Fmt.half_weeks(plan)})
+			step.result = _card("positive", "MEETING_RES_AGREED",
+				tr("MEETING_RES_PAIR").format({"first": _deal(vs)[0], "second": signs_in}),
 				B2BConstants.feature_label(promised) if promised != "" else "")
-			step.result.stamp = "HUNT_BADGE_SIGNED"
+			step.result.stamp = "SALES_DEAL_STAMP"
 		NegotiationSystem.OUTCOME_INSULTED:
 			step.gestures.append({"seat": LEAD, "name": "back"})
 			step.result = _card("negative", "MEETING_RES_INSULT",

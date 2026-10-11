@@ -6,22 +6,24 @@ extends RefCounted
 # faucet: a close creates a Customer and a same-day-signed account must not be lifecycle
 # ticked on its own signing day.
 #
-# Supply is the faucet's (§3). A rep works ONE lead at a time and the pipeline says which one
-# (§7.2). The ceiling is a STAR: a rep sells at or below their own Satış star and cannot reach
-# above it (§7.1), a gate the player can see on the card.
+# Supply is the faucet's (§3). A desk seller (a rep, or the founder on the Satış job) works ONE
+# deal at a time and the pipeline says which one (§7.2). The ceiling is a STAR: a rep sells at or
+# below their own Satış star and cannot reach above it (§7.1), a gate the player can see on the card.
 #
-# AN IN-LEAGUE DEAL ALWAYS CLOSES (§7.6); only WHEN is drawn. Each processing tick rolls the
-# league's close chance (PROCESS_CLOSE_CHANCE) on the seeded `sales_rep` stream, because a
-# week-long tick is too coarse to hold a duration of a few days. Premium is the one conditional:
-# it divides the chance and, on a price-sensitive archetype, produces the price-break moment (§7.6).
+# AN IN-LEAGUE DEAL ALWAYS CLOSES (§7.6) and nothing is drawn: a deal runs a plan of half weeks
+# (SalesConstants.deal_halfweeks), stamped when it opens, and signs when the plan has run. Premium
+# stretches a desk plan and, on a price-sensitive archetype, produces the price-break moment (§7.6).
+# The founder's table deals ride the same sweep (`sign_due`) and sign at their agreed terms
+# (SalesFinalizer.sign_deal). A sweep runs in this daily slot and at noon (SalesSystem.hourly_tick),
+# so a plan of an odd number of half weeks signs at noon.
 #
 # THE PRICE-BREAK CARD IS DEFINED AND INERT. Its behaviour and its trigger live here, and the
 # moment publishes `rep_discount_requested`. What does NOT happen is `EventGate.request` — the
 # wiring is the event package's (§18), and until it lands the deal closes at its own stance.
 # That is a stated fallback, not an accident: an inert card must not be able to strand a deal.
 #
-# THE ADDITIVITY INVARIANT, desk half: with nobody on Satış nothing is worked — any open
-# processing drops, and no lead is started or closed.
+# THE ADDITIVITY INVARIANT, desk half: with nobody on Satış the desk works nothing — a desk deal
+# drops when its seller leaves the job, and no desk deal is started or closed.
 
 
 # ============================================================================
@@ -47,6 +49,8 @@ static func _drop_processing(lead: Prospect) -> void:
 	lead.work_started_day = -1
 	lead.work_stance = ""
 	lead.price_break_raised = false
+	lead.deal_halfweeks = 0
+	lead.deal_paused_halfweeks = 0
 	# The lead returns to the ordinary waiting rules with a full clock — the freeze it enjoyed
 	# while it was being worked was never time it spent waiting.
 	lead.expires_on_day = GameState.day + TimeModel.ticks(SalesConstants.LEAD_LIFE_WEEKS)
@@ -146,6 +150,7 @@ static func _start_processing(rep: Character, lead: Prospect) -> void:
 	# kapanır." Moving the dial mid-deal cannot retroactively reprice a conversation that is
 	# already happening.
 	lead.work_stance = SalesLedger.price_stance()
+	lead.deal_halfweeks = _desk_halfweeks(rep, lead)
 	# NO `lead_routed` HERE. That signal is the PLAYER's verb ("Temsilciye ver") and its one
 	# publisher is SalesLedger.set_routing; a desk picking work up on its own is a different
 	# event and borrowing the name would give one signal two meanings and two emitters (§14).
@@ -155,31 +160,50 @@ static func _start_processing(rep: Character, lead: Prospect) -> void:
 #  §7.2 · Processing
 # ============================================================================
 
-## The chance this deal closes on one processing tick: the league difference picks it and
-## Premium divides it, so the expected processing time grows by the same +30 %. A card's pace rows
-## on the rep scale it (the event part of pace only; the desk does not read the morale band).
-static func close_chance(rep: Character, lead: Prospect) -> float:
-	var chance: float = float(SalesConstants.PROCESS_CLOSE_CHANCE[clampi(lead.star - rep_star(rep), -2, 0)])
+## A desk deal's plan, stamped when it opens: the stars' plan, Premium's +30 %, divided by the
+## seller's productivity this week (morale band and event lines), never under the minimum.
+static func _desk_halfweeks(rep: Character, lead: Prospect) -> int:
+	var halfweeks: float = SalesConstants.deal_halfweeks(lead.star, rep_star(rep))
 	if lead.work_stance == SalesConstants.STANCE_PREMIUM:
-		chance /= 1.0 + SalesConstants.PROCESS_PREMIUM_PENALTY
-	return chance * HRSystem.event_pace(rep)
+		halfweeks *= 1.0 + SalesConstants.PROCESS_PREMIUM_PENALTY
+	return maxi(roundi(halfweeks / HRSystem.productivity(rep)), roundi(2.0 * SalesConstants.DEAL_MIN_WEEKS))
 
 
-## A lead started this tick is picked up after this sweep, so its first roll is the next tick.
+## The daily slot: a desk deal whose seller left the Satış job drops, then every due deal signs.
+## `_tick_assignment` runs after it, so a seller who signs here opens the next deal in the same slot.
 static func _tick_processing() -> void:
 	for p in ProspectRegistry.get_all():
 		var lead: Prospect = p as Prospect
+		if not lead.is_being_worked() or lead.is_table_deal():
+			continue
+		var rep: Character = _assigned_rep(lead.worked_by)
+		var seller: Character = CharacterRegistry.get_character(lead.worked_by)
+		if rep != null:
+			# §7.6 — the price-break moment of a Premium deal against a price-sensitive archetype,
+			# read before the signature. It publishes and does NOT raise a card (see the header).
+			_maybe_price_break(rep, lead)
+		elif seller == null or not seller.assigned_jobs.has(HRConstants.AREA_SALES):
+			# §12 — off the Satış job, fired or resigned: the deal drops and the lead returns to the
+			# waiting rules. A seller on leave or training keeps it (`sign_due` pauses it).
+			_drop_processing(lead)
+	sign_due()
+
+
+## Every deal whose plan has run signs: the founder's table deals at their agreed terms, a desk
+## deal through its seller. A desk deal whose seller is off duty at a sweep waits that half week.
+static func sign_due() -> void:
+	for p in ProspectRegistry.get_all():
+		var lead: Prospect = p as Prospect
+		if lead.is_table_deal():
+			if lead.deal_due():
+				SalesFinalizer.sign_deal(lead)
+			continue
 		if not lead.is_being_worked():
 			continue
 		var rep: Character = _assigned_rep(lead.worked_by)
 		if rep == null:
-			# §12 — "Temsilci ayrılır / izne çıkar | işleme düşer; lead bekleme kurallarına döner."
-			_drop_processing(lead)
-			continue
-		# §7.6 — the price-break moment of a Premium deal against a price-sensitive archetype,
-		# read before the roll. It publishes and does NOT raise a card (see the header).
-		_maybe_price_break(rep, lead)
-		if RngStreams.get_stream(RngStreams.STREAM_SALES_REP).randf() < close_chance(rep, lead):
+			lead.deal_paused_halfweeks += 1
+		elif lead.deal_due():
 			_close(rep, lead)
 
 
@@ -260,22 +284,3 @@ static func _tick_weekly_summary() -> void:
 	EventBus.weekly_sales_report_issued.emit(closes)
 	MessageSystem.post("sales_week", "SALES_WEEKLY_TITLE",
 		{"rows": rows, "accounts": CustomerRegistry.account_count()})
-
-
-# ============================================================================
-#  Reads for the pipeline panel
-# ============================================================================
-
-## "Palmiye ile görüşüyor · 2. hafta" — the panel's line, as data. Week counting is INCLUSIVE
-## (the first week reads as week 1), which is how a person would say it.
-static func processing_view(rep: Character) -> Dictionary:
-	var lead_id: String = SalesLedger.rep_busy(rep.id)
-	if lead_id == "":
-		return {}
-	var lead: Prospect = ProspectRegistry.get_prospect(lead_id)
-	return {
-		"lead_id": lead.id,
-		"company_name": lead.company_name,
-		"week": GameState.day - lead.work_started_day + 1,
-		"stance": lead.work_stance,
-	}

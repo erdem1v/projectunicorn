@@ -119,6 +119,11 @@ static func group(n: int) -> String:
 
 
 ## Decimal number with the locale's decimal mark ("12,5" / "12.5").
+## A plan in half weeks as weeks, a decimal only on a half week ("2,5", "3").
+static func half_weeks(halfweeks: int) -> String:
+	return number(halfweeks / 2.0, halfweeks % 2)
+
+
 static func number(v: float, decimals: int = 1) -> String:
 	return String.num(v, decimals).replace(".", _t("NUM_DECIMAL_SEP"))
 

@@ -289,7 +289,7 @@ static func _condition_met(condition: String, p: Prospect) -> bool:
 ## §8 — the band the desk can reach today: the best Satış star between the founder and the
 ## sales roster. Derived, never stored (§13 "Erişim bandı türetilir, saklanmaz").
 static func reach_band() -> int:
-	var best: int = int(HRConstants.stars_for(GameState.get_founder_skill(HRConstants.AREA_SALES)))
+	var best: int = SalesLedger.founder_star()
 	for c in HRSystem.assigned_to(HRConstants.AREA_SALES):
 		best = maxi(best, SalesRepSystem.rep_star(c as Character))
 	return maxi(best, 1)

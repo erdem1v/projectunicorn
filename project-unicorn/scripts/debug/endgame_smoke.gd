@@ -210,7 +210,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sales_close_threshold_surfaces":    fail = _case_sales_close_threshold_surfaces()
 		"sales_threshold_separates_tiers":   fail = _case_sales_threshold_separates_tiers()
 		"sales_concession_deal_surfaces":    fail = _case_sales_concession_deal_surfaces()
-		"sales_close_speed_by_expertise":    fail = _case_sales_close_speed_by_expertise()
+		"sales_desk_deal_runs_its_plan":     fail = _case_sales_desk_deal_runs_its_plan()
+		"sales_deal_plan_rule":              fail = _case_sales_deal_plan_rule()
 		"cs_auto_assignment_capacity":       fail = _case_cs_auto_assignment_capacity()
 		"cs_capacity_resolution":            fail = _case_cs_capacity_resolution()
 		"cs_request_absorption_by_expertise": fail = _case_cs_request_absorption_by_expertise()
@@ -3355,10 +3356,12 @@ static func _case_b2b_ignore_then_churn() -> String:
 # --- B2B pitch meeting (the sitting end to end, outcome-invariant) ---
 
 static func _case_b2b_pitch_meeting_signs() -> String:
-	# THE WHOLE SITTING, END TO END (§5.0 → §5.1 → §5.3 → §5.4): the founder sits down, the
-	# customer cuts to the numbers, the table agrees a price, and an account exists that
-	# carries THAT price. FALSIFICATION: against the retired four-beat pitch the seat-price
-	# assertion fails — a signed account had no seat price to carry.
+	# THE WHOLE SITTING, END TO END (§5.0 → §5.1 → §5.3 → §5.4), AND THE DEAL IT AGREES: the founder
+	# sits down, the customer cuts to the numbers, the table agrees a price and a promise, and an
+	# account carrying THAT price signs when the deal's plan has run; the promise becomes a debt then.
+	# Meanwhile no rep takes the lead, it does not expire, the founder cannot sit at it again and a
+	# second table cannot promise. FALSIFICATION: sign at the table (the old `_sign`) and the first
+	# check after the sitting reads "account before its plan".
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
@@ -3381,39 +3384,74 @@ static func _case_b2b_pitch_meeting_signs() -> String:
 			str(vs.get("outcome", "")), float(vs.get("odds", 0.0)),
 			ProductRead.axis_reading("", "innovation"), ProductRead.axis_reading("", "stability"),
 			ProductRead.axis_reading("", "experience")]
-	# §5.3 — Perde 2. Offer at the band floor so the customer accepts on the first move.
+	# §5.3 — Perde 2, with a word given. Offer at the band floor so the customer accepts on the first move.
+	var promised: String = "line_erp_ledger_k1"
 	NegotiationSystem.open(NegotiationSystem.TYPE_B2B, {
 		"account": p.company_name, "lead_id": p.id, "star": p.star,
-		"archetype": p.archetype_id, "promised": SalesMeetingSystem.promised_feature(),
-		"is_whale": p.is_whale,
+		"archetype": p.archetype_id, "promised": promised, "is_whale": p.is_whale,
 	})
 	NegotiationSystem.select_price(SalesConstants.SEAT_PRICE_MIN)
 	var nvs: Dictionary = NegotiationSystem.offer()
 	if String(nvs.get("state", "")) != "accepted":
 		return "an offer at the band floor was not accepted: %s" % str(nvs.get("state", ""))
+	var seats: int = int(NegotiationSystem.result().values.units)
+	# The plan is stamped as the terms are agreed; a founder under the lead's league plans two weeks,
+	# so the deal outlives the lead's own week and the freeze is exercised.
+	_set_founder_area(HRConstants.AREA_SALES, 0)
 	SalesFinalizer.apply(NegotiationSystem.result())
 	SalesMeetingSystem.close()
 	if SalesMeetingSystem.is_active():
 		return "the sitting is still active after close()"
-	if CustomerRegistry.get_by_market("b2b").size() != before + 1:
-		return "the signature created no customer"
-	if ProspectRegistry.get_prospect(p.id) != null:
-		return "the signature did not remove the lead"
-	var c: Customer = CustomerRegistry.get_customer("co_" + p.id)
-	if c == null:
-		return "the customer id is not derived from the lead id"
-	# §5.4 — THE PRICE TRAIL. The account carries what it agreed to, and MRR is the product.
-	if c.seat_price != SalesConstants.SEAT_PRICE_MIN:
-		return "the account did not carry the agreed seat price: $%d" % c.seat_price
-	if c.mrr != c.seats * c.seat_price:
-		return "MRR %d is not seats x seat price (%d x %d)" % [c.mrr, c.seats, c.seat_price]
+	if CustomerRegistry.get_by_market("b2b").size() != before:
+		return "account before its plan: the table signed at once"
+	var lead: Prospect = ProspectRegistry.get_prospect(p.id)
+	if lead == null or not lead.is_table_deal() or lead.worked_by != CharacterRegistry.get_founder().id:
+		return "the agreed table left no founder's deal on the lead"
+	if lead.deal_seats != seats or lead.deal_price != SalesConstants.SEAT_PRICE_MIN or lead.deal_promise != promised \
+			or lead.deal_halfweeks != 4:
+		return "the deal does not carry the agreed terms: %d seats at $%d, promise '%s', plan %d half weeks" % [
+			lead.deal_seats, lead.deal_price, lead.deal_promise, lead.deal_halfweeks]
+	if SalesLedger.meeting_block_reason(p.id) != "SALES_BLOCK_IN_DEAL":
+		return "the founder could sit at a lead whose deal runs: %s" % SalesLedger.meeting_block_reason(p.id)
 	# The gate must be back OFF — but only the sitting's half of it. The two skipped hours
 	# run the real hourly path (§5.0), so an ambient card may legitimately be up when the
 	# player returns, and that refusal belongs to the event engine rather than to Sales.
 	if NegotiationSystem.is_active():
-		return "the negotiation is still active after the signature"
+		return "the negotiation is still active after the table agreed"
 	if EventGate.active_id() == "" and not SaveManager.can_save():
 		return "saving is still refused after the sitting closed with no card up"
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)
+	if SalesRepSystem.pick_lead_for(rep) == lead:
+		return "a rep would pick up the founder's deal"
+	# §6 — one open pitch promise: the agreed word holds the next table's promise row.
+	var other: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	SalesMeetingSystem.open(other.id)
+	var lock: String = SalesMeetingSystem._promise_lock()
+	SalesMeetingSystem.close()
+	if lock != "open_pitch_promise":
+		return "a second table could promise while an agreed word waits: lock '%s'" % lock
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if ProspectRegistry.get_prospect(p.id) == null:
+		return "the deal's lead expired or left before its plan ran"
+	if CustomerRegistry.get_customer("co_" + p.id) != null or SalesLedger.open_pitch_promise() != "":
+		return "the deal signed, or its promise opened, a week before its plan ran"
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if ProspectRegistry.get_prospect(p.id) != null:
+		return "the deal did not sign when its plan had run"
+	var c: Customer = CustomerRegistry.get_customer("co_" + p.id)
+	if c == null:
+		return "the customer id is not derived from the lead id"
+	# §5.4 — THE PRICE TRAIL. The account carries what it agreed to, and MRR is the product.
+	if c.seat_price != SalesConstants.SEAT_PRICE_MIN or c.seats != seats:
+		return "the account did not carry the agreed terms: %d seats at $%d" % [c.seats, c.seat_price]
+	if c.mrr != c.seats * c.seat_price:
+		return "MRR %d is not seats x seat price (%d x %d)" % [c.mrr, c.seats, c.seat_price]
+	if c.acquisition_source != "founder_pitch":
+		return "the account does not name the founder's table: %s" % c.acquisition_source
+	if SalesLedger.open_pitch_promise() != c.id or not PromiseRegistry.has_open_for(c.id):
+		return "the word given at the table did not become a debt at the signature"
 	return ""
 
 
@@ -7963,57 +8001,118 @@ static func _case_sales_concession_deal_surfaces() -> String:
 		return "a price-INSENSITIVE archetype produced the price-break moment"
 	return ""
 
-static func _case_sales_close_speed_by_expertise() -> String:
-	# §7.2 — a worked deal closes on each processing tick with a chance the LEAGUE DIFFERENCE
-	# picks (SalesConstants.PROCESS_CLOSE_CHANCE), and Premium divides it (§7.5), so the
-	# expected processing time grows by the same +30 %. A stronger seller sits more leagues
-	# above the same lead and closes it sooner.
+static func _case_sales_deal_plan_rule() -> String:
+	# §7.2 — a deal's plan: the customer's star sets its weeks, each star the seller stands above the
+	# customer takes half a week off, never under a week. Its stages split the plan evenly; a table
+	# deal walks only what follows its sitting. FALSIFICATION: drop the one-week floor and (1, 5)
+	# plans 0 half weeks; drop the clamp on a seller below the customer and (3, 0) plans 15.
+	for row in [[1, 1, 4], [1, 2, 3], [1, 3, 2], [1, 5, 2], [2, 2, 6], [2, 3, 5], [3, 0, 12], [3, 5, 10]]:
+		var got: int = SalesConstants.deal_halfweeks(row[0], row[1])
+		if got != row[2]:
+			return "a %d-star customer and a %d-star seller plan %d half weeks, want %d" % [row[0], row[1], got, row[2]]
+	var desk_all: Array = ["discovery", "demo", "proposal", "negotiation", "procurement", "signing"]
+	for row in [[2, false, ["discovery", "signing"]], [3, false, ["discovery", "proposal", "signing"]],
+			[4, false, ["discovery", "proposal", "signing"]], [6, false, ["discovery", "demo", "proposal", "signing"]],
+			[10, false, ["discovery", "demo", "proposal", "negotiation", "signing"]], [12, false, desk_all],
+			[2, true, ["signing"]], [4, true, ["proposal", "signing"]], [12, true, ["proposal", "procurement", "signing"]]]:
+		# Every half week of the plan, in order: each stage of the row comes, none is skipped.
+		var walked: Array = []
+		for progress in int(row[0]):
+			var stage: String = SalesConstants.deal_stage(row[0], progress, row[1])
+			if walked.is_empty() or walked[-1] != stage:
+				walked.append(stage)
+		if walked != row[2]:
+			return "a %s plan of %d half weeks walks %s, want %s" % [
+				"table" if row[1] else "desk", row[0], str(walked), str(row[2])]
+	# "Proposal stage · 2/6 weeks": at the start of its third week a six-week desk deal is in its third stage.
+	if SalesConstants.deal_stage(12, 4, false) != "proposal":
+		return "a six-week desk deal four half weeks in reads %s, want proposal" % SalesConstants.deal_stage(12, 4, false)
+	return ""
+
+
+static func _case_sales_desk_deal_runs_its_plan() -> String:
+	# §7.2 — a desk deal runs its stars' plan and signs when the plan has run, at noon when it ends on a
+	# half week. A seller works one deal at a time and takes the next in the slot where one signs.
+	# Premium stretches the plan by 30 %; a seller on leave keeps the deal, which waits for them and
+	# signs that much later; a worked lead from an older save (no plan) signs on the next sweep.
+	# FALSIFICATIONS: sign on whole weeks only (noon ignored) and the 11:00 check fails; drop the
+	# deal of a seller on leave and the leave check fails.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
-	var weak: Character = _make_sales_rep("char_sr_weak", 0, 4)
-	var strong: Character = _make_sales_rep("char_sr_strong", 0, 9)
-	var own_star: int = SalesRepSystem.rep_star(weak)
-	if SalesRepSystem.rep_star(strong) - own_star < 2:
-		return "fixture: the strong rep is not two leagues above the weak one"
-	var lead: Prospect = _add_prospect("span", own_star, "ai_vec_filter")
-	lead.work_stance = SalesConstants.STANCE_STANDARD
-	var own: float = SalesRepSystem.close_chance(weak, lead)
-	var below: float = SalesRepSystem.close_chance(strong, lead)
-	if not is_equal_approx(own, float(SalesConstants.PROCESS_CLOSE_CHANCE[0])) \
-			or not is_equal_approx(below, float(SalesConstants.PROCESS_CLOSE_CHANCE[-2])):
-		return "close chances own %.2f / two below %.2f do not read the league table" % [own, below]
-	if below <= own:
-		return "a stronger seller did not close the same lead sooner (%.2f -> %.2f)" % [own, below]
-	lead.work_stance = SalesConstants.STANCE_PREMIUM
-	if not is_equal_approx(SalesRepSystem.close_chance(strong, lead),
-			below / (1.0 + SalesConstants.PROCESS_PREMIUM_PENALTY)):
-		return "Premium did not divide the chance (%.3f)" % SalesRepSystem.close_chance(strong, lead)
-	ProspectRegistry.remove(lead.id)
-
-	# THE ROLL, through the desk's own sweep on the seeded stream: 1000 own-league deals close
-	# after 1 / chance processing ticks on average (2 at 0.50).
-	var n: int = 1000
-	for i in n:
-		var p: Prospect = _add_prospect("own_%d" % i, own_star, "ai_vec_filter")
-		p.worked_by = weak.id
-		p.work_started_day = GameState.day
-		p.work_stance = SalesConstants.STANCE_STANDARD
-	var open: int = ProspectRegistry.count()
-	var tick_sum: int = 0
-	for t in range(1, 60):
-		GameState.day += 1
-		SalesRepSystem._tick_processing()
-		tick_sum += (open - ProspectRegistry.count()) * t
-		open = ProspectRegistry.count()
-		if open == 0:
-			break
-	var mean: float = float(tick_sum) / float(n)
-	var want: float = 1.0 / float(SalesConstants.PROCESS_CLOSE_CHANCE[0])
-	if open != 0 or absf(mean - want) > 0.15:
-		return "own-league deals closed after %.3f ticks on average, want %.2f (%d still open)" % [
-			mean, want, open]
+	SalesLedger.set_price_stance(SalesConstants.STANCE_STANDARD)
+	var senior: Character = _make_sales_rep("char_sr_2", 0, 4)   # Satış 4 -> 2 stars
+	CharacterRegistry.set_morale(senior.id, 65)   # the middle band: productivity 1.0
+	if HRSystem.assigned_to(HRConstants.AREA_SALES).size() != 1:
+		return "fixture: someone besides the rep works the sales desk"
+	var old: Prospect = _add_prospect("deal_old", 1, "ai_vec_filter")
+	old.worked_by = senior.id
+	old.work_started_day = GameState.day - 1
+	old.work_stance = SalesConstants.STANCE_STANDARD
+	var a: Prospect = _add_prospect("deal_a", 1, "ai_vec_filter")
+	var b: Prospect = _add_prospect("deal_b", 1, "ai_vec_filter")
+	for lead: Prospect in [a, b]:
+		SalesLedger.set_routing(lead.id, SalesConstants.ROUTE_REP)
+	_sim_day_full()
+	if CustomerRegistry.get_customer("co_deal_old") == null:
+		return "a worked lead from an older save (no plan) did not sign on the next sweep"
+	if SalesLedger.rep_busy(senior.id) != a.id or a.deal_halfweeks != 3:
+		return "the 2-star seller did not open a 3 half week deal on the 1-star lead: busy '%s', plan %d" % [
+			SalesLedger.rep_busy(senior.id), a.deal_halfweeks]
+	var junior: Character = _make_sales_rep("char_sr_1", 0, 2)   # Satış 2 -> 1 star
+	CharacterRegistry.set_morale(junior.id, 65)
+	_sim_day_full()
+	if SalesLedger.rep_busy(junior.id) != b.id or b.deal_halfweeks != 4:
+		return "the 1-star seller did not open a 4 half week deal: busy '%s', plan %d" % [
+			SalesLedger.rep_busy(junior.id), b.deal_halfweeks]
+	# One and a half weeks: a prospect at 11:00 of its second week, an account from noon.
+	TimeManager.advance_hours(11)
+	if ProspectRegistry.get_prospect(a.id) == null:
+		return "the 1.5 week deal signed before noon of its second week"
+	if SalesLedger.rep_busy(senior.id) != a.id:
+		return "the 2-star seller left its deal before it signed"
+	TimeManager.advance_hours(1)
+	if CustomerRegistry.get_customer("co_deal_a") == null:
+		return "the 1.5 week deal did not sign at noon of its second week"
+	# The desk is the junior's from here; Premium is set after its deal opened, so that deal keeps Standard.
+	CharacterRegistry.clear_jobs(senior.id)
+	SalesLedger.set_price_stance(SalesConstants.STANCE_PREMIUM)
+	var c: Prospect = _add_prospect("deal_c", 1, "ai_vec_filter")
+	SalesLedger.set_routing(c.id, SalesConstants.ROUTE_REP)
+	_sim_day_full()
+	TimeManager.advance_hours(23)
+	if ProspectRegistry.get_prospect(b.id) == null:
+		return "the 2 week deal signed before the slot of its third week"
+	if SalesLedger.rep_busy(junior.id) != b.id:
+		return "the 1-star seller holds '%s', not its one deal" % SalesLedger.rep_busy(junior.id)
+	TimeManager.advance_hours(1)
+	var signed: Customer = CustomerRegistry.get_customer("co_deal_b")
+	if signed == null:
+		return "the 2 week deal did not sign in the slot of its third week"
+	if signed.seat_price != SalesLedger.seat_price_anchor(SalesConstants.STANCE_STANDARD):
+		return "the deal did not sign at the stance stamped when it opened: $%d/seat" % signed.seat_price
+	if SalesLedger.rep_busy(junior.id) != c.id or c.deal_halfweeks != 5:
+		return "the seller who signed did not open its next deal in the same slot at Premium's 5 half weeks: busy '%s', plan %d" % [
+			SalesLedger.rep_busy(junior.id), c.deal_halfweeks]
+	# Premium's 2.5 weeks would sign at noon of the deal's third week. Two weeks of leave from 10:00 of
+	# its second week hold it for the three half weeks the seller is away: it signs in its fifth week's slot.
+	_sim_day_full()
+	TimeManager.advance_hours(10)
+	HRMoraleSystem.send_on_leave(junior, 2, true)
+	_sim_day_full()
+	TimeManager.advance_hours(13)
+	if c.worked_by != junior.id:
+		return "a seller on leave lost the deal; it should wait for them"
+	if ProspectRegistry.get_prospect(c.id) == null:
+		return "the deal signed while its seller was on leave"
+	_sim_day_full()
+	TimeManager.advance_hours(23)
+	if ProspectRegistry.get_prospect(c.id) == null:
+		return "the deal did not wait out the half weeks its seller was away"
+	TimeManager.advance_hours(1)
+	if CustomerRegistry.get_customer("co_deal_c") == null:
+		return "the deal did not sign once its seller was back for the rest of its plan"
 	return ""
 
 
@@ -15911,6 +16010,11 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 	p.is_whale = true
 	p.last_loss_reason = SalesConstants.LOSS_PRICE
 	p.loss_count = 2
+	p.deal_halfweeks = 7
+	p.deal_paused_halfweeks = 2
+	p.deal_seats = 14
+	p.deal_price = 61
+	p.deal_promise = "line_erp_ledger_k1"
 	var cp: Prospect = _add_prospect("save_cust", 2, "")
 	var c: Customer = SalesSystem.add_b2b_customer(cp, 18, 52, 70, "founder_pitch", 0.2)
 	SalesLedger.set_price_stance(SalesConstants.STANCE_PREMIUM)
@@ -15940,7 +16044,9 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 	if rp == null:
 		return "the lead did not survive the round trip"
 	for pair in [["star", rp.star, 3], ["loss_count", rp.loss_count, 2],
-			["work_started_day", rp.work_started_day, p.work_started_day]]:
+			["work_started_day", rp.work_started_day, p.work_started_day], ["deal_halfweeks", rp.deal_halfweeks, 7],
+			["deal_paused_halfweeks", rp.deal_paused_halfweeks, 2], ["deal_seats", rp.deal_seats, 14],
+			["deal_price", rp.deal_price, 61]]:
 		if int(pair[1]) != int(pair[2]):
 			return "lead.%s came back %d, want %d" % [String(pair[0]), int(pair[1]), int(pair[2])]
 	for spair in [["routing", rp.routing, SalesConstants.ROUTE_RESERVED],
@@ -15948,7 +16054,8 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 			["whale_condition", rp.whale_condition, SalesConstants.WHALE_COND_LOCKED_TIER],
 			["last_loss_reason", rp.last_loss_reason, SalesConstants.LOSS_PRICE],
 			["worked_by", rp.worked_by, "char_sr_1"],
-			["pain_feature_id", rp.pain_feature_id, "line_erp_ledger_k1"]]:
+			["pain_feature_id", rp.pain_feature_id, "line_erp_ledger_k1"],
+			["deal_promise", rp.deal_promise, "line_erp_ledger_k1"]]:
 		if String(spair[1]) != String(spair[2]):
 			return "lead.%s came back '%s', want '%s'" % [
 				String(spair[0]), String(spair[1]), String(spair[2])]

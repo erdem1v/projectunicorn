@@ -3,8 +3,9 @@ extends RefCounted
 
 # B2B customer lifecycle engine. Pure static logic, no scene dependency — mirrors SalesSystem.
 # Dispatched once a tick from SalesSystem.daily_tick (slot 4, B2B market only), AFTER the B2C-only
-# satisfaction tick. There is deliberately NO hourly B2B branch — B2B lifecycle is a tick cadence;
-# its per-day rates are applied seven-fold here.
+# satisfaction tick. The lifecycle has deliberately NO hourly branch — it is a tick cadence; its
+# per-day rates are applied seven-fold here. The one hourly B2B step is the deal sweep at noon
+# (SalesSystem.hourly_tick), which signs plans of an odd number of half weeks.
 #
 # Owns the two-layer satisfaction model (visible `satisfaction` computed from product health;
 # hidden per-customer `tolerance` seeded at signing), the lifecycle phase machine (onboarding →
@@ -26,9 +27,9 @@ static func daily_tick() -> void:
 	#  3. The per-customer lifecycle sweep.
 	#  4. The customer desk's request channel, AFTER the sweep, so a request reads today's
 	#     settled satisfaction rather than yesterday's.
-	#  5. The sales desk LAST: an autonomous close creates a Customer, and a same-day-signed
-	#     account must not be lifecycle-ticked on its signing day — a founder-pitched account
-	#     never is, because the pitch resolves mid-day after this slot.
+	#  5. The sales desk LAST: a deal that signs here creates a Customer, and a same-day-signed
+	#     account must not be lifecycle-ticked on its signing day; a deal that signs at noon
+	#     comes after this slot.
 	PromiseRegistry.tick_deadlines(GameState.day)
 	CustomerRepSystem.reconcile_assignments()
 	# get_by_market returns a FRESH array, so removing a churned customer from the

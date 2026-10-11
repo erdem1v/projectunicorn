@@ -81,6 +81,12 @@ static func reach_band() -> int:
 	return SalesFaucetSystem.reach_band()
 
 
+## The founder's Satış star, whole: the league the table's mismatch, its deal plan and the reach
+## band read.
+static func founder_star() -> int:
+	return int(HRConstants.stars_for(GameState.get_founder_skill(HRConstants.AREA_SALES)))
+
+
 # ============================================================================
 #  §14 · The rep desk
 # ============================================================================
@@ -101,11 +107,13 @@ static func set_rep_band_cap(person_id: String, cap: int) -> void:
 	EventBus.rep_band_cap_changed.emit(person_id)
 
 
-## §7.2 — is this rep on a lead right now, and which one. "" = free.
+## §7.2 — is this desk seller on a deal right now, and which one. "" = free. The founder's table
+## deals are not desk work: a founder on the Satış job still takes one desk deal beside them.
 static func rep_busy(person_id: String) -> String:
 	for p in ProspectRegistry.get_all():
-		if (p as Prospect).worked_by == person_id:
-			return (p as Prospect).id
+		var lead: Prospect = p as Prospect
+		if lead.worked_by == person_id and not lead.is_table_deal():
+			return lead.id
 	return ""
 
 
@@ -310,8 +318,10 @@ static func meeting_block_reason(lead_id: String) -> String:
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
 	if p == null:
 		return "SALES_BLOCK_NO_LEAD"
+	if p.is_table_deal():
+		return "SALES_BLOCK_IN_DEAL"
 	if p.is_being_worked():
-		return ""   # §12 — the founder outranks a rep; the processing simply drops
+		return ""   # §12 — the founder outranks a rep; a won table takes the deal over
 	# §9 — the re-pitch blocker gate. An unchanged reason gives an unchanged answer, and the
 	# door says which one.
 	if p.loss_count > 0 and p.last_loss_reason != "" and not _blocker_cleared(p):

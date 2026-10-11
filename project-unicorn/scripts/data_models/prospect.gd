@@ -35,9 +35,21 @@ extends Resource
 ## §7.2.1 — "" | "reserved" (the desk is the founder's) | "rep" (first in the band queue).
 @export var routing: String = ""
 
-# --- Rep processing (§7.2, §13 "temsilci işleme") ---
+# --- The deal (§7.2, §13 "temsilci işleme") ---
+## The deal's owner: the rep or the founder at the desk, or the founder whose table agreed it.
 @export var worked_by: String = ""            # character id, "" = nobody is on it
 @export var work_started_day: int = -1
+## The plan in half weeks, stamped when the deal opens. 0 on a desk lead from an older save: due
+## at once, it signs on the next sweep.
+@export var deal_halfweeks: int = 0
+## Half weeks the desk seller was away (leave, training) while still on the Satış job: the deal
+## waits for them and signs that much later.
+@export var deal_paused_halfweeks: int = 0
+## The terms a founder's table agreed; seats above zero mark a table deal. The promise given at
+## the table becomes a debt when the deal signs.
+@export var deal_seats: int = 0
+@export var deal_price: int = 0
+@export var deal_promise: String = ""
 ## §7.5 — "İşlenmekte olan deal başladığı kadrandan kapanır." The stance is stamped when
 ## processing STARTS, so moving the dial mid-deal cannot retroactively reprice it.
 @export var work_stance: String = ""
@@ -75,6 +87,22 @@ func weeks_left() -> int:
 ## the expiry sweep pushes its expiry day forward with the work.
 func is_being_worked() -> bool:
 	return worked_by != ""
+
+
+func is_table_deal() -> bool:
+	return deal_seats > 0
+
+
+## Half weeks the deal has run: whole weeks since it opened, this week's afternoon from noon on,
+## less the half weeks its seller was away.
+func deal_progress() -> int:
+	return 2 * (GameState.day - work_started_day) \
+		+ int(GameState.current_hour >= SalesConstants.DEAL_HALF_WEEK_HOUR) - deal_paused_halfweeks
+
+
+## Read only by the sweeps (the daily desk slot and noon), where day and hour only move forward.
+func deal_due() -> bool:
+	return deal_progress() >= deal_halfweeks
 
 
 ## §4 — "Ligin üstü lead girilebilirdir." The founder may sit at any table; the card carries

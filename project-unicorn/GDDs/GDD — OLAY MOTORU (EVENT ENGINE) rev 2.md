@@ -2203,8 +2203,9 @@ kart başına bir satır, `title_key` kartın başlık anahtarı; motor fiile ka
 (ekip 0) yazılan eksi satır en çok −%30 ve 2 hafta. Aynı kartın ikinci satırı süreyi tazeler, farklı kartların
 satırları çarpılır ve çarpım 0,50 ile 1,30 arasına kenetlenir (`HRSystem.event_pace`). `HRSystem.productivity(c)` moral
 bandı (kurucuda 1) × bu çarpımdır; `SprintSystem._points` ve `HRSystem.effective_skill` moral bandının yerinde onu
-okur. Satış masası (`SalesRepSystem.close_chance`) yalnız `event_pace`'i okur: moral bandını bugün okumadığı için
-verim satırındaki moral satırı satışta etkisizdir (onay bekliyor, ACIK_KARARLAR 103). Satır, son
+okur. Satış masasında anlaşmanın planı açılırken satıcının verimine (`HRSystem.productivity`) bölünür
+(`SalesRepSystem._desk_halfweeks`): verim satırındaki moral satırı satışta da geçerlidir (sahip kararı
+2026-10-11). Satır, son
 haftası işlendiği tikte, haftayı okuyan sistemlerden sonra (günlük dağıtımda satıştan sonra) düşer. Lint §17.1: `pct` sıfır olamaz ve fiil bir arkın `on_invalidate`'inde duramaz (orada kart yoktur). Çip `EFFECT_PACE`,
 `EFFECT_PACE_FOUNDER`, `EFFECT_PACE_TEAM` (bedel ya da kazanç rengi; kırmızı değil). Ekip penceresinin satır ipucu
 ve ekip dosyasının VERİM bölümü verimi ve imzalı sebeplerini (`HRSystem.productivity_lines`) gösterir.

@@ -396,8 +396,7 @@ static func productivity(c: Character) -> float:
 	return band * event_pace(c)
 
 
-## Verimin olay kartlarından gelen payı: süreli satırların kenetli çarpımı, satır yokken 1,0. Satış
-## masası yalnız bunu okur (moral bandını okumaz).
+## Verimin olay kartlarından gelen payı: süreli satırların kenetli çarpımı, satır yokken 1,0.
 static func event_pace(c: Character) -> float:
 	var events: float = 1.0
 	for m in c.productivity_mods:

@@ -11,15 +11,13 @@ extends RefCounted
 # Draw sites (a new site joins a stream, it does not open a bare randf()):
 #   skill     — SkillCheck.roll_against / SkillCheck.resolve.
 #   hr_morale — HRMoraleSystem's resignation roll.
-#   sales_rep — SalesRepSystem's per-tick close roll.
 #
 # Seed/state are stored as STRINGS: both are 64-bit, and JSON numbers are doubles, so anything
 # past 2^53 would come back rounded. str()/to_int() round-trips the full bit pattern.
 
 const STREAM_SKILL := "skill"
 const STREAM_HR_MORALE := "hr_morale"
-const STREAM_SALES_REP := "sales_rep"
-const STREAM_IDS: Array[String] = [STREAM_SKILL, STREAM_HR_MORALE, STREAM_SALES_REP]
+const STREAM_IDS: Array[String] = [STREAM_SKILL, STREAM_HR_MORALE]
 
 static var _streams: Dictionary = {}   # id (String) -> RandomNumberGenerator
 static var _seeded_for: int = -1       # run_seed the streams are currently keyed to

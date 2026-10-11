@@ -144,12 +144,14 @@ static func is_b2b_market() -> bool:
 	return String(GameState.get_flag("mvp_market_type", "b2c")) == "b2b"
 
 
-# --- Hourly tick: bidirectional audience → derived MRR ---
+# --- Hourly tick: bidirectional audience → derived MRR; B2B deals due at noon sign ---
 
-static func hourly_tick(_hour: int) -> void:
+static func hourly_tick(hour: int) -> void:
 	if GameState.get_flag("mvp_shipped", false) and not is_b2b_market():
 		_tick_b2c_audience()
 		_derive_b2c_mrr()      # MRR = paying(audience,price) × price
+	elif hour == SalesConstants.DEAL_HALF_WEEK_HOUR and SalesFaucetSystem.market_open():
+		SalesRepSystem.sign_due()
 	reflect_mrr()
 
 
@@ -325,9 +327,9 @@ static func get_sales_log() -> Array:
 	return GameState.sales_log.duplicate()  # readonly snapshot (get_burn_breakdown contract)
 
 
-# --- B2B customer creation (SalesFinalizer on a signed negotiation, SalesRepSystem on an
-#     autonomous routine close). The sole B2B signing path: the rep has no private way to
-#     mint a customer. ---
+# --- B2B customer creation (SalesFinalizer when a table's deal signs, SalesRepSystem when a
+#     desk deal signs). The sole B2B signing path: the rep has no private way to mint a
+#     customer. ---
 
 static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 		satisfaction: int, source: String = "founder_pitch", discount: float = 0.0) -> Customer:

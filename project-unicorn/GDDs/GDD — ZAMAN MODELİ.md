@@ -168,7 +168,7 @@ sonra ×7 alır: gün modelinin yedi günlük adımı aynen korunur. Yukarı yö
 
 - İstifa: pencerenin ikinci haftasında tek zar atılır, zar dört günlük olasılığı biriktirir; üçüncü hafta istifa
   kesindir (§4.4).
-- Temsilci işleme: süre yerine tik başına kapanma ihtimali (§4.5).
+- Satış anlaşması: tik başına zar yerine yarım hafta sayan plan; yarım hafta öğlen biter (§4.5).
 
 ### 3.7 Orantılı terimler
 
@@ -249,10 +249,8 @@ kullanılan gün değişmez.
 | `LEAD_LIFE_*` | 7 gün | 1 hafta [K] | süre dolumu temsilci masasından sonra süpürülür (`SalesFaucetSystem.expire_leads`): lead dolduğu tikte de temsilci masasına girebilir, hafta içinde doğan lead ertesi tikin masasına ulaşır |
 | `RETURN_LOCK_*` | 30 gün | 4 hafta [K] | |
 | `WALK_LOCK_*` | 30 gün | 4 hafta [ÇALIŞMA] | |
-| `PROCESS_DAYS_OWN_LEAGUE` / `ONE_BELOW` / `TWO_BELOW` → `PROCESS_CLOSE_CHANCE` | [6, 7] / [3, 4] / [2, 3] gün | tik başına {kendi lig 0,50 · bir alt 0,75 · iki alt 1,00} [WORKING] | işleme tikinde tohumlu zar; beklenen süre 2 / 1,33 / 1 hafta |
-| `PROCESS_PREMIUM_PENALTY` | süre ×1,3 | ihtimal ÷1,3 [K] | beklenen süre ×1,3 aynen |
-| `PROCESS_MIN_DAYS`, `PROCESS_REFERENCE_OUTPUT`, `work_due_day` | var | yok | ⚑ temsilcinin etkin çıktısı süreyi etkilemez (Açık 1) |
-| `PRICE_BREAK_TRIGGER_LAST_DAYS` / `PRICE_BREAK_CANT_SAY_NO_MULT` | son 2 gün / pencere ×1,6 | yok | ⚑ fiyat-kırma her işleme tikinde zardan önce, lead başına bir kez değerlendirilir; HAYIR DİYEMEZ bağı yok (Açık 2) |
+| `PROCESS_DAYS_OWN_LEAGUE` / `ONE_BELOW` / `TWO_BELOW`, `PROCESS_PREMIUM_PENALTY`, `PROCESS_MIN_DAYS`, `PROCESS_REFERENCE_OUTPUT`, `work_due_day` → anlaşma planı | [6, 7] / [3, 4] / [2, 3] gün; Premium süre ×1,3 | yarım hafta sayan plan (`SalesConstants.deal_halfweeks`) [ÇALIŞMA] | zar yok; plan, Premium ve verim GUNCELLEMELER Satış §7.2 maddesindedir (sahip kararı 2026-10-11) |
+| `PRICE_BREAK_TRIGGER_LAST_DAYS` / `PRICE_BREAK_CANT_SAY_NO_MULT` | son 2 gün / pencere ×1,6 | yok | ⚑ fiyat-kırma anlaşmanın günlük masa diliminde imzadan önce, lead başına bir kez değerlendirilir; HAYIR DİYEMEZ bağı yok (Açık 2) |
 | `WEEKLY_SUMMARY_INTERVAL_*` | 7 gün | 1 hafta [ÇALIŞMA] | haftalık satış kartı her tik |
 | `FAUCET_BASE_PER_WEEK` / `FAUCET_PER_REP_PER_WEEK` / `ONE_STAR_FLOOR_PER_WEEK` | 3 / 2 / 1, gün başına ÷7 | 3 / 2 / 1, tik başına tam [K] | `DAYS_PER_WEEK` bölmesi yok |
 | `FAUCET_DAILY_MAX` → `FAUCET_TICK_MAX` | 2 / gün | 14 / tik [K] | ⚑ lead'ler haftanın başında toplu gelir |

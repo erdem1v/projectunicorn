@@ -1005,7 +1005,7 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability>. `desk` puts a rep mid-processing on the desk; `picker` opens the steward
+## norep|discounted|frank|risk_stability|deals>. `desk` puts a rep mid-processing on the desk; `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
 ## week's meetings spent, an open promise by sprint, the log) with three calm accounts, Aras in its onboarding floor's
@@ -1020,6 +1020,8 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 ## `frank` adds Frank's introduction to the three leads of a founder with no Satış: it heads the list, tagged.
 ## `risk_stability` keeps the bugs at the complaint gate, so neither Risk account is there over outages: Ege, which
 ## holds no broken promise, reads the product's stability, Lale, whose promise broke, its falling satisfaction.
+## `deals` shows the founder's two table deals (the 3★ lead's two weeks into its plan, the 1★ lead's agreed this week)
+## and a 3★ rep's desk deal on the 2★ lead, whose plan ends on a half week.
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
 	if kind == "b2c_live":
@@ -1051,7 +1053,15 @@ func _run_sales_shot(kind: String) -> void:
 	if kind == "frank":
 		CharacterRegistry.get_founder().role_stats[HRConstants.AREA_SALES] = 0
 		SalesFaucetSystem.spawn_prospect("mid", "frank_intro")
-	if edge or kind in ["desk", "picker", "inbox", "stretched"]:
+	if kind == "deals":
+		for star in [3, 1]:
+			var lead: Prospect = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.star == star)[0]
+			SalesFinalizer.apply({"outcome_id": NegotiationSystem.OUTCOME_SIGNED,
+				"context": {"lead_id": lead.id, "account": lead.company_name},
+				"values": {"units": int(SalesConstants.seat_band(star).low), "unit_price": SalesLedger.seat_price_anchor()}})
+			if star == 3:
+				lead.work_started_day = GameState.day - 2
+	if edge or kind in ["desk", "picker", "inbox", "stretched", "deals"]:
 		# A rep on the desk, mid-processing, so the band row and the working line both draw; at 1★ the band row
 		# is the line that says the rep works their own league only. The desk takes `edge`'s given lead only
 		# while a rep there could work it.
@@ -1063,7 +1073,7 @@ func _run_sales_shot(kind: String) -> void:
 		rep.level = HRConstants.LEVEL_MID
 		rep.monthly_salary = 3200
 		rep.morale = 62
-		rep.role_stats = HRConstants.seed_skills(rep.role, 2 if kind == "stretched" else 5, 3)
+		rep.role_stats = HRConstants.seed_skills(rep.role, {"stretched": 2, "deals": 6}.get(kind, 5), 3)
 		rep.traits = ["picks_it_up_fast"]
 		CharacterRegistry.add(rep)
 		rep.hire_day = GameState.day - 4   # add() stamps today
@@ -3485,7 +3495,7 @@ func _probe_pause_interactivity(root: Node, label: String) -> void:
 ## the act opens; countered = an offer under the insult line and their counter; insult = a price
 ## over the line picked on the ruler, the offer in its alert tone; last = the same offer held until
 ## patience is out, Accept leading and the hold in its alert tone; confirm = the floor price offered
-## and signed, its result card.
+## and agreed, its result card.
 func _run_negotiation_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_sales_world()

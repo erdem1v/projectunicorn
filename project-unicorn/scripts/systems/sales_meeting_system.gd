@@ -158,7 +158,7 @@ static func _build_base_contributions(p: Prospect) -> Array:
 	out.append({"seam": "urun.capacity_tier", "delta": SalesConstants.W_PROVIDER_TIER * provider_ok})
 
 	# Star mismatch — a HARD curve, and Charisma is one of only two moments it may be touched.
-	var gap: int = clampi(p.star - int(sales_star), 0, SalesConstants.MISMATCH_PENALTY.size() - 1)
+	var gap: int = clampi(p.star - SalesLedger.founder_star(), 0, SalesConstants.MISMATCH_PENALTY.size() - 1)
 	var penalty: float = float(SalesConstants.MISMATCH_PENALTY[gap])
 	if penalty > 0.0 and GameState.get_founder_skill(FounderConstants.SKILL_CHARISMA) > 0:
 		penalty *= (1.0 - SalesConstants.CHARISMA_MISMATCH_RELIEF)
@@ -368,7 +368,9 @@ static func _loss_target(reason: String) -> String:
 ## plannable sprint has no room for (the same fit rule as the card promise rows).
 static func _promise_lock() -> String:
 	var p: Prospect = ProspectRegistry.get_prospect(_lead_id)
-	if SalesLedger.open_pitch_promise() != "" or (p != null and SalesLedger.promise_locked_for(p.company_name)):
+	# A word agreed at a table whose deal has not signed yet is the open pitch promise too.
+	var agreed: bool = ProspectRegistry.get_all().any(func(lead: Prospect) -> bool: return lead.deal_promise != "")
+	if agreed or SalesLedger.open_pitch_promise() != "" or (p != null and SalesLedger.promise_locked_for(p.company_name)):
 		return "open_pitch_promise"
 	var step: String = _promise_step()
 	return "promise_no_room" if step != "" and not SprintSystem.fits_plannable(step) else ""

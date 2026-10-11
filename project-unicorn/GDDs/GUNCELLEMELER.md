@@ -657,18 +657,18 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
 
 - **§5.3 Perde 2, "Onay şeridi (MÜHÜRLÜ)" maddesinin sonu ("→ İmzala"); §16 örneğinin son adımı**
   - Eski metin: Kabulde onay şeridi koltuk × fiyat = MRR ve doluluk okumasını gösterir, oyuncu İmzala ile imzalar.
-  - Yürürlükteki kural: Kabulde masa kapanır ve sonuç kartı gelir: bant ("Anlaşma imzalandı"), masaya etkisi (koltuk × fiyat = MRR · Kapasite), liderle ilişki ve varsa verilen söz; Devam imzayı işler (`SalesFinalizer.apply`) ve oturumu kapatır. Ayrı bir İmzala düğmesi yoktur. Karar cümlesi ve replik yine yoktur. Kayıp, fiyattan kalkış ve hakaret de aynı sonuç kartıyla biter.
-  - Kaynak: görüşme akışı kararları (Erdem, 2026-09-28/29; Claude Design "Yatırımcı Görüşmesi v3" sonuç kartı); cf80260.
+  - Yürürlükteki kural: Kabulde masa kapanır ve sonuç kartı gelir: bant ("Şartlarda anlaşıldı"), masaya etkisi (koltuk × fiyat = MRR · İmza n hafta sonra), liderle ilişki ve varsa verilen söz; damgası "Anlaşıldı". Devam şartları anlaşma olarak lead'e yazar (`SalesFinalizer.apply`) ve oturumu kapatır; hesap anlaşmanın planı dolunca bu şartlarla imzalanır ve verilen söz o zaman borç olur (§7.2 maddesi). Ayrı bir İmzala düğmesi yoktur. Karar cümlesi ve replik yine yoktur. Kayıp, fiyattan kalkış ve hakaret de aynı sonuç kartıyla biter.
+  - Kaynak: görüşme akışı kararları (Erdem, 2026-09-28/29; Claude Design "Yatırımcı Görüşmesi v3" sonuç kartı); cf80260; sahip kararı 2026-10-11 (masa anlaşır, imza planı izler).
 
 - **§5.3 Perde 2, "Kalk her an açık … 30 gün kilidi"; §12 "Pazarlıktan Kalk" satırı**
   - Eski metin: Pazarlıktan kalkmak nötr bir ayrılıştır ve 30 günlük kilit [ÇALIŞMA] bırakır, iz bırakmaz.
   - Yürürlükteki kural: Kalk kilidi 4 haftadır (`SalesConstants.WALK_LOCK_WEEKS` 4 [ÇALIŞMA]); ayrılış yine nötr ve izsizdir.
   - Kaynak: `GDD — ZAMAN MODELİ.md` §4; sahip kararı 2026-09-27/28.
 
-- **§7.2 İşleme süresi (MÜHÜRLÜ); §7.5 "Premium işleme süresini uzatır [K +%30]"; §17'nin işleme süresi girdisi**
-  - Eski metin: Temsilci tek müşteri işler ve boru hattında işlemenin kaçıncı gününde olduğu görünür; süre kendi ligde 6 ile 7, bir alt ligde 3 ile 4, iki alt ligde 2 ile 3 gündür [K]; moral, odak ve saat süreyi `hr.effective_skill` üzerinden oynatır; Premium süreyi %30 uzatır.
-  - Yürürlükteki kural: İşleme bir süre değil, tik başına kapanma ihtimalidir (`SalesConstants.PROCESS_CLOSE_CHANCE` [WORKING]): kendi ligde %50, bir alt ligde %75, iki alt ligde %100; her işleme tikinde tohumlu bir zar atılır (`RngStreams`). Beklenen süre 2 / 1,33 / 1 haftadır. Premium ihtimali 1,3'e böler (`PROCESS_PREMIUM_PENALTY` 0,30 [K]); beklenen süre yine ×1,3 uzar. Temsilcinin etkin çıktısı (moral, odak, saat) artık süreyi oynatmaz. Açık (ACIK_KARARLAR): temsilci çıktısının işleme süresine etkisinin kalkması.
-  - Kaynak: `GDD — ZAMAN MODELİ.md` §4; sahip kararı 2026-09-27/28.
+- **§7.2 İşleme süresi (MÜHÜRLÜ); §7.5 "Premium işleme süresini uzatır [K +%30]"; §12 "Temsilci ayrılır / izne çıkar" satırı; §17'nin işleme süresi girdisi**
+  - Eski metin: Temsilci tek müşteri işler ve boru hattında işlemenin kaçıncı gününde olduğu görünür; süre kendi ligde 6 ile 7, bir alt ligde 3 ile 4, iki alt ligde 2 ile 3 gündür [K]; moral, odak ve saat süreyi `hr.effective_skill` üzerinden oynatır; Premium süreyi %30 uzatır; temsilci ayrılınca ya da izne çıkınca işleme düşer.
+  - Yürürlükteki kural: Satış bir süreçtir: her B2B anlaşması aşamalardan geçer ve planı dolunca imzalanır. Zar yoktur, anlaşma planın ortasında kaybedilmez. Plan müşterinin yıldızından gelir: 1★ 2, 2★ 3, 3★ 6, 4★ 8, 5★ 12 hafta (`SalesConstants.DEAL_BASE_WEEKS` [ÇALIŞMA]); satıcının müşteriden fazla her yıldızı yarım hafta kısaltır (`DEAL_WEEKS_PER_STAR_ABOVE` 0,5 [ÇALIŞMA]), plan bir haftanın altına inmez (`DEAL_MIN_WEEKS` 1 [ÇALIŞMA]), müşterinin altındaki satıcı tabanı alır. Tik bir hafta olduğu için plan yarım hafta sayar: yarım hafta öğlen biter ve yarımla biten plan öğlen imzalanır. Satış masasında (temsilci ya da Satış işindeki kurucu) satıcı bir anda tek anlaşma yürütür; plan anlaşma başlarken damgalanır, Premium onu %30 uzatır (`PROCESS_PREMIUM_PENALTY` 0,30 [K]) ve satıcının verimine (`HRSystem.productivity`: moral bandı × olay satırları) bölünür; odak ve çalışma saati planı oynatmaz. Kurucunun görüşmede anlaştığı anlaşmalar kurucunun yıldızıyla planlanır ve sayıca sınırsızdır; görüşmeleri haftada 4 toplantı ve mesai sınırlar. Aşamalar planı eşit böler: satış masası anlaşması Keşif, Demo, Teklif, Pazarlık, Satın alma onayı ve İmza'dan geçer, kısa planda aşamalar birleşir; görüşme anlaşması görüşmenin oynadığı aşamaları atlar (Teklif, Satın alma onayı, İmza; iki yarım haftaya dek yalnız İmza, dört yarım haftaya dek Teklif ve İmza). Satır "Teklif aşaması · 2/6 hafta" okur. İzne ya da eğitime çıkan satıcının anlaşması düşmez, bekler ve satıcının uzak kaldığı yarım haftalar kadar geç imzalanır. Satış işinden ayrılan, kovulan ya da istifa eden satıcının anlaşması düşer; lead tam bir haftayla bekleme kurallarına döner.
+  - Kaynak: sahip kararı 2026-10-11 (yardımcı yönetmen iletti; tik başına kapanma ihtimali `PROCESS_CLOSE_CHANCE` ve `RngStreams`'in `sales_rep` akışı kalktı).
 
 - **§7.3 Sunum, "Haftalık satış özeti … 7 günde bir"; §17 "haftalık özet günü"**
   - Eski metin: Haftalık satış özeti yalnız kapanışları taşıyan bir bilgi kartıdır ve 7 günde bir gelir [ÇALIŞMA].
@@ -677,8 +677,8 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
 
 - **§7.6 Kapanış modeli ve fiyat-kırma kartı: "işlemenin son günlerinde", "30 gün kilit", "HAYIR DİYEMEZ'li temsilcide kart daha sık [K]"; §17 "kart tetik günü + HAYIR DİYEMEZ çarpanı"**
   - Eski metin: Premium'da fiyat-duyarlı arketiplerde işlemenin son günlerinde fiyat-kırma kartı düşer; fiyatta kalınca deal düşer ve 30 günlük kilit gelir; HAYIR DİYEMEZ'li temsilcide kart daha sık düşer.
-  - Yürürlükteki kural: İşlemenin sabit bir süresi olmadığı için "son günler" yoktur: Premium'da fiyat-duyarlı arketip her işleme tikinde zardan önce değerlendirilir ve kart lead başına en çok bir kez düşer. 30 günlük kilit 4 hafta okunur. HAYIR DİYEMEZ'in kartı sıklaştırma bağı kalkmıştır. Kartın bağlanması hâlâ olay paketindedir; o güne dek kart inerttir. Açık (ACIK_KARARLAR): HAYIR DİYEMEZ'in fiyat-kırma bağı.
-  - Kaynak: `GDD — ZAMAN MODELİ.md` §4; sahip kararı 2026-09-27/28.
+  - Yürürlükteki kural: Premium'da fiyat-duyarlı arketip anlaşmanın günlük masa diliminde, imzadan önce değerlendirilir ve kart lead başına en çok bir kez, yani anlaşma açıldıktan sonraki ilk masa diliminde düşer; "son günler" okunmaz. 30 günlük kilit 4 hafta okunur. HAYIR DİYEMEZ'in kartı sıklaştırma bağı kalkmıştır. Kartın bağlanması hâlâ olay paketindedir; o güne dek kart inerttir. Açık (ACIK_KARARLAR): HAYIR DİYEMEZ'in fiyat-kırma bağı.
+  - Kaynak: `GDD — ZAMAN MODELİ.md` §4; sahip kararı 2026-09-27/28; anlaşma planı, sahip kararı 2026-10-11.
 
 - **§11.5 Üretim hattı, "TR kanonik önce, EN edebi sonra tek pastada"; §11.9 Üslup yasaları, 9. madde ("TR kanonik önce yazılır")**
   - Eski metin: Türkçe kanoniktir ve önce yazılır; İngilizce sonra, tek pastada yazılır.

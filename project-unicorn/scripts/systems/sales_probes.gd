@@ -77,8 +77,7 @@ static func facts_for(p: Prospect) -> Dictionary:
 		# --- the company, through Ekip §15.3 ---
 		"headcount": HRSystem.headcount(),
 		"cs_staffed": not HRSystem.assigned_to(HRConstants.AREA_CUSTOMER_SUCCESS).is_empty(),
-		"founder_sales_star": int(HRConstants.stars_for(
-			GameState.get_founder_skill(HRConstants.AREA_SALES))),
+		"founder_sales_star": SalesLedger.founder_star(),
 		"founder_charisma": GameState.get_founder_skill(FounderConstants.SKILL_CHARISMA),
 		# --- the book ---
 		"account_count": CustomerRegistry.get_by_market("b2b").size(),

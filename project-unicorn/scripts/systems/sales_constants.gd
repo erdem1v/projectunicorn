@@ -145,11 +145,23 @@ const PROMISE_BAND_NARROW := 0.15        # [K] the fraction of the band the lock
 const WALK_LOCK_WEEKS := 4               # [ÇALIŞMA] neutral walk, traceless
 
 
-# ============================ §7 · Rep automation ============================
-# The chance a worked lead closes on one processing tick, by league difference (customer star
-# − rep star): expected processing is 2 / 1.33 / 1 weeks.
-const PROCESS_CLOSE_CHANCE := {0: 0.50, -1: 0.75, -2: 1.00}   # [WORKING]
-const PROCESS_PREMIUM_PENALTY := 0.30    # [K] "Premium işleme süresini uzatır +%30": chance ÷ 1.30
+# ============================ §7 · Deals ====================================
+# A deal runs a plan before it signs: the customer's star sets its weeks, each star the seller
+# stands above the customer takes half a week off, never under a week. A tick is a week, so the
+# plan counts half weeks and a half week ends at noon.
+const DEAL_BASE_WEEKS := {1: 2.0, 2: 3.0, 3: 6.0, 4: 8.0, 5: 12.0}   # [ÇALIŞMA]
+const DEAL_WEEKS_PER_STAR_ABOVE := 0.5   # [ÇALIŞMA]
+const DEAL_MIN_WEEKS := 1.0              # [ÇALIŞMA]
+const DEAL_HALF_WEEK_HOUR := 12
+const PROCESS_PREMIUM_PENALTY := 0.30    # [K] "Premium işleme süresini uzatır +%30": a desk plan × 1.30
+# [ÇALIŞMA] The stages a plan walks, split evenly over its half weeks: the first row whose bound
+# reaches the plan, else the full list. A desk deal walks the whole sale; a table deal's sitting
+# already played the discovery, the demo and the negotiation, so it walks what follows them.
+const DEAL_STAGES_DESK := ["discovery", "demo", "proposal", "negotiation", "procurement", "signing"]
+const DEAL_STAGE_PLANS_DESK := {2: ["discovery", "signing"], 4: ["discovery", "proposal", "signing"],
+	6: ["discovery", "demo", "proposal", "signing"], 10: ["discovery", "demo", "proposal", "negotiation", "signing"]}
+const DEAL_STAGES_TABLE := ["proposal", "procurement", "signing"]
+const DEAL_STAGE_PLANS_TABLE := {2: ["signing"], 4: ["proposal", "signing"]}
 
 # §7.2.2 band cap. -1 = "Kendi ligi", the default; otherwise a full star step.
 const BAND_CAP_OWN_LEAGUE := -1
@@ -227,6 +239,24 @@ static func seat_band(star: int) -> Dictionary:
 ## Stance id → the §7.5 band placement multiplier.
 static func stance_mult(stance: String) -> float:
 	return float(STANCE_MULT.get(stance, STANCE_MULT[STANCE_DEFAULT]))
+
+
+## A deal's plan in half weeks from the two stars. A seller under the customer gets the base.
+static func deal_halfweeks(customer_star: int, seller_star: int) -> int:
+	return roundi(2.0 * maxf(float(DEAL_BASE_WEEKS[customer_star])
+		- DEAL_WEEKS_PER_STAR_ABOVE * maxi(seller_star - customer_star, 0), DEAL_MIN_WEEKS))
+
+
+## The stage a deal is in after `progress` of its `halfweeks`. A desk lead from an older save has
+## no plan (zero) and signs on the next sweep.
+static func deal_stage(halfweeks: int, progress: int, table: bool) -> String:
+	var plan: Array = DEAL_STAGES_TABLE if table else DEAL_STAGES_DESK
+	var rows: Dictionary = DEAL_STAGE_PLANS_TABLE if table else DEAL_STAGE_PLANS_DESK
+	for bound: int in rows:
+		if halfweeks <= bound:
+			plan = rows[bound]
+			break
+	return plan[mini(plan.size() - 1, progress * plan.size() / maxi(halfweeks, 1))]
 
 
 # ============================================================================
