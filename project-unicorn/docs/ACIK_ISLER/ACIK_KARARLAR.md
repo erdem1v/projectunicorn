@@ -1990,3 +1990,27 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   ihtimali, `SalesRepSystem.close_chance`) verimin yalnız olay satırlarını okur; satış masası moral bandını okumaz,
   verim satırındaki moral satırı satışta etkisizdir (bandı satışa sokmak kalibre ekonomiyi oynatır). Kaynak: yazar
   pilotu klasöründeki `research/verimlilik/TASARIM_NOTU_VERIM.md` §1 ve §8 (repo dışında).
+
+- **106 · Sprint turu: dürüst plan, sürüm anı, oyuncunun onayı, B2C okuması (sahip kararları 2026-10-10, GDD'ye
+  işlenmemiş).** Sahibin kararları: artık puan sonraki karta akar, kapasite ve hız kesirlidir (B1); plan tahmini
+  motorun oynatmasından gelir ("devreder", "başlamaz", SPRİNT SONUNDA yalnız bitenler), "+" eklendikten sonraki yükü
+  %125'le sınar ve kart bu sprintte puan alamayacaksa kapalıdır (B2, B-K1); sürüm koşulu ve MVP tahmini plan, aktif ve
+  sürüm notu kiplerinde tek satırdır, MVP öncesi not "kart kaldı" der, beta anahtarının altında kuralı (B3); MVP'de
+  sürüm kapısı Yayınla / Bir sprint daha, v1.1 ve sonrası kendiliğinden, bot Yayınla seçer (B4); yayından sonra B2C
+  okunur: Ürün başlığı, Satış'ın B2C sayfası, sürüm notunda ilk kullanıcılar, evreye göre boş hâller; haftalık kitle
+  örneği son 26 hafta (B5, B-K9); koşan sprint okunur: "Sırada", faz puanı, sayaç, tek kartlı sprintte devret uyarısı
+  (B6); sprint oyuncunun onayı olmadan başlamaz (B7): plan tutuşu sürüm notu kipinde de alınır (B-K2), planlanacak
+  kart yokken boş sprint kendiliğinden başlar (B-K3), boş geçirme oyuncunun açık onayıdır (B-K4), devirde sprint
+  `plan_next`'te ya da saat sürdürülünce başlar (B-K5), kapı devirde de oyuncuyu bekler (B-K6), "Sprinti başlat" saati
+  akıtmaz (B-K10); lider yalnız bitecek kartları ve en çok bir devreden kartı önerir, PM planları toplamla kalır,
+  lider kurucuysa "Kendi notun" (B8, B-K7); mesai modali sprint puanı etkisini ve "Kurucu + N çalışan"ı yazar (B9);
+  belgeler (B10). Kural GUNCELLEMELER "Ürün rev 7" bölümüne ("sprint turunun sahip kararları" maddesi) ve PRD rev 7
+  §3.5, §3.6, §3.8, §3.9, §3.11'e işlendi; GDD ch03 rev 6.1 .docx yapımı ve yayını, Ekip GDD'si mesai modalini bu
+  kararlar olmadan anlatır. Açık: ch03 ve Ekip GDD'si .docx güncellensin mi. Ayrıca **açık** (B-K8, bilgi): kurucunun
+  mesaisi bedelsizdir. Mesainin ücreti ve morali yalnız çalışanlara yazılır (`WorkHoursSystem.counts_in`,
+  `daily_overtime_in`); kurucunun uzun günü sprint puanını, Ar-Ge'deyse araştırma hızını, DESTEK masasındaysa
+  doğrulama ve düzeltme hızını artırır (`HRSystem.daily_contribution`) ve toplantı giriş penceresini uzatır
+  (`WorkHoursSystem.sitting_open`). Artık puanla 12 saat ve üstü MVP'yi 2 tik öne alır (12 saatin altında 7., 12 saat
+  ve üstünde 5. tik; `docs/tasks/PRD_SPRINT.md` §3, `--sprint-probe` ile ölçülür): bedelsiz baskın strateji. Bu turda
+  değişmez. Seçenekler: A) Kabul: uzun gün kurucunun bedelsiz kozudur. B) Kurucunun mesaisine bir bedel gelir (biçimi
+  ayrıca sorulur). Kaynak: `docs/tasks/PRD_SPRINT.md` §0, §2, §3, §6.

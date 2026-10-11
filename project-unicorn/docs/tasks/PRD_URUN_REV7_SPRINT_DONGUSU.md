@@ -4,7 +4,7 @@
 **Durum:** Kanonik. `TASK_URUN_REV7_SPRINT_DONUSUMU.md` ve `TASK_URUN_REV7_EKRAN_UYGULAMA.md` bu belgeyle değiştirildi; ikisine atıf yapılmaz.
 **Girdi:** `docs/mockups/urun_rev7/C1_planlama.png · C2_sprint_ici.png · C3_surum_cikti.png · C4_ceyrek.png · C5_planlama_b2b.png`. Ekrandaki her öge §2'de adıyla var. Yerleşim ve görünüm Menajer Masası koyu dilindedir (Erdem kararı 11): maketler `docs/mockups/menajer/screens/urun/`, ortak kurallar §2.0.
 **Okuma sırası:** §1 kapsam ve fazlar → §2 ekranlar (ne görünüyor · nereden geliyor · ne yapıyor) → §3 sistemler → §4 çalışma değerleri → §5–§10 yürütme ve doğrulama.
-**Tek cümle:** Oyuncu tek bir ürünü sprint sprint geliştirir; ekrana oturduğunda okumadan görür: neresi zayıf, bu sprintte ne yapılıyor, bu kartı seçersem ne değişir. Sprint sabit iki oyun günü (iki hafta); bitince sürüm otomatik çıkar; bitmeyen kart ilerlemesiyle devreder; iş hiç bitmez.
+**Tek cümle:** Oyuncu tek bir ürünü sprint sprint geliştirir; ekrana oturduğunda okumadan görür: neresi zayıf, bu sprintte ne yapılıyor, bu kartı seçersem ne değişir. Sprint sabit iki oyun günü (iki hafta); bitince sürüm otomatik çıkar (v1.0 MVP kapısında oyuncunun Yayınla'sını bekler, §3.6); bitmeyen kart ilerlemesiyle devreder; iş hiç bitmez.
 
 ---
 
@@ -40,18 +40,18 @@ Her satır: **Gösterir** · **Kaynak / kural** · **Etkileşim**. Kart ortak ta
 | SPRİNT / ÇEYREK | SPRİNT aktif | PM yoksa ÇEYREK kilitli, gerekçesi yanında "PM işe alınca"; kesme çizgisi dışında kaldıysa "Yakında" | Görünüm değiştirir |
 | ALANLAR · kapalı satır | ad · kareler · kelime · cümle · ses sayacı · rakip bayrağı · uyarı üçgeni | Kare = alan seviyesi (§3.4). Kelime = seviye vs beklenti (§3.4), kelimenin renginde. Cümle = şablon alan × durum × alt-tür; değişkenler: ticket sayısı, rakip. Ses sayacı "n · k yeni" = açık ticket + ses satırları, k son bir sprintte eklenen. Uyarı üçgeni = kesinti olayı açık ya da aynı yetenekte 3+ ticket. "Rakip: mobil" = statik rakip tablosu (§3.3) bu alana son 3 sprintte çıkış yaptı. Satır boyanmaz | Tık: aç/kapat; aynı anda tek satır açık (yükselir, sol kenarında işaret) |
 | YAPILANLAR | yetenek · kareler ya da □□□ · "n/3 rakipte var" | Dilim = kademe (K1–K3) + cila (+½, en çok +1). n = rakip tablosunda bu yetenekte kademe ≥1 olan rakip sayısı | Hover çipte rakip adları |
-| YAPILABİLECEKLER | aday kartlar | Üretim §3.2. Sıra: ACİL etiketli üstte, sonra etki/efor oranı azalan. Bu sprintte ya da sonrakinde olan kartın adı ikincil mürekkepte + "SPRİNT N" etiketi | "+" bu sprinte (`can_add`: kapasite >0, yük ≤ %125, kilitli değil); "→" sonrakine |
+| YAPILABİLECEKLER | aday kartlar | Üretim §3.2. Sıra: ACİL etiketli üstte, sonra etki/efor oranı azalan. Bu sprintte ya da sonrakinde olan kartın adı ikincil mürekkepte + "SPRİNT N" etiketi | "+" bu sprinte (`can_add`: kapasite >0, kilitli değil; boş sprint her kartı alır, dolu sprintte kart bu sprintte puan almalı ve eklendikten sonra yük ≤ kapasite × 1,25; §3.5); "→" sonrakine |
 | SESLER | "4 ses · 1 yeni" | Açık ticket başlıkları + araştırma cümleleri + rakip çıkışı cümlesi; 0 ise blok çizilmez | Aç/kapat; açılınca "YENİ" etiketleri düşer |
 | Diğer satırlar | Büyüme, Güven & Ölçek uyarı üçgeniyle, Gelir "Yok" | Aynı kurallar; Gelir alanı B2C'de var, B2B'de yok | — |
 | Orta başlık | "SPRİNT 7 · 2 hafta" · BU SPRİNT | Sprint numarası GameState.day'den türetilir (§3.11) | — |
-| Kapasite çubuğu | kart başına tek renk dilim · "10/12" | Kullanılan = sprintteki kartların puan toplamı; kapasite §3.5. Kapasitenin ötesi uyarı renginde, kapasite bir çizgiyle işaretli, taşan kartlarda "devreder" ve "Kapasite aşıldı · n kart devreder" notu; >%125 "+" kapalı ve notu ("%125 üstünde kart eklenmez") | — |
+| Kapasite çubuğu | kart başına tek renk dilim · "10/12" | Kullanılan = sprintteki kartların puan toplamı; kapasite §3.5. Kapasitenin ötesi uyarı renginde, kapasite bir çizgiyle işaretli, taşan kartlarda "devreder" ve "Kapasite aşıldı · n kart devreder" notu; "+" kapalıyken notu: boş puan varsa "%125 üstünde kart eklenmez", yoksa "Bu sprintte boş puan kalmadı"; aşım ve kapalı "+" notu yalnız planlamada (§3.5) | — |
 | Yüzler | ekibin yüz diskleri | Bu sprintte çalışabilecek herkes: aktif, Ar-Ge'de ve izinde olmayan | Hover: ad · rol |
-| Uyarı notu | "Ekipte Test yok · kartlar hatalı çıkabilir" (uyarı renginde) | Test rolü yoksa. Kimse yoksa sütun gövdesinde boş durum: "Henüz kimse yok" ve çıkış yolu (kadro yoksa "İşe alım başlat", varsa "Ekip'e git") | Düğme Ekip'i (ve Atlas'ı) açar |
+| Uyarı notu | "Ekipte Test yok · kartlar hatalı çıkabilir" (uyarı renginde) | Test rolü yoksa. Kimse yoksa sütun gövdesinde boş durum: "Henüz kimse yok" ve çıkış yolu (kurucu Ar-Ge'deyse "Ar-Ge'ye git", kadro yoksa "İşe alım başlat", varsa "Ekip'e git") | Düğme Ar-Ge'yi (araştırdığı düğüm seçili) ya da Ekip'i (ve Atlas'ı) açar |
 | Sprint kartları | üç kart | Kart tanımı §2.6 | Hover: efor dökümü "3 puan · Ece 1 hafta · Kaan 1 hafta" (otomatik atama ön izlemesi §3.5) ve etki satırının sağ ucunda → / Çıkar |
 | SPRİNT SONUNDA | "Onboarding Zayıf → Yeterli · Güven kalkar · 3 ticket kapanır" | Öngörü §3.7; yalnız değişenler; her parça kazanç glifiyle | — |
 | Liderin önerisi | yüz · "LİDERİN ÖNERİSİ Deniz" · cümle · Uygula | Kural §3.8; lider = Liderlik alanı en yüksek aktif çalışan, yoksa kurucu | Uygula: öneriyi sprinte uygular (boş yuvaları doldurur) |
 | Beta kanalı | Kapalı / Açık | §3.6 | İki konumlu anahtar |
-| Sprinti başlat | birincil düğme | `can_start`: ≥1 kart ve kapasite >0; aksi kapalı, gerekçesi yanında kapanan koşul: "Bu sprintte çalışacak kimse yok" ya da "En az bir kart ekle" | Planlama → sprint içi |
+| Sprinti başlat | birincil düğme | `can_start`: ≥1 kart ve kapasite >0; aksi kapalı, gerekçesi yanında kapanan koşul: "Bu sprintte çalışacak kimse yok" (kurucu Ar-Ge'deyse "Kurucu Ar-Ge'de: <düğüm>") ya da "En az bir kart ekle" | Planlama → sprint içi |
 | Sağ başlık | "SPRİNT 8" · SONRAKİ · bayraklar | Nötr bayrak: rakip tablosunda o sprintte çıkış. Uyarı renginde saatli bayrak: bir talebin son tarihi = o sprint | — |
 | Planlanan kartlar | kesikli kenarlı kart | Oyuncunun "→" ile gönderdiği ya da PM'in planladığı kartlar; "planlanan" damgası yok, kesikli kenar söyler | Hover: "↑" bu sprinte, Çıkar; boşsa "→ ile kart gönder" |
 
@@ -65,25 +65,25 @@ Her satır: **Gösterir** · **Kaynak / kural** · **Etkileşim**. Kart ortak ta
 | Kart yüzleri | o hafta atananlar | Otomatik atama; elle değişmez | Hover: ad · rol |
 | BİTTİ damgası | bitti | Üç faz dolu | — |
 | Karar satırı | "gönderen · konu" · Karara git, altında "Olaylar'da bekliyor · bu hafta" | Olay motoru `card_decision_requested` (§3.3); karar kâğıttır (bir hafta), gelen kutusunda bekler, kart orada cevaplanmaz. Karar bekleyen kart o hafta ilerlemez; sprint kapanışında hâlâ bekliyorsa varsayılan seçenekle çözülür. Kâğıt beklerken üst barın Sıradaki yuvası "Sprint kararı · bu hafta son" | Karara git → Olaylar kâğıt seçili açılır; saat ancak Cevapla'da durur |
-| Otomatik başlama notu | "Sprint otomatik başladı" | Sprint bir gün bekleyip liderin önerisiyle başladıysa, o sprint sürdükçe; Ürün kapalıyken BuildHUD'da | — |
+| Kendiliğinden başlama notu | "Sprint Deniz tarafından başlatıldı" ya da "Boş sprint · kimse kart üstünde çalışmıyor" | Sprint devirle PM'in planıyla ya da planlanacak kart yokken boş başladıysa (§3.11), o sprint sürdükçe; Ürün kapalıyken BuildHUD'da "Sprint otomatik başladı" | — |
 | DURUM | "1 kart bitti · 2 sürüyor · 1 karar bekliyor" | Sayımlar | — |
-| SONRAKİ SÜRÜM | "v1.5 · 1 hafta sonra" | Sprint sonuna kalan hafta; beta açıksa "+1 sprint" | — |
+| SONRAKİ SÜRÜM | "v1.5 · 1 hafta sonra" | Sprint sonuna kalan hafta; beta açıksa "+1 sprint"; MVP'den önce çizilmez (§3.9) | — |
 | Çıkar | hover | Kart adaylara döner, ilerlemesi kalır; bedel yok | — |
 
 ### 2.3 C3 — Sürüm çıktı
 
 | Öge | Gösterir | Kaynak / kural | Etkileşim |
 |---|---|---|---|
-| Zaman | durur | `HOLD_RELEASE_NOTE`; pencere kapatılırsa durum korunur, yeniden açılınca sürüm notu gelir; planlamaya geçilmeden bir gün geçerse sprint liderin önerisiyle otomatik başlar (§3.11) | — |
+| Zaman | durur | `HOLD_RELEASE_NOTE`; pencere kapatılırsa durum korunur, yeniden açılınca sürüm notu gelir; pencere kapanınca not tutuşu düşer, planlanacak kart varken `sprint_plan` tutuşu kalır; sprint yalnız devirde ya da planlanacak kart yokken kendiliğinden başlar, MVP kapısında hiç (§3.11) | — |
 | Sol panel | "■□□ → ■■□ · Zayıf → Yeterli" okları; "!" gitmiş | Bu sürümde değişen alanlar oklu; bir sonraki planlamada ok düşer | — |
-| v1.5 · CANLI | büyük sürüm numarası ve CANLI damgası (betada damga yok, "Beta kanalında · bir sonraki sprintte yayına girer") | §3.6 numaralama; çıkan kart yoksa "Bu sprint sürüm çıkmadı", numara artmaz | — |
+| v1.5 · CANLI | büyük sürüm numarası ve CANLI damgası (betada damga yok, "Beta kanalında · bir sonraki sprintte yayına girer") | §3.6 numaralama; MVP öncesi "v1.0 için N kart kaldı" (sürüm etiketi yok), MVP'yi tamamlayan kapanışta kapı ("v1.0 hazır", §3.6); sonra çıkan kart yoksa "Bu sprint sürüm çıkmadı", numara artmaz | — |
 | ÇIKANLAR | kart · tik · puan | Bitti kartlar; etkileri uygulanmış (§3.6) | — |
 | DEVREDEN | kart · ilerleme kareleri · "→ Sprint 8" | Tamamlanan puan / efor; kalan puan sonraki sütundaki kartta | — |
 | HIZ | "8/12 · Ekip 12 puanın 8'ini bitirdi." | Bitirilen puan / kapasite | — |
 | SONUÇ | çıkışta "Beklenen: …", bir gün sonra "Gerçekleşen: …" | §3.7; pencere açıksa satır canlı güncellenir | — |
 | BASIN | "TeknoGündem · Notly kayıt akışını kısalttı." | Çekirdek K2+ çıkışı ya da bir alanın Zayıf → Yeterli geçişi; şablon; haber bandına da gider; yayın adı kendi renginde | — |
 | Lider cümlesi | "Arama bir sprint daha ister." | Devreden kart varsa onu anar; yoksa en zayıf alanı | — |
-| Sprint 8 planına geç | birincil düğme, üstünde "Sürüm notu açıkken oyun durur" | Planlamaya geçer, saat bırakılır (bekleyen olay yoksa) | — |
+| Sprint 8 planına geç | birincil düğme, üstünde "Sürüm notu açıkken oyun durur" | Planlamaya geçer; not tutuşu kalkar, planlanacak kart varken `sprint_plan` tutuşu Sprinti başlat'a kadar kalır (§3.11) | — |
 | Sağ panel | DEVREDEN etiketli kart + planlananlar | Devreden kart kalan puanıyla üstte | — |
 
 ### 2.4 C4 — Çeyrek (Tier 2 · kesme çizgisi arkası)
@@ -113,7 +113,7 @@ Her satır: **Gösterir** · **Kaynak / kural** · **Etkileşim**. Kart ortak ta
 - **Kart:** kesik köşeli küçük belge (`SprintCard`); orta sütunda geniş, aday listesinde ve sonraki sütunda dar (ad iki satıra iner, durum etiketleri kendi satırında), çeyrekte mini (tür glifi, ad, puan).
 - **Satır 1:** tür glifi (yeni · cila · düzeltme · araştırma) · ad · gerekli rol glifleri (beceri glifleri, fazlardan türetilir) · puan kutusu; aday kartta + ve →, alınmış adayda "SPRİNT N" etiketi.
 - **Satır 2:** etki satırı, şablon parçalarından: alan kare geçişi · "n ticket kapatır" · "rakip açığını kapatır" · "{müşteri} talebi · {bedel}" · değişim yoksa "Alan Güçlü kalır · Yetenek ■■□ → ■■■". Öngörü kipinde kelime ("Zayıf → Yeterli") ve "kapanır".
-- **Durumlar:** aday · aday_alınmış · sprint_plan · sprint_aktif · bitti · devreden · planlanan · kilitli · beta_bekliyor. Etiketler: DEVREDER ve ACİL uyarı renginde, DEVREDEN, BETA BEKLİYOR ve SÖZ VERİLDİ nötr. Kilitli: kilit glifi ve soluk ad, gerekçe satırı ("Ar-Ge: Gelişmiş arama"), + ve → kapalı.
+- **Durumlar:** aday · aday_alınmış · sprint_plan · sprint_aktif · bitti · devreden · planlanan · kilitli · beta_bekliyor. Etiketler: DEVREDER ve ACİL uyarı renginde, DEVREDEN, BETA BEKLİYOR ve SÖZ VERİLDİ nötr. Kilitli: kilit glifi ve soluk ad, gerekçe satırı ("Ar-Ge: Gelişmiş arama") ve kilit bir araştırmaysa ardında düğümü seçili Ar-Ge'yi açan "Ar-Ge'ye git" bağlantısı, + ve → kapalı.
 - **Düğmeler:** aday + → hep görünür; sprint_plan → Çıkar, planlanan/devreden ↑ Çıkar üstüne gelince etki satırının sağ ucunda.
 - Bileşen hesap yapmaz; izinler ve eşikler modelden gelir.
 
@@ -154,19 +154,22 @@ Her satır: **Gösterir** · **Kaynak / kural** · **Etkileşim**. Kart ortak ta
 - Cümleler, etki parçaları ve basın satırları JSON şablonlarından; kodda sabit metin yok.
 
 ### 3.5 Kapasite, atama, ilerleme
-- Kişi puanı = uygun rolde haftada 2 × beceri (alan düşük 0.75 / orta 1.0 / yüksek 1.25) × moral bandı (mevcut) × çalışma saati (mevcut). Kurucu Ürün ve Yazılım'da 0.75. Ar-Ge'deki ve izindeki kişi sayılmaz.
-- Kapasite = toplam × 2 hafta. Tavan %125.
+- Kişi puanı = uygun rolde haftada 2 × beceri (alan düşük 0.75 / orta 1.0 / yüksek 1.25) × moral bandı (mevcut) × çalışma saati (mevcut). Kurucu 1.0'dır (`sprint.json` `founder_mult`) ve dört role (Ürün, Tasarım, Yazılım, Test) uyar. Ar-Ge'deki ve izindeki kişi sayılmaz.
+- Kapasite = toplam × 2 hafta; kesirlidir, yuvarlanmaz (ekranda "5,75", tam sayı "4"). Tavan %125: "+" kartı ancak kart bu sprintte puan alacaksa ve eklendikten sonra yük kapasite × 1.25'i aşmıyorsa alır; boş sprint tavanı aşan kartı da alır (tek kurucu K3'ü başka türlü alamaz). Boş puan yoksa not "Bu sprintte boş puan kalmadı", tavandaysa %125 notu.
 - Faz payları: özellik/cila 20/60/20 (Tasarım/Geliştirme/Test); düzeltme 0/70/30; araştırma Ürün %100.
-- Otomatik atama her hafta başı, açgözlü, sprint sırası korunur; kişi haftada tek kart. Uygun rol yoksa faz başka rolce yarım hızda; Test rolü yoksa uyarı çipi.
-- İlerleme: fazın puanı dolunca sonraki faz; üçü dolunca bitti. Karar bekleyen kart ilerlemez.
+- Otomatik atama her hafta başı, açgözlü, sprint sırası korunur. Kartını bitiren kişinin haftada kalan puanı sprint sırasıyla sonraki karta geçer (artık puan); haftanın dökümü atamayla aynı sırayı izler. Uygun rol yoksa faz başka rolce yarım hızda; Test rolü yoksa uyarı çipi.
+- Plan ekranı, "+" ve lider tek oynatmayı okur (`SprintSystem.plan_outcome`): hover'daki "kim, kaç hafta", bitmeyecek kartın "devreder · 2,75/3"ü, bu sprintte hiç puan almayacak kartın "Bu sprint başlamaz → Sprint N"i ve SPRİNT SONUNDA (yalnız bitecek kartlar) aynı oynatmadandır. Aşım notu yalnız planlamada çizilir.
+- İlerleme: fazın puanı dolunca sonraki faz; üçü dolunca bitti. Karar bekleyen kart ilerlemez ("İş durdu · karar bekliyor"); koşan sprintte işçisi olmayan kart "Sırada"dır, etkin fazın puanı kartta okunur. Koşan sprintte kart çıkarılınca ya da karar devredilince boşalan kişi kalan kartlara yeniden atanır.
 - Hatalı çıkış: Test rolsüz tamamlanmış kart sürümde %40 ihtimalle 1 ticket üretir (deterministik hash); beta açıksa yarı.
 
 ### 3.6 Sprint yaşam döngüsü
 - Başlat: kartlar kilitlenir (çıkar hariç), durum "sürüyor".
 - Hafta tick'i: günlük tick 1. yuvası (Ürün): atama → ilerleme → dikişler.
 - Kapanış (2. gün sonu): bitti kartlar sürüme girer, etkiler uygulanır (kademe artar, ticket kapanır, alan seviyesi ve eksen puanı yenilenir), devredenler sonraki sprinte, sürüm kaydı yazılır, `version_shipped`, zaman durur, sürüm notu açılır.
+- MVP kapısı: MVP'yi tamamlayan kapanış sürüm çıkarmaz; sürüm notu kapıdır ("v1.0 hazır", "Çekirdek kartları bitti. Yayınlarsan kullanıcılar bu hafta gelmeye başlar. …"). "Yayınla" (`SprintSystem.publish`) ürünü CANLI v1.0 yapar (§3.9); "Bir sprint daha" (`plan_next`) ürünü sonraki kapanışa kadar kapalı tutar ve o kapanış aynı kapıyı açar. Kademeler kapanışta yazılmıştır; beklemek yalnız ürünün kapalı kalmasıdır. Kapıdaki kapanışların hatalı hatları yayına kadar birikir (`gate_faulty`). Kapıda bir gün geçmek kapıyı geçmez, kapı planlama devredilmişken de oyuncuyu bekler. v1.1 ve sonrası kapanışta kendiliğinden çıkar. Bot kapıda Yayınla seçer.
+- Sürüm koşulu: MVP'den önce planlamada ve koşan sprintte kapasite satırının altında, sürüm notunda (kapıdan önceki kapanışta; kapıda aynı alanlar notun başlığını ve gövdesini yazar) başlığın altında tek satır: "v1.0 = 3 Çekirdek kartı · 1/3 bitti · tahmin Sprint 3 sonu (Hafta 6)". Tahmin `SprintSystem.mvp_eta()`: oyuncunun sprinti dolu tutup açıldığı gün başlattığı varsayımıyla Çekirdek K1'leri hafta hafta oynar, en çok 24 hafta; tahmin yoksa satır tahminsiz. MVP öncesi kapanış notu "v1.0 için N kart kaldı" der, sürüm etiketi yazmaz.
 - Numara: v1.0 = MVP; her sürümde +0.1; çıkan kart yoksa artmaz.
-- Beta: açıkken kartlar bir sprint "beta_bekliyor" (kapasite tüketmez), sürüm bir sprint gecikir, ticket ihtimali yarı.
+- Beta: açıkken kartlar bir sprint "beta_bekliyor" (kapasite tüketmez), sürüm (MVP kapısı da) bir sprint gecikir, ticket ihtimali yarı. Anahtar yalnız planlamada değişir (öbür kiplerde sönük); altında kuralı: "Biten kartlar bir sprint bekler, hatalı çıkma ihtimali yarıya iner".
 - Devretme: ilerleme korunur, kalan puan gösterilir.
 - Hotfix yok; acil düzeltme normal karttır.
 
@@ -176,11 +179,11 @@ Her satır: **Gösterir** · **Kaynak / kural** · **Etkileşim**. Kart ortak ta
 - Gerçekleşen (sürümden 1 gün sonra): alan seviyesi ve ticket sayımlarından şablon cümle; metrik yoksa dilim değişimi cümlesi. Sürüm kaydında güncellenir.
 
 ### 3.8 Lider önerisi ve PM planlayıcı
-- Lider: en zayıf alandan etki/efor oranı en yüksek 1 kart + açık ACİL düzeltme + kapasiteyi dolduran en yüksek etki/efor kart; cümle şablon "{kart1} ve {kart2} bu sprintte bitmeli."
-- PM planlayıcı (kesme çizgisi arkası): aynı kural, çeyrek hedef alanına ağırlık ×1.5, üç sprint ileriye; her sprint `approved=false` doğar. PM'in alan becerisi düşükse plan daha az kart taşır (0.8×).
+- Lider: en zayıf alandan etki/efor oranı en yüksek 1 kart + açık ACİL düzeltme + kalan yeri bu sprintte bitecek en yüksek etki/efor kartlar; cümle şablon "{kart1} ve {kart2} bu sprintte bitmeli." Doldurma, kartı sprintte duranlarla ve önceki seçilenlerle oynatır (`plan_outcome`): öncekilerin hepsi bitiyor, yeni kart puan alıyor ve yük kapasite × 1.25'i aşmıyorsa alır ("+" ile aynı yüklem); bitmeyecek kartı aldıktan sonra durur, yani en çok bir kart "devreder" etiketiyle girer. Lider kurucuysa öneri "Kendi notun" başlığını taşır, ad yazılmaz; sürüm notunun lider satırı da öyle ve önerinin alan seçimini izler (MVP öncesi Çekirdek). "Uygula" yalnız doldurur, başlatmaz; tür seçilince liderin planı uygulanmış gelir.
+- PM planlayıcı (kesme çizgisi arkası): aynı kural (doldurma oynatmasız, kalan kapasiteye sığan kartla), çeyrek hedef alanına ağırlık ×1.5, üç sprint ileriye; her sprint `approved=false` doğar. PM'in alan becerisi düşükse plan daha az kart taşır (0.8×).
 
 ### 3.9 MVP
-- Ürün, Çekirdek'teki üç kimlik yeteneği K1'e ulaşınca v1.0 ile canlıya çıkar (başlıkta SÜRÜM v1.0); mevcut "MVP çıktı" sinyali aynı anda aynı adla atılır; Satış'ın MVP'ye bağlı davranışı değişmez. Öncesinde başlık "MVP · yayında değil", Sonraki sürüm satırı "v1.0 · N kart kaldı". Onboarding'deki alt-tür seçimi katalog seçimidir; Konsept ekranı yoktur.
+- Çekirdek'teki üç kimlik yeteneği K1'e ulaşınca kapanış MVP kapısıdır (§3.6); ürün, oyuncu kapıda "Yayınla"ya basınca v1.0 ile canlıya çıkar (başlıkta SÜRÜM v1.0; `SprintSystem.publish`). Mevcut "MVP çıktı" sinyali (`mvp_shipped`, `version_shipped(1)`, `build_phase_changed("shipped")`) o an aynı adla atılır; v1.0 notu yayın gününü, beklenen satırında "Ürün yayında · ilk kullanıcılar bu hafta gelir"i ve "Ar-Ge açıldı"yı taşır; Satış'ın MVP'ye bağlı davranışı değişmez. Öncesinde başlık "MVP · yayında değil", sürüm koşulu satırı (§3.6); SONRAKİ SÜRÜM satırı MVP'den önce çizilmez. Onboarding'deki alt-tür seçimi katalog seçimidir; Konsept ekranı yoktur.
 
 ### 3.10 Save v10 ve taşıma
 - v10: yetenek kademeleri, cila sayaçları, kartlar, aktif sprint, planlanan sprint, sürüm listesi, rakip çıkış imleci, talepler, beta bayrağı, çeyrek hedefi.
@@ -188,7 +191,8 @@ Her satır: **Gösterir** · **Kaynak / kural** · **Etkileşim**. Kart ortak ta
 
 ### 3.11 Zaman kuralları
 - Sprint numarası ve hafta, GameState.day'den türetilir; ayrı sayaç yok.
-- Planlama durumunda zaman akarsa: bir gün geçince sprint liderin önerisiyle otomatik başlar ve TopBar'a "Sprint otomatik başladı" notu düşer.
+- Sprint oyuncunun onayı olmadan başlamaz. Ekip çalışabiliyor, planlanacak kart var (sprintte ya da sonraki sütunda kapısı açık kart ya da açık aday) ve planlama devredilmemişse planlamada ve sürüm notunda, MVP kapısında ise her durumda saat `sprint_plan` tutuşuyla durur (`SprintSystem.awaits_plan`, `sync_plan_hold`; TopBar "Sprint planı bekliyor", planın ayağında "Sprint başlayana kadar oyun durur"). Tutuşu pencere değil motor alır, Ürün kapalıyken de sürer; sürüm notu penceresi kapanınca not tutuşu düşer, plan tutuşu kalır. "Sprinti başlat" tutuşu kaldırır, saati akıtmaz: TopBar "DURDU · Boşluk ile sürdür", oyuncu Boşluk'la sürdürür.
+- Kendiliğinden başlama yalnız iki durumda olur. Planlama PM'e devredilmişse (denetim şeridinde "Planlamayı devret: <PM>" anahtarı) sprint `plan_next`'te ya da saat sürdürülünce PM'in planıyla başlar, panel "Sprint <PM> tarafından başlatıldı" der. Planlanacak kart yoksa ve ekip çalışabiliyorsa bir gün geçince boş sprint başlar, tutuş alınmaz, panel "Boş sprint · kimse kart üstünde çalışmıyor" der. Oyuncu "Bu sprinti boş geçir" ve onay satırıyla sprinti kartsız başlatabilir; kartları sonraki sütuna geçer. Kendiliğinden başlayan sprintin "Sprint otomatik başladı" notu Ürün kapalıyken BuildHUD'da kalır.
 - Sürüm notu ve olay modalı zamanı durdurur; bekleyen olay varsa saat bırakılmaz.
 
 ---
@@ -201,7 +205,7 @@ Her satır: **Gösterir** · **Kaynak / kural** · **Etkileşim**. Kart ortak ta
 | Çeyrek | 6 sprint |
 | Kart eforu | K1 3 · K2 5 · K3 8 · cila 2 · düzeltme 1 / 2 (3+ ticket) · araştırma 1 · talep = kademe eforu |
 | Faz payları | 20 / 60 / 20 · düzeltme 0 / 70 / 30 · araştırma Ürün 100 |
-| Kişi puanı | 2 / hafta × beceri 0.75–1.25 × moral × çalışma saati · kurucu 0.75 |
+| Kişi puanı | 2 / hafta × beceri 0.75–1.25 × moral × çalışma saati · kurucu 1.0 |
 | Kapasite tavanı | %125 |
 | Rolsüz faz hızı | %50 |
 | Hatalı çıkış ihtimali | %40 · beta açıkken %20 |
@@ -252,14 +256,14 @@ Her satır: **Gösterir** · **Kaynak / kural** · **Etkileşim**. Kart ortak ta
 ## 7. Doğrulama listesi
 
 1. Bayrak kalkmış; Ürün sekmesi yeni ekranı canlı veriyle gösteriyor; eski ekranlara giden yol kalmamış.
-2. Yeni run "MVP · yayında değil" ile başlar; üç kimlik yeteneği K1'e gelince "SÜRÜM v1.0" ve mevcut MVP sinyali bir kez atılır; Satış smoke'u yeşil.
+2. Yeni run "MVP · yayında değil" ile başlar; üç kimlik yeteneği K1'e gelince kapanış MVP kapısıdır, Yayınla'da "SÜRÜM v1.0" ve mevcut MVP sinyali bir kez atılır (§3.9); Satış smoke'u yeşil.
 3. Sprint tam iki gün sürer; TimeManager dışında gün sayan kod yok.
 4. Kapasite Ekip'ten hesaplanır; Ar-Ge'ye alınan kişi ve moral değişimi kapasiteyi değiştirir.
-5. "+" %125 üstünde pasif; %100–125 "devreder" uyarısı.
+5. "+" eklendikten sonraki yük %125'i aşacaksa ya da kart bu sprintte puan alamayacaksa pasif (boş sprint her kartı alır); bitmeyecek kart "devreder · 2,75/3" (§3.5).
 6. Otomatik atama: sprint içinde her kartta avatar; elle atama yok.
 7. Test rolsüz ekipte uyarı çipi ve deterministik ticket üretimi (test sabitiyle).
 8. Devreden kart ilerlemesini korur; kalan puan doğru.
-9. Sürüm notu zamanı durdurur; "Beklenen" çıkışta, "Gerçekleşen" bir gün sonra; pencere kapatılıp açılınca sürüm notu geri gelir; bir gün geçince otomatik başlangıç ve notu (Ürün'ün orta sütununda, Ürün kapalıyken BuildHUD'da).
+9. Sürüm notu zamanı durdurur; "Beklenen" çıkışta, "Gerçekleşen" bir gün sonra; pencere kapatılıp açılınca sürüm notu geri gelir; planlanacak kart varken plan tutuşu; kendiliğinden başlangıç yalnız devirde ya da planlanacak kart yokken, notuyla (Ürün'ün orta sütununda, Ürün kapalıyken BuildHUD'da).
 10. Sürümde eksen puanı push; MarketBar ve Satış davranışı mevcut smoke'ta yeşil.
 11. Durum kelimeleri beklenti tablosuna uyar; rakip çıkışı çip + bayrak + haber satırı + beklenti artışı üretir.
 12. Ticket'lar yeteneğe göre tek düzeltme kartında; kart çıkınca kapanır; 3+ ticket ACİL etiketi (uyarı üçgeniyle).

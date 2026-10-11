@@ -185,6 +185,11 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
+- Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
+  `seeds`, `seed`, `events`, `rate`, `beta`, `lead`, `gate`; anlamları HARITA Ürün'de) headless koşar: tek kurucunun
+  koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır, `SPRINTPROBE` satırları basar (`PRED`,
+  `CLOSE`, `SKIP`, `MVP`, `SUMMARY`; MVP tahmini `mvp_eta` `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız
+  uyuşmazlıkta 1 ile çıkar.
 - Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
   `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`
   pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer. Kare maliyeti:
@@ -217,9 +222,12 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse>`; term sheet masası
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
-  fikstürüyle (`scripts/debug/product_fixtures.gd`),
-  `--product-shot=live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests>` sprint motoruyla kurulan
-  koşuda. Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
+  fikstürüyle (`scripts/debug/product_fixtures.gd`), `--product-shot=live:<tür>` sprint motoruyla kurulan koşuda
+  (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_requests`,
+  `gate`, `delegate`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`; kurulumları ve ikinci, üçüncü kareleri HARITA
+  Ürün'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
+  B2B boş hâli `--sales-shot=b2b_pre`.
+  Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
   duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve
   `crowd_<ofis>_<kişi>_<hız>_NN.png`). Kurucunun toplantı yolculuğu: `--travel-shot=<home|ishani|plaza|loft>[:vc|:night]`
   (10:00'da satış toplantısına, `:vc` ile Series A görüşmesine davet, gidiş, panel ve dönüş; `:night` toplantıyı
