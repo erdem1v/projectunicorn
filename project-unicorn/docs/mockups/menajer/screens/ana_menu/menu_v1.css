@@ -1,0 +1,169 @@
+/* Main menu set, direction A "Akşam ofisi" with the B and C grafts. Tokens and components come from the system
+   (tokens.css, base.css) and the approved modallar group (modallar.css: .brand, .emb, .dlg-*, .sys-list, .slot,
+   .sl-*, .modal-f); this file adds only the menu's own layout. Every gap is on the spacing scale. */
+
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--surface-0); }
+body.w1536 { width: 1536px; height: 864px; }
+.screen { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--surface-0); }
+.w1536 .screen { width: 1536px; height: 864px; }
+
+/* ---------------------------------------------------------------- backdrop
+   One plate: the ishani office at 19:30, made from two real --office-shot renders (19:00 and 23:00) of the same
+   camera. No CSS grade. In Godot this is MenuBackdrop (OfficeLighting.apply(1170)); see NOTES. */
+.bd { position: absolute; inset: 0; background: var(--plate) 0 0 / 100% 100% no-repeat; }
+.screen > .scrim { z-index: 5; }
+.screen > .on-scrim { position: absolute; z-index: 6; }
+
+/* ---------------------------------------------------------------- the menu document */
+.mm { position: absolute; left: 64px; top: 64px; width: 472px; display: flex; flex-direction: column;
+  background: var(--surface-3); border: var(--bw-1) solid var(--line-2); box-shadow: var(--shadow-window); }
+.w1536 .mm { left: 48px; top: 48px; }
+.mm-head { display: flex; align-items: center; height: 96px; padding: 0 var(--sp-32); border-bottom: var(--bw-1) solid var(--line-1); }
+/* letterhead: the game's mark at 40, sentence case (a proper noun, rule 7) */
+.mm-head .brand { font-family: var(--f-cond); font-weight: 700; font-size: var(--fs-40); line-height: var(--lh-40); }
+
+/* the save slip: a filed document, information only; its action is the first item under it */
+.cont { margin: var(--sp-24) var(--sp-24) 0; padding: var(--sp-16) var(--sp-20) var(--sp-20); background: var(--surface-4); border: var(--bw-1) solid var(--line-3); }
+.slip { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: var(--sp-12); margin-bottom: var(--sp-16);
+  border-bottom: var(--bw-1) solid var(--line-1); font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); white-space: nowrap; }
+.slip .k { color: var(--ink-2); font-weight: 500; }
+.cont-top { display: flex; align-items: center; gap: var(--sp-16); }
+.cont .who { min-width: 0; display: flex; flex-direction: column; gap: var(--sp-4); padding-left: 0; }
+.cont .co { font-family: var(--f-cond); font-weight: 700; font-size: var(--fs-30); line-height: var(--lh-30); color: var(--ink-1);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.cont .fd { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); white-space: nowrap; }
+.facts { display: grid; grid-template-columns: 1fr 1.2fr 1fr; margin: var(--sp-16) 0 0; padding-top: var(--sp-16); border-top: var(--bw-1) solid var(--line-1); }
+.facts dt { color: var(--ink-3); }
+.facts dd { margin: var(--sp-4) 0 0; white-space: nowrap; font-weight: 600; font-size: var(--fs-20); line-height: var(--lh-20); color: var(--ink-1); }
+
+/* the company's logo on the menu's surfaces prints as a seal: its own shape, one ink. The orange square of the
+   letterhead stays the only orange mass, the amber bar the only amber one. */
+.emb.seal b { color: var(--ink-2); }
+
+/* items: Barlow 700/30 (t-h2), sentence case; hover is a border, focus the ring; amber only on the primary */
+.items { display: flex; flex-direction: column; padding: var(--sp-12) var(--sp-24) var(--sp-24); }
+.mm-head + .items { padding-top: var(--sp-24); }
+.it { display: flex; align-items: center; gap: var(--sp-12); height: var(--h-btn-lg); padding: 0 var(--sp-20); border: var(--bw-1) solid transparent; border-radius: var(--r-2);
+  font-family: var(--f-cond); font-weight: 700; font-size: var(--fs-30); line-height: var(--lh-30); color: var(--ink-2); white-space: nowrap; }
+.it.is-hover { border-color: var(--line-hover); color: var(--ink-1); }
+.it.is-focus { color: var(--ink-1); }
+.it.primary { background: var(--accent); color: var(--on-accent); margin-bottom: var(--sp-8); }
+.it .m { margin-left: auto; font-family: var(--f-sans); font-weight: 400; font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); }
+/* locked: the label alone goes ink-off; the reason sits next to it at ink-3 in the same 56 row (SPEC section 1 rule 4) */
+.it.is-locked { color: var(--ink-off); }
+.items .rule { height: 1px; margin: var(--sp-12) var(--sp-20); background: var(--line-1); }
+
+/* ---------------------------------------------------------------- corners: news line (A), label buttons + version (B) */
+.news, .cr { position: absolute; bottom: var(--sp-32); height: var(--h-ticker); display: flex; align-items: center;
+  background: var(--surface-0); border-radius: var(--r-2); font-size: var(--fs-14); line-height: var(--lh-14); white-space: nowrap; }
+.w1536 .news, .w1536 .cr { bottom: var(--sp-24); }
+/* 1536: the document reaches the bottom band; the news line is not drawn (the slip already carries the week) */
+.w1536 .news { display: none; }
+.news { left: 64px; gap: var(--sp-8); padding: 0 var(--sp-16); }
+.news .ic { width: 16px; height: 16px; color: var(--ink-4); margin-right: var(--sp-4); }
+.news .tk-pub { margin-right: 0; }
+.news .dl { color: var(--ink-3); margin-right: var(--sp-8); }
+/* ticker headlines vary in length: the band never reaches the corner (1920: corner starts at ~1416 in EN) */
+.news { max-width: 960px; }
+.news .tk-hl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.cr { right: 64px; gap: var(--sp-4); padding: 0 var(--sp-4); }
+.w1536 .cr { right: 48px; }
+.lb { display: inline-flex; align-items: center; gap: var(--sp-6); height: var(--h-btn-sm); padding: 0 var(--sp-12); border: var(--bw-1) solid transparent; border-radius: var(--r-2);
+  font-weight: 500; color: var(--ink-2); }
+.lb .k { font-weight: 400; color: var(--ink-3); }
+.lb.is-hover { border-color: var(--line-hover); color: var(--ink-1); }
+.cr .sep { width: 1px; height: 16px; background: var(--line-1); margin: 0 var(--sp-4); }
+.cr .ver { padding: 0 var(--sp-12) 0 var(--sp-8); color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- boot: the wordmark alone on surface-0 */
+.boot { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.boot .brand { gap: var(--sp-24); font-family: var(--f-cond); font-weight: 700; font-size: 64px; line-height: 1; }
+.boot .brand i { width: 52px; height: 52px; border-radius: var(--r-2); }
+
+/* ---------------------------------------------------------------- Yükle panel: company groups (C's archive index) */
+.ld-list { position: absolute; left: 0; right: 0; top: 0; padding: var(--sp-16) var(--sp-32) var(--sp-24) var(--sp-24); }
+.grp { display: flex; align-items: center; gap: var(--sp-12); height: 48px; margin: var(--sp-20) 0 var(--sp-8); }
+.grp:first-child { margin-top: 0; }
+.grp .n { font-family: var(--f-cond); font-weight: 700; font-size: var(--fs-20); line-height: var(--lh-20); color: var(--ink-1); white-space: nowrap; }
+.grp .f { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-14); line-height: var(--lh-14); color: var(--ink-3); white-space: nowrap; }
+.grp .c { margin-left: auto; font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+.ld-list .sl-sec { margin-top: var(--sp-24); }
+.slot { position: relative; }
+.slot.is-selected { background: var(--surface-4); border-color: var(--line-3); }
+.slot.is-selected::after { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: var(--bw-3); background: var(--selected-mark); border-radius: 0 2px 2px 0; }
+.slot:not(.is-selected) { background: var(--surface-3); }
+.slot.is-bad { background: transparent; border-color: var(--line-1); }
+.slot.is-bad .t { color: var(--ink-off); }
+.slot .t .ts { margin-left: auto; color: var(--ink-4); font-weight: 400; font-size: var(--fs-13); }
+
+/* ---------------------------------------------------------------- Künye */
+.ky .dlg-h .seg { align-self: stretch; margin-left: var(--sp-24); }
+.ky-body { position: absolute; inset: 0; display: grid; grid-template-columns: 440px 1fr; }
+.ky-id { padding: var(--sp-40) var(--sp-40) var(--sp-32); border-right: var(--bw-1) solid var(--line-1); display: flex; flex-direction: column; }
+.ky-id .brand { font-family: var(--f-cond); font-weight: 700; font-size: var(--fs-40); line-height: var(--lh-40); }
+.ky-id dl { margin: var(--sp-32) 0 0; display: grid; grid-template-columns: auto 1fr; column-gap: var(--sp-20); row-gap: var(--sp-12); align-items: baseline; }
+.ky-id dt { color: var(--ink-3); }
+.ky-id dd { margin: 0; color: var(--ink-2); }
+/* the courtesy line sits under the identity block on the scale (no margin-top:auto: the column is a top-aligned colophon) */
+.ky-id .made { margin-top: var(--sp-32); color: var(--ink-3); }
+.ky-main { padding: var(--sp-32) var(--sp-40); }
+.ky-sec { display: flex; align-items: center; gap: var(--sp-12); height: 36px; color: var(--ink-3); margin-top: var(--sp-32); }
+.ky-sec:first-child { margin-top: 0; }
+.ky-sec::after { content: ""; flex: 1; height: 1px; background: var(--line-1); }
+.crew { display: grid; grid-template-columns: 280px 1fr; margin-top: var(--sp-8); }
+.crew > span { height: 40px; display: flex; align-items: center; border-bottom: var(--bw-1) solid var(--row-rule); }
+.crew .r { color: var(--ink-3); }
+.crew .n { color: var(--ink-1); font-weight: 600; }
+.thx { margin-top: var(--sp-12); color: var(--ink-2); max-width: 820px; }
+.thx p { margin: 0 0 var(--sp-12); }
+.thx .s { color: var(--ink-3); }
+/* maket notu (not a game element): what the owner still has to fill; the modallar group's draft convention */
+.hold { display: inline-flex; align-items: center; gap: var(--sp-8); height: var(--h-tag); padding: 0 var(--sp-8); border: var(--bw-1) dashed var(--line-3); border-radius: var(--r-1);
+  font-family: var(--f-cond); font-weight: 600; font-size: var(--fs-13); line-height: var(--lh-13); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-4); white-space: nowrap; }
+
+/* licences: index column + the text, English and untranslated, in a scroll */
+.lic-body { position: absolute; inset: 0; display: grid; grid-template-columns: 400px 1fr; }
+.lic-idx { position: relative; background: var(--surface-2); border-right: var(--bw-1) solid var(--line-1); }
+/* both columns are scrolls under the window's fixed header and footer (1536: the window is 800 high) */
+.lic-scroll { position: absolute; inset: 0; overflow: hidden; }
+.lic-idx .lic-scroll { padding: var(--sp-16) var(--sp-12) var(--sp-16) var(--sp-16); }
+.lic-idx .g { height: 32px; display: flex; align-items: flex-end; padding: 0 var(--sp-12) var(--sp-6); color: var(--ink-3); margin-top: var(--sp-8); }
+.lic-idx .g:first-child { margin-top: 0; }
+.lic-r { position: relative; height: var(--h-row-sm); display: flex; align-items: center; gap: var(--sp-8); padding: 0 var(--sp-12); border-radius: var(--r-1); color: var(--ink-2); font-size: var(--fs-15); line-height: var(--lh-15); white-space: nowrap; }
+.lic-r .l { margin-left: auto; font-size: var(--fs-13); color: var(--ink-3); }
+.lic-r.is-selected { background: var(--surface-4); color: var(--ink-1); }
+.lic-r.is-selected::after { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: var(--bw-3); background: var(--selected-mark); border-radius: 0 2px 2px 0; }
+/* held rows are read content (a mock note), so ink-3 inside the dashed border, like the .hold chips; never ink-off */
+.lic-r.is-held { color: var(--ink-3); border: var(--bw-1) dashed var(--line-2); margin-top: var(--sp-4); }
+.lic-r.is-held .l { color: var(--ink-4); }
+.lic-txt { position: relative; }
+.lic-txt .lic-scroll { padding: var(--sp-32) var(--sp-48) var(--sp-24) var(--sp-40); }
+.lic-txt h2 { margin: 0; color: var(--ink-1); }
+.lic-txt .meta { margin-top: var(--sp-4); color: var(--ink-3); }
+.lic-txt .note { margin-top: var(--sp-16); display: flex; align-items: center; gap: var(--sp-8); color: var(--ink-3); }
+.lic-txt .note .ic { width: 14px; height: 14px; color: var(--ink-4); }
+.lic-txt .en { margin-top: var(--sp-20); padding-top: var(--sp-20); border-top: var(--bw-1) solid var(--line-1); color: var(--ink-2); font-size: var(--fs-15); line-height: var(--lh-15); max-width: 800px; }
+.lic-txt .en p { margin: 0 0 var(--sp-12); }
+.lic-txt .en .lead { color: var(--ink-1); font-weight: 600; }
+.lic-txt .en .caps { font-size: var(--fs-13); line-height: var(--lh-13); color: var(--ink-3); }
+.lic-txt h3 { margin: var(--sp-32) 0 0; color: var(--ink-1); }
+/* Godot's components: one folded row per component (name, licence id); unfolding shows its copyright lines and
+   licence id. 104 rows, never 104 open blocks. */
+.fold { margin-top: var(--sp-16); max-width: 800px; border-top: var(--bw-1) solid var(--row-rule); }
+.fr { display: flex; align-items: center; gap: var(--sp-8); height: var(--h-row); border-bottom: var(--bw-1) solid var(--row-rule); font-size: var(--fs-14); line-height: var(--lh-14); white-space: nowrap; }
+.fr .ic { color: var(--ink-4); }
+.fr .n { color: var(--ink-1); font-weight: 600; }
+.fr .l { margin-left: auto; color: var(--ink-3); font-size: var(--fs-13); line-height: var(--lh-13); }
+.fr.is-open { border-bottom-color: transparent; }
+.fr.is-open .ic { color: var(--ink-2); }
+.fb { padding: 0 0 var(--sp-12) var(--sp-24); border-bottom: var(--bw-1) solid var(--row-rule); color: var(--ink-2); font-size: var(--fs-14); line-height: var(--lh-14); }
+.fb > div + div { margin-top: var(--sp-4); }
+.fb .lc { color: var(--ink-3); }
+.lic-txt .sb { right: 8px; }
+
+/* ---------------------------------------------------------------- focus and hover sheet (documentation) */
+.sheet { position: absolute; inset: 0; background: var(--surface-0); }
+.sheet .cap { position: absolute; width: 472px; color: var(--ink-3); font-size: var(--fs-14); line-height: var(--lh-14); }
+.sheet .cap b { display: block; color: var(--ink-1); font-family: var(--f-cond); font-weight: 700; font-size: var(--fs-20); line-height: var(--lh-20); margin-bottom: var(--sp-4); }
+.sheet .mm { box-shadow: none; }
+.sheet .cr { bottom: auto; }
