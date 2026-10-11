@@ -80,6 +80,7 @@ const _ERP_SHIPPED_LINES := [
 
 
 func _ready() -> void:
+	get_tree().set_auto_accept_quit(false)
 	get_window().min_size = Vector2i(1280, 720)
 	print("BUILD|version=%s|scope=%s" % [ProjectSettings.get_setting("application/config/version"), EndingsSystem.build_scope()])
 	# The menu opens these windows with no shell behind it, and the harnesses stage both.
@@ -3964,6 +3965,21 @@ func _on_system_menu_dismissed() -> void:
 	_system_menu = null
 
 
+## X and Alt+F4 over unsaved progress ask the system menu's quit question, mounted on the menu so a waiting decision
+## lets it through; a question already open swallows the request. Anything else, or a question that cannot mount, quits.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_WM_CLOSE_REQUEST:
+		return
+	if _shell_mounted and SaveManager.has_unsaved_progress():
+		if _confirm_modal != null:
+			return
+		_on_system_menu_requested()
+		_system_menu._on_quit()
+		if _confirm_modal != null:
+			return
+	get_tree().quit()
+
+
 # Stacks on the system menu, which already paused the game.
 # ESC closes only the topmost (the last-added child sees _unhandled_input first).
 func _on_save_load_requested(mode: String) -> void:
@@ -4162,6 +4178,11 @@ func _unhandled_input(event: InputEvent) -> void:
 func _skip_to_shell() -> void:
 	GameState.initialize_run(_debug_payload())
 	_swap_to_shell_and_modal()
+
+
+## The window's X for the MCP bridge.
+func _dbg_close_request() -> void:
+	get_tree().root.propagate_notification(NOTIFICATION_WM_CLOSE_REQUEST)
 
 
 ## The boot's state for the MCP bridge, whose calls carry no arguments.

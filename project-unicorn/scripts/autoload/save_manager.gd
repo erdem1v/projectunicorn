@@ -64,12 +64,6 @@ func _ready() -> void:
 			_autosave_enabled = false
 
 
-# The engine quits by itself once the handlers return, so a failed write still lets the window close.
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		_autosave_on_close()
-
-
 ## get_tree().quit() frees this node before the engine waits for its workers: a write in flight lands first.
 func _exit_tree() -> void:
 	_join_write()
@@ -425,14 +419,6 @@ func _try_autosave() -> void:
 	_save_in_background(_next_auto_slot_id())
 	_autosave_pending = false
 	_last_autosave_msec = Time.get_ticks_msec()
-
-
-# Skips AUTOSAVE_MIN_REAL_SECONDS and _autosave_pending: the player is leaving, nothing waits. A
-# write in flight lands first: the rolling slot is picked from finished files.
-func _autosave_on_close() -> void:
-	_join_write()
-	if _autosave_enabled and _dirty and _autosave_frequency() != "off" and can_save():
-		save_to_slot(_next_auto_slot_id())
 
 
 ## Captured on this thread, written by a worker. The run keeps changing while the worker reads and a
