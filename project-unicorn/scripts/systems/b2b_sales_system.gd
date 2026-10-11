@@ -82,7 +82,7 @@ static func _tick_satisfaction(c: Customer) -> void:
 	# İLGİLENİLEN HESAP DAHA YAVAŞ AŞINIR, ve "ilgilenen" hesabın SAHİBİDİR (bkz.
 	# _account_owner): kurucunun kendi masasındaki hesap da aynı formülle korunur, özel kural yok.
 	# Bonus ETKİN ÇIKTIDAN okunur, ham eksenden değil: `HRSystem.effective_skill` alan
-	# katsayısını, odağı (iki iş = 0,50), moral bandını ve huy çarpanlarını uyguluyor.
+	# katsayısını, odağı (iki iş = 0,50), moral payını ve huy çarpanlarını uyguluyor.
 	# YALNIZ AŞAĞI YÖNDE: yukarı toparlanma tam güçte kalır.
 	#
 	# DESIGN-PARKED: the erosion MULTIPLIER is the working shape for the care bonus. The named

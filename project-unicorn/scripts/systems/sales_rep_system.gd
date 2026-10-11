@@ -161,7 +161,7 @@ static func _start_processing(rep: Character, lead: Prospect) -> void:
 # ============================================================================
 
 ## A desk deal's plan, stamped when it opens: the stars' plan, Premium's +30 %, divided by the
-## seller's productivity this week (morale band and event lines), never under the minimum.
+## seller's productivity this week (morale share and event lines), never under the minimum.
 static func _desk_halfweeks(rep: Character, lead: Prospect) -> int:
 	var halfweeks: float = SalesConstants.deal_halfweeks(lead.star, rep_star(rep))
 	if lead.work_stance == SalesConstants.STANCE_PREMIUM:

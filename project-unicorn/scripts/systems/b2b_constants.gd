@@ -176,7 +176,7 @@ static func account_capacity(customer_success: int) -> int:
 
 
 # Churn suppression per point of the steward's effective MÜŞTERİ İLİŞKİLERİ output. Anchored so
-# an output of 5 dampens to 1 − 5×0.055 = 0.725 (smoke pins it). Effective output can pass the ruler (high-morale band,
+# an output of 5 dampens to 1 − 5×0.055 = 0.725 (smoke pins it). Effective output can pass the ruler (high morale share,
 # output_mult trait), and CS_DAMPEN_MIN is the floor there.
 const CS_DAMPEN_PER_POINT := 0.055
 
