@@ -33,6 +33,7 @@ const CHIP_BY_SEAM := {
 	"sales.price_stance": "MEETING_CHIP_PREP",
 	"sales.reach_band": "MEETING_CHIP_ROOM",
 	"sales.answer": "MEETING_CHIP_ROOM",
+	"sales.warm_intro": "MEETING_CHIP_ROOM",
 	"sales.loss_reason": "MEETING_CHIP_MEMORY",
 }
 ## EvDice.modifier_lines' sign → the chip's sign and tone; the folded "and more" line has none.

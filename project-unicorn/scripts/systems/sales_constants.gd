@@ -85,6 +85,7 @@ const W_ANSWER := 0.08                   # [K] per played ▲/▼ verb
 # Indexed by (customer star - founder star), clamped. A founder ABOVE the table pays zero
 # and gains nothing (§12: "Kurucu ★'ı müşteriden yüksek | ceza sıfır; bonus satırı yok").
 const MISMATCH_PENALTY := [0.0, 0.14, 0.34]   # [K] 0 / 1 / 2+ leagues over the founder
+const WARM_INTRO_MISMATCH_MULT := 0.5         # [ÇALIŞMA] the share of it left at a table Frank introduced
 
 # Charisma has exactly two moments and enters no other formula (§5.1, MÜHÜRLÜ).
 const CHARISMA_MISMATCH_RELIEF := 0.5    # [K] the fraction of the mismatch penalty it erases

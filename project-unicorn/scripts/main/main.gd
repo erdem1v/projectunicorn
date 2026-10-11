@@ -1003,18 +1003,21 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|
-## norep|discounted>. `desk` puts a rep
-## mid-processing on the desk; `picker` opens the steward picker on the first account, `inbox` presses its İlgilen
-## (Olaylar opens on the account's mail); `edge` draws the rarer lines (a reserved lead, one given to a rep, a
-## whale's condition, tables above the founder's league, the week's meetings spent, an open promise by sprint, the
-## log) with three calm accounts, `edge_end` the same with both columns scrolled to their ends; `stretched` the
-## founder holding one account more than he can, a 1★ rep and a lead in its last week; `empty` an open market with
-## no lead, rep or account; `b2c` and `b2b_pre` photograph §3.1's empty window before the MVP ships in a B2C and a B2B
-## run, `untyped` before a type is picked, `b2c_live` the B2C page four weeks after live:b2c_live publishes;
-## `morning` paints the page at 00:00 (every lead locked) and shoots it again once the clock reaches 08:00, `evening`
-## paints it at 10:00 and shoots it again at the founder's last workday hour: the entry gate follows the clock.
-## `norep` is one lead and nobody on the Satış job: its Temsilciye ver is closed with the reason under it; `discounted`
-## gives Nordica, signed at $100 a seat, the retention discount: its row reads what a seat pays now.
+## norep|discounted|frank|risk_stability>. `desk` puts a rep mid-processing on the desk; `picker` opens the steward
+## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
+## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
+## week's meetings spent, an open promise by sprint, the log) with three calm accounts, Aras in its onboarding floor's
+## last week under the product's bar with the warning line, `edge_end` the same with both columns scrolled to their
+## ends; `stretched` the founder holding one account more than he can, a 1★ rep and a lead in its last week; `empty` an
+## open market with no lead, rep or account; `b2c` and `b2b_pre` photograph §3.1's empty window before the MVP ships in
+## a B2C and a B2B run, `untyped` before a type is picked, `b2c_live` the B2C page four weeks after live:b2c_live
+## publishes; `morning` paints the page at 00:00 (every lead locked) and shoots it again once the clock reaches 08:00,
+## `evening` paints it at 10:00 and shoots it again at the founder's last workday hour: the entry gate follows the
+## clock. `norep` is one lead and nobody on the Satış job: its Temsilciye ver is closed with the reason under it;
+## `discounted` gives Nordica, signed at $100 a seat, the retention discount: its row reads what a seat pays now.
+## `frank` adds Frank's introduction to the three leads of a founder with no Satış: it heads the list, tagged.
+## `risk_stability` keeps the bugs at the complaint gate, so neither Risk account is there over outages: Ege, which
+## holds no broken promise, reads the product's stability, Lale, whose promise broke, its falling satisfaction.
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
 	if kind == "b2c_live":
@@ -1043,6 +1046,9 @@ func _run_sales_shot(kind: String) -> void:
 		_:
 			for star in [1, 2, 3]:
 				SalesFaucetSystem.spawn(star, "faucet")
+	if kind == "frank":
+		CharacterRegistry.get_founder().role_stats[HRConstants.AREA_SALES] = 0
+		SalesFaucetSystem.spawn_prospect("mid", "frank_intro")
 	if edge or kind in ["desk", "picker", "inbox", "stretched"]:
 		# A rep on the desk, mid-processing, so the band row and the working line both draw; at 1★ the band row
 		# is the line that says the rep works their own league only. The desk takes `edge`'s given lead only
@@ -1084,6 +1090,10 @@ func _run_sales_shot(kind: String) -> void:
 		_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
 		CustomerRegistry.set_churn_countdown("co_ege", TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
 		_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
+	if kind == "risk_stability":
+		GameState.set_flag("mvp_live_bug_count", B2BConstants.COMPLAINT_BUG_GATE)
+		_shot_customer("co_lale", "Lale Lojistik", "logistics", "risk", 800, 8, 5, false)   # LOC-DATA debug seed / id
+		CustomerRegistry.set_trust_offset("co_lale", B2BConstants.PROMISE_BROKEN_OFFSET)
 	if kind == "stretched":
 		_shot_customer("co_lale", "Lale Lojistik", "logistics", "active", 800, 8, 5, false)   # LOC-DATA debug seed / id
 		# The 3★ lead is above the 1★ rep's league, so it waits: three weeks on the board, one left.
@@ -3358,7 +3368,9 @@ const MEETING_SHOT_VC := {
 ## panel as the founder plays it, each playback skipped.
 ## Sales, Perde 1 and the act change: probe = the first question; locked = on to a question with a
 ## locked answer and its reason line; won = played to the customer's cut, its Devam into the offer
-## on screen; lost = played to the loss, its result card; handoff = past that Devam into Perde 2.
+## on screen; lost = played to the loss, its result card; handoff = past that Devam into Perde 2; frank = Frank's
+## introduction across a founder with neither Satış nor Karizma, the first question, and the needle's hover lines
+## printed as MEETINGSHOT|frank|mods=<their seams> (a frame cannot show a hover).
 ## VC, with the shot's fund (the founder moved this meeting once and rehearsed for it): open = Odayı
 ## Oku as the room opens, the HAFIZA row and the withdraw button; sorgu = the third beat, the
 ## rehearsed answer marked; sheet = a won room's result card; callback = a lukewarm room's callback
@@ -3389,17 +3401,21 @@ func _run_meeting_shot(kind: String) -> void:
 			# Yerel sağlayıcı ve K1 merdiveni: "Gücü göster" satırı kapanır ve gerekçesini yazar.
 			ProductState.set_infra_provider("local")
 			_seed_line_state("erp", [["line_erp_ledger", 1, "line_erp_ledger_k1", 0.75]])
-		if kind == "lost":
+		if kind in ["lost", "frank"]:
 			# Kayıp karesi gerçekten kaybetmeli: kurucunun Satış'ı ve Karizma'sı sıfır, ürün K1,
 			# sağlayıcı yerel, lead 3★ (MISMATCH_PENALTY'nin en sert kademesi). İlk cevapta iğne
-			# §5.1'in alt eşiğinin altına düşer.
+			# §5.1'in alt eşiğinin altına düşer. Frank'in 2★ adayı aynı kurucunun karşısına oturur.
 			var founder: Character = CharacterRegistry.get_founder()
 			founder.role_stats[HRConstants.AREA_SALES] = 0
 			founder.role_stats[FounderConstants.SKILL_CHARISMA] = 0
 		var plays_out: bool = kind in ["won", "lost", "handoff"]
-		var p: Prospect = SalesFaucetSystem.spawn(3 if plays_out else 2, "faucet")
+		var p: Prospect = SalesFaucetSystem.spawn_prospect("mid", "frank_intro") if kind == "frank" \
+			else SalesFaucetSystem.spawn(3 if plays_out else 2, "faucet")
 		await _mount_shot_shell()
 		await _shot_sales_sitting(p)
+		if kind == "frank":
+			print("MEETINGSHOT|frank|mods=%s" % ",".join(PackedStringArray(SalesMeetingSystem.modifier_lines().map(
+				func(m: Dictionary) -> String: return m.seam))))
 		if kind == "locked":
 			for _i in 4:
 				var vs: Dictionary = SalesMeetingSystem.view_state()

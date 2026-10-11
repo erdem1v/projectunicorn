@@ -3532,8 +3532,10 @@ static func _case_sales_inner_voice_reaches_view() -> String:
 ## (stability zero, the provider short, the next step locked): one that only asked about the switch
 ## names it while nobody is on customer success and falls to price once someone is; one that asked
 ## about stability names stability; one that asked about nothing a reason names walks out over price.
+## Frank's 2★ introduction across a founder with neither Satış nor Karizma, each question given its
+## strongest open answer, stays over the customer's low cut: the die decides that table.
 ## FALSIFICATION: drop any family test from SalesMeetingSystem._derive_loss_reason and a row walks out
-## over the wrong reason.
+## over the wrong reason; set WARM_INTRO_MISMATCH_MULT to 1.0 and Frank's table is cut before the die.
 static func _case_sales_loss_reason_from_asked() -> String:
 	for row in [[["switching"], false, SalesConstants.LOSS_SWITCHING_RISK],
 			[["switching"], true, SalesConstants.LOSS_PRICE],
@@ -3546,6 +3548,29 @@ static func _case_sales_loss_reason_from_asked() -> String:
 		if reason != row[2]:
 			return "asked %s, customer success staffed %s: walked out over %s, want %s" % [
 				str(row[0]), str(row[1]), reason, row[2]]
+	# v1.0 just out, as when Frank calls: ledger, stock and invoicing at K1, stability under its floor.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	for row in [["line_erp_ledger", 0.75], ["line_erp_stock", 1.0], ["line_erp_invoicing", 0.75]]:
+		ProductState.set_line_tier(row[0], 1)
+		ProductState.stamp_step(row[0] + "_k1", row[1])
+	_set_founder_area(HRConstants.AREA_SALES, 0)
+	_set_founder_area(FounderConstants.SKILL_CHARISMA, 0)
+	var vs: Dictionary = SalesMeetingSystem.open(SalesFaucetSystem.spawn_prospect("mid", "frank_intro").id)
+	for _i in SalesConstants.SAFETY_CAP_PROBES:
+		if vs.outcome != "":
+			break
+		var best: Dictionary = {}
+		for a: Dictionary in SalesProbes.answers_for(SalesMeetingSystem._probe, SalesMeetingSystem._facts,
+				SalesMeetingSystem._promise_lock()):
+			if a.open and (best.is_empty() or a.delta > best.delta):
+				best = a
+		vs = SalesMeetingSystem.choose(best.id)
+	SalesMeetingSystem.close()
+	if not vs.rolled and vs.outcome != "won":
+		return "Frank's table, best answers, a founder with no Satış: ended '%s' before the die, needle %.2f" % [
+			vs.outcome, vs.odds]
 	return ""
 
 

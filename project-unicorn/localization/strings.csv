@@ -121,6 +121,7 @@ SALES_CHURN_COUNTDOWN,Churn'e ~{n} hafta,~{n} weeks to churn
 SALES_CHURN_COUNTDOWN_ONE,Churn'e ~{n} hafta,~{n} week to churn
 SALES_REASON_PREFIX,Sebep: {reason},Reason: {reason}
 SALES_REASON_OUTAGE,sık kesinti şikayeti,frequent outage complaints
+SALES_REASON_STABILITY,ürünün kararlılığı yetmiyor (Güven & Ölçek),the product's stability falls short (Trust & Scale)
 SALES_REASON_SATISFACTION,memnuniyet düşüyor,satisfaction is falling
 SALES_EXPANSION_FICTION,Başka departmana yaymak istiyor.,Wants to roll it out to another department.
 SALES_ONBOARDING_ENDS,Onboarding gelecek hafta bitiyor. Ürüne henüz ısınmadı.,Onboarding ends next week. Not sold on the product yet.
@@ -1134,7 +1135,7 @@ PROD_TYPE_VIDEO_CLIP_PITCH,Uzun videodan yayına hazır klip çıkaran araç.,Th
 PROD_TYPE_ERP_NAME,ERP,ERP
 PROD_TYPE_ERP_CATEGORY,İşletme,Business
 PROD_TYPE_ERP_DESC,Ön muhasebe · stok · fatura tek defterde.,Bookkeeping · stock · invoicing in one ledger.
-PROD_TYPE_ERP_TRADEOFF,Bir kez kurulunca kimse çıkmaz; ama ilk kurulum uzun sürer.,Once it is in nobody leaves; but the first install takes a long time.
+PROD_TYPE_ERP_TRADEOFF,İlk kurulum uzun sürer ve ilk müşteriler kararlılık ister; tutunca kimse çıkmaz.,"The first install takes long and first customers want stability; once it holds, nobody leaves."
 PROD_TYPE_ERP_BET,Defter tutan herkes aynı üç şeyi arıyor. Üçünü de doğru yap; gerisini sürümler getirir.,Everyone keeping books wants the same three things. Get all three right and versions bring the rest.
 PROD_TYPE_ERP_PITCH,Kasadan stoka işletmenin defterini tutan sistem.,The system that keeps a business's books from till to stock.
 SECTOR_SUBSCRIPTION,Abonelik,Subscription
@@ -1157,7 +1158,7 @@ PROD_PATH_TITLE,Yolunu seç,Choose your road
 PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan değişmez.,This choice decides how the product makes money. It cannot be changed later.
 PROD_PATH_B2C,Kitle,Consumer
 PROD_PATH_B2C_DESC,"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.","You sell to a crowd. Users arrive, users leave, the numbers swing."
-PROD_PATH_B2B_DESC,"Şirketlere satarsın. Her kontrat büyük para, her müşteri senin eserin.","You sell to companies. Every contract is real money, every customer is your own work."
+PROD_PATH_B2B_DESC,"Şirketlere satarsın. Kontratlar büyük, ama ilk müşteriler kararlı bir ürün bekler.","You sell to companies. Contracts are big, but first customers expect a stable product."
 PROD_MENTOR_LINE,"B2C'de kalabalığa satarsın, kimseyi tanımazsın. B2B'de herkesi tanırsın, herkes seni tanır. İkisi de para. Farklı dertler.","In B2C you sell to a crowd and know nobody. In B2B you know everybody, and everybody knows you. Both are money. Different headaches."
 PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product type
 PROD_NAME_LABEL,Ürün adı,Product name
@@ -2386,6 +2387,7 @@ SALES_ROUTE_RESERVE,Ayır,Reserve
 SALES_ROUTE_GIVE,Temsilciye ver,Give to a rep
 SALES_ROUTE_RESERVED,Ayrıldı,Reserved
 SALES_ROUTE_REP,Temsilcide,With a rep
+SALES_TAG_FRANK_INTRO,Frank'in tanıştırdığı,Frank's introduction
 SALES_ROUTE_NO_REP,Temsilci yok,No rep to take it
 SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.
 SALES_EXPIRED_LINE,Beklemekten vazgeçti.,They stopped waiting.
@@ -2415,6 +2417,7 @@ SALES_MOD_PRICE_SIGNAL,fiyat duyumu,the price signal
 SALES_MOD_PROVIDER,sağlayıcı kademesi,provider tier
 SALES_MOD_MISMATCH,masanın ölçeği,the size of the table
 SALES_MOD_CHARISMA,karizman,your charisma
+SALES_MOD_WARM_INTRO,Frank'in tanıştırması,Frank's introduction
 SALES_MOD_RETURNED,geçmiş bir görüşme,an earlier meeting
 SALES_MOD_ANSWERS,verdiğin cevaplar,the answers you gave
 SALES_BLOCK_NO_B2B,Canlı B2B ürün yok.,No live B2B product.

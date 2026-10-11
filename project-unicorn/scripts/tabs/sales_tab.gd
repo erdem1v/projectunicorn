@@ -298,7 +298,10 @@ func _go_product() -> Button:
 
 func _paint_pipeline(off: bool) -> void:
 	var leads: Array[Prospect] = ProspectRegistry.get_all()
+	# Görüşmeyi Frank kendisi ayarladı: tanıştırdığı aday listenin başında.
 	leads.sort_custom(func(a: Prospect, b: Prospect) -> bool:
+		if (a.source == "frank_intro") != (b.source == "frank_intro"):
+			return a.source == "frank_intro"
 		if a.star != b.star:
 			return a.star > b.star
 		return a.expires_on_day < b.expires_on_day)
@@ -330,6 +333,8 @@ func _lead_card(p: Prospect, off: bool) -> PanelContainer:
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	words.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	var head := _name_row(p.company_name, &"DataStrong", p.star)
+	if p.source == "frank_intro":
+		head.add_child(UiFactory.D_tag(tr("SALES_TAG_FRANK_INTRO")))
 	if p.routing == SalesConstants.ROUTE_RESERVED:
 		head.add_child(UiFactory.D_tag(tr("SALES_ROUTE_RESERVED"), &"neutral"))
 	elif p.routing == SalesConstants.ROUTE_REP:
@@ -529,7 +534,7 @@ func _account_card(c: Customer, off: bool) -> PanelContainer:
 	words.add_child(head)
 	words.add_child(_line(_meta_line(c), &"MetaMuted"))
 	if risk:
-		words.add_child(_line(tr("SALES_REASON_PREFIX").format({"reason": INBOX.risk_reason()}), &"MetaMuted"))
+		words.add_child(_line(tr("SALES_REASON_PREFIX").format({"reason": INBOX.risk_reason(c)}), &"MetaMuted"))
 	elif c.lifecycle_phase == "expansion":
 		words.add_child(_line(tr("SALES_EXPANSION_FICTION"), &"MetaMuted"))
 	elif B2BSalesSystem.onboarding_ends_under_bar(c):

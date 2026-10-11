@@ -165,6 +165,11 @@ static func _build_base_contributions(p: Prospect) -> Array:
 		out.append({"seam": "founder.charisma", "delta": 0.0001})   # the line, not the size
 	if penalty > 0.0:
 		out.append({"seam": "sales.reach_band", "delta": -penalty})
+	# Frank's introduction gives part of the mismatch back. Its line carries that part: at a marker's size it would
+	# fold under the hover's four lines at every table it reaches.
+	var warm: float = penalty * (1.0 - SalesConstants.WARM_INTRO_MISMATCH_MULT)
+	if p.source == "frank_intro" and warm > 0.0:
+		out.append({"seam": "sales.warm_intro", "delta": warm})
 
 	# §9 — the first loss leaves a permanent mark on the return.
 	if p.loss_count > 0:
@@ -195,6 +200,7 @@ static func _modifier_labels() -> Dictionary:
 		"urun.capacity_tier": TranslationServer.translate("SALES_MOD_PROVIDER"),
 		"sales.reach_band": TranslationServer.translate("SALES_MOD_MISMATCH"),
 		"founder.charisma": TranslationServer.translate("SALES_MOD_CHARISMA"),
+		"sales.warm_intro": TranslationServer.translate("SALES_MOD_WARM_INTRO"),
 		"sales.loss_reason": TranslationServer.translate("SALES_MOD_RETURNED"),
 		"sales.answer": TranslationServer.translate("SALES_MOD_ANSWERS"),
 	}

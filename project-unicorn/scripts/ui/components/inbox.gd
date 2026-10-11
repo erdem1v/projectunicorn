@@ -127,7 +127,7 @@ static func desk() -> Array:
 		r.merge({"customer": c.id, "risk": risk, "grow": not risk,
 			"value": Fmt.money_chip(c.mrr) + TranslationServer.translate("SALES_PER_MONTH"),
 			"state": TranslationServer.translate("SALES_CHIP_RISK" if risk else "SALES_CHIP_EXPANSION"),
-			"line": TranslationServer.translate("SALES_REASON_PREFIX").format({"reason": risk_reason()}) if risk
+			"line": TranslationServer.translate("SALES_REASON_PREFIX").format({"reason": risk_reason(c)}) if risk
 				else TranslationServer.translate("SALES_EXPANSION_FICTION"),
 			"request": "" if risk and c.cs_escalated else ("customer.retention" if risk else EXPANSION_CARD)}, true)
 		out.append(r)
@@ -217,10 +217,12 @@ static func account_item(customer_id: String) -> String:
 	return "r:customer:" + customer_id
 
 
-## Why an account is in Risk, as the Sales tab says it.
-static func risk_reason() -> String:
-	return TranslationServer.translate("SALES_REASON_OUTAGE" if ProductSystem.live_bug_count() > B2BConstants.COMPLAINT_BUG_GATE
-		else "SALES_REASON_SATISFACTION")
+## Why an account is in Risk, as the Sales tab says it: the outages; else the product's stability, while no promise it
+## was given has let it down; else its falling satisfaction.
+static func risk_reason(c: Customer) -> String:
+	if ProductSystem.live_bug_count() > B2BConstants.COMPLAINT_BUG_GATE:
+		return TranslationServer.translate("SALES_REASON_OUTAGE")
+	return TranslationServer.translate("SALES_REASON_STABILITY" if c.trust_offset >= 0.0 else "SALES_REASON_SATISFACTION")
 
 
 # --- The goal list (ChequeRead.summary) ------------------------------------------------------------
