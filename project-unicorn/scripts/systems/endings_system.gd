@@ -379,9 +379,10 @@ static var build_scope_override: String = "":
 
 ## Which build this is. An EA or full export names itself with a custom feature tag
 ## ("ea" / "full") in its export preset; anything untagged — the demo export, the editor,
-## every headless run — is the demo. A debug build also takes --build=<demo|ea|full>, from
-## the command line or Project Settings → Application → Run → Main Run Args, so the EA flow
-## can be played from the editor. The smoke suite and the run probe pin the demo through
+## every headless run — is the demo. A debug build also takes --build=<demo|ea|full> from
+## the command line, and in the editor from Project Settings → Application → Run → Main Run
+## Args, so the EA flow can be played from the editor; an export ships project.godot with
+## those args, so it never reads them. The smoke suite and the run probe pin the demo through
 ## build_scope_override, so a --build= left in Main Run Args does not change what they measure.
 static func build_scope() -> String:
 	if build_scope_override != "":
@@ -392,7 +393,8 @@ static func build_scope() -> String:
 		return BUILD_EA
 	if OS.is_debug_build():
 		var args: Array = Array(OS.get_cmdline_args())
-		args.append_array(Array(String(ProjectSettings.get_setting("application/run/main_args", "")).split(" ", false)))
+		if OS.has_feature("editor"):
+			args.append_array(Array(String(ProjectSettings.get_setting("application/run/main_args", "")).split(" ", false)))
 		for a in args:
 			var s: String = String(a)
 			if s.begins_with("--build="):

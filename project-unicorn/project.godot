@@ -13,7 +13,12 @@ config_version=5
 config/name="Project Unicorn"
 run/main_scene="res://scenes/main/Main.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
+config/icon="res://assets/brand/icon.svg"
+config/windows_native_icon="res://assets/brand/icon.ico"
+config/version="0.1.0"
+boot_splash/bg_color=Color(0.0627451, 0.05490196, 0.043137256, 1)
+boot_splash/image="res://assets/brand/boot_splash.png"
+boot_splash/image.editor_hint=""
 run/main_args="--skip-onboarding"
 
 [autoload]

@@ -284,6 +284,12 @@ SYS_QUIT_BODY,Son kayıttan bu yana oynadığın haftalar kaybolur.,The weeks yo
 SYS_QUIT_SAVE,Kaydet ve çık,Save and quit
 SYS_QUIT_DISCARD,Çık,Quit
 SYS_CANCEL,Vazgeç,Cancel
+MADE_WITH_GODOT,Godot Engine ile yapıldı.,Made with Godot Engine.
+LIC_THIRD_PARTY,Third-party notices,Third-party notices
+LIC_FREETYPE,Portions of this software are copyright © {year} The FreeType Project (https://freetype.org). All rights reserved.,Portions of this software are copyright © {year} The FreeType Project (https://freetype.org). All rights reserved.
+LIC_GODOT_LOGO,"Godot logo by Andrea Calabró, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).","Godot logo by Andrea Calabró, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)."
+LIC_FONTS,Fonts,Fonts
+LIC_ICONS,Icons,Icons
 SAVE_TITLE_SAVE,Kaydet,Save
 SAVE_TITLE_LOAD,Yükle,Load
 SAVE_NEW_SLOT,Yeni kayıt,New save
