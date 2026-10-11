@@ -43,8 +43,8 @@ static func can_move_to(id: String) -> bool:
 	return requirement_state(id).all(func(r: Dictionary) -> bool: return r.ok)
 
 
-## Starts the move; daily_tick lands it MOVE_WEEKS later. No money moves: rent, deposit and
-## movers wait on an open owner decision, so FinanceSystem's "office" burn line stays 0.
+## Starts the move; daily_tick lands it MOVE_WEEKS later. No money moves, so FinanceSystem's
+## "office" burn line stays 0.
 static func move_to(id: String) -> bool:
 	if not can_move_to(id):
 		return false

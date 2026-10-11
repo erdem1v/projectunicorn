@@ -1,9 +1,9 @@
 extends PanelContainer
 
-# The office card on the city map: what an office is and brings, what it would cost (shown,
-# charged nowhere), what it asks for today, and the move. Built for one office at the top right
-# of the view; OfficeCity builds a new one when the pick or the language changes, and after every
-# daily tick while the map is open, so today's readings stay today's.
+# The office card on the city map: what an office is and brings, what it asks for today, and the
+# move. Built for one office at the top right of the view; OfficeCity builds a new one when the
+# pick or the language changes, and after every daily tick while the map is open, so today's
+# readings stay today's.
 
 signal cancel_pressed
 signal move_pressed
@@ -33,7 +33,6 @@ func _init(office_id: String) -> void:
 	var current := office_id == OfficeSystem.current()
 	var reqs: Array = OfficeSystem.requirement_state(office_id)
 	var unmet := reqs.filter(func(r: Dictionary) -> bool: return not r.ok).size()
-	var move_money: int = office.deposit + office.move_cost
 
 	var thumb := TextureRect.new()
 	thumb.texture = load("res://assets/art/office/thumb_%s.jpg" % office_id)
@@ -61,18 +60,7 @@ func _init(office_id: String) -> void:
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(desc)
 
-	# A cost of nothing is an empty cell: the design's dash never reaches the screen.
-	var cells := HBoxContainer.new()
-	for cell: Array in [["OFFICE_CARD_DESKS", str(office.desks)],
-			["OFFICE_CARD_RENT", UiTokens.format_money(office.rent) if office.rent > 0 else ""],
-			["OFFICE_CARD_MOVE", UiTokens.format_money(move_money) if move_money > 0 else ""]]:
-		var stat := UiFactory.make_stat(tr(cell[0]), cell[1])
-		stat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cells.add_child(stat)
-	col.add_child(UiFactory.make_card(cells, true))
-	col.add_child(UiFactory.make_label(tr("OFFICE_CARD_MOVE_FREE") if office.rent + move_money == 0
-		else tr("OFFICE_CARD_MOVE_NOTE").format({"deposit": UiTokens.format_money(office.deposit),
-			"move": UiTokens.format_money(office.move_cost)}), &"RowMeta"))
+	col.add_child(UiFactory.make_card(UiFactory.make_stat(tr("OFFICE_CARD_DESKS"), str(office.desks)), true))
 
 	col.add_child(UiFactory.make_section_header(tr("OFFICE_CARD_ROOMS")))
 	var rooms := HFlowContainer.new()
@@ -108,7 +96,7 @@ func _init(office_id: String) -> void:
 		var weeks := OfficeSystem.arrival_day() - GameState.day
 		go.text = tr(Fmt.count_key("OFFICE_MOVING_BADGE", weeks)).format({"weeks": weeks})
 	elif OfficeSystem.can_move_to(office_id):
-		go.text = tr("OFFICE_CARD_MOVE_FOR").format({"money": UiTokens.format_money(move_money)})
+		go.text = tr("OFFICE_CARD_MOVE_GO")
 		go.disabled = false
 		go.pressed.connect(move_pressed.emit)
 	else:

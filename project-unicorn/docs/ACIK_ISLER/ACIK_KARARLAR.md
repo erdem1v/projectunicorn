@@ -891,6 +891,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   uyuyor. Açık: ch12 §1 ve ch14 §3 güncellensin mi.
 
 - **60 · Ofis kirası, depozitosu ve nakliyesi ekonomiye bağlı değil.**
+  - Kapandı (sahip kararı 2026-10-11, C seçildi): taşınma bedelsiz kalır; kasa şartı yalnız kapıdır. Karttan KİRA / AY
+    ve TAŞINMA hücreleri, depozito + nakliye notu ve düğmedeki tutar kalktı (düğme "Buraya taşın"), hover yalnız masa
+    sayısını yazar. `CATALOG`'dan `rent`, `deposit` ve `move_cost` alanları ile `OFFICE_CARD_RENT`, `_MOVE`,
+    `_MOVE_NOTE`, `_MOVE_FREE`, `_MOVE_FOR` anahtarları silindi; silinen sayılar aşağıdaki "Ne oluyor" satırında durur.
   - Ne oluyor: Katalog tasarımın sayılarını taşıyor, hepsi [WORKING]: İş hanı kira 2.500 / depozito 5.000 / nakliye
     1.500, Plaza 18.000 / 36.000 / 9.000, Depo loft 45.000 / 90.000 / 20.000; şartlar İş hanı'nda Frank'in çeki ve
     kasa 6.500, Plaza'da ekip 12, kasa 45.000, marka 40, Depo loft'ta ekip 35, kasa 110.000, marka 70. Taşınma kasadan

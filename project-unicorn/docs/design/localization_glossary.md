@@ -170,8 +170,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Plaza katı | Plaza floor | |
 | Depo loft | Warehouse loft | |
 | Masa | Desk | Kart hücresi MASA / DESKS. |
-| KİRA / AY | RENT / MO | Harita kartı hücresi. |
-| Taşınma | Move | Kart hücresi TAŞINMA / MOVE. |
+| Taşınma | Move | Ofisin taşınması (`OFFICE_TOAST_MOVE_STARTED`, `OFFICE_MOVING_BADGE`). |
 | Şartlar | Requirements | Kart başlığı ŞARTLAR / REQUIREMENTS. |
 | Kademe | Tier | Ürün hattının kademesi (K1–K3) de aynı çift. |
 | Taşınabilir | Can move | Kartın durum çipi. |

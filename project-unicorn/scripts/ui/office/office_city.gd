@@ -167,7 +167,7 @@ func hover(screen_pos: Vector2) -> String:
 			var office: Dictionary = OfficeConstants.CATALOG[hit.office]
 			_hover_name.text = tr(office.name_key)
 			_hover_line.text = tr("OFFICE_HOVER_HOME") if hit.office == "home" \
-				else tr("OFFICE_HOVER_LINE").format({"desks": office.desks, "money": UiTokens.format_money(office.rent)})
+				else tr("OFFICE_HOVER_LINE").format({"desks": office.desks})
 			_hover_card.reset_size()
 	_hover_card.visible = not hit.is_empty()
 	if _hover_card.visible:

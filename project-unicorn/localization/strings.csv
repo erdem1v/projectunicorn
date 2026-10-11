@@ -2698,22 +2698,18 @@ OFFICE_MAP_LOADING,Şehir haritası hazırlanıyor,Preparing the city map
 OFFICE_MOVE_BTN,Ofisi taşı,Move the office
 OFFICE_MOVE_AFTER_CHEQUE,Frank'in çekinden sonra,After Frank's cheque
 OFFICE_CARD_DESKS,MASA,DESKS
-OFFICE_CARD_RENT,KİRA / AY,RENT / MO
-OFFICE_CARD_MOVE,TAŞINMA,MOVE
-OFFICE_CARD_MOVE_NOTE,Depozito {deposit} + nakliye {move},Deposit {deposit} + movers {move}
-OFFICE_CARD_MOVE_FREE,Kira yok · taşınma bedeli yok,No rent · no moving cost
 OFFICE_CARD_ROOMS,GETİRDİKLERİ,WHAT YOU GET
 OFFICE_CARD_REQS,ŞARTLAR,REQUIREMENTS
 OFFICE_CARD_CANCEL,Vazgeç,Cancel
 OFFICE_CARD_HERE,Buradasınız,You are here
-OFFICE_CARD_MOVE_FOR,Taşın · {money},Move · {money}
+OFFICE_CARD_MOVE_GO,Buraya taşın,Move here
 OFFICE_CARD_UNMET,{n} şart karşılanmadı,{n} requirements unmet
 OFFICE_TOAST_MOVED,Yeni ofis,New office
 OFFICE_TOAST_MOVE_STARTED,Taşınma başladı,Move started
 OFFICE_HINT_SPACE,Boşluk: saati başlat,Space: start the clock
 OFFICE_CHIP_CURRENT,MEVCUT · {name},CURRENT · {name}
 OFFICE_HOVER_HOME,Kurucunun dairesi,The founder's flat
-OFFICE_HOVER_LINE,{desks} masa · {money}/ay,{desks} desks · {money}/mo
+OFFICE_HOVER_LINE,{desks} masa,{desks} desks
 OFFICE_MOVING_BADGE,Taşınıyor · {weeks} hafta,Moving · {weeks} weeks
 OFFICE_ACT_CODE,Kod yazıyor,Writing code
 OFFICE_ACT_RESEARCH,Araştırıyor,Researching

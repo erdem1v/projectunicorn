@@ -3,13 +3,12 @@ extends RefCounted
 
 # The office ladder's catalog and the rhythm of the people in it. No figure is the GDD's: each one,
 # the office design's or the people's rhythm, is a [WORKING] value awaiting the owner.
-# Rent, deposit and movers are shown on the city map and charged nowhere: tying them to the economy
-# is an open owner decision.
+# A move costs nothing: the cash a requirement asks for is a gate, not a price.
 
 ## OFFICE_MAP_SUB spells this out as "a week": a change here changes that row too.
 const MOVE_WEEKS := 1                       # [WORKING] weeks from move_to to arrival
 
-## id -> {tier_key, name_key, desc_key, desks, rent, deposit, move_cost, room_keys, reqs}; the flat
+## id -> {tier_key, name_key, desc_key, desks, room_keys, reqs}; the flat
 ## has no tier_key, being no step of the ladder.
 ## A req is {kind, value}: angel (Frank's cheque taken, value true), or team (headcount), cash
 ## and brand, each met at >= value.
@@ -18,9 +17,6 @@ const CATALOG := {
 		"name_key": "OFFICE_NAME_HOME",
 		"desc_key": "OFFICE_DESC_HOME",
 		"desks": 1,                         # [WORKING]
-		"rent": 0,                          # [WORKING]
-		"deposit": 0,                       # [WORKING]
-		"move_cost": 0,                     # [WORKING]
 		"room_keys": ["OFFICE_ROOM_STUDY_CORNER", "OFFICE_ROOM_KITCHEN_CORNER",
 			"OFFICE_ROOM_BEDROOM", "OFFICE_ROOM_BATHROOM", "OFFICE_ROOM_BALCONY"],
 		"reqs": [],
@@ -30,9 +26,6 @@ const CATALOG := {
 		"name_key": "OFFICE_NAME_ISHANI",
 		"desc_key": "OFFICE_DESC_ISHANI",
 		"desks": 10,                        # [WORKING]
-		"rent": 2_500,                      # [WORKING]
-		"deposit": 5_000,                   # [WORKING]
-		"move_cost": 1_500,                 # [WORKING]
 		"room_keys": ["OFFICE_ROOM_OPEN_OFFICE", "OFFICE_ROOM_MEETING_ROOM",
 			"OFFICE_ROOM_FOUNDER_GLASS", "OFFICE_ROOM_KITCHEN", "OFFICE_ROOM_RESTROOM"],
 		"reqs": [
@@ -45,9 +38,6 @@ const CATALOG := {
 		"name_key": "OFFICE_NAME_PLAZA",
 		"desc_key": "OFFICE_DESC_PLAZA",
 		"desks": 36,                        # [WORKING]
-		"rent": 18_000,                     # [WORKING]
-		"deposit": 36_000,                  # [WORKING]
-		"move_cost": 9_000,                 # [WORKING]
 		"room_keys": ["OFFICE_ROOM_RECEPTION", "OFFICE_ROOM_MEETING_ROOMS_2",
 			"OFFICE_ROOM_BOARD_ROOM", "OFFICE_ROOM_DEPARTMENT_PODS",
 			"OFFICE_ROOM_PHONE_BOOTHS", "OFFICE_ROOM_CAFE_GAMES"],
@@ -62,9 +52,6 @@ const CATALOG := {
 		"name_key": "OFFICE_NAME_LOFT",
 		"desc_key": "OFFICE_DESC_LOFT",
 		"desks": 64,                        # [WORKING]
-		"rent": 45_000,                     # [WORKING]
-		"deposit": 90_000,                  # [WORKING]
-		"move_cost": 20_000,                # [WORKING]
 		"room_keys": ["OFFICE_ROOM_RECEPTION_SECURITY", "OFFICE_ROOM_STAGE",
 			"OFFICE_ROOM_MEETING_ROOMS_3", "OFFICE_ROOM_PHONE_BOOTHS", "OFFICE_ROOM_GAMES",
 			"OFFICE_ROOM_VP_OFFICES", "OFFICE_ROOM_EXECUTIVE", "OFFICE_ROOM_FOUNDER_OFFICE"],
