@@ -28,7 +28,7 @@ so the engine finds a vocabulary rather than having to discover one.
 The event engine connects signals by NAME at runtime, which a static scan for `.connect(`
 cannot see. `EvSignals.install()` (`scripts/events/core/signals.gd`) connects exactly the `trigger.signal` of the
 cards the catalogue loads from `data/events/cards/`, and this generator reads the same cards. Today that
-is 6 signal(s): `axis_floor_crossed`, `axis_floor_warning`, `customer_health_changed`, `meeting_day`, `seed_sheet_granted`, `sheet_granted`. They are listed as `EvSignals (card trigger)` and are not counted
+is 7 signal(s): `axis_floor_crossed`, `axis_floor_warning`, `customer_health_changed`, `meeting_day`, `seed_sheet_granted`, `sheet_granted`, `version_shipped`. They are listed as `EvSignals (card trigger)` and are not counted
 as unheard.
 
 `EvSignals.BINDINGS` is an allowlist of the 15 signals a card MAY trigger on. A binding
@@ -156,7 +156,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `version_shipped` | `version: int` | main · sprint_system | 3 | 3 | rnd_tab · left_tabs · top_bar · EvSignals (bindable) |
+| `version_shipped` | `version: int` | main · sprint_system | 3 | 3 | rnd_tab · left_tabs · top_bar · EvSignals (card trigger) |
 | `fix_run_started` | `confirmed: int` | support_system | 1 | 0 | — |
 | `fix_run_finished` | `shipped: int, remaining: int` | support_system | 1 | 0 | — |
 | `bug_confirmed` | `total_confirmed: int` | product_read | 1 | 0 | — |

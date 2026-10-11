@@ -1,0 +1,50 @@
+{
+  "id": "funding.frank_v1",
+  "version_scope": "draft",
+  "category": "funding",
+  "speaker": "char_mentor_frank",
+  "tick": "signal",
+  "trigger": {
+    "signal": "version_shipped"
+  },
+  "class": "interrupt",
+  "tags": [],
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "seam": "urun.version",
+    "op": "==",
+    "value": 1
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "ok",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yayında",
+      "body": "Telefon çalıyor, arayan Frank.\n\n\"Çıktı. Çoğu insan buraya kadar gelemez. Şimdi buna para verecek birini bul.\"\n\nKapatıyor.",
+      "options": {
+        "ok": "İşe dön"
+      },
+      "expire_note": "Telefon cevapsız kaldı."
+    },
+    "en": {
+      "title": "Live",
+      "body": "The phone rings. It's Frank.\n\n\"It's out. Most people never get this far. Now find someone who'll pay for it.\"\n\nHe hangs up.",
+      "options": {
+        "ok": "Back to work"
+      },
+      "expire_note": "The call went unanswered."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}
