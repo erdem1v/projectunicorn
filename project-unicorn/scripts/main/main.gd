@@ -2144,8 +2144,23 @@ const MENU_SHOT_PRESS := {"load": "LOAD", "settings": "SETTINGS", "credits": "CR
 ## menu two frames on. live waits for the live scene to fade in; every other kind stands on the plate (plate itself,
 ## bare), the live scene arriving at no fixed frame. Prints the MENU line of the frame. bake_plate:<office>:<HHMM> draws
 ## a backdrop's live scene alone, as the plate it becomes: backdrop_<office>_<HHMM>.png, copied to assets/art/menu/.
-## return_confirm[:gate] is --modal-shot=return_confirm[_gate], the return asked over the shell.
+## return_confirm[:gate] is --modal-shot=return_confirm[_gate], the return asked over the shell. all runs every kind
+## but bake_plate, each in a windowed process of its own with this run's other flags, and exits 1 if one failed.
 func _run_menu_shot(kind: String) -> void:
+	if kind == "all":
+		var failed := 0
+		for each: String in MENU_SHOTS + ["return_confirm", "return_confirm:gate"]:
+			# The engine keeps its own flags off the command line it hands on; a shot has no sound.
+			var args := PackedStringArray(["--path", ProjectSettings.globalize_path("res://"), "--audio-driver", "Dummy"])
+			for arg in OS.get_cmdline_args():
+				args.append("--menu-shot=" + each if arg == "--menu-shot=all" else arg)
+			var out: Array = []
+			var code := OS.execute(OS.get_executable_path(), args, out, true)
+			print(out[0])
+			print("MENU|all|kind=%s|exit=%d" % [each, code])
+			failed += int(code != 0)
+		get_tree().quit(int(failed > 0))
+		return
 	if kind.begins_with("return_confirm"):
 		_run_modal_shot(kind.replace(":", "_"))
 		return
@@ -2222,12 +2237,12 @@ static func _hhmm_minute(hhmm: String) -> float:
 
 
 ## --backdrop-probe[=<office>:<HHMM>] (windowed): a backdrop alone, then the menu's own into NEW GAME. The BACKDROP
-## line: the plate on the first drawn frame, the live scene's load and its fade, the live view's GPU time over
-## BACKDROP_PROBE_FRAMES and the engine's start to that first frame (the Godot card left out). plate_vs_live is the
-## mean difference (0..255) of the faded-in live frame to the plate inside a 6 px margin; n/a on the low preset, which
-## keeps the plate alone. NEW GAME two frames on prints the node count --onboard-shot=1 prints for the same set-up and
-## whether a backdrop is left in the tree; tex_pct is the texture memory once the freed live view has left the frames
-## in flight, against the bare window's before the backdrop (bound +5).
+## line: the plate on the first drawn frame with no live scene over it, the live scene's load and its fade, the live
+## view's GPU time over BACKDROP_PROBE_FRAMES and the engine's start to that first frame (the Godot card left out).
+## plate_vs_live is the mean difference (0..255) of the faded-in live frame to the plate inside a 6 px margin; n/a on
+## the low preset, which keeps the plate alone. NEW GAME two frames on prints the node count --onboard-shot=1 prints
+## for the same set-up and whether a backdrop is left in the tree; tex_pct is the texture memory once the freed live
+## view has left the frames in flight, against the bare window's before the backdrop (bound +5).
 func _run_backdrop_probe(office: String, minute: float) -> void:
 	_begin_shot()
 	# The texture monitor reads 0 until frames are drawn; the frames waited here stay out of boot_to_menu_ms.
@@ -2242,8 +2257,8 @@ func _run_backdrop_probe(office: String, minute: float) -> void:
 	var boot_ms: int = Time.get_ticks_msec() - waited
 	var plate: TextureRect = backdrop.get_node("Plate")
 	var live: SubViewportContainer = backdrop.get_node("Live")
-	var row := {"plate_frame": int(plate.texture != null and live.modulate.a == 0.0), "live_ms": "n/a", "fade_ms": "n/a",
-		"gpu_p50": "n/a", "gpu_p95": "n/a", "diff": "n/a"}
+	var row := {"plate_frame": int(plate.texture != null and (live.get_child_count() == 0 or live.modulate.a == 0.0)),
+		"live_ms": "n/a", "fade_ms": "n/a", "gpu_p50": "n/a", "gpu_p95": "n/a", "diff": "n/a"}
 	if live.get_child_count() > 0:
 		await backdrop.live_ready
 		row.live_ms = str(Time.get_ticks_msec() - shown)

@@ -246,6 +246,16 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `TRAVEL|settled` satırı). Bir hafta gerçek
   saatle: `--day-shot=<ofis>:<hız>` (08:00'den çıkış ve gece atlamasıyla ertesi 08:00'e,
   `day_shot_<ofis>_<hız>_NN.png` ve kare başına `DAYSHOT` satırı).
+  Ana menü: `--menu-shot=<empty|continue|first_frame|godot_card|load|settings|credits|licenses|plate|live|
+  return_confirm[:gate]|all>` açılışı oyuncunun gördüğü gibi kurar ve kare başına `MENU|state=|focus=|continue=|groups=|
+  paused=|joy_ui=` satırı basar (`continue` ve `load` fikstür kayıtlarının üstünde, `live` canlı sahne gelince,
+  `return_confirm` kabuğun üstündeki dönüş onayı; `all` `bake_plate` dışındaki her türü kendi pencereli sürecinde
+  koşar, `MENU|all|kind=|exit=` basar, biri düşerse 1 ile çıkar). `--menu-shot=bake_plate:<ofis>:<HHMM>` arka planın
+  canlı sahnesini plaka olarak yazar (`backdrop_<ofis>_<HHMM>.png`, `assets/art/menu/`'ye kopyalanır). Arka plan
+  ölçümü `--backdrop-probe[=<ofis>:<HHMM>]` (varsayılan menünün akşam şehri):
+  `BACKDROP|plate_frame=|live_ms=|fade_ms=|gpu_ms_p50=|gpu_ms_p95=|boot_to_menu_ms=`, plakayla canlı karenin farkı
+  `BACKDROP|plate_vs_live=` (≤ 6) ve YENİ OYUN'dan sonra `BACKDROP|new_game|nodes=|backdrop=|tex_pct=`; düşük ön
+  ayarda yalnız plaka durur, ölçümler `n/a`.
 - Tema denetçisi: `"$GODOT" --headless --path . -s res://scripts/theme/theme_check.gd [--theme=<yol>]` master'a göre
   eksik ya da boş öğede, master dışı temada içerik payı açık kutuda 1 ile çıkar, metin ve zemin kontrastını basar.
   Koyu temanın kapısı `"$GODOT" --headless --path . --theme-contrast-audit`: her metin rengi çizildiği her zeminde,
@@ -273,7 +283,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - Editör `.tres` ve `project.godot`'u yeniden kaydeder (uid ekler, yorum siler); fark sahip onaylamadan commit'lenmez.
 - Dosya yazan bayraklar: `--event-lint=baseline` (taban dosyası), `--event-vocab` (`_vocabulary.md`), `--display-check`
   (ayarlar), `--modal-shot=save*|load*` ve `--theme-audit=modal:save*|load*` (kayıt yazar ya da siler), `--ending-shot`
-  (zaman damgalı gazete PNG'si), `--tick-probe` (`auto_*` kayıt yuvaları; kayıt taşıyan dizinde çalışmaz).
+  (zaman damgalı gazete PNG'si), `--tick-probe` (`auto_*` kayıt yuvaları; kayıt taşıyan dizinde çalışmaz),
+  `--menu-shot` (fikstür kayıtlarını `user://shot_menu/`'ye yazar). `--menu-shot` ve kayıt yazan `--modal-shot` türleri
+  `user://saves`'te kayıt varsa `MENU|refused=user_saves` basıp 1 ile çıkar: ayrı `APPDATA` ile koşulur.
 - Bazı smoke vakaları kaynak metni ve özel adları okur; ad değiştirmeden önce vakayı bul. `event_bus.gd`'deki
   `# --- X ---` başlıkları manifest bölümleri, `# LOC-DATA` işaretleri `loc_residue` istisnalarıdır; silinmez.
 
