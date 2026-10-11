@@ -149,8 +149,9 @@ func _refresh() -> void:
 	if now.is_empty():
 		_selected = String(_visible()[0].id) if not _visible().is_empty() else ""
 		_read()
-	# Read again only when the item changed: an armed option survives a repaint.
-	elif [_shown.get("kind"), _shown.get("event_id"), _shown.get("weeks_left")] \
+	# Read again only when the item changed: an armed option survives a repaint. The goal list arms nothing and
+	# its steps move under the same item.
+	elif now.get("goal", false) or [_shown.get("kind"), _shown.get("event_id"), _shown.get("weeks_left")] \
 			!= [now.kind, now.get("event_id"), now.get("weeks_left")]:
 		_read()
 	_draw_list()

@@ -156,20 +156,25 @@ DESK_PAPER_SHEET_TITLE_ONE,"Yatırım teklifi masada, son hafta","Offer on the t
 DESK_PAPER_SHEETS_TITLE,{n} yatırım teklifi masada,{n} offers on the table
 DESK_PAPER_ATLAS_TITLE,{n} aday dosyası hazır,{n} candidate files ready
 PAPER_GONE_TOAST,Bu kâğıdın konusu kalmadı,That paper no longer applies
-FIN_GOAL_P1_LABEL,Traction'a:,To Traction:
-FIN_GOAL_P1_META,Sürüm + ilk müşteri + ilk gelir,Ship + first customer + first revenue
 FIN_GOAL_P2_LABEL,Series A'ya:,To Series A:
 FIN_GOAL_P3_LABEL,Series A avı:,Series A hunt:
 FIN_GOAL_P3_HUNT,{n} teklif masada,{n} offers on the table
 FIN_GOAL_P3_HUNT_ONE,{n} teklif masada,{n} offer on the table
 FIN_GOAL_P3_CLOSED,Series A kapandı,Series A closed
+CHEQUE_TITLE,Frank'in çeki,Frank's cheque
+CHEQUE_NEXT,Sıradaki: {step},Next: {step}
+CHEQUE_LEAD,Beş adım. Beşincisinde Frank çeki yazar.,"Five steps. At the fifth, Frank writes the cheque."
 CHEQUE_STEP_TYPE,Ürün tipini seç,Pick a product type
 CHEQUE_STEP_SPRINT,İlk sprinti başlat,Start the first sprint
 CHEQUE_STEP_SHIP,v1.0'ı yayınla,Ship v1.0
 CHEQUE_STEP_PAYING,İlk ödeyen müşteri,First paying customer
 CHEQUE_STEP_MRR,Aylık gelir {bar},Monthly revenue {bar}
+CHEQUE_MRR_NOW,Şu an {mrr},Now {mrr}
 GOAL_STEP_TRACTION,Traction'a geç,Reach Traction
 GOAL_STEP_SEED,Seed turu: aylık gelir {bar},Seed round: monthly revenue {bar}
+GOAL_SEED_LEAD,Seed alırsan söz verirsin: {window} aylık ortalama büyüme {pct},Take the seed and you owe growth: a {window} month average of {pct}
+GOAL_TOAST,{title} · {done}/{total},{title} · {done}/{total}
+CHEQUE_GO,{tab} sayfasına git,Go to {tab}
 FIN_MARKET_TITLE,Pazar payı,Market share
 FIN_MARKET_YOU,Sen,You
 MILESTONE_FOUNDING,Kuruluş,Founding
@@ -380,7 +385,6 @@ HR_FOUNDER_STATE_IDLE,Boşta,Idle
 PER_CHARISMA,Karizma,Charisma
 PER_WHERE_AM_I,NEREDE DURUYORUM,WHERE I STAND
 PER_PHASE_GOAL,BU FAZIN HEDEFİ,THIS PHASE'S GOAL
-PER_GOAL_BOOTSTRAP,İlk ödeyen müşterilere ulaş,Reach your first paying customers
 PER_GOAL_TRACTION,Geliri büyüt ve markayı kur,Grow revenue and build the brand
 PER_GOAL_SERIES_A,Masaya otur ve turu kapat,Get to the table and close the round
 PER_NET_WORTH,NET SERVET,NET WORTH
@@ -2674,6 +2678,7 @@ OFFICE_CARD_MOVE_FOR,Taşın · {money},Move · {money}
 OFFICE_CARD_UNMET,{n} şart karşılanmadı,{n} requirements unmet
 OFFICE_TOAST_MOVED,Yeni ofis,New office
 OFFICE_TOAST_MOVE_STARTED,Taşınma başladı,Move started
+OFFICE_HINT_SPACE,Boşluk: saati başlat,Space: start the clock
 OFFICE_CHIP_CURRENT,MEVCUT · {name},CURRENT · {name}
 OFFICE_HOVER_HOME,Kurucunun dairesi,The founder's flat
 OFFICE_HOVER_LINE,{desks} masa · {money}/ay,{desks} desks · {money}/mo

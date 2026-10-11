@@ -30,6 +30,8 @@ const RANGES := {
 }
 ## The appetite's state → its tag (InvestorAppetiteUi words it).
 const APPETITE_TAGS := {"closed": &"outline", "warming": &"warn", "open": &"pos"}
+const INBOX := preload("res://scripts/ui/components/inbox.gd")
+const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
 
 ## The three columns; the window reads their height.
 var content: HBoxContainer
@@ -291,42 +293,40 @@ func _refresh_transactions() -> void:
 		rows.add_child(row)
 
 
-## Faz hedefi: başlık fazın hedefi, satır ne gerektiği; ilk fazda üç koşulun ilerlemesi. Altında hedefin
-## göstergesi, yatırımcı iştahı (rakamsız: kapı yalnız MRR, çıtası basılmaz). İkinci fazda kart yalnız başlığı
-## taşır, iştah onun hemen altındadır.
+## Hedef: hedef listesi açıkken (Frank'in çeki, sonra seed turu) başlığı, biten adım sayısı, sıradaki adımı ve
+## göstergesi; liste yokken fazın hedefi. Altında yatırımcı iştahı (rakamsız: kapı yalnız MRR, çıtası basılmaz).
+## İkinci fazda liste yokken kart yalnız başlığı taşır, iştah onun hemen altındadır.
 func _refresh_goal() -> void:
 	UiFactory.clear(_goal)
 	var head := SprintUiShared.box(UiTokens.SPACE_M)
 	_goal.add_child(head)
+	var goal: Dictionary = ChequeRead.summary()
 	var value := ""
 	var title := ""
-	var met: int = -1
-	match GameState.phase:
-		1:
-			title = "FIN_GOAL_P1_LABEL"
-			value = tr("FIN_GOAL_P1_META")
-			met = int(ProductState.is_live()) + int(not CustomerRegistry.get_all().is_empty()) + int(GameState.mrr > 0)
-		2:
-			title = "FIN_GOAL_P2_LABEL"
-		_:
-			if GameState.series_a_closed:
-				title = "FIN_GOAL_P3_CLOSED"
-				value = Fmt.money(GameState.run_investment_amount)
-			else:
-				var n: int = GameState.active_sheets.size()
-				title = "FIN_GOAL_P3_LABEL"
-				value = tr(Fmt.count_key("FIN_GOAL_P3_HUNT", n)).format({"n": n})
+	if not goal.is_empty():
+		title = goal.title_key
+		value = INBOX.goal_next(goal)
+	elif GameState.phase == 2:
+		title = "FIN_GOAL_P2_LABEL"
+	elif GameState.series_a_closed:
+		title = "FIN_GOAL_P3_CLOSED"
+		value = Fmt.money(GameState.run_investment_amount)
+	else:
+		var n: int = GameState.active_sheets.size()
+		title = "FIN_GOAL_P3_LABEL"
+		value = tr(Fmt.count_key("FIN_GOAL_P3_HUNT", n)).format({"n": n})
 	# Fazın adı yazıldığı gibi; anahtarın sonundaki iki nokta başlıkta kesilir.
 	head.add_child(SprintUiShared.label(tr(title).trim_suffix(":"), &"CardTitle"))
-	if met >= 0:
+	if not goal.is_empty():
 		head.add_child(RnDUiShared.spacer())
-		head.add_child(SprintUiShared.label(tr("FIN_GOAL_PROGRESS").format({"met": met, "total": 3}), &"DataStrong"))
+		head.add_child(SprintUiShared.label(tr("FIN_GOAL_PROGRESS").format({"met": goal.done, "total": goal.total}),
+			&"DataStrong"))
 	if value != "":
 		_goal.add_child(SprintUiShared.prose(value, &"BodyLabel"))
-	if met >= 0:
-		_goal.add_child(HRUiShared.D_bar(Vector2(0, UiTokens.D_H_PROGRESS), met / 3.0,
-			UiTokens.D_BAR_EMPH if met == 3 else UiTokens.D_BAR_FILL))
-	if GameState.phase != 2:
+	if not goal.is_empty():
+		_goal.add_child(HRUiShared.D_bar(Vector2(0, UiTokens.D_H_PROGRESS), float(goal.done) / goal.total,
+			UiTokens.D_BAR_EMPH if goal.next.is_empty() else UiTokens.D_BAR_FILL))
+	if _goal.get_child_count() > 1:
 		_goal.add_child(HSeparator.new())
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
 	var state: String = String(sig.get("state", "closed"))

@@ -19,7 +19,7 @@ signal with no emit point" a lint error, so the manifest is the lint rule's inpu
 |---|---|
 | Signals declared | **145** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **70** |
+| Emitted with **no production listener** | **68** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -67,7 +67,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 4 | main · office_people · office_view |
-| `clock_batch_ended` | `—` | time_manager | 1 | 4 | signals · rnd_tab · research_bar · office_people |
+| `clock_batch_ended` | `—` | time_manager | 1 | 5 | signals · sprint_system · rnd_tab · research_bar · office_people |
 | `tab_changed` | `tab_id: String` | game_shell · main · product_tab · mail_pane · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 47 | 4 | main · left_tabs · research_bar · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
@@ -97,11 +97,11 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `employee_eligible_for_promotion` | `character_id: String` | — | 0 | 0 | — |
 | `raise_requested` | `character_id: String` | — | 0 | 0 | — |
 | `leave_requested` | `character_id: String` | hr_morale_system | 1 | 0 | — |
-| `employee_hired` | `character_id: String` | character_registry | 1 | 0 | EvSignals (bindable) |
+| `employee_hired` | `character_id: String` | character_registry | 1 | 1 | sprint_system · EvSignals (bindable) |
 | `employee_departed` | `character_id: String` | character_registry | 1 | 0 | EvSignals (bindable) |
-| `training_started` | `character_id: String, area_key: String` | character_registry | 1 | 0 | — |
+| `training_started` | `character_id: String, area_key: String` | character_registry | 1 | 1 | sprint_system |
 | `training_completed` | `character_id: String, area_key: String` | character_registry | 1 | 0 | — |
-| `assignment_changed` | `character_id: String` | character_registry · work_hours_system | 11 | 2 | research_bar · office_people |
+| `assignment_changed` | `character_id: String` | character_registry · work_hours_system | 11 | 3 | sprint_system · research_bar · office_people |
 | `hr_day_processed` | `—` | hr_system | 1 | 2 | sprint_system · hr_dossier |
 | `news_stream_changed` | `—` | news_feed_system | 1 | 1 | news_ticker |
 

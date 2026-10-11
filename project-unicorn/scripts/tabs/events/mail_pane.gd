@@ -17,6 +17,7 @@ extends ScrollContainer
 # etiketi ve kilidi soluk, gerekçesi okunur.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
+const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
 const ENTER_GUARD_MS := 400
 const AVATAR := 40
 const GLYPHS := {"up": "res://assets/icons/stake/cash_in.svg", "cost": "res://assets/icons/stake/cost.svg",
@@ -699,6 +700,9 @@ func _opened(node: String) -> PanelContainer:
 ## A reminder reads as a record: who, its state, the facts, and where to attend to it.
 func _record() -> void:
 	_col.add_child(_kicker("MAIL_KIND_ATTENTION"))
+	if _item.get("goal", false):
+		_goal()
+		return
 	var from: Dictionary = _item.sender
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", UiTokens.SPACE_L)
@@ -731,6 +735,34 @@ func _record() -> void:
 			{"character_id": String(_item.employee)})
 	_actions("", [[tr("SALES_ACTION_EXPAND" if _item.get("grow", false) else "SALES_ACTION_RETAIN"), go, true]],
 		request != "" and EventGate.active_id() != "")
+
+
+## The goal list as a record: its steps, where to do the next, and the seed's growth promise before any pitch.
+func _goal() -> void:
+	var goal: Dictionary = ChequeRead.summary()
+	_col.add_child(_wrapped(INBOX.goal_head(goal), &"TitleH2"))
+	_col.add_child(_wrapped(tr("CHEQUE_LEAD") if goal.list == "cheque" else tr("GOAL_SEED_LEAD").format(
+		{"window": SeedConstants.EXPECT_WINDOW_MONTHS, "pct": Fmt.percent(SeedConstants.EXPECT_MOM_PCT, 0)}),
+		&"BodyLabel"))
+	var steps := VBoxContainer.new()
+	steps.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	_col.add_child(steps)
+	for s in ChequeRead.steps():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+		var mark: Control = UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_pos()) \
+			if s.done else Control.new()
+		mark.custom_minimum_size.x = UiTokens.D_ICON_ROW
+		row.add_child(mark)
+		row.add_child(UiFactory.make_label(INBOX.goal_step(s), &"DataText" if s.done
+			else (&"DataStrong" if s.id == goal.next.get("id", "") else &"NoteMuted")))
+		steps.add_child(row)
+		if s.has("value"):
+			var now := UiFactory.make_label(tr("CHEQUE_MRR_NOW").format({"mrr": Fmt.money_chip(int(s.value))}), &"MetaMuted")
+			steps.add_child(SprintUiShared.pad(now, Vector4i(UiTokens.D_ICON_ROW + UiTokens.SPACE_M, 0, 0, 0)))
+	var tab: String = String(_item.tab)
+	_actions("", [[tr("CHEQUE_GO").format({"tab": tr("TAB_" + tab.to_upper())}),
+		_go.bind(tab, String(_item.subpage)), true]])
 
 
 func _facts(rows: Array) -> PanelContainer:

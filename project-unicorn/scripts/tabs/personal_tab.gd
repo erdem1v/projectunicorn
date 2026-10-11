@@ -9,7 +9,10 @@ const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
 const SKILL_ICON := "res://assets/icons/skill/%s.svg"
 const TRAINING_ICON := "res://assets/icons/world/training.svg"
 const MILESTONE_ICON := "res://assets/icons/world/milestone.svg"
-const GOAL_KEYS := ["PER_GOAL_BOOTSTRAP", "PER_GOAL_TRACTION", "PER_GOAL_SERIES_A"]
+const INBOX := preload("res://scripts/ui/components/inbox.gd")
+const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
+## The phase's goal once no goal list is open (the first phase always has one).
+const GOAL_KEYS := {2: "PER_GOAL_TRACTION", 3: "PER_GOAL_SERIES_A"}
 ## Kazanılmış taşın tek cümle notu, taşın anahtarıyla (GameState.milestones).
 const MILESTONE_NOTES := {"MILESTONE_FOUNDING": "PERSONAL_MS_FOUNDING_NOTE",
 	"MILESTONE_FIRST_SHIP": "PERSONAL_MS_SHIP_NOTE",
@@ -191,7 +194,14 @@ func _standing() -> VBoxContainer:
 	var goal := UiFactory.D_card(spot)
 	goal.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	goal.add_child(SprintUiShared.label(Fmt.upper(tr("PER_PHASE_GOAL")), &"KeyLabel"))
-	goal.add_child(SprintUiShared.label(tr(GOAL_KEYS[GameState.phase - 1]), &"SubjectStrong"))
+	# An open goal list is the goal, as Finans counts it: "Frank'in çeki · 2/5" and its next step.
+	var goal_list: Dictionary = ChequeRead.summary()
+	if goal_list.is_empty():
+		goal.add_child(SprintUiShared.label(tr(GOAL_KEYS[GameState.phase]), &"SubjectStrong"))
+	else:
+		goal.add_child(SprintUiShared.label(INBOX.goal_head(goal_list), &"SubjectStrong"))
+		if not goal_list.next.is_empty():
+			goal.add_child(SprintUiShared.prose(INBOX.goal_next(goal_list), &"BodyLabel"))
 	col.add_child(_above(_section("PER_NET_WORTH"), UiTokens.SPACE_3XL))
 	var share := SprintUiShared.column(UiTokens.SPACE_M)
 	FinanceOzetView.cap_table(share)
