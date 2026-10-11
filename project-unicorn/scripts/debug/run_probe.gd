@@ -34,10 +34,21 @@ extends RefCounted
 #                                           support desk's roster, inflow and validation per day)
 #   PROBE CHURN day=<d> id=<cid> ...        (customer_churned — the autopsy's terminal)
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
+#   PROBE SIGN  day=<d> hour=<h> id=<cid> by=<founder|rep> star=<n> weeks=<w> mrr=<n>
+#                                           (every B2B signing; weeks is the deal's planned length,
+#                                           0: a deal signs as it closes; mrr is the account's)
 #   PROBE TALLY <id> fires=<n> picks=<n>    (one per id, at the end)
+#   PROBE WEEK  w=<w> fires=<n> meetings=<n> signs=<n>   (one per week, at the end: card fires,
+#                                           the founder's sittings, B2B signings)
 #   PROBE END   day=<d> run_active=<b> ending=<id> finite_runway_p<1|2|3>=<finite weeks>/<weeks>
-#               min_cash_pre_seed=<n> seed_day=<n|-1>   (the weeks are the weekly STATE readings,
-#                                           by phase; seed_day is the day the seed was signed)
+#               min_cash_pre_seed=<n> seed_day=<n|-1> first_sign_day=<n|-1> first_revenue_day=<n|-1>
+#               cheque_day=<n|-1> open_w1_12=<n> idle_w1_12=<n>
+#                                           (the weeks are the weekly STATE readings, by phase;
+#                                           seed_day is the day the seed was signed; first_revenue_day
+#                                           the first daily tick that closed with MRR; cheque_day the
+#                                           day Frank's cheque was taken; open_w1_12 the weeks 1-12
+#                                           whose 08:00 found the B2B market open, idle_w1_12 those
+#                                           of them without a sitting)
 #   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
 #   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn id>=<n>... ...
 #                                           (full_run*: once, the day the Series A door opens)
@@ -119,6 +130,11 @@ static var _fix_on_at: float = 0.0         # clock day (TimeModel.days) the runn
 static var _fix_off_at: float = -INF        # clock day the last fix pass ended
 static var _fixer_id: String = ""           # the developer lent to the support desk for it
 static var _fires_by_day: Dictionary = {}   # tick -> card fires that week, for PROBE WEEK
+static var _meetings_by_day: Dictionary = {}  # tick -> the founder's sittings that week, for PROBE WEEK
+static var _signs_by_day: Dictionary = {}   # tick -> B2B signings that week, for PROBE WEEK
+static var _first_sign_day: int = -1        # PROBE END: the tick of the run's first B2B signing
+static var _first_revenue_day: int = -1     # PROBE END: the first daily tick that closed with MRR
+static var _open_weeks: Array[int] = []     # weeks 1-12 whose 08:00 found the B2B market open
 static var _gate_day: int = -1              # the day phase_gate_reached(3) fired (PROBE GATE)
 static var _gate_logged: bool = false
 static var _mb_acc: Dictionary = {}         # burn id -> realised sum over the open fiscal month
@@ -170,6 +186,12 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_vc_booked = ""
 	_vc_meet_day = -1
 	_runway_weeks = {}
+	_fires_by_day = {}
+	_meetings_by_day = {}
+	_signs_by_day = {}
+	_first_sign_day = -1
+	_first_revenue_day = -1
+	_open_weeks = []
 	# The presets measure the demo. A --build=ea in Main Run Args would otherwise turn the
 	# bootstrap win into a non-terminal milestone and a real-clock run would sit on its paper.
 	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
@@ -229,6 +251,9 @@ static func _wire_log() -> void:
 	EventBus.phase_gate_reached.connect(_on_gate_reached)
 	EventBus.day_tick_completed.connect(_on_day_tick_completed)
 	EventBus.night_skipped.connect(_on_week_start)
+	EventBus.meeting_entered.connect(func(_lead_id: String) -> void:
+		_meetings_by_day[GameState.day] = int(_meetings_by_day.get(GameState.day, 0)) + 1)
+	EventBus.deal_signed.connect(_on_signed)
 
 
 static func _on_month_ended(_data: Dictionary) -> void:
@@ -285,7 +310,9 @@ static func _on_gate_reached(next_phase: int) -> void:
 		_gate_day = GameState.day
 
 
-static func _on_day_tick_completed(_day: int) -> void:
+static func _on_day_tick_completed(day: int) -> void:
+	if _first_revenue_day < 0 and GameState.mrr > 0:
+		_first_revenue_day = day
 	if _full_run:
 		_mb_add_tick()
 
@@ -406,6 +433,16 @@ static func _on_churn(customer_id: String) -> void:
 	print("PROBE CHURN day=%d id=%s sat=%d tol=%d trust=%.1f phase=%s streak=%d countdown=%d mrr=%d" % [
 		GameState.day, customer_id, c.satisfaction, c.tolerance, c.trust_offset,
 		c.lifecycle_phase, c.risk_streak, c.churn_countdown, c.mrr])
+
+
+static func _on_signed(customer_id: String, _seats: int, _seat_price: int) -> void:
+	# SalesSystem.add_b2b_customer emits once the account is on the books, so the record is readable.
+	var c: Customer = CustomerRegistry.get_customer(customer_id)
+	_signs_by_day[GameState.day] = int(_signs_by_day.get(GameState.day, 0)) + 1
+	if _first_sign_day < 0:
+		_first_sign_day = GameState.day
+	print("PROBE SIGN day=%d hour=%d id=%s by=%s star=%d weeks=0 mrr=%d" % [GameState.day, GameState.current_hour,
+		customer_id, "founder" if c.acquisition_source == "founder_pitch" else "rep", c.scale, c.mrr])
 
 
 static func _log_promise(promise_id: String, stage: String) -> void:
@@ -708,23 +745,26 @@ static func _run_realtime(speed_idx: int) -> void:
 	EventBus.speed_change_requested.emit(speed_idx)
 
 
-static func _log_weekly_fires() -> void:
-	# Verdict line: card fires per week, one tick each.
+static func _log_weeks() -> void:
+	# Verdict lines, one tick each: card fires, the founder's sittings and the B2B signings.
 	for w in range(1, GameState.day + 1):
-		print("PROBE WEEK w=%d fires=%d" % [w, int(_fires_by_day.get(w, 0))])
+		print("PROBE WEEK w=%d fires=%d meetings=%d signs=%d" % [w, int(_fires_by_day.get(w, 0)),
+			int(_meetings_by_day.get(w, 0)), int(_signs_by_day.get(w, 0))])
 
 
 static func _finish() -> void:
 	if _vc_policy != "" and not _vc_done:
 		_vc_end("UNRESOLVED", "phase<3" if GameState.phase < 3 else "run_over")
-	_log_weekly_fires()
+	_log_weeks()
 	_log_tally()
 	var runway: Array = [1, 2, 3].map(func(ph: int) -> String:
 		var w: Vector2i = _runway_weeks.get(ph, Vector2i.ZERO)
 		return "finite_runway_p%d=%d/%d" % [ph, w.x, w.y])
-	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d" % [
+	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d" % [
 		GameState.day, str(GameState.run_active), GameState.ending_id, " ".join(runway), _min_cash_pre_seed,
-		GameState.seed_closed_day])
+		GameState.seed_closed_day, _first_sign_day, _first_revenue_day,
+		int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, -1)), _open_weeks.size(),
+		_open_weeks.filter(func(w: int) -> bool: return not _meetings_by_day.has(w)).size()])
 	_log_hr()
 
 
@@ -759,8 +799,11 @@ static func _log_hr() -> void:
 ## The week's 08:00: the night's cards are answered, the desk looked at, the sprint planned,
 ## the seed round taken once its door opens, then the sales meetings sat back to back and the
 ## Series A hunt played. Every move goes through the seam the corresponding tab button calls —
-## the probe has no privileged path into the engine.
+## the probe has no privileged path into the engine. Before any move, an open B2B market in the
+## first twelve weeks is noted for PROBE END.
 static func _play_the_week() -> void:
+	if GameState.day <= 12 and SalesFaucetSystem.market_open():
+		_open_weeks.append(GameState.day)
 	_answer()
 	_play_the_hour()
 	if not _full_run:
@@ -939,8 +982,9 @@ static func _meet(p: Prospect) -> void:
 				break
 		SalesFinalizer.apply(NegotiationSystem.result())
 	SalesMeetingSystem.close()
-	print("PROBE PLAY day=%d meeting %s -> %s (mrr %d -> %d)" % [
-		GameState.day, p.company_name, outcome, mrr_before, GameState.mrr])
+	# A won table carries the deal's planned length (PROBE SIGN's weeks).
+	print("PROBE PLAY day=%d meeting %s -> %s (mrr %d -> %d)%s" % [GameState.day, p.company_name, outcome,
+		mrr_before, GameState.mrr, " weeks=0" if outcome == "won" else ""])
 
 
 ## The B2B run's staffing ladder: a founder who is growing
