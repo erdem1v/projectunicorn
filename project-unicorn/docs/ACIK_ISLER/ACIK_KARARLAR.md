@@ -389,20 +389,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Kaynak: GDD ch02 §1 (kurucu huyları katalogdan, ikonla), ch02 §8 (huylar yalnız modifier); CLAUDE.md §5 (her
     seçenek görünür bir sonuca düşer).
 
-- **29 · Mirasyedi kökeninin kilit notu: TAM SÜRÜMDE mi, ÇOK YAKINDA mı.**
-  - Ne oluyor: Kilitli iki kökenden `heir` (Mirasyedi) "TAM SÜRÜMDE" (`LOCK_FULL`), `corporate_refugee` (Kurumsal
-    Firari) "ÇOK YAKINDA" (`LOCK_SOON`) notunu taşıyor. ch14 §4 "kalan kökenleri" Early Access'e, §5 "ek kökenleri"
-    tam sürüme koyuyor; §3 demodaki kilitli-görünür kökenleri Heir ve Corporate Refugee diye sayıyor. 58e603e'deki
-    görsel kontrolde heir'in TR "TAM SÜRÜMDE" rozeti bilerek korunmuştu.
-  - Nerede: `scripts/systems/founder_constants.gd` (`ORIGINS`, heir satırının `locked_note_key`'i);
-    `scripts/onboarding/steps/origin_traits_step.gd` (kilitli köken kartı rozeti).
-  - Oyuncuya etkisi: Onboarding 2. sayfadaki iki kilitli köken farklı çıkış zamanı vaat ediyor. ch14 §4 okunursa
-    Mirasyedi'nin vaadi yanlış.
-  - Seçenekler: A) heir `LOCK_SOON`'a geçer (ch14 §4: kalan kökenler EA'da). B) `LOCK_FULL` kalır, ch14 §4 ve §5
-    Mirasyedi'yi tam sürüme koyacak biçimde netleştirilir. C) İki köken de tek bir nötr kilit notu taşır (ör.
-    `LOCK_CHIP`).
-  - Kaynak: GDD ch14 §3, §4, §5; ch01 §8; ch02 §1.
-
 - **31 · Pazarlıkta sabır ve karşı teklif adımı mizaçtan gelmiyor.**
   - Ne oluyor: `NegotiationSystem.open` sabrı arketipin pazarlık profilinden okuyor (`SalesArchetypes.negotiation` →
     `patience`: ops_cautious 3, tech_exacting 2, finance_brisk 2). `offer` karşı teklif adımını kalan sabırdan

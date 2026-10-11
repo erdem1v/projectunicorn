@@ -204,8 +204,10 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   döner, aynı karar için sonraki Esc sistem menüsünü açar, Ekip'in üstündeki dosyanın şeridi karara döner, karar
   verilir, saat durmuş kalır, Boşluk saati sürdürür) ve kare başına `GATEFLOW` satırı basar.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
-  founders|nav|crown|cast` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare; `founders` portre ile
-  bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest dizisi;
+  founders|nav|crown|cast|cheque|untyped|v1` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare;
+  `founders` portre ile bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest
+  dizisi; `cheque` çek listesinin ilk haftası (`_01` tür seçili, `_02` ilk sprint başlamış), `untyped` aynı hafta
+  tür seçilmeden, `v1` v1.0 yayınlanınca (`_01`) ve Ar-Ge açılınca (`_02`);
   `city:<saat>:crown` kulenin tacı). `--office-shot`'a `--pan=<adım;…>` eklenirse koşu yalnız 3B görüntüyü kamera
   ofsetlerinde kaydeder ve `PAN|` satırı basar (gölge kutusu ve ilk kareye fark; adım `dx,dy[,zm]`,
   `sweep:<baş>:<son>:<adım>:<x|y>:<zm>`, `fit[:zm]` ya da `drag:<dx>:<dy>[:olay]`); `--pan-set=<küme>|<küme>` yalıtım
