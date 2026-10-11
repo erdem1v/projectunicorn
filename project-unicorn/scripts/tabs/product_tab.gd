@@ -246,6 +246,10 @@ func _act(kind: String, args: Dictionary) -> void:
 		"pick_goal": SprintSystem.pick_goal(args.area_id)
 		"voices_seen": SprintSystem.voices_seen(args.area)
 		"team": EventBus.tab_changed.emit("hr")
+		"rnd":
+			# Önce sayfa: düğüm isteği monte olmuş Ar-Ge sayfasına düşer.
+			EventBus.tab_changed.emit("rnd")
+			EventBus.rnd_node_requested.emit(args.node, false)
 		"hire":
 			EventBus.tab_changed.emit("hr")
 			get_tree().get_first_node_in_group(&"window_layer").get_current_page_body().open_atlas()

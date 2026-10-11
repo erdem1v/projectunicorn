@@ -2752,6 +2752,7 @@ PRODUCT_WEEK_OF,Hafta {w}/{t},Week {w}/{t}
 PRODUCT_THIS_SPRINT,Bu sprint,This sprint
 PRODUCT_NEXT,Sonraki,Next
 PRODUCT_TEAM_NOBODY,Bu sprintte çalışacak kimse yok,Nobody can work this sprint
+PRODUCT_TEAM_IN_RND,Kurucu Ar-Ge'de: {node},The founder is in R&D: {node}
 PRODUCT_ROLE_MISSING,Ekipte {role} yok · kartlar hatalı çıkabilir,No {role} on the team · cards may ship buggy
 PRODUCT_CARD_SPILLS_PTS,devreder · {done}/{total},carries over · {done}/{total}
 PRODUCT_CARD_NO_START,Bu sprint başlamaz → Sprint {n},Won't start this sprint → Sprint {n}
@@ -2956,6 +2957,7 @@ PRODUCT_OVER_CAPACITY_ONE,Kapasite aşıldı · {n} kart devreder,Over capacity 
 PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}
 PRODUCT_ADD_CLOSED_FULL,Bu sprintte boş puan kalmadı,No spare points left this sprint
 PRODUCT_GO_TEAM,Ekip'e git,Go to Team
+PRODUCT_GO_RND,Ar-Ge'ye git,Go to R&D
 SALES_PROMISE_OPEN_SPRINT,Açık söz: {feature} · Sprint {n} sonuna kadar,Open promise: {feature} · by the end of sprint {n}
 FIN_BURN_TOOLS,Geçim ve araçlar,Living and tools
 FIN_BURN_SERVICE,Servis maliyeti,Service costs

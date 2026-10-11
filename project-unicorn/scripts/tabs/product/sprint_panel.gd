@@ -90,6 +90,9 @@ func _center(model: Dictionary) -> void:
 		if c.warning_text != "":
 			team.add_child(_note(SprintUiShared.BUG, c.warning_text, UiTokens.D_warn()))
 		col.head.add_child(team)
+	elif c.mode == "active" and c.rnd_node != null:
+		# Ekip satırı yokken araştıran kurucu başlıkta yazar; planlamada aynı satır başlatmanın gerekçesidir.
+		col.head.add_child(_note(RnDUiShared.ICON, c.rnd_node.text, UiTokens.D_INK_3))
 	# Aşım ve kapalı "+" plan uyarısıdır (koşan sprintin kartları kilitli). Sığan ama boş puanı kalmayan
 	# sprintte de "+" kapanır; not nedenini orada da söyler.
 	if c.mode == "plan" and (cap.state == "over" or (cap.state == "ok" and not c.can_add)):
@@ -104,7 +107,7 @@ func _center(model: Dictionary) -> void:
 		col.head.add_child(over)
 
 	if c.team.is_empty() and c.cards.is_empty():
-		col.stack.add_child(_nobody(c.staffed))
+		col.stack.add_child(_nobody(c))
 	for card in c.cards:
 		var node := _add_card(col.stack, card, SprintCard.Look.WIDE)
 		if card.id == model.ui.hover_card:
@@ -158,8 +161,9 @@ func _center(model: Dictionary) -> void:
 			col.foot().add_child(_foot_row(c, []))
 
 
-## Kimse çalışamıyorken sütunun gövdesi: ekip glifi, not ve çıkış yolu (kadro yoksa işe alım, varsa Ekip).
-func _nobody(staffed: bool) -> VBoxContainer:
+## Kimse çalışamıyorken sütunun gövdesi: ekip glifi, not ve çıkış yolu (kurucu araştırıyorsa Ar-Ge, kadro
+## yoksa işe alım, varsa Ekip).
+func _nobody(c: Dictionary) -> VBoxContainer:
 	var empty := SprintUiShared.column(UiTokens.SPACE_L)
 	empty.alignment = BoxContainer.ALIGNMENT_CENTER
 	empty.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -169,9 +173,10 @@ func _nobody(staffed: bool) -> VBoxContainer:
 	var note := UiFactory.make_label(tr("HR_EMPTY_ROW"), &"NoteMuted")
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	empty.add_child(note)
-	var go := SprintUiShared.button(tr("PRODUCT_GO_TEAM" if staffed else "HR_SEARCH_START"), &"SecondaryButton",
-		action.emit.bind("team" if staffed else "hire", {}))
-	if not staffed:
+	var way: Array = (["PRODUCT_GO_RND", "rnd", {"node": c.rnd_node.id}] if c.rnd_node != null
+		else ["PRODUCT_GO_TEAM", "team", {}] if c.staffed else ["HR_SEARCH_START", "hire", {}])
+	var go := SprintUiShared.button(tr(way[0]), &"SecondaryButton", action.emit.bind(way[1], way[2]))
+	if way[1] == "hire":
 		go.icon = load(PLUS)
 	go.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	empty.add_child(go)
@@ -272,7 +277,9 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 		grid.add_child(pair[1])
 	col.stack.add_child(SprintUiShared.pad(grid, Vector4i(0, UiTokens.SPACE_L, 0, UiTokens.SPACE_M)))
 	if r.rnd_open:
-		col.stack.add_child(_note(RnDUiShared.ICON, tr("PRODUCT_RELEASE_RND_OPEN"), UiTokens.D_INK_2))
+		var rnd := _note(RnDUiShared.ICON, tr("PRODUCT_RELEASE_RND_OPEN"), UiTokens.D_INK_2)
+		rnd.add_child(SprintUiShared.button(tr("PRODUCT_GO_RND"), &"FloatLink", action.emit.bind("rnd", {"node": ""})))
+		col.stack.add_child(rnd)
 	col.stack.add_child(_lead_row(r.lead, "PRODUCT_LEAD_LINE", null))
 
 	var hold := _note(PAUSE, tr("PRODUCT_RELEASE_HOLD"), UiTokens.D_INK_3)

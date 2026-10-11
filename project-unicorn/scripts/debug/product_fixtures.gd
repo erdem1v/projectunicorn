@@ -55,6 +55,10 @@ func act(kind: String, args: Dictionary) -> void:
 		EvTuning.SHIPPED_SCOPES.append("fixture")
 		EventGate.force_fire(card.decision.event_id)
 		EvTuning.SHIPPED_SCOPES.assign(shipped)
+	elif kind == "rnd":
+		# Ar-Ge'ye yol canlıdaki gibi sayfayı açar; model değişmez.
+		EventBus.tab_changed.emit("rnd")
+		EventBus.rnd_node_requested.emit(args.node, false)
 	elif STAGES.has(kind):
 		if model().center.mode == STAGES[kind][0]:
 			_stage = STAGES[kind][1]
@@ -88,7 +92,8 @@ func _build(id: String) -> Dictionary:
 				_deck("ucretli", SprintCard.State.SPRINT_PLAN, {"no_start": 8}),
 				_deck("oto_yedek", SprintCard.State.DEVREDEN, {"remaining": 0.25}),
 				_deck("etiketler", SprintCard.State.PLANLANAN),
-				_deck("akilli_arama", SprintCard.State.KILITLI, {"locked_node": tr("PRODUCT_LOCKED_NODE").format({"node": _p("Gelişmiş arama", "Advanced search")})}),
+				_deck("akilli_arama", SprintCard.State.KILITLI, {"locked_node": tr("PRODUCT_LOCKED_NODE").format({"node": _p("Gelişmiş arama", "Advanced search")}),
+					"locked_rnd": "semantic_index"}),
 				_deck("baglanti", SprintCard.State.BETA_BEKLIYOR),
 				_deck("efatura", SprintCard.State.SPRINT_AKTIF, {"phases": WAITING, "queued": true}),
 			] + _active_cards()
@@ -145,7 +150,8 @@ func _build(id: String) -> Dictionary:
 		"locked_k3":
 			m.ui.open_area = "core"
 			_area_of(m, "core").candidates.append(_deck("akilli_arama", SprintCard.State.KILITLI,
-				{"locked_node": tr("PRODUCT_LOCKED_NODE").format({"node": _p("Gelişmiş arama", "Advanced search")})}))
+				{"locked_node": tr("PRODUCT_LOCKED_NODE").format({"node": _p("Gelişmiş arama", "Advanced search")}),
+				"locked_rnd": "semantic_index"}))
 		"history_empty":
 			m.versions = []
 			m.ui.history_open = true
@@ -512,8 +518,8 @@ func _deck(id: String, state: int, extra := {}) -> Dictionary:
 		"state": state, "effect": d[5], "tag_sprint": -1, "phases": [], "phase_pts": null, "assignees": [],
 		"queued": false, "decision": null,
 		"effort_split": d[6].map(func(s: Array) -> Dictionary: return {"name": s[0], "weeks": s[1]}),
-		"locked_node": "", "remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0, "addable": false,
-		"urgent": false, "buttons": ProductModel.BUTTONS.get(state, [])}
+		"locked_node": "", "locked_rnd": "", "remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0,
+		"addable": false, "urgent": false, "buttons": ProductModel.BUTTONS.get(state, [])}
 	card.merge(extra, true)
 	return card
 
@@ -549,7 +555,7 @@ func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 		"cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "queued": 0, "decisions": 0},
 		"empty": false, "pm_started": "", "plan_hold": false, "delegate": null,
 		"next_version": null, "mvp_line": null, "can_add": false, "spare": false, "ceiling_pct": 125, "can_start": false,
-		"start_reason": "", "beta": {"open": false}, "lead_tip": null, "release": null}
+		"start_reason": "", "rnd_node": null, "beta": {"open": false}, "lead_tip": null, "release": null}
 	c.merge(extra, true)
 	_resum(c)
 	return c

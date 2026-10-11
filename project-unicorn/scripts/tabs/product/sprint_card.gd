@@ -10,7 +10,8 @@ enum State { ADAY, ADAY_ALINMIS, SPRINT_PLAN, SPRINT_AKTIF, BITTI, DEVREDEN, PLA
 ## alan satırının içindeki dar kart; MINI çeyrek sütunu.
 enum Look { WIDE, NARROW, LOW, MINI }
 
-## args her eylemde {card_id}; karar satırının düğmesi "decide" yayar ({card_id, item}).
+## args her eylemde {card_id}; karar satırının düğmesi "decide" ({card_id, item}), araştırma kilidinin
+## bağlantısı "rnd" ({card_id, node}) yayar.
 signal action(kind: String, args: Dictionary)
 
 ## Aday kartında düğmeler hep görünür; sprint ve sonraki sütun kartında üstüne gelince.
@@ -127,7 +128,16 @@ func setup(card: Dictionary, look := Look.WIDE) -> void:
 	elif not _card.effect.is_empty():
 		body.add_child(SprintUiShared.effect_line(_card.effect))
 	if state == State.KILITLI:
-		body.add_child(UiFactory.make_label(String(_card.locked_node), &"Caption"))
+		# Araştırma kilidinin ardında Ar-Ge'ye bağlantı; yer yoksa alt satıra iner.
+		var lock := HFlowContainer.new()
+		lock.add_theme_constant_override("h_separation", UiTokens.SPACE_S)
+		lock.add_child(SprintUiShared.label(String(_card.locked_node), &"Caption"))
+		if _card.locked_rnd != "":
+			var go := SprintUiShared.button(tr("PRODUCT_GO_RND"), &"FloatLink",
+				action.emit.bind("rnd", {"card_id": String(_card.id), "node": String(_card.locked_rnd)}))
+			go.mouse_filter = Control.MOUSE_FILTER_PASS   # STOP kartın hover'ını bitirirdi
+			lock.add_child(go)
+		body.add_child(lock)
 	if _card.decision != null:
 		_decision_rows(body, _card.decision)
 	if state in BUTTONS_ON_HOVER:

@@ -46,6 +46,7 @@ extends RefCounted
 #           can_add (sprint kart alıyor, kartsız soru), spare (planda hiçbir karta gitmeyen puan var),
 #           ceiling_pct (yükün "+" kapanan eşiği, yüzde), can_start,
 #           start_reason: "" or String (başlat kapalıysa kapanan koşul), beta: {open} or null,
+#           rnd_node: {id (araştırdığı düğüm), text ("Kurucu Ar-Ge'de: …")} or null (kurucu Ar-Ge'de değil),
 #           lead_tip: person + {text, self (lider kurucunun kendisi)} or null,
 #           release: {version: "v5" or "" (sürüm çıkmadı), beta, gate (MVP kapısı: Yayınla / Bir sprint daha;
 #                     başlık ve gövde mvp_line'dan), rnd_open (v1.0 notu: Ar-Ge açıldı), shipped: [card],
@@ -61,7 +62,8 @@ extends RefCounted
 #         decision: {event_id, item (gelen kutusundaki kâğıt), sender (Inbox'un göndericisi), subject, weeks_left,
 #                    last} or null (kart "İş durdu · karar bekliyor"),
 #         effort_split: [{name, weeks}],
-#         locked_node: "" or String, remaining: -1 or float (kesirli), urgent,
+#         locked_node: "" or String, locked_rnd: "" or String (kilidin açılmamış Ar-Ge düğümü; kart oraya götürür),
+#         remaining: -1 or float (kesirli), urgent,
 #         spills (planda puan alır ama bitmez), no_start: -1 or int (planda puan almaz, kaydığı sprint),
 #         planned_done (kesirli, planda sprint sonunda biten puan), addable ("+" bu aday için açık),
 #         buttons: ["add"|"send_next"|"pull"|"remove"]}   # var olan düğmeler; "+" addable ile açılır
@@ -165,7 +167,7 @@ static func _candidate(c: Dictionary, tags: Dictionary) -> Dictionary:
 		return _card(c, SprintCard.State.ADAY_ALINMIS, {"tag_sprint": tags.get(c.id, -1)})
 	var lock: String = SprintCatalog.gate_reason(c.step)
 	if lock != "":
-		return _card(c, SprintCard.State.KILITLI, {"locked_node": lock})
+		return _card(c, SprintCard.State.KILITLI, {"locked_node": lock, "locked_rnd": _locked_rnd(c.step)})
 	return _card(c, SprintCard.State.ADAY, {"addable": SprintSystem.can_add(c.id)})
 
 
@@ -248,10 +250,15 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 	var warning: String = ""
 	if not team.is_empty() and not team.any(func(t: Dictionary) -> bool: return "test" in t.fits):
 		warning = _t("PRODUCT_ROLE_MISSING").format({"role": HRConstants.area_label("qa")})
+	# Araştıran kurucu sprint ekibinden düşer: Ürün bunu düğümün adıyla söyler ve Ar-Ge'ye götürür.
+	var rnd: Variant = null
+	if CharacterRegistry.get_founder().assigned_job_ids.has(HRConstants.JOB_RESEARCH):
+		rnd = {"id": RnDSystem.active(),
+			"text": _t("PRODUCT_TEAM_IN_RND").format({"node": ResearchSeam.node_name(RnDSystem.active())})}
 	var can_start: bool = SprintSystem.can_start()
 	var reason: String = ""
 	if mode == "plan" and not can_start:
-		reason = _t("PRODUCT_TEAM_NOBODY" if total == 0 else "PRODUCT_START_NEED_CARD")
+		reason = (_t("PRODUCT_TEAM_NOBODY") if rnd == null else rnd.text) if total == 0 else _t("PRODUCT_START_NEED_CARD")
 	return {
 		"mode": mode, "sprint": n if n > 0 else -1, "weeks": weeks, "week": SprintSystem.week(),
 		"capacity": _bar(load, total, SprintSystem.done_points(), segments) if n > 0 else null,
@@ -277,7 +284,7 @@ static func _center(mode: String, release: Dictionary) -> Dictionary:
 			"sprint": eta.get("sprint", -1), "week": eta.get("week", -1)},
 		"can_add": SprintSystem.can_add(), "spare": outcome.get("spare", 0.0) > SprintSystem.EPS,
 		"ceiling_pct": roundi(float(SprintCatalog.cfg("cap_ceiling")) * 100.0),
-		"can_start": can_start, "start_reason": reason,
+		"can_start": can_start, "start_reason": reason, "rnd_node": rnd,
 		"beta": {"open": bool(sprint.get("beta", false))} if n > 0 else null,
 		"lead_tip": null if lead_ids.is_empty() else _person(lead).merged({"text": SprintCatalog.lead_sentence(lead_ids),
 			"self": lead.category == "founder"}),
@@ -405,7 +412,7 @@ static func _card(c: Dictionary, state: SprintCard.State, extra := {}) -> Dictio
 	var card := {"id": c.id, "name": SprintCatalog.card_name(c), "kind": _kind(c), "roles": c.roles,
 		"effort": roundi(SprintSystem.total(c)), "state": state, "effect": SprintCatalog.card_effect(c),
 		"tag_sprint": -1, "phases": [], "phase_pts": null, "assignees": [], "queued": false, "decision": null,
-		"effort_split": [], "locked_node": "",
+		"effort_split": [], "locked_node": "", "locked_rnd": "",
 		"remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0, "addable": false,
 		"urgent": SprintCatalog.is_urgent(c), "buttons": BUTTONS.get(state, [])}
 	card.merge(extra, true)
@@ -418,7 +425,16 @@ static func _planned(c: Dictionary, state: SprintCard.State, extra: Dictionary) 
 	var lock: String = SprintCatalog.gate_reason(c.step)
 	if lock == "":
 		return _card(c, state, extra)
-	return _card(c, SprintCard.State.KILITLI, extra.merged({"locked_node": lock, "buttons": ["remove"]}, true))
+	return _card(c, SprintCard.State.KILITLI, extra.merged({"locked_node": lock, "locked_rnd": _locked_rnd(c.step),
+		"buttons": ["remove"]}, true))
+
+
+## Kilidin ilk açılmamış Ar-Ge düğümü; kilit araştırma değilse "".
+static func _locked_rnd(step: String) -> String:
+	for part in LineGates.unmet_parts(step):
+		if part.kind == LineGates.KIND_RESEARCH:
+			return part.node
+	return ""
 
 
 ## Talep kartı çizimde yeni özellik kartıdır.

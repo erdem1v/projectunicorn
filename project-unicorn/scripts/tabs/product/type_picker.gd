@@ -1,9 +1,10 @@
 class_name TypePicker
 extends VBoxContainer
 
-# MVP'den önce Ürün sekmesinde ürünün pazarı, türü ve adı seçilir. Seçim yereldir ve her tıkta
-# kutu baştan kurulur; onay `chosen` olarak sekmeye çıkar, sekme SprintSystem.choose_type'a iletir.
-# Seçili kart yükselir ve sol kenarında işaret, sağ üstünde tik taşır.
+# MVP'den önce Ürün sekmesinde ürünün pazarı, türü ve adı seçilir. Seçim taslak olarak SprintSystem'e
+# yazılır (sayfa yeniden kurulunca kalır) ve her tıkta kutu baştan kurulur; onay `chosen` olarak sekmeye
+# çıkar, sekme SprintSystem.choose_type'a iletir. Seçili kart yükselir ve sol kenarında işaret, sağ üstünde
+# tik taşır.
 
 signal chosen(subtype: String, name: String)
 
@@ -16,6 +17,10 @@ var _suggest_i := 0
 
 
 func setup() -> void:
+	var draft: Dictionary = GameState.product.get("type_draft", {})
+	_market = draft.get("market", "")
+	_subtype = draft.get("subtype", "")
+	_name = draft.get("name", "")
 	UiFactory.clear(self)
 	add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	var intro := SprintUiShared.column(UiTokens.SPACE_M)
@@ -62,6 +67,7 @@ func setup() -> void:
 	suggest.pressed.connect(func() -> void:
 		_suggest_i += 1
 		_name = ProductCatalog.suggest_product_name(_suggest_i)
+		_save_draft()
 		edit.text = _name)
 	row.add_child(suggest)
 	add_child(row)
@@ -75,6 +81,7 @@ func setup() -> void:
 	# Elle yazılan ad seçimle birlikte saklanır; boş ad onayı kapatır.
 	edit.text_changed.connect(func(text: String) -> void:
 		_name = text
+		_save_draft()
 		confirm.disabled = text.strip_edges() == "")
 
 
@@ -82,6 +89,7 @@ func _pick_market(market: String) -> void:
 	if market != _market:
 		_market = market
 		_subtype = ""
+	_save_draft()
 	setup.call_deferred()
 
 
@@ -89,7 +97,12 @@ func _pick_type(subtype: String) -> void:
 	_subtype = subtype
 	if _name == "":
 		_name = ProductCatalog.suggest_product_name(_suggest_i)
+	_save_draft()
 	setup.call_deferred()
+
+
+func _save_draft() -> void:
+	SprintSystem.set_type_draft({"market": _market, "subtype": _subtype, "name": _name})
 
 
 ## Seçilebilir kart `host`'a eklenir: seçili olan yükselir, sol kenarında işaret ve sağ üstünde tik taşır;

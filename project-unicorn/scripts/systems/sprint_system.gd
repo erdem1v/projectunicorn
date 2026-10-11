@@ -47,7 +47,8 @@ static func daily_tick() -> void:
 
 # --- Tür -------------------------------------------------------------------------
 
-## Ürün sekmesinin tür seçimi: alt-tür, pazar, haber havuzu ve ad yazılır, Sprint 1 planlamada açılır.
+## Ürün sekmesinin tür seçimi: alt-tür, pazar, haber havuzu ve ad yazılır, Sprint 1 planlamada açılır;
+## seçicinin taslağı silinir.
 static func choose_type(subtype: String, name: String) -> void:
 	if is_typed():
 		return
@@ -57,9 +58,16 @@ static func choose_type(subtype: String, name: String) -> void:
 	if pool != "":
 		GameState.set_subgenre(pool)
 	GameState.set_flag("mvp_product_name", name)
+	GameState.product.erase("type_draft")
 	GameState.product.merge(new_state(GameState.day), true)
 	EventBus.sprint_planned.emit(1)
 	_changed()
+
+
+## Tür seçicinin yarım seçimi {market, subtype, name}: sayfa yeniden kurulunca (dil, palet, gelen kutusu)
+## seçici onu okur. Sinyalsiz: ad yazılırken sekme yeniden kurulmaz.
+static func set_type_draft(d: Dictionary) -> void:
+	GameState.product["type_draft"] = d
 
 
 ## Tür seçilmiş ürünün ilk durumu: Sprint 1 `day` gününde planlamada açılır. Saf; kayıt göçü de
