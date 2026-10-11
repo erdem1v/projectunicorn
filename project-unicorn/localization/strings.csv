@@ -2995,6 +2995,7 @@ EV_PRODUCT_SPRINT_TWO_PATHS_EXPIRED,"Karar verilmedi, iş bilinen yoldan sürdü
 EV_PRODUCT_SPRINT_LATE_TITLE,Sprint yetişmeyecek,The sprint will not make it
 EV_PRODUCT_SPRINT_LATE_CARRY,Sonraki sprinte devret,Carry it to the next sprint
 EV_PRODUCT_SPRINT_LATE_CRUNCH,"Her şeyi beklet, işi yetiştir",Put everything else on hold and finish it
+EV_PRODUCT_SPRINT_LATE_CRUNCH_LOCK,Gecelerle de bu sprintte bitmiyor,Not done this sprint even with the nights
 EV_PRODUCT_SPRINT_LATE_EXPIRED,"Karar verilmedi, kart sonraki sprinte devretti.","No decision came, so the card carried over to the next sprint."
 EV_PRODUCT_SPRINT_CONTRACTOR_TITLE,Dışarıdan destek,Outside help
 EV_PRODUCT_SPRINT_CONTRACTOR_HIRE,Serbest çalışan getir,Bring in a contractor

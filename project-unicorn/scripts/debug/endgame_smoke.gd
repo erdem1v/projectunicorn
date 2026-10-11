@@ -17958,9 +17958,10 @@ static func _case_promise_row_locked_when_no_room() -> String:
 ## product.sprint_late yalnız gerçekten geride kalan kartta açılır: sprintin kalan haftası bugünkü
 ## ekiple oynanır. Kurucuyla geliştirici ilk haftayı ilk karta verir, ikinci karta yalnız haftanın
 ## artanı düşer; ikinci hafta ikisi ona yetişir, kâğıt istenmez. Tek kurucunun 12 saatte ikinci
-## kartı yetişmez: kâğıt gelir ve fazla mesai satırı ekipsiz de açıktır.
+## kartı yetişmez: kâğıt gelir; kurucu öbür kartta olduğundan geceler de onu yetiştirmez ve fazla mesai
+## satırı kilitlidir.
 ## FALSİFİKASYON: sprint_late.json'un koşulundan urun.decision_card_late yaprağını sil → ilk sprintte
-## kâğıt istenir.
+## kâğıt istenir; crunch seçeneğinin requires yaprağını sil → fazla mesai satırı açılır.
 static func _case_sprint_late_only_when_behind() -> String:
 	_seed_sprint()
 	var rate: Variant = SprintCatalog.cfg("decision.rate")
@@ -17998,8 +17999,9 @@ static func _case_sprint_late_only_when_behind() -> String:
 			return "the solo founder's sprint asked about %s (%s), want sprint_late on %s" % [
 				asked, GameState.product.decision, behind]
 		var ev: GameEvent = EventGate.render("product.sprint_late")
-		if not _row_unlocked(ev, _row_with_verb(ev, "sprint_hours"), {}):
-			return "the overtime row is locked for a solo founder"
+		var row: int = _row_with_verb(ev, "sprint_hours")
+		if row < 0 or _row_unlocked(ev, row, {}):
+			return "the overtime row is missing or open while the solo founder works the other card"
 		return ""
 	var fail: String = run.call()
 	SprintCatalog._data.decision.rate = rate

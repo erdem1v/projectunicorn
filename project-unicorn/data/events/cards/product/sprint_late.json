@@ -35,6 +35,12 @@
     {
       "id": "crunch",
       "outcome_id": "crunched",
+      "requires": {
+        "seam": "urun.crunch_finishes",
+        "op": "==",
+        "value": true,
+        "reason": "EV_PRODUCT_SPRINT_LATE_CRUNCH_LOCK"
+      },
       "effects": [
         {
           "verb": "sprint_hours",
@@ -61,7 +67,10 @@
         "carry": "EV_PRODUCT_SPRINT_LATE_CARRY",
         "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH"
       },
-      "expire_note": "EV_PRODUCT_SPRINT_LATE_EXPIRED"
+      "expire_note": "EV_PRODUCT_SPRINT_LATE_EXPIRED",
+      "locked_reasons": {
+        "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH_LOCK"
+      }
     },
     "en": {
       "title": "EV_PRODUCT_SPRINT_LATE_TITLE",
@@ -76,7 +85,10 @@
         "carry": "EV_PRODUCT_SPRINT_LATE_CARRY",
         "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH"
       },
-      "expire_note": "EV_PRODUCT_SPRINT_LATE_EXPIRED"
+      "expire_note": "EV_PRODUCT_SPRINT_LATE_EXPIRED",
+      "locked_reasons": {
+        "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH_LOCK"
+      }
     }
   },
   "expires_weeks": 1,

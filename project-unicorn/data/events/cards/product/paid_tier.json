@@ -22,6 +22,11 @@
         "seam": "urun.weeks_since_launch",
         "op": ">=",
         "value": 1
+      },
+      {
+        "seam": "urun.paid_plan_set",
+        "op": "==",
+        "value": false
       }
     ]
   },
