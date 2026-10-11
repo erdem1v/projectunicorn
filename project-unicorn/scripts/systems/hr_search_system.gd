@@ -265,7 +265,7 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 
 	var level: int = clampi(int(file.get("level", HRConstants.LEVEL_JUNIOR)),
 		HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
-	# §10.3 aday kartı "ad, UNVAN, rol açıklaması" istiyor — unvan türetilir (§3).
+	# §10.3 aday kartı UNVAN gösterir; unvan türetilir (§3).
 	out["job_title"] = HRConstants.job_title(role_id, level) if HRConstants.is_employee_role(role_id) else role_id
 	out["commission"] = commission
 	out["hours"] = hours

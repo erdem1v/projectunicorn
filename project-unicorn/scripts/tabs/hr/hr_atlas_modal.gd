@@ -251,9 +251,10 @@ func _build_files_step() -> void:
 		&"PrimaryButtonDark", _on_hire_pressed if affordable else Callable()))
 
 
-## Aday dosyası (11b), köşesi kesik bir belge: künye ve seçim diski · yüz, ad, unvan · rol açıklaması ·
-## iki alan ve Liderlik · huy · esneyen boşluk (dosyalar eşit boyda) · maaş talebi · haftalık sprint puanı
-## (ürün tarafı rollerinde) · komisyon · devralınan mesai (sekizi aşan saatte) · runway.
+## Aday dosyası (11b), köşesi kesik bir belge: künye ve seçim diski · yüz, ad, unvan · iki alan ve Liderlik ·
+## huy · esneyen boşluk (dosyalar eşit boyda) · maaş talebi · haftalık sprint puanı (ürün tarafı rollerinde) ·
+## komisyon · devralınan mesai (sekizi aşan saatte) · runway. Rolün tanımı dosyada yok: oyuncu onu rol adımında
+## okudu, üç dosyada aynı cümle tekrar ederdi.
 func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	var pv: Dictionary = HRSearchSystem.preview_hire(index)
 	var role_id: String = String(file.get("role", ""))
@@ -282,14 +283,10 @@ func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	names.add_theme_constant_override("separation", 0)
 	names.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	names.add_child(UiFactory.make_label(cand_name, &"NameTitle"))
-	# §10.3: ad, UNVAN (§3 — seviye + rol adından türer), rol açıklaması.
+	# §10.3: ad, UNVAN (§3 — seviye + rol adından türer).
 	names.add_child(UiFactory.make_label(String(pv.get("job_title", HRConstants.role_label(role_id))), &"CondCaption"))
 	who.add_child(names)
 	col.add_child(spaced(who, UiTokens.SPACE_L))
-
-	var hint := UiFactory.make_label(HRConstants.role_phase_hint(role_id), &"MetaMuted")
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(spaced(hint, UiTokens.SPACE_L))
 
 	# İki alan ve Liderlik, aralarında ve üstte altta çizgi.
 	var skills := HBoxContainer.new()
