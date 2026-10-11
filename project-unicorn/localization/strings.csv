@@ -290,6 +290,13 @@ MENU_NEW_GAME,Yeni oyun,New game
 MENU_LOAD,Yükle,Load
 MENU_CREDITS,Jenerik,Credits
 MENU_CARD_LINE,Hafta {week} · Kasa {cash},Week {week} · Cash {cash}
+MENU_LAST_PLAYED,{when} oynandı,Played {when}
+FMT_AGO_MINUTES,{n} dakika önce,{n} minutes ago
+FMT_AGO_MINUTES_ONE,{n} dakika önce,{n} minute ago
+FMT_AGO_HOURS,{n} saat önce,{n} hours ago
+FMT_AGO_HOURS_ONE,{n} saat önce,{n} hour ago
+FMT_AGO_DAYS,{n} gün önce,{n} days ago
+FMT_AGO_DAYS_ONE,{n} gün önce,{n} day ago
 MENU_VERSION,{build} · Sürüm {version},{build} · Version {version}
 MENU_BUILD_DEMO,Demo,Demo
 MENU_BUILD_EA,Erken Erişim,Early Access
@@ -320,6 +327,10 @@ SAVE_META_MRR,MRR {amount},MRR {amount}
 SAVE_META_BACKUP,Yedekten,From backup
 SAVE_EMPTY,Henüz kayıt yok.,No saves yet.
 SAVE_LIST_HEADER,Kayıtlar,Saves
+SAVE_GROUP_BACKUPS,Otomatik yedekler ({n}),Autosaves ({n})
+SAVE_GROUP_LEGACY,Eski kayıtlar,Older saves
+SAVE_GROUP_COUNT,{n} kayıt,{n} saves
+SAVE_GROUP_COUNT_ONE,{n} kayıt,{n} save
 SAVE_DELETE,Sil,Delete
 SAVE_OVERWRITE_TITLE,Üzerine yazılsın mı?,Overwrite?
 SAVE_OVERWRITE_BODY,{label} kaydının yerini bu kayıt alır.,This save takes the place of {label}.

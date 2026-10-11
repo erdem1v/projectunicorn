@@ -8643,11 +8643,13 @@ static func _save_fingerprint(slot_id: String) -> String:
 	var payload: Dictionary = SaveManager.read_slot(slot_id)
 	if not bool(payload.get("ok", false)):
 		return ""
-	var state: Dictionary = payload["state"]
+	return _state_print(payload["state"])
+
+
+static func _state_print(state: Dictionary) -> String:
 	# Hız BİLEREK normalleştirilir: yükleme duraklamış döner (TimeManager.from_dict),
 	# yani ikinci kayıt ilkinden yalnız bu alanda ayrılır ve bu bir tasarım kararı.
-	var sys: Dictionary = state.get("systems", {}) as Dictionary
-	var t: Dictionary = sys.get("time", {}) as Dictionary
+	var t: Dictionary = state.systems.time
 	t["current_speed"] = 0
 	t["last_running_speed"] = 0
 	return JSON.stringify(state, "", true, true)
@@ -8945,15 +8947,79 @@ static func _case_autosave_writes_off_thread() -> String:
 	return done.call("")
 
 
-## The menu's boot: the first boot's language is Turkish for a Turkish Steam or system language and English for any
-## other, and Steam's answer beats the system's.
-## FALSIFICATION: read os_lang before steam_lang in Localization.detect_language and the third pair fails.
+## The menu's boot and the saves it offers. The first boot's language is Turkish for a Turkish Steam or system
+## language and English for any other, and Steam's answer beats the system's. A new run on a seed is the same state
+## after three weeks of an earlier run as on a clean slate, its id apart (the endings' latches and the sprint are
+## GameState's, so the print holds them). A run's quicksave and autosaves are its own: run B's four autosaves roll
+## over its own three and leave run A's files byte for byte; Continue is the newest save that opens, never a newer
+## file that cannot be read; the Load list holds the two runs apart. The saves are written to a folder of the case's
+## own.
+## FALSIFICATION: read os_lang before steam_lang in Localization.detect_language and the third pair fails; drop
+## RivalRegistry.reset() from reset_all_owners and run B starts on A's rivals; build _next_auto_slot_id's ids without
+## GameState.run_id and run B's third autosave rolls over run A's.
 static func _case_menu_state_machine() -> String:
 	for row in [["", "tr", "tr"], ["", "de", "en"], ["turkish", "en", "tr"], ["english", "tr", "en"]]:
 		var got: String = Localization.detect_language(row[0], row[1])
 		if got != row[2]:
 			return "detect_language(%s, %s) = %s, want %s" % [row[0], row[1], got, row[2]]
-	return ""
+
+	var dir := "user://smoke_menu_state/"
+	SaveManager._use_dir(dir)
+	var done := func(why: String) -> String:
+		for f in DirAccess.get_files_at(dir):
+			DirAccess.remove_absolute(dir + f)
+		DirAccess.remove_absolute(dir)
+		SaveManager._use_dir(SaveManager.SAVE_DIR)
+		return why
+	# Apart by a millisecond at least, so saved_msec orders them.
+	var autosave := func() -> bool:
+		OS.delay_msec(2)
+		return SaveManager.save_to_slot(SaveManager._next_auto_slot_id())
+	# The id is the clock's, so it is the one thing two runs on one seed do not share.
+	var run_print := func() -> String:
+		var state: Dictionary = SaveManager._payload().state
+		state.game_state.erase("run_id")
+		return _state_print(state)
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 7})
+	var run_a: String = GameState.run_id
+	var k0: String = run_print.call()
+	for i in TimeModel.ticks(3):
+		_sim_day()
+	if not SaveManager.quicksave() or not autosave.call():
+		return done.call("run A could not save (%s)" % SaveManager.cannot_save_reason_key())
+	var a_files: Dictionary = {}
+	for f in DirAccess.get_files_at(dir):
+		a_files[f] = FileAccess.get_file_as_bytes(dir + f)
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 7})
+	var run_b: String = GameState.run_id
+	if run_b == run_a:
+		return done.call("a second run kept the first run's id %s" % run_a)
+	if run_print.call() != k0:
+		return done.call("a new run on run A's seed after three weeks of A differs from a new run on a clean slate")
+	for i in 4:
+		if not autosave.call():
+			return done.call("run B's autosave %d failed (%s)" % [i + 1, SaveManager.cannot_save_reason_key()])
+	for f: String in a_files:
+		if FileAccess.get_file_as_bytes(dir + f) != a_files[f]:
+			return done.call("run B's autosaves changed run A's %s" % f)
+	var runs: Array = SaveManager.list_runs()
+	var shape: Array = runs.map(func(run: Dictionary) -> Array:
+		return [run.run_id, run.slots.size(), run.backups.size()])
+	if shape != [[run_b, 0, SaveManager.AUTO_SLOTS_PER_RUN], [run_a, 1, 1]]:
+		return done.call("the Load list is %s, want run B's three autosaves over run A's two saves" % str(shape))
+	if runs[0].backups[0].slot_id != "auto_%s_1" % run_b:
+		return done.call("run B's fourth autosave went to %s, not its oldest slot" % runs[0].backups[0].slot_id)
+	# A whole second on: the unreadable file sorts by its mtime, newer than every save.
+	OS.delay_msec(1001)
+	_put_text(dir + "manual_9.json", "{")
+	var rows: Array = SaveManager.list_slots()
+	var opens: Array = rows.filter(func(row: Dictionary) -> bool: return row.loadable)
+	if rows[0].slot_id != "manual_9" or opens[0].slot_id != "auto_%s_1" % run_b:
+		return done.call("Continue is %s with %s the newest file, want run B's newest autosave" % [
+			opens[0].slot_id, rows[0].slot_id])
+	return done.call("")
 
 
 static func _put_text(path: String, text: String) -> void:

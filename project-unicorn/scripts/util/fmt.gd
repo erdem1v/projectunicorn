@@ -73,6 +73,24 @@ static func date_line(d: Dictionary) -> String:
 	})
 
 
+## A real-world moment's date and time, in the locale's field order (TR 19.08.2026, EN 08/19/2026).
+static func stamp(unix: int) -> String:
+	var d: Dictionary = Time.get_datetime_dict_from_unix_time(unix)
+	return _t("SAVE_SLOT_TIMESTAMP").format({
+		"day": "%02d" % d.day, "month": "%02d" % d.month, "year": d.year,
+		"hour": "%02d" % d.hour, "minute": "%02d" % d.minute})
+
+
+## How long ago a real-world moment was ("2 hours ago"); from a week on, its stamp.
+static func ago(unix: int) -> String:
+	var s: int = int(Time.get_unix_time_from_system()) - unix
+	for unit in [["FMT_AGO_MINUTES", 60, 3600], ["FMT_AGO_HOURS", 3600, 86400], ["FMT_AGO_DAYS", 86400, 7 * 86400]]:
+		if s < unit[2]:
+			var n: int = maxi(1, s / unit[1])
+			return _t(count_key(unit[0], n)).format({"n": n})
+	return stamp(unix)
+
+
 # --- Numbers ----------------------------------------------------------------
 
 ## Thousands-grouped integer without a currency mark ("1.234.567" / "1,234,567").

@@ -5,7 +5,8 @@ extends Control
 # (@onready referansları ancak o an dolar); modal kendini `dismissed` ile bırakır.
 # process_mode = ALWAYS: tree paused iken de tıklanabilir.
 #
-# Kaydet modunda başta yeni kayıt yuvası (koşunun künyesiyle), altında kayıtlar. Liste boşken pencere
+# Kaydet modunda başta yeni kayıt yuvası (koşunun künyesiyle), altında yalnız bu koşunun kayıtları; Yükle her
+# şirketi kendi başlığı altında listeler, otomatik kayıtları bir anahtarın altında katlar. Liste boşken pencere
 # kısadır; kayıt varken tam boyunu tutar ve liste kayar. Okunamayan dosya listeden düşmez: gerekçesiyle,
 # yükleme aksiyonu kapalı görünür. Bir karar beklerken menüde Kaydet kapalıdır; Yükle penceresinde yükleme
 # kapalıdır (main._load_slot), başta karar şeridi gerekçesiyle ve karara dönüşüyle durur, silme açık kalır.
@@ -22,6 +23,7 @@ const FULL_H := 660.0
 const EMPTY_H := {"save": 420.0, "load": 340.0}
 const SLOT_H := 72.0
 const WELL := 40
+const GROUP_EMBLEM := 32.0
 
 var _mode: String = ""
 
@@ -50,21 +52,64 @@ func populate(mode: String) -> void:
 
 func _rebuild() -> void:
 	UiFactory.clear(_list)
-	var slots: Array = SaveManager.list_slots()
+	var runs: Array = SaveManager.list_runs()
 	if _mode == MODE_SAVE:
+		runs = runs.filter(func(run: Dictionary) -> bool: return run.run_id == GameState.run_id)
 		_list.add_child(_new_slot())
-		if not slots.is_empty():
+		if not runs.is_empty():
 			var head := SprintUiShared.section("SAVE_LIST_HEADER")
 			_list.add_child(SprintUiShared.pad(head, Vector4i(0, UiTokens.SPACE_M, 0, 0)))
-	for slot in slots:
-		_list.add_child(_slot_row(slot))
-	if slots.is_empty():
+	for run: Dictionary in runs:
+		if _mode != MODE_SAVE:
+			_list.add_child(_group_head(run))
+		for slot in run.slots:
+			_list.add_child(_slot_row(slot))
+		if not run.backups.is_empty():
+			_list.add_child(_backups(run.backups))
+	if runs.is_empty():
 		var glyph: String = "res://assets/icons/util/%s.svg" % ("save" if _mode == MODE_SAVE else "load")
 		_list.add_child(SprintUiShared.pad(UiFactory.D_empty(glyph, tr("SAVE_EMPTY"), &"NoteMuted"),
 			Vector4i(0, UiTokens.SPACE_4XL, 0, UiTokens.SPACE_4XL)))
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if slots.is_empty() \
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if runs.is_empty() \
 		else ScrollContainer.SCROLL_MODE_AUTO
-	_panel.custom_minimum_size.y = EMPTY_H[_mode] if slots.is_empty() else FULL_H
+	_panel.custom_minimum_size.y = EMPTY_H[_mode] if runs.is_empty() else FULL_H
+
+
+## A company over its saves: its emblem and name, when it was last played (saves from before runs had ids say so
+## instead) and how many saves it holds.
+func _group_head(run: Dictionary) -> MarginContainer:
+	var head := SprintUiShared.box(UiTokens.SPACE_M)
+	var emblem := LogoEmblem.new(GROUP_EMBLEM)
+	emblem.configure(run.logo_style, run.company_name)
+	head.add_child(emblem)
+	head.add_child(UiFactory.make_label(run.company_name, &"DialogTitle"))
+	var when := UiFactory.make_label(tr("SAVE_GROUP_LEGACY") if run.run_id == "" else tr("MENU_LAST_PLAYED").format(
+		{"when": Fmt.ago(run.newest_msec / 1000)}), &"MetaMuted")
+	when.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var n: int = run.slots.size() + run.backups.size()
+	var count := UiFactory.make_label(tr(Fmt.count_key("SAVE_GROUP_COUNT", n)).format({"n": n}), &"MetaMuted")
+	for line: Label in [when, count]:
+		line.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		head.add_child(line)
+	return SprintUiShared.pad(head, Vector4i(0, UiTokens.SPACE_XL if _list.get_child_count() > 0 else 0, 0, 0))
+
+
+## A company's autosaves, folded under the key that opens them.
+func _backups(rows: Array) -> VBoxContainer:
+	var box := SprintUiShared.column(UiTokens.SPACE_M)
+	var key := Button.new()
+	key.theme_type_variation = &"FloatLink"
+	key.text = tr("SAVE_GROUP_BACKUPS").format({"n": rows.size()})
+	key.toggle_mode = true
+	key.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	box.add_child(key)
+	var list := SprintUiShared.column(UiTokens.SPACE_M)
+	list.visible = false
+	for slot in rows:
+		list.add_child(_slot_row(slot))
+	key.toggled.connect(list.set_visible)
+	box.add_child(list)
+	return box
 
 
 ## The new save's slot, dashed: this run's line and the one amber key.
@@ -92,7 +137,7 @@ func _slot_row(slot: Dictionary) -> PanelContainer:
 			EventGate.active_id() != "" or not loadable]
 	var well: Control = _well("res://assets/icons/util/save.svg", UiTokens.D_INK_3) if loadable \
 		else _well("res://assets/icons/util/warn.svg", UiTokens.D_warn())
-	return _slot(label, _stamp(int(slot.unix_time)), _meta_line(slot), well, &"DealDoc", [delete, action])
+	return _slot(label, Fmt.stamp(int(slot.unix_time)), _meta_line(slot), well, &"DealDoc", [delete, action])
 
 
 ## A save's document: its well, its name with its time on the right over its line, then its keys, each
@@ -148,6 +193,7 @@ func _meta_line(slot: Dictionary) -> String:
 		return tr(String(slot.get("error_key", "SAVE_ERR_CORRUPT")))
 	var meta: Dictionary = slot.meta
 	var parts := PackedStringArray([
+		String(meta.company_name),
 		tr("SAVE_META_DAY").format({"date": Fmt.date_line(GameState.get_date_dict(int(meta.day)))}),
 		tr(GameState.PHASE_KEYS[int(meta.phase) - 1]),
 		tr("SAVE_META_CASH").format({"amount": Fmt.money_exact(int(meta.cash))}),
@@ -156,16 +202,6 @@ func _meta_line(slot: Dictionary) -> String:
 	if bool(slot.get("from_backup", false)):
 		parts.append(tr("SAVE_META_BACKUP"))
 	return " · ".join(parts)
-
-
-func _stamp(unix_time: int) -> String:
-	if unix_time <= 0:
-		return ""
-	# Gerçek dünya saati; alan sırası locale'e aittir (TR 19.08.2026, EN 08/19/2026).
-	var d: Dictionary = Time.get_datetime_dict_from_unix_time(unix_time)
-	return tr("SAVE_SLOT_TIMESTAMP").format({
-		"day": "%02d" % d.day, "month": "%02d" % d.month, "year": d.year,
-		"hour": "%02d" % d.hour, "minute": "%02d" % d.minute})
 
 
 # --- Aksiyonlar ---

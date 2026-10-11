@@ -23,9 +23,9 @@ const SCHEMA_VERSION := 15
 const MIN_LOADABLE_VERSION := 10
 const SAVE_DIR := "user://saves/"
 
-# Slot ids are also filenames on disk, i.e. a compatibility surface.
-const QUICK_SLOT_ID := "quick"
-const AUTO_SLOT_IDS: Array[String] = ["auto_1", "auto_2", "auto_3"]
+# Slot ids are also filenames on disk, i.e. a compatibility surface: quick_<run>, auto_<run>_<n> and manual_<n>. The
+# run-less quick and auto_<n> of older saves are read and never written.
+const AUTO_SLOTS_PER_RUN := 3                              # [WORKING]
 const MANUAL_SLOT_PREFIX := "manual_"
 
 const SETTING_AUTOSAVE_FREQUENCY := "autosave_frequency"
@@ -35,6 +35,8 @@ const AUTOSAVE_FREQUENCIES: Array[String] = ["off", "weekly", "monthly"]
 # skipped write stays pending and lands at the next safe boundary: coalesced, never lost.
 const AUTOSAVE_MIN_REAL_SECONDS := 10                      # [WORKING]
 
+# The folder the slots live in; a harness points it at its own (_use_dir).
+var _dir: String = SAVE_DIR
 # Smoke, probe and screenshot harnesses drive hundreds of ticks in seconds; they must never
 # write into the player's slots.
 var _autosave_enabled: bool = true
@@ -111,14 +113,28 @@ func list_slots() -> Array:
 	# vanishes from the list reads as the game having eaten it.
 	_join_write()
 	var rows: Array = []
-	var dir := DirAccess.open(SAVE_DIR)
+	var dir := DirAccess.open(_dir)
 	if dir == null:
 		return rows
 	for filename in dir.get_files():
 		if filename.ends_with(".json"):
 			rows.append(_slot_row(filename.trim_suffix(".json")))
-	rows.sort_custom(func(a, b): return int(a.get("unix_time", 0)) > int(b.get("unix_time", 0)))
+	rows.sort_custom(func(a, b): return a.meta.saved_msec > b.meta.saved_msec \
+		or a.meta.saved_msec == b.meta.saved_msec and a.meta.day > b.meta.day)
 	return rows
+
+
+## list_slots by run, the newest run first: {run_id, company_name, logo_style, newest_msec, slots, backups}, the
+## backups being its autosaves. Saves from before run ids group by their company name.
+func list_runs() -> Array:
+	var runs: Dictionary = {}
+	for row: Dictionary in list_slots():
+		var key: String = row.meta.run_id if row.meta.run_id != "" else "|" + row.meta.company_name
+		if not runs.has(key):
+			runs[key] = {"run_id": row.meta.run_id, "company_name": row.meta.company_name,
+				"logo_style": row.meta.logo_style, "newest_msec": row.meta.saved_msec, "slots": [], "backups": []}
+		runs[key]["backups" if row.slot_id.begins_with("auto_") else "slots"].append(row)
+	return runs.values()
 
 
 # ============================================================================
@@ -209,8 +225,12 @@ func _payload() -> Dictionary:
 	}
 
 
+func quick_slot_id() -> String:
+	return "quick_" + GameState.run_id
+
+
 func quicksave() -> bool:
-	return save_to_slot(QUICK_SLOT_ID)
+	return save_to_slot(quick_slot_id())
 
 
 func delete_slot(slot_id: String) -> bool:
@@ -227,11 +247,15 @@ func build_meta() -> Dictionary:
 	# plain int; formatting it here would freeze one locale into the file.
 	return {
 		"company_name": GameState.company_name,
+		"run_id": GameState.run_id,
+		"logo_style": GameState.logo_style,
 		"day": GameState.day,
 		"phase": GameState.phase,
 		"cash": GameState.cash,
 		"mrr": GameState.mrr,
 		"unix_time": int(Time.get_unix_time_from_system()),
+		# unix_time has whole seconds; two saves within one still sort by this.
+		"saved_msec": int(Time.get_unix_time_from_system() * 1000),
 		"schema_version": SCHEMA_VERSION,
 		"game_version": _game_version(),
 	}
@@ -423,17 +447,18 @@ func _join_write() -> void:
 		_write_task = -1
 
 
+## Rolling AUTO_SLOTS_PER_RUN per run: a missing slot first, else this run's oldest by saved_msec (a file's mtime has
+## whole seconds). Another run's autosaves are never overwritten.
 func _next_auto_slot_id() -> String:
-	# Rolling three: overwrite the oldest (a missing file counts as oldest).
-	var oldest_id: String = AUTO_SLOT_IDS[0]
-	var oldest_time: int = 1 << 62
-	for sid in AUTO_SLOT_IDS:
-		var path: String = _path_for(sid)
-		if not FileAccess.file_exists(path):
+	var oldest_id: String = ""
+	var oldest_msec: int = 1 << 62
+	for n in range(1, AUTO_SLOTS_PER_RUN + 1):
+		var sid: String = "auto_%s_%d" % [GameState.run_id, n]
+		if not FileAccess.file_exists(_path_for(sid)):
 			return sid
-		var t: int = int(FileAccess.get_modified_time(path))
-		if t < oldest_time:
-			oldest_time = t
+		var msec: int = _slot_row(sid).meta.saved_msec
+		if msec < oldest_msec:
+			oldest_msec = msec
 			oldest_id = sid
 	return oldest_id
 
@@ -456,7 +481,13 @@ static func _is_harness_arg(arg: String) -> bool:
 # ============================================================================
 
 func _path_for(slot_id: String) -> String:
-	return "%s%s.json" % [SAVE_DIR, slot_id]
+	return "%s%s.json" % [_dir, slot_id]
+
+
+## Debug seam: the slots live in `path` until it is pointed back at SAVE_DIR.
+func _use_dir(path: String) -> void:
+	_dir = path
+	DirAccess.make_dir_recursive_absolute(path)
 
 
 func _write_atomic(path: String, payload: Dictionary) -> bool:
@@ -525,6 +556,10 @@ func _slot_row(slot_id: String) -> Dictionary:
 		"unix_time": unix_time,
 		"from_backup": bool(read.get("from_backup", false)),
 		"meta": {
+			"company_name": String(meta.get("company_name", "")),
+			"run_id": String(meta.get("run_id", "")),
+			"logo_style": String(meta.get("logo_style", "")),
+			"saved_msec": int(meta.get("saved_msec", unix_time * 1000)),
 			"day": int(meta.get("day", 0)),
 			"phase": int(meta.get("phase", 1)),
 			"cash": int(meta.get("cash", 0)),
@@ -533,17 +568,19 @@ func _slot_row(slot_id: String) -> Dictionary:
 	}
 
 
+## An id's kind is its first part and its number its last: quick[_<run>], auto[_<run>]_<n>, manual_<n>.
 func _label_for(slot_id: String) -> String:
-	if slot_id == QUICK_SLOT_ID:
-		return tr("SAVE_QUICK_SLOT")
-	if slot_id in AUTO_SLOT_IDS:
-		return tr("SAVE_AUTO_SLOT").format({"n": AUTO_SLOT_IDS.find(slot_id) + 1})
-	return tr("SAVE_MANUAL_SLOT").format({"n": slot_id.trim_prefix(MANUAL_SLOT_PREFIX).to_int()})
+	var parts: PackedStringArray = slot_id.split("_")
+	match parts[0]:
+		"quick":
+			return tr("SAVE_QUICK_SLOT")
+		"auto":
+			return tr("SAVE_AUTO_SLOT").format({"n": parts[-1].to_int()})
+	return tr("SAVE_MANUAL_SLOT").format({"n": parts[-1].to_int()})
 
 
 func _game_version() -> String:
-	# project.godot has no version key yet; stored anyway so saves gain it without a schema bump.
-	return String(ProjectSettings.get_setting("application/config/version", "0.0.0-dev"))  # [WORKING]
+	return String(ProjectSettings.get_setting("application/config/version"))
 
 
 # ============================================================================

@@ -8,6 +8,9 @@ extends Node
 const START_DATE := {"year": 2026, "month": 1, "day": 1}
 
 # --- Run identity ---
+# Which run a save belongs to: its quick and autosave slots are its own, and the Load list groups by it. "" only
+# before the first run.
+var run_id: String = ""
 var company_name: String = "Unicorn Inc."
 var origin: String = "self_made"      # "self_made" | "heir" | "corporate_refugee" (demo: self_made only)
 var subgenre: String = "ai"           # "ai" | "saas" | "social" (demo: ai|saas only)
@@ -763,6 +766,7 @@ func initialize_run(payload: Dictionary) -> void:
 	var is_restore: bool = not restore_block.is_empty()
 
 	# Identity
+	run_id = ""
 	origin = payload.get("origin_id", "self_made")
 	subgenre = payload.get("subgenre_id", "ai")   # the committed product overwrites it later
 	company_name = payload.get("company_name", "Unicorn Inc.")
@@ -888,6 +892,10 @@ func initialize_run(payload: Dictionary) -> void:
 		# A save written before the Seed kept its post-money carries the two numbers it comes from.
 		if seed_post_money_m == 0.0 and run_seed_amount > 0 and run_seed_equity_pct > 0:
 			seed_post_money_m = post_money_m(run_seed_amount, run_seed_equity_pct)
+	# A fresh run, or a save from before run ids, takes a new id; the old save's slots stay with the older saves. The
+	# clock, not RngStreams: the id draws nothing from the run's sequences.
+	if run_id == "":
+		run_id = String.num_int64(int(Time.get_unix_time_from_system() * 1000) + Time.get_ticks_usec(), 36)
 
 	# 0 is ABSENT, not a seed: a literal 0 would pin every run to one sequence.
 	var seed_in: int = int(payload.get("seed", 0))

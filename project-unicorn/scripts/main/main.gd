@@ -1921,7 +1921,7 @@ func _seed_rnd(week: int, note := true) -> void:
 #   save_empty · save · save_overwrite (overwriting the quicksave asked) · load_empty · load · load_gate (a decision
 #   waiting) · load_delete (deleting Kayıt 1 asked) · confirm (the seed pitch) · confirm3 (quitting over the menu
 #   with weeks unsaved) · confirm3_gate (the same, a decision waiting) · f5_gate (F5 refused while a decision waits).
-# The save and load kinds write or delete four real saves (_shot_saves): run them with a private APPDATA.
+# The save and load kinds write or delete six real saves (_shot_saves): run them with a private APPDATA.
 func _run_modal_shot(kind: String) -> void:
 	_begin_shot()
 	if (kind.begins_with("save") or kind.begins_with("load")) and _saves_refused():
@@ -1960,8 +1960,10 @@ func _run_modal_shot(kind: String) -> void:
 			EventBus.save_load_requested.emit("load")
 			if kind == "load_delete":
 				await get_tree().process_frame
-				_save_load_modal.find_children("*", "Button", true, false).filter(
-					func(b: Button) -> bool: return b.text == tr("SAVE_DELETE"))[2].pressed.emit()
+				var save_1: String = tr("SAVE_MANUAL_SLOT").format({"n": 1})
+				_save_load_modal.find_children("*", "Button", true, false).filter(func(b: Button) -> bool:
+					return b.text == tr("SAVE_DELETE") and b.get_parent().find_children("*", "Label", true, false).any(
+						func(l: Label) -> bool: return l.text == save_1))[0].pressed.emit()
 		"confirm":
 			EventBus.confirm_requested.emit({
 				"title": tr("SEED_PITCH_CONFIRM_TITLE"),
@@ -2016,23 +2018,35 @@ func _shot_open_list(body: String, index: int, hover: int) -> void:
 	option.get_popup().set_focused_item(hover)
 
 
-## The mockups' four saves, newest first, written for a full list and deleted for an empty one: this run's quicksave
-## and autosave, another run's Kayıt 1 (week 23, the Series A, $24.000 cash and $6,4K MRR) and a Kayıt 2 too old to
-## open. Their meta is set on the written files.
+## The mockups' saves, newest first, written for a full list and deleted for an empty one: this run's quicksave and
+## two autosaves, then PromptPilot's from before run ids (their meta carries no run_id, logo_style or saved_msec):
+## Kayıt 1 (week 23, the Series A, $24.000 cash and $6,4K MRR), a Kayıt 2 too old to open and a Kayıt 3 that cannot
+## be read. Their meta is set on the written files.
 func _shot_saves(full: bool) -> void:
+	# One run id on every shot, so a rerun writes over the same files.
+	GameState.run_id = "unicorn"
 	var now: int = int(Time.get_unix_time_from_system())
-	for row in [["quick", 0, {}], ["auto_1", 660, {}],
-			["manual_1", 224880, {"day": 23, "phase": 3, "cash": 24000, "mrr": 6400}], ["manual_2", 1532220, {}]]:
+	var older := {"company_name": "PromptPilot"}
+	for row in [[SaveManager.quick_slot_id(), 0, {}], ["auto_%s_1" % GameState.run_id, 660, {}],
+			["auto_%s_2" % GameState.run_id, 2040, {}],
+			["manual_1", 224880, older.merged({"day": 23, "phase": 3, "cash": 24000, "mrr": 6400})],
+			["manual_2", 1532220, older], ["manual_3", 1900000, older]]:
 		if not full:
 			SaveManager.delete_slot(row[0])
 			continue
 		SaveManager.save_to_slot(row[0])
-		var path: String = SaveManager.SAVE_DIR + row[0] + ".json"
+		var path: String = SaveManager._path_for(row[0])
 		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
 		data.meta.merge(row[2], true)
 		data.meta.unix_time = now - int(row[1])
+		data.meta.saved_msec = data.meta.unix_time * 1000
+		if row[0].begins_with("manual_"):
+			for key in ["run_id", "logo_style", "saved_msec"]:
+				data.meta.erase(key)
 		if row[0] == "manual_2":
 			data.schema_version = SaveManager.MIN_LOADABLE_VERSION - 1
+		if row[0] == "manual_3":
+			data.erase("state")
 		FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(data, "\t", false))
 
 
@@ -2050,7 +2064,8 @@ const MENU_SHOTS := ["empty", "continue", "first_frame", "godot_card", "load", "
 	"plate", "live"]
 const MENU_SHOT_PRESS := {"load": "LOAD", "settings": "SETTINGS", "credits": "CREDITS", "licenses": "CREDITS"}
 
-## --menu-shot=<kind>: the boot as the player meets it. continue and load stand on the modal shots' fixture saves;
+## --menu-shot=<kind>: the boot as the player meets it. continue and load stand on the modal shots' fixture saves,
+## written to their own folder, the load window with its autosaves open;
 ## first_frame is the menu's first drawn frame, under its cover; godot_card frames the card, then ui_accept and the
 ## menu two frames on. live waits for the live scene to fade in; every other kind stands on the plate (plate itself,
 ## bare), the live scene arriving at no fixed frame. Prints the MENU line of the frame. bake_plate:<office>:<HHMM> draws
@@ -2073,6 +2088,7 @@ func _run_menu_shot(kind: String) -> void:
 		await get_tree().create_timer(0.2).timeout
 	if kind in ["continue", "load"]:
 		_seed_theme_surface()
+		SaveManager._use_dir("user://shot_menu/")
 		_shot_saves(true)
 	if kind == "godot_card":
 		_mount_godot_card()
@@ -2095,11 +2111,15 @@ func _run_menu_shot(kind: String) -> void:
 	if kind in MENU_SHOT_PRESS:
 		_menu.items[MENU_SHOT_PRESS[kind]].pressed.emit()
 		await get_tree().process_frame
+	if kind == "load":
+		for fold: Button in _menu.find_children("*", "Button", true, false).filter(func(b: Button) -> bool:
+				return b.toggle_mode):
+			fold.button_pressed = true
 	if kind == "licenses":
 		(_menu.find_child("LicensesBtn", true, false) as Button).pressed.emit()
 	var d: Dictionary = _dbg_menu_digest()
-	print("MENU|state=%s|focus=%s|continue=%s|paused=%d|joy_ui=%d" % [d.state, d.focus, _menu.items.CONTINUE.slot_id,
-		int(d.paused), int(InputMap.action_get_events("ui_down").any(func(e: InputEvent) -> bool: return e is InputEventJoypadButton))])
+	print("MENU|state=%s|focus=%s|continue=%s|groups=%d|paused=%d|joy_ui=%d" % [d.state, d.focus,
+		_menu.items.CONTINUE.slot_id, SaveManager.list_runs().size(), int(d.paused), int(InputMap.action_get_events("ui_down").any(func(e: InputEvent) -> bool: return e is InputEventJoypadButton))])
 	if kind == "first_frame":
 		_save_shot("menu_shot_first_frame")
 		get_tree().quit()
@@ -3943,7 +3963,7 @@ func _on_quicksave_requested() -> void:
 
 ## F9 says it loaded on the shell it remounted.
 func _on_quickload_requested() -> void:
-	if _shell_mounted and await _load_slot(SaveManager.QUICK_SLOT_ID):
+	if _shell_mounted and await _load_slot(SaveManager.quick_slot_id()):
 		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_LOADED"), _save_when("SAVE_TOAST_LOADED_WHEN"),
 			LOADED_GLYPH, UiTokens.D_pos())
 
