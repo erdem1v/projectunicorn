@@ -83,9 +83,13 @@ static func desk() -> Array:
 		if String(p.event_id) == active and p.context == ctx:
 			continue
 		out.append(_paper_item(p).merged({"grow": grow}))
-	if GameState.phase_gate_ready and GameState.pending_next_phase > 0:
-		out.append(_reminder("gate", "DESK_PAPER_TAG_GATE", frank(),
-			TranslationServer.translate("DESK_PAPER_GATE_TITLE"), "finance"))
+	for gate in PhaseGateSystem.GATES:
+		# The gate's card speaks for the open door while it is up or queued. The reminder covers the weeks the card
+		# waits (a shutter, a declined Series A) and leads nowhere: no window answers the gate.
+		if GameState.phase_gate_ready and int(gate.to) == GameState.pending_next_phase \
+				and EventGate.instances_of(String(gate.card_id)) == 0:
+			out.append(_reminder("gate", "DESK_PAPER_TAG_GATE", frank(),
+				TranslationServer.translate("DESK_PAPER_GATE_TITLE"), ""))
 	var sheets: Array = GameState.active_sheets
 	if not sheets.is_empty():
 		var sheet: TermSheet = sheets[0]

@@ -118,7 +118,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_ENTER, KEY_KP_ENTER:
 			var it: Dictionary = _find(_selected)
 			if it.get("kind", "") == "paper" and EventGate.active_id() == "":
-				EventGate.open_paper(String(it.key))
+				_pane.open_paper(String(it.key))
 			elif not _pane.on_key(key.keycode):
 				return
 		KEY_LEFT, KEY_RIGHT:

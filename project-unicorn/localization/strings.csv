@@ -155,6 +155,7 @@ DESK_PAPER_SHEET_TITLE,"Yatırım teklifi masada, son {weeks} hafta","Offer on t
 DESK_PAPER_SHEET_TITLE_ONE,"Yatırım teklifi masada, son hafta","Offer on the table, final week"
 DESK_PAPER_SHEETS_TITLE,{n} yatırım teklifi masada,{n} offers on the table
 DESK_PAPER_ATLAS_TITLE,{n} aday dosyası hazır,{n} candidate files ready
+PAPER_GONE_TOAST,Bu kâğıdın konusu kalmadı,That paper no longer applies
 FIN_GOAL_P1_LABEL,Traction'a:,To Traction:
 FIN_GOAL_P1_META,Sürüm + ilk müşteri + ilk gelir,Ship + first customer + first revenue
 FIN_GOAL_P2_LABEL,Series A'ya:,To Series A:

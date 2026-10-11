@@ -500,9 +500,17 @@ func _paper_bar() -> PanelContainer:
 	go.focus_mode = Control.FOCUS_NONE
 	go.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	go.disabled = blocked or _mode == "history"
-	go.pressed.connect(func() -> void: EventGate.open_paper(String(_item.key)))
+	go.pressed.connect(open_paper.bind(String(_item.key)))
 	row.add_child(go)
 	return bar
+
+
+## Opens the paper `key` off the desk (Cevapla, and Enter on the list). The world may have moved on while it
+## waited: the gate then drops it, and a toast says so.
+func open_paper(key: String) -> void:
+	if not EventGate.open_paper(key):
+		get_tree().call_group(&"toast", &"show_toast", tr("PAPER_GONE_TOAST"), "",
+			preload("res://assets/icons/util/close.svg"), UiTokens.D_ACCENT)
 
 
 ## An opened paper goes back on the desk with Esc, its clock still running.
@@ -715,6 +723,8 @@ func _record() -> void:
 		_col.add_child(_facts([[tr("HR_COL_MORALE"), str(int(_item.morale))]]))
 		_col.add_child(UiFactory.make_label(String(_item.line), &"DataText"))
 	var request: String = String(_item.get("request", ""))
+	if request == "" and _item.tab == "":
+		return
 	var go: Callable = _attend.bind(request) if request != "" else _go.bind(String(_item.tab), String(_item.subpage))
 	if _item.has("employee"):
 		go = func() -> void: get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
