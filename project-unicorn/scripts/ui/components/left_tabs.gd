@@ -20,7 +20,8 @@ extends Panel
 #   finance  1 when runway is under FinanceSystem's first runway alert threshold
 #   events   the decisions queued and the papers on the desk; while a decision waits, the amber
 #            gate dot instead
-#   rnd      RnDSystem.attention_count() (frozen research + unread report)
+#   rnd      RnDSystem.attention_count() (frozen research + unread report), and one for the tree v1.0
+#            opens until Ar-Ge is opened (this session only, never saved)
 
 const WIDTH := 184.0
 const WIDTH_ICONS := 64.0
@@ -53,6 +54,7 @@ const LOCK_ICON := preload("res://assets/icons/util/lock.svg")
 
 var current_tab_idx: int = -1  # -1 = hiçbir sekme açık değil, pencere yok
 var _hr_danger := false        # someone on the team may leave: Ekip's count is red
+var _rnd_new := false          # v1.0 shipped and Ar-Ge not opened since: one more on its count
 
 
 func _ready() -> void:
@@ -124,8 +126,8 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_paint)
 	EventBus.language_changed.connect(_paint.unbind(1))
 	EventBus.palette_changed.connect(_paint.unbind(1))
-	# v1.0 opens the tabs gated "live".
-	EventBus.version_shipped.connect(_paint.unbind(1))
+	# v1.0 opens the tabs gated "live" and Ar-Ge's tree.
+	EventBus.version_shipped.connect(_on_version_shipped)
 	_paint()
 
 
@@ -240,6 +242,16 @@ func _on_tab_button(idx: int) -> void:
 
 func _on_tab_changed(tab_id: String) -> void:
 	current_tab_idx = _index_of(tab_id)
+	if tab_id == "rnd":
+		_rnd_new = false
+		_refresh_rnd_badge()
+	_paint()
+
+
+func _on_version_shipped(version: int) -> void:
+	if version == 1:
+		_rnd_new = true
+		_refresh_rnd_badge()
 	_paint()
 
 
@@ -307,7 +319,7 @@ func _refresh_rnd_badge() -> void:
 	# Ar-Ge §5.6.2: donmuş araştırma okunmamış raporla toplanır. Koşan araştırma sayılmaz: Ar-Ge
 	# talep etmez. Ağaç açılmadan sayılacak bir şey olmaması tesadüftür; koruma o yüzden açıkça
 	# yazılı.
-	_set_badge_count("rnd", RnDSystem.attention_count() if RnDSystem.tree_open() else 0)
+	_set_badge_count("rnd", RnDSystem.attention_count() + int(_rnd_new) if RnDSystem.tree_open() else 0)
 
 
 func _set_badge_count(tab_id: String, count: int) -> void:

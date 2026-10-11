@@ -156,7 +156,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `version_shipped` | `version: int` | main · sprint_system | 3 | 3 | rnd_tab · left_tabs · top_bar · EvSignals (card trigger) |
+| `version_shipped` | `version: int` | sprint_system | 2 | 3 | rnd_tab · left_tabs · top_bar · EvSignals (card trigger) |
 | `fix_run_started` | `confirmed: int` | support_system | 1 | 0 | — |
 | `fix_run_finished` | `shipped: int, remaining: int` | support_system | 1 | 0 | — |
 | `bug_confirmed` | `total_confirmed: int` | product_read | 1 | 0 | — |

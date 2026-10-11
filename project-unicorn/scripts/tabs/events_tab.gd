@@ -90,6 +90,12 @@ func on_escape() -> bool:
 	return _pane.on_escape()
 
 
+## Its window frees the page only at the frame's end: the page stops being the inbox now, so a card shown later in
+## this frame opens a new one (Inbox.show).
+func on_page_closing() -> void:
+	remove_from_group(INBOX.GROUP)
+
+
 # --- Harness relays (--inbox-shot) ---
 
 func filter_for_shot(filter: int) -> void:

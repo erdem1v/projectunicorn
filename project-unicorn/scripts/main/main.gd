@@ -1108,9 +1108,9 @@ func _seed_goal(state: String) -> void:
 # and the founder seated, sitting and looking as at a meeting's start; cast (meet only) = the founder
 # walks in from the lift (a frame every CAST_WALK_EVERY, _cast_NN), the table at rest (_NN_rest),
 # then close up the lead speaking (_NN_speak) and each gesture at its middle (_NN_<gesture>).
-# untyped, cheque and v1 open on the goal lists' week 1 (_seed_goal), not the theme seed: untyped before a type is
-# picked; cheque the type picked (_01), then the first sprint started (_02); v1 the sprint running, then v1.0 shipped
-# (_01) and Ar-Ge opened (_02).
+# untyped and cheque open on the goal lists' week 1 (_seed_goal), not the theme seed: untyped before a type is
+# picked; cheque the type picked (_01), then the first sprint started (_02). v1 is the founder alone on the MVP gate
+# (_seed_product_live's gate), v1.0 published (_01), then Ar-Ge opened (_02).
 # card_ishani / card_home (city only) = the company still in the flat, İş hanı's / the flat's card
 # open; card_tick (city only) = Plaza's card open through one daily tick: a _before frame, and an
 # OFFICECARD line with the cash reading the card draws before and after.
@@ -1124,11 +1124,13 @@ func _run_office_shot(spec: String) -> void:
 	var hour: int = int(parts[1])
 	var extra: String = parts[2] if parts.size() > 2 else ""
 	_begin_shot()
-	var goal: String = {"untyped": "untyped", "cheque": "typed", "v1": "cheque"}.get(extra, "")
-	if goal == "":
-		_seed_theme_surface()
-	else:
-		_seed_goal(goal)
+	match extra:
+		"untyped": _seed_goal("untyped")
+		"cheque": _seed_goal("typed")
+		"v1":
+			_seed_run_reproducible()
+			_seed_product_live("gate")
+		_: _seed_theme_surface()
 	EventBus.speed_change_requested.emit(0)
 	# Debug path: the shot writes the office straight past OfficeSystem. The map and the meeting
 	# room are no office: the company sits in a real one, which the map's pin and chips read.
@@ -1158,10 +1160,8 @@ func _run_office_shot(spec: String) -> void:
 			await _shot_step("office_shot_%s_%02d_cheque" % [office_id, hour], func() -> void: SprintSystem.start())
 			return
 		"v1":
-			# v1.0 without playing the sprint out: the two flags the screens read, then the release's signal.
-			GameState.set_flag("mvp_shipped", true)
-			GameState.set_flag("mvp_version", 1)
-			EventBus.version_shipped.emit(1)
+			# The gate's Yayınla once the shell is up: the rail hears v1.0 as in the game.
+			SprintSystem.publish()
 			await _shot_step("office_shot_%s_%02d_v1" % [office_id, hour], EventBus.tab_changed.emit.bind("rnd"))
 			return
 		"card":
