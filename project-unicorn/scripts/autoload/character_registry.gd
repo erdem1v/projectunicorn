@@ -12,6 +12,17 @@ extends Node
 var _characters: Dictionary = {}  # id (String) -> Character
 
 
+func _ready() -> void:
+	EventBus.language_changed.connect(_on_language_changed)
+
+
+## Adsız bırakılan kurucunun adı rolüdür ve ekrandaki dili izler. Menüde koşu yoktur, kurucu da.
+func _on_language_changed(_locale: String) -> void:
+	var founder: Character = get_founder()
+	if GameState.founder_name_default and founder != null:
+		founder.character_name = tr("HR_ROLE_FOUNDER")
+
+
 # --- Okuma ---
 
 func get_character(id: String) -> Character:

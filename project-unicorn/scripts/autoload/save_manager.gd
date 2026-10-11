@@ -35,6 +35,8 @@ const AUTOSAVE_FREQUENCIES: Array[String] = ["off", "weekly", "monthly"]
 # skipped write stays pending and lands at the next safe boundary: coalesced, never lost.
 const AUTOSAVE_MIN_REAL_SECONDS := 10                      # [WORKING]
 
+const RUN_START := Vector2i(1, TimeModel.WEEK_START_HOUR)
+
 # The folder the slots live in; a harness points it at its own (_use_dir).
 var _dir: String = SAVE_DIR
 # Smoke, probe and screenshot harnesses drive hundreds of ticks in seconds; they must never
@@ -42,11 +44,12 @@ var _dir: String = SAVE_DIR
 var _autosave_enabled: bool = true
 var _autosave_pending: bool = false
 var _last_autosave_msec: int = 0
-# "Days have been played since the last save." Raised at the day-tick boundary, cleared by a
-# successful save and by a load.
+# A decision answered since the last save: progress the clock does not show. Cleared by a successful save and by a
+# load.
 var _dirty: bool = false
-# The day of the run's last save or load; a fresh run starts on day 1.
-var last_save_day: int = 1
+# The (day, hour) of the run's last save or load; a fresh run starts at RUN_START. A run standing anywhere else has
+# unsaved progress.
+var last_saved_at: Vector2i = RUN_START
 # The autosave a worker is writing, -1 when none. Waited for exactly once, in _join_write.
 var _write_task: int = -1
 
@@ -57,7 +60,9 @@ func _ready() -> void:
 	# a save hung off it would pair the new day number with yesterday's systems.
 	EventBus.day_tick_completed.connect(_on_day_tick_completed)
 	EventBus.month_ended.connect(_on_month_ended)
-	EventBus.event_resolved.connect(_retry_blocked_autosave.unbind(2))
+	EventBus.event_resolved.connect(func(_id: String, _choice: int) -> void:
+		_dirty = true
+		_retry_blocked_autosave())
 	EventBus.event_set_aside.connect(_retry_blocked_autosave.unbind(1))
 	for a in OS.get_cmdline_args() + OS.get_cmdline_user_args():
 		if _is_harness_arg(String(a)):
@@ -92,7 +97,15 @@ func cannot_save_reason_key() -> String:
 
 
 func has_unsaved_progress() -> bool:
-	return GameState.run_active and _dirty
+	return GameState.run_active and (_dirty or last_saved_at != _now())
+
+
+func _now() -> Vector2i:
+	return Vector2i(GameState.day, GameState.current_hour)
+
+
+func has_slot(slot_id: String) -> bool:
+	return FileAccess.file_exists(_path_for(slot_id))
 
 
 func next_manual_slot_id() -> String:
@@ -205,7 +218,7 @@ func save_to_slot(slot_id: String) -> bool:
 	if not _write_atomic(_path_for(slot_id), _payload()):
 		return false
 	_dirty = false
-	last_save_day = GameState.day
+	last_saved_at = _now()
 	return true
 
 
@@ -226,8 +239,10 @@ func quick_slot_id() -> String:
 	return "quick_" + GameState.run_id
 
 
-func quicksave() -> bool:
-	return save_to_slot(quick_slot_id())
+## Leaving saves into the run's own autosave rotation, so the quicksave stays the point F9 goes back to.
+func exit_slot_id() -> String:
+	_join_write()
+	return _next_auto_slot_id()
 
 
 func delete_slot(slot_id: String) -> bool:
@@ -295,8 +310,8 @@ func apply_loaded_state(payload: Dictionary) -> bool:
 
 	TimeManager.set_suspended(false)
 	_dirty = false
-	# The loaded week is where the player's progress was last kept.
-	last_save_day = GameState.day
+	# The loaded hour is where the player's progress was last kept.
+	last_saved_at = _now()
 	return true
 
 
@@ -343,7 +358,7 @@ func end_run() -> void:
 	reset_all_owners()
 	GameState.set_run_active(false)
 	_dirty = false
-	last_save_day = 1
+	last_saved_at = RUN_START
 	EventBus.speed_change_requested.emit(0)
 
 
@@ -386,7 +401,6 @@ func _restore_systems(state: Dictionary) -> void:
 # ============================================================================
 
 func _on_day_tick_completed(_day: int) -> void:
-	_dirty = true
 	if _autosave_frequency() == "weekly":
 		_autosave_pending = true
 	_try_autosave()
@@ -426,21 +440,20 @@ func _try_autosave() -> void:
 func _save_in_background(slot_id: String) -> void:
 	var payload: Dictionary = _payload().duplicate(true)
 	var path: String = _path_for(slot_id)
-	var day: int = GameState.day
+	var at: Vector2i = _now()
 	_write_task = WorkerThreadPool.add_task(func() -> void:
-		_on_write_done.call_deferred(_write_atomic(path, payload), day))
+		_on_write_done.call_deferred(_write_atomic(path, payload), at))
 
 
-## Back on the main thread. A day ticked since the capture keeps the run dirty; a failed write waits
+## Back on the main thread. Hours played since the capture keep the run unsaved; a failed write waits
 ## for the next boundary like a skipped one.
-func _on_write_done(ok: bool, day: int) -> void:
+func _on_write_done(ok: bool, at: Vector2i) -> void:
 	_join_write()
 	if not ok:
 		_autosave_pending = true
 		return
-	last_save_day = day
-	if day == GameState.day:
-		_dirty = false
+	last_saved_at = at
+	_dirty = false
 
 
 ## Mid-write a slot's file is briefly missing (rolled to .bak) and a second writer would share its
@@ -554,7 +567,7 @@ func _slot_row(slot_id: String) -> Dictionary:
 		unix_time = int(FileAccess.get_modified_time(_path_for(slot_id)))
 	return {
 		"slot_id": slot_id,
-		"label": _label_for(slot_id),
+		"label": label_for(slot_id),
 		"loadable": bool(read.get("ok", false)),
 		"error_key": String(read.get("error_key", "")),
 		"unix_time": unix_time,
@@ -573,7 +586,7 @@ func _slot_row(slot_id: String) -> Dictionary:
 
 
 ## An id's kind is its first part and its number its last: quick[_<run>], auto[_<run>]_<n>, manual_<n>.
-func _label_for(slot_id: String) -> String:
+func label_for(slot_id: String) -> String:
 	var parts: PackedStringArray = slot_id.split("_")
 	match parts[0]:
 		"quick":

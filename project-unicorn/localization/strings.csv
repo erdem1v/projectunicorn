@@ -251,6 +251,7 @@ SET_GFX_FPS_UNLIMITED,Sınırsız,Unlimited
 SET_VOL_MASTER,Ana ses,Master volume
 SET_VOL_MUSIC,Müzik,Music
 SET_VOL_SFX,Efektler,Effects
+SET_SFX_NONE,Henüz ses efekti yok.,No sound effects yet.
 SET_MUSIC_ENABLED,Arka plan müziği,Background music
 SET_MUTE_UNFOCUSED,Odak kaybında sessize al,Mute when unfocused
 SET_PAUSE_UNFOCUSED,Odak kaybında duraklat,Pause when unfocused
@@ -273,10 +274,13 @@ SET_RESET_CONFIRM_BODY,"Görüntü, ses ve oyun ayarları varsayılana döner. K
 SET_RESET_CONFIRM_OK,Sıfırla,Reset
 SET_RESET_CONFIRM_CANCEL,Vazgeç,Cancel
 SET_CLOSE,Kapat,Close
+SET_BLOCKED_TRAVEL,Ayarlar yolculuk bitince açılır.,Settings open when the trip ends.
 SYS_TITLE,Menü,Menu
 SYS_RESUME,Oyuna dön,Back to game
 SYS_SAVE,Kaydet,Save
 SYS_LOAD,Yükle,Load
+SYS_HINT_F5,F5,F5
+SYS_HINT_F9,F9,F9
 SYS_SETTINGS,Ayarlar,Settings
 SYS_MAIN_MENU,Ana menüye dön,Return to main menu
 SYS_MENU_TITLE,Ana menüye dönülsün mü?,Return to main menu?
@@ -347,6 +351,8 @@ SAVE_DELETE_OK,Sil,Delete
 SAVE_LOAD_CONFIRM_TITLE,Kaydedilmemiş ilerleme var.,You have unsaved progress.
 SAVE_LOAD_CONFIRM_BODY,Bu kaydı açarsan son kayıttan bu yana oynadığın haftalar kaybolur.,Opening this save loses the weeks you have played since your last save.
 SAVE_LOAD_CONFIRM_OK,Yükle,Load
+SAVE_F9_TITLE,Hızlı kayda dönülsün mü?,Go back to the quicksave?
+SAVE_F9_OK,Hızlı kaydı yükle,Load quicksave
 SAVE_ERR_CORRUPT,Dosya okunamıyor.,This file cannot be read.
 SAVE_ERR_NEWER,Bu kayıt daha yeni bir sürümden; açılamıyor.,This save comes from a newer version and cannot be opened.
 SAVE_ERR_TOO_OLD,Bu kayıt eski bir sürümden; ürün verisi değiştiği için açılamıyor.,This save comes from an older version; the product data changed and it cannot be opened.
@@ -354,6 +360,7 @@ SAVE_ERR_MODAL_OPEN,Bir karar ekranı açıkken kaydedilemez.,Saving is unavaila
 SAVE_ERR_DECISION_WAITING,Karar beklerken kaydedilemez.,Not while a decision is waiting.
 SAVE_ERR_WRITE,Kayıt yazılamadı.,The save could not be written.
 SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.
+SAVE_ERR_NO_QUICK,Bu şirketin hızlı kaydı yok.,This company has no quicksave.
 SAVE_TOAST_SAVED,Kaydedildi,Saved
 SAVE_TOAST_NOT_SAVED,Kaydedilmedi,Not saved
 SAVE_TOAST_LOADED,Yüklendi,Loaded

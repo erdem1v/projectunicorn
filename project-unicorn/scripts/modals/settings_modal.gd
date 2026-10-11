@@ -179,6 +179,9 @@ func _build_audio_section() -> void:
 
 	_music_slider = _add_volume_row("SET_VOL_MUSIC", AudioManager.set_music_volume)
 	_sfx_slider = _add_volume_row("SET_VOL_SFX", AudioManager.set_sfx_volume)
+	# The SFX bus has no player yet: the row waits for the first sound.
+	_sfx_slider.editable = false
+	_note(_audio_body, "SET_SFX_NONE")
 
 	_mute_toggle = CheckButton.new()
 	_mute_toggle.toggled.connect(AudioManager.set_mute_unfocused)

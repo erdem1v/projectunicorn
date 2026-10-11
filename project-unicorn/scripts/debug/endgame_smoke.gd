@@ -9079,7 +9079,7 @@ static func _case_menu_state_machine() -> String:
 	var k0: String = run_print.call()
 	for i in TimeModel.ticks(3):
 		_sim_day()
-	if not SaveManager.quicksave() or not autosave.call():
+	if not SaveManager.save_to_slot(SaveManager.quick_slot_id()) or not autosave.call():
 		return done.call("run A could not save (%s)" % SaveManager.cannot_save_reason_key())
 	var a_files: Dictionary = {}
 	for f in DirAccess.get_files_at(dir):

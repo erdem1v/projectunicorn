@@ -32,6 +32,7 @@ const SAVED_GLYPH := preload("res://assets/icons/util/check.svg")
 const NOT_SAVED_GLYPH := preload("res://assets/icons/util/save.svg")
 const LOADED_GLYPH := preload("res://assets/icons/util/load.svg")
 const DROPPED_CALL_GLYPH := preload("res://assets/icons/util/close.svg")
+const SETTINGS_GLYPH := preload("res://assets/icons/rail/settings.svg")
 const OFFICE_PAN := preload("res://scripts/debug/office_pan_probe.gd")
 const TICK_PROBE := preload("res://scripts/debug/tick_probe.gd")
 const SPRINT_PROBE := preload("res://scripts/debug/sprint_probe.gd")
@@ -1343,12 +1344,16 @@ func _run_office_shot(spec: String) -> void:
 	get_tree().quit()
 
 
-## The shell's toast through its real callers, a frame each: F5 over an open window, F5 refused, a
-## sales and a VC call put off, a move under way and its arrival, then F9, which remounts the shell.
+## The shell's toast through its real callers, a frame each: F9 with no quicksave, F5 over an open window, F5
+## refused, a sales and a VC call put off, a move under way and its arrival; then F9 over the system menu (no
+## toast), F9 over unsaved progress (its question), its answer, which remounts the shell, and F9 while a decision
+## waits.
 func _shot_toasts(view: Control) -> void:
 	_wire_modal_signals()
 	# The toast places itself when shown: wait for --shot-scale, which _begin_shot applies late.
 	await get_tree().create_timer(0.4).timeout
+	EventBus.quickload_requested.emit()
+	await _toast_frame("f9_none")
 	EventBus.tab_changed.emit("hr")
 	EventBus.quicksave_requested.emit()
 	await _toast_frame("saved")
@@ -1371,9 +1376,21 @@ func _shot_toasts(view: Control) -> void:
 	await _toast_frame("move_started")
 	EventBus.office_changed.emit(GameState.office_id)
 	await _toast_frame("moved")
+	get_tree().call_group(&"toast", &"hide")
+	EventBus.system_menu_requested.emit()
 	EventBus.quickload_requested.emit()
+	await _toast_frame("f9_modal")
+	_system_menu.close()
+	await get_tree().process_frame
+	SaveManager._dirty = true
+	EventBus.quickload_requested.emit()
+	await _toast_frame("f9_confirm")
+	_confirm_modal.get_node("%ConfirmBtn").pressed.emit()
 	await get_tree().create_timer(0.5).timeout
 	await _toast_frame("loaded")
+	_shot_card("funding.frank_cheque", {}, GameState.current_hour)
+	EventBus.quickload_requested.emit()
+	await _toast_frame("f9_gate")
 
 
 func _toast_frame(name: String) -> void:
@@ -2008,8 +2025,7 @@ func _run_modal_shot(kind: String) -> void:
 			})
 		"confirm3", "confirm3_gate", "return_confirm", "return_confirm_gate":
 			EventBus.system_menu_requested.emit()
-			SaveManager._dirty = true
-			SaveManager.last_save_day = GameState.day - 3
+			SaveManager.last_saved_at.x = GameState.day - 3
 			var row: String = "%QuitBtn" if kind.begins_with("confirm3") else "%MainMenuBtn"
 			(_system_menu.get_node(row) as Button).pressed.emit()
 		"f5_gate":
@@ -3918,7 +3934,11 @@ func _close_meeting(adapter: RefCounted) -> void:
 
 
 func _on_settings_requested() -> void:
-	if _settings_modal != null or _in_transit:
+	if _in_transit:
+		get_tree().call_group(&"toast", &"show_toast", tr("SYS_SETTINGS"), tr("SET_BLOCKED_TRAVEL"), SETTINGS_GLYPH,
+			UiTokens.D_ACCENT)
+		return
+	if _settings_modal != null:
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
@@ -3971,6 +3991,7 @@ func _on_system_menu_requested() -> void:
 	_system_menu = SYSTEM_MENU_MODAL.instantiate()
 	_system_menu.dismissed.connect(_on_system_menu_dismissed)
 	_system_menu.main_menu_requested.connect(_return_to_menu)
+	_system_menu.exit_save_requested.connect(func() -> void: _save_with_toast(SaveManager.exit_slot_id()))
 	modal_layer.add_child(_system_menu)
 
 
@@ -4003,57 +4024,76 @@ func _on_save_load_requested(mode: String) -> void:
 		return
 	_save_load_modal = SAVE_LOAD_MODAL.instantiate()
 	_save_load_modal.dismissed.connect(func() -> void: _save_load_modal = null)
+	_save_load_modal.save_requested.connect(_save_with_toast)
 	_save_load_modal.load_requested.connect(_load_slot)
 	modal_layer.add_child(_save_load_modal)
 	_save_load_modal.populate(mode)   # add_child SONRASI — @onready ref'ler ancak o zaman dolu
 
 
-## F5 says whether the run was saved, and when it stands; a refusal says why.
 func _on_quicksave_requested() -> void:
-	if not _shell_mounted:
-		return
+	if _shell_mounted:
+		_save_with_toast(SaveManager.quick_slot_id())
+
+
+## Every save the player takes (F5, the Save window, leaving through the system menu) says whether it landed, and
+## when the run stands; a refusal says why.
+func _save_with_toast(slot_id: String) -> void:
 	var why: String = SaveManager.cannot_save_reason_key()
-	if why == "" and not SaveManager.quicksave():
+	if why == "" and not SaveManager.save_to_slot(slot_id):
 		why = "SAVE_ERR_WRITE"
 	if why == "":
-		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_SAVED"), _save_when("SAVE_TOAST_WHEN"),
+		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_SAVED"), _save_when("SAVE_TOAST_WHEN", slot_id),
 			SAVED_GLYPH, UiTokens.D_pos())
 	else:
 		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_NOT_SAVED"), tr(why), NOT_SAVED_GLYPH,
 			UiTokens.D_warn())
 
 
-## F9 says it loaded on the shell it remounted.
+## F9 goes back to the run's quicksave. Over an open window (a question included) it does nothing; a missing
+## quicksave, a waiting decision or a sitting says why; unsaved progress asks first.
 func _on_quickload_requested() -> void:
-	if _shell_mounted and await _load_slot(SaveManager.quick_slot_id()):
-		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_LOADED"), _save_when("SAVE_TOAST_LOADED_WHEN"),
-			LOADED_GLYPH, UiTokens.D_pos())
+	if not _shell_mounted or _modal_layer().get_child_count() > 0:
+		return
+	var slot_id: String = SaveManager.quick_slot_id()
+	var why: String = SaveManager.cannot_save_reason_key() if SaveManager.has_slot(slot_id) else "SAVE_ERR_NO_QUICK"
+	if why != "":
+		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_NOT_LOADED"), tr(why), NOT_SAVED_GLYPH,
+			UiTokens.D_warn())
+	elif SaveManager.has_unsaved_progress():
+		EventBus.confirm_requested.emit({
+			"title": tr("SAVE_F9_TITLE"),
+			"body": tr("SYS_QUIT_BODY"),
+			"confirm_text": tr("SAVE_F9_OK"),
+			"cancel_text": tr("SYS_CANCEL"),
+			"on_confirm": _load_slot.bind(slot_id),
+			"danger": true,
+		})
+	else:
+		_load_slot(slot_id)
 
 
-## The week and the time the run stands at, as the top bar shows them.
-func _save_when(key: String) -> String:
-	return tr(key).format({"slot": tr("SAVE_QUICK_SLOT"), "week": int(GameState.get_date_dict().week),
+## The slot's name, the week and the time the run stands at, as the top bar shows them.
+func _save_when(key: String, slot_id: String) -> String:
+	return tr(key).format({"slot": SaveManager.label_for(slot_id), "week": int(GameState.get_date_dict().week),
 		"time": (_shell.get_node("TopBar/TimeBlock/Clock") as Label).text})
 
 
 # The single load path. The shell is torn down BEFORE state is applied, so initialize_run's
 # "no listeners yet" assumption holds here too and no signal storm is needed. The save is read
 # and validated before anything is touched: "file corrupt" in a half-torn world is the worst case.
-# True once the loaded run stands on its new shell.
-func _load_slot(slot_id: String) -> bool:
+# The loaded run says so on its new shell.
+func _load_slot(slot_id: String) -> void:
 	# The same rule as saving: a decision in progress (event card, VC meeting, term table, sales
-	# sitting, negotiation) is not carried over. F9 bypasses the menu gate and the ModalLayer
-	# guard, so it reaches here during any sitting.
+	# sitting, negotiation) is not carried over. The Load window lists saves while a decision waits.
 	if SaveManager.cannot_save_reason_key() in ["SAVE_ERR_DECISION_WAITING", "SAVE_ERR_MODAL_OPEN"]:
-		return false
+		return
 	var payload: Dictionary = SaveManager.read_slot(slot_id)
 	if not bool(payload.get("ok", false)):
 		push_warning("[Main] yükleme reddedildi (%s): %s" % [slot_id, payload.get("error_key", "")])
-		# The menu stays up and says why.
-		if _menu != null:
-			get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_NOT_LOADED"), tr(payload.error_key),
-				NOT_SAVED_GLYPH, UiTokens.D_warn())
-		return false
+		# Whoever asked stays where it was and says why.
+		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_NOT_LOADED"), tr(payload.error_key),
+			NOT_SAVED_GLYPH, UiTokens.D_warn())
+		return
 	_teardown_run_ui()
 	_state = "loading"
 	# queue_free is deferred; without a frame two GameShells would share the tree.
@@ -4062,13 +4102,14 @@ func _load_slot(slot_id: String) -> bool:
 		push_error("[Main] yükleme durumu uygulanamadı (%s)" % slot_id)
 		# The run it was to replace is gone: the menu is what is left to stand on.
 		_mount_menu()
-		return false
+		return
 	await _mount_shell()
+	get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_LOADED"),
+		_save_when("SAVE_TOAST_LOADED_WHEN", slot_id), LOADED_GLYPH, UiTokens.D_pos())
 	EventBus.game_loaded.emit(slot_id)
 	# The save keeps the queue and nothing pumps it before the next tick: a waiting card shows now,
 	# over the paused clock.
 	EventGate.pump()
-	return true
 
 
 func _on_summary_ready(_data: Dictionary) -> void:

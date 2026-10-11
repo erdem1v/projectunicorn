@@ -12,12 +12,12 @@ extends Control
 # kapalıdır (main._load_slot), başta karar şeridi gerekçesiyle ve karara dönüşüyle durur, silme açık kalır.
 
 signal dismissed
+signal save_requested(slot_id: String)
 signal load_requested(slot_id: String)
 
 const GATE_STRIP := preload("res://scripts/ui/components/gate_strip.gd")
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const MODE_SAVE := "save"
-const NOT_SAVED_GLYPH := preload("res://assets/icons/util/save.svg")
 ## The window's height while it lists saves and, by mode, while it has none; a save's slot; the well of its glyph.
 const FULL_H := 660.0
 const EMPTY_H := {"save": 420.0, "load": 340.0}
@@ -224,10 +224,9 @@ func _on_overwrite(slot_id: String, label: String) -> void:
 		"SAVE_OVERWRITE_OK", _do_save.bind(slot_id))
 
 
+## main.gd saves and toasts the result, as F5 does.
 func _do_save(slot_id: String) -> void:
-	if not SaveManager.save_to_slot(slot_id):
-		get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_NOT_SAVED"), tr("SAVE_ERR_WRITE"),
-			NOT_SAVED_GLYPH, UiTokens.D_warn())
+	save_requested.emit(slot_id)
 	_rebuild()
 
 

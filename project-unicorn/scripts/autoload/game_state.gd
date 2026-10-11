@@ -17,6 +17,8 @@ var subgenre: String = "ai"           # "ai" | "saas" | "social" (demo: ai|saas 
 var logo_style: String = "minimalist" # "minimalist" | "tech" | "playful" | "serious"
 var slogan: String = ""               # Optional free text — may be empty
 var founder_name: String = ""         # Player's name; "" means the founder Character defaults to "Founder"
+# The founder was left unnamed and is called by the role, in the language on screen (CharacterRegistry renames them).
+var founder_name_default: bool = false
 var founder_portrait: String = ""     # Portrait id (e.g. "founder_03"); art via FounderConstants.portrait_path()
 # THE RNG SEED, 0 = unseeded. Not the funding round (run_seed_amount / run_seed_equity_pct).
 var run_seed: int = 0
@@ -773,6 +775,7 @@ func initialize_run(payload: Dictionary) -> void:
 	logo_style = payload.get("logo_style", "minimalist")
 	slogan = payload.get("slogan", "")
 	founder_name = payload.get("founder_name", "")
+	founder_name_default = false
 	founder_portrait = payload.get("portrait_id", "")
 	name_lang = "en" if Fmt.is_english() and not is_restore else "tr"
 
@@ -943,6 +946,7 @@ func _build_founder(payload: Dictionary) -> Character:
 	var display_name: String = String(payload.get("founder_name", "")).strip_edges()
 	if display_name == "":
 		# The default name is copy, not data: it must not be persisted in one language.
+		founder_name_default = true
 		display_name = TranslationServer.translate("HR_ROLE_FOUNDER")
 
 	var f := Character.new()
