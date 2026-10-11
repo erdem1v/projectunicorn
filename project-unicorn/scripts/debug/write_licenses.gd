@@ -10,10 +10,10 @@ const FONT_FAMILIES := {
 }
 const LUCIDE := "res://assets/art/office/icons/LICENSE-lucide.txt"
 const CC0_DIR := "res://assets/art/people/LICENSES/"
-const LICENSES_SCREEN := preload("res://scripts/menu/licenses.gd")
 
 
-# The work waits for the first frame: Localization loads the CSV in its _ready.
+# The work waits for the first frame: Localization loads the CSV in its _ready. The Licenses screen is loaded
+# here, not preloaded: its UI helpers name autoloads that do not exist yet when this script compiles.
 func _process(_delta: float) -> bool:
 	var out: String = OS.get_cmdline_user_args()[0].path_join("LICENSES")
 	DirAccess.make_dir_recursive_absolute(out.path_join("fonts"))
@@ -25,7 +25,7 @@ func _process(_delta: float) -> bool:
 		"LICENSE-lucide.txt": FileAccess.get_file_as_string(LUCIDE),
 	}
 	var notices := PackedStringArray([en.get_message(&"LIC_THIRD_PARTY"), "",
-		en.get_message(&"LIC_FREETYPE").format({"year": LICENSES_SCREEN.freetype_year()}), "",
+		en.get_message(&"LIC_FREETYPE").format({"year": load("res://scripts/menu/licenses.gd").freetype_year()}), "",
 		en.get_message(&"LIC_GODOT_LOGO"), "", en.get_message(&"LIC_FONTS")])
 	for dir in FONT_FAMILIES:
 		var rel: String = "fonts/%s-OFL.txt" % FONT_FAMILIES[dir]

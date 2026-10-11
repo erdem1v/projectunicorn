@@ -1,6 +1,6 @@
 """Writes the brand assets from one geometry and prints it: the lock-up (assets/brand/lockup.svg, the orange square
 and "Project" / "Unicorn" in Barlow Condensed Bold, drawn as outlines so no font ships with it) and the app icon
-(the square alone: icon.svg, and icon.ico at 16, 32, 48 and 256 px).
+(the square alone: icon.svg, and icon.ico at 16, 32, 48, 64, 128 and 256 px).
     python tools/brand/make_lockup.py
 S is the square's side. Corner radius 0.08 S; text size F = S / 1.68, set 0.25 S right of the square; the cap top of
 "Project" sits on the square's top edge and the baseline of "Unicorn" on its bottom edge, so cap 0.70 F + line gap
@@ -59,7 +59,7 @@ width = math.ceil(max(p_box[2], u_box[2]))
 
 big = Image.new("RGBA", (ICON * 4, ICON * 4))
 ImageDraw.Draw(big).rounded_rectangle((0, 0, ICON * 4 - 1, ICON * 4 - 1), radius=0.08 * ICON * 4, fill=ORANGE)
-big.resize((ICON, ICON), Image.Resampling.LANCZOS).save(BRAND / "icon.ico", sizes=[(16, 16), (32, 32), (48, 48), (256, 256)])
+big.resize((ICON, ICON), Image.Resampling.LANCZOS).save(BRAND / "icon.ico", sizes=[(s, s) for s in (16, 32, 48, 64, 128, 256)])
 
 cap_top = word("P", cap)[1][1]
 baseline = word("n", S)[1][3]
