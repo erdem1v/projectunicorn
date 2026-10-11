@@ -112,10 +112,8 @@ ONB_GUIDED,Frank'le rehberli başla,Guided start with Frank
 ONB_GUIDED_NOTE,"İlk haftalarda Frank'in notları gelen kutuna düşer, öteki olaylar bekler.",In the first weeks Frank's notes reach your inbox and other events wait.
 ONB_GUIDED_LOCKED,Rehber yazılıyor.,The guide is being written.
 ONB_LOGO_LABEL,Logo,Logo
-LOGO_STYLE_MINIMALIST,MİNİMALİST,MINIMALIST
-LOGO_STYLE_TECH,TEKNO,TECH
-LOGO_STYLE_PLAYFUL,OYUNCUL,PLAYFUL
-LOGO_STYLE_SERIOUS,CİDDİ,SERIOUS
+ONB_LOGO_CAPTION,Adın baş harflerinden üretildi. Birini seç ya da yeniden üret.,Made from your name's initials. Pick one or make a new set.
+ONB_LOGO_REROLL,Yeniden üret,Make new set
 SALES_PORTFOLIO_HEADER,Müşteri portföyü,Customer portfolio
 SALES_CUSTOMERS_COUNT,{n} müşteri,{n} customers
 SALES_CUSTOMERS_COUNT_ONE,{n} müşteri,{n} customer

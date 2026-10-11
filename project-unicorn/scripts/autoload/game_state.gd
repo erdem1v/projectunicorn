@@ -14,7 +14,7 @@ var run_id: String = ""
 var company_name: String = "Unicorn Inc."
 var origin: String = "self_made"      # "self_made" | "heir" | "corporate_refugee" (demo: self_made only)
 var subgenre: String = "ai"           # "ai" | "saas" | "social" (demo: ai|saas only)
-var logo_style: String = "minimalist" # "minimalist" | "tech" | "playful" | "serious"
+var logo: Dictionary = {}            # LogoEmblem's {shape, color, style, glyphs}
 var founder_name: String = ""         # Player's name; "" means the founder Character defaults to "Founder"
 # The founder was left unnamed and is called by the role, in the language on screen (CharacterRegistry renames them).
 var founder_name_default: bool = false
@@ -772,7 +772,7 @@ func initialize_run(payload: Dictionary) -> void:
 	origin = payload.get("origin_id", "self_made")
 	subgenre = payload.get("subgenre_id", "ai")   # the committed product overwrites it later
 	company_name = payload.get("company_name", "Unicorn Inc.")
-	logo_style = payload.get("logo_style", "minimalist")
+	logo = payload.get("logo", {})
 	founder_name = payload.get("founder_name", "")
 	founder_name_default = false
 	founder_portrait = payload.get("portrait_id", "")
@@ -895,6 +895,9 @@ func initialize_run(payload: Dictionary) -> void:
 		# A save written before the Seed kept its post-money carries the two numbers it comes from.
 		if seed_post_money_m == 0.0 and run_seed_amount > 0 and run_seed_equity_pct > 0:
 			seed_post_money_m = post_money_m(run_seed_amount, run_seed_equity_pct)
+	# A save from before the emblem kept only a style; a run set up without a logo takes its name's first.
+	if logo.is_empty():
+		logo = LogoEmblem.from_legacy(String(restore_block.get("logo_style", "")), company_name)
 	# A fresh run, or a save from before run ids, takes a new id; the old save's slots stay with the older saves. The
 	# clock, not RngStreams: the id draws nothing from the run's sequences.
 	if run_id == "":

@@ -305,7 +305,7 @@ func _debug_payload() -> Dictionary:
 		"trait_ids": ["visionary", "stubborn"],
 		"company_name": "Unicorn Inc.",
 		"founder_name": "",
-		"logo_style": "minimalist",
+		"logo": LogoEmblem.candidates("Unicorn Inc.", 0)[0],
 	}
 
 
@@ -2092,14 +2092,15 @@ func _shot_open_list(body: String, index: int, hover: int) -> void:
 
 
 ## The mockups' saves, newest first, written for a full list and deleted for an empty one: this run's quicksave and
-## two autosaves, then PromptPilot's from before run ids (their meta carries no run_id, logo_style or saved_msec):
+## two autosaves, then PromptPilot's from before run ids (their meta carries no run_id, logo or saved_msec, and the
+## logo's old style):
 ## Kayıt 1 (week 23, the Series A, $24.000 cash and $6,4K MRR), a Kayıt 2 too old to open and a Kayıt 3 that cannot
 ## be read. Their meta is set on the written files.
 func _shot_saves(full: bool) -> void:
 	# One run id on every shot, so a rerun writes over the same files.
 	GameState.run_id = "unicorn"
 	var now: int = int(Time.get_unix_time_from_system())
-	var older := {"company_name": "PromptPilot"}
+	var older := {"company_name": "PromptPilot", "logo_style": "playful"}
 	for row in [[SaveManager.quick_slot_id(), 0, {}], ["auto_%s_1" % GameState.run_id, 660, {}],
 			["auto_%s_2" % GameState.run_id, 2040, {}],
 			["manual_1", 224880, older.merged({"day": 23, "phase": 3, "cash": 24000, "mrr": 6400})],
@@ -2114,7 +2115,7 @@ func _shot_saves(full: bool) -> void:
 		data.meta.unix_time = now - int(row[1])
 		data.meta.saved_msec = data.meta.unix_time * 1000
 		if row[0].begins_with("manual_"):
-			for key in ["run_id", "logo_style", "saved_msec"]:
+			for key in ["run_id", "logo", "saved_msec"]:
 				data.meta.erase(key)
 		if row[0] == "manual_2":
 			data.schema_version = SaveManager.MIN_LOADABLE_VERSION - 1
@@ -2289,8 +2290,8 @@ func _run_backdrop_probe(office: String, minute: float) -> void:
 # from the menu matches (--backdrop-probe), and ONB|stage=live|figure=<id> once the flat is up; the frame waits for
 # it. States: 1:plate (the plate and portrait the flat stands on until it is up), 1:cancel (a name typed, then Esc),
 # 2:random (Randomize), 2:hard_locked and 2:hard_open (the profile's finished runs, written to this run's settings),
-# 3:guided_locked; curtain is the curtain over step 3. Steps 2 and 3 are mounted straight: their draft need not be
-# whole.
+# 3:guided_locked, 3:reroll (Make new set pressed once); curtain is the curtain over step 3, which names the mockup's
+# company and picks its second emblem. Steps 2 and 3 are mounted straight: their draft need not be whole.
 func _run_onboard_shot(spec: String) -> void:
 	var state: String = spec.get_slice(":", 1) if ":" in spec else ""
 	if state.begins_with("hard_"):
@@ -2310,6 +2311,9 @@ func _run_onboard_shot(spec: String) -> void:
 	if step == 2:
 		# Two allocation points in one skill: its figure reads on the 0-10 ruler.
 		_flow.draft.skill_alloc = {"engineering": 2}
+	if step == 3:
+		_flow.draft.company_name = "Unicorn Inc."
+		_flow.draft.logo = LogoEmblem.candidates("Unicorn Inc.", 0)[1]
 	if step > 1:
 		_flow._mount_step(step - 1)
 	match state:
@@ -2320,10 +2324,12 @@ func _run_onboard_shot(spec: String) -> void:
 			_flow._ask_cancel()
 		"random":
 			_flow._step.roll()
+		"reroll":
+			_flow._step._reroll += 1
+			_flow._step._refresh()
+			_flow._step.changed.emit()
 		"":
 			if spec == "curtain":
-				_flow.draft.company_name = "Unicorn Inc."
-				_flow.draft.logo_style = "tech"
 				_flow.show_curtain()
 	if stage.get_node("Live").get_child_count() > 0:
 		while not live[0]:

@@ -40,7 +40,8 @@ var draft := {
 	"trait_ids": [],
 	"skill_alloc": {},
 	"company_name": "",
-	"logo_style": "",
+	"logo": {},
+	"logo_reroll": 0,
 	"difficulty": "normal",
 	"frank_guided": false,
 }
@@ -204,7 +205,7 @@ func _commit() -> void:
 
 func show_curtain() -> void:
 	var emblem := LogoEmblem.new(CURTAIN_EMBLEM)
-	emblem.configure(draft.logo_style, draft.company_name)
+	emblem.configure(draft.logo)
 	%EmblemSlot.add_child(emblem)
 	%CurtainName.text = draft.company_name
 	var d: Dictionary = GameState.get_date_dict(1)

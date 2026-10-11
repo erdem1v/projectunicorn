@@ -44,7 +44,7 @@ var _dir: String = SAVE_DIR
 var _autosave_enabled: bool = true
 var _autosave_pending: bool = false
 var _last_autosave_msec: int = 0
-# A decision answered since the last save: progress the clock does not show. Cleared by a successful save and by a
+# A decision answered since the last save: progress the clock does not show. Cleared by a save's capture and by a
 # load.
 var _dirty: bool = false
 # The (day, hour) of the run's last save or load; a fresh run starts at RUN_START. A run standing anywhere else has
@@ -133,7 +133,7 @@ func list_slots() -> Array:
 	return rows
 
 
-## list_slots by run, the newest run first: {run_id, company_name, logo_style, newest_msec, slots, backups}, the
+## list_slots by run, the newest run first: {run_id, company_name, logo, newest_msec, slots, backups}, the
 ## backups being its autosaves. Saves from before run ids group by their company name.
 func list_runs() -> Array:
 	var runs: Dictionary = {}
@@ -141,7 +141,7 @@ func list_runs() -> Array:
 		var key: String = row.meta.run_id if row.meta.run_id != "" else "|" + row.meta.company_name
 		if not runs.has(key):
 			runs[key] = {"run_id": row.meta.run_id, "company_name": row.meta.company_name,
-				"logo_style": row.meta.logo_style, "newest_msec": row.meta.saved_msec, "slots": [], "backups": []}
+				"logo": row.meta.logo, "newest_msec": row.meta.saved_msec, "slots": [], "backups": []}
 		runs[key]["backups" if row.slot_id.begins_with("auto_") else "slots"].append(row)
 	return runs.values()
 
@@ -260,7 +260,7 @@ func build_meta() -> Dictionary:
 	return {
 		"company_name": GameState.company_name,
 		"run_id": GameState.run_id,
-		"logo_style": GameState.logo_style,
+		"logo": GameState.logo,
 		"day": GameState.day,
 		"phase": GameState.phase,
 		"cash": GameState.cash,
@@ -441,19 +441,21 @@ func _save_in_background(slot_id: String) -> void:
 	var payload: Dictionary = _payload().duplicate(true)
 	var path: String = _path_for(slot_id)
 	var at: Vector2i = _now()
+	# The payload holds every decision up to here; one answered while the worker writes stays unsaved.
+	_dirty = false
 	_write_task = WorkerThreadPool.add_task(func() -> void:
 		_on_write_done.call_deferred(_write_atomic(path, payload), at))
 
 
 ## Back on the main thread. Hours played since the capture keep the run unsaved; a failed write waits
-## for the next boundary like a skipped one.
+## for the next boundary like a skipped one, its decisions unsaved again.
 func _on_write_done(ok: bool, at: Vector2i) -> void:
 	_join_write()
 	if not ok:
 		_autosave_pending = true
+		_dirty = true
 		return
 	last_saved_at = at
-	_dirty = false
 
 
 ## Mid-write a slot's file is briefly missing (rolled to .bak) and a second writer would share its
@@ -561,6 +563,8 @@ func _write_complete(path: String, text: String) -> bool:
 func _slot_row(slot_id: String) -> Dictionary:
 	var read: Dictionary = read_slot(slot_id)
 	var meta: Dictionary = read.get("meta", {}) as Dictionary
+	var company := String(meta.get("company_name", ""))
+	var logo: Dictionary = meta.get("logo", {})
 	var unix_time: int = int(meta.get("unix_time", 0))
 	if unix_time == 0:
 		# An unreadable file still needs a sort key.
@@ -573,9 +577,9 @@ func _slot_row(slot_id: String) -> Dictionary:
 		"unix_time": unix_time,
 		"from_backup": bool(read.get("from_backup", false)),
 		"meta": {
-			"company_name": String(meta.get("company_name", "")),
+			"company_name": company,
 			"run_id": String(meta.get("run_id", "")),
-			"logo_style": String(meta.get("logo_style", "")),
+			"logo": logo if not logo.is_empty() else LogoEmblem.from_legacy(String(meta.get("logo_style", "")), company),
 			"saved_msec": int(meta.get("saved_msec", unix_time * 1000)),
 			"day": int(meta.get("day", 0)),
 			"phase": int(meta.get("phase", 1)),

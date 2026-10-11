@@ -6250,12 +6250,12 @@ static func _case_onboarding_pages_contract() -> String:
 		# sales 2 holds SkillCheck.SALES_READ_THRESHOLD, charisma 1 holds the pitch beats
 		# non-zero, and the spare point goes to product so the İnovasyon ceiling is not flat.
 		"skill_alloc": {"product": 1, "design": 0, "engineering": 2, "qa": 0, "sales": 2, "customer_success": 0, "leadership": 0, "charisma": 1},
-		"company_name": "Synaptik", "logo_style": "tech",
+		"company_name": "Synaptik", "logo": LogoEmblem.candidates("Synaptik", 0)[0],
 	}
 	var expected_keys := {
 		"character": ["founder_name", "portrait_id"],
 		"origin_traits": ["origin_id", "trait_ids", "skill_alloc"],
-		"company": ["company_name", "logo_style"],
+		"company": ["company_name", "logo", "logo_reroll"],
 	}
 	for key in scenes:
 		var ps: PackedScene = scenes[key]
@@ -9156,16 +9156,35 @@ static func _case_autosave_writes_off_thread() -> String:
 ## ended so is the same state as on a clean slate, its id apart (the endings' latches and the sprint are GameState's,
 ## so the print holds them). A run's quicksave and autosaves are its own: run B's four autosaves roll
 ## over its own three and leave run A's files byte for byte; Continue is the newest save that opens, never a newer
-## file that cannot be read; the Load list holds the two runs apart. The saves are written to a folder of the case's
-## own.
+## file that cannot be read; the Load list holds the two runs apart; a decision answered while an autosave is written
+## stays unsaved once the write lands. The saves are written to a folder of the case's own. A company name opens the
+## same twelve emblems every time, every shape twice, every style four times, every colour at least once, and a
+## reroll opens others; an old save's style reads as the emblem it drew.
 ## FALSIFICATION: read os_lang before steam_lang in Localization.detect_language and the third pair fails; drop
 ## reset_all_owners() from SaveManager.end_run and run B starts on A's world; build _next_auto_slot_id's ids without
-## GameState.run_id and run B's third autosave rolls over run A's.
+## GameState.run_id and run B's third autosave rolls over run A's; clear _dirty in SaveManager._on_write_done and the
+## decision is lost; take LogoEmblem.candidates' colours from the first six only and a colour goes missing.
 static func _case_menu_state_machine() -> String:
 	for row in [["", "tr", "tr"], ["", "de", "en"], ["turkish", "en", "tr"], ["english", "tr", "en"]]:
 		var got: String = Localization.detect_language(row[0], row[1])
 		if got != row[2]:
 			return "detect_language(%s, %s) = %s, want %s" % [row[0], row[1], got, row[2]]
+	var emblems: Array = LogoEmblem.candidates("Unicorn Inc.", 0)
+	var counts := {}
+	for logo: Dictionary in emblems:
+		for part in [logo.shape, logo.style, logo.color]:
+			counts[part] = counts.get(part, 0) + 1
+	var tally := func(names: Array) -> Array: return names.map(func(n: String) -> int: return counts.get(n, 0))
+	if emblems.size() != 12 or tally.call(LogoEmblem.SHAPES) != [2, 2, 2, 2, 2, 2] \
+			or tally.call(LogoEmblem.STYLES) != [4, 4, 4] or tally.call(UiTokens.LOGO_PALETTE.keys()).has(0):
+		return "the emblems of Unicorn Inc. are %s" % str(emblems)
+	if emblems != LogoEmblem.candidates("Unicorn Inc.", 0) or emblems == LogoEmblem.candidates("Unicorn Inc.", 1):
+		return "Unicorn Inc. opens other emblems on a second call, or the same after a reroll"
+	for row in [["minimalist", "circle", "outline", "bone"], ["tech", "hexagon", "outline", "teal"],
+			["playful", "circle", "filled", "brick"], ["serious", "square", "filled", "bone"]]:
+		var old: Dictionary = LogoEmblem.from_legacy(row[0], "unicorn")
+		if [old.shape, old.style, old.color, old.glyphs] != row.slice(1) + ["U"]:
+			return "an old %s logo reads as %s" % [row[0], str(old)]
 
 	var dir := "user://smoke_menu_state/"
 	SaveManager._use_dir(dir)
@@ -9227,6 +9246,12 @@ static func _case_menu_state_machine() -> String:
 	if rows[0].slot_id != "manual_9" or opens[0].slot_id != "auto_%s_1" % run_b:
 		return done.call("Continue is %s with %s the newest file, want run B's newest autosave" % [
 			opens[0].slot_id, rows[0].slot_id])
+	SaveManager._save_in_background(SaveManager._next_auto_slot_id())
+	SaveManager._dirty = true
+	SaveManager._join_write()
+	SaveManager._on_write_done(true, SaveManager._now())
+	if not SaveManager.has_unsaved_progress():
+		return done.call("a decision answered during an autosave's write was saved by it")
 	return done.call("")
 
 

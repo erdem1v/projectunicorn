@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 35
+const THEME_STAMP := 36
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -598,6 +598,19 @@ const D_CUT_SM := 8    # small documents: toast, notice, selected inbox row
 
 # --- the brand square of the top bar: the logo's own orange, not a UI accent ---
 const D_BRAND_MARK := Color("#FFA028")
+
+# --- the company emblem's colours: mid-light on charcoal; neither the amber that acts nor the brand's orange ---
+const D_EMB_BONE := Color("#E6DED0")
+const D_EMB_BRICK := Color("#D9704E")
+const D_EMB_OLIVE := Color("#A9B25E")
+const D_EMB_SAGE := Color("#82BD9B")
+const D_EMB_TEAL := Color("#4BA8B0")
+const D_EMB_STEEL := Color("#7FA2DE")
+const D_EMB_LILAC := Color("#AC8EDB")
+const D_EMB_ROSE := Color("#DE8DAB")
+## The emblem colour by the id a logo keeps.
+const LOGO_PALETTE := {"bone": D_EMB_BONE, "brick": D_EMB_BRICK, "olive": D_EMB_OLIVE, "sage": D_EMB_SAGE,
+	"teal": D_EMB_TEAL, "steel": D_EMB_STEEL, "lilac": D_EMB_LILAC, "rose": D_EMB_ROSE}
 
 # --- newspaper island: cream in both themes; the dark theme's meta line reads at 4.5:1 ---
 const D_PAPER_INK_META := Color("#6E6553")

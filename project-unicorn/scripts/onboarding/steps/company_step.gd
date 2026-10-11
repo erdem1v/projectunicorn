@@ -1,15 +1,20 @@
 extends OnboardingStep
 
-# Step 3, Şirket: the company's name and its logo, a style LogoEmblem draws from the name's initial. The first-week
-# document's letterhead shows both as they are picked; Found and start commits from here.
+# Step 3, Şirket: the company's name and its emblem, one of the twelve LogoEmblem makes from the name; Make new set
+# rerolls them, and a new name keeps the pick's place. The first-week document's letterhead shows both as they are
+# picked; Found and start commits from here.
 
 const NAME_W := 520
-const EMBLEM := 56
+const COLUMNS := 6
+const TILE_H := [160, 116]
+const EMBLEM := [104, 80]
 
-var _logo_style := ""
 var _name_input: LineEdit
-var _style_cards := {}   # style_id -> PanelContainer
+var _reroll := 0
+var _pick := -1
+var _set := []   # the emblems on offer
 var _emblems: Array[LogoEmblem] = []
+var _tiles: Array[PanelContainer] = []
 
 
 func _ready() -> void:
@@ -30,61 +35,71 @@ func _ready() -> void:
 		changed.emit())
 	page.add_child(_name_input)
 
-	page.add_child(UiFactory.make_label(Fmt.upper(tr("ONB_LOGO_LABEL")), &"KeyLabel"))
-	var cards := HBoxContainer.new()
-	cards.add_theme_constant_override("separation", UiTokens.SPACE_XL)
-	page.add_child(cards)
-	for style: Dictionary in FounderConstants.LOGO_STYLES:
-		cards.add_child(_style_card(style))
+	var logo_head := HBoxContainer.new()
+	var caption := VBoxContainer.new()
+	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	caption.add_child(UiFactory.make_label(Fmt.upper(tr("ONB_LOGO_LABEL")), &"KeyLabel"))
+	caption.add_child(UiFactory.make_label(tr("ONB_LOGO_CAPTION"), &"Caption"))
+	logo_head.add_child(caption)
+	var reroll := Button.new()
+	reroll.theme_type_variation = &"SecondaryButtonSmall"
+	reroll.text = tr("ONB_LOGO_REROLL")
+	reroll.icon = load("res://assets/icons/util/dice.svg")
+	reroll.size_flags_vertical = Control.SIZE_SHRINK_END
+	reroll.pressed.connect(func() -> void:
+		_reroll += 1
+		_refresh()
+		changed.emit())
+	logo_head.add_child(reroll)
+	page.add_child(logo_head)
 
-
-func _style_card(style: Dictionary) -> PanelContainer:
-	var col := VBoxContainer.new()
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var card := _card(col, true)
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var emblem := LogoEmblem.new(EMBLEM)
-	emblem.style_id = style.id
-	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	emblem.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.add_child(emblem)
-	_emblems.append(emblem)
-	var label := UiFactory.make_label(tr(style.name_key), &"KeyLabel")
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(label)
-	card.gui_input.connect(func(event: InputEvent) -> void:
-		if UiFactory.is_left_click(event):
-			_logo_style = style.id
-			_refresh()
-			changed.emit())
-	_style_cards[style.id] = card
-	return card
+	var grid := GridContainer.new()
+	grid.columns = COLUMNS
+	grid.add_theme_constant_override("h_separation", UiTokens.SPACE_XL)
+	grid.add_theme_constant_override("v_separation", UiTokens.SPACE_XL)
+	page.add_child(grid)
+	for i in LogoEmblem.CANDIDATES:
+		var emblem := LogoEmblem.new(EMBLEM[int(short)])
+		emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		emblem.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		_emblems.append(emblem)
+		var tile := _card(emblem, true)
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tile.custom_minimum_size.y = TILE_H[int(short)]
+		tile.gui_input.connect(func(event: InputEvent) -> void:
+			if UiFactory.is_left_click(event):
+				_pick = i
+				_refresh()
+				changed.emit())
+		_tiles.append(tile)
+		grid.add_child(tile)
 
 
 func _refresh() -> void:
-	for style_id: String in _style_cards:
-		show_pick(_style_cards[style_id], style_id == _logo_style)
-	for emblem in _emblems:
-		emblem.configure(emblem.style_id, _name_input.text)
+	_set = LogoEmblem.candidates(_name_input.text.strip_edges(), _reroll)
+	for i in _tiles.size():
+		show_pick(_tiles[i], i == _pick)
+		_emblems[i].configure(_set[i])
 
 
 # --- OnboardingStep contract ---
 
 func prefill(draft: Dictionary) -> void:
 	_name_input.text = draft.get("company_name", "")
-	_logo_style = draft.get("logo_style", "")
+	_reroll = draft.get("logo_reroll", 0)
+	_pick = LogoEmblem.candidates(_name_input.text.strip_edges(), _reroll).find(draft.get("logo", {}))
 	_refresh()
 
 
 func invalid_reason() -> String:
 	if _name_input.text.strip_edges() == "":
 		return tr("ONB_WHY_COMPANY")
-	if _logo_style == "":
+	if _pick < 0:
 		return tr("ONB_WHY_LOGO")
 	return ""
 
 
 func collect_payload() -> Dictionary:
-	return {"company_name": _name_input.text.strip_edges(), "logo_style": _logo_style}
+	return {"company_name": _name_input.text.strip_edges(), "logo": _set[_pick] if _pick >= 0 else {},
+		"logo_reroll": _reroll}

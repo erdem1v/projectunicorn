@@ -90,14 +90,6 @@ const PORTRAIT_IDS := [
 	"founder_07", "founder_08", "founder_09", "founder_10", "founder_11",
 ]
 
-# --- Logo styles (onboarding Page 3). emblem drives LogoEmblem._draw — no image assets.
-const LOGO_STYLES := [
-	{"id": "minimalist", "name_key": "LOGO_STYLE_MINIMALIST", "emblem": "circle_outline"},
-	{"id": "tech", "name_key": "LOGO_STYLE_TECH", "emblem": "hexagon"},
-	{"id": "playful", "name_key": "LOGO_STYLE_PLAYFUL", "emblem": "rounded_fill"},
-	{"id": "serious", "name_key": "LOGO_STYLE_SERIOUS", "emblem": "square_fill"},
-]
-
 # --- Skill display keys (localization/strings.csv) ---
 # Lowercase inline odds fragments ("temel %35 · +%15 satış"), a different register from the
 # Title Case area label (HRConstants.area_label), hence a separate table.

@@ -80,7 +80,7 @@ func _rebuild() -> void:
 func _group_head(run: Dictionary) -> MarginContainer:
 	var head := SprintUiShared.box(UiTokens.SPACE_M)
 	var emblem := LogoEmblem.new(GROUP_EMBLEM)
-	emblem.configure(run.logo_style, run.company_name)
+	emblem.configure(run.logo)
 	head.add_child(emblem)
 	head.add_child(UiFactory.make_label(run.company_name, &"DialogTitle"))
 	var when := UiFactory.make_label(tr("SAVE_GROUP_LEGACY") if run.run_id == "" else tr("MENU_LAST_PLAYED").format(

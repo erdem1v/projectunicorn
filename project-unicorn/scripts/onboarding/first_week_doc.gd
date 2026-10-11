@@ -185,7 +185,7 @@ func show_draft(draft: Dictionary, step: int) -> void:
 	var named := step == 2 and company != ""
 	_v.slot.visible = not named
 	_v.emblem.visible = named
-	_v.emblem.configure(draft.logo_style, company)
+	_v.emblem.configure(draft.logo)
 	_v.company.visible = named
 	_v.company.text = company
 	var founder: String = draft.founder_name
