@@ -2309,16 +2309,17 @@ func _stage_tex_mem() -> float:
 # --onboard-shot=<1|2|3>[:<state>] | curtain. Prints the node count of the set-up, which NEW GAME from the menu matches
 # (--backdrop-probe), with its texture memory before the flat is up, and ONB|stage=live|figure=<id> once it is; the
 # frame waits for it. States: 1:plate (the plate and portrait the flat stands on until it is up), 1:cancel (a name
-# typed, then Esc), 2:random (Randomize), 2:hard_locked and 2:hard_open (the profile's finished runs, written to this
-# run's settings), 3:guided_locked, 3:reroll (Make new set pressed once); curtain is the curtain over step 3, which
-# names the mockup's company and picks its second emblem. Steps 2 and 3 are mounted straight: their draft need not be
-# whole.
+# typed, then Esc), 2:random (Randomize), 2:hard_locked and 2:hard_open (set on the document alone: the profile's
+# finished runs are never written), 3:guided_locked, 3:reroll (Make new set pressed once); curtain is the curtain over
+# step 3, which names the mockup's company and picks its second emblem. Steps 2 and 3 are mounted straight: their draft
+# need not be whole.
 func _run_onboard_shot(spec: String) -> void:
 	var state: String = spec.get_slice(":", 1) if ":" in spec else ""
-	if state.begins_with("hard_"):
-		Settings.set_value("runs_finished", int(state == "hard_open"))
 	_begin_shot()
 	_mount_flow()
+	if state.begins_with("hard_"):
+		_flow.get_node("%Doc").hard_open = state == "hard_open"
+		_flow._apply_layout()
 	var stage: Control = _flow.get_node("%Stage")
 	var live := [false]
 	stage.live_ready.connect(func() -> void:

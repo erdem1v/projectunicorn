@@ -11,6 +11,8 @@ const PORTRAIT := [Vector2(80, 100), Vector2(64, 80)]
 const KEY_W := [96, 84]
 const BAR_W := [50, 40]
 
+## Hard opens on the profile's finished runs; the onboarding shot sets it here and never writes the profile.
+var hard_open: bool = int(Settings.get_value("runs_finished", 0)) >= FounderConstants.HARD_OPENS_AFTER_RUNS
 var _v := {}   # the parts show_draft fills
 
 
@@ -116,7 +118,6 @@ func lay_out(short: bool) -> void:
 	var cells := HBoxContainer.new()
 	cells.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	var group := ButtonGroup.new()
-	var hard_open: bool = int(Settings.get_value("runs_finished", 0)) >= FounderConstants.HARD_OPENS_AFTER_RUNS
 	_v.cells = {}
 	for id: String in FounderConstants.DIFFICULTY_CASH_MULT:
 		var cell := Button.new()
@@ -189,9 +190,12 @@ func show_draft(draft: Dictionary, step: int) -> void:
 	_v.company.visible = named
 	_v.company.text = company
 	var founder: String = draft.founder_name
+	var line := tr("ONB_FOUNDER_LINE").format({"name": founder})
 	if founder == "":
+		# An unnamed founder goes by the role, which the line opens with: the role once, not twice.
 		founder = tr("HR_ROLE_FOUNDER")
-	_v.company_line.text = tr("ONB_FOUNDER_LINE").format({"name": founder}) if named else tr("ONB_DOC_COMPANY_EMPTY")
+		line = founder
+	_v.company_line.text = line if named else tr("ONB_DOC_COMPANY_EMPTY")
 
 	_v.face.texture = load(FounderConstants.portrait_path(draft.portrait_id))
 	_v.founder.text = founder
