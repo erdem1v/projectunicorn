@@ -4,8 +4,9 @@
 dosyasını oku ve uygula."
 **Durum:** co-director taslağı 2026-10-11; Erdem'in aynı günkü playtest notları ve kararlarıyla. Sayılar başlangıç
 değeridir, "onay bekliyor" diye iner, Erdem playtest'te çevirir.
-**Ne zaman:** Onarım 1'in A+B oturumu (Satış/Ekip/Ar-Ge/sprint dosyaları) bittikten sonra. D4 ve V3 olay kartıdır:
-motor v3 taşıması main'e indikten sonra.
+**Ne zaman:** hemen başlayabilir. A+B oturumu (`project-steam-2d`) Onarım 1'in sonunu ve O22 satış sürecini yazıyor
+(Satış, B2B, gelen kutusu dosyaları); bu PRD onlara dokunmaz, ortak dosyalarda (`strings.csv`, `endgame_smoke.gd`,
+`main.gd`) yalnız kendi hunk'larını commit'le. Motor v3 main'de (`5933acc`): D4 ve V3 kart işleri sırası gelince yapılır.
 **Tek cümle:** destek biletleri kimse atanmasa da yavaşça okunur ve oyuncu ürünün hatalı olduğunu görür; verim
 günün saatleriyle düşer, moral 40 saati aşınca aşınır, tükenmişlik ve izin vardır; işi biten ürün yöneticisi ve
 tasarımcı bir sonraki işe geçer, boşta kalan geliştirici oyuncuya söylenir.
