@@ -1199,7 +1199,9 @@ func _seed_goal(state: String) -> void:
 # open; card_tick (city only) = Plaza's card open through one daily tick: a _before frame, and an
 # OFFICECARD line with the cash reading the card draws before and after.
 # desk_shut = a live B2C product, the founder on the build, nobody at the support desk and twelve
-# reports in: the DESTEK card's counts and its refusal.
+# reports in, all missed this week: the DESTEK card's counts and its refusal. fix_run = the founder free
+# for the desk, nine confirmed bugs and three reports missed: Start (_01), then the run open with five
+# fixed (_02).
 # With --pan / --pan-gpu (OFFICE_PAN) the shot is handed over after the extra: the camera moves by pixel
 # offsets, the 3D image alone is saved and measured, and the process ends there.
 func _run_office_shot(spec: String) -> void:
@@ -1269,7 +1271,18 @@ func _run_office_shot(spec: String) -> void:
 			GameState.set_flag("mvp_market_type", "b2c")
 			GameState.set_flag("mvp_sub_product_type_id", "note_tool")
 			GameState.set_flag(ProductState.REPORTS_INCOMING, 12)
+			GameState.set_flag(ProductState.REPORTS_WEEK_NET, 12)
 			EventBus.build_progress_changed.emit()
+		"fix_run":
+			CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
+			GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
+			GameState.set_flag(ProductState.REPORTS_WEEK_NET, 3)
+			EventBus.build_progress_changed.emit()
+			await _shot_step("office_shot_%s_%02d_fix_run" % [office_id, hour], func() -> void:
+				GameState.set_flag(ProductState.FIX_RUN_ACTIVE, true)
+				GameState.set_flag(ProductState.FIX_RUN_FIXED, 5)
+				EventBus.build_progress_changed.emit())
+			return
 		"crown":
 			(view.lighting as OfficeLighting).crown_glow = 1.0
 			var cam: OfficeCamera = view.camera
@@ -2758,7 +2771,7 @@ func _run_hr_shot(kind: String) -> void:
 			WorkHoursSystem.set_group_hours(HRConstants.GROUP_DEVELOPMENT, 10)
 			var crew: Array[Character] = CharacterRegistry.get_employees()
 			if not crew.is_empty():
-				WorkHoursSystem.set_person_hours(crew[0].id, 6)
+				WorkHoursSystem.set_person_hours(crew[0].id, 7)
 			tab._open_hours_modal()
 		"saatler-sprint":   # LOC-DATA debug seed / id
 			# The live day stays 09:00 + 8 hours; the stepper's own write puts the draft at 15 (its top at 09:00).

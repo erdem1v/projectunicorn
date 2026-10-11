@@ -7,7 +7,7 @@ Dokuz kapı kararı (2026-08-08) işlenmiştir. Yeni terim ekleyen task bu dosya
 **Register:** EN, İngilizce yazılmış oyunun kendi sesi — kuru, düşük ateşli, satış-katı/haber-odası
 kayıtları yerinde. Makine-çeviri kokusu ve pazarlama İngilizcesi yasak. ALL-CAPS yüzey EN'de de
 ALL-CAPS; uzun çip = daha kısa kelime, asla daha geniş konteyner. INTEGRITY-law loanword seti
-(`pitch, startup, demo, momentum, MRR, runway, churn, burn` + `laptop, mail, VC` + `onboarding` (sahip kararı
+(`pitch, startup, demo, momentum, MRR, runway, churn, burn` + `laptop, mail, VC, hotfix` + `onboarding` (sahip kararı
 2026-10-11) + özel adlar) iki dilde aynıdır. Türkçe büyük harfte ödünç kelime gövdesi Latin I'yı korur, ardındaki
 Türkçe ek Türkçe kurala uyar (`Fmt.LOANWORD_STEMS`: `mail, onboarding, pitch, sprint`; "İlk sprinti" → "İLK SPRINTİ";
 sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
@@ -76,6 +76,8 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | sürüm notu | release note | |
 | hız *(sprint)* | velocity | HIZ / VELOCITY. Kişi ekseni "Hız ↔ Pace"ten ayrı anlam. |
 | düzeltme koşusu | fix run | DESTEK'in doğrulanmış hataları eriten koşusu; olay çipi "Düzeltme başlar ↔ A fix run starts" (`EFFECT_FIX_RUN_STARTS`). TR/EN onay bekliyor. |
+| hata düzeltme / hotfix | bug fixing / hotfix | DESTEK kartının düğmesi: kapalıyken "Hata düzeltmeyi başlat ↔ Start bug fixing", açıkken "Hotfix yayınla · {n} düzeltildi ↔ Ship hotfix · {n} fixed" (`PROD_FIX_RUN_*`). "hotfix" izinli ödünç kelimelerde (Erdem). TR/EN onay bekliyor. |
+| kaçırılan bildirim | missed report | Masanın o hafta bakamadığı bildirim: "Bu hafta {n} bildirim kaçırıldı ↔ {n} reports missed this week" (`BUILD_SUPPORT_MISSED`). TR/EN onay bekliyor. |
 
 ## 4. İnsanlar — eksenler, roller, bölümler, bantlar, HR
 

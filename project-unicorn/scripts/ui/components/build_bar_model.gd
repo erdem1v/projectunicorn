@@ -28,8 +28,9 @@ var decision_key: String = ""
 var decision_enabled: bool = false
 var refusal_key: String = ""     # eylem kapalıyken gerekçesi
 var live_bugs: int = 0           # doğrulanmış açık hata (§8.1)
-var incoming: int = 0            # doğrulanmayı bekleyen bildirim (§9)
+var missed: int = 0              # masanın bu hafta bakamadığı bildirim
 var fix_run_active: bool = false
+var fixed: int = 0               # açık koşunun düzelttiği, hotfix'le gidecek hata
 
 
 ## Yayındaki üründen kendini doldurur; ürün yayında değilse çizilecek kart yok, false. YAYINLANDI
@@ -46,9 +47,9 @@ func derive() -> bool:
 	# §8/§9 — çubuk, düzeltme koşusunun havuzu ne kadar erittiğidir. FIX_RUN_PROGRESS bir
 	# sonraki hataya kalan kesirdir; çubuğa konsa her çözülen hatada sıfıra düşerdi.
 	live_bugs = ProductState.bugs_confirmed()
-	incoming = ProductState.reports_incoming()
+	missed = ProductState.reports_missed()
 	fix_run_active = ProductState.fix_run_active()
-	var fixed: int = ProductState.fix_run_fixed()
+	fixed = ProductState.fix_run_fixed()
 	fill = 0.0 if live_bugs + fixed <= 0 else float(fixed) / float(live_bugs + fixed)
 	# Dolum, yüzdenin tek evi UiTokens.build_percent'ten geçer: çubuk yanındaki sayıyla çelişmez.
 	percent = UiTokens.build_percent(fill)
@@ -67,4 +68,4 @@ func derive() -> bool:
 ## Kartın çizdiği durumun parmak izi — yığın görünürlüğü ve smoke için.
 func fingerprint() -> String:
 	return "support|%.2f|%d|%s|%d|%d|%d|%d" % [fill, percent, split_note_key, int(decision_enabled),
-		live_bugs, incoming, int(fix_run_active)]
+		live_bugs, missed, int(fix_run_active)]

@@ -50,6 +50,9 @@ const USAGE_DIV_B2B := 10.0
 const VALIDATION_COEF := 0.8
 ## Ar-Ge §4.3 `bug_tracker` — aynı katsayının araştırılmış hâli.
 const VALIDATION_COEF_RESEARCHED := 1.0
+## Herkes mail okur: Destek'e atanmamış okurun (pasif ilgideki kurucu, bu hafta sprint kartı olmayan
+## çalışan) doğrulamaya katıldığı en düşük Müşteri İlişkileri puanı.
+const SUPPORT_BASE_POINTS := 2.0
 ## Modelin dışında, taşma koruması: işlenecek kaynak kalmadığında birikim en fazla bir
 ## birim bankalanır. Sınırsız bankalansaydı boş bir masada biriken kesir, ilk gelen
 ## bildirimi geldiği saniye doğrulardı — §8.2'nin "masa kapalı" hükmünü delerdi.
@@ -111,15 +114,18 @@ static func hourly_tick(_hour: int) -> void:
 	# Toplantı atlamasının saatinde kurucu masada payıyla sayılır (TimeManager.founder_output_factor).
 	var founder_share: float = TimeManager.founder_output_factor()
 	# §9 — bildirimler kendiliğinden gelir. Masa kapalı olsa da gelir; §8.2'nin
-	# kapattığı şey doğrulamadır, akış değil.
+	# kapattığı şey düzeltmedir, akış değil.
 	var reports: float = float(GameState.get_flag(ProductState.REPORTS_PROGRESS, 0.0)) \
 		+ TimeModel.per_tick(reports_per_day()) * f
 	var arrived: int = int(reports)
 	GameState.set_flag(ProductState.REPORTS_PROGRESS, reports - arrived)
 	GameState.set_flag(ProductState.REPORTS_INCOMING, ProductState.reports_incoming() + arrived)
-	# §8.2 — GELEN'i DOĞRULANMIŞ'a çevirir. Boş masa küçük bir sızıntı değil, tam sıfırdır.
-	_drain(ProductState.VALIDATION_PROGRESS, TimeModel.per_tick(validation_per_day(founder_share)) * f,
-		ProductState.REPORTS_INCOMING, ProductState.BUGS_CONFIRMED)
+	# §8.2 — GELEN'i DOĞRULANMIŞ'a çevirir; masa boşken de okurların tabanıyla.
+	var verified: int = _drain(ProductState.VALIDATION_PROGRESS,
+		TimeModel.per_tick(validation_per_day(founder_share)) * f, ProductState.REPORTS_INCOMING,
+		ProductState.BUGS_CONFIRMED)
+	GameState.set_flag(ProductState.REPORTS_WEEK_NET,
+		int(GameState.get_flag(ProductState.REPORTS_WEEK_NET, 0)) + arrived - verified)
 	# §8.4 — koşu DOĞRULANMIŞ'ı eritir ve çözülenleri sayar. Havuz boşalırsa koşu
 	# KENDİLİĞİNDEN BİTMEZ: yeni doğrulamaları da yer. Koşuyu bitiren yalnız oyuncudur.
 	_drain(ProductState.FIX_RUN_PROGRESS, TimeModel.per_tick(fix_per_day(founder_share)) * f,
@@ -129,6 +135,8 @@ static func hourly_tick(_hour: int) -> void:
 static func daily_tick() -> void:
 	if not ProductState.is_live():
 		return
+	# Kaçırılan bildirim haftalık sayılır ve tik bir haftadır.
+	GameState.set_flag(ProductState.REPORTS_WEEK_NET, 0)
 	apply_daily_satisfaction_damage()
 	# İlgi türetilir ama duruma geri yazılır: tüketicisi Satış/Pazarlama tek bir sayı okur.
 	GameState.set_flag(ProductState.INTEREST, interest_now())
@@ -180,7 +188,7 @@ static func usage_multiplier() -> float:
 # =========================================================================
 
 ## §8.2/§12.0 — DESTEK işine atanmış, bugün çalışabilir herkes; ARTI pasif ilgideki kurucu.
-## İzindeki/eğitimdeki kişi HRSystem tarafında zaten eleniyor. `_desk_sum` roster üzerinde
+## İzindeki/eğitimdeki kişi HRSystem tarafında zaten eleniyor. `_area_sum` roster üzerinde
 ## topladığı için masadaki temsilci ile pasif kurucu kendiliğinden toplanır.
 static func desk_roster() -> Array[Character]:
 	var roster: Array[Character] = HRSystem.assigned_to_job(HRConstants.JOB_SUPPORT)
@@ -209,37 +217,46 @@ static func founder_passive_care() -> bool:
 	return not HRSystem.is_busy(f) and f.assigned_job_ids.is_empty()
 
 
-## §8.2 — "Destek'e kimse atanmamışsa masa KAPALIDIR: GELEN birikir, hiçbir şey
-## doğrulanmaz, hiçbir şey düzeltilemez."
+## §8.2 — Destek'e kimse atanmamışsa masa KAPALIDIR: hiçbir şey düzeltilemez; doğrulama yalnız
+## okurların tabanıyla sürer.
 static func desk_staffed() -> bool:
 	return not desk_roster().is_empty()
 
 
 ## §8.2 — doğrulama/gün = katsayı × Σ `HRSystem.daily_contribution` (effective_skill × saat/8).
 ## Liderlik çarpanı BU FORMÜLDE YOK: §4.2 onu alanın toplamına uyguluyor ve §8.2 yazmıyor.
+## Herkes mail okur: masanın yanında bu hafta sprint kartı olmayan aktif çalışanlar da doğrular.
 static func validation_per_day(founder_share: float = 1.0) -> float:
 	if not ProductState.is_live():
 		return 0.0
 	var coef: float = VALIDATION_COEF_RESEARCHED if ResearchSeam.completed("bug_tracker") else VALIDATION_COEF
-	return coef * _desk_sum(HRConstants.AREA_CUSTOMER_SUCCESS, founder_share)
+	var readers: Array[Character] = desk_roster()
+	for c in CharacterRegistry.get_active_employees():
+		if not readers.has(c) and SprintSystem.role_of(c.id) == "":
+			readers.append(c)
+	return coef * _area_sum(readers, HRConstants.AREA_CUSTOMER_SUCCESS, founder_share, SUPPORT_BASE_POINTS)
 
 
-## §8.4 — düzeltme/gün = 1,2 × Σ etkin Yazılım × saat/8, yine YALNIZ Destek masası.
-## Koşu yokken 0: hiçbir hata kendiliğinden çözülmez (§8.1).
+## §8.4 — düzeltme/gün = 1,2 × Σ etkin Yazılım × saat/8, yine YALNIZ Destek masası ve tabansız:
+## mail okumak hata düzeltmez. Koşu yokken 0: hiçbir hata kendiliğinden çözülmez (§8.1).
 static func fix_per_day(founder_share: float = 1.0) -> float:
 	if not ProductState.is_live() or not ProductState.fix_run_active():
 		return 0.0
-	return FIX_COEF * _desk_sum(HRConstants.AREA_ENGINEERING, founder_share)
+	return FIX_COEF * _area_sum(desk_roster(), HRConstants.AREA_ENGINEERING, founder_share, 0.0)
 
 
 ## İki işteki kişi 0,5 odakla bölünür — `effective_skill` bunu zaten uyguluyor, yani
 ## koşu sırasında doğrulamanın sürmesi (§8.4) bedavaya gelmiyor. `founder_share` kurucunun
-## katkısını çarpar; yalnız saatlik tik toplantı payını verir.
-static func _desk_sum(area_key: String, founder_share: float) -> float:
+## katkısını çarpar; yalnız saatlik tik toplantı payını verir. Destek'e atanan tam puanıyla
+## sayılır, atanmamış en az `floor_points`'le.
+static func _area_sum(people: Array[Character], area_key: String, founder_share: float,
+		floor_points: float) -> float:
 	var total: float = 0.0
-	for c in desk_roster():
-		total += HRSystem.daily_contribution(c, area_key) \
-			* (founder_share if c.category == "founder" else 1.0)
+	for c in people:
+		var points: float = HRSystem.daily_contribution(c, area_key)
+		if not c.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
+			points = maxf(points, floor_points)
+		total += points * (founder_share if c.category == "founder" else 1.0)
 	return total
 
 
@@ -288,7 +305,7 @@ static func apply_daily_satisfaction_damage() -> void:
 
 ## §8.4 — "DOĞRULANMIŞ birikince DÜZELTME BAŞLAT açılır (DOĞRULANMIŞ 0 iken kapalıdır)."
 ## Masa kapalıysa da açılmaz: kimse yokken başlatılan koşu boş bir kabuk olurdu. Masa önce sorulur:
-## boş masada hiçbir şey doğrulanmaz, gelen bildirimler birikirken "hata yok" sebebi saklardı.
+## boş masa düzeltemez, "hata yok" sebebi bunu saklardı.
 static func fix_run_refusal() -> String:
 	if not ProductState.is_live():
 		return REFUSAL_NOT_LIVE
@@ -360,10 +377,11 @@ static func interest_now() -> float:
 # =========================================================================
 
 ## Günlük oranın bu saatlik payını birikime ekler ve tam birimleri `from_key` sayacından
-## `to_key` sayacına taşır. Kaynak tükenince birikim VALIDATION_BANK_MAX ile sınırlanır.
-static func _drain(progress_key: String, rate: float, from_key: String, to_key: String) -> void:
+## `to_key` sayacına taşır; taşıdığını döner. Kaynak tükenince birikim VALIDATION_BANK_MAX ile
+## sınırlanır.
+static func _drain(progress_key: String, rate: float, from_key: String, to_key: String) -> int:
 	if rate <= 0.0:
-		return
+		return 0
 	var prog: float = float(GameState.get_flag(progress_key, 0.0)) + rate
 	var source: int = int(GameState.get_flag(from_key, 0))
 	var moved: int = mini(int(prog), source)
@@ -374,3 +392,4 @@ static func _drain(progress_key: String, rate: float, from_key: String, to_key: 
 	GameState.set_flag(progress_key, prog)
 	GameState.set_flag(from_key, source)
 	GameState.set_flag(to_key, int(GameState.get_flag(to_key, 0)) + moved)
+	return moved

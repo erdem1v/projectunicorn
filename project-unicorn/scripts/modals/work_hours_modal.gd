@@ -383,8 +383,8 @@ func _morale_cell(emp: Character, hours: int, away: bool) -> HBoxContainer:
 	return cell
 
 
-## Kademeli şevron: 9s bir · 10s iki · 11s ve üstü üç aşağı, uyarı tonunda · 7s düz çizgi · 5-6s
-## yukarı, olumlu · 8s hiç. Kademenin cümlesi tooltip'te.
+## Kademeli şevron: 9s bir · 10s iki · 11s ve üstü üç aşağı, uyarı tonunda · 5-7s yukarı, olumlu
+## · 8s hiç. Kademenin cümlesi tooltip'te.
 func _morale_direction(hours: int) -> Control:
 	var delta: int = hours - HRConstants.WORK_HOURS_DEFAULT
 	if delta == 0:
@@ -393,7 +393,7 @@ func _morale_direction(hours: int) -> Control:
 	box.add_theme_constant_override("separation", -UiTokens.SPACE_XS)
 	box.tooltip_text = tr("HR_HOURS_HOVER_LONG" if hours > HOVER_KEYED_MAX else "HR_HOURS_HOVER_%d" % hours)
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
-	var glyph: String = "util/chevron_down" if delta > 0 else ("util/flat" if delta == -1 else "util/chevron_up")
+	var glyph: String = "util/chevron_down" if delta > 0 else "util/chevron_up"
 	for _i in (mini(delta, CHEVRON_MAX) if delta > 0 else 1):
 		box.add_child(UiFactory.make_glyph("res://assets/icons/%s.svg" % glyph, UiTokens.D_ICON_MARK,
 			UiTokens.D_warn() if delta > 0 else UiTokens.D_pos()))

@@ -125,7 +125,7 @@ static func _seed_target(emp: Character) -> void:
 
 
 ## §7.1 taban sürüklenme. Saat çarpanı ve aşırı yük YALNIZ buraya uygulanır; çarpan sıfırın
-## altına inince işaret döner ve moral yükselir (yedide durur, altıda yükselir).
+## altına inince işaret döner ve moral yükselir (sekizde durur, yedide yükselir).
 static func tick_drift() -> void:
 	var drift: float = TimeModel.per_tick(HRConstants.MORALE_BASE_DRIFT_PER_DAY)
 	for emp in CharacterRegistry.get_employees():

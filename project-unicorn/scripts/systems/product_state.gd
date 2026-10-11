@@ -18,6 +18,8 @@ const VALIDATION_PROGRESS := "mvp_validation_progress"
 const FIX_RUN_ACTIVE := "mvp_fix_run_active"
 const FIX_RUN_FIXED := "mvp_fix_run_fixed"
 const FIX_RUN_PROGRESS := "mvp_fix_run_progress"
+## Bu haftanın gelen bildirimi eksi doğrulananı; eksiye inebilir, `reports_missed` sıfırda keser.
+const REPORTS_WEEK_NET := "mvp_reports_week_net"
 const VERSION_LAUNCH_DAY := "mvp_version_launch_day"
 const INTEREST := "mvp_interest"
 const INFRA_PROVIDER := "mvp_infra_provider"
@@ -160,6 +162,11 @@ static func reports_incoming() -> int:
 
 static func bugs_confirmed() -> int:
 	return int(GameState.get_flag(BUGS_CONFIRMED, 0))
+
+
+## Masanın bu hafta bakamadığı bildirimler.
+static func reports_missed() -> int:
+	return maxi(int(GameState.get_flag(REPORTS_WEEK_NET, 0)), 0)
 
 
 ## Ürünün ticket defterinin yazma yolu: düzeltme kartı kapattığı doğrulanmış hataları düşer,

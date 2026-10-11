@@ -733,12 +733,13 @@ const START_HOUR_MIN := TimeModel.WEEK_START_HOUR
 const START_HOUR_MAX := 11
 
 ## §7.1 saat → moral çarpanı. Taban sürüklenmeye uygulanır; sıfırın altında işaret döner ve
-## moral yükselir. Yukarı doğru hızlanır; aşağıda yedide durur, altıda yükselir, beşte belirgin.
+## moral yükselir. Haftada 40 saate kadar moral aşınmaz: sekizde durur, altında yükselir, üstünde
+## hızlanarak aşınır.
 const HOUR_MORALE_MULT := {
 	5: -1.0,
 	6: -0.5,
-	7: 0.0,
-	8: 1.0,
+	7: -0.25,
+	8: 0.0,
 	9: 1.1,
 	10: 1.3,
 	11: 1.5,
@@ -851,8 +852,7 @@ const LEAD_OUTPUT_PER_POINT := 0.01
 const LEAD_MORALE_PER_POINT := 0.02
 
 ## Taban günlük düşüş; §7.1 saat çarpanı YALNIZ buna uygulanır, olay deltaları ham iner.
-## 0,25 = ayda 7,5 puan: sekiz saat geri sayım değil hafif baskıdır, yedi saat gerçek rahatlama.
-## Günlük orandır; tick_drift tik başına ×7 uygular.
+## 0,25 = çarpan 1,0'da ayda 7,5 puan. Günlük orandır; tick_drift tik başına ×7 uygular.
 const MORALE_BASE_DRIFT_PER_DAY := 0.25
 
 ## §7 "anında sıçramaz": görünen moral hedefe günde en fazla bu kadar yürür; tick_ease tik

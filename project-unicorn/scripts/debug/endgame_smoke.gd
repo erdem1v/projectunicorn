@@ -5259,7 +5259,7 @@ static func _case_hotfix_weekly_summary_rows() -> String:
 #  Destek Hattı Reworku — B2 · B3 · B4 · B5 (2026-08-27)
 # ============================================================================
 
-## B2 — REP + IDLE FOUNDER STACK. `_desk_sum` sums over the roster, so once B1 puts a passively
+## B2 — REP + IDLE FOUNDER STACK. `_area_sum` sums over the roster, so once B1 puts a passively
 ## caring founder INTO that roster the two rates add with no separate stacking rule. This case
 ## is the proof that they do, and that the sum is exactly the parts.
 ## FALSIFICATION: drop the founder out of `desk_roster()` and the combined rate equals the rep's.
@@ -6910,47 +6910,41 @@ static func _case_hr_leave_cycle() -> String:
 
 
 static func _case_hr_morale_drift_shape() -> String:
-	# §7.1'İN ÜÇ DÖNÜM NOKTASI. Taban sürüklenme AŞAĞI çalışır (§7.2 "Moral kendiliğinden
-	# iyileşmez") ve saat çarpanı sıfırın altına indiğinde İŞARET DÖNER:
-	#   8 saat ×1,0  → erir          (taban)
-	#   7 saat ×0    → DURUR
-	#   5 saat ×−1,0 → taban hızında YÜKSELİR
-	# Kısa günün bütün toparlanma mekaniği bu tek tablodan geliyor; ayrı bir sistem yok.
+	# §7.1 SAAT TABLOSU. Haftada 40 saate kadar moral aşınmaz: taban sürüklenme sekizde DURUR,
+	# sekizi aşan günde aşağı çalışır, altında İŞARET DÖNER ve moral yükselir. Kısa günün bütün
+	# toparlanma mekaniği bu tek tablodan geliyor; ayrı bir sistem yok.
 	#
-	# FALSİFİKASYON: HRConstants.HOUR_MORALE_MULT'ta 7'yi 0 yerine 1,0 yap → "seven hours"
-	# iddiası FAIL eder. 5'i pozitif yap → "five hours" iddiası FAIL eder.
+	# FALSİFİKASYON: HRConstants.HOUR_MORALE_MULT'ta 8'i 1,0 yap → "8h" iddiası FAIL eder. 10'u
+	# eksiye çevir → "10h" iddiası FAIL eder. 5'i pozitif yap → "5h" iddiası FAIL eder.
 	GameState.set_flag("debug_hr_force", "fail")   # istifa roll'u atmasın
-	GameState.set_cash(500000)   # 36 haftalık burn kasayı eritmesin; nakit krizi morale dokunur
+	GameState.set_cash(500000)   # 62 haftalık burn kasayı eritmesin; nakit krizi morale dokunur
 	var days: int = 12   # tik; her tik yedi günlük drift
-	var expect: int = int(round(TimeModel.per_tick(HRConstants.MORALE_BASE_DRIFT_PER_DAY) * float(days)))
 
-	# --- 8 SAAT: taban hızında erir ---
+	# --- 8 SAAT, 26 HAFTA: moral kıpırdamaz ---
 	var base_emp: Character = _make_employee("drift_base", "Drift Base", HRConstants.ROLE_DEVELOPER,
 		SEED_PACE, 0, 60)
 	_park_leave([base_emp])
 	var before: int = base_emp.morale
-	for i in days:
+	for i in 26:
 		_sim_day()
-	if base_emp.morale != before - expect:
-		return "8h drifted %d over %d ticks, want -%d (§7.1 taban)" % [
-			base_emp.morale - before, days, expect]
+	if base_emp.morale != before:
+		return "8h moved morale %d -> %d over 26 weeks; up to 40 hours it holds" % [before, base_emp.morale]
 
-	# --- 7 SAAT: DURUR. Çarpan tam sıfır, yani hiçbir yöne gitmez. ---
-	WorkHoursSystem.set_company_hours(7)
+	# --- 10 SAAT: aşınır ---
+	WorkHoursSystem.set_company_hours(10)
 	var held: int = base_emp.morale
 	for i in days:
 		_sim_day()
-	if base_emp.morale != held:
-		return "7h moved morale by %d — §7.1 says the drift STOPS there" % [base_emp.morale - held]
+	if base_emp.morale >= held:
+		return "10h did not wear morale (%d -> %d)" % [held, base_emp.morale]
 
-	# --- 5 SAAT: taban hızında YÜKSELİR (§8.3 kısa gün, §7.2'nin üçüncü kanalı) ---
+	# --- 5 SAAT: YÜKSELİR (§8.3 kısa gün, §7.2'nin üçüncü kanalı) ---
 	WorkHoursSystem.set_company_hours(5)
 	var low: int = base_emp.morale
 	for i in days:
 		_sim_day()
-	if base_emp.morale != low + expect:
-		return "5h moved %d over %d ticks, want +%d (§7.1 ×-1,0)" % [
-			base_emp.morale - low, days, expect]
+	if base_emp.morale <= low:
+		return "5h did not lift morale (%d -> %d)" % [low, base_emp.morale]
 
 	# --- AŞIRI YÜK BİR TABAN KOYAR (§7.1 / §12.1) ---
 	# "Aşırı yüklü bir çalışan kısa günden en fazla erimesinin durması kadar fayda görür;
@@ -13250,71 +13244,53 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 	SupportSystem.reset()
 
 
-## §8.2 — MASA BOŞSA HİÇBİR ŞEY DOĞRULANMAZ. Modülün merkez baskısı budur: bildirimler
-## kendiliğinden gelir, ama hiçbir hata kendiliğinden çözülmez (§8.1). Boş masa bir
-## "az doğrulama" durumu değil, TAM OLARAK SIFIR durumudur.
+## §8.2 — HERKES MAİL OKUR. Masada kimse yokken de canlı üründe bildirimler okunur: pasif ilgideki
+## kurucu ve bu hafta sprint kartı olmayan çalışan en az SUPPORT_BASE_POINTS'le doğrular. Masaya
+## oturan temsilci doğrulamayı en az üç katına çıkarır. Masanın bakamadığı bildirim haftalık
+## "kaçırılan" sayılır: temsilcisiz büyüyen üründe artar, temsilci gelince düşer. Taban yalnız
+## doğrulamadır: masa kapalıyken koşu açılmaz ve kart masanın sebebini söyler.
 ##
-## FALSİFİKASYON: validation_per_day'i atanmamış herkesi de sayacak şekilde değiştir →
-## "confirmed stayed flat" iddiası FAIL. fix_run_refusal'da masa denetimini "hata yok"un arkasına al →
-## ret sebebi iddiası FAIL.
+## FALSIFICATION: fix_run_refusal'da masa denetimini "hata yok"un arkasına al → "shut desk" FAIL;
+## SUPPORT_BASE_POINTS 0 → "verified nothing" FAIL; 3 → "three times" FAIL;
+## ProductState.reports_missed 0 dönerse → "did not grow" FAIL; hourly_tick haftanın netinden
+## `verified`'ı düşmezse → "did not cut" FAIL.
 static func _case_destek_empty_desk_piles_up() -> String:
 	_seed_support_fixture("b2c")
-	GameState.set_flag("b2c_audience", 4000.0)
-	# BORDRODA VAR, MASADA YOK. Bu satır olmadan iddia boşa düşüyordu: kadro bomboşken
-	# "atamayı yoksay" mutasyonu da sıfır üretir, yani case atamayı değil BOŞLUĞU
-	# ölçüyordu. Falsifikasyon bunu yakaladı.
-	var idle: Character = _make_employee("idle_rep", "Idle Rep", HRConstants.ROLE_CUSTOMER_REP)
-	idle.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 8
-	# VE MASADAN İNDİRİLMEK ZORUNDA (B3, 2026-08-27). Müşteri Temsilcisi artık KENDİ birincil
-	# işine, yani DESTEK MASASINA doğuyor — bu turun düzelttiği şeyin ta kendisi. Bu satır
-	# olmadan "bordroda var, masada yok" fikstürü kendi kendini çürütüyordu: `_make_employee`
-	# onu masaya oturtuyor ve case daha ilk iddiada düşüyordu.
-	CharacterRegistry.clear_jobs(idle.id)
-	# KURUCU MEŞGUL OLMAK ZORUNDA (B1, 2026-08-27). §8.2'nin BOŞ MASASI artık "kimse atanmadı"
-	# değil "kimse atanmadı VE kurucu başka bir şey yapıyor" demektir: işsiz bir kurucu canlı
-	# üründe kendiliğinden müşterilerle ilgilenir ve masayı doldurur. Bu satır olmadan case
-	# kendi kurduğu dünyayı ölçemezdi — düştüğü yer de tam orasıydı. Ölçtüğü şey DEĞİŞMEDİ:
-	# masa gerçekten boşken hiçbir şey doğrulanmaz.
-	var busy_founder: Character = CharacterRegistry.get_founder()
-	if busy_founder != null:
-		CharacterRegistry.assign_job(busy_founder.id, HRConstants.JOB_BUILD)
-
-	if SupportSystem.desk_staffed():
-		return "the desk reads staffed before anyone was assigned"
-	if absf(SupportSystem.validation_per_day()) > 0.0001:
-		return "an empty desk validates %.4f/day — §8.2 says nothing" \
-			% SupportSystem.validation_per_day()
-
-	for h in 24:
-		SupportSystem.hourly_tick(h)
-	var incoming_empty: int = ProductState.reports_incoming()
-	if incoming_empty <= 0:
-		return "no reports arrived at all — §9's flow never reaches zero"
-	if ProductState.bugs_confirmed() != 0:
-		return "%d bugs were confirmed with nobody at the desk" % ProductState.bugs_confirmed()
-	# Ve düzeltme koşusu da açılmaz: doğrulanmamış hata düzeltilemez.
-	if SupportSystem.can_start_fix_run():
-		return "a fix run could start with an empty desk and zero confirmed bugs"
-	# Kart sebebi söyler, sonucu değil: doğrulanmış sıfır, çünkü masada kimse yok.
+	# Akış yalnız kitleyle oynasın: yeni kod terimi haftadan haftaya sönerdi.
+	GameState.set_flag(ProductState.NEW_CODE_EFFORT, 0.0)
+	var founder: Character = CharacterRegistry.get_founder()
+	_set_founder_area(HRConstants.AREA_CUSTOMER_SUCCESS, 0)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
 	if SupportSystem.fix_run_refusal() != SupportSystem.REFUSAL_DESK_SHUT:
 		return "an empty desk with zero confirmed bugs refused as '%s', not as the shut desk" \
 			% SupportSystem.fix_run_refusal()
+	CharacterRegistry.clear_jobs(founder.id)
+	var alone: float = SupportSystem.validation_per_day()
+	var week := func(audience: float) -> int:
+		GameState.set_flag("b2c_audience", audience)
+		for h in TimeModel.HOURS_PER_DAY:
+			SupportSystem.hourly_tick(h)
+		var missed: int = ProductState.reports_missed()
+		SupportSystem.daily_tick()
+		return missed
 
-	# --- masaya biri oturunca doğrulama BAŞLAR ---
-	var rep: Character = _make_employee("desk_rep", "Desk Rep", HRConstants.ROLE_CUSTOMER_REP)
-	rep.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 8
-	if CharacterRegistry.assign_job(rep.id, HRConstants.JOB_SUPPORT) != "":
-		return "could not seat anyone at the support desk"
-	if not SupportSystem.desk_staffed():
-		return "the desk still reads empty with someone assigned"
-	if SupportSystem.validation_per_day() <= 0.0:
-		return "a staffed desk still validates nothing"
-	for h2 in 24:
-		SupportSystem.hourly_tick(h2)
+	# İki hafta, kurucunun Müşteri İlişkileri 0, masada kimse yok; kitle büyüyor.
+	var small: int = week.call(4000.0)
+	var grown: int = week.call(20000.0)
 	if ProductState.bugs_confirmed() <= 0:
-		return "a staffed desk confirmed nothing over a full day"
-	if ProductState.reports_incoming() >= incoming_empty + 24:
-		return "validation did not draw anything out of the incoming pool"
+		return "a founder with CS 0 and nobody at the desk verified nothing in two weeks"
+	if grown <= small:
+		return "missed reports did not grow with the product (%d -> %d)" % [small, grown]
+
+	var rep: Character = _make_employee("desk_rep", "Desk Rep", HRConstants.ROLE_CUSTOMER_REP)
+	if not SupportSystem.desk_roster().has(rep):
+		return "fixture: the rep was not seated at the desk"
+	if SupportSystem.validation_per_day() < 3.0 * alone:
+		return "one rep at the desk verifies %.2f/day against %.2f without; want three times" % [
+			SupportSystem.validation_per_day(), alone]
+	var with_rep: int = week.call(24000.0)
+	if with_rep >= grown:
+		return "a rep at the desk did not cut the missed reports (%d -> %d)" % [grown, with_rep]
 	return ""
 
 

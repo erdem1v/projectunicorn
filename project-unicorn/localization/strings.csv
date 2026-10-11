@@ -566,7 +566,8 @@ PROD_RND_NODE_ACCESSIBILITY,Erişilebilirlik,Accessibility
 PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
 BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
 BUILD_SUPPORT_CONFIRMED,Doğrulanmış {n},Confirmed {n}
-BUILD_SUPPORT_INCOMING,Gelen {n},Incoming {n}
+BUILD_SUPPORT_MISSED,Bu hafta {n} bildirim kaçırıldı,{n} reports missed this week
+BUILD_SUPPORT_MISSED_ONE,Bu hafta {n} bildirim kaçırıldı,{n} report missed this week
 FIX_RUN_REFUSED_NO_BUGS,Doğrulanmış hata yok.,No confirmed bugs.
 PROD_PERCENT,%{n},{n}%
 HR_ROLE_FOUNDER,Kurucu,Founder
@@ -623,8 +624,8 @@ HR_HOURS_CANCEL,Vazgeç,Cancel
 HR_HOURS_APPLY,Uygula,Apply
 HR_HOURS_HOVER_5,Kısa gün morali belirgin toparlar,A short day markedly restores morale
 HR_HOURS_HOVER_6,Kısa gün morali toparlar,A short day restores morale
-HR_HOURS_HOVER_7,Kısa gün moral erimesini durdurur,A short day stops morale eroding
-HR_HOURS_HOVER_9,Ek mesai morali normalden hızlı eritir,Overtime erodes morale faster than normal
+HR_HOURS_HOVER_7,Kısa gün morali yavaşça toparlar,A short day slowly restores morale
+HR_HOURS_HOVER_9,Ek mesai morali eritir,Overtime erodes morale
 HR_HOURS_HOVER_10,Ek mesai morali belirgin hızlı eritir,Overtime erodes morale markedly faster
 HR_HOURS_HOVER_11,Ek mesai morali çok hızlı eritir,Overtime erodes morale very fast
 HR_HOURS_HOVER_LONG,On bir saatlik günü aşan her saat morali daha da hızlı eritir,Every hour past an eleven-hour day erodes morale faster still
@@ -1235,8 +1236,8 @@ PROD_EV_ITER_DECISION_BODY,"İlk tasarım turu bitti. Frank prototipin başında
 ""The rounds keep going on their own · each one burns time and polishes the design a little more. But every round returns less than the one before. The moment you say enough, we move to development; at some point you need better people, not more rounds."""
 PROD_ITER_KEEP_GOING,Turlar sürsün,Keep the rounds going
 PROD_PATH_B2B,Kontrat,Contract
-PROD_FIX_RUN_START,Düzeltme başlat,Start a fix run
-PROD_FIX_RUN_END,Koşuyu bitir,End the run
+PROD_FIX_RUN_START,Hata düzeltmeyi başlat,Start bug fixing
+PROD_FIX_RUN_END,Hotfix yayınla · {n} düzeltildi,Ship hotfix · {n} fixed
 PROD_TREND_RISING,ARTIYOR,RISING
 VC_WHY_MRR_STRONG,MRR güçlü,MRR is strong
 VC_WHY_MRR_WEAK,MRR zayıf,MRR is weak
