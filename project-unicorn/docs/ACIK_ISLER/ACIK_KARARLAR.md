@@ -857,11 +857,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   düşmüyor. Açık: an (`SeedRoundSystem.accept` ya da `seed_round_closed` dinleyicisi), kaynak ("Ekonomi Postası" ya da
   "İÇERİDEN"), metin, fon ve tutarın yazılıp yazılmayacağı. Kaynak: SONLAR_GAZETE_MODLAR §6, SONLAR #18.
 
-- **ANA MENÜ sonrası.** Ana menü sahnesi yok. ANA MENÜ koşuyu elle kayıt slotuna yazıp oyunu yeniden başlatıyor
-  ("sanki varmış gibi"). Açılış ekranında kayıt yükleme girişi yok (ESC → Yükle ile açılıyor). Yeniden başlatma, debug'da
-  komut satırından verilen `--build=ea`'yı düşürüyor. Açık: ana menü gelene kadar bu hâl yeterli mi.
-  Kaynak: SONLAR_GAZETE_MODLAR §U.4 madde 4–5.
-
 - **B2 ekonomisi (D13).** Kapı gününde (5 tohum) son ay marjı %63–75, kârlı ay serisi 7–11. Demo'da yüzleşme sayılan her
   hareket ertesi gün bootstrap zaferi getiriyor; satın alma teklifi pratikte görünmüyor. ch08 §2 marjın ölçekle düşmesini
   istiyor. "Harness mi ekonomi mi" karşılaştırması yapılmadı. Ofis gideri 0 (`FinanceSystem`'deki "office" TODO).
@@ -2095,3 +2090,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     ekonomiyi yeniden oynatacak; ölçüm o işlerden sonra tekrarlanır.
   - Kaynak: sahip kararı 2026-10-11 (yardımcı yönetmen iletti: 0,15 eşiği O22'nin emniyetiydi, O22 süreleriyle olduğu
     gibi girdi; gider tarafı bu maddede, uygulama yok); 98; O19 `419ee6e`; O22; ölçüm kayıtları repo dışında.
+
+- **109 · Menü sonrası açıklar (ana menü işine alınmadı).**
+  - Yayın engeli, Xbot küçük resimleri: `assets/art/office/thumb_<id>.jpg` Xbot karakterleriyle render edilmiştir (three.js örnek modeli, Mixamo kökenli; lisansı doğrulanmadı; `assets/art/office/README.md`, `tools/office3d/README.md`). Seçenek (uygulama yok): küçük resimleri Quaternius kişileriyle ya da kişisiz yeniden üretmek (render hattı aynı).
+  - `use_custom_user_dir` ve göç: `user://` bugün `%APPDATA%/Godot/app_userdata/Project Unicorn`'dur, `project.godot`'ta `use_custom_user_dir` yoktur. Steam Auto-Cloud sabit, ada bağlı bir kök yol ister; açılırsa mevcut kayıtlar yeni dizine taşınır (göç adımı şart). Seçenekler (uygulama yok): açıp göçü yazmak ya da Auto-Cloud kullanılmayacaksa bırakmak.
+  - Steam istek listesi: menüde 'İstek listesine ekle' düğmesi yoktur. Sonlardaki WISHLIST'E EKLE'nin mağaza adresi boştur (`ending_scene.gd`) ve basılınca bir şey yapmaz; adres gelince menüde de olup olmayacağı ve yeri sahibin.
+  - UI tık sesi ve menü müziği: menüde bugünkü tek parça çalar; SFX bus'ında oynatıcı olmadığından Ayarlar'da Efektler kaydırıcısı kapalıdır (`SET_SFX_NONE`). Tık sesi ve menüye ayrı parça, parçanın kaynağı ve lisansı (`Döngü Modu.mp3`) açılana dek yapılmaz.
+  - Kaynak: ana menü denetimi (L5, D6, M7, M8); sahip kararı 2026-10-11 (istek listesi menüden düştü; D6 ve M7 ertelendi).
