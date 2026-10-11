@@ -8,10 +8,6 @@ extends RefCounted
 # class_name yok, okuyanlar preload eder: paylaşılan checkout'ta yeni bir class_name, öteki
 # oturumların headless koşularını global class-cache yarım kalınca düşürüyor.
 
-## B2C'de para adımlarının (ödeyen, aylık gelir, Traction) sekmesi: Satış'ın B2C sayfası yok, kitle ve
-## fiyat Ürün'de.
-const B2C_MONEY_TAB := "product"
-
 
 ## "cheque", "seed" ya da "". Çek listesi kabul, ret ya da süre dolumuyla cevaplanana dek açıktır; düşen
 ## satır cevap değildir, kart gösterilmeden koşulu bozulmuştur. Seed listesi Series A Avı'na, imzaya ya
@@ -29,25 +25,24 @@ static func list() -> String:
 ## Etkin listenin adımları sırayla, [{id, done, text_key, tab}]; MRR adımları canlı `value` ve `target`
 ## da taşır. Ödeyen ve gelir adımları canlıdır: müşteri giderse ya da MRR düşerse adım yeniden açılır.
 static func steps() -> Array:
-	var b2b: bool = SalesSystem.is_b2b_market()
-	var money_tab: String = "sales" if b2b else B2C_MONEY_TAB
 	match list():
 		"cheque":
 			# Tür seçimi Sprint 1'i planlamada açar; sonraki her kip ya da sprint ilkinin başladığını söyler.
 			var started: bool = SprintSystem.is_typed() \
 				and (SprintSystem.mode() != "plan" or SprintSystem.sprint_number() > 1)
-			var paying: bool = CustomerRegistry.account_count() > 0 if b2b else SalesSystem.b2c_paying_users() > 0
+			var paying: bool = CustomerRegistry.account_count() > 0 if SalesSystem.is_b2b_market() \
+				else SalesSystem.b2c_paying_users() > 0
 			return [
 				{"id": "type", "done": SprintSystem.is_typed(), "text_key": "CHEQUE_STEP_TYPE", "tab": "product"},
 				{"id": "sprint", "done": started, "text_key": "CHEQUE_STEP_SPRINT", "tab": "product"},
 				{"id": "ship", "done": ProductState.is_live(), "text_key": "CHEQUE_STEP_SHIP", "tab": "product"},
-				{"id": "paying", "done": paying, "text_key": "CHEQUE_STEP_PAYING", "tab": money_tab},
+				{"id": "paying", "done": paying, "text_key": "CHEQUE_STEP_PAYING", "tab": "sales"},
 				{"id": "mrr", "done": GameState.mrr >= AngelRoundSystem.MRR_THRESHOLD, "text_key": "CHEQUE_STEP_MRR",
-					"tab": money_tab, "value": GameState.mrr, "target": AngelRoundSystem.MRR_THRESHOLD},
+					"tab": "sales", "value": GameState.mrr, "target": AngelRoundSystem.MRR_THRESHOLD},
 			]
 		"seed":
 			return [
-				{"id": "traction", "done": GameState.phase >= 2, "text_key": "GOAL_STEP_TRACTION", "tab": money_tab},
+				{"id": "traction", "done": GameState.phase >= 2, "text_key": "GOAL_STEP_TRACTION", "tab": "sales"},
 				{"id": "seed", "done": SeedRoundSystem.page_unlocked(), "text_key": "GOAL_STEP_SEED", "tab": "finance",
 					"value": GameState.mrr, "target": SeedConstants.DOOR_MRR},
 			]

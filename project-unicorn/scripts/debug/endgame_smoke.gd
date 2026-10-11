@@ -4259,14 +4259,15 @@ static func _case_angel_hire_nudge() -> String:
 
 
 ## ChequeRead is the run's one goal source. Frank's cheque list walks 0 to 5 on a B2C and on a B2B
-## product, its paying and revenue steps read live; once the cheque is answered the seed list walks 0
-## to 2 and stays open at 2/2 until the signature, and a pitch burned without an offer closes it too.
+## product, its paying and revenue steps read live and lead to the Sales tab in both markets; a first
+## sprint the player skips counts as started. Once the cheque is answered the seed list walks 0 to 2
+## and stays open at 2/2 until the signature, and a pitch burned without an offer closes it too.
 ## A dropped cheque row keeps the cheque list open, an expired or a declined one closes it. No daily
 ## tick runs: no card arrives, the fixture sets every step.
 ##
 ## FALSIFICATION: cut step 2 down to `mode() != "plan"` and sprint 2's planning fails; read the
 ## cheque's history through `fire_count` and the dropped row fails; let a `chosen` row keep the list
-## open and the declined row fails.
+## open and the declined row fails; ask step 2 for a card in the sprint and the skipped sprint fails.
 static func _case_cheque_read_steps() -> String:
 	var bad: Array[String] = []
 	var reads := func(when: String, want: String) -> void:
@@ -4280,7 +4281,7 @@ static func _case_cheque_read_steps() -> String:
 		var got: Array = [step.get("value"), step.get("target")]
 		if got != [GameState.mrr, target]:
 			bad.append("%s: the MRR step reads %s, want %s" % [when, got, [GameState.mrr, target]])
-	var build := func(subtype: String, money_tab: String) -> void:
+	var build := func(subtype: String) -> void:
 		reads.call(subtype, "cheque 0/5 type@product")
 		SprintSystem.choose_type(subtype, "Notly")
 		reads.call(subtype + " typed", "cheque 1/5 sprint@product")
@@ -4294,32 +4295,31 @@ static func _case_cheque_read_steps() -> String:
 				subtype, SprintSystem.mode(), SprintSystem.sprint_number()])
 		reads.call(subtype + " sprint 2 planning", "cheque 2/5 ship@product")
 		GameState.set_flag("mvp_shipped", true)
-		reads.call(subtype + " shipped", "cheque 3/5 paying@" + money_tab)
+		reads.call(subtype + " shipped", "cheque 3/5 paying@sales")
 
-	var b2c: String = ChequeRead.B2C_MONEY_TAB
-	build.call("note_tool", b2c)
+	build.call("note_tool")
 	SalesSystem.open_b2c_paid_tier(15)   # the userbase record, nobody paying yet
-	reads.call("b2c tier open", "cheque 3/5 paying@" + b2c)
+	reads.call("b2c tier open", "cheque 3/5 paying@sales")
 	CustomerRegistry.set_seats(SalesSystem.B2C_USERBASE_ID, 1)
-	reads.call("b2c paying", "cheque 4/5 mrr@" + b2c)
+	reads.call("b2c paying", "cheque 4/5 mrr@sales")
 	bar.call("b2c paying", AngelRoundSystem.MRR_THRESHOLD)
 	CustomerRegistry.set_mrr(SalesSystem.B2C_USERBASE_ID, AngelRoundSystem.MRR_THRESHOLD)
 	SalesSystem.reflect_mrr()
 	reads.call("b2c at the bar", "cheque 5/5 -")
 	CustomerRegistry.set_seats(SalesSystem.B2C_USERBASE_ID, 0)
-	reads.call("b2c payers gone", "cheque 4/5 paying@" + b2c)
+	reads.call("b2c payers gone", "cheque 4/5 paying@sales")
 	EvHistory.record(ANGEL_ID, EvHistory.RESOLUTION_DROPPED, "", "", {}, [])
-	reads.call("cheque dropped", "cheque 4/5 paying@" + b2c)
+	reads.call("cheque dropped", "cheque 4/5 paying@sales")
 	EvHistory.record(ANGEL_ID, EvHistory.RESOLUTION_EXPIRED, "", "", {}, [])
-	reads.call("cheque expired", "seed 0/2 traction@" + b2c)
+	reads.call("cheque expired", "seed 0/2 traction@sales")
 	EvHistory.record(ANGEL_ID, EvHistory.RESOLUTION_CHOSEN, "decline", "refused", {}, [])
-	reads.call("cheque declined", "seed 0/2 traction@" + b2c)
+	reads.call("cheque declined", "seed 0/2 traction@sales")
 	GameState.seed_pitch_used = true
 	reads.call("seed pitch burned", "none")
 
 	SaveManager.reset_all_owners()
 	GameState.initialize_run({"seed": 424242})
-	build.call("erp", "sales")
+	build.call("erp")
 	_seed_b2b(AngelRoundSystem.MRR_THRESHOLD - 1)
 	reads.call("b2b account", "cheque 4/5 mrr@sales")
 	bar.call("b2b account", AngelRoundSystem.MRR_THRESHOLD)
@@ -4340,6 +4340,12 @@ static func _case_cheque_read_steps() -> String:
 	reads.call("seed offer waiting", "seed 2/2 -")
 	GameState.record_seed_round(15, 120000, "anchor")
 	reads.call("seed signed", "none")
+
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	SprintSystem.choose_type("erp", "Notly")
+	SprintSystem.skip()
+	reads.call("sprint 1 skipped", "cheque 2/5 ship@product")
 	return "; ".join(bad)
 
 
