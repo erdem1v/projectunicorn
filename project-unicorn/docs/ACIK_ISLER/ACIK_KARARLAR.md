@@ -464,17 +464,19 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Kaynak: Ekip GDD §12.0, §4.4, §10.4.
 
 - **39 · Satış sekmesinin Risk sebebi ile elde tutma kartındaki müşteri sesi farklı kurala bakıyor.**
-  - Ne oluyor: `sales_tab._card_risk`, `ProductSystem.live_bug_count() > B2BConstants.COMPLAINT_BUG_GATE` ise "sık
-    kesinti şikayeti" (`SALES_REASON_OUTAGE`), değilse "memnuniyet düşüyor" (`SALES_REASON_SATISFACTION`) yazıyor.
+  - Ne oluyor: Satış sekmesinin hesap kartı sebebi `Inbox.risk_reason(c)`'den okur (O20 `324ba37`):
+    `ProductSystem.live_bug_count() > B2BConstants.COMPLAINT_BUG_GATE` ise "sık kesinti şikayeti" (`SALES_REASON_OUTAGE`),
+    değilse hesabın söz defteri (`trust_offset`) 0 ya da üstündeyse "ürünün kararlılığı yetmiyor"
+    (`SALES_REASON_STABILITY`), altındaysa "memnuniyet düşüyor" (`SALES_REASON_SATISFACTION`).
     Aynı hesabın elde tutma kartındaki sesi `B2BSalesSystem.risk_voice` seçiyor: önce kırılmış söz (`b2b_broke_<id>` →
     `B2B_RISK_VOICE_BROKEN`), sonra `ProductState.bugs_confirmed() > COMPLAINT_BUG_GATE` ya da
     `InfraSystem.is_over_capacity()` (sektör şikâyeti), en son kısa ses. İki yol farklı hata sayacı okuyor; kapasite
     aşımı ve kırılmış söz sekmede sebep olarak hiç görünmüyor.
-  - Nerede: `scripts/tabs/sales_tab.gd` (`_card_risk`); `scripts/systems/b2b_sales_system.gd` (`risk_voice`);
+  - Nerede: `scripts/ui/components/inbox.gd` (`risk_reason`), `scripts/tabs/sales_tab.gd` (`_account_card`); `scripts/systems/b2b_sales_system.gd` (`risk_voice`);
     `scripts/systems/product_system.gd` (`live_bug_count`); `ProductState.bugs_confirmed`;
     `InfraSystem.is_over_capacity`.
-  - Oyuncuya etkisi: Sekme "Sebep: memnuniyet düşüyor" derken kart altyapı şikâyeti ya da kırılmış söz sesiyle
-    açılabiliyor; tersi de olabiliyor.
+  - Oyuncuya etkisi: Sekme "Sebep: ürünün kararlılığı yetmiyor" derken kart altyapı şikâyeti sesiyle açılabiliyor;
+    kırılmış söz sekmede "memnuniyet düşüyor" diye okunur, kendi sebep satırı yok.
   - Seçenekler: A) Sekme `risk_voice`'un sırasını ve yüklemini kullanır; kırılmış söz için yeni bir sebep satırı
     gerekir (yeni metin, onay bekler). B) Yalnız hata yüklemi `risk_voice` ile aynı yapılır (onaylı hata ya da
     kapasite aşımı), iki sebep kalır. C) Kalır.
@@ -879,7 +881,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   dosya sahip kararıyla silindi. Açık kararlar: perde sınırları, kişisel runway, 730'un Perde 2 saati olması, remote
   çalışan ve ekip tavanı, İK rolü, run kartı, teknik borç, tükenmişlik sonu. 3D sanat yönü ve kapsamı ile ofis kataloğu
   2026-09-27'de karara bağlandı (gerçek zamanlı izometrik 3B ofis; Ev → İş hanı → Plaza katı → Depo loft;
-  `GDDs/GUNCELLEMELER.md` ch12); kalan: kira ve ekonominin bağlanması (60. madde). #11 (kurgu etkinlik adları) karar
+  `GDDs/GUNCELLEMELER.md` ch12). #11 (kurgu etkinlik adları) karar
   değil, mevcut yasadır (ch14 §6). Birçoğu yürürlükteki GDD'lerle çelişiyor (ch14 §7 çalışan yüzü, Ekip GDD ekip
   tavanı). Kaynak: VIZYON_v1_YANITLAR §2–§3.
 
@@ -1562,10 +1564,11 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   ACIK_KARARLAR_D1-D13 §6'da. İnceleme notu: hepsi TR önce yeniden yazılır; F4 satırları E modelinden türetilmeli; F5 dönüş
   vaat ediyor; F2 suçlayıcı. Kaynak: ONERI_v3 K32, ACIK_KARARLAR_D1-D13 D11.
 
-- **K31 · Toplantı diyaloglarının yazım turu.** Satış toplantısında 54 satır "PH:" yer tutucusu taşıyor; ayrıca Ekip'teki
-  kurucu durum etiketi `HR_FOUNDER_STATE_CARE` "PH:" taşıyor. VC ve seed'de tepki satırları az ve iki oda arasında ortak,
-  fonların kendi sesi yok. Öneri: açılış, tepki, geçiş ve gerekçeli kapanış slotları, "en uzun süredir söylenmemiş" seçimi,
-  hafıza; önce yaklaşık 150 satırlık MVP, sonra yaklaşık 425 satır. Fon ses kartları yalnız EN; Anchor'ınki onaylı.
+- **K31 · Toplantı diyaloglarının yazım turu.** Satış toplantısının 54 satırından ve Ekip'teki kurucu durum etiketi
+  `HR_FOUNDER_STATE_CARE`'den "PH:" öneki kalktı (43e0a28; TR/EN sahip onayı bekliyor). Açık kalan toplantının sesidir:
+  VC ve seed'de tepki satırları az ve iki oda arasında ortak, fonların kendi sesi yok. Öneri: açılış, tepki, geçiş ve
+  gerekçeli kapanış slotları, "en uzun süredir söylenmemiş" seçimi, hafıza; önce yaklaşık 150 satırlık MVP, sonra
+  yaklaşık 425 satır. Fon ses kartları yalnız EN; Anchor'ınki onaylı.
   Kaynak: ONERI_v3 K31, §5 ve §5.4; TOPLANTI_VE_SERIES_A_ONERI §A–§C.
 
 - **Olay içeriği eksik (ch11 §1–§2, ch14 §2).** ch11 dokuz ark ve Frank hariç ~40 düğüm, ch14 §2 demo için 40–60 düğüm,
@@ -1773,7 +1776,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     sözcükleri, sonuç kartı, davet, dönüş sorusu, `MEETING_ROLE_LINE`, `MEETING_RES_PAIR`, `MEETING_RES_COST_BRAND`)
     EN önce yazıldı, TR tasarımın ifadelerini izler; onay bekliyor. Panel mevcut VC satırlarını olduğu gibi gösterir:
     bazılarında tire var (`VC_B1_LINE` "Vaktim kısa — beni…", `VC_B1_CHOICE`, `VC_B4_CALLBACK`, `VC_B4_PUSH`) ve karşı
-    taraf satırları tırnak içinde (tasarımda tırnak yok). Satış satırları hâlâ `PH:` yer tutucusu.
+    taraf satırları tırnak içinde (tasarımda tırnak yok). Satış satırlarında `PH:` öneki kalmadı (43e0a28).
   - Nerede: `localization/strings.csv`.
   - Seçenekler: A) Yeni metin onaylanır. B) Sahip yeniden yazar; tire ve tırnaklar kalkar (LANGUAGE INTEGRITY LAW).
   - Kaynak: CLAUDE.md §3, §5; 1888fe4, eba2140, 4ebcc5d, cf80260.
@@ -1997,7 +2000,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 
 - **106 · Sprint turu: dürüst plan, sürüm anı, oyuncunun onayı, B2C okuması (sahip kararları 2026-10-10, GDD'ye
   işlenmemiş).** Sahibin kararları: artık puan sonraki karta akar, kapasite ve hız kesirlidir (B1); plan tahmini
-  motorun oynatmasından gelir ("devreder", "başlamaz", SPRİNT SONUNDA yalnız bitenler), "+" eklendikten sonraki yükü
+  motorun oynatmasından gelir ("devreder", "başlamaz", SPRINT SONUNDA yalnız bitenler), "+" eklendikten sonraki yükü
   %125'le sınar ve kart bu sprintte puan alamayacaksa kapalıdır (B2, B-K1); sürüm koşulu ve MVP tahmini plan, aktif ve
   sürüm notu kiplerinde tek satırdır, MVP öncesi not "kart kaldı" der, beta anahtarının altında kuralı (B3); MVP'de
   sürüm kapısı Yayınla / Bir sprint daha, v1.1 ve sonrası kendiliğinden, bot Yayınla seçer (B4); yayından sonra B2C
@@ -2020,8 +2023,20 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   ayrıca sorulur). Kaynak: `docs/tasks/PRD_SPRINT.md` §0, §2, §3, §6.
 
 - **107 · Onarım 1 sahip kararları.**
+  - Kapandı (sahip kararı 2026-10-11, dördü de uygulandı): (a) onboarding tabanı, O19 `419ee6e`; (b) tek para tabanı,
+    O17 `2870897`; (c) ACIK 60 · C, O18 `c24f213`; (d) `WARM_INTRO_MISMATCH_MULT` 0,5, O20 `324ba37`.
+    (a) imzadan sonraki 4 hafta hesabın hedefini en az tolerans + 2'de tutar (`ONBOARDING_GRACE_WEEKS` 4,
+    `ONBOARDING_GRACE_MARGIN` 2; söz defteri tabandan sonra eklenir), yeni hesap nötr açılır (imza memnuniyeti en az
+    max(tolerans + 10, 50): `SIGNING_SAT_OVER_TOL`, `SIGNING_SAT_MIN`), kartın etiketi "Onboarding" der ve tabanın son
+    haftasında hedef toleransın altında kalacaksa satır uyarır. Ölçüm (olay motoru v3, `full_run:40:sim:1..20`; taban
+    O19'suz `3434eca`): ilk hesap 20/20 tohumda 4 haftada gidiyordu, şimdi 13/20 gider (7-14. haftada), 7/20 40. haftada
+    hesapta; M2 %11,1 → %65,4; M3 %31,8 → %7,6; pencere sonrası 8 haftada giden %6,5 → %12,8 (B2B ölümsüz olmaz);
+    `finite_runway_p2` 0,24 → 0,09; seed günü ortancası 22 (20-24) → 16 (14-17); 20. hafta MRR ortancası $17,9K →
+    $33,0K; `run_gate` 3/3 (104, 104, 67; tabanda 104, 104, 74). `finite_runway_p2` 0,15 çizgisinin altında kaldı (erken
+    hesaplar kalınca MRR 20. haftada iki katına yakın, seed ~6 hafta erken kapanıyor); sahip bilgilendirildi ve runway
+    kapısını O19 için kaldırdı. Traction'ın kolaylaşmasını O22 (satış süreci, sahip kararı 2026-10-11) ele alıyor.
   - Ne oluyor: Onarım 1'in dört sahip kararı (`docs/tasks/PRD_ONARIM_1.md` §6.2, §11). Dördü de 2026-10-11'de
-    sahip kararına bağlandı ve O17-O20 ile uygulanıyor; (a) için sahip önerinin pencere süresini değiştirdi.
+    sahip kararına bağlandı ve O17-O20 ile uygulandı; (a) için sahip önerinin pencere süresini değiştirdi.
     (a) S02 mekanizması. Ölçüm `6a35af1` (20 tohum, 40 hafta; girdi, kabul tabanı değil). M1: ilk hesap 20/20 tohumda
     4 hafta yaşar. M2: %14,7 (56/380; 7-14. haftada imzalanıp 12 hafta sonra hâlâ hesapta). M3: %28,3 (491/1.736;
     imzadan sonraki 8 haftada giden), M3b: %2,2 (14/639; sonraki 8 haftada). M4: v1.0 kararlılığı 20/20 tohumda 0;
@@ -2054,11 +2069,13 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     çekilir. M2/M3 eşikleri kapı değil, rapordur (metrikler playtest'e bırakıldı); 4 ve 8 hafta O19'da yan yana
     ölçülür. Sert kapılar: pencere sonrası churn > 0 (B2B ölümsüz olmaz) ve `run_gate` 3/3.
     (b) S43 tek para tabanı (22/30; run_h15 ayda $4.920 → ~$3.609, §2.3): sahip onayladı (2026-10-11), O17 `2870897`.
-    (c) ACIK 60 · C (bedelsiz taşınma, kartta fiyat yok, §4.2): sahip onayladı (2026-10-11), O18; 60. madde kapanır.
+    (c) ACIK 60 · C (bedelsiz taşınma, kartta fiyat yok, §4.2): sahip onayladı (2026-10-11), O18 `c24f213`; 60. madde
+    kapandı.
     (d) S12: `WARM_INTRO_MISMATCH_MULT` [ÇALIŞMA] yok (1,0) → 0,5. Frank'in tanıştırdığı adayda masa ölçeği cezası
     yarıya iner (2★ aday, Satış 0: iğne cezası 0,34 → 0,17); hover satırı ve etiket gelir. Aynı commit'e S14 (Risk
     nedeni, `trust_offset >= 0` ise kararlılık, değilse memnuniyet) ve S33 kopyası (`PROD_TYPE_ERP_TRADEOFF`,
-    `PROD_PATH_B2B_DESC`) girer; TR/EN onay bekliyor. Sahip 0,5'i onayladı (2026-10-11); O20, O19'dan sonra.
+    `PROD_PATH_B2B_DESC`) girdi; Risk nedeninin ayrılması (PRD §11.7) ve beş metnin TR/EN'i onay bekliyor. Sahip 0,5'i
+    onayladı (2026-10-11); O20 `324ba37` uyguladı.
   - Seçenekler (karara bağlandı): (a) A) onboarding tabanı (seçildi, 4 hafta), B) tolerans oturtma, C) dokunma.
     (d) A) 0,5 (seçildi), B) başka değer, C) dokunma.
   - Kaynak: `docs/tasks/PRD_ONARIM_1.md` §2.3, §4.2, §6, §11; ölçüm ve model kayıtları repo dışında.

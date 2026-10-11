@@ -50,8 +50,10 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   olur, `{company}'nin sözleşmesi` olmaz), CSV değerinde çıplak süslü parantez yok. Durumda metin değil id saklanır.
   Özel adlar çevrilmez. `static func` içindeki `tr()` derlenir ama çalışırken ölür.
 - **LANGUAGE INTEGRITY LAW.** `docs/design/localization_glossary.md` bağlayıcıdır. TR metinde İngilizce yalnız izinli
-  ödünç kelimelerde kalır: pitch, startup, demo, momentum, MRR, runway, churn, burn, laptop, mail, VC ve özel adlar.
-  Tek metinde dil karışmaz. Oyuncuya görünen hiçbir metinde tire (— –) yoktur (ch01 §9).
+  ödünç kelimelerde kalır: pitch, startup, demo, momentum, MRR, runway, churn, burn, laptop, mail, VC, onboarding ve
+  özel adlar. Türkçe büyük harfte ödünç kelime gövdesi Latin I'yı korur, ardındaki Türkçe ek Türkçe kurala uyar
+  (`Fmt.upper`, gövde listesi `Fmt.LOANWORD_STEMS`: SPRINT, "İlk sprinti" → İLK SPRINTİ). Tek metinde dil karışmaz.
+  Oyuncuya görünen hiçbir metinde tire (— –) yoktur (ch01 §9).
 - Motorun bilmediği etki ya da koşul taslakta `[VOCAB?]` / `[COND?]` kalır ve kart bağlanmaz (ch11 §3). Oyuncu
   metnini kimin yazdığı açık karardır (`docs/ACIK_ISLER/ACIK_KARARLAR.md`).
 - Kartlar `text.tr` ve `text.en` bloklarını aynı id kümesiyle taşır. Her seçenek gerçek bir kaynağa mal olur ve
@@ -215,18 +217,21 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   döner, aynı karar için sonraki Esc sistem menüsünü açar, Ekip'in üstündeki dosyanın şeridi karara döner, karar
   verilir, saat durmuş kalır, Boşluk saati sürdürür) ve kare başına `GATEFLOW` satırı basar.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
-  founders|nav|crown|cast|cheque|untyped|v1` (`crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare;
+  founders|nav|crown|cast|cheque|untyped|v1|card_ishani|card_home|card_tick|desk_shut` (`crowd40` kırk kişilik kadro,
+  `LOOKS` satırı ve dört yakın kare;
   `founders` portre ile bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest
   dizisi; `cheque` çek listesinin ilk haftası (`_01` tür seçili, `_02` ilk sprint başlamış), `untyped` aynı hafta
-  tür seçilmeden, `v1` v1.0 yayınlanınca (`_01`) ve Ar-Ge açılınca (`_02`);
+  tür seçilmeden, `v1` v1.0 yayınlanınca (`_01`) ve Ar-Ge açılınca (`_02`); `card_ishani` ve `card_home` yalnız
+  `city`'de, şirket Ev'de iken İş hanı'nın ve Ev'in kartı açık; `card_tick` yalnız `city`'de, Plaza'nın kartı bir günlük
+  tikten geçer (`_before` karesi, `OFFICECARD` satırı); `desk_shut` canlı B2C, DESTEK masası boş, 12 gelen bildirim;
   `city:<saat>:crown` kulenin tacı). `--office-shot`'a `--pan=<adım;…>` eklenirse koşu yalnız 3B görüntüyü kamera
   ofsetlerinde kaydeder ve `PAN|` satırı basar (gölge kutusu ve ilk kareye fark; adım `dx,dy[,zm]`,
   `sweep:<baş>:<son>:<adım>:<x|y>:<zm>`, `fit[:zm]` ya da `drag:<dx>:<dy>[:olay]`); `--pan-set=<küme>|<küme>` yalıtım
   düğmeleri (ilk küme taban, `SETDIFF|`), `--pan-gpu=<A>/<B>[;…]` alt görüntünün GPU ve CPU süresi (`GPU|`, `MEM|`);
   değerlerdeki `;` ve `|` tırnaklanır, düğme listesi `scripts/debug/office_pan_probe.gd` başındadır.
-  Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff`,
+  Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|frank`,
   VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
-  `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse>`; term sheet masası
+  `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
   fikstürüyle (`scripts/debug/product_fixtures.gd`), `--product-shot=live:<tür>` sprint motoruyla kurulan koşuda
   (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_requests`,

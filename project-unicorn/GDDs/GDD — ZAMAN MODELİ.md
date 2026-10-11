@@ -605,8 +605,11 @@ mekanik ondan bağımsızdır ve headless güvenlidir.
    Saat tutuluyken (`TimeManager.is_clock_held()`) görüşmeye girilmez: "Görüşmeye git", Kabul et, term sheet masası
    ve seed pitch'i reddedilir, neden söylenir (`TimeManager.hold_label()`); telefon çalmaya devam eder. Kararın kendi
    seçeneği masayı açarken kararın kendi tutuşu sayılmaz, başka tutuş masayı da reddeder. Saat akarken çalan satış
-   telefonu giriş kesimine (§8.2) cevapsız kalırsa çağrı biter ve tost nedenini söyler; VC çağrısı sessiz düşer, fon
-   uygun ilk gün yeniden arar (§8.6).
+   telefonu giriş kesimine (§8.2) cevapsız kalırsa çağrı biter ve tost nedenini söyler; VC çağrısı sessiz düşer ama
+   bedelini yazar: toplantı bir bekleme süresi (`MEETING_LEAD_WEEKS`) ileri kayar, çağrı ertelenmiş sayılır (sonrakinde
+   Ertele yoktur) ve fona her düşüşte erteleme cezası yazılır (`VCPitchSystem.lapse_call`,
+   `MEETING_RESCHEDULE_PENALTY`); tost yoktur, bedel görüşmede `VC_WHY_MOVED` satırı olarak görünür. Fon kayan haftada
+   yeniden arar (§8.6).
    Kabul et geçişi başlatır.
 1. Saat donar, ağaç koşar (`freeze_clock("travel", true)`); oturum geçişten önce açılır ve kurucu meşgul olur.
 2. Pencere katmanı perdelenir; pencereler kapanmaz, dönüşte aynı pencere açık gelir.
