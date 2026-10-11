@@ -1749,6 +1749,11 @@ func _run_personal_shot(kind: String) -> void:
 ##   (week 16: Test Otomasyonu done, its discovery on the notice stack) · discovery_design (no timeline: Tasarım
 ##   Sistemi completes with nobody on it and the founder's own discovery opens from the notice stack) · first_note
 ##   (the run's first monthly note arrives through the engine and opens in the inbox).
+##   assign_founder: a sprint running, AI Engine's assignment open with the founder ticked, the card scrolled to
+##   its end (the warning; an RNDSHOT line gives the sprint's mode) ·
+##   stars: no timeline, no Product Manager and no designer, Tasarım Sistemi picked (the star refusal and its
+##   hire link); the link is then pressed in code, rnd_shot_stars_hr frames the window it opens and an RNDSHOT
+##   line names it.
 func _run_rnd_shot(kind: String) -> void:
 	_begin_shot()
 	if kind == "closed":
@@ -1757,7 +1762,7 @@ func _run_rnd_shot(kind: String) -> void:
 	else:
 		_seed_theme_surface()
 		GameState.current_hour = 11
-		if kind not in ["history_empty", "discovery_design"]:
+		if kind not in ["history_empty", "discovery_design", "stars"]:
 			_seed_rnd(16 if kind == "discovery" else 14, kind != "first_note")
 	TimeManager.sync_to_current_hour()
 	var selin := "char_emp_shot_3"
@@ -1778,6 +1783,13 @@ func _run_rnd_shot(kind: String) -> void:
 			HRMoraleSystem.send_on_leave(CharacterRegistry.get_character(selin), HRConstants.LEAVE_WEEKS, false)
 		"discovery_design":
 			RnDSystem._complete("design_system")
+		"assign_founder":
+			SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+			SprintSystem.apply_lead()
+			SprintSystem.start()
+		"stars":
+			CharacterRegistry.remove("char_emp_shot_0")
+			CharacterRegistry.remove("char_emp_shot_1")
 	await _mount_shot_shell()
 	_wire_modal_signals()
 	match kind:
@@ -1785,15 +1797,25 @@ func _run_rnd_shot(kind: String) -> void:
 			EventBus.tab_changed.emit("rnd")
 			if kind.begins_with("history"):
 				_shell.find_child("CenterViewport", true, false).get_current_page_body()._show_view(1)
-		"detail", "detail_cash", "detail_frozen", "assign", "frozen", "read_only":
+		"detail", "detail_cash", "detail_frozen", "assign", "assign_founder", "frozen", "read_only":
 			if kind == "read_only":
 				_shot_card("funding.frank_cheque", {}, 11)
 			EventBus.tab_changed.emit("rnd")
 			EventBus.rnd_node_requested.emit("test_automation" if kind.ends_with("frozen") else "ai_engine",
-				kind in ["assign", "frozen"])
-			if kind == "assign":
+				kind in ["assign", "assign_founder", "frozen"])
+			if kind.begins_with("assign"):
 				await get_tree().process_frame
-				get_tree().root.find_child("AssignPanel", true, false).toggle("char_emp_shot_0")
+				var panel := get_tree().root.find_child("AssignPanel", true, false) as RnDAssignPanel
+				panel.toggle("char_emp_shot_0" if kind == "assign" else CharacterRegistry.get_founder().id)
+				if kind == "assign_founder":
+					# The card's box is fixed and the warning is the bottom band's second row: scrolled to it.
+					await get_tree().create_timer(0.3).timeout
+					var scroll := panel.get_parent().get_parent() as ScrollContainer
+					scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+					print("RNDSHOT|assign_founder|mode=%s" % SprintSystem.mode())
+		"stars":
+			EventBus.tab_changed.emit("rnd")
+			EventBus.rnd_node_requested.emit("design_system", false)
 		"card_gate":
 			_shot_card("funding.frank_cheque", {}, 11)
 			EventBus.tab_changed.emit("")
@@ -1807,6 +1829,15 @@ func _run_rnd_shot(kind: String) -> void:
 			_shot_fail("[RndShot] unknown kind: %s" % kind)
 			return
 	get_tree().call_group(&"top_bar", &"_refresh")
+	if kind == "stars":
+		# No OS click: the link's own pressed signal, as a click would send it.
+		await get_tree().process_frame
+		await get_tree().create_timer(0.6).timeout
+		_save_shot("rnd_shot_stars")
+		_press_button_labelled(_shell, tr("RND_HIRE_FOR_STARS").format(
+			{"role": HRConstants.role_label(HRConstants.ROLE_DESIGNER)}))
+		print("RNDSHOT|stars|window=%s" % get_tree().get_first_node_in_group(&"window_layer")._primary_id)
+		kind = "stars_hr"
 	await _finish_shot("rnd_shot_%s" % kind, 0.6)
 
 

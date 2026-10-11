@@ -2305,7 +2305,9 @@ RND_VIEW_TREE,Ağaç,Tree
 RND_VIEW_HISTORY,Geçmiş,History
 RND_TREE_DONE_KEY,Tamamlanan,Completed
 RND_SWITCH_NOTE,Başlatınca {node} durur; ilerlemesi korunur.,Starting this stops {node}. Its progress is kept.
+RND_FOUNDER_LEAVES_SPRINT,Kurucu sprintten çıkar; dönene kadar sprint durur.,The founder leaves the sprint; it stops until they return.
 RND_NEED_AREA_AWAY,{name} izinde · katkı yok,{name} is on leave · no contribution
+RND_HIRE_FOR_STARS,İşe al: {role},Hire: {role}
 RND_HISTORY_EMPTY,Henüz bir şey yok. Notlar ve keşifler burada toplanır.,Nothing yet. Notes and discoveries gather here.
 B2B_LOCK_PROMISE_OPEN,"Bu hesaba verilmiş, henüz tutulmamış bir söz var.",You already owe this account a word.
 B2B_LOCK_STALL_CAP,İki kez oyaladın. Üçüncüsünü kimse beklemez.,You've stalled them twice. Nobody waits for a third.

@@ -134,11 +134,20 @@ static func refusal_text(node_id: String, refusal: String) -> String:
 	return t("RND_TREE_CLOSED")
 
 
-## The refusal as a line: the star rule's sentence with the star glyph, every other one in words.
+## The refusal as a line: the star rule's sentence with the star glyph, every other one in words. When nobody on
+## the roster has the missing area's own role, the star line also links to Ekip for that hire.
 static func refusal_line(node_id: String, refusal: String, variation: StringName, ink: Variant = null) -> Control:
 	if refusal == RnDSystem.REFUSE_STARS:
-		var area: String = HRConstants.area_label(RnDSystem.missing_star_area(node_id))
-		return with_stars(t("RND_NEED_AREA").format({"area": area}), ResearchTree.stars_of(node_id), variation, ink)
+		var area: String = RnDSystem.missing_star_area(node_id)
+		var row: HBoxContainer = with_stars(t("RND_NEED_AREA").format({"area": HRConstants.area_label(area)}),
+			ResearchTree.stars_of(node_id), variation, ink)
+		for role: String in HRConstants.ROLE_AREAS:
+			if HRConstants.role_key_area(role) == area \
+					and not CharacterRegistry.get_employees().any(func(c: Character) -> bool: return c.role == role):
+				row.add_child(UiFactory.make_label("·", &"CaptionFaint"))
+				row.add_child(_link(t("RND_HIRE_FOR_STARS").format({"role": HRConstants.role_label(role)}), false,
+					func() -> void: EventBus.tab_changed.emit("hr")))
+		return row
 	return UiFactory.make_label(refusal_text(node_id, refusal), variation, ink)
 
 
@@ -155,6 +164,14 @@ static func with_stars(text: String, stars: int, variation: StringName, ink: Var
 	unit.add_child(UiFactory.make_glyph(STAR, UiTokens.D_ICON_STAR, UiTokens.D_INK_2))
 	unit.add_child(SprintUiShared.label(str(stars) + (parts[1] if parts.size() > 1 else ""), variation, ink))
 	row.add_child(unit)
+	return row
+
+
+## A note: its glyph and its muted line, both in `ink` when one is given.
+static func note(glyph: String, text: String, ink: Variant = null) -> HBoxContainer:
+	var row := SprintUiShared.box(UiTokens.SPACE_M)
+	row.add_child(UiFactory.make_glyph(glyph, UiTokens.D_ICON_ROW, ink if ink != null else UiTokens.D_INK_4))
+	row.add_child(SprintUiShared.label(text, &"MetaMuted", ink))
 	return row
 
 

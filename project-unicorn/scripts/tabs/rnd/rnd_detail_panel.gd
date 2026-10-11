@@ -182,7 +182,7 @@ func _lines(state: String) -> Array:
 			out.append(SprintUiShared.label(", ".join(names), &"MetaMuted"))
 		RnDUiShared.TILE_FROZEN:
 			# §5.6.1 — duraklamanın SEBEBİ yazılır, çubukla aynı motor okumasından.
-			var why := _note(RnDUiShared.PAUSE, RnDSystem.freeze_note(), UiTokens.D_INK_2)
+			var why := RnDUiShared.note(RnDUiShared.PAUSE, RnDSystem.freeze_note(), UiTokens.D_INK_2)
 			why.add_child(SprintUiShared.label("·", &"CaptionFaint"))
 			why.add_child(SprintUiShared.label(RnDUiShared.t("RND_FROZEN_KEEPS"), &"MetaMuted"))
 			out.append(why)
@@ -191,21 +191,21 @@ func _lines(state: String) -> Array:
 			# tahminden uydurulmaz.
 			var opened: Array = ResearchTree.children_of(_node_id)
 			if opened.size() == 1:
-				out.append(_note(INFO, RnDUiShared.t("RND_COMPLETED_UNLOCKED_ONE").format({
+				out.append(RnDUiShared.note(INFO, RnDUiShared.t("RND_COMPLETED_UNLOCKED_ONE").format({
 					"node": ResearchSeam.node_name(String(opened[0]))})))
 			elif opened.size() >= 2:
-				out.append(_note(INFO, RnDUiShared.t("RND_COMPLETED_UNLOCKED_TWO")))
+				out.append(RnDUiShared.note(INFO, RnDUiShared.t("RND_COMPLETED_UNLOCKED_TWO")))
 		RnDUiShared.TILE_LOCKED:
 			# Açılmamış çocuk derin bağdan seçilebilir ve kart kendini "Önce {düğüm}." diye açıklar (§7).
 			out.append(RnDUiShared.refusal_line(_node_id, _refusal(), &"MetaMuted"))
 		_:
 			var note: String = _switch_note()
 			if note != "":
-				out.append(_note(INFO, note))
+				out.append(RnDUiShared.note(INFO, note))
 	# §6.2 — CANLI uyarı: `user_research` kadroda yazacak kimse yokken de araştırılabilir, ama aylık
 	# rapor SESSİZCE ATLANIR. Kapı araştırmadan ÖNCE yazılır.
 	if _node_id == RnDSystem.NODE_USER_RESEARCH and RnDSystem.note_author() == null:
-		out.append(_note(WARN, RnDUiShared.t("RND_NOTE_NO_WRITER"), UiTokens.D_warn()))
+		out.append(RnDUiShared.note(WARN, RnDUiShared.t("RND_NOTE_NO_WRITER"), UiTokens.D_warn()))
 	return out
 
 
@@ -215,13 +215,6 @@ func _switch_note() -> String:
 	if running == "" or running == _node_id:
 		return ""
 	return RnDUiShared.t("RND_SWITCH_NOTE").format({"node": ResearchSeam.node_name(running)})
-
-
-func _note(glyph: String, text: String, ink: Variant = null) -> HBoxContainer:
-	var row := SprintUiShared.box(UiTokens.SPACE_M)
-	row.add_child(UiFactory.make_glyph(glyph, UiTokens.D_ICON_ROW, ink if ink != null else UiTokens.D_INK_4))
-	row.add_child(SprintUiShared.label(text, &"MetaMuted", ink))
-	return row
 
 
 # ---------------------------------------------------------------- eylemler

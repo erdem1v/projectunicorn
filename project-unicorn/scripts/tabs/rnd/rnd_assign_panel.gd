@@ -26,6 +26,7 @@ var _selected: Array[String] = []
 var _open_groups: Dictionary = {}      # area -> bool
 var _list: VBoxContainer = null
 var _foot: HBoxContainer = null
+var _warn: HBoxContainer = null
 var _why: HBoxContainer = null
 
 
@@ -46,12 +47,13 @@ func setup(node_id: String, switch_note: String) -> void:
 	_list = SprintUiShared.column(0)
 	add_child(_list)
 	if switch_note != "":
-		var note := SprintUiShared.box(UiTokens.SPACE_M)
-		note.add_child(UiFactory.make_glyph(RnDDetailPanel.INFO, UiTokens.D_ICON_ROW, UiTokens.D_INK_4))
-		note.add_child(SprintUiShared.label(switch_note, &"MetaMuted"))
-		add_child(note)
+		add_child(RnDUiShared.note(RnDDetailPanel.INFO, switch_note))
 	_foot = SprintUiShared.box(UiTokens.SPACE_L)
 	add_child(_foot)
+	# Its own row: beside a reason one band would outgrow the card, which does not scroll sideways.
+	_warn = RnDUiShared.note(RnDDetailPanel.WARN, RnDUiShared.t("RND_FOUNDER_LEAVES_SPRINT"), UiTokens.D_warn())
+	_warn.alignment = BoxContainer.ALIGNMENT_END
+	add_child(_warn)
 	_why = SprintUiShared.box(UiTokens.SPACE_L)
 	_why.alignment = BoxContainer.ALIGNMENT_END
 	add_child(_why)
@@ -184,9 +186,10 @@ func _role_line(c: Character, at_work: bool) -> String:
 
 # ---------------------------------------------------------------- alt bant
 
-## The area and the live estimate, then Geri and Başlat (Uygula on the running research); under them what
-## keeps Başlat closed, and for a star gate held by someone away, who. Read again on every tick of a box and
-## while a decision waits.
+## The area and the live estimate, then Geri and Başlat (Uygula on the running research); under them the
+## founder's warning, then what keeps Başlat closed and, for a star gate held by someone away, who. The founder
+## ticked while a sprint is planned or running is a warning, not a gate: on a research they drop out of the
+## sprint's team. Read again on every tick of a box and while a decision waits.
 func refresh_footer() -> void:
 	UiFactory.clear(_foot)
 	_foot.add_child(UiFactory.make_glyph(RnDDetailPanel.CLOCK, UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
@@ -205,6 +208,7 @@ func refresh_footer() -> void:
 	var refusal: String = RnDSystem.start_refusal(_node_id, _selected)
 	go.disabled = gated or refusal != ""
 	_foot.add_child(go)
+	_warn.visible = _selected.has(CharacterRegistry.get_founder().id) and SprintSystem.mode() in ["active", "plan"]
 	UiFactory.clear(_why)
 	if gated:
 		_why.add_child(SprintUiShared.label(RnDUiShared.t("GATE_ANSWER_FIRST"), &"MetaMuted"))
