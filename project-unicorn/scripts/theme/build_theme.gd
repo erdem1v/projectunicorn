@@ -520,6 +520,17 @@ func _menajer(master: Theme) -> Theme:
 		[&"GhostButtonSmall", ghost, small],
 	]:
 		_dbtn(th, row[0], row[1], row[2][0], row[2][1], row[2][2])
+	# The main menu's items: Barlow 30 on a 56 px row in ink-3, ink-1 under the pointer or the focus; the primary
+	# item reads ink-1 from the start.
+	for row in [[&"MainMenuItem", T.D_INK_3], [&"MainMenuItemPrimary", T.D_INK_1]]:
+		_dbtn(th, row[0], {"normal": [clear, clear, row[1]], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+			"pressed": [clear, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]},
+			cond_b, T.D_FS_30, _fit(cond_b, T.D_FS_30, T.D_H_BTN_LG, 0, 0))
+		th.set_color("font_focus_color", row[0], T.D_INK_1)
+	# The menu's Continue card is its primary item: a raised document, its hover the edge.
+	th.set_type_variation(&"ContinueCard", &"Button")
+	for row in [["normal", T.D_LINE_2], ["hover", T.D_LINE_HOVER], ["pressed", T.D_LINE_HOVER]]:
+		th.set_stylebox(row[0], &"ContinueCard", _doc(_flat(T.D_SURFACE_4, 0, Vector4.ZERO, row[1]), T.D_CUT_SM))
 	th.set_stylebox("focus", &"Button", ring)
 	th.set_type_variation(&"SecondaryButton", &"Button")
 	# A glyph beside the label: 18 px on a button, 16 on a small one.
@@ -640,8 +651,10 @@ func _menajer(master: Theme) -> Theme:
 		[&"TileValue", cond_b, T.D_FS_36, T.D_INK_1],
 		[&"HeroFigure", sans_sb, T.D_FS_40, T.D_INK_1],
 		[&"TitleH2", cond_b, T.D_FS_30, T.D_INK_1],
+		[&"CompanyTitle", cond_b, T.D_FS_26, T.D_INK_1],
 		[&"DialogTitle", cond_b, T.D_FS_22, T.D_INK_1],
 		[&"NameTitle", cond_b, T.D_FS_20, T.D_INK_1],
+		[&"LeadText", sans_med, T.D_FS_20, T.D_INK_2],
 		[&"SubheadLabel", cond_b, T.D_FS_20, T.D_INK_2],
 		[&"OptionLabel", cond_b, T.D_FS_20, T.D_INK_1],
 		[&"OptionLabelLocked", cond_b, T.D_FS_20, T.D_INK_OFF],
@@ -665,6 +678,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"ValueText", sans_med, T.D_FS_18, T.D_INK_2],
 		[&"ValueTextStrong", sans_sb, T.D_FS_18, T.D_INK_1],
 		[&"BodyLabel", sans_reg, T.D_FS_16, T.D_INK_2],
+		[&"BodyMuted", sans_reg, T.D_FS_16, T.D_INK_3],
 		[&"SenderName", sans_sb, T.D_FS_16, T.D_INK_2],
 		[&"RiskName", sans_sb, T.D_FS_16, T.D_INK_1],
 		[&"SubjectLabel", sans_med, T.D_FS_16, T.D_INK_2],
@@ -683,6 +697,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"KeyText", sans_med, T.D_FS_14, T.D_INK_2],
 		[&"KeyTextMuted", sans_med, T.D_FS_14, T.D_INK_3],
 		[&"MetaMuted", sans_reg, T.D_FS_14, T.D_INK_3],
+		[&"MetaFaint", sans_reg, T.D_FS_14, T.D_INK_4],
 		[&"Caption", sans_reg, T.D_FS_13, T.D_INK_3],
 		[&"CaptionStrong", sans_b, T.D_FS_13, T.D_INK_2],
 		[&"CaptionPrimary", sans_reg, T.D_FS_13, T.D_INK_2],
@@ -856,6 +871,8 @@ func _menajer(master: Theme) -> Theme:
 	# A bar's fill is white so its host can tint it with the value's own colour.
 	_panel(th, &"BarTint", "Panel", _flat(Color.WHITE, T.RADIUS_PILL, Vector4.ZERO))
 	_panel(th, &"BrandMark", "Panel", _flat(T.D_BRAND_MARK, T.D_RADIUS_1, Vector4.ZERO))
+	# The amber rule under the menu's primary item: the one amber on its screen.
+	_panel(th, &"AccentRule", "Panel", _flat(T.D_ACCENT, T.D_RADIUS_1, Vector4.ZERO))
 	# The disc on a picked card, behind its check glyph.
 	_panel(th, &"CheckDisc", "Panel", _flat(T.D_INK_1, T.RADIUS_PILL, Vector4.ZERO))
 	var mark := _flat(T.D_SELECTED_MARK, T.D_RADIUS_1, Vector4.ZERO)

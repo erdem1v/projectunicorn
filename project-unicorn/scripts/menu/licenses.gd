@@ -59,7 +59,7 @@ static func freetype_year() -> String:
 func _add_section(title_key: String, body: String) -> void:
 	if title_key != "":
 		_sections.add_child(UiFactory.make_label(tr(title_key), &"KeyLabel"))
-	var label := UiFactory.make_label(body, &"DataText")
+	var label := UiFactory.make_label(body, &"MetaText")
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sections.add_child(label)
 
@@ -68,6 +68,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		_close()
+	# The text takes no focus: the up and down keys scroll it from the footer's buttons, a quarter page a press.
+	elif event.is_action_pressed("ui_down", true) or event.is_action_pressed("ui_up", true):
+		get_viewport().set_input_as_handled()
+		var bar: VScrollBar = $Panel/Col/Scroll.get_v_scroll_bar()
+		bar.value += bar.page / 4.0 * (1 if event.is_action("ui_down") else -1)
 
 
 func _close() -> void:

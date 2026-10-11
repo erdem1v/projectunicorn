@@ -20,7 +20,16 @@ func _ready() -> void:
 	# `--lang=` beats the stored preference so verification can FORCE a locale; it never
 	# touches Settings, so a forced run cannot rewrite the player's preference.
 	var forced: String = _cmdline_language()
+	var source := "arg"
+	if forced == "":
+		source = "stored"
+		# The first boot takes Steam's game language, else the system's, and stores it; only Settings changes it then.
+		if is_first_boot():
+			var steam: String = Engine.get_singleton("Steam").getCurrentGameLanguage() if Engine.has_singleton("Steam") else ""
+			source = "steam" if steam != "" else "os"
+			Settings.set_value(KEY_LANGUAGE, detect_language(steam, OS.get_locale_language()))
 	TranslationServer.set_locale(forced if forced != "" else get_language())
+	print("BOOT|lang=%s|source=%s" % [TranslationServer.get_locale(), source])
 
 
 func get_language() -> String:
@@ -48,10 +57,15 @@ func _cmdline_language() -> String:
 	return ""
 
 
-## Has the player never chosen a language? Drives the first-boot gate. On a machine
-## that has ever picked a language this is false forever — use --force-language-gate.
+## Has no language been stored yet? Then this boot detects one.
 func is_first_boot() -> bool:
 	return not Settings.has_stored(KEY_LANGUAGE)
+
+
+## Turkish for a Turkish Steam or system language, English for any other. Steam's name ("turkish") wins over the
+## system's code ("tr") when Steam gives one.
+static func detect_language(steam_lang: String, os_lang: String) -> String:
+	return "tr" if (steam_lang if steam_lang != "" else os_lang) in ["turkish", "tr"] else "en"
 
 
 ## Choose between a Turkish source string and its English sibling at render time.

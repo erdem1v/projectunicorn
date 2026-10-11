@@ -3,15 +3,17 @@ extends Node
 # Main scene root — owns the launch lifecycle:
 #   1. Pause the clock (TimeManager auto-starts at 1x in its own _ready) so onboarding keeps
 #      day/hour at 1/08:00.
-#   2. Mount OnboardingFlow. GameShell is NOT mounted upfront: its children paint from
-#      GameState in _ready(), so it can only mount after initialize_run.
+#   2. Show the Godot card once, then the main menu. NEW GAME mounts OnboardingFlow; GameShell is
+#      NOT mounted upfront: its children paint from GameState in _ready(), so it can only mount
+#      after initialize_run (or a load).
 #   3. On flow completed (or F12 debug skip): swap the flow for GameShell and open the inbox on
 #      the run's first message.
 # It also owns the decision gate (a card on screen holds the clock in the inbox), routes every
 # modal / cinematic surface and dispatches the debug launch flags.
 
 const ONBOARDING_FLOW := preload("res://scenes/onboarding/OnboardingFlow.tscn")
-const LANGUAGE_GATE := preload("res://scenes/onboarding/LanguageGate.tscn")
+const GODOT_CARD := preload("res://scenes/menu/GodotCard.tscn")
+const MAIN_MENU := preload("res://scenes/menu/MainMenu.tscn")
 const GAME_SHELL := preload("res://scenes/main/GameShell.tscn")
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const MAIL_PANE := preload("res://scripts/tabs/events/mail_pane.gd")
@@ -38,7 +40,9 @@ const TRAVEL_FREEZE := "travel"                   # TimeManager freeze reason fo
 const SHOT_FREEZE := "shot"                       # TimeManager freeze reason holding a shot's hour
 
 var _flow: Node = null
+var _menu: Node = null
 var _shell: Node = null
+var _state := "boot"   # boot → card → menu → flow | loading → shell
 var _shell_mounted: bool = false
 var _event_signals_wired: bool = false
 # Currently-open surfaces (null = closed).
@@ -75,6 +79,11 @@ const _ERP_SHIPPED_LINES := [
 
 func _ready() -> void:
 	get_window().min_size = Vector2i(1280, 720)
+	print("BUILD|version=%s|scope=%s" % [ProjectSettings.get_setting("application/config/version"), EndingsSystem.build_scope()])
+	# The menu opens these windows with no shell behind it, and the harnesses stage both.
+	EventBus.settings_requested.connect(_on_settings_requested)
+	EventBus.save_load_requested.connect(_on_save_load_requested)
+	EventBus.confirm_requested.connect(_on_confirm_requested)
 	# TimeManager's _ready ran first (autoload order) and started the clock. Going through
 	# the signal keeps TimeManager.current_speed in sync; speed 0 pauses the tree.
 	EventBus.speed_change_requested.emit(0)
@@ -90,28 +99,46 @@ func _ready() -> void:
 		EventBus.debug_onboarding_retrigger_requested.connect(_on_debug_onboarding_retrigger)
 		if _run_debug_harness():
 			return
-		if "--skip-onboarding" in _run_args():
+		# The editor F5's --skip-onboarding goes straight to the shell; --menu on the command line keeps the menu.
+		if "--skip-onboarding" in _run_args() and not "--menu" in OS.get_cmdline_args():
 			_skip_to_shell()
 			return
-
-	# First boot picks a language before anything else builds, so the whole onboarding is
-	# constructed once in the chosen locale. --force-language-gate re-opens it for testing
-	# without clearing the stored preference (the gate simply writes it again).
-	if Localization.is_first_boot() or (OS.is_debug_build() and "--force-language-gate" in _run_args()):
-		_mount_language_gate()
-		return
-	_mount_flow()
+	_mount_godot_card()
 
 
-func _mount_language_gate() -> void:
-	var gate: Control = LANGUAGE_GATE.instantiate()
-	gate.chosen.connect(func(_locale: String) -> void:
-		gate.queue_free()
+## Once per process, between the boot splash and the menu.
+func _mount_godot_card() -> void:
+	_state = "card"
+	var card: Control = GODOT_CARD.instantiate()
+	var shown: int = Time.get_ticks_msec()
+	card.finished.connect(func() -> void:
+		print("BOOT|card_ms=%d" % (Time.get_ticks_msec() - shown))
+		card.queue_free()
+		_mount_menu())
+	add_child(card)
+
+
+## The menu is where no run is: the save gate reads "no run", nothing is unsaved and the clock stops.
+func _mount_menu() -> void:
+	_state = "menu"
+	GameState.set_run_active(false)
+	EventBus.speed_change_requested.emit(0)
+	_menu = MAIN_MENU.instantiate()
+	_menu.new_game_requested.connect(func() -> void:
+		_free_menu()
 		_mount_flow())
-	add_child(gate)
+	_menu.load_requested.connect(_load_slot)
+	add_child(_menu)
+
+
+func _free_menu() -> void:
+	if _menu != null:
+		_menu.queue_free()
+		_menu = null
 
 
 func _mount_flow() -> void:
+	_state = "flow"
 	_flow = ONBOARDING_FLOW.instantiate()
 	_flow.completed.connect(_swap_to_shell_and_modal)
 	add_child(_flow)
@@ -123,10 +150,11 @@ func _mount_flow() -> void:
 
 ## Launch flags come from two sources: the command line (CLI runs) and
 ## application/run/main_args, which Godot forwards only on an editor F5 — the MCP
-## editor-run path reads it from ProjectSettings.
+## editor-run path reads it from ProjectSettings. An exported build reads the command line only.
 func _run_args() -> PackedStringArray:
 	var args: PackedStringArray = OS.get_cmdline_args()
-	args.append_array(String(ProjectSettings.get_setting("application/run/main_args", "")).split(" ", false))
+	if OS.has_feature("editor"):
+		args.append_array(String(ProjectSettings.get_setting("application/run/main_args", "")).split(" ", false))
 	return args
 
 
@@ -213,6 +241,7 @@ func _run_debug_harness() -> bool:
 		"--personal-shot=": _run_personal_shot,
 		"--rnd-shot=": _run_rnd_shot,
 		"--modal-shot=": _run_modal_shot,
+		"--menu-shot=": _run_menu_shot,
 		"--onboard-shot=": func(v: String) -> void: _run_onboard_shot(int(v)),
 		"--theme-audit=": _run_theme_audit,
 		"--probe-shot=": _run_probe_shot,
@@ -1890,6 +1919,8 @@ func _seed_rnd(week: int, note := true) -> void:
 # The save and load kinds write or delete four real saves (_shot_saves): run them with a private APPDATA.
 func _run_modal_shot(kind: String) -> void:
 	_begin_shot()
+	if (kind.begins_with("save") or kind.begins_with("load")) and _saves_refused():
+		return
 	_seed_theme_surface()
 	# What the settings kinds show is staged in memory only, never written to settings.json: the language row shows
 	# the locale on screen (`--lang` forces the locale alone), the resolution and scale lists open on a window.
@@ -2000,32 +2031,86 @@ func _shot_saves(full: bool) -> void:
 		FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(data, "\t", false))
 
 
-# --onboard-shot=<0|1|2|3>. Step 0 is the language gate, mounted directly: it is unreachable
-# by play once a language is stored, and the harness must not depend on a pristine settings file.
+## A harness that writes saves runs only in a user dir that holds none, so it never shows, overwrites or deletes a
+## player's save.
+func _saves_refused() -> bool:
+	if DirAccess.get_files_at(SaveManager.SAVE_DIR).is_empty():
+		return false
+	print("MENU|refused=user_saves")
+	get_tree().quit(1)
+	return true
+
+
+const MENU_SHOTS := ["empty", "continue", "first_frame", "godot_card", "load", "settings", "credits", "licenses"]
+const MENU_SHOT_PRESS := {"load": "LOAD", "settings": "SETTINGS", "credits": "CREDITS", "licenses": "CREDITS"}
+
+## --menu-shot=<kind>: the boot as the player meets it. continue and load stand on the modal shots' fixture saves;
+## first_frame is the menu's first drawn frame, under its cover; godot_card frames the card, then ui_accept and the
+## menu two frames on. Prints the MENU line of the frame.
+func _run_menu_shot(kind: String) -> void:
+	_begin_shot()
+	if not kind in MENU_SHOTS:
+		_shot_fail("[MenuShot] unknown --menu-shot kind: %s" % kind)
+		return
+	if _saves_refused():
+		return
+	# The windows size themselves once, when opened: they open on the logical screen --shot-scale gives.
+	if _flag_value("--shot-scale=") != "":
+		await get_tree().create_timer(0.2).timeout
+	if kind in ["continue", "load"]:
+		_seed_theme_surface()
+		_shot_saves(true)
+	if kind == "godot_card":
+		_mount_godot_card()
+		await get_tree().create_timer(0.4).timeout
+		_save_shot("menu_shot_godot_card")
+		var accept := InputEventAction.new()
+		accept.action = &"ui_accept"
+		accept.pressed = true
+		Input.parse_input_event(accept)
+		await get_tree().process_frame
+	else:
+		_mount_menu()
+	await (RenderingServer.frame_post_draw if kind == "first_frame" else get_tree().process_frame)
+	if kind in MENU_SHOT_PRESS:
+		_menu.items[MENU_SHOT_PRESS[kind]].pressed.emit()
+		await get_tree().process_frame
+	if kind == "licenses":
+		(_menu.find_child("LicensesBtn", true, false) as Button).pressed.emit()
+	var d: Dictionary = _dbg_menu_digest()
+	print("MENU|state=%s|focus=%s|continue=%s|paused=%d|joy_ui=%d" % [d.state, d.focus, _menu.items.CONTINUE.slot_id,
+		int(d.paused), int(InputMap.action_get_events("ui_down").any(func(e: InputEvent) -> bool: return e is InputEventJoypadButton))])
+	if kind == "first_frame":
+		_save_shot("menu_shot_first_frame")
+		get_tree().quit()
+	else:
+		await _finish_shot("menu_shot_" + ("godot_card_menu" if kind == "godot_card" else kind))
+
+
+# --onboard-shot=<1|2|3>.
 func _run_onboard_shot(step: int) -> void:
 	_begin_shot()
-	if step == 0:
-		_mount_language_gate()
-	else:
-		_mount_flow()
-		await get_tree().process_frame
-		await get_tree().process_frame
-		var idx: int = clampi(step - 1, 0, 2)
-		if step == 2:
-			# Two allocation points in one skill: its figure reads on the 0-10 ruler.
-			_flow.draft.skill_alloc = {"engineering": 2}
-		if idx > 0:
-			_flow._mount_step(idx)   # doğrudan seam: adım geçerliliği fixture'da dolu olmayabilir
+	_mount_flow()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var idx: int = clampi(step - 1, 0, 2)
+	if step == 2:
+		# Two allocation points in one skill: its figure reads on the 0-10 ruler.
+		_flow.draft.skill_alloc = {"engineering": 2}
+	if idx > 0:
+		_flow._mount_step(idx)   # doğrudan seam: adım geçerliliği fixture'da dolu olmayabilir
 	await _finish_shot("onboard_shot_%d" % step)
 
 
-# --theme-audit=<tab_id | modal:<kind> | onboard:<step>> stages the surface as --tab-shot,
-# --modal-shot or --onboard-shot does and prints the RESOLVED theme values of every Control in
+# --theme-audit=<tab_id | menu | modal:<kind> | onboard:<step>> stages the surface as --tab-shot,
+# --menu-shot=empty, --modal-shot or --onboard-shot does and prints the RESOLVED theme values of every Control in
 # place of the frame: immune to anti-aliasing noise, and it names exactly which nodes changed.
 func _run_theme_audit(spec: String) -> void:
 	_audit_spec = spec
 	var kind: String = spec.get_slice(":", 1)
 	match spec.get_slice(":", 0):
+		"menu":
+			_run_menu_shot("empty")
 		"modal":
 			_run_modal_shot(kind)
 		"onboard":
@@ -3283,6 +3368,7 @@ func _shot_customer(id: String, cname: String, industry: String, phase: String, 
 # ============================================================================
 
 func _swap_to_shell_and_modal() -> void:
+	_free_menu()
 	if _flow != null:
 		_flow.queue_free()
 		_flow = null
@@ -3295,6 +3381,7 @@ func _swap_to_shell_and_modal() -> void:
 # so state is restored first and the shell mounted second. A save load comes through here
 # WITHOUT opening the intro, which belongs to a new run only.
 func _mount_shell() -> void:
+	_state = "shell"
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	_shell_mounted = true
@@ -3322,8 +3409,6 @@ func _wire_modal_signals() -> void:
 	EventBus.goto_tab_requested.connect(_on_goto_tab_requested)
 	EventBus.tab_changed.connect(_on_tab_changed)
 	EventBus.pitch_requested.connect(_on_pitch_requested)
-	EventBus.settings_requested.connect(_on_settings_requested)
-	EventBus.confirm_requested.connect(_on_confirm_requested)
 	EventBus.run_ended.connect(_on_run_ended)
 	EventBus.milestone_reached.connect(_on_milestone_reached)
 	EventBus.summary_ready.connect(_on_summary_ready)
@@ -3331,14 +3416,14 @@ func _wire_modal_signals() -> void:
 	EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
 	EventBus.term_table_requested.connect(_on_term_table_requested)
 	EventBus.system_menu_requested.connect(_on_system_menu_requested)
-	EventBus.save_load_requested.connect(_on_save_load_requested)
 	EventBus.quicksave_requested.connect(_on_quicksave_requested)
 	EventBus.quickload_requested.connect(_on_quickload_requested)
 
 
-## GameShell/ModalLayer, or null (with an error) when no shell is mounted.
+## GameShell/ModalLayer, the menu's without a shell, or null (with an error) when neither is mounted.
 func _modal_layer() -> CanvasLayer:
-	var layer: CanvasLayer = _shell.get_node_or_null("ModalLayer") if _shell != null else null
+	var host: Node = _shell if _shell != null else _menu
+	var layer: CanvasLayer = host.get_node_or_null("ModalLayer") if host != null else null
 	if layer == null:
 		push_error("[Main] GameShell/ModalLayer missing — modal can't mount")
 	return layer
@@ -3778,8 +3863,13 @@ func _load_slot(slot_id: String) -> bool:
 	var payload: Dictionary = SaveManager.read_slot(slot_id)
 	if not bool(payload.get("ok", false)):
 		push_warning("[Main] yükleme reddedildi (%s): %s" % [slot_id, payload.get("error_key", "")])
+		# The menu stays up and says why.
+		if _menu != null:
+			get_tree().call_group(&"toast", &"show_toast", tr("SAVE_TOAST_NOT_LOADED"), tr(payload.error_key),
+				NOT_SAVED_GLYPH, UiTokens.D_warn())
 		return false
 	_teardown_run_ui()
+	_state = "loading"
 	# queue_free is deferred; without a frame two GameShells would share the tree.
 	await get_tree().process_frame
 	if not SaveManager.apply_loaded_state(payload):
@@ -3918,6 +4008,13 @@ func _skip_to_shell() -> void:
 	_swap_to_shell_and_modal()
 
 
+## The boot's state for the MCP bridge, whose calls carry no arguments.
+func _dbg_menu_digest() -> Dictionary:
+	return {"state": _state, "focus": _menu.focused_id() if _menu != null else "", "scope": EndingsSystem.build_scope(),
+		"run_active": GameState.run_active, "unsaved": SaveManager.has_unsaved_progress(),
+		"speed": TimeManager.current_speed, "paused": get_tree().paused}
+
+
 # Shift+F4: tears down the shell and every modal and remounts OnboardingFlow from step 1, as a
 # fresh launch presents it. The in-progress run is discarded (onboarding's only exit is a new
 # run). SaveManager.reset_all_owners is the one reset path, shared with save loading.
@@ -3930,10 +4027,11 @@ func _on_debug_onboarding_retrigger() -> void:
 	_mount_flow()
 
 
-# Frees the shell (and its ModalLayer/PanelLayer children) and drops EVERY surface ref, so
+# Frees the menu or the shell (and its ModalLayer/PanelLayer children) and drops EVERY surface ref, so
 # nothing from the outgoing run leaks into the next — a stale dialogue ref
 # would misroute the next run's first meeting choice. Shared by Shift+F4 and save loading.
 func _teardown_run_ui() -> void:
+	_free_menu()
 	if _shell != null:
 		_shell.queue_free()
 		_shell = null

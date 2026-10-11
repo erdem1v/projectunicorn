@@ -1,0 +1,206 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/menu/main_menu.gd" id="1_menu"]
+[ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://assets/brand/lockup.svg" id="3_lockup"]
+[ext_resource type="Script" path="res://scripts/menu/continue_card.gd" id="4_card"]
+[ext_resource type="Script" path="res://scripts/ui/components/toast.gd" id="5_toast"]
+
+[node name="MainMenu" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_menu")
+
+[node name="Ground" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"ViewportPanel"
+
+[node name="Cover" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Column" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+theme_override_constants/separation = 0
+
+[node name="Lockup" type="TextureRect" parent="Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+texture = ExtResource("3_lockup")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ListGap" type="Control" parent="Column"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Continue" type="Button" parent="Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"ContinueCard"
+script = ExtResource("4_card")
+
+[node name="Pad" type="MarginContainer" parent="Column/Continue"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="Col" type="VBoxContainer" parent="Column/Continue/Pad"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="Head" type="VBoxContainer" parent="Column/Continue/Pad/Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="Column/Continue/Pad/Col/Head"]
+layout_mode = 2
+theme_type_variation = &"TitleH2"
+text = "MENU_CONTINUE"
+
+[node name="Rule" type="Panel" parent="Column/Continue/Pad/Col/Head"]
+custom_minimum_size = Vector2(48, 3)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"AccentRule"
+
+[node name="Line" type="HSeparator" parent="Column/Continue/Pad/Col"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Who" type="VBoxContainer" parent="Column/Continue/Pad/Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Company" type="Label" parent="Column/Continue/Pad/Col/Who"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"CompanyTitle"
+
+[node name="Facts" type="Label" parent="Column/Continue/Pad/Col/Who"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DataText"
+
+[node name="CardGap" type="Control" parent="Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="NewGame" type="Button" parent="Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"MainMenuItemPrimary"
+text = "MENU_NEW_GAME"
+alignment = 0
+
+[node name="NewRule" type="Panel" parent="Column/NewGame"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 48.0
+offset_right = 48.0
+offset_bottom = 51.0
+mouse_filter = 2
+theme_type_variation = &"AccentRule"
+
+[node name="Load" type="Button" parent="Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"MainMenuItem"
+text = "MENU_LOAD"
+alignment = 0
+
+[node name="Settings" type="Button" parent="Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"MainMenuItem"
+text = "SYS_SETTINGS"
+alignment = 0
+
+[node name="Credits" type="Button" parent="Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"MainMenuItem"
+text = "MENU_CREDITS"
+alignment = 0
+
+[node name="QuitGap" type="Control" parent="Column"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Quit" type="Button" parent="Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"MainMenuItem"
+text = "SYS_QUIT"
+alignment = 0
+
+[node name="Version" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+grow_vertical = 0
+theme_type_variation = &"MetaFaint"
+
+[node name="Rail" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ModalLayer" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 10
+
+[node name="ToastLayer" type="CanvasLayer" parent="."]
+layer = 11
+
+[node name="Toast" type="PanelContainer" parent="ToastLayer" node_paths=PackedStringArray("rail")]
+script = ExtResource("5_toast")
+rail = NodePath("../../Rail")

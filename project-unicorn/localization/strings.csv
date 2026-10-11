@@ -285,6 +285,11 @@ SYS_QUIT_SAVE,Kaydet ve çık,Save and quit
 SYS_QUIT_DISCARD,Çık,Quit
 SYS_CANCEL,Vazgeç,Cancel
 MADE_WITH_GODOT,Godot Engine ile yapıldı.,Made with Godot Engine.
+MENU_CONTINUE,Devam,Continue
+MENU_NEW_GAME,Yeni oyun,New game
+MENU_LOAD,Yükle,Load
+MENU_CREDITS,Jenerik,Credits
+MENU_CARD_LINE,Hafta {week} · Kasa {cash},Week {week} · Cash {cash}
 MENU_VERSION,{build} · Sürüm {version},{build} · Version {version}
 MENU_BUILD_DEMO,Demo,Demo
 MENU_BUILD_EA,Erken Erişim,Early Access
@@ -335,6 +340,7 @@ SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.
 SAVE_TOAST_SAVED,Kaydedildi,Saved
 SAVE_TOAST_NOT_SAVED,Kaydedilmedi,Not saved
 SAVE_TOAST_LOADED,Yüklendi,Loaded
+SAVE_TOAST_NOT_LOADED,Yüklenmedi,Not loaded
 SAVE_TOAST_WHEN,Hafta {week} · {time},Week {week} · {time}
 SAVE_TOAST_LOADED_WHEN,{slot} · Hafta {week} · {time},{slot} · Week {week} · {time}
 HR_COL_EMPLOYEE,ÇALIŞAN,EMPLOYEE

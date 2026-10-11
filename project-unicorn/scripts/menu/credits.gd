@@ -16,14 +16,12 @@ func _ready() -> void:
 	($Dimmer as ColorRect).color = UiTokens.D_SCRIM
 	%GodotMark.modulate = UiTokens.D_INK_3
 	%TitleLabel.text = Fmt.upper(tr("CREDITS_TITLE"))
-	%VersionLabel.text = tr("MENU_VERSION").format({
-		"build": tr("MENU_BUILD_" + EndingsSystem.build_scope().to_upper()),
-		"version": ProjectSettings.get_setting("application/config/version")})
+	%VersionLabel.text = version_line()
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(DATA_PATH))
 	for entry: Dictionary in data.roles:
 		if entry.names.is_empty():
 			continue
-		var role := UiFactory.make_label(tr(entry.role), &"NoteMuted")
+		var role := UiFactory.make_label(tr(entry.role), &"BodyMuted")
 		role.custom_minimum_size.x = ROLE_W
 		%Roles.add_child(role)
 		%Roles.add_child(UiFactory.make_label("\n".join(entry.names), &"SubjectStrong"))
@@ -32,6 +30,13 @@ func _ready() -> void:
 	_licenses_btn.pressed.connect(_open_licenses)
 	%CloseBtn.pressed.connect(_close)
 	%CloseBtn.grab_focus()
+
+
+## "Demo · Version 0.1.0", under the lock-up here and in the main menu's corner.
+static func version_line() -> String:
+	return TranslationServer.translate("MENU_VERSION").format({
+		"build": TranslationServer.translate("MENU_BUILD_" + EndingsSystem.build_scope().to_upper()),
+		"version": ProjectSettings.get_setting("application/config/version")})
 
 
 func _open_licenses() -> void:

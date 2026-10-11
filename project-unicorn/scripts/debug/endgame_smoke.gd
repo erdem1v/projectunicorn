@@ -279,6 +279,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
 		"save_backup_fallback":               fail = _case_save_backup_fallback()
 		"autosave_writes_off_thread":         fail = _case_autosave_writes_off_thread()
+		"menu_state_machine":                 fail = _case_menu_state_machine()
 		"save_v13_day_stamps_migrate":        fail = _case_save_v13_day_stamps_migrate()
 		"look_registry_unique_and_saved":     fail = _case_look_registry_unique_and_saved()
 		"meeting_cast_seeded_and_saved":      fail = _case_meeting_cast_seeded_and_saved()
@@ -8942,6 +8943,17 @@ static func _case_autosave_writes_off_thread() -> String:
 	if SaveManager._write_task != -1:
 		return done.call("save_to_slot returned with the autosave still in flight")
 	return done.call("")
+
+
+## The menu's boot: the first boot's language is Turkish for a Turkish Steam or system language and English for any
+## other, and Steam's answer beats the system's.
+## FALSIFICATION: read os_lang before steam_lang in Localization.detect_language and the third pair fails.
+static func _case_menu_state_machine() -> String:
+	for row in [["", "tr", "tr"], ["", "de", "en"], ["turkish", "en", "tr"], ["english", "tr", "en"]]:
+		var got: String = Localization.detect_language(row[0], row[1])
+		if got != row[2]:
+			return "detect_language(%s, %s) = %s, want %s" % [row[0], row[1], got, row[2]]
+	return ""
 
 
 static func _put_text(path: String, text: String) -> void:

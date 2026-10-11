@@ -42,6 +42,6 @@ texture = ExtResource("3_logo")
 
 [node name="Line" type="Label" parent="Center"]
 layout_mode = 2
-theme_type_variation = &"ValueText"
+theme_type_variation = &"LeadText"
 text = "MADE_WITH_GODOT"
 horizontal_alignment = 1
