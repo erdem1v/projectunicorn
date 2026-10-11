@@ -2014,3 +2014,47 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   ve üstünde 5. tik; `docs/tasks/PRD_SPRINT.md` §3, `--sprint-probe` ile ölçülür): bedelsiz baskın strateji. Bu turda
   değişmez. Seçenekler: A) Kabul: uzun gün kurucunun bedelsiz kozudur. B) Kurucunun mesaisine bir bedel gelir (biçimi
   ayrıca sorulur). Kaynak: `docs/tasks/PRD_SPRINT.md` §0, §2, §3, §6.
+
+- **107 · Onarım 1 sahip kararları.**
+  - Ne oluyor: Onarım 1'in dört sahip kararı (`docs/tasks/PRD_ONARIM_1.md` §6.2, §11). Dördü de 2026-10-11'de
+    sahip kararına bağlandı ve O17-O20 ile uygulanıyor; (a) için sahip önerinin pencere süresini değiştirdi.
+    (a) S02 mekanizması. Ölçüm `6a35af1` (20 tohum, 40 hafta; girdi, kabul tabanı değil). M1: ilk hesap 20/20 tohumda
+    4 hafta yaşar. M2: %14,7 (56/380; 7-14. haftada imzalanıp 12 hafta sonra hâlâ hesapta). M3: %28,3 (491/1.736;
+    imzadan sonraki 8 haftada giden), M3b: %2,2 (14/639; sonraki 8 haftada). M4: v1.0 kararlılığı 20/20 tohumda 0;
+    7-14. haftada imzada hedef ortancası 14 (0-32), tolerans ortancası 42 (33-56), 380/380 hesap altında; hedef
+    toleransı imzalananların neredeyse tamamı için ancak ~27. haftadan sonra aşar. M5: seed günü 18-24 (ortanca 21),
+    seed öncesi en düşük kasa 5.533-8.400, Traction'da sonlu runway payı 0,21. M6: `run_gate` 3/3 (gün 104, 104, 68).
+    S17 (yalnız ölçüm): `launch_leak` 8/8 tohumda 9. haftada, v1.0'dan 2 hafta sonra, `funding.gate_traction` ile aynı
+    hafta.
+    Önerilen, onboarding tabanı (`b2b_sales_system.gd:124-132`, `b2b_constants.gd`): `ONBOARDING_GRACE_WEEKS` yok → 8
+    ve `ONBOARDING_GRACE_MARGIN` yok → 2 (ikisi de [ÇALIŞMA]). İmzadan sonraki 8 hafta hedef
+    `max(sağlık, tolerans + ONBOARDING_GRACE_MARGIN)` olur; `trust_offset` tabandan sonra eklenir, kırık söz pencerede
+    de ısırır. Pencere `acquired_on_day`'den sayılır; `ONBOARDING_WEEKS` 4 (salınım katı) ayrı kalır.
+    Tahmin (koşu değil): kayıtlardan kurulan hesap modeli; botun indirim ve söz hamleleri yok, M2'yi düşük verir
+    (temelde %2,6, gerçek %14,7). M1 en az 11 hafta (modelde 15/20 ilk hesap 40. haftaya kadar kalır), M2 ~%70
+    (kurtarmasız alt sınır %38), M3 ~%0, M3b ~%13 (kurtarmasız üst sınır %30). Risk: pencerede ürün ne kadar kötü
+    olursa olsun memnuniyet toleransın 2 üstünde durur, uyarı pencere bitince birden gelir; B2B ölümsüz olmaz, churn
+    kalkmaz, 8 hafta kayar. İmza memnuniyeti toleransın 35'ten fazla altındaysa (7-14. haftada hesapların %12,6'sı)
+    ilk tikte kısa bir Risk girişi ve retention kartı olabilir; çözüm imza tohumunu tabana çekmek. Erken MRR sonlu
+    runway payını 0,21'in altına indirebilir (yön, ACIK 98).
+    Alternatif, toleransı rev 7 eksenlerine oturtma: `TOLERANCE_BASE` 33 ve `TOLERANCE_PER_SCALE` 9 ölçülen v1
+    kararlılığına göre düşer; `b2b_v1_lands_mid_band`'in `CAL_V1_GOOD_RAW_STABILITY` 31,0 ve
+    `CAL_V1_BAD_RAW_STABILITY` 18,3 sabitleri ile `quality_model.gd:25-30` yorumu birlikte değişir (Kalibrasyon A'nın
+    dört parçalı kararı). Tahmin (aynı model, örnek değerler): 14 ve 4 (1★ 14, 3★ 22) için M2 ~%92, M3 ~%2, ilk hesap
+    11/20 tohumda 40. haftaya kadar kalır; 20 ve 6 için M1 değişmez (4 hafta), M2 ~%82, M3 ~%4. İkisinde de 19.
+    haftadan sonra hiçbir hesap Risk'e girmez (0/2.340; gerçek koşuda 324/2.340 hesap Risk'te görünür): churn kalkar,
+    B2B fiilen ölümsüz.
+    **Sahip kararı (2026-10-11):** A, pencere 8 değil 4 hafta (`ONBOARDING_GRACE_WEEKS` 4, pay +2, ikisi [ÇALIŞMA]);
+    oyuncuya görünen adı "Onboarding" (TR ve EN aynı; ödünç kelime sözlüğe eklenir); pencerenin son haftasında
+    memnuniyet toleransın altındaysa önceden işaret gelir; imza memnuniyeti çok düşük hesapta imza tohumu tabana
+    çekilir. M2/M3 eşikleri kapı değil, rapordur (metrikler playtest'e bırakıldı); 4 ve 8 hafta O19'da yan yana
+    ölçülür. Sert kapılar: pencere sonrası churn > 0 (B2B ölümsüz olmaz) ve `run_gate` 3/3.
+    (b) S43 tek para tabanı (22/30; run_h15 ayda $4.920 → ~$3.609, §2.3): sahip onayladı (2026-10-11), O17 `2870897`.
+    (c) ACIK 60 · C (bedelsiz taşınma, kartta fiyat yok, §4.2): sahip onayladı (2026-10-11), O18; 60. madde kapanır.
+    (d) S12: `WARM_INTRO_MISMATCH_MULT` [ÇALIŞMA] yok (1,0) → 0,5. Frank'in tanıştırdığı adayda masa ölçeği cezası
+    yarıya iner (2★ aday, Satış 0: iğne cezası 0,34 → 0,17); hover satırı ve etiket gelir. Aynı commit'e S14 (Risk
+    nedeni, `trust_offset >= 0` ise kararlılık, değilse memnuniyet) ve S33 kopyası (`PROD_TYPE_ERP_TRADEOFF`,
+    `PROD_PATH_B2B_DESC`) girer; TR/EN onay bekliyor. Sahip 0,5'i onayladı (2026-10-11); O20, O19'dan sonra.
+  - Seçenekler (karara bağlandı): (a) A) onboarding tabanı (seçildi, 4 hafta), B) tolerans oturtma, C) dokunma.
+    (d) A) 0,5 (seçildi), B) başka değer, C) dokunma.
+  - Kaynak: `docs/tasks/PRD_ONARIM_1.md` §2.3, §4.2, §6, §11; ölçüm ve model kayıtları repo dışında.
