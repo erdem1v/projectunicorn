@@ -373,8 +373,8 @@ func _weeks_left(p: Prospect) -> HBoxContainer:
 
 
 ## §7.2.1'in iki fiili, bu masaya kim oturuyor sorusunun iki cevabı: Ayır masayı kurucuya saklar (temsilci
-## atlar), Temsilciye ver bandındaysa öne alır; basılıyken bir daha basmak geri alır. §5.0'ın giriş kapısı
-## kapalıyken gerekçesi düğmelerin hemen altındadır.
+## atlar), Temsilciye ver onu çalışabilecek bir temsilci varken açıktır ve öne alır; basılıyken, temsilci gitmiş olsa
+## da, bir daha basmak geri alır. Gerekçeler (onu alacak temsilci yok, §5.0'ın giriş kapısı) düğmelerin altındadır.
 func _lead_actions(p: Prospect, off: bool) -> VBoxContainer:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiTokens.SPACE_XS)
@@ -382,14 +382,16 @@ func _lead_actions(p: Prospect, off: bool) -> VBoxContainer:
 	row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	col.add_child(row)
+	var rep_block: String = SalesLedger.route_block_reason(p)
 	var block: String = SalesLedger.meeting_block_reason(p.id)
-	if block != "":
-		var why := _line(tr(block), &"Caption")
-		why.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		col.add_child(why)
+	for key in [rep_block, block]:
+		if key != "":
+			var why := _line(tr(key), &"Caption")
+			why.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			col.add_child(why)
 	for pair in [[SalesConstants.ROUTE_RESERVED, "SALES_ROUTE_RESERVE"], [SalesConstants.ROUTE_REP, "SALES_ROUTE_GIVE"]]:
 		var route: String = pair[0]
-		var b := _button(tr(pair[1]), off)
+		var b := _button(tr(pair[1]), off or (route == SalesConstants.ROUTE_REP and p.routing != route and rep_block != ""))
 		b.toggle_mode = true
 		b.set_pressed_no_signal(p.routing == route)
 		b.pressed.connect(func() -> void:
@@ -537,8 +539,9 @@ func _account_card(c: Customer, off: bool) -> PanelContainer:
 	return _card(UiTokens.D_variation(&"DealRisk") if risk else &"DealDoc", col)
 
 
-## "$1,0K/ay · 12 koltuk · 2 aydır müşteri", hesabın kendi koltuk fiyatı ve varsa imza indirimiyle (§5.4):
-## büyüme bu fiyattan yazılır, oyuncu onu büyütmeden önce neye anlaştığını görmelidir.
+## "$1,0K/ay · 12 koltuk · 2 aydır müşteri · $83/koltuk", varsa imza indirimiyle (§5.4). Koltuk fiyatı bir koltuğun
+## bugün ödediğidir (MRR / koltuk): sonradan verilen indirim MRR'ı düşürür ve burada görünür; imzadaki damga büyümenin
+## fiyatı olarak kalır.
 func _meta_line(c: Customer) -> String:
 	var months: int = int(TimeModel.months(GameState.day - c.acquired_on_day))
 	var parts: Array[String] = [
@@ -546,8 +549,8 @@ func _meta_line(c: Customer) -> String:
 		tr("SALES_SEATS").format({"n": c.seats}),
 		tr("SALES_TENURE_NEW") if months < 1 else tr("SALES_TENURE").format({"n": months}),
 	]
-	if c.seat_price > 0:
-		parts.append(tr("SALES_SEAT_PRICE").format({"price": Fmt.money_exact(c.seat_price)}))
+	if c.seats > 0:
+		parts.append(tr("SALES_SEAT_PRICE").format({"price": Fmt.money_exact(roundi(float(c.mrr) / c.seats))}))
 	if c.signing_discount > 0.0:
 		parts.append(tr("SALES_SIGNING_DISCOUNT").format({"pct": int(round(c.signing_discount * 100.0))}))
 	return " · ".join(parts)

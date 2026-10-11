@@ -954,8 +954,8 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 	pane.populate(INBOX.card_item("preview", card_id, ctx, {}, GameState.day).merged({"kind": "active"}), "preview")
 
 
-## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening>.
-## `desk` puts a rep
+## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|
+## norep|discounted>. `desk` puts a rep
 ## mid-processing on the desk; `picker` opens the steward picker on the first account, `inbox` presses its İlgilen
 ## (Olaylar opens on the account's mail); `edge` draws the rarer lines (a reserved lead, one given to a rep, a
 ## whale's condition, tables above the founder's league, the week's meetings spent, an open promise by sprint, the
@@ -965,6 +965,8 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 ## run, `untyped` before a type is picked, `b2c_live` the B2C page four weeks after live:b2c_live publishes;
 ## `morning` paints the page at 00:00 (every lead locked) and shoots it again once the clock reaches 08:00, `evening`
 ## paints it at 10:00 and shoots it again at the founder's last workday hour: the entry gate follows the clock.
+## `norep` is one lead and nobody on the Satış job: its Temsilciye ver is closed with the reason under it; `discounted`
+## gives Nordica, signed at $100 a seat, the retention discount: its row reads what a seat pays now.
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
 	if kind == "b2c_live":
@@ -988,12 +990,15 @@ func _run_sales_shot(kind: String) -> void:
 				GameState.flags.erase(flag)
 		"empty":
 			pass
+		"norep":
+			SalesFaucetSystem.spawn(1, "faucet")
 		_:
 			for star in [1, 2, 3]:
 				SalesFaucetSystem.spawn(star, "faucet")
-	if kind in ["desk", "picker", "inbox", "stretched"]:
+	if edge or kind in ["desk", "picker", "inbox", "stretched"]:
 		# A rep on the desk, mid-processing, so the band row and the working line both draw; at 1★ the band row
-		# is the line that says the rep works their own league only.
+		# is the line that says the rep works their own league only. The desk takes `edge`'s given lead only
+		# while a rep there could work it.
 		var rep := Character.new()
 		rep.id = "char_sr_shot"
 		rep.character_name = "Kerem Aydın"   # LOC-DATA debug seed / id
@@ -1034,6 +1039,10 @@ func _run_sales_shot(kind: String) -> void:
 		var last: Prospect = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.star == 3)[0]
 		last.spawned_on_day = GameState.day - TimeModel.ticks(3)
 		last.expires_on_day = GameState.day + TimeModel.ticks(1)
+	if kind == "discounted":
+		# Nordica signed its 20 seats at $100; the discount takes MRR down while the stamp stays.
+		CustomerRegistry.get_customer("co_nordica").seat_price = 100
+		B2BSalesSystem.apply_discount("co_nordica", -roundi(2000 * B2BConstants.RETAIN_DISCOUNT_PCT))
 	# Monthly strip figures: gained 1 / lost 2 / net -1.
 	GameState.run_customers_signed = 5
 	GameState.run_customers_lost = 2

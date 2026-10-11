@@ -2339,6 +2339,7 @@ SALES_ROUTE_RESERVE,Ayır,Reserve
 SALES_ROUTE_GIVE,Temsilciye ver,Give to a rep
 SALES_ROUTE_RESERVED,Ayrıldı,Reserved
 SALES_ROUTE_REP,Temsilcide,With a rep
+SALES_ROUTE_NO_REP,Temsilci yok,No rep to take it
 SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.
 SALES_EXPIRED_LINE,Beklemekten vazgeçti.,They stopped waiting.
 SALES_DESK_HEADER,Satış masası,Sales desk

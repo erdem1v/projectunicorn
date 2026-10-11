@@ -48,9 +48,12 @@ static func lead_routing(lead_id: String) -> String:
 
 ## §7.2.1 — "Ayır" (the desk is the founder's) and "Temsilciye ver" (first in the band queue), and
 ## ROUTE_NONE taking either back. Reserving does NOT stop the clock (§7.2.1: "Rezerv süreyi durdurmaz").
+## A lead goes to the desk only while a rep there could work it, the same rule that closes the card's button.
 static func set_routing(lead_id: String, routing: String) -> void:
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
 	if p == null or p.routing == routing:
+		return
+	if routing == SalesConstants.ROUTE_REP and route_block_reason(p) != "":
 		return
 	p.routing = routing
 	match routing:
@@ -60,6 +63,18 @@ static func set_routing(lead_id: String, routing: String) -> void:
 			EventBus.lead_routed.emit(lead_id)
 		_:
 			EventBus.lead_unrouted.emit(lead_id)
+
+
+## "" when a rep on the Satış job could work this lead; otherwise the CSV key naming why nobody can. A narrowed
+## band is named before the league, because the player can widen it.
+static func route_block_reason(p: Prospect) -> String:
+	var reps: Array[Character] = HRSystem.assigned_to(HRConstants.AREA_SALES)
+	if reps.is_empty():
+		return "SALES_ROUTE_NO_REP"
+	var reasons: Array = reps.map(func(rep: Character) -> String: return SalesRepSystem.out_of_band_reason(rep, p))
+	if reasons.has(""):
+		return ""
+	return "SALES_BAND_ABOVE_CAP" if reasons.has("SALES_BAND_ABOVE_CAP") else "SALES_BAND_ABOVE_REP"
 
 
 static func reach_band() -> int:
