@@ -1211,8 +1211,8 @@ func _seed_goal(state: String) -> void:
 # OFFICECARD line with the cash reading the card draws before and after.
 # desk_shut = a live B2C product, the founder on the build, nobody at the support desk and twelve
 # reports in, all missed this week: the DESTEK card's counts and its refusal. fix_run = the founder free
-# for the desk, nine confirmed bugs and three reports missed: Start (_01), then the run open with five
-# fixed (_02).
+# for the desk, nine confirmed bugs, seven reports in and three missed this week: Start (_01), then the run
+# open with five fixed and none missed (_02).
 # With --pan / --pan-gpu (OFFICE_PAN) the shot is handed over after the extra: the camera moves by pixel
 # offsets, the 3D image alone is saved and measured, and the process ends there.
 func _run_office_shot(spec: String) -> void:
@@ -1287,11 +1287,13 @@ func _run_office_shot(spec: String) -> void:
 		"fix_run":
 			CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
 			GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
+			GameState.set_flag(ProductState.REPORTS_INCOMING, 7)
 			GameState.set_flag(ProductState.REPORTS_WEEK_NET, 3)
 			EventBus.build_progress_changed.emit()
 			await _shot_step("office_shot_%s_%02d_fix_run" % [office_id, hour], func() -> void:
 				GameState.set_flag(ProductState.FIX_RUN_ACTIVE, true)
 				GameState.set_flag(ProductState.FIX_RUN_FIXED, 5)
+				GameState.set_flag(ProductState.REPORTS_WEEK_NET, 0)
 				EventBus.build_progress_changed.emit())
 			return
 		"crown":
@@ -2650,7 +2652,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
 # gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
-# dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai>:
+# dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai|izin>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
 # list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
@@ -2667,6 +2669,8 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # dosyalar-tehlike, dosyalar-onay, dosyalar-mesai = no roster: the founder alone, no revenue, $10,000 in the bank,
 # a Senior developer's files on the table (the first one picked); onay with the hire's confirmation open, mesai on
 # a 15-hour company day.
+# izin = the first employee's file over Kadro with its leave dialog open (hr_shot_izin_onay), then the dialog's own
+# button pressed: the file with her away and the leave row locked on its reason (hr_shot_izin).
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -2836,6 +2840,17 @@ func _run_hr_shot(kind: String) -> void:
 				tab._on_card_action(who[0].id, HRLedger.ACTION_TRAIN, null)
 		"dosya", "dosya-kilit":   # LOC-DATA debug seed / id
 			tab._on_card_action(CharacterRegistry.get_employees()[0].id, HRLedger.ACTION_DOSSIER, null)
+		"izin":   # LOC-DATA debug seed / id
+			tab._on_card_action(CharacterRegistry.get_employees()[0].id, HRLedger.ACTION_DOSSIER, null)
+			await get_tree().create_timer(0.3).timeout
+			if not _press_button_labelled(get_tree().get_root(), tr("HR_CARD_LEAVE")):
+				_shot_fail("[HRShot] dosyada izin satırı bulunamadı")
+				return
+			await get_tree().create_timer(0.5).timeout
+			_save_shot("hr_shot_izin_onay")
+			if not _press_button_labelled(_confirm_modal, tr("HR_CARD_LEAVE")):
+				_shot_fail("[HRShot] izin onay düğmesi bulunamadı")
+				return
 		"dosya-kurucu":   # LOC-DATA debug seed / id
 			EventBus.tab_changed.emit("")
 			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",

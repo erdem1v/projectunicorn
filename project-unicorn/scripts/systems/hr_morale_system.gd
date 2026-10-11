@@ -125,7 +125,8 @@ static func _seed_target(emp: Character) -> void:
 
 
 ## §7.1 taban sürüklenme. Saat çarpanı ve aşırı yük YALNIZ buraya uygulanır; çarpan sıfırın
-## altına inince işaret döner ve moral yükselir (sekizde durur, yedide yükselir).
+## altına inince işaret döner ve moral yükselir (sekizde durur, yedide yükselir; aşırı yük ve TAT
+## KAÇIRAN sekizde de aşındırır).
 static func tick_drift() -> void:
 	var drift: float = TimeModel.per_tick(HRConstants.MORALE_BASE_DRIFT_PER_DAY)
 	for emp in CharacterRegistry.get_employees():
@@ -137,8 +138,11 @@ static func tick_drift() -> void:
 		var hour_mult: float = 1.0
 		if emp.status != HRConstants.STATUS_TRAINING:
 			hour_mult = HRConstants.hour_morale_mult(WorkHoursSystem.hours_for(emp))
+		var overloaded: bool = HRSystem.is_overloaded(emp)
+		if is_zero_approx(hour_mult) and (overloaded or _team_decay_mult(emp) > 1.0):
+			hour_mult = HRConstants.LOADED_DAY_MORALE_MULT
 		var raw: float = -drift * hour_mult
-		if HRSystem.is_overloaded(emp):
+		if overloaded:
 			# §12.1: aşırı yük düşüşü hızlandırır; kısa günde de moral YÜKSELMEZ, en fazla durur.
 			raw = raw * HRConstants.OVERLOAD_MORALE_MULT if raw < 0.0 else 0.0
 		if is_zero_approx(raw):

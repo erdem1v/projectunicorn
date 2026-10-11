@@ -4,8 +4,8 @@ extends PanelContainer
 #
 # Satırlar, hepsi modelden:
 #   başlık : ürünün adı ve sürümü; masadaki biri iki işteyse sağda bölünmüş odağın notu.
-#   destek : DESTEK, doğrulanmış hatalar ve masanın bu hafta kaçırdığı bildirimler (yalnız varsa);
-#            koşu sürerken sağda yüzde, altında ilerleme.
+#   destek : DESTEK, doğrulanmış hatalar ve gelen bildirimler; masa bu hafta bildirim kaçırdıysa aynı
+#            yazı kaçanı da vurguyla söyler. Koşu sürerken sağda yüzde, altında ilerleme.
 #   eylem  : karttaki TEK basılabilir şey, koşuyu başlatır ya da düzeltileni hotfix'le yayınlar;
 #            kapalıyken gerekçesi yanında.
 # Sprint planlamada bir gün bekleyip liderin önerisiyle kendiliğinden başladıysa, o sprint sürdükçe
@@ -27,7 +27,7 @@ var _name_label: Label = null
 var _busy_label: Label = null
 var _key_label: Label = null
 var _confirmed_label: Label = null
-var _missed_label: Label = null
+var _incoming_label: Label = null
 var _percent_label: Label = null
 var _progress: ProgressBar = null
 var _action: Button = null
@@ -91,9 +91,9 @@ func _build_tree() -> void:
 	support.add_child(_key_label)
 	_confirmed_label = UiFactory.make_label("", &"MetaMuted")
 	support.add_child(_confirmed_label)
-	_missed_label = UiFactory.make_label("", &"KeyText")
-	_missed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	support.add_child(_missed_label)
+	_incoming_label = UiFactory.make_label("", &"MetaMuted")
+	_incoming_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	support.add_child(_incoming_label)
 	_percent_label = UiFactory.make_label("", &"KeyText")
 	support.add_child(_percent_label)
 	_progress = ProgressBar.new()
@@ -148,8 +148,9 @@ func _repaint() -> void:
 	_busy_label.visible = m.split_note_key != ""
 	_key_label.text = Fmt.upper(tr("BUILD_PHASE_SUPPORT"))
 	_confirmed_label.text = tr("BUILD_SUPPORT_CONFIRMED").format({"n": m.live_bugs})
-	_missed_label.text = tr(Fmt.count_key("BUILD_SUPPORT_MISSED", m.missed)).format({"n": m.missed}) \
-		if m.missed > 0 else ""
+	_incoming_label.text = tr("BUILD_SUPPORT_MISSED" if m.missed > 0 else "BUILD_SUPPORT_INCOMING").format(
+		{"n": m.incoming, "m": m.missed})
+	_incoming_label.theme_type_variation = &"KeyText" if m.missed > 0 else &"MetaMuted"
 	# Yüzde ve ilerleme yalnız koşu sürerken: dolacak bir şey yoksa sayı da yalan olurdu.
 	_percent_label.text = tr("PROD_PERCENT").format({"n": m.percent})
 	_percent_label.visible = m.fix_run_active

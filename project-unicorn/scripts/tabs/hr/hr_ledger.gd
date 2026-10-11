@@ -26,6 +26,7 @@ const ACTION_RAISE := "raise"
 const ACTION_FIRE := "fire"
 const ACTION_TRAIN := "train"
 const ACTION_PROMOTE := "promote"   # §13.3 dördüncü satır
+const ACTION_LEAVE := "leave"
 
 const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
 ## Açık HR görünümleri (Ekip sayfası, Ekip dosyası) bu gruptadır ve `rebuild_view()` uygular.
@@ -261,8 +262,8 @@ static func _on_row_input(ev: InputEvent, emp_id: String, action: String, on_act
 # --- kişi aksiyonları -------------------------------------------------------
 
 ## The person's actions as menu rows (the row menu and the dossier): the file (menu only), raise,
-## promotion, training, and dismissal ruled off below. Each row says its result on the right; a closed
-## one keeps its label, greys it and gives its reason under it.
+## promotion, leave, training, and dismissal ruled off below. Each row says its result on the right; a
+## closed one keeps its label, greys it and gives its reason under it.
 static func action_list(emp: Character, on_action: Callable, with_file: bool) -> VBoxContainer:
 	var list := VBoxContainer.new()
 	list.add_theme_constant_override("separation", 0)
@@ -282,6 +283,7 @@ static func _action_specs(emp: Character, with_file: bool) -> Array:
 		specs.append({"key": "HR_MENU_OPEN_DOSSIER", "glyph": "util/doc", "preview": {"ok": true},
 			"action": ACTION_DOSSIER, "meta": ""})
 	var next_title: String = HRConstants.job_title(emp.role, emp.level + 1) if HRActions.can_promote(emp) else ""
+	var leave: Dictionary = HRActions.preview_leave(emp)
 	specs.append_array([
 		{"key": "HR_CARD_RAISE", "glyph": "world/raise", "preview": HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT),
 			"action": ACTION_RAISE, "meta": "%s %s" % [tr_key("HR_ROW_SALARY"), Fmt.money_exact(emp.monthly_salary)]},
@@ -289,6 +291,8 @@ static func _action_specs(emp: Character, with_file: bool) -> Array:
 		{"key": "HR_CARD_PROMOTE", "glyph": "util/chevron_up",
 			"preview": {"ok": HRActions.can_promote(emp), "reason": HRActions.promotion_block_reason(emp)},
 			"action": ACTION_PROMOTE, "meta": "→ %s" % next_title if next_title != "" else ""},
+		{"key": "HR_CARD_LEAVE", "glyph": "util/calendar", "preview": leave, "action": ACTION_LEAVE,
+			"meta": "%s +%d" % [tr_key("HR_ROW_MORALE_RETURN"), leave.gain] if leave.ok else ""},
 		# §5.4 iki gerekçe: bar dolmadı ya da alan tavanda — metni registry seçer.
 		{"key": "HR_TRAINING_PICK_TITLE", "glyph": "world/training",
 			"preview": {"ok": CharacterRegistry.can_train(emp.id),
@@ -354,6 +358,8 @@ static func run_action(host: Node, emp: Character, action: String) -> void:
 			_open_raise(emp)
 		ACTION_PROMOTE:
 			_open_promotion(emp)
+		ACTION_LEAVE:
+			_open_leave(emp)
 		ACTION_TRAIN:
 			# Alan seçimini oyuncu yapıyor (§5.2), o yüzden onay kutusu değil eğitim modalı.
 			HRUiShared.mount_panel_modal(host, TRAINING_MODAL, _refresh_views, [emp.id])
@@ -390,6 +396,22 @@ static func _open_promotion(emp: Character) -> void:
 			"start": HRConstants.PROMOTION_MIN_PCT},
 		"preview": func(pct: int) -> Dictionary: return HRActions.preview_promotion(emp, pct),
 		"on_commit": _commit.bind(emp.id, HRActions.apply_promotion),
+	})
+
+
+## The same shell: the slider picks the weeks away, the row says the morale on return.
+static func _open_leave(emp: Character) -> void:
+	if not bool(HRActions.preview_leave(emp).get("ok", false)):
+		return
+	EventBus.confirm_requested.emit({
+		"modal": "hr_action",
+		"title": tr_key("HR_CARD_LEAVE"),
+		"person": emp,
+		"commit_key": "HR_CARD_LEAVE",
+		"slider": {"min": HRConstants.VACATION_WEEKS_MIN, "max": HRConstants.VACATION_WEEKS_MAX,
+			"start": HRConstants.VACATION_WEEKS_MIN, "format": Fmt.weeks},
+		"preview": func(_weeks: int) -> Dictionary: return HRActions.preview_leave(emp),
+		"on_commit": _commit.bind(emp.id, HRActions.apply_leave),
 	})
 
 

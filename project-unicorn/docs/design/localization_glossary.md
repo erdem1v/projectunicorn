@@ -77,7 +77,7 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | hız *(sprint)* | velocity | HIZ / VELOCITY. Kişi ekseni "Hız ↔ Pace"ten ayrı anlam. |
 | düzeltme koşusu | fix run | DESTEK'in doğrulanmış hataları eriten koşusu; olay çipi "Düzeltme başlar ↔ A fix run starts" (`EFFECT_FIX_RUN_STARTS`). TR/EN onay bekliyor. |
 | hata düzeltme / hotfix | bug fixing / hotfix | DESTEK kartının düğmesi: kapalıyken "Hata düzeltmeyi başlat ↔ Start bug fixing", açıkken "Hotfix yayınla · {n} düzeltildi ↔ Ship hotfix · {n} fixed" (`PROD_FIX_RUN_*`). "hotfix" izinli ödünç kelimelerde (Erdem). TR/EN onay bekliyor. |
-| kaçırılan bildirim | missed report | Masanın o hafta bakamadığı bildirim: "Bu hafta {n} bildirim kaçırıldı ↔ {n} reports missed this week" (`BUILD_SUPPORT_MISSED`). TR/EN onay bekliyor. |
+| kaçırılan bildirim | missed report | Masanın o hafta bakamadığı bildirim, gelen yığınla aynı yazıda: "Gelen {n} · bu hafta {m} kaçırıldı ↔ Incoming {n} · {m} missed this week" (`BUILD_SUPPORT_MISSED`); kaçan yokken "Gelen {n} ↔ Incoming {n}" (`BUILD_SUPPORT_INCOMING`). TR/EN onay bekliyor. |
 
 ## 4. İnsanlar — eksenler, roller, bölümler, bantlar, HR
 
@@ -96,7 +96,7 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | ekonomik / dengeli / üst segment *(maaş bantları)* | budget / balanced / premium | Küçük harf TR gibi. |
 | Kaçma riski / Tükeniyor / Aşırı yüklü / Yeni | Flight risk / Burning out / Overloaded / New | |
 | İzinde / Yarın başlıyor | On leave / Starts tomorrow | |
-| İzin / Tatil | Leave / Holiday | İki ayrı durum: HR_NEWS_ON_LEAVE ve HR_NEWS_ON_HOLIDAY. |
+| İzin / Tatil | Leave / Holiday | İki ayrı durum: HR_NEWS_ON_LEAVE ve HR_NEWS_ON_HOLIDAY. Dosyanın eylemi "İzne gönder ↔ Send on leave" (`HR_CARD_LEAVE`) kişiyi tatile çıkarır (HR_NEWS_ON_HOLIDAY). TR/EN onay bekliyor. |
 | EK MESAİ · {n}. GÜN | OVERTIME · DAY {n} | |
 | 3 gün / 1 hafta / 2 hafta | 3 days / 1 week / 2 weeks | Mesai blokları. |
 | ARAYIŞ BAŞLAT / ARAYIŞI İPTAL ET | START SEARCH / CANCEL SEARCH | Üç ayrı yazımın tek anahtar ailesi. |

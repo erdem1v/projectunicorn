@@ -50,8 +50,9 @@ const USAGE_DIV_B2B := 10.0
 const VALIDATION_COEF := 0.8
 ## Ar-Ge §4.3 `bug_tracker` — aynı katsayının araştırılmış hâli.
 const VALIDATION_COEF_RESEARCHED := 1.0
-## Herkes mail okur: Destek'e atanmamış okurun (pasif ilgideki kurucu, bu hafta sprint kartı olmayan
-## çalışan) doğrulamaya katıldığı en düşük Müşteri İlişkileri puanı.
+## Herkes mail okur: her okurun (Destek'e atanan, pasif ilgideki kurucu, bu hafta sprint kartı olmayan
+## çalışan) doğrulamaya katıldığı en düşük Müşteri İlişkileri puanı. Masaya atanmak kimseyi boştakinden
+## yavaş yapmaz.
 const SUPPORT_BASE_POINTS := 2.0
 ## Modelin dışında, taşma koruması: işlenecek kaynak kalmadığında birikim en fazla bir
 ## birim bankalanır. Sınırsız bankalansaydı boş bir masada biriken kesir, ilk gelen
@@ -247,15 +248,13 @@ static func fix_per_day(founder_share: float = 1.0) -> float:
 
 ## İki işteki kişi 0,5 odakla bölünür — `effective_skill` bunu zaten uyguluyor, yani
 ## koşu sırasında doğrulamanın sürmesi (§8.4) bedavaya gelmiyor. `founder_share` kurucunun
-## katkısını çarpar; yalnız saatlik tik toplantı payını verir. Destek'e atanan tam puanıyla
-## sayılır, atanmamış en az `floor_points`'le.
+## katkısını çarpar; yalnız saatlik tik toplantı payını verir. Herkes en az `floor_points`'le
+## sayılır.
 static func _area_sum(people: Array[Character], area_key: String, founder_share: float,
 		floor_points: float) -> float:
 	var total: float = 0.0
 	for c in people:
-		var points: float = HRSystem.daily_contribution(c, area_key)
-		if not c.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
-			points = maxf(points, floor_points)
+		var points: float = maxf(HRSystem.daily_contribution(c, area_key), floor_points)
 		total += points * (founder_share if c.category == "founder" else 1.0)
 	return total
 

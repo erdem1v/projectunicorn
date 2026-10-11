@@ -573,8 +573,8 @@ PROD_RND_NODE_ACCESSIBILITY,Erişilebilirlik,Accessibility
 PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
 BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
 BUILD_SUPPORT_CONFIRMED,Doğrulanmış {n},Confirmed {n}
-BUILD_SUPPORT_MISSED,Bu hafta {n} bildirim kaçırıldı,{n} reports missed this week
-BUILD_SUPPORT_MISSED_ONE,Bu hafta {n} bildirim kaçırıldı,{n} report missed this week
+BUILD_SUPPORT_INCOMING,Gelen {n},Incoming {n}
+BUILD_SUPPORT_MISSED,Gelen {n} · bu hafta {m} kaçırıldı,Incoming {n} · {m} missed this week
 FIX_RUN_REFUSED_NO_BUGS,Doğrulanmış hata yok.,No confirmed bugs.
 PROD_PERCENT,%{n},{n}%
 HR_ROLE_FOUNDER,Kurucu,Founder
@@ -935,12 +935,14 @@ HR_ATLAS_CLOSE_BODY,Dosyalar kapanır. Yeni bir arayış başlatırsan adaylar {
 HR_ATLAS_CLOSE_OK,Dosyaları kapat,Close the files
 HR_CARD_RAISE,Zam yap,Give a raise
 HR_CARD_FIRE,İşten çıkar,Dismiss
+HR_CARD_LEAVE,İzne gönder,Send on leave
 HR_MENU_PERMANENT,kalıcı,permanent
 HR_MENU_OPEN_DOSSIER,Dosyayı aç,Open file
 HR_CANDIDATE_GENERIC,Aday,Candidate
 HR_APPLY_RAISE_PCT,Zammı uygula · +{pct},Apply raise · +{pct}
 HR_ROW_SALARY,Maaş,Salary
 HR_ROW_MORALE,Moral,Morale
+HR_ROW_MORALE_RETURN,Dönüşte moral,Morale on return
 HR_ROW_PAYROLL,Aylık maaş yükü,Monthly payroll
 HR_ROW_CASH,Nakit,Cash
 HR_ROW_TEAM_MORALE,Ekip moral düşümü,Team morale drop

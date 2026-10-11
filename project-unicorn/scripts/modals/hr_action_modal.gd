@@ -1,13 +1,13 @@
 extends Control
 
-# İK EYLEM MODALI — ZAM YAP / TERFİ (kaydırıcılı) · İŞTEN ÇIKAR (kaydırıcısız), tek kabuk.
+# İK EYLEM MODALI — ZAM YAP / TERFİ / İZNE GÖNDER (kaydırıcılı) · İŞTEN ÇIKAR (kaydırıcısız), tek kabuk.
 #
 # ConfirmModal değil: tek autowrap etiketi, üç kayıt türünü (delta / olgu / kural) ayıramaz, yalnız
 # sıfırı geçen değeri kırmızıya çeviremez, kaydırıcı taşıyamaz. Yaşam döngüsü ve host ConfirmModal
 # ile ortak: `EventBus.confirm_requested` + `main.gd::_on_confirm_requested`, config'te
 # `"modal": "hr_action"`. Tek onay, saati durdurma ve ESC = vazgeç orada.
 #
-# Başlıkta eylem ve kişi; gövdede (varsa) yüzde ve kaydırıcı, sonra kayıtlar: deltanın oku var,
+# Başlıkta eylem ve kişi; gövdede (varsa) seçilen değer ve kaydırıcı, sonra kayıtlar: deltanın oku var,
 # olgunun yok, kuralın sayısı yok ve bilgi glifiyle durur. Bedeller (kıdem tazminatı, aylık fark,
 # moral düşümü) bedel diskiyle mürekkeptir; kırmızı yalnız sıfırın altına inen kasadır ve o zaman
 # kepenk notu gelir.
@@ -22,7 +22,9 @@ var _preview: Callable = Callable()     # (int) -> Dictionary
 var _commit: Callable = Callable()      # (int) -> bool
 var _commit_key: String = ""
 var _slider: HSlider = null
-var _pct: Label
+## The slider's value as the player reads it: a percentage unless the caller gives weeks.
+var _format: Callable = func(v: int) -> String: return Fmt.percent(v, 0)
+var _value: Label
 var _rows: VBoxContainer
 var _note: MarginContainer   # the shutter note, shown only while the cash would go below zero
 var _commit_btn: Button
@@ -31,7 +33,8 @@ var _person_id: String = ""
 
 ## Sözleşme:
 ##   {title, person: Character, on_commit: Callable(int)->bool,
-##    slider: {min, max, start}, preview: Callable(int)->Dictionary, commit_key   # kaydırıcılı hâl
+##    slider: {min, max, start, format?: Callable(int)->String},
+##    preview: Callable(int)->Dictionary, commit_key                               # kaydırıcılı hâl
 ##    rows: Array, commit_text, danger}                                            # kaydırıcısız hâl
 func populate(cfg: Dictionary) -> void:
 	_commit_key = String(cfg.get("commit_key", ""))
@@ -67,8 +70,9 @@ func populate(cfg: Dictionary) -> void:
 	body.add_theme_constant_override("separation", 0)
 	var slider_cfg: Dictionary = cfg.get("slider", {})
 	if not slider_cfg.is_empty():
-		_pct = UiFactory.make_label("", &"KpiValue", UiTokens.D_INK_1)
-		body.add_child(_pct)
+		_format = slider_cfg.get("format", _format)
+		_value = UiFactory.make_label("", &"KpiValue", UiTokens.D_INK_1)
+		body.add_child(_value)
 		_slider = HSlider.new()
 		_slider.min_value = int(slider_cfg["min"])
 		_slider.max_value = int(slider_cfg["max"])
@@ -76,11 +80,11 @@ func populate(cfg: Dictionary) -> void:
 		_slider.step = 1
 		body.add_child(_inset(_slider, UiTokens.SPACE_M, 0, 0))
 		var ends := HBoxContainer.new()
-		ends.add_child(UiFactory.make_label(Fmt.percent(int(slider_cfg["min"]), 0), &"SmallMuted"))
+		ends.add_child(UiFactory.make_label(_format.call(int(slider_cfg["min"])), &"SmallMuted"))
 		var gap := Control.new()
 		gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		ends.add_child(gap)
-		ends.add_child(UiFactory.make_label(Fmt.percent(int(slider_cfg["max"]), 0), &"SmallMuted"))
+		ends.add_child(UiFactory.make_label(_format.call(int(slider_cfg["max"])), &"SmallMuted"))
 		body.add_child(_inset(ends, UiTokens.SPACE_XS, 0, 0))
 	_rows = VBoxContainer.new()
 	_rows.add_theme_constant_override("separation", 0)
@@ -157,10 +161,10 @@ func _inset(child: Control, top: int, side: int, bottom: int = -1) -> MarginCont
 func _paint(pct: int) -> void:
 	# Önizlemenin tamamı motordan gelir; burada sayı hesaplanmaz.
 	var pv: Dictionary = _preview.call(pct) as Dictionary
-	var shown: int = int(pv.get("pct", pct))
-	_pct.text = Fmt.percent(shown, 0)
+	var shown: String = _format.call(int(pv.get("pct", pct)))
+	_value.text = shown
 	_render_rows(pv.get("rows", []))
-	_commit_btn.text = tr(_commit_key).format({"pct": Fmt.percent(shown, 0)})
+	_commit_btn.text = tr(_commit_key).format({"pct": shown})
 
 
 func _render_rows(rows: Array) -> void:

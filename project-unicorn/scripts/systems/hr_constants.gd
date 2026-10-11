@@ -750,6 +750,10 @@ const HOUR_MORALE_MULT := {
 	16: 2.5,
 }
 
+## Saatin aşındırmadığı günde (sekiz) aşırı yük (§12.1) ve TAT KAÇIRAN (§6) bu çarpanla aşındırır:
+## ikisinin "normalden hızlı erir"i sıfıra uygulansa hiçbir şey yapmazdı.
+const LOADED_DAY_MORALE_MULT := 1.0
+
 ## §12.1 aşırı yük çarpanı. Çarpanlar çarpılır: 11 saat + aşırı yük = ×2,25.
 const OVERLOAD_MORALE_MULT := 1.5
 
@@ -885,8 +889,7 @@ static func morale_band_id(morale: int) -> String:
 const MORALE_FLIGHT_RISK := 35      # §7: altı → Ayrılabilir
 const MORALE_HIRE_START := 75       # WORKING: yeni işe alınanın başlangıç morali
 const MORALE_LEAVE_RETURN := 15     # §11.4 izin dönüşü, tek seferde
-## Manuel tatil dönüşü. Oyuncu eylemi yok; `send_on_leave`'in `is_manual` dalı gelecek olay
-## kanalı için bekliyor (§15.3 bildirilmiş ama henüz ateşlenmemiş).
+## Oyuncunun dosyadan gönderdiği iznin dönüşü (`send_on_leave`'in `is_manual` dalı), süreden bağımsız.
 const MORALE_VACATION_RETURN := 20
 const MORALE_FIRE_TEAM := 5         # ayrılışta kalan ekipteki DÜŞÜŞ büyüklüğü
 const MORALE_RAISE_AT_MIN_PCT := 4  # %3 zamda moral kazancı  (WORKING)
@@ -1055,6 +1058,9 @@ static func resign_voice(character_id: String) -> String:
 # İzin çalışanın kendisine aittir. İki hafta, tek blok, Haziran–Ağustos penceresinde.
 # Ücretli: maaş akar, kapasite/hız/CS/mesai katkısı durur.
 const LEAVE_WEEKS := 2                  # §11.4 "iki hafta"
+## Oyuncunun dosyadan gönderdiği izin: onay kutusunun kaydırıcısı bu iki uç arasında seçer.
+const VACATION_WEEKS_MIN := 1
+const VACATION_WEEKS_MAX := 2
 const LEAVE_WINDOW_START_MONTH := 6     # Haziran
 const LEAVE_WINDOW_END_MONTH := 8       # Ağustos
 ## Yaz penceresinde her yıl en az 13 tik (Perşembe) var. Adım 5 ile 13 aralarında asal: on üç

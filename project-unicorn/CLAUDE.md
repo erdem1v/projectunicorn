@@ -50,8 +50,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   olur, `{company}'nin sözleşmesi` olmaz), CSV değerinde çıplak süslü parantez yok. Durumda metin değil id saklanır.
   Özel adlar çevrilmez. `static func` içindeki `tr()` derlenir ama çalışırken ölür.
 - **LANGUAGE INTEGRITY LAW.** `docs/design/localization_glossary.md` bağlayıcıdır. TR metinde İngilizce yalnız izinli
-  ödünç kelimelerde kalır: pitch, startup, demo, momentum, MRR, runway, churn, burn, laptop, mail, VC, onboarding ve
-  özel adlar. Türkçe büyük harfte ödünç kelime gövdesi Latin I'yı korur, ardındaki Türkçe ek Türkçe kurala uyar
+  ödünç kelimelerde kalır: pitch, startup, demo, momentum, MRR, runway, churn, burn, laptop, mail, VC, hotfix, onboarding
+  ve özel adlar. Türkçe büyük harfte ödünç kelime gövdesi Latin I'yı korur, ardındaki Türkçe ek Türkçe kurala uyar
   (`Fmt.upper`, gövde listesi `Fmt.LOANWORD_STEMS`: SPRINT, "İlk sprinti" → İLK SPRINTİ). Tek metinde dil karışmaz.
   Oyuncuya görünen hiçbir metinde tire (— –) yoktur (ch01 §9).
 - Motorun bilmediği etki ya da koşul taslakta `[VOCAB?]` / `[COND?]` kalır ve kart bağlanmaz (ch11 §3). Oyuncu

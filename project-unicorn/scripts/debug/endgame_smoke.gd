@@ -181,7 +181,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_raise_and_leave":    fail = _case_hr_raise_and_leave()
 		# --- İK modulü kapanışı (2026-08-22) ---
 		"menu_has_one_path":        fail = _case_menu_has_one_path()
-		"vacation_action_retired":  fail = _case_vacation_action_retired()
 		"leave_does_not_pause_build": fail = _case_leave_does_not_pause_build()
 		"money_never_double_minus": fail = _case_money_never_double_minus()
 		# rev 6.1 §6.4 kapıyı geri koydu; case adıyla birlikte ters çevrildi.
@@ -6954,6 +6953,7 @@ static func _case_hr_morale_drift_shape() -> String:
 	#
 	# FALSİFİKASYON: HRConstants.HOUR_MORALE_MULT'ta 8'i 1,0 yap → "8h" iddiası FAIL eder. 10'u
 	# eksiye çevir → "10h" iddiası FAIL eder. 5'i pozitif yap → "5h" iddiası FAIL eder.
+	# LOADED_DAY_MORALE_MULT'u 0 yap → "did not wear at 8h" iddiası FAIL eder.
 	GameState.set_flag("debug_hr_force", "fail")   # istifa roll'u atmasın
 	GameState.set_cash(500000)   # 62 haftalık burn kasayı eritmesin; nakit krizi morale dokunur
 	var days: int = 12   # tik; her tik yedi günlük drift
@@ -7001,6 +7001,16 @@ static func _case_hr_morale_drift_shape() -> String:
 	if loaded.morale > loaded_before:
 		return "an overloaded employee RECOVERED on a short day (%d → %d) — §12.1 forbids it" % [
 			loaded_before, loaded.morale]
+
+	# --- AŞIRI YÜK SEKİZDE DE AŞINDIRIR ---
+	# Sekiz saat tek başına morali tutar; aşırı yük ona LOADED_DAY_MORALE_MULT'la aşınma koyar, yoksa
+	# "normalden hızlı erir" sıfırı çarpardı.
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
+	var loaded_eight: int = loaded.morale
+	for i in days:
+		_sim_day()
+	if loaded.morale >= loaded_eight:
+		return "an overloaded employee did not wear at 8h (%d -> %d)" % [loaded_eight, loaded.morale]
 	return ""
 
 static func _case_hr_recovery_channels() -> String:
@@ -7065,8 +7075,8 @@ static func _case_hr_recovery_channels() -> String:
 
 static func _case_hr_raise_and_leave() -> String:
 	# Raise bounded 3-15% with morale scaling on the percentage and a PERMANENT salary rise
-	# that reaches burn; leave takes the person out of the sprint team, refreshes morale
-	# on return, and consumes that year's automatic leave.
+	# that reaches burn; the file's leave takes the person out of the sprint team, is locked
+	# while they are away, refreshes morale on return, and consumes that year's automatic leave.
 	GameState.set_cash(200000)
 	var e: Character = _make_employee("char_act", "Act Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 10000, 50)
 	_park_leave([e])
@@ -7092,18 +7102,19 @@ static func _case_hr_raise_and_leave() -> String:
 	FinanceSystem.daily_tick()
 	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(11000.0 / float(TimeModel.DAYS_PER_MONTH))):
 		return "the raise did not flow to burn"
-	# İzin tek kanaldan gelir, otomatik yıllık izin: biri gider, kapasite düşer, dönüşte moral
-	# tazelenir.
 	var cap0: float = SprintSystem.capacity()
-	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_WEEKS, false)
+	if not HRActions.apply_leave(e, HRConstants.VACATION_WEEKS_MAX):
+		return "the leave action refused a healthy employee"
 	if e.status != HRConstants.STATUS_ON_LEAVE:
-		return "annual leave did not take the employee out of capacity"
+		return "the leave action did not take the employee out of capacity"
 	if _sprint_points(e.id) > 0.0 or SprintSystem.capacity() >= cap0:
 		return "capacity unchanged during leave"
 	if e.leave_taken_year != int(GameState.get_date_dict().year):
-		return "the automatic leave did not stamp this year's latch"
+		return "the leave did not stamp this year's latch"
+	if HRActions.leave_block_reason(e) == "":
+		return "the leave action stays open for someone already on leave"
 	var mv: int = e.morale
-	for i in TimeModel.ticks(HRConstants.LEAVE_WEEKS) + 3:
+	for i in TimeModel.ticks(HRConstants.VACATION_WEEKS_MAX) + 3:
 		_sim_day()
 		if e.status == HRConstants.STATUS_ACTIVE:
 			break
@@ -7131,12 +7142,12 @@ static func _case_hr_frank_guard() -> String:
 			return "the mentor appears in get_active_employees"
 	if CharacterRegistry.get_total_monthly_salaries() != 0:
 		return "the mentor draws payroll (%d)" % CharacterRegistry.get_total_monthly_salaries()
-	# `can_send_on_vacation` EMEKLİ (H5): eylem kalktı, dolayısıyla Frank'e karşı
-	# bağışıklığını sınamaya da gerek kalmadı — hiç kimse için çağrılamıyor.
-	if HRActions.can_fire(frank) or HRActions.can_raise(frank, 5):
+	if HRActions.can_fire(frank) or HRActions.can_raise(frank, 5) or HRActions.leave_block_reason(frank) == "":
 		return "an HR action accepts the mentor"
 	if HRActions.can_fire(CharacterRegistry.get_founder()):
 		return "the founder is fireable"
+	if HRActions.leave_block_reason(CharacterRegistry.get_founder()) == "":
+		return "the founder can be sent on leave"
 	var dev: Character = _make_employee("char_guard_dev", "Guard Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 90)
 	_park_leave([dev])
 	# §8.2 / §9.1: mentor bordroda değil ve çalışma saatleri modelinin dışında. Blok
@@ -13215,40 +13226,6 @@ static func _case_menu_has_one_path() -> String:
 	return ""
 
 
-static func _case_vacation_action_retired() -> String:
-	# H5: oyuncunun "Tatile gönder" yolu KALDIRILDI. İki şey birden kanıtlanıyor —
-	# eylem gitti VE otomatik yıllık izin kanalı DURUYOR. Yalnız birincisi ölçülseydi,
-	# izni tamamen kıran bir değişiklik de bu vakayı yeşil geçerdi.
-	var acts: PackedStringArray = _script_methods("res://scripts/systems/hr_actions.gd")
-	for gone in ["can_send_on_vacation", "preview_vacation", "send_on_vacation"]:
-		if acts.has(gone):
-			return "the retired vacation seam is back (%s)" % gone
-	var tab: PackedStringArray = _script_methods("res://scripts/tabs/hr_tab.gd")
-	for gone in ["_confirm_vacation", "_do_vacation"]:
-		if tab.has(gone):
-			return "the vacation confirm path is back (%s)" % gone
-	var ledger: GDScript = load("res://scripts/tabs/hr/hr_ledger.gd") as GDScript
-	if ledger != null and ledger.get_script_constant_map().has("ACTION_VACATION"):
-		return "the vacation action id is back"
-	# Emekli dizgiler: çevrilmeyen bir anahtar KENDİNİ döndürür.
-	for key in ["HR_CARD_HOLIDAY", "HR_HOLIDAY_CONFIRM_TITLE", "HR_LEAVE_ANNUAL_SPENT"]:
-		if TranslationServer.translate(key) != key:
-			return "a retired vacation string is still in the CSV (%s)" % key
-	# OTOMATİK KANAL YAŞIYOR ve R3 yapısal olarak karşılanıyor: yıl mandalına dokunan
-	# tek şey artık o kanal.
-	var morale: PackedStringArray = _script_methods("res://scripts/systems/hr_morale_system.gd")
-	if not morale.has("send_on_leave") or not morale.has("tick_leave_departures"):
-		return "the automatic annual-leave channel was removed with the manual action"
-	var e: Character = _make_employee("char_vac_gone", "Vac Gone", HRConstants.ROLE_DEVELOPER)
-	_park_leave([e])
-	if e.leave_taken_year != 0:
-		return "the year latch did not start clear"
-	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_WEEKS, false)
-	if e.leave_taken_year != int(GameState.get_date_dict().year):
-		return "the automatic channel no longer stamps the year latch"
-	return ""
-
-
 ## Bir çalışan izindeyken sprint DURMAZ: izindeki kişi ekipten düşer, kalan kurucu kartı yürütür.
 ## Herkes düşünce (çalışan izinde, kurucu Ar-Ge'de) kapasite sıfırdır ve kart o hafta ilerlemez.
 ## İki yön de ölçülür, yoksa "hiç durmuyor" da bu vakayı geçerdi.
@@ -13344,12 +13321,15 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 
 
 ## §8.2 — HERKES MAİL OKUR. Masada kimse yokken de canlı üründe bildirimler okunur: pasif ilgideki
-## kurucu ve bu hafta sprint kartı olmayan çalışan en az SUPPORT_BASE_POINTS'le doğrular. Masaya
-## oturan temsilci doğrulamayı en az üç katına çıkarır. Masanın bakamadığı bildirim haftalık
-## "kaçırılan" sayılır: temsilcisiz büyüyen üründe artar, temsilci gelince düşer. Taban yalnız
-## doğrulamadır: masa kapalıyken koşu açılmaz ve kart masanın sebebini söyler.
+## kurucu ve bu hafta sprint kartı olmayan çalışan en az SUPPORT_BASE_POINTS'le doğrular; masaya
+## atanmak kimseyi boştakinden yavaş yapmaz. Masaya oturan temsilci doğrulamayı en az üç katına
+## çıkarır. Masanın bakamadığı bildirim haftalık "kaçırılan" sayılır: temsilcisiz büyüyen üründe artar,
+## temsilci gelince düşer; izne gönderilen temsilci doğrulamaz. Taban yalnız doğrulamadır: masa
+## kapalıyken koşu açılmaz ve kart masanın sebebini söyler.
 ##
 ## FALSIFICATION: fix_run_refusal'da masa denetimini "hata yok"un arkasına al → "shut desk" FAIL;
+## _area_sum tabanı Destek'e atanmışa uygulamazsa → "at the desk" FAIL; validation_per_day okurları
+## get_employees()'tan toplarsa → "on leave" FAIL;
 ## SUPPORT_BASE_POINTS 0 → "verified nothing" FAIL; 3 → "three times" FAIL;
 ## ProductState.reports_missed 0 dönerse → "did not grow" FAIL; hourly_tick haftanın netinden
 ## `verified`'ı düşmezse → "did not cut" FAIL.
@@ -13365,6 +13345,11 @@ static func _case_destek_empty_desk_piles_up() -> String:
 			% SupportSystem.fix_run_refusal()
 	CharacterRegistry.clear_jobs(founder.id)
 	var alone: float = SupportSystem.validation_per_day()
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT)
+	if SupportSystem.validation_per_day() < alone:
+		return "the founder with CS 0 verifies %.2f/day at the desk against %.2f idle" % [
+			SupportSystem.validation_per_day(), alone]
+	CharacterRegistry.clear_jobs(founder.id)
 	var week := func(audience: float) -> int:
 		GameState.set_flag("b2c_audience", audience)
 		for h in TimeModel.HOURS_PER_DAY:
@@ -13390,6 +13375,11 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	var with_rep: int = week.call(24000.0)
 	if with_rep >= grown:
 		return "a rep at the desk did not cut the missed reports (%d -> %d)" % [grown, with_rep]
+	if not HRActions.apply_leave(rep, HRConstants.VACATION_WEEKS_MIN):
+		return "fixture: the rep could not be sent on leave"
+	if not is_equal_approx(SupportSystem.validation_per_day(), alone):
+		return "a rep on leave still verifies (%.2f/day against %.2f without)" % [
+			SupportSystem.validation_per_day(), alone]
 	return ""
 
 

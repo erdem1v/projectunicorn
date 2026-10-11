@@ -28,6 +28,7 @@ var decision_key: String = ""
 var decision_enabled: bool = false
 var refusal_key: String = ""     # eylem kapalıyken gerekçesi
 var live_bugs: int = 0           # doğrulanmış açık hata (§8.1)
+var incoming: int = 0            # doğrulanmayı bekleyen bildirim (§9)
 var missed: int = 0              # masanın bu hafta bakamadığı bildirim
 var fix_run_active: bool = false
 var fixed: int = 0               # açık koşunun düzelttiği, hotfix'le gidecek hata
@@ -47,6 +48,7 @@ func derive() -> bool:
 	# §8/§9 — çubuk, düzeltme koşusunun havuzu ne kadar erittiğidir. FIX_RUN_PROGRESS bir
 	# sonraki hataya kalan kesirdir; çubuğa konsa her çözülen hatada sıfıra düşerdi.
 	live_bugs = ProductState.bugs_confirmed()
+	incoming = ProductState.reports_incoming()
 	missed = ProductState.reports_missed()
 	fix_run_active = ProductState.fix_run_active()
 	fixed = ProductState.fix_run_fixed()
@@ -67,5 +69,5 @@ func derive() -> bool:
 
 ## Kartın çizdiği durumun parmak izi — yığın görünürlüğü ve smoke için.
 func fingerprint() -> String:
-	return "support|%.2f|%d|%s|%d|%d|%d|%d" % [fill, percent, split_note_key, int(decision_enabled),
-		live_bugs, missed, int(fix_run_active)]
+	return "support|%.2f|%d|%s|%d|%d|%d|%d|%d" % [fill, percent, split_note_key, int(decision_enabled),
+		live_bugs, incoming, missed, int(fix_run_active)]

@@ -1,7 +1,7 @@
 class_name HRActions
 extends RefCounted
 
-# The employee-card actions: ZAM YAP (§9.2), TERFİ ETTİR (§9.3), İŞTEN ÇIKAR (§11.1/§11.2).
+# The employee-card actions: ZAM YAP (§9.2), TERFİ ETTİR (§9.3), İZNE GÖNDER (§11.4), İŞTEN ÇIKAR (§11.1/§11.2).
 # Player-triggered only, never ticked: every consequence is applied by the system that owns it.
 #
 # Each action is a trio — can_* (validation), preview_* (exactly what the confirm card prints),
@@ -152,6 +152,40 @@ static func apply_promotion(emp: Character, pct: int) -> bool:
 	})
 	HRMoraleSystem.apply_delta(emp, HRConstants.promotion_morale_gain(p))
 	EventBus.employee_promoted.emit(emp.id, emp.level)
+	return true
+
+
+# ============================== §11.4 İZİN ==================================
+# Ücretli izin: maaş akar, iş durur; moral dönüşte tek seferde gelir (HRMoraleSystem.send_on_leave).
+
+## Kilitli satırın gerekçesi: izindeki ya da eğitimdeki kişi kalan haftasıyla okunur.
+static func leave_block_reason(emp: Character) -> String:
+	var shared: String = _block_reason(emp)
+	if shared != "":
+		return shared
+	match emp.status:
+		HRConstants.STATUS_ON_LEAVE:
+			return HRSystem.leave_line(emp)
+		HRConstants.STATUS_TRAINING:
+			return HRSystem.training_line(emp)
+	return ""
+
+
+## Dönüşteki moral süreden bağımsızdır; süreyi onay kutusunun kaydırıcısı söyler.
+static func preview_leave(emp: Character) -> Dictionary:
+	var reason: String = leave_block_reason(emp)
+	if reason != "":
+		return _refusal(reason)
+	var gain: int = HRMoraleSystem.scaled_delta(emp, HRConstants.MORALE_VACATION_RETURN)
+	return {"ok": true, "reason": "", "gain": gain, "rows": [
+		_delta(TranslationServer.translate("HR_ROW_MORALE_RETURN"), str(emp.morale), str(emp.morale + gain))]}
+
+
+static func apply_leave(emp: Character, weeks: int) -> bool:
+	if leave_block_reason(emp) != "":
+		_refuse_loudly(emp, "apply_leave")
+		return false
+	HRMoraleSystem.send_on_leave(emp, weeks, true)
 	return true
 
 
