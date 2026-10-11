@@ -10,6 +10,12 @@ signal load_requested(slot_id: String)
 const CREDITS := preload("res://scenes/menu/Credits.tscn")
 const CREDITS_SCRIPT := preload("res://scripts/menu/credits.gd")
 const MENU_COVER_S := 0.2   # [WORKING] the boot's ground lifting off the menu
+const MENU_OFFICE := "city"   # [WORKING] the evening city behind the menu
+const MENU_MINUTE := 1170.0   # [WORKING] 19:30
+# The column and the version line read over the city: the ground's colour this strong at the left edge and at the
+# bottom, fading out over the gradients' stops.
+const SIDE_FADE := 0.85
+const FOOT_FADE := 0.6
 const LOCKUP_AUTHORED_S := 128.0   # lockup.svg's square, in the file's own pixels
 # The layout of a screen 1080 tall, then of a shorter one: column origin, lock-up S, the gap under it, the version's
 # distance from the left and the bottom edges.
@@ -25,6 +31,9 @@ var _opener: Control
 
 
 func _ready() -> void:
+	%MenuBackdrop.start(MENU_OFFICE, MENU_MINUTE)
+	%SideFade.texture.gradient.colors = [Color(UiTokens.D_SURFACE_0, SIDE_FADE), Color(UiTokens.D_SURFACE_0, 0.0)]
+	%FootFade.texture.gradient.colors = [Color(UiTokens.D_SURFACE_0, 0.0), Color(UiTokens.D_SURFACE_0, FOOT_FADE)]
 	# Settings over the menu changes the UI scale, and with it the logical height the layout is chosen by.
 	_apply_layout()
 	get_viewport().size_changed.connect(_apply_layout)

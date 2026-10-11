@@ -1,10 +1,23 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/menu/main_menu.gd" id="1_menu"]
 [ext_resource type="Theme" path="res://themes/menajer_theme.tres" id="2_theme"]
 [ext_resource type="Texture2D" path="res://assets/brand/lockup.svg" id="3_lockup"]
 [ext_resource type="Script" path="res://scripts/menu/continue_card.gd" id="4_card"]
 [ext_resource type="Script" path="res://scripts/ui/components/toast.gd" id="5_toast"]
+[ext_resource type="PackedScene" path="res://scenes/menu/MenuBackdrop.tscn" id="6_backdrop"]
+
+[sub_resource type="Gradient" id="Gradient_side"]
+offsets = PackedFloat32Array(0.24, 0.64)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_side"]
+gradient = SubResource("Gradient_side")
+
+[sub_resource type="Gradient" id="Gradient_foot"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_foot"]
+gradient = SubResource("Gradient_foot")
+fill_to = Vector2(0, 1)
 
 [node name="MainMenu" type="Control"]
 process_mode = 3
@@ -17,7 +30,12 @@ grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_menu")
 
-[node name="Ground" type="Panel" parent="."]
+[node name="MenuBackdrop" parent="." instance=ExtResource("6_backdrop")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="SideFade" type="TextureRect" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -25,7 +43,21 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_type_variation = &"ViewportPanel"
+texture = SubResource("GradientTexture2D_side")
+expand_mode = 1
+
+[node name="FootFade" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.86
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_foot")
+expand_mode = 1
 
 [node name="Cover" type="ColorRect" parent="."]
 unique_name_in_owner = true

@@ -14,6 +14,8 @@ extends Node
 const ONBOARDING_FLOW := preload("res://scenes/onboarding/OnboardingFlow.tscn")
 const GODOT_CARD := preload("res://scenes/menu/GodotCard.tscn")
 const MAIN_MENU := preload("res://scenes/menu/MainMenu.tscn")
+const MAIN_MENU_SCRIPT := preload("res://scripts/menu/main_menu.gd")
+const MENU_BACKDROP := preload("res://scenes/menu/MenuBackdrop.tscn")
 const GAME_SHELL := preload("res://scenes/main/GameShell.tscn")
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const MAIL_PANE := preload("res://scripts/tabs/events/mail_pane.gd")
@@ -133,6 +135,7 @@ func _mount_menu() -> void:
 
 func _free_menu() -> void:
 	if _menu != null:
+		_menu.get_node("%MenuBackdrop").stop()
 		_menu.queue_free()
 		_menu = null
 
@@ -210,6 +213,7 @@ func _run_debug_harness() -> bool:
 		"--sales-shot": _run_sales_shot.bind("pipeline"),
 		"--probe-shot": _run_probe_shot.bind(""),
 		"--display-check": _run_display_check,
+		"--backdrop-probe": _run_backdrop_probe.bind(MAIN_MENU_SCRIPT.MENU_OFFICE, MAIN_MENU_SCRIPT.MENU_MINUTE),
 		"--theme-contrast-audit": func() -> void: _quit_with(load("res://scripts/theme/theme_check.gd").contrast_audit(load(UiTokens.MENAJER_THEME), UiTokens)),
 	}
 	for flag in bare:
@@ -242,6 +246,7 @@ func _run_debug_harness() -> bool:
 		"--rnd-shot=": _run_rnd_shot,
 		"--modal-shot=": _run_modal_shot,
 		"--menu-shot=": _run_menu_shot,
+		"--backdrop-probe=": func(v: String) -> void: _run_backdrop_probe(v.get_slice(":", 0), _hhmm_minute(v.get_slice(":", 1))),
 		"--onboard-shot=": func(v: String) -> void: _run_onboard_shot(int(v)),
 		"--theme-audit=": _run_theme_audit,
 		"--probe-shot=": _run_probe_shot,
@@ -2041,14 +2046,23 @@ func _saves_refused() -> bool:
 	return true
 
 
-const MENU_SHOTS := ["empty", "continue", "first_frame", "godot_card", "load", "settings", "credits", "licenses"]
+const MENU_SHOTS := ["empty", "continue", "first_frame", "godot_card", "load", "settings", "credits", "licenses",
+	"plate", "live"]
 const MENU_SHOT_PRESS := {"load": "LOAD", "settings": "SETTINGS", "credits": "CREDITS", "licenses": "CREDITS"}
 
 ## --menu-shot=<kind>: the boot as the player meets it. continue and load stand on the modal shots' fixture saves;
 ## first_frame is the menu's first drawn frame, under its cover; godot_card frames the card, then ui_accept and the
-## menu two frames on. Prints the MENU line of the frame.
+## menu two frames on. live waits for the live scene to fade in; every other kind stands on the plate (plate itself,
+## bare), the live scene arriving at no fixed frame. Prints the MENU line of the frame. bake_plate:<office>:<HHMM> draws
+## a backdrop's live scene alone, as the plate it becomes: backdrop_<office>_<HHMM>.png, copied to assets/art/menu/.
 func _run_menu_shot(kind: String) -> void:
 	_begin_shot()
+	if kind.begins_with("bake_plate:"):
+		var at: PackedStringArray = kind.split(":")
+		var backdrop := _mount_backdrop(at[1], _hhmm_minute(at[2]))
+		await backdrop.live_ready
+		await _finish_shot("backdrop_%s_%s" % [at[1], at[2]], backdrop.MENU_FADE_S + 0.2)
+		return
 	if not kind in MENU_SHOTS:
 		_shot_fail("[MenuShot] unknown --menu-shot kind: %s" % kind)
 		return
@@ -2072,6 +2086,12 @@ func _run_menu_shot(kind: String) -> void:
 	else:
 		_mount_menu()
 	await (RenderingServer.frame_post_draw if kind == "first_frame" else get_tree().process_frame)
+	var menu_backdrop: Control = _menu.get_node("%MenuBackdrop")
+	if kind == "live":
+		await menu_backdrop.live_ready
+		await get_tree().create_timer(menu_backdrop.MENU_FADE_S).timeout
+	else:
+		menu_backdrop.stop()
 	if kind in MENU_SHOT_PRESS:
 		_menu.items[MENU_SHOT_PRESS[kind]].pressed.emit()
 		await get_tree().process_frame
@@ -2087,12 +2107,96 @@ func _run_menu_shot(kind: String) -> void:
 		await _finish_shot("menu_shot_" + ("godot_card_menu" if kind == "godot_card" else kind))
 
 
-# --onboard-shot=<1|2|3>.
+const BACKDROP_PROBE_FRAMES := 120
+
+
+## A backdrop alone over the window, its light at `minute`.
+func _mount_backdrop(office: String, minute: float) -> Control:
+	var backdrop: Control = MENU_BACKDROP.instantiate()
+	add_child(backdrop)
+	backdrop.start(office, minute)
+	return backdrop
+
+
+## "1930" → 1170.0.
+static func _hhmm_minute(hhmm: String) -> float:
+	return int(hhmm.left(2)) * 60.0 + int(hhmm.right(2))
+
+
+## --backdrop-probe[=<office>:<HHMM>] (windowed): a backdrop alone, then the menu's own into NEW GAME. The BACKDROP
+## line: the plate on the first drawn frame, the live scene's load and its fade, the live view's GPU time over
+## BACKDROP_PROBE_FRAMES and the engine's start to that first frame (the Godot card left out). plate_vs_live is the
+## mean difference (0..255) of the faded-in live frame to the plate inside a 6 px margin; n/a on the low preset, which
+## keeps the plate alone. NEW GAME two frames on prints the node count --onboard-shot=1 prints for the same set-up and
+## whether a backdrop is left in the tree; tex_pct is the texture memory once the freed live view has left the frames
+## in flight, against the bare window's before the backdrop (bound +5).
+func _run_backdrop_probe(office: String, minute: float) -> void:
+	_begin_shot()
+	# The texture monitor reads 0 until frames are drawn; the frames waited here stay out of boot_to_menu_ms.
+	var waited: int = Time.get_ticks_msec()
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var tex_before: float = Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)
+	waited = Time.get_ticks_msec() - waited
+	var backdrop := _mount_backdrop(office, minute)
+	var shown: int = Time.get_ticks_msec()
+	await RenderingServer.frame_post_draw
+	var boot_ms: int = Time.get_ticks_msec() - waited
+	var plate: TextureRect = backdrop.get_node("Plate")
+	var live: SubViewportContainer = backdrop.get_node("Live")
+	var row := {"plate_frame": int(plate.texture != null and live.modulate.a == 0.0), "live_ms": "n/a", "fade_ms": "n/a",
+		"gpu_p50": "n/a", "gpu_p95": "n/a", "diff": "n/a"}
+	if live.get_child_count() > 0:
+		await backdrop.live_ready
+		row.live_ms = str(Time.get_ticks_msec() - shown)
+		var fading: int = Time.get_ticks_msec()
+		while live.modulate.a < 1.0:
+			await get_tree().process_frame
+		row.fade_ms = str(Time.get_ticks_msec() - fading)
+		var rid: RID = live.get_child(0).get_viewport_rid()
+		RenderingServer.viewport_set_measure_render_time(rid, true)
+		var gpu: Array = []
+		for _i in BACKDROP_PROBE_FRAMES:
+			await RenderingServer.frame_post_draw
+			gpu.append(RenderingServer.viewport_get_measured_render_time_gpu(rid))
+		gpu.sort()
+		row.gpu_p50 = "%.3f" % gpu[int(gpu.size() * 0.5)]
+		row.gpu_p95 = "%.3f" % gpu[int(gpu.size() * 0.95)]
+		if plate.texture != null:
+			row.diff = "%.2f" % OFFICE_PAN.residual(get_viewport().get_texture().get_image(), plate.texture.get_image(),
+				Vector2i.ZERO).mean
+	print("BACKDROP|plate_frame=%d|live_ms=%s|fade_ms=%s|gpu_ms_p50=%s|gpu_ms_p95=%s|boot_to_menu_ms=%d" % [
+		row.plate_frame, row.live_ms, row.fade_ms, row.gpu_p50, row.gpu_p95, boot_ms])
+	print("BACKDROP|plate_vs_live=%s" % row.diff)
+	backdrop.free()
+
+	_mount_menu()
+	var menu_backdrop: Control = _menu.get_node("%MenuBackdrop")
+	if menu_backdrop.get_node("Live").get_child_count() > 0:
+		await menu_backdrop.live_ready
+	_menu.new_game_requested.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var nodes := int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+	var left := int(get_tree().root.find_child("MenuBackdrop", true, false) != null)
+	# The rendering device releases a freed viewport's buffers only after its frames in flight have drawn.
+	for _i in 3:
+		await RenderingServer.frame_post_draw
+	var tex: float = Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)
+	print("BACKDROP|new_game|nodes=%d|backdrop=%d|tex_mib=%.2f|tex_before_mib=%.2f|tex_pct=%+.1f" % [
+		nodes, left, tex / 1048576.0, tex_before / 1048576.0, (tex / tex_before - 1.0) * 100.0])
+	get_tree().quit()
+
+
+# --onboard-shot=<1|2|3>. Prints the node count and texture memory of the set-up, which NEW GAME from the menu
+# matches (--backdrop-probe).
 func _run_onboard_shot(step: int) -> void:
 	_begin_shot()
 	_mount_flow()
 	await get_tree().process_frame
 	await get_tree().process_frame
+	print("ONB|nodes=%d|tex_mib=%.2f" % [Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
+		Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED) / 1048576.0])
 	var idx: int = clampi(step - 1, 0, 2)
 	if step == 2:
 		# Two allocation points in one skill: its figure reads on the 0-10 ruler.
