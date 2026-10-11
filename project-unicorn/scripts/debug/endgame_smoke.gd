@@ -7262,16 +7262,26 @@ static func _case_hr_constants_contract() -> String:
 	# --- §8.2 EK MESAİ ÜCRETİ, SAAT BAŞINA ---
 	# "Aşan saatler için SAATLİK ÜCRETİN %50 FAZLASI ödenir (çarpan 1,5×). YALNIZ aşan
 	# saatler; ilk sekiz saat normal ücrettir." Blok başına günlük yüzde (%40) modeli gitti.
+	# Günlük oran TAKVİM günüdür: saatlik ücret 22 iş gününden, tahakkuk 30 takvim gününe yayılır.
 	var hourly: float = float(9000) / float(HRConstants.HOURS_PER_MONTH)
 	var over: int = HRConstants.WORK_HOURS_MAX - HRConstants.WORK_HOURS_DEFAULT
-	var want_ot: int = int(round(hourly * float(over) * HRConstants.OVERTIME_WAGE_MULT))
+	var want_ot: int = int(round(hourly * float(over) * HRConstants.OVERTIME_WAGE_MULT
+		* (float(HRConstants.HOURS_PER_MONTH) / float(HRConstants.WORK_HOURS_DEFAULT))
+		/ float(TimeModel.DAYS_PER_MONTH)))
 	if HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MAX) != want_ot:
-		return "the longest day on 9000 bills %d, want %d (%d hours at 1.5x)" % [
+		return "the longest day on 9000 bills %d, want %d (%d hours at 1.5x, 22 working days over 30)" % [
 			HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MAX), want_ot, over]
 	# İLK SEKİZ SAAT NORMAL ÜCRET: sekizde ve altında tahakkuk YOKTUR.
 	if HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_DEFAULT) != 0 \
 			or HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MIN) != 0:
 		return "an eight-hour or shorter day accrued overtime"
+	# TEK PARA TABANI: ayın ×30'u kuralın dediği 22 iş günü kadar mesai öder. 3.000 maaş, 15 saat:
+	# 7 aşan saat × saatlik × 1,5 × 22. Gün oranı tam sayıya yuvarlandığı için ay ±30 oynar.
+	var month_ot: int = HRConstants.overtime_pay_for_day(3000, 15) * TimeModel.DAYS_PER_MONTH
+	var want_month: int = int(round(3000.0 / 176.0 * 7.0 * 1.5 * 22.0))
+	if absi(month_ot - want_month) > 30:
+		return "3000 on a 15-hour day bills %d a month, want %d ±30 (7 hours at 1.5x over 22 working days)" % [
+			month_ot, want_month]
 	# §8.4 ORAN: sekizin üstündeki her saat yarım verim. 11 saat 1,1875, 16 saat 1,5, 5 saat 0,625.
 	if not is_equal_approx(HRConstants.hours_output_mult(11), 1.1875) \
 			or not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MAX), 1.5) \
@@ -10421,8 +10431,9 @@ static func _case_work_hours_three_scopes() -> String:
 	# FALSİFİKASYON: WorkHoursSystem.hours_for'daki `c.work_hours_override > 0` dalını sil →
 	# kişisel istisna görünmez olur ve "Cahit" iddiası FAIL eder. Grup dalını sil → grup
 	# iddiası FAIL eder.
+	# MAAŞ ŞART: mesai ücreti maaştan türüyor, sıfır maaşlı tester'da ücret iddiası 0'ı 0 ile karşılaştırırdı.
 	var dev: Character = _make_employee("wh_dev", "Wh Dev", HRConstants.ROLE_DEVELOPER)
-	var tester: Character = _make_employee("wh_qa", "Wh Qa", HRConstants.ROLE_TESTER)
+	var tester: Character = _make_employee("wh_qa", "Wh Qa", HRConstants.ROLE_TESTER, SEED_PACE, 3000)
 	var seller: Character = _make_employee("wh_sales", "Wh Sales", HRConstants.ROLE_SALES_REP)
 	var founder: Character = CharacterRegistry.get_founder()
 
@@ -10471,8 +10482,11 @@ static func _case_work_hours_three_scopes() -> String:
 		return "the founder took a personal exception — §2 forbids it (%d)" % WorkHoursSystem.hours_for(founder)
 
 	# --- §8.2 ücret YALNIZ aşan saatlere, %50 fazlasıyla ---
-	# 11 saat = 3 aşan saat. Saatlik = maaş / 176, ve ödenen 3 × saatlik × 1,5.
-	var want_ot: int = int(round(HRConstants.hourly_wage(tester.monthly_salary) * 3.0 * 1.5))
+	# 11 saat = 3 aşan saat. Saatlik = maaş / 176, ve ödenen 3 × saatlik × 1,5; günlük oran takvim
+	# günüdür (22 iş günü / 30 gün).
+	var want_ot: int = int(round(HRConstants.hourly_wage(tester.monthly_salary) * 3.0 * 1.5
+		* (float(HRConstants.HOURS_PER_MONTH) / float(HRConstants.WORK_HOURS_DEFAULT))
+		/ float(TimeModel.DAYS_PER_MONTH)))
 	if WorkHoursSystem.overtime_pay_today(tester) != want_ot:
 		return "overtime pay %d, want %d (only the hours above eight, at 1.5x)" % [
 			WorkHoursSystem.overtime_pay_today(tester), want_ot]

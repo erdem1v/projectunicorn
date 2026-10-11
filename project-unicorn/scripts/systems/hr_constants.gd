@@ -785,13 +785,15 @@ static func hourly_wage(monthly_salary: int) -> float:
 	return float(maxi(monthly_salary, 0)) / float(HOURS_PER_MONTH)
 
 
-## Bir günün ek mesai tahakkuku: günlük orandır, daily_burn'ün içinde tik başına ×7 işler.
-## İzindeki/eğitimdeki için çağrılmaz (§8.6).
+## Bir günün ek mesai tahakkuku: TAKVİM günü oranıdır. Saatlik ücret 22 iş gününden kurulur ama
+## daily_burn her takvim günü işler (tik başına ×7, ayda ×30); oran bu yüzden 22/30 ile çevrilir
+## ve ay tam 22 iş günü kadar mesai öder. İzindeki/eğitimdeki için çağrılmaz (§8.6).
 static func overtime_pay_for_day(monthly_salary: int, hours: int) -> int:
 	var extra: int = maxi(hours - WORK_HOURS_DEFAULT, 0)
 	if extra <= 0:
 		return 0
-	return int(round(hourly_wage(monthly_salary) * float(extra) * OVERTIME_WAGE_MULT))
+	return int(round(hourly_wage(monthly_salary) * float(extra) * OVERTIME_WAGE_MULT
+		* (float(HOURS_PER_MONTH) / float(WORK_HOURS_DEFAULT)) / float(TimeModel.DAYS_PER_MONTH)))
 
 # FinanceSystem.apply_one_time_cost defter etiketleri. Const değil fonksiyon: const yüklemede
 # bir kez değerlendirilir ve o anki dili dondururdu.
