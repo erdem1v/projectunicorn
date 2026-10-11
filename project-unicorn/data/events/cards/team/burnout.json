@@ -1,0 +1,119 @@
+{
+  "id": "team.burnout",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "request",
+  "class": "interrupt",
+  "expires_weeks": 1,
+  "tags": [],
+  "schema": 3,
+  "system": true,
+  "family": "team_overload",
+  "family_subject": {"cooldown_weeks": 26},
+  "plausibility": {
+    "phase_band": ["bootstrap_team", "traction", "series_a"],
+    "headcount": [1, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch_key": "entity",
+  "options": [
+    {
+      "id": "leave",
+      "outcome_id": "sent_on_leave",
+      "requires": {
+        "entity_seam": "hr.leave_cooldown_left",
+        "scope": "employee",
+        "op": "==",
+        "value": 0,
+        "reason": "EV_TEAM_BURNOUT_LOCK_LEAVE"
+      },
+      "effects": [
+        {
+          "verb": "send_on_leave",
+          "scope": "employee",
+          "weeks": 1
+        }
+      ]
+    },
+    {
+      "id": "hours",
+      "outcome_id": "hours_cut",
+      "effects": [
+        {
+          "verb": "work_hours",
+          "scope": "employee",
+          "hours": 8
+        }
+      ]
+    },
+    {
+      "id": "carry_on",
+      "outcome_id": "carried_on",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -15
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -20,
+          "weeks": 2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "EV_TEAM_BURNOUT_TITLE",
+      "body": "EV_TEAM_BURNOUT_BODY",
+      "options": {
+        "leave": "EV_TEAM_BURNOUT_LEAVE",
+        "hours": "EV_TEAM_BURNOUT_HOURS",
+        "carry_on": "EV_TEAM_BURNOUT_CARRY_ON"
+      },
+      "locked_reasons": {
+        "leave": "EV_TEAM_BURNOUT_LOCK_LEAVE"
+      },
+      "expire_note": "EV_TEAM_BURNOUT_EXPIRED"
+    },
+    "en": {
+      "title": "EV_TEAM_BURNOUT_TITLE",
+      "body": "EV_TEAM_BURNOUT_BODY",
+      "options": {
+        "leave": "EV_TEAM_BURNOUT_LEAVE",
+        "hours": "EV_TEAM_BURNOUT_HOURS",
+        "carry_on": "EV_TEAM_BURNOUT_CARRY_ON"
+      },
+      "locked_reasons": {
+        "leave": "EV_TEAM_BURNOUT_LOCK_LEAVE"
+      },
+      "expire_note": "EV_TEAM_BURNOUT_EXPIRED"
+    }
+  },
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -15
+      },
+      {
+        "verb": "productivity_mod",
+        "scope": "employee",
+        "pct": -20,
+        "weeks": 2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

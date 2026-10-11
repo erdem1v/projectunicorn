@@ -760,6 +760,9 @@ const OVERLOAD_MORALE_MULT := 1.5
 ## §8.2 ek mesai ücreti: yalnız sekizi aşan saatler, %50 fazlasıyla (İş Kanunu md.41).
 const OVERTIME_WAGE_MULT := 1.5
 
+## Tükenmişlik [WORKING]: sekizi aşan bu kadar ardışık iş haftası çalışana tükenmişlik kartını getirir.
+const BURNOUT_WEEKS := 4
+
 ## Aylık maaş → saatlik ücretin tek sabiti (§8.2): 22 iş günü × 8 saat. Saklanan tek rakam
 ## aylık maaştır.
 const HOURS_PER_MONTH := 176
@@ -847,8 +850,9 @@ const MORALE_BAND_HIGH := 80        # ve üstü "high"
 const MORALE_BAND_LOW := 50         # altı "low"
 
 ## Moral payı [WORKING]: çalışanın gün başı verimine moralinden gelen pay; eşik ve üstü → pay. Moral
-## yalnız HIZI etkiler; kalite yıldızlarda ve TİTİZ huyunda. Kurucunun morali yoktur.
-const MORALE_PACE_STEPS := {0: -0.10, 30: -0.05, 50: 0.0, 75: 0.05, 90: 0.10}
+## yalnız HIZI etkiler; kalite yıldızlarda ve TİTİZ huyunda. Kurucunun morali yoktur. +%5 basamağı
+## işe alım moralinin (MORALE_HIRE_START) bir üstünde başlar: yeni çalışan nötr başlar.
+const MORALE_PACE_STEPS := {0: -0.10, 30: -0.05, 50: 0.0, 76: 0.05, 90: 0.10}
 
 ## Olay kartının kişiye yazdığı süreli verim satırı [WORKING]. Satır −%50 ile +%30 arasında, 1 ile 8
 ## hafta sürer; kişinin bütün satırlarının çarpımı 0,50 ile 1,30 arasına kenetlenir ve moral payıyla
@@ -902,8 +906,8 @@ static func morale_band_id(morale: int) -> String:
 const MORALE_FLIGHT_RISK := 35      # §7: altı → Ayrılabilir
 const MORALE_HIRE_START := 75       # WORKING: yeni işe alınanın başlangıç morali
 const MORALE_LEAVE_RETURN := 15     # §11.4 izin dönüşü, tek seferde
-## Oyuncunun dosyadan gönderdiği iznin dönüşü (`send_on_leave`'in `is_manual` dalı), süreden bağımsız.
-const MORALE_VACATION_RETURN := 20
+## Oyuncunun gönderdiği iznin dönüşü [WORKING], iznin haftasına göre: hafta → moral.
+const MORALE_VACATION_RETURN := {1: 12, 2: 25}
 const MORALE_FIRE_TEAM := 5         # ayrılışta kalan ekipteki DÜŞÜŞ büyüklüğü
 const MORALE_RAISE_AT_MIN_PCT := 4  # %3 zamda moral kazancı  (WORKING)
 const MORALE_RAISE_AT_MAX_PCT := 10 # %10 zamda moral kazancı
@@ -1068,12 +1072,15 @@ static func resign_voice(character_id: String) -> String:
 
 
 # --------------------- §11.4 yaz izni (hafta tabanlı) ------------------------
-# İzin çalışanın kendisine aittir. İki hafta, tek blok, Haziran–Ağustos penceresinde.
-# Ücretli: maaş akar, kapasite/hız/CS/mesai katkısı durur.
+# Yaz izni çalışanın kendisine aittir: iki hafta, tek blok, Haziran–Ağustos penceresinde. Oyuncunun
+# dosyadan gönderdiği izin o yılın yaz izni yerine sayılır. Ücretli: maaş akar, kapasite/hız/CS/mesai
+# katkısı durur.
 const LEAVE_WEEKS := 2                  # §11.4 "iki hafta"
 ## Oyuncunun dosyadan gönderdiği izin: onay kutusunun kaydırıcısı bu iki uç arasında seçer.
 const VACATION_WEEKS_MIN := 1
 const VACATION_WEEKS_MAX := 2
+## Oyuncu aynı kişiyi son iznin dönüşünden bu kadar hafta sonra yeniden izne gönderebilir [WORKING].
+const LEAVE_COOLDOWN_WEEKS := 8
 const LEAVE_WINDOW_START_MONTH := 6     # Haziran
 const LEAVE_WINDOW_END_MONTH := 8       # Ağustos
 ## Yaz penceresinde her yıl en az 13 tik (Perşembe) var. Adım 5 ile 13 aralarında asal: on üç

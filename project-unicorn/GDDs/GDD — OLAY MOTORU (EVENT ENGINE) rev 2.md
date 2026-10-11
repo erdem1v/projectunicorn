@@ -2201,17 +2201,20 @@ kart başına bir satır, `title_key` kartın başlık anahtarı; motor fiile ka
 (`SprintSystem.team()`), sprint yoksa hedef yoktur ve kart seçeneği `urun.sprint_running` ile `EV_LOCK_NO_SPRINT`
 üstünden kilitlenir. Sınırlar `HRConstants.PACE_*`: satır −%50 ile +%30 arası, 1 ile 8 hafta; tek başına kurucuya
 (ekip 0) yazılan eksi satır en çok −%30 ve 2 hafta. Aynı kartın ikinci satırı süreyi tazeler, farklı kartların
-satırları çarpılır ve çarpım 0,50 ile 1,30 arasına kenetlenir (`HRSystem.event_pace`). `HRSystem.productivity(c)` moral
-bandı (kurucuda 1) × bu çarpımdır; `SprintSystem._points` ve `HRSystem.effective_skill` moral bandının yerinde onu
-okur. Satış masasında anlaşmanın planı açılırken satıcının verimine (`HRSystem.productivity`) bölünür
+satırları çarpılır ve çarpım 0,50 ile 1,30 arasına kenetlenir (`HRSystem.event_pace`). `HRSystem.productivity(c)` gün
+başı verimidir: (1 + moral payı) × bu çarpım (`HRConstants.MORALE_PACE_STEPS`; kurucunun moral payı yoktur);
+`SprintSystem._points` ve `HRSystem.effective_skill` onu okur, günün saatleri sonra gün içi verim eğrisinden geçer
+(`HRConstants.hours_output_mult`: her mesai saati %2, sekizi aşan saat %3 düşer, taban %50; sekiz saatlik gün 1,0'dır).
+Satış masasında anlaşmanın planı açılırken satıcının verimine (`HRSystem.productivity`) bölünür
 (`SalesRepSystem._desk_halfweeks`): verim satırındaki moral satırı satışta da geçerlidir (sahip kararı
 2026-10-11). Satır, son
 haftası işlendiği tikte, haftayı okuyan sistemlerden sonra (günlük dağıtımda satıştan sonra) düşer. Lint §17.1: `pct` sıfır olamaz ve fiil bir arkın `on_invalidate`'inde duramaz (orada kart yoktur). Çip `EFFECT_PACE`,
 `EFFECT_PACE_FOUNDER`, `EFFECT_PACE_TEAM` (bedel ya da kazanç rengi; kırmızı değil). Ekip penceresinin satır ipucu
 ve ekip dosyasının VERİM bölümü verimi ve imzalı sebeplerini (`HRSystem.productivity_lines`) gösterir.
 
-*Neden.* Sahibin verim kararları 1, 3, 4 ve 5. Satır yokken sayılar bayt bayt aynıdır: moral bandı yalnız yer
-değiştirdi.
+*Neden.* Sahibin verim kararları 1, 3, 4 ve 5. Satır yokken çarpım 1'dir ve gün başı verimi yalnız moral payından
+gelir; moral payı ve gün içi eğri moral bandının hız çarpanlarının yerini aldı (`docs/tasks/PRD_EKIP_VERIM_DESTEK.md`
+§3 V1).
 
 **2. `investor_strain` (nötr).**
 
@@ -2480,3 +2483,25 @@ bir kolu VE `EvChips`'te bir etiketi varsa yazılabilir.
 *Neden.* Lint eskiden yalnız fiilin listede olmasını soruyordu; listedeki 63 fiilin 15'i ya kolsuz ya
 çipsizdi, yani kart yazarının elinde çalışmayan bir söz vardı. Şıkların bedeli ve öznesi de kural olmadan
 denetlenemiyordu: bedava çıkış ve "kartın anlattığı kişiye hiçbir şey düşmeyen" şık sessizce geçiyordu.
+
+### §27.25 · Tükenmişlik kartının iki fiili, iki seam ve koşu sürerken susan hata yığını
+
+*Belge ne diyordu.* §8.1'de çalışanı izne gönderen ya da mesaisini değiştiren yazılabilir bir fiil yok:
+`send_on_leave` dağıtımda vardı ama kolsuz ve çipsizdi (§27.24). `product.bug_pile` düzeltme koşusunun açık olup
+olmadığını okuyamıyordu.
+
+*Ne yapıldı.* `{"verb": "send_on_leave", "scope": "<employee slotu>", "weeks": 1}` dosyanın izin eyleminin kapısından
+geçer (`HRActions.apply_leave`: izindeki, eğitimdeki, ayrılmakta olan ve son iznin dönüşünden
+`HRConstants.LEAVE_COOLDOWN_WEEKS` geçmemiş kişi reddedilir); kayıt dönüşte gelecek morali (`gain`) taşır. Yeni nötr fiil
+`{"verb": "work_hours", "scope": "<employee slotu>", "hours": 8}` kişinin mesai istisnasını yazar
+(`WorkHoursSystem.set_person_hours`). İkisi yazılabilir (`WRITER_VERBS` 32) ve özneye düşer (`SUBJECT_VERBS`). Çipler:
+`EFFECT_LEAVE` (bedel) ve dönüş morali `HR_ROW_MORALE_RETURN` (kazanç), `EFFECT_WORK_HOURS` (nötr). Yeni seam'ler
+`destek.fix_run_active` (GLOBAL, bool) ve `hr.leave_cooldown_left` (ENTITY, int: oyuncunun kişiyi yeniden izne
+gönderebilmesine kalan hafta). `product.bug_pile`'ın koşuluna `destek.fix_run_active == false` girdi. Yeni sistem kartı
+`team.burnout` (`tick: request`, `latch_key: entity`): sekizi aşan `HRConstants.BURNOUT_WEEKS` ardışık iş haftasında
+`HRMoraleSystem.tick_burnout` onu o çalışan için ister; kabul edilen kartla sayım baştan başlar, reddedilen istek gelecek
+hafta yinelenir (§13.3). Kurucu sayılmaz.
+
+*Neden.* `docs/tasks/PRD_EKIP_VERIM_DESTEK.md` D4 ve V3: koşu sürerken hata yığını kartı oyuncuya zaten yaptığı işi
+soruyordu; tükenmişlik kartının şıkları gerçek hamledir (izne gönder, mesaiyi indir, devam et ve bedelini öde) ve iki
+hamlenin fiili yoktu.

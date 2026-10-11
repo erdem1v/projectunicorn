@@ -32,8 +32,9 @@ static func daily_tick() -> void:
 	#  4. §7 taban sürüklenme eşiklerden ÖNCE: bugünün saat ayarı ve aşırı yükü hedefe yazılır,
 	#     ease onu morale taşır, sonra eşikler O MORALİ okur. Ters sıra Ayrılabilir'i bir tik
 	#     geriden getirirdi.
-	#  5. DENEYİM: bu hafta gerçekten çalışmış olanlar biriktirir.
-	#  6. EĞİTİM en sonda: önce koşarsa bitişte sıfırlanan deneyime tick_experience aynı tikte
+	#  5. TÜKENMİŞLİK izinden sonra: bu hafta izne çıkan sayılmaz.
+	#  6. DENEYİM: bu hafta gerçekten çalışmış olanlar biriktirir.
+	#  7. EĞİTİM en sonda: önce koşarsa bitişte sıfırlanan deneyime tick_experience aynı tikte
 	#     puan geri verir ve "biterken sıfırlanır" sözleşmesi bozulur.
 	HRMoraleSystem.tick_leave_returns()
 	HRMoraleSystem.tick_leave_departures()
@@ -41,6 +42,7 @@ static func daily_tick() -> void:
 	HRMoraleSystem.tick_drift()
 	HRMoraleSystem.tick_ease()
 	HRMoraleSystem.tick_thresholds()
+	HRMoraleSystem.tick_burnout()
 	tick_experience()
 	tick_training()
 	# LAST, and it has to be: EventBus.day_advanced fires BEFORE the daily ticks are dispatched,
@@ -438,21 +440,35 @@ static func productivity_figure(c: Character) -> String:
 
 ## Verimin imzalı sebepleri, Ekip satırının ipucu ve dosyanın verim bölümü için: moral payı (sıfırken
 ## satır vermez), olay satırları (kartın başlığı ve kalan haftası) ve günün son saatindeki düşüş. İşte
-## olmayanın sebebi yoktur.
-static func productivity_lines(c: Character) -> PackedStringArray:
+## olmayanın sebebi yoktur. `most` > 0 dosyanın listesidir, en çok o kadar satır (dosya penceresi kaymaz): moral
+## payı (günün başı) saat satırına (günün sonu) katılır, sığmayan en zayıf olay satırları son satırda sayılır
+## (en az iki; tek sebep kendi satırına sığar), kalanlar sırasını korur.
+static func productivity_lines(c: Character, most := 0) -> PackedStringArray:
 	var lines := PackedStringArray()
 	if c.status != HRConstants.STATUS_ACTIVE:
 		return lines
-	var pace: float = morale_pace(c)
-	if pace != 0.0:
-		lines.append(_t("HR_PACE_MORALE_HIGH" if pace > 0.0 else "HR_PACE_MORALE_LOW").format(
-			{"pct": Fmt.signed_percent(roundi(pace * 100.0))}))
+	var reasons: Array = []   # [yüzde, satır]; saat satırı hep sonda
+	var pace: int = roundi(morale_pace(c) * 100.0)
+	if pace != 0:
+		reasons.append([pace, _t("HR_PACE_MORALE_HIGH" if pace > 0 else "HR_PACE_MORALE_LOW").format(
+			{"pct": Fmt.signed_percent(pace)})])
 	for m in c.productivity_mods:
-		lines.append(_t("HR_PACE_EVENT").format({"title": _t(String(m.title_key)),
-			"pct": Fmt.signed_percent(int(m.pct)), "weeks": Fmt.weeks(int(m.until_day) - GameState.day)}))
+		reasons.append([int(m.pct), _t("HR_PACE_EVENT").format({"title": _t(String(m.title_key)),
+			"pct": Fmt.signed_percent(int(m.pct)), "weeks": Fmt.weeks(int(m.until_day) - GameState.day)})])
 	var hours: int = WorkHoursSystem.hours_for(c)
-	lines.append(_t("HR_PACE_HOURS").format({"n": hours,
-		"pct": Fmt.signed_percent(roundi((HRConstants.hour_yield(hours) - 1.0) * 100.0))}))
+	var drop: int = roundi((HRConstants.hour_yield(hours) - 1.0) * 100.0)
+	reasons.append([drop, _t("HR_PACE_HOURS").format({"n": hours, "pct": Fmt.signed_percent(drop)})])
+	if most > 0 and pace != 0:
+		var start: String = reasons.pop_front()[1]
+		reasons[-1][1] = " · ".join([start, reasons[-1][1]])
+	var folded: int = reasons.size() - most + 1 if most > 0 and reasons.size() > most else 0
+	for _i in folded:
+		reasons.erase(reasons.slice(0, -1).reduce(
+			func(a: Array, b: Array) -> Array: return b if absi(b[0]) < absi(a[0]) else a))
+	for r: Array in reasons:
+		lines.append(r[1])
+	if folded > 0:
+		lines.append(_t("HR_PACE_MORE").format({"n": folded}))
 	return lines
 
 

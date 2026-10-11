@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **194** |
-| Effect verbs (write) | **63** |
-| Cards in the catalogue | 97 |
+| Seams (read) | **196** |
+| Effect verbs (write) | **64** |
+| Cards in the catalogue | 98 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -49,6 +49,7 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `send_on_leave`
 - `start_training`
 - `productivity_mod`
+- `work_hours`
 - `damage_product`
 - `fix_run_start`
 - `sprint_card_effort`
@@ -145,6 +146,7 @@ slot of that type (§17.12).
 | `destek.absorb_ceiling` | global | int | Ops | requests the desk can take before escalating |
 | `destek.can_start_fix_run` | global | bool | Ops | live, no run under way, confirmed bugs waiting and the desk staffed |
 | `destek.desk_staffed` | global | bool | Ops | anyone on support at all |
+| `destek.fix_run_active` | global | bool | Ops | a fix run is under way |
 | `destek.warmth_band` | global | string | Ops | calm | warm | hot at 20 / 40 unvalidated reports |
 
 ### `finance.`
@@ -222,6 +224,7 @@ slot of that type (§17.12).
 | `hr.is_overloaded` | entity | bool | HR | more than one job |
 | `hr.job` | entity | string | HR | WRAPPER: the first job held, build | test | support | accounts | sales | research; "" with none |
 | `hr.job_count` | entity | int | HR | 0, 1 or 2 |
+| `hr.leave_cooldown_left` | entity | int | HR | weeks until the player may send this person on leave again; 0 means now |
 | `hr.level` | entity | int | HR | WRAPPER over Character.level. 0 = junior, 1 = mid, 2 = senior |
 | `hr.morale` | entity | int | HR | 0-100 |
 | `hr.morale_avg` | global | float | HR | 0.0-100.0, and 0.0 when there are no employees at all |
@@ -520,7 +523,7 @@ the catalogue already uses, and the gap each pays:
 | `sprint_capacity` | 6 | 3 |
 | `sprint_rewrite` | 6 | 4 |
 | `sprint_scope_creep` | 6 | 2 |
-| `team_overload` | 6 | 1 |
+| `team_overload` | 6 | 2 |
 | `team_ritual` | 6 | 1 |
 | `team_security` | 6 | 1 |
 | `world_offer_b2b` | 8 | 2 |
@@ -544,7 +547,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (30) — any card, inside the two rules below
+### Writer verbs (32) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -576,6 +579,8 @@ is what the player is shown and what lands.
 - `productivity_mod`
 - `investor_strain`
 - `marketing_push`
+- `send_on_leave`
+- `work_hours`
 
 Two rules narrow the list. A `sprint_card_*` verb belongs to a `tick: request` sprint
 decision and to no other card (§17.14, V3). A module verb spends a page the build may
@@ -608,7 +613,7 @@ reaching for one would be deciding the run instead of colouring it.
 - `abort_arc`
 - `set_arc_var`
 
-### Not writable (15) — no working arm or no chip
+### Not writable (14) — no working arm or no chip
 
 The executor dispatches these, so they are not unknown names; they are names a card
 may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.
@@ -616,7 +621,6 @@ may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.
 - `clear_flag`
 - `set_timed_flag`
 - `assign_to`
-- `send_on_leave`
 - `start_training`
 - `damage_product`
 - `ticker_push`

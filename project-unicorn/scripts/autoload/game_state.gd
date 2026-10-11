@@ -123,7 +123,7 @@ const FLAG_TYPES := {
 # Dynamic key families (one flag per entity id). None of the prefixes overlap.
 const FLAG_TYPE_PREFIXES := {
 	"b2b_broke_": TYPE_BOOL,                    # B2BSalesSystem credibility latch, per customer id
-	"hr_manual_leave_": TYPE_BOOL,              # HRMoraleSystem manual-vacation marker, per character id
+	"hr_manual_leave_": TYPE_INT,               # HRMoraleSystem: weeks of the player's leave, 0 = summer leave, per character id
 	"bug_count_at_bugfix_start_": TYPE_INT,     # ProductSystem beta-phase baseline, per build id
 }
 

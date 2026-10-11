@@ -32,6 +32,11 @@
         "seam": "destek.desk_staffed",
         "op": "==",
         "value": true
+      },
+      {
+        "seam": "destek.fix_run_active",
+        "op": "==",
+        "value": false
       }
     ]
   },

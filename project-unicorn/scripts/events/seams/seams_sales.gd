@@ -119,6 +119,8 @@ static func install() -> void:
 	EvSeams.register("destek.can_start_fix_run", G, TYPE_BOOL,
 		func() -> bool: return SupportSystem.can_start_fix_run(),
 		"Ops", "live, no run under way, confirmed bugs waiting and the desk staffed")
+	EvSeams.register("destek.fix_run_active", G, TYPE_BOOL,
+		func() -> bool: return ProductState.fix_run_active(), "Ops", "a fix run is under way")
 	EvSeams.register("destek.warmth_band", G, TYPE_STRING,
 		func() -> String: return SupportSystem.warmth_band(),
 		"Ops", "calm | warm | hot at 20 / 40 unvalidated reports")

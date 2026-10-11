@@ -100,6 +100,18 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 					key = "EFFECT_PACE"
 					words["name"] = _first_name(pid, ctx, names, _t("EFFECT_AN_EMPLOYEE"))
 			return [_part(_t(key).format(words), "", _signed(int(pace.pct)))]
+		# The weeks away are the cost, the morale on return the gain, as the dossier's leave dialog reads it.
+		"send_on_leave":
+			var lid: String = _employee(item, ctx, is_delta)
+			var away_weeks: int = int(item.get("weeks", HRConstants.VACATION_WEEKS_MIN))
+			var gain: int = int(item.get("gain", 0)) if is_delta \
+				else HRActions.leave_gain(CharacterRegistry.get_character(lid), away_weeks)
+			return [_part(_t("EFFECT_LEAVE").format({"name": _first_name(lid, ctx, names, _t("EFFECT_AN_EMPLOYEE")),
+					"weeks": Fmt.weeks(away_weeks)}), "", "cost"),
+				_figure("HR_ROW_MORALE_RETURN", _num(gain), "gain")]
+		"work_hours":
+			return [_part(_t("EFFECT_WORK_HOURS").format({"n": int(item.get("hours", HRConstants.WORK_HOURS_DEFAULT)),
+				"name": _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_AN_EMPLOYEE"))}), "", "neutral")]
 		"investor_strain":
 			var vc: String = String(item.get("vc", "")) if is_delta \
 				else EvEffects.entity_of(item, ctx, EvScope.TYPE_INVESTOR)

@@ -95,6 +95,11 @@ static func _install_people() -> void:
 			var c: Character = _emp(id)
 			return HRActions.raise_cooldown_left(c) if c != null else 0,
 		"HR", "weeks until a raise is allowed again; 0 means now")
+	EvSeams.register("hr.leave_cooldown_left", E, TYPE_INT,
+		func(id: String) -> int:
+			var c: Character = _emp(id)
+			return HRActions.leave_cooldown_left(c) if c != null else 0,
+		"HR", "weeks until the player may send this person on leave again; 0 means now")
 
 	# The retention modifier "maaşı bandın altında" needs this (I7: no seam, no modifier).
 	# A promotion raises by a percent and does not reseat the salary into the new band, so

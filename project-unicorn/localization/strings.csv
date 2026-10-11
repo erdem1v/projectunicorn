@@ -908,6 +908,7 @@ HR_RAISE_PERMANENT,"Zam kalıcıdır, geri alınmaz",A raise is permanent and ca
 HR_PROMOTION_PERMANENT,"Terfi kalıcıdır, geri alınmaz",A promotion is permanent and cannot be undone
 HR_ERR_TOP_LEVEL,En üst seviye,Top level
 HR_ERR_RAISE_COOLDOWN,Sonraki zam {time} sonra,Next raise in {time}
+HR_ERR_LEAVE_COOLDOWN,Sonraki izin {time} sonra,Next leave in {time}
 HR_CARD_PROMOTE,Terfi ettir,Promote
 HR_APPLY_PROMOTE_PCT,Terfi ettir · +{pct},Promote · +{pct}
 HR_ROW_TITLE,Unvan,Title
@@ -925,13 +926,11 @@ HR_STATE_ON_LEAVE_WEEKS,İzinde · {n} hafta kaldı,On leave · {n} weeks left
 HR_STATE_ON_LEAVE_WEEKS_ONE,İzinde · 1 hafta kaldı,On leave · 1 week left
 HR_STATE_ON_LEAVE,İzinde,On leave
 HR_STATE_IN_TRAINING,Eğitimde,In training
-HR_NEWS_BACK_FROM,{name} {whence} döndü,{name} is back from {whence}
+HR_NEWS_BACK_FROM,{name} izinden döndü,{name} is back from leave
 HR_NEWS_ON_LEAVE,{name} {n} hafta izinde,{name} is on leave for {n} weeks
 HR_NEWS_ON_LEAVE_ONE,{name} bir hafta izinde,{name} is on leave for a week
-HR_NEWS_ON_HOLIDAY,{name} {n} haftalığına tatile çıktı,{name} is off on holiday for {n} weeks
-HR_NEWS_ON_HOLIDAY_ONE,{name} bir haftalığına tatile çıktı,{name} is off on holiday for a week
-HR_WHENCE_LEAVE,izinden,leave
-HR_WHENCE_HOLIDAY,tatilden,holiday
+HR_NEWS_ON_HOLIDAY,{name} {n} haftalığına izne çıktı,{name} is sent on leave for {n} weeks
+HR_NEWS_ON_HOLIDAY_ONE,{name} bir haftalığına izne çıktı,{name} is sent on leave for a week
 HR_FILES_ON_DESK,{n} aday dosyası masada.,{n} candidate files on your desk.
 HR_OPEN_FILES,Dosyaları aç,Open the files
 HR_SEARCHING,{role} aranıyor · dosyalar {n} hafta sonra gelir,Searching for {role} · files arrive in {n} weeks
@@ -964,6 +963,7 @@ HR_APPLY_RAISE_PCT,Zammı uygula · +{pct},Apply raise · +{pct}
 HR_ROW_SALARY,Maaş,Salary
 HR_ROW_MORALE,Moral,Morale
 HR_ROW_MORALE_RETURN,Dönüşte moral,Morale on return
+HR_ROW_SUMMER_NOTE,(bu yılın yaz izni yerine sayılır),(counts as this year's summer leave)
 HR_ROW_PAYROLL,Aylık maaş yükü,Monthly payroll
 HR_ROW_CASH,Nakit,Cash
 HR_ROW_TEAM_MORALE,Ekip moral düşümü,Team morale drop
@@ -3398,10 +3398,13 @@ HR_PACE_MORALE_HIGH,Moral yüksek {pct},High morale {pct}
 HR_PACE_MORALE_LOW,Moral düşük {pct},Low morale {pct}
 HR_PACE_EVENT,{title} {pct} · {weeks},{title} {pct} · {weeks}
 HR_PACE_HOURS,Günde {n} saat {pct},{n} hours a day {pct}
+HR_PACE_MORE,+{n} neden daha,+{n} more reasons
 HR_DOSSIER_PACE,Verim,Pace
 EFFECT_PACE,{name} verimi {pct} · {weeks},{name} pace {pct} · {weeks}
 EFFECT_PACE_FOUNDER,Senin verimin {pct} · {weeks},Your pace {pct} · {weeks}
 EFFECT_PACE_TEAM,Ekibin verimi {pct} · {weeks},Team pace {pct} · {weeks}
+EFFECT_LEAVE,{name} izinde · {weeks},{name} on leave · {weeks}
+EFFECT_WORK_HOURS,{name} günde {n} saat,{name}: {n} hours a day
 EFFECT_INVESTOR_STRAIN,{investor} ile ilişki {v} · {n} haftada geçer,{investor}: relationship {v} · fades over {n} weeks
 EFFECT_MARKETING_BURN,Pazarlama: burn {pct} · {weeks},Marketing: burn {pct} · {weeks}
 EFFECT_MARKETING_GROWTH,Kitle büyümesi {pct} · {weeks},Audience growth {pct} · {weeks}
@@ -3421,6 +3424,13 @@ EV_TEAM_LEAD_OVERTIME_CARRY,Bırak devam etsinler,Let them keep going
 EV_TEAM_LEAD_OVERTIME_HOME,Herkesi vaktinde eve gönder,Send everyone home on time
 EV_TEAM_LEAD_OVERTIME_BONUS,Üstüne prim ver,Pay them a bonus on top
 EV_TEAM_LEAD_OVERTIME_EXPIRED,"Kimse bir şey demedi, mesaiden sonra kalmak alışkanlık oldu.","Nobody said anything, and the extra hours became a habit."
+EV_TEAM_BURNOUT_TITLE,Tükenmişlik,Burnout
+EV_TEAM_BURNOUT_BODY,"{employee} haftalardır her gün sekiz saatten fazla çalışıyor. Bu hafta iki kez, laptopunu açmadan bir saat masasında oturdu.","For weeks {employee} has worked past eight hours every day, and twice this week sat at the desk for an hour without opening the laptop."
+EV_TEAM_BURNOUT_LEAVE,Bir haftalığına izne gönder,Send on leave for a week
+EV_TEAM_BURNOUT_HOURS,Mesaiyi sekiz saate indir,Cut the day back to eight hours
+EV_TEAM_BURNOUT_CARRY_ON,Böyle devam etsin,Carry on as before
+EV_TEAM_BURNOUT_EXPIRED,Kimse bir şey demedi; {employee} geç saatlere kadar çalışmayı sürdürdü.,"Nobody said anything, and {employee} kept working late."
+EV_TEAM_BURNOUT_LOCK_LEAVE,İzinden döneli çok olmadı,Back from leave not long ago
 EV_TEAM_PASSWORD_RULE_TITLE,Parola meselesi,The password question
 EV_TEAM_PASSWORD_RULE_BODY,"Sürüm çıkmadan kullanıcı parolaları şifrelensin istiyorsun. {employee} buna fazladan iş diyor: hiçbir müşteri istememiş, üstelik parola hatırlatma maili bozulurmuş. O mail, parolanın kendisini yolluyor.","You want user passwords encrypted before the release goes out. {employee} calls it extra work no customer has asked for, and says it would break the password reminder. The reminder mails out the password itself."
 EV_TEAM_PASSWORD_RULE_RULE,Şifrelemeyi şart koş,Make encryption the rule

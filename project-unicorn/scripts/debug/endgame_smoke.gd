@@ -179,6 +179,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_morale_drift_shape":    fail = _case_hr_morale_drift_shape()
 		"hr_recovery_channels":     fail = _case_hr_recovery_channels()
 		"hr_raise_and_leave":    fail = _case_hr_raise_and_leave()
+		"hr_burnout_streak":        fail = _case_hr_burnout_streak()
 		# --- İK modulü kapanışı (2026-08-22) ---
 		"menu_has_one_path":        fail = _case_menu_has_one_path()
 		"leave_does_not_pause_build": fail = _case_leave_does_not_pause_build()
@@ -7076,7 +7077,8 @@ static func _case_hr_recovery_channels() -> String:
 static func _case_hr_raise_and_leave() -> String:
 	# Raise bounded 3-15% with morale scaling on the percentage and a PERMANENT salary rise
 	# that reaches burn; the file's leave takes the person out of the sprint team, is locked
-	# while they are away, refreshes morale on return, and consumes that year's automatic leave.
+	# while they are away, refreshes morale on return by its length, stays locked
+	# LEAVE_COOLDOWN_WEEKS after the return, and consumes that year's automatic leave.
 	GameState.set_cash(200000)
 	var e: Character = _make_employee("char_act", "Act Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 10000, 50)
 	_park_leave([e])
@@ -7103,6 +7105,9 @@ static func _case_hr_raise_and_leave() -> String:
 	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(11000.0 / float(TimeModel.DAYS_PER_MONTH))):
 		return "the raise did not flow to burn"
 	var cap0: float = SprintSystem.capacity()
+	if int(HRActions.preview_leave(e, HRConstants.VACATION_WEEKS_MAX).gain) \
+			<= int(HRActions.preview_leave(e, HRConstants.VACATION_WEEKS_MIN).gain):
+		return "a longer leave does not bring back more morale"
 	if not HRActions.apply_leave(e, HRConstants.VACATION_WEEKS_MAX):
 		return "the leave action refused a healthy employee"
 	if e.status != HRConstants.STATUS_ON_LEAVE:
@@ -7122,6 +7127,43 @@ static func _case_hr_raise_and_leave() -> String:
 		return "never returned from leave"
 	if e.morale <= mv:
 		return "the leave return did not refresh morale (%d -> %d)" % [mv, e.morale]
+	if HRActions.leave_block_reason(e) == "":
+		return "the leave action opened again the week its leave ended"
+	GameState.day += TimeModel.ticks(HRConstants.LEAVE_COOLDOWN_WEEKS)
+	if HRActions.leave_block_reason(e) != "":
+		return "the leave action stayed shut %d weeks after the return" % HRConstants.LEAVE_COOLDOWN_WEEKS
+	return ""
+
+
+## Four weeks running past eight hours bring the burnout card to the employee; a week at eight starts the count
+## over, and so does the card coming. The founder works the same twelve-hour days and is never counted.
+##
+## FALSIFICATION: let tick_burnout count a week at eight hours, read `>` for BURNOUT_WEEKS, drop the reset
+## after the admitted card, or count the founder too, and the matching assertion fails.
+static func _case_hr_burnout_streak() -> String:
+	var dev: Character = _make_employee("char_burn", "Burn Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 60)
+	_park_leave([dev])
+	WorkHoursSystem.set_company_hours(12)
+	for i in HRConstants.BURNOUT_WEEKS - 1:
+		HRMoraleSystem.tick_burnout()
+	if CharacterRegistry.get_founder().overtime_weeks != 0:
+		return "the founder's twelve-hour weeks were counted (%d)" % CharacterRegistry.get_founder().overtime_weeks
+	WorkHoursSystem.set_person_hours(dev.id, HRConstants.WORK_HOURS_DEFAULT)
+	HRMoraleSystem.tick_burnout()
+	if dev.overtime_weeks != 0 or EventGate.active_id() != "":
+		return "a week at eight hours kept the count (%d, card '%s')" % [dev.overtime_weeks, EventGate.active_id()]
+	WorkHoursSystem.clear_person_hours(dev.id)
+	for i in HRConstants.BURNOUT_WEEKS - 1:
+		HRMoraleSystem.tick_burnout()
+	if EventGate.active_id() != "":
+		return "'%s' came before %d weeks past eight hours" % [EventGate.active_id(), HRConstants.BURNOUT_WEEKS]
+	HRMoraleSystem.tick_burnout()
+	if EventGate.active_id() != "team.burnout" \
+			or String(EventGate.active_context()["employee"]["id"]) != dev.id:
+		return "no burnout card for the employee after %d weeks past eight hours ('%s')" % [
+			HRConstants.BURNOUT_WEEKS, EventGate.active_id()]
+	if dev.overtime_weeks != 0:
+		return "the count did not start over once the card came (%d)" % dev.overtime_weeks
 	return ""
 
 static func _case_hr_frank_guard() -> String:
@@ -10473,7 +10515,8 @@ static func _case_effective_skill_formula() -> String:
 	# yarıya indirir ve puana göre kalibre edilmiş her aşağı akış sabitini kaydırırdı.
 	#
 	# FALSİFİKASYON: productivity'den moral payını sil → "morale pace" iddiası FAIL. focus_mult'u
-	# 1.0 sabitle → "two jobs" iddiası FAIL.
+	# 1.0 sabitle → "two jobs" iddiası FAIL. +%5 basamağını 75'e indir → "hire morale" FAIL, 77'ye
+	# çıkar → "morale 76" FAIL.
 	GameState.set_flag("debug_hr_force", "fail")
 	var dev: Character = _make_employee("eff_dev", "Eff Dev", HRConstants.ROLE_DEVELOPER,
 		SEED_PACE, 4000, 60, 8, 2)
@@ -10522,6 +10565,14 @@ static func _case_effective_skill_formula() -> String:
 	v = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
 	if absf(v - 7.6) > 0.001:
 		return "low morale pace: %.3f, want 7.600" % v
+	CharacterRegistry.set_morale(dev.id, HRConstants.MORALE_HIRE_START)   # işe alım morali → nötr
+	v = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
+	if absf(v - 8.0) > 0.001:
+		return "the hire morale took a pace: %.3f, want 8.000" % v
+	CharacterRegistry.set_morale(dev.id, 76)          # 76-89 → +%5
+	v = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
+	if absf(v - 8.4) > 0.001:
+		return "morale 76 pace: %.3f, want 8.400" % v
 	CharacterRegistry.set_morale(dev.id, 60)          # nötr
 
 	# --- 5 · HUY ÇARPANI (§6) ---

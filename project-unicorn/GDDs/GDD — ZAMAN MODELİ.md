@@ -89,7 +89,6 @@ Günün süresi ve birimler tek dosyadadır: `scripts/systems/time_model.gd` (`T
 | `SECONDS_PER_HOUR` | `[0.0, 2.5, 1.25, 2.5 / 3.0]` [WORKING] | oyun saati başına gerçek saniye: duraklat, 1×, 2×, 3× |
 | `WEEK_START_HOUR` | 8 | hafta 08:00'de başlar |
 | `WORKDAY_LATEST_END` | 24 | mesai en geç 00:00'da biter |
-| `OVERTIME_HOUR_YIELD` | 0,5 [WORKING] | sekizi aşan her saatin verimi (§9) |
 | `WEEK_WORK_HOURS` | 40 [WORKING] | toplantının kurucu çıktı payı = saat / 40 (§8.4) |
 | `CLOCK_STEP_MIN` | 5 | üst barın saati bu kadar oyun dakikasıyla ilerler |
 | `DAYS_PER_TICK` | 7 | tik başına takvim günü |
@@ -207,7 +206,7 @@ kullanılan gün değişmez.
 
 | sabit | gün modeli (gün) | yürürlükte (hafta) | not |
 |---|---|---|---|
-| sprint (`data/product/sprint.json` `sprint_weeks`) | yok | 2 [WORKING] | Ürün rev 7: başlatıldığı tik 1. hafta, ertesi tik 2. hafta; çeyrek 6 sprint |
+| sprint (`data/product/sprint.json` `sprint_lengths`, varsayılan `sprint_weeks`) | yok | 1 ya da 2, varsayılan 2 [WORKING] | oyuncu planlamada seçer; başlatıldığı tik 1. hafta, ertesi tik 2. hafta; kartlarının hepsi biten sprint o haftanın sonunda kapanır; çeyrek 6 sprint |
 | sprint karar kartı (`sprint.json` `decision`) | yok | 2. haftanın tikinde, oran 0,35 [WORKING]; kâğıt 1 hafta bekler | koşan kart başına koşu tohumlu zar; kartlar `product.sprint_two_paths`, `sprint_late`, `sprint_contractor` (§4.10); `sprint_hours` çarpımla yığılır, 0,5–1,5 (`hours_mult`) |
 | `BUG_HISTORY_*` | 7 günlük örnek | 2 haftalık örnek | ⚑ trend bu hafta ile geçen haftayı karşılaştırır; `TREND_DELTA` 2 / `TREND_SPIKE` 4 aynı |
 | `INFLOW_TAU` | 21 | 3 | §3.5 |
@@ -652,8 +651,8 @@ mekanik ondan bağımsızdır ve headless güvenlidir.
 | başlangıç | 08:00 ile 11:00 arası (`START_HOUR_MIN` = `WEEK_START_HOUR` 8, `START_HOUR_MAX` 11), varsayılan 09:00 |
 | süre | 5 ile 16 saat arası (`WORK_HOURS_MIN` 5, `WORK_HOURS_MAX` 16), varsayılan 8, tam saat adımı |
 | bitiş | başlangıç + süre, en geç 24 (00:00 yazılır) |
-| moral çarpanı (`HOUR_MORALE_MULT`) | 5: -1,0 · 6: -0,5 · 7: 0 · 8: 1,0 · 9: 1,1 · 10: 1,3 · 11: 1,5 · 12: 1,7 · 13: 1,9 · 14: 2,1 · 15: 2,3 · 16: 2,5 |
-| verim (`hours_output_mult`) | (min(s, 8) + max(s - 8, 0) × `OVERTIME_HOUR_YIELD`) / 8: 5 saat 0,625 · 8 saat 1,0 · 11 saat 1,1875 · 16 saat 1,5 |
+| moral çarpanı (`HOUR_MORALE_MULT`) | 5: -1,0 · 6: -0,5 · 7: -0,25 · 8: 0 · 9: 1,1 · 10: 1,3 · 11: 1,5 · 12: 1,7 · 13: 1,9 · 14: 2,1 · 15: 2,3 · 16: 2,5 |
+| verim (`hours_output_mult`) | günün i. saatinin verimi 1 - `DECAY_PER_HOUR` × (min(i, 8) - 1) - `DECAY_OVERTIME_PER_HOUR` × max(i - 8, 0) (0,02 ve 0,03), taban `YIELD_FLOOR` 0,5; çıktı = saatlerin toplamı / sekiz saatlik günün toplamı (7,44): 5 saat 0,645 · 8 saat 1,0 · 10 saat 1,219 · 12 saat 1,422 · 16 saat 1,780 |
 
 - Başlangıç ve süre ayrı saklanır; süre okunurken `min(WORK_HOURS_MAX, 24 - başlangıç)` ile kırpılır
   (`WorkHoursSystem.max_hours(başlangıç)`; 11:00 başlangıç ile 16 saat 27'ye çıkmaz). Ücret, moral, verim, pencere ve

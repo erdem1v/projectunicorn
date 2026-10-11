@@ -96,7 +96,8 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | ekonomik / dengeli / üst segment *(maaş bantları)* | budget / balanced / premium | Küçük harf TR gibi. |
 | Kaçma riski / Tükeniyor / Aşırı yüklü / Yeni | Flight risk / Burning out / Overloaded / New | |
 | İzinde / Yarın başlıyor | On leave / Starts tomorrow | |
-| İzin / Tatil | Leave / Holiday | İki ayrı durum: HR_NEWS_ON_LEAVE ve HR_NEWS_ON_HOLIDAY. Dosyanın eylemi "İzne gönder ↔ Send on leave" (`HR_CARD_LEAVE`) kişiyi tatile çıkarır (HR_NEWS_ON_HOLIDAY). TR/EN onay bekliyor. |
+| İzin | Leave | Tek kelime (eş yönetmen kararı 2026-10-11): "İzne gönder ↔ Send on leave" (`HR_CARD_LEAVE`), "izne çıktı ↔ is sent on leave" (`HR_NEWS_ON_HOLIDAY`, oyuncunun izni), "izinde ↔ is on leave" (`HR_NEWS_ON_LEAVE`, yaz izni), "izinden döndü ↔ is back from leave" (`HR_NEWS_BACK_FROM`), "İzinde ↔ On leave"; "yaz izni ↔ summer leave". "Tatil" kullanılmaz. TR/EN onay bekliyor. |
+| Tükenmişlik | Burnout | `team.burnout` kartının başlığı; "Tükeniyor ↔ Burning out" rozet metninden ayrı. TR/EN onay bekliyor. |
 | EK MESAİ · {n}. GÜN | OVERTIME · DAY {n} | |
 | 3 gün / 1 hafta / 2 hafta | 3 days / 1 week / 2 weeks | Mesai blokları. |
 | ARAYIŞ BAŞLAT / ARAYIŞI İPTAL ET | START SEARCH / CANCEL SEARCH | Üç ayrı yazımın tek anahtar ailesi. |

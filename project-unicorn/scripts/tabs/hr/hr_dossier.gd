@@ -12,6 +12,7 @@ signal close_requested
 signal fit_changed
 
 const KEY_W := 84   # DURUM's key column: EXPERIENCE fits
+const PACE_LINES := 3   # VERİM's lines at most: a longer list would push a heavy file past its window
 
 var frame_options := {"variation": &"DocWindow", "theme": true, "pad": Vector2i.ZERO, "owns_close": true}
 var _id: String = ""
@@ -35,7 +36,8 @@ func _ready() -> void:
 	_body.add_theme_constant_override("margin_left", UiTokens.SPACE_XXL)
 	_body.add_theme_constant_override("margin_top", UiTokens.SPACE_XS)
 	_body.add_theme_constant_override("margin_right", UiTokens.SPACE_XXL)
-	_body.add_theme_constant_override("margin_bottom", UiTokens.SPACE_XXL)
+	# A shallower foot than the sides, so that a heavy file still fits its window without a scrollbar.
+	_body.add_theme_constant_override("margin_bottom", UiTokens.SPACE_M)
 	_scroll.add_child(_body)
 	_col = VBoxContainer.new()
 	_col.add_theme_constant_override("separation", 0)
@@ -101,9 +103,9 @@ func rebuild_view() -> void:
 		_col.add_child(_kv("HR_COL_MORALE", HRUiShared.D_morale(c.morale, {})))
 		_col.add_child(_kv("HR_COL_SALARY", UiFactory.make_label(Fmt.money_exact(c.monthly_salary), &"DataText")))
 	# VERİM: the Kadro row's tooltip as a standing list, the figure on the section's rule. Everyone at work
-	# has at least the hours line, so the list sits close and small enough for a usual file to fit its window.
+	# has at least the hours line, so the list sits close and small, and the tooltip keeps what does not fit.
 	_col.add_child(_section("HR_DOSSIER_PACE", HRSystem.productivity_figure(c)))
-	for line in HRSystem.productivity_lines(c):
+	for line in HRSystem.productivity_lines(c, PACE_LINES):
 		var reason := UiFactory.make_label(line, &"CaptionPrimary")
 		reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_col.add_child(reason)

@@ -156,9 +156,11 @@ static func apply_promotion(emp: Character, pct: int) -> bool:
 
 
 # ============================== §11.4 İZİN ==================================
-# Ücretli izin: maaş akar, iş durur; moral dönüşte tek seferde gelir (HRMoraleSystem.send_on_leave).
+# Ücretli izin: maaş akar, iş durur; moral dönüşte tek seferde, iznin haftasına göre gelir
+# (HRMoraleSystem.send_on_leave). Aynı kişi son iznin dönüşünden LEAVE_COOLDOWN_WEEKS sonra yeniden gider.
 
-## Kilitli satırın gerekçesi: izindeki ya da eğitimdeki kişi kalan haftasıyla okunur.
+## Kilitli satırın gerekçesi: izindeki ya da eğitimdeki kişi kalan haftasıyla, izinden yeni dönen
+## sonraki izne kalan süreyle okunur.
 static func leave_block_reason(emp: Character) -> String:
 	var shared: String = _block_reason(emp)
 	if shared != "":
@@ -168,17 +170,37 @@ static func leave_block_reason(emp: Character) -> String:
 			return HRSystem.leave_line(emp)
 		HRConstants.STATUS_TRAINING:
 			return HRSystem.training_line(emp)
-	return ""
+	var left: int = leave_cooldown_left(emp)
+	if left == 0:
+		return ""
+	return TranslationServer.translate("HR_ERR_LEAVE_COOLDOWN").format({"time": Fmt.weeks(left)})
 
 
-## Dönüşteki moral süreden bağımsızdır; süreyi onay kutusunun kaydırıcısı söyler.
-static func preview_leave(emp: Character) -> Dictionary:
+## Son iznin dönüşünden sonraki bekleme süresinden KALAN hafta. 0 = izne gönderilebilir.
+static func leave_cooldown_left(emp: Character) -> int:
+	if emp.leave_until_day <= 0:
+		return 0
+	return maxi(emp.leave_until_day + TimeModel.ticks(HRConstants.LEAVE_COOLDOWN_WEEKS) - GameState.day, 0)
+
+
+## `weeks` haftalık iznin dönüşte getireceği moral: dosyanın onay penceresi, kartın şıkkı ve çipi aynı sayıyı okur.
+static func leave_gain(emp: Character, weeks: int) -> int:
+	return HRMoraleSystem.scaled_delta(emp, HRConstants.MORALE_VACATION_RETURN[weeks])
+
+
+## `weeks` haftalık iznin dönüşteki morali. İzin o yılın yaz izni yerine sayılır: yaz izni daha öndeyse
+## satırın notu bunu söyler.
+static func preview_leave(emp: Character, weeks: int) -> Dictionary:
 	var reason: String = leave_block_reason(emp)
 	if reason != "":
 		return _refusal(reason)
-	var gain: int = HRMoraleSystem.scaled_delta(emp, HRConstants.MORALE_VACATION_RETURN)
+	var gain: int = leave_gain(emp, weeks)
+	var date: Dictionary = GameState.get_date_dict()
+	var summer_ahead: bool = emp.leave_taken_year != int(date.year) \
+		and int(date.month) <= HRConstants.LEAVE_WINDOW_END_MONTH
 	return {"ok": true, "reason": "", "gain": gain, "rows": [
-		_delta(TranslationServer.translate("HR_ROW_MORALE_RETURN"), str(emp.morale), str(emp.morale + gain))]}
+		_delta(TranslationServer.translate("HR_ROW_MORALE_RETURN"), str(emp.morale), str(emp.morale + gain),
+			TranslationServer.translate("HR_ROW_SUMMER_NOTE") if summer_ahead else "")]}
 
 
 static func apply_leave(emp: Character, weeks: int) -> bool:

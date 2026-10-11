@@ -10,12 +10,12 @@ extends RefCounted
 # hedefe doğru yürütür.
 #
 # WRITE-THROUGH: moral yalnız CharacterRegistry.set_morale, ayrılış yalnız
-# CharacterRegistry.remove üzerinden. İzin alanları (status hariç) ve kaçma riski sayacının
-# registry seam'i yok; sahibi bu dosyadır.
+# CharacterRegistry.remove üzerinden. İzin alanları (status hariç), kaçma riski ve tükenmişlik
+# sayaçlarının registry seam'i yok; sahibi bu dosyadır.
 
 
-# Manuel tatil ile otomatik yıllık izin dönüşte farklı moral getirir; işaret Character'da
-# alan olmadığı için GameState.flags'te kişi başına tutulur.
+# Oyuncunun gönderdiği izin dönüşte haftasına göre, yaz izni sabit moral getirir; iznin haftası
+# Character'da alan olmadığı için GameState.flags'te kişi başına tutulur (0 = yaz izni).
 const FLAG_MANUAL_LEAVE_PREFIX := "hr_manual_leave_"
 
 # Bekleyen istifa. Oyuncu kartı kapatana kadar kişi burada kalır: hem aynı kişi için roll'u
@@ -33,19 +33,13 @@ static func tick_leave_returns() -> void:
 	for emp in CharacterRegistry.get_employees():
 		if emp.status != HRConstants.STATUS_ON_LEAVE or GameState.day < emp.leave_until_day:
 			continue
-		var was_manual: bool = bool(GameState.get_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, false))
+		var manual_weeks: int = int(GameState.get_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, 0))
 		CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ACTIVE)
-		emp.leave_until_day = 0
-		GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, false)
-		# İzin dönüşü moral getirir, manuel tatil dönüşü daha büyük (§11.4).
-		if was_manual:
-			apply_delta(emp, HRConstants.MORALE_VACATION_RETURN)
-		else:
-			apply_delta(emp, HRConstants.MORALE_LEAVE_RETURN)
-		EventBus.headline_added.emit(HRConstants.NEWS_SOURCE, {"key": "HR_NEWS_BACK_FROM", "args": {
-			"name": emp.character_name,
-			"whence": {"key": "HR_WHENCE_HOLIDAY" if was_manual else "HR_WHENCE_LEAVE"},
-		}})
+		GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, 0)
+		# leave_until_day dönüş günü olarak kalır: oyuncunun yeni izni ondan LEAVE_COOLDOWN_WEEKS sonra açılır.
+		apply_delta(emp, HRConstants.MORALE_VACATION_RETURN.get(manual_weeks, HRConstants.MORALE_LEAVE_RETURN))
+		EventBus.headline_added.emit(HRConstants.NEWS_SOURCE,
+			{"key": "HR_NEWS_BACK_FROM", "args": {"name": emp.character_name}})
 
 
 static func tick_leave_departures() -> void:
@@ -84,6 +78,20 @@ static func tick_thresholds() -> void:
 			continue
 		emp.flight_risk_weeks += 1
 		_maybe_resign(emp)
+
+
+## Tükenmişlik: sekizi aşan her iş haftası sayılır, başka her hafta sayımı sıfırlar. Sayaç BURNOUT_WEEKS'e
+## varınca kart istenir; kabul edilen kartla sayım baştan başlar, reddedilen istek gelecek hafta yinelenir.
+## Kurucu sayılmaz: onun uzun gününün bedeli gün içi verim düşüşüdür.
+static func tick_burnout() -> void:
+	for emp in CharacterRegistry.get_employees():
+		if emp.status != HRConstants.STATUS_ACTIVE or not WorkHoursSystem.overtime_active(emp):
+			emp.overtime_weeks = 0
+			continue
+		emp.overtime_weeks += 1
+		if emp.overtime_weeks >= HRConstants.BURNOUT_WEEKS \
+				and EventGate.request("team.burnout", {"employee": emp.id}):
+			emp.overtime_weeks = 0
 
 
 ## §6 TAT KAÇIRAN aynı kadro grubundaki (§13.1) takım arkadaşlarının moral düşüşünü
@@ -248,9 +256,9 @@ static func send_on_leave(emp: Character, weeks: int, is_manual: bool) -> void:
 		return   # süren izin yeniden başlatılmaz
 	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ON_LEAVE)
 	emp.leave_until_day = GameState.day + TimeModel.ticks(weeks)
-	# Manuel tatil de o yılın iznini tüketir (§11.4); yoksa dönüş bonusu her hafta tekrarlanabilirdi.
+	# Oyuncunun gönderdiği izin o yılın yaz izni yerine sayılır (§11.4).
 	emp.leave_taken_year = int(GameState.get_date_dict().year)
-	GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, is_manual)
+	GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, weeks if is_manual else 0)
 	# Kimse izni ONAYLAMAZ (§11.4): modal değil ticker satırı.
 	var key: String = "HR_NEWS_ON_HOLIDAY" if is_manual else "HR_NEWS_ON_LEAVE"
 	EventBus.headline_added.emit(HRConstants.NEWS_SOURCE,
@@ -290,7 +298,7 @@ static func forget_employee(character_id: String) -> void:
 	if character_id == "":
 		return
 	_pending.erase(character_id)
-	GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + character_id, false)
+	GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + character_id, 0)
 
 
 ## Run sınırı: önceki koşunun bekleyen istifası yeni koşuya taşınmaz. İstifa roll'unun akışını

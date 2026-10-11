@@ -50,9 +50,10 @@ extends Resource
 # --- İstihdam durumu ---
 @export var status: String = "active"        # STATUS_ACTIVE | STATUS_ON_LEAVE | STATUS_TRAINING
 @export var hire_day: int = 0                # CharacterRegistry.add damgalar; 0 = işe alınmadı
-@export var leave_until_day: int = 0         # izin GameState.day buna ulaşınca biter
+@export var leave_until_day: int = 0         # son izin GameState.day buna ulaşınca biter; 0 = hiç izne çıkmadı
 @export var leave_taken_year: int = 0        # §11.4 "yılda bir" mandalı
 @export var flight_risk_weeks: int = 0       # MORALE_FLIGHT_RISK altında art arda hafta
+@export var overtime_weeks: int = 0          # sekizi aşan art arda iş haftası (tükenmişlik)
 
 # --- §12 GÖREV ATAMASI ---
 # Atama birimi İŞTİR (HRConstants.JOBS); en fazla MAX_JOBS_PER_PERSON sürekli iş (§12.1).

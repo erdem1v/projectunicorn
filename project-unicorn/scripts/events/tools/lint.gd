@@ -323,6 +323,7 @@ const WRITER_VERBS := [
 	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "fix_run_start",
 	"b2b_retain_delay", "b2b_retain_ignore", "b2b_expand_decline", "set_flag", "stamp_day",
 	"schedule_event", "cancel_scheduled", "productivity_mod", "investor_strain", "marketing_push",
+	"send_on_leave", "work_hours",
 ]
 
 ## V2: reserved for a system card. Each moves the run itself — a phase, a table, an arc, an
@@ -343,6 +344,7 @@ const CONSEQUENCE_VERBS := ["sprint_card_carry", "fix_run_start", "b2b_retain_de
 ## O4: the verbs that land on a subject, and the slot type each lands on.
 const SUBJECT_VERBS := {
 	"change_morale": "employee", "productivity_mod": "employee", "employee_leaves": "employee",
+	"send_on_leave": "employee", "work_hours": "employee",
 	"satisfaction_delta": "customer", "customer_mrr_delta": "customer", "seats": "customer",
 	"churn_customer": "customer", "promise_create": "customer", "b2b_retain_discount": "customer",
 	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",

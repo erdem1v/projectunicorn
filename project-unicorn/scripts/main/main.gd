@@ -704,7 +704,8 @@ func _run_b2b_shot(kind: String) -> void:
 ## --event-shot=<card id>[:<slot>=<entity id>...]: any catalogued card, `version_scope: fixture` ones
 ## included, in the reading pane's preview (its options drawn, not taken). A given slot binds that
 ## entity instead of running its selector (the shot seed has no seed lead, for one) and names the
-## PNG; a given slot that cannot bind fails the shot.
+## PNG; a given slot that cannot bind fails the shot. An id of --hr-shot's roster (char_emp_shot_<n>)
+## seeds that roster first.
 func _run_event_shot(spec: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -719,6 +720,8 @@ func _run_event_shot(spec: String) -> void:
 			_shot_fail("[EventShot] '%s' is not <slot>=<entity id>" % pair)
 			return
 		given[pair.get_slice("=", 0)] = pair.get_slice("=", 1)
+	if given.values().any(func(id: String) -> bool: return id.begins_with("char_emp_shot_")):   # LOC-DATA debug seed / id
+		_seed_hr_roster()
 	var ctx: Dictionary = EventGate.bind_scope(event_id, given)
 	for slot in given:
 		if String(ctx.get(slot, {}).get("id", "")) != given[slot]:
@@ -2727,7 +2730,8 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # hours exceptions in Durum; atlas-secili = the search with a role and a level picked; gorevler-arge =
 # Görevler with someone researching; verim = card pace rows on the low-morale designer and the founder:
 # the designer's Kadro tooltip (hr_shot_verim_ipucu), the on-leave developer's (hr_shot_verim_izin), her file
-# (hr_shot_verim_dosya), the founder's file (hr_shot_verim_kurucu). saatler-sprint = no roster: the founder alone
+# (hr_shot_verim_dosya), her file back from a leave today, its leave row locked (hr_shot_verim_dosya_izin), the
+# founder's file (hr_shot_verim_kurucu). saatler-sprint = no roster: the founder alone
 # with a product type chosen, the hours panel's draft at 15 hours.
 # urunsuz = no roster: a developer and a customer rep, no product type yet (hr_shot_urunsuz), then the type
 # chosen (hr_shot_urunsuz_tur) and Görevler with it (hr_shot_urunsuz_tur_gorevler); each state prints
@@ -2736,7 +2740,8 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # a Senior developer's files on the table (the first one picked); onay with the hire's confirmation open, mesai on
 # a 15-hour company day.
 # izin = the first employee's file over Kadro with its leave dialog open (hr_shot_izin_onay), then the dialog's own
-# button pressed: the file with her away and the leave row locked on its reason (hr_shot_izin).
+# button pressed: the file with her away and the leave row locked on its reason (hr_shot_izin), and a week on, back
+# from leave, the row locked on the wait for the next leave (hr_shot_izin_donus).
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -2917,6 +2922,13 @@ func _run_hr_shot(kind: String) -> void:
 			if not _press_button_labelled(_confirm_modal, tr("HR_CARD_LEAVE")):
 				_shot_fail("[HRShot] izin onay düğmesi bulunamadı")
 				return
+			await get_tree().create_timer(0.5).timeout
+			_save_shot("hr_shot_izin")
+			GameState.day += TimeModel.ticks(HRConstants.VACATION_WEEKS_MIN)
+			HRMoraleSystem.tick_leave_returns()
+			EventBus.hr_day_processed.emit()
+			await _finish_shot("hr_shot_izin_donus", 0.5)
+			return
 		"dosya-kurucu":   # LOC-DATA debug seed / id
 			EventBus.tab_changed.emit("")
 			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
@@ -2942,6 +2954,11 @@ func _run_hr_shot(kind: String) -> void:
 			tab._on_card_action("char_emp_shot_1", HRLedger.ACTION_DOSSIER, null)
 			await get_tree().create_timer(0.5).timeout
 			_save_shot("hr_shot_verim_dosya")
+			# Back from a leave today: the same file with its leave row locked on the wait for the next one.
+			CharacterRegistry.get_character("char_emp_shot_1").leave_until_day = GameState.day
+			EventBus.hr_day_processed.emit()
+			await get_tree().create_timer(0.5).timeout
+			_save_shot("hr_shot_verim_dosya_izin")
 			EventBus.tab_changed.emit("")
 			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
 				{"character_id": CharacterRegistry.get_founder().id})

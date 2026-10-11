@@ -36,8 +36,9 @@ const NEUTRAL_VERBS := [
 	"schedule_event", "cancel_scheduled",
 	# arcs
 	"start_arc", "advance_arc", "set_arc_var", "abort_arc", "end_arc",
-	# people — morale, pace and assignment are not economy; salary is, and lives below
+	# people — morale, pace, hours and assignment are not economy; salary is, and lives below
 	"change_morale", "morale_all", "assign_to", "send_on_leave", "start_training", "productivity_mod",
+	"work_hours",
 	# product — a fix run spends the desk's hours, not money
 	"damage_product", "fix_run_start",
 	# sprint — the card a sprint decision is about, and the sprint's work hours
@@ -373,6 +374,23 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				return _no_target(verb, pid)
 			var landed: Dictionary = HRSystem.add_productivity_mod(pid, pct, weeks, card_id, title)
 			return {"verb": verb, "employee": pid, "pct": landed.pct, "weeks": landed.weeks}
+		# The player's leave, under the dossier action's rules: the record keeps the morale it promised.
+		"send_on_leave":
+			var vid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
+			var away: Character = CharacterRegistry.get_character(vid)
+			if away == null:
+				return _no_target(verb, vid)
+			var leave_weeks: int = int(e.get("weeks", HRConstants.VACATION_WEEKS_MIN))
+			if not HRActions.apply_leave(away, leave_weeks):
+				return {"verb": verb, "refused": HRActions.leave_block_reason(away)}
+			return {"verb": verb, "employee": vid, "weeks": leave_weeks, "gain": HRActions.leave_gain(away, leave_weeks)}
+		"work_hours":
+			var hid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
+			if CharacterRegistry.get_character(hid) == null:
+				return _no_target(verb, hid)
+			var hours: int = int(e.get("hours", HRConstants.WORK_HOURS_DEFAULT))
+			WorkHoursSystem.set_person_hours(hid, hours)
+			return {"verb": verb, "employee": hid, "hours": hours}
 		"employee_leaves":
 			var lid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
 			if CharacterRegistry.get_character(lid) == null:

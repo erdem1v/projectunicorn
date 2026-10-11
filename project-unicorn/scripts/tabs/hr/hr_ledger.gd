@@ -286,7 +286,7 @@ static func _action_specs(emp: Character, with_file: bool) -> Array:
 		specs.append({"key": "HR_MENU_OPEN_DOSSIER", "glyph": "util/doc", "preview": {"ok": true},
 			"action": ACTION_DOSSIER, "meta": ""})
 	var next_title: String = HRConstants.job_title(emp.role, emp.level + 1) if HRActions.can_promote(emp) else ""
-	var leave: Dictionary = HRActions.preview_leave(emp)
+	var leave: Dictionary = HRActions.preview_leave(emp, HRConstants.VACATION_WEEKS_MIN)
 	specs.append_array([
 		{"key": "HR_CARD_RAISE", "glyph": "world/raise", "preview": HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT),
 			"action": ACTION_RAISE, "meta": "%s %s" % [tr_key("HR_ROW_SALARY"), Fmt.money_exact(emp.monthly_salary)]},
@@ -404,7 +404,7 @@ static func _open_promotion(emp: Character) -> void:
 
 ## The same shell: the slider picks the weeks away, the row says the morale on return.
 static func _open_leave(emp: Character) -> void:
-	if not bool(HRActions.preview_leave(emp).get("ok", false)):
+	if HRActions.leave_block_reason(emp) != "":
 		return
 	EventBus.confirm_requested.emit({
 		"modal": "hr_action",
@@ -413,7 +413,7 @@ static func _open_leave(emp: Character) -> void:
 		"commit_key": "HR_CARD_LEAVE",
 		"slider": {"min": HRConstants.VACATION_WEEKS_MIN, "max": HRConstants.VACATION_WEEKS_MAX,
 			"start": HRConstants.VACATION_WEEKS_MIN, "format": Fmt.weeks},
-		"preview": func(_weeks: int) -> Dictionary: return HRActions.preview_leave(emp),
+		"preview": func(weeks: int) -> Dictionary: return HRActions.preview_leave(emp, weeks),
 		"on_commit": _commit.bind(emp.id, HRActions.apply_leave),
 	})
 
