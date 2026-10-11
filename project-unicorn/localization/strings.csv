@@ -2323,7 +2323,14 @@ DESK_PAPER_WEEKS,{n} hafta,{n} weeks
 DESK_PAPER_THIS_WEEK,bu hafta,this week
 SALES_PIPELINE_HEADER,Boru hattı,Pipeline
 SALES_LOCKED_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
-SALES_B2C_NOTE,Kitleden gelen gelir MRR'da sayılır. Hesaplar ve adaylar B2B ürünle gelir.,Consumer revenue counts in MRR. Accounts and leads come with a B2B product.
+SALES_EMPTY_UNTYPED,Önce Ürün'de yolunu seç.,Pick your path in Product first.
+SALES_EMPTY_B2C_PRE,{version} yayınlanınca kullanıcıların burada görünür.,Your users show up here once {version} ships.
+SALES_EMPTY_B2B_PRE,{version} yayınlanınca adaylar gelir.,Leads arrive once {version} ships.
+SALES_B2C_CONVERSION,Dönüşüm,Conversion
+SALES_B2C_PLAN_CLOSED,Kapalı,Closed
+SALES_B2C_CURVE,Haftalık kullanıcı,Weekly users
+SALES_B2C_PLAN_HINT,"Gelir, Ürün'de Gelir alanındaki Ücretli plan kartıyla başlar.",Revenue starts with the Paid plan card in Product's Revenue area.
+SALES_GO_PRODUCT,Ürün'e git,Go to Product
 SALES_FLOW_RATE,Akış: {n}/hafta,Flow: {n}/week
 SALES_DAYS_LEFT,{n} hafta,{n} weeks
 SALES_DAYS_LEFT_ONE,{n} hafta,{n} week
@@ -2820,6 +2827,8 @@ PRODUCT_GATE_BODY,{area} kartları bitti. Yayınlarsan kullanıcılar bu hafta g
 PRODUCT_GATE_ONE_MORE,Bir sprint daha,One more sprint
 PRODUCT_RELEASE_BETA,Beta kanalında · bir sonraki sprintte yayına girer,In the beta channel · goes live next sprint
 PRODUCT_RELEASE_RND_OPEN,Ar-Ge açıldı,R&D is open
+PRODUCT_RELEASE_USERS,İlk hafta {n} kullanıcı,{n} users in the first week
+PRODUCT_RELEASE_USERS_ONE,İlk hafta {n} kullanıcı,{n} user in the first week
 PRODUCT_MVP_NOT_LIVE,MVP · yayında değil,MVP · not live
 PRODUCT_HISTORY,Geçmiş,History
 PRODUCT_DELEGATE,Planlamayı devret: {name},Delegate planning: {name}
@@ -2933,6 +2942,8 @@ PRODUCT_FX_PROMISE,Söz: {customer},Promise: {customer}
 PRODUCT_FX_PROMISE_KEPT,sözü tutulur,promise kept
 PRODUCT_PROMISED,söz verildi,promised
 PRODUCT_VERSION_KEY,Sürüm,Version
+PRODUCT_KPI_USERS,Kullanıcı,Users
+PRODUCT_KPI_PAYING,Ödeyen,Paying
 PRODUCT_DECISION_IN_INBOX,Olaylar'da bekliyor,Waiting in Events
 PRODUCT_DECISION_HALTED,İş durdu · karar bekliyor,Work stopped · decision waiting
 PRODUCT_GO_DECISION,Karara git,Go to the decision

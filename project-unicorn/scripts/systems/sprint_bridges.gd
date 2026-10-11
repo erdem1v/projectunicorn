@@ -182,13 +182,20 @@ static func on_mvp() -> void:
 ## Gelir'in "Ücretli plan" kartı: ücretli katman ürünün bugünkü değerinin önerdiği fiyatla açılır.
 static func open_paid_plan() -> void:
 	SalesSystem.apply_b2c_price(int(SalesSystem.product_value().optimal))
+	# Frank'in "fiyatı belirle" satırı fiyat konunca düşer.
+	if GameState.mentor_line_key == "FRANK_ADVISORY_PAID_TIER":
+		EventBus.mentor_advisory_changed.emit("", {})
 
 
 # --- Sonuç -------------------------------------------------------------------------------
 
-## Sürümden bir gün sonraki SONUÇ satırı: sürümde değişen alanın kelimesi bugün değiştiyse o,
-## yoksa kapanan ticket sayısı, o da yoksa "görünür bir değişiklik olmadı".
+## Sürümden bir gün sonraki SONUÇ satırı: B2C'de v1.0'ınki ilk haftanın kullanıcılarıdır; öbürlerinde
+## sürümde değişen alanın kelimesi bugün değiştiyse o, yoksa kapanan ticket sayısı, o da yoksa "görünür bir
+## değişiklik olmadı".
 static func actual_sentence(release: Dictionary) -> Dictionary:
+	if int(release.number) == 1 and not SalesSystem.is_b2b_market():
+		var users: int = int(SalesSystem.b2c_audience())
+		return {"key": Fmt.count_key("PRODUCT_RELEASE_USERS", users), "args": {"n": users}}
 	for change in release.changed_areas:
 		var from: String = SprintCatalog.word_for(float(change.from), SprintCatalog.expectation(change.area))
 		var to: String = SprintCatalog.area_word(change.area)

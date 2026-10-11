@@ -128,6 +128,12 @@ static func daily_tick() -> void:
 		_tick_satisfaction()
 		if is_b2b_market():
 			B2BSalesSystem.daily_tick()
+		else:
+			# The week's sample; the Sales page draws the same HISTORY_WEEKS as columns.
+			const HISTORY_WEEKS := 26
+			var weeks: Array = GameState.get_flag("b2c_audience_history", [])
+			weeks.append({"day": GameState.day, "users": int(b2c_audience()), "paying": b2c_paying_users()})
+			GameState.set_flag("b2c_audience_history", weeks.slice(-TimeModel.ticks(HISTORY_WEEKS)))
 	reflect_mrr()
 
 

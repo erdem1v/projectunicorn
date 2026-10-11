@@ -14,7 +14,8 @@ extends RefCounted
 #   roller → roles: design|dev|test|product (en çok üç ikon)
 #
 # model = {
-#   header: {name, live_version: "1.4" or "" (MVP öncesi), market: "B2C"|"B2B" or "" (tür yok), type_text},
+#   header: {name, live_version: "1.4" or "" (MVP öncesi), market: "B2C"|"B2B" or "" (tür yok), type_text,
+#            users, paying (canlı B2C'de kitle ve ödeyen; -1 = yok)},
 #   versions: [{label: "v1.4", sprint: int or -1, shipped_count: int or -1,   # -1 çizilmez
 #               result: {kind: "expected"|"actual", text} or null}],
 #   quarter: {state: "locked_no_pm"|"open",
@@ -105,6 +106,7 @@ static func live() -> Dictionary:
 			versions.append({"label": SprintSystem.version_label(int(r.number)), "sprint": int(r.sprint),
 				"shipped_count": -1 if int(r.sprint) < 0 else r.shipped.size(), "result": _result(r)})
 	var live_now: bool = ProductState.is_live()
+	var b2c_live: bool = live_now and ProductState.market_type() == "b2c"
 	var center: Dictionary = _center(mode, release)
 	var next: Dictionary = _next(mode)
 	return {
@@ -114,6 +116,8 @@ static func live() -> Dictionary:
 			"live_version": SprintSystem.version_text(ProductState.version()) if live_now else "",
 			"market": ProductState.market_type().to_upper(),
 			"type_text": ProductCatalog.type_name(ProductState.subtype()),
+			"users": int(SalesSystem.b2c_audience()) if b2c_live else -1,
+			"paying": SalesSystem.b2c_paying_users() if b2c_live else -1,
 		},
 		"versions": versions,
 		"quarter": _quarter(center, next),

@@ -580,7 +580,8 @@ func _customer(customer: String, request: String, card_id: String, due: int, val
 
 
 func _header(product: String, market: String, type_text: String) -> Dictionary:
-	return {"name": product, "live_version": "1.4", "market": market, "type_text": type_text}
+	# Mockup'larda kitle ve ödeyen ölçüsü yok: canlı B2C'nin ölçüleri live:b2c_live'da.
+	return {"name": product, "live_version": "1.4", "market": market, "type_text": type_text, "users": -1, "paying": -1}
 
 
 ## MVP öncesi sürüm koşulu: v1.0'a iki Çekirdek kartı kaldı, motor Sprint 8 sonunu tahmin ediyor.

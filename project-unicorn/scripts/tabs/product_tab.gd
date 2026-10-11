@@ -153,11 +153,13 @@ func _refit() -> void:
 	fit_changed.emit()
 
 
-## Başlığın ölçüleri: tür anahtarıyla ürün adı (ürün kurulunca) ve sürüm; MVP öncesi sürüm yazıyla.
+## Başlığın ölçüleri, ürün kurulunca: tür anahtarıyla ürün adı ve sürüm (MVP öncesi yazıyla); canlı B2C'de
+## kullanıcı ve ödeyen.
 func _build_head(h: Dictionary) -> void:
 	UiFactory.clear(_kpis)
-	if h.market != "":   # ürün kurulmadan pazar ve tür boş gelir
-		_kpis.add_child(UiFactory.D_kpi(h.market + SprintUiShared.SEP + h.type_text, h.name))
+	if h.market == "":   # ürün kurulmadan pazar ve tür boş gelir
+		return
+	_kpis.add_child(UiFactory.D_kpi(h.market + SprintUiShared.SEP + h.type_text, h.name))
 	var version := UiFactory.D_kpi(tr("PRODUCT_VERSION_KEY"),
 		tr("PROD_VERSION_SHORT").format({"version": h.live_version}) if h.live_version != "" else tr("PRODUCT_MVP_NOT_LIVE"))
 	if h.live_version == "":
@@ -165,6 +167,9 @@ func _build_head(h: Dictionary) -> void:
 		value.theme_type_variation = &"ValueText"
 		value.add_theme_color_override("font_color", UiTokens.D_INK_3)
 	_kpis.add_child(version)
+	if h.users >= 0:
+		_kpis.add_child(UiFactory.D_kpi(tr("PRODUCT_KPI_USERS"), Fmt.group(h.users)))
+		_kpis.add_child(UiFactory.D_kpi(tr("PRODUCT_KPI_PAYING"), Fmt.group(h.paying)))
 
 
 ## SPRİNT | ÇEYREK (PM yokken ÇEYREK kilitli, gerekçesi yanında) ... Geçmiş anahtarı; PM varken planlamayı ona

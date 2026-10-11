@@ -1059,7 +1059,8 @@ static func _expected(changed: Array, closed: int) -> Dictionary:
 static func _fill_actual() -> void:
 	var p: Dictionary = _p()
 	for r in p.releases:
-		if GameState.day != int(r.day) + 1 or r.shipped.is_empty():
+		# v1.0'ın sonucu yayının kendisidir: kapıda boş geçen sprintle yayınlansa da yazılır.
+		if GameState.day != int(r.day) + 1 or (r.shipped.is_empty() and int(r.number) != 1):
 			continue
 		r.actual = SprintBridges.actual_sentence(r)
 		if not p.release.is_empty() and int(p.release.sprint) == int(r.sprint):

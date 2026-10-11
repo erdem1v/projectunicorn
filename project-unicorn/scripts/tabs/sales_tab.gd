@@ -4,7 +4,7 @@ extends Control
 # Satış penceresi (GDD Satış rev 6: §3.1 pazar, §4 boru hattı, §7.2 masa, §7.5 fiyat duruşu, §19 portföy).
 # Koyu başlıkta Satış ve dört ölçü, denetim şeridinde fiyat duruşu. Gövdede solda boru hattı, satış masası ve
 # son hareketler, sağda müşteri portföyü; iki sütun da kendi içinde kayar, pencere içeriği kadar uzar
-# (fit_height). Canlı B2B ürün yokken gövde tek boş hâldir.
+# (fit_height). Canlı B2C üründe gövde kitle sayfasıdır; canlı ürün yokken tek boş hâldir.
 #
 # Sayfa durumu okur ve sahiplerinin seam'lerini tetikler, kendisi yazmaz (WRITE-THROUGH LAW). Karar beklerken
 # denetimleri kapalıdır. PROCESS_MODE_ALWAYS (.tscn): duraklatılmış düğüm çizilir ama tıklama almaz.
@@ -25,6 +25,8 @@ const PHASE_TAGS := {"risk": ["SALES_CHIP_RISK", &"risk"], "expansion": ["SALES_
 	"onboarding": ["SALES_CHIP_NEW", &"neutral"]}
 ## Under SAT_MID the satisfaction meter reads as a warning [WORKING]; danger is the Risk phase's alone.
 const SAT_MID := 50
+## Week columns on the live B2C page; SalesSystem.daily_tick keeps the same number of samples.
+const HISTORY_WEEKS := 26
 const CLOCK := "res://assets/icons/util/clock.svg"
 const CALENDAR := "res://assets/icons/util/calendar.svg"
 const INFO := "res://assets/icons/util/info.svg"
@@ -42,6 +44,7 @@ var _cols: HBoxContainer
 var _left: VBoxContainer
 var _right: VBoxContainer
 var _empty: VBoxContainer
+var _b2c: VBoxContainer
 var _signals: Array = []
 var _sitting_open: bool   # the clock half of SalesLedger.meeting_block_reason, as painted
 
@@ -131,6 +134,9 @@ func _build() -> void:
 	_empty.add_theme_constant_override("separation", UiTokens.SPACE_L)
 	HRUiShared.D_dashed(_empty)
 	body.add_child(_empty)
+	_b2c = VBoxContainer.new()
+	_b2c.add_theme_constant_override("separation", UiTokens.SPACE_XL)
+	body.add_child(_b2c)
 
 
 ## A column of lanes that scrolls on its own; its cards keep clear of the bar while it shows. `width` 0 takes
@@ -166,10 +172,12 @@ func fit_height() -> float:
 func _refresh() -> void:
 	_sitting_open = WorkHoursSystem.sitting_open(SalesConstants.MEETING_ENTRY_CUTOFF_HOURS)
 	var open: bool = SalesFaucetSystem.market_open()
+	var b2c: bool = ProductState.is_live() and not SalesSystem.is_b2b_market()
 	var off: bool = EventGate.active_id() != ""
 	_ctl.visible = open
 	_cols.visible = open
-	_empty.visible = not open
+	_b2c.visible = b2c
+	_empty.visible = not open and not b2c
 	for kpi: Control in _kpis:
 		kpi.visible = open
 	UiFactory.clear(_left)
@@ -180,6 +188,8 @@ func _refresh() -> void:
 		_paint_stance(off)
 		_paint_pipeline(off)
 		_paint_portfolio(custs, off)
+	elif b2c:
+		_paint_b2c()
 	else:
 		_paint_empty()
 	fit_changed.emit()
@@ -215,8 +225,8 @@ func _paint_stance(off: bool) -> void:
 	_stance.add_child(UiFactory.make_label(tr("SALES_STANCE_HINT_" + current.to_upper()), &"Caption"))
 
 
-## §3.1 PAZAR: canlı B2B ürün yokken gövde tek boş hâldir, nedeniyle; türü B2C seçilmiş koşuda gelirin nerede
-## sayıldığıyla (tür seçilmeden pazar bayrağı yoktur).
+## §3.1 PAZAR: canlı ürün yokken gövde tek boş hâldir, evresiyle: tür seçilmeden yol Ürün'dedir (tür seçilmeden
+## pazar bayrağı yoktur); B2C'de kullanıcılar, B2B'de adaylar v1.0 yayınlanınca gelir.
 func _paint_empty() -> void:
 	UiFactory.clear(_empty)
 	var glyph := UiFactory.make_glyph(SALES_GLYPH, UiTokens.D_ICON_EMPTY, UiTokens.D_INK_4)
@@ -224,12 +234,64 @@ func _paint_empty() -> void:
 	_empty.add_child(glyph)
 	var words := VBoxContainer.new()
 	words.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	words.add_child(UiFactory.make_label(tr("SALES_LOCKED_NO_B2B"), &"DataStrong"))
-	if SprintSystem.is_typed() and not SalesSystem.is_b2b_market():
-		words.add_child(UiFactory.make_label(tr("SALES_B2C_NOTE"), &"NoteMuted"))
+	var mvp := {"version": SprintSystem.version_label(1)}
+	var b2b: bool = SalesSystem.is_b2b_market()
+	if not SprintSystem.is_typed():
+		words.add_child(UiFactory.make_label(tr("SALES_EMPTY_UNTYPED"), &"DataStrong"))
+	elif not b2b:
+		words.add_child(UiFactory.make_label(tr("SALES_EMPTY_B2C_PRE").format(mvp), &"DataStrong"))
+	else:
+		words.add_child(UiFactory.make_label(tr("SALES_LOCKED_NO_B2B"), &"DataStrong"))
+		words.add_child(UiFactory.make_label(tr("SALES_EMPTY_B2B_PRE").format(mvp), &"NoteMuted"))
 	for line: Label in words.get_children():
 		line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_empty.add_child(words)
+	if b2b:
+		var go := _go_product()
+		go.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		_empty.add_child(go)
+
+
+## Canlı B2C: kullanıcı, ödeyen, dönüşüm ve ücretli plan; altında son haftaların kullanıcı sütunları, dibinde
+## ödeyen payı; plan kapalıyken gelirin yolu, Ürün'ün Gelir alanındaki kart.
+func _paint_b2c() -> void:
+	UiFactory.clear(_b2c)
+	var open: bool = GameState.get_flag("b2c_paid_tier_open", false)
+	var price: int = int(GameState.get_flag("b2c_price", SalesSystem.B2C_PRICE_DEFAULT))
+	var figures := HBoxContainer.new()
+	figures.add_theme_constant_override("separation", 0)
+	for pair in [["PRODUCT_KPI_USERS", Fmt.group(int(SalesSystem.b2c_audience()))],
+			["PRODUCT_KPI_PAYING", Fmt.group(SalesSystem.b2c_paying_users())],
+			["SALES_B2C_CONVERSION", Fmt.percent(SalesSystem.conversion_rate(price) * 100.0 if open else 0.0, 0)],
+			[SprintCatalog.PAID_PLAN_NAME_KEY,
+				Fmt.money(price) + tr("SALES_PER_MONTH") if open else tr("SALES_B2C_PLAN_CLOSED")]]:
+		figures.add_child(UiFactory.D_kpi(tr(pair[0]), pair[1]))
+	_b2c.add_child(figures)
+	var chart := Control.new()
+	chart.custom_minimum_size.y = UiTokens.D_H_CHART
+	chart.draw.connect(func() -> void:
+		var weeks: Array = GameState.get_flag("b2c_audience_history", [])
+		var top: float = 1.0
+		for w: Dictionary in weeks:
+			top = maxf(top, float(w.users))
+		var slot: float = chart.size.x / TimeModel.ticks(HISTORY_WEEKS)
+		for i in weeks.size():
+			for part in [["users", UiTokens.D_BAR_FILL], ["paying", UiTokens.D_BAR_EMPH]]:
+				var h: float = chart.size.y * float(weeks[i][part[0]]) / top
+				chart.draw_rect(Rect2(i * slot, chart.size.y - h, slot - UiTokens.SPACE_S, h), part[1])
+		chart.draw_line(Vector2(0, chart.size.y), chart.size, UiTokens.D_CHART_AXIS))
+	_lane(_b2c, "SALES_B2C_CURVE").add_child(chart)
+	if not open:
+		var hint := _glyph_line(INFO, UiTokens.D_INK_3, UiFactory.make_label(tr("SALES_B2C_PLAN_HINT"), &"DataText"))
+		hint.add_child(_go_product())
+		_b2c.add_child(hint)
+
+
+## Satış'tan Ürün'e: v1.0 ya da ücretli plan oradadır.
+func _go_product() -> Button:
+	var go := _button(tr("SALES_GO_PRODUCT"), false)
+	go.pressed.connect(EventBus.tab_changed.emit.bind("product"))
+	return go
 
 
 # --- Sol sütun: boru hattı (§4), satış masası (§7), son hareketler ----------------

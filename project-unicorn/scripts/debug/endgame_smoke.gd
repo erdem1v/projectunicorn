@@ -17329,15 +17329,19 @@ static func _case_sprint_request_on_time_met() -> String:
 
 
 ## Gelir'in "Ücretli plan" kartı çıkınca ücretli katman ürünün o anki değerinin önerdiği fiyatla
-## açılır; tek kademeli yetenek tamamlanır ve aday olarak bir daha gelmez.
+## açılır; tek kademeli yetenek tamamlanır ve aday olarak bir daha gelmez; Frank'in "fiyatı belirle"
+## satırı düşer.
+## FALSİFİKASYON: SprintBridges.open_paid_plan'daki satır düşürme bloğunu sil → FAIL.
 static func _case_sprint_paid_plan_opens_paid_tier() -> String:
 	_seed_sprint_live("note_tool")
 	_sprint_hire("char_paid_dev", HRConstants.ROLE_DEVELOPER)
+	EventBus.mentor_advisory_changed.emit("FRANK_ADVISORY_PAID_TIER", {})
 	var id: String = "plan:" + SprintCatalog.PAID_PLAN
 	var offered := func() -> bool:
 		return SprintCatalog.candidates("revenue").any(func(c: Dictionary) -> bool: return c.id == id)
-	if GameState.get_flag("b2c_paid_tier_open", false) or not offered.call():
-		return "fixture: want a closed paid tier and the plan card in Gelir"
+	if GameState.get_flag("b2c_paid_tier_open", false) or not offered.call() \
+			or GameState.mentor_line_key != "FRANK_ADVISORY_PAID_TIER":
+		return "fixture: want a closed paid tier, the plan card in Gelir and Frank's price line"
 	SprintSystem.add(id)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
@@ -17350,6 +17354,8 @@ static func _case_sprint_paid_plan_opens_paid_tier() -> String:
 			GameState.get_flag("b2c_paid_tier_open", false), GameState.get_flag("b2c_price", 0), price]
 	if SprintCatalog.tier(SprintCatalog.PAID_PLAN) != 1 or offered.call():
 		return "the open paid tier reads tier %d and still offers the plan card" % SprintCatalog.tier(SprintCatalog.PAID_PLAN)
+	if GameState.mentor_line_key != "":
+		return "the paid plan is open and Frank still says '%s'" % GameState.mentor_line_key
 	return ""
 
 

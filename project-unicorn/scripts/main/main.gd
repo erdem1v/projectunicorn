@@ -954,24 +954,35 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 	pane.populate(INBOX.card_item("preview", card_id, ctx, {}, GameState.day).merged({"kind": "active"}), "preview")
 
 
-## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|untyped|morning|evening>. `desk` puts a rep
+## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening>.
+## `desk` puts a rep
 ## mid-processing on the desk; `picker` opens the steward picker on the first account, `inbox` presses its İlgilen
 ## (Olaylar opens on the account's mail); `edge` draws the rarer lines (a reserved lead, one given to a rep, a
 ## whale's condition, tables above the founder's league, the week's meetings spent, an open promise by sprint, the
 ## log) with three calm accounts, `edge_end` the same with both columns scrolled to their ends; `stretched` the
 ## founder holding one account more than he can, a 1★ rep and a lead in its last week; `empty` an open market with
-## no lead, rep or account; `b2c` photographs §3.1's empty window in a B2C run, `untyped` before a type is picked;
+## no lead, rep or account; `b2c` and `b2b_pre` photograph §3.1's empty window before the MVP ships in a B2C and a B2B
+## run, `untyped` before a type is picked, `b2c_live` the B2C page four weeks after live:b2c_live publishes;
 ## `morning` paints the page at 00:00 (every lead locked) and shoots it again once the clock reaches 08:00, `evening`
 ## paints it at 10:00 and shoots it again at the founder's last workday hour: the entry gate follows the clock.
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
+	if kind == "b2c_live":
+		_seed_run_reproducible()
+		_seed_product_live(kind)
+		await _mount_shot_shell()
+		EventBus.tab_changed.emit("sales")
+		await _finish_shot("sales_shot_b2c_live", 0.6)
+		return
 	_seed_sales_world()
 	GameState.day = 14
 	GameState.set_flag("mvp_live_bug_count", 12)  # risk reason → "sık kesinti şikayeti"
 	var edge: bool = kind.begins_with("edge")
 	match kind:
-		"b2c":
-			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
+		"b2c", "b2b_pre":
+			GameState.flags.erase("mvp_shipped")
+			var b2c: bool = kind == "b2c"
+			SprintSystem.choose_type("note_tool" if b2c else "erp", "Notly" if b2c else "Fatura")   # LOC-DATA debug seed / id
 		"untyped":
 			for flag in ["mvp_shipped", "mvp_market_type", "mvp_sub_product_type_id"]:
 				GameState.flags.erase(flag)
@@ -2734,6 +2745,9 @@ func _run_product_shot(id: String) -> void:
 				_save_shot(stem)
 				_press_button_labelled(_shell, tr(press[0]))
 				stem = base + press[1]
+		if id == "live:b2c_live":
+			# Geçmiş açık: v1.0'ın satırı ilk haftanın kullanıcılarını okur.
+			get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(true, "history_open")
 		await _finish_shot(stem)
 		return
 	await _mount_shot_shell()
@@ -2762,7 +2776,7 @@ func _run_product_shot(id: String) -> void:
 	get_tree().quit()
 
 
-## live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2b_requests|gate|delegate|solo15|solo15_tip|solo12_active>.
+## live:<pick|pick_named|plan|active|decision_paper|b2c_mvp|b2c_live|b2b_requests|gate|delegate|solo15|solo15_tip|solo12_active>.
 ## pick and pick_named leave the product untyped (the type picker). The solo ones leave the founder alone
 ## from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with the lead's plan
 ## applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active starts the
@@ -2771,8 +2785,10 @@ func _run_product_shot(id: String) -> void:
 ## daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's plan, active and
 ## decision_paper in its second week with a sprint paper on the desk, gate on the MVP gate, b2c_mvp on the
 ## CANLI v1.0 release note it publishes, delegate on Sprint 2, started by the PM once Sprint 1's note is
-## left (shipped at the gate) with planning delegated. b2b_requests signs two accounts once the faucet
-## opens at MVP and plays one more sprint, so the next planning carries their request cards.
+## left (shipped at the gate) with planning delegated. b2c_live publishes as b2c_mvp and plays four weeks with
+## the audience flowing hour by hour, starting each sprint itself, and prints the live audience as `SHOT|b2c`.
+## b2b_requests signs two accounts once the faucet opens at MVP and plays one more sprint, so the next planning
+## carries their request cards.
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
 		return
@@ -2790,11 +2806,13 @@ func _seed_product_live(scenario: String) -> void:
 	var day := func() -> void:
 		GameState.advance_day()
 		SprintSystem.daily_tick()
-	var sprint := func() -> void:
+	var start_next := func() -> void:
 		if SprintSystem.mode() == "release":
 			SprintSystem.plan_next()
 			SprintSystem.apply_lead()
 			SprintSystem.start()
+	var sprint := func() -> void:
+		start_next.call()
 		while SprintSystem.mode() == "active":
 			day.call()
 	SprintSystem.apply_lead()
@@ -2818,6 +2836,14 @@ func _seed_product_live(scenario: String) -> void:
 			SprintSystem.publish()
 		if ProductState.is_live():
 			break
+	if scenario == "b2c_live":
+		for week in 4:
+			start_next.call()
+			for hour in 24:
+				SalesSystem.hourly_tick(hour)
+			day.call()
+			SalesSystem.daily_tick()
+		print("SHOT|b2c users=%d paying=%d" % [int(SalesSystem.b2c_audience()), SalesSystem.b2c_paying_users()])
 	if not b2b:
 		return
 	for i in 2:
