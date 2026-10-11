@@ -2241,20 +2241,14 @@ static func _hhmm_minute(hhmm: String) -> float:
 ## view's GPU time over BACKDROP_PROBE_FRAMES and the engine's start to that first frame (the Godot card left out).
 ## plate_vs_live is the mean difference (0..255) of the faded-in live frame to the plate inside a 6 px margin; n/a on
 ## the low preset, which keeps the plate alone. NEW GAME two frames on prints the node count --onboard-shot=1 prints
-## for the same set-up and whether a backdrop is left in the tree; tex_pct is the texture memory once the freed live
-## view has left the frames in flight, against the bare window's before the backdrop (bound +5).
+## for the same set-up and whether a backdrop is left in the tree; tex_pct is the texture memory once the onboarding's
+## stage has faded in, against the same onboarding mounted before the menu (bound +5).
 func _run_backdrop_probe(office: String, minute: float) -> void:
 	_begin_shot()
-	# The texture monitor reads 0 until frames are drawn; the frames waited here stay out of boot_to_menu_ms.
-	var waited: int = Time.get_ticks_msec()
-	await RenderingServer.frame_post_draw
-	await RenderingServer.frame_post_draw
-	var tex_before: float = Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)
-	waited = Time.get_ticks_msec() - waited
 	var backdrop := _mount_backdrop(office, minute)
 	var shown: int = Time.get_ticks_msec()
 	await RenderingServer.frame_post_draw
-	var boot_ms: int = Time.get_ticks_msec() - waited
+	var boot_ms: int = Time.get_ticks_msec()
 	var plate: TextureRect = backdrop.get_node("Plate")
 	var live: SubViewportContainer = backdrop.get_node("Live")
 	var row := {"plate_frame": int(plate.texture != null and (live.get_child_count() == 0 or live.modulate.a == 0.0)),
@@ -2283,6 +2277,9 @@ func _run_backdrop_probe(office: String, minute: float) -> void:
 	print("BACKDROP|plate_vs_live=%s" % row.diff)
 	backdrop.free()
 
+	_mount_flow()
+	var tex_before: float = await _stage_tex_mem()
+	_free_flow()
 	_mount_menu()
 	var menu_backdrop: Control = _menu.get_node("%MenuBackdrop")
 	if menu_backdrop.get_node("Live").get_child_count() > 0:
@@ -2292,21 +2289,30 @@ func _run_backdrop_probe(office: String, minute: float) -> void:
 	await get_tree().process_frame
 	var nodes := int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
 	var left := int(get_tree().root.find_child("MenuBackdrop", true, false) != null)
-	# The rendering device releases a freed viewport's buffers only after its frames in flight have drawn.
-	for _i in 3:
-		await RenderingServer.frame_post_draw
-	var tex: float = Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)
+	var tex: float = await _stage_tex_mem()
 	print("BACKDROP|new_game|nodes=%d|backdrop=%d|tex_mib=%.2f|tex_before_mib=%.2f|tex_pct=%+.1f" % [
 		nodes, left, tex / 1048576.0, tex_before / 1048576.0, (tex / tex_before - 1.0) * 100.0])
 	get_tree().quit()
 
 
-# --onboard-shot=<1|2|3>[:<state>] | curtain. Prints the node count and texture memory of the set-up, which NEW GAME
-# from the menu matches (--backdrop-probe), and ONB|stage=live|figure=<id> once the flat is up; the frame waits for
-# it. States: 1:plate (the plate and portrait the flat stands on until it is up), 1:cancel (a name typed, then Esc),
-# 2:random (Randomize), 2:hard_locked and 2:hard_open (the profile's finished runs, written to this run's settings),
-# 3:guided_locked, 3:reroll (Make new set pressed once); curtain is the curtain over step 3, which names the mockup's
-# company and picks its second emblem. Steps 2 and 3 are mounted straight: their draft need not be whole.
+## The texture memory once the onboarding's stage has faded in (the plate alone on the low preset) and the rendering
+## device has allocated its view's buffers and released those of the frames in flight.
+func _stage_tex_mem() -> float:
+	var live: Control = _flow.get_node("%Stage").get_node("Live")
+	while live.modulate.a < 1.0:
+		await get_tree().process_frame
+	for _i in 3:
+		await RenderingServer.frame_post_draw
+	return Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)
+
+
+# --onboard-shot=<1|2|3>[:<state>] | curtain. Prints the node count of the set-up, which NEW GAME from the menu matches
+# (--backdrop-probe), with its texture memory before the flat is up, and ONB|stage=live|figure=<id> once it is; the
+# frame waits for it. States: 1:plate (the plate and portrait the flat stands on until it is up), 1:cancel (a name
+# typed, then Esc), 2:random (Randomize), 2:hard_locked and 2:hard_open (the profile's finished runs, written to this
+# run's settings), 3:guided_locked, 3:reroll (Make new set pressed once); curtain is the curtain over step 3, which
+# names the mockup's company and picks its second emblem. Steps 2 and 3 are mounted straight: their draft need not be
+# whole.
 func _run_onboard_shot(spec: String) -> void:
 	var state: String = spec.get_slice(":", 1) if ":" in spec else ""
 	if state.begins_with("hard_"):

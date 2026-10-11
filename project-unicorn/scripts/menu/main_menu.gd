@@ -68,6 +68,11 @@ func _ready() -> void:
 	_opener.grab_focus()
 
 	%Cover.color = UiTokens.D_SURFACE_0
+	# Lifted only once drawn: the frame that mounts the menu can outlast MENU_COVER_S.
+	RenderingServer.frame_post_draw.connect(_lift_cover, CONNECT_ONE_SHOT)
+
+
+func _lift_cover() -> void:
 	var lift := create_tween()
 	lift.tween_property(%Cover, "modulate:a", 0.0, MENU_COVER_S).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	lift.tween_callback(%Cover.queue_free)
