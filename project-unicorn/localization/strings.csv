@@ -186,18 +186,14 @@ FIN_GOAL_P3_HUNT_ONE,{n} teklif masada,{n} offer on the table
 FIN_GOAL_P3_CLOSED,Series A kapandı,Series A closed
 CHEQUE_TITLE,Frank'in çeki,Frank's cheque
 CHEQUE_NEXT,Sıradaki: {step},Next: {step}
-CHEQUE_LEAD,Beş adım. Beşincisinde Frank çeki yazar.,"Five steps. At the fifth, Frank writes the cheque."
 CHEQUE_STEP_TYPE,Ürün tipini seç,Pick a product type
 CHEQUE_STEP_SPRINT,İlk sprinti başlat,Start the first sprint
 CHEQUE_STEP_SHIP,v1.0'ı yayınla,Ship v1.0
 CHEQUE_STEP_PAYING,İlk ödeyen müşteri,First paying customer
 CHEQUE_STEP_MRR,Aylık gelir {bar},Monthly revenue {bar}
-CHEQUE_MRR_NOW,Şu an {mrr},Now {mrr}
 GOAL_STEP_TRACTION,Traction'a geç,Reach Traction
 GOAL_STEP_SEED,Seed turu: aylık gelir {bar},Seed round: monthly revenue {bar}
-GOAL_SEED_LEAD,Seed alırsan söz verirsin: {window} aylık ortalama büyüme {pct},Take the seed and you owe growth: a {window} month average of {pct}
 GOAL_TOAST,{title} · {done}/{total},{title} · {done}/{total}
-CHEQUE_GO,{tab} sayfasına git,Go to {tab}
 FIN_MARKET_TITLE,Pazar payı,Market share
 FIN_MARKET_YOU,Sen,You
 MILESTONE_FOUNDING,Kuruluş,Founding
@@ -2767,7 +2763,6 @@ OFFICE_MAP_TITLE,Ofis seç,Choose an office
 OFFICE_MAP_SUB,3 kademe · taşınma bir hafta sürer,3 tiers · moving takes a week
 OFFICE_MAP_LOADING,Şehir haritası hazırlanıyor,Preparing the city map
 OFFICE_MOVE_BTN,Ofisi taşı,Move the office
-OFFICE_MOVE_AFTER_CHEQUE,Frank'in çekinden sonra,After Frank's cheque
 OFFICE_CARD_DESKS,MASA,DESKS
 OFFICE_CARD_ROOMS,GETİRDİKLERİ,WHAT YOU GET
 OFFICE_CARD_REQS,ŞARTLAR,REQUIREMENTS

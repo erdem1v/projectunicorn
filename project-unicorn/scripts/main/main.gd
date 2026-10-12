@@ -744,7 +744,7 @@ func _run_event_shot(spec: String) -> void:
 ##   personal_cheque_read_only (Kişisel read-only after Frank's cheque, a customer's card waiting) ·
 ##   held_key (a speed key refused: the frame's blink and the toast)
 ## Cards come through force_fire; a past decision is resolved for real at an earlier week.
-## The opening's states: cheque · seed (the goal list's paper, on _seed_goal's week 1) · intro_go (the intro's way to
+## The opening's states: intro_go (the intro's way to
 ## Ürün; GATEFLOW tab, picking, speed) · beat (founder.savings_note through EventGate.request in week 5: the office's
 ## notice stack as _stack, then the inbox on its history row) · dying (a card arriving in the frame a tab change frees
 ## the open inbox; GATEFLOW window, active, pane).
@@ -752,8 +752,6 @@ func _run_inbox_shot(state: String) -> void:
 	_begin_shot()
 	if state in ["intro", "intro_go", "beat"]:
 		_seed_run_reproducible()
-	elif state in ["cheque", "seed"]:
-		_seed_goal(state)
 	else:
 		_seed_theme_surface()
 		GameState.current_hour = 11
@@ -786,8 +784,6 @@ func _run_inbox_shot(state: String) -> void:
 			var layer: Node = get_tree().get_first_node_in_group(&"window_layer")
 			print("GATEFLOW tab=%s picking=%s speed=%d" % [layer._primary_id,
 				layer.get_current_page_body()._picker_view.is_visible_in_tree(), TimeManager.current_speed])
-		"cheque", "seed":
-			INBOX.show("r:goal")
 		"beat":
 			if not EventGate.request("founder.savings_note"):
 				_shot_fail("[InboxShot] founder.savings_note was refused")

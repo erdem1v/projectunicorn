@@ -73,6 +73,8 @@ func _refresh() -> void:
 	# Gizlenen kart bırakışı duyamaz; yeniden görününce imleçle kaymasın.
 	if not visible:
 		_dragging = false
+	# Ofisin bildirim yığını bu sütunun altında durur.
+	get_tree().call_group(&"notice_stack", &"dock_below", root.get_global_rect() if visible else Rect2())
 
 
 # --- Sürükleme ----------------------------------------------------------------

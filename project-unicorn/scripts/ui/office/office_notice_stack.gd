@@ -1,12 +1,12 @@
 extends VBoxContainer
 
-# The notice stack at the office's bottom right: the inbox's preview. Frank's latest line, in the run's first
-# minute how the clock starts, the newest discovery not read yet, then what waits in the inbox (the goal list's
-# paper, papers, then reminders, in its order), at most MAX_CARDS cards with a +N badge on the last for the rest.
-# A row reads sender · subject · time left; a click opens it in the inbox. The decision on screen is not a row: the
-# top bar's gate slot is. Windows are later siblings of the office, and the stack hides while one lies over it, or
-# while a call's card does; hidden, it still keeps up, and a step done on the goal list toasts over the windows.
-# In the dark language from its root.
+# The notice stack at the office's top right, under the build cards (BuildHUD says where they end): the inbox's
+# preview. Frank's latest line, in the run's first minute how the clock starts, the newest discovery not read yet,
+# then what waits in the inbox (papers, then reminders, in its order), at most MAX_CARDS cards with a +N badge on
+# the last for the rest. A row reads sender · subject · time left; a click opens it in the inbox. The decision on
+# screen is not a row: the top bar's gate slot is. Windows are later siblings of the office, and the stack hides
+# while one lies over it, or while a call's card does; hidden, it still keeps up, and a step done on the goal list
+# toasts over the windows. In the dark language from its root.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
@@ -30,12 +30,11 @@ var _call_cover := Rect2()
 func _ready() -> void:
 	theme = load(UiTokens.MENAJER_THEME)
 	add_to_group(&"office_overlays")
+	add_to_group(&"notice_stack")
 	custom_minimum_size.x = WIDTH
-	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE,
+	set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE,
 		UiTokens.SPACE_3XL)
 	grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	grow_vertical = Control.GROW_DIRECTION_BEGIN
-	alignment = BoxContainer.ALIGNMENT_END
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_theme_constant_override("separation", UiTokens.SPACE_M)
 	# The inbox's signals, plus the two that repaint what it gets from a rebuild: the office is never
@@ -57,6 +56,16 @@ func _ready() -> void:
 ## trip shows no controls (OfficeView says which).
 func set_map_open(open: bool) -> void:
 	_map_open = open
+	_show()
+
+
+## BuildHUD says where its column lies whenever it changes (empty while it shows nothing): the stack stands under it.
+func dock_below(hud: Rect2) -> void:
+	var top := float(UiTokens.SPACE_3XL)
+	if hud.has_area():
+		top = hud.end.y - get_parent_control().global_position.y + UiTokens.SPACE_M
+	offset_bottom += top - offset_top
+	offset_top = top
 	_show()
 
 
@@ -148,11 +157,7 @@ func _row(it: Dictionary) -> HBoxContainer:
 	row.add_child(UiFactory.make_label(String(it.sender.name), &"MetaMuted"))
 	var subject := UiFactory.make_label(String(it.subject), &"NoticeText")
 	subject.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# The goal's next step ends on its bar: a second line in the card's height rather than a cut figure.
-	if it.get("goal", false):
-		subject.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	else:
-		subject.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	subject.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	row.add_child(subject)
 	if it.kind == "paper":
 		var weeks: int = int(it.weeks_left)

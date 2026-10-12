@@ -22,7 +22,6 @@ const CATEGORY_SENDERS := {"funding": "frank", "founder": "self", "team": "self"
 const CATEGORY_OUTLETS := {"world": "WORLD_OUTLET_SEKTOR", "rival": "WORLD_OUTLET_GIRISIM"}
 ## The paper that offers an account more: it stands for the account's reminder and reads as growth.
 const EXPANSION_CARD := "customer.expansion"
-const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
 
 
 ## Opens the inbox on `item_id` (Olaylar comes up if it is not the open window; an open one keeps
@@ -69,21 +68,10 @@ static func items() -> Array:
 
 
 ## The papers and reminders, as the inbox lists them and the office's notice stack previews them:
-## the goal list's paper first, the papers most urgent first, then the reminders. The decision on
-## screen is not among them (the top bar's gate slot is), nor a reminder about its subject.
+## the papers most urgent first, then the reminders. The decision on screen is not among them (the
+## top bar's gate slot is), nor a reminder about its subject.
 static func desk() -> Array:
 	var out: Array = []
-	var goal: Dictionary = ChequeRead.summary()
-	if not goal.is_empty():
-		# Every step done, the paper leads to what answers the list: the cheque's card, the seed's pitch on Finans'
-		# Yatırım page (shut until the door opens: Finans stays on Özet).
-		var tab: String = goal.next.get("tab", "events" if goal.list == "cheque" else "finance")
-		var r := _reminder("goal", "DESK_PAPER_TAG_FUNDING", _desk(TranslationServer.translate(goal.title_key),
-			GameState.company_name), goal_head(goal) if goal.next.is_empty() else goal_next(goal), tab,
-			"yatirim" if tab == "finance" else "")   # LOC-DATA route id
-		r.merge({"goal": true, "value": TranslationServer.translate("FIN_GOAL_PROGRESS").format(
-			{"met": goal.done, "total": goal.total})}, true)
-		out.append(r)
 	var active: String = EventGate.active_id()
 	var ctx: Dictionary = EventGate.active_context()
 	var busy: Array = ctx.values().map(func(b: Dictionary) -> String: return String(b.get("id", "")))

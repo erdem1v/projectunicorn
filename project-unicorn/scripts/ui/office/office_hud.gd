@@ -3,8 +3,8 @@ extends Control
 # The office view's own controls: the move button at the bottom left (windows dock at the top
 # left) and the countdown of a move under way beside it. The shell's toast says when a move starts
 # and when it lands. OfficeCity mounts this on the view's overlay and opens the city map on
-# move_pressed. While a decision waits the button is off and says so: no move, no map. Until Frank's
-# cheque is taken it says under its label what the move waits for.
+# move_pressed. While a decision waits the button is off and says so: no move, no map.
+# In the dark language from its root.
 
 signal move_pressed
 
@@ -13,19 +13,20 @@ const PULSE_SCALE := 1.04     # [WORKING]
 const PULSE_ALPHA := 0.8      # [WORKING]
 const PULSE_TIME := 0.9       # [WORKING] seconds each way
 const MOVE_GLYPH := preload("res://assets/icons/util/move.svg")
+const GLOBE_GLYPH := preload("res://assets/icons/util/globe.svg")
 
 var _row := HBoxContainer.new()
-var _button := PanelContainer.new()
-var _label: Label
-var _badge: Control
+var _plate := PanelContainer.new()
+var _button := Button.new()
 var _waiting: Label
-var _note: Label
+var _badge: Control
 var _pulse: Tween
 var _map_open := false
 var _window_cover := Rect2()
 
 
 func _ready() -> void:
+	theme = load(UiTokens.MENAJER_THEME)
 	add_to_group(&"office_overlays")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -33,37 +34,22 @@ func _ready() -> void:
 	_row.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	add_child(_row)
 
-	_button.theme_type_variation = &"ChoiceCard"
-	_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	# Hover = edge; both variations share fill and margins, so the button does not jump.
-	_button.mouse_entered.connect(func() -> void: _button.theme_type_variation = &"ChoiceCardHover")
-	_button.mouse_exited.connect(func() -> void: _button.theme_type_variation = &"ChoiceCard")
-	_button.gui_input.connect(func(event: InputEvent) -> void:
-		if UiFactory.is_left_click(event) and EventGate.active_id() == "":
-			move_pressed.emit())
-	_button.resized.connect(func() -> void: _button.pivot_offset = _button.size * 0.5)
+	# WinClose is the theme's glyph-in-a-40 px-key; the dark plate keeps it readable on the bright scene.
+	_plate.theme_type_variation = &"FloatPanel"
+	_plate.resized.connect(func() -> void: _plate.pivot_offset = _plate.size * 0.5)
 	_row.resized.connect(_show_row)
-	_row.add_child(_button)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	_button.add_child(column)
-	var inner := HBoxContainer.new()
-	inner.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	column.add_child(inner)
-	var glyph := Panel.new()
-	glyph.theme_type_variation = &"TabBadge"
-	glyph.custom_minimum_size = Vector2.ONE * UiTokens.SPACE_M
-	glyph.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	inner.add_child(glyph)
-	_label = UiFactory.make_label("", &"RowName")
-	inner.add_child(_label)
+	_row.add_child(_plate)
+	_button.theme_type_variation = &"WinClose"
+	_button.icon = GLOBE_GLYPH
+	_button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_button.custom_minimum_size = Vector2.ONE * UiTokens.D_H_BTN
+	_button.focus_mode = Control.FOCUS_NONE   # Space is the speed key; focus must not swallow it
+	_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_button.pressed.connect(move_pressed.emit)
+	_plate.add_child(_button)
 	_waiting = UiFactory.make_label("", &"CaptionMuted")
 	_waiting.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	inner.add_child(_waiting)
-	_note = UiFactory.make_label("", &"CaptionMuted")
-	column.add_child(_note)
-	HRUiShared.set_mouse_ignore(column)
+	_row.add_child(_waiting)
 
 	for s: Signal in [EventBus.day_advanced, EventBus.office_changed, EventBus.equity_changed,
 			EventBus.language_changed]:
@@ -95,13 +81,11 @@ func _show_row() -> void:
 
 
 func _refresh() -> void:
-	_label.text = tr("OFFICE_MOVE_BTN")
 	var gated: bool = EventGate.active_id() != ""
+	_button.tooltip_text = tr("OFFICE_MOVE_BTN")
+	_button.disabled = gated
 	_waiting.text = tr("TOPBAR_GATE")
 	_waiting.visible = gated
-	_note.text = tr("OFFICE_MOVE_AFTER_CHEQUE")
-	_note.visible = GameState.run_angel_amount == 0
-	_button.mouse_default_cursor_shape = Control.CURSOR_ARROW if gated else Control.CURSOR_POINTING_HAND
 	if _badge != null:
 		_badge.free()
 		_badge = null
@@ -117,14 +101,14 @@ func _refresh() -> void:
 	if not breathe:
 		_pulse.kill()
 		_pulse = null
-		_button.scale = Vector2.ONE
-		_button.modulate.a = 1.0
+		_plate.scale = Vector2.ONE
+		_plate.modulate.a = 1.0
 		return
 	_pulse = create_tween().set_loops().set_trans(Tween.TRANS_SINE)
-	_pulse.tween_property(_button, "scale", Vector2.ONE * PULSE_SCALE, PULSE_TIME)
-	_pulse.parallel().tween_property(_button, "modulate:a", PULSE_ALPHA, PULSE_TIME)
-	_pulse.tween_property(_button, "scale", Vector2.ONE, PULSE_TIME)
-	_pulse.parallel().tween_property(_button, "modulate:a", 1.0, PULSE_TIME)
+	_pulse.tween_property(_plate, "scale", Vector2.ONE * PULSE_SCALE, PULSE_TIME)
+	_pulse.parallel().tween_property(_plate, "modulate:a", PULSE_ALPHA, PULSE_TIME)
+	_pulse.tween_property(_plate, "scale", Vector2.ONE, PULSE_TIME)
+	_pulse.parallel().tween_property(_plate, "modulate:a", 1.0, PULSE_TIME)
 
 
 func _on_move_started(office_id: String, _arrival_day: int) -> void:
