@@ -228,41 +228,6 @@ static func D_skill_cell(value: int, rank: StringName, width: int, band: bool) -
 	return cell
 
 
-## Başlığın beceri lejantı: rampanın beş basamağı kendi renginde, ana alanın altı çizili, ikincilin
-## yalın örneği.
-static func D_skill_legend() -> PanelContainer:
-	var cell := PanelContainer.new()
-	cell.theme_type_variation = &"KpiCell"
-	var col := VBoxContainer.new()
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
-	cell.add_child(col)
-	col.add_child(UiFactory.make_label(Fmt.upper(TranslationServer.translate("HR_COL_ROLES")), &"KeyLabel"))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	col.add_child(row)
-	for low in [1, 3, 5, 7, 9]:
-		row.add_child(UiFactory.make_label("%d-%d" % [low, low + 1], &"ValueTextStrong", UiTokens.D_skill(low)))
-	for sample in [["7", "HR_SKILL_LEGEND_MAIN"], ["6", "HR_SKILL_LEGEND_SECONDARY"]]:
-		var key := HBoxContainer.new()
-		key.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-		key.size_flags_vertical = Control.SIZE_SHRINK_END
-		var figure := UiFactory.make_label(sample[0], &"CaptionStrong")
-		key.add_child(figure)
-		key.add_child(UiFactory.make_label(TranslationServer.translate(sample[1]), &"Caption"))
-		row.add_child(key)
-		if sample[1] == "HR_SKILL_LEGEND_MAIN":
-			var mark := ColorRect.new()
-			mark.color = UiTokens.D_INK_2
-			mark.anchor_right = 1.0
-			mark.anchor_top = 1.0
-			mark.anchor_bottom = 1.0
-			mark.offset_top = UiTokens.BORDER_HAIRLINE
-			mark.offset_bottom = UiTokens.BORDER_HAIRLINE + UiTokens.D_SKILL_MARK.y
-			figure.add_child(mark)
-	return cell
-
-
 ## Moral hücresi: değer bandının renginde, sağa yaslı; yanında bar ve 35'teki kaçma çentiği. `refs`
 ## değeri ve dolguyu tutar, D_repaint_morale yerinde boyar.
 static func D_morale(morale: int, refs: Dictionary) -> HBoxContainer:

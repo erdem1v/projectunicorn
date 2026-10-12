@@ -6,7 +6,7 @@ extends Control
 # Ortak koyu başlıkta Ar-Ge ve tamamlanan düğüm sayısı. Denetim şeridinde AĞAÇ | GEÇMİŞ ve koşan
 # araştırmanın satırı (§5.6: çubuk sekmede de yaşar; pencere açıkken yüzen kart görünmez). Gövdede ağaç
 # (RnDTreeView, seçili düğümün kartıyla) ve ayağında anahtarı, ya da Ar-Ge'nin kendi geçmişi (notlar ve
-# keşifler; gelen kutusunun okuma bölmesi, okundu durumu tek). v1 yayınlanmadan pencere tek satırdır.
+# keşifler; gelen kutusunun okuma bölmesi, okundu durumu tek). v1 yayınlanmadan ağaç kilitli çizilir.
 # Pencere görünen içerik kadar uzar (fit_height): ağaç kısa, kart açılınca aşağı doğru uzun; alan
 # yetmezse gövde kayar, başlık, şerit ve ayak yerinde kalır.
 #
@@ -59,19 +59,10 @@ func _init() -> void:
 
 func _ready() -> void:
 	# TASLAK NÖBETİ: dil ya da palet değişince router sayfayı yıkıp yeniden kuruyor; bayrak
-	# olmasaydı oyuncu okuduğu düğümden dışarı atılırdı. TÜKETİLİR VE SİLİNİR — bekleme
-	# sayfasında da, bayat bir seçim bir sonraki turda geri gelmesin.
+	# olmasaydı oyuncu okuduğu düğümden dışarı atılırdı. TÜKETİLİR VE SİLİNİR — bayat bir seçim
+	# bir sonraki turda geri gelmesin.
 	var stashed: String = String(GameState.get_flag("rnd_selected", ""))
 	GameState.flags.erase("rnd_selected")
-	# İKİ SAYFA HÂLİ, TEK KAPI: `RnDSystem.tree_open()` (Ar-Ge §2, MÜHÜRLÜ). `version_shipped`
-	# dinlendiği için oyuncu pencere açıkken v1'i yayınlarsa sayfa ağaca döner.
-	if not RnDSystem.tree_open():
-		# Before v1: the one line that says what the tree waits for (§2).
-		var closed := UiFactory.D_empty(RnDUiShared.ICON, tr("RND_TREE_CLOSED"), &"BodyLabel")
-		closed.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		add_child(closed)
-		EventBus.version_shipped.connect(_on_version_shipped, CONNECT_ONE_SHOT)
-		return
 	_build()
 	# §10'un okuma yüzeyinin sinyalleri; `assignment_changed` çünkü bir kişinin işi değişince
 	# araştırma DONABİLİR, mesajlar geçmiş için, kapı sinyalleri kapalı eylemler için.
@@ -81,6 +72,8 @@ func _ready() -> void:
 		EventBus.node_revealed, EventBus.hidden_line_unlocked,
 		EventBus.research_progress_changed, EventBus.assignment_changed, EventBus.messages_changed,
 		EventBus.event_triggered, EventBus.event_resolved, EventBus.event_set_aside,
+		# v1 opens the tree: its tiles leave the locked look.
+		EventBus.version_shipped,
 	]
 	for sig: Signal in _signals:
 		sig.connect(_on_state_changed)
@@ -90,17 +83,7 @@ func _ready() -> void:
 	select_node(stashed)
 
 
-func _on_version_shipped(_v: int) -> void:
-	# Bekleme sayfası ağaca döner. Router'ın kendi yıkıp-kurma yolu burada yok, o yüzden sayfayı
-	# kendimiz yeniden kuruyoruz.
-	UiFactory.clear(self)
-	_ready()
-	fit_changed.emit()
-
-
 func _exit_tree() -> void:
-	if EventBus.version_shipped.is_connected(_on_version_shipped):
-		EventBus.version_shipped.disconnect(_on_version_shipped)
 	for sig: Signal in _signals:
 		sig.disconnect(_on_state_changed)
 	if EventBus.rnd_node_requested.is_connected(select_node):
@@ -116,10 +99,8 @@ func on_page_closing() -> void:
 		GameState.set_flag("rnd_selected", _selected)
 
 
-## The page's height: the strip, the view and, under the tree, its key; before v1 the one line.
+## The page's height: the strip, the view and, under the tree, its key.
 func fit_height() -> float:
-	if _outer == null:
-		return UiTokens.D_H_EMPTY_STATE
 	return _outer.get_combined_minimum_size().y + (_tree_body.get_combined_minimum_size().y if _view == VIEW_TREE
 		else float(UiTokens.D_H_RND_HISTORY))
 
@@ -229,6 +210,7 @@ func _compute_structure_key() -> String:
 	var parts := PackedStringArray()
 	for id in ResearchSeam.NODES.keys():
 		parts.append(RnDSystem.state_of(String(id)))
+	parts.append(str(RnDSystem.tree_open()))
 	parts.append(RnDSystem.active())
 	parts.append(str(RnDSystem.is_frozen()))
 	return "/".join(parts)

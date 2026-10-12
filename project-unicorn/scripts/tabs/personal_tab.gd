@@ -96,12 +96,13 @@ func _work(founder: Character) -> VBoxContainer:
 		HRUiShared.mount_panel_modal(self, TRAINING_MODAL, _build, [founder.id]))
 	train.icon = load(TRAINING_ICON)
 	train.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	var reason: String = CharacterRegistry.training_block_reason(founder.id)
-	train.disabled = reason != "" or EventGate.active_id() != ""
+	var reason_key: String = CharacterRegistry.training_block_reason_key(founder.id)
+	train.disabled = reason_key != "" or EventGate.active_id() != ""
 	col.add_child(_above(train, UiTokens.SPACE_XXL))
-	# In training the task line says so; the registry's reason would speak of a bar that stays full till it ends.
-	if reason != "" and founder.status == HRConstants.STATUS_ACTIVE:
-		col.add_child(_above(SprintUiShared.prose(reason, &"Caption"), UiTokens.SPACE_M))
+	# In training the task line says so; the registry's reason would speak of a bar that stays full till it ends. An
+	# unfilled bar needs no sentence: the figure above the button says so.
+	if reason_key not in ["", "HR_TRAINING_NOT_EARNED"] and founder.status == HRConstants.STATUS_ACTIVE:
+		col.add_child(_above(SprintUiShared.prose(tr(reason_key), &"Caption"), UiTokens.SPACE_M))
 	return col
 
 
@@ -112,7 +113,6 @@ func _sheet(founder: Character) -> VBoxContainer:
 	col.add_child(SprintUiShared.prose(founder.character_name, &"TitleH2"))
 	var origin: Dictionary = FounderConstants.origin_by_id(GameState.origin)
 	col.add_child(_above(UiFactory.D_tag(tr(String(origin.name_key)), &"outline"), UiTokens.SPACE_M))
-	col.add_child(_above(SprintUiShared.prose(tr(String(origin.quote_key)), &"OriginQuote"), UiTokens.SPACE_L))
 	col.add_child(_above(_section("HR_DOSSIER_SKILLS"), UiTokens.SPACE_XXL))
 	var skills := SprintUiShared.column(0)
 	col.add_child(_above(skills, UiTokens.SPACE_M))

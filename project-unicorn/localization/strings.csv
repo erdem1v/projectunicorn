@@ -455,7 +455,7 @@ PER_PHASE_GOAL,BU FAZIN HEDEFİ,THIS PHASE'S GOAL
 PER_GOAL_TRACTION,Geliri büyüt ve markayı kur,Grow revenue and build the brand
 PER_GOAL_SERIES_A,Masaya otur ve turu kapat,Get to the table and close the round
 PER_NET_WORTH,NET SERVET,NET WORTH
-PER_NO_VALUATION,Değerleme henüz yok. Seed turunda belirlenir.,No valuation yet. Your seed round sets it.
+PER_NO_VALUATION,Değerleme henüz yok.,No valuation yet.
 PER_VALUATION_ROW,Değerleme · {value},Valuation · {value}
 HR_BADGE_IDLE,Boşta,Idle
 HR_BADGE_OVERLOADED_JOBS,Aşırı yük,Overloaded
@@ -491,7 +491,6 @@ HR_KPI_EMPLOYEES,Çalışan,Employees
 HR_KPI_MORALE,Ortalama moral,Average morale
 HR_SEARCH_START,İşe alım başlat,Start recruitment
 HR_EMPTY_ROW,Henüz kimse yok,Nobody here yet
-HR_EMPTY_ADDS,Ürün seçilince bir işe alım haftada {pts} sprint puanı ekler · aylık {money} ile başlar,Once a product is picked a hire adds {pts} sprint points a week · from {money} a month
 HR_STATE_TRAINING,Eğitimde · {n} hafta,In training · {n} weeks
 HR_STATE_TRAINING_ONE,Eğitimde · 1 hafta,In training · 1 week
 HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
@@ -551,7 +550,6 @@ TAB_RND,Ar-Ge,R&D
 TAB_PERSONAL,Kişisel,Personal
 TAB_EVENTS,Olaylar,Events
 TAB_SETTINGS,Ayarlar,Settings
-RAIL_LOCK_AFTER_V1,v1.0'dan sonra,After v1.0
 FIN_PHASE_BOOTSTRAP,Bootstrap,Bootstrap
 FIN_PHASE_TRACTION,Traction,Traction
 FIN_PHASE_SERIES_A,Series A,Series A

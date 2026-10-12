@@ -216,18 +216,24 @@ const FOUNDER_STATE_IDLE := "idle"
 ##
 ## İKİ SÜREKLİ İŞ İÇİN SEKİZİNCİ BİR DURUM İCAT EDİLMEZ: §2.3 kapalı bir tablodur. Satır
 ## §12.2'nin çalışan grameri ödünç alır — iki ayrı işin kısa etiketi, `·` ile. Meşgul
-## durumlar (eğitim, yatırım hazırlığı) atamanın üstünü örter, o yüzden önce gelir.
+## durumlar (eğitim, yatırım hazırlığı) atamanın üstünü örter, o yüzden önce gelir. Satır ofisin
+## gördüğünü söyler: gece uyur, yapım atamasının kartı yoksa (sprint arası) planlama yapar.
 static func founder_task_label() -> String:
 	var f: Character = CharacterRegistry.get_founder()
-	if f != null and f.assigned_job_ids.size() > 1 \
-			and f.status != HRConstants.STATUS_TRAINING \
-			and not bool(GameState.get_flag("pitch_prep_active", false)):
-		var parts := PackedStringArray()
-		for job in f.assigned_job_ids:
-			parts.append(HRConstants.job_label(String(job)))
-		return " · ".join(parts)
+	var busy: bool = f != null and (f.status == HRConstants.STATUS_TRAINING \
+		or bool(GameState.get_flag("pitch_prep_active", false)))
+	if f != null and not busy:
+		if TimeManager.is_night():
+			return TranslationServer.translate("OFFICE_ACT_SLEEP")
+		if f.assigned_job_ids.size() > 1:
+			var parts := PackedStringArray()
+			for job in f.assigned_job_ids:
+				parts.append(HRConstants.job_label(String(job)))
+			return " · ".join(parts)
 	var state: String = founder_task_state()
 	var waiting: String = job_waiting_key(HRConstants.JOB_BUILD) if state == FOUNDER_STATE_BUILD else ""
+	if state == FOUNDER_STATE_BUILD and waiting == "" and SprintSystem.role_of(f.id) == "":
+		return TranslationServer.translate("OFFICE_ACT_PLAN")
 	return TranslationServer.translate(waiting if waiting != "" else "HR_FOUNDER_STATE_%s" % state.to_upper())
 
 

@@ -128,7 +128,7 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_paint)
 	EventBus.language_changed.connect(_paint.unbind(1))
 	EventBus.palette_changed.connect(_paint.unbind(1))
-	# v1.0 opens the tabs gated "live" and Ar-Ge's tree.
+	# v1.0 opens Ar-Ge's tree.
 	EventBus.version_shipped.connect(_on_version_shipped)
 	_paint()
 
@@ -226,11 +226,8 @@ func _place_gate_dot(dot: Panel, icons: bool) -> void:
 	dot.offset_bottom = at.y + px
 
 
-## A tab gated "live" waits for v1.0; the demo build says which build opens a tab gated "ea"; any
-## other build, or gate, says "soon".
+## The demo build says which build opens a tab gated "ea"; any other build, or gate, says "soon".
 func _lock_reason(gate: String) -> String:
-	if gate == "live":
-		return "RAIL_LOCK_AFTER_V1"
 	return "ENDING_BADGE_EA" if gate == "ea" and EndingsSystem.build_scope() == EndingsSystem.BUILD_DEMO \
 		else "SYS_SOON"
 

@@ -61,10 +61,6 @@ func _init() -> void:
 		var kpi := UiFactory.D_kpi(tr(key), "")
 		_kpis.append(kpi)
 		slot.add_child(kpi)
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slot.add_child(gap)
-	slot.add_child(HRUiShared.D_skill_legend())
 	frame_options = {"title": "TAB_HR", "kpi": slot, "pad": Vector2i.ZERO}
 
 
@@ -414,16 +410,6 @@ func _add_group(group_id: String, compact: bool) -> void:
 	if roster.is_empty():
 		_list.add_child(HRUiShared.D_empty_row(tr("HR_EMPTY_ROW"), tr("HR_SEARCH_START"), open_atlas,
 			EventGate.active_id() != ""))
-		# Sales and customer roles hold no sprint role, so only these two groups say what a hire adds.
-		if group_id in [HRConstants.GROUP_PRODUCT_DESIGN, HRConstants.GROUP_DEVELOPMENT]:
-			var floors: Array = []
-			for role: String in HRConstants.ROLE_GROUP:
-				if HRConstants.ROLE_GROUP[role] == group_id:
-					floors.append(HRConstants.salary_band_for_level(role, HRConstants.LEVEL_JUNIOR)[0])
-			_list.add_child(UiFactory.make_label(tr("HR_EMPTY_ADDS").format({
-				"pts": int(SprintCatalog.cfg("person_points_week")),
-				"money": Fmt.money_exact(floors.min()),
-			}), &"MetaMuted"))
 		return
 	# Dikkat isteyen satırlar üste. sort_custom kararlı DEĞİL ve çoğu ağırlık 0, o yüzden
 	# hire_day ve id ile kesin tiebreak: sıra her yeniden kurmada aynı kalır.

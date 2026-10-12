@@ -180,6 +180,9 @@ static func note(glyph: String, text: String, ink: Variant = null) -> HBoxContai
 ## Karonun beş durumundan hangisi. TEK EV: hem karo hem kart buradan okur, yoksa
 ## aynı düğüm iki yerde iki farklı şey görünür.
 static func tile_state(node_id: String) -> String:
+	# Before v1 the whole tree stands as locked slots: its shape shows, nothing can start.
+	if not RnDSystem.tree_open():
+		return TILE_LOCKED
 	match RnDSystem.state_of(node_id):
 		RnDSystem.STATE_DONE: return TILE_DONE
 		RnDSystem.STATE_ACTIVE: return TILE_FROZEN if RnDSystem.is_frozen() else TILE_RUNNING

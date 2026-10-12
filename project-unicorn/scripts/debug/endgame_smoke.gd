@@ -415,7 +415,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"research_completion_no_economic_delta": fail = _case_research_completion_no_economic_delta()
 		"paused_job_resumes_on_direct_return": fail = _case_paused_job_resumes_on_direct_return()
 		"split_bars_name_their_cause": fail = _case_split_bars_name_their_cause()
-		"rnd_rail_open_with_waiting_page": fail = _case_rnd_rail_open_with_waiting_page()
+		"rnd_rail_open_with_locked_tree": fail = _case_rnd_rail_open_with_locked_tree()
 		"rnd_note_author_and_lines": fail = _case_rnd_note_author_and_lines()
 		"card_math_matches_gdd_example":  fail = _case_card_math_matches_gdd_example()
 		"save_v10_product_state":         fail = _case_save_v10_product_state()
@@ -14895,14 +14895,13 @@ static func _case_split_bars_name_their_cause() -> String:
 ## yapıda gerçekten yok; Ar-Ge var, bitti, yalnız henüz açılmadı. YAKINDA rozeti artık tek
 ## şey demektir — bu yapıda yok — ve başka hiçbir şey onu giymez.
 ##
-## Kapı DEĞİŞMEDİ: `RnDSystem.tree_open()`. Değişen yalnız v1 öncesinin görüntüsü: tek satır,
-## kilitli yuva yok, hayalet ağaç yok.
+## Kapı DEĞİŞMEDİ: `RnDSystem.tree_open()`. v1 öncesinin görüntüsü: ağaç çizilir, bütün karolar kilitli.
 ##
 ## FALSİFİKASYON: `ui_tokens.gd`'nin rnd satırına `"lock": "v1_shipped"` geri koy → rozetsizlik
 ## iddiası FAIL. `left_tabs._refresh_rnd_badge`'deki `tree_open()` korumasını sil ve okunmamış
-## raporu zorla → rozet-sıfır iddiası FAIL. `_ready`'deki `add_child(_closed())` satırını `_build()` yap →
-## bekleme satırı iddiası FAIL.
-static func _case_rnd_rail_open_with_waiting_page() -> String:
+## raporu zorla → rozet-sıfır iddiası FAIL. `RnDUiShared.tile_state`'ten `tree_open()` dalını sil →
+## kilitli karo iddiası FAIL.
+static func _case_rnd_rail_open_with_locked_tree() -> String:
 	ProductLines.reload()
 	ResearchTree.reload()
 	RnDSystem.reset()
@@ -14925,7 +14924,7 @@ static func _case_rnd_rail_open_with_waiting_page() -> String:
 	if String(mkt_row.get("lock", "")) != "ea":
 		return "Marketing lost its lock; YAKINDA must still mean 'not in this build'"
 
-	# --- SAYFA TARAFI: v1 öncesi bekleme satırı, sonrası ağaç ---
+	# --- SAYFA TARAFI: v1 öncesi de ağaç, karoları kilitli ---
 	var host: Node = EventBus
 	var shell: Node = load("res://scenes/main/GameShell.tscn").instantiate()
 	host.add_child(shell)
@@ -14939,14 +14938,16 @@ static func _case_rnd_rail_open_with_waiting_page() -> String:
 		shell.queue_free()
 		return "the Ar-Ge tab did not mount — is it still falling to the placeholder?"
 
-	var waiting: String = TranslationServer.translate("RND_TREE_CLOSED")
-	if not _node_tree_has_text(page, waiting):
+	if _node_tree_has_text(page, TranslationServer.translate("RND_TREE_CLOSED")):
 		shell.queue_free()
-		return "before v1 the page does not carry the waiting line"
-	# TEK SATIR: ağacın hiçbir parçası çizilmemeli.
-	if _node_tree_has_text(page, TranslationServer.translate("RND_LEGEND_INTRA")):
+		return "before v1 the page still carries the waiting line"
+	if not _node_tree_has_text(page, TranslationServer.translate("RND_LEGEND_INTRA")):
 		shell.queue_free()
-		return "the waiting page drew the tree legend; it must be ONE line and nothing else"
+		return "before v1 the page did not draw the tree"
+	for id in ResearchSeam.NODES.keys():
+		if RnDUiShared.tile_state(String(id)) != RnDUiShared.TILE_LOCKED:
+			shell.queue_free()
+			return "before v1 the tile '%s' is not locked" % id
 
 	# Rozet: ağaç açılmadan Ar-Ge'de sayılacak hiçbir şey yok, ve koruma AÇIKÇA yazılı.
 	var rail: Node = shell.find_child("LeftTabs", true, false)
@@ -18945,7 +18946,7 @@ static func _case_event_v3_seams() -> String:
 	# FALSİFİKASYON: ModuleLocks.is_open'ın _override dalını sil → dördüncü iddia FAIL;
 	# hr.weeks_since_last_hire'ı en BÜYÜK kıdeme çevir → sonuncusu FAIL.
 	const ModuleLocks := preload("res://scripts/systems/module_locks.gd")
-	var want: Dictionary = {"marketing": false, "product": true, "rnd": true}
+	var want: Dictionary = {"marketing": false, "product": true, "rnd": true, "piyasa": true}
 	for id in want:
 		if EvSeams.read("build.module_unlocked." + String(id)) != want[id]:
 			return "build.module_unlocked.%s demo build'de %s olmalı" % [id, want[id]]

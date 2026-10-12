@@ -2,8 +2,7 @@ extends RefCounted
 
 # MODULE LOCKS — is a module's page reachable in this build? `UiTokens.TABS` carries a NAMED
 # gate (`"lock": "ea"`) rather than a boolean, so UiTokens stays free of game state: "ea" never
-# opens in this build, "live" opens with v1.0, and an unknown gate counts as LOCKED, because an
-# unfinished page must not open on the player.
+# opens in this build; any gate name locks its row, because an unfinished page must not open on the player.
 #
 # ONE HOME for that rule: the rail asks through LeftTabs._is_locked and content asks through
 # the `build.module_unlocked.<id>` seams, and both land here.
@@ -24,10 +23,7 @@ static func is_open(id: String) -> bool:
 		return bool(_override[id])
 	for row in UiTokens.TABS:
 		if String(row.id) == id:
-			match String(row.get("lock", "")):
-				"": return true
-				"live": return ProductState.is_live()
-				_: return false
+			return not row.has("lock")
 	return false
 
 

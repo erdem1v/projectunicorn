@@ -77,10 +77,6 @@ static func _window() -> PanelContainer:
 	kpis.add_child(UiFactory.D_kpi(_tr("HR_COL_EMPLOYEE"), "5"))
 	kpis.add_child(UiFactory.D_kpi(_tr("HR_COL_MORALE"), ""))
 	kpis.add_child(UiFactory.D_kpi(_tr("HR_COL_SALARY"), Fmt.money_exact(43600)))
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	kpis.add_child(gap)
-	kpis.add_child(HRUiShared.D_skill_legend())
 	head_row.add_child(kpis)
 	col.add_child(head)
 
