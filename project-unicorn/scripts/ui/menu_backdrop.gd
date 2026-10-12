@@ -3,14 +3,19 @@ extends Control
 ## A 3D place behind a screen with no run: the office view's world without its people and map, lit at a fixed minute,
 ## with no clock, input or game state. The plate baked from the same scene stands from the first frame; the scene
 ## fades in over it once its model has loaded off the main thread. The low graphics preset keeps the plate alone.
-## An office is framed close on one figure standing in it, with every light on; the city has none.
+## An office is framed close on one figure standing in it, with every light on; the city has none, and stands in the
+## menu's warm greys (menu_grade.gdshader), cropped close enough that only blocks and streets fill the frame.
 
 signal live_ready
 
 const OFFICE_VIEW := preload("res://scenes/office/OfficeView.tscn")
 const GraphicsSettingsLib := preload("res://scripts/systems/graphics_settings.gd")
+const GRADE := preload("res://scenes/menu/menu_grade.gdshader")
 const MENU_FADE_S := 0.6       # [WORKING] plate to live scene
-const MENU_CITY_ZOOM := 1.75   # [WORKING] the city closer than the camera's fit
+const MENU_CITY_ZOOM := 2.8    # [WORKING] the city closer than the camera's fit: only blocks and streets fill the frame
+const MENU_CITY_FOCUS := Vector2(-0.05, 0.3)   # [WORKING] the frame's centre from the fit's, in frame heights (right, up)
+## Scene nodes the menu's city goes without.
+const MENU_CITY_HIDDEN := [&"ferry", &"boat_0", &"boat_1", &"boat_2", &"boat_3"]
 const MENU_STAGE_ZOOM := 7.4   # [WORKING] the office this much closer than the fit: the figure stands 460 of 1080 px tall
 const MENU_STAGE_POS := Vector3(2.2, 0.0, 3.9)   # [WORKING] the figure's spot: the bookcase behind, the dining table beside
 ## Where the figure's feet stand from the frame's centre, in frame heights (right, down): the figure fills the portrait
@@ -114,8 +119,17 @@ func _process(_delta: float) -> void:
 		_camera.focus(MENU_STAGE_POS - (_camera.global_basis.x * MENU_STAGE_FEET.x
 			- _camera.global_basis.y * MENU_STAGE_FEET.y) * frame_h, _camera.fit_zoom, 0.0)
 	else:
+		# The city in the menu's warm greys, without its boats.
+		var grade := ShaderMaterial.new()
+		grade.shader = GRADE
+		grade.set_shader_parameter("tone", UiTokens.D_SURFACE_0)
+		%Live.material = grade
+		for hidden: StringName in MENU_CITY_HIDDEN:
+			scene.find_child(hidden, true, false).visible = false
 		_camera.fit_zoom *= MENU_CITY_ZOOM
-		_camera.focus(_camera.fit_target, _camera.fit_zoom, 0.0)
+		var frame_h := OfficeCamera.FH / _camera.fit_zoom
+		_camera.focus(_camera.fit_target + (_camera.global_basis.x * MENU_CITY_FOCUS.x
+			+ _camera.global_basis.y * MENU_CITY_FOCUS.y) * frame_h, _camera.fit_zoom, 0.0)
 	# The view takes the container's size a frame after it joins, and again on every resize.
 	_sub.size_changed.connect(_camera.refit)
 	if not _figure.is_empty():
