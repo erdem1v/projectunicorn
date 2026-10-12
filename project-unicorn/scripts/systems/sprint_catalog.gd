@@ -374,8 +374,7 @@ static func card_effect(card: Dictionary) -> Array:
 
 
 ## SPRINT SONUNDA: kartların hepsi bitmiş varsayılır; yalnız değişen alanlar, zamanında talepler,
-## tutulan sözler, kalkan "!" ve kapanan ticket sayısı. Söz betada bir sprint daha bekler, talep
-## beklemez. Kapısı kapanmış kart başlatmada sonraki sütuna geçeceği için sayılmaz.
+## tutulan sözler, kalkan "!" ve kapanan ticket sayısı. Kapısı kapanmış kart başlatmada sonraki sütuna geçeceği için sayılmaz.
 static func forecast(card_ids: Array) -> Array:
 	var cards: Array = card_ids.map(card_by_id).filter(func(c: Dictionary) -> bool: return gate_reason(c.step) == "")
 	var tiers: Dictionary = {}
@@ -686,9 +685,9 @@ static func open_requests() -> Array:
 		return r.status == "open" and CustomerRegistry.get_customer(String(r.customer_id)) != null)
 
 
-## Bu sprintte biten talep son tarihine yetişir mi: beta sürümü bir sprint geciktirir.
+## Bu sprintte biten talep son tarihine yetişir mi.
 static func _on_time(request: Dictionary) -> bool:
-	return SprintSystem.sprint_number() + int(_p().sprint.beta) <= int(request.due_sprint)
+	return SprintSystem.sprint_number() <= int(request.due_sprint)
 
 
 ## Kademeye verilmiş açık sözler, son tarihi yakın olan önde.

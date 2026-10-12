@@ -454,13 +454,12 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_mvp_three_identity_k1":          fail = _case_sprint_mvp_three_identity_k1()
 		"sprint_faulty_ticket_deterministic":    fail = _case_sprint_faulty_ticket_deterministic()
 		"sprint_fix_card_closes_tickets":        fail = _case_sprint_fix_card_closes_tickets()
-		"sprint_beta_delays_release":            fail = _case_sprint_beta_delays_release()
 		"sprint_starts_only_with_consent":       fail = _case_sprint_starts_only_with_consent()
 		"sprint_request_on_time_met":            fail = _case_sprint_request_on_time_met()
 		"sprint_paid_plan_opens_paid_tier":      fail = _case_sprint_paid_plan_opens_paid_tier()
 		"sprint_save_roundtrip":                 fail = _case_sprint_save_roundtrip()
 		"sprint_decision_blocks_progress":       fail = _case_sprint_decision_blocks_progress()
-		"sprint_beta_card_cannot_be_added":      fail = _case_sprint_beta_card_cannot_be_added()
+		"sprint_legacy_beta_cards_ship":         fail = _case_sprint_legacy_beta_cards_ship()
 		"sprint_release_resets_live_bugs":       fail = _case_sprint_release_resets_live_bugs()
 		"sprint_departure_restaffs_card":        fail = _case_sprint_departure_restaffs_card()
 		"sprint_never_stalls_in_plan":           fail = _case_sprint_never_stalls_in_plan()
@@ -17369,16 +17368,15 @@ static func _case_sprint_carry_keeps_progress() -> String:
 ## K1 çıkmasa da sonraki kapanışta aynı kapıya varır. Kapıda bir gün geçtikten sonra Yayınla (publish) ürünü
 ## CANLI v1.0 yapar: sinyaller (version_shipped ve "shipped") tam bir kez atılır, MVP bayrakları o gün yazılır;
 ## not ve kaydı aynıdır, yayın gününe tarihlenir, beklenen satırı MVP'nindir ve kapıda yazılan sonucu taşımaz;
-## ikinci publish bir şey yapmaz. Sonraki sürüm v1.1'dir. Beta açıkken biten kartlar bir sprint bekler, kapı da
-## bir kapanış sonra açılır.
+## ikinci publish bir şey yapmaz. Sonraki sürüm v1.1'dir.
 static func _case_sprint_mvp_three_identity_k1() -> String:
 	var versions: Array = []
 	var ships: Array = []
 	EventBus.version_shipped.connect(func(n: int) -> void: versions.append(n))
 	EventBus.build_phase_changed.connect(func(phase: String) -> void: ships.append(phase))
 	var lines: Array = []
-	# Sprint 1 brings one identity line to K1, sprint 2 (Beta as given) the other two.
-	var to_three := func(beta: bool) -> String:
+	# Sprint 1 brings one identity line to K1, sprint 2 the other two.
+	var to_three := func() -> String:
 		_seed_sprint()
 		for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
 			_sprint_hire("char_mvp_" + role_id, role_id)
@@ -17389,7 +17387,6 @@ static func _case_sprint_mvp_three_identity_k1() -> String:
 			return "one identity line at K1: gate %s, live %s, versions %s, ship signals %s; want neither" % [
 				GameState.product.release.gate, ProductState.is_live(), versions, ships]
 		SprintSystem.plan_next()
-		SprintSystem.set_beta(beta)
 		if not _play_sprint(["feat:%s_k1" % lines[1], "feat:%s_k1" % lines[2]]):
 			return "fixture: sprint 2 did not start"
 		return ""
@@ -17403,7 +17400,7 @@ static func _case_sprint_mvp_three_identity_k1() -> String:
 				sprint, r.gate, int(r.sprint), int(r.number), ProductState.is_live(), versions, ships,
 				GameState.get_flag("mvp_launch_day", -1)]
 		return ""
-	var fail: String = to_three.call(false)
+	var fail: String = to_three.call()
 	if fail == "":
 		fail = at_gate.call(2)
 	if fail != "":
@@ -17439,21 +17436,7 @@ static func _case_sprint_mvp_three_identity_k1() -> String:
 			or int(GameState.product.release.number) != 2:
 		return "the release after MVP: versions %s, ship signals %d, launch day %s, release %d; want v1.1" % [
 			versions, ships.size(), GameState.get_flag("mvp_launch_day", -1), int(GameState.product.release.number)]
-	# Beta: sprint 2's cards wait in it, so its close is no gate; the next close is.
-	SaveManager.reset_all_owners()
-	GameState.initialize_run({"seed": 424242})
-	versions.clear()
-	ships.clear()
-	fail = to_three.call(true)
-	if fail != "":
-		return "beta: " + fail
-	if GameState.product.release.gate or ProductState.is_live():
-		return "beta: sprint 2's close reads gate %s, live %s with its cards still in beta" % [
-			GameState.product.release.gate, ProductState.is_live()]
-	if not _play_sprint(["res:core"]):
-		return "fixture: beta sprint 3 did not start"
-	fail = at_gate.call(3)
-	return "" if fail == "" else "beta: " + fail
+	return ""
 
 
 ## Test rolü olmayan ekipte kartın Test fazı rolsüz, yarı hızla yapılır ve kart hatalı işaretlenir.
@@ -17523,51 +17506,6 @@ static func _case_sprint_fix_card_closes_tickets() -> String:
 	if SprintCatalog.candidates("core").any(func(c: Dictionary) -> bool: return c.kind == "fix"):
 		return "a fix card outlived its tickets"
 	return ""
-
-
-## Beta açıkken biten kart sürüme girmez, bir sprint "beta" bekler: sürüm numarası artmaz, kademe
-## yazılmaz. Sonraki kapanışta betadan çıkar ve sürüm olur; hatalı çıkış zarı orada betanın
-## ihtimalini okur (test sabiti: normal ihtimal sıfır, beta ihtimali zarın hemen üstü). Kart hatalı
-## olsun diye kurucunun rolleri Ürün ve Yazılım'a iner (test sabiti).
-static func _case_sprint_beta_delays_release() -> String:
-	_seed_sprint_live("note_tool")
-	_sprint_hire("char_beta_des", HRConstants.ROLE_DESIGNER)
-	var versions: Array = []
-	EventBus.version_shipped.connect(func(n: int) -> void: versions.append(n))
-	var saved: Array = [SprintCatalog.cfg("faulty_chance"), SprintCatalog.cfg("faulty_chance_beta"),
-		SprintCatalog.cfg("founder_roles")]
-	SprintCatalog._data.founder_roles = ["product", "dev"]
-	var run := func() -> String:
-		var line: String = SprintCatalog.capabilities("core")[3]
-		var id: String = "feat:%s_k1" % line
-		SprintSystem.set_beta(true)
-		if not _play_sprint([id]):
-			return "fixture: sprint 1 did not start"
-		var r: Dictionary = GameState.product.release
-		if int(r.number) != 0 or not r.beta or ProductState.line_tier(line) != 0 or not versions.is_empty() \
-				or GameState.product.cards.get(id, {}).get("state", "") != "beta":
-			return "a card done under beta: release %d (beta %s), tier %d, versions %s; want it waiting in beta" % [
-				int(r.number), r.beta, ProductState.line_tier(line), versions]
-		SprintSystem.plan_next()
-		SprintSystem.set_beta(false)
-		var roll: float = float(absi(hash(str([id, SprintSystem.sprint_number()]))) % 1000) / 1000.0
-		SprintCatalog._data.faulty_chance = 0.0
-		SprintCatalog._data.faulty_chance_beta = roll + 0.001
-		var before: int = ProductState.bugs_confirmed()
-		if not _play_sprint(["res:core"]):
-			return "fixture: sprint 2 did not start"
-		if versions != [2] or ProductState.line_tier(line) != 1:
-			return "the sprint after beta: versions %s, tier %d; want the beta card released as v1.1" % [
-				versions, ProductState.line_tier(line)]
-		if ProductState.bugs_confirmed() - before != 1:
-			return "the beta card rolled %.3f under the beta chance and gave %d ticket(s), want 1" % [
-				roll, ProductState.bugs_confirmed() - before]
-		return ""
-	var fail: String = run.call()
-	SprintCatalog._data.faulty_chance = saved[0]
-	SprintCatalog._data.faulty_chance_beta = saved[1]
-	SprintCatalog._data.founder_roles = saved[2]
-	return fail
 
 
 ## Sprint oyuncunun onayı olmadan başlamaz. Planlanacak kart varken plan saati tutar, gün geçse de sprint
@@ -17753,9 +17691,38 @@ static func _case_sprint_paid_plan_opens_paid_tier() -> String:
 	return ""
 
 
+## Betada bekleyen kart yüklemede biten sayılır: sürüm notu açıkken sıradaki sprintin, değilken bu sprintin
+## kartı olur ve sıradaki kapanışta yayına girer.
+## FALSİFİKASYON: SprintSystem.finish_beta_cards'ın gövdesini boşalt → kart betada kalır ve FAIL.
+static func _case_sprint_legacy_beta_cards_ship() -> String:
+	_seed_sprint_live("note_tool")
+	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
+		_sprint_hire("char_legacy_" + role_id, role_id)
+	var id: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[3]
+	SprintSystem.add(id)
+	var p: Dictionary = GameState.product
+	p.sprint.cards.erase(id)
+	p.cards[id].state = "beta"
+	SprintSystem.finish_beta_cards()
+	if p.cards[id].state != "done" or id not in p.sprint.cards:
+		return "the beta card after the load: state %s, in the sprint %s; want it done and in the sprint" % [
+			p.cards[id].state, id in p.sprint.cards]
+	var versions: Array = []
+	EventBus.version_shipped.connect(func(n: int) -> void: versions.append(n))
+	if not _play_sprint([]):
+		return "fixture: the sprint with the old beta card did not start"
+	if versions != [2] or p.cards.has(id):
+		return "the old beta card at the next close: versions %s, card kept %s; want v1.1 and the card shipped" % [
+			versions, p.cards.has(id)]
+	p.cards["legacy"] = {"id": "legacy", "state": "beta"}
+	SprintSystem.finish_beta_cards()
+	if "legacy" not in p.next.cards:
+		return "a beta card loaded under the release note did not join the next sprint: %s" % [p.next.cards]
+	return ""
+
+
 ## Ürün durumu kayıtla gidip gelir: sprintin ortasında alınan kayıt kartları, ilerlemeyi, sürüm
-## geçmişini ve ticket defterini aynen ve aynı sırayla geri verir (betadaki kartlar saklandıkları
-## sırayla çıkar) ve yüklenen dünya sprinti kapatır.
+## geçmişini ve ticket defterini aynen ve aynı sırayla geri verir ve yüklenen dünya sprinti kapatır.
 ## FALSİFİKASYON: SaveManager._write_atomic'teki JSON.stringify'a sort_keys=true geri koy → FAIL.
 static func _case_sprint_save_roundtrip() -> String:
 	var slot: String = "smoke_sprint_%d" % OS.get_process_id()
@@ -17897,24 +17864,6 @@ static func _case_sprint_decision_blocks_progress() -> String:
 	SprintCatalog._data.decision.rate = rate
 	SprintCatalog._data.decision.cards = events
 	return fail
-
-
-## Betada bekleyen kart yerinden oynamaz: "+" (B2B müşteri satırı onu aday gibi sunar) onu bu
-## sprinte almaz, kart betada kalır ve sonraki kapanışta betanın ihtimaliyle çıkar.
-## FALSİFİKASYON: SprintSystem._movable'dan "beta"yı çıkar → FAIL.
-static func _case_sprint_beta_card_cannot_be_added() -> String:
-	_seed_sprint_live("note_tool")
-	_sprint_hire("char_betaadd_des", HRConstants.ROLE_DESIGNER)
-	var id: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[3]
-	SprintSystem.set_beta(true)
-	if not _play_sprint([id]) or GameState.product.cards.get(id, {}).get("state", "") != "beta":
-		return "fixture: %s is not waiting in beta" % id
-	SprintSystem.plan_next()
-	SprintSystem.add(id)
-	if id in GameState.product.sprint.cards or GameState.product.cards[id].state != "beta":
-		return "+ took the beta card into sprint 2 (sprint %s, state %s)" % [GameState.product.sprint.cards,
-			GameState.product.cards[id].state]
-	return ""
 
 
 ## Açık sürüm canlı hata havuzunu sıfırlar: sayaç ve aşınma ilerlemesi 0'dan başlar. Sürüm

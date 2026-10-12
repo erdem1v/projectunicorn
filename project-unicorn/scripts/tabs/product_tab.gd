@@ -238,7 +238,6 @@ func _act(kind: String, args: Dictionary) -> void:
 		"delegate": SprintSystem.set_delegate(args.on)
 		"plan_next": SprintSystem.plan_next()
 		"publish": SprintSystem.publish()
-		"beta": SprintSystem.set_beta(args.open)
 		"weeks": SprintSystem.set_weeks(args.weeks)
 		"apply_lead": SprintSystem.apply_lead()
 		"decide": INBOX.show(args.item)

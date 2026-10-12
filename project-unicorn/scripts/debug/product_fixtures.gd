@@ -10,7 +10,7 @@ const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], "plan_next": ["release", "replan"]}
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
 const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "pm_started": "c2", "release": "c3",
-	"no_release": "c3", "no_release_beta": "c3", "gate": "c3", "beta_open": "c3", "b2b_no_requests": "c5",
+	"no_release": "c3", "gate": "c3", "b2b_no_requests": "c5",
 	"goal_menu": "c4", "approved": "c4"}
 ## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
 const AREAS := {
@@ -94,7 +94,6 @@ func _build(id: String) -> Dictionary:
 				_deck("etiketler", SprintCard.State.PLANLANAN),
 				_deck("akilli_arama", SprintCard.State.KILITLI, {"locked_node": tr("PROD_LOCK_RESEARCH").format({"node": _p("Gelişmiş arama", "Advanced search")}),
 					"locked_rnd": "semantic_index"}),
-				_deck("baglanti", SprintCard.State.BETA_BEKLIYOR),
 				_deck("efatura", SprintCard.State.SPRINT_AKTIF, {"phases": WAITING, "queued": true}),
 			] + _active_cards()
 			m.ui.hover_card = "mobil_giris"
@@ -118,15 +117,13 @@ func _build(id: String) -> Dictionary:
 			_place(m, "ilk_tur", "center")
 		"empty_start":
 			_clear_sprint(m)
-		"no_release", "no_release_beta":
+		"no_release":
 			# MVP öncesi kapanış, hiç kart bitmedi: sürüm yok, çıkan yok, hız sıfır, basın satırı yok; v1.0'a
-			# iki kart kaldı. Beta varyantında kanal açık (release.beta): not yine etiketsiz, beta satırı yok.
+			# iki kart kaldı.
 			m.versions = []
 			m.header.live_version = ""
 			m.center.mvp_line = _mvp_line()
 			m.center.release.version = ""
-			m.center.release.beta = id == "no_release_beta"
-			m.center.beta.open = id == "no_release_beta"
 			m.center.release.shipped = []
 			m.center.release.velocity.done = 0
 			m.center.release.press = {}
@@ -140,10 +137,6 @@ func _build(id: String) -> Dictionary:
 			m.center.release.gate = true
 			m.center.release.press = {}
 			m.center.release.result = null
-		"beta_open":
-			m.center.release.beta = true
-			m.center.beta.open = true
-			m.header.live_version = "1.4"
 		"b2b_no_requests":
 			m.customers = []
 			m.next.flags = []
@@ -179,11 +172,6 @@ func _apply(m: Dictionary, kind: String, args: Dictionary) -> void:
 		"add", "pull": _place(m, args.card_id, "center")
 		"send_next": _place(m, args.card_id, "next")
 		"remove": _place(m, args.card_id, "")
-		"beta":
-			var beta: Dictionary = m.center.beta
-			beta.open = not beta.open
-			if m.center.next_version != null:
-				m.center.next_version.beta_extra = beta.open
 		"weeks":
 			m.center.weeks = args.weeks
 		"apply_lead":
@@ -311,7 +299,7 @@ func _c2() -> Dictionary:
 	m.center = _center("active", _active_cards(), {
 		"capacity": {"total": 12, "done": 2},
 		"status": {"done": 1, "running": 1, "queued": 0, "decisions": 1},
-		"next_version": {"label": _version("1.5"), "weeks": 1, "beta_extra": false},
+		"next_version": {"label": _version("1.5"), "weeks": 1},
 	})
 	return m
 
@@ -324,7 +312,6 @@ func _c3() -> Dictionary:
 	var carried := _deck("filtreli", SprintCard.State.DEVREDEN)
 	m.center = _center("release", [], {"week": 2, "release": {
 		"version": _version("1.5"),
-		"beta": false,
 		"gate": false,
 		"rnd_open": false,
 		"shipped": [_deck("kisa_kayit", SprintCard.State.BITTI), _deck("kesinti", SprintCard.State.BITTI)],
@@ -557,7 +544,7 @@ func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 		"idle_text": "", "cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "queued": 0, "decisions": 0},
 		"empty": false, "pm_started": "", "plan_hold": false, "delegate": null,
 		"next_version": null, "mvp_line": null, "can_add": false, "spare": false, "ceiling_pct": 125, "can_start": false,
-		"start_reason": "", "rnd_node": null, "beta": {"open": false}, "lead_tip": null, "release": null}
+		"start_reason": "", "rnd_node": null, "lead_tip": null, "release": null}
 	c.merge(extra, true)
 	_resum(c)
 	return c

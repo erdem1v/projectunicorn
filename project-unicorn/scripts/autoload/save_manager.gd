@@ -303,6 +303,8 @@ func apply_loaded_state(payload: Dictionary) -> bool:
 	# A save can carry a promise with an empty feature_id, which would keep has_open_promise
 	# true forever. Runs after the registries because it reads what they restored.
 	PromiseRegistry.drop_targetless()
+	# A save from the beta channel's days may hold cards waiting in beta.
+	SprintSystem.finish_beta_cards()
 	# A save written before people had looks gets them here, apart from the restored team; one
 	# from before the funds had people gets those too.
 	CharacterRegistry.fill_missing_looks()
@@ -510,8 +512,7 @@ func _use_dir(path: String) -> void:
 
 
 func _write_atomic(path: String, payload: Dictionary) -> bool:
-	# Keys keep their order: the sprint ships beta cards in the order they were stored, and a
-	# sorted save would replay a different release after loading.
+	# Keys keep their order: a sorted save would hand the product's ledgers back in another order.
 	var text: String = JSON.stringify(payload, "\t", false)
 	# A crash mid-save, or a write that did not land whole, must never cost both the new save
 	# and the old one.
@@ -875,7 +876,7 @@ func _migrate_15(state: Dictionary) -> void:
 	var releases: Array = (flags.get("mvp_version_history", []) as Array).map(func(v: Dictionary) -> Dictionary:
 		var n: int = int(v.version)
 		return {"number": n, "sprint": -1, "shipped": [], "carried": [], "velocity": {"done": 0, "total": 0},
-			"expected": {}, "actual": {}, "press": {}, "beta": false, "day": int(v.day), "changed_areas": [],
+			"expected": {}, "actual": {}, "press": {}, "day": int(v.day), "changed_areas": [],
 			"alerts_cleared": []})
 
 	var product: Dictionary = SprintSystem.new_state(today)

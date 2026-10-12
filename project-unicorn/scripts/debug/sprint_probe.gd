@@ -1,14 +1,14 @@
 extends RefCounted
 
 # --sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:start=<hour>][:seeds=1][:seed=424242][:events=0|1][:rate=<r>]
-# [:beta=0|1][:lead=0|1][:gate=publish|more][:team=<n>][:weeks=<1|2>][:fill=0|1]: does the Product screen's sprint
+# [:lead=0|1][:gate=publish|more][:team=<n>][:weeks=<1|2>][:fill=0|1]: does the Product screen's sprint
 # plan come true? A founder builds note_tool for t ticks on each of the seeds seed, seed+1, …, the company working
 # h hours from start (the game's default start hour unless given); team=N adds N-1 mid-skilled employees in HIRES
 # order, weeks= picks the sprint length in Sprint 1's planning. Every sprint is planned and started here on the tick
 # it opens, so the ledger measures the engine, not a player's delay: cards=N tops it up to N cards (the
 # carried ones stay, the open Core K1 candidates follow by effort, each through SprintSystem.add),
 # fill=1 adds every open card the way "+" takes them instead (SprintCatalog.open_cards, cards= is not read),
-# lead=1 takes the lead's plan instead, beta=1 opens Beta; a sprint with nothing to start ends the seed.
+# lead=1 takes the lead's plan instead; a sprint with nothing to start ends the seed.
 # The MVP gate is answered on the tick it opens: gate=publish (the default) ships v1.0 there, gate=more takes
 # one more sprint and ships at the next close's gate.
 # The plan the screen draws (SprintSystem.plan_outcome) is read when its sprint starts and checked when it
@@ -49,7 +49,7 @@ static var _sum: Dictionary = {}
 
 static func run(spec: String, payload: Dictionary) -> bool:
 	var o: Dictionary = {"start": HRConstants.START_HOUR_DEFAULT, "seeds": 1, "seed": 424242, "events": 0,
-		"beta": 0, "lead": 0, "gate": "publish", "team": 1, "fill": 0}
+		"lead": 0, "gate": "publish", "team": 1, "fill": 0}
 	for part in spec.split(":"):
 		var key: String = part.get_slice("=", 0)
 		if key == "gate":
@@ -74,7 +74,6 @@ static func run(spec: String, payload: Dictionary) -> bool:
 			_hire(n)
 		WorkHoursSystem.set_company_start_hour(int(o.start))
 		WorkHoursSystem.set_company_hours(int(o.hours))
-		SprintSystem.set_beta(o.beta == 1)
 		if o.has("weeks"):
 			SprintSystem.set_weeks(int(o.weeks))
 		var going: bool = _plan(seed_value, o, verdicts)

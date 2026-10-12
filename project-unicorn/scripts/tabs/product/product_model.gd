@@ -8,7 +8,7 @@ extends RefCounted
 # PRD terimi → sözleşme adı:
 #   Alan → area {id, name} · Yetenek / Kademe → capability {name, tier 0..3}
 #   Kart → card {id, kind, effort, roles, phases, state, assignees, effect}
-#   Sprint → center {sprint, capacity, cards, beta} · Sürüm → center.release {version, shipped, carried, velocity, press}
+#   Sprint → center {sprint, capacity, cards} · Sürüm → center.release {version, shipped, carried, velocity, press}
 #   tür yeni/cila/düzeltme/araştırma → kind feature|polish|fix|research
 #   kart durumları → SprintCard.State · fazlar → phases [design, dev, test], her biri done|active|waiting
 #   roller → roles: design|dev|test|product (en çok üç ikon)
@@ -42,15 +42,15 @@ extends RefCounted
 #           cards: [card], forecast: [part], status: {done, running (işçili), queued, decisions},
 #           empty (koşan sprint kartsız başladı), pm_started: "" or String (sprinti devirle başlatan PM'in adı),
 #           plan_hold (planlama oyuncuyu bekliyor, saat duruyor), delegate: {on, name (PM)} or null (PM yok),
-#           next_version: {label, weeks: int or -1, beta_extra} or null (MVP öncesi),
-#           mvp_line: {version, area, need, done (biten ve betada bekleyen dahil), sprint (-1 = tahmin yok), week}
+#           next_version: {label, weeks: int or -1} or null (MVP öncesi),
+#           mvp_line: {version, area, need, done (bu sprintte biten dahil), sprint (-1 = tahmin yok), week}
 #                     or null (canlıda),
 #           can_add (sprint kart alıyor, kartsız soru), spare (planda hiçbir karta gitmeyen puan var),
 #           ceiling_pct (yükün "+" kapanan eşiği, yüzde), can_start,
-#           start_reason: "" or String (başlat kapalıysa kapanan koşul), beta: {open} or null,
+#           start_reason: "" or String (başlat kapalıysa kapanan koşul),
 #           rnd_node: {id (araştırdığı düğüm), text ("Kurucu Ar-Ge'de: …")} or null (kurucu Ar-Ge'de değil),
 #           lead_tip: person + {text, self (lider kurucunun kendisi)} or null,
-#           release: {version: "v5" or "" (sürüm çıkmadı), beta, gate (MVP kapısı: Yayınla / Bir sprint daha;
+#           release: {version: "v5" or "" (sürüm çıkmadı), gate (MVP kapısı: Yayınla / Bir sprint daha;
 #                     başlık ve gövde mvp_line'dan), rnd_open (v1.0 notu: Ar-Ge açıldı), shipped: [card],
 #                     carried: [{name, kind, done (kesirli), total, to_sprint}], velocity: {done, total} (kesirli),
 #                     result: {kind: "expected"|"actual", text} or null, press: {outlet (anahtar), text} or {},
@@ -208,9 +208,9 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 	var decision: Variant = _decision()
 	var eta: Dictionary = SprintSystem.mvp_eta() if n > 0 else {}
 	var need: int = int(SprintCatalog.cfg("mvp_lines"))
-	# Sürüm koşulunda bu sprintte biten ve betada bekleyen Çekirdek K1'i de bitmiş sayılır.
+	# Sürüm koşulunda bu sprintte biten Çekirdek K1 de bitmiş sayılır.
 	var finished: int = p.get("cards", {}).values().filter(func(c: Dictionary) -> bool:
-		return c.area == "core" and int(c.target_tier) == 1 and c.state in ["done", "beta"]).size()
+		return c.area == "core" and int(c.target_tier) == 1 and c.state == "done").size()
 	var cards: Array = []
 	var segments: Array = []
 	var load: float = 0.0
@@ -243,10 +243,6 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 		segments.append({"pts": pts})
 		load += pts
 		cards.append(card)
-	# Betada bekleyen kartlar bu sprintin sonunda yayına girer; kapasite tüketmez.
-	for c in p.get("cards", {}).values():
-		if c.state == "beta" and mode != "release":
-			cards.append(_card(c, SprintCard.State.BETA_BEKLIYOR))
 	var lead_ids: Array = SprintCatalog.lead_suggestion() if mode == "plan" and not sprint.get("lead_applied", false) else []
 	var warning: String = ""
 	if not team.is_empty() and not team.any(func(t: Dictionary) -> bool: return "test" in t.fits):
@@ -283,8 +279,7 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 		"delegate": {"on": bool(p.get("delegate", false)), "name": pm.character_name} if pm != null else null,
 		# MVP öncesi v1.0'ın tarihini sürüm koşulu verir; bu sprintin sonu onu vaat etmez.
 		"next_version": {"label": SprintSystem.version_label(ProductState.version() + 1),
-			"weeks": SprintSystem.weeks_left(),
-			"beta_extra": bool(sprint.get("beta", false))} if n > 0 and ProductState.is_live() else null,
+			"weeks": SprintSystem.weeks_left()} if n > 0 and ProductState.is_live() else null,
 		"mvp_line": null if n <= 0 or ProductState.is_live() else {"version": SprintSystem.version_label(1),
 			"area": SprintCatalog.area_short("core"), "need": need,
 			"done": need - SprintCatalog.mvp_cards_left() + finished,
@@ -292,7 +287,6 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 		"can_add": SprintSystem.can_add(), "spare": outcome.get("spare", 0.0) > SprintSystem.EPS,
 		"ceiling_pct": roundi(float(SprintCatalog.cfg("cap_ceiling")) * 100.0),
 		"can_start": can_start, "start_reason": reason, "rnd_node": rnd,
-		"beta": {"open": bool(sprint.get("beta", false))} if n > 0 else null,
 		"lead_tip": null if lead_ids.is_empty() else _person(lead).merged({"text": SprintCatalog.lead_sentence(lead_ids),
 			"self": lead.category == "founder"}),
 		"release": _release(release, lead) if not release.is_empty() else null,
@@ -303,11 +297,7 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 static func _release(r: Dictionary, lead: Character) -> Dictionary:
 	var press: Dictionary = r.get("press", {})
 	return {
-		# Betaya giden kartların sürümü bir sprint sonra çıkar: canlıda not o sürümün numarasını taşır. MVP
-		# öncesi kapanış sürüm çıkarmaz, beta açıkken de etiketsizdir.
-		"version": SprintSystem.version_label(ProductState.version() + 1 if r.beta and int(r.number) == 0
-			and ProductState.is_live() else int(r.number)),
-		"beta": r.beta,
+		"version": SprintSystem.version_label(int(r.number)),
 		"gate": r.get("gate", false),
 		# Ar-Ge ağacı v1.0 ile açılır.
 		"rnd_open": int(r.number) == 1,
@@ -348,8 +338,6 @@ static func _next(mode: String, outcome: Dictionary) -> Dictionary:
 		match c.state:
 			"carried":
 				cards.append(_planned(c, SprintCard.State.DEVREDEN, {"remaining": _remaining(c), "buttons": buttons}))
-			"beta":
-				cards.append(_card(c, SprintCard.State.BETA_BEKLIYOR))
 			_:
 				var ready: float = outcome.ready.get(id, -1.0) if mode == "plan" else SprintSystem.ready_share(c)
 				cards.append(_planned(c, SprintCard.State.PLANLANAN, {"buttons": buttons,

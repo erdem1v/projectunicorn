@@ -76,7 +76,7 @@ static func set_type_draft(d: Dictionary) -> void:
 static func new_state(day: int) -> Dictionary:
 	return {
 		"sprint": {"number": 1, "start_day": day, "status": "planning", "cards": [], "capacity": 0,
-			"beta": false, "lead_applied": false, "weeks": int(SprintCatalog.cfg("sprint_weeks"))},
+			"lead_applied": false, "weeks": int(SprintCatalog.cfg("sprint_weeks"))},
 		"next": {"number": 2, "cards": []},
 		"mode": "plan", "cards": {}, "release": {}, "releases": [], "polish": {},
 		"tickets": [], "ticket_seq": 0, "requests": [], "rival_hits": [],
@@ -110,7 +110,7 @@ static func send_next(card_id: String) -> void:
 static func remove(card_id: String) -> void:
 	var p: Dictionary = _p()
 	var card: Dictionary = p.cards.get(card_id, {})
-	if card.is_empty() or card.state in ["done", "beta"]:
+	if card.is_empty() or card.state == "done":
 		return
 	p.sprint.cards.erase(card_id)
 	p.next.cards.erase(card_id)
@@ -184,7 +184,7 @@ static func plan_next() -> void:
 			p.next.cards.erase(c.id)
 	var number: int = int(p.next.number)
 	p.sprint = {"number": number, "start_day": GameState.day, "status": "planning", "cards": p.next.cards,
-		"capacity": 0, "beta": bool(p.sprint.beta), "lead_applied": false, "weeks": sprint_weeks()}
+		"capacity": 0, "lead_applied": false, "weeks": sprint_weeks()}
 	p.next = {"number": number + 1, "cards": []}
 	p.release = {}
 	p.mode = "plan"
@@ -238,11 +238,13 @@ static func publish() -> void:
 	_changed()
 
 
-static func set_beta(open: bool) -> void:
-	if mode() != "plan":
-		return
-	_p().sprint.beta = open
-	_changed()
+## Beta kanalı günlerinden kalma kayıt: betada bekleyen kart biten sayılır ve sıradaki kapanışta yayına girer
+## (sürüm notu açıksa sıradaki sprintin kartı olarak).
+static func finish_beta_cards() -> void:
+	var p: Dictionary = GameState.product
+	for c in p.get("cards", {}).values().filter(func(c: Dictionary) -> bool: return c.state == "beta"):
+		c.state = "done"
+		(p.next if p.mode == "release" else p.sprint).cards.append(c.id)
 
 
 ## Sprintin süresi oyuncunun seçimidir (sprint.json `sprint_lengths`), yalnız planlamada değişir; sonraki
@@ -583,8 +585,7 @@ static func plan_outcome(ids: Array = []) -> Dictionary:
 ## K1 adayları efor sırasıyla; koşan sprintin kartları kilitlidir, öbür sprintlere sıradaki kartlar "+"un
 ## yüklemini geçtikçe girer, bitmeyen devreder; kartlarının hepsi biten sprint o hafta kapanır. Hafta hafta
 ## bugünkü ekiple oynanır, koşan sprintin mesai çarpanı sonraki sprintlere geçmez; karar bekleyen kart
-## beklemiyormuş gibi. Betada bekleyen K1 bitmiştir, bu sprintin kapanışında çıkar; beta açıksa yeni biten
-## kart bir sprint bekler. {sprint, week (kapanış tikinden bir önceki hafta)}; canlıda, ekip yokken ya da
+## beklemiyormuş gibi. {sprint, week (kapanış tikinden bir önceki hafta)}; canlıda, ekip yokken ya da
 ## MVP_HORIZON haftada bitmiyorsa {}.
 static func mvp_eta() -> Dictionary:
 	if ProductState.is_live() or capacity() <= 0:
@@ -605,11 +606,9 @@ static func mvp_eta() -> Dictionary:
 	var number: int = sprint_number() + int(mode() == "release")
 	var left: int = weeks_left()
 	var close: int = GameState.day + left
-	var need: int = SprintCatalog.mvp_cards_left() - p.cards.values().filter(func(c: Dictionary) -> bool:
-		return c.state == "beta" and k1.call(c)).size()
+	var need: int = SprintCatalog.mvp_cards_left()
 	if need <= 0:
 		return {"sprint": number, "week": close - 1}
-	var beta: int = int(p.sprint.beta)
 	for _w in MVP_HORIZON:
 		if not locked:
 			while not queue.is_empty() and _takes(cards, remaining(queue[0]), plain):
@@ -619,7 +618,7 @@ static func mvp_eta() -> Dictionary:
 		left -= 1
 		var shut: bool = left == 0 or _finished(cards)
 		if all.filter(func(c: Dictionary) -> bool: return k1.call(c) and phase(c) == PHASE_DONE).size() >= need:
-			return {"sprint": number + beta, "week": close - (left if shut else 0) - 1 + beta * weeks}
+			return {"sprint": number, "week": close - (left if shut else 0) - 1}
 		if shut:
 			cards = cards.filter(func(c: Dictionary) -> bool: return phase(c) < PHASE_DONE)
 			number += 1
@@ -979,9 +978,8 @@ static func _auto_start() -> void:
 	EventBus.sprint_auto_started.emit(sprint_number())
 
 
-## Sprint kapanışı: önceki sprintten betada bekleyenler ve bu sprintte bitenler (beta kapalıysa)
-## çıkar, etkileri uygulanır; bitmeyenler ilerlemesiyle sonraki sprinte devreder. Kimlik
-## yeteneklerinden üçü K1'e varınca kapanış sürüm kapısında durur, ürünü CANLI v1.0 yapan publish'tir;
+## Sprint kapanışı: bu sprintte biten kartlar çıkar, etkileri uygulanır; bitmeyenler ilerlemesiyle sonraki
+## sprinte devreder. Kimlik yeteneklerinden üçü K1'e varınca kapanış sürüm kapısında durur, ürünü CANLI v1.0 yapan publish'tir;
 ## canlıda çıkan kart her sürümde +0.1.
 ## Hâlâ bekleyen karar açık kalır: kâğıdı aynı dağıtımın olay yuvasında süresi dolup on_expire
 ## ile çözülür ve ertesi okumada kart serbest kalır; beklerken ilerlemediği için devretmiştir.
@@ -990,16 +988,13 @@ static func _close() -> void:
 	var sprint: Dictionary = p.sprint
 	var number: int = int(sprint.number)
 	var velocity: Dictionary = {"done": done_points(), "total": sprint.capacity}
-	var ship: Array = p.cards.values().filter(func(c: Dictionary) -> bool: return c.state == "beta")
-	var to_beta: Array = []
+	var ship: Array = []
 	var carried: Array = []
 	for c in _sprint_cards():
-		if c.state != "done":
-			carried.append(c)
-		elif sprint.beta:
-			to_beta.append(c)
-		else:
+		if c.state == "done":
 			ship.append(c)
+		else:
+			carried.append(c)
 	var areas: Array = SprintCatalog.area_ids()
 	var levels: Dictionary = {}
 	var alerts: Dictionary = {}
@@ -1029,13 +1024,11 @@ static func _close() -> void:
 						EventBus.line_completed.emit(c.line)
 						EventBus.delighter_shipped.emit(c.step)
 					new_code += ProductLines.effort_of(c.step)
-		var chance: float = SprintCatalog.cfg("faulty_chance_beta" if c.state == "beta" else "faulty_chance")
-		if c.faulty and float(absi(hash(str([c.id, number]))) % 1000) / 1000.0 < chance:
+		if c.faulty and float(absi(hash(str([c.id, number]))) % 1000) / 1000.0 < float(SprintCatalog.cfg("faulty_chance")):
 			faulty.append(c.line)
 		c.state = "done"
 		p.cards.erase(c.id)
-	# Araştırma ve bileti boşalmış düzeltme kartı sürüm yapmaz; betada yalnız onlar bekliyorsa not
-	# sonraki sürümü anmaz.
+	# Araştırma ve bileti boşalmış düzeltme kartı sürüm yapmaz.
 	var releases := func(c: Dictionary) -> bool:
 		return c.kind != "research" and not (c.kind == "fix" and c.tickets.is_empty())
 	# MVP'ye varan kapanış kapıda durur: ürün oyuncu yayınlayana dek kapalı kalır, kapanışın hatalı
@@ -1047,8 +1040,6 @@ static func _close() -> void:
 		_go_public(n, new_code, faulty)
 	elif gate:
 		p.gate_faulty = p.get("gate_faulty", []) + faulty
-	for c in to_beta:
-		c.state = "beta"
 	for c in carried:
 		c.state = "carried"
 		c.assignees = []
@@ -1069,7 +1060,7 @@ static func _close() -> void:
 		"carried": (carried + _carried_out()).map(func(c: Dictionary) -> Dictionary:
 			return {"id": c.id, "done": total(c) - remaining(c), "total": roundi(total(c)), "to_sprint": number + 1}),
 		"velocity": velocity, "expected": _expected(changed, closed), "actual": {}, "press": {},
-		"beta": to_beta.any(releases), "gate": gate, "day": GameState.day, "changed_areas": changed,
+		"gate": gate, "day": GameState.day, "changed_areas": changed,
 		"alerts_cleared": cleared}
 	release.press = SprintBridges.press_line(release)
 	var carried_ids: Array = carried.map(func(c: Dictionary) -> String: return c.id)
@@ -1190,9 +1181,9 @@ static func _finished(cards: Array) -> bool:
 	return not cards.is_empty() and cards.all(func(c: Dictionary) -> bool: return phase(c) == PHASE_DONE)
 
 
-## Koşan, bitmiş ya da betada bekleyen kart yerinden oynamaz; kilitli kademe alınmaz.
+## Koşan ya da bitmiş kart yerinden oynamaz; kilitli kademe alınmaz.
 static func _movable(c: Dictionary) -> bool:
-	return not c.is_empty() and c.state not in ["running", "done", "beta"] and SprintCatalog.gate_reason(c.step) == ""
+	return not c.is_empty() and c.state not in ["running", "done"] and SprintCatalog.gate_reason(c.step) == ""
 
 
 ## Başlamamış düzeltme kartının ticket'ları defterden okunur: koşunun erittikleri düşer, hattın

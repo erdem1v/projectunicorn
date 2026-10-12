@@ -194,7 +194,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
-  `seeds`, `seed`, `events`, `rate`, `beta`, `lead`, `gate`, `team`, `weeks`, `fill`; anlamları HARITA Ürün'de) headless
+  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team`, `weeks`, `fill`; anlamları HARITA Ürün'de) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
   `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`; MVP tahmini `mvp_eta`
   `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar.

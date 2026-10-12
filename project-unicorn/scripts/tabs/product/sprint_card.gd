@@ -5,7 +5,7 @@ extends PanelContainer
 # sütunu aynı sahneyi kullanır. Kart yalnız sözlüğünü çizer: hangi düğmenin olduğu (`buttons`) ve
 # "+"nın açıklığı (`addable`) modelden gelir. Sonraki sprinte planlanmış kart kesikli kenarlıdır.
 
-enum State { ADAY, ADAY_ALINMIS, SPRINT_PLAN, SPRINT_AKTIF, BITTI, DEVREDEN, PLANLANAN, KILITLI, BETA_BEKLIYOR }
+enum State { ADAY, ADAY_ALINMIS, SPRINT_PLAN, SPRINT_AKTIF, BITTI, DEVREDEN, PLANLANAN, KILITLI }
 ## WIDE orta sütun; NARROW sonraki sütun (ad iki satıra iner, durum etiketleri kendi satırında); LOW açık
 ## alan satırının içindeki dar kart; MINI çeyrek sütunu.
 enum Look { WIDE, NARROW, LOW, MINI }
@@ -190,7 +190,7 @@ func _tags() -> Array:
 		out.append(UiFactory.D_tag(tr("PRODUCT_CARD_NO_START").format({"n": int(_card.no_start)}), &"warn"))
 	if _card.urgent:
 		out.append(UiFactory.D_glyph_tag(SprintUiShared.WARN, tr("PRODUCT_URGENT"), &"warn"))
-	for row in [[state == State.DEVREDEN, "PRODUCT_CARRIED"], [state == State.BETA_BEKLIYOR, "PRODUCT_BETA_WAITING"],
+	for row in [[state == State.DEVREDEN, "PRODUCT_CARRIED"],
 			[_card.queued, "PRODUCT_QUEUED"], [_card.decision != null, "PRODUCT_DECISION_HALTED"],
 			[_card.effect.any(func(p: Dictionary) -> bool: return p.k == "promise"), "PRODUCT_PROMISED"]]:
 		if row[0]:

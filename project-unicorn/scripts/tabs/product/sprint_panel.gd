@@ -151,24 +151,20 @@ func _center(model: Dictionary) -> void:
 				action.emit.bind("skip", {})))
 			var skip := SprintUiShared.button(tr("PRODUCT_SKIP_SPRINT"), &"SecondaryButton", func() -> void:
 				confirm.visible = true)
-			col.foot().add_child(_foot_row(c, [skip, start]))
+			col.foot().add_child(_foot_row([skip, start]))
 			col.foot().add_child(confirm)
 		"active":
 			col.stack.add_child(SprintUiShared.section("PRODUCT_STATUS"))
 			col.stack.add_child(_status(c.status))
 			var nv: Variant = c.next_version
 			if nv != null:
-				var eta := PackedStringArray()
-				if nv.weeks >= 0:
-					eta.append(tr(Fmt.count_key("PRODUCT_IN_WEEKS", nv.weeks)).format({"n": nv.weeks}))
-				if nv.beta_extra:
-					eta.append(tr("PRODUCT_PLUS_ONE_SPRINT"))
 				var version := SprintUiShared.box(UiTokens.SPACE_L)
 				version.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_NEXT_RELEASE")), &"KeyLabel"))
 				version.add_child(SprintUiShared.label(String(nv.label), &"FigureValue"))
-				version.add_child(SprintUiShared.label(SprintUiShared.SEP.join(eta), &"MetaMuted"))
+				if nv.weeks >= 0:
+					version.add_child(SprintUiShared.label(tr(Fmt.count_key("PRODUCT_IN_WEEKS", nv.weeks)).format(
+						{"n": nv.weeks}), &"MetaMuted"))
 				col.foot().add_child(version)
-			col.foot().add_child(_foot_row(c, []))
 
 
 ## Kimse çalışamıyorken sütunun gövdesi: ekip glifi, not ve çıkış yolu (kurucu araştırıyorsa Ar-Ge, kadro
@@ -236,11 +232,8 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 	else:
 		var version := SprintUiShared.box(UiTokens.SPACE_XXL)
 		version.add_child(SprintUiShared.label(String(r.version), &"ReleaseValue"))
-		if not r.beta:
-			version.add_child(UiFactory.D_stamp(Fmt.upper(tr("PRODUCT_LIVE"))))
+		version.add_child(UiFactory.D_stamp(Fmt.upper(tr("PRODUCT_LIVE"))))
 		col.stack.add_child(version)
-		if r.beta:
-			col.stack.add_child(SprintUiShared.label(tr("PRODUCT_RELEASE_BETA"), &"MetaMuted"))
 
 	if not r.shipped.is_empty():
 		col.stack.add_child(SprintUiShared.section("PRODUCT_SHIPPED"))
@@ -296,7 +289,7 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 	hold.size_flags_horizontal = Control.SIZE_SHRINK_END
 	col.foot().add_child(hold)
 	var plan_next := action.emit.bind("plan_next", {"sprint": next_sprint})
-	col.foot().add_child(_foot_row(c, [
+	col.foot().add_child(_foot_row([
 		SprintUiShared.button(tr("PRODUCT_GATE_ONE_MORE"), &"SecondaryButton", plan_next),
 		SprintUiShared.button(tr("PROD_SHIP_PUBLISH"), &"PrimaryButtonDark", action.emit.bind("publish", {})),
 	] if r.gate else [SprintUiShared.button(tr("PRODUCT_PLAN_SPRINT").format({"n": next_sprint}), &"PrimaryButtonDark",
@@ -386,25 +379,9 @@ func _mvp_rule(line: Dictionary) -> Label:
 		&"MetaMuted")
 
 
-## Alt satır: solda beta kanalı (model veriyorsa) iki konumlu anahtarıyla, yalnız açık olmayan bölme
-## basılır; anahtar yalnız planlamada değişir ve orada altında kuralını yazar, öbür kiplerde sönüktür. Sağda
-## düğmeler, birincil en sağda.
-func _foot_row(c: Dictionary, buttons: Array) -> HBoxContainer:
+## Alt satır: sağda düğmeler, birincil en sağda.
+func _foot_row(buttons: Array) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_L)
-	if c.beta != null:
-		var plan: bool = c.mode == "plan"
-		var beta := SprintUiShared.column(UiTokens.SPACE_XS)
-		var toggle := SprintUiShared.box(UiTokens.SPACE_L)
-		toggle.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_BETA_CHANNEL")), &"KeyLabel"))
-		toggle.add_child(UiFactory.D_seg_pick([{"text": tr("PRODUCT_OFF")}, {"text": tr("PRODUCT_ON")}], int(c.beta.open),
-			func(i: int) -> void: action.emit("beta", {"open": i == 1}), not plan))
-		beta.add_child(toggle)
-		if plan:
-			# Kural anahtarın genişliğinde sarar: tek satırı orta sütunu genişletip sonraki sütunu daraltırdı.
-			var rule := SprintUiShared.label(tr("PRODUCT_BETA_RULE"), &"Caption", UiTokens.D_INK_3)
-			rule.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			beta.add_child(rule)
-		row.add_child(beta)
 	row.add_child(RnDUiShared.spacer())
 	for button: Button in buttons:
 		row.add_child(button)

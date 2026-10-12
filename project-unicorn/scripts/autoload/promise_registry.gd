@@ -154,15 +154,11 @@ func tick_deadlines(day: int) -> void:
 			_resolve(p, "broken")
 
 
-## A sprint promise breaks once its sprint has closed without the step live. A step whose card is
-## waiting in beta gets one more sprint: beta holds a finished card back one release.
+## A sprint promise breaks once its sprint has closed without the step live.
 func _overdue(p: Promise, day: int) -> bool:
 	if p.due_sprint < 0:
 		return day > p.deadline_day
-	var in_beta: bool = (GameState.product.cards.values() as Array).any(
-		func(c: Dictionary) -> bool: return c.state == "beta" and c.step == p.feature_id)
-	return not ProductState.is_feature_live(p.feature_id) \
-		and SprintSystem.last_closed() >= p.due_sprint + int(in_beta)
+	return not ProductState.is_feature_live(p.feature_id) and SprintSystem.last_closed() >= p.due_sprint
 
 
 func _resolve(p: Promise, status: String) -> void:

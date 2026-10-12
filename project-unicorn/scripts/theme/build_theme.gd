@@ -997,7 +997,7 @@ func _menajer(master: Theme) -> Theme:
 		# An area row's count of voices, and a flag in sentence case (a rival's launch, an area).
 		[&"CountChip", _flat(clear, T.D_RADIUS_2, chip_pad, T.D_LINE_2)],
 		[&"FlagChip", _flat(clear, T.D_RADIUS_2, flag_pad, T.D_LINE_3)],
-		# The beta channel's two-way switch.
+		# A segmented pick's box.
 		[&"SegPickBox", _flat(clear, T.D_RADIUS_2, hairline, T.D_LINE_2)],
 	]:
 		_panel(th, row[0], "PanelContainer", row[1])
