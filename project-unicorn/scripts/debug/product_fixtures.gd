@@ -92,7 +92,7 @@ func _build(id: String) -> Dictionary:
 				_deck("ucretli", SprintCard.State.SPRINT_PLAN, {"no_start": 8}),
 				_deck("oto_yedek", SprintCard.State.DEVREDEN, {"remaining": 0.25}),
 				_deck("etiketler", SprintCard.State.PLANLANAN),
-				_deck("akilli_arama", SprintCard.State.KILITLI, {"locked_node": tr("PRODUCT_LOCKED_NODE").format({"node": _p("Gelişmiş arama", "Advanced search")}),
+				_deck("akilli_arama", SprintCard.State.KILITLI, {"locked_node": tr("PROD_LOCK_RESEARCH").format({"node": _p("Gelişmiş arama", "Advanced search")}),
 					"locked_rnd": "semantic_index"}),
 				_deck("baglanti", SprintCard.State.BETA_BEKLIYOR),
 				_deck("efatura", SprintCard.State.SPRINT_AKTIF, {"phases": WAITING, "queued": true}),
@@ -150,7 +150,7 @@ func _build(id: String) -> Dictionary:
 		"locked_k3":
 			m.ui.open_area = "core"
 			_area_of(m, "core").candidates.append(_deck("akilli_arama", SprintCard.State.KILITLI,
-				{"locked_node": tr("PRODUCT_LOCKED_NODE").format({"node": _p("Gelişmiş arama", "Advanced search")}),
+				{"locked_node": tr("PROD_LOCK_RESEARCH").format({"node": _p("Gelişmiş arama", "Advanced search")}),
 				"locked_rnd": "semantic_index"}))
 		"history_empty":
 			m.versions = []
@@ -360,8 +360,8 @@ func _c5() -> Dictionary:
 			})),
 			_area("trust", 1, _p("Geçen hafta 2 saat kesinti oldu · SSO yok", "Two hours of downtime last week · no SSO"), {
 				"alert": true,
-				"capabilities": [_cap(_p("Kullanıcı rolleri", "User roles"), 2, ["Kasa", "Mizan", "Hesap"]),
-					_cap(_p("Yedekleme", "Backups"), 0, ["Kasa", "Mizan"]), _cap("SSO", 0, ["Kasa"])],
+				"capabilities": [_cap(_p("Kullanıcı rolleri", "User roles"), 2),
+					_cap(_p("Yedekleme", "Backups"), 0), _cap("SSO", 0)],
 				"candidates": [_deck("sso", alinmis, {"tag_sprint": 7}), _deck("kesinti", alinmis, {"tag_sprint": 7}),
 					_deck("oto_yedek", aday, {"effect": [_level("trust", 2, 3)]})],
 			}),
@@ -397,32 +397,32 @@ func _notly_areas(released: bool) -> Array:
 	return [
 		_area("core", 3, _p("Kullanıcılar arama ve editörü seviyor", "Users love the search and the editor"),
 			_heard([_p("Etikete göre arama olsa iyi olur", "Searching by tag would help")], 0).merged({
-			"capabilities": [_cap(_p("Arama", "Search"), 2, ["Memora", "Pinbox", "Defter"]),
-				_cap(_p("Editör", "Editor"), 3, ["Memora", "Defter"])],
+			"capabilities": [_cap(_p("Arama", "Search"), 2),
+				_cap(_p("Editör", "Editor"), 3)],
 			"candidates": [_deck("filtreli", alinmis, {"tag_sprint": 7}), _deck("etiketler", aday)],
 		})),
 		_area("onboarding", 1, _p("10 yeni kullanıcıdan 6'sı ilk hafta kalıyor", "6 of 10 new users stay past the first week")
 			if released else _p("10 yeni kullanıcıdan 6'sı ilk hafta bırakıyor", "6 of 10 new users quit in the first week"),
 			onboarding.merged({
 			"rival_topic": _p("mobil", "mobile"),
-			"capabilities": [_cap(_p("Kayıt", "Sign-up"), 1, ["Memora", "Pinbox"]),
-				_cap(_p("İlk tur", "First run"), 0, ["Memora"]), _cap(_p("Mobil", "Mobile"), 0, ["Pinbox"])],
+			"capabilities": [_cap(_p("Kayıt", "Sign-up"), 1),
+				_cap(_p("İlk tur", "First run"), 0), _cap(_p("Mobil", "Mobile"), 0)],
 			"candidates": [_deck("kisa_kayit", alinmis, {"tag_sprint": 7}), _deck("ilk_tur", alinmis, {"tag_sprint": 8}),
 				_deck("mobil_giris", aday), _deck("gorusme", aday)],
 		})),
 		_area("growth", 2, _p("Paylaşım yok, davet gelmiyor", "No sharing, no invites coming in"),
 			_heard([_p("Notumu paylaşamıyorum", "I can't share a note")], 0).merged({
-			"capabilities": [_cap(_p("Paylaşım", "Sharing"), 0, ["Memora", "Pinbox"])],
+			"capabilities": [_cap(_p("Paylaşım", "Sharing"), 0)],
 			"candidates": [_deck("baglanti", aday)],
 		})),
 		_area("trust", 1, _p("Geçen hafta 2 saat kesinti oldu", "Two hours of downtime last week"), {
 			"alert": not released,
-			"capabilities": [_cap(_p("Yedekleme", "Backups"), 0, ["Memora", "Pinbox"]),
-				_cap(_p("İzleme", "Monitoring"), 1, ["Memora", "Pinbox", "Defter"])],
+			"capabilities": [_cap(_p("Yedekleme", "Backups"), 0),
+				_cap(_p("İzleme", "Monitoring"), 1)],
 			"candidates": [_deck("kesinti", alinmis, {"tag_sprint": 7}), _deck("oto_yedek", alinmis, {"tag_sprint": 8})],
 		}),
 		_area("revenue", 0, _p("Ücretli plan henüz yok", "No paid plan yet"), {
-			"capabilities": [_cap(_p("Ücretli plan", "Paid plan"), 0, ["Memora", "Pinbox", "Defter"])],
+			"capabilities": [_cap(_p("Ücretli plan", "Paid plan"), 0)],
 			"candidates": [_deck("ucretli", aday)],
 		}),
 	]
@@ -489,7 +489,7 @@ func _deck_table() -> Dictionary:
 		"ilk_tur": ["feature", "onboarding", ["design", "dev"], 2, _p("İlk tur rehberi", "First-run guide"),
 			[_level("onboarding", 1, 2), {"k": "tickets", "n": 1}], [["Ece", 1], ["Kaan", 1]]],
 		"mobil_giris": ["feature", "onboarding", ["dev", "test"], 4, _p("Mobil giriş", "Mobile login"),
-			[_level("onboarding", 1, 2), {"k": "rival_gap"}], [["Kaan", 2]]],
+			[_level("onboarding", 1, 2)], [["Kaan", 2]]],
 		"gorusme": ["research", "onboarding", ["product"], 1, _p("5 kullanıcıyla görüş", "Talk to 5 users"),
 			[{"k": "research", "area": _short("onboarding")}], [[founder, 1]]],
 		"filtreli": ["polish", "core", ["dev"], 5, _p("Filtreli arama", "Filtered search"),
@@ -547,8 +547,8 @@ func _heard(texts: Array, fresh: int) -> Dictionary:
 	return {"voices": {"n": texts.size(), "new": fresh}, "voices_list": lines}
 
 
-func _cap(cap_name: String, tier: int, rivals: Array) -> Dictionary:
-	return {"name": cap_name, "tier": tier, "rivals_have": rivals.size(), "rivals_total": 3, "rival_names": rivals}
+func _cap(cap_name: String, tier: int) -> Dictionary:
+	return {"name": cap_name, "tier": tier}
 
 
 func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:

@@ -312,11 +312,9 @@ static func _part(part: Dictionary, forecast_mode: bool) -> HBoxContainer:
 		"request":
 			row.add_child(label(RnDUiShared.t("PRODUCT_FX_REQUEST").format({"customer": part.customer}) + SEP
 				+ RnDUiShared.t("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(part.value))}), say))
-		"rival_gap":
-			row.add_child(label(RnDUiShared.t("PRODUCT_FX_RIVAL_GAP"), say))
 		"research":
+			row.tooltip_text = String(part.area) + " " + RnDUiShared.t("PRODUCT_FX_RESEARCH")
 			row.add_child(label(String(part.area), &"KeyText"))
-			row.add_child(label(RnDUiShared.t("PRODUCT_FX_RESEARCH"), say))
 		"request_on_time":
 			row.add_child(label(String(part.customer), &"KeyText"))
 			row.add_child(label(RnDUiShared.t("PRODUCT_FX_ON_TIME"), say))

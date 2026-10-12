@@ -3149,6 +3149,8 @@ func _run_product_shot(id: String) -> void:
 			picker._pick_market("b2c")
 			await get_tree().process_frame
 			picker._pick_type("note_tool")
+			picker._name = "Notly"   # LOC-DATA debug seed / name
+			picker._save_draft()
 		if id == "live:decision_paper":
 			await get_tree().process_frame
 			for go: Button in _shell.find_children("*", "Button", true, false):

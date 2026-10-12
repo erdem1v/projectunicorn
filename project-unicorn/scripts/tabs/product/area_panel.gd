@@ -125,35 +125,31 @@ func _add_area_row(area: Dictionary) -> void:
 	if not _compact and area.rival_topic != "":
 		level.add_child(SprintUiShared.flag(tr("PRODUCT_RIVAL_TOPIC").format({"topic": area.rival_topic})))
 
-	var sentence := SprintUiShared.prose(String(area.sentence), &"Caption")
-	head.add_child(SprintUiShared.pad(sentence, Vector4i(0, UiTokens.SPACE_XS, 0, 0)))
+	if area.sentence != "":
+		head.add_child(SprintUiShared.pad(SprintUiShared.prose(String(area.sentence), &"Caption"),
+			Vector4i(0, UiTokens.SPACE_XS, 0, 0)))
 	if open:
 		_add_open_body(col, area)
 
 
-## Açık satırın gövdesi: YAPILANLAR (yetenek, kademe, rakipler), YAPILABİLECEKLER (aday kartlar), SESLER.
+## Açık satırın gövdesi: YAPILANLAR (kademesi olan yetenekler), YAPILABİLECEKLER (aday kartlar), SESLER.
 func _add_open_body(col: VBoxContainer, area: Dictionary) -> void:
 	var body := SprintUiShared.column(UiTokens.SPACE_M)
 	col.add_child(SprintUiShared.pad(body, Vector4i(0, UiTokens.SPACE_L, 0, 0)))
-	body.add_child(SprintUiShared.section("PRODUCT_BUILT", true))
-	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", UiTokens.SPACE_XL)
-	grid.add_theme_constant_override("v_separation", UiTokens.SPACE_S)
-	body.add_child(grid)
-	for cap in area.capabilities:
-		var tier: int = int(cap.tier)
-		var cap_name := SprintUiShared.label(String(cap.name), &"MetaText" if tier > 0 else &"MetaMuted")
-		cap_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid.add_child(cap_name)
-		# Kademe bir durum değil miktar: dolu kareler nötr mürekkepte.
-		grid.add_child(SprintUiShared.squares(tier, UiTokens.D_SQUARE_SM, SprintUiShared.word_color("enough")))
-		var rivals := SprintUiShared.label(tr("PRODUCT_RIVALS_HAVE").format(
-			{"have": int(cap.rivals_have), "total": int(cap.rivals_total)}), &"Caption")
-		rivals.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		rivals.tooltip_text = SprintUiShared.SEP.join(PackedStringArray(cap.rival_names))
-		rivals.mouse_filter = Control.MOUSE_FILTER_PASS   # Label varsayılanı IGNORE; ipucu fareyi ister
-		grid.add_child(rivals)
+	var built: Array = area.capabilities.filter(func(cap: Dictionary) -> bool: return int(cap.tier) > 0)
+	if not built.is_empty():
+		body.add_child(SprintUiShared.section("PRODUCT_BUILT", true))
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.add_theme_constant_override("h_separation", UiTokens.SPACE_XL)
+		grid.add_theme_constant_override("v_separation", UiTokens.SPACE_S)
+		body.add_child(grid)
+		for cap in built:
+			var cap_name := SprintUiShared.label(String(cap.name), &"MetaText")
+			cap_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			grid.add_child(cap_name)
+			# Kademe bir durum değil miktar: dolu kareler nötr mürekkepte.
+			grid.add_child(SprintUiShared.squares(int(cap.tier), UiTokens.D_SQUARE_SM, SprintUiShared.word_color("enough")))
 
 	body.add_child(SprintUiShared.section("PRODUCT_POSSIBLE", true))
 	if area["empty"]:

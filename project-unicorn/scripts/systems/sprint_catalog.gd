@@ -15,7 +15,6 @@ const PAID_PLAN := "cap_paid_plan"
 const PAID_PLAN_NAME_KEY := "PRODUCT_CAP_PAID_PLAN"
 const SEP := " · "
 const STAR := "★"
-const MARK_UNMET := "✗"
 
 static var _data: Dictionary = {}
 static var _rivals: Dictionary = {}
@@ -153,7 +152,11 @@ static func area_alert(area_id: String, closed: Array = []) -> bool:
 
 ## Kapalı satırın cümlesi: alan × durum şablonu, açık ticket ve rakip çıkışı eklenir.
 static func area_sentence(area_id: String) -> String:
-	var parts: PackedStringArray = [_t("PRODUCT_AREA_%s_%s" % [area_id.to_upper(), area_word(area_id).to_upper()])]
+	var word: String = area_word(area_id)
+	var parts: PackedStringArray = []
+	# Boş çekirdek kareleriyle ve "Yok" kelimesiyle söyler; cümlenin ekleyeceği bir şey yok.
+	if area_id != "core" or word != "none":
+		parts.append(_t("PRODUCT_AREA_%s_%s" % [area_id.to_upper(), word.to_upper()]))
 	var by_line: Dictionary = tickets_by_line()
 	var n: int = 0
 	for line_id in capabilities(area_id):
@@ -317,28 +320,26 @@ static func card_name(card: Dictionary) -> String:
 	return step_name(card.step)
 
 
-## Kilitli kademenin gerekçesi, yalnız karşılanmayan parçalarla; kilitsizse "". Ücretli plan
-## yayındaki ürünün katmanıdır, MVP'den önce açılmaz.
+## Kilitli kademenin gerekçesi ("2★ Tasarım gerekli"), yalnız karşılanmayan parçalarla; kilitsizse "". Ücretli
+## plan yayındaki ürünün katmanıdır, MVP'den önce açılmaz.
 static func gate_reason(step_id: String) -> String:
 	if step_id == PAID_PLAN:
-		return "" if ProductState.is_live() else _t("PROD_LOCK_PREFIX") + " " + _t("PRODUCT_LOCK_LIVE").format(
-			{"mark": MARK_UNMET})
+		return "" if ProductState.is_live() else _t("PRODUCT_LOCK_LIVE")
 	if ProductLines.step(step_id).is_empty():
 		return ""
 	var parts: PackedStringArray = []
 	for part in LineGates.unmet_parts(step_id):
 		if part.kind == LineGates.KIND_RESEARCH:
-			parts.append(_t("PROD_LOCK_RESEARCH").format({"node": ResearchSeam.node_name(part.node), "mark": MARK_UNMET}))
+			parts.append(_t("PROD_LOCK_RESEARCH").format({"node": ResearchSeam.node_name(part.node)}))
 		elif part.kind == LineGates.KIND_TOTAL:
 			var have: float = part.have
 			parts.append(_t("PROD_LOCK_TOTAL").format({"area": HRConstants.area_label(part.area),
-				"stars": STAR + str(part.stars),
-				"have": STAR + (str(roundi(have)) if is_equal_approx(have, roundf(have)) else Fmt.number(have, 1)),
-				"mark": MARK_UNMET}))
+				"stars": str(part.stars) + STAR,
+				"have": (str(roundi(have)) if is_equal_approx(have, roundf(have)) else Fmt.number(have, 1)) + STAR}))
 		else:
 			parts.append(_t("PROD_LOCK_PERSON").format({"area": HRConstants.area_label(part.area),
-				"stars": STAR.repeat(part.stars), "mark": MARK_UNMET}))
-	return "" if parts.is_empty() else _t("PROD_LOCK_PREFIX") + " " + SEP.join(parts)
+				"stars": str(part.stars) + STAR}))
+	return SEP.join(parts)
 
 
 ## Kartın etki satırı (ProductModel `part`): alan dilim geçişi, değişmiyorsa "Alan X kalır" ve
@@ -365,8 +366,6 @@ static func card_effect(card: Dictionary) -> Array:
 		out.append(_shift({"k": "cap", "name": cap_name(card.line),
 			"from": minf(tier(card.line) + polish(card.line), cap_max),
 			"to": minf(card.target_tier + polish(card.line), cap_max)}, expect))
-	if _closes_rival_gap(card):
-		out.append({"k": "rival_gap"})
 	var request: Dictionary = _request_of(card)
 	if not request.is_empty():
 		out.append({"k": "request", "customer": customer_name(request), "value": int(request.value)})
@@ -522,15 +521,6 @@ static func _approved_ahead() -> Array:
 
 
 # --- Rakipler ------------------------------------------------------------------------
-
-## Kademesi en az 1 olan rakipler (tablodaki başlangıç + kayda geçen çıkışlar).
-static func rival_names(line_id: String) -> Array:
-	var out: Array = []
-	for i in rival_table().rivals.size():
-		if _rival_tier(i, line_id) >= 1:
-			out.append(rival_name(i))
-	return out
-
 
 ## Alt-türün en çok çıkış yapmış rakibi, eşitlikte tablo sırası; tür seçilmeden "".
 static func rival_leader() -> String:

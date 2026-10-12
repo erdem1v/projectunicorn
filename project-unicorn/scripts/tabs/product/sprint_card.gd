@@ -75,8 +75,6 @@ func setup(card: Dictionary, look := Look.WIDE) -> void:
 	var top := SprintUiShared.box(UiTokens.SPACE_M if look != Look.MINI else UiTokens.SPACE_S)
 	body.add_child(top)
 	var ink := _ink()
-	if state == State.KILITLI:
-		top.add_child(UiFactory.make_glyph(SprintUiShared.LOCK, UiTokens.D_ICON_PART, UiTokens.D_INK_OFF))
 	top.add_child(UiFactory.make_glyph(SprintUiShared.KIND_ICON % _card.kind,
 		UiTokens.D_ICON_PART if look == Look.MINI else UiTokens.D_ICON_ROW, ink.glyph))
 	var title := UiFactory.make_label(String(_card.name), &"CaptionStrong" if look == Look.MINI else ink.title, ink.name)
@@ -128,9 +126,10 @@ func setup(card: Dictionary, look := Look.WIDE) -> void:
 	elif not _card.effect.is_empty():
 		body.add_child(SprintUiShared.effect_line(_card.effect))
 	if state == State.KILITLI:
-		# Araştırma kilidinin ardında Ar-Ge'ye bağlantı; yer yoksa alt satıra iner.
+		# Kartın altında kilit ve gerekçesi; araştırma kilidinde Ar-Ge'ye bağlantı da.
 		var lock := HFlowContainer.new()
 		lock.add_theme_constant_override("h_separation", UiTokens.SPACE_S)
+		lock.add_child(UiFactory.make_glyph(SprintUiShared.LOCK, UiTokens.D_ICON_PART, UiTokens.D_INK_3))
 		lock.add_child(SprintUiShared.label(String(_card.locked_node), &"Caption"))
 		if _card.locked_rnd != "":
 			var go := SprintUiShared.button(tr("PRODUCT_GO_RND"), &"FloatLink",

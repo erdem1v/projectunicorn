@@ -13,7 +13,6 @@ const PATH_KEYS := {"b2c": ["PROD_PATH_B2C", "PROD_PATH_B2C_DESC"], "b2b": ["PRO
 var _market := ""
 var _subtype := ""
 var _name := ""
-var _suggest_i := 0
 
 
 func setup() -> void:
@@ -55,22 +54,11 @@ func setup() -> void:
 		return
 
 	add_child(SprintUiShared.section("PROD_NAME_LABEL"))
-	var row := SprintUiShared.box(UiTokens.SPACE_M)
 	var edit := LineEdit.new()
 	edit.text = _name
 	edit.placeholder_text = tr("PROD_NAME_LABEL")
 	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(edit)
-	var suggest := Button.new()
-	suggest.text = tr("PROD_NAME_SUGGEST")
-	suggest.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
-	suggest.pressed.connect(func() -> void:
-		_suggest_i += 1
-		_name = ProductCatalog.suggest_product_name(_suggest_i)
-		_save_draft()
-		edit.text = _name)
-	row.add_child(suggest)
-	add_child(row)
+	add_child(edit)
 	var confirm := Button.new()
 	confirm.theme_type_variation = &"PrimaryButtonDark"
 	confirm.text = tr("PROD_CONFIRM_START")
@@ -95,8 +83,6 @@ func _pick_market(market: String) -> void:
 
 func _pick_type(subtype: String) -> void:
 	_subtype = subtype
-	if _name == "":
-		_name = ProductCatalog.suggest_product_name(_suggest_i)
 	_save_draft()
 	setup.call_deferred()
 

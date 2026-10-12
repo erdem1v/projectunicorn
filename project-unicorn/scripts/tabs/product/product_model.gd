@@ -29,7 +29,7 @@ extends RefCounted
 # area = {id, name, level 0..3 (.5 olabilir), level_to: -1 or 0..3 (sürüm oku),
 #         word: "strong"|"enough"|"weak"|"none", word_to: "" or word, sentence, goal_text (çeyrek hedefi olarak),
 #         voices: {n, new}, alert (uyarı üçgeni), rival_topic: "" or String,
-#         capabilities: [{name, tier 0..3, rivals_have, rivals_total, rival_names: [String]}],
+#         capabilities: [{name, tier 0..3}],
 #         candidates: [card], voices_list: [{text, new}], empty (aday kalmadı)}
 # customer = {name, request: "" or String, tickets, tag_sprint: -1 or int, due_sprint: -1 or int,
 #             value (yıllık $), area_name: "" or String, card_id (talebin kartı), buttons: [...],
@@ -72,7 +72,7 @@ extends RefCounted
 #         buttons: ["add"|"send_next"|"pull"|"remove"]}   # var olan düğmeler; "+" addable ile açılır
 # part = {k: "level", area, from, to, from_word, to_word} | {k: "holds", area, word} | {k: "alert_clear", area}
 #      | {k: "cap", name, from, to, from_word, to_word} | {k: "tickets", n} | {k: "voices", n}
-#      | {k: "request", customer, value} | {k: "rival_gap"} | {k: "research", area} | {k: "request_on_time", customer}
+#      | {k: "request", customer, value} | {k: "research", area} | {k: "request_on_time", customer}
 #      | {k: "promise", customer}   # kademeye verilmiş açık söz; kart onu etiketle de taşır
 #   level ve cap parçalarında from/to seviyedir (0..3); from_word/to_word o seviyenin beklentiye göre
 #   kelimesidir (SprintCatalog.word_for), kelime ve renk ondan.
@@ -162,9 +162,7 @@ static func _area(id: String, tags: Dictionary, changed: Dictionary) -> Dictiona
 
 
 static func _capability(line_id: String) -> Dictionary:
-	var rivals: Array = SprintCatalog.rival_names(line_id)
-	return {"name": SprintCatalog.cap_name(line_id), "tier": SprintCatalog.tier(line_id), "rivals_have": rivals.size(),
-		"rivals_total": SprintCatalog.rival_table().rivals.size(), "rival_names": rivals}
+	return {"name": SprintCatalog.cap_name(line_id), "tier": SprintCatalog.tier(line_id)}
 
 
 ## Aday: sprintte ya da sonrakinde duran kart soluk ve damgalı, kapısı kapalı kart kilitli.

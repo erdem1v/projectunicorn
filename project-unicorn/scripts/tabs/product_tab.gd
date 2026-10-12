@@ -172,7 +172,7 @@ func _build_head(h: Dictionary) -> void:
 		_kpis.add_child(UiFactory.D_kpi(tr("PRODUCT_KPI_PAYING"), Fmt.group(h.paying)))
 
 
-## SPRINT | ÇEYREK (PM yokken ÇEYREK kilitli, gerekçesi yanında) ... Geçmiş anahtarı; PM varken planlamayı ona
+## SPRINT | ÇEYREK (PM yokken ÇEYREK kilitli, gerekçesi ipucunda) ... Geçmiş anahtarı; PM varken planlamayı ona
 ## devretme anahtarı.
 func _build_ctl(m: Dictionary, view: String) -> void:
 	UiFactory.clear(_ctl_row)
@@ -181,8 +181,9 @@ func _build_ctl(m: Dictionary, view: String) -> void:
 	_ctl_row.add_child(UiFactory.D_seg_tabs(views.map(func(id: String) -> String: return tr(VIEW_KEYS[id])),
 		views.find(view), func(i: int) -> void: _set_ui(views[i], "view")))
 	if locked:
-		_ctl_row.add_child(UiFactory.D_locked_tab(tr("PRODUCT_VIEW_QUARTER")))
-		_ctl_row.add_child(SprintUiShared.label(tr("PRODUCT_QUARTER_NEED_PM"), &"Caption"))
+		var quarter := UiFactory.D_locked_tab(tr("PRODUCT_VIEW_QUARTER"))
+		quarter.tooltip_text = tr("PRODUCT_QUARTER_NEED_PM")
+		_ctl_row.add_child(quarter)
 	_ctl_row.add_child(RnDUiShared.spacer())
 	_add_switch(tr("PRODUCT_HISTORY"), _ui.history_open, _set_ui.bind("history_open"))
 	var delegate: Variant = m.center.delegate

@@ -275,17 +275,6 @@ static func get_quality_axes(sub_product_type_id: String) -> Array:
 	return QUALITY_AXES.get(sub_product_type_id, [])
 
 
-# "Öner" düğmesinin ad havuzu. Özel adlar çevrilmez; seçim sırayla, koşu tekrarlanabilir.
-const PRODUCT_NAME_POOL := [
-	"Pulse", "Nova", "Kairo", "Vela", "Loop", "Mira", "Flux", "Orbit", "Ember", "Sable",
-	"Nimbus", "Cadence", "Quill", "Atlas", "Beacon", "Ripple", "Vertex", "Halo", "Drift", "Onyx",
-]
-
-
-static func suggest_product_name(index: int) -> String:
-	return String(PRODUCT_NAME_POOL[abs(index) % PRODUCT_NAME_POOL.size()])
-
-
 # ---------------------------------------------------------------- copy accessors
 # Anahtarlar id'den türetilir (PROD_TYPE_<ID>_NAME …); tr("LITERAL") grep'i onları
 # göremediği için `loc_product_derived_keys` smoke'u gerçek id listelerini gezer.

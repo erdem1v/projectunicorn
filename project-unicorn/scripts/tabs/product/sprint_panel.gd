@@ -320,7 +320,7 @@ func _next(next: Dictionary) -> void:
 	for card in next.cards:
 		_add_card(col.stack, card, SprintCard.Look.NARROW)
 	if next.cards.is_empty():
-		col.stack.add_child(SprintUiShared.empty_line(tr("PRODUCT_NEXT_EMPTY")))
+		col.tooltip_text = tr("PRODUCT_NEXT_EMPTY")
 
 
 ## "SPRINT 7 · Hafta 1/2 ... BU SPRINT"; `meta` başlığın ardındaki parçadır (süre seçici ya da hafta). Sprint

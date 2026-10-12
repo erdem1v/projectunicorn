@@ -1189,7 +1189,6 @@ PROD_PATH_B2B_DESC,"Şirketlere satarsın. Kontratlar büyük, ama ilk müşteri
 PROD_MENTOR_LINE,"B2C'de kalabalığa satarsın, kimseyi tanımazsın. B2B'de herkesi tanırsın, herkes seni tanır. İkisi de para. Farklı dertler.","In B2C you sell to a crowd and know nobody. In B2B you know everybody, and everybody knows you. Both are money. Different headaches."
 PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product type
 PROD_NAME_LABEL,Ürün adı,Product name
-PROD_NAME_SUGGEST,Öner,Suggest
 PROD_CONFIRM_START,Onayla ve başlat,Confirm and start
 PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
 PROD_MARKET_SHARE,pazar payı {share},market share {share}
@@ -2221,10 +2220,9 @@ PROD_STEP_SHARED_MOBILE_K1_ERP_DESC,Ekran küçüldüğünde tablolar dağılmaz
 PROD_STEP_SHARED_MOBILE_K2_ERP_DESC,Onay bekleyen sipariş cepte görünür; imza yolda atılır.,An order waiting for approval shows up in a pocket; the signature happens on the road.
 PROD_STEP_SHARED_MOBILE_K3_ERP_DESC,Sahadaki satıcı kapsama dışında sipariş yazar; akşam ofise kendi girer.,"The rep in the field writes an order out of coverage, and in the evening it walks into the office on its own."
 PROD_VERSION_SHORT,v{version},v{version}
-PROD_LOCK_PREFIX,Kilit:,Locked:
-PROD_LOCK_RESEARCH,"Ar-Ge ""{node}"" {mark}","R&D ""{node}"" {mark}"
-PROD_LOCK_PERSON,{area} {stars} {mark},{area} {stars} {mark}
-PROD_LOCK_TOTAL,{area} toplam {stars} (sizde {have}) {mark},{area} total {stars} (you have {have}) {mark}
+PROD_LOCK_RESEARCH,"Ar-Ge ""{node}"" gerekli","R&D ""{node}"" needed"
+PROD_LOCK_PERSON,{stars} {area} gerekli,{stars} {area} needed
+PROD_LOCK_TOTAL,Toplam {area}: {stars} gerekli (sizde {have}),Total {area}: {stars} needed (you have {have})
 PROD_TEAM_GROUP_COUNT,({n}),({n})
 PROD_RND_NODE_DATA_MODEL_DESC,Verinin ortak şeması. Her kayıt aynı dilden konuşur.,A common schema for the data. Every record starts speaking the same language.
 PROD_RND_NODE_DATA_MODEL_UNLOCK,Entegrasyonlar hattının son kademesi.,The last tier of the Integrations line.
@@ -2815,7 +2813,6 @@ PRODUCT_VOICES_COUNT,{n} ses,{n} voices
 PRODUCT_VOICES_COUNT_ONE,{n} ses,{n} voice
 PRODUCT_NEW_COUNT,{n} yeni,{n} new
 PRODUCT_NEW_STAMP,Yeni,New
-PRODUCT_RIVALS_HAVE,{have}/{total} rakipte var,{have}/{total} rivals have it
 PRODUCT_RIVAL_TOPIC,Rakip: {topic},Rival: {topic}
 PRODUCT_LEVEL_STRONG,Güçlü,Strong
 PRODUCT_LEVEL_ENOUGH,Yeterli,Solid
@@ -2852,7 +2849,6 @@ PRODUCT_CARRIED,devreden,carried
 PRODUCT_URGENT,Acil,Urgent
 PRODUCT_BETA_WAITING,beta bekliyor,in beta
 PRODUCT_QUEUED,Sırada,Queued
-PRODUCT_LOCKED_NODE,Ar-Ge: {node},R&D: {node}
 PRODUCT_REMOVE,Çıkar,Remove
 PRODUCT_EFFORT_POINTS,{n} puan,{n} points
 PRODUCT_EFFORT_POINTS_ONE,{n} puan,{n} point
@@ -2866,7 +2862,6 @@ PRODUCT_FX_VOICES_CLOSE,{n} ses kapatır,settles {n} voices
 PRODUCT_FX_VOICES_CLOSE_ONE,{n} ses kapatır,settles {n} voice
 PRODUCT_FX_HOLDS,{level} kalır,stays {level}
 PRODUCT_FX_ALERT_CLEARS,kalkar,clears
-PRODUCT_FX_RIVAL_GAP,rakip açığını kapatır,closes the rival gap
 PRODUCT_FX_RESEARCH,beklentisi netleşir,expectations get clearer
 PRODUCT_FX_REQUEST,{customer} talebi,{customer} request
 PRODUCT_FX_ON_TIME,talebi zamanında,request on time
@@ -2954,7 +2949,6 @@ PRODUCT_AREA_TRUST,Güven & Ölçek,Trust & Scale
 PRODUCT_AREA_TRUST_SHORT,Güven,Trust
 PRODUCT_AREA_REVENUE,Gelir,Revenue
 PRODUCT_AREA_REVENUE_SHORT,Gelir,Revenue
-PRODUCT_AREA_CORE_NONE,Ürünün çekirdeği henüz yok,The core of the product does not exist yet
 PRODUCT_AREA_CORE_WEAK,Kullanıcılar temel işi yapmakta zorlanıyor,Users struggle to get the basic job done
 PRODUCT_AREA_CORE_ENOUGH,Temel iş sorunsuz yürüyor,The basic job runs without trouble
 PRODUCT_AREA_CORE_STRONG,Kullanıcılar çekirdeği başkalarına öneriyor,Users recommend the core to others
@@ -3024,7 +3018,7 @@ EFFECT_SPRINT_PROGRESS,İlerleme {v},Progress {v}
 EFFECT_SPRINT_CARRY,Sonraki sprinte devreder,Carries over to the next sprint
 EFFECT_SPRINT_HOURS,Bu sprint ekibin çalışma saati ×{v},Team work hours ×{v} this sprint
 HR_TASK_ON_PRODUCT,{product} {version} üzerinde çalışıyor,Working on {product} {version}
-PRODUCT_LOCK_LIVE,Canlı ürün {mark},Live product {mark}
+PRODUCT_LOCK_LIVE,Canlı ürün gerekli,Live product needed
 PRODUCT_GOAL_CORE,kullanıcıların yarısı asıl işini burada bitirsin,half of users get their main job done here
 PRODUCT_GOAL_ONBOARDING,yeni kullanıcıların yarısı kalsın,half of new users stay
 PRODUCT_GOAL_GROWTH,kullanıcıların yarısı birini getirsin,half of users bring someone in
