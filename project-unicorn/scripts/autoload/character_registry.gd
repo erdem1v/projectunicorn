@@ -495,11 +495,6 @@ func _validate_shape(character: Character) -> void:
 		elif not HRConstants.can_hold_area(character.role, area_id, character.category):
 			push_error("[CharacterRegistry] '%s' (%s) assigned to '%s', which is neither their key nor their secondary area"
 				% [character.id, character.role, area_id])
-	# §2.1 "Her şeyi yapabilir, aynı anda yapamaz": kurucunun kilidi İŞ sayısındadır. Alan aynası
-	# meşru biçimde daha geniştir (Build'deki kurucu üç alanda görünür).
-	if character.category == "founder" and character.assigned_job_ids.size() > 1:
-		push_error("[CharacterRegistry] founder holds %d jobs — §2.1 allows exactly one"
-			% character.assigned_job_ids.size())
 
 
 ## YALNIZ KAYIT GERİ YÜKLEME. add() yanlış kapıdır: hire_day'i bugüne damgalar, run_hires'ı

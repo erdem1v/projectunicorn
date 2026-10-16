@@ -37,7 +37,8 @@ extends RefCounted
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks (sprintin süresi), week (active),
 #           lengths: [int] (planlamada seçilebilen süreler),
 #           capacity: {used, total, done, state: "ok"|"over"|"blocked", segments: [{pts}]} or null (puanlar kesirli),
-#           team: [person], staffed (kadroda çalışan var), warning_text: "" or String (eksik rol),
+#           team: [person + {share}] (share: sprint payı, 1 ya da Yapım ve Destek tutanda 0,5), staffed (kadroda çalışan var),
+#           warning_text: "" or String (eksik rol),
 #           idle_text: "" or String (koşan sprintte bu hafta kartı olmayanlar ve öneri),
 #           cards: [card], forecast: [part], status: {done, running (işçili), queued, decisions},
 #           empty (koşan sprint kartsız başladı), pm_started: "" or String (sprinti devirle başlatan PM'in adı),
@@ -260,12 +261,13 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 	var can_start: bool = SprintSystem.can_start()
 	var reason: String = ""
 	if mode == "plan" and not can_start:
-		reason = (_t("PRODUCT_TEAM_NOBODY") if rnd == null else rnd.text) if total == 0 else _t("PRODUCT_START_NEED_CARD")
+		reason = (_t("PRODUCT_TEAM_NOBODY_JOBS") if rnd == null else rnd.text) if total == 0 else _t("PRODUCT_START_NEED_CARD")
 	return {
 		"mode": mode, "sprint": n if n > 0 else -1, "weeks": SprintSystem.sprint_weeks(), "week": SprintSystem.week(),
 		"lengths": (SprintCatalog.cfg("sprint_lengths") as Array).map(func(w: float) -> int: return int(w)),
 		"capacity": _bar(load, total, SprintSystem.done_points(), segments) if n > 0 else null,
-		"team": team.map(func(t: Dictionary) -> Dictionary: return _person(CharacterRegistry.get_character(t.id))),
+		"team": team.map(func(t: Dictionary) -> Dictionary:
+			return _person(CharacterRegistry.get_character(t.id)).merged({"share": t.share})),
 		"staffed": not CharacterRegistry.get_employees().is_empty(),
 		"warning_text": warning, "idle_text": idle_text, "cards": cards,
 		"forecast": SprintCatalog.forecast(sprint_cards.filter(func(id: String) -> bool: return outcome.cards[id].finishes))

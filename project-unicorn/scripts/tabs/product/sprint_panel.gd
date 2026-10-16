@@ -93,7 +93,7 @@ func _center(model: Dictionary) -> void:
 	if not c.team.is_empty():
 		var team := SprintUiShared.box(UiTokens.SPACE_S)
 		for p in c.team:
-			team.add_child(SprintUiShared.avatar(p, UiTokens.D_AVATAR_ROW))
+			team.add_child(_member(p))
 		team.add_child(RnDUiShared.spacer())
 		if c.warning_text != "":
 			team.add_child(_note(SprintUiShared.BUG, c.warning_text, UiTokens.D_warn()))
@@ -136,6 +136,9 @@ func _center(model: Dictionary) -> void:
 			start.disabled = not c.can_start
 			if c.start_reason != "":
 				var why := _note(SprintUiShared.LOCK, c.start_reason, UiTokens.D_INK_3)
+				# Kartsız boş sütunun çıkış yolu gövdesindeki düğmedir.
+				if c.team.is_empty() and not c.cards.is_empty():
+					why.add_child(_way_out(c, &"FloatLink"))
 				why.size_flags_horizontal = Control.SIZE_SHRINK_END
 				col.foot().add_child(why)
 			if c.plan_hold:
@@ -167,8 +170,7 @@ func _center(model: Dictionary) -> void:
 				col.foot().add_child(version)
 
 
-## Kimse çalışamıyorken sütunun gövdesi: ekip glifi, not ve çıkış yolu (kurucu araştırıyorsa Ar-Ge, kadro
-## yoksa işe alım, varsa Ekip).
+## Kimse çalışamıyorken sütunun gövdesi: ekip glifi, not ve çıkış yolu.
 func _nobody(c: Dictionary) -> VBoxContainer:
 	var empty := SprintUiShared.column(UiTokens.SPACE_L)
 	empty.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -179,14 +181,33 @@ func _nobody(c: Dictionary) -> VBoxContainer:
 	var note := UiFactory.make_label(tr("HR_EMPTY_ROW"), &"NoteMuted")
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	empty.add_child(note)
-	var way: Array = (["PRODUCT_GO_RND", "rnd", {"node": c.rnd_node.id}] if c.rnd_node != null
-		else ["PRODUCT_GO_TEAM", "team", {}] if c.staffed else ["HR_SEARCH_START", "hire", {}])
-	var go := SprintUiShared.button(tr(way[0]), &"SecondaryButton", action.emit.bind(way[1], way[2]))
-	if way[1] == "hire":
-		go.icon = load(PLUS)
+	var go := _way_out(c, &"SecondaryButton")
 	go.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	empty.add_child(go)
 	return empty
+
+
+## Kimse çalışamıyorken çıkış yolu: kurucu araştırıyorsa Ar-Ge, kadro yoksa işe alım, varsa Ekip.
+func _way_out(c: Dictionary, variation: StringName) -> Button:
+	var way: Array = (["PRODUCT_GO_RND", "rnd", {"node": c.rnd_node.id}] if c.rnd_node != null
+		else ["PRODUCT_GO_TEAM", "team", {}] if c.staffed else ["HR_SEARCH_START", "hire", {}])
+	var go := SprintUiShared.button(tr(way[0]), variation, action.emit.bind(way[1], way[2]))
+	if way[1] == "hire":
+		go.icon = load(PLUS)
+	return go
+
+
+## Ekip yüzü; sprint payı tam değilse yanında payı yazar, üstüne gelince söyler.
+func _member(p: Dictionary) -> Control:
+	var face := SprintUiShared.avatar(p, UiTokens.D_AVATAR_ROW)
+	if p.share >= 1.0:
+		return face
+	var share := Fmt.percent(p.share * 100.0, 0)
+	face.tooltip_text = tr("PRODUCT_PERSON_SHARE").format({"name": p.name, "role": p.role_text, "share": share})
+	var row := SprintUiShared.box(UiTokens.SPACE_XS)
+	row.add_child(face)
+	row.add_child(SprintUiShared.label(share, &"MetaMuted"))
+	return row
 
 
 ## DURUM: "1 kart bitti · 2 sürüyor · 1 sırada · 1 karar bekliyor"; sürüyor işçili kartlardır.

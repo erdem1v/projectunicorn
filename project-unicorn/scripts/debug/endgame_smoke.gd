@@ -395,6 +395,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# --- Trait seti · Build Bar · Görevler (2026-08-21). Beşi de ÖNCEKİ motora karşı DÜŞER.
 		"destek_survives_ship":           fail = _case_destek_survives_ship()
 		"gorevler_has_no_founder":        fail = _case_gorevler_has_no_founder()
+		"founder_not_double_counted":     fail = _case_founder_not_double_counted()
 		# --- Ürün modülü · hat modeli 2026-08-24 (GDD ÜRÜN rev 6 §11, §12).
 		#     Altısı da ÖNCEKİ motora karşı DÜŞER: hat modeli, kapı doğrulayıcısı ve
 		#     çıta okuması bu turdan önce YOKTU. Her biri falsifikasyonla doğrulandı.
@@ -448,6 +449,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"office_move_gates_and_save":            fail = _case_office_move_gates_and_save()
 		"sprint_two_days_close":                 fail = _case_sprint_two_days_close()
 		"sprint_capacity_from_team":             fail = _case_sprint_capacity_from_team()
+		"sprint_team_follows_job_matrix":        fail = _case_sprint_team_follows_job_matrix()
 		"productivity_mod_paces_the_sprint":     fail = _case_productivity_mod_paces_the_sprint()  # EXPECT-ERROR 'productivity_mod' found no target
 		"sprint_ceiling_125_blocks_add":         fail = _case_sprint_ceiling_125_blocks_add()
 		"sprint_carry_keeps_progress":           fail = _case_sprint_carry_keeps_progress()
@@ -13247,13 +13249,89 @@ static func _case_gorevler_has_no_founder() -> String:
 			return "the founder band is still drawn"
 	if not names.has("Matrix Dev"):
 		return "the matrix drew no employees at all — the probe is measuring nothing"
-	# ATAMA ÖKSÜZ DEĞİL: motor kurucuyu hâlâ bir İŞTE tutuyor (§2.1 — aynı anda tek iş).
+	# ATAMA ÖKSÜZ DEĞİL: motor kurucuyu hâlâ bir İŞTE tutuyor ve sprint ekibine o iş sokar.
 	# Alan aynasının daha geniş olması beklenir ve doğrudur: Build ekibi üç alanca taşınır
 	# (§12.0) ve kurucu altısını da taşır (§2), yani Build'deki bir kurucu üçünde de görünür.
-	if founder.assigned_job_ids.size() != 1:
-		return "the founder holds %d jobs; the engine must keep exactly one" % \
-			founder.assigned_job_ids.size()
+	if founder.assigned_job_ids.is_empty():
+		return "the engine left the founder without a job"
 	return ""
+
+
+## Kurucu iki yerde tam sayılmaz (Karar 13): sprint ve Destek masası aynı odak payını okur. Yapım'daki kurucu
+## sprintte tam sayılır ve masada yoktur (`desk_roster` boş, `desk_staffed` yanlış); Yapım ve Destek tutan kurucu
+## sprintte 0,5 ve masada 0,5 sayılır; işi olmayan kurucu sprintte yoktur ve masada pasif ilgiyle tam sayılır.
+## Sprint kartı olan kurucu Boşta okunmaz, yalnız Test'i tutan da. İki işli kurucu kayıtla gidip gelir ve
+## yükleme hata basmaz (smoke_run.sh motorun ERROR satırını FAIL sayar).
+##
+## FALSİFİKASYON: SprintSystem._share'dan odak payını sil → "Build and Support" FAIL; SupportSystem.
+## founder_passive_care'den işsizlik denetimini sil → "on Build alone" FAIL; CharacterRegistry._validate_shape'e
+## kurucunun tek iş kuralını geri koy → koşturucu yükleme satırında düşürür.
+static func _case_founder_not_double_counted() -> String:
+	var slot: String = "smoke_founder_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	_seed_sprint_live("note_tool")
+	var founder: Character = CharacterRegistry.get_founder()
+	_set_founder_area(HRConstants.AREA_CUSTOMER_SUCCESS, HRConstants.AREA_MAX)
+	# 1 · Yalnız Yapım (koşu başlangıcı): sprintte tam, masada yok.
+	if founder.assigned_job_ids != [HRConstants.JOB_BUILD]:
+		return done.call("fixture: the founder starts on %s, want Build alone" % str(founder.assigned_job_ids))
+	var full: float = _sprint_points(founder.id)
+	if _sprint_share(founder.id) != 1.0 or full <= 0.0:
+		return done.call("on Build alone the founder counts %.2f of a share (%.2f points), want a whole share" % [
+			_sprint_share(founder.id), full])
+	if SupportSystem.desk_roster().has(founder) or EvSeams.read("destek.desk_staffed") != false \
+			or SupportSystem.validation_per_day() != 0.0:
+		return done.call("on Build alone the founder sits at the desk (destek.desk_staffed %s, %.2f verified a day)" % [
+			EvSeams.read("destek.desk_staffed"), SupportSystem.validation_per_day()])
+	SprintSystem.add(SprintCatalog.open_cards([])[0].id)
+	if not SprintSystem.start():
+		return done.call("fixture: the sprint did not start")
+	if SprintSystem.role_of(founder.id) == "" or HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_BUILD \
+			or HRSystem.founder_task_label() == TranslationServer.translate("HR_FOUNDER_STATE_IDLE"):
+		return done.call("a founder on a sprint card reads '%s' (%s)" % [HRSystem.founder_task_label(),
+			HRSystem.founder_task_state()])
+	# 2 · Yapım ve Destek: sprintte 0,5, masada 0,5.
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) != "":
+		return done.call("fixture: the founder was refused a second job")
+	if _sprint_share(founder.id) != HRConstants.FOCUS_MULT_SPLIT \
+			or not is_equal_approx(_sprint_points(founder.id), full * HRConstants.FOCUS_MULT_SPLIT):
+		return done.call("on Build and Support the founder counts %.2f of a share (%.2f points), want half of %.2f" % [
+			_sprint_share(founder.id), _sprint_points(founder.id), full])
+	if not SupportSystem.desk_roster().has(founder) or EvSeams.read("destek.desk_staffed") != true:
+		return done.call("on Build and Support the founder is not on the desk")
+	var split_rate: float = SupportSystem.validation_per_day()
+	# 3 · İşsiz: sprintte yok, masada pasif ilgiyle tam.
+	CharacterRegistry.clear_jobs(founder.id)
+	if _sprint_share(founder.id) != 0.0 or SprintSystem.capacity() != 0.0:
+		return done.call("a founder with no job is on the sprint team (capacity %.2f)" % SprintSystem.capacity())
+	if not SupportSystem.founder_passive_care() or not SupportSystem.desk_roster().has(founder) \
+			or HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_CARE:
+		return done.call("a founder with no job is not looking after customers (%s)" % HRSystem.founder_task_state())
+	if not is_equal_approx(SupportSystem.validation_per_day(), split_rate * 2.0):
+		return done.call("the desk verifies %.2f a day with the jobless founder and %.2f with the Build and Support one, want twice" % [
+			SupportSystem.validation_per_day(), split_rate])
+	# Yalnız Test: sprint işi, Destek değil.
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_TEST)
+	if _sprint_share(founder.id) != 1.0 or HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_BUILD:
+		return done.call("a founder on Test alone counts %.2f of a share and reads '%s'" % [
+			_sprint_share(founder.id), HRSystem.founder_task_state()])
+	# İki işli kurucu kayıtla gidip gelir.
+	CharacterRegistry.clear_jobs(founder.id)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT)
+	_drain_all_modals()   # a card on screen refuses the save (can_save)
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(slot)):
+		return done.call("apply_loaded_state returned false")
+	founder = CharacterRegistry.get_founder()
+	if founder.assigned_job_ids != [HRConstants.JOB_BUILD, HRConstants.JOB_SUPPORT] \
+			or _sprint_share(founder.id) != HRConstants.FOCUS_MULT_SPLIT:
+		return done.call("the two-job founder came back as %s counting %.2f of a share" % [
+			str(founder.assigned_job_ids), _sprint_share(founder.id)])
+	return done.call("")
 
 
 static func _collect_label_text(n: Node, out: Array[String]) -> void:
@@ -17134,12 +17212,22 @@ static func _sprint_hire(id: String, role_id: String) -> Character:
 	return c
 
 
-## Kişinin bu sprintte haftalık puanı; ekipte değilse (izin, Ar-Ge) 0.
-static func _sprint_points(id: String) -> float:
+## Kişinin sprint ekibindeki satırı; ekipte değilse (izin, Ar-Ge, Destek, işsiz) puanı ve payı 0.
+static func _sprint_row(id: String) -> Dictionary:
 	for person in SprintSystem.team():
 		if person.id == id:
-			return person.points
-	return 0.0
+			return person
+	return {"points": 0.0, "share": 0.0}
+
+
+## Kişinin bu sprintte haftalık puanı.
+static func _sprint_points(id: String) -> float:
+	return _sprint_row(id).points
+
+
+## Kişinin sprint payı.
+static func _sprint_share(id: String) -> float:
+	return _sprint_row(id).share
 
 
 ## Kartın üç fazına dökülmüş toplam puan; kart saklanmıyorsa (aday ya da çıkmış) 0.
@@ -17223,6 +17311,107 @@ static func _case_sprint_capacity_from_team() -> String:
 	if SprintSystem.capacity() != 0 or SprintSystem.can_add():
 		return "with the founder researching and the developer on leave the sprint holds %.2f points (+ open: %s)" % [
 			SprintSystem.capacity(), SprintSystem.can_add()]
+	return ""
+
+
+## Sprint ekibi Görevler matrisini okur (Karar 13). Yalnız Destek'teki geliştirici ekipte yoktur (0 puan, hiçbir
+## kartın önizlemesinde ve atamasında geçmez) ve kapasite onsuz sayılır; Yapım ve Destek tutan geliştirici 0,5
+## puanla sayılır; atama geri alınınca kapasite eski değerine döner. Plan önizlemesi her üç durumda kapanışla
+## eşleşir: kart önizlemenin dediği gibi biter ya da devreder ve devreden kartın aldığı puan aynıdır. Yapım ya da
+## Test'te kimse yokken sprint başlamaz, "+" kapalıdır ve plan saati tutmaz; biri dönünce tutuş geri gelir.
+##
+## FALSİFİKASYON: SprintSystem.SPRINT_JOBS'a Destek'i de koy → "Support alone" FAIL; SprintSystem._points'ten
+## sprint payını sil → "Build and Support" FAIL; SprintSystem.awaits_plan'dan `capacity() > 0` denetimini sil →
+## "nobody" FAIL; SprintSystem.plan_outcome'a eksik puanlı bir ekip ver → "plan said" FAIL.
+static func _case_sprint_team_follows_job_matrix() -> String:
+	_seed_sprint()
+	var weeks: int = int(SprintCatalog.cfg("sprint_weeks"))
+	var point: float = float(SprintCatalog.cfg("person_points_week"))
+	var founder_pts: float = point * float(SprintCatalog.cfg("founder_mult"))
+	var mid: float = point * float((SprintCatalog.cfg("skill.mult") as Array)[1])
+	var founder: Character = CharacterRegistry.get_founder()
+	var dev: Character = _sprint_hire("char_matrix_dev", HRConstants.ROLE_DEVELOPER)
+	var whole: float = SprintSystem.capacity()
+	if not is_equal_approx(whole, (founder_pts + mid) * weeks):
+		return "fixture: a founder and a developer on Build hold %.2f points, want %.2f" % [whole, (founder_pts + mid) * weeks]
+	var held := func() -> bool: return TimeManager.holds().has(SprintSystem.HOLD_PLAN)
+	# One state: the developer's share and points, then a sprint planned, started and played to its note.
+	var play := func(label: String, share: float) -> String:
+		var want: float = (founder_pts + mid * share) * weeks
+		if _sprint_share(dev.id) != share or not is_equal_approx(_sprint_points(dev.id), mid * share) \
+				or not is_equal_approx(SprintSystem.capacity(), want):
+			return "%s: the developer counts %.2f of a share (%.2f points) for a capacity of %.2f, want %.2f and %.2f" % [
+				label, _sprint_share(dev.id), _sprint_points(dev.id), SprintSystem.capacity(), share, want]
+		# The sprint roles come from the area, not the jobs: a developer off Test still fits it.
+		if share > 0.0 and not (_sprint_row(dev.id).fits as Array).has("test"):
+			return "%s: the developer no longer fits the Test role (%s)" % [label, _sprint_row(dev.id).fits]
+		if SprintSystem.mode() == "release":
+			SprintSystem.plan_next()
+		for c in SprintCatalog.open_cards([]):
+			SprintSystem.add(c.id)
+			if not GameState.product.sprint.cards.has(c.id):
+				break
+		var outcome: Dictionary = SprintSystem.plan_outcome().cards
+		var said: Dictionary = {}   # card -> [finishes, points the plan gives it, points it holds before]
+		for id in GameState.product.sprint.cards:
+			var card: Dictionary = GameState.product.cards[id]
+			said[id] = [outcome[id].finishes, outcome[id].done, SprintSystem.total(card) - SprintSystem.remaining(card)]
+			if share == 0.0 and outcome[id].split.any(func(row: Dictionary) -> bool: return row.id == dev.id):
+				return "%s: the plan gives %s to a developer who is not on the team" % [label, id]
+		if said.is_empty() or not SprintSystem.start():
+			return "%s: fixture: the sprint did not start" % label
+		for id in said:
+			if share == 0.0 and dev.id in GameState.product.cards[id].assignees:
+				return "%s: %s was assigned to a developer who is not on the team" % [label, id]
+		while SprintSystem.mode() == "active":
+			dev.morale = 60   # the pace of morale is not under test
+			_sim_day()
+		for id in said:
+			var left: Array = GameState.product.release.carried.filter(func(item: Dictionary) -> bool: return item.id == id)
+			var got: float = 0.0 if left.is_empty() else float(left[0].done) - said[id][2]
+			if left.is_empty() != said[id][0] or (not left.is_empty() and absf(got - said[id][1]) > SprintSystem.EPS):
+				return "%s: the plan said %s finishes %s with %.2f points, the close %s with %.2f" % [
+					label, id, said[id][0], said[id][1], left.is_empty(), got]
+		return ""
+
+	# 1 · Yalnız Destek: ekipte yok.
+	CharacterRegistry.unassign_job(dev.id, HRConstants.JOB_BUILD)
+	CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT)
+	var why: String = play.call("Support alone", 0.0)
+	if why != "":
+		return why
+	# 2 · Yapım ve Destek: yarım pay.
+	CharacterRegistry.assign_job(dev.id, HRConstants.JOB_BUILD)
+	why = play.call("Build and Support", HRConstants.FOCUS_MULT_SPLIT)
+	if why != "":
+		return why
+	# 3 · Destek geri alındı: kapasite eski değerine döner.
+	CharacterRegistry.unassign_job(dev.id, HRConstants.JOB_SUPPORT)
+	SprintSystem.plan_next()
+	if not is_equal_approx(SprintSystem.capacity(), whole):
+		return "undoing the Support job left a capacity of %.2f, want %.2f" % [SprintSystem.capacity(), whole]
+	why = play.call("Build again", 1.0)
+	if why != "":
+		return why
+	# 4 · Yapım ya da Test'te kimse yok: sprint başlamaz, saat akar; biri dönünce plan saati yeniden tutar.
+	SprintSystem.plan_next()
+	if not held.call():
+		return "a plan with the team on Build did not hold the clock"
+	CharacterRegistry.unassign_job(founder.id, HRConstants.JOB_BUILD)
+	CharacterRegistry.unassign_job(dev.id, HRConstants.JOB_BUILD)
+	CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT)
+	if not SprintSystem.team().is_empty() or SprintSystem.capacity() != 0.0 or SprintSystem.can_start() \
+			or SprintSystem.can_add() or SprintSystem.awaits_plan() or held.call():
+		return "with nobody on Build or Test: team %s, capacity %.2f, start %s, + %s, waits %s, held %s; want no team, no start and a running clock" % [
+			SprintSystem.team().size(), SprintSystem.capacity(), SprintSystem.can_start(), SprintSystem.can_add(),
+			SprintSystem.awaits_plan(), held.call()]
+	_sim_day()
+	if SprintSystem.mode() != "plan":
+		return "a day with nobody on the team started the sprint (%s)" % SprintSystem.mode()
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+	if SprintSystem.team().size() != 1 or not held.call():
+		return "the founder back on Build left a team of %d, held %s; want 1 and the plan waiting" % [
+			SprintSystem.team().size(), held.call()]
 	return ""
 
 

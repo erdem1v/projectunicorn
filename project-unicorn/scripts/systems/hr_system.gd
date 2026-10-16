@@ -251,13 +251,14 @@ static func founder_task_state() -> String:
 	# duraklamış yapımının adını taşımak yalan olurdu.
 	if f.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
 		return FOUNDER_STATE_RESEARCH
-	if f.assigned_job_ids.has(HRConstants.JOB_BUILD):
+	# Sprintin işleri (Yapım, Test) YAPIM durumudur: sprint ekibindeki kurucu başka bir durum taşımaz.
+	if f.assigned_job_ids.any(func(job: String) -> bool: return job in SprintSystem.SPRINT_JOBS):
 		return FOUNDER_STATE_BUILD
 	# Satış işindeki kurucu CARE'e düşmemeli: o zaman satış yaparken destek de üretirdi.
 	if f.assigned_job_ids.has(HRConstants.JOB_SALES) \
 			or f.assigned_job_ids.has(HRConstants.JOB_ACCOUNTS):
 		return FOUNDER_STATE_SALES
-	if f.assigned_job_ids.has(HRConstants.JOB_SUPPORT) or f.assigned_job_ids.has(HRConstants.JOB_TEST):
+	if f.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
 		return FOUNDER_STATE_SUPPORT
 	# Atama YOKLUĞUNU okur: canlı bir ürün varken işsiz kurucu müşterilerle ilgileniyordur ve
 	# destek masası onu sayar (SupportSystem.desk_roster); ürün yokken gerçekten boştadır.

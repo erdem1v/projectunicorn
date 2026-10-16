@@ -2832,7 +2832,7 @@ PRODUCT_WEEKS_ONE,{n} hafta,{n} week
 PRODUCT_WEEK_OF,Hafta {w}/{t},Week {w}/{t}
 PRODUCT_THIS_SPRINT,Bu sprint,This sprint
 PRODUCT_NEXT,Sonraki,Next
-PRODUCT_TEAM_NOBODY,Bu sprintte çalışacak kimse yok,Nobody can work this sprint
+PRODUCT_TEAM_NOBODY_JOBS,Yapım ekibinde ya da Test'te çalışabilecek kimse yok,Nobody on the Build team or Test can work
 PRODUCT_TEAM_IN_RND,Kurucu Ar-Ge'de: {node},The founder is in R&D: {node}
 PRODUCT_ROLE_MISSING,Ekipte {role} yok · kartlar hatalı çıkabilir,No {role} on the team · cards may ship buggy
 PRODUCT_IDLE,{n} kişi boşta · iş bekliyor,{n} idle · waiting for work
@@ -2851,6 +2851,7 @@ PRODUCT_EFFORT_POINTS,{n} puan,{n} points
 PRODUCT_EFFORT_POINTS_ONE,{n} puan,{n} point
 PRODUCT_EFFORT_PERSON,{name} {weeks},{name} {weeks}
 PRODUCT_PERSON_ROLE,{name} · {role},{name} · {role}
+PRODUCT_PERSON_SHARE,{name} · {role} · sprintte {share},{name} · {role} · {share} on the sprint
 PRODUCT_FX_TICKETS_CLOSE,{n} ticket kapatır,closes {n} tickets
 PRODUCT_FX_TICKETS_CLOSE_ONE,{n} ticket kapatır,closes {n} ticket
 PRODUCT_FX_TICKETS_CLOSED,{n} ticket kapanır,{n} tickets close

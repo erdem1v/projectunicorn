@@ -110,6 +110,20 @@ func _build(id: String) -> Dictionary:
 			m.center.warning_text = ""
 			_clear_sprint(m)
 			m.center.lead_tip = null
+		"team_split":
+			# Deniz Yapım ve Destek tutar: sprintte yarım payla; Kaan yalnız Destek'te, ekipte yok.
+			var team: Array = _team()
+			m.center.team = [team[0], team[1].merged({"share": 0.5}, true), team[2]]
+			m.center.capacity.total = 10
+			_resum(m.center)
+		"team_none":
+			# Kadro var ama Yapım ya da Test işinde kimse yok: kartlar planda, sprint başlamaz.
+			m.center.team = []
+			m.center.capacity.total = 0
+			m.center.warning_text = ""
+			m.center.lead_tip = null
+			m.center.forecast = []
+			_resum(m.center)
 		"over_100":
 			_place(m, "mobil_giris", "center")
 		"over_125":
@@ -256,7 +270,7 @@ func _resum(c: Dictionary) -> void:
 	c.spare = cap.used < cap.total
 	c.can_add = c.spare
 	c.can_start = cap.total > 0 and not c.cards.is_empty()
-	c.start_reason = "" if c.can_start else tr("PRODUCT_TEAM_NOBODY" if cap.total == 0 else "PRODUCT_START_NEED_CARD")
+	c.start_reason = "" if c.can_start else tr("PRODUCT_TEAM_NOBODY_JOBS" if cap.total == 0 else "PRODUCT_START_NEED_CARD")
 
 
 ## Kapasiteyi aşan kart sırayla dolar: bir kısmını alan "devreder · x/y" der, hiç alamayan sonraki
@@ -554,10 +568,10 @@ func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 func _team() -> Array:
 	var engineering := _p("Yazılım", "Engineering")
 	return [
-		{"name": _p("Kurucu", "Founder"), "role_text": _p("Ürün · Yazılım", "Product · Engineering"), "look": {}},
-		{"name": "Deniz", "role_text": engineering, "look": {}},
-		{"name": "Ece", "role_text": _p("Tasarım", "Design"), "look": {}},
-		{"name": "Kaan", "role_text": engineering, "look": {}},
+		{"name": _p("Kurucu", "Founder"), "role_text": _p("Ürün · Yazılım", "Product · Engineering"), "look": {}, "share": 1.0},
+		{"name": "Deniz", "role_text": engineering, "look": {}, "share": 1.0},
+		{"name": "Ece", "role_text": _p("Tasarım", "Design"), "look": {}, "share": 1.0},
+		{"name": "Kaan", "role_text": engineering, "look": {}, "share": 1.0},
 	]
 
 

@@ -975,9 +975,9 @@ func _build_founder(payload: Dictionary) -> Character:
 		push_error("[GameState] skill_alloc failed validation (pool %d, cap %d): %s"
 			% [FounderConstants.POINT_POOL, FounderConstants.ONBOARDING_CAP, str(skill_alloc)])
 	f.role_stats = stats
-	# The founder sits in ONE JOB (§12.0), the primary job of the build area he allocated most
-	# into. The area list is a mirror derived from the jobs; written by hand it would be
-	# overwritten on the next assignment and §2.1's "cannot do both" lock would never engage.
+	# The founder starts on ONE JOB (§12.0), the primary job of the build area he allocated most
+	# into, and that job puts him on the sprint team. The area list is a mirror derived from the
+	# jobs; written by hand it would be overwritten on the next assignment.
 	var start_job: String = HRConstants.primary_job_for_area(_founder_start_area(stats))
 	if start_job != "":
 		f.assigned_job_ids.append(start_job)

@@ -1086,14 +1086,13 @@ static func _hire_after_the_seed() -> void:
 static func _run_the_company() -> void:
 	if not ProductState.is_live():
 		return
-	# Once anyone pays for the consumer product the founder swaps his build job for the support
-	# desk (§8.2). Sprint points do not read his job (SprintSystem.team), so the sprint loses
-	# nothing; the desk gains his engineering for fix passes, and his customer_success for
-	# validation (0 in the debug payload, so the first rep is still needed).
+	# Once anyone pays for the consumer product the founder takes the support desk (§8.2) next to
+	# his build job: the two jobs split his focus, so the sprint counts him at half a share and the
+	# desk gets half his engineering for fix passes and half his customer_success for validation
+	# (0 in the debug payload, so the first rep is still needed).
 	var founder: Character = CharacterRegistry.get_founder()
 	if ProductState.market_type() == "b2c" and SalesSystem.b2c_paying_users() > 0 \
 			and not founder.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
-		CharacterRegistry.clear_jobs(founder.id)
 		if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) == "":
 			print("PROBE PLAY day=%d founder takes the support desk" % GameState.day)
 	# A player closes a fix pass every few days and ships what was fixed; waiting for zero confirmed

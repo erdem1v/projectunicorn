@@ -4,8 +4,8 @@ extends RefCounted
 # EKİP → GÖREVLER matrisi (10b, §12): kim hangi işte. Sütunlar: yüz, ad, ana ve ikincil alanın
 # değeri, Durum, sonra `HRConstants.JOBS`'un her işi.
 #
-# KURUCU BURADA YOK: atanabilir bir işçi değil, sprint ekibine kendiliğinden girer
-# (SprintSystem.team).
+# KURUCU BURADA YOK: atanabilir bir işçi değil; başlangıç işi Yapım'dır ve işi onu sprint ekibine
+# sokar (SprintSystem.team).
 #
 # KUTULAR (§12.3): ana iş işaretli → dolu mürekkep; ikincil iş işaretli → çerçeveli; atanabilir boş
 # kutu; atanamaz → kesikli ve boş (alanı yok) ya da kesikli ve kilitli (gerekçesi üstüne gelince).

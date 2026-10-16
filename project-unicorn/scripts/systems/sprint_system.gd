@@ -23,6 +23,8 @@ const MVP_HORIZON := 24
 const CRUNCH_MULT := 1.25
 ## Sprint oyuncunun planını beklerken saati tutan neden (TimeManager.HOLD_LABELS).
 const HOLD_PLAN := "sprint_plan"
+## Sprint ekibine giren işler.
+const SPRINT_JOBS := [HRConstants.JOB_BUILD, HRConstants.JOB_TEST]
 
 
 static func daily_tick() -> void:
@@ -512,9 +514,9 @@ static func week_points(draft: Dictionary = {}) -> float:
 	return points
 
 
-## Bu sprintte çalışabilecekler: aktif kurucu ve ürün tarafındaki aktif çalışanlar, Ar-Ge'dekiler
-## hariç. {id, name, points (haftalık), fits (uyduğu roller), founder, ahead (ürün ve tasarım rolü:
-## geliştirme ve teste uymaz, yalnız ilk fazda çalışır ve önden gider)}.
+## Bu sprintte çalışabilecekler: Görevler matrisinde Yapım ya da Test işini tutan aktif kişiler, kurucu
+## dahil. {id, name, points (haftalık, sprint payıyla), share (sprint payı), fits (uyduğu roller), founder,
+## ahead (ürün ve tasarım rolü: geliştirme ve teste uymaz, yalnız ilk fazda çalışır ve önden gider)}.
 static func team() -> Array:
 	var people: Array[Character] = CharacterRegistry.get_active_employees()
 	var founder: Character = CharacterRegistry.get_founder()
@@ -523,11 +525,13 @@ static func team() -> Array:
 	var hours: float = float(_p().sprint.get("hours_mult", 1.0)) if mode() == "active" else 1.0
 	var out: Array = []
 	for c in people:
-		var fits: Array = _fits(c)
-		if fits.is_empty() or c.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
+		var share: float = _share(c)
+		if share == 0.0:
 			continue
+		var fits: Array = _fits(c)
 		out.append({"id": c.id, "name": c.character_name, "points": _points(c, WorkHoursSystem.hours_for(c)) * hours,
-			"fits": fits, "founder": c.category == "founder", "ahead": not (fits.has("dev") or fits.has("test"))})
+			"share": share, "fits": fits, "founder": c.category == "founder",
+			"ahead": not (fits.has("dev") or fits.has("test"))})
 	return out
 
 
@@ -890,9 +894,9 @@ static func _clear_decision() -> void:
 		_restaff()
 
 
-## Hafta ortasında ekipten ayrılan, Ekip'in gününde izne ya da Ar-Ge'ye giden ve izinden dönen kişi
-## haftanın atamasını değiştirir. Sprint koşmuyorken ekibin her değişikliği (Ar-Ge'ye oturan, işe alınan,
-## eğitime giden, ayrılan) planın tutuşunu yeniden okur: kimse çalışamıyorsa plan saati tutmaz.
+## Hafta ortasında ekipten ayrılan, Ekip'in gününde izne giden, işi sprint dışına geçen (Ar-Ge, Destek) ve
+## izinden dönen kişi haftanın atamasını değiştirir. Sprint koşmuyorken ekibin her değişikliği (işi değişen,
+## işe alınan, eğitime giden, ayrılan) planın tutuşunu yeniden okur: kimse çalışamıyorsa plan saati tutmaz.
 static func _watch_team() -> void:
 	if not EventBus.hr_day_processed.is_connected(_on_team_changed):
 		EventBus.hr_day_processed.connect(_on_team_changed)
@@ -1286,9 +1290,16 @@ static func points_for(role_id: String, role_stats: Dictionary, hours: int) -> f
 	return float(SprintCatalog.cfg("person_points_week")) * mult * HRConstants.hours_output_mult(hours)
 
 
-## Haftalık puan: 2 × beceri bandı (ana alanın 0-10 puanı; kurucu sabit) × verim × çalışma saati.
+## Haftalık puan: 2 × beceri bandı (ana alanın 0-10 puanı; kurucu sabit) × verim × çalışma saati × sprint payı.
 static func _points(c: Character, hours: int) -> float:
-	if c.category != "founder":
-		return points_for(c.role, c.role_stats, hours) * HRSystem.productivity(c)
-	return float(SprintCatalog.cfg("person_points_week")) * float(SprintCatalog.cfg("founder_mult")) \
+	var week: float = points_for(c.role, c.role_stats, hours) * HRSystem.productivity(c) if c.category != "founder" \
+		else float(SprintCatalog.cfg("person_points_week")) * float(SprintCatalog.cfg("founder_mult")) \
 		* HRSystem.productivity(c) * HRConstants.hours_output_mult(hours)
+	return week * _share(c)
+
+
+## Kişinin sprint payı: Yapım ve Test işlerinin her biri odak payını (HRConstants.focus_mult) getirir. Tek
+## işte 1, Yapım ve Test'te 1, Yapım ve Destek'te 0,5; yalnız Destek'te ya da Ar-Ge'de 0 (ekipte değil).
+static func _share(c: Character) -> float:
+	return c.assigned_job_ids.filter(func(job: String) -> bool: return job in SPRINT_JOBS).size() \
+		* HRConstants.focus_mult(HRSystem.job_count(c))
