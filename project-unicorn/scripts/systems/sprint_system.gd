@@ -1190,9 +1190,9 @@ static func _movable(c: Dictionary) -> bool:
 	return not c.is_empty() and c.state not in ["running", "done"] and SprintCatalog.gate_reason(c.step) == ""
 
 
-## Başlamamış düzeltme kartının ticket'ları defterden okunur: koşunun erittikleri düşer, hattın
-## yenileri eklenir; bileti kalmayan kart silinir. Defter yalnız günlük eşitlemede ve kapanışta
-## değişir; ikisinden sonra ve başlatmadan önce çağrılır.
+## Başlamamış düzeltme kartının ticket'ları defterden okunur: hattın yenileri eklenir; bileti
+## kalmayan kart silinir. Defter yalnız günlük eşitlemede ve kapanışta değişir; ikisinden sonra
+## ve başlatmadan önce çağrılır.
 static func _refresh_fix_cards() -> void:
 	var p: Dictionary = _p()
 	var by_line: Dictionary = SprintCatalog.tickets_by_line()

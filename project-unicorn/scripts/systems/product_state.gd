@@ -15,11 +15,6 @@ const REPORTS_INCOMING := "mvp_reports_incoming"
 const REPORTS_PROGRESS := "mvp_reports_progress"
 const BUGS_CONFIRMED := "mvp_bugs_confirmed"
 const VALIDATION_PROGRESS := "mvp_validation_progress"
-const FIX_RUN_ACTIVE := "mvp_fix_run_active"
-const FIX_RUN_FIXED := "mvp_fix_run_fixed"
-const FIX_RUN_PROGRESS := "mvp_fix_run_progress"
-## Bu haftanın gelen bildirimi eksi doğrulananı; eksiye inebilir, `reports_missed` sıfırda keser.
-const REPORTS_WEEK_NET := "mvp_reports_week_net"
 const VERSION_LAUNCH_DAY := "mvp_version_launch_day"
 const INTEREST := "mvp_interest"
 const INFRA_PROVIDER := "mvp_infra_provider"
@@ -164,25 +159,11 @@ static func bugs_confirmed() -> int:
 	return int(GameState.get_flag(BUGS_CONFIRMED, 0))
 
 
-## Masanın bu hafta bakamadığı bildirimler.
-static func reports_missed() -> int:
-	return maxi(int(GameState.get_flag(REPORTS_WEEK_NET, 0)), 0)
-
-
 ## Ürünün ticket defterinin yazma yolu: düzeltme kartı kapattığı doğrulanmış hataları düşer,
-## hatalı çıkış bir tane ekler. Yalnız DOĞRULANMIŞ oynar ve sıfırın altına inmez; GELEN ve
-## koşunun sayaçları DESTEK'indir. Koşunun birikimi havuz boşalınca DESTEK'in kendi bankası
-## kuralıyla kırpılır.
+## hatalı çıkış bir tane ekler. Yalnız DOĞRULANMIŞ oynar ve sıfırın altına inmez; GELEN
+## DESTEK'indir.
 static func adjust_confirmed(delta: int) -> void:
 	GameState.set_flag(BUGS_CONFIRMED, maxi(0, bugs_confirmed() + delta))
-
-
-static func fix_run_active() -> bool:
-	return bool(GameState.get_flag(FIX_RUN_ACTIVE, false))
-
-
-static func fix_run_fixed() -> int:
-	return int(GameState.get_flag(FIX_RUN_FIXED, 0))
 
 
 # ------------------------------------------------------- §9 age, interest

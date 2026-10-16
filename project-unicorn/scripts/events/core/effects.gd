@@ -39,8 +39,8 @@ const NEUTRAL_VERBS := [
 	# people — morale, pace, hours and assignment are not economy; salary is, and lives below
 	"change_morale", "morale_all", "assign_to", "send_on_leave", "start_training", "productivity_mod",
 	"work_hours",
-	# product — a fix run spends the desk's hours, not money
-	"damage_product", "fix_run_start",
+	# product
+	"damage_product",
 	# sprint — the card a sprint decision is about, and the sprint's work hours
 	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "sprint_hours",
 	# customers — satisfaction is a relationship, not a payment
@@ -436,11 +436,6 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			if sprint == 0:
 				return _no_target(verb, "")
 			return {"verb": verb, "sprint": sprint, "mult": mult, "hours": hours}
-		"fix_run_start":
-			if not SupportSystem.start_fix_run():
-				return {"verb": verb, "refused": SupportSystem.fix_run_refusal()}
-			return {"verb": verb}
-
 		# --- world and surfaces -----------------------------------------------
 		"ticker_push":
 			# §18: the ticker is atmosphere, never the ONLY channel — anything meaningful here is

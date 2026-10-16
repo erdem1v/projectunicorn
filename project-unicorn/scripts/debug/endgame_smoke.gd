@@ -187,7 +187,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# rev 6.1 §6.4 kapıyı geri koydu; case adıyla birlikte ters çevrildi.
 		# --- DESTEK (§8) ve ALTYAPI (§10) ---
 		"destek_empty_desk_piles_up":    fail = _case_destek_empty_desk_piles_up()
-		"fix_run_ships_subset":          fail = _case_fix_run_ships_subset()
 		"infra_capacity_moves_both_ways": fail = _case_infra_capacity_moves_both_ways()
 		"infra_heavy_step_costs_capacity": fail = _case_infra_heavy_step_costs_capacity()
 		"infra_overage_applies_and_stops": fail = _case_infra_overage_applies_and_stops()
@@ -5298,7 +5297,7 @@ static func _case_hotfix_weekly_summary_rows() -> String:
 #  Destek Hattı Reworku — B2 · B3 · B4 · B5 (2026-08-27)
 # ============================================================================
 
-## B2 — REP + IDLE FOUNDER STACK. `_area_sum` sums over the roster, so once B1 puts a passively
+## B2 — REP + IDLE FOUNDER STACK. `validation_per_day` sums over the roster, so once B1 puts a passively
 ## caring founder INTO that roster the two rates add with no separate stacking rule. This case
 ## is the proof that they do, and that the sum is exactly the parts.
 ## FALSIFICATION: drop the founder out of `desk_roster()` and the combined rate equals the rep's.
@@ -5849,23 +5848,22 @@ static func _case_event_beat_is_note() -> String:
 	return ""
 
 
-## §27.17: a history row prints what its card read when it resolved, not today's state. The bug count in a played
-## card's body stays the week's; a flag-picked variant keeps the variant the flag chose.
-## FALSIFICATION: drop the names lookup from EvPresenter._interpolate → the row prints today's count; drop it from
+## §27.17: a history row prints what its card read when it was written, not today's state. The runway in a note's
+## body stays the week's; a flag-picked variant keeps the variant the flag chose.
+## FALSIFICATION: drop the names lookup from EvPresenter._interpolate → the row prints today's runway; drop it from
 ## _resolve_variant → the variant follows the flag.
 static func _case_event_beat_freezes_seams() -> String:
-	GameState.set_flag("mvp_shipped", true)
-	EvSeams.mock("urun.bugs_confirmed", 14)
-	EvSeams.mock("destek.desk_staffed", true)
-	if not EventGate.request("product.bug_pile") or EventGate.active_id() != "product.bug_pile":
-		return "fixture: the bug pile did not show (%s)" % EventGate.active_id()
-	EventGate.resolve("product.bug_pile", "later")
+	GameState.day = 5
+	EvSeams.mock("finance.runway_weeks", 14)
+	if not EventGate.request("founder.savings_note"):
+		return "fixture: the savings note was refused"
 	var row: Dictionary = EventGate.history()[-1]
-	EvSeams.mock("urun.bugs_confirmed", 3)
+	EvSeams.mock("finance.runway_weeks", 3)
 	var body: String = EventGate.render(row.event_id, row.entities, row.get("names", {})).body_text
 	if not body.contains("14"):
-		return "the row reads today's count: '%s'" % body
+		return "the row reads today's runway: '%s'" % body
 	var card := {"text": {"en": {"body": {"by_seam": "destek.desk_staffed", "variants": {"0": "nobody", "1": "staffed"}}}}}
+	EvSeams.mock("destek.desk_staffed", true)
 	var kept: Dictionary = EvPresenter.freeze_seams(card, {})
 	EvSeams.mock("destek.desk_staffed", false)
 	if EvPresenter.resolve_text(card.text.en.body, {}, kept) != "staffed":
@@ -13186,13 +13184,10 @@ static func _case_borderless_note_key_exists() -> String:
 # ============================================================================
 
 ## R5: YAYINLAMAK BİR SON DEĞİLDİR. Yayından sonra kart kaybolmaz, DESTEK'e döner
-## ve ürün yaşadıkça yaşar. DOĞRULANMIŞ gerçek veriyi okur.
-## FALSİFİKASYON: `_derive_support`'ı `return false` yap → ikinci iddia FAIL.
-##
-## rev 6.1 (router devri): kart artık ESKİ hata sprintini değil §8/§9'un düzeltme
-## koşusunu okuyor. Sebep ekranda görülüyordu — yüzen kart "HATA SPRİNTİ · 5 hata"
-## derken altındaki canlı ürün sayfası "DÜZELTME BAŞLAT · DOĞRULANMIŞ 0" diyordu:
-## tek şeyin iki gerçeği, iki ayrı motordan.
+## ve ürün yaşadıkça yaşar. DOĞRULANMIŞ ile GELEN gerçek sayaçları okur.
+## FALSİFİKASYON: `BuildBarModel.derive`'ın başına `return false` koy → ikinci iddia FAIL.
+## `live_bugs` ya da `incoming` atamasını sil → sayaç iddiası FAIL; `fingerprint`'ten `live_bugs`'ı
+## çıkar → parmak izi iddiası FAIL.
 static func _case_destek_survives_ship() -> String:
 	const BarModel := preload("res://scripts/ui/components/build_bar_model.gd")
 	var before = BarModel.new()
@@ -13201,32 +13196,19 @@ static func _case_destek_survives_ship() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_product_name", "Nova")
 	GameState.set_flag("mvp_version", 2)
-	# rev 6.1: DESTEK'in motoru §8/§9'un DÜZELTME KOŞUSU oldu. Kartın İDDİASI aynı
-	# (yayın bir son değil), okuduğu sayaç değişti: `mvp_live_bug_count` değil
-	# DOĞRULANMIŞ HATA. Masa da kurulmalı — kimse atanmamışsa koşu başlatılamaz
-	# (§8: "Destek'e kimse atanmamışsa masa kapalıdır").
 	GameState.set_flag(ProductState.BUGS_CONFIRMED, 7)
-	GameState.set_flag(ProductState.FIX_RUN_ACTIVE, false)
-	GameState.set_flag(ProductState.FIX_RUN_FIXED, 0)
-	var founder: Character = CharacterRegistry.get_founder()
-	CharacterRegistry.clear_jobs(founder.id)
-	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT)
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 4)
 	var m = BarModel.new()
 	if not m.derive():
 		return "the card vanished after ship — YAYINLANDI is not a terminal state (R5)"
-	if m.live_bugs != 7:
-		return "DOĞRULANMIŞ read %d, want the confirmed-bug count 7" % m.live_bugs
-	if m.decision_key != "PROD_FIX_RUN_START" or not m.decision_enabled:
-		return "DESTEK's decision row is not an armed fix run (%s/%s)" 			% [m.decision_key, str(m.decision_enabled)]
-	# §8.4 — KOŞU SIRASINDA SATIR DÜŞMEZ, DEĞİŞİR: bitirmek de oyuncunun kararı.
-	if not SupportSystem.start_fix_run():
-		return "start_fix_run refused a shipped product with 7 confirmed bugs and a staffed desk"
-	var running = BarModel.new()
-	running.derive()
-	if running.decision_key != "PROD_FIX_RUN_END":
-		return "a running fix run did not offer the end action (%s)" % running.decision_key
-	if not running.fix_run_active:
-		return "the card did not see the running fix run"
+	if m.live_bugs != 7 or m.incoming != 4:
+		return "DOĞRULANMIŞ/GELEN read %d/%d, want the counters 7/4" % [m.live_bugs, m.incoming]
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
+	var later = BarModel.new()
+	later.derive()
+	if later.live_bugs != 9 or later.fingerprint() == m.fingerprint():
+		return "the card did not follow the confirmed count (%d, fingerprint '%s')" % [
+			later.live_bugs, later.fingerprint()]
 	return ""
 
 
@@ -13465,9 +13447,6 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 	GameState.set_flag(ProductState.REPORTS_PROGRESS, 0.0)
 	GameState.set_flag(ProductState.BUGS_CONFIRMED, 0)
 	GameState.set_flag(ProductState.VALIDATION_PROGRESS, 0.0)
-	GameState.set_flag(ProductState.FIX_RUN_ACTIVE, false)
-	GameState.set_flag(ProductState.FIX_RUN_FIXED, 0)
-	GameState.set_flag(ProductState.FIX_RUN_PROGRESS, 0.0)
 	ProductState.refresh_on_publish(20.0)
 	InfraSystem.reset()
 	SupportSystem.reset()
@@ -13476,16 +13455,14 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 ## §8.2 — HERKES MAİL OKUR. Masada kimse yokken de canlı üründe bildirimler okunur: pasif ilgideki
 ## kurucu ve bu hafta sprint kartı olmayan çalışan en az SUPPORT_BASE_POINTS'le doğrular; masaya
 ## atanmak kimseyi boştakinden yavaş yapmaz. Masaya oturan temsilci doğrulamayı en az üç katına
-## çıkarır. Masanın bakamadığı bildirim haftalık "kaçırılan" sayılır: temsilcisiz büyüyen üründe artar,
-## temsilci gelince düşer; izne gönderilen temsilci doğrulamaz. Taban yalnız doğrulamadır: masa
-## kapalıyken koşu açılmaz ve kart masanın sebebini söyler.
+## çıkarır. Masanın yetişemediği bildirimler Gelen yığınında birikir: temsilcisiz büyüyen üründe yığın
+## büyür, temsilci gelince küçülür; izne gönderilen temsilci doğrulamaz.
 ##
-## FALSIFICATION: fix_run_refusal'da masa denetimini "hata yok"un arkasına al → "shut desk" FAIL;
-## _area_sum tabanı Destek'e atanmışa uygulamazsa → "at the desk" FAIL; validation_per_day okurları
+## FALSIFICATION: desk_staffed hep true dönerse → "shut desk" FAIL; validation_per_day'in tabanı
+## Destek'e atanmışa uygulanmazsa → "at the desk" FAIL; validation_per_day okurları
 ## get_employees()'tan toplarsa → "on leave" FAIL;
 ## SUPPORT_BASE_POINTS 0 → "verified nothing" FAIL; 3 → "three times" FAIL;
-## ProductState.reports_missed 0 dönerse → "did not grow" FAIL; hourly_tick haftanın netinden
-## `verified`'ı düşmezse → "did not cut" FAIL.
+## hourly_tick doğrulamayı atlarsa → "verified nothing" FAIL.
 static func _case_destek_empty_desk_piles_up() -> String:
 	_seed_support_fixture("b2c")
 	# Akış yalnız kitleyle oynasın: yeni kod terimi haftadan haftaya sönerdi.
@@ -13493,9 +13470,8 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	var founder: Character = CharacterRegistry.get_founder()
 	_set_founder_area(HRConstants.AREA_CUSTOMER_SUCCESS, 0)
 	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
-	if SupportSystem.fix_run_refusal() != SupportSystem.REFUSAL_DESK_SHUT:
-		return "an empty desk with zero confirmed bugs refused as '%s', not as the shut desk" \
-			% SupportSystem.fix_run_refusal()
+	if SupportSystem.desk_staffed():
+		return "a founder on the build and nobody else still staffs the desk"
 	CharacterRegistry.clear_jobs(founder.id)
 	var alone: float = SupportSystem.validation_per_day()
 	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT)
@@ -13505,11 +13481,10 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	CharacterRegistry.clear_jobs(founder.id)
 	var week := func(audience: float) -> int:
 		GameState.set_flag("b2c_audience", audience)
+		var pile: int = ProductState.reports_incoming()
 		for h in TimeModel.HOURS_PER_DAY:
 			SupportSystem.hourly_tick(h)
-		var missed: int = ProductState.reports_missed()
-		SupportSystem.daily_tick()
-		return missed
+		return ProductState.reports_incoming() - pile
 
 	# İki hafta, kurucunun Müşteri İlişkileri 0, masada kimse yok; kitle büyüyor.
 	var small: int = week.call(4000.0)
@@ -13517,7 +13492,7 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	if ProductState.bugs_confirmed() <= 0:
 		return "a founder with CS 0 and nobody at the desk verified nothing in two weeks"
 	if grown <= small:
-		return "missed reports did not grow with the product (%d -> %d)" % [small, grown]
+		return "the unvalidated pile did not grow with the product (%d -> %d)" % [small, grown]
 
 	var rep: Character = _make_employee("desk_rep", "Desk Rep", HRConstants.ROLE_CUSTOMER_REP)
 	if not SupportSystem.desk_roster().has(rep):
@@ -13527,65 +13502,12 @@ static func _case_destek_empty_desk_piles_up() -> String:
 			SupportSystem.validation_per_day(), alone]
 	var with_rep: int = week.call(24000.0)
 	if with_rep >= grown:
-		return "a rep at the desk did not cut the missed reports (%d -> %d)" % [grown, with_rep]
+		return "a rep at the desk did not slow the pile (%d -> %d)" % [grown, with_rep]
 	if not HRActions.apply_leave(rep, HRConstants.VACATION_WEEKS_MIN):
 		return "fixture: the rep could not be sent on leave"
 	if not is_equal_approx(SupportSystem.validation_per_day(), alone):
 		return "a rep on leave still verifies (%.2f/day against %.2f without)" % [
 			SupportSystem.validation_per_day(), alone]
-	return ""
-
-
-## §8.4 — koşu oyuncunun istediği an biter ve YALNIZ ÇÖZÜLENLER gider. "35 doğrulanmış,
-## 27 çözüldü, 27'si gider, 8'i havuzda kalır. Sıfır beklenmez."
-##
-## FALSİFİKASYON: _accrue_fix_run'dan BUGS_CONFIRMED yazımını kaldır → kalan havuz
-## iddiası FAIL.
-static func _case_fix_run_ships_subset() -> String:
-	_seed_support_fixture("b2c")
-	var dev: Character = _make_employee("fix_dev", "Fix Dev", HRConstants.ROLE_DEVELOPER)
-	dev.role_stats[HRConstants.AREA_ENGINEERING] = 8
-	if CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT) != "":
-		return "could not seat the developer at the support desk"
-
-	# DOĞRULANMIŞ 0 iken düğme KAPALIDIR (§8.4).
-	if SupportSystem.can_start_fix_run():
-		return "the fix run opened at zero confirmed bugs"
-	if SupportSystem.fix_run_refusal() != SupportSystem.REFUSAL_NO_BUGS:
-		return "the refusal at zero bugs was '%s'" % SupportSystem.fix_run_refusal()
-
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 35)
-	if not SupportSystem.can_start_fix_run():
-		return "the fix run stayed shut with 35 confirmed bugs"
-	if not SupportSystem.start_fix_run():
-		return "start_fix_run refused"
-	if not ProductState.fix_run_active():
-		return "the run did not read as active"
-
-	# Oyuncu 27 çözülene kadar bekler, sonra BİTİRİR. Sıfır beklenmez.
-	var guard: int = 0
-	while ProductState.fix_run_fixed() < 27 and guard < 24 * 200:
-		SupportSystem.hourly_tick(guard % 24)
-		guard += 1
-	var fixed: int = ProductState.fix_run_fixed()
-	if fixed < 27:
-		return "the run never reached 27 fixes (%d)" % fixed
-	var remaining_before: int = ProductState.bugs_confirmed()
-	var shipped: int = SupportSystem.end_fix_run()
-
-	if shipped != fixed:
-		return "the run shipped %d but had fixed %d" % [shipped, fixed]
-	if ProductState.fix_run_active():
-		return "the run is still active after being ended"
-	# 35 − çözülen = havuzda kalan. Kalanlar SİLİNMEZ.
-	if remaining_before != 35 - fixed:
-		return "pool reads %d after %d fixes of 35 — the remainder did not stay" \
-			% [remaining_before, fixed]
-	if ProductState.bugs_confirmed() != remaining_before:
-		return "ending the run moved the pool (%d -> %d)" \
-			% [remaining_before, ProductState.bugs_confirmed()]
-	if ProductState.fix_run_fixed() != 0:
-		return "the run counter did not clear"
 	return ""
 
 
@@ -13819,9 +13741,8 @@ static func _case_product_read_catalogue() -> String:
 	var declared: Array[String] = []
 	for d in EventBus.get_signal_list():
 		declared.append(String((d as Dictionary).get("name", "")))
-	for name in ["version_shipped", "fix_run_started", "fix_run_finished", "bug_confirmed",
-			"unconfirmed_threshold_crossed", "axis_floor_warning", "axis_floor_crossed",
-			"line_upgraded", "line_completed", "delighter_shipped", "phase_bar_raised"]:
+	for name in ["version_shipped", "bug_confirmed", "unconfirmed_threshold_crossed", "axis_floor_warning",
+			"axis_floor_crossed", "line_upgraded", "line_completed", "delighter_shipped", "phase_bar_raised"]:
 		if not declared.has(name):
 			return "§19 signal '%s' is not declared on EventBus" % name
 
@@ -14354,8 +14275,6 @@ static func _case_save_v10_product_state() -> String:
 	ProductState.open_hidden_line("line_hidden_auto_organize")
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 41)
 	GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
-	GameState.set_flag(ProductState.FIX_RUN_ACTIVE, true)
-	GameState.set_flag(ProductState.FIX_RUN_FIXED, 27)
 	GameState.set_flag(ProductState.VERSION_LAUNCH_DAY, maxf(1.0, ProductSystem.clock_stamp() - 2.0))
 	GameState.set_flag(ProductState.INTEREST, 62.5)
 	GameState.set_flag(ProductState.INFRA_PROVIDER, "cloud")
@@ -14398,9 +14317,6 @@ static func _case_save_v10_product_state() -> String:
 		_cleanup_save_slots()
 		return "the DESTEK counters did not survive (%d / %d)" \
 			% [ProductState.reports_incoming(), ProductState.bugs_confirmed()]
-	if not ProductState.fix_run_active() or ProductState.fix_run_fixed() != 27:
-		_cleanup_save_slots()
-		return "the fix run did not survive"
 	if not is_equal_approx(ProductState.version_age(), age_before):
 		_cleanup_save_slots()
 		return "version age drifted across the reload (%.3f vs %.3f)" \

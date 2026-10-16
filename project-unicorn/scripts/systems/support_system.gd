@@ -8,19 +8,17 @@ extends RefCounted
 # İKİ SAYAÇ (§8.1), MÜHÜRLÜ terimler:
 #   GELEN BİLDİRİM  — doğrulanmamış kullanıcı bildirimi. Kendiliğinden GELİR (§9).
 #   DOĞRULANMIŞ HATA — onaylanmış açık hata. Kendiliğinden ÇÖZÜLMEZ. Asla.
-# Modülün bütün gerilimi bu asimetride: akış otomatiktir, çözüm ATAMA gerektirir.
+# Modülün bütün gerilimi bu asimetride: akış otomatiktir, çözüm sprintin düzeltme kartıdır.
 #
 # MODÜL KENDİ KENDİNE TİKLEMEZ: `daily_tick()` ve `hourly_tick(hour)` TimeManager'dan
 # çağrılır. Bayrak ADLARININ tek evi ProductState'tir; bu modül §8 sayaçlarının tek
 # yazarıdır ama adı daima ProductState'in sabitinden alır.
 #
 # SAAT/GÜN AYRIMI (bir tik yedi takvim günüdür):
-#   hourly_tick — AKIŞLAR. §9 bildirim akışı, §8.2 doğrulama, §8.4 düzeltme koşusu.
-#                 Üçü de GÜNLÜK oranlardır; saatlik tikte tikin yedi gününün 1/24'ü
+#   hourly_tick — AKIŞLAR. §9 bildirim akışı, §8.2 doğrulama.
+#                 İkisi de GÜNLÜK oranlardır; saatlik tikte tikin yedi gününün 1/24'ü
 #                 işlenir. Kesirli birikim *_PROGRESS bayraklarında durur, tam sayıya
-#                 taşınca sayaç oynar. Sıra kasıtlı: bildirim gelir → doğrulanır → koşu
-#                 çözer. Aynı saat içinde bir bildirimin doğrulanıp çözülebilmesi "masa
-#                 dolu" hâlinin ta kendisidir.
+#                 taşınca sayaç oynar. Sıra kasıtlı: bildirim gelir → doğrulanır.
 #   daily_tick  — GÜNLÜK KESİNTİLER. §8.3 memnuniyet zararı ve §9 ilgi sönümü. İkisi
 #                 de belgede açıkça "/gün" yazılıdır; zarar tavanı GÜNLÜK bir tavandır ve
 #                 günlük değere uygulanır, tik yedi günü sonra alır.
@@ -70,10 +68,6 @@ const DAMAGE_PER_UNITS := 10.0
 ## ölüm sarmalı değil, ağır ama toparlanabilir bir kanamadır.
 const DAMAGE_DAILY_CAP := -2.0
 
-# ------------------------------------------------------------- §8.4 düzeltme koşusu
-## §8.4 — düzeltme/gün = 1,2 × Σ etkin Yazılım × saat/8.
-const FIX_COEF := 1.2
-
 # --------------------------------------------------------------- §8.5 ısınma
 ## §8.5 eşikler: GELEN < 20 sakin · 20-40 ılık · > 40 sıcak. Renk UI'nin sözlüğüdür.
 const WARMTH_WARM_AT := 20
@@ -88,13 +82,6 @@ const BAND_HOT := "hot"
 const INTEREST_HALF_LIFE := 30.0 / TimeModel.DAYS_PER_TICK
 
 const MARKET_B2B := "b2b"
-
-## §8.4 DÜZELTME BAŞLAT'ın ret kimlikleri: makine kimliği döner, metin dönmez.
-## "" = koşu başlatılabilir.
-const REFUSAL_NOT_LIVE := "not_live"
-const REFUSAL_ALREADY_RUNNING := "already_running"
-const REFUSAL_NO_BUGS := "no_confirmed_bugs"
-const REFUSAL_DESK_SHUT := "desk_shut"
 
 ## Memnuniyet 0-100 TAM SAYIDIR ve tek yazma seam'i CustomerRegistry.set_satisfaction(id, int).
 ## §8.3'ün zararı kesirlidir: beş hesaba bölünmüş −2,0 hesap başına −0,4 eder ve yuvarlama
@@ -114,30 +101,20 @@ static func hourly_tick(_hour: int) -> void:
 	var f: float = 1.0 / float(TimeModel.HOURS_PER_DAY)
 	# Toplantı atlamasının saatinde kurucu masada payıyla sayılır (TimeManager.founder_output_factor).
 	var founder_share: float = TimeManager.founder_output_factor()
-	# §9 — bildirimler kendiliğinden gelir. Masa kapalı olsa da gelir; §8.2'nin
-	# kapattığı şey düzeltmedir, akış değil.
+	# §9 — bildirimler kendiliğinden gelir, masa kapalı olsa da.
 	var reports: float = float(GameState.get_flag(ProductState.REPORTS_PROGRESS, 0.0)) \
 		+ TimeModel.per_tick(reports_per_day()) * f
 	var arrived: int = int(reports)
 	GameState.set_flag(ProductState.REPORTS_PROGRESS, reports - arrived)
 	GameState.set_flag(ProductState.REPORTS_INCOMING, ProductState.reports_incoming() + arrived)
 	# §8.2 — GELEN'i DOĞRULANMIŞ'a çevirir; masa boşken de okurların tabanıyla.
-	var verified: int = _drain(ProductState.VALIDATION_PROGRESS,
-		TimeModel.per_tick(validation_per_day(founder_share)) * f, ProductState.REPORTS_INCOMING,
-		ProductState.BUGS_CONFIRMED)
-	GameState.set_flag(ProductState.REPORTS_WEEK_NET,
-		int(GameState.get_flag(ProductState.REPORTS_WEEK_NET, 0)) + arrived - verified)
-	# §8.4 — koşu DOĞRULANMIŞ'ı eritir ve çözülenleri sayar. Havuz boşalırsa koşu
-	# KENDİLİĞİNDEN BİTMEZ: yeni doğrulamaları da yer. Koşuyu bitiren yalnız oyuncudur.
-	_drain(ProductState.FIX_RUN_PROGRESS, TimeModel.per_tick(fix_per_day(founder_share)) * f,
-		ProductState.BUGS_CONFIRMED, ProductState.FIX_RUN_FIXED)
+	_drain(ProductState.VALIDATION_PROGRESS, TimeModel.per_tick(validation_per_day(founder_share)) * f,
+		ProductState.REPORTS_INCOMING, ProductState.BUGS_CONFIRMED)
 
 
 static func daily_tick() -> void:
 	if not ProductState.is_live():
 		return
-	# Kaçırılan bildirim haftalık sayılır ve tik bir haftadır.
-	GameState.set_flag(ProductState.REPORTS_WEEK_NET, 0)
 	apply_daily_satisfaction_damage()
 	# İlgi türetilir ama duruma geri yazılır: tüketicisi Satış/Pazarlama tek bir sayı okur.
 	GameState.set_flag(ProductState.INTEREST, interest_now())
@@ -189,7 +166,7 @@ static func usage_multiplier() -> float:
 # =========================================================================
 
 ## §8.2/§12.0 — DESTEK işine atanmış, bugün çalışabilir herkes; ARTI pasif ilgideki kurucu.
-## İzindeki/eğitimdeki kişi HRSystem tarafında zaten eleniyor. `_area_sum` roster üzerinde
+## İzindeki/eğitimdeki kişi HRSystem tarafında zaten eleniyor. `validation_per_day` roster üzerinde
 ## topladığı için masadaki temsilci ile pasif kurucu kendiliğinden toplanır.
 static func desk_roster() -> Array[Character]:
 	var roster: Array[Character] = HRSystem.assigned_to_job(HRConstants.JOB_SUPPORT)
@@ -218,8 +195,7 @@ static func founder_passive_care() -> bool:
 	return not HRSystem.is_busy(f) and f.assigned_job_ids.is_empty()
 
 
-## §8.2 — Destek'e kimse atanmamışsa masa KAPALIDIR: hiçbir şey düzeltilemez; doğrulama yalnız
-## okurların tabanıyla sürer.
+## §8.2 — Destek'e kimse atanmamışsa masa KAPALIDIR; doğrulama yalnız okurların tabanıyla sürer.
 static func desk_staffed() -> bool:
 	return not desk_roster().is_empty()
 
@@ -227,6 +203,9 @@ static func desk_staffed() -> bool:
 ## §8.2 — doğrulama/gün = katsayı × Σ `HRSystem.daily_contribution` (effective_skill × saat/8).
 ## Liderlik çarpanı BU FORMÜLDE YOK: §4.2 onu alanın toplamına uyguluyor ve §8.2 yazmıyor.
 ## Herkes mail okur: masanın yanında bu hafta sprint kartı olmayan aktif çalışanlar da doğrular.
+## İki işteki kişi 0,5 odakla bölünür (`effective_skill` bunu zaten uyguluyor). `founder_share`
+## kurucunun katkısını çarpar; yalnız saatlik tik toplantı payını verir. Herkes en az
+## SUPPORT_BASE_POINTS'le sayılır.
 static func validation_per_day(founder_share: float = 1.0) -> float:
 	if not ProductState.is_live():
 		return 0.0
@@ -235,28 +214,11 @@ static func validation_per_day(founder_share: float = 1.0) -> float:
 	for c in CharacterRegistry.get_active_employees():
 		if not readers.has(c) and SprintSystem.role_of(c.id) == "":
 			readers.append(c)
-	return coef * _area_sum(readers, HRConstants.AREA_CUSTOMER_SUCCESS, founder_share, SUPPORT_BASE_POINTS)
-
-
-## §8.4 — düzeltme/gün = 1,2 × Σ etkin Yazılım × saat/8, yine YALNIZ Destek masası ve tabansız:
-## mail okumak hata düzeltmez. Koşu yokken 0: hiçbir hata kendiliğinden çözülmez (§8.1).
-static func fix_per_day(founder_share: float = 1.0) -> float:
-	if not ProductState.is_live() or not ProductState.fix_run_active():
-		return 0.0
-	return FIX_COEF * _area_sum(desk_roster(), HRConstants.AREA_ENGINEERING, founder_share, 0.0)
-
-
-## İki işteki kişi 0,5 odakla bölünür — `effective_skill` bunu zaten uyguluyor, yani
-## koşu sırasında doğrulamanın sürmesi (§8.4) bedavaya gelmiyor. `founder_share` kurucunun
-## katkısını çarpar; yalnız saatlik tik toplantı payını verir. Herkes en az `floor_points`'le
-## sayılır.
-static func _area_sum(people: Array[Character], area_key: String, founder_share: float,
-		floor_points: float) -> float:
 	var total: float = 0.0
-	for c in people:
-		var points: float = maxf(HRSystem.daily_contribution(c, area_key), floor_points)
+	for c in readers:
+		var points: float = maxf(HRSystem.daily_contribution(c, HRConstants.AREA_CUSTOMER_SUCCESS), SUPPORT_BASE_POINTS)
 		total += points * (founder_share if c.category == "founder" else 1.0)
-	return total
+	return coef * total
 
 
 # =========================================================================
@@ -299,56 +261,6 @@ static func apply_daily_satisfaction_damage() -> void:
 
 
 # =========================================================================
-#  §8.4 · DÜZELTME KOŞUSU
-# =========================================================================
-
-## §8.4 — "DOĞRULANMIŞ birikince DÜZELTME BAŞLAT açılır (DOĞRULANMIŞ 0 iken kapalıdır)."
-## Masa kapalıysa da açılmaz: kimse yokken başlatılan koşu boş bir kabuk olurdu. Masa önce sorulur:
-## boş masa düzeltemez, "hata yok" sebebi bunu saklardı.
-static func fix_run_refusal() -> String:
-	if not ProductState.is_live():
-		return REFUSAL_NOT_LIVE
-	if ProductState.fix_run_active():
-		return REFUSAL_ALREADY_RUNNING
-	if not desk_staffed():
-		return REFUSAL_DESK_SHUT
-	if ProductState.bugs_confirmed() <= 0:
-		return REFUSAL_NO_BUGS
-	return ""
-
-
-static func can_start_fix_run() -> bool:
-	return fix_run_refusal() == ""
-
-
-## §8.4 — koşuyu başlatır. Sayaçlar sıfırlanır; ilerleme saatlik tick'te akar.
-static func start_fix_run() -> bool:
-	var refusal: String = fix_run_refusal()
-	if refusal != "":
-		push_warning("[SupportSystem] start_fix_run refused: %s" % refusal)
-		return false
-	EventBus.fix_run_started.emit(ProductState.bugs_confirmed())   # §19
-	GameState.set_flag(ProductState.FIX_RUN_ACTIVE, true)
-	GameState.set_flag(ProductState.FIX_RUN_FIXED, 0)
-	GameState.set_flag(ProductState.FIX_RUN_PROGRESS, 0.0)
-	return true
-
-
-## §8.4 — "Oyuncu koşuyu istediği an bitirir ve çözülenleri canlıya iter: 35 doğrulanmış,
-## 27 çözüldü, 27'si gider, 8'i havuzda kalır." Çözülenler koşu boyunca zaten havuzdan
-## düşmüştür; bu fonksiyon koşuyu kapatır ve kaç hatanın canlıya gittiğini döner.
-static func end_fix_run() -> int:
-	if not ProductState.fix_run_active():
-		return 0
-	var shipped: int = ProductState.fix_run_fixed()
-	GameState.set_flag(ProductState.FIX_RUN_ACTIVE, false)
-	GameState.set_flag(ProductState.FIX_RUN_FIXED, 0)
-	GameState.set_flag(ProductState.FIX_RUN_PROGRESS, 0.0)
-	EventBus.fix_run_finished.emit(shipped, ProductState.bugs_confirmed())   # §19
-	return shipped
-
-
-# =========================================================================
 #  §8.5 · İHMAL ISINMASI · §9 · İLGİ
 # =========================================================================
 
@@ -376,11 +288,10 @@ static func interest_now() -> float:
 # =========================================================================
 
 ## Günlük oranın bu saatlik payını birikime ekler ve tam birimleri `from_key` sayacından
-## `to_key` sayacına taşır; taşıdığını döner. Kaynak tükenince birikim VALIDATION_BANK_MAX ile
-## sınırlanır.
-static func _drain(progress_key: String, rate: float, from_key: String, to_key: String) -> int:
+## `to_key` sayacına taşır. Kaynak tükenince birikim VALIDATION_BANK_MAX ile sınırlanır.
+static func _drain(progress_key: String, rate: float, from_key: String, to_key: String) -> void:
 	if rate <= 0.0:
-		return 0
+		return
 	var prog: float = float(GameState.get_flag(progress_key, 0.0)) + rate
 	var source: int = int(GameState.get_flag(from_key, 0))
 	var moved: int = mini(int(prog), source)
@@ -391,4 +302,3 @@ static func _drain(progress_key: String, rate: float, from_key: String, to_key: 
 	GameState.set_flag(progress_key, prog)
 	GameState.set_flag(from_key, source)
 	GameState.set_flag(to_key, int(GameState.get_flag(to_key, 0)) + moved)
-	return moved

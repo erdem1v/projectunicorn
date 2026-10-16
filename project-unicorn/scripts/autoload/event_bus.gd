@@ -144,8 +144,6 @@ signal infra_changed()
 # Dinleyicisi olmasa da yayınlanır; eksik bir ad içeriğin o ana atıfta bulunamaması demektir.
 # Adlar KARARLIDIR ve her birinin TEK emitter'ı vardır: iki emitter motora aynı anı iki kez gösterir.
 signal version_shipped(version: int)
-signal fix_run_started(confirmed: int)
-signal fix_run_finished(shipped: int, remaining: int)
 signal bug_confirmed(total_confirmed: int)
 signal unconfirmed_threshold_crossed(band: String)
 signal axis_floor_warning(axis: String)

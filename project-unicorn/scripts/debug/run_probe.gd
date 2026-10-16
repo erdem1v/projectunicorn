@@ -126,9 +126,6 @@ static var _k1_only: bool = false           # full_run*: never plan a K2 or K3 s
 static var _runway_weeks: Dictionary = {}   # phase -> Vector2i(weeks with a finite runway, weeks)
 static var _min_cash_pre_seed: int = 0      # the lowest weekly cash before the seed round closed
 static var _run_seed: int = 424242
-static var _fix_on_at: float = 0.0         # clock day (TimeModel.days) the running fix pass started
-static var _fix_off_at: float = -INF        # clock day the last fix pass ended
-static var _fixer_id: String = ""           # the developer lent to the support desk for it
 static var _fires_by_day: Dictionary = {}   # tick -> card fires that week, for PROBE WEEK
 static var _meetings_by_day: Dictionary = {}  # tick -> the founder's sittings that week, for PROBE WEEK
 static var _signs_by_day: Dictionary = {}   # tick -> B2B signings that week, for PROBE WEEK
@@ -819,8 +816,8 @@ static func _play_the_week() -> void:
 		_play_the_hunt()
 
 
-## Every visible hour: the desk decisions a player takes whenever a gate opens — a hire, a fix
-## pass, research, the roster.
+## Every visible hour: the desk decisions a player takes whenever a gate opens — a hire,
+## research, the roster.
 static func _play_the_hour() -> void:
 	if not GameState.run_active or TimeManager.is_night():
 		return
@@ -1080,45 +1077,20 @@ static func _hire_after_the_seed() -> void:
 		print("PROBE PLAY day=%d start_search %s/junior" % [GameState.day, role])
 
 
-## The played run's operations — the things any player does once the product is live: run a
-## fix pass when confirmed bugs pile up, research, look after the roster. Servers and the price
-## follow the releases on their own.
+## The played run's operations — the things any player does once the product is live: research,
+## look after the roster. Servers and the price follow the releases on their own.
 static func _run_the_company() -> void:
 	if not ProductState.is_live():
 		return
 	# Once anyone pays for the consumer product the founder takes the support desk (§8.2) next to
 	# his build job: the two jobs split his focus, so the sprint counts him at half a share and the
-	# desk gets half his engineering for fix passes and half his customer_success for validation
-	# (0 in the debug payload, so the first rep is still needed).
+	# desk gets half his customer_success for validation (0 in the debug payload, so the first rep
+	# is still needed).
 	var founder: Character = CharacterRegistry.get_founder()
 	if ProductState.market_type() == "b2c" and SalesSystem.b2c_paying_users() > 0 \
 			and not founder.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
 		if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) == "":
 			print("PROBE PLAY day=%d founder takes the support desk" % GameState.day)
-	# A player closes a fix pass every few days and ships what was fixed; waiting for zero confirmed
-	# bugs never ends, because reports keep coming. Four calendar days on, one off, counted on the
-	# clock: the night cannot be acted in, so while the
-	# backlog stays high a week settles at twenty hours on (12:00 to 08:00) and four off.
-	var now: float = TimeModel.days(GameState.day + GameState.current_hour / float(TimeModel.HOURS_PER_DAY))
-	if ProductState.fix_run_active():
-		if ProductState.bugs_confirmed() <= 1 or now - _fix_on_at >= 4.0:
-			print("PROBE PLAY day=%d fix_run end shipped=%d" % [GameState.day, SupportSystem.end_fix_run()])
-			_fix_off_at = now
-			if _fixer_id != "":
-				CharacterRegistry.unassign_job(_fixer_id, HRConstants.JOB_SUPPORT)
-				_fixer_id = ""
-	elif ProductState.bugs_confirmed() >= 6 and SupportSystem.can_start_fix_run() and now - _fix_off_at >= 1.0:
-		# §8.4: fixes are ENGINEERING on the support desk. The CS reps who staff it have no
-		# engineering, so a player lends a developer to the desk for the pass.
-		for dev in CharacterRegistry.get_employees():
-			if dev.role == HRConstants.ROLE_DEVELOPER and not dev.assigned_job_ids.has(HRConstants.JOB_RESEARCH) \
-					and CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT) == "":
-				_fixer_id = dev.id
-				break
-		SupportSystem.start_fix_run()
-		_fix_on_at = now
-		print("PROBE PLAY day=%d fix_run start bugs=%d fixer=%s fix_per_day=%.2f" % [GameState.day,
-			ProductState.bugs_confirmed(), _fixer_id, SupportSystem.fix_per_day()])
 	_run_research()
 	_keep_the_team()
 
@@ -1158,9 +1130,8 @@ static func _run_research() -> void:
 		if not wanted.has(String(id)):
 			wanted.append(String(id))
 	var founder_id: String = CharacterRegistry.get_founder().id
-	# Research takes the whole person (Ar-Ge §5.0). Keep one developer on the sprint and
-	# never take the one lent to the fix pass: a company with a single developer does
-	# not research, it ships.
+	# Research takes the whole person (Ar-Ge §5.0). Keep one developer on the sprint: a company
+	# with a single developer does not research, it ships.
 	var devs: int = 0
 	for e in CharacterRegistry.get_employees():
 		if e.role == HRConstants.ROLE_DEVELOPER:
@@ -1169,7 +1140,7 @@ static func _run_research() -> void:
 		if not RnDSystem.available(String(node)):
 			continue
 		for c in RnDSystem.eligible_assignees(String(node)):
-			if c.id == founder_id or c.id == _fixer_id:
+			if c.id == founder_id:
 				continue
 			if c.role == HRConstants.ROLE_DEVELOPER and devs < 2:
 				continue

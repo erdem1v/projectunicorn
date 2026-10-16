@@ -320,7 +320,7 @@ const WRITER_VERBS := [
 	"add_cash", "add_brand", "add_reputation", "customer_mrr_delta", "seats", "churn_customer",
 	"audience_delta", "add_prospect", "employee_leaves", "b2b_retain_discount", "b2b_expand",
 	"change_morale", "morale_all", "satisfaction_delta", "promise_create", "sprint_hours",
-	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "fix_run_start",
+	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry",
 	"b2b_retain_delay", "b2b_retain_ignore", "b2b_expand_decline", "set_flag", "stamp_day",
 	"schedule_event", "cancel_scheduled", "productivity_mod", "investor_strain", "marketing_push",
 	"send_on_leave", "work_hours",
@@ -335,11 +335,11 @@ const SYSTEM_VERBS := [
 	"abort_arc", "set_arc_var",
 ]
 
-## O2: a chip whose CONSEQUENCE is the cost — the sprint carries the card over, the fix run
-## spends the desk's week, the account is left waiting, the promise becomes a debt. Read here
-## rather than off the chip, so a polarity edit cannot move the rule.
-const CONSEQUENCE_VERBS := ["sprint_card_carry", "fix_run_start", "b2b_retain_delay",
-	"b2b_retain_ignore", "b2b_expand_decline", "promise_create"]
+## O2: a chip whose CONSEQUENCE is the cost — the sprint carries the card over, the account is
+## left waiting, the promise becomes a debt. Read here rather than off the chip, so a polarity
+## edit cannot move the rule.
+const CONSEQUENCE_VERBS := ["sprint_card_carry", "b2b_retain_delay", "b2b_retain_ignore",
+	"b2b_expand_decline", "promise_create"]
 
 ## O4: the verbs that land on a subject, and the slot type each lands on.
 const SUBJECT_VERBS := {

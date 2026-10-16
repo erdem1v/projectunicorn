@@ -589,8 +589,6 @@ PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
 BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
 BUILD_SUPPORT_CONFIRMED,Doğrulanmış {n},Confirmed {n}
 BUILD_SUPPORT_INCOMING,Gelen {n},Incoming {n}
-BUILD_SUPPORT_MISSED,Gelen {n} · bu hafta {m} kaçırıldı,Incoming {n} · {m} missed this week
-FIX_RUN_REFUSED_NO_BUGS,Doğrulanmış hata yok.,No confirmed bugs.
 PROD_PERCENT,%{n},{n}%
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
@@ -1236,7 +1234,6 @@ PROD_DESIGN_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
 ""We can run another round if you want — it burns time and polishes the design. But every round returns less than the last. At some point you need better people, not more rounds.""{note}"
 PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
 PROD_TREND_FALLING,AZALIYOR,FALLING
-PROD_TIP_BUGS,Hata riski yüksek. Düzeltme koşusu başlat.,Bug risk is high. Start a fix run.
 PROD_ITER_CEILING_NOTE,"İnovasyon {inn} / tur kazancı tavanı {inn_max} · tavanı tur sayısı değil, masadaki ekip belirler.","Innovation {inn} / round gain ceiling {inn_max} · the ceiling comes from the team at the table, not from the number of rounds."
 PROD_EV_VERSION_SHIP_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
 
@@ -1259,8 +1256,6 @@ PROD_EV_ITER_DECISION_BODY,"İlk tasarım turu bitti. Frank prototipin başında
 ""The rounds keep going on their own · each one burns time and polishes the design a little more. But every round returns less than the one before. The moment you say enough, we move to development; at some point you need better people, not more rounds."""
 PROD_ITER_KEEP_GOING,Turlar sürsün,Keep the rounds going
 PROD_PATH_B2B,Kontrat,Contract
-PROD_FIX_RUN_START,Hata düzeltmeyi başlat,Start bug fixing
-PROD_FIX_RUN_END,Hotfix yayınla · {n} düzeltildi,Ship hotfix · {n} fixed
 PROD_TREND_RISING,ARTIYOR,RISING
 VC_WHY_MRR_STRONG,MRR güçlü,MRR is strong
 VC_WHY_MRR_WEAK,MRR zayıf,MRR is weak
@@ -2837,7 +2832,6 @@ PRODUCT_TEAM_IN_RND,Kurucu Ar-Ge'de: {node},The founder is in R&D: {node}
 PRODUCT_ROLE_MISSING,Ekipte {role} yok · kartlar hatalı çıkabilir,No {role} on the team · cards may ship buggy
 PRODUCT_IDLE,{n} kişi boşta · iş bekliyor,{n} idle · waiting for work
 PRODUCT_IDLE_ONE,{n} kişi boşta · iş bekliyor,{n} idle · waiting for work
-PRODUCT_IDLE_FIX,hata düzeltmeyi başlat,start bug fixing
 PRODUCT_IDLE_PLAN,sonraki sprinti planla,plan the next sprint
 PRODUCT_CARD_SPILLS_PTS,devreder · {done}/{total},carries over · {done}/{total}
 PRODUCT_CARD_NO_START,Bu sprint başlamaz → Sprint {n},Won't start this sprint → Sprint {n}
@@ -3052,7 +3046,6 @@ HR_ROW_TOOLS,Aylık araç gideri,Monthly tools
 EV_LOCK_NO_SPRINT,Süren bir sprint yok.,No sprint is running.
 EV_LOCK_MARKETING_EA,Pazarlama Erken Erişim'de açılır.,Marketing opens in Early Access.
 B2B_LOCK_PROMISE_BROKEN,Bu hesaba verdiğin son söz tutulmadı.,Your last promise to them was not kept.
-EFFECT_FIX_RUN_STARTS,Düzeltme başlar,A fix run starts
 EV_FOUNDER_MEETUP_TITLE,Konuşma daveti,A speaking slot
 EV_FOUNDER_MEETUP_BODY,"Şehirdeki kurucu buluşmasında bir konuşma aralığı boş kalmış, organizatörler sana soruyor. Konuşursan baskı ve küçük bir stant gerekir, bir haftanın akşamları da ürün yerine sunuma gider. Arka sırada oturmanın bedeli yalnız bilet.","The founders' meetup in town has an open speaking slot and the organisers asked if you want it. Speaking means printing, a small stand and a week of evenings spent on slides instead of the product. A seat at the back costs only the ticket."
 EV_FOUNDER_MEETUP_TALK,Konuşmayı üstlen,Take the slot
@@ -3092,11 +3085,6 @@ EV_TEAM_DEMO_DAY_BODY,"Sprintin son haftası. Biri, sürüm çıkmadan herkesin 
 EV_TEAM_DEMO_DAY_HOLD,Demoyu yap,Hold the demo
 EV_TEAM_DEMO_DAY_SKIP,Çalışmaya devam,Keep working
 EV_TEAM_DEMO_DAY_EXPIRED,Demo yapılmadı.,The demo never happened.
-EV_PRODUCT_BUG_PILE_TITLE,Hata yığını,The bug pile
-EV_PRODUCT_BUG_PILE_FIX,Düzeltmeye başla,Start a fix run
-EV_PRODUCT_BUG_PILE_LATER,Şimdilik bırak,Leave them for now
-EV_PRODUCT_BUG_PILE_LOCK_FIX,Bir düzeltme zaten sürüyor.,A fix run is already under way.
-EV_PRODUCT_BUG_PILE_EXPIRED,Yığın olduğu yerde kaldı.,The pile stayed where it was.
 EV_PRODUCT_OUTAGE_TITLE,Kesinti,Outage
 EV_PRODUCT_OUTAGE_BODY,"Kullanım, sunucuların kaldırabileceğini aştı. Sayfalar zaman aşımına düşüyor, destek hattı meşgul ve müşteriler ne olduğunu soruyor.","Usage went past what the servers can carry. Pages time out, the support line is busy and customers want to know what happened."
 EV_PRODUCT_OUTAGE_ALL_HANDS,Herkesi bu işe çek,Pull everyone onto it

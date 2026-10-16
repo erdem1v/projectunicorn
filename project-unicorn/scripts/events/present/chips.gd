@@ -41,7 +41,6 @@ const FIXED_CHIPS := {
 	"phase_gate_decline": ["EFFECT_PHASE_HOLD", "neutral"],
 	"goto_tab": ["EFFECT_TAKES_YOU_THERE", "neutral"],
 	"sprint_card_carry": ["EFFECT_SPRINT_CARRY", "neutral"],
-	"fix_run_start": ["EFFECT_FIX_RUN_STARTS", "neutral"],
 }
 
 ## The polarity's glyph (A2's icon names); a neutral part has none.

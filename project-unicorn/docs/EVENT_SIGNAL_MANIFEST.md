@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-11.
+Last generated 2026-10-17.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 146 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 144 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **146** |
+| Signals declared | **144** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **69** |
+| Emitted with **no production listener** | **67** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -65,7 +65,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
+| `speed_change_requested` | `speed: int` | save_manager · game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 5 | plausibility · main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 5 | signals · sprint_system · rnd_tab · research_bar · office_people |
 | `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · rnd_ui_shared · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 52 | 4 | main · left_tabs · research_bar · window_layer |
@@ -76,9 +76,9 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
-| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 14 | 1 | main |
-| `language_changed` | `locale: String` | localization · main | 2 | 9 | system_menu_modal · left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
+| `settings_requested` | `—` | main · main_menu · system_menu_modal · left_tabs | 4 | 1 | main |
+| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 16 | 1 | main |
+| `language_changed` | `locale: String` | localization · main | 2 | 10 | character_registry · system_menu_modal · left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
 | `palette_changed` | `colorblind: bool` | settings_modal | 2 | 7 | hr_tab · left_tabs · news_ticker · top_bar · window_layer · office_city · office_notice_stack |
 
 ### Character signals
@@ -102,7 +102,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `training_started` | `character_id: String, area_key: String` | character_registry | 1 | 1 | sprint_system |
 | `training_completed` | `character_id: String, area_key: String` | character_registry | 1 | 0 | — |
 | `assignment_changed` | `character_id: String` | character_registry · work_hours_system | 11 | 3 | sprint_system · research_bar · office_people |
-| `hr_day_processed` | `—` | hr_system | 1 | 2 | sprint_system · hr_dossier |
+| `hr_day_processed` | `—` | main · hr_system | 3 | 2 | sprint_system · hr_dossier |
 | `news_stream_changed` | `—` | news_feed_system | 1 | 1 | news_ticker |
 
 ### Customer signals
@@ -157,9 +157,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `version_shipped` | `version: int` | sprint_system | 2 | 3 | rnd_tab · left_tabs · top_bar · EvSignals (card trigger) |
-| `fix_run_started` | `confirmed: int` | support_system | 1 | 0 | — |
-| `fix_run_finished` | `shipped: int, remaining: int` | support_system | 1 | 0 | — |
+| `version_shipped` | `version: int` | sprint_system | 2 | 2 | left_tabs · top_bar · EvSignals (card trigger) |
 | `bug_confirmed` | `total_confirmed: int` | product_read | 1 | 0 | — |
 | `unconfirmed_threshold_crossed` | `band: String` | product_read | 1 | 0 | — |
 | `axis_floor_warning` | `axis: String` | product_read | 1 | 0 | EvSignals (card trigger) |
@@ -296,10 +294,10 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `day_tick_completed` | `day: int` | time_manager | 1 | 3 | save_manager · plausibility · office_city |
 | `game_loaded` | `slot_id: String` | main | 1 | 1 | left_tabs |
-| `system_menu_requested` | `—` | game_shell · main | 3 | 1 | main |
-| `save_load_requested` | `mode: String` | main · system_menu_modal | 4 | 1 | main |
-| `quicksave_requested` | `—` | game_shell · main · system_menu_modal | 5 | 1 | main |
-| `quickload_requested` | `—` | game_shell · main | 2 | 1 | main |
+| `system_menu_requested` | `—` | game_shell · main | 4 | 1 | main |
+| `save_load_requested` | `mode: String` | main · main_menu · system_menu_modal | 5 | 1 | main |
+| `quicksave_requested` | `—` | game_shell · main | 4 | 1 | main |
+| `quickload_requested` | `—` | game_shell · main | 5 | 1 | main |
 
 ### Debug signals (OS.is_debug_build only; emitter game_shell.gd)
 

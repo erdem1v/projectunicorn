@@ -74,9 +74,6 @@ const FLAG_TYPES := {
 	"mvp_reports_progress": TYPE_FLOAT,         # kesirli birikim; tam sayıya taşınca sayaç artar
 	"mvp_bugs_confirmed": TYPE_INT,             # DOĞRULANMIŞ HATA
 	"mvp_validation_progress": TYPE_FLOAT,      # §8.2 doğrulama kesri
-	"mvp_fix_run_active": TYPE_BOOL,            # §8.4 düzeltme koşusu
-	"mvp_fix_run_fixed": TYPE_INT,              # koşuda şimdiye dek çözülen
-	"mvp_fix_run_progress": TYPE_FLOAT,
 	# --- §9 canlı akış ---
 	# SÜRÜM yaşı (§17): mvp_launch_day ilk yayında bir kez damgalanır, bu her yayında yeniden.
 	"mvp_version_launch_day": TYPE_FLOAT,

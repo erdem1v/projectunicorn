@@ -252,7 +252,7 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 	var idle: int = team.filter(func(t: Dictionary) -> bool: return SprintSystem.role_of(t.id) == "").size() \
 		if mode == "active" else 0
 	var idle_text: String = "" if idle == 0 else _t(Fmt.count_key("PRODUCT_IDLE", idle)).format({"n": idle}) \
-		+ SprintUiShared.SEP + _t("PRODUCT_IDLE_FIX" if SupportSystem.can_start_fix_run() else "PRODUCT_IDLE_PLAN")
+		+ SprintUiShared.SEP + _t("PRODUCT_IDLE_PLAN")
 	# Araştıran kurucu sprint ekibinden düşer: Ürün bunu düğümün adıyla söyler ve Ar-Ge'ye götürür.
 	var rnd: Variant = null
 	if CharacterRegistry.get_founder().assigned_job_ids.has(HRConstants.JOB_RESEARCH):

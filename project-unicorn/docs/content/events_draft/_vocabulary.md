@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **197** |
-| Effect verbs (write) | **64** |
-| Cards in the catalogue | 98 |
+| Seams (read) | **195** |
+| Effect verbs (write) | **63** |
+| Cards in the catalogue | 97 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -51,7 +51,6 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `productivity_mod`
 - `work_hours`
 - `damage_product`
-- `fix_run_start`
 - `sprint_card_effort`
 - `sprint_card_progress`
 - `sprint_card_carry`
@@ -144,9 +143,7 @@ slot of that type (§17.12).
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
 | `destek.absorb_ceiling` | global | int | Ops | requests the desk can take before escalating |
-| `destek.can_start_fix_run` | global | bool | Ops | live, no run under way, confirmed bugs waiting and the desk staffed |
 | `destek.desk_staffed` | global | bool | Ops | anyone on support at all |
-| `destek.fix_run_active` | global | bool | Ops | a fix run is under way |
 | `destek.warmth_band` | global | string | Ops | calm | warm | hot at 20 / 40 unvalidated reports |
 
 ### `finance.`
@@ -510,7 +507,6 @@ the catalogue already uses, and the gap each pays:
 | `product_floor` | 4 | 2 |
 | `product_ops` | 6 | 1 |
 | `product_progress` | 6 | 1 |
-| `product_quality` | 6 | 1 |
 | `product_security` | 6 | 1 |
 | `product_support` | 6 | 1 |
 | `rival_exit` | 6 | 1 |
@@ -548,7 +544,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (32) — any card, inside the two rules below
+### Writer verbs (31) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -569,7 +565,6 @@ is what the player is shown and what lands.
 - `sprint_card_effort`
 - `sprint_card_progress`
 - `sprint_card_carry`
-- `fix_run_start`
 - `b2b_retain_delay`
 - `b2b_retain_ignore`
 - `b2b_expand_decline`

@@ -133,9 +133,9 @@ static func _prune_assignees() -> void:
 	_assignees = keep
 
 
-## The ONE door for every freeze cause — player pull, departure, a fix run stealing the
-## person, a build displacing the founder. All of them route through CharacterRegistry and
-## end up changing `_assignees`, so one publisher catches them all (§10's one-emitter rule).
+## The ONE door for every freeze cause — player pull, departure, a build displacing the founder.
+## All of them route through CharacterRegistry and end up changing `_assignees`, so one publisher
+## catches them all (§10's one-emitter rule).
 static func emit_edges() -> void:
 	var frozen: bool = is_frozen()
 	if frozen == _was_frozen:

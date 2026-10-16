@@ -13,9 +13,8 @@ extends RefCounted
 # --- Ticket ---------------------------------------------------------------------------
 
 ## Defteri DESTEK'in doğrulanmış sayacına eşitler. Sayaç kimlik taşımaz, yalnız fark okunur:
-## düzeltme koşusunun erittikleri defterin en eskisinden düşer; yeni doğrulananlar canlı
-## yeteneklere ticket kimliğinin hash'iyle dağılır, her yetenek bir pay artı kademesinin
-## kullanım ağırlığı kadar pay alır.
+## yeni doğrulananlar canlı yeteneklere ticket kimliğinin hash'iyle dağılır, her yetenek bir pay
+## artı kademesinin kullanım ağırlığı kadar pay alır.
 static func sync_tickets() -> void:
 	var tickets: Array = _p().tickets
 	var confirmed: int = ProductState.bugs_confirmed()
@@ -42,8 +41,8 @@ static func sync_tickets() -> void:
 	_p().tickets = tickets
 
 
-## Düzeltme kartı çıktı: kartın ticket'ları defterden ve doğrulanmış sayaçtan düşer. Koşu o
-## arada bir kısmını eritmişse onlar zaten düşmüştür; gerçekten kapananların kimlikleri döner.
+## Düzeltme kartı çıktı: kartın ticket'ları defterden ve doğrulanmış sayaçtan düşer; gerçekten
+## kapananların kimlikleri döner.
 static func close_tickets(ids: Array) -> Array:
 	sync_tickets()
 	var closing: Array = ids.map(func(i: Variant) -> int: return int(i))
