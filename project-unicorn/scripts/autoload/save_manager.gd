@@ -890,8 +890,10 @@ func _migrate_15(state: Dictionary) -> void:
 ## v15 → v16: the ticket ledger and the confirmed-bug counter become one store of open bugs per line. The
 ## counter is the total and the ledger only follows it once a week: a ticket counts on its own line, the newest
 ## ones when the counter fell below the ledger (as the daily sync kept them), and confirmed bugs the ledger had
-## not caught up with go one by one over the live lines in id order. A fix card keeps the count it showed as a number, the bugs of faulty cards
-## waiting for v1.0 change their name, and what earlier changes removed leaves the save: the fix run's and
+## not caught up with go one by one over the live lines in id order. A fix card keeps the count it showed as a number
+## (a shipped one left its line clear, so its release row reads "n → 0"), the release notes' result sentences take the
+## bug keys, the bugs of faulty cards waiting for v1.0 change their name, and what earlier changes removed leaves the
+## save: the fix run's and
 ## the support week's flags, and the rows of the card that left the event engine. Pure and cheap:
 ## list_slots reads every slot through here.
 const _REMOVED_FLAGS := ["mvp_bugs_confirmed", "mvp_fix_run_active", "mvp_fix_run_fixed", "mvp_fix_run_progress",
@@ -929,7 +931,12 @@ func _migrate_16(state: Dictionary) -> void:
 		for card: Dictionary in cards:
 			if card.has("tickets"):
 				card["bugs"] = (card["tickets"] as Array).size()
+				card["bugs_after"] = 0
 				card.erase("tickets")
+		for record: Dictionary in product.releases + [product.release]:
+			for said: Dictionary in [record.get("expected", {}), record.get("actual", {})]:
+				if said.has("key"):
+					said["key"] = String(said["key"]).replace("RESULT_TICKETS_", "RESULT_BUGS_")
 
 	var ev: Dictionary = (state.get("systems", {}) as Dictionary).get(EvSave.BLOCK_KEY, {}) as Dictionary
 	for key in ["queue", "schedule", "rows"]:

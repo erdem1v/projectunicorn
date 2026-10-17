@@ -2838,7 +2838,7 @@ PRODUCT_CARD_NO_START,Bu sprint başlamaz → Sprint {n},Won't start this sprint
 PRODUCT_CARD_READY,Geliştirmeye hazır,Ready for development
 PRODUCT_CARD_READY_PCT,{pct} hazır,{pct} ready
 PRODUCT_CARRIED,devreden,carried
-PRODUCT_URGENT,Acil,Urgent
+PRODUCT_PRIORITY,Öncelikli,Priority
 PRODUCT_QUEUED,Sırada,Queued
 PRODUCT_REMOVE,Çıkar,Remove
 PRODUCT_EFFORT_POINTS,{n} puan,{n} points
@@ -2846,10 +2846,17 @@ PRODUCT_EFFORT_POINTS_ONE,{n} puan,{n} point
 PRODUCT_EFFORT_PERSON,{name} {weeks},{name} {weeks}
 PRODUCT_PERSON_ROLE,{name} · {role},{name} · {role}
 PRODUCT_PERSON_SHARE,{name} · {role} · sprintte {share},{name} · {role} · {share} on the sprint
-PRODUCT_FX_TICKETS_CLOSE,{n} ticket kapatır,closes {n} tickets
-PRODUCT_FX_TICKETS_CLOSE_ONE,{n} ticket kapatır,closes {n} ticket
-PRODUCT_FX_TICKETS_CLOSED,{n} ticket kapanır,{n} tickets close
-PRODUCT_FX_TICKETS_CLOSED_ONE,{n} ticket kapanır,{n} ticket closes
+PRODUCT_FX_BUGS,{n} hata,{n} bugs
+PRODUCT_FX_BUGS_ONE,{n} hata,{n} bug
+PRODUCT_ACCOUNT_COUNT,{n} hesap,{n} accounts
+PRODUCT_ACCOUNT_COUNT_ONE,{n} hesap,{n} account
+PRODUCT_USER_COUNT,{n} kullanıcı,{n} users
+PRODUCT_USER_COUNT_ONE,{n} kullanıcı,{n} user
+PRODUCT_FX_TOP,en büyüğü {account} ({users}),largest: {account} ({users})
+PRODUCT_FX_BUGS_CLOSED,{n} hata kapanır,{n} bugs close
+PRODUCT_FX_BUGS_CLOSED_ONE,{n} hata kapanır,{n} bug closes
+PRODUCT_FX_BUGS_FIXED,{from} → {to} açık hata,{from} → {to} open bugs
+PRODUCT_FX_BUGS_FIXED_ONE,{from} → {to} açık hata,{from} → {to} open bug
 PRODUCT_FX_VOICES_CLOSE,{n} ses kapatır,settles {n} voices
 PRODUCT_FX_VOICES_CLOSE_ONE,{n} ses kapatır,settles {n} voice
 PRODUCT_FX_HOLDS,{level} kalır,stays {level}
@@ -2981,10 +2988,10 @@ PRODUCT_PRESS_AREA_0,{product} {area} tarafındaki açığını kapattı,{produc
 PRODUCT_PRESS_AREA_1,{product} {area} tarafında toparlandı,{product} has caught up on {area}
 PRODUCT_RESULT_LEVEL_EXPECTED,{area} {to} olmalı,{area} should be {to}
 PRODUCT_RESULT_LEVEL_ACTUAL,{area} {from} iken {to} oldu,{area} went from {from} to {to}
-PRODUCT_RESULT_TICKETS_EXPECTED,{n} ticket kapanmalı,{n} tickets should close
-PRODUCT_RESULT_TICKETS_EXPECTED_ONE,{n} ticket kapanmalı,{n} ticket should close
-PRODUCT_RESULT_TICKETS_ACTUAL,{n} ticket kapandı,{n} tickets closed
-PRODUCT_RESULT_TICKETS_ACTUAL_ONE,{n} ticket kapandı,{n} ticket closed
+PRODUCT_RESULT_BUGS_EXPECTED,{n} hata kapanmalı,{n} bugs should close
+PRODUCT_RESULT_BUGS_EXPECTED_ONE,{n} hata kapanmalı,{n} bug should close
+PRODUCT_RESULT_BUGS_ACTUAL,{n} hata kapandı,{n} bugs closed
+PRODUCT_RESULT_BUGS_ACTUAL_ONE,{n} hata kapandı,{n} bug closed
 PRODUCT_RESULT_NONE_EXPECTED,Görünür bir değişiklik beklenmiyor,No visible change expected
 PRODUCT_RESULT_NONE_ACTUAL,Görünür bir değişiklik olmadı,Nothing visible changed
 PRODUCT_RESULT_MVP_EXPECTED,Ürün yayında · ilk kullanıcılar bu hafta gelir,The product is live · first users arrive this week

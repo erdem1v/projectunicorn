@@ -24,7 +24,6 @@ const LEVEL_KEYS := {
 const RESULT_KEYS := {"expected": "PRODUCT_RESULT_EXPECTED", "actual": "PRODUCT_RESULT_ACTUAL"}
 ## Kart kipi "kapatır", öngörü kipi "kapanır" der.
 const COUNT_KEYS := {
-	"tickets": ["PRODUCT_FX_TICKETS_CLOSE", "PRODUCT_FX_TICKETS_CLOSED"],
 	"voices": ["PRODUCT_FX_VOICES_CLOSE", "PRODUCT_FX_VOICES_CLOSED"],
 }
 ## Kartın glif tuşları; listede olmayan tür (remove) kelimeyle yazılır.
@@ -258,14 +257,34 @@ static func button(text: String, variation: StringName, on_press: Callable) -> B
 	return b
 
 
-## Kartın etki satırı: parçalar arasında boşluk, ayraç yok; seviye geçişi karelerle.
-static func effect_line(parts: Array) -> HFlowContainer:
+## Kartın etki satırı: parçalar arasında boşluk, ayraç yok; seviye geçişi karelerle. Düzeltme kartının hata satırı
+## kendi satırında sarar: en büyük hesabın adı uzun olabilir, akıştaki etiket sarılmaz.
+static func effect_line(parts: Array) -> VBoxContainer:
+	var col := column(UiTokens.SPACE_XS)
 	var flow := HFlowContainer.new()
 	flow.add_theme_constant_override("h_separation", UiTokens.SPACE_L)
 	flow.add_theme_constant_override("v_separation", UiTokens.SPACE_XS)
 	for part in parts:
-		flow.add_child(_part(part, false))
-	return flow
+		if part.k == "bugs":
+			col.add_child(prose(bugs_text(part), &"MetaMuted"))
+		else:
+			flow.add_child(_part(part, false))
+	if flow.get_child_count() > 0:
+		col.add_child(flow)
+	return col
+
+
+## Düzeltme kartının hata satırı: "6 hata · 3 hesap · 140 kullanıcı · en büyüğü Demir Holding (100 kullanıcı)";
+## B2C'de hesap sayısı (-1) ve en büyük hesap yoktur.
+static func bugs_text(part: Dictionary) -> String:
+	var bits: PackedStringArray = [_count("PRODUCT_FX_BUGS", int(part.n))]
+	if int(part.accounts) >= 0:
+		bits.append(_count("PRODUCT_ACCOUNT_COUNT", int(part.accounts)))
+	bits.append(_count("PRODUCT_USER_COUNT", int(part.users)))
+	if part.top != "":
+		bits.append(RnDUiShared.t("PRODUCT_FX_TOP").format(
+			{"account": part.top, "users": _count("PRODUCT_USER_COUNT", int(part.top_users))}))
+	return SEP.join(bits)
 
 
 ## SPRINT SONUNDA öngörüsü: her parça kazanç glifiyle kendi kutusunda, seviye kelimeyle okunur.
@@ -282,6 +301,10 @@ static func forecast(parts: Array) -> HFlowContainer:
 		chip.add_child(row)
 		flow.add_child(chip)
 	return flow
+
+
+static func _count(key: String, n: int) -> String:
+	return RnDUiShared.t(Fmt.count_key(key, n)).format({"n": n})
 
 
 static func _part(part: Dictionary, forecast_mode: bool) -> HBoxContainer:
@@ -306,9 +329,10 @@ static func _part(part: Dictionary, forecast_mode: bool) -> HBoxContainer:
 			row.add_child(label(String(part.area), &"KeyText"))
 			row.add_child(UiFactory.make_glyph(WARN, UiTokens.D_ICON_PART, UiTokens.D_warn()))
 			row.add_child(label(RnDUiShared.t("PRODUCT_FX_ALERT_CLEARS"), say))
-		"tickets", "voices":
-			var n: int = int(part.n)
-			row.add_child(label(RnDUiShared.t(Fmt.count_key(COUNT_KEYS[part.k][int(forecast_mode)], n)).format({"n": n}), say))
+		"bugs_closed":
+			row.add_child(label(_count("PRODUCT_FX_BUGS_CLOSED", int(part.n)), say))
+		"voices":
+			row.add_child(label(_count(COUNT_KEYS[part.k][int(forecast_mode)], int(part.n)), say))
 		"request":
 			row.add_child(label(RnDUiShared.t("PRODUCT_FX_REQUEST").format({"customer": part.customer}) + SEP
 				+ RnDUiShared.t("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(part.value))}), say))

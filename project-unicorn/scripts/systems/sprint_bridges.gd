@@ -36,10 +36,7 @@ static func tick_requests() -> void:
 		if GameState.day < window or requests.any(func(r: Dictionary) -> bool:
 				return r.customer_id == c.id and (r.status == "open" or int(r.day) >= window)):
 			continue
-		var area: String = area_of["default"]
-		for archetype in SalesArchetypes.ids():
-			if c.industry in SalesArchetypes.sectors(archetype):
-				area = area_of.get(archetype, area)
+		var area: String = area_of.get(SalesArchetypes.of_sector(c.industry), area_of["default"])
 		var taken: Array = requests.filter(func(r: Dictionary) -> bool: return r.status == "open").map(
 			func(r: Dictionary) -> String: return r.step)
 		var steps: Array = []
@@ -154,7 +151,7 @@ static func actual_sentence(release: Dictionary) -> Dictionary:
 		if c.kind == "fix":
 			n += int(c.bugs)
 	if n > 0:
-		return {"key": Fmt.count_key("PRODUCT_RESULT_TICKETS_ACTUAL", n), "args": {"n": n}}
+		return {"key": Fmt.count_key("PRODUCT_RESULT_BUGS_ACTUAL", n), "args": {"n": n}}
 	return {"key": "PRODUCT_RESULT_NONE_ACTUAL", "args": {}}
 
 

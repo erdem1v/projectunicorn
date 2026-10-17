@@ -30,6 +30,8 @@ extends RefCounted
 # voice is a CSV key derived from the id (`SALES_ARCH_<ID>_LINE`).
 
 const DEFAULT_ID := "ops_cautious"
+## The least axis weight at which an account counts as using a line on that axis (SprintCatalog.line_accounts).
+const USE_AXIS_MIN := 0.25     # [ÇALIŞMA] onay bekliyor
 
 # Temperament ids: a storylet fact (SalesProbes.facts_for); never printed.
 const TEMPER_CAUTIOUS := "cautious"
@@ -124,6 +126,20 @@ static func ids() -> Array:
 
 static func has(archetype_id: String) -> bool:
 	return TABLE.has(archetype_id)
+
+
+## The archetype whose sector list holds `sector`; "" for a sector none of them claims.
+static func of_sector(sector: String) -> String:
+	for id in ids():
+		if sector in sectors(id):
+			return id
+	return ""
+
+
+## An account of `sector` uses a product line on `axis` when its buyer type weighs that axis at USE_AXIS_MIN or
+## more. A sector no archetype claims reads like DEFAULT_ID (`_row` falls back to it).
+static func uses_axis(sector: String, axis: String) -> bool:
+	return float(axis_weights(of_sector(sector)).get(axis, 0.0)) >= USE_AXIS_MIN
 
 
 static func _row(archetype_id: String) -> Dictionary:

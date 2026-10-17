@@ -178,7 +178,7 @@ func _points(points: float) -> Label:
 	return pts
 
 
-## Durum etiketleri: devreder ("devreder · 2,75/3"), başlamaz ve acil uyarı (acil uyarı üçgeniyle), ötekiler
+## Durum etiketleri: devreder ("devreder · 2,75/3"), başlamaz ve öncelikli (uyarı üçgeniyle), ötekiler
 ## nötr; önden hazırlanan kart hazır payını ("%40 hazır", tamamsa "Geliştirmeye hazır") taşır. "Planlanan"
 ## etiketi yok: kesikli kenar söyler.
 func _tags() -> Array:
@@ -188,8 +188,8 @@ func _tags() -> Array:
 			"total": SprintUiShared.points(_card.effort)}), &"warn"))
 	if int(_card.no_start) >= 0:
 		out.append(UiFactory.D_tag(tr("PRODUCT_CARD_NO_START").format({"n": int(_card.no_start)}), &"warn"))
-	if _card.urgent:
-		out.append(UiFactory.D_glyph_tag(SprintUiShared.WARN, tr("PRODUCT_URGENT"), &"warn"))
+	if _card.priority:
+		out.append(UiFactory.D_glyph_tag(SprintUiShared.WARN, tr("PRODUCT_PRIORITY"), &"warn"))
 	for row in [[state == State.DEVREDEN, "PRODUCT_CARRIED"],
 			[_card.queued, "PRODUCT_QUEUED"], [_card.decision != null, "PRODUCT_DECISION_HALTED"],
 			[_card.effect.any(func(p: Dictionary) -> bool: return p.k == "promise"), "PRODUCT_PROMISED"]]:

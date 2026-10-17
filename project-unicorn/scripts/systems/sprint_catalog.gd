@@ -2,7 +2,7 @@ class_name SprintCatalog
 extends RefCounted
 
 # Ürün sprint ekranının kataloğu: alanlar ve yetenekleri, alan seviyesi ve durumu, aday kartlar,
-# kartın etki satırı, sprint sonu öngörüsü, liderin önerisi ve rakip tablosu. Yalnız okur; ürün
+# kartın etki satırı, sprint sonu öngörüsü, hatanın etkilediği hesaplar, liderin önerisi ve rakip tablosu. Yalnız okur; ürün
 # durumunu SprintSystem ve köprüsü SprintBridges yazar. Adaylar saklanmaz, her çağrıda durumdan
 # kurulur.
 # Çalışma değerleri sprint.json'da, rakip tablosu rivals.json'da. Metin TranslationServer'dan
@@ -138,13 +138,13 @@ static func word_for(level: float, expect: float) -> String:
 	return "enough" if level < expect + 1.0 else "strong"
 
 
-## "!": yeteneklerinden birinde acil eşiği kadar açık hata, ya da (Güven & Ölçek) sunucu aşımı;
+## "!": yeteneklerinden birinde öncelik eşiği kadar açık hata, ya da (Güven & Ölçek) sunucu aşımı;
 ## `cleared` hatlarının hataları kapanmış sayılır.
 static func area_alert(area_id: String, cleared: Array = []) -> bool:
 	if _over_capacity(area_id):
 		return true
 	return capabilities(area_id).any(func(line_id: String) -> bool:
-		return line_id not in cleared and ProductState.line_bugs(line_id) >= int(cfg("urgent_tickets")))
+		return line_id not in cleared and ProductState.line_bugs(line_id) >= int(cfg("fix_effort.priority")))
 
 
 ## Kapalı satırın cümlesi: alan × durum şablonu, açık hata ve rakip çıkışı eklenir.
@@ -190,6 +190,13 @@ static func voices(area_id: String) -> Array:
 
 # --- Kartlar ---------------------------------------------------------------------
 
+## Düzeltme kartının eforu hata sayısına göre: `steps` basamakların son hata sayısı, `points` basamakların puanı
+## (4 ve altı 1 puan, 5 ve üstü 2).
+static func fix_effort(bugs: int) -> int:
+	var tiers: Dictionary = cfg("fix_effort")
+	return int(tiers.points[(tiers.steps as Array).filter(func(top: float) -> bool: return bugs > top).size()])
+
+
 ## K1 3 · K2 5 · K3 8; Ar-Ge "design_system" Deneyim kademelerinin eforunu %20 indirir.
 static func step_effort(step_id: String) -> int:
 	if step_id == PAID_PLAN:
@@ -217,7 +224,7 @@ static func card_roles(kind: String) -> Array:
 ## Alanın aday kartları (PRD §3.2): yetenek başına sonraki kademe (kapısı kapalıysa da görünür),
 ## açık talep o kademeyi talep kartına çevirir, açık hatası olan yetenek başına düzeltme, alan başına
 ## araştırma (yapıldığı sprintin ardından bir kapanış gizli). Sprintte ya da sonrakinde duran kart
-## saklanan hâliyle döner. Sıra: acil önde, kilitsiz önde, sonra etki/efor azalan.
+## saklanan hâliyle döner. Sıra: öncelikli önde, kilitsiz önde, sonra etki/efor azalan.
 static func candidates(area_id: String) -> Array:
 	var stored: Dictionary = _p().get("cards", {})
 	var requests: Dictionary = {}
@@ -246,9 +253,7 @@ static func candidates(area_id: String) -> Array:
 	var bugs: Dictionary = ProductState.open_bugs_by_line()
 	for line_id in caps:
 		if bugs.has(line_id):
-			var urgent: bool = int(bugs[line_id]) >= int(cfg("urgent_tickets"))
-			var effort: int = int(cfg("effort.fix_urgent" if urgent else "effort.fix"))
-			var card: Dictionary = new_card("fix:" + line_id, "fix", area_id, effort, line_id)
+			var card: Dictionary = new_card("fix:" + line_id, "fix", area_id, fix_effort(int(bugs[line_id])), line_id)
 			card.bugs = int(bugs[line_id])
 			out.append(card)
 	var researched: Variant = _p().get("research_done", {}).get(area_id)
@@ -256,7 +261,7 @@ static func candidates(area_id: String) -> Array:
 		out.append(new_card("res:" + area_id, "research", area_id, int(cfg("effort.research"))))
 	var keyed: Array = out.map(func(c: Dictionary) -> Array:
 		var card: Dictionary = (stored.get(c.id, c) as Dictionary).duplicate(true)
-		return [[float(is_urgent(card)), float(gate_reason(card.step) == ""), _ratio(card)], card])
+		return [[float(is_priority(card)), float(gate_reason(card.step) == ""), _ratio(card)], card])
 	keyed.sort_custom(func(a: Array, b: Array) -> bool:
 		for i in a[0].size():
 			if a[0][i] != b[0][i]:
@@ -265,8 +270,9 @@ static func candidates(area_id: String) -> Array:
 	return keyed.map(func(k: Array) -> Dictionary: return k[1])
 
 
-static func is_urgent(card: Dictionary) -> bool:
-	return card.kind == "fix" and card.bugs >= int(cfg("urgent_tickets"))
+## Öncelikli düzeltme: hattın açık hatası öncelik eşiğinde ya da üstünde.
+static func is_priority(card: Dictionary) -> bool:
+	return card.kind == "fix" and card.bugs >= int(cfg("fix_effort.priority"))
 
 
 static func new_card(id: String, kind: String, area_id: String, effort: int, line := "", step := "",
@@ -327,12 +333,12 @@ static func gate_reason(step_id: String) -> String:
 
 
 ## Kartın etki satırı (ProductModel `part`): alan dilim geçişi, değişmiyorsa "Alan X kalır" ve
-## yeteneğin geçişi; rakip açığı, talep ve verilmiş söz; düzeltmede kapanan hata ve "!" kalkışı.
+## yeteneğin geçişi; rakip açığı, talep ve verilmiş söz; düzeltmede hata sayısı, etkilenenler ve "!" kalkışı.
 static func card_effect(card: Dictionary) -> Array:
 	var area: String = card.area
 	match card.kind:
 		"fix":
-			var parts: Array = [{"k": "tickets", "n": card.bugs}]
+			var parts: Array = [_bugs_part(card)]
 			if _clears_alert(card):
 				parts.append({"k": "alert_clear", "area": area_short(area)})
 			return parts
@@ -385,8 +391,46 @@ static func forecast(card_ids: Array) -> Array:
 		if area_alert(area_id) and not area_alert(area_id, cleared):
 			out.append({"k": "alert_clear", "area": area_short(area_id)})
 	if closed > 0:
-		out.append({"k": "tickets", "n": closed})
+		out.append({"k": "bugs_closed", "n": closed})
 	return out
+
+
+# --- Etkilenenler -----------------------------------------------------------------------
+
+## B2B'de hattı kullanan hesaplar: aktif ya da deneme hesabı, sektörünün alıcı tipi hattın eksenini okuyorsa
+## (SalesArchetypes.USE_AXIS_MIN). Hesap başına bedeli yazan olay da bu listeyi okur.
+static func line_accounts(line_id: String) -> Array:
+	var axis: String = ProductLines.axis_of(line_id)
+	return CustomerRegistry.get_all().filter(func(c: Customer) -> bool:
+		return c.market_type == "b2b" and c.status in ["active", "trial"] and SalesArchetypes.uses_axis(c.industry, axis))
+
+
+## Hattın B2C kitle payı: her canlı hat bir pay artı kademesinin kullanım ağırlığı kadar alır; canlı olmayan hat 0.
+static func line_share(line_id: String) -> float:
+	var pulls: Dictionary = {}
+	for live in ProductState.live_lines():
+		pulls[live] = 1 + ProductLines.usage_weight_of(String(ProductLines.step_at(live, ProductState.line_tier(live)).id))
+	var total: int = 0
+	for pull in pulls.values():
+		total += pull
+	return float(pulls.get(line_id, 0)) / maxi(1, total)
+
+
+## Hattın açık hatasından etkilenenler. B2B: {accounts, seats, top_id, top_seats}; en büyük hesap koltuk
+## sayısıyla seçilir, eşitlikte MRR, sonra kimlik (hesap yoksa top_id ""). B2C: {users}, kitle × hattın payı.
+static func line_impact(line_id: String) -> Dictionary:
+	if ProductState.market_type() != "b2b":
+		return {"users": roundi(SalesSystem.b2c_audience() * line_share(line_id))}
+	var accounts: Array = line_accounts(line_id)
+	accounts.sort_custom(func(a: Customer, b: Customer) -> bool:
+		if a.seats != b.seats:
+			return a.seats > b.seats
+		return a.mrr > b.mrr if a.mrr != b.mrr else a.id < b.id)
+	var seats: int = 0
+	for c in accounts:
+		seats += c.seats
+	return {"accounts": accounts.size(), "seats": seats, "top_id": accounts[0].id if not accounts.is_empty() else "",
+		"top_seats": accounts[0].seats if not accounts.is_empty() else 0}
 
 
 # --- Lider ---------------------------------------------------------------------------
@@ -607,6 +651,19 @@ static func _over_capacity(area_id: String) -> bool:
 	return area_def(area_id).get("infra_alert", false) and InfraSystem.is_over_capacity()
 
 
+## Düzeltme kartının hata sayısı parçası (ProductModel `part`): hata, hesap (B2C'de -1) ve kullanıcı sayısı, B2B'de en
+## büyük hesabın adı ve koltuğu (hesap yoksa adı "").
+static func _bugs_part(card: Dictionary) -> Dictionary:
+	var impact: Dictionary = line_impact(card.line)
+	var part := {"k": "bugs", "n": card.bugs, "accounts": -1, "users": int(impact.get("users", impact.get("seats", 0))),
+		"top": "", "top_users": 0}
+	if impact.has("top_id"):
+		var top: Customer = CustomerRegistry.get_customer(impact.top_id)
+		part.merge({"accounts": impact.accounts, "top": top.display_name() if top != null else "",
+			"top_users": impact.top_seats}, true)
+	return part
+
+
 static func _clears_alert(card: Dictionary) -> bool:
 	return area_alert(card.area) and not area_alert(card.area, [card.line])
 
@@ -693,7 +750,7 @@ static func _impact(card: Dictionary) -> float:
 	var w: Dictionary = cfg("impact")
 	match card.kind:
 		"fix":
-			return w.ticket * card.bugs + (w.alert if _clears_alert(card) else 0.0)
+			return w.bug * card.bugs + (w.alert if _clears_alert(card) else 0.0)
 		"research":
 			return w.research
 	var v: float = w.step + w.level * (_raw_level(card.area, {card.line: card.target_tier}) - _raw_level(card.area))
@@ -757,7 +814,7 @@ static func _lead_area(pool: Array, capacity: float) -> String:
 
 ## Liderin kuralı. Zorunlu kartlar sırasıyla tavana (%125) kadar: verilmiş sözlerin kartları (son
 ## tarihi yakın önde), son tarihi en yakın talep, ücretli plan (B2C'de yayından sonra gelirin
-## kapısıdır), liderin alanının en iyi kartı ve açık acil düzeltmeler; boş sprint, "+" gibi, tavanı
+## kapısıdır), liderin alanının en iyi kartı ve açık öncelikli düzeltmeler; boş sprint, "+" gibi, tavanı
 ## aşan kartı da alır. Kalan yer etkisi olan, etki/efor oranı en yüksek kartlarla dolar: PM kapasiteye
 ## kadar; `played` (bu sprintin lideri) sprinti oynatarak, önceki seçilenlerin hepsi bitiyor, yeni kart
 ## puan alıyor ve yük tavanı aşmıyorsa; bitmeyecek kartı aldıktan sonra durur, sprint en çok bir
@@ -783,7 +840,7 @@ static func _suggest(capacity: float, used: float, taken: Array = [], goal := ""
 	must.append_array(requests.slice(0, 1))
 	must.append_array(pool.filter(func(c: Dictionary) -> bool: return c.line == PAID_PLAN))
 	must.append(pool.filter(func(c: Dictionary) -> bool: return c.area == weakest)[0])
-	must.append_array(pool.filter(is_urgent))
+	must.append_array(pool.filter(is_priority))
 	var picks: Array = []
 	var ceiling: float = capacity * float(cfg("cap_ceiling"))
 	for c in must:

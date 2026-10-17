@@ -65,7 +65,10 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | Geliştirme bekleniyor | Awaiting development | |
 | sprint | sprint | `PRODUCT_SPRINT_TITLE` ve ürün ekranı; CSV cümle düzeninde, büyük hâli `Fmt.upper` ile SPRINT. "sprint" izinli ödünç kelimelerde yok: TR onay bekliyor. |
 | PM | PM | `PRODUCT_PM`, Ürün Yöneticisi'nin çip kısaltması. "PM" izinli ödünç kelimelerde yok: TR onay bekliyor. |
-| ticket | ticket | `PRODUCT_CUSTOMER_TICKETS`, `PRODUCT_FX_TICKETS_*`. "ticket" izinli ödünç kelimelerde yok: TR onay bekliyor. |
+| ticket | ticket | `PRODUCT_CUSTOMER_TICKETS`. "ticket" izinli ödünç kelimelerde yok: TR onay bekliyor. |
+| açık hata | open bug | Düzeltme kartının hata satırı, öngörü ve sürüm notu: "6 hata · 3 hesap · 140 kullanıcı", "6 hata kapanır", "Fatura düzeltmesi · 6 → 0 açık hata", "6 hata kapandı" (`PRODUCT_FX_BUGS*`, `PRODUCT_RESULT_BUGS_*`). TR/EN onay bekliyor. |
+| hesap *(B2B müşteri)* | account | `PRODUCT_ACCOUNT_COUNT`; en büyük hesap "en büyüğü {hesap} ({n} kullanıcı) ↔ largest: {account} ({n} users)" (`PRODUCT_FX_TOP`). TR/EN onay bekliyor. |
+| Öncelikli *(düzeltme kartı etiketi)* | Priority | Hattın açık hatası öncelik eşiğinde (`PRODUCT_PRIORITY`). "Acil" değildir: "acil durum" olaylarıyla karışmasın diye ayrı kelime. TR/EN onay bekliyor. |
 | puan *(efor)* | points | Tekil: point (`_ONE`). |
 | alan *(ürün)* | area | ALANLAR / AREAS. |
 | yetenek | capability | Alanın altındaki yapılmış iş. |

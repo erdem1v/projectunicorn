@@ -203,6 +203,27 @@ static func plan_next() -> void:
 		_auto_start()
 
 
+## Hattın düzeltme kartı sprintin başına girer (olay motoru çağırır): kart sprintteyse başa taşınır, sonraki
+## sütundaysa ya da aday ise sprinte alınır, ikinci kart açılmaz. Koşan sprintte kart hemen koşmaya başlar ve haftanın
+## ataması baştan yapılır; sürüm notundayken sonraki sprintin başına girer. Hattında hata yoksa ya da kart bu sprintte
+## bitmişse (kapanışta hattı zaten temizler) bir şey yapmaz. Kart, `start()`'taki gibi, kilitlenmeden önce hata
+## deposundan okunur: olay hatayı düşürüp aynı tikte çağırır.
+static func fix_first(line: String) -> void:
+	_refresh_fix_cards()
+	var card: Dictionary = SprintCatalog.card_by_id("fix:" + line)
+	if card.is_empty() or card.state == "done":
+		return
+	var column: Array = _p().next.cards if mode() == "release" else _p().sprint.cards
+	_place(card, mode() != "release")
+	column.erase(card.id)
+	column.push_front(card.id)
+	if mode() == "active":
+		if card.state != "running":
+			card.merge({"state": "running", "base": _worked(card), "paid": true}, true)
+		_assign(_sprint_cards(), team(), _ahead_cards())
+	_changed()
+
+
 ## "Bu sprinti boş geçir", oyuncunun onayıyla: planın kartları sonraki sprinte geçer, sprint kartsız başlar.
 static func skip() -> void:
 	if mode() != "plan":
@@ -972,6 +993,7 @@ static func _auto_start() -> void:
 			return
 	if capacity() == 0:
 		return
+	_refresh_fix_cards()
 	apply_lead()
 	if _sprint_cards().is_empty():
 		for id in _p().next.cards.duplicate():
@@ -1045,6 +1067,10 @@ static func _close() -> void:
 	# Hatayı bulan kullanıcıdır: biten kartın hatası kartının hattına düşer, ürün canlı olana dek bekler.
 	p.pending_faulty.append_array(faulty)
 	_land_faulty()
+	# Sürüm notu hattın kapanıştan sonraki sayısını da yazar: hatalı kapanan bir kartın hatası aynı hatta düşmüş olabilir.
+	for c in ship:
+		if c.kind == "fix":
+			c.bugs_after = ProductState.line_bugs(c.line)
 	for c in carried:
 		c.state = "carried"
 		c.assignees = []
@@ -1066,7 +1092,7 @@ static func _close() -> void:
 			return {"id": c.id, "done": total(c) - remaining(c), "total": roundi(total(c)), "to_sprint": number + 1}),
 		"velocity": velocity, "expected": _expected(changed, closed), "actual": {}, "press": {},
 		"gate": gate, "day": GameState.day, "changed_areas": changed,
-		"alerts_cleared": cleared}
+		"alerts_cleared": cleared, "faulty": faulty}
 	release.press = SprintBridges.press_line(release)
 	var carried_ids: Array = carried.map(func(c: Dictionary) -> String: return c.id)
 	p.next.cards = carried_ids + p.next.cards.filter(func(id: String) -> bool: return id not in carried_ids)
@@ -1120,7 +1146,7 @@ static func _expected(changed: Array, closed: int) -> Dictionary:
 		var area: String = changed[0].area
 		return {"key": "PRODUCT_RESULT_LEVEL_EXPECTED", "args": {"area": area, "to": SprintCatalog.area_word(area)}}
 	if closed > 0:
-		return {"key": Fmt.count_key("PRODUCT_RESULT_TICKETS_EXPECTED", closed), "args": {"n": closed}}
+		return {"key": Fmt.count_key("PRODUCT_RESULT_BUGS_EXPECTED", closed), "args": {"n": closed}}
 	return {"key": "PRODUCT_RESULT_NONE_EXPECTED", "args": {}}
 
 
@@ -1196,13 +1222,15 @@ static func _movable(c: Dictionary) -> bool:
 	return not c.is_empty() and c.state not in ["running", "done"] and SprintCatalog.gate_reason(c.step) == ""
 
 
-## Başlamamış düzeltme kartının hata sayısı hata deposundan okunur; hattında hata kalmayan kart silinir.
-## Depo hata düşünce ve kart çıkınca değişir; günlük tikte, kapanıştan sonra ve başlatmadan önce çağrılır.
+## Başlamamış düzeltme kartının hata sayısı ve eforu hata deposundan okunur; hattında hata kalmayan kart silinir.
+## Koşan kartınki başlatmada kilitlenmiştir. Depo hata düşünce ve kart çıkınca değişir; günlük tikte, kapanıştan
+## sonra ve başlatmadan önce çağrılır.
 static func _refresh_fix_cards() -> void:
 	var p: Dictionary = _p()
 	for c in p.cards.values():
 		if c.kind == "fix" and c.state in ["candidate", "planned", "carried"]:
 			c.bugs = ProductState.line_bugs(c.line)
+			c.effort = SprintCatalog.fix_effort(c.bugs)
 			# A card a decision paper waits on stays until the paper settles: its expiry acts on it.
 			if c.bugs == 0 and not c.decision:
 				p.cards.erase(c.id)

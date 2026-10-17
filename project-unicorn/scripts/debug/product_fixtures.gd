@@ -10,7 +10,7 @@ const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], "plan_next": ["release", "replan"]}
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
 const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "pm_started": "c2", "release": "c3",
-	"no_release": "c3", "gate": "c3", "b2b_no_requests": "c5",
+	"no_release": "c3", "gate": "c3", "release_fix": "c3", "b2b_no_requests": "c5", "fix_long_name": "c5",
 	"goal_menu": "c4", "approved": "c4"}
 ## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
 const AREAS := {
@@ -86,7 +86,7 @@ func _build(id: String) -> Dictionary:
 			m.header.live_version = "1.5"
 		"cards":
 			m.center.cards = [
-				_deck("gorusme", SprintCard.State.ADAY, {"urgent": true, "addable": true}),
+				_deck("gorusme", SprintCard.State.ADAY, {"priority": true, "addable": true}),
 				_deck("ilk_tur", SprintCard.State.ADAY_ALINMIS, {"tag_sprint": 8}),
 				_deck("mobil_giris", SprintCard.State.SPRINT_PLAN, {"spills": true, "planned_done": 1.5}),
 				_deck("ucretli", SprintCard.State.SPRINT_PLAN, {"no_start": 8}),
@@ -154,6 +154,22 @@ func _build(id: String) -> Dictionary:
 		"b2b_no_requests":
 			m.customers = []
 			m.next.flags = []
+		"fix_long_name":
+			# B2B düzeltme kartının hata satırı: en büyük hesabın adı satıra sığmayacak kadar uzun, sarar. Geniş kartta
+			# (bu sprint), açık alandaki dar kartta ve sonraki sütundaki kartta.
+			var effect: Array = [_bugs(6, 3, 140, "Anadolu Lojistik ve Taşımacılık Sanayi A.Ş.", 100), _clear("trust")]
+			for list in [m.center.cards, _area_of(m, "trust").candidates]:
+				for c in list:
+					if c.id == "kesinti":
+						c.effect = effect
+			m.next.cards.push_front(_deck("kesinti", SprintCard.State.PLANLANAN, {"id": "kesinti_sonraki", "effect": effect}))
+		"release_fix":
+			# Düzeltme satırları kapanıştaki gerçek sayıyı yazar: planlanırken 5 olan hat kapanışta 9'du; öbürü, hatalı
+			# kapanan bir kartın hatası aynı hatta düştüğü için 1'e indi.
+			var note: Dictionary = m.center.release
+			note.shipped = [_deck("kisa_kayit", SprintCard.State.BITTI), _shipped_fix("kesinti", 9, 0),
+				_shipped_fix("esitleme", 6, 1)]
+			note.result = {"kind": "actual", "text": tr(Fmt.count_key("PRODUCT_RESULT_BUGS_ACTUAL", 15)).format({"n": 15})}
 		"locked_k3":
 			m.ui.open_area = "core"
 			_area_of(m, "core").candidates.append(_deck("akilli_arama", SprintCard.State.KILITLI,
@@ -300,7 +316,7 @@ func _c1() -> Dictionary:
 		"areas": _notly_areas(false),
 		"customers": null,
 		"center": _center("plan", _sprint_cards(), {
-			"forecast": [_level("onboarding", 1, 2), _clear("trust"), {"k": "tickets", "n": 3}],
+			"forecast": [_level("onboarding", 1, 2), _clear("trust"), {"k": "bugs_closed", "n": 5}],
 			"lead_tip": _lead(_p("Kesinti ve kayıt bu sprintte bitmeli.", "The outage fix and sign-up must land this sprint.")),
 		}),
 		"next": _notly_next(false),
@@ -328,7 +344,7 @@ func _c3() -> Dictionary:
 		"version": _version("1.5"),
 		"gate": false,
 		"rnd_open": false,
-		"shipped": [_deck("kisa_kayit", SprintCard.State.BITTI), _deck("kesinti", SprintCard.State.BITTI)],
+		"shipped": [_deck("kisa_kayit", SprintCard.State.BITTI), _shipped_fix("kesinti", 5, 0)],
 		"carried": [{"name": carried.name, "kind": carried.kind, "done": 3, "total": 5, "to_sprint": 8}],
 		"velocity": {"done": 8, "total": 12},
 		"result": {"kind": "actual", "text": _p("10 yeni kullanıcıdan 6'sı ilk hafta kaldı (önce 4).",
@@ -363,7 +379,8 @@ func _c5() -> Dictionary:
 				"alert": true,
 				"capabilities": [_cap(_p("Kullanıcı rolleri", "User roles"), 2),
 					_cap(_p("Yedekleme", "Backups"), 0), _cap("SSO", 0)],
-				"candidates": [_deck("sso", alinmis, {"tag_sprint": 7}), _deck("kesinti", alinmis, {"tag_sprint": 7}),
+				"candidates": [_deck("sso", alinmis, {"tag_sprint": 7}),
+					_deck("kesinti", alinmis, {"tag_sprint": 7, "effect": _fix_b2b()}),
 					_deck("oto_yedek", aday, {"effect": [_level("trust", 2, 3)]})],
 			}),
 		],
@@ -373,9 +390,9 @@ func _c5() -> Dictionary:
 			{"name": "Beykoz", "request": "", "tickets": 2, "tag_sprint": -1, "due_sprint": -1, "value": 0,
 				"area_name": "", "buttons": [], "card_id": ""},
 		],
-		"center": _center("plan", [_deck("sso", plan), _deck("kesinti", plan), _deck("excel", plan)], {
+		"center": _center("plan", [_deck("sso", plan), _deck("kesinti", plan, {"effect": _fix_b2b()}), _deck("excel", plan)], {
 			"forecast": [_level("trust", 1, 2), {"k": "request_on_time", "customer": "Nordica"},
-				{"k": "request_on_time", "customer": "Palmiye"}, _clear("trust")],
+				{"k": "request_on_time", "customer": "Palmiye"}, _clear("trust"), {"k": "bugs_closed", "n": 6}],
 			"lead_tip": _lead(_p("SSO gecikirse Nordica yenilemez.", "If SSO slips, Nordica won't renew.")),
 		}),
 		"next": {"sprint": 8, "cards": [_deck("efatura", SprintCard.State.PLANLANAN)], "flags": [{"k": "deadline",
@@ -484,11 +501,13 @@ func _sprint_cards() -> Array:
 func _deck_table() -> Dictionary:
 	var founder := _p("Kurucu", "Founder")
 	return {
-		"kesinti": ["fix", "trust", ["dev"], 2, _p("Kesinti düzeltmesi", "Outage fix"), [_clear("trust")], [["Kaan", 1]]],
+		"kesinti": ["fix", "trust", ["dev"], 2, _p("Kesinti düzeltmesi", "Outage fix"), [_bugs(5, -1, 300), _clear("trust")],
+			[["Kaan", 1]]],
+		"esitleme": ["fix", "core", ["dev"], 2, _p("Eşitleme düzeltmesi", "Sync fix"), [_bugs(5, -1, 300)], [["Kaan", 1]]],
 		"kisa_kayit": ["feature", "onboarding", ["design", "dev"], 3, _p("Kısa kayıt", "Short sign-up"),
-			[_level("onboarding", 1, 2), {"k": "tickets", "n": 3}], [["Ece", 1], ["Kaan", 1]]],
+			[_level("onboarding", 1, 2)], [["Ece", 1], ["Kaan", 1]]],
 		"ilk_tur": ["feature", "onboarding", ["design", "dev"], 2, _p("İlk tur rehberi", "First-run guide"),
-			[_level("onboarding", 1, 2), {"k": "tickets", "n": 1}], [["Ece", 1], ["Kaan", 1]]],
+			[_level("onboarding", 1, 2)], [["Ece", 1], ["Kaan", 1]]],
 		"mobil_giris": ["feature", "onboarding", ["dev", "test"], 4, _p("Mobil giriş", "Mobile login"),
 			[_level("onboarding", 1, 2)], [["Kaan", 2]]],
 		"gorusme": ["research", "onboarding", ["product"], 1, _p("5 kullanıcıyla görüş", "Talk to 5 users"),
@@ -522,8 +541,17 @@ func _deck(id: String, state: int, extra := {}) -> Dictionary:
 		"queued": false, "decision": null,
 		"effort_split": d[6].map(func(s: Array) -> Dictionary: return {"name": s[0], "weeks": s[1]}),
 		"locked_node": "", "locked_rnd": "", "remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0,
-		"addable": false, "ready": -1.0, "urgent": false, "buttons": ProductModel.BUTTONS.get(state, [])}
+		"addable": false, "ready": -1.0, "buttons": ProductModel.BUTTONS.get(state, []),
+		"priority": d[5].any(func(part: Dictionary) -> bool:
+			return part.k == "bugs" and part.n >= int(SprintCatalog.cfg("fix_effort.priority")))}
 	card.merge(extra, true)
+	return card
+
+
+## Sürüm notundaki düzeltme satırı: adı kapanıştaki "önce → sonra" sayıyı da taşır (ProductModel._shipped).
+func _shipped_fix(id: String, from: int, to: int) -> Dictionary:
+	var card: Dictionary = _deck(id, SprintCard.State.BITTI)
+	card.name += SprintUiShared.SEP + tr(Fmt.count_key("PRODUCT_FX_BUGS_FIXED", to)).format({"from": from, "to": to})
 	return card
 
 
@@ -627,6 +655,16 @@ func _cap_fx(cap_name: String, from: int, to: int) -> Dictionary:
 
 func _clear(area: String) -> Dictionary:
 	return {"k": "alert_clear", "area": _short(area)}
+
+
+## Düzeltme kartının hata satırı; B2C'de hesap sayısı -1 ve en büyük hesap "".
+func _bugs(n: int, accounts: int, users: int, top := "", top_users := 0) -> Dictionary:
+	return {"k": "bugs", "n": n, "accounts": accounts, "users": users, "top": top, "top_users": top_users}
+
+
+## c5'in B2B düzeltme kartı: altı hata, üç hesap, 140 kullanıcı, en büyüğü Nordica.
+func _fix_b2b() -> Array:
+	return [_bugs(6, 3, 140, "Nordica", 100), _clear("trust")]
 
 
 func _short(area: String) -> String:

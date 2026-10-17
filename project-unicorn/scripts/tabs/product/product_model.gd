@@ -66,13 +66,14 @@ extends RefCounted
 #                    last} or null (kart "İş durdu · karar bekliyor"),
 #         effort_split: [{name, weeks}],
 #         locked_node: "" or String, locked_rnd: "" or String (kilidin açılmamış Ar-Ge düğümü; kart oraya götürür),
-#         remaining: -1 or float (kesirli), urgent,
+#         remaining: -1 or float (kesirli), priority (öncelikli düzeltme),
 #         spills (planda puan alır ama bitmez), no_start: -1 or int (planda puan almaz, kaydığı sprint),
 #         planned_done (kesirli, planda sprint sonunda biten puan), addable ("+" bu aday için açık),
 #         ready: -1 or 0..1 (sonraki sütunda önden hazırlanan kartın hazır payı; planda sprint sonundaki),
 #         buttons: ["add"|"send_next"|"pull"|"remove"]}   # var olan düğmeler; "+" addable ile açılır
 # part = {k: "level", area, from, to, from_word, to_word} | {k: "holds", area, word} | {k: "alert_clear", area}
-#      | {k: "cap", name, from, to, from_word, to_word} | {k: "tickets", n} | {k: "voices", n}
+#      | {k: "cap", name, from, to, from_word, to_word} | {k: "bugs_closed", n} | {k: "voices", n}
+#      | {k: "bugs", n, accounts (B2C'de -1), users, top ("" ise yok), top_users}   # düzeltme kartının hata satırı
 #      | {k: "request", customer, value} | {k: "research", area} | {k: "request_on_time", customer}
 #      | {k: "promise", customer}   # kademeye verilmiş açık söz; kart onu etiketle de taşır
 #   level ve cap parçalarında from/to seviyedir (0..3); from_word/to_word o seviyenin beklentiye göre
@@ -303,7 +304,7 @@ static func _release(r: Dictionary, lead: Character) -> Dictionary:
 		"gate": r.get("gate", false),
 		# Ar-Ge ağacı v1.0 ile açılır.
 		"rnd_open": int(r.number) == 1,
-		"shipped": r.shipped.map(func(c: Dictionary) -> Dictionary: return _card(c, SprintCard.State.BITTI)),
+		"shipped": r.shipped.map(_shipped),
 		"carried": r.carried.map(func(item: Dictionary) -> Dictionary:
 			var c: Dictionary = SprintCatalog.card_by_id(item.id)
 			return {"name": SprintCatalog.card_name(c), "kind": _kind(c), "done": item.done, "total": item.total,
@@ -313,6 +314,15 @@ static func _release(r: Dictionary, lead: Character) -> Dictionary:
 		"press": {} if press.is_empty() else {"outlet": press.outlet, "text": SprintBridges.resolve(press)},
 		"lead": _person(lead).merged({"text": SprintCatalog.release_lead_sentence(r), "self": lead.category == "founder"}),
 	}
+
+
+## Çıkan kart; düzeltme kartının adı kapanıştaki hata sayısını da taşır: "Fatura düzeltmesi · 6 → 0 açık hata".
+static func _shipped(c: Dictionary) -> Dictionary:
+	var card: Dictionary = _card(c, SprintCard.State.BITTI)
+	if c.kind == "fix":
+		card.name += SprintUiShared.SEP + _t(Fmt.count_key("PRODUCT_FX_BUGS_FIXED", int(c.bugs_after))).format(
+			{"from": int(c.bugs), "to": int(c.bugs_after)})
+	return card
 
 
 ## Sürümün sonuç satırı: ertesi gün gerçekleşen, o gelene kadar beklenen; ikisi de yoksa null.
@@ -416,7 +426,7 @@ static func _card(c: Dictionary, state: SprintCard.State, extra := {}) -> Dictio
 		"tag_sprint": -1, "phases": [], "phase_pts": null, "assignees": [], "queued": false, "decision": null,
 		"effort_split": [], "locked_node": "", "locked_rnd": "",
 		"remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0, "addable": false, "ready": -1.0,
-		"urgent": SprintCatalog.is_urgent(c), "buttons": BUTTONS.get(state, [])}
+		"priority": SprintCatalog.is_priority(c), "buttons": BUTTONS.get(state, [])}
 	card.merge(extra, true)
 	return card
 
