@@ -13,7 +13,8 @@ const STEP_REALIZATION := "mvp_step_realization"
 const HIDDEN_LINES := "mvp_hidden_lines"
 const REPORTS_INCOMING := "mvp_reports_incoming"
 const REPORTS_PROGRESS := "mvp_reports_progress"
-const BUGS_CONFIRMED := "mvp_bugs_confirmed"
+const OPEN_BUGS := "mvp_open_bugs"
+const OPEN_BUGS_PREV := "mvp_open_bugs_prev"
 const VALIDATION_PROGRESS := "mvp_validation_progress"
 const VERSION_LAUNCH_DAY := "mvp_version_launch_day"
 const INTEREST := "mvp_interest"
@@ -155,15 +156,86 @@ static func reports_incoming() -> int:
 	return int(GameState.get_flag(REPORTS_INCOMING, 0))
 
 
-static func bugs_confirmed() -> int:
-	return int(GameState.get_flag(BUGS_CONFIRMED, 0))
+# ---------------------------------------------------------- açık hata deposu
+# Ürünün tek hata deposu: {hat kimliği: açık hata}, yalnız sıfırdan büyükler. Hata yalnız add_bugs ile
+# girer, clear_line_bugs ile çıkar; ikisi de `build_progress_changed` yayar, okuyan yüzeyler başka
+# yoldan değişmeyeceğine güvenir.
+
+## Bütün hatlardaki açık hata.
+static func open_bugs() -> int:
+	return _sum(GameState.get_flag(OPEN_BUGS, {}) as Dictionary)
 
 
-## Ürünün ticket defterinin yazma yolu: düzeltme kartı kapattığı doğrulanmış hataları düşer,
-## hatalı çıkış bir tane ekler. Yalnız DOĞRULANMIŞ oynar ve sıfırın altına inmez; GELEN
-## DESTEK'indir.
-static func adjust_confirmed(delta: int) -> void:
-	GameState.set_flag(BUGS_CONFIRMED, maxi(0, bugs_confirmed() + delta))
+## {hat kimliği: açık hata}; hatasız hat yok. Kopyadır: yazma yolu add_bugs ve clear_line_bugs'tır.
+static func open_bugs_by_line() -> Dictionary:
+	return (GameState.get_flag(OPEN_BUGS, {}) as Dictionary).duplicate()
+
+
+static func line_bugs(line: String) -> int:
+	return int((GameState.get_flag(OPEN_BUGS, {}) as Dictionary).get(line, 0))
+
+
+## En çok açık hatası olan hat, hatasızsa ""; eşitlikte küçük hat kimliği.
+static func worst_bug_line() -> String:
+	var bugs: Dictionary = open_bugs_by_line()
+	var ids: Array = bugs.keys()
+	ids.sort()
+	var worst: String = ""
+	for line in ids:
+		if worst == "" or int(bugs[line]) > int(bugs[worst]):
+			worst = line
+	return worst
+
+
+## Açık hata, son haftalık tikin anlık görüntüsüne göre: bir hatta ya da (`line` boşsa) hepsinde.
+static func open_bugs_delta(line := "") -> int:
+	var before: Dictionary = GameState.get_flag(OPEN_BUGS_PREV, {}) as Dictionary
+	if line != "":
+		return line_bugs(line) - int(before.get(line, 0))
+	return open_bugs() - _sum(before)
+
+
+## Haftalık tikin başında alınır: açık hata okları bu görüntüden sayar.
+static func snapshot_open_bugs() -> void:
+	GameState.set_flag(OPEN_BUGS_PREV, open_bugs_by_line())
+
+
+static func add_bugs(line: String, n: int) -> void:
+	var bugs: Dictionary = open_bugs_by_line()
+	bugs[line] = int(bugs.get(line, 0)) + n
+	GameState.set_flag(OPEN_BUGS, bugs)
+	EventBus.build_progress_changed.emit()
+
+
+## Düzeltme çıktı: hattın bütün açık hatası birden düşer. Kaç hata düştüğü döner.
+static func clear_line_bugs(line: String) -> int:
+	var bugs: Dictionary = open_bugs_by_line()
+	var n: int = int(bugs.get(line, 0))
+	if n > 0:
+		bugs.erase(line)
+		GameState.set_flag(OPEN_BUGS, bugs)
+		EventBus.build_progress_changed.emit()
+		EventBus.line_bugs_cleared.emit(line, n)
+	return n
+
+
+## Yeni hataya kapatılmış hat: hata kaynağı bu hatları seçmez. Hiçbir kural hat kapatmaz.
+static func line_blocked(_line: String) -> bool:
+	return false
+
+
+## Kademesi çıkmış hatlar, kimliğe göre sıralı: bir çekiliş sözlüğün ekleme sırasından bağımsız aynı hatta denk gelir.
+static func live_lines(tiers: Dictionary = line_tiers()) -> Array:
+	var ids: Array = tiers.keys().filter(func(line: String) -> bool: return int(tiers[line]) > 0)
+	ids.sort()
+	return ids
+
+
+static func _sum(bugs: Dictionary) -> int:
+	var n: int = 0
+	for count in bugs.values():
+		n += int(count)
+	return n
 
 
 # ------------------------------------------------------- §9 age, interest
@@ -234,12 +306,12 @@ static func set_infra_units(units: int) -> void:
 ## two readers cannot disagree.
 static func axis_readings() -> Dictionary:
 	return QualityModel.axis_readings(subtype(), line_tiers(), line_realization(),
-		bugs_confirmed())
+		open_bugs())
 
 
 static func axis_reading(axis: String) -> int:
 	return QualityModel.axis_reading(subtype(), line_tiers(), line_realization(),
-		axis, bugs_confirmed())
+		axis, open_bugs())
 
 
 ## The raw realized values the economy's saturation curve reads.

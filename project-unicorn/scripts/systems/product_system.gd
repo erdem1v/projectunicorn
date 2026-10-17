@@ -48,9 +48,11 @@ static func from_dict(d: Dictionary) -> void:
 
 
 static func daily_tick() -> void:
-	# Canlı ürünün haftalık hata örneği; bug_trend() ve health_state() bu pencereyi okur.
+	# Canlı ürünün haftalık hata örneği; bug_trend() ve health_state() bu pencereyi okur. Açık hata
+	# görüntüsü haftanın ilk işidir: sprint kapanışı ve yeni hatalar ondan sonra gelir.
 	if not ProductState.is_live():
 		return
+	ProductState.snapshot_open_bugs()
 	var hist: Array = GameState.get_flag("mvp_bug_history", [])
 	hist.append(int(GameState.get_flag("mvp_live_bug_count", 0)))
 	while hist.size() > TimeModel.ticks(BUG_HISTORY_WEEKS):

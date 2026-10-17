@@ -318,7 +318,7 @@ static func _reminder(id: String, topic: String, from: Dictionary, subject: Stri
 
 
 ## The Ar-Ge note's three lines (§6.3), the empty ones dropped; the demand line falls back to the
-## "nobody asked" sentence when no request or ticket was open. The note stores the product line's id,
+## "nobody asked" sentence when no request or bug was open. The note stores the product line's id,
 ## the name is resolved here so it follows the language.
 static func note_lines(a: Dictionary) -> Array:
 	var demand: String = String(a.get("demand_line", ""))

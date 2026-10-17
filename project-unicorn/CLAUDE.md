@@ -92,8 +92,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   yazılmaz. Seam'ler: müşteri → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (yayar);
   toplam MRR yalnız `SalesSystem.reflect_mrr()`; kasa, burn, marka, itibar → `GameState.set_*`; faz →
   `GameState.advance_phase()` (`set_phase` yalnız kayıt ve debug içindir); karakter → `CharacterRegistry.*`; ürün →
-  `SprintSystem.*` (`GameState.product`'ın yazarı; köprüsü `SprintBridges` yalnız `tickets`, `ticket_seq`,
-  `requests`, `rival_hits`'i yazar) ve `ProductState.*`; tek seferlik gider → `FinanceSystem.apply_one_time_cost`. `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
+  `SprintSystem.*` (`GameState.product`'ın yazarı; köprüsü `SprintBridges` yalnız `requests`,
+  `rival_hits`'i yazar) ve `ProductState.*`; tek seferlik gider → `FinanceSystem.apply_one_time_cost`. `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
   kapı `set_game_flag` beyaz listesi); motorun kendi hafızası `EvFlags`'tadır.
 - Olay motoru autoload değil; tek girişi statik `EventGate.request(event_id: String, context: Dictionary = {})`.
   Sistem kartın adını verir, kartı kurmaz. Kartlar `data/events/cards/<kategori>/` altında JSON'dur ve
@@ -104,7 +104,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   §11.3). Karar olmayan anlar `MessageSystem` mesajıdır.
 - Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
   kazanılır. B2C'de kitle her oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
-- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 15, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
+- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 16, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`). Her koşunun kimliği vardır (`GameState.run_id`, metada): yuvalar koşu başınadır (`quick_<run>`, `auto_<run>_<n>`, `manual_<n>`) ve bir koşunun oto kaydı ötekininkini ezmez. Menü koşunun olmadığı yerdir: ana menüye dönüş süreç içi `SaveManager.end_run()` ile koşuyu bitirir ve kabuğu söker.
 

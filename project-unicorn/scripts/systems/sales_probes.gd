@@ -59,7 +59,7 @@ static func facts_for(p: Prospect) -> Dictionary:
 		"axis_innovation": ProductRead.axis_reading("", "innovation"),
 		"axis_stability": ProductRead.axis_reading("", "stability"),
 		"axis_experience": ProductRead.axis_reading("", "experience"),
-		"confirmed_bugs": ProductRead.confirmed_open(),
+		"confirmed_bugs": ProductRead.open_bugs(),
 		"unconfirmed_reports": ProductRead.unconfirmed(),
 		"version_age": ProductRead.version_age(),   # weeks
 		"interest": int(ProductRead.interest()),

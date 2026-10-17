@@ -501,7 +501,7 @@ static func risk_voice(c: Customer) -> String:
 		return ""
 	if GameState.get_flag("b2b_broke_%s" % c.id, false):
 		return TranslationServer.translate("B2B_RISK_VOICE_BROKEN")
-	if ProductState.bugs_confirmed() > B2BConstants.COMPLAINT_BUG_GATE or InfraSystem.is_over_capacity():
+	if ProductState.open_bugs() > B2BConstants.COMPLAINT_BUG_GATE or InfraSystem.is_over_capacity():
 		return B2BConstants.complaint_voice(c.industry)
 	# A broken word and a failing product come first on purpose: they are louder than newness.
 	# After them, an account with no history yet cannot be disappointed by one.

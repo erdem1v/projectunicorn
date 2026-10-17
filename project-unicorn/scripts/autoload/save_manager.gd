@@ -13,13 +13,13 @@ extends Node
 # NegotiationSystem) are reset, never serialised: can_save() refuses while any of them
 # is_active(), so a sitting is always idle at the moment a save is taken.
 
-const SCHEMA_VERSION := 15
+const SCHEMA_VERSION := 16
 
 ## GDD ÜRÜN rev 6.1 §22.5 — eski kayıt TAŞINMAZ. "Yükleyici eski sürümü görürse kullanıcıya
 ## AÇIK MESAJ verir, sessizce bozuk state üretmez." Düz özellik listesi hat durumlarına
 ## çevrilemez ve v9 olay bloğu v10 motorunun arklarını/latch'lerini taşımaz; çevirmeye
 ## çalışmak çalışıyor görünen ve yanlış olan bir koşu üretir. O yüzden kapı sürümdedir.
-## v11-v15 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
+## v11-v16 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
 const MIN_LOADABLE_VERSION := 10
 const SAVE_DIR := "user://saves/"
 
@@ -199,6 +199,8 @@ func _read_file(path: String) -> Dictionary:
 		_migrate_14(state, meta)
 	if version < 15:
 		_migrate_15(state)
+	if version < 16:
+		_migrate_16(state)
 	return {"ok": true, "error_key": "", "meta": meta, "state": state}
 
 
@@ -804,8 +806,8 @@ static func _convert(d: Dictionary, from: String, to: String, f: Callable) -> vo
 ## v14 → v15: the sprint engine replaces the build. A build in progress becomes Sprint 1's plan, one
 ## feature card per planned step with its design done and its development as far along as the build
 ## was; the build and its flags go. A line's polish is read from the stamp its current step shipped
-## with. Confirmed bugs stay counted and the first daily sync attributes them to capabilities, so the
-## ticket ledger starts empty. A typed product opens in Sprint 1 planning; an untyped
+## with. Confirmed bugs stay counted for v16 to spread over the live lines, so the ticket ledger
+## starts empty. A typed product opens in Sprint 1 planning; an untyped
 ## run keeps the empty state the type picker starts from. Pure and cheap: list_slots reads every slot
 ## through here.
 const _POLISH_HALF_STAMP := 1.0     # above the one-turn baseline: a second design turn or a gate bonus
@@ -883,6 +885,63 @@ func _migrate_15(state: Dictionary) -> void:
 	product.sprint.cards = cards.keys()
 	product.merge({"cards": cards, "releases": releases, "polish": polish}, true)
 	gs["product"] = product
+
+
+## v15 → v16: the ticket ledger and the confirmed-bug counter become one store of open bugs per line. The
+## counter is the total and the ledger only follows it once a week: a ticket counts on its own line, the newest
+## ones when the counter fell below the ledger (as the daily sync kept them), and confirmed bugs the ledger had
+## not caught up with go one by one over the live lines in id order. A fix card keeps the count it showed as a number, the bugs of faulty cards
+## waiting for v1.0 change their name, and what earlier changes removed leaves the save: the fix run's and
+## the support week's flags, and the rows of the card that left the event engine. Pure and cheap:
+## list_slots reads every slot through here.
+const _REMOVED_FLAGS := ["mvp_bugs_confirmed", "mvp_fix_run_active", "mvp_fix_run_fixed", "mvp_fix_run_progress",
+	"mvp_reports_week_net"]
+const _REMOVED_CARD := "product.bug_pile"
+
+
+func _migrate_16(state: Dictionary) -> void:
+	var gs: Dictionary = state.get("game_state", {}) as Dictionary
+	var flags: Dictionary = gs.get("flags", {}) as Dictionary
+	var product: Dictionary = gs.get("product", {}) as Dictionary
+	var confirmed: int = int(flags.get("mvp_bugs_confirmed", 0))
+	var tickets: Array = product.get("tickets", []) as Array
+	var lines: Array = tickets.slice(maxi(0, tickets.size() - confirmed)).map(
+		func(ticket: Dictionary) -> String: return ticket.line)
+	var live: Array = ProductState.live_lines(flags.get("mvp_line_tiers", {}) as Dictionary)
+	if not live.is_empty():
+		for i in confirmed - lines.size():
+			lines.append(live[i % live.size()])
+	var bugs: Dictionary = {}
+	for line in lines:
+		bugs[line] = int(bugs.get(line, 0)) + 1
+	flags["mvp_open_bugs"] = bugs
+	flags["mvp_open_bugs_prev"] = bugs.duplicate()
+	for key in _REMOVED_FLAGS:
+		flags.erase(key)
+
+	if product.has("sprint"):
+		product["pending_faulty"] = product.get("gate_faulty", product.get("pending_faulty", []))
+		for key in ["tickets", "ticket_seq", "gate_faulty"]:
+			product.erase(key)
+		var cards: Array = product.cards.values() + product.release.get("shipped", [])
+		for record: Dictionary in product.releases:
+			cards.append_array(record.shipped)
+		for card: Dictionary in cards:
+			if card.has("tickets"):
+				card["bugs"] = (card["tickets"] as Array).size()
+				card.erase("tickets")
+
+	var ev: Dictionary = (state.get("systems", {}) as Dictionary).get(EvSave.BLOCK_KEY, {}) as Dictionary
+	for key in ["queue", "schedule", "rows"]:
+		if ev.has(key):
+			ev[key] = (ev[key] as Array).filter(func(e: Dictionary) -> bool: return e.event_id != _REMOVED_CARD)
+	if ev.get("active_event_id", "") == _REMOVED_CARD:
+		ev["active_event_id"] = ""
+		ev["active_context"] = {}
+	var papers: Dictionary = ev.get("papers", {}) as Dictionary
+	for key in papers.keys():
+		if papers[key].get("event_id", key) == _REMOVED_CARD:
+			papers.erase(key)
 
 
 # ----------------------------------------------------------------------------

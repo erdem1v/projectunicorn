@@ -12,7 +12,7 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **195** |
+| Seams (read) | **196** |
 | Effect verbs (write) | **63** |
 | Cards in the catalogue | 97 |
 | Arcs | 3 |
@@ -351,7 +351,6 @@ slot of that type (§17.12).
 | `urun.axis_experience` | global | int | Product | 0-120 |
 | `urun.axis_innovation` | global | int | Product | 0-120 |
 | `urun.axis_stability` | global | int | Product | 0-120 |
-| `urun.bugs_confirmed` | global | int | Product | confirmed live bugs |
 | `urun.bugs_unconfirmed` | global | int | Product | incoming, unvalidated reports |
 | `urun.capacity_state` | global | string | Product | normal | amber | over | unprovisioned |
 | `urun.capacity_tier` | global | int | Product | provisioned infra units |
@@ -367,6 +366,7 @@ slot of that type (§17.12).
 | `urun.is_live` | global | bool | Product | something has shipped |
 | `urun.lines_open` | global | int | Product | 0-9 feature lines opened |
 | `urun.market_type` | global | string | Product | b2b | b2c; empty until the product type is chosen |
+| `urun.open_bugs` | global | int | Product | open bugs across every line |
 | `urun.paid_plan_set` | global | bool | Product | the paid plan is open, or its card is in the running or the planned sprint |
 | `urun.sprint_last_week` | global | bool | Product | a running sprint is in its last week: week 2 of a two-week sprint, the only week of a one-week one |
 | `urun.sprint_number` | global | int | Product | the open sprint; 0 before the product type is chosen |
@@ -381,6 +381,7 @@ slot of that type (§17.12).
 | `urun.version` | global | int | Product | shipped version number |
 | `urun.version_age` | global | int | Product | weeks since THIS VERSION shipped, not since the product was born |
 | `urun.weeks_since_launch` | global | int | Product | -1 when nothing has shipped |
+| `urun.worst_line_bugs` | global | int | Product | open bugs on the line with the most |
 
 ## c · Condition vocabulary
 

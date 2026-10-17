@@ -138,29 +138,25 @@ static func word_for(level: float, expect: float) -> String:
 	return "enough" if level < expect + 1.0 else "strong"
 
 
-## "!": yeteneklerinden birinde acil eşiği kadar ticket, ya da (Güven & Ölçek) sunucu aşımı;
-## `closed` ticket'ları kapanmış sayılır.
-static func area_alert(area_id: String, closed: Array = []) -> bool:
+## "!": yeteneklerinden birinde acil eşiği kadar açık hata, ya da (Güven & Ölçek) sunucu aşımı;
+## `cleared` hatlarının hataları kapanmış sayılır.
+static func area_alert(area_id: String, cleared: Array = []) -> bool:
 	if _over_capacity(area_id):
 		return true
-	var by_line: Dictionary = tickets_by_line(closed)
-	for line_id in capabilities(area_id):
-		if (by_line.get(line_id, []) as Array).size() >= int(cfg("urgent_tickets")):
-			return true
-	return false
+	return capabilities(area_id).any(func(line_id: String) -> bool:
+		return line_id not in cleared and ProductState.line_bugs(line_id) >= int(cfg("urgent_tickets")))
 
 
-## Kapalı satırın cümlesi: alan × durum şablonu, açık ticket ve rakip çıkışı eklenir.
+## Kapalı satırın cümlesi: alan × durum şablonu, açık hata ve rakip çıkışı eklenir.
 static func area_sentence(area_id: String) -> String:
 	var word: String = area_word(area_id)
 	var parts: PackedStringArray = []
 	# Boş çekirdek kareleriyle ve "Yok" kelimesiyle söyler; cümlenin ekleyeceği bir şey yok.
 	if area_id != "core" or word != "none":
 		parts.append(_t("PRODUCT_AREA_%s_%s" % [area_id.to_upper(), word.to_upper()]))
-	var by_line: Dictionary = tickets_by_line()
 	var n: int = 0
 	for line_id in capabilities(area_id):
-		n += (by_line.get(line_id, []) as Array).size()
+		n += ProductState.line_bugs(line_id)
 	if n > 0:
 		parts.append(_t(Fmt.count_key("PRODUCT_AREA_TICKETS", n)).format({"n": n}))
 	if _over_capacity(area_id):
@@ -171,9 +167,8 @@ static func area_sentence(area_id: String) -> String:
 	return SEP.join(parts)
 
 
-## SESLER: açık ticket başlıkları, araştırma cümlesi ve rakip çıkışı; yeniler önde. Yeni = son
-## `voices_new_weeks` haftada (araştırma ve rakip çıkışı o haftaların sprintlerinde) gelmiş ve katlama
-## o günden beri açılmamış.
+## SESLER: araştırma cümlesi ve rakip çıkışı; yeniler önde. Yeni = son `voices_new_weeks` haftada
+## (o haftaların sprintlerinde) gelmiş ve katlama o günden beri açılmamış.
 static func voices(area_id: String) -> Array:
 	var seen: int = int(_p().get("voices_seen", {}).get(area_id, -1))
 	var since_sprint: bool = seen < int(_p().get("sprint", {}).get("start_day", 0))
@@ -181,11 +176,6 @@ static func voices(area_id: String) -> Array:
 	var sprints: int = SprintSystem.sprints_in(weeks)
 	var fresh: Array = []
 	var old: Array = []
-	var caps: Array[String] = capabilities(area_id)
-	for t in _p().get("tickets", []):
-		if String(t.line) in caps:
-			var is_new: bool = int(t.day) > seen and GameState.day - int(t.day) < TimeModel.ticks(weeks)
-			(fresh if is_new else old).append({"text": ticket_title(t), "new": is_new})
 	var research: Dictionary = _p().get("research_done", {})
 	if research.has(area_id):
 		var is_new: bool = since_sprint and SprintSystem.sprint_number() - int(research[area_id]) <= sprints
@@ -196,11 +186,6 @@ static func voices(area_id: String) -> Array:
 		(fresh if is_new else old).append({"text": _t("PRODUCT_RIVAL_VOICE").format(
 			{"rival": launch.name, "capability": _t(launch.capability_key)}), "new": is_new})
 	return fresh + old
-
-
-static func ticket_title(ticket: Dictionary) -> String:
-	var variant: int = absi(hash(str(int(ticket.id)))) % int(cfg("content.ticket_titles"))
-	return _t("PRODUCT_TICKET_%d" % variant).format({"capability": cap_name(ticket.line)})
 
 
 # --- Kartlar ---------------------------------------------------------------------
@@ -230,7 +215,7 @@ static func card_roles(kind: String) -> Array:
 
 
 ## Alanın aday kartları (PRD §3.2): yetenek başına sonraki kademe (kapısı kapalıysa da görünür),
-## açık talep o kademeyi talep kartına çevirir, ticket'lı yetenek başına düzeltme, alan başına
+## açık talep o kademeyi talep kartına çevirir, açık hatası olan yetenek başına düzeltme, alan başına
 ## araştırma (yapıldığı sprintin ardından bir kapanış gizli). Sprintte ya da sonrakinde duran kart
 ## saklanan hâliyle döner. Sıra: acil önde, kilitsiz önde, sonra etki/efor azalan.
 static func candidates(area_id: String) -> Array:
@@ -258,14 +243,13 @@ static func candidates(area_id: String) -> Array:
 			out.append(card)
 		else:
 			out.append(new_card("feat:" + step, "feature", area_id, step_effort(step), line_id, step, next))
-	var by_line: Dictionary = tickets_by_line()
+	var bugs: Dictionary = ProductState.open_bugs_by_line()
 	for line_id in caps:
-		if by_line.has(line_id):
-			var ids: Array = by_line[line_id]
-			var urgent: bool = ids.size() >= int(cfg("urgent_tickets"))
+		if bugs.has(line_id):
+			var urgent: bool = int(bugs[line_id]) >= int(cfg("urgent_tickets"))
 			var effort: int = int(cfg("effort.fix_urgent" if urgent else "effort.fix"))
 			var card: Dictionary = new_card("fix:" + line_id, "fix", area_id, effort, line_id)
-			card.tickets = ids
+			card.bugs = int(bugs[line_id])
 			out.append(card)
 	var researched: Variant = _p().get("research_done", {}).get(area_id)
 	if researched == null or SprintSystem.last_closed() > int(researched):
@@ -282,14 +266,14 @@ static func candidates(area_id: String) -> Array:
 
 
 static func is_urgent(card: Dictionary) -> bool:
-	return card.kind == "fix" and card.tickets.size() >= int(cfg("urgent_tickets"))
+	return card.kind == "fix" and card.bugs >= int(cfg("urgent_tickets"))
 
 
 static func new_card(id: String, kind: String, area_id: String, effort: int, line := "", step := "",
 		target_tier := 0) -> Dictionary:
 	return {"id": id, "kind": kind, "line": line, "step": step, "target_tier": target_tier, "area": area_id,
 		"effort": effort, "roles": card_roles(kind), "shares": card_shares(kind), "progress": [0.0, 0.0, 0.0],
-		"state": "candidate", "assignees": [], "tickets": [], "customer_id": "", "request_id": "",
+		"state": "candidate", "assignees": [], "bugs": 0, "customer_id": "", "request_id": "",
 		"decision": false, "effort_mod": 0, "faulty": false}
 
 
@@ -343,12 +327,12 @@ static func gate_reason(step_id: String) -> String:
 
 
 ## Kartın etki satırı (ProductModel `part`): alan dilim geçişi, değişmiyorsa "Alan X kalır" ve
-## yeteneğin geçişi; rakip açığı, talep ve verilmiş söz; düzeltmede ticket ve "!" kalkışı.
+## yeteneğin geçişi; rakip açığı, talep ve verilmiş söz; düzeltmede kapanan hata ve "!" kalkışı.
 static func card_effect(card: Dictionary) -> Array:
 	var area: String = card.area
 	match card.kind:
 		"fix":
-			var parts: Array = [{"k": "tickets", "n": card.tickets.size()}]
+			var parts: Array = [{"k": "tickets", "n": card.bugs}]
 			if _clears_alert(card):
 				parts.append({"k": "alert_clear", "area": area_short(area)})
 			return parts
@@ -374,14 +358,16 @@ static func card_effect(card: Dictionary) -> Array:
 
 
 ## SPRINT SONUNDA: kartların hepsi bitmiş varsayılır; yalnız değişen alanlar, zamanında talepler,
-## tutulan sözler, kalkan "!" ve kapanan ticket sayısı. Kapısı kapanmış kart başlatmada sonraki sütuna geçeceği için sayılmaz.
+## tutulan sözler, kalkan "!" ve kapanan hata sayısı. Kapısı kapanmış kart başlatmada sonraki sütuna geçeceği için sayılmaz.
 static func forecast(card_ids: Array) -> Array:
 	var cards: Array = card_ids.map(card_by_id).filter(func(c: Dictionary) -> bool: return gate_reason(c.step) == "")
 	var tiers: Dictionary = {}
-	var closed: Array = []
+	var cleared: Array = []
+	var closed: int = 0
 	for c in cards:
 		if c.kind == "fix":
-			closed.append_array(c.tickets.map(func(i: Variant) -> int: return int(i)))
+			cleared.append(c.line)
+			closed += c.bugs
 		elif c.kind != "research":
 			tiers[c.line] = maxi(int(tiers.get(c.line, tier(c.line))), int(c.target_tier))
 	var out: Array = []
@@ -396,10 +382,10 @@ static func forecast(card_ids: Array) -> Array:
 			out.append({"k": "request_on_time", "customer": customer_name(request)})
 		out.append_array(_promise_parts(c.step))
 	for area_id in area_ids():
-		if area_alert(area_id) and not area_alert(area_id, closed):
+		if area_alert(area_id) and not area_alert(area_id, cleared):
 			out.append({"k": "alert_clear", "area": area_short(area_id)})
-	if not closed.is_empty():
-		out.append({"k": "tickets", "n": closed.size()})
+	if closed > 0:
+		out.append({"k": "tickets", "n": closed})
 	return out
 
 
@@ -621,17 +607,8 @@ static func _over_capacity(area_id: String) -> bool:
 	return area_def(area_id).get("infra_alert", false) and InfraSystem.is_over_capacity()
 
 
-## Açık ticket kimlikleri hatta göre; `closed` kapanmış sayılır.
-static func tickets_by_line(closed: Array = []) -> Dictionary:
-	var out: Dictionary = {}
-	for t in _p().get("tickets", []):
-		if not closed.has(int(t.id)):
-			(out.get_or_add(String(t.line), []) as Array).append(int(t.id))
-	return out
-
-
 static func _clears_alert(card: Dictionary) -> bool:
-	return area_alert(card.area) and not area_alert(card.area, card.tickets.map(func(i: Variant) -> int: return int(i)))
+	return area_alert(card.area) and not area_alert(card.area, [card.line])
 
 
 static func _rival_tier(rival: int, line_id: String) -> int:
@@ -711,12 +688,12 @@ static func customer_name(owner: Dictionary) -> String:
 
 
 ## Etki puanı (sprint.json `impact`): kademe, alan seviyesindeki ham artış, rakip açığı, talep,
-## MVP öncesi boş kimlik yeteneği; düzeltmede ticket ve kalkan "!", araştırmada sabit.
+## MVP öncesi boş kimlik yeteneği; düzeltmede kapanan hata ve kalkan "!", araştırmada sabit.
 static func _impact(card: Dictionary) -> float:
 	var w: Dictionary = cfg("impact")
 	match card.kind:
 		"fix":
-			return w.ticket * card.tickets.size() + (w.alert if _clears_alert(card) else 0.0)
+			return w.ticket * card.bugs + (w.alert if _clears_alert(card) else 0.0)
 		"research":
 			return w.research
 	var v: float = w.step + w.level * (_raw_level(card.area, {card.line: card.target_tier}) - _raw_level(card.area))

@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 144 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 145 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **144** |
+| Signals declared | **145** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **67** |
+| Emitted with **no production listener** | **68** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -150,7 +150,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `module_unlocked` | `module_id: String` | engine | 1 | 0 | EvSignals (bindable) |
 | `build_phase_changed` | `new_phase: String` | sprint_system | 2 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
-| `build_progress_changed` | `—` | main · product_system | 2 | 2 | build_bar · build_hud_panel |
+| `build_progress_changed` | `—` | main · product_state · product_system | 4 | 2 | build_bar · build_hud_panel |
+| `line_bugs_cleared` | `line: String, n: int` | product_state | 1 | 0 | — |
 | `infra_changed` | `—` | product_state | 2 | 0 | — |
 
 ### GDD ÜRÜN rev 6.1 §19 · OKUMA YÜZEYİNİN SİNYALLERİ

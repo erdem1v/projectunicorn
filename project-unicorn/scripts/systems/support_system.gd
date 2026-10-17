@@ -5,14 +5,14 @@ extends RefCounted
 #
 # Canlı ürünün kalıcı hâli: sprintler biter, DESTEK bitmez.
 #
-# İKİ SAYAÇ (§8.1), MÜHÜRLÜ terimler:
-#   GELEN BİLDİRİM  — doğrulanmamış kullanıcı bildirimi. Kendiliğinden GELİR (§9).
-#   DOĞRULANMIŞ HATA — onaylanmış açık hata. Kendiliğinden ÇÖZÜLMEZ. Asla.
-# Modülün bütün gerilimi bu asimetride: akış otomatiktir, çözüm sprintin düzeltme kartıdır.
+# GELEN BİLDİRİM (§8.1, MÜHÜRLÜ terim) doğrulanmamış kullanıcı bildirimidir ve kendiliğinden GELİR (§9).
+# Doğrulanan her bildirim ürünün açık hata deposuna (ProductState) bir hata olarak düşer; açık hata
+# kendiliğinden ÇÖZÜLMEZ. Asla. Modülün bütün gerilimi bu asimetride: akış otomatiktir, çözüm sprintin
+# düzeltme kartıdır.
 #
 # MODÜL KENDİ KENDİNE TİKLEMEZ: `daily_tick()` ve `hourly_tick(hour)` TimeManager'dan
-# çağrılır. Bayrak ADLARININ tek evi ProductState'tir; bu modül §8 sayaçlarının tek
-# yazarıdır ama adı daima ProductState'in sabitinden alır.
+# çağrılır. Bayrak ADLARININ tek evi ProductState'tir; bu modül GELEN sayacının tek yazarıdır ama
+# adı daima ProductState'in sabitinden alır.
 #
 # SAAT/GÜN AYRIMI (bir tik yedi takvim günüdür):
 #   hourly_tick — AKIŞLAR. §9 bildirim akışı, §8.2 doğrulama.
@@ -107,9 +107,15 @@ static func hourly_tick(_hour: int) -> void:
 	var arrived: int = int(reports)
 	GameState.set_flag(ProductState.REPORTS_PROGRESS, reports - arrived)
 	GameState.set_flag(ProductState.REPORTS_INCOMING, ProductState.reports_incoming() + arrived)
-	# §8.2 — GELEN'i DOĞRULANMIŞ'a çevirir; masa boşken de okurların tabanıyla.
-	_drain(ProductState.VALIDATION_PROGRESS, TimeModel.per_tick(validation_per_day(founder_share)) * f,
-		ProductState.REPORTS_INCOMING, ProductState.BUGS_CONFIRMED)
+	# §8.2 — GELEN'i açık hataya çevirir; masa boşken de okurların tabanıyla. Her hata kendi başına bir canlı
+	# hatta düşer, hatlar eşit olasılıklı; hatsız ürünün bildirimi hat çıkana dek doğrulanmaz.
+	var lines: Array = ProductState.live_lines().filter(
+		func(line: String) -> bool: return not ProductState.line_blocked(line))
+	if lines.is_empty():
+		return
+	var draw: RandomNumberGenerator = RngStreams.get_stream(RngStreams.STREAM_BUG_LINE)
+	for _i in _validate(TimeModel.per_tick(validation_per_day(founder_share)) * f):
+		ProductState.add_bugs(lines[draw.randi_range(0, lines.size() - 1)], 1)
 
 
 static func daily_tick() -> void:
@@ -232,7 +238,7 @@ static func daily_satisfaction_damage() -> float:
 	var support: float = 0.0
 	if ProductState.is_live():
 		support = DAMAGE_INCOMING_PER_TEN * float(ProductState.reports_incoming()) / DAMAGE_PER_UNITS \
-			+ DAMAGE_CONFIRMED_PER_TEN * float(ProductState.bugs_confirmed()) / DAMAGE_PER_UNITS
+			+ DAMAGE_CONFIRMED_PER_TEN * float(ProductState.open_bugs()) / DAMAGE_PER_UNITS
 	return maxf(support + InfraSystem.satisfaction_delta_per_day(), DAMAGE_DAILY_CAP)
 
 
@@ -287,18 +293,18 @@ static func interest_now() -> float:
 #  BİRİKİM — kesirli oranlar, tam sayı sayaçlar
 # =========================================================================
 
-## Günlük oranın bu saatlik payını birikime ekler ve tam birimleri `from_key` sayacından
-## `to_key` sayacına taşır. Kaynak tükenince birikim VALIDATION_BANK_MAX ile sınırlanır.
-static func _drain(progress_key: String, rate: float, from_key: String, to_key: String) -> void:
+## Günlük oranın bu saatlik payını doğrulama birikimine ekler ve tam birimleri GELEN sayacından düşer;
+## doğrulanan bildirimlerin sayısı döner. GELEN tükenince birikim VALIDATION_BANK_MAX ile sınırlanır.
+static func _validate(rate: float) -> int:
 	if rate <= 0.0:
-		return
-	var prog: float = float(GameState.get_flag(progress_key, 0.0)) + rate
-	var source: int = int(GameState.get_flag(from_key, 0))
-	var moved: int = mini(int(prog), source)
-	prog -= moved
-	source -= moved
-	if source <= 0:
-		prog = minf(prog, VALIDATION_BANK_MAX)
-	GameState.set_flag(progress_key, prog)
-	GameState.set_flag(from_key, source)
-	GameState.set_flag(to_key, int(GameState.get_flag(to_key, 0)) + moved)
+		return 0
+	var progress: float = float(GameState.get_flag(ProductState.VALIDATION_PROGRESS, 0.0)) + rate
+	var incoming: int = ProductState.reports_incoming()
+	var validated: int = mini(int(progress), incoming)
+	progress -= validated
+	incoming -= validated
+	if incoming <= 0:
+		progress = minf(progress, VALIDATION_BANK_MAX)
+	GameState.set_flag(ProductState.VALIDATION_PROGRESS, progress)
+	GameState.set_flag(ProductState.REPORTS_INCOMING, incoming)
+	return validated

@@ -3,8 +3,8 @@ extends RefCounted
 
 # Ürünün sprint motoru: tür seçimi, planlama eylemleri, haftalık atama ve ilerleme, sprint
 # kapanışı ve sürüm. GameState.product'ı burası ve köprüsü SprintBridges yazar (köprü yalnız
-# tickets, ticket_seq, requests ve rival_hits'i); okuma katalogdadır (SprintCatalog). Sinyaller
-# EventBus'ın Sprint bölümündedir.
+# requests ve rival_hits'i); okuma katalogdadır (SprintCatalog). Sinyaller EventBus'ın Sprint
+# bölümündedir.
 #
 # Bir gün bir haftadır. Başlatılan sprintin ilk haftası başlatma günüdür; her günlük tik biten
 # haftanın işini kartlara döker. Sprint oyuncunun seçtiği sürenin sonunda, kartlarının hepsi daha
@@ -30,7 +30,6 @@ const SPRINT_JOBS := [HRConstants.JOB_BUILD, HRConstants.JOB_TEST]
 static func daily_tick() -> void:
 	if not is_typed():
 		return
-	SprintBridges.sync_tickets()
 	_settle_decision()
 	_refresh_fix_cards()
 	SprintBridges.tick_requests()
@@ -81,10 +80,10 @@ static func new_state(day: int) -> Dictionary:
 			"lead_applied": false, "weeks": int(SprintCatalog.cfg("sprint_weeks"))},
 		"next": {"number": 2, "cards": []},
 		"mode": "plan", "cards": {}, "release": {}, "releases": [], "polish": {},
-		"tickets": [], "ticket_seq": 0, "requests": [], "rival_hits": [],
+		"requests": [], "rival_hits": [],
 		"voices_seen": {}, "research_done": {}, "decision": {}, "auto_started": -1,
 		"quarter": {"goal_area": "", "start_sprint": 1, "plans": []},
-		"worked": {"day": -1, "ids": []}, "gate_faulty": [], "delegate": false, "empty_sprint": -1,
+		"worked": {"day": -1, "ids": []}, "pending_faulty": [], "delegate": false, "empty_sprint": -1,
 	}
 
 
@@ -127,7 +126,7 @@ static func remove(card_id: String) -> void:
 
 
 ## Sprinti başlatır; planın tutuşu kalkar, saati oyuncu sürdürür. Düzeltme kartları kilitlemeden önce
-## defterden okunur.
+## hata deposundan okunur.
 static func start() -> bool:
 	_settle_decision()
 	_refresh_fix_cards()
@@ -218,15 +217,15 @@ static func set_delegate(on: bool) -> void:
 	_changed()
 
 
-## Kapıda "Yayınla": ürün CANLI v1.0 olur, kapanışın notu v1.0'ın sürüm notu olur; kapıda bekleyen
-## hatalı hatlar şimdi ticket doğurur. "Bir sprint daha" plan_next'tir. Not yayın gününe tarihlenir:
-## kapıda geçen günün yazdığı sonuç kapalı ürünündü, v1.0'ınki ertesi gün yazılır.
+## Kapıda "Yayınla": ürün CANLI v1.0 olur, kapanışın notu v1.0'ın sürüm notu olur; v1.0'ı bekleyen
+## hatalı kartların hataları kartlarının hattına düşer. "Bir sprint daha" plan_next'tir. Not yayın
+## gününe tarihlenir: kapıda geçen günün yazdığı sonuç kapalı ürünündü, v1.0'ınki ertesi gün yazılır.
 static func publish() -> void:
 	var p: Dictionary = _p()
 	if not p.release.get("gate", false):
 		return
-	_go_public(1, _shipped_code(), p.gate_faulty)
-	p.gate_faulty = []
+	_go_public(1, _shipped_code())
+	_land_faulty()
 	var release: Dictionary = p.release
 	release.number = 1
 	release.day = GameState.day
@@ -987,6 +986,8 @@ static func _auto_start() -> void:
 ## canlıda çıkan kart her sürümde +0.1.
 ## Hâlâ bekleyen karar açık kalır: kâğıdı aynı dağıtımın olay yuvasında süresi dolup on_expire
 ## ile çözülür ve ertesi okumada kart serbest kalır; beklerken ilerlemediği için devretmiştir.
+## Düzeltme kartı hattının bütün açık hatasını düşer; hatalı kapanan kartın hatası kartının hattına düşer, ürün canlı
+## olana dek bekler.
 static func _close() -> void:
 	var p: Dictionary = _p()
 	var sprint: Dictionary = p.sprint
@@ -1011,9 +1012,9 @@ static func _close() -> void:
 	for c in ship:
 		match c.kind:
 			"fix":
-				# Sürüm notu gerçekten kapananları yazar: koşunun erittikleri karttan düşer.
-				c.tickets = SprintBridges.close_tickets(c.tickets)
-				closed += c.tickets.size()
+				# Sürüm notu gerçekten kapananı yazar: hattın o anki hatası, kartın planlanırkenki değil.
+				c.bugs = ProductState.clear_line_bugs(c.line)
+				closed += c.bugs
 			"research":
 				p.research_done[c.area] = number
 			_:
@@ -1032,22 +1033,22 @@ static func _close() -> void:
 			faulty.append(c.line)
 		c.state = "done"
 		p.cards.erase(c.id)
-	# Araştırma ve bileti boşalmış düzeltme kartı sürüm yapmaz.
+	# Araştırma ve düzeltecek hata bulamayan düzeltme kartı sürüm yapmaz.
 	var releases := func(c: Dictionary) -> bool:
-		return c.kind != "research" and not (c.kind == "fix" and c.tickets.is_empty())
-	# MVP'ye varan kapanış kapıda durur: ürün oyuncu yayınlayana dek kapalı kalır, kapanışın hatalı
-	# hatları yayını bekler.
+		return c.kind != "research" and not (c.kind == "fix" and c.bugs == 0)
+	# MVP'ye varan kapanış kapıda durur: ürün oyuncu yayınlayana dek kapalı kalır.
 	var gate: bool = not ProductState.is_live() and SprintCatalog.mvp_cards_left() == 0
 	var public: bool = ProductState.is_live() and ship.any(releases)
 	var n: int = ProductState.version() + 1 if public else 0
 	if public:
-		_go_public(n, new_code, faulty)
-	elif gate:
-		p.gate_faulty = p.get("gate_faulty", []) + faulty
+		_go_public(n, new_code)
+	# Hatayı bulan kullanıcıdır: biten kartın hatası kartının hattına düşer, ürün canlı olana dek bekler.
+	p.pending_faulty.append_array(faulty)
+	_land_faulty()
 	for c in carried:
 		c.state = "carried"
 		c.assignees = []
-	# Devreden düzeltme kartı defterden okunur; bileti kalmadıysa silinmiştir.
+	# Devreden düzeltme kartı hata deposundan okunur; hattında hata kalmadıysa silinmiştir.
 	_refresh_fix_cards()
 	carried = carried.filter(func(c: Dictionary) -> bool: return p.cards.has(c.id))
 	var changed: Array = []
@@ -1082,10 +1083,9 @@ static func _close() -> void:
 	EventBus.sprint_closed.emit(number)
 
 
-## Ürün kamuya açılır: sürüm bayrakları ve geçmişi, ayın öne çıkanı, eksenler ve köprüler; hatalı
-## hatlar ticket doğurur. v1.0 MVP'dir: ürün canlıya geçer, sunucu açılır. Sinyalleri çağıran sürüm
-## kaydını yazdıktan sonra atar.
-static func _go_public(n: int, new_code: float, faulty: Array) -> void:
+## Ürün kamuya açılır: sürüm bayrakları ve geçmişi, ayın öne çıkanı, eksenler ve köprüler. v1.0 MVP'dir:
+## ürün canlıya geçer, sunucu açılır. Sinyalleri çağıran sürüm kaydını yazdıktan sonra atar.
+static func _go_public(n: int, new_code: float) -> void:
 	if n == 1:
 		GameState.set_flag("mvp_shipped", true)
 		GameState.set_flag("mvp_launch_day", GameState.day)
@@ -1103,12 +1103,18 @@ static func _go_public(n: int, new_code: float, faulty: Array) -> void:
 	if n == 1:
 		SprintBridges.on_mvp()
 	SprintBridges.on_release()
-	# Hatayı bulan kullanıcıdır: yayına girmeyen kart ticket doğurmaz.
-	for line in faulty:
-		SprintBridges.add_faulty_ticket(line)
 
 
-## Sürümde beklenen: değişen ilk alanın yeni durumu, yoksa kapanan ticket'lar, yoksa değişiklik yok.
+## Hatalı kapanan kartların hataları kartlarının hattına düşer; ürün canlı olana dek (v1.0) bekler.
+static func _land_faulty() -> void:
+	if not ProductState.is_live():
+		return
+	for line in _p().pending_faulty:
+		ProductState.add_bugs(line, 1)
+	_p().pending_faulty = []
+
+
+## Sürümde beklenen: değişen ilk alanın yeni durumu, yoksa kapanan hatalar, yoksa değişiklik yok.
 static func _expected(changed: Array, closed: int) -> Dictionary:
 	if not changed.is_empty():
 		var area: String = changed[0].area
@@ -1190,17 +1196,15 @@ static func _movable(c: Dictionary) -> bool:
 	return not c.is_empty() and c.state not in ["running", "done"] and SprintCatalog.gate_reason(c.step) == ""
 
 
-## Başlamamış düzeltme kartının ticket'ları defterden okunur: hattın yenileri eklenir; bileti
-## kalmayan kart silinir. Defter yalnız günlük eşitlemede ve kapanışta değişir; ikisinden sonra
-## ve başlatmadan önce çağrılır.
+## Başlamamış düzeltme kartının hata sayısı hata deposundan okunur; hattında hata kalmayan kart silinir.
+## Depo hata düşünce ve kart çıkınca değişir; günlük tikte, kapanıştan sonra ve başlatmadan önce çağrılır.
 static func _refresh_fix_cards() -> void:
 	var p: Dictionary = _p()
-	var by_line: Dictionary = SprintCatalog.tickets_by_line()
 	for c in p.cards.values():
 		if c.kind == "fix" and c.state in ["candidate", "planned", "carried"]:
-			c.tickets = by_line.get(c.line, [])
+			c.bugs = ProductState.line_bugs(c.line)
 			# A card a decision paper waits on stays until the paper settles: its expiry acts on it.
-			if c.tickets.is_empty() and not c.decision:
+			if c.bugs == 0 and not c.decision:
 				p.cards.erase(c.id)
 				p.sprint.cards.erase(c.id)
 				p.next.cards.erase(c.id)

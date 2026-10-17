@@ -187,6 +187,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# rev 6.1 §6.4 kapıyı geri koydu; case adıyla birlikte ters çevrildi.
 		# --- DESTEK (§8) ve ALTYAPI (§10) ---
 		"destek_empty_desk_piles_up":    fail = _case_destek_empty_desk_piles_up()
+		"open_bugs_store_reads_and_writes": fail = _case_open_bugs_store_reads_and_writes()
+		"bugs_land_on_random_live_lines": fail = _case_bugs_land_on_random_live_lines()
 		"infra_capacity_moves_both_ways": fail = _case_infra_capacity_moves_both_ways()
 		"infra_heavy_step_costs_capacity": fail = _case_infra_heavy_step_costs_capacity()
 		"infra_overage_applies_and_stops": fail = _case_infra_overage_applies_and_stops()
@@ -453,8 +455,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_ceiling_125_blocks_add":         fail = _case_sprint_ceiling_125_blocks_add()
 		"sprint_carry_keeps_progress":           fail = _case_sprint_carry_keeps_progress()
 		"sprint_mvp_three_identity_k1":          fail = _case_sprint_mvp_three_identity_k1()
-		"sprint_faulty_ticket_deterministic":    fail = _case_sprint_faulty_ticket_deterministic()
-		"sprint_fix_card_closes_tickets":        fail = _case_sprint_fix_card_closes_tickets()
+		"sprint_faulty_bug_on_card_line":        fail = _case_sprint_faulty_bug_on_card_line()
+		"sprint_faulty_pre_launch_lands_at_v1":  fail = _case_sprint_faulty_pre_launch_lands_at_v1()
+		"sprint_fix_card_clears_its_line":       fail = _case_sprint_fix_card_clears_its_line()
 		"sprint_starts_only_with_consent":       fail = _case_sprint_starts_only_with_consent()
 		"sprint_request_on_time_met":            fail = _case_sprint_request_on_time_met()
 		"sprint_paid_plan_opens_paid_tier":      fail = _case_sprint_paid_plan_opens_paid_tier()
@@ -476,6 +479,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_late_only_when_behind":          fail = _case_sprint_late_only_when_behind()
 		"save_v14_build_becomes_sprint_plan":    fail = _case_save_v14_build_becomes_sprint_plan()
 		"save_v14_history_becomes_releases":     fail = _case_save_v14_history_becomes_releases()
+		"save_v15_tickets_become_open_bugs":     fail = _case_save_v15_tickets_become_open_bugs()
 		"product_paid_plan_locked_until_mvp":    fail = _case_product_paid_plan_locked_until_mvp()
 		"product_pm_plan_opens_as_next_sprint":  fail = _case_product_pm_plan_opens_as_next_sprint()
 		"market_catalog_lint":              fail = _case_market_catalog_lint()
@@ -703,6 +707,8 @@ static func _seed_live_product() -> void:
 	_seed_b2c()
 	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
 	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
+	# ai_assistant has no line content: the tier only gives a validated report a line to land on.
+	ProductState.set_line_tier("line_ai_assistant_core", 1)
 	GameState.set_flag("mvp_innovation", 20.0)
 	GameState.set_flag("mvp_stability", 25.0)
 	GameState.set_flag("mvp_experience", 22.0)
@@ -11638,7 +11644,7 @@ static func _case_b2c_satisfaction_drifts_to_experience() -> String:
 	GameState.set_flag("mvp_stability", 0.0)
 	GameState.set_flag("mvp_innovation", 0.0)
 	# SUPPORT-QUIET WORLD: the desk's two-tier damage and the server overage write the same
-	# record every day, so each leg starts with no reports, no confirmed bugs, no carried
+	# record every day, so each leg starts with no reports, no open bugs, no carried
 	# residue and room on the servers.
 	InfraSystem.set_provider("cloud")
 	InfraSystem.set_capacity(100)
@@ -11657,7 +11663,7 @@ static func _case_b2c_satisfaction_drifts_to_experience() -> String:
 		GameState.set_flag("mvp_experience", float(leg[0]))
 		GameState.set_flag("mvp_live_bug_count", int(leg[1]))
 		GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
-		GameState.set_flag(ProductState.BUGS_CONFIRMED, 0)
+		GameState.set_flag(ProductState.OPEN_BUGS, {})
 		SupportSystem.reset()
 		CustomerRegistry.set_satisfaction(ub.id, int(leg[2]))
 		_sim_day()
@@ -13184,7 +13190,7 @@ static func _case_borderless_note_key_exists() -> String:
 # ============================================================================
 
 ## R5: YAYINLAMAK BİR SON DEĞİLDİR. Yayından sonra kart kaybolmaz, DESTEK'e döner
-## ve ürün yaşadıkça yaşar. DOĞRULANMIŞ ile GELEN gerçek sayaçları okur.
+## ve ürün yaşadıkça yaşar. Açık hata deposunu ve GELEN sayacını gerçek okur.
 ## FALSİFİKASYON: `BuildBarModel.derive`'ın başına `return false` koy → ikinci iddia FAIL.
 ## `live_bugs` ya da `incoming` atamasını sil → sayaç iddiası FAIL; `fingerprint`'ten `live_bugs`'ı
 ## çıkar → parmak izi iddiası FAIL.
@@ -13196,18 +13202,18 @@ static func _case_destek_survives_ship() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_product_name", "Nova")
 	GameState.set_flag("mvp_version", 2)
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 7)
+	ProductState.add_bugs("line_note_tool_search", 7)
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 4)
 	var m = BarModel.new()
 	if not m.derive():
 		return "the card vanished after ship — YAYINLANDI is not a terminal state (R5)"
 	if m.live_bugs != 7 or m.incoming != 4:
 		return "DOĞRULANMIŞ/GELEN read %d/%d, want the counters 7/4" % [m.live_bugs, m.incoming]
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
+	ProductState.add_bugs("line_note_tool_editor", 2)
 	var later = BarModel.new()
 	later.derive()
 	if later.live_bugs != 9 or later.fingerprint() == m.fingerprint():
-		return "the card did not follow the confirmed count (%d, fingerprint '%s')" % [
+		return "the card did not follow the open bugs (%d, fingerprint '%s')" % [
 			later.live_bugs, later.fingerprint()]
 	return ""
 
@@ -13433,7 +13439,8 @@ static func _case_money_never_double_minus() -> String:
 # =========================================================================
 
 ## Canlı bir ürünü elle kurar — yapım hattından geçmeden, çünkü bu case'ler
-## DESTEK/ALTYAPI aritmetiğini ölçüyor, yapım borusunu değil.
+## DESTEK/ALTYAPI aritmetiğini ölçüyor, yapım borusunu değil. Tek canlı hattı `line_note_tool_search`'tür:
+## doğrulanan bildirim düşecek bir hat bulur.
 static func _seed_support_fixture(market: String = "b2c") -> void:
 	ProductLines.reload()
 	GameState.set_flag("mvp_shipped", true)
@@ -13441,11 +13448,11 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 	GameState.set_flag("mvp_market_type", market)
 	GameState.set_flag("mvp_version", 1)
 	GameState.set_flag("mvp_live_bug_count", 6)
-	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag(ProductState.LINE_TIERS, {"line_note_tool_search": 1})
 	GameState.set_flag(ProductState.STEP_REALIZATION, {})
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
 	GameState.set_flag(ProductState.REPORTS_PROGRESS, 0.0)
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 0)
+	GameState.set_flag(ProductState.OPEN_BUGS, {})
 	GameState.set_flag(ProductState.VALIDATION_PROGRESS, 0.0)
 	ProductState.refresh_on_publish(20.0)
 	InfraSystem.reset()
@@ -13489,7 +13496,7 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	# İki hafta, kurucunun Müşteri İlişkileri 0, masada kimse yok; kitle büyüyor.
 	var small: int = week.call(4000.0)
 	var grown: int = week.call(20000.0)
-	if ProductState.bugs_confirmed() <= 0:
+	if ProductState.open_bugs() <= 0:
 		return "a founder with CS 0 and nobody at the desk verified nothing in two weeks"
 	if grown <= small:
 		return "the unvalidated pile did not grow with the product (%d -> %d)" % [small, grown]
@@ -13508,6 +13515,131 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	if not is_equal_approx(SupportSystem.validation_per_day(), alone):
 		return "a rep on leave still verifies (%.2f/day against %.2f without)" % [
 			SupportSystem.validation_per_day(), alone]
+	return ""
+
+
+## Ürünün tek hata deposu: `add_bugs` hatta ekler, `open_bugs` toplamı verir, `open_bugs_by_line` bir KOPYA okur (dışarıdan
+## yazılamaz), `clear_line_bugs` yalnız o hattı sıfırlar ve düşeni döndürür, `worst_bug_line` en çok hatalı hattır (eşitlikte
+## küçük kimlik), `snapshot_open_bugs` ile `open_bugs_delta` haftalık okları besler. Yazan her kapı `build_progress_changed`,
+## düşüren `line_bugs_cleared` yayar; hatasız hatta düşürme hiçbirini yaymaz ve hatasız hat sözlükte kalmaz. Olay seam'leri
+## `urun.open_bugs` (toplam) ve `urun.worst_line_bugs` (en çok hatalı hattınki) aynı depoyu okur.
+## FALSİFİKASYON: open_bugs_by_line'da `.duplicate()`'i sil → kopya iddiası FAIL; worst_bug_line'da `>`'yi `>=` yap → eşitlik
+## iddiası FAIL; clear_line_bugs'ta `if n > 0:` denetimini sil → hatasız hat iddiası FAIL; seams_product.gd'de
+## `urun.worst_line_bugs` okuyucusunu `ProductRead.open_bugs()` yap → seam iddiası FAIL.
+static func _case_open_bugs_store_reads_and_writes() -> String:
+	var written: Array = []
+	var cleared: Array = []
+	EventBus.build_progress_changed.connect(func() -> void: written.append(1))
+	EventBus.line_bugs_cleared.connect(func(line: String, n: int) -> void: cleared.append([line, n]))
+	if ProductState.open_bugs() != 0 or not ProductState.open_bugs_by_line().is_empty() \
+			or ProductState.worst_bug_line() != "" or ProductState.open_bugs_delta() != 0:
+		return "a new run holds open bugs"
+	ProductState.add_bugs("line_b", 2)
+	ProductState.add_bugs("line_a", 2)
+	ProductState.add_bugs("line_b", 1)
+	if ProductState.open_bugs() != 5 or ProductState.line_bugs("line_b") != 3 or ProductState.line_bugs("line_a") != 2 \
+			or ProductState.line_bugs("line_c") != 0 or written.size() != 3:
+		return "three writes read %s (total %d) and signalled %d times; want line_b 3, line_a 2, total 5, 3 signals" % [
+			ProductState.open_bugs_by_line(), ProductState.open_bugs(), written.size()]
+	if ProductState.worst_bug_line() != "line_b":
+		return "the worst line reads '%s', want line_b with 3" % ProductState.worst_bug_line()
+	ProductState.add_bugs("line_a", 1)
+	if ProductState.worst_bug_line() != "line_a":
+		return "a tie on 3 went to '%s', want the lower line id" % ProductState.worst_bug_line()
+	var copy: Dictionary = ProductState.open_bugs_by_line()
+	copy["line_a"] = 99
+	copy["line_z"] = 1
+	if ProductState.open_bugs() != 6:
+		return "writing into the by-line read changed the store (%d)" % ProductState.open_bugs()
+	ProductState.snapshot_open_bugs()
+	ProductState.add_bugs("line_a", 2)
+	if ProductState.open_bugs_delta() != 2 or ProductState.open_bugs_delta("line_a") != 2 \
+			or ProductState.open_bugs_delta("line_b") != 0:
+		return "two bugs after the snapshot read changes %d / %d / %d, want 2 / 2 / 0" % [ProductState.open_bugs_delta(),
+			ProductState.open_bugs_delta("line_a"), ProductState.open_bugs_delta("line_b")]
+	if int(EvSeams.read("urun.open_bugs")) != 8 or int(EvSeams.read("urun.worst_line_bugs")) != 5:
+		return "the event seams read %s in all and %s on the worst line, want 8 and 5" % [
+			EvSeams.read("urun.open_bugs"), EvSeams.read("urun.worst_line_bugs")]
+	var signals: int = written.size()
+	if ProductState.clear_line_bugs("line_b") != 3 or cleared != [["line_b", 3]] or written.size() != signals + 1 \
+			or ProductState.open_bugs_by_line() != {"line_a": 5}:
+		return "clearing line_b left %s and signalled %s; want only line_a at 5 and one line_bugs_cleared(line_b, 3)" % [
+			ProductState.open_bugs_by_line(), cleared]
+	if ProductState.open_bugs_delta() != -1 or ProductState.open_bugs_delta("line_b") != -3:
+		return "after the clear the changes read %d / %d, want -1 / -3" % [ProductState.open_bugs_delta(),
+			ProductState.open_bugs_delta("line_b")]
+	if ProductState.clear_line_bugs("line_c") != 0 or cleared.size() != 1 or written.size() != signals + 1:
+		return "clearing a line with no bugs changed or signalled something"
+	return ""
+
+
+## Doğrulanan her bildirim kendi başına, eşit olasılıkla, canlı hatlardan birine açık hata olarak düşer: haftanın hattı ve ağırlık
+## yoktur. Aynı saatte doğrulanan 600 hata birden çok hatta dağılır; sekiz tohumda üç hattın payı üçte birin yüzde onu içinde
+## kalır; aynı tohum aynı hatları çeker ve kayıttan dönen akış kaldığı yerden sürer. Hatsız ürünün bildirimi doğrulanmaz,
+## GELEN'de bekler.
+## FALSİFİKASYON: SupportSystem.hourly_tick'te seçimi `lines[0]` yap → "several lines" FAIL; ilk hattı iki kez say (ağırlık) →
+## pay iddiası FAIL; hattı global randi() ile seç → aynı tohum iddiası FAIL; `if lines.is_empty():` dönüşünü sil → hatsız
+## iddia FAIL.
+static func _case_bugs_land_on_random_live_lines() -> String:
+	_seed_support_fixture("b2c")
+	var lines: Array = ["line_note_tool_capture", "line_note_tool_search", "line_note_tool_sync"]
+	var tiers: Dictionary = {}
+	for line in lines:
+		tiers[line] = 1
+	GameState.set_flag(ProductState.LINE_TIERS, tiers)
+	# The idle founder reads the mail, so the desk validates.
+	CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
+	# `count` reports validated in one hour of a run seeded `seed_value`: a pile and a bank of progress that size.
+	var one_hour := func(seed_value: int, count: int) -> Dictionary:
+		GameState.run_seed = seed_value
+		RngStreams.reseed(seed_value)
+		GameState.set_flag(ProductState.OPEN_BUGS, {})
+		GameState.set_flag(ProductState.REPORTS_INCOMING, count)
+		GameState.set_flag(ProductState.VALIDATION_PROGRESS, float(count))
+		SupportSystem.hourly_tick(0)
+		return ProductState.open_bugs_by_line()
+	var seeds: Array = [101, 202, 303, 404, 505, 606, 707, 808]
+	var first: Dictionary = {}
+	var totals: Dictionary = {}
+	var all: int = 0
+	for seed_value in seeds:
+		var got: Dictionary = one_hour.call(seed_value, 600)
+		if got.size() < 2:
+			return "seed %d: 600 bugs of one tick landed on %s, want them spread over several lines" % [seed_value, got]
+		if first.is_empty():
+			first = got
+		elif got == first:
+			return "seeds %d and %d placed their bugs identically (%s): the draw ignores the seed" % [seeds[0], seed_value, got]
+		for line in got:
+			totals[line] = int(totals.get(line, 0)) + int(got[line])
+			all += int(got[line])
+	for line in lines:
+		var share: float = float(totals.get(line, 0)) / float(all)
+		if absf(share - 1.0 / 3.0) > 1.0 / 3.0 * 0.10:
+			return "%s took %.3f of %d bugs over %d seeds, want a third within 10%% of itself (%s)" % [
+				line, share, all, seeds.size(), totals]
+	if one_hour.call(seeds[0], 600) != first:
+		return "the same seed placed its bugs differently on a second run"
+	var saved_streams: Dictionary = RngStreams.to_dict()
+	var stored: Dictionary = ProductState.open_bugs_by_line()
+	var burst := func() -> Dictionary:
+		GameState.set_flag(ProductState.REPORTS_INCOMING, 100)
+		GameState.set_flag(ProductState.VALIDATION_PROGRESS, 100.0)
+		SupportSystem.hourly_tick(0)
+		return ProductState.open_bugs_by_line()
+	var next: Dictionary = burst.call()
+	GameState.set_flag(ProductState.OPEN_BUGS, stored)
+	RngStreams.from_dict(saved_streams)
+	if burst.call() != next:
+		return "the bug-line stream did not resume from its saved state"
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag(ProductState.OPEN_BUGS, {})
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 5)
+	GameState.set_flag(ProductState.VALIDATION_PROGRESS, 5.0)
+	SupportSystem.hourly_tick(0)
+	if ProductState.open_bugs() != 0 or ProductState.reports_incoming() < 5:
+		return "a product with no live line validated its reports (%d open, %d waiting)" % [
+			ProductState.open_bugs(), ProductState.reports_incoming()]
 	return ""
 
 
@@ -13627,7 +13759,7 @@ static func _case_infra_overage_applies_and_stops() -> String:
 			% InfraSystem.acquisition_multiplier()
 	# §8.3 — aşım zararı DESTEK'in −2,0 TAVANININ İÇİNDE toplanır, ayrı kanal değil.
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 60)
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 40)
+	ProductState.add_bugs("line_note_tool_search", 40)
 	if SupportSystem.daily_satisfaction_damage() < SupportSystem.DAMAGE_DAILY_CAP - 0.0001:
 		return "overage pushed daily damage past the −2,0 cap (%.2f)" \
 			% SupportSystem.daily_satisfaction_damage()
@@ -13706,7 +13838,7 @@ static func _case_product_read_catalogue() -> String:
 	var q: Dictionary = {
 		"axis_reading": ProductRead.axis_reading("", "innovation"),
 		"market_word": ProductRead.market_word("", "innovation"),
-		"confirmed_open": ProductRead.confirmed_open(""),
+		"open_bugs": ProductRead.open_bugs(""),
 		"unconfirmed": ProductRead.unconfirmed(""),
 		"version_age": ProductRead.version_age(""),
 		"usage": ProductRead.usage(""),
@@ -13764,17 +13896,17 @@ static func _case_product_read_catalogue() -> String:
 	EventBus.unconfirmed_threshold_crossed.connect(
 		func(_b: String) -> void: seen.append("threshold"))
 	ProductRead.reset()
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 5)
+	ProductState.add_bugs("line_note_tool_search", 5)
 	ProductRead.emit_edges()          # tohumlama — sessiz olmalı
 	if not seen.is_empty():
 		return "the first edge sweep emitted %s instead of seeding" % str(seen)
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
+	ProductState.add_bugs("line_note_tool_editor", 4)
 	ProductRead.emit_edges()
 	if not seen.has("bug_confirmed"):
-		return "a rise in confirmed bugs emitted nothing"
+		return "a rise in open bugs emitted nothing"
 	# Düşüş (düzeltme) bu sinyali ATMAZ — yalnız doğrulama atar.
 	seen.clear()
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 2)
+	ProductState.clear_line_bugs("line_note_tool_search")
 	ProductRead.emit_edges()
 	if seen.has("bug_confirmed"):
 		return "fixing bugs emitted bug_confirmed"
@@ -14274,7 +14406,12 @@ static func _case_save_v10_product_state() -> String:
 	ProductState.stamp_step("line_shared_durability@note_tool_k1", 1.06)
 	ProductState.open_hidden_line("line_hidden_auto_organize")
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 41)
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
+	# Dokuz açık hata iki hatta; üçü son anlık görüntüden sonra gelmiş.
+	ProductState.add_bugs("line_note_tool_search", 6)
+	ProductState.snapshot_open_bugs()
+	ProductState.add_bugs("line_note_tool_search", 2)
+	ProductState.add_bugs("line_note_tool_editor", 1)
+	var bugs_before: Dictionary = ProductState.open_bugs_by_line()
 	GameState.set_flag(ProductState.VERSION_LAUNCH_DAY, maxf(1.0, ProductSystem.clock_stamp() - 2.0))
 	GameState.set_flag(ProductState.INTEREST, 62.5)
 	GameState.set_flag(ProductState.INFRA_PROVIDER, "cloud")
@@ -14290,7 +14427,8 @@ static func _case_save_v10_product_state() -> String:
 	# Durumu boz, sonra geri yükle: yükleme gerçekten yazmalı.
 	GameState.set_flag(ProductState.LINE_TIERS, {})
 	GameState.set_flag(ProductState.STEP_REALIZATION, {})
-	GameState.set_flag(ProductState.BUGS_CONFIRMED, 0)
+	GameState.set_flag(ProductState.OPEN_BUGS, {})
+	GameState.set_flag(ProductState.OPEN_BUGS_PREV, {})
 	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
 		_cleanup_save_slots()
 		return "apply_loaded_state returned false"
@@ -14313,10 +14451,11 @@ static func _case_save_v10_product_state() -> String:
 	if not ProductState.hidden_lines().has("line_hidden_auto_organize"):
 		_cleanup_save_slots()
 		return "an opened hidden line closed itself on reload"
-	if ProductState.reports_incoming() != 41 or ProductState.bugs_confirmed() != 9:
+	if ProductState.reports_incoming() != 41 or ProductState.open_bugs_by_line() != bugs_before \
+			or ProductState.open_bugs_delta() != 3 or ProductState.open_bugs_delta("line_note_tool_editor") != 1:
 		_cleanup_save_slots()
-		return "the DESTEK counters did not survive (%d / %d)" \
-			% [ProductState.reports_incoming(), ProductState.bugs_confirmed()]
+		return "the DESTEK counter and the bug store did not survive (%d incoming, %s, weekly change %d)" \
+			% [ProductState.reports_incoming(), ProductState.open_bugs_by_line(), ProductState.open_bugs_delta()]
 	if not is_equal_approx(ProductState.version_age(), age_before):
 		_cleanup_save_slots()
 		return "version age drifted across the reload (%.3f vs %.3f)" \
@@ -14987,7 +15126,7 @@ static func _node_tree_has_text(root: Node, needle: String) -> bool:
 ## §14 (MÜHÜRLÜ): rakip satırında SAYISAL İDDİA YASAK. Bu, havuzun tamamı üzerinde
 ## makineyle kontrol edilebilen tek şeydir ve başka hiçbir kapı onu yakalamaz.
 ##
-## FALSİFİKASYON: compose_note'ta demand_key'i "" yap → ticket iddiası FAIL. _demand_line'ın
+## FALSİFİKASYON: compose_note'ta demand_key'i "" yap → hata iddiası FAIL. _demand_line'ın
 ## karşılaştırıcısından eşitlik kolunu (`or (… a < b)`) sil → eşitlik iddiası FAIL. note_author'ı ham
 ## yıldıza çevir → müşteri temsilcisi yazar olur ve ilk iddia FAIL. _rival_name'in "+1"ini sil →
 ## dev seçilir ve o iddia FAIL. Havuzdaki bir cümleye rakam ekle → basamak iddiası FAIL, anahtarı
@@ -15022,7 +15161,7 @@ static func _case_rnd_note_author_and_lines() -> String:
 		return "the founder was picked as the note author; §6.2 excludes him"
 
 	# --- §6.3 · TALEP SATIRI ---
-	# Açık talep ve ticket yokken "kimse bir şey istemedi" doğrudur; biri açılınca not o hattı söyler.
+	# Açık talep ve hata yokken "kimse bir şey istemedi" doğrudur; biri açılınca not o hattı söyler.
 	GameState.product.merge(SprintSystem.new_state(GameState.day), true)
 	var note: Dictionary = RnDSystem.compose_note(author)
 	var none: String = TranslationServer.translate("RND_NOTE_DEMAND_NONE")
@@ -15034,22 +15173,22 @@ static func _case_rnd_note_author_and_lines() -> String:
 	pair.sort()
 	var low: String = pair[0]
 	var high: String = pair[1]
-	SprintBridges.add_faulty_ticket(high)
+	ProductState.add_bugs(high, 1)
 	var asked: Dictionary = RnDSystem.compose_note(author)
 	var asked_line: String = INBOX.note_lines(asked)[0]
 	var asked_key: String = String(asked.demand_key)
 	if RegEx.create_from_string("^RND_NOTE_DEMAND_B2C_[0-3]$").search(asked_key) == null \
 			or asked.demand_line != high or TranslationServer.translate(asked_key) == asked_key \
 			or not asked_line.contains(SprintCatalog.cap_name(high)) or asked_line.contains("{"):
-		return "one open ticket on %s: the note reads key '%s', line '%s', first line '%s'; want a resolving B2C demand key naming it" % [
+		return "one open bug on %s: the note reads key '%s', line '%s', first line '%s'; want a resolving B2C demand key naming it" % [
 			high, asked_key, asked.demand_line, asked_line]
-	# Çoğunluk kazanır; eşitlikte sıralı hat kimliği, ticket'ın açılış sırası değil.
-	SprintBridges.add_faulty_ticket(low)
+	# Çoğunluk kazanır; eşitlikte sıralı hat kimliği, hatanın düşüş sırası değil.
+	ProductState.add_bugs(low, 1)
 	if RnDSystem.compose_note(author).demand_line != low:
-		return "one ticket each on %s and %s: the tie did not go to the lower line id" % [low, high]
-	SprintBridges.add_faulty_ticket(high)
+		return "one bug each on %s and %s: the tie did not go to the lower line id" % [low, high]
+	ProductState.add_bugs(high, 1)
 	if RnDSystem.compose_note(author).demand_line != high:
-		return "two tickets on %s against one on %s: the plurality did not win" % [high, low]
+		return "two bugs on %s against one on %s: the plurality did not win" % [high, low]
 	var rk: String = String(note.get("rival_key", ""))
 	var tk: String = String(note.get("tech_key", ""))
 	if rk == "" or tk == "":
@@ -15109,17 +15248,17 @@ static func _case_rnd_note_author_and_lines() -> String:
 	CharacterRegistry.remove(rep.id)
 	CharacterRegistry.remove(pm.id)
 
-	# --- Talep yolu: B2B'de açık talep kendi hattını söyler (ticket yok) ---
+	# --- Talep yolu: B2B'de açık talep kendi hattını söyler (açık hata yok) ---
 	GameState.product.clear()
-	ProductState.adjust_confirmed(-ProductState.bugs_confirmed())
+	GameState.set_flag(ProductState.OPEN_BUGS, {})
 	if _seed_open_request() == null:
 		return "fixture: the request sprint did not start"
 	var req: Dictionary = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.status == "open")[0]
 	var b2b: Dictionary = RnDSystem.compose_note(author)
-	if not SprintCatalog.tickets_by_line().is_empty() or b2b.demand_line != req.line \
+	if ProductState.open_bugs() != 0 or b2b.demand_line != req.line \
 			or not String(b2b.demand_key).begins_with("RND_NOTE_DEMAND_B2B_") \
 			or not INBOX.note_lines(b2b)[0].contains(SprintCatalog.cap_name(req.line)):
-		return "an open request on %s and no ticket: the note reads key '%s', line '%s'; want the request's line" % [
+		return "an open request on %s and no open bug: the note reads key '%s', line '%s'; want the request's line" % [
 			req.line, b2b.demand_key, b2b.demand_line]
 	return ""
 
@@ -15797,7 +15936,7 @@ static func _case_sales_meeting_time_skip_founder_share() -> String:
 	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) != "":
 		return "fixture: the founder could not take the support desk"
 	var validated := func() -> float:
-		return float(ProductState.bugs_confirmed()) + float(GameState.get_flag(ProductState.VALIDATION_PROGRESS, 0.0))
+		return float(ProductState.open_bugs()) + float(GameState.get_flag(ProductState.VALIDATION_PROGRESS, 0.0))
 	var skip: int = SalesConstants.MEETING_SKIP_HOURS
 
 	# SOLO — the founder is the desk: two ordinary hours, then a meeting's two hours.
@@ -17546,10 +17685,14 @@ static func _case_sprint_mvp_three_identity_k1() -> String:
 
 ## Test rolü olmayan ekipte kartın Test fazı rolsüz, yarı hızla yapılır ve kart hatalı işaretlenir.
 ## Hatalı kart yayına giren sürümde zar atar: zar kartın kimliği ile sprint numarasının hash'i, eşik
-## sprint.json'daki ihtimal. Vaka eşiği zarın hemen üstüne ve tam üstüne koyar (test sabiti):
-## ilkinde kartın yeteneğine tek ticket düşer, ikincisinde düşmez. Kurucu Test rolüne de uyar; vaka
-## onun rollerini Ürün ve Yazılım'a indirir (test sabiti).
-static func _case_sprint_faulty_ticket_deterministic() -> String:
+## sprint.json'daki ihtimal. Vaka eşiği zarın hemen üstüne ve tam üstüne koyar (test sabiti): ilkinde tek
+## açık hata kartın KENDİ hattına düşer (rastgele bir hatta değil), ikincisinde düşmez. Hattında temizleyecek
+## hata bulamayan hatalı düzeltme kartı sürüm çıkarmaz ama hatası yine hattına düşer, sessizce kaybolmaz.
+## Kurucu Test rolüne de uyar; vaka onun rollerini Ürün ve Yazılım'a indirir (test sabiti).
+## FALSİFİKASYON: SprintSystem._close'ta `_land_faulty()` çağrısını sil → hata hiç düşmez ve ilk iddia FAIL; _land_faulty'de
+## hattı kartın hattı yerine ilk canlı hat yap → hat iddiası FAIL; `releases` yükleminden `c.bugs == 0` koşulunu sil →
+## "no release" iddiası FAIL.
+static func _case_sprint_faulty_bug_on_card_line() -> String:
 	_seed_sprint_live("note_tool")
 	_sprint_hire("char_faulty_des", HRConstants.ROLE_DESIGNER)
 	var saved: Array = [SprintCatalog.cfg("faulty_chance"), SprintCatalog.cfg("founder_roles")]
@@ -17563,19 +17706,35 @@ static func _case_sprint_faulty_ticket_deterministic() -> String:
 				SprintSystem.plan_next()
 			var id: String = "feat:%s_k1" % lines[i]
 			var roll: float = float(absi(hash(str([id, SprintSystem.sprint_number()]))) % 1000) / 1000.0
-			var ticket: bool = i == 0
-			SprintCatalog._data.faulty_chance = roll + 0.001 if ticket else roll
-			var before: int = ProductState.bugs_confirmed()
+			var lands: bool = i == 0
+			SprintCatalog._data.faulty_chance = roll + 0.001 if lands else roll
+			var before: int = ProductState.open_bugs()
 			if not _play_sprint([id]):
 				return "fixture: sprint %d did not start" % (i + 1)
 			var shipped: Array = GameState.product.release.shipped.filter(func(c: Dictionary) -> bool: return c.id == id)
 			if shipped.is_empty() or not shipped[0].faulty:
 				return "fixture: %s did not ship marked faulty from a team with no Test role" % id
-			if ProductState.bugs_confirmed() - before != int(ticket):
-				return "a faulty card rolling %.3f against %.3f gave %d ticket(s), want %d" % [roll,
-					float(SprintCatalog.cfg("faulty_chance")), ProductState.bugs_confirmed() - before, int(ticket)]
-			if ticket and String(GameState.product.tickets.back().line) != lines[i]:
-				return "the faulty ticket landed on %s, want %s" % [GameState.product.tickets.back().line, lines[i]]
+			if ProductState.open_bugs() - before != int(lands):
+				return "a faulty card rolling %.3f against %.3f gave %d bug(s), want %d" % [roll,
+					float(SprintCatalog.cfg("faulty_chance")), ProductState.open_bugs() - before, int(lands)]
+			if lands and ProductState.line_bugs(lines[i]) != 1:
+				return "the faulty bug landed on %s, want it on %s" % [ProductState.open_bugs_by_line(), lines[i]]
+		# A fix card whose line is already clear when it closes is no release, and its own faulty bug still lands.
+		var fixed: String = lines[0]
+		SprintSystem.plan_next()
+		var fix_id: String = "fix:" + fixed
+		SprintCatalog._data.faulty_chance = float(absi(hash(str([fix_id, SprintSystem.sprint_number()]))) % 1000) / 1000.0 + 0.001
+		SprintSystem.add(fix_id)
+		if not SprintSystem.start():
+			return "fixture: the fix sprint did not start"
+		var version: int = ProductState.version()
+		ProductState.clear_line_bugs(fixed)
+		while SprintSystem.mode() == "active":
+			_sim_day()
+		if int(GameState.product.release.number) != 0 or ProductState.version() != version:
+			return "a fix card that found nothing to clear made release %d, want none" % int(GameState.product.release.number)
+		if ProductState.line_bugs(fixed) != 1 or ProductState.open_bugs() != 1:
+			return "the faulty fix card's bug is on %s, want one on %s" % [ProductState.open_bugs_by_line(), fixed]
 		return ""
 	var fail: String = run.call()
 	SprintCatalog._data.faulty_chance = saved[0]
@@ -17583,33 +17742,111 @@ static func _case_sprint_faulty_ticket_deterministic() -> String:
 	return fail
 
 
-## Ticket'lar yeteneğe göre tek düzeltme kartında toplanır; acil eşiği kadar ticket kartı "! acil"
-## yapar ve alanın uyarısını yakar. Kart çıkınca ticket'lar defterden ve doğrulanmış sayaçtan
-## düşer, uyarı kalkar ve sürüm notu onu kalkanlar arasında yazar.
-static func _case_sprint_fix_card_closes_tickets() -> String:
+## v1.0'dan önce hatalı kapanan kartın hatası bekler: `pending_faulty`'ye yazılır, açık hata deposuna girmez; MVP kapısına
+## varmayan kapanışta da kapıyı kapatan kapanışta da. Kapıda Yayınla ürünü canlı yapınca her biri kendi kartının hattına düşer.
+## FALSİFİKASYON: _land_faulty'nin `is_live()` denetimini sil → hata v1.0'dan önce düşer ve bekleme iddiası FAIL; publish'ten
+## `_land_faulty()` çağrısını sil → hatalar yayında da bekler ve düşme iddiası FAIL.
+static func _case_sprint_faulty_pre_launch_lands_at_v1() -> String:
 	_seed_sprint()
+	_sprint_hire("char_pre_des", HRConstants.ROLE_DESIGNER)
+	var saved: Array = [SprintCatalog.cfg("faulty_chance"), SprintCatalog.cfg("founder_roles")]
+	SprintCatalog._data.founder_roles = ["product", "dev"]
+	var run := func() -> String:
+		var lines: Array = SprintCatalog.capabilities("core")
+		var faulty_k1 := func(line: String) -> String:
+			if SprintSystem.mode() == "release":
+				SprintSystem.plan_next()
+			var id: String = "feat:%s_k1" % line
+			SprintCatalog._data.faulty_chance = float(absi(hash(str([id, SprintSystem.sprint_number()]))) % 1000) / 1000.0 + 0.001
+			return id
+		if not _play_sprint([faulty_k1.call(lines[0])]):
+			return "fixture: sprint 1 did not start"
+		if ProductState.is_live() or GameState.product.release.gate:
+			return "fixture: one identity line at K1 reached the gate"
+		if GameState.product.pending_faulty != [lines[0]] or ProductState.open_bugs() != 0:
+			return "a faulty close short of the gate left pending %s and bugs %s; want it waiting on %s" % [
+				GameState.product.pending_faulty, ProductState.open_bugs_by_line(), lines[0]]
+		# Two more identity lines at K1 put the next close on the gate; its faulty card waits too.
+		ProductState.set_line_tier(lines[1], 1)
+		ProductState.set_line_tier(lines[2], 1)
+		if not _play_sprint([faulty_k1.call(lines[3])]):
+			return "fixture: sprint 2 did not start"
+		if not GameState.product.release.gate or ProductState.is_live():
+			return "fixture: the second close did not stop at the gate"
+		if GameState.product.pending_faulty != [lines[0], lines[3]] or ProductState.open_bugs() != 0:
+			return "at the gate pending reads %s and bugs %s; want both waiting" % [
+				GameState.product.pending_faulty, ProductState.open_bugs_by_line()]
+		_sim_day()
+		SprintSystem.publish()
+		if not ProductState.is_live() or not (GameState.product.pending_faulty as Array).is_empty() \
+				or ProductState.line_bugs(lines[0]) != 1 or ProductState.line_bugs(lines[3]) != 1 or ProductState.open_bugs() != 2:
+			return "published: live %s, pending %s, bugs %s; want one bug on %s and one on %s" % [ProductState.is_live(),
+				GameState.product.pending_faulty, ProductState.open_bugs_by_line(), lines[0], lines[3]]
+		return ""
+	var fail: String = run.call()
+	SprintCatalog._data.faulty_chance = saved[0]
+	SprintCatalog._data.founder_roles = saved[1]
+	return fail
+
+
+## Düzeltme kartı kapanınca hattının BÜTÜN açık hatası düşer, başka hatta dokunulmaz. Acil eşiği kadar hata kartı acil
+## yapar ve alanın uyarısını yakar. Sprint sürerken aynı hatta düşen yeni hata da kapanışta gider: sürüm notu planlanan
+## sayıyı değil kapanan gerçek sayıyı yazar, uyarı kalkar ve `line_bugs_cleared` kapanışta bir kez yayılır. Kapanışta
+## temizleyecek hatası kalmamış düzeltme kartı sürüm çıkarmaz.
+## FALSİFİKASYON: ProductState.clear_line_bugs'ta `bugs.erase(line)` yerine `bugs.clear()` → öbür hat iddiası FAIL;
+## SprintSystem._close'ta clear_line_bugs yerine `ProductState.line_bugs(c.line)` oku → hat temizlenmedi iddiası FAIL;
+## `releases` yükleminden `c.bugs == 0` koşulunu sil → "no release" iddiası FAIL.
+static func _case_sprint_fix_card_clears_its_line() -> String:
+	_seed_sprint_live("note_tool")
 	_sprint_hire("char_fix_dev", HRConstants.ROLE_DEVELOPER)
-	var line: String = SprintCatalog.capabilities("core")[0]
+	var lines: Array = SprintCatalog.capabilities("core")
+	var hit: String = lines[0]
+	var spared: String = lines[1]
 	var urgent: int = int(SprintCatalog.cfg("urgent_tickets"))
-	ProductState.set_line_tier(line, 1)
-	ProductState.adjust_confirmed(urgent)
-	SprintBridges.sync_tickets()
-	var fix: Array = SprintCatalog.candidates("core").filter(func(c: Dictionary) -> bool: return c.id == "fix:" + line)
-	if fix.size() != 1 or fix[0].tickets.size() != urgent or not SprintCatalog.is_urgent(fix[0]) \
-			or int(fix[0].effort) != int(SprintCatalog.cfg("effort.fix_urgent")):
-		return "%d tickets on one capability read %s, want one urgent fix card carrying all of them" % [urgent, fix]
+	var cleared: Array = []
+	EventBus.line_bugs_cleared.connect(func(line: String, n: int) -> void: cleared.append([line, n]))
+	ProductState.add_bugs(hit, urgent)
+	ProductState.add_bugs(spared, 2)
+	var fixes: Dictionary = {}
+	for c in SprintCatalog.candidates("core"):
+		if c.kind == "fix":
+			fixes[c.line] = c
+	if fixes.size() != 2 or fixes[hit].bugs != urgent or not SprintCatalog.is_urgent(fixes[hit]) \
+			or int(fixes[hit].effort) != int(SprintCatalog.cfg("effort.fix_urgent")) \
+			or fixes[spared].bugs != 2 or SprintCatalog.is_urgent(fixes[spared]):
+		return "%d bugs on one line and 2 on another read fix cards %s, want one card per line with its own count" % [urgent, fixes]
 	if not SprintCatalog.area_alert("core"):
-		return "an urgent capability did not raise Çekirdek's alert"
-	if not _play_sprint([fix[0].id]):
+		return "an urgent line did not raise Çekirdek's alert"
+	SprintSystem.add(fixes[hit].id)
+	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
-	if ProductState.bugs_confirmed() != 0 or not (GameState.product.tickets as Array).is_empty():
-		return "the fix card shipped and left %d confirmed, ledger %s" % [ProductState.bugs_confirmed(),
-			GameState.product.tickets]
-	if SprintCatalog.area_alert("core") or not GameState.product.release.alerts_cleared.has("core"):
-		return "the alert reads %s after the fix, cleared %s" % [SprintCatalog.area_alert("core"),
-			GameState.product.release.alerts_cleared]
-	if SprintCatalog.candidates("core").any(func(c: Dictionary) -> bool: return c.kind == "fix"):
-		return "a fix card outlived its tickets"
+	ProductState.add_bugs(hit, 1)
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	if ProductState.line_bugs(hit) != 0 or ProductState.line_bugs(spared) != 2 or ProductState.open_bugs() != 2:
+		return "the fix card shipped and left %s, want its own line empty and the other at 2" % ProductState.open_bugs_by_line()
+	var release: Dictionary = GameState.product.release
+	var counts: Array = release.shipped.filter(func(c: Dictionary) -> bool: return c.kind == "fix").map(
+		func(c: Dictionary) -> int: return int(c.bugs))
+	if counts != [urgent + 1] or cleared != [[hit, urgent + 1]] or ProductState.version() != 2 \
+			or int(release.expected.args.get("n", -1)) != urgent + 1:
+		return "the close cleared %s, the release note counts %s and says %s; want %d on %s once" % [
+			cleared, counts, release.expected, urgent + 1, hit]
+	if SprintCatalog.area_alert("core") or not release.alerts_cleared.has("core"):
+		return "the alert reads %s after the fix, cleared %s" % [SprintCatalog.area_alert("core"), release.alerts_cleared]
+	var left: Array = SprintCatalog.candidates("core").filter(func(c: Dictionary) -> bool: return c.kind == "fix")
+	if left.size() != 1 or left[0].line != spared or left[0].bugs != 2:
+		return "the fix cards left are %s, want only the spared line's with its 2" % [left]
+	SprintSystem.plan_next()
+	SprintSystem.add(left[0].id)
+	if not SprintSystem.start():
+		return "fixture: sprint 2 did not start"
+	ProductState.clear_line_bugs(spared)
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	if int(GameState.product.release.number) != 0 or ProductState.version() != 2:
+		return "a fix card that found nothing to clear made release %d (version %d), want none" % [
+			int(GameState.product.release.number), ProductState.version()]
 	return ""
 
 
@@ -17827,7 +18064,7 @@ static func _case_sprint_legacy_beta_cards_ship() -> String:
 
 
 ## Ürün durumu kayıtla gidip gelir: sprintin ortasında alınan kayıt kartları, ilerlemeyi, sürüm
-## geçmişini ve ticket defterini aynen ve aynı sırayla geri verir ve yüklenen dünya sprinti kapatır.
+## geçmişini ve açık hata deposunu aynen ve aynı sırayla geri verir ve yüklenen dünya sprinti kapatır.
 ## FALSİFİKASYON: SaveManager._write_atomic'teki JSON.stringify'a sort_keys=true geri koy → FAIL.
 static func _case_sprint_save_roundtrip() -> String:
 	var slot: String = "smoke_sprint_%d" % OS.get_process_id()
@@ -17839,8 +18076,7 @@ static func _case_sprint_save_roundtrip() -> String:
 	var lines: Array = SprintCatalog.capabilities("core")
 	if not _play_sprint(["feat:%s_k1" % lines[0]]):
 		return "fixture: sprint 1 did not start"
-	ProductState.adjust_confirmed(2)
-	SprintBridges.sync_tickets()
+	ProductState.add_bugs(lines[0], 2)
 	SprintSystem.plan_next()
 	SprintSystem.add("feat:%s_k1" % lines[2])
 	SprintSystem.add("feat:%s_k1" % lines[1])
@@ -17848,19 +18084,20 @@ static func _case_sprint_save_roundtrip() -> String:
 		return "fixture: sprint 2 did not start"
 	_sim_day()
 	_drain_all_modals()   # a card on screen refuses the save (can_save)
-	if (GameState.product.tickets as Array).size() != 2 or (GameState.product.releases as Array).is_empty():
-		return "fixture: want tickets and a release in the saved product"
+	if ProductState.open_bugs() != 2 or (GameState.product.releases as Array).is_empty():
+		return "fixture: want open bugs and a release in the saved product"
 	var plain := func() -> String:
 		return JSON.stringify(SaveCodec.from_json(SaveCodec.to_json(GameState.product)), "", false)
 	var reads := func() -> Array:
 		return [SprintSystem.capacity(), SprintSystem.used(), SprintSystem.week(), SprintSystem.done_points()]
 	var before: String = plain.call()
 	var saved_reads: Array = reads.call()
+	var saved_bugs: Dictionary = ProductState.open_bugs_by_line()
 	if not SaveManager.save_to_slot(slot):
 		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
 	if not SaveManager.apply_loaded_state(SaveManager.read_slot(slot)):
 		return done.call("apply_loaded_state returned false")
-	if plain.call() != before:
+	if plain.call() != before or ProductState.open_bugs_by_line() != saved_bugs:
 		return done.call("the product came back different from the save, or in another order")
 	if reads.call() != saved_reads:
 		return done.call("the loaded sprint reads %s, the saved one %s" % [reads.call(), saved_reads])
@@ -18581,6 +18818,133 @@ static func _case_save_v14_history_becomes_releases() -> String:
 	if rows.size() != 2 or int(rows[0].sprint) != -1 or int(rows[0].shipped_count) != -1:
 		return "Geçmiş rows came back %s" % str(rows)
 	return ""
+
+
+## v15 → v16: ticket defteri ve doğrulanmış hata sayacı hat başına açık hata deposu olur. Her ticket kendi hattında sayılır;
+## deftere yetişmemiş doğrulanmış hata canlı hatlara kimliğe göre birer birer dağılır, sayaç defterin altına düşmüşse (haftalık
+## eşitlemeden önce düzeltme koşusu) en yeni ticket'lar kalır; düzeltme kartının ticket kimlikleri sayı
+## olur, v1.0'ı bekleyen hatalı hatlar `pending_faulty` adını alır, düzeltme koşusunun ve haftalık net bayrakları ile silinen
+## kartın motor satırları kayıttan gider. Yüklenen dünya bu sayılarla oynar.
+## FALSİFİKASYON: _migrate_16'da ticket sayımını (`bugs[...] += 1`) sil → hat iddiası FAIL; fazlanın dağıtımını sil → toplam
+## iddiası FAIL; `product.erase(key)` döngüsünden "tickets"i çıkar → defter iddiası FAIL; ticket'ları sayaca kırpan
+## `slice`'ı sil → "counter below the ledger" iddiası FAIL.
+static func _case_save_v15_tickets_become_open_bugs() -> String:
+	var slot: String = "smoke_v15_bugs_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_v15_dev", HRConstants.ROLE_DEVELOPER)
+	var live: Array = ProductState.live_lines()
+	# A sprint ships a fix card of 2 bugs on live[1]; on its release note a fix card of 3 on live[0] waits in the next column.
+	ProductState.add_bugs(live[1], 2)
+	if not _play_sprint(["fix:" + live[1]]):
+		return "fixture: the fix sprint did not start"
+	ProductState.add_bugs(live[0], 3)
+	SprintSystem.send_next("fix:" + live[0])
+	var planned: Dictionary = GameState.product.cards.get("fix:" + live[0], {})
+	if planned.is_empty() or GameState.product.release.shipped.filter(func(c: Dictionary) -> bool: return c.kind == "fix").is_empty():
+		return "fixture: want a planned fix card and a shipped one"
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	raw["schema_version"] = 15
+	var gs: Dictionary = raw["state"]["game_state"]
+	var flags: Dictionary = gs["flags"]
+	var product: Dictionary = gs["product"]
+	# The v15 shape: a card carries its ticket ids, the ledger holds four tickets (3 on live[0], 1 on live[1]) while the
+	# counter says 7, the faulty bug waits as gate_faulty, and the fix run, the week's net and a deleted card's rows are in.
+	var ids := func(n: int) -> Array:
+		return range(1, n + 1)
+	var retire := func(card: Dictionary) -> void:
+		if card.kind == "fix":
+			card["tickets"] = ids.call(int(card["bugs"]))
+		else:
+			card["tickets"] = []
+		card.erase("bugs")
+	for card in (product["cards"] as Dictionary).values():
+		retire.call(card)
+	for record in [product["release"]] + product["releases"]:
+		for card in record["shipped"]:
+			retire.call(card)
+	product["tickets"] = [{"id": 1, "line": live[0], "day": 1}, {"id": 2, "line": live[0], "day": 1},
+		{"id": 3, "line": live[0], "day": 1}, {"id": 4, "line": live[1], "day": 1}]
+	product["ticket_seq"] = 4
+	product["gate_faulty"] = [live[2]]
+	product.erase("pending_faulty")
+	flags["mvp_bugs_confirmed"] = 7
+	flags["mvp_fix_run_active"] = true
+	flags["mvp_fix_run_fixed"] = 3
+	flags["mvp_fix_run_progress"] = 0.5
+	flags["mvp_reports_week_net"] = 4
+	flags.erase("mvp_open_bugs")
+	flags.erase("mvp_open_bugs_prev")
+	var ev: Dictionary = raw["state"]["systems"][EvSave.BLOCK_KEY]
+	ev["queue"] = [{"event_id": "product.bug_pile", "context": {}}]
+	ev["schedule"] = [{"event_id": "product.bug_pile", "fire_on_day": 9}]
+	ev["papers"] = {"product.bug_pile": {"event_id": "product.bug_pile", "context": {}}}
+	ev["active_event_id"] = "product.bug_pile"
+	var row :={"day": 1, "resolution": "chosen", "option_id": "ok", "outcome_id": "", "entities": {}, "deltas": [], "arc_id": ""}
+	ev["rows"] = [row.merged({"event_id": "product.bug_pile"}), row.merged({"event_id": "founder.savings_note"})]
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	if not bool(payload.get("ok", false)):
+		return done.call("the v15 save was refused: %s" % payload.get("error_key", ""))
+	var st: Dictionary = payload["state"]
+	var out_flags: Dictionary = st["game_state"]["flags"]
+	var out_product: Dictionary = st["game_state"]["product"]
+	# The 3 the ledger had not caught up with go one each to the three live lines, in id order.
+	var want: Dictionary = {live[0]: 4, live[1]: 2, live[2]: 1}
+	if out_flags.get("mvp_open_bugs", {}) != want or out_flags.get("mvp_open_bugs_prev", {}) != want:
+		return done.call("the migrated store reads %s (previous %s), want %s" % [out_flags.get("mvp_open_bugs"),
+			out_flags.get("mvp_open_bugs_prev"), want])
+	for key in ["mvp_bugs_confirmed", "mvp_fix_run_active", "mvp_fix_run_fixed", "mvp_fix_run_progress", "mvp_reports_week_net"]:
+		if out_flags.has(key):
+			return done.call("flag '%s' survived the migration" % key)
+	for key in ["tickets", "ticket_seq", "gate_faulty"]:
+		if out_product.has(key):
+			return done.call("the migrated product still holds '%s'" % key)
+	if out_product.get("pending_faulty") != [live[2]]:
+		return done.call("the faulty bug waiting for v1.0 reads %s, want [%s]" % [out_product.get("pending_faulty"), live[2]])
+	var fix: Dictionary = out_product["cards"].get("fix:" + live[0], {})
+	var shipped: Array = []
+	for record in [out_product["release"]] + out_product["releases"]:
+		shipped.append_array(record["shipped"].filter(func(c: Dictionary) -> bool: return c.kind == "fix"))
+	if int(fix.get("bugs", -1)) != 3 or fix.has("tickets") or shipped.size() != 2 \
+			or shipped.any(func(c: Dictionary) -> bool: return int(c.get("bugs", -1)) != 2 or c.has("tickets")):
+		return done.call("the fix cards read %s and %s, want counts 3 and 2 and no ticket ids" % [fix, shipped])
+	var block: Dictionary = st["systems"][EvSave.BLOCK_KEY]
+	if not (block["queue"] as Array).is_empty() or not (block["schedule"] as Array).is_empty() \
+			or not (block["papers"] as Dictionary).is_empty() or String(block["active_event_id"]) != "" \
+			or (block["rows"] as Array).map(func(r: Dictionary) -> String: return r.event_id) != ["founder.savings_note"]:
+		return done.call("the event engine block still carries the deleted card: queue %s, schedule %s, papers %s, active '%s', rows %s" % [
+			block["queue"], block["schedule"], block["papers"], block["active_event_id"], block["rows"]])
+	# A fix run lowered the counter to 1 before the weekly sync trimmed the ledger: the newest ticket is the open one.
+	var behind: Dictionary = {"game_state": {"flags": {"mvp_bugs_confirmed": 1, "mvp_line_tiers": {live[0]: 1, live[1]: 1}},
+		"product": {"tickets": [{"id": 1, "line": live[0], "day": 1}, {"id": 2, "line": live[1], "day": 2}]}}}
+	SaveManager._migrate_16(behind)
+	if behind.game_state.flags.mvp_open_bugs != {live[1]: 1}:
+		return done.call("with the counter below the ledger the store reads %s, want {%s: 1}" % [
+			behind.game_state.flags.mvp_open_bugs, live[1]])
+
+	if not SaveManager.apply_loaded_state(payload):
+		return done.call("apply_loaded_state returned false")
+	if ProductState.open_bugs_by_line() != want or ProductState.open_bugs() != 7 or ProductState.open_bugs_delta() != 0:
+		return done.call("the loaded game reads %s (total %d, change %d), want %s" % [ProductState.open_bugs_by_line(),
+			ProductState.open_bugs(), ProductState.open_bugs_delta(), want])
+	var card: Dictionary = SprintCatalog.card_by_id("fix:" + live[0])
+	if int(card.bugs) != 3 or SprintCatalog.card_effect(card)[0] != {"k": "tickets", "n": 3}:
+		return done.call("the loaded fix card reads %d bugs and effect %s, want 3" % [int(card.bugs), SprintCatalog.card_effect(card)])
+	_sim_day()
+	if int(SprintCatalog.card_by_id("fix:" + live[0]).bugs) != 4:
+		return done.call("a day on, the planned fix card reads %d bugs, want the line's live 4" % int(
+			SprintCatalog.card_by_id("fix:" + live[0]).bugs))
+	return done.call("")
 
 
 ## Ücretli plan yayındaki ürünün katmanıdır: MVP'den önce kilitli ve gerekçeli, "+" ve "→" onu

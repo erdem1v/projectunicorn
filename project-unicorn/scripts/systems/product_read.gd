@@ -33,9 +33,14 @@ static func market_word(_product_id: String, axis: String) -> String:
 	return WORD_LEVEL
 
 
-## §8.1 — DOĞRULANMIŞ HATA (açık, onaylanmış).
-static func confirmed_open(_product_id: String = "") -> int:
-	return ProductState.bugs_confirmed()
+## §8.1 — açık hata (doğrulanmış, düzeltilmemiş), bütün hatlarda.
+static func open_bugs(_product_id: String = "") -> int:
+	return ProductState.open_bugs()
+
+
+## En çok açık hatası olan hattın açık hatası; hata yoksa 0.
+static func worst_line_bugs(_product_id: String = "") -> int:
+	return ProductState.line_bugs(ProductState.worst_bug_line())
 
 
 ## §8.1 — GELEN BİLDİRİM (henüz doğrulanmamış).
@@ -137,7 +142,7 @@ static func axis_floor_state(axis: String) -> String:
 # çifter atar ya hiç atmazdı. Kayda YAZILMAZ: yüklemeden sonraki ilk gün yalnız
 # tohumlar, çünkü kaydı açan oyuncuya dünkü kenarı bildirmek yanlış olurdu.
 
-static var _prev_confirmed := 0
+static var _prev_open := 0
 static var _prev_band := ""
 static var _prev_floor := {}
 static var _prev_phase := 0
@@ -151,7 +156,7 @@ static func reset() -> void:
 
 ## Günün sonunda çağrılır (TimeManager, sistemler yerleştikten SONRA).
 static func emit_edges() -> void:
-	var confirmed: int = ProductState.bugs_confirmed()
+	var open: int = ProductState.open_bugs()
 	var band: String = SupportSystem.warmth_band()
 	var phase_now: int = GameState.phase
 	var floors: Dictionary = {}
@@ -160,8 +165,8 @@ static func emit_edges() -> void:
 
 	if _seeded:
 		# §8.1 — bir bildirim DOĞRULANDIĞINDA. Düşüş (düzeltme) bu sinyali atmaz.
-		if confirmed > _prev_confirmed:
-			EventBus.bug_confirmed.emit(confirmed)
+		if open > _prev_open:
+			EventBus.bug_confirmed.emit(open)
 		# §8.5 — ısınma bandı değişti.
 		if band != _prev_band:
 			EventBus.unconfirmed_threshold_crossed.emit(band)
@@ -179,7 +184,7 @@ static func emit_edges() -> void:
 			EventBus.phase_bar_raised.emit(phase_now)
 
 	_seeded = true
-	_prev_confirmed = confirmed
+	_prev_open = open
 	_prev_band = band
 	_prev_floor = floors
 	_prev_phase = phase_now

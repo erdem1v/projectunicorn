@@ -40,7 +40,7 @@
   "decision": {"rate": 0.35, "cards": ["product.sprint_two_paths", "product.sprint_late", "product.sprint_contractor", "product.sprint_hardcoded_colors", "product.sprint_colors_again", "product.sprint_unasked_rewrite"]},
   "paid_plan": {"effort": 3, "tiers": 1},
   "impact": {"step": 1.0, "level": 2.0, "rival_gap": 1.0, "request": 2.0, "mvp": 3.0, "ticket": 0.5, "alert": 2.0, "research": 0.0},
-  "content": {"ticket_titles": 3, "press_core": 2, "press_area": 2, "rival_news": 2},
+  "content": {"press_core": 2, "press_area": 2, "rival_news": 2},
   "archetypes": {"tech_exacting": "core", "finance_brisk": "integrations", "ops_cautious": "trust", "default": "onboarding"},
   "areas": [
     {"id": "core", "order": 0, "markets": ["b2c", "b2b"], "identity": true, "lines": [], "name_key": "PRODUCT_AREA_CORE"},

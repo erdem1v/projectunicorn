@@ -379,7 +379,7 @@ func _dispatch_daily_tick() -> void:
 	# 1 · Product. Destek önce: günlük memnuniyet zararını o uygular ve altyapı aşımı o
 	# zararın tavanına (§8.3) girer. §19 kenar sinyalleri en sonda, bugünün durumundan okunur.
 	ProductSystem.daily_tick()
-	# Sprint haftası ve sürüm Destek'ten önce: kapanan sprintin ticket'ları ve MVP'de açılan
+	# Sprint haftası ve sürüm Destek'ten önce: kapanan sprintin düzelttiği hatalar ve MVP'de açılan
 	# sunucular bugünün destek ve altyapı hesabına girer.
 	SprintSystem.daily_tick()
 	SupportSystem.daily_tick()

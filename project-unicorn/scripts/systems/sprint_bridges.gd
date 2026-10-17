@@ -1,63 +1,12 @@
 class_name SprintBridges
 extends RefCounted
 
-# Sprint motorunun öbür alanlarla dikişleri: DESTEK ticket defteri, B2B talepleri, rakip
-# çıkışları ve basın satırı, ekonomi (eksen puanı, altyapı, ücretli plan) ve gerçekleşen sonuç.
-# Öbür alanlara yalnız onların seam'lerinden yazar. GameState.product'ın yazarı SprintSystem'dir;
-# köprü orada yalnız dört anahtarı yazar: tickets, ticket_seq, requests, rival_hits. Hepsi tür
-# seçilmiş üründe çalışır.
+# Sprint motorunun öbür alanlarla dikişleri: B2B talepleri, rakip çıkışları ve basın satırı,
+# ekonomi (eksen puanı, altyapı, ücretli plan) ve gerçekleşen sonuç. Öbür alanlara yalnız onların
+# seam'lerinden yazar. GameState.product'ın yazarı SprintSystem'dir; köprü orada yalnız iki
+# anahtarı yazar: requests, rival_hits. Hepsi tür seçilmiş üründe çalışır.
 # Sürüm notunun cümleleri {key, args} saklanır; args'taki metin değeri ya çeviri anahtarıdır ya
 # özel ad, resolve() ikisini de ekranın dilinde okur.
-
-
-# --- Ticket ---------------------------------------------------------------------------
-
-## Defteri DESTEK'in doğrulanmış sayacına eşitler. Sayaç kimlik taşımaz, yalnız fark okunur:
-## yeni doğrulananlar canlı yeteneklere ticket kimliğinin hash'iyle dağılır, her yetenek bir pay
-## artı kademesinin kullanım ağırlığı kadar pay alır.
-static func sync_tickets() -> void:
-	var tickets: Array = _p().tickets
-	var confirmed: int = ProductState.bugs_confirmed()
-	if tickets.size() == confirmed:
-		return
-	tickets = tickets.slice(maxi(0, tickets.size() - confirmed))
-	var weights: Dictionary = {}
-	var total: int = 0
-	for line_id in ProductLines.line_ids(ProductState.subtype()):
-		var tier: int = ProductState.line_tier(line_id)
-		if tier > 0:
-			weights[line_id] = 1 + ProductLines.usage_weight_of(ProductLines.step_at(line_id, tier).id)
-			total += weights[line_id]
-	while tickets.size() < confirmed and total > 0:
-		var id: int = _next_ticket_id()
-		var r: int = absi(hash("%d|ticket" % id)) % total
-		var line: String = ""
-		for line_id in weights:
-			line = line_id
-			r -= weights[line_id]
-			if r < 0:
-				break
-		tickets.append({"id": id, "line": line, "day": GameState.day})
-	_p().tickets = tickets
-
-
-## Düzeltme kartı çıktı: kartın ticket'ları defterden ve doğrulanmış sayaçtan düşer; gerçekten
-## kapananların kimlikleri döner.
-static func close_tickets(ids: Array) -> Array:
-	sync_tickets()
-	var closing: Array = ids.map(func(i: Variant) -> int: return int(i))
-	var closed: Array = _p().tickets.filter(func(t: Dictionary) -> bool: return closing.has(int(t.id))).map(
-		func(t: Dictionary) -> int: return int(t.id))
-	_p().tickets = _p().tickets.filter(func(t: Dictionary) -> bool: return not closing.has(int(t.id)))
-	ProductState.adjust_confirmed(-closed.size())
-	return closed
-
-
-## Hatalı çıkış: kartın yeteneğine bir doğrulanmış hata.
-static func add_faulty_ticket(line: String) -> void:
-	sync_tickets()
-	_p().tickets.append({"id": _next_ticket_id(), "line": line, "day": GameState.day})
-	ProductState.adjust_confirmed(1)
 
 
 # --- Talepler (B2B) ---------------------------------------------------------------------
@@ -189,7 +138,7 @@ static func open_paid_plan() -> void:
 # --- Sonuç -------------------------------------------------------------------------------
 
 ## Sürümden bir gün sonraki SONUÇ satırı: B2C'de v1.0'ınki ilk haftanın kullanıcılarıdır; öbürlerinde
-## sürümde değişen alanın kelimesi bugün değiştiyse o, yoksa kapanan ticket sayısı, o da yoksa "görünür bir
+## sürümde değişen alanın kelimesi bugün değiştiyse o, yoksa kapanan hata sayısı, o da yoksa "görünür bir
 ## değişiklik olmadı".
 static func actual_sentence(release: Dictionary) -> Dictionary:
 	if int(release.number) == 1 and not SalesSystem.is_b2b_market():
@@ -203,7 +152,7 @@ static func actual_sentence(release: Dictionary) -> Dictionary:
 	var n: int = 0
 	for c in release.shipped:
 		if c.kind == "fix":
-			n += c.tickets.size()
+			n += int(c.bugs)
 	if n > 0:
 		return {"key": Fmt.count_key("PRODUCT_RESULT_TICKETS_ACTUAL", n), "args": {"n": n}}
 	return {"key": "PRODUCT_RESULT_NONE_ACTUAL", "args": {}}
@@ -233,8 +182,3 @@ static func line_of(sentence: Dictionary) -> Dictionary:
 
 static func _p() -> Dictionary:
 	return GameState.product
-
-
-static func _next_ticket_id() -> int:
-	_p().ticket_seq = int(_p().ticket_seq) + 1
-	return _p().ticket_seq

@@ -29,7 +29,7 @@ extends RefCounted
 #   PROBE PICK  day=<d> id=<id> choice=<i> label=<label>
 #   PROBE STATE day=<d> cash=<n> mrr=<n> brand=<n> burn=<n> runway=<f> cust=<n> emp=<n> promises=<n>
 #   PROBE B2C   day=<d> aud=<f> paying=<n> price=<n> conv=<f> sat=<n> sat_target=<n> live_bugs=<n>
-#               confirmed=<n> q=<f> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
+#               open_bugs=<n> q=<f> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
 #               validation_day=<f>          (every week a consumer product is live; desk = the
 #                                           support desk's roster, inflow and validation per day)
 #   PROBE CHURN day=<d> id=<cid> ...        (customer_churned — the autopsy's terminal)
@@ -274,13 +274,13 @@ static func _on_month_ended(_data: Dictionary) -> void:
 
 static func _on_build_phase(new_phase: String) -> void:
 	# A public release, with the raw axes the economy reads from now on: the sprint close pushed
-	# them before it announced the release. bugs is the live wear count, tickets the confirmed ones.
+	# them before it announced the release. bugs is the live wear count, open_bugs the product's bug store.
 	if new_phase != "shipped":
 		return
-	print("PROBE SHIP day=%d version=%d label=%s stability=%.1f innovation=%.1f experience=%.1f bugs=%d tickets=%d" % [
+	print("PROBE SHIP day=%d version=%d label=%s stability=%.1f innovation=%.1f experience=%.1f bugs=%d open_bugs=%d" % [
 		GameState.day, ProductState.version(), SprintSystem.version_label(ProductState.version()),
 		float(GameState.get_flag("mvp_stability", 0.0)), float(GameState.get_flag("mvp_innovation", 0.0)),
-		float(GameState.get_flag("mvp_experience", 0.0)), ProductSystem.live_bug_count(), ProductState.bugs_confirmed()])
+		float(GameState.get_flag("mvp_experience", 0.0)), ProductSystem.live_bug_count(), ProductState.open_bugs()])
 
 
 ## Every sprint close, released or not: what shipped, how much carried and the velocity.
@@ -518,7 +518,7 @@ static func _log_customers() -> void:
 
 
 ## PROBE B2C — the consumer week: the audience and who pays it at what price, the userbase's
-## satisfaction beside the experience score it drifts toward, live and confirmed bugs, the
+## satisfaction beside the experience score it drifts toward, live and open bugs, the
 ## rival-relative q the audience formula reads, interest, server occupancy, and the support
 ## desk: who is on it, the reports waiting, and how many arrive and get validated a day.
 static func _log_b2c() -> void:
@@ -526,11 +526,11 @@ static func _log_b2c() -> void:
 		return
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	var price: int = int(GameState.get_flag("b2c_price", 0)) if GameState.get_flag("b2c_paid_tier_open", false) else 0
-	print("PROBE B2C day=%d aud=%.1f paying=%d price=%d conv=%.3f sat=%d sat_target=%d live_bugs=%d confirmed=%d q=%.1f interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f" % [
+	print("PROBE B2C day=%d aud=%.1f paying=%d price=%d conv=%.3f sat=%d sat_target=%d live_bugs=%d open_bugs=%d q=%.1f interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f" % [
 		GameState.day, SalesSystem.b2c_audience(), SalesSystem.b2c_paying_users(), price,
 		SalesSystem.conversion_rate(price) if price > 0 else 0.0, ub.satisfaction if ub != null else -1,
 		roundi(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")),
-		ProductSystem.live_bug_count(), ProductState.bugs_confirmed(),
+		ProductSystem.live_bug_count(), ProductState.open_bugs(),
 		SalesSystem._rival_relative_quality(QualityModel.shipped_normalized()), ProductRead.interest(),
 		InfraSystem.occupancy(), SupportSystem.desk_roster().size(), ProductState.reports_incoming(),
 		SupportSystem.reports_per_day(), SupportSystem.validation_per_day()])

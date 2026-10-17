@@ -736,7 +736,7 @@ func _run_event_shot(spec: String) -> void:
 ## states, through the real gate (main's handler holds the clock and opens the inbox on the card):
 ##   offer · queue · customer (an option armed) · locked · history · paper · paper_open ·
 ##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
-##   frank_moment · rnd_note (week 14's note) · rnd_note_demand (the same note with a ticket open on an ERP
+##   frank_moment · rnd_note (week 14's note) · rnd_note_demand (the same note with a bug open on an ERP
 ##   line, so its first line names that line) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
 ##   weekly_sales · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
@@ -763,9 +763,9 @@ func _run_inbox_shot(state: String) -> void:
 	if state.begins_with("rnd_"):
 		_seed_rnd(16 if state == "rnd_discovery" else 14, state != "rnd_note_demand")
 	if state == "rnd_note_demand":
-		# A ticket needs a catalogued product type; the theme seed's has no lines.
+		# A bug needs a catalogued product type; the theme seed's has no lines.
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
-		SprintBridges.add_faulty_ticket(SprintCatalog.capabilities("integrations")[0])
+		ProductState.add_bugs(SprintCatalog.capabilities("integrations")[0], 1)
 		RnDSystem._tick_note()
 	await _mount_shot_shell()
 	_wire_modal_signals()
@@ -1287,7 +1287,7 @@ func _run_office_shot(spec: String) -> void:
 		"desk_shut":
 			GameState.set_flag("mvp_market_type", "b2c")
 			GameState.set_flag("mvp_sub_product_type_id", "note_tool")
-			GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
+			ProductState.add_bugs(ProductLines.line_ids("note_tool")[0], 9)
 			GameState.set_flag(ProductState.REPORTS_INCOMING, 12)
 			EventBus.build_progress_changed.emit()
 		"crown":

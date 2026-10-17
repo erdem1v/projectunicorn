@@ -2966,9 +2966,6 @@ PRODUCT_CAP_PAID_PLAN,Ücretli plan,Paid plan
 PRODUCT_FIX_CARD,{capability} düzeltmesi,{capability} fix
 PRODUCT_RESEARCH_CARD,{n} kullanıcıyla görüş,Talk to {n} users
 PRODUCT_REQUEST_CARD,{step} ({customer}),{step} ({customer})
-PRODUCT_TICKET_0,{capability}: arada bir yanıt vermiyor,{capability}: stops responding now and then
-PRODUCT_TICKET_1,{capability}: kaydettiğim değişiklik kayboldu,{capability}: a change I saved was lost
-PRODUCT_TICKET_2,{capability}: hata veriyor ve iş yarım kalıyor,{capability}: throws an error and the job is left half done
 PRODUCT_RESEARCH_VOICE_CORE,Görüştüğümüz kullanıcılar temel işin daha hızlı olmasını istiyor,The users we talked to want the basic job to go faster
 PRODUCT_RESEARCH_VOICE_ONBOARDING,Görüştüğümüz kullanıcılar ilk günü karışık buluyor,The users we talked to find the first day confusing
 PRODUCT_RESEARCH_VOICE_GROWTH,Görüştüğümüz kullanıcılar ürünü bir arkadaşına göstermek istiyor,The users we talked to want to show the product to a friend

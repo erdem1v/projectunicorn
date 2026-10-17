@@ -69,10 +69,11 @@ const FLAG_TYPES := {
 	# §11.2: çarpan KADEME başına saklanır; eksik kademe 1,0 okunur.
 	"mvp_step_realization": TYPE_DICTIONARY,    # {kademe kimliği: çarpan}
 	"mvp_hidden_lines": TYPE_ARRAY,             # Ar-Ge'nin açtığı gizli hatlar — §12.1
-	# --- DESTEK: iki sayaç, mühürlü adlar (§8.1) ---
+	# --- DESTEK: GELEN BİLDİRİM sayacı, mühürlü ad (§8.1), ve ürünün açık hata deposu ---
 	"mvp_reports_incoming": TYPE_INT,           # GELEN BİLDİRİM
 	"mvp_reports_progress": TYPE_FLOAT,         # kesirli birikim; tam sayıya taşınca sayaç artar
-	"mvp_bugs_confirmed": TYPE_INT,             # DOĞRULANMIŞ HATA
+	"mvp_open_bugs": TYPE_DICTIONARY,           # {hat kimliği: açık hata}, yalnız sıfırdan büyükler
+	"mvp_open_bugs_prev": TYPE_DICTIONARY,      # önceki haftalık tikteki hâli; okların tek kaynağı
 	"mvp_validation_progress": TYPE_FLOAT,      # §8.2 doğrulama kesri
 	# --- §9 canlı akış ---
 	# SÜRÜM yaşı (§17): mvp_launch_day ilk yayında bir kez damgalanır, bu her yayında yeniden.
@@ -294,8 +295,8 @@ var market_catalog_version: int = MarketCatalog.version()
 var market_shocks: Array = []           # ShockLog rows {week, company_id, kind, J, rho, tau, cause_ref}
 var market_ownership: Array = []        # {holder_kind, holder_id, company_id, shares}
 
-# --- Product sprint state (writer SprintSystem; its bridge SprintBridges writes only tickets,
-# ticket_seq, requests and rival_hits): sprint, cards, releases, tickets, requests ---
+# --- Product sprint state (writer SprintSystem; its bridge SprintBridges writes only requests
+# and rival_hits): sprint, cards, releases, requests ---
 var product: Dictionary = {}
 
 # --- Office (sole writer OfficeSystem) ---

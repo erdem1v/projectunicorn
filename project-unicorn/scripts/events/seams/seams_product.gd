@@ -87,8 +87,10 @@ static func _install_product() -> void:
 		func() -> String: return ProductRead.axis_floor_state("experience"),
 		"Product", "'' | warning | crossed")
 
-	EvSeams.register("urun.bugs_confirmed", G, TYPE_INT,
-		func() -> int: return ProductRead.confirmed_open(), "Product", "confirmed live bugs")
+	EvSeams.register("urun.open_bugs", G, TYPE_INT,
+		func() -> int: return ProductRead.open_bugs(), "Product", "open bugs across every line")
+	EvSeams.register("urun.worst_line_bugs", G, TYPE_INT,
+		func() -> int: return ProductRead.worst_line_bugs(), "Product", "open bugs on the line with the most")
 	EvSeams.register("urun.bugs_unconfirmed", G, TYPE_INT,
 		func() -> int: return ProductRead.unconfirmed(), "Product", "incoming, unvalidated reports")
 	EvSeams.register("urun.interest", G, TYPE_FLOAT,

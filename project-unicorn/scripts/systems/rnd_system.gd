@@ -592,15 +592,15 @@ static func _emerging_node(day: int) -> String:
 	return open_ids[_pick(open_ids.size(), "rnd_note_tech_node", day)]
 
 
-## §6.3 · §6.4 — açık talepler ve açık ticket'lar hat başına birer oydur; en çok oyu alan hat söylenir,
+## §6.3 · §6.4 — her açık talep ve her açık hata hattına birer oydur; en çok oyu alan hat söylenir,
 ## eşitlikte sıralı hat kimliği kazanır (Dictionary sırası sözleşme değil). Oy yoksa "".
 static func _demand_line() -> String:
 	var votes: Dictionary = {}
 	for r in SprintCatalog.open_requests():
 		votes[r.line] = votes.get(r.line, 0) + 1
-	var tickets: Dictionary = SprintCatalog.tickets_by_line()
-	for line_id in tickets:
-		votes[line_id] = votes.get(line_id, 0) + (tickets[line_id] as Array).size()
+	var bugs: Dictionary = ProductState.open_bugs_by_line()
+	for line_id in bugs:
+		votes[line_id] = votes.get(line_id, 0) + int(bugs[line_id])
 	var ids: Array = votes.keys()
 	ids.sort_custom(func(a, b): return votes[a] > votes[b] or (votes[a] == votes[b] and a < b))
 	return "" if ids.is_empty() else String(ids[0])

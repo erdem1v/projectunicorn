@@ -30,7 +30,7 @@ func derive() -> bool:
 	if pname.strip_edges() == "":
 		pname = GameState.company_name
 	product_name = " ".join([pname, SprintSystem.version_label(ProductState.version())])
-	live_bugs = ProductState.bugs_confirmed()
+	live_bugs = ProductState.open_bugs()
 	incoming = ProductState.reports_incoming()
 	for c in SupportSystem.desk_roster():
 		if HRSystem.is_overloaded(c):
