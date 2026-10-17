@@ -67,13 +67,8 @@ const BEAT3_SKILL := "charisma"         # Sorgu postures (dürüst / spin / geç
 const BEAT4_PUSH_SKILL := "charisma"    # Masayı zorla
 const ANGLE_SKILL := {"vizyon": "charisma"}   # Beat 2 anlatı; fallback: "sales" (metrik, traction)
 
-# --- Prep ---
-## Prep focus ids → their words. The ids stay ids; only the WORD localizes.
-const FOCUS_KEYS := {"rakamlar": "HUNT_FOCUS_NUMBERS", "hikaye": "HUNT_FOCUS_STORY", "prova": "HUNT_FOCUS_REHEARSAL"}
+# --- Booking ---
 const MEETING_LEAD_WEEKS := 1          # request → meeting week
-const PREP_WEEKS := 1
-const PREP_MIN_WEEKS_BEFORE := 1       # prep startable only if ≥ this many weeks remain
-const PREP_BONUS := 2                  # SkillCheck bonus units on the focused check (+~20% odds)
 # Moving a booked meeting costs a little of that fund's goodwill, paid at its NEXT meeting
 # (stored per fund in vc_states.move_penalty, consumed when that meeting begins). Cancelling
 # also shuts the booking desk for the rest of the week.

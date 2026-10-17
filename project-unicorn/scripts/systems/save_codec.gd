@@ -232,6 +232,7 @@ static func _decode_flags(raw: Variant) -> Dictionary:
 			TYPE_ARRAY:      out[key] = from_json(v) if typeof(v) == TYPE_ARRAY else []
 			TYPE_DICTIONARY: out[key] = from_json(v) if typeof(v) == TYPE_DICTIONARY else {}
 			_:               out[key] = from_json(v)
+	out.erase("pitch_prep_active")   # a key an old save carries and no system owns
 	return out
 
 

@@ -3641,9 +3641,9 @@ const MEETING_SHOT_VC := {
 ## on screen; lost = played to the loss, its result card; handoff = past that Devam into Perde 2; frank = Frank's
 ## introduction across a founder with neither Satış nor Karizma, the first question, and the needle's hover lines
 ## printed as MEETINGSHOT|frank|mods=<their seams> (a frame cannot show a hover).
-## VC, with the shot's fund (the founder moved this meeting once and rehearsed for it): open = Odayı
-## Oku as the room opens, the HAFIZA row and the withdraw button; sorgu = the third beat, the
-## rehearsed answer marked; sheet = a won room's result card; callback = a lukewarm room's callback
+## VC, with the shot's fund (the founder moved this meeting once): open = Odayı
+## Oku as the room opens, the HAFIZA row and the withdraw button; sorgu = the third beat;
+## sheet = a won room's result card; callback = a lukewarm room's callback
 ## and its condition; ret = a cold room's rejection, its cost and Frank on the way out; seed = the
 ## seed room's result card; long = a lukewarm room's closing beat under every earlier one, the most
 ## the panel holds (pair it with --shot-scale=1.25 for the narrowest dock).
@@ -3655,7 +3655,6 @@ func _run_meeting_shot(kind: String) -> void:
 		GameState.set_phase(3 if spec[0] == PitchConstants.STAGE_SERIES_A else 2)
 		GameState.mrr = 125000
 		VCPitchSystem._vc(SHOT_FUND)["move_penalty"] = PitchConstants.MEETING_RESCHEDULE_PENALTY
-		GameState.prep = {"vc_id": SHOT_FUND, "focus": "prova", "done_day": GameState.day}
 		GameState.set_flag("debug_skill_force", spec[1])
 		await _mount_shot_shell()
 		_stage_meeting_room(CounterpartSystem.investor_people(SHOT_FUND))

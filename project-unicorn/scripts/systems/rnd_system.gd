@@ -160,7 +160,7 @@ static func emit_edges() -> void:
 ##
 ## `ids` is exactly the set being asked about; an empty set contributes nothing.
 ## HRSystem.is_busy is the freeness gate: effective_skill checks only `status`, so a founder
-## in pitch_prep_active would otherwise keep researching at full rate.
+## in a sitting would otherwise keep researching at full rate.
 ## `founder_share` scales the founder's term; the tick and the week estimate pass the week's meeting share.
 static func research_per_day(node_id: String, ids: Array, founder_share: float = 1.0) -> float:
 	var areas: Array = ResearchTree.areas_of(node_id)

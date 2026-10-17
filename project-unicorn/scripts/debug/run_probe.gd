@@ -1374,7 +1374,7 @@ static func _meeting_pick(ids: Array[String]) -> String:
 			continue
 		var a: String = id.trim_prefix("b2_")
 		var d: int = VCPitchSystem._angle_diff(a)
-		var c: float = SkillCheck.chance_for(VCPitchSystem._angle_skill(a), d, VCPitchSystem._beat2_bonus(a))
+		var c: float = SkillCheck.chance_for(VCPitchSystem._angle_skill(a), d)
 		if c > best_c or (c == best_c and d < best_d):
 			best = id
 			best_c = c

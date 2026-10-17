@@ -157,14 +157,11 @@ func _lines(vs: Dictionary) -> Array:
 
 
 ## The option's die as chips over the terms SkillCheck sums: the founder's skill when it adds
-## anything, the prep that earned a bonus, and the room's difficulty, which always takes away.
+## anything, and the room's difficulty, which always takes away.
 func _dice(chk: Dictionary) -> Dictionary:
 	var factors := []
 	if chk.skill_value > 0:
 		factors.append({"cat_key": "MEETING_CHIP_SKILL", "text": FounderConstants.skill_label(chk.skill),
-			"sign": "+", "tone": "pos"})
-	if chk.prep != "":
-		factors.append({"cat_key": "MEETING_CHIP_PREP", "text": tr(PitchConstants.FOCUS_KEYS[chk.prep]),
 			"sign": "+", "tone": "pos"})
 	factors.append({"cat_key": "MEETING_CHIP_ROOM", "text": PitchConstants.diff_label(chk.difficulty),
 		"sign": "−", "tone": "neutral" if chk.difficulty == PitchConstants.DIFF_KOLAY else "neg"})

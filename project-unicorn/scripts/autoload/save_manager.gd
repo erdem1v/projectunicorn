@@ -690,7 +690,6 @@ func _migrate_14(state: Dictionary, meta: Dictionary) -> void:
 	_stamp_each((gs.get("active_sheets", []) as Array) + [gs.get("seed_sheet")],
 		["granted_day", "expires_day"], today)
 	_stamp_keys(gs.get("pending_meeting", {}), ["day"], today)
-	_stamp_keys(gs.get("prep", {}), ["done_day"], today)
 	var search: Dictionary = gs.get("hr_search", {}) as Dictionary
 	search.erase("started_day")
 	_stamp_keys(search, ["arrival_day"], today)

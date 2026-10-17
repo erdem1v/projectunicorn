@@ -143,8 +143,8 @@ static func status(c: Character) -> String:
 	return "" if c == null else c.status
 
 
-## §2.2 MEŞGULİYET TEK MODEL: izindeyken · eğitimdeyken · (kurucu) yatırım hazırlığında ya da
-## toplantıdayken. Ara kademe, yarı hız çarpanı, kısmi kapasite YOKTUR.
+## §2.2 MEŞGULİYET TEK MODEL: izindeyken · eğitimdeyken · (kurucu) toplantıdayken.
+## Ara kademe, yarı hız çarpanı, kısmi kapasite YOKTUR.
 ## Toplantı (Satış §5.0) sekizinci bir görev durumu değildir: oturum boyunca kurucu meşguldür.
 ## Destek masası ve araştırma burayı okur.
 static func is_busy(c: Character) -> bool:
@@ -152,8 +152,7 @@ static func is_busy(c: Character) -> bool:
 		return false
 	if c.status == HRConstants.STATUS_ON_LEAVE or c.status == HRConstants.STATUS_TRAINING:
 		return true
-	return c.category == "founder" and (bool(GameState.get_flag("pitch_prep_active", false))
-		or founder_in_meeting)
+	return c.category == "founder" and founder_in_meeting
 
 
 static func tenure_weeks(c: Character) -> int:
@@ -202,7 +201,6 @@ const FOUNDER_STATE_BUILD := "build"
 const FOUNDER_STATE_SALES := "sales"
 const FOUNDER_STATE_SUPPORT := "support"
 const FOUNDER_STATE_RESEARCH := "research"
-const FOUNDER_STATE_PITCH_PREP := "pitch_prep"
 const FOUNDER_STATE_TRAINING := "training"
 ## PASİF MÜŞTERİ İLGİSİ. Bir atama değil bir okuma: kurucu başka hiçbir şey yapmıyorken
 ## destek masası onu kendiliğinden sayar. BOŞTA'nın önünde okunur — ikisi de "bir işi yok"
@@ -216,13 +214,11 @@ const FOUNDER_STATE_IDLE := "idle"
 ##
 ## İKİ SÜREKLİ İŞ İÇİN SEKİZİNCİ BİR DURUM İCAT EDİLMEZ: §2.3 kapalı bir tablodur. Satır
 ## §12.2'nin çalışan grameri ödünç alır — iki ayrı işin kısa etiketi, `·` ile. Meşgul
-## durumlar (eğitim, yatırım hazırlığı) atamanın üstünü örter, o yüzden önce gelir. Satır ofisin
+## durum (eğitim) atamanın üstünü örter, o yüzden önce gelir. Satır ofisin
 ## gördüğünü söyler: gece uyur, yapım atamasının kartı yoksa (sprint arası) planlama yapar.
 static func founder_task_label() -> String:
 	var f: Character = CharacterRegistry.get_founder()
-	var busy: bool = f != null and (f.status == HRConstants.STATUS_TRAINING \
-		or bool(GameState.get_flag("pitch_prep_active", false)))
-	if f != null and not busy:
+	if f != null and f.status != HRConstants.STATUS_TRAINING:
 		if TimeManager.is_night():
 			return TranslationServer.translate("OFFICE_ACT_SLEEP")
 		if f.assigned_job_ids.size() > 1:
@@ -241,12 +237,10 @@ static func founder_task_state() -> String:
 	var f: Character = CharacterRegistry.get_founder()
 	if f == null:
 		return FOUNDER_STATE_IDLE
-	# SIRA ÖNEMLİ: meşgul durumlar önce okunur (§2.3'ün "Meşgul mü" sütunu). Eğitim ve
-	# yatırım hazırlığı yapımı DURDURUR, o yüzden bir yapım atamasının üstünü örterler.
+	# SIRA ÖNEMLİ: meşgul durum önce okunur (§2.3'ün "Meşgul mü" sütunu). Eğitim yapımı
+	# DURDURUR, o yüzden bir yapım atamasının üstünü örter.
 	if f.status == HRConstants.STATUS_TRAINING:
 		return FOUNDER_STATE_TRAINING
-	if bool(GameState.get_flag("pitch_prep_active", false)):
-		return FOUNDER_STATE_PITCH_PREP
 	# ARAŞTIRMA YAPIMDAN ÖNCE (Ar-Ge §5.0): araştıran kurucu başka hiçbir şey yapmıyor, yani
 	# duraklamış yapımının adını taşımak yalan olurdu.
 	if f.assigned_job_ids.has(HRConstants.JOB_RESEARCH):

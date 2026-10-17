@@ -38,7 +38,7 @@ static func _install_people() -> void:
 		"HR", "active | on_leave | training")
 	EvSeams.register("hr.is_busy", E, TYPE_BOOL,
 		func(id: String) -> bool: return HRSystem.is_busy(_emp(id)),
-		"HR", "leave or training, plus pitch prep for the founder")
+		"HR", "leave or training, plus a sitting for the founder")
 	EvSeams.register("hr.tenure_weeks", E, TYPE_INT,
 		func(id: String) -> int: return HRSystem.tenure_weeks(_emp(id)),
 		"HR", "weeks on the payroll; 0 when hire_day was never stamped")
@@ -179,10 +179,10 @@ static func _install_founder() -> void:
 		"HR", "0-10; the morale ceiling and the team output multiplier")
 	EvSeams.register("founder.task_state", G, TYPE_STRING,
 		func() -> String: return HRSystem.founder_task_state(),
-		"HR", "build | sales | support | research | pitch_prep | training | idle")
+		"HR", "build | sales | support | research | training | idle")
 	EvSeams.register("founder.is_busy", G, TYPE_BOOL,
 		func() -> bool: return HRSystem.is_busy(CharacterRegistry.get_founder()),
-		"HR", "assigned, in training, or preparing a pitch")
+		"HR", "assigned, in training, or in a sitting")
 	EvSeams.register("founder.origin", G, TYPE_STRING,
 		func() -> String: return GameState.origin,
 		"HR", "self_made | heir | corporate_refugee")

@@ -177,11 +177,11 @@ slot of that type (§17.12).
 |---|---|---|---|---|
 | `founder.charisma` | global | int | HR | 0-10 on the shared ruler; pitch and scandal outcomes read it |
 | `founder.equity_pct` | global | int | HR | WRAPPER: the complement of the investor total |
-| `founder.is_busy` | global | bool | HR | assigned, in training, or preparing a pitch |
+| `founder.is_busy` | global | bool | HR | assigned, in training, or in a sitting |
 | `founder.leadership` | global | int | HR | 0-10; the morale ceiling and the team output multiplier |
 | `founder.origin` | global | string | HR | self_made | heir | corporate_refugee |
 | `founder.skill` | global | int | Founder | the skill a check leaned on; the specific seam wins when one exists |
-| `founder.task_state` | global | string | HR | build | sales | support | research | pitch_prep | training | idle |
+| `founder.task_state` | global | string | HR | build | sales | support | research | training | idle |
 
 ### `funding.`
 
@@ -219,7 +219,7 @@ slot of that type (§17.12).
 | `hr.flight_risk` | entity | bool | HR | WRAPPER: morale under 35 |
 | `hr.headcount` | global | int | HR | active employees; excludes the founder and the mentor by construction |
 | `hr.idle_count` | global | int | HR | employees with no job |
-| `hr.is_busy` | entity | bool | HR | leave or training, plus pitch prep for the founder |
+| `hr.is_busy` | entity | bool | HR | leave or training, plus a sitting for the founder |
 | `hr.is_idle` | entity | bool | HR | an employee with no job at all |
 | `hr.is_overloaded` | entity | bool | HR | more than one job |
 | `hr.job` | entity | string | HR | WRAPPER: the first job held, build | test | support | accounts | sales | research; "" with none |

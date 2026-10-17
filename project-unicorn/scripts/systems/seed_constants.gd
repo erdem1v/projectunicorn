@@ -6,7 +6,7 @@ extends RefCounted
 # PitchConstants (SEED_LEVER_SKILL / SEED_LEVER_DIFF), and nothing else.
 #
 # WHY A SECOND CONSTANTS FILE INSTEAD OF MORE ROWS IN PitchConstants. PitchConstants is the
-# GLOBAL pitch surface — zones, beat deltas, prep, sheet economy, the term-sheet table's lever
+# GLOBAL pitch surface — zones, beat deltas, sheet economy, the term-sheet table's lever
 # tables — and both stages read it. This file is read by ONE rung. Keeping them apart is what
 # lets a calibration pass answer "what does the seed cost" by opening one file.
 #

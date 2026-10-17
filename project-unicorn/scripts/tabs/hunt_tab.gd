@@ -341,7 +341,6 @@ func _roster_actions(vc_id: String) -> Control:
 		col.add_child(SprintUiShared.label(tr("HUNT_MEETING_SET"), &"CaptionPrimary"))
 		if VCPitchSystem.can_move_meeting():
 			col.add_child(_meeting_move_row())
-		col.add_child(_prep_row(vc_id))
 		return col
 
 	var text: String = (tr("HUNT_REQUEST_AGAIN") if callback else tr("HUNT_REQUEST_MEETING")).format(
@@ -368,21 +367,6 @@ func _meeting_move_row() -> Control:
 			tr("HUNT_CANCEL_TIP").format({"n": PitchConstants.MEETING_CANCEL_PENALTY})]]:
 		var b := _button(row[0], _act.bind(row[1]))
 		b.tooltip_text = row[2]
-		b.disabled = _off
-		box.add_child(b)
-	return box
-
-
-func _prep_row(vc_id: String) -> Control:
-	# 3 focus buttons if prep is allowed; the block reason otherwise (no fake choices).
-	if not GameState.prep.is_empty():
-		return SprintUiShared.label(tr("HUNT_PREP_RUNNING"), &"Caption")
-	var reason: String = VCPitchSystem.prep_blocked_reason(vc_id)
-	if reason != "":
-		return SprintUiShared.prose(tr("HUNT_PREP_REASON").format({"reason": reason}), &"Caption")
-	var box := SprintUiShared.box(UiTokens.SPACE_M)
-	for focus_id in PitchConstants.FOCUS_KEYS:
-		var b := _button(tr(PitchConstants.FOCUS_KEYS[focus_id]), _act.bind(VCPitchSystem.start_prep.bind(vc_id, focus_id)))
 		b.disabled = _off
 		box.add_child(b)
 	return box
@@ -503,19 +487,13 @@ func _confirm_walk(vc_id: String) -> void:
 
 # --- Pending (Bekleyen) ---
 
-## The booked meeting and the prep under way; nothing pending is the head's one line.
+## The booked meeting; nothing pending is the head's one line.
 func _paint_pending(card: VBoxContainer) -> void:
 	var lines: Array = []
 	var pm: Dictionary = GameState.pending_meeting
-	var pr: Dictionary = GameState.prep
 	if not pm.is_empty():
 		lines.append(tr("HUNT_MEETING_PENDING").format({"vc": _vc_name(String(pm.get("vc_id", ""))),
 			"when": _when(int(pm.get("day", 0)) - GameState.day)}))
-	if not pr.is_empty():
-		var pd: int = int(pr.get("done_day", 0)) - GameState.day
-		lines.append(tr("HUNT_PREP_PENDING").format({
-			"focus": tr(PitchConstants.FOCUS_KEYS.get(String(pr.get("focus", "")), "HUNT_CB_NONE")),
-			"when": tr("HUNT_PREP_READY") if pd <= 0 else _when(pd)}))
 	card.add_child(UiFactory.D_card_head(tr("HUNT_SEC_PENDING"),
 		SprintUiShared.empty_line(tr("HUNT_NONE_PENDING"), CALENDAR, 0) if lines.is_empty() else null))
 	for text in lines:

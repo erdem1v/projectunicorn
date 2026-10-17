@@ -115,8 +115,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hunt_offer_lifecycle": fail = _case_hunt_offer_lifecycle()
 		"legacy_v12_save_opens_live_table": fail = _case_legacy_v12_save_opens_live_table()
 		"series_a_road_closed_when_all_funds_close": fail = _case_series_a_road_closed_when_all_funds_close()
-		"prep_bonus_and_capacity": fail = _case_prep_bonus_and_capacity()
-		"meeting_daylock":      fail = _case_meeting_daylock()
+		"save_drops_retired_prep": fail = _case_save_drops_retired_prep()
 		"pivot_closes_hunt":    fail = _case_pivot_closes_hunt()
 		"meeting_during_kepenk": fail = _case_meeting_during_kepenk()
 		"seat_upsell_moves_seats": fail = _case_seat_upsell_moves_seats()
@@ -2580,46 +2579,41 @@ static func _case_series_a_road_closed_when_all_funds_close() -> String:
 	return ""
 
 
-static func _case_prep_bonus_and_capacity() -> String:
-	GameState.set_phase(3)
-	_park_leave([_make_employee("char_prep_dev", "Prep Dev", HRConstants.ROLE_DEVELOPER)])
-	var capacity: float = SprintSystem.capacity()
-	if not VCPitchSystem.request_meeting("anchor"):
-		return "request refused"
-	if not VCPitchSystem.start_prep("anchor", "rakamlar"):
-		return "prep refused (should be allowed, 3 days out)"
-	if not GameState.get_flag("pitch_prep_active", false):
-		return "capacity flag not set"
-	# Hazırlık yalnız kurucuyu tutar: canlı ürüne meşgul sayılır, sprintin haftalık puanına
-	# dokunmaz (sprint ekibinden yalnız izin ve Ar-Ge düşürür).
-	if SprintSystem.capacity() != capacity:
-		return "VC prep moved the sprint capacity (%.2f -> %.2f)" % [capacity, SprintSystem.capacity()]
-	var founder: Character = CharacterRegistry.get_founder()
-	if not HRSystem.is_busy(founder):
-		return "a founder in VC prep reads as free"
-	VCPitchSystem.begin_meeting("anchor")  # consumes the prep focus; the founder is at the table
-	if GameState.get_flag("pitch_prep_active", false):
-		return "capacity flag not cleared at meeting start"
-	if not HRSystem.is_busy(founder):
-		return "a founder seated at the pitch reads as free"
-	VCPitchSystem.withdraw()
-	VCPitchSystem.end_sitting()
-	if HRSystem.is_busy(founder):
-		return "the founder stayed busy after the sitting closed"
-	return ""
-
-
-static func _case_meeting_daylock() -> String:
-	GameState.set_phase(3)
-	VCPitchSystem.request_meeting("anchor")
-	if VCPitchSystem.prep_blocked_reason("anchor") != "":
-		return "prep blocked 3 days out (should be allowed)"
-	_sim_day()
-	_sim_day()  # now 1 day before the meeting
-	if VCPitchSystem.prep_blocked_reason("anchor") == "":
-		return "prep not blocked <2 days before meeting"
-	if VCPitchSystem.start_prep("anchor", "rakamlar"):
-		return "start_prep succeeded when it should be blocked"
+## An old save's retired investor-prep fields do not survive a load. A real save is aged by writing
+## the `prep` block and the `pitch_prep_active` flag back into the file at the CURRENT schema (the
+## drop hangs on no version); what loads carries neither.
+##
+## FALSİFİKASYON: `SaveCodec._decode_flags`'taki `out.erase("pitch_prep_active")` satırını sil →
+## bayrak geri gelir ve FAIL.
+static func _case_save_drops_retired_prep() -> String:
+	var slot: String = "smoke_retired_prep_%d" % OS.get_process_id()
+	_seed_save_world()
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(slot):
+		SaveManager.delete_slot(slot)
+		return "save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key()
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	var gs: Dictionary = raw["state"]["game_state"]
+	var flags: Dictionary = gs["flags"]
+	if gs.has("prep") or flags.has("pitch_prep_active"):
+		SaveManager.delete_slot(slot)
+		return "a fresh save already carries the retired prep"
+	gs["prep"] = {"vc_id": "anchor", "focus": "prova", "done_day": GameState.day}
+	flags["pitch_prep_active"] = true
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	SaveManager.delete_slot(slot)
+	if not bool(payload.get("ok", false)):
+		return "the aged save was refused: %s" % String(payload.get("error_key", ""))
+	if not SaveManager.apply_loaded_state(payload):
+		return "apply_loaded_state returned false"
+	var back: Dictionary = SaveCodec.capture_game_state()
+	if back.has("prep") or GameState.flags.has("pitch_prep_active"):
+		return "the load kept the retired prep (state block: %s, flag: %s)" % [
+			back.has("prep"), GameState.flags.has("pitch_prep_active")]
 	return ""
 
 
@@ -9621,6 +9615,14 @@ static func _case_vc_call_postpones_once() -> String:
 	VCPitchSystem.begin_meeting(VCPitchSystem.call_waiting())
 	if not VCPitchSystem.is_active():
 		return "the answered call did not start the meeting"
+	# The sitting holds the founder (Ekip §2.2) and lets go when it closes.
+	var founder: Character = CharacterRegistry.get_founder()
+	if not HRSystem.is_busy(founder):
+		return "a founder seated at the pitch reads as free"
+	VCPitchSystem.withdraw()
+	VCPitchSystem.end_sitting()
+	if HRSystem.is_busy(founder):
+		return "the founder stayed busy after the sitting closed"
 	return ""
 
 
@@ -10606,13 +10608,6 @@ static func _case_hr_read_catalogue() -> String:
 	var state: String = HRSystem.founder_task_state()
 	if state != HRSystem.FOUNDER_STATE_BUILD:
 		return "the founder starts on a build but reads '%s'" % state
-	GameState.set_flag("pitch_prep_active", true)
-	if HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_PITCH_PREP:
-		return "yatırım hazırlığı did not surface as a task state — §2.3 gives it an id"
-	# §2.2/§2.3: yatırım hazırlığı MEŞGULDÜR ve yapım §2.1'e göre duraklar.
-	if not HRSystem.is_busy(CharacterRegistry.get_founder()):
-		return "a founder in pitch prep did not read as busy (§2.2)"
-	GameState.set_flag("pitch_prep_active", false)
 	CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
 	if HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_IDLE:
 		return "an unassigned founder did not read as Boşta"
@@ -10622,7 +10617,7 @@ static func _case_hr_read_catalogue() -> String:
 	# tek yolu anahtarla karşılaştırmaktır.
 	for st in [HRSystem.FOUNDER_STATE_BUILD, HRSystem.FOUNDER_STATE_SALES,
 			HRSystem.FOUNDER_STATE_SUPPORT, HRSystem.FOUNDER_STATE_RESEARCH,
-			HRSystem.FOUNDER_STATE_PITCH_PREP, HRSystem.FOUNDER_STATE_TRAINING,
+			HRSystem.FOUNDER_STATE_TRAINING,
 			HRSystem.FOUNDER_STATE_CARE, HRSystem.FOUNDER_STATE_IDLE]:
 		var lkey: String = "HR_FOUNDER_STATE_%s" % String(st).to_upper()
 		if TranslationServer.translate(lkey) == lkey:
@@ -15092,7 +15087,6 @@ static func _case_paused_job_resumes_on_direct_return() -> String:
 ## `founder_task_label`'ın kompozisyon dalını sil → satır tek etikete düşer ve FAIL.
 static func _case_split_bars_name_their_cause() -> String:
 	_seed_support_fixture("b2c")
-	GameState.set_flag("pitch_prep_active", false)
 	var founder: Character = CharacterRegistry.get_founder()
 	for area in HRConstants.AREAS:
 		founder.role_stats[area] = HRConstants.AREA_MAX

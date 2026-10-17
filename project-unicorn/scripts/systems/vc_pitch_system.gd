@@ -8,13 +8,12 @@ extends RefCounted
 # the result view is closed.
 #
 # TWO state homes:
-#   * Persistent/serialized → GameState (vc_states, active_sheets, seed_sheet, pending_meeting, prep).
+#   * Persistent/serialized → GameState (vc_states, active_sheets, seed_sheet, pending_meeting).
 #   * Meeting-LOCAL (conviction, beat, intel) → the static vars below, NEVER serialized
 #     (single sitting, no mid-meeting save).
 #
 # Reuses: SkillCheck.resolve (odds/bands), InvestorRegistry (static roster), PitchConstants
-# (global knobs), ProductSystem capacity flag (prep cost). Writes series_a_closed /
-# vc_rejections, which EndingsSystem reads (fields, not systems).
+# (global knobs). Writes series_a_closed / vc_rejections, which EndingsSystem reads (fields, not systems).
 #
 # NOTE: several Beat-3 domain-interrogation items read WORKING PROXIES where no dedicated
 # field exists yet (churn spike, MRR concentration, rival lead). Each is marked
@@ -35,7 +34,6 @@ static var _conviction: int = 0
 static var _cap: int = 100
 static var _beat: int = 0            # 1..5 (5 = the result view)
 static var _intel: bool = false      # Beat-1 success revealed the tell
-static var _prep_focus: String = ""  # "" | "rakamlar" | "hikaye" | "prova"
 static var _reentry: bool = false    # this meeting is a callback re-entry
 static var _sorgu: Dictionary = {}   # {key, vc_line, mono} chosen weak point (or clean)
 static var _meeting_day_mrr: int = 0 # snapshot for callback "MRR +20%"
@@ -66,10 +64,10 @@ static func begin_meeting(vc_id: String, stage: String = PitchConstants.STAGE_SE
 		return
 	_stage = stage
 	# THE SEED ROOM SKIPS THE CEREMONY, and that is a design statement rather than a saving.
-	# The Series A hunt makes the founder book a week ahead and spend a prep focus; the
-	# seed room is the fast one, a bet on a person. So no pending_meeting to consume and no
-	# prep to spend, which also keeps pending_meeting a Series-A-only field and leaves the fund's
-	# call (call_waiting) and every seam that reads a booked meeting untouched by this rung.
+	# The Series A hunt makes the founder book a week ahead; the seed room is the fast one, a bet on
+	# a person. So no pending_meeting to consume, which also keeps pending_meeting a Series-A-only
+	# field and leaves the fund's call (call_waiting) and every seam that reads a booked meeting
+	# untouched by this rung.
 	# ONE CALLBACK PER VC. `reentry_bonus` is only armed once the condition is met, so the
 	# status is read as well: any sitting with a fund that already gave a callback is the
 	# re-entry, and a second lukewarm room ends in a rejection rather than a second callback
@@ -82,7 +80,6 @@ static func begin_meeting(vc_id: String, stage: String = PitchConstants.STAGE_SE
 	_active = true
 	HRSystem.founder_in_meeting = true
 	_vc_id = vc_id
-	_prep_focus = _consume_prep(vc_id) if series_a else ""
 	_cap = 100
 	_intel = false
 	_beat = 1
@@ -310,8 +307,7 @@ static func _resolve_beat2(choice_id: String) -> Dictionary:
 	# Anlatı — angle check; conviction moves by margin.
 	var angle: String = choice_id.trim_prefix("b2_")
 	var diff: int = _angle_diff(angle)
-	var bonus: int = _beat2_bonus(angle)
-	var chk: Dictionary = SkillCheck.resolve(_angle_skill(angle), diff, bonus)
+	var chk: Dictionary = SkillCheck.resolve(_angle_skill(angle), diff)
 	if chk.passed:
 		var span: int = PitchConstants.BEAT2_SUCCESS_MAX - PitchConstants.BEAT2_SUCCESS_MIN
 		_conviction += PitchConstants.BEAT2_SUCCESS_MIN + int(round(clampf(chk.margin / 0.4, 0.0, 1.0) * span))
@@ -326,7 +322,7 @@ static func _resolve_beat2(choice_id: String) -> Dictionary:
 static func _resolve_beat3(choice_id: String) -> Dictionary:
 	# Sorgu — posture check. Geçiştir caps the room at 65.
 	var posture: String = choice_id.trim_prefix("b3_")
-	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT3_SKILL, _beat3_diff(posture), _beat3_bonus(posture))
+	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT3_SKILL, _beat3_diff(posture))
 	var s: int = 0
 	var f: int = 0
 	match posture:
@@ -731,7 +727,7 @@ static func sheet_for(vc_id: String) -> TermSheet:
 
 
 # ============================================================================
-# Scheduling + prep
+# Scheduling
 # ============================================================================
 
 ## Why a meeting with this fund cannot be booked right now, as an id the Hunt tab renders:
@@ -823,24 +819,20 @@ static func can_move_meeting() -> bool:
 	return not pm.is_empty() and int(pm.get("day", 0)) > GameState.day
 
 
-## "Cancel": the booking goes, a prep aimed at it goes with it, the fund remembers
+## "Cancel": the booking goes, the fund remembers
 ## (MEETING_CANCEL_PENALTY off its next meeting), and no new meeting is booked this week.
 static func cancel_meeting() -> bool:
 	if not can_move_meeting():
 		return false
 	var vc_id: String = String(GameState.pending_meeting.get("vc_id", ""))
 	GameState.pending_meeting.clear()
-	if String(GameState.prep.get("vc_id", "")) == vc_id:
-		GameState.prep.clear()
-		GameState.set_flag("pitch_prep_active", false)
 	_add_move_penalty(vc_id, PitchConstants.MEETING_CANCEL_PENALTY)
 	GameState.vc_meeting_cancel_day = GameState.day
 	return true
 
 
 ## "Reschedule": the same lead time again, counted from the booked week, so the booking week
-## itself can move it. The prep (if any) stays aimed at the same fund; the fund remembers
-## (MEETING_RESCHEDULE_PENALTY off its next meeting).
+## itself can move it. The fund remembers (MEETING_RESCHEDULE_PENALTY off its next meeting).
 static func reschedule_meeting() -> bool:
 	if not can_move_meeting():
 		return false
@@ -855,38 +847,6 @@ static func _add_move_penalty(vc_id: String, points: int) -> void:
 	st["move_penalty"] = int(st.get("move_penalty", 0)) + points
 
 
-static func prep_blocked_reason(vc_id: String) -> String:
-	# "" = allowed; else the reason to show (no fake choices).
-	if not GameState.prep.is_empty():
-		return _t("VC_PREP_BUSY")
-	if GameState.pending_meeting.get("vc_id", "") != vc_id:
-		return _t("VC_PREP_NEED_MEETING")
-	var weeks_before: int = int(GameState.pending_meeting.get("day", 0)) - GameState.day
-	if weeks_before < TimeModel.ticks(PitchConstants.PREP_MIN_WEEKS_BEFORE):
-		return _t(Fmt.count_key("VC_PREP_TOO_SOON", PitchConstants.PREP_MIN_WEEKS_BEFORE)).format(
-			{"weeks": PitchConstants.PREP_MIN_WEEKS_BEFORE})
-	return ""
-
-
-static func start_prep(vc_id: String, focus: String) -> bool:
-	if prep_blocked_reason(vc_id) != "":
-		return false
-	GameState.prep = {"vc_id": vc_id, "focus": focus,
-		"done_day": GameState.day + TimeModel.ticks(PitchConstants.PREP_WEEKS)}
-	GameState.set_flag("pitch_prep_active", true)   # capacity coupling (product slows)
-	return true
-
-
-static func _consume_prep(vc_id: String) -> String:
-	# Return the focus if a completed prep targets this VC; clear it either way.
-	var focus := ""
-	if GameState.prep.get("vc_id", "") == vc_id:
-		focus = String(GameState.prep.get("focus", ""))
-	GameState.prep.clear()
-	GameState.set_flag("pitch_prep_active", false)
-	return focus
-
-
 # ============================================================================
 # Daily tick (TimeManager slot between PhaseGate and Endings)
 # ============================================================================
@@ -896,7 +856,6 @@ static func daily_tick() -> void:
 		return
 	_deliver_pending_sheet()
 	_tick_callbacks()
-	_tick_prep()
 	_tick_meeting_day()
 	_tick_countdown_chip()
 
@@ -932,14 +891,6 @@ static func _tick_callbacks() -> void:
 				{"investor": inv.display_name})
 		elif String(cb.get("type", "")) == "churn_under" and _churn_window_done(cb):
 			st.callback = _churn_callback()   # a quarter that lost too many customers asks for the next one
-
-
-static func _tick_prep() -> void:
-	if GameState.prep.is_empty():
-		return
-	if GameState.day >= int(GameState.prep.get("done_day", 0)):
-		# Prep finished but the meeting hasn't happened — keep the focus, free capacity.
-		GameState.set_flag("pitch_prep_active", false)
 
 
 static func _tick_meeting_day() -> void:
@@ -993,8 +944,6 @@ static func is_last_answer_moment() -> bool:
 # --- Pivot cleanup hook (called by EndingsSystem.on_pivot_accepted) ---
 static func on_pivot() -> void:
 	GameState.pending_meeting.clear()
-	GameState.prep.clear()
-	GameState.set_flag("pitch_prep_active", false)
 	for inv in InvestorRegistry.get_active():
 		var st: Dictionary = _vc(inv.id)
 		if st.get("status", "") == "callback":
@@ -1027,7 +976,7 @@ static func _beat1_view_state(why: Array, memory_key: String) -> Dictionary:
 	vs["monologue_text"] = _t(_k("B1_MONO_WHY")).format({"reasons": " · ".join(PackedStringArray(why))})
 	vs["beat_label"] = _t("VC_BEAT1_LABEL")
 	vs["can_withdraw"] = true                       # only before the first check
-	vs["choices"] = [{"id": "b1_read", "text": _t("VC_B1_CHOICE"), "check": _check_view("VC_APPROACH_PERCEPTION", PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)}]
+	vs["choices"] = [{"id": "b1_read", "text": _t("VC_B1_CHOICE"), "check": _check_view("VC_APPROACH_PERCEPTION", PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF)}]
 	return vs
 
 
@@ -1043,7 +992,7 @@ static func _beat2_view_state() -> Dictionary:
 	var out: Array = []
 	for a in [["metrik", _t(_k("B2_METRIC"))], ["vizyon", _t(_k("B2_VISION"))], ["traction", _t(_k("B2_TRACTION"))]]:
 		# The resolver's own _angle_diff: the odds shown are the odds rolled.
-		out.append({"id": "b2_" + a[0], "text": a[1], "check": _check_view("VC_APPROACH_NARRATIVE", _angle_skill(a[0]), _angle_diff(a[0]), _beat2_bonus(a[0])), "marked": (a[0] == favored), "marked_text": _t("MEETING_MARK_FAVORED")})
+		out.append({"id": "b2_" + a[0], "text": a[1], "check": _check_view("VC_APPROACH_NARRATIVE", _angle_skill(a[0]), _angle_diff(a[0])), "marked": (a[0] == favored), "marked_text": _t("MEETING_MARK_FAVORED")})
 	vs["choices"] = out
 	return vs
 
@@ -1054,13 +1003,12 @@ static func _beat3_view_state(prev: Dictionary) -> Dictionary:
 	vs["active_line"] = String(_sorgu.get("vc_line", ""))
 	vs["monologue_text"] = String(_sorgu.get("mono", ""))
 	vs["beat_label"] = _t("VC_BEAT3_LABEL")
-	var prova: bool = _prep_focus == "prova"
-	# The resolver's own _beat3_diff / _beat3_bonus: a clean question is rolled at Kolay, and the
+	# The resolver's own _beat3_diff: a clean question is rolled at Kolay, and the
 	# odds shown are the odds rolled.
 	vs["choices"] = [
-		{"id": "b3_durust", "text": _t("VC_B3_HONEST"), "check": _check_view("VC_APPROACH_HONEST", PitchConstants.BEAT3_SKILL, _beat3_diff("durust"), _beat3_bonus("durust")), "caption": _t("VC_B3_HONEST_CAP"), "marked": prova, "marked_text": _t("VC_REHEARSED")},
-		{"id": "b3_spin", "text": _t("VC_B3_SPIN"), "check": _check_view("VC_APPROACH_SPIN", PitchConstants.BEAT3_SKILL, _beat3_diff("spin"), _beat3_bonus("spin")), "caption": _t("VC_B3_SPIN_CAP")},
-		{"id": "b3_gecistir", "text": _t("VC_B3_DEFLECT"), "check": _check_view("VC_APPROACH_DEFLECT", PitchConstants.BEAT3_SKILL, _beat3_diff("gecistir"), _beat3_bonus("gecistir")), "caption": _t("VC_B3_DEFLECT_CAP").format({"cap": PitchConstants.GECISTIR_CAP})},
+		{"id": "b3_durust", "text": _t("VC_B3_HONEST"), "check": _check_view("VC_APPROACH_HONEST", PitchConstants.BEAT3_SKILL, _beat3_diff("durust")), "caption": _t("VC_B3_HONEST_CAP")},
+		{"id": "b3_spin", "text": _t("VC_B3_SPIN"), "check": _check_view("VC_APPROACH_SPIN", PitchConstants.BEAT3_SKILL, _beat3_diff("spin")), "caption": _t("VC_B3_SPIN_CAP")},
+		{"id": "b3_gecistir", "text": _t("VC_B3_DEFLECT"), "check": _check_view("VC_APPROACH_DEFLECT", PitchConstants.BEAT3_SKILL, _beat3_diff("gecistir")), "caption": _t("VC_B3_DEFLECT_CAP").format({"cap": PitchConstants.GECISTIR_CAP})},
 	]
 	return vs
 
@@ -1089,7 +1037,7 @@ static func _beat4_view_state() -> Dictionary:
 	else:
 		vs["active_line"] = _t("VC_B4_WARM_LINE")
 		vs["monologue_text"] = _t("VC_B4_WARM_MONO")
-		var push_choice: Dictionary = {"id": "b4_zorla", "text": _t("VC_B4_PUSH"), "check": _check_view("VC_APPROACH_PUSH", PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": _t("VC_B4_PUSH_CAP"), "caption_danger": true}
+		var push_choice: Dictionary = {"id": "b4_zorla", "text": _t("VC_B4_PUSH"), "check": _check_view("VC_APPROACH_PUSH", PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF), "caption": _t("VC_B4_PUSH_CAP"), "caption_danger": true}
 		if _reentry:
 			vs["choices"] = [push_choice, {"id": "b4_ret", "text": _t("VC_B4_QUIT"), "caption": _t("VC_B4_QUIT_CAP")}]
 		else:
@@ -1273,14 +1221,6 @@ static func _angle_skill(angle: String) -> String:
 	return String(PitchConstants.ANGLE_SKILL.get(angle, "sales"))
 
 
-static func _beat2_bonus(angle: String) -> int:
-	if _prep_focus == "rakamlar" and angle == "metrik":
-		return PitchConstants.PREP_BONUS
-	if _prep_focus == "hikaye" and angle == "vizyon":
-		return PitchConstants.PREP_BONUS
-	return 0
-
-
 ## The Beat-3 roll's difficulty: a clean question (nothing to interrogate) is Kolay whatever
 ## the posture. ONE function for the resolver and the view, the _angle_diff rule.
 static func _beat3_diff(posture: String) -> int:
@@ -1292,17 +1232,12 @@ static func _beat3_diff(posture: String) -> int:
 		_: return PitchConstants.GECISTIR_DIFF
 
 
-static func _beat3_bonus(posture: String) -> int:
-	return PitchConstants.PREP_BONUS if (_prep_focus == "prova" and posture == "durust") else 0
-
-
 ## A choice's odds, from the breakdown the resolver's roll sums: {approach (the translated
-## VC_APPROACH_* word), chance, difficulty (diff int), skill (FounderConstants id), skill_value,
-## prep (the prep focus id behind the bonus, "" without one)}. Every VC bonus is the prep's.
-static func _check_view(approach_key: String, skill: String, diff: int, bonus: int) -> Dictionary:
-	var b: Dictionary = SkillCheck.breakdown(skill, diff, bonus)
+## VC_APPROACH_* word), chance, difficulty (diff int), skill (FounderConstants id), skill_value}.
+static func _check_view(approach_key: String, skill: String, diff: int) -> Dictionary:
+	var b: Dictionary = SkillCheck.breakdown(skill, diff)
 	return {"approach": _t(approach_key), "chance": float(b.total), "difficulty": diff, "skill": skill,
-		"skill_value": int(b.skill_value), "prep": _prep_focus if bonus > 0 else ""}
+		"skill_value": int(b.skill_value)}
 
 
 ## The investor's reaction to the previous check, spoken before the next line; "" without one.
@@ -1373,7 +1308,6 @@ static func _rival_ahead() -> bool:
 ## Run-boundary reset (SaveManager.reset_all_owners) and the end of every sitting: a live
 ## sitting releases the founder. The meeting-local statics are reset, never serialised:
 ## SaveManager.can_save() refuses while is_active(), so a sitting is idle at every save point.
-## `pitch_prep_active` is a FLAG and rides in the GameState block, so it is not touched here.
 static func reset() -> void:
 	if _active:
 		HRSystem.founder_in_meeting = false
@@ -1383,7 +1317,6 @@ static func reset() -> void:
 	_conviction = 0
 	_cap = 100
 	_intel = false
-	_prep_focus = ""
 	_reentry = false
 	_sorgu = {}
 	_cold_exit_key = ""

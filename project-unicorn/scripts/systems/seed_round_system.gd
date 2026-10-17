@@ -80,7 +80,7 @@ static func daily_tick() -> void:
 # ============================================================================
 
 ## "" when this fund can be pitched; otherwise the reason key to show. No fake choices — the
-## funding page renders the reason instead of a dead button (the prep_blocked_reason grammar).
+## funding page renders the reason instead of a dead button.
 static func pitch_blocked_reason(vc_id: String) -> String:
 	if GameState.seed_lead != "":
 		return "SEED_BLOCK_TAKEN"
@@ -97,7 +97,7 @@ static func pitch_blocked_reason(vc_id: String) -> String:
 ## opens, so a mid-meeting quit cannot hand it back.
 ##
 ## NO SCHEDULING CEREMONY, and that is deliberate. The Series A hunt makes you book a week
-## ahead and choose a prep focus; the seed room does not, because it is the fast room — a
+## ahead; the seed room does not, because it is the fast room — a
 ## bet on the founder, not a diligence appointment. It also keeps
 ## GameState.pending_meeting a Series-A-only field, so the fund's call
 ## (VCPitchSystem.call_waiting) and every seam that reads a booked meeting stay untouched by

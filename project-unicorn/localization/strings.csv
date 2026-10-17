@@ -446,7 +446,6 @@ HR_FOUNDER_STATE_BUILD,Yapımda görev alıyor,Working on the build
 HR_FOUNDER_STATE_SALES,Satışta,In sales
 HR_FOUNDER_STATE_SUPPORT,Destekte,On support
 HR_FOUNDER_STATE_RESEARCH,Araştırmada,In research
-HR_FOUNDER_STATE_PITCH_PREP,Yatırım hazırlığında,Preparing the raise
 HR_FOUNDER_STATE_TRAINING,Eğitimde,In training
 HR_FOUNDER_STATE_IDLE,Boşta,Idle
 PER_CHARISMA,Karizma,Charisma
@@ -793,8 +792,6 @@ HUNT_SEC_PENDING,Bekleyen,Pending
 HUNT_LOCKED_SOON,Yakında,Soon
 HUNT_CONDITION,Koşul: {condition},Condition: {condition}
 HUNT_MEETING_SET,Toplantı ayarlandı.,Meeting is set.
-HUNT_PREP_RUNNING,Hazırlık sürüyor.,Prep in progress.
-HUNT_PREP_REASON,Hazırlık: {reason},Prep: {reason}
 HUNT_NO_OFFERS,Henüz teklif yok.,No offers yet.
 HUNT_ROAD_CLOSED,Series A için kapısı açık fon kalmadı. Bu yolda oturulacak masa yok.,No fund is left open for a Series A. There is no table left on this road.
 HUNT_EMPTY_SLOT,Boş teklif yeri,Empty offer slot
@@ -812,8 +809,6 @@ HUNT_WALK_CONFIRM_TITLE,Masadan kalkılsın mı?,Walk away from the table?
 HUNT_WALK_CONFIRM_BODY,Bu teklif yanar ve fon kapanır. Ret sayılmaz. Diğer teklifler açık kalır.,This offer burns and the fund closes. It does not count as a rejection. Your other offers stay open.
 HUNT_WALK_CONFIRM_OK,Kalk,Walk
 HUNT_MEETING_PENDING,Toplantı: {vc} · {when},Meeting: {vc} · {when}
-HUNT_PREP_PENDING,Hazırlık: {focus} · {when},Prep: {focus} · {when}
-HUNT_PREP_READY,hazır,ready
 HUNT_WEEKS,{n} hafta sonra,in {n} weeks
 HUNT_THIS_WEEK,bu hafta,this week
 HUNT_NEXT_WEEK,gelecek hafta,next week
@@ -833,9 +828,6 @@ HUNT_CB_CHURN,{weeks} içinde müşteri kaybı {target} altında (şu an {curren
 HUNT_CB_FIRST_ENGINEER,İlk mühendisi işe al,Hire the first engineer
 HUNT_CB_SCANDAL,Skandalı çöz,Resolve the scandal
 HUNT_CB_NONE,—,—
-HUNT_FOCUS_NUMBERS,Rakamlar,Numbers
-HUNT_FOCUS_STORY,Hikâye,Story
-HUNT_FOCUS_REHEARSAL,Prova,Rehearsal
 HUNT_FRANK_LINE,Av açık. Kapanan masa: {n}. Üçüncüde yol biter.,The hunt is on. Tables closed: {n}. The third one ends it.
 HUNT_REQUEST_AGAIN,Tekrar iste ({when}),Ask again ({when})
 HUNT_REQUEST_MEETING,Toplantı iste ({when}),Request a meeting ({when})
@@ -1261,13 +1253,8 @@ VC_WHY_WARM_INTRO,Frank'in tanıştırması,Frank's introduction
 VC_WHY_DOMAIN_MATCH,Sektör eşleşmesi,Sector match
 VC_WHY_CALLBACK,Kapı yeniden açık,The door reopened
 VC_WHY_MOVED,Randevuyu kaydırdın,You moved the meeting
-VC_PREP_BUSY,Zaten bir hazırlık sürüyor,A prep is already running
-VC_PREP_NEED_MEETING,Önce bu VC'yle toplantı iste,Ask this VC for a meeting first
-VC_PREP_TOO_SOON,Toplantıya {weeks} haftadan az kaldı,Fewer than {weeks} weeks left before the meeting
-VC_PREP_TOO_SOON_ONE,"Toplantı bu hafta, hazırlığa vakit kalmadı","The meeting is this week, too late to prep"
 VC_BLOCK_LATE,Mesainin kalanı bir fonla masaya oturmaya yetmez. Artık gelecek hafta.,"Not enough of the workday left to sit down with a fund. Next week, then."
 VC_CALLBACK_REOPENED,Kapı yeniden açıldı: {investor}. Tekrar iste.,{investor}'s door is open again. Ask again.
-VC_REHEARSED,PROVA EDİLDİ,REHEARSED
 VC_BEAT1_LABEL,Odayı oku · 1/4,Read the room · 1/4
 VC_B1_LINE,"""{investor}. Otur. Vaktim kısa — beni neden buraya çağırdığını göster.""","""{investor}. Sit. My time is short — show me why you called me here."""
 VC_B1_MONO,Odayı oku.,Read the room.

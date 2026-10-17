@@ -101,7 +101,6 @@ const FLAG_TYPES := {
 	# --- phase gate / endgame / VC ---
 	# How many times the founder has said "not yet"; the gate card's escalating body reads it.
 	"gate_declines": TYPE_INT,
-	"pitch_prep_active": TYPE_BOOL,
 	"pivot_offer_made": TYPE_BOOL,
 	"acquisition_offer_made": TYPE_BOOL,
 	"acquisition_offer_rejected": TYPE_BOOL,
@@ -241,7 +240,6 @@ var run_angel_equity_pct: int = 0
 var vc_states: Dictionary = {}         # vc_id -> {status, callback, pending_sheet, meeting_count, ...}
 var active_sheets: Array = []          # live TermSheet resources (max PitchConstants.MAX_SHEETS)
 var pending_meeting: Dictionary = {}   # {vc_id, day} — one at a time; empty = none
-var prep: Dictionary = {}              # {vc_id, focus, done} — one prep per scheduled meeting
 var run_pitches: int = 0               # completed Series A meetings (the seed room is not counted)
 var run_sheets_won: int = 0            # sheets granted
 var vc_meeting_cancel_day: int = -1    # the day a booked meeting was cancelled; no new booking that day
@@ -854,7 +852,6 @@ func initialize_run(payload: Dictionary) -> void:
 	vc_states.clear()
 	active_sheets.clear()
 	pending_meeting.clear()
-	prep.clear()
 	run_pitches = 0
 	run_sheets_won = 0
 	vc_meeting_cancel_day = -1
