@@ -31,6 +31,7 @@ const SETTING_PAUSE_UNFOCUSED := "pause_unfocused"
 ## names the hold.
 const HOLD_LABELS := {
 	"event": "GATE_ANSWER_FIRST",
+	"incident": "GATE_ANSWER_FIRST",
 	"milestone_paper": "CLOCK_HOLD_MILESTONE",
 	"product_release_note": "CLOCK_HOLD_RELEASE_NOTE",
 	"sprint_plan": "CLOCK_HOLD_SPRINT_PLAN",
@@ -413,6 +414,8 @@ func _dispatch_daily_tick() -> void:
 	SeedRoundSystem.daily_tick()
 	# 6 · Events: cash triggers see the week's net flow applied.
 	EventGate.daily_tick()
+	# Tonight's emergency, if the week's bugs and servers roll one; the night asks for it at its hour.
+	IncidentSystem.daily_tick()
 	# 7 · News feed composes the day's lines from settled sales and rival state.
 	NewsFeedSystem.daily_tick()
 	# 8 · VC clocks, BEFORE Endings so the cascade-defer inputs (active_sheets /
@@ -439,5 +442,7 @@ func _dispatch_hourly_tick(hour: int) -> void:
 	SalesSystem.hourly_tick(hour)
 	# What waited for the workday is delivered before the engine shows its next card.
 	MailClock.hourly_tick()
+	# An emergency the night rolled is asked for at the first full hour after it began.
+	IncidentSystem.hourly_tick(hour)
 	# Ambient events evaluate hourly so their allowed_hours windows are honest.
 	EventGate.hourly_tick(hour)

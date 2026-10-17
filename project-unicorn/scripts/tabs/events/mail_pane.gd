@@ -364,14 +364,19 @@ func _paint_option(k: int) -> void:
 	bar.theme_type_variation = &"OptionBar"
 	bar.custom_minimum_size.y = UiTokens.D_H_BTN_LG
 	holder.add_child(bar)
+	# The bar has no air above and below its content: chips that wrap onto several lines bring their own.
+	var inset := MarginContainer.new()
+	for side in ["top", "bottom"]:
+		inset.add_theme_constant_override("margin_" + side, UiTokens.SPACE_M)
+	bar.add_child(inset)
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	bar.add_child(line)
+	inset.add_child(line)
 	var label := UiFactory.make_label(c.label, &"OptionLabel")
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	line.add_child(label)
 	line.add_child(_chips(parts))
-	HRUiShared.set_mouse_ignore(line)
+	HRUiShared.set_mouse_ignore(inset)
 	if inert:
 		return
 	bar.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND

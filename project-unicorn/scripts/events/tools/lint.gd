@@ -362,7 +362,7 @@ const SYSTEM_VERBS := [
 	"advance_phase", "phase_gate_decline", "angel_accept", "open_term_table", "open_seed_table",
 	"decline_offer", "decline_buyout", "trigger_ending", "mentor_advisory", "goto_tab",
 	"unlock_content", "spend_budget", "set_game_flag", "start_arc", "advance_arc", "end_arc",
-	"abort_arc", "set_arc_var",
+	"abort_arc", "set_arc_var", "incident",
 ]
 
 ## O2: a chip whose CONSEQUENCE is the cost — the sprint carries the card over, the account is
@@ -517,13 +517,14 @@ static func _lint_v3_options(id: String, card: Dictionary, where: String) -> voi
 	for slot in slots:
 		if subject_types.has(String((slots[slot] as Dictionary).get("type", ""))):
 			subject_slots[slot] = slots[slot]
-	# One person's card: the founder alone, or a single named employee. Either way the team's
-	# hours and the team's morale are not theirs to spend.
-	var one_person: bool = String(card["category"]) == "founder" \
-		or _slots_of_type(slots, "employee").size() == 1
 	# A system card is the run speaking, so it owes the player no price. A note owes none either,
 	# and needs no clause here: its one option carries nothing, so it is O1's branch (C R5).
 	var system: bool = bool(card.get("system", false))
+	# One person's card: the founder alone, or a single named employee. Either way the team's
+	# hours and the team's morale are not theirs to spend. A system card names a sender or an account to
+	# speak with, not a subject it is about.
+	var one_person: bool = not system and (String(card["category"]) == "founder"
+		or _slots_of_type(slots, "employee").size() == 1)
 	var scope: String = String(card.get("version_scope", "demo"))
 
 	for o in options:
@@ -559,7 +560,7 @@ static func _lint_v3_options(id: String, card: Dictionary, where: String) -> voi
 				_v3(id, "O5", where, "option '%s' spends %s without requiring the module to be open"
 					% [opt_id, module])
 
-		if not subject_slots.is_empty() and _touched_slots(effects, subject_slots).is_empty():
+		if not system and not subject_slots.is_empty() and _touched_slots(effects, subject_slots).is_empty():
 			_v3(id, "O4", where, "option '%s' drops nothing on the subject the card is about" % opt_id)
 
 

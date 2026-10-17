@@ -1,10 +1,14 @@
 extends RefCounted
 
 # --sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:start=<hour>][:seeds=1][:seed=424242][:events=0|1][:rate=<r>]
-# [:lead=0|1][:gate=publish|more][:team=<n>][:weeks=<1|2>][:fill=0|1]: does the Product screen's sprint
-# plan come true? A founder builds note_tool for t ticks on each of the seeds seed, seed+1, …, the company working
-# h hours from start (the game's default start hour unless given); team=N adds N-1 mid-skilled employees in HIRES
-# order, weeks= picks the sprint length in Sprint 1's planning. Every sprint is planned and started here on the tick
+# [:lead=0|1][:gate=publish|more][:team=<n>][:weeks=<1|2>][:fill=0|1][:market=b2c|b2b][:incident=<kind>@<tick>]:
+# does the Product screen's sprint plan come true? A founder builds note_tool (market=b2b: the erp product, four
+# accounts signed the tick it goes live, two of a night-shift sector) for t ticks on each of the seeds seed,
+# seed+1, …, the company working h hours from start (the game's default start hour unless given); team=N adds N-1
+# mid-skilled employees in HIRES order (team=4: a developer, a designer and a tester), weeks= picks the sprint length
+# in Sprint 1's planning; incident=outage@8 makes tick 8's die an emergency (it needs a live product past its launch
+# weeks, so a run that lasts that long: fill=1; events=1: the card stops the night and is answered with the rest of
+# the desk). Every sprint is planned and started here on the tick
 # it opens, so the ledger measures the engine, not a player's delay: cards=N tops it up to N cards (the
 # carried ones stay, the open Core K1 candidates follow by effort, each through SprintSystem.add),
 # fill=1 adds every open card the way "+" takes them instead (SprintCatalog.open_cards, cards= is not read),
@@ -49,11 +53,11 @@ static var _sum: Dictionary = {}
 
 static func run(spec: String, payload: Dictionary) -> bool:
 	var o: Dictionary = {"start": HRConstants.START_HOUR_DEFAULT, "seeds": 1, "seed": 424242, "events": 0,
-		"lead": 0, "gate": "publish", "team": 1, "fill": 0}
+		"lead": 0, "gate": "publish", "team": 1, "fill": 0, "market": "b2c", "incident": ""}
 	for part in spec.split(":"):
 		var key: String = part.get_slice("=", 0)
-		if key == "gate":
-			o.gate = part.get_slice("=", 1)
+		if key in ["gate", "market", "incident"]:
+			o[key] = part.get_slice("=", 1)
 		else:
 			o[key] = part.get_slice("=", 1).to_float()
 	var events: bool = o.events == 1
@@ -69,9 +73,12 @@ static func run(spec: String, payload: Dictionary) -> bool:
 		# initialize_run alone would keep the previous seed's registries and event pipeline.
 		SaveManager.reset_all_owners()
 		GameState.initialize_run(payload.merged({"seed": seed_value}))
-		SprintSystem.choose_type("note_tool", "Notly")
+		var subtype: String = "erp" if o.market == "b2b" else "note_tool"
+		SprintSystem.choose_type(subtype, RunProbe.PRODUCT_NAMES[subtype])
 		for n in int(o.team) - 1:
 			_hire(n)
+		if o.incident != "":
+			IncidentSystem.force_on(String(o.incident).get_slice("@", 0), int(String(o.incident).get_slice("@", 1)))
 		WorkHoursSystem.set_company_start_hour(int(o.start))
 		WorkHoursSystem.set_company_hours(int(o.hours))
 		if o.has("weeks"):
@@ -90,6 +97,8 @@ static func run(spec: String, payload: Dictionary) -> bool:
 				GameState.advance_day()
 				SprintSystem.daily_tick()
 			_count_idle()
+			if o.market == "b2b" and ProductState.is_live() and CustomerRegistry.get_by_market("b2b").is_empty():
+				_sign_book()
 			going = _plan(seed_value, o, verdicts)
 		var mvp: int = GameState.get_flag("mvp_launch_day", -1)
 		days[mvp] = days.get(mvp, 0) + 1
@@ -181,6 +190,23 @@ static func _hire(n: int) -> void:
 	c.status = HRConstants.STATUS_ACTIVE
 	c.leave_week = -1
 	CharacterRegistry.add(c)
+
+
+## Four signed accounts, the biggest two of a night-shift sector: the book an emergency lands on (market=b2b).
+static func _sign_book() -> void:
+	for row in [["logistics", 60, 3200], ["manufacturing", 40, 2400], ["retail", 30, 1800], ["insurance", 20, 1400]]:
+		var c := Customer.new()
+		c.id = "co_probe_" + row[0]
+		c.company_name = c.id
+		c.industry = row[0]
+		c.market_type = "b2b"
+		c.seats = row[1]
+		c.mrr = row[2]
+		c.satisfaction = 72
+		c.tolerance = 40
+		c.acquired_on_day = GameState.day
+		c.update_health_from_satisfaction()
+		CustomerRegistry.add(c)
 
 
 ## The week the tick closed: team members on no card, by the engine's worked list.

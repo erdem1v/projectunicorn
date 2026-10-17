@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **196** |
-| Effect verbs (write) | **65** |
-| Cards in the catalogue | 98 |
+| Seams (read) | **202** |
+| Effect verbs (write) | **66** |
+| Cards in the catalogue | 99 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -101,6 +101,7 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 - `b2b_expand`
 - `b2b_retain_discount`
 - `marketing_push`
+- `incident`
 
 ### Terminal
 
@@ -300,6 +301,17 @@ slot of that type (§17.12).
 |---|---|---|---|---|
 | `office.current` | global | string | Office | WRAPPER; home / ishani / plaza / loft. Where the company works, not where a move is heading |
 | `office.moving` | global | bool | Office | WRAPPER; a move to the next office is under way |
+
+### `olay.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `olay.accounts` | global | int | Incident | active B2B accounts |
+| `olay.affected_users` | global | int | Incident | B2C: people who tried the app between the outage's start and the card's opening |
+| `olay.clock` | global | string | Incident | when the open emergency began, 02:10; a history row reads the latest emergency's |
+| `olay.night_accounts` | global | int | Incident | active B2B accounts of a night-shift sector |
+| `olay.payers` | global | int | Incident | people a night fix costs morale (SprintSystem.payers); 0 locks the option |
+| `olay.service_up` | global | bool | Incident | no emergency is open, or the fix it was answered with is done |
 
 ### `phase.`
 
@@ -503,12 +515,12 @@ the catalogue already uses, and the gap each pays:
 | `frank_mentor` | 6 | 10 |
 | `funding_paperwork` | 6 | 3 |
 | `hr_departure` | 6 | 1 |
+| `incident` | 6 | 2 |
 | `investor_favor` | 6 | 2 |
 | `investor_pressure` | 6 | 1 |
 | `leak_story` | 6 | 2 |
 | `phase_gate` | 6 | 2 |
 | `product_floor` | 4 | 2 |
-| `product_ops` | 6 | 1 |
 | `product_progress` | 6 | 1 |
 | `product_security` | 6 | 1 |
 | `product_support` | 6 | 1 |
@@ -590,7 +602,7 @@ not have opened: never in a demo card, and past the demo only in an option whose
 
 - `marketing_push` — needs `build.module_unlocked.marketing`
 
-### Reserved (18) — a `system` card only
+### Reserved (19) — a `system` card only
 
 Each moves the run itself — a phase, a table, an arc, an ending — so a story card
 reaching for one would be deciding the run instead of colouring it.
@@ -613,6 +625,7 @@ reaching for one would be deciding the run instead of colouring it.
 - `end_arc`
 - `abort_arc`
 - `set_arc_var`
+- `incident`
 
 ### Not writable (14) — no working arm or no chip
 

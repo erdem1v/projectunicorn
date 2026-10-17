@@ -50,6 +50,7 @@ const ONE_TIME_LABELS := {
 	"rnd": "TAB_RND",
 	# An event card's add_cash names one of these; EvLint refuses any other.
 	"incident": "FIN_ONETIME_INCIDENT",
+	"outage_credit": "FIN_ONETIME_OUTAGE_CREDIT",
 	"audit": "FIN_ONETIME_AUDIT",
 	"retention": "FIN_ONETIME_RETENTION",
 	"contractor": "FIN_ONETIME_CONTRACTOR",

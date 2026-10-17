@@ -1,0 +1,172 @@
+{
+  "id": "product.incident_outage_b2c",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "interrupt",
+  "sender": "employee",
+  "sender_desk": "MAIL_SENDER_SERVER_ALERT",
+  "system": true,
+  "tags": [
+    "critical",
+    "urgent",
+    "incident"
+  ],
+  "schema": 3,
+  "family": "incident",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": false,
+      "select": "asked"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 0
+  },
+  "options": [
+    {
+      "id": "night_fix",
+      "outcome_id": "night_fix",
+      "requires": {
+        "seam": "olay.payers",
+        "op": ">=",
+        "value": 1
+      },
+      "effects": [
+        {
+          "verb": "morale_crew",
+          "crew": "incident_crew",
+          "amount": -10
+        },
+        {
+          "verb": "incident",
+          "act": "night"
+        }
+      ]
+    },
+    {
+      "id": "founder_fix",
+      "outcome_id": "founder_fix",
+      "requires": {
+        "seam": "hr.headcount",
+        "op": "<=",
+        "value": 2
+      },
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -15,
+          "weeks": 1
+        },
+        {
+          "verb": "incident",
+          "act": "founder"
+        }
+      ]
+    },
+    {
+      "id": "morning_free_month",
+      "outcome_id": "morning_free_month",
+      "effects": [
+        {
+          "verb": "incident",
+          "act": "morning_free_month"
+        }
+      ]
+    },
+    {
+      "id": "morning",
+      "outcome_id": "morning",
+      "effects": [
+        {
+          "verb": "incident",
+          "act": "morning"
+        }
+      ]
+    },
+    {
+      "id": "defer",
+      "outcome_id": "defer",
+      "requires": {
+        "seam": "olay.service_up",
+        "op": "==",
+        "value": true
+      },
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Uygulama açılmıyor",
+      "body": "Uygulama {seam:olay.clock} sularında çöktü, hâlâ açılmıyor. O saatten beri {seam:olay.affected_users} kişi girmeyi denedi.",
+      "options": {
+        "night_fix": "Ekip şimdi düzeltsin",
+        "founder_fix": "Kendin düzelt",
+        "morning_free_month": "Sabah düzelt, bir ay ücretsiz ver",
+        "morning": "Sabah düzelt",
+        "defer": "Sonraki sprinte bırak"
+      },
+      "locked_reasons": {
+        "night_fix": "Ekipte yazılım ya da test yapan kimse yok.",
+        "founder_fix": "Ekip iki kişiyi geçti.",
+        "defer": "Uygulama şu anda kimseye açılmıyor."
+      },
+      "expire_note": "Karar verilmedi, uygulama sabah düzeltildi."
+    },
+    "en": {
+      "title": "The app won't open",
+      "body": "The app went down at around {seam:olay.clock} and still won't open. {seam:olay.affected_users} people have tried to get in since then.",
+      "options": {
+        "night_fix": "Have the team fix it now",
+        "founder_fix": "Fix it yourself",
+        "morning_free_month": "Fix it in the morning, give a free month",
+        "morning": "Fix it in the morning",
+        "defer": "Leave it for the next sprint"
+      },
+      "locked_reasons": {
+        "night_fix": "Nobody on the team builds or tests.",
+        "founder_fix": "The team has grown past two people.",
+        "defer": "The app isn't opening for anyone right now."
+      },
+      "expire_note": "No decision came, so the app was fixed in the morning."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "incident",
+        "act": "morning"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

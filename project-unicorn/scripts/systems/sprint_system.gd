@@ -392,6 +392,12 @@ static func pick_goal(area_id: String) -> void:
 	_changed()
 
 
+## Bu sprint bir olayla kesildi (`kind`: şimdilik "incident"): kayıt sprinti ve türü tutar, son kesinti kalır; eski
+## kayıtta alan yoktur.
+static func record_interrupt(kind: String) -> void:
+	_p()["interrupt"] = {"sprint": sprint_number(), "kind": kind}
+
+
 # --- Okumalar --------------------------------------------------------------------------
 
 static func is_typed() -> bool:

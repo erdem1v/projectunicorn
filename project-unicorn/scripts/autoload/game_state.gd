@@ -320,6 +320,10 @@ var desk_arrivals: Dictionary = {}
 # Standing trust costs, one per `trust_delta per_sprint` an option took (sole writer B2BSalesSystem):
 # {accounts: [customer id], amount: int, until: {line_cleared: line} | {step_live: step}}.
 var trust_drains: Array = []
+# The night's emergencies (sole writer IncidentSystem): {last_day: tick of the last one, pending: the one the
+# 00:00 die rolled and the night has yet to ask for, open: the one whose card is out or was last, forced: the debug
+# roll}. Empty until the first roll.
+var incident: Dictionary = {}
 
 
 func _ready() -> void:
@@ -892,6 +896,7 @@ func initialize_run(payload: Dictionary) -> void:
 	mail_outbox.clear()
 	desk_arrivals.clear()
 	trust_drains.clear()
+	incident.clear()
 
 	flags.clear()
 	# Origin flags, after the clear. RESERVED: nothing consumes them yet

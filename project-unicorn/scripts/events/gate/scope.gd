@@ -28,6 +28,9 @@ const TYPE_INVESTOR := "investor"
 
 const TYPES := [TYPE_EMPLOYEE, TYPE_FOUNDER, TYPE_CUSTOMER, TYPE_PROSPECT, TYPE_RIVAL, TYPE_INVESTOR]
 
+## A slot with this `select` binds only the entity the requester names, and stays empty (if optional) without one.
+const ASKED := "asked"
+
 
 # --- Resolution ------------------------------------------------------------
 
@@ -77,7 +80,8 @@ static func resolve(slots: Dictionary, given: Dictionary = {}) -> Dictionary:
 				for candidate in _ids(type_id):
 					if not _passes_where(spec, slot_name, candidate):
 						hidden[candidate] = slot_name
-			chosen = _select(type_id, String(spec.get("select", "")), hidden, context)
+			var mode: String = String(spec.get("select", ""))
+			chosen = "" if mode == ASKED else _select(type_id, mode, hidden, context)
 			if chosen == "":
 				if bool(spec.get("required", true)):
 					return {"ok": false, "context": context,

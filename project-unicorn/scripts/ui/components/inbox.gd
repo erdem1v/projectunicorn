@@ -374,6 +374,9 @@ static func card_sender(card: Dictionary, ctx: Dictionary, names: Dictionary) ->
 		"investor":
 			return investor(id)
 		"employee":
+			# A card that names no one to write (an emergency with nobody on Build) comes from a desk of its own.
+			if id == "" and card.has("sender_desk"):
+				return _desk(TranslationServer.translate(String(card.sender_desk)), GameState.company_name)
 			var e: Character = CharacterRegistry.get_character(id)
 			return employee(e) if e != null else gone_person(kept)
 		"contact":
@@ -487,13 +490,7 @@ static func first_line(body: String) -> String:
 static func date_text(day: int, at := -1) -> String:
 	if at < 0:
 		return Fmt.date_line(GameState.get_date_dict(day))
-	return "%s · %s" % [Fmt.date_line(GameState.get_date_dict(at / MailClock.DAY_MINUTES)), clock_text(at)]
-
-
-## The time of day of an absolute minute, "09:00".
-static func clock_text(at: int) -> String:
-	var minute: int = at % MailClock.DAY_MINUTES
-	return "%02d:%02d" % [minute / 60, minute % 60]
+	return "%s · %s" % [Fmt.date_line(GameState.get_date_dict(at / MailClock.DAY_MINUTES)), MailClock.clock_text(at)]
 
 
 static func signed_money(value: int) -> String:

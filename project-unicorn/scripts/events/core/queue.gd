@@ -3,10 +3,11 @@ extends RefCounted
 
 # ADMITTED, NOT YET SHOWN (GDD §2, §11.2). One entry:
 #
-#     {event_id, context, admitted_day, class, arc_id, at, urgent}
+#     {event_id, context, admitted_day, class, arc_id, at, urgent, night}
 #
 # `at` is when the player may see it (MailClock: -1 = always, `urgent` = it arrived when it was made). An
-# entry waits in the queue until then; _shown is the one place that says which entries the player may see.
+# entry waits in the queue until then, and outside the workday until the workday, unless it is a `night` entry (an
+# emergency, or the player's own ask); _shown is the one place that says which entries the player may see.
 #
 # IDS AND SCALARS ONLY — never a card object and never rendered text. Every card is on disk,
 # so a language change mid-run is safe (§3.2) and a content edit reaches queued cards.
@@ -40,7 +41,7 @@ static var _absorbed: Dictionary = {}
 ## Returns false when this instance is already queued or showing. The rejection is COUNTED, so
 ## a system re-offering the same decision every tick shows up in the run log.
 static func admit(event_id: String, context: Dictionary, card_class: String,
-		arc_id: String = "", at: int = -1, urgent: bool = false) -> bool:
+		arc_id: String = "", at: int = -1, urgent: bool = false, night: bool = false) -> bool:
 	if holds(EvLatches.key_of(event_id, context)):
 		_absorbed[event_id] = int(_absorbed.get(event_id, 0)) + 1
 		return false
@@ -52,6 +53,7 @@ static func admit(event_id: String, context: Dictionary, card_class: String,
 		"arc_id": arc_id,
 		"at": at,
 		"urgent": urgent,
+		"night": night,
 	})
 	return true
 
@@ -76,10 +78,12 @@ static func next() -> Dictionary:
 	return best
 
 
-## An instance's place on §11.2's ladder, 0 = most urgent. EvTempo charges the day's admissions
-## by the same ladder, with their declared class.
+## An instance's place on §11.2's ladder, 0 = most urgent; an emergency (tag `urgent`) stands before it, at -1.
+## EvTempo charges the day's admissions by the same ladder, with their declared class.
 static func rank(event_id: String, key: String, card_class: String) -> int:
 	var tags: Array = EvCatalog.card(event_id).get("tags", [])
+	if tags.has("urgent"):
+		return -1
 	if tags.has("terminal_warning"):
 		return 0
 	if EvPapers.is_expiring(key):
@@ -152,9 +156,13 @@ static func holds(key: String) -> bool:
 	return _index_of(key) >= 0 or EvLatches.key_of(_active_id, _active_context) == key
 
 
-## The entries the player may see now: an entry shows from its arrival time.
+## The entries the player may see now: an entry shows from its arrival time, and outside the workday only a `night`
+## entry shows (an entry with no time is always shown).
 static func _shown() -> Array:
-	return _entries.filter(func(e: Dictionary) -> bool: return MailClock.delivered(int(e.get("at", -1))))
+	var open: bool = MailClock.in_window()
+	return _entries.filter(func(e: Dictionary) -> bool:
+		var at: int = int(e.get("at", -1))
+		return MailClock.delivered(at) and (open or at < 0 or bool(e.get("night", false))))
 
 
 static func _index_of(key: String) -> int:

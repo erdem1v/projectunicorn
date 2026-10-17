@@ -18,7 +18,9 @@ extends RefCounted
 #             TimeManager.advance_hours batch, answered before the next, and the night is one
 #             skip_night batch (the rollover and the daily tick inside it). Deterministic, instant.
 #   1|2|3|4 — the REAL clock at that speed index (TimeManager._advance_real, frame pacing and
-#             all). The only mode that can catch a real-time-only defect.
+#             all). The only mode that can catch a real-time-only defect. It rolls no night
+#             emergency: one holds the clock until its card is answered, and this mode answers
+#             at the hour boundary the hold would never reach.
 # In both the founder sits the sales meetings when the week opens (the first 08:00, then every
 # night_skipped) and takes the desk decisions at every visible hour, as a player at the keyboard.
 #
@@ -56,12 +58,14 @@ extends RefCounted
 #   PROBE MONTH_BURN day=<d> n=<n> ticks=<n> <burn id>=<n>... one_time=<n>   (full_run*: beside each PROBE MONTH)
 #               The burn ids are FinanceSystem.BURN_IDS, in its order.
 #   PROBE SPRINT day=<d> n=<n> label=<v1.x|-> shipped=<card ids> carried=<n> velocity=<done>/<capacity>
-#   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it)
+#   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it; faulty = the
+#                                           lines the release's faulty cards put a bug on)
 #   PROBE FIX   day=<d> sprint=<n> weeks=<n> fix_load=<f> capacity=<f> share=<f> cards=<fix card ids|-> bug_sprint=<b>
 #                                           (every sprint start: the fix cards' remaining points over the plan's
 #                                           capacity; a bug sprint spends more than half the capacity on fixes)
 #   PROBE BUGS  day=<d> new=<n> open=<n> pre=<n>   (every week a product is live: bugs that arrived, open bugs now,
 #                                           and open bugs just before this week's sprint close)
+#   PROBE LINES day=<d> <line>=<n>,...      (beside PROBE BUGS: the open bugs line by line, - with none)
 #   PROBE MARKET day=<d> total=<$M> leader=<id> leader_value=<$M> listed=<n> player=<valuation $M>
 #               (the Piyasa list at the week's open, every MARKET_LOG_WEEKS weeks from week 1;
 #               a pure read of MarketCatalog, so the line is byte-identical for one seed)
@@ -315,10 +319,11 @@ static func _on_build_phase(new_phase: String) -> void:
 	# them before it announced the release. open_bugs is the product's bug store after the close.
 	if new_phase != "shipped":
 		return
-	print("PROBE SHIP day=%d version=%d label=%s stability=%.1f innovation=%.1f experience=%.1f open_bugs=%d" % [
+	print("PROBE SHIP day=%d version=%d label=%s stability=%.1f innovation=%.1f experience=%.1f open_bugs=%d faulty=%d" % [
 		GameState.day, ProductState.version(), SprintSystem.version_label(ProductState.version()),
 		float(GameState.get_flag("mvp_stability", 0.0)), float(GameState.get_flag("mvp_innovation", 0.0)),
-		float(GameState.get_flag("mvp_experience", 0.0)), ProductState.open_bugs()])
+		float(GameState.get_flag("mvp_experience", 0.0)), ProductState.open_bugs(),
+		(GameState.product.release.get("faulty", []) as Array).size()])
 
 
 ## Every sprint start: the fix cards in the plan against the capacity it was planned for (stored when the sprint
@@ -597,6 +602,11 @@ static func _log_bugs() -> void:
 	var open: int = ProductState.open_bugs()
 	print("PROBE BUGS day=%d new=%d open=%d pre=%d" % [GameState.day, open - _bugs_open + _bugs_cleared, open,
 		open - ProductState.open_bugs_delta()])
+	var by_line: Dictionary = ProductState.open_bugs_by_line()
+	var lines: Array = by_line.keys()
+	lines.sort()
+	print("PROBE LINES day=%d %s" % [GameState.day, ",".join(lines.map(func(l: String) -> String:
+		return "%s=%d" % [l, by_line[l]])) if not lines.is_empty() else "-"])
 	_bugs_open = open
 	_bugs_cleared = 0
 
@@ -750,6 +760,9 @@ static func _run_sim() -> void:
 			break
 		if TimeManager.is_night() or GameState.current_hour == TimeModel.HOURS_PER_DAY - 1:
 			TimeManager.skip_night()
+			# An emergency stops the night at its hour and waits for the founder's answer.
+			if EventGate.active_id() != "":
+				_answer()
 		else:
 			TimeManager.advance_hours(1)
 			_answer()
@@ -794,6 +807,8 @@ static func _run_realtime(speed_idx: int) -> void:
 		print("PROBE ERROR bad speed index %d" % speed_idx)
 		Engine.get_main_loop().quit()
 		return
+	# A night emergency holds the clock until it is answered, which stops the hour boundary this mode answers at.
+	IncidentSystem.rolls = false
 	# Nothing pauses the clock in probe mode (main.gd's modal pause is shell wiring that
 	# is not mounted), so the drain has to ride the hour boundary or a stuck active event
 	# would silently block every later fire while the weeks kept rolling past it. The desk rides

@@ -94,7 +94,14 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   `MessageSystem.post`, `MailClock.hourly_tick` teslim eder); kart kendi deposunda (`EvQueue`, `EvPapers`,
   `EvHistory`) `at` ile bekler ve onu GÖSTEREN okuyucu `MailClock.delivered` sorar, VARLIĞINI soran (`EvQueue.has/
   holds/ids`, `EvPapers.has/keys_of`, `EventGate.instances_of/on_desk`) sormaz. Hatırlatıcılar durumdan türediği
-  için geliş saatleri `GameState.desk_arrivals`'tadır. Kuyruğun görünürlük süzgeci tek yerdedir (`EvQueue._shown`).
+  için geliş saatleri `GameState.desk_arrivals`'tadır. Kuyruğun görünürlük süzgeci tek yerdedir (`EvQueue._shown`) ve
+  gece kapısı da oradadır: mesai penceresi dışında yalnız acil durum kartı (`urgent` etiketi) açılır; kepenk kartı ve
+  kâğıdın son uyarısı da mesai başına kadar bekler.
+- **Acil durum.** Gecenin acil durumu bir sistemin zarıdır (`IncidentSystem`, durum `GameState.incident`): 00:00'ın günlük
+  diliminde zar yalnız karar verir, kart başlangıçtan sonraki ilk tam saatte istenir ve `TimeManager.hold_clock("incident")`
+  toplu gece adımını o saatte durdurur; karar verilince tutuş kalkar ve gece kaldığı yerden sürer. Olay reddedilirse (kart kapısı)
+  başlamamış sayılır: aralık sayacı, bedel ve tutuş ilerlemez. Bedel olaydan türer (`IncidentSystem.plan`): çip, geçmiş satırı
+  ve uygulama aynı sayıyı okur. Sayılar `data/product/sprint.json` `incident` bloğunda [WORKING].
 - Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber
   şeridine 10. yuvada tek satır düşer; modal açılmaz. Dönem özeti oyuncunun seçtiği sıklıkta
   gelen kutusuna mesaj olarak gelir (`summary_frequency`: haftalık, aylık, çeyreklik ya da yıllık; varsayılan
@@ -105,7 +112,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   toplam MRR yalnız `SalesSystem.reflect_mrr()`; kasa, burn, marka, itibar → `GameState.set_*`; faz →
   `GameState.advance_phase()` (`set_phase` yalnız kayıt ve debug içindir); karakter → `CharacterRegistry.*`; ürün →
   `SprintSystem.*` (`GameState.product`'ın yazarı; köprüsü `SprintBridges` yalnız `requests`,
-  `rival_hits`'i yazar) ve `ProductState.*` (açık hata deposunun tek yazarları `add_bugs` ve `clear_line_bugs`); tek seferlik gider → `FinanceSystem.apply_one_time_cost`. `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
+  `rival_hits`'i yazar) ve `ProductState.*` (açık hata deposunun tek yazarları `add_bugs` ve `clear_line_bugs`); tek seferlik gider → `FinanceSystem.apply_one_time_cost`; gecenin acil durumu → `IncidentSystem` (`GameState.incident`'ın yazarı). `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
   kapı `set_game_flag` beyaz listesi); motorun kendi hafızası `EvFlags`'tadır.
 - Olay motoru autoload değil; tek girişi statik `EventGate.request(event_id: String, context: Dictionary = {})`.
   Sistem kartın adını verir, kartı kurmaz. Kartlar `data/events/cards/<kategori>/` altında JSON'dur ve
@@ -209,7 +216,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
-  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team`, `weeks`, `fill`; anlamları HARITA Ürün'de) headless
+  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team`, `weeks`, `fill`, `market`, `incident`; anlamları HARITA Ürün'de) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
   `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`; MVP tahmini `mvp_eta`
   `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar.
@@ -220,7 +227,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   saat adımı, gece, sonraki kare ve ilk saat karelerinin süresini, TopBar'ın gece başına yenilemesini ve otomatik
   kaydın karesini `TICK` satırlarında basar. `auto_*` yazar: ayrı `APPDATA` ile koşulur (`TICK START udir=`); kayıt
   taşıyan kullanıcı dizininde çalışmaz. Üst barın saat hâlleri:
-  `--clock-shot=<running|paused|held|released|gate|focus_out|focus_out_off>` (`CLOCKSHOT` satırı: birincil pencere,
+  `--clock-shot=<running|paused|held|released|gate|incident|focus_out|focus_out_off>` (`CLOCKSHOT` satırı: birincil pencere,
   sprint kipi, tutuşlar, hız; odak kollarında önce ve sonraki hız; dar bar `paused` ve `--shot-scale=1.25`).
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,

@@ -46,6 +46,10 @@ const FIXED_CHIPS := {
 ## How many names a crew chip lists before it counts the rest.
 const NAMES_SHOWN := 4   # [WORKING]
 
+## The chip of a group of accounts that took a trust hit together; one account reads by its name.
+const TRUST_GROUP_KEYS := {"all": "EFFECT_TRUST_ACCOUNTS", "night": "EFFECT_TRUST_NIGHT_ACCOUNTS",
+	"other": "EFFECT_TRUST_OTHER_ACCOUNTS"}
+
 ## The polarity's glyph (A2's icon names); a neutral part has none.
 const GLYPHS := {"gain": "up", "cost": "cost", "danger": "warn", "neutral": ""}
 
@@ -79,6 +83,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			var crew: Array = item.get("names", []) if is_delta else EvEffects.crew_names(EvEffects.crew_of(item, ctx))
 			return [_figure("EFFECT_NIGHT_CREW", _num(d), _signed(d), {"names": _name_list(crew)})]
 		"trust_delta": return _trust_parts(item if is_delta else EvEffects.trust_plan(item, ctx))
+		"incident": return _incident_parts(item if is_delta else IncidentSystem.plan(String(item.get("act", ""))))
 		"sprint_card_effort":
 			var effort: int = d if is_delta else SprintSystem.effort_change(d)
 			return [_figure("EFFECT_SPRINT_EFFORT", _num(effort), _signed(-effort))]
@@ -232,12 +237,40 @@ static func _trust_parts(plan: Dictionary) -> Array:
 	if delta != 0:
 		var accounts: Array = plan.accounts if plan.get("accounts") is Array else []
 		var top: Dictionary = accounts[0] if not accounts.is_empty() else {}
-		var key: String = "EFFECT_TRUST_ACCOUNT" if accounts.size() < 2 else "EFFECT_TRUST_ACCOUNTS"
-		parts.append(_part(_t(key).format({"n": accounts.size(), "v": _num(delta), "customer": top.get("name", ""),
-			"from": int(top.get("from", 0)), "to": int(top.get("to", 0))}), "", _signed(delta)))
+		parts.append(_trust_part("all", accounts.size(), delta, top))
 	var per_sprint: int = int(plan.get("per_sprint", 0))
 	if per_sprint != 0:
 		parts.append(_part(_t("EFFECT_TRUST_PER_SPRINT").format({"v": _num(per_sprint)}), "", _signed(per_sprint)))
+	return parts
+
+
+## A group of `n` accounts that took `delta` together, by its largest account's name and satisfaction now and a tick
+## on; a group of one reads as that account.
+static func _trust_part(group: String, n: int, delta: int, top: Dictionary) -> Dictionary:
+	var key: String = TRUST_GROUP_KEYS[group] if n > 1 else "EFFECT_TRUST_ACCOUNT"
+	return _part(_t(key).format({"n": n, "v": _num(delta), "customer": top.get("name", ""),
+		"from": int(top.get("from", 0)), "to": int(top.get("to", 0))}), "", _signed(delta))
+
+
+## An emergency's answer (IncidentSystem.plan): what is paid, what the accounts keep, when the service is back and what
+## the audience loses. An effect that carries no figures gives no parts.
+static func _incident_parts(plan: Dictionary) -> Array:
+	var parts: Array = []
+	if plan.has("credit"):
+		var credit: Dictionary = plan.credit
+		parts.append(_figure(Fmt.count_key("EFFECT_OUTAGE_CREDIT", int(credit.n)), _money(-int(credit.amount)), "cost",
+			{"n": credit.n, "pct": credit.pct}))
+	if plan.has("free"):
+		var free: Dictionary = plan.free
+		parts.append(_figure("EFFECT_FREE_MONTH", _money(-int(free.amount)), "cost", {"n": free.n, "paying": free.paying}))
+	for row in plan.get("trust", []):
+		parts.append(_trust_part(String(row.group), int(row.n), int(row.delta), row))
+	if plan.has("back"):
+		var key: String = "EFFECT_SERVICE_BACK" if plan.market == "b2b" else "EFFECT_APP_BACK"
+		parts.append(_part(_t(key).format({"clock": MailClock.clock_text(int(plan.back))}), "", "neutral"))
+	var audience: int = int(plan.get("audience", 0))
+	if audience != 0:
+		parts.append(_figure("EFFECT_AUDIENCE", _num(audience), _signed(audience)))
 	return parts
 
 

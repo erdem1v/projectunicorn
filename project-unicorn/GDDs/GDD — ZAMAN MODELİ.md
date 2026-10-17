@@ -366,7 +366,8 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 | `founder.side_contract` | kâğıt | 1 | süresi dolmak bedelsiz rettir |
 | `founder.meetup_talk`, `domain_name`, `friends_test`; `customer.security_review`, `b2c_refunds`; `world.trade_fair`, `app_placement`, `b2c_creator_feature` | kâğıt | 2 | |
 | `world.analyst_guide`, `newsletter_slot` | kâğıt, kritik | 2 | faz 3'ün ilk iki haftası |
-| `product.outage`, `b2c_floor_signal`, `b2c_floor_churn`; `rival.funding_round`, `price_cut`; `team.outside_offer` | kesinti | 1 | o haftanın olayı |
+| `b2c_floor_signal`, `b2c_floor_churn`; `rival.funding_round`, `price_cut`; `team.outside_offer` | kesinti | 1 | o haftanın olayı |
+| `product.incident_outage_b2b`, `incident_outage_b2c` | kesinti, kritik | 1 | gecenin acil durumu; cevaba kadar saati tutar, süre yalnız lint için taşınır (§4.10 giriş) |
 | `founder.savings_note`, `unseen_build`, `company_of_one`; `product.working_parts`; `team.first_weeks`, `demo_day` | kesinti, sessiz | 1 | taban kartı (§4.8 `FLOOR_QUIET_*`) |
 
 `product.design_round_intro`, `first_ship` ve `version_ship` `data/events/cards/unwired/`'dadır; deste onları

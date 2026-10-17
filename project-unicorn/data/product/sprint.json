@@ -38,6 +38,17 @@
   "request": {"deadline_weeks": 8, "first_after_weeks": 2, "before_renewal_weeks": 12, "contract_weeks": 52},
   "pm": {"horizon": 3, "goal_weight": 1.5, "low_skill_cards": 0.8, "goal_squares": 10, "goal_mark": 5},
   "decision": {"rate": 0.35, "cards": ["product.sprint_two_paths", "product.sprint_late", "product.sprint_contractor", "product.sprint_hardcoded_colors", "product.sprint_colors_again", "product.sprint_unasked_rewrite"]},
+  "incident": {
+    "base": 0.1, "tier": {"local": 1.0, "cloud": 0.5, "enterprise": 0.25}, "bug_cap": 12, "bug_div": 8, "p_max": 0.3,
+    "min_gap": 4, "launch_quiet": 3,
+    "outage": {
+      "start": [30, 270], "start_step": 10, "min_audience": 1000,
+      "fix_hours": 3, "crew_base": 0.75, "crew_per_star": 0.125, "founder_slower": 1.5, "fix_step": 10,
+      "night_sectors": ["logistics", "manufacturing", "health"], "day_start": 510,
+      "credit": [[0, 10], [7, 15], [12, 25]], "trust_per_hour": 0.6, "trust_cap": 8, "credit_forgives": 0.85,
+      "try_share_hour": 0.015, "loss_per_hour": 0.003, "loss_cap": 0.04, "free_month_loss": 0.5
+    }
+  },
   "paid_plan": {"effort": 3, "tiers": 1},
   "impact": {"step": 1.0, "level": 2.0, "rival_gap": 1.0, "request": 2.0, "mvp": 3.0, "bug": 0.5, "alert": 2.0, "research": 0.0},
   "content": {"press_core": 2, "press_area": 2, "rival_news": 2},

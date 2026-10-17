@@ -2613,3 +2613,33 @@ kişiye, `morale_all` ile bütün çalışanlara yazılır.
 
 *Neden.* Faz B görevi (Karar 5, 6 ve 8): bedel olaydan türer, "ertelemeyi alışkanlık yapan kaybeder" kalıcı bir izle
 mümkündür (görünen memnuniyet bir tikte silinir) ve yükü ekibin kimin üstüne düşeceği kişi kişi okunur.
+
+### §27.29 · Faz B3: gecenin acil durumları, gece kapısı, ikinci tutuş
+
+*Belge ne diyordu.* §11.2: karar sırası terminal uyarı, süresi dolan kâğıt, `critical`, sonra sınıf; §11.3: saati karar kapısı
+tutar (kabuk, kart gösterilince). Kesinti tek kartın işiydi (`product.outage`: sunucu aşınca gelir, üç sabit şık, sabit $6.000
+telafi), olasılığı havuzun zarıydı ve gece hiçbir kuralı yoktu.
+
+*Ne yapıldı.* Gece kesintisi bir sistemin zarıdır; sistem kartı adıyla ister, gece yalnız o açılır.
+- `IncidentSystem` (Ürün, HARITA): 00:00'ın günlük diliminde zar yalnız karar verir (olay var mı, gecenin hangi dakikasında
+  başladı), kart başlangıçtan sonraki ilk tam saatin saatlik diliminde `EventGate.request` ile istenir. İstek reddedilirse olay
+  başlamamıştır. Kabul edilirse `TimeManager.hold_clock("incident")` toplu gece adımını o saatte durdurur ve `clock_batch_ended`
+  kartı açar (kartın damgası açılış saatidir); kabuğun kendi `event` tutuşu ayrıdır, ikisi de cevapta kalkar. Tutuş
+  `event_resolved`'da, kart gösterilmeden düşerse batch sonunda bırakılır; başsız koşuda kabuk olmadığı için tutuşu yalnız
+  bu sistem taşır ve cevaplamayan harness saati sonsuza dek durdurur (bu yüzden `IncidentSystem.rolls`).
+- Gece kapısı: `EvQueue._shown` mesai penceresi dışında yalnız `night` girdisini görünür sayar (girdi alanı, `_admit` yazar:
+  `urgent` etiketli kart ya da `immediate` istek; `force_fire` de); saatsiz girdi her zaman görünür. Kepenk kartı ve kâğıdın
+  son uyarısı da mesai başına kadar bekler: "gece yalnız acil durum kartı açılır" kuralı onları da kapsar (B1'in
+  "acil sayılır, 00:00'da kalır" satırı yalnız geliş saatini söylüyordu); sahibin onayı bekliyor. `EvQueue.rank`
+  `urgent` etiketli kartı -1'e koyar, terminal uyarının (0) ve süresi dolan kâğıdın (1) önüne.
+- `incident {act}` (ekonomik, sistem kartı): servisin açılacağı saat, hesapların kalıcı izi ya da kredisi, kitlenin kaybı ya da
+  ücretsiz ay `IncidentSystem.plan(act)`'ten hesaplanır ve uygulanır; çip (`EvChips._incident_parts`), geçmiş satırı ve uygulama
+  tek sözlüğü okur.
+- `select: "asked"` (`EvScope`): slot yalnız isteyenin verdiği varlığa bağlanır; isteğe bağlı slot verilmezse boş kalır.
+  Kartın `sender_desk` alanı çalışan slotu boşken gönderen adını (`MAIL_SENDER_SERVER_ALERT`) söyler.
+- Lint: `system` kart O3 ve O4'ten muaftır; konuşan çalışan ve hesap kartın konusu değildir.
+- `product.outage` ve `EV_PRODUCT_OUTAGE_*` kalktı; `product.incident_outage_b2b` ve `_b2c` geldi. Seam'ler `olay.*`.
+- Vakalar `incident_gap_and_spread`, `incident_night_hold_resumes`, `incident_scale`, `incident_save_roundtrip`.
+
+*Neden.* Faz B görevi (Acil durumlar ve Karar 21): acil durum seyrek, sürpriz ve gerçek gelir, her seçenek kime neye mal olacağını sayıyla
+söyler ve gece yalnız acil durum açılır.

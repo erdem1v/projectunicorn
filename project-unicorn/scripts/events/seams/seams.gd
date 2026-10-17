@@ -46,6 +46,7 @@ static func ensure_installed() -> void:
 	EvSeamsSales.install()
 	EvSeamsWorld.install()
 	EvSeamsPorted.install()
+	EvSeamsIncident.install()
 
 
 # --- Reading ---------------------------------------------------------------

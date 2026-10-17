@@ -504,7 +504,9 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String, im
 		_unannounced.append({"event_id": event_id, "context": verdict.context, "at": at, "row": row})
 	elif verdict.card_class == "paper":
 		EvPapers.place(event_id, verdict.context, _expiry_weeks(card), arc_id, at)
-	elif not EvQueue.admit(event_id, verdict.context, verdict.card_class, arc_id, at, _is_urgent(card)):
+	# An emergency (tag `urgent`) and the player's own ask show outside the workday too; an ending's warning waits.
+	elif not EvQueue.admit(event_id, verdict.context, verdict.card_class, arc_id, at, _is_urgent(card),
+			immediate or (card["tags"] as Array).has("urgent")):
 		return false
 
 	# The latch is spent AT ADMISSION, so a card waiting in the queue or on the desk is not
@@ -738,7 +740,7 @@ static func force_fire(event_id: String, context: Dictionary = {}) -> bool:
 		push_warning("[EvEngine] force_fire refused at %s: %s" % [verdict.step, verdict.reason])
 		return false
 	EvQueue.admit(event_id, verdict.context, verdict.card_class,
-		String(EvCatalog.card(event_id).get("arc", "")), MailClock.now())
+		String(EvCatalog.card(event_id).get("arc", "")), MailClock.now(), false, true)
 	_forced.append(EvLatches.key_of(event_id, verdict.context))
 	pump()
 	return true

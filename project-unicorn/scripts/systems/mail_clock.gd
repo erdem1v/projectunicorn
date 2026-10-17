@@ -44,6 +44,12 @@ static func delivered(at: int) -> bool:
 	return instant or at < 0 or at <= now()
 
 
+## The time of day of an absolute minute, "09:00".
+static func clock_text(at: int) -> String:
+	var minute: int = at % DAY_MINUTES
+	return "%02d:%02d" % [minute / 60, minute % 60]
+
+
 ## When something made now reaches the player: now while the workday is on or when `urgent`; else a whole hour in
 ## the next window's first `spread` hours, drawn from `key` so the same save draws the same hour.
 static func arrival(key: String, urgent := false, spread := SPREAD_HOURS) -> int:

@@ -67,6 +67,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 	# The suite drives the daily tick directly, so what it admits is delivered when it is made; the case that proves
 	# the workday rule plays the real clock and turns this off itself.
 	MailClock.instant = true
+	# Nor does it answer an emergency, which holds the clock until its card is answered: the cases that play one roll it.
+	IncidentSystem.rolls = false
 	_gate_signals = []
 	_endings = []
 	EventBus.phase_gate_reached.connect(func(p: int) -> void: _gate_signals.append(p))
@@ -319,6 +321,10 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_amount_seam":              fail = _case_event_amount_seam()
 		"event_trust_delta_lasting":      fail = _case_event_trust_delta_lasting()
 		"event_morale_payers":            fail = _case_event_morale_payers()
+		"incident_gap_and_spread":        fail = _case_incident_gap_and_spread()
+		"incident_night_hold_resumes":    fail = _case_incident_night_hold_resumes()
+		"incident_scale":                 fail = _case_incident_scale(pinned)
+		"incident_save_roundtrip":        fail = _case_incident_save_roundtrip()
 		"event_set_aside_no_history":     fail = _case_event_set_aside_no_history()
 		"event_no_double_resolution_after_load": fail = _case_event_no_double_resolution_after_load()
 		"event_history_names_survive":    fail = _case_event_history_names_survive()
@@ -5970,6 +5976,7 @@ static func _case_sales_weekly_report_is_a_message() -> String:
 ## FALSIFICATION: let MailClock.arrival return now() and the first run fails on its first 00:00 stamp.
 static func _case_inbox_no_night_stamp(payload: Dictionary) -> String:
 	MailClock.instant = false
+	IncidentSystem.rolls = true   # an emergency's card is urgent, so it is stamped at the hour it opens
 	for window in [Vector2i(8, 9), Vector2i(11, 13)]:
 		var audit: Dictionary = _play_and_audit_stamps(payload, window, 104)
 		var bad: Array = audit.bad
@@ -6044,7 +6051,6 @@ static func _audit_history_stamps() -> void:
 
 
 static func _audit_stamp(kind: String, what: String, at: int, urgent: bool) -> void:
-	const INBOX := preload("res://scripts/ui/components/inbox.gd")
 	var key: String = "%s|%s|%d" % [kind, what, at]
 	if at < 0 or _stamp_audit.done.has(key):
 		return
@@ -6053,7 +6059,7 @@ static func _audit_stamp(kind: String, what: String, at: int, urgent: bool) -> v
 	var window: Dictionary = WorkHoursSystem.company_window()
 	var minute: int = at % MailClock.DAY_MINUTES
 	if not urgent and (minute < int(window.start) * 60 or minute >= int(window["end"]) * 60):
-		(_stamp_audit.bad as Array).append("%s %s stamped %s on tick %d" % [kind, what, INBOX.clock_text(at),
+		(_stamp_audit.bad as Array).append("%s %s stamped %s on tick %d" % [kind, what, MailClock.clock_text(at),
 			at / MailClock.DAY_MINUTES])
 
 
@@ -15670,6 +15676,431 @@ static func _case_event_morale_payers() -> String:
 		CharacterRegistry.remove(person.id)
 	if not SprintSystem.payers(line).is_empty() or not EvEffects.crew_of(hit, {}).is_empty():
 		return "a team of the founder alone still has payers: %s" % str(SprintSystem.payers(line))
+	return ""
+
+
+# ============================================================================
+#  The night's emergencies (IncidentSystem)
+# ============================================================================
+
+const OUTAGE_B2B := "product.incident_outage_b2b"
+const OUTAGE_B2C := "product.incident_outage_b2c"
+
+
+## An account of the book an emergency lands on, past its onboarding.
+static func _incident_account(id: String, display: String, industry: String, seats: int, mrr: int) -> Customer:
+	var c: Customer = _add_customer(id, display)
+	c.industry = industry
+	c.seats = seats
+	c.mrr = mrr
+	c.satisfaction = 70
+	c.tolerance = 40
+	c.lifecycle_phase = "active"
+	_past_onboarding(c)
+	return c
+
+
+## A mid-morale hire whose engineering is `engineering` points (6 is three stars).
+static func _incident_hire(id: String, display: String, role_id: String, engineering: int) -> Character:
+	var c: Character = _make_employee(id, display, role_id, SEED_PACE, 0, 60)
+	c.role_stats[HRConstants.AREA_ENGINEERING] = engineering
+	_park_leave([c])
+	return c
+
+
+## A live ERP with its book (Marmara and Ege Metal work through the night), a developer of three stars and a tester,
+## the founder at two stars of engineering, a sprint running so no plan holds the clock.
+static func _incident_world() -> void:
+	EvCatalog.ensure_loaded()
+	_seed_sprint_live("erp")
+	_incident_account("co_marmara", "Marmara Lojistik", "logistics", 60, 1900)
+	_incident_account("co_ege_metal", "Ege Metal", "manufacturing", 40, 1500)
+	_incident_account("co_demir", "Demir Holding", "finance", 100, 2400)
+	_incident_account("co_kuzey", "Kuzey Perakende", "retail", 30, 1800)
+	SalesSystem.reflect_mrr()
+	_set_founder_area(HRConstants.AREA_ENGINEERING, 4)
+	_incident_hire("char_inc_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER, 6)
+	_incident_hire("char_inc_test", "Selin Aras", HRConstants.ROLE_TESTER, 4)
+	SprintSystem.apply_lead()
+	SprintSystem.start()
+
+
+## A live note app: 12,400 people, a paid plan at $8, the same crew.
+static func _incident_world_b2c() -> void:
+	EvCatalog.ensure_loaded()
+	_seed_sprint_live("note_tool")
+	SalesSystem.add_b2c_audience(12400)
+	SalesSystem.open_b2c_paid_tier(8)
+	_set_founder_area(HRConstants.AREA_ENGINEERING, 4)
+	_incident_hire("char_inc_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER, 6)
+	_incident_hire("char_inc_test", "Selin Aras", HRConstants.ROLE_TESTER, 4)
+
+
+## How often the night has an emergency, played through the real roll, the real card and its answer for 300
+## weeks on each of three server tiers with twelve open bugs: two emergencies are never closer than MIN_GAP ticks, and at
+## least a third of the gaps fall outside 4 to 6 (cheap servers and a pile of bugs make them frequent, never regular).
+## FALSIFICATION: set `incident.min_gap` to 0 and the gap check fails; set `incident.p_max` to 0.2 and the local odds
+## check fails; make `hazard` ignore the tier and the cloud odds check fails.
+static func _case_incident_gap_and_spread() -> String:
+	IncidentSystem.rolls = true
+	_incident_world()
+	for row in [["local", 12, 0.25], ["cloud", 12, 0.125], ["enterprise", 12, 0.0625]]:
+		ProductState.set_infra_provider(row[0])
+		ProductState.clear_line_bugs(BUG_LINE)
+		_seed_bugs(row[1])
+		if not is_equal_approx(IncidentSystem.hazard(), row[2]):
+			return "%s servers with %d open bugs roll %.4f a week, want %.4f" % [row[0], row[1], IncidentSystem.hazard(), row[2]]
+		GameState.incident.clear()
+		var ticks: Array = []
+		for week in 300:
+			GameState.advance_day()
+			IncidentSystem.daily_tick()
+			if not GameState.incident.has("pending"):
+				continue
+			IncidentSystem.hourly_tick(6)
+			if EventGate.active_id() != OUTAGE_B2B:
+				return "%s, tick %d: an emergency was rolled and its card did not come (active '%s')" % [
+					row[0], GameState.day, EventGate.active_id()]
+			ticks.append(GameState.day)
+			EventGate.resolve(OUTAGE_B2B, "night_fix")
+			if TimeManager.holds().has(IncidentSystem.HOLD):
+				return "%s, tick %d: the clock was still held after the answer" % [row[0], GameState.day]
+		var gaps: Array = []
+		for i in range(1, ticks.size()):
+			gaps.append(int(ticks[i]) - int(ticks[i - 1]))
+		if gaps.size() < 10:
+			return "%s: %d emergencies in 300 weeks, too few to read a rhythm from" % [row[0], gaps.size() + 1]
+		if gaps.min() < 4:
+			return "%s: two emergencies %d ticks apart, the least allowed is 4" % [row[0], gaps.min()]
+		var off_beat: int = gaps.filter(func(gap: int) -> bool: return gap < 4 or gap > 6).size()
+		print("INCIDENT_GAPS %s emergencies=%d off_beat=%d/%d gaps=%s" % [row[0], gaps.size() + 1, off_beat, gaps.size(),
+			str(gaps)])
+		if float(off_beat) / gaps.size() < 0.3:
+			return "%s: only %d of %d gaps fall outside 4 to 6 weeks, want a third" % [row[0], off_beat, gaps.size()]
+	return ""
+
+
+## What a night costs is read off the night: the credit is the tier of the hours down times the book's monthly fees
+## (10, 15 and 25 percent), a one-time cost that leaves the fees as they were; the accounts keep the hours they could
+## not work (the night shift from the moment of the outage, the rest from 08:30), and a credit forgives most of it; the
+## audience that leaves is a share of it by the hours down, capped, and a free month costs only the people who pay. The
+## chip says what lands, in the history row too, and a locked option says why.
+## FALSIFICATION: take the credit off the book's fees and read the accounts' MRR (they drop) and the credit check fails;
+## price the credit by the hours since 08:30 instead of the hours down and the tier check fails; drop the cap from
+## IncidentSystem._audience_loss and the cap check fails; read the audience at its first value after a doubling and the
+## proportion check fails.
+static func _case_incident_scale(payload: Dictionary) -> String:
+	_incident_world()
+	var fees: int = CustomerRegistry.get_total_mrr()
+	var wake: int = int(WorkHoursSystem.company_window().start) * 60
+	var day_start: int = GameState.day * MailClock.DAY_MINUTES
+	var morning: int = day_start + wake + 160   # a three-star developer fixes it in 2 h 40
+	GameState.set_current_hour(3)
+	TimeManager.sync_to_current_hour()
+	var night: Array = [CustomerRegistry.get_customer("co_marmara"), CustomerRegistry.get_customer("co_ege_metal")]
+	var rest: Array = [CustomerRegistry.get_customer("co_demir"), CustomerRegistry.get_customer("co_kuzey")]
+	# The credit, by how long the service was down: 5 h and 9.5 h before 11:40, and 13 h before 13:40 (a workday from 11).
+	for tier in [[400, 9, 10], [130, 9, 15], [40, 11, 25]]:
+		WorkHoursSystem.set_company_start_hour(tier[1])
+		IncidentSystem.stage("outage", tier[0])
+		var credit: Dictionary = IncidentSystem.plan("morning_credit").credit
+		var want: int = roundi(float(fees) * tier[2] / 100.0)
+		if credit.n != 4 or credit.pct != tier[2] or credit.amount != want:
+			return "down from minute %d to the morning of %02d:00 the credit reads %s, want 4 accounts at %d%% = $%d" % [
+				tier[0], tier[1], str(credit), tier[2], want]
+		var cash: int = GameState.cash
+		var rows: int = GameState.transactions.size()
+		var effect: Dictionary = {"verb": "incident", "act": "morning_credit"}
+		var shown: String = ",".join(EvChips.describe(effect, {}, {}, false).map(EvChips.text))
+		var row: Dictionary = EvEffects.run_played([effect], {})[0]
+		var kept: String = ",".join(EvChips.describe(row, {}, {}, true).map(EvChips.text))
+		if shown != kept:
+			return "the card showed '%s' and its history row reads '%s'" % [shown, kept]
+		if cash - GameState.cash != want or CustomerRegistry.get_total_mrr() != fees:
+			return "a %d%% credit moved the cash by %d (want %d) and the fees to %d (want %d)" % [
+				tier[2], cash - GameState.cash, want, CustomerRegistry.get_total_mrr(), fees]
+		var ledger: Dictionary = GameState.transactions[rows]
+		if GameState.transactions.size() != rows + 1 or String(ledger.label) != "outage_credit" or int(ledger.amount) != -want:
+			return "the credit reached the ledger as %s" % str(GameState.transactions.slice(rows))
+		if not shown.contains("%d%%" % tier[2]) and not shown.contains("%%%d" % tier[2]):
+			return "the chip '%s' does not name the tier %d%%" % [shown, tier[2]]
+		for c in night + rest:
+			CustomerRegistry.set_trust_offset(c.id, 0.0)
+	WorkHoursSystem.set_company_start_hour(9)
+	# The accounts: 9.5 h down, 02:10 to 11:40. The night shift pays 5.7 -> 6, the rest the 3.2 h since 08:30 -> 2; a credit
+	# forgives 85%: 1 and none. What the chip says is what the player reads a tick on.
+	IncidentSystem.stage("outage", 130)
+	var top: Customer = night[0]
+	CustomerRegistry.set_satisfaction(top.id, B2BSalesSystem.satisfaction_target(top))
+	var from: int = top.satisfaction
+	var hit: Dictionary = {"verb": "incident", "act": "morning"}
+	var line: String = ",".join(EvChips.describe(hit, {}, {}, false).map(EvChips.text))
+	var landed: Dictionary = EvEffects.run_played([hit], {})[0]
+	var carried: String = ",".join(EvChips.describe(landed, {}, {}, true).map(EvChips.text))
+	if line != carried:
+		return "the card showed '%s' and its history row reads '%s'" % [line, carried]
+	for c in night:
+		if not is_equal_approx(c.trust_offset, -6.0):
+			return "%s took %.1f off the night shift's ledger, want 6" % [c.display_name(), -c.trust_offset]
+	for c in rest:
+		if not is_equal_approx(c.trust_offset, -2.0):
+			return "%s took %.1f off the ledger, want 2" % [c.display_name(), -c.trust_offset]
+	var promised: int = int(landed.trust[0].to)
+	if int(landed.trust[0].from) != from or not line.contains("%d → %d" % [from, promised]):
+		return "the night shift chip '%s' does not read %d → %d" % [line, from, promised]
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if top.satisfaction != promised:
+		return "the chip promised %d, the player reads %d a tick later" % [promised, top.satisfaction]
+	for c in night + rest:
+		CustomerRegistry.set_trust_offset(c.id, 0.0)
+	var credited: Dictionary = IncidentSystem.plan("morning_credit")
+	if credited.trust.size() != 1 or credited.trust[0].group != "night" or credited.trust[0].delta != -1:
+		return "a credit leaves the accounts %s, want one night shift row of -1" % str(credited.trust)
+	if IncidentSystem.plan("night").has("trust") or IncidentSystem.plan("founder").has("trust"):
+		return "a fix the same night wrote a trust cost"
+	# Without a night shift the book is one group.
+	for c in night:
+		c.industry = "retail"
+	var all_of_them: Array = IncidentSystem.plan("morning").trust
+	if all_of_them.size() != 1 or all_of_them[0].group != "all" or all_of_them[0].n != 4 or all_of_them[0].delta != -2:
+		return "a book with no night shift reads %s, want one row of 4 accounts at -2" % str(all_of_them)
+	# A fix the same night ends when the fix takes: the team's after the opening, the founder's slower.
+	var opened: int = int(GameState.incident.open.opened)
+	var back_team: int = int(IncidentSystem.plan("night").back)
+	var back_founder: int = int(IncidentSystem.plan("founder").back)
+	if back_team != opened + 160 or back_founder != opened + 270:
+		return "back at +%d min for the team and +%d for the founder, want +160 and +270" % [back_team - opened, back_founder - opened]
+	if int(IncidentSystem.plan("morning").back) != morning:
+		return "the morning fix ends at minute %d, want %d" % [IncidentSystem.plan("morning").back, morning]
+	# The locks: nobody to pay, and a team grown past two.
+	var locks: Dictionary = {}
+	for option in EvCatalog.card(OUTAGE_B2B).options:
+		locks[option.id] = option.get("requires", {})
+	if not EventGate.condition_met(locks.night_fix) or not EventGate.condition_met(locks.founder_fix):
+		return "a developer and a tester should leave both the night fix and the founder's open"
+	_incident_hire("char_inc_third", "Ece Sarı", HRConstants.ROLE_DESIGNER, 3)
+	if EventGate.condition_met(locks.founder_fix):
+		return "three people on the team should lock the founder's fix"
+	for person in CharacterRegistry.get_employees():
+		CharacterRegistry.remove(person.id)
+	if EventGate.condition_met(locks.night_fix):
+		return "nobody on the team should lock the night fix"
+	if int(IncidentSystem.plan("morning").back) != day_start + wake + 270:
+		return "with no team the morning fix ends at minute %d, want the founder's, 4 h 30 after the workday begins" % int(
+			IncidentSystem.plan("morning").back)
+	return _incident_scale_audience(payload)
+
+
+## The B2C half of `_case_incident_scale`.
+static func _incident_scale_audience(payload: Dictionary) -> String:
+	SaveManager.reset_all_owners()
+	GameState.initialize_run(payload)
+	MailClock.instant = true
+	_incident_world_b2c()
+	GameState.set_current_hour(3)
+	TimeManager.sync_to_current_hour()
+	var audience: float = SalesSystem.b2c_audience()
+	IncidentSystem.stage("outage", 130)
+	var tried: int = IncidentSystem.tried()
+	if tried != roundi(audience * 0.015 * 50.0 / 60.0):
+		return "50 minutes after the outage began %d people tried the app, want %d" % [tried, roundi(audience * 0.015 * 50.0 / 60.0)]
+	# 02:10 to 05:40, 07:30 and 11:40: 3.5, 5.33 and 9.5 hours at 0.3% of the audience an hour; a free month halves it.
+	var expect: Dictionary = {"night": roundi(audience * 0.003 * 3.5), "founder": roundi(audience * 0.003 * 16.0 / 3.0),
+		"morning": roundi(audience * 0.003 * 9.5), "morning_free_month": roundi(audience * 0.003 * 9.5 * 0.5)}
+	for act in expect:
+		var plan: Dictionary = IncidentSystem.plan(act)
+		if plan.audience != -expect[act]:
+			return "%s: the audience loses %d, want %d" % [act, -plan.audience, expect[act]]
+		var effect: Dictionary = {"verb": "incident", "act": act}
+		var shown: String = ",".join(EvChips.describe(effect, {}, {}, false).map(EvChips.text))
+		if not shown.contains("-%d" % expect[act]):
+			return "%s: the chip '%s' does not name the loss of %d" % [act, shown, expect[act]]
+	var before: float = SalesSystem.b2c_audience()
+	var cash: int = GameState.cash
+	var free: Dictionary = IncidentSystem.plan("morning_free_month")
+	var paying: int = roundi(float(tried) * SalesSystem.b2c_paying_users() / audience)
+	if free.free.n != tried or free.free.paying != paying or free.free.amount != paying * 8:
+		return "the free month reads %s, want %d people, %d paying, $%d" % [str(free.free), tried, paying, paying * 8]
+	var rows: int = GameState.transactions.size()
+	var effect: Dictionary = {"verb": "incident", "act": "morning_free_month"}
+	var shown: String = ",".join(EvChips.describe(effect, {}, {}, false).map(EvChips.text))
+	var row: Dictionary = EvEffects.run_played([effect], {})[0]
+	var kept: String = ",".join(EvChips.describe(row, {}, {}, true).map(EvChips.text))
+	if shown != kept:
+		return "the card showed '%s' and its history row reads '%s'" % [shown, kept]
+	if cash - GameState.cash != paying * 8 or before - SalesSystem.b2c_audience() != expect.morning_free_month \
+			or String(GameState.transactions[rows].label) != "refunds":
+		return "the free month moved the cash by %d, the audience by %d, labelled '%s'" % [cash - GameState.cash,
+			before - SalesSystem.b2c_audience(), GameState.transactions[rows].label]
+	# The loss follows the audience, and stops at a share of it.
+	var loss: int = -int(IncidentSystem.plan("morning").audience)
+	SalesSystem.add_b2c_audience(int(SalesSystem.b2c_audience()))
+	var doubled: int = -int(IncidentSystem.plan("morning").audience)
+	if absi(doubled - 2 * loss) > 1:
+		return "twice the audience loses %d, a single one lost %d" % [doubled, loss]
+	(SprintCatalog.cfg("incident.outage") as Dictionary).loss_per_hour = 0.01   # 9.5 hours would lose 9.5%
+	var capped: int = -int(IncidentSystem.plan("morning").audience)
+	if capped != roundi(SalesSystem.b2c_audience() * 0.04):
+		return "an outage that would lose 9.5%% loses %d, want the cap of 4%% = %d" % [capped, roundi(SalesSystem.b2c_audience() * 0.04)]
+	(SprintCatalog.cfg("incident.outage") as Dictionary).loss_per_hour = 0.003
+	# The sprint option is locked while the service is down, and opens once the fix is done.
+	IncidentSystem.stage("outage", 130)
+	var defer: Dictionary = {}
+	for option in EvCatalog.card(OUTAGE_B2C).options:
+		if option.id == "defer":
+			defer = option.requires
+	if EventGate.condition_met(defer):
+		return "leaving a full outage for the next sprint should be locked"
+	EvEffects.run_played([{"verb": "incident", "act": "night"}], {})
+	if EventGate.condition_met(defer):
+		return "the sprint option opened before the fix was done"
+	GameState.set_current_hour(6)
+	TimeManager.sync_to_current_hour()
+	if not EventGate.condition_met(defer):
+		return "the sprint option stayed locked after the fix was done"
+	return ""
+
+
+## The night stops at the emergency's hour, once, and goes on from there. Played through the real clock with the window
+## at 09:00 to 17:00: at 00:00 the die is rolled and nothing is asked for; the card opens at the first full hour after
+## the outage began, stamped with that hour, with the clock held; of the cards waiting (a paper's last warning, which is
+## urgent but no emergency) none shows before it or after it; the answer lets the night run on to 08:00 and it still
+## shows nothing; the card that waited opens when the workday does. The mail comes from the first developer on Build, and
+## from the server's own alert with nobody to write it.
+## FALSIFICATION: take the hold out of IncidentSystem._ask and the night runs on to 08:00 (the stop check fails); let
+## EvQueue._shown ignore the workday and the paper's warning shows the moment the answer is given (the quiet check fails);
+## ask for the card in the 00:00 slice (give hourly_tick a free pass at hour 0) and the first check fails.
+static func _case_incident_night_hold_resumes() -> String:
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
+	MailClock.instant = false
+	_incident_world()
+	var risk: Customer = _add_risk_b2b("inc_risk", 900)
+	var warned: Dictionary = _ctx_customer(risk)
+	EvPapers.place(RETAIN_ID, warned, 2)
+	var shown: Array = []
+	EventBus.event_triggered.connect(func(id: String) -> void: shown.append(id))
+	IncidentSystem.force_on("outage", GameState.day + 1)
+	GameState.set_current_hour(22)
+	TimeManager.sync_to_current_hour()
+	TimeManager.advance_hours(1)
+	TimeManager.advance_hours(1)
+	var tonight: Dictionary = GameState.incident.get("pending", {})
+	if tonight.is_empty() or not EvQueue.ids().has(RETAIN_ID):
+		return "at 00:00 the die should have rolled tonight's emergency (%s) and the paper's last warning be queued (%s)" % [
+			str(tonight), str(EvQueue.ids())]
+	if EventGate.active_id() != "" or EvQueue.ids().has(OUTAGE_B2B) or TimeManager.holds().has(IncidentSystem.HOLD) \
+			or not shown.is_empty():
+		return "at 00:00 something was asked for or shown: active '%s', queue %s, holds %s, shown %s" % [
+			EventGate.active_id(), str(EvQueue.ids()), str(TimeManager.holds()), str(shown)]
+	var hour: int = int(tonight.minute) / 60 + 1
+	TimeManager.skip_night()
+	var stamp: int = GameState.day * MailClock.DAY_MINUTES + hour * 60
+	if GameState.current_hour != hour or EventGate.active_id() != OUTAGE_B2B or not TimeManager.holds().has(IncidentSystem.HOLD):
+		return "the night should stop at %02d:00 on the emergency's card with the clock held; it stands at %02d:00, active '%s', holds %s" % [
+			hour, GameState.current_hour, EventGate.active_id(), str(TimeManager.holds())]
+	if EventGate.active_at() != stamp or int(GameState.product.interrupt.sprint) != SprintSystem.sprint_number():
+		return "the card is stamped %s and the sprint record reads %s, want %s and sprint %d" % [
+			str(EventGate.active_at()), str(GameState.product.get("interrupt")), str(stamp), SprintSystem.sprint_number()]
+	var context: Dictionary = EventGate.active_context()
+	if String(context.employee.id) != "char_inc_dev" or String(context.customer.id) != "co_marmara":
+		return "the card is about %s, want the developer to write about the largest night shift account Marmara" % str(context)
+	var from: Dictionary = INBOX.card_sender(EvCatalog.card(OUTAGE_B2B), context, {})
+	if String(from.name) != "Deniz Kaya":
+		return "the mail comes from '%s', want the developer" % from.name
+	if EvQueue.rank(OUTAGE_B2B, "", "interrupt") >= EvQueue.rank(RETAIN_ID, EvLatches.key_of(RETAIN_ID, warned), "interrupt"):
+		return "the paper's last warning ranks before the emergency"
+	var card: GameEvent = EventGate.active_card()
+	var names: String = EvChips.text(EvChips.describe(card.choices[0].modifiers[0], context, {}, false)[0])
+	var clock: String = MailClock.clock_text(stamp + 160)
+	if not names.contains("Deniz") or not names.contains("Selin") or not EvChips.text(
+			EvChips.describe(card.choices[0].modifiers[1], context, {}, false)[0]).contains(clock):
+		return "the night fix reads '%s' and a service back around %s was expected" % [names, clock]
+	var morale: int = CharacterRegistry.get_character("char_inc_dev").morale
+	EventGate.resolve(OUTAGE_B2B, "night_fix")
+	if CharacterRegistry.get_character("char_inc_dev").morale >= morale:
+		return "the night fix cost the developer no morale"
+	if TimeManager.holds().has(IncidentSystem.HOLD) or EventGate.active_id() != "" or EvQueue.size() != 0 \
+			or GameState.current_hour != hour:
+		return "after the answer nothing should show and the clock should stand at %02d:00: active '%s', %d shown, holds %s, %02d:00" % [
+			hour, EventGate.active_id(), EvQueue.size(), str(TimeManager.holds()), GameState.current_hour]
+	TimeManager.skip_night()
+	if GameState.current_hour != TimeModel.WEEK_START_HOUR or EventGate.active_id() != "" or shown != [OUTAGE_B2B] \
+			or not EvQueue.ids().has(RETAIN_ID):
+		return "the night should run on to 08:00 and show nothing: %02d:00, active '%s', shown %s, queue %s" % [
+			GameState.current_hour, EventGate.active_id(), str(shown), str(EvQueue.ids())]
+	TimeManager.advance_hours(int(WorkHoursSystem.company_window().start) - TimeModel.WEEK_START_HOUR)
+	if EventGate.active_id() != RETAIN_ID:
+		return "at %02d:00 the waiting card should open, '%s' did" % [GameState.current_hour, EventGate.active_id()]
+	EventGate.resolve(RETAIN_ID, "leave_alone")
+	# With nobody on Build the mail comes from the server's own alert, and the card has no employee slot.
+	for person in CharacterRegistry.get_employees():
+		CharacterRegistry.remove(person.id)
+	GameState.incident.erase("last_day")
+	IncidentSystem.stage("outage", 130)
+	var alone: Dictionary = EventGate.bind_scope(OUTAGE_B2B, {"customer": "co_marmara"})
+	if alone.has("employee") or INBOX.card_sender(EvCatalog.card(OUTAGE_B2B), alone, {}).name != TranslationServer.translate("MAIL_SENDER_SERVER_ALERT"):
+		return "with nobody on Build the card should come from the server alert, got %s" % str(
+			INBOX.card_sender(EvCatalog.card(OUTAGE_B2B), alone, {}).name)
+	return ""
+
+
+## An emergency is rolled, asked for, answered and rolled again across saves: the roll waiting for its hour, the last
+## one's tick (so the gap holds after a load), the open one (so a card's words and the service-up seam read the same) and
+## the sprint's record all come back, with their integers. A save from before the emergencies opens with none.
+## FALSIFICATION: take `incident` out of GameState and every check after the first load fails; read `last_day` as a float
+## key ("1.0") and the gap check fails.
+static func _case_incident_save_roundtrip() -> String:
+	_incident_world()
+	GameState.advance_day()
+	IncidentSystem.force_on("outage", GameState.day)
+	IncidentSystem.daily_tick()
+	var rolled: Dictionary = GameState.incident.get("pending", {}).duplicate()
+	if rolled.is_empty():
+		return "fixture: the forced die did not roll an emergency"
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var saved: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	_cleanup_save_slots()
+	if not SaveManager.apply_loaded_state(saved):
+		return "the slot did not load back"
+	var back: Dictionary = GameState.incident.get("pending", {})
+	if back != rolled or typeof(back.minute) != TYPE_INT:
+		return "the roll came back as %s (%s), want %s" % [str(back), type_string(typeof(back.get("minute"))), str(rolled)]
+	IncidentSystem.hourly_tick(6)
+	if EventGate.active_id() != OUTAGE_B2B or not TimeManager.holds().has(IncidentSystem.HOLD):
+		return "the roll that waited through a save did not ask for its card (active '%s')" % EventGate.active_id()
+	EventGate.resolve(OUTAGE_B2B, "morning")
+	var asked: Dictionary = GameState.incident.duplicate(true)
+	var record: Dictionary = GameState.product.get("interrupt", {}).duplicate()
+	if int(asked.get("last_day", -1)) != GameState.day or not asked.open.has("back") or record.kind != "incident":
+		return "the answered emergency left %s and the sprint record %s" % [str(asked), str(record)]
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused after the answer"
+	var later: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	_cleanup_save_slots()
+	if not SaveManager.apply_loaded_state(later):
+		return "the second slot did not load back"
+	if GameState.incident != asked or GameState.product.get("interrupt", {}) != record \
+			or typeof(GameState.incident.last_day) != TYPE_INT:
+		return "the record came back as %s and %s, want %s and %s" % [str(GameState.incident),
+			str(GameState.product.get("interrupt")), str(asked), str(record)]
+	if IncidentSystem.can_happen():
+		return "a load let a second emergency in the same tick as the first"
+	if IncidentSystem.service_up():
+		return "the morning fix is not done at %02d:00 and the service reads up" % GameState.current_hour
+	GameState.set_current_hour(12)
+	TimeManager.sync_to_current_hour()
+	if not IncidentSystem.service_up():
+		return "the morning fix is done by 12:00 and the service reads down"
+	for _week in int(SprintCatalog.cfg("incident.min_gap")):
+		GameState.advance_day()
+	if not IncidentSystem.can_happen():
+		return "after the gap the night should be open again"
+	# A save from before the emergencies.
+	later.state.game_state.erase("incident")
+	if not SaveManager.apply_loaded_state(later) or not GameState.incident.is_empty() or not IncidentSystem.can_happen():
+		return "a save from before the emergencies did not open with none (%s)" % str(GameState.incident)
 	return ""
 
 

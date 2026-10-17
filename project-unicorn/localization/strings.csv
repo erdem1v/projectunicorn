@@ -3066,12 +3066,6 @@ EV_TEAM_DEMO_DAY_BODY,"Sprintin son haftası. Biri, sürüm çıkmadan herkesin 
 EV_TEAM_DEMO_DAY_HOLD,Demoyu yap,Hold the demo
 EV_TEAM_DEMO_DAY_SKIP,Çalışmaya devam,Keep working
 EV_TEAM_DEMO_DAY_EXPIRED,Demo yapılmadı.,The demo never happened.
-EV_PRODUCT_OUTAGE_TITLE,Kesinti,Outage
-EV_PRODUCT_OUTAGE_BODY,"Kullanım, sunucuların kaldırabileceğini aştı. Sayfalar zaman aşımına düşüyor, destek hattı meşgul ve müşteriler ne olduğunu soruyor.","Usage went past what the servers can carry. Pages time out, the support line is busy and customers want to know what happened."
-EV_PRODUCT_OUTAGE_ALL_HANDS,Herkesi bu işe çek,Pull everyone onto it
-EV_PRODUCT_OUTAGE_CREDIT,Kesintiyi telafi et,Pay back the downtime
-EV_PRODUCT_OUTAGE_QUIET,"Yamala, bir şey söyleme",Patch it and say nothing
-EV_PRODUCT_OUTAGE_EXPIRED,"Kesinti kendi seyrinde bitti, herkes fark etti.",The outage ran its course and people noticed.
 EV_CUSTOMER_SECURITY_REVIEW_TITLE,Güvenlik denetimi,Security review
 EV_CUSTOMER_SECURITY_REVIEW_BODY,"{customer} bir güvenlik anketi gönderdi. Satın alma ekipleri, daha ileri gitmeden önce her cevabın kanıtla desteklenmesini istiyor.",{customer} sent over a security questionnaire. Their procurement team wants every answer backed by evidence before they go any further.
 EV_CUSTOMER_SECURITY_REVIEW_AUDIT,Dış denetime para ver,Pay for an outside audit
@@ -3202,6 +3196,7 @@ MAIL_STAMP_EXPIRED,Süresi doldu,Expired
 MAIL_STAMP_AT,{stamp} H{week},{stamp} W{week}
 MAIL_SENDER_ACCOUNTS,Muhasebe,Accounts
 MAIL_SENDER_SUPPORT,Destek,Support
+MAIL_SENDER_SERVER_ALERT,Sunucu uyarısı,Server alert
 MAIL_SELF_NOTE,Kendine not,Note to self
 MAIL_RPT_CLOSED,Geçen hafta kapananlar:,Closed last week:
 MAIL_RPT_BOOKS,Defterdeki hesap: {n},Accounts on the books: {n}
@@ -3363,10 +3358,18 @@ EFFECT_TRUST_ACCOUNTS,{n} hesap: memnuniyet {v} · {customer} {from} → {to},{n
 EFFECT_NIGHT_CREW,{names}: moral {v},{names}: morale {v}
 EFFECT_TRUST_PER_SPRINT,Düzelene kadar her sprint sonunda memnuniyet {v},Satisfaction {v} at the end of each sprint until fixed
 EFFECT_NAMES_MORE,ve {n} kişi,and {n} more
+EFFECT_SERVICE_BACK,Servis {clock} sularında açılır,Service back around {clock}
+EFFECT_APP_BACK,Uygulama {clock} sularında açılır,App back around {clock}
+EFFECT_OUTAGE_CREDIT,Kesinti kredisi · {n} hesap · %{pct} {v},Outage credit · {n} accounts · {pct}% {v}
+EFFECT_OUTAGE_CREDIT_ONE,Kesinti kredisi · {n} hesap · %{pct} {v},Outage credit · {n} account · {pct}% {v}
+EFFECT_FREE_MONTH,Bir ay ücretsiz · {n} kişi · ödeyen {paying} {v},Free month · {n} people · {paying} paying {v}
+EFFECT_TRUST_NIGHT_ACCOUNTS,{n} gece vardiyalı hesap: memnuniyet {v} · {customer} {from} → {to},{n} night shift accounts: satisfaction {v} · {customer} {from} → {to}
+EFFECT_TRUST_OTHER_ACCOUNTS,Öbür {n} hesap: memnuniyet {v},Other {n} accounts: satisfaction {v}
 VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some friction between you.
 FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
 FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut
 FIN_ONETIME_DATA_PURCHASE,Veri alımı,Data purchase
+FIN_ONETIME_OUTAGE_CREDIT,Kesinti kredisi,Outage credit
 EV_TEAM_CONFERENCE_TRIP_TITLE,Konferans,The conference
 EV_TEAM_CONFERENCE_TRIP_BODY,"{employee} başka şehirde yapılacak bir konferansa gitmek istiyor. İki gün sürüyor; bilet, tren ve otelle $1.200 tutuyor. Bildiklerinin çoğunu bu konferansın internetteki ücretsiz kayıtlarından öğrendi. Şimdiye kadar hiçbir şey istememişti.","{employee} wants to attend a conference in another city: two days, $1,200 with the ticket, train and hotel. Most of what they know came from its free talk videos. It is the first thing they have asked for."
 EV_TEAM_CONFERENCE_TRIP_PAY,Bütün masrafı öde,Pay for the whole trip

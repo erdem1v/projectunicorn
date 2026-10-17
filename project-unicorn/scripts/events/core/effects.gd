@@ -72,7 +72,7 @@ const ECONOMIC_VERBS := [
 	"add_customer", "churn_customer", "customer_mrr_delta", "seats",
 	"audience_delta", "convert_audience", "open_paid_tier",
 	"change_salary", "fire_employee", "employee_leaves",
-	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "marketing_push",
+	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "marketing_push", "incident",
 ]
 
 ## Ends the run. Played decisions only — never a dice branch (I6), never an expiry, never an
@@ -292,6 +292,9 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				int(e.get("growth_pct", 0)), int(e.get("weeks", 0)))
 			push["verb"] = verb
 			return push
+		# An emergency's answer: when the service is back, and what the accounts or the audience are given and lose.
+		"incident":
+			return IncidentSystem.resolve(String(e.get("act", "")))
 
 		# --- flags and memory ----------------------------------------------
 		"set_flag":

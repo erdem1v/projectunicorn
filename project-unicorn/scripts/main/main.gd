@@ -587,6 +587,8 @@ func _seed_run_reproducible() -> void:
 	GameState.initialize_run(_debug_payload())
 	GameState.run_seed = 424242
 	seed(GameState.run_seed)
+	# A pinned run is a fixture, not a play: no random emergency stops its night (a forced one still comes).
+	IncidentSystem.rolls = false
 
 
 func _mount_shot_shell() -> void:
@@ -709,7 +711,8 @@ func _run_b2b_shot(kind: String) -> void:
 ## included, in the reading pane's preview (its options drawn, not taken). A given slot binds that
 ## entity instead of running its selector (the shot seed has no seed lead, for one) and names the
 ## PNG; a given slot that cannot bind fails the shot. An id of --hr-shot's roster (char_emp_shot_<n>)
-## seeds that roster first.
+## seeds that roster first. An emergency's card (product.incident_outage_*) stands in the company it needs, at 03:00 of
+## its night, with its sender and account given.
 func _run_event_shot(spec: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -724,7 +727,9 @@ func _run_event_shot(spec: String) -> void:
 			_shot_fail("[EventShot] '%s' is not <slot>=<entity id>" % pair)
 			return
 		given[pair.get_slice("=", 0)] = pair.get_slice("=", 1)
-	if given.values().any(func(id: String) -> bool: return id.begins_with("char_emp_shot_")):   # LOC-DATA debug seed / id
+	if event_id.begins_with("product.incident_outage_"):
+		given.merge(_seed_incident_world(event_id.ends_with("_b2b")), false)
+	elif given.values().any(func(id: String) -> bool: return id.begins_with("char_emp_shot_")):   # LOC-DATA debug seed / id
 		_seed_hr_roster()
 	var ctx: Dictionary = EventGate.bind_scope(event_id, given)
 	for slot in given:
@@ -734,6 +739,43 @@ func _run_event_shot(spec: String) -> void:
 	_shot_pane(event_id, ctx)
 	await get_tree().process_frame
 	await _finish_shot("event_shot_%s" % spec.replace(":", "_"), 0.35)
+
+
+## The company an outage card is shot in, 03:00 on the night it began at 02:10. B2B: the theme seed's book with two more
+## night-shift accounts and the roster's crew (whose developer is on leave, so the mail comes from the server's own
+## alert). B2C: a note app with an audience and a paid plan, a developer and a designer. Returns the slots the card is
+## given: B2B its largest night-shift account, B2C its sender.
+func _seed_incident_world(b2b: bool) -> Dictionary:
+	var given := {}
+	if b2b:
+		_seed_theme_surface()
+		_shot_customer("co_marmara", "Marmara Lojistik", "logistics", "active", 1900, 60, 20, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_ege_metal", "Ege Metal", "manufacturing", "active", 1500, 40, 18, false)   # LOC-DATA debug seed / id
+		SalesSystem.reflect_mrr()
+		given["customer"] = IncidentSystem.night_accounts()[0].id
+	else:
+		GameState.day = 14
+		GameState.set_flag("mvp_shipped", true)
+		GameState.set_flag("mvp_launch_day", 6)
+		GameState.set_flag("mvp_market_type", "b2c")
+		SalesSystem.add_b2c_audience(12400)
+		SalesSystem.open_b2c_paid_tier(8)
+		for row in [["char_emp_shot_2", "Mert Yıldız", HRConstants.ROLE_DEVELOPER, 6],   # LOC-DATA debug seed / id
+				["char_emp_shot_1", "Deniz Arslan", HRConstants.ROLE_DESIGNER, 5]]:   # LOC-DATA debug seed / id
+			var emp := Character.new()
+			emp.id = row[0]
+			emp.character_name = row[1]
+			emp.role = row[2]
+			emp.category = "employee"
+			emp.role_stats = HRConstants.seed_skills(emp.role, row[3], 3)
+			emp.traits = ["picks_it_up_fast"]
+			emp.status = HRConstants.STATUS_ACTIVE
+			CharacterRegistry.add(emp)
+		given["employee"] = "char_emp_shot_2"
+	GameState.current_hour = 3
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.stage("outage", 130)
+	return given
 
 
 ## --inbox-shot=<state>: the Olaylar inbox over the theme seed (week 14, İş hanı) in the mockups'
@@ -754,7 +796,8 @@ func _run_event_shot(spec: String) -> void:
 ## the open inbox; GATEFLOW window, active, pane) · morning (the night under the workday rule, through the real hourly
 ## path: the inbox at 00:00 just after the rollover, then half an hour into the workday, then four hours on; MORNING lines
 ## name what each frame lists, each item stamped inside the window; the frames are inbox_shot_morning_0000, _0930 and
-## inbox_shot_morning).
+## inbox_shot_morning) · night (an emergency stops the night at its hour: the inbox shows it alone, a customer's warning
+## waiting out of sight; a NIGHT line).
 func _run_inbox_shot(state: String) -> void:
 	_begin_shot()
 	if state in ["intro", "intro_go", "beat"]:
@@ -767,7 +810,7 @@ func _run_inbox_shot(state: String) -> void:
 		# founder.savings_note's ground: week 5, no product, savings for fewer than 24 weeks.
 		GameState.day = 5
 		GameState.set_cash(5000)
-	if state == "morning":
+	if state in ["morning", "night"]:
 		# One hour before the rollover, with a summary due at every tick and cash enough that no shutter warns.
 		SummarySystem.frequency_override = "weekly"
 		GameState.set_cash(200000)
@@ -790,6 +833,8 @@ func _run_inbox_shot(state: String) -> void:
 			return
 		"morning":
 			await _morning_frames()
+		"night":
+			_night_emergency()
 		"intro":
 			_open_note("intro")
 		"intro_go":
@@ -915,6 +960,19 @@ func _run_inbox_shot(state: String) -> void:
 	await _finish_shot("inbox_shot_%s" % state, 0.6)
 
 
+## The night's emergency through the real clock: from 23:00, with an ending's kind of card waiting (a customer's last
+## warning, urgent but no emergency), the die is forced for the coming tick and the night runs. It stops at the
+## emergency's hour with the card on screen and the clock held, and the waiting card stays out of sight until the
+## workday. A NIGHT line names the clock, the card on screen, the cards waiting out of sight and the holds.
+func _night_emergency() -> void:
+	IncidentSystem.force_on("outage", GameState.day + 1)
+	var warning: Dictionary = EventGate.bind_scope("customer.retention", {"customer": "co_ege"})
+	EvQueue.admit("customer.retention", warning, "interrupt", "", MailClock.now(), true)
+	TimeManager.skip_night()
+	print("NIGHT|clock=%s|active=%s|waiting=%d|shown=%d|holds=%s" % [MailClock.clock_text(MailClock.now()),
+		EventGate.active_id(), EvQueue.ids().size(), EventGate.queue_size(), TimeManager.holds()])
+
+
 ## --inbox-shot=morning: the night under the workday rule. The clock steps through 00:00 (the rollover and the daily tick),
 ## and the first frame is the inbox then: none of the night's mail is in it. The second frame is half an hour into the
 ## workday and the third four hours on (a card that came is answered first), each after the hours ran through the real
@@ -935,10 +993,10 @@ func _morning_frames() -> void:
 
 ## One frame of --inbox-shot=morning; the last one is saved by the shot's own tail.
 func _morning_frame(last: bool) -> void:
-	var clock: String = INBOX.clock_text(MailClock.now())
+	var clock: String = MailClock.clock_text(MailClock.now())
 	var stamped: Array = INBOX.items().filter(func(it: Dictionary) -> bool: return int(it.at) >= 0)
 	print("MORNING|clock=%s|active=%s|stamped=%s" % [clock, EventGate.active_id(), ", ".join(
-		stamped.map(func(it: Dictionary) -> String: return "%s %s" % [INBOX.clock_text(int(it.at)), it.id]))])
+		stamped.map(func(it: Dictionary) -> String: return "%s %s" % [MailClock.clock_text(int(it.at)), it.id]))])
 	var newest: Dictionary = {}
 	for it in stamped:
 		if newest.is_empty() or int(it.at) > int(newest.at):
@@ -1693,19 +1751,23 @@ func _run_invite_shot(kind: String) -> void:
 	get_tree().quit()
 
 
-# --clock-shot=<running|paused|held|released|gate|focus_out|focus_out_off>: the top bar's clock states over the
+# --clock-shot=<running|paused|held|released|gate|incident|focus_out|focus_out_off>: the top bar's clock states over the
 # shell, clock_shot_<state>[_1].png and a CLOCKSHOT line a frame (the primary window, the sprint's mode, the
 # holds, the speed). running: 1×, two frames; paused: as every shot opens, two frames a second apart (the
 # compact bar under --shot-scale=1.25). held: a B2C run on its release note with Ürün open (the note holds the
 # clock), two frames, then Görüşmeye git refused under the hold (_meet, the toast); released: the note left
 # through the page's own plan_next and the sprint started on the lead's plan; gate: a card takes Ürün's
-# place and is answered, and Ürün comes back. focus_out: at 1×, the window losing the application's focus
+# place and is answered, and Ürün comes back; incident: the night stopped by an emergency (the theme seed's company
+# from 23:00), the clock held by the emergency and by its card. focus_out: at 1×, the window losing the application's focus
 # pauses the clock (CLOCKSHOT before/after); focus_out_off: the same with the setting off, held in memory
 # only, and the clock runs on.
 func _run_clock_shot(kind: String) -> void:
 	var note: bool = kind in ["held", "released", "gate"]
 	_begin_shot()
-	_seed_run_reproducible()
+	if kind == "incident":
+		_seed_theme_surface()
+	else:
+		_seed_run_reproducible()
 	if note:
 		_seed_product_live("b2c_mvp")
 	await _mount_shot_shell()
@@ -1748,6 +1810,12 @@ func _run_clock_shot(kind: String) -> void:
 			get_tree().root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
 			print("CLOCKSHOT|%s|before=%d|after=%d" % [kind, before, TimeManager.current_speed])
 			await frame.call(kind)
+		"incident":
+			GameState.set_cash(200000)   # no shutter warning waits in this night
+			GameState.current_hour = TimeModel.HOURS_PER_DAY - 1
+			TimeManager.sync_to_current_hour()
+			_night_emergency()
+			await frame.call("incident")
 		"gate":
 			GameState.set_mrr(AngelRoundSystem.MRR_THRESHOLD)   # Frank's cheque asks for it
 			_shot_card("funding.frank_cheque", {}, GameState.current_hour)
