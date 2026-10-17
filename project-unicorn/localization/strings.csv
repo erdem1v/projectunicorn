@@ -588,8 +588,7 @@ PROD_RND_NODE_ONBOARDING_FLOW,Onboarding Akışı,Onboarding Flow
 PROD_RND_NODE_ACCESSIBILITY,Erişilebilirlik,Accessibility
 PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
 BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
-BUILD_SUPPORT_CONFIRMED,Doğrulanmış {n},Confirmed {n}
-BUILD_SUPPORT_INCOMING,Gelen {n},Incoming {n}
+BUILD_SUPPORT_TIP,En çok açık hata: {capability},Most open bugs: {capability}
 PROD_PERCENT,%{n},{n}%
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
@@ -2796,11 +2795,11 @@ FRANK_ADVISORY_PAID_TIER,Artık ücret almanın vakti. Fiyatı belirle.,Time to 
 PRODUCT_AREAS,Alanlar,Areas
 PRODUCT_BUILT,Yapılanlar,Built
 PRODUCT_POSSIBLE,Yapılabilecekler,To build
-PRODUCT_VOICES,Sesler,Voices
-PRODUCT_VOICES_COUNT,{n} ses,{n} voices
-PRODUCT_VOICES_COUNT_ONE,{n} ses,{n} voice
-PRODUCT_NEW_COUNT,{n} yeni,{n} new
-PRODUCT_NEW_STAMP,Yeni,New
+PRODUCT_BUGS,Açık hatalar,Open bugs
+PRODUCT_BUG_COUNT,{n} açık hata,{n} open bugs
+PRODUCT_BUG_COUNT_ONE,{n} açık hata,{n} open bug
+PRODUCT_BUGS_TIP_PREV,Geçen hafta: {bugs},Last week: {bugs}
+PRODUCT_BUGS_TIP_TOP,En büyük hesap: {account} ({users}),Largest account: {account} ({users})
 PRODUCT_RIVAL_TOPIC,Rakip: {topic},Rival: {topic}
 PRODUCT_LEVEL_STRONG,Güçlü,Strong
 PRODUCT_LEVEL_ENOUGH,Yeterli,Solid
@@ -2813,8 +2812,6 @@ PRODUCT_REQUESTS_COUNT_ONE,{n} talep,{n} request
 PRODUCT_CUSTOMERS_NONE,Açık talep yok,No open requests
 PRODUCT_DUE_SPRINT,Sprint {n} sonuna kadar,By the end of sprint {n}
 PRODUCT_PER_YEAR,{amount}/yıl,{amount}/yr
-PRODUCT_CUSTOMER_TICKETS,{customer} · {n} ticket,{customer} · {n} tickets
-PRODUCT_CUSTOMER_TICKETS_ONE,{customer} · {n} ticket,{customer} · {n} ticket
 PRODUCT_TAG_SPRINT,Sprint {n},Sprint {n}
 PRODUCT_SPRINT_TITLE,Sprint {n},Sprint {n}
 PRODUCT_WEEKS,{n} hafta,{n} weeks
@@ -2852,8 +2849,6 @@ PRODUCT_FX_BUGS_CLOSED,{n} hata kapanır,{n} bugs close
 PRODUCT_FX_BUGS_CLOSED_ONE,{n} hata kapanır,{n} bug closes
 PRODUCT_FX_BUGS_FIXED,{from} → {to} açık hata,{from} → {to} open bugs
 PRODUCT_FX_BUGS_FIXED_ONE,{from} → {to} açık hata,{from} → {to} open bug
-PRODUCT_FX_VOICES_CLOSE,{n} ses kapatır,settles {n} voices
-PRODUCT_FX_VOICES_CLOSE_ONE,{n} ses kapatır,settles {n} voice
 PRODUCT_FX_HOLDS,{level} kalır,stays {level}
 PRODUCT_FX_ALERT_CLEARS,kalkar,clears
 PRODUCT_FX_RESEARCH,beklentisi netleşir,expectations get clearer
@@ -2923,8 +2918,6 @@ PRODUCT_APPROVE,Onayla,Approve
 PRODUCT_EDIT,Düzenle,Edit
 PRODUCT_APPROVE_ALL,Hepsini onayla,Approve all
 PRODUCT_APPROVED,Onaylandı,Approved
-PRODUCT_FX_VOICES_CLOSED,{n} ses kapanır,{n} voices settle
-PRODUCT_FX_VOICES_CLOSED_ONE,{n} ses kapanır,{n} voice settles
 PRODUCT_AREA_CORE,Çekirdek,Core
 PRODUCT_AREA_CORE_SHORT,Çekirdek,Core
 PRODUCT_AREA_ONBOARDING,Onboarding & Erişim,Onboarding & Access
@@ -2938,7 +2931,7 @@ PRODUCT_AREA_TRUST_SHORT,Güven,Trust
 PRODUCT_AREA_REVENUE,Gelir,Revenue
 PRODUCT_AREA_REVENUE_SHORT,Gelir,Revenue
 PRODUCT_AREA_CORE_WEAK,Kullanıcılar temel işi yapmakta zorlanıyor,Users struggle to get the basic job done
-PRODUCT_AREA_CORE_ENOUGH,Temel iş sorunsuz yürüyor,The basic job runs without trouble
+PRODUCT_AREA_CORE_ENOUGH,Kullanıcılar temel işi yapabiliyor,Users can get the basic job done
 PRODUCT_AREA_CORE_STRONG,Kullanıcılar çekirdeği başkalarına öneriyor,Users recommend the core to others
 PRODUCT_AREA_ONBOARDING_NONE,Yeni gelen kullanıcıyı karşılayan bir şey yok,Nothing greets a new user yet
 PRODUCT_AREA_ONBOARDING_WEAK,Yeni kullanıcıların çoğu ilk hafta bırakıyor,Most new users quit in the first week
@@ -2954,14 +2947,12 @@ PRODUCT_AREA_INTEGRATIONS_ENOUGH,Temel programlarla bağlantı kuruluyor,It conn
 PRODUCT_AREA_INTEGRATIONS_STRONG,Müşteriler ürünü kendi sistemlerine bağlıyor,Customers wire the product into their own systems
 PRODUCT_AREA_TRUST_NONE,Ne yedek var ne yetki,No backups and no access control
 PRODUCT_AREA_TRUST_WEAK,Veri kaybı ve kesinti korkusu var,People fear data loss and downtime
-PRODUCT_AREA_TRUST_ENOUGH,Ürün güvenilir çalışıyor,The product runs reliably
+PRODUCT_AREA_TRUST_ENOUGH,Yedek ve yetki yerinde,Backups and access control are in place
 PRODUCT_AREA_TRUST_STRONG,Büyük hesaplar da ürüne güveniyor,Large accounts trust the product too
 PRODUCT_AREA_REVENUE_NONE,Ücretli plan henüz yok,No paid plan yet
 PRODUCT_AREA_REVENUE_WEAK,"Ücretli plan var, ödeyen az","There is a paid plan, few pay"
 PRODUCT_AREA_REVENUE_ENOUGH,Ücretli plan açık,The paid plan is open
 PRODUCT_AREA_REVENUE_STRONG,Ödeyen kullanıcılar artıyor,Paying users keep growing
-PRODUCT_AREA_TICKETS,{n} açık ticket,{n} open tickets
-PRODUCT_AREA_TICKETS_ONE,{n} açık ticket,{n} open ticket
 PRODUCT_AREA_RIVAL,{rival} bu alanda yeni bir şey çıkardı,{rival} shipped something new here
 PRODUCT_AREA_OVER_CAPACITY,Sunucular yükü kaldırmıyor,The servers can't keep up with the load
 PRODUCT_CAP_PAID_PLAN,Ücretli plan,Paid plan
@@ -2974,7 +2965,6 @@ PRODUCT_RESEARCH_VOICE_GROWTH,Görüştüğümüz kullanıcılar ürünü bir ar
 PRODUCT_RESEARCH_VOICE_INTEGRATIONS,Görüştüğümüz müşteriler veriyi elle taşımaktan yorulmuş,The customers we talked to are tired of moving data by hand
 PRODUCT_RESEARCH_VOICE_TRUST,Görüştüğümüz kullanıcılar verilerinin güvende olduğunu bilmek istiyor,The users we talked to want to know their data is safe
 PRODUCT_RESEARCH_VOICE_REVENUE,Görüştüğümüz kullanıcılar neye para ödeyeceğini bilmek istiyor,The users we talked to want to know what they would pay for
-PRODUCT_RIVAL_VOICE,{rival} artık şunu yapıyor: {capability}. Sizde ne zaman?,{rival} does this now: {capability}. When will you have it?
 PRODUCT_NEWS_RIVAL_LAUNCH_0,{rival} yeni özelliğini duyurdu: {capability},{rival} announced a new feature: {capability}
 PRODUCT_NEWS_RIVAL_LAUNCH_1,{rival} kullanıcılarına yeni bir araç sundu: {capability},{rival} rolled out a new tool for its users: {capability}
 PRODUCT_PRESS_CORE_0,{product} yeni sürümünü çıkardı: {capability},{product} released a new version: {capability}

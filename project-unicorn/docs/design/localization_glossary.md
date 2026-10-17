@@ -65,8 +65,7 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | Geliştirme bekleniyor | Awaiting development | |
 | sprint | sprint | `PRODUCT_SPRINT_TITLE` ve ürün ekranı; CSV cümle düzeninde, büyük hâli `Fmt.upper` ile SPRINT. "sprint" izinli ödünç kelimelerde yok: TR onay bekliyor. |
 | PM | PM | `PRODUCT_PM`, Ürün Yöneticisi'nin çip kısaltması. "PM" izinli ödünç kelimelerde yok: TR onay bekliyor. |
-| ticket | ticket | `PRODUCT_CUSTOMER_TICKETS`. "ticket" izinli ödünç kelimelerde yok: TR onay bekliyor. |
-| açık hata | open bug | Düzeltme kartının hata satırı, öngörü ve sürüm notu: "6 hata · 3 hesap · 140 kullanıcı", "6 hata kapanır", "Fatura düzeltmesi · 6 → 0 açık hata", "6 hata kapandı" (`PRODUCT_FX_BUGS*`, `PRODUCT_RESULT_BUGS_*`). TR/EN onay bekliyor. |
+| açık hata | open bug | Düzeltme kartının hata satırı, öngörü ve sürüm notu: "6 hata · 3 hesap · 140 kullanıcı", "6 hata kapanır", "Fatura düzeltmesi · 6 → 0 açık hata", "6 hata kapandı" (`PRODUCT_FX_BUGS*`, `PRODUCT_RESULT_BUGS_*`); hat paneli satırı "Fatura · 6 açık hata · 3 hesap · 140 kullanıcı", alan cümlesi ve DESTEK kartı "7 açık hata" (`PRODUCT_BUG_COUNT`), bölüm "Açık hatalar ↔ Open bugs" (`PRODUCT_BUGS`), ipuçları "Geçen hafta: {n} açık hata", "En büyük hesap: {hesap} ({n} kullanıcı)", "En çok açık hata: {hat}" (`PRODUCT_BUGS_TIP_PREV`, `PRODUCT_BUGS_TIP_TOP`, `BUILD_SUPPORT_TIP`). TR/EN onay bekliyor. |
 | hesap *(B2B müşteri)* | account | `PRODUCT_ACCOUNT_COUNT`; en büyük hesap "en büyüğü {hesap} ({n} kullanıcı) ↔ largest: {account} ({n} users)" (`PRODUCT_FX_TOP`). TR/EN onay bekliyor. |
 | Öncelikli *(düzeltme kartı etiketi)* | Priority | Hattın açık hatası öncelik eşiğinde (`PRODUCT_PRIORITY`). "Acil" değildir: "acil durum" olaylarıyla karışmasın diye ayrı kelime. TR/EN onay bekliyor. |
 | müşteri kaybı *(ürün fonunun geri dönüşü)* | customer churn | Yatırımcının koşulu: "{weeks} içinde müşteri kaybı %5 altında (şu an %2,5) ↔ Customer churn under 5% in 12 weeks (2.5% so far)" (`HUNT_CB_CHURN`). TR/EN onay bekliyor. |
@@ -74,7 +73,6 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | puan *(efor)* | points | Tekil: point (`_ONE`). |
 | alan *(ürün)* | area | ALANLAR / AREAS. |
 | yetenek | capability | Alanın altındaki yapılmış iş. |
-| ses *(kullanıcı)* | voice | SESLER / VOICES; kart fiili "ses kapatır" ↔ "settles {n} voices". |
 | talep | request | Müşterinin ürün talebi; satıştaki "aday ↔ lead" ile karışmaz. |
 | lider *(build)* | lead | LİDERİN ÖNERİSİ / LEAD'S PICK. Satıştaki "aday ↔ lead"den ayrı anahtar ailesi. |
 | devreden | carried over | Kart damgası küçük harf: devreden / carried. |
@@ -82,7 +80,6 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | hız *(sprint)* | velocity | HIZ / VELOCITY. Kişi ekseni "Hız ↔ Pace"ten ayrı anlam. |
 | düzeltme koşusu | fix run | DESTEK'in doğrulanmış hataları eriten koşusu; olay çipi "Düzeltme başlar ↔ A fix run starts" (`EFFECT_FIX_RUN_STARTS`). TR/EN onay bekliyor. |
 | hata düzeltme / hotfix | bug fixing / hotfix | DESTEK kartının düğmesi: kapalıyken "Hata düzeltmeyi başlat ↔ Start bug fixing", açıkken "Hotfix yayınla · {n} düzeltildi ↔ Ship hotfix · {n} fixed" (`PROD_FIX_RUN_*`). "hotfix" izinli ödünç kelimelerde (Erdem). TR/EN onay bekliyor. |
-| kaçırılan bildirim | missed report | Masanın o hafta bakamadığı bildirim, gelen yığınla aynı yazıda: "Gelen {n} · bu hafta {m} kaçırıldı ↔ Incoming {n} · {m} missed this week" (`BUILD_SUPPORT_MISSED`); kaçan yokken "Gelen {n} ↔ Incoming {n}" (`BUILD_SUPPORT_INCOMING`). TR/EN onay bekliyor. |
 
 ## 4. İnsanlar — eksenler, roller, bölümler, bantlar, HR
 

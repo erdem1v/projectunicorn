@@ -459,6 +459,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_fix_card_refreshes_until_it_runs": fail = _case_sprint_fix_card_refreshes_until_it_runs()
 		"sprint_fix_first_puts_the_card_on_top": fail = _case_sprint_fix_first_puts_the_card_on_top()
 		"line_impact_names_the_accounts":        fail = _case_line_impact_names_the_accounts()
+		"product_bug_rows_read_the_store":       fail = _case_product_bug_rows_read_the_store()
+		"worst_bug_line_breaks_ties_by_users":   fail = _case_worst_bug_line_breaks_ties_by_users()
 		"sprint_starts_only_with_consent":       fail = _case_sprint_starts_only_with_consent()
 		"sprint_request_on_time_met":            fail = _case_sprint_request_on_time_met()
 		"sprint_paid_plan_opens_paid_tier":      fail = _case_sprint_paid_plan_opens_paid_tier()
@@ -13096,11 +13098,11 @@ static func _case_borderless_note_key_exists() -> String:
 #  Build Bar · duraklama · DESTEK · trait göçü · Görevler (2026-08-21)
 # ============================================================================
 
-## R5: YAYINLAMAK BİR SON DEĞİLDİR. Yayından sonra kart kaybolmaz, DESTEK'e döner
-## ve ürün yaşadıkça yaşar. Açık hata deposunu ve GELEN sayacını gerçek okur.
+## R5: YAYINLAMAK BİR SON DEĞİLDİR. Yayından sonra kart kaybolmaz, DESTEK'e döner ve ürün yaşadıkça yaşar. Tek açık hata
+## sayısını, en çok hatalı hattı ve alanını (tıklanınca Ürün penceresi o alanı açar) gerçek okur; hata yoksa ikisi de boştur.
 ## FALSİFİKASYON: `BuildBarModel.derive`'ın başına `return false` koy → ikinci iddia FAIL.
-## `live_bugs` ya da `incoming` atamasını sil → sayaç iddiası FAIL; `fingerprint`'ten `live_bugs`'ı
-## çıkar → parmak izi iddiası FAIL.
+## `open_bugs` ya da `worst_area` atamasını sil → sayaç ve alan iddiası FAIL; `worst_line` atamasını sil → hat iddiası FAIL;
+## `fingerprint`'ten `worst_line`ı çıkar → parmak izi iddiası FAIL.
 static func _case_destek_survives_ship() -> String:
 	const BarModel := preload("res://scripts/ui/components/build_bar_model.gd")
 	var before = BarModel.new()
@@ -13109,19 +13111,33 @@ static func _case_destek_survives_ship() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_product_name", "Nova")
 	GameState.set_flag("mvp_version", 2)
+	GameState.set_flag("mvp_market_type", "b2c")
+	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
+	var clean = BarModel.new()
+	clean.derive()
+	if clean.open_bugs != 0 or clean.worst_line != "" or clean.worst_area != "":
+		return "a card with no open bugs read %d bugs on line '%s' in area '%s'" % [clean.open_bugs, clean.worst_line, clean.worst_area]
 	ProductState.add_bugs("line_note_tool_search", 7)
-	GameState.set_flag(ProductState.REPORTS_INCOMING, 4)
 	var m = BarModel.new()
 	if not m.derive():
 		return "the card vanished after ship — YAYINLANDI is not a terminal state (R5)"
-	if m.live_bugs != 7 or m.incoming != 4:
-		return "DOĞRULANMIŞ/GELEN read %d/%d, want the counters 7/4" % [m.live_bugs, m.incoming]
+	if m.open_bugs != 7 or m.worst_line != "line_note_tool_search" or m.worst_area != "core":
+		return "DESTEK read %d open bugs, worst line '%s' in area '%s', want 7 on line_note_tool_search in core" % [
+			m.open_bugs, m.worst_line, m.worst_area]
 	ProductState.add_bugs("line_note_tool_editor", 2)
 	var later = BarModel.new()
 	later.derive()
-	if later.live_bugs != 9 or later.fingerprint() == m.fingerprint():
-		return "the card did not follow the open bugs (%d, fingerprint '%s')" % [
-			later.live_bugs, later.fingerprint()]
+	if later.open_bugs != 9 or later.worst_line != "line_note_tool_search" or later.fingerprint() == m.fingerprint():
+		return "the card did not follow the open bugs (%d, line '%s', fingerprint '%s')" % [
+			later.open_bugs, later.worst_line, later.fingerprint()]
+	# The same nine bugs, now all on the editor: the worst line moves and the card's fingerprint with it.
+	ProductState.clear_line_bugs("line_note_tool_search")
+	ProductState.add_bugs("line_note_tool_editor", 7)
+	var shifted = BarModel.new()
+	shifted.derive()
+	if shifted.open_bugs != 9 or shifted.worst_line != "line_note_tool_editor" or shifted.fingerprint() == later.fingerprint():
+		return "the nine bugs moved to the editor and the card reads %d on line '%s' (fingerprint '%s')" % [
+			shifted.open_bugs, shifted.worst_line, shifted.fingerprint()]
 	return ""
 
 
@@ -17977,6 +17993,94 @@ static func _case_line_impact_names_the_accounts() -> String:
 	return ""
 
 
+## Beş B2B hesabı (kimlik, sektör, koltuk, MRR, durum): ledger hattı beşini (350 koltuk) kullanır, stock dördünü (310), cashflow tek
+## teknik hesabı (40). En büyük hesap co_aa'dır (koltuk eşitliğinde MRR, sonra kimlik).
+static func _seed_line_accounts() -> void:
+	for row in [["co_a", "technology", 40, 4000, "active"], ["co_zz", "logistics", 100, 9000, "active"],
+			["co_aa", "retail", 100, 9000, "active"], ["co_00", "healthcare", 100, 8000, "active"],
+			["co_try", "legal", 10, 1000, "trial"]]:
+		var c: Customer = _add_customer(row[0], "Firm " + row[0])
+		c.industry = row[1]
+		c.seats = row[2]
+		c.mrr = row[3]
+		c.status = row[4]
+
+
+## Hat paneli: alanın AÇIK HATALAR satırları yalnız hatası olan hatları, en çok hatalısı önde, `ProductModel.bug_row`'dan yazar. Satır
+## hattın adını, açık hatayı, hesap ve kullanıcı sayısını söyler (B2C'de hesapsız); ipucu geçen haftanın sayısını ve B2B'de en
+## büyük hesabı; `delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü). Alan cümlesi aynı toplamı söyler ve araştırmadan
+## sonraki iki haftada kullanıcıların sözünü sonuna ekler, sonra düşürür.
+## FALSİFİKASYON: ProductModel._bug_rows'tan `> 0` süzgecini sil → hatasız hat iddiası FAIL; sıralamayı ters çevir → sıra iddiası
+## FAIL; bug_row'da `open_bugs_delta(line_id)` yerine `0` yaz → ok iddiası FAIL; bug_row_of'ta en büyük hesabın ipucu satırını sil →
+## ipucu iddiası FAIL; SprintCatalog.area_sentence'ta araştırma penceresinin `<=`'sini `<` yap ya da bir sprint uzat (`+ 1`) →
+## pencere iddiası FAIL, araştırma cümlesini hiç ekleme → söz iddiası FAIL, hata sayısı cümlesini düşür → toplam iddiası FAIL;
+## SprintUiShared.impact_bits'te `int(part.accounts) >= 0` denetimini `true` yap → B2C satırı iddiası FAIL.
+static func _case_product_bug_rows_read_the_store() -> String:
+	_seed_sprint_live("erp")
+	_seed_line_accounts()
+	var rows := func() -> Array:
+		return ProductModel.live().areas.filter(func(a: Dictionary) -> bool: return a.id == "core")[0].bug_rows
+	if not rows.call().is_empty():
+		return "a product with no open bugs wrote the bug rows %s" % [rows.call()]
+	ProductState.add_bugs("line_erp_ledger", 8)
+	ProductState.add_bugs("line_erp_stock", 3)
+	ProductState.add_bugs("line_erp_cashflow", 1)
+	# A week ago the ledger had 6 and the stock 5; the cash flow had none.
+	GameState.set_flag(ProductState.OPEN_BUGS_PREV, {"line_erp_ledger": 6, "line_erp_stock": 5})
+	var lines: Array = ["line_erp_ledger", "line_erp_stock", "line_erp_cashflow"]
+	var read: Array = rows.call()
+	if read.size() != lines.size():
+		return "the core rows read %d lines, want the %d with open bugs and no line without" % [read.size(), lines.size()]
+	for i in lines.size():
+		if not String(read[i].text).begins_with(SprintCatalog.cap_name(lines[i])):
+			return "row %d reads '%s', want the %s line (most bugs first)" % [i, read[i].text, lines[i]]
+	var ledger: String = SprintUiShared.SEP.join([SprintCatalog.cap_name(lines[0]),
+		SprintUiShared.count("PRODUCT_BUG_COUNT", 8), SprintUiShared.count("PRODUCT_ACCOUNT_COUNT", 5),
+		SprintUiShared.count("PRODUCT_USER_COUNT", 350)])
+	if read[0].text != ledger:
+		return "the ledger row reads '%s', want '%s'" % [read[0].text, ledger]
+	if [read[0].delta, read[1].delta, read[2].delta] != [2, -2, 1]:
+		return "the rows' changes read %s, want 2 (6 to 8), -2 (5 to 3) and 1 (0 to 1)" % [[read[0].delta, read[1].delta, read[2].delta]]
+	if not read[0].tip.contains("Firm co_aa") or not read[0].tip.contains("100") \
+			or not read[0].tip.contains(SprintUiShared.count("PRODUCT_BUG_COUNT", 6)):
+		return "the ledger row's tip reads '%s', want last week's 6 and the largest account with its seats" % read[0].tip
+	var b2c: Dictionary = ProductModel.bug_row_of("Sync", {"k": "bugs", "n": 5, "accounts": -1, "users": 300, "top": "",
+		"top_users": 0}, -1)
+	if b2c.text != SprintUiShared.SEP.join(["Sync", SprintUiShared.count("PRODUCT_BUG_COUNT", 5),
+			SprintUiShared.count("PRODUCT_USER_COUNT", 300)]) or b2c.tip.contains("\n"):
+		return "a B2C row reads %s, want its users only and no account line in the tip" % [b2c]
+	var said: String = SprintCatalog.area_sentence("core")
+	if not said.contains(SprintUiShared.count("PRODUCT_BUG_COUNT", 12)):
+		return "the core sentence reads '%s', want the 12 open bugs of its three lines" % said
+	# The users' words stay for the sprint after the research (a sprint is two weeks, so two weeks) and go after it.
+	var voice: String = TranslationServer.translate("PRODUCT_RESEARCH_VOICE_CORE")
+	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 1
+	if not SprintCatalog.area_sentence("core").ends_with(voice):
+		return "a sprint after the research the sentence reads '%s', want the users' words at its end" % SprintCatalog.area_sentence("core")
+	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 2
+	if SprintCatalog.area_sentence("core").contains(voice):
+		return "two sprints after the research the sentence still reads '%s'" % SprintCatalog.area_sentence("core")
+	return ""
+
+
+## En çok açık hatası olan hat: eşitlikte en çok kullanıcıyı etkileyen (Destek kartı o hattın alanını açar), o da eşitse küçük hat
+## kimliği; kullanıcı eşitlikte karar verir, hata sayısını geçmez.
+## FALSİFİKASYON: ProductState.worst_bug_line'dan kullanıcı terimini sil → eşitlik iddiası FAIL (kimlik küçük olan, cashflow, kazanır);
+## kullanıcı karşılaştırmasının `>`'sini `<` yap → eşitlik iddiası FAIL; hata sayısı yerine kullanıcıyı karşılaştır → "more bugs"
+## iddiası FAIL.
+static func _case_worst_bug_line_breaks_ties_by_users() -> String:
+	_seed_sprint_live("erp")
+	_seed_line_accounts()
+	ProductState.add_bugs("line_erp_cashflow", 2)
+	ProductState.add_bugs("line_erp_ledger", 2)
+	if ProductState.worst_bug_line() != "line_erp_ledger":
+		return "a tie on 2 bugs went to '%s', want the ledger (350 users, the cash flow's 40 and its lower id do not count)" % ProductState.worst_bug_line()
+	ProductState.add_bugs("line_erp_cashflow", 1)
+	if ProductState.worst_bug_line() != "line_erp_cashflow":
+		return "3 bugs on the cash flow against 2 on the ledger read '%s', want more bugs to win whatever the users" % ProductState.worst_bug_line()
+	return ""
+
+
 ## Sprint oyuncunun onayı olmadan başlamaz. Planlanacak kart varken plan saati tutar, gün geçse de sprint
 ## başlamaz; kurucu Ar-Ge'ye oturunca kimse çalışamaz, tutuş kalkar; işe alınan geliştiriciyle geri gelir,
 ## geliştirici eğitime gidince yine kalkar, kurucu dönünce geri gelir. "Sprinti başlat"
@@ -18930,11 +19034,11 @@ static func _case_save_v14_history_becomes_releases() -> String:
 ## olur, v1.0'ı bekleyen hatalı hatlar `pending_faulty` adını alır, düzeltme koşusunun ve haftalık net bayrakları ile silinen
 ## kartın motor satırları kayıttan gider. Yüklenen dünya bu sayılarla oynar.
 ## Sürüm notlarının sonuç cümleleri ticket anahtarlarından hata anahtarlarına geçer ve çıkmış düzeltme kartı hattını temiz bırakmış
-## sayılır (`bugs_after` 0).
+## sayılır (`bugs_after` 0). Sesler'in son görülme günleri (`voices_seen`) kayıttan gider.
 ## FALSİFİKASYON: _migrate_16'da ticket sayımını (`bugs[...] += 1`) sil → hat iddiası FAIL; fazlanın dağıtımını sil → toplam
-## iddiası FAIL; `product.erase(key)` döngüsünden "tickets"i çıkar → defter iddiası FAIL; ticket'ları sayaca kırpan
-## `slice`'ı sil → "counter below the ledger" iddiası FAIL; cümle anahtarı değişimini sil → "result sentences" iddiası FAIL;
-## `bugs_after` yazımını sil → "fix cards" iddiası FAIL.
+## iddiası FAIL; `product.erase(key)` döngüsünden "tickets"i ya da "voices_seen"i çıkar → defter iddiası FAIL; ticket'ları
+## sayaca kırpan `slice`'ı sil → "counter below the ledger" iddiası FAIL; cümle anahtarı değişimini sil → "result sentences"
+## iddiası FAIL; `bugs_after` yazımını sil → "fix cards" iddiası FAIL.
 static func _case_save_v15_tickets_become_open_bugs() -> String:
 	var slot: String = "smoke_v15_bugs_%d" % OS.get_process_id()
 	var done := func(why: String) -> String:
@@ -18982,6 +19086,7 @@ static func _case_save_v15_tickets_become_open_bugs() -> String:
 	product["tickets"] = [{"id": 1, "line": live[0], "day": 1}, {"id": 2, "line": live[0], "day": 1},
 		{"id": 3, "line": live[0], "day": 1}, {"id": 4, "line": live[1], "day": 1}]
 	product["ticket_seq"] = 4
+	product["voices_seen"] = {"core": 3}
 	product["gate_faulty"] = [live[2]]
 	product.erase("pending_faulty")
 	flags["mvp_bugs_confirmed"] = 7
@@ -19016,7 +19121,7 @@ static func _case_save_v15_tickets_become_open_bugs() -> String:
 	for key in ["mvp_bugs_confirmed", "mvp_fix_run_active", "mvp_fix_run_fixed", "mvp_fix_run_progress", "mvp_reports_week_net"]:
 		if out_flags.has(key):
 			return done.call("flag '%s' survived the migration" % key)
-	for key in ["tickets", "ticket_seq", "gate_faulty"]:
+	for key in ["tickets", "ticket_seq", "gate_faulty", "voices_seen"]:
 		if out_product.has(key):
 			return done.call("the migrated product still holds '%s'" % key)
 	if out_product.get("pending_faulty") != [live[2]]:
@@ -20341,11 +20446,11 @@ static func _case_support_inflow_is_bug_free() -> String:
 ## İhmal itibarı düşürür: açık hata ihmal eşiğinde üst üste NEGLECT_WEEKS haftalık tik durursa itibar o hafta ve koşul
 ## sürdükçe her hafta bir düşer; sıfırda kesilmez, GameState'in tabanında (−10) durur. Düzelten oyuncu eşiğe girmez, bir
 ## temiz hafta sayacı sıfırlar. İtibar sıfırın altındayken yatırımcının itibar sorusu açılır. Son düşüşün sebebi tek
-## okuma noktasındadır (TopBar ipucu). `fix_off` anahtarı kuralı kapatır.
+## okuma noktasındadır (TopBar ve Destek kartı ipucu: düşüşün tarihli cümlesi). `fix_off` anahtarı kuralı kapatır.
 ## FALSİFİKASYON: `streak >= NEGLECT_WEEKS` yerine `NEGLECT_WEEKS - 1` yaz → "before the fourth" iddiası FAIL;
 ## `set_reputation(before - 1)` yerine `set_reputation(maxi(0, before - 1))` → "below zero" iddiası FAIL;
 ## `>= NEGLECT_BUGS` yerine `> NEGLECT_BUGS` → eşik iddiası FAIL; sayacı sıfırlayan `else 0`ı sil → "consecutive" iddiası FAIL;
-## `costed`ı kuraldan çıkar → anahtar iddiası FAIL.
+## `costed`ı kuraldan çıkar → anahtar iddiası FAIL; `neglect_note`ta tarihi biçimleyen `.format(...)`ı sil → cümle iddiası FAIL.
 static func _case_neglect_reputation_below_zero() -> String:
 	_seed_support_fixture("b2c")
 	GameState.set_reputation(0)
@@ -20356,12 +20461,14 @@ static func _case_neglect_reputation_below_zero() -> String:
 	ProductState.add_bugs(line, SupportSystem.NEGLECT_BUGS)
 	for i in SupportSystem.NEGLECT_WEEKS - 1:
 		week.call()
-		if GameState.reputation != 0 or not SupportSystem.neglect_drop().is_empty():
+		if GameState.reputation != 0 or not SupportSystem.neglect_drop().is_empty() or SupportSystem.neglect_note() != "":
 			return "reputation read %d with a drop recorded in week %d, before the fourth consecutive week" % [GameState.reputation, i + 1]
 	week.call()
 	var drop: Dictionary = SupportSystem.neglect_drop()
 	if GameState.reputation != -1 or int(drop.get("day", 0)) != GameState.day or drop.get("reason") != SupportSystem.NEGLECT_REASON:
 		return "the fourth week read reputation %d and drop %s, want -1 on day %d" % [GameState.reputation, drop, GameState.day]
+	if not SupportSystem.neglect_note().contains(Fmt.date_line(GameState.get_date_dict(GameState.day))):
+		return "the drop's note reads '%s', want the date of day %d" % [SupportSystem.neglect_note(), GameState.day]
 	# The pile holds: the fall goes below zero week by week and stops at GameState's floor.
 	week.call()
 	if GameState.reputation != -2:

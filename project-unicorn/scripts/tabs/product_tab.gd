@@ -4,8 +4,8 @@ extends Control
 # denetim şeridi (SPRINT | ÇEYREK, PM yokken gerekçesiyle kilitli; Geçmiş ve devir anahtarı), gövdede SPRINT
 # görünümü (alanlar · bu sprint · sonraki) ya da ÇEYREK görünümü. Her değişiklikte kaynağın modelinden
 # baştan kurulur; kaynak yoksa canlı model ve eylemler SprintSystem'e gider, ürün türü seçilmemişse
-# şerit yoktur ve ortada tür seçici durur. Akordeon, ses katlaması, geçmiş ve görünüm sekmenin yerel
-# durumudur: modelin `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; kaynağa yalnız "voices_seen" gider.
+# şerit yoktur ve ortada tür seçici durur. Akordeon, geçmiş ve görünüm sekmenin yerel durumudur: modelin
+# `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar.
 
 ## ÇEYREK'te pencere içeriği kadar uzar (WindowLayer fit_height okur).
 signal fit_changed
@@ -21,10 +21,12 @@ var _source: Object = null
 var _ui: Dictionary = {}
 var _closing := false   # pencere kapanıyor: ertelenmiş kurulum ölmekte olan sayfada saati yeniden tutmasın
 var _rebuild_queued := false
+var _reveal_open := false   # Destek kartı alanı açtı: kurulunca alanın başı sütunun başına gelsin
 var _kpis: HBoxContainer
 var _ctl: PanelContainer
 var _ctl_row: HBoxContainer
 var _sprint_view: HBoxContainer
+var _areas_scroll: ScrollContainer
 var _areas: AreaPanel
 var _sprint: SprintPanel
 var _quarter: QuarterView
@@ -56,6 +58,7 @@ func _ready() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.custom_minimum_size.x = UiTokens.D_W_AREAS
 	_sprint_view.add_child(scroll)
+	_areas_scroll = scroll
 	_areas = AreaPanel.new()
 	_areas.action.connect(_on_action)
 	_areas.ui_changed.connect(_on_ui_changed)
@@ -91,8 +94,9 @@ func _ready() -> void:
 		body.add_child(SprintUiShared.pad(view, BODY_PAD))
 		view.get_parent().set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	# Canlı modelin durumu sistemlerde değişir: sprint eylemi, sürüm, gün geçişi ve masadaki kâğıtlar yeniden çizer.
+	# Canlı modelin durumu sistemlerde değişir: sprint eylemi, sürüm, açık hata, gün geçişi ve masadaki kâğıtlar yeniden çizer.
 	EventBus.product_state_changed.connect(_queue_rebuild)
+	EventBus.build_progress_changed.connect(_queue_rebuild)
 	EventBus.day_advanced.connect(_queue_rebuild.unbind(1))
 	EventBus.desk_changed.connect(_queue_rebuild)
 	_rebuild()
@@ -143,6 +147,9 @@ func _rebuild() -> void:
 	elif _sprint_view.get_parent().visible:
 		_areas.setup(m, false)
 		_sprint.setup(m)
+		if _reveal_open:
+			_reveal_open = false
+			get_tree().process_frame.connect(_scroll_to_open_area, CONNECT_ONE_SHOT)
 	_hold_clock(m.center.mode == "release")
 	# Wrapped text settles in the frame after a rebuild; the window reads the quarter's height then.
 	if not get_tree().process_frame.is_connected(_refit):
@@ -151,6 +158,14 @@ func _rebuild() -> void:
 
 func _refit() -> void:
 	fit_changed.emit()
+
+
+## Üstteki Müşteriler listesi sütunu uzatabilir: açılan alan yerleştikten sonra, sütunun alt yarısında başlıyorsa sütunun
+## başına gelir.
+func _scroll_to_open_area() -> void:
+	var offset: int = _areas.open_offset()
+	if offset > _areas_scroll.size.y / 2.0:
+		_areas_scroll.scroll_vertical = offset
 
 
 ## Başlığın ölçüleri, ürün kurulunca: tür anahtarıyla ürün adı ve sürüm (MVP öncesi yazıyla); canlı B2C'de
@@ -209,9 +224,15 @@ func _set_ui(value: Variant, key: String) -> void:
 	_queue_rebuild()
 
 
-func _on_ui_changed(open_area: String, voices_open: bool) -> void:
-	_ui.open_area = open_area
-	_ui.voices_open = voices_open
+## SPRINT görünümünde bu alan açık: Destek kartı en çok açık hatası olan hattın alanına götürür.
+func open_area(area_id: String) -> void:
+	_ui.view = "sprint"
+	_reveal_open = true
+	_on_ui_changed(area_id)
+
+
+func _on_ui_changed(open_area_id: String) -> void:
+	_ui.open_area = open_area_id
 	_queue_rebuild()
 
 
@@ -245,7 +266,6 @@ func _act(kind: String, args: Dictionary) -> void:
 		"approve_all": SprintSystem.approve_all()
 		"edit": SprintSystem.edit(args.sprint)
 		"pick_goal": SprintSystem.pick_goal(args.area_id)
-		"voices_seen": SprintSystem.voices_seen(args.area)
 		"team": EventBus.tab_changed.emit("hr")
 		"rnd":
 			# Önce sayfa: düğüm isteği monte olmuş Ar-Ge sayfasına düşer.

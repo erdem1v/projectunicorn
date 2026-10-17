@@ -20,7 +20,7 @@ extends RefCounted
 #               result: {kind: "expected"|"actual", text} or null}],
 #   quarter: {state: "locked_no_pm"|"open",
 #             goal: {area_id, area_name, text, now, target, total, progress_text} or null, columns: [column]},
-#   ui: {view: "sprint"|"quarter", open_area: area id or "", history_open, voices_open, hover_card: card id or ""},
+#   ui: {view: "sprint"|"quarter", open_area: area id or "", history_open, hover_card: card id or ""},
 #   areas: [area],
 #   customers: null (B2C, satır yok) | [customer] ([] = "Açık talep yok"),
 #   center: center,
@@ -28,11 +28,13 @@ extends RefCounted
 # }
 # area = {id, name, level 0..3 (.5 olabilir), level_to: -1 or 0..3 (sürüm oku),
 #         word: "strong"|"enough"|"weak"|"none", word_to: "" or word, sentence, goal_text (çeyrek hedefi olarak),
-#         voices: {n, new}, alert (uyarı üçgeni), rival_topic: "" or String,
+#         bug_rows: [bug_row] (yalnız açık hatası olan hatlar, en çok hatalısı önde), alert (uyarı üçgeni),
+#         rival_topic: "" or String,
 #         capabilities: [{name, tier 0..3}],
-#         candidates: [card], voices_list: [{text, new}], empty (aday kalmadı)}
-# customer = {name, request: "" or String, tickets, tag_sprint: -1 or int, due_sprint: -1 or int,
-#             value (yıllık $), area_name: "" or String, card_id (talebin kartı), buttons: [...],
+#         candidates: [card], empty (aday kalmadı)}
+# bug_row = {text: "Fatura · 6 açık hata · 3 hesap · 140 kullanıcı", tip, delta (son haftalık tike göre: okun yönü, 0 = ok yok)}
+# customer = {name, request, tag_sprint: -1 or int, due_sprint: -1 or int,
+#             value (yıllık $), area_name, card_id (talebin kartı), buttons: [...],
 #             addable ("+" bu talep için açık)}
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks (sprintin süresi), week (active),
 #           lengths: [int] (planlamada seçilebilen süreler),
@@ -72,7 +74,7 @@ extends RefCounted
 #         ready: -1 or 0..1 (sonraki sütunda önden hazırlanan kartın hazır payı; planda sprint sonundaki),
 #         buttons: ["add"|"send_next"|"pull"|"remove"]}   # var olan düğmeler; "+" addable ile açılır
 # part = {k: "level", area, from, to, from_word, to_word} | {k: "holds", area, word} | {k: "alert_clear", area}
-#      | {k: "cap", name, from, to, from_word, to_word} | {k: "bugs_closed", n} | {k: "voices", n}
+#      | {k: "cap", name, from, to, from_word, to_word} | {k: "bugs_closed", n}
 #      | {k: "bugs", n, accounts (B2C'de -1), users, top ("" ise yok), top_users}   # düzeltme kartının hata satırı
 #      | {k: "request", customer, value} | {k: "research", area} | {k: "request_on_time", customer}
 #      | {k: "promise", customer}   # kademeye verilmiş açık söz; kart onu etiketle de taşır
@@ -131,7 +133,7 @@ static func live() -> Dictionary:
 		},
 		"versions": versions,
 		"quarter": _quarter(center, next),
-		"ui": {"view": "sprint", "open_area": "", "history_open": false, "voices_open": false, "hover_card": ""},
+		"ui": {"view": "sprint", "open_area": "", "history_open": false, "hover_card": ""},
 		"areas": SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()).map(
 			func(a: Dictionary) -> Dictionary: return _area(a.id, tags, changed.get(a.id, {}))),
 		"customers": _customers(tags) if ProductState.market_type() == "b2b" else null,
@@ -145,16 +147,15 @@ static func live() -> Dictionary:
 ## Sürüm notunda değişen alan oklu okunur: eski seviye ve kelimesi → bugünkü.
 static func _area(id: String, tags: Dictionary, changed: Dictionary) -> Dictionary:
 	var word: String = SprintCatalog.area_word(id)
-	var voices: Array = SprintCatalog.voices(id)
 	var candidates: Array = SprintCatalog.candidates(id).map(
 		func(c: Dictionary) -> Dictionary: return _candidate(c, tags))
 	var area := {"id": id, "name": SprintCatalog.area_name(id),
 		"level": SprintCatalog.area_level(id), "level_to": -1, "word": word, "word_to": "",
 		"sentence": SprintCatalog.area_sentence(id), "goal_text": goal_text(id),
-		"voices": {"n": voices.size(), "new": voices.filter(func(v: Dictionary) -> bool: return v.new).size()},
+		"bug_rows": _bug_rows(id),
 		"alert": SprintCatalog.area_alert(id), "rival_topic": SprintCatalog.rival_topic(id),
 		"capabilities": SprintCatalog.capabilities(id).map(_capability),
-		"candidates": candidates, "voices_list": voices, "empty": candidates.is_empty()}
+		"candidates": candidates, "empty": candidates.is_empty()}
 	if not changed.is_empty():
 		area.level = float(changed.from)
 		area.level_to = float(changed.to)
@@ -165,6 +166,36 @@ static func _area(id: String, tags: Dictionary, changed: Dictionary) -> Dictiona
 
 static func _capability(line_id: String) -> Dictionary:
 	return {"name": SprintCatalog.cap_name(line_id), "tier": SprintCatalog.tier(line_id)}
+
+
+## Alanın yalnız açık hatası olan hatları, en çok hatalısı önde (eşitlikte yeteneklerin sırası).
+static func _bug_rows(area_id: String) -> Array:
+	var lines: Array = SprintCatalog.capabilities(area_id).filter(
+		func(line_id: String) -> bool: return ProductState.line_bugs(line_id) > 0)
+	var order: Array = lines.duplicate()
+	lines.sort_custom(func(a: String, b: String) -> bool:
+		var more: int = ProductState.line_bugs(a) - ProductState.line_bugs(b)
+		return more > 0 if more != 0 else order.find(a) < order.find(b))
+	return lines.map(bug_row)
+
+
+## Hat satırı (alanın AÇIK HATALAR bölümü): `text` "Fatura · 6 açık hata · 3 hesap · 140 kullanıcı" (B2C'de hesapsız), `delta`
+## açık hatanın son haftalık tike göre değişimi (okun yönü, 0 ise ok yok), `tip` geçen haftanın sayısı ve B2B'de en büyük hesap.
+static func bug_row(line_id: String) -> Dictionary:
+	return bug_row_of(SprintCatalog.cap_name(line_id), SprintCatalog.bugs_part(line_id, ProductState.line_bugs(line_id)),
+		ProductState.open_bugs_delta(line_id))
+
+
+## Satırın metni, hata parçasından (`SprintCatalog.bugs_part`) ve değişimden kurulur; fikstür de bunu çağırır.
+static func bug_row_of(line_name: String, part: Dictionary, delta: int) -> Dictionary:
+	var bits: PackedStringArray = [line_name, SprintUiShared.count("PRODUCT_BUG_COUNT", int(part.n))]
+	bits.append_array(SprintUiShared.impact_bits(part))
+	var tip: PackedStringArray = [_t("PRODUCT_BUGS_TIP_PREV").format(
+		{"bugs": SprintUiShared.count("PRODUCT_BUG_COUNT", int(part.n) - delta)})]
+	if part.top != "":
+		tip.append(_t("PRODUCT_BUGS_TIP_TOP").format(
+			{"account": part.top, "users": SprintUiShared.count("PRODUCT_USER_COUNT", int(part.top_users))}))
+	return {"text": SprintUiShared.SEP.join(bits), "tip": "\n".join(tip), "delta": delta}
 
 
 ## Aday: sprintte ya da sonrakinde duran kart soluk ve damgalı, kapısı kapalı kart kilitli.
@@ -189,7 +220,7 @@ static func _customers(tags: Dictionary) -> Array:
 		var card_id: String = "feat:" + r.step if stored.has("feat:" + r.step) else String(r.card_id)
 		var area_id: String = SprintCatalog.area_of_line(r.line)
 		var tag: int = tags.get(card_id, -1)
-		out.append({"name": customer, "request": SprintCatalog.step_name(r.step), "tickets": 0,
+		out.append({"name": customer, "request": SprintCatalog.step_name(r.step),
 			"tag_sprint": tag, "due_sprint": int(r.due_sprint), "value": int(r.value),
 			"area_name": SprintCatalog.area_short(area_id), "card_id": card_id,
 			"buttons": BUTTONS[SprintCard.State.ADAY] if tag < 0 else [], "addable": tag < 0 and SprintSystem.can_add(card_id)})

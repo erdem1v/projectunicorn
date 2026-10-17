@@ -890,9 +890,10 @@ func _migrate_15(state: Dictionary) -> void:
 ## not caught up with go one by one over the live lines in id order. A fix card keeps the count it showed as a number
 ## (a shipped one left its line clear, so its release row reads "n → 0"), the release notes' result sentences take the
 ## bug keys, the bugs of faulty cards waiting for v1.0 change their name, and what earlier changes removed leaves the
-## save: the fix run's and the support week's flags, the live bug counter and its history, and the rows of the card
-## that left the event engine. A product fund's pending callback on open bugs becomes the customer-loss callback, its
-## window opening at the save's own day. Pure and cheap: list_slots reads every slot through here.
+## save: the fix run's and the support week's flags, the live bug counter and its history, the days the voices were
+## last read, and the rows of the card that left the event engine. A product fund's pending callback on open bugs
+## becomes the customer-loss callback, its window opening at the save's own day. Pure and cheap: list_slots reads
+## every slot through here.
 const _REMOVED_FLAGS := ["mvp_bugs_confirmed", "mvp_fix_run_active", "mvp_fix_run_fixed", "mvp_fix_run_progress",
 	"mvp_reports_week_net", "mvp_live_bug_count", "mvp_live_bug_progress", "mvp_bug_history"]
 const _REMOVED_CARD := "product.bug_pile"
@@ -920,7 +921,7 @@ func _migrate_16(state: Dictionary) -> void:
 
 	if product.has("sprint"):
 		product["pending_faulty"] = product.get("gate_faulty", product.get("pending_faulty", []))
-		for key in ["tickets", "ticket_seq", "gate_faulty"]:
+		for key in ["tickets", "ticket_seq", "gate_faulty", "voices_seen"]:
 			product.erase(key)
 		var cards: Array = product.cards.values() + product.release.get("shipped", [])
 		for record: Dictionary in product.releases:

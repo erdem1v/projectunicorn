@@ -9,7 +9,6 @@ const SEP := " · "
 const KIND_ICON := "res://assets/icons/product/kind_%s.svg"
 const ROLE_ICONS := {"design": "res://assets/icons/skill/design.svg", "dev": "res://assets/icons/skill/engineering.svg",
 	"test": "res://assets/icons/skill/qa.svg", "product": "res://assets/icons/skill/product.svg"}
-const VOICES := "res://assets/icons/product/voices.svg"
 const BUG := "res://assets/icons/product/bug.svg"
 const ARROW := "res://assets/icons/util/arrow_right.svg"
 const WARN := "res://assets/icons/util/warn.svg"
@@ -22,10 +21,6 @@ const LEVEL_KEYS := {
 	"weak": "PRODUCT_LEVEL_WEAK", "none": "PRODUCT_LEVEL_NONE",
 }
 const RESULT_KEYS := {"expected": "PRODUCT_RESULT_EXPECTED", "actual": "PRODUCT_RESULT_ACTUAL"}
-## Kart kipi "kapatır", öngörü kipi "kapanır" der.
-const COUNT_KEYS := {
-	"voices": ["PRODUCT_FX_VOICES_CLOSE", "PRODUCT_FX_VOICES_CLOSED"],
-}
 ## Kartın glif tuşları; listede olmayan tür (remove) kelimeyle yazılır.
 const KEY_GLYPHS := {"add": "res://assets/icons/util/plus.svg", "send_next": ARROW,
 	"pull": "res://assets/icons/util/chevron_up.svg"}
@@ -277,14 +272,21 @@ static func effect_line(parts: Array) -> VBoxContainer:
 ## Düzeltme kartının hata satırı: "6 hata · 3 hesap · 140 kullanıcı · en büyüğü Demir Holding (100 kullanıcı)";
 ## B2C'de hesap sayısı (-1) ve en büyük hesap yoktur.
 static func bugs_text(part: Dictionary) -> String:
-	var bits: PackedStringArray = [_count("PRODUCT_FX_BUGS", int(part.n))]
-	if int(part.accounts) >= 0:
-		bits.append(_count("PRODUCT_ACCOUNT_COUNT", int(part.accounts)))
-	bits.append(_count("PRODUCT_USER_COUNT", int(part.users)))
+	var bits: PackedStringArray = [count("PRODUCT_FX_BUGS", int(part.n))]
+	bits.append_array(impact_bits(part))
 	if part.top != "":
 		bits.append(RnDUiShared.t("PRODUCT_FX_TOP").format(
-			{"account": part.top, "users": _count("PRODUCT_USER_COUNT", int(part.top_users))}))
+			{"account": part.top, "users": count("PRODUCT_USER_COUNT", int(part.top_users))}))
 	return SEP.join(bits)
+
+
+## Hata parçasının etkilenenleri: "3 hesap", "140 kullanıcı"; B2C'de hesap sayısı (-1) yazılmaz.
+static func impact_bits(part: Dictionary) -> PackedStringArray:
+	var bits := PackedStringArray()
+	if int(part.accounts) >= 0:
+		bits.append(count("PRODUCT_ACCOUNT_COUNT", int(part.accounts)))
+	bits.append(count("PRODUCT_USER_COUNT", int(part.users)))
+	return bits
 
 
 ## SPRINT SONUNDA öngörüsü: her parça kazanç glifiyle kendi kutusunda, seviye kelimeyle okunur.
@@ -303,8 +305,9 @@ static func forecast(parts: Array) -> HFlowContainer:
 	return flow
 
 
-static func _count(key: String, n: int) -> String:
-	return RnDUiShared.t(Fmt.count_key(key, n)).format({"n": n})
+## Sayılan anahtarın metni: `n` 1 ise tekili, binlik ayraçlı.
+static func count(key: String, n: int) -> String:
+	return RnDUiShared.t(Fmt.count_key(key, n)).format({"n": Fmt.group(n)})
 
 
 static func _part(part: Dictionary, forecast_mode: bool) -> HBoxContainer:
@@ -330,9 +333,7 @@ static func _part(part: Dictionary, forecast_mode: bool) -> HBoxContainer:
 			row.add_child(UiFactory.make_glyph(WARN, UiTokens.D_ICON_PART, UiTokens.D_warn()))
 			row.add_child(label(RnDUiShared.t("PRODUCT_FX_ALERT_CLEARS"), say))
 		"bugs_closed":
-			row.add_child(label(_count("PRODUCT_FX_BUGS_CLOSED", int(part.n)), say))
-		"voices":
-			row.add_child(label(_count(COUNT_KEYS[part.k][int(forecast_mode)], int(part.n)), say))
+			row.add_child(label(count("PRODUCT_FX_BUGS_CLOSED", int(part.n)), say))
 		"request":
 			row.add_child(label(RnDUiShared.t("PRODUCT_FX_REQUEST").format({"customer": part.customer}) + SEP
 				+ RnDUiShared.t("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(part.value))}), say))

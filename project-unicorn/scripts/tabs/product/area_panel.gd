@@ -3,19 +3,20 @@ extends VBoxContainer
 
 # Ürün sprint ekranının sol paneli: Geçmiş açıksa sürüm listesi, B2B'de Müşteriler satırı (son tarihli
 # talepler bir bakışta görünsün diye en üstte), sonra alan satırları (aynı anda tek açık akordeon), açık
-# alanın yetenekleri, aday kartları ve sesleri. Panel modeli çizer. Akordeonun ve ses katlamasının
-# sahibi sekmedir: tık `ui_changed` olarak çıkar, sekme durumu yazıp paneli yeniden kurar.
+# alanın yetenekleri, açık hatası olan hatları ve aday kartları. Panel modeli çizer. Akordeonun sahibi
+# sekmedir: tık `ui_changed` olarak çıkar, sekme durumu yazıp paneli yeniden kurar.
 
 signal action(kind: String, args: Dictionary)
-signal ui_changed(open_area: String, voices_open: bool)
+signal ui_changed(open_area: String)
 
 const CARD_SCENE := preload("res://scenes/tabs/product/SprintCard.tscn")
 const CHEVRONS := ["res://assets/icons/util/chevron_right.svg", "res://assets/icons/util/chevron_down.svg"]
+## Hat satırının değişim oku: artış yukarı, azalış aşağı üçgen.
+const TREND_ICONS := {1: "res://assets/icons/util/tri_up.svg", -1: "res://assets/icons/util/tri_down.svg"}
 
 var _model: Dictionary
 var _compact := false
 var _open := ""
-var _voices_open := false
 
 
 ## compact: çeyrek görünümünün dar sütunu; satır açılmaz, şevron, rakip bayrağı ve talep kartı yok.
@@ -24,7 +25,6 @@ func setup(model: Dictionary, compact: bool) -> void:
 	_model = model
 	_compact = compact
 	_open = "" if compact else String(model.ui.open_area)
-	_voices_open = bool(model.ui.voices_open)
 	UiFactory.clear(self)
 	add_theme_constant_override("separation", 0)
 	if _model.ui.history_open and not compact:
@@ -34,6 +34,14 @@ func setup(model: Dictionary, compact: bool) -> void:
 	add_child(SprintUiShared.section("PRODUCT_AREAS"))
 	for area in _model.areas:
 		_add_area_row(area)
+
+
+## Açık satırın sütundaki yeri (açık satır yoksa 0): kaydırma alanı oraya kaydırılınca alanın başı görünür.
+func open_offset() -> int:
+	for row: Control in get_children():
+		if row.get_meta(&"selected", false):
+			return int(row.position.y)
+	return 0
 
 
 ## Sürümler, en yenisi üstte: "v1.4 Sprint 6 · 2 kart", altında beklenen ya da gerçekleşen sonuç.
@@ -66,8 +74,8 @@ func _add_history() -> void:
 		list.add_child(row)
 
 
-## Alan satırı: ad, uyarı üçgeni ve şevron; seviye kareleri ve kelimesi, sağda ses sayacı ve rakip
-## bayrağı; cümlesi. Açık satır yükselir ve gövdesini taşır.
+## Alan satırı: ad, uyarı üçgeni ve şevron; seviye kareleri ve kelimesi, sağda rakip bayrağı; cümlesi. Açık
+## satır yükselir ve gövdesini taşır.
 func _add_area_row(area: Dictionary) -> void:
 	var id: String = area.id
 	var open: bool = id == _open
@@ -113,15 +121,6 @@ func _add_area_row(area: Dictionary) -> void:
 	level.add_child(SprintUiShared.label(tr(SprintUiShared.LEVEL_KEYS[word]), &"KeyText",
 		SprintUiShared.word_color(word)))
 	level.add_child(RnDUiShared.spacer())
-	if int(area.voices.n) > 0:
-		var chip := PanelContainer.new()
-		chip.theme_type_variation = &"CountChip"
-		chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE   # PanelContainer tıkı yutar; satır başlığına geçsin
-		var counts := SprintUiShared.box(UiTokens.SPACE_XS)
-		chip.add_child(counts)
-		_add_voice_counts(counts, area.voices, false)
-		level.add_child(chip)
 	if not _compact and area.rival_topic != "":
 		level.add_child(SprintUiShared.flag(tr("PRODUCT_RIVAL_TOPIC").format({"topic": area.rival_topic})))
 
@@ -132,7 +131,8 @@ func _add_area_row(area: Dictionary) -> void:
 		_add_open_body(col, area)
 
 
-## Açık satırın gövdesi: YAPILANLAR (kademesi olan yetenekler), YAPILABİLECEKLER (aday kartlar), SESLER.
+## Açık satırın gövdesi: YAPILANLAR (kademesi olan yetenekler), AÇIK HATALAR (yalnız hatası olan hatlar), YAPILABİLECEKLER
+## (aday kartlar).
 func _add_open_body(col: VBoxContainer, area: Dictionary) -> void:
 	var body := SprintUiShared.column(UiTokens.SPACE_M)
 	col.add_child(SprintUiShared.pad(body, Vector4i(0, UiTokens.SPACE_L, 0, 0)))
@@ -151,6 +151,13 @@ func _add_open_body(col: VBoxContainer, area: Dictionary) -> void:
 			# Kademe bir durum değil miktar: dolu kareler nötr mürekkepte.
 			grid.add_child(SprintUiShared.squares(int(cap.tier), UiTokens.D_SQUARE_SM, SprintUiShared.word_color("enough")))
 
+	if not area.bug_rows.is_empty():
+		body.add_child(SprintUiShared.section("PRODUCT_BUGS", true))
+		var rows := SprintUiShared.column(UiTokens.SPACE_S)
+		body.add_child(rows)
+		for row in area.bug_rows:
+			rows.add_child(_bug_row(row))
+
 	body.add_child(SprintUiShared.section("PRODUCT_POSSIBLE", true))
 	if area["empty"]:
 		body.add_child(SprintUiShared.empty_line(tr("PRODUCT_AREA_NOTHING_LEFT"), SprintUiShared.CHECK))
@@ -160,42 +167,23 @@ func _add_open_body(col: VBoxContainer, area: Dictionary) -> void:
 		card.setup(c, SprintCard.Look.LOW)
 		card.action.connect(action.emit)
 
-	var voices: Dictionary = area.voices
-	if int(voices.n) == 0:
-		return
-	body.add_child(SprintUiShared.section("PRODUCT_VOICES", true))
-	var fold := SprintUiShared.box(UiTokens.SPACE_M)
-	fold.custom_minimum_size.y = UiTokens.D_H_FX
-	fold.mouse_filter = Control.MOUSE_FILTER_STOP
-	fold.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	fold.gui_input.connect(_on_voices_input.bind(area.id))
-	body.add_child(fold)
-	_add_voice_counts(fold, voices, true)
-	fold.add_child(RnDUiShared.spacer())
-	fold.add_child(UiFactory.make_glyph(CHEVRONS[int(_voices_open)], UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
-	if not _voices_open:
-		return
-	for v in area.voices_list:
-		var line := SprintUiShared.box(UiTokens.SPACE_M)
-		if v["new"]:
-			line.add_child(UiFactory.D_tag(tr("PRODUCT_NEW_STAMP")))
-		line.add_child(SprintUiShared.prose(String(v.text), &"MetaText"))
-		body.add_child(line)
 
-
-## Ses sayacı: kapalı satırın çipinde yalnız sayı, SESLER satırında "n ses"; yeni ses varsa "· k yeni".
-func _add_voice_counts(box: HBoxContainer, voices: Dictionary, worded: bool) -> void:
-	var n: int = int(voices.n)
-	var fresh: int = int(voices["new"])
-	box.add_child(UiFactory.make_glyph(SprintUiShared.VOICES, UiTokens.D_ICON_ROW if worded else UiTokens.D_ICON_PART,
-		UiTokens.D_INK_3))
-	var small: StringName = &"MetaText" if worded else &"CaptionPrimary"
-	box.add_child(SprintUiShared.label(tr(Fmt.count_key("PRODUCT_VOICES_COUNT", n)).format({"n": n}) if worded
-		else str(n), small))
-	if fresh > 0:
-		box.add_child(SprintUiShared.label(SprintUiShared.SEP.strip_edges(), small, UiTokens.D_INK_4))
-		box.add_child(SprintUiShared.label(tr("PRODUCT_NEW_COUNT").format({"n": fresh}),
-			&"TipTitle" if worded else &"CaptionStrong", UiTokens.D_INK_1))
+## Hat satırı: metni, sağında son haftalık tikten bu yana değişim oku (artış uyarı renginde, azalış olumlu renkte;
+## değişmediyse yuvası boş kalır, satırlar aynı genişlikte sarar); ayrıntı ipucunda.
+func _bug_row(row: Dictionary) -> HBoxContainer:
+	var line := SprintUiShared.box(UiTokens.SPACE_M)
+	line.tooltip_text = row.tip
+	line.add_child(SprintUiShared.prose(String(row.text), &"MetaText"))
+	var delta: int = int(row.delta)
+	if delta == 0:
+		var slot := Control.new()
+		slot.custom_minimum_size.x = UiTokens.D_ICON_TAG
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		line.add_child(slot)
+	else:
+		line.add_child(UiFactory.make_glyph(TREND_ICONS[signi(delta)], UiTokens.D_ICON_TAG,
+			UiTokens.D_warn() if delta > 0 else UiTokens.D_pos()))
+	return line
 
 
 ## Müşteriler: talep sayısı ve talep kartları; dar sütunda yalnız başlık ve sayı.
@@ -222,8 +210,7 @@ func _add_customers(customers: Array) -> void:
 
 
 ## Talep kartı: "müşteri · talep" ve planlı sprintin etiketi ya da "+" ve "→"; altında son tarih (bu ya da
-## sonraki sprintte bitiyorsa uyarı renginde), yıllık bedel ve alan. Talebi olmayan müşteri tek satırlık
-## ticket sayısıdır.
+## sonraki sprintte bitiyorsa uyarı renginde), yıllık bedel ve alan.
 func _customer_card(c: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"SprintCard"
@@ -231,14 +218,10 @@ func _customer_card(c: Dictionary) -> PanelContainer:
 	card.add_child(col)
 	var top := SprintUiShared.box(UiTokens.SPACE_M)
 	col.add_child(top)
-	var tickets: int = int(c.tickets)
-	var title := SprintUiShared.label(String(c.name) + SprintUiShared.SEP + String(c.request) if c.request != ""
-		else tr(Fmt.count_key("PRODUCT_CUSTOMER_TICKETS", tickets)).format({"customer": c.name, "n": tickets}), &"DataStrong")
+	var title := SprintUiShared.label(String(c.name) + SprintUiShared.SEP + String(c.request), &"DataStrong")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	top.add_child(title)
-	if c.request == "":
-		return card
 	if int(c.tag_sprint) >= 0:
 		top.add_child(UiFactory.D_tag(tr("PRODUCT_TAG_SPRINT").format({"n": int(c.tag_sprint)}), &"outline"))
 	for kind in c.buttons:
@@ -260,19 +243,10 @@ func _customer_card(c: Dictionary) -> PanelContainer:
 		terms.add_child(due)
 	terms.add_child(SprintUiShared.label(tr("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(c.value))}),
 		&"KeyText"))
-	if String(c.area_name) != "":
-		terms.add_child(SprintUiShared.flag(String(c.area_name)))
+	terms.add_child(SprintUiShared.flag(String(c.area_name)))
 	return card
 
 
 func _on_area_input(ev: InputEvent, id: String) -> void:
 	if UiFactory.is_left_click(ev):
-		ui_changed.emit("" if _open == id else id, false)
-
-
-func _on_voices_input(ev: InputEvent, id: String) -> void:
-	if not UiFactory.is_left_click(ev):
-		return
-	if not _voices_open:
-		action.emit("voices_seen", {"area": id})
-	ui_changed.emit(_open, not _voices_open)
+		ui_changed.emit("" if _open == id else id)

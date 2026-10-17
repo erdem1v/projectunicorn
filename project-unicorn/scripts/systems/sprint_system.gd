@@ -81,7 +81,7 @@ static func new_state(day: int) -> Dictionary:
 		"next": {"number": 2, "cards": []},
 		"mode": "plan", "cards": {}, "release": {}, "releases": [], "polish": {},
 		"requests": [], "rival_hits": [],
-		"voices_seen": {}, "research_done": {}, "decision": {}, "auto_started": -1,
+		"research_done": {}, "decision": {}, "auto_started": -1,
 		"quarter": {"goal_area": "", "start_sprint": 1, "plans": []},
 		"worked": {"day": -1, "ids": []}, "pending_faulty": [], "delegate": false, "empty_sprint": -1,
 	}
@@ -394,12 +394,6 @@ static func pick_goal(area_id: String) -> void:
 	_changed()
 
 
-## Sesler katlaması açıldı: o güne kadar gelenler "yeni" sayılmaz.
-static func voices_seen(area_id: String) -> void:
-	_p().voices_seen[area_id] = GameState.day
-	_changed()
-
-
 # --- Okumalar --------------------------------------------------------------------------
 
 static func is_typed() -> bool:
@@ -449,7 +443,7 @@ static func sprint_weeks() -> int:
 
 
 ## Haftayla sayılan süre seçilen sprint süresiyle kaç sprint eder: talep ve söz son tarihi, çeyrek,
-## rakip penceresi ve Sesler'in "yeni"si hafta sayar ve sprint sırasıyla okunur.
+## rakip penceresi ve araştırma cümlesi hafta sayar ve sprint sırasıyla okunur.
 static func sprints_in(weeks: int) -> int:
 	return int(float(weeks) / sprint_weeks())
 

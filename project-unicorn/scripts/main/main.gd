@@ -1218,8 +1218,8 @@ func _seed_goal(state: String) -> void:
 # card_ishani / card_home (city only) = the company still in the flat, İş hanı's / the flat's card
 # open; card_tick (city only) = Plaza's card open through one daily tick: a _before frame, and an
 # OFFICECARD line with the cash reading the card draws before and after.
-# desk_shut = a live B2C product, the founder on the build, nobody at the support desk, nine confirmed
-# bugs and twelve reports in: the DESTEK card's two counts.
+# desk_shut = a live B2C product, the founder on the build, nobody at the support desk, seven open bugs on two
+# lines: the DESTEK card's one line (_01), then a click on it: the Product window on the worst line's area (_02).
 # With --pan / --pan-gpu (OFFICE_PAN) the shot is handed over after the extra: the camera moves by pixel
 # offsets, the 3D image alone is saved and measured, and the process ends there.
 func _run_office_shot(spec: String) -> void:
@@ -1286,11 +1286,20 @@ func _run_office_shot(spec: String) -> void:
 			TimeManager._dispatch_daily_tick()
 			print("OFFICECARD|cash_now_before=%s|after=%s" % [before, on_card.call()])
 		"desk_shut":
-			GameState.set_flag("mvp_market_type", "b2c")
-			GameState.set_flag("mvp_sub_product_type_id", "note_tool")
-			ProductState.add_bugs(ProductLines.line_ids("note_tool")[0], 9)
-			GameState.set_flag(ProductState.REPORTS_INCOMING, 12)
-			EventBus.build_progress_changed.emit()
+			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / name
+			GameState.set_flag("mvp_version", 5)
+			GameState.set_flag("b2c_audience", 2400.0)
+			# The theme surface's bugs sit on an ERP line this product has not.
+			ProductState.clear_line_bugs("line_erp_ledger")
+			var lines: Array = ProductLines.line_ids("note_tool")
+			for line: String in lines.slice(0, 2):
+				ProductState.set_line_tier(line, 2)
+			ProductState.add_bugs(lines[0], 4)
+			ProductState.add_bugs(lines[1], 3)
+			# The card's click handler: the Product window opens on the worst line's area.
+			await _shot_step("office_shot_%s_%02d_desk_shut" % [office_id, hour],
+				func() -> void: _shell.find_child("BuildBar", true, false)._open_product())
+			return
 		"crown":
 			(view.lighting as OfficeLighting).crown_glow = 1.0
 			var cam: OfficeCamera = view.camera
@@ -3113,7 +3122,7 @@ func _run_ending_shot(key: String) -> void:
 # through the shell's debug relays, the same path an MCP session takes; flow starts from c1 and
 # saves one frame after each of start, advance and plan_next; cards saves a second frame with the sprint
 # column scrolled to its locked card (<stem>_locked); edge:goal_menu opens the quarter goal's
-# menu with a click on its strip, edge:voices_open scrolls the areas to the open one. live draws
+# menu with a click on its strip; edge:bug_lines_* open the core area on its open-bug lines. live draws
 # ProductModel.live() over a run seeded through SprintSystem (_seed_product_live); live:pick_named is
 # the type picker with B2C, a type and a name picked, live:pick_relang saves it and switches this run to
 # English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the decision row's
@@ -3176,13 +3185,6 @@ func _run_product_shot(id: String) -> void:
 		return
 	await _mount_shot_shell()
 	_shell.debug_product_apply("c1" if id == "flow" else id.trim_prefix("edge:"))
-	if id == "edge:voices_open":
-		# The areas column starts at the open area's own row, so its voices are in view.
-		await get_tree().process_frame
-		var areas: AreaPanel = _shell.find_children("*", "AreaPanel", true, false)[0]
-		for row: Control in areas.get_children():
-			if row.get_meta(&"selected", false):
-				(areas.get_parent().get_parent() as ScrollContainer).scroll_vertical = int(row.position.y)
 	if id == "edge:goal_menu":
 		await get_tree().process_frame
 		var click := InputEventMouseButton.new()

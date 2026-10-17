@@ -147,7 +147,8 @@ static func area_alert(area_id: String, cleared: Array = []) -> bool:
 		return line_id not in cleared and ProductState.line_bugs(line_id) >= int(cfg("fix_effort.priority")))
 
 
-## Kapalı satırın cümlesi: alan × durum şablonu, açık hata ve rakip çıkışı eklenir.
+## Kapalı satırın cümlesi: alan × durum şablonu, açık hata, sunucu aşımı, rakip çıkışı ve araştırmadan sonraki
+## `research_sentence_weeks` haftada kullanıcıların söylediği.
 static func area_sentence(area_id: String) -> String:
 	var word: String = area_word(area_id)
 	var parts: PackedStringArray = []
@@ -158,34 +159,17 @@ static func area_sentence(area_id: String) -> String:
 	for line_id in capabilities(area_id):
 		n += ProductState.line_bugs(line_id)
 	if n > 0:
-		parts.append(_t(Fmt.count_key("PRODUCT_AREA_TICKETS", n)).format({"n": n}))
+		parts.append(_t(Fmt.count_key("PRODUCT_BUG_COUNT", n)).format({"n": Fmt.group(n)}))
 	if _over_capacity(area_id):
 		parts.append(_t("PRODUCT_AREA_OVER_CAPACITY"))
 	var hit: Dictionary = _recent_hit(area_id)
 	if not hit.is_empty():
 		parts.append(_t("PRODUCT_AREA_RIVAL").format({"rival": rival_name(int(hit.rival))}))
+	var researched: Variant = _p().get("research_done", {}).get(area_id)
+	if researched != null and SprintSystem.sprint_number() - int(researched) \
+			<= SprintSystem.sprints_in(int(cfg("research_sentence_weeks"))):
+		parts.append(_t("PRODUCT_RESEARCH_VOICE_" + area_id.to_upper()))
 	return SEP.join(parts)
-
-
-## SESLER: araştırma cümlesi ve rakip çıkışı; yeniler önde. Yeni = son `voices_new_weeks` haftada
-## (o haftaların sprintlerinde) gelmiş ve katlama o günden beri açılmamış.
-static func voices(area_id: String) -> Array:
-	var seen: int = int(_p().get("voices_seen", {}).get(area_id, -1))
-	var since_sprint: bool = seen < int(_p().get("sprint", {}).get("start_day", 0))
-	var weeks: int = int(cfg("voices_new_weeks"))
-	var sprints: int = SprintSystem.sprints_in(weeks)
-	var fresh: Array = []
-	var old: Array = []
-	var research: Dictionary = _p().get("research_done", {})
-	if research.has(area_id):
-		var is_new: bool = since_sprint and SprintSystem.sprint_number() - int(research[area_id]) <= sprints
-		(fresh if is_new else old).append({"text": _t("PRODUCT_RESEARCH_VOICE_" + area_id.to_upper()), "new": is_new})
-	var launch: Dictionary = _launch_of(_recent_hit(area_id))
-	if not launch.is_empty():
-		var is_new: bool = since_sprint and SprintSystem.sprint_number() - int(launch.sprint) <= sprints
-		(fresh if is_new else old).append({"text": _t("PRODUCT_RIVAL_VOICE").format(
-			{"rival": launch.name, "capability": _t(launch.capability_key)}), "new": is_new})
-	return fresh + old
 
 
 # --- Kartlar ---------------------------------------------------------------------
@@ -338,7 +322,7 @@ static func card_effect(card: Dictionary) -> Array:
 	var area: String = card.area
 	match card.kind:
 		"fix":
-			var parts: Array = [_bugs_part(card)]
+			var parts: Array = [bugs_part(card.line, card.bugs)]
 			if _clears_alert(card):
 				parts.append({"k": "alert_clear", "area": area_short(area)})
 			return parts
@@ -431,6 +415,23 @@ static func line_impact(line_id: String) -> Dictionary:
 		seats += c.seats
 	return {"accounts": accounts.size(), "seats": seats, "top_id": accounts[0].id if not accounts.is_empty() else "",
 		"top_seats": accounts[0].seats if not accounts.is_empty() else 0}
+
+
+## Hattın açık hatasından etkilenen kullanıcılar: B2B'de hattı kullanan hesapların koltukları, B2C'de kitle payı.
+static func line_users(line_id: String) -> int:
+	return _users_of(line_impact(line_id))
+
+
+## Düzeltme kartının ve hat satırının hata sayısı parçası (ProductModel `part`): `n` hata, hesap (B2C'de -1) ve kullanıcı
+## sayısı, B2B'de en büyük hesabın adı ve koltuğu (hesap yoksa adı "").
+static func bugs_part(line_id: String, n: int) -> Dictionary:
+	var impact: Dictionary = line_impact(line_id)
+	var part := {"k": "bugs", "n": n, "accounts": -1, "users": _users_of(impact), "top": "", "top_users": 0}
+	if impact.has("top_id"):
+		var top: Customer = CustomerRegistry.get_customer(impact.top_id)
+		part.merge({"accounts": impact.accounts, "top": top.display_name() if top != null else "",
+			"top_users": impact.top_seats}, true)
+	return part
 
 
 # --- Lider ---------------------------------------------------------------------------
@@ -651,17 +652,8 @@ static func _over_capacity(area_id: String) -> bool:
 	return area_def(area_id).get("infra_alert", false) and InfraSystem.is_over_capacity()
 
 
-## Düzeltme kartının hata sayısı parçası (ProductModel `part`): hata, hesap (B2C'de -1) ve kullanıcı sayısı, B2B'de en
-## büyük hesabın adı ve koltuğu (hesap yoksa adı "").
-static func _bugs_part(card: Dictionary) -> Dictionary:
-	var impact: Dictionary = line_impact(card.line)
-	var part := {"k": "bugs", "n": card.bugs, "accounts": -1, "users": int(impact.get("users", impact.get("seats", 0))),
-		"top": "", "top_users": 0}
-	if impact.has("top_id"):
-		var top: Customer = CustomerRegistry.get_customer(impact.top_id)
-		part.merge({"accounts": impact.accounts, "top": top.display_name() if top != null else "",
-			"top_users": impact.top_seats}, true)
-	return part
+static func _users_of(impact: Dictionary) -> int:
+	return int(impact.get("users", impact.get("seats", 0)))
 
 
 static func _clears_alert(card: Dictionary) -> bool:

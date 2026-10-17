@@ -11,7 +11,7 @@ const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], 
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
 const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "pm_started": "c2", "release": "c3",
 	"no_release": "c3", "gate": "c3", "release_fix": "c3", "b2b_no_requests": "c5", "fix_long_name": "c5",
-	"goal_menu": "c4", "approved": "c4"}
+	"bug_lines_b2b": "c5", "bug_lines_many": "c5", "goal_menu": "c4", "approved": "c4"}
 ## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
 const AREAS := {
 	"core": ["Çekirdek", "Core", "Çekirdek", "Core"],
@@ -192,8 +192,36 @@ func _build(id: String) -> Dictionary:
 			m.center.mvp_line = _mvp_line()
 		"quarter_no_pm":
 			m.quarter.state = "locked_no_pm"
-		"voices_open":
-			m.ui.voices_open = true
+		"bug_lines_b2b":
+			# Hat paneli, B2B: üç hat, biri arttı, biri azaldı, biri aynı; en büyük hesap ipucunda.
+			m.customers = []
+			_area_of(m, "core").capabilities = [_cap(_p("Fatura", "Invoicing"), 2), _cap(_p("Stok", "Stock"), 2),
+				_cap(_p("Defter", "Ledger"), 1)]
+			_area_of(m, "core").candidates = [_deck("fatura_fix", SprintCard.State.ADAY)]
+			_bug_lines(m, "core", [
+				[_p("Fatura", "Invoicing"), _bugs(6, 3, 140, "Nordica", 100), 2],
+				[_p("Stok", "Stock"), _bugs(3, 1, 40, "Palmiye", 40), -1],
+				[_p("Defter", "Ledger"), _bugs(1, 2, 90, "Beykoz", 60), 0]])
+		"bug_lines_b2c":
+			# Hat paneli, B2C: kullanıcı sayısı var, hesap yok.
+			_area_of(m, "core").capabilities.push_front(_cap(_p("Eşitleme", "Sync"), 1))
+			_area_of(m, "core").candidates.push_front(_deck("esitleme", SprintCard.State.ADAY))
+			_bug_lines(m, "core", [
+				[_p("Eşitleme", "Sync"), _bugs(5, -1, 300), -1],
+				[_p("Arama", "Search"), _bugs(2, -1, 120), 1],
+				[_p("Editör", "Editor"), _bugs(1, -1, 60), 0]])
+		"bug_lines_many":
+			# Rastgele dağılımın hâli: çekirdeğin beş hattının hepsinde 1 ya da 2 hata, kalabalık sayılarla.
+			m.customers = []
+			_area_of(m, "core").capabilities = [_cap(_p("Nakit Akışı", "Cash Flow"), 2),
+				_cap(_p("Veri Girişi", "Data Entry"), 1), _cap(_p("Defter", "Ledger"), 2), _cap(_p("Stok", "Stock"), 2),
+				_cap(_p("Fatura", "Invoicing"), 2)]
+			_bug_lines(m, "core", [
+				[_p("Nakit Akışı", "Cash Flow"), _bugs(2, 14, 1240, "Nordica", 300), 1],
+				[_p("Veri Girişi", "Data Entry"), _bugs(2, 4, 210, "Palmiye", 90), 1],
+				[_p("Defter", "Ledger"), _bugs(2, 5, 350, "Nordica", 300), 0],
+				[_p("Stok", "Stock"), _bugs(1, 4, 310, "Beykoz", 120), -1],
+				[_p("Fatura", "Invoicing"), _bugs(1, 3, 140, "Nordica", 100), 1]])
 	return m
 
 
@@ -229,11 +257,6 @@ func _apply(m: Dictionary, kind: String, args: Dictionary) -> void:
 			m.quarter.goal.area_id = args.area_id
 			m.quarter.goal.area_name = _short(args.area_id)
 			m.quarter.goal.text = _area_of(m, args.area_id).goal_text
-		"voices_seen":
-			var heard: Dictionary = _area_of(m, args.area)
-			heard.voices["new"] = 0
-			for v in heard.voices_list:
-				v["new"] = false
 
 
 ## Kartı taşır: "center" bu sprint, "next" sonraki, "" adaylara geri. Adaydaki kopyası soluklaşıp
@@ -368,13 +391,11 @@ func _c5() -> Dictionary:
 		"ui": _ui_state("trust", ""),
 		"areas": [
 			_area("core", 2, _p("Fatura kesme çalışıyor, tahsilat takibi zayıf", "Invoicing works, collections tracking is weak"),
-				_heard([_p("Tahsilatı ayrı bir tabloda izliyoruz", "We track collections in a separate sheet")], 0)),
+				{}),
 			_area("onboarding", 2, _p("Kurulum bir günde bitiyor", "Setup is done in a day"), {}),
-			_area("integrations", 1, _p("Muhasebe programına aktarım yok", "No export to accounting software"),
-				_heard([_p("Muhasebeci her ay tablo istiyor", "Our accountant asks for a spreadsheet every month"),
-					_p("e-Fatura gönderemiyoruz", "We can't send e-invoices")], 0).merged({
+			_area("integrations", 1, _p("Muhasebe programına aktarım yok", "No export to accounting software"), {
 				"candidates": [_deck("excel", alinmis, {"tag_sprint": 7}), _deck("efatura", alinmis, {"tag_sprint": 8})],
-			})),
+			}),
 			_area("trust", 1, _p("Geçen hafta 2 saat kesinti oldu · SSO yok", "Two hours of downtime last week · no SSO"), {
 				"alert": true,
 				"capabilities": [_cap(_p("Kullanıcı rolleri", "User roles"), 2),
@@ -387,8 +408,6 @@ func _c5() -> Dictionary:
 		"customers": [
 			_customer("Nordica", "SSO", "sso", 8, 12000, "trust"),
 			_customer("Palmiye", _p("Tablo dışa aktarma", "Spreadsheet export"), "excel", 10, 4000, "integrations"),
-			{"name": "Beykoz", "request": "", "tickets": 2, "tag_sprint": -1, "due_sprint": -1, "value": 0,
-				"area_name": "", "buttons": [], "card_id": ""},
 		],
 		"center": _center("plan", [_deck("sso", plan), _deck("kesinti", plan, {"effect": _fix_b2b()}), _deck("excel", plan)], {
 			"forecast": [_level("trust", 1, 2), {"k": "request_on_time", "customer": "Nordica"},
@@ -403,36 +422,26 @@ func _c5() -> Dictionary:
 func _notly_areas(released: bool) -> Array:
 	var aday := SprintCard.State.ADAY
 	var alinmis := SprintCard.State.ADAY_ALINMIS
-	var onboarding: Dictionary
-	if released:
-		onboarding = _heard([_p("Doğrulama e-postası geç geliyor", "The verification email arrives late")], 0)
-		onboarding.merge({"level_to": 2, "word_to": "enough"})
-	else:
-		onboarding = _heard([_p("Kayıtta şifre kuralı anlaşılmıyor", "The password rule at sign-up is unclear"),
-			_p("Doğrulama e-postası geç geliyor", "The verification email arrives late"),
-			_p("Kayıt formu çok uzun", "The sign-up form is too long"),
-			_p("Telefondan giriş yapamıyorum", "I can't log in from my phone")], 1)
 	return [
-		_area("core", 3, _p("Kullanıcılar arama ve editörü seviyor", "Users love the search and the editor"),
-			_heard([_p("Etikete göre arama olsa iyi olur", "Searching by tag would help")], 0).merged({
+		_area("core", 3, _p("Kullanıcılar arama ve editörü seviyor", "Users love the search and the editor"), {
 			"capabilities": [_cap(_p("Arama", "Search"), 2),
 				_cap(_p("Editör", "Editor"), 3)],
 			"candidates": [_deck("filtreli", alinmis, {"tag_sprint": 7}), _deck("etiketler", aday)],
-		})),
+		}),
 		_area("onboarding", 1, _p("10 yeni kullanıcıdan 6'sı ilk hafta kalıyor", "6 of 10 new users stay past the first week")
-			if released else _p("10 yeni kullanıcıdan 6'sı ilk hafta bırakıyor", "6 of 10 new users quit in the first week"),
-			onboarding.merged({
+			if released else _p("10 yeni kullanıcıdan 6'sı ilk hafta bırakıyor", "6 of 10 new users quit in the first week"), {
+			"level_to": 2 if released else -1,
+			"word_to": "enough" if released else "",
 			"rival_topic": _p("mobil", "mobile"),
 			"capabilities": [_cap(_p("Kayıt", "Sign-up"), 1),
 				_cap(_p("İlk tur", "First run"), 0), _cap(_p("Mobil", "Mobile"), 0)],
 			"candidates": [_deck("kisa_kayit", alinmis, {"tag_sprint": 7}), _deck("ilk_tur", alinmis, {"tag_sprint": 8}),
 				_deck("mobil_giris", aday), _deck("gorusme", aday)],
-		})),
-		_area("growth", 2, _p("Paylaşım yok, davet gelmiyor", "No sharing, no invites coming in"),
-			_heard([_p("Notumu paylaşamıyorum", "I can't share a note")], 0).merged({
+		}),
+		_area("growth", 2, _p("Paylaşım yok, davet gelmiyor", "No sharing, no invites coming in"), {
 			"capabilities": [_cap(_p("Paylaşım", "Sharing"), 0)],
 			"candidates": [_deck("baglanti", aday)],
-		})),
+		}),
 		_area("trust", 1, _p("Geçen hafta 2 saat kesinti oldu", "Two hours of downtime last week"), {
 			"alert": not released,
 			"capabilities": [_cap(_p("Yedekleme", "Backups"), 0),
@@ -504,6 +513,8 @@ func _deck_table() -> Dictionary:
 		"kesinti": ["fix", "trust", ["dev"], 2, _p("Kesinti düzeltmesi", "Outage fix"), [_bugs(5, -1, 300), _clear("trust")],
 			[["Kaan", 1]]],
 		"esitleme": ["fix", "core", ["dev"], 2, _p("Eşitleme düzeltmesi", "Sync fix"), [_bugs(5, -1, 300)], [["Kaan", 1]]],
+		"fatura_fix": ["fix", "core", ["dev"], 2, _p("Fatura düzeltmesi", "Invoicing fix"),
+			[_bugs(6, 3, 140, "Nordica", 100)], [["Kaan", 1]]],
 		"kisa_kayit": ["feature", "onboarding", ["design", "dev"], 3, _p("Kısa kayıt", "Short sign-up"),
 			[_level("onboarding", 1, 2)], [["Ece", 1], ["Kaan", 1]]],
 		"ilk_tur": ["feature", "onboarding", ["design", "dev"], 2, _p("İlk tur rehberi", "First-run guide"),
@@ -530,7 +541,7 @@ func _deck_table() -> Dictionary:
 		"excel": ["feature", "integrations", ["dev"], 3, _p("Tablo dışa aktarma (Palmiye)", "Spreadsheet export (Palmiye)"),
 			[_level("integrations", 1, 2), {"k": "request", "customer": "Palmiye", "value": 4000}], [["Deniz", 1]]],
 		"efatura": ["feature", "integrations", ["dev", "test"], 5, _p("e-Fatura entegrasyonu", "e-Invoice integration"),
-			[_level("integrations", 1, 2), {"k": "voices", "n": 2}], [["Deniz", 2]]],
+			[_level("integrations", 1, 2)], [["Deniz", 2]]],
 	}
 
 
@@ -558,8 +569,8 @@ func _shipped_fix(id: String, from: int, to: int) -> Dictionary:
 func _area(id: String, level: int, sentence: String, extra: Dictionary) -> Dictionary:
 	var area := {"id": id, "name": _p(AREAS[id][0], AREAS[id][1]), "level": level,
 		"level_to": -1, "word": WORDS[level], "word_to": "", "sentence": sentence, "goal_text": ProductModel.goal_text(id),
-		"voices": {"n": 0, "new": 0}, "alert": false, "rival_topic": "",
-		"capabilities": [], "candidates": [], "voices_list": [], "empty": false}
+		"bug_rows": [], "alert": false, "rival_topic": "",
+		"capabilities": [], "candidates": [], "empty": false}
 	area.merge(extra, true)
 	return area
 
@@ -568,12 +579,16 @@ func _area_of(m: Dictionary, id: String) -> Dictionary:
 	return m.areas.filter(func(a: Dictionary) -> bool: return a.id == id)[0]
 
 
-## Ses satırları; ilk `fresh` tanesi bu sprintte gelmiş (YENİ).
-func _heard(texts: Array, fresh: int) -> Dictionary:
-	var lines: Array = []
-	for i in texts.size():
-		lines.append({"text": texts[i], "new": i < fresh})
-	return {"voices": {"n": texts.size(), "new": fresh}, "voices_list": lines}
+## Alanın hatalı hatları [[hat adı, hata parçası, değişim]], en çok hatalısı önde: satırlar `ProductModel.bug_row_of`'tan,
+## cümlesine model gibi toplam eklenir ve alan açık açılır.
+func _bug_lines(m: Dictionary, id: String, lines: Array) -> void:
+	var area: Dictionary = _area_of(m, id)
+	var total := 0
+	for line in lines:
+		area.bug_rows.append(ProductModel.bug_row_of(line[0], line[1], line[2]))
+		total += int(line[1].n)
+	area.sentence += SprintUiShared.SEP + SprintUiShared.count("PRODUCT_BUG_COUNT", total)
+	m.ui.open_area = id
 
 
 func _cap(cap_name: String, tier: int) -> Dictionary:
@@ -612,7 +627,7 @@ func _lead(text: String) -> Dictionary:
 
 
 func _customer(customer: String, request: String, card_id: String, due: int, value: int, area: String) -> Dictionary:
-	return {"name": customer, "request": request, "tickets": 0, "tag_sprint": 7, "due_sprint": due, "value": value,
+	return {"name": customer, "request": request, "tag_sprint": 7, "due_sprint": due, "value": value,
 		"area_name": _short(area), "buttons": [], "card_id": card_id}
 
 
@@ -638,7 +653,7 @@ func _versions() -> Array:
 
 
 func _ui_state(open_area: String, hover_card: String) -> Dictionary:
-	return {"view": "sprint", "open_area": open_area, "history_open": false, "voices_open": false, "hover_card": hover_card}
+	return {"view": "sprint", "open_area": open_area, "history_open": false, "hover_card": hover_card}
 
 
 func _rival_flag() -> Dictionary:

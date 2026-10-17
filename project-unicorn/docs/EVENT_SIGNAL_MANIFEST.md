@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | save_manager · game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 5 | plausibility · main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 5 | signals · sprint_system · rnd_tab · research_bar · office_people |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · rnd_ui_shared · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 52 | 4 | main · left_tabs · research_bar · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · rnd_ui_shared · build_bar · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 53 | 4 | main · left_tabs · research_bar · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
@@ -150,7 +150,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `module_unlocked` | `module_id: String` | engine | 1 | 0 | EvSignals (bindable) |
 | `build_phase_changed` | `new_phase: String` | sprint_system | 2 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
-| `build_progress_changed` | `—` | main · product_state | 3 | 2 | build_bar · build_hud_panel |
+| `build_progress_changed` | `—` | product_state | 2 | 3 | product_tab · build_bar · build_hud_panel |
 | `line_bugs_cleared` | `line: String, n: int` | product_state | 1 | 0 | — |
 | `infra_changed` | `—` | product_state | 2 | 0 | — |
 

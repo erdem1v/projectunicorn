@@ -295,6 +295,13 @@ static func neglect_drop() -> Dictionary:
 	return {} if day == 0 else {"day": day, "reason": NEGLECT_REASON}
 
 
+## Son düşüşün sebebini söyleyen cümle (TopBar'ın ve Destek kartının ipucu); hiç düşürmediyse "".
+static func neglect_note() -> String:
+	var drop: Dictionary = neglect_drop()
+	return "" if drop.is_empty() else TranslationServer.translate(drop.reason).format(
+		{"date": Fmt.date_line(GameState.get_date_dict(int(drop.day)))})
+
+
 # =========================================================================
 #  §8.5 · İHMAL ISINMASI · §9 · İLGİ
 # =========================================================================

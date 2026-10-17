@@ -179,14 +179,15 @@ static func line_bugs(line: String) -> int:
 	return int((GameState.get_flag(OPEN_BUGS, {}) as Dictionary).get(line, 0))
 
 
-## En çok açık hatası olan hat, hatasızsa ""; eşitlikte küçük hat kimliği.
+## En çok açık hatası olan hat, hatasızsa ""; eşitlikte en çok kullanıcıyı etkileyen, o da eşitse küçük hat kimliği.
 static func worst_bug_line() -> String:
 	var bugs: Dictionary = open_bugs_by_line()
 	var ids: Array = bugs.keys()
 	ids.sort()
 	var worst: String = ""
 	for line in ids:
-		if worst == "" or int(bugs[line]) > int(bugs[worst]):
+		if worst == "" or int(bugs[line]) > int(bugs[worst]) or (int(bugs[line]) == int(bugs[worst])
+				and SprintCatalog.line_users(line) > SprintCatalog.line_users(worst)):
 			worst = line
 	return worst
 

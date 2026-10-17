@@ -31,7 +31,7 @@
   "rival_bump": 0.5,
   "rival_bump_max": 1.0,
   "rival_window_weeks": 6,
-  "voices_new_weeks": 2,
+  "research_sentence_weeks": 2,
   "polish_step": 0.5,
   "polish_max": 1.0,
   "research_users": 5,

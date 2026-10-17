@@ -223,7 +223,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   dizisi; `cheque` çek listesinin ilk haftası (`_01` tür seçili, `_02` ilk sprint başlamış), `untyped` aynı hafta
   tür seçilmeden, `v1` v1.0 yayınlanınca (`_01`) ve Ar-Ge açılınca (`_02`); `card_ishani` ve `card_home` yalnız
   `city`'de, şirket Ev'de iken İş hanı'nın ve Ev'in kartı açık; `card_tick` yalnız `city`'de, Plaza'nın kartı bir günlük
-  tikten geçer (`_before` karesi, `OFFICECARD` satırı); `desk_shut` canlı B2C, DESTEK masası boş, 12 gelen bildirim;
+  tikten geçer (`_before` karesi, `OFFICECARD` satırı); `desk_shut` canlı B2C, iki hatta yedi açık hata: DESTEK
+  kartının tek satırı (`_01`), kartın tıklanışı ve en çok hatalı hattın alanı açık Ürün penceresi (`_02`);
   `city:<saat>:crown` kulenin tacı). `--office-shot`'a `--pan=<adım;…>` eklenirse koşu yalnız 3B görüntüyü kamera
   ofsetlerinde kaydeder ve `PAN|` satırı basar (gölge kutusu ve ilk kareye fark; adım `dx,dy[,zm]`,
   `sweep:<baş>:<son>:<adım>:<x|y>:<zm>`, `fit[:zm]` ya da `drag:<dx>:<dy>[:olay]`); `--pan-set=<küme>|<küme>` yalıtım

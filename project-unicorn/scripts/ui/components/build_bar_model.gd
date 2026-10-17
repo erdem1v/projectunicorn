@@ -1,9 +1,8 @@
 extends RefCounted
 
-# BuildBarModel — DESTEK kartının TÜRETİLMİŞ verisi: yayındaki ürün, doğrulanmış hatalar ve gelen
-# bildirimler. Oyun durumu değildir: her çağrıda seam'lerden yeniden hesaplanır. Hiçbir şey
-# saklanmaz, her şey sorulur: kart "kim boşta"nın kendi kopyasını tutsaydı atama değiştiği anda
-# state'in tersini iddia ederdi.
+# BuildBarModel — DESTEK kartının TÜRETİLMİŞ verisi: yayındaki ürün ve tek açık hata sayısı. Oyun durumu
+# değildir: her çağrıda seam'lerden yeniden hesaplanır. Hiçbir şey saklanmaz, her şey sorulur: kart "kim
+# boşta"nın kendi kopyasını tutsaydı atama değiştiği anda state'in tersini iddia ederdi.
 #
 # BİLİNÇLİ class_name YOK: BuildBar ve smoke `preload` eder. Paylaşılan checkout'ta yeni bir
 # class_name, öteki oturumların headless koşularını class-cache yarım kalınca düşürüyor.
@@ -15,8 +14,10 @@ var product_name: String = ""
 ## Ekip §12.1 bölünmüş odak: masadaki biri iki işteyse bildirimler doğrulanmaktan hızlı birikir
 ## ve oyuncu bunu ancak bu nottan görür.
 var split_note_key: String = ""
-var live_bugs: int = 0           # doğrulanmış açık hata (§8.1)
-var incoming: int = 0            # doğrulanmayı bekleyen bildirim (§9)
+var open_bugs: int = 0
+## En çok açık hatası olan hat ve alanı, hata yoksa "": kart Ürün penceresini o alan açık açar, ipucu hattı söyler.
+var worst_line: String = ""
+var worst_area: String = ""
 
 
 ## Yayındaki üründen kendini doldurur; ürün yayında değilse çizilecek kart yok, false. YAYINLANDI
@@ -30,8 +31,9 @@ func derive() -> bool:
 	if pname.strip_edges() == "":
 		pname = GameState.company_name
 	product_name = " ".join([pname, SprintSystem.version_label(ProductState.version())])
-	live_bugs = ProductState.open_bugs()
-	incoming = ProductState.reports_incoming()
+	open_bugs = ProductState.open_bugs()
+	worst_line = ProductState.worst_bug_line()
+	worst_area = SprintCatalog.area_of_line(worst_line)
 	for c in SupportSystem.desk_roster():
 		if HRSystem.is_overloaded(c):
 			split_note_key = "BUILD_SPLIT_FOCUS"
@@ -41,4 +43,4 @@ func derive() -> bool:
 
 ## Kartın çizdiği durumun parmak izi — yığın görünürlüğü ve smoke için.
 func fingerprint() -> String:
-	return "support|%s|%d|%d" % [split_note_key, live_bugs, incoming]
+	return "support|%s|%d|%s" % [split_note_key, open_bugs, worst_line]
