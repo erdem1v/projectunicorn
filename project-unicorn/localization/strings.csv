@@ -141,7 +141,7 @@ SALES_STEWARD,Müşteri temsilcisi: {name},Account manager: {name}
 SALES_CHURN_COUNTDOWN,Churn'e ~{n} hafta,~{n} weeks to churn
 SALES_CHURN_COUNTDOWN_ONE,Churn'e ~{n} hafta,~{n} week to churn
 SALES_REASON_PREFIX,Sebep: {reason},Reason: {reason}
-SALES_REASON_OUTAGE,sık kesinti şikayeti,frequent outage complaints
+SALES_REASON_OUTAGE,kullandığı hatlardaki açık hatalar,open bugs on the lines they use
 SALES_REASON_STABILITY,ürünün kararlılığı yetmiyor (Güven & Ölçek),the product's stability falls short (Trust & Scale)
 SALES_REASON_SATISFACTION,memnuniyet düşüyor,satisfaction is falling
 SALES_EXPANSION_FICTION,Başka departmana yaymak istiyor.,Wants to roll it out to another department.
@@ -467,7 +467,7 @@ HR_AREA_MEANING_DESIGNER_DESIGN,Deneyim ekseninin tavanı,The ceiling on the Exp
 HR_AREA_MEANING_DESIGNER_PRODUCT,Özellik kararları ve tasarım tavanı,Feature decisions and the design ceiling
 HR_AREA_MEANING_DEVELOPER_ENGINEERING,Geliştirme hızı ve hata oranı,Development speed and bug rate
 HR_AREA_MEANING_DEVELOPER_QA,Beta keşif hızı,Beta discovery speed
-HR_AREA_MEANING_TESTER_QA,Beta keşif hızı ve canlı hata aşınması,Beta discovery speed and live bug wear
+HR_AREA_MEANING_TESTER_QA,Sprint kartlarında test aşamasının hızı,Speed of the test phase on sprint cards
 HR_AREA_MEANING_TESTER_ENGINEERING,Geliştirme hızı ve hata oranı,Development speed and bug rate
 HR_AREA_MEANING_SALES_REP_SALES,Kapanış olasılığı ve anlaşma boyutu,Close probability and deal size
 HR_AREA_MEANING_CUSTOMER_REP_CUSTOMER_SUCCESS,Bilet çözümü ve churn,Ticket resolution and churn
@@ -479,7 +479,7 @@ ONB_SKILL_DESIGN_DESC,Özellik kartlarında Tasarım yıldızı isteyen kademele
 ONB_SKILL_ENGINEERING,Yazılım,Engineering
 ONB_SKILL_ENGINEERING_DESC,Özellik kartlarında Yazılım yıldızı isteyen kademeler; teknik araştırma.,Engineering-star tiers on feature cards; technical research.
 ONB_SKILL_QA,Test,QA
-ONB_SKILL_QA_DESC,Test yıldızı isteyen kademeler ve canlı ürünün aşınma hızı.,"Test-star tiers, and how fast the live product wears."
+ONB_SKILL_QA_DESC,Test yıldızı isteyen kademeler ve sprint kartlarının test aşamasının hızı.,"Test-star tiers, and how fast the test phase of sprint cards runs."
 ONB_SKILL_CUSTOMER_SUCCESS,Müşteri Başarısı,Customer Success
 ONB_SKILL_CUSTOMER_SUCCESS_DESC,Destek masasının hızı ve hesaplarının memnuniyetinin ne yavaş düştüğü.,"Support desk speed, and how slowly your accounts sour."
 ONB_SKILL_CHARISMA,Karizma,Charisma
@@ -560,6 +560,7 @@ FIN_CAP_MRR,MRR,MRR
 FIN_CAP_RUNWAY,RUNWAY,RUNWAY
 FIN_CAP_BRAND,MARKA,BRAND
 FIN_CAP_REPUTATION,İTİBAR,REPUTATION
+REP_DROP_BUGS,Haftalardır açık kalan hatalar itibarı düşürdü. Son düşüş: {date}.,Bugs left open for weeks cost reputation. Last drop: {date}.
 FIN_VALUATION,Değerleme,Valuation
 FIN_EQUITY,Hisse,Equity
 BUILD_BUSY_NOBODY,Kimse üzerinde değil.,Nobody is on it.
@@ -829,7 +830,7 @@ HUNT_BADGE_WALKED,Masadan kalktın,You walked
 HUNT_BADGE_SIGNED,İmzalandı,Signed
 HUNT_BADGE_OPEN,Açık,Open
 HUNT_CB_MRR,MRR {target} ({current}/{target}),MRR {target} ({current}/{target})
-HUNT_CB_BUGS,Aktif hata < {n},Open bugs < {n}
+HUNT_CB_CHURN,{weeks} içinde müşteri kaybı {target} altında (şu an {current}),Customer churn under {target} in {weeks} ({current} so far)
 HUNT_CB_FIRST_ENGINEER,İlk mühendisi işe al,Hire the first engineer
 HUNT_CB_SCANDAL,Skandalı çöz,Resolve the scandal
 HUNT_CB_NONE,—,—
@@ -1317,8 +1318,6 @@ VC_Q_REFUSED_ACQ,"""Bir satın almayı geri çevirmişsin. Kibir mi, vizyon mu?"
 VC_Q_REFUSED_ACQ_MONO,Reddettiğin teklifi soracak.,They will ask about the offer you refused.
 VC_Q_REPUTATION,"""İtibarın zedeli. Bu hikâyeye kim inanır?""","""Your reputation is damaged. Who believes this story?"""
 VC_Q_REPUTATION_MONO,İtibarını yoklayacak.,They will probe your reputation.
-VC_Q_BUGS,"""Ürünün hata kaynıyor. Kalite senin için ne ifade ediyor?""","""Your product is crawling with bugs. What does quality mean to you?"""
-VC_Q_BUGS_MONO,Hata sayını soracak.,They will ask about your bug count.
 VC_Q_WEAK_DIM,"""{axis} tarafın zayıf. Sektörü bilen biri bunu ilk bakışta görür.""","""Your {axis} side is weak. Anyone who knows the sector sees it at a glance."""
 VC_Q_WEAK_DIM_MONO,En zayıf ekseni bulacak.,They will find the weakest axis.
 VC_Q_CLEAN,"""Doğrusu, saldıracak bir yer bulamadım. Bu iyi bir işaret. Devam et.""","""Honestly, I could not find anywhere to attack. That is a good sign. Go on."""
@@ -2481,7 +2480,6 @@ SALES_ARCH_OPS_CAUTIOUS_LINE,Ölçülü bir alıcı. Kararlılık onun için her
 SALES_ARCH_TECH_EXACTING_LINE,Teknik taraf soruyor. Ürünün nereye kadar gittiğini bilmek ister.,The technical side is asking. They want to know how far the product goes.
 SALES_ARCH_FINANCE_BRISK_LINE,"Hızlı konuşur, düşük rakam ister.",Talks fast and wants a low number.
 SALES_PROBE_PROBE_STABILITY_RECORD,Bizim için en önemli konu kararlılık. Bugüne kadar kesinti yaşadınız mı?,Stability matters most to us. Have you had outages?
-SALES_PROBE_PROBE_STABILITY_BUGS,Açık hata sayınızı duydum. Bunlar bizim işimizi nasıl etkiler?,We hear you have open bugs. How do they affect our work?
 SALES_PROBE_PROBE_LADDER_REACH,"Ürün nereye kadar gidiyor? Bugün ne var, bu çeyrek ne çıkıyor?","How far does the product go? What is live, what ships this quarter?"
 SALES_PROBE_PROBE_LADDER_LOCKED,İhtiyacımız olan kademe listede var ama kapalı görünüyor.,The tier we need is on the list but it reads as closed.
 SALES_PROBE_PROBE_PROVIDER_TRUST,Veri nerede duruyor? Altyapıyı kimden alıyorsunuz?,Where does the data sit? Who do you buy infrastructure from?
@@ -2508,12 +2506,9 @@ SALES_LOCK_PROVIDER,Altyapın yerel bir sağlayıcıda.,Your infrastructure is w
 SALES_LOCK_CS_STAFFED,Müşteri ilişkilerine atanmış kimse yok.,Nobody is assigned to customer success.
 SALES_LOCK_AXIS_EXPERIENCE,Deneyim bunu henüz desteklemiyor.,Experience does not back that up yet.
 SALES_LOCK_OPEN_PITCH_PROMISE,Verilmiş bir sözün var.,You already gave your word.
-SALES_ANS_PROBE_STABILITY_RECORD_A_STRENGTH,"Kararlılık yerinde, açık hata listesi kısa. Gösterebilirim.",Stability holds and the open bug list is short. I can show you.
+SALES_ANS_PROBE_STABILITY_RECORD_A_STRENGTH,Kararlılık yerinde. Kaydı gösterebilirim.,Stability holds. I can show you the record.
 SALES_ANS_PROBE_STABILITY_RECORD_A_ADMIT,Her şey sorunsuz gitmedi. Kaydı olduğu gibi gösteririm.,Not everything has run clean. I will show you the record as it is.
 SALES_ANS_PROBE_STABILITY_RECORD_A_CHARISMA,Kesintiyi ben karşılarım. Numaram sizde olur.,Outages come to me. You will have my number.
-SALES_ANS_PROBE_STABILITY_BUGS_A_ADMIT,Açık hatalarımız var ve listesi bende.,We have open bugs and I have the list.
-SALES_ANS_PROBE_STABILITY_BUGS_A_PROMISE,İhtiyacınız olan kademeyi bir sonraki sprintimize alırım. Yazılı veririm.,The tier you need goes into our next sprint. I will put it in writing.
-SALES_ANS_PROBE_STABILITY_BUGS_A_REFERENCE,Sizin ölçeğinizde bir müşterimiz var. Onu arayın.,We carry an account your size. Call them.
 SALES_ANS_PROBE_LADDER_REACH_A_STRENGTH,Birkaç kademe şimdiden canlıda. Bugün kullanabilirsiniz.,Several tiers are already live. You can use them today.
 SALES_ANS_PROBE_LADDER_REACH_A_ADMIT,Ürünün bir kısmı henüz yok. Bugün olanı gösterebilirim.,Part of the product is not there yet. I can show you what is.
 SALES_ANS_PROBE_LADDER_REACH_A_PROMISE,İhtiyacınız olan kademeyi öne alırım.,I will move the tier you need forward.

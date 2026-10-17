@@ -12,7 +12,7 @@ extends RefCounted
 const AREA_PRODUCT := "product"                     # Ürün — tasarım turları, özellik kararları
 const AREA_DESIGN := "design"                       # Tasarım — tasarım tavanı, Deneyim ekseni
 const AREA_ENGINEERING := "engineering"             # Yazılım — geliştirme hızı, bug oranı
-const AREA_QA := "qa"                               # Test — beta keşif hızı, canlı bug aşınması
+const AREA_QA := "qa"                               # Test — sprint kartlarının test aşaması
 const AREA_SALES := "sales"                         # Satış — kapanış olasılığı, anlaşma boyutu
 const AREA_CUSTOMER_SUCCESS := "customer_success"   # Müşteri Başarısı — bilet, memnuniyet, churn
 const AREAS := ["product", "design", "engineering", "qa", "sales", "customer_success"]

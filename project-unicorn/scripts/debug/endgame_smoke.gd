@@ -93,7 +93,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"pitch_ret_counter":    fail = _case_pitch_ret_counter()
 		"gecistir_cap":         fail = _case_gecistir_cap()
 		"callback_contract":    fail = _case_callback_contract()
-		"pitch_bug_interrogation": fail = _case_pitch_bug_interrogation()
 		"pitch_refused_acq":    fail = _case_pitch_refused_acq()
 		"sheet_expiry_no_rejection": fail = _case_sheet_expiry_no_rejection()
 		"third_sheet_delayed":  fail = _case_third_sheet_delayed()
@@ -202,7 +201,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"speed_day_invariant":     fail = _case_speed_day_invariant()
 		"office_pace_linear":      fail = _case_office_pace_linear()
 		# --- Product×HR Coupling (task 2 of 3) ---
-		"coupling_wear_team_average":    fail = _case_coupling_wear_team_average()
 		"coupling_cs_dampen_axis":       fail = _case_coupling_cs_dampen_axis()
 		# --- Sales/Customer×HR Coupling (task 2b) ---
 		"sales_pipeline_rate_by_pace":       fail = _case_sales_pipeline_rate_by_pace()
@@ -345,7 +343,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"month_history_save_typing":       fail = _case_month_history_save_typing()
 		"b2c_wom_needs_satisfaction":      fail = _case_b2c_wom_needs_satisfaction()
 		"b2c_growth_multiplier_floor":     fail = _case_b2c_growth_multiplier_floor()
-		"conversion_bug_penalty":          fail = _case_conversion_bug_penalty()
 		"b2c_value_reads_live_lines":      fail = _case_b2c_value_reads_live_lines()
 		"audience_pct_modifier":           fail = _case_audience_pct_modifier()
 		"complaint_never_charges_cash":    fail = _case_complaint_never_charges_cash()
@@ -468,7 +465,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_save_roundtrip":                 fail = _case_sprint_save_roundtrip()
 		"sprint_decision_blocks_progress":       fail = _case_sprint_decision_blocks_progress()
 		"sprint_legacy_beta_cards_ship":         fail = _case_sprint_legacy_beta_cards_ship()
-		"sprint_release_resets_live_bugs":       fail = _case_sprint_release_resets_live_bugs()
 		"sprint_departure_restaffs_card":        fail = _case_sprint_departure_restaffs_card()
 		"sprint_never_stalls_in_plan":           fail = _case_sprint_never_stalls_in_plan()
 		"sprint_lead_offers_paid_plan_b2c":      fail = _case_sprint_lead_offers_paid_plan_b2c()
@@ -484,6 +480,13 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_v14_build_becomes_sprint_plan":    fail = _case_save_v14_build_becomes_sprint_plan()
 		"save_v14_history_becomes_releases":     fail = _case_save_v14_history_becomes_releases()
 		"save_v15_tickets_become_open_bugs":     fail = _case_save_v15_tickets_become_open_bugs()
+		"save_v15_callback_bugs_under":          fail = _case_save_v15_callback_bugs_under()
+		"callback_churn_window":                 fail = _case_callback_churn_window()
+		"bug_cost_b2b_account_lines":            fail = _case_bug_cost_b2b_account_lines()
+		"bug_cost_b2c_audience":                 fail = _case_bug_cost_b2c_audience()
+		"support_inflow_is_bug_free":            fail = _case_support_inflow_is_bug_free()
+		"neglect_reputation_below_zero":         fail = _case_neglect_reputation_below_zero()
+		"bugs_leave_sales_and_vc_alone":         fail = _case_bugs_leave_sales_and_vc_alone()
 		"product_paid_plan_locked_until_mvp":    fail = _case_product_paid_plan_locked_until_mvp()
 		"product_pm_plan_opens_as_next_sprint":  fail = _case_product_pm_plan_opens_as_next_sprint()
 		"market_catalog_lint":              fail = _case_market_catalog_lint()
@@ -668,6 +671,15 @@ static func _seed_b2b_lines(subtype: String, tier: int = 2) -> void:
 	GameState.set_flag("mvp_sub_product_type_id", subtype)
 	for line_id in ProductLines.line_ids(subtype):
 		ProductState.set_line_tier(String(line_id), tier)
+
+
+## The line the bug cases put their bugs on: a stability line, which every buyer type reads (SalesArchetypes.uses_axis).
+const BUG_LINE := "line_erp_ledger"
+
+
+## `n` more open bugs on BUG_LINE.
+static func _seed_bugs(n: int) -> void:
+	ProductState.add_bugs(BUG_LINE, n)
 
 
 ## An established book at the bar, not a fresh signing: its onboarding window is closed, or the
@@ -1553,7 +1565,6 @@ static func _case_callback_contract() -> String:
 	GameState.set_phase(3)
 	_force("pass")
 	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_live_bug_count", 5)   # product interrogation + callback not-yet-met
 	_seed_b2b(3000)
 	_sim_day()
 	VCPitchSystem.begin_meeting("meridian")
@@ -1565,14 +1576,14 @@ static func _case_callback_contract() -> String:
 	var st: Dictionary = GameState.vc_states.get("meridian", {})
 	if st.get("status", "") != "callback":
 		return "status not callback (%s)" % st.get("status", "")
-	if st.get("callback", {}).get("type", "") != "bugs_under":
+	if st.get("callback", {}).get("type", "") != "churn_under":
 		return "callback type=%s" % st.get("callback", {}).get("type", "")
 	if st.get("callback", {}).get("met", true):
 		return "callback already met"
 	# ONE CALLBACK PER VC: the fund cannot be re-booked before its condition is met.
 	if VCPitchSystem.request_meeting("meridian"):
 		return "callback fund re-booked before its condition was met"
-	GameState.set_flag("mvp_live_bug_count", 1)   # satisfy: bugs under target
+	GameState.day += TimeModel.ticks(PitchConstants.CALLBACK_CHURN_WEEKS)   # satisfy: a quarter without losing an account
 	_sim_day()
 	if not st.get("callback", {}).get("met", false):
 		return "callback not met after condition satisfied"
@@ -1585,26 +1596,6 @@ static func _case_callback_contract() -> String:
 	var seed_without: int = int(VCPitchSystem.initial_conviction("meridian").value)
 	if seed_with - seed_without != PitchConstants.CONV_CALLBACK_BONUS:
 		return "re-entry bonus wrong (%d vs %d)" % [seed_with, seed_without]
-	return ""
-
-
-static func _case_pitch_bug_interrogation() -> String:
-	# A.4: live bugs > 0 must FIRE the product interrogation (sorgu key "bugs") and
-	# leave the bugs_under callback UNMET — both were silently dead while VCPitch read
-	# the never-written mvp_bug_count key (now mvp_live_bug_count).
-	GameState.set_phase(3)
-	_force("pass")
-	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_live_bug_count", 5)    # >= CALLBACK_BUGS_UNDER (3)
-	_seed_b2b(3000)
-	_sim_day()
-	VCPitchSystem.begin_meeting("meridian")        # product-domain VC
-	VCPitchSystem.advance("b1_read")
-	VCPitchSystem.advance("b2_metrik")             # _sorgu assigned here (_resolve_beat2)
-	if VCPitchSystem._sorgu.get("key", "") != "bugs":
-		return "product interrogation did not fire (sorgu=%s)" % str(VCPitchSystem._sorgu.get("key", ""))
-	if VCPitchSystem._callback_met({"type": "bugs_under", "target": PitchConstants.CALLBACK_BUGS_UNDER}):
-		return "bugs_under met at 5 bugs (should fail, target %d)" % PitchConstants.CALLBACK_BUGS_UNDER
 	return ""
 
 
@@ -2248,10 +2239,9 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 	expect.call("sales_weekly_anchor_day (empty)", mfl.get("sales_weekly_anchor_day"), 0)
 	expect.call("angel_seed_accepted_day", mfl.get("angel_seed_accepted_day"), 5)
 	expect.call("finance_runway_warn_snooze_until_day", mfl.get("finance_runway_warn_snooze_until_day"), 7)
-	if (mfl["mvp_bug_history"] as Array).map(func(n: Variant) -> int: return int(n)) != [5]:
-		bad.append("mvp_bug_history = %s, want the newest sample" % str(mfl["mvp_bug_history"]))
 	gone.call("flags", mfl, ["mvp_sprint_days_total", "mvp_sprint_days_elapsed", "mvp_sprint_weeks_total",
-		"mvp_sprint_weeks_elapsed", "sales_meeting_active", "sales_meeting_used_day", "sales_weekly_closes"])
+		"mvp_sprint_weeks_elapsed", "sales_meeting_active", "sales_meeting_used_day", "sales_weekly_closes",
+		"mvp_bug_history"])
 
 	var memp: Dictionary = row_of.call(mreg["characters"], "emp_save")
 	expect.call("hire_day", memp.get("hire_day"), 4)
@@ -2589,16 +2579,16 @@ static func _case_prep_bonus_and_capacity() -> String:
 	if SprintSystem.capacity() != capacity:
 		return "VC prep moved the sprint capacity (%.2f -> %.2f)" % [capacity, SprintSystem.capacity()]
 	var founder: Character = CharacterRegistry.get_founder()
-	if ProductSystem._is_free(founder):
-		return "a founder in VC prep still counts as FREE for the live product"
+	if not HRSystem.is_busy(founder):
+		return "a founder in VC prep reads as free"
 	VCPitchSystem.begin_meeting("anchor")  # consumes the prep focus; the founder is at the table
 	if GameState.get_flag("pitch_prep_active", false):
 		return "capacity flag not cleared at meeting start"
-	if ProductSystem._is_free(founder):
-		return "a founder seated at the pitch still counts as FREE for the live product"
+	if not HRSystem.is_busy(founder):
+		return "a founder seated at the pitch reads as free"
 	VCPitchSystem.withdraw()
 	VCPitchSystem.end_sitting()
-	if not ProductSystem._is_free(founder):
+	if HRSystem.is_busy(founder):
 		return "the founder stayed busy after the sitting closed"
 	return ""
 
@@ -3035,9 +3025,9 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
 	CustomerRegistry.set_tolerance(c.id, 50)
 	CustomerRegistry.set_satisfaction(c.id, 70)
-	# Degrade: low effective stability (high bugs) → low satisfaction target.
+	# Degrade: low stability and a bug backlog on the account's lines → low satisfaction target.
 	GameState.set_flag("mvp_stability", 20.0)
-	GameState.set_flag("mvp_live_bug_count", 40)
+	_seed_bugs(40)
 	var entered_risk := false
 	for i in 40:
 		_sim_day()
@@ -3050,7 +3040,7 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 		return "never reached Risk phase with a visible countdown"
 	# Recover: fix the product + lift satisfaction over tolerance → counter resets.
 	GameState.set_flag("mvp_stability", 90.0)
-	GameState.set_flag("mvp_live_bug_count", 0)
+	ProductState.clear_line_bugs(BUG_LINE)
 	CustomerRegistry.set_satisfaction(c.id, 85)
 	_sim_day()
 	if c.churn_countdown != -1:
@@ -3059,7 +3049,7 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 		return "still in Risk after recovery"
 	# Degrade again and ride the counter to zero → churn from the watched counter.
 	GameState.set_flag("mvp_stability", 20.0)
-	GameState.set_flag("mvp_live_bug_count", 40)
+	_seed_bugs(40)
 	CustomerRegistry.set_satisfaction(c.id, 70)
 	var churned: Array = []
 	var cb := func(id: String) -> void: churned.append(id)
@@ -3092,7 +3082,6 @@ static func _case_b2b_onboarding_grace_floor() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_stability", 0.0)
-	GameState.set_flag("mvp_live_bug_count", 0)
 	var open_account := func(id: String) -> Customer:
 		var p := Prospect.new()
 		p.id = id
@@ -3105,7 +3094,7 @@ static func _case_b2b_onboarding_grace_floor() -> String:
 	if c.satisfaction != start:
 		return "signed at satisfaction 0, the account opens at %d (want max(tolerance %d + %d, %d) = %d)" % [
 			c.satisfaction, c.tolerance, B2BConstants.SIGNING_SAT_OVER_TOL, B2BConstants.SIGNING_SAT_MIN, start]
-	var health: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
+	var health: float = QualityModel.axis_score(QualityModel.dims_from_flags(), "stability")
 	if health >= c.tolerance:
 		return "test misconfigured: the product (%.1f) is not under the bar (%d)" % [health, c.tolerance]
 	var weeks: int = TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
@@ -3167,9 +3156,8 @@ static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
 	GameState.set_flag("mvp_stability", 200.0)
 	GameState.set_flag("mvp_innovation", 200.0)
 	GameState.set_flag("mvp_experience", 200.0)
-	GameState.set_flag("mvp_live_bug_count", 0)
 	# Expected delta: toward the experience score, capped at a week's step.
-	var target: int = int(round(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")))
+	var target: int = int(round(QualityModel.axis_score(QualityModel.dims_from_flags(), "experience")))
 	var step: int = int(TimeModel.per_tick(SalesSystem.SATISFACTION_DRIFT_PER_DAY))
 	var s0: int = ub.satisfaction
 	var want: int = clampi(target - s0, -step, step)
@@ -3304,7 +3292,7 @@ static func _case_b2b_ignore_then_churn() -> String:
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(2000)
 	GameState.set_flag("mvp_stability", 20.0)      # degrading product → stays under tolerance
-	GameState.set_flag("mvp_live_bug_count", 40)
+	_seed_bugs(40)
 
 	# Ignore path → countdown runs down → natural churn with one brand hit.
 	var c: Customer = _add_risk_b2b("ic", 1000)
@@ -3766,7 +3754,7 @@ static func _case_b2b_cs_absorbs_routine() -> String:
 	if cs_mgd.assigned_to != cs.id:
 		return "assign_customer did not set assigned_to"
 	GameState.set_flag("mvp_stability", 20.0)
-	GameState.set_flag("mvp_live_bug_count", 40)
+	_seed_bugs(40)
 	CustomerRegistry.set_satisfaction(founder_mgd.id, 60)
 	CustomerRegistry.set_satisfaction(cs_mgd.id, 60)
 	GameState.advance_day()   # one week of erosion; a longer walk floors both twins at 0
@@ -7725,49 +7713,6 @@ static func _case_office_pace_linear() -> String:
 #  equivalence anchors survived the rescale exactly.
 # ============================================================================
 
-static func _case_coupling_wear_team_average() -> String:
-	# Post-ship wear follows the SAME grammar as bug — the founder-only read is gone.
-	_seed_live_product()
-	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(6)
-	# The audience must be big enough to keep the wear rate OFF WEAR_FLOOR in BOTH arms —
-	# otherwise both clamp to the floor and read identical, which says nothing about the
-	# expertise term. It is sized from the coefficient: 0.04 an hour of user wear, more than
-	# the founder's Test 6 takes off.
-	var audience: float = 0.04 / ProductSystem.WEAR_AUD_COEF
-	GameState.set_flag("b2c_audience", audience)
-	GameState.set_flag("mvp_live_bug_count", 0)
-	GameState.set_flag("mvp_live_bug_progress", 0.0)
-	# Wear with the founder alone, over a day of live product.
-	for h in 24:
-		ProductSystem.hourly_tick(h)
-	var solo_wear: float = float(GameState.get_flag("mvp_live_bug_progress", 0.0)) \
-		+ float(int(GameState.get_flag("mvp_live_bug_count", 0)))
-	if solo_wear <= 0.0:
-		return "live product did not wear at all — case window invalid"
-	if absf(solo_wear - TimeModel.per_tick(24.0 * ProductSystem.WEAR_FLOOR)) < 0.0001:
-		return "the wear rate is pinned at WEAR_FLOOR (%.4f) — the expertise term cannot be seen" % solo_wear
-	# Aynı gün, bu kez kadroda yüksek TEST'li biri var: aşınma YAVAŞLAMALI.
-	#
-	# İŞE ALINAN KİŞİ DEĞİŞTİ (2026-08-22): yazılımcı yerine TEST MÜHENDİSİ. Canlı ürün
-	# aşınması TEST alanını okuyor (rev 2 §2) ve atama kapısıyla birlikte artık YALNIZ Test'e
-	# ATANMIŞ biri o sayıya giriyor. Bir yazılımcı kendi ana alanına (Yazılım) doğuyor —
-	# Test onun ikincil alanı, ama oraya ATANMADIĞI sürece aşınmaya dokunmaz. Ölçülen yasa
-	# aynı: "ekibin Test'i canlı ürünün aşınmasını yavaşlatır".
-	_make_employee("char_wear_dev", "Wear Tester", HRConstants.ROLE_TESTER,
-		SEED_PACE, 0, 50, 9, SEED_RAPPORT)
-	GameState.set_flag("b2c_audience", audience)
-	GameState.set_flag("mvp_live_bug_count", 0)
-	GameState.set_flag("mvp_live_bug_progress", 0.0)
-	for h in 24:
-		ProductSystem.hourly_tick(h)
-	var team_wear: float = float(GameState.get_flag("mvp_live_bug_progress", 0.0)) \
-		+ float(int(GameState.get_flag("mvp_live_bug_count", 0)))
-	if team_wear >= solo_wear:
-		return "a strong developer did not slow live-product wear (%.4f -> %.4f)" % [solo_wear, team_wear]
-	return ""
-
-
 static func _case_coupling_cs_dampen_axis() -> String:
 	# ANCHOR b2: the churn dampen reads UZMANLIK directly, and a UZMANLIK-5 rep dampens
 	# EXACTLY as the pre-Coupling cs_skill-55 rep did — the shim's promise, kept without it.
@@ -7797,8 +7742,8 @@ static func _case_coupling_cs_dampen_axis() -> String:
 	var bb: Customer = _sign_fixture(p, 1000, 70)
 	CustomerRegistry.assign_customer(a.id, weak_rep.id)
 	CustomerRegistry.assign_customer(bb.id, strong_rep.id)
-	GameState.set_flag("mvp_stability", 20.0)
-	GameState.set_flag("mvp_live_bug_count", 40)
+	GameState.set_flag("mvp_stability", 0.0)   # the target sits on the floor, so the twins fall at their own rates all six ticks
+	_seed_bugs(40)
 	CustomerRegistry.set_satisfaction(a.id, 60)
 	CustomerRegistry.set_satisfaction(bb.id, 60)
 	for i in 6:
@@ -11636,10 +11581,9 @@ static func _case_b2b_v1_lands_mid_band() -> String:
 
 
 ## B2C satisfaction has no gate: the userbase record drifts toward the experience score a day's
-## step at a time (seven on a tick) from either side and stops there, and a live backlog over
-## SATISFACTION_BUG_GATE pushes it down on top at its own daily rate, not the drift's.
+## step at a time (seven on a tick) from either side and stops there.
 ## FALSIFICATION: put back the "+1 a day while experience ≥ 40" gate and the from-above leg
-## climbs instead of falling; push the backlog at the drift's step and the backlog legs land low.
+## climbs instead of falling.
 static func _case_b2c_satisfaction_drifts_to_experience() -> String:
 	_seed_b2c()
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
@@ -11653,27 +11597,22 @@ static func _case_b2c_satisfaction_drifts_to_experience() -> String:
 	InfraSystem.set_provider("cloud")
 	InfraSystem.set_capacity(100)
 	var step: int = int(TimeModel.per_tick(SalesSystem.SATISFACTION_DRIFT_PER_DAY))
-	var push: int = int(TimeModel.per_tick(SalesSystem.SATISFACTION_BUG_PUSH_PER_DAY))
-	var over: int = SalesSystem.SATISFACTION_BUG_GATE + 1
 	var target: int = int(round(QualityModel.normalized_quality(25.0)))   # raw experience 25
-	# [raw experience, live bugs, satisfaction before, satisfaction after one tick]
+	# [raw experience, satisfaction before, satisfaction after one tick]
 	for leg in [
-			[25.0, 0, target - 3 * step, target - 2 * step],          # climbs a week's step
-			[25.0, 0, target - 2, target],                            # and stops at the target
-			[25.0, 0, 80, 80 - step],                                 # falls from above: nothing holds it up
-			[10.0, 0, 10, 10 + step],                                 # a weak product (target 29) still climbs
-			[25.0, over, target, target - push],                      # the backlog pushes under the target
-			[25.0, over, target - 3 * step, target - 2 * step - push]]:   # and slows a climb
+			[25.0, target - 3 * step, target - 2 * step],          # climbs a week's step
+			[25.0, target - 2, target],                            # and stops at the target
+			[25.0, 80, 80 - step],                                 # falls from above: nothing holds it up
+			[10.0, 10, 10 + step]]:                                # a weak product (target 29) still climbs
 		GameState.set_flag("mvp_experience", float(leg[0]))
-		GameState.set_flag("mvp_live_bug_count", int(leg[1]))
 		GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
 		GameState.set_flag(ProductState.OPEN_BUGS, {})
 		SupportSystem.reset()
-		CustomerRegistry.set_satisfaction(ub.id, int(leg[2]))
+		CustomerRegistry.set_satisfaction(ub.id, int(leg[1]))
 		_sim_day()
-		if ub.satisfaction != int(leg[3]):
-			return "experience %.0f, %d live bugs: satisfaction %d -> %d, want %d" % [
-				float(leg[0]), int(leg[1]), int(leg[2]), ub.satisfaction, int(leg[3])]
+		if ub.satisfaction != int(leg[2]):
+			return "experience %.0f: satisfaction %d -> %d, want %d" % [
+				float(leg[0]), int(leg[1]), ub.satisfaction, int(leg[2])]
 	return ""
 
 
@@ -12098,42 +12037,6 @@ static func _case_b2c_growth_multiplier_floor() -> String:
 	return ""
 
 
-# --- Bugs hit conversion ---
-
-static func _case_conversion_bug_penalty() -> String:
-	# 10 live bugs ≈ −20 % conversion, floored at ×0.4; the price-change projection
-	# (SalesSystem.estimate_price_change → new_paying) moves with it.
-	_seed_b2c()
-	GameState.set_flag("mvp_innovation", 15.0)
-	GameState.set_flag("mvp_stability", 20.0)
-	GameState.set_flag("mvp_experience", 17.5)
-	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
-	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
-	GameState.set_flag("b2c_audience", 1000.0)
-	var price: int = int(GameState.get_flag("b2c_price", SalesSystem.B2C_PRICE_DEFAULT))
-	# Bugs ALSO lower product_value (effective stability → composite → optimal), so the
-	# expectation is rebuilt from product_value at each bug level: the penalty factor is what
-	# conversion_rate adds on top of the price curve.
-	for probe in [[0, 1.0], [10, 0.8], [60, SalesSystem.BUG_CONV_FLOOR]]:
-		GameState.set_flag("mvp_live_bug_count", int(probe[0]))
-		var optimal: float = maxf(1.0, float(SalesSystem.product_value()["optimal"]))
-		var price_curve: float = clampf(SalesSystem.CONVERSION_BASE * optimal / maxf(1.0, float(price)),
-			SalesSystem.CONVERSION_MIN, SalesSystem.CONVERSION_MAX)
-		var want: float = clampf(price_curve * float(probe[1]), SalesSystem.CONVERSION_MIN, SalesSystem.CONVERSION_MAX)
-		var got: float = SalesSystem.conversion_rate(price)
-		if absf(got - want) > 1e-6:
-			return "%d bugs → conversion %.4f, want price curve %.4f × %.2f = %.4f" % [int(probe[0]), got, price_curve, float(probe[1]), want]
-		if int(probe[0]) == 0 and (got <= SalesSystem.CONVERSION_MIN or got >= SalesSystem.CONVERSION_MAX):
-			return "fixture: bug-free rate %.3f sits on a clamp; the penalty would be masked" % got
-	GameState.set_flag("mvp_live_bug_count", 0)
-	var paying0: int = int(SalesSystem.estimate_price_change(price)["new_paying"])
-	GameState.set_flag("mvp_live_bug_count", 10)
-	var paying10: int = int(SalesSystem.estimate_price_change(price)["new_paying"])
-	if paying10 >= paying0:
-		return "the pricing projection did not move under bugs (%d vs %d paying)" % [paying10, paying0]
-	return ""
-
-
 ## The B2C price anchor reads the live line ladder: open lines and their usage weight add
 ## worth, and the flat feature list (fixtures only) does not.
 ## FALSIFICATION: point product_value back at mvp_components and the feature-list leg moves.
@@ -12267,7 +12170,7 @@ static func _seed_risk_account() -> Customer:
 	CustomerRegistry.set_tolerance(c.id, 50)
 	CustomerRegistry.set_satisfaction(c.id, 30)
 	GameState.set_flag("mvp_stability", 5.0)
-	GameState.set_flag("mvp_live_bug_count", 30)
+	_seed_bugs(30)
 	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 	CustomerRegistry.set_churn_countdown(c.id, TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
 	return c
@@ -12327,7 +12230,7 @@ static func _case_risk_exit_stamps_day() -> String:
 	if c.last_risk_exit_day != -1:
 		return "fresh account already carries an exit day"
 	GameState.set_flag("mvp_stability", 80.0)
-	GameState.set_flag("mvp_live_bug_count", 0)
+	ProductState.clear_line_bugs(BUG_LINE)
 	CustomerRegistry.set_satisfaction(c.id, 90)   # over the bar → _tick_healthy's risk branch
 	_sim_day()
 	if c.lifecycle_phase == "risk" or c.last_risk_exit_day != GameState.day:
@@ -13451,7 +13354,6 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
 	GameState.set_flag("mvp_market_type", market)
 	GameState.set_flag("mvp_version", 1)
-	GameState.set_flag("mvp_live_bug_count", 6)
 	GameState.set_flag(ProductState.LINE_TIERS, {"line_note_tool_search": 1})
 	GameState.set_flag(ProductState.STEP_REALIZATION, {})
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
@@ -13490,6 +13392,7 @@ static func _case_destek_empty_desk_piles_up() -> String:
 		return "the founder with CS 0 verifies %.2f/day at the desk against %.2f idle" % [
 			SupportSystem.validation_per_day(), alone]
 	CharacterRegistry.clear_jobs(founder.id)
+	var unit: float = SupportSystem.USAGE_DIV_B2C   # one usage unit of audience doubles the inflow's multiplier
 	var week := func(audience: float) -> int:
 		GameState.set_flag("b2c_audience", audience)
 		var pile: int = ProductState.reports_incoming()
@@ -13498,8 +13401,8 @@ static func _case_destek_empty_desk_piles_up() -> String:
 		return ProductState.reports_incoming() - pile
 
 	# İki hafta, kurucunun Müşteri İlişkileri 0, masada kimse yok; kitle büyüyor.
-	var small: int = week.call(4000.0)
-	var grown: int = week.call(20000.0)
+	var small: int = week.call(40.0 * unit)
+	var grown: int = week.call(80.0 * unit)
 	if ProductState.open_bugs() <= 0:
 		return "a founder with CS 0 and nobody at the desk verified nothing in two weeks"
 	if grown <= small:
@@ -13511,7 +13414,7 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	if SupportSystem.validation_per_day() < 3.0 * alone:
 		return "one rep at the desk verifies %.2f/day against %.2f without; want three times" % [
 			SupportSystem.validation_per_day(), alone]
-	var with_rep: int = week.call(24000.0)
+	var with_rep: int = week.call(84.0 * unit)
 	if with_rep >= grown:
 		return "a rep at the desk did not slow the pile (%d -> %d)" % [grown, with_rep]
 	if not HRActions.apply_leave(rep, HRConstants.VACATION_WEEKS_MIN):
@@ -14058,36 +13961,23 @@ static func _case_axis_reading_replaces_not_adds() -> String:
 	var stamps := {line: 1.0}                    # tur çarpanı 1,00 · kapı-üstü yok
 
 	# K1: 4 puan × Kano 1,0 = 4,0 gizil. Bootstrap çıtası 12,0 → round(100 × 4/12) = 33.
-	var before: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 0, 1)
+	var before: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 1)
 	if before != 33:
 		return "K1 experience reading is %d, want 33 (4,0 gizil / çıta 12,0)" % before
 
 	# K2: 9 puan × Kano 0,8 = 7,2 gizil → round(100 × 7,2/12) = 60 (rev 6.1 merkezleri).
 	tiers[line] = 2
-	var after: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 0, 1)
+	var after: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 1)
 	if after != 60:
 		return "K2 experience reading is %d, want 60 (7,2 gizil / çıta 12,0)" % after
 	# Toplama olsaydı gizil 4,0 + 7,2 = 11,2 → 93. Aradaki fark iddianın kendisidir.
 	if after >= 93:
 		return "the upgrade ADDED to the line instead of replacing it (%d)" % after
 
-	# §11.2 — Kararlılık okumasından −2 × açık DOĞRULANMIŞ hata.
-	var sline := "line_note_tool_sync"
-	var stiers := {sline: 1}
-	var sstamps := {sline: 1.0}
-	var clean: int = QualityModel.axis_reading(st, stiers, sstamps, "stability", 0, 1)
-	var buggy: int = QualityModel.axis_reading(st, stiers, sstamps, "stability", 5, 1)
-	if clean - buggy != 10:
-		return "5 confirmed bugs moved Kararlılık by %d, want 10 (−2 each)" % (clean - buggy)
-	# İnovasyon'a dokunmaz: hata cezası TEK EKSENE yazılıdır.
-	if QualityModel.axis_reading(st, stiers, sstamps, "innovation", 0, 1) \
-			!= QualityModel.axis_reading(st, stiers, sstamps, "innovation", 5, 1):
-		return "confirmed bugs leaked into the İnovasyon reading"
-
 	# §11.3 — çıta her fazda +%10 yükselir; aynı ürün Traction'da DAHA DÜŞÜK okur.
 	tiers[line] = 1
-	var boot: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 0, 1)
-	var trac: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 0, 2)
+	var boot: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 1)
+	var trac: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 2)
 	if trac >= boot:
 		return "the bar did not rise between phases (%d -> %d)" % [boot, trac]
 	return ""
@@ -18445,29 +18335,6 @@ static func _case_sprint_decision_blocks_progress() -> String:
 	return fail
 
 
-## Açık sürüm canlı hata havuzunu sıfırlar: sayaç ve aşınma ilerlemesi 0'dan başlar. Sürüm
-## çıkarmayan kapanış (araştırma) havuza dokunmaz.
-## FALSİFİKASYON: SprintSystem._go_public'teki mvp_live_bug_count sıfırlamasını sil → FAIL.
-static func _case_sprint_release_resets_live_bugs() -> String:
-	_seed_sprint_live("note_tool")
-	_sprint_hire("char_bugs_dev", HRConstants.ROLE_DEVELOPER)
-	GameState.set_flag("mvp_live_bug_count", 7)
-	GameState.set_flag("mvp_live_bug_progress", 0.75)
-	if not _play_sprint(["res:core"]):
-		return "fixture: the research sprint did not start"
-	if int(GameState.product.release.number) != 0 or ProductSystem.live_bug_count() != 7:
-		return "a research-only close (release %d) moved the live pool to %d, want 7 untouched" % [
-			int(GameState.product.release.number), ProductSystem.live_bug_count()]
-	if not _play_sprint(["feat:%s_k1" % SprintCatalog.capabilities("core")[3]]):
-		return "fixture: the release sprint did not start"
-	if int(GameState.product.release.number) != 2:
-		return "fixture: the second sprint did not release v1.1 (release %d)" % int(GameState.product.release.number)
-	if ProductSystem.live_bug_count() != 0 or float(GameState.get_flag("mvp_live_bug_progress", -1.0)) != 0.0:
-		return "the release left the live pool at %d bugs, progress %.2f; want 0 and 0.0" % [
-			ProductSystem.live_bug_count(), float(GameState.get_flag("mvp_live_bug_progress", -1.0))]
-	return ""
-
-
 ## Hafta ortasında ekipten ayrılan kişi kartından düşer ve boştaki kişi kimsesiz kalan karta
 ## haftanın kalanında atanır; Ekip'in gününde izne çıkan da karttan düşer.
 ## FALSİFİKASYON: SprintSystem._restaff'ın gövdesini boşalt → FAIL.
@@ -20185,3 +20052,430 @@ static func _add_customer(id: String, company_name: String) -> Customer:
 	c.acquired_on_day = GameState.day
 	CustomerRegistry.add(c)
 	return c
+
+
+# ============================================================================
+#  Açık hatanın bedeli: müşteri kaybı, itibar. Satış ve yatırımcı hatayı okumaz.
+# ============================================================================
+
+## v15 → v16: ürün fonunun bekleyen "açık hata" geri dönüşü müşteri kaybı geri dönüşüne çevrilir; penceresi kaydın kendi
+## gününde açılır, defter kayıttaki gibidir (B2B: aktif hesaplar ve şimdiye dek kaybedilen hesap; B2C: kitle, kaybedilmiş kullanıcı
+## yok), `met` korunur. Canlı hata sayacı, ilerlemesi ve haftalık örneği kayıttan gider; kayıtta `bugs_under` kalmaz.
+## FALSİFİKASYON: _migrate_16'da geri dönüş çevirisini (`fund["callback"] = callback`) sil → tür iddiası FAIL;
+## `callback["met"] = ...` satırını sil → "met kept" iddiası FAIL; `int(gs.get("day", 1))` yerine 1 yaz ya da hesap sayımından
+## `status == "active"` süzgecini sil → pencere iddiası FAIL;
+## _REMOVED_FLAGS'ten "mvp_live_bug_count"u çıkar → bayrak iddiası FAIL.
+static func _case_save_v15_callback_bugs_under() -> String:
+	var saved := func(market: String, met: bool) -> Dictionary:
+		return {"game_state": {"day": 40.0, "run_customers_lost": 3.0,
+			"flags": {"mvp_market_type": market, "b2c_audience": 1200.0, "mvp_live_bug_count": 7.0,
+				"mvp_live_bug_progress": 0.5, "mvp_bug_history": [4.0, 7.0]},
+			"vc_states": {
+				"meridian": {"status": "callback", "callback": {"type": "bugs_under", "target": 3.0, "met": met}},
+				"nexus": {"status": "callback", "callback": {"type": "first_engineer", "target": 1.0, "met": false}}}},
+			"registries": {"customers": [{"market_type": "b2b"}, {"market_type": "b2b"}, {"market_type": "b2b", "status": "trial"},
+				{"market_type": "b2c"}]}}
+	var b2b: Dictionary = saved.call("b2b", false)
+	SaveManager._migrate_16(b2b)
+	var cb: Dictionary = b2b.game_state.vc_states.meridian.callback
+	if cb.get("type") != "churn_under" or int(cb.get("target", 0)) != PitchConstants.CALLBACK_CHURN_PCT_B2B \
+			or bool(cb.get("met", true)):
+		return "the B2B callback reads %s, want an unmet churn_under at %d" % [cb, PitchConstants.CALLBACK_CHURN_PCT_B2B]
+	if int(cb.get("from_day", 0)) != 40 or int(cb.get("from_base", 0)) != 2 or int(cb.get("from_lost", 0)) != 3:
+		return "the window reads %s, want it opened on the save's day 40 with the 2 active accounts and 3 lost" % cb
+	if b2b.game_state.vc_states.nexus.callback.get("type") != "first_engineer":
+		return "the team fund's callback was touched: %s" % b2b.game_state.vc_states.nexus.callback
+	for key in ["mvp_live_bug_count", "mvp_live_bug_progress", "mvp_bug_history"]:
+		if b2b.game_state.flags.has(key):
+			return "flag '%s' survived the migration" % key
+	if JSON.stringify(b2b).contains("bugs_under"):
+		return "the migrated save still names bugs_under"
+	var b2c: Dictionary = saved.call("b2c", true)
+	SaveManager._migrate_16(b2c)
+	cb = b2c.game_state.vc_states.meridian.callback
+	if int(cb.get("target", 0)) != PitchConstants.CALLBACK_CHURN_PCT_B2C or int(cb.get("from_base", 0)) != 1200 \
+			or float(cb.get("from_lost", -1.0)) != 0.0 or not bool(cb.get("met", false)):
+		return "the B2C callback reads %s, want %d%% over the 1200 audience, none lost and met kept" % [
+			cb, PitchConstants.CALLBACK_CHURN_PCT_B2C]
+	# The loaded callback plays: the window is a quarter long from the save's day.
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.run_customers_lost = 3
+	cb = b2b.game_state.vc_states.meridian.callback
+	GameState.day = 40 + TimeModel.ticks(PitchConstants.CALLBACK_CHURN_WEEKS) - 1
+	if VCPitchSystem._callback_met(cb):
+		return "the migrated callback was met a week before its quarter was complete"
+	GameState.day += 1
+	if not VCPitchSystem._callback_met(cb):
+		return "the migrated callback was not met after a quarter without losing an account"
+	return ""
+
+
+## Ürün fonunun geri dönüşü müşteri kaybıdır: geri dönüş verildikten sonraki 12 haftada kaybedilen müşteri oranı eşiğin
+## altında kalmalıdır, pencere dolmadan karşılanmaz. B2B'de ayrılan hesap, B2C'de churn ve aşınma terimlerinin götürdüğü
+## kullanıcı sayılır. Kayıpla dolan pencere geri dönüşü karşılamaz ve sıradaki çeyreği ister.
+## FALSİFİKASYON: `_callback_met`ten `_churn_window_done(cb) and` kısmını sil → "complete" iddiası FAIL; `<` yerine `<=` yaz →
+## eşik iddiası FAIL; `_tick_callbacks`taki yeniden kurmayı sil → "asks for the next quarter" iddiası FAIL; `_customers_lost`ta
+## B2C kolunu `run_customers_lost`a çevir → B2C iddiası FAIL.
+static func _case_callback_churn_window() -> String:
+	GameState.set_phase(3)
+	_seed_b2b(3000)
+	var weeks: int = TimeModel.ticks(PitchConstants.CALLBACK_CHURN_WEEKS)
+	var fund: Dictionary = VCPitchSystem._vc("meridian")
+	fund["status"] = "callback"
+	var open_window := func() -> Dictionary:
+		fund["callback"] = VCPitchSystem._make_callback("meridian")
+		return fund["callback"]
+	var cb: Dictionary = open_window.call()
+	if cb.get("type") != "churn_under" or int(cb.get("target", 0)) != PitchConstants.CALLBACK_CHURN_PCT_B2B \
+			or int(cb.get("from_base", 0)) != 1 or int(cb.get("from_day", 0)) != GameState.day:
+		return "the B2B callback reads %s, want churn_under at %d%% over the one account, opened today" % [
+			cb, PitchConstants.CALLBACK_CHURN_PCT_B2B]
+	var text: String = VCPitchSystem.callback_text(cb)
+	if text == "HUNT_CB_CHURN" or text.contains("{"):
+		return "the condition reads '%s'" % text
+	# The quarter has to be complete before the fund calls it, however clean it has been.
+	GameState.day += weeks - 1
+	VCPitchSystem._tick_callbacks()
+	if fund.callback.get("met", false):
+		return "met a week before the quarter was complete"
+	GameState.day += 1
+	VCPitchSystem._tick_callbacks()
+	if not fund.callback.get("met", false):
+		return "a quarter without losing an account did not meet it"
+	# The threshold is strict: one account of twenty is exactly the target.
+	cb = open_window.call()
+	cb["from_base"] = 20.0
+	GameState.run_customers_lost += 1
+	GameState.day += weeks
+	VCPitchSystem._tick_callbacks()
+	if fund.callback.get("met", false):
+		return "losing 1 account of 20 (5%%) met a %d%% target" % PitchConstants.CALLBACK_CHURN_PCT_B2B
+	# A loss inside the window: not met, and the fund asks for the next quarter, counting from today.
+	cb = open_window.call()
+	GameState.run_customers_lost += 1
+	GameState.day += weeks
+	VCPitchSystem._tick_callbacks()
+	if fund.callback.get("met", false):
+		return "a lost account inside the quarter still met the callback"
+	if int(fund.callback.get("from_day", 0)) != GameState.day or int(fund.callback.get("from_lost", 0)) != GameState.run_customers_lost:
+		return "the fund did not ask for the next quarter: %s" % fund.callback
+	if VCPitchSystem.meeting_blocked_reason("meridian") != "callback_unmet":
+		return "the door opened without the condition (%s)" % VCPitchSystem.meeting_blocked_reason("meridian")
+	GameState.day += weeks
+	VCPitchSystem._tick_callbacks()
+	if not fund.callback.get("met", false):
+		return "a clean quarter after the lost one did not meet it"
+	# B2C: the users the churn and erosion terms took, over the audience at the window's start.
+	GameState.set_flag("mvp_market_type", "b2c")
+	GameState.set_flag("b2c_audience", 1000.0)
+	cb = open_window.call()
+	if int(cb.get("target", 0)) != PitchConstants.CALLBACK_CHURN_PCT_B2C or int(cb.get("from_base", 0)) != 1000:
+		return "the B2C callback reads %s, want %d%% over the 1000 audience" % [cb, PitchConstants.CALLBACK_CHURN_PCT_B2C]
+	GameState.set_flag("b2c_users_lost", SalesSystem.b2c_users_lost() + 100.0)
+	GameState.day += weeks
+	VCPitchSystem._tick_callbacks()
+	if not fund.callback.get("met", false):
+		return "losing 10%% of the audience missed a %d%% target" % PitchConstants.CALLBACK_CHURN_PCT_B2C
+	cb = open_window.call()
+	GameState.set_flag("b2c_users_lost", SalesSystem.b2c_users_lost() + 200.0)
+	GameState.day += weeks
+	VCPitchSystem._tick_callbacks()
+	if fund.callback.get("met", false):
+		return "losing 20%% of the audience met a %d%% target" % PitchConstants.CALLBACK_CHURN_PCT_B2C
+	return ""
+
+
+## B2B'de açık hatanın bedeli hesabın memnuniyet hedefindedir: hesabın kullandığı hatlardaki hata başına
+## B2B_BUG_SAT_PER, en çok B2B_BUG_SAT_CAP; onboarding tabanı cezadan sonra uygulanır. Hesabın kullandığı hat, alıcı
+## tipinin hattın eksenini USE_AXIS_MIN ve üstü okumasıdır (operasyon alıcısı yeniliği okumaz, teknik alıcı okur).
+## Şikâyet sesi ve Risk sebebi aynı kuraldan okur: hesabın kendi hatlarındaki hata COMPLAINT_BUG_GATE'in üstünde.
+## `fix_off` anahtarı bedeli sıfırlar.
+## FALSİFİKASYON: `account_bugs`ta `uses_axis` süzgecini sil → "reads only the lines" iddiası FAIL; `minf(..., CAP)`ı sil → tavan
+## iddiası FAIL; onboarding tabanını cezadan önceye taşı → "floor after" iddiası FAIL; `risk_reason`da `account_bugs(c)` yerine
+## `ProductState.open_bugs()` yaz → sebep iddiası FAIL; `costed`ı `account_bugs`tan çıkar → anahtar iddiası FAIL.
+static func _case_bug_cost_b2b_account_lines() -> String:
+	_seed_b2b(1000)
+	var ops: Customer = CustomerRegistry.get_by_market("b2b")[0]    # "testing": no buyer type claims it, it reads like the default operations buyer
+	var p := Prospect.new()
+	p.id = "lead_tech"
+	p.company_name = "Tech Co"
+	p.industry = "technology"
+	p.star = 1
+	var tech: Customer = _sign_fixture(p, 1000, 70)
+	_past_onboarding(ops)
+	_past_onboarding(tech)
+	var health: float = QualityModel.axis_score(QualityModel.dims_from_flags(), "stability")
+	var cost := func(bugs: int) -> float:
+		return minf(B2BConstants.B2B_BUG_SAT_PER * float(bugs), float(B2BConstants.B2B_BUG_SAT_CAP))
+	var target := func(c: Customer, bugs: int) -> int:
+		return clampi(int(round(health - cost.call(bugs) + c.trust_offset)), 0, 100)
+	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 0):
+		return "fixture: a bug-free account reads target %d, want %d" % [B2BSalesSystem.satisfaction_target(ops), target.call(ops, 0)]
+	# A stability line concerns both buyers; an innovation line only the technical one.
+	_seed_bugs(10)
+	ProductState.add_bugs("line_erp_cashflow", 8)
+	if B2BSalesSystem.account_bugs(ops) != 10 or B2BSalesSystem.account_bugs(tech) != 18:
+		return "the operations account counts %d bugs and the technical one %d, want 10 and 18 (each reads only the lines it uses)" % [
+			B2BSalesSystem.account_bugs(ops), B2BSalesSystem.account_bugs(tech)]
+	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 10) or B2BSalesSystem.satisfaction_target(tech) != target.call(tech, 18):
+		return "targets read %d and %d, want %d and %d" % [B2BSalesSystem.satisfaction_target(ops),
+			B2BSalesSystem.satisfaction_target(tech), target.call(ops, 10), target.call(tech, 18)]
+	# The cost stops at the cap.
+	_seed_bugs(500)
+	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 510):
+		return "510 bugs: target %d, want %d (health %.1f less the cap %d)" % [B2BSalesSystem.satisfaction_target(ops),
+			target.call(ops, 510), health, B2BConstants.B2B_BUG_SAT_CAP]
+	# The onboarding floor holds a fresh account over its bar after the cost, not before it.
+	GameState.set_flag("mvp_stability", 5.0)
+	var fresh_p := Prospect.new()
+	fresh_p.id = "lead_fresh"
+	fresh_p.company_name = "Fresh Co"
+	fresh_p.industry = "technology"
+	fresh_p.star = 1
+	var fresh: Customer = _sign_fixture(fresh_p, 1000, 70)
+	if B2BSalesSystem.satisfaction_target(fresh) != fresh.tolerance + B2BConstants.ONBOARDING_GRACE_MARGIN:
+		return "a fresh account under 510 bugs reads target %d, want its floor %d + %d" % [
+			B2BSalesSystem.satisfaction_target(fresh), fresh.tolerance, B2BConstants.ONBOARDING_GRACE_MARGIN]
+	_past_onboarding(fresh)
+	if B2BSalesSystem.satisfaction_target(fresh) != 0:
+		return "once the floor lifted the account reads target %d, want 0 (stability less the cap)" % B2BSalesSystem.satisfaction_target(fresh)
+	# The Risk reason and the complaint voice read the account's own lines, strictly above the gate.
+	GameState.set_flag("mvp_stability", 70.0)
+	ProductState.clear_line_bugs(BUG_LINE)
+	ProductState.clear_line_bugs("line_erp_cashflow")
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)   # room on the servers: an overage is a complaint too
+	InfraSystem.set_capacity(100)
+	var outage: String = TranslationServer.translate("SALES_REASON_OUTAGE")
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
+	_seed_bugs(B2BConstants.COMPLAINT_BUG_GATE)
+	if INBOX.risk_reason(ops) == outage or INBOX.risk_reason(tech) == outage:
+		return "the gate itself (%d bugs) already reads as outages" % B2BConstants.COMPLAINT_BUG_GATE
+	ProductState.clear_line_bugs(BUG_LINE)
+	ProductState.add_bugs("line_erp_cashflow", B2BConstants.COMPLAINT_BUG_GATE + 1)
+	if INBOX.risk_reason(ops) == outage or B2BSalesSystem.risk_voice(ops) == B2BConstants.complaint_voice(ops.industry):
+		return "bugs on a line the operations account does not use read as its outages"
+	if INBOX.risk_reason(tech) != outage or B2BSalesSystem.risk_voice(tech) != B2BConstants.complaint_voice(tech.industry):
+		return "bugs on a line the technical account uses did not read as its outages ('%s')" % INBOX.risk_reason(tech)
+	# The baseline switch zeroes the cost; the bugs stay counted.
+	ProductState.bugs_free = true
+	if B2BSalesSystem.account_bugs(tech) != 0 or B2BSalesSystem.satisfaction_target(tech) != target.call(tech, 0) \
+			or ProductState.open_bugs() != B2BConstants.COMPLAINT_BUG_GATE + 1:
+		return "with the cost off the technical account counts %d bugs and reads target %d" % [
+			B2BSalesSystem.account_bugs(tech), B2BSalesSystem.satisfaction_target(tech)]
+	ProductState.bugs_free = false
+	return ""
+
+
+## B2C'de açık hata kitleyi eritir: saatte hata başına B2C_BUG_CHURN_COEF × kitle, B2C_BUG_CHURN_CAP hataya kadar; kalite
+## aşınmasının YANINA eklenir, yerine geçmez; kayıp `b2c_users_lost`ta birikir (ürün fonunun geri dönüşü bunu sayar).
+## `fix_off` anahtarı bedeli sıfırlar.
+## FALSİFİKASYON: `_audience_loss_per_hour`da hata terimini sil → "bugs" iddiası FAIL; `+ bugs` yerine `max(erosion, bugs)` yaz →
+## "next to erosion" iddiası FAIL; `mini(..., CAP)`i sil → tavan iddiası FAIL; `_tick_b2c_audience`ten `b2c_users_lost` yazımını sil →
+## sayaç iddiası FAIL; `costed`ı kaldır → anahtar iddiası FAIL.
+static func _case_bug_cost_b2c_audience() -> String:
+	_seed_support_fixture("b2c")
+	GameState.set_flag("b2c_audience", 10000.0)
+	var loss := func(bugs_on_search: int) -> float:
+		GameState.set_flag(ProductState.OPEN_BUGS, {"line_note_tool_search": bugs_on_search} if bugs_on_search > 0 else {})
+		return SalesSystem._audience_loss_per_hour()
+	# A product over the erosion line: only the bugs cost audience.
+	for axis in ["mvp_innovation", "mvp_stability", "mvp_experience"]:
+		GameState.set_flag(axis, 200.0)
+	if loss.call(0) != 0.0:
+		return "fixture: a strong product with no bugs still loses %.4f users an hour" % loss.call(0)
+	var per_bug: float = SalesSystem.B2C_BUG_CHURN_COEF * 10000.0
+	if absf(loss.call(1) - per_bug) > 1e-9 or absf(loss.call(7) - 7.0 * per_bug) > 1e-9:
+		return "1 and 7 bugs lose %.6f and %.6f users an hour, want %.6f and %.6f (the first bug already costs)" % [
+			loss.call(1), loss.call(7), per_bug, 7.0 * per_bug]
+	var capped: float = float(SalesSystem.B2C_BUG_CHURN_CAP) * per_bug
+	if absf(loss.call(SalesSystem.B2C_BUG_CHURN_CAP) - capped) > 1e-9 or absf(loss.call(500) - capped) > 1e-9:
+		return "the cost does not stop at %d bugs: %.6f and %.6f an hour, want %.6f" % [
+			SalesSystem.B2C_BUG_CHURN_CAP, loss.call(SalesSystem.B2C_BUG_CHURN_CAP), loss.call(500), capped]
+	# The growth reads the same loss: the delta falls by exactly what the bugs take.
+	loss.call(0)
+	var d0: float = SalesSystem._audience_delta_per_hour()
+	loss.call(7)
+	if absf(d0 - SalesSystem._audience_delta_per_hour() - 7.0 * per_bug) > 1e-9:
+		return "7 bugs lowered the hourly growth by %.6f, want %.6f" % [d0 - SalesSystem._audience_delta_per_hour(), 7.0 * per_bug]
+	# A product under the erosion line: the bugs add to the erosion.
+	for axis in ["mvp_innovation", "mvp_stability", "mvp_experience"]:
+		GameState.set_flag(axis, 0.0)
+	var erosion: float = loss.call(0)
+	if erosion <= 0.0:
+		return "fixture: a product with no axes does not erode"
+	if absf(loss.call(7) - (erosion + 7.0 * per_bug)) > 1e-9:
+		return "erosion %.6f plus 7 bugs reads %.6f an hour, want %.6f (the bug cost sits next to the erosion)" % [
+			erosion, loss.call(7), erosion + 7.0 * per_bug]
+	# The running total follows the audience: one tick takes exactly the tick's loss.
+	var lost0: float = SalesSystem.b2c_users_lost()
+	var audience0: float = SalesSystem.b2c_audience()
+	var tick_loss: float = TimeModel.per_tick(loss.call(7))
+	SalesSystem._tick_b2c_audience()
+	if absf(SalesSystem.b2c_users_lost() - lost0 - tick_loss) > 1e-6:
+		return "a tick added %.4f to the users lost, want %.4f" % [SalesSystem.b2c_users_lost() - lost0, tick_loss]
+	if SalesSystem.b2c_audience() >= audience0:
+		return "a tick with 7 bugs and no growth lines left the audience at %.1f (from %.1f)" % [SalesSystem.b2c_audience(), audience0]
+	# The baseline switch zeroes the bug cost and leaves the erosion.
+	GameState.set_flag("b2c_audience", 10000.0)
+	ProductState.bugs_free = true
+	if absf(loss.call(7) - erosion) > 1e-9:
+		return "with the cost off 7 bugs lose %.6f an hour, want the erosion alone %.6f" % [loss.call(7), erosion]
+	ProductState.bugs_free = false
+	return ""
+
+
+## Açık hata bildirim akışını beslemez: hata yalnız kullanımdan ve yeni koddan doğar.
+## FALSİFİKASYON: `reports_per_day`e `+ 0.05 * float(ProductState.open_bugs())` ekle → FAIL.
+static func _case_support_inflow_is_bug_free() -> String:
+	_seed_support_fixture("b2c")
+	GameState.set_flag("b2c_audience", 1000.0)
+	var flow: float = SupportSystem.reports_per_day()
+	if flow <= 0.0:
+		return "fixture: a live product has no inflow"
+	ProductState.add_bugs("line_note_tool_search", 50)
+	if absf(SupportSystem.reports_per_day() - flow) > 1e-9:
+		return "50 open bugs moved the inflow from %.4f to %.4f a day" % [flow, SupportSystem.reports_per_day()]
+	return ""
+
+
+## İhmal itibarı düşürür: açık hata ihmal eşiğinde üst üste NEGLECT_WEEKS haftalık tik durursa itibar o hafta ve koşul
+## sürdükçe her hafta bir düşer; sıfırda kesilmez, GameState'in tabanında (−10) durur. Düzelten oyuncu eşiğe girmez, bir
+## temiz hafta sayacı sıfırlar. İtibar sıfırın altındayken yatırımcının itibar sorusu açılır. Son düşüşün sebebi tek
+## okuma noktasındadır (TopBar ipucu). `fix_off` anahtarı kuralı kapatır.
+## FALSİFİKASYON: `streak >= NEGLECT_WEEKS` yerine `NEGLECT_WEEKS - 1` yaz → "before the fourth" iddiası FAIL;
+## `set_reputation(before - 1)` yerine `set_reputation(maxi(0, before - 1))` → "below zero" iddiası FAIL;
+## `>= NEGLECT_BUGS` yerine `> NEGLECT_BUGS` → eşik iddiası FAIL; sayacı sıfırlayan `else 0`ı sil → "consecutive" iddiası FAIL;
+## `costed`ı kuraldan çıkar → anahtar iddiası FAIL.
+static func _case_neglect_reputation_below_zero() -> String:
+	_seed_support_fixture("b2c")
+	GameState.set_reputation(0)
+	var line := "line_note_tool_search"
+	var week := func() -> void:
+		GameState.advance_day()
+		SupportSystem.daily_tick()
+	ProductState.add_bugs(line, SupportSystem.NEGLECT_BUGS)
+	for i in SupportSystem.NEGLECT_WEEKS - 1:
+		week.call()
+		if GameState.reputation != 0 or not SupportSystem.neglect_drop().is_empty():
+			return "reputation read %d with a drop recorded in week %d, before the fourth consecutive week" % [GameState.reputation, i + 1]
+	week.call()
+	var drop: Dictionary = SupportSystem.neglect_drop()
+	if GameState.reputation != -1 or int(drop.get("day", 0)) != GameState.day or drop.get("reason") != SupportSystem.NEGLECT_REASON:
+		return "the fourth week read reputation %d and drop %s, want -1 on day %d" % [GameState.reputation, drop, GameState.day]
+	# The pile holds: the fall goes below zero week by week and stops at GameState's floor.
+	week.call()
+	if GameState.reputation != -2:
+		return "the fifth week read reputation %d, want -2 (every week the pile holds)" % GameState.reputation
+	var floor_day: int = -1
+	for i in 20:
+		week.call()
+		if GameState.reputation == -10 and floor_day < 0:
+			floor_day = GameState.day
+	if GameState.reputation != -10 or floor_day < 0:
+		return "the neglect left reputation at %d, want the floor -10" % GameState.reputation
+	if int(SupportSystem.neglect_drop().day) != floor_day:
+		return "the last drop reads day %d, want %d (the week the floor was reached)" % [int(SupportSystem.neglect_drop().day), floor_day]
+	# Below zero the investor asks about it.
+	for r in RivalRegistry.get_all():
+		r.status = "STEADY"
+	if VCPitchSystem._sorgu_narrative().get("key") != "reputation":
+		return "at reputation -10 the narrative fund asks '%s', want the reputation question" % VCPitchSystem._sorgu_narrative().get("key")
+	# Fixing stops the fall: a clean week resets the count and the reputation stays where it was.
+	GameState.set_reputation(-4)
+	ProductState.clear_line_bugs(line)
+	for i in 10:
+		week.call()
+	if GameState.reputation != -4 or int(GameState.get_flag(ProductState.BUG_STREAK, -1)) != 0:
+		return "ten weeks with the bugs fixed left reputation %d, streak %s; want -4 and 0" % [
+			GameState.reputation, GameState.get_flag(ProductState.BUG_STREAK, -1)]
+	# One bug under the threshold is not neglect.
+	ProductState.add_bugs(line, SupportSystem.NEGLECT_BUGS - 1)
+	for i in 10:
+		week.call()
+	if GameState.reputation != -4:
+		return "%d bugs, one under the threshold, took reputation to %d" % [SupportSystem.NEGLECT_BUGS - 1, GameState.reputation]
+	# The weeks must be consecutive: three over, one clean, three over drop nothing.
+	ProductState.add_bugs(line, 1)
+	for i in SupportSystem.NEGLECT_WEEKS - 1:
+		week.call()
+	ProductState.clear_line_bugs(line)
+	week.call()
+	ProductState.add_bugs(line, SupportSystem.NEGLECT_BUGS)
+	for i in SupportSystem.NEGLECT_WEEKS - 1:
+		week.call()
+	if GameState.reputation != -4:
+		return "weeks over the threshold split by a clean one took reputation to %d" % GameState.reputation
+	# The baseline switch turns the rule off.
+	ProductState.bugs_free = true
+	for i in 10:
+		week.call()
+	if GameState.reputation != -4:
+		return "with the cost off the pile took reputation to %d" % GameState.reputation
+	ProductState.bugs_free = false
+	return ""
+
+
+## Satış ve yatırımcı hatayı okumaz: 0 ve 50 açık hatalı iki dünyada dönüşüm, ürün değeri, kalite okuması, toplantı ihtimali
+## (kalıcı katkılar), yıldız karışımı, satış sorusunun gerçekleri, kayıp sebebi ve yeniden sunum kapısı, VC'nin tohum ve
+## Series A sorguları, term sheet uyumu birebir aynıdır.
+## FALSİFİKASYON: `conversion_rate`e hata çarpanı ekle → "conversion" FAIL; `QualityModel.shipped_composite`te kararlılıktan
+## `0.8 × açık hata` düş → "quality" FAIL; `SalesProbes.facts_for`a hata gerçeği ekle → "facts" FAIL; `_sorgu_product`a hata
+## dalı ekle → "series_a_query" FAIL; `_domain_fit`e Meridian hata terimi ekle → "term_sheet_fit" FAIL;
+## `star_mix_now`a hata payı ekle → "star_mix" FAIL.
+static func _case_bugs_leave_sales_and_vc_alone() -> String:
+	GameState.set_phase(3)
+	_seed_b2b(1000)
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	var lead: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	if lead == null:
+		return "the faucet produced no lead"
+	lead.loss_count = 1
+	lead.last_loss_reason = SalesConstants.LOSS_STABILITY
+	VCPitchSystem._vc_id = "meridian"
+	TermSheetTableSystem._vc_id = "meridian"
+	var read := func() -> Dictionary:
+		SalesMeetingSystem._used_families = ["stability"]
+		SalesMeetingSystem._facts = SalesProbes.facts_for(lead)
+		return {
+			"conversion": SalesSystem.conversion_rate(15),
+			"value": SalesSystem.product_value(),
+			"quality": QualityModel.shipped_normalized(),
+			"axes": ProductState.axis_readings(),
+			"signing_seed": SalesSystem.signing_satisfaction_seed(),
+			"meeting": SalesMeetingSystem._build_base_contributions(lead),
+			"star_mix": SalesFaucetSystem.star_mix_now(),
+			"facts": SalesProbes.facts_for(lead),
+			"loss_reason": SalesMeetingSystem._derive_loss_reason(),
+			"repitch_gate": SalesLedger._blocker_cleared(lead),
+			"seed_query": VCPitchSystem._pick_sorgu_seed(),
+			"series_a_query": VCPitchSystem._sorgu_product(),
+			"term_sheet_fit": TermSheetTableSystem._domain_fit(),
+		}
+	# Two products: a K1 line on each axis, where the star mix is not saturated and a bug term in it would move it,
+	# and the whole ladder at K2, where the stability reading clears the loss reason's and the re-pitch gate's bars.
+	for ladder in [{"line_erp_cashflow": 1, "line_erp_ledger": 1, "line_erp_stock": 1}, {}]:
+		GameState.set_flag(ProductState.LINE_TIERS, ladder)
+		if ladder.is_empty():
+			for line_id in ProductLines.line_ids("erp"):
+				ProductState.set_line_tier(String(line_id), 2)
+		ProductState.clear_line_bugs(BUG_LINE)
+		var clean: Dictionary = read.call()
+		if clean.series_a_query.get("key") != "clean" or clean.seed_query.get("key") != "clean":
+			return "fixture: the healthy product's questions read %s and %s, want clean" % [clean.seed_query.get("key"), clean.series_a_query.get("key")]
+		var strength: float = SalesFaucetSystem.product_strength()
+		var moving: bool = strength > SalesConstants.QUALITY_STRENGTH_LOW and strength < SalesConstants.QUALITY_STRENGTH_HIGH
+		if moving == ladder.is_empty():
+			return "fixture: the %s ladder reads strength %.2f against the star mix's moving band" % [
+				"K2" if ladder.is_empty() else "K1", strength]
+		if ladder.is_empty() and (clean.axes.stability < 55 or clean.repitch_gate != true):
+			return "fixture: the K2 ladder reads stability %s and re-pitch gate %s, want it over the bars" % [
+				clean.axes.stability, clean.repitch_gate]
+		ProductState.add_bugs(BUG_LINE, 50)
+		var buggy: Dictionary = read.call()
+		for key in clean:
+			if clean[key] != buggy[key]:
+				return "50 open bugs changed '%s': %s, was %s with none" % [key, buggy[key], clean[key]]
+	SalesMeetingSystem.reset()
+	VCPitchSystem._vc_id = ""
+	TermSheetTableSystem._vc_id = ""
+	return ""

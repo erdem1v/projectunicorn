@@ -1041,7 +1041,9 @@ func _run_sales_shot(kind: String) -> void:
 		return
 	_seed_sales_world()
 	GameState.day = 14
-	GameState.set_flag("mvp_live_bug_count", 12)  # risk reason → "sık kesinti şikayeti"
+	# Over the complaint gate on a line every buyer uses, so a Risk account reads the open bugs as its reason;
+	# risk_stability stays at the gate, which reads the stability reason.
+	ProductState.add_bugs("line_erp_ledger", 12 if kind != "risk_stability" else B2BConstants.COMPLAINT_BUG_GATE)
 	var edge: bool = kind.begins_with("edge")
 	match kind:
 		"b2c", "b2b_pre":
@@ -1111,7 +1113,6 @@ func _run_sales_shot(kind: String) -> void:
 		CustomerRegistry.set_churn_countdown("co_ege", TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
 		_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
 	if kind == "risk_stability":
-		GameState.set_flag("mvp_live_bug_count", B2BConstants.COMPLAINT_BUG_GATE)
 		_shot_customer("co_lale", "Lale Lojistik", "logistics", "risk", 800, 8, 5, false)   # LOC-DATA debug seed / id
 		CustomerRegistry.set_trust_offset("co_lale", B2BConstants.PROMISE_BROKEN_OFFSET)
 	if kind == "stretched":
@@ -1174,7 +1175,7 @@ func _seed_theme_surface() -> void:
 	GameState.set_flag("mvp_innovation", 45.0)
 	GameState.set_flag("mvp_stability", 70.0)
 	GameState.set_flag("mvp_experience", 45.0)
-	GameState.set_flag("mvp_live_bug_count", 12)
+	ProductState.add_bugs("line_erp_ledger", 12)
 	_seed_hr_roster()
 	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
 	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
@@ -3332,9 +3333,10 @@ func _seed_sales_world() -> void:
 	founder.role_stats[FounderConstants.SKILL_CHARISMA] = 4
 
 
-## --vc-shot=<hunt|hunt_closed|hunt_meeting|hunt_seed|table|table_final|table_walk|table_other|seed_table|k10>:
+## --vc-shot=<hunt|hunt_closed|hunt_meeting|hunt_callback|hunt_seed|table|table_final|table_walk|table_other|seed_table|k10>:
 ## the Series A surfaces — the Hunt page (two offers and one queued; every fund closed; a meeting booked beside
-## one offer; Traction with the seed door open), the term-sheet table in its states and the expired-offer
+## one offer; the product fund's customer-loss callback under a reputation the neglected bugs took to the floor; Traction
+## with the seed door open), the term-sheet table in its states and the expired-offer
 ## decision card. Pushes go through the real table system with the SkillCheck debug force. A table's kind
 ## with ":shell" mounts it in the shell's ModalLayer, as the game does, over the shell (vc_shot_<kind>_shell).
 func _run_vc_shot(spec: String) -> void:
@@ -3370,6 +3372,11 @@ func _run_vc_shot(spec: String) -> void:
 			VCPitchSystem._vc("nexus")["status"] = "rejected"
 			GameState.vc_rejections = 1
 			VCPitchSystem.request_meeting("bosphorus")
+		"hunt_callback":
+			VCPitchSystem._vc("meridian")["status"] = "callback"
+			VCPitchSystem._vc("meridian")["callback"] = VCPitchSystem._make_callback("meridian")
+			GameState.set_reputation(-10)
+			GameState.set_flag(ProductState.BUG_DROP_DAY, GameState.day)
 		"hunt_seed":
 			GameState.set_phase(2)
 			GameState.mrr = 22000

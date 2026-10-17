@@ -27,10 +27,8 @@ const B2C_USERBASE_ID := "co_b2c_userbase"
 # B2C aggregate satisfaction drifts toward the EXPERIENCE axis score: the axis the record is
 # SEEDED from (_ensure_b2c_record), and what a consumer feels week to week. A target instead of
 # a threshold, so a product settles at its own experience reading rather than sliding to 0
-# under a bar it cannot reach. A live backlog over SATISFACTION_BUG_GATE pushes it under.
+# under a bar it cannot reach.
 const SATISFACTION_DRIFT_PER_DAY := 1.5    # [WORKING] max move a day toward the target
-const SATISFACTION_BUG_PUSH_PER_DAY := 1   # [WORKING] taken off a day on top of the drift while the backlog is over the gate
-const SATISFACTION_BUG_GATE := 5         # live bug_count > → satisfaction pushed down
 
 # THE SERIES A REVENUE BAR, inside the [100,000-150,000] band. The Series A gate is MRR only;
 # PhaseGateSystem (the gate leaf and series_a_bar) is its only reader. NEVER RENDERED AS A
@@ -52,10 +50,9 @@ const HOURLY_AUD_BRAND_COEF := 0.004
 const HOURLY_AUD_REPUTATION_COEF := 0.01   # raw reputation (-10..100): 0 neutral, + grows, − erodes
 
 # --- Erosion / churn ---
-# When the product falls below EROSION_THRESHOLD (bugs cut effective stability, or a
-# rival passes → quality_term drops), churn overcomes the positive base → audience
-# FALLS (not just slows). Kept as a separate additive term so the normalization
-# contract is untouched. BALANCE-TUNABLE.
+# When the product falls below EROSION_THRESHOLD (a rival passes → quality_term drops), churn
+# overcomes the positive base → audience FALLS (not just slows). Kept as a separate additive
+# term so the normalization contract is untouched. BALANCE-TUNABLE.
 # CHURN is PROPORTIONAL to the current audience (churn = losing existing users, so
 # nothing to lose at audience 0 → a fresh product can grow from 0). CHURN_COEF is a
 # per-audience-member rate: at audience 200, gap 10 → 0.000036·10·200 = 0.072 users/hour.
@@ -78,10 +75,14 @@ const WOM_SAT_GATE := 30.0         # [WORKING] satisfaction above which word of 
 const WOM_MULT_PIVOT := 15.0       # [WORKING] satisfaction at which base growth runs at full strength
 const WOM_MULT_MIN := 0.3          # [WORKING] floor of the base-growth multiplier (satisfaction 0)
 const EROSION_THRESHOLD := 25.0    # [WORKING] rival-relative quality (50 = startup-league parity) under which the audience bleeds
+# Open bugs cost customers, not quality: each open bug (up to the cap) makes this share of the audience
+# leave every calendar hour, next to the erosion above. No threshold, the first bug starts it.
+const B2C_BUG_CHURN_COEF := 0.000001   # [WORKING] onay bekliyor
+const B2C_BUG_CHURN_CAP := 40          # [WORKING] onay bekliyor
 
 # --- Dynamic pricing / value algorithm (working values; balance is the last pass) ---
 # product_value() estimates the product's worth ($/user/mo) from quality + the live line
-# ladder (open lines and their usage weight) + low bug count + product-type tendency. It feeds
+# ladder (open lines and their usage weight) + product-type tendency. It feeds
 # the paid plan's opening price (SprintBridges.open_paid_plan), conversion, the hike reaction
 # and audience price-sensitivity. Read-only.
 const VALUE_BASE := 4.0
@@ -98,17 +99,8 @@ const TENDENCY_MULT := {"premium": 1.35, "neutral": 1.0, "volume": 0.8}
 const CONVERSION_BASE := 0.35            # at optimal
 const CONVERSION_MIN := 0.02
 const CONVERSION_MAX := 0.60
-# Bugs hit CONVERSION, not only satisfaction: without this a buggy product still converts
-# browsers to payers at full rate. The standing conversion is scaled by
-# (1 − live_bugs·BUG_CONV_COEF), floored — the raw live count, the same grammar as
-# SATISFACTION_BUG_GATE ("10 bugs ≈ −20 %"). Applied AFTER the price clamp so a cheap price
-# cannot hide bugs under CONVERSION_MAX, then re-clamped.
-const BUG_CONV_COEF := 0.02              # [WORKING] per live bug; 10 bugs ≈ −20 %
-const BUG_CONV_FLOOR := 0.4              # [WORKING] 30+ bugs cap the penalty at −60 %
-
 # R&D §4.4 `onboarding_flow` — B2C conversion ×1.15. Multiplies CONVERSION_BASE
-# INSIDE the price term, before the FIRST clamp, so the bonus is bounded exactly
-# once and cannot stack past CONVERSION_MAX after the bug factor re-clamps.
+# INSIDE the price term, before the clamp, so the bonus is bounded exactly once.
 const RND_CONVERSION_MULT := 1.15
 
 # Price-hike audience reaction: fraction of the audience that leaves on a raise.
@@ -171,15 +163,16 @@ static func _tick_b2c_audience() -> void:
 	# instead of rounding to zero each hour. A tick is a week, so each of its 24 hourly steps
 	# carries seven calendar hours of the flow.
 	var delta: float = TimeModel.per_tick(_audience_delta_per_hour())
+	var lost: float = TimeModel.per_tick(_audience_loss_per_hour())
 	GameState.set_flag("b2c_audience", maxf(0.0, b2c_audience() + delta))
+	GameState.set_flag("b2c_users_lost", b2c_users_lost() + lost)
 
 
 # Shared audience-growth delta per calendar hour: _tick_b2c_audience and growth_band BOTH call
 # this, so the "büyüyor / eriyor" verdict can never drift from the actual audience motion.
-# Quality is the normalized, type-weighted, effective-stability composite (bugs already baked
-# in via effective_stability, so there is NO separate bug subtractor — one clean channel).
-# Interest (Ürün §9) scales base acquisition through the same band the B2B faucet reads, so a
-# fresh release pulls users in and an aging one slows the trickle.
+# Quality is the normalized, type-weighted composite of the raw axes. Interest (Ürün §9) scales base
+# acquisition through the same band the B2B faucet reads, so a fresh release pulls users in and an aging
+# one slows the trickle.
 static func _audience_delta_per_hour() -> float:
 	var quality_term: float = _rival_relative_quality(QualityModel.shipped_normalized())
 	var grow: float = (HOURLY_AUD_BASE \
@@ -199,9 +192,17 @@ static func _audience_delta_per_hour() -> float:
 	grow += audience * WOM_COEF * maxf(0.0, sat - WOM_SAT_GATE) / 100.0
 	# A card's marketing push lifts the whole intake, word of mouth included; erosion is untouched.
 	grow *= FinanceSystem.marketing_growth_mult()
-	# A product below EROSION_THRESHOLD bleeds users (see CHURN_COEF). Price-independent, so
-	# it sits outside the multiplier.
-	return grow - CHURN_COEF * maxf(0.0, EROSION_THRESHOLD - quality_term) * audience
+	# Price-independent, so the loss sits outside the multiplier.
+	return grow - _audience_loss_per_hour()
+
+
+# Users leaving per calendar hour: a product below EROSION_THRESHOLD bleeds them (see CHURN_COEF) and
+# every open bug adds its share (B2C_BUG_CHURN_COEF). Both are proportional to the audience.
+static func _audience_loss_per_hour() -> float:
+	var quality_term: float = _rival_relative_quality(QualityModel.shipped_normalized())
+	var erosion: float = CHURN_COEF * maxf(0.0, EROSION_THRESHOLD - quality_term)
+	var bugs: float = B2C_BUG_CHURN_COEF * float(mini(ProductState.costed(ProductState.open_bugs()), B2C_BUG_CHURN_CAP))
+	return (erosion + bugs) * b2c_audience()
 
 
 # Recenters the quality term around the same-type rival average. Benchmark = the STARTUP
@@ -240,7 +241,7 @@ static func _ensure_b2c_record() -> void:
 	if CustomerRegistry.get_customer(B2C_USERBASE_ID) != null:
 		return
 	# Seed satisfaction from the EXPERIENCE axis (ease-of-use → happy new users).
-	var seed_sat: int = int(round(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")))
+	var seed_sat: int = int(round(QualityModel.axis_score(QualityModel.dims_from_flags(), "experience")))
 	var base := Customer.new()
 	base.id = B2C_USERBASE_ID
 	# NOT baked: the name is composed copy, so it is stored as a key + argument (company_name
@@ -265,6 +266,11 @@ static func open_b2c_paid_tier(price: int) -> void:
 	GameState.set_flag("b2c_price", maxi(price, 1))
 	_derive_b2c_mrr()
 	reflect_mrr()
+
+
+## The users the B2C audience has lost to erosion and bug churn so far; the Series A product fund's callback counts a window of it.
+static func b2c_users_lost() -> float:
+	return maxf(0.0, float(GameState.get_flag("b2c_users_lost", 0.0)))
 
 
 ## THE read seam for the live B2C audience. Satış bu sayının sahibidir; Ürün §9'un kullanım
@@ -403,11 +409,11 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	return c
 
 
-## A signed B2B account's opening satisfaction: Stability + Experience, off effective quality
+## A signed B2B account's opening satisfaction: Stability + Experience, off the raw axes
 ## (reliability and ease, which is what a business buyer feels on day one). Both signing paths,
 ## the played meeting and the rep's own close, read it, so the two cannot drift apart.
 static func signing_satisfaction_seed() -> int:
-	var dims: Dictionary = QualityModel.economy_dims_from_flags()
+	var dims: Dictionary = QualityModel.dims_from_flags()
 	return int(round(
 		(QualityModel.axis_score(dims, "stability") + QualityModel.axis_score(dims, "experience")) * 0.5))
 
@@ -416,14 +422,11 @@ static func signing_satisfaction_seed() -> int:
 
 static func _tick_satisfaction() -> void:
 	# Drift toward the experience score, a day's step a day and seven days a tick, stopping at
-	# the target; an over-gate backlog pushes it further down on top, so it holds satisfaction
-	# under the target. B2B satisfaction is owned by B2BSalesSystem (two-layer model).
-	var target: int = int(round(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")))
+	# the target. B2B satisfaction is owned by B2BSalesSystem (two-layer model).
+	var target: int = int(round(QualityModel.axis_score(QualityModel.dims_from_flags(), "experience")))
 	var step: int = int(TimeModel.per_tick(SATISFACTION_DRIFT_PER_DAY))
-	var push: int = int(TimeModel.per_tick(SATISFACTION_BUG_PUSH_PER_DAY)) \
-		if ProductSystem.live_bug_count() > SATISFACTION_BUG_GATE else 0
 	for c in CustomerRegistry.get_by_market("b2c"):
-		var delta: int = clampi(target - c.satisfaction, -step, step) - push
+		var delta: int = clampi(target - c.satisfaction, -step, step)
 		if delta != 0:
 			CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
@@ -431,9 +434,8 @@ static func _tick_satisfaction() -> void:
 # --- Value algorithm (product worth → optimal price + lower bound) ---
 
 static func product_value() -> Dictionary:
-	# Read-only worth estimate. Pricing power = the type-weighted, effective-stability
-	# NORMALIZED composite, so the premium comes from whatever axis THIS market values
-	# (quality_axes weights) and bugs dampen worth via effective stability, not a separate term.
+	# Read-only worth estimate. Pricing power = the type-weighted NORMALIZED composite, so the premium
+	# comes from whatever axis THIS market values (quality_axes weights).
 	# Breadth and depth are the live ladder: what the sprint engine has actually shipped.
 	var mult: float = float(TENDENCY_MULT.get(ProductCatalog.get_price_tendency(ProductState.subtype()), 1.0))
 	var raw: float = VALUE_BASE + QualityModel.shipped_normalized() * VALUE_QUALITY_COEF \
@@ -453,19 +455,14 @@ static func rnd_conversion_mult() -> float:
 
 static func conversion_rate(price: int) -> float:
 	# Standing fraction of the WHOLE audience that pays at this price (MRR derives
-	# from it each hour). Cheaper than optimal → higher; pricier → lower. Live bugs
-	# suppress it (buyers generate the complaints that suppress buying).
+	# from it each hour). Cheaper than optimal → higher; pricier → lower.
 	#
-	# R&D §4.4 `onboarding_flow` multiplies the BASE inside the price term — before the first
-	# clamp, never after the last (see RND_CONVERSION_MULT); after the last, CONVERSION_MAX would
-	# eat it outright for anyone already at the ceiling. At optimal 0.35 → 0.4025, under
-	# CONVERSION_MAX, so the node lands in full across the normal band; the ceiling clips it only
-	# below optimal × 0.671 and swallows it only below optimal × 0.583, where an un-researched
-	# player is already capped.
+	# R&D §4.4 `onboarding_flow` multiplies the BASE inside the price term, before the clamp (see
+	# RND_CONVERSION_MULT). At optimal 0.35 → 0.4025, under CONVERSION_MAX, so the node lands in full
+	# across the normal band; the ceiling clips it only below optimal × 0.671 and swallows it only
+	# below optimal × 0.583, where an un-researched player is already capped.
 	var optimal: float = maxf(1.0, float(product_value()["optimal"]))
-	var rate: float = clampf(CONVERSION_BASE * rnd_conversion_mult() * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
-	var bug_factor: float = maxf(BUG_CONV_FLOOR, 1.0 - float(ProductSystem.live_bug_count()) * BUG_CONV_COEF)
-	return clampf(rate * bug_factor, CONVERSION_MIN, CONVERSION_MAX)
+	return clampf(CONVERSION_BASE * rnd_conversion_mult() * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
 
 
 static func churn_fraction(old_price: int, new_price: int) -> float:

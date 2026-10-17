@@ -134,7 +134,7 @@ signal messages_changed
 signal module_unlocked(module_id: String)
 # SprintSystem her açık sürümde "shipped" ile atar; PromiseRegistry sözü burada tutar.
 signal build_phase_changed(new_phase: String)
-# ProductSystem's hourly wear moved the live bug counters, or ProductState wrote the open bugs.
+# ProductState wrote the open bugs (add_bugs, clear_line_bugs).
 signal build_progress_changed()
 # A fix shipped: `n` open bugs of `line` are gone (ProductState.clear_line_bugs).
 signal line_bugs_cleared(line: String, n: int)

@@ -1119,9 +1119,6 @@ static func _go_public(n: int, new_code: float) -> void:
 	var history: Array = GameState.get_flag("mvp_version_history", [])
 	history.append({"version": n, "day": GameState.day})
 	GameState.set_flag("mvp_version_history", history)
-	# Canlı hata havuzu her sürümle yeniden başlar; sprintte gizli hata devri yoktur, devir 0'dır.
-	GameState.set_flag("mvp_live_bug_count", 0)
-	GameState.set_flag("mvp_live_bug_progress", 0.0)
 	GameState.submit_month_highlight("PROD_SHIP_FIRST_TITLE" if n == 1 else "PROD_SHIP_VERSION_TITLE",
 		{"version": version_text(n)}, 50)
 	ProductState.refresh_on_publish(new_code)

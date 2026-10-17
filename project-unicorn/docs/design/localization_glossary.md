@@ -69,6 +69,8 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | açık hata | open bug | Düzeltme kartının hata satırı, öngörü ve sürüm notu: "6 hata · 3 hesap · 140 kullanıcı", "6 hata kapanır", "Fatura düzeltmesi · 6 → 0 açık hata", "6 hata kapandı" (`PRODUCT_FX_BUGS*`, `PRODUCT_RESULT_BUGS_*`). TR/EN onay bekliyor. |
 | hesap *(B2B müşteri)* | account | `PRODUCT_ACCOUNT_COUNT`; en büyük hesap "en büyüğü {hesap} ({n} kullanıcı) ↔ largest: {account} ({n} users)" (`PRODUCT_FX_TOP`). TR/EN onay bekliyor. |
 | Öncelikli *(düzeltme kartı etiketi)* | Priority | Hattın açık hatası öncelik eşiğinde (`PRODUCT_PRIORITY`). "Acil" değildir: "acil durum" olaylarıyla karışmasın diye ayrı kelime. TR/EN onay bekliyor. |
+| müşteri kaybı *(ürün fonunun geri dönüşü)* | customer churn | Yatırımcının koşulu: "{weeks} içinde müşteri kaybı %5 altında (şu an %2,5) ↔ Customer churn under 5% in 12 weeks (2.5% so far)" (`HUNT_CB_CHURN`). TR/EN onay bekliyor. |
+| itibar düşüşü *(hata ihmali)* | reputation drop | TopBar itibar ipucu: "Haftalardır açık kalan hatalar itibarı düşürdü. Son düşüş: {tarih} ↔ Bugs left open for weeks cost reputation. Last drop: {date}" (`REP_DROP_BUGS`). TR/EN onay bekliyor. |
 | puan *(efor)* | points | Tekil: point (`_ONE`). |
 | alan *(ürün)* | area | ALANLAR / AREAS. |
 | yetenek | capability | Alanın altındaki yapılmış iş. |

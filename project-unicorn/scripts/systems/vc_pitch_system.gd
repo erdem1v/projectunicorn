@@ -490,7 +490,7 @@ static func _make_callback(vc_id: String) -> Dictionary:
 	# One condition per VC, by domain (working assignment).
 	match InvestorRegistry.get_investor(vc_id).get("domain", ""):
 		"metrics": return {"type": "mrr_growth", "target": int(round(_meeting_day_mrr * (1.0 + PitchConstants.CALLBACK_MRR_GROWTH_PCT / 100.0))), "met": false}
-		"product": return {"type": "bugs_under", "target": PitchConstants.CALLBACK_BUGS_UNDER, "met": false}
+		"product": return _churn_callback()
 		"team": return {"type": "first_engineer", "target": 1, "met": false}
 		_: return {"type": "scandal_resolved", "target": 0, "met": false}
 
@@ -500,10 +500,39 @@ static func callback_text(cb: Dictionary) -> String:
 	match String(cb.get("type", "")):
 		"mrr_growth": return _t("HUNT_CB_MRR").format({"target": Fmt.money(int(cb.get("target", 0))),
 			"current": Fmt.money(GameState.mrr)})
-		"bugs_under": return _t("HUNT_CB_BUGS").format({"n": int(cb.get("target", 0))})
+		"churn_under": return _t("HUNT_CB_CHURN").format({"target": Fmt.percent(float(cb.get("target", 0)), 0),
+			"weeks": Fmt.weeks(PitchConstants.CALLBACK_CHURN_WEEKS), "current": Fmt.percent(_churn_pct(cb))})
 		"first_engineer": return _t("HUNT_CB_FIRST_ENGINEER")
 		"scandal_resolved": return _t("HUNT_CB_SCANDAL")
 		_: return _t("HUNT_CB_NONE")
+
+
+## The product fund's callback: lose fewer than `target` percent of the customers in the quarter that follows. The
+## window's start (the day, the book and the losses so far) rides in the callback.
+static func _churn_callback() -> Dictionary:
+	var b2b: bool = ProductState.market_type() == "b2b"
+	return churn_callback(b2b, GameState.day,
+		float(CustomerRegistry.get_by_market("b2b").size()) if b2b else SalesSystem.b2c_audience(), _customers_lost())
+
+
+## The callback's shape, also what a saved bugs_under callback becomes (SaveManager._migrate_16).
+static func churn_callback(b2b: bool, from_day: int, from_base: float, from_lost: float) -> Dictionary:
+	return {"type": "churn_under", "met": false, "from_day": from_day, "from_base": from_base, "from_lost": from_lost,
+		"target": PitchConstants.CALLBACK_CHURN_PCT_B2B if b2b else PitchConstants.CALLBACK_CHURN_PCT_B2C}
+
+
+## Customers lost so far: accounts that left (B2B) or users the churn and erosion terms took (B2C).
+static func _customers_lost() -> float:
+	return float(GameState.run_customers_lost) if ProductState.market_type() == "b2b" else SalesSystem.b2c_users_lost()
+
+
+## Percent of the window's starting book lost since the window opened.
+static func _churn_pct(cb: Dictionary) -> float:
+	return 100.0 * (_customers_lost() - float(cb.get("from_lost", 0.0))) / maxf(1.0, float(cb.get("from_base", 0.0)))
+
+
+static func _churn_window_done(cb: Dictionary) -> bool:
+	return GameState.day - int(cb.get("from_day", 0)) >= TimeModel.ticks(PitchConstants.CALLBACK_CHURN_WEEKS)
 
 
 ## Series A only: the seed branch of _resolve_beat4 returns before any rejection.
@@ -901,6 +930,8 @@ static func _tick_callbacks() -> void:
 			EventBus.callback_ready.emit(inv.id)
 			EventBus.mentor_advisory_changed.emit("VC_CALLBACK_REOPENED",
 				{"investor": inv.display_name})
+		elif String(cb.get("type", "")) == "churn_under" and _churn_window_done(cb):
+			st.callback = _churn_callback()   # a quarter that lost too many customers asks for the next one
 
 
 static func _tick_prep() -> void:
@@ -1146,7 +1177,7 @@ static func _pick_sorgu_seed() -> Dictionary:
 				return {"key": "insight", "vc_line": _t("SEED_Q_INSIGHT"),
 					"mono": _t("SEED_Q_INSIGHT_MONO")}
 		"product":
-			if _weakest_dimension() != "" or ProductSystem.live_bug_count() > 0:
+			if _weakest_dimension() != "":
 				return {"key": "how_big", "vc_line": _t("SEED_Q_HOW_BIG"),
 					"mono": _t("SEED_Q_HOW_BIG_MONO")}
 	return {"key": "clean", "vc_line": _t("SEED_Q_CLEAN"), "mono": _t("SEED_Q_CLEAN_MONO")}
@@ -1196,8 +1227,6 @@ static func _sorgu_narrative() -> Dictionary:
 
 
 static func _sorgu_product() -> Dictionary:
-	if ProductSystem.live_bug_count() > 0:
-		return {"key": "bugs", "vc_line": _t("VC_Q_BUGS"), "mono": _t("VC_Q_BUGS_MONO")}
 	var weak: String = _weakest_dimension()
 	if weak != "":
 		return {"key": "weak_dim",
@@ -1288,7 +1317,7 @@ static func _react_line(chk: Dictionary) -> String:
 static func _callback_met(cb: Dictionary) -> bool:
 	match String(cb.get("type", "")):
 		"mrr_growth": return GameState.mrr >= int(cb.get("target", 0))
-		"bugs_under": return ProductSystem.live_bug_count() < int(cb.get("target", 0))
+		"churn_under": return _churn_window_done(cb) and _churn_pct(cb) < float(cb.get("target", 0))
 		"first_engineer": return CharacterRegistry.count_developers() >= 1
 		"scandal_resolved": return not GameState.unmanaged_major_scandal
 		_: return false

@@ -127,15 +127,15 @@ static func satisfaction_target(c: Customer) -> int:
 
 ## An account's satisfaction target on tick `day` with the trust ledger at `trust`.
 static func _target_on(c: Customer, day: int, trust: float) -> int:
-	# Product-health channel — the SAME effective-stability signal the rest of the
-	# economy reads (bugs already folded into effective stability via economy dims,
-	# so there is no separate bug subtractor). NO price link (B2B is not price-driven).
+	# Product-health channel — the raw stability score, less what the open bugs on the lines THIS account
+	# uses cost it. NO price link (B2B is not price-driven).
 	# Kept promises lift the target and broken ones depress it through the per-customer trust
 	# ledger: that is what makes a broken word DURABLE (the drift would otherwise walk
 	# PROMISE_BROKEN_SAT back within one tick) and gives each account its own target.
-	var health: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
-	# The onboarding floor holds a new account just over its bar. The trust ledger lands on top
-	# of it, so a word broken inside the window still bites.
+	var health: float = QualityModel.axis_score(QualityModel.dims_from_flags(), "stability") \
+		- minf(B2BConstants.B2B_BUG_SAT_PER * float(account_bugs(c)), float(B2BConstants.B2B_BUG_SAT_CAP))
+	# The onboarding floor holds a new account just over its bar, after the bug penalty. The trust
+	# ledger lands on top of it, so a word broken inside the window still bites.
 	if day < onboarding_floor_until(c):
 		health = maxf(health, c.tolerance + B2BConstants.ONBOARDING_GRACE_MARGIN)
 	return clampi(int(round(health + trust)), 0, 100)
@@ -144,6 +144,17 @@ static func _target_on(c: Customer, day: int, trust: float) -> int:
 ## The trust ledger one tick on: each tick forgives a little before its target is read.
 static func _forgiven_trust(c: Customer) -> float:
 	return move_toward(c.trust_offset, 0.0, TimeModel.per_tick(B2BConstants.TRUST_OFFSET_DECAY_PER_DAY))
+
+
+## The open bugs on the lines this account uses (SalesArchetypes.uses_axis): what its satisfaction target, and the
+## complaint it voices in Risk, count.
+static func account_bugs(c: Customer) -> int:
+	var n: int = 0
+	var bugs: Dictionary = ProductState.open_bugs_by_line()
+	for line in bugs:
+		if SalesArchetypes.uses_axis(c.industry, ProductLines.axis_of(line)):
+			n += int(bugs[line])
+	return ProductState.costed(n)
 
 
 ## The tick an account's onboarding floor lifts.
@@ -501,7 +512,7 @@ static func risk_voice(c: Customer) -> String:
 		return ""
 	if GameState.get_flag("b2b_broke_%s" % c.id, false):
 		return TranslationServer.translate("B2B_RISK_VOICE_BROKEN")
-	if ProductState.open_bugs() > B2BConstants.COMPLAINT_BUG_GATE or InfraSystem.is_over_capacity():
+	if account_bugs(c) > B2BConstants.COMPLAINT_BUG_GATE or InfraSystem.is_over_capacity():
 		return B2BConstants.complaint_voice(c.industry)
 	# A broken word and a failing product come first on purpose: they are louder than newness.
 	# After them, an account with no history yet cannot be disappointed by one.

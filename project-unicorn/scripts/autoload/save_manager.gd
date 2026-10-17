@@ -722,9 +722,6 @@ func _migrate_14(state: Dictionary, meta: Dictionary) -> void:
 	_stamp_keys(flags, ["mvp_launch_day", "mvp_version_launch_day", "sales_weekly_anchor_day",
 		"angel_seed_accepted_day", "finance_runway_warn_snooze_until_day"], today)
 	_stamp_each(flags.get("mvp_version_history", []), ["day"], today)
-	# One bug sample per tick: the daily window keeps its newest.
-	if flags.has("mvp_bug_history"):
-		flags["mvp_bug_history"] = (flags["mvp_bug_history"] as Array).slice(-1)
 	for key in ["sales_meeting_active", "sales_meeting_used_day", "sales_weekly_closes"]:
 		flags.erase(key)
 
@@ -893,11 +890,11 @@ func _migrate_15(state: Dictionary) -> void:
 ## not caught up with go one by one over the live lines in id order. A fix card keeps the count it showed as a number
 ## (a shipped one left its line clear, so its release row reads "n → 0"), the release notes' result sentences take the
 ## bug keys, the bugs of faulty cards waiting for v1.0 change their name, and what earlier changes removed leaves the
-## save: the fix run's and
-## the support week's flags, and the rows of the card that left the event engine. Pure and cheap:
-## list_slots reads every slot through here.
+## save: the fix run's and the support week's flags, the live bug counter and its history, and the rows of the card
+## that left the event engine. A product fund's pending callback on open bugs becomes the customer-loss callback, its
+## window opening at the save's own day. Pure and cheap: list_slots reads every slot through here.
 const _REMOVED_FLAGS := ["mvp_bugs_confirmed", "mvp_fix_run_active", "mvp_fix_run_fixed", "mvp_fix_run_progress",
-	"mvp_reports_week_net"]
+	"mvp_reports_week_net", "mvp_live_bug_count", "mvp_live_bug_progress", "mvp_bug_history"]
 const _REMOVED_CARD := "product.bug_pile"
 
 
@@ -937,6 +934,18 @@ func _migrate_16(state: Dictionary) -> void:
 			for said: Dictionary in [record.get("expected", {}), record.get("actual", {})]:
 				if said.has("key"):
 					said["key"] = String(said["key"]).replace("RESULT_TICKETS_", "RESULT_BUGS_")
+
+	var b2b: bool = flags.get("mvp_market_type", "") == "b2b"
+	var accounts: int = _rows(state, "customers").filter(func(c: Dictionary) -> bool:
+		return c.get("market_type", "") == "b2b" and c.get("status", "active") == "active").size()
+	for fund: Dictionary in (gs.get("vc_states", {}) as Dictionary).values():
+		var old_callback: Dictionary = fund.get("callback", {}) as Dictionary
+		if old_callback.get("type", "") == "bugs_under":
+			var callback: Dictionary = VCPitchSystem.churn_callback(b2b, int(gs.get("day", 1)),
+				float(accounts) if b2b else float(flags.get("b2c_audience", 0.0)),
+				float(gs.get("run_customers_lost", 0)) if b2b else 0.0)
+			callback["met"] = old_callback.get("met", false)
+			fund["callback"] = callback
 
 	var ev: Dictionary = (state.get("systems", {}) as Dictionary).get(EvSave.BLOCK_KEY, {}) as Dictionary
 	for key in ["queue", "schedule", "rows"]:

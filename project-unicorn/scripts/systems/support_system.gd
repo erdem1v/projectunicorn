@@ -21,27 +21,27 @@ extends RefCounted
 #                 taşınca sayaç oynar. Sıra kasıtlı: bildirim gelir → doğrulanır.
 #   daily_tick  — GÜNLÜK KESİNTİLER. §8.3 memnuniyet zararı ve §9 ilgi sönümü. İkisi
 #                 de belgede açıkça "/gün" yazılıdır; zarar tavanı GÜNLÜK bir tavandır ve
-#                 günlük değere uygulanır, tik yedi günü sonra alır.
+#                 günlük değere uygulanır, tik yedi günü sonra alır. Haftalık hata ihmali kuralı
+#                 (itibar) da burada işler.
 
 # ------------------------------------------------------ §9 canlı hata akışı
-# gelen bildirim/gün = (0,2 + 0,05 × taşınan_hata
-#                       + 0,03 × yeni_kod_eforu × e^(−sürüm_yaşı/3)) × kullanım_çarpanı
-# Sürüm yaşı haftadır ve saat kesrini taşır.
+# gelen bildirim/gün = (0,1 + 0,03 × yeni_kod_eforu × e^(−sürüm_yaşı/3)) × kullanım_çarpanı
+# Sürüm yaşı haftadır ve saat kesrini taşır. Açık hata akışı beslemez: hata yalnız kullanımdan ve
+# yeni koddan doğar.
 #
 ## §9 taban — "hiçbir ürün %100 hatasız değildir; akış asla sıfırlanmaz."
-const INFLOW_BASE := 0.2
+const INFLOW_BASE := 0.1
 ## Ar-Ge §4.3 `self_service` — aynı tabanın araştırılmış hâli. Akışı KISAR, kapatmaz.
-const INFLOW_BASE_RESEARCHED := 0.14
-## §9 taşınan hata terimi — canlıdaki her açık hata zamanla yüzeye çıkar.
-const INFLOW_CARRIED_COEF := 0.05
+const INFLOW_BASE_RESEARCHED := 0.07
 ## §9 yeni kod terimi — yeni sürümün efor büyüklüğüyle orantılı yeni havuz.
 const INFLOW_NEWCODE_COEF := 0.03
 ## §9 "~3 haftada söner" — YALNIZ yeni kod terimi söner. Yeni sürüm sıfırdan havuz
 ## yaratmaz: olgun ürün altta durur, tazelenen tek şey bu terimdir. Birim hafta.
 const INFLOW_TAU := 3.0
-## §9 kullanım çarpanı: 1 + aktif kullanıcı/2000 (B2C) · 1 + hesap sayısı/10 (B2B).
-const USAGE_DIV_B2C := 2000.0
-const USAGE_DIV_B2B := 10.0
+## §9 kullanım çarpanı: 1 + aktif kullanıcı/10000 (B2C) · 1 + hesap sayısı/80 (B2B). B2B'de aynı hatayı
+## çok hesap bildirir, akış hesapla yavaş büyür.
+const USAGE_DIV_B2C := 10000.0
+const USAGE_DIV_B2B := 80.0
 
 # ------------------------------------------------ §8.2 doğrulama (Müşteri İlişkileri)
 ## §8.2 — doğrulama/gün = 0,8 × Σ hr.effective_skill(atanan, Mİ) × saat/8.
@@ -80,6 +80,14 @@ const BAND_HOT := "hot"
 ## §9 — "her yayın ilgiyi 100'e tazeler; ilgi sürüm yaşıyla söner, yarı ömür 30 gün."
 ## Tazeleme ProductState.refresh_on_publish()'in işi; sönüm burada. Birim hafta; tam bölünür.
 const INTEREST_HALF_LIFE := 30.0 / TimeModel.DAYS_PER_TICK
+
+# ------------------------------------------------------- hata ihmali ve itibar
+## Açık hata bu sayıya ya da üstüne varınca o haftalık tik ihmal sayılır.
+const NEGLECT_BUGS := 30                # [ÇALIŞMA] onay bekliyor
+## Üst üste bu kadar haftalık tikte ihmal sürerse itibar her hafta bir düşer (alt sınır GameState'in −10'u).
+const NEGLECT_WEEKS := 4                # [ÇALIŞMA] onay bekliyor
+## İtibar düşüşünün sebebi; ipucu bu CSV anahtarını son düşüşün tarihiyle okur.
+const NEGLECT_REASON := "REP_DROP_BUGS"
 
 const MARKET_B2B := "b2b"
 
@@ -122,6 +130,7 @@ static func daily_tick() -> void:
 	if not ProductState.is_live():
 		return
 	apply_daily_satisfaction_damage()
+	_tick_neglect()
 	# İlgi türetilir ama duruma geri yazılır: tüketicisi Satış/Pazarlama tek bir sayı okur.
 	GameState.set_flag(ProductState.INTEREST, interest_now())
 
@@ -150,10 +159,7 @@ static func reports_per_day() -> float:
 	var floor_rate: float = INFLOW_BASE_RESEARCHED if ResearchSeam.completed("self_service") else INFLOW_BASE
 	var new_code: float = ProductState.new_code_effort() \
 		* exp(-ProductState.version_age(ProductSystem.hour_start_fraction()) / INFLOW_TAU)
-	# Taşınan hata `live_bug_count`'tur ve canlı aşınmayla (ProductSystem._post_ship_wear_hourly)
-	# büyür; §9 aşınma terimi yazmaz.
-	var base: float = floor_rate + INFLOW_CARRIED_COEF * float(ProductSystem.live_bug_count()) \
-		+ INFLOW_NEWCODE_COEF * new_code
+	var base: float = floor_rate + INFLOW_NEWCODE_COEF * new_code
 	# §10 — altyapı akışı çarpar (ucuz sağlayıcı ×1,25, doluluk %100 üstü ×1,5);
 	# InfraSystem'den okunur, burada yeniden türetilmez.
 	return base * usage_multiplier() * InfraSystem.report_inflow_multiplier()
@@ -238,7 +244,7 @@ static func daily_satisfaction_damage() -> float:
 	var support: float = 0.0
 	if ProductState.is_live():
 		support = DAMAGE_INCOMING_PER_TEN * float(ProductState.reports_incoming()) / DAMAGE_PER_UNITS \
-			+ DAMAGE_CONFIRMED_PER_TEN * float(ProductState.open_bugs()) / DAMAGE_PER_UNITS
+			+ DAMAGE_CONFIRMED_PER_TEN * float(ProductState.costed(ProductState.open_bugs())) / DAMAGE_PER_UNITS
 	return maxf(support + InfraSystem.satisfaction_delta_per_day(), DAMAGE_DAILY_CAP)
 
 
@@ -264,6 +270,29 @@ static func apply_daily_satisfaction_damage() -> void:
 		_damage_residue[c.id] = carried - float(whole)
 		if whole != 0:
 			CustomerRegistry.set_satisfaction(c.id, c.satisfaction + whole)
+
+
+# =========================================================================
+#  HATA İHMALİ · itibar
+# =========================================================================
+
+## Haftalık tikte açık hata ihmal eşiğindeyse sayaç artar, değilse sıfırlanır; sayaç eşiğe varınca (ve koşul
+## sürdükçe her hafta) itibar bir düşer. Düzenli düzelten oyuncu eşiğe varmaz.
+static func _tick_neglect() -> void:
+	var streak: int = int(GameState.get_flag(ProductState.BUG_STREAK, 0))
+	streak = streak + 1 if ProductState.costed(ProductState.open_bugs()) >= NEGLECT_BUGS else 0
+	GameState.set_flag(ProductState.BUG_STREAK, streak)
+	if streak >= NEGLECT_WEEKS:
+		var before: int = GameState.reputation
+		GameState.set_reputation(before - 1)
+		if GameState.reputation < before:
+			GameState.set_flag(ProductState.BUG_DROP_DAY, GameState.day)
+
+
+## İhmalin son itibar düşüşü: {day, reason}, reason bir CSV anahtarı; hiç düşürmediyse boş.
+static func neglect_drop() -> Dictionary:
+	var day: int = int(GameState.get_flag(ProductState.BUG_DROP_DAY, 0))
+	return {} if day == 0 else {"day": day, "reason": NEGLECT_REASON}
 
 
 # =========================================================================

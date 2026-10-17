@@ -336,8 +336,7 @@ static func _lose(reason: String) -> Dictionary:
 ## §5.2 — the customer names its reason FROM REAL STATE, and only a gap it ASKED about this sitting;
 ## price is open at every table, so every other loss falls to it.
 static func _derive_loss_reason() -> String:
-	if _used_families.has("stability") \
-			and (_facts.get("confirmed_bugs", 0) >= 3 or int(_facts.get("axis_stability", 0)) < 40):
+	if _used_families.has("stability") and int(_facts.get("axis_stability", 0)) < 40:
 		return SalesConstants.LOSS_STABILITY
 	if _used_families.has("provider") and not bool(_facts.get("provider_enterprise_ok", true)):
 		return SalesConstants.LOSS_PROVIDER_TRUST

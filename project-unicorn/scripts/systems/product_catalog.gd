@@ -79,88 +79,88 @@ static func locked_type_ids(market: String) -> Array:
 
 
 # Düz özellik havuzu (hat modeli olmayan alt-tipler): satışın acı noktaları ve sözleri bu
-# kimlikleri okur. complexity (1-5) canlı aşınmaya ve ürün değerine (fiyat) girer.
+# kimlikleri okur.
 const FEATURE_POOLS := {
 	"ai_assistant": [
-		{"id": "ai_assistant_chat", "complexity": 2},
-		{"id": "ai_assistant_memory", "complexity": 3},
-		{"id": "ai_assistant_tools", "complexity": 4},
-		{"id": "ai_assistant_voice", "complexity": 3},
-		{"id": "ai_assistant_image", "complexity": 4},
-		{"id": "ai_assistant_streaming", "complexity": 2},
+		{"id": "ai_assistant_chat"},
+		{"id": "ai_assistant_memory"},
+		{"id": "ai_assistant_tools"},
+		{"id": "ai_assistant_voice"},
+		{"id": "ai_assistant_image"},
+		{"id": "ai_assistant_streaming"},
 	],
 	"ai_photo_editor": [
-		{"id": "ai_photo_bg_removal", "complexity": 2},
-		{"id": "ai_photo_inpaint", "complexity": 4},
-		{"id": "ai_photo_upscale", "complexity": 3},
-		{"id": "ai_photo_style_transfer", "complexity": 3},
-		{"id": "ai_photo_batch", "complexity": 3},
-		{"id": "ai_photo_filters", "complexity": 1},
+		{"id": "ai_photo_bg_removal"},
+		{"id": "ai_photo_inpaint"},
+		{"id": "ai_photo_upscale"},
+		{"id": "ai_photo_style_transfer"},
+		{"id": "ai_photo_batch"},
+		{"id": "ai_photo_filters"},
 	],
 	"ai_code_copilot": [
-		{"id": "ai_code_autocomplete", "complexity": 3},
-		{"id": "ai_code_chat", "complexity": 2},
-		{"id": "ai_code_refactor", "complexity": 4},
-		{"id": "ai_code_explain", "complexity": 2},
-		{"id": "ai_code_test_gen", "complexity": 3},
-		{"id": "ai_code_multi_file", "complexity": 5},
-		{"id": "ai_code_diff_review", "complexity": 4},
+		{"id": "ai_code_autocomplete"},
+		{"id": "ai_code_chat"},
+		{"id": "ai_code_refactor"},
+		{"id": "ai_code_explain"},
+		{"id": "ai_code_test_gen"},
+		{"id": "ai_code_multi_file"},
+		{"id": "ai_code_diff_review"},
 	],
 	"ai_vector_search": [
-		{"id": "ai_vec_embed_api", "complexity": 3},
-		{"id": "ai_vec_search_api", "complexity": 3},
-		{"id": "ai_vec_filter", "complexity": 3},
-		{"id": "ai_vec_dashboard", "complexity": 2},
-		{"id": "ai_vec_scaling", "complexity": 5},
-		{"id": "ai_vec_sdk", "complexity": 2},
+		{"id": "ai_vec_embed_api"},
+		{"id": "ai_vec_search_api"},
+		{"id": "ai_vec_filter"},
+		{"id": "ai_vec_dashboard"},
+		{"id": "ai_vec_scaling"},
+		{"id": "ai_vec_sdk"},
 	],
 	"saas_project_mgmt": [
-		{"id": "saas_pm_tasks", "complexity": 2},
-		{"id": "saas_pm_gantt", "complexity": 3},
-		{"id": "saas_pm_comments", "complexity": 2},
-		{"id": "saas_pm_integrations", "complexity": 4},
-		{"id": "saas_pm_automation", "complexity": 4},
-		{"id": "saas_pm_reporting", "complexity": 3},
+		{"id": "saas_pm_tasks"},
+		{"id": "saas_pm_gantt"},
+		{"id": "saas_pm_comments"},
+		{"id": "saas_pm_integrations"},
+		{"id": "saas_pm_automation"},
+		{"id": "saas_pm_reporting"},
 	],
 	"saas_crm": [
-		{"id": "saas_crm_contacts", "complexity": 2},
-		{"id": "saas_crm_pipeline", "complexity": 3},
-		{"id": "saas_crm_email", "complexity": 4},
-		{"id": "saas_crm_forecast", "complexity": 3},
-		{"id": "saas_crm_mobile", "complexity": 4},
-		{"id": "saas_crm_call_log", "complexity": 3},
+		{"id": "saas_crm_contacts"},
+		{"id": "saas_crm_pipeline"},
+		{"id": "saas_crm_email"},
+		{"id": "saas_crm_forecast"},
+		{"id": "saas_crm_mobile"},
+		{"id": "saas_crm_call_log"},
 	],
 	"saas_analytics": [
-		{"id": "saas_an_dashboards", "complexity": 3},
-		{"id": "saas_an_query", "complexity": 4},
-		{"id": "saas_an_alerts", "complexity": 3},
-		{"id": "saas_an_share", "complexity": 2},
-		{"id": "saas_an_etl", "complexity": 5},
-		{"id": "saas_an_embed", "complexity": 4},
+		{"id": "saas_an_dashboards"},
+		{"id": "saas_an_query"},
+		{"id": "saas_an_alerts"},
+		{"id": "saas_an_share"},
+		{"id": "saas_an_etl"},
+		{"id": "saas_an_embed"},
 	],
 	"saas_billing": [
-		{"id": "saas_bill_subscriptions", "complexity": 3},
-		{"id": "saas_bill_invoice", "complexity": 2},
-		{"id": "saas_bill_tax", "complexity": 5},
-		{"id": "saas_bill_dunning", "complexity": 3},
-		{"id": "saas_bill_webhooks", "complexity": 3},
-		{"id": "saas_bill_proration", "complexity": 4},
+		{"id": "saas_bill_subscriptions"},
+		{"id": "saas_bill_invoice"},
+		{"id": "saas_bill_tax"},
+		{"id": "saas_bill_dunning"},
+		{"id": "saas_bill_webhooks"},
+		{"id": "saas_bill_proration"},
 	],
 	"saas_dev_tools": [
-		{"id": "saas_dev_cli", "complexity": 2},
-		{"id": "saas_dev_api", "complexity": 3},
-		{"id": "saas_dev_docs", "complexity": 3},
-		{"id": "saas_dev_ci_plugin", "complexity": 4},
-		{"id": "saas_dev_logs", "complexity": 3},
-		{"id": "saas_dev_sandbox", "complexity": 3},
+		{"id": "saas_dev_cli"},
+		{"id": "saas_dev_api"},
+		{"id": "saas_dev_docs"},
+		{"id": "saas_dev_ci_plugin"},
+		{"id": "saas_dev_logs"},
+		{"id": "saas_dev_sandbox"},
 	],
 	"saas_ops": [
-		{"id": "saas_ops_workflow", "complexity": 4},
-		{"id": "saas_ops_reporting", "complexity": 3},
-		{"id": "saas_ops_integration", "complexity": 5},
-		{"id": "saas_ops_scheduling", "complexity": 3},
-		{"id": "saas_ops_field", "complexity": 5},
-		{"id": "saas_ops_mobile", "complexity": 4},
+		{"id": "saas_ops_workflow"},
+		{"id": "saas_ops_reporting"},
+		{"id": "saas_ops_integration"},
+		{"id": "saas_ops_scheduling"},
+		{"id": "saas_ops_field"},
+		{"id": "saas_ops_mobile"},
 	],
 }
 
@@ -250,14 +250,6 @@ static func get_sub_product_type_by_id(id: String) -> Dictionary:
 
 static func get_feature_pool(sub_product_type_id: String) -> Array:
 	return FEATURE_POOLS.get(sub_product_type_id, [])
-
-
-static func get_feature_by_id(feature_id: String) -> Dictionary:
-	for pool_key in FEATURE_POOLS:
-		for feature in FEATURE_POOLS[pool_key]:
-			if feature["id"] == feature_id:
-				return feature
-	return {}
 
 
 ## PostShip satış modeli. Bilinmeyen id "b2c" okur: B2C aday hattı istemez.

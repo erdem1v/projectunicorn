@@ -53,7 +53,10 @@ static func seed_tolerance(scale: int, industry: String) -> int:
 
 
 # ======================== Event families / retention =========================
-const COMPLAINT_BUG_GATE := 6           # live bugs above this → product-complaint family eligible
+const COMPLAINT_BUG_GATE := 6           # open bugs on an account's own lines above this → product-complaint family eligible
+# An account's satisfaction target loses B2B_BUG_SAT_PER points per open bug on the lines it uses, up to B2B_BUG_SAT_CAP.
+const B2B_BUG_SAT_PER := 0.3            # [WORKING] onay bekliyor
+const B2B_BUG_SAT_CAP := 20             # [WORKING] onay bekliyor
 const RETAIN_DELAY_MAX_USES := 2        # "Oyala" works this many times, then the customer catches on
 # "İndirim ver" use cap: per account, across BOTH discount channels (the retention card and
 # the CS renewal card — both resolve through apply_discount). Past the cap the row stays

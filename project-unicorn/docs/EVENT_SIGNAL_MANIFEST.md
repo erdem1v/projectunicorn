@@ -150,7 +150,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `module_unlocked` | `module_id: String` | engine | 1 | 0 | EvSignals (bindable) |
 | `build_phase_changed` | `new_phase: String` | sprint_system | 2 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
-| `build_progress_changed` | `—` | main · product_state · product_system | 4 | 2 | build_bar · build_hud_panel |
+| `build_progress_changed` | `—` | main · product_state | 3 | 2 | build_bar · build_hud_panel |
 | `line_bugs_cleared` | `line: String, n: int` | product_state | 1 | 0 | — |
 | `infra_changed` | `—` | product_state | 2 | 0 | — |
 

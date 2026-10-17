@@ -35,9 +35,6 @@ const NORMALIZE_HALF_SAT := 25.0
 # The one reader is SalesSystem._rival_relative_quality; raw-vs-raw comparisons
 # (RivalRegistry ranking) are unaffected.
 const RIVAL_TEMPLATE_HALF_SAT := 50.0
-# How much each open bug erodes the Stability the economy reads: features feed the
-# axis, bugs eat it.
-const BUG_STABILITY_COEF := 0.8
 
 
 # =========================================================================
@@ -84,31 +81,20 @@ static func _saturate(composite: float, half_sat: float) -> float:
 	return 100.0 * c / (c + half_sat)
 
 
-# Single-axis 0-100 score. Pass economy dims when you want bug-eroded stability.
+# Single-axis 0-100 score.
 static func axis_score(dims: Dictionary, axis: String) -> float:
 	return normalized_quality(float(dims.get(axis, 0.0)))
-
-
-static func effective_stability(stability: float, bug_count: int) -> float:
-	return maxf(0.0, stability - BUG_STABILITY_COEF * float(bug_count))
 
 
 # =========================================================================
 #  Surface adapters — the shipped product's dims, read off the mvp_* flags
 # =========================================================================
 
-# Raw post-ship dims (no bug erosion), read off the mvp_* flags.
+# Raw post-ship dims, read off the mvp_* flags. Open bugs never touch them: a bug costs customers, not quality.
 static func dims_from_flags() -> Dictionary:
 	var out: Dictionary = {}
 	for axis in AXES:
 		out[axis] = float(GameState.get_flag("mvp_%s" % axis, 0.0))
-	return out
-
-
-# Post-ship: the LIVE bug count (it keeps accruing after ship) erodes stability.
-static func economy_dims_from_flags() -> Dictionary:
-	var out: Dictionary = dims_from_flags()
-	out["stability"] = effective_stability(out["stability"], ProductSystem.live_bug_count())
 	return out
 
 
@@ -118,10 +104,10 @@ static func shipped_normalized() -> float:
 	return normalized_quality(shipped_composite())
 
 
-# Post-ship composite (effective) — for rival ranking after ship.
+# Post-ship composite — for rival ranking after ship.
 static func shipped_composite() -> float:
 	var sub := String(GameState.get_flag("mvp_sub_product_type_id", ""))
-	return composite_quality(economy_dims_from_flags(), ProductCatalog.get_quality_axes(sub))
+	return composite_quality(dims_from_flags(), ProductCatalog.get_quality_axes(sub))
 
 
 # =========================================================================
@@ -135,7 +121,6 @@ static func shipped_composite() -> float:
 #   ceza      = eksende hiç hat açılmamışsa ×0,6
 #   gerçekleş = gizil × tur çarpanı × (1 + kapı-üstü bonusu)
 #   okuma     = round(100 × gerçekleşen / çıta_faz), 0-120 arasına sıkıştırılır
-#   Kararlılık okumasından ayrıca −2 × açık DOĞRULANMIŞ hata
 #
 # Eksenler yatırım kolu DEĞİLDİR (§11.1): slider yok, toplam tek skor yok. Bunlar
 # skor tabelasıdır.
@@ -154,10 +139,6 @@ const BASELINE_LINES_PER_AXIS := 3
 ## ×0,6. Pratikte yalnız İKİNCİL puanla beslenen eksende ısırır: kendi hattı
 ## açılmamışken başka hattın taşmasıyla puan toplayan eksen tam kredi almaz.
 const EMPTY_AXIS_PENALTY := 0.6
-
-## §11.2 — Kararlılık okumasından her açık doğrulanmış hata için düşülen puan.
-## GELEN BİLDİRİM değil, DOĞRULANMIŞ HATA sayılır (§8.1).
-const CONFIRMED_BUG_READING_COST := 2.0
 
 ## §11.3 — gösterimde 0-120 arasına sıkıştırılır; üçgen geometrisi 100'ü TAM KENAR
 ## sayar, yani çıtanın üstündeki ürün kenarı taşırır.
@@ -226,22 +207,18 @@ static func realized_axis(subtype: String, line_tiers: Dictionary,
 ## §11.3 — the 0-120 reading. This is what the `urun.axis_*` seams return and what
 ## the floor ladder (§14) compares against.
 static func axis_reading(subtype: String, line_tiers: Dictionary,
-		line_realization: Dictionary, axis: String, confirmed_bugs: int = 0,
-		phase: int = -1) -> int:
+		line_realization: Dictionary, axis: String, phase: int = -1) -> int:
 	var realized: float = realized_axis(subtype, line_tiers, line_realization, axis)
 	var reading: float = 100.0 * realized / maxf(0.01, axis_bar(subtype, line_tiers, axis, phase))
-	if axis == "stability":
-		reading -= CONFIRMED_BUG_READING_COST * float(maxi(confirmed_bugs, 0))
 	return int(round(clampf(reading, READING_MIN, READING_MAX)))
 
 
 ## All three readings at once.
 static func axis_readings(subtype: String, line_tiers: Dictionary,
-		line_realization: Dictionary, confirmed_bugs: int = 0, phase: int = -1) -> Dictionary:
+		line_realization: Dictionary, phase: int = -1) -> Dictionary:
 	var out: Dictionary = {}
 	for axis in AXES:
-		out[axis] = axis_reading(subtype, line_tiers, line_realization,
-			String(axis), confirmed_bugs, phase)
+		out[axis] = axis_reading(subtype, line_tiers, line_realization, String(axis), phase)
 	return out
 
 

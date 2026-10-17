@@ -335,7 +335,7 @@ static func meeting_block_reason(lead_id: String) -> String:
 static func _blocker_cleared(p: Prospect) -> bool:
 	match p.last_loss_reason:
 		SalesConstants.LOSS_STABILITY:
-			return ProductRead.axis_reading("", "stability") >= 55 and ProductRead.open_bugs() <= 2
+			return ProductRead.axis_reading("", "stability") >= 55
 		SalesConstants.LOSS_MISSING_TIER:
 			return SalesProbes.locked_line() == ""
 		SalesConstants.LOSS_PROVIDER_TRUST:

@@ -146,7 +146,7 @@ static func status(c: Character) -> String:
 ## §2.2 MEŞGULİYET TEK MODEL: izindeyken · eğitimdeyken · (kurucu) yatırım hazırlığında ya da
 ## toplantıdayken. Ara kademe, yarı hız çarpanı, kısmi kapasite YOKTUR.
 ## Toplantı (Satış §5.0) sekizinci bir görev durumu değildir: oturum boyunca kurucu meşguldür.
-## Canlı ürünün aşınması (ProductSystem._is_free üzerinden) ve araştırma burayı okur.
+## Destek masası ve araştırma burayı okur.
 static func is_busy(c: Character) -> bool:
 	if c == null:
 		return false

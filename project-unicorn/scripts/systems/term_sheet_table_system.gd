@@ -59,7 +59,6 @@ const E_FIT_TEAM_SIZE_MIN := 4
 const E_FIT_NARRATIVE_BRAND := 6    # Bosphorus: brand at/above the room's brand floor (+), below (−)
 const E_FIT_NARRATIVE_WARM := 4     # Bosphorus: came through a warm intro (+)
 const E_FIT_PRODUCT_SHIPPED := 4    # Meridian: MVP shipped (+), not shipped (−)
-const E_FIT_PRODUCT_BUGS := 6       # Meridian: live bugs (−), none (+)
 const E_FIT_PRODUCT_DIMS := 4       # Meridian: no quality axis under the floor below (+)
 const E_FIT_PRODUCT_DIM_FLOOR := 40.0
 
@@ -546,7 +545,6 @@ static func _domain_fit() -> int:
 				fit += E_FIT_NARRATIVE_WARM
 		"product":
 			fit += E_FIT_PRODUCT_SHIPPED if bool(GameState.get_flag("mvp_shipped", false)) else -E_FIT_PRODUCT_SHIPPED
-			fit += -E_FIT_PRODUCT_BUGS if ProductSystem.live_bug_count() > 0 else E_FIT_PRODUCT_BUGS
 			var weakest: float = QualityModel.dims_from_flags().values().min()
 			if weakest >= E_FIT_PRODUCT_DIM_FLOOR:
 				fit += E_FIT_PRODUCT_DIMS

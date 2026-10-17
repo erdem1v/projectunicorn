@@ -422,9 +422,7 @@ func _dispatch_daily_tick() -> void:
 func _dispatch_hourly_tick(hour: int) -> void:
 	if not GameState.run_active:
 		return
-	# Build quality/bugs and support flow (§8, §9) move hourly so a mid-day assignment
-	# shows the same day.
-	ProductSystem.hourly_tick(hour)
+	# The support flow (§8, §9) moves hourly so a mid-day assignment shows the same day.
 	SupportSystem.hourly_tick(hour)
 	# B2C audience and MRR derive every in-game hour.
 	SalesSystem.hourly_tick(hour)

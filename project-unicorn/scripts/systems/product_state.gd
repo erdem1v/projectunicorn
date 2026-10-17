@@ -15,6 +15,10 @@ const REPORTS_INCOMING := "mvp_reports_incoming"
 const REPORTS_PROGRESS := "mvp_reports_progress"
 const OPEN_BUGS := "mvp_open_bugs"
 const OPEN_BUGS_PREV := "mvp_open_bugs_prev"
+## Üst üste kaç haftalık tikte açık hata ihmal eşiğinde (SupportSystem'in itibar kuralı).
+const BUG_STREAK := "mvp_bug_streak"
+## O kuralın itibarı düşürdüğü son tik; 0 = hiç düşürmedi.
+const BUG_DROP_DAY := "mvp_bug_drop_day"
 const VALIDATION_PROGRESS := "mvp_validation_progress"
 const VERSION_LAUNCH_DAY := "mvp_version_launch_day"
 const INTEREST := "mvp_interest"
@@ -219,6 +223,16 @@ static func clear_line_bugs(line: String) -> int:
 	return n
 
 
+## Debug anahtarı (run_probe `fix_off`): açıkken açık hatanın hiçbir bedeli yoktur; hatalar sayılır ve görünür,
+## yalnız bedel yazan yerler sıfır okur. Koşu başında kapalıdır.
+static var bugs_free: bool = false
+
+
+## Bedel yazan her yer açık hata sayısını buradan geçirir.
+static func costed(bugs: int) -> int:
+	return 0 if bugs_free else bugs
+
+
 ## Yeni hataya kapatılmış hat: hata kaynağı bu hatları seçmez. Hiçbir kural hat kapatmaz.
 static func line_blocked(_line: String) -> bool:
 	return false
@@ -305,13 +319,11 @@ static func set_infra_units(units: int) -> void:
 ## Every reader of an axis goes through here, never through the chain directly, so
 ## two readers cannot disagree.
 static func axis_readings() -> Dictionary:
-	return QualityModel.axis_readings(subtype(), line_tiers(), line_realization(),
-		open_bugs())
+	return QualityModel.axis_readings(subtype(), line_tiers(), line_realization())
 
 
 static func axis_reading(axis: String) -> int:
-	return QualityModel.axis_reading(subtype(), line_tiers(), line_realization(),
-		axis, open_bugs())
+	return QualityModel.axis_reading(subtype(), line_tiers(), line_realization(), axis)
 
 
 ## The raw realized values the economy's saturation curve reads.

@@ -218,6 +218,12 @@ func _refresh_metrics(g: Dictionary) -> void:
 	$BrandValue.text = str(GameState.brand)
 	$BurnValue.text = Fmt.money_chip(int(flow.expense))
 	$RepValue.text = str(GameState.reputation)
+	# Hata yüzünden itibar düştüyse sebebi ipucunda (runway'inki gibi: ipucu üzerine gelmeyi ister).
+	var drop: Dictionary = SupportSystem.neglect_drop()
+	for part: Label in [$RepKey, $RepValue]:
+		part.tooltip_text = "" if drop.is_empty() else tr(drop.reason).format(
+			{"date": Fmt.date_line(GameState.get_date_dict(int(drop.day)))})
+		part.mouse_filter = Control.MOUSE_FILTER_IGNORE if drop.is_empty() else Control.MOUSE_FILTER_STOP
 	for row in [[$CashKey, $CashValue, "A", "B", ROW_1], [$NetKey, $NetValue, "A", "B", ROW_2],
 			[$RunwayKey, runway, "C", "D", ROW_1], [$MrrKey, $MrrValue, "E", "F", ROW_1],
 			[$BrandKey, $BrandValue, "E", "F", ROW_2], [$BurnKey, $BurnValue, "G", "H", ROW_1],

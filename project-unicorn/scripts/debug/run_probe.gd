@@ -28,10 +28,11 @@ extends RefCounted
 #   PROBE FIRE  day=<d> hour=<h> id=<id> src=<src>
 #   PROBE PICK  day=<d> id=<id> choice=<i> label=<label>
 #   PROBE STATE day=<d> cash=<n> mrr=<n> brand=<n> burn=<n> runway=<f> cust=<n> emp=<n> promises=<n>
-#   PROBE B2C   day=<d> aud=<f> paying=<n> price=<n> conv=<f> sat=<n> sat_target=<n> live_bugs=<n>
-#               open_bugs=<n> q=<f> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
+#   PROBE B2C   day=<d> aud=<f> paying=<n> price=<n> conv=<f> sat=<n> sat_target=<n> open_bugs=<n>
+#               lost=<f> q=<f> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
 #               validation_day=<f>          (every week a consumer product is live; desk = the
-#                                           support desk's roster, inflow and validation per day)
+#                                           support desk's roster, inflow and validation per day;
+#                                           lost = the users the audience has lost to erosion and bug churn)
 #   PROBE CHURN day=<d> id=<cid> ...        (customer_churned — the autopsy's terminal)
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
 #   PROBE SIGN  day=<d> hour=<h> id=<cid> by=<founder|rep> star=<n> weeks=<w> mrr=<n>
@@ -56,6 +57,11 @@ extends RefCounted
 #               The burn ids are FinanceSystem.BURN_IDS, in its order.
 #   PROBE SPRINT day=<d> n=<n> label=<v1.x|-> shipped=<card ids> carried=<n> velocity=<done>/<capacity>
 #   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it)
+#   PROBE FIX   day=<d> sprint=<n> weeks=<n> fix_load=<f> capacity=<f> share=<f> cards=<fix card ids|-> bug_sprint=<b>
+#                                           (every sprint start: the fix cards' remaining points over the plan's
+#                                           capacity; a bug sprint spends more than half the capacity on fixes)
+#   PROBE BUGS  day=<d> new=<n> open=<n> pre=<n>   (every week a product is live: bugs that arrived, open bugs now,
+#                                           and open bugs just before this week's sprint close)
 #   PROBE MARKET day=<d> total=<$M> leader=<id> leader_value=<$M> listed=<n> player=<valuation $M>
 #               (the Piyasa list at the week's open, every MARKET_LOG_WEEKS weeks from week 1;
 #               a pure read of MarketCatalog, so the line is byte-identical for one seed)
@@ -68,7 +74,10 @@ extends RefCounted
 ##   policy    — the event answers (default "sensible", below);
 ##   vc        — the Series A policy, sim only (none: the run never sits at a Series A table);
 ##   staff_cap — the headcount the B2B staffing ladder stops at (default: the whole ladder);
-##   k1_only   — the founder never plans a K2 or K3 step.
+##   k1_only   — the founder never plans a K2 or K3 step;
+##   fix       — the sprint's fix cards (default: whatever the lead plans): "none" takes no fix card, "worst" the
+##               line with the most open bugs, "due" every line with DUE_BUGS or more (B2B: a line an active or
+##               trial account uses), "off" is "worst" with the cost of open bugs switched off (the baseline).
 const PRESETS := {
 	"b2b_reps": {}, "b2b_solo": {}, "b2b_risk": {}, "b2b_slip": {}, "b2c": {}, "b2c_neglect": {},
 	"full_run": {"subtype": "erp"},
@@ -82,6 +91,14 @@ const PRESETS := {
 	"full_run_b2c_vc_cautious": {"subtype": "note_tool", "vc": "cautious"},
 	"full_run_b2c_vc_walk": {"subtype": "note_tool", "vc": "walk"},
 	"full_run_b2c_k1": {"subtype": "note_tool", "k1_only": true},
+	"full_run_fix_none": {"subtype": "erp", "fix": "none"},
+	"full_run_fix_worst": {"subtype": "erp", "fix": "worst"},
+	"full_run_fix_due": {"subtype": "erp", "fix": "due"},
+	"full_run_fix_off": {"subtype": "erp", "fix": "off"},
+	"full_run_b2c_fix_none": {"subtype": "note_tool", "fix": "none"},
+	"full_run_b2c_fix_worst": {"subtype": "note_tool", "fix": "worst"},
+	"full_run_b2c_fix_due": {"subtype": "note_tool", "fix": "due"},
+	"full_run_b2c_fix_off": {"subtype": "note_tool", "fix": "off"},
 }
 const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Klipo"}
 # The played run has three answer policies on one world, a controlled experiment on what
@@ -104,7 +121,7 @@ const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Kli
 # The fixtures:
 #   b2c           — a consumer product the sprint engine builds itself, the lead planning every
 #                   sprint; its MVP release brings the launch audience and opens the paid tier.
-#   b2c_neglect   — a stability-poor, bug-heavy B2C fixture nobody tends: satisfaction erodes.
+#   b2c_neglect   — a stability-poor, bug-heavy B2C fixture nobody tends: the audience erodes.
 #   The B2B fixtures and b2c_neglect seed a live product on a catalogue subtype without line
 #   content, so they have no sprints.
 
@@ -123,6 +140,9 @@ static var _policy: String = "sensible"     # full_run answer policy: sensible |
 static var _subtype: String = ""            # full_run*: the product chosen on the first morning
 static var _staff_cap: int = 0              # full_run*: the headcount the B2B ladder stops at
 static var _k1_only: bool = false           # full_run*: never plan a K2 or K3 step
+static var _fix_arm: String = ""            # full_run*: "" | none | worst | due | off (see PRESETS)
+static var _bugs_open: int = 0              # PROBE BUGS: the open bugs at the last weekly line
+static var _bugs_cleared: int = 0           # PROBE BUGS: bugs a fix card cleared since then
 static var _runway_weeks: Dictionary = {}   # phase -> Vector2i(weeks with a finite runway, weeks)
 static var _min_cash_pre_seed: int = 0      # the lowest weekly cash before the seed round closed
 static var _run_seed: int = 424242
@@ -142,6 +162,9 @@ static var _vc_done: bool = false           # the one table this run gets has be
 static var _vc_booked: String = ""          # the fund the current booking is with
 static var _vc_meet_day: int = -1           # the day the last meeting was played
 const TABLE_PUSH_CAP := 64                  # runaway backstop for a push loop, never reached in play
+const DUE_BUGS := 2                         # the "due" arm fixes every line with this many open bugs
+const FIXTURE_BUG_LINE := "line_erp_ledger"   # the stability line the fixture presets put their bugs on
+const SLIP_BUGS := 24                       # b2b_slip: the backlog whose cost the cleared product wins back
 
 
 # ============================================================================
@@ -172,6 +195,10 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_fires.clear()
 	_picks.clear()
 	_full_run = false
+	_fix_arm = ""
+	_bugs_open = 0
+	_bugs_cleared = 0
+	ProductState.bugs_free = false
 	_hire_started = false
 	_gate_day = -1
 	_gate_logged = false
@@ -244,6 +271,8 @@ static func _wire_log() -> void:
 	EventBus.promise_broken.connect(func(pid: String) -> void: _log_promise(pid, "resolved"))
 	EventBus.build_phase_changed.connect(_on_build_phase)
 	EventBus.sprint_closed.connect(_on_sprint_closed)
+	EventBus.sprint_started.connect(_on_sprint_started)
+	EventBus.line_bugs_cleared.connect(func(_line: String, n: int) -> void: _bugs_cleared += n)
 	EventBus.month_ended.connect(_on_month_ended)
 	EventBus.phase_gate_reached.connect(_on_gate_reached)
 	EventBus.day_tick_completed.connect(_on_day_tick_completed)
@@ -274,13 +303,28 @@ static func _on_month_ended(_data: Dictionary) -> void:
 
 static func _on_build_phase(new_phase: String) -> void:
 	# A public release, with the raw axes the economy reads from now on: the sprint close pushed
-	# them before it announced the release. bugs is the live wear count, open_bugs the product's bug store.
+	# them before it announced the release. open_bugs is the product's bug store after the close.
 	if new_phase != "shipped":
 		return
-	print("PROBE SHIP day=%d version=%d label=%s stability=%.1f innovation=%.1f experience=%.1f bugs=%d open_bugs=%d" % [
+	print("PROBE SHIP day=%d version=%d label=%s stability=%.1f innovation=%.1f experience=%.1f open_bugs=%d" % [
 		GameState.day, ProductState.version(), SprintSystem.version_label(ProductState.version()),
 		float(GameState.get_flag("mvp_stability", 0.0)), float(GameState.get_flag("mvp_innovation", 0.0)),
-		float(GameState.get_flag("mvp_experience", 0.0)), ProductSystem.live_bug_count(), ProductState.open_bugs()])
+		float(GameState.get_flag("mvp_experience", 0.0)), ProductState.open_bugs()])
+
+
+## Every sprint start: the fix cards in the plan against the capacity it was planned for (stored when the sprint
+## began, before the hours decision could move it).
+static func _on_sprint_started(number: int) -> void:
+	var p: Dictionary = GameState.product
+	var fixes: Array = p.sprint.cards.filter(func(id: String) -> bool: return p.cards[id].kind == "fix")
+	var fix_load: float = 0.0
+	for id in fixes:
+		fix_load += SprintSystem.remaining(p.cards[id])
+	var capacity: float = float(p.sprint.capacity)
+	var share: float = fix_load / capacity if capacity > 0.0 else 0.0
+	print("PROBE FIX day=%d sprint=%d weeks=%d fix_load=%.2f capacity=%.2f share=%.3f cards=%s bug_sprint=%s" % [
+		GameState.day, number, SprintSystem.sprint_weeks(), fix_load, capacity, share,
+		",".join(fixes) if not fixes.is_empty() else "-", str(share > 0.5)])
 
 
 ## Every sprint close, released or not: what shipped, how much carried and the velocity.
@@ -464,9 +508,9 @@ static func _log_state() -> void:
 	_runway_weeks[GameState.phase] = _runway_weeks.get(GameState.phase, Vector2i.ZERO) + Vector2i(int(not is_inf(runway)), 1)
 	if GameState.seed_closed_day < 0:
 		_min_cash_pre_seed = mini(_min_cash_pre_seed, GameState.cash)
-	# The B2C aggregate (audience, its satisfaction, live bugs) and the rival-relative
-	# quality q that the audience formula actually reads — the four numbers the B2C growth
-	# and bug-conversion verdicts are read from. q is -1 before a ship (nothing to compare).
+	# The B2C aggregate (audience, its satisfaction, open bugs) and the rival-relative
+	# quality q that the audience formula actually reads — the numbers the B2C growth
+	# verdicts are read from. q is -1 before a ship (nothing to compare).
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	var q: float = -1.0
 	if GameState.get_flag("mvp_shipped", false):
@@ -477,14 +521,15 @@ static func _log_state() -> void:
 	# Frank's approach step (0-4, phase.series_a_approach) — the growth streak is no
 	# longer a gate half. It is still logged on the PROBE MONTH line, where it feeds the
 	# valuation band rather than the door.
-	print("PROBE STATE day=%d cash=%d mrr=%d brand=%d burn=%d runway=%s cust=%d emp=%d promises=%d phase=%d aud=%d sat=%d bugs=%d q=%.1f appetite=%s approach=%d gate_ready=%s profit_streak=%d" % [
+	print("PROBE STATE day=%d cash=%d mrr=%d brand=%d burn=%d runway=%s cust=%d emp=%d promises=%d phase=%d aud=%d sat=%d open_bugs=%d q=%.1f appetite=%s approach=%d gate_ready=%s profit_streak=%d lost=%d" % [
 		GameState.day, GameState.cash, GameState.mrr, GameState.brand, GameState.daily_burn,
 		("INF" if is_inf(runway) else "%.2f" % runway),
 		CustomerRegistry.get_all().size(), CharacterRegistry.get_employees().size(),
 		PromiseRegistry.get_all().size(), GameState.phase,
 		int(GameState.get_flag("b2c_audience", 0)), (ub.satisfaction if ub != null else -1),
-		int(GameState.get_flag("mvp_live_bug_count", 0)), q,
-		appetite, int(sig.get("approach", 0)), str(GameState.phase_gate_ready), GameState.get_profitable_month_streak()])
+		ProductState.open_bugs(), q,
+		appetite, int(sig.get("approach", 0)), str(GameState.phase_gate_ready), GameState.get_profitable_month_streak(),
+		GameState.run_customers_lost])
 	if appetite != _last_appetite:
 		print("PROBE SIGNAL day=%d appetite=%s->%s mrr=%d approach=%d" % [
 			GameState.day, _last_appetite, appetite, GameState.mrr, int(sig.get("approach", 0))])
@@ -499,7 +544,7 @@ static func _log_customers() -> void:
 	# (B2BSalesSystem.satisfaction_target), and it is printed beside satisfaction and tolerance
 	# because "why did nobody slide" and "why did everybody slide" are the same question asked
 	# of these three numbers. The SAT line's target is the bare stability axis.
-	var health: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
+	var health: float = QualityModel.axis_score(QualityModel.dims_from_flags(), "stability")
 	var book: Array = CustomerRegistry.get_by_market("b2b")
 	var satisfied: int = 0
 	for c in book:
@@ -508,8 +553,7 @@ static func _log_customers() -> void:
 		print("PROBE CUST day=%d id=%s sat=%d tol=%d target=%d trust=%.1f phase=%s streak=%d cd=%d mrr=%d bugs=%d" % [
 			GameState.day, c.id, c.satisfaction, c.tolerance,
 			B2BSalesSystem.satisfaction_target(c), c.trust_offset,
-			c.lifecycle_phase, c.risk_streak, c.churn_countdown, c.mrr,
-			int(GameState.get_flag("mvp_live_bug_count", 0))])
+			c.lifecycle_phase, c.risk_streak, c.churn_countdown, c.mrr, B2BSalesSystem.account_bugs(c)])
 	# The fraction of the book at or above its bar — the number the
 	# tolerance re-seat is judged by ("~60-70% of a 5-account book for a good v1, ~20% bad").
 	if not book.is_empty():
@@ -518,7 +562,7 @@ static func _log_customers() -> void:
 
 
 ## PROBE B2C — the consumer week: the audience and who pays it at what price, the userbase's
-## satisfaction beside the experience score it drifts toward, live and open bugs, the
+## satisfaction beside the experience score it drifts toward, open bugs, the users lost so far, the
 ## rival-relative q the audience formula reads, interest, server occupancy, and the support
 ## desk: who is on it, the reports waiting, and how many arrive and get validated a day.
 static func _log_b2c() -> void:
@@ -526,14 +570,26 @@ static func _log_b2c() -> void:
 		return
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	var price: int = int(GameState.get_flag("b2c_price", 0)) if GameState.get_flag("b2c_paid_tier_open", false) else 0
-	print("PROBE B2C day=%d aud=%.1f paying=%d price=%d conv=%.3f sat=%d sat_target=%d live_bugs=%d open_bugs=%d q=%.1f interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f" % [
+	print("PROBE B2C day=%d aud=%.1f paying=%d price=%d conv=%.3f sat=%d sat_target=%d open_bugs=%d lost=%.1f q=%.1f interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f" % [
 		GameState.day, SalesSystem.b2c_audience(), SalesSystem.b2c_paying_users(), price,
 		SalesSystem.conversion_rate(price) if price > 0 else 0.0, ub.satisfaction if ub != null else -1,
-		roundi(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")),
-		ProductSystem.live_bug_count(), ProductState.open_bugs(),
+		roundi(QualityModel.axis_score(QualityModel.dims_from_flags(), "experience")),
+		ProductState.open_bugs(), SalesSystem.b2c_users_lost(),
 		SalesSystem._rival_relative_quality(QualityModel.shipped_normalized()), ProductRead.interest(),
 		InfraSystem.occupancy(), SupportSystem.desk_roster().size(), ProductState.reports_incoming(),
 		SupportSystem.reports_per_day(), SupportSystem.validation_per_day()])
+
+
+## PROBE BUGS — the week's bugs: how many arrived (the change in the store plus what fix cards cleared), the store
+## now, and the store just before this week's sprint close (the snapshot the weekly tick took first).
+static func _log_bugs() -> void:
+	if not ProductState.is_live():
+		return
+	var open: int = ProductState.open_bugs()
+	print("PROBE BUGS day=%d new=%d open=%d pre=%d" % [GameState.day, open - _bugs_open + _bugs_cleared, open,
+		open - ProductState.open_bugs_delta()])
+	_bugs_open = open
+	_bugs_cleared = 0
 
 
 static func _log_tally() -> void:
@@ -699,6 +755,7 @@ static func _on_week_start() -> void:
 	_log_state()
 	_log_customers()
 	_log_b2c()
+	_log_bugs()
 	if (GameState.day - 1) % MARKET_LOG_WEEKS == 0:
 		_log_market()
 	if GameState.day >= _stop_day or not GameState.run_active:
@@ -850,6 +907,8 @@ static func _plan_the_sprint() -> void:
 		if GameState.product.sprint.cards.has(paid):
 			print("PROBE PLAY day=%d paid plan card" % GameState.day)
 	SprintSystem.apply_lead()
+	if _fix_arm != "":
+		_plan_fix_arm()
 	if _k1_only:
 		for id in GameState.product.sprint.cards.duplicate():
 			if not _plannable(GameState.product.cards[id]):
@@ -867,6 +926,35 @@ static func _plan_the_sprint() -> void:
 		print("PROBE PLAY day=%d sprint %d start cards=%s used=%.2f capacity=%.2f" % [GameState.day,
 			SprintSystem.sprint_number(), ",".join(GameState.product.sprint.cards), SprintSystem.used(),
 			SprintSystem.capacity()])
+
+
+## The fix arms on top of the lead's plan: every fix card out, the arm's cards in first (past the capacity ceiling
+## when `add` refuses them), then the lead fills what is left. The fix cards the arm does not take wait in the next
+## column meanwhile, where the lead never suggests them.
+static func _plan_fix_arm() -> void:
+	var p: Dictionary = GameState.product
+	for id in p.sprint.cards.duplicate():
+		if p.cards[id].kind == "fix":
+			SprintSystem.remove(id)
+	var bugs: Dictionary = ProductState.open_bugs_by_line()
+	var due: Array = bugs.keys()
+	due.sort_custom(func(a: String, b: String) -> bool: return bugs[a] > bugs[b] if bugs[a] != bugs[b] else a < b)
+	if _fix_arm == "due":
+		due = due.filter(func(line: String) -> bool: return bugs[line] >= DUE_BUGS and (
+			ProductState.market_type() != "b2b" or not SprintCatalog.line_accounts(line).is_empty()))
+	else:
+		due = due.slice(0, 0 if _fix_arm == "none" else 1)
+	for line in due:
+		SprintSystem.add("fix:" + line)
+		if not p.sprint.cards.has("fix:" + line):
+			SprintSystem._place(SprintCatalog.card_by_id("fix:" + line), true)
+	var parked: Array = bugs.keys().filter(func(line: String) -> bool: return not due.has(line)).map(
+		func(line: String) -> String: return "fix:" + line)
+	for id in parked:
+		SprintSystem.send_next(id)
+	SprintSystem.apply_lead()
+	for id in parked:
+		SprintSystem.remove(id)
 
 
 ## A sprint waiting on its plan starts on the lead's plan the morning its note opens, as the Product page
@@ -1537,6 +1625,8 @@ static func _seed_world(preset: String) -> void:
 		_vc_policy = String(spec.get("vc", ""))
 		_staff_cap = int(spec.get("staff_cap", STAFF_LADDER.size()))
 		_k1_only = bool(spec.get("k1_only", false))
+		_fix_arm = String(spec.get("fix", ""))
+		ProductState.bugs_free = _fix_arm == "off"
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log
 	match preset:
@@ -1567,10 +1657,10 @@ static func _seed_world(preset: String) -> void:
 			# backlog is cleared — so a founder who answers the demand AND cleans up keeps the
 			# account, and one who ignores it does not.
 			_seed_b2b_world(0)
-			# DERIVED. With the backlog live the axis sits 2 over the
+			# DERIVED. With the backlog live the axis sits half a point over the
 			# MID bar (inside [T_mid, T_mid+5): small accounts safe, sector-picky mids and the
 			# enterprise under); cleared, it must clear T_mid+7 — checked at seed time.
-			_seed_stability_fixture("b2b_slip", _raw_for_axis(_bar_mid() + 2.0) + QualityModel.BUG_STABILITY_COEF * 9.0, 9)
+			_seed_stability_fixture("b2b_slip", _raw_for_axis(_bar_mid() + 0.5 + _bug_penalty(SLIP_BUGS)), SLIP_BUGS)
 
 
 ## A product already live on day 1. mvp_launch_day is stamped here because the fixture skips
@@ -1599,14 +1689,14 @@ static func _seed_b2c_world() -> void:
 
 
 ## The UNTENDED consumer product: experience low enough that satisfaction drifts down toward its
-## score, a live backlog over SATISFACTION_BUG_GATE pushing it lower, and nobody sprints. The
-## "declining" arm of the B2C growth measurement.
+## score, a bug backlog eating the audience, and nobody sprints. The "declining" arm of the B2C growth
+## measurement.
 static func _seed_b2c_neglect() -> void:
 	_seed_live_product("b2c", "ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], "Nova")
 	GameState.set_flag("mvp_innovation", 10.0)
 	GameState.set_flag("mvp_stability", 8.0)
 	GameState.set_flag("mvp_experience", 8.0)
-	GameState.set_flag("mvp_live_bug_count", 12)
+	ProductState.add_bugs(FIXTURE_BUG_LINE, 12)
 	SalesSystem.add_b2c_audience(200)
 	SalesSystem.open_b2c_paid_tier(15)
 
@@ -1621,8 +1711,13 @@ static func _raw_for_axis(axis: float) -> float:
 	return QualityModel.NORMALIZE_HALF_SAT * a / (100.0 - a)
 
 
+## What `bugs` open bugs on the lines an account uses take off its satisfaction target.
+static func _bug_penalty(bugs: int) -> float:
+	return minf(B2BConstants.B2B_BUG_SAT_PER * float(bugs), float(B2BConstants.B2B_BUG_SAT_CAP))
+
+
 static func _axis_of(raw_stability: float, bugs: int) -> float:
-	return QualityModel.axis_score({"stability": QualityModel.effective_stability(raw_stability, bugs)}, "stability")
+	return QualityModel.axis_score({"stability": raw_stability}, "stability") - _bug_penalty(bugs)
 
 
 static func _bar_small() -> float:
@@ -1635,7 +1730,7 @@ static func _bar_mid() -> float:
 
 static func _seed_stability_fixture(preset: String, raw_stability: float, bugs: int) -> void:
 	GameState.set_flag("mvp_stability", raw_stability)
-	GameState.set_flag("mvp_live_bug_count", bugs)
+	ProductState.add_bugs(FIXTURE_BUG_LINE, bugs)
 	var live_axis: float = _axis_of(raw_stability, bugs)
 	var clear_axis: float = _axis_of(raw_stability, 0)
 	var ok: bool = true
@@ -1657,15 +1752,15 @@ static func _seed_stability_fixture(preset: String, raw_stability: float, bugs: 
 
 static func _seed_b2b_world(rep_count: int) -> void:
 	_seed_live_product("b2b", "saas_ops", ["saas_ops_workflow", "saas_ops_reporting"], "Sahra")
-	# A MID product on purpose: with its 4 live bugs the stability AXIS sits above a small
+	# A MID product on purpose: with its 4 open bugs the stability AXIS sits above a small
 	# account's tolerance bar and below a scaled one's, so the book holds a mix of steady
-	# and sliding accounts. The satisfaction TARGET is this axis, so it is the most
+	# and sliding accounts. The satisfaction TARGET is this axis less the bugs' cost, so it is the most
 	# load-bearing fixture value in the log — which is why it is DERIVED from the live bars
 	# rather than authored as a raw number.
 	GameState.set_flag("mvp_innovation", 20.0)
 	GameState.set_flag("mvp_experience", 22.5)
 	_seed_stability_fixture("b2b_solo",
-		_raw_for_axis((_bar_small() + 3.0 + _bar_mid()) * 0.5) + QualityModel.BUG_STABILITY_COEF * 4.0, 4)
+		_raw_for_axis((_bar_small() + 3.0 + _bar_mid()) * 0.5 + _bug_penalty(4)), 4)
 
 	# Five accounts through the real signing seam (SalesSystem.add_b2b_customer — the
 	# sole B2B signing path), spread across archetypes so tolerance seeds differ and the
@@ -1678,7 +1773,7 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	#
 	# Satisfaction seeds straddle the tolerance seeds on purpose: probe_c and probe_e open at
 	# the neutral signing start (their bar + SIGNING_SAT_OVER_TOL), the lowest a signing allows,
-	# so ordinary product wear can push them under once their onboarding floor has lifted, which
+	# so the target can pull them under once their onboarding floor has lifted, which
 	# is the only way the retention → promise → churn chain is reachable without hand-forcing it.
 	var specs := [
 		{"id": "probe_a", "name": "Kuzey Lojistik", "industry": "logistics", "star": 1, "seats": 7, "price": 50, "sat": 72},

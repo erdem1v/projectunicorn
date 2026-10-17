@@ -59,7 +59,6 @@ static func facts_for(p: Prospect) -> Dictionary:
 		"axis_innovation": ProductRead.axis_reading("", "innovation"),
 		"axis_stability": ProductRead.axis_reading("", "stability"),
 		"axis_experience": ProductRead.axis_reading("", "experience"),
-		"confirmed_bugs": ProductRead.open_bugs(),
 		"unconfirmed_reports": ProductRead.unconfirmed(),
 		"version_age": ProductRead.version_age(),   # weeks
 		"interest": int(ProductRead.interest()),
@@ -132,22 +131,11 @@ const CATALOGUE := [
 		"criteria": {"buyer": SalesArchetypes.BUYER_OPERATIONS},
 		"answers": [
 			{"id": "a_strength", "verb": VERB_STRENGTH, "delta": 1.0,
-				"gate": {"axis_stability": {"min": 55}, "confirmed_bugs": {"max": 2}},
+				"gate": {"axis_stability": {"min": 55}},
 				"lock_fact": "axis_stability"},
 			{"id": "a_admit", "verb": VERB_ADMIT, "delta": 0.35},
 			{"id": "a_charisma", "verb": VERB_CHARISMA, "delta": 0.8,
 				"gate": {"founder_charisma": {"min": 1}}},
-		],
-	},
-	{
-		"id": "probe_stability_bugs",
-		"family": "stability",
-		"criteria": {"buyer": SalesArchetypes.BUYER_OPERATIONS, "confirmed_bugs": {"min": 3}},
-		"answers": [
-			{"id": "a_admit", "verb": VERB_ADMIT, "delta": 0.4},
-			{"id": "a_promise", "verb": VERB_PROMISE, "delta": 0.9},
-			{"id": "a_reference", "verb": VERB_REFERENCE, "delta": 0.7,
-				"gate": {"has_reference": true}},
 		],
 	},
 

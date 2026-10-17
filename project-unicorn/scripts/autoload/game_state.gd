@@ -58,9 +58,6 @@ const FLAG_TYPES := {
 	"mvp_innovation": TYPE_FLOAT,
 	"mvp_stability": TYPE_FLOAT,
 	"mvp_experience": TYPE_FLOAT,
-	"mvp_live_bug_count": TYPE_INT,
-	"mvp_live_bug_progress": TYPE_FLOAT,
-	"mvp_bug_history": TYPE_ARRAY,
 	"critical_bug_unfixed": TYPE_BOOL,
 	"tech_debt_birikti": TYPE_BOOL,
 	# --- Ürün rev 6.1 · HAT MODELİ ve DESTEK (§12, §8, §9, §10) ---
@@ -88,6 +85,9 @@ const FLAG_TYPES := {
 	"b2c_audience": TYPE_FLOAT,
 	"b2c_price": TYPE_INT,
 	"b2c_paid_tier_open": TYPE_BOOL,
+	"b2c_users_lost": TYPE_FLOAT,              # running total the audience lost to erosion and bug churn
+	"mvp_bug_streak": TYPE_INT,                # weekly ticks in a row at the neglect threshold
+	"mvp_bug_drop_day": TYPE_INT,              # the tick the neglect rule last cost reputation, 0 = never
 	# --- sales / customer desks ---
 	"cs_throughput_progress": TYPE_FLOAT,
 	"sales_faucet_progress": TYPE_FLOAT,       # §3 — sub-lead inflow accumulator

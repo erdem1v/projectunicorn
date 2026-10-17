@@ -113,7 +113,11 @@ const EST_POS_MAX := 0.40
 
 # --- Callbacks ---
 const CALLBACK_MRR_GROWTH_PCT := 20     # "MRR +20% over meeting-day value"
-const CALLBACK_BUGS_UNDER := 3          # "active bugs under N"
+# The product fund asks for a quarter of retention data: the share of its customers the company loses in the
+# window after the callback must stay under the target (B2B accounts / B2C audience).
+const CALLBACK_CHURN_WEEKS := 12        # [WORKING] onay bekliyor
+const CALLBACK_CHURN_PCT_B2B := 5       # [WORKING] onay bekliyor
+const CALLBACK_CHURN_PCT_B2C := 15      # [WORKING] onay bekliyor
 
 # --- Term Sheet Table — the push-your-luck negotiation ---
 # Every number is a working placeholder (calibration pass tunes it). Each lever's push reads
