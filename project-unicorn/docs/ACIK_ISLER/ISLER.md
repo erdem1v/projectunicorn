@@ -13,8 +13,6 @@ Açık işlerin tek yeri bu klasördür.
 ## Olay motoru
 - Lint kuralı: bir arkın `reassign_event` / `close_event` kartı öznenin slotunu bildirirse, özne `entity_exists` ile
   geçersizlendikten sonra G5'i hiç geçemez (§10.6'nın yasakladığı sessiz ölüm). Bugünkü kartlarda yok; kural eklenmeli.
-- "Kâğıt masada mı" okuması yok: `SprintSystem` bekleyen karar kâğıdını bulmak için `EventGate.desk_papers`'ı
-  `DESK_SCAN` (64) kâğıda kadar tarıyor. `EventGate.has_paper(event_id)` gibi bir okuma kurulunca sabit silinir.
 - G6'nın faz koruması hiç geçmiyor: `EvGate._g6_guards` `guards.phase`'i JSON'un float dizisinde `Array.has` ile
   arıyor ve Godot 4.6.2'de `[2.0, 3.0].has(2)` false döner (`scripts/events/gate/gate.gd`). Bugün kullanan kart yok;
   kartlar evreyi `phase.current` seam'iyle okuyor. Karşılaştırma tam sayıyla yapılır.

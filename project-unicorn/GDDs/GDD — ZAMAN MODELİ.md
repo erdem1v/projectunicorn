@@ -48,7 +48,9 @@ söyler.
   alınırsa (kilometre taşı kâğıdı) durur. Gece türetildiği için kalan gece, tutma kalkıp oyuncu saati sürdürünce
   sürer.
 - Toplu adım sürerken olay kartı gösterilmez. Motorun gösterimi toplu adımın sonunda (`clock_batch_ended`) bir kez
-  koşar: kart 08:00'de yeniden doğrulanıp kurulur, en önemli kart önce gelir, aktif kart 00:00 autosave'ini engellemez.
+  koşar: gelmiş kart gösterildiği saatte yeniden doğrulanıp kurulur, en önemli kart önce gelir, aktif kart 00:00
+  autosave'ini engellemez. Saatin ürettiği acil olmayan kart, mail ve hatırlatıcı mesai penceresinde bir geliş saati
+  alır ve ondan önce gösterilmez (`MailClock`, motor md §27.27); toplu adımın sonunda yalnız gelmiş olan kurulur.
 - `freeze_clock(neden, tree_runs)` / `thaw_clock(neden)` yalnız saatin birikimini durdurur; ağaca yalnız
   `tree_runs` dokunur. Yolculuk dondurması onu taşır: ağaç hız 0'da da koşar (kurucunun yürüyüşü, asansör, trafik) ve
   dondurma çözülünce yeniden hıza bağlanır. Gece dondurması ağaca dokunmaz; duraklatma gece yürüyüşünü de durdurur.
@@ -475,6 +477,7 @@ yüklemez, süreleri okunmaz.
 | 8 | VC saatleri |
 | 9 | sonların taraması |
 | 10 | özet ve şerit satırları (`SummarySystem.daily_tick`) |
+| | günün hatırlatıcılarının geliş saatleri (`MailClock.sync_desk`) |
 
 ### 7.2 Hafta ve gece
 
@@ -489,7 +492,7 @@ yüklemez, süreleri okunmaz.
 - Bir karenin birden çok saat taşıdığı takılmada adım geceye inerse karenin kalan saatleri düşer: kare takılması
   mesai bitişini aşamaz.
 - 24:00'te biten mesaide saat 23'ü gösterirken biriken saatin 24'e vardığı an da gecedir (`TimeManager.is_night`
-  akümülatörü de okur). 23 → 0 devri gece atlamasına kalır; günlük tikin kartları 08:00'i bekler. Çıkış beklenirken
+  akümülatörü de okur). 23 → 0 devri gece atlamasına kalır; günlük tikin kartları mesai penceresindeki geliş saatlerini bekler. Çıkış beklenirken
   ofisin ışığı 24:00'te durur, geri sarmaz (`TimeManager.day_minute` 24'te kırpılır).
 
 ### 7.3 Atlama

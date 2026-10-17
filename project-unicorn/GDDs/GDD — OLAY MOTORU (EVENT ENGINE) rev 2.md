@@ -2531,3 +2531,48 @@ düzeltme koşusu oyundan kalktı: düzeltme sprintin düzeltme kartının işid
 *Neden.* Faz A görevi (sahip kararı 2026-10-16, Karar 1 ve 12): oyuncu hata durumunu tek sayıdan okur, hata
 düzeltmek sprintin küçük bir parçasıdır ve DESTEK'te ayrı bir düzeltme düğmesi yoktur; koşu olmayınca onu soran
 seam'lerin ve onu bekleyen kartın okuyacağı durum kalmaz.
+
+### §27.27 · Faz B1: mail ve bildirim saatleri, teslim kuralı
+
+*Belge ne diyordu.* Kuyruk (§2), masa (§12) ve geçmiş (§7) gün damgası taşır; günlük tikte kabul edilen kart toplu adımın
+sonunda, 08:00'de gösterilir (ZAMAN MODELİ §1.2); gelen kutusunun mesajı yalnız gün taşır, hatırlatıcının hiç saati yoktur
+(§27.12 – §27.14). Gün 00:00'da dönünce günlük üreticilerin hepsi o anda yazar ve oyuncu sabah gece yarısı damgalı bir
+yığın bulur.
+
+*Ne yapıldı.* Saatin ürettiği mail, kâğıt, not, hatırlatıcı, Frank'in satırı ve haber bandının canlı satırı, acil değilse,
+şirketin mesai penceresinde (`WorkHoursSystem.company_window()`) bir geliş saati alır ve ondan önce gösterilmez.
+`MailClock` (statik, durumsuz) saati çeker: pencerede ya da acilse şimdi, değilse sonraki pencerenin ilk 4 saati içinde
+`EvDice.unit("arrival", …)` ile bir tam saat (bir haftalık kâğıt için ilk 1 saat) [WORKING, onay bekliyor]. `at` mutlak
+dakikadır (tik × 1440 + günün dakikası), -1 saatsizdir. Acil sayılan: `terminal_warning` ya da `urgent` etiketli kart,
+kâğıdın son uyarısı, koşunun giriş notu, Frank'in satırını silen boş anahtar; oyuncunun kendi isteği (`EventGate.request`'in
+`immediate` argümanı, hatırlatıcının düğmesi) de hemen gelir.
+- Mesaj: `MessageSystem.post` pencere dışında mesajı `GameState.mail_outbox`'a yazar, `MailClock.hourly_tick` vakti gelince
+  `messages`'a teslim eder (kimlik ve gün teslimde doğar). `summary_ready` ve `product_note_issued` teslim anında yayılır;
+  yazan sistem yaymaz.
+- Kart: `EvEngine._admit` geliş saatini çeker ve kuyruk girdisine (`at`, `urgent`), masa kâğıdına (`at`) ve not satırına
+  yazar; cevap satırı cevabın verildiği saati, süre dolumu satırı çekilmiş bir geliş saatini taşır. Görünürlük okuma
+  anında karar verilir: kuyruğun süzgeci tek yerdedir (`EvQueue._shown`), masanınki `EvPapers.visible`, notunki
+  `EvHistory.newest_unread_note` ve `Inbox.items`. Varlığı soran okuyucular süzmez (`EvQueue.has/holds/ids`,
+  `EvPapers.has/keys_of/is_empty`, `EventGate.instances_of/on_desk`, ark adımı, `SprintSystem._settle_decision`): gizli bir
+  kâğıt hâlâ kartın beklediği kâğıttır. Kâğıt geliş gününden saymaya başlar; akşam gelen kâğıdın haftası ertesi tikte açılır.
+  Toplu adımın sonundaki `pump` yalnız gelmiş kartı kurar. Not yazıldığı anda geçmişe girer ve geliş saatinde duyurulur;
+  duyuru anında §4.4'ün yeniden doğrulaması koşar (`EvGate.revalidate`, kuyruktaki kartın kurulmadan önce geçtiği
+  denetim) ve oyuncunun sabahki hamleleri dünyayı taşıdıysa not sessizce `dropped` satırına döner (`EvHistory.withdraw`),
+  yoksa 00:00'da yazılmış bir not 10:00'da artık doğru olmayan bir dünyayı anlatırdı.
+- Hatırlatıcı: durumdan türer (`MailClock.reminders()`: kapı, term sheet, aday dosyaları, Risk ve Genişleme'deki hesap,
+  ayrılma riskindeki çalışan); ilk görüldükleri an `GameState.desk_arrivals`'a yazılır (günlük dağıtımın sonunda ve her
+  saat), `Inbox.desk` yalnız gelmişi listeler. Frank'in satırı `GameState.mentor_line_at` gelince, haber bandının satırı
+  pencere açılınca görünür.
+- Saat: 00:00'ın saatlik dilimi `advance_day()`'den önce koşar; o dilimde `TimeManager.is_rolling_over()` doğrudur ve
+  `MailClock.now()` yeni tiki sayar, yoksa dilimin okuması bir önceki günün geliş saatini görürdü.
+- Kayıt: şema 17; `mail_outbox`, `desk_arrivals`, `mentor_line_at` ve girdilerin `at` alanı varsayılan taşır, eski kayıttaki
+  öğe saatsiz açılır ve her zaman gösterilir. Göç yoktur.
+- Ekran: gelen kutusunun liste satırı ve kart başlığı geliş saatini "ss:dd" yazar, şimdiki saati değil (`Inbox.date_text`).
+- Kapsamda olmayanlar: sprint planının 08:00'deki tutuşu (kapı mail değil, günü başlatma eşiğidir), sol rayın rozet sayaçları
+  (`attention_count`, durumdan okunur), ofis taşıma toast'ı. Açık: dönem özeti ve ilk Ar-Ge notu teslim anında gelen
+  kutusunu kendiliğinden açıp saati durdurur, yani artık gece yarısı değil mesai içinde, çoğunlukla öğleye yakın bir
+  saatte (`main._open_note`).
+
+*Neden.* Faz B görevi (sahip kararı 2026-10-16, Karar 21 ve kabul 4.4): gün 00:00'da dönünce
+sıradan bir mail gece yarısı düşüyor, oysa sabah 09:00 ya da 10:00'da gelmesi gerekir. Geliş saati bir kez çekilir ve saklanır;
+görünürlük okuma anındadır, bu yüzden yükleme, toplu adım ve toplantı atlaması aynı kuralla doğru çalışır.

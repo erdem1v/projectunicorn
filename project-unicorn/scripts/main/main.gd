@@ -746,7 +746,10 @@ func _run_event_shot(spec: String) -> void:
 ## The opening's states: intro_go (the intro's way to
 ## Ürün; GATEFLOW tab, picking, speed) · beat (founder.savings_note through EventGate.request in week 5: the office's
 ## notice stack as _stack, then the inbox on its history row) · dying (a card arriving in the frame a tab change frees
-## the open inbox; GATEFLOW window, active, pane).
+## the open inbox; GATEFLOW window, active, pane) · morning (the night under the workday rule, through the real hourly
+## path: the inbox at 00:00 just after the rollover, then half an hour into the workday, then four hours on; MORNING lines
+## name what each frame lists, each item stamped inside the window; the frames are inbox_shot_morning_0000, _0930 and
+## inbox_shot_morning).
 func _run_inbox_shot(state: String) -> void:
 	_begin_shot()
 	if state in ["intro", "intro_go", "beat"]:
@@ -759,6 +762,12 @@ func _run_inbox_shot(state: String) -> void:
 		# founder.savings_note's ground: week 5, no product, savings for fewer than 24 weeks.
 		GameState.day = 5
 		GameState.set_cash(5000)
+	if state == "morning":
+		# One hour before the rollover, with a summary due at every tick and cash enough that no shutter warns.
+		SummarySystem.frequency_override = "weekly"
+		GameState.set_cash(200000)
+		GameState.current_hour = TimeModel.HOURS_PER_DAY - 1
+		TimeManager.sync_to_current_hour()
 	if state.begins_with("rnd_"):
 		_seed_rnd(16 if state == "rnd_discovery" else 14, state != "rnd_note_demand")
 	if state == "rnd_note_demand":
@@ -774,6 +783,8 @@ func _run_inbox_shot(state: String) -> void:
 			await _gate_flow()
 			get_tree().quit()
 			return
+		"morning":
+			await _morning_frames()
 		"intro":
 			_open_note("intro")
 		"intro_go":
@@ -867,8 +878,7 @@ func _run_inbox_shot(state: String) -> void:
 			GameState.current_hour = 8
 			TimeManager.sync_to_current_hour()
 			var payload: Dictionary = SummarySystem._build_summary_data("quarterly", GameState.day - 1)
-			MessageSystem.post("summary", String(SummarySystem.PERIOD_KEYS.quarterly.title), payload)
-			EventBus.summary_ready.emit(payload)
+			MessageSystem.post("summary", String(SummarySystem.PERIOD_KEYS.quarterly.title), payload, true)
 		"rnd_note", "rnd_note_demand", "rnd_discovery":
 			INBOX.show("m:" + String(GameState.messages[-1].id))
 		"weekly_sales":
@@ -898,6 +908,43 @@ func _run_inbox_shot(state: String) -> void:
 	get_tree().call_group(&"top_bar", &"_refresh")
 	await get_tree().process_frame
 	await _finish_shot("inbox_shot_%s" % state, 0.6)
+
+
+## --inbox-shot=morning: the night under the workday rule. The clock steps through 00:00 (the rollover and the daily tick),
+## and the first frame is the inbox then: none of the night's mail is in it. The second frame is half an hour into the
+## workday and the third four hours on (a card that came is answered first), each after the hours ran through the real
+## hourly path, with the newest arrival open in the pane. A MORNING line names what the inbox lists at each frame, each
+## item with the time it reached the player.
+func _morning_frames() -> void:
+	TimeManager.advance_hours(1)
+	EventBus.tab_changed.emit("events")
+	await _morning_frame(false)
+	TimeManager._in_game_hours = 0.5
+	TimeManager.advance_hours(WorkHoursSystem.start_hour())
+	await _morning_frame(false)
+	while EventGate.active_id() != "":
+		EventGate.resolve(EventGate.active_id(), 0)
+	TimeManager.advance_hours(MailClock.SPREAD_HOURS)
+	await _morning_frame(true)
+
+
+## One frame of --inbox-shot=morning; the last one is saved by the shot's own tail.
+func _morning_frame(last: bool) -> void:
+	var clock: String = INBOX.clock_text(MailClock.now())
+	var stamped: Array = INBOX.items().filter(func(it: Dictionary) -> bool: return int(it.at) >= 0)
+	print("MORNING|clock=%s|active=%s|stamped=%s" % [clock, EventGate.active_id(), ", ".join(
+		stamped.map(func(it: Dictionary) -> String: return "%s %s" % [INBOX.clock_text(int(it.at)), it.id]))])
+	var newest: Dictionary = {}
+	for it in stamped:
+		if newest.is_empty() or int(it.at) > int(newest.at):
+			newest = it
+	if not newest.is_empty():
+		INBOX.show(String(newest.id))
+	get_tree().call_group(&"top_bar", &"_refresh")
+	await get_tree().process_frame
+	await get_tree().create_timer(0.6).timeout
+	if not last:
+		_save_shot("inbox_shot_morning_" + clock.replace(":", ""))
 
 
 ## --inbox-shot=flow: the gate played through the shell's own input, a frame and a GATEFLOW line a

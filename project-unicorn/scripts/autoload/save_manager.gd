@@ -13,13 +13,13 @@ extends Node
 # NegotiationSystem) are reset, never serialised: can_save() refuses while any of them
 # is_active(), so a sitting is always idle at the moment a save is taken.
 
-const SCHEMA_VERSION := 16
+const SCHEMA_VERSION := 17
 
 ## GDD ÜRÜN rev 6.1 §22.5 — eski kayıt TAŞINMAZ. "Yükleyici eski sürümü görürse kullanıcıya
 ## AÇIK MESAJ verir, sessizce bozuk state üretmez." Düz özellik listesi hat durumlarına
 ## çevrilemez ve v9 olay bloğu v10 motorunun arklarını/latch'lerini taşımaz; çevirmeye
 ## çalışmak çalışıyor görünen ve yanlış olan bir koşu üretir. O yüzden kapı sürümdedir.
-## v11-v16 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
+## v11-v17 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
 const MIN_LOADABLE_VERSION := 10
 const SAVE_DIR := "user://saves/"
 

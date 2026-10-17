@@ -120,11 +120,12 @@ signal event_resolved(event_id: String, choice_index: int)
 signal modal_requested(event: GameEvent)
 # The opened paper went back on the desk unanswered (EventGate.set_aside).
 signal event_set_aside(event_id: String)
-# A paper landed on, left or expired off the desk (EvPapers).
+# A paper landed on, left or expired off the desk (EvPapers), or an hour of the workday brought what waited for it
+# (MailClock).
 signal desk_changed
 
 # --- Inbox messages ---
-# GameState.messages changed: a message was posted or read (MessageSystem).
+# GameState.messages changed: a message was delivered or read (MessageSystem).
 signal messages_changed
 
 # --- Build / product signals ---
@@ -175,6 +176,7 @@ signal research_frozen(node_id: String)
 signal research_resumed(node_id: String)
 signal node_revealed(node_id: String)
 signal hidden_line_unlocked(line_id: String)
+# The monthly note reached the inbox: MessageSystem raises it when it delivers the message (MailClock).
 signal product_note_issued(day: int)
 
 # §10 listesinde olmayan iki ek:
@@ -249,7 +251,8 @@ signal shutter_changed(weeks_left: int)
 # A calendar month closed (slot 0 of the new month's first tick). Silent: the payload is the
 # month_history entry just pushed; the summary modal listens to summary_ready instead.
 signal month_ended(month_close: Dictionary)
-# A summary period closed at the player's summary frequency; main.gd mounts the modal.
+# A summary period closed at the player's summary frequency and its message reached the inbox: MessageSystem
+# raises it when it delivers the message (MailClock); main.gd opens the message.
 signal summary_ready(data: Dictionary)
 
 # --- Meeting panel — MeetingPanel ---

@@ -172,8 +172,9 @@ static func _subject_character(context: Dictionary) -> String:
 
 # --- The desk --------------------------------------------------------------
 
-## What the desk lists, most urgent first. The model is uncapped (§11.4); `visible_slots` caps
-## the rows (-1: none), and EvPapers.ordered() keeps the papers with the fewest weeks left inside the cap.
+## What the desk lists, most urgent first: the papers that have arrived (MailClock). The model is uncapped (§11.4);
+## `visible_slots` caps the rows (-1: none), and EvPapers.ordered() keeps the papers with the fewest weeks left
+## inside the cap.
 ## `id` is the paper's key, which is what open_paper takes; `category` is the card's category,
 ## which the surface puts in words. `weeks_left` 1 reads "this week", and `expiring`
 ## (EvPapers.is_expiring) is the row's one highlight. The card, its context and the names it
@@ -196,6 +197,7 @@ static func desk_papers(visible_slots: int) -> Array:
 			# warning a deferred decision gets.
 			"expiring": EvPapers.is_expiring(key),
 			"admitted_day": EvPapers.admitted_day_of(key),
+			"at": EvPapers.at_of(key),
 			"opened": EvPapers.opened_before(key),
 		})
 	return out

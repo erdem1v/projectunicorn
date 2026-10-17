@@ -262,9 +262,12 @@ static func row(it: Dictionary, selected: bool, pill: bool, on_pick: Callable) -
 		from.text = "%s · %s" % [it.sender.name, TranslationServer.translate("MAIL_STAMP_LEFT")]
 	from.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	from.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	one.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	one.add_child(from)
 	if pill:
 		one.add_child(PANE.topic_pill(String(it.topic)))
+	if int(it.at) >= 0:
+		one.add_child(UiFactory.make_label(INBOX.clock_text(int(it.at)), &"Caption"))
 	lines.add_child(one)
 	var two := HBoxContainer.new()
 	two.add_theme_constant_override("separation", UiTokens.SPACE_M)

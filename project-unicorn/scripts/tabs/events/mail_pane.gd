@@ -119,9 +119,7 @@ func _card() -> void:
 		state = _within()
 		ink = UiTokens.D_warn() if _item.expiring else null
 	var static_body: bool = _mode != "history" or _static_body()
-	var hour: int = GameState.current_hour if _mode == "live" and _item.hourly else -1
-	_mail(_kicker(kind, state, ink), ev.title, INBOX.date_text(int(_item.day), hour),
-		ev.body_text if static_body else "")
+	_mail(_kicker(kind, state, ink), ev.title, ev.body_text if static_body else "")
 	if _mode == "history" and _item.note:
 		_actions("", [[_item.option, _close, true]])
 	elif _mode == "history":
@@ -139,19 +137,19 @@ func _message() -> void:
 	var kind: String = {"intro": "MAIL_KIND_MESSAGE", "rnd_discovery": "RND_DISCOVERY_TITLE"}.get(m.kind, "MAIL_KIND_REPORT")
 	match String(m.kind):
 		"intro":
-			_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)), tr("MENTOR_INTRO_BODY"))
+			_mail(_kicker(kind), _item.subject, tr("MENTOR_INTRO_BODY"))
 			_actions("", [[tr("MENTOR_INTRO_CTA"), _go.bind("product"), true]])
 		"summary":
-			_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)), "", _summary(a))
+			_mail(_kicker(kind), _item.subject, "", _summary(a))
 			_actions(SummarySystem.display(a).footer, [[tr("MAIL_CONTINUE"), _close, true]])
 		"sales_week":
-			_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)), "", _sales_report(a))
+			_mail(_kicker(kind), _item.subject, "", _sales_report(a))
 		"rnd_note", "rnd_discovery":
 			var note: bool = m.kind == "rnd_note"
 			if note:
-				_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)), "\n\n".join(INBOX.note_lines(a)))
+				_mail(_kicker(kind), _item.subject, "\n\n".join(INBOX.note_lines(a)))
 			else:
-				_mail(_kicker(kind), _item.subject, INBOX.date_text(int(m.day)),
+				_mail(_kicker(kind), _item.subject,
 					RnDUiShared.t_or("PROD_RND_NODE_%s_DISCOVERY" % String(a.node).to_upper(), ""), _opened(String(a.node)))
 			var product: Array = [tr("RND_NOTE_GO_PRODUCT"), _go.bind("product"), false]
 			var tree: Array = [tr("RND_NOTE_GO_TREE"), _go.bind("rnd"), false]
@@ -159,9 +157,9 @@ func _message() -> void:
 				_mode == "rnd" and EventGate.active_id() != "")
 
 
-## The mail's top: kicker, subject, header, body, an extra block (a report's table) and the
-## signature, beside the portrait well when a person writes.
-func _mail(kicker: Control, subject: String, date: String, body: String, extra: Control = null) -> void:
+## The mail's top: kicker, subject, header (dated by the time the item reached the player), body, an extra block
+## (a report's table) and the signature, beside the portrait well when a person writes.
+func _mail(kicker: Control, subject: String, body: String, extra: Control = null) -> void:
 	var from: Dictionary = _item.sender
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", UiTokens.SPACE_4XL)
@@ -175,7 +173,7 @@ func _mail(kicker: Control, subject: String, date: String, body: String, extra: 
 	lead.add_child(kicker)
 	lead.add_child(_wrapped(subject, &"TitleH2"))
 	head.add_child(lead)
-	head.add_child(_header(from, date))
+	head.add_child(_header(from, INBOX.date_text(int(_item.day), int(_item.at))))
 	head.add_child(HSeparator.new())
 	if body != "":
 		var rich := RichTextLabel.new()
@@ -744,9 +742,9 @@ func _facts(rows: Array) -> PanelContainer:
 	return box
 
 
-## The card about this subject, as the Sales tab's button names it.
+## The card about this subject, as the reminder's button names it: the player asked, so it shows at once.
 func _attend(event_id: String) -> void:
-	EventGate.request(event_id, {"customer": String(_item.customer)})
+	EventGate.request(event_id, {"customer": String(_item.customer)}, true)
 
 
 # --- Shared --------------------------------------------------------------------------------------

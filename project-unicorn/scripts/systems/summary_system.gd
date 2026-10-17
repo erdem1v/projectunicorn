@@ -9,9 +9,9 @@ extends RefCounted
 # new month's ledger opens, so this week's money flow lands in the new month. When the player's
 # summary frequency closes a period on this tick, its payload is built from the state the last
 # week left and the next period opens.
-# Slot 10 (daily_tick), after the endings scan: the payload is posted to the inbox and goes out
-# as summary_ready, and the month-close and runway lines go to the ticker, only while the run is
-# on, so an ending on the same tick wins. A running Kepenk does not suppress the summary: it
+# Slot 10 (daily_tick), after the endings scan: the payload is posted to the inbox (MessageSystem raises
+# summary_ready when it delivers it), and the month-close and runway lines go to the ticker, only while
+# the run is on, so an ending on the same tick wins. A running Kepenk does not suppress the summary: it
 # matters most mid-countdown. The payload is numbers and keys; `display` renders it.
 #
 # Persistent state lives on GameState: month_ledger (the month's opening cash and customer
@@ -92,7 +92,6 @@ static func daily_tick() -> void:
 			EventBus.ticker_live_line.emit(source, runway_line)
 	if not summary.is_empty():
 		MessageSystem.post("summary", String(PERIOD_KEYS[summary.freq].title), summary)
-		EventBus.summary_ready.emit(summary)
 
 
 static func _frequency() -> String:

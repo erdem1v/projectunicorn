@@ -2,9 +2,10 @@ extends RefCounted
 
 # Gelen kutusu: Olaylar penceresinin, ofisin bildirim yığınının, üst barın kapı yuvasının ve rayın
 # Olaylar rozetinin tek görünüm modeli. Kendi durumu yoktur, her okumada kurulur: etkin karar,
-# kuyruktakilerin sayısı, masadaki kâğıtlar, canlı durumdan türeyen hatırlatıcılar (saatleri ve
-# okundu işaretleri yoktur), geçmiş kararlar (EventGate.history) ve motor dışı mesajlar
-# (GameState.messages). Yazdığı tek şey bir mesajın ya da notun okundu işaretidir, sahibinin yolundan.
+# kuyruktakilerin sayısı, masadaki kâğıtlar, canlı durumdan türeyen hatırlatıcılar (MailClock.reminders;
+# okundu işaretleri yoktur, geliş saatleri GameState.desk_arrivals'tadır), geçmiş kararlar (EventGate.history)
+# ve motor dışı mesajlar (GameState.messages). Mesai penceresine ulaşmamış öğe listede yoktur (MailClock). Yazdığı
+# tek şey bir mesajın ya da notun okundu işaretidir, sahibinin yolundan.
 # Her öğe bir göndericiden gelmiş mail gibi okunur: kartın `sender`'ı, Frank konuşuyorsa Frank,
 # yoksa kartın bağlı öznesi ya da kategorisi göndericiyi adlandırır.
 # Dışarıdan preload ile erişilir: global class cache'e bağımlılık yok (headless tuzağı).
@@ -35,14 +36,14 @@ static func show(item_id: String) -> void:
 
 ## Everything the inbox lists, in its order: what waits (the decision on screen, the queue as one
 ## row, the papers, the reminders), then the past (messages and decisions), newest first. An item
-## is {id, kind, day (-1 undated), waiting, unread, topic, sender, subject, line} and its kind's own
-## fields.
+## is {id, kind, day (-1 undated), at (-1 no time), waiting, unread, topic, sender, subject, line} and its
+## kind's own fields. Only what has arrived is listed (MailClock).
 static func items() -> Array:
 	var out: Array = []
 	if EventGate.active_id() != "":
 		out.append(active_item())
 	if EventGate.queue_size() > 0:
-		out.append({"id": "queue", "kind": "queue", "day": -1, "waiting": true, "unread": true,
+		out.append({"id": "queue", "kind": "queue", "day": -1, "at": -1, "waiting": true, "unread": true,
 			"count": EventGate.queue_size()})
 	out.append_array(desk())
 	var past: Array = []
@@ -53,7 +54,8 @@ static func items() -> Array:
 		var row: Dictionary = rows[i]
 		if String(row.resolution) in [EvHistory.RESOLUTION_CHOSEN, EvHistory.RESOLUTION_EXPIRED] \
 				and not row.has("forced") and EventGate.is_catalogued(String(row.event_id)) \
-				and String(EventGate.catalogue_card(String(row.event_id)).get("class", "")) != "ambient":
+				and String(EventGate.catalogue_card(String(row.event_id)).get("class", "")) != "ambient" \
+				and MailClock.delivered(int(row.get("at", -1))):
 			past.append(_history_item(i, row).merged({"seq": i}))
 	# Newest week first; within a week the messages, then the decisions, each newest first. The order
 	# is total because sort_custom is not stable.
@@ -83,51 +85,53 @@ static func desk() -> Array:
 		if String(p.event_id) == active and p.context == ctx:
 			continue
 		out.append(_paper_item(p).merged({"grow": grow}))
-	for gate in PhaseGateSystem.GATES:
-		# The gate's card speaks for the open door while it is up or queued. The reminder covers the weeks the card
-		# waits (a shutter, a declined Series A) and leads nowhere: no window answers the gate.
-		if GameState.phase_gate_ready and int(gate.to) == GameState.pending_next_phase \
-				and EventGate.instances_of(String(gate.card_id)) == 0:
-			out.append(_reminder("gate", "DESK_PAPER_TAG_GATE", frank(),
-				TranslationServer.translate("DESK_PAPER_GATE_TITLE"), ""))
-	var sheets: Array = GameState.active_sheets
-	if not sheets.is_empty():
-		var sheet: TermSheet = sheets[0]
-		var weeks: int = sheet.weeks_left(GameState.day)
-		var title: String = TranslationServer.translate("DESK_PAPER_SHEETS_TITLE").format({"n": sheets.size()})
-		if sheets.size() == 1:
-			# Süresi dolan teklifin sayacak haftası kalmaz; kâğıt fonun cevap beklediğini söyler.
-			title = TranslationServer.translate("HUNT_DECISION_DUE") if sheet.is_decision_due(GameState.day) \
-				else TranslationServer.translate(Fmt.count_key("DESK_PAPER_SHEET_TITLE", weeks)).format({"weeks": weeks})
-		out.append(_reminder("sheet", "DESK_PAPER_TAG_FUNDING", investor(String(sheet.vc_id)), title,
-			"finance", "yatirim"))   # LOC-DATA route id
-	if HRSearchSystem.has_files_ready():
-		var atlas: String = TranslationServer.translate("DESK_PAPER_TAG_ATLAS")
-		out.append(_reminder("atlas", "DESK_PAPER_TAG_ATLAS", _desk(atlas, GameState.company_name),
-			TranslationServer.translate("DESK_PAPER_ATLAS_TITLE").format({"n": HRSearchSystem.get_files().size()}), "hr"))
-	for c in CustomerRegistry.get_by_market("b2b"):
-		if busy.has(c.id) or not c.lifecycle_phase in ["risk", "expansion"] \
-				or (c.lifecycle_phase == "expansion" and expansion_papers.has(c.id)):
+	for reminder in MailClock.reminders():
+		if not MailClock.delivered(MailClock.reminder_at(String(reminder.id))):
 			continue
-		var risk: bool = c.lifecycle_phase == "risk"
-		var r := _reminder("customer:" + c.id, "EVENT_TAG_CUSTOMER", contact(c),
-			TranslationServer.translate("INBOX_SUBJ_RISK" if risk else "INBOX_SUBJ_GROW"), "sales")
-		r.merge({"customer": c.id, "risk": risk, "grow": not risk,
-			"value": Fmt.money_chip(c.mrr) + TranslationServer.translate("SALES_PER_MONTH"),
-			"state": TranslationServer.translate("SALES_CHIP_RISK" if risk else "SALES_CHIP_EXPANSION"),
-			"line": TranslationServer.translate("SALES_REASON_PREFIX").format({"reason": risk_reason(c)}) if risk
-				else TranslationServer.translate("SALES_EXPANSION_FICTION"),
-			"request": "" if risk and c.cs_escalated else ("customer.retention" if risk else EXPANSION_CARD)}, true)
-		out.append(r)
-	for e in CharacterRegistry.get_employees():
-		if busy.has(e.id) or not HRConstants.is_flight_risk(e.morale):
-			continue
-		var r := _reminder("employee:" + e.id, "EVENT_TAG_TEAM", employee(e),
-			TranslationServer.translate("HR_BADGE_FLIGHT_RISK"), "hr")
-		r.merge({"employee": e.id, "risk": true, "morale": e.morale,
-			"state": TranslationServer.translate("HR_BADGE_FLIGHT_RISK"),
-			"line": HRConstants.role_label(e.role)}, true)
-		out.append(r)
+		match String(reminder.kind):
+			"gate":
+				# The gate's card speaks for the open door while it is up or queued. The reminder covers the weeks the card
+				# waits (a shutter, a declined Series A) and leads nowhere: no window answers the gate.
+				if EventGate.instances_of(String(reminder.card)) == 0:
+					out.append(_reminder("gate", "DESK_PAPER_TAG_GATE", frank(),
+						TranslationServer.translate("DESK_PAPER_GATE_TITLE"), ""))
+			"sheet":
+				var sheets: Array = GameState.active_sheets
+				var sheet: TermSheet = sheets[0]
+				var weeks: int = sheet.weeks_left(GameState.day)
+				var title: String = TranslationServer.translate("DESK_PAPER_SHEETS_TITLE").format({"n": sheets.size()})
+				if sheets.size() == 1:
+					# Süresi dolan teklifin sayacak haftası kalmaz; kâğıt fonun cevap beklediğini söyler.
+					title = TranslationServer.translate("HUNT_DECISION_DUE") if sheet.is_decision_due(GameState.day) \
+						else TranslationServer.translate(Fmt.count_key("DESK_PAPER_SHEET_TITLE", weeks)).format({"weeks": weeks})
+				out.append(_reminder("sheet", "DESK_PAPER_TAG_FUNDING", investor(String(sheet.vc_id)), title,
+					"finance", "yatirim"))   # LOC-DATA route id
+			"atlas":
+				var atlas: String = TranslationServer.translate("DESK_PAPER_TAG_ATLAS")
+				out.append(_reminder("atlas", "DESK_PAPER_TAG_ATLAS", _desk(atlas, GameState.company_name),
+					TranslationServer.translate("DESK_PAPER_ATLAS_TITLE").format({"n": HRSearchSystem.get_files().size()}), "hr"))
+			"customer":
+				var c: Customer = reminder.ref
+				if not busy.has(c.id) and not (c.lifecycle_phase == "expansion" and expansion_papers.has(c.id)):
+					var risk: bool = c.lifecycle_phase == "risk"
+					var r := _reminder("customer:" + c.id, "EVENT_TAG_CUSTOMER", contact(c),
+						TranslationServer.translate("INBOX_SUBJ_RISK" if risk else "INBOX_SUBJ_GROW"), "sales")
+					r.merge({"customer": c.id, "risk": risk, "grow": not risk,
+						"value": Fmt.money_chip(c.mrr) + TranslationServer.translate("SALES_PER_MONTH"),
+						"state": TranslationServer.translate("SALES_CHIP_RISK" if risk else "SALES_CHIP_EXPANSION"),
+						"line": TranslationServer.translate("SALES_REASON_PREFIX").format({"reason": risk_reason(c)}) if risk
+							else TranslationServer.translate("SALES_EXPANSION_FICTION"),
+						"request": "" if risk and c.cs_escalated else ("customer.retention" if risk else EXPANSION_CARD)}, true)
+					out.append(r)
+			"employee":
+				var e: Character = reminder.ref
+				if not busy.has(e.id):
+					var r := _reminder("employee:" + e.id, "EVENT_TAG_TEAM", employee(e),
+						TranslationServer.translate("HR_BADGE_FLIGHT_RISK"), "hr")
+					r.merge({"employee": e.id, "risk": true, "morale": e.morale,
+						"state": TranslationServer.translate("HR_BADGE_FLIGHT_RISK"),
+						"line": HRConstants.role_label(e.role)}, true)
+					out.append(r)
 	return out
 
 
@@ -173,7 +177,7 @@ static func counts(list: Array) -> Array:
 static func active_item() -> Dictionary:
 	var event_id: String = EventGate.active_id()
 	var ctx: Dictionary = EventGate.active_context()
-	var it := card_item("active", event_id, ctx, {}, GameState.day)
+	var it := card_item("active", event_id, ctx, {}, GameState.day, EventGate.active_at())
 	it.merge({"kind": "active", "waiting": true, "from_desk": EventGate.active_from_desk()}, true)
 	for p in EventGate.desk_papers():
 		if String(p.event_id) == event_id and p.context == ctx:
@@ -234,26 +238,28 @@ static func goal_step(step: Dictionary) -> String:
 
 # --- Items ---------------------------------------------------------------------------------------
 
-## A card as an item: its view in the live language with the names it kept, its sender and topic.
-static func card_item(id: String, event_id: String, ctx: Dictionary, names: Dictionary, day: int) -> Dictionary:
+## A card as an item: its view in the live language with the names it kept, its sender and topic; `at` is when it
+## reached the player (MailClock), -1 for none.
+static func card_item(id: String, event_id: String, ctx: Dictionary, names: Dictionary, day: int, at := -1) -> Dictionary:
 	var card: Dictionary = EventGate.catalogue_card(event_id)
 	var ev: GameEvent = EventGate.render(event_id, ctx, names)
 	var from: Dictionary = card_sender(card, ctx, names)
-	return {"id": id, "event_id": event_id, "ctx": ctx, "names": names, "event": ev, "day": day,
+	return {"id": id, "event_id": event_id, "ctx": ctx, "names": names, "event": ev, "day": day, "at": at,
 		"unread": false, "waiting": false, "sender": from, "subject": ev.title, "line": first_line(ev.body_text),
-		"paper": String(card.get("class", "")) == "paper", "hourly": String(card.get("tick", "")) == "hourly",
+		"paper": String(card.get("class", "")) == "paper",
 		"topic": "EVENT_TAG_MENTOR" if from.kind == "frank" else String(EvChips.source_tag(ev, String(card.get("category", ""))).key)}
 
 
 static func _paper_item(p: Dictionary) -> Dictionary:
-	var it := card_item("paper:" + String(p.id), String(p.event_id), p.context, p.names, int(p.admitted_day))
+	var it := card_item("paper:" + String(p.id), String(p.event_id), p.context, p.names, int(p.admitted_day), int(p.at))
 	it.merge({"kind": "paper", "key": String(p.id), "waiting": true, "unread": not bool(p.opened),
 		"weeks_left": int(p.weeks_left), "expiring": bool(p.expiring)}, true)
 	return it
 
 
 static func _history_item(i: int, row: Dictionary) -> Dictionary:
-	var it := card_item("h:%d" % i, String(row.event_id), row.entities, row.get("names", {}), int(row.day))
+	var it := card_item("h:%d" % i, String(row.event_id), row.entities, row.get("names", {}), int(row.day),
+		int(row.get("at", -1)))
 	var expired: bool = row.resolution == EvHistory.RESOLUTION_EXPIRED
 	var label: String = ""
 	for c in (it.event as GameEvent).choices.size():
@@ -271,8 +277,8 @@ static func _history_item(i: int, row: Dictionary) -> Dictionary:
 
 
 static func _message_item(m: Dictionary) -> Dictionary:
-	var it := {"id": "m:" + String(m.id), "kind": "message", "msg": m, "day": int(m.day), "waiting": false,
-		"unread": not bool(m.read), "topic": MESSAGE_TOPICS.get(m.kind, "EVENT_TAG_AGENDA"),
+	var it := {"id": "m:" + String(m.id), "kind": "message", "msg": m, "day": int(m.day), "at": int(m.get("at", -1)),
+		"waiting": false, "unread": not bool(m.read), "topic": MESSAGE_TOPICS.get(m.kind, "EVENT_TAG_AGENDA"),
 		"subject": TranslationServer.translate(String(m.key)), "line": "", "right": "INBOX_ROW_REPORT"}
 	var a: Dictionary = m.args
 	match String(m.kind):
@@ -313,8 +319,8 @@ static func _message_item(m: Dictionary) -> Dictionary:
 
 static func _reminder(id: String, topic: String, from: Dictionary, subject: String, tab: String,
 		subpage: String = "") -> Dictionary:
-	return {"id": "r:" + id, "kind": "reminder", "day": -1, "waiting": false, "unread": false, "topic": topic,
-		"sender": from, "subject": subject, "line": "", "tab": tab, "subpage": subpage}
+	return {"id": "r:" + id, "kind": "reminder", "day": -1, "at": MailClock.reminder_at(id), "waiting": false,
+		"unread": false, "topic": topic, "sender": from, "subject": subject, "line": "", "tab": tab, "subpage": subpage}
 
 
 ## The Ar-Ge note's three lines (§6.3), the empty ones dropped; the demand line falls back to the
@@ -476,10 +482,18 @@ static func first_line(body: String) -> String:
 	return ""
 
 
-## "Hafta 14 · Nisan 2026", and the hour for an hourly card.
-static func date_text(day: int, hour := -1) -> String:
-	var date: String = Fmt.date_line(GameState.get_date_dict(day))
-	return date if hour < 0 else "%s · %02d:00" % [date, hour]
+## "Hafta 14 · Nisan 2026", and the time of day an item reached the player ("· 09:00") when it has one; the date is
+## then the one of that moment.
+static func date_text(day: int, at := -1) -> String:
+	if at < 0:
+		return Fmt.date_line(GameState.get_date_dict(day))
+	return "%s · %s" % [Fmt.date_line(GameState.get_date_dict(at / MailClock.DAY_MINUTES)), clock_text(at)]
+
+
+## The time of day of an absolute minute, "09:00".
+static func clock_text(at: int) -> String:
+	var minute: int = at % MailClock.DAY_MINUTES
+	return "%02d:%02d" % [minute / 60, minute % 60]
 
 
 static func signed_money(value: int) -> String:

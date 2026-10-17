@@ -28,9 +28,12 @@ static var _by_event: Dictionary = {}
 ## The single write. Every resolution goes through here, including the ones nobody played:
 ## an expiry and a display-time drop are both facts a later card may need. A `note` is a beat
 ## written down instead of shown (§27.17); it stays unread until the player opens it.
+## `at` is when the row reaches the inbox's list (MailClock): the player's answer is when they gave it, a note's or an
+## expiry's is an arrival time inside the workday; a row without one is always listed. Returns the row's index.
 static func record(event_id: String, resolution: String, option_id: String,
 		outcome_id: String, entities: Dictionary, deltas: Array,
-		arc_id: String = "", forced: bool = false, names: Dictionary = {}, note: bool = false) -> void:
+		arc_id: String = "", forced: bool = false, names: Dictionary = {}, note: bool = false,
+		at: int = -1) -> int:
 	var row: Dictionary = {
 		"event_id": event_id,
 		"day": GameState.day,
@@ -54,8 +57,22 @@ static func record(event_id: String, resolution: String, option_id: String,
 	if note:
 		row["note"] = true
 		row["unread"] = true
+	if at >= 0:
+		row["at"] = at
 	_by_event.get_or_add(event_id, []).append(_rows.size())
 	_rows.append(row)
+	return _rows.size() - 1
+
+
+## A note that did not reach the player because the world moved on before its time is written down as a drop at
+## `step`, as a queued card that fails its re-validation is (§4.4): it was never chosen and never listed.
+static func withdraw(index: int, step: String) -> void:
+	var row: Dictionary = _rows[index]
+	row["resolution"] = RESOLUTION_DROPPED
+	row["option_id"] = ""
+	row["outcome_id"] = step
+	row.erase("note")
+	row.erase("unread")
 
 
 ## The player opened the note at `index` (its place in rows()).
@@ -144,11 +161,11 @@ static func rows() -> Array:
 	return _rows.duplicate(true)
 
 
-## The newest unread note as {index, row}, or {}. Scanned from the end without copying the rest:
-## the office's notice stack asks on every refresh.
+## The newest unread note that has arrived, as {index, row}, or {}. Scanned from the end without copying the
+## rest: the office's notice stack asks on every refresh.
 static func newest_unread_note() -> Dictionary:
 	for i in range(_rows.size() - 1, -1, -1):
-		if _rows[i].get("unread", false):
+		if _rows[i].get("unread", false) and MailClock.delivered(int(_rows[i].get("at", -1))):
 			return {"index": i, "row": _rows[i].duplicate(true)}
 	return {}
 

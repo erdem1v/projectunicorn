@@ -15,8 +15,6 @@ extends RefCounted
 const TEST_PHASE := 2
 const PHASE_DONE := 3
 const EPS := 0.001
-## Karar kartı masada mı diye bakarken taranan kâğıt sayısı; masa hiç bu kadar dolmaz.
-const DESK_SCAN := 64
 ## MVP tahmininin ufku (hafta); ötesinde tahmin yoktur.
 const MVP_HORIZON := 24
 ## product.sprint_late kartının fazla mesai seçeneğinin çarpanı (sprint_hours fiili); kartın değeriyle aynı kalır.
@@ -878,8 +876,7 @@ static func _settle_decision() -> void:
 	if decision.is_empty():
 		return
 	var event_id: String = decision.event_id
-	if EventGate.instances_of(event_id) > 0 \
-			or EventGate.desk_papers(DESK_SCAN).any(func(e: Dictionary) -> bool: return e.id == event_id):
+	if EventGate.instances_of(event_id) > 0 or EventGate.on_desk(event_id):
 		return
 	_clear_decision()
 

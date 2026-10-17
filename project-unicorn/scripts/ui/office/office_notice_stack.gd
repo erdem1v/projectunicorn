@@ -98,7 +98,7 @@ func _refresh(arrive: bool) -> void:
 	UiFactory.clear(self)
 	var room: int = MAX_CARDS
 	var key: String = GameState.mentor_line_key
-	if key != "":
+	if key != "" and MailClock.delivered(GameState.mentor_line_at):
 		room -= 1
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", UiTokens.SPACE_L)

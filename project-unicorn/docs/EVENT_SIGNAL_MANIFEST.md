@@ -56,7 +56,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `brand_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `reputation_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `day_advanced` | `new_day: int` | game_state | 1 | 3 | product_tab · research_bar · top_bar |
-| `hour_changed` | `hour: int` | game_state | 1 | 2 | sales_tab · top_bar |
+| `hour_changed` | `hour: int` | game_state | 1 | 3 | sales_tab · news_ticker · top_bar |
 | `phase_changed` | `new_phase: int` | game_state | 2 | 1 | top_bar |
 | `runway_recalculated` | `months: float` | game_state | 1 | 2 | left_tabs · top_bar |
 | `equity_changed` | `investor_pct: int` | game_state | 2 | 0 | — |
@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | save_manager · game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 5 | plausibility · main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 5 | signals · sprint_system · rnd_tab · research_bar · office_people |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · rnd_ui_shared · build_bar · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 53 | 4 | main · left_tabs · research_bar · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · rnd_ui_shared · build_bar · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 54 | 4 | main · left_tabs · research_bar · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
@@ -136,7 +136,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 9 | save_manager · game_shell · main · sprint_system · left_tabs · research_bar · top_bar · window_frame · office_hud |
 | `modal_requested` | `event: GameEvent` | engine | 1 | 2 | harness · main |
 | `event_set_aside` | `event_id: String` | engine | 1 | 7 | save_manager · main · left_tabs · research_bar · top_bar · window_frame · office_hud |
-| `desk_changed` | `—` | papers | 4 | 3 | product_tab · left_tabs · top_bar |
+| `desk_changed` | `—` | papers · mail_clock | 6 | 3 | product_tab · left_tabs · top_bar |
 
 ### Inbox messages
 
@@ -192,7 +192,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `research_resumed` | `node_id: String` | rnd_system | 1 | 2 | left_tabs · research_bar |
 | `node_revealed` | `node_id: String` | rnd_system | 1 | 0 | — |
 | `hidden_line_unlocked` | `line_id: String` | rnd_system | 1 | 0 | — |
-| `product_note_issued` | `day: int` | rnd_system | 1 | 2 | main · left_tabs |
+| `product_note_issued` | `day: int` | message_system | 1 | 2 | main · left_tabs |
 | `research_progress_changed` | `—` | time_manager | 1 | 2 | build_hud_panel · research_bar |
 | `product_note_read` | `—` | rnd_system | 1 | 1 | left_tabs |
 | `rnd_node_requested` | `node_id: String, open_assign: bool` | main · product_tab · research_bar | 4 | 1 | rnd_tab |
@@ -254,7 +254,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `milestone_reached` | `milestone_id: String, ending_data: Dictionary` | endings_system | 1 | 1 | main |
 | `shutter_changed` | `weeks_left: int` | game_state | 1 | 1 | top_bar |
 | `month_ended` | `month_close: Dictionary` | summary_system | 1 | 2 | save_manager · top_bar |
-| `summary_ready` | `data: Dictionary` | main · summary_system | 2 | 1 | main |
+| `summary_ready` | `data: Dictionary` | message_system | 1 | 1 | main |
 
 ### Meeting panel — MeetingPanel
 

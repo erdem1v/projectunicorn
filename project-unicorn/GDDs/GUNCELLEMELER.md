@@ -320,6 +320,16 @@ yerinin değiştiğini söyler, eski girişler tarihçedir.
   - Yürürlükteki kural: Test işi sprint kartlarının test aşamasını yürütür ve oyuncu metinlerinde başka vaat taşımaz (`HR_AREA_MEANING_TESTER_QA`, `ONB_SKILL_QA_DESC`). Canlı aşınma yoktur, düzeltme DESTEK'in işi değil sprintin düzeltme kartıdır; Test'in yayındaki ürüne etkisi sonraki fazda testçiyle geri gelir ve bugün Test'in o etkisi yoktur.
   - Kaynak: sahip kararı 2026-10-16 (Faz A görevi, Karar 2, 12).
 
+## Faz B · olaylar (sahip kararı 2026-10-16)
+
+Bu bölüm olay kartlarının ve mailin ne zaman geldiğine dair cümlelerin yerine geçer; çakışmada bu bölüm geçerlidir. Sayılar
+[ÇALIŞMA] ve onay bekliyor (CLAUDE.md §3).
+
+- **ch11 §5 Triggers, son cümle ("Ambient texture events: at most one per day"), günlük kartların 08:00'de görülmesi; ch12 §1 Tabs, Olaylar maddesi; mail ve bildirim saatleri**
+  - Eski metin: Gece atlaması ve toplantı atlaması sürerken kart gösterimi ertelenir; adım bitince kartlar önem sırasıyla gelir, yani günlük kartları oyuncu haftanın başında, 08:00'de görür. Gelen kutusunun satırı tarih taşır; mesaj, kâğıt ve hatırlatıcı gece yarısı doğar.
+  - Yürürlükteki kural: Saatin ürettiği acil olmayan mail (dönem özeti, haftalık satış raporu, Ar-Ge notu ve keşfi), kâğıt, not, süre dolumu satırı, hatırlatıcı (kapı, term sheet, aday dosyaları, Risk ve Genişleme'deki hesap, ayrılma riskindeki çalışan), Frank'in satırı ve haber bandının canlı satırı gün sınırında düşmez: şirketin mesai penceresinde (`WorkHoursSystem.company_window()`, başlangıç 08:00 ile 11:00 arası, bitiş en geç 24:00) bir geliş saati alır ve ondan önce gösterilmez. Geliş saati pencerenin ilk 4 saatinden çekilmiş bir tam saattir (`MailClock.SPREAD_HOURS` 4 [ÇALIŞMA]); bir haftalık kâğıtta ilk 1 saat (`SHORT_LIVED_SPREAD_HOURS` 1 [ÇALIŞMA]), böylece haftası kısalmaz. Gün sınırında kabul edilen kartın hakları (mandal, kota, kesinti bütçesi) 00:00'da harcanır, yalnız gösterimi geliş saatini bekler. Acil olan geliş saatini beklemez: `terminal_warning` ya da `urgent` etiketli kart, kâğıdın son uyarısı, koşunun giriş notu; oyuncunun kendi isteği (hatırlatıcının düğmesi) hemen gelir. Gelen kutusunun liste satırı ve kart başlığı geliş saatini "ss:dd" yazar, o anki saati değil. Dönem özeti ve ilk Ar-Ge notu gelen kutusunu teslim anında, yani mesai içinde açar. Şema 17.
+  - Kaynak: Faz B görevi (sahip kararı 2026-10-16, Karar 21, kabul 4.4); olay motoru GDD rev 2 §27.27.
+
 ## GDD v2 — 06 · Operations
 
 - **§1.1 Servis maliyeti, formül satırı, "Product type changes the slope" cümlesi ve "Reader" satırı**

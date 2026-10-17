@@ -537,7 +537,6 @@ static func _tick_note() -> void:
 	# The inbox keeps every note; the Ar-Ge tab reads the latest. The read state is owned here and
 	# mark_note_read carries it to the message.
 	MessageSystem.post("rnd_note", "RND_NOTE_TITLE", pending_note())
-	EventBus.product_note_issued.emit(GameState.day)
 
 
 ## §6.2 (MÜHÜRLÜ) — a Product Manager or a Designer.

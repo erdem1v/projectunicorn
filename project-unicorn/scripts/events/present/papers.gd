@@ -18,24 +18,28 @@ extends RefCounted
 # Every change to the desk emits EventBus.desk_changed: papers land on hourly ticks too, so a
 # surface that refreshed only on the day's end would show a stale desk.
 
-## key -> {event_id, context, expires_on, arc_id, opened_before, admitted_day, names}
+## key -> {event_id, context, expires_on, arc_id, opened_before, admitted_day, names, at}
+## `at` is when the paper reaches the player (MailClock; -1 = always): the desk lists it from then on.
 static var _papers: Dictionary = {}
 
 
 static func place(event_id: String, context: Dictionary, expires_weeks: int,
-		arc_id: String = "") -> void:
+		arc_id: String = "", at: int = -1) -> void:
+	# A paper lives from the tick it reaches the player, which an evening's paper moves to the next one.
+	var day: int = at / MailClock.DAY_MINUTES if at >= 0 else GameState.day
 	_papers[EvLatches.key_of(event_id, context)] = {
 		"event_id": event_id,
 		"context": context.duplicate(true),
 		# §12.5: an ABSOLUTE tick, never "weeks remaining" — a counter that misses a tick (save,
 		# speed change, load on a later week) is a paper that never expires.
-		"expires_on": GameState.day + TimeModel.ticks(maxi(1, expires_weeks)),
+		"expires_on": day + TimeModel.ticks(maxi(1, expires_weeks)),
 		"arc_id": arc_id,
 		"opened_before": false,
-		"admitted_day": GameState.day,
+		"admitted_day": day,
 		# The subject's name as it read when the paper landed, so the paper still names someone
 		# who left while it waited (EvPresenter.freeze_names).
 		"names": EvPresenter.freeze_names(context),
+		"at": at,
 	}
 	EventBus.desk_changed.emit()
 
@@ -125,8 +129,10 @@ static func ordered() -> Array:
 	return ids
 
 
+## The papers the player may see now, most urgent first.
 static func visible(slots: int) -> Array:
-	return ordered() if slots < 0 else ordered().slice(0, slots)
+	var shown: Array = ordered().filter(func(key: String) -> bool: return MailClock.delivered(at_of(key)))
+	return shown if slots < 0 else shown.slice(0, slots)
 
 
 # --- Reading ---------------------------------------------------------------
@@ -158,6 +164,10 @@ static func names_of(key: String) -> Dictionary:
 
 static func admitted_day_of(key: String) -> int:
 	return int((_papers.get(key, {}) as Dictionary).get("admitted_day", GameState.day))
+
+
+static func at_of(key: String) -> int:
+	return int((_papers.get(key, {}) as Dictionary).get("at", -1))
 
 
 ## The player has picked it up once; until then it reads unread.

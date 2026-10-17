@@ -69,6 +69,7 @@ var _night_max_wait_s: float = 0.0
 var _night_wait_s: float = 0.0
 
 var _advancing: bool = false                     # inside _step_hour
+var _rolling_over: bool = false                  # inside the 00:00 hourly slice, which runs before advance_day
 var _batching: bool = false                      # inside advance_hours / skip_night
 var _batch_meeting: bool = false                 # the batch is a meeting's skipped hours
 
@@ -144,11 +145,13 @@ func _step_hour(frac: float) -> void:
 	_advancing = true
 	var hour: int = (GameState.current_hour + 1) % TimeModel.HOURS_PER_DAY
 	_in_game_hours = float(hour) + frac
+	_rolling_over = hour == 0
 	GameState.set_current_hour(hour)
 	if hour == TimeModel.WEEK_START_HOUR:
 		GameState.start_work_week()
 	_dispatch_hourly_tick(hour)
 	if hour == 0:
+		_rolling_over = false
 		GameState.advance_day()
 		_dispatch_daily_tick()
 	_advancing = false
@@ -201,6 +204,11 @@ func _run_batch(steps: int, frac: float, meeting: bool) -> void:
 
 func is_batching() -> bool:
 	return _batching
+
+
+## True inside the 00:00 hourly slice: its day number is still the old tick's, though the clock already reads the new one.
+func is_rolling_over() -> bool:
+	return _rolling_over
 
 
 ## The accumulator term is the one moment the hour cannot show: a workday ending at 24:00 has
@@ -277,6 +285,7 @@ func reset() -> void:
 	_holds.clear()
 	_freezes.clear()
 	_night_wait_s = 0.0
+	_rolling_over = false
 	get_tree().paused = false
 
 
@@ -413,6 +422,8 @@ func _dispatch_daily_tick() -> void:
 	EndingsSystem.daily_tick()
 	# 10 · Summary, after Endings: if a terminal fired today the ending wins.
 	SummarySystem.daily_tick()
+	# The reminders the day's state stands up take their arrival times before anything reads the desk.
+	MailClock.sync_desk()
 	# The autosave boundary: the only moment every system has finished the day.
 	EventBus.day_tick_completed.emit(GameState.day)
 
@@ -426,5 +437,7 @@ func _dispatch_hourly_tick(hour: int) -> void:
 	SupportSystem.hourly_tick(hour)
 	# B2C audience and MRR derive every in-game hour.
 	SalesSystem.hourly_tick(hour)
+	# What waited for the workday is delivered before the engine shows its next card.
+	MailClock.hourly_tick()
 	# Ambient events evaluate hourly so their allowed_hours windows are honest.
 	EventGate.hourly_tick(hour)

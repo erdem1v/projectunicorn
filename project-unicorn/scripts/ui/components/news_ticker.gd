@@ -18,7 +18,9 @@ extends Panel
 #    archive; a ticker_live_line is shown once. This is the game's only non-modal notification
 #    channel — candidate arrival must raise a badge and a ticker line WITHOUT interrupting the
 #    player. A live line is kept as data (a source and a {key, args} line) and read in the
-#    current language when the belt is fed, so a language change keeps it.
+#    current language when the belt is fed, so a language change keeps it. A line that comes in
+#    outside the company's workday waits (_waiting) and joins the belt when the workday opens
+#    (MailClock): the night's lines do not run at 00:00.
 #
 # Akış içeriği NewsFeedSystem.get_stream()'den gelir (sektör/rakip/piyasa/biz, 45/25/10/≤20) ve
 # tik sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10 anahtarları
@@ -56,6 +58,7 @@ signal open_changed(open: bool)
 
 var open: bool = true
 var _live_lines: Array[Dictionary] = []
+var _waiting: Array[Dictionary] = []   # live lines that came in outside the workday, oldest first
 var _belt: Array[Dictionary] = []   # the parts on the run, left to right: {bbcode, txt, w}
 var _cursor: int = 0   # the next index of _sources() to feed the belt
 var _hues: Dictionary = {}   # outlet name -> hue
@@ -68,6 +71,7 @@ func _ready() -> void:
 	_set_open(bool(Settings.get_value("ticker_open")))
 	EventBus.headline_added.connect(_on_live_line)
 	EventBus.ticker_live_line.connect(_on_live_line)
+	EventBus.hour_changed.connect(_release_waiting)
 	# Tik-sonu akış tazelemesi (post-tick sinyal — day_advanced tik işlenmeden ÖNCE atılır,
 	# ona bağlanmak önceki tikin akışını okurdu; sinyalin kendi yorumuna bak).
 	EventBus.news_stream_changed.connect(_refresh)
@@ -83,6 +87,8 @@ func _exit_tree() -> void:
 		EventBus.headline_added.disconnect(_on_live_line)
 	if EventBus.ticker_live_line.is_connected(_on_live_line):
 		EventBus.ticker_live_line.disconnect(_on_live_line)
+	if EventBus.hour_changed.is_connected(_release_waiting):
+		EventBus.hour_changed.disconnect(_release_waiting)
 	if EventBus.news_stream_changed.is_connected(_refresh):
 		EventBus.news_stream_changed.disconnect(_refresh)
 
@@ -105,7 +111,17 @@ func _set_open(value: bool) -> void:
 func _on_live_line(source: String, line: Dictionary) -> void:
 	if NewsFeedSystem.line_text(line).strip_edges() == "":
 		return
-	_live_lines.push_front({"src": source}.merged(line))
+	_waiting.append({"src": source}.merged(line))
+	_release_waiting()
+
+
+## While the workday is on, the waiting lines join the belt, oldest first, so the newest leads it.
+func _release_waiting(_hour := 0) -> void:
+	if _waiting.is_empty() or not MailClock.in_window():
+		return
+	for row in _waiting:
+		_live_lines.push_front(row)
+	_waiting.clear()
 	while _live_lines.size() > MAX_LIVE_LINES:
 		_live_lines.pop_back()
 	_refresh()

@@ -64,6 +64,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
 	# The summary frequency is the player's setting; the suite reads the monthly cadence.
 	SummarySystem.frequency_override = "monthly"
+	# The suite drives the daily tick directly, so what it admits is delivered when it is made; the case that proves
+	# the workday rule plays the real clock and turns this off itself.
+	MailClock.instant = true
 	_gate_signals = []
 	_endings = []
 	EventBus.phase_gate_reached.connect(func(p: int) -> void: _gate_signals.append(p))
@@ -321,6 +324,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_beat_freezes_seams":       fail = _case_event_beat_freezes_seams()
 		"messages_save_round_trip":       fail = _case_messages_save_round_trip()
 		"sales_weekly_report_is_a_message": fail = _case_sales_weekly_report_is_a_message()
+		"inbox_no_night_stamp":           fail = _case_inbox_no_night_stamp(pinned)
+		"mail_pending_survives_save":     fail = _case_mail_pending_survives_save()
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
 		"loc_b5_derived_keys":       fail = _case_loc_b5_derived_keys()
 		"loc_language_switch":       fail = _case_loc_language_switch()
@@ -5951,6 +5956,195 @@ static func _case_sales_weekly_report_is_a_message() -> String:
 	if not EventGate.request("team.resignation", {"employee": e.id}) \
 			or EventGate.active_id() != "team.resignation":
 		return "a card raised after the report did not show (active '%s')" % EventGate.active_id()
+	return ""
+
+
+## THE WORKDAY RULE (MailClock). A played B2B run of 104 weeks, in two company workdays (08:00 to 17:00 and 11:00 to
+## 24:00), is audited every hour: nothing that is not urgent is stamped outside the window (a message, a delivery
+## in the outbox, a queued card, a desk paper, a note or an expiry in the history, a reminder, Frank's line), and
+## the screen's readers show nothing before its stamp. A third, shorter run with delivery closed (MailClock.instant)
+## must be caught, so the audit is not blind.
+## FALSIFICATION: let MailClock.arrival return now() and the first run fails on its first 00:00 stamp.
+static func _case_inbox_no_night_stamp(payload: Dictionary) -> String:
+	MailClock.instant = false
+	for window in [Vector2i(8, 9), Vector2i(11, 13)]:
+		var audit: Dictionary = _play_and_audit_stamps(payload, window, 104)
+		var bad: Array = audit.bad
+		if not bad.is_empty():
+			return "window %02d:00 for %d hours: %d stamp(s) outside the workday, first: %s" \
+				% [window.x, window.y, bad.size(), bad[0]]
+		var seen: Dictionary = audit.seen
+		if int(seen.get("message", 0)) < 5 or int(seen.get("card", 0)) < 5 or int(seen.get("reminder", 0)) < 1:
+			return "window %02d:00 for %d hours: the run made too few stamped items to prove anything: %s" \
+				% [window.x, window.y, str(seen)]
+	MailClock.instant = true
+	var control: Array = _play_and_audit_stamps(payload, Vector2i(9, 8), 26).bad
+	MailClock.instant = false
+	if control.is_empty():
+		return "with delivery closed the audit still found every stamp inside the window: it cannot fail"
+	print("INBOX_STAMPS control (delivery closed) caught %d stamp(s) outside the workday, first: %s" % [control.size(), control[0]])
+	return ""
+
+
+static var _stamp_audit: Dictionary = {}
+
+
+## One played run, audited every hour and at its end: {bad: findings, seen: items stamped, by kind}.
+static func _play_and_audit_stamps(payload: Dictionary, window: Vector2i, weeks: int) -> Dictionary:
+	SaveManager.reset_all_owners()
+	_stamp_audit = {"bad": [], "done": {}, "seen": {}}
+	EventBus.hour_changed.connect(_audit_stamps_once)
+	RunProbe.run("full_run:%d:sim:424242:window=%d-%d" % [weeks, window.x, window.y], payload)
+	EventBus.hour_changed.disconnect(_audit_stamps_once)
+	_audit_stamps()
+	_audit_history_stamps()
+	print("INBOX_STAMPS window=%d-%d weeks=%d seen=%s bad=%d" % [window.x, window.y, weeks,
+		str(_stamp_audit.seen), (_stamp_audit.bad as Array).size()])
+	return _stamp_audit
+
+
+static func _audit_stamps_once(_hour: int) -> void:
+	_audit_stamps()
+
+
+## Every transient store's stamps, each item once: its time lies inside the company window unless the item is urgent,
+## and the readers that show things show nothing before its time.
+static func _audit_stamps() -> void:
+	for m in GameState.messages + GameState.mail_outbox:
+		_audit_stamp("message", "%s %s" % [m.kind, m.get("id", "outbox")], int(m.get("at", -1)), m.kind == "intro")
+	for e in EvQueue.entries():
+		_audit_stamp("card", "queued " + String(e.event_id), int(e.get("at", -1)),
+			bool(e.get("urgent", false)) or _stamp_urgent(String(e.event_id)))
+	for key in EvPapers.ordered():
+		_audit_stamp("card", "paper " + String(key), EvPapers.at_of(String(key)),
+			_stamp_urgent(EvPapers.event_id_of(String(key))))
+	for id in GameState.desk_arrivals:
+		_audit_stamp("reminder", String(id), int(GameState.desk_arrivals[id]), false)
+	if GameState.mentor_line_key != "":
+		_audit_stamp("frank", GameState.mentor_line_key, GameState.mentor_line_at, false)
+	var now: int = MailClock.now()
+	var shown: Array = GameState.messages.map(func(m: Dictionary) -> int: return int(m.get("at", -1)))
+	shown.append_array(EventGate.desk_papers().map(func(p: Dictionary) -> int: return int(p.at)))
+	shown.append(int(EvQueue.next().get("at", -1)))
+	for at in shown:
+		if at > now:
+			(_stamp_audit.bad as Array).append("an item stamped %d was shown at %d" % [at, now])
+
+
+## The history rows that reached the inbox on their own: notes and expiries. An answer is stamped when the player
+## gave it.
+static func _audit_history_stamps() -> void:
+	for row in EvHistory.rows():
+		if row.has("note") or row.resolution == EvHistory.RESOLUTION_EXPIRED:
+			_audit_stamp("card", "row %s %s" % [row.resolution, row.event_id], int(row.get("at", -1)),
+				_stamp_urgent(String(row.event_id)))
+
+
+static func _audit_stamp(kind: String, what: String, at: int, urgent: bool) -> void:
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
+	var key: String = "%s|%s|%d" % [kind, what, at]
+	if at < 0 or _stamp_audit.done.has(key):
+		return
+	_stamp_audit.done[key] = true
+	_stamp_audit.seen[kind] = int(_stamp_audit.seen.get(kind, 0)) + 1
+	var window: Dictionary = WorkHoursSystem.company_window()
+	var minute: int = at % MailClock.DAY_MINUTES
+	if not urgent and (minute < int(window.start) * 60 or minute >= int(window["end"]) * 60):
+		(_stamp_audit.bad as Array).append("%s %s stamped %s on tick %d" % [kind, what, INBOX.clock_text(at),
+			at / MailClock.DAY_MINUTES])
+
+
+static func _stamp_urgent(event_id: String) -> bool:
+	var tags: Array = EvCatalog.card(event_id).get("tags", [])
+	return tags.has("terminal_warning") or tags.has("urgent")
+
+
+## What waits for the workday survives a save. At 00:00 a message waits in the outbox, a card in the queue, a paper on the
+## desk, and a reminder and Frank's line in their ledgers, each with its arrival time. After a save and a load the same
+## things wait with the same times, still out of sight, and come once the clock reaches them. A save from before
+## arrival times (no `at` anywhere) opens with all of it shown.
+## FALSIFICATION: leave `mail_outbox` out of the saved GameState fields and the outbox check fails; give EvQueue.admit
+## no `at` and the queued card shows at 00:00.
+static func _case_mail_pending_survives_save() -> String:
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
+	MailClock.instant = false
+	_seed_b2b(500)
+	var dev: Character = _make_employee("char_mail_dev", "Mail Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 7000, 22)
+	GameState.set_current_hour(TimeModel.HOURS_PER_DAY - 1)
+	TimeManager.sync_to_current_hour()
+	TimeManager.advance_hours(1)
+	var risk: Customer = _add_risk_b2b("mail_risk", 900)
+	var paper_key: String = EvLatches.key_of(RETAIN_ID, _ctx_customer(risk))
+	var reminder: String = "customer:" + risk.id
+	MessageSystem.post("probe", "MONTH_TITLE")
+	if not EventGate.request("team.resignation", {"employee": dev.id}):
+		return "fixture: the resignation card was refused"
+	EvPapers.place(RETAIN_ID, _ctx_customer(risk), 2, "", MailClock.arrival("smoke paper"))
+	EventBus.mentor_advisory_changed.emit("FRANK_ADVISORY_PAID_TIER", {})
+	MailClock.sync_desk()
+	var times: Array = _mail_times(paper_key, reminder)
+	if times.any(func(at: int) -> bool: return at <= MailClock.now()) or EvQueue.ids().count("team.resignation") != 1:
+		return "at 00:00 the outbox, the queued card, the paper, the reminder and Frank's line should all wait, got %s" \
+			% str(times)
+	if _mail_shown(INBOX, reminder) != "":
+		return "at 00:00: " + _mail_shown(INBOX, reminder)
+
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var saved: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	_cleanup_save_slots()
+	if not SaveManager.apply_loaded_state(saved):
+		return "the slot did not load back"
+	if _mail_times(paper_key, reminder) != times:
+		return "arrival times changed across the save: %s then %s" % [str(times), str(_mail_times(paper_key, reminder))]
+	if _mail_shown(INBOX, reminder) != "":
+		return "after the load: " + _mail_shown(INBOX, reminder)
+
+	TimeManager.advance_hours(13)
+	var came: Array = [EventGate.active_id() == "team.resignation" or EvQueue.size() > 0,
+		GameState.messages.any(func(m: Dictionary) -> bool: return m.kind == "probe"),
+		EventGate.desk_papers().any(func(p: Dictionary) -> bool: return p.id == paper_key),
+		MailClock.delivered(MailClock.reminder_at(reminder)), MailClock.delivered(GameState.mentor_line_at)]
+	if came != [true, true, true, true, true]:
+		return "13 hours into the day not everything had arrived (card, message, paper, reminder, Frank): %s" % str(came)
+
+	for key in ["mail_outbox", "desk_arrivals", "mentor_line_at"]:
+		saved.state.game_state.erase(key)
+	var engine_block: Dictionary = saved.state.systems[EvSave.BLOCK_KEY]
+	for entry in engine_block.queue:
+		entry.erase("at")
+		entry.erase("urgent")
+	for paper in engine_block.papers.values():
+		paper.erase("at")
+	if not SaveManager.apply_loaded_state(saved):
+		return "the save from before arrival times did not load"
+	if EventGate.queue_size() == 0 or not EventGate.desk_papers().any(func(p: Dictionary) -> bool: return p.id == paper_key):
+		return "a save from before arrival times kept its cards back (%d queued, %d on the desk)" \
+			% [EventGate.queue_size(), EventGate.desk_papers().size()]
+	return ""
+
+
+## The arrival times of what the fixture made wait, in a fixed order: the probe message, the resignation card, the
+## paper, the reminder and Frank's line.
+static func _mail_times(paper_key: String, reminder: String) -> Array:
+	var message: Array = GameState.mail_outbox.filter(func(m: Dictionary) -> bool: return m.kind == "probe")
+	var card: Array = EvQueue.entries().filter(func(e: Dictionary) -> bool: return e.event_id == "team.resignation")
+	return [int(message[0].at) if not message.is_empty() else -2, int(card[0].at) if not card.is_empty() else -2,
+		EvPapers.at_of(paper_key), MailClock.reminder_at(reminder), GameState.mentor_line_at]
+
+
+## What the player can see of the waiting things: "" when none of them shows.
+static func _mail_shown(inbox: GDScript, reminder: String) -> String:
+	if EventGate.queue_size() != 0 or not EvQueue.next().is_empty():
+		return "a queued card shows"
+	if not EventGate.desk_papers().is_empty():
+		return "a paper shows on the desk"
+	if inbox.desk().any(func(it: Dictionary) -> bool: return it.id == "r:" + reminder):
+		return "the reminder shows"
+	if GameState.messages.any(func(m: Dictionary) -> bool: return m.kind == "probe"):
+		return "the message shows"
+	if MailClock.delivered(GameState.mentor_line_at):
+		return "Frank's line shows"
 	return ""
 
 

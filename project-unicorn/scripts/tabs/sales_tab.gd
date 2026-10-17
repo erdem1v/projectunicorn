@@ -652,7 +652,9 @@ func _account_foot(c: Customer, off: bool) -> HBoxContainer:
 	if attend != "":
 		row.add_child(RnDUiShared.spacer())
 		var go := _button(tr(attend), off, MAIL)
-		go.pressed.connect(func() -> void: INBOX.show(INBOX.account_item(c.id)))
+		go.pressed.connect(func() -> void:
+			MailClock.reach("customer:" + c.id)
+			INBOX.show(INBOX.account_item(c.id)))
 		row.add_child(go)
 	return row
 

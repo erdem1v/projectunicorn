@@ -158,6 +158,7 @@ static var _mb_acc: Dictionary = {}         # burn id -> realised sum over the o
 static var _mb_ticks: int = 0               # dispatched ticks folded into _mb_acc
 static var _vc_policy: String = ""          # "" | "naive" | "cautious" | "walk"
 static var _replay_k: int = -1              # naive only: table replays per fund; -1 = not given
+static var _window: Vector2i = Vector2i.ZERO   # the company's start hour and hours; zero = the default workday
 static var _vc_done: bool = false           # the one table this run gets has been played
 static var _vc_booked: String = ""          # the fund the current booking is with
 static var _vc_meet_day: int = -1           # the day the last meeting was played
@@ -182,12 +183,17 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_mode = String(parts[2]) if parts.size() > 2 else "sim"
 	# Optional 4th part: the run seed, so one preset can be sampled across seeds.
 	_run_seed = int(parts[3]) if parts.size() > 3 else 424242
-	# Optional 5th+ parts: named options. Today only replay=<K> (full_run_vc_naive).
+	# Optional 5th+ parts: named options. replay=<K> (full_run_vc_naive) and window=<start hour>-<hours>, the
+	# company's workday (11-13 is 11:00 to 24:00).
 	_replay_k = -1
+	_window = Vector2i.ZERO
 	for idx in range(4, parts.size()):
 		var extra: String = String(parts[idx])
 		if extra.begins_with("replay="):
 			_replay_k = maxi(0, int(extra.trim_prefix("replay=")))
+		elif extra.begins_with("window="):
+			var hours: PackedStringArray = extra.trim_prefix("window=").split("-")
+			_window = Vector2i(int(hours[0]), int(hours[1]))
 	if not PRESETS.has(_preset):
 		print("PROBE ERROR unknown preset '%s' (have %s)" % [_preset, ", ".join(PRESETS.keys())])
 		return
@@ -228,6 +234,9 @@ static func run(spec: String, payload: Dictionary) -> void:
 	GameState.run_seed = _run_seed
 	seed(GameState.run_seed)
 	RngStreams.reseed(GameState.run_seed)   # the named streams, not just the global generator
+	if _window != Vector2i.ZERO:
+		WorkHoursSystem.set_company_start_hour(_window.x)
+		WorkHoursSystem.set_company_hours(_window.y)
 	_wire_log()
 	_seed_world(_preset)
 	_min_cash_pre_seed = GameState.cash

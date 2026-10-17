@@ -11,10 +11,12 @@ extends RefCounted
 # --- Admission -------------------------------------------------------------
 
 ## Ask for a card by id. Returns true when it was admitted, or when this instance's waiting paper was
-## opened instead (the Sales tab buttons use it).
+## opened instead (a reminder's button uses it).
 ## `context` names the card's subjects: the gate binds them or refuses the card (§4.3).
-static func request(event_id: String, context: Dictionary = {}) -> bool:
-	return EvEngine.request(event_id, context)
+## A request comes in with the workday like everything the clock makes (MailClock); `immediate` is the player's
+## own ask and shows at once.
+static func request(event_id: String, context: Dictionary = {}, immediate: bool = false) -> bool:
+	return EvEngine.request(event_id, context, immediate)
 
 
 ## Resolve the ACTIVE card; any other id is rejected (double-click guard). `option` is the
@@ -50,6 +52,11 @@ static func active_id() -> String:
 ## The active card is a paper the player picked up off the desk; it may go back unanswered.
 static func active_from_desk() -> bool:
 	return EvQueue.active_from_desk()
+
+
+## When the active card reached the player (an absolute minute, MailClock); -1 for none.
+static func active_at() -> int:
+	return EvQueue.active_at()
 
 
 ## True while the chosen option's effects run: a sitting the option opens is the card's own, so
@@ -150,7 +157,8 @@ static func pump() -> void:
 	EvEngine.pump()
 
 
-## The desk, most urgent first, capped at the layout's slot count (the whole desk without one).
+## The desk as the player sees it, most urgent first, capped at the layout's slot count (the whole desk without
+## one): the papers that have arrived (MailClock).
 static func desk_papers(slots := -1) -> Array:
 	return EvPresenter.desk_papers(slots)
 
@@ -178,6 +186,11 @@ static func queued_ids() -> Array:
 static func instances_of(event_id: String) -> int:
 	var n: int = 1 if EvQueue.active_id() == event_id else 0
 	return n + EvQueue.ids().count(event_id)
+
+
+## A paper of the card is on the desk, whether the player sees it yet or not.
+static func on_desk(event_id: String) -> bool:
+	return not EvPapers.keys_of(event_id).is_empty()
 
 
 static func queue_position_of(event_id: String) -> int:

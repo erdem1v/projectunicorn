@@ -3,7 +3,10 @@ extends RefCounted
 
 # ADMITTED, NOT YET SHOWN (GDD §2, §11.2). One entry:
 #
-#     {event_id, context, admitted_day, class, arc_id}
+#     {event_id, context, admitted_day, class, arc_id, at, urgent}
+#
+# `at` is when the player may see it (MailClock: -1 = always, `urgent` = it arrived when it was made). An
+# entry waits in the queue until then; _shown is the one place that says which entries the player may see.
 #
 # IDS AND SCALARS ONLY — never a card object and never rendered text. Every card is on disk,
 # so a language change mid-run is safe (§3.2) and a content edit reaches queued cards.
@@ -26,6 +29,8 @@ static var _active_context: Dictionary = {}
 ## (EvEngine.set_aside), where an interrupt is answered. Never saved: a save is refused while a
 ## card is active.
 static var _active_from_desk: bool = false
+## When the card on screen reached the player (MailClock), -1 for none.
+static var _active_at: int = -1
 ## event_id -> times it was offered and absorbed as a duplicate. The run log reads it.
 static var _absorbed: Dictionary = {}
 
@@ -35,7 +40,7 @@ static var _absorbed: Dictionary = {}
 ## Returns false when this instance is already queued or showing. The rejection is COUNTED, so
 ## a system re-offering the same decision every tick shows up in the run log.
 static func admit(event_id: String, context: Dictionary, card_class: String,
-		arc_id: String = "") -> bool:
+		arc_id: String = "", at: int = -1, urgent: bool = false) -> bool:
 	if holds(EvLatches.key_of(event_id, context)):
 		_absorbed[event_id] = int(_absorbed.get(event_id, 0)) + 1
 		return false
@@ -45,6 +50,8 @@ static func admit(event_id: String, context: Dictionary, card_class: String,
 		"admitted_day": GameState.day,
 		"class": card_class,
 		"arc_id": arc_id,
+		"at": at,
+		"urgent": urgent,
 	})
 	return true
 
@@ -60,7 +67,7 @@ static func absorbed_count(event_id: String) -> int:
 static func next() -> Dictionary:
 	var best: Dictionary = {}
 	var best_rank: int = PRIORITY.size() + 1
-	for e in _entries:
+	for e in _shown():
 		var entry: Dictionary = e
 		var r: int = rank(String(entry["event_id"]), EvLatches.key_of_entry(entry), String(entry["class"]))
 		if r < best_rank or (r == best_rank and _earlier(entry, best)):
@@ -100,16 +107,18 @@ static func take(key: String) -> Dictionary:
 
 # --- The active card -------------------------------------------------------
 
-static func set_active(event_id: String, context: Dictionary, from_desk: bool) -> void:
+static func set_active(event_id: String, context: Dictionary, from_desk: bool, at: int = -1) -> void:
 	_active_id = event_id
 	_active_context = context.duplicate(true)
 	_active_from_desk = from_desk
+	_active_at = at
 
 
 static func clear_active() -> void:
 	_active_id = ""
 	_active_context = {}
 	_active_from_desk = false
+	_active_at = -1
 
 
 static func active_id() -> String:
@@ -122,6 +131,10 @@ static func active_context() -> Dictionary:
 
 static func active_from_desk() -> bool:
 	return _active_from_desk
+
+
+static func active_at() -> int:
+	return _active_at
 
 
 # --- Reading ---------------------------------------------------------------
@@ -139,6 +152,11 @@ static func holds(key: String) -> bool:
 	return _index_of(key) >= 0 or EvLatches.key_of(_active_id, _active_context) == key
 
 
+## The entries the player may see now: an entry shows from its arrival time.
+static func _shown() -> Array:
+	return _entries.filter(func(e: Dictionary) -> bool: return MailClock.delivered(int(e.get("at", -1))))
+
+
 static func _index_of(key: String) -> int:
 	for i in _entries.size():
 		if EvLatches.key_of_entry(_entries[i]) == key:
@@ -146,8 +164,9 @@ static func _index_of(key: String) -> int:
 	return -1
 
 
+## The cards the player may see now.
 static func size() -> int:
-	return _entries.size()
+	return _shown().size()
 
 
 static func ids() -> Array:

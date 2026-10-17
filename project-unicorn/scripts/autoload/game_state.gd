@@ -304,19 +304,26 @@ var office_move_to: String = ""        # where a move is heading; "" = not movin
 var office_move_day: int = -1          # that move's arrival day; -1 = not moving
 
 # Frank's latest advisory, kept for the surfaces that open after he said it: a CSV key and its
-# format args, resolved where it is shown so the line follows the live language.
+# format args, resolved where it is shown so the line follows the live language. It is shown from
+# mentor_line_at on (MailClock).
 var mentor_line_key: String = ""
 var mentor_line_args: Dictionary = {}
+var mentor_line_at: int = -1
 
 # --- Inbox messages that are not engine cards (sole writer MessageSystem): oldest first,
-# {id, kind, day, key, args, read} ---
+# {id, kind, day, key, args, at, read} ---
 var messages: Array[Dictionary] = []
+# Messages made outside the workday and not delivered yet (sole writer MessageSystem), {kind, key, args, at}.
+var mail_outbox: Array[Dictionary] = []
+# When each standing desk reminder reached the player, {reminder id: at} (sole writer MailClock).
+var desk_arrivals: Dictionary = {}
 
 
 func _ready() -> void:
 	EventBus.mentor_advisory_changed.connect(func(key: String, args: Dictionary) -> void:
 		mentor_line_key = key
-		mentor_line_args = args)
+		mentor_line_args = args
+		mentor_line_at = MailClock.arrival("frank|" + key, key == ""))
 
 # --- Setters (the only way to mutate from outside) ---
 
@@ -877,7 +884,10 @@ func initialize_run(payload: Dictionary) -> void:
 	office_move_day = -1
 	mentor_line_key = ""
 	mentor_line_args.clear()
+	mentor_line_at = -1
 	messages.clear()
+	mail_outbox.clear()
+	desk_arrivals.clear()
 
 	flags.clear()
 	# Origin flags, after the clear. RESERVED: nothing consumes them yet
@@ -931,7 +941,7 @@ func initialize_run(payload: Dictionary) -> void:
 
 	# Month-1 ledger after the roster so the team count is real.
 	SummarySystem.snapshot()
-	MessageSystem.post("intro", "MENTOR_INTRO_TITLE")
+	MessageSystem.post("intro", "MENTOR_INTRO_TITLE", {}, true)
 	# The engine's tutorial hook: while the flag stands only tutorial cards reach the screen.
 	if payload.get("frank_guided", false):
 		EvFlags.set_flag("tutorial_active", "onboarding")

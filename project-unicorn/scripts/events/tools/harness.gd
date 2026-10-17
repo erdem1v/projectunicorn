@@ -133,6 +133,7 @@ static func _one_run(mode: String, seed_value: int, max_weeks: int) -> void:
 		_note_arcs()
 		for hour in SWEEP_HOURS:
 			GameState.current_hour = hour
+			TimeManager.sync_to_current_hour()
 			EvEngine.hourly_tick(hour)
 			_drain(mode)
 		_check_dangling()

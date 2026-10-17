@@ -45,7 +45,7 @@ func _ready() -> void:
 ## The head's title and the run's date and hour.
 func _retranslate() -> void:
 	%TitleLabel.text = Fmt.upper(tr("SYS_TITLE"))
-	%DateLabel.text = INBOX.date_text(GameState.day, GameState.current_hour)
+	%DateLabel.text = INBOX.date_text(GameState.day, MailClock.now())
 
 
 ## A key inside a row, on its right: the row's shortcut, or why it does not work now.

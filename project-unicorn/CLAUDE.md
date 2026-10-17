@@ -60,7 +60,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   sonucu arayüzde görünür bir yere düşer; bedelsiz seçenek yalnız açık bir "beat"tir. Metin gözlemler, hüküm vermez;
   hüküm yalnız Frank'in ağzındadır (ch11 §7). Kilitli seçenek gerekçesiyle görünür; gerekçe kendi bilgeliğini söylemez
   ("Fiyatlarını zaten iki kez indirdin", "Bu hesabı fiyat değil ürün tutar" değil). Gerçek marka, UI talimatı, sekme
-  ya da düğüm adı yok. Gün sınırında ateşlenen kart saat yazmaz. Seçeneğin anlattığını modifier'ları yapar.
+  ya da düğüm adı yok. Gün sınırında ateşlenen kart saat yazmaz: ekrana mesai penceresinde, çekilmiş bir geliş
+  saatinde gelir (§6). Seçeneğin anlattığını modifier'ları yapar.
 - **EFFECT-VISIBILITY RULE.** Modifier oyuncuya okunur etiketle gösterilir, iç kodla değil. Etki çipini kuran tek yer
   `EvChips.describe` (`scripts/events/present/chips.gd`; imzalı parçalar, kırmızı yalnız tehlike); bilinçli etiketsiz
   fiiller `EvChips.SILENT_VERBS`'te, `event_chip_coverage` smoke'u zorlar.
@@ -83,6 +84,16 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   [WORKING]. Hafta 08:00'de başlar; varsayılan mesaide (09:00'dan 17:00'ye) hafta 1×'te 22,5, 3×'te 7,5 saniye sürer.
   Mesai bitip ofis boşalınca gecenin saatleri tek toplu adımda koşar (`TimeManager.skip_night`); saati dışarıdan
   ileri taşıyan öbür kapı `TimeManager.advance_hours(n)`'dir (toplantı kapanışı, smoke, probe).
+- **Teslim saati.** Saatin ürettiği mail, kâğıt, not, hatırlatıcı, Frank'in satırı ve haber bandının canlı satırı
+  mesai penceresi dışında düşmez (gün sınırı dahil): şirketin penceresinde (`WorkHoursSystem.company_window()`) bir
+  geliş saati alır ve ondan önce gösterilmez (`MailClock`; yayılım 4 saat, bir haftalık kâğıtta 1 saat [WORKING]).
+  Acil olan (`terminal_warning` ya da `urgent` etiketli kart, kâğıdın son uyarısı, giriş notu) üretildiği anda gelir;
+  oyuncunun kendi isteği (hatırlatıcının düğmesi) hemen gelir. Öğenin `at`'ı mutlak dakikadır (tik × 1440 + günün
+  dakikası), -1 saatsizdir ve her zaman gösterilir. Mesaj dış kutuda bekler (`GameState.mail_outbox`,
+  `MessageSystem.post`, `MailClock.hourly_tick` teslim eder); kart kendi deposunda (`EvQueue`, `EvPapers`,
+  `EvHistory`) `at` ile bekler ve onu GÖSTEREN okuyucu `MailClock.delivered` sorar, VARLIĞINI soran (`EvQueue.has/
+  holds/ids`, `EvPapers.has/keys_of`, `EventGate.instances_of/on_desk`) sormaz. Hatırlatıcılar durumdan türediği
+  için geliş saatleri `GameState.desk_arrivals`'tadır. Kuyruğun görünürlük süzgeci tek yerdedir (`EvQueue._shown`).
 - Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber
   şeridine 10. yuvada tek satır düşer; modal açılmaz. Dönem özeti oyuncunun seçtiği sıklıkta
   gelen kutusuna mesaj olarak gelir (`summary_frequency`: haftalık, aylık, çeyreklik ya da yıllık; varsayılan
@@ -104,7 +115,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   §11.3). Karar olmayan anlar `MessageSystem` mesajıdır.
 - Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
   kazanılır. B2C'de kitle her oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
-- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 16, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
+- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 17, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`). Her koşunun kimliği vardır (`GameState.run_id`, metada): yuvalar koşu başınadır (`quick_<run>`, `auto_<run>_<n>`, `manual_<n>`) ve bir koşunun oto kaydı ötekininkini ezmez. Menü koşunun olmadığı yerdir: ana menüye dönüş süreç içi `SaveManager.end_run()` ile koşuyu bitirir ve kabuğu söker.
 
@@ -189,7 +200,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   kurallarına (koruma, makullük, bilinen saçmalık, aile aralığı, `critical` kapsamı) sınar ve `PLAUS FIRE` / `PLAUS FAIL` /
   `PLAUS RATE` / `PLAUS SUMMARY` basar; kapısı `bash tools/plausibility_run.sh` (40 koşu × 16 hafta + `PLAUS LONG` 4 × 60
   hafta, koşu başına ayrı süreç ve kullanıcı dizini; `fails=0` ister).
-- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te (düzeltme kolları
+- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>][:window=<başlangıç saati>-<saat>]` (`window=11-13` şirketin mesaisini 11:00 –
+  24:00 kurar), preset'ler `RunProbe.PRESETS`'te (düzeltme kolları
   `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*`, preset anahtarı `fix`; her sprint başında `PROBE FIX`,
   her hafta `PROBE BUGS` basar). Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı

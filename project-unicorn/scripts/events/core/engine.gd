@@ -54,7 +54,8 @@ static var _today_admissions: Array = []
 static var _forced: Array = []
 ## True while the chosen option's effects run: a sitting the option opens is the card's own.
 static var _resolving: bool = false
-## Notes written since the last pump, which names them to the inbox outside a batch of hours.
+## Notes written since the last pump, {event_id, context, at, row}, which names them to the inbox outside a batch of
+## hours once they have arrived (MailClock), if the world still holds them.
 static var _unannounced: Array = []
 
 
@@ -121,8 +122,8 @@ static func _step_paper_expiry() -> void:
 		if EvScope.still_valid(context):
 			names.merge(EvPresenter.freeze_seams(card, context))
 		var deltas: Array = EvEffects.run_expire(penalties, context, event_id)
-		EvHistory.record(event_id, EvHistory.RESOLUTION_EXPIRED, "", "expired",
-			context, deltas, arc_id, false, names)
+		EvHistory.record(event_id, EvHistory.RESOLUTION_EXPIRED, "", "expired", context, deltas, arc_id, false,
+			names, false, MailClock.arrival("expired|" + EvLatches.key_of(event_id, context)))
 		var note: String = String(card.get("expire_note", ""))
 		if note != "":
 			EvTicker.push(String(EvPresenter.text_block(card).get(note, note)),
@@ -144,7 +145,7 @@ static func _step_last_warnings() -> void:
 		# A paper whose subject died overnight gets no last warning; it still expires.
 		if not EvGate.revalidate(event_id, context).admitted:
 			continue
-		EvQueue.admit(event_id, context, "interrupt", EvPapers.arc_of(key))
+		EvQueue.admit(event_id, context, "interrupt", EvPapers.arc_of(key), MailClock.now(), true)
 		_today_admissions.append({"event_id": event_id, "context": context})
 
 
@@ -419,8 +420,9 @@ static func _step_assign_classes() -> void:
 		# the next pump would mount it anyway and the demotion would be invisible.
 		if final_class == "paper" and bool(entry.get("demoted", false)):
 			var card: Dictionary = EvCatalog.card(String(entry["event_id"]))
-			EvPapers.place(String(entry["event_id"]), EvQueue.take(key)["context"],
-				_expiry_weeks(card), String(card.get("arc", "")))
+			var queued: Dictionary = EvQueue.take(key)
+			EvPapers.place(String(entry["event_id"]), queued["context"], _expiry_weeks(card),
+				String(card.get("arc", "")), int(queued.get("at", -1)))
 	_today_admissions.clear()
 
 
@@ -471,12 +473,17 @@ static func _deferral_weeks(event_id: String, origin: EvGate.Origin,
 
 ## An instance whose paper is on the desk is refused: queued beside its own paper it would pass
 ## for the paper's last warning, the one re-queue §13.5 lets past the budget.
-static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) -> bool:
+static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String, immediate: bool = false) -> bool:
 	var key: String = EvLatches.key_of(event_id, verdict.context)
 	if EvPapers.has(key):
 		return false
 	var card: Dictionary = EvCatalog.card(event_id)
 	var note: bool = EvPresenter.is_note(card)
+	# When the player may see it (MailClock): at once when it is urgent or the player asked for it, else inside the
+	# workday. A paper that lives a week lands at the window's start, so its week is not cut short.
+	var lasts_a_week: bool = verdict.card_class == "paper" and _expiry_weeks(card) <= 1
+	var at: int = MailClock.arrival(key, immediate or _is_urgent(card),
+		MailClock.SHORT_LIVED_SPREAD_HOURS if lasts_a_week else MailClock.SPREAD_HOURS)
 
 	# A NOTE IS ANSWERED ON ARRIVAL (§27.17): it has nothing to decide, so it neither holds the clock
 	# nor waits; its only option is written down, unread, and the next pump names it to the inbox.
@@ -487,17 +494,17 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) ->
 		var only: Dictionary = card["options"][0]
 		var names: Dictionary = EvPresenter.freeze_names(verdict.context)
 		names.merge(EvPresenter.freeze_seams(card, verdict.context))
-		EvHistory.record(event_id, EvHistory.RESOLUTION_CHOSEN, String(only["id"]),
-			String(only.get("outcome_id", only["id"])), verdict.context, [], arc_id, false, names, true)
+		var row: int = EvHistory.record(event_id, EvHistory.RESOLUTION_CHOSEN, String(only["id"]),
+			String(only.get("outcome_id", only["id"])), verdict.context, [], arc_id, false, names, true, at)
 		# Outside the tick's budget, but the family's brakes still hear it (§27.21).
 		EvTempo.record_family(event_id, card, EvGate.subject_of(verdict.context))
 		# As in resolve(): an arc step answered moves its arc on, and the only option has no arc verb.
 		if card.has("arc"):
 			EvArcs.advance(String(card["arc"]))
-		_unannounced.append(event_id)
+		_unannounced.append({"event_id": event_id, "context": verdict.context, "at": at, "row": row})
 	elif verdict.card_class == "paper":
-		EvPapers.place(event_id, verdict.context, _expiry_weeks(card), arc_id)
-	elif not EvQueue.admit(event_id, verdict.context, verdict.card_class, arc_id):
+		EvPapers.place(event_id, verdict.context, _expiry_weeks(card), arc_id, at)
+	elif not EvQueue.admit(event_id, verdict.context, verdict.card_class, arc_id, at, _is_urgent(card)):
 		return false
 
 	# The latch is spent AT ADMISSION, so a card waiting in the queue or on the desk is not
@@ -512,6 +519,12 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) ->
 	if not note:
 		_today_admissions.append({"event_id": event_id, "context": verdict.context})
 	return true
+
+
+## A card that reaches the player when it is made, whatever the hour: an ending's warning, an emergency.
+static func _is_urgent(card: Dictionary) -> bool:
+	var tags: Array = card["tags"]
+	return tags.has("terminal_warning") or tags.has("urgent")
 
 
 ## The card's own wait; §12.2's table by stakes is the fallback.
@@ -536,9 +549,18 @@ static func _expiry_weeks(card: Dictionary) -> int:
 static func pump() -> bool:
 	if not GameState.run_active or TimeManager.is_batching():
 		return false
-	for event_id in _unannounced:
-		EventBus.event_triggered.emit(event_id)
-	_unannounced.clear()
+	var waiting: Array = []
+	for note in _unannounced:
+		if not MailClock.delivered(int(note["at"])):
+			waiting.append(note)
+			continue
+		# A note arrives in the workday, after the player's own moves: §4.4's re-validation, as a queued card gets.
+		var verdict: EvGate.Verdict = EvGate.revalidate(String(note["event_id"]), note["context"])
+		if verdict.admitted:
+			EventBus.event_triggered.emit(String(note["event_id"]))
+		else:
+			EvHistory.withdraw(int(note["row"]), verdict.step)
+	_unannounced = waiting
 	if EvQueue.active_id() != "":
 		return false
 
@@ -565,7 +587,7 @@ static func pump() -> bool:
 				EvLatches.refund(key)
 			continue
 
-		EvQueue.set_active(event_id, context, false)
+		EvQueue.set_active(event_id, context, false, int(next.get("at", -1)))
 		_announce(event_id, context)
 		return true
 	return false
@@ -629,7 +651,7 @@ static func resolve(event_id: String, option_id: String) -> void:
 	var forced: bool = _forced.has(key)
 	_forced.erase(key)
 	EvHistory.record(event_id, EvHistory.RESOLUTION_CHOSEN, option_id, outcome,
-		context, deltas, arc_id, forced, names)
+		context, deltas, arc_id, forced, names, false, MailClock.now())
 
 	EvPapers.remove(key)
 	EvQueue.clear_active()
@@ -682,8 +704,9 @@ static func reset() -> void:
 ## and it opens (§11.4). That is asked BEFORE the gate: the paper spent its latch when it landed,
 ## so a one_shot card would be refused at G3 and the paper would stay out of reach.
 ##
-## Returns true when the card reached the player, admitted or opened off the desk.
-static func request(event_id: String, context: Dictionary = {}) -> bool:
+## Returns true when the card reached the player, admitted or opened off the desk. A request comes in with the
+## workday like everything the clock makes; `immediate` is the player's own ask, which shows at once.
+static func request(event_id: String, context: Dictionary = {}, immediate: bool = false) -> bool:
 	if not GameState.run_active:
 		return false
 	var bound: Dictionary = EvScope.resolve(EvCatalog.card(event_id).get("scope", {}), context)
@@ -694,7 +717,7 @@ static func request(event_id: String, context: Dictionary = {}) -> bool:
 	var verdict: EvGate.Verdict = EvGate.propose(event_id, EvGate.Origin.REQUEST, context)
 	if not verdict.admitted:
 		return false
-	if not _admit(event_id, verdict, ""):
+	if not _admit(event_id, verdict, "", immediate):
 		return false
 	_step_assign_classes()
 	pump()
@@ -715,7 +738,7 @@ static func force_fire(event_id: String, context: Dictionary = {}) -> bool:
 		push_warning("[EvEngine] force_fire refused at %s: %s" % [verdict.step, verdict.reason])
 		return false
 	EvQueue.admit(event_id, verdict.context, verdict.card_class,
-		String(EvCatalog.card(event_id).get("arc", "")))
+		String(EvCatalog.card(event_id).get("arc", "")), MailClock.now())
 	_forced.append(EvLatches.key_of(event_id, verdict.context))
 	pump()
 	return true
@@ -745,7 +768,7 @@ static func open_paper(key: String) -> bool:
 	# this instance, picked up now: left queued it would come straight back after the paper is
 	# answered or put aside.
 	EvQueue.take(key)
-	EvQueue.set_active(event_id, context, true)
+	EvQueue.set_active(event_id, context, true, EvPapers.at_of(key))
 	_announce(event_id, context)
 	return true
 
