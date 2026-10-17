@@ -17,8 +17,8 @@ extends RefCounted
 #    · node states     → `_states`, this file, one table. Ürün gates, event conditions and
 #                        the screen all read it through ResearchSeam.completed / arge.*.
 #    · coefficients    → applied in the system that OWNS the number (load divisor in
-#                        InfraSystem, bug/effort in ProductSystem). Ar-Ge carries the flag
-#                        and keeps no second arithmetic.
+#                        InfraSystem, report inflow in SupportSystem, step effort in
+#                        ProductLines). Ar-Ge carries the flag and keeps no second arithmetic.
 #    · opened lines    → ProductState.HIDDEN_LINES; Ürün's catalog is their reader.
 #
 #  WRITE-THROUGH: jobs go through CharacterRegistry's seams, cash through

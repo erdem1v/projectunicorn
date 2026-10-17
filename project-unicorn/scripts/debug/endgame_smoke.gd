@@ -15030,7 +15030,7 @@ static func _node_tree_has_text(root: Node, needle: String) -> bool:
 ## raporu yazdırır. Kurucu da hariçtir ve KATEGORİYLE hariç tutulmak zorundadır, çünkü
 ## can_hold_area kurucu için her alanda true döner.
 ##
-## §6.3 · §6.4: talep satırı açık talepler ve ticket'lar arasında en çok oyu alan hattı söyler
+## §6.3 · §6.4: talep satırı açık talepler ve açık hatalar arasında en çok oyu alan hattı söyler
 ## (eşitlikte sıralı kimlik); hiçbiri açık değilken "kimse bir şey istemedi" doğrudur.
 ##
 ## §14 (MÜHÜRLÜ): rakip satırında SAYISAL İDDİA YASAK. Bu, havuzun tamamı üzerinde

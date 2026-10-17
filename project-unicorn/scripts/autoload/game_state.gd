@@ -122,7 +122,6 @@ const FLAG_TYPES := {
 const FLAG_TYPE_PREFIXES := {
 	"b2b_broke_": TYPE_BOOL,                    # B2BSalesSystem credibility latch, per customer id
 	"hr_manual_leave_": TYPE_INT,               # HRMoraleSystem: weeks of the player's leave, 0 = summer leave, per character id
-	"bug_count_at_bugfix_start_": TYPE_INT,     # ProductSystem beta-phase baseline, per build id
 }
 
 # --- Endgame state ---
@@ -342,7 +341,7 @@ func set_brand(value: int) -> void:
 	EventBus.brand_changed.emit(brand)
 
 func set_reputation(value: int) -> void:
-	# Placeholder range; the bounds await a design decision.
+	# Bugs left open for weeks push reputation below zero; -10 is the floor.
 	reputation = clampi(value, -10, 100)
 	EventBus.reputation_changed.emit(reputation)
 

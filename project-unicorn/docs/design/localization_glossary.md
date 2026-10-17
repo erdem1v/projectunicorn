@@ -59,7 +59,7 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | Yayınla → | Ship → | Founder'lar ship eder; "Publish" app-store kaydı. |
 | Sürüm / İlk sürüm | Release / First release | |
 | Özellik | Feature | |
-| Hata / hata riski | Bug / bug risk | TR ekranda asla "bug" demez. |
+| Hata | Bug | TR ekranda asla "bug" demez. |
 | Kararlılık *(monitör)* | Stability | Pitch KARARLILIK'ından AYRI anlam — anahtar paylaşılmaz. |
 | Teknik borç | Tech debt | |
 | Geliştirme bekleniyor | Awaiting development | |
@@ -78,8 +78,6 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | devreden | carried over | Kart damgası küçük harf: devreden / carried. |
 | sürüm notu | release note | |
 | hız *(sprint)* | velocity | HIZ / VELOCITY. Kişi ekseni "Hız ↔ Pace"ten ayrı anlam. |
-| düzeltme koşusu | fix run | DESTEK'in doğrulanmış hataları eriten koşusu; olay çipi "Düzeltme başlar ↔ A fix run starts" (`EFFECT_FIX_RUN_STARTS`). TR/EN onay bekliyor. |
-| hata düzeltme / hotfix | bug fixing / hotfix | DESTEK kartının düğmesi: kapalıyken "Hata düzeltmeyi başlat ↔ Start bug fixing", açıkken "Hotfix yayınla · {n} düzeltildi ↔ Ship hotfix · {n} fixed" (`PROD_FIX_RUN_*`). "hotfix" izinli ödünç kelimelerde (Erdem). TR/EN onay bekliyor. |
 
 ## 4. İnsanlar — eksenler, roller, bölümler, bantlar, HR
 

@@ -470,7 +470,7 @@ HR_AREA_MEANING_DEVELOPER_QA,Beta keşif hızı,Beta discovery speed
 HR_AREA_MEANING_TESTER_QA,Sprint kartlarında test aşamasının hızı,Speed of the test phase on sprint cards
 HR_AREA_MEANING_TESTER_ENGINEERING,Geliştirme hızı ve hata oranı,Development speed and bug rate
 HR_AREA_MEANING_SALES_REP_SALES,Kapanış olasılığı ve anlaşma boyutu,Close probability and deal size
-HR_AREA_MEANING_CUSTOMER_REP_CUSTOMER_SUCCESS,Bilet çözümü ve churn,Ticket resolution and churn
+HR_AREA_MEANING_CUSTOMER_REP_CUSTOMER_SUCCESS,Destek hızı ve hesapların memnuniyeti,Support speed and account satisfaction
 SKILL_LABEL_CHARISMA,karizma,charisma
 ONB_SKILL_PRODUCT,Ürün,Product
 ONB_SKILL_PRODUCT_DESC,Özellik kartlarında Ürün yıldızı isteyen kademeler; ürün araştırması.,Product-star tiers on feature cards; product research.
@@ -1174,9 +1174,6 @@ SECTOR_SOFTWARE,Yazılım,Software
 PROD_AXIS_INNOVATION,İnovasyon,Innovation
 PROD_AXIS_STABILITY,Kararlılık,Stability
 PROD_AXIS_EXPERIENCE,Deneyim,Experience
-PROD_RISK_LOW,Düşük,Low
-PROD_RISK_MID,Orta,Medium
-PROD_RISK_HIGH,Yüksek,High
 PROD_PATH_TITLE,Yolunu seç,Choose your road
 PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan değişmez.,This choice decides how the product makes money. It cannot be changed later.
 PROD_PATH_B2C,Kitle,Consumer
@@ -1189,9 +1186,6 @@ PROD_CONFIRM_START,Onayla ve başlat,Confirm and start
 PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
 PROD_MARKET_SHARE,pazar payı {share},market share {share}
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
-PROD_HEALTHY,SAĞLIKLI,HEALTHY
-PROD_RISKY,RİSKLİ,AT RISK
-PROD_FLAT,SABİT,FLAT
 PROD_TIP_WEAK,Zayıf yanın {axis}. v{version} sürümünde onu güçlendir; {rival} önünde.,Your weakest area is {axis}. Shore it up in v{version}; {rival} is ahead of you there.
 PROD_TIP_GOOD,Sorun yok. Zayıf yanın {axis}.,Nothing wrong right now. Your weakest area is {axis}.
 PROD_SHIP_FIRST_TITLE,İlk versiyon yayında,First version is live
@@ -1233,7 +1227,6 @@ PROD_DESIGN_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
 
 ""We can run another round if you want — it burns time and polishes the design. But every round returns less than the last. At some point you need better people, not more rounds.""{note}"
 PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
-PROD_TREND_FALLING,AZALIYOR,FALLING
 PROD_ITER_CEILING_NOTE,"İnovasyon {inn} / tur kazancı tavanı {inn_max} · tavanı tur sayısı değil, masadaki ekip belirler.","Innovation {inn} / round gain ceiling {inn_max} · the ceiling comes from the team at the table, not from the number of rounds."
 PROD_EV_VERSION_SHIP_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
 
@@ -1256,7 +1249,6 @@ PROD_EV_ITER_DECISION_BODY,"İlk tasarım turu bitti. Frank prototipin başında
 ""The rounds keep going on their own · each one burns time and polishes the design a little more. But every round returns less than the one before. The moment you say enough, we move to development; at some point you need better people, not more rounds."""
 PROD_ITER_KEEP_GOING,Turlar sürsün,Keep the rounds going
 PROD_PATH_B2B,Kontrat,Contract
-PROD_TREND_RISING,ARTIYOR,RISING
 VC_WHY_MRR_STRONG,MRR güçlü,MRR is strong
 VC_WHY_MRR_WEAK,MRR zayıf,MRR is weak
 VC_WHY_BRAND_SOLID,Marka sağlam,Brand holds up

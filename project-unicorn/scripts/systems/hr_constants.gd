@@ -11,10 +11,10 @@ extends RefCounted
 # tek kişilik ekipte boşluk kalmaz (bedeli §5: alan dışında çalışmak daha yorucudur).
 const AREA_PRODUCT := "product"                     # Ürün — tasarım turları, özellik kararları
 const AREA_DESIGN := "design"                       # Tasarım — tasarım tavanı, Deneyim ekseni
-const AREA_ENGINEERING := "engineering"             # Yazılım — geliştirme hızı, bug oranı
+const AREA_ENGINEERING := "engineering"             # Yazılım — geliştirme hızı
 const AREA_QA := "qa"                               # Test — sprint kartlarının test aşaması
 const AREA_SALES := "sales"                         # Satış — kapanış olasılığı, anlaşma boyutu
-const AREA_CUSTOMER_SUCCESS := "customer_success"   # Müşteri Başarısı — bilet, memnuniyet, churn
+const AREA_CUSTOMER_SUCCESS := "customer_success"   # Müşteri Başarısı — destek masası, memnuniyet, churn
 const AREAS := ["product", "design", "engineering", "qa", "sales", "customer_success"]
 
 # Liderlik herkeste (§4.2); Karizma yalnız kurucuda ve FounderConstants'ta.

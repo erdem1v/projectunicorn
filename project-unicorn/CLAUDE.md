@@ -93,7 +93,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   toplam MRR yalnız `SalesSystem.reflect_mrr()`; kasa, burn, marka, itibar → `GameState.set_*`; faz →
   `GameState.advance_phase()` (`set_phase` yalnız kayıt ve debug içindir); karakter → `CharacterRegistry.*`; ürün →
   `SprintSystem.*` (`GameState.product`'ın yazarı; köprüsü `SprintBridges` yalnız `requests`,
-  `rival_hits`'i yazar) ve `ProductState.*`; tek seferlik gider → `FinanceSystem.apply_one_time_cost`. `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
+  `rival_hits`'i yazar) ve `ProductState.*` (açık hata deposunun tek yazarları `add_bugs` ve `clear_line_bugs`); tek seferlik gider → `FinanceSystem.apply_one_time_cost`. `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
   kapı `set_game_flag` beyaz listesi); motorun kendi hafızası `EvFlags`'tadır.
 - Olay motoru autoload değil; tek girişi statik `EventGate.request(event_id: String, context: Dictionary = {})`.
   Sistem kartın adını verir, kartı kurmaz. Kartlar `data/events/cards/<kategori>/` altında JSON'dur ve
@@ -142,7 +142,7 @@ Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları te
 - Kısa ve doğrudan yaz. Tek yerde kullanılan sarmalayıcı ya da yardımcı, tek gerçeklemeli "genel" yapı, okunurluk
   kazandırmayan ara değişken yazılmaz. Uzun if/elif zinciri yerine `match` ya da sözlük.
 - Aynı işi yapan ikinci fonksiyon yazılmaz: önce var olan evi ara (`Fmt`, `UiFactory`, `HRUiShared`, `UiTokens`,
-  `ProductSystem.live_bug_count`, `SalesConstants.mix` …). Kopyala-yapıştır blok yok.
+  `ProductState.open_bugs`, `SalesConstants.mix` …). Kopyala-yapıştır blok yok.
 - İmkânsız durum için savunma kontrolü yazılmaz; null ve sınır kontrolü yalnız gerçekten gelebilen değer içindir.
 - Yerini alan kod eskisini aynı commit'te siler. Ölü fonksiyon, sabit, alan, sinyal, CSV anahtarı, asset, smoke vakası
   bırakılmaz; yoruma alınmış kod ve debug `print` commit'lenmez.
@@ -189,7 +189,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   kurallarına (koruma, makullük, bilinen saçmalık, aile aralığı, `critical` kapsamı) sınar ve `PLAUS FIRE` / `PLAUS FAIL` /
   `PLAUS RATE` / `PLAUS SUMMARY` basar; kapısı `bash tools/plausibility_run.sh` (40 koşu × 16 hafta + `PLAUS LONG` 4 × 60
   hafta, koşu başına ayrı süreç ve kullanıcı dizini; `fails=0` ister).
-- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te. Karar değil defter basar;
+- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te (düzeltme kolları
+  `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*`, preset anahtarı `fix`; her sprint başında `PROBE FIX`,
+  her hafta `PROBE BUGS` basar). Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
@@ -234,7 +236,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
-  fikstürüyle (`scripts/debug/product_fixtures.gd`), `--product-shot=live:<tür>` sprint motoruyla kurulan koşuda
+  fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları HARITA Ürün'de), `--product-shot=live:<tür>` sprint
+  motoruyla kurulan koşuda
   (`pick`, `pick_named`, `pick_relang`, `plan`, `week1`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_requests`,
   `gate`, `delegate`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`; kurulumları ve ikinci, üçüncü kareleri HARITA
   Ürün'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi

@@ -515,7 +515,7 @@ static func _churn_callback() -> Dictionary:
 		float(CustomerRegistry.get_by_market("b2b").size()) if b2b else SalesSystem.b2c_audience(), _customers_lost())
 
 
-## The callback's shape, also what a saved bugs_under callback becomes (SaveManager._migrate_16).
+## The callback's shape; SaveManager._migrate_16 builds it from a callback saved before v16 too.
 static func churn_callback(b2b: bool, from_day: int, from_base: float, from_lost: float) -> Dictionary:
 	return {"type": "churn_under", "met": false, "from_day": from_day, "from_base": from_base, "from_lost": from_lost,
 		"target": PitchConstants.CALLBACK_CHURN_PCT_B2B if b2b else PitchConstants.CALLBACK_CHURN_PCT_B2C}

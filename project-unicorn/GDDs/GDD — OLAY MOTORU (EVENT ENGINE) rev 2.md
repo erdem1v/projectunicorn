@@ -2007,12 +2007,12 @@ gelirdir: işlem listesine yazılır, ay gelirine yazılmaz.
 - Seam'ler: `musteri.broke_promise` (hesaba verilen söz kırılalı `PROMISE_RELOCK_WEEKS` olmadı mı), `musteri.promise_fits`
   (hesabın istediği adım planlanabilir sprintin boş puanına sığar mı; `SprintSystem.fits_plannable`),
   `urun.decision_card_late`, `urun.decision_card_effort`, `urun.capacity_state`, `urun.enterprise_trust`,
-  `destek.can_start_fix_run`, `rival.leader`. Planın `rival.segment_leader` adı lint'in gerçek marka listesine
+  `destek.can_start_fix_run` (sonradan kaldırıldı, §27.26), `rival.leader`. Planın `rival.segment_leader` adı lint'in gerçek marka listesine
   (`EvLint.FORBIDDEN_TERMS`, "segment", §17.8) takıldı: liste kart gövdesini `{seam:}` jetonlarıyla birlikte tarar. Planın
   `urun.decision_card_left_pct`'i okuyucusu kalmayınca silindi. `sales.growth_band` çevrilmiş sözcük yerine bant id'si
   döndürür (`melting | flat | steady | fast`).
 - Seçiciler: customer `largest` (en yüksek MRR), employee `most_senior` (en yüksek seviye, eşitlikte en eski işe alım).
-- Fiil: nötr `fix_run_start` DESTEK'in düzeltme koşusunu başlatır (`SupportSystem.start_fix_run`), açılamazsa ret
+- Fiil (sonradan kaldırıldı, §27.26): nötr `fix_run_start` DESTEK'in düzeltme koşusunu başlatır (`SupportSystem.start_fix_run`), açılamazsa ret
   gerekçesini döndürür; sabit çipi `EFFECT_FIX_RUN_STARTS`.
 - `EvSignals.BINDINGS`'e slotsuz `axis_floor_warning` ve `axis_floor_crossed` eklendi; B2C taban kartları onlarla
   tetiklenir.
@@ -2486,6 +2486,8 @@ denetlenemiyordu: bedava çıkış ve "kartın anlattığı kişiye hiçbir şey
 
 ### §27.25 · Tükenmişlik kartının iki fiili, iki seam ve koşu sürerken susan hata yığını
 
+*(`destek.fix_run_active` ve `product.bug_pile` Faz A'da kaldırıldı, §27.26; tükenmişlik kartının iki fiili ve `hr.leave_cooldown_left` yürürlüktedir.)*
+
 *Belge ne diyordu.* §8.1'de çalışanı izne gönderen ya da mesaisini değiştiren yazılabilir bir fiil yok:
 `send_on_leave` dağıtımda vardı ama kolsuz ve çipsizdi (§27.24). `product.bug_pile` düzeltme koşusunun açık olup
 olmadığını okuyamıyordu.
@@ -2505,3 +2507,27 @@ hafta yinelenir (§13.3). Kurucu sayılmaz.
 *Neden.* `docs/tasks/PRD_EKIP_VERIM_DESTEK.md` D4 ve V3: koşu sürerken hata yığını kartı oyuncuya zaten yaptığı işi
 soruyordu; tükenmişlik kartının şıkları gerçek hamledir (izne gönder, mesaiyi indir, devam et ve bedelini öde) ve iki
 hamlenin fiili yoktu.
+
+### §27.26 · Faz A: tek açık hata deposu, düzeltme koşusunun ve hata yığını kartının kalkışı
+
+*Belge ne diyordu.* §27.11 madde 3 ve §27.25: DESTEK'in düzeltme koşusunu başlatan nötr `fix_run_start` fiili (çipi
+`EFFECT_FIX_RUN_STARTS`), `destek.can_start_fix_run` ve `destek.fix_run_active` seam'leri ve koşu sürerken susan
+`product.bug_pile` kartı yürürlüktedir; ürünün hata okuması `urun.bugs_confirmed` (doğrulanmış hata sayacı) seam'idir.
+
+*Ne yapıldı.* Hata tek depoya indi (hat başına açık hata, `ProductState`; GUNCELLEMELER "Faz A · tek hata sayısı") ve
+düzeltme koşusu oyundan kalktı: düzeltme sprintin düzeltme kartının işidir.
+- Silindi: iki `destek.*` seam'i, `fix_run_start` fiili ve çipi (`EvEffects`, `EvChips`), lint'te `WRITER_VERBS`'ten
+  (32 → 31) ve `CONSEQUENCE_VERBS`'ten fiil, `product.bug_pile` kartı (dondurulmuş listedeki satırı, tek üyeli
+  `product_quality` ailesi, beş `EV_PRODUCT_BUG_PILE_*` anahtarı).
+- Değişti: `urun.bugs_confirmed` yerini `urun.open_bugs`'a bıraktı (bütün hatlardaki açık hata); `customer.b2c_refunds`
+  yeni seam'i okur, eşik aynı (8). Yeni seam `urun.worst_line_bugs` en çok hatalı hattın sayısını okur.
+- Eksen seam'leri (`urun.axis_stability` dahil) açık hatayla düşmez: Kararlılık okuması ham eksendir, hatanın bedeli
+  müşteri kaybıdır. `urun.axis_stability` okuyan kartlar (`launch_leak`, `password_rule`) hata yüzünden eşiğe inmez.
+- Yeni sinyal `EventBus.line_bugs_cleared(hat, n)` motora bağlı değildir; düzeltme kartı hattını temizleyince yayılır.
+- Üretilen sayılar (`_vocabulary.md`): 197 → 196 seam, 64 → 63 fiil, 98 → 97 kart.
+- Eski kayıt: `product.bug_pile` satırları (kuyruk, takvim, masa, geçmiş, etkin kart) `SaveManager._migrate_16`'da
+  silinir; kart bir kaydın içinde kalırsa yükleyici hata basardı.
+
+*Neden.* Faz A görevi (sahip kararı 2026-10-16, Karar 1 ve 12): oyuncu hata durumunu tek sayıdan okur, hata
+düzeltmek sprintin küçük bir parçasıdır ve DESTEK'te ayrı bir düzeltme düğmesi yoktur; koşu olmayınca onu soran
+seam'lerin ve onu bekleyen kartın okuyacağı durum kalmaz.

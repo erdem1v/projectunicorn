@@ -55,7 +55,10 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   oyun içi çağıranı kalmayan öğeler; her biri sprint ekranında bir yere bağlanır ya da sahibin kararıyla silinir:
   - Hata trendi zinciri (ch03 §8.4 yön okları; sahip): `ProductSystem.bug_trend`, `health_state`, `product_bug_risk`,
     `mvp_bug_history` penceresi; etiketleri `PROD_TREND_RISING`, `PROD_TREND_FALLING`, `PROD_RISK_LOW`, `PROD_RISK_MID`,
-    `PROD_RISK_HIGH`, `PROD_HEALTHY`, `PROD_RISKY`, `PROD_FLAT`.
+    `PROD_RISK_HIGH`, `PROD_HEALTHY`, `PROD_RISKY`, `PROD_FLAT`. Faz A ile değişti (2026-10-17): zincir ve sekiz
+    etiketi silindi, çünkü girdileri (aşınma, canlı hata sayacı, ürün karmaşıklığı) kalktı ve zincir çalışamazdı;
+    hat panelindeki ok (`ProductModel.bug_row` `delta`: son haftalık tike göre artış ya da azalış) yön okunun yerini
+    aldı. Sahip onayı RAPOR_A'da.
   - Tip ekranının kilitli üçlüsü (ch03 §12.11, GUNCELLEMELER ch14 §2): `ProductCatalog.locked_type_ids`,
     `TYPE_SCREEN` kilitli listesi, `type_sector_labels`; tür seçici yalnız oynanabilir türleri çiziyor
     (ACIK_KARARLAR 96).
@@ -96,7 +99,9 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   - C-05: Penceresinde yapılabilir adım olmayan B2B talebi, adım açılınca aynı pencerenin sonraki bir tikinde doğuyor
     (ACIK_KARARLAR 96 (28) ve PRD'nin zamanlamasıyla çelişir).
   - C-07: Planlanmış düzeltme kartı, ticket sayısı acil eşiğini geçince planlama anındaki eforunda kalıyor (3 ticket'ta
-    efor 1); tersi de var.
+    efor 1); tersi de var. Faz A K4 ile kapandı: başlamamış düzeltme kartının hata sayısı ve eforu her gün hata
+    deposundan yenilenir (`SprintSystem._refresh_fix_cards`), koşan kartınki başlatmada kilitlidir. Sahip onayı
+    RAPOR_A'da; onaydan sonra madde silinir.
   - C-09: Öngörü durum sözcüğü değişmeyen seviye geçişini de yazıyor ("Çekirdek Yeterli → Yeterli").
   - C-10: Ücretli plan özelliklerle aynı sürümde çıkınca fiyat sürüm öncesi eksenlerden kuruluyor (~%14 düşük).
   - C-11: Müşteriler satırı betada bekleyen talep kartına "+" ve "→" gösteriyor; düğmeler bir şey yapmıyor.
@@ -105,6 +110,8 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   - INT-6: Koşan kartı "Çıkar"mak atananlarını haftanın kalanında boşta bırakıyor ve yapılmış puanı HIZ satırından
     düşürüyor (`SprintSystem.remove` `_restaff` çağırmıyor).
   - INT-9: v14 göçünden sonra ilk günlük tike kadar ticket defteri boş: yüklemede düzeltme kartı ve "!" yok.
+    Faz A K3 ile kapandı: bilet defteri yoktur, `_migrate_16` açık hataları doğrudan hat deposuna yazar ve düzeltme
+    kartlarının sayısını kayda taşır. Sahip onayı RAPOR_A'da; onaydan sonra madde silinir.
   - INT-10: Eski yapım motorunun bayrak artıkları: ölü bir bayrak türü öneki ve tek okuyucusu silinen iki beyaz
     listeli bayrak.
   - LC-9: PM kovulunca ya da izne çıkınca onaylı planları sprintleri yönlendirmeyi sürdürüyor; ÇEYREK kilitli, planlar
@@ -115,13 +122,23 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
     98).
   - `--event-harness=guided` yalnız `EvEngine`'i tikler: ürün türü seçilmez, sprint koşmaz; MVP öncesi ritmi ölçemez.
     Ritim probe günlüklerinden okundu.
-  - Probe kurucusunun Müşteri İlişkileri'si 0'dır (`main.gd` debug yükü): masadaki kurucu doğrulama yapmaz, yalnız
-    düzeltir (ACIK_KARARLAR 99).
+  - Probe kurucusunun Müşteri İlişkileri'si 0'dır (`main.gd` debug yükü): masadaki kurucu doğrulama yapmaz ve
+    düzeltme koşusu kalktığı için düzeltme de yapmaz; düzeltme sprintin düzeltme kartındandır. B2C kolunda ödeyen
+    kullanıcı gelince kurucu Destek'i Yapım'ın yanında ikinci iş olarak alır ve sprintte yarım pay sayılır
+    (ACIK_KARARLAR 99). Faz A ile değişti (2026-10-17); sahip onayı RAPOR_A'da.
   - Bot `rival.funding_round`'da hep ilk seçeneği alır: "bekle"nin zamanladığı `rival.price_cut` yolu hiçbir probe'da
     koşmuyor. Sensible politika `founder.side_contract`'ta hep "al"ı seçer.
   - Faz 3 giriş kartlarının (`world.analyst_guide`, `world.newsletter_slot`) ve sözün beta payının smoke vakası yok;
     ilkini yalnız probe ve lint koruyor.
   - `min_cash_pre_seed` haftalık `STATE` okumasından alınır, hafta içi dip değildir.
+
+## VC görüşmesi · takip katmanları
+- **Takip sorusu ve anlaşmanın düşmesi (Faz A Karar 10; sonraki VC işi).** Bugün yatırımcının sorgusu tek sorudur
+  (`VCPitchSystem._sorgu_*`; negatif itibar için `VC_Q_REPUTATION`, "İtibarın zedeli. Bu hikâyeye kim inanır?") ve
+  cevaptan sonra konu kapanır. Faz A negatif itibarı yatırımcının sorgusuna açtı ama şu iki katmanı yapmadı:
+  - "Bunu düzeltmek için ne planlıyorsunuz?" türü takip sorusu: yatırımcı bulduğu zayıflığın düzeltilip
+    düzeltilmeyeceğini cevaptan sonra sorar.
+  - Yatırımcı ikna olmazsa anlaşmanın düşmesi: takipte ikna olmayan fon teklifini geri çeker.
 
 ## Rakip Dünyası · Piyasa I1 sonrası
 - **I2 · "Ürünleri" bölümü.** Sektör rakibinin rapor kartında çıkmış 2-4 yetenek hattı (PRD Rakip Dünyası §3.4);

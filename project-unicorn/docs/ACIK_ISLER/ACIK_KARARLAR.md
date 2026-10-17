@@ -481,6 +481,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     gerekir (yeni metin, onay bekler). B) Yalnız hata yüklemi `risk_voice` ile aynı yapılır (onaylı hata ya da
     kapasite aşımı), iki sebep kalır. C) Kalır.
   - Kaynak: Satış GDD §19 (retention kartı korunanlar arasında); ch11 §7.
+  - Faz A ile değişti (2026-10-17): Risk sebebi ve elde tutma sesi hata yüklemini artık aynı sayıdan okur: hesabın kullandığı hatlardaki açık hata (`B2BSalesSystem.account_bugs`) `COMPLAINT_BUG_GATE`'in (hesap başına 6) üstünde (`Inbox.risk_reason`, `B2BSalesSystem.risk_voice`). `live_bug_count` ve `bugs_confirmed` yoktur. Kırılmış söz ve kapasite aşımı için sekmede ayrı sebep satırı sorusu açık kalır. Sahip onayı RAPOR_A'da.
 
 - **40 · Kayıtlı ama okunmayan `Customer.health` alanı.**
   - Ne oluyor: `Customer.health` her memnuniyet değişiminde `update_health_from_satisfaction` ile yazılıyor ama
@@ -544,6 +545,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     `complexity` alanı eklenir (içerik işi, §12.12 şartnamesi). C) Risk rozeti DOĞRULANMIŞ hata sayısına göre mutlak
     eşiklerle okunur; karmaşıklık terimi aşınmayla birlikte kalkar (bkz. 45. madde).
   - Kaynak: Ürün GDD (ch03) §8, §9, §10 (kullanım ağırlığı), §12.4, §17, §21.
+  - Faz A ile değişti (2026-10-17): Aşınma, ürün karmaşıklığı hesabı (`_shipped_total_complexity`, katalogdaki `complexity` anahtarları, `get_feature_by_id`) ve hata riski ile yön okları zinciri (`product_bug_risk`, `health_state`, `bug_trend`) silindi; yayındaki ürün kendiliğinden hata biriktirmez. Yukarıdaki sorun ve C seçeneğinin konusu kalmadı. Sahip onayı RAPOR_A'da.
 
 - **44 · Düz özellik kataloğunun emekliliği.**
   - Ne oluyor: GDD §21 "katalog hat modeline geçer, 61 düz özellik ve ölü alanlar silinir" diyor. Düz yol oyunda
@@ -563,6 +565,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     içeriği olmayan) tiplerin veri kaynağı olarak kalır, yapım yolu silinir. C) Bugünkü hâl kalır, GDD §21'e not
     düşülür.
   - Kaynak: Ürün GDD (ch03) §12.1, §20, §21, §22.5; `docs/ACIK_ISLER/ISLER.md` "Test paketi".
+  - Faz A ile değişti (2026-10-17): `ProductSystem` hata tohumu ve aşınma silindi; `ProductSystem` yalnız koşu sınırı, haftalık açık hata görüntüsü ve saat damgası taşır. Düz yolun ve havuzların öbür okuyucularının kararı bu notun dışındadır. Sahip onayı RAPOR_A'da.
 
 - **45 · Canlı aşınma §9'un taşınan hata terimini büyütüyor.**
   - Ne oluyor: `SupportSystem.reports_per_day`'deki §9 taşınan_hata terimi `ProductSystem.live_bug_count()`
@@ -584,6 +587,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     düşürür. C) Taşınan hatalar yayında DOĞRULANMIŞ'a tohumlanır ve akıştaki terim kalkar (§9'un "zamanla yüzeye
     çıkar" cümlesiyle çelişir). D) Aşınma kalır ve GDD'ye işlenir.
   - Kaynak: Ürün GDD (ch03) §7, §8.1, §8.4, §9, §11.2, §20.
+  - Faz A ile değişti (2026-10-17): Aşınma ve `live_bug_count` (`mvp_live_bug_count`) silindi, akış formülünde açık hataya bağlı terim yoktur (`INFLOW_CARRIED_COEF` silindi): hata yalnız kullanımdan ve yeni koddan doğar. Sağlık rozeti, ekonomi Kararlılığı ve VC ile term sheet hata okumaları kalktı; ara kararın `WEAR_AUD_COEF`'i yoktur. Hata sayısı tek depodur (açık hata, hat başına) ve düzeltme sprintin düzeltme kartıdır. Sahip onayı RAPOR_A'da.
 
 - **46 · Boş ürün adı her yüzeyde farklı görünüyor.**
   - Ne oluyor: Konsept'te ad alanı boş bırakılabiliyor. `ProductSystem.start_line_build` v1'de adı
@@ -758,6 +762,24 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Kaynak: GDD ch09 (Funding & Investors) ve Ürün GDD (ch03) §11.2–§11.3 VC tabanının hangi ölçeğe baktığını
     söylemiyor; `QualityModel` hat modeli; probe ölçümü (`full_run:760:sim:1-3` PROBE SHIP satırları); 52. madde (ham
     eksen aralığı).
+  - Faz A ile değişti (2026-10-17): VC'nin ürün odaklı fon geri dönüşü eksen okumaz: `bugs_under` yerine `churn_under` gelir (verildikten sonra 12 haftada kaybedilen müşteri oranı B2B %5, B2C %15 altında). `_weakest_dimension`'ın öbür okuyucuları (seed ve Series A sorguları) ve `E_FIT_PRODUCT_DIM_FLOOR` bu maddenin konusu olarak değişmeden açık kalır. Sahip onayı RAPOR_A'da.
+
+- **110 · Düz özellik havuzunda B2B sözü: ürünün zaten sunduğu yetenek söz konusu olabilir.**
+  - Ne oluyor: `B2BSalesSystem.pick_pain_feature`'ın düz havuz yolu (hat modeli olmayan alt-türler) bir özelliğin
+    ürün tarafından henüz sunulmadığını `mvp_components` bayrağından okur. Sprint motoru bu bayrağı yazmaz (yalnız
+    fikstürler ve probe yazar); bu yüzden yol "hiçbir şey canlı değil" görür ve adayın ya da hesabın acısı olarak
+    ürünün zaten sunduğu bir özelliği seçebilir. Böyle bir söz ya bedava kazanç ya haksız kayıp olur. Oynanabilir üç
+    tür (`note_tool`, `video_clip`, `erp`) hat alt-türüdür ve `_pick_line_pain`'e gider; düz yola yalnız hat içeriği
+    olmayan alt-türler (debug fikstürleri, probe) girer. Faz A bu yola dokunmadı: söz kaydı ve smoke vakaları
+    `mvp_components` bayrağına bağlı.
+  - Nerede: `scripts/systems/b2b_sales_system.gd` (`pick_pain_feature`, `mvp_components` okuması);
+    `scripts/systems/product_state.gd` (`is_feature_live`'ın düz kimlik dalı).
+  - Oyuncuya etkisi: Bugünkü oynanabilir türlerde yok. Düz havuzlu bir alt-tür oynanabilir olursa söz sistemi
+    ürünün zaten sunduğu yeteneği isteyen hesaplar üretir.
+  - Seçenekler: A) Düz yol silinir (44. maddenin A seçeneği); `mvp_components` okuması söz kaydıyla birlikte kalkar.
+    B) Düz yol adayı `ProductState.is_feature_live(kimlik)` ile süzer. C) Kalır; düz havuz oynanabilir türlere
+    dönmeyecekse sorun yoktur.
+  - Kaynak: Faz A K8 taraması; ürün GDD (ch03) §12.1, §21.
 
 ## Tasarım ve denge
 
@@ -1297,6 +1319,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     yerde), C) metin maddelerinde sahip yeniden yazar.
   - Kaynak: sahip kararı 2026-10-01; `docs/tasks/PRD_URUN_REV7_SPRINT_DONGUSU.md`; GUNCELLEMELER "Ürün rev 7";
     CLAUDE.md §3 (tasarım sabiti ve TR metni onay bekler).
+  - Faz A ile değişti (2026-10-17): (4) faz → rol → alan uyumu kuralı aynı kalır, ama uyan kişiyi arayan ekip artık Görevler matrisinden gelir. (5) sprint ekibi Görevler matrisinden gelir: yalnız Yapım ya da Test işini tutanlar girer, pay tek işte 1,0, iki sürekli işte 0,5, Ar-Ge'de ve yalnız Destek'te 0; "iş ataması ve odak payı sprint puanına girmez" cümlesi geçersizdir (Yapım ve Destek'teki yazılımcı 0,5 sayılır). (9) "!" bir yetenekte 5 ve üstü açık hatadır (`fix_effort.priority`), 3+ ticket değil. (16) liderin zorunlu listesi sözlerin kartları, talep, Ücretli plan, en zayıf alanın en iyi kartı ve öncelikli düzeltmelerdir (hattın açık hatası 5 ve üstü; "acil düzeltme" adı "Öncelikli" oldu). (21) hatalı kart ticket açmaz: hatası kartın hattına açık hata olarak düşer, MVP öncesi kapanışta v1.0'a kadar bekler, sürüm çıkarmayan kapanışta da düşer. (29) ticket dağıtım ağırlığı yoktur: yeni hata canlı hatlara eşit olasılıkla düşer. (45) ve (50) sayaç, aşınma ve devir yoktur; açık hata sürümle sıfırlanmaz, yalnız düzeltme kartı hattının hatasını siler. (49) oyuncu metninde "ticket" kalmadı. (52) düzeltme kartının hata sayısı bilet defterinden değil hata deposundan okunur ve kapanış hattın bütün açık hatasını siler. Sahip onayı RAPOR_A'da.
 
 - **97 · Kalibrasyon turu · onay bekleyen değerler.**
   - Ne oluyor: Ürün rev 7 kalibrasyon turu (sahip kararları 2026-10-02, GUNCELLEMELER "Kalibrasyon turu · ürün
@@ -1428,6 +1451,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler: Her madde için A) onaylanır, B) sahip değiştirir (değer parantezdeki yerde), C) metin maddelerinde
     sahip yeniden yazar.
   - Kaynak: sahip kararı 2026-10-02 (1–12); GUNCELLEMELER "Kalibrasyon turu · ürün rev 7"; CLAUDE.md §3.
+  - Faz A ile değişti (2026-10-17): `WEAR_AUD_COEF` silindi (aşınma kalktı); `product.bug_pile` kartı ve `EFFECT_FIX_RUN_STARTS` çipi silindi (düzeltme koşusu kalktı), kalibrasyon turunun 27 kartından 26'sı yürürlüktedir. `founder_roles` değişmedi: kurucu sprint ekibine yalnız Yapım ya da Test işini tutarsa girer. Sahip onayı RAPOR_A'da.
 
 - **98 · B2B Traction'da sonlu runway hedefi tutmadı.**
   - Ne oluyor: Turun kabul ölçütü Traction haftalarının en az %40'ında sonlu runway istiyordu (ch01 §5: her evre
@@ -1462,6 +1486,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     puanı işi ve odağı okur (96 (5)), sonra bot düzeltmeyi genişletir ve yeniden ölçülür. D) Memnuniyetin itişi
     yeniden ayarlanır.
   - Kaynak: Ürün GDD (ch03) §8–§9; kalibrasyon turu ölçümü.
+  - Faz A ile değişti (2026-10-17): Düzeltme koşusu ve doğrulanmış hata birikimi yoktur: hata tek depodur, düzeltme sprintin düzeltme kartıdır ve geç B2C'de hatanın bedeli kitle kaybıdır. C seçeneğinin sprint yarısı Faz A Karar 13 ile uygulandı (sprint puanı Görevler matrisini okur; Yapım ve Destek'teki yazılımcı 0,5 sayılır). Bot düzeltme kolları (`fix_none`, `fix_worst`, `fix_due`, `fix_off`) bu değişikliklerle yeniden ölçüldü; ölçüm RAPOR_A'dadır. Madde açık kalır. Sahip onayı RAPOR_A'da.
 
 - **100 · Faz 3'te iki kararsız hafta üst üste gelebiliyor.**
   - Ne oluyor: Karar 12'nin ölçütü (faz 3'te her 2 haftada en az 1 karar ve kasanın en az %5'ini harcatan en az 1
@@ -1570,7 +1595,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   en az bir rakip hamlesi ve bir olay (incident) istiyor. Canlı destede Frank'inkiler dahil 58 demo kartı var;
   kalibrasyon turu 27 kart ekledi (97): Y3 `team.demo_day` ve `team.outside_offer`, Y4 `team.first_weeks`, Y7
   `product.bug_pile`, Y8 `rival.funding_round` ve `rival.price_cut`, Y9 `product.outage`. Altı `quiet` kart olay motoru
-  GDD §13.6'nın sessiz tabanını doldurur. Açık kalan: ch11'in dokuz arkı. Kaynak: EVENT_REVISION §9.
+  GDD §13.6'nın sessiz tabanını doldurur. Açık kalan: ch11'in dokuz arkı. Kaynak: EVENT_REVISION §9. Faz A ile değişti (2026-10-17): `product.bug_pile` silindi, 27 kartın 26'sı yürürlüktedir. Sahip onayı RAPOR_A'da.
 
 - **Son ve kapı metinleri (K23 dahil).** `END_BS_HEAD` "{company} Kimseye El Açmadan Ayakta", `END_BS_SUB` "Dışarıdan tek
   kuruş almadan büyüyen bir şirket…" diyor. Oysa Frank'in çeki normal modda reddedilemiyor ve seed alınmış koşu da

@@ -208,8 +208,9 @@ kullanılan gün değişmez.
 |---|---|---|---|
 | sprint (`data/product/sprint.json` `sprint_lengths`, varsayılan `sprint_weeks`) | yok | 1 ya da 2, varsayılan 2 [WORKING] | oyuncu planlamada seçer; başlatıldığı tik 1. hafta, ertesi tik 2. hafta; kartlarının hepsi biten sprint o haftanın sonunda kapanır; çeyrek 6 sprint |
 | sprint karar kartı (`sprint.json` `decision`) | yok | 2. haftanın tikinde, oran 0,35 [WORKING]; kâğıt 1 hafta bekler | koşan kart başına koşu tohumlu zar; kartlar `product.sprint_two_paths`, `sprint_late`, `sprint_contractor` (§4.10); `sprint_hours` çarpımla yığılır, 0,5–1,5 (`hours_mult`) |
-| `BUG_HISTORY_*` | 7 günlük örnek | 2 haftalık örnek | ⚑ trend bu hafta ile geçen haftayı karşılaştırır; `TREND_DELTA` 2 / `TREND_SPIKE` 4 aynı |
 | `INFLOW_TAU` | 21 | 3 | §3.5 |
+| itibar ihmal kuralı (`SupportSystem.NEGLECT_BUGS` 30, `NEGLECT_WEEKS` 4) | yok | açık hata 30 ve üstü üst üste 4 haftalık tikte itibar −1, koşul sürdükçe her tik [ÇALIŞMA] | taban GameState'in −10'u; GUNCELLEMELER "Faz A · tek hata sayısı" |
+| ürün fonunun geri dönüşü (`PitchConstants.CALLBACK_CHURN_WEEKS`) | yok | 12 hafta; pencere dolmadan koşul karşılanmaz [WORKING] | kaybedilen müşteri oranı: B2B %5, B2C %15 altında |
 | `INTEREST_HALF_LIFE` | 30 | 30 / 7 ≈ 4,29 | §3.5 |
 | `DAMAGE_DAILY_CAP` | -2 / gün | -2 / gün, tik başına -14 | §3.3 |
 | B2B talebi (`sprint.json` `request`) | yok | sprint cinsinden [WORKING] | imzadan 1 sprint sonra ve yenilemeden 6 sprint önce doğar, son tarih 4 sprint; sözleşme 52 hafta |
@@ -265,7 +266,7 @@ kullanılan gün değişmez.
 | `CS_ESCALATION_WINDOW_*` / `CS_ESCALATE_AFTER_*` | 7 / 3 | 1 / 1 | haftalık tavan `CS_ESCALATION_WEEKLY_CAP` 2 aynı |
 | `TRUST_OFFSET_DECAY_PER_DAY` | 0,4 / gün | aynı, tik başına 2,8 | |
 | `CS_THROUGHPUT_BASE` / `_PER_PACE` | 0,5 / 0,15 gün başına | aynı, tik başına ×7 | banka tavanı aynı |
-| B2C memnuniyet kayması | ±1 / gün | deneyim puanına doğru en çok 1,5 / gün (tik başına 10); canlı hata 5'i aşınca üstüne −1 / gün (−7 / tik) [WORKING] | kapı değil hedef (GUNCELLEMELER "Kalibrasyon turu · ürün rev 7") |
+| B2C memnuniyet kayması | ±1 / gün | deneyim puanına doğru en çok 1,5 / gün (tik başına 10) [WORKING] | kapı değil hedef (GUNCELLEMELER "Kalibrasyon turu · ürün rev 7"); açık hata memnuniyeti itmez, bedeli kitle kaybıdır (GUNCELLEMELER "Faz A · tek hata sayısı") |
 | B2C saatlik kitle katsayıları | saatlik adımda ×1 | saatlik adımda ×7 | `growth_band` eşikleri aynı |
 | günde bir satış toplantısı | kural | haftada en fazla 4 (`MEETINGS_PER_WEEK` [WORKING]) + saat bütçesi | §8 |
 | `MEETING_SKIP_HOURS` | 2 saat [K] | 2 saat [K] | §8 |
@@ -363,7 +364,7 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 | `founder.side_contract` | kâğıt | 1 | süresi dolmak bedelsiz rettir |
 | `founder.meetup_talk`, `domain_name`, `friends_test`; `customer.security_review`, `b2c_refunds`; `world.trade_fair`, `app_placement`, `b2c_creator_feature` | kâğıt | 2 | |
 | `world.analyst_guide`, `newsletter_slot` | kâğıt, kritik | 2 | faz 3'ün ilk iki haftası |
-| `product.bug_pile`, `outage`, `b2c_floor_signal`, `b2c_floor_churn`; `rival.funding_round`, `price_cut`; `team.outside_offer` | kesinti | 1 | o haftanın olayı |
+| `product.outage`, `b2c_floor_signal`, `b2c_floor_churn`; `rival.funding_round`, `price_cut`; `team.outside_offer` | kesinti | 1 | o haftanın olayı |
 | `founder.savings_note`, `unseen_build`, `company_of_one`; `product.working_parts`; `team.first_weeks`, `demo_day` | kesinti, sessiz | 1 | taban kartı (§4.8 `FLOOR_QUIET_*`) |
 
 `product.design_round_intro`, `first_ship` ve `version_ship` `data/events/cards/unwired/`'dadır; deste onları

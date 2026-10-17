@@ -494,11 +494,10 @@ func _run_tempo_probe(spec: String) -> void:
 
 
 ## The tempo and tick probes' world on the pinned seed. The HOURLY path gets real work (B2C audience
-## flow, post-ship wear and bug accrual) and the daily path a sprint, because that is where a
-## speed-coupled bug would surface. mvp_shipped is load-bearing: SalesSystem.hourly_tick gates the
-## whole B2C half on it and ProductSystem gates post-ship wear on it. Real bools, not strings: event
-## conditions compare via bool(). Sprint 1 starts on the lead's plan as the player starts it: a plan
-## holds the clock.
+## flow and bug inflow) and the daily path a sprint, because that is where a speed-coupled bug
+## would surface. mvp_shipped is load-bearing: SalesSystem.hourly_tick gates the whole B2C half on
+## it. Real bools, not strings: event conditions compare via bool(). Sprint 1 starts on the lead's
+## plan as the player starts it: a plan holds the clock.
 func _seed_tempo_state() -> void:
 	_seed_run_reproducible()
 	GameState.set_cash(50000)
