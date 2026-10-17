@@ -2576,3 +2576,40 @@ kâğıdın son uyarısı, koşunun giriş notu, Frank'in satırını silen boş
 *Neden.* Faz B görevi (sahip kararı 2026-10-16, Karar 21 ve kabul 4.4): gün 00:00'da dönünce
 sıradan bir mail gece yarısı düşüyor, oysa sabah 09:00 ya da 10:00'da gelmesi gerekir. Geliş saati bir kez çekilir ve saklanır;
 görünürlük okuma anındadır, bu yüzden yükleme, toplu adım ve toplantı atlaması aynı kuralla doğru çalışır.
+
+### §27.28 · Faz B2: tutarın seam'den gelmesi, kalıcı memnuniyet izi, kişiye moral
+
+*Belge ne diyordu.* §8.1: bir etkinin tutarı kartta düz sayıdır (`amount`, `delta`, `value`); `satisfaction_delta`
+hesabın görünen memnuniyetini yazar ve B2B'de bir tikte silinir (hedefe geri çekilir); moral `change_morale` ile tek
+kişiye, `morale_all` ile bütün çalışanlara yazılır.
+
+*Ne yapıldı.* Olayın bedeli olayın ölçeğinden türer ve oyuncunun gördüğü sayı uygulananla aynıdır.
+- `amount_seam` + `amount_mult`: bir etkinin tutarı global seam'in değeri çarpı `amount_mult`'tur (seam büyüklük verir,
+  çarpan işareti taşır); tek yardımcı `EvEffects.amount(e)` yürütücünün, `EvChips.describe`'ın, `on_expire` işaret
+  denetiminin ve botun `_cash_delta_of`'unun okuduğu yerdir. Lint seam'in kayıtlı ve global olmasını ister; işaret
+  denetimi seam yerine çarpana bakar.
+- `trust_delta {amount, accounts, per_sprint, until}` (nötr): kalıcı iz `CustomerRegistry.set_trust_offset` üstünden
+  yazılır (sınır `B2BConstants.clamp_trust`). `accounts` `slot` (kartın müşteri slotu) ya da `decision_line` (bekleyen
+  sprint kararının hattını kullanan B2B hesapları, büyük hesap önce). Defter haftada 2,8 puan affedilir ve memnuniyet bir
+  tikte en çok sprint adımı kadar yürür; çipin "to"su bu yüzden oyuncunun bir tik sonra okuyacağı değerdir
+  (`B2BSalesSystem.satisfaction_next_tick`), `from` şimdiki değerdir: hesap hedefindeyken −6 → "58 → 55", −8 → "58 → 53";
+  hedefin dışında yürüyen hesapta o yürüyüş de "to"ya girer. Tikte −3, −2 ve −1'in izi görünmez (bir sonraki tik sıfıra
+  iner); bu bir tasarım sorusudur (R). Süren biçim tek yerde: `per_sprint` + `until` (`{line_cleared: hat}` ya da
+  `{step_live: adım}`; değer düz kimlik ya da `EvEffects.DECISION`, bekleyen karar kartının kendi hattı ve adımı)
+  `GameState.trust_drains`'e yazılır (tek yazıcı `B2BSalesSystem`, şema 17 içinde varsayılanla). Her sprint kapanışı
+  (`SprintSystem._close`, `sprint_closed`'tan önce) biten satırı düşürür, kalanın miktarını hesapların defterine ekler;
+  düzeltme kartı hattı kapanışta aynı `_close`'ta temizlediği için o sprint ücret almaz. Çip yalnız biçimin kendisini
+  yazar ("her sprint sonunda memnuniyet −3").
+- `morale_crew {crew, amount}` (nötr, kişiye moral): `crew` `incident_crew` (bedeli ödeyenler), `card_crew` (bekleyen karar
+  kartının atananları) ya da `speaker` (kartın çalışan slotu); her kişiye `HRMoraleSystem.apply_delta`, kurucu moral
+  almaz ve listeden düşer. Çip adları (ilk adlar) yazar, dört kişiyi geçince ilk iki ad ve `EFFECT_NAMES_MORE`
+  ("ve {n} kişi"); geçmiş satırı adları saklar. Ödeyen kuralı (Karar 6) tek fonksiyondadır, `SprintSystem.payers(hat)`:
+  önce koşan sprintte hattın kartlarına atanmış geliştirici ve testçiler (ürün ve tasarım rolü olmayanlar), yoksa Görevler
+  matrisinde Yapım ya da Test işini tutan herkes, kurucu hariç ve tasarımcı ile PM dahil; ikisi de boşsa ödeyecek seçenek
+  kilitlidir.
+- Yeni fiiller dört yerde: `EvLint.WRITER_VERBS`, `EvEffects.NEUTRAL_VERBS`, `EvChips.describe`, `event_chip_coverage`
+  (`fixture.b2_chips`'in fiilleri). `fixture.b2_chips` `--b2b-shot=chips`'in kartıdır.
+- Vakalar `event_amount_seam`, `event_trust_delta_lasting`, `event_morale_payers`.
+
+*Neden.* Faz B görevi (Karar 5, 6 ve 8): bedel olaydan türer, "ertelemeyi alışkanlık yapan kaybeder" kalıcı bir izle
+mümkündür (görünen memnuniyet bir tikte silinir) ve yükü ekibin kimin üstüne düşeceği kişi kişi okunur.

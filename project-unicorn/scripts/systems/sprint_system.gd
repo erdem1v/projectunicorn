@@ -547,6 +547,25 @@ static func team() -> Array:
 	return out
 
 
+## Bir olayın düzeltmesinin moral bedelini ödeyenler (kimlik, sprint payı çoktan aza, eşitse ad). Kurucu ödemez:
+## onun yolu "Kendin düzelt". Önce koşan sprintte `line` hattının kartlarına atanmış geliştirici ve testçiler; hiçbiri
+## yoksa ya da hat yoksa Görevler matrisinde Yapım ya da Test işini tutan herkes. İkisi de boşsa [] döner ve bedeli
+## ödeyecek seçenek kilitli kalır.
+static func payers(line: String) -> Array:
+	var crew: Array = team().filter(func(t: Dictionary) -> bool: return not t.founder)
+	var carded: Array = []
+	if line != "":
+		var on_line: Array = []
+		for c in _sprint_cards():
+			if c.line == line:
+				on_line.append_array(c.assignees)
+		carded = crew.filter(func(t: Dictionary) -> bool: return t.id in on_line and not t.ahead)
+	var paying: Array = carded if not carded.is_empty() else crew
+	paying.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.share > b.share if a.share != b.share else a.name < b.name)
+	return paying.map(func(t: Dictionary) -> String: return t.id)
+
+
 ## "+" yalnız planlamada ve kapasite varken açıktır, sonra sprint kartı alıyor mu (_takes). Kart
 ## verilmezse yalnız bugünkü yük sorulur.
 static func can_add(card_id := "") -> bool:
@@ -1097,6 +1116,7 @@ static func _close() -> void:
 	if public:
 		EventBus.build_phase_changed.emit("shipped")
 		EventBus.version_shipped.emit(n)
+	B2BSalesSystem.charge_trust_drains()
 	EventBus.sprint_closed.emit(number)
 
 

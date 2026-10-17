@@ -406,15 +406,19 @@ static func line_impact(line_id: String) -> Dictionary:
 	if ProductState.market_type() != "b2b":
 		return {"users": roundi(SalesSystem.b2c_audience() * line_share(line_id))}
 	var accounts: Array = line_accounts(line_id)
-	accounts.sort_custom(func(a: Customer, b: Customer) -> bool:
-		if a.seats != b.seats:
-			return a.seats > b.seats
-		return a.mrr > b.mrr if a.mrr != b.mrr else a.id < b.id)
+	accounts.sort_custom(larger_account)
 	var seats: int = 0
 	for c in accounts:
 		seats += c.seats
 	return {"accounts": accounts.size(), "seats": seats, "top_id": accounts[0].id if not accounts.is_empty() else "",
 		"top_seats": accounts[0].seats if not accounts.is_empty() else 0}
+
+
+## Büyük hesap önce: koltuk sayısı, eşitlikte MRR, sonra kimlik.
+static func larger_account(a: Customer, b: Customer) -> bool:
+	if a.seats != b.seats:
+		return a.seats > b.seats
+	return a.mrr > b.mrr if a.mrr != b.mrr else a.id < b.id
 
 
 ## Hattın açık hatasından etkilenen kullanıcılar: B2B'de hattı kullanan hesapların koltukları, B2C'de kitle payı.

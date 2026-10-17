@@ -3358,6 +3358,11 @@ EFFECT_WORK_HOURS,{name} günde {n} saat,{name}: {n} hours a day
 EFFECT_INVESTOR_STRAIN,{investor} ile ilişki {v} · {n} haftada geçer,{investor}: relationship {v} · fades over {n} weeks
 EFFECT_MARKETING_BURN,Pazarlama: burn {pct} · {weeks},Marketing: burn {pct} · {weeks}
 EFFECT_MARKETING_GROWTH,Kitle büyümesi {pct} · {weeks},Audience growth {pct} · {weeks}
+EFFECT_TRUST_ACCOUNT,{customer}: memnuniyet {from} → {to},{customer}: satisfaction {from} → {to}
+EFFECT_TRUST_ACCOUNTS,{n} hesap: memnuniyet {v} · {customer} {from} → {to},{n} accounts: satisfaction {v} · {customer} {from} → {to}
+EFFECT_NIGHT_CREW,{names}: moral {v},{names}: morale {v}
+EFFECT_TRUST_PER_SPRINT,Düzelene kadar her sprint sonunda memnuniyet {v},Satisfaction {v} at the end of each sprint until fixed
+EFFECT_NAMES_MORE,ve {n} kişi,and {n} more
 VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some friction between you.
 FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
 FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut

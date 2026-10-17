@@ -37,14 +37,14 @@ const NEUTRAL_VERBS := [
 	# arcs
 	"start_arc", "advance_arc", "set_arc_var", "abort_arc", "end_arc",
 	# people — morale, pace, hours and assignment are not economy; salary is, and lives below
-	"change_morale", "morale_all", "assign_to", "send_on_leave", "start_training", "productivity_mod",
+	"change_morale", "morale_all", "morale_crew", "assign_to", "send_on_leave", "start_training", "productivity_mod",
 	"work_hours",
 	# product
 	"damage_product",
 	# sprint — the card a sprint decision is about, and the sprint's work hours
 	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "sprint_hours",
 	# customers — satisfaction is a relationship, not a payment
-	"satisfaction_delta", "promise_create",
+	"satisfaction_delta", "trust_delta", "promise_create",
 	# world and surfaces
 	"ticker_push", "goto_tab", "unlock_content", "spend_budget", "notify",
 	# investor flow that moves no money by itself
@@ -82,6 +82,9 @@ const TERMINAL_VERBS := ["trigger_ending"]
 ## `promise_create` with this feature id promises "what this account wants": the customer's own
 ## pain feature, resolved when the option is taken.
 const PAIN_SENTINEL := "pain"
+
+## A `line` / `until` argument with this value names the pending sprint decision's own line or step.
+const DECISION := "decision"
 
 ## What a consumer churn event costs when the "customer" is the whole userbase.
 const B2C_CHURN_PCT := 0.15
@@ -205,9 +208,9 @@ static func _is_negative(effect: Dictionary) -> bool:
 	# A marketing push spends money to buy growth: never only a cost, so never an expiry's.
 	if String(effect.get("verb", "")) == "marketing_push":
 		return false
-	for key in ["amount", "delta", "value"]:
+	for key in ["amount_seam", "amount", "delta", "value"]:
 		if effect.has(key):
-			return float(effect[key]) < 0.0
+			return amount(effect) < 0
 	# A verb with no signed amount at all (churn_customer, employee_leaves) is a loss by
 	# nature, so expiry may apply it.
 	return true
@@ -221,13 +224,13 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 		"add_cash":
 			# Through Finance's one-time door, so a card's money reaches the month's books and
 			# the transactions list; `label` is the line the player reads there.
-			var amount: int = _amount(e)
+			var cash: int = amount(e)
 			var label: String = String(e.get("label", ""))
-			if amount < 0:
-				FinanceSystem.apply_one_time_cost(-amount, label)
+			if cash < 0:
+				FinanceSystem.apply_one_time_cost(-cash, label)
 			else:
-				FinanceSystem.apply_one_time_income(amount, label)
-			return {"verb": verb, "amount": amount}
+				FinanceSystem.apply_one_time_income(cash, label)
+			return {"verb": verb, "amount": cash}
 		"add_mrr":
 			# No aggregate-MRR write seam exists: SalesSystem.reflect_mrr() derives MRR from the
 			# customer book, so a raw write would be reverted. Refused rather than faked.
@@ -235,25 +238,25 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				+ "Use customer_mrr_delta on a named account, or seats.")
 			return {"verb": verb, "refused": "no aggregate MRR seam"}
 		"add_brand":
-			GameState.set_brand(GameState.brand + _amount(e))
-			return {"verb": verb, "amount": _amount(e)}
+			GameState.set_brand(GameState.brand + amount(e))
+			return {"verb": verb, "amount": amount(e)}
 		"add_reputation":
-			GameState.set_reputation(GameState.reputation + _amount(e))
-			return {"verb": verb, "amount": _amount(e)}
+			GameState.set_reputation(GameState.reputation + amount(e))
+			return {"verb": verb, "amount": amount(e)}
 		"customer_mrr_delta":
 			var cid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var c: Customer = CustomerRegistry.get_customer(cid)
 			if c == null:
 				return _no_target(verb, cid)
-			CustomerRegistry.set_mrr(cid, c.mrr + _amount(e))
+			CustomerRegistry.set_mrr(cid, c.mrr + amount(e))
 			SalesSystem.reflect_mrr()
-			return {"verb": verb, "customer": cid, "amount": _amount(e)}
+			return {"verb": verb, "customer": cid, "amount": amount(e)}
 		"seats":
 			var sid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var sc: Customer = CustomerRegistry.get_customer(sid)
 			if sc == null:
 				return _no_target(verb, sid)
-			var add_seats: int = _amount(e)
+			var add_seats: int = amount(e)
 			var per_seat: int = int(e.get("per_seat_mrr", 0))
 			CustomerRegistry.set_seats(sid, sc.seats + add_seats)
 			if per_seat != 0:
@@ -275,7 +278,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			SalesSystem.reflect_mrr()
 			return {"verb": verb, "customer": chid}
 		"audience_delta":
-			var n: int = _amount(e)
+			var n: int = amount(e)
 			if e.has("pct"):
 				n = int(round(SalesSystem.b2c_audience() * float(e["pct"])))
 			SalesSystem.add_b2c_audience(n)
@@ -347,14 +350,22 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			# Through HRMoraleSystem.apply_delta, where the trait multiplier and the founder's
 			# Liderlik climate coefficient live; a raw write would skip both.
 			if emp.category == "employee":
-				HRMoraleSystem.apply_delta(emp, _amount(e))
+				HRMoraleSystem.apply_delta(emp, amount(e))
 			else:
-				CharacterRegistry.set_morale(eid, emp.morale + _amount(e))
-			return {"verb": verb, "employee": eid, "amount": _amount(e)}
+				CharacterRegistry.set_morale(eid, emp.morale + amount(e))
+			return {"verb": verb, "employee": eid, "amount": amount(e)}
 		"morale_all":
 			for worker in CharacterRegistry.get_employees():
-				HRMoraleSystem.apply_delta(worker, _amount(e))
-			return {"verb": verb, "amount": _amount(e)}
+				HRMoraleSystem.apply_delta(worker, amount(e))
+			return {"verb": verb, "amount": amount(e)}
+		"morale_crew":
+			var crew: Array = crew_of(e, ctx)
+			if crew.is_empty():
+				return _no_target(verb, String(e.get("crew", "")))
+			var hit: int = amount(e)
+			for id in crew:
+				HRMoraleSystem.apply_delta(CharacterRegistry.get_character(id), hit)
+			return {"verb": verb, "amount": hit, "names": crew_names(crew)}
 		"productivity_mod":
 			# The row keeps the card's title key, not text, so the tooltip reads in the live language.
 			var title: String = String(EvPresenter.text_block(EvCatalog.card(card_id)).get("title", ""))
@@ -404,8 +415,21 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			var sat_c: Customer = CustomerRegistry.get_customer(scid)
 			if sat_c == null:
 				return _no_target(verb, scid)
-			CustomerRegistry.set_satisfaction(scid, sat_c.satisfaction + _amount(e))
-			return {"verb": verb, "customer": scid, "amount": _amount(e)}
+			CustomerRegistry.set_satisfaction(scid, sat_c.satisfaction + amount(e))
+			return {"verb": verb, "customer": scid, "amount": amount(e)}
+		# The lasting half of a satisfaction hit: the trust ledger, never the visible number the drift
+		# erases within a tick. The row keeps what the chip showed (trust_plan).
+		"trust_delta":
+			var plan: Dictionary = trust_plan(e, ctx)
+			if plan.accounts.is_empty():
+				return _no_target(verb, String(e.get("accounts", "slot")))
+			var ids: Array = plan.accounts.map(func(row: Dictionary) -> String: return row.id)
+			for id in ids:
+				var tc: Customer = CustomerRegistry.get_customer(id)
+				CustomerRegistry.set_trust_offset(id, tc.trust_offset + plan.amount)
+			if plan.per_sprint != 0:
+				B2BSalesSystem.add_trust_drain(ids, plan.per_sprint, _until(e))
+			return plan.merged({"verb": verb})
 		"promise_create":
 			var pcid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var pfid: String = String(e.get("feature_id", ""))
@@ -423,10 +447,10 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 		# knows which card the pending decision is about and answers its id, or "" with none.
 		# Effort and hours record the clamped value that lands, the one the chip showed.
 		"sprint_card_effort":
-			var effort: int = SprintSystem.effort_change(_amount(e))
-			return _on_decision_card(verb, SprintSystem.decision_effort(_amount(e)), effort)
+			var effort: int = SprintSystem.effort_change(amount(e))
+			return _on_decision_card(verb, SprintSystem.decision_effort(amount(e)), effort)
 		"sprint_card_progress":
-			return _on_decision_card(verb, SprintSystem.decision_progress(_amount(e)), _amount(e))
+			return _on_decision_card(verb, SprintSystem.decision_progress(amount(e)), amount(e))
 		"sprint_card_carry":
 			return _on_decision_card(verb, SprintSystem.decision_carry(), 0)
 		"sprint_hours":
@@ -490,7 +514,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			var svc: String = entity_of(e, ctx, EvScope.TYPE_INVESTOR)
 			if svc == "":
 				return _no_target(verb, svc)
-			var strain: Dictionary = VCPitchSystem.add_strain(svc, _amount(e), int(e.get("weeks", 0)))
+			var strain: Dictionary = VCPitchSystem.add_strain(svc, amount(e), int(e.get("weeks", 0)))
 			return {"verb": verb, "vc": svc, "amount": strain.amount, "weeks": strain.weeks}
 		"open_seed_table":
 			# The seed offer knows whose it is, and there is only ever one.
@@ -572,11 +596,78 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 
 # --- Helpers ---------------------------------------------------------------
 
-static func _amount(e: Dictionary) -> int:
+## The signed figure an effect names: a seam's value times `amount_mult` (a seam yields a magnitude, the
+## multiplier carries the sign), else its literal `amount`, `delta` or `value`. EvChips and the bot read
+## the figure here too, so what a chip shows is what lands.
+static func amount(e: Dictionary) -> int:
+	if e.has("amount_seam"):
+		return roundi(float(EvSeams.read(String(e["amount_seam"]))) * float(e.get("amount_mult", 1.0)))
 	for key in ["amount", "delta", "value"]:
 		if e.has(key):
 			return int(e[key])
 	return 0
+
+
+## What a `trust_delta` writes and what the player reads for it, worked out the way the arm applies it:
+## per account, largest first, the satisfaction now and the one a tick after its ledger takes `amount`.
+static func trust_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
+	var delta: int = amount(e)
+	var rows: Array = []
+	for c in trust_accounts(e, ctx):
+		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction, "to":
+			B2BSalesSystem.satisfaction_next_tick(c, B2BConstants.clamp_trust(c.trust_offset + delta))})
+	return {"amount": delta, "per_sprint": int(e.get("per_sprint", 0)), "accounts": rows}
+
+
+## The B2B accounts a `trust_delta` lands on, largest first: the slot's, or the users of the pending
+## sprint decision's line.
+static func trust_accounts(e: Dictionary, ctx: Dictionary) -> Array:
+	var accounts: Array = []
+	match String(e.get("accounts", "slot")):
+		"slot":
+			var c: Customer = CustomerRegistry.get_customer(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
+			if c != null and c.market_type == "b2b":
+				accounts.append(c)
+		"decision_line":
+			accounts = SprintCatalog.line_accounts(_of_decision(DECISION, "line"))
+	accounts.sort_custom(SprintCatalog.larger_account)
+	return accounts
+
+
+## The people a `morale_crew` lands on, by id: employees only, the founder's morale is not managed.
+## `incident_crew` pays by SprintSystem.payers on `line`; `card_crew` is the pending decision card's
+## assignees; `speaker` is the card's employee slot.
+static func crew_of(e: Dictionary, ctx: Dictionary) -> Array:
+	var ids: Array = []
+	match String(e.get("crew", "")):
+		"incident_crew":
+			ids = SprintSystem.payers(_of_decision(String(e.get("line", "")), "line"))
+		"card_crew":
+			ids = SprintSystem.decision_card().get("assignees", [])
+		"speaker":
+			ids = [entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)]
+	return ids.filter(func(id: String) -> bool:
+		var person: Character = CharacterRegistry.get_character(id)
+		return person != null and person.category == "employee")
+
+
+## First names of these people, in order: what a chip reads and a history row keeps.
+static func crew_names(ids: Array) -> Array:
+	return ids.map(func(id: String) -> String:
+		return CharacterRegistry.get_character(id).character_name.split(" ", false)[0])
+
+
+## How a standing `per_sprint` cost ends (B2BSalesSystem.add_trust_drain).
+static func _until(e: Dictionary) -> Dictionary:
+	var until: Dictionary = e["until"]
+	if until.has("line_cleared"):
+		return {"line_cleared": _of_decision(String(until["line_cleared"]), "line")}
+	return {"step_live": _of_decision(String(until["step_live"]), "step")}
+
+
+## `token` as written, or the pending sprint decision card's `field` when it is DECISION.
+static func _of_decision(token: String, field: String) -> String:
+	return String(SprintSystem.decision_card().get(field, "")) if token == DECISION else token
 
 
 ## The entity this effect targets: an explicit id, else the named slot, else the first slot of

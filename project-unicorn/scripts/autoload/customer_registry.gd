@@ -223,7 +223,7 @@ func set_trust_offset(customer_id: String, value: float) -> void:
 	if c == null:
 		push_warning("[CustomerRegistry] set_trust_offset on unknown id: %s" % customer_id)
 		return
-	c.trust_offset = clampf(value, B2BConstants.TRUST_OFFSET_MIN, B2BConstants.TRUST_OFFSET_MAX)
+	c.trust_offset = B2BConstants.clamp_trust(value)
 
 
 func set_support_request(customer_id: String, since_day: int) -> void:

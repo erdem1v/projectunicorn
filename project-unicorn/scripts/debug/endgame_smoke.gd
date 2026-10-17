@@ -316,6 +316,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_thesis_day10_to_day90":    fail = _case_event_thesis_day10_to_day90()
 		"event_thesis_through_presenter": fail = _case_event_thesis_through_presenter()
 		"event_chip_coverage":       fail = _case_event_chip_coverage()
+		"event_amount_seam":              fail = _case_event_amount_seam()
+		"event_trust_delta_lasting":      fail = _case_event_trust_delta_lasting()
+		"event_morale_payers":            fail = _case_event_morale_payers()
 		"event_set_aside_no_history":     fail = _case_event_set_aside_no_history()
 		"event_no_double_resolution_after_load": fail = _case_event_no_double_resolution_after_load()
 		"event_history_names_survive":    fail = _case_event_history_names_survive()
@@ -15417,6 +15420,256 @@ static func _case_event_chip_coverage() -> String:
 							blind.append(row)
 	if not blind.is_empty():
 		return "card rows that render no chip: %s" % ", ".join(blind)
+	return ""
+
+
+## B2 · A seam-derived amount: the executor, the chip, the history row and the bot read ONE figure
+## (EvEffects.amount), so what a chip shows is what lands. A seam yields a magnitude and `amount_mult`
+## carries the sign, which is also how an expiry tells a cost from a gain.
+## FALSIFICATION: read only the literal in EvEffects.amount, or only `amount` in EvChips.describe, and the
+## first check fails; ignore the seam in EvEffects._is_negative and the expiry check fails.
+static func _case_event_amount_seam() -> String:
+	var seam := "urun.open_bugs"
+	EvSeams.mock(seam, 7)
+	var cost: Dictionary = {"verb": "add_cash", "amount_seam": seam, "amount_mult": -120, "label": "refunds"}
+	var literal: Dictionary = {"verb": "add_cash", "amount": -840, "label": "refunds"}
+	var chip: String = EvChips.text(EvChips.describe(cost, {}, {}, false)[0])
+	var twin: String = EvChips.text(EvChips.describe(literal, {}, {}, false)[0])
+	if chip != twin:
+		return "the chip of a seam amount reads '%s', its literal twin '%s'" % [chip, twin]
+	var cash: int = GameState.cash
+	var row: Dictionary = EvEffects.run_played([cost], {})[0]
+	if GameState.cash != cash - 840 or int(row.amount) != -840:
+		return "7 x -120 moved the cash by %d and logged %s, want -840" % [GameState.cash - cash, str(row)]
+	var kept: String = EvChips.text(EvChips.describe(row, {}, {}, true)[0])
+	if kept != chip:
+		return "the history row reads '%s', the card showed '%s'" % [kept, chip]
+	var choice := EventChoice.new()
+	choice.modifiers = [cost]
+	if RunProbe._cash_delta_of(choice) != -840:
+		return "the bot reads a cash delta of %d, want -840" % RunProbe._cash_delta_of(choice)
+	_seed_b2c()
+	var audience: int = SalesSystem.b2c_audience()
+	var shrink: Dictionary = {"verb": "audience_delta", "amount_seam": seam, "amount_mult": -10}
+	var shown: String = EvChips.text(EvChips.describe(shrink, {}, {}, false)[0])
+	var shrink_row: Dictionary = EvEffects.run_played([shrink], {})[0]
+	if SalesSystem.b2c_audience() != audience - 70 \
+			or EvChips.text(EvChips.describe(shrink_row, {}, {}, true)[0]) != shown:
+		return "7 x -10 audience moved %d, the chip read '%s' and the row '%s'" % [
+			SalesSystem.b2c_audience() - audience, shown,
+			EvChips.text(EvChips.describe(shrink_row, {}, {}, true)[0])]
+	if EvEffects._permitted("add_cash", cost, EvEffects.Origin.EXPIRE) != "":
+		return "an expiry could not apply a cost made of a seam"
+	if EvEffects._permitted("add_cash", cost.merged({"amount_mult": 120}, true), EvEffects.Origin.EXPIRE) == "":
+		return "an expiry applied a gain made of a seam"
+	EvSeams.clear_mocks()
+	return ""
+
+
+## B2 · A trust hit LASTS and its chip names the number the player will read: the hit goes on the trust ledger,
+## the ledger forgives 2.8 a tick and satisfaction walks toward its target at most 21 a tick, so the chip's "to"
+## is the value one tick on. A standing cost (`per_sprint`) is charged at every sprint close until its line is
+## clear or its step is live, and not on the close that clears it.
+## FALSIFICATION: take the forgiveness out of EvEffects.trust_plan (to = from + the hit) or write the hit with
+## set_satisfaction instead of the ledger and the first loop fails; drop the charge from SprintSystem._close and
+## the sprint check fails; test the line before the close clears it and the last check fails.
+static func _case_event_trust_delta_lasting() -> String:
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	_past_onboarding(c)
+	c.onboarding_until = GameState.day
+	var ctx: Dictionary = _ctx_customer(c)
+	# What a player reads one tick on, by the size of the hit: -6 and -8 show, -3 is forgiven away.
+	for dip in [[-6, 3, 4], [-8, 5, 6], [-3, 0, 1]]:
+		var delta: int = dip[0]
+		CustomerRegistry.set_trust_offset(c.id, 0.0)
+		CustomerRegistry.set_satisfaction(c.id, B2BSalesSystem.satisfaction_target(c))
+		var from: int = c.satisfaction
+		var hit: Dictionary = {"verb": "trust_delta", "amount": delta, "scope": "customer"}
+		var shown: String = EvChips.text(EvChips.describe(hit, ctx, {}, false)[0])
+		var row: Dictionary = EvEffects.run_played([hit], ctx)[0]
+		var kept: String = EvChips.text(EvChips.describe(row, ctx, {}, true)[0])
+		var to: int = int(row.accounts[0].to)
+		if shown != kept or int(row.accounts[0].from) != from:
+			return "%d: the card showed '%s', its history row reads '%s' (from %d)" % [delta, shown, kept, from]
+		if not shown.contains("%d → %d" % [from, to]):
+			return "%d: the chip '%s' does not name %d → %d" % [delta, shown, from, to]
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		if c.satisfaction != to:
+			return "%d: the chip promised %d, the player reads %d a tick later" % [delta, to, c.satisfaction]
+		var held: float = move_toward(float(delta), 0.0, TimeModel.per_tick(B2BConstants.TRUST_OFFSET_DECAY_PER_DAY))
+		if not is_equal_approx(c.trust_offset, held):
+			return "%d: the ledger holds %f a tick later, want %f" % [delta, c.trust_offset, held]
+		if from - to < int(dip[1]) or from - to > int(dip[2]):
+			return "%d: the player sees %d → %d, want a dip of %d to %d" % [delta, from, to, dip[1], dip[2]]
+	return _trust_standing_cost()
+
+
+## The standing half of `_case_event_trust_delta_lasting`, through real sprint closes.
+static func _trust_standing_cost() -> String:
+	CustomerRegistry.remove("co_lead_smoke")
+	_seed_sprint_live("erp")
+	var line := "line_erp_ledger"
+	var acct: Customer = _add_customer("co_trust", "Firm Trust")
+	acct.industry = "retail"
+	acct.seats = 50
+	acct.mrr = 2000
+	# A step ends it when it is live; a save keeps it meanwhile.
+	B2BSalesSystem.add_trust_drain([acct.id], -3, {"step_live": "fixture_step"})
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var saved: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	_cleanup_save_slots()
+	var older: Dictionary = saved.duplicate(true)
+	older.state.game_state.erase("trust_drains")
+	if not SaveManager.apply_loaded_state(older) or not GameState.trust_drains.is_empty():
+		return "a save from before the standing costs did not open with none"
+	if not SaveManager.apply_loaded_state(saved):
+		return "the slot did not load back"
+	acct = CustomerRegistry.get_customer("co_trust")
+	B2BSalesSystem.charge_trust_drains()
+	if GameState.trust_drains.size() != 1 or not is_equal_approx(acct.trust_offset, -3.0):
+		return "after a load the standing cost charged %f with %d left, want -3 with 1" % [
+			acct.trust_offset, GameState.trust_drains.size()]
+	GameState.set_flag("mvp_components", ["fixture_step"])
+	B2BSalesSystem.charge_trust_drains()
+	if not GameState.trust_drains.is_empty() or not is_equal_approx(acct.trust_offset, -3.0):
+		return "a live step did not end the standing cost (%f, %d left)" % [acct.trust_offset, GameState.trust_drains.size()]
+	GameState.set_flag("mvp_components", [])
+	CustomerRegistry.set_trust_offset(acct.id, 0.0)
+	# The decision's line names the accounts and the end.
+	var wait: Dictionary = {"verb": "trust_delta", "accounts": "decision_line", "per_sprint": -3,
+		"until": {"line_cleared": "decision"}}
+	var chip: String = EvChips.text(EvChips.describe(wait, {}, {}, false)[0])
+	if chip != TranslationServer.translate("EFFECT_TRUST_PER_SPRINT").format({"v": "-3"}):
+		return "the standing cost reads '%s'" % chip
+	ProductState.add_bugs(line, 2)
+	SprintSystem.add("fix:" + line)
+	if not SprintSystem.start():
+		return "fixture: the fix sprint did not start"
+	GameState.product.decision = {"card_id": "fix:" + line, "event_id": "fixture"}
+	var landed: Array = EvEffects.trust_accounts(wait, {}).map(func(a: Customer) -> String: return a.id)
+	if landed != [acct.id]:
+		return "the decision's line reaches %s, want [%s]" % [str(landed), acct.id]
+	var row: Dictionary = EvEffects.run_played([wait], {})[0]
+	GameState.product.decision = {}
+	if row.has("refused") or GameState.trust_drains.size() != 1 \
+			or GameState.trust_drains[0].until != {"line_cleared": line}:
+		return "the standing cost was recorded as %s" % str(GameState.trust_drains)
+	# A line that is clear at the close that ends the sprint costs nothing.
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	if ProductState.line_bugs(line) != 0 or not is_zero_approx(acct.trust_offset) or not GameState.trust_drains.is_empty():
+		return "the fix sprint cleared %d bugs and left the ledger %f with %d standing costs" % [
+			ProductState.line_bugs(line), acct.trust_offset, GameState.trust_drains.size()]
+	# A line that stays open is charged at the close.
+	ProductState.add_bugs(line, 2)
+	B2BSalesSystem.add_trust_drain([acct.id], -3, {"line_cleared": line})
+	if not _play_sprint(["res:" + SprintCatalog.area_ids()[0]]) or GameState.trust_drains.size() != 1 \
+			or acct.trust_offset > -0.1:
+		return "a sprint closed on an open line and left the ledger %f with %d standing costs" % [
+			acct.trust_offset, GameState.trust_drains.size()]
+	ProductState.clear_line_bugs(line)
+	var held: float = acct.trust_offset
+	B2BSalesSystem.charge_trust_drains()
+	if not GameState.trust_drains.is_empty() or not is_equal_approx(acct.trust_offset, held):
+		return "a cleared line still cost the ledger %f → %f with %d standing costs" % [
+			held, acct.trust_offset, GameState.trust_drains.size()]
+	return ""
+
+
+## B2 · WHO PAYS for a night fix (Karar 6) is one rule, SprintSystem.payers: first the developers and testers
+## holding a card on the incident's line in the running sprint, else everyone the task matrix puts on Build or
+## Test but the founder (his way is "fix it yourself"), designers and product managers included; nobody left
+## locks the option. `morale_crew` lands the morale on exactly them and the chip names them.
+## FALSIFICATION: let payers() return the card holders without the `ahead` filter and the second check fails;
+## let it keep the founder and the third does; let a Support-only hire into team() and the Support check fails;
+## drop the sort and the chip's names come out of order.
+static func _case_event_morale_payers() -> String:
+	_seed_sprint()
+	var hire := func(id: String, who: String, role: String) -> Character:
+		var person: Character = _make_employee(id, who, role, SEED_PACE, 0, 60)
+		_park_leave([person])
+		return person
+	var dev: Character = hire.call("char_pay_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER)
+	var tester: Character = hire.call("char_pay_test", "Selin Aras", HRConstants.ROLE_TESTER)
+	var designer: Character = hire.call("char_pay_des", "Ece Yurt", HRConstants.ROLE_DESIGNER)
+	var pm: Character = hire.call("char_pay_pm", "Pelin Er", HRConstants.ROLE_PRODUCT_MANAGER)
+	var founder: Character = CharacterRegistry.get_founder()
+	var card_id := "feat:line_note_tool_capture_k1"
+	SprintSystem.add(card_id)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	var card: Dictionary = GameState.product.cards[card_id]
+	var line: String = card.line
+	# Cluster one: the developer and the tester on the line's card, the founder and the designer there too.
+	card.assignees = [dev.id, tester.id, designer.id, founder.id]
+	if SprintSystem.payers(line) != [dev.id, tester.id]:
+		return "with the developer, tester, designer and founder on the card the payers read %s, want the developer and the tester" % [
+			str(SprintSystem.payers(line))]
+	# Support alone in the task matrix builds and tests nothing, so it pays nothing.
+	var support: Character = hire.call("char_pay_sup", "Ada Tan", HRConstants.ROLE_CUSTOMER_REP)
+	CharacterRegistry.clear_jobs(support.id)
+	if CharacterRegistry.assign_job(support.id, HRConstants.JOB_SUPPORT) != "":
+		return "fixture: the customer rep could not take Support"
+	var support_morale: int = support.morale
+	card.assignees = [designer.id, founder.id]
+	var everyone: Array = [dev.id, tester.id, designer.id, pm.id]
+	var rest: Array = SprintSystem.payers(line)
+	rest.sort()
+	var want: Array = everyone.duplicate()
+	want.sort()
+	if rest != want:
+		return "with only the designer and the founder on the card the payers read %s, want the team less the founder %s" % [
+			str(rest), str(want)]
+	var no_line: Array = SprintSystem.payers("")
+	no_line.sort()
+	if no_line != want:
+		return "an incident with no line reads payers %s, want %s" % [str(no_line), str(want)]
+	# The verb lands on them and the chip names them, live and in the history row.
+	var hit: Dictionary = {"verb": "morale_crew", "crew": "incident_crew", "line": line, "amount": -10}
+	var expected: Dictionary = {}
+	for person in [dev, tester, designer, pm, founder]:
+		expected[person.id] = person.morale + HRMoraleSystem.scaled_delta(person, -10)
+	var shown: String = EvChips.text(EvChips.describe(hit, {}, {}, false)[0])
+	var row: Dictionary = EvEffects.run_played([hit], {})[0]
+	var kept: String = EvChips.text(EvChips.describe(row, {}, {}, true)[0])
+	if shown != kept:
+		return "the card showed '%s', its history row reads '%s'" % [shown, kept]
+	for person in [dev, tester, designer, pm, founder]:
+		if person.morale != expected[person.id]:
+			return "%s sits at %d after a -10 crew hit, want %d" % [person.character_name, person.morale, expected[person.id]]
+	if support.morale != support_morale:
+		return "the Support-only hire paid the crew hit (%d → %d)" % [support_morale, support.morale]
+	for first in ["Deniz", "Selin", "Ece", "Pelin"]:
+		if not shown.contains(first):
+			return "the chip '%s' does not name %s" % [shown, first]
+	# Past four names the chip counts the rest.
+	for i in 2:
+		hire.call("char_pay_more%d" % i, "Ekstra%d Kaya" % i, HRConstants.ROLE_DEVELOPER)
+	var long: String = EvChips.text(EvChips.describe(hit, {}, {}, false)[0])
+	var more: String = TranslationServer.translate("EFFECT_NAMES_MORE").format({"n": 4})
+	if not long.contains(more) or long.count(",") != 1:
+		return "six payers read '%s', want two names and '%s'" % [long, more]
+	# The speaker and the card's crew are other ways to name people; the founder is nobody's morale.
+	var speaker: Dictionary = {"verb": "morale_crew", "crew": "speaker", "scope": "employee", "amount": -5}
+	var spoken: Dictionary = {"employee": {"type": "employee", "id": dev.id}}
+	if EvEffects.crew_of(speaker, spoken) != [dev.id]:
+		return "the speaker crew reads %s" % str(EvEffects.crew_of(speaker, spoken))
+	if not EvEffects.crew_of(speaker, {"employee": {"type": "employee", "id": founder.id}}).is_empty():
+		return "the founder counted as a speaker whose morale moves"
+	GameState.product.decision = {"card_id": card_id, "event_id": "fixture"}
+	card.assignees = [tester.id, founder.id]
+	if EvEffects.crew_of({"crew": "card_crew"}, {}) != [tester.id]:
+		return "the card crew reads %s" % str(EvEffects.crew_of({"crew": "card_crew"}, {}))
+	GameState.product.decision = {}
+	# Nobody builds or tests: the rule gives nobody and the option stays locked.
+	for person in CharacterRegistry.get_employees():
+		CharacterRegistry.remove(person.id)
+	if not SprintSystem.payers(line).is_empty() or not EvEffects.crew_of(hit, {}).is_empty():
+		return "a team of the founder alone still has payers: %s" % str(SprintSystem.payers(line))
 	return ""
 
 

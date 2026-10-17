@@ -50,7 +50,7 @@ static func _tick_customer(c: Customer) -> void:
 	# already reflects the (slightly smaller) grudge — a broken promise makes an account
 	# fragile for a month, not forever.
 	if not is_zero_approx(c.trust_offset):
-		CustomerRegistry.set_trust_offset(c.id, _forgiven_trust(c))
+		CustomerRegistry.set_trust_offset(c.id, _forgiven_trust(c.trust_offset))
 	_tick_satisfaction(c)
 	# A delegated account raises ONE escalation when it sinks past the level its rep can hold;
 	# recovery above the threshold re-arms it. The flag IS the edge: `customer.cs_escalation`
@@ -71,11 +71,24 @@ static func _tick_customer(c: Customer) -> void:
 
 # --- Layer 1: visible satisfaction drifts toward a product-health target ---
 static func _tick_satisfaction(c: Customer) -> void:
-	var target: int = satisfaction_target(c)
+	var delta: int = _drift(c, satisfaction_target(c), GameState.day)
+	if delta != 0:
+		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
+
+
+## The satisfaction the player reads one tick from now if the trust ledger then holds `trust`: the
+## ledger forgives first, then the drift walks toward the target as far as one tick lets it.
+static func satisfaction_next_tick(c: Customer, trust: float) -> int:
+	var day: int = GameState.day + 1
+	return c.satisfaction + _drift(c, _target_on(c, day, _forgiven_trust(trust)), day)
+
+
+## How far satisfaction moves toward `target` on tick `day`.
+static func _drift(c: Customer, target: int, day: int) -> int:
 	var step: int = B2BConstants.SAT_DRIFT_STEP
 	# Onboarding window (first ONBOARDING_WEEKS after signing): first impressions
 	# swing harder — a bug-heavy product at signing bites more, a solid one wins faster.
-	if GameState.day < c.onboarding_until:
+	if day < c.onboarding_until:
 		step = int(ceil(float(step) * B2BConstants.ONBOARDING_AMP))
 	var gap: int = target - c.satisfaction
 	var down: int = step
@@ -102,9 +115,7 @@ static func _tick_satisfaction(c: Customer) -> void:
 				down = int(float(down) * maxf(0.0, 1.0 - bonus / 100.0))
 	# Both steps are per-day caps, the care dampener applied per day; the tick moves seven days
 	# of them and stops at the target.
-	var delta: int = clampi(gap, -int(TimeModel.per_tick(down)), int(TimeModel.per_tick(step)))
-	if delta != 0:
-		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
+	return clampi(gap, -int(TimeModel.per_tick(down)), int(TimeModel.per_tick(step)))
 
 
 ## WHO LOOKS AFTER THIS ACCOUNT. A named rep, or the founder when nobody is named:
@@ -142,8 +153,8 @@ static func _target_on(c: Customer, day: int, trust: float) -> int:
 
 
 ## The trust ledger one tick on: each tick forgives a little before its target is read.
-static func _forgiven_trust(c: Customer) -> float:
-	return move_toward(c.trust_offset, 0.0, TimeModel.per_tick(B2BConstants.TRUST_OFFSET_DECAY_PER_DAY))
+static func _forgiven_trust(trust: float) -> float:
+	return move_toward(trust, 0.0, TimeModel.per_tick(B2BConstants.TRUST_OFFSET_DECAY_PER_DAY))
 
 
 ## The open bugs on the lines this account uses (SalesArchetypes.uses_axis): what its satisfaction target, and the
@@ -167,7 +178,33 @@ static func onboarding_floor_until(c: Customer) -> int:
 ## week ahead.
 static func onboarding_ends_under_bar(c: Customer) -> bool:
 	var lift: int = onboarding_floor_until(c)
-	return lift - GameState.day == 1 and _target_on(c, lift, _forgiven_trust(c)) < c.tolerance
+	return lift - GameState.day == 1 and _target_on(c, lift, _forgiven_trust(c.trust_offset)) < c.tolerance
+
+
+# --- Standing trust cost: the `trust_delta` verb's `per_sprint`, written at every sprint close ---
+
+## From now on each sprint close writes `amount` onto these accounts' trust ledgers, until `until`
+## holds: {line_cleared: line} the line has no open bug left, {step_live: step} the step is live.
+static func add_trust_drain(accounts: Array, amount: int, until: Dictionary) -> void:
+	GameState.trust_drains.append({"accounts": accounts, "amount": amount, "until": until})
+
+
+## Sprint close: a standing cost whose end has come goes; the others write their amount. A fix card
+## clears its line before the close reaches here, so the sprint that fixes a line is not charged.
+static func charge_trust_drains() -> void:
+	var standing: Array = []
+	for drain in GameState.trust_drains:
+		var until: Dictionary = drain.until
+		var over: bool = ProductState.line_bugs(String(until.line_cleared)) == 0 if until.has("line_cleared") \
+			else ProductState.is_feature_live(String(until.step_live))
+		if over:
+			continue
+		standing.append(drain)
+		for id in drain.accounts:
+			var c: Customer = CustomerRegistry.get_customer(id)
+			if c != null:
+				CustomerRegistry.set_trust_offset(id, c.trust_offset + float(drain.amount))
+	GameState.trust_drains.assign(standing)
 
 
 # --- Layer 2 + phase machine: hidden tolerance vs satisfaction → churn countdown ---

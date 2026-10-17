@@ -637,8 +637,9 @@ func _shot_fail(msg: String) -> void:
 	get_tree().quit(1)
 
 
-## --b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel>: one
-## factory-built card in the inbox's reading pane.
+## --b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel|chips>: one
+## factory-built card in the inbox's reading pane. `chips` is the fixture whose options carry the trust hit,
+## the standing per-sprint cost and the crew list, over the HR roster.
 func _run_b2b_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -684,6 +685,10 @@ func _run_b2b_shot(kind: String) -> void:
 			GameState.phase = 3
 			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
 			card_id = "funding.sheet_expiry"
+		"chips":
+			_seed_hr_roster()
+			CustomerRegistry.set_satisfaction(c.id, B2BSalesSystem.satisfaction_target(c))
+			card_id = "fixture.b2_chips"
 		"angel":
 			# Frank's seed card: the KABUL effect chip (an undescribed modifier renders blind)
 			# and the locked REDDET row's treatment only show in a rendered frame.

@@ -232,7 +232,11 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 
 		match context:
 			"expire":
-				if economic and float(effect.get("amount", effect.get("delta", -1))) > 0.0:
+				# A seam yields a magnitude, so its multiplier carries the sign.
+				var figure: float = float(effect.get("amount", effect.get("delta", -1)))
+				if effect.has("amount_seam"):
+					figure = float(effect.get("amount_mult", 1.0))
+				if economic and figure > 0.0:
 					_add(SEVERITY_ERROR, "17.3", where,
 						"I2: on_expire applies a POSITIVE '%s' — an expiry is a cost" % verb)
 				if verb == "marketing_push":
@@ -286,12 +290,34 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 					"%s names unknown arc '%s'" % [verb, effect.get("arc_id", "")])
 		if verb == "productivity_mod" and int(effect.get("pct", 0)) == 0:
 			_add(SEVERITY_ERROR, "17.1", where, "productivity_mod names no pct; a pace row must move the pace")
+		if effect.has("amount_seam") and (not EvSeams.has(String(effect["amount_seam"]))
+				or EvSeams.kind_of(String(effect["amount_seam"])) != EvSeams.Kind.GLOBAL):
+			_add(SEVERITY_ERROR, "17.1", where, "amount_seam '%s' is not a registered global seam"
+				% effect["amount_seam"])
+		if verb == "trust_delta":
+			_lint_trust_delta(where, effect)
+		if verb == "morale_crew" and String(effect.get("crew", "")) not in MORALE_CREWS:
+			_add(SEVERITY_ERROR, "17.1", where, "morale_crew crew '%s' is not one of %s"
+				% [effect.get("crew", ""), str(MORALE_CREWS)])
 		# A card's cash is a line in the month's books and the transactions list, so it names a
 		# label Finance can print.
 		if verb == "add_cash" and not FinanceSystem.ONE_TIME_LABELS.has(String(effect.get("label", ""))):
 			_add(SEVERITY_ERROR, "17.1", where,
 				"add_cash has no known label ('%s'); FinanceSystem.ONE_TIME_LABELS lists them"
 				% effect.get("label", ""))
+
+
+## A `trust_delta` names whose ledger it writes, and a standing cost names its end.
+static func _lint_trust_delta(where: String, effect: Dictionary) -> void:
+	if String(effect.get("accounts", "slot")) not in TRUST_ACCOUNTS:
+		_add(SEVERITY_ERROR, "17.1", where, "trust_delta accounts '%s' is not one of %s"
+			% [effect.get("accounts", ""), str(TRUST_ACCOUNTS)])
+	var until: Variant = effect.get("until")
+	if effect.has("per_sprint") != (until != null):
+		_add(SEVERITY_ERROR, "17.1", where, "trust_delta per_sprint and until come together")
+	elif until != null and not (until is Dictionary and until.size() == 1
+			and (until.has("line_cleared") or until.has("step_live"))):
+		_add(SEVERITY_ERROR, "17.1", where, "trust_delta until is {line_cleared: line} or {step_live: step}")
 
 
 # --- §17.13-17.15 schema v3 ------------------------------------------------
@@ -314,12 +340,16 @@ const V3_WARN_RULES := ["P3"]
 ## anything written since.
 const FROZEN_SOFT_RULES := ["O2", "O4", "O5", "T2", "T3"]
 
+## What a `trust_delta` accounts and a `morale_crew` crew may name (EvEffects.trust_accounts, crew_of).
+const TRUST_ACCOUNTS := ["slot", "decision_line"]
+const MORALE_CREWS := ["incident_crew", "card_crew", "speaker"]
+
 ## V1: the verbs an author may write. Each has a working arm in EvEffects._apply AND a chip in
 ## EvChips, so what the option promises is what the player is shown and what lands.
 const WRITER_VERBS := [
 	"add_cash", "add_brand", "add_reputation", "customer_mrr_delta", "seats", "churn_customer",
 	"audience_delta", "add_prospect", "employee_leaves", "b2b_retain_discount", "b2b_expand",
-	"change_morale", "morale_all", "satisfaction_delta", "promise_create", "sprint_hours",
+	"change_morale", "morale_all", "morale_crew", "satisfaction_delta", "trust_delta", "promise_create", "sprint_hours",
 	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry",
 	"b2b_retain_delay", "b2b_retain_ignore", "b2b_expand_decline", "set_flag", "stamp_day",
 	"schedule_event", "cancel_scheduled", "productivity_mod", "investor_strain", "marketing_push",
@@ -343,9 +373,9 @@ const CONSEQUENCE_VERBS := ["sprint_card_carry", "b2b_retain_delay", "b2b_retain
 
 ## O4: the verbs that land on a subject, and the slot type each lands on.
 const SUBJECT_VERBS := {
-	"change_morale": "employee", "productivity_mod": "employee", "employee_leaves": "employee",
+	"change_morale": "employee", "morale_crew": "employee", "productivity_mod": "employee", "employee_leaves": "employee",
 	"send_on_leave": "employee", "work_hours": "employee",
-	"satisfaction_delta": "customer", "customer_mrr_delta": "customer", "seats": "customer",
+	"satisfaction_delta": "customer", "trust_delta": "customer", "customer_mrr_delta": "customer", "seats": "customer",
 	"churn_customer": "customer", "promise_create": "customer", "b2b_retain_discount": "customer",
 	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",
 	"b2b_expand_decline": "customer",
@@ -513,7 +543,8 @@ static func _lint_v3_options(id: String, card: Dictionary, where: String) -> voi
 		for e in effects:
 			var effect: Dictionary = e
 			var verb: String = String(effect.get("verb", ""))
-			if one_person and (verb == "sprint_hours" or (verb == "morale_all"
+			if one_person and (verb == "sprint_hours" or (verb in ["morale_all", "morale_crew"]
+					and String(effect.get("crew", "")) != "speaker"
 					and int(effect.get("amount", effect.get("delta", effect.get("value", 0)))) < 0)):
 				_v3(id, "O3", where, "option '%s' spends the team's '%s' on a card about "
 					% [opt_id, verb] + "one person")
@@ -598,9 +629,15 @@ static func _card_effects(card: Dictionary) -> Array:
 ## they would land today.
 static func _has_cost(effects: Array) -> bool:
 	for e in effects:
-		if CONSEQUENCE_VERBS.has(String((e as Dictionary).get("verb", ""))):
+		var effect: Dictionary = e
+		if CONSEQUENCE_VERBS.has(String(effect.get("verb", ""))):
 			return true
-		for part in EvChips.describe(e as Dictionary, {}, {}, true):
+		if effect.has("amount_seam"):
+			# A linter has no run to read the seam in: its multiplier's sign is the polarity.
+			effect = effect.duplicate()
+			effect["amount"] = int(signf(float(effect.get("amount_mult", 1.0))))
+			effect.erase("amount_seam")
+		for part in EvChips.describe(effect, {}, {}, true):
 			if String((part as Dictionary)["polarity"]) in ["cost", "danger"]:
 				return true
 	return false
@@ -622,7 +659,9 @@ static func _touched_slots(effects: Array, slots: Dictionary) -> Array:
 	for e in effects:
 		var effect: Dictionary = e
 		var type_id: String = String(SUBJECT_VERBS.get(String(effect.get("verb", "")), ""))
-		if type_id == "":
+		# A crew or a decision line's accounts are no slot: only the speaker and the slot's account are.
+		if type_id == "" or String(effect.get("crew", "speaker")) != "speaker" \
+				or String(effect.get("accounts", "slot")) != "slot":
 			continue
 		var slot: String = String(effect.get("scope", ""))
 		if slot == "":

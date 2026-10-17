@@ -1,0 +1,54 @@
+{
+  "id": "fixture.b2_chips",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "customer",
+  "tick": "request",
+  "class": "info",
+  "tags": [],
+  "family": "fixture_b2_chips",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by its own shot, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "latch": { "cooldown_weeks": 0 },
+  "scope": {
+    "customer": { "type": "customer", "required": true }
+  },
+  "options": [
+    {
+      "id": "hit",
+      "outcome_id": "hit",
+      "effects": [
+        { "verb": "trust_delta", "scope": "customer", "amount": -6 },
+        { "verb": "morale_crew", "crew": "incident_crew", "amount": -10 }
+      ]
+    },
+    {
+      "id": "wait",
+      "outcome_id": "wait",
+      "effects": [
+        { "verb": "trust_delta", "scope": "customer", "amount": -8, "per_sprint": -3,
+          "until": { "step_live": "fixture_step" } }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "B2 çipleri",
+      "body": "Yalnız çiplerin görünümünü ölçer.",
+      "options": { "hit": "Şimdi düzelt", "wait": "Beklet" }
+    },
+    "en": {
+      "title": "B2 chips",
+      "body": "This card only shows the chips.",
+      "options": { "hit": "Fix it now", "wait": "Hold it" }
+    }
+  },
+  "_note": "The subject of `--b2b-shot=chips`: the trust hit's from → to, the standing per-sprint cost and the crew list under a pane's options. `event_chip_coverage` reads its verbs too."
+}

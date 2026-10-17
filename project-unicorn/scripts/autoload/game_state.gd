@@ -317,6 +317,9 @@ var messages: Array[Dictionary] = []
 var mail_outbox: Array[Dictionary] = []
 # When each standing desk reminder reached the player, {reminder id: at} (sole writer MailClock).
 var desk_arrivals: Dictionary = {}
+# Standing trust costs, one per `trust_delta per_sprint` an option took (sole writer B2BSalesSystem):
+# {accounts: [customer id], amount: int, until: {line_cleared: line} | {step_live: step}}.
+var trust_drains: Array = []
 
 
 func _ready() -> void:
@@ -888,6 +891,7 @@ func initialize_run(payload: Dictionary) -> void:
 	messages.clear()
 	mail_outbox.clear()
 	desk_arrivals.clear()
+	trust_drains.clear()
 
 	flags.clear()
 	# Origin flags, after the clear. RESERVED: nothing consumes them yet

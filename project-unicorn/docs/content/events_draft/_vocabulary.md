@@ -13,8 +13,8 @@ Counts are what the engine actually has, at generation time:
 | | count |
 |---|---|
 | Seams (read) | **196** |
-| Effect verbs (write) | **63** |
-| Cards in the catalogue | 97 |
+| Effect verbs (write) | **65** |
+| Cards in the catalogue | 98 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -45,6 +45,7 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `end_arc`
 - `change_morale`
 - `morale_all`
+- `morale_crew`
 - `assign_to`
 - `send_on_leave`
 - `start_training`
@@ -56,6 +57,7 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `sprint_card_carry`
 - `sprint_hours`
 - `satisfaction_delta`
+- `trust_delta`
 - `promise_create`
 - `ticker_push`
 - `goto_tab`
@@ -545,7 +547,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (31) — any card, inside the two rules below
+### Writer verbs (33) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -560,7 +562,9 @@ is what the player is shown and what lands.
 - `b2b_expand`
 - `change_morale`
 - `morale_all`
+- `morale_crew`
 - `satisfaction_delta`
+- `trust_delta`
 - `promise_create`
 - `sprint_hours`
 - `sprint_card_effort`

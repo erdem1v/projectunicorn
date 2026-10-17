@@ -64,7 +64,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   saatinde gelir (§6). Seçeneğin anlattığını modifier'ları yapar.
 - **EFFECT-VISIBILITY RULE.** Modifier oyuncuya okunur etiketle gösterilir, iç kodla değil. Etki çipini kuran tek yer
   `EvChips.describe` (`scripts/events/present/chips.gd`; imzalı parçalar, kırmızı yalnız tehlike); bilinçli etiketsiz
-  fiiller `EvChips.SILENT_VERBS`'te, `event_chip_coverage` smoke'u zorlar.
+  fiiller `EvChips.SILENT_VERBS`'te, `event_chip_coverage` smoke'u zorlar. Bir fiilin tutarı seam'den gelebilir
+  (`amount_seam` × `amount_mult`); çip, geçmiş satırı ve bot tutarı aynı `EvEffects.amount`'tan okur, çip uygulananı yazar.
 
 ## 6. Mimari
 - Godot 4.6 (Forward Plus), yalnız GDScript. Ana sahne `scenes/main/Main.tscn`; `main.gd` açılışı, modal montajını,
@@ -100,7 +101,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   çeyreklik; `SummarySystem`, `EventBus.summary_ready`).
 - **WRITE-THROUGH LAW.** Hiçbir olay, modal ya da UI başka bir alanın durumunu doğrudan yazmaz; değişiklik durumun
   sahibinin seam'inden geçer ve UI'nin dinlediği yerde seam sinyal yayar. Seam yoksa kurulur, alan "bir kereliğine"
-  yazılmaz. Seam'ler: müşteri → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (yayar);
+  yazılmaz. Seam'ler: müşteri → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (yayar; kalıcı memnuniyet izi `set_trust_offset`, sinyalsiz);
   toplam MRR yalnız `SalesSystem.reflect_mrr()`; kasa, burn, marka, itibar → `GameState.set_*`; faz →
   `GameState.advance_phase()` (`set_phase` yalnız kayıt ve debug içindir); karakter → `CharacterRegistry.*`; ürün →
   `SprintSystem.*` (`GameState.product`'ın yazarı; köprüsü `SprintBridges` yalnız `requests`,

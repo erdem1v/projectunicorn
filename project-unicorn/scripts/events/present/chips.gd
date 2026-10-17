@@ -43,6 +43,9 @@ const FIXED_CHIPS := {
 	"sprint_card_carry": ["EFFECT_SPRINT_CARRY", "neutral"],
 }
 
+## How many names a crew chip lists before it counts the rest.
+const NAMES_SHOWN := 4   # [WORKING]
+
 ## The polarity's glyph (A2's icon names); a neutral part has none.
 const GLYPHS := {"gain": "up", "cost": "cost", "danger": "warn", "neutral": ""}
 
@@ -61,7 +64,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		return []
 	if FIXED_CHIPS.has(verb):
 		return [_part(_t(FIXED_CHIPS[verb][0]), "", FIXED_CHIPS[verb][1])]
-	var d: int = int(item.get("amount", item.get("delta", item.get("value", 0))))
+	var d: int = EvEffects.amount(item)
 	match verb:
 		"add_cash": return [_figure("EFFECT_CASH", _money(d), _signed(d))]
 		"add_brand": return [_figure("EFFECT_BRAND", _num(d), _signed(d))]
@@ -72,6 +75,10 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			var seats: int = int(item.get("seats", d))
 			return [_figure("EFFECT_SEATS", _num(seats), _signed(seats))]
 		"morale_all": return [_figure("EFFECT_TEAM", _num(d), _signed(d))]
+		"morale_crew":
+			var crew: Array = item.get("names", []) if is_delta else EvEffects.crew_names(EvEffects.crew_of(item, ctx))
+			return [_figure("EFFECT_NIGHT_CREW", _num(d), _signed(d), {"names": _name_list(crew)})]
+		"trust_delta": return _trust_parts(item if is_delta else EvEffects.trust_plan(item, ctx))
 		"sprint_card_effort":
 			var effort: int = d if is_delta else SprintSystem.effort_change(d)
 			return [_figure("EFFECT_SPRINT_EFFORT", _num(effort), _signed(-effort))]
@@ -214,6 +221,31 @@ static func _figure(key: String, value: String, polarity: String, args: Dictiona
 	var words: Dictionary = {"v": ""}
 	words.merge(args, true)
 	return _part(_t(key).format(words).strip_edges(), value, polarity)
+
+
+## A trust hit: the largest account's satisfaction now and a tick on (the figure the player will read,
+## EvEffects.trust_plan), and the standing per-sprint cost. A card effect read as a delta (the linter)
+## has no accounts yet, only its figures.
+static func _trust_parts(plan: Dictionary) -> Array:
+	var parts: Array = []
+	var delta: int = int(plan.get("amount", 0))
+	if delta != 0:
+		var accounts: Array = plan.accounts if plan.get("accounts") is Array else []
+		var top: Dictionary = accounts[0] if not accounts.is_empty() else {}
+		var key: String = "EFFECT_TRUST_ACCOUNT" if accounts.size() < 2 else "EFFECT_TRUST_ACCOUNTS"
+		parts.append(_part(_t(key).format({"n": accounts.size(), "v": _num(delta), "customer": top.get("name", ""),
+			"from": int(top.get("from", 0)), "to": int(top.get("to", 0))}), "", _signed(delta)))
+	var per_sprint: int = int(plan.get("per_sprint", 0))
+	if per_sprint != 0:
+		parts.append(_part(_t("EFFECT_TRUST_PER_SPRINT").format({"v": _num(per_sprint)}), "", _signed(per_sprint)))
+	return parts
+
+
+## "Deniz, Mert, Selin"; past NAMES_SHOWN names, the first two and how many more.
+static func _name_list(names: Array) -> String:
+	if names.size() <= NAMES_SHOWN:
+		return ", ".join(names)
+	return ", ".join(names.slice(0, 2)) + " " + _t("EFFECT_NAMES_MORE").format({"n": names.size() - 2})
 
 
 static func _signed(delta: int) -> String:

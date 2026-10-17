@@ -266,3 +266,7 @@ const PROMISE_BROKEN_OFFSET := -12.0
 const TRUST_OFFSET_MIN := -25.0
 const TRUST_OFFSET_MAX := 10.0
 const TRUST_OFFSET_DECAY_PER_DAY := 0.4   # -12 → 0 in 30 days
+
+
+static func clamp_trust(offset: float) -> float:
+	return clampf(offset, TRUST_OFFSET_MIN, TRUST_OFFSET_MAX)
