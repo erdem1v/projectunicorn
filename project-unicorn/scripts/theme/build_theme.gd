@@ -955,10 +955,7 @@ func _menajer(master: Theme) -> Theme:
 		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]},
 		sans_reg, T.D_FS_14, Vector4.ZERO)
 	th.set_constant("icon_max_width", &"WinClose", T.D_ICON_CONTROL)
-	# A float card's action is a small ghost button with a smaller glyph; its links are text keys.
-	th.set_type_variation(&"FloatAction", &"GhostButtonSmall")
-	th.set_constant("icon_max_width", &"FloatAction", T.D_ICON_ACTION)
-	th.set_constant("h_separation", &"FloatAction", T.SPACE_S)
+	# A float card's links are text keys.
 	_dbtn(th, &"FloatLink", ghost, sans_reg, T.D_FS_13, _fit(sans_reg, T.D_FS_13, T.D_H_LINK, T.SPACE_S, T.SPACE_S))
 	# A paused progress keeps its share in a neutral fill.
 	th.set_type_variation(&"ProgressPaused", &"ProgressBar")
@@ -991,11 +988,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"SprintColumnHead", column_head],
 		[&"SprintColumnFoot", _flat(clear, 0, Vector4(T.SPACE_XXL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XL), T.D_LINE_1,
 			Vector4i(0, T.BORDER_HAIRLINE, 0, 0))],
-		# A card's hover keys sit on the end of its effect line, on the card's own ground.
-		[&"CardKeys", _flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_M, 0, 0, 0))],
-		[&"CardKeysPlanned", _flat(T.D_SURFACE_3, 0, Vector4(T.SPACE_M, 0, 0, 0))],
-		# An area row's count of voices, and a flag in sentence case (a rival's launch, an area).
-		[&"CountChip", _flat(clear, T.D_RADIUS_2, chip_pad, T.D_LINE_2)],
+		# A flag in sentence case (a rival's launch, an area).
 		[&"FlagChip", _flat(clear, T.D_RADIUS_2, flag_pad, T.D_LINE_3)],
 		# A segmented pick's box.
 		[&"SegPickBox", _flat(clear, T.D_RADIUS_2, hairline, T.D_LINE_2)],
@@ -1018,6 +1011,13 @@ func _menajer(master: Theme) -> Theme:
 	th.set_constant("icon_max_width", &"IconKey", T.D_ICON_ROW)
 	# The card's word key (Çıkar) at the glyph keys' height.
 	_dbtn(th, &"CardKeyText", ghost, cond_sb, T.D_FS_16, _fit(cond_sb, T.D_FS_16, T.D_H_KEY_SM, T.SPACE_S, T.SPACE_S))
+	# A sprint card's keys rest dim and take the two looks above while the pointer is on the card; a key
+	# under the pointer keeps the base look's hover.
+	th.set_type_variation(&"IconKeyIdle", &"IconKey")
+	th.set_stylebox("normal", &"IconKeyIdle", _flat(clear, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_1))
+	th.set_color("icon_normal_color", &"IconKeyIdle", T.D_INK_4)
+	th.set_type_variation(&"CardKeyTextIdle", &"CardKeyText")
+	th.set_color("font_color", &"CardKeyTextIdle", T.D_INK_4)
 	# The two-way switch's segments: the one that is on is filled and underlined in ink.
 	var seg_pad := _fit(sans_reg, T.D_FS_14, T.D_H_BTN_SM - 2 * T.BORDER_HAIRLINE, T.SPACE_L, T.SPACE_L)
 	var on := [T.D_SURFACE_5, T.D_INK_1, T.D_INK_1]

@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 37
+const THEME_STAMP := 38
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -706,7 +706,6 @@ const D_ICON_BUTTON_SM := 16 # a small button's glyph
 const D_ICON_ROW := 16       # a row's leading glyph
 const D_ICON_PART := 14      # a part's polarity glyph beside its value
 const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
-const D_ICON_ACTION := 12    # the glyph inside a float card's action
 const D_ICON_TAG := 12       # a tag's leading glyph
 const D_ICON_EMPTY := 32     # an empty state's glyph
 # --- the sprint screen (Ürün) ---

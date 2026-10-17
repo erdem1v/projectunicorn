@@ -224,16 +224,20 @@ static func flag(text: String, warn := false) -> PanelContainer:
 	return chip
 
 
-## Kartın glif tuşu (+, →, ↑); "+" kapalıyken de görünür.
+## Kartın tuşunun tema görünümü: parlak ya da sönük (sprint kartında fare kartın üstünde değilken).
+static func key_variation(kind: String, lit: bool) -> StringName:
+	return StringName(("IconKey" if KEY_GLYPHS.has(kind) else "CardKeyText") + ("" if lit else "Idle"))
+
+
+## Kartın tuşu (+, →, ↑, çıkar), parlak; "+" kapalıyken de görünür.
 static func key_button(kind: String, disabled: bool) -> Button:
 	var b := Button.new()
+	b.theme_type_variation = key_variation(kind, true)
 	if KEY_GLYPHS.has(kind):
-		b.theme_type_variation = &"IconKey"
 		b.icon = load(KEY_GLYPHS[kind])
 		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		b.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_SM
 	else:
-		b.theme_type_variation = &"CardKeyText"
 		b.text = RnDUiShared.t("PRODUCT_REMOVE")
 	b.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
 	b.disabled = disabled

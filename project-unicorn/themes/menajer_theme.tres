@@ -393,20 +393,6 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d1d9b"]
-content_margin_left = 8.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(0.15294118, 0.13725491, 0.12156863, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5303d"]
-content_margin_left = 8.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(0.11764706, 0.105882354, 0.09411765, 1)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_420c4"]
 content_margin_left = 12.0
 content_margin_top = 10.0
@@ -1059,22 +1045,6 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 corner_detail = 1
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_10100"]
-content_margin_left = 6.0
-content_margin_top = 2.0
-content_margin_right = 6.0
-content_margin_bottom = 2.0
-bg_color = Color(1, 1, 1, 0)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6f464_2"]
 content_margin_left = 16.0
@@ -2342,6 +2312,22 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_94e4b_2"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_08a93"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -2410,7 +2396,7 @@ corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 corner_detail = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_94e4b_2"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_94e4b_3"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -2474,7 +2460,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_94e4b_3"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_94e4b_4"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -2538,7 +2524,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_94e4b_4"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_94e4b_5"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -2618,7 +2604,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_94e4b_5"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_94e4b_6"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -6078,10 +6064,8 @@ CardKeyText/styles/disabled = SubResource("StyleBoxFlat_e6a21")
 CardKeyText/styles/hover = SubResource("StyleBoxFlat_9c5d8")
 CardKeyText/styles/normal = SubResource("StyleBoxFlat_e6a21_2")
 CardKeyText/styles/pressed = SubResource("StyleBoxFlat_cd574")
-CardKeys/base_type = &"PanelContainer"
-CardKeys/styles/panel = SubResource("StyleBoxFlat_d1d9b")
-CardKeysPlanned/base_type = &"PanelContainer"
-CardKeysPlanned/styles/panel = SubResource("StyleBoxFlat_5303d")
+CardKeyTextIdle/base_type = &"CardKeyText"
+CardKeyTextIdle/colors/font_color = Color(0.6039216, 0.5686275, 0.5176471, 1)
 CardPanel/base_type = &"PanelContainer"
 CardPanel/styles/panel = SubResource("StyleBoxFlat_420c4")
 CardPanelTight/base_type = &"PanelContainer"
@@ -6298,8 +6282,6 @@ ContinueCard/base_type = &"Button"
 ContinueCard/styles/hover = SubResource("StyleBoxFlat_edd24")
 ContinueCard/styles/normal = SubResource("StyleBoxFlat_11f55")
 ContinueCard/styles/pressed = SubResource("StyleBoxFlat_edd24_2")
-CountChip/base_type = &"PanelContainer"
-CountChip/styles/panel = SubResource("StyleBoxFlat_10100")
 DangerButton/base_type = &"Button"
 DangerButton/colors/font_color = Color(0.95686275, 0.6392157, 0.6039216, 1)
 DangerButton/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
@@ -6478,9 +6460,6 @@ FlagChipWarn/base_type = &"PanelContainer"
 FlagChipWarn/styles/panel = SubResource("StyleBoxFlat_34821")
 FlagChipWarnCb/base_type = &"PanelContainer"
 FlagChipWarnCb/styles/panel = SubResource("StyleBoxFlat_3e18b")
-FloatAction/base_type = &"GhostButtonSmall"
-FloatAction/constants/h_separation = 6
-FloatAction/constants/icon_max_width = 12
 FloatButton/base_type = &"Button"
 FloatButton/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 FloatButton/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
@@ -6672,6 +6651,9 @@ IconKey/styles/disabled = SubResource("StyleBoxFlat_94e4b")
 IconKey/styles/hover = SubResource("StyleBoxFlat_08a46")
 IconKey/styles/normal = SubResource("StyleBoxFlat_53db3")
 IconKey/styles/pressed = SubResource("StyleBoxFlat_faa9d")
+IconKeyIdle/base_type = &"IconKey"
+IconKeyIdle/colors/icon_normal_color = Color(0.6039216, 0.5686275, 0.5176471, 1)
+IconKeyIdle/styles/normal = SubResource("StyleBoxFlat_94e4b_2")
 IconWell/base_type = &"Panel"
 IconWell/styles/panel = SubResource("StyleBoxFlat_08a93")
 InboxBand/base_type = &"PanelContainer"
@@ -6700,7 +6682,7 @@ JobBox/colors/icon_pressed_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 JobBox/constants/icon_max_width = 16
 JobBox/font_sizes/font_size = 13
 JobBox/fonts/font = ExtResource("d_sans_reg_96321")
-JobBox/styles/disabled = SubResource("StyleBoxFlat_94e4b_2")
+JobBox/styles/disabled = SubResource("StyleBoxFlat_94e4b_3")
 JobBox/styles/hover = SubResource("StyleBoxFlat_faa9d_2")
 JobBox/styles/normal = SubResource("StyleBoxFlat_baa50")
 JobBox/styles/pressed = SubResource("StyleBoxFlat_dfeca")
@@ -6720,7 +6702,7 @@ JobBoxPrimary/colors/icon_pressed_color = Color(0.0627451, 0.05490196, 0.0431372
 JobBoxPrimary/constants/icon_max_width = 16
 JobBoxPrimary/font_sizes/font_size = 13
 JobBoxPrimary/fonts/font = ExtResource("d_sans_reg_96321")
-JobBoxPrimary/styles/disabled = SubResource("StyleBoxFlat_94e4b_3")
+JobBoxPrimary/styles/disabled = SubResource("StyleBoxFlat_94e4b_4")
 JobBoxPrimary/styles/hover = SubResource("StyleBoxFlat_9351a")
 JobBoxPrimary/styles/normal = SubResource("StyleBoxFlat_f0a5d")
 JobBoxPrimary/styles/pressed = SubResource("StyleBoxFlat_c0022")
@@ -6740,7 +6722,7 @@ JobBoxSecondary/colors/icon_pressed_color = Color(1, 1, 1, 1)
 JobBoxSecondary/constants/icon_max_width = 16
 JobBoxSecondary/font_sizes/font_size = 13
 JobBoxSecondary/fonts/font = ExtResource("d_sans_reg_96321")
-JobBoxSecondary/styles/disabled = SubResource("StyleBoxFlat_94e4b_4")
+JobBoxSecondary/styles/disabled = SubResource("StyleBoxFlat_94e4b_5")
 JobBoxSecondary/styles/hover = SubResource("StyleBoxFlat_dfeca_2")
 JobBoxSecondary/styles/normal = SubResource("StyleBoxFlat_5f61b")
 JobBoxSecondary/styles/pressed = SubResource("StyleBoxFlat_faa9d_3")
@@ -6753,7 +6735,7 @@ KeyCapOff/base_type = &"Label"
 KeyCapOff/colors/font_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
 KeyCapOff/font_sizes/font_size = 14
 KeyCapOff/fonts/font = ExtResource("d_cond_sb_6c810")
-KeyCapOff/styles/normal = SubResource("StyleBoxFlat_94e4b_5")
+KeyCapOff/styles/normal = SubResource("StyleBoxFlat_94e4b_6")
 KeyLabel/base_type = &"Label"
 KeyLabel/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
 KeyLabel/font_sizes/font_size = 14
@@ -7912,7 +7894,7 @@ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
 TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
 TraitBox/base_type = &"PanelContainer"
 TraitBox/styles/panel = SubResource("StyleBoxFlat_e9fa3")
-UiTokensStamp/constants/stamp = 37
+UiTokensStamp/constants/stamp = 38
 VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")

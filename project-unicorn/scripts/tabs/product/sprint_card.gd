@@ -14,9 +14,10 @@ enum Look { WIDE, NARROW, LOW, MINI }
 ## bağlantısı "rnd" ({card_id, node}) yayar.
 signal action(kind: String, args: Dictionary)
 
-## Aday kartında düğmeler hep görünür; sprint ve sonraki sütun kartında üstüne gelince.
+## Aday ve kilitli kartın düğmeleri üst satırda, hep parlak; sprint ve sonraki sütun kartınınkiler altta, sönük,
+## fare kartın üstüne gelince parlak.
 const BUTTONS_ALWAYS := [State.ADAY, State.KILITLI]
-const BUTTONS_ON_HOVER := [State.SPRINT_PLAN, State.SPRINT_AKTIF, State.PLANLANAN, State.DEVREDEN]
+const BUTTONS_DIM := [State.SPRINT_PLAN, State.SPRINT_AKTIF, State.PLANLANAN, State.DEVREDEN]
 const PLANNED := [State.PLANLANAN, State.DEVREDEN]
 const PHASE_KEYS := ["PRODUCT_PHASE_DESIGN", "PRODUCT_PHASE_DEV", "PRODUCT_PHASE_TEST"]
 const INBOX_GLYPH := "res://assets/icons/util/inbox.svg"
@@ -26,7 +27,7 @@ const MAIL_PANE := preload("res://scripts/tabs/events/mail_pane.gd")
 
 var _card: Dictionary
 var _look := Look.WIDE
-var _hover_bar: Control   # sprint ve sonraki sütun kartının üstüne gelince beliren düğmeleri
+var _keys: HBoxContainer   # sprint ve sonraki sütun kartının sönük düğmeleri
 ## Efor dökümü: sütunun kırpmasından kaçsın diye top_level yüzer.
 var _effort_box: PanelContainer
 var _effort_parts: PackedStringArray
@@ -139,10 +140,10 @@ func setup(card: Dictionary, look := Look.WIDE) -> void:
 		body.add_child(lock)
 	if _card.decision != null:
 		_decision_rows(body, _card.decision)
-	if state in BUTTONS_ON_HOVER:
-		_hover_bar = _hover_keys()
+	if state in BUTTONS_DIM:
+		_foot(body)
 	_effort(points)
-	if _effort_box != null or _hover_bar != null:
+	if _effort_box != null or _keys != null:
 		mouse_entered.connect(_hover.bind(true))
 		mouse_exited.connect(_hover.bind(false))
 	_paint()
@@ -153,7 +154,7 @@ func _ready() -> void:
 	_paint()
 
 
-## Fikstür hover'ı (`ui.hover_card`): efor kutusu, hover kenarı ve düğmeler.
+## Fikstür hover'ı (`ui.hover_card`): efor kutusu, hover kenarı ve parlak düğmeler.
 func show_effort() -> void:
 	_forced = true
 	_hover(true)
@@ -209,27 +210,30 @@ func _align(top: HBoxContainer) -> void:
 
 func _key(kind: String, disabled: bool) -> Button:
 	var b := SprintUiShared.key_button(kind, disabled)
-	# STOP olsaydı imleç düğmeye geçince kartın hover'ı biter, hover düğmeleri kaybolurdu.
+	# STOP olsaydı imleç düğmeye geçince kartın hover'ı biter, düğmeler sönerdi.
 	b.mouse_filter = Control.MOUSE_FILTER_PASS
 	b.pressed.connect(action.emit.bind(kind, {"card_id": String(_card.id)}))
 	return b
 
 
-## Hover düğmeleri etki satırının sağ ucuna, kartın kendi zemininde biner: kart zıplamaz.
-func _hover_keys() -> Control:
-	var host := PanelContainer.new()
-	host.theme_type_variation = &"CardKeysPlanned" if state in PLANNED else &"CardKeys"
-	host.size_flags_horizontal = Control.SIZE_SHRINK_END
-	host.size_flags_vertical = Control.SIZE_SHRINK_END
-	host.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	host.visible = false
-	var row := SprintUiShared.box(UiTokens.SPACE_XS)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+## Sönük düğmeler kendi yerini tutar ve ne etki satırını ne atananları örter: geniş kartta son satırın sağ ucunda,
+## dar kartta (etki parçaları bölünmez) kendi satırında sağa yaslı.
+func _foot(body: VBoxContainer) -> void:
+	_keys = SprintUiShared.box(UiTokens.SPACE_XS)
 	for kind in _card.buttons:
-		row.add_child(_key(kind, false))
-	host.add_child(row)
-	add_child(host)
-	return host
+		_keys.add_child(_key(kind, false))
+	if _look != Look.WIDE:
+		_keys.size_flags_horizontal = Control.SIZE_SHRINK_END
+		body.add_child(_keys)
+		return
+	var last: Control = body.get_child(-1)
+	body.remove_child(last)
+	last.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	last.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var foot := SprintUiShared.box(UiTokens.SPACE_M)
+	foot.add_child(last)
+	foot.add_child(_keys)
+	body.add_child(foot)
 
 
 ## Sprint içi satırı: Tasarım, Geliştirme ve Test adımları (süren fazın yanında puanları, "1,4/1,8"), sağda o
@@ -314,14 +318,16 @@ func _effort(points: float) -> void:
 
 func _hover(on: bool) -> void:
 	_hovered = on
-	if _hover_bar != null:
-		_hover_bar.visible = on or _forced
 	_paint()
 
 
-## Hover bir kenardır: düz kartta açık kenar, kesikli kart kesik kalır.
+## Hover bir kenardır: düz kartta açık kenar, kesikli kart kesik kalır; sönük düğmeler kartla birlikte parlar.
 func _paint() -> void:
 	var hot: bool = _hovered or _forced
+	if _keys != null:
+		var kinds: Array = _card.buttons
+		for i in kinds.size():
+			(_keys.get_child(i) as Button).theme_type_variation = SprintUiShared.key_variation(kinds[i], hot)
 	if _look == Look.MINI:
 		theme_type_variation = &"SprintCardMiniPlanned" if state in PLANNED else &"SprintCardMini"
 	elif state in PLANNED:
