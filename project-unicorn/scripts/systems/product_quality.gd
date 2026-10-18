@@ -147,6 +147,19 @@ static func next_ratio(area: String, star: int = next_star()) -> float:
 	return level(area) / (expect if expect > 0.0 else expectation(area, {"star": mini(star + 1, STAR_MAX)}))
 
 
+## Beklenen alanlardan sözcüğü Zayıf ya da Yok olan (seviye < beklenti) ve oranı en düşük olan; yoksa "". `ctx` boşsa
+## ürün sayfasının referansıdır. `areas` verilmezse U'nun alanlarına bakar: Gelir fiyatın konusudur, kaliteye girmez.
+static func weakest_area(ctx: Dictionary = {}) -> String:
+	var ratios: Dictionary = {}
+	var areas: Array = ctx.get("areas", weights(ctx.get("market", ProductState.market_type()), ctx.get("sector", "")).keys())
+	for area in areas:
+		var lvl: float = level(area)
+		var expect: float = expectation(area, ctx)
+		if lvl < expect:
+			ratios[area] = _ratio(lvl, expect)
+	return _lowest(ratios.keys(), ratios)
+
+
 ## {alan: beklenti} (beklentisi 0 olan alan yok): yıldızın ve sektörün satırı, rakipsiz. Hesap bunu imzada ve her yenileme
 ## penceresinin açılışında kopyalar (`Customer.market_ref`).
 static func market_ref_for(star: int, sector: String, subtype: String = ProductState.subtype()) -> Dictionary:

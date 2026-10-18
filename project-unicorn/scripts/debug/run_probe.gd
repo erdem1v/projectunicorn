@@ -81,11 +81,11 @@ extends RefCounted
 #                                           SprintCatalog level (the screen shows it rounded to halves), lines =
 #                                           the area's capabilities, launches = the rival launches on them that
 #                                           the rival window still counts)
-#   PROBE VCQ   day=<d> investor=<id> key=<query key> dim=<axis id|->
+#   PROBE VCQ   day=<d> investor=<id> key=<query key> dim=<area id|->
 #                                           (every Beat-3 question, as the meeting put it up: the key VCPitchSystem
-#                                           chose, seed or Series A; dim the weakest axis behind a product fund's
-#                                           question (weak_dim names it, seed how_big does not), - for any other
-#                                           fund and for the clean question)
+#                                           chose, seed or Series A; dim the weakest product area behind a product
+#                                           fund's question (weak_dim names it, seed how_big does not), - for any
+#                                           other fund and for the clean question)
 #   PROBE MARKET day=<d> total=<$M> leader=<id> leader_value=<$M> listed=<n> player=<valuation $M>
 #               (the Piyasa list at the week's open, every MARKET_LOG_WEEKS weeks from week 1;
 #               a pure read of MarketCatalog, so the line is byte-identical for one seed)
@@ -1516,11 +1516,11 @@ static func _sit_the_meeting() -> String:
 
 
 ## PROBE VCQ — the Beat-3 question the angle pick just put up, the key read from the meeting itself. Only the
-## product fund's question turns on an axis (_sorgu_product, seed how_big), so the weakest axis is read for it
+## product fund's question turns on an area (_sorgu_product, seed how_big), so the weakest area is read for it
 ## alone and is "-" when it asked its clean question.
 static func _log_vcq() -> void:
 	var product_fund: bool = InvestorRegistry.get_investor(VCPitchSystem._vc_id).get("domain", "") == "product"
-	var weak: String = VCPitchSystem._weakest_dimension() if product_fund else ""
+	var weak: String = ProductQuality.weakest_area() if product_fund else ""
 	print("PROBE VCQ day=%d investor=%s key=%s dim=%s" % [
 		GameState.day, VCPitchSystem._vc_id, VCPitchSystem._sorgu.get("key", "-"), weak if weak != "" else "-"])
 

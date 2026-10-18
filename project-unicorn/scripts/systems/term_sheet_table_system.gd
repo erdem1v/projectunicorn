@@ -59,8 +59,7 @@ const E_FIT_TEAM_SIZE_MIN := 4
 const E_FIT_NARRATIVE_BRAND := 6    # Bosphorus: brand at/above the room's brand floor (+), below (−)
 const E_FIT_NARRATIVE_WARM := 4     # Bosphorus: came through a warm intro (+)
 const E_FIT_PRODUCT_SHIPPED := 4    # Meridian: MVP shipped (+), not shipped (−)
-const E_FIT_PRODUCT_DIMS := 4       # Meridian: no quality axis under the floor below (+)
-const E_FIT_PRODUCT_DIM_FLOOR := 40.0
+const E_FIT_PRODUCT_DIMS := 4       # Meridian: no area the market expects is Weak or Missing on the product page (+)
 
 ## What a push costs in E. A FAILED push also costs 1 patience. The ask size is
 ## how far this push would drag the lever from the fund's opening offer, in steps
@@ -544,9 +543,9 @@ static func _domain_fit() -> int:
 			if bool(inv.get("warm_intro", false)):
 				fit += E_FIT_NARRATIVE_WARM
 		"product":
-			fit += E_FIT_PRODUCT_SHIPPED if bool(GameState.get_flag("mvp_shipped", false)) else -E_FIT_PRODUCT_SHIPPED
-			var weakest: float = QualityModel.dims_from_flags().values().min()
-			if weakest >= E_FIT_PRODUCT_DIM_FLOOR:
+			var shipped: bool = bool(GameState.get_flag("mvp_shipped", false))
+			fit += E_FIT_PRODUCT_SHIPPED if shipped else -E_FIT_PRODUCT_SHIPPED
+			if shipped and ProductQuality.weakest_area() == "":
 				fit += E_FIT_PRODUCT_DIMS
 	return clampi(fit, -E_FIT_MAX, E_FIT_MAX)
 

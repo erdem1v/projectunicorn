@@ -1296,8 +1296,8 @@ VC_Q_REFUSED_ACQ,"""Bir satın almayı geri çevirmişsin. Kibir mi, vizyon mu?"
 VC_Q_REFUSED_ACQ_MONO,Reddettiğin teklifi soracak.,They will ask about the offer you refused.
 VC_Q_REPUTATION,"""İtibarın zedeli. Bu hikâyeye kim inanır?""","""Your reputation is damaged. Who believes this story?"""
 VC_Q_REPUTATION_MONO,İtibarını yoklayacak.,They will probe your reputation.
-VC_Q_WEAK_DIM,"""{axis} tarafın zayıf. Sektörü bilen biri bunu ilk bakışta görür.""","""Your {axis} side is weak. Anyone who knows the sector sees it at a glance."""
-VC_Q_WEAK_DIM_MONO,En zayıf ekseni bulacak.,They will find the weakest axis.
+VC_Q_WEAK_DIM,"""{area} tarafın zayıf. Sektörü bilen biri bunu ilk bakışta görür.""","""Your {area} side is weak. Anyone who knows the sector sees it at a glance."""
+VC_Q_WEAK_DIM_MONO,En zayıf alanı bulacak.,They will find the weakest area.
 VC_Q_CLEAN,"""Doğrusu, saldıracak bir yer bulamadım. Bu iyi bir işaret. Devam et.""","""Honestly, I could not find anywhere to attack. That is a good sign. Go on."""
 VC_Q_CLEAN_MONO,Temiz alan. Nefes al.,Clear ground. Take a breath.
 VC_REACT_GOOD,"""İyi.""","""Good."""

@@ -540,6 +540,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"support_inflow_is_bug_free":            fail = _case_support_inflow_is_bug_free()
 		"neglect_reputation_below_zero":         fail = _case_neglect_reputation_below_zero()
 		"bugs_leave_sales_and_vc_alone":         fail = _case_bugs_leave_sales_and_vc_alone()
+		"vc_weakest_area":                       fail = _case_vc_weakest_area()
 		"product_paid_plan_locked_until_mvp":    fail = _case_product_paid_plan_locked_until_mvp()
 		"product_pm_plan_opens_as_next_sprint":  fail = _case_product_pm_plan_opens_as_next_sprint()
 		"market_catalog_lint":              fail = _case_market_catalog_lint()
@@ -23721,8 +23722,11 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 				ProductState.set_line_tier(String(line_id), 2)
 		ProductState.clear_line_bugs(BUG_LINE)
 		var clean: Dictionary = read.call()
-		if clean.series_a_query.get("key") != "clean" or clean.seed_query.get("key") != "clean":
-			return "fixture: the healthy product's questions read %s and %s, want clean" % [clean.seed_query.get("key"), clean.series_a_query.get("key")]
+		var asked: Array = [clean.seed_query.get("key"), clean.series_a_query.get("key")]
+		var want_asked: Array = ["clean", "clean"] if ladder.is_empty() else ["how_big", "weak_dim"]
+		if asked != want_asked:
+			return "fixture: the %s ladder's seed and Series A questions read %s, want %s" % [
+				"K2" if ladder.is_empty() else "K1", asked, want_asked]
 		var strength: float = SalesFaucetSystem.product_strength()
 		var moving: bool = strength > SalesConstants.QUALITY_STRENGTH_LOW and strength < SalesConstants.QUALITY_STRENGTH_HIGH
 		if moving == ladder.is_empty():
@@ -23737,6 +23741,69 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 			if clean[key] != buggy[key]:
 				return "50 open bugs changed '%s': %s, was %s with none" % [key, buggy[key], clean[key]]
 	SalesMeetingSystem.reset()
+	VCPitchSystem._vc_id = ""
+	TermSheetTableSystem._vc_id = ""
+	return ""
+
+
+## Yatırımcı ve yatırım masası ürün sayfasının alan dilini okur. `weakest_area`: beklenen alanlardan sözcüğü Zayıf ya da Yok
+## olanların oranı en düşüğü; tam beklentide olan, beklentisi 0 olan ve `areas`ın dışında kalan alan sayılmaz; yoksa "".
+## Series A sorusu o alanı adıyla söyler, tohum sorusu `how_big` olur, yoksa ikisi temizdir. Meridian'ın masa uyumu
+## `E_FIT_PRODUCT_DIMS`'i yalnız yayındaki ürünün hiçbir alanı eksik değilken alır.
+## FALSİFİKASYON: `weakest_area`da `lvl < expect` yerine `<=` yaz → "bar" FAIL; `_lowest` yerine ilk eksik alanı
+## döndür → "lowest" FAIL; `_sorgu_product`ta `area_short` yerine boş dize ver → "series_a" FAIL; beklentiyi 1'e yükselt
+## (`lvl < maxf(expect, 1.0)`) → "star" FAIL; `_domain_fit`te `shipped and`'i kaldır → "unshipped" FAIL.
+static func _case_vc_weakest_area() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	VCPitchSystem._vc_id = "meridian"
+	TermSheetTableSystem._vc_id = "meridian"
+	var met_fit: int = TermSheetTableSystem.E_FIT_PRODUCT_SHIPPED + TermSheetTableSystem.E_FIT_PRODUCT_DIMS
+	var read := func() -> Dictionary:
+		return {"area": ProductQuality.weakest_area(), "seed": VCPitchSystem._pick_sorgu_seed().key,
+			"series_a": VCPitchSystem._sorgu_product(), "fit": TermSheetTableSystem._domain_fit()}
+	var tier_area := func(area: String, tier: int) -> void:
+		for line_id in SprintCatalog.capabilities(area):
+			ProductState.set_line_tier(line_id, tier)
+	# K2 meets every bar; K1 puts Core exactly on the 2★ bar (level = expectation reads Enough).
+	for tier in [2, 1]:
+		_seed_b2b_lines("erp", tier)
+		var met: Dictionary = read.call()
+		if met.area != "" or met.seed != "clean" or met.series_a.key != "clean" or met.fit != met_fit:
+			return "bar: ERP at K%d reads weak area '%s', seed '%s', Series A '%s', fit %d; want none, both clean, fit %d" % [
+				tier, met.area, met.seed, met.series_a.key, met.fit, met_fit]
+	# Core one line short (below its bar, above 0) and Trust empty: the lowest ratio is named, not the first lacking.
+	tier_area.call("trust", 0)
+	ProductState.set_line_tier(SprintCatalog.capabilities("core")[0], 0)
+	var lacking: Dictionary = read.call()
+	if lacking.area != "trust":
+		return "lowest: Core at %.2f of its bar and Trust at 0 name '%s', want trust" % [ProductQuality.level("core"), lacking.area]
+	var line: String = lacking.series_a.vc_line
+	if lacking.series_a.key != "weak_dim" or not line.contains(SprintCatalog.area_short("trust")) or line.contains("{"):
+		return "series_a: the question reads %s '%s', want weak_dim naming %s" % [
+			lacking.series_a.key, line, SprintCatalog.area_short("trust")]
+	if lacking.seed != "how_big" or lacking.fit != met_fit - TermSheetTableSystem.E_FIT_PRODUCT_DIMS:
+		return "lacking: seed '%s', fit %d; want how_big and the table without the +%d" % [
+			lacking.seed, lacking.fit, TermSheetTableSystem.E_FIT_PRODUCT_DIMS]
+	# A 1★ customer looks only at Core: Trust at 0 is not named. `areas` narrows the look.
+	if ProductQuality.weakest_area({"market": "b2b", "sector": "logistics", "star": 1}) != "":
+		return "star: a 1★ context named '%s' with Core past its bar" % ProductQuality.weakest_area({"market": "b2b", "sector": "logistics", "star": 1})
+	if ProductQuality.weakest_area({"areas": ["integrations"]}) != "" or ProductQuality.weakest_area({"areas": ["core", "trust"]}) != "trust":
+		return "areas: the filter reads '%s' and '%s', want '' and trust" % [
+			ProductQuality.weakest_area({"areas": ["integrations"]}), ProductQuality.weakest_area({"areas": ["core", "trust"]})]
+	# Trust built: Core is the one left.
+	tier_area.call("trust", 1)
+	if ProductQuality.weakest_area() != "core":
+		return "core: Trust built, the weakest reads '%s', want core" % ProductQuality.weakest_area()
+	# A product not shipped gets no bonus for lacking nothing.
+	_seed_b2b_lines("erp", 2)
+	GameState.set_flag("mvp_shipped", false)
+	if TermSheetTableSystem._domain_fit() != -TermSheetTableSystem.E_FIT_PRODUCT_SHIPPED:
+		return "unshipped: the fit reads %d, want %d" % [TermSheetTableSystem._domain_fit(), -TermSheetTableSystem.E_FIT_PRODUCT_SHIPPED]
+	for loc in ["tr", "en"]:
+		var raw: String = TranslationServer.get_translation_object(loc).get_message("VC_Q_WEAK_DIM")
+		if not raw.contains("{area}") or raw.contains("{axis}"):
+			return "VC_Q_WEAK_DIM in %s reads '%s', want the {area} placeholder" % [loc, raw]
 	VCPitchSystem._vc_id = ""
 	TermSheetTableSystem._vc_id = ""
 	return ""

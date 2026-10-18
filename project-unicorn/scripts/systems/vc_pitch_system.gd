@@ -1125,7 +1125,7 @@ static func _pick_sorgu_seed() -> Dictionary:
 				return {"key": "insight", "vc_line": _t("SEED_Q_INSIGHT"),
 					"mono": _t("SEED_Q_INSIGHT_MONO")}
 		"product":
-			if _weakest_dimension() != "":
+			if ProductQuality.weakest_area() != "":
 				return {"key": "how_big", "vc_line": _t("SEED_Q_HOW_BIG"),
 					"mono": _t("SEED_Q_HOW_BIG_MONO")}
 	return {"key": "clean", "vc_line": _t("SEED_Q_CLEAN"), "mono": _t("SEED_Q_CLEAN_MONO")}
@@ -1175,10 +1175,10 @@ static func _sorgu_narrative() -> Dictionary:
 
 
 static func _sorgu_product() -> Dictionary:
-	var weak: String = _weakest_dimension()
+	var weak: String = ProductQuality.weakest_area()
 	if weak != "":
 		return {"key": "weak_dim",
-			"vc_line": _t("VC_Q_WEAK_DIM").format({"axis": ProductCatalog.axis_label(weak)}),
+			"vc_line": _t("VC_Q_WEAK_DIM").format({"area": SprintCatalog.area_short(weak)}),
 			"mono": _t("VC_Q_WEAK_DIM_MONO")}
 	return _clean_sorgu()
 
@@ -1256,20 +1256,6 @@ static func _callback_met(cb: Dictionary) -> bool:
 		"first_engineer": return CharacterRegistry.count_developers() >= 1
 		"scandal_resolved": return not GameState.unmanaged_major_scandal
 		_: return false
-
-
-## The weakest quality axis, as an ID ("innovation" / "stability" / "experience") or "".
-## An id, never a label (store ids, render at display time): _sorgu_product localizes it
-## through ProductCatalog.axis_label.
-static func _weakest_dimension() -> String:
-	var dims := QualityModel.dims_from_flags()
-	var worst := ""
-	var worst_v := 999.0
-	for k in dims:
-		if dims[k] < worst_v:
-			worst_v = dims[k]
-			worst = k
-	return worst if worst_v < 40.0 else ""   # only "weak" if below a working floor
 
 
 ## Did the founder personally close most of the book? Reads the acquisition source on the
