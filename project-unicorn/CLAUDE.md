@@ -246,10 +246,10 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
   `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`
   pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer. Kare maliyeti:
-  `--tick-probe=<hız>[:<pencere>]` headless'tır, kabuğu tempo dünyasıyla kurar ve beş haftayı gerçek saatle koşar;
-  saat adımı, gece, sonraki kare ve ilk saat karelerinin süresini, TopBar'ın gece başına yenilemesini ve otomatik
-  kaydın karesini `TICK` satırlarında basar. `auto_*` yazar: ayrı `APPDATA` ile koşulur (`TICK START udir=`); kayıt
-  taşıyan kullanıcı dizininde çalışmaz. Üst barın saat hâlleri:
+  `--tick-probe=<hız>[:<pencere>][:accounts=<n>]` headless'tır, kabuğu tempo dünyasıyla (`accounts=<n>` ile n B2B hesaplı
+  ERP dünyasıyla, `TICK WORLD` satırı) kurar ve beş haftayı gerçek saatle koşar; saat adımı, gece, sonraki kare ve ilk
+  saat karelerinin süresini, TopBar'ın gece başına yenilemesini ve otomatik kaydın karesini `TICK` satırlarında basar.
+  `auto_*` yazar: ayrı `APPDATA` ile koşulur (`TICK START udir=`); kayıt taşıyan kullanıcı dizininde çalışmaz. Üst barın saat hâlleri:
   `--clock-shot=<running|paused|held|released|gate|incident|focus_out|focus_out_off>` (`CLOCKSHOT` satırı: birincil pencere,
   sprint kipi, tutuşlar, hız; odak kollarında önce ve sonraki hız; dar bar `paused` ve `--shot-scale=1.25`).
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.

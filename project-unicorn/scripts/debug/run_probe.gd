@@ -37,9 +37,15 @@ extends RefCounted
 #                                           lost = the users the audience has lost to erosion and bug churn)
 #   PROBE CHURN day=<d> id=<cid> ...        (customer_churned — the autopsy's terminal)
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
-#   PROBE SIGN  day=<d> hour=<h> id=<cid> by=<founder|rep> star=<n> weeks=<w> mrr=<n>
+#   PROBE LEAD  day=<d> id=<pid> arch=<archetype> sector=<sector> star=<n> phase=<p>
+#                                           (every B2B lead the faucet or an event puts on the desk, as it arrives)
+#   PROBE SIGN  day=<d> hour=<h> id=<cid> by=<founder|rep> star=<n> weeks=<w> mrr=<n> sector=<s> arch=<a> tol=<n> phase=<p>
+#               areas=<area>:<level>,...
 #                                           (every B2B signing; weeks is the deal's planned length,
-#                                           0 for a fixture account; mrr is the account's)
+#                                           0 for a fixture account; mrr is the account's; arch is the lead's,
+#                                           - for a fixture account, which has no lead; tol is the account's
+#                                           seeded tolerance, the floor its satisfaction is held against;
+#                                           areas are the market's unrounded area levels at the signature)
 #   PROBE TALLY <id> fires=<n> picks=<n>    (one per id, at the end)
 #   PROBE WEEK  w=<w> fires=<n> meetings=<n> signs=<n>   (one per week, at the end: card fires,
 #                                           the founder's sittings, B2B signings)
@@ -70,6 +76,16 @@ extends RefCounted
 #   PROBE BUGS  day=<d> new=<n> open=<n> pre=<n>   (every week a product is live: bugs that arrived, open bugs now,
 #                                           and open bugs just before this week's sprint close)
 #   PROBE LINES day=<d> <line>=<n>,...      (beside PROBE BUGS: the open bugs line by line, - with none)
+#   PROBE AREAS day=<d> market=<b2b|b2c> <area>=<level>/<lines>/<launches>,...
+#                                           (beside PROBE BUGS: every area of the market, level = the unrounded
+#                                           SprintCatalog level (the screen shows it rounded to halves), lines =
+#                                           the area's capabilities, launches = the rival launches on them that
+#                                           the rival window still counts)
+#   PROBE VCQ   day=<d> investor=<id> key=<query key> dim=<axis id|->
+#                                           (every Beat-3 question, as the meeting put it up: the key VCPitchSystem
+#                                           chose, seed or Series A; dim the weakest axis behind a product fund's
+#                                           question (weak_dim names it, seed how_big does not), - for any other
+#                                           fund and for the clean question)
 #   PROBE MARKET day=<d> total=<$M> leader=<id> leader_value=<$M> listed=<n> player=<valuation $M>
 #               (the Piyasa list at the week's open, every MARKET_LOG_WEEKS weeks from week 1;
 #               a pure read of MarketCatalog, so the line is byte-identical for one seed)
@@ -308,6 +324,7 @@ static func _wire_log() -> void:
 	EventBus.meeting_entered.connect(func(_lead_id: String) -> void:
 		_meetings_by_day[GameState.day] = int(_meetings_by_day.get(GameState.day, 0)) + 1)
 	EventBus.deal_signed.connect(_on_signed)
+	EventBus.prospect_arrived.connect(_on_lead)
 
 
 static func _on_month_ended(_data: Dictionary) -> void:
@@ -518,9 +535,19 @@ static func _on_signed(customer_id: String, _seats: int, _seat_price: int) -> vo
 	_signs_by_day[GameState.day] = int(_signs_by_day.get(GameState.day, 0)) + 1
 	if _first_sign_day < 0:
 		_first_sign_day = GameState.day
-	print("PROBE SIGN day=%d hour=%d id=%s by=%s star=%d weeks=%.1f mrr=%d" % [GameState.day, GameState.current_hour,
-		customer_id, "founder" if c.acquisition_source == "founder_pitch" else "rep", c.scale,
-		lead.deal_halfweeks / 2.0 if lead != null else 0.0, c.mrr])
+	var levels: Array = SprintCatalog.area_ids().map(func(a: String) -> String:
+		return "%s:%.3f" % [a, SprintCatalog._raw_level(a)])
+	print("PROBE SIGN day=%d hour=%d id=%s by=%s star=%d weeks=%.1f mrr=%d sector=%s arch=%s tol=%d phase=%d areas=%s" % [
+		GameState.day, GameState.current_hour, customer_id,
+		"founder" if c.acquisition_source == "founder_pitch" else "rep", c.scale,
+		lead.deal_halfweeks / 2.0 if lead != null else 0.0, c.mrr, c.industry,
+		lead.archetype_id if lead != null else "-", c.tolerance, GameState.phase, ",".join(levels)])
+
+
+static func _on_lead(lead_id: String) -> void:
+	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
+	print("PROBE LEAD day=%d id=%s arch=%s sector=%s star=%d phase=%d" % [
+		GameState.day, lead_id, p.archetype_id, p.industry, p.star, GameState.phase])
 
 
 static func _log_promise(promise_id: String, stage: String) -> void:
@@ -629,6 +656,22 @@ static func _log_bugs() -> void:
 		return "%s=%d" % [l, by_line[l]])) if not lines.is_empty() else "-"])
 	_bugs_open = open
 	_bugs_cleared = 0
+
+
+## PROBE AREAS — the live product's areas this week. SprintCatalog._raw_level is read because the screen's
+## area_level rounds to halves; the launches are the rival_hits on the area's lines inside _recent_hit's window.
+static func _log_areas() -> void:
+	if not ProductState.is_live():
+		return
+	var window: int = SprintSystem.sprints_in(int(SprintCatalog.cfg("rival_window_weeks")))
+	var hits: Array = GameState.product.get("rival_hits", [])
+	var areas: PackedStringArray = []
+	for area_id in SprintCatalog.area_ids():
+		var caps: Array[String] = SprintCatalog.capabilities(area_id)
+		var launches: int = hits.filter(func(h: Dictionary) -> bool:
+			return String(h.line) in caps and SprintSystem.sprint_number() - int(h.sprint) < window).size()
+		areas.append("%s=%.3f/%d/%d" % [area_id, SprintCatalog._raw_level(area_id), caps.size(), launches])
+	print("PROBE AREAS day=%d market=%s %s" % [GameState.day, ProductState.market_type(), ",".join(areas)])
 
 
 static func _log_tally() -> void:
@@ -826,6 +869,7 @@ static func _on_week_start() -> void:
 	_log_customers()
 	_log_b2c()
 	_log_bugs()
+	_log_areas()
 	if (GameState.day - 1) % MARKET_LOG_WEEKS == 0:
 		_log_market()
 	if GameState.day >= _stop_day or not GameState.run_active:
@@ -1458,6 +1502,8 @@ static func _sit_the_meeting() -> String:
 		var pick: String = _meeting_pick(ids)
 		var before: int = VCPitchSystem._conviction
 		var res: Dictionary = VCPitchSystem.advance(pick)
+		if pick.begins_with("b2_"):
+			_log_vcq()
 		if bool(res.get("done", false)):
 			trace.append("%s:%d>end" % [pick, before])
 			break
@@ -1470,6 +1516,16 @@ static func _sit_the_meeting() -> String:
 		print("PROBE ERROR day=%d meeting did not finish" % GameState.day)
 	VCPitchSystem.end_sitting()     # the sitting's hours run once the panel is gone
 	return ",".join(trace)
+
+
+## PROBE VCQ — the Beat-3 question the angle pick just put up, the key read from the meeting itself. Only the
+## product fund's question turns on an axis (_sorgu_product, seed how_big), so the weakest axis is read for it
+## alone and is "-" when it asked its clean question.
+static func _log_vcq() -> void:
+	var product_fund: bool = InvestorRegistry.get_investor(VCPitchSystem._vc_id).get("domain", "") == "product"
+	var weak: String = VCPitchSystem._weakest_dimension() if product_fund else ""
+	print("PROBE VCQ day=%d investor=%s key=%s dim=%s" % [
+		GameState.day, VCPitchSystem._vc_id, VCPitchSystem._sorgu.get("key", "-"), weak if weak != "" else "-"])
 
 
 static func _pushable_levers() -> Array[String]:

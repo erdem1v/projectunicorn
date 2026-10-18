@@ -513,21 +513,61 @@ func _seed_tempo_state() -> void:
 	SprintSystem.start()
 
 
-# --tick-probe=<speed idx>[:<window>]: the cost of the frames that step the hour or the night, five
-# weeks on the real clock over the tempo world, headless, with that window open (finance, piyasa,
-# ...); tick_probe.gd times and prints them. The autosave is on, the night's frame must carry it,
+## The tick probe's book world: the live ERP product on its real lines and `count` B2B accounts, thirteen sectors
+## by three stars in turn, signed through the signing seam. A seat each at a small price keeps the book's MRR under
+## the Series A bar, so no fund calls inside the five weeks, and a tolerance of 0 keeps every account out of Risk
+## once the first release lowers the axes, so no retention card queues: the weeks time the healthy path.
+## TICK WORLD reports the book that signed.
+func _seed_accounts_state(count: int) -> void:
+	_seed_run_reproducible()
+	GameState.set_cash(50000)
+	SprintSystem.choose_type("erp", "Sahra")
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_innovation", 45.0)
+	GameState.set_flag("mvp_stability", 70.0)
+	GameState.set_flag("mvp_experience", 45.0)
+	GameState.set_flag("mvp_version", 2)
+	for row in _ERP_SHIPPED_LINES:
+		ProductState.set_line_tier(String(row[0]), int(row[1]))
+	var sectors: Array = B2BConstants.SECTORS
+	for i in count:
+		var lead := Prospect.new()
+		lead.id = "tick_%03d" % i
+		lead.company_name = "Tick %03d" % i
+		lead.industry = String(sectors[i % sectors.size()])
+		lead.star = 1 + floori(i / float(sectors.size())) % 3
+		SalesSystem.add_b2b_customer(lead, 1, 10, 85).tolerance = 0
+	SprintSystem.apply_lead()
+	SprintSystem.start()
+	print("TICK WORLD accounts=%d mrr=%d" % [CustomerRegistry.get_by_market("b2b").size(), GameState.mrr])
+
+
+# --tick-probe=<speed idx>[:<window>][:accounts=<n>]: the cost of the frames that step the hour or the
+# night, five weeks on the real clock over the tempo world, headless, with that window open (finance,
+# piyasa, ...); tick_probe.gd times and prints them. accounts=<n> swaps the tempo world for the ERP
+# world with n B2B accounts (_seed_accounts_state). The autosave is on, the night's frame must carry it,
 # and the headless frame sleep is off, it would sit inside every frame time. It writes auto_*
 # slots, so it refuses a user dir that holds saves: run it on an APPDATA of its own.
 func _run_tick_probe(spec: String) -> void:
-	var speed: int = int(spec.get_slice(":", 0))
+	var parts: PackedStringArray = spec.split(":")
+	var speed: int = int(parts[0])
 	if _speed_refused("TICK", speed):
 		return
 	if not SaveManager.list_slots().is_empty():
 		print("TICK ERROR %s holds saves: run on an APPDATA of its own" % OS.get_user_data_dir())
 		get_tree().quit()
 		return
-	var win: String = spec.get_slice(":", 1) if spec.contains(":") else ""
-	_seed_tempo_state()
+	var win: String = ""
+	var accounts: int = 0
+	for part in parts.slice(1):
+		if part.begins_with("accounts="):
+			accounts = int(part.trim_prefix("accounts="))
+		else:
+			win = part
+	if accounts > 0:
+		_seed_accounts_state(accounts)
+	else:
+		_seed_tempo_state()
 	_begin_shot()
 	await _mount_shot_shell()
 	OS.low_processor_usage_mode_sleep_usec = 0
