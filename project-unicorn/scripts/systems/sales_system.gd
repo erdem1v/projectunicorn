@@ -385,6 +385,7 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 		c.pain_feature_id = B2BSalesSystem.pick_pain_feature(ProductState.subtype(), c.scale)
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
+	CustomerRegistry.set_market_ref(c.id, ProductQuality.market_ref_for(c.scale, c.industry))
 	# The account arrives already owned when a rep has room, through the stewardship system's
 	# own seam: who holds an account is CS's rule, not Sales', and Sales only says "one more
 	# exists now".

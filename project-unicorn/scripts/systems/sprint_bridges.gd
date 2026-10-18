@@ -17,7 +17,8 @@ extends RefCounted
 ## pencere atlanır. Yetenek hesabın sektörünün arketipine bağlı alandan, kilidi açık ve başka açık
 ## talepte olmayan sonraki kademelerden hash'le seçilir. Son tarih planlanabilir sprintten
 ## `deadline_weeks` sonraki sprinttir (seçilen süreyle sayılır); o sprint kapanmış ya da hesabı
-## kapanan açık talep sessizce düşer (zamanında olan kapanışta on_release'te karşılanmıştır).
+## kapanan açık talep sessizce düşer (zamanında olan kapanışta on_release'te karşılanmıştır). Yenileme penceresinin
+## açıldığı gün hesap pazar referansını yeniden kopyalar (`Customer.market_ref`).
 static func tick_requests() -> void:
 	var last_closed: int = SprintSystem.last_closed()
 	var plannable: int = SprintSystem.plannable_sprint()
@@ -32,6 +33,8 @@ static func tick_requests() -> void:
 	var area_of: Dictionary = SprintCatalog.cfg("archetypes")
 	for c in accounts:
 		var renewal: int = next_renewal_day(c)
+		if GameState.day == renewal - lead:
+			CustomerRegistry.set_market_ref(c.id, ProductQuality.market_ref_for(c.scale, c.industry))
 		var window: int = renewal - lead if GameState.day >= renewal - lead else c.acquired_on_day + first
 		if GameState.day < window or requests.any(func(r: Dictionary) -> bool:
 				return r.customer_id == c.id and (r.status == "open" or int(r.day) >= window)):
@@ -105,7 +108,7 @@ static func press_line(release: Dictionary) -> Dictionary:
 			break
 	if out.is_empty():
 		for change in release.changed_areas:
-			var expect: float = SprintCatalog.expectation(change.area)
+			var expect: float = ProductQuality.expectation(change.area)
 			if float(change.from) < expect and float(change.to) >= expect:
 				out = {"key": "PRODUCT_PRESS_AREA_%d" % (h % int(SprintCatalog.cfg("content.press_area"))),
 					"args": {"product": product, "area": change.area}}
@@ -151,8 +154,8 @@ static func actual_sentence(release: Dictionary) -> Dictionary:
 		var users: int = int(SalesSystem.b2c_audience())
 		return {"key": Fmt.count_key("PRODUCT_RELEASE_USERS", users), "args": {"n": users}}
 	for change in release.changed_areas:
-		var from: String = SprintCatalog.word_for(float(change.from), SprintCatalog.expectation(change.area))
-		var to: String = SprintCatalog.area_word(change.area)
+		var from: String = ProductQuality.word_for(float(change.from), ProductQuality.expectation(change.area))
+		var to: String = ProductQuality.word(change.area)
 		if from != to:
 			return {"key": "PRODUCT_RESULT_LEVEL_ACTUAL", "args": {"area": change.area, "from": from, "to": to}}
 	var n: int = 0

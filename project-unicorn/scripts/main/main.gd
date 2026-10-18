@@ -3507,6 +3507,8 @@ func _run_product_shot(id: String) -> void:
 		if id == "live:b2c_live":
 			# Geçmiş açık: v1.0'ın satırı ilk haftanın kullanıcılarını okur.
 			get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(true, "history_open")
+		if id == "live:b2b_quarter":
+			get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui("quarter", "view")
 		await _finish_shot(stem)
 		return
 	await _mount_shot_shell()
@@ -3541,8 +3543,8 @@ func _run_product_shot(id: String) -> void:
 	get_tree().quit()
 
 
-## live:<pick|pick_named|pick_relang|plan|week1|active|decision_paper|b2c_mvp|b2c_live|b2b_requests|gate|rnd|
-## delegate|solo15|solo15_tip|solo12_active>. The pick ones leave the product untyped (the type picker). The solo ones
+## live:<pick|pick_named|pick_relang|plan|week1|active|decision_paper|b2c_mvp|b2c_live|b2b_mvp|b2b_mature|b2b_quarter|
+## b2b_requests|gate|rnd|delegate|solo15|solo15_tip|solo12_active>. The pick ones leave the product untyped (the type picker). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
 ## the lead's plan applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active
 ## starts the lead's plan at 12 hours, two cards over capacity (6/5). The rest choose a type, staff it with the
@@ -3555,12 +3557,14 @@ func _run_product_shot(id: String) -> void:
 ## v1.0 release note it publishes, delegate on Sprint 2, started by the PM once Sprint 1's note is left (shipped
 ## at the gate) with planning delegated. b2c_live publishes as b2c_mvp and plays four weeks with the audience
 ## flowing hour by hour, starting each sprint itself, and prints the live audience as `SHOT|b2c`.
-## b2b_requests signs two accounts once the faucet opens at MVP and plays one more sprint, so the next planning
-## carries their request cards.
+## b2b_mvp is b2c_mvp on the ERP: the v1.0 release note of a B2B product. b2b_mature builds every line to its second tier
+## and opens the next planning, so every area reads the third star. b2b_quarter is delegate on the ERP with the quarter
+## view open: the PM's goal strip right after the MVP. b2b_requests signs two accounts once the faucet
+## opens at MVP and plays one more sprint, so the next planning carries their request cards.
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
 		return
-	var b2b: bool = scenario == "b2b_requests"
+	var b2b: bool = scenario.begins_with("b2b")
 	var paper: String = ""   # decision_paper:<card id> asks for that real paper instead of the developer fixture
 	if scenario.begins_with("decision_paper:"):
 		paper = scenario.get_slice(":", 1)
@@ -3624,7 +3628,7 @@ func _seed_product_live(scenario: String) -> void:
 	day.call()
 	if scenario in ["active", "decision_paper"]:
 		return
-	if scenario == "delegate":
+	if scenario in ["delegate", "b2b_quarter"]:
 		day.call()
 		SprintSystem.publish()
 		SprintSystem.set_delegate(true)
@@ -3650,7 +3654,11 @@ func _seed_product_live(scenario: String) -> void:
 			day.call()
 			SalesSystem.daily_tick()
 		print("SHOT|b2c users=%d paying=%d" % [int(SalesSystem.b2c_audience()), SalesSystem.b2c_paying_users()])
-	if not b2b:
+	if scenario == "b2b_mature":
+		for line_id in ProductLines.line_ids(ProductState.subtype()):
+			ProductState.set_line_tier(String(line_id), 2)
+		SprintSystem.plan_next()
+	if scenario != "b2b_requests":
 		return
 	for i in 2:
 		var lead: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")

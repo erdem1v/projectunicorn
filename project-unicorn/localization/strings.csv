@@ -2909,25 +2909,12 @@ PRODUCT_AREA_TRUST,Güven & Ölçek,Trust & Scale
 PRODUCT_AREA_TRUST_SHORT,Güven,Trust
 PRODUCT_AREA_REVENUE,Gelir,Revenue
 PRODUCT_AREA_REVENUE_SHORT,Gelir,Revenue
-PRODUCT_AREA_CORE_WEAK,Kullanıcılar temel işi yapmakta zorlanıyor,Users struggle to get the basic job done
-PRODUCT_AREA_CORE_ENOUGH,Kullanıcılar temel işi yapabiliyor,Users can get the basic job done
-PRODUCT_AREA_CORE_STRONG,Kullanıcılar çekirdeği başkalarına öneriyor,Users recommend the core to others
-PRODUCT_AREA_ONBOARDING_NONE,Yeni gelen kullanıcıyı karşılayan bir şey yok,Nothing greets a new user yet
-PRODUCT_AREA_ONBOARDING_WEAK,Yeni kullanıcıların çoğu ilk hafta bırakıyor,Most new users quit in the first week
-PRODUCT_AREA_ONBOARDING_ENOUGH,Yeni kullanıcılar yolunu buluyor,New users find their way
-PRODUCT_AREA_ONBOARDING_STRONG,Yeni kullanıcılar ilk gün alışıyor,New users settle in on day one
-PRODUCT_AREA_GROWTH_NONE,Ürün kendi kendine yayılmıyor,The product does not spread on its own
-PRODUCT_AREA_GROWTH_WEAK,"Paylaşım zor, davet az geliyor",Sharing is hard and few invites come in
-PRODUCT_AREA_GROWTH_ENOUGH,Kullanıcılar arada bir davet gönderiyor,Users send an invite now and then
-PRODUCT_AREA_GROWTH_STRONG,Davetler kendiliğinden geliyor,Invites keep arriving on their own
-PRODUCT_AREA_INTEGRATIONS_NONE,Başka programlarla bağlantı yok,No connection to other software
-PRODUCT_AREA_INTEGRATIONS_WEAK,Veri elle taşınıyor,Data is moved by hand
-PRODUCT_AREA_INTEGRATIONS_ENOUGH,Temel programlarla bağlantı kuruluyor,It connects to the main tools
-PRODUCT_AREA_INTEGRATIONS_STRONG,Müşteriler ürünü kendi sistemlerine bağlıyor,Customers wire the product into their own systems
-PRODUCT_AREA_TRUST_NONE,Ne yedek var ne yetki,No backups and no access control
-PRODUCT_AREA_TRUST_WEAK,Veri kaybı ve kesinti korkusu var,People fear data loss and downtime
-PRODUCT_AREA_TRUST_ENOUGH,Yedek ve yetki yerinde,Backups and access control are in place
-PRODUCT_AREA_TRUST_STRONG,Büyük hesaplar da ürüne güveniyor,Large accounts trust the product too
+PRODUCT_STAR_NONE,Henüz hiçbir şirkete yetmez.,Not enough for any company yet.
+PRODUCT_STAR_SKIPPED,1★ şirketler bu alana bakmaz. 2★ şirketler bir başlangıç ister.,1★ companies do not look at this area. 2★ companies want a start.
+PRODUCT_STAR_SERVES,Bu hâliyle {star}★ şirketlere yeter. {next}★ şirketler daha fazlasını ister.,As it stands it is enough for {star}★ companies. {next}★ companies want more.
+PRODUCT_STAR_TOP,Bu hâliyle 3★ şirketlere de yeter.,As it stands it is enough even for 3★ companies.
+PRODUCT_AUDIENCE_ENOUGH,Bugünkü kitlene yeter.,Enough for your current audience.
+PRODUCT_AUDIENCE_OUTGROWN,Kitlen büyüdükçe kullanıcılar bu alanda daha fazlasını ister.,"As your audience grows, users want more here."
 PRODUCT_AREA_REVENUE_NONE,Ücretli plan henüz yok,No paid plan yet
 PRODUCT_AREA_REVENUE_WEAK,"Ücretli plan var, ödeyen az","There is a paid plan, few pay"
 PRODUCT_AREA_REVENUE_ENOUGH,Ücretli plan açık,The paid plan is open

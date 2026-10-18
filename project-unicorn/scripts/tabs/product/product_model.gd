@@ -80,7 +80,7 @@ extends RefCounted
 #      | {k: "request", customer, value} | {k: "research", area} | {k: "request_on_time", customer}
 #      | {k: "promise", customer}   # kademeye verilmiş açık söz; kart onu etiketle de taşır
 #   level ve cap parçalarında from/to seviyedir (0..3); from_word/to_word o seviyenin beklentiye göre
-#   kelimesidir (SprintCatalog.word_for), kelime ve renk ondan.
+#   kelimesidir (ProductQuality.word_for), kelime ve renk ondan.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 ## Kartın bulunduğu yerdeki düğmeleri; "+" kartın addable'ıyla açılır.
@@ -147,7 +147,7 @@ static func live() -> Dictionary:
 
 ## Sürüm notunda değişen alan oklu okunur: eski seviye ve kelimesi → bugünkü.
 static func _area(id: String, tags: Dictionary, changed: Dictionary) -> Dictionary:
-	var word: String = SprintCatalog.area_word(id)
+	var word: String = ProductQuality.word(id)
 	var candidates: Array = SprintCatalog.candidates(id).map(
 		func(c: Dictionary) -> Dictionary: return _candidate(c, tags))
 	var area := {"id": id, "name": SprintCatalog.area_name(id),
@@ -158,9 +158,9 @@ static func _area(id: String, tags: Dictionary, changed: Dictionary) -> Dictiona
 		"capabilities": SprintCatalog.capabilities(id).map(_capability),
 		"candidates": candidates, "empty": candidates.is_empty()}
 	if not changed.is_empty():
-		area.level = float(changed.from)
-		area.level_to = float(changed.to)
-		area.word = SprintCatalog.word_for(float(changed.from), SprintCatalog.expectation(id))
+		area.level = SprintCatalog.display_level(float(changed.from))
+		area.level_to = SprintCatalog.display_level(float(changed.to))
+		area.word = ProductQuality.word_for(float(changed.from), ProductQuality.expectation(id))
 		area.word_to = word
 	return area
 
@@ -434,13 +434,13 @@ static func _quarter(center: Dictionary, next: Dictionary) -> Dictionary:
 	return {"state": "open", "goal": _goal(), "columns": columns}
 
 
-## Hedef şeridi: alan seviyesinin hedefe (beklentiye) oranı onluk vekil ölçekte, hedef ortadaki
+## Hedef şeridi: alan seviyesinin sıradaki yıldızın beklentisine oranı onluk vekil ölçekte, hedef ortadaki
 ## çizgidedir; alanın cümlesi o çizgiyi anlatır.
 static func _goal() -> Dictionary:
 	var id: String = SprintCatalog.quarter_goal()
 	var mark: int = int(SprintCatalog.cfg("pm.goal_mark"))
 	var total: int = int(SprintCatalog.cfg("pm.goal_squares"))
-	var now: int = mini(roundi(SprintCatalog.area_level(id) / SprintCatalog.expectation(id) * mark), total)
+	var now: int = mini(roundi(ProductQuality.next_ratio(id) * mark), total)
 	return {"area_id": id, "area_name": SprintCatalog.area_short(id), "text": goal_text(id),
 		"now": now, "target": mark, "total": total,
 		"progress_text": _t("PRODUCT_GOAL_PROGRESS").format({"now": now, "total": total})}

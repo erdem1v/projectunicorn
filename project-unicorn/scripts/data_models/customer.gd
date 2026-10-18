@@ -71,6 +71,13 @@ extends Resource
 # a manual choice the same night; this flag is what lets player intent outlive the automation.
 @export var cs_pinned: bool = false           # true = assigned_to was chosen by the player
 
+# --- Ürün uyumu: the market this account measures the product against (HIDDEN, no signal) ---
+# {area: expectation}, the account's star and sector row without the rivals. Copied at signing and when each renewal
+# window opens (ProductQuality.market_ref_for, written by CustomerRegistry.set_market_ref), so a table change or a rival
+# launch never moves a signed account on its own. {} = no copy (a fixture that skipped the signing path, a B2C record):
+# ProductQuality.account_fit reads today's row instead.
+@export var market_ref: Dictionary = {}
+
 # --- SATIŞ rev 6 §5.4 · the price trail -------------------------------------
 # THE ACCOUNT CARRIES ITS OWN SEAT PRICE, stamped at the signature; expansion adds seats at
 # this price, which is what makes the stance dial (§7.5) a decision with a tail rather than a

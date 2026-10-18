@@ -431,6 +431,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"product_fit_table":              fail = _case_product_fit_table()
 		"product_quality_sector_table":   fail = _case_product_quality_sector_table()
 		"product_line_profiles":          fail = _case_product_line_profiles()  # EXPECT-ERROR has unknown profile
+		"fit_star_context":               fail = _case_fit_star_context()
+		"fit_account_ref":                fail = _case_fit_account_ref()
+		"save_v17_market_ref":            fail = _case_save_v17_market_ref()
 		# --- rev 6.1 · Ar-Ge bağı ve kart aritmetiği (2026-08-25).
 		"research_node_map_binds":        fail = _case_research_node_map_binds()
 		"rnd_tree_loads_and_validates":  fail = _case_rnd_tree_loads_and_validates()
@@ -14285,6 +14288,317 @@ static func _case_product_line_profiles() -> String:
 	if ProductLines.work_profile("line_nope") != "":
 		return "an unknown line reads a profile"
 	return ""
+
+
+## Yıldız bağlamı: beklenti müşterinin yıldızına bağlıdır, evreye değil. MVP'den hemen sonra ürün sayfası Çekirdek'i Zayıf
+## okur ama cümle 1★'a yettiğini söyler; evre geçişi hiçbir adayın ve hesabın U'sunu oynatmaz; MVP 1★ adayda 70, aynı MVP 2★
+## adayda 70'in altındadır, aynı ürün 1★, 2★, 3★ adayda azalan U verir; Ar-Ge'nin gizli hattı açılınca İlk kullanım beklentisi
+## hat sayısıyla iner ve onu bekleyen adayın U'su düşmez; B2C'de kitle iki yıldız satırı arasında geçerken U sürekli kalır.
+##
+## FALSİFİKASYON: ProductQuality.expectation'ın sonundaki `minf(value, top)`'u `minf(value + 0.1 * (GameState.phase - 1), top)` yap →
+## evre iddiası FAIL; `_star_value`'daki `[2, "emphasis"]` hücresini `return 1.0` yap → gizli hat iddiası FAIL; `_audience_fit`'in
+## sonunu `return upper` yap → süreklilik iddiası FAIL; `next_ratio`'da sıfır beklentinin üst yıldıza dönüşünü sil → sıfıra bölme
+## iddiası FAIL; `_role`'de sektörsüz B2B'yi `rest` oku → sayfa referansı iddiası FAIL.
+static func _case_fit_star_context() -> String:
+	_seed_sprint_live("erp")
+	var asked := func(star: int, sector: String) -> Prospect:
+		var p := Prospect.new()
+		p.id = "lead_ctx_%d_%s" % [star, sector]
+		p.company_name = p.id
+		p.industry = sector
+		p.star = star
+		return p
+	var said := func(key: String, args: Dictionary) -> String:
+		return TranslationServer.translate(key).format(args)
+
+	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur, cümle MVP'nin 1★'a yettiğini söyler.
+	if ProductQuality.expectation("core", {"star": 1}) != 0.6 or ProductQuality.expectation("core") != 1.0 \
+			or ProductQuality.expectation("trust") != 0.5 or ProductQuality.expectation("integrations") != 1.0 \
+			or ProductQuality.expectation("revenue") != 0.0:
+		return "the page reference reads core %.2f at 1 star and %.2f on the page, trust %.2f, integrations %.2f; want 0.6, 1, 0.5 and 1" % [
+			ProductQuality.expectation("core", {"star": 1}), ProductQuality.expectation("core"),
+			ProductQuality.expectation("trust"), ProductQuality.expectation("integrations")]
+	if ProductQuality.word("core") != "weak" or ProductQuality.serves("core") != 1 \
+			or SprintCatalog.area_sentence("core") != said.call("PRODUCT_STAR_SERVES", {"star": 1, "next": 2}):
+		return "right after the MVP Core reads '%s', serves %d, says '%s'; want Weak, 1 and the 1 star sentence" % [
+			ProductQuality.word("core"), ProductQuality.serves("core"), SprintCatalog.area_sentence("core")]
+	if ProductQuality.next_star() != 2:
+		return "right after the MVP the next star reads %d, want 2" % ProductQuality.next_star()
+	if SprintCatalog.area_sentence("integrations") != said.call("PRODUCT_STAR_SKIPPED", {}) \
+			or ProductQuality.word("integrations") != "none":
+		return "an empty Integrations reads '%s' and says '%s'; want None and the line that 1 star companies do not look at it" % [
+			ProductQuality.word("integrations"), SprintCatalog.area_sentence("integrations")]
+	# Sayfanın referansı on üç sektörün en yükseğidir: her yıldızda her alan için.
+	for star in [1, 2, 3]:
+		for area in SprintCatalog.area_ids():
+			var highest: float = 0.0
+			for sector in ProductQuality.TABLE:
+				highest = maxf(highest, ProductQuality.expectation(area, {"star": star, "sector": sector}))
+			if highest != ProductQuality.expectation(area, {"star": star}):
+				return "%s at %d star reads %.2f on the page and %.2f at its highest sector" % [
+					area, star, ProductQuality.expectation(area, {"star": star}), highest]
+
+	# Sıradaki yıldız: MVP'den sonra lider ve çeyrek hedefi 2★'ın baktığı boş bir alana bakar. Çekirdek MVP'nin altına inince
+	# sıradaki yıldız 1'dir ve 1★'ın bakmadığı alan 2★'ın değeriyle tartılır: sıfıra bölme olmaz, şerit 0 kare der.
+	if SprintCatalog.quarter_goal() not in ["onboarding", "integrations", "trust"]:
+		return "right after the MVP the quarter goal reads '%s', want an empty area the next star looks at" % SprintCatalog.quarter_goal()
+	var wobble: String = SprintCatalog.capabilities("core")[0]
+	ProductState.set_line_tier(wobble, 0)
+	for line_id in SprintCatalog.capabilities("trust"):
+		ProductState.set_line_tier(line_id, 1)
+	var strip: Dictionary = ProductModel._goal()
+	if ProductQuality.next_star() != 1 or not is_equal_approx(ProductQuality.next_ratio("trust"), 2.0) \
+			or not is_equal_approx(ProductQuality.next_ratio("core"), 0.4 / 0.6) \
+			or strip.area_id not in ["onboarding", "integrations"] or strip.now != 0:
+		return "below the MVP the next star reads %d, Trust %.2f and Core %.2f of it, the strip %s; want 1, 2, 0.67 and an empty area at 0" % [
+			ProductQuality.next_star(), ProductQuality.next_ratio("trust"), ProductQuality.next_ratio("core"), strip]
+	ProductState.set_line_tier(wobble, 1)
+	for line_id in SprintCatalog.capabilities("trust"):
+		ProductState.set_line_tier(line_id, 0)
+
+	var mvp_1: Dictionary = ProductQuality.prospect_fit(asked.call(1, "logistics"))
+	var mvp_2: Dictionary = ProductQuality.prospect_fit(asked.call(2, "logistics"))
+	if mvp_1.value != 70 or mvp_1.loss_area != "" or mvp_2.value >= 70 or mvp_2.loss_area == "":
+		return "the MVP reads U %d (loss '%s') for a 1 star and %d (loss '%s') for a 2 star; want 70 and nothing lacking, then under 70 with a lacking area" % [
+			mvp_1.value, mvp_1.loss_area, mvp_2.value, mvp_2.loss_area]
+
+	# Evre geçişi hiçbir adayın ve hesabın U'sunu, sayfanın kelimesini ve cümlesini oynatmaz.
+	var account: Customer = _sign_fixture(asked.call(3, "health"), 6000, 70)
+	var guest: Prospect = asked.call(2, "construction")
+	var snapshot := func() -> Array:
+		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
+			SprintCatalog.area_sentence("core"), ProductQuality.next_star(), ProductQuality.expectation("core")]
+	var before: Array = snapshot.call()
+	for phase in [2, 3]:
+		GameState.phase_gate_ready = true
+		GameState.pending_next_phase = phase
+		GameState.advance_phase()
+		if GameState.phase != phase:
+			return "fixture: the phase did not advance to %d" % phase
+		if snapshot.call() != before:
+			return "the move to phase %d changed what a prospect, an account or the page reads: %s -> %s" % [
+				phase, before, snapshot.call()]
+
+	# Aynı ürün büyüdükçe büyük şirketin çıtası yükselir: 1★, 2★, 3★ adayda azalan U.
+	for line_id in ProductLines.line_ids("erp"):
+		ProductState.set_line_tier(String(line_id), 1)
+	var by_star: Array = [1, 2, 3].map(func(star: int) -> int:
+		return ProductQuality.prospect_fit(asked.call(star, "logistics")).value)
+	if not (by_star[0] > by_star[1] and by_star[1] > by_star[2]):
+		return "one product reads U %s for a 1, 2 and 3 star prospect, want it falling" % [by_star]
+
+	# Ar-Ge'nin gizli hattı İlk kullanım'ı iki hatlı yapar: beklenti hat sayısıyla iner, onu bekleyen adayın U'su düşmez.
+	var builder: Prospect = asked.call(2, "construction")
+	var u_before: int = ProductQuality.prospect_fit(builder).value
+	var exp_before: float = ProductQuality.expectation("onboarding")
+	if exp_before != 1.0 or not ProductLines.register_runtime_line(ResearchTree.hidden_line_raw("line_hidden_self_serve"), "erp"):
+		return "fixture: Onboarding reads %.2f before the hidden line, or the line did not register" % exp_before
+	if ProductQuality.expectation("onboarding") != 0.5 or ProductQuality.prospect_fit(builder).value != u_before:
+		return "with the hidden line open Onboarding expects %.2f (want 0.5) and the prospect who looks at it reads U %d, was %d" % [
+			ProductQuality.expectation("onboarding"), ProductQuality.prospect_fit(builder).value, u_before]
+	ProductLines.reload()
+
+	# B2C: kitle 1.000'e kadar 1★ satırını, 10.000'de 2★'ı, 50.000'den sonra 3★'ı okur; aradaki geçişte U süreklidir.
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint_live("note_tool")
+	var audience := func(n: float) -> void:
+		GameState.set_flag("b2c_audience", n)
+	var u_at := func(n: float) -> int:
+		audience.call(n)
+		return ProductQuality.fit({"market": "b2c", "sector": ""}).value
+	var row_u := func(star: int) -> int:
+		return ProductQuality.fit({"market": "b2c", "sector": "", "star": star}).value
+	audience.call(1000.0)
+	var at_1k: float = ProductQuality.expectation("core")
+	audience.call(10000.0)
+	var at_10k: float = ProductQuality.expectation("core")
+	audience.call(sqrt(1000.0 * 10000.0))
+	var between: float = ProductQuality.expectation("core")
+	audience.call(80000.0)
+	var at_80k: float = ProductQuality.expectation("core")
+	if at_1k != 0.6 or at_10k != 1.0 or at_80k != 2.0 or not (between > 0.6 and between < 1.0):
+		return "the audience reads Core %.3f at 1k, %.3f at 10k, %.3f halfway in between and %.3f at 80k; want 0.6, 1, in between and 2" % [
+			at_1k, at_10k, between, at_80k]
+	if u_at.call(1000.0) != 70 or u_at.call(10000.0) != row_u.call(2) or u_at.call(50000.0) != row_u.call(3) \
+			or u_at.call(200.0) != 70 or u_at.call(90000.0) != row_u.call(3):
+		return "the audience at 1k, 10k, 50k reads U %d, %d, %d; want 70 and the 2 and 3 star rows %d, %d" % [
+			u_at.call(1000.0), u_at.call(10000.0), u_at.call(50000.0), row_u.call(2), row_u.call(3)]
+	var last: int = u_at.call(500.0)
+	var n: float = 500.0
+	while n < 100000.0:
+		n *= 1.02
+		var u: int = u_at.call(n)
+		if absi(u - last) > 1:
+			return "the audience crossed %d users and U jumped from %d to %d in one 2 percent step" % [roundi(n), last, u]
+		last = u
+	# Kelime ve cümle de kitleyle kayar: 500'de MVP yeter, 10.000'de yetmez.
+	audience.call(500.0)
+	if ProductQuality.word("core") != "enough" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_ENOUGH", {}):
+		return "500 users read Core '%s' saying '%s'; want Solid and the audience is served" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+	audience.call(10000.0)
+	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "10,000 users read Core '%s' saying '%s'; want Weak and the audience has outgrown it" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+	# Yayından önce kitle yoktur: alan kitleye yetip yetmediğini söylemez.
+	GameState.set_flag("mvp_shipped", false)
+	audience.call(0.0)
+	if SprintCatalog.area_sentence("core") != "" or SprintCatalog.area_sentence("growth") != "":
+		return "before the launch Core says '%s' and Growth '%s'; want no audience sentence" % [
+			SprintCatalog.area_sentence("core"), SprintCatalog.area_sentence("growth")]
+	return ""
+
+
+## Hesabın referansı: rakip çıkışı yeni adayın U'sunu düşürür, imzalı hesabınkini düşürmez; imzada kopyalanan referans hesabın U'sunu
+## tablo değişse de sabit tutar ve `market_value` bugünkü satırla U'yu söyler; yenileme penceresinin açıldığı gün referans bugünkü
+## satırı alır, ondan önceki gün almaz ve `market_value` ile `value` eşitlenir. Kopyası olmayan hesap (imza yolunu atlayan fikstür)
+## bugünkü satırı okur.
+##
+## FALSİFİKASYON: ProductQuality.prospect_fit'ten `"rivals": true`'yu sil → rakip iddiası FAIL; SprintBridges.tick_requests'teki
+## set_market_ref'i sil → yenileme iddiası FAIL; SalesSystem.add_b2b_customer'daki set_market_ref'i sil → imza iddiası FAIL;
+## account_fit'te referansı her zaman `today` yap → eski referans iddiası FAIL.
+static func _case_fit_account_ref() -> String:
+	_seed_sprint_live("erp")
+	for line_id in ProductLines.line_ids("erp"):
+		ProductState.set_line_tier(String(line_id), 1)
+	var lead := func(id: String) -> Prospect:
+		var p := Prospect.new()
+		p.id = id
+		p.company_name = id
+		p.industry = "logistics"
+		p.star = 2
+		return p
+	var account: Customer = _sign_fixture(lead.call("lead_ref_a"), 6000, 70)
+	var guest: Prospect = lead.call("lead_ref_b")
+	var today: Dictionary = ProductQuality.market_ref_for(2, "logistics")
+	if today.is_empty() or account.market_ref != today:
+		return "the account signed with the reference %s, want today's row %s" % [account.market_ref, today]
+	var u_0: int = ProductQuality.prospect_fit(guest).value
+	var signed: Dictionary = ProductQuality.account_fit(account)
+	if signed.value != u_0 or signed.market_value != u_0:
+		return "same product, same row: the account reads U %d (market %d), the prospect %d" % [signed.value, signed.market_value, u_0]
+
+	# Rakip çıkışı: yeni aday zorlaşır, imzalı hesap bugünkü referansıyla aynı kalır.
+	var rival := {"rival": 0, "line": SprintCatalog.capabilities("integrations")[0], "sprint": SprintSystem.sprint_number()}
+	GameState.product.rival_hits.append(rival)
+	var after: Dictionary = ProductQuality.account_fit(account)
+	if ProductQuality.prospect_fit(guest).value >= u_0 or after.value != u_0 or after.market_value != u_0:
+		return "after a rival launch the prospect reads U %d (was %d) and the account %d (market %d); want the prospect lower and the account at %d" % [
+			ProductQuality.prospect_fit(guest).value, u_0, after.value, after.market_value, u_0]
+
+	# Tablo değişti: hesap eski referansıyla ölçülür, `market_value` bugünkü satırı söyler.
+	var old_ref := {"core": 1.0, "integrations": 0.5, "trust": 0.5}
+	CustomerRegistry.set_market_ref(account.id, old_ref)
+	var aged: Dictionary = ProductQuality.account_fit(account)
+	var by_old: int = ProductQuality.fit({"market": "b2b", "sector": "logistics", "ref": old_ref}).value
+	if aged.value != by_old or aged.market_value != u_0 or aged.value == aged.market_value:
+		return "the account on an old reference reads U %d (market %d), want %d on its own reference and %d on today's" % [
+			aged.value, aged.market_value, by_old, u_0]
+
+	# Yenileme penceresi açıldığı gün referansı yeniler, bir gün önce dokunmaz.
+	var term: int = TimeModel.ticks(int(SprintCatalog.cfg("request.contract_weeks")))
+	var window: int = TimeModel.ticks(int(SprintCatalog.cfg("request.before_renewal_weeks")))
+	account.acquired_on_day = GameState.day - (term - window) + 1
+	SprintBridges.tick_requests()
+	if account.market_ref != old_ref:
+		return "the reference changed a day before the renewal window opened: %s" % [account.market_ref]
+	account.acquired_on_day = GameState.day - (term - window)
+	SprintBridges.tick_requests()
+	var renewed: Dictionary = ProductQuality.account_fit(account)
+	if account.market_ref != today or renewed.value != renewed.market_value:
+		return "the day the renewal window opened the reference reads %s (want %s) and U %d against market %d" % [
+			account.market_ref, today, renewed.value, renewed.market_value]
+
+	# İmza yolunu atlayan hesap bugünkü satırı okur.
+	var bare := Customer.new()
+	bare.id = "co_bare"
+	bare.industry = "logistics"
+	bare.scale = 2
+	if ProductQuality.account_fit(bare).value != u_0 or not bare.market_ref.is_empty():
+		return "an account with no copy reads U %d, want today's %d and no reference written" % [ProductQuality.account_fit(bare).value, u_0]
+	return ""
+
+
+## v17 → v18: B2B hesaplar pazar referansı kazanır (yıldızının ve sektörünün rakipsiz satırı), B2C kitle kaydı kazanmaz; satır
+## kaydın kendi ürününün hatlarıyla okunur, canlı ürün başka ya da boş olsa da. Yüklenen referans hesaba oturur ve yükleme sonrası
+## ilk tik hiçbir hesabın memnuniyetini aynı dünyanın şema 18 olarak kaydedilmiş hâlinin ilk tikinden farklı yazmaz.
+##
+## FALSİFİKASYON: _migrate_17'deki B2C süzgecini (`!= "b2b"`) sil → kitle kaydı referans alır FAIL; `subtype` argümanını sil → canlı
+## ürün boşken referanslar boş kalır FAIL; read_slot'taki `_migrate_17` çağrısını sil → şema 17 kaydı boş referansla açılır FAIL.
+static func _case_save_v17_market_ref() -> String:
+	# Canlı ürün yokken (ana menüden Devam): referans yine kaydın ürününden dolar.
+	var v17 := {"game_state": {"flags": {"mvp_sub_product_type_id": "erp"}}, "registries": {"customers": [
+		{"id": "co_a", "market_type": "b2b", "scale": 2, "industry": "logistics"},
+		{"id": "co_b", "market_type": "b2b", "scale": 3, "industry": "health"},
+		{"id": "co_c", "market_type": "b2b", "scale": 2, "industry": "logistics"},
+		{"id": "co_users", "market_type": "b2c"}]}}
+	if ProductState.subtype() != "":
+		return "fixture: the live product is '%s', the migration is meant to run with none" % ProductState.subtype()
+	SaveManager._migrate_17(v17)
+	var rows: Array = v17.registries.customers
+	if rows[3].has("market_ref") or rows[0].market_ref.is_empty() or rows[0].market_ref != rows[2].market_ref \
+			or rows[0].market_ref == rows[1].market_ref:
+		return "the migrated rows read %s; want a reference on each B2B account, the same for the same star and sector, none on the user base" % [rows]
+	rows[0].market_ref["core"] = 9.0
+	if rows[2].market_ref["core"] == 9.0:
+		return "two accounts share one reference dictionary"
+
+	var slot: String = "smoke_v17_ref_%d" % OS.get_process_id()
+	var old_slot: String = slot + "_old"
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		SaveManager.delete_slot(old_slot)
+		return why
+	_seed_sprint_live("erp")
+	for line_id in ProductLines.line_ids("erp"):
+		ProductState.set_line_tier(String(line_id), 1)
+	var sign := func(id: String, star: int, sector: String) -> Customer:
+		var p := Prospect.new()
+		p.id = id
+		p.company_name = id
+		p.industry = sector
+		p.star = star
+		return _sign_fixture(p, 3000 * star, 70)
+	var small: Customer = sign.call("lead_v17_a", 1, "logistics")
+	var large: Customer = sign.call("lead_v17_b", 3, "health")
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(old_slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SaveManager.SAVE_DIR + old_slot + ".json")) as Dictionary
+	raw["schema_version"] = 17
+	for row in raw["state"]["registries"]["customers"]:
+		row.erase("market_ref")
+	var w := FileAccess.open(SaveManager.SAVE_DIR + slot + ".json", FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	if not bool(payload.get("ok", false)):
+		return done.call("the v17 save was refused: %s" % payload.get("error_key", ""))
+	var want: Dictionary = {small.id: ProductQuality.market_ref_for(1, "logistics"), large.id: ProductQuality.market_ref_for(3, "health")}
+	for row in payload["state"]["registries"]["customers"]:
+		if row.get("market_type", "") == "b2b" and row.get("market_ref", {}) != want.get(row["id"], {}):
+			return done.call("%s migrated with the reference %s, want %s" % [row["id"], row.get("market_ref"), want.get(row["id"])])
+
+	# Yüklenen dünyanın ilk tiki, şema 18 olarak kaydedilmiş aynı dünyanınkiyle aynı memnuniyeti yazar. Kayıt tam sayı değerli
+	# beklentiyi tam sayı olarak geri verir: referanslar sayısal karşılaştırılır.
+	var same_ref := func(a: Dictionary, b: Dictionary) -> bool:
+		return a.keys().size() == b.keys().size() and a.keys().all(func(k: String) -> bool:
+			return b.has(k) and is_equal_approx(float(a[k]), float(b[k])))
+	var tick_after := func(read: String) -> Array:
+		if not SaveManager.apply_loaded_state(SaveManager.read_slot(read)):
+			return ["apply_loaded_state returned false"]
+		var held: Array = [CustomerRegistry.get_customer(small.id).market_ref, CustomerRegistry.get_customer(large.id).market_ref]
+		_sim_day()
+		return held + [CustomerRegistry.get_customer(small.id).satisfaction, CustomerRegistry.get_customer(large.id).satisfaction]
+	var migrated: Array = tick_after.call(slot)
+	var control: Array = tick_after.call(old_slot)
+	if not same_ref.call(migrated[0], want[small.id]) or not same_ref.call(migrated[1], want[large.id]) \
+			or migrated.slice(2) != control.slice(2):
+		return done.call("after loading the v17 save the accounts hold %s and %s and the first tick leaves satisfaction %s; the same world saved as v18 leaves %s" % [
+			migrated[0], migrated[1], migrated.slice(2), control.slice(2)])
+	return done.call("")
 
 
 ## §12.3 MÜHÜRLÜ MERDİVEN, dört kuralın dördü de. Tek yerde yaşar (ProductLines); aday kartlar

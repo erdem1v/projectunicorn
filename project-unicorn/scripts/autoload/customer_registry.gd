@@ -226,6 +226,16 @@ func set_trust_offset(customer_id: String, value: float) -> void:
 	c.trust_offset = B2BConstants.clamp_trust(value)
 
 
+func set_market_ref(customer_id: String, ref: Dictionary) -> void:
+	# HIDDEN — no signal, same shape as set_tolerance. The account's copy of the market it measures the product against:
+	# written at signing and when a renewal window opens, nowhere else.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_market_ref on unknown id: %s" % customer_id)
+		return
+	c.market_ref = ref
+
+
 func set_support_request(customer_id: String, since_day: int) -> void:
 	# HIDDEN request-channel bookkeeping — no signal. since_day == -1 means the account has
 	# no open request; any other value is the tick one opened (the escalation clock AND the

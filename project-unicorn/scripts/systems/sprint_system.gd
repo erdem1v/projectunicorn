@@ -1422,7 +1422,7 @@ static func _close() -> void:
 	var levels: Dictionary = {}
 	var alerts: Dictionary = {}
 	for a in areas:
-		levels[a] = SprintCatalog.area_level(a)
+		levels[a] = ProductQuality.level(a)
 		alerts[a] = SprintCatalog.area_alert(a)
 	var closed: int = 0
 	var new_code: float = 0.0
@@ -1483,8 +1483,8 @@ static func _close() -> void:
 	var changed: Array = []
 	var cleared: Array = []
 	for a in areas:
-		var to: float = SprintCatalog.area_level(a)
-		if to != levels[a]:
+		var to: float = ProductQuality.level(a)
+		if SprintCatalog.display_level(to) != SprintCatalog.display_level(levels[a]):
 			changed.append({"area": a, "from": levels[a], "to": to})
 		if alerts[a] and not SprintCatalog.area_alert(a):
 			cleared.append(a)
@@ -1546,7 +1546,7 @@ static func _land_faulty() -> void:
 static func _expected(changed: Array, closed: int) -> Dictionary:
 	if not changed.is_empty():
 		var area: String = changed[0].area
-		return {"key": "PRODUCT_RESULT_LEVEL_EXPECTED", "args": {"area": area, "to": SprintCatalog.area_word(area)}}
+		return {"key": "PRODUCT_RESULT_LEVEL_EXPECTED", "args": {"area": area, "to": ProductQuality.word(area)}}
 	if closed > 0:
 		return {"key": Fmt.count_key("PRODUCT_RESULT_BUGS_EXPECTED", closed), "args": {"n": closed}}
 	return {"key": "PRODUCT_RESULT_NONE_EXPECTED", "args": {}}

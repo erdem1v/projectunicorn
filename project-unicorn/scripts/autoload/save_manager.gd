@@ -13,13 +13,13 @@ extends Node
 # NegotiationSystem) are reset, never serialised: can_save() refuses while any of them
 # is_active(), so a sitting is always idle at the moment a save is taken.
 
-const SCHEMA_VERSION := 17
+const SCHEMA_VERSION := 18
 
 ## GDD ÜRÜN rev 6.1 §22.5 — eski kayıt TAŞINMAZ. "Yükleyici eski sürümü görürse kullanıcıya
 ## AÇIK MESAJ verir, sessizce bozuk state üretmez." Düz özellik listesi hat durumlarına
 ## çevrilemez ve v9 olay bloğu v10 motorunun arklarını/latch'lerini taşımaz; çevirmeye
 ## çalışmak çalışıyor görünen ve yanlış olan bir koşu üretir. O yüzden kapı sürümdedir.
-## v11-v17 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
+## v11-v18 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
 const MIN_LOADABLE_VERSION := 10
 const SAVE_DIR := "user://saves/"
 
@@ -201,6 +201,8 @@ func _read_file(path: String) -> Dictionary:
 		_migrate_15(state)
 	if version < 16:
 		_migrate_16(state)
+	if version < 18:
+		_migrate_17(state)
 	return {"ok": true, "error_key": "", "meta": meta, "state": state}
 
 
@@ -958,6 +960,24 @@ func _migrate_16(state: Dictionary) -> void:
 	for key in papers.keys():
 		if papers[key].get("event_id", key) == _REMOVED_CARD:
 			papers.erase(key)
+
+
+## v17 → v18: B2B hesaplar pazar referansı (`Customer.market_ref`) kazanır: yıldızının ve sektörünün rakipsiz satırı. B2C kitle
+## kaydı atlanır. Satır, kaydın kendi ürününün hatlarıyla okunur: kayıt okunurken canlı ürün başka ya da boş olabilir
+## (`list_slots` her yuvayı buradan geçirir).
+func _migrate_17(state: Dictionary) -> void:
+	var flags: Dictionary = (state.get("game_state", {}) as Dictionary).get("flags", {}) as Dictionary
+	var subtype: String = String(flags.get("mvp_sub_product_type_id", ""))
+	var refs: Dictionary = {}
+	for row in _rows(state, "customers"):
+		if row.get("market_type", "") != "b2b":
+			continue
+		var star: int = int(row.get("scale", 1))
+		var sector: String = String(row.get("industry", ""))
+		var key: String = "%d|%s" % [star, sector]
+		if not refs.has(key):
+			refs[key] = ProductQuality.market_ref_for(star, sector, subtype)
+		row["market_ref"] = refs[key].duplicate()
 
 
 # ----------------------------------------------------------------------------

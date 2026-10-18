@@ -58,11 +58,12 @@ static func area_of_line(line_id: String) -> String:
 
 
 ## Alanın yetenekleri: hat kimlikleri (paylaşılan hat alt-türüyle, `@note_tool`) ve Gelir'de
-## ücretli plan. Gizli hat ancak Ar-Ge onu açınca listeye girer.
-static func capabilities(area_id: String) -> Array[String]:
+## ücretli plan. Gizli hat ancak Ar-Ge onu açınca listeye girer. `subtype` canlı üründen başka bir ürün içindir
+## (kayıt göçü kendi kaydının ürününü okur).
+static func capabilities(area_id: String, subtype: String = ProductState.subtype()) -> Array[String]:
 	var area: Dictionary = area_def(area_id)
 	var out: Array[String] = []
-	for line_id in ProductLines.line_ids(ProductState.subtype()):
+	for line_id in ProductLines.line_ids(subtype):
 		var identity: bool = area.get("identity", false) and not ProductLines.line(line_id).shared
 		if identity or line_id.get_slice("@", 0) in area.lines:
 			out.append(line_id)
@@ -105,37 +106,16 @@ static func area_def(area_id: String) -> Dictionary:
 	return (cfg("areas") as Array).filter(func(a: Dictionary) -> bool: return a.id == area_id)[0]
 
 
-# --- Seviye, beklenti, durum ------------------------------------------------------
+# --- Seviye, durum ------------------------------------------------------------------
 
-## Yarıma yuvarlanmış alan seviyesi (0..3); `tiers` öngörünün varsaydığı kademeleri ezer.
-static func area_level(area_id: String, tiers: Dictionary = {}) -> float:
-	return snappedf(_raw_level(area_id, tiers), 0.5)
-
-
-## Bootstrap 1 · Traction 2 · Series A 2, rakip çıkışı başına +0.5 (en çok +1). Beklenti alanın
-## ulaşabileceği seviyeyi aşmaz: tek kademeli Ücretli plan Gelir'i 1'de tamamlar.
-static func expectation(area_id: String) -> float:
-	var caps: Array[String] = capabilities(area_id)
-	var hits: int = (_p().get("rival_hits", []) as Array).filter(
-		func(h: Dictionary) -> bool: return String(h.line) in caps).size()
-	var bump: float = minf(float(cfg("rival_bump")) * hits, float(cfg("rival_bump_max")))
-	var top: int = 0
-	for line_id in caps:
-		top = maxi(top, _max_tier(line_id))
-	return minf(float(cfg("expectation")[str(GameState.phase)]) + bump, top)
+## Ekranın gösterdiği seviye: yarıma yuvarlanmış (0..3). Kelime ve ekonomi yuvarlanmamışı okur (ProductQuality).
+static func display_level(raw: float) -> float:
+	return snappedf(raw, 0.5)
 
 
-static func area_word(area_id: String) -> String:
-	return word_for(area_level(area_id), expectation(area_id))
-
-
-## 0 → Yok · beklentinin altı → Zayıf · beklenti ile +0.5 arası → Yeterli · +1 ve üstü → Güçlü.
-static func word_for(level: float, expect: float) -> String:
-	if level <= 0.0:
-		return "none"
-	if level < expect:
-		return "weak"
-	return "enough" if level < expect + 1.0 else "strong"
+## Yarıma yuvarlanmış alan seviyesi.
+static func area_level(area_id: String) -> float:
+	return display_level(ProductQuality.level(area_id))
 
 
 ## "!": yeteneklerinden birinde öncelik eşiği kadar açık hata, ya da (Güven & Ölçek) sunucu aşımı;
@@ -147,14 +127,13 @@ static func area_alert(area_id: String, cleared: Array = []) -> bool:
 		return line_id not in cleared and ProductState.line_bugs(line_id) >= int(cfg("fix_effort.priority")))
 
 
-## Kapalı satırın cümlesi: alan × durum şablonu, açık hata, sunucu aşımı, rakip çıkışı ve araştırmadan sonraki
+## Kapalı satırın cümlesi: alanın kime yettiği, açık hata, sunucu aşımı, rakip çıkışı ve araştırmadan sonraki
 ## `research_sentence_weeks` haftada kullanıcıların söylediği.
 static func area_sentence(area_id: String) -> String:
-	var word: String = area_word(area_id)
 	var parts: PackedStringArray = []
-	# Boş çekirdek kareleriyle ve "Yok" kelimesiyle söyler; cümlenin ekleyeceği bir şey yok.
-	if area_id != "core" or word != "none":
-		parts.append(_t("PRODUCT_AREA_%s_%s" % [area_id.to_upper(), word.to_upper()]))
+	var standing: String = _standing(area_id)
+	if standing != "":
+		parts.append(standing)
 	var n: int = 0
 	for line_id in capabilities(area_id):
 		n += ProductState.line_bugs(line_id)
@@ -218,7 +197,7 @@ static func candidates(area_id: String) -> Array:
 	var caps: Array[String] = capabilities(area_id)
 	for line_id in caps:
 		if line_id == PAID_PLAN:
-			if tier(PAID_PLAN) < _max_tier(PAID_PLAN):
+			if tier(PAID_PLAN) < max_tier(PAID_PLAN):
 				out.append(new_card("plan:" + PAID_PLAN, "feature", area_id, step_effort(PAID_PLAN), line_id, PAID_PLAN, 1))
 			continue
 		var next: int = ProductLines.next_tier(tier(line_id))
@@ -328,18 +307,18 @@ static func card_effect(card: Dictionary) -> Array:
 			return parts
 		"research":
 			return [{"k": "research", "area": area_short(area)}]
-	var from: float = area_level(area)
-	var to: float = area_level(area, {card.line: card.target_tier})
-	var expect: float = expectation(area)
+	var level: Dictionary = _level_part(area, {card.line: card.target_tier})
 	var out: Array = []
-	if to != from:
-		out.append(_shift({"k": "level", "area": area_short(area), "from": from, "to": to}, expect))
+	if level.to != level.from:
+		out.append(level)
 	else:
-		var cap_max: float = _max_tier(card.line)
-		out.append({"k": "holds", "area": area_short(area), "word": word_for(to, expect)})
-		out.append(_shift({"k": "cap", "name": cap_name(card.line),
-			"from": minf(tier(card.line) + polish(card.line), cap_max),
-			"to": minf(card.target_tier + polish(card.line), cap_max)}, expect))
+		var cap_max: float = max_tier(card.line)
+		var expect: float = ProductQuality.expectation(area)
+		var cap_from: float = minf(tier(card.line) + polish(card.line), cap_max)
+		var cap_to: float = minf(card.target_tier + polish(card.line), cap_max)
+		out.append({"k": "holds", "area": area_short(area), "word": level.to_word})
+		out.append({"k": "cap", "name": cap_name(card.line), "from": cap_from, "to": cap_to,
+			"from_word": ProductQuality.word_for(cap_from, expect), "to_word": ProductQuality.word_for(cap_to, expect)})
 	var request: Dictionary = _request_of(card)
 	if not request.is_empty():
 		out.append({"k": "request", "customer": customer_name(request), "value": int(request.value)})
@@ -362,10 +341,9 @@ static func forecast(card_ids: Array) -> Array:
 			tiers[c.line] = maxi(int(tiers.get(c.line, tier(c.line))), int(c.target_tier))
 	var out: Array = []
 	for area_id in area_ids():
-		var from: float = area_level(area_id)
-		var to: float = area_level(area_id, tiers)
-		if to != from:
-			out.append(_shift({"k": "level", "area": area_short(area_id), "from": from, "to": to}, expectation(area_id)))
+		var level: Dictionary = _level_part(area_id, tiers)
+		if level.to != level.from:
+			out.append(level)
 	for c in cards:
 		var request: Dictionary = _request_of(c)
 		if not request.is_empty() and _on_time(request):
@@ -685,7 +663,8 @@ static func _identity_lines() -> Array[String]:
 	return capabilities(_identity_area())
 
 
-static func _max_tier(line_id: String) -> int:
+## Hattın en üst kademesi: Ücretli plan tek kademelidir.
+static func max_tier(line_id: String) -> int:
 	return int(cfg("paid_plan.tiers")) if line_id == PAID_PLAN else ProductLines.TIER_MAX
 
 
@@ -697,22 +676,35 @@ static func step_name_key(step_id: String) -> String:
 	return PAID_PLAN_NAME_KEY if step_id == PAID_PLAN else ProductLines.step(step_id).name_key
 
 
-## Etki satırının seviye geçişi parçası (level, cap) iki ucun kelimesini taşır; çizim kelimeyi
-## buradan okur, seviyeden türetmez.
-static func _shift(part: Dictionary, expect: float) -> Dictionary:
-	return part.merged({"from_word": word_for(part.from, expect), "to_word": word_for(part.to, expect)})
+## Alanın seviye geçişi parçası (etki satırı ve öngörü): sayılar yarıma yuvarlanmış, iki ucun kelimesi ham seviyeden
+## ürün sayfasının referansına göre; çizim kelimeyi buradan okur, seviyeden türetmez.
+static func _level_part(area_id: String, tiers: Dictionary) -> Dictionary:
+	var from: float = ProductQuality.level(area_id)
+	var to: float = ProductQuality.level(area_id, tiers)
+	var expect: float = ProductQuality.expectation(area_id)
+	return {"k": "level", "area": area_short(area_id), "from": display_level(from), "to": display_level(to),
+		"from_word": ProductQuality.word_for(from, expect), "to_word": ProductQuality.word_for(to, expect)}
 
 
-## Yuvarlanmamış alan seviyesi: yeteneklerin kademe + cila ortalaması; `tiers` öngörünün
-## varsaydığı kademeleri ezer.
-static func _raw_level(area_id: String, tiers: Dictionary = {}) -> float:
-	var caps: Array[String] = capabilities(area_id)
-	if caps.is_empty():
-		return 0.0
-	var sum: float = 0.0
-	for line_id in caps:
-		sum += minf(float(tiers.get(line_id, tier(line_id))) + polish(line_id), _max_tier(line_id))
-	return sum / caps.size()
+## Alanın kime yettiği. B2B'de hangi yıldızdaki şirketlere yettiği (Çekirdek dışı alana 1★ şirket bakmaz); B2C'de bugünkü
+## kitleye yetip yetmediği, yayından önce kitle olmadığı için hiçbir şey; Gelir kaliteye girmez, cümlesi sözcüğüne bağlı
+## kendi dört satırıdır.
+static func _standing(area_id: String) -> String:
+	if area_id == "revenue":
+		return _t("PRODUCT_AREA_REVENUE_" + ProductQuality.word(area_id).to_upper())
+	if ProductState.market_type() == "b2c":
+		if not ProductState.is_live():
+			return ""
+		var enough: bool = ProductQuality.level(area_id) >= ProductQuality.expectation(area_id)
+		return _t("PRODUCT_AUDIENCE_ENOUGH" if enough else "PRODUCT_AUDIENCE_OUTGROWN")
+	var star: int = ProductQuality.serves(area_id)
+	if star == 0:
+		return _t("PRODUCT_STAR_NONE")
+	if star == 1 and area_id != "core":
+		return _t("PRODUCT_STAR_SKIPPED")
+	if star == ProductQuality.STAR_MAX:
+		return _t("PRODUCT_STAR_TOP")
+	return _t("PRODUCT_STAR_SERVES").format({"star": star, "next": star + 1})
 
 
 ## Güven & Ölçek sunucu aşımını da uyarı sayar.
@@ -733,7 +725,7 @@ static func _rival_tier(rival: int, line_id: String) -> int:
 	for h in _p().get("rival_hits", []):
 		if int(h.rival) == rival and h.line == line_id:
 			t += 1
-	return mini(t, _max_tier(line_id))
+	return mini(t, max_tier(line_id))
 
 
 ## Rakiplerden biri bu kademeye ya da üstüne varmış ve kart oyuncuyu ona yetiştiriyor.
@@ -744,14 +736,19 @@ static func _closes_rival_gap(card: Dictionary) -> bool:
 	return best > tier(card.line) and int(card.target_tier) >= best
 
 
-## Alanın son rakip çıkışı (son `rival_window_weeks` haftanın sprintlerinde), yoksa {}.
-static func _recent_hit(area_id: String) -> Dictionary:
-	var caps: Array[String] = capabilities(area_id)
+## Verilen hatlara son `rival_window_weeks` haftanın sprintlerinde düşen rakip çıkışları, çıkış kaydı başına. Aday
+## beklentisinin artışı ve alanın "Rakip" çipi aynı pencereyi okur.
+static func recent_hits(lines: Array) -> Array:
 	var window: int = SprintSystem.sprints_in(int(cfg("rival_window_weeks")))
+	return (_p().get("rival_hits", []) as Array).filter(func(h: Dictionary) -> bool:
+		return String(h.line) in lines and SprintSystem.sprint_number() - int(h.sprint) < window)
+
+
+## Alanın son rakip çıkışı, yoksa {}.
+static func _recent_hit(area_id: String) -> Dictionary:
 	var latest: Dictionary = {}
-	for h in _p().get("rival_hits", []):
-		if String(h.line) in caps and SprintSystem.sprint_number() - int(h.sprint) < window \
-				and int(h.sprint) >= int(latest.get("sprint", -1)):
+	for h in recent_hits(capabilities(area_id)):
+		if int(h.sprint) >= int(latest.get("sprint", -1)):
 			latest = h
 	return latest
 
@@ -813,7 +810,8 @@ static func _impact(card: Dictionary) -> float:
 			return w.bug * card.bugs + (w.alert if _clears_alert(card) else 0.0)
 		"research":
 			return w.research
-	var v: float = w.step + w.level * (_raw_level(card.area, {card.line: card.target_tier}) - _raw_level(card.area))
+	var v: float = w.step + w.level * (
+		ProductQuality.level(card.area, {card.line: card.target_tier}) - ProductQuality.level(card.area))
 	if _closes_rival_gap(card):
 		v += w.rival_gap
 	if not _request_of(card).is_empty():
@@ -827,20 +825,21 @@ static func _ratio(card: Dictionary) -> float:
 	return _impact(card) / maxi(1, int(card.effort))
 
 
-## Seviyesi beklentisinin en çok altında kalan alan. Yuvarlanmamış seviye okunur, yarım dilimin
-## gizlediği fark da sayılır; eşitlikte `pool`'daki en iyi kartının etki/efor oranı yüksek olan.
+## Seviyesi sıradaki yıldızın beklentisine en az ulaşmış alan (ProductQuality.next_ratio). Yuvarlanmamış seviye okunur,
+## yarım dilimin gizlediği fark da sayılır; eşitlikte `pool`'daki en iyi kartının etki/efor oranı yüksek olan.
 static func _weakest(area_ids: Array, pool: Array) -> String:
 	var best: Dictionary = {}
 	for c in pool:
 		best[c.area] = maxf(float(best.get(c.area, 0.0)), _ratio(c))
+	var star: int = ProductQuality.next_star()
 	var weakest: String = ""
-	var gap: float = INF
+	var reached: float = INF
 	var ratio: float = 0.0
 	for area_id in area_ids:
-		var g: float = _raw_level(area_id) - expectation(area_id)
+		var g: float = ProductQuality.next_ratio(area_id, star)
 		var r: float = best.get(area_id, 0.0)
-		if g < gap or (g == gap and r > ratio):
-			gap = g
+		if g < reached or (g == reached and r > ratio):
+			reached = g
 			ratio = r
 			weakest = area_id
 	return weakest

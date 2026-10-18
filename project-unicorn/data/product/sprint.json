@@ -28,7 +28,6 @@
   "lead": {"small_team_cards": 2},
   "faulty_chance": 0.4,
   "promise": {"cut_test_escape": 0.15},
-  "expectation": {"1": 1, "2": 2, "3": 2},
   "rival_bump": 0.5,
   "rival_bump_max": 1.0,
   "rival_window_weeks": 6,

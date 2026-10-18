@@ -130,7 +130,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   çeyreklik; `SummarySystem`, `EventBus.summary_ready`).
 - **WRITE-THROUGH LAW.** Hiçbir olay, modal ya da UI başka bir alanın durumunu doğrudan yazmaz; değişiklik durumun
   sahibinin seam'inden geçer ve UI'nin dinlediği yerde seam sinyal yayar. Seam yoksa kurulur, alan "bir kereliğine"
-  yazılmaz. Seam'ler: müşteri → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (yayar; kalıcı memnuniyet izi `set_trust_offset`, sinyalsiz);
+  yazılmaz. Seam'ler: müşteri → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (yayar; kalıcı memnuniyet izi `set_trust_offset` ve hesabın pazar referansı `set_market_ref`, sinyalsiz);
   toplam MRR yalnız `SalesSystem.reflect_mrr()`; kasa, burn, marka, itibar → `GameState.set_*`; faz →
   `GameState.advance_phase()` (`set_phase` yalnız kayıt ve debug içindir); karakter → `CharacterRegistry.*`; ürün →
   `SprintSystem.*` (`GameState.product`'ın yazarı; köprüsü `SprintBridges` yalnız `requests`,
@@ -145,7 +145,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   §11.3). Karar olmayan anlar `MessageSystem` mesajıdır.
 - Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
   kazanılır. B2C'de kitle her oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
-- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 17, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
+- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 18, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`). Her koşunun kimliği vardır (`GameState.run_id`, metada): yuvalar koşu başınadır (`quick_<run>`, `auto_<run>_<n>`, `manual_<n>`) ve bir koşunun oto kaydı ötekininkini ezmez. Menü koşunun olmadığı yerdir: ana menüye dönüş süreç içi `SaveManager.end_run()` ile koşuyu bitirir ve kabuğu söker.
 
@@ -281,7 +281,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
   fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları HARITA Ürün'de), `--product-shot=live:<tür>` sprint
   motoruyla kurulan koşuda
-  (`pick`, `pick_named`, `pick_relang`, `plan`, `week1`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_requests`,
+  (`pick`, `pick_named`, `pick_relang`, `plan`, `week1`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
   `gate`, `delegate`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`; kurulumları ve ikinci, üçüncü kareleri HARITA
   Ürün'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
   B2B boş hâli `--sales-shot=b2b_pre`.

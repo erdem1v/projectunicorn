@@ -536,7 +536,7 @@ static func _on_signed(customer_id: String, _seats: int, _seat_price: int) -> vo
 	if _first_sign_day < 0:
 		_first_sign_day = GameState.day
 	var levels: Array = SprintCatalog.area_ids().map(func(a: String) -> String:
-		return "%s:%.3f" % [a, SprintCatalog._raw_level(a)])
+		return "%s:%.3f" % [a, ProductQuality.level(a)])
 	print("PROBE SIGN day=%d hour=%d id=%s by=%s star=%d weeks=%.1f mrr=%d sector=%s arch=%s tol=%d phase=%d areas=%s" % [
 		GameState.day, GameState.current_hour, customer_id,
 		"founder" if c.acquisition_source == "founder_pitch" else "rep", c.scale,
@@ -658,19 +658,16 @@ static func _log_bugs() -> void:
 	_bugs_cleared = 0
 
 
-## PROBE AREAS — the live product's areas this week. SprintCatalog._raw_level is read because the screen's
-## area_level rounds to halves; the launches are the rival_hits on the area's lines inside _recent_hit's window.
+## PROBE AREAS — the live product's areas this week. ProductQuality.level is read because the screen's
+## area_level rounds to halves; the launches are the rival_hits on the area's lines inside the rival window.
 static func _log_areas() -> void:
 	if not ProductState.is_live():
 		return
-	var window: int = SprintSystem.sprints_in(int(SprintCatalog.cfg("rival_window_weeks")))
-	var hits: Array = GameState.product.get("rival_hits", [])
 	var areas: PackedStringArray = []
 	for area_id in SprintCatalog.area_ids():
 		var caps: Array[String] = SprintCatalog.capabilities(area_id)
-		var launches: int = hits.filter(func(h: Dictionary) -> bool:
-			return String(h.line) in caps and SprintSystem.sprint_number() - int(h.sprint) < window).size()
-		areas.append("%s=%.3f/%d/%d" % [area_id, SprintCatalog._raw_level(area_id), caps.size(), launches])
+		var launches: int = SprintCatalog.recent_hits(caps).size()
+		areas.append("%s=%.3f/%d/%d" % [area_id, ProductQuality.level(area_id), caps.size(), launches])
 	print("PROBE AREAS day=%d market=%s %s" % [GameState.day, ProductState.market_type(), ",".join(areas)])
 
 
