@@ -7,6 +7,7 @@
     {
       "id": "line_note_tool_capture",
       "axis": "innovation",
+      "profile": "dev",
       "steps": [
         {
           "id": "line_note_tool_capture_k1",
@@ -41,6 +42,7 @@
     {
       "id": "line_note_tool_linking",
       "axis": "innovation",
+      "profile": "dev",
       "steps": [
         {
           "id": "line_note_tool_linking_k1",
@@ -75,6 +77,7 @@
     {
       "id": "line_note_tool_sync",
       "axis": "stability",
+      "profile": "test",
       "steps": [
         {
           "id": "line_note_tool_sync_k1",
@@ -107,6 +110,7 @@
     {
       "id": "line_note_tool_editor",
       "axis": "experience",
+      "profile": "design",
       "steps": [
         {
           "id": "line_note_tool_editor_k1",
@@ -139,6 +143,7 @@
     {
       "id": "line_note_tool_search",
       "axis": "experience",
+      "profile": "design",
       "steps": [
         {
           "id": "line_note_tool_search_k1",

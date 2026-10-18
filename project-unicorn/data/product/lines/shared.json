@@ -8,6 +8,7 @@
     {
       "id": "line_shared_integrations",
       "axis": "innovation",
+      "profile": "dev",
       "steps": [
         {
           "id": "line_shared_integrations_k1",
@@ -41,6 +42,7 @@
     {
       "id": "line_shared_security",
       "axis": "stability",
+      "profile": "test",
       "steps": [
         {
           "id": "line_shared_security_k1",
@@ -73,6 +75,7 @@
     {
       "id": "line_shared_durability",
       "axis": "stability",
+      "profile": "test",
       "steps": [
         {
           "id": "line_shared_durability_k1",
@@ -105,6 +108,7 @@
     {
       "id": "line_shared_mobile",
       "axis": "experience",
+      "profile": "design",
       "steps": [
         {
           "id": "line_shared_mobile_k1",

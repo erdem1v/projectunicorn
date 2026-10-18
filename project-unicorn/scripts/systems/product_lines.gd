@@ -49,6 +49,8 @@ const UPGRADE_RATIO_MIN := 1.6
 const IDENTITY_AXIS_SHAPE := {"innovation": 2, "stability": 1, "experience": 2}
 const IDENTITY_LINE_COUNT := 5
 const LINES_PER_SUBTYPE := 9
+## Hattın iş profili: hangi işi yaptırdığı (tasarım, geliştirme, test). Her hat tam birini taşır.
+const PROFILES := ["design", "dev", "test"]
 
 ## §12.10 — eksen sahipleri. Kapı-üstü bonusunun (§12.8) hangi alanı okuyacağını
 ## ve demo çapalarını bu tablo belirler.
@@ -163,6 +165,10 @@ static func _build_line(raw: Dictionary, subtype: String, is_shared: bool,
 	if not QualityModel.AXES.has(axis):
 		_fail("%s/%s has unknown axis '%s'" % [subtype, line_id, axis])
 		return {}
+	var profile: String = String(raw.get("profile", ""))
+	if not PROFILES.has(profile):
+		_fail("%s/%s has unknown profile '%s'" % [subtype, line_id, profile])
+		return {}
 	var steps_raw: Array = raw.get("steps", []) as Array
 	if steps_raw.size() != TIER_MAX:
 		_fail("%s/%s has %d steps, expected %d" % [subtype, line_id, steps_raw.size(), TIER_MAX])
@@ -224,6 +230,7 @@ static func _build_line(raw: Dictionary, subtype: String, is_shared: bool,
 	var rec := {
 		"id": line_id + suffix,
 		"axis": axis,
+		"profile": profile,
 		"shared": is_shared,
 		"steps": step_ids,
 		"name_key": line_name_key(line_id),
@@ -374,6 +381,11 @@ static func step_at(line_id: String, tier: int) -> Dictionary:
 
 static func axis_of(line_id: String) -> String:
 	return String(line(line_id).get("axis", ""))
+
+
+## Hattın iş profili (`PROFILES`); kayıtlı olmayan hat için "".
+static func work_profile(line_id: String) -> String:
+	return String(line(line_id).get("profile", ""))
 
 
 ## Ar-Ge §4.4 `design_system` — YALNIZ Deneyim ekseninin kademelerinde efor −%20.

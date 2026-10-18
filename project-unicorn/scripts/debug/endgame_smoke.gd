@@ -428,6 +428,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"gate_scope_and_halves":          fail = _case_gate_scope_and_halves()
 		"above_gate_bonus_ladder":        fail = _case_above_gate_bonus_ladder()
 		"loc_product_line_keys_resolve":  fail = _case_loc_product_line_keys_resolve()
+		"product_fit_table":              fail = _case_product_fit_table()
+		"product_quality_sector_table":   fail = _case_product_quality_sector_table()
+		"product_line_profiles":          fail = _case_product_line_profiles()  # EXPECT-ERROR has unknown profile
 		# --- rev 6.1 · Ar-Ge bağı ve kart aritmetiği (2026-08-25).
 		"research_node_map_binds":        fail = _case_research_node_map_binds()
 		"rnd_tree_loads_and_validates":  fail = _case_rnd_tree_loads_and_validates()
@@ -14120,6 +14123,167 @@ static func _case_product_lines_catalog_loads() -> String:
 			% int((erp_total[0] as Dictionary).get("stars", 0))
 	if not (note_gate.get("total", []) as Array).is_empty():
 		return "the override leaked: note_tool's shared K3 picked up ERP's total gate"
+	return ""
+
+
+## Ürün uyumu: üç ürün × üç sektörün dokuz hücresi birebir, tavan, uç değerler ve seviyenin hattan okunması. Ürünler
+## oran olarak verilir (Çekirdek, Onboarding, Entegrasyonlar, Güven); dört alanın beklentisi 1 iken seviye = oran.
+##
+## FALSİFİKASYON: ProductQuality.CORE_LEAD'i 9.0 yap → P2 hücreleri tavansız 63'e çıkar, ilk iddia FAIL.
+## TABLE["finance"]'ın iki vurgusunu ters çevir → P1 Finans 77'den düşer.
+static func _case_product_fit_table() -> String:
+	var areas: Array = ["core", "onboarding", "integrations", "trust"]
+	var ref: Dictionary = {"core": 1.0, "onboarding": 1.0, "integrations": 1.0, "trust": 1.0}
+	var products: Dictionary = {"P1": [1.5, 1.0, 0.0, 1.0], "P2": [0.4, 1.0, 1.5, 1.5], "P3": [1.0, 0.0, 1.5, 1.0]}
+	var cells: Dictionary = {"finance": {"P1": 77, "P2": 46, "P3": 68}, "logistics": {"P1": 70, "P2": 46, "P3": 72},
+		"construction": {"P1": 81, "P2": 46, "P3": 56}}
+	for sector in cells:
+		for p in products:
+			var levels: Dictionary = {}
+			for i in areas.size():
+				levels[areas[i]] = products[p][i]
+			var got: Dictionary = ProductQuality.fit_from_levels(levels, {"market": "b2b", "sector": sector, "ref": ref})
+			if got.value != cells[sector][p]:
+				return "%s on %s reads U %d, want %d" % [p, sector, got.value, cells[sector][p]]
+			if got.capped != (p == "P2") or (got.capped and got.loss_area != "core"):
+				return "%s on %s: capped=%s loss_area='%s'; only P2's weak Core hits the cap, and it names Core" % [
+					p, sector, got.capped, got.loss_area]
+
+	# Tavansız P2 Finans 63 eder: 17 puanı tavan alır.
+	var w: Dictionary = ProductQuality.weights("b2b", "finance")
+	var uncapped: float = 0.0
+	for i in areas.size():
+		uncapped += w[areas[i]] * products.P2[i]
+	if roundi(ProductQuality.FIT_SCALE * uncapped) != 63:
+		return "P2 on finance without the cap reads %d, want 63" % roundi(ProductQuality.FIT_SCALE * uncapped)
+
+	var b2b: Dictionary = {"market": "b2b", "sector": "finance", "ref": ref}
+	var met: Dictionary = ProductQuality.fit_from_levels(ref, b2b)
+	if met.value != 70 or met.capped or met.loss_area != "":
+		return "a product at every expectation reads %s, want U 70, no cap and no lacking area" % met
+	# Tavan devredeyken eksik bulunan alan Çekirdek'tir, oranı en düşük alan o olmasa bile.
+	var capped_low: Dictionary = ProductQuality.fit_from_levels(
+		{"core": 0.2, "onboarding": 1.5, "integrations": 1.5, "trust": 0.1}, b2b)
+	if not capped_low.capped or capped_low.loss_area != "core":
+		return "a capped product with a weaker Trust reads capped=%s loss_area='%s', want capped and core" % [
+			capped_low.capped, capped_low.loss_area]
+	var no_core: Dictionary = ProductQuality.fit_from_levels(
+		{"core": 0.0, "onboarding": 3.0, "integrations": 3.0, "trust": 3.0}, b2b)
+	if no_core.value > 18:
+		return "a product with no Core reads U %d, want 18 at most" % no_core.value
+	# Kesikten ötesi uyumu artırmaz ve her alan kesikteyken U 100'dür.
+	var top: Dictionary = ProductQuality.fit_from_levels(
+		{"core": 3.0, "onboarding": 3.0, "integrations": 3.0, "trust": 3.0}, b2b)
+	var beyond: Dictionary = ProductQuality.fit_from_levels(
+		{"core": 9.0, "onboarding": 9.0, "integrations": 9.0, "trust": 9.0}, b2b)
+	if top.value != 100 or top.match != beyond.match:
+		return "every area past the ratio cap reads U %d match %.2f, and %.2f three times as far; want 100 and the same match" % [
+			top.value, top.match, beyond.match]
+	# Beklentisi olmayan alan U'ya girmez: seviyesi 0 olsa da 70 kalır.
+	var unexpected: Dictionary = ProductQuality.fit_from_levels(
+		{"core": 1.0, "onboarding": 0.0, "integrations": 0.0, "trust": 1.0},
+		{"market": "b2b", "sector": "finance", "ref": {"core": 1.0, "onboarding": 0.0, "integrations": 0.0, "trust": 1.0}})
+	if unexpected.value != 70:
+		return "areas nobody expects still weigh on U: reads %d, want 70" % unexpected.value
+
+	# Seviye hattan okunur: ERP'nin bütün hatları K1'de, Onboarding'in tek hattı boş.
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	for id in ProductLines.line_ids("erp"):
+		ProductState.set_line_tier(String(id), 1)
+	ProductState.set_line_tier("line_shared_mobile@erp", 0)
+	if ProductQuality.level("core") != 1.0 or ProductQuality.level("onboarding") != 0.0:
+		return "levels read core %.2f onboarding %.2f, want 1 and 0" % [
+			ProductQuality.level("core"), ProductQuality.level("onboarding")]
+	if ProductQuality.ratio("core", 0.5) != ProductQuality.RATIO_CAP or ProductQuality.ratio("core", 2.0) != 0.5:
+		return "ratio reads %.2f at half the expectation and %.2f at twice it, want the cap and 0.5" % [
+			ProductQuality.ratio("core", 0.5), ProductQuality.ratio("core", 2.0)]
+	var live: Dictionary = ProductQuality.fit(b2b)
+	var note: Array = [{"area": "core", "word": "enough"}, {"area": "trust", "word": "enough"}]
+	if live.value != 63 or live.capped or live.loss_area != "onboarding" or live.weakest_emphasis != "trust" \
+			or live.note != note:
+		return "the live product reads %s; want U 63, uncapped, Onboarding lacking, Trust the weaker emphasis" % live
+	if TranslationServer.translate(live.label_key) == live.label_key:
+		return "label key '%s' does not resolve" % live.label_key
+	return ""
+
+
+## Sektör tablosu: on üç sektörün hepsinin satırı vardır ve satır üç alanın bir permütasyonudur; ağırlıklar toplamı 1;
+## fikstür sektörleri varsayılan alıcı tipinin ilk sektörünün satırını okur; B2C ağırlıkları Gelir'i taşımaz.
+##
+## FALSİFİKASYON: TABLE'dan bir sektörü sil → o sektör FAIL. TABLE'a "testing" ekle → satır sayısı FAIL. Bir satırda
+## alanı ikiletip öbürünü sil → permütasyon FAIL. _row'un varsayılanını TABLE["construction"] yap → fikstür FAIL.
+static func _case_product_quality_sector_table() -> String:
+	if ProductQuality.TABLE.size() != B2BConstants.SECTORS.size():
+		return "the table has %d rows for %d sectors; a fixture sector must not get a row of its own" % [
+			ProductQuality.TABLE.size(), B2BConstants.SECTORS.size()]
+	for sector in B2BConstants.SECTORS:
+		if not ProductQuality.TABLE.has(sector):
+			return "sector '%s' has no row" % sector
+		var row: Array = ProductQuality.TABLE[sector]
+		var sorted: Array = row.duplicate()
+		sorted.sort()
+		if sorted != ["integrations", "onboarding", "trust"]:
+			return "%s reads %s, not a permutation of onboarding, integrations and trust" % [sector, row]
+		var w: Dictionary = ProductQuality.weights("b2b", sector)
+		var total: float = 0.0
+		for area in w:
+			total += w[area]
+		if not is_equal_approx(total, 1.0) or w.size() != 4:
+			return "%s weights %s sum to %.3f over %d areas, want 1 over 4" % [sector, w, total, w.size()]
+		if ProductQuality.emphasis(sector) != row.slice(0, 2) or not (w[row[0]] > w[row[1]] and w[row[1]] > w[row[2]]):
+			return "%s: emphasis %s and weights %s do not follow the row %s" % [
+				sector, ProductQuality.emphasis(sector), w, row]
+
+	var home: Dictionary = ProductQuality.weights("b2b", String(SalesArchetypes.sectors(SalesArchetypes.DEFAULT_ID)[0]))
+	for sector in [B2BConstants.SECTOR_FIXTURE, "healthcare"]:
+		if ProductQuality.weights("b2b", sector) != home:
+			return "unknown sector '%s' reads %s, not the default buyer's first sector %s" % [
+				sector, ProductQuality.weights("b2b", sector), home]
+
+	var b2c: Dictionary = ProductQuality.weights("b2c", "")
+	var shares: Array = [b2c.onboarding, b2c.growth, b2c.trust]
+	if b2c.size() != 4 or b2c.has("revenue") or b2c.core != 0.5 or shares.count(shares[0]) != 3 \
+			or not is_equal_approx(b2c.core + shares[0] * 3.0, 1.0):
+		return "B2C weights read %s; want Core 0.5 and onboarding, growth, trust splitting the rest, no revenue" % b2c
+	if ProductQuality.emphasis("") != []:
+		return "B2C has an emphasis: %s" % [ProductQuality.emphasis("")]
+	return ""
+
+
+## İş profili: her hattın profili var ve eksenden türeyen eşlemeyle aynı; gizli hatlar da. Doğrulayıcı üç değerin dışını
+## ve eksik profili reddeder.
+##
+## FALSİFİKASYON: shared.json'da bir hattın profilini değiştir → o hat FAIL. _build_line'daki PROFILES kontrolünü sil →
+## kayıt reddedilmez, FAIL.
+static func _case_product_line_profiles() -> String:
+	ProductLines.reload()
+	var of_axis: Dictionary = {"experience": "design", "innovation": "dev", "stability": "test"}
+	var seen: int = 0
+	for sub in ProductLines.subtypes():
+		for id in ProductLines.line_ids(sub):
+			if ProductLines.work_profile(id) != of_axis[ProductLines.axis_of(id)]:
+				return "%s carries profile '%s', its axis maps to '%s'" % [
+					id, ProductLines.work_profile(id), of_axis[ProductLines.axis_of(id)]]
+			seen += 1
+	if seen == 0:
+		return "no line was read"
+	for hidden in ResearchTree.hidden_line_ids():
+		if ResearchTree.hidden_line_profile(hidden) != of_axis[ResearchTree.hidden_line_axis(hidden)]:
+			return "hidden line %s carries profile '%s', its axis maps to '%s'" % [
+				hidden, ResearchTree.hidden_line_profile(hidden), of_axis[ResearchTree.hidden_line_axis(hidden)]]
+
+	var raw: Dictionary = ResearchTree.hidden_line_raw("line_hidden_self_serve")
+	var bad: Dictionary = raw.duplicate(true)
+	bad.erase("profile")
+	if ProductLines.register_runtime_line(bad, "erp"):
+		return "a line with no profile was registered"
+	bad["profile"] = "devops"
+	if ProductLines.register_runtime_line(bad, "erp"):
+		return "a line with profile 'devops' was registered"
+	if not ProductLines.register_runtime_line(raw, "erp") or ProductLines.work_profile("line_hidden_self_serve@erp") != "test":
+		return "the authored hidden line did not register with its profile"
+	if ProductLines.work_profile("line_nope") != "":
+		return "an unknown line reads a profile"
 	return ""
 
 

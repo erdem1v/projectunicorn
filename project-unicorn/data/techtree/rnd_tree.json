@@ -39,11 +39,13 @@
   "hidden_lines": {
     "line_hidden_self_serve": {
       "axis": "stability",
+      "profile": "test",
       "opened_by": "test_automation",
       "authored": true,
       "raw": {
         "id": "line_hidden_self_serve",
         "axis": "stability",
+        "profile": "test",
         "steps": [
           {"id": "line_hidden_self_serve_k1", "axis_points": 4,  "effort": 6,  "usage_weight": 0, "requires": {}},
           {"id": "line_hidden_self_serve_k2", "axis_points": 9,  "effort": 8,  "usage_weight": 0, "requires": {"person": [{"area": "qa", "stars": 2}]}},
@@ -51,8 +53,8 @@
         ]
       }
     },
-    "line_hidden_auto_organize":        {"axis": "innovation", "opened_by": "knowledge_graph", "authored": false, "raw": {}},
-    "line_hidden_enterprise_reporting": {"axis": "stability",  "opened_by": "data_warehouse",  "authored": false, "raw": {}},
-    "line_hidden_adaptive_ui":          {"axis": "experience", "opened_by": "personalization", "authored": false, "raw": {}}
+    "line_hidden_auto_organize":        {"axis": "innovation", "profile": "dev",    "opened_by": "knowledge_graph", "authored": false, "raw": {}},
+    "line_hidden_enterprise_reporting": {"axis": "stability",  "profile": "test",   "opened_by": "data_warehouse",  "authored": false, "raw": {}},
+    "line_hidden_adaptive_ui":          {"axis": "experience", "profile": "design", "opened_by": "personalization", "authored": false, "raw": {}}
   }
 }

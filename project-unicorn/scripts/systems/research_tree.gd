@@ -239,6 +239,9 @@ static func _validate_hidden_lines() -> void:
 		var axis: String = String(hl.get("axis", ""))
 		if not QualityModel.AXES.has(axis):
 			_fail("hidden line '%s' has unknown axis '%s'" % [line_id, axis])
+		var profile: String = String(hl.get("profile", ""))
+		if not ProductLines.PROFILES.has(profile):
+			_fail("hidden line '%s' has unknown profile '%s'" % [line_id, profile])
 		axis_tally[axis] = int(axis_tally.get(axis, 0)) + 1
 		var by: String = String(hl.get("opened_by", ""))
 		if String(openers.get(line_id, "")) != by:
@@ -413,6 +416,11 @@ static func hidden_line_ids() -> Array:
 static func hidden_line_axis(line_id: String) -> String:
 	ensure_loaded()
 	return String((_hidden.get(line_id, {}) as Dictionary).get("axis", ""))
+
+
+static func hidden_line_profile(line_id: String) -> String:
+	ensure_loaded()
+	return String((_hidden.get(line_id, {}) as Dictionary).get("profile", ""))
 
 
 ## §12.1 — only KENDİ KENDİNE SERVİS is written for the demo. The other three are

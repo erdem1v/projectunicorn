@@ -7,6 +7,7 @@
     {
       "id": "line_video_clip_clipping",
       "axis": "innovation",
+      "profile": "dev",
       "steps": [
         {
           "id": "line_video_clip_clipping_k1",
@@ -40,6 +41,7 @@
     {
       "id": "line_video_clip_captions",
       "axis": "innovation",
+      "profile": "dev",
       "steps": [
         {
           "id": "line_video_clip_captions_k1",
@@ -74,6 +76,7 @@
     {
       "id": "line_video_clip_pipeline",
       "axis": "stability",
+      "profile": "test",
       "steps": [
         {
           "id": "line_video_clip_pipeline_k1",
@@ -108,6 +111,7 @@
     {
       "id": "line_video_clip_timeline",
       "axis": "experience",
+      "profile": "design",
       "steps": [
         {
           "id": "line_video_clip_timeline_k1",
@@ -140,6 +144,7 @@
     {
       "id": "line_video_clip_framing",
       "axis": "experience",
+      "profile": "design",
       "steps": [
         {
           "id": "line_video_clip_framing_k1",

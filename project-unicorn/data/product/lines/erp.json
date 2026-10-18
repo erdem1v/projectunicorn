@@ -14,6 +14,7 @@
     {
       "id": "line_erp_cashflow",
       "axis": "innovation",
+      "profile": "dev",
       "steps": [
         {
           "id": "line_erp_cashflow_k1",
@@ -47,6 +48,7 @@
     {
       "id": "line_erp_intake",
       "axis": "innovation",
+      "profile": "dev",
       "steps": [
         {
           "id": "line_erp_intake_k1",
@@ -82,6 +84,7 @@
     {
       "id": "line_erp_ledger",
       "axis": "stability",
+      "profile": "test",
       "steps": [
         {
           "id": "line_erp_ledger_k1",
@@ -115,6 +118,7 @@
     {
       "id": "line_erp_stock",
       "axis": "experience",
+      "profile": "design",
       "steps": [
         {
           "id": "line_erp_stock_k1",
@@ -149,6 +153,7 @@
     {
       "id": "line_erp_invoicing",
       "axis": "experience",
+      "profile": "design",
       "steps": [
         {
           "id": "line_erp_invoicing_k1",
