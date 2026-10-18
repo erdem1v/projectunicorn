@@ -40,17 +40,7 @@
         "value": 10000
       },
       {
-        "seam": "urun.floor_innovation",
-        "op": "!=",
-        "value": "crossed"
-      },
-      {
-        "seam": "urun.floor_stability",
-        "op": "!=",
-        "value": "crossed"
-      },
-      {
-        "seam": "urun.floor_experience",
+        "seam": "urun.floor_state",
         "op": "!=",
         "value": "crossed"
       }

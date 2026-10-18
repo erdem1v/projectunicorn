@@ -41,23 +41,9 @@
         "value": 4
       },
       {
-        "any": [
-          {
-            "seam": "urun.floor_innovation",
-            "op": "!=",
-            "value": ""
-          },
-          {
-            "seam": "urun.floor_stability",
-            "op": "!=",
-            "value": ""
-          },
-          {
-            "seam": "urun.floor_experience",
-            "op": "!=",
-            "value": ""
-          }
-        ]
+        "seam": "urun.floor_state",
+        "op": "!=",
+        "value": ""
       }
     ]
   },
@@ -98,7 +84,7 @@
   "text": {
     "tr": {
       "title": "EV_PRODUCT_B2C_FLOOR_SIGNAL_TITLE",
-      "body": "EV_PRODUCT_B2C_FLOOR_SIGNAL_BODY",
+      "body": "Son yorumlar hep {seam:urun.floor_area} tarafına dönüyor.",
       "options": {
         "feedback": "EV_PRODUCT_B2C_FLOOR_SIGNAL_FEEDBACK",
         "noted": "EV_PRODUCT_B2C_FLOOR_SIGNAL_NOTED"
@@ -110,7 +96,7 @@
     },
     "en": {
       "title": "EV_PRODUCT_B2C_FLOOR_SIGNAL_TITLE",
-      "body": "EV_PRODUCT_B2C_FLOOR_SIGNAL_BODY",
+      "body": "The latest reviews keep coming back to {seam:urun.floor_area}.",
       "options": {
         "feedback": "EV_PRODUCT_B2C_FLOOR_SIGNAL_FEEDBACK",
         "noted": "EV_PRODUCT_B2C_FLOOR_SIGNAL_NOTED"

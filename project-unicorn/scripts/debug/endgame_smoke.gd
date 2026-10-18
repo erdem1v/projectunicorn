@@ -197,6 +197,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"infra_overage_applies_and_stops": fail = _case_infra_overage_applies_and_stops()
 		"infra_local_provider_tradeoff": fail = _case_infra_local_provider_tradeoff()
 		"product_read_catalogue":        fail = _case_product_read_catalogue()
+		"floor_ladder_areas":            fail = _case_floor_ladder_areas()
 		"hr_frank_guard":           fail = _case_hr_frank_guard()
 		"hr_active_filters":        fail = _case_hr_active_filters()
 		"hr_overload_badge":        fail = _case_hr_overload_badge()
@@ -14034,9 +14035,12 @@ static func _case_product_read_catalogue() -> String:
 	for d in EventBus.get_signal_list():
 		declared.append(String((d as Dictionary).get("name", "")))
 	for name in ["version_shipped", "bug_confirmed", "unconfirmed_threshold_crossed", "axis_floor_warning",
-			"axis_floor_crossed", "line_upgraded", "line_completed", "delighter_shipped", "phase_bar_raised"]:
+			"axis_floor_crossed", "line_upgraded", "line_completed", "delighter_shipped"]:
 		if not declared.has(name):
 			return "§19 signal '%s' is not declared on EventBus" % name
+	for name in ["urun.floor_state", "urun.floor_area", "urun.trust_level"]:
+		if not EvSeams.has(name):
+			return "the floor ladder's seam '%s' is not registered" % name
 
 	# --- SPRINT: seam'ler motoru okur ---
 	if int(EvSeams.read("urun.sprint_number")) != 0 or bool(EvSeams.read("urun.sprint_running")):
@@ -14070,6 +14074,75 @@ static func _case_product_read_catalogue() -> String:
 	ProductRead.emit_edges()
 	if seen.has("bug_confirmed"):
 		return "fixing bugs emitted bug_confirmed"
+	return ""
+
+
+## Taban merdiveni: oran eşikleri, en kötü alanın seçimi ve eşitlik, beklentisi 0 olan alanın ve Gelir'in dışarıda kalması,
+## sinyalin alan kimliğiyle kenarda bir kez atması, B2B'de susması. Not aracının 5 Çekirdek hattı, her alanda bir hat (Güven'de
+## iki) vardır; 10.000 kullanıcıda Çekirdek ve vurguların beklentisi 1, Güven'inki 0,5'tir, 50.000'de 2 ve 1,5.
+##
+## FALSİFİKASYON: ProductRead.FLOOR_CROSSED_RATIO'yu 0 yap → eşik iddiası FAIL. worst_floor'da `<` yerine `<=` yaz → eşitlik
+## iddiası FAIL. floor_ratios'ta `weights("b2c", "")` yerine `SprintCatalog.area_ids()` oku → Gelir iddiası FAIL. B2B
+## koşulunu kaldır → B2B iddiası FAIL.
+static func _case_floor_ladder_areas() -> String:
+	for pair in [[0.6, ""], [0.59, "warning"], [0.4, "warning"], [0.39, "crossed"], [0.0, "crossed"]]:
+		if ProductRead.floor_state(pair[0]) != pair[1]:
+			return "ratio %s reads '%s', want '%s'" % [pair[0], ProductRead.floor_state(pair[0]), pair[1]]
+	_seed_support_fixture("b2c")
+	var set_tier := func(area: String, tier: int) -> void:
+		for line_id in SprintCatalog.capabilities(area):
+			ProductState.set_line_tier(line_id, tier)
+	var security: String = SprintCatalog.in_product("line_shared_security")
+	GameState.set_flag("b2c_audience", 500.0)
+	if ProductRead.floor_ratios().keys() != ["core"]:
+		return "an audience under the first star holds %s on the ladder, want core alone" % str(ProductRead.floor_ratios().keys())
+
+	GameState.set_flag("b2c_audience", 10000.0)
+	set_tier.call("core", 1)
+	ProductState.set_line_tier(security, 1)
+	var ratios: Dictionary = ProductRead.floor_ratios()
+	if ratios.keys() != ["core", "onboarding", "growth", "trust"]:
+		return "the ladder holds %s, want core and the three areas that enter U (no Revenue)" % str(ratios.keys())
+	for area in ratios:
+		if not is_equal_approx(ratios[area], 1.0 if area in ["core", "trust"] else 0.0):
+			return "%s reads ratio %.2f at 10.000 users" % [area, ratios[area]]
+	var worst: Dictionary = ProductRead.worst_floor()
+	if worst.area != "onboarding" or worst.state != "crossed":
+		return "two areas at ratio 0 read worst '%s' %s, want the earlier one, onboarding, crossed" % [worst.area, worst.state]
+	if EvSeams.read("urun.floor_area") != "PRODUCT_AREA_ONBOARDING_SHORT" or EvSeams.read("urun.floor_state") != "crossed":
+		return "the seams read '%s' '%s'" % [EvSeams.read("urun.floor_area"), EvSeams.read("urun.floor_state")]
+	set_tier.call("onboarding", 1)
+	if ProductRead.worst_floor().area != "growth":
+		return "with onboarding built, the worst area reads '%s', want growth" % ProductRead.worst_floor().area
+	set_tier.call("growth", 1)
+	if ProductRead.worst_floor() != {"area": "", "state": ""} or EvSeams.read("urun.floor_area") != "":
+		return "a product at every area's reference holds a floor: %s" % str(ProductRead.worst_floor())
+
+	var seen: Array[String] = []
+	EventBus.axis_floor_warning.connect(func(area: String) -> void: seen.append("warning:" + area))
+	EventBus.axis_floor_crossed.connect(func(area: String) -> void: seen.append("crossed:" + area))
+	ProductRead.reset()
+	ProductRead.emit_edges()
+	GameState.set_flag("b2c_audience", sqrt(10000.0 * 50000.0))
+	ProductRead.emit_edges()
+	if seen != ["warning:trust"] or ProductRead.worst_floor().state != "warning":
+		return "Trust at ratio 0.5 emitted %s (worst %s), want one warning for trust" % [str(seen), str(ProductRead.worst_floor())]
+	ProductState.set_line_tier(security, 0)
+	ProductRead.emit_edges()
+	ProductRead.emit_edges()
+	if seen != ["warning:trust", "crossed:trust"]:
+		return "Trust falling to ratio 0 emitted %s, want the warning then one crossing" % str(seen)
+	if EvSeams.read("urun.trust_level") != 0.0:
+		return "no Trust line built reads level %s" % EvSeams.read("urun.trust_level")
+	ProductState.set_line_tier(security, 1)
+	if EvSeams.read("urun.trust_level") != 0.5:
+		return "one Trust line at tier 1 reads level %s, want 0.5" % EvSeams.read("urun.trust_level")
+
+	GameState.set_flag("mvp_market_type", "b2b")
+	ProductState.set_line_tier(security, 0)
+	ProductRead.emit_edges()
+	if not ProductRead.floor_ratios().is_empty() or seen.size() != 2 or EvSeams.read("urun.floor_state") != "":
+		return "a B2B product holds a floor (%s) or emitted %s" % [str(ProductRead.floor_ratios()), str(seen)]
 	return ""
 
 

@@ -2522,7 +2522,8 @@ düzeltme koşusu oyundan kalktı: düzeltme sprintin düzeltme kartının işid
 - Değişti: `urun.bugs_confirmed` yerini `urun.open_bugs`'a bıraktı (bütün hatlardaki açık hata); `customer.b2c_refunds`
   yeni seam'i okur, eşik aynı (8). Yeni seam `urun.worst_line_bugs` en çok hatalı hattın sayısını okur.
 - Eksen seam'leri (`urun.axis_stability` dahil) açık hatayla düşmez: Kararlılık okuması ham eksendir, hatanın bedeli
-  müşteri kaybıdır. `urun.axis_stability` okuyan kartlar (`launch_leak`, `password_rule`) hata yüzünden eşiğe inmez.
+  müşteri kaybıdır. `urun.axis_stability` okuyan kartlar (`launch_leak`, `password_rule`) hata yüzünden eşiğe inmez
+  (seam'ler sonradan kalktı, §27.36; kartlar `urun.trust_level` okur ve aynı kuralı korur).
 - Yeni sinyal `EventBus.line_bugs_cleared(hat, n)` motora bağlı değildir; düzeltme kartı hattını temizleyince yayılır.
 - Üretilen sayılar (`_vocabulary.md`): 197 → 196 seam, 64 → 63 fiil, 98 → 97 kart.
 - Eski kayıt: `product.bug_pile` satırları (kuyruk, takvim, masa, geçmiş, etkin kart) `SaveManager._migrate_16`'da
@@ -2876,3 +2877,35 @@ yalnız bir pazara aitse onu gizleyen yol yoktur (§3.3: kilitli seçenek görü
 
 *Neden.* Faz B görevi (Karar 10 ile 13; W2): PM, tasarımcı ve testçi kâğıtlarında her seçenek kime neye mal olacağını sayıyla söyler (karta,
 sonraki sprinte, hesaba, kitleye ya da kasaya) ve bedelsiz çıkış yoktur.
+
+### §27.36 · Faz Q K5: taban merdiveni eksenden alana, eksen seam'leri kalktı
+
+*Belge ne diyordu.* §27.26 ve Ürün §14: B2C taban kartları üç eksenin okumasına bağlıdır; `urun.axis_innovation`,
+`urun.axis_stability`, `urun.axis_experience` ham eksen okumasını (0-120), `urun.floor_innovation`, `urun.floor_stability`,
+`urun.floor_experience` her eksenin tabana göre durumunu (`''`, `warning`, `crossed`) verir; `launch_leak` ile `password_rule`
+Kararlılık 10'un altındayken açılır; taban kartlarının gövdesi "aynı zayıflık" der ve adını söylemez. Çıta her faz geçişinde
+`EventBus.phase_bar_raised` yayardı.
+
+*Ne yapıldı.* Merdiven alana geçti (`docs/tasks/faz_cde/PRD_FAZ_Q_KALITE.md` Karar 12):
+- `ProductRead.floor_ratios()` canlı B2C üründe Çekirdek ile U'ya giren üç alanın (Gelir yok) seviyesini ürün sayfasının referansına
+  (`ProductQuality.expectation(alan)`, B2C'de bugünkü kitle) böler; beklentisi 0 olan alan sayılmaz, B2B'de boştur (orada geride kalmanın
+  dili satış kaybıdır). `floor_state(oran)`: `FLOOR_WARNING_RATIO` (0,6) altı `warning`, `FLOOR_CROSSED_RATIO` (0,4) altı `crossed`
+  [WORKING] onay bekliyor. `worst_floor()` oranı en düşük alanı ve basamağını verir, eşitlikte `ProductQuality.weights` sırasında öndekini.
+  Süre sayacı yoktur: bugünkü sıra (uyarı kartı, o kartın geçmişi, sonra kayıp kartı) kalır.
+- `axis_floor_warning(area)` ve `axis_floor_crossed(area)` aynı adlarla alan kimliği taşır, alan başına kenarda bir kez yayılır
+  (`ProductRead.emit_edges`); `EvSignals.BINDINGS` aynı kalır (slotsuz). `phase_bar_raised` ve yalnız onun için duran `_prev_phase` silindi.
+- Silinen seam'ler: altı eksen seam'i (`urun.axis_*`, `urun.floor_innovation/stability/experience`). Yeni seam'ler: `urun.floor_state`
+  (en kötü alanın basamağı), `urun.floor_area` (o alanın kısa adının yerelleştirme anahtarı, `PRODUCT_AREA_*_SHORT`; çevrilmiş metin
+  değil, çünkü `freeze_seams` anahtarı saklar ve gövde dil değişince yeniden çevrilir), `urun.trust_level` (Güven & Ölçek seviyesi,
+  ekranın yarım adımı).
+- Kartlar: `b2c_floor_signal` ve `b2c_floor_churn` `urun.floor_state` okur, gövdeleri CSV anahtarı yerine kart JSON'unda satır içidir ve
+  `{seam:urun.floor_area}` ile alanın adını söyler (CSV değerinde `{seam:}` olmaz; iki `EV_PRODUCT_B2C_FLOOR_*_BODY` anahtarı silindi);
+  ikisi `tools/lint_v3_frozen.json`'dan çıktı (yeniden yazılan kart listeden çıkar) ve O2, O4, O5, T2, T3 onlarda artık hatadır.
+  `shutdown_notice` ile `b2c_creator_feature` "hiçbir taban aşılmadı" koşulunu `urun.floor_state != crossed` olarak okur.
+  `launch_leak` ile `password_rule` "Kararlılık < 10" yerine `urun.trust_level == 0` okur; `urun.enterprise_trust` koşulu aynı.
+- "Açık hatayla düşmez" kuralı korunur: `urun.trust_level` hattın kademesini okur (`ProductQuality.level`), açık hata kademeyi indirmez;
+  `launch_leak` ve `password_rule` hata yüzünden eşiğe inmez.
+- Vaka `floor_ladder_areas`; `product_read_catalogue` yeni sinyal ve seam adlarını sınar.
+
+*Neden.* Faz Q K5: ürünün tek kalitesi alan seviyesidir, eksen okuması kalkar; B2C taban kartı "aynı zayıflık" yerine alanın adını söyler,
+böylece oyuncunun karşılığı olan hamle (o alana kart koymak) görünür olur.

@@ -36,9 +36,9 @@
         "value": 6
       },
       {
-        "seam": "urun.axis_stability",
-        "op": "<",
-        "value": 10
+        "seam": "urun.trust_level",
+        "op": "==",
+        "value": 0
       },
       {
         "seam": "urun.enterprise_trust",

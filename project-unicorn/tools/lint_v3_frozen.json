@@ -23,8 +23,6 @@
 		"funding.monthly_update",
 		"funding.portfolio_vendor",
 		"funding.portfolio_vendor_trial",
-		"product.b2c_floor_churn",
-		"product.b2c_floor_signal",
 		"product.launch_leak",
 		"product.repeat_reminders",
 		"product.sprint_colors_again",

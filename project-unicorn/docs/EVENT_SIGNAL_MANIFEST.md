@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-18.
+Last generated 2026-10-19.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 145 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 144 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **145** |
+| Signals declared | **144** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **68** |
+| Emitted with **no production listener** | **67** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -161,12 +161,11 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `version_shipped` | `version: int` | sprint_system | 2 | 2 | left_tabs · top_bar · EvSignals (card trigger) |
 | `bug_confirmed` | `total_confirmed: int` | product_read | 1 | 0 | — |
 | `unconfirmed_threshold_crossed` | `band: String` | product_read | 1 | 0 | — |
-| `axis_floor_warning` | `axis: String` | product_read | 1 | 0 | EvSignals (card trigger) |
-| `axis_floor_crossed` | `axis: String` | product_read | 1 | 0 | EvSignals (card trigger) |
+| `axis_floor_warning` | `area: String` | product_read | 1 | 0 | EvSignals (card trigger) |
+| `axis_floor_crossed` | `area: String` | product_read | 1 | 0 | EvSignals (card trigger) |
 | `line_upgraded` | `line_id: String, tier: int` | sprint_system | 1 | 0 | — |
 | `line_completed` | `line_id: String` | sprint_system | 1 | 0 | — |
 | `delighter_shipped` | `step_id: String` | sprint_system | 1 | 0 | — |
-| `phase_bar_raised` | `phase: int` | product_read | 1 | 0 | — |
 
 ### Sprint
 

@@ -30,23 +30,9 @@
   "condition": {
     "all": [
       {
-        "any": [
-          {
-            "seam": "urun.floor_innovation",
-            "op": "==",
-            "value": "crossed"
-          },
-          {
-            "seam": "urun.floor_stability",
-            "op": "==",
-            "value": "crossed"
-          },
-          {
-            "seam": "urun.floor_experience",
-            "op": "==",
-            "value": "crossed"
-          }
-        ]
+        "seam": "urun.floor_state",
+        "op": "==",
+        "value": "crossed"
       },
       {
         "any": [
@@ -117,7 +103,7 @@
   "text": {
     "tr": {
       "title": "EV_PRODUCT_B2C_FLOOR_CHURN_TITLE",
-      "body": "EV_PRODUCT_B2C_FLOOR_CHURN_BODY",
+      "body": "Ayrılış anketi iptallerin sebebi olarak {seam:urun.floor_area} tarafını gösteriyor.",
       "options": {
         "let_go": "EV_PRODUCT_B2C_FLOOR_CHURN_LET_GO",
         "credits": "EV_PRODUCT_B2C_FLOOR_CHURN_CREDITS",
@@ -127,7 +113,7 @@
     },
     "en": {
       "title": "EV_PRODUCT_B2C_FLOOR_CHURN_TITLE",
-      "body": "EV_PRODUCT_B2C_FLOOR_CHURN_BODY",
+      "body": "The exit survey points to {seam:urun.floor_area} as the reason people cancel.",
       "options": {
         "let_go": "EV_PRODUCT_B2C_FLOOR_CHURN_LET_GO",
         "credits": "EV_PRODUCT_B2C_FLOOR_CHURN_CREDITS",

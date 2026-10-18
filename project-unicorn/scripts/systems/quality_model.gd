@@ -156,8 +156,7 @@ const READING_MAX := 120.0
 ## için cezalandırılan oyuncu. Bu kuralda K1'i yayınlamak tam NÖTR, K2 +16,5 getirir.
 ##
 ## Ölçeği değişen OKUMA'dır, değer değil: `realized_dims` bilerek dokunulmadan kalır,
-## çünkü ekonominin doyum eğrisi MUTLAK bir sayı ister. `EventBus.phase_bar_raised`
-## burada kullanılmaz: yükü bir FAZ, oysa bir hat tek bir EKSENİ yükseltir.
+## çünkü ekonominin doyum eğrisi MUTLAK bir sayı ister.
 static func axis_bar(subtype: String, line_tiers: Dictionary, axis: String,
 		phase: int = -1) -> float:
 	var market_bar: float = float(PHASE_BAR.get(phase if phase > 0 else GameState.phase, PHASE_BAR[1]))
@@ -204,8 +203,7 @@ static func realized_axis(subtype: String, line_tiers: Dictionary,
 	return total
 
 
-## §11.3 — the 0-120 reading. This is what the `urun.axis_*` seams return and what
-## the floor ladder (§14) compares against.
+## §11.3 — the 0-120 reading.
 static func axis_reading(subtype: String, line_tiers: Dictionary,
 		line_realization: Dictionary, axis: String, phase: int = -1) -> int:
 	var realized: float = realized_axis(subtype, line_tiers, line_realization, axis)

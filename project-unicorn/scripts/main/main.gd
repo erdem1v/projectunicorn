@@ -775,6 +775,8 @@ func _run_event_shot(spec: String) -> void:
 		given.merge(_seed_incident_world(emergency[0], b2b), false)
 	elif event_id == "product.promise_due":
 		given.merge(_seed_promise_world(), false)
+	elif event_id in ["product.b2c_floor_signal", "product.b2c_floor_churn"]:
+		_seed_floor_world()
 	elif ["pm", "designer", "tester"].has(String(EvCatalog.card(event_id).get("pool_group", ""))):
 		given.merge(_seed_paper_world(event_id), false)
 	elif given.values().any(func(id: String) -> bool: return id.begins_with("char_emp_shot_")):   # LOC-DATA debug seed / id
@@ -885,6 +887,20 @@ func _stage_emergency(kind: String, b2b: bool, given: Dictionary) -> Dictionary:
 	if kind == "storm":
 		given.erase("employee")
 	return given
+
+
+## The company the B2C floor cards are shot in: a note app whose audience has outgrown its Trust and Scale (one of its two
+## lines built), so the floor ladder holds a warning on that area and the card names it.
+func _seed_floor_world() -> void:
+	ProductLines.reload()
+	GameState.set_flag("mvp_shipped", true)
+	SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
+	for area in ["core", "onboarding", "growth"]:
+		for line_id in SprintCatalog.capabilities(area):
+			ProductState.set_line_tier(line_id, 1)
+	ProductState.set_line_tier(SprintCatalog.in_product("line_shared_security"), 1)
+	SalesSystem.add_b2c_audience(20000)
+	SalesSystem.open_b2c_paid_tier(8)
 
 
 ## The company the promise card is shot in: a live ERP whose roster tests its one sprint card, in testing and a week

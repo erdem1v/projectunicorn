@@ -86,25 +86,19 @@ static func _install_product() -> void:
 				p.get("sprint", {}).get("cards", []) + p.get("next", {}).get("cards", []),
 		"Product", "the paid plan is open, or its card is in the running or the planned sprint")
 
-	# Quality. Axis readings, not a single score — §17's triangle rule says the player reads
-	# the asymmetry, so content asks about an axis and never about "quality" as one number.
-	EvSeams.register("urun.axis_innovation", G, TYPE_INT,
-		func() -> int: return ProductRead.axis_reading("", "innovation"), "Product", "0-120")
-	EvSeams.register("urun.axis_stability", G, TYPE_INT,
-		func() -> int: return ProductRead.axis_reading("", "stability"), "Product", "0-120")
-	EvSeams.register("urun.axis_experience", G, TYPE_INT,
-		func() -> int: return ProductRead.axis_reading("", "experience"), "Product", "0-120")
-
-	# The floor ladder's trigger (Ürün §14): "" / warning at floor+20% / crossed.
-	EvSeams.register("urun.floor_innovation", G, TYPE_STRING,
-		func() -> String: return ProductRead.axis_floor_state("innovation"),
-		"Product", "'' | warning | crossed")
-	EvSeams.register("urun.floor_stability", G, TYPE_STRING,
-		func() -> String: return ProductRead.axis_floor_state("stability"),
-		"Product", "'' | warning | crossed")
-	EvSeams.register("urun.floor_experience", G, TYPE_STRING,
-		func() -> String: return ProductRead.axis_floor_state("experience"),
-		"Product", "'' | warning | crossed")
+	# The B2C floor ladder (ProductRead.worst_floor): the worst area's state and name, and the Trust and Scale level the
+	# launch-day cards read.
+	EvSeams.register("urun.floor_state", G, TYPE_STRING,
+		func() -> String: return ProductRead.worst_floor().state,
+		"Product", "'' | warning | crossed: the state of the worst area; '' in B2B and while no area is below the warning ratio")
+	EvSeams.register("urun.floor_area", G, TYPE_STRING,
+		func() -> String:
+			var area: String = ProductRead.worst_floor().area
+			return SprintCatalog.area_short_key(area) if area != "" else "",
+		"Product", "localization key (PRODUCT_AREA_*_SHORT) of the worst area's name, '' without one; a card body prints it translated")
+	EvSeams.register("urun.trust_level", G, TYPE_FLOAT,
+		func() -> float: return SprintCatalog.area_level("trust"),
+		"Product", "Trust and Scale as the product page shows it, 0-3 in halves; 0 until a line of the area is built")
 
 	EvSeams.register("urun.open_bugs", G, TYPE_INT,
 		func() -> int: return ProductRead.open_bugs(), "Product", "open bugs across every line")

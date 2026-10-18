@@ -108,9 +108,11 @@ static func step_unlockable(step_id: String) -> bool:
 # Adlar EventBus'ta yaşıyor; bu bölüm onları YAYINLAYAN tek yerdir. İki emitter
 # olursa olay motoru aynı olayı iki kez görür.
 
-## §14 — taban merdiveninin ilk iki basamağı. "Uyarısız kayıp yoktur": önce yumuşak
-## sinyal, sonra tabanın kendisi. Üçüncü basamak (kriz) olay motorunun işi.
-const FLOOR_WARNING_MARGIN := 1.20
+## §14 — taban merdiveninin ilk iki basamağı, yalnız B2C'de. "Uyarısız kayıp yoktur": önce yumuşak sinyal, sonra tabanın
+## kendisi. Alanın seviyesi ürün sayfasının referansına (kitle) bölünür; oran ilkinin altına inince "warning", ikincisinin
+## altına inince "crossed". Üçüncü basamak (kriz) olay motorunun işi. [WORKING] onay bekliyor.
+const FLOOR_WARNING_RATIO := 0.6
+const FLOOR_CROSSED_RATIO := 0.4
 
 ## §14 [K] — B2B İ25 · K40 · D30 · B2C İ35 · K20 · D35. B2B dışındaki her pazar B2C okur.
 const _MARKET_FLOORS := {
@@ -123,17 +125,35 @@ static func market_floors(market: String) -> Dictionary:
 	return _MARKET_FLOORS["b2b" if market == "b2b" else "b2c"]
 
 
-## Her eksen için tabanın durumunu döndürür: "" · "warning" · "crossed".
-static func axis_floor_state(axis: String) -> String:
-	if not ProductState.is_live():
-		return ""
-	var floor_v: float = float(market_floors(ProductState.market_type()).get(axis, 0))
-	var r: float = float(ProductState.axis_reading(axis))
-	if r < floor_v:
+## Merdivenin alanları: {alan: seviye ÷ beklenti}. Gelir kaliteye girmediği için yok, beklentisi 0 olan alan da yok. B2B'de
+## ve canlı ürün yokken boş: B2B'de geride kalmanın dili satış kaybıdır.
+static func floor_ratios() -> Dictionary:
+	var out: Dictionary = {}
+	if not ProductState.is_live() or ProductState.market_type() != "b2c":
+		return out
+	for area in ProductQuality.weights("b2c", ""):
+		var expect: float = ProductQuality.expectation(area)
+		if expect > 0.0:
+			out[area] = ProductQuality.level(area) / expect
+	return out
+
+
+## Oranın basamağı: "" · "warning" · "crossed".
+static func floor_state(ratio: float) -> String:
+	if ratio < FLOOR_CROSSED_RATIO:
 		return "crossed"
-	if r < floor_v * FLOOR_WARNING_MARGIN:
-		return "warning"
-	return ""
+	return "warning" if ratio < FLOOR_WARNING_RATIO else ""
+
+
+## En düşük oranlı alan ve basamağı ({area, state}); oranlar eşitse öndeki. Hiçbir alan uyarıya inmediyse ikisi de boş.
+static func worst_floor() -> Dictionary:
+	var ratios: Dictionary = floor_ratios()
+	var worst: String = ""
+	for area in ratios:
+		if worst == "" or ratios[area] < ratios[worst]:
+			worst = area
+	var state: String = floor_state(ratios[worst]) if worst != "" else ""
+	return {"area": worst if state != "" else "", "state": state}
 
 
 # ---------------------------------------------------------------- edges
@@ -145,7 +165,6 @@ static func axis_floor_state(axis: String) -> String:
 static var _prev_open := 0
 static var _prev_band := ""
 static var _prev_floor := {}
-static var _prev_phase := 0
 static var _seeded := false
 
 
@@ -158,10 +177,10 @@ static func reset() -> void:
 static func emit_edges() -> void:
 	var open: int = ProductState.open_bugs()
 	var band: String = SupportSystem.warmth_band()
-	var phase_now: int = GameState.phase
+	var ratios: Dictionary = floor_ratios()
 	var floors: Dictionary = {}
-	for axis in QualityModel.AXES:
-		floors[axis] = axis_floor_state(String(axis))
+	for area in ratios:
+		floors[area] = floor_state(ratios[area])
 
 	if _seeded:
 		# §8.1 — bir bildirim DOĞRULANDIĞINDA. Düşüş (düzeltme) bu sinyali atmaz.
@@ -170,21 +189,17 @@ static func emit_edges() -> void:
 		# §8.5 — ısınma bandı değişti.
 		if band != _prev_band:
 			EventBus.unconfirmed_threshold_crossed.emit(band)
-		# §14 — taban merdiveninin ilk iki basamağı, her eksen için ayrı.
-		for axis in floors:
-			var now: String = floors[axis]
-			if now == _prev_floor.get(axis, ""):
+		# §14 — taban merdiveninin ilk iki basamağı, her alan için ayrı.
+		for area in floors:
+			var now: String = floors[area]
+			if now == _prev_floor.get(area, ""):
 				continue
 			if now == "warning":
-				EventBus.axis_floor_warning.emit(axis)
+				EventBus.axis_floor_warning.emit(area)
 			elif now == "crossed":
-				EventBus.axis_floor_crossed.emit(axis)
-		# §11.3 — çıta her faz geçişinde +%10 yükselir. "Yerinde durmak görece gerilemektir."
-		if phase_now > _prev_phase:
-			EventBus.phase_bar_raised.emit(phase_now)
+				EventBus.axis_floor_crossed.emit(area)
 
 	_seeded = true
 	_prev_open = open
 	_prev_band = band
 	_prev_floor = floors
-	_prev_phase = phase_now

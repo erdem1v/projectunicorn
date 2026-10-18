@@ -3089,12 +3089,10 @@ EV_CUSTOMER_B2C_REFUNDS_ALL,İsteyen herkese iade et,Refund everyone who asks
 EV_CUSTOMER_B2C_REFUNDS_POLICY,İade koşullarını hatırlat,Point them to the refund policy
 EV_CUSTOMER_B2C_REFUNDS_EXPIRED,"Talepler cevapsız kaldı, yorumlar da bunu yazdı.",The requests went unanswered and the reviews said so.
 EV_PRODUCT_B2C_FLOOR_SIGNAL_TITLE,Yorumlar ne diyor,What the reviews say
-EV_PRODUCT_B2C_FLOOR_SIGNAL_BODY,Son yorumlar hep aynı zayıflığa dönüyor. Henüz bu yüzden giden olmadı.,The newest reviews keep coming back to the same weakness. Nobody has left over it yet.
 EV_PRODUCT_B2C_FLOOR_SIGNAL_FEEDBACK,Geri bildirime zaman ayır,Spend time with the feedback
 EV_PRODUCT_B2C_FLOOR_SIGNAL_NOTED,Not alındı,Noted
 EV_PRODUCT_B2C_FLOOR_SIGNAL_EXPIRED,Yorumlar aynı şeyi söylemeye devam etti.,The reviews kept saying it.
 EV_PRODUCT_B2C_FLOOR_CHURN_TITLE,Kullanıcılar gidiyor,Users are leaving
-EV_PRODUCT_B2C_FLOOR_CHURN_BODY,Yorumların söyleyip durduğu zayıflık artık iptal sebebi. Ayrılış anketi bunu tek satırla söylüyor.,The weakness the reviews kept naming is now why people cancel. The exit survey says it in one line.
 EV_PRODUCT_B2C_FLOOR_CHURN_LET_GO,Gitmelerine izin ver,Let them go
 EV_PRODUCT_B2C_FLOOR_CHURN_CREDITS,Kalmaları için kredi ver,Offer credit to stay
 EV_PRODUCT_B2C_FLOOR_CHURN_ROADMAP,Neyi düzelteceğini açıkla,Publish what you will fix

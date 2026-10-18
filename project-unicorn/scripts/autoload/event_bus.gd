@@ -149,12 +149,11 @@ signal infra_changed()
 signal version_shipped(version: int)
 signal bug_confirmed(total_confirmed: int)
 signal unconfirmed_threshold_crossed(band: String)
-signal axis_floor_warning(axis: String)
-signal axis_floor_crossed(axis: String)
+signal axis_floor_warning(area: String)
+signal axis_floor_crossed(area: String)
 signal line_upgraded(line_id: String, tier: int)
 signal line_completed(line_id: String)
 signal delighter_shipped(step_id: String)
-signal phase_bar_raised(phase: int)
 
 # --- Sprint ---
 # Tek emitter SprintSystem. product_state_changed sprint ekranının yeniden çizim kancasıdır.

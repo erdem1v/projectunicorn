@@ -12,7 +12,7 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **264** |
+| Seams (read) | **261** |
 | Effect verbs (write) | **75** |
 | Cards in the catalogue | 148 |
 | Arcs | 3 |
@@ -378,9 +378,6 @@ slot of that type (§17.12).
 
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
-| `urun.axis_experience` | global | int | Product | 0-120 |
-| `urun.axis_innovation` | global | int | Product | 0-120 |
-| `urun.axis_stability` | global | int | Product | 0-120 |
 | `urun.bugs_unconfirmed` | global | int | Product | incoming, unvalidated reports |
 | `urun.capacity_state` | global | string | Product | normal | amber | over | unprovisioned |
 | `urun.capacity_tier` | global | int | Product | provisioned infra units |
@@ -420,9 +417,8 @@ slot of that type (§17.12).
 | `urun.design_late` | global | bool | Product | the decision card is still in design after this week's work and a developer waits on it |
 | `urun.durability_tier` | global | int | Product | the tier the Durability line has reached; 1 is autosave and nothing more |
 | `urun.enterprise_trust` | global | bool | Product | the enterprise provider or security_cert research: the bar a large account checks before it signs |
-| `urun.floor_experience` | global | string | Product | '' | warning | crossed |
-| `urun.floor_innovation` | global | string | Product | '' | warning | crossed |
-| `urun.floor_stability` | global | string | Product | '' | warning | crossed |
+| `urun.floor_area` | global | string | Product | localization key (PRODUCT_AREA_*_SHORT) of the worst area's name, '' without one; a card body prints it translated |
+| `urun.floor_state` | global | string | Product | '' | warning | crossed: the state of the worst area; '' in B2B and while no area is below the warning ratio |
 | `urun.interest` | global | float | Product | 0-100, refreshed on publish, decays by a half-life counted in weeks |
 | `urun.is_live` | global | bool | Product | something has shipped |
 | `urun.lines_open` | global | int | Product | 0-9 feature lines opened |
@@ -461,6 +457,7 @@ slot of that type (§17.12).
 | `urun.subtype` | global | string | Product | one of the sub-product ids |
 | `urun.support_staffed` | global | bool | Product | the module's central pressure reads from this one boolean |
 | `urun.tech_debt` | global | bool | Product | WRAPPER over a flag; boolean by design in the demo |
+| `urun.trust_level` | global | float | Product | Trust and Scale as the product page shows it, 0-3 in halves; 0 until a line of the area is built |
 | `urun.usage` | global | float | Product | load multiplier |
 | `urun.version` | global | int | Product | shipped version number |
 | `urun.version_age` | global | int | Product | weeks since THIS VERSION shipped, not since the product was born |
