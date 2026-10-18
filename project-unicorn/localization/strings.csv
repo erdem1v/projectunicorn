@@ -583,7 +583,7 @@ PROD_RND_NODE_INCIDENT_PLAYBOOK,Olay Kitabı,Incident Playbook
 PROD_RND_NODE_SELF_SERVICE,Yardım Merkezi,Help Center
 PROD_RND_NODE_DESIGN_SYSTEM,Tasarım Sistemi,Design System
 PROD_RND_NODE_USER_RESEARCH,Kullanıcı Araştırması,User Research
-PROD_RND_NODE_ONBOARDING_FLOW,Onboarding Akışı,Onboarding Flow
+PROD_RND_NODE_ONBOARDING_FLOW,İlk Açılış Akışı,Onboarding Flow
 PROD_RND_NODE_ACCESSIBILITY,Erişilebilirlik,Accessibility
 PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
 BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
@@ -2899,8 +2899,8 @@ PRODUCT_APPROVE_ALL,Hepsini onayla,Approve all
 PRODUCT_APPROVED,Onaylandı,Approved
 PRODUCT_AREA_CORE,Çekirdek,Core
 PRODUCT_AREA_CORE_SHORT,Çekirdek,Core
-PRODUCT_AREA_ONBOARDING,Onboarding & Erişim,Onboarding & Access
-PRODUCT_AREA_ONBOARDING_SHORT,Onboarding,Onboarding
+PRODUCT_AREA_ONBOARDING,İlk Kullanım ve Erişim,Onboarding & Access
+PRODUCT_AREA_ONBOARDING_SHORT,İlk kullanım,Onboarding
 PRODUCT_AREA_GROWTH,Büyüme,Growth
 PRODUCT_AREA_GROWTH_SHORT,Büyüme,Growth
 PRODUCT_AREA_INTEGRATIONS,Entegrasyonlar,Integrations

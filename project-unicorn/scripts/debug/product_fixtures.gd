@@ -16,7 +16,7 @@ const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "pm_started": "c2
 ## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
 const AREAS := {
 	"core": ["Çekirdek", "Core", "Çekirdek", "Core"],
-	"onboarding": ["Onboarding & Erişim", "Onboarding & Access", "Onboarding", "Onboarding"],
+	"onboarding": ["İlk Kullanım ve Erişim", "Onboarding & Access", "İlk kullanım", "Onboarding"],
 	"growth": ["Büyüme", "Growth", "Büyüme", "Growth"],
 	"integrations": ["Entegrasyonlar", "Integrations", "Entegrasyonlar", "Integrations"],
 	"trust": ["Güven & Ölçek", "Trust & Scale", "Güven", "Trust"],

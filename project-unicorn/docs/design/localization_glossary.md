@@ -72,6 +72,8 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | itibar düşüşü *(hata ihmali)* | reputation drop | TopBar itibar ipucu: "Haftalardır açık kalan hatalar itibarı düşürdü. Son düşüş: {tarih} ↔ Bugs left open for weeks cost reputation. Last drop: {date}" (`REP_DROP_BUGS`). TR/EN onay bekliyor. |
 | puan *(efor)* | points | Tekil: point (`_ONE`). |
 | alan *(ürün)* | area | ALANLAR / AREAS. |
+| İlk Kullanım ve Erişim / İlk kullanım *(ürün alanı)* | Onboarding & Access / Onboarding | `PRODUCT_AREA_ONBOARDING` ve `_SHORT`. TR adı sahip kararıyla değişti (2026-10-17); EN ve iç kimlik (`onboarding`) aynı. "Onboarding" TR'de yalnız hesabın ilk haftaları anlamında kalır (§5). |
+| İlk Açılış Akışı *(Ar-Ge düğümü)* | Onboarding Flow | `PROD_RND_NODE_ONBOARDING_FLOW`. TR adı sahip kararıyla değişti (2026-10-17); EN aynı. |
 | yetenek | capability | Alanın altındaki yapılmış iş. |
 | talep | request | Müşterinin ürün talebi; satıştaki "aday ↔ lead" ile karışmaz. |
 | lider *(build)* | lead | LİDERİN ÖNERİSİ / LEAD'S PICK. Satıştaki "aday ↔ lead"den ayrı anahtar ailesi. |
@@ -115,7 +117,7 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | aday | lead | Sayımlar ve akış (`{n} leads`). |
 | prospect | prospect | Panodaki varlık. Kural: **lead gelir, prospect panoda oturur** — shipped ayrım kanonlaştı. |
 | Memnuniyet | Satisfaction | |
-| Onboarding | Onboarding | Yeni hesabın ilk haftaları: hesap kartının etiketi (`SALES_CHIP_ONBOARDING`) ve son haftasının satırı (`SALES_ONBOARDING_ENDS`). Ödünç kelime, iki dilde aynı: sahip kararı 2026-10-11. |
+| Onboarding | Onboarding | Yeni hesabın ilk haftaları: hesap kartının etiketi (`SALES_CHIP_ONBOARDING`) ve son haftasının satırı (`SALES_ONBOARDING_ENDS`). Ödünç kelime, iki dilde aynı: sahip kararı 2026-10-11. Ürün alanının TR adı bu kelimeyi taşımaz (§3). |
 | Churn'e ~{n} hafta | ~{n} weeks to churn | Tekil: ~1 week to churn (`_ONE`). |
 | Söz / Söz teslimi | Promise / Promise due | |
 | söz verildi | promised | Sözlü sprint kartının damgası (`PRODUCT_PROMISED`), küçük harf. TR/EN onay bekliyor. |
