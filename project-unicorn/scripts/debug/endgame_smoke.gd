@@ -19684,11 +19684,13 @@ static func _case_sprint_save_roundtrip() -> String:
 ## süresince değiştirir ve geri koyar.
 ## Tek kurucu 12 saatte ilk haftayı sıradaki ilk karta verir; geride kalan ikinci kart kararı alır.
 ## Kararla devredince ya da koşan kart çıkarılınca kurucu haftanın kalanında kalan kartta. Fazla
-## mesai (×1,25) fixture.paper_crunch kâğıdından seçilir: kurucu 15 saatte de ilk karttaysa kararı
-## kalkan karta geçmez ve kart devreder; ilk kart çıkarılınca boştaki kurucu onu 12 saatte bitirir
-## (3,1 puan). crunch_finishes ikisini de seçimden önce söyler.
-## FALSİFİKASYON: SprintSystem.remove'daki _restaff çağrısını sil ya da crunch_finishes'i 1 çarpanla
-## veya meşgul kurucuyla oynat → FAIL.
+## mesai (×1,25) fixture.paper_crunch kâğıdından seçilir: cevap gelince haftanın ataması baştan yapılır
+## ve kurucu ilk kartı bitirip artan puanıyla kararı kalkan karta döner. Üç kol: 15 saatte artan puan
+## kartı bitirir ve kart sürümle çıkar; ilk kart çıkarılınca boştaki kurucu onu 12 saatte bitirir
+## (3,1 puan); 10 saatte artan puan yetmez ve kart devreder. crunch_finishes üçünü de seçimden önce söyler.
+## FALSİFİKASYON: SprintSystem.remove'daki _restaff çağrısını sil → FAIL; _clear_decision'daki atamayı
+## _restaff()'a geri çevir → kurucu karta dönmedi FAIL; crunch_finishes'in karar dalını yalnız boştaki
+## kişilerle oynat (eski kod) → FAIL; crunch_finishes hep true → 10 saatlik kol FAIL.
 static func _case_sprint_decision_blocks_progress() -> String:
 	_seed_sprint()
 	WorkHoursSystem.set_company_hours(12)
@@ -19750,7 +19752,9 @@ static func _case_sprint_decision_blocks_progress() -> String:
 		if CharacterRegistry.get_founder().id not in GameState.product.cards[held].assignees:
 			return "removing the running %s left the founder idle beside %s (%s)" % [free, held,
 				GameState.product.cards[held].assignees]
-		for solo in [false, true]:
+		for arm in [[false, 15, true], [true, 12, true], [false, 10, false]]:
+			var solo: bool = arm[0]
+			var want: bool = arm[2]
 			if not world.call():
 				return "fixture: the crunch world's sprint did not start"
 			_sim_day()
@@ -19758,13 +19762,16 @@ static func _case_sprint_decision_blocks_progress() -> String:
 				return "fixture: no late card paper waits on %s (%s)" % [held, GameState.product.decision]
 			if solo:
 				SprintSystem.remove(free)
-			else:
-				WorkHoursSystem.set_company_hours(15)
+			WorkHoursSystem.set_company_hours(arm[1])
 			var said: bool = SprintSystem.crunch_finishes(held)
-			if said != solo:
-				return "with the founder %s crunch_finishes() says %s" % [
-					"idle" if solo else "on %s at 15 hours" % free, said]
+			if said != want:
+				return "with the founder %s at %d hours crunch_finishes() says the card %s, want %s" % [
+					"idle" if solo else "on %s" % free, arm[1], "ships" if said else "carries",
+					"ships" if want else "carries"]
 			EventGate.resolve(PAPER_CRUNCH, "crunch")
+			if want and not solo and CharacterRegistry.get_founder().id not in GameState.product.cards[held].assignees:
+				return "after the answer the founder did not return to %s (%s)" % [held,
+					GameState.product.cards[held].assignees]
 			_sim_day()
 			if GameState.product.release.shipped.any(func(r: Dictionary) -> bool: return r.id == held) != said:
 				return "crunch_finishes() said %s, the chosen crunch %s %s" % [said,

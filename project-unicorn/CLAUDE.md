@@ -113,7 +113,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
 - **Karar kâğıdı.** Sprint başına tek zar (`SprintSystem._request_decision`): 1 haftalık sprintte başlarken, 2 haftalıkta ilk haftanın
   sonunda, `data/product/sprint.json` `decision.sprint_chance` ihtimaliyle sprintin bir kartı için `decision.cards` havuzundan bir kâğıt
   istenir, yoksa sprint kâğıtsızdır ([WORKING]: sprintlerin en az üçte biri). Havuz ağırlıklı sırayla denenir (görülmemiş kâğıt önde,
-  `decision.seen_weight`) ve her kâğıt 52 haftada bir, koşuda en çok 3 kez gelir (`latch`, `latch_key: run`). Kesinti sırası: söz olayı
+  `decision.seen_weight`) ve her kâğıt 52 haftada bir, koşuda en çok 3 kez gelir (`latch`, `latch_key: run`). Kâğıt beklerken kartı ilerlemez ve ona kimse atanmaz; cevap gelince haftanın ataması baştan yapılır ve ekip karta döner (`_clear_decision`). Kesinti sırası: söz olayı
   ya da acil durum gelen sprintte kâğıt gelmez; kâğıt gelen sprintte `IncidentSystem` yalnız servisin çöktüğü acil durumu (kesinti,
   ödeme; `IncidentSystem.SERVICE_DOWN`) yaşatır, öbür acil durum kaybolmaz, sonraki sprinte kalır (`record_interrupt("paper")`,
   `GameState.incident.shifted`). Konuşan kâğıdın kartında o fazda çalışan kişidir: kartın JSON'unda `speaker_role`, `stage`, `pool_group` yazılır, konuşan `EventGate.request(id, {"employee": id})`

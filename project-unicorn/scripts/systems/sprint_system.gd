@@ -861,9 +861,8 @@ static func finishes_with(id: String, extra: int) -> bool:
 
 
 ## Fazla mesai kartı bu sprintte bitirir mi (sprint_hours'un varacağı çarpanla); sprintte olmayan kart için yanlış.
-## Karar bekleyen kart haftanın işine girmemiştir ve seçim onu hafta ortasında kaldırır: kart, motorda olduğu gibi
-## (_restaff), yalnız hiçbir kartta olmayanları alır; kâğıt istenirken kartın atananları henüz silinmemiştir, bu yüzden kartın
-## kendi atananları sayılmaz. Atanmış kartı kendi çalışanları yetiştirir (_finish_sprint).
+## Karar bekleyen kart haftanın işine girmemiştir; cevap gelince haftanın ataması baştan yapılır (_clear_decision), bu yüzden
+## kalan haftalar baştan atanarak oynanır (_play_out). Atanmış kartı kendi çalışanları yetiştirir (_finish_sprint).
 static func crunch_finishes(id: String) -> bool:
 	if not _in_sprint(id):
 		return false
@@ -871,15 +870,7 @@ static func crunch_finishes(id: String) -> bool:
 	var people: Array = team().map(func(t: Dictionary) -> Dictionary: return t.merged({"points": t.points * scale}, true))
 	var cards: Array = _played_copies()
 	if decision_card().get("id", "") == id:
-		var busy: Array = []
-		for c in _sprint_cards():
-			if c.id != id:
-				busy.append_array(c.assignees)
-		for c in cards:
-			if c.id == id:
-				c.assignees = []
-		_play_out(cards.filter(func(c: Dictionary) -> bool: return c.assignees.is_empty()), weeks_left(),
-			people.filter(func(t: Dictionary) -> bool: return t.id not in busy))
+		_play_out(cards, weeks_left(), people)
 	else:
 		_finish_sprint(cards, people)
 	return cards.any(func(c: Dictionary) -> bool: return c.id == id and phase(c) == PHASE_DONE)
@@ -1308,8 +1299,7 @@ static func _on_event_resolved(event_id: String, _choice: int) -> void:
 		_changed()
 
 
-## Sprint sürerken kalkan kararın kartı haftanın kalanında o hafta boşta kalanlarla yürür: seçim
-## kartın kaderini değiştirebilsin.
+## Sprint sürerken kalkan kararın kartına ekip döner: haftanın ataması baştan yapılır ve seçimin değiştirdiği kartı okur.
 static func _clear_decision() -> void:
 	var c: Dictionary = decision_card()
 	_p().decision = {}
@@ -1317,7 +1307,7 @@ static func _clear_decision() -> void:
 		return
 	c.decision = false
 	if mode() == "active" and c.id in _p().sprint.cards:
-		_restaff()
+		_staff_week(false)
 
 
 ## Hafta ortasında ekipten ayrılan, Ekip'in gününde izne giden, işi sprint dışına geçen (Ar-Ge, Destek) ve

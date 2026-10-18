@@ -2663,7 +2663,7 @@ rolü olmadan yapılan test onu açardı.
   yeniden doğrulamada düşer.
 - `decision_card_late` ve `crunch_finishes` kart kimliği alır (`card_late(id)`, `crunch_finishes(id)`); karar seam'leri karar
   kartının kimliğini verir. Atanmış kartın mesaisi, `_end_week` gibi, haftanın atamasını koruyarak oynanır
-  (`_finish_sprint`); karar bekleyen kart eskisi gibi yalnız boştaki kişilerle.
+  (`_finish_sprint`); karar bekleyen kart, kâğıt cevaplanınca haftanın ataması baştan yapıldığı için, yeniden atanarak (`_play_out`).
 - Yeni fiiller: `sprint_card_test {act: cut}` (nötr; söz olayının kartının kalan test işi yarıya iner: test payı düşer, kart
   `cut` olur), `promise_extend` (nötr; açık sözler `due_sprint + 1`, `Promise.extended`, bir kez; bedeli seçeneğin kendi
   `trust_delta {accounts: promise}`'ı, önce yazılır), `promise_break` (ekonomik; açık sözler `PromiseRegistry.break_promise`
@@ -2818,7 +2818,7 @@ kalan kartta gelir; kâğıtlar sprintin kartına dokunan fiillerini "Efor +2" g
   karar kartı bir müşteri isteği (`urun.decision_kind`), sözü yok (`urun.decision_promised`), sprintin son haftasında bu hızla
   yetişmiyor ve fazla mesaiyle yetişiyor (`urun.decision_card_late`, `urun.crunch_finishes`). Fazla mesai sprintin saatini ×1,25
   yapar; ekipte `sprint_crew` (`SprintSystem.payers("")`: ekip, kurucu hariç) morali −5 alır, kurucu tekken kurucunun verimi 1 hafta
-  −%15. `crunch_finishes` kâğıt istenirken (kartın atananları henüz silinmemişken) kartın kendi atananlarını saymaz.
+  −%15. `crunch_finishes` cevaptan sonraki atamayı oynar: kâğıt cevaplanınca ekip karta döner.
 - Seam'ler (`seams_product.gd`): `urun.decision_{kind,line,line_name,tier,card_done,line_bugs,line_accounts,root_bugs,root_cause,
   test_untouched,line_first_version,promised,by_founder,license_year}`, `urun.sprint_has_tester`, `urun.durability_tier`,
   `urun.security_tier` (güncelleme kâğıdı yalnız kurulmuş Güvenlik hattına hata yazar), `urun.security_bugs`, `urun.security_fix_planned`, `urun.weeks_to_month_end`, `urun.paper_{contract,tester_week,license,server_bill,

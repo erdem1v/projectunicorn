@@ -1252,8 +1252,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
       (`SprintSystem._close`; `LineGates.above_gate_bonus` yalnız smoke'ta). (23) `refresh_on_publish`'in yeni kod
       terimi katalog eforunu okur (`ProductLines.effort_of`, DESTEK'in kalibre olduğu ölçek), sprint puanını değil.
       (24) Yalnız araştırma çıkan kapanış sürüm değildir. (25) Karar 2. haftanın tikinde istenir. Kâğıt sprint sürerken
-      kapanınca kart haftanın kalanında o hafta boşta kalanlarla yürür; boşta kimse yoksa yürümez ve devreder
-      (`SprintSystem._clear_decision`). (26) Durum eklemeleri: `sprint.status` "closed", `sprint.hours_mult`,
+      kapanınca haftanın ataması baştan yapılır ve ekip karta döner (Erdem 2026-10-18;
+      `SprintSystem._clear_decision`). (26) Durum eklemeleri: `sprint.status` "closed", `sprint.hours_mult`,
       `card.base`, `card.paid`, `product.worked`; sürüm kaydı etiket değil numara saklar (`release.number`, 0 sürüm
       değildir). (27) "→" kilitli kartı da reddeder (PRD yalnız "+"yı kilitler); sonraki
       sütundaki kart planlama dışında yalnız "çıkar"ı sunar.

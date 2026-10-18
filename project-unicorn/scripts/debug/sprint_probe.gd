@@ -204,7 +204,8 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 static func _paper_asked() -> void:
 	var decision: Dictionary = GameState.product.decision
 	_papered["%d|%d" % [_seed, SprintSystem.sprint_number()]] = true
-	# The paper holds its card and the week's staff moves off it, whatever the answer: it names the sprint.
+	# The staff moves off the card until the answer, so a paper still waiting at the week's end costs the card that
+	# week: it names the sprint.
 	if _cause == "":
 		_cause = decision.event_id
 	print("SPRINTPROBE PAPER|%d|%d|%s|%s" % [_seed, SprintSystem.sprint_number(), decision.event_id,
