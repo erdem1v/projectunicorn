@@ -215,16 +215,17 @@ static func fix_first(line: String, bugs := 0) -> void:
 
 
 ## Kart sprintin başına girer: sprintteyse başa taşınır, sonraki sütundaysa ya da aday ise sprinte alınır, ikinci kart
-## açılmaz. Koşan sprintte kart hemen koşmaya başlar ve haftanın ataması baştan yapılır; sürüm notundayken ve koşan
-## sprintin son gecesi mesai bittikten sonra (ekip yeni sprintle başlar) sonraki sprintin başına girer.
+## açılmaz. Sürüm notundayken ve koşan sprintin son gecesi mesai bittikten sonra (ekip yeni sprintle başlar) sonraki
+## sprintin başına girer. Koşan sprintte sprinte giren kart hemen koşmaya başlar ve haftanın ataması iki durumda da
+## baştan yapılır: sprintten çıkan kartın kişileri öbür kartlara geçer, kapanış planın gösterdiğini yapar.
 static func put_first(card: Dictionary) -> void:
 	var next: bool = _fix_goes_next()
 	_place(card, not next)
 	var column: Array = _p().next.cards if next else _p().sprint.cards
 	column.erase(card.id)
 	column.push_front(card.id)
-	if mode() == "active" and not next:
-		if card.state != "running":
+	if mode() == "active":
+		if not next and card.state != "running":
 			card.merge({"state": "running", "base": _worked(card), "paid": true}, true)
 		_assign(_sprint_cards(), team(), _ahead_cards())
 	_changed()
