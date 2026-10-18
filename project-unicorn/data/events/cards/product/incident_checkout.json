@@ -1,0 +1,181 @@
+{
+  "id": "product.incident_checkout",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "interrupt",
+  "system": true,
+  "tags": [
+    "critical",
+    "urgent",
+    "incident"
+  ],
+  "schema": 3,
+  "family": "incident",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "condition": {
+    "seam": "urun.sprint_running",
+    "op": "==",
+    "value": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": false,
+      "select": "asked"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 0
+  },
+  "options": [
+    {
+      "id": "sprint_stop",
+      "outcome_id": "sprint_stop",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      "effects": [
+        {
+          "verb": "sprint_fix_first",
+          "line": "incident",
+          "bugs": 1
+        },
+        {
+          "verb": "incident",
+          "act": "now"
+        }
+      ]
+    },
+    {
+      "id": "founder_fix",
+      "outcome_id": "founder_fix",
+      "requires": {
+        "seam": "hr.headcount",
+        "op": "<=",
+        "value": 2
+      },
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -15,
+          "weeks": 1
+        },
+        {
+          "verb": "incident",
+          "act": "founder"
+        }
+      ]
+    },
+    {
+      "id": "after_hours",
+      "outcome_id": "after_hours",
+      "requires": {
+        "seam": "olay.payers",
+        "op": ">=",
+        "value": 1
+      },
+      "effects": [
+        {
+          "verb": "morale_crew",
+          "crew": "incident_crew",
+          "line": "incident",
+          "amount": -10
+        },
+        {
+          "verb": "incident",
+          "act": "evening"
+        }
+      ]
+    },
+    {
+      "id": "defer",
+      "outcome_id": "defer",
+      "requires": {
+        "seam": "olay.service_up",
+        "op": "==",
+        "value": true
+      },
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Ödeme alınamıyor",
+      "body": "Dün geceden beri {seam:olay.affected_users} kişi ödeme yapamadı. Kart ödemeleri son adımda reddediliyor.",
+      "options": {
+        "sprint_stop": "Sprinti durdur, şimdi düzelt",
+        "founder_fix": "Kendin düzelt",
+        "after_hours": "Ekip bu akşam kalsın",
+        "defer": "Sonraki sprinte bırak"
+      },
+      "locked_reasons": {
+        "sprint_stop": "Şu anda koşan bir sprint yok.",
+        "founder_fix": "Ekip iki kişiyi geçti.",
+        "after_hours": "Ekipte yazılım ya da test yapan kimse yok.",
+        "defer": "Şu anda kimse ödeme yapamıyor."
+      },
+      "expire_note": "Karar verilmedi, düzeltme sprintin başına alındı."
+    },
+    "en": {
+      "title": "Payments are failing",
+      "body": "{seam:olay.affected_users} people haven't been able to pay since last night. Card payments are declined at the last step.",
+      "options": {
+        "sprint_stop": "Stop the sprint, fix it now",
+        "founder_fix": "Fix it yourself",
+        "after_hours": "Have the team stay late tonight",
+        "defer": "Leave it for the next sprint"
+      },
+      "locked_reasons": {
+        "sprint_stop": "No sprint is running right now.",
+        "founder_fix": "The team has grown past two people.",
+        "after_hours": "Nobody on the team builds or tests.",
+        "defer": "Nobody can pay right now."
+      },
+      "expire_note": "No decision came, so the fix went to the top of the sprint."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_fix_first",
+        "line": "incident",
+        "bugs": 1
+      },
+      {
+        "verb": "incident",
+        "act": "now"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

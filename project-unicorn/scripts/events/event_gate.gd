@@ -14,9 +14,10 @@ extends RefCounted
 ## opened instead (a reminder's button uses it).
 ## `context` names the card's subjects: the gate binds them or refuses the card (§4.3).
 ## A request comes in with the workday like everything the clock makes (MailClock); `immediate` is the player's
-## own ask and shows at once.
-static func request(event_id: String, context: Dictionary = {}, immediate: bool = false) -> bool:
-	return EvEngine.request(event_id, context, immediate)
+## own ask and shows at once. `stamp` (an absolute minute, not after now) is the time the mail carries when the
+## requester knows it came in earlier than it is asked for.
+static func request(event_id: String, context: Dictionary = {}, immediate: bool = false, stamp: int = -1) -> bool:
+	return EvEngine.request(event_id, context, immediate, stamp)
 
 
 ## Resolve the ACTIVE card; any other id is rejected (double-click guard). `option` is the

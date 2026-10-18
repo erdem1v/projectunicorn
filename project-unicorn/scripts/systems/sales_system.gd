@@ -290,6 +290,12 @@ static func b2c_paying_users() -> int:
 	return int(ub.seats) if ub != null else 0
 
 
+## New users a week brings, before erosion takes any (a card prices what it keeps from them by it).
+static func weekly_new_users() -> int:
+	return roundi(float(TimeModel.HOURS_PER_DAY) * TimeModel.per_tick(
+		_audience_delta_per_hour() + _audience_loss_per_hour()))
+
+
 # Event audience lever (`audience_delta`, and `churn_customer` on the B2C aggregate): moves the
 # live audience by n and re-derives MRR at once.
 static func add_b2c_audience(n: int) -> void:

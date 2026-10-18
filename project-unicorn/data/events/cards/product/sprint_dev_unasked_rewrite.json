@@ -1,0 +1,186 @@
+{
+  "id": "product.sprint_dev_unasked_rewrite",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      3,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "where": {
+        "all": [
+          {
+            "entity_seam": "hr.tenure_weeks",
+            "scope": "employee",
+            "op": ">=",
+            "value": 12
+          }
+        ]
+      }
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 5
+      },
+      {
+        "seam": "urun.decision_card_late",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "urun.weeks_since_launch",
+        "op": ">=",
+        "value": 24
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "review",
+      "outcome_id": "review",
+      "effects": [
+        {
+          "verb": "sprint_card_carry"
+        },
+        {
+          "verb": "morale_crew",
+          "crew": "speaker",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "read_yourself",
+      "outcome_id": "read_yourself",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -20,
+          "weeks": 2
+        },
+        {
+          "verb": "sprint_card_effort",
+          "amount": -1
+        },
+        {
+          "verb": "morale_crew",
+          "crew": "speaker",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "switch_now",
+      "outcome_id": "switch_now",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -2
+        },
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 2
+        },
+        {
+          "verb": "morale_crew",
+          "crew": "speaker",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "keep_old",
+      "outcome_id": "keep_old",
+      "effects": [
+        {
+          "verb": "morale_crew",
+          "crew": "speaker",
+          "amount": -8
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Arayüzü baştan yazdım",
+      "body": "Boş vakitlerimde arayüzün tamamını baştan yazdım. {seam:urun.decision_card} yeni kodda daha az iş istiyor ama kodu henüz kimse incelemedi.",
+      "options": {
+        "review": "Önce ekip incelesin",
+        "read_yourself": "Kodu kendin oku",
+        "switch_now": "Hemen yeni koda geç",
+        "keep_old": "Eski kodda kal"
+      },
+      "expire_note": "Kimse bakmadı, {employee} konuyu bir daha açmadı."
+    },
+    "en": {
+      "title": "I rewrote the front end",
+      "body": "I rewrote the whole front end in my spare time. {seam:urun.decision_card} takes less work on the new code, but nobody has reviewed it yet.",
+      "options": {
+        "review": "Have the team review it first",
+        "read_yourself": "Read the code yourself",
+        "switch_now": "Switch to the new code now",
+        "keep_old": "Stay on the old code"
+      },
+      "expire_note": "Nobody looked at it, and {employee} stopped bringing it up."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "morale_crew",
+        "crew": "speaker",
+        "amount": -10
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

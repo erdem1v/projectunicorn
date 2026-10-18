@@ -1,0 +1,147 @@
+{
+  "id": "product.sprint_test_too_much",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_test",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the account or the developer comes from the card on the desk, not from how long they have been here"
+  },
+  "speaker_role": "tester",
+  "pool_group": "tester",
+  "stage": "test",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "dev": {
+      "type": "employee",
+      "required": true,
+      "select": "sprint_dev"
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_late",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.cut_test_finishes",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "test_all",
+      "outcome_id": "test_all",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        },
+        {
+          "verb": "sprint_card_outlook",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "main_paths",
+      "outcome_id": "main_paths",
+      "effects": [
+        {
+          "verb": "sprint_card_test",
+          "card": "decision"
+        }
+      ]
+    },
+    {
+      "id": "dev_helps",
+      "outcome_id": "dev_helps",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "dev",
+          "pct": -30,
+          "weeks": 1
+        },
+        {
+          "verb": "sprint_card_progress",
+          "amount_seam": "urun.decision_test_half"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Test sandığımızdan uzun",
+      "body": "{seam:urun.decision_card} kartında test edilecek senaryo sandığımızdan çok. Hepsini denersem kart bu sprintte bitmez.",
+      "options": {
+        "test_all": "Hepsini dene",
+        "main_paths": "Ana akışları dene",
+        "dev_helps": "Teste {dev} yardım etsin"
+      },
+      "expire_note": "Cevap gelmedi, test sürdü ve kart sonraki sprinte kaldı."
+    },
+    "en": {
+      "title": "Testing is bigger than we thought",
+      "body": "{seam:urun.decision_card} has more paths to test than we planned. If I test them all, the card won't finish this sprint.",
+      "options": {
+        "test_all": "Test every path",
+        "main_paths": "Test the main paths",
+        "dev_helps": "Have {dev} help with testing"
+      },
+      "expire_note": "No answer came, so testing went on and the card moved to next sprint."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_effort",
+        "amount": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

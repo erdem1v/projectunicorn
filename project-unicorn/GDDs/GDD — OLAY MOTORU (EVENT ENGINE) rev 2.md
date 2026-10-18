@@ -2643,3 +2643,236 @@ telafi), olasılığı havuzun zarıydı ve gece hiçbir kuralı yoktu.
 
 *Neden.* Faz B görevi (Acil durumlar ve Karar 21): acil durum seyrek, sürpriz ve gerçek gelir, her seçenek kime neye mal olacağını sayıyla
 söyler ve gece yalnız acil durum açılır.
+
+### §27.30 · Faz B7: söz olayı, testi kısaltma
+
+*Belge ne diyordu.* §11 ve ch11: sprint karar kartları (`urun.decision_card_late`, `urun.crunch_finishes`) bekleyen karar
+kartı üzerinden okunur; söz yalnız günlük süpürmeyle kırılır ya da kartın sürümde çıkmasıyla tutulur ve söz tarihi
+yaklaşırken oyuncuya hiçbir kart gelmez. Kartın sürümde hatalı çıkma ihtimali tek sabitti (`faulty_chance`) ve yalnız test
+rolü olmadan yapılan test onu açardı.
+
+*Ne yapıldı.* Söz tarihi yaklaşınca oyuncu sıkıştırılır; kartı sistem ister.
+- `SprintSystem.late_promise` sprintin son haftasında bu sprinte söz verilmiş (açık, `due_sprint` bu sprint) bir kademenin
+  hiçbir kartı ekibin hızıyla yetişmiyorsa {kart, sözler, en büyük hesap} verir; `_ask_promise` haftanın ataması yapıldıktan
+  sonra `product.promise_due`'yu ister (hesap `customer` slotunda, kartta çalışan ilk çalışan `employee` slotunda;
+  yoksa gönderen kurucunun notudur, `inbox.card_sender`). Sprintin tek kesintisidir: `record_interrupt("promise")` yazılır
+  ve o haftanın karar kâğıdı çekilmez (`_request_decision` `late_promise()` doluysa döner). Olayın kaydı
+  `GameState.product.promise_due` kart istenmeden yazılır (koşullar ve metin `urun.promise_*` seam'lerini okur), motor
+  reddederse silinir. Kart karar kartı değildir: kartı dondurmaz, `decision` alanı yazılmaz. Koşulu üç leaf'tir
+  (`urun.sprint_running`, `urun.sprint_last_week`, `urun.promise_open >= 1`); kâğıt masada kalıp dünya ilerlerse gösterimde
+  yeniden doğrulamada düşer.
+- `decision_card_late` ve `crunch_finishes` kart kimliği alır (`card_late(id)`, `crunch_finishes(id)`); karar seam'leri karar
+  kartının kimliğini verir. Atanmış kartın mesaisi, `_end_week` gibi, haftanın atamasını koruyarak oynanır
+  (`_finish_sprint`); karar bekleyen kart eskisi gibi yalnız boştaki kişilerle.
+- Yeni fiiller: `sprint_card_test {act: cut}` (nötr; söz olayının kartının kalan test işi yarıya iner: test payı düşer, kart
+  `cut` olur), `promise_extend` (nötr; açık sözler `due_sprint + 1`, `Promise.extended`, bir kez; bedeli seçeneğin kendi
+  `trust_delta {accounts: promise}`'ı, önce yazılır), `promise_break` (ekonomik; açık sözler `PromiseRegistry.break_promise`
+  ile bugünkü yoldan kırılır; sprintin süpürmesi sözleri zaten kırdıysa kâğıdın süre dolumu bir şey yapmaz),
+  `morale_crew {crew: promise_crew}` ve `sprint_hours {promise}` (çip saat yazmaz, "Söz tutulur" der). Üçü `SYSTEM_VERBS`'tadır.
+- Testi kısaltmanın bedeli çipte yüzdeyle değil sonuçla yazılır ("kart: test işi yarıya iner"); hatalı çıkma ihtimali tek
+  fonksiyondur, `SprintSystem.escape_chance(kart)` (testi test rolü olmadan yapılan kart `faulty_chance`, kısaltılmış kart en az
+  sprint.json `promise.cut_test_escape` [WORKING]); `_close` zarı ondan okur.
+- Memnuniyet çipleri oyuncunun bir tik sonra okuyacağı değerdir: ertelemede `trust_plan`, bırakmada
+  `B2BSalesSystem.satisfaction_after_break` (anlık −20, iz −12, sonra hedefe yürüyüş).
+- Vakalar `promise_due_fires_when_late`, `promise_cut_test_escape`, `promise_extend_once`, `promise_break_chain`.
+
+*Neden.* Faz B görevi (Karar 14): söz tarihi yaklaşan oyuncu ya riske girer (test), ya takımı yorar (mesai), ya hesaba
+bedel öder (ek süre) ya da sözü bırakır; hiçbiri bedelsiz değildir ve çipler bedeli sayıyla söyler.
+
+### §27.31 · Faz B8: sürüm anının teşekkür notu, anahtar dönen metin seam'i
+
+*Belge ne diyordu.* §27.17: seçeneği tek ve etkisiz kart nottur ve gövdesi geçmişte okunur kalır; ama metin (TYPE_STRING) seam'i
+satırda donmaz, çünkü satır çevrilmiş söz taşımaz (§7.4). Gövdesi metin seam'i okuyan her kartın satırı gövdesiz kalıyordu.
+
+*Ne yapıldı.* Sürüm çıkınca müşteri kısa bir teşekkür yazar; not, adını bir ürün kademesinden alır.
+- `customer.release_thanks`: `class: info`, tek düğmeli not (`EvPresenter.is_note`; not yolu kota tüketmez, bu yüzden §27.13'ün "canlı içerikte `info`
+  kart kalmadı" cümlesi eskir), `tick: request`, `latch_key: entity`, `system: true`; `SprintBridges.thank` sprint kapanışında hesap başına `EventGate.request(id, {customer})` ile ister. Gönderen
+  hesabın `contact()`'ıdır, kart B1'in `at` kuralıyla mesai içinde gelir. Gövdesi `by_seam: musteri.thanks_variant` ile 14
+  gövdeden biridir (söz tutuldu 5, istek karşılandı 4, acil durum hızla kapandı 5; ertelenmiş söze ve gündüz kapanan olaya uymayan
+  gövdeler `SprintBridges._thanks_pool`'da elenir, aynı tetikleyicide son kullanılan dönmez).
+- `musteri.met_feature` kademenin adının ANAHTARINI döner (`PROD_STEP_*`). `EvPresenter.freeze_seams` artık metin seam'ini
+  boşsa ya da anahtarsa satırda tutar ve `_interpolate` anahtarı çizerken ekranın diline çevirir: satır dil taşımaz (§7.4), geçmiş
+  gövdesi çizilir ve dil değişince yeni dilde okunur. Anahtar olmayan, boş olmayan metin seam'i eskisi gibi donmaz.
+- Sürüm kaydı `thanks: [{customer, trigger, feature, variant}]` taşır (hesap başına en çok bir, sürümde en çok üç; öncelik söz,
+  istek, acil durum), acil durum kaydı (`GameState.incident.open`) `act` taşır ve `IncidentSystem.quick_fix` hızla kapanan
+  olayı yaşayan hesabı verir. B2C güncellemesinin yorumları sürümden bir tik sonra `_fill_actual`'da seçilir (`reviews`).
+- Vakalar `release_thanks_each_kind`, `release_thanks_limits`, `release_thanks_incident_scope`, `release_reviews_pick`,
+  `release_through_close`.
+
+*Neden.* Faz B görevi (Karar 16 ve 17): sürüm anında müşteri teşekkür eder ya da kullanıcılar yorum yazar; teşekkür notu
+oyuncunun gelen kutusunda okuyacağı tek şeydir, gövdesi geçmişte düşmemeli.
+
+### §27.32 · Faz B4: ay sonu, ödeme, bozulma ve fırtına acil durumları, "Sprinti durdur"
+
+*Belge ne diyordu.* §27.29: acil durum gece kesintisidir ve kartın damgası açılış saatidir; olay motoru sprintin kartlarına dokunmaz,
+ertelenen hatanın kalıcı bedeli yoktur.
+
+*Ne yapıldı.* `IncidentSystem` beş türü taşır (`outage`, `month_close`, `checkout`, `regression`, `storm`; ağırlıklar sprint.json
+`incident.weights`). Zar yine 00:00'da yalnız karar verir; tür dünyanın izin verdikleri (`_allows`) arasından ağırlıkla seçilir ve
+mail damgası türe göre çekilir: ay sonu kapanışı 22:10 ile 22:55 (kart 23:00), ödeme ve bozulma mesai başından 10 ile 50 dakika sonra,
+fırtına 11:00 ile 16:00. Sürümü hatalı kritik hattı bozan hafta zarsız `regression` gelir (`_regression_line`: sürüm kaydının
+`faulty`'si ile kritik hatların kesişimi).
+- `EventGate.request(id, ctx, immediate, stamp)`: `stamp` kartın mailinin gelmiş sayıldığı mutlak dakikadır (şimdiden ileri olamaz);
+  `EvEngine._admit` onu `MailClock.arrival` yerine kayıt `at`'ına yazar. Kesintinin damgası açılış saatidir ve parametre almaz.
+- Kartlar `customer.incident_month_close`, `product.incident_checkout`, `product.incident_regression`,
+  `product.incident_review_storm` (`system: true`, `tick: request`, etiketler `critical` `urgent` `incident`). Gövdesi hatta göre
+  değişen kartlar `by_seam: olay.variant` varyantlarını taşır (ay sonu 3, fırtına 4, bozulma 18); lint gövde uzunluğunu en uzun
+  varyanttan okur, çünkü panel bir varyant gösterir. Ay sonu kartı `sender_title` anahtarını taşır: `Inbox.contact` hesabın alıcısını
+  o unvanla gönderen yapar (sektörün sabit unvanı yerine).
+- Yeni fiil `sprint_fix_first {line, bugs}` (nötr, `SYSTEM_VERBS`): `line: "incident"` açık olayın hattıdır (`EvEffects.line_of`,
+  `DECISION` ile aynı kalıp); `SprintSystem.fix_first(line, bugs)` hattın düzeltme kartını `put_first` ile koşan sprintin başına
+  alır (sprintteyse başa taşır, ikinci kart açmaz), sürüm notundayken ve koşan sprintin son gecesi mesai bittikten sonra sonraki sprintin
+  başına. `bugs` kendi hattı olmayan olayın (ödeme) hata deposuna düşürdüğü hatadır. Çip `fix_first_bumps` ile kayan kartın adını yazar
+  (bugünkü sırada biten, kart başa girince bitmeyen ilk kart; yoksa çip yoktur: `SILENT_VERBS`); satır uygulananı saklar.
+- `incident {act}` cevapları: `now`, `founder`, `evening`, `morning`, `morning_credit`, `morning_free_month`, `defer`,
+  `defer_free_month`. Erteleme B2B'de etkilenen hesaplara `trust_delta`'nın süren biçimini yazar (hemen `defer.trust`, her sprint
+  kapanışında `defer.per_sprint`, `until line_cleared`; hattı kapatan kapanış ücret almaz), B2C'de `GameState.incident.drains`'e
+  haftalık kitle payı yazar (`daily_tick` önce onu öder, hattında hata kalmayan satırı düşürür). Ödemede kitle kaybı ödeyemeyen kişilerin
+  payıdır ve çipe var olan kitle çipiyle yazılır.
+- `morale_crew {crew: incident_crew}` ve `olay.payers` olayın hattını okur (ödeyen kuralı B2).
+- Seam'ler `olay.version` (metin: sürüm etiketi; satırda donmaz, bu yüzden bozulma kartının geçmiş satırı en son açık olayın sürümünü
+  okur, `olay.clock` gibi bilinen kısıt), `olay.affected_accounts`, `olay.line_users`, `olay.shares`, `olay.variant`.
+- Bot: `RunProbe._pick_emergency` acil durum kartını fiile göre cevaplar (`fix_none` kolu erteler, öbürleri `sprint_fix_first` seçer;
+  kilitliyse ilk açık seçenek); cevapladığı an `PROBE STOP` basar (düzeltme kartı başa girdikten sonraki yük). `*_free` preset'leri
+  `no_stop` anahtarıyla "Sprinti durdur"u hiç seçmez. `--sprint-probe` `incident=<tür>@<tik>` her türü zorlar, türün ihtiyacı
+  olan hatayı bir tik önce kurar ve cevaplanan olaydan sonra planı yeniden okur (`SPRINTPROBE REPRED`), kapanış onunla karşılaştırılır.
+- Vakalar `incident_month_close_window`, `incident_gates`, `incident_regression_fixture`, `incident_checkout_fix_card`,
+  `incident_defer_ends_with_line`, `incident_sprint_stop_moves_the_card`.
+
+*Neden.* Faz B görevi (Karar 1, 8, 9 ve 20): beş acil durum seyrek ve gerçek gelir; her cevap kime neye mal olacağını sayıyla söyler,
+"Sprinti durdur" bedelini sprintten kayan kartın adıyla öder ve ertelemek kalıcıdır ama hattı kapatan sprintte biter.
+
+### §27.33 · Faz B5: kâğıt motoru, kâğıt sözleşmesi, kesinti sırası
+
+*Belge ne diyordu.* §27.11 madde 4: `SprintSystem`, koşan bir kart için sprintin 2. haftasının tikinde deterministik hash'le
+(`decision.rate`) `decision.cards`'tan bir kartı ister; kâğıdın konuşanı yoktur (gönderen kategoriden ya da kartın kendi
+slotundan gelir); §3.1: mandalın `one_shot`, `max_fires` ve `cooldown_weeks` alanları birbirinin alternatifidir.
+
+*Ne yapıldı.* Kâğıt sprint başına tek zarla gelir ve konuşanı kartta o fazda çalışan kişidir.
+- `SprintSystem._request_decision`: sprintin kâğıt fırsatında (1 haftalık sprintte `_begin`, 2 haftalıkta ilk haftanın sonu) tek zar
+  `EvDice.unit("paper", gün, "sprint")` atılır, ihtimal `sprint.json` `decision.sprint_chance` (`{"1": 0,3, "2": 0,5}`, bir ve iki haftalık sprintte
+  ayrı [WORKING, onay bekliyor]; sprintlerin en az üçte biri kâğıtsız kalır). Zar atılan sprint `GameState.product.decision_sprint`'tedir
+  (eski kayıtta `.get(…, -1)`): aynı sprintte ikinci kâğıt istenmez. Havuz `decision.cards` ağırlıklı sırayla denenir (ağırlık
+  `1 / (1 + decision.seen_weight × EvLatches.fires)`, `seen_weight` 2 [WORKING, onay bekliyor]; sıra `u ^ (1 + seen_weight × görülme)`
+  anahtarıyla, yani yerine koymadan ağırlıklı çekim) ve her kâğıt sprintin bitmemiş kartlarında sırayla; kartın koşulları bekleyen
+  kartı okuduğu için `product.decision` (`{card_id, event_id, speaker}`) istekten önce yazılır, ret gelirse silinir. `decision.rate` ve kart
+  başı haftalık `hash()` zarı kalktı; `--sprint-probe` `rate=` her iki süreye aynı ihtimali verir.
+- Hafta ataması kâğıttan önce yapılır (`_staff_week`: `_assign`, sonra kâğıt, kâğıt gelirse yeniden `_assign`): konuşan istek anında yakalanır
+  (kartın `assignees`'i dolu), kâğıt gelince kartı beklediği için `assignees`'i boşalır (`card_decision_requested` anında okunur).
+- **Kâğıt sözleşmesi.** Kâğıt kartının JSON'unda `speaker_role` (karakterin rolü: `product_manager | designer | developer | tester |
+  founder`), `stage` (`any | design | dev | test`: kartın o anki fazı, `SprintSystem.role_of`) ve `pool_group` (`pm | designer | developer |
+  tester | no_tester | solo | system`: havuzun sayım grubu; motor okumaz). Konuşan `EventGate.request(id, {"employee": id})` ile bağlanır,
+  kurucuysa `{"founder": id}`; kartın scope'unda o türden slot şarttır (lint §17.7: bilinmeyen rol, aşama, grup ya da slotsuz kâğıt hata).
+  `_speaker`: kartın o haftaki `assignees`'inden rolü uyan ve fazı uyan ilk kişi; PM kâğıdında çeyreğin PM'i (`SprintCatalog.quarter_pm()`) ve
+  konu sprintteki müşteri isteği kartıdır (`customer` slotu isteğin hesabıdır; PM'in atanması değişmez); payı Destek'te kalan kişi
+  atanmadığı için konuşmaz, tasarımcı kâğıdını kartta atanmış PM söylemez. `speaker_role`'ü olmayan kâğıt konuşansızdır (`sprint_late` dahil
+  bugünkü altı kâğıt B6'ya kadar böyle çalışır).
+- **Kesinti sırası.** `record_interrupt("paper")` kâğıt gelince yazılır; söz olayı ya da acil durum gelen sprintte kâğıt gelmez
+  (`_paper_blocked`; bugün saatini bekleyen öbür acil durumda da), kâğıt gelen sprintte `IncidentSystem.daily_tick` yalnız servisin
+  çöktüğü türü (`SERVICE_DOWN`: kesinti, ödeme) yaşatır: öbür tür, seçilmiş hâliyle
+  (hat, dakika) `GameState.incident.shifted`'e kalır ve kâğıtsız ilk sprintte `pending` olur (kaybolmaz).
+- **Mandal.** `blocked_reason` `max_fires` ve `cooldown_weeks`'i birlikte uygular (koşuda en çok 3, 52 hafta); GDD §3.1'in "alternatifler"
+  cümlesi kodda böyle değildir ve `latches.gd` yorumu düzeltildi. Kâğıtlarda `latch_key: run`.
+- Prob: `SPRINTPROBE PAPER|<tohum>|<sprint>|<kâğıt>|<konuşan>` ve `PAPERSUM` (kâğıtsız sprint oranı).
+- Vakalar `paper_speaker_is_assignee`, `decision_one_per_sprint`, `decision_no_fourth_show`, `paper_interrupt_order`, `paper_empty_sprint_ratio`;
+  fikstür kâğıtları `data/events/cards/_fixtures/paper_*.json`.
+
+*Neden.* Faz B görevi (Karar 10 ile 13): sprint başına en çok bir kâğıt gelir, bazı sprintlerde hiç gelmez, konuşan o kartta o aşamada çalışan
+kişidir ve bir sprintte en çok bir kesinti olur.
+
+### §27.34 · Faz B6b: yazılımcı, testçisiz ve tek kurucu kâğıtları, hattın yeniden yazımı, karar kartının testi
+
+*Belge ne diyordu.* §27.33: `speaker_role` tek bir roldür ve `_speaker` ilk uyan kişiyi alır; konu hesap yalnız PM kâğıdında
+bağlanır; `ProductState.line_blocked` hiçbir hattı kapatmaz; `damage_product` sözlükte vardır ama kolsuzdur; `sprint_card_test`
+söz olayının kartının fiilidir ve yalnız sistem kartı yazabilir (V2); `product.sprint_late` konuşansız bir kâğıttır ve her geride
+kalan kartta gelir; kâğıtlar sprintin kartına dokunan fiillerini "Efor +2" gibi kartın adını söylemeyen çiplerle gösterir.
+
+*Ne yapıldı.* Havuza yazılımcı (10), testçisiz (3) ve tek kurucu (6) kâğıtları girdi; bedel seçeneğin kendisidir ve çip sayıyı söyler.
+- `speaker_role` bir rol ya da rol listesidir: `_speaker` kartta çalışan, rolü listede olan ilk kişiyi alır (`sprint_untested_old_screens`
+  yazılımcıyı ya da kurucuyu, `sprint_late` çalışan rollerinin hepsini söyler; konuşan kurucuysa `founder` slotuna bağlanır). Lint
+  §17.7 listeyi öğe öğe sınar. O4 (her seçenek kartın konusuna dokunur) `speaker_role` taşıyan kartta uygulanmaz: kâğıdın konusu
+  sprint kartıdır, slotları gönderen ve hesabı adlandırır. `sprint_card_test` ve `sprint_fix_first` `WRITER_VERBS`'e geçti
+  (kâğıt yazabilir); `sprint_fix_first` O2 için sonuç fiilidir (başka kart kayar).
+- Kâğıdın konusu hesap `customer` slotunun `select` kipidir (`SprintCatalog.paper_account`): `line_top` kartın hattını kullanan en
+  büyük hesap, `line_newest` en yeni imzalayan (kartın `where`'i pencereyi daraltır), `request` kartı isteyen hesap (istek olmayan
+  kartta boş: zorunlu slot kâğıdı o kartta getirmez); ikinci çalışan `employee` slotunun `sprint_dev` kipidir.
+- `line_harden {line, weeks}` (nötr): `ProductState.harden_line` `mvp_line_harden` {hat: yeni hata düşmeyen son tik} yazar
+  (`GameState.FLAG_TYPES`, tipli), `ProductState.line_blocked` okur; `weeks` yoksa `sprint.json` `paper.harden_weeks` [WORKING, 26].
+  Zarla gelen hata (`SupportSystem.hourly_tick`'in bildirim çekilişi ve `SprintSystem._close`'un hatalı çıkma zarı) kapalı hattı
+  atlar: çip "26 hafta yeni hata çıkmaz" der ve söz bu iki yol için doğrudur. Oyuncunun seçtiği hata düşer: kartı bilinen hatayla
+  çıkarmak (`sprint_card_trim {bugs}`, `leaks`) da çipin yazdığı gibi yeniden yazılmış hatta açık hata olur. İkinci yeniden yazım
+  süreyi uzatır, kısaltmaz.
+  `damage_product {line, bugs}` (nötr; daha önce kolsuzdu; GDD'nin `damage_product(scope, amount)` imzası böyle okunur): hemen `ProductState.add_bugs`; oyuncunun kendi seçtiği bedel olduğu için
+  yeniden yazılmış hatta da düşer. `line` `decision` (karar kartının hattı) ya da hat kimliğidir, paylaşılan hat temel kimlikle
+  yazılır (`SprintCatalog.in_product`).
+- `sprint_card_test {card: decision}` karar kâğıdının kartının testini yarılar (`SprintSystem.cut_test(kart)`: `cut_promise_test`'in
+  yerine geçti, söz olayı kartını `promise_card()` ile verir). Çip yalnız "kart: test işi yarıya iner" der: yüzde yazmaz (sahip:
+  "kart hata ihtimali yazmayalım") ve söz tutulmuş demez; hatalı çıkma ihtimali `SprintSystem.escape_chance`'tendir.
+- Çipler: kartın puanı kartın adıyla yazılır (`EFFECT_CARD_POINTS`; eski `EFFECT_SPRINT_EFFORT` ve `EFFECT_SPRINT_PROGRESS` kalktı),
+  yapılmış işi silmek `EFFECT_WORK_LOST` (kırmızı; tutar `urun.decision_card_done` seam'inden, çip ve uygulanan aynı sayı), anlık
+  hata `EFFECT_NEW_BUGS`, yeniden yazım `EFFECT_LINE_HARDEN`, kâğıdın hattın düzeltmesini başa alması `EFFECT_FIX_FRONT`
+  (`sprint_fix_first {front: true}`), kurucu tekken fazla mesai `EFFECT_SPRINT_HOURS_SOLO`. Fiil satırları kartı adlandıran alanları
+  taşır (`of`, `SprintSystem.card_ref`): geçmiş satırı kart silinse de adı okur.
+- `product.sprint_late` (ekip) ve `product.sprint_late_solo` (kurucu tek) `system: true` sistem kâğıtlarıdır; ikiye bölünmeleri, motorun
+  bir seçeneği gizleyememesindendir (ekip ve kurucu fazla mesaisi ayrı seçeneklerdir, oyuncu yalnız kendisininkini görür). Koşul:
+  karar kartı bir müşteri isteği (`urun.decision_kind`), sözü yok (`urun.decision_promised`), sprintin son haftasında bu hızla
+  yetişmiyor ve fazla mesaiyle yetişiyor (`urun.decision_card_late`, `urun.crunch_finishes`). Fazla mesai sprintin saatini ×1,25
+  yapar; ekipte `sprint_crew` (`SprintSystem.payers("")`: ekip, kurucu hariç) morali −5 alır, kurucu tekken kurucunun verimi 1 hafta
+  −%15. `crunch_finishes` kâğıt istenirken (kartın atananları henüz silinmemişken) kartın kendi atananlarını saymaz.
+- Seam'ler (`seams_product.gd`): `urun.decision_{kind,line,line_name,tier,card_done,line_bugs,line_accounts,root_bugs,root_cause,
+  test_untouched,line_first_version,promised,by_founder,license_year}`, `urun.sprint_has_tester`, `urun.durability_tier`,
+  `urun.security_tier` (güncelleme kâğıdı yalnız kurulmuş Güvenlik hattına hata yazar), `urun.security_bugs`, `urun.security_fix_planned`, `urun.weeks_to_month_end`, `urun.paper_{contract,tester_week,license,server_bill,
+  loss_small,loss_mid,signup_loss}`; `urun.decision_line` paylaşılan hattı temel kimlikle okur. Bedel sayıları `sprint.json` `paper`
+  bloğunda [WORKING]: `contract_per_point`, `b2c_loss`, `signup_loss`, `license`, `outside_week_mult`, `root_min`, `harden_weeks`.
+- Üç takip kâğıdı (`sprint_rewrite_bugs`, `_owner`, `_reader`) ve "İki yol var" ile "Dışarıdan destek"in eski kartları kalktı; bedelleri
+  yeni kartların seçeneklerine katlandı (inceleme kartı devreder, okuma kurucunun verimini yer, hemen geçiş 2 açık hata yazar).
+- Vakalar `paper_line_harden`, `paper_card_effects`, `paper_seams`, `sprint_late_for_requests`; geride kalan kartın konuşansız kâğıdı
+  rolünü, eski vakalarda `product.sprint_late`'in yerine, `fixture.paper_crunch` üstlendi.
+
+*Neden.* Faz B görevi (Karar 10 ile 13; W2): her kâğıt kime neye mal olacağını sayıyla söyler, bedel A'nın hata deposundan geçer
+(yeniden yazım ve anlık hata) ve kâğıt yalnız gerçekten sıkışmış kartta gelir.
+
+### §27.35 · Faz B6a: PM, tasarımcı ve testçi kâğıtları, kartın işini sonraki sprinte bırakma
+
+*Belge ne diyordu.* §27.33 ve §27.34: kâğıdın bedeli kartın puanı, silinen iş, hemen düşen hata ya da hattın yeniden yazımıdır; kartın işini
+sonraki sprinte bırakmanın ve kartı bilinen hatayla çıkarmanın yolu yoktur; `trust_delta` ertelemenin "düzelene kadar" bedelini yazar ama
+kademenin çıkmasına bağlayamaz; kâğıdın hesabı `customer` slotunda `line_top`, `line_newest` ve `request` kipleriyle bağlanır; bir seçenek
+yalnız bir pazara aitse onu gizleyen yol yoktur (§3.3: kilitli seçenek görünür kalır); `expire_note` düz metindir; yenileme günü
+`tick_requests`in içinde tek bir ifadedir.
+
+*Ne yapıldı.* Havuza PM (6), tasarımcı (7) ve testçi (8) kâğıtları girdi (W2); bedel seçeneğin kendisidir ve çip sayıyı söyler.
+- `sprint_card_trim` (nötr; `WRITER_VERBS`, O2 için sonuç fiilidir): `share` karar kartının `paper.trim_share` payını (yukarı yuvarlanır, yapılmış
+  işin ve 1 puanın altına inmez) karttan alır, `amount` kartın hiç almadığı iştir, `follow` ikisini ve `paper.reopen_points`'i sonraki
+  sprintin kartı yapar, `bugs` ve `line` kart çıkınca o hatta açık hata yazar. Takip kartı (`follow: true`) kademesi aynı özellik kartıdır:
+  kademeyi tutmuş kartı silen `plan_next` onu silmez ve kademenin lisansı yeniden kesilmez. Hata `leaks`te bekler, kapanışta
+  `pending_faulty`ye girer (ürün canlı olana dek bekler) ve sürümü hatalı saydırmaz. Plan (`SprintSystem.trim_plan`) çipin, geçmiş
+  satırının ve uygulamanın tek kaynağıdır.
+- `sprint_card_outlook` (nötr, etkisiz): çip kartın bu sprintte biter mi sorusunu planın oynatmasından (`SprintSystem.finishes_with`)
+  okur, `amount` aynı seçeneğin öbür fiillerinin ekleyeceği puandır (`EFFECT_CARD_LATE`, `EFFECT_CARD_ON_TIME`); satır uygulanınca kartın
+  bittiğini kaydeder. `sprint_card_first` kartı sprintin başına alır (`SprintSystem.decision_first`, `put_first`) ve çip yalnız kayan
+  kartı yazar; `b2b_month_discount` hesabın aylık ücretinin `paper.renewal_discount` payını `retention` etiketiyle tek seferlik gider yazar.
+  Dördü de `WRITER_VERBS`tedir; `sprint_card_trim`, `_outlook` ve `_first` O2 için `CONSEQUENCE_VERBS`tedir.
+- `trust_delta`: `accounts: second` (aynı kademeyi isteyen öbür hesap, `SprintCatalog.second_account`) ve `until: {step_live}` kademe çıkana
+  kadar her sprint sonunda yazar, çip `EFFECT_TRUST_UNTIL_SHIPS` der. Paylaşılan bir hat ya da kademe kart verisinde temel kimlikle
+  yazılır (`line_shared_mobile_k1`) ve fiil onu ürünün kimliğine çevirir (`SprintCatalog.in_product`).
+- Slot seçicileri (`EvScope`): `customer` `select: line_top | line_warehouse | line_newest | line_slow` karar kartının hattını kullanan
+  hesaplardan seçer (`SprintCatalog.paper_account`; depo işi sektörleri ve koltuk eşiği `sprint.json` `paper` bloğunda), `employee`
+  `select: sprint_dev` ekibin sprint payı en büyük yazılımcısını verir. Pazara özgü seçenekleri olan dört kâğıt B2B ve `_b2c` olarak iki
+  karttır (`phone_too`, `spec_unclear`, `empty_state`, `slow_many`).
+- `expire_note` bir varyant kümesi olabilir (`{by_seam, variants}`; `EvEngine` süre dolumunda çözer): renk kâğıdının ikinci gelişi başka bir cümleyle
+  kapanır. Renk kâğıtları tek kartta birleşti (`product.sprint_design_customer_colors`); iki gelişi `urun.colors_again` ve fiyat seam'leridir
+  (`colors_hand`, `colors_central`, `colors_cost`: ikinci gelişte her biri bir puan fazla), süre dolumu ilkinde memnuniyet −8, ikincide kart +3.
+- `SprintBridges.next_renewal_day(hesap)` yenileme penceresinin gösterdiği yenileme günüdür ve talebin penceresiyle `pm_renewal` aynı
+  ifadeyi okur; `urun.decision_renewal_saved` kart yetişmiyorken, yenileme bu sprintin kapanışından sonra ve sonrakinden önceyken ve kart başa girince
+  bu sprintte bitiyorken doğrudur.
+- Seam'ler `urun.decision_{second_account, request_votes, step, phase, trim_finishes, contract_cost, phone_late, renewal_saved, test_half}`,
+  `urun.{cut_test_finishes, responsive_shipped, design_late, paid_plan_open, colors_*}`, `urun.paper_{phone_points, ask_silent,
+  first_screen_loss, coupon_loss, test_phones}`; `urun.decision_request_votes` B2C istek verisi (C) gelene kadar 0 döner, o yüzden PM'in B2C kâğıtları
+  (`_b2c` ikizleri ve `pm_core_first`) bugün gelmez; `urun.decision_second_account` bugün hiç dolmaz (bir kademeyi tek hesap isteyebilir), `pm_two_accounts`
+  uykudadır. Sabitler `sprint.json` `paper` bloğunda [WORKING].
+- Vakalar `paper_card_trim`, `paper_outlook_reads_the_plan`, `next_renewal_day_one_place`, `paper_renewal_card_first`,
+  `paper_colors_two_arrivals`, `paper_trust_until_ships`, `paper_account_selectors`, `paper_cards_render`; görsel `--event-shot=<kâğıt>` kâğıdı
+  `main._seed_paper_world`te kurar.
+
+*Neden.* Faz B görevi (Karar 10 ile 13; W2): PM, tasarımcı ve testçi kâğıtlarında her seçenek kime neye mal olacağını sayıyla söyler (karta,
+sonraki sprinte, hesaba, kitleye ya da kasaya) ve bedelsiz çıkış yoktur.

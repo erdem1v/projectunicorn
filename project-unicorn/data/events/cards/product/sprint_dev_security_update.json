@@ -1,0 +1,117 @@
+{
+  "id": "product.sprint_dev_security_update",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.security_tier",
+        "op": ">=",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "update_now",
+      "outcome_id": "update_now",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "later",
+      "outcome_id": "later",
+      "effects": [
+        {
+          "verb": "damage_product",
+          "line": "line_shared_security",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kütüphaneye güvenlik güncellemesi geldi",
+      "body": "Kullandığımız bir kütüphaneye güvenlik güncellemesi geldi. Şimdi geçersek {seam:urun.decision_card} biraz uzar.",
+      "options": {
+        "update_now": "Şimdi güncelle",
+        "later": "Güncellemeyi sonraya bırak"
+      },
+      "expire_note": "Cevap gelmedi, güncelleme sonraya kaldı."
+    },
+    "en": {
+      "title": "A security update for a library we use",
+      "body": "A library we use just got a security update. Moving to it now makes {seam:urun.decision_card} a bit longer.",
+      "options": {
+        "update_now": "Update now",
+        "later": "Leave the update for later"
+      },
+      "expire_note": "No answer came, so the update was left for later."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "damage_product",
+        "line": "line_shared_security",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

@@ -1,0 +1,135 @@
+{
+  "id": "product.sprint_pm_two_accounts",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_pm",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "speaker_role": "product_manager",
+  "pool_group": "pm",
+  "stage": "any",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_second_account",
+        "op": "!=",
+        "value": ""
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "first_way",
+      "outcome_id": "first_way",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "accounts": "second",
+          "amount": -8
+        }
+      ]
+    },
+    {
+      "id": "second_way",
+      "outcome_id": "second_way",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -8
+        }
+      ]
+    },
+    {
+      "id": "both_ways",
+      "outcome_id": "both_ways",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "İki hesap aynı ekranı farklı istiyor",
+      "body": "Bu kartı hem {customer} hem {seam:urun.decision_second_account} istedi ama ekranı farklı biçimde istiyorlar. İkisini birden yaparsak kart büyür.",
+      "options": {
+        "first_way": "{customer} nasıl istiyorsa öyle yap",
+        "second_way": "{seam:urun.decision_second_account} nasıl istiyorsa öyle yap",
+        "both_ways": "İkisine de ayar ekle"
+      },
+      "expire_note": "Karar verilmedi, ekran {customer} nasıl istediyse öyle yapıldı."
+    },
+    "en": {
+      "title": "Two accounts want the same screen differently",
+      "body": "{customer} and {seam:urun.decision_second_account} both asked for this card, but each wants the screen built a different way. Doing both makes the card bigger.",
+      "options": {
+        "first_way": "Build it the way {customer} wants",
+        "second_way": "Build it the way {seam:urun.decision_second_account} wants",
+        "both_ways": "Add a setting for both"
+      },
+      "expire_note": "Nobody decided, so the screen was built the way {customer} wanted."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "accounts": "second",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

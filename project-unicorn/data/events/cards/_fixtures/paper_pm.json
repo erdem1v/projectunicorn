@@ -1,0 +1,72 @@
+{
+  "id": "fixture.paper_pm",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "family": "fixture_paper",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by the sprint engine, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "speaker_role": "product_manager",
+  "pool_group": "pm",
+  "stage": "any",
+  "latch": {"cooldown_weeks": 52, "max_fires": 3},
+  "scope": {
+    "employee": {"type": "employee", "required": true},
+    "customer": {"type": "customer", "required": false}
+  },
+  "condition": {
+    "all": [
+      {"seam": "urun.sprint_running", "op": "==", "value": true}
+    ]
+  },
+  "options": [
+    {
+      "id": "carry",
+      "outcome_id": "carry",
+      "effects": [
+        {"verb": "sprint_card_carry"}
+      ]
+    },
+    {
+      "id": "go_on",
+      "outcome_id": "go_on",
+      "effects": [
+        {"verb": "sprint_card_effort", "amount": 1}
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "PM kâğıdı",
+      "body": "{customer} bu kartı istedi. Kartı sprintte tutalım mı?",
+      "options": {
+        "carry": "Kartı sonraki sprinte bırak",
+        "go_on": "Kartı sprintte tut"
+      },
+      "expire_note": "Karar verilmedi, kart sprintte kaldı."
+    },
+    "en": {
+      "title": "Product manager paper",
+      "body": "{customer} asked for this card. Do we keep it in the sprint?",
+      "options": {
+        "carry": "Leave the card for next sprint",
+        "go_on": "Keep the card in the sprint"
+      },
+      "expire_note": "Nobody decided, so the card stayed in the sprint."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {"penalties": []},
+  "expire_note": "expire_note",
+  "_note": "A product-manager paper: the speaker is the quarter's PM, the subject a planned customer request card, and the account is the request's."
+}

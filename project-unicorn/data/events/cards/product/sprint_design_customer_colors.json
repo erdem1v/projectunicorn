@@ -1,0 +1,233 @@
+{
+  "id": "product.sprint_design_customer_colors",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_design",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 8
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "speaker_role": "designer",
+  "pool_group": "designer",
+  "stage": "design",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "largest"
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "phase.current",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "flag_unset": "colors_central"
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 3
+      },
+      {
+        "entity_seam": "musteri.scale",
+        "scope": "customer",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "entity_seam": "musteri.lifecycle_phase",
+        "scope": "customer",
+        "op": "==",
+        "value": "active"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "by_hand",
+      "outcome_id": "by_hand",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount_seam": "urun.colors_hand"
+        },
+        {
+          "verb": "b2b_expand",
+          "scope": "customer"
+        },
+        {
+          "verb": "set_flag",
+          "name": "colors_by_hand"
+        }
+      ]
+    },
+    {
+      "id": "one_file",
+      "outcome_id": "one_file",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount_seam": "urun.colors_central"
+        },
+        {
+          "verb": "b2b_expand",
+          "scope": "customer"
+        },
+        {
+          "verb": "set_flag",
+          "name": "colors_central"
+        }
+      ]
+    },
+    {
+      "id": "freelancer",
+      "outcome_id": "freelancer",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount_seam": "urun.colors_cost",
+          "amount_mult": -1,
+          "label": "contractor"
+        },
+        {
+          "verb": "b2b_expand",
+          "scope": "customer"
+        },
+        {
+          "verb": "set_flag",
+          "name": "colors_by_hand"
+        }
+      ]
+    },
+    {
+      "id": "as_is",
+      "outcome_id": "as_is",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -8
+        },
+        {
+          "verb": "b2b_expand_decline",
+          "scope": "customer"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kendi renkleri",
+      "body": {
+        "by_seam": "urun.colors_again",
+        "variants": {
+          "0": "{customer}, ürünü daha çok çalışanına açmadan önce kendi logosunu ve renklerini görmek istiyor. Renkleri içeride değiştirmek {seam:urun.decision_card} işini geciktirir. Her sayfanın renkleri koda tek tek yazılmış, yeni sayfalar da öyle.",
+          "1": "Renk değişikliğinden sonra eklenen her sayfa varsayılan renklerle çıktı. {customer} kendi renklerini her sayfada görmek istiyor. Bunu içeride yapmak {seam:urun.decision_card} işini geciktirir."
+        }
+      },
+      "options": {
+        "by_hand": "Renkleri elle değiştir",
+        "one_file": "Bütün renkleri tek dosyaya topla",
+        "freelancer": "Renkleri bir serbest çalışana değiştirt",
+        "as_is": "Renkler değişmeyecek de"
+      },
+      "expire_note": {
+        "by_seam": "urun.colors_again",
+        "variants": {
+          "0": "Cevap gitmedi, {customer} bunu hayır diye anladı.",
+          "1": "{customer} şikâyet etti, ekip sayfaları elle değiştirdi."
+        }
+      }
+    },
+    "en": {
+      "title": "Their own colours",
+      "body": {
+        "by_seam": "urun.colors_again",
+        "variants": {
+          "0": "{customer} wants their logo and colours on the product before more of their staff use it. Changing them in house slows down {seam:urun.decision_card}. Every page has its colours written into the code, and new pages are no different.",
+          "1": "Every page added since the colour change is in the default colours. {customer} wants their own on every page. Doing it in house slows down {seam:urun.decision_card}."
+        }
+      },
+      "options": {
+        "by_hand": "Change their colours by hand",
+        "one_file": "Pull every colour into one file",
+        "freelancer": "Have a freelancer change the colours",
+        "as_is": "Tell them the colours stay"
+      },
+      "expire_note": {
+        "by_seam": "urun.colors_again",
+        "variants": {
+          "0": "No answer went back, so {customer} took it as a no.",
+          "1": "{customer} complained, and the team changed the pages by hand."
+        }
+      }
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "scope": "customer",
+        "amount_seam": "urun.colors_first",
+        "amount_mult": -8
+      },
+      {
+        "verb": "sprint_card_effort",
+        "amount_seam": "urun.colors_again",
+        "amount_mult": 3
+      },
+      {
+        "verb": "b2b_expand_decline",
+        "scope": "customer"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

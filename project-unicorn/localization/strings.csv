@@ -2950,6 +2950,38 @@ PRODUCT_PRESS_CORE_0,{product} yeni sürümünü çıkardı: {capability},{produ
 PRODUCT_PRESS_CORE_1,{product} güncellendi; öne çıkan yenilik {capability},{product} has been updated; the headline change is {capability}
 PRODUCT_PRESS_AREA_0,{product} {area} tarafındaki açığını kapattı,{product} closed its gap on {area}
 PRODUCT_PRESS_AREA_1,{product} {area} tarafında toparlandı,{product} has caught up on {area}
+PRODUCT_REVIEWS,Sürüm sonrası öne çıkan yorumlar,Top comments after the release
+REVIEW_SOURCE_SOCIAL,Sosyal medya,Social media
+REVIEW_SOURCE_STORE,Uygulama mağazası,App store
+PRODUCT_REVIEW_QUOTED,"""{review}""","""{review}"""
+PRODUCT_REVIEW_NEW_NAMED_1,"Sonunda {feature} gelmiş, uzun zamandır bekliyordum.",{feature} finally arrived. I'd been waiting for it for ages.
+PRODUCT_REVIEW_NEW_NAMED_2,{feature} tam aradığım şeydi.,{feature} is exactly what I was looking for.
+PRODUCT_REVIEW_NEW_NAMED_3,Yeni sürümdeki {feature} işimi epey kolaylaştırdı.,{feature} in the new version makes things a lot easier.
+PRODUCT_REVIEW_NEW_NAMED_4,"{feature} için teşekkürler, hemen denedim.",Thanks for {feature}. Tried it right away.
+PRODUCT_REVIEW_NEW_PLAIN_1,Yeni güncelleme çok iyi olmuş.,The new update is really good.
+PRODUCT_REVIEW_NEW_PLAIN_2,"Her güncellemede biraz daha iyi oluyor, böyle devam.",It gets a little better with every update. Keep going.
+PRODUCT_REVIEW_NEW_PLAIN_3,"Yeni güncellemeyi yükledim, şimdilik beğendim.",Just updated. Liking it so far.
+PRODUCT_REVIEW_FIX_1,"Son güncellemeyle yaşadığım sorun düzelmiş, teşekkürler.",The update fixed the problem I had. Thanks.
+PRODUCT_REVIEW_FIX_2,Haftalardır çıkan hata sonunda gitti.,The bug I'd had for weeks is finally gone.
+PRODUCT_REVIEW_FIX_3,"Şikâyet ettiğim şey düzeltilmiş, dinlediğiniz için teşekkürler.",What I complained about has been fixed. Thanks for listening.
+PRODUCT_REVIEW_NEG_INTEGRATIONS_1,"Güncellemeden beri bağladığım hesaplar kopuyor, her gün yeniden bağlıyorum.",Since the update my linked accounts keep dropping. I reconnect them every day.
+PRODUCT_REVIEW_NEG_INTEGRATIONS_2,Başka uygulamalardan aktarım yarıda kesiliyor. Lütfen bakın.,Importing from other apps stops halfway. Please look into it.
+PRODUCT_REVIEW_NEG_INTEGRATIONS_3,Paylaş düğmesi artık hiçbir uygulamaya göndermiyor.,The share button doesn't send to any other app anymore.
+PRODUCT_REVIEW_NEG_SECURITY_1,Her açışta yeniden giriş yapmamı istiyor.,It asks me to log in again every time I open it.
+PRODUCT_REVIEW_NEG_SECURITY_2,"Şifre sıfırlama kodu hiç gelmiyor, hesabıma giremiyorum.",The password reset code never arrives. I can't get into my account.
+PRODUCT_REVIEW_NEG_SECURITY_3,Güncellemeden beri paylaştığım kişiler hiçbir şey göremiyor.,"Since the update, the people I share with can't see anything."
+PRODUCT_REVIEW_NEG_DURABILITY_1,Uygulama kapanınca yaptığım son değişiklikler gidiyor.,"When the app closes, my last changes are gone."
+PRODUCT_REVIEW_NEG_DURABILITY_2,İki günlük işim kaydedilmemiş. Geri almanın bir yolu var mı?,Two days of my work didn't save. Is there any way to get it back?
+PRODUCT_REVIEW_NEG_DURABILITY_3,"İnternet gidince uygulama donuyor, ancak yeniden açınca düzeliyor.","When the connection drops, the app freezes until I restart it."
+PRODUCT_REVIEW_NEG_MOBILE_1,"Telefonda ekran taşıyor, düğmelere basamıyorum.",On my phone the screen is cut off and I can't tap the buttons.
+PRODUCT_REVIEW_NEG_MOBILE_2,Güncellemeden beri mobil uygulama açılır açılmaz kapanıyor.,Since the update the mobile app closes as soon as it opens.
+PRODUCT_REVIEW_NEG_MOBILE_3,Tablette yazılar üst üste biniyor.,On my tablet the text overlaps.
+PRODUCT_REVIEW_NEG_OTHER_1,Güncellemeden beri uygulama yavaşladı.,The app has been slow since the update.
+PRODUCT_REVIEW_NEG_OTHER_2,"Yeni sürümde bir şey bozulmuş, eskisi daha iyi çalışıyordu.",Something broke in the new version. The old one worked better.
+PRODUCT_REVIEW_NEG_OTHER_3,Güncellemeden beri en çok kullandığım özellik hata veriyor.,"Since the update, the feature I use most keeps giving errors."
+PRODUCT_REVIEW_NEG_OTHER_4,En çok kullandığım özellik sık sık hata veriyor.,The feature I use most keeps throwing errors.
+PRODUCT_REVIEW_NEG_OTHER_5,Uygulama son zamanlarda çok yavaş.,The app has been really slow lately.
+PRODUCT_REVIEW_NEG_OTHER_6,Bazı ekranlar ancak ikinci denemede açılıyor.,Some screens won't load until I try a second time.
 PRODUCT_RESULT_LEVEL_EXPECTED,{area} {to} olmalı,{area} should be {to}
 PRODUCT_RESULT_LEVEL_ACTUAL,{area} {from} iken {to} oldu,{area} went from {from} to {to}
 PRODUCT_RESULT_BUGS_EXPECTED,{n} hata kapanmalı,{n} bugs should close
@@ -2967,10 +2999,12 @@ PRODUCT_LEAD_WEAKEST,{area} sırada.,{area} is next.
 PRODUCT_AUTO_STARTED,Sprint otomatik başladı,Sprint started automatically
 PRODUCT_EMPTY_SPRINT,Boş sprint · kimse kart üstünde çalışmıyor,Empty sprint · no one is working on a card
 PRODUCT_PM_STARTED,Sprint {name} tarafından başlatıldı,{name} started the sprint
-EFFECT_SPRINT_EFFORT,Efor {v},Effort {v}
-EFFECT_SPRINT_PROGRESS,İlerleme {v},Progress {v}
 EFFECT_SPRINT_CARRY,Sonraki sprinte devreder,Carries over to the next sprint
 EFFECT_SPRINT_HOURS,Bu sprint ekibin çalışma saati ×{v},Team work hours ×{v} this sprint
+EFFECT_TEST_CUT,{card}: test işi yarıya iner,{card}: testing cut in half
+EFFECT_PROMISE_KEPT,Söz tutulur,The promise is kept
+EFFECT_PROMISE_MOVED,Söz sonraki sprintin sonuna kayar,The promise moves to the end of next sprint
+EFFECT_PROMISE_RELOCK,Bu hesaba {n} hafta yeni söz verilemez,No new promise to this account for {n} weeks
 HR_TASK_ON_PRODUCT,{product} {version} üzerinde çalışıyor,Working on {product} {version}
 PRODUCT_LOCK_LIVE,Canlı ürün gerekli,Live product needed
 PRODUCT_GOAL_CORE,kullanıcıların yarısı asıl işini burada bitirsin,half of users get their main job done here
@@ -3030,19 +3064,6 @@ EV_FOUNDER_SAVINGS_EXPIRED,Hesaba bir hafta daha bakılmadı.,The balance went u
 EV_FOUNDER_UNSEEN_TITLE,Kimse görmedi,Nobody has seen it
 EV_FOUNDER_UNSEEN_OK,Yapmaya devam et,Keep building
 EV_FOUNDER_UNSEEN_EXPIRED,Bir hafta daha kimse görmeden geçti.,Another week of building with nobody watching.
-EV_PRODUCT_SPRINT_TWO_PATHS_TITLE,İki yol var,Two ways through
-EV_PRODUCT_SPRINT_TWO_PATHS_NEW,Kısa yola geç,Take the shorter route
-EV_PRODUCT_SPRINT_TWO_PATHS_KNOWN,Bilinen yoldan devam et,Stay on the known route
-EV_PRODUCT_SPRINT_TWO_PATHS_EXPIRED,"Karar verilmedi, iş bilinen yoldan sürdü.","No decision came, so the work stayed on the known route."
-EV_PRODUCT_SPRINT_LATE_TITLE,Sprint yetişmeyecek,The sprint will not make it
-EV_PRODUCT_SPRINT_LATE_CARRY,Sonraki sprinte devret,Carry it to the next sprint
-EV_PRODUCT_SPRINT_LATE_CRUNCH,"Her şeyi beklet, işi yetiştir",Put everything else on hold and finish it
-EV_PRODUCT_SPRINT_LATE_CRUNCH_LOCK,Gecelerle de bu sprintte bitmiyor,Not done this sprint even with the nights
-EV_PRODUCT_SPRINT_LATE_EXPIRED,"Karar verilmedi, kart sonraki sprinte devretti.","No decision came, so the card carried over to the next sprint."
-EV_PRODUCT_SPRINT_CONTRACTOR_TITLE,Dışarıdan destek,Outside help
-EV_PRODUCT_SPRINT_CONTRACTOR_HIRE,Serbest çalışan getir,Bring in a contractor
-EV_PRODUCT_SPRINT_CONTRACTOR_LEARN,İçeride öğren,Learn it in house
-EV_PRODUCT_SPRINT_CONTRACTOR_EXPIRED,"Karar verilmedi, iş yavaş yoldan sürdü.","No decision came, so the work went the slow way."
 EV_TEAM_FIRST_WEEKS_TITLE,İlk haftalar,First weeks
 EV_TEAM_FIRST_WEEKS_BODY,"{employee} buradaki işleyişi hâlâ öğreniyor, bu hafta aynı soruyu iki kez sordu.",{employee} is still learning how things work here and asked the same question twice this week.
 EV_TEAM_FIRST_WEEKS_PAIR,Birkaç gün yanında otur,Sit with them for a few days
@@ -3184,6 +3205,7 @@ MAIL_STAMP_AT,{stamp} H{week},{stamp} W{week}
 MAIL_SENDER_ACCOUNTS,Muhasebe,Accounts
 MAIL_SENDER_SUPPORT,Destek,Support
 MAIL_SENDER_SERVER_ALERT,Sunucu uyarısı,Server alert
+MAIL_SENDER_FINANCE_MANAGER,Finans Müdürü,Finance Manager
 MAIL_SELF_NOTE,Kendine not,Note to self
 MAIL_RPT_CLOSED,Geçen hafta kapananlar:,Closed last week:
 MAIL_RPT_BOOKS,Defterdeki hesap: {n},Accounts on the books: {n}
@@ -3352,6 +3374,27 @@ EFFECT_OUTAGE_CREDIT_ONE,Kesinti kredisi · {n} hesap · %{pct} {v},Outage credi
 EFFECT_FREE_MONTH,Bir ay ücretsiz · {n} kişi · ödeyen {paying} {v},Free month · {n} people · {paying} paying {v}
 EFFECT_TRUST_NIGHT_ACCOUNTS,{n} gece vardiyalı hesap: memnuniyet {v} · {customer} {from} → {to},{n} night shift accounts: satisfaction {v} · {customer} {from} → {to}
 EFFECT_TRUST_OTHER_ACCOUNTS,Öbür {n} hesap: memnuniyet {v},Other {n} accounts: satisfaction {v}
+EFFECT_FIXED_AROUND,Sorun {clock} sularında çözülür,Fixed around {clock}
+EFFECT_FIXED_TOMORROW,Sorun yarın {clock} sularında çözülür,Fixed tomorrow around {clock}
+EFFECT_SPRINT_BUMP,{card} sonraki sprinte kayar,{card} moves to the next sprint
+EFFECT_NEXT_SPRINT_WORK,Sonraki sprinte {n} puanlık iş kalır,{n} points of work left for next sprint
+EFFECT_NEXT_SPRINT_WORK_ONE,Sonraki sprinte {n} puanlık iş kalır,{n} point of work left for next sprint
+EFFECT_CARD_LATE,{card} bu sprintte bitmez,{card} won't finish this sprint
+EFFECT_CARD_ON_TIME,{card} bu sprintte biter,{card} finishes this sprint
+EFFECT_SHIP_BUGS,{line}: çıkışta {n} açık hata,{line}: {n} open bugs at release
+EFFECT_SHIP_BUGS_ONE,{line}: çıkışta {n} açık hata,{line}: {n} open bug at release
+EFFECT_ONE_MONTH_DISCOUNT,{customer}: bir ay %{pct} indirim {v},{customer}: {pct}% off for a month {v}
+EFFECT_TRUST_UNTIL_SHIPS,{card} çıkana kadar her sprint sonunda memnuniyet {v},Satisfaction {v} at the end of each sprint until {card} ships
+EFFECT_AUDIENCE_WEEKLY,Düzelene kadar kitle haftada {v},Audience {v} a week until fixed
+EFFECT_CARD_POINTS,{card} {v} puan,{card} {v} points
+EFFECT_CARD_POINTS_ONE,{card} {v} puan,{card} {v} point
+EFFECT_WORK_LOST,Yapılan {n} puan boşa gider,{n} points of finished work are lost
+EFFECT_WORK_LOST_ONE,Yapılan {n} puan boşa gider,{n} point of finished work is lost
+EFFECT_NEW_BUGS,{line}: {n} yeni açık hata,{line}: {n} new open bugs
+EFFECT_NEW_BUGS_ONE,{line}: {n} yeni açık hata,{line}: {n} new open bug
+EFFECT_LINE_HARDEN,{line}: {weeks} hafta yeni hata çıkmaz,{line}: no new bugs for {weeks} weeks
+EFFECT_FIX_FRONT,{card} sprintin başına girer,{card} goes to the front of the sprint
+EFFECT_SPRINT_HOURS_SOLO,Bu sprint çalışma saatin ×{v},Your work hours ×{v} this sprint
 VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some friction between you.
 FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
 FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut
@@ -3435,37 +3478,6 @@ EV_PRODUCT_SUPPORT_OVERFLOW_YOURSELF,Cevapları kendin yaz,Answer them yourself
 EV_PRODUCT_SUPPORT_OVERFLOW_HOURLY_HELP,Mesajlar için saat ücretiyle birini tut,Pay someone hourly to answer them
 EV_PRODUCT_SUPPORT_OVERFLOW_KNOWN_BUGS,Bilinen hataların listesini yayınla,Publish a list of known bugs
 EV_PRODUCT_SUPPORT_OVERFLOW_EXPIRED,"Kimse cevap yazmadı, mesajlar gelmeye devam etti.","Nobody wrote back, and the messages kept coming."
-EV_PRODUCT_SPRINT_HARDCODED_COLORS_TITLE,Kendi renkleri,Their own colours
-EV_PRODUCT_SPRINT_HARDCODED_COLORS_HAND,Renkleri elle değiştir,Change their colours by hand
-EV_PRODUCT_SPRINT_HARDCODED_COLORS_ONE_FILE,Bütün renkleri tek dosyaya topla,Pull every colour into one file
-EV_PRODUCT_SPRINT_HARDCODED_COLORS_FREELANCER,Renkleri bir serbest çalışana değiştirt,Have a freelancer change the colours
-EV_PRODUCT_SPRINT_HARDCODED_COLORS_AS_IS,Renkler değişmeyecek de,Tell them the colours stay
-EV_PRODUCT_SPRINT_HARDCODED_COLORS_EXPIRED,"Cevap gitmedi, {customer} bunu hayır diye anladı.","No answer went back, so {customer} took it as a no."
-EV_PRODUCT_SPRINT_COLORS_AGAIN_TITLE,Yine renkler,The colours again
-EV_PRODUCT_SPRINT_COLORS_AGAIN_EXPIRED,"{customer} şikâyet etti, ekip sayfaları elle değiştirdi.","{customer} complained, and the team changed the pages by hand."
-EV_PRODUCT_SPRINT_UNASKED_REWRITE_TITLE,Arayüz baştan yazılmış,"The front end, rewritten"
-EV_PRODUCT_SPRINT_UNASKED_REWRITE_REVIEW,"İncelet, yeni koda sonraki sprintte geç",Have the team review it first
-EV_PRODUCT_SPRINT_UNASKED_REWRITE_READ,"Otur, her satırı kendin oku",Read every line yourself
-EV_PRODUCT_SPRINT_UNASKED_REWRITE_MERGE,"Bırak incelemeyi, yeni koda geç","Switch now, skip the review"
-EV_PRODUCT_SPRINT_UNASKED_REWRITE_EXPIRED,"Kimse bakmadı, {employee} konuyu bir daha açmadı.","Nobody looked at it, and {employee} stopped bringing it up."
-EV_PRODUCT_SPRINT_REWRITE_BUGS_TITLE,Geçişten beri,Since the switch
-EV_PRODUCT_SPRINT_REWRITE_BUGS_BODY,"Yeni koda geçişten beri kullanıcılar, eskiden çalışan bir düzine şeyin artık çalışmadığını bildirdi. Hepsi yeni koddan çıkıyor. Her biri küçük.","Since the switch, users have reported a dozen things that used to work. All of them are in the new code. Each one is small."
-EV_PRODUCT_SPRINT_REWRITE_BUGS_FIX,Hataları {employee} düzeltsin,Have {employee} fix them
-EV_PRODUCT_SPRINT_REWRITE_BUGS_ROLLBACK,Eski arayüze geri dön,Roll back to the old code
-EV_PRODUCT_SPRINT_REWRITE_BUGS_FREEZE,"Yeni işi durdur, önce hataları düzelt","Stop new work, fix them first"
-EV_PRODUCT_SPRINT_REWRITE_BUGS_EXPIRED,"Kimse üstlenmedi, kullanıcılar yenilerini bulmaya devam etti.","Nobody took them on, and users kept finding more."
-EV_PRODUCT_SPRINT_REWRITE_OWNER_TITLE,Tek kişinin kodu,One person's code
-EV_PRODUCT_SPRINT_REWRITE_OWNER_BODY,"İnceleme bitti, ekip yeni koda geçti. İncelemenin çoğu {employee} yeni kodu anlatırken geçti. Başka kimse elini sürmedi.",The review is done and the team is on the new code. Most of the review was {employee} explaining it. Nobody else has touched it since.
-EV_PRODUCT_SPRINT_REWRITE_OWNER_PAIR,{employee} her birinin yanında çalışsın,Pair {employee} with each of them
-EV_PRODUCT_SPRINT_REWRITE_OWNER_TRAINER,Dışarıdan bir eğitmen getir,Bring in an outside trainer
-EV_PRODUCT_SPRINT_REWRITE_OWNER_OWN,Arayüzün sorumluluğunu {employee} alsın,Put {employee} in charge of it
-EV_PRODUCT_SPRINT_REWRITE_OWNER_EXPIRED,"Karar verilmedi, her soruyu yine {employee} cevapladı.","Nobody decided, so every question kept going to {employee}."
-EV_PRODUCT_SPRINT_REWRITE_READER_TITLE,Her değişiklik sana,"Every change, to you"
-EV_PRODUCT_SPRINT_REWRITE_READER_BODY,Yeni arayüzü satır satır okuduğun günden beri {employee} her değişikliği çıkmadan önce sana gönderiyor. Sen okumadan hiçbiri çıkmıyor. Dokuz tane bekliyor.,"Since you read the new front end line by line, {employee} has been sending you every change before it goes out. Nothing goes out until you read it. Nine are waiting."
-EV_PRODUCT_SPRINT_REWRITE_READER_KEEP,Hepsini okumaya devam et,Keep reading every change
-EV_PRODUCT_SPRINT_REWRITE_READER_PEER,Ekip birbirinin kodunu okusun,Have the team review each other
-EV_PRODUCT_SPRINT_REWRITE_READER_TRUST,Değişikliklerini {employee} kendisi çıkarsın,Let {employee} ship changes alone
-EV_PRODUCT_SPRINT_REWRITE_READER_EXPIRED,"Cevap gelmedi, {employee} değişiklikleri okunmadan çıkarmaya başladı.","No answer came, so {employee} started shipping them unread."
 EV_FUNDING_CLOSING_DOCS_TITLE,Evrak işleri,The paperwork
 EV_FUNDING_CLOSING_DOCS_BODY,"{investor} teklifi iki sayfa. Turun belgeleri de yanında geldi, fon bir ay içinde imza bekliyor. Avukatlarına göre hepsi standart. Series A fonları da okuyacak. Tam 114 sayfa.",The term sheet from {investor} is two pages. The documents for the round came with it. The fund wants them signed within a month. Its lawyers call them standard. Series A funds will read them too. All 114 pages.
 EV_FUNDING_CLOSING_DOCS_LAW_FIRM,Hukuk bürosuyla anlaş,Hire a startup law firm

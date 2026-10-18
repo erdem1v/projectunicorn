@@ -20,8 +20,23 @@ static func install() -> void:
 		func() -> int: return IncidentSystem.tried(),
 		"Incident", "B2C: people who tried the app between the outage's start and the card's opening")
 	EvSeams.register("olay.payers", G, TYPE_INT,
-		func() -> int: return SprintSystem.payers("").size(),
-		"Incident", "people a night fix costs morale (SprintSystem.payers); 0 locks the option")
+		func() -> int: return SprintSystem.payers(IncidentSystem.hit_line()).size(),
+		"Incident", "people a fix outside the sprint costs morale (SprintSystem.payers, on the line the emergency hit); 0 locks the option")
 	EvSeams.register("olay.service_up", G, TYPE_BOOL,
 		func() -> bool: return IncidentSystem.service_up(),
 		"Incident", "no emergency is open, or the fix it was answered with is done")
+	EvSeams.register("olay.version", G, TYPE_STRING,
+		func() -> String: return IncidentSystem.version(),
+		"Incident", "the version the open regression broke, v1.4")
+	EvSeams.register("olay.affected_accounts", G, TYPE_INT,
+		func() -> int: return SprintCatalog.line_accounts(IncidentSystem.hit_line()).size(),
+		"Incident", "active B2B accounts that use the line the emergency hit")
+	EvSeams.register("olay.line_users", G, TYPE_INT,
+		func() -> int: return SprintCatalog.line_users(IncidentSystem.hit_line()),
+		"Incident", "people the line the emergency hit reaches each day (B2C: the audience's share of it)")
+	EvSeams.register("olay.shares", G, TYPE_INT,
+		func() -> int: return roundi(SalesSystem.b2c_audience() * float(SprintCatalog.cfg("incident.storm.share"))),
+		"Incident", "how many times the post going round has been shared: a share of the audience")
+	EvSeams.register("olay.variant", G, TYPE_INT,
+		func() -> int: return IncidentSystem.variant(),
+		"Incident", "which line-specific body a card reads (IncidentSystem.variant), for by_seam text")

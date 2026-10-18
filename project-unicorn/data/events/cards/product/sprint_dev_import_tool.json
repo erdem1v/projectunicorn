@@ -1,0 +1,154 @@
+{
+  "id": "product.sprint_dev_import_tool",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the card is about a customer who has just signed, so the account is new by design"
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "line_newest",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "musteri.tenure_weeks",
+            "scope": "customer",
+            "op": "<=",
+            "value": 8
+          }
+        ]
+      }
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_line",
+        "op": "in",
+        "value": [
+          "line_erp_intake",
+          "line_erp_ledger",
+          "line_erp_stock"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "build_tool",
+      "outcome_id": "build_tool",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "we_import",
+      "outcome_id": "we_import",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "pct": -40,
+          "weeks": 1
+        },
+        {
+          "verb": "morale_crew",
+          "crew": "speaker",
+          "amount": -3
+        }
+      ]
+    },
+    {
+      "id": "by_hand",
+      "outcome_id": "by_hand",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "amount": -8
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Eski kayıtlarını aktarmak istiyorlar",
+      "body": "{customer} geçen yılın kayıtlarını eski sisteminden aktarmak istiyor. Elle yapmak onlara haftalar sürer, bir aktarma aracı yazarsam kart büyür.",
+      "options": {
+        "build_tool": "Aktarma aracını yaz",
+        "we_import": "Kayıtları {employee} aktarsın",
+        "by_hand": "Elle aktarsınlar"
+      },
+      "expire_note": "Cevap gelmedi, kayıtları kendileri elle aktarıyor."
+    },
+    "en": {
+      "title": "They want to bring over their old records",
+      "body": "{customer} wants to bring last year's records over from their old system. Doing it by hand takes them weeks; an import tool makes the card bigger.",
+      "options": {
+        "build_tool": "Write the import tool",
+        "we_import": "Have {employee} import them",
+        "by_hand": "Let them do it by hand"
+      },
+      "expire_note": "No answer came, so they're moving the records by hand."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

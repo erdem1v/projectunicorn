@@ -3,8 +3,9 @@ extends RefCounted
 
 # Sprint motorunun öbür alanlarla dikişleri: B2B talepleri, rakip çıkışları ve basın satırı,
 # ekonomi (eksen puanı, altyapı, ücretli plan) ve gerçekleşen sonuç. Öbür alanlara yalnız onların
-# seam'lerinden yazar. GameState.product'ın yazarı SprintSystem'dir; köprü orada yalnız iki
-# anahtarı yazar: requests, rival_hits. Hepsi tür seçilmiş üründe çalışır.
+# seam'lerinden yazar. GameState.product'ın yazarı SprintSystem'dir; köprü orada yalnız requests ve
+# rival_hits'i, bir de kendisine verilen sürüm kaydının thanks alanını yazar (reviews'u SprintSystem
+# yazar, seçimi köprüden alır). Hepsi tür seçilmiş üründe çalışır.
 # Sürüm notunun cümleleri {key, args} saklanır; args'taki metin değeri ya çeviri anahtarıdır ya
 # özel ad, resolve() ikisini de ekranın dilinde okur.
 
@@ -26,13 +27,12 @@ static func tick_requests() -> void:
 	for r in requests:
 		if r.status == "open" and (int(r.due_sprint) <= last_closed or not account_ids.has(r.customer_id)):
 			r.status = "late"
-	var term: int = TimeModel.ticks(int(SprintCatalog.cfg("request.contract_weeks")))
 	var lead: int = TimeModel.ticks(int(SprintCatalog.cfg("request.before_renewal_weeks")))
 	var first: int = TimeModel.ticks(int(SprintCatalog.cfg("request.first_after_weeks")))
 	var area_of: Dictionary = SprintCatalog.cfg("archetypes")
 	for c in accounts:
-		var renewals: int = int(float(GameState.day - c.acquired_on_day + lead) / term)
-		var window: int = c.acquired_on_day + (renewals * term - lead if renewals > 0 else first)
+		var renewal: int = next_renewal_day(c)
+		var window: int = renewal - lead if GameState.day >= renewal - lead else c.acquired_on_day + first
 		if GameState.day < window or requests.any(func(r: Dictionary) -> bool:
 				return r.customer_id == c.id and (r.status == "open" or int(r.day) >= window)):
 			continue
@@ -52,6 +52,15 @@ static func tick_requests() -> void:
 			"created_sprint": plannable,
 			"due_sprint": plannable + SprintSystem.sprints_in(int(SprintCatalog.cfg("request.deadline_weeks"))),
 			"value": c.mrr * 12, "status": "open", "card_id": "req:" + id, "day": GameState.day})
+
+
+## Hesabın yenileme penceresinin gösterdiği yenileme günü: sözleşme imza gününden `request.contract_weeks` haftada bir
+## yenilenir ve pencere yenilemeden `request.before_renewal_weeks` hafta önce açılır. İlk pencere açılana dek ilk yenileme
+## döner; pencere açılınca o yenileme, geçse de bir sonraki pencereye kadar.
+static func next_renewal_day(c: Customer) -> int:
+	var term: int = TimeModel.ticks(int(SprintCatalog.cfg("request.contract_weeks")))
+	var lead: int = TimeModel.ticks(int(SprintCatalog.cfg("request.before_renewal_weeks")))
+	return c.acquired_on_day + maxi(1, int(float(GameState.day - c.acquired_on_day + lead) / term)) * term
 
 
 ## Herkese açık sürüm, kademeler yazıldıktan sonra: kademesi canlıya geçen açık talep zamanında
@@ -173,6 +182,169 @@ static func line_of(sentence: Dictionary) -> Dictionary:
 	if args.has("capability"):
 		args.capability = {"key": SprintCatalog.step_name_key(args.capability)}
 	return {"key": sentence.key, "args": args}
+
+
+# --- Sürüm anı: teşekkür ve yorum -------------------------------------------------------
+
+## Teşekkür notunun kartı; gövdesinin hangi varyant olduğunu `musteri.thanks_variant` söyler.
+const THANKS_CARD := "customer.release_thanks"
+
+
+## Sürüm kapanışında, söz ve istek çözüldükten sonra bir kez: sürüme teşekkür eden hesapların notunu ister ve sürüm
+## kaydına `thanks` olarak yazar ({customer, trigger, feature, variant}). Üç tetikleyici öncelik sırasıyla söz tutuldu,
+## istek karşılandı, acil durum hızla kapandı; bir hesap sürümde en çok bir not, sürüm en çok `thanks.max` [WORKING] not alır.
+static func thank(release: Dictionary) -> void:
+	var thanks: Array = []
+	release["thanks"] = thanks
+	for c in _thanks_candidates(release):
+		if thanks.size() == int(SprintCatalog.cfg("thanks.max")):
+			break
+		if thanks.any(func(t: Dictionary) -> bool: return t.customer == c.customer):
+			continue
+		thanks.append({"customer": c.customer, "trigger": c.trigger, "feature": c.feature,
+			"variant": _thanks_variant(c, int(release.number))})
+		if not EventGate.request(THANKS_CARD, {"customer": c.customer}):
+			thanks.pop_back()
+
+
+## Hesabın en son teşekküründeki kayıt, yoksa {}; kartın seam'leri (`musteri.thanks_variant`, `musteri.met_feature`) okur.
+static func thanks_of(customer_id: String) -> Dictionary:
+	var releases: Array = _p().get("releases", [])
+	for i in range(releases.size() - 1, -1, -1):
+		for t in releases[i].get("thanks", []):
+			if t.customer == customer_id:
+				return t
+	return {}
+
+
+## Teşekkür edebilecek hesaplar, en çok hak edenden başlayarak: tutulan söz, karşılanan istek, hızla kapanan acil durum;
+## her tetikleyicide büyük hesap önde. Acil durum, önceki sürümden bu yana olduysa sayılır: sürüm çıkarmadan kapanan
+## sprint aralığı açmaz.
+static func _thanks_candidates(release: Dictionary) -> Array:
+	var steps: Array = release.shipped.map(func(c: Dictionary) -> String: return c.step)
+	var words: Array = PromiseRegistry.get_all().filter(func(p: Promise) -> bool:
+		return p.status == "kept" and p.feature_id in steps).map(func(p: Promise) -> Dictionary:
+			return {"customer": p.customer_id, "trigger": "promise", "feature": p.feature_id, "moved": p.extended})
+	var asked: Array = _p().requests.filter(func(r: Dictionary) -> bool: return r.status == "met" and r.step in steps).map(
+		func(r: Dictionary) -> Dictionary: return {"customer": r.customer_id, "trigger": "request", "feature": r.step})
+	var larger := func(a: Dictionary, b: Dictionary) -> bool:
+		return SprintCatalog.larger_account(CustomerRegistry.get_customer(a.customer), CustomerRegistry.get_customer(b.customer))
+	words.sort_custom(larger)
+	asked.sort_custom(larger)
+	var fast: Dictionary = IncidentSystem.quick_fix()
+	var before: Array = _p().releases.slice(0, -1).filter(func(r: Dictionary) -> bool: return int(r.number) > 0)
+	var since: int = int(before.back().day) * MailClock.DAY_MINUTES if not before.is_empty() else 0
+	if not fast.is_empty() and int(GameState.incident.open.start) >= since:
+		return words + asked + [{"customer": fast.customer, "trigger": "incident", "feature": "", "night": fast.night}]
+	return words + asked
+
+
+## Notun gövdesi: tetikleyicinin kartta yazılı gövdelerinden hesap ve sürümle seçilir; aynı tetikleyicide en son
+## kullanılan dönmez.
+static func _thanks_variant(c: Dictionary, number: int) -> int:
+	var pool: Array = _thanks_pool(c)
+	var sent: Array = []
+	for r in _p().releases:
+		sent.append_array(r.get("thanks", []).filter(func(t: Dictionary) -> bool: return t.trigger == c.trigger))
+	if not sent.is_empty():
+		pool.erase(int(sent.back().variant))
+	return pool[floori(EvDice.unit("thanks", number, c.customer, "") * pool.size())]
+
+
+## Kartın gövdelerinden tetikleyicinin doğru söyleyebilecekleri: gece düzeltmesine ancak gece kapanan olay, ertelenmiş
+## söze ancak yeni tarihi anan gövdeler uyar.
+static func _thanks_pool(c: Dictionary) -> Array:
+	match String(c.trigger):
+		"incident":
+			return [0, 1, 2, 3, 4] if c.night else [0, 1, 2]
+		"promise":
+			return [5, 7, 9] if c.moved else [5, 6, 7, 8]
+	return [10, 11, 12, 13]
+
+
+## Sürümden bir tik sonra, B2C güncellemesinin notuna yorum satırı: 2 ya da 3 kısa yorum (`ids`), adlı yorumların andığı
+## özellik (`feature`, kademe kimliği) ve yorumların ekrana geleceği an (`at`); B2B'de ve v1.0'da {}. Sırayla: sürümde
+## canlıya geçen kademe (kimlik hattınınsa adlı ya da adsız, ortak hattınsa adsız), kapanan bir düzeltme, hatalı çıkan ya da
+## açık hatası eşiği geçen hattın olumsuz yorumu (sonda); 2'nin altında kalırsa adsız yorumla tamamlanır. Olumsuz yorumun
+## yanına yalnız sakin adsız yorum konur. Aynı metin `reviews.repeat_weeks` hafta dönmez. Sayılar `reviews` bloğunda [WORKING].
+static func pick_reviews(release: Dictionary) -> Dictionary:
+	if int(release.number) < 2 or SalesSystem.is_b2b_market():
+		return {}
+	var cfg: Dictionary = SprintCatalog.cfg("reviews")
+	var number: int = int(release.number)
+	var shown: Array = []
+	for r in _p().releases:
+		if GameState.day - int(r.day) < TimeModel.ticks(int(cfg.repeat_weeks)):
+			shown.append_array(r.get("reviews", {}).get("ids", []))
+	var tiers: Array = release.shipped.filter(func(c: Dictionary) -> bool:
+		return c.kind in ["feature", "request"] and c.line != SprintCatalog.PAID_PLAN)
+	var identity: Array = tiers.filter(func(c: Dictionary) -> bool: return not ProductLines.line(c.line).shared)
+	identity.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return [a.target_tier, a.effort] > [b.target_tier, b.effort])
+	var feature: String = String(identity[0].step) if not identity.is_empty() else ""
+	var fixed: bool = release.shipped.any(func(c: Dictionary) -> bool: return c.kind == "fix" and int(c.bugs) > 0)
+	var unhappy: Dictionary = _unhappy(release, int(cfg.neg_line_bugs))
+	var plain: Array = cfg.plain.filter(func(e: Dictionary) -> bool: return unhappy.is_empty() or e.get("calm", false))
+	var picks: Array = []
+	if not tiers.is_empty():
+		var named: bool = feature != "" and ((not fixed and unhappy.is_empty())
+				or EvDice.unit("review", number, "named", "") < float(cfg.named_share))
+		_add_review(picks, cfg.named if named else plain, "new", number, shown)
+	if fixed:
+		_add_review(picks, cfg.fix, "fix", number, shown)
+	for pad in maxi(0, int(cfg.min) - (0 if unhappy.is_empty() else 1) - picks.size()):
+		_add_review(picks, plain, "pad%d" % pad, number, shown)
+	if not unhappy.is_empty():
+		var group: Array = cfg.neg.get(String(unhappy.line).get_slice("@", 0), cfg.neg.other)
+		_add_review(picks, group.filter(func(e: Dictionary) -> bool:
+			return (unhappy.blames or not e.get("blames", false)) and ProductState.line_tier(unhappy.line) >= int(e.get("tier", 0))),
+			"neg", number, shown)
+	if picks.is_empty():
+		return {}
+	return {"ids": picks.map(func(e: Dictionary) -> String: return e.id), "feature": feature,
+		"at": MailClock.arrival("reviews:%d" % number)}
+
+
+## Olumsuz yorumu yazacak hat ve yorumun güncellemeyi suçlayıp suçlamadığı: sürüm hatalı çıktıysa o hat, değilse açık
+## hatası eşikte ya da üstünde olan en kötü hat; yoksa {}.
+static func _unhappy(release: Dictionary, line_bugs: int) -> Dictionary:
+	var faulty: Array = release.get("faulty", [])
+	var blames: bool = not faulty.is_empty()
+	var lines: Array = faulty.duplicate() if blames else ProductState.open_bugs_by_line().keys().filter(
+		func(l: String) -> bool: return ProductState.costed(ProductState.line_bugs(l)) >= line_bugs)
+	lines.sort()
+	var worst: String = ""
+	for line in lines:
+		if worst == "" or ProductState.line_bugs(line) > ProductState.line_bugs(worst) \
+				or (ProductState.line_bugs(line) == ProductState.line_bugs(worst)
+				and SprintCatalog.line_users(line) > SprintCatalog.line_users(worst)):
+			worst = line
+	return {} if worst == "" else {"line": worst, "blames": blames}
+
+
+## Havuzdan henüz seçilmemiş bir yorum ekler, yakında gösterilmemiş olanı yeğler; havuz tükendiyse eklemez.
+static func _add_review(picks: Array, pool: Array, salt: String, number: int, shown: Array) -> void:
+	var open: Array = pool.filter(func(e: Dictionary) -> bool: return e not in picks)
+	var fresh: Array = open.filter(func(e: Dictionary) -> bool: return e.id not in shown)
+	var from: Array = fresh if not fresh.is_empty() else open
+	if not from.is_empty():
+		picks.append(from[floori(EvDice.unit("review", number, salt, "") * from.size())])
+
+
+## Sürüm notunun yorum satırları ekranın dilinde ({source, text}); yorumlar kendi anına gelene dek ve B2B'de yok.
+static func review_lines(release: Dictionary) -> Array:
+	var reviews: Dictionary = release.get("reviews", {})
+	if reviews.is_empty() or not MailClock.delivered(int(reviews.at)):
+		return []
+	var cfg: Dictionary = SprintCatalog.cfg("reviews")
+	var entries: Array = cfg.named + cfg.plain + cfg.fix
+	for group in cfg.neg.values():
+		entries += group
+	var feature: String = SprintCatalog.step_name(reviews.feature) if reviews.feature != "" else ""
+	return reviews.ids.map(func(id: String) -> Dictionary:
+		var entry: Dictionary = entries.filter(func(e: Dictionary) -> bool: return e.id == id)[0]
+		return {"source": TranslationServer.translate(entry.src), "text": TranslationServer.translate(
+			"PRODUCT_REVIEW_QUOTED").format({"review": TranslationServer.translate(id).format({"feature": feature})})})
 
 
 # --- İç -------------------------------------------------------------------------------

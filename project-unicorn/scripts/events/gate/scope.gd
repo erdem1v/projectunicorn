@@ -240,6 +240,14 @@ static func _select_employee(mode: String, used: Dictionary, bound: Dictionary) 
 				if not used.has((rep as Character).id):
 					return (rep as Character).id
 			return ""
+		"sprint_dev":
+			# A developer on the running sprint's team, by sprint share (SprintSystem.payers' order): the one a sprint
+			# paper's tester or the pending card names besides the speaker.
+			for id in SprintSystem.payers(""):
+				var dev: Character = CharacterRegistry.get_character(id)
+				if pool.has(dev) and dev.role == HRConstants.ROLE_DEVELOPER:
+					return id
+			return ""
 	return _first_by(pool, func(c): return c.id)
 
 
@@ -295,6 +303,9 @@ static func _select_customer(mode: String, used: Dictionary) -> String:
 			return _first_by(pool, func(c): return -c.mrr)
 		"smallest":
 			return _first_by(pool, func(c): return c.mrr)
+		"line_top", "line_warehouse", "line_newest", "line_slow", "request":
+			# An account of the pending sprint decision's line (SprintCatalog.paper_account).
+			return SprintCatalog.paper_account(mode, used)
 	return _first_by(pool, func(c): return c.id)
 
 

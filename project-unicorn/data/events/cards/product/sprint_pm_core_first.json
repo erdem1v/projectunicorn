@@ -1,0 +1,138 @@
+{
+  "id": "product.sprint_pm_core_first",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_pm",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c"
+  },
+  "speaker_role": "product_manager",
+  "pool_group": "pm",
+  "stage": "any",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_request_votes",
+        "op": ">=",
+        "value": 1
+      },
+      {
+        "seam": "urun.decision_card_late",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_trim_finishes",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "core_only",
+      "outcome_id": "core_only",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "share": true
+        },
+        {
+          "verb": "audience_delta",
+          "amount_seam": "urun.paper_ask_silent",
+          "amount_mult": -1
+        }
+      ]
+    },
+    {
+      "id": "rest_next",
+      "outcome_id": "rest_next",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "share": true,
+          "follow": true
+        }
+      ]
+    },
+    {
+      "id": "full",
+      "outcome_id": "full",
+      "effects": [
+        {
+          "verb": "sprint_card_outlook"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Çoğu yalnız temel hâlini istiyor",
+      "body": "Bu kartı {seam:urun.decision_request_votes} kişi istedi, yazdıklarının çoğu temel hâliyle ilgili. Yalnız onu çıkarırsak kart bu sprintte biter.",
+      "options": {
+        "core_only": "Yalnız temel hâlini yap",
+        "rest_next": "Kalanını önümüzdeki sprinte at",
+        "full": "Tam hâlini yap"
+      },
+      "expire_note": "Karar verilmedi, kart tam hâliyle sürüyor."
+    },
+    "en": {
+      "title": "Most only want the basic version",
+      "body": "{seam:urun.decision_request_votes} people asked for this card, and most of what they wrote is about the basic version. If we ship just that, the card finishes this sprint.",
+      "options": {
+        "core_only": "Build only the basic version",
+        "rest_next": "Move the rest to next sprint",
+        "full": "Build the full version"
+      },
+      "expire_note": "Nobody decided, so the card carries on in full."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

@@ -1,0 +1,125 @@
+{
+  "id": "product.sprint_solo_license",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_solo",
+  "speaker_role": "founder",
+  "stage": "dev",
+  "pool_group": "solo",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      0
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "scope": {
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 5
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "buy",
+      "outcome_id": "buy",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "label": "build_commit",
+          "amount_seam": "urun.paper_license",
+          "amount_mult": -1
+        },
+        {
+          "verb": "sprint_card_effort",
+          "amount": -3
+        }
+      ]
+    },
+    {
+      "id": "free",
+      "outcome_id": "free",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -2
+        },
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    },
+    {
+      "id": "write",
+      "outcome_id": "write",
+      "effects": [
+        {
+          "verb": "sprint_card_outlook"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Bu iş için hazır bir bileşen var",
+      "body": "{seam:urun.decision_card} için gereken işi yapan hazır bir bileşen var, lisansı {seam:urun.decision_license_year}. Ücretsiz bir sürümü de var ama iki yıldır kimse bakmıyor.",
+      "options": {
+        "buy": "Lisansı al",
+        "free": "Ücretsiz sürümü kullan",
+        "write": "Kendin yaz"
+      },
+      "expire_note": "Cevap verilmedi, kodu kendin yazmaya devam ettin."
+    },
+    "en": {
+      "title": "There's a ready made component for this",
+      "body": "There's a ready made component that does what {seam:urun.decision_card} needs, and its licence costs {seam:urun.decision_license_year}. There's a free version too, but nobody has maintained it for two years.",
+      "options": {
+        "buy": "Buy the licence",
+        "free": "Use the free version",
+        "write": "Write it yourself"
+      },
+      "expire_note": "No answer came, so you kept writing it yourself."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

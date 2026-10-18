@@ -1,0 +1,140 @@
+{
+  "id": "product.sprint_test_stock_transfer",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_test",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the account or the developer comes from the card on the desk, not from how long they have been here"
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "speaker_role": "tester",
+  "pool_group": "tester",
+  "stage": "test",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "line_warehouse"
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_line",
+        "op": "==",
+        "value": "line_erp_stock"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "fix",
+      "outcome_id": "fix",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "transfer_off",
+      "outcome_id": "transfer_off",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -1
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -8
+        }
+      ]
+    },
+    {
+      "id": "known_bug",
+      "outcome_id": "known_bug",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Transferde ürün iki depoda görünüyor",
+      "body": "Bir ürün depodan depoya aktarılınca iki depoda birden görünüyor. Sayımda raftakinden fazla stok çıkıyor.",
+      "options": {
+        "fix": "Çıkmadan düzelt",
+        "transfer_off": "Transferi bu sürümde kapat",
+        "known_bug": "Bilinen hata olarak çık"
+      },
+      "expire_note": "Cevap gelmedi, kart hatayla çıktı."
+    },
+    "en": {
+      "title": "Transfers show stock in both warehouses",
+      "body": "When stock moves from one warehouse to another, it shows up in both. The count comes out higher than what's really on the shelves.",
+      "options": {
+        "fix": "Fix it before it ships",
+        "transfer_off": "Turn transfers off for this release",
+        "known_bug": "Ship it as a known bug"
+      },
+      "expire_note": "No answer came, so the card shipped with the bug."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

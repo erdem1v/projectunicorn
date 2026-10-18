@@ -1,0 +1,128 @@
+{
+  "id": "product.sprint_solo_backup",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_solo",
+  "speaker_role": "founder",
+  "stage": "any",
+  "pool_group": "solo",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      0
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.durability_tier",
+        "op": "==",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "set_up",
+      "outcome_id": "set_up",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "outsource",
+      "outcome_id": "outsource",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "label": "contractor",
+          "amount_seam": "urun.paper_contract",
+          "amount_mult": -1
+        }
+      ]
+    },
+    {
+      "id": "later",
+      "outcome_id": "later",
+      "effects": [
+        {
+          "verb": "damage_product",
+          "line": "line_shared_durability",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Veritabanının yedeği yok",
+      "body": "Veritabanının hiç yedeği yok, bir sorun çıkarsa bütün kayıtlar gider. Otomatik yedeği kurmak bu kartı biraz uzatır.",
+      "options": {
+        "set_up": "Yedeği şimdi kur",
+        "outsource": "Serbest çalışana kurdur",
+        "later": "Sonraya bırak"
+      },
+      "expire_note": "Cevap verilmedi, yedek sonraya kaldı."
+    },
+    "en": {
+      "title": "The database has no backup",
+      "body": "The database has no backup at all; if something goes wrong, every record is gone. Setting up automatic backups makes this card a bit longer.",
+      "options": {
+        "set_up": "Set up the backup now",
+        "outsource": "Get a contractor to set it up",
+        "later": "Leave it for later"
+      },
+      "expire_note": "No answer came, so the backup was left for later."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "damage_product",
+        "line": "line_shared_durability",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

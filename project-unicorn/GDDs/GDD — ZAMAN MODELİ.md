@@ -209,7 +209,7 @@ kullanılan gün değişmez.
 | sabit | gün modeli (gün) | yürürlükte (hafta) | not |
 |---|---|---|---|
 | sprint (`data/product/sprint.json` `sprint_lengths`, varsayılan `sprint_weeks`) | yok | 1 ya da 2, varsayılan 2 [WORKING] | oyuncu planlamada seçer; başlatıldığı tik 1. hafta, ertesi tik 2. hafta; kartlarının hepsi biten sprint o haftanın sonunda kapanır; çeyrek 6 sprint |
-| sprint karar kartı (`sprint.json` `decision`) | yok | 2. haftanın tikinde, oran 0,35 [WORKING]; kâğıt 1 hafta bekler | koşan kart başına koşu tohumlu zar; kartlar `product.sprint_two_paths`, `sprint_late`, `sprint_contractor` (§4.10); `sprint_hours` çarpımla yığılır, 0,5–1,5 (`hours_mult`) |
+| sprint karar kartı (`sprint.json` `decision`) | yok | 2. haftanın tikinde, oran 0,35 [WORKING]; kâğıt 1 hafta bekler | koşan kart başına koşu tohumlu zar; kartlar `decision.cards` havuzundaki kâğıtlardır (§4.10); `sprint_hours` çarpımla yığılır, 0,5–1,5 (`hours_mult`) |
 | `INFLOW_TAU` | 21 | 3 | §3.5 |
 | itibar ihmal kuralı (`SupportSystem.NEGLECT_BUGS` 30, `NEGLECT_WEEKS` 4) | yok | açık hata 30 ve üstü üst üste 4 haftalık tikte itibar −1, koşul sürdükçe her tik [ÇALIŞMA] | taban GameState'in −10'u; GUNCELLEMELER "Faz A · tek hata sayısı" |
 | ürün fonunun geri dönüşü (`PitchConstants.CALLBACK_CHURN_WEEKS`) | yok | 12 hafta; pencere dolmadan koşul karşılanmaz [WORKING] | kaybedilen müşteri oranı: B2B %5, B2C %15 altında |
@@ -362,12 +362,12 @@ kesinti ve bilgi kartı bildirime düşmez; değerleri lint ya da bilgi için ta
 | `team.resignation` | kesinti, kritik | 1 | |
 | `world.final_stretch_press` | kâğıt, kritik | 4 | |
 | `world.final_stretch_comment`, `final_stretch_verdict` | kesinti, kritik | 1 | yumuşak tavana bağlı |
-| `product.sprint_two_paths`, `sprint_late`, `sprint_contractor` | kâğıt (istek) | 1 | sprintin 2. haftası; süresi dolunca geride kalan kart devreder, dış destek kartının eforu +1, iki yolda bilinen yol kalır |
+| `decision.cards` kâğıtları (`product.sprint_dev_*`, `sprint_untested_*`, `sprint_solo_*`, `sprint_late`) | kâğıt (istek) | 1 | sprint başına en çok bir; süresi dolunca her kâğıdın kendi süre doldu yolu işler |
 | `founder.side_contract` | kâğıt | 1 | süresi dolmak bedelsiz rettir |
 | `founder.meetup_talk`, `domain_name`, `friends_test`; `customer.security_review`, `b2c_refunds`; `world.trade_fair`, `app_placement`, `b2c_creator_feature` | kâğıt | 2 | |
 | `world.analyst_guide`, `newsletter_slot` | kâğıt, kritik | 2 | faz 3'ün ilk iki haftası |
 | `b2c_floor_signal`, `b2c_floor_churn`; `rival.funding_round`, `price_cut`; `team.outside_offer` | kesinti | 1 | o haftanın olayı |
-| `product.incident_outage_b2b`, `incident_outage_b2c` | kesinti, kritik | 1 | gecenin acil durumu; cevaba kadar saati tutar, süre yalnız lint için taşınır (§4.10 giriş) |
+| `product.incident_outage_b2b`, `incident_outage_b2c`, `customer.incident_month_close`, `product.incident_checkout`, `incident_regression`, `incident_review_storm` | kesinti, kritik | 1 | acil durum; kart mailin damgasından sonraki ilk tam saatte açılır ve cevaba kadar saati tutar, süre yalnız lint için taşınır (§4.10 giriş) |
 | `founder.savings_note`, `unseen_build`, `company_of_one`; `product.working_parts`; `team.first_weeks`, `demo_day` | kesinti, sessiz | 1 | taban kartı (§4.8 `FLOOR_QUIET_*`) |
 
 `product.design_round_intro`, `first_ship` ve `version_ship` `data/events/cards/unwired/`'dadır; deste onları

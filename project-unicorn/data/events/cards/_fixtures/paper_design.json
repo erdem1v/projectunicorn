@@ -1,0 +1,71 @@
+{
+  "id": "fixture.paper_design",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "family": "fixture_paper",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by the sprint engine, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "speaker_role": "designer",
+  "pool_group": "designer",
+  "stage": "design",
+  "latch": {"cooldown_weeks": 52, "max_fires": 3},
+  "scope": {
+    "employee": {"type": "employee", "required": true}
+  },
+  "condition": {
+    "all": [
+      {"seam": "urun.sprint_running", "op": "==", "value": true}
+    ]
+  },
+  "options": [
+    {
+      "id": "carry",
+      "outcome_id": "carry",
+      "effects": [
+        {"verb": "sprint_card_carry"}
+      ]
+    },
+    {
+      "id": "go_on",
+      "outcome_id": "go_on",
+      "effects": [
+        {"verb": "sprint_card_effort", "amount": 1}
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Tasarımcı kâğıdı",
+      "body": "{seam:urun.decision_card} için çizimler bitmedi. Biraz daha zaman istiyorum.",
+      "options": {
+        "carry": "Kartı sonraki sprinte bırak",
+        "go_on": "Çizimleri bu sprintte bitir"
+      },
+      "expire_note": "Karar verilmedi, çizimler bu sprintte sürdü."
+    },
+    "en": {
+      "title": "Designer paper",
+      "body": "The drawings for {seam:urun.decision_card} are not done. I need a little more time.",
+      "options": {
+        "carry": "Leave the card for next sprint",
+        "go_on": "Finish the drawings this sprint"
+      },
+      "expire_note": "Nobody decided, so the drawings carried on this sprint."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {"penalties": []},
+  "expire_note": "expire_note",
+  "_note": "A designer-voiced paper about a card in its design phase: the engine never hands it to a product manager who was put on the card."
+}

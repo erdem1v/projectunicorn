@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **202** |
-| Effect verbs (write) | **66** |
-| Cards in the catalogue | 99 |
+| Seams (read) | **264** |
+| Effect verbs (write) | **75** |
+| Cards in the catalogue | 148 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -52,13 +52,20 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `productivity_mod`
 - `work_hours`
 - `damage_product`
+- `line_harden`
 - `sprint_card_effort`
 - `sprint_card_progress`
 - `sprint_card_carry`
+- `sprint_card_test`
 - `sprint_hours`
+- `sprint_fix_first`
+- `sprint_card_trim`
+- `sprint_card_outlook`
+- `sprint_card_first`
 - `satisfaction_delta`
 - `trust_delta`
 - `promise_create`
+- `promise_extend`
 - `ticker_push`
 - `goto_tab`
 - `unlock_content`
@@ -100,8 +107,10 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 - `angel_accept`
 - `b2b_expand`
 - `b2b_retain_discount`
+- `b2b_month_discount`
 - `marketing_push`
 - `incident`
+- `promise_break`
 
 ### Terminal
 
@@ -277,6 +286,7 @@ slot of that type (§17.12).
 | `musteri.is_expansion_ready` | entity | bool | Sales | mature, healthy, and never yet offered expansion |
 | `musteri.lifecycle_phase` | entity | string | Sales | onboarding | active | risk | churning | expansion |
 | `musteri.lost_this_run` | global | int | Sales | WRAPPER; churn counter |
+| `musteri.met_feature` | entity | string | Sales | the name KEY of the step the account's latest thanks is for; text reads it in the live language, a history row keeps the key |
 | `musteri.min_satisfaction` | global | int | Sales | worst account |
 | `musteri.mrr` | entity | int | Sales | WRAPPER |
 | `musteri.pain_buildable` | entity | bool | Sales | gates the promise row: nobody can promise what the company cannot build yet |
@@ -291,6 +301,7 @@ slot of that type (§17.12).
 | `musteri.sector_contact` | entity | string | Sales | the speaker's role line |
 | `musteri.stalls_used` | entity | int | Sales | 0-2; the stall row locks at the cap |
 | `musteri.tenure_weeks` | entity | int | Sales | WRAPPER; weeks since signature |
+| `musteri.thanks_variant` | entity | int | Sales | which body of the release thanks note the account's latest thanks reads, for by_seam text |
 | `musteri.tolerance` | entity | int | Sales | WRAPPER; HIDDEN from the player. Condition on it, never name it in copy |
 | `musteri.total_mrr` | global | int | Sales |  |
 | `musteri.under_tolerance` | entity | bool | Sales | the comparison that actually drives Risk |
@@ -307,11 +318,16 @@ slot of that type (§17.12).
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
 | `olay.accounts` | global | int | Incident | active B2B accounts |
+| `olay.affected_accounts` | global | int | Incident | active B2B accounts that use the line the emergency hit |
 | `olay.affected_users` | global | int | Incident | B2C: people who tried the app between the outage's start and the card's opening |
 | `olay.clock` | global | string | Incident | when the open emergency began, 02:10; a history row reads the latest emergency's |
+| `olay.line_users` | global | int | Incident | people the line the emergency hit reaches each day (B2C: the audience's share of it) |
 | `olay.night_accounts` | global | int | Incident | active B2B accounts of a night-shift sector |
-| `olay.payers` | global | int | Incident | people a night fix costs morale (SprintSystem.payers); 0 locks the option |
+| `olay.payers` | global | int | Incident | people a fix outside the sprint costs morale (SprintSystem.payers, on the line the emergency hit); 0 locks the option |
 | `olay.service_up` | global | bool | Incident | no emergency is open, or the fix it was answered with is done |
+| `olay.shares` | global | int | Incident | how many times the post going round has been shared: a share of the audience |
+| `olay.variant` | global | int | Incident | which line-specific body a card reads (IncidentSystem.variant), for by_seam text |
+| `olay.version` | global | string | Incident | the version the open regression broke, v1.4 |
 
 ### `phase.`
 
@@ -368,10 +384,41 @@ slot of that type (§17.12).
 | `urun.bugs_unconfirmed` | global | int | Product | incoming, unvalidated reports |
 | `urun.capacity_state` | global | string | Product | normal | amber | over | unprovisioned |
 | `urun.capacity_tier` | global | int | Product | provisioned infra units |
+| `urun.colors_again` | global | bool | Product | the colours were changed by hand once, so the account asks for its colours on the pages added since |
+| `urun.colors_central` | global | int | Product | the points of pulling every colour into one file; one more for each page added since the first change |
+| `urun.colors_cost` | global | int | Product | what a freelancer asks for the colours: the by hand points at the outside price, in dollars |
+| `urun.colors_first` | global | int | Product | 1 the first time an account asks for its colours, 0 the second time |
+| `urun.colors_hand` | global | int | Product | the points of changing the colours by hand; one more for each page added since the first change |
 | `urun.crunch_finishes` | global | bool | Product | the crunch's hours finish the decision card this sprint; false when none waits |
+| `urun.cut_test_finishes` | global | bool | Product | the decision card is in testing and cutting its test in half finishes it this sprint |
+| `urun.decision_by_founder` | global | bool | Product | the founder speaks the pending paper (works the card's phase), not an employee |
 | `urun.decision_card` | global | string | Product | name of the card a sprint decision waits on; empty when none |
+| `urun.decision_card_done` | global | int | Product | points already worked on the decision card; 0 when none waits |
 | `urun.decision_card_effort` | global | int | Product | the decision card's effort in points; 0 when none waits |
 | `urun.decision_card_late` | global | bool | Product | at the team's pace the decision card will not finish this sprint; false when none waits |
+| `urun.decision_contract_cost` | global | int | Product | what an outside developer costs for the trim share of the decision card, in dollars |
+| `urun.decision_kind` | global | string | Product | feature | request | fix | research: what the decision card is; empty when none waits |
+| `urun.decision_license_year` | global | string | Product | that licence as money text, for a paper's body |
+| `urun.decision_line` | global | string | Product | id of the line the decision card is on, a shared line by its base id; empty when none waits |
+| `urun.decision_line_accounts` | global | int | Product | B2B accounts that use the decision card's line |
+| `urun.decision_line_bugs` | global | int | Product | open bugs on the decision card's line |
+| `urun.decision_line_first_version` | global | bool | Product | the decision card's line was opened by the first version (the sprints before v1.0 and v1.0 itself) |
+| `urun.decision_line_name` | global | string | Product | the name of that line, for a paper's text; empty when none waits |
+| `urun.decision_phase` | global | int | Product | the phase the decision card is in: 0 design, 1 development, 2 testing, 3 done; 0 when none waits |
+| `urun.decision_phone_late` | global | bool | Product | the phone layout's points added, the decision card would not finish this sprint |
+| `urun.decision_promised` | global | bool | Product | an account was promised the decision card's step and the promise is still open |
+| `urun.decision_renewal_saved` | global | bool | Product | the account's renewal falls after this sprint and before the next, and standing the card first ships it this sprint |
+| `urun.decision_request_votes` | global | int | Product | B2C: the people who asked for the decision card's step; 0 until the consumer request data exists |
+| `urun.decision_root_bugs` | global | int | Product | open bugs the decision card, a fix card, closes; 0 for any other card |
+| `urun.decision_root_cause` | global | bool | Product | the decision card is a fix card with enough bugs on one line to share a root |
+| `urun.decision_second_account` | global | string | Product | the other account that asked for the decision card's step; empty when only one did (open requests carry one account per step) |
+| `urun.decision_step` | global | string | Product | id of the step the decision card takes its line to, a shared line's step by its base id; empty when none waits |
+| `urun.decision_test_half` | global | int | Product | half of the decision card's testing left, in points; the work a developer helping with the test does |
+| `urun.decision_test_untouched` | global | bool | Product | the decision card has reached testing and nobody has tested it yet |
+| `urun.decision_tier` | global | int | Product | the tier the decision card takes its line to; 0 when none waits |
+| `urun.decision_trim_finishes` | global | bool | Product | taking the trim share off the decision card finishes it this sprint |
+| `urun.design_late` | global | bool | Product | the decision card is still in design after this week's work and a developer waits on it |
+| `urun.durability_tier` | global | int | Product | the tier the Durability line has reached; 1 is autosave and nothing more |
 | `urun.enterprise_trust` | global | bool | Product | the enterprise provider or security_cert research: the bar a large account checks before it signs |
 | `urun.floor_experience` | global | string | Product | '' | warning | crossed |
 | `urun.floor_innovation` | global | string | Product | '' | warning | crossed |
@@ -381,7 +428,30 @@ slot of that type (§17.12).
 | `urun.lines_open` | global | int | Product | 0-9 feature lines opened |
 | `urun.market_type` | global | string | Product | b2b | b2c; empty until the product type is chosen |
 | `urun.open_bugs` | global | int | Product | open bugs across every line |
+| `urun.paid_plan_open` | global | bool | Product | the paid plan is open |
 | `urun.paid_plan_set` | global | bool | Product | the paid plan is open, or its card is in the running or the planned sprint |
+| `urun.paper_ask_silent` | global | int | Product | the audience that goes quiet when a request is not met: the people who asked, times the quiet ones behind each |
+| `urun.paper_contract` | global | int | Product | what an outside developer costs for one point of work, in dollars |
+| `urun.paper_coupon_loss` | global | int | Product | the audience that would have come in on a coupon, in people |
+| `urun.paper_first_screen_loss` | global | int | Product | the sign ups a sign up screen with three questions loses over its weeks, in people |
+| `urun.paper_license` | global | int | Product | what a ready made component's licence costs, in dollars, once |
+| `urun.paper_loss_mid` | global | int | Product | the audience a real annoyance costs, in people |
+| `urun.paper_loss_small` | global | int | Product | the audience a small annoyance costs, in people |
+| `urun.paper_phone_points` | global | int | Product | the work a phone layout adds to a card, in points |
+| `urun.paper_server_bill` | global | int | Product | this month's server bill, in dollars |
+| `urun.paper_signup_loss` | global | int | Product | the sign ups a week of a broken sign up code costs, in people |
+| `urun.paper_test_phones` | global | int | Product | what a few phones to test on cost, in dollars, once |
+| `urun.paper_tester_week` | global | int | Product | what a tester hired from outside for a week costs, in dollars |
+| `urun.promise_card` | global | string | Product | name of the card the latest promise event is about; a history row reads the latest event's |
+| `urun.promise_crunch_finishes` | global | bool | Product | employees work the promise card and the crunch's hours finish it this sprint |
+| `urun.promise_cut_finishes` | global | bool | Product | the promise card is in testing and cutting its test in half finishes it this sprint |
+| `urun.promise_extended` | global | bool | Product | one of those promises has already moved a sprint; a word moves once |
+| `urun.promise_open` | global | int | Product | promises the latest promise event is about that are still open |
+| `urun.responsive_shipped` | global | bool | Product | the Responsive Interface step is live |
+| `urun.security_bugs` | global | int | Product | open bugs on the Security and Access line |
+| `urun.security_fix_planned` | global | bool | Product | the Security and Access fix card is in the running sprint |
+| `urun.security_tier` | global | int | Product | the tier the Security and Access line has reached; 0 before it is built |
+| `urun.sprint_has_tester` | global | bool | Product | a tester works in the sprint's team (the Test job); the founder testing is not one |
 | `urun.sprint_last_week` | global | bool | Product | a running sprint is in its last week: week 2 of a two-week sprint, the only week of a one-week one |
 | `urun.sprint_number` | global | int | Product | the open sprint; 0 before the product type is chosen |
 | `urun.sprint_running` | global | bool | Product | a sprint is under way: not planning, not the release note |
@@ -395,6 +465,7 @@ slot of that type (§17.12).
 | `urun.version` | global | int | Product | shipped version number |
 | `urun.version_age` | global | int | Product | weeks since THIS VERSION shipped, not since the product was born |
 | `urun.weeks_since_launch` | global | int | Product | -1 when nothing has shipped |
+| `urun.weeks_to_month_end` | global | int | Product | ticks until the calendar month turns; 1 on the month's last tick |
 | `urun.worst_line_bugs` | global | int | Product | open bugs on the line with the most |
 
 ## c · Condition vocabulary
@@ -515,7 +586,7 @@ the catalogue already uses, and the gap each pays:
 | `frank_mentor` | 6 | 10 |
 | `funding_paperwork` | 6 | 3 |
 | `hr_departure` | 6 | 1 |
-| `incident` | 6 | 2 |
+| `incident` | 6 | 6 |
 | `investor_favor` | 6 | 2 |
 | `investor_pressure` | 6 | 1 |
 | `leak_story` | 6 | 2 |
@@ -524,6 +595,8 @@ the catalogue already uses, and the gap each pays:
 | `product_progress` | 6 | 1 |
 | `product_security` | 6 | 1 |
 | `product_support` | 6 | 1 |
+| `promise` | 6 | 1 |
+| `release_thanks` | 6 | 1 |
 | `rival_exit` | 6 | 1 |
 | `rival_funding` | 6 | 1 |
 | `rival_imitation` | 6 | 2 |
@@ -532,9 +605,13 @@ the catalogue already uses, and the gap each pays:
 | `sales_negotiation` | 6 | 1 |
 | `seed_round` | 6 | 4 |
 | `series_a_table` | 6 | 3 |
-| `sprint_capacity` | 6 | 3 |
-| `sprint_rewrite` | 6 | 4 |
-| `sprint_scope_creep` | 6 | 2 |
+| `sprint_design` | 6 | 8 |
+| `sprint_dev` | 6 | 10 |
+| `sprint_late` | 6 | 2 |
+| `sprint_pm` | 6 | 8 |
+| `sprint_solo` | 6 | 6 |
+| `sprint_test` | 6 | 9 |
+| `sprint_untested` | 6 | 3 |
 | `team_overload` | 6 | 2 |
 | `team_ritual` | 6 | 1 |
 | `team_security` | 6 | 1 |
@@ -542,6 +619,21 @@ the catalogue already uses, and the gap each pays:
 | `world_offer_b2c` | 8 | 3 |
 
 A family absent from `EvTuning.FAMILY_GAP_WEEKS` pays the default, 6 weeks.
+
+### `speaker_role` · `stage` · `pool_group` — the sprint paper
+
+A card listed in sprint.json `decision.cards` is a sprint paper, asked for at most once a sprint for one of the
+sprint's cards. `speaker_role` (`product_manager`, `designer`, `developer`, `tester`, `founder`) is the role of whoever speaks it: the engine binds the
+person who works the card at `stage` (`any`, `design`, `dev`, `test`; `any` is any phase) to the card's `employee` slot, or
+to its `founder` slot for the founder's own note, and a card nobody of that role works is not asked for.
+`speaker_role` may be a list of roles: the first person working the card with any of them speaks.
+A `product_manager` paper is spoken by the quarter's PM and is about a planned customer request card: its
+`customer` slot is the request's account. `pool_group` (`pm`, `designer`, `developer`, `tester`, `no_tester`, `solo`, `system`) counts the paper in the
+pool. A paper carries `latch: {cooldown_weeks: 52, max_fires: 3}` (the two stack); a card with no
+`speaker_role` is spoken by no one.
+A paper's `customer` slot may take `select: line_top | line_warehouse | line_newest | line_slow | request` (an account of
+the decision card's line, SprintCatalog.paper_account) and a second `employee` slot `select: sprint_dev` (a developer of
+the sprint's team); an option that fits one market only is a card of its own (`_b2c`), since a locked option is never hidden.
 
 ### The window, the immunity and the demo's reach
 
@@ -559,7 +651,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (33) — any card, inside the two rules below
+### Writer verbs (41) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -594,6 +686,14 @@ is what the player is shown and what lands.
 - `marketing_push`
 - `send_on_leave`
 - `work_hours`
+- `damage_product`
+- `line_harden`
+- `sprint_card_test`
+- `sprint_fix_first`
+- `sprint_card_trim`
+- `sprint_card_outlook`
+- `sprint_card_first`
+- `b2b_month_discount`
 
 Two rules narrow the list. A `sprint_card_*` verb belongs to a `tick: request` sprint
 decision and to no other card (§17.14, V3). A module verb spends a page the build may
@@ -602,7 +702,7 @@ not have opened: never in a demo card, and past the demo only in an option whose
 
 - `marketing_push` — needs `build.module_unlocked.marketing`
 
-### Reserved (19) — a `system` card only
+### Reserved (21) — a `system` card only
 
 Each moves the run itself — a phase, a table, an arc, an ending — so a story card
 reaching for one would be deciding the run instead of colouring it.
@@ -626,8 +726,10 @@ reaching for one would be deciding the run instead of colouring it.
 - `abort_arc`
 - `set_arc_var`
 - `incident`
+- `promise_extend`
+- `promise_break`
 
-### Not writable (14) — no working arm or no chip
+### Not writable (13) — no working arm or no chip
 
 The executor dispatches these, so they are not unknown names; they are names a card
 may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.
@@ -636,7 +738,6 @@ may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.
 - `set_timed_flag`
 - `assign_to`
 - `start_training`
-- `damage_product`
 - `ticker_push`
 - `notify`
 - `open_negotiation`

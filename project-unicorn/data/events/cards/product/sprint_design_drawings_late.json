@@ -1,0 +1,129 @@
+{
+  "id": "product.sprint_design_drawings_late",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_design",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "speaker_role": "designer",
+  "pool_group": "designer",
+  "stage": "design",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.design_late",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "stay_late",
+      "outcome_id": "stay_late",
+      "effects": [
+        {
+          "verb": "morale_crew",
+          "crew": "speaker",
+          "amount": -4
+        },
+        {
+          "verb": "sprint_card_progress",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "from_draft",
+      "outcome_id": "from_draft",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "carry",
+      "outcome_id": "carry",
+      "effects": [
+        {
+          "verb": "sprint_card_carry"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Çizimler yetişmedi",
+      "body": "{seam:urun.decision_card} çizimlerini bu hafta bitiremedim, geliştirme beni bekliyor. Taslakla başlarlarsa sonradan değişiklik çıkar.",
+      "options": {
+        "stay_late": "{employee} akşam kalsın",
+        "from_draft": "Taslakla başlasınlar",
+        "carry": "Kartı sonraki sprinte bırak"
+      },
+      "expire_note": "Cevap gelmedi, geliştirme taslakla başladı."
+    },
+    "en": {
+      "title": "The designs aren't ready",
+      "body": "I couldn't finish the designs for {seam:urun.decision_card} this week, and development is waiting on me. If they start from the draft, there will be changes later.",
+      "options": {
+        "stay_late": "Have {employee} stay late",
+        "from_draft": "Start from the draft",
+        "carry": "Leave the card for next sprint"
+      },
+      "expire_note": "No answer came, so development started from the draft."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_effort",
+        "amount": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

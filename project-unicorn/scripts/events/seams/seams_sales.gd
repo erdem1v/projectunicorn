@@ -72,6 +72,14 @@ static func install() -> void:
 			var c: Customer = CustomerRegistry.get_customer(id)
 			return c != null and c.assigned_to != "",
 		"Sales", "WRAPPER; a CS rep carries it, rather than the founder")
+	EvSeams.register("musteri.thanks_variant", E, TYPE_INT,
+		func(id: String) -> int: return int(SprintBridges.thanks_of(id).get("variant", 0)),
+		"Sales", "which body of the release thanks note the account's latest thanks reads, for by_seam text")
+	EvSeams.register("musteri.met_feature", E, TYPE_STRING,
+		func(id: String) -> String:
+			var step: String = String(SprintBridges.thanks_of(id).get("feature", ""))
+			return SprintCatalog.step_name_key(step) if step != "" else "",
+		"Sales", "the name KEY of the step the account's latest thanks is for; text reads it in the live language, a history row keeps the key")
 
 	# --- Book-wide ----------------------------------------------------------
 	# RECORDS, NOT ACCOUNTS, and the difference is load-bearing: the Traction gate asks

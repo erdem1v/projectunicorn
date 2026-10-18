@@ -1,0 +1,120 @@
+{
+  "id": "product.sprint_test_after_midnight",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_test",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "speaker_role": "tester",
+  "pool_group": "tester",
+  "stage": "test",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_line",
+        "op": "in",
+        "value": [
+          "line_erp_invoicing",
+          "line_erp_stock",
+          "line_erp_ledger",
+          "line_erp_cashflow",
+          "line_erp_intake",
+          "line_shared_durability"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "fix",
+      "outcome_id": "fix",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "known_bug",
+      "outcome_id": "known_bug",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Gece girilen kayıt önceki güne düşüyor",
+      "body": "Gece yarısından sonra girilen kayıtlar bir önceki güne yazılıyor. Geç saatte çalışanların gün toplamı tutmuyor.",
+      "options": {
+        "fix": "Çıkmadan düzelt",
+        "known_bug": "Bilinen hata olarak çık"
+      },
+      "expire_note": "Cevap gelmedi, kart hatayla çıktı."
+    },
+    "en": {
+      "title": "Late night entries land on the day before",
+      "body": "Anything entered after midnight is saved under the day before. Daily totals don't add up for anyone working late.",
+      "options": {
+        "fix": "Fix it before it ships",
+        "known_bug": "Ship it as a known bug"
+      },
+      "expire_note": "No answer came, so the card shipped with the bug."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

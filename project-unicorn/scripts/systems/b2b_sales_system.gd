@@ -71,7 +71,7 @@ static func _tick_customer(c: Customer) -> void:
 
 # --- Layer 1: visible satisfaction drifts toward a product-health target ---
 static func _tick_satisfaction(c: Customer) -> void:
-	var delta: int = _drift(c, satisfaction_target(c), GameState.day)
+	var delta: int = _drift(c, satisfaction_target(c), GameState.day, c.satisfaction)
 	if delta != 0:
 		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
@@ -80,17 +80,26 @@ static func _tick_satisfaction(c: Customer) -> void:
 ## ledger forgives first, then the drift walks toward the target as far as one tick lets it.
 static func satisfaction_next_tick(c: Customer, trust: float) -> int:
 	var day: int = GameState.day + 1
-	return c.satisfaction + _drift(c, _target_on(c, day, _forgiven_trust(trust)), day)
+	return c.satisfaction + _drift(c, _target_on(c, day, _forgiven_trust(trust)), day, c.satisfaction)
 
 
-## How far satisfaction moves toward `target` on tick `day`.
-static func _drift(c: Customer, target: int, day: int) -> int:
+## The satisfaction the player reads one tick after a promise to this account breaks (on_promise_resolved "broken"):
+## the drop lands at once, the trust ledger takes its hit, then the drift walks back toward the target.
+static func satisfaction_after_break(c: Customer) -> int:
+	var day: int = GameState.day + 1
+	var sat: int = clampi(c.satisfaction + B2BConstants.PROMISE_BROKEN_SAT, 0, 100)
+	var trust: float = B2BConstants.clamp_trust(c.trust_offset + B2BConstants.PROMISE_BROKEN_OFFSET)
+	return sat + _drift(c, _target_on(c, day, _forgiven_trust(trust)), day, sat)
+
+
+## How far satisfaction, standing at `sat`, moves toward `target` on tick `day`.
+static func _drift(c: Customer, target: int, day: int, sat: int) -> int:
 	var step: int = B2BConstants.SAT_DRIFT_STEP
 	# Onboarding window (first ONBOARDING_WEEKS after signing): first impressions
 	# swing harder — a bug-heavy product at signing bites more, a solid one wins faster.
 	if day < c.onboarding_until:
 		step = int(ceil(float(step) * B2BConstants.ONBOARDING_AMP))
-	var gap: int = target - c.satisfaction
+	var gap: int = target - sat
 	var down: int = step
 	# İLGİLENİLEN HESAP DAHA YAVAŞ AŞINIR, ve "ilgilenen" hesabın SAHİBİDİR (bkz.
 	# _account_owner): kurucunun kendi masasındaki hesap da aynı formülle korunur, özel kural yok.

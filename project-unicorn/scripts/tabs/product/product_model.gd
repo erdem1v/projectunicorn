@@ -57,6 +57,7 @@ extends RefCounted
 #                     başlık ve gövde mvp_line'dan), rnd_open (v1.0 notu: Ar-Ge açıldı), shipped: [card],
 #                     carried: [{name, kind, done (kesirli), total, to_sprint}], velocity: {done, total} (kesirli),
 #                     result: {kind: "expected"|"actual", text} or null, press: {outlet (anahtar), text} or {},
+#                     reviews: [{source, text}] (B2C güncellemesinin öne çıkan yorumları, gelene dek boş),
 #                     lead: person + {text, self}} or null}
 # person = {name, role_text, look ({} ise baş harfler)}
 # column = {sprint, kind: "current"|"proposed"|"empty", capacity: {...} or null, pm, flags: [...], cards: [card], approved}
@@ -343,6 +344,7 @@ static func _release(r: Dictionary, lead: Character) -> Dictionary:
 		"velocity": r.velocity,
 		"result": _result(r),
 		"press": {} if press.is_empty() else {"outlet": press.outlet, "text": SprintBridges.resolve(press)},
+		"reviews": SprintBridges.review_lines(r),
 		"lead": _person(lead).merged({"text": SprintCatalog.release_lead_sentence(r), "self": lead.category == "founder"}),
 	}
 

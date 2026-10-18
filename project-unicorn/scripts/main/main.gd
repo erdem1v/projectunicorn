@@ -711,8 +711,9 @@ func _run_b2b_shot(kind: String) -> void:
 ## included, in the reading pane's preview (its options drawn, not taken). A given slot binds that
 ## entity instead of running its selector (the shot seed has no seed lead, for one) and names the
 ## PNG; a given slot that cannot bind fails the shot. An id of --hr-shot's roster (char_emp_shot_<n>)
-## seeds that roster first. An emergency's card (product.incident_outage_*) stands in the company it needs, at 03:00 of
-## its night, with its sender and account given.
+## seeds that roster first. An emergency's card (INCIDENT_SHOTS) stands in the company it needs, at the hour its card
+## opens, with its sender and account given (the broken release's card in a B2B book, or in a B2C app with `market=b2c`);
+## the promise card stands in the second week of a sprint, its sender the person who works the promised card.
 func _run_event_shot(spec: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -727,8 +728,15 @@ func _run_event_shot(spec: String) -> void:
 			_shot_fail("[EventShot] '%s' is not <slot>=<entity id>" % pair)
 			return
 		given[pair.get_slice("=", 0)] = pair.get_slice("=", 1)
-	if event_id.begins_with("product.incident_outage_"):
-		given.merge(_seed_incident_world(event_id.ends_with("_b2b")), false)
+	if INCIDENT_SHOTS.has(event_id):
+		var emergency: Array = INCIDENT_SHOTS[event_id]
+		var b2b: bool = emergency[1] and given.get("market", "") != "b2c"
+		given.erase("market")
+		given.merge(_seed_incident_world(emergency[0], b2b), false)
+	elif event_id == "product.promise_due":
+		given.merge(_seed_promise_world(), false)
+	elif ["pm", "designer", "tester"].has(String(EvCatalog.card(event_id).get("pool_group", ""))):
+		given.merge(_seed_paper_world(event_id), false)
 	elif given.values().any(func(id: String) -> bool: return id.begins_with("char_emp_shot_")):   # LOC-DATA debug seed / id
 		_seed_hr_roster()
 	var ctx: Dictionary = EventGate.bind_scope(event_id, given)
@@ -741,11 +749,21 @@ func _run_event_shot(spec: String) -> void:
 	await _finish_shot("event_shot_%s" % spec.replace(":", "_"), 0.35)
 
 
-## The company an outage card is shot in, 03:00 on the night it began at 02:10. B2B: the theme seed's book with two more
-## night-shift accounts and the roster's crew (whose developer is on leave, so the mail comes from the server's own
-## alert). B2C: a note app with an audience and a paid plan, a developer and a designer. Returns the slots the card is
-## given: B2B its largest night-shift account, B2C its sender.
-func _seed_incident_world(b2b: bool) -> Dictionary:
+## The emergency cards --event-shot stands in a company: card id -> [kind, B2B].
+const INCIDENT_SHOTS := {
+	"product.incident_outage_b2b": ["outage", true], "product.incident_outage_b2c": ["outage", false],
+	"customer.incident_month_close": ["month_close", true], "product.incident_checkout": ["checkout", false],
+	"product.incident_regression": ["regression", true], "product.incident_review_storm": ["storm", false],
+}
+
+
+## The company an emergency card is shot in. B2B: the theme seed's book with two more night-shift accounts and the
+## roster's crew (whose developer is on leave, so the mail comes from the server's own alert). B2C: a note app with an
+## audience and a paid plan, a developer and a designer. The outage is at 03:00 of the night it began at 02:10; the
+## others find a full sprint running on the live product (so "Stop the sprint" names the card it pushes out) and the
+## bugs the emergency hit. Returns the slots the card is given: B2B its largest account (the outage's night-shift
+## one), B2C its sender.
+func _seed_incident_world(kind: String, b2b: bool) -> Dictionary:
 	var given := {}
 	if b2b:
 		_seed_theme_surface()
@@ -772,9 +790,142 @@ func _seed_incident_world(b2b: bool) -> Dictionary:
 			emp.status = HRConstants.STATUS_ACTIVE
 			CharacterRegistry.add(emp)
 		given["employee"] = "char_emp_shot_2"
+	if kind != "outage":
+		return _stage_emergency(kind, b2b, given)
 	GameState.current_hour = 3
 	TimeManager.sync_to_current_hour()
 	IncidentSystem.stage("outage", 130)
+	return given
+
+
+## A month that cannot close, failing payments, a broken release or a post going round on the live product: a full
+## sprint is running, the line the emergency hit holds its bugs, and its mail is stamped at its hour.
+func _stage_emergency(kind: String, b2b: bool, given: Dictionary) -> Dictionary:
+	ProductState.clear_line_bugs("line_erp_ledger")
+	SprintSystem.choose_type("erp" if b2b else "note_tool", "Fatura" if b2b else "Notly")   # LOC-DATA debug seed / id
+	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+		ProductState.set_line_tier(line_id, 1)
+	var chance: Dictionary = SprintCatalog.cfg("decision.sprint_chance")
+	for weeks in chance:
+		chance[weeks] = 0.0
+	(SprintCatalog.cfg("fix_effort") as Dictionary).points = [6, 8]   # a fix this big leaves the full sprint no room for it
+	for card in SprintCatalog.open_cards([]):
+		SprintSystem.add(card.id)
+		if not GameState.product.sprint.cards.has(card.id):
+			break
+	SprintSystem.start()
+	var line: String = "line_erp_stock" if b2b else "line_shared_security@note_tool"
+	var hour: int = 10
+	var began: int = 22 * 60 + 40
+	match kind:
+		"month_close":
+			line = "line_erp_invoicing"
+			hour = 23
+			ProductState.add_bugs(line, int(SprintCatalog.cfg("incident.month_close.line_bugs")))
+		"checkout":
+			line = SprintCatalog.PAID_PLAN
+			began = 40
+		"regression":
+			ProductState.add_bugs(line, 1)
+			GameState.product.releases.append({"number": 5, "sprint": 5, "day": GameState.day, "faulty": [line], "shipped": []})
+		"storm":
+			line = "line_shared_durability@note_tool"
+			hour = 14
+			began = 13 * 60 + 20
+			ProductState.add_bugs(line, int(SprintCatalog.cfg("incident.storm.line_bugs")))
+	if line != SprintCatalog.PAID_PLAN and ProductState.line_tier(line) == 0:
+		ProductState.set_line_tier(line, 1)   # a line nobody uses has no one to be hurt
+	GameState.current_hour = hour
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.stage(kind, began, line)
+	if b2b:
+		given["customer"] = SprintCatalog.line_impact(line).top_id
+	if kind == "regression" and b2b:
+		given["employee"] = "char_emp_shot_3"   # the roster's tester
+	if kind == "storm":
+		given.erase("employee")
+	return given
+
+
+## The company the promise card is shot in: a live ERP whose roster tests its one sprint card, in testing and a week
+## and a tenth of the testers' work from done, promised to Nordica for this sprint; the tick into the sprint's last
+## week asks for the card. Returns the slots the card is given: that account and, when an employee works the card,
+## the first of them as its sender.
+func _seed_promise_world() -> Dictionary:
+	ProductLines.reload()
+	SprintSystem.choose_type("erp", "Fatura")
+	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+		ProductState.set_line_tier(line_id, 1)
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_version", 1)
+	_seed_hr_roster()
+	_shot_customer("co_nordica", "Nordica", "logistics", "active", 2000, 20, 26, false)   # LOC-DATA debug seed / id
+	SalesSystem.reflect_mrr()
+	var step: String = "%s_k1" % SprintCatalog.capabilities("core")[3]
+	var card: Dictionary = SprintCatalog.candidates(SprintCatalog.area_of_line(ProductLines.step(step).line_id)).filter(
+		func(c: Dictionary) -> bool: return c.step == step)[0]
+	SprintSystem.add(card.id)
+	var week: float = 0.0
+	for member in SprintSystem.team():
+		if not member.ahead:
+			week += member.points * (1.0 if "test" in member.fits else float(SprintCatalog.cfg("no_role_speed")))
+	var stored: Dictionary = GameState.product.cards[card.id]
+	stored.effort = 100
+	stored.progress = [float(stored.shares[0]) * 100.0, float(stored.shares[1]) * 100.0,
+		float(stored.shares[2]) * 100.0 - 2.1 * week]
+	PromiseRegistry.create("co_nordica", step, 1).due_sprint = SprintSystem.sprint_number()
+	SprintSystem.start()
+	GameState.advance_day()
+	SprintSystem.daily_tick()
+	var given := {"customer": "co_nordica"}
+	var crew: Array = SprintSystem.promise_crew()
+	if not crew.is_empty():
+		given["employee"] = crew[0]
+	return given
+
+
+## The company a pm, designer or tester paper is shot in: a live ERP (a B2B paper) or note app with the HR shot roster's
+## crew and a one-card sprint whose card, in the phase the paper's speaker works, waits on the paper. Returns the slots
+## the paper is given: its speaker and, for a pm paper, the account that asked for the card.
+func _seed_paper_world(event_id: String) -> Dictionary:
+	var paper: Dictionary = EvCatalog.card(event_id)
+	var b2b: bool = String(paper.get("guards", {}).get("market", "b2b")) == "b2b"
+	ProductLines.reload()
+	SprintSystem.choose_type("erp" if b2b else "note_tool", "Fatura" if b2b else "Notly")   # LOC-DATA debug seed / id
+	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+		ProductState.set_line_tier(line_id, 1)
+	GameState.day = 14
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_version", 1)
+	GameState.set_flag("mvp_launch_day", 6)
+	_seed_hr_roster()
+	CharacterRegistry.set_status("char_emp_shot_2", HRConstants.STATUS_ACTIVE)   # the developer, back from leave
+	if b2b:
+		_shot_customer("co_marmara", "Marmara Lojistik", "logistics", "active", 1900, 60, 20, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_ege_metal", "Ege Metal", "manufacturing", "active", 1500, 40, 18, false)   # LOC-DATA debug seed / id
+		SalesSystem.reflect_mrr()
+	else:
+		SalesSystem.add_b2c_audience(12400)
+		SalesSystem.open_b2c_paid_tier(8)
+	var line: String = SprintCatalog.capabilities("core")[3]
+	var given := {}
+	var id: String = "feat:%s_k1" % line
+	if paper.pool_group == "pm":
+		id = "req:co_marmara.1"
+		given["customer"] = "co_marmara"
+		GameState.product.requests.append({"id": "co_marmara.1", "customer_id": "co_marmara", "step": line + "_k1", "line": line,
+			"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 22800, "card_id": id, "day": GameState.day})
+	SprintSystem.add(id)
+	SprintSystem.start()
+	var card: Dictionary = GameState.product.cards[id]
+	var phase: int = {"design": 0, "dev": 1, "test": 2}.get(String(paper.stage), 1)
+	card.effort = 20
+	card.progress = [4.0 if phase > 0 else 0.0, 12.0 if phase > 1 else 0.0, 0.0]
+	var speaker: String = CharacterRegistry.get_employees().filter(
+		func(c: Character) -> bool: return c.role == paper.speaker_role)[0].id
+	card.decision = true
+	GameState.product.decision = {"card_id": id, "event_id": event_id, "speaker": speaker}
+	given["employee"] = speaker
 	return given
 
 
@@ -782,7 +933,8 @@ func _seed_incident_world(b2b: bool) -> Dictionary:
 ## states, through the real gate (main's handler holds the clock and opens the inbox on the card):
 ##   offer · queue · customer (an option armed) · locked · history · paper · paper_open ·
 ##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
-##   frank_moment · rnd_note (week 14's note) · rnd_note_demand (the same note with a bug open on an ERP
+##   frank_moment · thanks (two release thank-you notes, a kept word and a met request, the newest open) ·
+##   rnd_note (week 14's note) · rnd_note_demand (the same note with a bug open on an ERP
 ##   line, so its first line names that line) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
 ##   weekly_sales · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
@@ -823,6 +975,8 @@ func _run_inbox_shot(state: String) -> void:
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 		ProductState.add_bugs(SprintCatalog.capabilities("integrations")[0], 1)
 		RnDSystem._tick_note()
+	if state == "thanks":
+		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 	await _mount_shot_shell()
 	_wire_modal_signals()
 	var selina := "char_emp_shot_3"
@@ -922,6 +1076,16 @@ func _run_inbox_shot(state: String) -> void:
 		"departed":
 			_shot_answered("team.resignation", {"employee": selina}, "acknowledge", 14)
 			INBOX.show("h:0")
+		"thanks":
+			# A release that kept Ege Sigorta's word and met Nordica's request: two thank-you notes, through the real bridge.
+			var invoicing := "line_erp_invoicing_k2"
+			var ledger := "line_erp_ledger_k2"
+			PromiseRegistry.create("co_ege", invoicing, 4).status = "kept"
+			GameState.product.requests.append({"id": "co_nordica.1", "customer_id": "co_nordica", "step": ledger, "status": "met"})
+			var release := {"number": 5, "day": GameState.day, "shipped": [{"step": invoicing}, {"step": ledger}]}
+			GameState.product.releases.append(release)
+			SprintBridges.thank(release)
+			INBOX.show("h:%d" % (EventGate.history().size() - 1))
 		"frank_moment":
 			_shot_card("customer.frank_intro", {}, 8)
 		"summary":
@@ -3266,12 +3430,15 @@ func _run_product_shot(id: String) -> void:
 			picker._pick_type("note_tool")
 			picker._name = "Notly"   # LOC-DATA debug seed / name
 			picker._save_draft()
-		if id == "live:decision_paper":
+		if id.begins_with("live:decision_paper"):
 			await get_tree().process_frame
 			for go: Button in _shell.find_children("*", "Button", true, false):
 				if go.text == tr("PRODUCT_GO_DECISION"):
 					go.pressed.emit()
 					break
+			if id != "live:decision_paper":   # a real paper: its answer is open, so its options and their chips are in the frame
+				await get_tree().create_timer(0.4).timeout
+				_press_button_labelled(_shell, tr("MAIL_RESPOND"))
 		if id == "live:solo15":
 			await get_tree().process_frame
 			(_shell.find_children("*", "SprintCard", true, false).filter(func(card: SprintCard) -> bool:
@@ -3343,7 +3510,7 @@ func _run_product_shot(id: String) -> void:
 ## only its own daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's plan and
 ## the first open card in the next column (the product and design roles go ahead on it), week1 the same with the
 ## 1-week length picked before the lead plans, active (that card too) and decision_paper in its second week with
-## a sprint paper on the desk (drawn at rate 1), gate on the MVP gate, rnd
+## a sprint paper on the desk (drawn at chance 1: the developer fixture paper, spoken by the person on the card), gate on the MVP gate, rnd
 ## publishes it, plans the next sprint and puts the founder on the Data Model research, b2c_mvp on the CANLI
 ## v1.0 release note it publishes, delegate on Sprint 2, started by the PM once Sprint 1's note is left (shipped
 ## at the gate) with planning delegated. b2c_live publishes as b2c_mvp and plays four weeks with the audience
@@ -3354,6 +3521,11 @@ func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
 		return
 	var b2b: bool = scenario == "b2b_requests"
+	var paper: String = ""   # decision_paper:<card id> asks for that real paper instead of the developer fixture
+	if scenario.begins_with("decision_paper:"):
+		paper = scenario.get_slice(":", 1)
+		scenario = "decision_paper"
+	var alone: bool = paper.begins_with("product.sprint_solo")
 	SprintSystem.choose_type("erp" if b2b else "note_tool", "Fatura" if b2b else "Notly")
 	if scenario.begins_with("solo"):
 		WorkHoursSystem.set_company_hours(12 if scenario == "solo12_active" else 15)
@@ -3362,8 +3534,12 @@ func _seed_product_live(scenario: String) -> void:
 		if scenario == "solo12_active":
 			SprintSystem.start()
 		return
-	if scenario not in ["gate", "rnd"]:
+	if scenario not in ["gate", "rnd"] and not alone:
 		_seed_hr_roster()
+	if scenario == "decision_paper" and not alone:
+		CharacterRegistry.set_status("char_emp_shot_2", HRConstants.STATUS_ACTIVE)   # the developer, whose paper it is
+	if paper.begins_with("product.sprint_untested"):
+		CharacterRegistry.remove("char_emp_shot_3")   # no tester: the developer tests
 	var day := func() -> void:
 		GameState.advance_day()
 		SprintSystem.daily_tick()
@@ -3384,8 +3560,26 @@ func _seed_product_live(scenario: String) -> void:
 	if scenario in ["plan", "week1"]:
 		return
 	if scenario in ["active", "decision_paper"]:
-		# The week's tick draws the paper at once; the late card takes it.
-		(SprintCatalog.cfg("decision") as Dictionary).rate = 1.0
+		# The week's tick draws the paper at once; decision_paper's is the developer's, about the card in its
+		# development phase.
+		var chance: Dictionary = SprintCatalog.cfg("decision.sprint_chance")
+		for weeks in chance:
+			chance[weeks] = 1.0
+		if scenario == "decision_paper":
+			MailClock.instant = true   # the tick is driven here, no hour delivers the paper
+			if paper == "":
+				EvTuning.SHIPPED_SCOPES.append("fixture")
+			(SprintCatalog.cfg("decision") as Dictionary).cards = [paper if paper != "" else "fixture.paper_dev"]
+	if paper != "":
+		# One card, and its work so big that the team is still in the phase the paper speaks of after the first week.
+		var kept: Array = GameState.product.sprint.cards.duplicate()
+		for id in kept.slice(1):
+			SprintSystem.remove(id)
+		var tuned: Dictionary = GameState.product.cards[kept[0]]
+		var work: Array = [8, 1.6, 0.0, 0.0] if alone else [40, 8.0, 24.0, 0.0] if paper.begins_with("product.sprint_untested") \
+			else [20, 4.0, 0.0, 0.0]
+		tuned.effort = work[0]
+		tuned.progress = work.slice(1)
 	SprintSystem.start()
 	day.call()
 	if scenario in ["active", "decision_paper"]:

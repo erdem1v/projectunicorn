@@ -1,0 +1,120 @@
+{
+  "id": "product.sprint_design_first_screen",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_design",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c"
+  },
+  "speaker_role": "designer",
+  "pool_group": "designer",
+  "stage": "design",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_step",
+        "op": "in",
+        "value": [
+          "line_shared_security_k1"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "straight_in",
+      "outcome_id": "straight_in",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "three_questions",
+      "outcome_id": "three_questions",
+      "effects": [
+        {
+          "verb": "audience_delta",
+          "amount_seam": "urun.paper_first_screen_loss",
+          "amount_mult": -1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kayıt ekranının iki hâli var",
+      "body": "Kayıt ekranının iki hâlini çizdim: biri önce üç soru soruyor, öteki hemen içeri alıyor. Hemen içeri alan daha çok kişiyi tutar ama arkasındaki ekranların da değişmesi gerekir.",
+      "options": {
+        "straight_in": "Hemen içeri alsın",
+        "three_questions": "Üç soruyla çıksın"
+      },
+      "expire_note": "Cevap gelmedi, kayıt ekranı üç soruyla çıktı."
+    },
+    "en": {
+      "title": "Two versions of the sign up screen",
+      "body": "I designed two versions of the sign up screen: one asks three questions first, the other lets people straight in. Letting them in keeps more people, but the screens behind it have to change too.",
+      "options": {
+        "straight_in": "Let them straight in",
+        "three_questions": "Go with the three questions"
+      },
+      "expire_note": "No answer came, so sign up went out with the three questions."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "audience_delta",
+        "amount_seam": "urun.paper_first_screen_loss",
+        "amount_mult": -1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

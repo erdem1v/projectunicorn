@@ -1,0 +1,66 @@
+{
+  "id": "fixture.paper_crunch",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "family": "fixture_paper",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by the sprint engine, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "latch": {"cooldown_weeks": 0},
+  "condition": {
+    "all": [
+      {"seam": "urun.sprint_running", "op": "==", "value": true},
+      {"seam": "urun.decision_card_late", "op": "==", "value": true}
+    ]
+  },
+  "options": [
+    {
+      "id": "carry",
+      "outcome_id": "carry",
+      "effects": [
+        {"verb": "sprint_card_carry"}
+      ]
+    },
+    {
+      "id": "crunch",
+      "outcome_id": "crunch",
+      "effects": [
+        {"verb": "sprint_hours", "mult": 1.25}
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Sprint yetişmeyecek",
+      "body": "{seam:urun.decision_card} bu hızla sprint sonuna yetişmeyecek.",
+      "options": {
+        "carry": "Sonraki sprinte devret",
+        "crunch": "Fazla mesai yap"
+      },
+      "expire_note": "Karar verilmedi, kart sonraki sprinte devretti."
+    },
+    "en": {
+      "title": "The sprint will not make it",
+      "body": "At this pace {seam:urun.decision_card} will not be done by the end of the sprint.",
+      "options": {
+        "carry": "Carry it to the next sprint",
+        "crunch": "Work overtime"
+      },
+      "expire_note": "Nobody decided, so the card carried over to the next sprint."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {"penalties": [{"verb": "sprint_card_carry"}]},
+  "expire_note": "expire_note",
+  "_note": "A sprint paper no one speaks, for a card that is behind: the cases that watch a pending decision hold a card still, and the overtime's reach, use it."
+}

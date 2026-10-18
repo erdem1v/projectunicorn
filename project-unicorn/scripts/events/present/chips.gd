@@ -21,6 +21,8 @@ const SILENT_VERBS := [
 	"set_flag", "set_game_flag", "stamp_day", "schedule_event", "cancel_scheduled",
 	"start_arc", "advance_arc", "end_arc", "abort_arc", "set_arc_var",
 	"mentor_advisory", "unlock_content", "spend_budget",
+	# The chip names the card it bumps; a sprint with room for the fix has nothing to say.
+	"sprint_fix_first", "sprint_card_first",
 ]
 
 ## Verbs whose part is a fixed sentence: [CSV key, polarity].
@@ -34,6 +36,7 @@ const FIXED_CHIPS := {
 	"add_prospect": ["EFFECT_NEW_PROSPECT", "gain"],
 	"open_paid_tier": ["EFFECT_PAID_TIER", "gain"],
 	"promise_create": ["EFFECT_PROMISE_CREATE", "cost"],
+	"promise_extend": ["EFFECT_PROMISE_MOVED", "neutral"],
 	"b2b_retain_delay": ["EFFECT_RETAIN_DELAY", "neutral"],
 	"b2b_retain_ignore": ["EFFECT_RETAIN_IGNORE", "neutral"],
 	"b2b_expand_decline": ["EFFECT_NO_CHANGE", "neutral"],
@@ -84,15 +87,64 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			return [_figure("EFFECT_NIGHT_CREW", _num(d), _signed(d), {"names": _name_list(crew)})]
 		"trust_delta": return _trust_parts(item if is_delta else EvEffects.trust_plan(item, ctx))
 		"incident": return _incident_parts(item if is_delta else IncidentSystem.plan(String(item.get("act", ""))))
+		"promise_break": return _break_parts(item if is_delta else EvEffects.break_plan())
+		"sprint_fix_first":
+			var bumped: Dictionary = item.get("bumps", {}) if is_delta \
+				else SprintSystem.fix_first_bumps(EvEffects.line_of(item), int(item.get("bugs", 0)))
+			var parts: Array = []
+			# A paper's fix names itself too: the player asked for it first.
+			if bool(item.get("front", false)) and _line_name(item) != "":
+				parts.append(_part(_t("EFFECT_FIX_FRONT").format({"card": SprintCatalog.card_name(
+					{"kind": "fix", "line": EvEffects.line_of(item)})}), "", "gain"))
+			if not bumped.is_empty():
+				parts.append(_part(_t("EFFECT_SPRINT_BUMP").format({"card": SprintCatalog.card_name(bumped)}), "", "cost"))
+			return parts
+		# The card's own work: its name and the points it gains (a cost) or sheds. Work already done that is thrown
+		# away reads as what it is, not as points off the card.
 		"sprint_card_effort":
 			var effort: int = d if is_delta else SprintSystem.effort_change(d)
-			return [_figure("EFFECT_SPRINT_EFFORT", _num(effort), _signed(-effort))]
-		"sprint_card_progress": return [_figure("EFFECT_SPRINT_PROGRESS", _num(d), _signed(d))]
+			return [_card_points(item, effort, _signed(-effort))]
+		"sprint_card_progress":
+			if d < 0:
+				return [_part(_t(Fmt.count_key("EFFECT_WORK_LOST", -d)).format({"n": -d}), "", "danger")]
+			return [_card_points(item, -d, _signed(d))]
+		# The option's lock says the card ships this sprint: the promise is kept. The price is the test cut in half, or
+		# for the promise's overtime (`promise`) the crew's morale, its own effect; the chip names no hours. A paper's
+		# test cut (`card` DECISION) keeps no promise: the card is the pending decision's.
+		"sprint_card_test":
+			if String(item.get("card", "")) == EvEffects.DECISION:
+				return [_part(_t("EFFECT_TEST_CUT").format({"card": _card_name(item)}), "", "cost")]
+			return [_part(_t("EFFECT_PROMISE_KEPT"), "", "gain"),
+				_part(_t("EFFECT_TEST_CUT").format({"card": SprintSystem.promise_name()}), "", "cost")]
+		# The card gives work up (points off it, work left for the next sprint) or ships with a bug.
+		"sprint_card_trim": return _trim_parts(item if is_delta else EvEffects.trim_plan(item))
+		# No effect of its own: whether the card finishes the sprint once the option's other effects have landed.
+		"sprint_card_outlook":
+			var finishes: bool = bool(item.get("finishes", false)) if is_delta \
+				else SprintSystem.finishes_with(SprintSystem.decision_card().get("id", ""), d)
+			return [_part(_t("EFFECT_CARD_ON_TIME" if finishes else "EFFECT_CARD_LATE").format({"card": _card_name(item)}),
+				"", "neutral")]
+		# The card stands first in the sprint: the card it bumps is the only word.
+		"sprint_card_first":
+			var shoved: Dictionary = item.get("bumps", {}) if is_delta else SprintSystem.decision_first_bumps()
+			return [] if shoved.is_empty() \
+				else [_part(_t("EFFECT_SPRINT_BUMP").format({"card": SprintCatalog.card_name(shoved)}), "", "cost")]
 		"sprint_hours":
+			if bool(item.get("promise", false)):
+				return [_part(_t("EFFECT_PROMISE_KEPT"), "", "gain")]
 			var mult: float = float(item.get("mult", 1.0))
 			var hours: float = float(item.get("hours", mult)) if is_delta else SprintSystem.hours_after(mult)
-			return [_part(_t("EFFECT_SPRINT_HOURS").format({"v": Fmt.number(hours, 2)}), "",
-				_signed(int(signf(mult - 1.0))))]
+			var alone: bool = bool(item.get("solo", false)) if is_delta else SprintSystem.payers("").is_empty()
+			return [_part(_t("EFFECT_SPRINT_HOURS_SOLO" if alone else "EFFECT_SPRINT_HOURS").format(
+				{"v": Fmt.number(hours, 2)}), "", _signed(int(signf(mult - 1.0))))]
+		# The code is rewritten: no bug lands on the line for a while. The line is named the way the row recorded it.
+		"line_harden":
+			var weeks: int = int(item.get("weeks", SprintCatalog.cfg("paper.harden_weeks")))
+			return [_part(_t("EFFECT_LINE_HARDEN").format({"line": _line_name(item), "weeks": weeks}), "", "gain")]
+		"damage_product":
+			var bugs: int = int(item.get("bugs", 1))
+			return [_part(_t(Fmt.count_key("EFFECT_NEW_BUGS", bugs)).format(
+				{"line": _line_name(item), "n": bugs}), "", "cost")]
 		"change_morale":
 			var who: String = _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_MORALE"))
 			return [_figure("EFFECT_AXIS", _num(d), _signed(d), {"axis": who})]
@@ -158,6 +210,11 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 				var rc: Customer = CustomerRegistry.get_customer(EvEffects.entity_of(item, ctx, EvScope.TYPE_CUSTOMER))
 				cut = -int(round(float(rc.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT)) if rc != null else 0
 			return [_figure("EFFECT_RETAIN_DISCOUNT", _money(cut), "cost")]
+		# A month's discount: the account and the share it keeps (EvEffects.month_discount_plan), money out once.
+		"b2b_month_discount":
+			var gift: Dictionary = item if is_delta else EvEffects.month_discount_plan(item, ctx)
+			return [_part(_t("EFFECT_ONE_MONTH_DISCOUNT").format({"customer": gift.get("name", ""),
+				"pct": int(gift.get("pct", 0)), "v": _money(int(gift.get("amount", 0)))}), "", "cost")]
 		# Seats and rate as B2BSalesSystem.expand computes them (the account's own seat price, the
 		# constant only as fallback, Satış §5.4); a history row carries what landed.
 		"b2b_expand":
@@ -240,7 +297,13 @@ static func _trust_parts(plan: Dictionary) -> Array:
 		parts.append(_trust_part("all", accounts.size(), delta, top))
 	var per_sprint: int = int(plan.get("per_sprint", 0))
 	if per_sprint != 0:
-		parts.append(_part(_t("EFFECT_TRUST_PER_SPRINT").format({"v": _num(per_sprint)}), "", _signed(per_sprint)))
+		var step: String = String((plan.get("until", {}) as Dictionary).get("step_live", ""))
+		var standing: String = _t("EFFECT_TRUST_PER_SPRINT")
+		var words: Dictionary = {"v": _num(per_sprint)}
+		if not ProductLines.step(step).is_empty():
+			standing = _t("EFFECT_TRUST_UNTIL_SHIPS")
+			words["card"] = SprintCatalog.step_name(step)
+		parts.append(_part(standing.format(words), "", _signed(per_sprint)))
 	return parts
 
 
@@ -252,8 +315,38 @@ static func _trust_part(group: String, n: int, delta: int, top: Dictionary) -> D
 		"from": int(top.get("from", 0)), "to": int(top.get("to", 0))}), "", _signed(delta))
 
 
-## An emergency's answer (IncidentSystem.plan): what is paid, what the accounts keep, when the service is back and what
-## the audience loses. An effect that carries no figures gives no parts.
+## A broken word (EvEffects.break_plan): the largest account's satisfaction now and a tick on, the brand it costs and
+## the weeks that account cannot be promised anything. An effect that carries no figures reads the constants.
+static func _break_parts(plan: Dictionary) -> Array:
+	var parts: Array = []
+	var accounts: Array = plan.get("accounts", [])
+	if not accounts.is_empty():
+		var top: Dictionary = accounts[0]
+		parts.append(_trust_part("all", accounts.size(), int(top.to) - int(top.from), top))
+	parts.append(_figure("EFFECT_BRAND", _num(int(plan.get("brand", B2BConstants.PROMISE_BROKEN_BRAND))), "cost"))
+	parts.append(_part(_t("EFFECT_PROMISE_RELOCK").format({"n": B2BConstants.PROMISE_RELOCK_WEEKS}), "", "cost"))
+	return parts
+
+
+## What a card gives up (EvEffects.trim_plan): the points off it, the work it leaves for the next sprint and the bugs it ships
+## with. A row that carries no figures gives no parts.
+static func _trim_parts(plan: Dictionary) -> Array:
+	var parts: Array = []
+	var cut: int = int(plan.get("cut", 0))
+	if cut > 0 or bool(plan.get("share", false)):
+		parts.append(_card_points(plan, -cut, "gain"))
+	var work: int = int(plan.get("work", 0))
+	if work > 0:
+		parts.append(_part(_t(Fmt.count_key("EFFECT_NEXT_SPRINT_WORK", work)).format({"n": work}), "", "cost"))
+	var bugs: int = int(plan.get("bugs", 0))
+	if bugs > 0:
+		parts.append(_part(_t(Fmt.count_key("EFFECT_SHIP_BUGS", bugs)).format({"line": _line_name(plan), "n": bugs}),
+			"", "cost"))
+	return parts
+
+
+## An emergency's answer (IncidentSystem.plan): what is paid, what the accounts keep, when the service is back or the
+## fix lands, and what the audience loses. An effect that carries no figures gives no parts.
 static func _incident_parts(plan: Dictionary) -> Array:
 	var parts: Array = []
 	if plan.has("credit"):
@@ -265,12 +358,20 @@ static func _incident_parts(plan: Dictionary) -> Array:
 		parts.append(_figure("EFFECT_FREE_MONTH", _money(-int(free.amount)), "cost", {"n": free.n, "paying": free.paying}))
 	for row in plan.get("trust", []):
 		parts.append(_trust_part(String(row.group), int(row.n), int(row.delta), row))
+	if int(plan.get("per_sprint", 0)) != 0:
+		parts.append(_part(_t("EFFECT_TRUST_PER_SPRINT").format({"v": _num(int(plan.per_sprint))}), "",
+			_signed(int(plan.per_sprint))))
 	if plan.has("back"):
-		var key: String = "EFFECT_SERVICE_BACK" if plan.market == "b2b" else "EFFECT_APP_BACK"
+		var key: String = "EFFECT_FIXED_TOMORROW" if bool(plan.tomorrow) else "EFFECT_FIXED_AROUND"
+		if plan.kind == "outage":
+			key = "EFFECT_SERVICE_BACK" if plan.market == "b2b" else "EFFECT_APP_BACK"
 		parts.append(_part(_t(key).format({"clock": MailClock.clock_text(int(plan.back))}), "", "neutral"))
 	var audience: int = int(plan.get("audience", 0))
 	if audience != 0:
 		parts.append(_figure("EFFECT_AUDIENCE", _num(audience), _signed(audience)))
+	if plan.has("drain"):
+		parts.append(_part(_t("EFFECT_AUDIENCE_WEEKLY").format({"v": Fmt.signed_percent(-roundi(float(plan.drain) * 100.0))}),
+			"", "cost"))
 	return parts
 
 
@@ -302,6 +403,24 @@ static func _first_name(id: String, ctx: Dictionary, names: Dictionary, fallback
 		var c: Character = CharacterRegistry.get_character(id)
 		full = c.character_name if c != null else ""
 	return full.split(" ", false)[0] if full != "" else fallback
+
+
+## "Batch Invoicing +2 points": a card and the points it gains or sheds.
+static func _card_points(item: Dictionary, points: int, polarity: String) -> Dictionary:
+	return _part(_t(Fmt.count_key("EFFECT_CARD_POINTS", absi(points))).format(
+		{"card": _card_name(item), "v": _num(points)}), "", polarity)
+
+
+## The card a sprint effect lands on: the identity the row kept (`of`), else the pending decision's card.
+static func _card_name(item: Dictionary) -> String:
+	var card: Dictionary = item.get("of", SprintSystem.decision_card())
+	return "" if card.is_empty() else SprintCatalog.card_name(card)
+
+
+## The line an effect names (`line`, DECISION for the pending decision's), "" when it names none.
+static func _line_name(item: Dictionary) -> String:
+	var line: String = EvEffects.line_of(item)
+	return "" if ProductLines.line(line).is_empty() else SprintCatalog.cap_name(line)
 
 
 static func _num(value: int) -> String:

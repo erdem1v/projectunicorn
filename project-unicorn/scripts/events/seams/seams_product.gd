@@ -7,6 +7,8 @@ extends RefCounted
 
 static func install() -> void:
 	_install_product()
+	_install_papers()
+	_install_paper_asks()
 	_install_rnd()
 
 
@@ -47,7 +49,7 @@ static func _install_product() -> void:
 		func() -> String: return _decision_card(),
 		"Product", "name of the card a sprint decision waits on; empty when none")
 	EvSeams.register("urun.decision_card_late", G, TYPE_BOOL,
-		func() -> bool: return SprintSystem.decision_card_late(),
+		func() -> bool: return SprintSystem.card_late(SprintSystem.decision_card().get("id", "")),
 		"Product", "at the team's pace the decision card will not finish this sprint; false when none waits")
 	EvSeams.register("urun.decision_card_effort", G, TYPE_INT,
 		func() -> int:
@@ -58,8 +60,25 @@ static func _install_product() -> void:
 		func() -> bool: return SprintSystem.sprint_card_count() == 1,
 		"Product", "the open sprint holds one card; carried over, it leaves the sprint nothing to work on")
 	EvSeams.register("urun.crunch_finishes", G, TYPE_BOOL,
-		func() -> bool: return SprintSystem.crunch_finishes(),
+		func() -> bool: return SprintSystem.crunch_finishes(SprintSystem.decision_card().get("id", "")),
 		"Product", "the crunch's hours finish the decision card this sprint; false when none waits")
+	EvSeams.register("urun.promise_card", G, TYPE_STRING,
+		func() -> String: return SprintSystem.promise_name(),
+		"Product", "name of the card the latest promise event is about; a history row reads the latest event's")
+	EvSeams.register("urun.promise_open", G, TYPE_INT,
+		func() -> int: return SprintSystem.event_promises().size(),
+		"Product", "promises the latest promise event is about that are still open")
+	EvSeams.register("urun.promise_extended", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.event_promises().any(func(word: Promise) -> bool: return word.extended),
+		"Product", "one of those promises has already moved a sprint; a word moves once")
+	EvSeams.register("urun.promise_cut_finishes", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.cut_test_finishes(SprintSystem.promise_event().get("card", "")),
+		"Product", "the promise card is in testing and cutting its test in half finishes it this sprint")
+	EvSeams.register("urun.promise_crunch_finishes", G, TYPE_BOOL,
+		func() -> bool:
+			return not SprintSystem.promise_crew().is_empty() \
+				and SprintSystem.crunch_finishes(SprintSystem.promise_event().get("card", "")),
+		"Product", "employees work the promise card and the crunch's hours finish it this sprint")
 	EvSeams.register("urun.paid_plan_set", G, TYPE_BOOL,
 		func() -> bool:
 			var p: Dictionary = GameState.product
@@ -119,6 +138,210 @@ static func _install_product() -> void:
 	EvSeams.register("urun.tech_debt", G, TYPE_BOOL,
 		func() -> bool: return bool(GameState.get_flag("tech_debt_birikti", false)),
 		"Product", "WRAPPER over a flag; boolean by design in the demo")
+
+
+## What a sprint paper reads: the card it is about, its line, and the prices its options quote (`sprint.json` `paper`).
+static func _install_papers() -> void:
+	var G := EvSeams.Kind.GLOBAL
+	EvSeams.register("urun.decision_kind", G, TYPE_STRING,
+		func() -> String: return String(_decision_field("kind", "")),
+		"Product", "feature | request | fix | research: what the decision card is; empty when none waits")
+	EvSeams.register("urun.decision_line", G, TYPE_STRING,
+		func() -> String: return String(_decision_field("line", "")).get_slice("@", 0),
+		"Product", "id of the line the decision card is on, a shared line by its base id; empty when none waits")
+	EvSeams.register("urun.decision_line_name", G, TYPE_STRING,
+		func() -> String:
+			var line: String = String(_decision_field("line", ""))
+			return "" if ProductLines.line(line).is_empty() else SprintCatalog.cap_name(line),
+		"Product", "the name of that line, for a paper's text; empty when none waits")
+	EvSeams.register("urun.decision_tier", G, TYPE_INT,
+		func() -> int: return int(_decision_field("target_tier", 0)),
+		"Product", "the tier the decision card takes its line to; 0 when none waits")
+	EvSeams.register("urun.decision_card_done", G, TYPE_INT,
+		func() -> int: return SprintSystem.decision_done(),
+		"Product", "points already worked on the decision card; 0 when none waits")
+	EvSeams.register("urun.decision_line_bugs", G, TYPE_INT,
+		func() -> int: return ProductState.line_bugs(String(_decision_field("line", ""))),
+		"Product", "open bugs on the decision card's line")
+	EvSeams.register("urun.decision_line_accounts", G, TYPE_INT,
+		func() -> int: return SprintCatalog.line_accounts(String(_decision_field("line", ""))).size(),
+		"Product", "B2B accounts that use the decision card's line")
+	EvSeams.register("urun.decision_root_bugs", G, TYPE_INT,
+		func() -> int: return int(_decision_field("bugs", 0)) if _decision_field("kind", "") == "fix" else 0,
+		"Product", "open bugs the decision card, a fix card, closes; 0 for any other card")
+	EvSeams.register("urun.decision_root_cause", G, TYPE_BOOL,
+		func() -> bool:
+			return int(_decision_field("bugs", 0)) >= int(SprintCatalog.cfg("paper.root_min")) \
+				and _decision_field("kind", "") == "fix",
+		"Product", "the decision card is a fix card with enough bugs on one line to share a root")
+	EvSeams.register("urun.decision_line_first_version", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.line_in_first_version(String(_decision_field("line", ""))),
+		"Product", "the decision card's line was opened by the first version (the sprints before v1.0 and v1.0 itself)")
+	EvSeams.register("urun.decision_promised", G, TYPE_BOOL,
+		func() -> bool:
+			var step: String = String(_decision_field("step", ""))
+			return PromiseRegistry.get_all().any(
+				func(p: Promise) -> bool: return p.status == "open" and p.feature_id == step),
+		"Product", "an account was promised the decision card's step and the promise is still open")
+	EvSeams.register("urun.decision_by_founder", G, TYPE_BOOL,
+		func() -> bool:
+			var speaker: Character = CharacterRegistry.get_character(
+				String(GameState.product.get("decision", {}).get("speaker", "")))
+			return speaker != null and speaker.category == "founder",
+		"Product", "the founder speaks the pending paper (works the card's phase), not an employee")
+	EvSeams.register("urun.decision_test_untouched", G, TYPE_BOOL,
+		func() -> bool:
+			var card: Dictionary = SprintSystem.decision_card()
+			return not card.is_empty() and SprintSystem.phase(card) == SprintSystem.TEST_PHASE \
+				and float(card.progress[SprintSystem.TEST_PHASE]) < SprintSystem.EPS,
+		"Product", "the decision card has reached testing and nobody has tested it yet")
+	EvSeams.register("urun.sprint_has_tester", G, TYPE_BOOL,
+		func() -> bool:
+			return SprintSystem.team().any(func(t: Dictionary) -> bool:
+				return not t.founder and CharacterRegistry.get_character(t.id).role == HRConstants.ROLE_TESTER),
+		"Product", "a tester works in the sprint's team (the Test job); the founder testing is not one")
+	EvSeams.register("urun.durability_tier", G, TYPE_INT,
+		func() -> int: return ProductState.line_tier(SprintCatalog.in_product("line_shared_durability")),
+		"Product", "the tier the Durability line has reached; 1 is autosave and nothing more")
+	EvSeams.register("urun.security_tier", G, TYPE_INT,
+		func() -> int: return ProductState.line_tier(SprintCatalog.in_product("line_shared_security")),
+		"Product", "the tier the Security and Access line has reached; 0 before it is built")
+	EvSeams.register("urun.security_bugs", G, TYPE_INT,
+		func() -> int: return ProductState.line_bugs(SprintCatalog.in_product("line_shared_security")),
+		"Product", "open bugs on the Security and Access line")
+	EvSeams.register("urun.security_fix_planned", G, TYPE_BOOL,
+		func() -> bool:
+			var fix: String = "fix:" + SprintCatalog.in_product("line_shared_security")
+			return fix in GameState.product.get("sprint", {}).get("cards", []),
+		"Product", "the Security and Access fix card is in the running sprint")
+	EvSeams.register("urun.weeks_to_month_end", G, TYPE_INT,
+		func() -> int:
+			var weeks: int = 1
+			while int(GameState.get_date_dict(GameState.day + weeks).month) == int(GameState.get_date_dict().month):
+				weeks += 1
+			return weeks,
+		"Product", "ticks until the calendar month turns; 1 on the month's last tick")
+	EvSeams.register("urun.paper_contract", G, TYPE_INT,
+		func() -> int: return int(SprintCatalog.cfg("paper.contract_per_point")),
+		"Product", "what an outside developer costs for one point of work, in dollars")
+	EvSeams.register("urun.paper_tester_week", G, TYPE_INT,
+		func() -> int: return SprintCatalog.outside_tester_week(),
+		"Product", "what a tester hired from outside for a week costs, in dollars")
+	EvSeams.register("urun.paper_license", G, TYPE_INT,
+		func() -> int: return SprintCatalog.license_cost(),
+		"Product", "what a ready made component's licence costs, in dollars, once")
+	EvSeams.register("urun.decision_license_year", G, TYPE_STRING,
+		func() -> String: return Fmt.money_exact(SprintCatalog.license_cost()),
+		"Product", "that licence as money text, for a paper's body")
+	EvSeams.register("urun.paper_server_bill", G, TYPE_INT,
+		func() -> int: return InfraSystem.monthly_bill(),
+		"Product", "this month's server bill, in dollars")
+	EvSeams.register("urun.paper_loss_small", G, TYPE_INT,
+		func() -> int: return roundi(SalesSystem.b2c_audience() * float(SprintCatalog.cfg("paper.b2c_loss.small"))),
+		"Product", "the audience a small annoyance costs, in people")
+	EvSeams.register("urun.paper_loss_mid", G, TYPE_INT,
+		func() -> int: return roundi(SalesSystem.b2c_audience() * float(SprintCatalog.cfg("paper.b2c_loss.mid"))),
+		"Product", "the audience a real annoyance costs, in people")
+	EvSeams.register("urun.paper_signup_loss", G, TYPE_INT,
+		func() -> int: return roundi(SalesSystem.weekly_new_users() * float(SprintCatalog.cfg("paper.signup_loss"))),
+		"Product", "the sign ups a week of a broken sign up code costs, in people")
+
+
+## What a sprint paper asks of its card and its account before it comes, and the prices its options quote (`sprint.json`
+## `paper`): the card trimmed, held up by a phone screen, saved for a renewal; the colours' two arrivals; the B2C losses.
+static func _install_paper_asks() -> void:
+	var G := EvSeams.Kind.GLOBAL
+	EvSeams.register("urun.decision_second_account", G, TYPE_STRING,
+		func() -> String:
+			var second: Customer = SprintCatalog.second_account(SprintSystem.decision_card())
+			return "" if second == null else second.display_name(),
+		"Product", "the other account that asked for the decision card's step; empty when only one did (open requests carry one account per step)")
+	EvSeams.register("urun.decision_request_votes", G, TYPE_INT,
+		func() -> int: return 0,
+		"Product", "B2C: the people who asked for the decision card's step; 0 until the consumer request data exists")
+	EvSeams.register("urun.decision_step", G, TYPE_STRING,
+		func() -> String: return String(_decision_field("step", "")).get_slice("@", 0),
+		"Product", "id of the step the decision card takes its line to, a shared line's step by its base id; empty when none waits")
+	EvSeams.register("urun.decision_phase", G, TYPE_INT,
+		func() -> int:
+			var card: Dictionary = SprintSystem.decision_card()
+			return 0 if card.is_empty() else SprintSystem.phase(card),
+		"Product", "the phase the decision card is in: 0 design, 1 development, 2 testing, 3 done; 0 when none waits")
+	EvSeams.register("urun.cut_test_finishes", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.cut_test_finishes(SprintSystem.decision_card().get("id", "")),
+		"Product", "the decision card is in testing and cutting its test in half finishes it this sprint")
+	EvSeams.register("urun.decision_test_half", G, TYPE_INT,
+		func() -> int: return SprintSystem.decision_test_half(),
+		"Product", "half of the decision card's testing left, in points; the work a developer helping with the test does")
+	EvSeams.register("urun.decision_trim_finishes", G, TYPE_BOOL,
+		func() -> bool:
+			return SprintSystem.finishes_with(SprintSystem.decision_card().get("id", ""),
+				-SprintSystem.trim_points(float(SprintCatalog.cfg("paper.trim_share")))),
+		"Product", "taking the trim share off the decision card finishes it this sprint")
+	EvSeams.register("urun.decision_contract_cost", G, TYPE_INT,
+		func() -> int:
+			return SprintSystem.trim_points(float(SprintCatalog.cfg("paper.trim_share"))) \
+				* int(SprintCatalog.cfg("paper.contract_per_point")),
+		"Product", "what an outside developer costs for the trim share of the decision card, in dollars")
+	EvSeams.register("urun.paper_phone_points", G, TYPE_INT,
+		func() -> int: return int(SprintCatalog.cfg("paper.phone_points")),
+		"Product", "the work a phone layout adds to a card, in points")
+	EvSeams.register("urun.decision_phone_late", G, TYPE_BOOL,
+		func() -> bool:
+			return SprintSystem.late_with(SprintSystem.decision_card().get("id", ""), int(SprintCatalog.cfg("paper.phone_points"))),
+		"Product", "the phone layout's points added, the decision card would not finish this sprint")
+	EvSeams.register("urun.responsive_shipped", G, TYPE_BOOL,
+		func() -> bool: return ProductState.is_feature_live(SprintCatalog.in_product("line_shared_mobile_k1")),
+		"Product", "the Responsive Interface step is live")
+	EvSeams.register("urun.decision_renewal_saved", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.decision_renewal_saved(),
+		"Product", "the account's renewal falls after this sprint and before the next, and standing the card first ships it this sprint")
+	EvSeams.register("urun.design_late", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.design_late(SprintSystem.decision_card().get("id", "")),
+		"Product", "the decision card is still in design after this week's work and a developer waits on it")
+	EvSeams.register("urun.paid_plan_open", G, TYPE_BOOL,
+		func() -> bool: return SprintCatalog.tier(SprintCatalog.PAID_PLAN) > 0,
+		"Product", "the paid plan is open")
+	EvSeams.register("urun.colors_again", G, TYPE_BOOL,
+		func() -> bool: return EvFlags.has("colors_by_hand"),
+		"Product", "the colours were changed by hand once, so the account asks for its colours on the pages added since")
+	EvSeams.register("urun.colors_first", G, TYPE_INT,
+		func() -> int: return 0 if EvFlags.has("colors_by_hand") else 1,
+		"Product", "1 the first time an account asks for its colours, 0 the second time")
+	EvSeams.register("urun.colors_hand", G, TYPE_INT,
+		func() -> int: return _colors_points("hand"),
+		"Product", "the points of changing the colours by hand; one more for each page added since the first change")
+	EvSeams.register("urun.colors_central", G, TYPE_INT,
+		func() -> int: return _colors_points("central"),
+		"Product", "the points of pulling every colour into one file; one more for each page added since the first change")
+	EvSeams.register("urun.colors_cost", G, TYPE_INT,
+		func() -> int: return _colors_points("hand") * int(SprintCatalog.cfg("paper.contract_per_point")),
+		"Product", "what a freelancer asks for the colours: the by hand points at the outside price, in dollars")
+	EvSeams.register("urun.paper_ask_silent", G, TYPE_INT,
+		func() -> int: return int(EvSeams.read("urun.decision_request_votes")) * int(SprintCatalog.cfg("paper.ask_silent_mult")),
+		"Product", "the audience that goes quiet when a request is not met: the people who asked, times the quiet ones behind each")
+	EvSeams.register("urun.paper_test_phones", G, TYPE_INT,
+		func() -> int: return int(SprintCatalog.cfg("paper.test_phones")),
+		"Product", "what a few phones to test on cost, in dollars, once")
+	EvSeams.register("urun.paper_first_screen_loss", G, TYPE_INT,
+		func() -> int:
+			var loss: Dictionary = SprintCatalog.cfg("paper.first_screen_loss")
+			return roundi(SalesSystem.weekly_new_users() * float(loss.share) * int(loss.weeks)),
+		"Product", "the sign ups a sign up screen with three questions loses over its weeks, in people")
+	EvSeams.register("urun.paper_coupon_loss", G, TYPE_INT,
+		func() -> int: return roundi(SalesSystem.b2c_audience() * float(SprintCatalog.cfg("paper.coupon_share"))),
+		"Product", "the audience that would have come in on a coupon, in people")
+
+
+## The points of a colour change: its sprint.json base, one more when the colours were changed by hand before.
+static func _colors_points(kind: String) -> int:
+	var colors: Dictionary = SprintCatalog.cfg("paper.colors")
+	return int(colors[kind]) + (int(colors.again_extra) if EvFlags.has("colors_by_hand") else 0)
+
+
+## The pending decision card's `field`, `fallback` when none waits.
+static func _decision_field(field: String, fallback: Variant) -> Variant:
+	return SprintSystem.decision_card().get(field, fallback)
 
 
 static func _decision_card() -> String:

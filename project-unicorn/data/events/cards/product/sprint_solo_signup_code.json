@@ -1,0 +1,121 @@
+{
+  "id": "product.sprint_solo_signup_code",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_solo",
+  "speaker_role": "founder",
+  "stage": "any",
+  "pool_group": "solo",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      0
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.security_bugs",
+        "op": ">=",
+        "value": 1
+      },
+      {
+        "seam": "urun.security_fix_planned",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "fix_first",
+      "outcome_id": "fix_first",
+      "effects": [
+        {
+          "verb": "sprint_fix_first",
+          "line": "line_shared_security",
+          "front": true
+        }
+      ]
+    },
+    {
+      "id": "finish_card",
+      "outcome_id": "finish_card",
+      "effects": [
+        {
+          "verb": "audience_delta",
+          "amount_seam": "urun.paper_signup_loss",
+          "amount_mult": -1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kayıt kodu gelmiyor",
+      "body": "Uygulama mağazasındaki son yorumların çoğu aynı şeyi söylüyor: kayıt kodu gelmiyor. Sen ise {seam:urun.decision_card} kartının ortasındasın.",
+      "options": {
+        "fix_first": "Önce kayıt kodunu düzelt",
+        "finish_card": "Önce kartı bitir"
+      },
+      "expire_note": "Cevap verilmedi, kart sürdü."
+    },
+    "en": {
+      "title": "The sign up code never arrives",
+      "body": "Most of the latest reviews in the app store say the same thing: the sign up code never arrives. And you're halfway through {seam:urun.decision_card}.",
+      "options": {
+        "fix_first": "Fix the sign up code first",
+        "finish_card": "Finish the card first"
+      },
+      "expire_note": "No answer came, so the card carried on."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "audience_delta",
+        "amount_seam": "urun.paper_signup_loss",
+        "amount_mult": -1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

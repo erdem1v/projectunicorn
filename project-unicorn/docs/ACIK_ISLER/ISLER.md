@@ -21,7 +21,11 @@ Açık işlerin tek yeri bu klasördür.
   `team.outside_offer` 8 der. Budama kartların en büyük `min_gap_weeks`'ini de kapsar.
 - `info` ve `ambient` kart kategori kotası tüketiyor: `EvTempo.assign` her kabulü tempo penceresine yazar ve katman 3
   penceredeki her kaydı sayar (`scripts/events/present/tempo.gd`); motor GDD §13.2 "bütçe tüketmez" der (§27.13).
-  Bugün canlı `info` ya da `ambient` kart yok. Bu iki sınıf katman 3'te sayılmaz.
+  Bugün canlı tek `info` kart `customer.release_thanks`'tir ve nottur (not yolu tempo penceresine yazmaz, §27.17); canlı
+  `ambient` kart yok. Bu iki sınıf katman 3'te sayılmaz.
+- B2C söz eşdeğeri açık: B2C'de söz olayı yok, çünkü şirketler sürüm çıkmadan kullanıcıya tarih vermez, sürüm çıkınca
+  not paylaşır; kullanıcılara tarih duyurmak ve “kampanya aracı” ikizi reddedildi; Erdem “üstüne düşünmek lazım” dedi,
+  aday yön C'nin istek verisi gelince en çok istenen şeyin sürüm yorumlarında “hâlâ yok” diye görünmesi.
 
 ## Arayüz yeniden yapılırken
 Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktalar:

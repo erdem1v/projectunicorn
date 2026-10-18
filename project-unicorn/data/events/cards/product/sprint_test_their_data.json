@@ -1,0 +1,129 @@
+{
+  "id": "product.sprint_test_their_data",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_test",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the account or the developer comes from the card on the desk, not from how long they have been here"
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "speaker_role": "tester",
+  "pool_group": "tester",
+  "stage": "test",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "line_top"
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "ask_copy",
+      "outcome_id": "ask_copy",
+      "effects": [
+        {
+          "verb": "sprint_card_carry"
+        }
+      ]
+    },
+    {
+      "id": "bigger_data",
+      "outcome_id": "bigger_data",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "known_bug",
+      "outcome_id": "known_bug",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Hata yalnız onların verisinde çıkıyor",
+      "body": "Bu hata yalnız {customer} verisiyle çıkıyor, bizim deneme verimizde hiç görünmüyor. Bulmak için onların verisinin bir kopyası lazım.",
+      "options": {
+        "ask_copy": "{customer} ekibinden kopya iste",
+        "bigger_data": "Deneme verisini büyüt",
+        "known_bug": "Bilinen hata olarak çık"
+      },
+      "expire_note": "Cevap gelmedi, kart hatayla çıktı."
+    },
+    "en": {
+      "title": "The bug only shows up with their data",
+      "body": "This bug only shows up with {customer} data and never in our test data. To find it, I need a copy of theirs.",
+      "options": {
+        "ask_copy": "Ask the {customer} team for a copy",
+        "bigger_data": "Build bigger test data",
+        "known_bug": "Ship it as a known bug"
+      },
+      "expire_note": "No answer came, so the card shipped with the bug."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

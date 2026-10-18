@@ -264,7 +264,7 @@ static func new_card(id: String, kind: String, area_id: String, effort: int, lin
 	return {"id": id, "kind": kind, "line": line, "step": step, "target_tier": target_tier, "area": area_id,
 		"effort": effort, "roles": card_roles(kind), "shares": card_shares(kind), "progress": [0.0, 0.0, 0.0],
 		"state": "candidate", "assignees": [], "bugs": 0, "customer_id": "", "request_id": "",
-		"decision": false, "effort_mod": 0, "faulty": false}
+		"decision": false, "effort_mod": 0, "faulty": false, "cut": false}
 
 
 ## Saklanan kart ya da adayı; yoksa {}.
@@ -426,6 +426,48 @@ static func line_users(line_id: String) -> int:
 	return _users_of(line_impact(line_id))
 
 
+## Paylaşılan bir hat ya da kademe temel kimliğiyle (`line_shared_mobile`, `line_shared_mobile_k1`) yazılırsa ürünün kendi
+## kimliği (`id@alt-tür`); öbür kimlikler olduğu gibi. Kart verisi alt-türden bağımsız yazılır.
+static func in_product(id: String) -> String:
+	var shared: String = "%s@%s" % [id, ProductState.subtype()]
+	return shared if not ProductLines.line(shared).is_empty() or not ProductLines.step(shared).is_empty() else id
+
+
+## Karar kartının hattını kullanan hesaplardan kâğıdın konusu olan (`select` kipi): "line_top" en büyük, "line_warehouse" depo
+## işi sektörlerindeki (sprint.json `paper.warehouse_sectors`) en büyük, "line_newest" en yeni imzalanan, "line_slow"
+## `paper.slow_seats` koltuğa varan en büyük, "request" kartı isteyen hesap. `used`taki hesaplar sayılmaz. Karar ya da
+## böyle bir hesap yoksa "".
+static func paper_account(mode: String, used: Dictionary) -> String:
+	var card: Dictionary = SprintSystem.decision_card()
+	if card.is_empty():
+		return ""
+	if mode == "request":
+		return String(card.customer_id)
+	var accounts: Array = line_accounts(card.line).filter(func(c: Customer) -> bool:
+		if used.has(c.id):
+			return false
+		match mode:
+			"line_warehouse":
+				return c.industry in cfg("paper.warehouse_sectors")
+			"line_slow":
+				return c.seats >= int(cfg("paper.slow_seats"))
+		return true)
+	accounts.sort_custom(func(a: Customer, b: Customer) -> bool:
+		if mode == "line_newest" and a.acquired_on_day != b.acquired_on_day:
+			return a.acquired_on_day > b.acquired_on_day
+		return a.id < b.id if mode == "line_newest" else larger_account(a, b))
+	return "" if accounts.is_empty() else accounts[0].id
+
+
+## Karar kartı bir isteğin kartıysa o kademeyi isteyen öbür hesap (en büyüğü), yoksa null.
+static func second_account(card: Dictionary) -> Customer:
+	var asking: Array = open_requests().filter(func(r: Dictionary) -> bool:
+		return r.step == card.get("step", "") and r.customer_id != card.get("customer_id", ""))
+	var accounts: Array = asking.map(func(r: Dictionary) -> Customer: return CustomerRegistry.get_customer(r.customer_id))
+	accounts.sort_custom(larger_account)
+	return null if accounts.is_empty() else accounts[0]
+
+
 ## Düzeltme kartının ve hat satırının hata sayısı parçası (ProductModel `part`): `n` hata, hesap (B2C'de -1) ve kullanıcı
 ## sayısı, B2B'de en büyük hesabın adı ve koltuğu (hesap yoksa adı "").
 static func bugs_part(line_id: String, n: int) -> Dictionary:
@@ -436,6 +478,28 @@ static func bugs_part(line_id: String, n: int) -> Dictionary:
 		part.merge({"accounts": impact.accounts, "top": top.display_name() if top != null else "",
 			"top_users": impact.top_seats}, true)
 	return part
+
+
+# --- Kâğıt bedelleri (`sprint.json` `paper` bloğu, [WORKING]) ---------------------------------
+
+## Hazır bileşenin lisansı, bir kez ödenir: B2B'de hesapların koltukları, B2C'de kitle başına; en az `paper.license.min`.
+static func license_cost() -> int:
+	var cost: float = SalesSystem.b2c_audience() * float(cfg("paper.license.per_user"))
+	if ProductState.market_type() == "b2b":
+		cost = 0.0
+		for c in CustomerRegistry.get_all():
+			if c.market_type == "b2b" and c.status in ["active", "trial"]:
+				cost += c.seats * float(cfg("paper.license.per_seat"))
+	return maxi(int(cfg("paper.license.min")), roundi(cost))
+
+
+## Bir haftalığına dışarıdan tutulan testçinin ücreti: orta seviye testçi maaşının haftalığı, `paper.outside_week_mult`
+## katı, yüzlüğe yuvarlanır.
+static func outside_tester_week() -> int:
+	var band: Array = HRConstants.salary_band_for_level(HRConstants.ROLE_TESTER, HRConstants.LEVEL_MID)
+	var weekly: float = (float(band[0]) + float(band[1])) / 2.0 \
+		/ (float(TimeModel.DAYS_PER_MONTH) / float(TimeModel.DAYS_PER_TICK))
+	return roundi(weekly * float(cfg("paper.outside_week_mult")) / 100.0) * 100
 
 
 # --- Lider ---------------------------------------------------------------------------

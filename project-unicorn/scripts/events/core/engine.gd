@@ -126,7 +126,9 @@ static func _step_paper_expiry() -> void:
 			names, false, MailClock.arrival("expired|" + EvLatches.key_of(event_id, context)))
 		var note: String = String(card.get("expire_note", ""))
 		if note != "":
-			EvTicker.push(String(EvPresenter.text_block(card).get(note, note)),
+			# A note that reads differently by a seam (a variant set) is resolved now; a key or prose goes out as it is.
+			var line: Variant = EvPresenter.text_block(card).get(note, note)
+			EvTicker.push(EvPresenter.resolve_text(line, context, names) if line is Dictionary else String(line),
 				EvTicker.PRIORITY_PLAYER, context)
 
 		# An expiring arc step must move its arc through an arc verb in on_expire (lint enforces
@@ -473,7 +475,8 @@ static func _deferral_weeks(event_id: String, origin: EvGate.Origin,
 
 ## An instance whose paper is on the desk is refused: queued beside its own paper it would pass
 ## for the paper's last warning, the one re-queue §13.5 lets past the budget.
-static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String, immediate: bool = false) -> bool:
+static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String, immediate: bool = false,
+		stamp: int = -1) -> bool:
 	var key: String = EvLatches.key_of(event_id, verdict.context)
 	if EvPapers.has(key):
 		return false
@@ -482,7 +485,7 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String, im
 	# When the player may see it (MailClock): at once when it is urgent or the player asked for it, else inside the
 	# workday. A paper that lives a week lands at the window's start, so its week is not cut short.
 	var lasts_a_week: bool = verdict.card_class == "paper" and _expiry_weeks(card) <= 1
-	var at: int = MailClock.arrival(key, immediate or _is_urgent(card),
+	var at: int = stamp if stamp >= 0 else MailClock.arrival(key, immediate or _is_urgent(card),
 		MailClock.SHORT_LIVED_SPREAD_HOURS if lasts_a_week else MailClock.SPREAD_HOURS)
 
 	# A NOTE IS ANSWERED ON ARRIVAL (§27.17): it has nothing to decide, so it neither holds the clock
@@ -707,8 +710,9 @@ static func reset() -> void:
 ## so a one_shot card would be refused at G3 and the paper would stay out of reach.
 ##
 ## Returns true when the card reached the player, admitted or opened off the desk. A request comes in with the
-## workday like everything the clock makes; `immediate` is the player's own ask, which shows at once.
-static func request(event_id: String, context: Dictionary = {}, immediate: bool = false) -> bool:
+## workday like everything the clock makes; `immediate` is the player's own ask, which shows at once; `stamp` is the
+## time its mail carries when that is earlier than the ask.
+static func request(event_id: String, context: Dictionary = {}, immediate: bool = false, stamp: int = -1) -> bool:
 	if not GameState.run_active:
 		return false
 	var bound: Dictionary = EvScope.resolve(EvCatalog.card(event_id).get("scope", {}), context)
@@ -719,7 +723,7 @@ static func request(event_id: String, context: Dictionary = {}, immediate: bool 
 	var verdict: EvGate.Verdict = EvGate.propose(event_id, EvGate.Origin.REQUEST, context)
 	if not verdict.admitted:
 		return false
-	if not _admit(event_id, verdict, "", immediate):
+	if not _admit(event_id, verdict, "", immediate, stamp):
 		return false
 	_step_assign_classes()
 	pump()

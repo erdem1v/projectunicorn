@@ -1,0 +1,134 @@
+{
+  "id": "product.sprint_dev_root_cause",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_root_cause",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "rewrite",
+      "outcome_id": "rewrite",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        },
+        {
+          "verb": "line_harden",
+          "line": "decision"
+        }
+      ]
+    },
+    {
+      "id": "patch",
+      "outcome_id": "patch",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    },
+    {
+      "id": "contractor",
+      "outcome_id": "contractor",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "label": "contractor",
+          "amount_seam": "urun.paper_contract",
+          "amount_mult": -2
+        },
+        {
+          "verb": "line_harden",
+          "line": "decision"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Hatalar aynı yerden çıkıyor",
+      "body": "{seam:urun.decision_line_name} hatalarının {seam:urun.decision_root_bugs} tanesi aynı yerden çıkıyor. Altını yeniden yazarsam bir daha çıkmaz, tek tek yamalarsam biri geri döner.",
+      "options": {
+        "rewrite": "Altını yeniden yaz",
+        "patch": "Hataları tek tek yamala",
+        "contractor": "Serbest çalışana yazdır"
+      },
+      "expire_note": "Cevap gelmedi, hatalar tek tek yamalandı."
+    },
+    "en": {
+      "title": "The bugs come from the same place",
+      "body": "{seam:urun.decision_root_bugs} of the {seam:urun.decision_line_name} bugs come from the same place. If I rewrite what's underneath, they won't come back; if I patch them one by one, one of them will.",
+      "options": {
+        "rewrite": "Rewrite what's underneath",
+        "patch": "Patch them one by one",
+        "contractor": "Get a contractor to rewrite it"
+      },
+      "expire_note": "No answer came, so the bugs were patched one by one."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

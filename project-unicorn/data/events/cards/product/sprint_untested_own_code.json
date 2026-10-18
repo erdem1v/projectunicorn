@@ -1,0 +1,132 @@
+{
+  "id": "product.sprint_untested_own_code",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_untested",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "test",
+  "pool_group": "no_tester",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.sprint_has_tester",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "founder_tests",
+      "outcome_id": "founder_tests",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -15,
+          "weeks": 1
+        }
+      ]
+    },
+    {
+      "id": "outside_tester",
+      "outcome_id": "outside_tester",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "label": "contractor",
+          "amount_seam": "urun.paper_tester_week",
+          "amount_mult": -1
+        }
+      ]
+    },
+    {
+      "id": "own_test",
+      "outcome_id": "own_test",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kendi kodumu test ediyorum",
+      "body": "Bu kartta testçi yok, testi ben yapıyorum. Yazarken aklıma gelmeyen durumlar test ederken de gelmeyecek.",
+      "options": {
+        "founder_tests": "Testi sen yap",
+        "outside_tester": "Bir haftalığına testçi tut",
+        "own_test": "{employee} test etsin"
+      },
+      "expire_note": "Cevap gelmedi, testi {employee} yaptı."
+    },
+    "en": {
+      "title": "Testing my own code",
+      "body": "There's no tester on this card, so I'm testing it myself. The cases I didn't think of while writing it won't come to me while testing it either.",
+      "options": {
+        "founder_tests": "Test it yourself",
+        "outside_tester": "Hire a tester for a week",
+        "own_test": "Let {employee} test it"
+      },
+      "expire_note": "No answer came, so {employee} tested it."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

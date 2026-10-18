@@ -97,7 +97,8 @@ static func freeze_names(context: Dictionary) -> Dictionary:
 
 ## {"seam:<name>": value} for every number and flag the card's titles and bodies read, a variant's
 ## selector included, as it reads now: a history row prints the week it was written. A number keeps
-## its printed form, a flag "0" or "1"; a text seam is not kept, a row holds no translated words (§7.4).
+## its printed form, a flag "0" or "1"; a text seam is not kept, a row holds no translated words (§7.4),
+## unless it answers with nothing or with a localization key, which is read in the live language when the text is drawn.
 static func freeze_seams(card: Dictionary, context: Dictionary) -> Dictionary:
 	var out: Dictionary = {}
 	for block in (card.get("text", {}) as Dictionary).values():
@@ -109,6 +110,9 @@ static func freeze_seams(card: Dictionary, context: Dictionary) -> Dictionary:
 						out["seam:" + seam_name] = str(value)
 					TYPE_BOOL:
 						out["seam:" + seam_name] = str(int(value))
+					TYPE_STRING:
+						if value == "" or is_key(value):
+							out["seam:" + seam_name] = value
 	return out
 
 
@@ -279,7 +283,7 @@ static func _interpolate(text: String, context: Dictionary, names: Dictionary) -
 			push_error("[EvPresenter] card text reads unknown seam '%s'" % seam_name)
 		else:
 			value = str(_seam_value(seam_name, context))
-		out = out.replace(m.get_string(0), value)
+		out = out.replace(m.get_string(0), TranslationServer.translate(value) if is_key(value) else value)
 		m = SEAM_RE.search(out)
 
 	for slot in context:

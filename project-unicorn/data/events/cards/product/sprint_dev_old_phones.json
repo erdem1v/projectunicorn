@@ -1,0 +1,138 @@
+{
+  "id": "product.sprint_dev_old_phones",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_line",
+        "op": "in",
+        "value": [
+          "line_shared_mobile",
+          "line_shared_durability"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "rework",
+      "outcome_id": "rework",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "off_on_old",
+      "outcome_id": "off_on_old",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        },
+        {
+          "verb": "audience_delta",
+          "amount_seam": "urun.paper_loss_small",
+          "amount_mult": -1
+        }
+      ]
+    },
+    {
+      "id": "ship",
+      "outcome_id": "ship",
+      "effects": [
+        {
+          "verb": "audience_delta",
+          "amount_seam": "urun.paper_loss_mid",
+          "amount_mult": -1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Eski telefonlarda yavaş açılıyor",
+      "body": "Bu kartla uygulama eski telefonlarda iki kat geç açılıyor. Hafifletmek için yükleme sırasını değiştirmem gerekiyor.",
+      "options": {
+        "rework": "Yükleme sırasını değiştir",
+        "off_on_old": "Bu özelliği eski telefonlarda kapat",
+        "ship": "Böyle çıksın"
+      },
+      "expire_note": "Cevap gelmedi, kart böyle çıktı."
+    },
+    "en": {
+      "title": "Slow to open on older phones",
+      "body": "With this card, the app takes twice as long to open on older phones. Making it lighter means reworking the loading order.",
+      "options": {
+        "rework": "Rework the loading order",
+        "off_on_old": "Turn this feature off on older phones",
+        "ship": "Ship it like this"
+      },
+      "expire_note": "No answer came, so the card went out like this."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "audience_delta",
+        "amount_seam": "urun.paper_loss_mid",
+        "amount_mult": -1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

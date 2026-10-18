@@ -10,7 +10,8 @@ const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], "plan_next": ["release", "replan"]}
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
 const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "pm_started": "c2", "release": "c3",
-	"no_release": "c3", "gate": "c3", "release_fix": "c3", "b2b_no_requests": "c5", "fix_long_name": "c5",
+	"no_release": "c3", "gate": "c3", "release_fix": "c3", "release_reviews": "c3", "b2b_no_requests": "c5",
+	"fix_long_name": "c5",
 	"bug_lines_b2b": "c5", "bug_lines_many": "c5", "goal_menu": "c4", "approved": "c4"}
 ## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
 const AREAS := {
@@ -170,6 +171,11 @@ func _build(id: String) -> Dictionary:
 			note.shipped = [_deck("kisa_kayit", SprintCard.State.BITTI), _shipped_fix("kesinti", 9, 0),
 				_shipped_fix("esitleme", 6, 1)]
 			note.result = {"kind": "actual", "text": tr(Fmt.count_key("PRODUCT_RESULT_BUGS_ACTUAL", 15)).format({"n": 15})}
+		"release_reviews":
+			# Sürümden bir tik sonra B2C güncellemesinin yorumları: adlı yeni özellik, kapanan düzeltme ve güncellemeyi
+			# suçlayan olumsuz yorum.
+			m.center.release.reviews = SprintBridges.review_lines({"reviews": {"feature": "line_note_tool_capture_k2",
+				"at": -1, "ids": ["PRODUCT_REVIEW_NEW_NAMED_2", "PRODUCT_REVIEW_FIX_2", "PRODUCT_REVIEW_NEG_INTEGRATIONS_1"]}})
 		"locked_k3":
 			m.ui.open_area = "core"
 			_area_of(m, "core").candidates.append(_deck("akilli_arama", SprintCard.State.KILITLI,
@@ -374,6 +380,7 @@ func _c3() -> Dictionary:
 			"6 of 10 new users stayed the first week (4 before).")},
 		"press": {"outlet": "WORLD_OUTLET_TEKNOGUNDEM",
 			"text": _p("Notly kayıt akışını kısalttı.", "Notly shortened its sign-up flow.")},
+		"reviews": [],
 		"lead": _lead(_p("Arama bir sprint daha ister.", "Search needs one more sprint.")),
 	}})
 	m.next = _notly_next(true)
@@ -495,7 +502,7 @@ func _active_cards() -> Array:
 		_deck("kisa_kayit", SprintCard.State.SPRINT_AKTIF, {"phases": ["done", "done", "active"],
 			"phase_pts": {"done": 0.4, "total": 0.6}, "assignees": [_person("Ece"), _person("Kaan")]}),
 		_deck("filtreli", SprintCard.State.SPRINT_AKTIF, {"phases": WAITING, "decision": {"event_id": "fixture.thesis_open",
-			"item": "", "sender": INBOX.named_employee("Deniz", ""), "subject": tr("EV_PRODUCT_SPRINT_TWO_PATHS_TITLE"),
+			"item": "", "sender": INBOX.named_employee("Deniz", ""), "subject": EvPresenter.text_block(EvCatalog.card("product.sprint_dev_shorter_path")).title,
 			"weeks_left": 1, "last": true}}),
 	]
 

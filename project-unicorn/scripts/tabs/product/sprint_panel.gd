@@ -300,6 +300,13 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 		pair[1].size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(pair[1])
 	col.stack.add_child(SprintUiShared.pad(grid, Vector4i(0, UiTokens.SPACE_L, 0, UiTokens.SPACE_M)))
+	if not r.reviews.is_empty():
+		col.stack.add_child(SprintUiShared.section("PRODUCT_REVIEWS"))
+		for review in r.reviews:
+			var line := SprintUiShared.box(UiTokens.SPACE_L)
+			line.add_child(SprintUiShared.prose(review.text, &"DataText"))
+			line.add_child(SprintUiShared.label(review.source, &"MetaMuted", UiTokens.D_INK_3))
+			col.stack.add_child(line)
 	if r.rnd_open:
 		var rnd := _note(RnDUiShared.ICON, tr("PRODUCT_RELEASE_RND_OPEN"), UiTokens.D_INK_2)
 		rnd.add_child(SprintUiShared.button(tr("PRODUCT_GO_RND"), &"FloatLink", action.emit.bind("rnd", {"node": ""})))

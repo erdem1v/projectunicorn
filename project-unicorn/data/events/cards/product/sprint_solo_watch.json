@@ -1,0 +1,117 @@
+{
+  "id": "product.sprint_solo_watch",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "self",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_solo",
+  "speaker_role": "founder",
+  "stage": "any",
+  "pool_group": "solo",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      0
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the sprint names the account the card's line serves; the account is not picked by its seniority"
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "scope": {
+    "founder": {
+      "type": "founder",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "line_top"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "weekly",
+      "outcome_id": "weekly",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -15,
+          "weeks": 2
+        }
+      ]
+    },
+    {
+      "id": "when_done",
+      "outcome_id": "when_done",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "amount": -8
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "{customer} her hafta görmek istiyor",
+      "body": "{customer} bu ekranı sen yaparken her hafta görmek istiyor. Her hafta bir gösterim hazırlaman gerekecek.",
+      "options": {
+        "weekly": "Her hafta göster",
+        "when_done": "Bitince göster"
+      },
+      "expire_note": "Cevap gitmedi, {customer} bitmesini bekleyecek."
+    },
+    "en": {
+      "title": "{customer} wants to see it every week",
+      "body": "{customer} wants to see this screen every week while you build it. That means getting a demo ready every week.",
+      "options": {
+        "weekly": "Show them every week",
+        "when_done": "Show them when it's done"
+      },
+      "expire_note": "No answer went back, so {customer} will wait until it's done."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

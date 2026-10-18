@@ -1,0 +1,99 @@
+{
+  "id": "customer.release_thanks",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "request",
+  "class": "info",
+  "system": true,
+  "tags": [],
+  "schema": 3,
+  "family": "release_thanks",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true
+    }
+  },
+  "latch_key": "entity",
+  "latch": {
+    "cooldown_weeks": 0
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "ok",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Teşekkürler",
+      "body": {
+        "by_seam": "musteri.thanks_variant",
+        "variants": {
+          "0": "Sorunu bu kadar hızlı çözdüğünüz için teşekkürler.",
+          "1": "Hızlı müdahaleniz için teşekkürler, her şey yeniden çalışıyor.",
+          "2": "Sorun çözülmüş, elinize sağlık.",
+          "3": "Gece müdahale ettiğiniz için teşekkürler, sabah her şey çalışıyordu.",
+          "4": "Gece uğraştığınızı gördük, teşekkür ederiz.",
+          "5": "Söz verdiğiniz {seam:musteri.met_feature} geldi, teşekkürler.",
+          "6": "{seam:musteri.met_feature} söylediğiniz tarihte geldi. Teşekkür ederiz.",
+          "7": "Sözünüzü tuttunuz, {seam:musteri.met_feature} için teşekkürler.",
+          "8": "{seam:musteri.met_feature} söz verdiğiniz gibi çıktı. Elinize sağlık.",
+          "9": "{seam:musteri.met_feature} yeni tarihte geldi, teşekkürler.",
+          "10": "İstediğimiz {seam:musteri.met_feature} geldi, teşekkürler.",
+          "11": "{seam:musteri.met_feature} için teşekkürler, tam ihtiyacımız olan buydu.",
+          "12": "Bizi dinlediğiniz için teşekkürler, {seam:musteri.met_feature} çok işimize yarayacak.",
+          "13": "{seam:musteri.met_feature} eklenmiş, gördük. Teşekkür ederiz."
+        }
+      },
+      "options": {
+        "ok": "Tamam"
+      }
+    },
+    "en": {
+      "title": "Thank you",
+      "body": {
+        "by_seam": "musteri.thanks_variant",
+        "variants": {
+          "0": "Thanks for fixing it so quickly.",
+          "1": "Thanks for jumping on it. Everything is working again.",
+          "2": "It's fixed. Great work, thank you.",
+          "3": "Thanks for working on it overnight. Everything was running by morning.",
+          "4": "We saw you worked on it overnight. Thank you.",
+          "5": "{seam:musteri.met_feature} arrived, just as you promised. Thank you.",
+          "6": "{seam:musteri.met_feature} arrived right when you said it would. Thank you.",
+          "7": "You kept your word. Thanks for {seam:musteri.met_feature}.",
+          "8": "{seam:musteri.met_feature} shipped as promised. Nice work.",
+          "9": "{seam:musteri.met_feature} arrived on the new date. Thank you.",
+          "10": "We asked for {seam:musteri.met_feature} and it arrived. Thank you.",
+          "11": "Thanks for {seam:musteri.met_feature}. It's exactly what we needed.",
+          "12": "Thanks for listening to us. {seam:musteri.met_feature} will help us a lot.",
+          "13": "We saw that {seam:musteri.met_feature} went live. Thank you."
+        }
+      },
+      "options": {
+        "ok": "Got it"
+      }
+    }
+  }
+}

@@ -97,11 +97,33 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   için geliş saatleri `GameState.desk_arrivals`'tadır. Kuyruğun görünürlük süzgeci tek yerdedir (`EvQueue._shown`) ve
   gece kapısı da oradadır: mesai penceresi dışında yalnız acil durum kartı (`urgent` etiketi) açılır; kepenk kartı ve
   kâğıdın son uyarısı da mesai başına kadar bekler.
-- **Acil durum.** Gecenin acil durumu bir sistemin zarıdır (`IncidentSystem`, durum `GameState.incident`): 00:00'ın günlük
-  diliminde zar yalnız karar verir, kart başlangıçtan sonraki ilk tam saatte istenir ve `TimeManager.hold_clock("incident")`
+- **Acil durum.** Acil durum bir sistemin zarıdır (`IncidentSystem`, durum `GameState.incident`; gece kesintisi, ay sonu kapanışı,
+  ödeme, sürüm sonrası bozulma, yorum fırtınası): 00:00'ın günlük diliminde zar yalnız karar verir, kart damgadan sonraki ilk tam
+  saatte istenir (mail kartın açılışından önceki damgayı taşıyabilir: `EventGate.request`'in `stamp`'ı) ve `TimeManager.hold_clock("incident")`
   toplu gece adımını o saatte durdurur; karar verilince tutuş kalkar ve gece kaldığı yerden sürer. Olay reddedilirse (kart kapısı)
   başlamamış sayılır: aralık sayacı, bedel ve tutuş ilerlemez. Bedel olaydan türer (`IncidentSystem.plan`): çip, geçmiş satırı
-  ve uygulama aynı sayıyı okur. Sayılar `data/product/sprint.json` `incident` bloğunda [WORKING].
+  ve uygulama aynı sayıyı okur. "Sprinti durdur" hattın düzeltme kartını koşan sprintin başına alır (`sprint_fix_first`,
+  `SprintSystem.put_first`) ve çip sprintten kayan kartın adını yazar. Sayılar `data/product/sprint.json` `incident` bloğunda [WORKING].
+- **Söz olayı.** Sprintin son haftasında bu sprinte söz verilmiş kart ekibin hızıyla yetişmiyorsa sistem `product.promise_due`'yu
+  ister (`SprintSystem.late_promise`, `_ask_promise`): sprintin tek kesintisi sayılır ve o hafta karar kâğıdı çekilmez. Hamleler:
+  testi kısalt (`sprint_card_test`; kısaltılmış kart sürümde `SprintSystem.escape_chance` ihtimaliyle hatalı çıkabilir), fazla
+  mesai, sözü bir sprint ileri al (`PromiseRegistry.extend`, bir kez, hesabın izine bedel) ya da bırak (`PromiseRegistry.break_promise`).
+  Çip yüzde yazmaz, sonucu yazar. Kısaltılmış testin ihtimali `data/product/sprint.json` `promise.cut_test_escape`'te, mesainin
+  moral bedeli ve ek sürenin izi kartın (`promise_due.json`) seçeneklerinde [WORKING].
+- **Karar kâğıdı.** Sprint başına tek zar (`SprintSystem._request_decision`): 1 haftalık sprintte başlarken, 2 haftalıkta ilk haftanın
+  sonunda, `data/product/sprint.json` `decision.sprint_chance` ihtimaliyle sprintin bir kartı için `decision.cards` havuzundan bir kâğıt
+  istenir, yoksa sprint kâğıtsızdır ([WORKING]: sprintlerin en az üçte biri). Havuz ağırlıklı sırayla denenir (görülmemiş kâğıt önde,
+  `decision.seen_weight`) ve her kâğıt 52 haftada bir, koşuda en çok 3 kez gelir (`latch`, `latch_key: run`). Kesinti sırası: söz olayı
+  ya da acil durum gelen sprintte kâğıt gelmez; kâğıt gelen sprintte `IncidentSystem` yalnız servisin çöktüğü acil durumu (kesinti,
+  ödeme; `IncidentSystem.SERVICE_DOWN`) yaşatır, öbür acil durum kaybolmaz, sonraki sprinte kalır (`record_interrupt("paper")`,
+  `GameState.incident.shifted`). Konuşan kâğıdın kartında o fazda çalışan kişidir: kartın JSON'unda `speaker_role`, `stage`, `pool_group` yazılır, konuşan `EventGate.request(id, {"employee": id})`
+  ile (kurucu `{"founder": id}`) kartın `assignees`'inden, rolü ve fazı uyan ilk kişiden bağlanır; PM kâğıdını çeyreğin PM'i söyler
+  ve konusu sprintteki müşteri isteği kartıdır; payı Destek'te kalan kişi konuşmaz (ayrıntı HARITA Ürün). Kâğıdın bedeli seçeneğin kendisidir ve çipte sayıyla yazılır: kartın puanı, yapılmış işin silinmesi, dışarıdan iş (`paper.contract_per_point`), hemen düşen hata (`damage_product`) ve hattın yeniden yazımı (`line_harden`: hatta 26 hafta yeni hata düşmez). PM, tasarımcı ve testçi kâğıtları bedeli ayrıca kartın işini sonraki sprinte bırakarak (`sprint_card_trim`: karttan pay çıkar, takip kartı sonraki sprinte girer), kartı bilinen hatayla çıkararak (hata kart çıkınca kendi hattında açık hata olur), hesabın memnuniyetine (`trust_delta`, kart çıkana kadar sürebilir) ya da kitleye yazar; renk kâğıdı tek karttır, iki gelişi vardır. Sistem kâğıdı `product.sprint_late` (kurucu tekken `sprint_late_solo`) yalnız kartı bekleyen biri varken gelir.
+- **Sürüm anı.** Sprint kapanışı sürüm çıkardığında (`SprintBridges.thank`, sürüm kaydına `thanks`) sözü tutulan, isteği
+  karşılanan ve acil durumu hızla kapanan B2B hesapları teşekkür notu yazar (`customer.release_thanks`, tek düğmeli not
+  kartı): hesap sürümde en çok bir, sürüm en çok üç not alır, öncelik söz, istek, acil durum sırasıdır. B2C güncellemesinin
+  notu bir tik sonra 2–3 öne çıkan yorum taşır (`SprintBridges.pick_reviews`, sürüm kaydında `reviews`, mesai içinde
+  `at`). Sayılar `data/product/sprint.json` `thanks` ve `reviews` bloklarında [WORKING].
 - Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber
   şeridine 10. yuvada tek satır düşer; modal açılmaz. Dönem özeti oyuncunun seçtiği sıklıkta
   gelen kutusuna mesaj olarak gelir (`summary_frequency`: haftalık, aylık, çeyreklik ya da yıllık; varsayılan
@@ -112,7 +134,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   toplam MRR yalnız `SalesSystem.reflect_mrr()`; kasa, burn, marka, itibar → `GameState.set_*`; faz →
   `GameState.advance_phase()` (`set_phase` yalnız kayıt ve debug içindir); karakter → `CharacterRegistry.*`; ürün →
   `SprintSystem.*` (`GameState.product`'ın yazarı; köprüsü `SprintBridges` yalnız `requests`,
-  `rival_hits`'i yazar) ve `ProductState.*` (açık hata deposunun tek yazarları `add_bugs` ve `clear_line_bugs`); tek seferlik gider → `FinanceSystem.apply_one_time_cost`; gecenin acil durumu → `IncidentSystem` (`GameState.incident`'ın yazarı). `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
+  `rival_hits`'i ve verilen sürüm kaydının `thanks`'ini yazar) ve `ProductState.*` (açık hata deposunun tek yazarları `add_bugs` ve `clear_line_bugs`); tek seferlik gider → `FinanceSystem.apply_one_time_cost`; gecenin acil durumu → `IncidentSystem` (`GameState.incident`'ın yazarı). `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
   kapı `set_game_flag` beyaz listesi); motorun kendi hafızası `EvFlags`'tadır.
 - Olay motoru autoload değil; tek girişi statik `EventGate.request(event_id: String, context: Dictionary = {})`.
   Sistem kartın adını verir, kartı kurmaz. Kartlar `data/events/cards/<kategori>/` altında JSON'dur ve
@@ -211,14 +233,15 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - Probe: `--run-log=<preset>:<hafta>:sim[:<seed>][:window=<başlangıç saati>-<saat>]` (`window=11-13` şirketin mesaisini 11:00 –
   24:00 kurar), preset'ler `RunProbe.PRESETS`'te (düzeltme kolları
   `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*`, preset anahtarı `fix`; her sprint başında `PROBE FIX`,
-  her hafta `PROBE BUGS` basar). Karar değil defter basar;
+  her hafta `PROBE BUGS` basar; bot acil durum kartını fiile göre cevaplar, `fix_none` erteler, öbürleri sprinti durdurur ve
+  durdurduğu anda `PROBE STOP` basar; `*_free` kolları sprinti hiç durdurmaz). Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
-  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team`, `weeks`, `fill`, `market`, `incident`; anlamları HARITA Ürün'de) headless
+  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team`, `weeks`, `fill`, `market`, `incident`, `promise`; anlamları HARITA Ürün'de) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
-  `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`; MVP tahmini `mvp_eta`
+  `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; MVP tahmini `mvp_eta`
   `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar.
 - Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
   `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`

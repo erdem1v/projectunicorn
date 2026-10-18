@@ -1,0 +1,141 @@
+{
+  "id": "product.sprint_pm_renewal",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_pm",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "speaker_role": "product_manager",
+  "pool_group": "pm",
+  "stage": "any",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_renewal_saved",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "front",
+      "outcome_id": "front",
+      "effects": [
+        {
+          "verb": "sprint_card_first"
+        }
+      ]
+    },
+    {
+      "id": "discount",
+      "outcome_id": "discount",
+      "effects": [
+        {
+          "verb": "b2b_month_discount",
+          "scope": "customer"
+        }
+      ]
+    },
+    {
+      "id": "let_wait",
+      "outcome_id": "let_wait",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -6,
+          "per_sprint": -3,
+          "until": {
+            "step_live": "decision"
+          }
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yenilemeden önce görmek istiyorlar",
+      "body": "{customer} sözleşmesini yenilemeden önce bu kartı görmek istiyor. Bu hızla kart yenilemeden sonra çıkıyor.",
+      "options": {
+        "front": "Kartı sprintin başına al",
+        "discount": "Bir ay indirim ver",
+        "let_wait": "Beklesinler"
+      },
+      "expire_note": "Karar verilmedi, kart sırasında kaldı."
+    },
+    "en": {
+      "title": "They want to see it before renewal",
+      "body": "{customer} wants to see this card before they renew their contract. At this pace it goes out after the renewal.",
+      "options": {
+        "front": "Move the card to the front of the sprint",
+        "discount": "Give them a month's discount",
+        "let_wait": "Let them wait"
+      },
+      "expire_note": "Nobody decided, so the card kept its place."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "scope": "customer",
+        "amount": -6,
+        "per_sprint": -3,
+        "until": {
+          "step_live": "decision"
+        }
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

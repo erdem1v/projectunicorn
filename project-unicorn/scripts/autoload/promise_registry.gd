@@ -78,6 +78,20 @@ func create(customer_id: String, feature_id: String, deadline_weeks: int) -> Pro
 	return p
 
 
+## An open sprint word moves one sprint later, once: the account agreed to wait (what that costs it is the
+## caller's `trust_delta`).
+func extend(promise_id: String) -> void:
+	var p: Promise = _promises[promise_id]
+	if not p.extended:
+		p.due_sprint += 1
+		p.extended = true
+
+
+## The player gives an open word up before its sprint closes: the break the deadline sweep would make.
+func break_promise(promise_id: String) -> void:
+	_resolve(_promises[promise_id], "broken")
+
+
 func reset() -> void:
 	_promises.clear()
 

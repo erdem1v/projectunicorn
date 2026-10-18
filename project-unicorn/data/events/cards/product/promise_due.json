@@ -1,0 +1,188 @@
+{
+  "id": "product.promise_due",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "interrupt",
+  "sender": "employee",
+  "system": true,
+  "tags": [],
+  "schema": 3,
+  "family": "promise",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": false,
+      "select": "asked"
+    },
+    "customer": {
+      "type": "customer",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 0
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.sprint_last_week",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.promise_open",
+        "op": ">=",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "cut_test",
+      "outcome_id": "cut_test",
+      "requires": {
+        "seam": "urun.promise_cut_finishes",
+        "op": "==",
+        "value": true
+      },
+      "effects": [
+        {
+          "verb": "sprint_card_test",
+          "act": "cut"
+        }
+      ]
+    },
+    {
+      "id": "crunch",
+      "outcome_id": "crunch",
+      "requires": {
+        "seam": "urun.promise_crunch_finishes",
+        "op": "==",
+        "value": true
+      },
+      "effects": [
+        {
+          "verb": "sprint_hours",
+          "mult": 1.25,
+          "promise": true
+        },
+        {
+          "verb": "morale_crew",
+          "crew": "promise_crew",
+          "amount": -5
+        }
+      ]
+    },
+    {
+      "id": "extend",
+      "outcome_id": "extend",
+      "requires": {
+        "seam": "urun.promise_extended",
+        "op": "==",
+        "value": false
+      },
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "accounts": "promise",
+          "amount": -6
+        },
+        {
+          "verb": "promise_extend"
+        }
+      ]
+    },
+    {
+      "id": "slip",
+      "outcome_id": "slip",
+      "effects": [
+        {
+          "verb": "promise_break"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "{seam:urun.promise_card} bu sprinte yetişmiyor",
+      "body": {
+        "by_seam": "urun.promise_cut_finishes",
+        "variants": {
+          "0": "{customer} ekibine {seam:urun.promise_card} için bu sprint sonu söz verdik. Bu hızla yetişmeyecek.",
+          "1": "{customer} ekibine {seam:urun.promise_card} için bu sprint sonu söz verdik. Bu hızla yetişmeyecek, testi kısaltırsak yetişir."
+        }
+      },
+      "options": {
+        "cut_test": "Testi kısalt",
+        "crunch": "Ekipten fazla mesai iste",
+        "extend": "Arayıp bir sprint ek süre iste",
+        "slip": "Söz kaçsın"
+      },
+      "locked_reasons": {
+        "cut_test": "Kart henüz teste gelmedi.",
+        "crunch": "Fazla mesaiyle de bu sprintte bitmiyor.",
+        "extend": "Bu tarih bir kez ertelendi."
+      },
+      "expire_note": "Karar verilmedi, sprint kapandı ve söz tutulmadı."
+    },
+    "en": {
+      "title": "{seam:urun.promise_card} won't make this sprint",
+      "body": {
+        "by_seam": "urun.promise_cut_finishes",
+        "variants": {
+          "0": "We promised {customer} that {seam:urun.promise_card} would ship this sprint. At this pace it won't.",
+          "1": "We promised {customer} that {seam:urun.promise_card} would ship this sprint. At this pace it won't, unless we shorten the tests."
+        }
+      },
+      "options": {
+        "cut_test": "Shorten the tests",
+        "crunch": "Ask the team for overtime",
+        "extend": "Call and ask for one more sprint",
+        "slip": "Let the promise slip"
+      },
+      "locked_reasons": {
+        "cut_test": "The card hasn't reached testing yet.",
+        "crunch": "Even with overtime it won't be done this sprint.",
+        "extend": "This date has already been moved once."
+      },
+      "expire_note": "No decision came, so the sprint closed and the promise was broken."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "promise_break"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

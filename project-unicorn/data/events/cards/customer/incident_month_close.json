@@ -1,0 +1,186 @@
+{
+  "id": "customer.incident_month_close",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "request",
+  "class": "interrupt",
+  "sender_title": "MAIL_SENDER_FINANCE_MANAGER",
+  "system": true,
+  "tags": [
+    "critical",
+    "urgent",
+    "incident"
+  ],
+  "schema": 3,
+  "family": "incident",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 0
+  },
+  "options": [
+    {
+      "id": "night_fix",
+      "outcome_id": "night_fix",
+      "requires": {
+        "seam": "olay.payers",
+        "op": ">=",
+        "value": 1
+      },
+      "effects": [
+        {
+          "verb": "morale_crew",
+          "crew": "incident_crew",
+          "line": "incident",
+          "amount": -7
+        },
+        {
+          "verb": "incident",
+          "act": "now"
+        }
+      ]
+    },
+    {
+      "id": "founder_fix",
+      "outcome_id": "founder_fix",
+      "requires": {
+        "seam": "hr.headcount",
+        "op": "<=",
+        "value": 2
+      },
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -15,
+          "weeks": 1
+        },
+        {
+          "verb": "incident",
+          "act": "founder"
+        }
+      ]
+    },
+    {
+      "id": "sprint_stop",
+      "outcome_id": "sprint_stop",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      "effects": [
+        {
+          "verb": "sprint_fix_first",
+          "line": "incident"
+        },
+        {
+          "verb": "trust_delta",
+          "amount": -3
+        },
+        {
+          "verb": "incident",
+          "act": "morning"
+        }
+      ]
+    },
+    {
+      "id": "defer",
+      "outcome_id": "defer",
+      "effects": [
+        {
+          "verb": "incident",
+          "act": "defer"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Acil: ay sonu kapanışı",
+      "body": {
+        "by_seam": "olay.variant",
+        "variants": {
+          "0": "Fatura kesemiyoruz, ay sonu kapanışını yapamıyoruz. Acil çözebilir misiniz?",
+          "1": "Defter bankayla tutmuyor, ay sonu kapanışını yapamıyoruz. Acil çözebilir misiniz?",
+          "2": "Kasa bakiyesi yanlış çıkıyor, ay sonu kapanışını yapamıyoruz. Acil çözebilir misiniz?"
+        }
+      },
+      "options": {
+        "night_fix": "Ekip şimdi düzeltsin",
+        "founder_fix": "Kendin düzelt",
+        "sprint_stop": "Sabah düzelt",
+        "defer": "Sonraki sprinte bırak"
+      },
+      "locked_reasons": {
+        "night_fix": "Ekipte yazılım ya da test yapan kimse yok.",
+        "founder_fix": "Ekip iki kişiyi geçti.",
+        "sprint_stop": "Şu anda koşan bir sprint yok."
+      },
+      "expire_note": "Cevap gitmedi, {customer} ayı elle kapattı."
+    },
+    "en": {
+      "title": "Urgent: month close",
+      "body": {
+        "by_seam": "olay.variant",
+        "variants": {
+          "0": "We can't issue invoices, so we can't close the month. Can you fix it urgently?",
+          "1": "Our ledger doesn't match the bank, so we can't close the month. Can you fix it urgently?",
+          "2": "Our cash balance comes out wrong, so we can't close the month. Can you fix it urgently?"
+        }
+      },
+      "options": {
+        "night_fix": "Have the team fix it now",
+        "founder_fix": "Fix it yourself",
+        "sprint_stop": "Fix it in the morning",
+        "defer": "Leave it for the next sprint"
+      },
+      "locked_reasons": {
+        "night_fix": "Nobody on the team builds or tests.",
+        "founder_fix": "The team has grown past two people.",
+        "sprint_stop": "No sprint is running right now."
+      },
+      "expire_note": "No answer went back, so {customer} closed the month by hand."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "incident",
+        "act": "defer"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

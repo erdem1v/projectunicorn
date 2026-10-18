@@ -1,0 +1,216 @@
+{
+  "id": "product.incident_regression",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "interrupt",
+  "system": true,
+  "tags": [
+    "critical",
+    "urgent",
+    "incident"
+  ],
+  "schema": 3,
+  "family": "incident",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": false,
+      "select": "asked"
+    },
+    "customer": {
+      "type": "customer",
+      "required": false,
+      "select": "asked"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 0
+  },
+  "options": [
+    {
+      "id": "sprint_stop",
+      "outcome_id": "sprint_stop",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      "effects": [
+        {
+          "verb": "sprint_fix_first",
+          "line": "incident"
+        },
+        {
+          "verb": "incident",
+          "act": "now"
+        }
+      ]
+    },
+    {
+      "id": "evening",
+      "outcome_id": "evening",
+      "requires": {
+        "seam": "olay.payers",
+        "op": ">=",
+        "value": 1
+      },
+      "effects": [
+        {
+          "verb": "morale_crew",
+          "crew": "incident_crew",
+          "line": "incident",
+          "amount": -7
+        },
+        {
+          "verb": "incident",
+          "act": "evening"
+        }
+      ]
+    },
+    {
+      "id": "founder_fix",
+      "outcome_id": "founder_fix",
+      "requires": {
+        "seam": "hr.headcount",
+        "op": "<=",
+        "value": 2
+      },
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -15,
+          "weeks": 1
+        },
+        {
+          "verb": "incident",
+          "act": "founder"
+        }
+      ]
+    },
+    {
+      "id": "defer",
+      "outcome_id": "defer",
+      "effects": [
+        {
+          "verb": "incident",
+          "act": "defer"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "{seam:olay.version} sonrası bir şey bozuldu",
+      "body": {
+        "by_seam": "olay.variant",
+        "variants": {
+          "0": "{seam:olay.version} çıktığından beri bazı faturalar iki kez kesiliyor. {seam:olay.affected_accounts} hesap etkileniyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı).",
+          "1": "{seam:olay.version} çıktığından beri bazı faturalar iki kez kesiliyor. Etkilenen tek hesap {customer} ({seam:musteri.seats} kullanıcı).",
+          "2": "{seam:olay.version} çıktığından beri stok sayımında bazı ürünler eksi adetle görünüyor. {seam:olay.affected_accounts} hesap etkileniyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı).",
+          "3": "{seam:olay.version} çıktığından beri stok sayımında bazı ürünler eksi adetle görünüyor. Etkilenen tek hesap {customer} ({seam:musteri.seats} kullanıcı).",
+          "4": "{seam:olay.version} çıktığından beri dönem bakiyeleri bankayla tutmuyor. {seam:olay.affected_accounts} hesap etkileniyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı).",
+          "5": "{seam:olay.version} çıktığından beri dönem bakiyeleri bankayla tutmuyor. Etkilenen tek hesap {customer} ({seam:musteri.seats} kullanıcı).",
+          "6": "{seam:olay.version} çıktığından beri kasa bakiyesi gün sonunda yanlış çıkıyor. {seam:olay.affected_accounts} hesap etkileniyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı).",
+          "7": "{seam:olay.version} çıktığından beri kasa bakiyesi gün sonunda yanlış çıkıyor. Etkilenen tek hesap {customer} ({seam:musteri.seats} kullanıcı).",
+          "8": "{seam:olay.version} çıktığından beri banka hareketleri deftere iki kez düşüyor. {seam:olay.affected_accounts} hesap etkileniyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı).",
+          "9": "{seam:olay.version} çıktığından beri banka hareketleri deftere iki kez düşüyor. Etkilenen tek hesap {customer} ({seam:musteri.seats} kullanıcı).",
+          "10": "{seam:olay.version} çıktığından beri yetkisi olmayan kullanıcılar maliyet sütununu görebiliyor. {seam:olay.affected_accounts} hesap etkileniyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı).",
+          "11": "{seam:olay.version} çıktığından beri yetkisi olmayan kullanıcılar maliyet sütununu görebiliyor. Etkilenen tek hesap {customer} ({seam:musteri.seats} kullanıcı).",
+          "12": "{seam:olay.version} çıktığından beri sayfa yenilenince kaydedilen değişiklikler kayboluyor. {seam:olay.affected_accounts} hesap etkileniyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı).",
+          "13": "{seam:olay.version} çıktığından beri sayfa yenilenince kaydedilen değişiklikler kayboluyor. Etkilenen tek hesap {customer} ({seam:musteri.seats} kullanıcı).",
+          "14": "{seam:olay.version} çıktığından beri başka uygulamalarla bağlantı sık sık kopuyor. Her gün {seam:olay.line_users} kişi bununla karşılaşıyor.",
+          "15": "{seam:olay.version} çıktığından beri bazı kullanıcılar sürekli oturumdan atılıyor. Her gün {seam:olay.line_users} kişi bununla karşılaşıyor.",
+          "16": "{seam:olay.version} çıktığından beri kaydedilen değişiklikler uygulama kapanınca kayboluyor. Her gün {seam:olay.line_users} kişi bununla karşılaşıyor.",
+          "17": "{seam:olay.version} çıktığından beri telefonda bazı düğmeler ekranın dışında kalıyor. Her gün {seam:olay.line_users} kişi bununla karşılaşıyor."
+        }
+      },
+      "options": {
+        "sprint_stop": "Sprinti durdur, şimdi düzelt",
+        "evening": "Ekip bu akşam kalsın",
+        "founder_fix": "Kendin düzelt",
+        "defer": "Sonraki sprinte bırak"
+      },
+      "locked_reasons": {
+        "sprint_stop": "Şu anda koşan bir sprint yok.",
+        "evening": "Ekipte yazılım ya da test yapan kimse yok.",
+        "founder_fix": "Ekip iki kişiyi geçti."
+      },
+      "expire_note": "Karar verilmedi, düzeltme sonraki sprinte kaldı."
+    },
+    "en": {
+      "title": "Something broke in {seam:olay.version}",
+      "body": {
+        "by_seam": "olay.variant",
+        "variants": {
+          "0": "Since {seam:olay.version} went out, some invoices go out twice. {seam:olay.affected_accounts} accounts are affected; the largest is {customer} ({seam:musteri.seats} users).",
+          "1": "Since {seam:olay.version} went out, some invoices go out twice. The only account affected is {customer} ({seam:musteri.seats} users).",
+          "2": "Since {seam:olay.version} went out, some products show a negative count in the stock take. {seam:olay.affected_accounts} accounts are affected; the largest is {customer} ({seam:musteri.seats} users).",
+          "3": "Since {seam:olay.version} went out, some products show a negative count in the stock take. The only account affected is {customer} ({seam:musteri.seats} users).",
+          "4": "Since {seam:olay.version} went out, period balances no longer match the bank. {seam:olay.affected_accounts} accounts are affected; the largest is {customer} ({seam:musteri.seats} users).",
+          "5": "Since {seam:olay.version} went out, period balances no longer match the bank. The only account affected is {customer} ({seam:musteri.seats} users).",
+          "6": "Since {seam:olay.version} went out, the cash balance comes out wrong at the end of the day. {seam:olay.affected_accounts} accounts are affected; the largest is {customer} ({seam:musteri.seats} users).",
+          "7": "Since {seam:olay.version} went out, the cash balance comes out wrong at the end of the day. The only account affected is {customer} ({seam:musteri.seats} users).",
+          "8": "Since {seam:olay.version} went out, bank transactions land in the ledger twice. {seam:olay.affected_accounts} accounts are affected; the largest is {customer} ({seam:musteri.seats} users).",
+          "9": "Since {seam:olay.version} went out, bank transactions land in the ledger twice. The only account affected is {customer} ({seam:musteri.seats} users).",
+          "10": "Since {seam:olay.version} went out, users without the right permission can see the cost column. {seam:olay.affected_accounts} accounts are affected; the largest is {customer} ({seam:musteri.seats} users).",
+          "11": "Since {seam:olay.version} went out, users without the right permission can see the cost column. The only account affected is {customer} ({seam:musteri.seats} users).",
+          "12": "Since {seam:olay.version} went out, saved changes are lost when the page reloads. {seam:olay.affected_accounts} accounts are affected; the largest is {customer} ({seam:musteri.seats} users).",
+          "13": "Since {seam:olay.version} went out, saved changes are lost when the page reloads. The only account affected is {customer} ({seam:musteri.seats} users).",
+          "14": "Since {seam:olay.version} went out, links to other apps keep dropping. {seam:olay.line_users} people run into it every day.",
+          "15": "Since {seam:olay.version} went out, some users keep getting logged out. {seam:olay.line_users} people run into it every day.",
+          "16": "Since {seam:olay.version} went out, saved changes are lost when the app closes. {seam:olay.line_users} people run into it every day.",
+          "17": "Since {seam:olay.version} went out, on phones some buttons sit off the screen. {seam:olay.line_users} people run into it every day."
+        }
+      },
+      "options": {
+        "sprint_stop": "Stop the sprint, fix it now",
+        "evening": "Have the team stay late tonight",
+        "founder_fix": "Fix it yourself",
+        "defer": "Leave it for the next sprint"
+      },
+      "locked_reasons": {
+        "sprint_stop": "No sprint is running right now.",
+        "evening": "Nobody on the team builds or tests.",
+        "founder_fix": "The team has grown past two people."
+      },
+      "expire_note": "No decision came, so the fix was left for the next sprint."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "incident",
+        "act": "defer"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

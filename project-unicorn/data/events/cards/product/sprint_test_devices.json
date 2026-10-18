@@ -1,0 +1,132 @@
+{
+  "id": "product.sprint_test_devices",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_test",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c"
+  },
+  "speaker_role": "tester",
+  "pool_group": "tester",
+  "stage": "test",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_line",
+        "op": "in",
+        "value": [
+          "line_shared_mobile"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "buy_phones",
+      "outcome_id": "buy_phones",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount_seam": "urun.paper_test_phones",
+          "amount_mult": -1,
+          "label": "user_tests"
+        }
+      ]
+    },
+    {
+      "id": "team_phones",
+      "outcome_id": "team_phones",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "two_phones",
+      "outcome_id": "two_phones",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yalnız iki telefonda deneyebildim",
+      "body": "Bu kartı yalnız elimizdeki iki telefonda deneyebildim. Kullanıcıların çoğu başka modeller kullanıyor ve ekran telefona göre değişiyor.",
+      "options": {
+        "buy_phones": "Birkaç test telefonu al",
+        "team_phones": "Ekibin telefonlarında dene",
+        "two_phones": "İki telefonla yetin"
+      },
+      "expire_note": "Cevap gelmedi, kart iki telefonda denenip çıktı."
+    },
+    "en": {
+      "title": "I could only test it on two phones",
+      "body": "I could only test this card on the two phones we have. Most users are on other models, and the screen changes from phone to phone.",
+      "options": {
+        "buy_phones": "Buy a few test phones",
+        "team_phones": "Try it on the team's phones",
+        "two_phones": "Make do with two phones"
+      },
+      "expire_note": "No answer came, so the card shipped after two phones."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

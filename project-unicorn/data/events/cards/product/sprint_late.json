@@ -4,20 +4,55 @@
   "category": "product",
   "tick": "request",
   "class": "paper",
+  "sender": "employee",
+  "system": true,
   "tags": [],
   "schema": 3,
-  "family": "sprint_capacity",
-  "delay_weeks": [0, 0],
+  "family": "sprint_late",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": [
+    "developer",
+    "designer",
+    "tester"
+  ],
+  "stage": "any",
+  "pool_group": "system",
+  "delay_weeks": [
+    0,
+    0
+  ],
   "delay_reason": "request",
   "plausibility": {
-    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
-    "headcount": [0, null],
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
     "product": "any",
     "modules": [],
     "min_week": 0
   },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": false,
+      "select": "request"
+    }
+  },
   "latch": {
-    "cooldown_weeks": 2
+    "cooldown_weeks": 26,
+    "max_fires": 3
   },
   "condition": {
     "all": [
@@ -27,16 +62,36 @@
         "value": true
       },
       {
+        "seam": "urun.sprint_last_week",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_kind",
+        "op": "==",
+        "value": "request"
+      },
+      {
         "seam": "urun.decision_card_late",
         "op": "==",
         "value": true
+      },
+      {
+        "seam": "urun.crunch_finishes",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_promised",
+        "op": "==",
+        "value": false
       }
     ]
   },
   "options": [
     {
       "id": "carry",
-      "outcome_id": "carried",
+      "outcome_id": "carry",
       "effects": [
         {
           "verb": "sprint_card_carry"
@@ -45,61 +100,50 @@
     },
     {
       "id": "crunch",
-      "outcome_id": "crunched",
-      "requires": {
-        "seam": "urun.crunch_finishes",
-        "op": "==",
-        "value": true,
-        "reason": "EV_PRODUCT_SPRINT_LATE_CRUNCH_LOCK"
-      },
+      "outcome_id": "crunch",
       "effects": [
         {
           "verb": "sprint_hours",
           "mult": 1.25
         },
         {
-          "verb": "add_brand",
-          "amount": -2
+          "verb": "morale_crew",
+          "crew": "sprint_crew",
+          "amount": -5
         }
       ]
     }
   ],
   "text": {
     "tr": {
-      "title": "EV_PRODUCT_SPRINT_LATE_TITLE",
+      "title": "Kart sprinte yetişmeyecek",
       "body": {
-        "by_seam": "urun.sprint_single_card",
+        "by_seam": "urun.decision_request_votes",
         "variants": {
-          "0": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek. Zamanında bitmesi için geceler ona gidecek, dışarıya hiçbir şey çıkmayacak.",
-          "1": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek. Sprintteki tek kart bu; devredilirse sprintte yapılacak iş kalmaz. Zamanında bitmesi için geceler ona gidecek."
+          "0": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek ve {customer} ekibi bu kartı bekliyor. Bu hafta ekip fazla mesai yaparsa yetişir.",
+          "1": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek ve bu kartı {seam:urun.decision_request_votes} kişi bekliyor. Bu hafta ekip fazla mesai yaparsa yetişir."
         }
       },
       "options": {
-        "carry": "EV_PRODUCT_SPRINT_LATE_CARRY",
-        "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH"
+        "carry": "Sonraki sprinte devret",
+        "crunch": "Ekipten fazla mesai iste"
       },
-      "expire_note": "EV_PRODUCT_SPRINT_LATE_EXPIRED",
-      "locked_reasons": {
-        "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH_LOCK"
-      }
+      "expire_note": "Karar verilmedi, kart sonraki sprinte devretti."
     },
     "en": {
-      "title": "EV_PRODUCT_SPRINT_LATE_TITLE",
+      "title": "The card won't make the sprint",
       "body": {
-        "by_seam": "urun.sprint_single_card",
+        "by_seam": "urun.decision_request_votes",
         "variants": {
-          "0": "At this pace {seam:urun.decision_card} will not be done by the end of the sprint. Finishing it in time means nights on it and nothing else going out.",
-          "1": "At this pace {seam:urun.decision_card} will not be done by the end of the sprint. It is the only card in this sprint; carried over, the sprint has nothing left to work on. Finishing it in time means nights on it."
+          "0": "At this pace {seam:urun.decision_card} won't be done by the end of the sprint, and the {customer} team is waiting for it. If the team works late this week, it makes it.",
+          "1": "At this pace {seam:urun.decision_card} won't be done by the end of the sprint, and {seam:urun.decision_request_votes} people are waiting for it. If the team works late this week, it makes it."
         }
       },
       "options": {
-        "carry": "EV_PRODUCT_SPRINT_LATE_CARRY",
-        "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH"
+        "carry": "Carry it to the next sprint",
+        "crunch": "Ask the team to work late"
       },
-      "expire_note": "EV_PRODUCT_SPRINT_LATE_EXPIRED",
-      "locked_reasons": {
-        "crunch": "EV_PRODUCT_SPRINT_LATE_CRUNCH_LOCK"
-      }
+      "expire_note": "No decision came, so the card carried over to the next sprint."
     }
   },
   "expires_weeks": 1,

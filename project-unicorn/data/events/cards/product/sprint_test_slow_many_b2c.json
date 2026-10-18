@@ -1,0 +1,124 @@
+{
+  "id": "product.sprint_test_slow_many_b2c",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_test",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c"
+  },
+  "speaker_role": "tester",
+  "pool_group": "tester",
+  "stage": "test",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_kind",
+        "op": "in",
+        "value": [
+          "feature",
+          "request"
+        ]
+      },
+      {
+        "seam": "sales.b2c_audience",
+        "op": ">=",
+        "value": 5000
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "paging",
+      "outcome_id": "paging",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "ship_b2c",
+      "outcome_id": "ship_b2c",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Çok kayıtla yavaşlıyor",
+      "body": "Bu ekran yüz kayıtla hızlı açılıyor, on bin kayıtla yarım dakika sürüyor. Sayfa sayfa yüklersek kart biraz uzar.",
+      "options": {
+        "paging": "Sayfa sayfa yüklesin",
+        "ship_b2c": "Böyle çıksın"
+      },
+      "expire_note": "Cevap gelmedi, ekran böyle çıktı."
+    },
+    "en": {
+      "title": "It slows down with lots of records",
+      "body": "This screen opens fast with a hundred records, but with ten thousand it takes half a minute. Loading it page by page makes the card a bit longer.",
+      "options": {
+        "paging": "Load it page by page",
+        "ship_b2c": "Ship it like this"
+      },
+      "expire_note": "No answer came, so the screen went out like this."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

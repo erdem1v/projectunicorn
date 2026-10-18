@@ -27,6 +27,7 @@
   "hours_mult": {"min": 0.5, "max": 1.5},
   "lead": {"small_team_cards": 2},
   "faulty_chance": 0.4,
+  "promise": {"cut_test_escape": 0.15},
   "expectation": {"1": 1, "2": 2, "3": 2},
   "rival_bump": 0.5,
   "rival_bump_max": 1.0,
@@ -37,21 +38,96 @@
   "research_users": 5,
   "request": {"deadline_weeks": 8, "first_after_weeks": 2, "before_renewal_weeks": 12, "contract_weeks": 52},
   "pm": {"horizon": 3, "goal_weight": 1.5, "low_skill_cards": 0.8, "goal_squares": 10, "goal_mark": 5},
-  "decision": {"rate": 0.35, "cards": ["product.sprint_two_paths", "product.sprint_late", "product.sprint_contractor", "product.sprint_hardcoded_colors", "product.sprint_colors_again", "product.sprint_unasked_rewrite"]},
+  "decision": {"sprint_chance": {"1": 0.3, "2": 0.5}, "seen_weight": 2, "cards": ["product.sprint_dev_root_cause", "product.sprint_dev_shorter_path", "product.sprint_dev_contractor", "product.sprint_dev_unasked_rewrite", "product.sprint_dev_security_update", "product.sprint_dev_multi_currency", "product.sprint_dev_import_tool", "product.sprint_dev_backfill", "product.sprint_dev_old_phones", "product.sprint_dev_relogin", "product.sprint_untested_own_code", "product.sprint_untested_old_screens", "product.sprint_founder_test_pile", "product.sprint_solo_rushed_code", "product.sprint_solo_backup", "product.sprint_solo_server_bill", "product.sprint_solo_license", "product.sprint_solo_watch", "product.sprint_solo_signup_code", "product.sprint_late", "product.sprint_late_solo", "product.sprint_pm_scope_grew", "product.sprint_pm_phone_too", "product.sprint_pm_phone_too_b2c", "product.sprint_pm_two_accounts", "product.sprint_pm_renewal", "product.sprint_pm_spec_unclear", "product.sprint_pm_spec_unclear_b2c", "product.sprint_pm_core_first", "product.sprint_design_customer_colors", "product.sprint_design_gloves", "product.sprint_design_first_screen", "product.sprint_design_notifications", "product.sprint_design_drawings_late", "product.sprint_design_color_blind", "product.sprint_design_empty_state", "product.sprint_design_empty_state_b2c", "product.sprint_test_stock_transfer", "product.sprint_test_readonly_delete", "product.sprint_test_their_data", "product.sprint_test_coupon", "product.sprint_test_devices", "product.sprint_test_after_midnight", "product.sprint_test_slow_many", "product.sprint_test_slow_many_b2c", "product.sprint_test_too_much"]},
+  "paper": {
+    "trim_share": 0.4, "reopen_points": 1, "contract_per_point": 1000, "ask_silent_mult": 5, "phone_points": 2,
+    "b2c_loss": {"small": 0.005, "mid": 0.01}, "renewal_discount": 0.2, "first_screen_loss": {"share": 0.1, "weeks": 8},
+    "coupon_share": 0.01, "test_phones": 1200, "slow_seats": 15, "warehouse_sectors": ["logistics", "manufacturing", "retail"],
+    "colors": {"hand": 2, "central": 4, "again_extra": 1},
+    "harden_weeks": 26, "root_min": 3, "signup_loss": 0.3, "outside_week_mult": 1.5,
+    "license": {"per_seat": 6, "per_user": 0.3, "min": 1200}
+  },
   "incident": {
     "base": 0.1, "tier": {"local": 1.0, "cloud": 0.5, "enterprise": 0.25}, "bug_cap": 12, "bug_div": 8, "p_max": 0.3,
     "min_gap": 4, "launch_quiet": 3,
+    "weights": {"outage": 1.0, "month_close": 1.5, "checkout": 1.0, "storm": 1.5},
+    "fix": {
+      "hours": {"outage": 3, "month_close": 3, "checkout": 2, "regression": 4, "storm": 3},
+      "crew_base": 0.75, "crew_per_star": 0.125, "founder_slower": 1.5, "step": 10
+    },
     "outage": {
       "start": [30, 270], "start_step": 10, "min_audience": 1000,
-      "fix_hours": 3, "crew_base": 0.75, "crew_per_star": 0.125, "founder_slower": 1.5, "fix_step": 10,
       "night_sectors": ["logistics", "manufacturing", "health"], "day_start": 510,
       "credit": [[0, 10], [7, 15], [12, 25]], "trust_per_hour": 0.6, "trust_cap": 8, "credit_forgives": 0.85,
       "try_share_hour": 0.015, "loss_per_hour": 0.003, "loss_cap": 0.04, "free_month_loss": 0.5
-    }
+    },
+    "month_close": {"lines": ["line_erp_invoicing", "line_erp_ledger", "line_erp_cashflow"], "line_bugs": 3, "stamp": [1330, 1375]},
+    "checkout": {"began": [-120, 240], "after_start": [10, 50], "try_share_hour": 0.0022, "give_up": 0.25},
+    "regression": {
+      "b2b": ["line_erp_invoicing", "line_erp_stock", "line_erp_ledger", "line_erp_cashflow", "line_shared_integrations",
+        "line_shared_security", "line_shared_durability"],
+      "b2c": ["line_shared_integrations", "line_shared_security", "line_shared_durability", "line_shared_mobile"],
+      "after_start": [10, 50]
+    },
+    "storm": {
+      "lines": ["line_shared_durability", "line_shared_security", "line_shared_mobile", "line_shared_integrations"],
+      "line_bugs": 7, "min_audience": 2000, "stamp": [660, 960], "share": 0.025
+    },
+    "defer": {"trust": -6, "per_sprint": -3, "audience": 0.02, "free_month_audience": 0.01}
   },
   "paid_plan": {"effort": 3, "tiers": 1},
   "impact": {"step": 1.0, "level": 2.0, "rival_gap": 1.0, "request": 2.0, "mvp": 3.0, "bug": 0.5, "alert": 2.0, "research": 0.0},
   "content": {"press_core": 2, "press_area": 2, "rival_news": 2},
+  "thanks": {"max": 3},
+  "reviews": {
+    "neg_line_bugs": 5, "repeat_weeks": 52, "named_share": 0.7, "min": 2,
+    "named": [
+      {"id": "PRODUCT_REVIEW_NEW_NAMED_1", "src": "REVIEW_SOURCE_SOCIAL"},
+      {"id": "PRODUCT_REVIEW_NEW_NAMED_2", "src": "REVIEW_SOURCE_STORE"},
+      {"id": "PRODUCT_REVIEW_NEW_NAMED_3", "src": "REVIEW_SOURCE_STORE"},
+      {"id": "PRODUCT_REVIEW_NEW_NAMED_4", "src": "REVIEW_SOURCE_SOCIAL"}
+    ],
+    "plain": [
+      {"id": "PRODUCT_REVIEW_NEW_PLAIN_1", "src": "REVIEW_SOURCE_STORE"},
+      {"id": "PRODUCT_REVIEW_NEW_PLAIN_2", "src": "REVIEW_SOURCE_SOCIAL"},
+      {"id": "PRODUCT_REVIEW_NEW_PLAIN_3", "src": "REVIEW_SOURCE_STORE", "calm": true}
+    ],
+    "fix": [
+      {"id": "PRODUCT_REVIEW_FIX_1", "src": "REVIEW_SOURCE_STORE"},
+      {"id": "PRODUCT_REVIEW_FIX_2", "src": "REVIEW_SOURCE_SOCIAL"},
+      {"id": "PRODUCT_REVIEW_FIX_3", "src": "REVIEW_SOURCE_STORE"}
+    ],
+    "neg": {
+      "line_shared_integrations": [
+        {"id": "PRODUCT_REVIEW_NEG_INTEGRATIONS_1", "src": "REVIEW_SOURCE_STORE", "blames": true},
+        {"id": "PRODUCT_REVIEW_NEG_INTEGRATIONS_2", "src": "REVIEW_SOURCE_SOCIAL"},
+        {"id": "PRODUCT_REVIEW_NEG_INTEGRATIONS_3", "src": "REVIEW_SOURCE_STORE"}
+      ],
+      "line_shared_security": [
+        {"id": "PRODUCT_REVIEW_NEG_SECURITY_1", "src": "REVIEW_SOURCE_STORE"},
+        {"id": "PRODUCT_REVIEW_NEG_SECURITY_2", "src": "REVIEW_SOURCE_SOCIAL"},
+        {"id": "PRODUCT_REVIEW_NEG_SECURITY_3", "src": "REVIEW_SOURCE_STORE", "blames": true}
+      ],
+      "line_shared_durability": [
+        {"id": "PRODUCT_REVIEW_NEG_DURABILITY_1", "src": "REVIEW_SOURCE_STORE"},
+        {"id": "PRODUCT_REVIEW_NEG_DURABILITY_2", "src": "REVIEW_SOURCE_SOCIAL"},
+        {"id": "PRODUCT_REVIEW_NEG_DURABILITY_3", "src": "REVIEW_SOURCE_STORE"}
+      ],
+      "line_shared_mobile": [
+        {"id": "PRODUCT_REVIEW_NEG_MOBILE_1", "src": "REVIEW_SOURCE_STORE"},
+        {"id": "PRODUCT_REVIEW_NEG_MOBILE_2", "src": "REVIEW_SOURCE_STORE", "blames": true, "tier": 2},
+        {"id": "PRODUCT_REVIEW_NEG_MOBILE_3", "src": "REVIEW_SOURCE_SOCIAL"}
+      ],
+      "other": [
+        {"id": "PRODUCT_REVIEW_NEG_OTHER_1", "src": "REVIEW_SOURCE_STORE", "blames": true},
+        {"id": "PRODUCT_REVIEW_NEG_OTHER_2", "src": "REVIEW_SOURCE_SOCIAL", "blames": true},
+        {"id": "PRODUCT_REVIEW_NEG_OTHER_3", "src": "REVIEW_SOURCE_STORE", "blames": true},
+        {"id": "PRODUCT_REVIEW_NEG_OTHER_4", "src": "REVIEW_SOURCE_STORE"},
+        {"id": "PRODUCT_REVIEW_NEG_OTHER_5", "src": "REVIEW_SOURCE_SOCIAL"},
+        {"id": "PRODUCT_REVIEW_NEG_OTHER_6", "src": "REVIEW_SOURCE_STORE"}
+      ]
+    }
+  },
   "archetypes": {"tech_exacting": "core", "finance_brisk": "integrations", "ops_cautious": "trust", "default": "onboarding"},
   "areas": [
     {"id": "core", "order": 0, "markets": ["b2c", "b2b"], "identity": true, "lines": [], "name_key": "PRODUCT_AREA_CORE"},

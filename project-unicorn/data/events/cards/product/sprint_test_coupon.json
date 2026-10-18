@@ -1,0 +1,136 @@
+{
+  "id": "product.sprint_test_coupon",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_test",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c"
+  },
+  "speaker_role": "tester",
+  "pool_group": "tester",
+  "stage": "test",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.paid_plan_open",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_line",
+        "op": "in",
+        "value": [
+          "line_shared_integrations"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "fix",
+      "outcome_id": "fix",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "coupons_off",
+      "outcome_id": "coupons_off",
+      "effects": [
+        {
+          "verb": "audience_delta",
+          "amount_seam": "urun.paper_coupon_loss",
+          "amount_mult": -1
+        }
+      ]
+    },
+    {
+      "id": "known_bug",
+      "outcome_id": "known_bug",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kupon iki kez düşüyor",
+      "body": "Kupon iki kez düşüyor, müşteri iki kat indirim alıyor. Düzeltirsek kart biraz uzar.",
+      "options": {
+        "fix": "Çıkmadan düzelt",
+        "coupons_off": "Kuponları bu sürümde kapat",
+        "known_bug": "Bilinen hata olarak çık"
+      },
+      "expire_note": "Cevap gelmedi, kart hatayla çıktı."
+    },
+    "en": {
+      "title": "The coupon is applied twice",
+      "body": "The coupon is applied twice, so customers get double the discount. Fixing it makes the card a bit longer.",
+      "options": {
+        "fix": "Fix it before it ships",
+        "coupons_off": "Turn coupons off for this release",
+        "known_bug": "Ship it as a known bug"
+      },
+      "expire_note": "No answer came, so the card shipped with the bug."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

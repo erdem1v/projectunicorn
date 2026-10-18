@@ -1,0 +1,131 @@
+{
+  "id": "product.sprint_solo_server_bill",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_solo",
+  "speaker_role": "founder",
+  "stage": "any",
+  "pool_group": "solo",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      0
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.paper_server_bill",
+        "op": ">",
+        "value": 0
+      },
+      {
+        "seam": "urun.weeks_to_month_end",
+        "op": "<=",
+        "value": 2
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "fix_code",
+      "outcome_id": "fix_code",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "pay",
+      "outcome_id": "pay",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "label": "incident",
+          "amount_seam": "urun.paper_server_bill",
+          "amount_mult": -1
+        },
+        {
+          "verb": "sprint_card_trim",
+          "amount": 1,
+          "follow": true
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Sunucu faturası iki katına çıktı",
+      "body": "Sunucu faturan bu ay iki katına çıktı. Sebebi yazdığın {seam:urun.decision_card} kodu: her açılışta aynı veriyi baştan çekiyor.",
+      "options": {
+        "fix_code": "Kodu düzelt",
+        "pay": "Faturayı öde, kodu sonraki sprintte düzelt"
+      },
+      "expire_note": "Cevap verilmedi, fatura ödendi, düzeltme sonraki sprinte kaldı."
+    },
+    "en": {
+      "title": "The server bill doubled",
+      "body": "Your server bill doubled this month. The cause is the {seam:urun.decision_card} code you wrote: it pulls the same data from scratch every time it opens.",
+      "options": {
+        "fix_code": "Fix the code",
+        "pay": "Pay it, fix the code next sprint"
+      },
+      "expire_note": "No answer came, so the bill was paid and the fix moved to next sprint."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_cash",
+        "label": "incident",
+        "amount_seam": "urun.paper_server_bill",
+        "amount_mult": -1
+      },
+      {
+        "verb": "sprint_card_trim",
+        "amount": 1,
+        "follow": true
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

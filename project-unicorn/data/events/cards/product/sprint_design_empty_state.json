@@ -1,0 +1,125 @@
+{
+  "id": "product.sprint_design_empty_state",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_design",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the account or the developer comes from the card on the desk, not from how long they have been here"
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "speaker_role": "designer",
+  "pool_group": "designer",
+  "stage": "design",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "line_newest"
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_tier",
+        "op": "==",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "guide",
+      "outcome_id": "guide",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "empty_b2b",
+      "outcome_id": "empty_b2b",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -8
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yeni gelen boş ekran görüyor",
+      "body": "Yeni gelenler bu ekranı açınca bomboş görüyor, nereden başlayacaklarını söyleyen bir şey yok. Kısa bir ilk adım rehberi çizersem kart biraz büyür.",
+      "options": {
+        "guide": "Rehberi çiz",
+        "empty_b2b": "Boş kalsın"
+      },
+      "expire_note": "Cevap gelmedi, ekran boş çıktı."
+    },
+    "en": {
+      "title": "New users see an empty screen",
+      "body": "New users open this screen and find it completely empty, with nothing telling them where to start. A short first steps guide would make the card a little bigger.",
+      "options": {
+        "guide": "Add the guide",
+        "empty_b2b": "Leave it empty"
+      },
+      "expire_note": "No answer came, so the screen went out empty."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "scope": "customer",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

@@ -1,0 +1,139 @@
+{
+  "id": "product.sprint_dev_multi_currency",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the sprint names the account the card's line serves; the account is not picked by its seniority"
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "line_top"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_line",
+        "op": "in",
+        "value": [
+          "line_erp_invoicing",
+          "line_erp_ledger",
+          "line_erp_cashflow"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "add_currency",
+      "outcome_id": "add_currency",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "currency_next",
+      "outcome_id": "currency_next",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "amount": 2,
+          "follow": true
+        }
+      ]
+    },
+    {
+      "id": "single",
+      "outcome_id": "single",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "amount": -8
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "İki para birimiyle çalışıyorlar",
+      "body": "{customer} bu ekranı hem dolarla hem avroyla kullanıyor, biz tek para birimine göre yazdık. İkinci para birimini eklersem kart büyür.",
+      "options": {
+        "add_currency": "İkinci para birimini ekle",
+        "currency_next": "Önümüzdeki sprinte at",
+        "single": "Tek para birimiyle çıksın"
+      },
+      "expire_note": "Cevap gelmedi, ekran tek para birimiyle çıktı."
+    },
+    "en": {
+      "title": "They work in two currencies",
+      "body": "{customer} uses this screen in both dollars and euros, and we built it for a single currency. Adding the second one makes the card bigger.",
+      "options": {
+        "add_currency": "Add the second currency",
+        "currency_next": "Move it to next sprint",
+        "single": "Ship it with one currency"
+      },
+      "expire_note": "No answer came, so the screen went out with one currency."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

@@ -1,0 +1,131 @@
+{
+  "id": "product.sprint_dev_backfill",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_tier",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      },
+      {
+        "seam": "urun.decision_line_accounts",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "seam": "urun.decision_kind",
+        "op": "in",
+        "value": [
+          "feature",
+          "request"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "fill_old",
+      "outcome_id": "fill_old",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "leave_empty",
+      "outcome_id": "leave_empty",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yeni alan eski kayıtlarda boş",
+      "body": "Bu kartla gelen yeni alan bütün eski kayıtlarda boş görünecek. Eskileri de doldurursam kart biraz büyür.",
+      "options": {
+        "fill_old": "Eski kayıtları da doldur",
+        "leave_empty": "Eski kayıtlar boş kalsın"
+      },
+      "expire_note": "Cevap gelmedi, eski kayıtlar boş kaldı."
+    },
+    "en": {
+      "title": "The new field is empty on old records",
+      "body": "The field this card adds will be empty on every old record. If I fill in the old ones too, the card gets a bit bigger.",
+      "options": {
+        "fill_old": "Fill in the old records too",
+        "leave_empty": "Leave the old records empty"
+      },
+      "expire_note": "No answer came, so the old records stayed empty."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

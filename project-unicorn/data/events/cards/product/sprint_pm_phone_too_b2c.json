@@ -1,0 +1,150 @@
+{
+  "id": "product.sprint_pm_phone_too_b2c",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_pm",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c"
+  },
+  "speaker_role": "product_manager",
+  "pool_group": "pm",
+  "stage": "any",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_request_votes",
+        "op": ">=",
+        "value": 1
+      },
+      {
+        "seam": "urun.decision_card_late",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "urun.decision_phone_late",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.responsive_shipped",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "add_now",
+      "outcome_id": "add_now",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount_seam": "urun.paper_phone_points"
+        },
+        {
+          "verb": "sprint_card_outlook",
+          "amount_seam": "urun.paper_phone_points"
+        }
+      ]
+    },
+    {
+      "id": "phone_next",
+      "outcome_id": "phone_next",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "amount_seam": "urun.paper_phone_points",
+          "follow": true
+        }
+      ]
+    },
+    {
+      "id": "desktop_b2c",
+      "outcome_id": "desktop_b2c",
+      "effects": [
+        {
+          "verb": "audience_delta",
+          "amount_seam": "urun.paper_ask_silent",
+          "amount_mult": -1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Telefondan da kullanmak istiyorlar",
+      "body": "Bu kartı isteyen {seam:urun.decision_request_votes} kişinin çoğu telefondan yazmış, biz yalnız masaüstüne göre çizdik. Telefon desteğini şimdi eklersek kart bu sprintte bitmez.",
+      "options": {
+        "add_now": "Telefon desteğini şimdi ekle",
+        "phone_next": "Telefon desteğini önümüzdeki sprinte at",
+        "desktop_b2c": "Yalnız masaüstü olsun"
+      },
+      "expire_note": "Karar verilmedi, kart yalnız masaüstü için çıkacak."
+    },
+    "en": {
+      "title": "They want it on their phones too",
+      "body": "Most of the {seam:urun.decision_request_votes} people who asked for this card wrote from their phones, and we only designed it for desktop. If we add phone support now, the card won't finish this sprint.",
+      "options": {
+        "add_now": "Add phone support now",
+        "phone_next": "Move phone support to next sprint",
+        "desktop_b2c": "Keep it desktop only"
+      },
+      "expire_note": "Nobody decided, so the card goes out desktop only."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "audience_delta",
+        "amount_seam": "urun.paper_ask_silent",
+        "amount_mult": -1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

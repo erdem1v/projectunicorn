@@ -225,6 +225,24 @@ static func run() -> bool:
 	L.append("A family absent from `EvTuning.FAMILY_GAP_WEEKS` pays the default, %d weeks."
 		% EvTuning.FAMILY_GAP_WEEKS_DEFAULT)
 	L.append("")
+	L.append("### `speaker_role` · `stage` · `pool_group` — the sprint paper")
+	L.append("")
+	L.append("A card listed in sprint.json `decision.cards` is a sprint paper, asked for at most once a sprint for one of the")
+	L.append("sprint's cards. `speaker_role` (%s) is the role of whoever speaks it: the engine binds the" % ", ".join(
+		EvLint.PAPER_SPEAKERS.map(func(r: String) -> String: return "`%s`" % r)))
+	L.append("person who works the card at `stage` (%s; `any` is any phase) to the card's `employee` slot, or" % ", ".join(
+		EvLint.PAPER_STAGES.map(func(s: String) -> String: return "`%s`" % s)))
+	L.append("to its `founder` slot for the founder's own note, and a card nobody of that role works is not asked for.")
+	L.append("`speaker_role` may be a list of roles: the first person working the card with any of them speaks.")
+	L.append("A `product_manager` paper is spoken by the quarter's PM and is about a planned customer request card: its")
+	L.append("`customer` slot is the request's account. `pool_group` (%s) counts the paper in the" % ", ".join(
+		EvLint.PAPER_GROUPS.map(func(g: String) -> String: return "`%s`" % g)))
+	L.append("pool. A paper carries `latch: {cooldown_weeks: 52, max_fires: 3}` (the two stack); a card with no")
+	L.append("`speaker_role` is spoken by no one.")
+	L.append("A paper's `customer` slot may take `select: line_top | line_warehouse | line_newest | line_slow | request` (an account of")
+	L.append("the decision card's line, SprintCatalog.paper_account) and a second `employee` slot `select: sprint_dev` (a developer of")
+	L.append("the sprint's team); an option that fits one market only is a card of its own (`_b2c`), since a locked option is never hidden.")
+	L.append("")
 	L.append("### The window, the immunity and the demo's reach")
 	L.append("")
 	L.append("- `delay_weeks: [N, M]` — the week the condition first holds arms a window and the")

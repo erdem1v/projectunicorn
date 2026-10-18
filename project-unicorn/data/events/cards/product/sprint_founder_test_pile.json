@@ -1,0 +1,135 @@
+{
+  "id": "product.sprint_founder_test_pile",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_untested",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "founder",
+  "stage": "test",
+  "pool_group": "no_tester",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the card is about the founder's own testing; the developer who can share it is picked from the sprint's team"
+  },
+  "scope": {
+    "founder": {
+      "type": "founder",
+      "required": true
+    },
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "sprint_dev"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.sprint_has_tester",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "urun.decision_test_untouched",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "share",
+      "outcome_id": "share",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "pct": -30,
+          "weeks": 1
+        }
+      ]
+    },
+    {
+      "id": "main_paths",
+      "outcome_id": "main_paths",
+      "effects": [
+        {
+          "verb": "sprint_card_test",
+          "card": "decision"
+        }
+      ]
+    },
+    {
+      "id": "carry",
+      "outcome_id": "carry",
+      "effects": [
+        {
+          "verb": "sprint_card_carry"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Test işi sende birikiyor",
+      "body": "Bütün kartları sen test ediyorsun, ekip yazdıkça iş önünde birikiyor. {seam:urun.decision_card} geçen haftadan beri seni bekliyor.",
+      "options": {
+        "share": "Testi {employee} ile paylaş",
+        "main_paths": "Ana akışları test et",
+        "carry": "Kartı sonraki sprinte bırak"
+      },
+      "expire_note": "Cevap verilmedi, kart sonraki sprinte kaldı."
+    },
+    "en": {
+      "title": "Testing is piling up on you",
+      "body": "You're testing every card, and the work piles up as the team keeps building. {seam:urun.decision_card} has been waiting for you since last week.",
+      "options": {
+        "share": "Share the testing with {employee}",
+        "main_paths": "Test the main paths",
+        "carry": "Leave the card for next sprint"
+      },
+      "expire_note": "No answer came, so the card moved to next sprint."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_carry"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

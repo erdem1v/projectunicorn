@@ -374,9 +374,12 @@ static func card_sender(card: Dictionary, ctx: Dictionary, names: Dictionary) ->
 		"investor":
 			return investor(id)
 		"employee":
-			# A card that names no one to write (an emergency with nobody on Build) comes from a desk of its own.
-			if id == "" and card.has("sender_desk"):
-				return _desk(TranslationServer.translate(String(card.sender_desk)), GameState.company_name)
+			# A card that names no one to write (an emergency with nobody on Build) comes from a desk of its own, or
+			# from the founder's own note.
+			if id == "":
+				if card.has("sender_desk"):
+					return _desk(TranslationServer.translate(String(card.sender_desk)), GameState.company_name)
+				return founder_note()
 			var e: Character = CharacterRegistry.get_character(id)
 			return employee(e) if e != null else gone_person(kept)
 		"contact":
@@ -384,7 +387,9 @@ static func card_sender(card: Dictionary, ctx: Dictionary, names: Dictionary) ->
 				var p: Prospect = ProspectRegistry.get_prospect(id)
 				return _person(CounterpartSystem.prospect_people(p)[0], p.company_name) if p != null else gone_person(kept)
 			var c: Customer = CustomerRegistry.get_customer(id)
-			return contact(c) if c != null else _mono(kept, "", kept)
+			if c == null:
+				return _mono(kept, "", kept)
+			return contact(c, TranslationServer.translate(String(card.get("sender_title", ""))))
 		"press":
 			var outlet: String = CATEGORY_OUTLETS.get(String(card.get("category", "")), "WORLD_OUTLET_SEKTOR")
 			var from := _mono(TranslationServer.translate(outlet), "", TranslationServer.translate(outlet))
@@ -427,14 +432,15 @@ static func gone_person(person: String) -> Dictionary:
 		{"mono": UiFactory.initials_of(person), "gone": true})
 
 
-## The account's buyer met at the table, when it came from a lead; else the sector's contact.
-static func contact(c: Customer) -> Dictionary:
+## The account's buyer met at the table, when it came from a lead; else the sector's contact. A card that says who
+## writes (`title`, say the finance manager) gives the sender that title in place of their own.
+static func contact(c: Customer, title := "") -> Dictionary:
 	if c.name_key != "":
 		return _desk(TranslationServer.translate("MAIL_SENDER_SUPPORT"), GameState.company_name)
 	if c.acquisition_source != "":
-		return _person(CounterpartSystem.buyer_of(c), c.company_name)
-	var title: String = TranslationServer.translate(B2BConstants.sector_contact(c.industry))
-	return _mono(c.company_name, title, title, c.company_name)
+		return _person(CounterpartSystem.buyer_of(c), c.company_name, "", title)
+	var role: String = title if title != "" else TranslationServer.translate(B2BConstants.sector_contact(c.industry))
+	return _mono(c.company_name, role, role, c.company_name)
 
 
 static func investor(vc_id: String) -> Dictionary:
@@ -449,9 +455,9 @@ static func founder_note() -> Dictionary:
 		{"look": f.look, "well": true, "well_portrait": FounderConstants.portrait_path(GameState.founder_portrait)})
 
 
-static func _person(person: Dictionary, company: String, vc_id := "") -> Dictionary:
-	var title: String = CounterpartSystem.title(person, vc_id)
-	return _sender("contact", String(person.name), title, String(person.name), "%s · %s" % [title, company],
+static func _person(person: Dictionary, company: String, vc_id := "", title := "") -> Dictionary:
+	var role: String = title if title != "" else CounterpartSystem.title(person, vc_id)
+	return _sender("contact", String(person.name), role, String(person.name), "%s · %s" % [role, company],
 		{"look": person.look})
 
 

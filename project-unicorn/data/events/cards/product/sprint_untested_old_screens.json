@@ -1,0 +1,167 @@
+{
+  "id": "product.sprint_untested_old_screens",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_untested",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": [
+    "developer",
+    "founder"
+  ],
+  "stage": "test",
+  "pool_group": "no_tester",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the speaker is named by the sprint, whoever tests the card; nobody is picked by seniority"
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": false,
+      "select": "asked"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.sprint_has_tester",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "urun.decision_tier",
+        "op": "in",
+        "value": [
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "test_old",
+      "outcome_id": "test_old",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "new_only",
+      "outcome_id": "new_only",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    },
+    {
+      "id": "founder_checks",
+      "outcome_id": "founder_checks",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -10,
+          "weeks": 1
+        }
+      ],
+      "requires": {
+        "seam": "urun.decision_by_founder",
+        "op": "==",
+        "value": false
+      }
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Eski ekranlara kimse bakmadı",
+      "body": {
+        "by_seam": "urun.decision_by_founder",
+        "variants": {
+          "0": "Bu kart {seam:urun.decision_line_name} hattındaki eski ekranlara da dokunuyor. Ben yalnız yenisini denedim, eskilere kimse bakmadı.",
+          "1": "Bu kart {seam:urun.decision_line_name} hattındaki eski ekranlara da dokunuyor. Sen yalnız yenisini test ettin."
+        }
+      },
+      "options": {
+        "test_old": "Eski ekranları da dene",
+        "new_only": "Yalnız yenisi yeter",
+        "founder_checks": "Eski ekranlara sen bak"
+      },
+      "locked_reasons": {
+        "founder_checks": "Testi zaten sen yapıyorsun."
+      },
+      "expire_note": "Cevap gelmedi, yalnız yeni ekran denendi."
+    },
+    "en": {
+      "title": "Nobody has looked at the old screens",
+      "body": {
+        "by_seam": "urun.decision_by_founder",
+        "variants": {
+          "0": "This card also touches the old {seam:urun.decision_line_name} screens. I only tested the new one; nobody has gone back to the old ones.",
+          "1": "This card also touches the old {seam:urun.decision_line_name} screens. You only tested the new one."
+        }
+      },
+      "options": {
+        "test_old": "Test the old screens too",
+        "new_only": "The new one is enough",
+        "founder_checks": "Check the old screens yourself"
+      },
+      "locked_reasons": {
+        "founder_checks": "You're already doing the testing."
+      },
+      "expire_note": "No answer came, so only the new screen was tried."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

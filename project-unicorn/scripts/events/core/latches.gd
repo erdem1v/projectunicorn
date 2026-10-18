@@ -76,9 +76,9 @@ static func blocked_reason(card_latch: Dictionary, key: String) -> String:
 	return ""
 
 
-## §3.1 writes the latch as `one_shot | max_fires:N | cooldown_weeks:N` — alternatives, not a
-## stack. The default applies only to a card that declares NO brake; how soon a card may
-## return is min_gap_weeks' job (§13.3 layer 1). Returned in ticks.
+## `one_shot` decides alone; `max_fires` and `cooldown_weeks` stack (`blocked_reason` applies both), so a card may
+## return at most N times and never sooner than the cooldown. The default applies only to a card that declares NO
+## brake; how soon a card may return is min_gap_weeks' job (§13.3 layer 1). Returned in ticks.
 static func _cooldown_of(card_latch: Dictionary) -> int:
 	if card_latch.has(COOLDOWN):
 		return TimeModel.ticks(int(card_latch[COOLDOWN]))

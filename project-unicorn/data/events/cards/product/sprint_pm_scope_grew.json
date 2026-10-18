@@ -1,0 +1,138 @@
+{
+  "id": "product.sprint_pm_scope_grew",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_pm",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "speaker_role": "product_manager",
+  "pool_group": "pm",
+  "stage": "any",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_late",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_trim_finishes",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "defer_extra",
+      "outcome_id": "defer_extra",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "share": true,
+          "follow": true
+        }
+      ]
+    },
+    {
+      "id": "contractor",
+      "outcome_id": "contractor",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount_seam": "urun.decision_contract_cost",
+          "amount_mult": -1,
+          "label": "contractor"
+        },
+        {
+          "verb": "sprint_card_trim",
+          "share": true
+        }
+      ]
+    },
+    {
+      "id": "as_drawn",
+      "outcome_id": "as_drawn",
+      "effects": [
+        {
+          "verb": "sprint_card_outlook"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kartı çizerken büyüttük",
+      "body": "Bu kartı {customer} istedi; biz çizerken büyüttük. Filtre ve dışa aktarma bizim fikrimiz. Onları önümüzdeki sprinte atarsak kart bu sprintte biter.",
+      "options": {
+        "defer_extra": "Önümüzdeki sprinte at",
+        "contractor": "Eklediklerimizi serbest çalışana yaptır",
+        "as_drawn": "Çizildiği gibi yap"
+      },
+      "expire_note": "Karar verilmedi, kart çizildiği gibi kaldı."
+    },
+    "en": {
+      "title": "This card grew while we designed it",
+      "body": "{customer} asked for this card, and it grew while we were designing it. The filters and the export were our idea. If we move them to next sprint, the card finishes this sprint.",
+      "options": {
+        "defer_extra": "Move them to next sprint",
+        "contractor": "Have a contractor build our additions",
+        "as_drawn": "Build it as designed"
+      },
+      "expire_note": "Nobody decided, so the card stayed as designed."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

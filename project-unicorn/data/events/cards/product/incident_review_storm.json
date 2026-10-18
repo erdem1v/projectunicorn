@@ -1,0 +1,204 @@
+{
+  "id": "product.incident_review_storm",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "interrupt",
+  "system": true,
+  "tags": [
+    "critical",
+    "urgent",
+    "incident"
+  ],
+  "schema": 3,
+  "family": "incident",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": false,
+      "select": "asked"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 0
+  },
+  "options": [
+    {
+      "id": "sprint_stop",
+      "outcome_id": "sprint_stop",
+      "requires": {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      "effects": [
+        {
+          "verb": "sprint_fix_first",
+          "line": "incident"
+        },
+        {
+          "verb": "incident",
+          "act": "now"
+        }
+      ]
+    },
+    {
+      "id": "evening",
+      "outcome_id": "evening",
+      "requires": {
+        "seam": "olay.payers",
+        "op": ">=",
+        "value": 1
+      },
+      "effects": [
+        {
+          "verb": "morale_crew",
+          "crew": "incident_crew",
+          "line": "incident",
+          "amount": -7
+        },
+        {
+          "verb": "incident",
+          "act": "evening"
+        }
+      ]
+    },
+    {
+      "id": "founder_fix",
+      "outcome_id": "founder_fix",
+      "requires": {
+        "seam": "hr.headcount",
+        "op": "<=",
+        "value": 2
+      },
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -15,
+          "weeks": 1
+        },
+        {
+          "verb": "incident",
+          "act": "founder"
+        }
+      ]
+    },
+    {
+      "id": "free_month_defer",
+      "outcome_id": "free_month_defer",
+      "effects": [
+        {
+          "verb": "incident",
+          "act": "defer_free_month"
+        }
+      ]
+    },
+    {
+      "id": "silent_defer",
+      "outcome_id": "silent_defer",
+      "effects": [
+        {
+          "verb": "incident",
+          "act": "defer"
+        },
+        {
+          "verb": "add_brand",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Bir gönderi sabahtan beri {seam:olay.shares} kez paylaşıldı",
+      "body": {
+        "by_seam": "olay.variant",
+        "variants": {
+          "0": "“Kaydettiğim her şey uygulamayı kapatınca gitti.” Her gün {seam:olay.line_users} kişi bununla karşılaşıyor.",
+          "1": "“Uygulama beni günde beş kez dışarı atıyor.” Her gün {seam:olay.line_users} kişi bununla karşılaşıyor.",
+          "2": "“Telefonda kaydet düğmesi ekranın dışında kalıyor, basamıyorum.” Her gün {seam:olay.line_users} kişi bununla karşılaşıyor.",
+          "3": "“Takvim bağlantısı her gün kopuyor, her sabah yeniden kuruyorum.” Her gün {seam:olay.line_users} kişi bununla karşılaşıyor."
+        }
+      },
+      "options": {
+        "sprint_stop": "Sprinti durdur, şimdi düzelt",
+        "evening": "Ekip bu akşam kalsın",
+        "founder_fix": "Kendin düzelt",
+        "free_month_defer": "Bir ay ücretsiz ver, sonraki sprinte bırak",
+        "silent_defer": "Sessiz kal, sonraki sprinte bırak"
+      },
+      "locked_reasons": {
+        "sprint_stop": "Şu anda koşan bir sprint yok.",
+        "evening": "Ekipte yazılım ya da test yapan kimse yok.",
+        "founder_fix": "Ekip iki kişiyi geçti."
+      },
+      "expire_note": "Karar verilmedi, gönderi paylaşılmaya devam etti."
+    },
+    "en": {
+      "title": "A post has been shared {seam:olay.shares} times since this morning",
+      "body": {
+        "by_seam": "olay.variant",
+        "variants": {
+          "0": "“Everything I saved was gone when I closed the app.” {seam:olay.line_users} people run into this every day.",
+          "1": "“The app logs me out five times a day.” {seam:olay.line_users} people run into this every day.",
+          "2": "“On my phone the save button is off the screen. I can't press it.” {seam:olay.line_users} people run into this every day.",
+          "3": "“My calendar link drops every day. I set it up again every morning.” {seam:olay.line_users} people run into this every day."
+        }
+      },
+      "options": {
+        "sprint_stop": "Stop the sprint, fix it now",
+        "evening": "Have the team stay late tonight",
+        "founder_fix": "Fix it yourself",
+        "free_month_defer": "Give a free month, fix it next sprint",
+        "silent_defer": "Stay quiet, fix it next sprint"
+      },
+      "locked_reasons": {
+        "sprint_stop": "No sprint is running right now.",
+        "evening": "Nobody on the team builds or tests.",
+        "founder_fix": "The team has grown past two people."
+      },
+      "expire_note": "No decision came, and the post kept getting shared."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "incident",
+        "act": "defer"
+      },
+      {
+        "verb": "add_brand",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

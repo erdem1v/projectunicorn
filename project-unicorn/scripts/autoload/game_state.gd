@@ -71,6 +71,7 @@ const FLAG_TYPES := {
 	"mvp_reports_progress": TYPE_FLOAT,         # kesirli birikim; tam sayıya taşınca sayaç artar
 	"mvp_open_bugs": TYPE_DICTIONARY,           # {hat kimliği: açık hata}, yalnız sıfırdan büyükler
 	"mvp_open_bugs_prev": TYPE_DICTIONARY,      # önceki haftalık tikteki hâli; okların tek kaynağı
+	"mvp_line_harden": TYPE_DICTIONARY,         # {hat kimliği: yeni hata düşmeyen son tik} — yeniden yazılmış hat
 	"mvp_validation_progress": TYPE_FLOAT,      # §8.2 doğrulama kesri
 	# --- §9 canlı akış ---
 	# SÜRÜM yaşı (§17): mvp_launch_day ilk yayında bir kez damgalanır, bu her yayında yeniden.

@@ -1,0 +1,147 @@
+{
+  "id": "product.sprint_pm_spec_unclear",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_pm",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "speaker_role": "product_manager",
+  "pool_group": "pm",
+  "stage": "any",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 5
+      },
+      {
+        "seam": "urun.decision_phase",
+        "op": "==",
+        "value": 0
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "ask_b2b",
+      "outcome_id": "ask_b2b",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "small_b2b",
+      "outcome_id": "small_b2b",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -1
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -8
+        }
+      ]
+    },
+    {
+      "id": "big",
+      "outcome_id": "big",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "İstek iki türlü okunuyor",
+      "body": "{customer} isteğini tek cümleyle yazmış, ekip bunu iki türlü anladı. Biri küçük bir değişiklik, öteki yeni bir ekran.",
+      "options": {
+        "ask_b2b": "{customer} ekibine sor",
+        "small_b2b": "Küçük olanı yap",
+        "big": "Yeni ekranı yap"
+      },
+      "expire_note": "Cevap gitmedi, ekip küçük olanı yaptı."
+    },
+    "en": {
+      "title": "The request reads two ways",
+      "body": "{customer} wrote their request in one sentence, and the team read it two ways. One is a small change, the other is a new screen.",
+      "options": {
+        "ask_b2b": "Ask the {customer} team",
+        "small_b2b": "Make the small change",
+        "big": "Build the new screen"
+      },
+      "expire_note": "No answer went out, so the team made the small change."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_effort",
+        "amount": -1
+      },
+      {
+        "verb": "trust_delta",
+        "scope": "customer",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

@@ -324,6 +324,17 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"incident_night_hold_resumes":    fail = _case_incident_night_hold_resumes()
 		"incident_scale":                 fail = _case_incident_scale(pinned)
 		"incident_save_roundtrip":        fail = _case_incident_save_roundtrip()
+		"incident_month_close_window":     fail = _case_incident_month_close_window()
+		"incident_gates":                 fail = _case_incident_gates(pinned)
+		"incident_regression_fixture":    fail = _case_incident_regression_fixture(pinned)
+		"incident_checkout_fix_card":     fail = _case_incident_checkout_fix_card()
+		"incident_defer_ends_with_line":  fail = _case_incident_defer_ends_with_line(pinned)
+		"incident_sprint_stop_moves_the_card": fail = _case_incident_sprint_stop_moves_the_card()
+		"release_thanks_each_kind":       fail = _case_release_thanks_each_kind()
+		"release_thanks_limits":          fail = _case_release_thanks_limits()
+		"release_thanks_incident_scope":  fail = _case_release_thanks_incident_scope()
+		"release_reviews_pick":           fail = _case_release_reviews_pick()
+		"release_through_close":          fail = _case_release_through_close()
 		"event_set_aside_no_history":     fail = _case_event_set_aside_no_history()
 		"event_no_double_resolution_after_load": fail = _case_event_no_double_resolution_after_load()
 		"event_history_names_survive":    fail = _case_event_history_names_survive()
@@ -479,6 +490,20 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_paid_plan_opens_paid_tier":      fail = _case_sprint_paid_plan_opens_paid_tier()
 		"sprint_save_roundtrip":                 fail = _case_sprint_save_roundtrip()
 		"sprint_decision_blocks_progress":       fail = _case_sprint_decision_blocks_progress()
+		"paper_speaker_is_assignee":             fail = _case_paper_speaker_is_assignee()
+		"decision_one_per_sprint":               fail = _case_decision_one_per_sprint()
+		"decision_no_fourth_show":               fail = _case_decision_no_fourth_show()
+		"paper_interrupt_order":                 fail = _case_paper_interrupt_order()
+		"paper_empty_sprint_ratio":              fail = _case_paper_empty_sprint_ratio()
+		"paper_card_trim":                       fail = _case_paper_card_trim()
+		"paper_outlook_reads_the_plan":          fail = _case_paper_outlook_reads_the_plan()
+		"next_renewal_day_one_place":            fail = _case_next_renewal_day_one_place()
+		"paper_renewal_card_first":              fail = _case_paper_renewal_card_first()
+		"paper_colors_two_arrivals":             fail = _case_paper_colors_two_arrivals()
+		"paper_trust_until_ships":               fail = _case_paper_trust_until_ships()
+		"paper_account_selectors":               fail = _case_paper_account_selectors()
+		"paper_cards_render":                    fail = _case_paper_cards_render()
+		"paper_cards_are_asked":                 fail = _case_paper_cards_are_asked()
 		"sprint_legacy_beta_cards_ship":         fail = _case_sprint_legacy_beta_cards_ship()
 		"sprint_departure_restaffs_card":        fail = _case_sprint_departure_restaffs_card()
 		"sprint_never_stalls_in_plan":           fail = _case_sprint_never_stalls_in_plan()
@@ -487,11 +512,18 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"promise_due_sprint_kept_when_shipped_next_sprint": fail = _case_promise_due_sprint_kept_when_shipped_next_sprint()
 		"promise_due_sprint_breaks_after_close": fail = _case_promise_due_sprint_breaks_after_close()
 		"promise_relock_after_break":            fail = _case_promise_relock_after_break()
+		"promise_due_fires_when_late":           fail = _case_promise_due_fires_when_late()
+		"promise_cut_test_escape":               fail = _case_promise_cut_test_escape()
+		"promise_extend_once":                   fail = _case_promise_extend_once()
+		"promise_break_chain":                   fail = _case_promise_break_chain()
 		"quiet_cards_fill_empty_floor":          fail = _case_quiet_cards_fill_empty_floor()
 		"sprint_decision_card_fires_shipped":    fail = _case_sprint_decision_card_fires_shipped()
 		"promise_row_locked_after_break":        fail = _case_promise_row_locked_after_break()
 		"promise_row_locked_when_no_room":       fail = _case_promise_row_locked_when_no_room()
-		"sprint_late_only_when_behind":          fail = _case_sprint_late_only_when_behind()
+		"sprint_late_for_requests":              fail = _case_sprint_late_for_requests()
+		"paper_line_harden":                     fail = _case_paper_line_harden()
+		"paper_card_effects":                    fail = _case_paper_card_effects()
+		"paper_seams":                           fail = _case_paper_seams()
 		"save_v14_build_becomes_sprint_plan":    fail = _case_save_v14_build_becomes_sprint_plan()
 		"save_v14_history_becomes_releases":     fail = _case_save_v14_history_becomes_releases()
 		"save_v15_tickets_become_open_bugs":     fail = _case_save_v15_tickets_become_open_bugs()
@@ -5799,13 +5831,13 @@ static func _case_event_history_names_survive() -> String:
 static func _case_event_history_chip_matches_live() -> String:
 	_seed_sprint()
 	WorkHoursSystem.set_company_hours(12)
-	SprintCatalog._data.decision.rate = 1.0
+	_paper_pool([PAPER_CRUNCH])
 	for line_id in SprintCatalog.capabilities("core").slice(0, 2):
 		SprintSystem.add("feat:%s_k1" % line_id)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	_sim_day()
-	SprintCatalog._data.decision.rate = 0.0
+	_paper_chance(0.0)
 	if SprintSystem.mode() != "active" or SprintSystem.decision_card().is_empty():
 		return "fixture: no decision waits in a running sprint (%s)" % SprintSystem.mode()
 	_seed_b2b(500)
@@ -15703,8 +15735,8 @@ static func _incident_hire(id: String, display: String, role_id: String, enginee
 
 
 ## A live ERP with its book (Marmara and Ege Metal work through the night), a developer of three stars and a tester,
-## the founder at two stars of engineering, a sprint running so no plan holds the clock.
-static func _incident_world() -> void:
+## the founder at two stars of engineering, a sprint running so no plan holds the clock (unless `started` is false).
+static func _incident_world(started := true) -> void:
 	EvCatalog.ensure_loaded()
 	_seed_sprint_live("erp")
 	_incident_account("co_marmara", "Marmara Lojistik", "logistics", 60, 1900)
@@ -15715,8 +15747,9 @@ static func _incident_world() -> void:
 	_set_founder_area(HRConstants.AREA_ENGINEERING, 4)
 	_incident_hire("char_inc_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER, 6)
 	_incident_hire("char_inc_test", "Selin Aras", HRConstants.ROLE_TESTER, 4)
-	SprintSystem.apply_lead()
-	SprintSystem.start()
+	if started:
+		SprintSystem.apply_lead()
+		SprintSystem.start()
 
 
 ## A live note app: 12,400 people, a paid plan at $8, the same crew.
@@ -15751,12 +15784,13 @@ static func _case_incident_gap_and_spread() -> String:
 			IncidentSystem.daily_tick()
 			if not GameState.incident.has("pending"):
 				continue
-			IncidentSystem.hourly_tick(6)
-			if EventGate.active_id() != OUTAGE_B2B:
-				return "%s, tick %d: an emergency was rolled and its card did not come (active '%s')" % [
-					row[0], GameState.day, EventGate.active_id()]
+			var card: String = IncidentSystem.CARDS[GameState.incident.pending.kind].b2b
+			IncidentSystem.hourly_tick(int(GameState.incident.pending.minute) / 60 + 1)
+			if EventGate.active_id() != card:
+				return "%s, tick %d: an emergency was rolled and its card did not come (active '%s', want '%s')" % [
+					row[0], GameState.day, EventGate.active_id(), card]
 			ticks.append(GameState.day)
-			EventGate.resolve(OUTAGE_B2B, "night_fix")
+			EventGate.resolve(card, "night_fix")
 			if TimeManager.holds().has(IncidentSystem.HOLD):
 				return "%s, tick %d: the clock was still held after the answer" % [row[0], GameState.day]
 		var gaps: Array = []
@@ -15851,7 +15885,7 @@ static func _case_incident_scale(payload: Dictionary) -> String:
 	var credited: Dictionary = IncidentSystem.plan("morning_credit")
 	if credited.trust.size() != 1 or credited.trust[0].group != "night" or credited.trust[0].delta != -1:
 		return "a credit leaves the accounts %s, want one night shift row of -1" % str(credited.trust)
-	if IncidentSystem.plan("night").has("trust") or IncidentSystem.plan("founder").has("trust"):
+	if IncidentSystem.plan("now").has("trust") or IncidentSystem.plan("founder").has("trust"):
 		return "a fix the same night wrote a trust cost"
 	# Without a night shift the book is one group.
 	for c in night:
@@ -15861,7 +15895,7 @@ static func _case_incident_scale(payload: Dictionary) -> String:
 		return "a book with no night shift reads %s, want one row of 4 accounts at -2" % str(all_of_them)
 	# A fix the same night ends when the fix takes: the team's after the opening, the founder's slower.
 	var opened: int = int(GameState.incident.open.opened)
-	var back_team: int = int(IncidentSystem.plan("night").back)
+	var back_team: int = int(IncidentSystem.plan("now").back)
 	var back_founder: int = int(IncidentSystem.plan("founder").back)
 	if back_team != opened + 160 or back_founder != opened + 270:
 		return "back at +%d min for the team and +%d for the founder, want +160 and +270" % [back_team - opened, back_founder - opened]
@@ -15900,7 +15934,7 @@ static func _incident_scale_audience(payload: Dictionary) -> String:
 	if tried != roundi(audience * 0.015 * 50.0 / 60.0):
 		return "50 minutes after the outage began %d people tried the app, want %d" % [tried, roundi(audience * 0.015 * 50.0 / 60.0)]
 	# 02:10 to 05:40, 07:30 and 11:40: 3.5, 5.33 and 9.5 hours at 0.3% of the audience an hour; a free month halves it.
-	var expect: Dictionary = {"night": roundi(audience * 0.003 * 3.5), "founder": roundi(audience * 0.003 * 16.0 / 3.0),
+	var expect: Dictionary = {"now": roundi(audience * 0.003 * 3.5), "founder": roundi(audience * 0.003 * 16.0 / 3.0),
 		"morning": roundi(audience * 0.003 * 9.5), "morning_free_month": roundi(audience * 0.003 * 9.5 * 0.5)}
 	for act in expect:
 		var plan: Dictionary = IncidentSystem.plan(act)
@@ -15946,7 +15980,7 @@ static func _incident_scale_audience(payload: Dictionary) -> String:
 			defer = option.requires
 	if EventGate.condition_met(defer):
 		return "leaving a full outage for the next sprint should be locked"
-	EvEffects.run_played([{"verb": "incident", "act": "night"}], {})
+	EvEffects.run_played([{"verb": "incident", "act": "now"}], {})
 	if EventGate.condition_met(defer):
 		return "the sprint option opened before the fix was done"
 	GameState.set_current_hour(6)
@@ -16095,6 +16129,433 @@ static func _case_incident_save_roundtrip() -> String:
 	later.state.game_state.erase("incident")
 	if not SaveManager.apply_loaded_state(later) or not GameState.incident.is_empty() or not IncidentSystem.can_happen():
 		return "a save from before the emergencies did not open with none (%s)" % str(GameState.incident)
+	return ""
+
+
+# ----------------------------------------------------------------------------
+#  Month close, failing payments, a broken release, a post going round
+# ----------------------------------------------------------------------------
+
+const MONTH_CLOSE := "customer.incident_month_close"
+const CHECKOUT := "product.incident_checkout"
+const REGRESSION := "product.incident_regression"
+const SHARED_DURABILITY := "line_shared_durability@note_tool"
+const SHARED_MOBILE := "line_shared_mobile@note_tool"
+
+
+## The month that cannot close: only in the last week of a calendar month, and only when a line of the books holds three
+## open bugs. The mail is stamped between 22:10 and 22:55 of that night, never twice the same minute in a run of
+## months, and the card opens at 23:00, not at 22:00, from the finance manager of the largest account that uses the line.
+## The team's fix past midnight is tonight's, the morning's is tomorrow's.
+## FALSIFICATION: let IncidentSystem._month_ends answer true and the mid-month check fails; take the bug threshold out of
+## IncidentSystem._worst and the two-bug check fails; widen incident.month_close.stamp to [1300, 1400] and the stamp
+## check fails; ask for the card in the hour of the stamp (hour * 60 < minute) and the 22:00 check fails; read
+## `tomorrow` as any later day (IncidentSystem.plan) and the night's fix check fails.
+static func _case_incident_month_close_window() -> String:
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
+	MailClock.instant = false
+	_incident_world()
+	var books := "line_erp_invoicing"
+	var ends := func() -> bool:
+		return int(GameState.get_date_dict().month) != int(GameState.get_date_dict(GameState.day + 1).month)
+	for _week in 6:
+		if not ends.call():
+			break
+		GameState.advance_day()
+	ProductState.add_bugs(books, 3)
+	if IncidentSystem._allows("month_close"):
+		return "a week in mid-month let a month that cannot close happen"
+	for _week in 6:
+		if ends.call():
+			break
+		GameState.advance_day()
+	ProductState.clear_line_bugs(books)
+	ProductState.add_bugs(books, 2)
+	ProductState.add_bugs("line_erp_stock", 9)
+	if IncidentSystem._allows("month_close"):
+		return "two bugs on a line of the books (and nine on one that is not) let it happen, want three"
+	ProductState.add_bugs(books, 1)
+	if not IncidentSystem._allows("month_close") or IncidentSystem._line_of("month_close") != books:
+		return "three bugs on the invoicing line in the month's last week did not allow it (line '%s')" % IncidentSystem._line_of("month_close")
+	var minutes: Dictionary = {}
+	for _i in 30:
+		GameState.advance_day()
+		GameState.incident.erase("last_day")
+		IncidentSystem.force_on("month_close", GameState.day)
+		IncidentSystem.daily_tick()
+		var minute: int = int(GameState.incident.get("pending", {}).get("minute", -1))
+		if minute < 22 * 60 + 10 or minute > 22 * 60 + 55:
+			return "the month close's mail was stamped at minute %d, want 22:10 to 22:55" % minute
+		minutes[minute] = true
+	if minutes.size() < 5:
+		return "30 months stamped the mail at only %d different minutes" % minutes.size()
+	var stamp: int = GameState.day * MailClock.DAY_MINUTES + int(GameState.incident.pending.minute)
+	GameState.set_current_hour(22)
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.hourly_tick(22)
+	if EventGate.active_id() != "" or not GameState.incident.has("pending"):
+		return "the card was asked for at 22:00, an hour the mail is still being stamped in (active '%s')" % EventGate.active_id()
+	GameState.set_current_hour(23)
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.hourly_tick(23)
+	if EventGate.active_id() != MONTH_CLOSE or EventGate.active_at() != stamp or stamp >= MailClock.now():
+		return "at 23:00 the card reads '%s' stamped %s, want %s stamped %d before %d" % [EventGate.active_id(),
+			str(EventGate.active_at()), MONTH_CLOSE, stamp, MailClock.now()]
+	var context: Dictionary = EventGate.active_context()
+	if String(context.customer.id) != String(SprintCatalog.line_impact(books).top_id) or context.has("employee"):
+		return "the mail is about %s, want the largest account that uses the line and no employee slot" % str(context)
+	var from: Dictionary = INBOX.card_sender(EvCatalog.card(MONTH_CLOSE), context, {})
+	if String(from.title) != TranslationServer.translate("MAIL_SENDER_FINANCE_MANAGER") or from.kind != "contact":
+		return "the mail comes from '%s' (%s), want the account's finance manager" % [from.title, from.kind]
+	if IncidentSystem.variant() != 0:
+		return "the invoicing line reads body %d, want the first" % IncidentSystem.variant()
+	if IncidentSystem.plan("now").tomorrow or not IncidentSystem.plan("morning").tomorrow:
+		return "the night's fix reads tomorrow: %s, the morning's: %s; want only the morning's" % [
+			IncidentSystem.plan("now").tomorrow, IncidentSystem.plan("morning").tomorrow]
+	EventGate.resolve(MONTH_CLOSE, "defer")
+	if TimeManager.holds().has(IncidentSystem.HOLD):
+		return "the clock was still held after the answer"
+	return ""
+
+
+## What lets each of the other emergencies happen. A post going round needs an audience of 2,000 and seven open bugs on a
+## line every user shares (what the app's own lines hold does not count); failing payments need a paid plan; each belongs
+## to its own market only, a month that cannot close to B2B.
+## FALSIFICATION: lower incident.storm.line_bugs to 6 and the six-bug check fails; take the audience floor out of
+## IncidentSystem._allows and the 1,999 check fails; let "storm" ignore the market and the B2B check fails.
+static func _case_incident_gates(payload: Dictionary) -> String:
+	_incident_world()
+	ProductState.add_bugs("line_shared_durability@erp", 9)
+	SalesSystem.add_b2c_audience(5000)
+	GameState.set_flag("b2c_paid_tier_open", true)
+	for kind in ["storm", "checkout"]:
+		if IncidentSystem._allows(kind):
+			return "a B2B book with a crowd of readers, nine bugs on a shared line and a paid plan let a %s happen" % kind
+	SaveManager.reset_all_owners()
+	GameState.initialize_run(payload)
+	_incident_world_b2c()
+	if IncidentSystem._allows("month_close"):
+		return "a B2C product let a month that cannot close happen"
+	ProductState.add_bugs(SHARED_DURABILITY, 6)
+	ProductState.add_bugs("line_note_tool_capture", 20)
+	if IncidentSystem._allows("storm"):
+		return "six bugs on a shared line (and twenty on one of the app's own) let a post go round, want seven on a shared one"
+	ProductState.add_bugs(SHARED_DURABILITY, 1)
+	if not IncidentSystem._allows("storm") or IncidentSystem._line_of("storm") != SHARED_DURABILITY:
+		return "seven bugs on a shared line did not let a post go round (line '%s')" % IncidentSystem._line_of("storm")
+	SalesSystem.add_b2c_audience(1999 - roundi(SalesSystem.b2c_audience()))
+	if IncidentSystem._allows("storm"):
+		return "an audience of 1,999 let a post go round, want 2,000"
+	SalesSystem.add_b2c_audience(1)
+	if not IncidentSystem._allows("storm"):
+		return "an audience of 2,000 did not let a post go round"
+	if not IncidentSystem._allows("checkout") or IncidentSystem._line_of("checkout") != SprintCatalog.PAID_PLAN:
+		return "a paid plan did not let payments fail"
+	GameState.set_flag("b2c_paid_tier_open", false)
+	if IncidentSystem._allows("checkout"):
+		return "payments failed in an app with no paid plan"
+	return ""
+
+
+## A release whose card went out faulty on a critical line brings its own emergency the morning it ships, no die rolled:
+## stamped 10 to 50 minutes into the workday, asked for at the next full hour, about that line and that version. A faulty
+## card on a line that is no critical one (Veri Girişi, and Mobil only in B2B) brings none.
+## FALSIFICATION: keep every faulty line in IncidentSystem._regression_line and the intake check fails; draw the stamp
+## from incident.regression.after_start [0, 60] and the stamp check fails; test the release's day against the day
+## before and the critical check fails.
+static func _case_incident_regression_fixture(payload: Dictionary) -> String:
+	IncidentSystem.rolls = true
+	var incident: Dictionary = SprintCatalog.cfg("incident")
+	var saved: Array = [incident.base, SprintCatalog.cfg("faulty_chance")]
+	incident.base = 0.0
+	SprintCatalog._data.faulty_chance = 1.0
+	var fail: String = _regression_book()
+	if fail == "":
+		fail = _regression_audience(payload)
+	incident.base = saved[0]
+	SprintCatalog._data.faulty_chance = saved[1]
+	return fail
+
+
+## A sprint that closes on the fix card of `line`, which went out faulty (the fixture: its test is marked unfinished).
+static func _close_faulty(line: String) -> void:
+	if SprintSystem.mode() == "release":
+		SprintSystem.plan_next()
+	ProductState.add_bugs(line, 2)
+	SprintSystem.add("fix:" + line)
+	SprintSystem.start()
+	GameState.product.cards["fix:" + line].faulty = true
+	while SprintSystem.mode() == "active":
+		_sim_day()
+
+
+## The emergency a release left for the morning, once its card has been asked for: {} when it left none.
+static func _regression_card(hour: int) -> Dictionary:
+	var pending: Dictionary = GameState.incident.get("pending", {}).duplicate()
+	if pending.is_empty():
+		return {}
+	var start: int = int(WorkHoursSystem.company_window().start) * 60
+	if pending.kind != "regression" or int(pending.minute) < start + 10 or int(pending.minute) > start + 50:
+		return {"fail": "the release left %s, want a regression stamped 10 to 50 minutes after %d" % [str(pending), start]}
+	GameState.set_current_hour(hour)
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.hourly_tick(hour)
+	return pending
+
+
+static func _regression_book() -> String:
+	_incident_world(false)
+	MailClock.instant = false
+	for line in ["line_erp_intake", "line_shared_mobile@erp"]:
+		_close_faulty(line)
+		if not GameState.incident.get("pending", {}).is_empty():
+			return "a faulty card on %s (no critical line) brought %s" % [line, str(GameState.incident.pending)]
+	_close_faulty("line_erp_stock")
+	var pending: Dictionary = _regression_card(10)
+	if pending.is_empty() or pending.has("fail"):
+		return String(pending.get("fail", "a faulty card on the stock line brought no emergency"))
+	if pending.line != "line_erp_stock" or EventGate.active_id() != REGRESSION:
+		return "the emergency is about '%s' and the card on the desk is '%s', want the stock line and %s" % [pending.line,
+			EventGate.active_id(), REGRESSION]
+	var release: Dictionary = GameState.product.releases.back()
+	if IncidentSystem.version() != SprintSystem.version_label(int(release.number)) or IncidentSystem.version() == "":
+		return "the card names version '%s', the release is %s" % [IncidentSystem.version(), SprintSystem.version_label(int(release.number))]
+	if String(EventGate.active_context().employee.id) != "char_inc_test" or IncidentSystem.variant() not in [2, 3]:
+		return "the mail comes from %s with body %d, want the tester and one of the stock line's two" % [
+			str(EventGate.active_context().get("employee")), IncidentSystem.variant()]
+	EventGate.resolve(REGRESSION, "defer")
+	var start: int = int(WorkHoursSystem.company_window().start) * 60
+	var minutes: Dictionary = {}
+	for _day in 30:
+		GameState.advance_day()
+		GameState.incident.erase("last_day")
+		GameState.incident.erase("pending")
+		release.day = GameState.day
+		IncidentSystem.daily_tick()
+		var minute: int = int(GameState.incident.get("pending", {}).get("minute", -1))
+		if minute < start + 10 or minute > start + 50:
+			return "the regression's mail was stamped at minute %d, want 10 to 50 minutes after %d" % [minute, start]
+		minutes[minute] = true
+	if minutes.size() < 5:
+		return "30 mornings stamped the mail at only %d different minutes" % minutes.size()
+	return ""
+
+
+static func _regression_audience(payload: Dictionary) -> String:
+	SaveManager.reset_all_owners()
+	GameState.initialize_run(payload)
+	_incident_world_b2c()
+	MailClock.instant = false
+	_close_faulty("line_note_tool_capture")
+	if not GameState.incident.get("pending", {}).is_empty():
+		return "a faulty card on the app's own capture line brought %s" % str(GameState.incident.pending)
+	_close_faulty(SHARED_MOBILE)
+	var pending: Dictionary = _regression_card(10)
+	if pending.is_empty() or pending.has("fail") or pending.line != SHARED_MOBILE or IncidentSystem.variant() != 17:
+		return "the shared mobile line's faulty card left %s (body %d), want its emergency and the last of the 18 bodies" % [
+			str(pending), IncidentSystem.variant()]
+	return ""
+
+
+## "Stop the sprint" on failing payments. The paid plan has no line of its own, so the answer drops the bug the payments
+## broke on and puts a one-off fix card first in the sprint, once however often it is asked, named like any line's. The
+## fix ships with the sprint, takes the bug away and is not offered again; what the people who could not pay are worth
+## leaves the audience by the figure the chip showed.
+## FALSIFICATION: take the bug out of SprintSystem.fix_first (`bugs`) and no fix card exists; leave the card where it is
+## instead of moving it first (SprintSystem.put_first) and the order check fails; read the audience loss before the
+## fix instead of after and the loss check fails.
+static func _case_incident_checkout_fix_card() -> String:
+	MailClock.instant = false
+	_incident_world_b2c()
+	SprintSystem.apply_lead()
+	SprintSystem.start()
+	var paid: String = SprintCatalog.PAID_PLAN
+	var audience: int = roundi(SalesSystem.b2c_audience())
+	IncidentSystem.rolls = true
+	IncidentSystem.force_on("checkout", GameState.day + 1)
+	_sim_day()
+	GameState.set_current_hour(10)
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.hourly_tick(10)
+	if EventGate.active_id() != CHECKOUT:
+		return "payments broke and the card on the desk is '%s'" % EventGate.active_id()
+	var card: GameEvent = EventGate.active_card()
+	var stop: EventChoice = card.choices[0]
+	var shown: String = ",".join(stop.modifiers.map(func(m: Dictionary) -> String:
+		return ",".join(EvChips.describe(m, EventGate.active_context(), {}, false).map(EvChips.text))))
+	var plan: Dictionary = IncidentSystem.plan("now")
+	var lost: int = -int(plan.audience)
+	if lost <= 0 or not shown.contains(str(lost)):
+		return "the chips '%s' do not name the %d people who gave up" % [shown, lost]
+	EventGate.resolve(CHECKOUT, "sprint_stop")
+	var cards: Array = GameState.product.sprint.cards
+	if cards.size() < 1 or cards[0] != "fix:" + paid or cards.count("fix:" + paid) != 1 or ProductState.line_bugs(paid) != 1:
+		return "the answer left the sprint %s and %d bug(s) on the paid plan, want its fix card first, once, and one bug" % [
+			str(cards), ProductState.line_bugs(paid)]
+	var fix: Dictionary = GameState.product.cards["fix:" + paid]
+	var named: String = TranslationServer.translate("PRODUCT_FIX_CARD").format({"capability": TranslationServer.translate("PRODUCT_CAP_PAID_PLAN")})
+	if SprintCatalog.card_name(fix) != named or fix.state != "running":
+		return "the fix card is '%s' (%s), want '%s' running" % [SprintCatalog.card_name(fix), fix.state, named]
+	if roundi(audience - SalesSystem.b2c_audience()) != lost:
+		return "the audience lost %d, the chip said %d" % [roundi(audience - SalesSystem.b2c_audience()), lost]
+	if RnDSystem._demand_line() != paid:
+		return "the R&D note reads '%s' as the line people ask about, want the paid plan" % RnDSystem._demand_line()
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	var shipped: Array = GameState.product.release.shipped.filter(func(c: Dictionary) -> bool: return c.id == "fix:" + paid)
+	if shipped.size() != 1 or int(shipped[0].bugs) != 1 or ProductState.line_bugs(paid) != 0 \
+			or not SprintCatalog.card_by_id("fix:" + paid).is_empty():
+		return "the sprint closed with the fix %s, %d bug(s) left and the card %s; want it shipped once, nothing left, no card" % [
+			str(shipped), ProductState.line_bugs(paid), str(SprintCatalog.card_by_id("fix:" + paid).get("id"))]
+	return ""
+
+
+## Leaving an emergency for the next sprint costs until its line is clean and not a day longer. B2B: the account takes its
+## hit at once and the same again at every sprint close that finds the line dirty, and the close whose own fix clears the
+## line charges nothing. B2C: the audience loses its share every week until the line is clean, and a free month halves
+## the share; the week the line's fix ships is not charged.
+## FALSIFICATION: charge the standing cost before the close clears the line (B2BSalesSystem.charge_trust_drains ahead of
+## clear_line_bugs in SprintSystem._close) and the last B2B check fails; drop the `line_bugs > 0` filter from
+## IncidentSystem._drain_audience and the B2C check fails; read the free month's share as the plain one and the half fails.
+static func _case_incident_defer_ends_with_line(payload: Dictionary) -> String:
+	_incident_world()
+	var line := "line_erp_invoicing"
+	ProductState.add_bugs(line, 3)
+	var top: Customer = CustomerRegistry.get_customer(SprintCatalog.line_impact(line).top_id)
+	CustomerRegistry.set_trust_offset(top.id, 0.0)
+	IncidentSystem.stage("month_close", 22 * 60 + 30, line)
+	var defer: Dictionary = {"verb": "incident", "act": "defer"}
+	var shown: String = ",".join(EvChips.describe(defer, {}, {}, false).map(EvChips.text))
+	if not shown.contains(TranslationServer.translate("EFFECT_TRUST_PER_SPRINT").format({"v": "-3"})):
+		return "the chip '%s' does not say the cost goes on every sprint" % shown
+	EvEffects.run_played([defer], {})
+	if not is_equal_approx(top.trust_offset, -6.0) or GameState.trust_drains.size() != 1 \
+			or GameState.trust_drains[0].until != {"line_cleared": line}:
+		return "leaving it left %s on the ledger and %s standing, want -6 and one cost until the line is cleared" % [
+			top.trust_offset, str(GameState.trust_drains)]
+	while SprintSystem.mode() == "active":
+		GameState.advance_day()
+		SprintSystem.daily_tick()
+	if not is_equal_approx(top.trust_offset, -9.0) or GameState.trust_drains.size() != 1:
+		return "a sprint that closed on the dirty line left the ledger at %s with %d cost(s), want -9 and the cost still standing" % [
+			top.trust_offset, GameState.trust_drains.size()]
+	SprintSystem.plan_next()
+	SprintSystem.add("fix:" + line)
+	SprintSystem.start()
+	while SprintSystem.mode() == "active":
+		GameState.advance_day()
+		SprintSystem.daily_tick()
+	if not is_equal_approx(top.trust_offset, -9.0) or not GameState.trust_drains.is_empty():
+		return "the sprint that fixed the line left the ledger at %s with %d cost(s), want -9 and none" % [
+			top.trust_offset, GameState.trust_drains.size()]
+	SaveManager.reset_all_owners()
+	GameState.initialize_run(payload)
+	_incident_world_b2c()
+	ProductState.add_bugs(SHARED_DURABILITY, 7)
+	IncidentSystem.stage("storm", 13 * 60, SHARED_DURABILITY)
+	var audience: float = SalesSystem.b2c_audience()
+	var plain: String = ",".join(EvChips.describe(defer, {}, {}, false).map(EvChips.text))
+	if not plain.contains(TranslationServer.translate("EFFECT_AUDIENCE_WEEKLY").format({"v": Fmt.signed_percent(-2)})):
+		return "the chip '%s' does not say the audience loses 2%% a week" % plain
+	EvEffects.run_played([defer], {})
+	IncidentSystem.daily_tick()
+	var week: int = roundi(audience * 0.02)
+	if roundi(audience - SalesSystem.b2c_audience()) != week:
+		return "the first week took %d from the audience, want %d" % [roundi(audience - SalesSystem.b2c_audience()), week]
+	ProductState.clear_line_bugs(SHARED_DURABILITY)
+	var after: float = SalesSystem.b2c_audience()
+	IncidentSystem.daily_tick()
+	if SalesSystem.b2c_audience() != after or not GameState.incident.get("drains", []).is_empty():
+		return "a clean line still cost the audience %d (drains %s)" % [roundi(after - SalesSystem.b2c_audience()),
+			str(GameState.incident.get("drains"))]
+	ProductState.add_bugs(SHARED_DURABILITY, 7)
+	EvEffects.run_played([{"verb": "incident", "act": "defer_free_month"}], {})
+	var held: float = SalesSystem.b2c_audience()
+	IncidentSystem.daily_tick()
+	if roundi(held - SalesSystem.b2c_audience()) != roundi(held * 0.01):
+		return "a free month's week took %d from the audience, want %d" % [roundi(held - SalesSystem.b2c_audience()), roundi(held * 0.01)]
+	return ""
+
+
+## "Stop the sprint" moves the line's fix card to the front of the running sprint and the chip names the card that falls out
+## of it, the first that would finish with the order as it stands and no longer does. What the chip said is what
+## happens: that card is carried at the close and every card the plan still finished ships. Asked again it stays one
+## card. In the last week, once the workday is over, the team starts the fix with the next sprint and the card goes
+## to the front of that one; by day, and in the hours before the workday, it goes in the running one.
+## FALSIFICATION: leave the fix card at the end of the column (SprintSystem.put_first without push_front) and the order
+## check fails; name the card that finishes under the new order instead of the one that stops (fix_first_bumps) and the
+## chip check fails; drop `_fix_goes_next` from put_first and the last-night check fails; let `_fix_goes_next` read
+## any hour outside the workday as over and the 03:00 check fails.
+static func _case_incident_sprint_stop_moves_the_card() -> String:
+	MailClock.instant = false
+	_seed_sprint_live("erp")
+	for pair in [["char_stop_dev", HRConstants.ROLE_DEVELOPER], ["char_stop_des", HRConstants.ROLE_DESIGNER],
+			["char_stop_test", HRConstants.ROLE_TESTER]]:
+		_sprint_hire(pair[0], pair[1])
+	for c in SprintCatalog.open_cards([]):
+		SprintSystem.add(c.id)
+		if not GameState.product.sprint.cards.has(c.id):
+			break
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	var line := "line_erp_ledger"
+	(SprintCatalog.cfg("fix_effort") as Dictionary).points = [6, 8]   # a fix this big leaves the full sprint no room for it
+	ProductState.add_bugs(line, 1)
+	var bumped: Dictionary = SprintSystem.fix_first_bumps(line)
+	if bumped.is_empty():
+		return "fixture: a fix of six points never pushed a card out of a full sprint"
+	var chip: String = ",".join(EvChips.describe({"verb": "sprint_fix_first", "line": line}, {}, {}, false).map(EvChips.text))
+	var slips: String = TranslationServer.translate("EFFECT_SPRINT_BUMP").format({"card": SprintCatalog.card_name(bumped)})
+	if chip != slips:
+		return "the chip reads '%s', want '%s'" % [chip, slips]
+	var before: Dictionary = SprintSystem.plan_outcome().cards
+	EvEffects.run_played([{"verb": "sprint_fix_first", "line": line}], {})
+	EvEffects.run_played([{"verb": "sprint_fix_first", "line": line}], {})
+	var cards: Array = GameState.product.sprint.cards
+	if cards[0] != "fix:" + line or cards.count("fix:" + line) != 1:
+		return "the sprint reads %s, want the fix card first and once" % str(cards)
+	var after: Dictionary = SprintSystem.plan_outcome().cards
+	var slipped: Array = after.keys().filter(func(id: String) -> bool:
+		return before.has(id) and before[id].finishes and not after[id].finishes)
+	if slipped.is_empty() or SprintCatalog.card_name(GameState.product.cards[slipped[0]]) != SprintCatalog.card_name(bumped):
+		return "the plan lets %s slip, the chip named '%s'" % [str(slipped), SprintCatalog.card_name(bumped)]
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	var release: Dictionary = GameState.product.release
+	var shipped: Array = release.shipped.map(func(c: Dictionary) -> String: return c.id)
+	var carried: Array = release.carried.map(func(c: Dictionary) -> String: return c.id)
+	for id in after:
+		if after[id].finishes != shipped.has(id) or after[id].finishes == carried.has(id):
+			return "the plan said %s finishes: %s, the close shipped %s and carried %s" % [id, after[id].finishes, str(shipped), str(carried)]
+	SprintSystem.plan_next()
+	for c in SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind == "feature"):
+		SprintSystem.add(c.id)
+		break
+	SprintSystem.start()
+	_sim_day()
+	if SprintSystem.week() < SprintSystem.sprint_weeks():
+		return "fixture: the second sprint is in week %d of %d" % [SprintSystem.week(), SprintSystem.sprint_weeks()]
+	ProductState.add_bugs("line_erp_stock", 2)
+	GameState.set_current_hour(23)
+	TimeManager.sync_to_current_hour()
+	SprintSystem.fix_first("line_erp_stock")
+	if GameState.product.next.cards.is_empty() or GameState.product.next.cards[0] != "fix:line_erp_stock" \
+			or GameState.product.sprint.cards.has("fix:line_erp_stock"):
+		return "at 23:00 of the last week the fix went to sprint %s / next %s, want the front of the next one" % [
+			str(GameState.product.sprint.cards), str(GameState.product.next.cards)]
+	ProductState.add_bugs("line_erp_cashflow", 2)
+	GameState.set_current_hour(10)
+	TimeManager.sync_to_current_hour()
+	SprintSystem.fix_first("line_erp_cashflow")
+	if GameState.product.sprint.cards[0] != "fix:line_erp_cashflow":
+		return "at 10:00 of the last week the fix went to %s, want the front of the running sprint" % str(GameState.product.sprint.cards)
+	ProductState.add_bugs("line_erp_invoicing", 2)
+	GameState.set_current_hour(3)
+	TimeManager.sync_to_current_hour()
+	SprintSystem.fix_first("line_erp_invoicing")
+	if GameState.product.sprint.cards[0] != "fix:line_erp_invoicing":
+		return "at 03:00 of the last week, its workday still ahead, the fix went to %s, want the front of the running sprint" % str(
+			GameState.product.sprint.cards)
 	return ""
 
 
@@ -18023,13 +18484,20 @@ static func _case_office_move_gates_and_save() -> String:
 # =========================================================================
 
 ## Ürünü Ürün sekmesinin yolundan kurar: tür seçilir, Sprint 1 bugün planlamada açılır. Kasa
-## kepenk sayacını başlatmayacak kadar derin; ekipte yalnız kurucu var. İstek oranı 0'dır (test
-## sabiti): sprint karar kartları destededir, kararı ölçen vaka oranı kendisi açar.
+## kepenk sayacını başlatmayacak kadar derin; ekipte yalnız kurucu var. Kâğıt ihtimali 0'dır (test
+## sabiti): sprint karar kartları destededir, kararı ölçen vaka ihtimali kendisi açar.
 static func _seed_sprint(subtype: String = "note_tool") -> void:
 	ProductLines.reload()
 	GameState.set_cash(500000)
-	(SprintCatalog.cfg("decision") as Dictionary).rate = 0.0
+	_paper_chance(0.0)
 	SprintSystem.choose_type(subtype, "Notly")
+
+
+## Sprint karar kâğıdı zarının ihtimali (test sabiti), bir ve iki haftalık sprintte aynı. Açan vaka önceki ihtimalleri
+## kendi süresince tutar ve geri koyar.
+static func _paper_chance(chance: float) -> void:
+	for weeks in SprintCatalog.cfg("decision.sprint_chance"):
+		SprintCatalog._data.decision.sprint_chance[weeks] = chance
 
 
 ## Yayındaki ürün: Çekirdek'in ilk üç kimlik yeteneği K1'de, MVP sürümü çıkmış. Sprint kapanışı
@@ -18771,7 +19239,7 @@ static func _case_sprint_fix_card_refreshes_until_it_runs() -> String:
 ## kart sprinte alınır ve başa konur, zaten sprintteki başa taşınır (ikinci kart açılmaz); hattında hata yoksa bir şey
 ## yapmaz. Koşan sprintte yeni kart hemen koşar ve haftanın ataması baştan yapılır, sayısı ve eforu depodan okunarak
 ## kilitlenir, zaten koşan kartın tabanı sıfırlanmaz; sürüm notunda sonraki sprintin başına girer.
-## FALSİFİKASYON: SprintSystem.fix_first'te `column.push_front(card.id)`'yi `column.append(card.id)` yap → sıra iddiası FAIL;
+## FALSİFİKASYON: SprintSystem.put_first'te `column.push_front(card.id)`'yi `column.append(card.id)` yap → sıra iddiası FAIL;
 ## `_assign(...)` satırını sil → atama iddiası FAIL; `if card.state != "running"` denetimini kaldır (her zaman başlat) →
 ## taban iddiası FAIL; fix_first'ten `_refresh_fix_cards()`'ı sil → sonraki sütundaki kart eski sayıyla kilitlenir ve
 ## sayı iddiası FAIL.
@@ -19212,11 +19680,11 @@ static func _case_sprint_save_roundtrip() -> String:
 
 ## Karar bekleyen kart ilerlemez: kâğıt masadayken haftanın işi ona dökülmez ve ona kimse atanmaz;
 ## sprint kapanınca ilerlemesiyle devreder, kâğıt kapanınca yeniden yürür. Kararlar ürünün gerçek
-## sprint kartlarıdır; vaka istek oranını (test sabiti, her hafta) ve fazla mesai için desteyi kendi
+## sprint kartlarıdır; vaka kâğıt ihtimalini (test sabiti, her sprint) ve fazla mesai için desteyi kendi
 ## süresince değiştirir ve geri koyar.
 ## Tek kurucu 12 saatte ilk haftayı sıradaki ilk karta verir; geride kalan ikinci kart kararı alır.
 ## Kararla devredince ya da koşan kart çıkarılınca kurucu haftanın kalanında kalan kartta. Fazla
-## mesai (×1,25) product.sprint_late kâğıdından seçilir: kurucu 15 saatte de ilk karttaysa kararı
+## mesai (×1,25) fixture.paper_crunch kâğıdından seçilir: kurucu 15 saatte de ilk karttaysa kararı
 ## kalkan karta geçmez ve kart devreder; ilk kart çıkarılınca boştaki kurucu onu 12 saatte bitirir
 ## (3,1 puan). crunch_finishes ikisini de seçimden önce söyler.
 ## FALSİFİKASYON: SprintSystem.remove'daki _restaff çağrısını sil ya da crunch_finishes'i 1 çarpanla
@@ -19224,9 +19692,7 @@ static func _case_sprint_save_roundtrip() -> String:
 static func _case_sprint_decision_blocks_progress() -> String:
 	_seed_sprint()
 	WorkHoursSystem.set_company_hours(12)
-	var rate: Variant = SprintCatalog.cfg("decision.rate")
-	var events: Variant = SprintCatalog.cfg("decision.cards")
-	SprintCatalog._data.decision.rate = 1.0
+	var saved: Array = _paper_pool([PAPER_CRUNCH])
 	var run := func() -> String:
 		var asked: Array = []
 		EventBus.card_decision_requested.connect(func(id: String) -> void: asked.append(id))
@@ -19239,8 +19705,8 @@ static func _case_sprint_decision_blocks_progress() -> String:
 			return "fixture: the sprint did not start"
 		_sim_day()
 		if asked != [held] or not GameState.product.cards[held].decision \
-				or not String(GameState.product.decision.get("event_id", "")).begins_with("product.sprint_"):
-			return "a decision at rate 1 went to %s (pending %s), want a product sprint card on %s" % [
+				or GameState.product.decision.get("event_id", "") != PAPER_CRUNCH:
+			return "a decision at chance 1 went to %s (pending %s), want the late card's paper on %s" % [
 				asked, GameState.product.decision, held]
 		if not (GameState.product.cards[held].assignees as Array).is_empty():
 			return "a card waiting on its decision was staffed for the week"
@@ -19267,7 +19733,7 @@ static func _case_sprint_decision_blocks_progress() -> String:
 			GameState.initialize_run({"seed": 424242})
 			_seed_sprint()
 			WorkHoursSystem.set_company_hours(12)
-			SprintCatalog._data.decision.rate = 1.0
+			_paper_chance(1.0)
 			SprintSystem.add(free)
 			SprintSystem.add(held)
 			return SprintSystem.start()
@@ -19284,30 +19750,28 @@ static func _case_sprint_decision_blocks_progress() -> String:
 		if CharacterRegistry.get_founder().id not in GameState.product.cards[held].assignees:
 			return "removing the running %s left the founder idle beside %s (%s)" % [free, held,
 				GameState.product.cards[held].assignees]
-		SprintCatalog._data.decision.cards = ["product.sprint_late"]
 		for solo in [false, true]:
 			if not world.call():
 				return "fixture: the crunch world's sprint did not start"
 			_sim_day()
-			if GameState.product.decision.get("card_id", "") != held or not EventGate.open_paper("product.sprint_late"):
-				return "fixture: no sprint_late paper waits on %s (%s)" % [held, GameState.product.decision]
+			if GameState.product.decision.get("card_id", "") != held or not EventGate.open_paper(PAPER_CRUNCH):
+				return "fixture: no late card paper waits on %s (%s)" % [held, GameState.product.decision]
 			if solo:
 				SprintSystem.remove(free)
 			else:
 				WorkHoursSystem.set_company_hours(15)
-			var said: bool = SprintSystem.crunch_finishes()
+			var said: bool = SprintSystem.crunch_finishes(held)
 			if said != solo:
 				return "with the founder %s crunch_finishes() says %s" % [
 					"idle" if solo else "on %s at 15 hours" % free, said]
-			EventGate.resolve("product.sprint_late", "crunch")
+			EventGate.resolve(PAPER_CRUNCH, "crunch")
 			_sim_day()
 			if GameState.product.release.shipped.any(func(r: Dictionary) -> bool: return r.id == held) != said:
 				return "crunch_finishes() said %s, the chosen crunch %s %s" % [said,
 					"carried" if said else "shipped", held]
 		return ""
 	var fail: String = run.call()
-	SprintCatalog._data.decision.rate = rate
-	SprintCatalog._data.decision.cards = events
+	_paper_pool_end(saved)
 	return fail
 
 
@@ -19460,6 +19924,277 @@ static func _case_promise_relock_after_break() -> String:
 	return ""
 
 
+const PROMISE_DUE := "product.promise_due"
+
+
+## Söz olayı vakalarının dünyası: yayındaki ERP, 100 koltuklu bir hesap, bir geliştirici ve bir testçi. Sprint 1'in tek kartı
+## hesaba söz verilmiş kademenin kartıdır ve test aşamasındadır; son haftanın başında testten kalan iş, o aşamada
+## çalışanların bir haftalık işinin `late` katıdır (1,1: fazla mesai yetiştirir; 1,4: yetiştirmez; ikisinde de testi
+## kısaltmak yetiştirir; 0,5: kart yetişir). Söz `due` kadar sonraki sprintedir. Sprint başlamazsa {}.
+static func _promise_world(late: float, weeks := 2, due := 0) -> Dictionary:
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	EvCatalog.ensure_loaded()
+	_seed_sprint_live("erp")
+	var account: Customer = _incident_account("co_demir", "Demir Holding", "finance", 100, 2400)
+	SalesSystem.reflect_mrr()
+	_incident_hire("char_inc_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER, 6)
+	_incident_hire("char_inc_test", "Selin Aras", HRConstants.ROLE_TESTER, 4)
+	var step: String = "%s_k1" % SprintCatalog.capabilities("core")[3]
+	var card: Dictionary = SprintCatalog.candidates(SprintCatalog.area_of_line(ProductLines.step(step).line_id)).filter(
+		func(c: Dictionary) -> bool: return c.step == step)[0]
+	SprintSystem.set_weeks(weeks)
+	SprintSystem.add(card.id)
+	var stored: Dictionary = GameState.product.cards.get(card.id, {})
+	if stored.is_empty():
+		return {}
+	var week: float = 0.0
+	for member in SprintSystem.team():
+		if not member.ahead:
+			week += member.points * (1.0 if "test" in member.fits else float(SprintCatalog.cfg("no_role_speed")))
+	stored.effort = 100
+	stored.progress = [float(stored.shares[0]) * 100.0, float(stored.shares[1]) * 100.0,
+		float(stored.shares[2]) * 100.0 - late * week - (week if weeks == 2 else 0.0)]
+	var promise: Promise = PromiseRegistry.create(account.id, step, B2BConstants.PROMISE_DEADLINE_WEEKS)
+	promise.due_sprint = SprintSystem.sprint_number() + due
+	if SprintSystem.team().size() < 3 or not SprintSystem.start():
+		return {}
+	return {"account": account, "promise": promise, "card": card.id, "step": step}
+
+
+## Açık kartın seçeneklerinin kimliği → {open (kilitsiz mi), chips (çiplerin metni)}.
+static func _promise_options() -> Dictionary:
+	var ev: GameEvent = EventGate.active_card()
+	var ctx: Dictionary = EventGate.active_context()
+	var out: Dictionary = {}
+	var options: Array = EvCatalog.card(PROMISE_DUE).options
+	for i in options.size():
+		var chips: Array = []
+		for effect in ev.choices[i].modifiers:
+			for part in EvChips.describe(effect, ctx, {}, false):
+				chips.append(EvChips.text(part))
+		out[options[i].id] = {"open": EventGate.condition_met(ev.choices[i].unlock_condition, ctx), "chips": chips}
+	return out
+
+
+## Söz olayı: sprintin son haftasında, bu sprinte söz verilmiş kart ekibin hızıyla yetişmiyorsa gelir ve sprintin tek
+## kesintisi olarak kaydedilir; üç koşulun biri eksikse gelmez (bu sprinte açık söz yok, kart yetişiyor). Gelen sprintte
+## karar kâğıdı (`fixture.paper_crunch`) çekilmez, gelmeyen sprintte çekilir. Konuşan kartta çalışan ilk çalışandır. Test
+## aşamasında kısaltma yetiştiriyorsa "Testi kısalt", mesai yetiştiriyorsa "Ekipten fazla mesai iste" açıktır; mesai çipi
+## saat yazmaz, çalışanların morali düşer, kurucununki düşmez; seçilince kart yetişir ve söz tutulur.
+## FALSİFİKASYON: SprintSystem._ask_promise çağrılarını sil → kart gelmedi FAIL; late_promise'ta `week() < sprint_weeks()`
+## koşulunu sil → ilk hafta FAIL; `c.id not in late` koşulunu sil → yetişen kart FAIL; `_request_decision`'daki
+## `late_promise()` koşulunu sil → kâğıt geldi FAIL; record_interrupt("promise") satırını sil → kesinti kaydı FAIL.
+static func _case_promise_due_fires_when_late() -> String:
+	_paper_pool([PAPER_CRUNCH])
+	# Gelmeyenler; ilkinde karar kâğıdı gelir (kontrol): kart geç ama söz bu sprinte değil.
+	for control in [{"late": 1.1, "due": 1}, {"late": 0.5, "due": 0}]:
+		var idle: Dictionary = _promise_world(control.late, 2, control.due)
+		if idle.is_empty():
+			return "fixture: the promise world's sprint did not start"
+		_paper_chance(1.0)
+		_sim_day()
+		if EventGate.instances_of(PROMISE_DUE) > 0 or EventGate.on_desk(PROMISE_DUE):
+			return "late %s, the word due +%d sprints: the promise card came" % [control.late, control.due]
+		if control.due == 1 and not EventGate.on_desk(PAPER_CRUNCH):
+			return "fixture: the paper did not come for a late card with no promise on it"
+	var w: Dictionary = _promise_world(1.1)
+	if w.is_empty():
+		return "fixture: the promise world's sprint did not start"
+	_paper_chance(1.0)
+	if EventGate.instances_of(PROMISE_DUE) > 0 or not SprintSystem.late_promise().is_empty():
+		return "week 1 of a two-week sprint already names a late promised card"
+	_sim_day()
+	if EventGate.active_id() != PROMISE_DUE:
+		return "week 2, a promised card late at the team's pace and no promise card came (active '%s')" % EventGate.active_id()
+	if EventGate.on_desk(PAPER_CRUNCH) or not GameState.product.decision.is_empty():
+		return "the sprint's paper came beside the promise card"
+	var record: Dictionary = GameState.product.get("interrupt", {})
+	if int(record.get("sprint", 0)) != SprintSystem.sprint_number() or record.get("kind", "") != "promise":
+		return "the interrupt record reads %s, want this sprint's promise" % str(record)
+	var ctx: Dictionary = EventGate.active_context()
+	var staff: Array = GameState.product.cards[w.card].assignees.filter(
+		func(id: String) -> bool: return CharacterRegistry.get_character(id).category == "employee")
+	var speaks: String = "" if staff.is_empty() else staff[0]
+	if String((ctx.get("employee", {}) as Dictionary).get("id", "")) != speaks or String(ctx.customer.id) != w.account.id:
+		return "the card is spoken by %s about %s, want %s about %s" % [(ctx.get("employee", {}) as Dictionary).get("id", ""),
+			ctx.customer.id, speaks, w.account.id]
+	var options: Dictionary = _promise_options()
+	for id in ["cut_test", "crunch", "extend", "slip"]:
+		if not options[id].open:
+			return "option '%s' is locked on a card in testing that both the cut and the overtime finish" % id
+	var kept: String = TranslationServer.translate("EFFECT_PROMISE_KEPT")
+	var cut: Array = options.cut_test.chips
+	if cut.size() != 2 or cut[0] != kept or cut[1] != TranslationServer.translate("EFFECT_TEST_CUT").format(
+			{"card": SprintCatalog.step_name(w.step)}) or "%" in cut[1]:
+		return "the cut option reads %s, want the kept promise and the test cut in half with no percentage" % str(cut)
+	var crunch: Array = options.crunch.chips
+	if crunch.size() != 2 or crunch[0] != kept or not crunch[1].contains("-5"):
+		return "the overtime option reads %s, want the kept promise and the crew's morale, no hours" % str(crunch)
+	var crew: Array = SprintSystem.promise_crew()
+	var founder: Character = CharacterRegistry.get_founder()
+	var morale: Dictionary = {founder.id: founder.morale}
+	for id in crew:
+		morale[id] = CharacterRegistry.get_character(id).morale
+	EventGate.resolve(PROMISE_DUE, "crunch")
+	if not is_equal_approx(float(GameState.product.sprint.hours_mult), SprintSystem.CRUNCH_MULT):
+		return "the overtime left the sprint's hours at x%s" % GameState.product.sprint.hours_mult
+	for id in morale:
+		var after: int = CharacterRegistry.get_character(id).morale
+		if (id in crew) == (after >= morale[id]) or (id == founder.id and after != morale[id]):
+			return "%s's morale went %d -> %d under the overtime (crew %s)" % [id, morale[id], after, str(crew)]
+	_sim_day()
+	if not GameState.product.release.shipped.any(func(r: Dictionary) -> bool: return r.id == w.card) or w.promise.status != "kept":
+		return "the overtime did not get the card out: the word reads '%s'" % w.promise.status
+	# Fazla mesai yetiştirmeyen kartta seçenek kilitlidir, kısaltma açıktır.
+	var short: Dictionary = _promise_world(1.4)
+	if short.is_empty():
+		return "fixture: the promise world's sprint did not start"
+	_sim_day()
+	if EventGate.active_id() != PROMISE_DUE:
+		return "fixture: no promise card came on the 1.4 week card"
+	var hard: Dictionary = _promise_options()
+	if hard.crunch.open or not hard.cut_test.open:
+		return "a card 1.4 weeks from done: overtime open %s, cut open %s; want a locked overtime and an open cut" % [
+			hard.crunch.open, hard.cut_test.open]
+	# Bir haftalık sprintte kart sprint başlarken gelir.
+	var one: Dictionary = _promise_world(1.1, 1)
+	if one.is_empty() or EventGate.active_id() != PROMISE_DUE:
+		return "a one-week sprint with a late promised card started without the promise card (active '%s')" % EventGate.active_id()
+	return ""
+
+
+## "Testi kısalt": kartın kalan test işi yarıya iner ve kart kısaltılmış testle çıkmış sayılır. Hatalı çıkma ihtimali tek
+## fonksiyondur (SprintSystem.escape_chance) ve kapanış zarı ondan okur: testi kısaltılmamış kartta 0, kısaltılmışta
+## en az sprint.json promise.cut_test_escape, test rolü olmadan test edilmiş (hatalı) kartta büyüğü. Çip yüzde yazmaz.
+## FALSİFİKASYON: _close'daki zarı escape_chance yerine `c.faulty and ... faulty_chance`e çevir → zar iddiası FAIL;
+## _halve_test'te `c.cut = true`yu sil → kısaltılmış kart FAIL; shares'ı yarılamayı sil → iş iddiası FAIL;
+## escape_chance'te maxf'yi `cut_test_escape`e indir → hatalı kart FAIL.
+static func _case_promise_cut_test_escape() -> String:
+	var floor_chance: float = float(SprintCatalog.cfg("promise.cut_test_escape"))
+	for lands in [true, false]:
+		var w: Dictionary = _promise_world(1.1)
+		if w.is_empty():
+			return "fixture: the promise world's sprint did not start"
+		_sim_day()
+		var card: Dictionary = GameState.product.cards[w.card]
+		var twin: Dictionary = card.duplicate(true).merged({"faulty": true}, true)
+		if SprintSystem.escape_chance(card) != 0.0 or not is_equal_approx(SprintSystem.escape_chance(twin),
+				float(SprintCatalog.cfg("faulty_chance"))):
+			return "before the cut a tested card reads %s and an untested one %s, want 0 and the faulty chance" % [
+				SprintSystem.escape_chance(card), SprintSystem.escape_chance(twin)]
+		var left: float = float(card.shares[2]) * SprintSystem.total(card) - float(card.progress[2])
+		var done: float = float(card.progress[2])
+		EventGate.resolve(PROMISE_DUE, "cut_test")
+		var halved: float = float(card.shares[2]) * SprintSystem.total(card) - float(card.progress[2])
+		if not is_equal_approx(halved, left / 2.0) or not is_equal_approx(float(card.progress[2]), done):
+			return "the cut left %.3f of %.3f test points with %.3f done (was %.3f)" % [halved, left, card.progress[2], done]
+		twin.cut = true
+		if not is_equal_approx(SprintSystem.escape_chance(card), floor_chance) \
+				or not is_equal_approx(SprintSystem.escape_chance(twin), float(SprintCatalog.cfg("faulty_chance"))):
+			return "after the cut the tested card reads %s and the untested one %s, want %s and the larger of the two" % [
+				SprintSystem.escape_chance(card), SprintSystem.escape_chance(twin), floor_chance]
+		# Kapanış zarı aynı fonksiyondan okur: sınırın bir tık üstünde hatalı çıkar, sınırda çıkmaz.
+		var roll: float = float(absi(hash(str([w.card, SprintSystem.sprint_number()]))) % 1000) / 1000.0
+		SprintCatalog._data.promise.cut_test_escape = roll + 0.001 if lands else roll
+		_sim_day()
+		var faulty: Array = GameState.product.release.faulty
+		if not GameState.product.release.shipped.any(func(r: Dictionary) -> bool: return r.id == w.card):
+			return "fixture: the cut card did not ship at the close"
+		if faulty.has(card.line) != lands:
+			return "the die at the close (roll %.3f, chance %.3f) left the release faulty %s, want %s" % [
+				roll, SprintCatalog.cfg("promise.cut_test_escape"), str(faulty), lands]
+		SprintCatalog._data.promise.cut_test_escape = floor_chance
+	return ""
+
+
+## "Arayıp bir sprint ek süre iste": söz bir sprint ileri alınır, bir kez; hesabın güven izine -6 yazılır ve çipteki
+## memnuniyet, oyuncunun bir tik sonra okuduğu değerdir. Söz o sprintin kapanışında kırılmaz, ertesi sprintte çıkınca
+## tam ödülle tutulur. Ertelenmiş söz ikinci kez ertelenemez.
+## FALSİFİKASYON: PromiseRegistry.extend'de `due_sprint += 1`i sil → söz kapanışta kırılır FAIL; `p.extended = true`yu sil →
+## ikinci erteleme FAIL; kartın trust_delta tutarını 0 yap → iz iddiası FAIL.
+static func _case_promise_extend_once() -> String:
+	var w: Dictionary = _promise_world(1.1)
+	if w.is_empty():
+		return "fixture: the promise world's sprint did not start"
+	_sim_day()
+	if EventGate.active_id() != PROMISE_DUE:
+		return "fixture: no promise card came"
+	var promise: Promise = w.promise
+	var account: Customer = w.account
+	var due: int = promise.due_sprint
+	var trust: float = account.trust_offset
+	var plan: Dictionary = EvEffects.trust_plan({"verb": "trust_delta", "accounts": "promise", "amount": -6}, EventGate.active_context())
+	var shown: Array = _promise_options().extend.chips
+	if plan.accounts.size() != 1 or not shown[0].contains(str(plan.accounts[0].to)) \
+			or shown[1] != TranslationServer.translate("EFFECT_PROMISE_MOVED"):
+		return "the extend option reads %s for a plan of %s" % [str(shown), str(plan)]
+	EventGate.resolve(PROMISE_DUE, "extend")
+	if promise.due_sprint != due + 1 or not promise.extended or promise.status != "open":
+		return "the word reads due %d (was %d), extended %s, %s" % [promise.due_sprint, due, promise.extended, promise.status]
+	if not is_equal_approx(account.trust_offset, B2BConstants.clamp_trust(trust - 6.0)):
+		return "the account's trust went %s -> %s, want -6" % [trust, account.trust_offset]
+	PromiseRegistry.extend(promise.id)
+	if promise.due_sprint != due + 1:
+		return "a word that already moved moved again, to sprint %d" % promise.due_sprint
+	if not EvSeams.read("urun.promise_extended"):
+		return "the extension lock reads open on a word that moved"
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if account.satisfaction != int(plan.accounts[0].to):
+		return "the chip said satisfaction %d a tick on, the player reads %d" % [plan.accounts[0].to, account.satisfaction]
+	_sim_day()
+	if promise.status != "open":
+		return "the moved word broke at the close of its old sprint (%s)" % promise.status
+	if not _play_sprint([]) or promise.status != "kept":
+		return "the moved word reads '%s' after the next sprint shipped the step" % promise.status
+	return ""
+
+
+## "Söz kaçsın": söz bugünkü yoldan kırılır, aynı zincirle (memnuniyet -20, güven izi -12, marka -3, tarih ve 8 hafta
+## yeni söz yok); çipteki memnuniyet oyuncunun bir tik sonra okuduğu değerdir. Sprint kapanışında kırılan söz için kâğıt
+## süresi dolunca yeniden kırılmaz ve hata vermez.
+## FALSİFİKASYON: satisfaction_after_break'te anlık düşüşü (`sat`) sil → çip iddiası FAIL; promise_break'te break_promise
+## çağrısını sil → söz durumu FAIL; `broken.accounts.is_empty()` dönüşünü sil → süre dolumu iddiası FAIL.
+static func _case_promise_break_chain() -> String:
+	var w: Dictionary = _promise_world(1.1)
+	if w.is_empty():
+		return "fixture: the promise world's sprint did not start"
+	_sim_day()
+	if EventGate.active_id() != PROMISE_DUE:
+		return "fixture: no promise card came"
+	var promise: Promise = w.promise
+	var account: Customer = w.account
+	var sat: int = account.satisfaction
+	var brand: int = GameState.brand
+	var plan: Dictionary = EvEffects.break_plan()
+	var shown: Array = _promise_options().slip.chips
+	if plan.accounts.size() != 1 or int(plan.accounts[0].from) != sat or shown.size() != 3 \
+			or not shown[0].contains(str(plan.accounts[0].to)) or not shown[2].contains(str(B2BConstants.PROMISE_RELOCK_WEEKS)):
+		return "the slip option reads %s for a plan of %s" % [str(shown), str(plan)]
+	var broken: Array = []
+	var cb := func(id: String) -> void: broken.append(id)
+	EventBus.promise_broken.connect(cb)
+	EventGate.resolve(PROMISE_DUE, "slip")
+	EventBus.promise_broken.disconnect(cb)
+	if promise.status != "broken" or broken != [promise.id]:
+		return "the word reads '%s' and promise_broken came %s" % [promise.status, str(broken)]
+	if account.satisfaction != maxi(sat + B2BConstants.PROMISE_BROKEN_SAT, 0) \
+			or not is_equal_approx(account.trust_offset, B2BConstants.PROMISE_BROKEN_OFFSET) \
+			or GameState.brand != brand + B2BConstants.PROMISE_BROKEN_BRAND \
+			or account.promise_broken_day != GameState.day or not B2BSalesSystem.promise_relocked(account):
+		return "the break left satisfaction %d (was %d), trust %s, brand %d (was %d), broken day %d, relocked %s" % [
+			account.satisfaction, sat, account.trust_offset, GameState.brand, brand, account.promise_broken_day,
+			B2BSalesSystem.promise_relocked(account)]
+	if not EvEffects.run_expire([{"verb": "promise_break"}], {}, PROMISE_DUE).is_empty() or GameState.brand != brand + B2BConstants.PROMISE_BROKEN_BRAND:
+		return "the paper's expiry broke a word the sprint had already broken"
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if account.satisfaction != int(plan.accounts[0].to):
+		return "the chip said satisfaction %d a tick on, the player reads %d" % [plan.accounts[0].to, account.satisfaction]
+	return ""
+
+
 ## B2C'de yayından sonra ücretli plan liderin zorunlu kartıdır: gelirin kapısıdır, tek kurucunun dar
 ## sprintinde de önce o önerilir.
 ## FALSİFİKASYON: SprintCatalog._suggest'teki PAID_PLAN satırını sil → FAIL.
@@ -19521,10 +20256,10 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 	for c in EvCatalog.pool_candidates("daily"):
 		if ((c as Dictionary)["tags"] as Array).has("quiet"):
 			return "the weighted pool offers the quiet card %s" % (c as Dictionary)["id"]
-	# The rhythm includes the sprint decision papers: their real rate, not _seed_sprint's zero.
-	var rate: Variant = SprintCatalog.cfg("decision.rate")
+	# The rhythm includes the sprint decision papers: their real chance, not _seed_sprint's zero.
+	var chance: Dictionary = (SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()
 	_seed_sprint()
-	SprintCatalog._data.decision.rate = rate
+	SprintCatalog._data.decision.sprint_chance = chance
 	var worst: int = 0
 	var weeks: int = 0
 	while weeks < 12:
@@ -19556,11 +20291,10 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 	return ""
 
 
-## Sprint karar kartları gerçek destededir: istek oranı 1 iken koşan sprintin ilk haftasından sonra
-## geride kalan kart bir product.sprint_* kâğıdını masaya koyar ve gövdesi beklenen kartın adını
-## okur. Vaka fikstür kapsamını açmaz; oranı (test sabiti) kendi süresince açar ve geri koyar. Tek
-## kurucu 12 saatte iki K1 alır; ikincisi ilk hafta geride kalır. Kapanmayan haftası olmayan 1 haftalık
-## sprintte varsayılan mesaideki kurucunun tek K1'i geride kalır ve kararını sprint başlarken çeker.
+## Sprint karar kartları gerçek destededir: kâğıt ihtimali 1 iken tek kurucunun ilk hafta geliştirmede çalıştığı sekiz puanlık
+## kart, ilk haftanın sonunda bir product.sprint_* kâğıdını masaya koyar (kurucu tek, geliştirme aşaması: lisans kâğıdı) ve
+## gövdesi kartın adını okur. Vaka fikstür kapsamını açmaz; ihtimali (test sabiti) kendi süresince açar ve geri koyar. Tasarımı
+## biten sekiz puanlık tek kart 1 haftalık sprintte kararını sprint başlarken çeker.
 ## FALSİFİKASYON: kartlardan birinin version_scope'unu "fixture" yap ya da sprint.json
 ## decision.cards'ı fixture kimliklerine çevir → karar istenmez; SprintSystem._begin'deki
 ## _request_decision çağrısını sil → 1 haftalık sprint karar çekmez.
@@ -19569,19 +20303,21 @@ static func _case_sprint_decision_card_fires_shipped() -> String:
 		return "fixture: the shipped scopes already admit fixtures"
 	_seed_sprint()
 	WorkHoursSystem.set_company_hours(12)
-	var rate: Variant = SprintCatalog.cfg("decision.rate")
-	SprintCatalog._data.decision.rate = 1.0
+	var chance: Dictionary = (SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()
+	_paper_chance(1.0)
 	for line_id in SprintCatalog.capabilities("core").slice(0, 2):
 		SprintSystem.add("feat:%s_k1" % line_id)
+	for id in GameState.product.sprint.cards:
+		GameState.product.cards[id].effort = 8   # a card the founder is still building after the first week
 	var started: bool = SprintSystem.start()
 	if started:
 		_sim_day()
-	SprintCatalog._data.decision.rate = rate
+	SprintCatalog._data.decision.sprint_chance = chance
 	if not started:
 		return "fixture: the sprint did not start"
 	var event_id: String = String(GameState.product.decision.get("event_id", ""))
 	if not event_id.begins_with("product.sprint_") or not event_id in (SprintCatalog.cfg("decision.cards") as Array):
-		return "a decision at rate 1 asked for '%s', want one of %s" % [event_id, SprintCatalog.cfg("decision.cards")]
+		return "a decision at chance 1 asked for '%s', want one of %s" % [event_id, SprintCatalog.cfg("decision.cards")]
 	if not EventGate.desk_papers(8).any(func(p: Dictionary) -> bool: return p.id == event_id):
 		return "the %s paper is not on the desk" % event_id
 	var name: String = SprintCatalog.card_name(SprintSystem.decision_card())
@@ -19592,12 +20328,15 @@ static func _case_sprint_decision_card_fires_shipped() -> String:
 	GameState.initialize_run({"seed": 424242})
 	_seed_sprint()
 	SprintSystem.set_weeks(1)
-	SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
-	SprintCatalog._data.decision.rate = 1.0
+	var built: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[0]
+	SprintSystem.add(built)
+	GameState.product.cards[built].effort = 8
+	GameState.product.cards[built].progress = [1.6, 0.0, 0.0]   # the design is done: the founder starts in the build
+	_paper_chance(1.0)
 	started = SprintSystem.start()
-	SprintCatalog._data.decision.rate = rate
-	if not started or GameState.product.decision.get("event_id", "") != "product.sprint_late":
-		return "a one-week sprint started (%s) with decision %s, want product.sprint_late drawn at its start" % [
+	SprintCatalog._data.decision.sprint_chance = chance
+	if not started or GameState.product.decision.get("event_id", "") != "product.sprint_solo_license":
+		return "a one-week sprint started (%s) with decision %s, want product.sprint_solo_license drawn at its start" % [
 			started, GameState.product.decision]
 	return ""
 
@@ -19732,58 +20471,1116 @@ static func _case_promise_row_locked_when_no_room() -> String:
 	return check.call(false, "a full next sprint")
 
 
-## product.sprint_late yalnız gerçekten geride kalan kartta açılır: sprintin kalan haftası bugünkü
-## ekiple oynanır. Kurucuyla geliştirici ilk haftayı ilk karta verir, ikinci karta yalnız haftanın
-## artanı düşer; ikinci hafta ikisi ona yetişir, kâğıt istenmez. Tek kurucunun 12 saatte ikinci
-## kartı yetişmez: kâğıt gelir; kurucu öbür kartta olduğundan geceler de onu yetiştirmez ve fazla mesai
-## satırı kilitlidir.
-## FALSİFİKASYON: sprint_late.json'un koşulundan urun.decision_card_late yaprağını sil → ilk sprintte
-## kâğıt istenir; crunch seçeneğinin requires yaprağını sil → fazla mesai satırı açılır.
-static func _case_sprint_late_only_when_behind() -> String:
-	_seed_sprint()
-	var rate: Variant = SprintCatalog.cfg("decision.rate")
-	var events: Variant = SprintCatalog.cfg("decision.cards")
-	SprintCatalog._data.decision.rate = 1.0
-	SprintCatalog._data.decision.cards = ["product.sprint_late"]
+## `line_harden`: yeniden yazılan hatta süresince zarla yeni hata düşmez (ne bildirimlerin çekilişinden ne hatalı kapanış
+## zarından), öbür hatlara düşer; oyuncunun kendi seçtiği hata (çıkış hatası `leaks` ve anlık hata `damage_product`) yine düşer;
+## süre dolunca hat hata almaya döner, ikinci yeniden yazım süreyi kısaltmaz; bayrak tipli kayıt tablosundadır ve JSON turundan
+## sağ çıkar.
+## FALSİFİKASYON: ProductState.line_blocked'ın gövdesine `return false` yaz → kapalı hatta hata düştü FAIL; `_close`un zarındaki
+## `line_blocked` koşulunu sil → hatalı kapanış kapalı hatta hata yazdı FAIL; `_land_faulty`ye `line_blocked` koşulu ekle →
+## çıkış hatası FAIL; `harden_line`daki `maxi`yi `mini` yap → kısa yeniden yazım uzun olanı kısalttı FAIL; `damage_product`
+## kolundaki add_bugs'ı sil → anlık hata FAIL.
+static func _case_paper_line_harden() -> String:
+	_seed_sprint_live("erp")
+	CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
+	var lines: Array = ProductState.live_lines()
+	var shut: String = lines[0]
+	var open: String = lines[1]
+	var rain := func() -> Dictionary:
+		GameState.run_seed = 101
+		RngStreams.reseed(101)
+		GameState.set_flag(ProductState.OPEN_BUGS, {})
+		GameState.set_flag(ProductState.REPORTS_INCOMING, 300)
+		GameState.set_flag(ProductState.VALIDATION_PROGRESS, 300.0)
+		SupportSystem.hourly_tick(0)
+		return ProductState.open_bugs_by_line()
+	if int(rain.call().get(shut, 0)) == 0:
+		return "fixture: 300 reports left %s without a bug" % shut
+	var log: Array = EvEffects.run_played([{"verb": "line_harden", "line": shut, "weeks": 2}], {})
+	if log.size() != 1 or int(log[0].get("weeks", 0)) != 2 or log[0].has("refused"):
+		return "the rewrite's row reads %s, want two weeks on %s" % [str(log), shut]
+	if not ProductState.line_blocked(shut) or ProductState.line_blocked(open):
+		return "after the rewrite %s is blocked %s and %s %s, want only the first" % [shut, ProductState.line_blocked(shut),
+			open, ProductState.line_blocked(open)]
+	var drawn: Dictionary = rain.call()
+	if int(drawn.get(shut, 0)) != 0 or int(drawn.get(open, 0)) == 0:
+		return "300 reports landed %s on a line with a rewrite, want none there and some beside it" % str(drawn)
+	GameState.set_flag(ProductState.OPEN_BUGS, {})
+	GameState.product.pending_faulty = [shut]
+	SprintSystem._land_faulty()
+	EvEffects.run_played([{"verb": "damage_product", "line": shut, "bugs": 2}], {})
+	if ProductState.line_bugs(shut) != 3:
+		return "the bugs the player chose (one shipped with, two now) landed %d on the rewritten line, want 3" % \
+			ProductState.line_bugs(shut)
+	EvEffects.run_played([{"verb": "line_harden", "line": shut, "weeks": 1}], {})
+	GameState.day += TimeModel.ticks(1)
+	if not ProductState.line_blocked(shut):
+		return "a second rewrite of one week shortened the first of two"
+	var kept: Variant = JSON.parse_string(JSON.stringify(GameState.get_flag(ProductState.LINE_HARDEN, {})))
+	GameState.set_flag(ProductState.LINE_HARDEN, kept)
+	if GameState.FLAG_TYPES.get(ProductState.LINE_HARDEN, -1) != TYPE_DICTIONARY or not ProductState.line_blocked(shut):
+		return "the rewrite's table is %s and after a JSON round trip the line is blocked %s" % [
+			GameState.FLAG_TYPES.get(ProductState.LINE_HARDEN, -1), ProductState.line_blocked(shut)]
+	GameState.day += TimeModel.ticks(2)
+	if ProductState.line_blocked(shut) or int(rain.call().get(shut, 0)) == 0:
+		return "two weeks on, the rewritten line still takes no bugs"
+	# Kapanış zarı: test rolü olmayan kurucunun test ettiği iki kart (bir özellik, bir düzeltme) hatalı çıkar; yeniden yazılan
+	# hattınki hata yazmaz.
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint_live("erp")
+	var saved: Array = [SprintCatalog.cfg("faulty_chance"), SprintCatalog.cfg("founder_roles")]
+	SprintCatalog._data.faulty_chance = 1.0
+	SprintCatalog._data.founder_roles = ["product", "design", "dev"]
+	var rolled: Array = [SprintCatalog.capabilities("core")[3], ProductState.live_lines()[0]]
+	ProductState.harden_line(rolled[0], 26)
+	ProductState.add_bugs(rolled[1], 1)
+	for id in ["feat:%s_k1" % rolled[0], "fix:" + rolled[1]]:
+		SprintSystem.add(id)
+		GameState.product.cards[id].effort = 1
+	var started: bool = SprintSystem.start()
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	SprintCatalog._data.faulty_chance = saved[0]
+	SprintCatalog._data.founder_roles = saved[1]
+	var faulty: Array = GameState.product.releases[-1].get("faulty", []) if started else []
+	if faulty != [rolled[1]]:
+		return "a close of two cards tested without the test role rolled faulty %s, want only %s" % [faulty, rolled[1]]
+	return ""
+
+
+## Karar kâğıdının kartına dokunan fiiller ve çipleri: yapılmış işi silmek seam'den okunan puandır (çip ve uygulanan aynı sayı);
+## kartın puanı kartın adıyla yazılır; anlık hata hattın adını ve tekil/çoğul kalıbını taşır; "Ana akışları test et" kartın testini
+## yarıya indirir, kartı kısaltılmış testle çıkmış sayar ve çipi yüzde yazmaz, söz tutulmuş demez. Yazılımcı, testçisiz, tek kurucu ve
+## sistem kâğıtlarının yirmi biri de havuzdadır ve gösterilir: metin çözülür ve her etkinin çipi vardır.
+## FALSİFİKASYON: sprint_card_progress çipinde amount'u seam'den değil sabitten oku → çip sayısı FAIL; `sprint_card_test` kolunda
+## `card` DECISION dalını sil → kısaltılmış kart FAIL; çipte DECISION dalını sil → yüzde ya da söz çipi FAIL; sprint.json
+## `decision.cards`tan `product.sprint_late_solo`yu çıkar → havuzda yok FAIL.
+static func _case_paper_card_effects() -> String:
+	_seed_sprint_live("erp")
+	var line: String = SprintCatalog.capabilities("core")[3]
+	var card_id: String = "feat:%s_k1" % line
+	SprintSystem.add(card_id)
+	var card: Dictionary = GameState.product.cards.get(card_id, {})
+	if card.is_empty() or not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	card.effort = 8
+	card.progress = [1.6, 0.4, 0.0]
+	GameState.product.decision = {"card_id": card_id, "event_id": "fixture.paper_dev", "speaker": ""}
+	var name: String = SprintCatalog.card_name(card)
+	var lost: Dictionary = {"verb": "sprint_card_progress", "amount_seam": "urun.decision_card_done", "amount_mult": -1}
+	var chips := func(effect: Dictionary) -> Array:
+		return EvChips.describe(effect, {}, {}, false)
+	if int(EvSeams.read("urun.decision_card_done")) != 2 or EvEffects.amount(lost) != -2:
+		return "two points are done and the seam reads %s, the amount %d" % [EvSeams.read("urun.decision_card_done"),
+			EvEffects.amount(lost)]
+	var lost_chip: Array = chips.call(lost)
+	if lost_chip.size() != 1 or lost_chip[0].polarity != "danger" or not String(lost_chip[0].label).contains("2"):
+		return "the chip for 2 finished points thrown away reads %s" % str(lost_chip)
+	var gain_chip: Array = chips.call({"verb": "sprint_card_effort", "amount": 2})
+	if gain_chip.size() != 1 or not String(gain_chip[0].label).contains(name) or gain_chip[0].polarity != "cost":
+		return "the chip for 2 more points reads %s, want it to name '%s' and cost" % [str(gain_chip), name]
+	var cut_chip: Array = chips.call({"verb": "sprint_card_effort", "amount": -3})
+	if cut_chip.size() != 1 or cut_chip[0].polarity != "gain" or not String(cut_chip[0].label).contains("3"):
+		return "the chip for 3 points off reads %s" % str(cut_chip)
+	EvEffects.run_played([lost], {})
+	if _card_worked(card_id) > 0.0001:
+		return "the finished work was not thrown away: %.2f points still done" % _card_worked(card_id)
+	var one: Array = chips.call({"verb": "damage_product", "line": line, "bugs": 1})
+	var two: Array = chips.call({"verb": "damage_product", "line": line, "bugs": 2})
+	if one.size() != 1 or two.size() != 1 or one[0].label == two[0].label or one[0].polarity != "cost" \
+			or not String(one[0].label).contains(SprintCatalog.cap_name(line)):
+		return "the new bug chips read %s and %s, want the line's name and a singular and a plural" % [str(one), str(two)]
+	EvEffects.run_played([{"verb": "damage_product", "line": line, "bugs": 2}], {})
+	if ProductState.line_bugs(line) != 2:
+		return "the bug verb left %d bugs on the line, want 2" % ProductState.line_bugs(line)
+	var cut: Dictionary = {"verb": "sprint_card_test", "card": "decision"}
+	var cut_parts: Array = chips.call(cut)
+	if cut_parts.size() != 1 or String(cut_parts[0].label).contains("%") or cut_parts[0].polarity != "cost":
+		return "the test cut chip reads %s, want one costing sentence and no percentage" % str(cut_parts)
+	if SprintSystem.escape_chance(card) != 0.0:
+		return "a tested card reads an escape chance of %s before the cut" % SprintSystem.escape_chance(card)
+	EvEffects.run_played([cut], {})
+	if not bool(card.cut) or SprintSystem.escape_chance(card) < float(SprintCatalog.cfg("promise.cut_test_escape")):
+		return "after the cut the card reads cut %s and an escape chance of %s" % [card.cut, SprintSystem.escape_chance(card)]
+	# Yirmi bir kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), her etkinin çipi vardır.
+	var account: Customer = _incident_account("co_render", "Render Co", "retail", 40, 1800)
+	var slots: Dictionary = {
+		"employee": {"type": "employee", "id": _sprint_hire("char_render_dev", HRConstants.ROLE_DEVELOPER).id, "bound_day": GameState.day},
+		"founder": {"type": "founder", "id": CharacterRegistry.get_founder().id, "bound_day": GameState.day},
+		"customer": {"type": "customer", "id": account.id, "bound_day": GameState.day}}
+	var seen := 0
+	for path in DirAccess.get_files_at("res://data/events/cards/product"):
+		var paper: Dictionary = EvCatalog.card("product." + String(path).trim_suffix(".json"))
+		if paper.is_empty() or not ["developer", "no_tester", "solo", "system"].has(String(paper.get("pool_group", ""))):
+			continue
+		seen += 1
+		if not (SprintCatalog.cfg("decision.cards") as Array).has(paper.id):
+			return "%s is not in sprint.json decision.cards, so no sprint can ask for it" % paper.id
+		var bound: Dictionary = {}
+		for slot in paper.scope:
+			bound[slot] = slots[slot]
+		var ev: GameEvent = EvPresenter.build_view(paper.id, bound)
+		var words: Array = [ev.title, ev.body_text]
+		for choice in ev.choices:
+			words.append(choice.label)
+			for effect in choice.modifiers:
+				if EvChips.describe(effect, bound, {}, false).is_empty() and not EvChips.SILENT_VERBS.has(String(effect.verb)):
+					return "%s: the effect %s shows no chip" % [paper.id, str(effect)]
+		for text in words:
+			if String(text) == "" or String(text).contains("{") or String(text).contains("}"):
+				return "%s reads '%s'" % [paper.id, text]
+	if seen != 21:
+		return "%d of the 21 developer, no tester, solo and system papers were rendered" % seen
+	return ""
+
+
+## Kâğıtların okuduğu seam'ler: hat kimliği paylaşılan hatta temel kimlikle okunur ve adı hattın adıdır; kök neden yalnız yeterli
+## hatası olan düzeltme kartında doğrudur; ekipte testçi var mı Test işindekilere bakar (kurucu sayılmaz); ilk sürümün hattı v1.0'a
+## kadarki sürümlerin kartlarındandır; ay sonuna kalan tik ayın son tikinde 1'dir; lisans alt sınırdadır ve koltukla büyür, dışarıdan
+## testçinin haftası maaştan türer; yedek kâğıdı Dayanıklılık'ın kademesini, kayıt kodu kâğıdı Güvenlik'in hatasını ve düzeltme
+## kartının sprintte olup olmadığını okur, ilk cevabı düzeltme kartını başa alır (çip kartın adını yazar).
+## FALSİFİKASYON: `urun.security_fix_planned`ı `false` döndür → planlı düzeltme FAIL; `urun.decision_line`dan `get_slice`ı sil →
+## paylaşılan hat FAIL; `decision_root_cause`dan `kind == "fix"` koşulunu
+## sil → özellik kartı FAIL; `sprint_has_tester`dan `not t.founder`ı sil → kurucu testçi sayıldı FAIL; `line_in_first_version`da
+## `number <= 1`i sil → sonraki sürümün hattı FAIL.
+static func _case_paper_seams() -> String:
+	_seed_sprint_live("note_tool")
+	var security: String = SprintCatalog.in_product("line_shared_security")
+	var built: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[3]
+	ProductState.add_bugs(security, 2)
+	SprintSystem.add(built)
+	SprintSystem.add("fix:" + security)
+	if not SprintSystem.start() or not GameState.product.sprint.cards.has("fix:" + security) \
+			or not GameState.product.sprint.cards.has(built):
+		return "fixture: the sprint did not start with the Security fix and a feature card"
+	var decide := func(card_id: String) -> void:
+		GameState.product.decision = {"card_id": card_id, "event_id": "fixture.paper_dev", "speaker": ""}
+	var fix: Dictionary = GameState.product.cards["fix:" + security]
+	decide.call(fix.id)
+	if EvSeams.read("urun.decision_line") != "line_shared_security" \
+			or EvSeams.read("urun.decision_line_name") != SprintCatalog.cap_name(fix.line):
+		return "a shared line reads '%s' named '%s', want its base id and its name" % [EvSeams.read("urun.decision_line"),
+			EvSeams.read("urun.decision_line_name")]
+	for bugs in [2, 3]:
+		fix.bugs = bugs
+		if bool(EvSeams.read("urun.decision_root_cause")) != (bugs >= int(SprintCatalog.cfg("paper.root_min"))) \
+				or int(EvSeams.read("urun.decision_root_bugs")) != bugs:
+			return "a fix card for %d bugs reads root cause %s over %s bugs" % [bugs, EvSeams.read("urun.decision_root_cause"),
+				EvSeams.read("urun.decision_root_bugs")]
+	decide.call(built)
+	if EvSeams.read("urun.decision_root_cause") or EvSeams.read("urun.decision_root_bugs") != 0:
+		return "a feature card reads a root cause (%s)" % EvSeams.read("urun.decision_root_cause")
+	if EvSeams.read("urun.sprint_has_tester"):
+		return "a founder alone reads a tester in the team"
+	_sprint_hire("char_seam_test", HRConstants.ROLE_TESTER)
+	if not EvSeams.read("urun.sprint_has_tester"):
+		return "a tester hired onto the Test job reads no tester in the team"
+	GameState.product.releases = [{"number": 0, "shipped": [{"line": "l_early"}]}, {"number": 2, "shipped": [{"line": "l_late"}]}]
+	if not SprintSystem.line_in_first_version("l_early") or SprintSystem.line_in_first_version("l_late"):
+		return "the first version's lines read early %s and late %s, want true and false" % [
+			SprintSystem.line_in_first_version("l_early"), SprintSystem.line_in_first_version("l_late")]
+	for day in range(1, 40):
+		GameState.day = day
+		var weeks: int = int(EvSeams.read("urun.weeks_to_month_end"))
+		if weeks < 1 or GameState.get_date_dict(day + weeks).month == GameState.get_date_dict(day).month \
+				or GameState.get_date_dict(day + weeks - 1).month != GameState.get_date_dict(day).month:
+			return "on tick %d the month turns in %d ticks, which is not the first tick of another month" % [day, weeks]
+	for tier in [0, 1]:
+		ProductState.set_line_tier(security, tier)
+		if int(EvSeams.read("urun.security_tier")) != tier:
+			return "a Security line at tier %d reads %s; its update paper must not land a bug on an unbuilt line" % [tier,
+				EvSeams.read("urun.security_tier")]
+	ProductState.set_line_tier(SprintCatalog.in_product("line_shared_durability"), 1)
+	if int(EvSeams.read("urun.durability_tier")) != 1 or int(EvSeams.read("urun.security_bugs")) != 2 \
+			or not EvSeams.read("urun.security_fix_planned"):
+		return "the backup and sign up papers read durability tier %s, %s security bugs and a planned fix %s" % [
+			EvSeams.read("urun.durability_tier"), EvSeams.read("urun.security_bugs"), EvSeams.read("urun.security_fix_planned")]
+	SprintSystem.remove("fix:" + security)
+	if EvSeams.read("urun.security_fix_planned"):
+		return "the Security fix card left the sprint and the sign up paper reads it planned"
+	var front: Array = EvChips.describe({"verb": "sprint_fix_first", "line": "line_shared_security", "front": true}, {}, {}, false)
+	if front.is_empty() or front[0].polarity != "gain" or not String(front[0].label).contains(SprintCatalog.cap_name(security)):
+		return "the sign up paper's first answer reads %s, want the fix card standing first" % str(front)
+	if int(EvSeams.read("urun.paper_tester_week")) != 1400 or int(EvSeams.read("urun.paper_license")) != 1200:
+		return "an outside tester's week reads $%s and a licence $%s, want $1400 and the $1200 floor" % [
+			EvSeams.read("urun.paper_tester_week"), EvSeams.read("urun.paper_license")]
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint_live("erp")
+	_incident_account("co_license", "License Co", "retail", 1000, 5000)
+	if int(EvSeams.read("urun.paper_license")) != 6000:
+		return "a licence for 1000 seats reads $%s, want $6000" % EvSeams.read("urun.paper_license")
+	return ""
+
+
+## Gecikmiş bir sprintin dünyası: yayındaki ERP, 100 koltuklu bir hesap, ekip (`solo` değilse bir geliştirici ve bir testçi) ve
+## sprintin tek kartı: hesabın isteği (`request`) ya da özellik kartı, söz verilmişse (`promised`) sonraki sprinte. Kart test
+## aşamasındadır ve son haftanın başında testten kalan iş o aşamada çalışanların bir haftalık işinin 1,1 katıdır (fazla mesai
+## yetiştirir). Kâğıt ihtimali 1. Kartın kimliği, sprint başlamazsa "".
+static func _late_world(solo: bool, request: bool, promised := false) -> String:
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	EvCatalog.ensure_loaded()
+	_seed_sprint_live("erp")
+	var account: Customer = _incident_account("co_demir", "Demir Holding", "finance", 100, 2400)
+	SalesSystem.reflect_mrr()
+	if not solo:
+		_incident_hire("char_inc_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER, 6)
+		_incident_hire("char_inc_test", "Selin Aras", HRConstants.ROLE_TESTER, 4)
+	var line: String = SprintCatalog.capabilities("core")[3]
+	var step: String = "%s_k1" % line
+	var card_id: String = "feat:" + step
+	if request:
+		card_id = "req:co_demir.1"
+		GameState.product.requests.append({"id": "co_demir.1", "customer_id": account.id, "step": step, "line": line,
+			"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": card_id, "day": GameState.day})
+	if promised:
+		PromiseRegistry.create(account.id, step, B2BConstants.PROMISE_DEADLINE_WEEKS).due_sprint = SprintSystem.sprint_number() + 1
+	SprintSystem.set_weeks(2)
+	SprintSystem.add(card_id)
+	var stored: Dictionary = GameState.product.cards.get(card_id, {})
+	if stored.is_empty():
+		return ""
+	var week: float = 0.0
+	for member in SprintSystem.team():
+		if not member.ahead:
+			week += member.points * (1.0 if "test" in member.fits else float(SprintCatalog.cfg("no_role_speed")))
+	stored.effort = 100
+	stored.progress = [float(stored.shares[0]) * 100.0, float(stored.shares[1]) * 100.0,
+		float(stored.shares[2]) * 100.0 - 1.1 * week - week]
+	_paper_chance(1.0)
+	return card_id if SprintSystem.start() else ""
+
+
+## "Sprint yetişmeyecek" yalnız kartı bekleyen biri varken, sprintin son haftasında, kart bu hızla yetişmeyip fazla mesaiyle
+## yetişiyorsa ve kartta söz yoksa gelir: ekipte kartın o aşamada çalışanı (bir çalışan) söyler, kurucu tekken kurucunun kendi notudur
+## (`product.sprint_late_solo`); konu hesap isteyen hesaptır. Kartı isteyen olmayan (özellik kartı) ya da sözü olan kartta gelmez.
+## Fazla mesai sprintin saatini ×1,25 yapar; ekipte herkesin morali düşer, kurucu tekken düşmez.
+## FALSİFİKASYON: kartın koşulundan `urun.decision_kind == request` yaprağını sil → özellik kartında geldi FAIL; `urun.decision_promised`
+## yaprağını sil → sözlü kartta geldi FAIL; `crunch_finishes` yaprağını sil → yetişmeyen kartta geldi FAIL; sprint.json
+## `decision.cards`tan `product.sprint_late_solo`yu çıkar → kurucu tekken gelmedi FAIL.
+static func _case_sprint_late_for_requests() -> String:
+	var chance: Dictionary = (SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()
+	var cards: Variant = SprintCatalog.cfg("decision.cards")
 	var run := func() -> String:
-		var asked: Array = []
-		EventBus.card_decision_requested.connect(func(id: String) -> void: asked.append(id))
-		var dev: Character = _sprint_hire("char_late_dev", HRConstants.ROLE_DEVELOPER)
-		var lines: Array = SprintCatalog.capabilities("core")
-		for line_id in lines.slice(0, 2):
-			SprintSystem.add("feat:%s_k1" % line_id)
+		# [ekip yalnız kurucu mu, kart bir istek mi, kart sözlü mü, gelmesi gereken kâğıt ("" = hiçbiri)]
+		for row in [[false, true, false, "product.sprint_late"], [true, true, false, "product.sprint_late_solo"],
+				[false, false, false, ""], [true, false, false, ""], [false, true, true, ""]]:
+			var card_id: String = _late_world(row[0], row[1], row[2])
+			SprintCatalog._data.decision.cards = ["product.sprint_late", "product.sprint_late_solo"]
+			if card_id == "":
+				return "fixture: the late world's sprint did not start (%s)" % str(row)
+			var before: Dictionary = {}
+			for member in SprintSystem.team():
+				before[member.id] = CharacterRegistry.get_character(member.id).morale
+			_sim_day()
+			var came: String = String(GameState.product.decision.get("event_id", ""))
+			if came != row[3] or (row[3] != "" and not EventGate.on_desk(row[3])) \
+					or (row[3] == "" and (EventGate.on_desk("product.sprint_late") or EventGate.on_desk("product.sprint_late_solo"))):
+				return "a late %s card (solo %s, promised %s) brought '%s', want '%s'" % [
+					"request" if row[1] else "feature", row[0], row[2], came, row[3]]
+			if row[3] == "":
+				continue
+			var speaker: Character = CharacterRegistry.get_character(GameState.product.decision.speaker)
+			_drain_all_modals()
+			if (speaker.category == "founder") != row[0]:
+				return "the %s paper was spoken by %s (%s)" % [row[3], speaker.character_name, speaker.category]
+			if not EventGate.open_paper(row[3]) or EventGate.active_context().customer.id != "co_demir":
+				return "the %s paper is bound to %s, want the account that asked" % [row[3], str(EventGate.active_context())]
+			EventGate.resolve(row[3], "crunch_solo" if row[0] else "crunch")
+			if not is_equal_approx(float(GameState.product.sprint.hours_mult), 1.25):
+				return "the overtime left the sprint's hours at %s, want x1.25" % GameState.product.sprint.hours_mult
+			for id in before:
+				var person: Character = CharacterRegistry.get_character(id)
+				if (person.category == "employee") and person.morale >= before[id]:
+					return "the overtime left %s's morale at %s (was %s)" % [person.character_name, person.morale, before[id]]
+		return ""
+	var fail: String = run.call()
+	SprintCatalog._data.decision.sprint_chance = chance
+	SprintCatalog._data.decision.cards = cards
+	return fail
+
+
+const PAPER_DEV := "fixture.paper_dev"
+const PAPER_DESIGN := "fixture.paper_design"
+const PAPER_PM := "fixture.paper_pm"
+const PAPER_FOUNDER := "fixture.paper_founder"
+const PAPER_PLAIN := "fixture.paper_plain"
+const PAPER_CRUNCH := "fixture.paper_crunch"
+
+
+## Karar kâğıdı vakalarının sahnesi: havuzda yalnız `papers` (fikstür kâğıtları), kâğıt ihtimali 1, fikstür kapsamı açık.
+## Eski değerleri verir; `_paper_pool_end` geri koyar. `_seed_sprint` ihtimali sıfırlar: sahne ondan sonra kurulur.
+static func _paper_pool(papers: Array) -> Array:
+	var saved: Array = [EvTuning.SHIPPED_SCOPES.duplicate(), SprintCatalog.cfg("decision.cards"),
+		(SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()]
+	EvTuning.SHIPPED_SCOPES.append("fixture")
+	SprintCatalog._data.decision.cards = papers
+	_paper_chance(1.0)
+	return saved
+
+
+static func _paper_pool_end(saved: Array) -> void:
+	EvTuning.SHIPPED_SCOPES.assign(saved[0])
+	SprintCatalog._data.decision.cards = saved[1]
+	SprintCatalog._data.decision.sprint_chance = saved[2]
+
+
+## Kâğıt, kartta o aşamada çalışan kişinin ağzından gelir: konuşan istek anında kartın atananlarındadır, `role_of` o
+## aşamanın rolünü verir, karakter rolü kâğıdın `speaker_role`'üdür ve kâğıt ona bağlanır (`employee` slotu; kurucuysa
+## `founder`). Tasarım aşamasında kartta atanmış PM tasarımcı kâğıdını söylemez; payı Destek'e geçmiş yazılımcı atanmaz ve
+## konuşmaz. PM kâğıdını çeyreği planlayan PM söyler, konusu sprintteki müşteri isteği kartıdır, hesap isteğin hesabıdır;
+## PM yoksa gelmez. Tek kurucunun kâğıdı kendi notudur.
+## FALSİFİKASYON: SprintSystem._speaker'daki `.role == role` koşulunu sil → PM'li ekipte tasarımcı kâğıdı geldi FAIL;
+## `role_of(id) == stage` koşulunu sil → yazılımcı kâğıdının aşaması FAIL; PM dalındaki `c.kind == "request"` koşulunu
+## sil → PM kâğıdı istek olmayan karta düştü FAIL.
+static func _case_paper_speaker_is_assignee() -> String:
+	var saved: Array = _paper_pool([])
+	var seen: Array = []
+	EventBus.card_decision_requested.connect(func(card_id: String) -> void:
+		var card: Dictionary = GameState.product.cards[card_id]
+		var speaker: String = GameState.product.decision.speaker
+		seen.append({"speaker": speaker, "kind": card.kind, "assignees": card.assignees.duplicate(),
+			"stage": SprintSystem.role_of(speaker)}))
+	# Bir sprint: ekip `roles` (kurucu ayrıca) ve havuzda yalnız `paper`. 1 haftalık sprint kâğıdı başlarken ister, her kart
+	# tasarımda; 2 haftalık ilk haftanın sonunda, her kart geliştirmede. Kâğıt gelmediyse {}.
+	var play := func(roles: Array, paper: String, weeks: int, b2b: bool, desk_dev: bool) -> Dictionary:
+		SaveManager.reset_all_owners()
+		GameState.initialize_run({"seed": 424242})
+		seen.clear()
+		if b2b:
+			_seed_sprint_live("erp")
+		else:
+			_seed_sprint()
+		_paper_chance(1.0)
+		SprintCatalog._data.decision.cards = [paper]
+		for role_id in roles:
+			var hired: Character = _sprint_hire("char_paper_" + role_id, role_id)
+			if desk_dev and role_id == HRConstants.ROLE_DEVELOPER:
+				CharacterRegistry.assign_job(hired.id, HRConstants.JOB_SUPPORT)
+				CharacterRegistry.unassign_job(hired.id, HRConstants.JOB_BUILD)
+		var cards: Array = []
+		if b2b:
+			_incident_account("co_paper", "Paper Co", "retail", 40, 1800)
+			SalesSystem.reflect_mrr()
+			var line: String = SprintCatalog.capabilities("core")[3]
+			GameState.product.requests.append({"id": "co_paper.1", "customer_id": "co_paper", "step": line + "_k1",
+				"line": line, "status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600,
+				"card_id": "req:co_paper.1", "day": GameState.day})
+			cards.append("feat:%s_k1" % SprintCatalog.capabilities("core")[4])   # first in the sprint: not the PM's subject
+			cards.append("req:co_paper.1")
+		else:
+			for line_id in SprintCatalog.capabilities("core").slice(0, 3):
+				cards.append("feat:%s_k1" % line_id)
+		SprintSystem.set_weeks(weeks)
+		for id in cards:
+			SprintSystem.add(id)
+		for id in GameState.product.sprint.cards:
+			GameState.product.cards[id].effort = 8   # a card no team of this size finishes in a week
 		if not SprintSystem.start():
-			return "fixture: sprint 1 did not start"
+			return {"error": "the sprint did not start"}
+		if weeks == 2:
+			_sim_day()
+		return seen[0] if not seen.is_empty() else {}
+	var fail := ""
+	var worked := func(paper: Dictionary, role_id: String, stage: String) -> String:
+		if paper.has("error") or paper.is_empty():
+			return "no %s paper came (%s)" % [role_id, str(paper)]
+		var who: Character = CharacterRegistry.get_character(paper.speaker)
+		if paper.speaker not in paper.assignees or paper.stage != stage or who.role != role_id:
+			return "the %s paper was spoken by %s (%s) on a card worked by %s, working %s; want a %s at %s" % [
+				role_id, paper.speaker, who.role, str(paper.assignees), paper.stage, role_id, stage]
+		return ""
+	var dev: Dictionary = play.call([HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER],
+		PAPER_DEV, 2, false, false)
+	fail = worked.call(dev, HRConstants.ROLE_DEVELOPER, "dev")
+	if fail == "" and (not EventGate.open_paper(PAPER_DEV) or EventGate.active_context().employee.id != dev.speaker):
+		fail = "the developer paper is not bound to the developer on the card (%s)" % str(EventGate.active_context())
+	if fail == "":
+		var early: Dictionary = play.call([HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER], PAPER_DEV, 1, false, false)
+		if not early.is_empty():
+			fail = "the developer paper came in the first week, with every card in design and the developer drawing on one (%s)" \
+				% str(early)
+	if fail == "":
+		var design: Dictionary = play.call([HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER,
+			HRConstants.ROLE_PRODUCT_MANAGER], PAPER_DESIGN, 1, false, false)
+		fail = worked.call(design, HRConstants.ROLE_DESIGNER, "design")
+	if fail == "":
+		var pm_card: Dictionary = play.call([HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DEVELOPER],
+			PAPER_DESIGN, 1, false, false)
+		var pm_works: bool = GameState.product.cards.values().any(func(c: Dictionary) -> bool:
+			return "char_paper_" + HRConstants.ROLE_PRODUCT_MANAGER in c.assignees)
+		if not pm_works:
+			fail = "fixture: the product manager works no card of a design-phase sprint"
+		elif not pm_card.is_empty():
+			fail = "the product manager on a design card spoke the designer's paper (%s)" % str(pm_card)
+	if fail == "":
+		var desk: Dictionary = play.call([HRConstants.ROLE_DEVELOPER], PAPER_DEV, 2, false, true)
+		if SprintSystem.team().size() != 1 or not desk.is_empty():
+			fail = "a developer whose whole share is the desk is in the sprint team (%d) or spoke (%s)" % [
+				SprintSystem.team().size(), str(desk)]
+	if fail == "":
+		var pm: Dictionary = play.call([HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DEVELOPER], PAPER_PM, 2, true, false)
+		var pm_id: String = "" if SprintCatalog.quarter_pm() == null else SprintCatalog.quarter_pm().id
+		_drain_all_modals()   # the account's first-contact card is on screen; one modal at a time
+		if pm.is_empty() or pm.get("speaker", "") != pm_id or pm.get("kind", "") != "request":
+			fail = "the product manager paper reads %s, want the quarter's PM %s on a request card" % [str(pm), pm_id]
+		elif not EventGate.open_paper(PAPER_PM) or EventGate.active_context().employee.id != pm_id \
+				or EventGate.active_context().customer.id != "co_paper":
+			fail = "the product manager paper is bound to %s" % str(EventGate.active_context())
+	if fail == "":
+		var no_pm: Dictionary = play.call([HRConstants.ROLE_DEVELOPER], PAPER_PM, 2, true, false)
+		if not no_pm.is_empty():
+			fail = "a product manager paper came to a team with no product manager (%s)" % str(no_pm)
+	if fail == "":
+		var own: Dictionary = play.call([], PAPER_FOUNDER, 2, false, false)
+		var founder: String = CharacterRegistry.get_founder().id
+		if own.get("speaker", "") != founder or not EventGate.open_paper(PAPER_FOUNDER) \
+				or EventGate.active_context().founder.id != founder:
+			fail = "the lone founder's paper reads %s, want the founder's own note" % str(own)
+	_paper_pool_end(saved)
+	return fail
+
+
+## Sprint başına en çok bir kâğıt: kâğıt ihtimali 1 iken her 2 haftalık sprint tam bir kâğıt getirir ve kâğıt cevaplanınca
+## aynı sprintte bir daha istenmez (`product.decision_sprint` sprintin zarını tutar).
+## FALSİFİKASYON: `_request_decision`'daki `decision_sprint` karşılaştırmasını sil → cevaptan sonra ikinci kâğıt FAIL;
+## kâğıt ihtimalini 0 yap → hiç kâğıt gelmedi FAIL.
+static func _case_decision_one_per_sprint() -> String:
+	_seed_sprint()
+	var saved: Array = _paper_pool([PAPER_PLAIN])
+	var asked: Array = []
+	EventBus.card_decision_requested.connect(func(_id: String) -> void: asked.append(SprintSystem.sprint_number()))
+	SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
+	GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]].effort = 100000
+	var fail := ""
+	for sprint in 5:
+		if SprintSystem.mode() == "release":
+			SprintSystem.plan_next()
+		if not SprintSystem.start():
+			fail = "fixture: sprint %d did not start" % (sprint + 1)
+			break
 		_sim_day()
-		# Geliştiricinin tam bir haftası ikinci kartın Tasarım'ına yarı hızla bile haftasının yarısını
-		# döker; yalnız artanı alan kart bunun altında kalır.
-		var second: float = _card_worked("feat:%s_k1" % lines[1])
-		if second <= 0.0 or second >= _sprint_points(dev.id) * float(SprintCatalog.cfg("no_role_speed")):
-			return "the second card got %.2f in the first week, want only the week's residual" % second
-		if not asked.is_empty():
-			return "sprint_late asked about %s, which the founder and the developer finish this week" % asked
+		if asked.size() != sprint + 1 or asked.back() != SprintSystem.sprint_number():
+			fail = "sprint %d asked %s, want one paper in each sprint so far" % [sprint + 1, str(asked)]
+			break
+		EventGate.open_paper(PAPER_PLAIN)
+		EventGate.resolve(PAPER_PLAIN, "go_on")
+		if int(GameState.product.decision_sprint) != SprintSystem.sprint_number() or SprintSystem._request_decision() \
+				or asked.size() != sprint + 1:
+			fail = "sprint %d asked a second paper after the first was answered (%s)" % [sprint + 1, str(asked)]
+			break
 		_sim_day()
+	_paper_pool_end(saved)
+	return fail
+
+
+## Aynı kâğıt bekleme süresi geçmeden dönmez ve bir koşuda en çok 3 kez görünür (mandalın `cooldown_weeks` ve `max_fires`'ı
+## birlikte uygulanır): 1 haftalık sprintlerde ihtimal 1 iken tek kâğıtlık havuz ilk sprintte gelir, ertesi sprintte
+## beklemede kalır, bekleme süresi dolunca her seferinde gelir ve üçüncüden sonra hiç gelmez. Kâğıdın 52 haftası vaka için 12
+## haftaya iner (koşunun 104 haftasına sığsın diye); iki sayı da kartın verisidir.
+## FALSİFİKASYON: kâğıdın latch'inden `max_fires`'ı sil → dördüncü sprintte kâğıt geldi FAIL; `cooldown_weeks`'i sil →
+## ertesi sprintte kâğıt geldi FAIL.
+static func _case_decision_no_fourth_show() -> String:
+	_seed_sprint()
+	var saved: Array = _paper_pool([PAPER_FOUNDER])
+	var shows: Array = []
+	EventBus.card_decision_requested.connect(func(_id: String) -> void: shows.append(GameState.day))
+	SprintSystem.set_weeks(1)
+	SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
+	GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]].effort = 100000
+	var fail := ""
+	var latch: Dictionary = EvCatalog.card(PAPER_FOUNDER).latch
+	var cooldown: int = latch.cooldown_weeks
+	latch.cooldown_weeks = 12
+	# [haftalar sonra başlar, o sprintte kâğıt gelir mi, mandalın o andaki gerekçesi]
+	for step in [[0, true, ""], [0, false, "cooldown"], [13, true, ""], [13, true, ""], [13, false, "max_fires"]]:
+		if SprintSystem.mode() == "release":
+			SprintSystem.plan_next()
+		GameState.day += TimeModel.ticks(step[0])
+		var before: int = shows.size()
+		var reason: String = EvLatches.blocked_reason(latch, PAPER_FOUNDER).get_slice(":", 0)
+		if not SprintSystem.start():
+			fail = "fixture: the sprint did not start"
+			break
+		_sim_day()
+		if (shows.size() - before == 1) != step[1] or reason != step[2]:
+			fail = "after %d weeks the paper %s (latch said '%s'), want it %s ('%s')" % [step[0],
+				"came" if shows.size() > before else "did not come", reason, "to come" if step[1] else "to stay away", step[2]]
+			break
+	latch.cooldown_weeks = cooldown
+	_paper_pool_end(saved)
+	return fail
+
+
+## Kesinti sırası: kâğıt gelen sprintte yalnız servisin çöktüğü acil durum (kesinti, ödeme) gelir; öbürü kaybolmaz, tüm
+## hâliyle bekler ve kâğıtsız ilk sprintte gelir. Acil durum gelen sprintte ve bugün saatini bekleyen öbür türde kâğıt
+## gelmez (söz olayı gelen sprint için `promise_due_fires_when_late`).
+## FALSİFİKASYON: IncidentSystem.daily_tick'teki `kind not in SERVICE_DOWN and SprintSystem.paper_sprint()` koşulunu sil →
+## ay sonu kâğıtlı sprintte pending oldu FAIL; `shifted`'i bırakan satırı sil → sonraki sprintte gelmedi FAIL;
+## SprintSystem._paper_blocked'taki `_interrupted_by(["incident", "promise"])` yerine false yaz → kesintili sprintte kâğıt
+## geldi FAIL; aynı yerdeki `waiting not in IncidentSystem.SERVICE_DOWN` yerine false yaz → bekleyen bozulma kâğıdı
+## kapatmadı FAIL.
+static func _case_paper_interrupt_order() -> String:
+	var saved: Array = _paper_pool([PAPER_PLAIN])
+	var asked: Array = []
+	EventBus.card_decision_requested.connect(func(_id: String) -> void: asked.append(SprintSystem.sprint_number()))
+	var world := func() -> void:
+		SaveManager.reset_all_owners()
+		GameState.initialize_run({"seed": 424242})
+		_incident_world()
+		_paper_chance(1.0)
+		asked.clear()
+	var run := func() -> String:
+		# Kâğıtlı sprint: ay sonu kapanışı beklemeye alınır, sprint kapanıp sonraki sprint kâğıtsız başlayınca gelir.
+		world.call()
+		ProductState.add_bugs("line_erp_invoicing", 1)
+		IncidentSystem.force_on("month_close", GameState.day + 1)
+		_sim_day()
+		if not SprintSystem.paper_sprint() or asked.size() != 1:
+			return "fixture: the first sprint brought %s papers (kind %s)" % [str(asked), str(GameState.product.get("interrupt"))]
+		if GameState.incident.has("pending") or String(GameState.incident.get("shifted", {}).get("kind", "")) != "month_close":
+			return "a month close in a sprint with a paper was %s, want it held for the next sprint" % str(GameState.incident)
+		_sim_day()
+		if SprintSystem.mode() != "release" or not GameState.incident.has("shifted") or GameState.incident.has("pending"):
+			return "the held month close came before the paper's sprint was over (%s, %s)" % [SprintSystem.mode(),
+				str(GameState.incident)]
 		SprintSystem.plan_next()
-		CharacterRegistry.remove(dev.id)
-		WorkHoursSystem.set_company_hours(12)
-		for line_id in lines.slice(2, 4):
-			SprintSystem.add("feat:%s_k1" % line_id)
+		_paper_chance(0.0)
+		SprintSystem.apply_lead()
 		if not SprintSystem.start():
 			return "fixture: sprint 2 did not start"
 		_sim_day()
-		var behind: String = "feat:%s_k1" % lines[3]
-		if asked != [behind] or GameState.product.decision.get("event_id", "") != "product.sprint_late":
-			return "the solo founder's sprint asked about %s (%s), want sprint_late on %s" % [
-				asked, GameState.product.decision, behind]
-		var ev: GameEvent = EventGate.render("product.sprint_late")
-		var row: int = _row_with_verb(ev, "sprint_hours")
-		if row < 0 or _row_unlocked(ev, row, {}):
-			return "the overtime row is missing or open while the solo founder works the other card"
+		if String(GameState.incident.get("pending", {}).get("kind", "")) != "month_close" or GameState.incident.has("shifted"):
+			return "the held month close did not come in the sprint with no paper (%s)" % str(GameState.incident)
+		# Kâğıtlı sprintte servis kesintisi gelir.
+		world.call()
+		IncidentSystem.force_on("outage", GameState.day + 1)
+		_sim_day()
+		if not SprintSystem.paper_sprint() or String(GameState.incident.get("pending", {}).get("kind", "")) != "outage" \
+				or GameState.incident.has("shifted"):
+			return "an outage in a sprint with a paper was %s, want it to come" % str(GameState.incident)
+		# Bugün saatini bekleyen bozulma (sürümün ertesi sabahı başlatılan sprint) kâğıdı kapatır, ödeme arızası kapatmaz.
+		world.call()
+		for waiting in [["checkout", false], ["regression", true]]:
+			GameState.incident["pending"] = {"kind": waiting[0], "minute": 600}
+			if SprintSystem._paper_blocked() != waiting[1]:
+				return "a %s waiting for its hour %s the sprint's paper" % [waiting[0], "let in" if waiting[1] else "kept out"]
+		# Acil durum gelen sprintte kâğıt gelmez.
+		world.call()
+		GameState.incident["pending"] = {"kind": "outage", "minute": 90}
+		IncidentSystem.hourly_tick(3)
+		if String(GameState.product.get("interrupt", {}).get("kind", "")) != "incident":
+			return "fixture: the outage was not asked (%s)" % str(GameState.product.get("interrupt"))
+		_sim_day()
+		if not asked.is_empty() or int(GameState.product.decision_sprint) != -1:
+			return "a sprint with an emergency asked a paper (%s)" % str(asked)
 		return ""
 	var fail: String = run.call()
-	SprintCatalog._data.decision.rate = rate
-	SprintCatalog._data.decision.cards = events
+	_paper_pool_end(saved)
 	return fail
+
+
+## Kâğıtsız sprintler: ihtimal sprint.json'daki (bir ve iki haftalık sprintte ayrı) iken sprintlerin en az üçte biri kâğıtsız
+## kalır, hiçbir sprint iki kâğıt almaz ve kâğıt gelir. Havuzdaki kâğıt her sprintte kabul edilir, boş sprintleri yalnız zar belirler.
+## FALSİFİKASYON: sprint.json `decision.sprint_chance`'ı 1 yap → kâğıtsız sprint kalmadı FAIL; 0 yap → hiç kâğıt gelmedi FAIL.
+static func _case_paper_empty_sprint_ratio() -> String:
+	var saved: Array = _paper_pool([PAPER_PLAIN])
+	var papers: Dictionary = {}
+	EventBus.card_decision_requested.connect(func(_id: String) -> void:
+		papers[SprintSystem.sprint_number()] = int(papers.get(SprintSystem.sprint_number(), 0)) + 1)
+	for weeks in [1, 2]:
+		SaveManager.reset_all_owners()
+		GameState.initialize_run({"seed": 424242})
+		_seed_sprint()
+		SprintCatalog._data.decision.sprint_chance = (saved[2] as Dictionary).duplicate()
+		papers.clear()
+		SprintSystem.set_weeks(weeks)
+		SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
+		GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]].effort = 100000
+		var sprints := 0
+		while sprints < 30:
+			if SprintSystem.mode() == "release":
+				SprintSystem.plan_next()
+			if not SprintSystem.start():
+				return "fixture: sprint %d of the %d-week run did not start" % [sprints + 1, weeks]
+			while SprintSystem.mode() == "active":
+				_sim_day()
+			sprints += 1
+		var empty: int = sprints - papers.size()
+		if papers.values().any(func(n: int) -> bool: return n > 1) or papers.is_empty() or float(empty) / sprints < 1.0 / 3.0:
+			return "%d-week sprints: %d of %d had no paper (papers by sprint %s), want at least a third empty, some papers and never two" % [
+				weeks, empty, sprints, str(papers)]
+		print("PAPER_EMPTY weeks=%d sprints=%d empty=%d" % [weeks, sprints, empty])
+	_paper_pool_end(saved)
+	return ""
+
+
+## B6a'nın kâğıt dünyası: yayındaki ERP (dört hesap, bir yazılımcı, bir testçi), bir tasarımcı, bir ürün yöneticisi, iki
+## haftalık sprint planlamada.
+static func _paper_world() -> void:
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_incident_world(false)
+	_sprint_hire("char_b6a_design", HRConstants.ROLE_DESIGNER)
+	_sprint_hire("char_b6a_pm", HRConstants.ROLE_PRODUCT_MANAGER)
+	SprintSystem.set_weeks(2)
+
+
+## Çekirdeğin `slot`'uncu hattının K1 kartını sprinte koyar ve eforunu `effort` yapar; kartın kimliği.
+static func _paper_card(slot: int, effort: int) -> String:
+	var id: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[slot]
+	SprintSystem.add(id)
+	GameState.product.cards[id].effort = effort
+	return id
+
+
+## Kart `id` kararı bekliyormuş gibi (kâğıdı olay motoru göstermez; sonraki günlük tik kaydı siler).
+static func _paper_waits_on(id: String) -> void:
+	GameState.product.cards[id].decision = true
+	GameState.product.decision = {"card_id": id, "event_id": PAPER_PLAIN, "speaker": ""}
+
+
+## Sprint kapanana dek günlük tikleri koşar; kapanmazsa false.
+static func _paper_sprint_closes() -> bool:
+	var guard := 0
+	while SprintSystem.mode() == "active" and guard < 8:
+		_sim_day()
+		guard += 1
+	return SprintSystem.mode() == "release"
+
+
+## B6a · `sprint_card_trim`: kâğıt kartın işini sonraki sprinte bırakır ya da kartı hatayla çıkarır. `share` kartın
+## `paper.trim_share` payını karttan alır, `follow` onu ve yeniden açma payını sonraki sprinte kart yapar (kademeyi tutan
+## kartı silen `plan_next` bu takip kartını silmez); `bugs` hata kart çıkınca kendi hattında açık hata olur, sürümü
+## hatalı saydırmaz. Çip ve geçmiş satırı aynı sayıyı yazar.
+## FALSİFİKASYON: `plan_next`'teki `not c.get("follow", false)` koşulunu sil → takip kartı silindi FAIL; `_close`'daki
+## `leaks` döngüsünü sil → hata düşmedi FAIL; `trim_plan`daki `work`ü hep 0 yap → takip kartı yok FAIL.
+static func _case_paper_card_trim() -> String:
+	_paper_world()
+	var big: String = _paper_card(3, 8)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_paper_waits_on(big)
+	var card: Dictionary = GameState.product.cards[big]
+	var trim := {"verb": "sprint_card_trim", "share": true, "follow": true}
+	var plan: Dictionary = EvEffects.trim_plan(trim)
+	if plan.cut != 4 or plan.work != 5:
+		return "40%% of an 8 point card with a follow reads %s, want 4 points off and 5 left for the next sprint" % str(plan)
+	var shown: Array = EvChips.describe(trim, {}, {}, false).map(EvChips.text)
+	var row: Dictionary = EvEffects.run_played([trim], {})[0]
+	var kept: Array = EvChips.describe(row, {}, {}, true).map(EvChips.text)
+	if shown.size() != 2 or shown != kept:
+		return "the card showed %s, its history row reads %s" % [str(shown), str(kept)]
+	if SprintSystem.total(card) != 4.0:
+		return "the trimmed card is %s points, want 4" % SprintSystem.total(card)
+	var follows: Array = GameState.product.cards.values().filter(func(c: Dictionary) -> bool: return c.get("follow", false))
+	if follows.size() != 1 or int(follows[0].effort) != 5 or follows[0].id not in GameState.product.next.cards \
+			or follows[0].step != card.step:
+		return "the follow card is %s, want one of 5 points in the next sprint on the same step" % str(follows)
+	var followed: String = follows[0].id
+	ProductModel.live()   # the sprint screen draws the follow card in the next column
+	if not _paper_sprint_closes() or ProductState.line_tier(card.line) < 1:
+		return "fixture: the trimmed card did not ship (%s)" % SprintSystem.mode()
+	SprintSystem.plan_next()
+	if not GameState.product.cards.has(followed) or followed not in GameState.product.sprint.cards:
+		return "planning the next sprint dropped the follow card, whose tier the first card reached"
+	ProductModel.live()
+	# A card that ships with a bug: the bug lands on its line when the card ships and the release is not faulty.
+	var small: String = _paper_card(4, 2)
+	if not SprintSystem.start():
+		return "fixture: sprint 2 did not start"
+	_paper_waits_on(small)
+	var line: String = GameState.product.cards[small].line
+	var leak := {"verb": "sprint_card_trim", "bugs": 1}
+	var said: Array = EvChips.describe(leak, {}, {}, false).map(EvChips.text)
+	var leak_row: Dictionary = EvEffects.run_played([leak], {})[0]
+	if said.size() != 1 or said != EvChips.describe(leak_row, {}, {}, true).map(EvChips.text):
+		return "the leak showed %s, its history row reads %s" % [str(said), str(EvChips.describe(leak_row, {}, {}, true).map(EvChips.text))]
+	if ProductState.line_bugs(line) != 0:
+		return "the bug landed before the card shipped"
+	if not _paper_sprint_closes() or GameState.product.releases.back().shipped.filter(
+			func(c: Dictionary) -> bool: return c.id == small).is_empty():
+		return "fixture: the leaking card did not ship"
+	if ProductState.line_bugs(line) != 1:
+		return "the shipped card's bug is on %s, want one on %s" % [str(ProductState.open_bugs_by_line()), line]
+	if not (GameState.product.releases.back().faulty as Array).is_empty():
+		return "a card that shipped with a known bug made the release faulty (%s)" % str(GameState.product.releases.back().faulty)
+	return ""
+
+
+## B6a · Bilgi çipi: `sprint_card_outlook` kendi başına bir şey yapmaz; çip kartın bu sprintte biter mi sorusunu planın
+## oynatmasından (`finishes_with`) okur, seçeneğin öbür fiillerinin ekleyeceği puanla (`amount`), satır uygulanınca kartın
+## bittiğini yazar.
+## FALSİFİKASYON: chips.gd'de `finishes`i hep true yap → ağır kart "biter" dedi FAIL; satırın `finishes`ini çipten oku →
+## geçmiş satırı çiple ayrıştı FAIL.
+static func _case_paper_outlook_reads_the_plan() -> String:
+	_paper_world()
+	var id: String = _paper_card(3, 3)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_paper_waits_on(id)
+	var name: String = SprintCatalog.card_name(GameState.product.cards[id])
+	var on_time: String = TranslationServer.translate("EFFECT_CARD_ON_TIME").format({"card": name})
+	var late: String = TranslationServer.translate("EFFECT_CARD_LATE").format({"card": name})
+	var plain := {"verb": "sprint_card_outlook"}
+	if EvChips.text(EvChips.describe(plain, {}, {}, false)[0]) != on_time:
+		return "a 3 point card the team finishes reads '%s', want '%s'" % [EvChips.text(EvChips.describe(plain, {}, {}, false)[0]), on_time]
+	var heavy := {"verb": "sprint_card_outlook", "amount": 40}
+	if EvChips.text(EvChips.describe(heavy, {}, {}, false)[0]) != late:
+		return "with 40 points more the card reads '%s', want '%s'" % [EvChips.text(EvChips.describe(heavy, {}, {}, false)[0]), late]
+	var effects: Array = [{"verb": "sprint_card_effort", "amount": 40}, heavy]
+	var rows: Array = EvEffects.run_played(effects, {})
+	if bool(rows[1].finishes) or EvChips.text(EvChips.describe(rows[1], {}, {}, true)[0]) != late:
+		return "the history row of the outlook reads %s, want the late card" % str(rows[1])
+	var relief := {"verb": "sprint_card_outlook", "amount": -39}
+	if EvChips.text(EvChips.describe(relief, {}, {}, false)[0]) != on_time:
+		return "taking 39 points off the 43 point card still reads late"
+	return ""
+
+
+## B6a · Yenileme günü tek yerde: `SprintBridges.next_renewal_day` hesabın yenileme penceresinin gösterdiği yenileme günüdür
+## (imzadan 52 haftada bir, pencere 12 hafta önce açılır) ve talebin penceresini de aynı gün belirler: ilk talep imzadan
+## 2 hafta sonra, sonrakiler yenilemeden 12 hafta önce doğar.
+## FALSİFİKASYON: next_renewal_day'deki `maxi(1, …)` ya da `lead` toplamını sil → gün değerleri FAIL; `tick_requests`te pencereyi
+## eski ifadeye döndür ve next_renewal_day'in terimini değiştir → talep penceresi kaydı FAIL.
+static func _case_next_renewal_day_one_place() -> String:
+	_paper_world()
+	var account: Customer = _incident_account("co_renewal", "Renewal Co", "technology", 40, 1800)
+	account.acquired_on_day = 10
+	# [today, the renewal the window shows]
+	for pair in [[11, 62], [49, 62], [50, 62], [62, 62], [63, 62], [101, 62], [102, 114], [150, 114]]:
+		GameState.day = pair[0]
+		if SprintBridges.next_renewal_day(account) != pair[1]:
+			return "on day %d the account (signed on day 10) shows the renewal of day %d, want %d" % [
+				pair[0], SprintBridges.next_renewal_day(account), pair[1]]
+	# The windows that open a request: day 12 (the first), then day 50 (12 weeks before the renewal of day 62).
+	GameState.product.requests.clear()
+	var opened: Array = []
+	for day in range(11, 52):
+		GameState.day = day
+		SprintBridges.tick_requests()
+		var mine: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.customer_id == account.id)
+		if mine.size() > opened.size():
+			opened.append(day)
+			mine.back().status = "late"
+	if opened != [12, 50]:
+		return "the account's requests opened on days %s, want [12, 50]" % str(opened)
+	return ""
+
+
+## B6a · "Kartı başa al": `sprint_card_first` kâğıdın kartını sprintin başına alır ve kâğıt cevaplanınca kart hemen çalışır
+## (ataması baştan yapılır); çip yalnız o yüzden sprintten kayan kartı yazar ve geçmiş satırı aynısını okur. Kâğıt
+## yenilemeden önce çıkarmayı vaat ettiği için `urun.decision_renewal_saved` yalnız kart yetişmiyorken, kart başa girince
+## bu sprintte bitiyorken ve yenileme bu sprintin kapanışından sonra, sonrakinden önceyse doğrudur.
+## FALSİFİKASYON: `decision_first`te `c.decision = false` satırını sil → kartın ataması boş kaldı FAIL; seam'de
+## `renewal < close + sprint_weeks()` koşulunu sil → uzak yenileme de "kurtarılır" FAIL.
+static func _case_paper_renewal_card_first() -> String:
+	_paper_world()
+	var account: Customer = _incident_account("co_renewal", "Renewal Co", "retail", 40, 1800)
+	var lines: Array = SprintCatalog.capabilities("core")
+	var first_id: String = _paper_card(3, 6)
+	var req := {"id": "co_renewal.1", "customer_id": account.id, "step": lines[4] + "_k1", "line": lines[4],
+		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_renewal.1",
+		"day": GameState.day}
+	GameState.product.requests.append(req)
+	var asked: String = "req:co_renewal.1"
+	SprintSystem.add(asked)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_paper_waits_on(asked)
+	# Efforts that leave the request behind the first card, and finish it when it stands first.
+	var found := false
+	for a in [4, 6, 8, 10]:
+		for b in [4, 6, 8, 10]:
+			GameState.product.cards[first_id].effort = a
+			GameState.product.cards[asked].effort = b
+			if SprintSystem.card_late(asked) and SprintSystem.decision_first_finishes():
+				found = true
+				break
+		if found:
+			break
+	if not found:
+		return "fixture: no pair of efforts leaves the request late and saves it when first"
+	var close: int = GameState.day + SprintSystem.weeks_left()
+	account.acquired_on_day = close + 1 - 52
+	if not bool(EvSeams.read("urun.decision_renewal_saved")):
+		return "a renewal on day %d, a day after this sprint closes, did not call for the card first" % SprintBridges.next_renewal_day(account)
+	account.acquired_on_day -= 10
+	if bool(EvSeams.read("urun.decision_renewal_saved")):
+		return "a renewal before this sprint closes can still be saved"
+	account.acquired_on_day = close + 1 - 52 + 40
+	if bool(EvSeams.read("urun.decision_renewal_saved")):
+		return "a renewal a whole sprint after the next close is called saved"
+	account.acquired_on_day = close + 1 - 52
+	var front := {"verb": "sprint_card_first"}
+	var shown: Array = EvChips.describe(front, {}, {}, false).map(EvChips.text)
+	var row: Dictionary = EvEffects.run_played([front], {})[0]
+	if EvChips.describe(row, {}, {}, true).map(EvChips.text) != shown:
+		return "the card showed %s, its history row reads %s" % [str(shown), str(EvChips.describe(row, {}, {}, true).map(EvChips.text))]
+	if GameState.product.sprint.cards[0] != asked or GameState.product.cards[asked].assignees.is_empty():
+		return "the request stands %s with %s on it, want first and staffed" % [GameState.product.sprint.cards, GameState.product.cards[asked].assignees]
+	if SprintSystem.card_late(asked):
+		return "the request is still late standing first"
+	return ""
+
+
+## B6a · Renk kâğıdı tek karttır, iki gelişi vardır: ilk gelişte elle 2, tek dosya 4 puan, serbest çalışan elle yolunun
+## puanı kadar (2 × $1.000); renkler bir kez elle değiştirildiyse ikinci gelişte her biri bir puan fazla. Süre dolarsa ilk
+## gelişte hesap hayır diye anlar (memnuniyet -8), ikincide ekip elle değiştirir (kart +3): metin de gelişe göre okunur.
+## FALSİFİKASYON: `_colors_points`teki `again_extra` toplamını sil → ikinci geliş aynı puanı verdi FAIL; kartın
+## `expire_note` varyantını düz metne çevir → ikinci gelişte ilk gelişin notu FAIL.
+static func _case_paper_colors_two_arrivals() -> String:
+	_paper_world()
+	var id: String = "product.sprint_design_customer_colors"
+	for old in ["product.sprint_hardcoded_colors", "product.sprint_colors_again"]:
+		if EvCatalog.has_card(old) or old in SprintCatalog.cfg("decision.cards"):
+			return "the old colour paper %s is still in the game" % old
+	if id not in SprintCatalog.cfg("decision.cards"):
+		return "the merged colour paper is not in the pool"
+	var account: Customer = CustomerRegistry.get_customer("co_demir")
+	var ctx: Dictionary = _ctx_customer(account)
+	var card: Dictionary = EvCatalog.card(id)
+	var points := func() -> Array:
+		return [EvSeams.read("urun.colors_hand"), EvSeams.read("urun.colors_central"), EvSeams.read("urun.colors_cost")]
+	if points.call() != [2, 4, 2000]:
+		return "the first arrival prices %s, want [2, 4, 2000]" % str(points.call())
+	var first_body: String = EvPresenter.resolve_text(EvPresenter.text_block(card).body, ctx)
+	var first_note: String = EvPresenter.resolve_text(EvPresenter.text_block(card).expire_note, ctx)
+	EvFlags.set_flag("colors_by_hand")
+	if points.call() != [3, 5, 3000]:
+		return "the second arrival prices %s, want [3, 5, 3000]" % str(points.call())
+	var second_body: String = EvPresenter.resolve_text(EvPresenter.text_block(card).body, ctx)
+	var second_note: String = EvPresenter.resolve_text(EvPresenter.text_block(card).expire_note, ctx)
+	if first_body == second_body or first_note == second_note or not second_body.contains("Demir Holding"):
+		return "the two arrivals read alike: '%s' / '%s'" % [first_note, second_note]
+	# What an unanswered paper does: the first arrival loses the account's trust, the second changes the pages by hand.
+	var id_card: String = _paper_card(3, 6)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_paper_waits_on(id_card)
+	var effort: float = SprintSystem.total(GameState.product.cards[id_card])
+	EvEffects.run_expire(card.on_expire.penalties, ctx, id)
+	if SprintSystem.total(GameState.product.cards[id_card]) != effort + 3.0 or account.trust_offset != 0.0:
+		return "the second arrival's expiry moved the card to %s and the trust to %s, want +3 points and no trust hit" % [
+			SprintSystem.total(GameState.product.cards[id_card]), account.trust_offset]
+	EvFlags.clear_flag("colors_by_hand")
+	effort = SprintSystem.total(GameState.product.cards[id_card])
+	EvEffects.run_expire(card.on_expire.penalties, ctx, id)
+	if SprintSystem.total(GameState.product.cards[id_card]) != effort or account.trust_offset > -7.0:
+		return "the first arrival's expiry moved the card to %s and the trust to %s, want no points and -8" % [
+			SprintSystem.total(GameState.product.cards[id_card]), account.trust_offset]
+	return ""
+
+
+## B6a · Bir hesabın "kart çıkana kadar" bedeli: `trust_delta` `until: {step_live: decision}` kartın kademesi çıkana kadar her
+## sprint kapanışında bir kez daha yazılır ve çip kartın adını söyler (`EFFECT_TRUST_UNTIL_SHIPS`); satır aynı çipi okur.
+## FALSİFİKASYON: `trust_plan`dan `until`i sil → çip hat temizlenene dek metnine düştü FAIL.
+static func _case_paper_trust_until_ships() -> String:
+	_paper_world()
+	var id: String = _paper_card(3, 6)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_paper_waits_on(id)
+	var card: Dictionary = GameState.product.cards[id]
+	var account: Customer = CustomerRegistry.get_customer("co_demir")
+	var ctx: Dictionary = _ctx_customer(account)
+	var wait := {"verb": "trust_delta", "scope": "customer", "amount": -6, "per_sprint": -3, "until": {"step_live": "decision"}}
+	var shown: Array = EvChips.describe(wait, ctx, {}, false).map(EvChips.text)
+	var want: String = TranslationServer.translate("EFFECT_TRUST_UNTIL_SHIPS").format(
+		{"v": "-3", "card": SprintCatalog.step_name(card.step)})
+	if shown.size() != 2 or shown[1] != want:
+		return "the chips read %s, want the second to be '%s'" % [str(shown), want]
+	var row: Dictionary = EvEffects.run_played([wait], ctx)[0]
+	if EvChips.describe(row, ctx, {}, true).map(EvChips.text) != shown:
+		return "the history row reads %s, the card showed %s" % [str(EvChips.describe(row, ctx, {}, true).map(EvChips.text)), str(shown)]
+	if GameState.trust_drains.size() != 1 or GameState.trust_drains[0].until.get("step_live", "") != card.step:
+		return "the standing cost is %s, want one ending when %s ships" % [str(GameState.trust_drains), card.step]
+	return ""
+
+
+## B6a · Kâğıdın hesabı ve geliştiricisi kartın hattından seçilir (`select` kipleri): "line_top" hattı kullanan en büyük
+## hesap, "line_warehouse" depo işi sektörlerindekilerin en büyüğü, "line_newest" en yeni imzalanan, "line_slow"
+## `paper.slow_seats` koltuğa varan en büyük; `sprint_dev` ekibin sprint payı en büyük yazılımcısı. Hat kimsenin
+## kullanmadığı bir hatsa slot dolmaz ve kâğıt gelmez.
+## FALSİFİKASYON: `paper_account`ta `used` süzgecini sil → bağlı hesap ikinci slota da verildi FAIL; `line_slow` süzgecini sil →
+## 15 koltuktan küçük hesap seçildi FAIL.
+static func _case_paper_account_selectors() -> String:
+	_paper_world()
+	CustomerRegistry.get_customer("co_kuzey").acquired_on_day = GameState.day + 1
+	var line: String = "line_erp_stock"
+	if ProductState.line_tier(line) > 0:
+		return "fixture: the stock line is already built"
+	var id: String = "feat:%s_k1" % line
+	SprintSystem.add(id)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_paper_waits_on(id)
+	var users: Array = SprintCatalog.line_accounts(line)
+	if users.size() < 2:
+		return "fixture: the stock line has %d users" % users.size()
+	var biggest: String = ""
+	for c in users:
+		if biggest == "" or c.seats > CustomerRegistry.get_customer(biggest).seats:
+			biggest = c.id
+	for mode in ["line_top", "line_warehouse", "line_slow"]:
+		if SprintCatalog.paper_account(mode, {}) != biggest:
+			return "%s picked %s, want the biggest user of the line, %s" % [mode, SprintCatalog.paper_account(mode, {}), biggest]
+	if SprintCatalog.paper_account("line_newest", {}) != "co_kuzey" and CustomerRegistry.get_customer("co_kuzey") in users:
+		return "line_newest picked %s, want the newest account, co_kuzey" % SprintCatalog.paper_account("line_newest", {})
+	if SprintCatalog.paper_account("line_top", {biggest: "x"}) in ["", biggest]:
+		return "a taken account was handed out again (%s)" % SprintCatalog.paper_account("line_top", {biggest: "x"})
+	CustomerRegistry.get_customer(biggest).seats = 10
+	for c in users:
+		c.seats = mini(c.seats, 10)
+	if SprintCatalog.paper_account("line_slow", {}) != "":
+		return "line_slow picked %s with every user under 15 seats" % SprintCatalog.paper_account("line_slow", {})
+	var dev: String = EvScope.resolve({"dev": {"type": "employee", "required": true, "select": "sprint_dev"}}, {}).context.get(
+		"dev", {}).get("id", "")
+	if dev != "char_inc_dev":
+		return "sprint_dev picked '%s', want the team's developer" % dev
+	return ""
+
+
+## B6a · Yirmi beş kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), seçeneklerin
+## çipleri hesaplanır; yeni seam'ler kâğıt yokken de okunur.
+## FALSİFİKASYON: bir kartın metnindeki `{dev}`i `{worker}` yap → çözülmemiş parantez FAIL; bir fiilin çip kolunu sil →
+## çipsiz seçenek FAIL.
+static func _case_paper_cards_render() -> String:
+	EvCatalog.reload()
+	for name in EvSeams.all_names():
+		if String(name).begins_with("urun.") and EvSeams.kind_of(name) == EvSeams.Kind.GLOBAL:
+			EvSeams.read(name)
+	_paper_world()
+	var id: String = _paper_card(3, 6)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_paper_waits_on(id)
+	var ctx: Dictionary = {
+		"employee": {"type": "employee", "id": "char_inc_test", "bound_day": GameState.day},
+		"dev": {"type": "employee", "id": "char_inc_dev", "bound_day": GameState.day},
+		"customer": {"type": "customer", "id": "co_marmara", "bound_day": GameState.day}}
+	var seen := 0
+	for path in DirAccess.get_files_at("res://data/events/cards/product"):
+		var card: Dictionary = EvCatalog.card("product." + String(path).trim_suffix(".json"))
+		if card.is_empty() or not String(path).begins_with("sprint_") \
+				or not ["pm", "designer", "tester"].has(String(card.get("pool_group", ""))):
+			continue
+		seen += 1
+		var slots: Dictionary = {}
+		for slot in card.scope:
+			slots[slot] = ctx[slot] if ctx.has(slot) else ctx.customer
+		var ev: GameEvent = EvPresenter.build_view(card.id, slots)
+		var words: Array = [ev.title, ev.body_text]
+		for choice in ev.choices:
+			words.append(choice.label)
+			for effect in choice.modifiers:
+				if EvChips.describe(effect, slots, {}, false).is_empty() and not EvChips.SILENT_VERBS.has(String(effect.verb)):
+					return "%s: the effect %s shows no chip" % [card.id, str(effect)]
+		for text in words:
+			if String(text) == "" or String(text).contains("{") or String(text).contains("}"):
+				return "%s reads '%s'" % [card.id, text]
+	if seen != 25:
+		return "%d of the 25 papers were rendered" % seen
+	return ""
+
+
+## B6a · Kâğıtlar gerçek yoldan istenir: sprintin kartı kâğıdın koşullarını taşıyorsa `_request_decision` kâğıdı ister, konuşan kartın
+## o aşamada çalışan kişisidir (PM'de çeyreğin PM'i), hesap ve ikinci çalışan kartın hattından bağlanır; koşulu taşımayan kartta
+## (hattı başka) ya da sprintsiz kâğıt istenmez.
+## FALSİFİKASYON: `paper_account`un `line_warehouse` süzgecini sil → depo dışı hesap bağlandı FAIL; stock_transfer'in koşulundan
+## `urun.decision_line` yaprağını sil → fatura hattındaki kartta da istendi FAIL; `sprint_dev` seçicisinde rol süzgecini sil →
+## yazılımcı olmayan bağlandı FAIL.
+static func _case_paper_cards_are_asked() -> String:
+	var ask := func(paper: String, line: String, effort: int, progress: Array) -> Dictionary:
+		_paper_world()
+		# A designer who sorts before the developer: `sprint_dev` must take the developer by role, not the first on the team.
+		_incident_hire("char_a_early", "Aaron Early", HRConstants.ROLE_DESIGNER, 4)
+		var saved: Array = _paper_pool([paper])
+		var lines: Array = SprintCatalog.capabilities("core")
+		var id: String = _paper_card(lines.find(line), effort)
+		GameState.product.cards[id].progress = progress
+		var out := {"asked": false}
+		if SprintSystem.start():
+			GameState.product.decision = {}
+			GameState.product.cards[id].decision = false
+			GameState.product.decision_sprint = -1
+			out.asked = SprintSystem._request_decision()
+			out.card = id
+			if out.asked:
+				out.warehouse = SprintCatalog.paper_account("line_warehouse", {})
+				out.ctx = {}
+				if EventGate.open_paper(paper):
+					out.ctx = EventGate.active_context()
+				_drain_all_modals()
+		_paper_pool_end(saved)
+		return out
+	var role_of := func(ctx: Dictionary, slot: String) -> String:
+		return String(CharacterRegistry.get_character(ctx.get(slot, {}).get("id", "")).role) if ctx.has(slot) else ""
+	var stock := "line_erp_stock"
+	var got: Dictionary = ask.call("product.sprint_design_drawings_late", stock, 100, [0.0, 0.0, 0.0])
+	if not got.asked or role_of.call(got.ctx, "employee") != HRConstants.ROLE_DESIGNER:
+		return "the designer's late drawings paper was not asked or not spoken by the designer (%s)" % str(got)
+	got = ask.call("product.sprint_design_empty_state", stock, 40, [0.0, 0.0, 0.0])
+	if not got.asked or got.ctx.get("customer", {}).get("id", "") == "":
+		return "the first screen paper of a new line was not asked or has no account (%s)" % str(got)
+	got = ask.call("product.sprint_test_stock_transfer", stock, 40, [8.0, 24.0, 0.0])
+	if not got.asked or role_of.call(got.ctx, "employee") != HRConstants.ROLE_TESTER \
+			or got.ctx.get("customer", {}).get("id", "") != got.warehouse:
+		return "the stock transfer paper was not asked, not spoken by the tester or not about the stock line's warehouse account (%s)" % str(got)
+	got = ask.call("product.sprint_test_stock_transfer", "line_erp_invoicing", 40, [8.0, 24.0, 0.0])
+	if got.asked:
+		return "the stock transfer paper was asked about the invoicing line"
+	got = ask.call("product.sprint_test_readonly_delete", "line_erp_invoicing", 40, [8.0, 24.0, 0.0])
+	if not got.asked or role_of.call(got.ctx, "employee") != HRConstants.ROLE_TESTER \
+			or role_of.call(got.ctx, "dev") != HRConstants.ROLE_DEVELOPER:
+		return "the read only delete paper was not asked, not spoken by the tester or names no developer (%s)" % str(got)
+	got = ask.call("product.sprint_test_their_data", stock, 40, [8.0, 24.0, 0.0])
+	if not got.asked or got.ctx.get("customer", {}).get("id", "") == "":
+		return "the paper about a customer's own data was not asked or has no account (%s)" % str(got)
+	return _paper_pm_asked()
+
+
+## B6a · PM kâğıdı: sprintteki müşteri isteği kartı ekibin hızıyla yetişmiyor ve işin payı çıkınca yetişiyorsa
+## `product.sprint_pm_scope_grew` istenir; konuşan çeyreğin PM'i, hesap isteğin hesabıdır.
+static func _paper_pm_asked() -> String:
+	_paper_world()
+	var paper := "product.sprint_pm_scope_grew"
+	var saved: Array = _paper_pool([paper])
+	var lines: Array = SprintCatalog.capabilities("core")
+	var account: Customer = _incident_account("co_asked", "Asked Co", "technology", 40, 1800)
+	var first_id: String = _paper_card(3, 6)
+	GameState.product.requests.append({"id": "co_asked.1", "customer_id": account.id, "step": lines[4] + "_k1", "line": lines[4],
+		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_asked.1", "day": GameState.day})
+	var asked: String = "req:co_asked.1"
+	SprintSystem.add(asked)
+	if not SprintSystem.start():
+		_paper_pool_end(saved)
+		return "fixture: the sprint did not start"
+	_paper_waits_on(asked)
+	var found := false
+	for a in [4, 6, 8, 10]:
+		for b in [6, 8, 10, 14]:
+			GameState.product.cards[first_id].effort = a
+			GameState.product.cards[asked].effort = b
+			if bool(EvSeams.read("urun.decision_card_late")) and bool(EvSeams.read("urun.decision_trim_finishes")):
+				found = true
+				break
+		if found:
+			break
+	GameState.product.decision = {}
+	GameState.product.cards[asked].decision = false
+	GameState.product.decision_sprint = -1
+	var did: bool = found and SprintSystem._request_decision()
+	var ctx: Dictionary = EventGate.active_context() if did and EventGate.open_paper(paper) else {}
+	_drain_all_modals()
+	_paper_pool_end(saved)
+	if not found:
+		return "fixture: no pair of efforts leaves the request late and finished by the trim"
+	var pm_id: String = "" if SprintCatalog.quarter_pm() == null else SprintCatalog.quarter_pm().id
+	if not did or ctx.get("employee", {}).get("id", "") != pm_id or ctx.get("customer", {}).get("id", "") != account.id:
+		return "the PM's scope paper was not asked, or not by the quarter's PM %s about the request's account (%s)" % [pm_id, str(ctx)]
+	return ""
 
 
 ## v14 → v15: sürmekte olan yapım Sprint 1'in planı olur. Planlanan her kademe bir özellik kartıdır:
@@ -21457,4 +23254,368 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 	SalesMeetingSystem.reset()
 	VCPitchSystem._vc_id = ""
 	TermSheetTableSystem._vc_id = ""
+	return ""
+
+
+# ============================================================================
+#  Release thanks and reviews (SprintBridges.thank, pick_reviews)
+# ============================================================================
+
+const THANKS_ID := "customer.release_thanks"
+const INVOICING_STEP := "line_erp_invoicing_k2"
+const LEDGER_STEP := "line_erp_ledger_k2"
+const CASHFLOW_STEP := "line_erp_cashflow_k2"
+const STOCK_STEP := "line_erp_stock_k2"
+
+
+## A release the sprint record holds, shipping these steps (one feature card each), as SprintSystem._close leaves it.
+static func _thanks_release(number: int, steps: Array) -> Dictionary:
+	var release := {"number": number, "sprint": number, "day": GameState.day, "faulty": [], "shipped": steps.map(
+		func(step: String) -> Dictionary: return _release_card(step))}
+	GameState.product.releases.append(release)
+	return release
+
+
+## A feature card that took its line to the step's tier.
+static func _release_card(step: String) -> Dictionary:
+	var s: Dictionary = ProductLines.step(step)
+	return {"kind": "feature", "line": s.line_id, "step": step, "target_tier": s.tier, "effort": 8, "bugs": 0}
+
+
+static func _keep_word(customer_id: String, step: String) -> Promise:
+	var word: Promise = PromiseRegistry.create(customer_id, step, 4)
+	word.status = "kept"
+	return word
+
+
+static func _met_request(customer_id: String, step: String) -> void:
+	GameState.product.requests.append({"id": "%s.%s" % [customer_id, step], "customer_id": customer_id, "step": step,
+		"status": "met", "line": ProductLines.step(step).line_id})
+
+
+## The thank-you note a release sent an account, as its history row: {} when none was sent.
+static func _thanks_row(customer_id: String) -> Dictionary:
+	for row in EventGate.history():
+		if row.event_id == THANKS_ID and String(row.entities.customer.id) == customer_id:
+			return row
+	return {}
+
+
+static func _thanks_body(row: Dictionary) -> String:
+	return EventGate.render(row.event_id, row.entities, row.get("names", {})).body_text
+
+
+## The overnight outage of the incident world, answered at 03:00 with `act`.
+static func _answered_outage(act: String) -> void:
+	GameState.set_current_hour(3)
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.stage("outage", 130)
+	IncidentSystem.resolve(act)
+
+
+## Each thanks, by what the account lived through, is a note from the account's contact in the inbox: a kept word, a
+## request met and an outage fixed at once overnight, each from a different account, in that order of merit. The
+## promise's and the request's name the step (in the live language, as the history row keeps the key), the outage's
+## names none; the body is one of the card's bodies for its trigger. The record of the release carries who was thanked.
+## FALSIFICATION: leave the quick fix out of `_thanks_candidates` and the third check fails; read the request's
+## `customer_id` as the promise's and the order fails; take `musteri.met_feature` out of `freeze_seams` (is_key) and the
+## history row's body loses the step's name.
+static func _case_release_thanks_each_kind() -> String:
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
+	_incident_world()
+	_keep_word("co_demir", INVOICING_STEP)
+	_met_request("co_kuzey", LEDGER_STEP)
+	_answered_outage("now")
+	var release: Dictionary = _thanks_release(5, [INVOICING_STEP, LEDGER_STEP])
+	SprintBridges.thank(release)
+	var seen: Array = release.thanks.map(func(t: Dictionary) -> String: return "%s:%s" % [t.trigger, t.customer])
+	if seen != ["promise:co_demir", "request:co_kuzey", "incident:co_marmara"]:
+		return "the release thanked %s, want the kept word, the met request and the night shift's largest account" % str(seen)
+	var bodies := {"promise": range(5, 9), "request": range(10, 14), "incident": range(0, 5)}
+	for t in release.thanks:
+		var row: Dictionary = _thanks_row(t.customer)
+		if row.is_empty() or not row.get("note", false):
+			return "%s has no note in the inbox (%s)" % [t.customer, str(row.get("note"))]
+		if int(t.variant) not in bodies[t.trigger]:
+			return "%s thanks read body %d, not one of the %s bodies" % [t.trigger, int(t.variant), t.trigger]
+		if INBOX.card_sender(EvCatalog.card(THANKS_ID), row.entities, row.get("names", {})).kind != "contact":
+			return "the note does not come from the account's contact"
+		var named: String = TranslationServer.translate("PROD_STEP_ERP_%s" % ("INVOICING_K2" if t.trigger == "promise" else "LEDGER_K2"))
+		var body: String = _thanks_body(row)
+		if t.trigger != "incident" and not body.contains(named):
+			return "the %s note reads '%s', want it to name %s" % [t.trigger, body, named]
+		if body == "" or body.contains("{"):
+			return "the %s note reads '%s'" % [t.trigger, body]
+		var unkept: Array = EvPresenter.seams_of(EvPresenter.text_block(EvCatalog.card(THANKS_ID)).body).filter(
+			func(seam: String) -> bool: return not row.names.has("seam:" + seam))
+		if not unkept.is_empty():
+			return "the %s note's history row did not keep %s, so its body would not be drawn again" % [t.trigger, str(unkept)]
+	var promise_row: Dictionary = _thanks_row("co_demir")
+	var loc0: String = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+	var english: String = _thanks_body(promise_row)
+	TranslationServer.set_locale(loc0)
+	if not english.contains("Batch Invoicing"):
+		return "the kept word's history row reads '%s' in English, want the step's name in the live language" % english
+	return ""
+
+
+## The counters: an account gets one note a release, a release three; a kept word comes before a request, a request
+## before a fix, and the larger account first. A word and a request for the same step on one account is the word's note.
+## The next release's note for the same trigger is a body the last one was not, and a word the account agreed to move
+## never reads a body that says it kept its date.
+## FALSIFICATION: drop the account check from `thank` and Demir is thanked twice; drop the `max` check and four are
+## thanked; sort the candidates smallest first and the order check fails; let `_thanks_variant` skip the erase and the
+## last check fails (one round in four by chance, so the case sends it twelve times); ignore `moved` in `_thanks_pool`
+## and a moved word reads a kept-date body (one round in two by chance, six moved rounds).
+static func _case_release_thanks_limits() -> String:
+	_incident_world()
+	_keep_word("co_demir", INVOICING_STEP)
+	_met_request("co_demir", INVOICING_STEP)
+	_keep_word("co_marmara", LEDGER_STEP)
+	_met_request("co_ege_metal", CASHFLOW_STEP)
+	_met_request("co_kuzey", STOCK_STEP)
+	_answered_outage("now")
+	var release: Dictionary = _thanks_release(5, [INVOICING_STEP, LEDGER_STEP, CASHFLOW_STEP, STOCK_STEP])
+	SprintBridges.thank(release)
+	var seen: Array = release.thanks.map(func(t: Dictionary) -> String: return "%s:%s" % [t.trigger, t.customer])
+	if seen != ["promise:co_demir", "promise:co_marmara", "request:co_ege_metal"]:
+		return "the release thanked %s, want three: the two kept words, then the larger met request" % str(seen)
+	var notes: int = EventGate.history().filter(func(row: Dictionary) -> bool: return row.event_id == THANKS_ID).size()
+	if notes != 3:
+		return "%d notes reached the inbox, want 3" % notes
+	if not _thanks_body(_thanks_row("co_demir")).contains(TranslationServer.translate("PROD_STEP_ERP_INVOICING_K2")):
+		return "Demir, with a word and a request for one step, did not get the word's note"
+	for round in 12:
+		var sent: Array = []
+		for r in GameState.product.releases:
+			sent.append_array(r.get("thanks", []).filter(func(t: Dictionary) -> bool: return t.trigger == "promise"))
+		var last: int = int(sent.back().variant)
+		GameState.advance_day()
+		var again: Dictionary = _thanks_release(6 + round, [LEDGER_STEP])
+		var word: Promise = _keep_word("co_demir", LEDGER_STEP)
+		word.extended = round % 2 == 0
+		SprintBridges.thank(again)
+		var variant: int = int(again.thanks[0].variant)
+		if variant == last:
+			return "round %d: a kept-word note reads the body the last one did (%d)" % [round, last]
+		if word.extended and variant not in [5, 7, 9]:
+			return "round %d: a word that was moved reads body %d, which says it kept its date" % [round, variant]
+	return ""
+
+
+## The emergency's thanks: only for a fix that came at once ("now", "founder", "evening"), only from an account that lived
+## through it, and only in the release after it. An overnight fix thanks the night shift's largest account and may read
+## the night bodies; one that lands after the accounts' morning thanks the largest account of the book when no night
+## shift felt it; a fix left to the morning, a deferred one, and a fix nobody was awake for thank no one.
+## FALSIFICATION: add "morning" to QUICK_ACTS and the second check fails; drop the `night` test from the felt accounts and
+## the no-night-shift check fails; read `since` as 0 and the third release thanks the old fix again; read it from the
+## sprint closed with no release and the fix is never thanked.
+static func _case_release_thanks_incident_scope() -> String:
+	_incident_world()
+	_answered_outage("now")
+	var fast: Dictionary = IncidentSystem.quick_fix()
+	if fast != {"customer": "co_marmara", "night": true}:
+		return "an outage fixed at 03:00 by the team reads %s, want Marmara and the night" % str(fast)
+	for act in ["morning", "morning_credit"]:
+		GameState.incident.clear()
+		_answered_outage(act)
+		if not IncidentSystem.quick_fix().is_empty():
+			return "the answer '%s' is no quick fix and was thanked" % act
+	var line := "line_erp_invoicing"
+	for act in ["morning", "defer"]:
+		GameState.incident.clear()
+		IncidentSystem.stage("month_close", 1330, line)
+		IncidentSystem.resolve(act)
+		if not IncidentSystem.quick_fix().is_empty():
+			return "the month close answered '%s' is no quick fix and was thanked" % act
+	# A fix is thanked in the release after it, once: the fix is a night after the release before, and a sprint that
+	# closed with nothing to ship in between does not end its window.
+	GameState.incident.clear()
+	_thanks_release(4, [])
+	GameState.advance_day()
+	_answered_outage("now")
+	GameState.advance_day()
+	_thanks_release(0, [])
+	GameState.advance_day()
+	var first: Dictionary = _thanks_release(5, [INVOICING_STEP])
+	SprintBridges.thank(first)
+	if first.thanks.map(func(t: Dictionary) -> String: return t.trigger) != ["incident"]:
+		return "the release after the fix thanked %s" % str(first.thanks)
+	if int(first.thanks[0].variant) not in range(0, 5):
+		return "the incident thanks reads body %d" % int(first.thanks[0].variant)
+	GameState.advance_day()
+	var second: Dictionary = _thanks_release(6, [LEDGER_STEP])
+	SprintBridges.thank(second)
+	if not second.thanks.is_empty():
+		return "the next release thanked the same fix again: %s" % str(second.thanks)
+	# A month that could not close, fixed at once overnight, thanks the line's largest user.
+	GameState.incident.clear()
+	GameState.set_current_hour(23)
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.stage("month_close", 1330, line)
+	IncidentSystem.resolve("now")
+	var closed: Dictionary = IncidentSystem.quick_fix()
+	var users: Array = SprintCatalog.line_accounts(line)
+	users.sort_custom(SprintCatalog.larger_account)
+	if users.is_empty() or closed.get("customer") != users[0].id or not closed.night:
+		return "a month close fixed at once reads %s, want the line's largest user %s and the night" % [str(closed),
+			str(users[0].id if not users.is_empty() else "")]
+	# With nobody on the night shift an overnight fix was over before the accounts' day: no one lived through it. The
+	# founder's slow one lands after the morning: the book's largest account did.
+	for c in CustomerRegistry.get_by_market("b2b"):
+		c.industry = "retail"
+	GameState.incident.clear()
+	_answered_outage("now")
+	if not IncidentSystem.quick_fix().is_empty():
+		return "an outage nobody was awake for and that was over before morning thanked %s" % str(IncidentSystem.quick_fix())
+	GameState.incident.clear()
+	GameState.set_current_hour(6)
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.stage("outage", 130)
+	IncidentSystem.resolve("founder")
+	var slow: Dictionary = IncidentSystem.quick_fix()
+	if slow != {"customer": "co_demir", "night": false}:
+		return "a founder's fix landing at %s reads %s, want the largest account and no night" % [
+			MailClock.clock_text(int(GameState.incident.open.back)), str(slow)]
+	return ""
+
+
+## A B2C update's top comments: 2 or 3, positives first and the unhappy one last. A new identity tier is named (always,
+## when nothing else fills the row) or not; a closed fix has a comment; a line the release shipped faulty, or one past the
+## bug threshold, has an unhappy one that blames the update only when the release broke it, and the Mobile App's only
+## when it is live; beside an unhappy one only the calm plain comment fits. The same text does not come back within a
+## year. The row waits for its hour and reads the step in the live language.
+## FALSIFICATION: drop the `calm` filter and the third check fails; read `unhappy.blames` as always true and the
+## threshold check fails; drop the `tier` test and the Mobile check fails; drop `shown` and the repeat check fails.
+static func _case_release_reviews_pick() -> String:
+	_incident_world_b2c()
+	var identity: String = SprintCatalog.capabilities("core")[3]
+	var head: Dictionary = _release_card("%s_k2" % identity)
+	var shared := func(base: String) -> String:
+		return ProductLines.line_ids("note_tool").filter(func(l: String) -> bool: return l.get_slice("@", 0) == base)[0]
+	var integrations: String = shared.call("line_shared_integrations")
+	var mobile: String = shared.call("line_shared_mobile")
+	var release := func(number: int, cards: Array, faulty: Array) -> Dictionary:
+		return {"number": number, "day": GameState.day, "shipped": cards, "faulty": faulty}
+	var fix := {"kind": "fix", "line": integrations, "step": "", "target_tier": 0, "effort": 2, "bugs": 6}
+	var picks := func(cards: Array, faulty: Array, number: int) -> Array:
+		return SprintBridges.pick_reviews(release.call(number, cards, faulty)).get("ids", [])
+	for n in range(2, 14):
+		var alone: Array = picks.call([head], [], n)
+		if alone.size() != 2 or not alone[0].begins_with("PRODUCT_REVIEW_NEW_NAMED") or not alone[1].begins_with("PRODUCT_REVIEW_NEW_PLAIN"):
+			return "a new identity tier alone reads %s at release %d, want a named comment and a plain one" % [str(alone), n]
+		var platform: Array = picks.call([_release_card(ProductLines.step_at(integrations, 2).id)], [], n)
+		if platform.size() != 2 or platform.any(func(id: String) -> bool: return not id.begins_with("PRODUCT_REVIEW_NEW_PLAIN")) \
+				or platform[0] == platform[1]:
+			return "a platform tier alone reads %s at release %d, want two different plain comments" % [str(platform), n]
+	ProductState.add_bugs(integrations, 1)
+	for n in range(2, 14):
+		var broken: Array = picks.call([head, fix], [integrations], n)
+		if broken.size() != 3 or not broken[2].begins_with("PRODUCT_REVIEW_NEG_INTEGRATIONS") \
+				or not broken[1].begins_with("PRODUCT_REVIEW_FIX"):
+			return "a fix and a broken line read %s at release %d, want the new tier, the fix and the unhappy one last" % [str(broken), n]
+		if not broken[0].begins_with("PRODUCT_REVIEW_NEW_NAMED") and broken[0] != "PRODUCT_REVIEW_NEW_PLAIN_3":
+			return "a plain comment beside an unhappy one reads %s, want the calm one" % broken[0]
+	var blamed := {}
+	var bugs: int = int(SprintCatalog.cfg("reviews.neg_line_bugs"))
+	ProductState.add_bugs(integrations, bugs - 2)
+	if picks.call([head], [], 2).any(func(id: String) -> bool: return id.contains("NEG")):
+		return "%d open bugs on a line are under the threshold and drew an unhappy comment" % ProductState.line_bugs(integrations)
+	ProductState.add_bugs(integrations, 1)
+	for n in range(2, 30):
+		var ids: Array = picks.call([head], [], n)
+		if ids.back() == "PRODUCT_REVIEW_NEG_INTEGRATIONS_1":
+			return "the release did not break the line and the unhappy comment blames the update (release %d)" % n
+		blamed[picks.call([head], [integrations], n).back()] = true
+	if not blamed.has("PRODUCT_REVIEW_NEG_INTEGRATIONS_1"):
+		return "a release that shipped the line faulty never drew the comment that blames the update: %s" % str(blamed.keys())
+	var wrong: Array = picks.call([head], [identity], 2)
+	if not wrong.back().begins_with("PRODUCT_REVIEW_NEG_OTHER"):
+		return "an identity line gone wrong reads %s, want the general unhappy group" % wrong.back()
+	# The Mobile App's comment needs the Mobile App.
+	ProductState.add_bugs(mobile, 1)
+	var seen_mobile := {}
+	for n in range(2, 30):
+		seen_mobile[picks.call([head], [mobile], n).back()] = true
+	if seen_mobile.has("PRODUCT_REVIEW_NEG_MOBILE_2"):
+		return "the Mobile App's comment came with the Mobile App not live"
+	ProductState.set_line_tier(mobile, 2)
+	seen_mobile.clear()
+	for n in range(2, 30):
+		seen_mobile[picks.call([head], [mobile], n).back()] = true
+	if not seen_mobile.has("PRODUCT_REVIEW_NEG_MOBILE_2"):
+		return "with the Mobile App live its comment never came: %s" % str(seen_mobile.keys())
+	# A year without the same text; then the row is held by its hour and drawn in the live language.
+	GameState.product.releases.clear()
+	ProductState.clear_line_bugs(integrations)
+	ProductState.clear_line_bugs(mobile)
+	var first: Dictionary = SprintBridges.pick_reviews(release.call(2, [head], []))
+	GameState.product.releases.append({"number": 2, "day": GameState.day, "reviews": first})
+	GameState.advance_day()
+	for n in range(3, 13):
+		var second: Array = picks.call([head], [], n)
+		if second.any(func(id: String) -> bool: return first.ids.has(id)):
+			return "release %d repeated a comment of release 2: %s after %s" % [n, str(second), str(first.ids)]
+	var was: bool = MailClock.instant
+	MailClock.instant = false
+	first["at"] = MailClock.now() + 120
+	if not SprintBridges.review_lines({"reviews": first}).is_empty():
+		MailClock.instant = was
+		return "the comments showed two hours before their time"
+	first["at"] = MailClock.now()
+	var lines: Array = SprintBridges.review_lines({"reviews": first})
+	MailClock.instant = was
+	var step_name: String = SprintCatalog.step_name("%s_k2" % identity)
+	if lines.size() != 2 or lines.any(func(l: Dictionary) -> bool: return not l.text.begins_with("\"") or l.source == ""):
+		return "the delivered row reads %s, want two quoted comments with their sources" % str(lines)
+	if not lines[0].text.contains(step_name):
+		return "the named comment reads '%s', want it to name %s" % [lines[0].text, step_name]
+	if SprintBridges.pick_reviews(release.call(1, [head], [])) != {}:
+		return "v1.0 drew update comments"
+	GameState.set_flag("mvp_market_type", "b2b")
+	var b2b: Dictionary = SprintBridges.pick_reviews(release.call(3, [head], []))
+	GameState.set_flag("mvp_market_type", "b2c")
+	if b2b != {}:
+		return "a B2B release drew app comments: %s" % str(b2b)
+	return ""
+
+
+## Through the real close: a request for a K1 step is met when the sprint ships it, the account's note is in the inbox
+## and the sprint record carries it; a B2C update's comments land in the record and in the open note a tick later,
+## with their hour.
+## FALSIFICATION: delete the `SprintBridges.thank` call from SprintSystem._close and the first check fails; delete the
+## `r.reviews =` line from `_fill_actual` and the second fails.
+static func _case_release_through_close() -> String:
+	_seed_sprint_live("erp")
+	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
+		_sprint_hire("char_thanks_" + role_id, role_id)
+	_incident_account("co_thanks", "Thanks Co", "retail", 40, 1800)
+	SalesSystem.reflect_mrr()
+	var line: String = SprintCatalog.capabilities("core")[3]
+	var step := "%s_k1" % line
+	GameState.product.requests.append({"id": "co_thanks.1", "customer_id": "co_thanks", "step": step, "line": line,
+		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_thanks.1",
+		"day": GameState.day})
+	if not _play_sprint(["req:co_thanks.1"]):
+		return "fixture: the sprint did not start"
+	var record: Dictionary = GameState.product.releases.back()
+	if record.thanks.map(func(t: Dictionary) -> String: return t.customer) != ["co_thanks"] or _thanks_row("co_thanks").is_empty():
+		return "closing the sprint that shipped the request thanked %s (note %s)" % [str(record.get("thanks")), str(_thanks_row("co_thanks").size())]
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 515151})
+	_seed_sprint_live("note_tool")
+	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
+		_sprint_hire("char_review_" + role_id, role_id)
+	SalesSystem.add_b2c_audience(12400)
+	var b2c_line: String = SprintCatalog.capabilities("core")[3]
+	if not _play_sprint(["feat:%s_k1" % b2c_line]):
+		return "fixture: the B2C sprint did not start"
+	if not GameState.product.releases.back().get("reviews", {}).is_empty():
+		return "the comments came with the release, not a tick after it"
+	_sim_day()
+	var reviews: Dictionary = GameState.product.releases.back().get("reviews", {})
+	var note: Dictionary = GameState.product.release
+	if not reviews.has("ids") or reviews.ids.size() not in [2, 3] or (not note.is_empty() and note.reviews != reviews):
+		return "a tick after the update the comments read %s and the open note %s" % [str(reviews), str(note.get("reviews"))]
 	return ""

@@ -1,0 +1,120 @@
+{
+  "id": "product.sprint_dev_relogin",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_line",
+        "op": "in",
+        "value": [
+          "line_shared_security"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "carry_sessions",
+      "outcome_id": "carry_sessions",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "relogin",
+      "outcome_id": "relogin",
+      "effects": [
+        {
+          "verb": "audience_delta",
+          "amount_seam": "urun.paper_loss_mid",
+          "amount_mult": -1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Herkes yeniden giriş yapacak",
+      "body": "Bu kart girişi değiştiriyor, çıkınca herkes bir kez yeniden giriş yapmak zorunda kalacak. Oturumları korumak için ek kod yazmam gerekiyor.",
+      "options": {
+        "carry_sessions": "Oturumları koru",
+        "relogin": "Herkes yeniden girsin"
+      },
+      "expire_note": "Cevap gelmedi, herkes bir kez yeniden giriş yapacak."
+    },
+    "en": {
+      "title": "Everyone will have to log in again",
+      "body": "This card changes the login, so once it ships everyone has to log in again. Keeping them logged in takes extra code.",
+      "options": {
+        "carry_sessions": "Keep everyone logged in",
+        "relogin": "Let everyone log in again"
+      },
+      "expire_note": "No answer came, so everyone will log in once more."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "audience_delta",
+        "amount_seam": "urun.paper_loss_mid",
+        "amount_mult": -1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

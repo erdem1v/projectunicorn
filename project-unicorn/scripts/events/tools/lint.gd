@@ -54,6 +54,13 @@ const FORBIDDEN_TERMS := [
 ## hinged.
 const DASH_CHARS := ["—", "–"]
 
+## The sprint paper's contract: who may speak (a character role), at which phase of the card they work (the sprint
+## roles of `roles` in sprint.json) and the groups the pool is counted in.
+const PAPER_SPEAKERS := [HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER,
+	HRConstants.ROLE_TESTER, HRConstants.ROLE_FOUNDER]
+const PAPER_STAGES := ["any", "design", "dev", "test"]
+const PAPER_GROUPS := ["pm", "designer", "developer", "tester", "no_tester", "solo", "system"]
+
 ## §17.8: a daily-tick card may not assert a clock. Deterministic beats fire at the day
 ## boundary, so "· 13:05" on one of them is a lie the player can check against the TopBar.
 static var _clock_re: RegEx = RegEx.create_from_string("[0-2]?[0-9][:.][0-5][0-9]")
@@ -118,6 +125,7 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 	for tree in _trees_of(card):
 		_lint_condition(where, tree as Dictionary)
 	_lint_where(where, card)
+	_lint_speaker(where, card)
 
 	# §17.7 paper ----------------------------------------------------------
 	var is_paper: bool = String(card["class"]) == "paper"
@@ -341,8 +349,8 @@ const V3_WARN_RULES := ["P3"]
 const FROZEN_SOFT_RULES := ["O2", "O4", "O5", "T2", "T3"]
 
 ## What a `trust_delta` accounts and a `morale_crew` crew may name (EvEffects.trust_accounts, crew_of).
-const TRUST_ACCOUNTS := ["slot", "decision_line"]
-const MORALE_CREWS := ["incident_crew", "card_crew", "speaker"]
+const TRUST_ACCOUNTS := ["slot", "decision_line", "promise", "second"]
+const MORALE_CREWS := ["incident_crew", "card_crew", "promise_crew", "sprint_crew", "speaker"]
 
 ## V1: the verbs an author may write. Each has a working arm in EvEffects._apply AND a chip in
 ## EvChips, so what the option promises is what the player is shown and what lands.
@@ -354,6 +362,8 @@ const WRITER_VERBS := [
 	"b2b_retain_delay", "b2b_retain_ignore", "b2b_expand_decline", "set_flag", "stamp_day",
 	"schedule_event", "cancel_scheduled", "productivity_mod", "investor_strain", "marketing_push",
 	"send_on_leave", "work_hours",
+	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
+	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
 ]
 
 ## V2: reserved for a system card. Each moves the run itself — a phase, a table, an arc, an
@@ -362,14 +372,15 @@ const SYSTEM_VERBS := [
 	"advance_phase", "phase_gate_decline", "angel_accept", "open_term_table", "open_seed_table",
 	"decline_offer", "decline_buyout", "trigger_ending", "mentor_advisory", "goto_tab",
 	"unlock_content", "spend_budget", "set_game_flag", "start_arc", "advance_arc", "end_arc",
-	"abort_arc", "set_arc_var", "incident",
+	"abort_arc", "set_arc_var", "incident", "promise_extend", "promise_break",
 ]
 
 ## O2: a chip whose CONSEQUENCE is the cost — the sprint carries the card over, the account is
 ## left waiting, the promise becomes a debt. Read here rather than off the chip, so a polarity
 ## edit cannot move the rule.
 const CONSEQUENCE_VERBS := ["sprint_card_carry", "b2b_retain_delay", "b2b_retain_ignore",
-	"b2b_expand_decline", "promise_create"]
+	"b2b_expand_decline", "promise_create", "sprint_card_trim", "sprint_card_outlook", "sprint_card_first",
+	"sprint_fix_first"]
 
 ## O4: the verbs that land on a subject, and the slot type each lands on.
 const SUBJECT_VERBS := {
@@ -560,7 +571,10 @@ static func _lint_v3_options(id: String, card: Dictionary, where: String) -> voi
 				_v3(id, "O5", where, "option '%s' spends %s without requiring the module to be open"
 					% [opt_id, module])
 
-		if not system and not subject_slots.is_empty() and _touched_slots(effects, subject_slots).is_empty():
+		# A sprint paper names its speaker and the account it is about; its subject is the sprint card, which its
+		# options land on, so the slots are not asked to be hit.
+		if not system and not card.has("speaker_role") and not subject_slots.is_empty() \
+				and _touched_slots(effects, subject_slots).is_empty():
 			_v3(id, "O4", where, "option '%s' drops nothing on the subject the card is about" % opt_id)
 
 
@@ -653,6 +667,26 @@ static func _slots_of_type(slots: Dictionary, type_id: String) -> Array:
 	return out
 
 
+## §17.7: a sprint paper that names its speaker (`speaker_role`, the character's role or a list of them) says at which
+## phase of its card the speaker works (`stage`) and which pool group it counts in (`pool_group`). The engine binds the speaker to
+## the card's employee slot (the founder's own note to its founder slot), so a name it does not know or a card without
+## the slot is a paper that never reaches the player, and nothing at runtime shows it.
+static func _lint_speaker(where: String, card: Dictionary) -> void:
+	if not card.has("speaker_role"):
+		return
+	var roles: Array = card["speaker_role"] if card["speaker_role"] is Array else [card["speaker_role"]]
+	for role in roles:
+		if role not in PAPER_SPEAKERS:
+			_add(SEVERITY_ERROR, "17.7", where, "speaker_role '%s' is none of %s" % [role, PAPER_SPEAKERS])
+		elif _slots_of_type(card["scope"], EvScope.TYPE_FOUNDER if role == HRConstants.ROLE_FOUNDER
+				else EvScope.TYPE_EMPLOYEE).is_empty():
+			_add(SEVERITY_ERROR, "17.7", where, "speaker_role '%s' needs a scope slot of the speaker's kind" % role)
+	if String(card.get("stage", "any")) not in PAPER_STAGES:
+		_add(SEVERITY_ERROR, "17.7", where, "stage '%s' is none of %s" % [card.get("stage"), PAPER_STAGES])
+	if String(card.get("pool_group", "")) not in PAPER_GROUPS:
+		_add(SEVERITY_ERROR, "17.7", where, "pool_group '%s' is none of %s" % [card.get("pool_group", ""), PAPER_GROUPS])
+
+
 ## Which of the card's slots these effects land on. An effect names its slot in `scope`; one that
 ## does not falls to the first slot of its verb's type, the way EvEffects resolves it.
 static func _touched_slots(effects: Array, slots: Dictionary) -> Array:
@@ -725,8 +759,9 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 	for locale in ["tr", "en"]:
 		var block: Dictionary = text[locale]
 		_lint_variant_keys(where, locale, block)
-		# A body may be a variant set; every arm is checked.
-		var body: String = " ".join(PackedStringArray(_body_strings(block)))
+		# A body may be a variant set; every arm is checked, and the panel holds one of them at a time.
+		var arms: Array = _body_strings(block)
+		var body: String = " ".join(PackedStringArray(arms))
 		for dash in DASH_CHARS:
 			if body.contains(dash):
 				_add(SEVERITY_ERROR, "17.8", where, "[%s] body contains a dash" % locale)
@@ -746,9 +781,12 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 				_add(SEVERITY_ERROR, "17.8", where,
 					"[%s] a tick:daily card asserts a clock; daily beats fire at hour 0" % locale)
 
-		if body.length() > 900:
+		var longest: int = 0
+		for arm in arms:
+			longest = maxi(longest, String(arm).length())
+		if longest > 900:
 			_add(SEVERITY_WARN, "17.8", where,
-				"[%s] body is %d chars; the card panel is 780x420" % [locale, body.length()])
+				"[%s] body is %d chars; the card panel is 780x420" % [locale, longest])
 
 
 ## EvPresenter picks a variant by a seam's INTEGER value, so a key that is not an integer

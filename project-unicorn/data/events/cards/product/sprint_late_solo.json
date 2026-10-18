@@ -1,0 +1,152 @@
+{
+  "id": "product.sprint_late_solo",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "self",
+  "system": true,
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_late",
+  "speaker_role": "founder",
+  "stage": "any",
+  "pool_group": "system",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      0
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "scope": {
+    "founder": {
+      "type": "founder",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": false,
+      "select": "request"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 26,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.sprint_last_week",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_kind",
+        "op": "==",
+        "value": "request"
+      },
+      {
+        "seam": "urun.decision_card_late",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.crunch_finishes",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_promised",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "carry",
+      "outcome_id": "carry",
+      "effects": [
+        {
+          "verb": "sprint_card_carry"
+        }
+      ]
+    },
+    {
+      "id": "crunch_solo",
+      "outcome_id": "crunch_solo",
+      "effects": [
+        {
+          "verb": "sprint_hours",
+          "mult": 1.25
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -15,
+          "weeks": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kart sprinte yetişmeyecek",
+      "body": {
+        "by_seam": "urun.decision_request_votes",
+        "variants": {
+          "0": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek ve {customer} ekibi bu kartı bekliyor. Bu hafta akşamları da çalışırsan yetişir.",
+          "1": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek ve bu kartı {seam:urun.decision_request_votes} kişi bekliyor. Bu hafta akşamları da çalışırsan yetişir."
+        }
+      },
+      "options": {
+        "carry": "Sonraki sprinte devret",
+        "crunch_solo": "Akşamları da çalış"
+      },
+      "expire_note": "Karar verilmedi, kart sonraki sprinte devretti."
+    },
+    "en": {
+      "title": "The card won't make the sprint",
+      "body": {
+        "by_seam": "urun.decision_request_votes",
+        "variants": {
+          "0": "At this pace {seam:urun.decision_card} won't be done by the end of the sprint, and the {customer} team is waiting for it. If you work evenings this week too, it makes it.",
+          "1": "At this pace {seam:urun.decision_card} won't be done by the end of the sprint, and {seam:urun.decision_request_votes} people are waiting for it. If you work evenings this week too, it makes it."
+        }
+      },
+      "options": {
+        "carry": "Carry it to the next sprint",
+        "crunch_solo": "Work evenings too"
+      },
+      "expire_note": "No decision came, so the card carried over to the next sprint."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_carry"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

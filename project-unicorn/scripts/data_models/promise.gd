@@ -18,3 +18,5 @@ extends Resource
 # product type was chosen, or an old save).
 @export var due_sprint: int = -1
 @export var status: String = "open"       # "open" | "kept" | "broken" | "partial"
+# The account agreed to wait one more sprint (PromiseRegistry.extend); a word moves once.
+@export var extended := false

@@ -63,6 +63,10 @@ extends RefCounted
 #   PROBE FIX   day=<d> sprint=<n> weeks=<n> fix_load=<f> capacity=<f> share=<f> cards=<fix card ids|-> bug_sprint=<b>
 #                                           (every sprint start: the fix cards' remaining points over the plan's
 #                                           capacity; a bug sprint spends more than half the capacity on fixes)
+#   PROBE STOP  day=<d> sprint=<n> id=<emergency card> fix_load=<f> capacity=<f> share=<f> cards=<fix card ids|-> bug_sprint=<b>
+#                                           (an emergency answered with its line's fix card first: the fix cards'
+#                                           remaining points over the sprint's capacity, as PROBE FIX reads them at
+#                                           a sprint's start, so the fix a sprint takes on mid-week counts too)
 #   PROBE BUGS  day=<d> new=<n> open=<n> pre=<n>   (every week a product is live: bugs that arrived, open bugs now,
 #                                           and open bugs just before this week's sprint close)
 #   PROBE LINES day=<d> <line>=<n>,...      (beside PROBE BUGS: the open bugs line by line, - with none)
@@ -82,6 +86,9 @@ extends RefCounted
 ##   fix       — the sprint's fix cards (default: whatever the lead plans): "none" takes no fix card, "worst" the
 ##               line with the most open bugs, "due" every line with DUE_BUGS or more (B2B: a line an active or
 ##               trial account uses), "off" is "worst" with the cost of open bugs switched off (the baseline).
+##               It also decides the answer to an emergency card: "none" leaves the fix for the next sprint, every
+##               other arm stops the sprint for it;
+##   no_stop   — the arm never stops the sprint for an emergency (the same run with that answer left out).
 const PRESETS := {
 	"b2b_reps": {}, "b2b_solo": {}, "b2b_risk": {}, "b2b_slip": {}, "b2c": {}, "b2c_neglect": {},
 	"full_run": {"subtype": "erp"},
@@ -103,6 +110,12 @@ const PRESETS := {
 	"full_run_b2c_fix_worst": {"subtype": "note_tool", "fix": "worst"},
 	"full_run_b2c_fix_due": {"subtype": "note_tool", "fix": "due"},
 	"full_run_b2c_fix_off": {"subtype": "note_tool", "fix": "off"},
+	"full_run_fix_worst_free": {"subtype": "erp", "fix": "worst", "no_stop": true},
+	"full_run_fix_due_free": {"subtype": "erp", "fix": "due", "no_stop": true},
+	"full_run_fix_off_free": {"subtype": "erp", "fix": "off", "no_stop": true},
+	"full_run_b2c_fix_worst_free": {"subtype": "note_tool", "fix": "worst", "no_stop": true},
+	"full_run_b2c_fix_due_free": {"subtype": "note_tool", "fix": "due", "no_stop": true},
+	"full_run_b2c_fix_off_free": {"subtype": "note_tool", "fix": "off", "no_stop": true},
 }
 const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Klipo"}
 # The played run has three answer policies on one world, a controlled experiment on what
@@ -145,6 +158,7 @@ static var _subtype: String = ""            # full_run*: the product chosen on t
 static var _staff_cap: int = 0              # full_run*: the headcount the B2B ladder stops at
 static var _k1_only: bool = false           # full_run*: never plan a K2 or K3 step
 static var _fix_arm: String = ""            # full_run*: "" | none | worst | due | off (see PRESETS)
+static var _no_stop: bool = false           # full_run*: an emergency never stops the sprint for its fix
 static var _bugs_open: int = 0              # PROBE BUGS: the open bugs at the last weekly line
 static var _bugs_cleared: int = 0           # PROBE BUGS: bugs a fix card cleared since then
 static var _runway_weeks: Dictionary = {}   # phase -> Vector2i(weeks with a finite runway, weeks)
@@ -206,6 +220,7 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_picks.clear()
 	_full_run = false
 	_fix_arm = ""
+	_no_stop = false
 	_bugs_open = 0
 	_bugs_cleared = 0
 	ProductState.bugs_free = false
@@ -329,6 +344,12 @@ static func _on_build_phase(new_phase: String) -> void:
 ## Every sprint start: the fix cards in the plan against the capacity it was planned for (stored when the sprint
 ## began, before the hours decision could move it).
 static func _on_sprint_started(number: int) -> void:
+	print("PROBE FIX day=%d sprint=%d weeks=%d %s" % [GameState.day, number, SprintSystem.sprint_weeks(), _fix_ledger()])
+
+
+## The sprint's fix cards (ids, or "-") and their remaining points against the sprint's capacity; a bug sprint spends
+## more than half the capacity on fixes.
+static func _fix_ledger() -> String:
 	var p: Dictionary = GameState.product
 	var fixes: Array = p.sprint.cards.filter(func(id: String) -> bool: return p.cards[id].kind == "fix")
 	var fix_load: float = 0.0
@@ -336,9 +357,8 @@ static func _on_sprint_started(number: int) -> void:
 		fix_load += SprintSystem.remaining(p.cards[id])
 	var capacity: float = float(p.sprint.capacity)
 	var share: float = fix_load / capacity if capacity > 0.0 else 0.0
-	print("PROBE FIX day=%d sprint=%d weeks=%d fix_load=%.2f capacity=%.2f share=%.3f cards=%s bug_sprint=%s" % [
-		GameState.day, number, SprintSystem.sprint_weeks(), fix_load, capacity, share,
-		",".join(fixes) if not fixes.is_empty() else "-", str(share > 0.5)])
+	return "fix_load=%.2f capacity=%.2f share=%.3f cards=%s bug_sprint=%s" % [fix_load, capacity, share,
+		",".join(fixes) if not fixes.is_empty() else "-", str(share > 0.5)]
 
 
 ## Every sprint close, released or not: what shipped, how much carried and the velocity.
@@ -662,6 +682,8 @@ static func _drain_modals() -> void:
 				_discount_uses[cid] = int(_discount_uses.get(cid, 0)) + 1
 				print("PROBE DISCOUNT day=%d cust=%s uses=%d" % [GameState.day, cid, int(_discount_uses[cid])])
 		EventGate.resolve(id, idx)
+		if ev.choices[idx].modifiers.any(func(m: Dictionary) -> bool: return String(m.get("verb", "")) == "sprint_fix_first"):
+			print("PROBE STOP day=%d sprint=%d id=%s %s" % [GameState.day, SprintSystem.sprint_number(), id, _fix_ledger()])
 
 
 # Retention preference, BY MODIFIER TYPE rather than by row index or label. Index is wrong
@@ -680,6 +702,10 @@ const DISCOUNT_PREFERENCE := ["b2b_retain_discount", "promise_create", "b2b_reta
 static func _pick_choice(ev: GameEvent) -> int:
 	# Runs the modal's OWN gate (EventGate.condition_met on unlock_condition), not a mirror of
 	# it, so the probe can never pick a row a human is forbidden to click.
+	if _policy != "naive" and ev.tags.has("incident"):
+		var emergency: int = _pick_emergency(ev)
+		if emergency >= 0:
+			return emergency
 	# Account cards (retention, the three requests, the CS warning): the policy picks by
 	# EFFECT VERB, never by row index or label — rows are conditional and labels are
 	# player-facing text. `naive` skips this and takes the first unlocked row below.
@@ -720,6 +746,28 @@ static func _pick_choice(ev: GameEvent) -> int:
 			best_cost = cost
 			best = idx
 	return best
+
+
+## An emergency card is answered by what an option DOES, never by its place or its label: the arm that leaves the
+## bugs alone (fix_none) leaves the fix for the next sprint, every other arm stops the sprint for it (unless it
+## never does: no_stop). The row the card locks, or the one the arm does not want, falls to the first row left
+## open; -1 when no row is open at all (the caller's error).
+static func _pick_emergency(ev: GameEvent) -> int:
+	var open: Array = range(ev.choices.size()).filter(func(idx: int) -> bool:
+		return EventGate.condition_met(ev.choices[idx].unlock_condition, EventGate.active_context()))
+	var does := func(idx: int, wanted: Callable) -> bool:
+		return ev.choices[idx].modifiers.any(wanted)
+	var stops := func(m: Dictionary) -> bool: return String(m.get("verb", "")) == "sprint_fix_first"
+	var defers := func(m: Dictionary) -> bool:
+		return String(m.get("verb", "")) == "incident" and String(m.get("act", "")).begins_with("defer")
+	var wanted: Callable = defers if _fix_arm == "none" else stops
+	for idx in open:
+		if does.call(idx, wanted) and not (_no_stop and does.call(idx, stops)):
+			return idx
+	for idx in open:
+		if not (_no_stop and does.call(idx, stops)):
+			return idx
+	return -1
 
 
 # Fraction of the current balance the founder will spend on any single event choice.
@@ -1650,6 +1698,7 @@ static func _seed_world(preset: String) -> void:
 		_staff_cap = int(spec.get("staff_cap", STAFF_LADDER.size()))
 		_k1_only = bool(spec.get("k1_only", false))
 		_fix_arm = String(spec.get("fix", ""))
+		_no_stop = bool(spec.get("no_stop", false))
 		ProductState.bugs_free = _fix_arm == "off"
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log

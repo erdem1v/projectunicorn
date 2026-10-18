@@ -39,12 +39,13 @@ const NEUTRAL_VERBS := [
 	# people — morale, pace, hours and assignment are not economy; salary is, and lives below
 	"change_morale", "morale_all", "morale_crew", "assign_to", "send_on_leave", "start_training", "productivity_mod",
 	"work_hours",
-	# product
-	"damage_product",
+	# product — a line's bugs: one that lands now, and the rewrite that keeps new ones off it
+	"damage_product", "line_harden",
 	# sprint — the card a sprint decision is about, and the sprint's work hours
-	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "sprint_hours",
+	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "sprint_card_test", "sprint_hours",
+	"sprint_fix_first", "sprint_card_trim", "sprint_card_outlook", "sprint_card_first",
 	# customers — satisfaction is a relationship, not a payment
-	"satisfaction_delta", "trust_delta", "promise_create",
+	"satisfaction_delta", "trust_delta", "promise_create", "promise_extend",
 	# world and surfaces
 	"ticker_push", "goto_tab", "unlock_content", "spend_budget", "notify",
 	# investor flow that moves no money by itself
@@ -72,7 +73,8 @@ const ECONOMIC_VERBS := [
 	"add_customer", "churn_customer", "customer_mrr_delta", "seats",
 	"audience_delta", "convert_audience", "open_paid_tier",
 	"change_salary", "fire_employee", "employee_leaves",
-	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "marketing_push", "incident",
+	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "b2b_month_discount", "marketing_push", "incident",
+	"promise_break",
 ]
 
 ## Ends the run. Played decisions only — never a dice branch (I6), never an expiry, never an
@@ -85,6 +87,8 @@ const PAIN_SENTINEL := "pain"
 
 ## A `line` / `until` argument with this value names the pending sprint decision's own line or step.
 const DECISION := "decision"
+## A `line` argument with this value names the line the open emergency hit.
+const INCIDENT := "incident"
 
 ## What a consumer churn event costs when the "customer" is the whole userbase.
 const B2C_CHURN_PCT := 0.15
@@ -445,24 +449,80 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				int(e.get("deadline_weeks", B2BConstants.PROMISE_DEADLINE_WEEKS)))
 			return {"verb": verb, "customer": pcid, "feature": pfid}
 
+		# The words an open promise event waits on move one sprint; what that costs the accounts is the option's own
+		# trust_delta, listed first (it reads the open words).
+		"promise_extend":
+			var moved: Array = SprintSystem.event_promises()
+			if moved.is_empty():
+				return _no_target(verb, "")
+			for word in moved:
+				PromiseRegistry.extend(word.id)
+			return {"verb": verb, "n": moved.size()}
+		# The player gives the words up; the row keeps what the chip showed (break_plan). A paper that expires after
+		# the sprint's own sweep broke them has nothing left to break.
+		"promise_break":
+			var broken: Dictionary = break_plan()
+			if broken.accounts.is_empty():
+				return {}
+			for word in SprintSystem.event_promises():
+				PromiseRegistry.break_promise(word.id)
+			return broken.merged({"verb": verb})
+
 		# --- sprint -------------------------------------------------------------
 		# A decision card names no card in its scope (there is no card scope type): SprintSystem
 		# knows which card the pending decision is about and answers its id, or "" with none.
 		# Effort and hours record the clamped value that lands, the one the chip showed.
 		"sprint_card_effort":
 			var effort: int = SprintSystem.effort_change(amount(e))
-			return _on_decision_card(verb, SprintSystem.decision_effort(amount(e)), effort)
+			return _on_card(verb, SprintSystem.decision_effort(amount(e)), effort)
 		"sprint_card_progress":
-			return _on_decision_card(verb, SprintSystem.decision_progress(amount(e)), amount(e))
+			return _on_card(verb, SprintSystem.decision_progress(amount(e)), amount(e))
 		"sprint_card_carry":
-			return _on_decision_card(verb, SprintSystem.decision_carry(), 0)
+			return _on_card(verb, SprintSystem.decision_carry(), 0)
+		# The test of the promise card (or, with `card` DECISION, of the pending decision's card) is cut in half: it can
+		# leave in the release with a bug (SprintSystem.escape_chance).
+		"sprint_card_test":
+			var cut_card: Dictionary = SprintSystem.decision_card() if String(e.get("card", "")) == DECISION \
+				else SprintSystem.promise_card()
+			return _on_card(verb, SprintSystem.cut_test(cut_card), 0)
 		"sprint_hours":
 			var mult: float = float(e.get("mult", 1.0))
 			var hours: float = SprintSystem.hours_after(mult)
 			var sprint: int = SprintSystem.set_hours_mult(mult)
 			if sprint == 0:
 				return _no_target(verb, "")
-			return {"verb": verb, "sprint": sprint, "mult": mult, "hours": hours}
+			return {"verb": verb, "sprint": sprint, "mult": mult, "hours": hours, "solo": SprintSystem.payers("").is_empty()}
+		# A line's fix card stands first in the sprint; the row keeps the card it bumped (what the chip said).
+		"sprint_fix_first":
+			var fix_line: String = line_of(e)
+			var bumped: Dictionary = SprintSystem.fix_first_bumps(fix_line, int(e.get("bugs", 0)))
+			SprintSystem.fix_first(fix_line, int(e.get("bugs", 0)))
+			return {"verb": verb, "line": fix_line, "bumps": bumped, "front": bool(e.get("front", false))}
+		# The pending decision's card gives work up or ships with a bug; the row keeps the plan the chip showed.
+		"sprint_card_trim":
+			var trimmed: Dictionary = trim_plan(e)
+			return _on_card(verb, SprintSystem.decision_trim(trimmed), 0).merged(trimmed)
+		# No effect of its own: the row keeps whether the pending decision's card finishes the sprint once the option's
+		# other effects have landed, which the chip said before they did.
+		"sprint_card_outlook":
+			var outlook_card: String = SprintSystem.decision_card().get("id", "")
+			return _on_card(verb, outlook_card, 0).merged({"finishes": SprintSystem.finishes_with(outlook_card, 0)})
+		# The pending decision's card stands first in the sprint; the row keeps the card it bumped (what the chip said).
+		"sprint_card_first":
+			var first_bumped: Dictionary = SprintSystem.decision_first_bumps()
+			return _on_card(verb, SprintSystem.decision_first(), 0).merged({"bumps": first_bumped})
+		# The line's code is rewritten: `weeks` (else sprint.json `paper.harden_weeks`) with no new bug on it.
+		"line_harden":
+			var hardened: String = line_of(e)
+			var span: int = int(e.get("weeks", SprintCatalog.cfg("paper.harden_weeks")))
+			ProductState.harden_line(hardened, span)
+			return {"verb": verb, "line": hardened, "weeks": span}
+		# `bugs` open bugs land on the line now, at once and whatever the line is shielded from.
+		"damage_product":
+			var damaged: String = line_of(e)
+			var landed: int = int(e.get("bugs", 1))
+			ProductState.add_bugs(damaged, landed)
+			return {"verb": verb, "line": damaged, "bugs": landed}
 		# --- world and surfaces -----------------------------------------------
 		"ticker_push":
 			# §18: the ticker is atmosphere, never the ONLY channel — anything meaningful here is
@@ -567,6 +627,13 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			B2BSalesSystem.apply_discount(dc,
 				-int(round(float(dcust.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT)))
 			return {"verb": verb, "customer": dc, "amount": dcust.mrr - cut_from}
+		# A month's discount on the slot's account, once: money out, the account's MRR stays.
+		"b2b_month_discount":
+			var gift: Dictionary = month_discount_plan(e, ctx)
+			if CustomerRegistry.get_customer(gift.id) == null:
+				return _no_target(verb, gift.id)
+			FinanceSystem.apply_one_time_cost(-int(gift.amount), "retention")
+			return gift.merged({"verb": verb})
 		"b2b_retain_ignore":
 			B2BSalesSystem.ignore_risk(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
 			return {"verb": verb}
@@ -619,7 +686,25 @@ static func trust_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
 	for c in trust_accounts(e, ctx):
 		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction, "to":
 			B2BSalesSystem.satisfaction_next_tick(c, B2BConstants.clamp_trust(c.trust_offset + delta))})
-	return {"amount": delta, "per_sprint": int(e.get("per_sprint", 0)), "accounts": rows}
+	return {"amount": delta, "per_sprint": int(e.get("per_sprint", 0)), "accounts": rows,
+		"until": _until(e) if e.has("until") else {}}
+
+
+## What a `sprint_card_trim` gives up and what the player reads for it (SprintSystem.trim_plan): `share` takes the
+## sprint.json `paper.trim_share` of the card off it, `amount` is work the card never takes, `follow` makes both a card of
+## the next sprint, `bugs` open bugs land on `line` (else the card's) when the card ships.
+static func trim_plan(e: Dictionary) -> Dictionary:
+	return SprintSystem.trim_plan(bool(e.get("share", false)), amount(e), bool(e.get("follow", false)),
+		int(e.get("bugs", 0)), _named(String(e.get("line", DECISION)), "line"))
+
+
+## What a `b2b_month_discount` costs: sprint.json `paper.renewal_discount` of the slot's account's MRR, once.
+static func month_discount_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
+	var id: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
+	var c: Customer = CustomerRegistry.get_customer(id)
+	var pct: float = float(SprintCatalog.cfg("paper.renewal_discount"))
+	return {"id": id, "name": c.display_name() if c != null else "", "pct": roundi(pct * 100.0),
+		"amount": -roundi(float(c.mrr) * pct) if c != null else 0}
 
 
 ## The B2B accounts a `trust_delta` lands on, largest first: the slot's, or the users of the pending
@@ -632,21 +717,43 @@ static func trust_accounts(e: Dictionary, ctx: Dictionary) -> Array:
 			if c != null and c.market_type == "b2b":
 				accounts.append(c)
 		"decision_line":
-			accounts = SprintCatalog.line_accounts(_of_decision(DECISION, "line"))
+			accounts = SprintCatalog.line_accounts(_named(DECISION, "line"))
+		"promise":
+			accounts = SprintSystem.event_promises().map(
+				func(word: Promise) -> Customer: return CustomerRegistry.get_customer(word.customer_id))
+		"second":
+			var second: Customer = SprintCatalog.second_account(SprintSystem.decision_card())
+			if second != null:
+				accounts.append(second)
 	accounts.sort_custom(SprintCatalog.larger_account)
 	return accounts
 
 
+## What a `promise_break` lands on and what the player reads for it: the accounts whose words are still open, largest
+## first, each with its satisfaction now and a tick after the break, and the brand the broken words cost.
+static func break_plan() -> Dictionary:
+	var rows: Array = []
+	for c in trust_accounts({"accounts": "promise"}, {}):
+		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction,
+			"to": B2BSalesSystem.satisfaction_after_break(c)})
+	return {"accounts": rows, "brand": SprintSystem.event_promises().size() * B2BConstants.PROMISE_BROKEN_BRAND}
+
+
 ## The people a `morale_crew` lands on, by id: employees only, the founder's morale is not managed.
 ## `incident_crew` pays by SprintSystem.payers on `line`; `card_crew` is the pending decision card's
-## assignees; `speaker` is the card's employee slot.
+## assignees; `promise_crew` is the promise event's card's; `sprint_crew` is the running sprint's team
+## (everyone the sprint's hours reach); `speaker` is the card's employee slot.
 static func crew_of(e: Dictionary, ctx: Dictionary) -> Array:
 	var ids: Array = []
 	match String(e.get("crew", "")):
 		"incident_crew":
-			ids = SprintSystem.payers(_of_decision(String(e.get("line", "")), "line"))
+			ids = SprintSystem.payers(line_of(e))
 		"card_crew":
 			ids = SprintSystem.decision_card().get("assignees", [])
+		"promise_crew":
+			ids = SprintSystem.promise_crew()
+		"sprint_crew":
+			ids = SprintSystem.payers("")
 		"speaker":
 			ids = [entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)]
 	return ids.filter(func(id: String) -> bool:
@@ -664,13 +771,24 @@ static func crew_names(ids: Array) -> Array:
 static func _until(e: Dictionary) -> Dictionary:
 	var until: Dictionary = e["until"]
 	if until.has("line_cleared"):
-		return {"line_cleared": _of_decision(String(until["line_cleared"]), "line")}
-	return {"step_live": _of_decision(String(until["step_live"]), "step")}
+		return {"line_cleared": _named(String(until["line_cleared"]), "line")}
+	return {"step_live": _named(String(until["step_live"]), "step")}
 
 
-## `token` as written, or the pending sprint decision card's `field` when it is DECISION.
-static func _of_decision(token: String, field: String) -> String:
-	return String(SprintSystem.decision_card().get(field, "")) if token == DECISION else token
+## The line an effect names (`line`): as written, the pending sprint decision's, or the open emergency's.
+static func line_of(e: Dictionary) -> String:
+	return _named(String(e.get("line", "")), "line")
+
+
+## `token` as written (a shared line or step by its base id reads as the product's own, SprintCatalog.in_product), the
+## pending sprint decision card's `field` when it is DECISION, or the open emergency's line when it is INCIDENT.
+static func _named(token: String, field: String) -> String:
+	match token:
+		DECISION:
+			return String(SprintSystem.decision_card().get(field, ""))
+		INCIDENT:
+			return IncidentSystem.hit_line()
+	return SprintCatalog.in_product(token)
 
 
 ## The entity this effect targets: an explicit id, else the named slot, else the first slot of
@@ -694,7 +812,8 @@ static func _no_target(verb: String, entity_id: String) -> Dictionary:
 	return {"verb": verb, "refused": "no target"}
 
 
-static func _on_decision_card(verb: String, card_id: String, amount: int) -> Dictionary:
+static func _on_card(verb: String, card_id: String, amount: int) -> Dictionary:
 	if card_id == "":
 		return _no_target(verb, card_id)
-	return {"verb": verb, "card": card_id, "amount": amount}
+	return {"verb": verb, "card": card_id, "amount": amount,
+		"of": SprintSystem.card_ref(SprintCatalog.card_by_id(card_id))}

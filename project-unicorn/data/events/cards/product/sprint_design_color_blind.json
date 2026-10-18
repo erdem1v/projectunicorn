@@ -1,0 +1,129 @@
+{
+  "id": "product.sprint_design_color_blind",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_design",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "speaker_role": "designer",
+  "pool_group": "designer",
+  "stage": "design",
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "any": [
+          {
+            "seam": "urun.decision_line",
+            "op": "in",
+            "value": [
+              "line_erp_invoicing",
+              "line_erp_stock",
+              "line_erp_cashflow",
+              "line_shared_integrations"
+            ]
+          },
+          {
+            "seam": "urun.decision_step",
+            "op": "in",
+            "value": [
+              "line_shared_durability_k2"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "icons",
+      "outcome_id": "icons",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "colour_only",
+      "outcome_id": "colour_only",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Durumları yalnız renk ayırıyor",
+      "body": "Bu ekranda durumları yalnız renkler ayırıyor: kırmızı, sarı, yeşil. Renk körü kullanıcılar bunları ayıramıyor; her birine bir işaret eklemek istiyorum.",
+      "options": {
+        "icons": "İşaretleri ekle",
+        "colour_only": "Yalnız renk kalsın"
+      },
+      "expire_note": "Cevap gelmedi, ekran yalnız renkle çıktı."
+    },
+    "en": {
+      "title": "Only colour tells the states apart",
+      "body": "On this screen, only red, yellow and green tell the states apart. Colour blind users can't tell them apart, so I want to add an icon to each.",
+      "options": {
+        "icons": "Add the icons",
+        "colour_only": "Keep colour only"
+      },
+      "expire_note": "No answer came, so the screen went out with colour only."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_trim",
+        "bugs": 1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

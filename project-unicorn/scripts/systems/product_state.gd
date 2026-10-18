@@ -15,6 +15,8 @@ const REPORTS_INCOMING := "mvp_reports_incoming"
 const REPORTS_PROGRESS := "mvp_reports_progress"
 const OPEN_BUGS := "mvp_open_bugs"
 const OPEN_BUGS_PREV := "mvp_open_bugs_prev"
+## {hat: aşınmadan yeni hata düşmeyen son tik}; sağlamlaştırılmış hat (`line_harden`).
+const LINE_HARDEN := "mvp_line_harden"
 ## Üst üste kaç haftalık tikte açık hata ihmal eşiğinde (SupportSystem'in itibar kuralı).
 const BUG_STREAK := "mvp_bug_streak"
 ## O kuralın itibarı düşürdüğü son tik; 0 = hiç düşürmedi.
@@ -234,9 +236,17 @@ static func costed(bugs: int) -> int:
 	return 0 if bugs_free else bugs
 
 
-## Yeni hataya kapatılmış hat: hata kaynağı bu hatları seçmez. Hiçbir kural hat kapatmaz.
-static func line_blocked(_line: String) -> bool:
-	return false
+## Yeni hataya kapatılmış hat: zarla gelen hata (saatlik bildirim, hatalı kapanış zarı) bu hatları seçmez; oyuncunun
+## seçtiği hata (anlık hata, çıkış hatası) düşer. Hattı yalnız yeniden yazım kapatır (`harden_line`).
+static func line_blocked(line: String) -> bool:
+	return int((GameState.get_flag(LINE_HARDEN, {}) as Dictionary).get(line, 0)) > GameState.day
+
+
+## Hat `weeks` hafta aşınmadan yeni hata almaz; ikinci yeniden yazım süreyi uzatır, kısaltmaz.
+static func harden_line(line: String, weeks: int) -> void:
+	var hardened: Dictionary = (GameState.get_flag(LINE_HARDEN, {}) as Dictionary).duplicate()
+	hardened[line] = maxi(int(hardened.get(line, 0)), GameState.day + TimeModel.ticks(weeks))
+	GameState.set_flag(LINE_HARDEN, hardened)
 
 
 ## Kademesi çıkmış hatlar, kimliğe göre sıralı: bir çekiliş sözlüğün ekleme sırasından bağımsız aynı hatta denk gelir.

@@ -1,0 +1,116 @@
+{
+  "id": "product.sprint_dev_shorter_path",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_card_effort",
+        "op": ">=",
+        "value": 5
+      },
+      {
+        "seam": "urun.decision_card_done",
+        "op": ">=",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "new_way",
+      "outcome_id": "new_way",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -3
+        },
+        {
+          "verb": "sprint_card_progress",
+          "amount_seam": "urun.decision_card_done",
+          "amount_mult": -1
+        }
+      ]
+    },
+    {
+      "id": "known_way",
+      "outcome_id": "known_way",
+      "effects": [
+        {
+          "verb": "sprint_card_outlook"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Daha kısa bir yol buldum",
+      "body": "{seam:urun.decision_card} için daha kısa bir yol buldum. Ama şimdi geçersem bu karta yaptığım iş boşa gider.",
+      "options": {
+        "new_way": "Kısa yola geç",
+        "known_way": "Bilinen yoldan devam et"
+      },
+      "expire_note": "Karar verilmedi, iş bilinen yoldan sürdü."
+    },
+    "en": {
+      "title": "I found a shorter way",
+      "body": "I found a shorter way to build {seam:urun.decision_card}. But if I switch now, what I've built so far is thrown away.",
+      "options": {
+        "new_way": "Take the shorter route",
+        "known_way": "Stay on the known route"
+      },
+      "expire_note": "No decision came, so the work stayed on the known route."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}
