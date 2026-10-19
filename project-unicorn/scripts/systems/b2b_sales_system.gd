@@ -147,12 +147,12 @@ static func satisfaction_target(c: Customer) -> int:
 
 ## An account's satisfaction target on tick `day` with the trust ledger at `trust`.
 static func _target_on(c: Customer, day: int, trust: float) -> int:
-	# Product-health channel — the raw stability score, less what the open bugs on the lines THIS account
-	# uses cost it. NO price link (B2B is not price-driven).
+	# Product-health channel — how well the product fits THIS account (ProductQuality.account_fit), less what the
+	# open bugs on the lines it uses cost it. NO price link (B2B is not price-driven).
 	# Kept promises lift the target and broken ones depress it through the per-customer trust
 	# ledger: that is what makes a broken word DURABLE (the drift would otherwise walk
 	# PROMISE_BROKEN_SAT back within one tick) and gives each account its own target.
-	var health: float = QualityModel.axis_score(QualityModel.dims_from_flags(), "stability") \
+	var health: float = ProductQuality.account_fit(c).value \
 		- minf(B2BConstants.B2B_BUG_SAT_PER * float(account_bugs(c)), float(B2BConstants.B2B_BUG_SAT_CAP))
 	# The onboarding floor holds a new account just over its bar, after the bug penalty. The trust
 	# ledger lands on top of it, so a word broken inside the window still bites.

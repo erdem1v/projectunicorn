@@ -89,7 +89,7 @@ static func sign_deal(lead: Prospect) -> void:
 	# wrong cause is worse than none. Alternative seen: show that distance as "pazarlık farkı" —
 	# a naming decision with a string behind it. The field stays in the save schema.
 	var c: Customer = SalesSystem.add_b2b_customer(lead, lead.deal_seats, lead.deal_price,
-		SalesSystem.signing_satisfaction_seed(), "founder_pitch")
+		SalesSystem.signing_satisfaction_seed(lead), "founder_pitch")
 
 	# §6 — the word given at the table becomes a real debt AT THE SIGNATURE, not before: a
 	# promise made to a company that never signed was never given. One open pitch promise at a

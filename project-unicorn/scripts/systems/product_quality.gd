@@ -28,6 +28,8 @@ const USE_AREA_MIN := 0.15
 ## Satışçı kapanışının eğrisi [WORKING] onay bekliyor, E1'de kalibre: adayın U'su → ihtimal, noktalar arası doğrusal, uçlarda
 ## düz. Baktığı hiçbir alanı eksik olmayan aday bu eğriye girmez, kesin kapanır.
 const CLOSE_CURVE := [[40.0, 0.30], [55.0, 0.60], [70.0, 0.85], [80.0, 0.95]]
+## Alan sözcüğünün tonu (`area_row`): Güçlü iyi, Yeterli nötr, Zayıf ve Yok uyarı; `UiFactory.D_tag`'in anlam adlarıdır.
+const WORD_TONES := {"strong": "pos", "enough": "neutral", "weak": "warn", "none": "warn"}
 
 # Yıldız beklenti tablosu [WORKING] onay bekliyor, E1'de kalibre: seviye 1 alanın her hattının ilk sürümüdür. Hat sayısına
 # bağlı iki hücre hesaplanır: Çekirdek 1★'ta MVP'dir (`mvp_lines` ÷ Çekirdek hat sayısı), vurgu alanı 2★'ta alanın hat
@@ -181,6 +183,20 @@ static func weakest_area(ctx: Dictionary = {}) -> String:
 		if lvl < expect:
 			ratios[area] = _ratio(lvl, expect)
 	return _lowest(ratios.keys(), ratios)
+
+
+## Genel Bakış'ın ürün durumu satırı: alanın ürün sayfasındaki hâli, `word` ve `serves` ile aynı referans. `word`: sözcüğün kimliği;
+## `tone`: onun tonu; `sentence`: alanın cümlesi; `squares`: seviyenin referans beklentisine oranı onluk ölçekte (beşinci kare
+## referanstır, en çok 10); `faint_from`: ilk soluk karenin numarası, oran RATIO_CAP'e varınca başlar, çünkü fazlası uyuma
+## eklenmez. Referansın alandan bir şey beklemediği yerde (B2C'de küçük kitle) ölçek yoktur: kare 0.
+static func area_row(area: String) -> Dictionary:
+	var lvl: float = level(area)
+	var expect: float = expectation(area)
+	var mark: int = int(SprintCatalog.cfg("pm.goal_mark"))
+	var word_id: String = word_for(lvl, expect)
+	return {"area": area, "word": word_id, "tone": WORD_TONES[word_id], "sentence": SprintCatalog.area_sentence(area),
+		"squares": mini(roundi(lvl / expect * mark), int(SprintCatalog.cfg("pm.goal_squares"))) if expect > 0.0 else 0,
+		"faint_from": roundi(RATIO_CAP * mark)}
 
 
 ## {alan: beklenti} (beklentisi 0 olan alan yok): yıldızın ve sektörün satırı, rakipsiz. Hesap bunu imzada ve her yenileme

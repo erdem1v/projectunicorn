@@ -515,8 +515,8 @@ func _seed_tempo_state() -> void:
 
 ## The tick probe's book world: the live ERP product on its real lines and `count` B2B accounts, thirteen sectors
 ## by three stars in turn, signed through the signing seam. A seat each at a small price keeps the book's MRR under
-## the Series A bar, so no fund calls inside the five weeks, and a tolerance of 0 keeps every account out of Risk
-## once the first release lowers the axes, so no retention card queues: the weeks time the healthy path.
+## the Series A bar, so no fund calls inside the five weeks, and a tolerance of 0 keeps every account out of Risk,
+## so no retention card queues: the weeks time the healthy path.
 ## TICK WORLD reports the book that signed.
 func _seed_accounts_state(count: int) -> void:
 	_seed_run_reproducible()
@@ -687,13 +687,12 @@ func _run_b2b_shot(kind: String) -> void:
 	_seed_run_reproducible()
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_line_state("erp", _ERP_SHIPPED_LINES)
 	var p := Prospect.new()
 	p.id = "shot"
 	p.company_name = "Ege Sigorta"
 	p.industry = "insurance"
 	p.star = 1
-	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = SalesSystem.add_b2b_customer(p, 20, 50, 70)   # 20 seats x $50 = $1.000
 	var card_id: String = "customer.retention"
 	var scoped: bool = true

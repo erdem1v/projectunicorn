@@ -133,6 +133,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"locale_switch":        fail = _case_locale_switch()
 		"b2b_lifecycle_and_countdown": fail = _case_b2b_lifecycle_and_countdown()
 		"b2b_onboarding_grace_floor": fail = _case_b2b_onboarding_grace_floor()
+		"b2b_account_reads_fit": fail = _case_b2b_account_reads_fit()
 		"b2b_satisfaction_leaves_b2c_identical": fail = _case_b2b_satisfaction_leaves_b2c_identical()
 		"b2b_retention_routes_seams": fail = _case_b2b_retention_routes_seams()
 		"b2b_ignore_then_churn": fail = _case_b2b_ignore_then_churn()
@@ -445,6 +446,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"fit_star_context":               fail = _case_fit_star_context()
 		"fit_account_ref":                fail = _case_fit_account_ref()
 		"save_v17_market_ref":            fail = _case_save_v17_market_ref()
+		"product_area_row":               fail = _case_product_area_row()
 		# --- rev 6.1 · Ar-Ge bağı ve kart aritmetiği (2026-08-25).
 		"research_node_map_binds":        fail = _case_research_node_map_binds()
 		"rnd_tree_loads_and_validates":  fail = _case_rnd_tree_loads_and_validates()
@@ -712,14 +714,9 @@ static func _seed_b2b(mrr: int) -> void:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	# The shared product: the ERP with every line at K2, which meets what a customer of any size and sector expects, so
-	# ProductQuality finds nothing lacking at any table.
+	# ProductQuality finds nothing lacking at any table and a signed account holds steady under the B2B two-layer model
+	# (only a weaker product erodes it). Bug count is left untouched so cases that pre-set it keep control.
 	_seed_b2b_lines("erp")
-	# A shipped product always has quality axes — seed a realistic HEALTHY product so a
-	# signed account holds steady under the B2B two-layer model (only a DEGRADING product
-	# should erode it). Bug count is left untouched so cases that pre-set it keep control.
-	GameState.set_flag("mvp_innovation", 45.0)
-	GameState.set_flag("mvp_stability", 70.0)
-	GameState.set_flag("mvp_experience", 45.0)
 	var p := Prospect.new()
 	p.id = "lead_smoke"
 	p.company_name = "Smoke Corp"
@@ -728,8 +725,8 @@ static func _seed_b2b(mrr: int) -> void:
 	_sign_fixture(p, mrr, 70)
 
 
-## A LIVE, HEALTHY B2B PRODUCT for the sitting cases: every line of the sub-type at one tier, which is what ProductQuality
-## and the line ladder read. `_seed_b2b` also keeps the legacy `mvp_*` flags, for the economy that still reads them.
+## A LIVE B2B PRODUCT for the sitting cases and the account cases: every line of the sub-type at one tier, which is what
+## ProductQuality and the line ladder read (tier 0 is a product that fits no account).
 static func _seed_b2b_lines(subtype: String, tier: int = 2) -> void:
 	GameState.set_flag("mvp_sub_product_type_id", subtype)
 	for line_id in ProductLines.line_ids(subtype):
@@ -3098,8 +3095,8 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
 	CustomerRegistry.set_tolerance(c.id, 50)
 	CustomerRegistry.set_satisfaction(c.id, 70)
-	# Degrade: low stability and a bug backlog on the account's lines → low satisfaction target.
-	GameState.set_flag("mvp_stability", 20.0)
+	# Degrade: a product with no line shipped (it fits nobody) and a bug backlog on the account's lines → low satisfaction target.
+	_seed_b2b_lines("erp", 0)
 	_seed_bugs(40)
 	var entered_risk := false
 	for i in 40:
@@ -3112,7 +3109,7 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 	if not entered_risk:
 		return "never reached Risk phase with a visible countdown"
 	# Recover: fix the product + lift satisfaction over tolerance → counter resets.
-	GameState.set_flag("mvp_stability", 90.0)
+	_seed_b2b_lines("erp")
 	ProductState.clear_line_bugs(BUG_LINE)
 	CustomerRegistry.set_satisfaction(c.id, 85)
 	_sim_day()
@@ -3121,7 +3118,7 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 	if c.lifecycle_phase == "risk":
 		return "still in Risk after recovery"
 	# Degrade again and ride the counter to zero → churn from the watched counter.
-	GameState.set_flag("mvp_stability", 20.0)
+	_seed_b2b_lines("erp", 0)
 	_seed_bugs(40)
 	CustomerRegistry.set_satisfaction(c.id, 70)
 	var churned: Array = []
@@ -3149,13 +3146,12 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 
 
 static func _case_b2b_onboarding_grace_floor() -> String:
-	# A 2★ account signed at satisfaction 0 on a stability-0 product opens neutral, holds over its
+	# A 2★ account signed at satisfaction 0 on a product that fits no account opens neutral, holds over its
 	# bar for the onboarding floor's weeks, its card warns in the last one, and it enters Risk the
 	# tick the floor lifts. A word broken inside the window still lowers the target.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_stability", 0.0)
-	_seed_b2b_lines("erp", 0)   # the faucet reads the product's lines to draw the stars of the week's leads
+	_seed_b2b_lines("erp", 0)   # no line shipped: the account's fit is 0, and the faucet draws the stars of the week's leads from the lines
 	var open_account := func(id: String) -> Customer:
 		var p := Prospect.new()
 		p.id = id
@@ -3168,9 +3164,9 @@ static func _case_b2b_onboarding_grace_floor() -> String:
 	if c.satisfaction != start:
 		return "signed at satisfaction 0, the account opens at %d (want max(tolerance %d + %d, %d) = %d)" % [
 			c.satisfaction, c.tolerance, B2BConstants.SIGNING_SAT_OVER_TOL, B2BConstants.SIGNING_SAT_MIN, start]
-	var health: float = QualityModel.axis_score(QualityModel.dims_from_flags(), "stability")
+	var health: int = ProductQuality.account_fit(c).value
 	if health >= c.tolerance:
-		return "test misconfigured: the product (%.1f) is not under the bar (%d)" % [health, c.tolerance]
+		return "test misconfigured: the product (fit %d) is not under the bar (%d)" % [health, c.tolerance]
 	var weeks: int = TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
 	for w in weeks - 1:
 		_sim_day()
@@ -3182,7 +3178,7 @@ static func _case_b2b_onboarding_grace_floor() -> String:
 				str(B2BSalesSystem.onboarding_ends_under_bar(c)), w + 1, weeks]
 	_sim_day()
 	if B2BSalesSystem.satisfaction_target(c) != clampi(int(round(health + c.trust_offset)), 0, 100):
-		return "target %d once the floor lifted (want stability %.1f + trust %.1f)" % [
+		return "target %d once the floor lifted (want fit %d + trust %.1f)" % [
 			B2BSalesSystem.satisfaction_target(c), health, c.trust_offset]
 	if c.lifecycle_phase != "risk":
 		return "the floor lifted over a product under the bar and the account did not enter Risk (%s, %d/%d)" % [
@@ -3209,6 +3205,97 @@ static func _case_b2b_onboarding_grace_floor() -> String:
 	if small.satisfaction != B2BConstants.SIGNING_SAT_MIN:
 		return "a 1★ account signed at satisfaction 0 opens at %d (want the middle %d)" % [
 			small.satisfaction, B2BConstants.SIGNING_SAT_MIN]
+	return ""
+
+
+## Hesabın memnuniyet hedefinin ürün terimi hesabın ürüne uyumudur (`account_fit`) ve hesap imzada adayın uyumuyla açılır, tabanlar
+## kalır: MVP'de 1★ aday 70'tir ve o sayıyla açılır, 3★ aday tolerans tabanının altında kalır ve tabanla açılır. Masanın imzası ile
+## satışçının kapanışı aynı tohumu okur. Ürün büyüyünce hedef hesabın uyumuna kayar ve ön izleme (`satisfaction_next_tick`) sonraki
+## tikin yazdığıdır.
+## FALSİFİKASYON: `_target_on`ta uyum terimini 100 yap → hedef iddiası FAIL; `signing_satisfaction_seed`i 50 döndür → tohum iddiası
+## FAIL; `SalesRepSystem._close`ta tohumu 50 yap → satışçı iddiası FAIL; `_tick_satisfaction`ta hedefe 1 ekle → ön izleme iddiası
+## FAIL.
+static func _case_b2b_account_reads_fit() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	_seed_b2b_lines("erp", 0)
+	_seed_mvp_lines()
+	var lead_of := func(id: String, sector: String, star: int) -> Prospect:
+		var lead := Prospect.new()
+		lead.id = id
+		lead.company_name = id
+		lead.industry = sector
+		lead.star = star
+		lead.archetype_id = SalesArchetypes.DEFAULT_ID
+		lead.deal_seats = 10
+		lead.deal_price = 50
+		ProspectRegistry.add(lead)
+		return lead
+	var small: Prospect = lead_of.call("fit_small", "insurance", 1)
+	var big: Prospect = lead_of.call("fit_big", "manufacturing", 3)
+	var desk: Prospect = lead_of.call("fit_desk", "logistics", 1)
+	# The MVP meets a 1★ table exactly; a 3★ table wants far more than the MVP and opens on its floor, not on the seed.
+	if SalesSystem.signing_satisfaction_seed(small) != 70 or SalesSystem.signing_satisfaction_seed(desk) != 70:
+		return "the MVP's seed for a 1★ table reads %d and %d, want 70" % [
+			SalesSystem.signing_satisfaction_seed(small), SalesSystem.signing_satisfaction_seed(desk)]
+	var floor_big: int = B2BConstants.seed_tolerance(3, big.industry) + B2BConstants.SIGNING_SAT_OVER_TOL
+	if SalesSystem.signing_satisfaction_seed(big) != ProductQuality.prospect_fit(big).value \
+			or SalesSystem.signing_satisfaction_seed(big) >= floor_big:
+		return "fixture: the 3★ seed %d is not the lead's fit %d under the opening floor %d" % [
+			SalesSystem.signing_satisfaction_seed(big), ProductQuality.prospect_fit(big).value, floor_big]
+	SalesFinalizer.sign_deal(small)
+	SalesFinalizer.sign_deal(big)
+	SalesRepSystem._close(_make_employee("char_fit_rep", "Fit Rep", HRConstants.ROLE_SALES_REP), desk)
+	var accounts: Array[Customer] = []
+	for id in ["co_fit_small", "co_fit_big", "co_fit_desk"]:
+		var account: Customer = CustomerRegistry.get_customer(id)
+		if account == null:
+			return "%s did not sign" % id
+		accounts.append(account)
+	if accounts[0].satisfaction != 70 or accounts[2].satisfaction != 70:
+		return "the desk's and the table's 1★ accounts open at %d and %d, want the seed 70 on both" % [
+			accounts[2].satisfaction, accounts[0].satisfaction]
+	if accounts[1].satisfaction != floor_big:
+		return "the 3★ account opens at %d, want its floor %d (the seed is lower)" % [accounts[1].satisfaction, floor_big]
+	# Past the onboarding floor the target is the account's fit: the product alone.
+	for account in accounts:
+		_past_onboarding(account)
+	var want_fit := func() -> String:
+		for account in accounts:
+			if B2BSalesSystem.satisfaction_target(account) != ProductQuality.account_fit(account).value:
+				return "%s reads target %d at a fit of %d" % [
+					account.id, B2BSalesSystem.satisfaction_target(account), ProductQuality.account_fit(account).value]
+		return ""
+	var failed: String = want_fit.call()
+	if failed != "":
+		return "on the MVP, " + failed
+	var before: Array = accounts.map(func(account: Customer) -> int: return B2BSalesSystem.satisfaction_target(account))
+	_seed_b2b_lines("erp", 1)
+	failed = want_fit.call()
+	if failed != "":
+		return "on a K1 ERP, " + failed
+	# The bars (33 to 69) sit on the same 0 to 100 scale as the fit: a K1 ERP clears the 1★ account's bar and leaves the 3★ one under its own.
+	var fit_small: int = ProductQuality.account_fit(accounts[0]).value
+	var fit_big: int = ProductQuality.account_fit(accounts[1]).value
+	if fit_small < accounts[0].tolerance or fit_big >= accounts[1].tolerance:
+		return "a K1 ERP reads fit %d for the 1★ account (bar %d) and %d for the 3★ one (bar %d), want over the first and under the second" % [
+			fit_small, accounts[0].tolerance, fit_big, accounts[1].tolerance]
+	for i in accounts.size():
+		if B2BSalesSystem.satisfaction_target(accounts[i]) <= before[i]:
+			return "%s: a bigger product left the target at %d (was %d)" % [
+				accounts[i].id, B2BSalesSystem.satisfaction_target(accounts[i]), before[i]]
+	# A tick writes what the preview read; the target pulls the 1★ account up and the 3★ one, which opened on its floor, down.
+	var want: Array = accounts.map(func(account: Customer) -> int:
+		return B2BSalesSystem.satisfaction_next_tick(account, account.trust_offset))
+	GameState.advance_day()
+	for account in accounts:
+		B2BSalesSystem._tick_satisfaction(account)
+	for i in accounts.size():
+		if accounts[i].satisfaction != want[i]:
+			return "%s reads %d after the tick, the preview said %d" % [accounts[i].id, accounts[i].satisfaction, want[i]]
+	if accounts[0].satisfaction <= 70 or accounts[1].satisfaction >= floor_big:
+		return "the tick moved the 1★ account to %d and the 3★ one to %d, want up from 70 and down from %d" % [
+			accounts[0].satisfaction, accounts[1].satisfaction, floor_big]
 	return ""
 
 
@@ -3362,9 +3449,8 @@ static func _case_b2b_ignore_then_churn() -> String:
 	# "Kendi haline bırak" = no intervention: the customer stays in Risk and pays; the
 	# churn countdown keeps running and fires _churn on its own at zero, with a SINGLE
 	# brand delta (the moved-to-churn hit). And İlgilen before expiry can still rescue.
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(2000)
-	GameState.set_flag("mvp_stability", 20.0)      # degrading product → stays under tolerance
+	_seed_b2b_lines("erp", 0)      # degrading product → stays under tolerance
 	_seed_bugs(40)
 
 	# Ignore path → countdown runs down → natural churn with one brand hit.
@@ -4032,7 +4118,6 @@ static func _escalation_lands(c: Customer, rep: Character) -> bool:
 static func _case_b2b_cs_absorbs_routine() -> String:
 	# A CS-managed account erodes SLOWER than a founder-managed twin and produces NO
 	# routine events (no retention/escalation while above the critical threshold).
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)  # founder-managed twin (co_lead_smoke)
 	var founder_mgd: Customer = CustomerRegistry.get_customer("co_lead_smoke")
 	var cs: Character = _make_cs("char_cs_1", 5)
@@ -4046,7 +4131,7 @@ static func _case_b2b_cs_absorbs_routine() -> String:
 	CustomerRegistry.assign_customer(cs_mgd.id, cs.id)
 	if cs_mgd.assigned_to != cs.id:
 		return "assign_customer did not set assigned_to"
-	GameState.set_flag("mvp_stability", 20.0)
+	_seed_b2b_lines("erp", 0)
 	_seed_bugs(40)
 	CustomerRegistry.set_satisfaction(founder_mgd.id, 60)
 	CustomerRegistry.set_satisfaction(cs_mgd.id, 60)
@@ -4066,7 +4151,7 @@ static func _case_b2b_cs_escalation_refuse() -> String:
 	# churns the account + drops brand + drops THAT CS employee's morale (through the seam).
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	_seed_b2b_lines("erp")   # a sub-type with lines: the daily tick reads the fit (ProductQuality.market_fit)
+	_seed_b2b_lines("erp", 0)   # a product that fits nobody: the account stays under the critical threshold through the tick
 	var cs: Character = _make_cs("char_cs_1", 4, 60)
 	var p := Prospect.new()
 	p.id = "esc"
@@ -5657,10 +5742,8 @@ static func _case_hires_land_in_own_column() -> String:
 static func _case_owned_account_erodes_slower() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	# A SICK product, so the drift target is below tolerance and erosion actually runs.
-	GameState.set_flag("mvp_innovation", 5.0)
-	GameState.set_flag("mvp_stability", 5.0)
-	GameState.set_flag("mvp_experience", 5.0)
+	# A SICK product (no line shipped, it fits nobody), so the drift target is below tolerance and erosion actually runs.
+	_seed_b2b_lines("erp", 0)
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder != null:
 		CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)   # engaged: cares for nobody
@@ -6036,7 +6119,7 @@ static func _case_event_history_names_survive() -> String:
 
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	_seed_b2b_lines("erp")   # a sub-type with lines: the daily tick reads the fit (ProductQuality.market_fit)
+	_seed_b2b_lines("erp", 0)   # a product that fits nobody: the account stays under the critical threshold through the tick
 	var cs: Character = _make_cs("char_cs_nm", 4, 60)
 	var p := Prospect.new()
 	p.id = "esc_nm"
@@ -8207,7 +8290,6 @@ static func _case_coupling_cs_dampen_axis() -> String:
 	if B2BConstants.cs_dampen(9) >= B2BConstants.cs_dampen(0):
 		return "the dampen does not strengthen with UZMANLIK"
 	# End to end: a strong rep really does erode slower than a weak one on identical accounts.
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
 	var weak_rep: Character = _make_employee("char_dmp_weak", "Weak Rep", HRConstants.ROLE_CUSTOMER_REP,
 		SEED_PACE, 0, 50, 1, SEED_RAPPORT)
@@ -8223,7 +8305,7 @@ static func _case_coupling_cs_dampen_axis() -> String:
 	var bb: Customer = _sign_fixture(p, 1000, 70)
 	CustomerRegistry.assign_customer(a.id, weak_rep.id)
 	CustomerRegistry.assign_customer(bb.id, strong_rep.id)
-	GameState.set_flag("mvp_stability", 0.0)   # the target sits on the floor, so the twins fall at their own rates all six ticks
+	_seed_b2b_lines("erp", 0)   # the target sits on the floor, so the twins fall at their own rates all six ticks
 	_seed_bugs(40)
 	CustomerRegistry.set_satisfaction(a.id, 60)
 	CustomerRegistry.set_satisfaction(bb.id, 60)
@@ -9274,8 +9356,9 @@ static func _case_promise_broken_penalty() -> String:
 	# PROMISE_BROKEN_SAT is APPLIED (the assertion the old broken-promise case never made),
 	# and the hit is DURABLE: before task 2b the daily drift erased it inside a week because
 	# _promise_offset was a permanent `return 0.0` stub.
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
+	_seed_b2b_lines("erp", 0)
+	_seed_mvp_lines()   # the MVP fits a 1★ account exactly (U 70), so only the grudge keeps it under where it started
 	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
 	CustomerRegistry.set_satisfaction(c.id, 70)
 	var sat_before: int = c.satisfaction
@@ -13098,7 +13181,7 @@ static func _seed_risk_account() -> Customer:
 	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
 	CustomerRegistry.set_tolerance(c.id, 50)
 	CustomerRegistry.set_satisfaction(c.id, 30)
-	GameState.set_flag("mvp_stability", 5.0)
+	_seed_b2b_lines("erp", 0)
 	_seed_bugs(30)
 	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 	CustomerRegistry.set_churn_countdown(c.id, TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
@@ -13158,7 +13241,7 @@ static func _case_risk_exit_stamps_day() -> String:
 	var c: Customer = _seed_risk_account()
 	if c.last_risk_exit_day != -1:
 		return "fresh account already carries an exit day"
-	GameState.set_flag("mvp_stability", 80.0)
+	_seed_b2b_lines("erp")
 	ProductState.clear_line_bugs(BUG_LINE)
 	CustomerRegistry.set_satisfaction(c.id, 90)   # over the bar → _tick_healthy's risk branch
 	_sim_day()
@@ -15010,6 +15093,55 @@ static func _case_product_quality_sector_table() -> String:
 		return "B2C weights read %s; want Core 0.5 and onboarding, growth, trust splitting the rest, no revenue" % b2c
 	if ProductQuality.emphasis("") != []:
 		return "B2C has an emphasis: %s" % [ProductQuality.emphasis("")]
+	return ""
+
+
+## Genel Bakış'ın ürün durumu satırı ürün sayfasının referansını okur (B2B'de 2★, B2C'de bugünkü kitle): `word` ve `tone` seviyenin
+## referansa göre kelimesinden, `sentence` alanın cümlesinden gelir; `squares` seviyenin referans beklentisine oranının onluk
+## ölçeğidir (beşinci kare referans, en çok 10), soluk kare (`faint_from`) oran RATIO_CAP'e varınca başlar; referansın bir şey
+## beklemediği alanda ölçek yoktur: kare 0.
+##
+## FALSİFİKASYON: `area_row`da `mark` yerine 4 yaz → kare iddiası FAIL; `faint_from`u `RATIO_CAP * mark - 1` yap → soluk eşik iddiası
+## FAIL; `WORD_TONES`ta "weak"i "neutral" yap → ton iddiası FAIL; `expect > 0.0` süzgecini sil → B2C'de sıfıra bölmeyle FAIL.
+static func _case_product_area_row() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	_seed_b2b_lines("erp", 0)
+	# [alan, hatların kademeleri, kare, kelime, ton, soluk]: ürün sayfasının referansında Çekirdek 1, Entegrasyonlar 1, İlk kullanım 1,
+	# Güven 0,5; Çekirdek'in beş hattı var, Güven'in iki.
+	var rows := [
+		["core", [1, 1, 1, 0, 0], 3, "weak", "warn", false],       # MVP: 0,6 / 1
+		["core", [1, 1, 1, 1, 1], 5, "enough", "neutral", false],  # tam referans: beşinci kare
+		["core", [2, 2, 2, 1, 0], 7, "enough", "neutral", false],  # 1,4 / 1
+		["core", [2, 2, 2, 1, 1], 8, "enough", "neutral", true],   # 1,6 / 1: oran kesiği aşıldı
+		["core", [3, 3, 3, 3, 3], 10, "strong", "pos", true],      # onluk ölçeğin sonu
+		["core", [0, 0, 0, 0, 0], 0, "none", "warn", false],
+		["integrations", [2], 10, "strong", "pos", true],
+		["onboarding", [1], 5, "enough", "neutral", false],
+		["trust", [1, 0], 5, "enough", "neutral", false],           # 0,5 / 0,5
+		["trust", [0, 0], 0, "none", "warn", false],
+	]
+	for row in rows:
+		var lines: Array = SprintCatalog.capabilities(row[0])
+		for i in lines.size():
+			ProductState.set_line_tier(lines[i], int(row[1][i]))
+		var got: Dictionary = ProductQuality.area_row(row[0])
+		if got.area != row[0] or got.squares != row[2] or got.word != row[3] or got.tone != row[4] \
+				or (got.squares >= got.faint_from) != row[5]:
+			return "%s at tiers %s reads %s; want %d squares, '%s', '%s', faint %s" % [row[0], row[1], got, row[2], row[3], row[4], row[5]]
+		if got.faint_from != 8 or got.sentence == "" or got.sentence != SprintCatalog.area_sentence(row[0]):
+			return "%s reads faint_from %d and sentence '%s'; want 8 and the area's sentence" % [row[0], got.faint_from, got.sentence]
+	# Referansın bir şey beklemediği alan: küçük kitleli B2C ürünün 1★ satırı yalnız Çekirdek'e bakar.
+	_seed_b2c()
+	_set_area_tiers({"onboarding": 1})
+	if ProductQuality.expectation("onboarding") != 0.0:
+		return "fixture: the page asks %.2f of Onboarding in a 200 user audience" % ProductQuality.expectation("onboarding")
+	var quiet: Dictionary = ProductQuality.area_row("onboarding")
+	if quiet.squares != 0 or quiet.word != ProductQuality.word("onboarding"):
+		return "an area the page asks nothing of reads %s; want no squares and the page's word '%s'" % [quiet, ProductQuality.word("onboarding")]
+	var asked: Dictionary = ProductQuality.area_row("core")
+	if asked.squares != 5 or asked.word != "enough":
+		return "the MVP of a small audience reads %s on Core, want 5 squares and 'enough'" % asked
 	return ""
 
 
@@ -17349,6 +17481,7 @@ static func _case_incident_night_hold_resumes() -> String:
 	MailClock.instant = false
 	_incident_world()
 	var risk: Customer = _add_risk_b2b("inc_risk", 900)
+	CustomerRegistry.set_market_ref(risk.id, ProductQuality.market_ref_for(3, risk.industry))   # a picky account: the MVP fits it badly, so it keeps sinking through the nights
 	var warned: Dictionary = _ctx_customer(risk)
 	EvPapers.place(RETAIN_ID, warned, 2)
 	var shown: Array = []
@@ -24326,10 +24459,11 @@ static func _case_callback_churn_window() -> String:
 ## B2B_BUG_SAT_PER, en çok B2B_BUG_SAT_CAP; onboarding tabanı cezadan sonra uygulanır. Hesabın kullandığı hat, sektörünün hattın alanına
 ## USE_AREA_MIN ve üstü ağırlık vermesidir (Çekirdek ve iki vurgu; lojistik Entegrasyonlar'ı okur, inşaat okumaz).
 ## Şikâyet sesi ve Risk sebebi aynı kuraldan okur: hesabın kendi hatlarındaki hata COMPLAINT_BUG_GATE'in üstünde.
-## `fix_off` anahtarı bedeli sıfırlar.
+## `fix_off` anahtarı bedeli sıfırlar. Hedefin ürün terimi hesabın uyumudur (`ProductQuality.account_fit`).
 ## FALSİFİKASYON: `account_bugs`ta `used_areas` süzgecini sil → "reads only the lines" iddiası FAIL; `minf(..., CAP)`ı sil → tavan
 ## iddiası FAIL; onboarding tabanını cezadan önceye taşı → "floor after" iddiası FAIL; `risk_reason`da `account_bugs(c)` yerine
-## `ProductState.open_bugs()` yaz → sebep iddiası FAIL; `costed`ı `account_bugs`tan çıkar → anahtar iddiası FAIL.
+## `ProductState.open_bugs()` yaz → sebep iddiası FAIL; `costed`ı `account_bugs`tan çıkar → anahtar iddiası FAIL; `_target_on`ta
+## uyum terimini 100 yap → "a fit of 0" iddiası FAIL.
 static func _case_bug_cost_b2b_account_lines() -> String:
 	_seed_b2b(1000)
 	var ops: Customer = CustomerRegistry.get_by_market("b2b")[0]    # "testing": no sector row, it reads the default one (Integrations, Trust)
@@ -24342,11 +24476,12 @@ static func _case_bug_cost_b2b_account_lines() -> String:
 	_past_onboarding(ops)
 	_past_onboarding(build)
 	var integrations: String = SprintCatalog.capabilities("integrations")[0]
-	var health: float = QualityModel.axis_score(QualityModel.dims_from_flags(), "stability")
+	var fit := func(c: Customer) -> int:
+		return ProductQuality.account_fit(c).value
 	var cost := func(bugs: int) -> float:
 		return minf(B2BConstants.B2B_BUG_SAT_PER * float(bugs), float(B2BConstants.B2B_BUG_SAT_CAP))
 	var target := func(c: Customer, bugs: int) -> int:
-		return clampi(int(round(health - cost.call(bugs) + c.trust_offset)), 0, 100)
+		return clampi(int(round(float(fit.call(c)) - cost.call(bugs) + c.trust_offset)), 0, 100)
 	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 0):
 		return "fixture: a bug-free account reads target %d, want %d" % [B2BSalesSystem.satisfaction_target(ops), target.call(ops, 0)]
 	# A core line concerns both accounts; an Integrations line only the one that names it.
@@ -24361,10 +24496,10 @@ static func _case_bug_cost_b2b_account_lines() -> String:
 	# The cost stops at the cap.
 	_seed_bugs(500)
 	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 518):
-		return "518 bugs: target %d, want %d (health %.1f less the cap %d)" % [B2BSalesSystem.satisfaction_target(ops),
-			target.call(ops, 518), health, B2BConstants.B2B_BUG_SAT_CAP]
+		return "518 bugs: target %d, want %d (fit %d less the cap %d)" % [B2BSalesSystem.satisfaction_target(ops),
+			target.call(ops, 518), fit.call(ops), B2BConstants.B2B_BUG_SAT_CAP]
 	# The onboarding floor holds a fresh account over its bar after the cost, not before it.
-	GameState.set_flag("mvp_stability", 5.0)
+	_seed_b2b_lines("erp", 0)
 	var fresh_p := Prospect.new()
 	fresh_p.id = "lead_fresh"
 	fresh_p.company_name = "Fresh Co"
@@ -24376,9 +24511,9 @@ static func _case_bug_cost_b2b_account_lines() -> String:
 			B2BSalesSystem.satisfaction_target(fresh), fresh.tolerance, B2BConstants.ONBOARDING_GRACE_MARGIN]
 	_past_onboarding(fresh)
 	if B2BSalesSystem.satisfaction_target(fresh) != 0:
-		return "once the floor lifted the account reads target %d, want 0 (stability less the cap)" % B2BSalesSystem.satisfaction_target(fresh)
+		return "once the floor lifted the account reads target %d, want 0 (a fit of 0 less the cap)" % B2BSalesSystem.satisfaction_target(fresh)
 	# The Risk reason and the complaint voice read the account's own lines, strictly above the gate.
-	GameState.set_flag("mvp_stability", 70.0)
+	_seed_b2b_lines("erp")
 	ProductState.clear_line_bugs(BUG_LINE)
 	ProductState.clear_line_bugs(integrations)
 	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)   # room on the servers: an overage is a complaint too
@@ -24581,7 +24716,7 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 			"conversion": SalesSystem.conversion_rate(15),
 			"value": SalesSystem.product_value(),
 			"axes": ProductState.axis_readings(),
-			"signing_seed": SalesSystem.signing_satisfaction_seed(),
+			"signing_seed": SalesSystem.signing_satisfaction_seed(lead),
 			"meeting": SalesMeetingSystem._build_base_contributions(lead, SalesMeetingSystem._fit),
 			"fit_line": SalesMeetingSystem._fit_line(),
 			"star_mix": SalesFaucetSystem.star_mix_now(),

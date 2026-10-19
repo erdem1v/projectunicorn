@@ -146,7 +146,9 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
 - Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
   kazanılır; temsilcinin planı dolunca müşterinin baktığı bir alan ürünün beklentisinin altındaysa kapanış ürün uyumuna
   bağlı bir zarla kaybedilebilir (`ProductQuality.close_chance`) ve kayıp haftada en çok bir mailla gelir, kalanı haftalık
-  özetin satırıdır. B2C'de kitle her oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
+  özetin satırıdır. Hesap imzada adayın ürüne uyumuyla açılır (tabanlar kalır) ve memnuniyeti hesabın kendi uyumuna kayar
+  (`ProductQuality.account_fit`; hesabın kullandığı hatlardaki açık hata düşer, güven defteri eklenir). B2C'de kitle her
+  oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
   Kitlenin büyüme ve erime terimi, B2C memnuniyetinin hedefi ve fiyat önerisi ürünün kitleye uyumunu okur
   (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir.
 - Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 18, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
@@ -242,7 +244,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   masada temsilci varken kurucu yalnız temsilcilerin yıldız bandının üstündeki adaylarla görüşür; `full_run_quality_core[_desk]`
   (anahtar `core_only`) sprintte Çekirdek dışı özellik ve talep kartı bırakmaz, düzeltme ve araştırma kartları kalır;
   `full_run_vc_product` ve `full_run_b2c_vc_product` seed'de ve Series A'da önce ürün fonuyla (Meridian) oturur; lead'li her
-  B2B imzada `PROBE FIT`, her hafta `PROBE UFLUX` basılır). Karar değil defter basar;
+  B2B imzada `PROBE FIT`, satışçının kaybettiği her adayda `PROBE REPLOSS`, her hafta `PROBE UFLUX` basılır). Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.

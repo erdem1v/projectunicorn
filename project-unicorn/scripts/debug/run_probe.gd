@@ -46,7 +46,7 @@ extends RefCounted
 #   PROBE LEAD  day=<d> id=<pid> arch=<archetype> sector=<sector> star=<n> phase=<p> u=<n|-> loss=<area|->
 #                                           (every B2B lead the faucet or an event puts on the desk, as it arrives;
 #                                           u is the lead's fit the day it arrives, loss the area it would miss;
-#                                           - on a fixture product without line content, which has no core to fit)
+#                                           - on a product without line content, which has no core to fit)
 #   PROBE SIGN  day=<d> hour=<h> id=<cid> by=<founder|rep> star=<n> weeks=<w> mrr=<n> sector=<s> arch=<a> tol=<n> phase=<p>
 #               areas=<area>:<level>,...
 #                                           (every B2B signing; weeks is the deal's planned length,
@@ -60,7 +60,18 @@ extends RefCounted
 #                                           signature, read before the lead leaves the registry; capped = the
 #                                           core ceiling held it, loss the area it would miss; tol the account's
 #                                           seeded tolerance. A fixture account has no lead and prints none, nor
-#                                           does a fixture product without line content)
+#                                           does a product without line content)
+#   PROBE REPLOSS day=<d> hour=<h> id=<pid> phase=<p> sector=<s> star=<n> u=<n> capped=<b> loss=<area>
+#                                           (every B2B deal a desk seller loses at the close, read as PROBE FIT reads a
+#                                           signature: u is the lead's fit the moment it is lost, before it leaves the
+#                                           registry, loss the area it lacked. The share of a seller's closes that is
+#                                           lost counts from these lines against PROBE FIT by=rep. The founder's own
+#                                           lost sittings print none)
+#   PROBE FIXTURE preset=<p> bugs=<n> under_live=<n> under_clear=<n> slack=<n> book=<id>:<clear>/<live>/<bar>,...
+#                                           (the b2b_* presets, once, after the book signs: each account's target with no
+#                                           bug open (clear) and with the backlog open (live) against its tolerance (bar);
+#                                           under_* count the accounts under their bar, slack is the least a clear target
+#                                           clears its bar by. A PROBE ERROR follows when the preset's intent no longer holds)
 #   PROBE UFLUX day=<d> changed=<n> release=<b> renewal=<n> unexplained=<n>
 #                                           (every week the B2B book is not empty, on a product with line
 #                                           content: the accounts whose fit moved since last week's reading or
@@ -189,8 +200,8 @@ const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Kli
 #                   sprint; its MVP release brings the launch audience and opens the paid tier.
 #   b2c_neglect   — a note app nobody tends, at its MVP with a bug backlog: it grows until its audience
 #                   expects more than the MVP gives, then erodes.
-#   The B2B fixtures seed a live product on a catalogue subtype without line content, so they have no
-#   sprints; b2c_neglect has the lines but starts none.
+#   The B2B fixtures seed the live ERP at a fixed ladder of line tiers (B2B_PRODUCTS) and start no sprint, so the
+#   product alone decides the book; b2c_neglect has the lines but starts none.
 
 static var _fires: Dictionary = {}      # id -> fire count
 static var _picks: Dictionary = {}      # id -> resolve count
@@ -214,6 +225,7 @@ static var _desk: bool = false              # full_run*: the founder leaves the 
 static var _release_seen: bool = false      # PROBE UFLUX: a version shipped since the last weekly reading
 static var _account_u: Dictionary = {}      # PROBE UFLUX: account id -> its fit at the last reading or its signature
 static var _u_unexplained_weeks: int = 0    # PROBE END: the weeks PROBE UFLUX counted an unexplained account
+static var _lost_lead: Prospect = null      # PROBE REPLOSS: the lead the last reported loss took off the registry
 static var _bugs_open: int = 0              # PROBE BUGS: the open bugs at the last weekly line
 static var _bugs_cleared: int = 0           # PROBE BUGS: bugs a fix card cleared since then
 static var _runway_weeks: Dictionary = {}   # phase -> Vector2i(weeks with a finite runway, weeks)
@@ -237,8 +249,7 @@ static var _vc_booked: String = ""          # the fund the current booking is wi
 static var _vc_meet_day: int = -1           # the day the last meeting was played
 const TABLE_PUSH_CAP := 64                  # runaway backstop for a push loop, never reached in play
 const DUE_BUGS := 2                         # the "due" arm fixes every line with this many open bugs
-const FIXTURE_BUG_LINE := "line_erp_ledger"   # the stability line the fixture presets put their bugs on
-const SLIP_BUGS := 24                       # b2b_slip: the backlog whose cost the cleared product wins back
+const FIXTURE_BUG_LINE := "line_erp_ledger"   # the ERP core line the fixture presets put their bugs on (every B2B account uses it)
 
 
 # ============================================================================
@@ -368,6 +379,8 @@ static func _wire_log() -> void:
 	EventBus.meeting_entered.connect(func(_lead_id: String) -> void:
 		_meetings_by_day[GameState.day] = int(_meetings_by_day.get(GameState.day, 0)) + 1)
 	EventBus.deal_signed.connect(_on_signed)
+	EventBus.meeting_lost.connect(_on_lost)
+	EventBus.rep_deal_lost.connect(_on_rep_lost)
 	EventBus.prospect_arrived.connect(_on_lead)
 	EventBus.version_shipped.connect(func(_n: int) -> void: _release_seen = true)
 
@@ -597,6 +610,22 @@ static func _on_signed(customer_id: String, _seats: int, _seat_price: int) -> vo
 	_account_u[customer_id] = ProductQuality.account_fit(c).value
 
 
+## A loss is reported before its lead leaves the registry (SalesFinalizer.lose) and the desk seller's signal comes after it,
+## so the lead is kept here until PROBE REPLOSS reads its fit.
+static func _on_lost(account: String, _reason: String) -> void:
+	_lost_lead = null
+	for lead: Prospect in ProspectRegistry.get_all():
+		if lead.company_name == account:
+			_lost_lead = lead
+
+
+static func _on_rep_lost(_rep_id: String, lead_id: String, area: String) -> void:
+	var fit: Dictionary = ProductQuality.prospect_fit(_lost_lead)
+	print("PROBE REPLOSS day=%d hour=%d id=%s phase=%d sector=%s star=%d u=%d capped=%s loss=%s" % [
+		GameState.day, GameState.current_hour, lead_id, GameState.phase, _lost_lead.industry, _lost_lead.star,
+		fit.value, str(fit.capped), area])
+
+
 static func _on_lead(lead_id: String) -> void:
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
 	var fit: Dictionary = ProductQuality.prospect_fit(p) if _fit_readable() else {"value": "-", "loss_area": ""}
@@ -605,7 +634,7 @@ static func _on_lead(lead_id: String) -> void:
 		fit.value, fit.loss_area if fit.loss_area != "" else "-"])
 
 
-## A fixture product without line content (saas_ops) has no core area to fit: its leads read `u=-` and its
+## A product with no line content (no type picked yet) has no core area to fit: its leads read `u=-` and its
 ## signatures and accounts print no fit.
 static func _fit_readable() -> bool:
 	return not SprintCatalog.capabilities("core").is_empty()
@@ -663,11 +692,12 @@ static func _log_customers() -> void:
 	# The churn autopsy's raw material. TARGET is the number each account drifts toward
 	# (B2BSalesSystem.satisfaction_target), and it is printed beside satisfaction and tolerance
 	# because "why did nobody slide" and "why did everybody slide" are the same question asked
-	# of these three numbers. The SAT line's target is the bare stability axis.
-	var health: float = QualityModel.axis_score(QualityModel.dims_from_flags(), "stability")
+	# of these three numbers. The SAT line's target is the book's mean fit, the product term alone.
 	var book: Array = CustomerRegistry.get_by_market("b2b")
 	var satisfied: int = 0
+	var fit_sum: int = 0
 	for c in book:
+		fit_sum += ProductQuality.account_fit(c).value
 		if c.satisfaction >= c.tolerance:
 			satisfied += 1
 		print("PROBE CUST day=%d id=%s sat=%d tol=%d target=%d trust=%.1f phase=%s streak=%d cd=%d mrr=%d bugs=%d" % [
@@ -678,7 +708,7 @@ static func _log_customers() -> void:
 	# tolerance re-seat is judged by ("~60-70% of a 5-account book for a good v1, ~20% bad").
 	if not book.is_empty():
 		print("PROBE SAT day=%d satisfied=%d/%d target=%d" % [GameState.day, satisfied, book.size(),
-			clampi(int(round(health)), 0, 100)])
+			roundi(float(fit_sum) / book.size())])
 
 
 ## PROBE UFLUX — the B2B book's fit read once a week against the last reading (or the account's signature). A
@@ -1881,44 +1911,18 @@ static func _seed_world(preset: String) -> void:
 			_seed_b2c_world()
 		"b2c_neglect":
 			_seed_b2c_neglect()
-		"b2b_solo":
-			_seed_b2b_world(0)
-		"b2b_reps":
-			_seed_b2b_world(2)
-		"b2b_risk":
-			# Same book, a product under real strain — the ONLY configuration in which the
-			# retention → promise → build → churn chain is reachable, because the B2B
-			# satisfaction target IS the product's stability score. Stated plainly as a
-			# CONSTRUCTED pressure state: the healthy fixture (b2b_solo) parks the whole
-			# book at target 49-51 against tolerances of 35-50 and nothing ever slides,
-			# which is itself one of the probe's own findings.
-			_seed_b2b_world(0)
-			# DERIVED, not authored. Unsalvageable = the zero-bug axis
-			# sits 8 under the SMALL bar; the backlog (14) only makes it worse.
-			_seed_stability_fixture("b2b_risk", _raw_for_axis(_bar_small() - 8.0), 14)
-		"b2b_slip":
-			# RECOVERABLE pressure, and the distinction from b2b_risk is the whole point.
-			# b2b_risk is UNSALVAGEABLE by construction: the satisfaction target sits below
-			# every tolerance in the book even at zero bugs. This preset sits the target near
-			# the mid/enterprise bar while the bug backlog is live and clearly over it once the
-			# backlog is cleared — so a founder who answers the demand AND cleans up keeps the
-			# account, and one who ignores it does not.
-			_seed_b2b_world(0)
-			# DERIVED. With the backlog live the axis sits half a point over the
-			# MID bar (inside [T_mid, T_mid+5): small accounts safe, sector-picky mids and the
-			# enterprise under); cleared, it must clear T_mid+7 — checked at seed time.
-			_seed_stability_fixture("b2b_slip", _raw_for_axis(_bar_mid() + 0.5 + _bug_penalty(SLIP_BUGS)), SLIP_BUGS)
+		"b2b_solo", "b2b_reps", "b2b_risk", "b2b_slip":
+			_seed_b2b_world(preset)
 
 
 ## A product already live on day 1. mvp_launch_day is stamped here because the fixture skips
 ## the sprint close, its only writer, and every weeks_since_flag trigger reading it would
 ## otherwise stay false forever.
-static func _seed_live_product(market: String, subtype: String, components: Array, product_name: String) -> void:
+static func _seed_live_product(market: String, subtype: String, product_name: String) -> void:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_launch_day", GameState.day)
 	GameState.set_flag("mvp_market_type", market)
 	GameState.set_flag("mvp_sub_product_type_id", subtype)
-	GameState.set_flag("mvp_components", components)
 	GameState.set_flag("mvp_version", 1)
 	GameState.set_flag("mvp_product_name", product_name)
 
@@ -1939,7 +1943,7 @@ static func _seed_b2c_world() -> void:
 ## audience, and nobody sprints. The audience outgrows what the MVP gives and the product falls behind it: the
 ## "declining" arm of the B2C growth measurement.
 static func _seed_b2c_neglect() -> void:
-	_seed_live_product("b2c", "note_tool", [], "Nova")
+	_seed_live_product("b2c", "note_tool", "Nova")
 	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
 		ProductState.set_line_tier(line_id, 1)
 	ProductState.add_bugs(FIXTURE_BUG_LINE, 12)
@@ -1947,66 +1951,67 @@ static func _seed_b2c_neglect() -> void:
 	SalesSystem.open_b2c_paid_tier(15)
 
 
-# --- Fixture arithmetic ---
-# axis(s) = 100·s/(s+H) (QualityModel.normalized_quality) and its inverse. Fixture
-# stability is DERIVED from the tolerance bars at seed time so each preset's documented
-# intent line survives a tolerance move; _seed_stability_fixture prints the derived value
-# and a PROBE ERROR if the intent inequality it was derived for no longer holds.
-static func _raw_for_axis(axis: float) -> float:
-	var a: float = clampf(axis, 0.0, 99.0)
-	return QualityModel.NORMALIZE_HALF_SAT * a / (100.0 - a)
+# --- The B2B presets' world ---
+
+## The B2B presets' ERP, shipped line by line: the tiers of the five core lines, the tier of every other line, the open bugs
+## on the core line (`FIXTURE_BUG_LINE`, which every account uses) and whether the book is settled (its onboarding floors
+## have lifted, so the product alone decides). The pressure of each preset is DERIVED from the accounts' own fit and bars:
+## `_check_b2b_fixture` prints it at seed time and answers a PROBE ERROR when the intent no longer holds.
+##   b2b_solo, b2b_reps: every line at K1. The 1★ and 2★ accounts are steady, the 3★ one slides.
+##   b2b_risk: UNSALVAGEABLE. One core line at K1 and nothing else, so every account's target sits under its bar even with no
+##             bug open.
+##   b2b_slip: RECOVERABLE. The K1 ladder with four core lines at K2. With the backlog open the 3★ account sits just under its
+##             bar; cleared, every account sits over it. A founder who answers the demand AND cleans up keeps the account,
+##             and one who ignores it does not.
+const B2B_PRODUCTS := {
+	"b2b_solo": {"core": [1, 1, 1, 1, 1], "rest": 1, "bugs": 4, "settled": false},
+	"b2b_reps": {"core": [1, 1, 1, 1, 1], "rest": 1, "bugs": 4, "settled": false},
+	"b2b_risk": {"core": [1, 0, 0, 0, 0], "rest": 0, "bugs": 14, "settled": true},
+	"b2b_slip": {"core": [2, 2, 2, 2, 1], "rest": 1, "bugs": 24, "settled": true},
+}
+## b2b_slip: the points every account clears its bar by once the backlog is cleared.
+const SLIP_CLEAR_MARGIN := 3
 
 
-## What `bugs` open bugs on the lines an account uses take off its satisfaction target.
-static func _bug_penalty(bugs: int) -> float:
-	return minf(B2BConstants.B2B_BUG_SAT_PER * float(bugs), float(B2BConstants.B2B_BUG_SAT_CAP))
-
-
-static func _axis_of(raw_stability: float, bugs: int) -> float:
-	return QualityModel.axis_score({"stability": raw_stability}, "stability") - _bug_penalty(bugs)
-
-
-static func _bar_small() -> float:
-	return float(B2BConstants.seed_tolerance(2, ""))   # a small account: scale 2, no sector
-
-
-static func _bar_mid() -> float:
-	return float(B2BConstants.seed_tolerance(3, ""))   # a mid/enterprise account: scale 3, no sector
-
-
-static func _seed_stability_fixture(preset: String, raw_stability: float, bugs: int) -> void:
-	GameState.set_flag("mvp_stability", raw_stability)
-	ProductState.add_bugs(FIXTURE_BUG_LINE, bugs)
-	var live_axis: float = _axis_of(raw_stability, bugs)
-	var clear_axis: float = _axis_of(raw_stability, 0)
-	var ok: bool = true
+## The preset's intent, read off the signed book: each account's target with the backlog open and with none, against its bar
+## (`book` lists id:clear/live/bar). The product alone decides the book, so a table or tolerance move that breaks the intent
+## prints a PROBE ERROR instead of silently measuring another world.
+static func _check_b2b_fixture(preset: String) -> void:
+	var book: Array = CustomerRegistry.get_by_market("b2b")
+	var rows: PackedStringArray = []
+	var under_live: int = 0
+	var under_clear: int = 0
+	var slack: int = 100   # the least a cleared target clears its bar by
+	for c in book:
+		var clear: int = ProductQuality.account_fit(c).value
+		var live: int = B2BSalesSystem._target_on(c, B2BSalesSystem.onboarding_floor_until(c), 0.0)   # the target once its floor lifts, no trust
+		under_live += int(live < c.tolerance)
+		under_clear += int(clear < c.tolerance)
+		slack = mini(slack, clear - c.tolerance)
+		rows.append("%s:%d/%d/%d" % [c.id, clear, live, c.tolerance])
+	var ok: bool = false
 	match preset:
-		"b2b_solo":
-			ok = live_axis >= _bar_small() + 3.0 and live_axis < _bar_mid()
-		"b2b_slip":
-			ok = live_axis >= _bar_mid() and live_axis < _bar_mid() + 5.0 and clear_axis >= _bar_mid() + 7.0
+		"b2b_solo", "b2b_reps":
+			ok = under_live > 0 and under_live < book.size()
 		"b2b_risk":
-			ok = clear_axis < _bar_small() - 5.0
-	print("PROBE FIXTURE preset=%s stability=%.1f bugs=%d axis_live=%.1f axis_clear=%.1f bar_small=%d bar_mid=%d" % [
-		preset, raw_stability, bugs, live_axis, clear_axis, int(_bar_small()), int(_bar_mid())])
+			ok = under_clear == book.size()
+		"b2b_slip":
+			ok = under_live > 0 and slack >= SLIP_CLEAR_MARGIN
+	print("PROBE FIXTURE preset=%s bugs=%d under_live=%d under_clear=%d slack=%d book=%s" % [
+		preset, ProductState.open_bugs(), under_live, under_clear, slack, ",".join(rows)])
 	if not ok:
-		print("PROBE ERROR fixture drifted: %s no longer satisfies its intent inequality (re-derive after a tolerance move)" % preset)
-	# The pressure presets call this again once the book is signed: every account's onboarding floor has lifted.
-	for c in CustomerRegistry.get_by_market("b2b"):
-		c.acquired_on_day = GameState.day - TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
+		print("PROBE ERROR fixture drifted: %s no longer satisfies its intent (re-derive after a table or tolerance move)" % preset)
 
 
-static func _seed_b2b_world(rep_count: int) -> void:
-	_seed_live_product("b2b", "saas_ops", ["saas_ops_workflow", "saas_ops_reporting"], "Sahra")
-	# A MID product on purpose: with its 4 open bugs the stability AXIS sits above a small
-	# account's tolerance bar and below a scaled one's, so the book holds a mix of steady
-	# and sliding accounts. The satisfaction TARGET is this axis less the bugs' cost, so it is the most
-	# load-bearing fixture value in the log — which is why it is DERIVED from the live bars
-	# rather than authored as a raw number.
-	GameState.set_flag("mvp_innovation", 20.0)
-	GameState.set_flag("mvp_experience", 22.5)
-	_seed_stability_fixture("b2b_solo",
-		_raw_for_axis((_bar_small() + 3.0 + _bar_mid()) * 0.5 + _bug_penalty(4)), 4)
+static func _seed_b2b_world(preset: String) -> void:
+	var spec: Dictionary = B2B_PRODUCTS[preset]
+	_seed_live_product("b2b", "erp", "Sahra")
+	for line_id in ProductLines.line_ids("erp"):
+		ProductState.set_line_tier(String(line_id), int(spec.rest))
+	var core: Array[String] = SprintCatalog.capabilities("core")
+	for i in core.size():
+		ProductState.set_line_tier(core[i], int(spec.core[i]))
+	ProductState.add_bugs(FIXTURE_BUG_LINE, int(spec.bugs))
 
 	# Five accounts through the real signing seam (SalesSystem.add_b2b_customer — the
 	# sole B2B signing path), spread across archetypes so tolerance seeds differ and the
@@ -2039,8 +2044,12 @@ static func _seed_b2b_world(rep_count: int) -> void:
 		# §5.3 — the deal is SEATS x SEAT PRICE: seat counts inside each star's band at the
 		# Standard price anchor (MRR 350 / 800 / 700 / 300 / 550).
 		SalesSystem.add_b2b_customer(p, int(s["seats"]), int(s["price"]), int(s["sat"]))
+	if spec.settled:
+		for c in CustomerRegistry.get_by_market("b2b"):
+			c.acquired_on_day = GameState.day - TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
+	_check_b2b_fixture(preset)
 
-	for i in rep_count:
+	for i in (2 if preset == "b2b_reps" else 0):
 		var c := Character.new()
 		c.id = "probe_cs_%d" % i
 		c.character_name = "Temsilci %d" % (i + 1)

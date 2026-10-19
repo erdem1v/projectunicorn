@@ -412,13 +412,11 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	return c
 
 
-## A signed B2B account's opening satisfaction: Stability + Experience, off the raw axes
-## (reliability and ease, which is what a business buyer feels on day one). Both signing paths,
-## the played meeting and the rep's own close, read it, so the two cannot drift apart.
-static func signing_satisfaction_seed() -> int:
-	var dims: Dictionary = QualityModel.dims_from_flags()
-	return int(round(
-		(QualityModel.axis_score(dims, "stability") + QualityModel.axis_score(dims, "experience")) * 0.5))
+## A signed B2B account's opening satisfaction: how well the product fits the prospect the day it signs (the same U the
+## meeting and the rep's die read). Both signing paths, the played meeting and the rep's own close, read it, so the two
+## cannot drift apart.
+static func signing_satisfaction_seed(prospect: Prospect) -> int:
+	return ProductQuality.prospect_fit(prospect).value
 
 
 # --- B2C satisfaction tick ---

@@ -265,7 +265,7 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	var seat_price: int = SalesLedger.seat_price_anchor(lead.work_stance)
 	var seats: int = _seats_for(lead)
 	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, seat_price,
-		SalesSystem.signing_satisfaction_seed(), "sales_rep:%s" % rep.id)
+		SalesSystem.signing_satisfaction_seed(lead), "sales_rep:%s" % rep.id)
 	ProspectRegistry.remove(lead.id)
 	SalesLedger.record_close(c, rep.character_name)
 	SalesSystem.record_sales_event("auto_close", rep.character_name, c.company_name, c.mrr)
