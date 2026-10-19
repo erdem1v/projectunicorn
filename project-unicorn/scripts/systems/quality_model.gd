@@ -25,15 +25,13 @@ const DEFAULT_AXES := [
 # Saturation half-point: the composite that maps to normalized 50, i.e. where a shipped
 # v1 lands on the 0-100 market band. At 25 a stability-competent v1 (raw 17-20) reads
 # 40-44, the middle of the B2B tolerance band (B2BConstants). Tuned together with those
-# tolerances, the saas_ops_field research unlock, the B2C satisfaction target (SalesSystem
-# drifts the userbase toward the experience score on this scale) and RIVAL_TEMPLATE_HALF_SAT:
-# the four are one decision.
+# tolerances, the saas_ops_field research unlock and RIVAL_TEMPLATE_HALF_SAT: the three are one
+# decision.
 const NORMALIZE_HALF_SAT := 25.0
 # Rival scale bridge. RivalCatalog.TEMPLATE and its momentum were authored for a
 # half-point of 50; normalizing rivals at the player's 25 would double every rival's
 # lead in normalized space. Rivals keep 50 until the rival table is re-authored.
-# The one reader is SalesSystem._rival_relative_quality; raw-vs-raw comparisons
-# (RivalRegistry ranking) are unaffected.
+# No economy path reads it; raw-vs-raw comparisons (RivalRegistry ranking) are unaffected.
 const RIVAL_TEMPLATE_HALF_SAT := 50.0
 
 

@@ -34,7 +34,10 @@ extends RefCounted
 #               lost=<f> q=<f> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
 #               validation_day=<f>          (every week a consumer product is live; desk = the
 #                                           support desk's roster, inflow and validation per day;
-#                                           lost = the users the audience has lost to erosion and bug churn)
+#                                           lost = the users the audience has lost to erosion and bug churn;
+#                                           sat_target = the fit of the core and the way in, the number the
+#                                           record drifts toward; q = the B2C quality term the audience and the
+#                                           price read, the product's fit to its audience x 5/7)
 #   PROBE CHURN day=<d> id=<cid> ...        (customer_churned — the autopsy's terminal)
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
 #   PROBE LEAD  day=<d> id=<pid> arch=<archetype> sector=<sector> star=<n> phase=<p>
@@ -154,9 +157,10 @@ const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Kli
 # The fixtures:
 #   b2c           — a consumer product the sprint engine builds itself, the lead planning every
 #                   sprint; its MVP release brings the launch audience and opens the paid tier.
-#   b2c_neglect   — a stability-poor, bug-heavy B2C fixture nobody tends: the audience erodes.
-#   The B2B fixtures and b2c_neglect seed a live product on a catalogue subtype without line
-#   content, so they have no sprints.
+#   b2c_neglect   — a note app nobody tends, at its MVP with a bug backlog: it grows until its audience
+#                   expects more than the MVP gives, then erodes.
+#   The B2B fixtures seed a live product on a catalogue subtype without line content, so they have no
+#   sprints; b2c_neglect has the lines but starts none.
 
 static var _fires: Dictionary = {}      # id -> fire count
 static var _picks: Dictionary = {}      # id -> resolve count
@@ -569,13 +573,11 @@ static func _log_state() -> void:
 	_runway_weeks[GameState.phase] = _runway_weeks.get(GameState.phase, Vector2i.ZERO) + Vector2i(int(not is_inf(runway)), 1)
 	if GameState.seed_closed_day < 0:
 		_min_cash_pre_seed = mini(_min_cash_pre_seed, GameState.cash)
-	# The B2C aggregate (audience, its satisfaction, open bugs) and the rival-relative
-	# quality q that the audience formula actually reads — the numbers the B2C growth
-	# verdicts are read from. q is -1 before a ship (nothing to compare).
+	# The B2C aggregate (audience, its satisfaction, open bugs) and the quality term q that the
+	# audience formula actually reads — the numbers the B2C growth verdicts are read from. q is -1
+	# off a live consumer product (nothing to read).
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
-	var q: float = -1.0
-	if GameState.get_flag("mvp_shipped", false):
-		q = SalesSystem._rival_relative_quality(QualityModel.shipped_normalized())
+	var q: float = SalesSystem.b2c_quality() if ProductState.is_live() and not SalesSystem.is_b2b_market() else -1.0
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
 	var appetite: String = String(sig.get("state", "closed"))
 	# The Series A door is MRR only, so the gate reading is the signal state plus
@@ -623,8 +625,8 @@ static func _log_customers() -> void:
 
 
 ## PROBE B2C — the consumer week: the audience and who pays it at what price, the userbase's
-## satisfaction beside the experience score it drifts toward, open bugs, the users lost so far, the
-## rival-relative q the audience formula reads, interest, server occupancy, and the support
+## satisfaction beside the target it drifts toward, open bugs, the users lost so far, the
+## quality term q the audience formula reads, interest, server occupancy, and the support
 ## desk: who is on it, the reports waiting, and how many arrive and get validated a day.
 static func _log_b2c() -> void:
 	if not ProductState.is_live() or ProductState.market_type() != "b2c":
@@ -634,9 +636,9 @@ static func _log_b2c() -> void:
 	print("PROBE B2C day=%d aud=%.1f paying=%d price=%d conv=%.3f sat=%d sat_target=%d open_bugs=%d lost=%.1f q=%.1f interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f" % [
 		GameState.day, SalesSystem.b2c_audience(), SalesSystem.b2c_paying_users(), price,
 		SalesSystem.conversion_rate(price) if price > 0 else 0.0, ub.satisfaction if ub != null else -1,
-		roundi(QualityModel.axis_score(QualityModel.dims_from_flags(), "experience")),
+		SalesSystem.b2c_satisfaction_target(),
 		ProductState.open_bugs(), SalesSystem.b2c_users_lost(),
-		SalesSystem._rival_relative_quality(QualityModel.shipped_normalized()), ProductRead.interest(),
+		SalesSystem.b2c_quality(), ProductRead.interest(),
 		InfraSystem.occupancy(), SupportSystem.desk_roster().size(), ProductState.reports_incoming(),
 		SupportSystem.reports_per_day(), SupportSystem.validation_per_day()])
 
@@ -1814,14 +1816,13 @@ static func _seed_b2c_world() -> void:
 		SalesSystem.open_b2c_paid_tier(15), CONNECT_ONE_SHOT)
 
 
-## The UNTENDED consumer product: experience low enough that satisfaction drifts down toward its
-## score, a bug backlog eating the audience, and nobody sprints. The "declining" arm of the B2C growth
-## measurement.
+## The UNTENDED consumer product: the note app at its MVP (its first Core lines at K1), a bug backlog eating the
+## audience, and nobody sprints. The audience outgrows what the MVP gives and the product falls behind it: the
+## "declining" arm of the B2C growth measurement.
 static func _seed_b2c_neglect() -> void:
-	_seed_live_product("b2c", "ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], "Nova")
-	GameState.set_flag("mvp_innovation", 10.0)
-	GameState.set_flag("mvp_stability", 8.0)
-	GameState.set_flag("mvp_experience", 8.0)
+	_seed_live_product("b2c", "note_tool", [], "Nova")
+	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+		ProductState.set_line_tier(line_id, 1)
 	ProductState.add_bugs(FIXTURE_BUG_LINE, 12)
 	SalesSystem.add_b2c_audience(200)
 	SalesSystem.open_b2c_paid_tier(15)

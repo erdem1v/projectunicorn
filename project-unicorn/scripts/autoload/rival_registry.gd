@@ -27,10 +27,8 @@ func reset() -> void:
 	# Run-boundary reset (SaveManager.reset_all_owners). Rivals are the ONE registry that
 	# cannot simply be emptied: advance_all() mutates innovation/stability/experience every
 	# single tick, so by week 20 the field is nothing like the catalog — but an empty field
-	# is not a valid state either. _rival_relative_quality benchmarks the player's audience
-	# churn against the same-type startup average, and with no rivals it returns the player's
-	# own quality, i.e. the load-bearing competitive pressure silently switches off. So this
-	# RE-SEEDS from the catalog rather than clearing.
+	# is not a valid state either: the Piyasa, the news feed and the investors' rival check read
+	# the field. So this RE-SEEDS from the catalog rather than clearing.
 	_rivals.clear()
 	for r in RivalCatalog.build_all():
 		r.status = _status_for(r)

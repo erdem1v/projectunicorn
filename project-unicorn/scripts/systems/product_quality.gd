@@ -183,9 +183,11 @@ static func account_fit(c: Customer) -> Dictionary:
 
 
 ## Ürün uyumu. `ctx`: `market` ("b2b" | "b2c"), `sector` (B2C'de ""), `star`, `ref` ({alan: beklenti}; verilmezse ctx'in
-## beklentisinden kurulur, beklentisi 0 olan alan sayılmaz), `rivals`. U: 0-100. `match`: tavandan sonraki uyum. `capped`:
-## tavan devrede. `loss_area`: müşterinin eksik bulacağı alan (tavan devredeyse Çekirdek, değilse beklentisinin altındaki
-## alanların en zayıfı, yoksa ""). `weakest_emphasis`: oranı en düşük vurgu alanı. `note`: Çekirdek ve o alanın kelimesi.
+## beklentisinden kurulur, beklentisi 0 olan alan sayılmaz), `rivals`, `areas` (U yalnız bu alanlardan hesaplanır, ağırlıklar
+## kendi içinde yeniden ölçeklenir; verilmezse hepsi, Çekirdek içinde olmalı: tavan onu okur). U: 0-100. `match`: tavandan
+## sonraki uyum. `capped`: tavan devrede. `loss_area`: müşterinin eksik bulacağı alan (tavan devredeyse Çekirdek, değilse
+## beklentisinin altındaki alanların en zayıfı, yoksa ""). `weakest_emphasis`: oranı en düşük vurgu alanı. `note`: Çekirdek
+## ve o alanın kelimesi.
 static func fit(ctx: Dictionary) -> Dictionary:
 	return fit_from_levels(_levels(ctx), ctx)
 
@@ -203,7 +205,7 @@ static func fit_from_levels(levels: Dictionary, ctx: Dictionary) -> Dictionary:
 	var ratios: Dictionary = {}
 	var weighted: float = 0.0
 	var total: float = 0.0
-	for area in w:
+	for area in ctx.get("areas", w.keys()):
 		var expect: float = float(ref.get(area, 0.0))
 		if expect > 0.0:
 			ratios[area] = _ratio(float(levels[area]), expect)

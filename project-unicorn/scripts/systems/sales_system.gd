@@ -24,10 +24,19 @@ extends RefCounted
 const B2C_PRICE_DEFAULT := 15            # $/user/month; apply_b2c_price sets this
 const B2C_USERBASE_ID := "co_b2c_userbase"
 
-# B2C aggregate satisfaction drifts toward the EXPERIENCE axis score: the axis the record is
-# SEEDED from (_ensure_b2c_record), and what a consumer feels week to week. A target instead of
-# a threshold, so a product settles at its own experience reading rather than sliding to 0
-# under a bar it cannot reach.
+# The B2C economy reads the product's fit to its audience (ProductQuality, audience context): the
+# audience is the market, and a rival launch inside the rival window raises what it expects.
+const B2C_FIT_CTX := {"market": "b2c", "sector": "", "rivals": true}
+# The growth, erosion and price formulas read that fit (U, 0-100) as a quality term on their own scale:
+# a product that meets its audience's expectation (U 70) reads 50, the point EROSION_THRESHOLD and the
+# coefficients below sit against.
+const B2C_QUALITY_PER_FIT := 5.0 / 7.0     # [WORKING] onay bekliyor
+# What a new user feels first: the core and the way in. Satisfaction reads these two alone.
+const B2C_SATISFACTION_AREAS := ["core", "onboarding"]
+
+# B2C aggregate satisfaction drifts toward b2c_satisfaction_target: the fit of those two areas, which is
+# also what the record is SEEDED with (_ensure_b2c_record). A target instead of a threshold, so a product
+# settles at its own reading rather than sliding to 0 under a bar it cannot reach.
 const SATISFACTION_DRIFT_PER_DAY := 1.5    # [WORKING] max move a day toward the target
 
 # THE SERIES A REVENUE BAR, inside the [100,000-150,000] band. The Series A gate is MRR only;
@@ -50,31 +59,30 @@ const HOURLY_AUD_BRAND_COEF := 0.004
 const HOURLY_AUD_REPUTATION_COEF := 0.01   # raw reputation (-10..100): 0 neutral, + grows, − erodes
 
 # --- Erosion / churn ---
-# When the product falls below EROSION_THRESHOLD (a rival passes → quality_term drops), churn
+# When the product falls below EROSION_THRESHOLD (the audience outgrows it → quality_term drops), churn
 # overcomes the positive base → audience FALLS (not just slows). Kept as a separate additive
-# term so the normalization contract is untouched. BALANCE-TUNABLE.
+# term. BALANCE-TUNABLE.
 # CHURN is PROPORTIONAL to the current audience (churn = losing existing users, so
 # nothing to lose at audience 0 → a fresh product can grow from 0). CHURN_COEF is a
 # per-audience-member rate: at audience 200, gap 10 → 0.000036·10·200 = 0.072 users/hour.
-# [WORKING] About 0.6 % of the audience a week per point under the threshold: the MVP reads 8 to
-# 10 and a finished K1 ladder 14 to 18, both under it, and the K2 steps lift the product over it,
-# so a product that stops at K1 keeps bleeding and one that keeps shipping climbs out.
+# [WORKING] About 0.6 % of the audience a week per point under the threshold: a product the audience
+# has outgrown keeps bleeding, and one that keeps shipping climbs out.
 const CHURN_COEF := 0.000036
 # WORD OF MOUTH — the proportional growth term. Base growth is an ABSOLUTE per-hour trickle
 # and churn is PROPORTIONAL to the audience; alone they settle at a fixed point
-# (A_eq = grow / (CHURN_COEF·(EROSION_THRESHOLD−q))) that never compounds and shrinks as rivals
-# advance. Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product
+# (A_eq = grow / (CHURN_COEF·(EROSION_THRESHOLD−q))) that never compounds and shrinks as the audience's
+# expectation rises. Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product
 # compounds — grow += audience · WOM_COEF · max(0, sat − WOM_SAT_GATE)/100 — and a disliked one
 # grows slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). Satisfaction drifts to
-# the experience score, which an MVP reads at about 14 and a finished K1 ladder at about 24, and
-# an unstaffed support desk holds the record near 10: the pivot sits at that level, so a kept MVP
-# grows at close to full base rate, and the gate sits over it, so compounding needs more
-# experience than the K1 ladder ships with.
+# b2c_satisfaction_target (70 while the core and the way in meet the audience's expectation), and an
+# unstaffed support desk holds the record near 10: the pivot sits at that level, so a kept product
+# grows at full base rate, and the gate sits over it, so compounding needs a product its audience
+# is mostly satisfied with.
 const WOM_COEF := 0.0012           # [WORKING] per hour · per audience member · per satisfaction point/100 over the gate; ~6 % a week at 30 points over
 const WOM_SAT_GATE := 30.0         # [WORKING] satisfaction above which word of mouth starts
 const WOM_MULT_PIVOT := 15.0       # [WORKING] satisfaction at which base growth runs at full strength
 const WOM_MULT_MIN := 0.3          # [WORKING] floor of the base-growth multiplier (satisfaction 0)
-const EROSION_THRESHOLD := 25.0    # [WORKING] rival-relative quality (50 = startup-league parity) under which the audience bleeds
+const EROSION_THRESHOLD := 25.0    # [WORKING] B2C quality term (50 = the product meets its audience's expectation) under which the audience bleeds
 # Open bugs cost customers, not quality: each open bug (up to the cap) makes this share of the audience
 # leave every calendar hour, next to the erosion above. No threshold, the first bug starts it.
 const B2C_BUG_CHURN_COEF := 0.000001   # [WORKING] onay bekliyor
@@ -88,7 +96,7 @@ const B2C_BUG_CHURN_CAP := 40          # [WORKING] onay bekliyor
 const VALUE_BASE := 4.0
 const VALUE_QUALITY_COEF := 0.12         # per quality point (0-100)
 # A finished ladder opens about nine lines and eighteen usage-weight points, so at these weights
-# it is worth about 13, a little over the quality term (≤ 12).
+# it is worth about 13, a little over the quality term (≤ 9).
 const VALUE_FEATURE_COEF := 0.75          # [WORKING] per open line (ProductState.lines_open)
 const VALUE_COMPLEXITY_COEF := 0.375       # [WORKING] per live usage-weight point (ProductState.usage_weight_total)
 const VALUE_FLOOR_RATIO := 0.5           # lower-bound mark = optimal × this
@@ -117,10 +125,10 @@ static func daily_tick() -> void:
 	# THE MARKET GATE, symmetric with hourly_tick's (Satış §3.1): the B2B desk — lifecycle,
 	# retention, expansion, faucet, the autonomous rep systems — runs only on a B2B product.
 	if GameState.get_flag("mvp_shipped", false):
-		_tick_satisfaction()
 		if is_b2b_market():
 			B2BSalesSystem.daily_tick()
 		else:
+			_tick_satisfaction()
 			# The week's sample; the Sales page draws the same HISTORY_WEEKS as columns.
 			const HISTORY_WEEKS := 26
 			var weeks: Array = GameState.get_flag("b2c_audience_history", [])
@@ -140,8 +148,10 @@ static func is_b2b_market() -> bool:
 
 static func hourly_tick(hour: int) -> void:
 	if GameState.get_flag("mvp_shipped", false) and not is_b2b_market():
-		_tick_b2c_audience()
-		_derive_b2c_mrr()      # MRR = paying(audience,price) × price
+		# The product's fit is read once an hour and shared by the audience flow, the price and the conversion.
+		var quality: float = b2c_quality()
+		_tick_b2c_audience(quality)
+		_derive_b2c_mrr(quality)      # MRR = paying(audience,price) × price
 	elif hour == SalesConstants.DEAL_HALF_WEEK_HOUR and SalesFaucetSystem.market_open():
 		SalesRepSystem.sign_due()
 	reflect_mrr()
@@ -157,29 +167,28 @@ static func reflect_mrr() -> void:
 		GameState.set_mrr(total_mrr)
 
 
-static func _tick_b2c_audience() -> void:
+static func _tick_b2c_audience(quality: float = b2c_quality()) -> void:
 	# TASARIM KANONU: canlı ürünün ekonomisi ASLA donmaz, sprint sırasında da.
 	# Accumulate as float so small per-hour deltas (especially slow erosion) survive
 	# instead of rounding to zero each hour. A tick is a week, so each of its 24 hourly steps
 	# carries seven calendar hours of the flow.
-	var delta: float = TimeModel.per_tick(_audience_delta_per_hour())
-	var lost: float = TimeModel.per_tick(_audience_loss_per_hour())
+	var delta: float = TimeModel.per_tick(_audience_delta_per_hour(quality))
+	var lost: float = TimeModel.per_tick(_audience_loss_per_hour(quality))
 	GameState.set_flag("b2c_audience", maxf(0.0, b2c_audience() + delta))
 	GameState.set_flag("b2c_users_lost", b2c_users_lost() + lost)
 
 
 # Shared audience-growth delta per calendar hour: _tick_b2c_audience and growth_band BOTH call
-# this, so the "büyüyor / eriyor" verdict can never drift from the actual audience motion.
-# Quality is the normalized, type-weighted composite of the raw axes. Interest (Ürün §9) scales base
+# this, so the "büyüyor / eriyor" verdict can never drift from the actual audience motion. `quality` is the
+# B2C quality term, read once an hour by hourly_tick and handed down. Interest (Ürün §9) scales base
 # acquisition through the same band the B2B faucet reads, so a fresh release pulls users in and an aging
 # one slows the trickle.
-static func _audience_delta_per_hour() -> float:
-	var quality_term: float = _rival_relative_quality(QualityModel.shipped_normalized())
+static func _audience_delta_per_hour(quality: float = b2c_quality()) -> float:
 	var grow: float = (HOURLY_AUD_BASE \
-		+ quality_term * HOURLY_AUD_QUALITY_COEF \
+		+ quality * HOURLY_AUD_QUALITY_COEF \
 		+ GameState.brand * HOURLY_AUD_BRAND_COEF \
 		+ GameState.reputation * HOURLY_AUD_REPUTATION_COEF) \
-		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0))) \
+		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0)), quality) \
 		* SalesConstants.interest_mult(ProductRead.interest()) \
 		* InfraSystem.acquisition_multiplier()   # Ürün §10: over capacity, B2C acquisition ×0,6
 	var audience: float = b2c_audience()
@@ -193,44 +202,32 @@ static func _audience_delta_per_hour() -> float:
 	# A card's marketing push lifts the whole intake, word of mouth included; erosion is untouched.
 	grow *= FinanceSystem.marketing_growth_mult()
 	# Price-independent, so the loss sits outside the multiplier.
-	return grow - _audience_loss_per_hour()
+	return grow - _audience_loss_per_hour(quality)
 
 
 # Users leaving per calendar hour: a product below EROSION_THRESHOLD bleeds them (see CHURN_COEF) and
 # every open bug adds its share (B2C_BUG_CHURN_COEF). Both are proportional to the audience.
-static func _audience_loss_per_hour() -> float:
-	var quality_term: float = _rival_relative_quality(QualityModel.shipped_normalized())
-	var erosion: float = CHURN_COEF * maxf(0.0, EROSION_THRESHOLD - quality_term)
+static func _audience_loss_per_hour(quality: float = b2c_quality()) -> float:
+	var erosion: float = CHURN_COEF * maxf(0.0, EROSION_THRESHOLD - quality)
 	var bugs: float = B2C_BUG_CHURN_COEF * float(mini(ProductState.costed(ProductState.open_bugs()), B2C_BUG_CHURN_CAP))
 	return (erosion + bugs) * b2c_audience()
 
 
-# Recenters the quality term around the same-type rival average. Benchmark = the STARTUP
-# LEAGUE only (the player's real competition). Giants / established are aspiration, NOT the
-# churn benchmark — averaging the full field (giants ≈ norm 85) would put a fresh player
-# permanently below it → guaranteed death-spiral. Startup rivals advance daily, so the bar
-# rises → "feed it or fall behind" pressure that stays recoverable.
-static func _rival_relative_quality(player_nq: float) -> float:
-	var sub: String = ProductState.subtype()
-	var axes: Array = ProductCatalog.get_quality_axes(sub)
-	var total: float = 0.0
-	var n: int = 0
-	for r in RivalRegistry.get_by_type(sub):
-		if r.tier == "startup":
-			total += QualityModel.normalized_quality_rival(r.composite(axes))   # rival scale bridge
-			n += 1
-	if n == 0:
-		return player_nq
-	return clampf(50.0 + (player_nq - total / float(n)), 0.0, 100.0)
+## The B2C quality term the growth, erosion and price formulas read: the product's fit to its audience (U) on the
+## scale of B2C_QUALITY_PER_FIT. What the audience expects rises with its size and, for a while, with a rival
+## launch, so a product that stops growing meets it less each week and starts to bleed. Before the launch there is no
+## audience to fit, and the seams read this term then too.
+static func b2c_quality() -> float:
+	return ProductQuality.fit(B2C_FIT_CTX).value * B2C_QUALITY_PER_FIT if ProductState.is_live() else 0.0
 
 
 # MRR derives from the live audience + price. Sets the aggregate B2C record absolutely
 # (seats = paying users, mrr = paying × price). No-op until a price has been set.
-static func _derive_b2c_mrr() -> void:
+static func _derive_b2c_mrr(quality: float = b2c_quality()) -> void:
 	if not GameState.get_flag("b2c_paid_tier_open", false):
 		return  # no price yet → no paying users (audience still builds on the tick)
 	var price: int = int(GameState.get_flag("b2c_price", B2C_PRICE_DEFAULT))
-	var paying: int = int(round(int(b2c_audience()) * conversion_rate(price)))
+	var paying: int = int(round(int(b2c_audience()) * conversion_rate(price, quality)))
 	_ensure_b2c_record()
 	CustomerRegistry.set_seats(B2C_USERBASE_ID, paying)
 	CustomerRegistry.set_mrr(B2C_USERBASE_ID, paying * price)
@@ -240,8 +237,6 @@ static func _derive_b2c_mrr() -> void:
 static func _ensure_b2c_record() -> void:
 	if CustomerRegistry.get_customer(B2C_USERBASE_ID) != null:
 		return
-	# Seed satisfaction from the EXPERIENCE axis (ease-of-use → happy new users).
-	var seed_sat: int = int(round(QualityModel.axis_score(QualityModel.dims_from_flags(), "experience")))
 	var base := Customer.new()
 	base.id = B2C_USERBASE_ID
 	# NOT baked: the name is composed copy, so it is stored as a key + argument (company_name
@@ -254,7 +249,7 @@ static func _ensure_b2c_record() -> void:
 	base.market_type = "b2c"
 	base.acquisition_source = "organic"
 	base.acquired_on_day = GameState.day
-	base.satisfaction = clampi(seed_sat, 0, 100)
+	base.satisfaction = b2c_satisfaction_target()   # the record opens where it will drift to
 	base.update_health_from_satisfaction()
 	CustomerRegistry.add(base)
 
@@ -292,8 +287,9 @@ static func b2c_paying_users() -> int:
 
 ## New users a week brings, before erosion takes any (a card prices what it keeps from them by it).
 static func weekly_new_users() -> int:
+	var quality: float = b2c_quality()
 	return roundi(float(TimeModel.HOURS_PER_DAY) * TimeModel.per_tick(
-		_audience_delta_per_hour() + _audience_loss_per_hour()))
+		_audience_delta_per_hour(quality) + _audience_loss_per_hour(quality)))
 
 
 # Event audience lever (`audience_delta`, and `churn_customer` on the B2C aggregate): moves the
@@ -427,12 +423,21 @@ static func signing_satisfaction_seed() -> int:
 
 # --- B2C satisfaction tick ---
 
+## What B2C satisfaction drifts toward: the fit (U) of the core and the way in alone, in the audience context. The
+## weights rescale inside the two areas.
+static func b2c_satisfaction_target() -> int:
+	return ProductQuality.fit(B2C_FIT_CTX.merged({"areas": B2C_SATISFACTION_AREAS})).value
+
+
 static func _tick_satisfaction() -> void:
-	# Drift toward the experience score, a day's step a day and seven days a tick, stopping at
+	# Drift toward b2c_satisfaction_target, a day's step a day and seven days a tick, stopping at
 	# the target. B2B satisfaction is owned by B2BSalesSystem (two-layer model).
-	var target: int = int(round(QualityModel.axis_score(QualityModel.dims_from_flags(), "experience")))
+	var users: Array = CustomerRegistry.get_by_market("b2c")
+	if users.is_empty():
+		return
+	var target: int = b2c_satisfaction_target()
 	var step: int = int(TimeModel.per_tick(SATISFACTION_DRIFT_PER_DAY))
-	for c in CustomerRegistry.get_by_market("b2c"):
+	for c in users:
 		var delta: int = clampi(target - c.satisfaction, -step, step)
 		if delta != 0:
 			CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
@@ -440,12 +445,11 @@ static func _tick_satisfaction() -> void:
 
 # --- Value algorithm (product worth → optimal price + lower bound) ---
 
-static func product_value() -> Dictionary:
-	# Read-only worth estimate. Pricing power = the type-weighted NORMALIZED composite, so the premium
-	# comes from whatever axis THIS market values (quality_axes weights).
+static func product_value(quality: float = b2c_quality()) -> Dictionary:
+	# Read-only worth estimate. Pricing power = the B2C quality term: how well the product meets its audience.
 	# Breadth and depth are the live ladder: what the sprint engine has actually shipped.
 	var mult: float = float(TENDENCY_MULT.get(ProductCatalog.get_price_tendency(ProductState.subtype()), 1.0))
-	var raw: float = VALUE_BASE + QualityModel.shipped_normalized() * VALUE_QUALITY_COEF \
+	var raw: float = VALUE_BASE + quality * VALUE_QUALITY_COEF \
 		+ ProductState.lines_open() * VALUE_FEATURE_COEF \
 		+ ProductState.usage_weight_total() * VALUE_COMPLEXITY_COEF
 	var optimal: int = int(round(maxf(1.0, raw) * mult))
@@ -460,7 +464,7 @@ static func rnd_conversion_mult() -> float:
 	return RND_CONVERSION_MULT if ResearchSeam.completed("onboarding_flow") else 1.0
 
 
-static func conversion_rate(price: int) -> float:
+static func conversion_rate(price: int, quality: float = b2c_quality()) -> float:
 	# Standing fraction of the WHOLE audience that pays at this price (MRR derives
 	# from it each hour). Cheaper than optimal → higher; pricier → lower.
 	#
@@ -468,7 +472,7 @@ static func conversion_rate(price: int) -> float:
 	# RND_CONVERSION_MULT). At optimal 0.35 → 0.4025, under CONVERSION_MAX, so the node lands in full
 	# across the normal band; the ceiling clips it only below optimal × 0.671 and swallows it only
 	# below optimal × 0.583, where an un-researched player is already capped.
-	var optimal: float = maxf(1.0, float(product_value()["optimal"]))
+	var optimal: float = maxf(1.0, float(product_value(quality)["optimal"]))
 	return clampf(CONVERSION_BASE * rnd_conversion_mult() * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
 
 
@@ -483,11 +487,11 @@ static func churn_fraction(old_price: int, new_price: int) -> float:
 	return clampf(raise_ratio * 0.6 + above_optimal * 0.5, 0.0, CHURN_MAX)
 
 
-static func audience_growth_multiplier(price: int) -> float:
+static func audience_growth_multiplier(price: int, quality: float = b2c_quality()) -> float:
 	# Multiplies the hourly audience flow. Neutral (1.0) until a price is set.
 	if not GameState.get_flag("b2c_paid_tier_open", false) or price <= 0:
 		return 1.0
-	var optimal: float = maxf(1.0, float(product_value()["optimal"]))
+	var optimal: float = maxf(1.0, float(product_value(quality)["optimal"]))
 	return clampf(optimal / maxf(1.0, float(price)), AUD_PRICE_MULT_MIN, AUD_PRICE_MULT_MAX)
 
 

@@ -353,8 +353,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"harness_sniffer_matches_run_log": fail = _case_harness_sniffer_matches_run_log()
 		"quality_half_sat_25":             fail = _case_quality_half_sat_25()
 		"b2b_v1_lands_mid_band":           fail = _case_b2b_v1_lands_mid_band()
-		"b2c_satisfaction_drifts_to_experience": fail = _case_b2c_satisfaction_drifts_to_experience()
-		"rival_relative_uses_template_half_sat": fail = _case_rival_relative_uses_template_half_sat()
+		"b2c_satisfaction_drifts_to_fit":  fail = _case_b2c_satisfaction_drifts_to_fit()
+		"b2c_audience_reads_fit":          fail = _case_b2c_audience_reads_fit()
 		"soft_cap_ends_run_at_730":        fail = _case_soft_cap_ends_run_at_730()  # EXPECT-ERROR telegraph 'soft_cap_telegraphed' never did
 		"no_calendar_stop_before_cap":     fail = _case_no_calendar_stop_before_cap()
 		"soft_cap_no_defer_for_sheet":     fail = _case_soft_cap_no_defer_for_sheet()  # EXPECT-ERROR telegraph 'soft_cap_telegraphed' never did
@@ -763,26 +763,39 @@ static func _seed_growth_streak(last: int) -> void:
 	_seed_month_closes([m1, m2, m3, last])
 
 
+## The first `mvp_lines` Core lines of the live product at K1: the MVP the sprint engine ships.
+static func _seed_mvp_lines() -> void:
+	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+		ProductState.set_line_tier(line_id, 1)
+
+
+## A shipped consumer product: the note app at its MVP with a small audience and the paid tier open. The B2C economy
+## reads the product's fit to its audience, so the product needs lines.
 static func _seed_b2c() -> void:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2c")
+	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
+	_seed_mvp_lines()
 	SalesSystem.add_b2c_audience(200)
 	SalesSystem.open_b2c_paid_tier(15)  # derives paying users → userbase record + MRR > 0
+
+
+## A day in which only the satisfaction drift writes the B2C record: the support desk's two-tier damage and the server
+## overage write it every day too, so the day starts with no reports, no open bugs, no carried residue and room on the servers.
+static func _quiet_b2c_day() -> void:
+	InfraSystem.set_provider("cloud")
+	InfraSystem.set_capacity(100)
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
+	GameState.set_flag(ProductState.OPEN_BUGS, {})
+	SupportSystem.reset()
 
 
 static func _seed_live_product() -> void:
 	# Canlı B2C ürün durumu (yaşam-döngüsü/kapasite case'lerinin ortak kurulumu):
 	# pozitif nakit (7 gün negatif nakit bankruptcy shutter'ı tetikler), audience +
-	# paid tier, shipped mvp eksenleri/bileşenleri.
+	# paid tier, MVP'deki not uygulaması.
 	GameState.set_cash(50000)
 	_seed_b2c()
-	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
-	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
-	# ai_assistant has no line content: the tier only gives a validated report a line to land on.
-	ProductState.set_line_tier("line_ai_assistant_core", 1)
-	GameState.set_flag("mvp_innovation", 20.0)
-	GameState.set_flag("mvp_stability", 25.0)
-	GameState.set_flag("mvp_experience", 22.0)
 	GameState.set_flag("mvp_version", 2)
 	GameState.set_flag("mvp_product_name", "Nova")
 
@@ -3202,17 +3215,16 @@ static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	if ub == null:
 		return "no B2C aggregate record after seed"
-	# Product whose experience score sits well above the seeded record: a definite drift.
-	GameState.set_flag("mvp_stability", 200.0)
-	GameState.set_flag("mvp_innovation", 200.0)
-	GameState.set_flag("mvp_experience", 200.0)
-	# Expected delta: toward the experience score, capped at a week's step.
-	var target: int = int(round(QualityModel.axis_score(QualityModel.dims_from_flags(), "experience")))
+	# Product whose fit sits well above the seeded record (the MVP's 70): a definite drift.
+	_seed_b2b_lines("note_tool", 3)
+	# Expected delta: toward the satisfaction target, capped at a week's step.
+	var target: int = SalesSystem.b2c_satisfaction_target()
 	var step: int = int(TimeModel.per_tick(SalesSystem.SATISFACTION_DRIFT_PER_DAY))
 	var s0: int = ub.satisfaction
 	var want: int = clampi(target - s0, -step, step)
 	if want == 0:
 		return "test misconfigured: expected a non-zero B2C drift (target %d, satisfaction %d)" % [target, s0]
+	_quiet_b2c_day()
 	_sim_day()
 	var got: int = ub.satisfaction - s0
 	if got != want:
@@ -11820,70 +11832,83 @@ static func _case_b2b_v1_lands_mid_band() -> String:
 	return ""
 
 
-## B2C satisfaction has no gate: the userbase record drifts toward the experience score a day's
-## step at a time (seven on a tick) from either side and stops there.
-## FALSIFICATION: put back the "+1 a day while experience ≥ 40" gate and the from-above leg
-## climbs instead of falling.
-static func _case_b2c_satisfaction_drifts_to_experience() -> String:
+## B2C satisfaction has no gate: the userbase record drifts toward the fit of the core and the way in, a day's step at
+## a time (seven on a tick), from either side, and stops there. Only those two areas count: trust and growth lines
+## move the quality term but not the target, and a product that has not built the way in reads lower than one that has.
+## FALSIFICATION: let `b2c_satisfaction_target` read every area and the "trust and growth" leg moves; put back a
+## "+1 a day while the target >= 40" gate and the from-above leg climbs instead of falling.
+static func _case_b2c_satisfaction_drifts_to_fit() -> String:
 	_seed_b2c()
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	if ub == null:
 		return "no B2C aggregate record after seed"
-	GameState.set_flag("mvp_stability", 0.0)
-	GameState.set_flag("mvp_innovation", 0.0)
-	# SUPPORT-QUIET WORLD: the desk's two-tier damage and the server overage write the same
-	# record every day, so each leg starts with no reports, no open bugs, no carried
-	# residue and room on the servers.
-	InfraSystem.set_provider("cloud")
-	InfraSystem.set_capacity(100)
+	if ub.satisfaction != SalesSystem.b2c_satisfaction_target():
+		return "the record opened at %d, want its target %d" % [ub.satisfaction, SalesSystem.b2c_satisfaction_target()]
+	# 10,000 users expect the core at K2 and the way in at K1: the MVP is short of both.
+	GameState.set_flag("b2c_audience", 10000.0)
 	var step: int = int(TimeModel.per_tick(SalesSystem.SATISFACTION_DRIFT_PER_DAY))
-	var target: int = int(round(QualityModel.normalized_quality(25.0)))   # raw experience 25
-	# [raw experience, satisfaction before, satisfaction after one tick]
-	for leg in [
-			[25.0, target - 3 * step, target - 2 * step],          # climbs a week's step
-			[25.0, target - 2, target],                            # and stops at the target
-			[25.0, 80, 80 - step],                                 # falls from above: nothing holds it up
-			[10.0, 10, 10 + step]]:                                # a weak product (target 29) still climbs
-		GameState.set_flag("mvp_experience", float(leg[0]))
-		GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
-		GameState.set_flag(ProductState.OPEN_BUGS, {})
-		SupportSystem.reset()
-		CustomerRegistry.set_satisfaction(ub.id, int(leg[1]))
+	var week := func(before: int) -> int:
+		_quiet_b2c_day()
+		CustomerRegistry.set_satisfaction(ub.id, before)
 		_sim_day()
-		if ub.satisfaction != int(leg[2]):
-			return "experience %.0f: satisfaction %d -> %d, want %d" % [
-				float(leg[0]), int(leg[1]), ub.satisfaction, int(leg[2])]
+		return ub.satisfaction
+	# A short product (target in the low thirties) still climbs.
+	var target: int = SalesSystem.b2c_satisfaction_target()
+	if target < 20 or target > 40:
+		return "fixture: the MVP among 10,000 users reads target %d, want a low one" % target
+	if week.call(10) != 10 + step:
+		return "a short product: satisfaction 10 -> %d, want %d" % [ub.satisfaction, 10 + step]
+	var product := func(core: int, way_in: int) -> int:
+		_seed_b2b_lines("note_tool", 0)
+		for line_id in SprintCatalog.capabilities("core"):
+			ProductState.set_line_tier(line_id, core)
+		for line_id in SprintCatalog.capabilities("onboarding"):
+			ProductState.set_line_tier(line_id, way_in)
+		return SalesSystem.b2c_satisfaction_target()
+	var bare: int = product.call(2, 0)
+	for area in ["trust", "growth"]:
+		for line_id in SprintCatalog.capabilities(area):
+			ProductState.set_line_tier(line_id, 3)
+	if SalesSystem.b2c_satisfaction_target() != bare:
+		return "trust and growth lines moved the target (%d -> %d)" % [bare, SalesSystem.b2c_satisfaction_target()]
+	target = product.call(2, 1)
+	if target <= bare or bare > 100 - step:
+		return "fixture: the way in lifts the target %d -> %d, want it up and the bare one a week's step under 100" % [bare, target]
+	# Climbs a week's step, then stops at the target.
+	for leg in [[target - 3 * step, target - 2 * step], [target - 2, target]]:
+		if week.call(leg[0]) != leg[1]:
+			return "satisfaction %d -> %d, want %d (target %d)" % [leg[0], ub.satisfaction, leg[1], target]
+	# From above nothing holds it up: the bare product falls a week's step.
+	product.call(2, 0)
+	if week.call(100) != 100 - step:
+		return "satisfaction 100 -> %d, want %d (target %d)" % [ub.satisfaction, 100 - step, bare]
 	return ""
 
 
-static func _case_rival_relative_uses_template_half_sat() -> String:
-	# The rival scale bridge: rivals normalize at RIVAL_TEMPLATE_HALF_SAT (50), the player at
-	# NORMALIZE_HALF_SAT (25). A player composite equal to the startup rivals' raw average
-	# therefore reads ABOVE parity (q > 50) — which is the whole point: the bridge stops the
-	# half-point move from doubling the rivals' lead over a played product.
-	if not is_equal_approx(QualityModel.RIVAL_TEMPLATE_HALF_SAT, 50.0):
-		return "RIVAL_TEMPLATE_HALF_SAT is %.1f, want 50" % QualityModel.RIVAL_TEMPLATE_HALF_SAT
-	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
-	var axes: Array = ProductCatalog.get_quality_axes("ai_assistant")
-	var total: float = 0.0
-	var total_norm: float = 0.0
-	var n: int = 0
-	for r in RivalRegistry.get_by_type("ai_assistant"):
-		if r.tier == "startup":
-			total += r.composite(axes)
-			total_norm += QualityModel.normalized_quality_rival(r.composite(axes))
-			n += 1
-	if n == 0:
-		return "fixture: no startup rivals for ai_assistant"
-	var avg_raw: float = total / float(n)
-	var q_parity: float = SalesSystem._rival_relative_quality(QualityModel.normalized_quality(avg_raw))
-	# The engine averages the NORMALIZED rival scores (not the raw composites), so the
-	# expectation is built the same way.
-	var want: float = 50.0 + QualityModel.normalized_quality(avg_raw) - total_norm / float(n)
-	if absf(q_parity - want) > 0.01:
-		return "q at raw parity = %.2f, want %.2f (rivals must normalize at the template half-point)" % [q_parity, want]
-	if q_parity <= 50.0:
-		return "q at raw parity = %.2f — the bridge is not lifting the played product" % q_parity
+## The B2C audience reads the product's fit to it: a product that meets what 200 users expect reads quality 50 and grows
+## without bleeding; the same product reads lower among 10,000 users, and one short in the core grows slower and
+## bleeds even among 200.
+## FALSIFICATION: hold the audience context at one star (`_audience_star` returns 1.0) and the 10,000 leg stops falling;
+## take the erosion out of `_audience_loss_per_hour` and the no-core leg loses no users.
+static func _case_b2c_audience_reads_fit() -> String:
+	_seed_b2c()
+	if not is_equal_approx(SalesSystem.b2c_quality(), 50.0):
+		return "the MVP among 200 users reads quality %.2f, want 50 (U 70)" % SalesSystem.b2c_quality()
+	var met: float = SalesSystem._audience_delta_per_hour()
+	if met <= 0.0 or SalesSystem._audience_loss_per_hour() != 0.0:
+		return "a product that meets its audience reads growth %.4f and loss %.6f an hour, want growth and no loss" % [
+			met, SalesSystem._audience_loss_per_hour()]
+	GameState.set_flag("b2c_audience", 10000.0)
+	var outgrown: float = SalesSystem.b2c_quality()
+	GameState.set_flag("b2c_audience", 200.0)
+	if outgrown >= 50.0:
+		return "the MVP among 10,000 users reads quality %.2f, want less than the 50 it reads among 200" % outgrown
+	for line_id in SprintCatalog.capabilities("core"):
+		ProductState.set_line_tier(line_id, 0)
+	if SalesSystem._audience_delta_per_hour() >= met:
+		return "a product with no core grows %.4f an hour, want less than %.4f" % [SalesSystem._audience_delta_per_hour(), met]
+	if SalesSystem._audience_loss_per_hour() <= 0.0:
+		return "a product with no core loses no users an hour (quality %.2f)" % SalesSystem.b2c_quality()
 	return ""
 
 
@@ -12218,9 +12243,6 @@ static func _case_b2c_wom_needs_satisfaction() -> String:
 	# to the AUDIENCE (that is the compounding); below the gate there is no such term. Every
 	# reading sits at or over WOM_MULT_PIVOT, so base growth is the same in all of them.
 	_seed_b2c()
-	GameState.set_flag("mvp_innovation", 15.0)
-	GameState.set_flag("mvp_stability", 20.0)
-	GameState.set_flag("mvp_experience", 17.5)
 	GameState.set_flag("b2c_audience", 1000.0)
 	var pivot: int = int(SalesSystem.WOM_MULT_PIVOT)
 	var gate: int = int(SalesSystem.WOM_SAT_GATE)
@@ -12250,9 +12272,6 @@ static func _case_b2c_growth_multiplier_floor() -> String:
 	# at and above the pivot it runs at full strength. Measured as the gap to the pivot reading
 	# with no audience, so churn and word of mouth are zero.
 	_seed_b2c()
-	GameState.set_flag("mvp_innovation", 15.0)
-	GameState.set_flag("mvp_stability", 20.0)
-	GameState.set_flag("mvp_experience", 17.5)
 	GameState.set_flag("b2c_audience", 0.0)   # no audience → no churn, no word of mouth: pure base growth
 	var pivot: int = int(SalesSystem.WOM_MULT_PIVOT)
 	var half: int = int(SalesSystem.WOM_MULT_PIVOT * 0.5)
@@ -12283,22 +12302,17 @@ static func _case_b2c_growth_multiplier_floor() -> String:
 static func _case_b2c_value_reads_live_lines() -> String:
 	_seed_b2c()
 	var sub: String = "note_tool"
-	GameState.set_flag("mvp_sub_product_type_id", sub)
-	GameState.set_flag("mvp_innovation", 15.0)
-	GameState.set_flag("mvp_stability", 20.0)
-	GameState.set_flag("mvp_experience", 17.5)
 	var bare: int = int(SalesSystem.product_value()["optimal"])
 	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
 	if int(SalesSystem.product_value()["optimal"]) != bare:
 		return "the flat feature list moved the value (%d -> %d)" % [
 			bare, int(SalesSystem.product_value()["optimal"])]
-	for line_id in ProductLines.line_ids(sub):
-		ProductState.set_line_tier(String(line_id), 2)
+	_seed_b2b_lines(sub, 2)
 	if ProductState.usage_weight_total() <= 0:
 		return "fixture: tier 2 carries no usage weight, so the depth term cannot be seen"
 	var mult: float = float(SalesSystem.TENDENCY_MULT.get(ProductCatalog.get_price_tendency(sub), 1.0))
 	var want: int = int(round(maxf(1.0, SalesSystem.VALUE_BASE
-		+ QualityModel.shipped_normalized() * SalesSystem.VALUE_QUALITY_COEF
+		+ SalesSystem.b2c_quality() * SalesSystem.VALUE_QUALITY_COEF
 		+ ProductState.lines_open() * SalesSystem.VALUE_FEATURE_COEF
 		+ ProductState.usage_weight_total() * SalesSystem.VALUE_COMPLEXITY_COEF) * mult))
 	var got: int = int(SalesSystem.product_value()["optimal"])
@@ -13219,9 +13233,6 @@ static func _case_ambient_hourly_never_at_night() -> String:
 	EvCatalog.reload()
 	_seed_b2c()
 	GameState.set_cash(500000)
-	GameState.set_flag("mvp_innovation", 15.0)
-	GameState.set_flag("mvp_stability", 20.0)
-	GameState.set_flag("mvp_experience", 17.5)
 	GameState.set_flag("b2c_audience", 500.0)
 	SalesSystem.add_b2c_audience(0)
 	var per_tick: Dictionary = {}
@@ -19056,8 +19067,7 @@ static func _paper_chance(chance: float) -> void:
 ## bunu MVP'den sonraki her sürüm gibi okur.
 static func _seed_sprint_live(subtype: String) -> void:
 	_seed_sprint(subtype)
-	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
-		ProductState.set_line_tier(line_id, 1)
+	_seed_mvp_lines()
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_version", 1)
 
@@ -23612,8 +23622,7 @@ static func _case_bug_cost_b2c_audience() -> String:
 		GameState.set_flag(ProductState.OPEN_BUGS, {"line_note_tool_search": bugs_on_search} if bugs_on_search > 0 else {})
 		return SalesSystem._audience_loss_per_hour()
 	# A product over the erosion line: only the bugs cost audience.
-	for axis in ["mvp_innovation", "mvp_stability", "mvp_experience"]:
-		GameState.set_flag(axis, 200.0)
+	_seed_b2b_lines("note_tool", 3)
 	if loss.call(0) != 0.0:
 		return "fixture: a strong product with no bugs still loses %.4f users an hour" % loss.call(0)
 	var per_bug: float = SalesSystem.B2C_BUG_CHURN_COEF * 10000.0
@@ -23631,11 +23640,10 @@ static func _case_bug_cost_b2c_audience() -> String:
 	if absf(d0 - SalesSystem._audience_delta_per_hour() - 7.0 * per_bug) > 1e-9:
 		return "7 bugs lowered the hourly growth by %.6f, want %.6f" % [d0 - SalesSystem._audience_delta_per_hour(), 7.0 * per_bug]
 	# A product under the erosion line: the bugs add to the erosion.
-	for axis in ["mvp_innovation", "mvp_stability", "mvp_experience"]:
-		GameState.set_flag(axis, 0.0)
+	_seed_b2b_lines("note_tool", 0)
 	var erosion: float = loss.call(0)
 	if erosion <= 0.0:
-		return "fixture: a product with no axes does not erode"
+		return "fixture: a product with no lines does not erode"
 	if absf(loss.call(7) - (erosion + 7.0 * per_bug)) > 1e-9:
 		return "erosion %.6f plus 7 bugs reads %.6f an hour, want %.6f (the bug cost sits next to the erosion)" % [
 			erosion, loss.call(7), erosion + 7.0 * per_bug]
@@ -23774,7 +23782,6 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 		return {
 			"conversion": SalesSystem.conversion_rate(15),
 			"value": SalesSystem.product_value(),
-			"quality": QualityModel.shipped_normalized(),
 			"axes": ProductState.axis_readings(),
 			"signing_seed": SalesSystem.signing_satisfaction_seed(),
 			"meeting": SalesMeetingSystem._build_base_contributions(lead),
