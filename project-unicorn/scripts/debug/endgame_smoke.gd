@@ -14775,7 +14775,7 @@ static func _case_product_read_catalogue() -> String:
 
 ## Taban merdiveni: oran eşikleri, en kötü alanın seçimi ve eşitlik, beklentisi 0 olan alanın ve Gelir'in dışarıda kalması,
 ## sinyalin alan kimliğiyle kenarda bir kez atması, B2B'de susması. Merdiven kitlenin kendi referansını okur; ürün sayfasının
-## 2★ tabanını değil. Not aracının 5 Çekirdek hattı, her alanda bir hat (Güven'de iki) vardır; 10.000 kullanıcıda Çekirdek 1,5
+## 2★ tabanını değil. Not aracının 5 Çekirdek hattı, her alanda bir hat (Güven'de iki) vardır; 10.000 kullanıcıda Çekirdek 1,25
 ## ve vurgular 1 ister, 50.000'de 2 ve 1,5.
 ##
 ## FALSİFİKASYON: ProductRead.FLOOR_CROSSED_RATIO'yu 0 yap → eşik iddiası FAIL. worst_floor'da `<` yerine `<=` yaz → eşitlik
@@ -14800,9 +14800,9 @@ static func _case_floor_ladder_areas() -> String:
 	var ratios: Dictionary = ProductRead.floor_ratios()
 	if ratios.keys() != ["core", "onboarding", "growth", "trust"]:
 		return "the ladder holds %s, want core and the three areas that enter U (no Revenue)" % str(ratios.keys())
-	# Çekirdek 1 ÷ 1,5; Güven'in bir hattı 0,5 ÷ 1; İlk kullanım ve Büyüme boş.
+	# Çekirdek 1 ÷ 1,25; Güven'in bir hattı 0,5 ÷ 1; İlk kullanım ve Büyüme boş.
 	for area in ratios:
-		var want_ratio: float = {"core": 1.0 / 1.5, "trust": 0.5}.get(area, 0.0)
+		var want_ratio: float = {"core": 1.0 / 1.25, "trust": 0.5}.get(area, 0.0)
 		if not is_equal_approx(ratios[area], want_ratio):
 			return "%s reads ratio %.2f at 10.000 users, want %.2f" % [area, ratios[area], want_ratio]
 	var worst: Dictionary = ProductRead.worst_floor()
@@ -15044,15 +15044,15 @@ static func _case_product_area_row() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	_seed_b2b_lines("erp", 0)
-	# [alan, hatların kademeleri, kare, kelime, ton, soluk]: ürün sayfasının referansında Çekirdek 1,5, Entegrasyonlar 1, İlk kullanım 1,
+	# [alan, hatların kademeleri, kare, kelime, ton, soluk]: ürün sayfasının referansında Çekirdek 1,25, Entegrasyonlar 1, İlk kullanım 1,
 	# Güven 1; Çekirdek'in beş hattı var, Güven'in iki.
 	var rows := [
-		["core", [1, 1, 1, 0, 0], 2, "weak", "warn", false],       # MVP: 0,6 / 1,5
-		["core", [1, 1, 1, 1, 1], 3, "weak", "warn", false],       # 1 / 1,5
-		["core", [2, 2, 2, 1, 0], 5, "weak", "warn", false],       # 1,4 / 1,5: referansın hemen altı
-		["core", [2, 2, 2, 1, 1], 5, "enough", "neutral", false],  # 1,6 / 1,5: referans aşıldı, beşinci kare
-		["core", [2, 2, 2, 2, 2], 7, "enough", "neutral", false],  # 2 / 1,5
-		["core", [3, 3, 2, 2, 2], 8, "enough", "neutral", true],   # 2,4 / 1,5: oran kesiği, soluk karelerin başı
+		["core", [1, 1, 1, 0, 0], 2, "weak", "warn", false],       # MVP: 0,6 / 1,25
+		["core", [1, 1, 1, 1, 1], 4, "weak", "warn", false],       # 1 / 1,25
+		["core", [2, 1, 1, 1, 1], 5, "weak", "warn", false],       # 1,2 / 1,25: referansın hemen altı
+		["core", [2, 2, 1, 1, 1], 6, "enough", "neutral", false],  # 1,4 / 1,25: referans aşıldı
+		["core", [2, 2, 2, 2, 1], 7, "enough", "neutral", false],  # 1,8 / 1,25
+		["core", [2, 2, 2, 2, 2], 8, "enough", "neutral", true],   # 2 / 1,25: oran kesiği, soluk karelerin başı
 		["core", [3, 3, 3, 3, 3], 10, "strong", "pos", true],      # onluk ölçeğin sonu
 		["core", [0, 0, 0, 0, 0], 0, "none", "warn", false],
 		["integrations", [2], 10, "strong", "pos", true],
@@ -15075,7 +15075,7 @@ static func _case_product_area_row() -> String:
 	var quiet: Dictionary = ProductQuality.area_row("revenue")
 	if ProductQuality.expectation("revenue") != 0.0 or quiet.squares != 0 or quiet.word != ProductQuality.word("revenue"):
 		return "an area the page asks nothing of reads %s; want no squares and the page's word '%s'" % [quiet, ProductQuality.word("revenue")]
-	# Küçük kitleli B2C ürünün sayfası da 2★ satırını okur: İlk kullanım 1 ister (yeter), MVP Çekirdek'i 1,5'in altında kalır.
+	# Küçük kitleli B2C ürünün sayfası da 2★ satırını okur: İlk kullanım 1 ister (yeter), MVP Çekirdek'i 1,25'in altında kalır.
 	_seed_b2c()
 	_set_area_tiers({"onboarding": 1})
 	if ProductQuality.expectation("onboarding") != 1.0:
@@ -15246,10 +15246,10 @@ static func _case_fit_star_context() -> String:
 		return TranslationServer.translate(key).format(args)
 
 	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur, cümle MVP'nin 1★'a yettiğini söyler.
-	if ProductQuality.expectation("core", {"star": 1}) != 0.6 or ProductQuality.expectation("core") != 1.5 \
+	if ProductQuality.expectation("core", {"star": 1}) != 0.6 or ProductQuality.expectation("core") != 1.25 \
 			or ProductQuality.expectation("trust") != 1.0 or ProductQuality.expectation("integrations") != 1.0 \
 			or ProductQuality.expectation("revenue") != 0.0:
-		return "the page reference reads core %.2f at 1 star and %.2f on the page, trust %.2f, integrations %.2f; want 0.6, 1.5, 1 and 1" % [
+		return "the page reference reads core %.2f at 1 star and %.2f on the page, trust %.2f, integrations %.2f; want 0.6, 1.25, 1 and 1" % [
 			ProductQuality.expectation("core", {"star": 1}), ProductQuality.expectation("core"),
 			ProductQuality.expectation("trust"), ProductQuality.expectation("integrations")]
 	if ProductQuality.word("core") != "weak" or ProductQuality.serves("core") != 1 \
@@ -15358,10 +15358,10 @@ static func _case_fit_star_context() -> String:
 	var between: float = ProductQuality.expectation("core", {"audience": true})
 	audience.call(80000.0)
 	var at_80k: float = ProductQuality.expectation("core", {"audience": true})
-	if at_1k != 0.6 or at_10k != 1.5 or at_80k != 2.0 or not (between > 0.6 and between < 1.5):
-		return "the audience reads Core %.3f at 1k, %.3f at 10k, %.3f halfway in between and %.3f at 80k; want 0.6, 1.5, in between and 2" % [
+	if at_1k != 0.6 or at_10k != 1.25 or at_80k != 2.0 or not (between > 0.6 and between < 1.25):
+		return "the audience reads Core %.3f at 1k, %.3f at 10k, %.3f halfway in between and %.3f at 80k; want 0.6, 1.25, in between and 2" % [
 			at_1k, at_10k, between, at_80k]
-	# Ürün sayfasının referansı kitle 2★'a varana kadar 2★ satırıdır (Çekirdek 1,5, İlk kullanım 1), sonra kitleyi izler (2 ve 1,5).
+	# Ürün sayfasının referansı kitle 2★'a varana kadar 2★ satırıdır (Çekirdek 1,25, İlk kullanım 1), sonra kitleyi izler (2 ve 1,5).
 	var page := func(n: float) -> Array:
 		audience.call(n)
 		return [ProductQuality.expectation("core"), ProductQuality.expectation("onboarding")]
@@ -15370,8 +15370,8 @@ static func _case_fit_star_context() -> String:
 	var small: Array = page.call(200.0)
 	var halfway: Array = page.call(sqrt(1000.0 * 10000.0))
 	var big: Array = page.call(80000.0)
-	if not near.call(small, [1.5, 1.0]) or not near.call(halfway, [1.5, 1.0]) or not near.call(big, [2.0, 1.5]):
-		return "the page reads Core and Onboarding %s at 200 users, %s at 3,162 and %s at 80k; want [1.5, 1], [1.5, 1] and [2, 1.5]" % [
+	if not near.call(small, [1.25, 1.0]) or not near.call(halfway, [1.25, 1.0]) or not near.call(big, [2.0, 1.5]):
+		return "the page reads Core and Onboarding %s at 200 users, %s at 3,162 and %s at 80k; want [1.25, 1], [1.25, 1] and [2, 1.5]" % [
 			small, halfway, big]
 	if u_at.call(1000.0) != 70 or u_at.call(10000.0) != row_u.call(2) or u_at.call(50000.0) != row_u.call(3) \
 			or u_at.call(200.0) != 70 or u_at.call(90000.0) != row_u.call(3):
@@ -15385,21 +15385,25 @@ static func _case_fit_star_context() -> String:
 		if absi(u - last) > 1:
 			return "the audience crossed %d users and U jumped from %d to %d in one 2 percent step" % [roundi(n), last, u]
 		last = u
-	# Kelime ve cümle sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,5) varınca 500'de
-	# yeter, kitle 3★ satırına (2) inince yetmez.
+	# Kelime ve cümle sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
+	# yeter (1,2 yetmez, 1,4 yeter), kitle 3★ satırına (2) inince yetmez.
 	audience.call(500.0)
 	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
 		return "500 users read the MVP Core '%s' saying '%s'; want Weak and users want more, the page asks the 2 star row of a small audience too" % [
 			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
 	var core_lines: Array = SprintCatalog.capabilities("core")
 	for i in core_lines.size():
-		ProductState.set_line_tier(core_lines[i], 2 if i < 3 else 1)
+		ProductState.set_line_tier(core_lines[i], 2 if i < 1 else 1)
+	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "500 users read Core at 1.2 '%s' saying '%s'; want Weak, just under the 2 star row" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+	ProductState.set_line_tier(core_lines[1], 2)
 	if ProductQuality.word("core") != "enough" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_ENOUGH", {}):
-		return "500 users read Core at 1.6 '%s' saying '%s'; want Enough and the audience is served" % [
+		return "500 users read Core at 1.4 '%s' saying '%s'; want Enough and the audience is served" % [
 			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
 	audience.call(80000.0)
 	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
-		return "80,000 users read Core at 1.6 '%s' saying '%s'; want Weak and the audience has outgrown it" % [
+		return "80,000 users read Core at 1.4 '%s' saying '%s'; want Weak and the audience has outgrown it" % [
 			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
 	# Yayından önce kitle yoktur: alan kitleye yetip yetmediğini söylemez.
 	GameState.set_flag("mvp_shipped", false)
@@ -24718,7 +24722,7 @@ static func _case_vc_weakest_area() -> String:
 		for line_id in SprintCatalog.capabilities(area):
 			ProductState.set_line_tier(line_id, tier)
 	# K2 meets every bar; at K1 every area but Core sits exactly on its 2★ bar (level = expectation reads Enough) and Core, whose bar
-	# is 1.5, is one tier up.
+	# is 1.25, is one tier up.
 	for tier in [2, 1]:
 		_seed_b2b_lines("erp", tier)
 		if tier == 1:

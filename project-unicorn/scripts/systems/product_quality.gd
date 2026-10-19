@@ -34,7 +34,7 @@ const WORD_TONES := {"strong": "pos", "enough": "neutral", "weak": "warn", "none
 # Yıldız beklenti tablosu: seviye 1 alanın her hattının ilk sürümüdür. Hat sayısına bağlı tek hücre hesaplanır: Çekirdek
 # 1★'ta MVP'dir (`mvp_lines` ÷ Çekirdek hat sayısı). Tabloda olmayan hücre 0'dır: o yıldız o alana bakmaz. MVP hücresi
 # ve 3★ satırı [WORKING] onay bekliyor.
-const CORE_2 := 1.5
+const CORE_2 := 1.25
 const EMPHASIS_2 := 1.0
 const CORE_3 := 2.0
 const EMPHASIS_3 := 1.5
