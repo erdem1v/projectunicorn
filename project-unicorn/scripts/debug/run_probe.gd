@@ -32,16 +32,21 @@ extends RefCounted
 #   PROBE STATE day=<d> cash=<n> mrr=<n> brand=<n> burn=<n> runway=<f> cust=<n> emp=<n> promises=<n>
 #   PROBE B2C   day=<d> aud=<f> paying=<n> price=<n> conv=<f> sat=<n> sat_target=<n> open_bugs=<n>
 #               lost=<f> q=<f> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
-#               validation_day=<f>          (every week a consumer product is live; desk = the
+#               validation_day=<f> u=<n> aud_star=<f>
+#                                           (every week a consumer product is live; desk = the
 #                                           support desk's roster, inflow and validation per day;
 #                                           lost = the users the audience has lost to erosion and bug churn;
 #                                           sat_target = the fit of the core and the way in, the number the
 #                                           record drifts toward; q = the B2C quality term the audience and the
-#                                           price read, the product's fit to its audience x 5/7)
+#                                           price read, the product's fit to its audience x 5/7; u = that fit
+#                                           itself, 0-100; aud_star = where the audience stands on the star rows,
+#                                           1.00-3.00)
 #   PROBE CHURN day=<d> id=<cid> ...        (customer_churned — the autopsy's terminal)
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
-#   PROBE LEAD  day=<d> id=<pid> arch=<archetype> sector=<sector> star=<n> phase=<p>
-#                                           (every B2B lead the faucet or an event puts on the desk, as it arrives)
+#   PROBE LEAD  day=<d> id=<pid> arch=<archetype> sector=<sector> star=<n> phase=<p> u=<n|-> loss=<area|->
+#                                           (every B2B lead the faucet or an event puts on the desk, as it arrives;
+#                                           u is the lead's fit the day it arrives, loss the area it would miss;
+#                                           - on a fixture product without line content, which has no core to fit)
 #   PROBE SIGN  day=<d> hour=<h> id=<cid> by=<founder|rep> star=<n> weeks=<w> mrr=<n> sector=<s> arch=<a> tol=<n> phase=<p>
 #               areas=<area>:<level>,...
 #                                           (every B2B signing; weeks is the deal's planned length,
@@ -49,18 +54,33 @@ extends RefCounted
 #                                           - for a fixture account, which has no lead; tol is the account's
 #                                           seeded tolerance, the floor its satisfaction is held against;
 #                                           areas are the market's unrounded area levels at the signature)
+#   PROBE FIT   day=<d> hour=<h> id=<cid> phase=<p> sector=<s> star=<n> by=<founder|rep> u=<n> capped=<b>
+#               loss=<area|-> tol=<n>
+#                                           (beside every PROBE SIGN that has a lead: u is the lead's fit at the
+#                                           signature, read before the lead leaves the registry; capped = the
+#                                           core ceiling held it, loss the area it would miss; tol the account's
+#                                           seeded tolerance. A fixture account has no lead and prints none, nor
+#                                           does a fixture product without line content)
+#   PROBE UFLUX day=<d> changed=<n> release=<b> renewal=<n> unexplained=<n>
+#                                           (every week the B2B book is not empty, on a product with line
+#                                           content: the accounts whose fit moved since last week's reading or
+#                                           their signature; release = a version shipped meanwhile, renewal =
+#                                           the changed accounts whose renewal window opened this week,
+#                                           unexplained = the changed accounts with neither. One reading a
+#                                           week, because every account's fit is read)
 #   PROBE TALLY <id> fires=<n> picks=<n>    (one per id, at the end)
 #   PROBE WEEK  w=<w> fires=<n> meetings=<n> signs=<n>   (one per week, at the end: card fires,
 #                                           the founder's sittings, B2B signings)
 #   PROBE END   day=<d> run_active=<b> ending=<id> finite_runway_p<1|2|3>=<finite weeks>/<weeks>
 #               min_cash_pre_seed=<n> seed_day=<n|-1> first_sign_day=<n|-1> first_revenue_day=<n|-1>
-#               cheque_day=<n|-1> open_w1_12=<n> idle_w1_12=<n>
+#               cheque_day=<n|-1> open_w1_12=<n> idle_w1_12=<n> u_unexplained_weeks=<n>
 #                                           (the weeks are the weekly STATE readings, by phase;
 #                                           seed_day is the day the seed was signed; first_revenue_day
 #                                           the first daily tick that closed with MRR; cheque_day the
 #                                           day Frank's cheque was taken; open_w1_12 the weeks 1-12
 #                                           whose 08:00 found the B2B market open, idle_w1_12 those
-#                                           of them without a sitting)
+#                                           of them without a sitting; u_unexplained_weeks the weeks
+#                                           whose PROBE UFLUX counted an unexplained account)
 #   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
 #   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn id>=<n>... ...
 #                                           (full_run*: once, the day the Series A door opens)
@@ -99,7 +119,8 @@ extends RefCounted
 ## (full_run*) seed nothing and carry what the founder picks and plays by:
 ##   subtype   — the product chosen in the Product tab on the first morning;
 ##   policy    — the event answers (default "sensible", below);
-##   vc        — the Series A policy, sim only (none: the run never sits at a Series A table);
+##   vc        — the Series A policy, sim only (none: the run never sits at a Series A table); "product" signs
+##               the opening terms like "cautious" and sits at the product fund first, at the seed and at Series A;
 ##   staff_cap — the headcount the B2B staffing ladder stops at (default: the whole ladder);
 ##   k1_only   — the founder never plans a K2 or K3 step;
 ##   fix       — the sprint's fix cards (default: whatever the lead plans): "none" takes no fix card, "worst" the
@@ -107,7 +128,11 @@ extends RefCounted
 ##               trial account uses), "off" is "worst" with the cost of open bugs switched off (the baseline).
 ##               It also decides the answer to an emergency card: "none" leaves the fix for the next sprint, every
 ##               other arm stops the sprint for it;
-##   no_stop   — the arm never stops the sprint for an emergency (the same run with that answer left out).
+##   no_stop   — the arm never stops the sprint for an emergency (the same run with that answer left out);
+##   core_only — rides the fix arm: no feature or request card outside the core area stays in a sprint, fix and
+##               research cards are kept, and the lead fills what is left from the rest of the pool;
+##   desk      — with a rep on the Satış job the founder sits only the leads above the reps' band, the rest are
+##               the reps' (the game's own pick_lead_for); with no rep he sits every lead, as the other arms do.
 const PRESETS := {
 	"b2b_reps": {}, "b2b_solo": {}, "b2b_risk": {}, "b2b_slip": {}, "b2c": {}, "b2c_neglect": {},
 	"full_run": {"subtype": "erp"},
@@ -135,6 +160,11 @@ const PRESETS := {
 	"full_run_b2c_fix_worst_free": {"subtype": "note_tool", "fix": "worst", "no_stop": true},
 	"full_run_b2c_fix_due_free": {"subtype": "note_tool", "fix": "due", "no_stop": true},
 	"full_run_b2c_fix_off_free": {"subtype": "note_tool", "fix": "off", "no_stop": true},
+	"full_run_fix_worst_desk": {"subtype": "erp", "fix": "worst", "desk": true},
+	"full_run_quality_core": {"subtype": "erp", "fix": "worst", "core_only": true},
+	"full_run_quality_core_desk": {"subtype": "erp", "fix": "worst", "core_only": true, "desk": true},
+	"full_run_vc_product": {"subtype": "erp", "vc": "product"},
+	"full_run_b2c_vc_product": {"subtype": "note_tool", "vc": "product"},
 }
 const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Klipo"}
 # The played run has three answer policies on one world, a controlled experiment on what
@@ -179,6 +209,11 @@ static var _staff_cap: int = 0              # full_run*: the headcount the B2B l
 static var _k1_only: bool = false           # full_run*: never plan a K2 or K3 step
 static var _fix_arm: String = ""            # full_run*: "" | none | worst | due | off (see PRESETS)
 static var _no_stop: bool = false           # full_run*: an emergency never stops the sprint for its fix
+static var _core_only: bool = false         # full_run*: the sprint keeps no feature or request card outside the core
+static var _desk: bool = false              # full_run*: the founder leaves the reps' band to the reps
+static var _release_seen: bool = false      # PROBE UFLUX: a version shipped since the last weekly reading
+static var _account_u: Dictionary = {}      # PROBE UFLUX: account id -> its fit at the last reading or its signature
+static var _u_unexplained_weeks: int = 0    # PROBE END: the weeks PROBE UFLUX counted an unexplained account
 static var _bugs_open: int = 0              # PROBE BUGS: the open bugs at the last weekly line
 static var _bugs_cleared: int = 0           # PROBE BUGS: bugs a fix card cleared since then
 static var _runway_weeks: Dictionary = {}   # phase -> Vector2i(weeks with a finite runway, weeks)
@@ -194,7 +229,7 @@ static var _gate_day: int = -1              # the day phase_gate_reached(3) fire
 static var _gate_logged: bool = false
 static var _mb_acc: Dictionary = {}         # burn id -> realised sum over the open fiscal month
 static var _mb_ticks: int = 0               # dispatched ticks folded into _mb_acc
-static var _vc_policy: String = ""          # "" | "naive" | "cautious" | "walk"
+static var _vc_policy: String = ""          # "" | "naive" | "cautious" | "walk" | "product"
 static var _replay_k: int = -1              # naive only: table replays per fund; -1 = not given
 static var _window: Vector2i = Vector2i.ZERO   # the company's start hour and hours; zero = the default workday
 static var _vc_done: bool = false           # the one table this run gets has been played
@@ -241,6 +276,11 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_full_run = false
 	_fix_arm = ""
 	_no_stop = false
+	_core_only = false
+	_desk = false
+	_release_seen = false
+	_account_u = {}
+	_u_unexplained_weeks = 0
 	_bugs_open = 0
 	_bugs_cleared = 0
 	ProductState.bugs_free = false
@@ -329,6 +369,7 @@ static func _wire_log() -> void:
 		_meetings_by_day[GameState.day] = int(_meetings_by_day.get(GameState.day, 0)) + 1)
 	EventBus.deal_signed.connect(_on_signed)
 	EventBus.prospect_arrived.connect(_on_lead)
+	EventBus.version_shipped.connect(func(_n: int) -> void: _release_seen = true)
 
 
 static func _on_month_ended(_data: Dictionary) -> void:
@@ -541,17 +582,33 @@ static func _on_signed(customer_id: String, _seats: int, _seat_price: int) -> vo
 		_first_sign_day = GameState.day
 	var levels: Array = SprintCatalog.area_ids().map(func(a: String) -> String:
 		return "%s:%.3f" % [a, ProductQuality.level(a)])
+	var by: String = "founder" if c.acquisition_source == "founder_pitch" else "rep"
 	print("PROBE SIGN day=%d hour=%d id=%s by=%s star=%d weeks=%.1f mrr=%d sector=%s arch=%s tol=%d phase=%d areas=%s" % [
-		GameState.day, GameState.current_hour, customer_id,
-		"founder" if c.acquisition_source == "founder_pitch" else "rep", c.scale,
+		GameState.day, GameState.current_hour, customer_id, by, c.scale,
 		lead.deal_halfweeks / 2.0 if lead != null else 0.0, c.mrr, c.industry,
 		lead.archetype_id if lead != null else "-", c.tolerance, GameState.phase, ",".join(levels)])
+	if not _fit_readable():
+		return
+	if lead != null:
+		var fit: Dictionary = ProductQuality.prospect_fit(lead)
+		print("PROBE FIT day=%d hour=%d id=%s phase=%d sector=%s star=%d by=%s u=%d capped=%s loss=%s tol=%d" % [
+			GameState.day, GameState.current_hour, customer_id, GameState.phase, c.industry, c.scale, by,
+			fit.value, str(fit.capped), fit.loss_area if fit.loss_area != "" else "-", c.tolerance])
+	_account_u[customer_id] = ProductQuality.account_fit(c).value
 
 
 static func _on_lead(lead_id: String) -> void:
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
-	print("PROBE LEAD day=%d id=%s arch=%s sector=%s star=%d phase=%d" % [
-		GameState.day, lead_id, p.archetype_id, p.industry, p.star, GameState.phase])
+	var fit: Dictionary = ProductQuality.prospect_fit(p) if _fit_readable() else {"value": "-", "loss_area": ""}
+	print("PROBE LEAD day=%d id=%s arch=%s sector=%s star=%d phase=%d u=%s loss=%s" % [
+		GameState.day, lead_id, p.archetype_id, p.industry, p.star, GameState.phase,
+		fit.value, fit.loss_area if fit.loss_area != "" else "-"])
+
+
+## A fixture product without line content (saas_ops) has no core area to fit: its leads read `u=-` and its
+## signatures and accounts print no fit.
+static func _fit_readable() -> bool:
+	return not SprintCatalog.capabilities("core").is_empty()
 
 
 static func _log_promise(promise_id: String, stage: String) -> void:
@@ -624,23 +681,55 @@ static func _log_customers() -> void:
 			clampi(int(round(health)), 0, 100)])
 
 
+## PROBE UFLUX — the B2B book's fit read once a week against the last reading (or the account's signature). A
+## fit moves only when a version ships or the account's renewal window opens (Customer.market_ref is copied
+## then); a change with neither is counted as unexplained. A window opens on the day next_renewal_day minus the
+## request lead falls on, so a copy at any other time is unexplained too.
+static func _log_uflux() -> void:
+	var released: bool = _release_seen
+	_release_seen = false
+	var book: Array = CustomerRegistry.get_by_market("b2b")
+	if book.is_empty() or not _fit_readable():
+		return
+	var lead: int = TimeModel.ticks(int(SprintCatalog.cfg("request.before_renewal_weeks")))
+	var now: Dictionary = {}
+	var changed: int = 0
+	var renewal: int = 0
+	var unexplained: int = 0
+	for c in book:
+		now[c.id] = ProductQuality.account_fit(c).value
+		if now[c.id] == _account_u.get(c.id, now[c.id]):
+			continue
+		changed += 1
+		if SprintBridges.next_renewal_day(c) - lead == GameState.day:
+			renewal += 1
+		elif not released:
+			unexplained += 1
+	print("PROBE UFLUX day=%d changed=%d release=%s renewal=%d unexplained=%d" % [
+		GameState.day, changed, str(released), renewal, unexplained])
+	_u_unexplained_weeks += int(unexplained > 0)
+	_account_u = now
+
+
 ## PROBE B2C — the consumer week: the audience and who pays it at what price, the userbase's
 ## satisfaction beside the target it drifts toward, open bugs, the users lost so far, the
-## quality term q the audience formula reads, interest, server occupancy, and the support
-## desk: who is on it, the reports waiting, and how many arrive and get validated a day.
+## quality term q the audience formula reads (and the fit u it is made of, with the audience's
+## place on the star rows), interest, server occupancy, and the support desk: who is on it, the
+## reports waiting, and how many arrive and get validated a day.
 static func _log_b2c() -> void:
 	if not ProductState.is_live() or ProductState.market_type() != "b2c":
 		return
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	var price: int = int(GameState.get_flag("b2c_price", 0)) if GameState.get_flag("b2c_paid_tier_open", false) else 0
-	print("PROBE B2C day=%d aud=%.1f paying=%d price=%d conv=%.3f sat=%d sat_target=%d open_bugs=%d lost=%.1f q=%.1f interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f" % [
+	print("PROBE B2C day=%d aud=%.1f paying=%d price=%d conv=%.3f sat=%d sat_target=%d open_bugs=%d lost=%.1f q=%.1f interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f u=%d aud_star=%.2f" % [
 		GameState.day, SalesSystem.b2c_audience(), SalesSystem.b2c_paying_users(), price,
 		SalesSystem.conversion_rate(price) if price > 0 else 0.0, ub.satisfaction if ub != null else -1,
 		SalesSystem.b2c_satisfaction_target(),
 		ProductState.open_bugs(), SalesSystem.b2c_users_lost(),
 		SalesSystem.b2c_quality(), ProductRead.interest(),
 		InfraSystem.occupancy(), SupportSystem.desk_roster().size(), ProductState.reports_incoming(),
-		SupportSystem.reports_per_day(), SupportSystem.validation_per_day()])
+		SupportSystem.reports_per_day(), SupportSystem.validation_per_day(),
+		ProductQuality.fit(SalesSystem.B2C_FIT_CTX).value, ProductQuality._audience_star()])
 
 
 ## PROBE BUGS — the week's bugs: how many arrived (the change in the store plus what fix cards cleared), the store
@@ -866,6 +955,7 @@ static func _on_week_start() -> void:
 	_play_the_week()
 	_log_state()
 	_log_customers()
+	_log_uflux()
 	_log_b2c()
 	_log_bugs()
 	_log_areas()
@@ -932,11 +1022,11 @@ static func _finish() -> void:
 	var runway: Array = [1, 2, 3].map(func(ph: int) -> String:
 		var w: Vector2i = _runway_weeks.get(ph, Vector2i.ZERO)
 		return "finite_runway_p%d=%d/%d" % [ph, w.x, w.y])
-	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d" % [
+	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d u_unexplained_weeks=%d" % [
 		GameState.day, str(GameState.run_active), GameState.ending_id, " ".join(runway), _min_cash_pre_seed,
 		GameState.seed_closed_day, _first_sign_day, _first_revenue_day,
 		int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, -1)), _open_weeks.size(),
-		_open_weeks.filter(func(w: int) -> bool: return not _meetings_by_day.has(w)).size()])
+		_open_weeks.filter(func(w: int) -> bool: return not _meetings_by_day.has(w)).size(), _u_unexplained_weeks])
 	_log_hr()
 
 
@@ -1045,11 +1135,11 @@ static func _plan_the_sprint() -> void:
 
 ## The fix arms on top of the lead's plan: every fix card out, the arm's cards in first (past the capacity ceiling
 ## when `add` refuses them), then the lead fills what is left. The fix cards the arm does not take wait in the next
-## column meanwhile, where the lead never suggests them.
+## column meanwhile, where the lead never suggests them; so do the cards outside the core when the arm is core-only.
 static func _plan_fix_arm() -> void:
 	var p: Dictionary = GameState.product
 	for id in p.sprint.cards.duplicate():
-		if p.cards[id].kind == "fix":
+		if p.cards[id].kind == "fix" or _outside_core(p.cards[id]):
 			SprintSystem.remove(id)
 	var bugs: Dictionary = ProductState.open_bugs_by_line()
 	var due: Array = bugs.keys()
@@ -1065,11 +1155,19 @@ static func _plan_fix_arm() -> void:
 			SprintSystem._place(SprintCatalog.card_by_id("fix:" + line), true)
 	var parked: Array = bugs.keys().filter(func(line: String) -> bool: return not due.has(line)).map(
 		func(line: String) -> String: return "fix:" + line)
+	parked.append_array(SprintCatalog.open_cards([]).filter(_outside_core).map(
+		func(c: Dictionary) -> String: return c.id))
 	for id in parked:
 		SprintSystem.send_next(id)
 	SprintSystem.apply_lead()
 	for id in parked:
 		SprintSystem.remove(id)
+
+
+## A feature or request card of another area than the core, which the core-only arm never plans. Fix and research
+## cards are the arm's too, whatever their area.
+static func _outside_core(c: Dictionary) -> bool:
+	return _core_only and c.area != "core" and (c.kind == "feature" or c.kind == "request")
 
 
 ## A sprint waiting on its plan starts on the lead's plan the morning its note opens, as the Product page
@@ -1129,11 +1227,12 @@ static func _work_the_pipeline() -> void:
 		return
 	for i in SalesConstants.MEETINGS_PER_WEEK + 1:
 		# The first lead the founder is allowed to sit with, not only the head of the queue: a
-		# blocked returning company at leads[0] would idle the meeting.
+		# blocked returning company at leads[0] would idle the meeting. The desk arm leaves the reps' band to them.
+		var reps_band: int = _desk_ceiling() if _desk else 0
 		var table: Prospect = null
 		for raw in ProspectRegistry.get_all():
 			var lead: Prospect = raw as Prospect
-			if lead != null and SalesLedger.meeting_block_reason(lead.id) == "":
+			if lead != null and lead.star > reps_band and SalesLedger.meeting_block_reason(lead.id) == "":
 				table = lead
 				break
 		if table == null or not GameState.run_active:
@@ -1141,6 +1240,14 @@ static func _work_the_pipeline() -> void:
 		_meet(table)
 		_answer()
 		_play_the_hour()
+
+
+## The highest star a rep on the Satış job works (the game hands them every lead up to it); 0 with nobody there.
+static func _desk_ceiling() -> int:
+	var best: int = 0
+	for rep in HRSystem.assigned_to(HRConstants.AREA_SALES):
+		best = maxi(best, SalesRepSystem.band_ceiling(rep))
+	return best
 
 
 static func _meet(p: Prospect) -> void:
@@ -1364,11 +1471,19 @@ static func _run_research() -> void:
 # no Series A policy, sign the opening terms; walk signs them too, because the seed table has no
 # walk (TermSheetTableSystem.walk refuses it at seed).
 
+## The funds the founder tries, in the registry's order; the product policy tries the product fund first.
+static func _funds() -> Array:
+	var funds: Array = InvestorRegistry.get_active()
+	if _vc_policy == "product":
+		funds = funds.filter(func(f: Dictionary) -> bool: return f.domain == "product") \
+			+ funds.filter(func(f: Dictionary) -> bool: return f.domain != "product")
+	return funds.map(func(f: Dictionary) -> String: return String(f.id))
+
+
 static func _take_the_seed() -> void:
 	if GameState.seed_sheet == null and SeedRoundSystem.door_open() \
 			and WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS):
-		for raw in InvestorRegistry.get_active():
-			var fund: String = String((raw as Dictionary).get("id", ""))
+		for fund in _funds():
 			if SeedRoundSystem.begin_pitch(fund):
 				var path: String = _sit_the_meeting()
 				print("PROBE PLAY day=%d seed meeting fund=%s path=%s" % [GameState.day, fund, path])
@@ -1399,6 +1514,9 @@ static func _take_the_seed() -> void:
 #   cautious — the same meeting; sign the opening terms without a single push (the baseline).
 #   walk     — the same meeting; walk the first table through its own walk (VCPitchSystem.
 #              walk_table): the Series A decision faced and refused, the bootstrap road.
+#   product  — cautious, but the product fund is tried first at the seed and at Series A, so
+#              the area it names (PROBE VCQ dim) can be counted; its run parts from the others
+#              at the seed round.
 # The meeting is played identically by all, so the runs are the same run up to the
 # table. The lever draw comes from a probe-local generator seeded per table with an EvDice
 # hash of seed/day/ids — never a stream the game draws from — and nothing acts before
@@ -1425,9 +1543,8 @@ static func _play_the_hunt() -> void:
 		return
 	if _vc_meet_day == GameState.day:
 		return                          # a refusal this week: the next fund is booked next week
-	# 4. Book the first fund that will meet, in the registry's order.
-	for raw in InvestorRegistry.get_active():
-		var vc: String = String((raw as Dictionary).get("id", ""))
+	# 4. Book the first fund that will meet, in _funds' order.
+	for vc in _funds():
 		var st: Dictionary = GameState.vc_states.get(vc, {}) as Dictionary
 		if String(st.get("status", "open")) == "callback":
 			continue
@@ -1754,6 +1871,8 @@ static func _seed_world(preset: String) -> void:
 		_k1_only = bool(spec.get("k1_only", false))
 		_fix_arm = String(spec.get("fix", ""))
 		_no_stop = bool(spec.get("no_stop", false))
+		_core_only = bool(spec.get("core_only", false))
+		_desk = bool(spec.get("desk", false))
 		ProductState.bugs_free = _fix_arm == "off"
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log

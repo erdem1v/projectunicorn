@@ -236,7 +236,11 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   24:00 kurar), preset'ler `RunProbe.PRESETS`'te (düzeltme kolları
   `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*`, preset anahtarı `fix`; her sprint başında `PROBE FIX`,
   her hafta `PROBE BUGS` basar; bot acil durum kartını fiile göre cevaplar, `fix_none` erteler, öbürleri sprinti durdurur ve
-  durdurduğu anda `PROBE STOP` basar; `*_free` kolları sprinti hiç durdurmaz). Karar değil defter basar;
+  durdurduğu anda `PROBE STOP` basar; `*_free` kolları sprinti hiç durdurmaz; `*_desk` kollarında (anahtar `desk`)
+  masada temsilci varken kurucu yalnız temsilcilerin yıldız bandının üstündeki adaylarla görüşür; `full_run_quality_core[_desk]`
+  (anahtar `core_only`) sprintte Çekirdek dışı özellik ve talep kartı bırakmaz, düzeltme ve araştırma kartları kalır;
+  `full_run_vc_product` ve `full_run_b2c_vc_product` seed'de ve Series A'da önce ürün fonuyla (Meridian) oturur; lead'li her
+  B2B imzada `PROBE FIT`, her hafta `PROBE UFLUX` basılır). Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
