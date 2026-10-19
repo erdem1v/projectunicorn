@@ -121,6 +121,11 @@ static func word(area: String, ctx: Dictionary = {}) -> String:
 	return word_for(level(area), expectation(area, ctx))
 
 
+## Alanın sözcüğü Yeterli ya da üstü mü.
+static func is_enough(area: String, ctx: Dictionary) -> bool:
+	return word(area, ctx) in ["enough", "strong"]
+
+
 ## B2B: alanın, yıldızın ürün sayfası referansını karşıladığı en büyük yıldız (0-3), ham seviyeyle. 0 yalnız Çekirdek'te
 ## olur; öbür alanlara 1★ bakmaz, onlar en az 1'dir.
 static func serves(area: String) -> int:
@@ -166,9 +171,14 @@ static func market_ref_for(star: int, sector: String, subtype: String = ProductS
 	return _ref({"market": "b2b", "sector": sector, "star": star, "subtype": subtype})
 
 
-## Adayın uyumu: yıldızı ve sektörüyle bugünkü beklenti, rakip penceresi dahil.
+## Adayın bağlamı: yıldızı ve sektörüyle bugünkü beklenti, rakip penceresi dahil.
+static func prospect_ctx(p: Prospect) -> Dictionary:
+	return {"market": "b2b", "sector": p.industry, "star": p.star, "rivals": true}
+
+
+## Adayın uyumu.
 static func prospect_fit(p: Prospect) -> Dictionary:
-	return fit({"market": "b2b", "sector": p.industry, "star": p.star, "rivals": true})
+	return fit(prospect_ctx(p))
 
 
 ## Hesabın uyumu: beklenti hesabın kopyasıdır (`market_ref`), kopyası olmayan hesapta (imza yolunu atlayan fikstür) bugünkü

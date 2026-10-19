@@ -28,7 +28,7 @@ const NOD_SHARE := 0.5
 const CHIP_BY_SEAM := {
 	"hr.effective_skill": "MEETING_CHIP_SKILL",
 	"founder.charisma": "MEETING_CHIP_SKILL",
-	"urun.axis_reading": "MEETING_CHIP_PREP",
+	"urun.product_fit": "MEETING_CHIP_PREP",
 	"urun.capacity_tier": "MEETING_CHIP_PREP",
 	"sales.price_stance": "MEETING_CHIP_PREP",
 	"sales.reach_band": "MEETING_CHIP_ROOM",
@@ -84,7 +84,7 @@ func pick(id: String) -> Dictionary:
 	var label := tr("SALES_MEETING_SKIP")
 	for a: Dictionary in _view.answers:
 		if a.id == id:
-			label = tr(a.text_key)
+			label = _say(a.text_key, _view)
 	var asked := _asker(_view)
 	var before: float = _view.odds
 	var vs: Dictionary = SalesMeetingSystem.skip_to_offer() if id == SKIP else SalesMeetingSystem.choose(id)
@@ -146,20 +146,21 @@ func _act1(vs: Dictionary, entries: Array, gestures: Array) -> Dictionary:
 	}
 	if vs.outcome == "":
 		step.speaker = _asker(vs)
+		if vs.objection != "":
+			entries.append({"kind": "counterpart", "seat": step.speaker, "text": vs.objection})
 		entries.append({"kind": "counterpart", "seat": step.speaker, "text": tr(vs.probe_key)})
 		if vs.inner_voice != "":
 			entries.append({"kind": "quiet", "text": vs.inner_voice})
 		step.options = _answers(vs)
 		return step
 	step.speaker = LEAD
-	entries.append({"kind": "counterpart", "seat": LEAD, "text": tr(vs.closing_key)})
+	entries.append({"kind": "counterpart", "seat": LEAD, "text": _say(vs.closing_key, vs)})
 	if vs.outcome == "won":
 		step.continue_key = "SALES_MEETING_OPEN_OFFER"
 	else:
 		step.continue_key = "MEETING_CONTINUE"
 		step.result = _card("negative", "MEETING_RES_LOST",
-			tr("MEETING_RES_LOCK").format({"weeks": SalesConstants.RETURN_LOCK_WEEKS}),
-			tr("SALES_MEMORY_" + String(vs.closing_key).trim_prefix("SALES_LOSS_")))
+			tr("MEETING_RES_LOCK").format({"weeks": SalesConstants.RETURN_LOCK_WEEKS}), vs.memory_after)
 	return step
 
 
@@ -169,8 +170,8 @@ func _act1(vs: Dictionary, entries: Array, gestures: Array) -> Dictionary:
 func _answers(vs: Dictionary) -> Array:
 	var out := []
 	for a: Dictionary in vs.answers:
-		out.append(_option(a.id, tr(a.text_key)).merged(
-			{"enabled": a.open, "lock_reason": tr(a.lock_key), "dice_only": vs.last_probe and a.open}, true))
+		out.append(_option(a.id, _say(a.text_key, vs)).merged(
+			{"enabled": a.open, "lock_reason": _say(a.lock_key, vs), "dice_only": vs.last_probe and a.open}, true))
 	if vs.can_skip:
 		var factors := []
 		for m: Dictionary in vs.modifier_lines:
@@ -183,6 +184,11 @@ func _answers(vs: Dictionary) -> Array:
 
 func _option(id: String, label: String) -> Dictionary:
 	return {"id": id, "label": label}
+
+
+## A line of the sitting with the area its view names.
+func _say(key: String, vs: Dictionary) -> String:
+	return tr(key).format({"area": vs.area})
 
 
 func _open_table() -> Dictionary:
@@ -256,7 +262,7 @@ func _move(id: String) -> Dictionary:
 				step.gestures.append({"seat": LEAD, "name": "back"})
 				step.result = _card("negative", "MEETING_RES_LOST",
 					tr("MEETING_RES_PAIR").format({"first": tr("MEETING_RES_PRICE_OUT"), "second": walk_lock}),
-					tr("SALES_MEMORY_" + reason.to_upper()))
+					SalesLedger.memory_line(reason, ""))
 	step.merge({"instrument": {}, "options": [], "continue_key": "MEETING_CONTINUE"})
 	return step
 

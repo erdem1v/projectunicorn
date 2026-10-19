@@ -192,6 +192,17 @@ static func loss_reason(account_key: String) -> String:
 	return String(_memory(account_key).get("loss_reason", ""))
 
 
+## What the loss named: the area id of a weak-area loss, the line or provider of the others.
+static func loss_target(account_key: String) -> String:
+	return String(_memory(account_key).get("loss_target", ""))
+
+
+## §9 — what a company remembers of its loss, the line the next sitting opens with.
+static func memory_line(reason: String, target: String) -> String:
+	var line: String = TranslationServer.translate("SALES_MEMORY_%s" % reason.to_upper())
+	return line.format({"area": SprintCatalog.area_short(target)}) if reason == SalesConstants.LOSS_WEAK_AREA else line
+
+
 static func loss_count(account_key: String) -> int:
 	return int(_memory(account_key).get("loss_count", 0))
 
@@ -334,8 +345,8 @@ static func meeting_block_reason(lead_id: String) -> String:
 ## the taxonomy, and an unrecognised id must never lock a door forever).
 static func _blocker_cleared(p: Prospect) -> bool:
 	match p.last_loss_reason:
-		SalesConstants.LOSS_STABILITY:
-			return ProductRead.axis_reading("", "stability") >= 55
+		SalesConstants.LOSS_WEAK_AREA:
+			return ProductQuality.is_enough(loss_target(p.company_name), ProductQuality.prospect_ctx(p))
 		SalesConstants.LOSS_MISSING_TIER:
 			return SalesProbes.locked_line() == ""
 		SalesConstants.LOSS_PROVIDER_TRUST:

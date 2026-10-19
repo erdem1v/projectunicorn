@@ -40,6 +40,8 @@ static var _promised_feature: String = ""
 static var _inner_voice_key: String = ""   # the line THIS sitting drew; a key, never text
 static var _outcome: String = ""            # "" | "won" | "lost"
 static var _loss_reason: String = ""
+static var _ctx: Dictionary = {}            # how this table reads the product (ProductQuality.prospect_ctx)
+static var _fit: Dictionary = {}            # its product fit: U, and the area the customer finds lacking
 
 const EVENT_KIND := "sales_meeting"
 
@@ -70,6 +72,8 @@ static func reset() -> void:
 	_inner_voice_key = ""
 	_outcome = ""
 	_loss_reason = ""
+	_ctx = {}
+	_fit = {}
 
 
 # ============================================================================
@@ -84,8 +88,10 @@ static func open(lead_id: String) -> Dictionary:
 	_active = true
 	_lead_id = lead_id
 	_facts = SalesProbes.facts_for(p)
+	_ctx = ProductQuality.prospect_ctx(p)
+	_fit = ProductQuality.fit(_ctx)
 	_probe_budget = _probes_for_star(p.star)
-	_base_contributions = _build_base_contributions(p)
+	_base_contributions = _build_base_contributions(p, _fit)
 	_needle = _odds_from(_base_contributions)
 	SalesLedger.count_meeting()
 	# §5.0 — the founder is AT the table for the whole sitting; the busy gates read it while
@@ -128,18 +134,12 @@ static func close() -> void:
 ##
 ## I7 IS STRUCTURAL HERE: a term exists only if a named query produced it. "Masada olmayan
 ## yetenek satır olamaz" (§5.1) is enforced by there being nowhere else to get a number.
-static func _build_base_contributions(p: Prospect) -> Array:
+static func _build_base_contributions(p: Prospect, fit: Dictionary) -> Array:
 	var out: Array = []
-	# Product fit — the dominant term. The archetype's axis weights are what make the same
+	# Product fit — the dominant term. The customer's star and sector are what make the same
 	# product read differently at two tables.
-	var weights: Dictionary = SalesArchetypes.axis_weights(p.archetype_id)
-	var floors: Dictionary = ProductRead.market_floors("b2b")
-	var fit: float = 0.0
-	for axis in weights.keys():
-		var a: String = String(axis)
-		var floor_v: float = maxf(float(floors.get(a, 30)), 1.0)
-		fit += float(weights[a]) * clampf(float(ProductRead.axis_reading("", a)) / floor_v - 1.0, -1.0, 1.0)
-	out.append({"seam": "urun.axis_reading", "delta": SalesConstants.W_PRODUCT_FIT * fit})
+	out.append({"seam": "urun.product_fit",
+		"delta": SalesConstants.W_PRODUCT_FIT * clampf(float(fit.value) / ProductQuality.FIT_SCALE - 1.0, -1.0, 1.0)})
 
 	# The founder's Satış — the base.
 	var sales_star: float = HRConstants.stars_for(GameState.get_founder_skill(HRConstants.AREA_SALES))
@@ -194,7 +194,7 @@ static func modifier_lines() -> Array:
 static func _modifier_labels() -> Dictionary:
 	# Every key here is a seam name, and every seam name here is one a query actually answers.
 	return {
-		"urun.axis_reading": TranslationServer.translate("SALES_MOD_PRODUCT_FIT"),
+		"urun.product_fit": _fit_line(),
 		"hr.effective_skill": TranslationServer.translate("SALES_MOD_FOUNDER_SALES"),
 		"sales.price_stance": TranslationServer.translate("SALES_MOD_PRICE_SIGNAL"),
 		"urun.capacity_tier": TranslationServer.translate("SALES_MOD_PROVIDER"),
@@ -204,6 +204,13 @@ static func _modifier_labels() -> Dictionary:
 		"sales.loss_reason": TranslationServer.translate("SALES_MOD_RETURNED"),
 		"sales.answer": TranslationServer.translate("SALES_MOD_ANSWERS"),
 	}
+
+
+## "ürün uyumu · Çekirdek Zayıf": no number, the area the customer finds lacking (Core when none) and how this table reads it.
+static func _fit_line() -> String:
+	var area: String = String(_fit.loss_area) if _fit.loss_area != "" else "core"
+	return "%s%s%s %s" % [TranslationServer.translate(_fit.label_key), SprintCatalog.SEP, SprintCatalog.area_short(area),
+		TranslationServer.translate("PRODUCT_LEVEL_" + ProductQuality.word(area, _ctx).to_upper())]
 
 
 # ============================================================================
@@ -322,22 +329,20 @@ static func _lose(reason: String) -> Dictionary:
 	var p: Prospect = ProspectRegistry.get_prospect(_lead_id)
 	if p != null:
 		# §5.2 — the account remembers, the log records, the signal fires. No economic delta.
-		SalesLedger.report_loss(p.company_name, reason, _loss_target(reason))
-		SalesFaucetSystem.lock_return(p.company_name, SalesConstants.RETURN_LOCK_WEEKS)
-		ProspectRegistry.remove(p.id)
+		SalesFinalizer.lose(p.id, p.company_name, reason, _loss_target(reason), SalesConstants.RETURN_LOCK_WEEKS)
 	return view_state()
 
 
 # DESIGN-PARKED: §5.2 gives the taxonomy but not the PRECEDENCE. This order is the one a
-# buyer would actually weigh — can it stay up, do I trust who runs it, does it do the thing,
-# who carries the switch — with price as the falling branch. Alternatives seen: weight by the
-# archetype's own axis priorities; or name whichever modifier is most negative (which turns a
-# number into a sentence and reads against §9.6's no-numbers rule).
-## §5.2 — the customer names its reason FROM REAL STATE, and only a gap it ASKED about this sitting;
-## price is open at every table, so every other loss falls to it.
+# buyer would actually weigh — does the product do what we need, do I trust who runs it, is
+# the next step there, who carries the switch — with price as the falling branch. Alternatives
+# seen: weight by the archetype's own priorities; or name whichever modifier is most negative
+# (which turns a number into a sentence and reads against §9.6's no-numbers rule).
+## §5.2 — the customer names its reason FROM REAL STATE: the area it said it finds lacking (the opening objection),
+## or a gap it ASKED about this sitting; price is open at every table, so every other loss falls to it.
 static func _derive_loss_reason() -> String:
-	if _used_families.has("stability") and int(_facts.get("axis_stability", 0)) < 40:
-		return SalesConstants.LOSS_STABILITY
+	if _fit.loss_area != "":
+		return SalesConstants.LOSS_WEAK_AREA
 	if _used_families.has("provider") and not bool(_facts.get("provider_enterprise_ok", true)):
 		return SalesConstants.LOSS_PROVIDER_TRUST
 	if _used_families.has("ladder") and bool(_facts.get("has_locked_next_step", false)):
@@ -349,10 +354,10 @@ static func _derive_loss_reason() -> String:
 
 
 ## The reason's TARGET field (§5.2 "Hedef alanı ilgili hat/eksen kimliğini taşır") — what the
-## demand generator will read when it lands.
+## return gate and the memory line read.
 static func _loss_target(reason: String) -> String:
 	match reason:
-		SalesConstants.LOSS_STABILITY: return "stability"
+		SalesConstants.LOSS_WEAK_AREA: return String(_fit.loss_area)
 		SalesConstants.LOSS_MISSING_TIER: return SalesProbes.locked_line()
 		SalesConstants.LOSS_PROVIDER_TRUST: return InfraSystem.provider()
 		SalesConstants.LOSS_SWITCHING_RISK: return HRConstants.AREA_CUSTOMER_SUCCESS
@@ -403,15 +408,34 @@ static func view_state() -> Dictionary:
 		"last_probe": _on_last_probe(),
 		"memory_line": _memory_line(ProspectRegistry.get_prospect(_lead_id)),
 		"inner_voice": _inner_voice_line(),
+		"objection": _objection(),
+		# The area the view's lines name as {area}.
+		"area": _area_name(),
 	}
 	if _outcome == "":
 		vs["probe_key"] = "SALES_PROBE_%s" % String(_probe.get("id", "")).to_upper()
 		vs["answers"] = _answer_views()
 	elif _outcome == "lost":
 		vs["closing_key"] = "SALES_LOSS_%s" % _loss_reason.to_upper()
+		vs["memory_after"] = SalesLedger.memory_line(_loss_reason, _loss_target(_loss_reason))
 	else:
 		vs["closing_key"] = "SALES_WIN_CUT"
 	return vs
+
+
+## The area the view's lines name: the probe row's while it asks, the lost area when a weak area ended the table, else "".
+static func _area_name() -> String:
+	var area: String = String(_probe.get("area", ""))
+	if _outcome == "lost":
+		area = String(_fit.loss_area) if _loss_reason == SalesConstants.LOSS_WEAK_AREA else ""
+	return SprintCatalog.area_short(area) if area != "" else ""
+
+
+## What the customer finds lacking, said once, with the sitting's first question: "" at every other view.
+static func _objection() -> String:
+	if _outcome != "" or _probe_index != 1 or _fit.loss_area == "":
+		return ""
+	return TranslationServer.translate("SALES_MEETING_OBJECTION").format({"area": SprintCatalog.area_short(_fit.loss_area)})
 
 
 static func _answer_views() -> Array:
@@ -422,8 +446,7 @@ static func _answer_views() -> Array:
 			"id": String(ans.get("id", "")),
 			"verb": String(ans.get("verb", "")),
 			"open": bool(ans.get("open", false)),
-			"text_key": "SALES_ANS_%s_%s" % [
-				String(_probe.get("id", "")).to_upper(), String(ans.get("id", "")).to_upper()],
+			"text_key": SalesProbes.answer_key(_probe, String(ans.get("id", ""))),
 			"lock_key": _lock_key(String(ans.get("lock_fact", ""))),
 		})
 	return out
@@ -441,7 +464,7 @@ static func _lock_key(lock_fact: String) -> String:
 static func _memory_line(p: Prospect) -> String:
 	if p == null or p.loss_count <= 0 or p.last_loss_reason == "":
 		return ""
-	return TranslationServer.translate("SALES_MEMORY_%s" % p.last_loss_reason.to_upper())
+	return SalesLedger.memory_line(p.last_loss_reason, SalesLedger.loss_target(p.company_name))
 
 
 # DESIGN-PARKED: §5.1.1 says budgeted and conditional but not WHICH line or WHEN. At most

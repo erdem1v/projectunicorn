@@ -15,7 +15,7 @@ extends RefCounted
 # loses to one it has not) and then on a deterministic hash, so the same state on the same day
 # produces the same interrogation after a reload.
 #
-# THE LINES ARE CSV KEYS DERIVED FROM IDS: `SALES_PROBE_<ID>`, `SALES_ANS_<ID>_<ANSWER>` and
+# THE LINES ARE CSV KEYS DERIVED FROM IDS: `SALES_PROBE_<ID>`, `SALES_ANS_<ID>_<ANSWER>` (`answer_key`) and
 # `SALES_LOCK_<FACT>`. No grep for a literal finds them, so `loc_sales_derived_keys` walks this
 # catalogue and asks the translation server for each one.
 #
@@ -45,6 +45,8 @@ const VERB_REFERENCE := "reference"
 ## refuse such a row before a build, is not built.
 static func facts_for(p: Prospect) -> Dictionary:
 	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	var ctx: Dictionary = ProductQuality.prospect_ctx(p)
+	var emphasis: String = ProductQuality.emphasis(p.industry)[0]
 	return {
 		# --- the table itself ---
 		"customer_star": p.star,
@@ -55,10 +57,12 @@ static func facts_for(p: Prospect) -> Dictionary:
 		"whale_condition": p.whale_condition,
 		"returning": p.loss_count > 0,
 		"last_loss_reason": p.last_loss_reason,
+		# --- the product, through the areas this table's sector weighs (ProductQuality) ---
+		"emphasis_area": emphasis,
+		"emphasis_enough": ProductQuality.is_enough(emphasis, ctx),
+		# An area the table's star does not look at asks nothing of the product.
+		"onboarding_enough": ProductQuality.expectation("onboarding", ctx) == 0.0 or ProductQuality.is_enough("onboarding", ctx),
 		# --- the product, through Ürün §19 ---
-		"axis_innovation": ProductRead.axis_reading("", "innovation"),
-		"axis_stability": ProductRead.axis_reading("", "stability"),
-		"axis_experience": ProductRead.axis_reading("", "experience"),
 		"unconfirmed_reports": ProductRead.unconfirmed(),
 		"version_age": ProductRead.version_age(),   # weeks
 		"interest": int(ProductRead.interest()),
@@ -109,6 +113,16 @@ static func _has_reference(star: int) -> bool:
 	return false
 
 
+## What every emphasis row answers: the three rows ask one question about three areas.
+const EMPHASIS_ANSWERS := [
+	{"id": "a_strength", "verb": VERB_STRENGTH, "delta": 1.0,
+		"gate": {"emphasis_enough": true}, "lock_fact": "emphasis_enough"},
+	{"id": "a_admit", "verb": VERB_ADMIT, "delta": 0.35},
+	{"id": "a_charisma", "verb": VERB_CHARISMA, "delta": 0.8,
+		"gate": {"founder_charisma": {"min": 1}}},
+]
+
+
 # ============================================================================
 #  The catalogue. Rows are DATA; the picker below is the only thing that reads them.
 # ============================================================================
@@ -118,25 +132,39 @@ static func _has_reference(star: int) -> bool:
 #   family        the topic; the picker never runs two rows of one family in one sitting
 #   criteria      {fact_key: matcher}. A matcher is a literal (equality) or
 #                 {"min": n} / {"max": n} / {"in": [...]}. MORE CRITERIA = MORE SPECIFIC.
+#   area          the product area the row's lines name as {area}, when they name one
+#   answers_as    the stem of the answer lines' CSV keys (the row's id when absent): rows that ask one question in several
+#                 ways share their answer lines
 #   answers       2-4 contextual rows, each {id, verb, gate, delta, lock_fact}
 #                   gate       optional criteria the ANSWER needs to be OPEN
 #                   delta      the ▲/▼ this verb moves the needle by, as a share of the base
 #                   lock_fact  which fact the lock line names when the gate fails; a locked
 #                              row is drawn ONLY when it is informative (§5.1.1)
 const CATALOGUE := [
-	# --- Stability / the outage record ------------------------------------
+	# --- The sector's emphasis: every buyer asks about the area its sector weighs most ---
 	{
-		"id": "probe_stability_record",
-		"family": "stability",
-		"criteria": {"buyer": SalesArchetypes.BUYER_OPERATIONS},
-		"answers": [
-			{"id": "a_strength", "verb": VERB_STRENGTH, "delta": 1.0,
-				"gate": {"axis_stability": {"min": 55}},
-				"lock_fact": "axis_stability"},
-			{"id": "a_admit", "verb": VERB_ADMIT, "delta": 0.35},
-			{"id": "a_charisma", "verb": VERB_CHARISMA, "delta": 0.8,
-				"gate": {"founder_charisma": {"min": 1}}},
-		],
+		"id": "probe_emphasis_trust",
+		"family": "emphasis",
+		"criteria": {"emphasis_area": "trust"},
+		"area": "trust",
+		"answers_as": "probe_emphasis",
+		"answers": EMPHASIS_ANSWERS,
+	},
+	{
+		"id": "probe_emphasis_integrations",
+		"family": "emphasis",
+		"criteria": {"emphasis_area": "integrations"},
+		"area": "integrations",
+		"answers_as": "probe_emphasis",
+		"answers": EMPHASIS_ANSWERS,
+	},
+	{
+		"id": "probe_emphasis_onboarding",
+		"family": "emphasis",
+		"criteria": {"emphasis_area": "onboarding"},
+		"area": "onboarding",
+		"answers_as": "probe_emphasis",
+		"answers": EMPHASIS_ANSWERS,
 	},
 
 	# --- The ladder / integrations ----------------------------------------
@@ -196,9 +224,10 @@ const CATALOGUE := [
 		"id": "probe_switching_risk",
 		"family": "switching",
 		"criteria": {"customer_star": {"min": 2}},
+		"area": "onboarding",
 		"answers": [
 			{"id": "a_strength", "verb": VERB_STRENGTH, "delta": 1.0,
-				"gate": {"axis_experience": {"min": 50}}, "lock_fact": "axis_experience"},
+				"gate": {"onboarding_enough": true}, "lock_fact": "onboarding_enough"},
 			{"id": "a_admit", "verb": VERB_ADMIT, "delta": 0.4},
 			{"id": "a_promise", "verb": VERB_PROMISE, "delta": 0.8},
 		],
@@ -314,3 +343,8 @@ static func answers_for(row: Dictionary, facts: Dictionary, promise_lock: String
 			continue
 		out.append(ans)
 	return out
+
+
+## The CSV key of one answer's line; rows that share their answers (`answers_as`) share the lines.
+static func answer_key(row: Dictionary, answer_id: String) -> String:
+	return "SALES_ANS_%s_%s" % [String(row.get("answers_as", row.id)).to_upper(), answer_id.to_upper()]

@@ -140,6 +140,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sales_meeting_replays_identically": fail = _case_sales_meeting_replays_identically()
 		"sales_inner_voice_reaches_view": fail = _case_sales_inner_voice_reaches_view()
 		"sales_loss_reason_from_asked": fail = _case_sales_loss_reason_from_asked()
+		"sales_meeting_reads_fit": fail = _case_sales_meeting_reads_fit()
+		"sales_emphasis_question": fail = _case_sales_emphasis_question()
+		"sales_weak_area_loss": fail = _case_sales_weak_area_loss()
 		"sales_faucet_guard_b2c": fail = _case_sales_faucet_guard_b2c()
 		"sales_lead_expiry_and_return_lock": fail = _case_sales_lead_expiry_and_return_lock()
 		"sales_meeting_time_skip_founder_share": fail = _case_sales_meeting_time_skip_founder_share()
@@ -700,6 +703,9 @@ static func _make_employee(id: String, display_name: String, role_id: String,
 static func _seed_b2b(mrr: int) -> void:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
+	# The shared product: the ERP with every line at K2, which meets what a customer of any size and sector expects, so
+	# ProductQuality finds nothing lacking at any table.
+	_seed_b2b_lines("erp")
 	# A shipped product always has quality axes — seed a realistic HEALTHY product so a
 	# signed account holds steady under the B2B two-layer model (only a DEGRADING product
 	# should erode it). Bug count is left untouched so cases that pre-set it keep control.
@@ -714,14 +720,8 @@ static func _seed_b2b(mrr: int) -> void:
 	_sign_fixture(p, mrr, 70)
 
 
-## "Healthy Series A MRR" for the VC fixtures: the revenue bar moved
-## 5,000 → the $40-80K band and VCPitchSystem's conviction seeding reads CONV_MRR_REFERENCE =
-## the bar, so a fixture hard-pinned at 6,000 would read as a WEAK company. Bar + 1,000.
-## A LIVE, HEALTHY B2B PRODUCT for the sitting cases — line tiers, not the legacy `mvp_*`
-## flags. Ürün rev 6.1 assembles the axis readings from the LINE LADDER (product_state.gd:238),
-## so a fixture that only sets `mvp_stability` leaves every `urun.axis_reading` at zero and the
-## persuasion model reads a product that does not exist. `_seed_b2b` keeps its flags because
-## the economy path still reads them; this is the other half.
+## A LIVE, HEALTHY B2B PRODUCT for the sitting cases: every line of the sub-type at one tier, which is what ProductQuality
+## and the line ladder read. `_seed_b2b` also keeps the legacy `mvp_*` flags, for the economy that still reads them.
 static func _seed_b2b_lines(subtype: String, tier: int = 2) -> void:
 	GameState.set_flag("mvp_sub_product_type_id", subtype)
 	for line_id in ProductLines.line_ids(subtype):
@@ -737,7 +737,9 @@ static func _seed_bugs(n: int) -> void:
 	ProductState.add_bugs(BUG_LINE, n)
 
 
-## An established book at the bar, not a fresh signing: its onboarding window is closed, or the
+## "Healthy Series A MRR" for the VC fixtures: the revenue bar moved 5,000 → the $40-80K band and VCPitchSystem's
+## conviction seeding reads CONV_MRR_REFERENCE = the bar, so a fixture hard-pinned at 6,000 would read as a WEAK company.
+## Bar + 1,000. An established book at the bar, not a fresh signing: its onboarding window is closed, or the
 ## phase-3 onboarding service cost would drain the cash and the VC cases would run in the shutter.
 static func _seed_b2b_series_a() -> void:
 	_seed_b2b(SalesSystem.TRACTION_MRR_TARGET + 1000)
@@ -3541,7 +3543,7 @@ static func _case_sales_meeting_replays_identically() -> String:
 	# old pitch used) and the two verdicts diverge, because a stream draw moves with position.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b_lines("erp")
 	GameState.run_seed = 424242
 	var first: String = _replay_once("replay_lead")
 	if first == "":
@@ -3601,7 +3603,7 @@ static func _replay_once(lead_id: String) -> String:
 static func _case_sales_inner_voice_reaches_view() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b_lines("erp")
 	GameState.set_flag("sales_inner_voice_used", 0)
 	GameState.sales_meetings_week.clear()
 	var p: Prospect = _add_prospect("voice_lead", 3, "ai_vec_filter")
@@ -3626,36 +3628,43 @@ static func _case_sales_inner_voice_reaches_view() -> String:
 	return ""
 
 
-## §5.2 — the customer walks out over a gap it ASKED about. Every gap is open at each table below
-## (stability zero, the provider short, the next step locked): one that only asked about the switch
-## names it while nobody is on customer success and falls to price once someone is; one that asked
-## about stability names stability; one that asked about nothing a reason names walks out over price.
-## Frank's 2★ introduction across a founder with neither Satış nor Karizma, each question given its
-## strongest open answer, stays over the customer's low cut: the die decides that table.
-## FALSIFICATION: drop any family test from SalesMeetingSystem._derive_loss_reason and a row walks out
-## over the wrong reason; set WARM_INTRO_MISMATCH_MULT to 1.0 and Frank's table is cut before the die.
+## §5.2 — the customer walks out over what it SAID or ASKED about. A table that found an area lacking walks out over that
+## area whatever else it asked (its opening objection named it); one that did not names a gap it asked about, each open at
+## the tables below (the provider short, the next step locked): one that only asked about the switch names it while nobody is
+## on customer success and falls to price once someone is; one that asked about nothing a reason names walks out over price.
+## Frank's 2★ introduction across a founder with neither Satış nor Karizma, each question given its strongest open answer,
+## stays over the customer's low cut: the die decides that table.
+## FALSIFICATION: drop the area branch from SalesMeetingSystem._derive_loss_reason and the lacking-area rows walk out over
+## price; drop any family test and a row walks out over the wrong reason; set WARM_INTRO_MISMATCH_MULT to 1.0 and Frank's
+## table is cut before the die.
 static func _case_sales_loss_reason_from_asked() -> String:
-	for row in [[["switching"], false, SalesConstants.LOSS_SWITCHING_RISK],
-			[["switching"], true, SalesConstants.LOSS_PRICE],
-			[["stability"], true, SalesConstants.LOSS_STABILITY],
-			[["capacity"], false, SalesConstants.LOSS_PRICE]]:
-		SalesMeetingSystem._used_families = row[0]
-		SalesMeetingSystem._facts = {"axis_stability": 0, "cs_staffed": row[1], "provider_enterprise_ok": false,
-			"has_locked_next_step": true}
+	for row in [["", ["switching"], false, SalesConstants.LOSS_SWITCHING_RISK],
+			["", ["switching"], true, SalesConstants.LOSS_PRICE],
+			["", ["provider"], true, SalesConstants.LOSS_PROVIDER_TRUST],
+			["", ["ladder"], true, SalesConstants.LOSS_MISSING_TIER],
+			["", ["capacity"], false, SalesConstants.LOSS_PRICE],
+			["integrations", ["switching"], false, SalesConstants.LOSS_WEAK_AREA],
+			["core", [], true, SalesConstants.LOSS_WEAK_AREA]]:
+		SalesMeetingSystem._fit = {"loss_area": row[0]}
+		SalesMeetingSystem._used_families = row[1]
+		SalesMeetingSystem._facts = {"cs_staffed": row[2], "provider_enterprise_ok": false, "has_locked_next_step": true}
 		var reason: String = SalesMeetingSystem._derive_loss_reason()
-		if reason != row[2]:
-			return "asked %s, customer success staffed %s: walked out over %s, want %s" % [
-				str(row[0]), str(row[1]), reason, row[2]]
-	# v1.0 just out, as when Frank calls: ledger, stock and invoicing at K1, stability under its floor.
+		if reason != row[3]:
+			return "lacking '%s', asked %s, customer success staffed %s: walked out over %s, want %s" % [
+				row[0], str(row[1]), str(row[2]), reason, row[3]]
+	SalesMeetingSystem.reset()
+	# The ERP at K1 with no Trust & Scale: a 2★ manufacturer finds that area lacking, and Frank's warm introduction is what
+	# keeps its table over the cut.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "erp")
-	for row in [["line_erp_ledger", 0.75], ["line_erp_stock", 1.0], ["line_erp_invoicing", 0.75]]:
-		ProductState.set_line_tier(row[0], 1)
-		ProductState.stamp_step(row[0] + "_k1", row[1])
+	_seed_b2b_lines("erp", 1)
+	for line_id in SprintCatalog.capabilities("trust"):
+		ProductState.set_line_tier(line_id, 0)
 	_set_founder_area(HRConstants.AREA_SALES, 0)
 	_set_founder_area(FounderConstants.SKILL_CHARISMA, 0)
-	var vs: Dictionary = SalesMeetingSystem.open(SalesFaucetSystem.spawn_prospect("mid", "frank_intro").id)
+	var frank: Prospect = SalesFaucetSystem.spawn_prospect("mid", "frank_intro")
+	frank.industry = "manufacturing"
+	var vs: Dictionary = SalesMeetingSystem.open(frank.id)
 	for _i in SalesConstants.SAFETY_CAP_PROBES:
 		if vs.outcome != "":
 			break
@@ -3669,6 +3678,219 @@ static func _case_sales_loss_reason_from_asked() -> String:
 	if not vs.rolled and vs.outcome != "won":
 		return "Frank's table, best answers, a founder with no Satış: ended '%s' before the die, needle %.2f" % [
 			vs.outcome, vs.odds]
+	return ""
+
+
+## Görüşme ürün uyumunu adayın U'sundan okur ve zar ipucu sayı yazmaz. Aynı aday, aynı sektör: sağlıklı üründe uyum terimi
+## clamp(U ÷ 70 - 1, -1, 1) × W_PRODUCT_FIT'tir; Çekirdek'i zayıf üründe (öteki alanlar fazlasıyla yeterli, tavan devrede) terim
+## düşer ve ipucu satırı Çekirdek'i ve sözcüğünü yazar; Entegrasyonlar'ı boş üründe eksik alanı ve sözcüğünü yazar. Müşteri
+## eksik bulduğu alanı oturumun ilk sorusuyla bir kez söyler, aynı soru yeniden çizilince aynıdır, sonraki soruda yoktur; eksik
+## alan yoksa söylemez. Terim eski eksen okumasının değil ürün uyumunun seam'idir.
+##
+## FALSİFİKASYON: SalesMeetingSystem._objection'dan `_probe_index != 1` koşulunu sil → ikinci soruda itiraz sürer FAIL;
+## _build_base_contributions'ta `fit.value`'yu 70 yap → terim düşmez FAIL; _fit_line'da alanı hep "core" oku → Entegrasyonlar
+## iddiası FAIL; "urun.product_fit"i "urun.axis_reading" yap → seam iddiası FAIL.
+static func _case_sales_meeting_reads_fit() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	_set_founder_area(HRConstants.AREA_SALES, 9)
+	var lead: Prospect = _add_prospect("fit_lead", 2, "")
+	lead.industry = "logistics"
+	var sit := func() -> Dictionary:
+		GameState.sales_meetings_week.clear()
+		var vs: Dictionary = SalesMeetingSystem.open(lead.id)
+		var term: Variant = null
+		var seams: Array = []
+		for c: Dictionary in SalesMeetingSystem._base_contributions:
+			seams.append(c.seam)
+			if c.seam == "urun.product_fit":
+				term = c.delta
+		var line: String = ""
+		for m: Dictionary in vs.modifier_lines:
+			if m.seam == "urun.product_fit":
+				line = m.label
+		var again: Dictionary = SalesMeetingSystem.view_state()
+		var second: Dictionary = {}
+		for a: Dictionary in vs.answers:
+			if a.open:
+				second = SalesMeetingSystem.choose(a.id)
+				break
+		var out := {"vs": vs, "term": term, "seams": seams, "line": line, "again": again, "second": second,
+			"fit": ProductQuality.prospect_fit(lead)}
+		SalesMeetingSystem.close()
+		return out
+	var said := func(area: String, word: String) -> String:
+		return "%s%s%s %s" % [TranslationServer.translate("SALES_MOD_PRODUCT_FIT"), SprintCatalog.SEP,
+			SprintCatalog.area_short(area), TranslationServer.translate("PRODUCT_LEVEL_" + word.to_upper())]
+	var digits := RegEx.new()
+	digits.compile("[0-9]")
+
+	_seed_b2b_lines("erp", 2)
+	var healthy: Dictionary = sit.call()
+	var want: float = SalesConstants.W_PRODUCT_FIT * clampf(float(healthy.fit.value) / 70.0 - 1.0, -1.0, 1.0)
+	if healthy.term == null or not is_equal_approx(healthy.term, want) or healthy.term <= 0.0 or "urun.axis_reading" in healthy.seams:
+		return "a healthy product's fit term reads %s (want %.3f), seams %s" % [str(healthy.term), want, healthy.seams]
+	if healthy.fit.loss_area != "" or healthy.vs.objection != "" or healthy.line != said.call("core", "strong"):
+		return "a healthy product lacks '%s', objects '%s' and its hint reads '%s'" % [
+			healthy.fit.loss_area, healthy.vs.objection, healthy.line]
+
+	# Çekirdek'in iki hattı K1, öteki her alan K2: uyum Çekirdek oranının 0,25 üstünde kesilir.
+	for line_id in SprintCatalog.capabilities("core"):
+		ProductState.set_line_tier(line_id, 0)
+	for line_id in SprintCatalog.capabilities("core").slice(0, 2):
+		ProductState.set_line_tier(line_id, 1)
+	var weak: Dictionary = sit.call()
+	if not weak.fit.capped or weak.fit.loss_area != "core" or not (weak.term < healthy.term):
+		return "a weak Core reads capped %s, lacking '%s', term %s against %s" % [
+			weak.fit.capped, weak.fit.loss_area, str(weak.term), str(healthy.term)]
+	if weak.line != said.call("core", "weak") or digits.search(weak.line) != null:
+		return "a weak Core's hint reads '%s', want '%s' with no number" % [weak.line, said.call("core", "weak")]
+	var objects: String = TranslationServer.translate("SALES_MEETING_OBJECTION").format({"area": SprintCatalog.area_short("core")})
+	if weak.vs.objection != objects or weak.again.objection != objects:
+		return "the opening objection reads '%s' then '%s', want '%s' both times" % [weak.vs.objection, weak.again.objection, objects]
+	if weak.second.get("outcome", "lost") != "" or weak.second.objection != "":
+		return "the second question still objects ('%s') or the table ended (%s)" % [
+			weak.second.get("objection", ""), weak.second.get("outcome", "")]
+
+	# Çekirdek tam, Entegrasyonlar boş: ipucu eksik alanı söyler.
+	for line_id in SprintCatalog.capabilities("core"):
+		ProductState.set_line_tier(line_id, 2)
+	for line_id in SprintCatalog.capabilities("integrations"):
+		ProductState.set_line_tier(line_id, 0)
+	var missing: Dictionary = sit.call()
+	if missing.fit.loss_area != "integrations" or missing.line != said.call("integrations", "none"):
+		return "an empty Integrations reads lacking '%s' and the hint '%s'" % [missing.fit.loss_area, missing.line]
+	return ""
+
+
+## Vurgu sorusu: her alıcı tipi, sektörünün en çok baktığı alanı sorar; soru adayın vurgu 1 alanına göre üç biçimdedir
+## (Finans Güven, Lojistik Entegrasyonlar, İnşaat İlk kullanım), tek kriterle seçilir ve her yıldızda sorulur. Güçlü cevap
+## yalnız o alanın kelimesi Yeterli ya da üstüyken açıktır, değilse kilit satırı alanı söyler. Geçiş riski sorusunun güçlü
+## cevabı İlk kullanım Yeterli iken ya da aday yıldızı o alana bakmıyorken açıktır.
+##
+## FALSİFİKASYON: probe_emphasis_integrations'ın kriterini "trust" yap → Lojistik iddiası FAIL; facts_for'da emphasis_enough'u
+## hep true yap → boş alan iddiası FAIL; onboarding_enough'tan beklenti 0 dalını sil → Lojistik geçiş iddiası FAIL.
+static func _case_sales_emphasis_question() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	_seed_b2b_lines("erp", 3)
+	var table := func(star: int, sector: String, archetype: String) -> Dictionary:
+		var p := Prospect.new()
+		p.id = "lead_emph_%d_%s_%s" % [star, sector, archetype]
+		p.company_name = p.id
+		p.industry = sector
+		p.star = star
+		p.archetype_id = archetype
+		var facts: Dictionary = SalesProbes.facts_for(p)
+		return {"facts": facts, "row": SalesProbes.pick(facts, [], 7)}
+	var set_area := func(area: String, tier: int) -> void:
+		for line_id in SprintCatalog.capabilities(area):
+			ProductState.set_line_tier(line_id, tier)
+	var strength := func(asked: Dictionary, row_id: String) -> Dictionary:
+		for row in SalesProbes.CATALOGUE:
+			if row.id == row_id:
+				return SalesProbes.answers_for(row, asked.facts, "")[0]
+		return {}
+	var rows := {"finance": "trust", "logistics": "integrations", "construction": "onboarding"}
+	for sector in rows:
+		for archetype in SalesArchetypes.ids():
+			var asked: Dictionary = table.call(1, sector, archetype)
+			if asked.facts.emphasis_area != rows[sector] or asked.row.get("id", "") != "probe_emphasis_" + rows[sector]:
+				return "a %s %s table at 1 star asks '%s' with the emphasis '%s', want probe_emphasis_%s" % [
+					archetype, sector, asked.row.get("id", ""), asked.facts.emphasis_area, rows[sector]]
+		# Alan K3'te: güçlü cevap açık. Alan boş: kilitli, kilit satırı alanın adını taşır.
+		var area: String = rows[sector]
+		set_area.call(area, 3)
+		var full: Dictionary = strength.call(table.call(2, sector, "ops_cautious"), "probe_emphasis_" + area)
+		set_area.call(area, 0)
+		var empty: Dictionary = strength.call(table.call(2, sector, "ops_cautious"), "probe_emphasis_" + area)
+		if not full.open or empty.open or empty.get("lock_fact", "") != "emphasis_enough" \
+				or SalesMeetingSystem._lock_key(empty.lock_fact) != "SALES_LOCK_EMPHASIS_ENOUGH":
+			return "the %s question's strength answer reads open %s with the area full and open %s (lock '%s') with it empty" % [
+				area, full.open, empty.open, empty.get("lock_fact", "")]
+		set_area.call(area, 3)
+
+	# Geçiş riski: İnşaat 2★ İlk kullanım'ı bekler, Lojistik 2★ beklemez.
+	var switching := func(sector: String) -> Dictionary:
+		return strength.call(table.call(2, sector, "ops_cautious"), "probe_switching_risk")
+	set_area.call("onboarding", 0)
+	var builder: Dictionary = switching.call("construction")
+	var hauler: Dictionary = switching.call("logistics")
+	set_area.call("onboarding", 2)
+	var built: Dictionary = switching.call("construction")
+	if builder.open or builder.get("lock_fact", "") != "onboarding_enough" or not hauler.open or not built.open:
+		return "the switch answer reads open %s (construction, onboarding empty), %s (logistics, onboarding empty), %s (construction, onboarding built)" % [
+			builder.open, hauler.open, built.open]
+	return ""
+
+
+## Görüşmeden kayıp alan adıyla biter ve tek kayıp yolundan geçer: neden `weak_area`, hedef eksik bulunan alanın kimliği, şirket
+## dönüş kilidine girer, aday boru hattından çıkar, hafıza satırı alanın adını taşır. Geri dönüş kapısı o alan adayın bağlamında
+## Yeterli olunca açılır. Pazarlıktan kalkan masa aynı işlevden geçer (nedenli kalkış hafıza yazar, nedensiz yazmaz); ikisi de
+## şirketi kilitler ve adayı çıkarır.
+##
+## FALSİFİKASYON: SalesMeetingSystem._loss_target'ta weak_area kolunu boşalt → hedef iddiası FAIL; SalesLedger._blocker_cleared'ta
+## weak_area kolunu `return true` yap → kapı iddiası FAIL; SalesFinalizer.lose'tan report_loss'u sil → kalkış hafızası FAIL.
+static func _case_sales_weak_area_loss() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	_seed_b2b_lines("erp", 2)
+	for area in ["integrations", "trust"]:
+		for line_id in SprintCatalog.capabilities(area):
+			ProductState.set_line_tier(line_id, 0)
+	_set_founder_area(HRConstants.AREA_SALES, 0)
+	_set_founder_area(FounderConstants.SKILL_CHARISMA, 0)
+	var lead: Prospect = _add_prospect("loss_lead", 2, "")
+	lead.industry = "logistics"
+	var name: String = lead.company_name
+	var vs: Dictionary = SalesMeetingSystem.open(lead.id)
+	for a: Dictionary in vs.answers:
+		if a.open:
+			vs = SalesMeetingSystem.choose(a.id)
+			break
+	var area: String = SprintCatalog.area_short("integrations")
+	var said: String = TranslationServer.translate("SALES_MEMORY_WEAK_AREA").format({"area": area})
+	if vs.outcome != "lost" or vs.closing_key != "SALES_LOSS_WEAK_AREA" or vs.area != area or vs.memory_after != said:
+		SalesMeetingSystem.close()
+		return "the table ended '%s' over '%s' naming '%s' with the memory '%s'; want a loss over SALES_LOSS_WEAK_AREA naming '%s'" % [
+			vs.outcome, vs.get("closing_key", ""), vs.area, vs.get("memory_after", ""), area]
+	SalesMeetingSystem.close()
+	if SalesLedger.loss_reason(name) != SalesConstants.LOSS_WEAK_AREA or SalesLedger.loss_target(name) != "integrations" \
+			or ProspectRegistry.get_prospect(lead.id) != null or not SalesFaucetSystem.is_return_locked(name):
+		return "the loss left reason '%s', target '%s', lead %s and lock %s" % [SalesLedger.loss_reason(name),
+			SalesLedger.loss_target(name), ProspectRegistry.get_prospect(lead.id) != null, SalesFaucetSystem.is_return_locked(name)]
+
+	# The company is back with its memory: the door stays shut until Integrations is enough for its table.
+	var back: Prospect = _add_prospect("back_lead", 2, "")
+	back.company_name = name
+	back.industry = "logistics"
+	back.loss_count = SalesLedger.loss_count(name)
+	back.last_loss_reason = SalesLedger.loss_reason(name)
+	if SalesLedger._blocker_cleared(back):
+		return "the door opened with Integrations still empty"
+	for line_id in SprintCatalog.capabilities("integrations"):
+		ProductState.set_line_tier(line_id, 1)
+	if not SalesLedger._blocker_cleared(back):
+		return "the door stayed shut with Integrations enough for a 2 star table"
+	GameState.sales_meetings_week.clear()
+	var again: Dictionary = SalesMeetingSystem.open(back.id)
+	SalesMeetingSystem.close()
+	if again.memory_line != said:
+		return "the returning table opens with the memory '%s', want '%s'" % [again.memory_line, said]
+
+	# A table out of patience walks over price through the same function; a walk that stood up leaves no memory.
+	var walked: Prospect = _add_prospect("walk_lead", 2, "")
+	SalesFinalizer.apply({"outcome_id": NegotiationSystem.OUTCOME_WALKED, "context": {"lead_id": walked.id, "account": walked.company_name},
+		"values": {"reason": SalesConstants.LOSS_PRICE}})
+	var stood: Prospect = _add_prospect("stood_lead", 2, "")
+	SalesFinalizer.apply({"outcome_id": NegotiationSystem.OUTCOME_WALKED, "context": {"lead_id": stood.id, "account": stood.company_name},
+		"values": {"reason": ""}})
+	if SalesLedger.loss_reason(walked.company_name) != SalesConstants.LOSS_PRICE or SalesLedger.loss_reason(stood.company_name) != "":
+		return "the walks left memories '%s' and '%s', want price and none" % [
+			SalesLedger.loss_reason(walked.company_name), SalesLedger.loss_reason(stood.company_name)]
+	for left: Prospect in [walked, stood]:
+		if ProspectRegistry.get_prospect(left.id) != null or not SalesFaucetSystem.is_return_locked(left.company_name):
+			return "%s stayed in the pipeline or was not locked after the walk" % left.id
 	return ""
 
 
@@ -14607,17 +14829,26 @@ static func _case_fit_account_ref() -> String:
 
 ## v17 → v18: B2B hesaplar pazar referansı kazanır (yıldızının ve sektörünün rakipsiz satırı), B2C kitle kaydı kazanmaz; satır
 ## kaydın kendi ürününün hatlarıyla okunur, canlı ürün başka ya da boş olsa da. Yüklenen referans hesaba oturur ve yükleme sonrası
-## ilk tik hiçbir hesabın memnuniyetini aynı dünyanın şema 18 olarak kaydedilmiş hâlinin ilk tikinden farklı yazmaz.
+## ilk tik hiçbir hesabın memnuniyetini aynı dünyanın şema 18 olarak kaydedilmiş hâlinin ilk tikinden farklı yazmaz. Eski "stability"
+## kayıp nedeni (hesap hafızası, kayıp günlüğü, aday) Güven & Ölçek alanını zayıf bulmak olur, öbür nedenler olduğu gibi kalır.
 ##
 ## FALSİFİKASYON: _migrate_17'deki B2C süzgecini (`!= "b2b"`) sil → kitle kaydı referans alır FAIL; `subtype` argümanını sil → canlı
-## ürün boşken referanslar boş kalır FAIL; read_slot'taki `_migrate_17` çağrısını sil → şema 17 kaydı boş referansla açılır FAIL.
+## ürün boşken referanslar boş kalır FAIL; read_slot'taki `_migrate_17` çağrısını sil → şema 17 kaydı boş referansla açılır FAIL;
+## `_retire_stability`'yi `_migrate_17`'den çıkar → eski kayıp nedeni FAIL.
 static func _case_save_v17_market_ref() -> String:
 	# Canlı ürün yokken (ana menüden Devam): referans yine kaydın ürününden dolar.
-	var v17 := {"game_state": {"flags": {"mvp_sub_product_type_id": "erp"}}, "registries": {"customers": [
-		{"id": "co_a", "market_type": "b2b", "scale": 2, "industry": "logistics"},
-		{"id": "co_b", "market_type": "b2b", "scale": 3, "industry": "health"},
-		{"id": "co_c", "market_type": "b2b", "scale": 2, "industry": "logistics"},
-		{"id": "co_users", "market_type": "b2c"}]}}
+	var v17 := {"game_state": {"flags": {"mvp_sub_product_type_id": "erp"},
+			"sales_account_memory": {
+				"Eski A.Ş.": {"loss_reason": "stability", "loss_target": "stability", "loss_count": 1},
+				"Fiyat A.Ş.": {"loss_reason": "price", "loss_target": "", "loss_count": 1}},
+			"sales_loss_log": [{"day": 3, "account": "Eski A.Ş.", "reason": "stability", "target": "stability"},
+				{"day": 4, "account": "Fiyat A.Ş.", "reason": "price", "target": ""}]},
+		"registries": {"customers": [
+			{"id": "co_a", "market_type": "b2b", "scale": 2, "industry": "logistics"},
+			{"id": "co_b", "market_type": "b2b", "scale": 3, "industry": "health"},
+			{"id": "co_c", "market_type": "b2b", "scale": 2, "industry": "logistics"},
+			{"id": "co_users", "market_type": "b2c"}],
+			"prospects": [{"id": "p_old", "last_loss_reason": "stability"}, {"id": "p_price", "last_loss_reason": "price"}]}}
 	if ProductState.subtype() != "":
 		return "fixture: the live product is '%s', the migration is meant to run with none" % ProductState.subtype()
 	SaveManager._migrate_17(v17)
@@ -14628,6 +14859,16 @@ static func _case_save_v17_market_ref() -> String:
 	rows[0].market_ref["core"] = 9.0
 	if rows[2].market_ref["core"] == 9.0:
 		return "two accounts share one reference dictionary"
+	var memory: Dictionary = v17.game_state.sales_account_memory
+	var log: Array = v17.game_state.sales_loss_log
+	var prospects: Array = v17.registries.prospects
+	if memory["Eski A.Ş."].loss_reason != SalesConstants.LOSS_WEAK_AREA or memory["Eski A.Ş."].loss_target != "trust" \
+			or log[0].reason != SalesConstants.LOSS_WEAK_AREA or log[0].target != "trust" \
+			or prospects[0].last_loss_reason != SalesConstants.LOSS_WEAK_AREA:
+		return "the retired stability reason reads %s / %s / %s, want a weak Trust & Scale area in all three" % [memory["Eski A.Ş."], log[0], prospects[0]]
+	if memory["Fiyat A.Ş."].loss_reason != SalesConstants.LOSS_PRICE or log[1].reason != SalesConstants.LOSS_PRICE \
+			or prospects[1].last_loss_reason != SalesConstants.LOSS_PRICE:
+		return "a price loss was rewritten by the migration: %s / %s / %s" % [memory["Fiyat A.Ş."], log[1], prospects[1]]
 
 	var slot: String = "smoke_v17_ref_%d" % OS.get_process_id()
 	var old_slot: String = slot + "_old"
@@ -18024,7 +18265,7 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 	var c: Customer = SalesSystem.add_b2b_customer(cp, 18, 52, 70, "founder_pitch", 0.2)
 	SalesLedger.set_price_stance(SalesConstants.STANCE_PREMIUM)
 	SalesLedger.set_rep_band_cap("char_sr_1", 2)
-	SalesLedger.report_loss("Kayıp A.Ş.", SalesConstants.LOSS_STABILITY, "stability")
+	SalesLedger.report_loss("Kayıp A.Ş.", SalesConstants.LOSS_WEAK_AREA, "trust")
 	SalesLedger.record_insult("Devrilen A.Ş.")
 	SalesFaucetSystem.lock_return("Kilitli A.Ş.", 12)
 	SalesLedger.set_open_pitch_promise(c.id)
@@ -18077,7 +18318,7 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 		return "the price stance did not survive"
 	if SalesLedger.rep_band_cap("char_sr_1") != 2:
 		return "the band cap did not survive"
-	if SalesLedger.loss_reason("Kayıp A.Ş.") != SalesConstants.LOSS_STABILITY:
+	if SalesLedger.loss_reason("Kayıp A.Ş.") != SalesConstants.LOSS_WEAK_AREA or SalesLedger.loss_target("Kayıp A.Ş.") != "trust":
 		return "the account memory did not survive"
 	if SalesLedger.loss_log().is_empty():
 		return "the loss log did not survive"
@@ -18109,8 +18350,7 @@ static func _case_loc_sales_derived_keys() -> String:
 		var rid: String = String((row as Dictionary).get("id", ""))
 		wanted.append("SALES_PROBE_%s" % rid.to_upper())
 		for a in ((row as Dictionary).get("answers", []) as Array):
-			wanted.append("SALES_ANS_%s_%s" % [rid.to_upper(),
-				String((a as Dictionary).get("id", "")).to_upper()])
+			wanted.append(SalesProbes.answer_key(row, String((a as Dictionary).get("id", ""))))
 			var lf: String = String((a as Dictionary).get("lock_fact", ""))
 			if lf != "":
 				wanted.append("SALES_LOCK_%s" % lf.to_upper())
@@ -18126,7 +18366,7 @@ static func _case_loc_sales_derived_keys() -> String:
 		wanted.append("SALES_STANCE_HINT_%s" % String(stance).to_upper())
 	for key in ["SALES_BLOCK_NO_B2B", "SALES_BLOCK_WEEK_FULL", "SALES_BLOCK_TOO_LATE",
 			"SALES_BLOCK_NO_LEAD", "SALES_BLOCK_REASON_UNCHANGED", "SALES_BAND_ABOVE_REP",
-			"SALES_BAND_ABOVE_CAP", "SALES_WIN_CUT", "SALES_INNER_VOICE_0",
+			"SALES_BAND_ABOVE_CAP", "SALES_WIN_CUT", "SALES_MEETING_OBJECTION", "SALES_INNER_VOICE_0",
 			"SALES_INNER_VOICE_1", "SALES_INNER_VOICE_2"]:
 		wanted.append(key)
 	for locale in ["tr", "en"]:
@@ -23760,31 +24000,35 @@ static func _case_neglect_reputation_below_zero() -> String:
 
 ## Satış ve yatırımcı hatayı okumaz: 0 ve 50 açık hatalı iki dünyada dönüşüm, ürün değeri, kalite okuması, toplantı ihtimali
 ## (kalıcı katkılar), yıldız karışımı, satış sorusunun gerçekleri, kayıp sebebi ve yeniden sunum kapısı, VC'nin tohum ve
-## Series A sorguları, term sheet uyumu birebir aynıdır.
-## FALSİFİKASYON: `conversion_rate`e hata çarpanı ekle → "conversion" FAIL; `QualityModel.shipped_composite`te kararlılıktan
-## `0.8 × açık hata` düş → "quality" FAIL; `SalesProbes.facts_for`a hata gerçeği ekle → "facts" FAIL; `_sorgu_product`a hata
+## Series A sorguları, term sheet uyumu birebir aynıdır. İki ürün iki kayıp sebebi ve iki kapı durumu verir: K1 merdiveninde
+## 2★ aday Güven & Ölçek'i zayıf bulur ve kapı kapalıdır, K2 merdiveninde fiyat ve kapı açıktır.
+## FALSİFİKASYON: `conversion_rate`e hata çarpanı ekle → "conversion" FAIL; `ProductQuality.level`dan `0.8 × açık hata`
+## düş → "value" FAIL; `SalesProbes.facts_for`a hata gerçeği ekle → "facts" FAIL; `_sorgu_product`a hata
 ## dalı ekle → "series_a_query" FAIL; `_domain_fit`e Meridian hata terimi ekle → "term_sheet_fit" FAIL;
 ## `star_mix_now`a hata payı ekle → "star_mix" FAIL.
 static func _case_bugs_leave_sales_and_vc_alone() -> String:
 	GameState.set_phase(3)
 	_seed_b2b(1000)
-	GameState.set_flag("mvp_sub_product_type_id", "erp")
-	var lead: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	var lead: Prospect = SalesFaucetSystem.spawn(2, "faucet")
 	if lead == null:
 		return "the faucet produced no lead"
+	SalesLedger.report_loss(lead.company_name, SalesConstants.LOSS_WEAK_AREA, "trust")
 	lead.loss_count = 1
-	lead.last_loss_reason = SalesConstants.LOSS_STABILITY
+	lead.last_loss_reason = SalesConstants.LOSS_WEAK_AREA
 	VCPitchSystem._vc_id = "meridian"
 	TermSheetTableSystem._vc_id = "meridian"
 	var read := func() -> Dictionary:
-		SalesMeetingSystem._used_families = ["stability"]
+		SalesMeetingSystem._used_families = ["emphasis"]
 		SalesMeetingSystem._facts = SalesProbes.facts_for(lead)
+		SalesMeetingSystem._ctx = ProductQuality.prospect_ctx(lead)
+		SalesMeetingSystem._fit = ProductQuality.fit(SalesMeetingSystem._ctx)
 		return {
 			"conversion": SalesSystem.conversion_rate(15),
 			"value": SalesSystem.product_value(),
 			"axes": ProductState.axis_readings(),
 			"signing_seed": SalesSystem.signing_satisfaction_seed(),
-			"meeting": SalesMeetingSystem._build_base_contributions(lead),
+			"meeting": SalesMeetingSystem._build_base_contributions(lead, SalesMeetingSystem._fit),
+			"fit_line": SalesMeetingSystem._fit_line(),
 			"star_mix": SalesFaucetSystem.star_mix_now(),
 			"facts": SalesProbes.facts_for(lead),
 			"loss_reason": SalesMeetingSystem._derive_loss_reason(),
@@ -23794,7 +24038,7 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 			"term_sheet_fit": TermSheetTableSystem._domain_fit(),
 		}
 	# Two products: a K1 line on each axis, where the star mix is not saturated and a bug term in it would move it,
-	# and the whole ladder at K2, where the stability reading clears the loss reason's and the re-pitch gate's bars.
+	# and the whole ladder at K2, where no area is lacking and Trust & Scale is enough for the re-pitch gate.
 	for ladder in [{"line_erp_cashflow": 1, "line_erp_ledger": 1, "line_erp_stock": 1}, {}]:
 		GameState.set_flag(ProductState.LINE_TIERS, ladder)
 		if ladder.is_empty():
@@ -23812,9 +24056,10 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 		if moving == ladder.is_empty():
 			return "fixture: the %s ladder reads strength %.2f against the star mix's moving band" % [
 				"K2" if ladder.is_empty() else "K1", strength]
-		if ladder.is_empty() and (clean.axes.stability < 55 or clean.repitch_gate != true):
-			return "fixture: the K2 ladder reads stability %s and re-pitch gate %s, want it over the bars" % [
-				clean.axes.stability, clean.repitch_gate]
+		var lacking: bool = clean.loss_reason == SalesConstants.LOSS_WEAK_AREA
+		if lacking == ladder.is_empty() or clean.repitch_gate == lacking:
+			return "fixture: the %s ladder reads loss reason '%s' and re-pitch gate %s, want a weak area and a shut gate at K1, neither at K2" % [
+				"K2" if ladder.is_empty() else "K1", clean.loss_reason, clean.repitch_gate]
 		ProductState.add_bugs(BUG_LINE, 50)
 		var buggy: Dictionary = read.call()
 		for key in clean:

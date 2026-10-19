@@ -964,9 +964,18 @@ func _migrate_16(state: Dictionary) -> void:
 
 ## v17 → v18: B2B hesaplar pazar referansı (`Customer.market_ref`) kazanır: yıldızının ve sektörünün rakipsiz satırı. B2C kitle
 ## kaydı atlanır. Satır, kaydın kendi ürününün hatlarıyla okunur: kayıt okunurken canlı ürün başka ya da boş olabilir
-## (`list_slots` her yuvayı buradan geçirir).
+## (`list_slots` her yuvayı buradan geçirir). Eski "stability" kayıp nedeni (hesap hafızası, kayıp günlüğü, aday) Güven & Ölçek
+## alanını zayıf bulmak olur.
 func _migrate_17(state: Dictionary) -> void:
-	var flags: Dictionary = (state.get("game_state", {}) as Dictionary).get("flags", {}) as Dictionary
+	var gs: Dictionary = state.get("game_state", {}) as Dictionary
+	for mem: Dictionary in (gs.get("sales_account_memory", {}) as Dictionary).values():
+		_retire_stability(mem, "loss_reason", "loss_target")
+	for row: Dictionary in (gs.get("sales_loss_log", []) as Array):
+		_retire_stability(row, "reason", "target")
+	for row in _rows(state, "prospects"):
+		if row.get("last_loss_reason", "") == "stability":
+			row["last_loss_reason"] = "weak_area"
+	var flags: Dictionary = gs.get("flags", {}) as Dictionary
 	var subtype: String = String(flags.get("mvp_sub_product_type_id", ""))
 	var refs: Dictionary = {}
 	for row in _rows(state, "customers"):
@@ -978,6 +987,12 @@ func _migrate_17(state: Dictionary) -> void:
 		if not refs.has(key):
 			refs[key] = ProductQuality.market_ref_for(star, sector, subtype)
 		row["market_ref"] = refs[key].duplicate()
+
+
+func _retire_stability(row: Dictionary, reason_key: String, target_key: String) -> void:
+	if row.get(reason_key, "") == "stability":
+		row[reason_key] = "weak_area"
+		row[target_key] = "trust"
 
 
 # ----------------------------------------------------------------------------

@@ -203,12 +203,12 @@ const CANDIDATE_STAR_CAP_RAW := 7        # [ÇALIŞMA] ★3,5 on the 0-10 ruler
 # ============================ Loss reasons (§5.2) ============================
 # The WORKING taxonomy. Content refines the wording later; these ids are what the loss log
 # and the demand generator will speak.
-const LOSS_STABILITY := "stability"
+const LOSS_WEAK_AREA := "weak_area"      # its target is the area id the customer found lacking
 const LOSS_MISSING_TIER := "missing_tier"
 const LOSS_PROVIDER_TRUST := "provider_trust"
 const LOSS_PRICE := "price"
 const LOSS_SWITCHING_RISK := "switching_risk"
-const LOSS_REASONS := [LOSS_STABILITY, LOSS_MISSING_TIER, LOSS_PROVIDER_TRUST,
+const LOSS_REASONS := [LOSS_WEAK_AREA, LOSS_MISSING_TIER, LOSS_PROVIDER_TRUST,
 	LOSS_PRICE, LOSS_SWITCHING_RISK]
 
 

@@ -1342,7 +1342,7 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals>. `desk` puts a rep mid-processing on the desk; `picker` opens the steward
+## norep|discounted|frank|risk_stability|deals|returning>. `desk` puts a rep mid-processing on the desk; `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
 ## week's meetings spent, an open promise by sprint, the log) with three calm accounts, Aras in its onboarding floor's
@@ -1357,6 +1357,8 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 ## `frank` adds Frank's introduction to the three leads of a founder with no Satış: it heads the list, tagged.
 ## `risk_stability` keeps the bugs at the complaint gate, so neither Risk account is there over outages: Ege, which
 ## holds no broken promise, reads the product's stability, Lale, whose promise broke, its falling satisfaction.
+## `returning` gives two leads a loss over an area: the 2★ lead's Integrations is still empty (its door is shut, the reason
+## under its buttons), the 1★ lead's Core is enough for a 1★ table (open).
 ## `deals` shows the founder's two table deals (the 3★ lead's two weeks into its plan, the 1★ lead's agreed this week)
 ## and a 3★ rep's desk deal on the 2★ lead, whose plan ends on a half week.
 func _run_sales_shot(kind: String) -> void:
@@ -1392,6 +1394,12 @@ func _run_sales_shot(kind: String) -> void:
 	if kind == "frank":
 		CharacterRegistry.get_founder().role_stats[HRConstants.AREA_SALES] = 0
 		SalesFaucetSystem.spawn_prospect("mid", "frank_intro")
+	if kind == "returning":
+		for row in [[1, "core"], [2, "integrations"]]:
+			var back: Prospect = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.star == row[0])[0]
+			SalesLedger.report_loss(back.company_name, SalesConstants.LOSS_WEAK_AREA, row[1])
+			back.loss_count = 1
+			back.last_loss_reason = SalesConstants.LOSS_WEAK_AREA
 	if kind == "deals":
 		for star in [3, 1]:
 			var lead: Prospect = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.star == star)[0]
@@ -3813,6 +3821,67 @@ func _run_vc_shot(spec: String) -> void:
 	await _finish_shot("vc_shot_%s%s" % [kind, "_shell" if shelled else ""], 0.5)
 
 
+## The shots' ERP at K2 on every line: no area is lacking at any table, so a sitting plays to the offer.
+func _shot_healthy_erp() -> void:
+	for line_id in ProductLines.line_ids("erp"):
+		ProductState.set_line_tier(String(line_id), 2)
+
+
+## Each of the area's lines at its tier in `tiers` (one tier for all, or one per line in order).
+func _shot_area(area: String, tiers: Variant) -> void:
+	var lines: Array[String] = SprintCatalog.capabilities(area)
+	for i in lines.size():
+		ProductState.set_line_tier(lines[i], tiers[i] if tiers is Array else tiers)
+
+
+## A lead of `star` in `sector`: the faucet's draws until one lands there, the rest leave the pipeline.
+func _shot_lead(star: int, sector: String) -> Prospect:
+	for _i in 200:
+		var p: Prospect = SalesFaucetSystem.spawn(star, "faucet")
+		if p == null or p.industry == sector:
+			return p
+		ProspectRegistry.remove(p.id)
+	return null
+
+
+## --meeting-shot's emphasis kinds: [sector, the area its table asks about, whether the area is built].
+const MEETING_SHOT_EMPHASIS := {
+	"emph_trust": ["retail", "trust", true],
+	"emph_integrations": ["logistics", "integrations", false],
+	"emph_onboarding": ["construction", "onboarding", false],
+}
+
+
+## The lead a sales --meeting-shot sits down with (the world's product is already seeded). The product-read kinds fix the
+## sector, and mark the other one-criterion questions as spoken so the emphasis question is the first one asked.
+func _meeting_shot_lead(kind: String, plays_out: bool) -> Prospect:
+	if kind == "frank":
+		return SalesFaucetSystem.spawn_prospect("mid", "frank_intro")
+	if not (kind in ["weak_core", "die", "returning"] or MEETING_SHOT_EMPHASIS.has(kind)):
+		return SalesFaucetSystem.spawn(3 if plays_out else 2, "faucet")
+	for row_id in ["probe_provider_trust", "probe_switching_risk"]:
+		SalesProbes.remember(row_id)
+	if MEETING_SHOT_EMPHASIS.has(kind):
+		var row: Array = MEETING_SHOT_EMPHASIS[kind]
+		_shot_area(row[1], 2 if row[2] else 0)
+		return _shot_lead(2, row[0])
+	if kind == "returning":
+		# Integrations is enough for a 2★ table (the door is open) and the company remembers it was the area it left over.
+		_shot_area("integrations", 1)
+		var back: Prospect = _shot_lead(2, "logistics")
+		SalesLedger.report_loss(back.company_name, SalesConstants.LOSS_WEAK_AREA, "integrations")
+		back.loss_count = 1
+		back.last_loss_reason = SalesConstants.LOSS_WEAK_AREA
+		return back
+	# Core at 1.2 of the 3★ table's 2, every other area under what it wants: Core is the weakest, so it is what the table names,
+	# and Integrations (1 of 1.5) is not enough to back the strength answer.
+	_shot_area("core", [2, 2, 2, 0, 0])
+	_shot_area("integrations", 1)
+	_shot_area("trust", 1)
+	_shot_area("onboarding", 1)
+	return _shot_lead(3, "logistics")
+
+
 ## First open answer of the live sales table; `last` walks on to the weakest (last) open one.
 func _open_answer(last: bool) -> String:
 	var picked: String = ""
@@ -3899,6 +3968,12 @@ const MEETING_SHOT_VC := {
 ## on screen; lost = played to the loss, its result card; handoff = past that Devam into Perde 2; frank = Frank's
 ## introduction across a founder with neither Satış nor Karizma, the first question, and the needle's hover lines
 ## printed as MEETINGSHOT|frank|mods=<their seams> (a frame cannot show a hover).
+## Sales, the product read at the table (the sector fixed, the sitting's first question the emphasis one): emph_trust,
+## emph_integrations and emph_onboarding = a 2★ table asking its sector's question in each of its three forms, the area
+## built for the first (the strength answer open) and empty for the others (its lock line); weak_core = a 3★ table whose
+## Core is the weakest area: the opening objection above the question and the lock line under the strength answer; die =
+## the same table one answer on, the skip option's die hovered, its factors naming the area and its word; returning = a
+## 2★ table back after a loss over Integrations, the memory row of its head.
 ## VC, with the shot's fund (the founder moved this meeting once): open = Odayı
 ## Oku as the room opens, the HAFIZA row and the withdraw button; sorgu = the third beat;
 ## sheet = a won room's result card; callback = a lukewarm room's callback
@@ -3928,6 +4003,8 @@ func _run_meeting_shot(kind: String) -> void:
 			# Yerel sağlayıcı ve K1 merdiveni: "Gücü göster" satırı kapanır ve gerekçesini yazar.
 			ProductState.set_infra_provider("local")
 			_seed_line_state("erp", [["line_erp_ledger", 1, "line_erp_ledger_k1", 0.75]])
+		if kind in ["won", "handoff"]:
+			_shot_healthy_erp()
 		if kind in ["lost", "frank"]:
 			# Kayıp karesi gerçekten kaybetmeli: kurucunun Satış'ı ve Karizma'sı sıfır, ürün K1,
 			# sağlayıcı yerel, lead 3★ (MISMATCH_PENALTY'nin en sert kademesi). İlk cevapta iğne
@@ -3936,10 +4013,17 @@ func _run_meeting_shot(kind: String) -> void:
 			founder.role_stats[HRConstants.AREA_SALES] = 0
 			founder.role_stats[FounderConstants.SKILL_CHARISMA] = 0
 		var plays_out: bool = kind in ["won", "lost", "handoff"]
-		var p: Prospect = SalesFaucetSystem.spawn_prospect("mid", "frank_intro") if kind == "frank" \
-			else SalesFaucetSystem.spawn(3 if plays_out else 2, "faucet")
+		var p: Prospect = _meeting_shot_lead(kind, plays_out)
 		await _mount_shot_shell()
 		await _shot_sales_sitting(p)
+		if kind == "die":
+			# The die sits on the skip option, which opens with the second question; a frame cannot hover, so the panel is told to.
+			await _shot_pick(_open_answer(false))
+			var skip: Array = _meeting_panel._cards.filter(func(card) -> bool: return card.id == SalesMeetingAdapter.SKIP)
+			if skip.is_empty():
+				_shot_fail("[MeetingShot] die: the table ended before the skip option opened")
+				return
+			_meeting_panel._on_hover(true, skip[0])
 		if kind == "frank":
 			print("MEETINGSHOT|frank|mods=%s" % ",".join(PackedStringArray(SalesMeetingSystem.modifier_lines().map(
 				func(m: Dictionary) -> String: return m.seam))))
@@ -3986,6 +4070,7 @@ func _probe_pause_interactivity(root: Node, label: String) -> void:
 func _run_negotiation_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_sales_world()
+	_shot_healthy_erp()
 	var p: Prospect = SalesFaucetSystem.spawn(3, "faucet")
 	await _mount_shot_shell()
 	await _shot_sales_sitting(p)

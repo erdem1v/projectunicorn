@@ -277,7 +277,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `sweep:<baş>:<son>:<adım>:<x|y>:<zm>`, `fit[:zm]` ya da `drag:<dx>:<dy>[:olay]`); `--pan-set=<küme>|<küme>` yalıtım
   düğmeleri (ilk küme taban, `SETDIFF|`), `--pan-gpu=<A>/<B>[;…]` alt görüntünün GPU ve CPU süresi (`GPU|`, `MEM|`);
   değerlerdeki `;` ve `|` tırnaklanır, düğme listesi `scripts/debug/office_pan_probe.gd` başındadır.
-  Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|frank`,
+  Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning`,
   VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
@@ -286,7 +286,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   (`pick`, `pick_named`, `pick_relang`, `plan`, `week1`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
   `gate`, `delegate`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`; kurulumları ve ikinci, üçüncü kareleri HARITA
   Ürün'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
-  B2B boş hâli `--sales-shot=b2b_pre`.
+  B2B boş hâli `--sales-shot=b2b_pre`, kayıptan dönen lead'lerin kapısı `--sales-shot=returning`.
   Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
   duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve
   `crowd_<ofis>_<kişi>_<hız>_NN.png`). Kurucunun toplantı yolculuğu: `--travel-shot=<home|ishani|plaza|loft>[:vc|:night]`

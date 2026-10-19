@@ -142,7 +142,7 @@ SALES_CHURN_COUNTDOWN,Churn'e ~{n} hafta,~{n} weeks to churn
 SALES_CHURN_COUNTDOWN_ONE,Churn'e ~{n} hafta,~{n} week to churn
 SALES_REASON_PREFIX,Sebep: {reason},Reason: {reason}
 SALES_REASON_OUTAGE,kullandığı hatlardaki açık hatalar,open bugs on the lines they use
-SALES_REASON_STABILITY,ürünün kararlılığı yetmiyor (Güven & Ölçek),the product's stability falls short (Trust & Scale)
+SALES_REASON_STABILITY,ürün yeterince güvenilir değil (Güven & Ölçek),the product is not reliable enough (Trust & Scale)
 SALES_REASON_SATISFACTION,memnuniyet düşüyor,satisfaction is falling
 SALES_EXPANSION_FICTION,Başka departmana yaymak istiyor.,Wants to roll it out to another department.
 SALES_ONBOARDING_ENDS,Onboarding gelecek hafta bitiyor. Ürüne henüz ısınmadı.,Onboarding ends next week. Not sold on the product yet.
@@ -1150,7 +1150,7 @@ PROD_TYPE_VIDEO_CLIP_PITCH,Uzun videodan yayına hazır klip çıkaran araç.,Th
 PROD_TYPE_ERP_NAME,ERP,ERP
 PROD_TYPE_ERP_CATEGORY,İşletme,Business
 PROD_TYPE_ERP_DESC,Ön muhasebe · stok · fatura tek defterde.,Bookkeeping · stock · invoicing in one ledger.
-PROD_TYPE_ERP_TRADEOFF,İlk kurulum uzun sürer ve ilk müşteriler kararlılık ister; tutunca kimse çıkmaz.,"The first install takes long and first customers want stability; once it holds, nobody leaves."
+PROD_TYPE_ERP_TRADEOFF,İlk kurulum uzun sürer ve ilk müşteriler bozulmayan bir ürün ister; tutunca kimse çıkmaz.,"The first install takes long and first customers want something that does not break; once it sticks, nobody leaves."
 PROD_TYPE_ERP_BET,Defter tutan herkes aynı üç şeyi arıyor. Üçünü de doğru yap; gerisini sürümler getirir.,Everyone keeping books wants the same three things. Get all three right and versions bring the rest.
 PROD_TYPE_ERP_PITCH,Kasadan stoka işletmenin defterini tutan sistem.,The system that keeps a business's books from till to stock.
 SECTOR_SUBSCRIPTION,Abonelik,Subscription
@@ -1170,7 +1170,7 @@ PROD_PATH_TITLE,Yolunu seç,Choose your road
 PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan değişmez.,This choice decides how the product makes money. It cannot be changed later.
 PROD_PATH_B2C,Kitle,Consumer
 PROD_PATH_B2C_DESC,"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.","You sell to a crowd. Users arrive, users leave, the numbers swing."
-PROD_PATH_B2B_DESC,"Şirketlere satarsın. Kontratlar büyük, ama ilk müşteriler kararlı bir ürün bekler.","You sell to companies. Contracts are big, but first customers expect a stable product."
+PROD_PATH_B2B_DESC,"Şirketlere satarsın. Kontratlar büyük, ama ilk müşteriler sağlam bir ürün bekler.","You sell to companies. Contracts are big, but first customers expect a product that holds up."
 PROD_MENTOR_LINE,"B2C'de kalabalığa satarsın, kimseyi tanımazsın. B2B'de herkesi tanırsın, herkes seni tanır. İkisi de para. Farklı dertler.","In B2C you sell to a crowd and know nobody. In B2B you know everybody, and everybody knows you. Both are money. Different headaches."
 PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product type
 PROD_NAME_LABEL,Ürün adı,Product name
@@ -2215,7 +2215,7 @@ PROD_RND_NODE_MODEL_OPTIMIZATION_UNLOCK,Artık aynı modeli daha ucuza koşturuy
 PROD_RND_NODE_DATA_WAREHOUSE_DESC,"Bütün kayıtlar tek ambarda toplanır. Geçmiş, sorulabilir bir şeye dönüşür.",Every record gathers in one warehouse. The past turns into something you can question.
 PROD_RND_NODE_DATA_WAREHOUSE_UNLOCK,Kurumsal Raporlama adında yeni bir özellik hattı. İçeriği Erken Erişim'de açılır.,A new feature line called Enterprise Reporting. Its content opens in Early Access.
 PROD_RND_NODE_BUG_TRACKER_DESC,Her bildirim numaralanır ve bir sahibi olur. Hiçbir hata kulaktan kulağa kalmaz.,Every report gets a number and an owner. No bug survives on word of mouth.
-PROD_RND_NODE_BUG_TRACKER_UNLOCK,Ürünün kendi kararlılık hattının son kademesi. Masaya düşen bildirimin hepsini artık aynı gün doğruluyoruz.,The last tier of the product's own stability line. Everything that reaches the desk is verified the same day now.
+PROD_RND_NODE_BUG_TRACKER_UNLOCK,Ürünü ayakta tutan hattın son kademesi. Masaya düşen bildirimin hepsini artık aynı gün doğruluyoruz.,The last tier of the line that keeps the product standing. Everything that reaches the desk is verified the same day now.
 PROD_RND_NODE_CICD_DESC,Her değişiklik makinede kendi kendine kurulup sınanır. Kırık iş gece boyunca beklemez.,Every change builds and tests itself on a machine. Broken work no longer waits out the night.
 PROD_RND_NODE_CICD_UNLOCK,Yazılan her değişiklik artık makinede kendi kendine sınanıyor; geliştirmeden daha az hata çıkıyor.,"Every change written is tested by the machine on its own now, and less comes out of development broken."
 PROD_RND_NODE_TEST_AUTOMATION_DESC,Sınamalar insan eli olmadan tekrar tekrar koşar. Aynı hata ikinci kez geçip gitmez.,The tests run again and again without a hand on them. The same bug does not slip past twice.
@@ -2418,6 +2418,7 @@ SALES_SIGNING_DISCOUNT,imza indirimi %{pct},signing discount {pct}%
 SALES_ODDS,İkna %{n},Persuasion {n}%
 SALES_MEETING_SKIP,Teklife geç,Skip to the offer
 SALES_MEETING_OPEN_OFFER,Rakamı konuş,Talk numbers
+SALES_MEETING_OBJECTION,"Açık konuşayım, {area} tarafınız bize yetmiyor.","To be frank, your {area} side is not enough for us."
 SALES_MOD_PRODUCT_FIT,ürün uyumu,product fit
 SALES_MOD_FOUNDER_SALES,senin satış tarafın,your sales side
 SALES_MOD_PRICE_SIGNAL,fiyat duyumu,the price signal
@@ -2454,10 +2455,12 @@ NEG_CAPACITY,Kapasite: {used}/{cap},Capacity: {used}/{cap}
 NEG_DEAL_IF_ACCEPT,Kabul edersen: {line},If you accept: {line}
 NEG_LOCK_PROMISE,Verilen söz üst ucu kapattı.,The promise closed the top end.
 NEG_INSULT_REASON,Bu rakam masayı devirir.,That number tips the table over.
-SALES_ARCH_OPS_CAUTIOUS_LINE,Ölçülü bir alıcı. Kararlılık onun için her şeyden önce gelir.,A measured buyer. Stability comes first.
+SALES_ARCH_OPS_CAUTIOUS_LINE,"Ölçülü bir alıcı. Acele etmez, her rakamı tartar.",A measured buyer. Takes its time and weighs every number.
 SALES_ARCH_TECH_EXACTING_LINE,Teknik taraf soruyor. Ürünün nereye kadar gittiğini bilmek ister.,The technical side is asking. They want to know how far the product goes.
 SALES_ARCH_FINANCE_BRISK_LINE,"Hızlı konuşur, düşük rakam ister.",Talks fast and wants a low number.
-SALES_PROBE_PROBE_STABILITY_RECORD,Bizim için en önemli konu kararlılık. Bugüne kadar kesinti yaşadınız mı?,Stability matters most to us. Have you had outages?
+SALES_PROBE_PROBE_EMPHASIS_TRUST,Bizim için en önemli konu verinin güvende olması ve sistemin ayakta kalması. Bu tarafta neyiniz var?,What matters most to us is safe data and a system that stays up. What do you have there?
+SALES_PROBE_PROBE_EMPHASIS_INTEGRATIONS,Bizim işimiz başka programlara bağlı. Ürününüz bizim programlarımızla konuşabiliyor mu?,Our work runs through other software. Can your product talk to ours?
+SALES_PROBE_PROBE_EMPHASIS_ONBOARDING,Ekibimiz sahada ve telefonda çalışıyor. Ürününüzü ilk gün kullanabilirler mi?,"Our team works in the field, on phones. Can they use your product on day one?"
 SALES_PROBE_PROBE_LADDER_REACH,"Ürün nereye kadar gidiyor? Bugün ne var, bu çeyrek ne çıkıyor?","How far does the product go? What is live, what ships this quarter?"
 SALES_PROBE_PROBE_LADDER_LOCKED,İhtiyacımız olan kademe listede var ama kapalı görünüyor.,The tier we need is on the list but it reads as closed.
 SALES_PROBE_PROBE_PROVIDER_TRUST,Veri nerede duruyor? Altyapıyı kimden alıyorsunuz?,Where does the data sit? Who do you buy infrastructure from?
@@ -2468,25 +2471,25 @@ SALES_INNER_VOICE_0,Her cevap not ediliyor.,Every answer is being written down.
 SALES_INNER_VOICE_1,Sorular hazırlanmış. Bu görüşmeye çalışmışlar.,The questions were prepared. They worked on this meeting.
 SALES_INNER_VOICE_2,Kimse acele etmiyor. Bu iyiye de kötüye de gidebilir.,Nobody is hurrying. That can go either way.
 SALES_WIN_CUT,Bu kadar soru yeter. Rakamı konuşalım.,Enough questions. Let's talk numbers.
-SALES_LOSS_STABILITY,Kararlılık bizim için hâlâ açık bir soru.,Stability is still an open question for us.
+SALES_LOSS_WEAK_AREA,{area} sizde henüz zayıf. O taraf güçlenince yeniden konuşalım.,Your {area} side is still weak. Let us talk again once it is stronger.
 SALES_LOSS_MISSING_TIER,İhtiyacımız olan kademe yok. Onsuz alamayız.,The tier we need is not there. We cannot buy without it.
 SALES_LOSS_PROVIDER_TRUST,Altyapı tarafı bizim eşiğimizi geçmiyor.,The infrastructure side does not clear our bar.
 SALES_LOSS_PRICE,Rakam bu iş için bizde karşılık bulmuyor.,The number does not land for this piece of work.
 SALES_LOSS_SWITCHING_RISK,Sizde müşteri ilişkilerine ayrılmış kimse yok. Bu riski taşıyamayız.,Nobody on your side is dedicated to customer success. We cannot carry that risk.
-SALES_MEMORY_STABILITY,Geçen sefer kararlılık konuşulmuştu.,Last time we talked about stability.
+SALES_MEMORY_WEAK_AREA,Geçen sefer {area} konuşulmuştu.,Last time we talked about {area}.
 SALES_MEMORY_MISSING_TIER,Geçen sefer eksik kademe konuşulmuştu.,Last time we talked about the missing tier.
 SALES_MEMORY_PROVIDER_TRUST,Geçen sefer altyapı konuşulmuştu.,Last time we talked about infrastructure.
 SALES_MEMORY_PRICE,Geçen sefer rakamda anlaşamamıştık.,Last time we did not meet on the number.
 SALES_MEMORY_SWITCHING_RISK,Geçen sefer bizimle kimin ilgileneceği konuşulmuştu.,Last time we talked about who would look after us.
-SALES_LOCK_AXIS_STABILITY,Kararlılık bunu henüz desteklemiyor.,Stability does not back that up yet.
+SALES_LOCK_EMPHASIS_ENOUGH,{area} bunu henüz desteklemiyor.,{area} does not back that up yet.
 SALES_LOCK_STEPS_SHIPPED,Yayınlanmış kademeler bunu henüz desteklemiyor.,Shipped tiers do not back that up yet.
 SALES_LOCK_PROVIDER,Altyapın yerel bir sağlayıcıda.,Your infrastructure is with a local provider.
 SALES_LOCK_CS_STAFFED,Müşteri ilişkilerine atanmış kimse yok.,Nobody is assigned to customer success.
-SALES_LOCK_AXIS_EXPERIENCE,Deneyim bunu henüz desteklemiyor.,Experience does not back that up yet.
+SALES_LOCK_ONBOARDING_ENOUGH,{area} bunu henüz desteklemiyor.,{area} does not back that up yet.
 SALES_LOCK_OPEN_PITCH_PROMISE,Verilmiş bir sözün var.,You already gave your word.
-SALES_ANS_PROBE_STABILITY_RECORD_A_STRENGTH,Kararlılık yerinde. Kaydı gösterebilirim.,Stability holds. I can show you the record.
-SALES_ANS_PROBE_STABILITY_RECORD_A_ADMIT,Her şey sorunsuz gitmedi. Kaydı olduğu gibi gösteririm.,Not everything has run clean. I will show you the record as it is.
-SALES_ANS_PROBE_STABILITY_RECORD_A_CHARISMA,Kesintiyi ben karşılarım. Numaram sizde olur.,Outages come to me. You will have my number.
+SALES_ANS_PROBE_EMPHASIS_A_STRENGTH,{area} tarafı hazır. Size gösterebilirim.,The {area} side is ready. I can show you.
+SALES_ANS_PROBE_EMPHASIS_A_ADMIT,{area} tarafı henüz eksik. Bugünkü hâlini olduğu gibi gösteririm.,The {area} side is not finished. I will show you where it stands.
+SALES_ANS_PROBE_EMPHASIS_A_CHARISMA,O tarafı ben üstlenirim. Numaram sizde olur.,I will own that part myself. You will have my number.
 SALES_ANS_PROBE_LADDER_REACH_A_STRENGTH,Birkaç kademe şimdiden canlıda. Bugün kullanabilirsiniz.,Several tiers are already live. You can use them today.
 SALES_ANS_PROBE_LADDER_REACH_A_ADMIT,Ürünün bir kısmı henüz yok. Bugün olanı gösterebilirim.,Part of the product is not there yet. I can show you what is.
 SALES_ANS_PROBE_LADDER_REACH_A_PROMISE,İhtiyacınız olan kademeyi öne alırım.,I will move the tier you need forward.

@@ -33,12 +33,20 @@ static func apply(result: Dictionary) -> void:
 			# makes the re-pitch blocker have something to read next time.
 			var reason: String = String((result.get("values", {}) as Dictionary).get("reason", ""))
 			if reason != "":
-				SalesLedger.report_loss(account, reason, "")
-			_leave(lead_id, account, SalesConstants.WALK_LOCK_WEEKS)
+				lose(lead_id, account, reason, "", SalesConstants.WALK_LOCK_WEEKS)
+			else:
+				_leave(lead_id, account, SalesConstants.WALK_LOCK_WEEKS)
 		NegotiationSystem.OUTCOME_INSULTED:
 			# §5.3 — "masa devrilir, hesap hafızasına yazılır". This one IS remembered.
 			SalesLedger.record_insult(account)
 			_leave(lead_id, account, SalesConstants.RETURN_LOCK_WEEKS)
+
+
+## A lead that walks out over a named reason (§5.2): the account remembers it, and the company stays out of the pool for
+## `lock_weeks`. The first act's loss and a table out of patience end here.
+static func lose(lead_id: String, account: String, reason: String, target: String, lock_weeks: int) -> void:
+	SalesLedger.report_loss(account, reason, target)
+	_leave(lead_id, account, lock_weeks)
 
 
 static func _leave(lead_id: String, account: String, lock_weeks: int) -> void:
