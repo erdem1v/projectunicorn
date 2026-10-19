@@ -60,7 +60,7 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | Sürüm / İlk sürüm | Release / First release | |
 | Özellik | Feature | |
 | Hata | Bug | TR ekranda asla "bug" demez. |
-| Kararlılık *(monitör)* | Stability | Pitch KARARLILIK'ından AYRI anlam — anahtar paylaşılmaz. |
+| Kararlılık *(açık hata ve kesinti satırının başlığı)* | Stability | Ürünün eski eksen adı Faz Q'da kalktı; terim yalnız Faz C'nin kuracağı açık hata ve kesinti satırının başlığıdır ("Kararlılık · 7 açık hata ▲2 · son 4 haftada 1 kesinti") ve oyunda henüz yoktur. Pitch KARARLILIK'ından AYRI anlam — anahtar paylaşılmaz. |
 | Teknik borç | Tech debt | |
 | Geliştirme bekleniyor | Awaiting development | |
 | sprint | sprint | `PRODUCT_SPRINT_TITLE` ve ürün ekranı; CSV cümle düzeninde, büyük hâli `Fmt.upper` ile SPRINT. "sprint" izinli ödünç kelimelerde yok: TR onay bekliyor. |
@@ -74,6 +74,9 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | alan *(ürün)* | area | ALANLAR / AREAS. |
 | İlk Kullanım ve Erişim / İlk kullanım *(ürün alanı)* | Onboarding & Access / Onboarding | `PRODUCT_AREA_ONBOARDING` ve `_SHORT`. TR adı sahip kararıyla değişti (2026-10-17); EN ve iç kimlik (`onboarding`) aynı. "Onboarding" TR'de yalnız hesabın ilk haftaları anlamında kalır (§5). |
 | İlk Açılış Akışı *(Ar-Ge düğümü)* | Onboarding Flow | `PROD_RND_NODE_ONBOARDING_FLOW`. TR adı sahip kararıyla değişti (2026-10-17); EN aynı. |
+| Yok · Zayıf · Yeterli · Güçlü *(alanın sözcüğü)* | None · Weak · Solid · Strong | `PRODUCT_LEVEL_NONE`, `_WEAK`, `_ENOUGH`, `_STRONG`. Alanın ham seviyesinin beklentiye göre okunuşudur; "Yeterli" EN'de "Solid"dir, "Enough" değil. Eksik alanı söyleyen satış cümleleri aynı alan adını taşır ("{area} sizde henüz zayıf" ↔ "Your {area} side is still weak", `SALES_LOSS_WEAK_AREA`). TR/EN onay bekliyor. |
+| ürün uyumu | product fit | Satış zarının ipucu, küçük harf: "ürün uyumu · Çekirdek Zayıf" ↔ "product fit · Core Weak" (`SALES_MOD_PRODUCT_FIT`). Ürünün müşterinin baktığı alanlara uyumu; alanın sözcüğü ile birlikte yazılır, tek başına sayı yazılmaz. TR/EN onay bekliyor. |
+| 1★ şirketler | 1★ companies | Ürün sayfasının alan cümlesi (`PRODUCT_STAR_*`): "1★ şirketler bu alana bakmaz." ↔ "1★ companies do not look at this area." (`PRODUCT_STAR_SKIPPED`) Yıldız işareti rakama bitişik, iki dilde aynı. TR/EN onay bekliyor. |
 | yetenek | capability | Alanın altındaki yapılmış iş. |
 | talep | request | Müşterinin ürün talebi; satıştaki "aday ↔ lead" ile karışmaz. |
 | lider *(build)* | lead | LİDERİN ÖNERİSİ / LEAD'S PICK. Satıştaki "aday ↔ lead"den ayrı anahtar ailesi. |

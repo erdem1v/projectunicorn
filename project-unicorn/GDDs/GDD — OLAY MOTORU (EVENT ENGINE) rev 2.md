@@ -2015,7 +2015,7 @@ gelirdir: işlem listesine yazılır, ay gelirine yazılmaz.
 - Fiil (sonradan kaldırıldı, §27.26): nötr `fix_run_start` DESTEK'in düzeltme koşusunu başlatır (`SupportSystem.start_fix_run`), açılamazsa ret
   gerekçesini döndürür; sabit çipi `EFFECT_FIX_RUN_STARTS`.
 - `EvSignals.BINDINGS`'e slotsuz `axis_floor_warning` ve `axis_floor_crossed` eklendi; B2C taban kartları onlarla
-  tetiklenir.
+  tetiklenir (sinyaller sonradan eksen değil alan kimliği taşır, §27.36).
 
 *Neden.* Yeni kartların okuduğu durumun seam'i yoktu; içerik durumu yalnız seam'den okur (§6).
 
@@ -2964,3 +2964,25 @@ taşır ve bakılacak yeri gösterir.
 
 *Neden.* Faz Q Karar 1 ve 11: ürünün tek kalitesi alanların seviyesidir; eksen puanı, damga ve kapı-üstü bonusu ekonomiyi sürmüyordu ve okuyanı
 kalmamıştı. Rakip modeli kendi üç boyutunu tutar ve ürünle bağı koptu.
+
+
+### §27.39 · Faz Q K3a: görüşmenin ikna terimi ürün uyumunu okur, kayıp nedeni alan adı taşır
+
+*Belge ne diyordu.* §9.6 ve Satış §5.1: görüşmenin kalıcı ikna terimleri motorun `{seam, delta}` biçimidir ve `EvDice.modifier_lines` ipucu listesini kurar;
+ürün terimi `urun.axis_reading` adını taşıyordu ve ürünün eksen okumasından geliyordu. Alıcının ürün sorusu "kararlılık sicili"ydi
+(`probe_stability_record`) ve eksik ürünün kayıp nedeni `LOSS_STABILITY`'ydi.
+
+*Ne yapıldı.*
+- Terim `urun.product_fit` oldu: `delta = W_PRODUCT_FIT × clamp(U ÷ FIT_SCALE − 1, −1, 1)`, U adayın `ProductQuality.prospect_fit`'idir. Etiketi sayı
+  yazmaz (`SalesMeetingSystem._fit_line`: "ürün uyumu · Çekirdek Zayıf", yani müşterinin eksik bulduğu alan, yoksa Çekirdek, ve bu masanın o alanı okuduğu
+  sözcük); zar ipucundaki kategorisi `MEETING_CHIP_PREP`'tir. `urun.axis_reading` gibi `urun.product_fit` de `EvSeams`'e kayıtlı bir seam DEĞİLDİR: yalnız
+  ipucu listesinin anahtarıdır ve kartlar onu okuyamaz.
+- Kararlılık sorusu yerine her alıcı tipinin üç vurgu sorusu vardır (`probe_emphasis_trust`, `probe_emphasis_integrations`, `probe_emphasis_onboarding`;
+  kriter sektörün vurgu 1 alanıdır, cevapların ortak tablosu `EMPHASIS_ANSWERS`). Güçlü cevabın kapısı vurgu alanının Yeterli ya da üstü olmasıdır; eksik
+  alanı olan müşteri ilk soruyla bir kez itiraz eder.
+- `LOSS_STABILITY` yerini `LOSS_WEAK_AREA`'ya bıraktı: hedefi müşterinin eksik bulduğu alanın kimliğidir. Görüşme kaybı ve pazarlıktan nedenli kalkış
+  `SalesFinalizer.lose`'dan geçer; geri dönüş kapısı o alan adayın bağlamında Yeterli olunca açılır. `SaveManager._migrate_17` eski kararlılık
+  kaybını (hesabın hafızası, kayıp günlüğü, aday) `weak_area` + `trust` yapar.
+- Vakalar `sales_meeting_reads_fit`, `sales_emphasis_question`, `sales_weak_area_loss`.
+
+*Neden.* Faz Q Karar 9: oyuncu görüşmede zayıf ürünü bir sayı olarak değil müşterinin ağzından, alanın adıyla duyar ve hamlesi (o alana kart koymak) görünür olur.

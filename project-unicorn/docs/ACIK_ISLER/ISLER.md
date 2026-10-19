@@ -64,11 +64,15 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   - Tip ekranının kilitli üçlüsü (ch03 §12.11, GUNCELLEMELER ch14 §2): `ProductCatalog.locked_type_ids`,
     `TYPE_SCREEN` kilitli listesi, `type_sector_labels`; tür seçici yalnız oynanabilir türleri çiziyor
     (ACIK_KARARLAR 96).
-  - Hat okumaları (ch03 §12.9): `ProductLines.net_gain`, `is_complete`; kapı üstü bonus (ch03 §12.8):
-    `LineGates.above_gate_bonus` (yalnız smoke; çıkan kademeye damga vurulmuyor, ACIK_KARARLAR 96).
+  - Hat okumaları (ch03 §12.9): `ProductLines.is_complete` (yalnız smoke). `net_gain` (ağırlıklı eksen kazancı)
+    ile kapı üstü bonusun gerçekleşme zinciri (`LineGates.above_gate_bonus`, kademe damgası) eksenlerle birlikte Faz Q
+    K7b'de silindi (`bd7ed53`); kapı üstü hız basamakları (`LineGates.speed_bonus_for`, `ABOVE_GATE_*`,
+    ch03 §12.8) okuyucusuz duruyor, kararı ACIK_KARARLAR 41'de.
   - Altyapı ve fiyat (ch03 §10): `InfraSystem.gross_margin_monthly` (brüt marjın yüzeyi yok), `adjust_capacity` ve
     `SalesSystem.estimate_price_change` (yalnız smoke).
-  - Pazar payı merdiveni (ch03 §12.11; sahip): `RivalRegistry.get_player_rank_in_startup_league`.
+  - Pazar payı merdiveni (ch03 §12.11; sahip): oyuncunun kendi tipindeki startup rakipler arasındaki sırası; okuyan
+    ekran yok. Sıra hesabı (`RivalRegistry.get_player_rank_in_startup_league`) eksen bileşkesini okuyordu ve Faz Q K7b'de
+    silindi (`bd7ed53`); merdiven istenirse rakip modeliyle birlikte yeniden kurulur.
   - Merdiven reddi (ch03 §12.3): `ProductLines.ladder_refusal` (yalnız smoke `line_ladder_rules`; aday kartlar
     sıradaki kademeyi `next_tier`'dan okur).
   - Liderlik ve koordinasyon çıktısı (Ekip §4.2, §17.2): `HRSystem.leadership_output_mult`,
@@ -104,11 +108,24 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
     efor 1); tersi de var. Faz A K4 ile kapandı: başlamamış düzeltme kartının hata sayısı ve eforu her gün hata
     deposundan yenilenir (`SprintSystem._refresh_fix_cards`), koşan kartınki başlatmada kilitlidir. Sahip onayı
     RAPOR_A'da; onaydan sonra madde silinir.
-  - C-09: Öngörü durum sözcüğü değişmeyen seviye geçişini de yazıyor ("Çekirdek Yeterli → Yeterli").
-  - C-10: Ücretli plan özelliklerle aynı sürümde çıkınca fiyat sürüm öncesi eksenlerden kuruluyor (~%14 düşük).
+  - C-09: Öngörü durum sözcüğü değişmeyen seviye geçişini de yazıyor ("Çekirdek Yeterli → Yeterli"):
+    `SprintCatalog.card_effect` yarım adım yuvarlanmış seviye değişince `level` parçası verir, `SprintUiShared.forecast`
+    iki ucun sözcüğünü eşit olsa da çizer. Faz Q K2 sözcüğü ürün sayfasının referansına göre ham seviyeden okur hâle
+    getirdi (`9a0dff9`); bu davranış değişmedi. Kardeşi: `holds` parçası kartın SONRAKİ ham seviyesinin sözcüğünü
+    (`level.to_word`) yazar, alan paneli bugünkü ham seviyeninkini; seviye aynı yarım adımda kalıp sözcük sınırını
+    aşarsa kart "Zayıf kalır" derken panel "Yok" okur.
+  - C-10: Ücretli plan özelliklerle aynı sürümde çıkınca fiyat, aynı kapanışta kart sırasında kendisinden sonra gelen
+    kademeler yazılmadan kuruluyor: `SprintSystem._close` döngüsü `SprintBridges.open_paid_plan`'ı kartın sırasında
+    çağırır, `SalesSystem.product_value` kalite terimini (`b2c_quality`, canlı kademelerden) ve açık hat sayısını o
+    anki kademelerden okur. Eksen sayıları Faz Q K7b'de kalktı; eskiden fiyat döngüden sonra yazılan eksen
+    gerçekleşmesinin bütününden önce kuruluyordu (~%14 düşük ölçüsü o dönemin), şimdi yalnız sonraki kartlar eksik.
+    Yeni kalite terimiyle yeniden ölçülmedi.
   - C-11: Müşteriler satırı betada bekleyen talep kartına "+" ve "→" gösteriyor; düğmeler bir şey yapmıyor.
   - C-13: Alan cümlelerinin alt-tür boyutu yok: her alt-tür aynı Çekirdek cümlesini okuyor (PRD §2.1 "şablon alan ×
-    durum × alt-tür").
+    durum × alt-tür"). Faz Q K2 ile konusunu yitirdi (`9a0dff9`): alan × söz şablonu kalktı, 19 alana özgü durum
+    cümlesi silindi; kapalı satırın cümlesi ürün sayfasının yıldız cümlesidir (`PRODUCT_STAR_*`, B2C'de
+    `PRODUCT_AUDIENCE_*`, Gelir'in dört satırı kalır) ve alt-türden bağımsızdır. Alanlara özgü tadın yitmesi ayrı
+    sahip sorusu. Sahip onayı Faz Q raporunda; onaydan sonra madde silinir.
   - INT-6: Koşan kartı "Çıkar"mak atananlarını haftanın kalanında boşta bırakıyor ve yapılmış puanı HIZ satırından
     düşürüyor (`SprintSystem.remove` `_restaff` çağırmıyor).
   - INT-9: v14 göçünden sonra ilk günlük tike kadar ticket defteri boş: yüklemede düzeltme kartı ve "!" yok.

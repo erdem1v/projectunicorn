@@ -149,10 +149,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 - **10 · VC iç sesi, sorulmuş soruya gelecek zamanla bakıyor (Beat 3 `_MONO` satırları).**
   - Ne oluyor: 3. vuruşta VC'nin sorusu (`active_line`) ile iç ses (`monologue_text`) aynı ekranda aynı anda çıkıyor.
     İç ses satırları ise gelecek zamanda yazılmış: "Churn'ü soracak.", "Tek-kurucu riskini soracak.", "Rakibi masaya
-    koyacak.", "En zayıf ekseni bulacak.". Oyuncu soruyu okurken iç ses onun daha sorulacağını söylüyor.
+    koyacak.", "En zayıf alanı bulacak.". Oyuncu soruyu okurken iç ses onun daha sorulacağını söylüyor.
   - Nerede: `scripts/systems/vc_pitch_system.gd` (`_beat3_view_state`: soru `active_line`, iç ses `monologue_text`);
-    `scripts/modals/meeting_scene.gd` (`_apply_active_line` ikisini aynı anda çizer); anahtarlar `VC_Q_*_MONO` ve
-    `SEED_Q_*_MONO`.
+    `scripts/ui/meeting/vc_meeting_adapter.gd` (`_lines` soruyu `counterpart`, iç sesi `quiet` satır olarak aynı
+    görünümde art arda çizer); anahtarlar `VC_Q_*_MONO` ve `SEED_Q_*_MONO`.
   - Oyuncuya etkisi: Sahnenin zamanı kayıyor: VC sormuş, iç ses "soracak" diyor. Satır bir önsezi gibi okunuyor ama
     önsezi için artık çok geç. Hazırlık ipucunun ("Sayıları hazırla") işe yarayacağı an zaten geçmiş.
   - Seçenekler: A) Metin: iç ses satırları şimdiki zamana ya da tepkiye çevrilir (ör. "Churn'ü soruyor. Sayılar hazır
@@ -160,6 +160,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     Bunun 1. vuruş istihbaratına bağlanıp bağlanmayacağı ayrıca seçilir. Bu, vuruş yapısını değiştirir. C) Olduğu gibi
     kalır. K31 (toplantı diyaloglarının yazım turu) kapsamına alınabilir.
   - Kaynak: ONERI_v3 §2 (şüphe 5); ACIK_KARARLAR K31 maddesi.
+  - Faz Q ile değişti (2026-10-19): `VC_Q_WEAK_DIM_MONO` artık "En zayıf alanı bulacak." diyor (K4v, `2af6eef`: yatırımcı
+    ürün sayfasının alan dilini konuşur); eksen sözcüğü kalktı. Zaman sorunu ve seçenekler değişmedi: öbür `_MONO`
+    satırları gelecek zamanda, seçim sahibin. K4v metninin TR/EN onayı o commit'te bekliyor.
 
 - **11 · Elde tutma kartı yalnız Risk'e girişte açılıyor (kalibrasyon).**
   - Ne oluyor: `customer.retention` artık yalnız hesap Risk'e girerken açılıyor (`customer_health_changed`); önceden
@@ -693,28 +696,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Kaynak: ch01 §9 (Non-negotiables: no dashes in copy); Ürün GDD (ch03) §12.12 (gövde metinlerinde tire yok);
     CLAUDE.md §5.
 
-- **52 · Eksen sayıları üç yüzeyde iki farklı cetvelle gösteriliyor.**
-  - Ne oluyor: Ürün Detayı üçgeni ve legend'i `ProductState.axis_readings()`'in §11.3 okumasını sabit
-    `QualityModel.READING_MAX` (120) üstünde çiziyor. Aynı sayfadaki B2C fiyat panelinin eksen çipleri
-    (`PROD_AXIS_INNOVATION_N` / `_STABILITY_N` / `_EXPERIENCE_N`) ise ham `mvp_innovation` / `mvp_stability` /
-    `mvp_experience` bayraklarını, yani fiyat ve değer hesabının girdisi olan gerçekleşen eksen değerlerini basıyor.
-    Konsept'in önizleme üçgeni `ProductSystem.projected_line_dims`'in ham değerini (taban cila ×1,00)
-    `max(PREVIEW_SCALE_FLOOR = 25, en büyük eksen)` ölçeğinde çiziyor; ölçek seçimle kayıyor. Legend sayıları farklı
-    birimde ("7,2" ile "83" gibi).
-  - Nerede: `scripts/tabs/product/pricing_panel.gd` (`repaint`, eksen çipleri); `scripts/tabs/product/detail_view.gd`
-    (`_repaint_profile`, legend çubukları); `scripts/tabs/product/creation_flow.gd` (`_update_dynamic`,
-    `PREVIEW_SCALE_FLOOR`); `scripts/systems/product_state.gd` (`axis_readings`);
-    `scripts/ui/components/triangle_radar.gd` (`set_axes`).
-  - Oyuncuya etkisi: Oyuncu aynı eksen için aynı ekranda iki sayı görür ve hangisinin ürünü anlattığını bilemez;
-    Konsept'te planladığı şekli yayından sonra Ürün Detayı'nda gördüğüyle karşılaştıramaz; önizlemede bir eksenin
-    büyümesi öbürlerini küçülmüş gösterebilir.
-  - Seçenekler: A) Tek cetvel: çipler ve Konsept önizlemesi de §11.3 okumasını (projeksiyon / fazın çıtası × 100,
-    READING_MAX üstünde) gösterir. B) Çipler kalkar (§17: eksen okumaları yalnız üçgende yaşar); önizleme A'daki
-    cetvele geçer. C) Yüzeyler ayrı kalır: çip ve önizleme ham değeri korur ama bunu söyleyen yeni birer başlık alır
-    (yeni metin) ve önizleme sabit bir ölçek (o fazın çıtası) kullanır.
-  - Kaynak: Ürün GDD (ch03) §5 (Konsept önizlemesi taban cila), §11.1, §11.2, §11.3, §17 ("Eksen okumaları monitörün
-    üçgeninde yaşar; ayrı panel yoktur", "üçgenin ölçekleme hatası ekran turunda düzeltilir").
-
 - **54 · `PROD_DESK_NOBODY_ELIGIBLE` okunmuyor: masaya kimse uygun değilken işe alım ipucu yok.**
   - Ne oluyor: DESTEK bloğunun masa cümlesi, masa boşken ve masayı taşıyabilecek çalışan yokken her zaman
     `PROD_DESK_FOUNDER_BUSY` gösteriyor (canlı üründe boş masa, kurucunun başka bir işte olduğu demek).
@@ -738,31 +719,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler: A) Yeni anahtar yazılır: EN "Working on research", TR "Araştırmada görev alıyor" (onay bekler);
     ardından `_job_text`'teki geri düşüş dalı silinir. B) Bugünkü gibi: etiket yeterli, geri düşüş kalır.
   - Kaynak: Ekip GDD §12.2 (iş metni); Ar-Ge GDD §5.0 (araştırma dışlayıcı iştir).
-
-- **59 · VC'nin zayıf boyut tabanı ham eksenle karşılaştırılıyor; ürün uyumu bonusu fiilen hiç verilmiyor.**
-  - Ne oluyor: `VCPitchSystem._weakest_dimension` literal `< 40.0` çalışma tabanını,
-    `TermSheetTableSystem.E_FIT_PRODUCT_DIM_FLOOR` (40,0) ise ürün alanının uyum puanını yayındaki HAM
-    `mvp_innovation` / `mvp_stability` / `mvp_experience` değerleriyle (`QualityModel.dims_from_flags`)
-    karşılaştırıyor. Hat modelinde bu değerler 52. maddenin kaydettiği gibi tek haneden ~20'lere uzanır. Eksen başına
-    üç hattın K1'i 12 eder (`QualityModel.PHASE_BAR[1]`). 40'a ancak bir eksenin üç hattı da K3'teyken (3 × 14,4 =
-    43,2, tam gerçekleşmede) varılır. `full_run:760:sim` probe'unda (tohum 1, 2, 3) 12–16 sürümde en yüksek ham eksen
-    31,6 / 27,9 / 33,3'te kaldı, deneyim ekseni 3,0–5,7'yi geçmedi.
-  - Nerede: `scripts/systems/vc_pitch_system.gd` (`_weakest_dimension`; okuyanları `_sorgu_product` ve seed'in ürün
-    sorusu); `scripts/systems/term_sheet_table_system.gd` (`E_FIT_PRODUCT_DIM_FLOOR`, `E_FIT_PRODUCT_DIMS`,
-    `_domain_fit` "product" dalı); `scripts/systems/quality_model.gd` (`dims_from_flags`, `axis_readings`).
-  - Oyuncuya etkisi: VC her koşuda bir zayıf boyut bulur. Canlı hata yokken Series A sorgusu hep `VC_Q_WEAK_DIM`
-    sorar, seed'in ürün sorusu hep `SEED_Q_HOW_BIG` olur, "temiz" dal (`VC_Q_CLEAN` / `SEED_Q_CLEAN`) ürün alanında
-    hiç gelmez. Meridian masasında `E_FIT_PRODUCT_DIMS` (+4) pratikte hiç verilmez; ürünü ne kadar iyi olursa olsun
-    oyuncu bu isteklilik puanını alamaz.
-  - Seçenekler: A) İki taban da §11.3 eksen okumasıyla (`ProductState.axis_readings`, 0–120, çıtaya göre)
-    karşılaştırılır; 40 okuma çıtanın %40'ı demek olur. B) Tabanlar ham aralığa göre yeniden ölçeklenir [K] (ör. 12 =
-    eksen başına K1 dolu). C) Bugünkü davranış kalır ve GDD'ye yazılır: ürün alanında VC hep bir zayıflık bulur, boyut
-    bonusu Series A'da ulaşılmaz bir hedeftir. İki sabit de E modeli sabitidir, değişikliği sahip onayı gerektirir
-    (CLAUDE.md §3).
-  - Kaynak: GDD ch09 (Funding & Investors) ve Ürün GDD (ch03) §11.2–§11.3 VC tabanının hangi ölçeğe baktığını
-    söylemiyor; `QualityModel` hat modeli; probe ölçümü (`full_run:760:sim:1-3` PROBE SHIP satırları); 52. madde (ham
-    eksen aralığı).
-  - Faz A ile değişti (2026-10-17): VC'nin ürün odaklı fon geri dönüşü eksen okumaz: `bugs_under` yerine `churn_under` gelir (verildikten sonra 12 haftada kaybedilen müşteri oranı B2B %5, B2C %15 altında). `_weakest_dimension`'ın öbür okuyucuları (seed ve Series A sorguları) ve `E_FIT_PRODUCT_DIM_FLOOR` bu maddenin konusu olarak değişmeden açık kalır. Sahip onayı RAPOR_A'da.
 
 - **110 · Düz özellik havuzunda B2B sözü: ürünün zaten sunduğu yetenek söz konusu olabilir.**
   - Ne oluyor: `B2BSalesSystem.pick_pain_feature`'ın düz havuz yolu (hat modeli olmayan alt-türler) bir özelliğin
