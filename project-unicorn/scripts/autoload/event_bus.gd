@@ -216,6 +216,7 @@ signal meeting_lost(account_key: String, reason: String)  # §5.2 — with the N
 signal deal_signed(customer_id: String, seats: int, seat_price: int)   # §5.3 — İmzala
 signal deal_walked(account_key: String)               # §5.3 — neutral walk
 signal rep_deal_closed(rep_id: String, customer_id: String)            # §7.6
+signal rep_deal_lost(rep_id: String, prospect_id: String, area: String)  # §7.6 — a desk deal lost over an area the product lacks
 signal rep_discount_requested(rep_id: String, prospect_id: String)     # §7.6 — the price-break moment
 signal pitch_promise_made(account_key: String, feature_id: String)     # §6
 signal pitch_promise_kept(account_key: String)        # §6

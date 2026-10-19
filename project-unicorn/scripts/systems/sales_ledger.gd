@@ -71,6 +71,8 @@ static func route_block_reason(p: Prospect) -> String:
 	var reps: Array[Character] = HRSystem.assigned_to(HRConstants.AREA_SALES)
 	if reps.is_empty():
 		return "SALES_ROUTE_NO_REP"
+	if repitch_blocked(p):
+		return "SALES_BLOCK_REASON_UNCHANGED"   # §9 — no desk picks it (SalesRepSystem.pick_lead_for)
 	var reasons: Array = reps.map(func(rep: Character) -> String: return SalesRepSystem.out_of_band_reason(rep, p))
 	if reasons.has(""):
 		return ""
@@ -335,9 +337,14 @@ static func meeting_block_reason(lead_id: String) -> String:
 		return ""   # §12 — the founder outranks a rep; a won table takes the deal over
 	# §9 — the re-pitch blocker gate. An unchanged reason gives an unchanged answer, and the
 	# door says which one.
-	if p.loss_count > 0 and p.last_loss_reason != "" and not _blocker_cleared(p):
+	if repitch_blocked(p):
 		return "SALES_BLOCK_REASON_UNCHANGED"
 	return ""
+
+
+## §9 — a returning lead whose named loss has not moved since. The founder's door and the desk's pick both stay shut on it.
+static func repitch_blocked(p: Prospect) -> bool:
+	return p.loss_count > 0 and p.last_loss_reason != "" and not _blocker_cleared(p)
 
 
 ## §9 — has the named reason actually moved since the loss? Each reason type names the query
@@ -381,7 +388,7 @@ static func spend_inner_voice() -> void:
 # EACH CLOSE IS STAMPED AS IT SIGNS (company, star, seats, seat price, MRR, the closing rep)
 # into the open window's rows. The capped activity log can lose a week's closes behind the next
 # tick's expiries, and an account can churn before the report is read. When the window ends with
-# a desk close, its rows become the week's report: SalesRepSystem posts them to the inbox as they
+# a desk close or a lost desk deal, its rows become the week's report: SalesRepSystem posts them to the inbox as they
 # stand, and the inbox draws its table from those rows whenever it is opened.
 
 ## One close into the open window, with the name of the rep who closed it, "" for the founder.
@@ -398,5 +405,21 @@ static func record_close(c: Customer, rep: String) -> void:
 static func close_week() -> Array:
 	var rows: Array = GameState.get_flag("sales_weekly_close_rows", [])
 	GameState.set_flag("sales_weekly_close_rows", [])
+	return rows
+
+
+## One lost desk deal into the open window's lost rows, the ones the founder was not mailed about: the seller's name (stored,
+## like a close's), the company and the area id found lacking. They sit beside the closes' rows, so the report's table and
+## total read the closes alone.
+static func record_loss(rep: String, company: String, area: String) -> void:
+	var rows: Array = GameState.get_flag("sales_weekly_loss_rows", [])
+	rows.append({"company": company, "area": area, "rep": rep})
+	GameState.set_flag("sales_weekly_loss_rows", rows)
+
+
+## Ends the open window and returns its lost rows.
+static func lost_week() -> Array:
+	var rows: Array = GameState.get_flag("sales_weekly_loss_rows", [])
+	GameState.set_flag("sales_weekly_loss_rows", [])
 	return rows
 

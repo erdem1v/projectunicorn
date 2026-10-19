@@ -134,7 +134,8 @@ func _card() -> void:
 func _message() -> void:
 	var m: Dictionary = _item.msg
 	var a: Dictionary = m.args
-	var kind: String = {"intro": "MAIL_KIND_MESSAGE", "rnd_discovery": "RND_DISCOVERY_TITLE"}.get(m.kind, "MAIL_KIND_REPORT")
+	var kind: String = {"intro": "MAIL_KIND_MESSAGE", "sales_loss": "MAIL_KIND_MESSAGE",
+		"rnd_discovery": "RND_DISCOVERY_TITLE"}.get(m.kind, "MAIL_KIND_REPORT")
 	match String(m.kind):
 		"intro":
 			_mail(_kicker(kind), _item.subject, tr("MENTOR_INTRO_BODY"))
@@ -144,6 +145,8 @@ func _message() -> void:
 			_actions(SummarySystem.display(a).footer, [[tr("MAIL_CONTINUE"), _close, true]])
 		"sales_week":
 			_mail(_kicker(kind), _item.subject, "", _sales_report(a))
+		"sales_loss":
+			_mail(_kicker(kind), _item.subject, INBOX.lost_body(a))
 		"rnd_note", "rnd_discovery":
 			var note: bool = m.kind == "rnd_note"
 			if note:
@@ -633,35 +636,39 @@ func _summary_row(table: VBoxContainer, label: String, values: String, delta: St
 func _sales_report(a: Dictionary) -> VBoxContainer:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	col.add_child(UiFactory.make_label(tr("MAIL_RPT_CLOSED"), &"BodyLabel"))
-	var grid := GridContainer.new()
-	grid.columns = 5
-	grid.add_theme_constant_override("h_separation", UiTokens.SPACE_4XL)
-	grid.add_theme_constant_override("v_separation", UiTokens.SPACE_L)
-	col.add_child(grid)
-	for key in ["MAIL_RPT_CUSTOMER", "MAIL_RPT_STARS", "MAIL_RPT_SEATS", "MAIL_RPT_PRICE", "FIN_CAP_MRR"]:
-		grid.add_child(UiFactory.make_label(Fmt.upper(tr(key)), &"KeyLabel"))
-	var total: int = 0
-	for r in a.rows:
-		total += int(r.mrr)
-		var company := UiFactory.make_label(String(r.company), &"DataStrong")
-		company.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid.add_child(company)
-		var stars := HBoxContainer.new()
-		stars.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-		stars.add_child(UiFactory.make_label(str(int(r.star)), &"DataText"))
-		stars.add_child(UiFactory.make_glyph(STAR, UiTokens.D_ICON_PART, UiTokens.D_INK_3))
-		grid.add_child(stars)
-		grid.add_child(UiFactory.make_label(str(int(r.seats)), &"DataText"))
-		grid.add_child(UiFactory.make_label(Fmt.money_exact(int(r.price)), &"DataText"))
-		grid.add_child(UiFactory.make_label("+" + Fmt.money_exact(int(r.mrr)) + tr("SALES_PER_MONTH"),
-			&"DataText", UiTokens.D_pos()))
 	var foot := HBoxContainer.new()
 	foot.add_theme_constant_override("separation", UiTokens.SPACE_4XL)
-	foot.add_child(UiFactory.make_label(tr("SALES_WEEKLY_TOTAL").format({"n": a.rows.size(),
-		"mrr": Fmt.money_exact(total)}), &"KeyText"))
+	# A week of lost deals alone has no closes: no table and no total, only the lost lines and the book.
+	if not a.rows.is_empty():
+		col.add_child(UiFactory.make_label(tr("MAIL_RPT_CLOSED"), &"BodyLabel"))
+		var grid := GridContainer.new()
+		grid.columns = 5
+		grid.add_theme_constant_override("h_separation", UiTokens.SPACE_4XL)
+		grid.add_theme_constant_override("v_separation", UiTokens.SPACE_L)
+		col.add_child(grid)
+		for key in ["MAIL_RPT_CUSTOMER", "MAIL_RPT_STARS", "MAIL_RPT_SEATS", "MAIL_RPT_PRICE", "FIN_CAP_MRR"]:
+			grid.add_child(UiFactory.make_label(Fmt.upper(tr(key)), &"KeyLabel"))
+		var total: int = 0
+		for r in a.rows:
+			total += int(r.mrr)
+			var company := UiFactory.make_label(String(r.company), &"DataStrong")
+			company.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			grid.add_child(company)
+			var stars := HBoxContainer.new()
+			stars.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+			stars.add_child(UiFactory.make_label(str(int(r.star)), &"DataText"))
+			stars.add_child(UiFactory.make_glyph(STAR, UiTokens.D_ICON_PART, UiTokens.D_INK_3))
+			grid.add_child(stars)
+			grid.add_child(UiFactory.make_label(str(int(r.seats)), &"DataText"))
+			grid.add_child(UiFactory.make_label(Fmt.money_exact(int(r.price)), &"DataText"))
+			grid.add_child(UiFactory.make_label("+" + Fmt.money_exact(int(r.mrr)) + tr("SALES_PER_MONTH"),
+				&"DataText", UiTokens.D_pos()))
+		foot.add_child(UiFactory.make_label(tr("SALES_WEEKLY_TOTAL").format({"n": a.rows.size(),
+			"mrr": Fmt.money_exact(total)}), &"KeyText"))
 	foot.add_child(UiFactory.make_label(tr("MAIL_RPT_BOOKS").format({"n": int(a.accounts)}), &"KeyText"))
 	col.add_child(foot)
+	for lost in a.get("lost", []):
+		col.add_child(_wrapped(INBOX.lost_line(lost), &"DataText"))
 	return col
 
 

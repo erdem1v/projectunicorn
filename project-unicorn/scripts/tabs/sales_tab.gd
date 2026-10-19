@@ -394,7 +394,8 @@ func _lead_actions(p: Prospect, off: bool) -> VBoxContainer:
 	off = off or p.is_table_deal()
 	var rep_block: String = "" if p.is_table_deal() else SalesLedger.route_block_reason(p)
 	var block: String = SalesLedger.meeting_block_reason(p.id)
-	for key in [rep_block, block]:
+	# A returning lead's unchanged reason shuts both doors with one line.
+	for key in [rep_block, "" if block == rep_block else block]:
 		if key != "":
 			var why := _line(tr(key), &"Caption")
 			why.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

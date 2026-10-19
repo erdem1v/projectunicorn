@@ -99,6 +99,8 @@ const FLAG_TYPES := {
 	"sales_first_top_star_id": TYPE_STRING,    # §7.3 — the run's first 3★ account, "" = none yet
 	"sales_weekly_anchor_day": TYPE_INT,       # §7.3 — the weekly summary's window start
 	"sales_weekly_close_rows": TYPE_ARRAY,     # §7.3 — the open week's closes, stamped at signing
+	"sales_weekly_loss_rows": TYPE_ARRAY,      # §7.3 — the open week's lost desk deals the founder was not mailed about
+	"sales_loss_mail_day": TYPE_INT,           # §7.6 — the tick of the last lost-deal mail (at most one a week), 0 = none yet
 	# --- phase gate / endgame / VC ---
 	# How many times the founder has said "not yet"; the gate card's escalating body reads it.
 	"gate_declines": TYPE_INT,

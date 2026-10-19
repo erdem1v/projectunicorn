@@ -43,7 +43,7 @@ static func apply(result: Dictionary) -> void:
 
 
 ## A lead that walks out over a named reason (§5.2): the account remembers it, and the company stays out of the pool for
-## `lock_weeks`. The first act's loss and a table out of patience end here.
+## `lock_weeks`. The first act's loss, a table out of patience and a desk deal the product could not carry end here.
 static func lose(lead_id: String, account: String, reason: String, target: String, lock_weeks: int) -> void:
 	SalesLedger.report_loss(account, reason, target)
 	_leave(lead_id, account, lock_weeks)

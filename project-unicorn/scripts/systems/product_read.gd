@@ -114,17 +114,6 @@ static func step_unlockable(step_id: String) -> bool:
 const FLOOR_WARNING_RATIO := 0.6
 const FLOOR_CROSSED_RATIO := 0.4
 
-## §14 [K] — B2B İ25 · K40 · D30 · B2C İ35 · K20 · D35. B2B dışındaki her pazar B2C okur.
-const _MARKET_FLOORS := {
-	"b2b": {"innovation": 25, "stability": 40, "experience": 30},
-	"b2c": {"innovation": 35, "stability": 20, "experience": 35},
-}
-
-
-static func market_floors(market: String) -> Dictionary:
-	return _MARKET_FLOORS["b2b" if market == "b2b" else "b2c"]
-
-
 ## Merdivenin alanları: {alan: seviye ÷ beklenti}. Gelir kaliteye girmediği için yok, beklentisi 0 olan alan da yok. B2B'de
 ## ve canlı ürün yokken boş: B2B'de geride kalmanın dili satış kaybıdır.
 static func floor_ratios() -> Dictionary:

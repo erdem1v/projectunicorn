@@ -2,7 +2,7 @@ class_name MessageSystem
 extends RefCounted
 
 # The inbox's messages that are not engine cards: Frank's intro, the period summary, the R&D
-# note and discovery, the weekly sales report. Engine decisions are read from EvHistory and
+# note and discovery, the weekly sales report, a seller's lost-deal note. Engine decisions are read from EvHistory and
 # never copied here. A message is a CSV key and its args, never text, so it reads in the
 # language it is opened in. The only writer of GameState.messages.
 #

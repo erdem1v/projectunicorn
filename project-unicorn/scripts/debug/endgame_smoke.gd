@@ -143,6 +143,13 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sales_meeting_reads_fit": fail = _case_sales_meeting_reads_fit()
 		"sales_emphasis_question": fail = _case_sales_emphasis_question()
 		"sales_weak_area_loss": fail = _case_sales_weak_area_loss()
+		"sales_rep_close_chance": fail = _case_sales_rep_close_chance()
+		"sales_rep_close_die": fail = _case_sales_rep_close_die()
+		"sales_rep_loss_mail": fail = _case_sales_rep_loss_mail()
+		"sales_star_mix_reads_fit": fail = _case_sales_star_mix_reads_fit()
+		"sales_sectors_all_produce_leads": fail = _case_sales_sectors_all_produce_leads()
+		"account_uses_area_rule": fail = _case_account_uses_area_rule()
+		"request_area_follows_emphasis": fail = _case_request_area_follows_emphasis()
 		"sales_faucet_guard_b2c": fail = _case_sales_faucet_guard_b2c()
 		"sales_lead_expiry_and_return_lock": fail = _case_sales_lead_expiry_and_return_lock()
 		"sales_meeting_time_skip_founder_share": fail = _case_sales_meeting_time_skip_founder_share()
@@ -728,7 +735,7 @@ static func _seed_b2b_lines(subtype: String, tier: int = 2) -> void:
 		ProductState.set_line_tier(String(line_id), tier)
 
 
-## The line the bug cases put their bugs on: a stability line, which every buyer type reads (SalesArchetypes.uses_axis).
+## The line the bug cases put their bugs on: a core line, which every account uses (ProductQuality.uses_area).
 const BUG_LINE := "line_erp_ledger"
 
 
@@ -3147,6 +3154,7 @@ static func _case_b2b_onboarding_grace_floor() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_stability", 0.0)
+	_seed_b2b_lines("erp", 0)   # the faucet reads the product's lines to draw the stars of the week's leads
 	var open_account := func(id: String) -> Customer:
 		var p := Prospect.new()
 		p.id = id
@@ -4057,7 +4065,7 @@ static func _case_b2b_cs_escalation_refuse() -> String:
 	# churns the account + drops brand + drops THAT CS employee's morale (through the seam).
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b_lines("erp")   # a sub-type with lines: the daily tick reads the fit (ProductQuality.market_fit)
 	var cs: Character = _make_cs("char_cs_1", 4, 60)
 	var p := Prospect.new()
 	p.id = "esc"
@@ -4143,7 +4151,6 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	# A SECOND, DISTINCT account — not a re-seed of co_lead_smoke. `expand()` above already
 	# spent that account's one expansion moment, and since the expansion-loop fix the engine remembers it. The
 	# re-seed only ever looked like a fresh start because expansion had no memory at all.
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	var pm := Prospect.new()
 	pm.id = "lead_mature"
 	pm.company_name = "Mature A.Ş."
@@ -5278,7 +5285,7 @@ static func _case_b2b_market_gate_b2c_run() -> String:
 	# Control: the same roster in a B2B market DOES work, so the gate is a gate, not a wall.
 	GameState.set_cash(50000)   # the first 25 weeks drained the seed cash; the control must not end in a Kepenk
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	_seed_b2b_lines("erp")   # a B2B product with lines: the faucet reads them to draw the week's stars
 	for i in 25:
 		_sim_day_full()
 		if not GameState.run_active:
@@ -6028,7 +6035,7 @@ static func _case_event_history_names_survive() -> String:
 
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b_lines("erp")   # a sub-type with lines: the daily tick reads the fit (ProductQuality.market_fit)
 	var cs: Character = _make_cs("char_cs_nm", 4, 60)
 	var p := Prospect.new()
 	p.id = "esc_nm"
@@ -8594,6 +8601,451 @@ static func _case_sales_desk_deal_runs_its_plan() -> String:
 	TimeManager.advance_hours(1)
 	if CustomerRegistry.get_customer("co_deal_c") == null:
 		return "the deal did not sign once its seller was back for the rest of its plan"
+	return ""
+
+
+## Her alanın hatlarını aynı kademeye çeker: `tiers` {alan: kademe}.
+static func _set_area_tiers(tiers: Dictionary) -> void:
+	for area in tiers:
+		for line_id in SprintCatalog.capabilities(area):
+			ProductState.set_line_tier(line_id, int(tiers[area]))
+
+
+## Kendi zarı istenen sonucu veren aday: kimlik, satışçı kapanışını kaybedene (`loses`) ya da imzalayana dek aranır. Kayıtlı döner,
+## 400 kimlikte bulunmazsa null.
+static func _die_lead(tag: String, star: int, sector: String, loses: bool) -> Prospect:
+	var p := Prospect.new()
+	p.company_name = "Die " + tag
+	p.industry = sector
+	p.star = star
+	p.archetype_id = SalesArchetypes.DEFAULT_ID
+	p.spawned_on_day = GameState.day
+	p.expires_on_day = GameState.day + TimeModel.ticks(SalesConstants.LEAD_LIFE_WEEKS) + 1
+	for n in 400:
+		p.id = "%s_%d" % [tag, n]
+		if (SalesRepSystem.lost_area(p) != "") == loses:
+			ProspectRegistry.add(p)
+			return p
+	return null
+
+
+## Satışçının kapanış ihtimali adayın bugünkü U'sundan okunur: baktığı hiçbir alan beklentinin altında değilse 1 (zar atılmaz); eksik
+## bir alan varsa U 40 ve altında %30, 55'te %60, 70'te %85, 80 ve üstünde %95, aralarında doğrusal. Ürün büyüdükçe ihtimal düşmez.
+## FALSİFİKASYON: `ProductQuality.CLOSE_CURVE`ün 55 noktasını 0,60'tan 0,50'ye çek → eğri iddiası FAIL; `close_chance`ın `loss_area` boşken
+## 1 döndüren dalını sil → "nothing lacking" iddiası FAIL.
+static func _case_sales_rep_close_chance() -> String:
+	_seed_b2b(1000)
+	var curve := func(u: float) -> float:
+		if u <= 40.0:
+			return 0.30
+		if u <= 55.0:
+			return lerpf(0.30, 0.60, (u - 40.0) / 15.0)
+		if u <= 70.0:
+			return lerpf(0.60, 0.85, (u - 55.0) / 15.0)
+		if u <= 80.0:
+			return lerpf(0.85, 0.95, (u - 70.0) / 10.0)
+		return 0.95
+	var lead := Prospect.new()
+	lead.industry = "logistics"
+	# The shared ERP meets every table: nothing is lacking, so nothing is drawn.
+	for star in [1, 2, 3]:
+		lead.star = star
+		if ProductQuality.close_chance(lead) != 1.0:
+			return "a %d star table lacking nothing reads close chance %.3f, want 1" % [star, ProductQuality.close_chance(lead)]
+	# [star, core, integrations, trust, onboarding] tiers whose U spans every segment of the curve.
+	var segments := [false, false, false, false, false]   # up to 40 · 40 to 55 · 55 to 70 · 70 to 80 · 80 and over
+	var seen: Array = []
+	for row in [[2, 0, 0, 0, 0], [2, 1, 0, 0, 2], [3, 1, 1, 1, 1], [2, 1, 0, 1, 2], [3, 2, 1, 1, 1], [3, 2, 2, 2, 0], [3, 3, 3, 3, 0]]:
+		lead.star = row[0]
+		_set_area_tiers({"core": row[1], "integrations": row[2], "trust": row[3], "onboarding": row[4]})
+		var fit: Dictionary = ProductQuality.prospect_fit(lead)
+		if fit.loss_area == "":
+			return "fixture: the row %s lacks nothing" % [row]
+		var u: float = fit.value
+		var segment: int = 0
+		for bound in [40.0, 55.0, 70.0, 80.0]:
+			segment += int(u > bound)
+		segments[segment] = true
+		var chance: float = ProductQuality.close_chance(lead)
+		if not is_equal_approx(chance, curve.call(u)):
+			return "U %d reads close chance %.4f, want %.4f" % [fit.value, chance, curve.call(u)]
+		seen.append([u, chance])
+	if segments.has(false):
+		return "fixture: the rows' U values %s leave a segment of the curve unread %s" % [seen, segments]
+	seen.sort()
+	for i in range(1, seen.size()):
+		if seen[i][1] < seen[i - 1][1]:
+			return "a higher U lowered the close chance: %s" % [seen]
+	return ""
+
+
+## Satışçının kapanış zarı adayın kendi zarıdır (çalıştırma tohumu, aday kimliği, alıcı tipi): aynı aday her okunuşta ve kayıttan yüklemeden
+## sonra aynı sonucu verir; ürün plan sürerken büyürse kayıp ancak imzaya döner. Kaybedilen anlaşma görüşmenin kaybıyla aynı yoldan geçer
+## (neden `weak_area`, hedef eksik alanın kimliği, dönüş kilidi, aday boru hattından çıkar, kayıp sinyali alanı taşır, hesap doğmaz); zarı
+## geçen eksikli anlaşma imzalanır; satışçı sıradaki adaya geçer; kaybedilen şirket geri geldiğinde alan Yeterli olana dek satışçıya verilmez.
+## FALSİFİKASYON: `_close`un kayıp dalını sil → "signed anyway" iddiası FAIL; `pick_lead_for`dan `repitch_blocked` denetimini sil →
+## "blocked lead picked" iddiası FAIL; `route_block_reason`dan `repitch_blocked` denetimini sil → "could be given" iddiası FAIL.
+static func _case_sales_rep_close_die() -> String:
+	_seed_b2b(1000)
+	_set_area_tiers({"core": 1, "integrations": 0})
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)   # Satış 9: dört yıldız, bant 1..3
+	CharacterRegistry.set_morale(rep.id, 65)
+	var lost: Prospect = _die_lead("die_lost", 2, "logistics", true)
+	var kept: Prospect = _die_lead("die_kept", 2, "logistics", false)
+	if lost == null or kept == null:
+		return "fixture: no lead id lands the die as asked in 400 tries"
+	var lost_id: String = lost.id
+	var kept_id: String = kept.id
+	var company: String = lost.company_name
+	if ProductQuality.prospect_fit(kept).loss_area != "integrations" or ProductQuality.close_chance(kept) >= 1.0:
+		return "fixture: the lead that passes the die does not lack Integrations"
+	# The die is the lead's own: the same answer however often it is read, and after a save.
+	var verdicts := func() -> Array:
+		return [SalesRepSystem.lost_area(ProspectRegistry.get_prospect(lost_id)),
+			SalesRepSystem.lost_area(ProspectRegistry.get_prospect(kept_id))]
+	var first: Array = verdicts.call()
+	if first != ["integrations", ""]:
+		return "the die is not the lead's own: the losing id reads %s, want lost over integrations and a signature" % [first]
+	for i in 20:
+		if verdicts.call() != first:
+			return "the die changed between two reads"
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		_cleanup_save_slots()
+		return "the slot did not load back"
+	_cleanup_save_slots()
+	if verdicts.call() != first:
+		return "the die changed across a save: %s, was %s" % [verdicts.call(), first]
+	rep = CharacterRegistry.get_character("char_sr_1")
+	# A product that grew while the plan ran can only turn the loss into a signature.
+	_set_area_tiers({"integrations": 1})
+	if SalesRepSystem.lost_area(ProspectRegistry.get_prospect(lost_id)) != "":
+		return "with Integrations built the lead still reads lost over '%s'" % SalesRepSystem.lost_area(ProspectRegistry.get_prospect(lost_id))
+	_set_area_tiers({"integrations": 0})
+	# The desk plays the lost deal out: the first lead the rep takes is the one handed to it.
+	var dropped: Array = []
+	var on_lost := func(rep_id: String, prospect_id: String, area: String) -> void:
+		dropped.append([rep_id, prospect_id, area])
+	EventBus.rep_deal_lost.connect(on_lost)
+	SalesLedger.set_routing(lost_id, SalesConstants.ROUTE_REP)
+	var days: int = 0
+	while ProspectRegistry.get_prospect(lost_id) != null and days < 30:
+		GameState.advance_day()
+		SalesRepSystem.daily_tick()
+		days += 1
+	EventBus.rep_deal_lost.disconnect(on_lost)
+	if ProspectRegistry.get_prospect(lost_id) != null:
+		return "the lead the die lost was still on the desk after %d ticks" % days
+	if CustomerRegistry.get_customer("co_" + lost_id) != null:
+		return "the lead the die lost signed anyway"
+	if SalesLedger.loss_reason(company) != SalesConstants.LOSS_WEAK_AREA or SalesLedger.loss_target(company) != "integrations" \
+			or SalesLedger.loss_count(company) != 1 or not SalesFaucetSystem.is_return_locked(company):
+		return "the loss left reason '%s', target '%s', count %d and lock %s; want a weak area over integrations, once, locked" % [
+			SalesLedger.loss_reason(company), SalesLedger.loss_target(company), SalesLedger.loss_count(company),
+			SalesFaucetSystem.is_return_locked(company)]
+	if dropped != [[rep.id, lost_id, "integrations"]]:
+		return "rep_deal_lost carried %s, want the rep, the lead and the area" % [dropped]
+	if SalesLedger.rep_busy(rep.id) != kept_id:
+		return "the rep did not move on to the next lead: busy with '%s'" % SalesLedger.rep_busy(rep.id)
+	# The next lead lacks the same area but passes its die: it signs.
+	days = 0
+	while ProspectRegistry.get_prospect(kept_id) != null and days < 30:
+		GameState.advance_day()
+		SalesRepSystem.daily_tick()
+		days += 1
+	if CustomerRegistry.get_customer("co_" + kept_id) == null or SalesLedger.loss_reason(kept.company_name) != "":
+		return "the lead that passes the die did not sign cleanly"
+	# The lost company comes back with its memory: the desk leaves it alone until Integrations is enough for its table.
+	var back: Prospect = _add_prospect("die_back", 2, "")
+	back.company_name = company
+	back.industry = "logistics"
+	back.loss_count = SalesLedger.loss_count(company)
+	back.last_loss_reason = SalesLedger.loss_reason(company)
+	if SalesRepSystem.pick_lead_for(rep) != null:
+		return "blocked lead picked: the desk took a returning company whose lost area is still empty"
+	SalesLedger.set_routing(back.id, SalesConstants.ROUTE_REP)
+	if back.routing == SalesConstants.ROUTE_REP or SalesLedger.route_block_reason(back) != "SALES_BLOCK_REASON_UNCHANGED":
+		return "the returning company could be given to the desk that will not pick it (block '%s')" % SalesLedger.route_block_reason(back)
+	_set_area_tiers({"integrations": 1})
+	if SalesRepSystem.pick_lead_for(rep) != back or SalesLedger.route_block_reason(back) != "":
+		return "Integrations built and the desk still leaves the returning company alone"
+	return ""
+
+
+## Satışçının kaybı kurucuya haftada en çok bir mailla gelir: haftanın ilk kaybı satıcının maili, öbürleri haftalık özetin satırı; özet yalnız
+## kayıpla da açılır, kapanış tablosu ve toplamı kayıp satırlarını saymaz. Masadaki kurucunun kaybı kendine mail olmaz, satırdır. Mail ve satır
+## alan adını söyler (TR ve EN, §3.4'ün cümleleri); saat durmaz, kayıt yükleme son kayıp maili gününü korur.
+## FALSİFİKASYON: `_lose`taki `sales_loss_mail_day` denetimini sil → ikinci kayıp da mail olur ve "one mail a week" iddiası FAIL; `closes <= 0 and
+## lost.is_empty()` yerine `closes <= 0` yaz → yalnız kayıplı hafta özet açmaz ve "loss-only week" iddiası FAIL; `_lose`taki `rep.category == "founder"`
+## koşulunu sil → kurucunun kaybı mail olur ve "founder's own loss" iddiası FAIL.
+static func _case_sales_rep_loss_mail() -> String:
+	_seed_b2b(1000)
+	_set_area_tiers({"core": 1, "integrations": 0, "onboarding": 0})
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)
+	var a: Prospect = _die_lead("mail_a", 2, "logistics", true)       # integrations, trust: integrations lacking
+	var b: Prospect = _die_lead("mail_b", 2, "real_estate", true)     # onboarding, integrations: both empty, the first named
+	var c: Prospect = _die_lead("mail_c", 2, "textile", true)         # integrations, onboarding: integrations named first
+	var signer: Prospect = _add_prospect("mail_sign", 1, "")           # a 1 star table only asks the core's MVP
+	if a == null or b == null or c == null:
+		return "fixture: no lead id lands the die as asked"
+	var issued: Array = []
+	var on_issued := func(closes: int) -> void:
+		issued.append(closes)
+	EventBus.weekly_sales_report_issued.connect(on_issued)
+	for lead in [a, b, c]:
+		SalesRepSystem._close(rep, lead)
+	SalesRepSystem._close(rep, signer)
+	var mails := func() -> Array:
+		return GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "sales_loss")
+	if mails.call().size() != 1 or mails.call()[0].args != {"rep": rep.character_name, "company": a.company_name, "area": "integrations"}:
+		EventBus.weekly_sales_report_issued.disconnect(on_issued)
+		return "three losses in one week mailed %s, want one mail for the first" % [mails.call().map(func(m: Dictionary) -> Dictionary: return m.args)]
+	var rows: Array = GameState.get_flag("sales_weekly_loss_rows", [])
+	if rows != [{"company": b.company_name, "area": "onboarding", "rep": rep.character_name},
+			{"company": c.company_name, "area": "integrations", "rep": rep.character_name}]:
+		EventBus.weekly_sales_report_issued.disconnect(on_issued)
+		return "the week's other two losses are %s, want one line each naming the company, the area and the seller" % [rows]
+	var closes: Array = GameState.get_flag("sales_weekly_close_rows", [])
+	if closes.size() != 1 or closes[0].company != signer.company_name:
+		EventBus.weekly_sales_report_issued.disconnect(on_issued)
+		return "the week's closes are %s, want the signed lead alone" % [closes]
+	var interval: int = TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS)
+	var summarise := func() -> void:
+		GameState.advance_day()
+		GameState.set_flag("sales_weekly_anchor_day", GameState.day - interval)
+		SalesRepSystem._tick_weekly_summary()
+	summarise.call()
+	var week: Dictionary = GameState.messages[-1]
+	if week.kind != "sales_week" or (week.args.rows as Array).size() != 1 or (week.args.lost as Array).size() != 2 \
+			or issued != [1] or not (GameState.get_flag("sales_weekly_loss_rows", []) as Array).is_empty():
+		EventBus.weekly_sales_report_issued.disconnect(on_issued)
+		return "the summary carries %s (issued %s), want one close and the two lines, and the window reset" % [week.args, issued]
+	# The next week's first loss is mailed again; its second is a line.
+	var d: Prospect = _die_lead("mail_d", 2, "logistics", true)
+	var e: Prospect = _die_lead("mail_e", 2, "logistics", true)
+	SalesRepSystem._close(rep, d)
+	if mails.call().size() != 2:
+		EventBus.weekly_sales_report_issued.disconnect(on_issued)
+		return "the next week's first loss was not mailed (%d mails)" % mails.call().size()
+	# A save keeps the week's mail: the second loss after the load is a line, not a second mail.
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		EventBus.weekly_sales_report_issued.disconnect(on_issued)
+		return "save_to_slot refused"
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		EventBus.weekly_sales_report_issued.disconnect(on_issued)
+		_cleanup_save_slots()
+		return "the slot did not load back"
+	_cleanup_save_slots()
+	rep = CharacterRegistry.get_character("char_sr_1")
+	SalesRepSystem._close(rep, ProspectRegistry.get_prospect(e.id))
+	if mails.call().size() != 2 or (GameState.get_flag("sales_weekly_loss_rows", []) as Array).size() != 1:
+		EventBus.weekly_sales_report_issued.disconnect(on_issued)
+		return "after a load the week's second loss made %d mails and %d lines, want 2 and 1" % [
+			mails.call().size(), (GameState.get_flag("sales_weekly_loss_rows", []) as Array).size()]
+	# A week of one line and no close still opens the summary, with no table.
+	summarise.call()
+	var only: Dictionary = GameState.messages[-1]
+	if only.kind != "sales_week" or not (only.args.rows as Array).is_empty() or (only.args.lost as Array).size() != 1 or issued != [1, 0]:
+		EventBus.weekly_sales_report_issued.disconnect(on_issued)
+		return "the loss-only week posted %s (issued %s), want a summary of one line and no closes" % [only.args, issued]
+	var posted: int = GameState.messages.size()
+	summarise.call()
+	EventBus.weekly_sales_report_issued.disconnect(on_issued)
+	if GameState.messages.size() != posted or issued != [1, 0]:
+		return "a quiet week posted a message"
+	# The founder at the desk would be writing to himself: his loss is a line, never a mail.
+	GameState.advance_day()
+	var founder: Character = CharacterRegistry.get_founder()
+	SalesRepSystem._close(founder, _die_lead("mail_f", 2, "logistics", true))
+	var own: Array = GameState.get_flag("sales_weekly_loss_rows", [])
+	if mails.call().size() != 2 or own.size() != 1 or own[0].rep != founder.character_name:
+		return "the founder's own loss made %d mails and the lines %s, want the 2 earlier mails and one line in his name" % [mails.call().size(), own]
+	# The inbox reads the mail and the lines in the live language, the approved sentences.
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
+	var loc0: String = TranslationServer.get_locale()
+	var mail: Dictionary = mails.call()[0]
+	var want := {
+		"en": ["Lost deal: %s", "Boss, I could not close %s. They found the %s side lacking. I will try again once it is stronger.",
+			"%s: lost, %s found lacking."],
+		"tr": ["Kaçan satış: %s", "Patron, %s ile anlaşamadım. %s tarafını eksik buldular. O taraf güçlenince yeniden denerim.",
+			"%s: kaçtı, %s eksik bulundu."]}
+	for loc in want:
+		TranslationServer.set_locale(loc)
+		var area: String = SprintCatalog.area_short("integrations")
+		var item: Dictionary = INBOX._message_item(mail)
+		var line: String = INBOX._message_item(only).line
+		TranslationServer.set_locale(loc0)
+		var texts: Array = want[loc]
+		if item.subject != texts[0] % a.company_name or item.line != texts[1] % [a.company_name, area] \
+				or item.sender.name != rep.character_name or line != texts[2] % [e.company_name, area]:
+			return "[%s] the mail reads '%s' / '%s' from '%s' and the loss-only summary '%s'" % [
+				loc, item.subject, item.line, item.sender.name, line]
+	return ""
+
+
+## Yıldız karışımının gücü ürünün 3★ şirketlere uyumudur: `market_fit(3)` 13 sektörün 3★ aday U'sunun ortalaması (rakip penceresi dahil; B2C'de kitle
+## bağlamındaki U), güç onun 70'e oranı. 3★ şirketin beklediğini karşılayan ürün üst bandı tam açar, ürün boşken üst bandın payı `QUALITY_SHIFT_FLOOR`'a
+## iner, arası doğrusaldır; kaybedilen pay 1★'a gider ve toplam 1 kalır.
+## FALSİFİKASYON: `product_strength`te `STAR_MAX` yerine 2 yaz → "strength is not market fit" iddiası FAIL; `QUALITY_STRENGTH_HIGH`ı 1,6'ya çıkar →
+## "wide open" iddiası FAIL.
+static func _case_sales_star_mix_reads_fit() -> String:
+	GameState.set_phase(3)
+	_seed_b2b(1000)
+	if B2BConstants.SECTORS.size() != 13 or ProductQuality.TABLE.size() != 13:
+		return "fixture: the market has %d sectors and the table %d rows, want thirteen" % [B2BConstants.SECTORS.size(), ProductQuality.TABLE.size()]
+	var table: Array = SalesConstants.star_mix(GameState.phase)
+	var floor_share: float = SalesConstants.QUALITY_SHIFT_FLOOR
+	# What the faucet reads now, and the two things it must equal.
+	var read := func() -> Dictionary:
+		var sum: int = 0
+		for sector in B2BConstants.SECTORS:
+			sum += ProductQuality.fit({"market": "b2b", "sector": sector, "star": 3, "rivals": true}).value
+		var mix: Array = SalesFaucetSystem.star_mix_now()
+		return {"fit": ProductQuality.market_fit(3), "mean": roundi(float(sum) / B2BConstants.SECTORS.size()),
+			"strength": SalesFaucetSystem.product_strength(), "mix": mix, "kept": float(mix[2]) / float(table[2])}
+	var wrong := func(r: Dictionary) -> String:
+		if r.fit != r.mean:
+			return "market fit %d is not the mean of the thirteen sectors' 3 star fits %d" % [r.fit, r.mean]
+		if not is_equal_approx(r.strength, r.fit / 70.0):
+			return "strength %.3f is not market fit %d over 70" % [r.strength, r.fit]
+		if not is_equal_approx(float(r.mix[0]) + float(r.mix[1]) + float(r.mix[2]), 1.0) or not is_equal_approx(float(r.mix[1]), float(table[1])):
+			return "the mix %s does not keep the 2 star share and sum to one" % [r.mix]
+		return ""
+	# The shared ERP at K2 meets what a 3 star company expects: the top band is wide open.
+	var mature: Dictionary = read.call()
+	if wrong.call(mature) != "":
+		return wrong.call(mature)
+	if (mature.strength < SalesConstants.QUALITY_STRENGTH_HIGH or not is_equal_approx(mature.kept, 1.0)
+			or not is_equal_approx(float(mature.mix[0]), float(table[0]))):
+		return "wide open: a product meeting the 3 star table reads strength %.2f and keeps %.2f of the top band (mix %s), want all of it" % [
+			mature.strength, mature.kept, mature.mix]
+	# The core at K2 and the rest at K1: strength between the two ends, the top band partly open, what it loses falling to 1 star.
+	_set_area_tiers({"integrations": 1, "trust": 1, "onboarding": 1})
+	var mid: Dictionary = read.call()
+	if wrong.call(mid) != "":
+		return wrong.call(mid)
+	if mid.strength <= SalesConstants.QUALITY_STRENGTH_LOW or mid.strength >= SalesConstants.QUALITY_STRENGTH_HIGH:
+		return "fixture: strength %.2f is not between %.2f and %.2f" % [mid.strength, SalesConstants.QUALITY_STRENGTH_LOW, SalesConstants.QUALITY_STRENGTH_HIGH]
+	var t: float = (mid.strength - SalesConstants.QUALITY_STRENGTH_LOW) / (SalesConstants.QUALITY_STRENGTH_HIGH - SalesConstants.QUALITY_STRENGTH_LOW)
+	if (not is_equal_approx(mid.kept, lerpf(floor_share, 1.0, t))
+			or not is_equal_approx(float(mid.mix[0]), float(table[0]) + float(table[2]) * (1.0 - mid.kept))):
+		return "at strength %.2f the top band keeps %.3f and the mix reads %s; want the line from the floor %.2f to all, the rest falling to 1 star" % [
+			mid.strength, mid.kept, mid.mix, floor_share]
+	# An empty product keeps the floor.
+	_set_area_tiers({"core": 0, "integrations": 0, "trust": 0, "onboarding": 0})
+	var empty: Dictionary = read.call()
+	if wrong.call(empty) != "":
+		return wrong.call(empty)
+	if not is_equal_approx(empty.kept, floor_share):
+		return "an empty product keeps %.3f of the top band, want the floor %.2f" % [empty.kept, floor_share]
+	# On a consumer product the market fit is the audience's.
+	GameState.set_flag("mvp_market_type", "b2c")
+	if ProductQuality.market_fit(3) != ProductQuality.fit(SalesSystem.B2C_FIT_CTX).value:
+		return "a consumer product's market fit %d is not its audience's fit %d" % [ProductQuality.market_fit(3), ProductQuality.fit(SalesSystem.B2C_FIT_CTX).value]
+	return ""
+
+
+## On üç sektörün hepsi aday üretir: her sektör tam bir alıcı tipinin listesindedir, ilk üç sektörün sırası yerinde kalır (yeni sektör sona eklenir:
+## sektör çekimi listenin uzunluğuna bölünür, fikstürler `sectors(...)[0]`'ı okur) ve musluk 600 adayda on üçünü de çıkarır.
+## FALSİFİKASYON: `sales_archetypes.gd`den "textile"ı sil → "no buyer type claims" iddiası FAIL; `SalesFaucetSystem.spawn`da sektör çekiminin ikinci
+## karıştırma turunu kaldır → "never offered insurance" iddiası FAIL (tek turda Sigorta ve Hukuk hiç gelmez).
+static func _case_sales_sectors_all_produce_leads() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	var claimed: Dictionary = {}
+	for id in SalesArchetypes.ids():
+		for sector in SalesArchetypes.sectors(String(id)):
+			if claimed.has(sector):
+				return "%s is claimed by %s and %s" % [sector, claimed[sector], id]
+			claimed[sector] = id
+	for sector in B2BConstants.SECTORS:
+		if not claimed.has(sector):
+			return "no buyer type claims %s, so the faucet never offers it" % sector
+	if claimed.size() != B2BConstants.SECTORS.size():
+		return "the buyer types claim %d sectors, the market has %d" % [claimed.size(), B2BConstants.SECTORS.size()]
+	for row in [["ops_cautious", ["logistics", "construction", "manufacturing", "health", "textile"]],
+			["tech_exacting", ["technology", "ecommerce", "finance", "media"]], ["finance_brisk", ["insurance", "legal", "retail", "real_estate"]]]:
+		if SalesArchetypes.sectors(row[0]) != row[1]:
+			return "%s reads sectors %s, want %s (new sectors go last)" % [row[0], SalesArchetypes.sectors(row[0]), row[1]]
+	var seen: Dictionary = {}
+	for i in 600:
+		var p: Prospect = SalesFaucetSystem.spawn(1 + i % 3, "faucet")
+		if p == null:
+			return "the faucet dried at draw %d" % i
+		seen[p.industry] = true
+		if seen.size() == B2BConstants.SECTORS.size():
+			return ""
+	for sector in B2BConstants.SECTORS:
+		if not seen.has(sector):
+			return "600 leads never offered %s (saw %s)" % [sector, seen.keys()]
+	return ""
+
+
+## Hesap sektörünün ağırlığı `USE_AREA_MIN` ve üstü olan alanın hatlarını kullanır: Çekirdek ve sektörün iki vurgusu; kalan alanın hatası o
+## hesaba yazılmaz. Hattı kullanan hesaplar (`line_accounts`) ve hesabın saydığı açık hata (`account_bugs`) aynı üyeliği okur.
+## FALSİFİKASYON: `USE_AREA_MIN`i 0,10'a indir → kalan alan da kullanılır ve "uses" iddiası FAIL; `account_bugs`ta `used_areas(c.industry)` yerine
+## `weights("b2b", c.industry).keys()` yaz → kalan alanın hatası sayılır ve "bugs" iddiası FAIL.
+static func _case_account_uses_area_rule() -> String:
+	_seed_sprint_live("erp")
+	for sector in B2BConstants.SECTORS:
+		var row: Array = ProductQuality.TABLE[sector]
+		var used: Array = ProductQuality.used_areas(sector)
+		if used != ["core", row[0], row[1]] or ProductQuality.uses_area(sector, row[2]) or not ProductQuality.uses_area(sector, "core") \
+				or not ProductQuality.uses_area(sector, row[1]):
+			return "%s uses %s, want the core and its two emphasis areas %s and not %s" % [sector, used, row.slice(0, 2), row[2]]
+	if ProductQuality.uses_area("logistics", ""):
+		return "a line of no area counts as used"
+	if ProductQuality.used_areas("testing") != ProductQuality.used_areas("logistics"):
+		return "the fixture sector reads %s, want the default row's %s" % [ProductQuality.used_areas("testing"), ProductQuality.used_areas("logistics")]
+	for sector in B2BConstants.SECTORS:
+		var c: Customer = _add_customer("co_use_" + sector, "Firm " + sector)
+		c.industry = sector
+		c.status = "active"
+	# A line of each area is used by the sectors that name the area first or second, and by none that leave it last.
+	for area in ["core", "onboarding", "integrations", "trust"]:
+		var want: int = 0
+		for sector in B2BConstants.SECTORS:
+			want += int(area == "core" or ProductQuality.TABLE[sector].slice(0, 2).has(area))
+		var line: String = SprintCatalog.capabilities(area)[0]
+		if SprintCatalog.line_accounts(line).size() != want:
+			return "%s is used by %d accounts, want the %d sectors that name %s" % [line, SprintCatalog.line_accounts(line).size(), want, area]
+	# An account counts the open bugs on the lines of the areas it uses and none on the area it leaves last.
+	var onboarding: String = SprintCatalog.capabilities("onboarding")[0]
+	var integrations: String = SprintCatalog.capabilities("integrations")[0]
+	_seed_bugs(5)
+	ProductState.add_bugs(integrations, 3)
+	ProductState.add_bugs(onboarding, 2)
+	for row in [["construction", 7], ["logistics", 8], ["media", 7], ["real_estate", 10]]:
+		var account: Customer = CustomerRegistry.get_customer("co_use_" + row[0])
+		if B2BSalesSystem.account_bugs(account) != row[1]:
+			return "the %s account counts %d bugs, want %d (the core's 5 and the bugs of the lines of its two emphasis areas)" % [
+				row[0], B2BSalesSystem.account_bugs(account), row[1]]
+	return ""
+
+
+## Hesabın isteği sektörünün vurgu 1 alanındandır: Teknoloji Entegrasyonlar, İnşaat İlk kullanım, Medya Güven; alıcı tipi alan seçmez.
+## FALSİFİKASYON: `tick_requests`te `ProductQuality.emphasis(c.industry)[0]` yerine `"core"` yaz → alan iddiası FAIL.
+static func _case_request_area_follows_emphasis() -> String:
+	_seed_sprint_live("erp")
+	_sprint_hire("char_ask_design", HRConstants.ROLE_DESIGNER)   # Onboarding's first tier asks a design person
+	var asked := {}
+	for sector in ["technology", "construction", "media"]:
+		var c: Customer = _incident_account("co_ask_" + sector, "Ask " + sector, sector, 40, 1800)
+		c.acquired_on_day = 10
+		asked[c.id] = sector
+	GameState.product.requests.clear()
+	for day in range(11, 14):
+		GameState.day = day
+		SprintBridges.tick_requests()
+	for id in asked:
+		var mine: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.customer_id == id)
+		if mine.size() != 1:
+			return "%s opened %d requests, want one" % [id, mine.size()]
+		var want: String = ProductQuality.emphasis(asked[id])[0]
+		if SprintCatalog.area_of_line(mine[0].line) != want:
+			return "the %s account asks in %s, want its first emphasis %s" % [asked[id], SprintCatalog.area_of_line(mine[0].line), want]
 	return ""
 
 
@@ -18450,7 +18902,7 @@ static func _case_sales_presentation_rules() -> String:
 	var earlier: Array = SalesLedger.close_week()
 	if earlier.is_empty() or String(earlier[-1].rep) != rep.character_name:
 		return "the desk's close did not carry its rep's name: %s" % str(earlier)
-	# THE WEEKLY REPORT carries closes and nothing else, and a quiet week produces none.
+	# THE WEEKLY REPORT carries the closes and the lost desk deals, and a quiet week produces none.
 	var interval: int = TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS)
 	GameState.set_flag("sales_weekly_anchor_day", GameState.day - interval)
 	var reported: Array = []
@@ -18557,7 +19009,6 @@ static func _seed_seed_world(mrr: int = SeedConstants.DOOR_MRR) -> void:
 	GameState.set_cash(40000)
 	GameState.set_phase(2)
 	_seed_b2b(mrr)
-	_seed_b2b_lines("saas_ops")
 
 
 ## Run the seed meeting end to end with a given set of beat choices.
@@ -20096,18 +20547,18 @@ static func _case_sprint_fix_first_puts_the_card_on_top() -> String:
 	return ""
 
 
-## Hattı kullanan hesaplar, sektörünün alıcı tipinin hattın eksenine verdiği ağırlıkla (SalesArchetypes.USE_AXIS_MIN) seçilir:
-## yalnız B2B pazarından aktif ya da deneme hesapları; en büyük hesap koltuk sayısıyla, eşitlikte MRR'la, sonra kimlikle. Kart
+## Hattı kullanan hesaplar, sektörünün hattın alanına verdiği ağırlıkla (ProductQuality.USE_AREA_MIN) seçilir: Çekirdek ve sektörün iki
+## vurgusu; yalnız B2B pazarından aktif ya da deneme hesapları; en büyük hesap koltuk sayısıyla, eşitlikte MRR'la, sonra kimlikle. Kart
 ## hesap sayısını, kullanıcıyı (koltuk toplamı) ve en büyük hesabın adını ve koltuğunu söyler.
 ## FALSİFİKASYON: SprintCatalog.line_accounts'tan `c.status in [...]` denetimini sil → churned hesap sayılır ve hesap iddiası FAIL;
-## SalesArchetypes.USE_AXIS_MIN'i 0 yap → her hesap her hattı kullanır ve cashflow iddiası FAIL; line_impact'ın sıralamasında MRR
+## ProductQuality.USE_AREA_MIN'i 0 yap → her hesap her hattı kullanır ve onboarding iddiası FAIL; line_impact'ın sıralamasında MRR
 ## satırını sil → en büyük hesap kimliğe düşer ve ad iddiası FAIL; kimlik karşılaştırmasını `>` yap → ad iddiası FAIL.
 static func _case_line_impact_names_the_accounts() -> String:
 	_seed_sprint_live("erp")
 	# [id, sector, seats, MRR, status, market]
-	for row in [["co_a", "technology", 40, 4000, "active", "b2b"], ["co_zz", "logistics", 100, 9000, "active", "b2b"],
+	for row in [["co_a", "construction", 40, 4000, "active", "b2b"], ["co_zz", "logistics", 100, 9000, "active", "b2b"],
 			["co_aa", "retail", 100, 9000, "active", "b2b"], ["co_00", "healthcare", 100, 8000, "active", "b2b"],
-			["co_try", "legal", 10, 1000, "trial", "b2b"], ["co_old", "technology", 500, 50000, "churned", "b2b"],
+			["co_try", "real_estate", 10, 1000, "trial", "b2b"], ["co_old", "technology", 500, 50000, "churned", "b2b"],
 			["co_c2c", "technology", 900, 900, "active", "b2c"]]:
 		var c: Customer = _add_customer(row[0], "Firm " + row[0])
 		c.industry = row[1]
@@ -20115,11 +20566,13 @@ static func _case_line_impact_names_the_accounts() -> String:
 		c.mrr = row[3]
 		c.status = row[4]
 		c.market_type = row[5]
-	# Stability: every buyer type weighs it; experience: operations and finance; innovation: the technical buyer.
+	# The core: every sector (the unknown "healthcare" reads the default row, Integrations and Trust). An emphasis area: the sectors
+	# that name it first or second; construction and real estate name Onboarding, real estate leaves Trust last.
 	var want: Dictionary = {
 		"line_erp_ledger": {"accounts": 5, "seats": 350, "top_id": "co_aa", "top_seats": 100},
-		"line_erp_stock": {"accounts": 4, "seats": 310, "top_id": "co_aa", "top_seats": 100},
-		"line_erp_cashflow": {"accounts": 1, "seats": 40, "top_id": "co_a", "top_seats": 40},
+		SprintCatalog.in_product("line_shared_integrations"): {"accounts": 4, "seats": 310, "top_id": "co_aa", "top_seats": 100},
+		SprintCatalog.in_product("line_shared_security"): {"accounts": 4, "seats": 340, "top_id": "co_aa", "top_seats": 100},
+		SprintCatalog.in_product("line_shared_mobile"): {"accounts": 2, "seats": 50, "top_id": "co_a", "top_seats": 40},
 	}
 	for line in want:
 		if SprintCatalog.line_impact(line) != want[line]:
@@ -20135,10 +20588,10 @@ static func _case_line_impact_names_the_accounts() -> String:
 	return ""
 
 
-## Beş B2B hesabı (kimlik, sektör, koltuk, MRR, durum): ledger hattı beşini (350 koltuk) kullanır, stock dördünü (310), cashflow tek
-## teknik hesabı (40). En büyük hesap co_aa'dır (koltuk eşitliğinde MRR, sonra kimlik).
+## Beş B2B hesabı (kimlik, sektör, koltuk, MRR, durum): Çekirdeğin ve Entegrasyonlar'ın hattı beşini (350 koltuk), Güven'in hatları emlak
+## hesabı dışındaki dördünü (310) kullanır. En büyük hesap co_aa'dır (koltuk eşitliğinde MRR, sonra kimlik).
 static func _seed_line_accounts() -> void:
-	for row in [["co_a", "technology", 40, 4000, "active"], ["co_zz", "logistics", 100, 9000, "active"],
+	for row in [["co_a", "real_estate", 40, 4000, "active"], ["co_zz", "logistics", 100, 9000, "active"],
 			["co_aa", "retail", 100, 9000, "active"], ["co_00", "healthcare", 100, 8000, "active"],
 			["co_try", "legal", 10, 1000, "trial"]]:
 		var c: Customer = _add_customer(row[0], "Firm " + row[0])
@@ -20207,19 +20660,21 @@ static func _case_product_bug_rows_read_the_store() -> String:
 
 ## En çok açık hatası olan hat: eşitlikte en çok kullanıcıyı etkileyen (Destek kartı o hattın alanını açar), o da eşitse küçük hat
 ## kimliği; kullanıcı eşitlikte karar verir, hata sayısını geçmez.
-## FALSİFİKASYON: ProductState.worst_bug_line'dan kullanıcı terimini sil → eşitlik iddiası FAIL (kimlik küçük olan, cashflow, kazanır);
+## FALSİFİKASYON: ProductState.worst_bug_line'dan kullanıcı terimini sil → eşitlik iddiası FAIL (kimlik küçük olan, dayanıklılık, kazanır);
 ## kullanıcı karşılaştırmasının `>`'sini `<` yap → eşitlik iddiası FAIL; hata sayısı yerine kullanıcıyı karşılaştır → "more bugs"
 ## iddiası FAIL.
 static func _case_worst_bug_line_breaks_ties_by_users() -> String:
 	_seed_sprint_live("erp")
 	_seed_line_accounts()
-	ProductState.add_bugs("line_erp_cashflow", 2)
-	ProductState.add_bugs("line_erp_ledger", 2)
-	if ProductState.worst_bug_line() != "line_erp_ledger":
-		return "a tie on 2 bugs went to '%s', want the ledger (350 users, the cash flow's 40 and its lower id do not count)" % ProductState.worst_bug_line()
-	ProductState.add_bugs("line_erp_cashflow", 1)
-	if ProductState.worst_bug_line() != "line_erp_cashflow":
-		return "3 bugs on the cash flow against 2 on the ledger read '%s', want more bugs to win whatever the users" % ProductState.worst_bug_line()
+	var durability: String = SprintCatalog.in_product("line_shared_durability")
+	var integrations: String = SprintCatalog.in_product("line_shared_integrations")
+	ProductState.add_bugs(durability, 2)
+	ProductState.add_bugs(integrations, 2)
+	if ProductState.worst_bug_line() != integrations:
+		return "a tie on 2 bugs went to '%s', want Integrations (350 users; durability's 310 and its lower id do not count)" % ProductState.worst_bug_line()
+	ProductState.add_bugs(durability, 1)
+	if ProductState.worst_bug_line() != durability:
+		return "3 bugs on durability against 2 on Integrations read '%s', want more bugs to win whatever the users" % ProductState.worst_bug_line()
 	return ""
 
 
@@ -20340,7 +20795,7 @@ static func _seed_open_request() -> Customer:
 	return account
 
 
-## B2B talebi: hesap imzadan bir sprint sonra sektörünün arketipine bağlı alandan bir kademe ister.
+## B2B talebi: hesap imzadan bir sprint sonra sektörünün vurgu 1 alanından bir kademe ister.
 ## Talep kartı adaylarda, liderin önerisinde ve öngörüde "zamanında" olarak görünür; son tarihten
 ## önce çıkan sürüm talebi karşılar ve aynı kademeye verilmiş sözü o sürümün "shipped"iyle tutar.
 static func _case_sprint_request_on_time_met() -> String:
@@ -20352,10 +20807,10 @@ static func _case_sprint_request_on_time_met() -> String:
 		return "a sprint after signing the account holds requests %s, want one from %s" % [open, account.id]
 	var req: Dictionary = open[0]
 	var deadline: int = SprintSystem.sprints_in(int(SprintCatalog.cfg("request.deadline_weeks")))
-	if SprintCatalog.area_of_line(req.line) != String(SprintCatalog.cfg("archetypes.tech_exacting")) \
+	if SprintCatalog.area_of_line(req.line) != ProductQuality.emphasis(account.industry)[0] \
 			or int(req.due_sprint) != int(req.created_sprint) + deadline \
 			or int(req.value) != account.mrr * 12:
-		return "the request reads %s; want the archetype's area, the deadline sprint and a year of MRR" % req
+		return "the request reads %s; want the sector's first emphasis area, the deadline sprint and a year of MRR" % req
 	SprintSystem.plan_next()
 	if not SprintCatalog.candidates(SprintCatalog.area_of_line(req.line)).any(
 			func(c: Dictionary) -> bool: return c.id == req.card_id and c.kind == "request"):
@@ -22055,7 +22510,8 @@ static func _case_paper_outlook_reads_the_plan() -> String:
 ## eski ifadeye döndür ve next_renewal_day'in terimini değiştir → talep penceresi kaydı FAIL.
 static func _case_next_renewal_day_one_place() -> String:
 	_paper_world()
-	var account: Customer = _incident_account("co_renewal", "Renewal Co", "technology", 40, 1800)
+	# Construction names Onboarding first, which no other account of the world does: its first tier is free to ask for.
+	var account: Customer = _incident_account("co_renewal", "Renewal Co", "construction", 40, 1800)
 	account.acquired_on_day = 10
 	# [today, the renewal the window shows]
 	for pair in [[11, 62], [49, 62], [50, 62], [62, 62], [63, 62], [101, 62], [102, 114], [150, 114]]:
@@ -22228,13 +22684,22 @@ static func _case_paper_account_selectors() -> String:
 	var users: Array = SprintCatalog.line_accounts(line)
 	if users.size() < 2:
 		return "fixture: the stock line has %d users" % users.size()
-	var biggest: String = ""
-	for c in users:
-		if biggest == "" or c.seats > CustomerRegistry.get_customer(biggest).seats:
-			biggest = c.id
-	for mode in ["line_top", "line_warehouse", "line_slow"]:
-		if SprintCatalog.paper_account(mode, {}) != biggest:
-			return "%s picked %s, want the biggest user of the line, %s" % [mode, SprintCatalog.paper_account(mode, {}), biggest]
+	var largest := func(of: Array) -> String:
+		var best: Customer = null
+		for c in of:
+			if best == null or c.seats > best.seats:
+				best = c
+		return "" if best == null else best.id
+	var biggest: String = largest.call(users)
+	# Every core line is used by every account, Demir Holding (finance, 100 seats) among them: it is no warehouse sector, so the
+	# modes read their own rule.
+	var warehouse: Array = users.filter(func(c: Customer) -> bool: return c.industry in SprintCatalog.cfg("paper.warehouse_sectors"))
+	var slow: Array = users.filter(func(c: Customer) -> bool: return c.seats >= int(SprintCatalog.cfg("paper.slow_seats")))
+	for row in [["line_top", users], ["line_warehouse", warehouse], ["line_slow", slow]]:
+		if SprintCatalog.paper_account(row[0], {}) != largest.call(row[1]):
+			return "%s picked %s, want the biggest user it selects, %s" % [row[0], SprintCatalog.paper_account(row[0], {}), largest.call(row[1])]
+	if biggest == largest.call(warehouse):
+		return "fixture: the biggest user is a warehouse account, so line_top and line_warehouse prove nothing apart"
 	if SprintCatalog.paper_account("line_newest", {}) != "co_kuzey" and CustomerRegistry.get_customer("co_kuzey") in users:
 		return "line_newest picked %s, want the newest account, co_kuzey" % SprintCatalog.paper_account("line_newest", {})
 	if SprintCatalog.paper_account("line_top", {biggest: "x"}) in ["", biggest]:
@@ -23769,24 +24234,25 @@ static func _case_callback_churn_window() -> String:
 
 
 ## B2B'de açık hatanın bedeli hesabın memnuniyet hedefindedir: hesabın kullandığı hatlardaki hata başına
-## B2B_BUG_SAT_PER, en çok B2B_BUG_SAT_CAP; onboarding tabanı cezadan sonra uygulanır. Hesabın kullandığı hat, alıcı
-## tipinin hattın eksenini USE_AXIS_MIN ve üstü okumasıdır (operasyon alıcısı yeniliği okumaz, teknik alıcı okur).
+## B2B_BUG_SAT_PER, en çok B2B_BUG_SAT_CAP; onboarding tabanı cezadan sonra uygulanır. Hesabın kullandığı hat, sektörünün hattın alanına
+## USE_AREA_MIN ve üstü ağırlık vermesidir (Çekirdek ve iki vurgu; lojistik Entegrasyonlar'ı okur, inşaat okumaz).
 ## Şikâyet sesi ve Risk sebebi aynı kuraldan okur: hesabın kendi hatlarındaki hata COMPLAINT_BUG_GATE'in üstünde.
 ## `fix_off` anahtarı bedeli sıfırlar.
-## FALSİFİKASYON: `account_bugs`ta `uses_axis` süzgecini sil → "reads only the lines" iddiası FAIL; `minf(..., CAP)`ı sil → tavan
+## FALSİFİKASYON: `account_bugs`ta `used_areas` süzgecini sil → "reads only the lines" iddiası FAIL; `minf(..., CAP)`ı sil → tavan
 ## iddiası FAIL; onboarding tabanını cezadan önceye taşı → "floor after" iddiası FAIL; `risk_reason`da `account_bugs(c)` yerine
 ## `ProductState.open_bugs()` yaz → sebep iddiası FAIL; `costed`ı `account_bugs`tan çıkar → anahtar iddiası FAIL.
 static func _case_bug_cost_b2b_account_lines() -> String:
 	_seed_b2b(1000)
-	var ops: Customer = CustomerRegistry.get_by_market("b2b")[0]    # "testing": no buyer type claims it, it reads like the default operations buyer
+	var ops: Customer = CustomerRegistry.get_by_market("b2b")[0]    # "testing": no sector row, it reads the default one (Integrations, Trust)
 	var p := Prospect.new()
-	p.id = "lead_tech"
-	p.company_name = "Tech Co"
-	p.industry = "technology"
+	p.id = "lead_build"
+	p.company_name = "Build Co"
+	p.industry = "construction"                                   # Onboarding, Trust: it leaves Integrations last
 	p.star = 1
-	var tech: Customer = _sign_fixture(p, 1000, 70)
+	var build: Customer = _sign_fixture(p, 1000, 70)
 	_past_onboarding(ops)
-	_past_onboarding(tech)
+	_past_onboarding(build)
+	var integrations: String = SprintCatalog.capabilities("integrations")[0]
 	var health: float = QualityModel.axis_score(QualityModel.dims_from_flags(), "stability")
 	var cost := func(bugs: int) -> float:
 		return minf(B2BConstants.B2B_BUG_SAT_PER * float(bugs), float(B2BConstants.B2B_BUG_SAT_CAP))
@@ -23794,20 +24260,20 @@ static func _case_bug_cost_b2b_account_lines() -> String:
 		return clampi(int(round(health - cost.call(bugs) + c.trust_offset)), 0, 100)
 	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 0):
 		return "fixture: a bug-free account reads target %d, want %d" % [B2BSalesSystem.satisfaction_target(ops), target.call(ops, 0)]
-	# A stability line concerns both buyers; an innovation line only the technical one.
+	# A core line concerns both accounts; an Integrations line only the one that names it.
 	_seed_bugs(10)
-	ProductState.add_bugs("line_erp_cashflow", 8)
-	if B2BSalesSystem.account_bugs(ops) != 10 or B2BSalesSystem.account_bugs(tech) != 18:
-		return "the operations account counts %d bugs and the technical one %d, want 10 and 18 (each reads only the lines it uses)" % [
-			B2BSalesSystem.account_bugs(ops), B2BSalesSystem.account_bugs(tech)]
-	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 10) or B2BSalesSystem.satisfaction_target(tech) != target.call(tech, 18):
+	ProductState.add_bugs(integrations, 8)
+	if B2BSalesSystem.account_bugs(ops) != 18 or B2BSalesSystem.account_bugs(build) != 10:
+		return "the logistics account counts %d bugs and the construction one %d, want 18 and 10 (each reads only the lines it uses)" % [
+			B2BSalesSystem.account_bugs(ops), B2BSalesSystem.account_bugs(build)]
+	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 18) or B2BSalesSystem.satisfaction_target(build) != target.call(build, 10):
 		return "targets read %d and %d, want %d and %d" % [B2BSalesSystem.satisfaction_target(ops),
-			B2BSalesSystem.satisfaction_target(tech), target.call(ops, 10), target.call(tech, 18)]
+			B2BSalesSystem.satisfaction_target(build), target.call(ops, 18), target.call(build, 10)]
 	# The cost stops at the cap.
 	_seed_bugs(500)
-	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 510):
-		return "510 bugs: target %d, want %d (health %.1f less the cap %d)" % [B2BSalesSystem.satisfaction_target(ops),
-			target.call(ops, 510), health, B2BConstants.B2B_BUG_SAT_CAP]
+	if B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 518):
+		return "518 bugs: target %d, want %d (health %.1f less the cap %d)" % [B2BSalesSystem.satisfaction_target(ops),
+			target.call(ops, 518), health, B2BConstants.B2B_BUG_SAT_CAP]
 	# The onboarding floor holds a fresh account over its bar after the cost, not before it.
 	GameState.set_flag("mvp_stability", 5.0)
 	var fresh_p := Prospect.new()
@@ -23825,26 +24291,26 @@ static func _case_bug_cost_b2b_account_lines() -> String:
 	# The Risk reason and the complaint voice read the account's own lines, strictly above the gate.
 	GameState.set_flag("mvp_stability", 70.0)
 	ProductState.clear_line_bugs(BUG_LINE)
-	ProductState.clear_line_bugs("line_erp_cashflow")
+	ProductState.clear_line_bugs(integrations)
 	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)   # room on the servers: an overage is a complaint too
 	InfraSystem.set_capacity(100)
 	var outage: String = TranslationServer.translate("SALES_REASON_OUTAGE")
 	const INBOX := preload("res://scripts/ui/components/inbox.gd")
 	_seed_bugs(B2BConstants.COMPLAINT_BUG_GATE)
-	if INBOX.risk_reason(ops) == outage or INBOX.risk_reason(tech) == outage:
+	if INBOX.risk_reason(ops) == outage or INBOX.risk_reason(build) == outage:
 		return "the gate itself (%d bugs) already reads as outages" % B2BConstants.COMPLAINT_BUG_GATE
 	ProductState.clear_line_bugs(BUG_LINE)
-	ProductState.add_bugs("line_erp_cashflow", B2BConstants.COMPLAINT_BUG_GATE + 1)
-	if INBOX.risk_reason(ops) == outage or B2BSalesSystem.risk_voice(ops) == B2BConstants.complaint_voice(ops.industry):
-		return "bugs on a line the operations account does not use read as its outages"
-	if INBOX.risk_reason(tech) != outage or B2BSalesSystem.risk_voice(tech) != B2BConstants.complaint_voice(tech.industry):
-		return "bugs on a line the technical account uses did not read as its outages ('%s')" % INBOX.risk_reason(tech)
+	ProductState.add_bugs(integrations, B2BConstants.COMPLAINT_BUG_GATE + 1)
+	if INBOX.risk_reason(build) == outage or B2BSalesSystem.risk_voice(build) == B2BConstants.complaint_voice(build.industry):
+		return "bugs on a line the construction account does not use read as its outages"
+	if INBOX.risk_reason(ops) != outage or B2BSalesSystem.risk_voice(ops) != B2BConstants.complaint_voice(ops.industry):
+		return "bugs on a line the logistics account uses did not read as its outages ('%s')" % INBOX.risk_reason(ops)
 	# The baseline switch zeroes the cost; the bugs stay counted.
 	ProductState.bugs_free = true
-	if B2BSalesSystem.account_bugs(tech) != 0 or B2BSalesSystem.satisfaction_target(tech) != target.call(tech, 0) \
+	if B2BSalesSystem.account_bugs(ops) != 0 or B2BSalesSystem.satisfaction_target(ops) != target.call(ops, 0) \
 			or ProductState.open_bugs() != B2BConstants.COMPLAINT_BUG_GATE + 1:
-		return "with the cost off the technical account counts %d bugs and reads target %d" % [
-			B2BSalesSystem.account_bugs(tech), B2BSalesSystem.satisfaction_target(tech)]
+		return "with the cost off the logistics account counts %d bugs and reads target %d" % [
+			B2BSalesSystem.account_bugs(ops), B2BSalesSystem.satisfaction_target(ops)]
 	ProductState.bugs_free = false
 	return ""
 
@@ -24000,8 +24466,8 @@ static func _case_neglect_reputation_below_zero() -> String:
 
 ## Satış ve yatırımcı hatayı okumaz: 0 ve 50 açık hatalı iki dünyada dönüşüm, ürün değeri, kalite okuması, toplantı ihtimali
 ## (kalıcı katkılar), yıldız karışımı, satış sorusunun gerçekleri, kayıp sebebi ve yeniden sunum kapısı, VC'nin tohum ve
-## Series A sorguları, term sheet uyumu birebir aynıdır. İki ürün iki kayıp sebebi ve iki kapı durumu verir: K1 merdiveninde
-## 2★ aday Güven & Ölçek'i zayıf bulur ve kapı kapalıdır, K2 merdiveninde fiyat ve kapı açıktır.
+## Series A sorguları, term sheet uyumu birebir aynıdır. İki ürün iki kayıp sebebi ve iki kapı durumu verir: Güven'i boş ürünün
+## 2★ adayı Güven & Ölçek'i zayıf bulur ve kapı kapalıdır, bütün hatları K2 üründe fiyat ve kapı açıktır.
 ## FALSİFİKASYON: `conversion_rate`e hata çarpanı ekle → "conversion" FAIL; `ProductQuality.level`dan `0.8 × açık hata`
 ## düş → "value" FAIL; `SalesProbes.facts_for`a hata gerçeği ekle → "facts" FAIL; `_sorgu_product`a hata
 ## dalı ekle → "series_a_query" FAIL; `_domain_fit`e Meridian hata terimi ekle → "term_sheet_fit" FAIL;
@@ -24037,29 +24503,29 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 			"series_a_query": VCPitchSystem._sorgu_product(),
 			"term_sheet_fit": TermSheetTableSystem._domain_fit(),
 		}
-	# Two products: a K1 line on each axis, where the star mix is not saturated and a bug term in it would move it,
-	# and the whole ladder at K2, where no area is lacking and Trust & Scale is enough for the re-pitch gate.
-	for ladder in [{"line_erp_cashflow": 1, "line_erp_ledger": 1, "line_erp_stock": 1}, {}]:
-		GameState.set_flag(ProductState.LINE_TIERS, ladder)
-		if ladder.is_empty():
-			for line_id in ProductLines.line_ids("erp"):
-				ProductState.set_line_tier(String(line_id), 2)
+	# Two products: a built core with Trust & Scale empty, where the star mix is not saturated and a bug term in it would move
+	# it, and the whole ladder at K2, where no area is lacking and Trust & Scale is enough for the re-pitch gate.
+	lead.industry = "logistics"
+	for lacking in [true, false]:
+		for line_id in ProductLines.line_ids("erp"):
+			ProductState.set_line_tier(String(line_id), 2)
+		if lacking:
+			_set_area_tiers({"trust": 0})
+		var name: String = "Trust-less" if lacking else "K2"
 		ProductState.clear_line_bugs(BUG_LINE)
 		var clean: Dictionary = read.call()
 		var asked: Array = [clean.seed_query.get("key"), clean.series_a_query.get("key")]
-		var want_asked: Array = ["clean", "clean"] if ladder.is_empty() else ["how_big", "weak_dim"]
+		var want_asked: Array = ["how_big", "weak_dim"] if lacking else ["clean", "clean"]
 		if asked != want_asked:
-			return "fixture: the %s ladder's seed and Series A questions read %s, want %s" % [
-				"K2" if ladder.is_empty() else "K1", asked, want_asked]
+			return "fixture: the %s product's seed and Series A questions read %s, want %s" % [name, asked, want_asked]
 		var strength: float = SalesFaucetSystem.product_strength()
 		var moving: bool = strength > SalesConstants.QUALITY_STRENGTH_LOW and strength < SalesConstants.QUALITY_STRENGTH_HIGH
-		if moving == ladder.is_empty():
-			return "fixture: the %s ladder reads strength %.2f against the star mix's moving band" % [
-				"K2" if ladder.is_empty() else "K1", strength]
-		var lacking: bool = clean.loss_reason == SalesConstants.LOSS_WEAK_AREA
-		if lacking == ladder.is_empty() or clean.repitch_gate == lacking:
-			return "fixture: the %s ladder reads loss reason '%s' and re-pitch gate %s, want a weak area and a shut gate at K1, neither at K2" % [
-				"K2" if ladder.is_empty() else "K1", clean.loss_reason, clean.repitch_gate]
+		if moving != lacking:
+			return "fixture: the %s product reads strength %.2f against the star mix's moving band" % [name, strength]
+		var weak: bool = clean.loss_reason == SalesConstants.LOSS_WEAK_AREA
+		if weak != lacking or clean.repitch_gate == weak:
+			return "fixture: the %s product reads loss reason '%s' and re-pitch gate %s, want a weak area and a shut gate when Trust is empty, neither at K2" % [
+				name, clean.loss_reason, clean.repitch_gate]
 		ProductState.add_bugs(BUG_LINE, 50)
 		var buggy: Dictionary = read.call()
 		for key in clean:

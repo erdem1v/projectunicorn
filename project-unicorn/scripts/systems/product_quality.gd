@@ -22,6 +22,12 @@ const STAR_MAX := 3
 ## Ürün sayfasının B2B referansı bu yıldızı okur: Traction adaylarının yarısı 2★'dır ve sözcük ürün büyüdükçe kendi kendine
 ## düşmemelidir.
 const PAGE_STAR := 2
+## Hesap, sektör ağırlığı bu değerde ya da üstünde olan alanın hatlarını kullanır: Çekirdek ve sektörün iki vurgusu. Kalan
+## alanın hatası o hesaba yazılmaz.
+const USE_AREA_MIN := 0.15
+## Satışçı kapanışının eğrisi [WORKING] onay bekliyor, E1'de kalibre: adayın U'su → ihtimal, noktalar arası doğrusal, uçlarda
+## düz. Baktığı hiçbir alanı eksik olmayan aday bu eğriye girmez, kesin kapanır.
+const CLOSE_CURVE := [[40.0, 0.30], [55.0, 0.60], [70.0, 0.85], [80.0, 0.95]]
 
 # Yıldız beklenti tablosu [WORKING] onay bekliyor, E1'de kalibre: seviye 1 alanın her hattının ilk sürümüdür. Hat sayısına
 # bağlı iki hücre hesaplanır: Çekirdek 1★'ta MVP'dir (`mvp_lines` ÷ Çekirdek hat sayısı), vurgu alanı 2★'ta alanın hat
@@ -69,6 +75,18 @@ static func weights(market: String, sector: String) -> Dictionary:
 ## [vurgu 1, vurgu 2]; B2C'de (sektör boş) boş.
 static func emphasis(sector: String) -> Array:
 	return [] if sector == "" else _row(sector).slice(0, 2)
+
+
+## Sektördeki bir hesabın hatlarını kullandığı alanlar: ağırlığı `USE_AREA_MIN` ve üstü olanlar, yani Çekirdek ve sektörün
+## iki vurgusu.
+static func used_areas(sector: String) -> Array:
+	var w: Dictionary = weights("b2b", sector)
+	return w.keys().filter(func(area: String) -> bool: return w[area] >= USE_AREA_MIN)
+
+
+## Sektördeki bir hesap alanın hatlarını kullanır mı. Hatsız alan ("") kullanılmaz.
+static func uses_area(sector: String, area: String) -> bool:
+	return area in used_areas(sector)
 
 
 ## Alanın yuvarlanmamış seviyesi: hatlarının kademe + cila ortalaması; `tiers` öngörünün varsaydığı kademeleri ezer.
@@ -173,12 +191,36 @@ static func market_ref_for(star: int, sector: String, subtype: String = ProductS
 
 ## Adayın bağlamı: yıldızı ve sektörüyle bugünkü beklenti, rakip penceresi dahil.
 static func prospect_ctx(p: Prospect) -> Dictionary:
-	return {"market": "b2b", "sector": p.industry, "star": p.star, "rivals": true}
+	return _candidate_ctx(p.industry, p.star)
 
 
 ## Adayın uyumu.
 static func prospect_fit(p: Prospect) -> Dictionary:
 	return fit(prospect_ctx(p))
+
+
+## Ürünün bir yıldızdaki müşterilere uyumu (0-100): B2B'de 13 sektörün o yıldızdaki aday U'sunun ortalaması, B2C'de kitle
+## bağlamındaki U (yıldız okunmaz). Yıldız karışımı 3★'ı okur.
+static func market_fit(star: int) -> int:
+	if ProductState.market_type() == "b2c":
+		return fit(SalesSystem.B2C_FIT_CTX).value
+	var sum: int = 0
+	for sector in TABLE:
+		sum += fit(_candidate_ctx(sector, star)).value
+	return roundi(float(sum) / TABLE.size())
+
+
+## Satışçının adayı kapanış anında imzalama ihtimali (0-1): adayın bugünkü U'sundan `CLOSE_CURVE` ile. Baktığı hiçbir alan
+## beklentinin altında değilse (`loss_area` boş) 1'dir: ortada adı konmuş bir eksik yoksa zar atılmaz.
+static func close_chance(p: Prospect) -> float:
+	var fit_now: Dictionary = prospect_fit(p)
+	if fit_now.loss_area == "":
+		return 1.0
+	var u: float = clampf(fit_now.value, CLOSE_CURVE[0][0], CLOSE_CURVE[-1][0])
+	for i in range(1, CLOSE_CURVE.size()):
+		if u <= CLOSE_CURVE[i][0]:
+			return lerpf(CLOSE_CURVE[i - 1][1], CLOSE_CURVE[i][1], inverse_lerp(CLOSE_CURVE[i - 1][0], CLOSE_CURVE[i][0], u))
+	return CLOSE_CURVE[-1][1]
 
 
 ## Hesabın uyumu: beklenti hesabın kopyasıdır (`market_ref`), kopyası olmayan hesapta (imza yolunu atlayan fikstür) bugünkü
@@ -292,6 +334,11 @@ static func _star_value(star: int, role: String, lines: int) -> float:
 		[3, "rest"]:
 			return REST_3
 	return 0.0
+
+
+## Bir sektörün bir yıldızdaki adayının bağlamı.
+static func _candidate_ctx(sector: String, star: int) -> Dictionary:
+	return {"market": "b2b", "sector": sector, "star": star, "rivals": true}
 
 
 ## ctx'in beklenti haritası: beklentisi 0'dan büyük alanlar.

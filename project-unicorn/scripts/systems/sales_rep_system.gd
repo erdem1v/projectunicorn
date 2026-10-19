@@ -10,9 +10,12 @@ extends RefCounted
 # deal at a time and the pipeline says which one (§7.2). The ceiling is a STAR: a rep sells at or
 # below their own Satış star and cannot reach above it (§7.1), a gate the player can see on the card.
 #
-# AN IN-LEAGUE DEAL ALWAYS CLOSES (§7.6) and nothing is drawn: a deal runs a plan of half weeks
-# (SalesConstants.deal_halfweeks), stamped when it opens, and signs when the plan has run. Premium
-# stretches a desk plan and, on a price-sensitive archetype, produces the price-break moment (§7.6).
+# AN IN-LEAGUE DEAL SIGNS UNLESS THE PRODUCT LACKS WHAT THE CUSTOMER LOOKS AT (§7.6): a deal runs a plan of half weeks
+# (SalesConstants.deal_halfweeks), stamped when it opens, and when the plan has run it signs, except that a prospect lacking
+# an area it looks at rolls the product's close chance (ProductQuality.close_chance) on a die its own lead seeds. A lost deal
+# is named after that area, takes the road a lost sitting takes (SalesFinalizer.lose) and reaches the founder as a mail from
+# the seller, at most one a week, the rest as lines of the weekly summary. Premium stretches a desk plan and, on a
+# price-sensitive archetype, produces the price-break moment (§7.6).
 # The founder's table deals ride the same sweep (`sign_due`) and sign at their agreed terms
 # (SalesFinalizer.sign_deal). A sweep runs in this daily slot and at noon (SalesSystem.hourly_tick),
 # so a plan of an odd number of half weeks signs at noon.
@@ -103,13 +106,14 @@ static func out_of_band_reason(rep: Character, lead: Prospect) -> String:
 # ============================================================================
 
 ## "Seçim kuralı: bandındaki yönlendirilmemiş lead'lerden en yüksek yıldızlı; eşitlikte süresi
-## bitmek üzere olan." Reserved leads are skipped outright — that desk is the founder's.
+## bitmek üzere olan." Reserved leads are skipped outright — that desk is the founder's — and so is a returning one whose
+## named loss has not moved since (the founder's door shuts on it too).
 static func pick_lead_for(rep: Character) -> Prospect:
 	var ceiling: int = band_ceiling(rep)
 	var best: Prospect = null
 	for p in ProspectRegistry.get_all():
 		var lead: Prospect = p as Prospect
-		if lead.is_being_worked() or lead.star > ceiling:
+		if lead.is_being_worked() or lead.star > ceiling or SalesLedger.repitch_blocked(lead):
 			continue
 		if lead.routing == SalesConstants.ROUTE_RESERVED:
 			continue
@@ -229,7 +233,33 @@ static func _maybe_price_break(rep: Character, lead: Prospect) -> void:
 	EventBus.rep_discount_requested.emit(rep.id, lead.id)
 
 
+## The area a due desk deal is lost over, "" when it signs. A prospect lacking nothing it looks at always signs; one lacking an
+## area signs by a die the lead itself seeds (run seed, lead, archetype), so a reload cannot reroll it, against the product as it
+## stands now: a product that grew while the plan ran can only turn a loss into a signature.
+static func lost_area(lead: Prospect) -> String:
+	var roll: float = SalesConstants.mix_unit(lead.id + "|" + lead.archetype_id, SalesConstants.SALT_REP_CLOSE)
+	return "" if roll < ProductQuality.close_chance(lead) else ProductQuality.prospect_fit(lead).loss_area
+
+
+## The deal is lost: it takes the road a lost sitting takes, the seller tells the founder, and the desk moves to its next lead.
+static func _lose(rep: Character, lead: Prospect, area: String) -> void:
+	SalesFinalizer.lose(lead.id, lead.company_name, SalesConstants.LOSS_WEAK_AREA, area, SalesConstants.RETURN_LOCK_WEEKS)
+	# The first loss of a week is a mail from the seller; the week's others wait for the summary's lines, and so does every loss of
+	# the founder at the desk, who would be writing to himself.
+	if rep.category == "founder" or int(GameState.get_flag("sales_loss_mail_day", 0)) == GameState.day:
+		SalesLedger.record_loss(rep.character_name, lead.company_name, area)
+	else:
+		GameState.set_flag("sales_loss_mail_day", GameState.day)
+		MessageSystem.post("sales_loss", "SALES_REP_LOST_TITLE",
+			{"rep": rep.character_name, "company": lead.company_name, "area": area})
+	EventBus.rep_deal_lost.emit(rep.id, lead.id, area)
+
+
 static func _close(rep: Character, lead: Prospect) -> void:
+	var lost: String = lost_area(lead)
+	if lost != "":
+		_lose(rep, lead, lost)
+		return
 	# §7.5 — the rep closes at THE DIAL's price. Their star does not touch it: "Temsilci
 	# kadrandan kapatır; yıldızı fiyata dokunmaz."
 	var seat_price: int = SalesLedger.seat_price_anchor(lead.work_stance)
@@ -260,14 +290,14 @@ static func _seats_for(lead: Prospect) -> int:
 #  §7.3 · The weekly summary
 # ============================================================================
 
-# DESIGN-PARKED: a week with no desk close posts NO report. §7.3 says the summary carries closes;
+# DESIGN-PARKED: a week with no desk close and no lost desk deal posts NO report. §7.3 says the summary carries closes;
 # a report of none is a report of nothing. Alternative seen: always post it with a "no closes this
 # week" line — noise.
 ## "Haftalık satış özeti yalnız kapanışları taşır — temsilcinin sesiyle bilgi kartı. Churn
 ## girmez. Karar butonu yok." An inbox message, not an engine card: the week's rows (a desk close
-## names its rep, the voice the report is sent in) and the book's account count as they stand
-## when the report is written, so it never stops the clock, never waits in the event queue and
-## never reads a later week.
+## names its rep, the voice the report is sent in), the week's lost desk deals the founder was not mailed about and the book's
+## account count as they stand when the report is written, so it never stops the clock, never waits in the event queue and
+## never reads a later week. A week of losses alone opens it too.
 static func _tick_weekly_summary() -> void:
 	var anchor: int = int(GameState.get_flag("sales_weekly_anchor_day", 0))
 	if anchor <= 0:
@@ -277,10 +307,11 @@ static func _tick_weekly_summary() -> void:
 		return
 	GameState.set_flag("sales_weekly_anchor_day", GameState.day)
 	var rows: Array = SalesLedger.close_week()
+	var lost: Array = SalesLedger.lost_week()
 	# A row loaded from an older save names no rep and counts as the founder's.
 	var closes: int = rows.filter(func(r: Dictionary) -> bool: return String(r.get("rep", "")) != "").size()
-	if closes <= 0:
+	if closes <= 0 and lost.is_empty():
 		return
 	EventBus.weekly_sales_report_issued.emit(closes)
 	MessageSystem.post("sales_week", "SALES_WEEKLY_TITLE",
-		{"rows": rows, "accounts": CustomerRegistry.account_count()})
+		{"rows": rows, "lost": lost, "accounts": CustomerRegistry.account_count()})

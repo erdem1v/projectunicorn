@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 144 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 145 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **144** |
+| Signals declared | **145** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **67** |
+| Emitted with **no production listener** | **68** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -227,6 +227,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `deal_signed` | `customer_id: String, seats: int, seat_price: int` | sales_system | 1 | 0 | — |
 | `deal_walked` | `account_key: String` | sales_finalizer | 1 | 0 | — |
 | `rep_deal_closed` | `rep_id: String, customer_id: String` | sales_rep_system | 1 | 0 | — |
+| `rep_deal_lost` | `rep_id: String, prospect_id: String, area: String` | sales_rep_system | 1 | 0 | — |
 | `rep_discount_requested` | `rep_id: String, prospect_id: String` | sales_rep_system | 1 | 0 | — |
 | `pitch_promise_made` | `account_key: String, feature_id: String` | sales_finalizer | 1 | 0 | — |
 | `pitch_promise_kept` | `account_key: String` | b2b_sales_system | 1 | 0 | — |

@@ -2909,3 +2909,26 @@ Kararlılık 10'un altındayken açılır; taban kartlarının gövdesi "aynı z
 
 *Neden.* Faz Q K5: ürünün tek kalitesi alan seviyesidir, eksen okuması kalkar; B2C taban kartı "aynı zayıflık" yerine alanın adını söyler,
 böylece oyuncunun karşılığı olan hamle (o alana kart koymak) görünür olur.
+
+### §27.37 · Faz Q K3b: satışçının kapanışı ürün uyumuna bağlandı, kayıp mailla gelir
+
+*Belge ne diyordu.* §27.13: haftalık satış özeti bir gelen kutusu mesajıdır (`sales_week`) ve masanın kapanışlarını taşır; masa anlaşması planı
+dolunca her zaman imzalanır.
+
+*Ne yapıldı.* Masa satıcısının kapanışı (`SalesRepSystem._close`) ürüne bakar:
+- Adayın baktığı bir alan beklentinin altındaysa (`ProductQuality.prospect_fit(aday).loss_area` dolu) plan dolunca adayın kendi zarı atılır
+  (`SalesRepSystem.lost_area`: `SalesConstants.mix_unit` ile aday kimliği, alıcı tipi ve `SALT_REP_CLOSE`; yükleme ve okuma sayısı sonucu
+  değiştirmez) ve `ProductQuality.close_chance` (adayın U'sundan `CLOSE_CURVE`, [WORKING] onay bekliyor) kadar ihtimalle imzalanır. Eksik alan yoksa
+  zar yoktur. Kaybedilen anlaşma görüşmenin kaybıyla aynı yoldan geçer (`SalesFinalizer.lose`) ve `EventBus.rep_deal_lost(rep_id, prospect_id, area)`
+  yayılır; sinyal motora bağlı değildir, kanalı ölçüm için taşır.
+- Kayıp kurucuya haftada en çok bir mailla gelir: mesaj türü `sales_loss` (`{rep, company, area}`, `MessageSystem.post`, saati durdurmaz, mesai
+  penceresinde gelir). Aynı haftanın öbür kayıpları `sales_weekly_loss_rows` bayrağında satır olur ve `sales_week` mesajının `lost` argümanıyla gider;
+  özet yalnız kayıpla da açılır. Kurucu masadaysa kaybı mailsiz satırdır. Yeni bayraklar `FLAG_TYPES`'ta; şema aynı, eksik bayrak varsayılanla açılır.
+- Hesabın hat üyeliği alıcı tipinin eksen ağırlığından sektörün alan ağırlığına geçti (`ProductQuality.used_areas`, `USE_AREA_MIN` 0,15: Çekirdek ve iki
+  vurgu); `SprintCatalog.line_accounts` ve `B2BSalesSystem.account_bugs` bunu okur; onları okuyan olay seam'leri (`olay.affected_accounts`,
+  `urun.decision_line_accounts`) ve kartların hesap sayıları değişmeden yeni üyelikle çalışır.
+- Aday sektörü: Sağlık ve Tekstil ops_cautious'ın, Medya tech_exacting'in listesinin sonuna girdi; sektör çekimi tip çekiminden ayrı ikinci karıştırma
+  turuyla yapılır. İstek alanı sektörün vurgu 1 alanıdır (`sprint.json`'daki `archetypes` bloğu silindi).
+
+*Neden.* Faz Q Karar 14 (zar), Karar 3 ve Karar 10 (sektör ve üyelik): oyuncu zayıf alanı kuraldan değil satıştan öğrenir; satışçının kaybı da alanın adını
+taşır ve bakılacak yeri gösterir.

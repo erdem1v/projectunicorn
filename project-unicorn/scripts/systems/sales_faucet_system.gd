@@ -132,9 +132,10 @@ static func lead_rate_per_week() -> float:
 static func _tick_inflow() -> void:
 	var progress: float = float(GameState.get_flag("sales_faucet_progress", 0.0)) \
 		+ lead_rate_per_week()
+	var mix: Array = star_mix_now()   # the product does not move while the tick draws
 	var emitted: int = 0
 	while progress >= 1.0 and emitted < SalesConstants.FAUCET_TICK_MAX:
-		if spawn(_roll_star(emitted), "faucet") == null:
+		if spawn(_roll_star(emitted, mix), "faucet") == null:
 			break
 		progress -= 1.0
 		emitted += 1
@@ -159,22 +160,13 @@ static func star_mix_now() -> Array:
 	return mix
 
 
-## How strong the shipped product reads against its market floors (Ürün §14). 1.0 means "on
-## the bar"; the faucet's quality shifter is the only consumer, and it is a RATIO rather than
-## a raw axis so a floor change moves both sides together.
+## How far the shipped product reaches the top band: its fit to a 3★ company (ProductQuality.market_fit) as a share of the
+## fit of a product that meets what such a company expects. 1.0 means "meets it"; the quality shifter is the only consumer.
 static func product_strength() -> float:
-	var floors: Dictionary = ProductRead.market_floors("b2b")
-	var total: float = 0.0
-	var n: int = 0
-	for axis in floors.keys():
-		var floor_v: float = maxf(float(floors[axis]), 1.0)
-		total += float(ProductRead.axis_reading("", String(axis))) / floor_v
-		n += 1
-	return total / float(maxi(n, 1))
+	return float(ProductQuality.market_fit(SalesConstants.STAR_MAX)) / ProductQuality.FIT_SCALE
 
 
-static func _roll_star(nth_today: int) -> int:
-	var mix: Array = star_mix_now()
+static func _roll_star(nth_today: int, mix: Array) -> int:
 	var total: float = float(mix[0]) + float(mix[1]) + float(mix[2])
 	var draw: float = float(SalesConstants.mix_seed(_day_seed(nth_today), SALT_STAR) % 10000) / 10000.0 * total
 	var acc: float = 0.0
@@ -212,8 +204,11 @@ static func spawn(star: int, source: String) -> Prospect:
 	var sectors: Array = SalesArchetypes.sectors(archetype)
 	var chosen_sector: String = ""
 	var company: String = ""
+	# A second round of the mixer: one round would make the sector the archetype's draw shifted by a constant, and a buyer type
+	# whose sector count equals its pool slots would only ever meet the sectors that constant away from its own slot.
+	var sector_draw: int = SalesConstants.mix_seed(SalesConstants.mix_seed(seed_base, SALT_SECTOR), SALT_SECTOR)
 	for offset in sectors.size():
-		var sector: String = String(sectors[(SalesConstants.mix_seed(seed_base, SALT_SECTOR) + offset) % sectors.size()])
+		var sector: String = String(sectors[(sector_draw + offset) % sectors.size()])
 		var name: String = SalesNamePool.take(sector, seed_base + offset, excluded)
 		if name != "":
 			chosen_sector = sector

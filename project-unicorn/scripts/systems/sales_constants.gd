@@ -45,11 +45,11 @@ const STAR_MIN := 1
 const STAR_MAX := 3                      # demo ceiling (§2, MÜHÜRLÜ)
 
 # Quality shifter (§3): "üst bandın payı ürün okumasıyla açılır; zayıf ürünle büyük balık
-# kapıyı çalmaz." Product strength 0..1 scales the top band's share and the mass it loses
-# falls to the 1★ band, so the mix always sums to 1 without a second table.
+# kapıyı çalmaz." Product strength (the product's fit to a 3★ company as a share of 70) scales the top
+# band's share and the mass it loses falls to the 1★ band, so the mix always sums to 1 without a second table.
 const QUALITY_SHIFT_FLOOR := 0.25        # [K] the weakest product still keeps this much of the top band
-const QUALITY_STRENGTH_LOW := 0.6        # [K] axis-over-floor ratio that reads as weak
-const QUALITY_STRENGTH_HIGH := 1.6       # [K] ratio at which the top band opens fully
+const QUALITY_STRENGTH_LOW := 0.6        # [WORKING] onay bekliyor: strength that reads as weak
+const QUALITY_STRENGTH_HIGH := 1.0       # [WORKING] onay bekliyor: strength at which the top band opens fully (a product that meets a 3★ company)
 
 
 # ============================ §4 · Pipeline ==================================
@@ -277,6 +277,7 @@ const MIX_SALT_STRIDE := 7919
 const SALT_UNITS := 401          # negotiation seats / equity points
 const SALT_RESERVE := 409        # negotiation hidden reserve
 const SALT_REP_SEATS := 419      # the rep desk's seat count (§7.6)
+const SALT_REP_CLOSE := 449      # the rep desk's close die (ProductQuality.close_chance)
 const SALT_LOOK := 431           # an office person's look (LookSystem)
 const SALT_ACTOR := 433          # an office person's breaks and idles (OfficeActor)
 const SALT_DAY := 439            # an office person's week: late in, early out (OfficePeople)

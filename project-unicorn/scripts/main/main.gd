@@ -992,7 +992,9 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ##   frank_moment · thanks (two release thank-you notes, a kept word and a met request, the newest open) ·
 ##   rnd_note (week 14's note) · rnd_note_demand (the same note with a bug open on an ERP
 ##   line, so its first line names that line) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
-##   weekly_sales · empty · long · team_read_only (Ekip
+##   weekly_sales · rep_lost (the sales rep's mail of a desk deal lost over an area, through the real close) · weekly_lost
+##   (the same week's summary: two closes and the two lost deals the rep did not mail) · weekly_lost_only (a week of the
+##   lost deals alone: no table) · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
 ##   finance_read_only (Finans read-only) · personal_read_only (Kişisel read-only) ·
 ##   personal_cheque_read_only (Kişisel read-only after Frank's cheque, a customer's card waiting) ·
@@ -1033,6 +1035,8 @@ func _run_inbox_shot(state: String) -> void:
 		RnDSystem._tick_note()
 	if state == "thanks":
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+	if state in ["rep_lost", "weekly_lost", "weekly_lost_only"]:
+		_stage_desk_losses(state != "weekly_lost_only")
 	await _mount_shot_shell()
 	_wire_modal_signals()
 	var selina := "char_emp_shot_3"
@@ -1159,6 +1163,9 @@ func _run_inbox_shot(state: String) -> void:
 			var id: String = MessageSystem.post("sales_week", "SALES_WEEKLY_TITLE",
 				{"rows": rows, "accounts": CustomerRegistry.account_count()})
 			INBOX.show("m:" + id)
+		"rep_lost", "weekly_lost", "weekly_lost_only":
+			var kind: String = "sales_loss" if state == "rep_lost" else "sales_week"
+			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == kind)[-1].id))
 		"empty":
 			EventBus.tab_changed.emit("events")
 			get_tree().call_group(INBOX.GROUP, &"filter_for_shot", 1)
@@ -1520,6 +1527,41 @@ func _seed_theme_surface() -> void:
 	SalesFaucetSystem.spawn_prospect("small", "find")
 	SalesFaucetSystem.spawn_prospect("mid", "find")
 	SalesSystem.reflect_mrr()
+
+
+## --inbox-shot=rep_lost | weekly_lost | weekly_lost_only: the theme seed's company with a live ERP at its MVP whose Entegrasyonlar
+## and İlk kullanım are empty, and its sales rep closing desk deals in one week through the real close: three 2★ leads are lost
+## over an area (the first is the rep's mail, the other two the weekly summary's lines) and, with `closes`, two 1★ leads sign (its
+## rows). A lead's id is picked for its die: a losing lead is one whose own die lands above its close chance.
+func _stage_desk_losses(closes: bool) -> void:
+	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+	for line_id in SprintCatalog.capabilities("core"):
+		ProductState.set_line_tier(line_id, 1)
+	for line_id in SprintCatalog.capabilities("trust"):
+		ProductState.set_line_tier(line_id, 1)
+	var rep: Character = CharacterRegistry.get_character("char_emp_shot_4")
+	var leads: Array = [["Ege Lojistik", "logistics", "ops_cautious", 2, true], ["Taurus Gayrimenkul", "real_estate", "finance_brisk", 2, true],   # LOC-DATA debug seed / id
+		["Karadeniz Tekstil", "textile", "ops_cautious", 2, true], ["Liman Lojistik", "logistics", "ops_cautious", 1, false],
+		["Zeytin Market", "retail", "finance_brisk", 1, false]]
+	for i in leads.size():
+		var row: Array = leads[i]
+		if not closes and not row[4]:
+			continue
+		var lead := Prospect.new()
+		lead.company_name = row[0]
+		lead.industry = row[1]
+		lead.archetype_id = row[2]
+		lead.star = row[3]
+		lead.spawned_on_day = GameState.day
+		lead.expires_on_day = GameState.day + 1
+		for n in 400:
+			lead.id = "lead_shot_%d_%d_%d" % [GameState.day, i, n]
+			if (SalesRepSystem.lost_area(lead) != "") == bool(row[4]):
+				break
+		ProspectRegistry.add(lead)
+		SalesRepSystem._close(rep, lead)
+	GameState.set_flag("sales_weekly_anchor_day", GameState.day - TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS))
+	SalesRepSystem._tick_weekly_summary()
 
 
 ## The goal lists' fixture: week 1 at 08:00 as the run opens, `state` how far the first minute got. untyped · typed

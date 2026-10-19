@@ -23,8 +23,8 @@ extends Resource
 ## and prestige all read it, and the row always draws five stars (Ekip §4.1 grammar).
 @export var star: int = 1
 
-## §11.1 — which customer archetype speaks at this table. Selects the probe families, the
-## axis weights the persuasion reading multiplies, and the negotiation profile.
+## §11.1 — which customer archetype speaks at this table. Selects the probe families and the
+## negotiation profile.
 @export var archetype_id: String = "ops_cautious"
 
 # --- Life and routing (§4) ---

@@ -14,7 +14,7 @@ extends RefCounted
 
 ## Günlük. Her aktif B2B hesabı en çok bir açık talep taşır; talep imzadan `first_after_weeks` sonra
 ## ve her yenilemeden `before_renewal_weeks` önce açılan pencerede bir kez doğar, kaçırılan eski
-## pencere atlanır. Yetenek hesabın sektörünün arketipine bağlı alandan, kilidi açık ve başka açık
+## pencere atlanır. Yetenek hesabın sektörünün vurgu 1 alanından, kilidi açık ve başka açık
 ## talepte olmayan sonraki kademelerden hash'le seçilir. Son tarih planlanabilir sprintten
 ## `deadline_weeks` sonraki sprinttir (seçilen süreyle sayılır); o sprint kapanmış ya da hesabı
 ## kapanan açık talep sessizce düşer (zamanında olan kapanışta on_release'te karşılanmıştır). Yenileme penceresinin
@@ -30,7 +30,6 @@ static func tick_requests() -> void:
 			r.status = "late"
 	var lead: int = TimeModel.ticks(int(SprintCatalog.cfg("request.before_renewal_weeks")))
 	var first: int = TimeModel.ticks(int(SprintCatalog.cfg("request.first_after_weeks")))
-	var area_of: Dictionary = SprintCatalog.cfg("archetypes")
 	for c in accounts:
 		var renewal: int = next_renewal_day(c)
 		if GameState.day == renewal - lead:
@@ -39,7 +38,7 @@ static func tick_requests() -> void:
 		if GameState.day < window or requests.any(func(r: Dictionary) -> bool:
 				return r.customer_id == c.id and (r.status == "open" or int(r.day) >= window)):
 			continue
-		var area: String = area_of.get(SalesArchetypes.of_sector(c.industry), area_of["default"])
+		var area: String = ProductQuality.emphasis(c.industry)[0]
 		var taken: Array = requests.filter(func(r: Dictionary) -> bool: return r.status == "open").map(
 			func(r: Dictionary) -> String: return r.step)
 		var steps: Array = []

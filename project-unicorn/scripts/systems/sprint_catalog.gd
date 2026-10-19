@@ -359,12 +359,12 @@ static func forecast(card_ids: Array) -> Array:
 
 # --- Etkilenenler -----------------------------------------------------------------------
 
-## B2B'de hattı kullanan hesaplar: aktif ya da deneme hesabı, sektörünün alıcı tipi hattın eksenini okuyorsa
-## (SalesArchetypes.USE_AXIS_MIN). Hesap başına bedeli yazan olay da bu listeyi okur.
+## B2B'de hattı kullanan hesaplar: aktif ya da deneme hesabı, sektörü hattın alanını kullanıyorsa
+## (`ProductQuality.uses_area`: Çekirdek ve sektörün iki vurgusu). Hesap başına bedeli yazan olay da bu listeyi okur.
 static func line_accounts(line_id: String) -> Array:
-	var axis: String = ProductLines.axis_of(line_id)
+	var area: String = area_of_line(line_id)
 	return CustomerRegistry.get_all().filter(func(c: Customer) -> bool:
-		return c.market_type == "b2b" and c.status in ["active", "trial"] and SalesArchetypes.uses_axis(c.industry, axis))
+		return c.market_type == "b2b" and c.status in ["active", "trial"] and ProductQuality.uses_area(c.industry, area))
 
 
 ## Hattın B2C kitle payı: her canlı hat bir pay artı kademesinin kullanım ağırlığı kadar alır; canlı olmayan hat 0.

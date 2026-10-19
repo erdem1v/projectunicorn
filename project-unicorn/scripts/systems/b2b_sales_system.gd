@@ -166,14 +166,15 @@ static func _forgiven_trust(trust: float) -> float:
 	return move_toward(trust, 0.0, TimeModel.per_tick(B2BConstants.TRUST_OFFSET_DECAY_PER_DAY))
 
 
-## The open bugs on the lines this account uses (SalesArchetypes.uses_axis): what its satisfaction target, and the
+## The open bugs on the lines this account uses (ProductQuality.uses_area): what its satisfaction target, and the
 ## complaint it voices in Risk, count.
 static func account_bugs(c: Customer) -> int:
 	var n: int = 0
 	var bugs: Dictionary = ProductState.open_bugs_by_line()
-	for line in bugs:
-		if SalesArchetypes.uses_axis(c.industry, ProductLines.axis_of(line)):
-			n += int(bugs[line])
+	if not bugs.is_empty():   # read for every account every tick: a clean product costs nothing
+		for area in ProductQuality.used_areas(c.industry):
+			for line in SprintCatalog.capabilities(area):
+				n += int(bugs.get(line, 0))
 	return ProductState.costed(n)
 
 

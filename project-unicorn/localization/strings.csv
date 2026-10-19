@@ -2520,6 +2520,9 @@ SALES_PROMISE_OPEN,Açık söz: {feature} · {n} hafta,Open promise: {feature} �
 SALES_PROMISE_OPEN_ONE,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} week
 SALES_PROMISE_OPEN_THIS_WEEK,Açık söz: {feature} · bu hafta,Open promise: {feature} · this week
 SALES_WEEKLY_TOTAL,Toplam: {n} anlaşma · {mrr}/ay,Total: {n} deals · {mrr}/mo
+SALES_REP_LOST_TITLE,Kaçan satış: {company},Lost deal: {company}
+SALES_REP_LOST_BODY,"Patron, {company} ile anlaşamadım. {area} tarafını eksik buldular. O taraf güçlenince yeniden denerim.","Boss, I could not close {company}. They found the {area} side lacking. I will try again once it is stronger."
+SALES_WEEKLY_LOST,"{company}: kaçtı, {area} eksik bulundu.","{company}: lost, {area} found lacking."
 HR_FOUNDER_STATE_CARE,Müşterilerle ilgileniyor,Looking after customers
 SEED_SECTION_TITLE,Seed turu,Seed round
 SEED_DOOR_LINE,"Gelir bir tura yetecek kadar düzenli. Dört fondan biriyle oturabilirsin; bir tur, bir fon.","Revenue is steady enough to carry a round. You can sit down with one of the four funds: one round, one fund."

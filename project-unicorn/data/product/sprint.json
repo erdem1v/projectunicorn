@@ -127,7 +127,6 @@
       ]
     }
   },
-  "archetypes": {"tech_exacting": "core", "finance_brisk": "integrations", "ops_cautious": "trust", "default": "onboarding"},
   "areas": [
     {"id": "core", "order": 0, "markets": ["b2c", "b2b"], "identity": true, "lines": [], "name_key": "PRODUCT_AREA_CORE"},
     {"id": "onboarding", "order": 1, "markets": ["b2c", "b2b"], "lines": ["line_shared_mobile", "line_hidden_self_serve"], "name_key": "PRODUCT_AREA_ONBOARDING"},

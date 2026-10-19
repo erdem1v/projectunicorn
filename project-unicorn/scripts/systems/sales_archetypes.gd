@@ -19,9 +19,6 @@ extends RefCounted
 #   buyer           → which probe families the picker may draw (a technical buyer asks
 #                     different questions from an operational one)
 #   temperament     → a storylet fact the probe catalogue can key on (SalesProbes.facts_for)
-#   priorities      → the axis weights the persuasion reading multiplies, plus how many
-#                     BASE and how many DELIGHT steps this buyer counts (the Kano reading
-#                     — the LABEL never reaches the screen, §11.1)
 #   negotiation     → reserve sensitivity, patience, insult margin, price-sensitivity flag
 #                     (the flag is what §7.6 reads to decide a price-break card is possible)
 #   conditions      → the ordered whale condition list (§8); empty = never a whale
@@ -30,8 +27,6 @@ extends RefCounted
 # voice is a CSV key derived from the id (`SALES_ARCH_<ID>_LINE`).
 
 const DEFAULT_ID := "ops_cautious"
-## The least axis weight at which an account counts as using a line on that axis (SprintCatalog.line_accounts).
-const USE_AXIS_MIN := 0.25     # [ÇALIŞMA] onay bekliyor
 
 # Temperament ids: a storylet fact (SalesProbes.facts_for); never printed.
 const TEMPER_CAUTIOUS := "cautious"
@@ -45,19 +40,14 @@ const BUYER_FINANCE := "finance"
 
 const TABLE := {
 	# --- Stub 1 · the cautious operations buyer -----------------------------
-	# Reads stability above everything, counts base steps and ignores delighters, and
-	# haggles slowly. The §10 language sample is written against this shape.
+	# Haggles slowly. The §10 language sample is written against this shape. Sector order is load-bearing (the faucet draws
+	# `% size`, the fixtures read [0]): a new sector goes last.
 	"ops_cautious": {
-		"sectors": ["logistics", "construction", "manufacturing"],
+		"sectors": ["logistics", "construction", "manufacturing", "health", "textile"],
 		"subtype_affinity": ["erp"],       # the only B2B sub-type that ships today
 		"star_range": [1, 3],
 		"buyer": BUYER_OPERATIONS,
 		"temperament": TEMPER_CAUTIOUS,
-		"priorities": {
-			"axis_weights": {"stability": 0.55, "experience": 0.30, "innovation": 0.15},
-			"base_steps_counted": 3,
-			"delight_steps_counted": 0,
-		},
 		"negotiation": {
 			"reserve_sensitivity": 0.92,
 			"patience": 3,
@@ -69,19 +59,13 @@ const TABLE := {
 	},
 
 	# --- Stub 2 · the technical buyer ---------------------------------------
-	# Wants the ladder climbed: innovation first, and it counts delighters. Moves fast and
-	# is NOT price sensitive, so it never produces a price-break card (§7.6).
+	# Wants the ladder climbed. Moves fast and is NOT price sensitive, so it never produces a price-break card (§7.6).
 	"tech_exacting": {
-		"sectors": ["technology", "ecommerce", "finance"],
+		"sectors": ["technology", "ecommerce", "finance", "media"],
 		"subtype_affinity": [],            # no second B2B sub-type to prefer yet
 		"star_range": [1, 3],
 		"buyer": BUYER_TECHNICAL,
 		"temperament": TEMPER_EXACTING,
-		"priorities": {
-			"axis_weights": {"innovation": 0.50, "stability": 0.30, "experience": 0.20},
-			"base_steps_counted": 2,
-			"delight_steps_counted": 2,
-		},
 		"negotiation": {
 			"reserve_sensitivity": 1.12,
 			"patience": 2,
@@ -93,19 +77,13 @@ const TABLE := {
 	},
 
 	# --- Stub 3 · the finance buyer -----------------------------------------
-	# Buys the experience of not being surprised, and buys it cheaply. Impatient, very price
-	# sensitive, and the archetype the price-break card was designed against.
+	# Buys cheaply. Impatient, very price sensitive, and the archetype the price-break card was designed against.
 	"finance_brisk": {
 		"sectors": ["insurance", "legal", "retail", "real_estate"],
 		"subtype_affinity": [],
 		"star_range": [1, 2],
 		"buyer": BUYER_FINANCE,
 		"temperament": TEMPER_BRISK,
-		"priorities": {
-			"axis_weights": {"experience": 0.45, "stability": 0.40, "innovation": 0.15},
-			"base_steps_counted": 2,
-			"delight_steps_counted": 1,
-		},
 		"negotiation": {
 			"reserve_sensitivity": 0.84,
 			"patience": 2,
@@ -126,20 +104,6 @@ static func ids() -> Array:
 
 static func has(archetype_id: String) -> bool:
 	return TABLE.has(archetype_id)
-
-
-## The archetype whose sector list holds `sector`; "" for a sector none of them claims.
-static func of_sector(sector: String) -> String:
-	for id in ids():
-		if sector in sectors(id):
-			return id
-	return ""
-
-
-## An account of `sector` uses a product line on `axis` when its buyer type weighs that axis at USE_AXIS_MIN or
-## more. A sector no archetype claims reads like DEFAULT_ID (`_row` falls back to it).
-static func uses_axis(sector: String, axis: String) -> bool:
-	return float(axis_weights(of_sector(sector)).get(axis, 0.0)) >= USE_AXIS_MIN
 
 
 static func _row(archetype_id: String) -> Dictionary:
@@ -166,28 +130,6 @@ static func buyer(archetype_id: String) -> String:
 
 static func temperament(archetype_id: String) -> String:
 	return String(_row(archetype_id).get("temperament", TEMPER_CAUTIOUS))
-
-
-## Axis weights, normalised. Read by the persuasion reading's product-fit term — this is the
-## whole reason "the same product reads differently to two customers".
-static func axis_weights(archetype_id: String) -> Dictionary:
-	var w: Dictionary = (_row(archetype_id)["priorities"]["axis_weights"] as Dictionary).duplicate()
-	var total: float = 0.0
-	for k in w.keys():
-		total += float(w[k])
-	for k in w.keys():
-		w[k] = float(w[k]) / total
-	return w
-
-
-## How many BASE and how many DELIGHT ladder steps this buyer counts (§11.1). The Kano
-## reading of the product; the label never reaches the screen.
-static func step_appetite(archetype_id: String) -> Dictionary:
-	var p: Dictionary = _row(archetype_id).get("priorities", {}) as Dictionary
-	return {
-		"base": int(p.get("base_steps_counted", 2)),
-		"delight": int(p.get("delight_steps_counted", 0)),
-	}
 
 
 static func negotiation(archetype_id: String) -> Dictionary:

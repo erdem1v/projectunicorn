@@ -15,7 +15,8 @@ const GROUP := &"inbox"
 const MENTOR_ID := "char_mentor_frank"
 ## A message kind's topic.
 const MESSAGE_TOPICS := {"intro": "EVENT_TAG_MENTOR", "summary": "EVENT_TAG_AGENDA",
-	"sales_week": "EVENT_TAG_CUSTOMER", "rnd_note": "EVENT_TAG_PRODUCT", "rnd_discovery": "EVENT_TAG_PRODUCT"}
+	"sales_week": "EVENT_TAG_CUSTOMER", "sales_loss": "EVENT_TAG_CUSTOMER", "rnd_note": "EVENT_TAG_PRODUCT",
+	"rnd_discovery": "EVENT_TAG_PRODUCT"}
 ## A category's sender when the card's speaker and slots name none.
 const CATEGORY_SENDERS := {"funding": "frank", "founder": "self", "team": "self", "world": "press",
 	"rival": "press", "customer": "desk", "product": "desk"}
@@ -293,8 +294,9 @@ static func _message_item(m: Dictionary) -> Dictionary:
 			it.line = "%s %s → %s · %s %s" % [TranslationServer.translate("FIN_CAP_MRR"), Fmt.money_chip(int(a.mrr.from)),
 				Fmt.money_chip(int(a.mrr.to)), TranslationServer.translate("MONTH_ROW_CASH"), signed_money(int(a.cash.to) - int(a.cash.from))]
 		"sales_week":
+			var lost: Array = a.get("lost", [])
 			var rep: String = ""
-			for r in a.rows:
+			for r in a.rows + lost:
 				rep = String(r.get("rep", "")) if rep == "" else rep
 			it.sender = named_employee(rep, HRConstants.ROLE_SALES_REP)
 			it.sender.well = false   # a report leaves the room to its table
@@ -303,7 +305,14 @@ static func _message_item(m: Dictionary) -> Dictionary:
 			for r in a.rows:
 				total += int(r.mrr)
 				names.append(String(r.company))
-			it.line = "%s · %s" % [", ".join(names), Fmt.money_exact(total) + TranslationServer.translate("SALES_PER_MONTH")]
+			# A week of lost deals alone has no closes to list: the preview reads its first lost line.
+			it.line = lost_line(lost[0]) if names.is_empty() \
+				else "%s · %s" % [", ".join(names), Fmt.money_exact(total) + TranslationServer.translate("SALES_PER_MONTH")]
+		"sales_loss":
+			it.sender = named_employee(String(a.rep), HRConstants.ROLE_SALES_REP)
+			it.subject = TranslationServer.translate(String(m.key)).format({"company": a.company})
+			it.line = first_line(lost_body(a))
+			it.right = ""
 		"rnd_note":
 			it.sender = named_employee(String(a.get("author_name", "")), String(a.get("author_role", "")))
 			it.line = first_line(note_lines(a)[0])
@@ -321,6 +330,18 @@ static func _reminder(id: String, topic: String, from: Dictionary, subject: Stri
 		subpage: String = "") -> Dictionary:
 	return {"id": "r:" + id, "kind": "reminder", "day": -1, "at": MailClock.reminder_at(id), "waiting": false,
 		"unread": false, "topic": topic, "sender": from, "subject": subject, "line": "", "tab": tab, "subpage": subpage}
+
+
+## A seller's lost-deal mail: its body in the live language.
+static func lost_body(a: Dictionary) -> String:
+	return TranslationServer.translate("SALES_REP_LOST_BODY").format(
+		{"company": a.company, "area": SprintCatalog.area_short(String(a.area))})
+
+
+## One lost deal as the weekly report says it.
+static func lost_line(row: Dictionary) -> String:
+	return TranslationServer.translate("SALES_WEEKLY_LOST").format(
+		{"company": row.company, "area": SprintCatalog.area_short(String(row.area))})
 
 
 ## The Ar-Ge note's three lines (§6.3), the empty ones dropped; the demand line falls back to the
