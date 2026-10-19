@@ -457,6 +457,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"split_bars_name_their_cause": fail = _case_split_bars_name_their_cause()
 		"rnd_rail_open_with_locked_tree": fail = _case_rnd_rail_open_with_locked_tree()
 		"rnd_note_author_and_lines": fail = _case_rnd_note_author_and_lines()
+		"rnd_design_discount_reads_profile": fail = _case_rnd_design_discount_reads_profile()
 		"card_math_matches_gdd_example":  fail = _case_card_math_matches_gdd_example()
 		"save_v10_product_state":         fail = _case_save_v10_product_state()
 		# --- rev 6.1 · router devri (2026-08-25). İkisi de ÖNCEKİ ağaca karşı DÜŞER.
@@ -2286,7 +2287,7 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 	expect.call("runway_warn_band", mgs.get("runway_warn_band"), 3)
 	expect.call("sales_return_locks", mgs["sales_return_locks"].get("V13 Co"), 7)
 	expect.call("hr_search.arrival_day", mgs["hr_search"].get("arrival_day"), 7)
-	gone.call("game_state", mgs, ["shutter_days_left", "product"])
+	gone.call("game_state", mgs, ["shutter_days_left"])
 	gone.call("hr_search", mgs["hr_search"], ["started_day"])
 	var cash: Array = (mgs["cash_history"] as Array).map(
 		func(r: Dictionary) -> Array: return [int(r["day"]), int(r["cash"])])
@@ -2374,8 +2375,8 @@ static func _case_save_v13_day_stamps_migrate() -> String:
 			or CharacterRegistry.get_character("emp_save").training_weeks_left != 2:
 		return done.call("the load did not seat the week values (tick %d, shutter %d)"
 			% [GameState.day, GameState.shutter_weeks_left])
-	if SprintSystem.is_typed():
-		return done.call("a run without a product type opened with a sprint")
+	if not SprintSystem.is_typed():   # the shared fixture is the ERP: its build comes back as the sprint plan
+		return done.call("the ERP run opened without its sprint")
 	_sim_day_full()
 	if GameState.day != 7:
 		return done.call("one day from the load reached tick %d, want 7" % GameState.day)
@@ -15046,6 +15047,94 @@ static func _case_product_line_profiles() -> String:
 		return "the authored hidden line did not register with its profile"
 	if ProductLines.work_profile("line_nope") != "":
 		return "an unknown line reads a profile"
+	return ""
+
+
+## Ar-Ge "Tasarım sistemi" kademe eforunu hattın İŞ PROFİLİNE göre indirir: tamamlanınca tasarım profilli hattın kademesi iki
+## yolda da (kart eforu `SprintCatalog.step_effort`, ham efor `ProductLines.effort_of`) 0,80 ile iner, geliştirme ve test
+## profilleri inmez, tamamlanmadan hiçbiri inmez. Ekseni ile profili ayrışan çalışma anı hatları okumayı ayırır: stability
+## ekseninde tasarım profilli hat iner, experience ekseninde test profilli hat inmez. Kayıt göçü (`_migrate_15`) kaydın
+## Ar-Ge durumunu aynı profille okur; kayıtta olmayan hat ('' profil) inmez.
+##
+## FALSİFİKASYON: `step_effort`ın okuyucusunu `step.axis == "experience"` yap → ayrışan hat iddiası FAIL; `effort_of`ın
+## okuyucusunu `== "test"` yap → profil iddiası FAIL; `_migrate_15`in okuyucusunu `ProductLines.axis_of(line) == "experience"`
+## yap → göç iddiası FAIL.
+static func _case_rnd_design_discount_reads_profile() -> String:
+	ProductLines.reload()
+	RnDSystem.reset()
+	var mult: float = ProductLines.RND_DESIGN_EFFORT_MULT
+	var wrong := func(step_id: String, eased: bool) -> String:
+		var tier: int = int(ProductLines.step(step_id).tier)
+		var card: int = int(SprintCatalog.cfg("effort.k%d" % tier))
+		var raw: int = int(ProductLines.step(step_id).effort)
+		var want: Array = [maxi(1, roundi(card * mult)), maxi(1, int(round(float(raw) * mult)))] if eased else [card, raw]
+		var got: Array = [SprintCatalog.step_effort(step_id), ProductLines.effort_of(step_id)]
+		return "" if got == want else "%s reads card effort %d and raw effort %d, want %d and %d" % [
+			step_id, got[0], got[1], want[0], want[1]]
+	var lines: Dictionary = {"design": "line_note_tool_editor", "dev": "line_note_tool_capture", "test": "line_note_tool_sync"}
+	for profile in lines:
+		if ProductLines.work_profile(lines[profile]) != profile:
+			return "fixture: %s does not carry the %s profile" % [lines[profile], profile]
+	for tier in [1, 2, 3]:
+		for profile in lines:
+			var untouched: String = wrong.call("%s_k%d" % [lines[profile], tier], false)
+			if untouched != "":
+				return "before the research: " + untouched
+
+	RnDSystem._complete("design_system")
+	for tier in [1, 2, 3]:
+		for profile in lines:
+			var after: String = wrong.call("%s_k%d" % [lines[profile], tier], profile == "design")
+			if after != "":
+				return "after the research: " + after
+	if SprintCatalog.step_effort("line_note_tool_editor_k2") >= int(SprintCatalog.cfg("effort.k2")):
+		return "fixture: the discount did not lower a design tier's card effort"
+
+	# Kayıt göçü: v14 yapımının planlanan her kademesi bir kart olur, eforu kaydın Ar-Ge durumuna bağlıdır.
+	var migrated := func(subtype: String, market: String, planned: Array, done: bool) -> Array:
+		var state := {"game_state": {"day": 30.0, "flags": {"mvp_sub_product_type_id": subtype, "mvp_market_type": market,
+			"mvp_line_tiers": {}}}, "systems": {"rnd": {"states": {"design_system": RnDSystem.STATE_DONE if done else RnDSystem.STATE_LOCKED}},
+			"product": {"active_build": {"planned_step_ids": planned, "total_efor": 8.0, "efor_spent": 2.0}}}}
+		SaveManager._migrate_15(state)
+		return planned.map(func(s: String) -> int: return int(state.game_state.product.cards["feat:" + s].effort))
+	var base: Array = [int(SprintCatalog.cfg("effort.k2")), int(SprintCatalog.cfg("effort.k1")), int(SprintCatalog.cfg("effort.k3"))]
+	var planned: Array = ["line_note_tool_editor_k2", "line_note_tool_capture_k1", "line_note_tool_sync_k3"]
+	var lighter: Array = [maxi(1, roundi(base[0] * mult)), base[1], base[2]]
+	var open_read: Array = migrated.call("note_tool", "b2c", planned, false)
+	if open_read != base:
+		return "a v14 build planned with the research open migrated to %s, want %s" % [open_read, base]
+	var done_read: Array = migrated.call("note_tool", "b2c", planned, true)
+	if done_read != lighter:
+		return "a v14 build planned after the research migrated to %s, want %s" % [done_read, lighter]
+
+	# Ekseni ile profili ayrışan çalışma anı hatları: indirimi profil verir, eksen vermez.
+	var probe := func(id: String, axis: String, profile: String) -> Dictionary:
+		var raw: Dictionary = ResearchTree.hidden_line_raw("line_hidden_self_serve")
+		raw.id = id
+		raw.axis = axis
+		raw.profile = profile
+		for i in 3:
+			raw.steps[i].id = "%s_k%d" % [id, i + 1]
+		return raw
+	for split in [["line_hidden_probe_design", "stability", "design"], ["line_hidden_probe_test", "experience", "test"]]:
+		if not ProductLines.register_runtime_line(probe.call(split[0], split[1], split[2]), "erp"):
+			return "fixture: %s did not register" % split[0]
+		for tier in [1, 2, 3]:
+			var apart: String = wrong.call("%s_k%d@erp" % [split[0], tier], split[2] == "design")
+			if apart != "":
+				return "a %s profile on the %s axis: %s" % [split[2], split[1], apart]
+	# Göç, hat kayıtlıyken profilini okur; kayıtta yokken ('' profil) hiç indirmez.
+	var hidden: String = "line_hidden_self_serve_k2@erp"
+	if not ProductLines.register_runtime_line(probe.call("line_hidden_self_serve", "stability", "design"), "erp"):
+		return "fixture: the hidden line did not register"
+	var registered: Array = migrated.call("erp", "b2b", [hidden], true)
+	if registered != [lighter[0]]:
+		return "a registered hidden design line in a v14 build migrated to %s, want %s" % [registered, [lighter[0]]]
+	ProductLines.reload()
+	var absent: Array = migrated.call("erp", "b2b", [hidden], true)
+	if absent != [base[0]]:
+		return "a hidden line the load has not registered migrated to %s, want %s" % [absent, [base[0]]]
+	RnDSystem.reset()
 	return ""
 
 

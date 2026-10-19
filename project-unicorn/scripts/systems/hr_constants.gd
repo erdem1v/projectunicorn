@@ -9,8 +9,8 @@ extends RefCounted
 # ============================ Skill ALANLARI (0-10) ===========================
 # §4: yetenek ROL değil ALANDIR; herkes altı alanda ve Liderlik'te bir sayı taşır, böylece
 # tek kişilik ekipte boşluk kalmaz (bedeli §5: alan dışında çalışmak daha yorucudur).
-const AREA_PRODUCT := "product"                     # Ürün — tasarım turları, özellik kararları
-const AREA_DESIGN := "design"                       # Tasarım — tasarım tavanı, Deneyim ekseni
+const AREA_PRODUCT := "product"                     # Ürün — çeyrek planı, Ürün yıldızı isteyen kademeler
+const AREA_DESIGN := "design"                       # Tasarım — sprint kartlarının tasarım aşaması, Tasarım yıldızı isteyen kademeler
 const AREA_ENGINEERING := "engineering"             # Yazılım — geliştirme hızı
 const AREA_QA := "qa"                               # Test — sprint kartlarının test aşaması
 const AREA_SALES := "sales"                         # Satış — kapanış olasılığı, anlaşma boyutu

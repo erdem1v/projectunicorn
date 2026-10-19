@@ -160,14 +160,14 @@ static func fix_effort(bugs: int) -> int:
 	return int(tiers.points[(tiers.steps as Array).filter(func(top: float) -> bool: return bugs > top).size()])
 
 
-## K1 3 · K2 5 · K3 8; Ar-Ge "design_system" Deneyim kademelerinin eforunu %20 indirir.
+## K1 3 · K2 5 · K3 8; Ar-Ge "design_system" tasarım profilli hatların kademe eforunu %20 indirir.
 static func step_effort(step_id: String) -> int:
 	if step_id == PAID_PLAN:
 		return int(cfg("paid_plan.effort"))
 	var step: Dictionary = ProductLines.step(step_id)
 	var effort: int = int(cfg("effort.k%d" % int(step.tier)))
-	if step.axis == "experience" and ResearchSeam.completed("design_system"):
-		return maxi(1, roundi(effort * ProductLines.RND_EXPERIENCE_EFFORT_MULT))
+	if ProductLines.work_profile(step.line_id) == "design" and ResearchSeam.completed("design_system"):
+		return maxi(1, roundi(effort * ProductLines.RND_DESIGN_EFFORT_MULT))
 	return effort
 
 

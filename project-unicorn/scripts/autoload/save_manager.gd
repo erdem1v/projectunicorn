@@ -861,8 +861,8 @@ func _migrate_15(state: Dictionary) -> void:
 			var area: Dictionary = areas.filter(func(a: Dictionary) -> bool:
 				return (a.get("identity", false) and line == line_base) or line_base in a.lines)[0]
 			var effort: int = int(SprintCatalog.cfg("effort.k%d" % tier))
-			if lighter and ProductLines.axis_of(line) == "experience":
-				effort = maxi(1, roundi(effort * ProductLines.RND_EXPERIENCE_EFFORT_MULT))
+			if lighter and ProductLines.work_profile(line) == "design":
+				effort = maxi(1, roundi(effort * ProductLines.RND_DESIGN_EFFORT_MULT))
 			var card: Dictionary = SprintCatalog.new_card("feat:" + step, "feature", area.id, effort, line, step, tier)
 			# Progress is in points: a phase is full at effort × its share.
 			card.progress = [effort * card.shares[0], effort * card.shares[1] * done, 0.0]

@@ -460,10 +460,10 @@ HR_BADGE_IDLE,Boşta,Idle
 HR_BADGE_OVERLOADED_JOBS,Aşırı yük,Overloaded
 HR_IDLE_HINT,Hiçbir işe atanmadı — duruyor ve maaş alıyor.,Not assigned to any job — standing idle and still on payroll.
 HR_OVERLOAD_HINT,"Birden fazla işte çalışıyor. Zamanı işler arasında bölünür, her iki işte de hızı belirgin düşer, ve morali normalden hızlı erir.","Working more than one job. Their time is split between them, they are markedly slower in both, and their morale erodes faster than normal."
-HR_AREA_MEANING_PRODUCT_MANAGER_PRODUCT,Özellik kararları ve tasarım tavanı,Feature decisions and the design ceiling
-HR_AREA_MEANING_PRODUCT_MANAGER_DESIGN,Deneyim ekseninin tavanı,The ceiling on the Experience axis
-HR_AREA_MEANING_DESIGNER_DESIGN,Deneyim ekseninin tavanı,The ceiling on the Experience axis
-HR_AREA_MEANING_DESIGNER_PRODUCT,Özellik kararları ve tasarım tavanı,Feature decisions and the design ceiling
+HR_AREA_MEANING_PRODUCT_MANAGER_PRODUCT,Çeyrek planının kart sayısı ve Ürün yıldızı isteyen kademeler,Cards in the quarter plan and the tiers that ask for Product stars
+HR_AREA_MEANING_PRODUCT_MANAGER_DESIGN,Tasarım yıldızı isteyen kademeler,Tiers that ask for Design stars
+HR_AREA_MEANING_DESIGNER_DESIGN,Sprint kartlarında tasarım aşamasının hızı,Speed of the design phase on sprint cards
+HR_AREA_MEANING_DESIGNER_PRODUCT,Ürün yıldızı isteyen kademeler,Tiers that ask for Product stars
 HR_AREA_MEANING_DEVELOPER_ENGINEERING,Geliştirme hızı ve hata oranı,Development speed and bug rate
 HR_AREA_MEANING_DEVELOPER_QA,Beta keşif hızı,Beta discovery speed
 HR_AREA_MEANING_TESTER_QA,Sprint kartlarında test aşamasının hızı,Speed of the test phase on sprint cards

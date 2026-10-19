@@ -35,7 +35,7 @@ const USAGE_WEIGHT_MAX := 3
 ## bir sabiti değil ERİŞİMCİYİ değiştirir; kart ve tahsilat aynı erişimciden okur
 ## (§12.9: "oyuncu ekranda gördüğü sayıyı alır").
 const RND_LICENSE_MULT := 0.60             # model_optimization (Ar-Ge §4.2) — lisans −%40
-const RND_EXPERIENCE_EFFORT_MULT := 0.80   # design_system (Ar-Ge §4.4) — Deneyim eforu −%20
+const RND_DESIGN_EFFORT_MULT := 0.80       # design_system (Ar-Ge §4.4) — tasarım profilli hattın kademe eforu −%20
 const RND_AI_USAGE_RELIEF := 1             # edge_inference (Ar-Ge §4.1) — AI kademesi ağırlık −1
 
 ## §12.12 + §5 — her yükseltme anlamlı bir kazanç olmalı. Kısıt HAM PUANA değil
@@ -388,16 +388,16 @@ static func work_profile(line_id: String) -> String:
 	return String(line(line_id).get("profile", ""))
 
 
-## Ar-Ge §4.4 `design_system` — YALNIZ Deneyim ekseninin kademelerinde efor −%20.
+## Ar-Ge §4.4 `design_system` — YALNIZ tasarım profilli hatların kademelerinde efor −%20.
 ## · `_validate_step` bandı HAM `effort` üstünden ölçer: indirim bir kademeyi
 ##   EFFORT_BANDS'ten dışarı itse de yükleme düşmez; doğrulama içeriğin sözleşmesidir.
 ## maxi(1, ...): indirim bir kademeyi bedava yapamaz.
 static func effort_of(step_id: String) -> int:
 	var s: Dictionary = step(step_id)
 	var raw: int = int(s.get("effort", 0))
-	if raw > 0 and String(s.get("axis", "")) == "experience" \
+	if raw > 0 and work_profile(String(s.get("line_id", ""))) == "design" \
 			and ResearchSeam.completed("design_system"):
-		return maxi(1, int(round(float(raw) * RND_EXPERIENCE_EFFORT_MULT)))
+		return maxi(1, int(round(float(raw) * RND_DESIGN_EFFORT_MULT)))
 	return raw
 
 
