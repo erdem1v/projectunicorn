@@ -67,6 +67,13 @@ extends RefCounted
 #                                           registry, loss the area it lacked. The share of a seller's closes that is
 #                                           lost counts from these lines against PROBE FIT by=rep. The founder's own
 #                                           lost sittings print none)
+#   PROBE MLOSS day=<d> hour=<h> id=<pid> sector=<s> star=<n> phase=<p> reason=<SalesLedger reason> target=<area|line|-> u=<n|-> capped=<b|->
+#               loss=<area|->
+#                                           (every B2B deal the founder loses, at a sitting or at a table that ran out of
+#                                           patience, as it is lost: reason and target are the account memory's, u, capped
+#                                           and loss the lead's fit before it leaves the registry. A desk seller's loss
+#                                           also reaches the meeting_lost signal and prints PROBE REPLOSS instead; - on a
+#                                           product without line content)
 #   PROBE FIXTURE preset=<p> bugs=<n> under_live=<n> under_clear=<n> slack=<n> book=<id>:<clear>/<live>/<bar>,...
 #                                           (the b2b_* presets, once, after the book signs: each account's target with no
 #                                           bug open (clear) and with the backlog open (live) against its tolerance (bar);
@@ -611,12 +618,20 @@ static func _on_signed(customer_id: String, _seats: int, _seat_price: int) -> vo
 
 
 ## A loss is reported before its lead leaves the registry (SalesFinalizer.lose) and the desk seller's signal comes after it,
-## so the lead is kept here until PROBE REPLOSS reads its fit.
-static func _on_lost(account: String, _reason: String) -> void:
+## so the lead is kept here until PROBE REPLOSS reads its fit. The founder's loss is the one lost at the sitting still open on
+## that lead (a lost answer, or the table after it that ran out of patience): PROBE MLOSS prints it at once.
+static func _on_lost(account: String, reason: String) -> void:
 	_lost_lead = null
 	for lead: Prospect in ProspectRegistry.get_all():
 		if lead.company_name == account:
 			_lost_lead = lead
+	if not SalesMeetingSystem.is_active() or SalesMeetingSystem.active_lead_id() != _lost_lead.id:
+		return
+	var fit: Dictionary = _lead_fit(_lost_lead)
+	var target: String = SalesLedger.loss_target(account)
+	print("PROBE MLOSS day=%d hour=%d id=%s sector=%s star=%d phase=%d reason=%s target=%s u=%s capped=%s loss=%s" % [
+		GameState.day, GameState.current_hour, _lost_lead.id, _lost_lead.industry, _lost_lead.star, GameState.phase, reason,
+		target if target != "" else "-", fit.value, str(fit.capped), fit.loss_area if fit.loss_area != "" else "-"])
 
 
 static func _on_rep_lost(_rep_id: String, lead_id: String, area: String) -> void:
@@ -628,7 +643,7 @@ static func _on_rep_lost(_rep_id: String, lead_id: String, area: String) -> void
 
 static func _on_lead(lead_id: String) -> void:
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
-	var fit: Dictionary = ProductQuality.prospect_fit(p) if _fit_readable() else {"value": "-", "loss_area": ""}
+	var fit: Dictionary = _lead_fit(p)
 	print("PROBE LEAD day=%d id=%s arch=%s sector=%s star=%d phase=%d u=%s loss=%s" % [
 		GameState.day, lead_id, p.archetype_id, p.industry, p.star, GameState.phase,
 		fit.value, fit.loss_area if fit.loss_area != "" else "-"])
@@ -638,6 +653,10 @@ static func _on_lead(lead_id: String) -> void:
 ## signatures and accounts print no fit.
 static func _fit_readable() -> bool:
 	return not SprintCatalog.capabilities("core").is_empty()
+
+
+static func _lead_fit(lead: Prospect) -> Dictionary:
+	return ProductQuality.prospect_fit(lead) if _fit_readable() else {"value": "-", "capped": "-", "loss_area": ""}
 
 
 static func _log_promise(promise_id: String, stage: String) -> void:
