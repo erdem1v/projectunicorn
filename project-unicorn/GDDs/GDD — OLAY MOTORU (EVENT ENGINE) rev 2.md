@@ -2887,8 +2887,8 @@ Kararlılık 10'un altındayken açılır; taban kartlarının gövdesi "aynı z
 `EventBus.phase_bar_raised` yayardı.
 
 *Ne yapıldı.* Merdiven alana geçti (`docs/tasks/faz_cde/PRD_FAZ_Q_KALITE.md` Karar 12):
-- `ProductRead.floor_ratios()` canlı B2C üründe Çekirdek ile U'ya giren üç alanın (Gelir yok) seviyesini ürün sayfasının referansına
-  (`ProductQuality.expectation(alan)`, B2C'de bugünkü kitle) böler; beklentisi 0 olan alan sayılmaz, B2B'de boştur (orada geride kalmanın
+- `ProductRead.floor_ratios()` canlı B2C üründe Çekirdek ile U'ya giren üç alanın (Gelir yok) seviyesini kitlenin kendi referansına
+  (`ProductQuality.expectation(alan, {"audience": true})`; ürün sayfası küçük kitlede 2★ tabanını okur, merdiven okumaz) böler; beklentisi 0 olan alan sayılmaz, B2B'de boştur (orada geride kalmanın
   dili satış kaybıdır). `floor_state(oran)`: `FLOOR_WARNING_RATIO` (0,6) altı `warning`, `FLOOR_CROSSED_RATIO` (0,4) altı `crossed`
   [WORKING] onay bekliyor. `worst_floor()` oranı en düşük alanı ve basamağını verir, eşitlikte `ProductQuality.weights` sırasında öndekini.
   Süre sayacı yoktur: bugünkü sıra (uyarı kartı, o kartın geçmişi, sonra kayıp kartı) kalır.

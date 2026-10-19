@@ -150,7 +150,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   (`ProductQuality.account_fit`; hesabın kullandığı hatlardaki açık hata düşer, güven defteri eklenir). B2C'de kitle her
   oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
   Kitlenin büyüme ve erime terimi, B2C memnuniyetinin hedefi ve fiyat önerisi ürünün kitleye uyumunu okur
-  (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir.
+  (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir. Ürün sayfasının sözcüğü ve
+  cümlesi B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz.
 - Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 18, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`). Her koşunun kimliği vardır (`GameState.run_id`, metada): yuvalar koşu başınadır (`quick_<run>`, `auto_<run>_<n>`, `manual_<n>`) ve bir koşunun oto kaydı ötekininkini ezmez. Menü koşunun olmadığı yerdir: ana menüye dönüş süreç içi `SaveManager.end_run()` ile koşuyu bitirir ve kabuğu söker.

@@ -19,8 +19,8 @@ const W_B2B := [0.25, 0.15, 0.10]
 ## B2C: Çekirdek'ten kalan ağırlığı eşit bölen alanlar. Gelir kaliteye girmez, fiyatın konusudur.
 const B2C_AREAS := ["onboarding", "growth", "trust"]
 const STAR_MAX := 3
-## Ürün sayfasının B2B referansı bu yıldızı okur: Traction adaylarının yarısı 2★'dır ve sözcük ürün büyüdükçe kendi kendine
-## düşmemelidir.
+## Ürün sayfasının referansı bu yıldızı okur: Traction adaylarının yarısı 2★'dır ve sözcük ürün büyüdükçe kendi kendine
+## düşmemelidir. B2C'de kitle bu yıldıza varana kadar da bunu okur: küçük kitlede ilk sürümü yapılmış tek alana Güçlü denmez.
 const PAGE_STAR := 2
 ## Hesap, sektör ağırlığı bu değerde ya da üstünde olan alanın hatlarını kullanır: Çekirdek ve sektörün iki vurgusu. Kalan
 ## alanın hatası o hesaba yazılmaz.
@@ -31,10 +31,11 @@ const CLOSE_CURVE := [[40.0, 0.30], [55.0, 0.60], [70.0, 0.85], [80.0, 0.95]]
 ## Alan sözcüğünün tonu (`area_row`): Güçlü iyi, Yeterli nötr, Zayıf ve Yok uyarı; `UiFactory.D_tag`'in anlam adlarıdır.
 const WORD_TONES := {"strong": "pos", "enough": "neutral", "weak": "warn", "none": "warn"}
 
-# Yıldız beklenti tablosu [WORKING] onay bekliyor, E1'de kalibre: seviye 1 alanın her hattının ilk sürümüdür. Hat sayısına
-# bağlı iki hücre hesaplanır: Çekirdek 1★'ta MVP'dir (`mvp_lines` ÷ Çekirdek hat sayısı), vurgu alanı 2★'ta alanın hat
-# sayısının payıdır (1 ÷ hat sayısı). Tabloda olmayan hücre 0'dır: o yıldız o alana bakmaz.
-const CORE_2 := 1.0
+# Yıldız beklenti tablosu: seviye 1 alanın her hattının ilk sürümüdür. Hat sayısına bağlı tek hücre hesaplanır: Çekirdek
+# 1★'ta MVP'dir (`mvp_lines` ÷ Çekirdek hat sayısı). Tabloda olmayan hücre 0'dır: o yıldız o alana bakmaz. MVP hücresi
+# ve 3★ satırı [WORKING] onay bekliyor.
+const CORE_2 := 1.5
+const EMPHASIS_2 := 1.0
 const CORE_3 := 2.0
 const EMPHASIS_3 := 1.5
 const REST_3 := 1.0
@@ -109,10 +110,11 @@ static func ratio(area: String, expect: float) -> float:
 
 
 ## Alanın beklentisi (0-3; 0 = bu müşteri bakmaz). `ctx`: `market` (boşsa ürünün pazarı), `star` (B2B'de adayın ya da
-## hesabın yıldızı; B2C'de verilirse o yıldızın satırı, verilmezse bugünkü kitlenin satırı), `sector` (boşsa alanın
-## sektörlerdeki en yüksek beklentisi), `rivals` (alanın hatlarına rakip penceresinde düşen çıkış başına artış; yalnız
-## aday ve ekonomi bağlamı), `subtype` (boşsa canlı ürün: hat sayısı canlıdır, Ar-Ge gizli hat açınca beklenti iner).
-## ctx boşsa ürün sayfasının referansıdır: B2B'de 2★ şirketin, B2C'de bugünkü kitlenin; rakipsizdir.
+## hesabın yıldızı; B2C'de verilirse o yıldızın satırı), `audience` (B2C'de `star` yokken true ise kitlenin kendi konumu,
+## sayfanın 2★ tabanı olmadan; taban merdiveni okur), `sector` (boşsa alanın sektörlerdeki en yüksek beklentisi), `rivals`
+## (alanın hatlarına rakip penceresinde düşen çıkış başına artış; yalnız aday ve ekonomi bağlamı), `subtype` (boşsa canlı
+## ürün: hat sayısı canlıdır). ctx boşsa ürün sayfasının referansıdır: B2B'de 2★ şirketin, B2C'de kitlenin yıldızı ile
+## 2★'ın büyüğü; rakipsizdir.
 static func expectation(area: String, ctx: Dictionary = {}) -> float:
 	var market: String = ctx.get("market", ProductState.market_type())
 	var caps: Array[String] = SprintCatalog.capabilities(area, ctx.get("subtype", ProductState.subtype()))
@@ -188,7 +190,7 @@ static func weakest_area(ctx: Dictionary = {}) -> String:
 ## Genel Bakış'ın ürün durumu satırı: alanın ürün sayfasındaki hâli, `word` ve `serves` ile aynı referans. `word`: sözcüğün kimliği;
 ## `tone`: onun tonu; `sentence`: alanın cümlesi; `squares`: seviyenin referans beklentisine oranı onluk ölçekte (beşinci kare
 ## referanstır, en çok 10); `faint_from`: ilk soluk karenin numarası, oran RATIO_CAP'e varınca başlar, çünkü fazlası uyuma
-## eklenmez. Referansın alandan bir şey beklemediği yerde (B2C'de küçük kitle) ölçek yoktur: kare 0.
+## eklenmez. Referansın alandan bir şey beklemediği yerde (B2B'de Gelir) ölçek yoktur: kare 0.
 static func area_row(area: String) -> Dictionary:
 	var lvl: float = level(area)
 	var expect: float = expectation(area)
@@ -329,7 +331,8 @@ static func _role(area: String, market: String, sector: String) -> String:
 
 static func _value(role: String, lines: int, ctx: Dictionary, market: String) -> float:
 	if market == "b2c" and not ctx.has("star"):
-		var at: float = _audience_star() - 1.0
+		var star: float = _audience_star()
+		var at: float = (star if ctx.get("audience", false) else maxf(star, PAGE_STAR)) - 1.0
 		var low: int = mini(int(at), STAR_MAX - 2)
 		return lerpf(_star_value(low + 1, role, lines), _star_value(low + 2, role, lines), at - low)
 	return _star_value(ctx.get("star", PAGE_STAR), role, lines)
@@ -344,7 +347,7 @@ static func _star_value(star: int, role: String, lines: int) -> float:
 		[3, "core"]:
 			return CORE_3
 		[2, "emphasis"]:
-			return 1.0 / lines
+			return EMPHASIS_2
 		[3, "emphasis"]:
 			return EMPHASIS_3
 		[3, "rest"]:

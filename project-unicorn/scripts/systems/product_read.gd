@@ -86,8 +86,9 @@ static func step_unlockable(step_id: String) -> bool:
 # olursa olay motoru aynı olayı iki kez görür.
 
 ## §14 — taban merdiveninin ilk iki basamağı, yalnız B2C'de. "Uyarısız kayıp yoktur": önce yumuşak sinyal, sonra tabanın
-## kendisi. Alanın seviyesi ürün sayfasının referansına (kitle) bölünür; oran ilkinin altına inince "warning", ikincisinin
-## altına inince "crossed". Üçüncü basamak (kriz) olay motorunun işi. [WORKING] onay bekliyor.
+## kendisi. Alanın seviyesi kitlenin kendi referansına bölünür (ürün sayfasının referansı küçük kitlede 2★ tabanındadır,
+## merdiven kitle ürünü aşınca konuşur); oran ilkinin altına inince "warning", ikincisinin altına inince "crossed".
+## Üçüncü basamak (kriz) olay motorunun işi. [WORKING] onay bekliyor.
 const FLOOR_WARNING_RATIO := 0.6
 const FLOOR_CROSSED_RATIO := 0.4
 
@@ -98,7 +99,7 @@ static func floor_ratios() -> Dictionary:
 	if not ProductState.is_live() or ProductState.market_type() != "b2c":
 		return out
 	for area in ProductQuality.weights("b2c", ""):
-		var expect: float = ProductQuality.expectation(area)
+		var expect: float = ProductQuality.expectation(area, {"audience": true})
 		if expect > 0.0:
 			out[area] = ProductQuality.level(area) / expect
 	return out

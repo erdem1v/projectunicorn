@@ -61,6 +61,13 @@ static func area_of_line(line_id: String) -> String:
 ## ücretli plan. Gizli hat ancak Ar-Ge onu açınca listeye girer. `subtype` canlı üründen başka bir ürün içindir
 ## (kayıt göçü kendi kaydının ürününü okur).
 static func capabilities(area_id: String, subtype: String = ProductState.subtype()) -> Array[String]:
+	var key: String = "capabilities/" + area_id + "/" + subtype
+	if not ProductLines.memo.has(key):
+		ProductLines.memo[key] = _capabilities_of(area_id, subtype)
+	return ProductLines.memo[key].duplicate()
+
+
+static func _capabilities_of(area_id: String, subtype: String) -> Array[String]:
 	var area: Dictionary = area_def(area_id)
 	var out: Array[String] = []
 	for line_id in ProductLines.line_ids(subtype):
@@ -686,9 +693,9 @@ static func _level_part(area_id: String, tiers: Dictionary) -> Dictionary:
 		"from_word": ProductQuality.word_for(from, expect), "to_word": ProductQuality.word_for(to, expect)}
 
 
-## Alanın kime yettiği. B2B'de hangi yıldızdaki şirketlere yettiği (Çekirdek dışı alana 1★ şirket bakmaz); B2C'de bugünkü
-## kitleye yetip yetmediği, yayından önce kitle olmadığı için hiçbir şey; Gelir kaliteye girmez, cümlesi sözcüğüne bağlı
-## kendi dört satırıdır.
+## Alanın kime yettiği. B2B'de hangi yıldızdaki şirketlere yettiği (Çekirdek dışı alana 1★ şirket bakmaz); B2C'de sayfanın
+## referansına (kitlenin yıldızı, en az 2★) yetip yetmediği, yayından önce kitle olmadığı için hiçbir şey; Gelir kaliteye
+## girmez, cümlesi sözcüğüne bağlı kendi dört satırıdır.
 static func _standing(area_id: String) -> String:
 	if area_id == "revenue":
 		return _t("PRODUCT_AREA_REVENUE_" + ProductQuality.word(area_id).to_upper())

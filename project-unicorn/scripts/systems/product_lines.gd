@@ -48,6 +48,9 @@ static var _by_subtype: Dictionary = {}   # subtype -> Array of line ids
 static var _subtypes: Array[String] = []
 static var _loaded := false
 static var _load_errors: Array[String] = []
+## Hat kümesinden türeyen sorguların önbelleği (`SprintCatalog.capabilities`): çalışma anı hattı eklenince ve yeniden yüklemede
+## boşalır.
+static var memo: Dictionary = {}
 
 
 ## Lazy load. Every public accessor goes through this, so a caller can never read
@@ -67,6 +70,7 @@ static func reload() -> void:
 	_subtypes.clear()
 	_load_errors.clear()
 	_loaded = false
+	memo.clear()
 	ensure_loaded()
 
 
@@ -371,6 +375,7 @@ static func register_runtime_line(raw: Dictionary, subtype: String) -> bool:
 	var ids: Array = _by_subtype[subtype] as Array
 	if not ids.has(rec["id"]):
 		ids.append(rec["id"])
+	memo.clear()
 	return true
 
 
