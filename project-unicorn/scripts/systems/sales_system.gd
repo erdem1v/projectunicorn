@@ -74,13 +74,15 @@ const CHURN_COEF := 0.000036
 # expectation rises. Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product
 # compounds — grow += audience · WOM_COEF · max(0, sat − WOM_SAT_GATE)/100 — and a disliked one
 # grows slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). Satisfaction drifts to
-# b2c_satisfaction_target (70 while the core and the way in meet the audience's expectation), and an
-# unstaffed support desk holds the record near 10: the pivot sits at that level, so a kept product
-# grows at full base rate, and the gate sits over it, so compounding needs a product its audience
-# is mostly satisfied with.
-const WOM_COEF := 0.0012           # [WORKING] per hour · per audience member · per satisfaction point/100 over the gate; ~6 % a week at 30 points over
-const WOM_SAT_GATE := 30.0         # [WORKING] satisfaction above which word of mouth starts
-const WOM_MULT_PIVOT := 15.0       # [WORKING] satisfaction at which base growth runs at full strength
+# b2c_satisfaction_target (about 70 while the core and the way in meet the audience's expectation).
+# The pivot sits over 100, so satisfaction never lifts base growth to full strength: once the paid tier
+# is open it runs between WOM_MULT_MIN and sat ÷ pivot (×0.3 at 70, ×0.43 at 100), and it compounds only
+# while satisfaction is over the gate. Before the record exists (paid tier closed) neither term applies:
+# the base trickle runs in full and nothing compounds. The three values hold the audience at weeks 26,
+# 52 and 104 near the sizes the rest of the economy is balanced for.
+const WOM_COEF := 0.00103          # [WORKING] onay bekliyor · per hour · per audience member · per satisfaction point/100 over the gate; ~5 % a week at 30 points over
+const WOM_SAT_GATE := 65.0         # [WORKING] onay bekliyor · satisfaction above which word of mouth starts
+const WOM_MULT_PIVOT := 233.0      # [WORKING] onay bekliyor · base growth is scaled by satisfaction ÷ this, between WOM_MULT_MIN and 1
 const WOM_MULT_MIN := 0.3          # [WORKING] floor of the base-growth multiplier (satisfaction 0)
 const EROSION_THRESHOLD := 25.0    # [WORKING] B2C quality term (50 = the product meets its audience's expectation) under which the audience bleeds
 # Open bugs cost customers, not quality: each open bug (up to the cap) makes this share of the audience
@@ -193,12 +195,12 @@ static func _audience_delta_per_hour(quality: float = b2c_quality()) -> float:
 		* InfraSystem.acquisition_multiplier()   # Ürün §10: over capacity, B2C acquisition ×0,6
 	var audience: float = b2c_audience()
 	# Word of mouth, both directions (see WOM_* above), on the aggregate B2C record's
-	# satisfaction. Before the record exists (no paid tier yet) it reads WOM_MULT_PIVOT, so the
+	# satisfaction. Before the record exists (no paid tier yet) neither term applies, so the
 	# pre-revenue trickle is untouched.
 	var ub: Customer = CustomerRegistry.get_customer(B2C_USERBASE_ID)
-	var sat: float = float(ub.satisfaction) if ub != null else WOM_MULT_PIVOT
-	grow *= clampf(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1.0)
-	grow += audience * WOM_COEF * maxf(0.0, sat - WOM_SAT_GATE) / 100.0
+	if ub != null:
+		grow *= clampf(ub.satisfaction / WOM_MULT_PIVOT, WOM_MULT_MIN, 1.0)
+		grow += audience * WOM_COEF * maxf(0.0, ub.satisfaction - WOM_SAT_GATE) / 100.0
 	# A card's marketing push lifts the whole intake, word of mouth included; erosion is untouched.
 	grow *= FinanceSystem.marketing_growth_mult()
 	# Price-independent, so the loss sits outside the multiplier.

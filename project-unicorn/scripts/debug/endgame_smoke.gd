@@ -12925,67 +12925,66 @@ static func _case_month_history_save_typing() -> String:
 
 # --- B2C growth compounds both ways (word of mouth on the aggregate's satisfaction) ---
 
-static func _b2c_delta_at_satisfaction(sat: int) -> float:
-	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
-	CustomerRegistry.set_satisfaction(ub.id, sat)
-	return SalesSystem._audience_delta_per_hour()
+## The hourly audience delta at an audience and a satisfaction (-1 leaves the record as it is), with the quality term held at
+## 50 and room on the servers, so only the satisfaction rules move it.
+static func _b2c_delta(audience: float, sat: int = -1) -> float:
+	InfraSystem.set_capacity(100)
+	if sat >= 0:
+		CustomerRegistry.set_satisfaction(SalesSystem.B2C_USERBASE_ID, sat)
+	GameState.set_flag("b2c_audience", audience)
+	return SalesSystem._audience_delta_per_hour(50.0)
 
 
+## What word of mouth adds an hour: the delta of an audience over the delta of none at the same satisfaction.
+static func _b2c_wom(audience: float, sat: int = -1) -> float:
+	return _b2c_delta(audience, sat) - _b2c_delta(0.0, sat)
+
+
+## Word of mouth is the part of the delta that scales with the audience: none at the gate or under it, audience·WOM_COEF·
+## (sat−gate)/100 over it, proportional to the audience. It reads the aggregate record only a paid tier opens, so an audience
+## without one gets none, however big.
+## FALSIFICATION: read WOM_MULT_PIVOT as the satisfaction when the record is missing and the last leg gains word of mouth.
 static func _case_b2c_wom_needs_satisfaction() -> String:
-	# Above the gate the hourly delta carries audience·WOM_COEF·(sat−gate)/100 — proportional
-	# to the AUDIENCE (that is the compounding); below the gate there is no such term. Every
-	# reading sits at or over WOM_MULT_PIVOT, so base growth is the same in all of them.
 	_seed_b2c()
-	GameState.set_flag("b2c_audience", 1000.0)
-	var pivot: int = int(SalesSystem.WOM_MULT_PIVOT)
 	var gate: int = int(SalesSystem.WOM_SAT_GATE)
-	if gate <= pivot:
-		return "fixture: the word-of-mouth gate (%d) must sit over the pivot (%d)" % [gate, pivot]
-	var d_pivot: float = _b2c_delta_at_satisfaction(pivot)
-	var d_gate: float = _b2c_delta_at_satisfaction(gate)
-	var d_over: float = _b2c_delta_at_satisfaction(gate + 20)
-	if absf(d_gate - d_pivot) > 1e-6:
-		return "satisfaction %d (the gate) already adds word of mouth (%.4f vs %.4f)" % [gate, d_gate, d_pivot]
+	for sat in [0, gate]:
+		var wom: float = _b2c_wom(1000.0, sat)
+		if absf(wom) > 1e-6:
+			return "satisfaction %d adds %.4f users an hour of word of mouth, want none at or under the gate (%d)" % [sat, wom, gate]
 	var want: float = 1000.0 * SalesSystem.WOM_COEF * 0.2
-	if absf((d_over - d_gate) - want) > 1e-6:
-		return "sat %d adds %.4f/h over the gate, want audience·WOM_COEF·0.2 = %.4f" % [gate + 20, d_over - d_gate, want]
-	# Proportional to the audience: double the audience, double the word-of-mouth term.
-	GameState.set_flag("b2c_audience", 2000.0)
-	var d_over_b: float = _b2c_delta_at_satisfaction(gate + 20)
-	var d_gate_b: float = _b2c_delta_at_satisfaction(gate)
-	if absf((d_over_b - d_gate_b) - 2.0 * want) > 1e-6:
-		return "word of mouth is not proportional to the audience (%.4f vs %.4f)" % [d_over_b - d_gate_b, 2.0 * want]
-	if SalesSystem.WOM_COEF <= 0.0:
-		return "WOM_COEF is %.4f — the compounding term is off" % SalesSystem.WOM_COEF
+	var over: float = _b2c_wom(1000.0, gate + 20)
+	if absf(over - want) > 1e-6:
+		return "sat %d adds %.4f an hour over the gate, want audience·WOM_COEF·0.2 = %.4f" % [gate + 20, over, want]
+	var doubled: float = _b2c_wom(2000.0, gate + 20)
+	if absf(doubled - 2.0 * want) > 1e-6:
+		return "word of mouth is not proportional to the audience (%.4f vs %.4f)" % [doubled, 2.0 * want]
+	CustomerRegistry.remove(SalesSystem.B2C_USERBASE_ID)
+	var bare: float = _b2c_wom(1000.0)
+	if absf(bare) > 1e-6:
+		return "an audience of 1000 with no aggregate record adds %.4f an hour of word of mouth, want none" % bare
 	return ""
 
 
+## While the aggregate record exists the base growth is scaled by clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1): the floor at
+## satisfaction 0, the slope at 100; with no record it runs unscaled. Each reading is divided by its multiplier, so the three
+## must name one base growth. No audience, so nothing bleeds and nothing compounds.
+## FALSIFICATION: drop the lower bound of the clamp and the satisfaction 0 leg reads zero growth.
 static func _case_b2c_growth_multiplier_floor() -> String:
-	# Below the pivot the BASE growth is scaled by sat/WOM_MULT_PIVOT, floored at WOM_MULT_MIN;
-	# at and above the pivot it runs at full strength. Measured as the gap to the pivot reading
-	# with no audience, so churn and word of mouth are zero.
 	_seed_b2c()
-	GameState.set_flag("b2c_audience", 0.0)   # no audience → no churn, no word of mouth: pure base growth
-	var pivot: int = int(SalesSystem.WOM_MULT_PIVOT)
-	var half: int = int(SalesSystem.WOM_MULT_PIVOT * 0.5)
-	var d_pivot: float = _b2c_delta_at_satisfaction(pivot)
-	var d100: float = _b2c_delta_at_satisfaction(100)
-	var d_half: float = _b2c_delta_at_satisfaction(half)
-	var d0: float = _b2c_delta_at_satisfaction(0)
-	if d_pivot <= 0.0:
-		return "fixture: base growth is not positive (%.4f)" % d_pivot
-	if absf(d100 - d_pivot) > 1e-6:
-		return "satisfaction above the pivot changed base growth (%.4f vs %.4f)" % [d100, d_pivot]
-	if absf(d_half - float(half) / float(pivot) * d_pivot) > 1e-6:
-		return "satisfaction %d should scale base growth by %d/%d (%.4f vs %.4f)" % [
-			half, half, pivot, d_half, float(half) / float(pivot) * d_pivot]
-	if absf(d0 - SalesSystem.WOM_MULT_MIN * d_pivot) > 1e-6:
-		return "satisfaction 0 should floor at ×%.1f (%.4f vs %.4f)" % [SalesSystem.WOM_MULT_MIN, d0, SalesSystem.WOM_MULT_MIN * d_pivot]
-	# No aggregate record yet (paid tier closed) → the pre-revenue trickle is untouched.
+	var slope: float = 100.0 / SalesSystem.WOM_MULT_PIVOT
+	if slope <= SalesSystem.WOM_MULT_MIN or slope >= 1.0:
+		return "fixture: satisfaction 100 reads ×%.2f, want it between the floor (×%.1f) and 1" % [slope, SalesSystem.WOM_MULT_MIN]
+	var floored: float = _b2c_delta(0.0, 0) / SalesSystem.WOM_MULT_MIN
+	var sloped: float = _b2c_delta(0.0, 100) / slope
 	CustomerRegistry.remove(SalesSystem.B2C_USERBASE_ID)
-	var d_none: float = SalesSystem._audience_delta_per_hour()
-	if absf(d_none - d_pivot) > 1e-6:
-		return "without the aggregate record growth should equal the pivot reading (%.4f vs %.4f)" % [d_none, d_pivot]
+	var bare: float = _b2c_delta(0.0)
+	if bare <= 0.0:
+		return "fixture: base growth is not positive (%.4f)" % bare
+	if absf(floored - bare) > 1e-6:
+		return "satisfaction 0 should floor base growth at ×%.1f (reads %.4f, base %.4f)" % [SalesSystem.WOM_MULT_MIN, floored, bare]
+	if absf(sloped - bare) > 1e-6:
+		return "satisfaction 100 should scale base growth by 100/%d (reads %.4f, base %.4f)" % [
+			int(SalesSystem.WOM_MULT_PIVOT), sloped, bare]
 	return ""
 
 
