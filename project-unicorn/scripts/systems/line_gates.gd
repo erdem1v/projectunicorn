@@ -98,14 +98,8 @@ static func unmet_parts(step_id: String) -> Array:
 
 
 # ------------------------------------------------------- §12.8 above the gate
-# "Erişim ikilidir. Kapının üstünde: eksen sahibinin fazladan ilk yıldızı
-# gerçekleşmeye +%8, ikincisi +%4; fazladan Yazılım yıldızları hızı aynı kademeyle
-# çarpar; +2'den sonrası fark yaratmaz."
-#
 # The excess is measured against THE STEP'S OWN GATE on that area; a step that does
-# not gate on the area earns nothing from it. Reading it against an axis-wide
-# reference would pay every product for stars no step asked for, which "kapı-üstü"
-# cannot mean. Both bonuses run through `_excess_ladder`.
+# not gate on the area earns nothing from it, which is what "kapı-üstü" means.
 
 static func _excess_ladder(excess_stars: float) -> float:
 	if excess_stars >= 2.0:
@@ -127,17 +121,7 @@ static func _excess_for(step_id: String, area: String) -> float:
 	return excess
 
 
-## §11.2's `(1 + kapı-üstü bonusu)` term for one step, driven by the axis owner
-## (§12.10: İnovasyon → Ürün · Kararlılık → Test · Deneyim → Tasarım).
-static func above_gate_bonus(step_id: String) -> float:
-	var axis: String = String(ProductLines.step(step_id).get("axis", ""))
-	var owner: String = String(ProductLines.AXIS_OWNER_AREA.get(axis, ""))
-	if owner == "":
-		return 0.0
-	return _excess_ladder(_excess_for(step_id, owner))
-
-
-## §12.8 — extra Yazılım stars multiply SPEED at the same ladder: the best excess over
+## §12.8 — extra Yazılım stars multiply SPEED (ABOVE_GATE_* ladder): the best excess over
 ## any engineering gate the version's steps carry. Not yet applied by ProductSystem.
 static func speed_bonus_for(step_ids: Array) -> float:
 	var best: float = -1.0

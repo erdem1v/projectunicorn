@@ -74,9 +74,9 @@ var _audit_spec := ""                # --theme-audit: the staged surface prints 
 var _tempo_last_msec: int = 0   # --tempo-probe: real-clock stamp of the previous 08:00
 
 const _ERP_SHIPPED_LINES := [
-	["line_erp_ledger", 2, "line_erp_ledger_k2", 1.06],
-	["line_erp_stock", 1, "line_erp_stock_k1", 1.00],
-	["line_erp_invoicing", 1, "line_erp_invoicing_k1", 0.75],
+	["line_erp_ledger", 2],
+	["line_erp_stock", 1],
+	["line_erp_invoicing", 1],
 ]
 
 
@@ -503,9 +503,6 @@ func _seed_tempo_state() -> void:
 	GameState.set_cash(50000)
 	SprintSystem.choose_type("note_tool", "Nova")
 	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_innovation", 20.0)
-	GameState.set_flag("mvp_stability", 25.0)
-	GameState.set_flag("mvp_experience", 22.0)
 	GameState.set_flag("mvp_version", 2)
 	GameState.set_flag("b2c_audience", 4000)
 	SalesSystem.open_b2c_paid_tier(15)   # makes MRR derive hourly too
@@ -523,9 +520,6 @@ func _seed_accounts_state(count: int) -> void:
 	GameState.set_cash(50000)
 	SprintSystem.choose_type("erp", "Sahra")
 	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_innovation", 45.0)
-	GameState.set_flag("mvp_stability", 70.0)
-	GameState.set_flag("mvp_experience", 45.0)
 	GameState.set_flag("mvp_version", 2)
 	for row in _ERP_SHIPPED_LINES:
 		ProductState.set_line_tier(String(row[0]), int(row[1]))
@@ -1514,10 +1508,7 @@ func _seed_theme_surface() -> void:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_launch_day", 6)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
-	GameState.set_flag("mvp_innovation", 45.0)
-	GameState.set_flag("mvp_stability", 70.0)
-	GameState.set_flag("mvp_experience", 45.0)
+	_seed_line_state("erp", _ERP_SHIPPED_LINES)
 	ProductState.add_bugs("line_erp_ledger", 12)
 	_seed_hr_roster()
 	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
@@ -2359,11 +2350,7 @@ func _seed_rnd(week: int, note := true) -> void:
 	if week == 16:
 		RnDSystem.mark_note_read()
 		GameState.day = 16
-		# The theme seed's product type is not in the line catalogue: the line this research opens registers on a
-		# catalogued B2B type.
-		GameState.set_flag("mvp_sub_product_type_id", "erp")
 		RnDSystem._complete("test_automation")
-		GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 
 
 # --modal-shot=<kind>: the four dialogs on the theme seed in the mockups' states, each through its REAL mount path
@@ -3014,7 +3001,7 @@ func _run_finance_shot(kind: String) -> void:
 	_seed_run_reproducible()
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	_seed_line_state("erp", _ERP_SHIPPED_LINES)
 	_seed_hr_roster()
 	GameState.set_cash(150000 if kind in ["uyari", "kepenk"] else 300000)
 	# The curve must start from the fixture cash, not initialize_run's day-1 sample — the one
@@ -3734,13 +3721,11 @@ func _seed_product_live(scenario: String) -> void:
 	SprintSystem.apply_lead()
 
 
-## Rows are [line id, tier, tier id to stamp, turn multiplier]. The readings
-## (ProductState.axis_readings) multiply BOTH, so both are set.
+## Rows are [line id, tier].
 func _seed_line_state(subtype: String, rows: Array) -> void:
 	GameState.set_flag("mvp_sub_product_type_id", subtype)
 	for row in rows:
 		ProductState.set_line_tier(String(row[0]), int(row[1]))
-		ProductState.stamp_step(String(row[2]), float(row[3]))
 
 
 ## The world every Satış shot stands on — one seed, so a meeting shot and a pipeline shot are
@@ -4043,7 +4028,7 @@ func _run_meeting_shot(kind: String) -> void:
 		if kind == "locked" or kind == "lost":
 			# Yerel sağlayıcı ve K1 merdiveni: "Gücü göster" satırı kapanır ve gerekçesini yazar.
 			ProductState.set_infra_provider("local")
-			_seed_line_state("erp", [["line_erp_ledger", 1, "line_erp_ledger_k1", 0.75]])
+			_seed_line_state("erp", [["line_erp_ledger", 1]])
 		if kind in ["won", "handoff"]:
 			_shot_healthy_erp()
 		if kind in ["lost", "frank"]:

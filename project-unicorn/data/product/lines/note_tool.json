@@ -1,24 +1,21 @@
 {
   "subtype": "note_tool",
   "_doc": "GDD URUN rev 6 §12.11 — Not & Bilgi Aracı (B2C). Kanca: kişisel çalışma alanı, üretkenlik. Solo v1 = not + senkron. K3 yönü: Notlarına soru sor (ai_engine).",
-  "_canon": "line_note_tool_search is written verbatim from §12.9's worked example: Arama / Anında Arama -> Filtreli Arama, Efor 8 · Deneyim +7 (+3), Kilit: Yazılım ★★ · Tasarım ★. Anlamsal Arama is §12.9's completed-line example.",
-  "_anchor": "line_note_tool_linking_k3 is §12.10's solo-reachable K3: research node + engineering ★2 + axis owner (innovation -> product) ★1.",
+  "_canon": "line_note_tool_search is written verbatim from §12.9's worked example: Arama / Anında Arama -> Filtreli Arama, Efor 8, Kilit: Yazılım ★★ · Tasarım ★. Anlamsal Arama is §12.9's completed-line example.",
+  "_anchor": "line_note_tool_linking_k3 is §12.10's solo-reachable K3: research node + engineering ★2 + product ★1.",
   "lines": [
     {
       "id": "line_note_tool_capture",
-      "axis": "innovation",
       "profile": "dev",
       "steps": [
         {
           "id": "line_note_tool_capture_k1",
-          "axis_points": 4,
           "effort": 5,
           "usage_weight": 0,
           "requires": {}
         },
         {
           "id": "line_note_tool_capture_k2",
-          "axis_points": 9,
           "effort": 7,
           "usage_weight": 1,
           "license_cost": 800,
@@ -28,7 +25,6 @@
         },
         {
           "id": "line_note_tool_capture_k3",
-          "axis_points": 12,
           "effort": 10,
           "usage_weight": 3,
           "ai": true,
@@ -41,19 +37,16 @@
     },
     {
       "id": "line_note_tool_linking",
-      "axis": "innovation",
       "profile": "dev",
       "steps": [
         {
           "id": "line_note_tool_linking_k1",
-          "axis_points": 4,
           "effort": 6,
           "usage_weight": 0,
           "requires": {}
         },
         {
           "id": "line_note_tool_linking_k2",
-          "axis_points": 9,
           "effort": 8,
           "usage_weight": 1,
           "requires": {
@@ -62,7 +55,6 @@
         },
         {
           "id": "line_note_tool_linking_k3",
-          "axis_points": 12,
           "effort": 11,
           "usage_weight": 3,
           "ai": true,
@@ -76,19 +68,16 @@
     },
     {
       "id": "line_note_tool_sync",
-      "axis": "stability",
       "profile": "test",
       "steps": [
         {
           "id": "line_note_tool_sync_k1",
-          "axis_points": 4,
           "effort": 6,
           "usage_weight": 1,
           "requires": {}
         },
         {
           "id": "line_note_tool_sync_k2",
-          "axis_points": 9,
           "effort": 8,
           "usage_weight": 1,
           "requires": {
@@ -97,7 +86,6 @@
         },
         {
           "id": "line_note_tool_sync_k3",
-          "axis_points": 12,
           "effort": 12,
           "usage_weight": 3,
           "requires": {
@@ -109,19 +97,16 @@
     },
     {
       "id": "line_note_tool_editor",
-      "axis": "experience",
       "profile": "design",
       "steps": [
         {
           "id": "line_note_tool_editor_k1",
-          "axis_points": 4,
           "effort": 5,
           "usage_weight": 0,
           "requires": {}
         },
         {
           "id": "line_note_tool_editor_k2",
-          "axis_points": 9,
           "effort": 7,
           "usage_weight": 0,
           "requires": {
@@ -130,7 +115,6 @@
         },
         {
           "id": "line_note_tool_editor_k3",
-          "axis_points": 12,
           "effort": 10,
           "usage_weight": 1,
           "requires": {
@@ -142,19 +126,16 @@
     },
     {
       "id": "line_note_tool_search",
-      "axis": "experience",
       "profile": "design",
       "steps": [
         {
           "id": "line_note_tool_search_k1",
-          "axis_points": 4,
           "effort": 6,
           "usage_weight": 0,
           "requires": {}
         },
         {
           "id": "line_note_tool_search_k2",
-          "axis_points": 9,
           "effort": 8,
           "usage_weight": 1,
           "requires": {
@@ -163,7 +144,6 @@
         },
         {
           "id": "line_note_tool_search_k3",
-          "axis_points": 12,
           "effort": 11,
           "usage_weight": 3,
           "ai": true,

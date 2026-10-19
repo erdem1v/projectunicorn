@@ -2932,3 +2932,35 @@ dolunca her zaman imzalanır.
 
 *Neden.* Faz Q Karar 14 (zar), Karar 3 ve Karar 10 (sektör ve üyelik): oyuncu zayıf alanı kuraldan değil satıştan öğrenir; satışçının kaybı da alanın adını
 taşır ve bakılacak yeri gösterir.
+
+
+### §27.38 · Faz Q K7b: eksen zinciri silindi, ürünün tek kalitesi alan seviyesi
+
+*Belge ne diyordu.* §27.10 ve §27.36: ürünün ekonomiye bağlanan kalitesi hat kademelerinden türeyen üç ham eksen değeridir; sprint kapanışında
+`SprintBridges.push_axes` onu GameState bayraklarına yazar, kademe damgası (`ProductState.stamp_step`) ve kapı-üstü bonusu onu çarpar,
+`QualityModel` eksen okumasını, faz çıtasını ve doyum eğrisini hesaplar.
+
+*Ne yapıldı.* Bütün okuyucular K3 ile K7a arasında alana taşındığı için zincir silindi:
+- Hat verisi (`data/product/lines/*.json`, Ar-Ge'nin gizli hatları) eksen, eksen puanı ve ikincil eksen puanı taşımaz. `ProductLines` eksen doğrulamasını,
+  K(n+1) ≥ 1,6 × K(n) denetimini, `axis_of`, `line_ids_by_axis`, `weighted_points`, `net_gain`, `KANO_COEF`, `AXIS_OWNER_AREA` ve `UPGRADE_RATIO_MIN`'i
+  kaybetti; kademe kaydında `kano` yoktur. Kimlik hatlarının iş profili dağılımı (2 geliştirme · 1 test · 2 tasarım, `IDENTITY_PROFILE_SHAPE`) ve Ar-Ge'nin
+  dört gizli hattınınki (1 · 2 · 1, `ResearchTree.HIDDEN_PROFILE_SHAPE`) yüklemede denetlenir. Ar-Ge `design_system` etkisinin iç adı `design_effort` oldu.
+- `QualityModel` yalnız rakip matematiğidir (`grow`, `composite_quality`, `DEFAULT_AXES`); eksen okumaları, faz çıtası, doyum eğrisi ve `AXES` silindi.
+  Rakip bileşkesinin ağırlıkları `ProductCatalog.QUALITY_AXES`'ten `RivalCatalog.COMPOSITE_AXES`'e taşındı (`Rival.composite()` argümansızdır) ve rakip
+  sayıları değişmedi (`rival_composite_table`). `ProductCatalog.get_quality_axes`, `axis_label` ve `RivalRegistry.get_player_rank_in_startup_league` silindi.
+  Rakip bileşkesinin üretimde okuyanı yoktur; rakip modeli de elden geçmelidir.
+- `SprintBridges.push_axes` ve `SprintSystem._go_public`'taki çağrısı silindi; üç kalite ekseni bayrağı ve kademe damgası (`ProductState.STEP_REALIZATION`,
+  `step_realization`, `stamp_step`, `line_realization`) `FLAG_TYPES`'tan çıktı. Bu dört bayrak eski kayıtta durur; `SaveCodec.RETIRED_PRODUCT_FLAGS`
+  onları her yüklemede, göçler ham sözlükten okuduktan sonra düşürür ve `_migrate_15` damgadan cilayı eskisi gibi türetir
+  (`save_retired_product_flags`, `save_v14_build_becomes_sprint_plan`).
+- `ProductRead.axis_reading`, `market_word`, `WORD_*`, `MARKET_WORD_BAND`; `ProductState.axis_readings`, `axis_reading`, `realized_dims`;
+  `LineGates.above_gate_bonus` silindi. Kapı-üstü basamakları yalnız `speed_bonus_for` için durur (henüz uygulanmaz).
+- Ölü metin: `PROD_AXIS_INNOVATION`, `PROD_AXIS_STABILITY`, `PROD_AXIS_EXPERIENCE`. `PROD_RND_NODE_DESIGN_SYSTEM_UNLOCK` eksen dilinden tasarım
+  profili diline yeniden yazıldı.
+- Debug: `PROBE SHIP` eksen alanlarını basmaz. Shot fikstürleri eksen bayrağı yazmaz, kademe damgası kurmaz; tema, finans ve Ar-Ge fikstürleri hatsız
+  `saas_ops` yerine ERP hatlarını kurar (`_ERP_SHIPPED_LINES`).
+- Vakalar: silinenler `axis_reading_replaces_not_adds`, `above_gate_bonus_ladder`, `quality_half_sat_25`, `b2b_v1_lands_mid_band`; yeni
+  `save_retired_product_flags` ve `rival_composite_table`; hat, profil, Ar-Ge ağacı, kayıt ve okuma yüzeyi vakaları profile ve alana göre yeniden yazıldı.
+
+*Neden.* Faz Q Karar 1 ve 11: ürünün tek kalitesi alanların seviyesidir; eksen puanı, damga ve kapı-üstü bonusu ekonomiyi sürmüyordu ve okuyanı
+kalmamıştı. Rakip modeli kendi üç boyutunu tutar ve ürünle bağı koptu.

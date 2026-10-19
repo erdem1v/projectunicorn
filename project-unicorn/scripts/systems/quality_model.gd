@@ -1,43 +1,19 @@
 class_name QualityModel
 extends RefCounted
 
-# The single choke point between open-ended, multi-dimensional quality and the
-# ratio-based economy (SalesSystem). Every consumer calls QualityModel; nobody
-# re-derives quality inline.
-#
-# Three engine-internal axes (never localized; display names come from ProductCatalog):
-#   innovation — distinctiveness / tech wow / premium pricing power
-#   stability  — bug-freeness / crash resistance / low churn
-#   experience — ease of use / onboarding / satisfaction
-# Each axis is born at 0 and is open-ended (no upper clamp). grow()'s diminishing
-# returns ceilings rival advancement (rival_registry.gd tier asymptotes keep the giant
-# band structurally out of reach).
+# The rival model's math: three open-ended dimensions (innovation, stability, experience) that grow with diminishing
+# returns and blend into one composite by the weights of the rival's sub-type. The player's product has no such
+# dimensions: its quality is the level of its areas (ProductQuality).
+# grow()'s diminishing returns ceilings rival advancement (rival_registry.gd tier asymptotes keep the giant band
+# structurally out of reach).
 
-const AXES := ["innovation", "stability", "experience"]
-
-# Equal blend when a sub-type omits quality_axes.
+# Equal blend when a sub-type omits its row in RivalCatalog.COMPOSITE_AXES.
 const DEFAULT_AXES := [
 	{"axis": "innovation", "weight": 1.0},
 	{"axis": "stability",  "weight": 1.0},
 	{"axis": "experience", "weight": 1.0},
 ]
 
-# Saturation half-point: the composite that maps to normalized 50, i.e. where a shipped
-# v1 lands on the 0-100 market band. At 25 a stability-competent v1 (raw 17-20) reads
-# 40-44, the middle of the B2B tolerance band (B2BConstants). Tuned together with those
-# tolerances, the saas_ops_field research unlock and RIVAL_TEMPLATE_HALF_SAT: the three are one
-# decision.
-const NORMALIZE_HALF_SAT := 25.0
-# Rival scale bridge. RivalCatalog.TEMPLATE and its momentum were authored for a
-# half-point of 50; normalizing rivals at the player's 25 would double every rival's
-# lead in normalized space. Rivals keep 50 until the rival table is re-authored.
-# No economy path reads it; raw-vs-raw comparisons (RivalRegistry ranking) are unaffected.
-const RIVAL_TEMPLATE_HALF_SAT := 50.0
-
-
-# =========================================================================
-#  Core math
-# =========================================================================
 
 # Diminishing-returns accumulator — THE structural-ceiling primitive.
 # Positive raw is scaled by remaining headroom so `current` asymptotes below
@@ -59,171 +35,3 @@ static func composite_quality(dims: Dictionary, quality_axes: Array = []) -> flo
 		acc += w * float(dims.get(String(a.get("axis", "")), 0.0))
 		wsum += w
 	return acc / wsum if wsum > 0.0 else 0.0
-
-
-# Saturation: open-ended composite → the ~0-100 band the ratio economy expects.
-# Strictly < 100 for every finite input, so conversion_rate's optimal/price and
-# similar ratios never blow up when dims run open-ended.
-static func normalized_quality(composite: float) -> float:
-	return _saturate(composite, NORMALIZE_HALF_SAT)
-
-
-## A RIVAL's composite on the 0-100 band — same curve, the template's own half-point.
-## Never use for the player's product.
-static func normalized_quality_rival(composite: float) -> float:
-	return _saturate(composite, RIVAL_TEMPLATE_HALF_SAT)
-
-
-static func _saturate(composite: float, half_sat: float) -> float:
-	var c := maxf(0.0, composite)
-	return 100.0 * c / (c + half_sat)
-
-
-# Single-axis 0-100 score.
-static func axis_score(dims: Dictionary, axis: String) -> float:
-	return normalized_quality(float(dims.get(axis, 0.0)))
-
-
-# =========================================================================
-#  Surface adapters — the shipped product's dims, read off the mvp_* flags
-# =========================================================================
-
-# Raw post-ship dims, read off the mvp_* flags. Open bugs never touch them: a bug costs customers, not quality.
-static func dims_from_flags() -> Dictionary:
-	var out: Dictionary = {}
-	for axis in AXES:
-		out[axis] = float(GameState.get_flag("mvp_%s" % axis, 0.0))
-	return out
-
-
-# THE market-facing quality number. Audience and growth band both read this, so they
-# cannot drift.
-static func shipped_normalized() -> float:
-	return normalized_quality(shipped_composite())
-
-
-# Post-ship composite — for rival ranking after ship.
-static func shipped_composite() -> float:
-	var sub := String(GameState.get_flag("mvp_sub_product_type_id", ""))
-	return composite_quality(dims_from_flags(), ProductCatalog.get_quality_axes(sub))
-
-
-# =========================================================================
-#  GDD — ÜRÜN MODÜLÜ rev 6 §11.2 · §11.3 — HAT MODELİNİN OKUMA ZİNCİRİ
-# =========================================================================
-#
-# §18: "Eksen okumaları → §11.2 zinciri; başka hiçbir sistem eksen hesaplamaz."
-# Zincir tek yönlüdür ve tamamı burada:
-#
-#   gizil     = Σ (hattın mevcut kademesinin eksen puanı × Kano katsayısı)
-#   ceza      = eksende hiç hat açılmamışsa ×0,6
-#   gerçekleş = gizil × tur çarpanı × (1 + kapı-üstü bonusu)
-#   okuma     = round(100 × gerçekleşen / çıta_faz), 0-120 arasına sıkıştırılır
-#
-# Eksenler yatırım kolu DEĞİLDİR (§11.1): slider yok, toplam tek skor yok. Bunlar
-# skor tabelasıdır.
-
-## §11.3 — pazar çıtası. Beklenen ham gizil değer, her faz geçişinde +%10.
-## "Yerinde durmak görece gerilemektir."
-const PHASE_BAR := {1: 12.0, 2: 13.2, 3: 14.5}
-
-## 12,0 tam olarak EKSEN BAŞINA ÜÇ HAT'ın K1'idir (3 × 4 × 1,0); yayınlanmış her
-## alt-tipte eksen başına üç hat var (§12.2). Gizli bir hat dördüncüyü eklediğinde
-## çıta da büyümek zorunda, yoksa hattın tek başına K1'i Series A çıtasında ~+27
-## okuma puanı eder.
-const BASELINE_LINES_PER_AXIS := 3
-
-## §12.4 — Basic yokluğu cezası. Bir eksende üç hat da boşsa o eksenin gizili
-## ×0,6. Pratikte yalnız İKİNCİL puanla beslenen eksende ısırır: kendi hattı
-## açılmamışken başka hattın taşmasıyla puan toplayan eksen tam kredi almaz.
-const EMPTY_AXIS_PENALTY := 0.6
-
-## §11.3 — gösterimde 0-120 arasına sıkıştırılır; üçgen geometrisi 100'ü TAM KENAR
-## sayar, yani çıtanın üstündeki ürün kenarı taşırır.
-const READING_MIN := 0.0
-const READING_MAX := 120.0
-
-
-## The bar for ONE axis: the phase's market bar (live phase by default) scaled by the
-## number of lines the product HAS on that axis — not the number that are OPEN.
-##
-## Katalog hatları HER ZAMAN sayılır: pazarın taban beklentisidir, oyuncu o hatta
-## kademe yayınlamamış olsa bile. Gizli (runtime) bir hat sayıma ancak İLK KADEMESİ
-## YAYINLANDIĞINDA girer. AÇIK hatları saymak çıtayı hat açıldığı an, oyuncu içine
-## hiçbir şey gönderemeden yükseltirdi (kararlılık okuması 82,8 → 62,1): iyi oynadığı
-## için cezalandırılan oyuncu. Bu kuralda K1'i yayınlamak tam NÖTR, K2 +16,5 getirir.
-##
-## Ölçeği değişen OKUMA'dır, değer değil: `realized_dims` bilerek dokunulmadan kalır,
-## çünkü ekonominin doyum eğrisi MUTLAK bir sayı ister.
-static func axis_bar(subtype: String, line_tiers: Dictionary, axis: String,
-		phase: int = -1) -> float:
-	var market_bar: float = float(PHASE_BAR.get(phase if phase > 0 else GameState.phase, PHASE_BAR[1]))
-	var counted: int = 0
-	for line_id in ProductLines.line_ids_by_axis(subtype).get(axis, []):
-		var lid: String = String(line_id)
-		if not bool(ProductLines.line(lid).get("runtime", false)) or int(line_tiers.get(lid, 0)) >= 1:
-			counted += 1
-	if counted <= 0:
-		# Bilinmeyen alt-tip ya da hattı olmayan eksen: sıfıra bölmek yerine çıplak çıta.
-		return market_bar
-	return market_bar * float(counted) / float(BASELINE_LINES_PER_AXIS)
-
-
-## §11.2 — realized value of one axis. `line_tiers` maps line_id -> 0..3 and
-## `line_realization` maps line_id -> the stamp that line's current step shipped
-## with (missing = 1.0).
-static func realized_axis(subtype: String, line_tiers: Dictionary,
-		line_realization: Dictionary, axis: String) -> float:
-	var total: float = 0.0
-	var own_axis_open := false
-	for line_id in ProductLines.line_ids(subtype):
-		var lid: String = String(line_id)
-		var tier: int = int(line_tiers.get(lid, 0))
-		if tier <= 0:
-			continue
-		var step: Dictionary = ProductLines.step_at(lid, tier)
-		if step.is_empty():
-			continue
-		var points: float = 0.0
-		if String(step.get("axis", "")) == axis:
-			points = float(int(step.get("axis_points", 0)))
-			own_axis_open = true
-		else:
-			# §12.12 — a step may name an optional secondary axis.
-			var secondary: Dictionary = step.get("axis_points_secondary", {}) as Dictionary
-			points = float(int(secondary.get(axis, 0)))
-		if points <= 0.0:
-			continue
-		var coef: float = float(ProductLines.KANO_COEF.get(String(step.get("kano", "k1")), 1.0))
-		total += points * coef * float(line_realization.get(lid, 1.0))
-	if not own_axis_open:
-		total *= EMPTY_AXIS_PENALTY
-	return total
-
-
-## §11.3 — the 0-120 reading.
-static func axis_reading(subtype: String, line_tiers: Dictionary,
-		line_realization: Dictionary, axis: String, phase: int = -1) -> int:
-	var realized: float = realized_axis(subtype, line_tiers, line_realization, axis)
-	var reading: float = 100.0 * realized / maxf(0.01, axis_bar(subtype, line_tiers, axis, phase))
-	return int(round(clampf(reading, READING_MIN, READING_MAX)))
-
-
-## All three readings at once.
-static func axis_readings(subtype: String, line_tiers: Dictionary,
-		line_realization: Dictionary, phase: int = -1) -> Dictionary:
-	var out: Dictionary = {}
-	for axis in AXES:
-		out[axis] = axis_reading(subtype, line_tiers, line_realization, String(axis), phase)
-	return out
-
-
-## The raw realized values, which are what the economy's saturation curve reads
-## (`normalized_quality`). Kept separate from the reading on purpose: the reading
-## is a comparison against the market bar, the economy wants an absolute.
-static func realized_dims(subtype: String, line_tiers: Dictionary,
-		line_realization: Dictionary) -> Dictionary:
-	var out: Dictionary = {}
-	for axis in AXES:
-		out[axis] = realized_axis(subtype, line_tiers, line_realization, String(axis))
-	return out

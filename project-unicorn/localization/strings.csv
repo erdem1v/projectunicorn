@@ -1163,9 +1163,6 @@ SECTOR_SALES,Satış,Sales
 SECTOR_SOCIAL_MEDIA,Sosyal Medya,Social Media
 SECTOR_PRODUCTIVITY,Verimlilik,Productivity
 SECTOR_SOFTWARE,Yazılım,Software
-PROD_AXIS_INNOVATION,İnovasyon,Innovation
-PROD_AXIS_STABILITY,Kararlılık,Stability
-PROD_AXIS_EXPERIENCE,Deneyim,Experience
 PROD_PATH_TITLE,Yolunu seç,Choose your road
 PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan değişmez.,This choice decides how the product makes money. It cannot be changed later.
 PROD_PATH_B2C,Kitle,Consumer
@@ -2225,7 +2222,7 @@ PROD_RND_NODE_INCIDENT_PLAYBOOK_UNLOCK,Kesinti anında ne yapılacağı artık y
 PROD_RND_NODE_SELF_SERVICE_DESC,Sık sorulanın cevabı ürünün içinde durur. Kullanıcı beklemeden çıkışı bulur.,The answer to the common question sits inside the product. The user finds the way out without waiting.
 PROD_RND_NODE_SELF_SERVICE_UNLOCK,Kullanıcı cevabı ürünün içinde buluyor; destek masasına daha az iş düşüyor.,"Users find the answer inside the product, and less work reaches the support desk."
 PROD_RND_NODE_DESIGN_SYSTEM_DESC,Arayüzün parçaları bir kez tanımlanır. Her yeni ekran hazır parçalardan kurulur.,The pieces of the interface are defined once. Every new screen is built from parts that already exist.
-PROD_RND_NODE_DESIGN_SYSTEM_UNLOCK,Mobil & Erişim hattının son kademesi ve ürünün kendi tasarım kademelerinden biri. Deneyim kademelerini artık hazır parçalardan kuruyoruz.,"The last tier of the Mobile and Access line, and one of the product's own design tiers. We build the Experience tiers out of ready parts now."
+PROD_RND_NODE_DESIGN_SYSTEM_UNLOCK,"Mobil & Erişim hattının son kademesi ve ürünün kendi tasarım kademelerinden biri. Tasarım ağırlıklı kademeler artık daha az efor istiyor, çünkü onları hazır parçalardan kuruyoruz.","The last tier of the Mobile and Access line, and one of the product's own design tiers. Tiers that are mostly design work take less effort now, because we build them out of ready parts."
 PROD_RND_NODE_USER_RESEARCH_DESC,Kullanıcıyla düzenli konuşma alışkanlığı. Ne istediklerini tahmin etmek gerekmez.,The habit of talking to users on a schedule. Guessing what they want stops being necessary.
 PROD_RND_NODE_USER_RESEARCH_UNLOCK,Aylık ürün notu · bir Ürün Yöneticisi ya da Tasarımcı gerektirir. Kadroda öyle biri yoksa rapor gelmez.,The monthly product note · it needs a Product Manager or a Designer. With nobody like that on staff the note never arrives.
 PROD_RND_NODE_ONBOARDING_FLOW_DESC,İlk açılışta yol gösteren kurulu bir akış. Yeni gelen ürünü ilk beş dakikada anlar.,A built flow that guides the first opening. A newcomer understands the product in the first five minutes.

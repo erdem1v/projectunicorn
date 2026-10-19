@@ -19,10 +19,6 @@ const SHARED_FILE := "shared.json"
 
 const TIER_MAX := 3
 
-## §12.4 — Kano ağırlıkları 10 / 8 / 12, §11.2'nin katsayı hâli. Ağırlık ile puan
-## İKİ KEZ çarpılmaz: gizil zincir yalnız bu katsayıyı kullanır.
-const KANO_COEF := {"k1": 1.0, "k2": 0.8, "k3": 1.2}
-
 ## §12.4 — efor bantları. Banda uymayan kademe yüklenmez.
 const EFFORT_BANDS := {"k1": [5, 7], "k2": [7, 9], "k3": [9, 12]}
 
@@ -38,27 +34,13 @@ const RND_LICENSE_MULT := 0.60             # model_optimization (Ar-Ge §4.2) �
 const RND_DESIGN_EFFORT_MULT := 0.80       # design_system (Ar-Ge §4.4) — tasarım profilli hattın kademe eforu −%20
 const RND_AI_USAGE_RELIEF := 1             # edge_inference (Ar-Ge §4.1) — AI kademesi ağırlık −1
 
-## §12.12 + §5 — her yükseltme anlamlı bir kazanç olmalı. Kısıt HAM PUANA değil
-## AĞIRLIKLI KATKIYA uygulanır: mühürlü merkezler 4 · 9 · 12 ham puanken ağırlıklı
-## katkıları 4,0 · 7,2 · 14,4 eder (oranlar 1,80 ve 2,00). Ham okunsaydı K3'ün 14,4
-## ham puan olması gerekirdi, ki bu mühürlü 12 merkezini kırardı.
-const UPGRADE_RATIO_MIN := 1.6
-
-## §12.2 — kimlik hatlarının eksen dağılımı: 2 İnovasyon · 1 Kararlılık · 2 Deneyim.
-## Paylaşılanlarla birlikte toplam her eksende 3 hat eder.
-const IDENTITY_AXIS_SHAPE := {"innovation": 2, "stability": 1, "experience": 2}
+## §12.2 — kimlik hatlarının iş profili dağılımı: 2 geliştirme · 1 test · 2 tasarım. Paylaşılanlarla birlikte
+## toplam her profilde 3 hat eder.
+const IDENTITY_PROFILE_SHAPE := {"dev": 2, "test": 1, "design": 2}
 const IDENTITY_LINE_COUNT := 5
 const LINES_PER_SUBTYPE := 9
 ## Hattın iş profili: hangi işi yaptırdığı (tasarım, geliştirme, test). Her hat tam birini taşır.
 const PROFILES := ["design", "dev", "test"]
-
-## §12.10 — eksen sahipleri. Kapı-üstü bonusunun (§12.8) hangi alanı okuyacağını
-## ve demo çapalarını bu tablo belirler.
-const AXIS_OWNER_AREA := {
-	"innovation": "product",
-	"stability": "qa",
-	"experience": "design",
-}
 
 static var _lines: Dictionary = {}        # line_id -> line record
 static var _steps: Dictionary = {}        # step_id -> step record
@@ -123,16 +105,16 @@ static func _load_subtype(path: String, shared: Dictionary) -> void:
 			% [subtype, identity.size(), IDENTITY_LINE_COUNT])
 		return
 	var ids: Array[String] = []
-	var axis_tally: Dictionary = {}
+	var profile_tally: Dictionary = {}
 	for raw in identity:
 		var rec: Dictionary = _build_line(raw as Dictionary, subtype, false)
 		if rec.is_empty():
 			return
 		ids.append(rec["id"])
-		axis_tally[rec["axis"]] = int(axis_tally.get(rec["axis"], 0)) + 1
-	if axis_tally != IDENTITY_AXIS_SHAPE:
-		_fail("%s identity axis shape is %s, §12.2 wants %s"
-			% [subtype, axis_tally, IDENTITY_AXIS_SHAPE])
+		profile_tally[rec["profile"]] = int(profile_tally.get(rec["profile"], 0)) + 1
+	if profile_tally != IDENTITY_PROFILE_SHAPE:
+		_fail("%s identity profile shape is %s, §12.2 wants %s"
+			% [subtype, profile_tally, IDENTITY_PROFILE_SHAPE])
 		return
 
 	# §12.10 ekip telegrafları paylaşılan bir kademenin kapısını alt-tipe göre
@@ -160,10 +142,6 @@ static func _build_line(raw: Dictionary, subtype: String, is_shared: bool,
 	var line_id: String = String(raw.get("id", ""))
 	if line_id == "":
 		_fail("%s has a line with no id" % subtype)
-		return {}
-	var axis: String = String(raw.get("axis", ""))
-	if not QualityModel.AXES.has(axis):
-		_fail("%s/%s has unknown axis '%s'" % [subtype, line_id, axis])
 		return {}
 	var profile: String = String(raw.get("profile", ""))
 	if not PROFILES.has(profile):
@@ -196,10 +174,8 @@ static func _build_line(raw: Dictionary, subtype: String, is_shared: bool,
 		step.merge({
 			"id": step_id + suffix,
 			"tier": tier,
-			"kano": kano,
 			"line_id": line_id + suffix,
 			"subtype": subtype,
-			"axis": axis,
 			"name_key": name_key,
 			"desc_key": name_key + ("_%s_DESC" % subtype.to_upper() if is_shared else "_DESC"),
 		}, true)
@@ -217,19 +193,8 @@ static func _build_line(raw: Dictionary, subtype: String, is_shared: bool,
 				% [subtype, line_id, got_node, want_node])
 			return {}
 
-	# §5 + §12.12 — her kademenin AĞIRLIKLI katkısı, altındakinin en az
-	# UPGRADE_RATIO_MIN katı. Ağırlıklı, çünkü kartta görünen ve eksene giren sayı odur (§12.9).
-	for i in range(1, step_ids.size()):
-		var lo: float = weighted_points(step_ids[i - 1])
-		var hi: float = weighted_points(step_ids[i])
-		if hi < lo * UPGRADE_RATIO_MIN - 0.0001:
-			_fail("%s/%s K%d contributes %.2f, only %.2fx the %.2f below it (§12.12 wants %.2fx)"
-				% [subtype, line_id, i + 1, hi, hi / lo, lo, UPGRADE_RATIO_MIN])
-			return {}
-
 	var rec := {
 		"id": line_id + suffix,
-		"axis": axis,
 		"profile": profile,
 		"shared": is_shared,
 		"steps": step_ids,
@@ -247,15 +212,6 @@ static func _validate_step(step: Dictionary, subtype: String, step_id: String,
 	if effort < int(band[0]) or effort > int(band[1]):
 		_fail("%s/%s effort %d outside §12.4 band %s" % [subtype, step_id, effort, band])
 		return false
-
-	if int(step.get("axis_points", 0)) <= 0:
-		_fail("%s/%s has no axis points" % [subtype, step_id])
-		return false
-
-	for ax in step.get("axis_points_secondary", {}) as Dictionary:
-		if not QualityModel.AXES.has(String(ax)):
-			_fail("%s/%s secondary axis '%s' unknown" % [subtype, step_id, ax])
-			return false
 
 	var usage: int = int(step.get("usage_weight", -1))
 	if usage < USAGE_WEIGHT_MIN or usage > USAGE_WEIGHT_MAX:
@@ -351,16 +307,6 @@ static func line_ids(subtype: String) -> Array:
 	return (_by_subtype.get(subtype, []) as Array).duplicate()
 
 
-## Line ids grouped by axis, in QualityModel.AXES order. This is what the line list renders.
-static func line_ids_by_axis(subtype: String) -> Dictionary:
-	var out: Dictionary = {}
-	for axis in QualityModel.AXES:
-		out[axis] = []
-	for lid in line_ids(subtype):
-		(out[_lines[lid]["axis"]] as Array).append(lid)
-	return out
-
-
 static func line(line_id: String) -> Dictionary:
 	ensure_loaded()
 	return _lines.get(line_id, {}) as Dictionary
@@ -377,10 +323,6 @@ static func step_at(line_id: String, tier: int) -> Dictionary:
 	if rec.is_empty() or tier < 1 or tier > TIER_MAX:
 		return {}
 	return step(String((rec["steps"] as Array)[tier - 1]))
-
-
-static func axis_of(line_id: String) -> String:
-	return String(line(line_id).get("axis", ""))
 
 
 ## Hattın iş profili (`PROFILES`); kayıtlı olmayan hat için "".
@@ -409,26 +351,6 @@ static func usage_weight_of(step_id: String) -> int:
 	if raw > 0 and bool(s.get("ai", false)) and ResearchSeam.completed("edge_inference"):
 		return maxi(USAGE_WEIGHT_MIN, raw - RND_AI_USAGE_RELIEF)
 	return raw
-
-
-## §12.9 — "Kartta ham puan değil, Kano katsayısı uygulanmış gerçek değer gösterilir
-## — oyuncu ekranda gördüğü sayıyı alır." Bu o değerdir, ve §11.2'nin gizil
-## toplamına giren de budur. Ham puan hiçbir yüzeyde tek başına çizilmez.
-static func weighted_points(step_id: String) -> float:
-	var s: Dictionary = step(step_id)
-	return float(int(s.get("axis_points", 0))) * float(KANO_COEF.get(String(s.get("kano", "k1")), 1.0))
-
-
-## §12.9's parenthesised net gain: what taking the next step is worth ON TOP of
-## what the line already contributes. A line at tier 0 gains the whole step.
-static func net_gain(line_id: String, current_tier: int) -> float:
-	var nxt: int = next_tier(current_tier)
-	if nxt == 0:
-		return 0.0
-	var gain: float = weighted_points(String(step_at(line_id, nxt).get("id", "")))
-	if current_tier > 0:
-		gain -= weighted_points(String(step_at(line_id, current_tier).get("id", "")))
-	return gain
 
 
 ## §12.1 — GİZLİ HATLAR. Ar-Ge'nin devam düğümleri katalogda hiç görünmeyen hatlar

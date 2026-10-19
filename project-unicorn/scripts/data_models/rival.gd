@@ -11,8 +11,8 @@ extends Resource
 #   established  — ahead; a late-Phase-1 player may brush the bottom.
 #   giant        — aspirational, structurally unreachable in Phase 1.
 #
-# Dimensions mirror QualityModel's canonical axes (open-ended floats). `momentum`
-# is the per-day growth rate rivals gain via RivalRegistry.advance_all (0 = static).
+# Dimensions are open-ended floats that QualityModel.grow advances. `momentum` is the per-day growth rate
+# rivals gain via RivalRegistry.advance_all (0 = static).
 
 @export var id: String = ""                    # "rv_<subtype>_<n>" — type-prefixed id
 @export var product_name: String = ""
@@ -31,7 +31,8 @@ extends Resource
 @export var notes: String = ""
 
 
-# Type-weighted composite (same math the player uses) — for ranking and the churn benchmark.
-func composite(quality_axes: Array = []) -> float:
+# The three dimensions blended by the weights of this rival's sub-type (RivalCatalog.COMPOSITE_AXES).
+func composite() -> float:
 	return QualityModel.composite_quality(
-		{"innovation": innovation, "stability": stability, "experience": experience}, quality_axes)
+		{"innovation": innovation, "stability": stability, "experience": experience},
+		RivalCatalog.COMPOSITE_AXES.get(sub_product_type_id, []))

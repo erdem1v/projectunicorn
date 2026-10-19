@@ -1,25 +1,21 @@
 {
   "_doc": "GDD URUN rev 6.1 §12.2 — the four shared platform lines. Skeleton and step names are IDENTICAL in every subtype; only the one-line description is written per subtype (derived strings.csv key). Gates here are the defaults; a subtype may override one via shared_gate_overrides (§12.10 telegraphs).",
-  "_axis_shape": "integrations=innovation · security=stability · durability=stability · mobile=experience. With the five identity lines (2 inn · 1 sta · 2 exp) this makes 3 lines per axis (§12.2).",
-  "_numbers": "rev 6.1 sealed axis-point centres K1 4 · K2 9 · K3 12 (weighted 4,0 · 7,2 · 14,4). §12.12's >=1,6 upgrade ratio binds on the WEIGHTED value. usage_weight per §10.",
+  "_profile_shape": "integrations=dev · security=test · durability=test · mobile=design. With the five identity lines (2 dev · 1 test · 2 design) this makes 3 lines per profile (§12.2).",
+  "_numbers": "usage_weight per §10.",
   "_nodes": "K3 research nodes are §12.5's BINDING map, checked at load against ResearchSeam.SHARED_LINE_NODES: Entegrasyonlar -> data_model · Dayanıklılık -> scalable_backend · Güvenlik -> security_cert · Mobil -> design_system.",
-  "_gates": "§12.8: most K2/K3 steps must ask for the axis owner's stars, otherwise the above-gate bonus is dead content. Axis owners: innovation -> product · stability -> qa · experience -> design.",
   "lines": [
     {
       "id": "line_shared_integrations",
-      "axis": "innovation",
       "profile": "dev",
       "steps": [
         {
           "id": "line_shared_integrations_k1",
-          "axis_points": 4,
           "effort": 5,
           "usage_weight": 1,
           "requires": {}
         },
         {
           "id": "line_shared_integrations_k2",
-          "axis_points": 9,
           "effort": 7,
           "usage_weight": 1,
           "requires": {
@@ -28,7 +24,6 @@
         },
         {
           "id": "line_shared_integrations_k3",
-          "axis_points": 12,
           "effort": 10,
           "usage_weight": 2,
           "requires": {
@@ -41,19 +36,16 @@
     },
     {
       "id": "line_shared_security",
-      "axis": "stability",
       "profile": "test",
       "steps": [
         {
           "id": "line_shared_security_k1",
-          "axis_points": 4,
           "effort": 5,
           "usage_weight": 0,
           "requires": {}
         },
         {
           "id": "line_shared_security_k2",
-          "axis_points": 9,
           "effort": 7,
           "usage_weight": 0,
           "requires": {
@@ -62,7 +54,6 @@
         },
         {
           "id": "line_shared_security_k3",
-          "axis_points": 12,
           "effort": 11,
           "usage_weight": 1,
           "requires": {
@@ -74,19 +65,16 @@
     },
     {
       "id": "line_shared_durability",
-      "axis": "stability",
       "profile": "test",
       "steps": [
         {
           "id": "line_shared_durability_k1",
-          "axis_points": 4,
           "effort": 5,
           "usage_weight": 0,
           "requires": {}
         },
         {
           "id": "line_shared_durability_k2",
-          "axis_points": 9,
           "effort": 7,
           "usage_weight": 1,
           "requires": {
@@ -95,7 +83,6 @@
         },
         {
           "id": "line_shared_durability_k3",
-          "axis_points": 12,
           "effort": 10,
           "usage_weight": 1,
           "requires": {
@@ -107,12 +94,10 @@
     },
     {
       "id": "line_shared_mobile",
-      "axis": "experience",
       "profile": "design",
       "steps": [
         {
           "id": "line_shared_mobile_k1",
-          "axis_points": 4,
           "effort": 5,
           "usage_weight": 0,
           "requires": {
@@ -121,7 +106,6 @@
         },
         {
           "id": "line_shared_mobile_k2",
-          "axis_points": 9,
           "effort": 8,
           "usage_weight": 1,
           "requires": {
@@ -131,7 +115,6 @@
         },
         {
           "id": "line_shared_mobile_k3",
-          "axis_points": 12,
           "effort": 10,
           "usage_weight": 1,
           "requires": {

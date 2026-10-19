@@ -49,9 +49,12 @@ const CROSS_EFFORT_CEIL := 50
 const COEFFICIENT_EFFECTS := [
 	"load_divisor", "validation_throughput", "bug_rate_ceil", "beta_decay",
 	"overage_satisfaction", "inflow_base", "license_cost", "b2c_conversion",
-	"experience_effort", "ai_usage_weight",
+	"design_effort", "ai_usage_weight",
 ]
 const HOOK_EFFECTS := ["enterprise_trust", "product_note"]
+
+## §4.5 — the four hidden lines' work profiles: 1 development, 2 test, 1 design.
+const HIDDEN_PROFILE_SHAPE := {"dev": 1, "test": 2, "design": 1}
 
 static var _nodes: Dictionary = {}
 static var _hidden: Dictionary = {}
@@ -215,7 +218,7 @@ static func _validate_cross_links() -> void:
 		_fail("tree has %d cross links; §13 says exactly 4" % found.size())
 
 
-## §4.5 — the four hidden lines, their axes and the single branch-level one.
+## §4.5 — the four hidden lines, their work profiles and the single branch-level one.
 static func _validate_hidden_lines() -> void:
 	var openers: Dictionary = {}
 	for id in _nodes.keys():
@@ -232,17 +235,14 @@ static func _validate_hidden_lines() -> void:
 	if openers.size() != 4:
 		_fail("%d nodes open a hidden line; §4.5 says exactly 4" % openers.size())
 
-	var axis_tally: Dictionary = {}
+	var profile_tally: Dictionary = {}
 	var branch_openers: Array[String] = []
 	for line_id in _hidden.keys():
 		var hl: Dictionary = _hidden[line_id] as Dictionary
-		var axis: String = String(hl.get("axis", ""))
-		if not QualityModel.AXES.has(axis):
-			_fail("hidden line '%s' has unknown axis '%s'" % [line_id, axis])
 		var profile: String = String(hl.get("profile", ""))
 		if not ProductLines.PROFILES.has(profile):
 			_fail("hidden line '%s' has unknown profile '%s'" % [line_id, profile])
-		axis_tally[axis] = int(axis_tally.get(axis, 0)) + 1
+		profile_tally[profile] = int(profile_tally.get(profile, 0)) + 1
 		var by: String = String(hl.get("opened_by", ""))
 		if String(openers.get(line_id, "")) != by:
 			_fail("hidden line '%s' says opened_by '%s'; the node table disagrees" % [line_id, by])
@@ -259,11 +259,9 @@ static func _validate_hidden_lines() -> void:
 		if authored:
 			_validate_hidden_k3(line_id, raw)
 
-	# §4.5's applied redistribution: İnovasyon 1 · Kararlılık 2 · Deneyim 1.
-	if int(axis_tally.get("innovation", 0)) != 1 or int(axis_tally.get("stability", 0)) != 2 \
-			or int(axis_tally.get("experience", 0)) != 1:
-		_fail("hidden line axis tally is %s; §4.5 wants innovation 1 / stability 2 / experience 1"
-			% axis_tally)
+	# §4.5's applied redistribution: development 1, test 2, design 1.
+	if profile_tally != HIDDEN_PROFILE_SHAPE:
+		_fail("hidden line profile tally is %s; §4.5 wants %s" % [profile_tally, HIDDEN_PROFILE_SHAPE])
 
 	# §13.5's sealed single exception — one hidden line at branch level, and it is
 	# test_automation's. Asserting the NAME stops the exception being silently doubled.
@@ -411,11 +409,6 @@ static func report_period_weeks() -> int:
 static func hidden_line_ids() -> Array:
 	ensure_loaded()
 	return _hidden.keys()
-
-
-static func hidden_line_axis(line_id: String) -> String:
-	ensure_loaded()
-	return String((_hidden.get(line_id, {}) as Dictionary).get("axis", ""))
 
 
 static func hidden_line_profile(line_id: String) -> String:

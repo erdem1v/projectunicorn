@@ -362,8 +362,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_language_switch":       fail = _case_loc_language_switch()
 		# --- Calibration pass (2026-08-19) — one guard per number ---
 		"harness_sniffer_matches_run_log": fail = _case_harness_sniffer_matches_run_log()
-		"quality_half_sat_25":             fail = _case_quality_half_sat_25()
-		"b2b_v1_lands_mid_band":           fail = _case_b2b_v1_lands_mid_band()
 		"b2c_satisfaction_drifts_to_fit":  fail = _case_b2c_satisfaction_drifts_to_fit()
 		"b2c_audience_reads_fit":          fail = _case_b2c_audience_reads_fit()
 		"soft_cap_ends_run_at_730":        fail = _case_soft_cap_ends_run_at_730()  # EXPECT-ERROR telegraph 'soft_cap_telegraphed' never did
@@ -430,15 +428,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"destek_survives_ship":           fail = _case_destek_survives_ship()
 		"gorevler_has_no_founder":        fail = _case_gorevler_has_no_founder()
 		"founder_not_double_counted":     fail = _case_founder_not_double_counted()
-		# --- Ürün modülü · hat modeli 2026-08-24 (GDD ÜRÜN rev 6 §11, §12).
-		#     Altısı da ÖNCEKİ motora karşı DÜŞER: hat modeli, kapı doğrulayıcısı ve
-		#     çıta okuması bu turdan önce YOKTU. Her biri falsifikasyonla doğrulandı.
+		# --- Ürün modülü · hat modeli (GDD ÜRÜN rev 6 §12).
 		"product_lines_catalog_loads":    fail = _case_product_lines_catalog_loads()
 		"line_ladder_rules":              fail = _case_line_ladder_rules()
 		"line_k3_locked_without_research": fail = _case_line_k3_locked_without_research()
-		"axis_reading_replaces_not_adds": fail = _case_axis_reading_replaces_not_adds()
 		"gate_scope_and_halves":          fail = _case_gate_scope_and_halves()
-		"above_gate_bonus_ladder":        fail = _case_above_gate_bonus_ladder()
 		"loc_product_line_keys_resolve":  fail = _case_loc_product_line_keys_resolve()
 		"product_fit_table":              fail = _case_product_fit_table()
 		"product_quality_sector_table":   fail = _case_product_quality_sector_table()
@@ -447,6 +441,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"fit_account_ref":                fail = _case_fit_account_ref()
 		"save_v17_market_ref":            fail = _case_save_v17_market_ref()
 		"product_area_row":               fail = _case_product_area_row()
+		"save_retired_product_flags":     fail = _case_save_retired_product_flags()
+		"rival_composite_table":          fail = _case_rival_composite_table()
 		# --- rev 6.1 · Ar-Ge bağı ve kart aritmetiği (2026-08-25).
 		"research_node_map_binds":        fail = _case_research_node_map_binds()
 		"rnd_tree_loads_and_validates":  fail = _case_rnd_tree_loads_and_validates()
@@ -3537,10 +3533,8 @@ static func _case_b2b_pitch_meeting_signs() -> String:
 		return "a save was allowed mid-sitting — §5.0 says the scene is atomic"
 	vs = _play_meeting_out(vs)
 	if String(vs.get("outcome", "")) != "won":
-		return "a strong founder against a 1-star table did not win: %s (odds %.2f, axes %d/%d/%d)" % [
-			str(vs.get("outcome", "")), float(vs.get("odds", 0.0)),
-			ProductRead.axis_reading("", "innovation"), ProductRead.axis_reading("", "stability"),
-			ProductRead.axis_reading("", "experience")]
+		return "a strong founder against a 1-star table did not win: %s (odds %.2f, fit %d)" % [
+			str(vs.get("outcome", "")), float(vs.get("odds", 0.0)), ProductQuality.prospect_fit(p).value]
 	# §5.3 — Perde 2, with a word given. Offer at the band floor so the customer accepts on the first move.
 	var promised: String = "line_erp_ledger_k1"
 	NegotiationSystem.open(NegotiationSystem.TYPE_B2B, {
@@ -3780,11 +3774,11 @@ static func _case_sales_loss_reason_from_asked() -> String:
 ## clamp(U ÷ 70 - 1, -1, 1) × W_PRODUCT_FIT'tir; Çekirdek'i zayıf üründe (öteki alanlar fazlasıyla yeterli, tavan devrede) terim
 ## düşer ve ipucu satırı Çekirdek'i ve sözcüğünü yazar; Entegrasyonlar'ı boş üründe eksik alanı ve sözcüğünü yazar. Müşteri
 ## eksik bulduğu alanı oturumun ilk sorusuyla bir kez söyler, aynı soru yeniden çizilince aynıdır, sonraki soruda yoktur; eksik
-## alan yoksa söylemez. Terim eski eksen okumasının değil ürün uyumunun seam'idir.
+## alan yoksa söylemez.
 ##
 ## FALSİFİKASYON: SalesMeetingSystem._objection'dan `_probe_index != 1` koşulunu sil → ikinci soruda itiraz sürer FAIL;
 ## _build_base_contributions'ta `fit.value`'yu 70 yap → terim düşmez FAIL; _fit_line'da alanı hep "core" oku → Entegrasyonlar
-## iddiası FAIL; "urun.product_fit"i "urun.axis_reading" yap → seam iddiası FAIL.
+## iddiası FAIL; terimin seam kimliğini "urun.product_fit"ten başka bir şey yap → seam iddiası FAIL.
 static func _case_sales_meeting_reads_fit() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
@@ -3823,7 +3817,7 @@ static func _case_sales_meeting_reads_fit() -> String:
 	_seed_b2b_lines("erp", 2)
 	var healthy: Dictionary = sit.call()
 	var want: float = SalesConstants.W_PRODUCT_FIT * clampf(float(healthy.fit.value) / 70.0 - 1.0, -1.0, 1.0)
-	if healthy.term == null or not is_equal_approx(healthy.term, want) or healthy.term <= 0.0 or "urun.axis_reading" in healthy.seams:
+	if healthy.term == null or not is_equal_approx(healthy.term, want) or healthy.term <= 0.0:
 		return "a healthy product's fit term reads %s (want %.3f), seams %s" % [str(healthy.term), want, healthy.seams]
 	if healthy.fit.loss_area != "" or healthy.vs.objection != "" or healthy.line != said.call("core", "strong"):
 		return "a healthy product lacks '%s', objects '%s' and its hint reads '%s'" % [
@@ -12170,11 +12164,6 @@ static func _case_loc_product_derived_keys() -> String:
 					if TranslationServer.translate(fkey) == fkey:
 						TranslationServer.set_locale(loc0)
 						return "[%s] %s has no row" % [loc, fkey]
-		for axis in ["innovation", "stability", "experience"]:
-			var akey: String = "PROD_AXIS_" + axis.to_upper()
-			if TranslationServer.translate(akey) == akey:
-				TranslationServer.set_locale(loc0)
-				return "[%s] %s has no row" % [loc, akey]
 	TranslationServer.set_locale(loc0)
 	return ""
 
@@ -12532,61 +12521,6 @@ static func _case_harness_sniffer_matches_run_log() -> String:
 		return "a harness flag stopped matching the sniffer"
 	if SaveManager._is_harness_arg("C:/games/screenshots/project-unicorn") or SaveManager._is_harness_arg("res://run-log"):
 		return "a bare (non --) argument matched the sniffer"
-	return ""
-
-
-# --- A played product is born INSIDE the tolerance band (three levers together) ---
-
-# The two raw stability values --run-log measured at ship (seed 424242, 2026-08-19): the
-# stability-competent v1 (integration+field+scheduling, build events +14, Beta cleared) and
-# the weak set (workflow+reporting+scheduling, events +12, backlog sprinted). They are the
-# numbers the tolerance band was seated against, so they are pinned here as the band's guard.
-const CAL_V1_GOOD_RAW_STABILITY := 31.0
-const CAL_V1_BAD_RAW_STABILITY := 18.3
-
-
-static func _case_quality_half_sat_25() -> String:
-	# Lever 1 by value: 25 maps to normalized 50, and the catalog-competent 3-feature v1
-	# (raw 17) reads 40.5 — inside the band instead of 15-30 points under it.
-	if not is_equal_approx(QualityModel.NORMALIZE_HALF_SAT, 25.0):
-		return "NORMALIZE_HALF_SAT is %.1f, want 25" % QualityModel.NORMALIZE_HALF_SAT
-	if not is_equal_approx(QualityModel.normalized_quality(25.0), 50.0):
-		return "normalized_quality(25) = %.2f, want 50" % QualityModel.normalized_quality(25.0)
-	var a17: float = QualityModel.axis_score({"stability": 17.0}, "stability")
-	if absf(a17 - 40.476) > 0.01:
-		return "axis_score(raw 17) = %.3f, want 40.476" % a17
-	# The rival bridge keeps its own half-point: a raw-50 rival composite still reads 50.
-	if not is_equal_approx(QualityModel.normalized_quality_rival(50.0), 50.0):
-		return "normalized_quality_rival(50) = %.2f, want 50" % QualityModel.normalized_quality_rival(50.0)
-	return ""
-
-
-static func _case_b2b_v1_lands_mid_band() -> String:
-	# Lever 2 by outcome, with the measured raws as constants. The good v1 must clear the
-	# plain mid/enterprise bar (scale 3, no sector) and fall under the sector-picky mid bar;
-	# the bad v1 must clear the plain small bar (scale 2) and fall under small+insurance.
-	# Moving ONE lever alone breaks it: HALF_SAT back at 50 reads the good v1 at 38 (under
-	# every bar); the old (35, 5) band reads the bad v1 over every small and mid bar.
-	var good: float = QualityModel.axis_score({"stability": CAL_V1_GOOD_RAW_STABILITY}, "stability")
-	var bad: float = QualityModel.axis_score({"stability": CAL_V1_BAD_RAW_STABILITY}, "stability")
-	var mid_plain: int = B2BConstants.seed_tolerance(3, "manufacturing")
-	var mid_picky: int = B2BConstants.seed_tolerance(3, "health")
-	var small_plain: int = B2BConstants.seed_tolerance(2, "logistics")
-	var small_picky: int = B2BConstants.seed_tolerance(2, "insurance")
-	if not (good >= float(mid_plain) and good < float(mid_picky)):
-		return "good v1 axis %.1f is outside [mid %d, mid+sector %d)" % [good, mid_plain, mid_picky]
-	if not (bad >= float(small_plain) and bad < float(small_picky)):
-		return "bad v1 axis %.1f is outside [small %d, small+sector %d)" % [bad, small_plain, small_picky]
-	# The probe's 5-account book (2 small · 2 mid+sector · 1 enterprise): 3/5 for the good
-	# v1, 1/5 for the bad one — the director's ~60 % / ~20 %.
-	var bars: Array = [small_plain, small_picky, mid_picky, mid_picky, mid_plain]
-	var good_ok: int = 0
-	var bad_ok: int = 0
-	for b in bars:
-		if good >= float(b): good_ok += 1
-		if bad >= float(b): bad_ok += 1
-	if good_ok != 3 or bad_ok != 1:
-		return "book fractions good=%d/5 bad=%d/5, want 3/5 and 1/5" % [good_ok, bad_ok]
 	return ""
 
 
@@ -14378,7 +14312,6 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 	GameState.set_flag("mvp_market_type", market)
 	GameState.set_flag("mvp_version", 1)
 	GameState.set_flag(ProductState.LINE_TIERS, {"line_note_tool_search": 1})
-	GameState.set_flag(ProductState.STEP_REALIZATION, {})
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
 	GameState.set_flag(ProductState.REPORTS_PROGRESS, 0.0)
 	GameState.set_flag(ProductState.OPEN_BUGS, {})
@@ -14757,17 +14690,14 @@ static func _case_infra_local_provider_tradeoff() -> String:
 ## yayınlanır. Sprint seam'leri motoru okur: tür seçilmeden sprint yoktur.
 ##
 ## FALSİFİKASYON: EventBus'tan `line_completed` sinyalini sil → sinyal iddiası FAIL.
-## ProductRead.market_word'ü sil → sorgu iddiası FAIL.
+## ProductRead.line_next_step'i hep "" döndür → sorgu iddiası FAIL.
 static func _case_product_read_catalogue() -> String:
 	ProductLines.reload()
 	_seed_support_fixture("b2c")
 	ProductState.set_line_tier("line_note_tool_search", 1)
-	ProductState.stamp_step("line_note_tool_search_k1", 1.0)
 
 	# --- SORGULAR ---
 	var q: Dictionary = {
-		"axis_reading": ProductRead.axis_reading("", "innovation"),
-		"market_word": ProductRead.market_word("", "innovation"),
 		"open_bugs": ProductRead.open_bugs(""),
 		"unconfirmed": ProductRead.unconfirmed(""),
 		"version_age": ProductRead.version_age(""),
@@ -14790,9 +14720,6 @@ static func _case_product_read_catalogue() -> String:
 	if int(q["lines_open"]) != 1 or int(q["steps_shipped"]) != 1:
 		return "lines_open/steps_shipped read %d/%d, want 1/1" \
 			% [int(q["lines_open"]), int(q["steps_shipped"])]
-	if not [ProductRead.WORD_AHEAD, ProductRead.WORD_LEVEL, ProductRead.WORD_BEHIND] \
-			.has(String(q["market_word"])):
-		return "market_word returned '%s', outside önde/hizada/geride" % String(q["market_word"])
 	# Tamamlanmış hat sıradaki kademeyi ÖNERMEZ.
 	ProductState.set_line_tier("line_note_tool_search", 3)
 	if ProductRead.line_next_step("", "line_note_tool_search") != "":
@@ -14920,11 +14847,12 @@ static func _case_floor_ladder_areas() -> String:
 # =========================================================================
 
 ## §12.1 · §12.2 — the catalog is data-driven and its SHAPE is law: 9 lines per
-## subtype, 3 per axis, 3 steps per line. A content file that violates any of it
+## subtype, 3 per work profile, 3 steps per line. A content file that violates any of it
 ## must be REFUSED at load, not tolerated.
 ##
 ## FALSİFİKASYON: shared.json'dan bir hattı sil → "9 lines" iddiası FAIL.
-## Bir kimlik hattının eksenini değiştir → "axis shape" iddiası FAIL.
+## Bir paylaşılan hattın profilini değiştir → "per profile" iddiası FAIL; bir kimlik hattının
+## profilini değiştir → yükleme "identity profile shape" ile reddeder FAIL.
 static func _case_product_lines_catalog_loads() -> String:
 	ProductLines.reload()
 	var errs: Array = ProductLines.load_errors()
@@ -14943,11 +14871,12 @@ static func _case_product_lines_catalog_loads() -> String:
 		var ids: Array = ProductLines.line_ids(sub)
 		if ids.size() != ProductLines.LINES_PER_SUBTYPE:
 			return "%s has %d lines, §12.2 wants %d" % [sub, ids.size(), ProductLines.LINES_PER_SUBTYPE]
-		var by_axis: Dictionary = ProductLines.line_ids_by_axis(sub)
-		for axis in QualityModel.AXES:
-			var n: int = (by_axis[axis] as Array).size()
-			if n != 3:
-				return "%s has %d lines on %s, §12.2 wants 3" % [sub, n, axis]
+		var by_profile: Dictionary = {}
+		for lid in ids:
+			var profile: String = ProductLines.work_profile(String(lid))
+			by_profile[profile] = int(by_profile.get(profile, 0)) + 1
+		if by_profile != {"design": 3, "dev": 3, "test": 3}:
+			return "%s has lines %s per profile, §12.2 wants 3 of each" % [sub, by_profile]
 		# 9 hat × 3 kademe = 27 seçilebilir kalem (§12.1).
 		var steps: int = 0
 		for lid in ids:
@@ -15145,27 +15074,36 @@ static func _case_product_area_row() -> String:
 	return ""
 
 
-## İş profili: her hattın profili var ve eksenden türeyen eşlemeyle aynı; gizli hatlar da. Doğrulayıcı üç değerin dışını
+## İş profili: her hattın profili var ve dağılım tutuyor: kimlik hatları geliştirme 2 · test 1 · tasarım 2, paylaşılan hatlar
+## geliştirme 1 · test 2 · tasarım 1, Ar-Ge'nin gizli hatları geliştirme 1 · test 2 · tasarım 1. Doğrulayıcı üç değerin dışını
 ## ve eksik profili reddeder.
 ##
-## FALSİFİKASYON: shared.json'da bir hattın profilini değiştir → o hat FAIL. _build_line'daki PROFILES kontrolünü sil →
+## FALSİFİKASYON: shared.json'da bir hattın profilini değiştir → dağılım iddiası FAIL. _build_line'daki PROFILES kontrolünü sil →
 ## kayıt reddedilmez, FAIL.
 static func _case_product_line_profiles() -> String:
 	ProductLines.reload()
-	var of_axis: Dictionary = {"experience": "design", "innovation": "dev", "stability": "test"}
 	var seen: int = 0
 	for sub in ProductLines.subtypes():
+		var identity: Dictionary = {}
+		var shared: Dictionary = {}
 		for id in ProductLines.line_ids(sub):
-			if ProductLines.work_profile(id) != of_axis[ProductLines.axis_of(id)]:
-				return "%s carries profile '%s', its axis maps to '%s'" % [
-					id, ProductLines.work_profile(id), of_axis[ProductLines.axis_of(id)]]
+			var profile: String = ProductLines.work_profile(id)
+			if not ProductLines.PROFILES.has(profile):
+				return "%s carries profile '%s'" % [id, profile]
+			var tally: Dictionary = shared if bool(ProductLines.line(id).shared) else identity
+			tally[profile] = int(tally.get(profile, 0)) + 1
 			seen += 1
+		if identity != {"dev": 2, "test": 1, "design": 2} or shared != {"dev": 1, "test": 2, "design": 1}:
+			return "%s: identity lines carry %s and shared lines %s; want dev 2, test 1, design 2 and dev 1, test 2, design 1" % [
+				sub, identity, shared]
 	if seen == 0:
 		return "no line was read"
+	var hidden_tally: Dictionary = {}
 	for hidden in ResearchTree.hidden_line_ids():
-		if ResearchTree.hidden_line_profile(hidden) != of_axis[ResearchTree.hidden_line_axis(hidden)]:
-			return "hidden line %s carries profile '%s', its axis maps to '%s'" % [
-				hidden, ResearchTree.hidden_line_profile(hidden), of_axis[ResearchTree.hidden_line_axis(hidden)]]
+		var hidden_profile: String = ResearchTree.hidden_line_profile(hidden)
+		hidden_tally[hidden_profile] = int(hidden_tally.get(hidden_profile, 0)) + 1
+	if hidden_tally != {"dev": 1, "test": 2, "design": 1}:
+		return "the hidden lines carry %s; want dev 1, test 2, design 1" % hidden_tally
 
 	var raw: Dictionary = ResearchTree.hidden_line_raw("line_hidden_self_serve")
 	var bad: Dictionary = raw.duplicate(true)
@@ -15184,13 +15122,12 @@ static func _case_product_line_profiles() -> String:
 
 ## Ar-Ge "Tasarım sistemi" kademe eforunu hattın İŞ PROFİLİNE göre indirir: tamamlanınca tasarım profilli hattın kademesi iki
 ## yolda da (kart eforu `SprintCatalog.step_effort`, ham efor `ProductLines.effort_of`) 0,80 ile iner, geliştirme ve test
-## profilleri inmez, tamamlanmadan hiçbiri inmez. Ekseni ile profili ayrışan çalışma anı hatları okumayı ayırır: stability
-## ekseninde tasarım profilli hat iner, experience ekseninde test profilli hat inmez. Kayıt göçü (`_migrate_15`) kaydın
-## Ar-Ge durumunu aynı profille okur; kayıtta olmayan hat ('' profil) inmez.
+## profilleri inmez, tamamlanmadan hiçbiri inmez. Çalışma anında kaydedilen gizli hatlar da aynı profille okunur: tasarım
+## profilli hat iner, test profilli hat inmez. Kayıt göçü (`_migrate_15`) kaydın Ar-Ge durumunu aynı profille okur; kayıtta
+## olmayan hat ('' profil) inmez.
 ##
-## FALSİFİKASYON: `step_effort`ın okuyucusunu `step.axis == "experience"` yap → ayrışan hat iddiası FAIL; `effort_of`ın
-## okuyucusunu `== "test"` yap → profil iddiası FAIL; `_migrate_15`in okuyucusunu `ProductLines.axis_of(line) == "experience"`
-## yap → göç iddiası FAIL.
+## FALSİFİKASYON: `step_effort`ın okuyucusunu `== "dev"` yap → profil iddiası FAIL; `effort_of`ın okuyucusunu `== "test"` yap →
+## profil iddiası FAIL; `_migrate_15`in okuyucusunu `== "test"` yap → göç iddiası FAIL.
 static func _case_rnd_design_discount_reads_profile() -> String:
 	ProductLines.reload()
 	RnDSystem.reset()
@@ -15239,25 +15176,24 @@ static func _case_rnd_design_discount_reads_profile() -> String:
 	if done_read != lighter:
 		return "a v14 build planned after the research migrated to %s, want %s" % [done_read, lighter]
 
-	# Ekseni ile profili ayrışan çalışma anı hatları: indirimi profil verir, eksen vermez.
-	var probe := func(id: String, axis: String, profile: String) -> Dictionary:
+	# Çalışma anı hatları: aynı iskelet, yalnız profil değişir; indirimi profil verir.
+	var probe := func(id: String, profile: String) -> Dictionary:
 		var raw: Dictionary = ResearchTree.hidden_line_raw("line_hidden_self_serve")
 		raw.id = id
-		raw.axis = axis
 		raw.profile = profile
 		for i in 3:
 			raw.steps[i].id = "%s_k%d" % [id, i + 1]
 		return raw
-	for split in [["line_hidden_probe_design", "stability", "design"], ["line_hidden_probe_test", "experience", "test"]]:
-		if not ProductLines.register_runtime_line(probe.call(split[0], split[1], split[2]), "erp"):
+	for split in [["line_hidden_probe_design", "design"], ["line_hidden_probe_test", "test"]]:
+		if not ProductLines.register_runtime_line(probe.call(split[0], split[1]), "erp"):
 			return "fixture: %s did not register" % split[0]
 		for tier in [1, 2, 3]:
-			var apart: String = wrong.call("%s_k%d@erp" % [split[0], tier], split[2] == "design")
+			var apart: String = wrong.call("%s_k%d@erp" % [split[0], tier], split[1] == "design")
 			if apart != "":
-				return "a %s profile on the %s axis: %s" % [split[2], split[1], apart]
+				return "a runtime line with the %s profile: %s" % [split[1], apart]
 	# Göç, hat kayıtlıyken profilini okur; kayıtta yokken ('' profil) hiç indirmez.
 	var hidden: String = "line_hidden_self_serve_k2@erp"
-	if not ProductLines.register_runtime_line(probe.call("line_hidden_self_serve", "stability", "design"), "erp"):
+	if not ProductLines.register_runtime_line(probe.call("line_hidden_self_serve", "design"), "erp"):
 		return "fixture: the hidden line did not register"
 	var registered: Array = migrated.call("erp", "b2b", [hidden], true)
 	if registered != [lighter[0]]:
@@ -15670,42 +15606,6 @@ static func _case_line_k3_locked_without_research() -> String:
 	return ""
 
 
-## §12.4 — "Hattın katkısı YALNIZ mevcut kademesinin puanıdır." Kademe kendinden
-## öncekini DEĞİŞTİRİR, üstüne EKLEMEZ. Bu case tam olarak o farkı ölçer: toplama
-## olsaydı okuma çok daha yükseğe çıkardı.
-##
-## FALSİFİKASYON: realized_axis'i kademeleri toplayacak şekilde değiştir → "replacement"
-## iddiası FAIL (47 yerine 80 okur).
-static func _case_axis_reading_replaces_not_adds() -> String:
-	ProductLines.reload()
-	var st := "note_tool"
-	var line := "line_note_tool_search"          # Deneyim ekseni
-	var tiers := {line: 1}
-	var stamps := {line: 1.0}                    # tur çarpanı 1,00 · kapı-üstü yok
-
-	# K1: 4 puan × Kano 1,0 = 4,0 gizil. Bootstrap çıtası 12,0 → round(100 × 4/12) = 33.
-	var before: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 1)
-	if before != 33:
-		return "K1 experience reading is %d, want 33 (4,0 gizil / çıta 12,0)" % before
-
-	# K2: 9 puan × Kano 0,8 = 7,2 gizil → round(100 × 7,2/12) = 60 (rev 6.1 merkezleri).
-	tiers[line] = 2
-	var after: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 1)
-	if after != 60:
-		return "K2 experience reading is %d, want 60 (7,2 gizil / çıta 12,0)" % after
-	# Toplama olsaydı gizil 4,0 + 7,2 = 11,2 → 93. Aradaki fark iddianın kendisidir.
-	if after >= 93:
-		return "the upgrade ADDED to the line instead of replacing it (%d)" % after
-
-	# §11.3 — çıta her fazda +%10 yükselir; aynı ürün Traction'da DAHA DÜŞÜK okur.
-	tiers[line] = 1
-	var boot: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 1)
-	var trac: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 2)
-	if trac >= boot:
-		return "the bar did not rise between phases (%d -> %d)" % [boot, trac]
-	return ""
-
-
 ## §12.7 kapı KAPSAMI + §12.6 buçuk kuralı. İkisi bir arada ölçülüyor çünkü ikisi de
 ## "kim sayılır" sorusunun cevabı ve ikisi de sessizce yanlış olabilir.
 ##
@@ -15759,49 +15659,6 @@ static func _case_gate_scope_and_halves() -> String:
 	founder.role_stats[HRConstants.AREA_ENGINEERING] = 4   # +2 yıldız
 	if absf(LineGates.total_stars(HRConstants.AREA_ENGINEERING) - 7.5) > 0.001:
 		return "the founder's stars did not join the company total"
-	return ""
-
-
-## §12.8 — kapı-üstü bonusu: fazladan İLK yıldız +%8, İKİNCİ +%4, sonrası fark
-## yaratmaz. Erişimin kendisi ikilidir; bu yalnız gerçekleşmeyi oynatır.
-##
-## FALSİFİKASYON: _excess_ladder'ın cap'ini kaldır → "no third star" iddiası FAIL.
-static func _case_above_gate_bonus_ladder() -> String:
-	ProductLines.reload()
-	var founder: Character = CharacterRegistry.get_founder()
-	if founder == null:
-		return "no founder"
-	for area in HRConstants.AREAS:
-		founder.role_stats[area] = 0
-
-	# Deneyim ekseninin sahibi Tasarım (§12.10). Bu kademe Tasarım ★2 istiyor.
-	var step := "line_note_tool_editor_k2"
-	var d: Character = _make_employee("gate_d", "Gate D", HRConstants.ROLE_DESIGNER)
-	for area_d in HRConstants.AREAS:
-		d.role_stats[area_d] = 0
-
-	d.role_stats[HRConstants.AREA_DESIGN] = 4      # ★2 — tam kapıda
-	if absf(LineGates.above_gate_bonus(step) - 0.0) > 0.0001:
-		return "a team exactly at the gate earned a bonus"
-
-	d.role_stats[HRConstants.AREA_DESIGN] = 6      # ★3 — bir fazla
-	if absf(LineGates.above_gate_bonus(step) - LineGates.ABOVE_GATE_FIRST) > 0.0001:
-		return "first extra star paid %.3f, want %.3f" \
-			% [LineGates.above_gate_bonus(step), LineGates.ABOVE_GATE_FIRST]
-
-	d.role_stats[HRConstants.AREA_DESIGN] = 8      # ★4 — iki fazla
-	var two: float = LineGates.ABOVE_GATE_FIRST + LineGates.ABOVE_GATE_SECOND
-	if absf(LineGates.above_gate_bonus(step) - two) > 0.0001:
-		return "second extra star paid %.3f, want %.3f" % [LineGates.above_gate_bonus(step), two]
-
-	d.role_stats[HRConstants.AREA_DESIGN] = 10     # ★5 — üç fazla, FARK YARATMAZ
-	if absf(LineGates.above_gate_bonus(step) - two) > 0.0001:
-		return "a third extra star still paid — §12.8 stops at two"
-
-	# Kapının istemediği alan bonus üretmez: bu "kapı-üstü", "yıldız-üstü" değil.
-	var ungated := "line_note_tool_editor_k1"
-	if absf(LineGates.above_gate_bonus(ungated)) > 0.0001:
-		return "an ungated step paid an above-gate bonus"
 	return ""
 
 
@@ -15903,13 +15760,13 @@ static func _case_research_node_map_binds() -> String:
 	if visible != 27:
 		return "%d steps carry a research node, expected 27 (one K3 per line)" % visible
 
-	# Ar-Ge §4.5.1 (MÜHÜRLÜ) — HER ALT-TİPİN KİMLİK KARARLILIK HATTININ K3'Ü bug_tracker'a
+	# Ar-Ge §4.5.1 (MÜHÜRLÜ) — HER ALT-TİPİN KİMLİK TEST HATTININ K3'Ü bug_tracker'a
 	# bağlanır. Bu, PRACTICE ailesinin görünür içerik açtığı tek yerdir: dört etkisi de
 	# oyuncunun göremediği sayıları oynatıyordu ve hiçbir K3 bir Practice düğümü istemiyordu,
 	# yani aile "+%5 düğümü olmayacak" yasasını çiğniyordu.
 	#
-	# Hat ADIYLA değil EKSENİYLE bulunuyor: §12.2'nin kimlik dağılımı eksen başına 2/1/2, yani
-	# her alt-tipte paylaşılmayan Kararlılık hattı TEKTİR. İsimle arasaydık üç alt-tip için üç
+	# Hat ADIYLA değil PROFİLİYLE bulunuyor: §12.2'nin kimlik dağılımı profil başına 2/1/2, yani
+	# her alt-tipte paylaşılmayan test profilli hat TEKTİR. İsimle arasaydık üç alt-tip için üç
 	# literal gerekirdi ve dördüncü alt-tip geldiğinde sessizce eksik kalırdı.
 	#
 	# FALSİFİKASYON: üç JSON'dan birinde bu tek token'ı geri al → FAIL, alt-tipi adıyla yazar.
@@ -15918,58 +15775,36 @@ static func _case_research_node_map_binds() -> String:
 		var found: String = ""
 		for lid2 in ProductLines.line_ids(String(st3)):
 			var rec: Dictionary = ProductLines.line(String(lid2))
-			if bool(rec.get("shared", false)) or String(rec.get("axis", "")) != "stability":
+			if bool(rec.get("shared", false)) or String(rec.get("profile", "")) != "test":
 				continue
 			found = String(lid2)
 			var k3s: Dictionary = ProductLines.step_at(String(lid2), 3)
 			var bound: String = String((k3s.get("requires", {}) as Dictionary).get("research", ""))
 			if bound != "bug_tracker":
-				return "%s identity stability K3 binds '%s'; §4.5.1 says bug_tracker" % [st3, bound]
+				return "%s identity test line K3 binds '%s'; §4.5.1 says bug_tracker" % [st3, bound]
 			practice_gates += 1
 		if found == "":
-			return "%s has no identity stability line; §12.2 wants exactly one" % st3
+			return "%s has no identity test line; §12.2 wants exactly one" % st3
 	if practice_gates != 3:
-		return "%d identity stability lines gate bug_tracker, §4.5.1 wants 3" % practice_gates
+		return "%d identity test lines gate bug_tracker, §4.5.1 wants 3" % practice_gates
 	return ""
 
 
-## §12.9 (rev 6.1) — kartın aritmetiği. Belge kendi çalışılmış örneğini veriyor:
+## §12.9 (rev 6.1) — kartın satırı. Belge kendi çalışılmış örneğini veriyor:
 ##
-##   Arama   Anında Arama ✓ → Filtreli Arama    Efor 8 · Deneyim 7,2 (+3,2)
+##   Arama   Anında Arama ✓ → Filtreli Arama    Efor 8
 ##                            Kilit: Yazılım ★★ ✓ · Tasarım ★ ✗ → Eğit
 ##
-## Bu case o satırı BİREBİR sabitler. Kartta HAM PUAN YAZILMAZ: Kano katsayısı
-## uygulanmış gerçek değer yazılır, "oyuncu ekranda gördüğü sayıyı alır."
+## Bu case o satırın eforunu ve kilidini BİREBİR sabitler.
 ##
-## FALSİFİKASYON: weighted_points'ten Kano katsayısını kaldır → 7,2 iddiası FAIL
-## (9,0 okur). net_gain'i mevcut kademeyi düşmeyecek şekilde boz → +3,2 FAIL.
+## FALSİFİKASYON: note_tool.json'da Filtreli Arama'nın eforunu değiştir → efor iddiası FAIL; kilitten Tasarım ★'ı çıkar →
+## kilit iddiası FAIL.
 static func _case_card_math_matches_gdd_example() -> String:
 	ProductLines.reload()
-	var line := "line_note_tool_search"
-	var k2 := line + "_k2"
+	var k2 := "line_note_tool_search_k2"
 
 	if ProductLines.effort_of(k2) != 8:
 		return "Filtreli Arama effort is %d, §12.9's row says 8" % ProductLines.effort_of(k2)
-	if ProductLines.axis_of(line) != "experience":
-		return "the Arama line is on %s, §12.9's row says Deneyim" % ProductLines.axis_of(line)
-
-	var weighted: float = ProductLines.weighted_points(k2)
-	if absf(weighted - 7.2) > 0.001:
-		return "card contribution is %.2f, §12.9's row says 7,2 (9 ham × Kano 0,8)" % weighted
-	if absf(float(int(ProductLines.step(k2).get("axis_points", 0))) - 9.0) > 0.001:
-		return "raw points are %d, rev 6.1's K2 centre is 9" \
-			% int(ProductLines.step(k2).get("axis_points", 0))
-
-	# Parantezdeki net kazanç: K1 canlıyken K2'ye geçmenin FARKI, toplamı değil.
-	var gain: float = ProductLines.net_gain(line, 1)
-	if absf(gain - 3.2) > 0.001:
-		return "net gain reads %.2f, §12.9's row says +3,2 (7,2 − 4,0)" % gain
-	# Boş hatta K1 almanın kazancı kademenin tamamıdır.
-	if absf(ProductLines.net_gain(line, 0) - 4.0) > 0.001:
-		return "an empty line's K1 gain reads %.2f, want 4,0" % ProductLines.net_gain(line, 0)
-	# Tamamlanmış hat kazanç önermez.
-	if absf(ProductLines.net_gain(line, 3)) > 0.001:
-		return "a completed line still offered a gain"
 
 	# §12.9'un kilit satırı da örnekte yazılı: Yazılım ★★ · Tasarım ★.
 	var req: Dictionary = ProductLines.step(k2).get("requires", {}) as Dictionary
@@ -15988,11 +15823,9 @@ static func _case_card_math_matches_gdd_example() -> String:
 ## §22.5 — kayıt şeması v9. İki iddia bir arada, çünkü ikisi de aynı sözleşmenin
 ## yarısı: YENİ durum tam olarak hayatta kalır, ESKİ kayıt sessizce yüklenmez.
 ##
-## Damga sözlüğü bu case'in asıl konusudur: §11.2 çarpanı kademe yayınlanırken
-## damgalıyor, o yüzden damgalar yeniden yüklemeyi atlatmazsa her geçmiş sürüm
-## sessizce BUGÜNKÜ tur sayısıyla yeniden okunur ve eski işin değeri değişir.
+## Hat kademeleri, açık hata deposu, yayın yaşı, ilgi ve altyapı seçimi yeniden yüklemeden sağ çıkar.
 ##
-## FALSİFİKASYON: FLAG_TYPES'tan mvp_step_realization satırını sil → damga iddiası
+## FALSİFİKASYON: `SaveCodec.RETIRED_PRODUCT_FLAGS`a "mvp_line_tiers" ekle → hat kademesi iddiası
 ## FAIL. MIN_LOADABLE_VERSION'ı 8'e indir → red iddiası FAIL.
 static func _case_save_v10_product_state() -> String:
 	ProductLines.reload()
@@ -16017,10 +15850,6 @@ static func _case_save_v10_product_state() -> String:
 	ProductState.set_line_tier("line_note_tool_search", 2)
 	ProductState.set_line_tier("line_note_tool_editor", 1)
 	ProductState.set_line_tier("line_shared_durability@note_tool", 1)
-	# Üç ayrı sürümün cilası, üç ayrı damga — hepsi geri gelmeli.
-	ProductState.stamp_step("line_note_tool_search_k2", 1.15)
-	ProductState.stamp_step("line_note_tool_editor_k1", 0.75)
-	ProductState.stamp_step("line_shared_durability@note_tool_k1", 1.06)
 	ProductState.open_hidden_line("line_hidden_auto_organize")
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 41)
 	# Dokuz açık hata iki hatta; üçü son anlık görüntüden sonra gelmiş.
@@ -16035,7 +15864,6 @@ static func _case_save_v10_product_state() -> String:
 	GameState.set_flag(ProductState.INFRA_UNITS, 7)
 
 	var age_before: float = ProductState.version_age()
-	var readings_before: Dictionary = ProductState.axis_readings()
 	var usage_before: int = ProductState.usage_weight_total()
 
 	if not SaveManager.save_to_slot(SAVE_SLOT_A):
@@ -16043,7 +15871,6 @@ static func _case_save_v10_product_state() -> String:
 		return "save_to_slot failed"
 	# Durumu boz, sonra geri yükle: yükleme gerçekten yazmalı.
 	GameState.set_flag(ProductState.LINE_TIERS, {})
-	GameState.set_flag(ProductState.STEP_REALIZATION, {})
 	GameState.set_flag(ProductState.OPEN_BUGS, {})
 	GameState.set_flag(ProductState.OPEN_BUGS_PREV, {})
 	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
@@ -16058,13 +15885,6 @@ static func _case_save_v10_product_state() -> String:
 		_cleanup_save_slots()
 		return "line totals came back wrong: %d open, %d steps" \
 			% [ProductState.lines_open(), ProductState.steps_shipped()]
-	var stamps: Dictionary = ProductState.step_realization()
-	for pair in [["line_note_tool_search_k2", 1.15], ["line_note_tool_editor_k1", 0.75],
-			["line_shared_durability@note_tool_k1", 1.06]]:
-		var got: float = float(stamps.get(String(pair[0]), -1.0))
-		if absf(got - float(pair[1])) > 0.0001:
-			_cleanup_save_slots()
-			return "stamp for %s came back %.3f, want %.3f" % [pair[0], got, float(pair[1])]
 	if not ProductState.hidden_lines().has("line_hidden_auto_organize"):
 		_cleanup_save_slots()
 		return "an opened hidden line closed itself on reload"
@@ -16087,11 +15907,6 @@ static func _case_save_v10_product_state() -> String:
 		_cleanup_save_slots()
 		return "usage weight total drifted (%d vs %d)" \
 			% [ProductState.usage_weight_total(), usage_before]
-	# Damgalar yaşadığı için okumalar da birebir aynı.
-	if str(ProductState.axis_readings()) != str(readings_before):
-		_cleanup_save_slots()
-		return "axis readings changed across the reload: %s vs %s" \
-			% [str(ProductState.axis_readings()), str(readings_before)]
 
 	# --- §22.5: ESKİ kayıt AÇIKÇA reddedilir, sessizce yarım yüklenmez ----
 	var path: String = SaveManager.SAVE_DIR + SAVE_SLOT_A + ".json"
@@ -16213,25 +16028,24 @@ static func _case_rnd_tree_loads_and_validates() -> String:
 			return "%s cross target '%s' costs %d effort / $%d; §3.1 wants a cheap early node" \
 				% [nid, cross, ResearchTree.effort_of(cross), ResearchTree.cash_of(cross)]
 
-	# --- §4.5 gizli hatlar: dört tane, eksen dağılımı 1/2/1, dal seviyesinde TEK istisna ---
+	# --- §4.5 gizli hatlar: dört tane, profil dağılımı 1/2/1, dal seviyesinde TEK istisna ---
 	var opens: Array[String] = []
 	var branch_level: Array[String] = []
-	var tally := {"innovation": 0, "stability": 0, "experience": 0}
+	var tally := {"dev": 0, "test": 0, "design": 0}
 	for id in ResearchSeam.NODES.keys():
 		var nid := String(id)
 		var line_id: String = ResearchTree.opens_line_of(nid)
 		if line_id == "":
 			continue
 		opens.append(line_id)
-		tally[ResearchTree.hidden_line_axis(line_id)] = \
-			int(tally.get(ResearchTree.hidden_line_axis(line_id), 0)) + 1
+		tally[ResearchTree.hidden_line_profile(line_id)] = \
+			int(tally.get(ResearchTree.hidden_line_profile(line_id), 0)) + 1
 		if ResearchSeam.placement(nid) == ResearchSeam.PLACE_BRANCH:
 			branch_level.append(nid)
 	if opens.size() != 4:
 		return "%d nodes open a hidden line, §4.5 says 4" % opens.size()
-	if int(tally["innovation"]) != 1 or int(tally["stability"]) != 2 \
-			or int(tally["experience"]) != 1:
-		return "hidden line axis tally is %s, §4.5 wants 1/2/1" % tally
+	if int(tally["dev"]) != 1 or int(tally["test"]) != 2 or int(tally["design"]) != 1:
+		return "hidden line profile tally is %s, §4.5 wants dev 1, test 2, design 1" % tally
 	# §13.5'in MÜHÜRLÜ tek istisnası. ADI kontrol ediliyor, sayısı değil: sayı kontrolü
 	# istisnanın sessizce ikiye çıkmasını engellemez.
 	if branch_level.size() != 1:
@@ -23082,7 +22896,11 @@ static func _paper_pm_asked() -> String:
 ## v14 → v15: sürmekte olan yapım Sprint 1'in planı olur. Planlanan her kademe bir özellik kartıdır:
 ## tasarımı dolu, geliştirmesi yapımın vardığı yerde, lisansı ödenmiş. Hattın şimdiki kademesinin
 ## damgası cilaya döner (tek tur üstü yarım, üç tur tam), yapımın bayrakları düşer. Taşınan dünya
-## Sprint 1 planlamada açılır; başlatma lisansı yeniden kesmez ve kartlar kaldıkları yerden yürür.
+## Sprint 1 planlamada açılır; başlatma lisansı yeniden kesmez ve kartlar kaldıkları yerden yürür. Damga bayrağı
+## göç ham sözlüğü okurken kayıtta durur, yükleme sonrası düşer; cila kalır.
+##
+## FALSİFİKASYON: `SaveCodec._decode_flags`taki düşürme döngüsünü `SaveManager._read_file`da göçlerden ÖNCEYE taşı → cila iddiası
+## FAIL (damga göçten önce silinir).
 static func _case_save_v14_build_becomes_sprint_plan() -> String:
 	var slot: String = "smoke_v14_build_%d" % OS.get_process_id()
 	var done := func(why: String) -> String:
@@ -23093,9 +22911,8 @@ static func _case_save_v14_build_becomes_sprint_plan() -> String:
 	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
 	var lines: Array = ProductLines.line_ids("note_tool")
 	ProductState.set_line_tier(lines[0], 1)
-	ProductState.stamp_step("%s_k1" % lines[0], 1.11)
 	ProductState.set_line_tier(lines[1], 1)
-	ProductState.stamp_step("%s_k1" % lines[1], 1.05)
+	GameState.set_flag("mvp_step_realization", {"%s_k1" % lines[0]: 1.11, "%s_k1" % lines[1]: 1.05})
 	_drain_all_modals()
 	if not SaveManager.save_to_slot(slot):
 		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
@@ -23157,6 +22974,11 @@ static func _case_save_v14_build_becomes_sprint_plan() -> String:
 
 	if not SaveManager.apply_loaded_state(payload):
 		return done.call("apply_loaded_state returned false")
+	if GameState.has_flag("mvp_step_realization") \
+			or not is_equal_approx(float(GameState.product.polish.get(lines[0], 0.0)), float(SprintCatalog.cfg("polish_max"))) \
+			or not is_equal_approx(float(GameState.product.polish.get(lines[1], 0.0)), float(SprintCatalog.cfg("polish_step"))):
+		return done.call("after the load the stamp flag reads %s and polish %s; want the flag gone and the polish kept" % [
+			GameState.has_flag("mvp_step_realization"), GameState.product.polish])
 	if SprintSystem.mode() != "plan" or not is_equal_approx(SprintSystem.used(), left):
 		return done.call("the loaded plan reads %s with a load of %.2f, want planning with %.2f left" % [
 			SprintSystem.mode(), SprintSystem.used(), left])
@@ -24688,7 +24510,7 @@ static func _case_neglect_reputation_below_zero() -> String:
 	return ""
 
 
-## Satış ve yatırımcı hatayı okumaz: 0 ve 50 açık hatalı iki dünyada dönüşüm, ürün değeri, kalite okuması, toplantı ihtimali
+## Satış ve yatırımcı hatayı okumaz: 0 ve 50 açık hatalı iki dünyada dönüşüm, ürün değeri, toplantı ihtimali
 ## (kalıcı katkılar), yıldız karışımı, satış sorusunun gerçekleri, kayıp sebebi ve yeniden sunum kapısı, VC'nin tohum ve
 ## Series A sorguları, term sheet uyumu birebir aynıdır. İki ürün iki kayıp sebebi ve iki kapı durumu verir: Güven'i boş ürünün
 ## 2★ adayı Güven & Ölçek'i zayıf bulur ve kapı kapalıdır, bütün hatları K2 üründe fiyat ve kapı açıktır.
@@ -24715,7 +24537,6 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 		return {
 			"conversion": SalesSystem.conversion_rate(15),
 			"value": SalesSystem.product_value(),
-			"axes": ProductState.axis_readings(),
 			"signing_seed": SalesSystem.signing_satisfaction_seed(lead),
 			"meeting": SalesMeetingSystem._build_base_contributions(lead, SalesMeetingSystem._fit),
 			"fit_line": SalesMeetingSystem._fit_line(),
@@ -25185,4 +25006,81 @@ static func _case_release_through_close() -> String:
 	var note: Dictionary = GameState.product.release
 	if not reviews.has("ids") or reviews.ids.size() not in [2, 3] or (not note.is_empty() and note.reviews != reviews):
 		return "a tick after the update the comments read %s and the open note %s" % [str(reviews), str(note.get("reviews"))]
+	return ""
+
+
+## Ürünün kalite eksenleri ve kademe damgaları yoktur; onlar varken yazılmış bir kayıt (şema 17 ya da 18) bayraklarını yine de
+## taşır. Bayraklar her yüklemede düşer, öbür bayraklar ve cila olduğu gibi kalır. Damgayı cilaya çeviren göç
+## (`_migrate_15`) onu düşmeden önce ham sözlükten okur: bu `save_v14_build_becomes_sprint_plan`ın konusudur.
+##
+## FALSİFİKASYON: `SaveCodec._decode_flags`taki düşürme döngüsünü sil → bayrak iddiası FAIL; `RETIRED_PRODUCT_FLAGS`a
+## "mvp_line_tiers" ekle → hat kademesi iddiası FAIL.
+static func _case_save_retired_product_flags() -> String:
+	var slot: String = "smoke_retired_flags_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	_seed_sprint_live("erp")
+	for line_id in ProductLines.line_ids("erp"):
+		ProductState.set_line_tier(String(line_id), 1)
+	GameState.product.polish = {"line_erp_ledger": float(SprintCatalog.cfg("polish_step"))}
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	raw["schema_version"] = 17
+	var retired: Dictionary = {"mvp_innovation": 45.0, "mvp_stability": 70.0, "mvp_experience": 45.0,
+		"mvp_step_realization": {"line_erp_ledger_k2": 1.06}}
+	(raw["state"]["game_state"]["flags"] as Dictionary).merge(retired)
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(slot)):
+		return done.call("apply_loaded_state returned false")
+	for key in retired:
+		if GameState.has_flag(key):
+			return done.call("the retired flag %s survived the load" % key)
+	if ProductState.subtype() != "erp" or ProductState.lines_open() != ProductLines.line_ids("erp").size():
+		return done.call("the load left subtype '%s' with %d open lines; want erp with all %d" % [
+			ProductState.subtype(), ProductState.lines_open(), ProductLines.line_ids("erp").size()])
+	if not is_equal_approx(SprintCatalog.polish("line_erp_ledger"), float(SprintCatalog.cfg("polish_step"))):
+		return done.call("the ledger line's polish reads %s after the load" % SprintCatalog.polish("line_erp_ledger"))
+	return done.call("")
+
+
+# Rakip bileşkeleri sabitlendi: 13 alt-tür × 8 rakip, sıra `RivalCatalog.TEMPLATE` sırası. Ağırlık tablosu ya da şablon kayarsa
+# rakip sayıları değişir; `rival_composite_table` onu yakalar.
+const RIVAL_COMPOSITES := {
+	"video_clip": [285.0000, 161.0000, 140.0000, 71.3333, 60.0000, 49.3333, 40.3333, 32.6667],
+	"ai_assistant": [286.0294, 163.0588, 141.3529, 74.0000, 61.8824, 50.6471, 41.2647, 33.0882],
+	"ai_photo_editor": [286.0606, 163.5455, 142.0000, 74.2424, 62.3030, 51.0909, 41.6364, 33.3636],
+	"ai_code_copilot": [284.3939, 159.4545, 138.7273, 69.6364, 58.6061, 48.2424, 39.5152, 32.2121],
+	"ai_vector_search": [283.7879, 158.5455, 138.3636, 68.1818, 57.7576, 47.7576, 39.2121, 32.1515],
+	"note_tool": [285.0000, 161.0000, 140.0000, 71.3333, 60.0000, 49.3333, 40.3333, 32.6667],
+	"erp": [285.0000, 161.0000, 140.0000, 71.3333, 60.0000, 49.3333, 40.3333, 32.6667],
+	"saas_project_mgmt": [284.5313, 161.0625, 140.8125, 70.5000, 60.0000, 49.6875, 40.7188, 33.0938],
+	"saas_crm": [284.3750, 160.5000, 140.2500, 70.0000, 59.5000, 49.2500, 40.3750, 32.8750],
+	"saas_analytics": [284.8438, 160.2188, 139.1250, 70.7500, 59.3125, 48.6875, 39.8125, 32.3125],
+	"saas_billing": [283.5938, 158.3438, 138.3750, 67.7500, 57.5625, 47.6875, 39.1875, 32.1875],
+	"saas_dev_tools": [284.5588, 159.6176, 138.7059, 70.0000, 58.7647, 48.2941, 39.5294, 32.1765],
+	"saas_ops": [284.1429, 159.5143, 139.2000, 69.2000, 58.6286, 48.4571, 39.7429, 32.4571],
+}
+
+
+## Rakip bileşkesinin ağırlıkları rakip kataloğundadır ve rakip sayıları sabittir: on üç alt-türün sekiz rakibinin bileşkesi
+## sabitlenmiş değerlerle aynı. Satırı olmayan alt-türler (erp, note_tool, video_clip) eşit karışımdır.
+##
+## FALSİFİKASYON: `RivalCatalog.COMPOSITE_AXES`ta "saas_billing"in stability ağırlığını 1.6'dan 1.5 yap → o alt-türün satırı FAIL;
+## `Rival.composite`te tablo yerine boş dizi ver → tablolu alt-türler FAIL.
+static func _case_rival_composite_table() -> String:
+	var read: int = 0
+	for r in RivalCatalog.build_all():
+		var want: float = RIVAL_COMPOSITES[r.sub_product_type_id][r.id.trim_prefix("rv_%s_" % r.sub_product_type_id).to_int()]
+		if absf(r.composite() - want) > 0.00006:
+			return "%s reads composite %.4f, want %.4f" % [r.id, r.composite(), want]
+		read += 1
+	if read != RIVAL_COMPOSITES.size() * RivalCatalog.TEMPLATE.size():
+		return "%d rivals were read, want %d" % [read, RIVAL_COMPOSITES.size() * RivalCatalog.TEMPLATE.size()]
 	return ""

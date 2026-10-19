@@ -107,8 +107,8 @@ Her madde: **Bölüm ve madde** · Eski metin (özet) · Yürürlükteki kural �
 
 - **§5 TASARIM, "Ters çevrilme yasağı" son cümlesi; §12.12, 45 kimlik kademesi maddesinin son cümlesi**
   - Eski metin: K(n+1) ≥ K(n) × 1,6 kısıtı kademelerin ham eksen puanına uygulanır.
-  - Yürürlükteki kural: Kısıt ağırlıklı katkıya (ham puan × Kano katsayısı) uygulanır. Mühürlü merkezlerde (4 · 9 · 12) ağırlıklı katkılar 4,0 · 7,2 · 14,4, oranlar 1,80 ve 2,00'dir; ham puana uygulansaydı mühürlü K3 merkezi 12 kırılırdı. Katalog yüklenirken denetlenir, ihlal eden hat reddedilir.
-  - Kaynak: aynı belgenin §24'ü, §12.4 notu (direktör hükmü 2026-08-25); cc952e4.
+  - Yürürlükteki kural: Kısıt yoktur. Kademelerin eksen puanı ve Kano katsayısı kalktığı için denetlenecek bir katkı kalmadı (aşağıdaki "§11.2 Okuma zinciri" maddesi). Katalog yüklenirken kademe kimliği, efor bandı (§12.4), kullanım ağırlığı, kapı parçaları, K3'ün Ar-Ge düğümü ve kimlik hatlarının iş profili dağılımı (2 geliştirme · 1 test · 2 tasarım) denetlenir; ihlal eden hat reddedilir.
+  - Kaynak: Faz Q görev belgesi Karar 11, eksen verisinin silinmesi (sahip kararı 2026-10-18); eski kuralın kaynağı aynı belgenin §24'ü, §12.4 notu (direktör hükmü 2026-08-25).
 
 - **§6.1 Efor modeli, iki formül satırı ve "Saat normalizasyonu" paragrafı; §24'ün §6.1 notu**
   - Eski metin: Kişinin günlük katkısı etkin çıktı × saat/8'dir; yapım hızı (efor/gün) taşıyıcıların toplamı × K_EFOR'dur; saat normalizasyonu 5 ile 11 saat arasında ölçülmüş cebirsel bir özdeşliktir.
@@ -156,8 +156,13 @@ Her madde: **Bölüm ve madde** · Eski metin (özet) · Yürürlükteki kural �
 
 - **§11.3 Pazar çıtası, "Okuma formülü" paragrafı (ilgili: §11.2 "üç hat")**
   - Eski metin: Çıta faz başına tek sabit sayıdır (12,0 / 13,2 / 14,5) ve her eksen için aynıdır.
-  - Yürürlükteki kural: Faz çıtası (12,0 · 13,2 · 14,5; faz başına +%10 [K]) üç hat × K1'e kalibredir ve eksen başına okunur: çıta_eksen = çıta_faz × (üründe o eksende fiilen var olan hat sayısı) / 3. Katalog hatları her zaman sayılır; gizli (Ar-Ge) hat ilk kademesi yayınlandığında sayıya girer, açıldığında değil. Ölçeklenen okumadır; ekonominin kullandığı gerçekleşen değer değişmez. eksen_okuması = round(100 × gerçekleşen_eksen / çıta_eksen), 0–120.
-  - Kaynak: Ar-Ge GDD rev 1.7 §4.5 (mühürlü) ve YÜRÜRLÜK satırı.
+  - Yürürlükteki kural: Faz çıtası ve eksen okuması yoktur. Beklenti evreye değil müşterinin yıldızına bağlıdır (1★ MVP, 2★ Çekirdek'in her hattı ve sektörün iki vurgusundan başlangıç, 3★ olgun ürün); ürün sayfası alanın seviyesini bu beklentiye göre sözcüğe çevirir (Yok, Zayıf, Yeterli, Güçlü) ve alanın hangi yıldıza yettiğini yazar. Ar-Ge'nin gizli hattı alanın hat sayısını artırınca o alanın beklentisi iner. `EventBus.phase_bar_raised` yoktur.
+  - Kaynak: Faz Q görev belgesi Karar 1, 6 ve 11 (sahip kararı 2026-10-18); eski kuralın kaynağı Ar-Ge GDD rev 1.7 §4.5 (mühürlü) ve YÜRÜRLÜK satırı.
+
+- **§11.2 Okuma zinciri ("gizil", "ceza", "gerçekleşme", "okuma"), §12.4 Kano katsayısı ve eksen puanı, §12.8 kapı-üstü bonusunun gerçekleşmeye etkisi, §18'in "Eksen okumaları" satırı**
+  - Eski metin: Hat kademelerinin eksen puanı (ham puan × Kano katsayısı), tur çarpanı ve kapı-üstü bonusu İnovasyon, Kararlılık ve Deneyim eksenlerinin gerçekleşmesini kurar; ekonomi bu ham eksen değerlerini okur ve başka hiçbir sistem eksen hesaplamaz.
+  - Yürürlükteki kural: Eksen yoktur. Hat verisinde eksen, eksen puanı ve ikincil eksen puanı bulunmaz; Kano katsayısı, kademenin tur çarpanı (damga) ve kapı-üstü bonusunun gerçekleşmeye etkisi kalktı. Kapı-üstü basamakları yalnız Yazılım yıldızlarının hız çarpanı olarak durur (§12.8; henüz uygulanmaz). Ürünün tek kalitesi alanların seviyesidir (hatların kademe ve cila ortalaması); ekonomi, satış ve yatırımcı `ProductQuality`'den okur. Hattın `profile` alanı (tasarım, geliştirme, test) eksenin yerine geçen iş profilidir; Ar-Ge'nin "Tasarım sistemi" indirimi tasarım profilli hatların kademe eforunu okur. Rakip modeli kendi üç boyutunu ve bileşke ağırlıklarını tutar (`RivalCatalog.COMPOSITE_AXES`); ürünün kalitesine bağlı değildir.
+  - Kaynak: Faz Q görev belgesi Karar 1 ve 11 (sahip kararı 2026-10-18).
 
 - **§11.3 Pazar çıtası, "Ticker" maddesi ("~10 günde bir [K]")**
   - Eski metin: Çıta başlıkları ticker'a seyrek, yaklaşık 10 günde bir düşer.
@@ -758,6 +763,11 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
   - Yürürlükteki kural: Satır motorun bugün okuduğu iki kaynaktan beslenir: açık talepler (yalnız B2B) ve açık ticket'lar (iki pazar). Her açık talep ve her açık ticket kendi hattına bir oy verir; en çok oyu alan hat söylenir, eşitlikte sıralı hat kimliği kazanır (`RnDSystem._demand_line`). Mesaj hattın kimliğini saklar (`demand_line`), adı okunurken dile göre çözülür. Ne talep ne ticket açıkken "Bu ay kimse bir şey istemedi." doğru cümle olarak kalır. Motorun okumadığı sayıyı söylememek için dört cümle sayısız yazıldı (`RND_NOTE_DEMAND_B2B_0`, `_B2B_1`, `_B2B_2`, `_B2C_2`, aynı anahtarlar); havuzun anahtar kümesi ve öbür dört cümle değişmez.
   - Kaynak: sahip kararı 2026-10-08 (Onarım 0 · A9: metin seçeneği a, kaynak açık talep ve açık ticket, çoğunluk kazanır); Ürün rev 7 sprint döngüsü (talep ve ticket defteri).
   - Not (Faz A, 2026-10-17): talep satırının ikinci kaynağı açık hatadır (açık ticket değil) (bkz. "Faz A · hatalar ve hata gösterimi").
+
+- **§4.4 Tasarım Sistemi etkisi ("Deneyim ekseni" kademelerinin eforu); §13'ün on katsayısından `experience_effort`**
+  - Eski metin: Tasarım Sistemi Deneyim ekseninin kademelerinin eforunu düşürür; katsayının adı `experience_effort`tur.
+  - Yürürlükteki kural: Eksen yoktur. İndirim iş profili tasarım olan hatların kademe eforunu %20 düşürür (`ProductLines.work_profile(hat) == "design"`; kart eforu, ham efor ve kayıt göçü aynı profili okur, sabit `ProductLines.RND_DESIGN_EFFORT_MULT`). Katsayının adı `design_effort`tir.
+  - Kaynak: Faz Q görev belgesi Karar 11 (sahip kararı 2026-10-18).
 
 ## GDD — SATIŞ MODÜLÜ (rev 6.1 · İNŞA SÜRÜMÜ)
 

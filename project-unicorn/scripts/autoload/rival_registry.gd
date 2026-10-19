@@ -10,9 +10,8 @@ extends Node
 # per-day rate; each tick applies a week of it.
 #
 # STRUCTURAL CEILING: rival advancement uses QualityModel.grow with per-tier
-# asymptotes. The player's axes are bounded by the catalog pool sums (+
-# strengthen accretion paid in efor/time), which sit far below the giant band
-# (composite ≈ 285). Enforced by the number bands, not a clamp.
+# asymptotes (startup 100, established 200, giant 330), so a tier never reaches the
+# next one's band. Enforced by the number bands, not a clamp.
 
 const TIER_ASYMPTOTE := {"startup": 100.0, "established": 200.0, "giant": 330.0}
 
@@ -65,21 +64,6 @@ func get_by_type(sub_type_id: String) -> Array[Rival]:
 		if r.sub_product_type_id == sub_type_id:
 			out.append(r)
 	return out
-
-
-# Rank the player among same-type STARTUP rivals. Returns {rank, total}.
-# rank is 1-based (1 = ahead of every startup rival). total = startup rivals + the
-# player. `player_composite` should be the player's type-weighted composite.
-func get_player_rank_in_startup_league(sub_type_id: String, player_composite: float) -> Dictionary:
-	var axes: Array = ProductCatalog.get_quality_axes(sub_type_id)
-	var league: int = 0
-	var better: int = 0
-	for r in _rivals.values():
-		if r.tier == "startup" and r.sub_product_type_id == sub_type_id:
-			league += 1
-			if r.composite(axes) > player_composite:
-				better += 1
-	return {"rank": better + 1, "total": league + 1}
 
 
 # --- Advancement (called on every tick by TimeManager) ---

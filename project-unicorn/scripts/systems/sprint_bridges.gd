@@ -2,7 +2,7 @@ class_name SprintBridges
 extends RefCounted
 
 # Sprint motorunun öbür alanlarla dikişleri: B2B talepleri, rakip çıkışları ve basın satırı,
-# ekonomi (eksen puanı, altyapı, ücretli plan) ve gerçekleşen sonuç. Öbür alanlara yalnız onların
+# ekonomi (altyapı, ücretli plan) ve gerçekleşen sonuç. Öbür alanlara yalnız onların
 # seam'lerinden yazar. GameState.product'ın yazarı SprintSystem'dir; köprü orada yalnız requests ve
 # rival_hits'i, bir de kendisine verilen sürüm kaydının thanks alanını yazar (reviews'u SprintSystem
 # yazar, seçimi köprüden alır). Hepsi tür seçilmiş üründe çalışır.
@@ -120,14 +120,6 @@ static func press_line(release: Dictionary) -> Dictionary:
 
 
 # --- Ekonomi -----------------------------------------------------------------------------
-
-## Eksen köprüsü: hat kademelerinden türeyen ham eksen değerleri Satış'ın, VC'nin ve Finans'ın
-## okuduğu mvp_* bayraklarına yazılır.
-static func push_axes() -> void:
-	var dims: Dictionary = ProductState.realized_dims()
-	for axis in QualityModel.AXES:
-		GameState.set_flag("mvp_%s" % axis, float(dims[axis]))
-
 
 ## MVP anı: sunucu önerilen kapasiteyle bulutta açılır.
 static func on_mvp() -> void:

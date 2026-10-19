@@ -412,15 +412,12 @@ static func _on_month_ended(_data: Dictionary) -> void:
 
 
 static func _on_build_phase(new_phase: String) -> void:
-	# A public release, with the raw axes the economy reads from now on: the sprint close pushed
-	# them before it announced the release. open_bugs is the product's bug store after the close.
+	# A public release. open_bugs is the product's bug store after the close.
 	if new_phase != "shipped":
 		return
-	print("PROBE SHIP day=%d version=%d label=%s stability=%.1f innovation=%.1f experience=%.1f open_bugs=%d faulty=%d" % [
+	print("PROBE SHIP day=%d version=%d label=%s open_bugs=%d faulty=%d" % [
 		GameState.day, ProductState.version(), SprintSystem.version_label(ProductState.version()),
-		float(GameState.get_flag("mvp_stability", 0.0)), float(GameState.get_flag("mvp_innovation", 0.0)),
-		float(GameState.get_flag("mvp_experience", 0.0)), ProductState.open_bugs(),
-		(GameState.product.release.get("faulty", []) as Array).size()])
+		ProductState.open_bugs(), (GameState.product.release.get("faulty", []) as Array).size()])
 
 
 ## Every sprint start: the fix cards in the plan against the capacity it was planned for (stored when the sprint
@@ -1353,8 +1350,8 @@ static func _meet(p: Prospect) -> void:
 const STAFF_LADDER := [
 	{"role": "developer", "min_customers": 0, "min_mrr": 0},
 	{"role": "customer_rep", "min_customers": 3, "min_mrr": 0},
-	# QA early: the stability lines' K2/K3 gate on QA stars, and B2B satisfaction drifts
-	# toward the stability reading. A run without a tester cannot hold its accounts.
+	# QA early: the test lines' K2/K3 gate on QA stars, and B2B satisfaction drifts
+	# toward the product's fit. A run without a tester cannot hold its accounts.
 	{"role": "tester", "min_customers": 0, "min_mrr": 3000},
 	{"role": "sales_rep", "min_customers": 0, "min_mrr": 4000},
 	{"role": "sales_rep", "min_customers": 0, "min_mrr": 12000},

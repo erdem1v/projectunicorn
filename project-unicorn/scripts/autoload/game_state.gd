@@ -55,16 +55,11 @@ const FLAG_TYPES := {
 	"mvp_sub_product_type_id": TYPE_STRING,
 	"mvp_market_type": TYPE_STRING,
 	"mvp_launch_day": TYPE_INT,
-	"mvp_innovation": TYPE_FLOAT,
-	"mvp_stability": TYPE_FLOAT,
-	"mvp_experience": TYPE_FLOAT,
 	"critical_bug_unfixed": TYPE_BOOL,
 	"tech_debt_birikti": TYPE_BOOL,
 	# --- Ürün rev 6.1 · HAT MODELİ ve DESTEK (§12, §8, §9, §10) ---
 	# mvp_components (düz özellik listesi) Satış ve söz kaydı okuduğu için duruyor.
 	"mvp_line_tiers": TYPE_DICTIONARY,          # {hat kimliği: 0|1|2|3} — §12.1
-	# §11.2: çarpan KADEME başına saklanır; eksik kademe 1,0 okunur.
-	"mvp_step_realization": TYPE_DICTIONARY,    # {kademe kimliği: çarpan}
 	"mvp_hidden_lines": TYPE_ARRAY,             # Ar-Ge'nin açtığı gizli hatlar — §12.1
 	# --- DESTEK: GELEN BİLDİRİM sayacı, mühürlü ad (§8.1), ve ürünün açık hata deposu ---
 	"mvp_reports_incoming": TYPE_INT,           # GELEN BİLDİRİM

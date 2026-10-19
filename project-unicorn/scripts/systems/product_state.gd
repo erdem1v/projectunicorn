@@ -9,7 +9,6 @@ extends RefCounted
 # ekranı, monitör, talep üreteci ve olay koşulları aynı tabloyu okur."
 
 const LINE_TIERS := "mvp_line_tiers"
-const STEP_REALIZATION := "mvp_step_realization"
 const HIDDEN_LINES := "mvp_hidden_lines"
 const REPORTS_INCOMING := "mvp_reports_incoming"
 const REPORTS_PROGRESS := "mvp_reports_progress"
@@ -85,32 +84,6 @@ static func set_line_tier(line_id: String, tier: int) -> void:
 	var d: Dictionary = line_tiers()
 	d[line_id] = clampi(tier, 0, ProductLines.TIER_MAX)
 	GameState.set_flag(LINE_TIERS, d)
-
-
-## §11.2 — the multiplier a step shipped with. Missing reads 1.0, which is the
-## §5 baseline, so an un-stamped fixture behaves as a one-turn version.
-static func step_realization() -> Dictionary:
-	return (GameState.get_flag(STEP_REALIZATION, {}) as Dictionary).duplicate()
-
-
-static func stamp_step(step_id: String, mult: float) -> void:
-	var d: Dictionary = step_realization()
-	d[step_id] = mult
-	GameState.set_flag(STEP_REALIZATION, d)
-
-
-## The realization map keyed by LINE, which is the shape QualityModel reads: each
-## live line contributes through the stamp its CURRENT step shipped with.
-static func line_realization() -> Dictionary:
-	var stamps: Dictionary = GameState.get_flag(STEP_REALIZATION, {}) as Dictionary
-	var tiers: Dictionary = GameState.get_flag(LINE_TIERS, {}) as Dictionary
-	var out: Dictionary = {}
-	for line_id in tiers:
-		var tier: int = int(tiers[line_id])
-		if tier > 0:
-			var step_id: String = String(ProductLines.step_at(String(line_id), tier).get("id", ""))
-			out[line_id] = float(stamps.get(step_id, 1.0))
-	return out
 
 
 ## §12.1 — hidden lines opened by Ar-Ge continuation nodes. Persisted so a reload
@@ -322,21 +295,3 @@ static func set_infra_units(units: int) -> void:
 		return
 	GameState.set_flag(INFRA_UNITS, clamped)
 	EventBus.infra_changed.emit()
-
-
-# ------------------------------------------------------------ readings
-
-## §11.2/§11.3 — the three 0-120 readings, assembled from the one true state.
-## Every reader of an axis goes through here, never through the chain directly, so
-## two readers cannot disagree.
-static func axis_readings() -> Dictionary:
-	return QualityModel.axis_readings(subtype(), line_tiers(), line_realization())
-
-
-static func axis_reading(axis: String) -> int:
-	return QualityModel.axis_reading(subtype(), line_tiers(), line_realization(), axis)
-
-
-## The raw realized values the economy's saturation curve reads.
-static func realized_dims() -> Dictionary:
-	return QualityModel.realized_dims(subtype(), line_tiers(), line_realization())

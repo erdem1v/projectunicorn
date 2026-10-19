@@ -16,8 +16,6 @@ extends RefCounted
 #   giant       ≈ 285   (asymptote 330, momentum 0 → static)
 #   established ≈ 140-161
 #   startup     ≈ 32-71  (asymptote 100)
-# A Phase-1 player's composite stays < 110 by construction (QualityModel.grow),
-# so the player can brush the established floor but never enters the giant band.
 # All numbers BALANCE-TUNABLE.
 const TEMPLATE := [
 	{"tier": "giant",       "innovation": 290.0, "stability": 280.0, "experience": 285.0, "momentum": 0.0},
@@ -29,6 +27,63 @@ const TEMPLATE := [
 	{"tier": "startup",     "innovation": 40.0,  "stability": 35.0,  "experience": 46.0,  "momentum": 0.50},
 	{"tier": "startup",     "innovation": 31.0,  "stability": 30.0,  "experience": 37.0,  "momentum": 0.45},
 ]
+
+# Weight of each dimension in a rival's composite (Rival.composite), per sub-type. A sub-type without a row (erp,
+# note_tool, video_clip) blends the three equally (QualityModel.DEFAULT_AXES).
+const COMPOSITE_AXES := {
+	# --- AI (mostly B2C) ---
+	"ai_assistant": [
+		{"axis": "innovation", "weight": 1.4},
+		{"axis": "stability", "weight": 0.7},
+		{"axis": "experience", "weight": 1.3},
+	],
+	"ai_photo_editor": [
+		{"axis": "innovation", "weight": 1.3},
+		{"axis": "stability", "weight": 0.6},
+		{"axis": "experience", "weight": 1.4},
+	],
+	"ai_code_copilot": [
+		{"axis": "innovation", "weight": 1.0},
+		{"axis": "stability", "weight": 1.4},
+		{"axis": "experience", "weight": 0.9},
+	],
+	"ai_vector_search": [
+		{"axis": "innovation", "weight": 0.8},
+		{"axis": "stability", "weight": 1.6},
+		{"axis": "experience", "weight": 0.9},
+	],
+	# --- SaaS (all B2B) ---
+	"saas_project_mgmt": [
+		{"axis": "innovation", "weight": 0.8},
+		{"axis": "stability", "weight": 1.1},
+		{"axis": "experience", "weight": 1.3},
+	],
+	"saas_crm": [
+		{"axis": "innovation", "weight": 0.8},
+		{"axis": "stability", "weight": 1.2},
+		{"axis": "experience", "weight": 1.2},
+	],
+	"saas_analytics": [
+		{"axis": "innovation", "weight": 1.1},
+		{"axis": "stability", "weight": 1.2},
+		{"axis": "experience", "weight": 0.9},
+	],
+	"saas_billing": [
+		{"axis": "innovation", "weight": 0.7},
+		{"axis": "stability", "weight": 1.6},
+		{"axis": "experience", "weight": 0.9},
+	],
+	"saas_dev_tools": [
+		{"axis": "innovation", "weight": 1.1},
+		{"axis": "stability", "weight": 1.4},
+		{"axis": "experience", "weight": 0.9},
+	],
+	"saas_ops": [
+		{"axis": "innovation", "weight": 0.9},
+		{"axis": "stability", "weight": 1.5},
+		{"axis": "experience", "weight": 1.1},
+	],
+}
 
 # Per-type product names (index 0 = giant, 1-2 = established, 3-7 = startup).
 #

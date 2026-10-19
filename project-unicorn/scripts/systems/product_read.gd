@@ -10,29 +10,6 @@ extends RefCounted
 # `product_id` parametreleri belgedeki imzayı korur ve YOK SAYILIR: çoklu ürün Erken
 # Erişim'in konusu (§1), demo'da tek ürün vardır.
 
-## §11.3 — 0-120 okuması. Üçgenin çizdiği ve tabanların (§14) karşılaştırdığı sayı.
-static func axis_reading(_product_id: String, axis: String) -> int:
-	return ProductState.axis_reading(axis)
-
-
-## §19 — önde / hizada / geride. SORGU VARDIR, EKRANDA HİÇBİR YERDE RENDER EDİLMEZ:
-## olay metni düzyazıda kullanabilir, monitör kullanamaz (§17'nin üçgen kuralı).
-const WORD_AHEAD := "onde"
-const WORD_LEVEL := "hizada"
-const WORD_BEHIND := "geride"
-## Çıtanın etrafındaki "hizada" bandı: okuma 100 çıtanın tam kendisidir.
-const MARKET_WORD_BAND := 10
-
-
-static func market_word(_product_id: String, axis: String) -> String:
-	var r: int = ProductState.axis_reading(axis)
-	if r >= 100 + MARKET_WORD_BAND:
-		return WORD_AHEAD
-	if r <= 100 - MARKET_WORD_BAND:
-		return WORD_BEHIND
-	return WORD_LEVEL
-
-
 ## §8.1 — açık hata (doğrulanmış, düzeltilmemiş), bütün hatlarda.
 static func open_bugs(_product_id: String = "") -> int:
 	return ProductState.open_bugs()

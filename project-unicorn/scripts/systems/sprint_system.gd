@@ -1514,7 +1514,7 @@ static func _close() -> void:
 	EventBus.sprint_closed.emit(number)
 
 
-## Ürün kamuya açılır: sürüm bayrakları ve geçmişi, ayın öne çıkanı, eksenler ve köprüler. v1.0 MVP'dir:
+## Ürün kamuya açılır: sürüm bayrakları ve geçmişi, ayın öne çıkanı ve köprüler. v1.0 MVP'dir:
 ## ürün canlıya geçer, sunucu açılır. Sinyalleri çağıran sürüm kaydını yazdıktan sonra atar.
 static func _go_public(n: int, new_code: float) -> void:
 	if n == 1:
@@ -1527,7 +1527,6 @@ static func _go_public(n: int, new_code: float) -> void:
 	GameState.submit_month_highlight("PROD_SHIP_FIRST_TITLE" if n == 1 else "PROD_SHIP_VERSION_TITLE",
 		{"version": version_text(n)}, 50)
 	ProductState.refresh_on_publish(new_code)
-	SprintBridges.push_axes()
 	if n == 1:
 		SprintBridges.on_mvp()
 	SprintBridges.on_release()

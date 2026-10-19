@@ -1,7 +1,7 @@
 class_name ProductCatalog
 extends RefCounted
 
-# Read-only catalog: sub-product types, the flat feature pools and per-type axis weights.
+# Read-only catalog: sub-product types and the flat feature pools.
 # Player-facing words live in strings.csv, derived from ids (copy accessors at the bottom).
 
 # Dış anahtar PAZAR DEĞİL, HABER/OLAY HAVUZUDUR (GameState.subgenre; news_feed_system
@@ -165,64 +165,6 @@ const FEATURE_POOLS := {
 }
 
 
-# Pazarın eksenlere verdiği ağırlık (composite_quality'ye girer); etiketler evrensel
-# üçlüdür (axis_label). Kayıtlardan ayrı sözlük, tip kayıtları okunur kalsın diye.
-const QUALITY_AXES := {
-	# --- AI (mostly B2C) ---
-	"ai_assistant": [
-		{"axis": "innovation", "weight": 1.4},
-		{"axis": "stability", "weight": 0.7},
-		{"axis": "experience", "weight": 1.3},
-	],
-	"ai_photo_editor": [
-		{"axis": "innovation", "weight": 1.3},
-		{"axis": "stability", "weight": 0.6},
-		{"axis": "experience", "weight": 1.4},
-	],
-	"ai_code_copilot": [
-		{"axis": "innovation", "weight": 1.0},
-		{"axis": "stability", "weight": 1.4},
-		{"axis": "experience", "weight": 0.9},
-	],
-	"ai_vector_search": [
-		{"axis": "innovation", "weight": 0.8},
-		{"axis": "stability", "weight": 1.6},
-		{"axis": "experience", "weight": 0.9},
-	],
-	# --- SaaS (all B2B) ---
-	"saas_project_mgmt": [
-		{"axis": "innovation", "weight": 0.8},
-		{"axis": "stability", "weight": 1.1},
-		{"axis": "experience", "weight": 1.3},
-	],
-	"saas_crm": [
-		{"axis": "innovation", "weight": 0.8},
-		{"axis": "stability", "weight": 1.2},
-		{"axis": "experience", "weight": 1.2},
-	],
-	"saas_analytics": [
-		{"axis": "innovation", "weight": 1.1},
-		{"axis": "stability", "weight": 1.2},
-		{"axis": "experience", "weight": 0.9},
-	],
-	"saas_billing": [
-		{"axis": "innovation", "weight": 0.7},
-		{"axis": "stability", "weight": 1.6},
-		{"axis": "experience", "weight": 0.9},
-	],
-	"saas_dev_tools": [
-		{"axis": "innovation", "weight": 1.1},
-		{"axis": "stability", "weight": 1.4},
-		{"axis": "experience", "weight": 0.9},
-	],
-	"saas_ops": [
-		{"axis": "innovation", "weight": 0.9},
-		{"axis": "stability", "weight": 1.5},
-		{"axis": "experience", "weight": 1.1},
-	],
-}
-
-
 ## Tüm havuzların birleşimi: tip oyun içinde seçilir ve seçim GameState.subgenre'yi
 ## tipin havuzundan yazar.
 static func get_all_sub_product_types() -> Array:
@@ -262,11 +204,6 @@ static func get_price_tendency(sub_product_type_id: String) -> String:
 	return String(get_sub_product_type_by_id(sub_product_type_id).get("price_tendency", "neutral"))
 
 
-## [] for unknown ids → QualityModel falls back to equal DEFAULT_AXES.
-static func get_quality_axes(sub_product_type_id: String) -> Array:
-	return QUALITY_AXES.get(sub_product_type_id, [])
-
-
 # ---------------------------------------------------------------- copy accessors
 # Anahtarlar id'den türetilir (PROD_TYPE_<ID>_NAME …); tr("LITERAL") grep'i onları
 # göremediği için `loc_product_derived_keys` smoke'u gerçek id listelerini gezer.
@@ -302,7 +239,3 @@ static func type_sector_labels(sub_product_type_id: String) -> Array:
 	for sid in get_sub_product_type_by_id(sub_product_type_id).get("sectors", []):
 		out.append(_derived("SECTOR_", String(sid)))
 	return out
-
-
-static func axis_label(axis_id: String) -> String:
-	return _derived("PROD_AXIS_", axis_id)

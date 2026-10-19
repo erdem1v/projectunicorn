@@ -26,7 +26,7 @@
     "incident_playbook":  {"effort": 70, "cash": 0,   "areas": ["qa", "engineering"],      "stars": 2, "parent": "cicd",             "effect": "overage_satisfaction"},
     "self_service":       {"effort": 90, "cash": 0,   "areas": ["qa", "design"],           "stars": 2, "parent": "test_automation",  "cross": "design_system",    "effect": "inflow_base"},
 
-    "design_system":      {"effort": 50, "cash": 0,   "areas": ["design"],                 "stars": 1, "parent": "",                 "effect": "experience_effort"},
+    "design_system":      {"effort": 50, "cash": 0,   "areas": ["design"],                 "stars": 1, "parent": "",                 "effect": "design_effort"},
     "user_research":      {"effort": 70, "cash": 0,   "areas": ["design"],                 "stars": 2, "parent": "design_system",    "effect": "product_note"},
     "onboarding_flow":    {"effort": 70, "cash": 0,   "areas": ["design"],                 "stars": 2, "parent": "design_system",    "effect": "b2c_conversion"},
     "accessibility":      {"effort": 70, "cash": 0,   "areas": ["design", "product"],      "stars": 2, "parent": "user_research"},
@@ -38,23 +38,21 @@
 
   "hidden_lines": {
     "line_hidden_self_serve": {
-      "axis": "stability",
       "profile": "test",
       "opened_by": "test_automation",
       "authored": true,
       "raw": {
         "id": "line_hidden_self_serve",
-        "axis": "stability",
         "profile": "test",
         "steps": [
-          {"id": "line_hidden_self_serve_k1", "axis_points": 4,  "effort": 6,  "usage_weight": 0, "requires": {}},
-          {"id": "line_hidden_self_serve_k2", "axis_points": 9,  "effort": 8,  "usage_weight": 0, "requires": {"person": [{"area": "qa", "stars": 2}]}},
-          {"id": "line_hidden_self_serve_k3", "axis_points": 12, "effort": 10, "usage_weight": 1, "requires": {"research": "design_system", "person": [{"area": "qa", "stars": 2}], "total": [{"area": "customer_success", "stars": 3}]}}
+          {"id": "line_hidden_self_serve_k1", "effort": 6,  "usage_weight": 0, "requires": {}},
+          {"id": "line_hidden_self_serve_k2", "effort": 8,  "usage_weight": 0, "requires": {"person": [{"area": "qa", "stars": 2}]}},
+          {"id": "line_hidden_self_serve_k3", "effort": 10, "usage_weight": 1, "requires": {"research": "design_system", "person": [{"area": "qa", "stars": 2}], "total": [{"area": "customer_success", "stars": 3}]}}
         ]
       }
     },
-    "line_hidden_auto_organize":        {"axis": "innovation", "profile": "dev",    "opened_by": "knowledge_graph", "authored": false, "raw": {}},
-    "line_hidden_enterprise_reporting": {"axis": "stability",  "profile": "test",   "opened_by": "data_warehouse",  "authored": false, "raw": {}},
-    "line_hidden_adaptive_ui":          {"axis": "experience", "profile": "design", "opened_by": "personalization", "authored": false, "raw": {}}
+    "line_hidden_auto_organize":        {"profile": "dev",    "opened_by": "knowledge_graph", "authored": false, "raw": {}},
+    "line_hidden_enterprise_reporting": {"profile": "test",   "opened_by": "data_warehouse",  "authored": false, "raw": {}},
+    "line_hidden_adaptive_ui":          {"profile": "design", "opened_by": "personalization", "authored": false, "raw": {}}
   }
 }

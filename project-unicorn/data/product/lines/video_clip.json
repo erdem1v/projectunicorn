@@ -2,23 +2,20 @@
   "subtype": "video_clip",
   "_doc": "GDD URUN rev 6 §12.11 — Video Klip Aracı (B2C). Kanca: uzun videodan kısa klip, creator ekonomisi. Solo v1 = yükle → kes → altyazı. K3 yönü: otomatik klip seçimi / altyazı zekâsı (ai_engine).",
   "_usage": "§10 — video gerçekten ağır iştir: kodlama ve AI kademeleri 2-3 taşır, kurgu yüzeyi 0-1'de kalır. Beş K1'in ağırlık toplamı 4 (clipping 1 · captions 1 · pipeline 2), yani bir v1 hâlâ karşılanabilir.",
-  "_anchor": "line_video_clip_clipping_k3 is §12.10's solo-reachable K3: research node (ai_engine) + engineering ★2 + axis owner (innovation → product) ★1.",
+  "_anchor": "line_video_clip_clipping_k3 is §12.10's solo-reachable K3: research node (ai_engine) + engineering ★2 + product ★1.",
   "lines": [
     {
       "id": "line_video_clip_clipping",
-      "axis": "innovation",
       "profile": "dev",
       "steps": [
         {
           "id": "line_video_clip_clipping_k1",
-          "axis_points": 4,
           "effort": 6,
           "usage_weight": 1,
           "requires": {}
         },
         {
           "id": "line_video_clip_clipping_k2",
-          "axis_points": 9,
           "effort": 8,
           "usage_weight": 2,
           "requires": {
@@ -27,7 +24,6 @@
         },
         {
           "id": "line_video_clip_clipping_k3",
-          "axis_points": 12,
           "effort": 11,
           "usage_weight": 3,
           "ai": true,
@@ -40,19 +36,16 @@
     },
     {
       "id": "line_video_clip_captions",
-      "axis": "innovation",
       "profile": "dev",
       "steps": [
         {
           "id": "line_video_clip_captions_k1",
-          "axis_points": 4,
           "effort": 6,
           "usage_weight": 1,
           "requires": {}
         },
         {
           "id": "line_video_clip_captions_k2",
-          "axis_points": 9,
           "effort": 8,
           "usage_weight": 2,
           "requires": {
@@ -61,7 +54,6 @@
         },
         {
           "id": "line_video_clip_captions_k3",
-          "axis_points": 12,
           "effort": 11,
           "usage_weight": 3,
           "ai": true,
@@ -75,19 +67,16 @@
     },
     {
       "id": "line_video_clip_pipeline",
-      "axis": "stability",
       "profile": "test",
       "steps": [
         {
           "id": "line_video_clip_pipeline_k1",
-          "axis_points": 4,
           "effort": 7,
           "usage_weight": 2,
           "requires": {}
         },
         {
           "id": "line_video_clip_pipeline_k2",
-          "axis_points": 9,
           "effort": 9,
           "usage_weight": 2,
           "license_cost": 900,
@@ -97,7 +86,6 @@
         },
         {
           "id": "line_video_clip_pipeline_k3",
-          "axis_points": 12,
           "effort": 12,
           "usage_weight": 3,
           "requires": {
@@ -110,19 +98,16 @@
     },
     {
       "id": "line_video_clip_timeline",
-      "axis": "experience",
       "profile": "design",
       "steps": [
         {
           "id": "line_video_clip_timeline_k1",
-          "axis_points": 4,
           "effort": 6,
           "usage_weight": 0,
           "requires": {}
         },
         {
           "id": "line_video_clip_timeline_k2",
-          "axis_points": 9,
           "effort": 8,
           "usage_weight": 1,
           "requires": {
@@ -131,7 +116,6 @@
         },
         {
           "id": "line_video_clip_timeline_k3",
-          "axis_points": 12,
           "effort": 11,
           "usage_weight": 2,
           "requires": {
@@ -143,12 +127,10 @@
     },
     {
       "id": "line_video_clip_framing",
-      "axis": "experience",
       "profile": "design",
       "steps": [
         {
           "id": "line_video_clip_framing_k1",
-          "axis_points": 4,
           "effort": 5,
           "usage_weight": 0,
           "requires": {
@@ -157,7 +139,6 @@
         },
         {
           "id": "line_video_clip_framing_k2",
-          "axis_points": 9,
           "effort": 7,
           "usage_weight": 1,
           "requires": {
@@ -166,7 +147,6 @@
         },
         {
           "id": "line_video_clip_framing_k3",
-          "axis_points": 12,
           "effort": 10,
           "usage_weight": 2,
           "requires": {

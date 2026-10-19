@@ -20,6 +20,10 @@ extends RefCounted
 
 const TYPE_TAG := "__res"
 
+# The product's quality axes and the stamps that fed them. A save written while they lived still carries the flags,
+# whatever its schema number; they are dropped on every load, after the migrations that read them.
+const RETIRED_PRODUCT_FLAGS := ["mvp_innovation", "mvp_stability", "mvp_experience", "mvp_step_realization"]
+
 
 # Every Resource class that can reach a save file. A `match` because a global class name is
 # not a constant expression and cannot sit in a const Dictionary.
@@ -233,6 +237,8 @@ static func _decode_flags(raw: Variant) -> Dictionary:
 			TYPE_DICTIONARY: out[key] = from_json(v) if typeof(v) == TYPE_DICTIONARY else {}
 			_:               out[key] = from_json(v)
 	out.erase("pitch_prep_active")   # a key an old save carries and no system owns
+	for key in RETIRED_PRODUCT_FLAGS:
+		out.erase(key)
 	return out
 
 
