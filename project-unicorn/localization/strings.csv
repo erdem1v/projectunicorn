@@ -3044,7 +3044,6 @@ SALES_PROMISE_OPEN_SPRINT,Açık söz: {feature} · Sprint {n} sonuna kadar,Open
 FIN_ONETIME_INCIDENT,Kesinti gideri,Incident costs
 FIN_ONETIME_AUDIT,Güvenlik denetimi,Security audit
 FIN_ONETIME_RETENTION,Bağlılık primi,Retention bonus
-FIN_ONETIME_CONTRACTOR,Dış kaynak ücreti,Contractor fee
 FIN_ONETIME_OUTREACH,Tanıtım kampanyası,Outreach campaign
 FIN_ONETIME_REFUNDS,İadeler,Refunds
 FIN_ONETIME_SIDE_WORK,Yan iş,Side contract
@@ -3426,13 +3425,11 @@ EV_TEAM_PASSWORD_RULE_TITLE,Parola meselesi,The password question
 EV_TEAM_PASSWORD_RULE_BODY,"Sürüm çıkmadan kullanıcı parolaları şifrelensin istiyorsun. {employee} buna fazladan iş diyor: hiçbir müşteri istememiş, üstelik parola hatırlatma maili bozulurmuş. O mail, parolanın kendisini yolluyor.","You want user passwords encrypted before the release goes out. {employee} calls it extra work no customer has asked for, and says it would break the password reminder. The reminder mails out the password itself."
 EV_TEAM_PASSWORD_RULE_RULE,Şifrelemeyi şart koş,Make encryption the rule
 EV_TEAM_PASSWORD_RULE_SELF,Şifrelemeyi kendin yaz,Write the encryption yourself
-EV_TEAM_PASSWORD_RULE_OUTSIDE,Dışarıdan birine yaptır,Have a contractor do it
 EV_TEAM_PASSWORD_RULE_LEAVE,"Bırak, {employee} karar versin",Leave it to {employee}
 EV_TEAM_PASSWORD_RULE_EXPIRED,"Karar çıkmadı, hatırlatma maili parolaları yollamaya devam ediyor.","No ruling came, so the reminder still mails out passwords."
 EV_TEAM_WIPED_TABLE_TITLE,Boş filtre,An empty filter
 EV_TEAM_WIPED_TABLE_BODY,"Destek kuyruğu uzayınca {employee} işe el attı: yönetim panelinden çift açılmış kullanıcı hesaplarını siliyordu. Filtre boş kalmış, toplu silme bütün hesapları götürmüş. Elde iki ay önceki yedek var. {employee} istifasını sundu.","{employee} was helping with the support queue, deleting duplicate user accounts in the admin tool. The filter was empty, and the delete took every account. The last backup is two months old. {employee} has offered to resign."
 EV_TEAM_WIPED_TABLE_REBUILD,Hesapları {employee} geri getirsin,Let {employee} rebuild the accounts
-EV_TEAM_WIPED_TABLE_EXPERT,"Veri kurtarma uzmanı tut, {employee} kalsın","Keep {employee}, hire a recovery expert"
 EV_TEAM_WIPED_TABLE_ACCEPT,"İstifayı kabul et, yedeği geri yükle","Accept the resignation, restore the backup"
 EV_TEAM_WIPED_TABLE_EXPIRED,"Cevap gitmedi, istifa kabul edilmiş sayıldı.","No answer went back, and the resignation stood."
 EV_CUSTOMER_CHARGEBACK_TITLE,Muhasebecileri,Their bookkeeper
@@ -3467,7 +3464,6 @@ EV_PRODUCT_LAUNCH_LEAK_TITLE,Başkasının hesabı,Someone else's account
 EV_PRODUCT_LAUNCH_LEAK_BODY,"Bir teknoloji forumunda okurun biri, sitendeki kendi profilini açmış, adres çubuğundaki sayıyı değiştirmiş ve başka birinin hesabına girmiş. Nasıl yaptığını, ürünü duyurduğun başlığın altına adım adım yazmış. Hâlâ çalışıyor.","A reader on a tech forum opened their profile on your site, changed the number in the address bar and was in someone else's account. The steps are written out under your launch post. They still work."
 EV_PRODUCT_LAUNCH_LEAK_TAKE_DOWN,Düzelene kadar siteyi kapat,Close the site until it's fixed
 EV_PRODUCT_LAUNCH_LEAK_THANK,Başlıkta açığı bulana teşekkür et,Thank the finder in the thread
-EV_PRODUCT_LAUNCH_LEAK_HIRE_FINDER,Açığı bulanı bir haftalığına tut,Hire the finder for a week
 EV_PRODUCT_LAUNCH_LEAK_ASK_DELETE,Gönderiyi silmesini rica et,Ask them to delete the post
 EV_PRODUCT_LAUNCH_LEAK_EXPIRED,Başlık senden cevap gelmeden büyüdü. Bazı kullanıcılar gitti.,The thread grew without a word from you. Some users left.
 EV_PRODUCT_REPEAT_REMINDERS_TITLE,Kırk kez,Forty times
@@ -3478,7 +3474,6 @@ EV_PRODUCT_REPEAT_REMINDERS_WRITE,Onların müşterilerine sen yaz,Write to thei
 EV_PRODUCT_REPEAT_REMINDERS_EXPIRED,"{customer} müşterilerinden tek başına özür diledi, yazılımın kimin olduğunu da söyledi.",{customer} apologised alone and told their clients whose software it was.
 EV_PRODUCT_SUPPORT_OVERFLOW_TITLE,Destekte kimse yok,Nobody on support
 EV_PRODUCT_SUPPORT_OVERFLOW_YOURSELF,Cevapları kendin yaz,Answer them yourself
-EV_PRODUCT_SUPPORT_OVERFLOW_HOURLY_HELP,Mesajlar için saat ücretiyle birini tut,Pay someone hourly to answer them
 EV_PRODUCT_SUPPORT_OVERFLOW_KNOWN_BUGS,Bilinen hataların listesini yayınla,Publish a list of known bugs
 EV_PRODUCT_SUPPORT_OVERFLOW_EXPIRED,"Kimse cevap yazmadı, mesajlar gelmeye devam etti.","Nobody wrote back, and the messages kept coming."
 EV_FUNDING_CLOSING_DOCS_TITLE,Evrak işleri,The paperwork

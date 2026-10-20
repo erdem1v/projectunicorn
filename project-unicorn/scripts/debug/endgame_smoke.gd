@@ -116,6 +116,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"legacy_v12_save_opens_live_table": fail = _case_legacy_v12_save_opens_live_table()
 		"series_a_road_closed_when_all_funds_close": fail = _case_series_a_road_closed_when_all_funds_close()
 		"save_drops_retired_prep": fail = _case_save_drops_retired_prep()
+		"save_drops_retired_transaction_label": fail = _case_save_drops_retired_transaction_label()
 		"pivot_closes_hunt":    fail = _case_pivot_closes_hunt()
 		"meeting_during_kepenk": fail = _case_meeting_during_kepenk()
 		"seat_upsell_moves_seats": fail = _case_seat_upsell_moves_seats()
@@ -2671,6 +2672,37 @@ static func _case_save_drops_retired_prep() -> String:
 	if back.has("prep") or GameState.flags.has("pitch_prep_active"):
 		return "the load kept the retired prep (state block: %s, flag: %s)" % [
 			back.has("prep"), GameState.flags.has("pitch_prep_active")]
+	return ""
+
+
+## Eski kaydın işlem listesinde artık hiçbir kartın yazmadığı bir tek seferlik gider etiketi kalmış olabilir: yüklenen liste onu
+## taşımaz, öbür satırları korur. Gerçek bir kayıt, etiketli satır dosyaya GÜNCEL şemada geri yazılarak eskitilir.
+##
+## FALSİFİKASYON: `SaveCodec.apply_game_state`teki `transactions` süzgecini sil → emekli etiketli satır geri gelir ve FAIL.
+static func _case_save_drops_retired_transaction_label() -> String:
+	var slot: String = "smoke_retired_label_%d" % OS.get_process_id()
+	_seed_save_world()
+	_drain_all_modals()
+	FinanceSystem.record_transaction("hire", -500)
+	if not SaveManager.save_to_slot(slot):
+		SaveManager.delete_slot(slot)
+		return "save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key()
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	(raw["state"]["game_state"]["transactions"] as Array).append(
+		{"day": GameState.day, "label": SaveCodec.RETIRED_TRANSACTION_LABELS[0], "amount": -2000})
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "	", false, true))
+	w.close()
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	SaveManager.delete_slot(slot)
+	if not bool(payload.get("ok", false)):
+		return "the aged save was refused: %s" % String(payload.get("error_key", ""))
+	if not SaveManager.apply_loaded_state(payload):
+		return "apply_loaded_state returned false"
+	var labels: Array = GameState.transactions.map(func(row: Dictionary) -> String: return String(row.label))
+	if labels != ["hire"]:
+		return "the load left the transactions labelled %s, want only the hire row" % str(labels)
 	return ""
 
 
@@ -21755,9 +21787,9 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 
 
 ## Sprint karar kartları gerçek destededir: kâğıt ihtimali 1 iken tek kurucunun ilk hafta geliştirmede çalıştığı sekiz puanlık
-## kart, ilk haftanın sonunda bir product.sprint_* kâğıdını masaya koyar (kurucu tek, geliştirme aşaması: lisans kâğıdı) ve
-## gövdesi kartın adını okur. Vaka fikstür kapsamını açmaz; ihtimali (test sabiti) kendi süresince açar ve geri koyar. Tasarımı
-## biten sekiz puanlık tek kart 1 haftalık sprintte kararını sprint başlarken çeker.
+## kart (hattı ilk sürümle çıkmış ve bir açık hatası var: aceleyle yazılmış kod kâğıdı), ilk haftanın sonunda bir product.sprint_*
+## kâğıdını masaya koyar ve gövdesi hattın adını okur. Vaka fikstür kapsamını açmaz; ihtimali (test sabiti) kendi süresince açar ve
+## geri koyar. Tasarımı biten sekiz puanlık tek kart 1 haftalık sprintte kararını sprint başlarken çeker.
 ## FALSİFİKASYON: kartlardan birinin version_scope'unu "fixture" yap ya da sprint.json
 ## decision.cards'ı fixture kimliklerine çevir → karar istenmez; SprintSystem._begin'deki
 ## _request_decision çağrısını sil → 1 haftalık sprint karar çekmez.
@@ -21768,10 +21800,12 @@ static func _case_sprint_decision_card_fires_shipped() -> String:
 	WorkHoursSystem.set_company_hours(12)
 	var chance: Dictionary = (SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()
 	_paper_chance(1.0)
-	for line_id in SprintCatalog.capabilities("core").slice(0, 2):
+	var lines: Array = SprintCatalog.capabilities("core").slice(0, 2)
+	for line_id in lines:
 		SprintSystem.add("feat:%s_k1" % line_id)
 	for id in GameState.product.sprint.cards:
 		GameState.product.cards[id].effort = 8   # a card the founder is still building after the first week
+	_seed_hasty_first_version(lines)
 	var started: bool = SprintSystem.start()
 	if started:
 		_sim_day()
@@ -21783,7 +21817,7 @@ static func _case_sprint_decision_card_fires_shipped() -> String:
 		return "a decision at chance 1 asked for '%s', want one of %s" % [event_id, SprintCatalog.cfg("decision.cards")]
 	if not EventGate.desk_papers(8).any(func(p: Dictionary) -> bool: return p.id == event_id):
 		return "the %s paper is not on the desk" % event_id
-	var name: String = SprintCatalog.card_name(SprintSystem.decision_card())
+	var name: String = SprintCatalog.cap_name(SprintSystem.decision_card().line)
 	var body: String = EventGate.render(event_id).body_text
 	if name == "" or not body.contains(name) or body.contains("{"):
 		return "the decision paper reads '%s', want it to name '%s'" % [body, name]
@@ -21795,13 +21829,22 @@ static func _case_sprint_decision_card_fires_shipped() -> String:
 	SprintSystem.add(built)
 	GameState.product.cards[built].effort = 8
 	GameState.product.cards[built].progress = [1.6, 0.0, 0.0]   # the design is done: the founder starts in the build
+	_seed_hasty_first_version([SprintCatalog.capabilities("core")[0]])
 	_paper_chance(1.0)
 	started = SprintSystem.start()
 	SprintCatalog._data.decision.sprint_chance = chance
-	if not started or GameState.product.decision.get("event_id", "") != "product.sprint_solo_license":
-		return "a one-week sprint started (%s) with decision %s, want product.sprint_solo_license drawn at its start" % [
+	if not started or not String(GameState.product.decision.get("event_id", "")) in (SprintCatalog.cfg("decision.cards") as Array):
+		return "a one-week sprint started (%s) with decision %s, want a pool paper drawn at its start" % [
 			started, GameState.product.decision]
 	return ""
+
+
+## Hatlar v1.0'a kadarki sürümlerle çıkmış ve her birinde bir açık hata var: tek kurucunun aceleyle yazılmış kod kâğıdının koşulu.
+static func _seed_hasty_first_version(lines: Array) -> void:
+	GameState.product.releases = [{"number": 0, "sprint": 0, "day": -5,
+		"shipped": lines.map(func(l: String) -> Dictionary: return {"line": l})}]
+	for line_id in lines:
+		ProductState.add_bugs(line_id, 1)
 
 
 ## Kırık sözden sonra o hesaba yeni "Söz ver" açılmaz: dört söz satırı ve rakip fiyat kırma
@@ -22014,7 +22057,7 @@ static func _case_paper_line_harden() -> String:
 ## Karar kâğıdının kartına dokunan fiiller ve çipleri: yapılmış işi silmek seam'den okunan puandır (çip ve uygulanan aynı sayı);
 ## kartın puanı kartın adıyla yazılır; anlık hata hattın adını ve tekil/çoğul kalıbını taşır; "Ana akışları test et" kartın testini
 ## yarıya indirir, kartı kısaltılmış testle çıkmış sayar ve çipi yüzde yazmaz, söz tutulmuş demez. Yazılımcı, testçisiz, tek kurucu ve
-## sistem kâğıtlarının yirmisi de havuzdadır ve gösterilir: metin çözülür ve her etkinin çipi vardır.
+## sistem kâğıtlarının on dokuzu da havuzdadır ve gösterilir: metin çözülür ve her etkinin çipi vardır.
 ## FALSİFİKASYON: sprint_card_progress çipinde amount'u seam'den değil sabitten oku → çip sayısı FAIL; `sprint_card_test` kolunda
 ## `card` DECISION dalını sil → kısaltılmış kart FAIL; çipte DECISION dalını sil → yüzde ya da söz çipi FAIL; sprint.json
 ## `decision.cards`tan `product.sprint_late_solo`yu çıkar → havuzda yok FAIL.
@@ -22065,7 +22108,7 @@ static func _case_paper_card_effects() -> String:
 	EvEffects.run_played([cut], {})
 	if not bool(card.cut) or SprintSystem.escape_chance(card) < float(SprintCatalog.cfg("promise.cut_test_escape")):
 		return "after the cut the card reads cut %s and an escape chance of %s" % [card.cut, SprintSystem.escape_chance(card)]
-	# Yirmi kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), her etkinin çipi vardır.
+	# On dokuz kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), her etkinin çipi vardır.
 	var account: Customer = _incident_account("co_render", "Render Co", "retail", 40, 1800)
 	var slots: Dictionary = {
 		"employee": {"type": "employee", "id": _sprint_hire("char_render_dev", HRConstants.ROLE_DEVELOPER).id, "bound_day": GameState.day},
@@ -22092,16 +22135,16 @@ static func _case_paper_card_effects() -> String:
 		for text in words:
 			if String(text) == "" or String(text).contains("{") or String(text).contains("}"):
 				return "%s reads '%s'" % [paper.id, text]
-	if seen != 20:
-		return "%d of the 20 developer, no tester, solo and system papers were rendered" % seen
+	if seen != 19:
+		return "%d of the 19 developer, no tester, solo and system papers were rendered" % seen
 	return ""
 
 
 ## Kâğıtların okuduğu seam'ler: hat kimliği paylaşılan hatta temel kimlikle okunur ve adı hattın adıdır; kök neden yalnız yeterli
 ## hatası olan düzeltme kartında doğrudur; ekipte testçi var mı Test işindekilere bakar (kurucu sayılmaz); ilk sürümün hattı v1.0'a
-## kadarki sürümlerin kartlarındandır; ay sonuna kalan tik ayın son tikinde 1'dir; lisans alt sınırdadır ve koltukla büyür, dışarıdan
-## testçinin haftası maaştan türer; yedek kâğıdı Dayanıklılık'ın kademesini, kayıt kodu kâğıdı Güvenlik'in hatasını ve düzeltme
-## kartının sprintte olup olmadığını okur, ilk cevabı düzeltme kartını başa alır (çip kartın adını yazar).
+## kadarki sürümlerin kartlarındandır; ay sonuna kalan tik ayın son tikinde 1'dir; yedek kâğıdı Dayanıklılık'ın kademesini, kayıt kodu
+## kâğıdı Güvenlik'in hatasını ve düzeltme kartının sprintte olup olmadığını okur, ilk cevabı düzeltme kartını başa alır (çip kartın
+## adını yazar).
 ## FALSİFİKASYON: `urun.security_fix_planned`ı `false` döndür → planlı düzeltme FAIL; `urun.decision_line`dan `get_slice`ı sil →
 ## paylaşılan hat FAIL; `decision_root_cause`dan `kind == "fix"` koşulunu
 ## sil → özellik kartı FAIL; `sprint_has_tester`dan `not t.founder`ı sil → kurucu testçi sayıldı FAIL; `line_in_first_version`da
@@ -22164,15 +22207,6 @@ static func _case_paper_seams() -> String:
 	var front: Array = EvChips.describe({"verb": "sprint_fix_first", "line": "line_shared_security", "front": true}, {}, {}, false)
 	if front.is_empty() or front[0].polarity != "gain" or not String(front[0].label).contains(SprintCatalog.cap_name(security)):
 		return "the sign up paper's first answer reads %s, want the fix card standing first" % str(front)
-	if int(EvSeams.read("urun.paper_tester_week")) != 1400 or int(EvSeams.read("urun.paper_license")) != 1200:
-		return "an outside tester's week reads $%s and a licence $%s, want $1400 and the $1200 floor" % [
-			EvSeams.read("urun.paper_tester_week"), EvSeams.read("urun.paper_license")]
-	SaveManager.reset_all_owners()
-	GameState.initialize_run({"seed": 424242})
-	_seed_sprint_live("erp")
-	_incident_account("co_license", "License Co", "retail", 1000, 5000)
-	if int(EvSeams.read("urun.paper_license")) != 6000:
-		return "a licence for 1000 seats reads $%s, want $6000" % EvSeams.read("urun.paper_license")
 	return ""
 
 

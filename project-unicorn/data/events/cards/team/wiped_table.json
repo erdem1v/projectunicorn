@@ -97,26 +97,6 @@
       ]
     },
     {
-      "id": "expert",
-      "outcome_id": "recovered_by_expert",
-      "effects": [
-        {
-          "verb": "add_cash",
-          "amount": -5000,
-          "label": "contractor"
-        },
-        {
-          "verb": "audience_delta",
-          "pct": -0.02
-        },
-        {
-          "verb": "change_morale",
-          "scope": "employee",
-          "amount": 3
-        }
-      ]
-    },
-    {
       "id": "accept",
       "outcome_id": "resignation_accepted",
       "effects": [
@@ -138,7 +118,6 @@
       "body": "EV_TEAM_WIPED_TABLE_BODY",
       "options": {
         "rebuild": "EV_TEAM_WIPED_TABLE_REBUILD",
-        "expert": "EV_TEAM_WIPED_TABLE_EXPERT",
         "accept": "EV_TEAM_WIPED_TABLE_ACCEPT"
       },
       "expire_note": "EV_TEAM_WIPED_TABLE_EXPIRED"
@@ -148,7 +127,6 @@
       "body": "EV_TEAM_WIPED_TABLE_BODY",
       "options": {
         "rebuild": "EV_TEAM_WIPED_TABLE_REBUILD",
-        "expert": "EV_TEAM_WIPED_TABLE_EXPERT",
         "accept": "EV_TEAM_WIPED_TABLE_ACCEPT"
       },
       "expire_note": "EV_TEAM_WIPED_TABLE_EXPIRED"

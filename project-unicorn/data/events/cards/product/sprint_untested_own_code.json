@@ -75,18 +75,6 @@
       ]
     },
     {
-      "id": "outside_tester",
-      "outcome_id": "outside_tester",
-      "effects": [
-        {
-          "verb": "add_cash",
-          "label": "contractor",
-          "amount_seam": "urun.paper_tester_week",
-          "amount_mult": -1
-        }
-      ]
-    },
-    {
       "id": "own_test",
       "outcome_id": "own_test",
       "effects": [
@@ -103,7 +91,6 @@
       "body": "Bu kartta testçi yok, testi ben yapıyorum. Yazarken aklıma gelmeyen durumlar test ederken de gelmeyecek.",
       "options": {
         "founder_tests": "Testi sen yap",
-        "outside_tester": "Bir haftalığına testçi tut",
         "own_test": "{employee} test etsin"
       },
       "expire_note": "Cevap gelmedi, testi {employee} yaptı."
@@ -113,7 +100,6 @@
       "body": "There's no tester on this card, so I'm testing it myself. The cases I didn't think of while writing it won't come to me while testing it either.",
       "options": {
         "founder_tests": "Test it yourself",
-        "outside_tester": "Hire a tester for a week",
         "own_test": "Let {employee} test it"
       },
       "expire_note": "No answer came, so {employee} tested it."

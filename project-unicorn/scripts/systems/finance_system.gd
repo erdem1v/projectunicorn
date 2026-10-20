@@ -42,7 +42,6 @@ const ONE_TIME_LABELS := {
 	"outage_credit": "FIN_ONETIME_OUTAGE_CREDIT",
 	"audit": "FIN_ONETIME_AUDIT",
 	"retention": "FIN_ONETIME_RETENTION",
-	"contractor": "FIN_ONETIME_CONTRACTOR",
 	"outreach": "FIN_ONETIME_OUTREACH",
 	"refunds": "FIN_ONETIME_REFUNDS",
 	"side_work": "FIN_ONETIME_SIDE_WORK",

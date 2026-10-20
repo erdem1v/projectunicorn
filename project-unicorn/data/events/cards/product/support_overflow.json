@@ -82,26 +82,6 @@
       ]
     },
     {
-      "id": "hourly_help",
-      "outcome_id": "helper_paid",
-      "effects": [
-        {
-          "verb": "add_cash",
-          "amount": -1200,
-          "label": "contractor"
-        },
-        {
-          "verb": "add_reputation",
-          "amount": 1
-        },
-        {
-          "verb": "satisfaction_delta",
-          "scope": "customer",
-          "amount": 6
-        }
-      ]
-    },
-    {
       "id": "known_bugs",
       "outcome_id": "bugs_published",
       "effects": [
@@ -123,7 +103,6 @@
       "body": "Destekte {seam:urun.bugs_unconfirmed} mesaj birikti ve birçoğu bir teşekkürle başlıyor. Bunlara cevap yazabilecek tek kişi ürünü yapmakla meşgul. {customer} bu hafta yine yazdı.",
       "options": {
         "yourself": "EV_PRODUCT_SUPPORT_OVERFLOW_YOURSELF",
-        "hourly_help": "EV_PRODUCT_SUPPORT_OVERFLOW_HOURLY_HELP",
         "known_bugs": "EV_PRODUCT_SUPPORT_OVERFLOW_KNOWN_BUGS"
       },
       "expire_note": "EV_PRODUCT_SUPPORT_OVERFLOW_EXPIRED"
@@ -133,7 +112,6 @@
       "body": "Support has {seam:urun.bugs_unconfirmed} messages piled up, and plenty of them open with a thank you. The only person who could answer them is busy building the product. {customer} wrote again this week.",
       "options": {
         "yourself": "EV_PRODUCT_SUPPORT_OVERFLOW_YOURSELF",
-        "hourly_help": "EV_PRODUCT_SUPPORT_OVERFLOW_HOURLY_HELP",
         "known_bugs": "EV_PRODUCT_SUPPORT_OVERFLOW_KNOWN_BUGS"
       },
       "expire_note": "EV_PRODUCT_SUPPORT_OVERFLOW_EXPIRED"

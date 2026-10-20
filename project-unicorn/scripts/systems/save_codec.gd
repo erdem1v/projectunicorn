@@ -24,6 +24,10 @@ const TYPE_TAG := "__res"
 # whatever its schema number; they are dropped on every load, after the migrations that read them.
 const RETIRED_PRODUCT_FLAGS := ["mvp_innovation", "mvp_stability", "mvp_experience", "mvp_step_realization"]
 
+# One-time charge ids no card writes any more. A save still carries their rows in the transactions log, and the Finance
+# tab would draw the raw id; they are dropped on every load.
+const RETIRED_TRANSACTION_LABELS := ["contractor"]
+
 
 # Every Resource class that can reach a save file. A `match` because a global class name is
 # not a constant expression and cannot sit in a const Dictionary.
@@ -217,6 +221,8 @@ static func apply_game_state(block: Dictionary) -> void:
 			(current as Array).assign(decoded as Array)   # keeps the declared element type
 		else:
 			GameState.set(fname, decoded)
+	GameState.transactions.assign(GameState.transactions.filter(
+		func(row: Dictionary) -> bool: return not String(row.label) in RETIRED_TRANSACTION_LABELS))
 
 
 static func _decode_flags(raw: Variant) -> Dictionary:

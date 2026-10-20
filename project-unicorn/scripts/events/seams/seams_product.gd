@@ -215,15 +215,6 @@ static func _install_papers() -> void:
 				weeks += 1
 			return weeks,
 		"Product", "ticks until the calendar month turns; 1 on the month's last tick")
-	EvSeams.register("urun.paper_tester_week", G, TYPE_INT,
-		func() -> int: return SprintCatalog.outside_tester_week(),
-		"Product", "what a tester hired from outside for a week costs, in dollars")
-	EvSeams.register("urun.paper_license", G, TYPE_INT,
-		func() -> int: return SprintCatalog.license_cost(),
-		"Product", "what a ready made component's licence costs, in dollars, once")
-	EvSeams.register("urun.decision_license_year", G, TYPE_STRING,
-		func() -> String: return Fmt.money_exact(SprintCatalog.license_cost()),
-		"Product", "that licence as money text, for a paper's body")
 	EvSeams.register("urun.paper_server_bill", G, TYPE_INT,
 		func() -> int: return InfraSystem.monthly_bill(),
 		"Product", "this month's server bill, in dollars")

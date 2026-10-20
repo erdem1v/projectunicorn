@@ -82,17 +82,6 @@
       ]
     },
     {
-      "id": "hire_finder",
-      "outcome_id": "finder_hired",
-      "effects": [
-        {
-          "verb": "add_cash",
-          "amount": -2000,
-          "label": "contractor"
-        }
-      ]
-    },
-    {
       "id": "ask_delete",
       "outcome_id": "asked_delete",
       "effects": [
@@ -110,7 +99,6 @@
       "options": {
         "take_down": "EV_PRODUCT_LAUNCH_LEAK_TAKE_DOWN",
         "thank": "EV_PRODUCT_LAUNCH_LEAK_THANK",
-        "hire_finder": "EV_PRODUCT_LAUNCH_LEAK_HIRE_FINDER",
         "ask_delete": "EV_PRODUCT_LAUNCH_LEAK_ASK_DELETE"
       },
       "expire_note": "EV_PRODUCT_LAUNCH_LEAK_EXPIRED"
@@ -121,7 +109,6 @@
       "options": {
         "take_down": "EV_PRODUCT_LAUNCH_LEAK_TAKE_DOWN",
         "thank": "EV_PRODUCT_LAUNCH_LEAK_THANK",
-        "hire_finder": "EV_PRODUCT_LAUNCH_LEAK_HIRE_FINDER",
         "ask_delete": "EV_PRODUCT_LAUNCH_LEAK_ASK_DELETE"
       },
       "expire_note": "EV_PRODUCT_LAUNCH_LEAK_EXPIRED"

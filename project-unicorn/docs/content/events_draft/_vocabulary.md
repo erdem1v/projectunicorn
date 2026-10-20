@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **259** |
+| Seams (read) | **256** |
 | Effect verbs (write) | **75** |
-| Cards in the catalogue | 147 |
+| Cards in the catalogue | 146 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -394,7 +394,6 @@ slot of that type (§17.12).
 | `urun.decision_card_effort` | global | int | Product | the decision card's effort in points; 0 when none waits |
 | `urun.decision_card_late` | global | bool | Product | at the team's pace the decision card will not finish this sprint; false when none waits |
 | `urun.decision_kind` | global | string | Product | feature | request | fix | research: what the decision card is; empty when none waits |
-| `urun.decision_license_year` | global | string | Product | that licence as money text, for a paper's body |
 | `urun.decision_line` | global | string | Product | id of the line the decision card is on, a shared line by its base id; empty when none waits |
 | `urun.decision_line_accounts` | global | int | Product | B2B accounts that use the decision card's line |
 | `urun.decision_line_bugs` | global | int | Product | open bugs on the decision card's line |
@@ -428,14 +427,12 @@ slot of that type (§17.12).
 | `urun.paper_ask_silent` | global | int | Product | the audience that goes quiet when a request is not met: the people who asked, times the quiet ones behind each |
 | `urun.paper_coupon_loss` | global | int | Product | the audience that would have come in on a coupon, in people |
 | `urun.paper_first_screen_loss` | global | int | Product | the sign ups a sign up screen with three questions loses over its weeks, in people |
-| `urun.paper_license` | global | int | Product | what a ready made component's licence costs, in dollars, once |
 | `urun.paper_loss_mid` | global | int | Product | the audience a real annoyance costs, in people |
 | `urun.paper_loss_small` | global | int | Product | the audience a small annoyance costs, in people |
 | `urun.paper_phone_points` | global | int | Product | the work a phone layout adds to a card, in points |
 | `urun.paper_server_bill` | global | int | Product | this month's server bill, in dollars |
 | `urun.paper_signup_loss` | global | int | Product | the sign ups a week of a broken sign up code costs, in people |
 | `urun.paper_test_phones` | global | int | Product | what a few phones to test on cost, in dollars, once |
-| `urun.paper_tester_week` | global | int | Product | what a tester hired from outside for a week costs, in dollars |
 | `urun.promise_card` | global | string | Product | name of the card the latest promise event is about; a history row reads the latest event's |
 | `urun.promise_crunch_finishes` | global | bool | Product | employees work the promise card and the crunch's hours finish it this sprint |
 | `urun.promise_cut_finishes` | global | bool | Product | the promise card is in testing and cutting its test in half finishes it this sprint |
@@ -604,7 +601,7 @@ the catalogue already uses, and the gap each pays:
 | `sprint_dev` | 6 | 9 |
 | `sprint_late` | 6 | 2 |
 | `sprint_pm` | 6 | 8 |
-| `sprint_solo` | 6 | 6 |
+| `sprint_solo` | 6 | 5 |
 | `sprint_test` | 6 | 9 |
 | `sprint_untested` | 6 | 3 |
 | `team_overload` | 6 | 2 |

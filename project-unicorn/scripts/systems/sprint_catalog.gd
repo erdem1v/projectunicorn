@@ -465,28 +465,6 @@ static func bugs_part(line_id: String, n: int) -> Dictionary:
 	return part
 
 
-# --- Kâğıt bedelleri (`sprint.json` `paper` bloğu, [WORKING]) ---------------------------------
-
-## Hazır bileşenin lisansı, bir kez ödenir: B2B'de hesapların koltukları, B2C'de kitle başına; en az `paper.license.min`.
-static func license_cost() -> int:
-	var cost: float = SalesSystem.b2c_audience() * float(cfg("paper.license.per_user"))
-	if ProductState.market_type() == "b2b":
-		cost = 0.0
-		for c in CustomerRegistry.get_all():
-			if c.market_type == "b2b" and c.status in ["active", "trial"]:
-				cost += c.seats * float(cfg("paper.license.per_seat"))
-	return maxi(int(cfg("paper.license.min")), roundi(cost))
-
-
-## Bir haftalığına dışarıdan tutulan testçinin ücreti: orta seviye testçi maaşının haftalığı, `paper.outside_week_mult`
-## katı, yüzlüğe yuvarlanır.
-static func outside_tester_week() -> int:
-	var band: Array = HRConstants.salary_band_for_level(HRConstants.ROLE_TESTER, HRConstants.LEVEL_MID)
-	var weekly: float = (float(band[0]) + float(band[1])) / 2.0 \
-		/ (float(TimeModel.DAYS_PER_MONTH) / float(TimeModel.DAYS_PER_TICK))
-	return roundi(weekly * float(cfg("paper.outside_week_mult")) / 100.0) * 100
-
-
 # --- Lider ---------------------------------------------------------------------------
 
 ## Onaylı PM planlarının kartları o sprintlere ayrılmıştır; lider onlara dokunmaz. Lider bu sprinti

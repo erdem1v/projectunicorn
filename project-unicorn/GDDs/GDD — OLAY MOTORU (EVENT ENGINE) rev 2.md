@@ -2821,10 +2821,10 @@ kalan kartta gelir; kâğıtlar sprintin kartına dokunan fiillerini "Efor +2" g
   yapar; ekipte `sprint_crew` (`SprintSystem.payers("")`: ekip, kurucu hariç) morali −5 alır, kurucu tekken kurucunun verimi 1 hafta
   −%15. `crunch_finishes` cevaptan sonraki atamayı oynar: kâğıt cevaplanınca ekip karta döner.
 - Seam'ler (`seams_product.gd`): `urun.decision_{kind,line,line_name,tier,card_done,line_bugs,line_accounts,root_bugs,root_cause,
-  test_untouched,line_first_version,promised,by_founder,license_year}`, `urun.sprint_has_tester`, `urun.durability_tier`,
-  `urun.security_tier` (güncelleme kâğıdı yalnız kurulmuş Güvenlik hattına hata yazar), `urun.security_bugs`, `urun.security_fix_planned`, `urun.weeks_to_month_end`, `urun.paper_{tester_week,license,server_bill,
+  test_untouched,line_first_version,promised,by_founder}`, `urun.sprint_has_tester`, `urun.durability_tier`,
+  `urun.security_tier` (güncelleme kâğıdı yalnız kurulmuş Güvenlik hattına hata yazar), `urun.security_bugs`, `urun.security_fix_planned`, `urun.weeks_to_month_end`, `urun.paper_{server_bill,
   loss_small,loss_mid,signup_loss}`; `urun.decision_line` paylaşılan hattı temel kimlikle okur. Bedel sayıları `sprint.json` `paper`
-  bloğunda [WORKING]: `b2c_loss`, `signup_loss`, `license`, `outside_week_mult`, `root_min`, `harden_weeks`.
+  bloğunda [WORKING]: `b2c_loss`, `signup_loss`, `root_min`, `harden_weeks`.
 - Üç takip kâğıdı (`sprint_rewrite_bugs`, `_owner`, `_reader`) ve "İki yol var" ile "Dışarıdan destek"in eski kartları kalktı; bedelleri
   yeni kartların seçeneklerine katlandı (inceleme kartı devreder, okuma kurucunun verimini yer, hemen geçiş 2 açık hata yazar).
 - Vakalar `paper_line_harden`, `paper_card_effects`, `paper_seams`, `sprint_late_for_requests`; geride kalan kartın konuşansız kâğıdı
@@ -2999,8 +2999,7 @@ kalmamıştı. Rakip modeli kendi üç boyutunu tutar ve ürünle bağı koptu.
   `sprint_solo_rushed_code` ve `sprint_design_customer_colors`tan çıktı (kart ve metin bloğu); kalan seçenekler ve çipleri değişmedi.
 - `product.sprint_dev_contractor` kâğıdı konusu kalmadığı için tümden silindi (kart, `decision.cards` adı; havuzda yazılımcı kâğıdı 10'dan 9'a,
   `paper_card_effects` toplamı 21'den 20'ye indi).
-- Kalanlar: `contractor` etiketi ve `FIN_ONETIME_CONTRACTOR` kâğıt olmayan kartların ve testçi kâğıdının tek seferlik giderini yazar;
-  `urun.paper_tester_week` (`paper.outside_week_mult`) ve `urun.paper_license` ayrı kâğıtların bedelidir.
+- Dışarıdan hizmetin kalan biçimleri (`contractor` etiketli kart giderleri, testçi kâğıdı, lisans kâğıdı) Faz Q K16'da kalktı (§27.42).
 - Vaka `paper_colors_two_arrivals` fiyat dizisini `[2, 4]` ve `[3, 5]` okur.
 - Makullük defteri (`plausibility.gd` `_plausibility_of`) bir slotun seçici düğümlerini yalnız slot bağlıyken sınar: isteğe bağlı
   slot boş kalınca (kurucunun söylediği `sprint_untested_old_screens`, `employee` bağsız) kıdem düğümünün öznesi yoktur ve kapı
@@ -3028,3 +3027,29 @@ kalmamıştı. Rakip modeli kendi üç boyutunu tutar ve ürünle bağı koptu.
 - Vakalar `capacity_step_immediate`, `load_mult_steps`, `incident_gap_and_spread`.
 
 *Neden.* Faz C Karar 1: dolu sunucu yalnız kesinti ihtimalini artırır; ekranda yazan kat aynen uygulanır (tavan yük çarpanını yutmaz).
+
+
+### §27.42 · Faz Q K16: dışarıdan hizmetin her biçimi kalktı
+
+*Belge ne diyordu.* §27.40'ın "Kalanlar" maddesi: K14'ten sonra `contractor` etiketi ve `FIN_ONETIME_CONTRACTOR` kâğıt olmayan kartların ve
+testçi kâğıdının tek seferlik giderini yazıyordu; `urun.paper_tester_week` (`paper.outside_week_mult`) ve `urun.paper_license` ayrı kâğıtların
+bedeliydi.
+
+*Ne yapıldı.*
+- Seçenek (kart bloğu, metin ve CSV satırı) düştü: `product.sprint_untested_own_code` "Bir haftalığına testçi tut", `product.launch_leak`
+  "Açığı bulanı bir haftalığına tut", `product.support_overflow` "Mesajlar için saat ücretiyle birini tut", `team.password_rule` "Dışarıdan
+  birine yaptır", `team.wiped_table` "Veri kurtarma uzmanı tut, {employee} kalsın". Kalan seçeneklerin kimliği, etkisi ve çipi değişmedi;
+  beş kartın kalan her seçeneği bir kaynağa mal olur.
+- `product.sprint_solo_license` kâğıdı konusu kalmadığı için tümden silindi (kart, `decision.cards` adı; havuzda tek kurucu kâğıdı 6'dan 5'e,
+  `paper_card_effects` toplamı 20'den 19'a indi).
+- Silindi: `SprintCatalog.outside_tester_week` ve `license_cost`, `sprint.json` `paper.outside_week_mult` ile `paper.license`, seam'ler
+  `urun.paper_tester_week`, `urun.paper_license` ve `urun.decision_license_year`, `FinanceSystem.ONE_TIME_LABELS["contractor"]` ve
+  `FIN_ONETIME_CONTRACTOR`.
+- Eski kaydın işlem listesi (`GameState.transactions`) etiketi ham kimlikle saklar ve Finans sekmesi onu olduğu gibi çizerdi:
+  `SaveCodec.RETIRED_TRANSACTION_LABELS` (`contractor`) her yüklemede, `apply_game_state`in sonunda o satırları düşürür; şema artmaz.
+- Dokunulmayan: ürünün zorunlu lisans gideri (`ProductLines.sum_license_cost`, hat kademelerinin `license_cost` alanı, Ar-Ge'nin
+  `license_cost` etkisi, sprint başında kademenin lisansının kesilmesi) oyuncunun seçtiği bir hizmet değil ürünün kendi giderleridir.
+- Vakalar: `save_drops_retired_transaction_label` yeni; `paper_seams` ve `paper_card_effects` silinenleri bırakıp güncellendi;
+  `sprint_decision_card_fires_shipped` tek kurucunun aceleyle yazılmış kod kâğıdıyla çalışır (tek kurucu kâğıtları arasında yalnız kartın eforunu okuyan lisans kâğıdıydı).
+
+*Neden.* Faz Q Karar 13: dışarıdan hizmetin her biçimi kalkar; suistimal edilebilir.
