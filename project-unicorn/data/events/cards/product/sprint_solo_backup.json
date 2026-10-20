@@ -69,18 +69,6 @@
       ]
     },
     {
-      "id": "outsource",
-      "outcome_id": "outsource",
-      "effects": [
-        {
-          "verb": "add_cash",
-          "label": "contractor",
-          "amount_seam": "urun.paper_contract",
-          "amount_mult": -1
-        }
-      ]
-    },
-    {
       "id": "later",
       "outcome_id": "later",
       "effects": [
@@ -98,7 +86,6 @@
       "body": "Veritabanının hiç yedeği yok, bir sorun çıkarsa bütün kayıtlar gider. Otomatik yedeği kurmak bu kartı biraz uzatır.",
       "options": {
         "set_up": "Yedeği şimdi kur",
-        "outsource": "Serbest çalışana kurdur",
         "later": "Sonraya bırak"
       },
       "expire_note": "Cevap verilmedi, yedek sonraya kaldı."
@@ -108,7 +95,6 @@
       "body": "The database has no backup at all; if something goes wrong, every record is gone. Setting up automatic backups makes this card a bit longer.",
       "options": {
         "set_up": "Set up the backup now",
-        "outsource": "Get a contractor to set it up",
         "later": "Leave it for later"
       },
       "expire_note": "No answer came, so the backup was left for later."

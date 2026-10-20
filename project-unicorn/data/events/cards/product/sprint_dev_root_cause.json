@@ -81,22 +81,6 @@
           "bugs": 1
         }
       ]
-    },
-    {
-      "id": "contractor",
-      "outcome_id": "contractor",
-      "effects": [
-        {
-          "verb": "add_cash",
-          "label": "contractor",
-          "amount_seam": "urun.paper_contract",
-          "amount_mult": -2
-        },
-        {
-          "verb": "line_harden",
-          "line": "decision"
-        }
-      ]
     }
   ],
   "text": {
@@ -105,8 +89,7 @@
       "body": "{seam:urun.decision_line_name} hatalarının {seam:urun.decision_root_bugs} tanesi aynı yerden çıkıyor. Altını yeniden yazarsam bir daha çıkmaz, tek tek yamalarsam biri geri döner.",
       "options": {
         "rewrite": "Altını yeniden yaz",
-        "patch": "Hataları tek tek yamala",
-        "contractor": "Serbest çalışana yazdır"
+        "patch": "Hataları tek tek yamala"
       },
       "expire_note": "Cevap gelmedi, hatalar tek tek yamalandı."
     },
@@ -115,8 +98,7 @@
       "body": "{seam:urun.decision_root_bugs} of the {seam:urun.decision_line_name} bugs come from the same place. If I rewrite what's underneath, they won't come back; if I patch them one by one, one of them will.",
       "options": {
         "rewrite": "Rewrite what's underneath",
-        "patch": "Patch them one by one",
-        "contractor": "Get a contractor to rewrite it"
+        "patch": "Patch them one by one"
       },
       "expire_note": "No answer came, so the bugs were patched one by one."
     }

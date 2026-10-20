@@ -2822,9 +2822,9 @@ kalan kartta gelir; kâğıtlar sprintin kartına dokunan fiillerini "Efor +2" g
   −%15. `crunch_finishes` cevaptan sonraki atamayı oynar: kâğıt cevaplanınca ekip karta döner.
 - Seam'ler (`seams_product.gd`): `urun.decision_{kind,line,line_name,tier,card_done,line_bugs,line_accounts,root_bugs,root_cause,
   test_untouched,line_first_version,promised,by_founder,license_year}`, `urun.sprint_has_tester`, `urun.durability_tier`,
-  `urun.security_tier` (güncelleme kâğıdı yalnız kurulmuş Güvenlik hattına hata yazar), `urun.security_bugs`, `urun.security_fix_planned`, `urun.weeks_to_month_end`, `urun.paper_{contract,tester_week,license,server_bill,
+  `urun.security_tier` (güncelleme kâğıdı yalnız kurulmuş Güvenlik hattına hata yazar), `urun.security_bugs`, `urun.security_fix_planned`, `urun.weeks_to_month_end`, `urun.paper_{tester_week,license,server_bill,
   loss_small,loss_mid,signup_loss}`; `urun.decision_line` paylaşılan hattı temel kimlikle okur. Bedel sayıları `sprint.json` `paper`
-  bloğunda [WORKING]: `contract_per_point`, `b2c_loss`, `signup_loss`, `license`, `outside_week_mult`, `root_min`, `harden_weeks`.
+  bloğunda [WORKING]: `b2c_loss`, `signup_loss`, `license`, `outside_week_mult`, `root_min`, `harden_weeks`.
 - Üç takip kâğıdı (`sprint_rewrite_bugs`, `_owner`, `_reader`) ve "İki yol var" ile "Dışarıdan destek"in eski kartları kalktı; bedelleri
   yeni kartların seçeneklerine katlandı (inceleme kartı devreder, okuma kurucunun verimini yer, hemen geçiş 2 açık hata yazar).
 - Vakalar `paper_line_harden`, `paper_card_effects`, `paper_seams`, `sprint_late_for_requests`; geride kalan kartın konuşansız kâğıdı
@@ -2862,11 +2862,11 @@ yalnız bir pazara aitse onu gizleyen yol yoktur (§3.3: kilitli seçenek görü
   karttır (`phone_too`, `spec_unclear`, `empty_state`, `slow_many`).
 - `expire_note` bir varyant kümesi olabilir (`{by_seam, variants}`; `EvEngine` süre dolumunda çözer): renk kâğıdının ikinci gelişi başka bir cümleyle
   kapanır. Renk kâğıtları tek kartta birleşti (`product.sprint_design_customer_colors`); iki gelişi `urun.colors_again` ve fiyat seam'leridir
-  (`colors_hand`, `colors_central`, `colors_cost`: ikinci gelişte her biri bir puan fazla), süre dolumu ilkinde memnuniyet −8, ikincide kart +3.
+  (`colors_hand`, `colors_central`: ikinci gelişte her biri bir puan fazla), süre dolumu ilkinde memnuniyet −8, ikincide kart +3.
 - `SprintBridges.next_renewal_day(hesap)` yenileme penceresinin gösterdiği yenileme günüdür ve talebin penceresiyle `pm_renewal` aynı
   ifadeyi okur; `urun.decision_renewal_saved` kart yetişmiyorken, yenileme bu sprintin kapanışından sonra ve sonrakinden önceyken ve kart başa girince
   bu sprintte bitiyorken doğrudur.
-- Seam'ler `urun.decision_{second_account, request_votes, step, phase, trim_finishes, contract_cost, phone_late, renewal_saved, test_half}`,
+- Seam'ler `urun.decision_{second_account, request_votes, step, phase, trim_finishes, phone_late, renewal_saved, test_half}`,
   `urun.{cut_test_finishes, responsive_shipped, design_late, paid_plan_open, colors_*}`, `urun.paper_{phone_points, ask_silent,
   first_screen_loss, coupon_loss, test_phones}`; `urun.decision_request_votes` B2C istek verisi (C) gelene kadar 0 döner, o yüzden PM'in B2C kâğıtları
   (`_b2c` ikizleri ve `pm_core_first`) bugün gelmez; `urun.decision_second_account` bugün hiç dolmaz (bir kademeyi tek hesap isteyebilir), `pm_two_accounts`
@@ -2986,3 +2986,24 @@ kalmamıştı. Rakip modeli kendi üç boyutunu tutar ve ürünle bağı koptu.
 - Vakalar `sales_meeting_reads_fit`, `sales_emphasis_question`, `sales_weak_area_loss`.
 
 *Neden.* Faz Q Karar 9: oyuncu görüşmede zayıf ürünü bir sayı olarak değil müşterinin ağzından, alanın adıyla duyar ve hamlesi (o alana kart koymak) görünür olur.
+
+
+### §27.40 · Faz Q K14: dışarıdan iş mekaniği kalktı
+
+*Belge ne diyordu.* §27.34 ve §27.35: yazılımcı, tek kurucu ve PM kâğıtlarının ve renk kâğıdının bir seçeneği işi dışarıya yaptırmaktı; bedeli
+`sprint.json` `paper.contract_per_point` (puan başına $1.000) ve ondan türeyen `urun.paper_contract`, `urun.decision_contract_cost` ve
+`urun.colors_cost` seam'leriyle `add_cash` (`contractor` etiketi) yazılırdı. `product.sprint_dev_contractor` kâğıdının konusu bu seçenekti.
+
+*Ne yapıldı.*
+- `paper.contract_per_point` ve üç seam silindi. Seçenek `sprint_dev_root_cause`, `sprint_pm_scope_grew`, `sprint_solo_backup`,
+  `sprint_solo_rushed_code` ve `sprint_design_customer_colors`tan çıktı (kart ve metin bloğu); kalan seçenekler ve çipleri değişmedi.
+- `product.sprint_dev_contractor` kâğıdı konusu kalmadığı için tümden silindi (kart, `decision.cards` adı; havuzda yazılımcı kâğıdı 10'dan 9'a,
+  `paper_card_effects` toplamı 21'den 20'ye indi).
+- Kalanlar: `contractor` etiketi ve `FIN_ONETIME_CONTRACTOR` kâğıt olmayan kartların ve testçi kâğıdının tek seferlik giderini yazar;
+  `urun.paper_tester_week` (`paper.outside_week_mult`) ve `urun.paper_license` ayrı kâğıtların bedelidir.
+- Vaka `paper_colors_two_arrivals` fiyat dizisini `[2, 4]` ve `[3, 5]` okur.
+- Makullük defteri (`plausibility.gd` `_plausibility_of`) bir slotun seçici düğümlerini yalnız slot bağlıyken sınar: isteğe bağlı
+  slot boş kalınca (kurucunun söylediği `sprint_untested_old_screens`, `employee` bağsız) kıdem düğümünün öznesi yoktur ve kapı
+  eskiden onu FAIL sayıyordu. Havuz değişince uzun koşunun dördüncü tohumunda göründü.
+
+*Neden.* Faz Q Karar 24: mekanik tamamen kalkar; kodu, verisi ve metni temizlenir.

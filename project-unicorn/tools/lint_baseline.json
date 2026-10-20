@@ -5,9 +5,6 @@
 		"17.15|res://data/events/cards/customer/named_in_leak.json|O4: option 'lawyer' drops nothing on the subject the card is about",
 		"17.15|res://data/events/cards/customer/new_owner_group.json|O4: option 'pitch' drops nothing on the subject the card is about",
 		"17.15|res://data/events/cards/funding/portfolio_vendor.json|O5: option 'own_ads' spends marketing, which the demo never opens",
-		"17.15|res://data/events/cards/product/sprint_colors_again.json|O4: option 'by_hand' drops nothing on the subject the card is about",
-		"17.15|res://data/events/cards/product/sprint_colors_again.json|O4: option 'one_file' drops nothing on the subject the card is about",
-		"17.15|res://data/events/cards/product/sprint_colors_again.json|O4: option 'freelancer' drops nothing on the subject the card is about",
 		"17.15|res://data/events/cards/rival/shutdown_notice.json|O5: option 'more_marketing' spends marketing, which the demo never opens",
 		"17.15|res://data/events/cards/team/wiped_table.json|T3: slot 'employee' picks the newest hire with a floor of 4 weeks",
 		"17.2|res://data/events/arcs/fixture_subject.json|arc 'arc_fixture_subject' is never started by any card"

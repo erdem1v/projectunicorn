@@ -21963,7 +21963,7 @@ static func _case_paper_line_harden() -> String:
 ## Karar kâğıdının kartına dokunan fiiller ve çipleri: yapılmış işi silmek seam'den okunan puandır (çip ve uygulanan aynı sayı);
 ## kartın puanı kartın adıyla yazılır; anlık hata hattın adını ve tekil/çoğul kalıbını taşır; "Ana akışları test et" kartın testini
 ## yarıya indirir, kartı kısaltılmış testle çıkmış sayar ve çipi yüzde yazmaz, söz tutulmuş demez. Yazılımcı, testçisiz, tek kurucu ve
-## sistem kâğıtlarının yirmi biri de havuzdadır ve gösterilir: metin çözülür ve her etkinin çipi vardır.
+## sistem kâğıtlarının yirmisi de havuzdadır ve gösterilir: metin çözülür ve her etkinin çipi vardır.
 ## FALSİFİKASYON: sprint_card_progress çipinde amount'u seam'den değil sabitten oku → çip sayısı FAIL; `sprint_card_test` kolunda
 ## `card` DECISION dalını sil → kısaltılmış kart FAIL; çipte DECISION dalını sil → yüzde ya da söz çipi FAIL; sprint.json
 ## `decision.cards`tan `product.sprint_late_solo`yu çıkar → havuzda yok FAIL.
@@ -22014,7 +22014,7 @@ static func _case_paper_card_effects() -> String:
 	EvEffects.run_played([cut], {})
 	if not bool(card.cut) or SprintSystem.escape_chance(card) < float(SprintCatalog.cfg("promise.cut_test_escape")):
 		return "after the cut the card reads cut %s and an escape chance of %s" % [card.cut, SprintSystem.escape_chance(card)]
-	# Yirmi bir kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), her etkinin çipi vardır.
+	# Yirmi kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), her etkinin çipi vardır.
 	var account: Customer = _incident_account("co_render", "Render Co", "retail", 40, 1800)
 	var slots: Dictionary = {
 		"employee": {"type": "employee", "id": _sprint_hire("char_render_dev", HRConstants.ROLE_DEVELOPER).id, "bound_day": GameState.day},
@@ -22041,8 +22041,8 @@ static func _case_paper_card_effects() -> String:
 		for text in words:
 			if String(text) == "" or String(text).contains("{") or String(text).contains("}"):
 				return "%s reads '%s'" % [paper.id, text]
-	if seen != 21:
-		return "%d of the 21 developer, no tester, solo and system papers were rendered" % seen
+	if seen != 20:
+		return "%d of the 20 developer, no tester, solo and system papers were rendered" % seen
 	return ""
 
 
@@ -22738,9 +22738,9 @@ static func _case_paper_renewal_card_first() -> String:
 	return ""
 
 
-## B6a · Renk kâğıdı tek karttır, iki gelişi vardır: ilk gelişte elle 2, tek dosya 4 puan, serbest çalışan elle yolunun
-## puanı kadar (2 × $1.000); renkler bir kez elle değiştirildiyse ikinci gelişte her biri bir puan fazla. Süre dolarsa ilk
-## gelişte hesap hayır diye anlar (memnuniyet -8), ikincide ekip elle değiştirir (kart +3): metin de gelişe göre okunur.
+## B6a · Renk kâğıdı tek karttır, iki gelişi vardır: ilk gelişte elle 2, tek dosya 4 puan; renkler bir kez elle değiştirildiyse
+## ikinci gelişte her biri bir puan fazla. Süre dolarsa ilk gelişte hesap hayır diye anlar (memnuniyet -8), ikincide ekip elle
+## değiştirir (kart +3): metin de gelişe göre okunur.
 ## FALSİFİKASYON: `_colors_points`teki `again_extra` toplamını sil → ikinci geliş aynı puanı verdi FAIL; kartın
 ## `expire_note` varyantını düz metne çevir → ikinci gelişte ilk gelişin notu FAIL.
 static func _case_paper_colors_two_arrivals() -> String:
@@ -22755,14 +22755,14 @@ static func _case_paper_colors_two_arrivals() -> String:
 	var ctx: Dictionary = _ctx_customer(account)
 	var card: Dictionary = EvCatalog.card(id)
 	var points := func() -> Array:
-		return [EvSeams.read("urun.colors_hand"), EvSeams.read("urun.colors_central"), EvSeams.read("urun.colors_cost")]
-	if points.call() != [2, 4, 2000]:
-		return "the first arrival prices %s, want [2, 4, 2000]" % str(points.call())
+		return [EvSeams.read("urun.colors_hand"), EvSeams.read("urun.colors_central")]
+	if points.call() != [2, 4]:
+		return "the first arrival prices %s, want [2, 4]" % str(points.call())
 	var first_body: String = EvPresenter.resolve_text(EvPresenter.text_block(card).body, ctx)
 	var first_note: String = EvPresenter.resolve_text(EvPresenter.text_block(card).expire_note, ctx)
 	EvFlags.set_flag("colors_by_hand")
-	if points.call() != [3, 5, 3000]:
-		return "the second arrival prices %s, want [3, 5, 3000]" % str(points.call())
+	if points.call() != [3, 5]:
+		return "the second arrival prices %s, want [3, 5]" % str(points.call())
 	var second_body: String = EvPresenter.resolve_text(EvPresenter.text_block(card).body, ctx)
 	var second_note: String = EvPresenter.resolve_text(EvPresenter.text_block(card).expire_note, ctx)
 	if first_body == second_body or first_note == second_note or not second_body.contains("Demir Holding"):

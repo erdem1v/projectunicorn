@@ -265,7 +265,7 @@ static func _judge(card: Dictionary, context: Dictionary, src: String, week: int
 	if week <= START_IMMUNITY_WEEKS and not is_system and not ["request", "floor"].has(src):
 		_fail("start_immunity", "%s week=%d src=%s" % [id, week, src])
 
-	for node in _plausibility_of(card):
+	for node in _plausibility_of(card, context):
 		if not EvCondition.eval(node, context):
 			_fail("plausibility", "%s node=%s" % [id, JSON.stringify(node)])
 
@@ -285,11 +285,13 @@ static func _judge(card: Dictionary, context: Dictionary, src: String, week: int
 ## What the v3 compiler wrote, in the condition and in each slot's selector, as the NODES to
 ## judge rather than the leaves under them: a two-band `plausibility.phase_band` compiles to one
 ## `any`, and asking each band to hold on its own would fail the card for every band it is not in.
-static func _plausibility_of(card: Dictionary) -> Array:
+## A slot the card left empty (optional, nobody named) has no subject for its selector to judge.
+static func _plausibility_of(card: Dictionary, context: Dictionary) -> Array:
 	var out: Array = []
 	_plausibility_nodes(card.get("condition", {}), out)
-	for spec in (card["scope"] as Dictionary).values():
-		_plausibility_nodes((spec as Dictionary).get("where", {}), out)
+	for slot in (card["scope"] as Dictionary):
+		if context.has(slot):
+			_plausibility_nodes((card["scope"][slot] as Dictionary).get("where", {}), out)
 	return out
 
 

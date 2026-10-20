@@ -77,22 +77,6 @@
       ]
     },
     {
-      "id": "contractor",
-      "outcome_id": "contractor",
-      "effects": [
-        {
-          "verb": "add_cash",
-          "label": "contractor",
-          "amount_seam": "urun.paper_contract",
-          "amount_mult": -2
-        },
-        {
-          "verb": "line_harden",
-          "line": "decision"
-        }
-      ]
-    },
-    {
       "id": "note",
       "outcome_id": "note",
       "effects": [
@@ -109,7 +93,6 @@
       "body": "{seam:urun.decision_line_name} kodunu ilk sürüm için aceleyle yazmıştın, içinde şimdiden bir hata var. Şimdi toparlarsan bir süre yeni hata çıkmaz.",
       "options": {
         "evenings": "Akşamlarını buna ver",
-        "contractor": "Serbest çalışana toparlat",
         "note": "Not al, devam et"
       },
       "expire_note": "Cevap verilmedi, kod olduğu gibi kaldı."
@@ -119,7 +102,6 @@
       "body": "You wrote the {seam:urun.decision_line_name} code in a hurry for the first version, and there's already a bug in it. Tidy it up now and no new ones will turn up for a while.",
       "options": {
         "evenings": "Give it your evenings",
-        "contractor": "Get a contractor to tidy it",
         "note": "Make a note and move on"
       },
       "expire_note": "No answer came, so the code stayed as it was."

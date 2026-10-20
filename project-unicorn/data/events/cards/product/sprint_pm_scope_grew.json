@@ -83,22 +83,6 @@
       ]
     },
     {
-      "id": "contractor",
-      "outcome_id": "contractor",
-      "effects": [
-        {
-          "verb": "add_cash",
-          "amount_seam": "urun.decision_contract_cost",
-          "amount_mult": -1,
-          "label": "contractor"
-        },
-        {
-          "verb": "sprint_card_trim",
-          "share": true
-        }
-      ]
-    },
-    {
       "id": "as_drawn",
       "outcome_id": "as_drawn",
       "effects": [
@@ -114,7 +98,6 @@
       "body": "Bu kartı {customer} istedi; biz çizerken büyüttük. Filtre ve dışa aktarma bizim fikrimiz. Onları önümüzdeki sprinte atarsak kart bu sprintte biter.",
       "options": {
         "defer_extra": "Önümüzdeki sprinte at",
-        "contractor": "Eklediklerimizi serbest çalışana yaptır",
         "as_drawn": "Çizildiği gibi yap"
       },
       "expire_note": "Karar verilmedi, kart çizildiği gibi kaldı."
@@ -124,7 +107,6 @@
       "body": "{customer} asked for this card, and it grew while we were designing it. The filters and the export were our idea. If we move them to next sprint, the card finishes this sprint.",
       "options": {
         "defer_extra": "Move them to next sprint",
-        "contractor": "Have a contractor build our additions",
         "as_drawn": "Build it as designed"
       },
       "expire_note": "Nobody decided, so the card stayed as designed."

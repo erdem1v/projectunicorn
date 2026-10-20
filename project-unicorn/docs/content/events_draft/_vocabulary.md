@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **261** |
+| Seams (read) | **258** |
 | Effect verbs (write) | **75** |
-| Cards in the catalogue | 148 |
+| Cards in the catalogue | 147 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -383,7 +383,6 @@ slot of that type (§17.12).
 | `urun.capacity_tier` | global | int | Product | provisioned infra units |
 | `urun.colors_again` | global | bool | Product | the colours were changed by hand once, so the account asks for its colours on the pages added since |
 | `urun.colors_central` | global | int | Product | the points of pulling every colour into one file; one more for each page added since the first change |
-| `urun.colors_cost` | global | int | Product | what a freelancer asks for the colours: the by hand points at the outside price, in dollars |
 | `urun.colors_first` | global | int | Product | 1 the first time an account asks for its colours, 0 the second time |
 | `urun.colors_hand` | global | int | Product | the points of changing the colours by hand; one more for each page added since the first change |
 | `urun.crunch_finishes` | global | bool | Product | the crunch's hours finish the decision card this sprint; false when none waits |
@@ -393,7 +392,6 @@ slot of that type (§17.12).
 | `urun.decision_card_done` | global | int | Product | points already worked on the decision card; 0 when none waits |
 | `urun.decision_card_effort` | global | int | Product | the decision card's effort in points; 0 when none waits |
 | `urun.decision_card_late` | global | bool | Product | at the team's pace the decision card will not finish this sprint; false when none waits |
-| `urun.decision_contract_cost` | global | int | Product | what an outside developer costs for the trim share of the decision card, in dollars |
 | `urun.decision_kind` | global | string | Product | feature | request | fix | research: what the decision card is; empty when none waits |
 | `urun.decision_license_year` | global | string | Product | that licence as money text, for a paper's body |
 | `urun.decision_line` | global | string | Product | id of the line the decision card is on, a shared line by its base id; empty when none waits |
@@ -427,7 +425,6 @@ slot of that type (§17.12).
 | `urun.paid_plan_open` | global | bool | Product | the paid plan is open |
 | `urun.paid_plan_set` | global | bool | Product | the paid plan is open, or its card is in the running or the planned sprint |
 | `urun.paper_ask_silent` | global | int | Product | the audience that goes quiet when a request is not met: the people who asked, times the quiet ones behind each |
-| `urun.paper_contract` | global | int | Product | what an outside developer costs for one point of work, in dollars |
 | `urun.paper_coupon_loss` | global | int | Product | the audience that would have come in on a coupon, in people |
 | `urun.paper_first_screen_loss` | global | int | Product | the sign ups a sign up screen with three questions loses over its weeks, in people |
 | `urun.paper_license` | global | int | Product | what a ready made component's licence costs, in dollars, once |
@@ -603,7 +600,7 @@ the catalogue already uses, and the gap each pays:
 | `seed_round` | 6 | 4 |
 | `series_a_table` | 6 | 3 |
 | `sprint_design` | 6 | 8 |
-| `sprint_dev` | 6 | 10 |
+| `sprint_dev` | 6 | 9 |
 | `sprint_late` | 6 | 2 |
 | `sprint_pm` | 6 | 8 |
 | `sprint_solo` | 6 | 6 |

@@ -126,26 +126,6 @@
       ]
     },
     {
-      "id": "freelancer",
-      "outcome_id": "freelancer",
-      "effects": [
-        {
-          "verb": "add_cash",
-          "amount_seam": "urun.colors_cost",
-          "amount_mult": -1,
-          "label": "contractor"
-        },
-        {
-          "verb": "b2b_expand",
-          "scope": "customer"
-        },
-        {
-          "verb": "set_flag",
-          "name": "colors_by_hand"
-        }
-      ]
-    },
-    {
       "id": "as_is",
       "outcome_id": "as_is",
       "effects": [
@@ -174,7 +154,6 @@
       "options": {
         "by_hand": "Renkleri elle değiştir",
         "one_file": "Bütün renkleri tek dosyaya topla",
-        "freelancer": "Renkleri bir serbest çalışana değiştirt",
         "as_is": "Renkler değişmeyecek de"
       },
       "expire_note": {
@@ -197,7 +176,6 @@
       "options": {
         "by_hand": "Change their colours by hand",
         "one_file": "Pull every colour into one file",
-        "freelancer": "Have a freelancer change the colours",
         "as_is": "Tell them the colours stay"
       },
       "expire_note": {

@@ -215,9 +215,6 @@ static func _install_papers() -> void:
 				weeks += 1
 			return weeks,
 		"Product", "ticks until the calendar month turns; 1 on the month's last tick")
-	EvSeams.register("urun.paper_contract", G, TYPE_INT,
-		func() -> int: return int(SprintCatalog.cfg("paper.contract_per_point")),
-		"Product", "what an outside developer costs for one point of work, in dollars")
 	EvSeams.register("urun.paper_tester_week", G, TYPE_INT,
 		func() -> int: return SprintCatalog.outside_tester_week(),
 		"Product", "what a tester hired from outside for a week costs, in dollars")
@@ -272,11 +269,6 @@ static func _install_paper_asks() -> void:
 			return SprintSystem.finishes_with(SprintSystem.decision_card().get("id", ""),
 				-SprintSystem.trim_points(float(SprintCatalog.cfg("paper.trim_share")))),
 		"Product", "taking the trim share off the decision card finishes it this sprint")
-	EvSeams.register("urun.decision_contract_cost", G, TYPE_INT,
-		func() -> int:
-			return SprintSystem.trim_points(float(SprintCatalog.cfg("paper.trim_share"))) \
-				* int(SprintCatalog.cfg("paper.contract_per_point")),
-		"Product", "what an outside developer costs for the trim share of the decision card, in dollars")
 	EvSeams.register("urun.paper_phone_points", G, TYPE_INT,
 		func() -> int: return int(SprintCatalog.cfg("paper.phone_points")),
 		"Product", "the work a phone layout adds to a card, in points")
@@ -308,9 +300,6 @@ static func _install_paper_asks() -> void:
 	EvSeams.register("urun.colors_central", G, TYPE_INT,
 		func() -> int: return _colors_points("central"),
 		"Product", "the points of pulling every colour into one file; one more for each page added since the first change")
-	EvSeams.register("urun.colors_cost", G, TYPE_INT,
-		func() -> int: return _colors_points("hand") * int(SprintCatalog.cfg("paper.contract_per_point")),
-		"Product", "what a freelancer asks for the colours: the by hand points at the outside price, in dollars")
 	EvSeams.register("urun.paper_ask_silent", G, TYPE_INT,
 		func() -> int: return int(EvSeams.read("urun.decision_request_votes")) * int(SprintCatalog.cfg("paper.ask_silent_mult")),
 		"Product", "the audience that goes quiet when a request is not met: the people who asked, times the quiet ones behind each")
