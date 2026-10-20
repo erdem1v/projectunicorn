@@ -109,9 +109,9 @@
       "options": {
         "redraw": "Ekranı yeniden çiz",
         "redraw_next": "Önümüzdeki sprinte at",
-        "as_drawn": "Çizildiği gibi kalsın"
+        "as_drawn": "Tasarlandığı gibi kalsın"
       },
-      "expire_note": "Cevap gelmedi, ekran çizildiği gibi kaldı."
+      "expire_note": "Cevap gelmedi, ekran tasarlandığı gibi kaldı."
     },
     "en": {
       "title": "They use it with gloves on in the warehouse",

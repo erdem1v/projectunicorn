@@ -94,13 +94,13 @@
   ],
   "text": {
     "tr": {
-      "title": "Kartı çizerken büyüttük",
-      "body": "Bu kartı {customer} istedi; biz çizerken büyüttük. Filtre ve dışa aktarma bizim fikrimiz. Onları önümüzdeki sprinte atarsak kart bu sprintte biter.",
+      "title": "Kartı tasarlarken büyüttük",
+      "body": "Bu kartı {customer} istedi; biz tasarlarken büyüttük. Filtre ve dışa aktarma bizim fikrimiz. Onları önümüzdeki sprinte atarsak kart bu sprintte biter.",
       "options": {
         "defer_extra": "Önümüzdeki sprinte at",
-        "as_drawn": "Çizildiği gibi yap"
+        "as_drawn": "Tasarlandığı gibi yap"
       },
-      "expire_note": "Karar verilmedi, kart çizildiği gibi kaldı."
+      "expire_note": "Karar verilmedi, kart tasarlandığı gibi kaldı."
     },
     "en": {
       "title": "This card grew while we designed it",
