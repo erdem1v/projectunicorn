@@ -6,7 +6,7 @@ Açık işlerin tek yeri bu klasördür.
 
 ## Test paketi
 - Smoke ve probe paketi yalın bir paketle değiştirilecek (CLAUDE.md "Test"). Bugün `scripts/debug/endgame_smoke.gd`
-  345 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu ve CSV'de yalnız
+  467 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu ve CSV'de yalnız
   smoke'un okuduğu türetilmiş anahtar aileleri bu işle birlikte ele alınır; temizlik raporlarında "yalnız test" diye
   ayrılan maddeler de buraya girer.
 
@@ -27,20 +27,20 @@ Açık işlerin tek yeri bu klasördür.
   not paylaşır; kullanıcılara tarih duyurmak ve “kampanya aracı” ikizi reddedildi; Erdem “üstüne düşünmek lazım” dedi,
   aday yön C'nin istek verisi gelince en çok istenen şeyin sürüm yorumlarında “hâlâ yok” diye görünmesi.
 
-## Arayüz yeniden yapılırken
-Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktalar:
-- Ham stil değerleri (UI/STYLE LAW; her biri yeni token ister): `OnboardingFlow.tscn` LoadingLabel 18,
-  `origin_traits_step.gd` ve `character_step.gd` modulate'ları; bir yerde ham 24 punto ve CREAM rengi.
-- Oyuncu metinlerinde tire (— –) kalan CSV satırları var (CLAUDE.md §5); mühürlü metinlerde sahibin kararı gerekir.
+## Oyuncu metni
+- Oyuncu metinlerinde tire (— –) kalan yerler var (CLAUDE.md §5; Erdem 2026-10-20 kararı 14: hiçbir yerde tire yok,
+  sorulmaz, yapılır; değişen metin commit mesajında "TR/EN onay bekliyor" diye işaretlenir): CSV'de iki dilden birinde
+  tire taşıyan 31 satır (ör. `HR_TASK_NONE`, `HUNT_CB_NONE`, `VC_Q_CHURN`, `GATE_ADVANCE`, `END_META_*_FRANK`) ve
+  `scripts/tabs/sales_tab.gd` `_account_foot`'taki "—" literal'i (sorumlu satırı, ACIK_KARARLAR 35).
 - EN çoğul ikizi: `DESK_PAPER_ATLAS_TITLE` ("{n} candidate files ready") n=1'de çoğul okunuyor; tekil ikiz anahtar ve
   seçimi gerekir (TR sayıdan sonra çoğul eki almaz).
 
 ## Ofis ve pencereler
-- İlk açılış rehberi yok: mentor modalı kapanınca oyuncu ofise düşer, ofis, pencereler, not yığını ve "Ofisi taşı"
-  düğmesi tanıtılmaz. İstenirse ayrı iş.
-- Ofis 1080p'nin üstünde konteyner ölçüsünde çiziliyor (`scenes/office/OfficeView.tscn`, `stretch`); doğal
-  çözünürlükte çizim, karar ACIK_KARARLAR 70.
-- 70 kişilik Depo loft 4×'te kare ~8,4 ms (eski Xbot kadrosu ~6 ms); LOD turu, karar ACIK_KARARLAR 71.
+- İlk açılış rehberi yok: kurulum bitince oyuncu ofise düşer; ofis, pencereler, not yığını ve "Ofisi taşı" düğmesi
+  tanıtılmaz. Kurulumun "Frank'le rehberli başla" anahtarı rehber yazılana kadar kilitli (`ONB_GUIDED_LOCKED`,
+  `first_week_doc.gd`); `tutorial` etiketli kart yok. İstenirse ayrı iş.
+- 70 kişilik Depo loft'ta kare ~8,4 ms (eski Xbot kadrosu ~6 ms); ölçüm eski merdivenin 4×'ünde, bugünkü 1×'in
+  temposunda; LOD turu, karar ACIK_KARARLAR 71.
 - Harita kartı küçük resimleri hâlâ tasarımın Xbot figürleriyle (`assets/art/office/thumb_*.jpg`); Quaternius
   karakterleriyle yeniden çekim, karar ACIK_KARARLAR 72.
 - Huylar ofis ritmini etkilemiyor (kahveci, İŞKOLİK, düşük moral kahve ve mola sıklığını değiştirmiyor); trait
@@ -49,8 +49,6 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   takılma, önünde "hazırlanıyor" perdesi. Arka planda ya da önceden yükleme.
 - Export ön ayarı kurulunca `art/office3d/*.json`'ın pakete girdiği doğrulanır: `OfficeLayout.load` onları
   `FileAccess` ile okur; gerekirse include filtresine eklenir.
-- `project.godot` `rendering/reflections/sky_reflections/roughness_layers=7`: ofisin gökyüzü (REALTIME) yedi katman
-  istiyor; proje ayarı farkı sahibin onayıyla commit'lenir (CLAUDE.md §12).
 
 ## Ürün rev 7
 - **Yeniden yuva listesi (PRD §5.9, §7.23).** GDD'de adı geçtiği ya da sahip tuttuğu için kalan, sprint geçişiyle
@@ -64,32 +62,22 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
   - Tip ekranının kilitli üçlüsü (ch03 §12.11, GUNCELLEMELER ch14 §2): `ProductCatalog.locked_type_ids`,
     `TYPE_SCREEN` kilitli listesi, `type_sector_labels`; tür seçici yalnız oynanabilir türleri çiziyor
     (ACIK_KARARLAR 96).
-  - Hat okumaları (ch03 §12.9): `ProductLines.is_complete` (yalnız smoke). `net_gain` (ağırlıklı eksen kazancı)
-    ile kapı üstü bonusun gerçekleşme zinciri (`LineGates.above_gate_bonus`, kademe damgası) eksenlerle birlikte Faz Q
-    K7b'de silindi (`bd7ed53`); kapı üstü hız basamakları (`LineGates.speed_bonus_for`, `ABOVE_GATE_*`,
-    ch03 §12.8) okuyucusuz duruyor, kararı ACIK_KARARLAR 41'de.
-  - Altyapı ve fiyat (ch03 §10): `InfraSystem.gross_margin_monthly` (brüt marjın yüzeyi yok), `adjust_capacity` ve
-    `SalesSystem.estimate_price_change` (yalnız smoke).
-  - Pazar payı merdiveni (ch03 §12.11; sahip): oyuncunun kendi tipindeki startup rakipler arasındaki sırası; okuyan
-    ekran yok. Sıra hesabı (`RivalRegistry.get_player_rank_in_startup_league`) eksen bileşkesini okuyordu ve Faz Q K7b'de
-    silindi (`bd7ed53`); merdiven istenirse rakip modeliyle birlikte yeniden kurulur.
+  - Hat okumaları (ch03 §12.9): `ProductLines.is_complete` (yalnız smoke). Kapı üstü hız basamakları
+    (`LineGates.speed_bonus_for`, `ABOVE_GATE_*`, ch03 §12.8) okuyucusuz duruyor, kararı ACIK_KARARLAR 41'de.
+  - Altyapı ve fiyat (ch03 §10): `SalesSystem.estimate_price_change` (okuyanı yok, smoke da çağırmıyor; Faz E siler).
+  - Pazar payı merdiveni (ch03 §12.11; sahip): oyuncunun kendi tipindeki startup rakipler arasındaki sırası; kodda ve
+    ekranda yok. İstenirse rakip modeliyle birlikte kurulur.
   - Merdiven reddi (ch03 §12.3): `ProductLines.ladder_refusal` (yalnız smoke `line_ladder_rules`; aday kartlar
     sıradaki kademeyi `next_tier`'dan okur).
   - Liderlik ve koordinasyon çıktısı (Ekip §4.2, §17.2): `HRSystem.leadership_output_mult`,
     `HRConstants.LEAD_OUTPUT_PER_POINT`, `HRConstants.coordination_for_founder` / `coordination_for_lead` ve `COORD_*`,
     `HRSystem.output_mult_for_area` (yalnız smoke; sprint puanı liderliği ve koordinasyonu okumaz, ACIK_KARARLAR 96).
-  - İş ataması ve odak (Ekip §12.1): Ekip sekmesinin Yapım iş sütunu ve iki işte 0,50 odak katsayısı sprint işini
-    etkilemiyor (`SprintSystem.team`, `_points`; ACIK_KARARLAR 96 (5)); `HRConstants.GROUP_PRODUCT_DESIGN` (okuyanı
-    eski `capacity_total`'dı).
-  - Satış okuma eşiği (Satış GDD): `SkillCheck.can_read_prospect`, `SALES_READ_THRESHOLD` (yalnız smoke; okuyanı fiyat
-    paneliydi).
+  - Satış okuma eşiği (Satış GDD): `SkillCheck.can_read_prospect` (yalnız smoke); `SALES_READ_THRESHOLD` yalnız
+    kurulumun Satış etki cümlesini seçer (`origin_traits_step.gd`).
   - Kritik hata bayrağı: `critical_bug_unfixed` (`GameState.FLAG_TYPES`, `EvEffects.GAME_FLAG_WHITELIST`; okuyanı
     `launch()`'tı).
   - Okuyanı olmayan anahtarlar: `PROD_DEV_VERSION` (yalnız `loc_language_switch` smoke örneği), `PROD_MARKET_SHARE`
     (yalnız bir smoke yorumu anıyor).
-- **Ar-Ge derin bağının `open_assign` argümanı.** `EventBus.rnd_node_requested`'ı artık yalnız Ar-Ge çubuğunun
-  "ata"sı yayıyor ve hep `true` gönderiyor; Konsept'in `false` gönderen "→ Araştır" bağı silindi. Argüman sinyalden
-  kalkabilir (`research_bar.gd`, `rnd_tab.select_node`).
 
 ## Ürün rev 7 kalibrasyon turu
 - **Bayrakla ulaşılamayan görsel kabul yüzeyleri.** Turun görsel kabulü altı durumu repoda olmayan bir sürücüyle
@@ -120,14 +108,13 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
     anki kademelerden okur. Eksen sayıları Faz Q K7b'de kalktı; eskiden fiyat döngüden sonra yazılan eksen
     gerçekleşmesinin bütününden önce kuruluyordu (~%14 düşük ölçüsü o dönemin), şimdi yalnız sonraki kartlar eksik.
     Yeni kalite terimiyle yeniden ölçülmedi.
-  - C-11: Müşteriler satırı betada bekleyen talep kartına "+" ve "→" gösteriyor; düğmeler bir şey yapmıyor.
   - C-13: Alan cümlelerinin alt-tür boyutu yok: her alt-tür aynı Çekirdek cümlesini okuyor (PRD §2.1 "şablon alan ×
     durum × alt-tür"). Faz Q K2 ile konusunu yitirdi (`9a0dff9`): alan × söz şablonu kalktı, 19 alana özgü durum
     cümlesi silindi; kapalı satırın cümlesi ürün sayfasının yıldız cümlesidir (`PRODUCT_STAR_*`, B2C'de
     `PRODUCT_AUDIENCE_*`, Gelir'in dört satırı kalır) ve alt-türden bağımsızdır. Alanlara özgü tadın yitmesi ayrı
     sahip sorusu. Sahip onayı Faz Q raporunda; onaydan sonra madde silinir.
-  - INT-6: Koşan kartı "Çıkar"mak atananlarını haftanın kalanında boşta bırakıyor ve yapılmış puanı HIZ satırından
-    düşürüyor (`SprintSystem.remove` `_restaff` çağırmıyor).
+  - INT-6: Koşan kartı "Çıkar"mak yapılmış puanı HIZ satırından düşürüyor (`SprintSystem.done_points` yalnız
+    sprintteki ve devreden kartları sayar).
   - INT-9: v14 göçünden sonra ilk günlük tike kadar ticket defteri boş: yüklemede düzeltme kartı ve "!" yok.
     Faz A K3 ile kapandı: bilet defteri yoktur, `_migrate_16` açık hataları doğrudan hat deposuna yazar ve düzeltme
     kartlarının sayısını kayda taşır. Sahip onayı RAPOR_A'da; onaydan sonra madde silinir.
@@ -137,8 +124,7 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
     görünmüyor ve geri alınamıyor.
 - **Harness notları** (`scripts/debug/run_probe.gd`):
   - Botun B2B işe alım kapısı (kasa ≥ 6 × (burn·30 + 6.000 − MRR), `_hire_after_the_seed`) Traction'ın erken
-    sonucunu belirliyor; `ONBOARDING_MRR_MULT` Traction düzeltmesi bu kapının etrafından dolandı (ACIK_KARARLAR 97,
-    98).
+    sonucunu belirliyor (ACIK_KARARLAR 98).
   - `--event-harness=guided` yalnız `EvEngine`'i tikler: ürün türü seçilmez, sprint koşmaz; MVP öncesi ritmi ölçemez.
     Ritim probe günlüklerinden okundu.
   - Probe kurucusunun Müşteri İlişkileri'si 0'dır (`main.gd` debug yükü): masadaki kurucu doğrulama yapmaz ve
@@ -147,8 +133,8 @@ Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktal
     (ACIK_KARARLAR 99). Faz A ile değişti (2026-10-17); sahip onayı RAPOR_A'da.
   - Bot `rival.funding_round`'da hep ilk seçeneği alır: "bekle"nin zamanladığı `rival.price_cut` yolu hiçbir probe'da
     koşmuyor. Sensible politika `founder.side_contract`'ta hep "al"ı seçer.
-  - Faz 3 giriş kartlarının (`world.analyst_guide`, `world.newsletter_slot`) ve sözün beta payının smoke vakası yok;
-    ilkini yalnız probe ve lint koruyor.
+  - Faz 3 giriş kartlarının (`world.analyst_guide`, `world.newsletter_slot`) smoke vakası yok; onları yalnız probe
+    ve lint koruyor.
   - `min_cash_pre_seed` haftalık `STATE` okumasından alınır, hafta içi dip değildir.
 
 ## VC görüşmesi · takip katmanları
