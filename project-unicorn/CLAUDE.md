@@ -80,7 +80,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
 - **Zaman.** Bir oyun günü (tik) bir haftadır; hafta sonu yoktur. `GameState.day`, sistemlerin `daily_tick`'i ve
   `EventBus.day_advanced` adlarını korur ve tik sayar; her tik 24 saatlik tik ve bir günlük tik taşır. Zaman
   sabitlerinin ve birim dönüştürücülerinin tek evi `TimeModel`'dir: süre hafta verisidir ve `TimeModel.ticks()` ile
-  okunur, `*_PER_DAY` oranları gün verisi kalır ve tikte `TimeModel.per_tick()` ile ×7 uygulanır. Hız merdiveni
+  okunur, `*_PER_DAY` oranları gün verisi kalır ve tikte `TimeModel.per_tick()` ile ×7 uygulanır. Takvim 1 Ocak 2012
+  Pazar'da başlar ve her tik bir Pazar'dır; tarihi, ayı ve yılı yalnız `GameState.get_date_dict` verir. Hız merdiveni
   `TimeModel.SECONDS_PER_HOUR = [0.0, 2.5, 1.25, 2.5 / 3.0]` saniye / oyun saati: duraklat / 1× / 2× / 3×
   [WORKING]. Hafta 08:00'de başlar; varsayılan mesaide (09:00'dan 17:00'ye) hafta 1×'te 22,5, 3×'te 7,5 saniye sürer.
   Mesai bitip ofis boşalınca gecenin saatleri tek toplu adımda koşar (`TimeManager.skip_night`); saati dışarıdan

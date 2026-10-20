@@ -55,8 +55,8 @@ static func _install_time() -> void:
 	EvSeams.register("time.hour", G, TYPE_INT,
 		func() -> int: return GameState.current_hour, "Time", "WRAPPER; 0-23")
 	EvSeams.register("time.month", G, TYPE_INT,
-		func() -> int: return int(GameState.get_date_dict().get("month", 1)),
-		"Time", "1-12; the month of the week's Thursday on the real calendar")
+		func() -> int: return int(GameState.get_date_dict().month),
+		"Time", "1-12; the month of the week's date on the real calendar")
 	EvSeams.register("time.speed", G, TYPE_INT,
 		func() -> int: return TimeManager.current_speed,
 		"Time", "WRAPPER; 0 paused, 1-4")

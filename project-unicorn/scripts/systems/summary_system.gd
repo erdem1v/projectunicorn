@@ -3,7 +3,7 @@ extends RefCounted
 
 # The calendar-month close and the period summary.
 #
-# Slot 0 (begin_day), before any system writes the new tick. A tick belongs to its Thursday's
+# Slot 0 (begin_day), before any system writes the new tick. A tick belongs to its own date's
 # month (GameState.get_date_dict, never the economy constant DAYS_PER_MONTH). When the tick opens
 # a new month, the month that ended is pushed onto month_history, month_ended is emitted and the
 # new month's ledger opens, so this week's money flow lands in the new month. When the player's

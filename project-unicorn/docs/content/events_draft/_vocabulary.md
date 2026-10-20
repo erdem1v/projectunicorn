@@ -369,7 +369,7 @@ slot of that type (§17.12).
 |---|---|---|---|---|
 | `time.hour` | global | int | Time | WRAPPER; 0-23 |
 | `time.is_paused` | global | bool | Time | WRAPPER; there is no named predicate for this |
-| `time.month` | global | int | Time | 1-12; the month of the week's Thursday on the real calendar |
+| `time.month` | global | int | Time | 1-12; the month of the week's date on the real calendar |
 | `time.run_active` | global | bool | Time | WRAPPER; false once a terminal has fired |
 | `time.speed` | global | int | Time | WRAPPER; 0 paused, 1-4 |
 | `time.week` | global | int | Time | WRAPPER; absolute game week (the tick), starts at 1. GameState owns it, not TimeManager |

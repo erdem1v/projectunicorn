@@ -74,14 +74,10 @@ static func month_abbr(month: int) -> String:
 	return month_name(month).substr(0, 3)
 
 
-## The chrome date line from GameState.get_date_dict(): the tick's ISO week and its month
-## ("Hafta 14 · Nisan 2026"). Field order is data (DATE_LINE).
+## The chrome date line from GameState.get_date_dict(): the tick's week of the year, its month and its
+## year ("Hafta 14 · Nisan 2012"). Field order is data (DATE_LINE).
 static func date_line(d: Dictionary) -> String:
-	return _t("DATE_LINE").format({
-		"week": int(d.get("week", 1)),
-		"mon": month_name(int(d.get("month", 1))),
-		"year": int(d.get("year", 2026)),
-	})
+	return _t("DATE_LINE").format({"week": int(d.week), "mon": month_name(int(d.month)), "year": int(d.year)})
 
 
 ## A real-world moment's date and time, in the locale's field order (TR 19.08.2026, EN 08/19/2026).

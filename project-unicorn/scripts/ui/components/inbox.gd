@@ -512,7 +512,7 @@ static func first_line(body: String) -> String:
 	return ""
 
 
-## "Hafta 14 · Nisan 2026", and the time of day an item reached the player ("· 09:00") when it has one; the date is
+## "Hafta 14 · Nisan 2012", and the time of day an item reached the player ("· 09:00") when it has one; the date is
 ## then the one of that moment.
 static func date_text(day: int, at := -1) -> String:
 	if at < 0:

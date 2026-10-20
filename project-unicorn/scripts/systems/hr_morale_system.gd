@@ -44,8 +44,8 @@ static func tick_leave_returns() -> void:
 
 static func tick_leave_departures() -> void:
 	# §11.4 yaz penceresi: her çalışanın Haziran–Ağustos içinde atanmış bir izin HAFTASI var;
-	# o hafta gelince oyuncu onayı istenmeden izne çıkar. Her tik bir Perşembedir ve pencerenin
-	# Perşembeleri 0..12 indekslerine birer kez düşer.
+	# o hafta gelince oyuncu onayı istenmeden izne çıkar. Tikler yedi gün arayla düşer, bu yüzden
+	# pencerenin tikleri 0..12 indekslerine birer kez düşer.
 	var date: Dictionary = GameState.get_date_dict()
 	var month: int = int(date.month)
 	var year: int = int(date.year)

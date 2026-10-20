@@ -249,7 +249,7 @@ func _add_profit_progress() -> void:
 
 
 func _month_ticks(day_min: int, day_max: int) -> Array:
-	# Ay başlangıçları GERÇEK takvimden: bir tik Perşembesinin ayına aittir ve ayı, ayı bir
+	# Ay başlangıçları GERÇEK takvimden: bir tik kendi tarihinin ayına aittir ve ayı, ayı bir
 	# önceki tikinkinden farklı olan tik açar (GameState.get_date_dict), asla ekonomi sabiti
 	# DAYS_PER_MONTH değil. Etiket: Fmt.month_abbr (yerele göre).
 	var ticks: Array = []

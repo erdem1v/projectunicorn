@@ -76,7 +76,7 @@ söyler.
 - Süre bildiren seam'ler haftadır: `time.week`, `urun.weeks_since_launch`, `funding.sheet_weeks_left`,
   `funding.acq_weeks_open`, `funding.angel_weeks_since_accept`, `funding.seed_weeks_since_close`,
   `finance.runway_weeks`, `finance.shutter_weeks_left`, `finance.shutter_weeks_total`, `hr.tenure_weeks`,
-  `musteri.tenure_weeks`, `hr.raise_cooldown_left`. Her tik Perşembe'ye düştüğü için haftanın günü seam'i yoktur.
+  `musteri.tenure_weeks`, `hr.raise_cooldown_left`. Her tik aynı güne (Pazar) düştüğü için haftanın günü seam'i yoktur.
 - `funding.sheet_days_left` gün değerlidir ve yalnız `funding.sheet_expiry` gövdesini besler; Frank'in hafta
   cümlesi onaylanana kadar kalır.
 - Kart JSON'u sabit okuyamaz. `world.final_stretch_verdict` 103'ü (`SOFT_CAP_WEEK - 1`), `funding.acquisition_offer`
@@ -375,20 +375,20 @@ yüklemez, süreleri okunmaz.
 
 ## 5. Takvim ve tarih satırı
 
-- Tik N'in tarihi 1 Ocak 2026 + (N - 1) × 7 gündür (`GameState.get_date_dict`). 1 Ocak 2026 Perşembe olduğu için her
-  tik bir Perşembe'ye düşer.
-- Tikin ayı o Perşembe'nin gerçek takvim ayıdır; aylar 4 ya da 5 haftalıktır. Ekonomi ayı (`DAYS_PER_MONTH` 30)
+- Tik N'in tarihi 1 Ocak 2012 + (N - 1) × 7 gündür (`GameState.get_date_dict`). 1 Ocak 2012 Pazar olduğu için her
+  tik bir Pazar'a düşer.
+- Tikin ayı o Pazar'ın gerçek takvim ayıdır; aylar 4 ya da 5 haftalıktır. Ekonomi ayı (`DAYS_PER_MONTH` 30)
   yalnız oranlar ve runway içindir, ay sınırını belirlemez.
-- Hafta numarası tikin Perşembe'sinin ISO yıl-içi haftasıdır: (yılın günü - 1) / 7 + 1. Yılı takvim yılıdır; yıl
-  başında 1'e döner.
+- Hafta numarası tikin gününün yıl içindeki haftasıdır: (yılın günü - 1) / 7 + 1. Yılı takvim yılıdır; yıl
+  başında 1'e döner. 2012 53 tik taşır: ilki 1 Ocak, sonuncusu 30 Aralık.
 - Ay sınırı: `ay(tik) != ay(tik - 1)` ise önceki ay kapanır (§6.2).
-- Yaz izni haftası, Haziran ile Ağustos arasındaki Perşembe'lerin sırasından seçilir. Pencerede 2026 ve 2027'de 13,
-  2028'de 14 tik vardır; izin haftası ilk 13'ünden biridir (`HRConstants.LEAVE_WEEK_COUNT` 13).
-- Tarih satırı haftayı, ayı ve yılı okur (`DATE_LINE`, örnek: "Hafta 14 · Nisan 2026"). TopBar saati ekler
-  ("Hafta 14 · Nisan 2026 · 09:00"); dar genişlikte kısa biçim (`TOPBAR_CLOCK_COMPACT`, "H14 · Nis · 09:00").
+- Yaz izni haftası, Haziran ile Ağustos arasındaki Pazar'ların sırasından seçilir. Pencerede 2012 ve 2013'te 13,
+  2014'te 14 tik vardır; izin haftası ilk 13'ünden biridir (`HRConstants.LEAVE_WEEK_COUNT` 13).
+- Tarih satırı haftayı, ayı ve yılı okur (`DATE_LINE`, örnek: "Hafta 14 · Nisan 2012"). TopBar saati ekler
+  ("Hafta 14 · Nisan 2012 · 09:00"); dar genişlikte kısa biçim (`TOPBAR_CLOCK_COMPACT`, "H14 · Nis · 09:00").
   Haftanın günü yazılmaz.
 - "Hangi hafta" damgası taşıyan her yüzey aynı tarih satırını okur: kayıt yuvası, olay kartının karar ve okuma
-  damgası, VC şeridi, gazete künyesi. Finans işlem tarihi kısa biçimi okur (`FIN_TX_DATE`, "H14 · Nis 2026").
+  damgası, VC şeridi, gazete künyesi. Finans işlem tarihi kısa biçimi okur (`FIN_TX_DATE`, "H14 · Nis 2012").
 - Süre sayaçları "N hafta" okur. Tike bağlı "bugün / yarın" "bu hafta / gelecek hafta" olur. Anlatının içindeki gün
   lafları dokunulmaz.
 - Yeni ve değişen oyuncu metni önce İngilizce yazılır, Türkçe yerelleştirme ayrı adımdır; onaya kadar "TR/EN onay
@@ -412,8 +412,8 @@ yüklemez, süreleri okunmaz.
 ### 6.2 Ay kapanışı sessizdir
 
 - Ay kapanışı muhasebe sınırıdır ve günlük dağıtımın başında, yuva 0'da koşar (`SummarySystem.begin_day`,
-  `advance_day`'den hemen sonra, üründen önce). Böylece yeni ayın ilk haftasının akışı yeni aya yazılır. Ocak 2026 beş
-  Perşembe'lidir, ama 1. günde finans tiki koşmadığı için 4 × 7 = 28 günlük akış taşır.
+  `advance_day`'den hemen sonra, üründen önce). Böylece yeni ayın ilk haftasının akışı yeni aya yazılır. Ocak 2012 beş
+  Pazar'lıdır, ama 1. günde finans tiki koşmadığı için 4 × 7 = 28 günlük akış taşır.
 - Yuva 0'da kapanan ay `month_history`'ye girer, `month_ended` yayılır ve yeni ayın defteri açılır.
 - Ay kapanışı modal açmaz. Defter kapanır, TopBar'ın aylık rakamları yenilenir ve yuva 10'da (sonların taramasından
   sonra) haber şeridine tek satır düşer (`MONTH_CLOSED_TICKER`): "{month} kapandı · MRR {mrr} · nakit {delta}". Satır

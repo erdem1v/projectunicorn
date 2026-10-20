@@ -1083,8 +1083,8 @@ const VACATION_WEEKS_MAX := 2
 const LEAVE_COOLDOWN_WEEKS := 8
 const LEAVE_WINDOW_START_MONTH := 6     # Haziran
 const LEAVE_WINDOW_END_MONTH := 8       # Ağustos
-## Yaz penceresinde her yıl en az 13 tik (Perşembe) var. Adım 5 ile 13 aralarında asal: on üç
-## ardışık işe alım on üç farklı haftaya düşer ve bütün ekip aynı hafta izinde olmaz.
+## Yaz penceresi (Haziran ile Ağustos, 92 gün) her yıl en az 13 tik taşır. Adım 5 ile 13 aralarında asal:
+## on üç ardışık işe alım on üç farklı haftaya düşer ve bütün ekip aynı hafta izinde olmaz.
 const LEAVE_WEEK_COUNT := 13
 const LEAVE_WEEK_STRIDE := 5
 ## §11.4 erteleme: −5 moral, talep 4 hafta sonra döner, en fazla iki kez.

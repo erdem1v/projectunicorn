@@ -489,7 +489,7 @@ static func _founding_clause(ledger: Dictionary) -> String:
 
 static func _date_line(ledger: Dictionary) -> String:
 	# Masthead meta line: the chrome date line in capitals + issue number ("HAFTA 46 · KASIM
-	# 2027 · SAYI 99"). A date and an edition, never a run length — the raw count lives ONLY in
+	# 2012 · SAYI 99"). A date and an edition, never a run length — the raw count lives ONLY in
 	# the rail's run-meta line (Rule 2). Ledger-driven, not GameState.day, so the paper dates
 	# the ledger it was handed (a fixture ledger included), not the live clock.
 	var day := _day(ledger)

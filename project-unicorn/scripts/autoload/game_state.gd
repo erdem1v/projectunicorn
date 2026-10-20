@@ -3,9 +3,9 @@ extends Node
 # Core run state. Every `var` here is save schema (SaveCodec walks them) and its default is the
 # migration for an older save. Mutations from outside go through the setters/seams below.
 
-# Tick 1 = Thu 1 Jan 2026. A tick is a week, so every tick falls on a Thursday; get_date_dict()
+# Tick 1 = Sun 1 Jan 2012. A tick is a week, so every tick falls on a Sunday; get_date_dict()
 # is the seam.
-const START_DATE := {"year": 2026, "month": 1, "day": 1}
+const START_DATE := {"year": 2012, "month": 1, "day": 1}
 
 # --- Run identity ---
 # Which run a save belongs to: its quick and autosave slots are its own, and the Load list groups by it. "" only
@@ -651,9 +651,9 @@ func get_founder_skill(skill_name: String) -> int:
 
 
 ## Tick N → Godot Time datetime dict {year, month, day, …} plus `week`. THE tick→calendar
-## conversion: tick N is START_DATE + (N − 1) × DAYS_PER_TICK days, a Thursday, and its month is
-## that Thursday's month (real 28/30/31-day months, never the economy DAYS_PER_MONTH). `week` is
-## the ISO week of the year, which for a Thursday is (day of year − 1) / 7 + 1. Default: now; a tick
+## conversion: tick N is START_DATE + (N − 1) × DAYS_PER_TICK days, a Sunday, and its month is
+## that Sunday's month (real 28/29/30/31-day months, never the economy DAYS_PER_MONTH). `week` is
+## (day of year − 1) / 7 + 1, so a year's first tick is its week 1. Default: now; a tick
 ## before the first is a date before the run.
 func get_date_dict(for_day: Variant = null) -> Dictionary:
 	var t: int = day if for_day == null else for_day
@@ -674,7 +674,6 @@ func get_run_ledger() -> Dictionary:
 		"phase": phase,
 		"origin": origin,
 		"start_month": int(start.month),
-		"start_year": int(start.year),
 		# economy
 		"cash": cash,
 		"mrr": mrr,

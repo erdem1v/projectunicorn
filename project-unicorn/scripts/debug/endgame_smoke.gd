@@ -1375,13 +1375,13 @@ static func _case_month_summary() -> String:
 	GameState.month_highlight_priority = -1
 
 	# Quiet January with one known delta: brand 50 → 60. No customers, no mvp flags → gates
-	# stay closed, MRR stays 0, cash falls by burn only. Ticks 1-5 are the Thursdays of January.
+	# stay closed, MRR stays 0, cash falls by burn only. Ticks 1-5 are the Sundays of January.
 	GameState.set_brand(60)
 	for i in 4:
 		_sim_day()  # ticks 2..5
 	if not summaries.is_empty() or not closes.is_empty():
 		return "month fired early (tick %d, count %d)" % [GameState.day, summaries.size()]
-	_sim_day()  # tick 6 = 5 Feb 2026 → January closes in slot 0, before this week's flow
+	_sim_day()  # tick 6 = 5 Feb 2012 → January closes in slot 0, before this week's flow
 	if summaries.size() != 1 or closes.size() != 1:
 		return "expected one summary and one close at tick 6, got %d / %d" % [summaries.size(), closes.size()]
 	# The inbox keeps the same payload: numbers and keys, rendered when it is read.
@@ -1391,7 +1391,7 @@ static func _case_month_summary() -> String:
 	var payload: Dictionary = summaries[0]
 	var m: Dictionary = SummarySystem.display(payload)
 	var want_title: String = TranslationServer.translate("MONTH_TITLE").format(
-		{"month": Fmt.month_name(1), "year": 2026})
+		{"month": Fmt.month_name(1), "year": 2012})
 	if String(m.title) != want_title:
 		return "title: %s (want %s)" % [String(m.title), want_title]
 	var want_range: String = TranslationServer.translate(Fmt.count_key("SUMMARY_RANGE", 5)).format(
@@ -1454,7 +1454,7 @@ static func _case_month_summary() -> String:
 	if int(GameState.summary_ledger.get("brand", -1)) != 60:
 		return "counters disturbed the period snapshot"
 
-	# Terminal suppression: February is ticks 6-9, so it closes at tick 10 (5 Mar). A Class-A
+	# Terminal suppression: February is ticks 6-9, so it closes at tick 10 (4 Mar). A Class-A
 	# ending on that tick: slot 9 ends the run before slot 10 sends → the ending wins, no second
 	# summary. The month still closes in slot 0.
 	while GameState.day < 9:
@@ -1474,8 +1474,8 @@ static func _case_month_summary() -> String:
 
 ## The summary arrives at the right tick for each frequency, and a month close outside the
 ## summary's period is silent: one live ticker line, no summary. One calendar year of ticks
-## 2..54 (tick N is the Thursday 1 Jan 2026 + 7(N − 1); 54 = 7 Jan 2027) through SummarySystem's
-## two slots. A month turns on the first Thursday of the next month. The runway line rides the
+## 2..54 (tick N is the Sunday 1 Jan 2012 + 7(N − 1); 54 = 6 Jan 2013) through SummarySystem's
+## two slots. A month turns on the first Sunday of the next month. The runway line rides the
 ## same slot: once when runway falls under a band, again only after it climbs back
 ## RUNWAY_ALERT_REARM_MONTHS above it and falls once more.
 static func _case_summary_frequency_ticks() -> String:
@@ -1483,8 +1483,8 @@ static func _case_summary_frequency_ticks() -> String:
 	var lines: Array = []
 	EventBus.summary_ready.connect(func(_d: Dictionary) -> void: fired.append(GameState.day))
 	EventBus.ticker_live_line.connect(func(_src: String, _line: Dictionary) -> void: lines.append(GameState.day))
-	var month_turns: Array = [6, 10, 14, 19, 23, 27, 32, 36, 40, 45, 49, 54]
-	var want := {"weekly": range(2, 55), "monthly": month_turns, "quarterly": [14, 27, 40, 54],
+	var month_turns: Array = [6, 10, 14, 19, 23, 27, 32, 36, 41, 45, 49, 54]
+	var want := {"weekly": range(2, 55), "monthly": month_turns, "quarterly": [14, 27, 41, 54],
 		"yearly": [54]}
 	for freq in SummarySystem.FREQUENCIES:
 		SummarySystem.frequency_override = freq
@@ -10844,15 +10844,15 @@ static func _case_loc_csv_integrity() -> String:
 ## rule (the English branch exists because tr_upper was mangling Display→DİSPLAY).
 static func _case_loc_format_locale_flip() -> String:
 	var loc0: String = TranslationServer.get_locale()
-	var d := {"week": 37, "month": 9, "year": 2026}
+	var d := {"week": 37, "month": 9, "year": 2012}
 	var want := {
 		"tr": {
 			"money_exact": "$1.234.567", "money": "$3,5K", "pct": "%12,5",
-			"date": "Hafta 37 · Eylül 2026", "upper": "İYİ", "month": "Eylül",
+			"date": "Hafta 37 · Eylül 2012", "upper": "İYİ", "month": "Eylül",
 		},
 		"en": {
 			"money_exact": "$1,234,567", "money": "$3.5K", "pct": "12.5%",
-			"date": "Week 37 · September 2026", "upper": "IYI", "month": "September",
+			"date": "Week 37 · September 2012", "upper": "IYI", "month": "September",
 		},
 	}
 	for loc in ["tr", "en"]:
@@ -12477,7 +12477,7 @@ static func _case_loc_language_switch() -> String:
 			FinanceSystem.burn_category_label("salaries"),
 			TranslationServer.translate("PROD_DEV_VERSION").format({"version": 3}),
 			Fmt.money_exact(1234567),
-			Fmt.date_line({"week": 37, "month": 9, "year": 2026}),
+			Fmt.date_line({"week": 37, "month": 9, "year": 2012}),
 		]
 	Localization.set_language("tr")
 	var tr_out: Array = samples.call()
