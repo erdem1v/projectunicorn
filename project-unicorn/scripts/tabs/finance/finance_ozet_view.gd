@@ -8,7 +8,7 @@ extends Control
 #
 # Bu dosya hiçbir sonucu HESAPLAMAZ: her rakam bir motor seam'inden gelir (FinanceSystem.get_monthly_flow /
 # get_burn_breakdown_pct / get_transactions / get_optimistic_daily_net, GameState.get_cash_history,
-# UiTokens.net_runway_parts, RivalRegistry.get_market_snapshot, PhaseGateSystem.series_a_signal). Tek istisna
+# RivalRegistry.get_market_snapshot, PhaseGateSystem.series_a_signal). Tek istisna
 # BİÇİMLEMEdir (tarih etiketi, çubuk oranları).
 #
 # Gider dağılımı yalnız gerçek kalemlerden; Series A çıtasının rakamı basılmaz, sinyali iştah etiketidir.
@@ -140,7 +140,7 @@ func _build_curve_card() -> void:
 	body.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	_range_slot = SprintUiShared.box(0)
 	body.add_child(UiFactory.D_card_head(tr("FIN_CAP_CASH"), _range_slot))
-	# Why the runway reads no months, and how far the profitability streak has come.
+	# How far the profitability streak has come.
 	_notes = SprintUiShared.column(UiTokens.SPACE_XS)
 	body.add_child(_notes)
 	_curve = CashCurve.new()
@@ -193,9 +193,6 @@ func refresh() -> void:
 
 func _refresh_curve() -> void:
 	UiFactory.clear(_notes)
-	var p: Dictionary = UiTokens.net_runway_parts(GameState.get_runway_months())
-	if p.note != "":
-		_notes.add_child(SprintUiShared.prose(p.note, &"Caption"))
 	_add_profit_progress()
 	_notes.visible = _notes.get_child_count() > 0
 	UiFactory.clear(_range_slot)
@@ -386,6 +383,7 @@ func _refresh_burn() -> void:
 	_burn.add_child(UiFactory.D_card_head(tr("FIN_BURN_SECTION"), UiFactory.make_label(tr("FIN_PER_MONTH").format(
 		{"amount": Fmt.money(int(FinanceSystem.get_monthly_flow().expense))}), &"Caption")))
 	if rows.is_empty():
+		_burn.add_child(SprintUiShared.empty_line(tr("FIN_BURN_EMPTY"), "res://assets/icons/util/doc.svg", 0))
 		return
 	var top: float = float(rows[0].pct)
 	_burn.add_child(_stack(rows.map(func(r: Dictionary) -> Array:

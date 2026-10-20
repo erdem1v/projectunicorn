@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-19.
+Last generated 2026-10-20.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | save_manager · game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 5 | plausibility · main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 6 | signals · incident_system · sprint_system · rnd_tab · research_bar · office_people |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · rnd_ui_shared · build_bar · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 54 | 4 | main · left_tabs · research_bar · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · rnd_ui_shared · build_bar · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 55 | 4 | main · left_tabs · research_bar · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 

@@ -211,14 +211,14 @@ func _refresh_metrics(g: Dictionary) -> void:
 	var runway: Label = $RunwayValue
 	runway.theme_type_variation = &"ValueText" if reading.ink == null else &"ValueTextStrong"
 	_paint(runway, reading.text, reading.ink)
-	# Artıda olmanın nedeni ipucunda (Label varsayılanı IGNORE, ipucu üzerine gelmeyi ister).
-	runway.tooltip_text = reading.note
-	runway.mouse_filter = Control.MOUSE_FILTER_STOP if reading.note != "" else Control.MOUSE_FILTER_IGNORE
+	# Net akış eksi değilken okunacak sayaç yok: hücre çizilmez.
+	$RunwayKey.visible = reading.text != ""
+	runway.visible = reading.text != ""
 	$MrrValue.text = Fmt.money_chip(GameState.mrr)
 	$BrandValue.text = str(GameState.brand)
 	$BurnValue.text = Fmt.money_chip(int(flow.expense))
 	$RepValue.text = str(GameState.reputation)
-	# Hata yüzünden itibar düştüyse sebebi ipucunda (runway'inki gibi: ipucu üzerine gelmeyi ister).
+	# Hata yüzünden itibar düştüyse sebebi ipucunda (ipucu üzerine gelmeyi ister).
 	var drop_note: String = SupportSystem.neglect_note()
 	for part: Label in [$RepKey, $RepValue]:
 		part.tooltip_text = drop_note

@@ -355,11 +355,15 @@ func _file_card(index: int, file: Dictionary) -> PanelContainer:
 		col.add_child(_file_row("util/clock", note, []))
 	# RUNWAY şeridi: "5 ay → 4 ay". Çift okuma tek seam'den (UiTokens.net_runway_pair): iki taraf aynı
 	# okunuyorsa iki taraf da aynı yazılır. Kısalan runway bir bedeldir; tehlike yalnız gelir yokken ya da
-	# ilk alarm eşiğinin altında, o zaman varılan değer kırmızıdır.
+	# ilk alarm eşiğinin altında, o zaman varılan değer kırmızıdır. İşe alımdan önce net akış eksi değilse
+	# öncesi okunmaz ve yalnız varılan değer yazılır; işe alımdan sonra da eksi değilse şerit çizilmez.
 	var pair: Dictionary = UiTokens.net_runway_pair(float(pv.get("runway_before", 0.0)), float(pv.get("runway_after", 0.0)))
-	col.add_child(_file_row("world/runway", UiFactory.make_label(Fmt.upper(tr("HR_ATLAS_RUNWAY_LABEL")), &"KeyLabel"),
-		[[String(pair["before"]), &"Caption"], ["→", &"CaptionFaint"],
-		[String(pair["after"]), &"DataStrong", UiTokens.D_neg() if bool(pv["danger"]) else null]]))
+	if String(pair["after"]) != "":
+		var reading: Array = [[String(pair["after"]), &"DataStrong", UiTokens.D_neg() if bool(pv["danger"]) else null]]
+		if String(pair["before"]) != "":
+			reading = [[String(pair["before"]), &"Caption"], ["→", &"CaptionFaint"]] + reading
+		col.add_child(_file_row("world/runway", UiFactory.make_label(Fmt.upper(tr("HR_ATLAS_RUNWAY_LABEL")), &"KeyLabel"),
+			reading))
 	HRUiShared.set_mouse_ignore(col)
 	for hover: Control in col.find_children("*", "Control", true, false):
 		if hover.tooltip_text != "":
@@ -401,7 +405,7 @@ func _on_hire_pressed() -> void:
 	var salary: String = Fmt.money_exact(int(file.get("salary", 0)))
 	EventBus.confirm_requested.emit({
 		"title": tr("HR_HIRE_CONFIRM_TITLE").format({"name": String(file.get("name", ""))}),
-		"body": tr("HR_HIRE_CONFIRM_BODY").format({"salary": salary,
+		"body": tr("HR_HIRE_CONFIRM_BODY" if pair["before"] != "" else "HR_HIRE_CONFIRM_BODY_AFTER").format({"salary": salary,
 			"commission": Fmt.money_exact(int(pv["commission"])), "before": pair["before"], "after": pair["after"]}),
 		"confirm_text": tr("HR_ATLAS_HIRE").format({"amount": salary}),
 		"cancel_text": tr("UI_DISMISS"),

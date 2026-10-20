@@ -956,9 +956,11 @@ static func _lever_name(lever: String) -> String:
 
 static func _kasa_runway_text() -> String:
 	# GROSS runway, the table's own lens (the fund ignores revenue; the shell shows the net), in the shell's
-	# months.
-	return TranslationServer.translate("TERM_CASH_RUNWAY").format({"cash": Fmt.money(GameState.cash),
-		"runway": UiTokens.net_runway_text(VCPitchSystem.gross_runway_months())})
+	# months. A company that spends nothing has no months to count: the cash stands alone.
+	var runway: String = UiTokens.net_runway_text(VCPitchSystem.gross_runway_months())
+	if runway == "":
+		return TranslationServer.translate("TERM_CASH").format({"cash": Fmt.money(GameState.cash)})
+	return TranslationServer.translate("TERM_CASH_RUNWAY").format({"cash": Fmt.money(GameState.cash), "runway": runway})
 
 
 # ============================================================================

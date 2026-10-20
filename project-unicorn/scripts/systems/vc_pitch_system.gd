@@ -1199,9 +1199,13 @@ static func _vc(vc_id: String) -> Dictionary:
 
 static func gross_runway_months() -> float:
 	# GROSS burn runway (revenue ignored — "if revenue went to zero, how long?"). The VC's
-	# question; deliberately distinct from the shell's revenue-aware NET runway. Always finite.
-	var burn: int = maxi(GameState.daily_burn, 1)
-	return (float(GameState.cash) / float(burn) / float(TimeModel.DAYS_PER_MONTH)) if GameState.cash > 0 else 0.0
+	# question; deliberately distinct from the shell's revenue-aware NET runway. 0 at cash <= 0, INF while
+	# nothing is spent.
+	if GameState.cash <= 0:
+		return 0.0
+	if GameState.daily_burn <= 0:
+		return INF
+	return float(GameState.cash) / float(GameState.daily_burn) / float(TimeModel.DAYS_PER_MONTH)
 
 
 ## The Beat-2 angle difficulty. At Series A it is the fund's own weight; in the seed room

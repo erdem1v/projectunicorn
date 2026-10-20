@@ -596,8 +596,8 @@ func _summary(p: Dictionary) -> VBoxContainer:
 		var text: String = "%s  →  %s" % [Fmt.money_chip(from), Fmt.money_chip(to)] if r[2] else "%d  →  %d" % [from, to]
 		var delta: String = INBOX.signed_money(to - from) if r[2] else ("±0" if to == from else "%+d" % (to - from))
 		_summary_row(table, tr(r[0]), text, delta, UiTokens.D_delta_color(to - from))
-	var artida: bool = int(p.cash.to) >= 0 and int(p.net) >= 0
-	_summary_row(table, tr("FIN_RUNWAY"), d.runway_text, "", UiTokens.D_pos() if artida else UiTokens.D_INK_2)
+	if d.runway_text != "":
+		_summary_row(table, tr("FIN_RUNWAY"), d.runway_text, "", UiTokens.D_INK_2)
 	var note := PanelContainer.new()
 	note.theme_type_variation = &"NoteBox"
 	var hl := HBoxContainer.new()

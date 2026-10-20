@@ -45,9 +45,7 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | Yatırımcı iştahı | Investor appetite | Series A kapısının tek oyuncu-yüzü; rakam asla basılmaz. |
 | KAPALI · ISINIYOR · AÇIK *(iştah çipi)* | CLOSED · WARMING · OPEN | Üç durum; çip ALL-CAPS iki dilde. |
 | Gelir çıtası | Revenue bar | Kapının gelir koşulunun RAKAMSIZ adı (`altında` / `aşıldı` ↔ `below` / `cleared`). |
-| Geçim ve araçlar | Living and tools | Gider dökümünün evre tabanı + çalışan koltuğu kalemi (`FIN_BURN_TOOLS`); aynı fatura işten çıkarma onayında "Aylık araç gideri ↔ Monthly tools" (`HR_ROW_TOOLS`). TR/EN onay bekliyor. |
-| Servis maliyeti | Service costs | Müşteriyle ölçeklenen gider kalemi (`FIN_BURN_SERVICE`); "Sunucular ↔ Servers" faturasından ayrı. TR/EN onay bekliyor. |
-| Brüt marj | Gross margin | MRR − sunucu faturası − servis maliyeti. Bugün ekranda yok. |
+| Aylık gider | Monthly costs | İlk hafta belgesi para tablosunun gider notu (`ONB_DOC_BURN`). Gider dökümünün kalemleri Maaşlar · Ek mesai · Pazarlama · Ofis · Sunucular ↔ Salaries · Overtime · Marketing · Office · Servers (`FIN_BURN_*`). |
 | Kesinti gideri · Güvenlik denetimi · Bağlılık primi · Dış kaynak ücreti · Tanıtım kampanyası · İadeler · Yan iş · Topluluk buluşması · Sponsorluk · Alan adı · Kullanıcı denemesi · Fuar standı | Incident costs · Security audit · Retention bonus · Contractor fee · Outreach campaign · Refunds · Side contract · Meetup · Sponsorship · Web address · User tests · Trade fair | İşlem listesinde olay kartlarının tek seferlik satırları (`FIN_ONETIME_*`). TR/EN onay bekliyor. |
 
 ## 3. Build & ürün

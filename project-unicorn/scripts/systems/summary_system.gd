@@ -208,7 +208,7 @@ static func display(p: Dictionary) -> Dictionary:
 			Fmt.count_key("SUMMARY_RANGE", last_day - start_day + 1)).format(
 			{"from": int(GameState.get_date_dict(start_day).week), "to": int(last.week)}),
 		"phase_name": GameState.phase_display_name(int(p.phase)),
-		# A company in the red has no runway, whatever its flow.
+		# A company in the red has no runway, whatever its flow; one not losing cash has none to read ("").
 		"runway_text": UiTokens.net_runway_text(
 			0.0 if cash_to < 0 else GameState.runway_months_for(cash_to, int(p.net))),
 		"caption": TranslationServer.translate(String(keys.caption)),

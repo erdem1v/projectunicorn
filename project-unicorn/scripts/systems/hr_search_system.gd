@@ -245,15 +245,13 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	# first weeks take back.
 	var hours: int = WorkHoursSystem.group_hours_in(WorkHoursSystem.draft_state(), HRConstants.ROLE_GROUP[role_id])
 	var overtime: int = HRConstants.overtime_pay_for_day(salary, hours)
-	# FinanceSystem PULLS the whole payroll and the tools bill and converts each in ONE rounding
-	# pass, so tomorrow's burn is today's published total with those two slices swapped out.
-	# Adding this salary rounded on its own would sit a dollar off, and would double-count a hire
-	# made today (the registry already holds that salary, the published burn does not yet).
+	# FinanceSystem PULLS the whole payroll and converts it in ONE rounding pass, so tomorrow's burn is
+	# today's published total with the salaries slice swapped out. Adding this salary rounded on its own
+	# would sit a dollar off, and would double-count a hire made today (the registry already holds that
+	# salary, the published burn does not yet).
 	var payroll_after: int = CharacterRegistry.get_total_monthly_salaries() + salary
-	var tools_after: int = FinanceSystem.monthly_tools_for(CharacterRegistry.get_employees().size() + 1)
-	var published: Dictionary = FinanceSystem.burn_breakdown
-	var burn_after: int = GameState.daily_burn - int(published["salaries"]) - int(published["tools"]) \
-		+ FinanceSystem.daily_rate(payroll_after) + FinanceSystem.daily_rate(tools_after) + overtime
+	var burn_after: int = GameState.daily_burn - int(FinanceSystem.burn_breakdown["salaries"]) \
+		+ FinanceSystem.daily_rate(payroll_after) + overtime
 	var net_after: int = GameState.get_daily_revenue() - burn_after
 	var cash_after: int = GameState.cash - commission
 	if GameState.cash < commission:

@@ -74,7 +74,8 @@ func fit_height() -> float:
 
 
 ## Nakit; aylık net (artıysa olumlu, kasa artıdayken eksi bedeldir, tehlike yalnız kasa eksideyken); runway ya
-## da kepenk sayacı. Her değişiklikte baştan kurulur; bağlandığı sinyallerin değeri okunmaz.
+## da kepenk sayacı, net akış eksi değilken hiçbiri. Her değişiklikte baştan kurulur; bağlandığı sinyallerin
+## değeri okunmaz.
 func _paint_kpis(_value = null) -> void:
 	UiFactory.clear(_kpis)
 	var cash := UiFactory.D_kpi(tr("FIN_CASH"), Fmt.money_exact(GameState.cash))
@@ -89,10 +90,11 @@ func _paint_kpis(_value = null) -> void:
 		UiFactory.D_kpi_value(net_cell).add_theme_color_override("font_color", net_ink)
 	_kpis.add_child(net_cell)
 	var reading: Dictionary = UiTokens.D_runway_reading()
+	if reading.text == "":
+		return
 	var runway := UiFactory.D_kpi(tr("TOPBAR_SHUTTER" if reading.shutter else "FIN_RUNWAY"), reading.text)
 	if reading.ink != null:
 		UiFactory.D_kpi_value(runway).add_theme_color_override("font_color", reading.ink)
-	runway.tooltip_text = reading.note
 	_kpis.add_child(runway)
 
 

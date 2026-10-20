@@ -15,7 +15,7 @@ static func install() -> void:
 	EvSeams.register("finance.peak_mrr", G, TYPE_INT,
 		func() -> int: return GameState.run_peak_mrr, "Finance", "WRAPPER; high-water mark")
 	EvSeams.register("finance.daily_burn", G, TYPE_INT,
-		func() -> int: return GameState.daily_burn, "Finance", "WRAPPER; a per-day rate, $50 at the start")
+		func() -> int: return GameState.daily_burn, "Finance", "WRAPPER; a per-day rate, 0 at the start")
 	EvSeams.register("finance.daily_net", G, TYPE_INT,
 		func() -> int: return GameState.get_net_daily_flow(), "Finance", "signed; a per-day rate")
 	EvSeams.register("finance.brand", G, TYPE_INT,
@@ -23,7 +23,7 @@ static func install() -> void:
 	EvSeams.register("finance.reputation", G, TYPE_INT,
 		func() -> int: return GameState.reputation, "Finance", "WRAPPER; clamped -10..100")
 
-	# INF when default-alive ("Artıda"), so a condition must test "runway BELOW x"; "above"
+	# INF while net flow is not negative, so a condition must test "runway BELOW x"; "above"
 	# reads true forever once the company turns profitable.
 	EvSeams.register("finance.runway_months", G, TYPE_FLOAT,
 		func() -> float: return GameState.get_runway_months(),

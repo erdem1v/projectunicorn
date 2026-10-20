@@ -148,7 +148,7 @@ func lay_out(short: bool) -> void:
 	table.add_theme_constant_override("h_separation", UiTokens.SPACE_L)
 	table.add_theme_constant_override("v_separation", UiTokens.SPACE_M)
 	for row: Array in [["FIN_CAP_CASH", "cash", &"HeroValue"], ["FIN_CAP_BURN", "burn", &"ValueText"],
-			["FIN_CAP_RUNWAY", "runway", &"ValueText"], ["ONB_DOC_OFFICE", "office", &"ValueText"], ["ONB_DOC_TEAM", "team", &"ValueText"]]:
+			["ONB_DOC_OFFICE", "office", &"ValueText"], ["ONB_DOC_TEAM", "team", &"ValueText"]]:
 		var key := UiFactory.make_label(Fmt.upper(tr(row[0])), &"KeyLabel")
 		key.custom_minimum_size.x = KEY_W[int(short)]
 		table.add_child(key)
@@ -222,11 +222,8 @@ func show_draft(draft: Dictionary, step: int) -> void:
 	_v.cash.text = Fmt.money_exact(cash)
 	UiFactory.clear(_v.cash_tag)
 	_v.cash_tag.add_child(UiFactory.D_tag(tr("ONB_DIFF_" + draft.difficulty.to_upper()), &"outline"))
+	# The run opens with nothing to pay and no revenue: there is no runway to read, so the table has no row for it.
 	_v.burn.text = Fmt.money_chip(FinanceSystem.starting_daily_burn() * TimeModel.DAYS_PER_MONTH)
-	# The top bar's runway as the run will open: whole months. UiTokens.net_runway_text would read the last run's
-	# cash, which a run that ended below zero leaves negative.
-	var months := GameState.runway_months_for(cash, -FinanceSystem.starting_daily_burn())
-	_v.runway.text = "%d %s" % [roundi(months), tr("RUNWAY_UNIT_MONTHS")]
 	_v.guided.set_pressed_no_signal(draft.frank_guided)
 	_v.guided_note.visible = _v.guided.disabled or draft.frank_guided
 

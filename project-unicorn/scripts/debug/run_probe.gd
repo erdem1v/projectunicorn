@@ -29,7 +29,7 @@ extends RefCounted
 #   PROBE BEGIN preset=<p> weeks=<n> mode=<m> seed=<s>
 #   PROBE FIRE  day=<d> hour=<h> id=<id> src=<src>
 #   PROBE PICK  day=<d> id=<id> choice=<i> label=<label>
-#   PROBE STATE day=<d> cash=<n> mrr=<n> brand=<n> burn=<n> runway=<f> cust=<n> emp=<n> promises=<n>
+#   PROBE STATE day=<d> cash=<n> mrr=<n> brand=<n> burn=<n> runway=<f|INF> cust=<n> emp=<n> promises=<n>
 #   PROBE B2C   day=<d> aud=<f> paying=<n> price=<n> conv=<f> sat=<n> sat_target=<n> open_bugs=<n>
 #               lost=<f> q=<f> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
 #               validation_day=<f> u=<n> aud_star=<f>

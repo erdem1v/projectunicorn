@@ -122,8 +122,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"satisfaction_seam_emits": fail = _case_satisfaction_seam_emits()
 		"targeted_modifier_hits_named_customer": fail = _case_targeted_modifier_hits_named_customer()
 		"burn_refresh_same_tick": fail = _case_burn_refresh_same_tick()
-		"burn_day1_breakdown":  fail = _case_burn_day1_breakdown()
-		"burn_tools_and_service": fail = _case_burn_tools_and_service()
+		"burn_lines_visible":   fail = _case_burn_lines_visible()
 		"add_cash_writes_ledger": fail = _case_add_cash_writes_ledger()
 		"marketing_push_burns_and_ends": fail = _case_marketing_push_burns_and_ends()  # EXPECT-ERROR refused 'marketing_push' from expire
 		"investor_strain_fades_from_the_room": fail = _case_investor_strain_fades_from_the_room()
@@ -741,8 +740,7 @@ static func _seed_bugs(n: int) -> void:
 
 ## "Healthy Series A MRR" for the VC fixtures: the revenue bar moved 5,000 → the $40-80K band and VCPitchSystem's
 ## conviction seeding reads CONV_MRR_REFERENCE = the bar, so a fixture hard-pinned at 6,000 would read as a WEAK company.
-## Bar + 1,000. An established book at the bar, not a fresh signing: its onboarding window is closed, or the
-## phase-3 onboarding service cost would drain the cash and the VC cases would run in the shutter.
+## Bar + 1,000. An established book at the bar, not a fresh signing: its onboarding window is closed.
 static func _seed_b2b_series_a() -> void:
 	_seed_b2b(SalesSystem.TRACTION_MRR_TARGET + 1000)
 	CustomerRegistry.get_customer("co_lead_smoke").onboarding_until = GameState.day
@@ -1375,8 +1373,10 @@ static func _case_month_summary() -> String:
 	GameState.month_highlight_priority = -1
 
 	# Quiet January with one known delta: brand 50 → 60. No customers, no mvp flags → gates
-	# stay closed, MRR stays 0, cash falls by burn only. Ticks 1-5 are the Sundays of January.
+	# stay closed, MRR stays 0, cash falls by burn only (a company starts with none; the marketing line is the
+	# $50 a day this month is read against). Ticks 1-5 are the Sundays of January.
 	GameState.set_brand(60)
+	FinanceSystem.set_burn_category("marketing", 50)
 	for i in 4:
 		_sim_day()  # ticks 2..5
 	if not summaries.is_empty() or not closes.is_empty():
@@ -1501,6 +1501,7 @@ static func _case_summary_frequency_ticks() -> String:
 			return "%s month-close lines on ticks %s" % [freq, str(lines)]
 
 	# THE RUNWAY LINE. No revenue, so runway is cash / (daily burn × DAYS_PER_MONTH) months.
+	GameState.set_daily_burn(50)
 	var month_cash: float = float(GameState.daily_burn * TimeModel.DAYS_PER_MONTH)
 	var band: float = float(FinanceSystem.RUNWAY_ALERT_MONTHS[0])
 	var rearm: float = FinanceSystem.RUNWAY_ALERT_REARM_MONTHS
@@ -2788,38 +2789,44 @@ static func _case_targeted_modifier_hits_named_customer() -> String:
 	return ""
 
 
-static func _case_burn_day1_breakdown() -> String:
-	# Day 1 carries no category without a mechanic behind it: one row, the phase-1 tools base
-	# with nobody on the payroll, 100 %, $50 (the runway calibration).
-	if FinanceSystem.starting_daily_burn() != 50:
-		return "starting_daily_burn %d, want 50 (baseline calibration moved)" % FinanceSystem.starting_daily_burn()
-	if GameState.daily_burn != FinanceSystem.starting_daily_burn():
-		return "GameState.daily_burn (%d) does not derive from the breakdown" % GameState.daily_burn
-	# servers and service are written by InfraSystem and stay 0 until the product ships;
-	# marketing and office are hooks at 0.
-	var want_keys: Array = ["salaries", "overtime", "tools", "marketing", "office", "servers", "service"]
-	var keys: Array = FinanceSystem.STARTING_BURN_BREAKDOWN.keys()
-	if keys.size() != want_keys.size():
-		return "breakdown holds %d categories, want %d: %s" % [keys.size(), want_keys.size(), str(keys)]
-	for key in want_keys:
-		if not FinanceSystem.STARTING_BURN_BREAKDOWN.has(key):
-			return "breakdown lost category '%s'" % key
-		if not FinanceSystem.BURN_IDS.has(key):
-			return "category '%s' has no label" % key
-	for key in keys:
-		var v: int = int(FinanceSystem.STARTING_BURN_BREAKDOWN[key])
-		if String(key) == "tools":
-			if v != FinanceSystem.daily_rate(FinanceSystem.monthly_tools_for(0)):
-				return "day-1 tools %d is not the phase-1 base with nobody on the payroll" % v
-		elif v != 0:
-			return "category '%s' carries %d with no mechanic behind it (fiction)" % [key, v]
-	# Day-1 render contract: one row, tools, 100 % (zero rows are skipped).
+## Finans'ın gider listesi yalnız oyuncunun görüp yönettiği kalemleri taşır: gün 1'de gider 0 ve liste boştur,
+## beş kalem (maaş, ek mesai, pazarlama, ofis, sunucu) yazıldıkça kendi satırıyla çıkar ve satırların toplamı
+## günlük burn'dür; araç ve servis kalemi yoktur; yüklenen kayıt, o kalemleri taşıyan eski toplamı taşımaz.
+##
+## FALSIFICATION: FinanceSystem.from_dict'in son satırını (`GameState.set_daily_burn(compute_total_burn())`) sil →
+## son iddia FAIL (kayıt eski toplamla açılır).
+static func _case_burn_lines_visible() -> String:
+	if FinanceSystem.starting_daily_burn() != 0 or GameState.daily_burn != 0:
+		return "day 1 costs %d (start %d) a day, want 0" % [GameState.daily_burn, FinanceSystem.starting_daily_burn()]
+	var want_keys: Array = ["salaries", "overtime", "marketing", "office", "servers"]
+	if FinanceSystem.STARTING_BURN_BREAKDOWN.keys() != want_keys or FinanceSystem.BURN_IDS != want_keys:
+		return "burn categories are %s / %s, want %s" % [
+			str(FinanceSystem.STARTING_BURN_BREAKDOWN.keys()), str(FinanceSystem.BURN_IDS), str(want_keys)]
+	if not FinanceSystem.get_burn_breakdown_pct().is_empty():
+		return "day 1 draws cost lines: %s" % str(FinanceSystem.get_burn_breakdown_pct())
+	_make_employee("char_burn_a", "Burn A", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000)
+	FinanceSystem.daily_tick()
+	FinanceSystem.set_burn_category("servers", 40)
+	FinanceSystem.set_burn_category("marketing", 20)
+	var written: int = FinanceSystem.get_burn_breakdown().values().filter(func(v: int) -> bool: return v > 0).size()
 	var rows: Array = FinanceSystem.get_burn_breakdown_pct()
-	if rows.size() != 1:
-		return "day-1 breakdown renders %d rows, want exactly 1: %s" % [rows.size(), str(rows)]
-	var row: Dictionary = rows[0]
-	if String(row.get("id", "")) != "tools" or int(row.get("pct", 0)) != 100 or int(row.get("amount", 0)) != 50:
-		return "day-1 row is not tools/100/50: %s" % str(row)
+	if written != 3 or rows.size() != written:
+		return "%d written categories draw %d lines" % [written, rows.size()]
+	var amount_sum: int = 0
+	var pct_sum: int = 0
+	for row in rows:
+		amount_sum += int(row.amount)
+		pct_sum += int(row.pct)
+	if amount_sum != GameState.daily_burn or pct_sum != 100:
+		return "lines add up to %d (%d %%), the daily burn is %d" % [amount_sum, pct_sum, GameState.daily_burn]
+	# A save written with the tools and service lines also holds the daily burn they made.
+	GameState.set_daily_burn(320)
+	FinanceSystem.from_dict({"burn_breakdown": {"salaries": 200, "tools": 50, "service": 30, "servers": 40}})
+	var loaded: Dictionary = FinanceSystem.get_burn_breakdown()
+	if loaded.has("tools") or loaded.has("service"):
+		return "a loaded save kept a dropped line: %s" % str(loaded)
+	if GameState.daily_burn != 240:
+		return "a loaded save opens at a daily burn of %d, want 240 (its lines' sum)" % GameState.daily_burn
 	return ""
 
 
@@ -2842,79 +2849,6 @@ static func _case_burn_refresh_same_tick() -> String:
 	if GameState.mrr != 1000 or GameState.cash - cash0 != want:
 		return "one tick moved cash by %d at MRR %d, burn %d (want %d)" % [
 			GameState.cash - cash0, GameState.mrr, GameState.daily_burn, want]
-	return ""
-
-
-## The two burn lines that grow with the company. Tools: the phase base plus the phase rate per
-## employee on the payroll, the founder out and people on leave in. Service: B2C per thousand
-## users under the load; B2B per account plus seats under the load, plus the phase multiple of
-## an account's MRR for its first four ticks; nothing while the product is not live.
-##
-## FALSIFICATION: count every character in FinanceSystem's tools pull, read `>=` for the
-## onboarding window, drop the load factor from the seat term, or drop InfraSystem's is_live
-## guard, and the matching assertion fails.
-static func _case_burn_tools_and_service() -> String:
-	FinanceSystem.daily_tick()
-	var base_only: int = FinanceSystem.daily_rate(int(FinanceSystem.TOOLS_BASE_MONTHLY[1]))
-	if int(FinanceSystem.get_burn_breakdown()["tools"]) != base_only:
-		return "a founder-only company pays %d for tools, want the phase-1 base %d" % [
-			int(FinanceSystem.get_burn_breakdown()["tools"]), base_only]
-	_make_employee("char_tools_a", "Tools A", HRConstants.ROLE_DEVELOPER)
-	var away: Character = _make_employee("char_tools_b", "Tools B", HRConstants.ROLE_DESIGNER)
-	CharacterRegistry.set_status(away.id, HRConstants.STATUS_ON_LEAVE)
-	for phase in [1, 2, 3]:
-		GameState.set_phase(phase)
-		FinanceSystem.daily_tick()
-		var want_tools: int = FinanceSystem.daily_rate(int(FinanceSystem.TOOLS_BASE_MONTHLY[phase])
-			+ 2 * int(FinanceSystem.TOOLS_PER_EMPLOYEE_MONTHLY[phase]))
-		var got_tools: int = int(FinanceSystem.get_burn_breakdown()["tools"])
-		if got_tools != want_tools:
-			return "phase %d tools %d, want %d (two employees, one on leave, founder out)" % [
-				phase, got_tools, want_tools]
-
-	GameState.set_phase(2)
-	if InfraSystem.monthly_service() != 0:
-		return "a product that is not live costs %d in service" % InfraSystem.monthly_service()
-
-	_seed_b2c()
-	GameState.set_flag("b2c_audience", 4000.0)
-	var want_b2c: int = int(round(4.0 * InfraSystem.SERVICE_PER_1K_USERS_B2C * InfraSystem.load_factor()))
-	if InfraSystem.monthly_service() != want_b2c:
-		return "4,000 users cost %d in service, want %d" % [InfraSystem.monthly_service(), want_b2c]
-
-	GameState.set_flag("b2c_audience", 0.0)
-	_seed_b2b(3000)
-	ProductState.set_line_tier("line_note_tool_capture", 3)
-	var lf: float = InfraSystem.load_factor()
-	if lf <= InfraSystem.LOAD_BASE:
-		return "fixture: the heavy step carries no load (%.3f)" % lf
-	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
-	var settled: float = InfraSystem.SERVICE_PER_ACCOUNT_B2B + c.seats * InfraSystem.SERVICE_PER_SEAT_B2B * lf
-	for phase in [1, 2, 3]:
-		GameState.set_phase(phase)
-		var want_b2b: int = int(round(settled + c.mrr * float(InfraSystem.ONBOARDING_MRR_MULT[phase])))
-		if InfraSystem.monthly_service() != want_b2b:
-			return "phase %d: an onboarding account costs %d in service, want %d" % [
-				phase, InfraSystem.monthly_service(), want_b2b]
-
-	# The multiple holds through the account's fourth tick and is gone on the fifth.
-	GameState.day = c.onboarding_until - 1
-	if InfraSystem.monthly_service() != int(round(settled + c.mrr * float(InfraSystem.ONBOARDING_MRR_MULT[3]))):
-		return "the onboarding multiple ended before the account's fourth tick"
-	GameState.day = c.onboarding_until
-	if InfraSystem.monthly_service() != int(round(settled)):
-		return "the onboarding multiple outlived its window (%d, want %d)" % [
-			InfraSystem.monthly_service(), int(round(settled))]
-
-	InfraSystem.daily_tick()
-	var published: int = int(FinanceSystem.get_burn_breakdown()["service"])
-	if published <= 0 or published != FinanceSystem.daily_rate(InfraSystem.monthly_service()):
-		return "the service line carries %d, the daily rate is %d" % [
-			published, FinanceSystem.daily_rate(InfraSystem.monthly_service())]
-	GameState.set_flag("mvp_shipped", false)
-	InfraSystem.daily_tick()
-	if int(FinanceSystem.get_burn_breakdown()["service"]) != 0:
-		return "service still burns %d with the product offline" % int(FinanceSystem.get_burn_breakdown()["service"])
 	return ""
 
 
@@ -3033,30 +2967,42 @@ static func _case_investor_strain_fades_from_the_room() -> String:
 
 # --- Two-runway model + localization cases ---
 
+## Net runway reads only while cash is draining: net flow >= 0 (zero cost included) reads "" and nothing is drawn;
+## net flow < 0 reads the months.
+##
+## FALSIFICATION: delete the `months == INF` branch of UiTokens.net_runway_text; the zero-cost reading fails.
 static func _case_runway_net_status() -> String:
-	# Net runway: profitable → localized status word (no unit); finite → months + "ay".
 	TranslationServer.set_locale("tr")
-	var alive: Dictionary = UiTokens.net_runway_parts(INF)
-	if String(alive.value) != "Artıda" or String(alive.unit) != "":
-		return "profitable(tr) wrong: '%s' / '%s'" % [alive.value, alive.unit]
-	TranslationServer.set_locale("en")
-	if String(UiTokens.net_runway_parts(INF).value) != "Default Alive":
-		return "profitable(en) wrong: '%s'" % UiTokens.net_runway_parts(INF).value
-	TranslationServer.set_locale("tr")
-	var finite: Dictionary = UiTokens.net_runway_parts(6.4)
-	if String(finite.value) != "6" or String(finite.unit) != "ay":
-		return "finite wrong: '%s' / '%s'" % [finite.value, finite.unit]
-	# Break-even (net_burn == 0) counts as default alive → INF.
-	GameState.set_daily_burn(50)
-	GameState.set_mrr(1500)   # daily_revenue round(1500/30)=50 == burn → net 0 → INF
+	GameState.set_cash(10000)
+	# Zero cost and zero revenue: net 0.
 	if GameState.get_runway_months() != INF:
-		return "break-even not treated as alive"
+		return "nothing earned and nothing spent is not a non-negative flow"
+	if UiTokens.net_runway_text(GameState.get_runway_months()) != "":
+		return "a company with no cost reads a runway: '%s'" % UiTokens.net_runway_text(GameState.get_runway_months())
+	# Break-even (net == 0) and profit read nothing either.
+	GameState.set_daily_burn(50)
+	GameState.set_mrr(1500)   # daily_revenue round(1500/30)=50 == burn → net 0
+	if GameState.get_runway_months() != INF or UiTokens.D_runway_reading().text != "":
+		return "break-even draws a runway: '%s'" % UiTokens.D_runway_reading().text
+	GameState.set_mrr(3000)
+	if UiTokens.D_runway_reading().text != "":
+		return "a profitable company draws a runway: '%s'" % UiTokens.D_runway_reading().text
+	# Net < 0: the months (10000 / 50 / 30 = 6.67 → 7).
+	GameState.set_mrr(0)
+	var want: String = "7 %s" % TranslationServer.translate("RUNWAY_UNIT_MONTHS")
+	if UiTokens.net_runway_text(GameState.get_runway_months()) != want or UiTokens.D_runway_reading().text != want:
+		return "net < 0 reads '%s' / '%s', want '%s'" % [UiTokens.net_runway_text(GameState.get_runway_months()),
+			UiTokens.D_runway_reading().text, want]
 	return ""
 
 
 static func _case_gross_runway_months() -> String:
-	# Gross burn runway = cash / daily_burn / 30, always finite, 0 at cash ≤ 0.
+	# Gross burn runway = cash / daily_burn / 30, INF with no cost (the term sheet then prints the cash alone),
+	# 0 at cash ≤ 0.
 	GameState.set_cash(30000)
+	GameState.set_daily_burn(0)
+	if VCPitchSystem.gross_runway_months() != INF or UiTokens.net_runway_text(VCPitchSystem.gross_runway_months()) != "":
+		return "a company with no cost reads %.2f gross months" % VCPitchSystem.gross_runway_months()
 	GameState.set_daily_burn(50)   # 30000/50/30 = 20 months
 	var m: float = VCPitchSystem.gross_runway_months()
 	if int(round(m)) != 20:
@@ -3070,13 +3016,13 @@ static func _case_gross_runway_months() -> String:
 static func _case_locale_switch() -> String:
 	# CSV → TranslationServer resolves per locale (proves the localization layer end-to-end).
 	TranslationServer.set_locale("en")
-	if TranslationServer.translate("RUNWAY_PROFITABLE") != "Default Alive":
-		return "en RUNWAY_PROFITABLE: '%s'" % TranslationServer.translate("RUNWAY_PROFITABLE")
+	if TranslationServer.translate("RUNWAY_UNIT_MONTHS") != "mo":
+		return "en RUNWAY_UNIT_MONTHS: '%s'" % TranslationServer.translate("RUNWAY_UNIT_MONTHS")
 	if TranslationServer.translate("SETTINGS_LANGUAGE") != "Language":
 		return "en SETTINGS_LANGUAGE: '%s'" % TranslationServer.translate("SETTINGS_LANGUAGE")
 	TranslationServer.set_locale("tr")
-	if TranslationServer.translate("RUNWAY_PROFITABLE") != "Artıda":
-		return "tr RUNWAY_PROFITABLE: '%s'" % TranslationServer.translate("RUNWAY_PROFITABLE")
+	if TranslationServer.translate("RUNWAY_UNIT_MONTHS") != "ay":
+		return "tr RUNWAY_UNIT_MONTHS: '%s'" % TranslationServer.translate("RUNWAY_UNIT_MONTHS")
 	if TranslationServer.translate("SETTINGS_LANGUAGE") != "Dil":
 		return "tr SETTINGS_LANGUAGE: '%s'" % TranslationServer.translate("SETTINGS_LANGUAGE")
 	return ""
@@ -4421,12 +4367,15 @@ static func _case_role_locks_and_runway_pair() -> String:
 	# 5 · GÜRÜLTÜ DEĞİŞİKLİK DEĞİLDİR — şerit kırmızıya boyanmaz.
 	if bool(UiTokens.net_runway_pair(5.0, 4.99)["changed"]):
 		return "floating-point noise was painted as a runway drop"
-	# 6 · INF→INF kırmızı DEĞİL, ve iki taraf da "Artıda" der.
+	# 6 · INF→INF kırmızı DEĞİL ve iki taraf da boş; INF→sonlu yalnız varılan tarafı yazar.
 	var inf_pair: Dictionary = UiTokens.net_runway_pair(INF, INF)
 	if bool(inf_pair["changed"]):
 		return "a profitable run was painted as losing runway"
-	if String(inf_pair["before"]) != String(inf_pair["after"]):
-		return "INF→INF printed two different words"
+	if String(inf_pair["before"]) != "" or String(inf_pair["after"]) != "":
+		return "INF→INF printed '%s' → '%s', want nothing on both sides" % [inf_pair["before"], inf_pair["after"]]
+	var turn_pair: Dictionary = UiTokens.net_runway_pair(INF, 4.0)
+	if String(turn_pair["before"]) != "" or String(turn_pair["after"]) != UiTokens.net_runway_text(4.0):
+		return "a hire that turns net negative printed '%s' → '%s'" % [turn_pair["before"], turn_pair["after"]]
 	# 7 · TEK EV KORUNDU: sıradan bir düşüş hâlâ paylaşılan biçimleyicinin cümlesi.
 	var plain: Dictionary = UiTokens.net_runway_pair(6.0, 1.0)
 	if String(plain["before"]) != UiTokens.net_runway_text(6.0) \
@@ -4436,32 +4385,25 @@ static func _case_role_locks_and_runway_pair() -> String:
 
 
 static func _case_runway_days_and_negative_cash() -> String:
-	# Two display bugs, both of which live in net_runway_parts and only there.
+	# Two display bugs, both of which live in net_runway_text and only there.
 	# FAILS against the pre-fix engine: sub-month printed "0 ay", and negative cash printed
-	# the green "Artıda" two cells from a running bankruptcy counter.
+	# a green status two cells from a running bankruptcy counter.
+	var weeks: String = TranslationServer.translate("RUNWAY_UNIT_WEEKS")
 	GameState.set_cash(8597)
 	# Half a month is two whole weeks. int(round()) of the months rendered "1 ay" or "0 ay";
 	# under a month the value is weeks.
-	var sub: Dictionary = UiTokens.net_runway_parts(0.5)
-	if String(sub.get("value", "")) != "2" \
-			or String(sub.get("unit", "")) != TranslationServer.translate("RUNWAY_UNIT_WEEKS"):
-		return "half a month of runway renders as '%s %s', want 2 weeks" % [
-			str(sub.get("value")), str(sub.get("unit"))]
-	if bool(sub.get("positive", false)):
-		return "a two-week runway reads as positive"
+	if UiTokens.net_runway_text(0.5) != "2 %s" % weeks:
+		return "half a month of runway renders as '%s', want 2 %s" % [UiTokens.net_runway_text(0.5), weeks]
 	# The months path above one month is untouched.
-	var normal: Dictionary = UiTokens.net_runway_parts(6.4)
-	if String(normal.get("value", "")) != "6" \
-			or String(normal.get("unit", "")) != TranslationServer.translate("RUNWAY_UNIT_MONTHS"):
-		return "the months path moved: %s %s" % [str(normal.get("value")), str(normal.get("unit"))]
-	# Negative cash can never read as "Artıda", whatever the daily net says.
+	if UiTokens.net_runway_text(6.4) != "6 %s" % TranslationServer.translate("RUNWAY_UNIT_MONTHS"):
+		return "the months path moved: '%s'" % UiTokens.net_runway_text(6.4)
+	# Negative cash is never "nothing to read", whatever the daily net says: it reads zero weeks.
 	GameState.set_cash(-4000)
-	var broke: Dictionary = UiTokens.net_runway_parts(INF)
-	if bool(broke.get("positive", false)):
-		return "negative cash still renders as positive runway"
+	if UiTokens.net_runway_text(INF) != "0 %s" % weeks:
+		return "negative cash renders as '%s', want 0 %s" % [UiTokens.net_runway_text(INF), weeks]
 	GameState.set_cash(20000)
-	if not bool(UiTokens.net_runway_parts(INF).get("positive", false)):
-		return "a solvent, profitable company lost its ARTIDA — the guard is a wall"
+	if UiTokens.net_runway_text(INF) != "":
+		return "a solvent company that is not losing cash draws a runway: '%s'" % UiTokens.net_runway_text(INF)
 	return ""
 
 
@@ -6194,6 +6136,7 @@ static func _case_event_history_chip_matches_live() -> String:
 static func _case_event_beat_is_note() -> String:
 	const INBOX := preload("res://scripts/ui/components/inbox.gd")
 	GameState.set_cash(5000)
+	FinanceSystem.set_burn_category("marketing", 50)   # savings that run down: nothing drains them otherwise
 	GameState.day = 5
 	var asked: Array = []
 	EventBus.modal_requested.connect(func(ev: GameEvent) -> void: asked.append(ev.id))
@@ -12726,7 +12669,8 @@ static func _case_month_history_close_and_cap() -> String:
 	# month's accruals (income = Σ tick revenue, expense = Σ burn + one-time costs, red_weeks),
 	# and keeps 12.
 	GameState.set_cash(100000)
-	_seed_b2b(3000)   # daily revenue 100, burn 50 tools + the account's service cost → net positive
+	_seed_b2b(3000)   # daily revenue 100
+	_make_employee("char_close_dev", "Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 1500)   # burn 50 → net positive
 	_sim_day()        # settle the bridge (MRR → GameState)
 	var closes_before: int = GameState.month_history.size()
 	for i in 4:
@@ -21661,7 +21605,8 @@ static func _seed_promise_sprint() -> Array:
 ## MVP öncesi koşuda taban boş kalmaz: quiet kartlar sıradan havuza girmez, yalnız boş haftayı
 ## doldurur ve tek kurucu MVP'ye yürürken taban art arda raporlanacak kadar boş bulunmaz (§13.6).
 ## Oyuncu her kartı ilk seçenekle cevaplar ki masa boşalsın ve taban tetiklenebilsin; kasa her
-## hafta düşük bir bakiyede tutulur, runway birikim notunun eşiğinin altında kalır.
+## hafta düşük bir bakiyede tutulur ve bir gider kalemi onu eritir (gider yokken eriyen birikim yoktur,
+## not gelmez), runway birikim notunun eşiğinin altında kalır.
 ## FALSİFİKASYON: EvCatalog.pool_candidates'ten quiet dışlamasını sil → ilk kontrol düşer;
 ## founder.savings_note ve founder.unseen_build'i sil → hiçbir quiet kart ateşlenmez.
 static func _case_quiet_cards_fill_empty_floor() -> String:
@@ -21672,6 +21617,7 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 	var chance: Dictionary = (SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()
 	_seed_sprint()
 	SprintCatalog._data.decision.sprint_chance = chance
+	FinanceSystem.set_burn_category("marketing", 50)
 	var worst: int = 0
 	var weeks: int = 0
 	while weeks < 12:

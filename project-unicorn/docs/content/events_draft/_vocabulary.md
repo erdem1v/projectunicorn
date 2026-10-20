@@ -164,7 +164,7 @@ slot of that type (§17.12).
 |---|---|---|---|---|
 | `finance.brand` | global | int | Finance | WRAPPER; clamped 0-100 |
 | `finance.cash` | global | int | Finance | WRAPPER over GameState.cash; MAY BE NEGATIVE, which is what starts the shutter |
-| `finance.daily_burn` | global | int | Finance | WRAPPER; a per-day rate, $50 at the start |
+| `finance.daily_burn` | global | int | Finance | WRAPPER; a per-day rate, 0 at the start |
 | `finance.daily_net` | global | int | Finance | signed; a per-day rate |
 | `finance.growth_streak_months` | global | int | Finance | consecutive closed months of MRR growth |
 | `finance.investor_equity_pct` | global | int | Finance | 0-100 |

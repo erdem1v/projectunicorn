@@ -396,38 +396,28 @@ static func tr_upper(s: String) -> String:
 	return Fmt.upper(s)
 
 
-## Net-runway display parts {value, unit, positive, note} — the single home for the
-## months-vs-status decision (TopBar, Finance tab, HR previews, month-end summary).
-## Uses TranslationServer because statics can't call tr(). `positive` lets a caller
-## colour the status green; `note` explains why no month figure is shown.
-static func net_runway_parts(months: float) -> Dictionary:
-	# Empty treasury first: runway_months_for() answers INF for any non-negative daily
-	# net without looking at cash, so a company at cash < 0 would otherwise be painted
-	# a green "Artıda" next to a red bankruptcy countdown.
-	if GameState.cash < 0:
-		return {"value": "0", "unit": TranslationServer.translate("RUNWAY_UNIT_WEEKS"),
-				"positive": false, "note": ""}
-	if months == INF:
-		return {"value": TranslationServer.translate("RUNWAY_PROFITABLE"), "unit": "",
-				"positive": true, "note": TranslationServer.translate("RUNWAY_PROFITABLE_NOTE")}
-	if months < 1.0:
-		# Under a month a bare "0 ay" reads as insolvency; say it in weeks.
-		return {"value": str(_runway_weeks(months)),
-				"unit": TranslationServer.translate("RUNWAY_UNIT_WEEKS"),
-				"positive": false, "note": ""}
-	return {"value": str(int(round(months))), "unit": TranslationServer.translate("RUNWAY_UNIT_MONTHS"),
-			"positive": false, "note": ""}
-
-
+## The net runway as a reader prints it (TopBar, Finance tab, HR previews, month-end summary), "" while
+## net flow is not negative: with nothing draining the cash there is no clock to read, and the caller
+## draws no cell, row or hint. Uses TranslationServer because statics can't call tr().
 static func net_runway_text(months: float) -> String:
-	var p: Dictionary = net_runway_parts(months)
-	return String(p.value) if String(p.unit) == "" else "%s %s" % [p.value, p.unit]
+	# Empty treasury first: runway_months_for() answers INF for any non-negative daily net without
+	# looking at cash, so a company at cash < 0 would otherwise read nothing next to a running
+	# bankruptcy countdown.
+	if GameState.cash < 0:
+		return _runway_weeks_text(0.0)
+	if months == INF:
+		return ""
+	# Under a month a bare "0 ay" reads as insolvency; say it in weeks.
+	if months < 1.0:
+		return _runway_weeks_text(months)
+	return "%d %s" % [roundi(months), TranslationServer.translate("RUNWAY_UNIT_MONTHS")]
 
 
 ## İki runway değeri yan yana ("önce → sonra" şeritleri). net_runway_text tam aya
 ## yuvarlar; iki sayı yan yana konduğunda bu, "5 ay → 5 ay" yazan bir yalan üretir. Ay
 ## metinleri aynı çıkıp hafta metinleri ayrışıyorsa ikisi de HAFTA'da yazılır. `changed`,
-## ekrana basılan iki metnin farklı olmasıdır: aynı okunan çift kırmızıya boyanmaz.
+## ekrana basılan iki metnin farklı olmasıdır: aynı okunan çift kırmızıya boyanmaz. Net akış
+## eksiye dönmüyorsa taraf "" okur (hem öncesi hem sonrası boşsa şerit çizilmez).
 static func net_runway_pair(before: float, after: float) -> Dictionary:
 	var before_text: String = net_runway_text(before)
 	var after_text: String = net_runway_text(after)
@@ -904,19 +894,17 @@ static func D_outlet(outlet_key: String) -> Color:
 
 
 ## The money header's runway, the top bar's and the Finans window's: the shutter's weeks while cash is below zero
-## and the counter runs, else the runway. {shutter, text, ink, note}: ink null keeps the variation's own, green
-## when profitable, red under the first alert threshold or below zero.
+## and the counter runs, else the runway, text "" while net flow is not negative (the cell is not drawn).
+## {shutter, text, ink}: ink null keeps the variation's own, red under the first alert threshold or below zero.
 static func D_runway_reading() -> Dictionary:
 	var months: float = GameState.get_runway_months()
 	var weeks: int = GameState.shutter_weeks_left
 	var shut: bool = GameState.cash < 0
 	if shut and weeks >= 0:
-		return {"shutter": true, "ink": D_neg(), "note": "", "text": TranslationServer.translate(
+		return {"shutter": true, "ink": D_neg(), "text": TranslationServer.translate(
 			Fmt.count_key("TOPBAR_SHUTTER_WEEKS", weeks)).format({"n": weeks})}
-	var p: Dictionary = net_runway_parts(months)
 	var alarm: bool = shut or months < FinanceSystem.RUNWAY_ALERT_MONTHS[0]
-	return {"shutter": false, "text": net_runway_text(months), "note": p.note,
-		"ink": D_pos() if p.positive else (D_neg() if alarm else null)}
+	return {"shutter": false, "text": net_runway_text(months), "ink": D_neg() if alarm else null}
 
 
 ## An offer's time left, in the top bar's Sıradaki slot and at the head of the term sheet table: {text, ink},

@@ -1010,9 +1010,10 @@ func _run_inbox_shot(state: String) -> void:
 		GameState.current_hour = 11
 		TimeManager.sync_to_current_hour()
 	if state == "beat":
-		# founder.savings_note's ground: week 5, no product, savings for fewer than 24 weeks.
+		# founder.savings_note's ground: week 5, no product, savings for fewer than 24 weeks at a cost that runs.
 		GameState.day = 5
 		GameState.set_cash(5000)
+		FinanceSystem.set_burn_category("marketing", 50)
 	if state in ["morning", "night"]:
 		# One hour before the rollover, with a summary due at every tick and cash enough that no shutter warns.
 		SummarySystem.frequency_override = "weekly"
@@ -2985,20 +2986,26 @@ func _audit_color(c: Color) -> String:
 	return "%.3f,%.3f,%.3f,%.2f" % [c.r, c.g, c.b, c.a]
 
 
-# --finance-shot=<ozet|ipucu|artida|uyari|kepenk|signal|gider>: six weeks played through real seams (cash
+# --finance-shot=<ozet|ipucu|artida|uyari|kepenk|signal|gider|gider_empty>: six weeks played through real seams (cash
 # ring buffer and transaction ledger fill from the real flow), framed on the Finance tab.
 #   ozet   — negatif net: mevcut gidiş projeksiyonu, iki imza
 #   ipucu  — ozet'in akışı, eğrinin 4. haftası üstüne gelinmiş
-#   artida — MRR > burn: yeşil ARTIDA, kırmızı erime projeksiyonu yok
+#   artida — MRR > burn: runway yok (kasa erimiyor), kırmızı erime projeksiyonu yok
 #   uyari  — runway < 3 ay: mentor kartı BAND 1 + ERTELE, mevcut gidiş sıfırı ufukta keser
 #   kepenk — uyari'nin akışı, kasa eksiye düşüp kepenk sayacı bir hafta işleyene kadar: BAND 2
 #   signal — artida'nın akışı, faz 2'de ayları takvimle kapanarak dört ay artıda kapanana kadar: yatırımcı iştahı
 #            + artıda ay sayısı
-#   gider  — on saatlik mesai, MVP'nin bulut sunucusu ve servis maliyeti, bir kartın pazarlama kampanyası:
-#            gider dağılımının bütün kalemleri; son işlemlerde kartların hukuk, veri alımı ve maaş indirimi satırı
+#   gider  — on saatlik mesai, MVP'nin bulut sunucusu, bir kartın pazarlama kampanyası: gider dağılımının
+#            kalemleri; son işlemlerde kartların hukuk, veri alımı ve maaş indirimi satırı
+#   gider_empty — taze şirket, ekip ve sunucu yok: gider dağılımının boş hâli
 func _run_finance_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
+	if kind == "gider_empty":   # LOC-DATA debug seed / id
+		await _mount_shot_shell()
+		EventBus.tab_changed.emit("finance")
+		await _finish_shot("finance_shot_%s" % kind)
+		return
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	_seed_line_state("erp", _ERP_SHIPPED_LINES)

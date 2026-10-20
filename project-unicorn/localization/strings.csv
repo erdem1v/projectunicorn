@@ -1,6 +1,4 @@
 keys,tr,en
-RUNWAY_PROFITABLE,Artıda,Default Alive
-RUNWAY_PROFITABLE_NOTE,"Gider gelirin altında; kasa erimiyor. Sayaç, net akış eksiye dönerse işler.",Expenses run below revenue; the treasury holds. The clock starts only if net flow turns negative.
 RUNWAY_UNIT_MONTHS,ay,mo
 RUNWAY_UNIT_WEEKS,hafta,wk
 RUNWAY_CROSS_TICKER,Runway {n} ayın altına indi,Runway fell below {n} months
@@ -98,7 +96,7 @@ ONB_WEEK_ONE,Hafta 1 · {month} {year},Week 1 · {month} {year}
 ONB_FOUNDER_LINE,Kurucu · {name},Founder · {name}
 ONB_DOC_COMPANY_EMPTY,3. adımda: ad ve logo,Step 3: name and logo
 ONB_DOC_STEP2,"Köken, huylar ve yetenekler 2. adımda.","Origin, traits and skills come in step 2."
-ONB_DOC_BURN,Geçim ve araçlar,Living and tools
+ONB_DOC_BURN,Aylık gider,Monthly costs
 ONB_DOC_OFFICE,Ofis,Office
 ONB_DOC_TEAM,Ekip,Team
 ONB_TEAM_SOLO,Yalnız sen,Just you
@@ -925,6 +923,7 @@ HR_ATLAS_TAKE_NONE,Hiçbirini alma,Take none
 HR_ATLAS_HIRE,İşe al · {amount}/ay,Hire · {amount}/mo
 HR_HIRE_CONFIRM_TITLE,İşe alım: {name},Hire {name}?
 HR_HIRE_CONFIRM_BODY,Aylık {salary} ve tek seferlik {commission} komisyon. Runway {before} → {after}.,{salary} a month and a one-off commission of {commission}. Runway {before} → {after}.
+HR_HIRE_CONFIRM_BODY_AFTER,Aylık {salary} ve tek seferlik {commission} komisyon. Runway {after}.,{salary} a month and a one-off commission of {commission}. Runway {after}.
 HR_ATLAS_CLOSE_BODY,Dosyalar kapanır. Yeni bir arayış başlatırsan adaylar {span} sonra gelir.,The files close. If you start a new search the candidates arrive in {span}.
 HR_ATLAS_CLOSE_OK,Dosyaları kapat,Close the files
 HR_CARD_RAISE,Zam yap,Give a raise
@@ -1376,6 +1375,7 @@ TERM_BOARD_SEATS,{n} koltuk,{n} seats
 TERM_BOARD_VETO, + veto, + veto
 TERM_INVESTMENT,{amount} yatırım,{amount} investment
 TERM_CASH_RUNWAY,Kasa: {cash} · Runway: {runway},Cash: {cash} · Runway: {runway}
+TERM_CASH,Kasa: {cash},Cash: {cash}
 TERM_TABLES_CLOSED,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
 TERM_LEVERAGE_BOX,Cebinde 2. term sheet var — {investor}. Bunu onlar da biliyor.,You have a second term sheet in your pocket — {investor}. They know it too.
 TERM_RESULT_ACCEPTED,Kabul ettiler. {move}.,They accepted. {move}.
@@ -1425,6 +1425,7 @@ FIN_BURN_OVERTIME,Ek mesai,Overtime
 FIN_BURN_MARKETING,Pazarlama,Marketing
 FIN_BURN_OFFICE,Ofis,Office
 FIN_BURN_SERVERS,Sunucular,Servers
+FIN_BURN_EMPTY,Bu ay gider yok.,No expenses this month.
 FIN_ONETIME_BUILD,Özellik maliyeti,Feature cost
 FIN_ONETIME_VERSION,Sürüm özellikleri,Version features
 FIN_MENTOR_WARNING,Mentor uyarısı,Mentor warning
@@ -3005,8 +3006,6 @@ PRODUCT_ADD_CLOSED_FULL,Bu sprintte boş puan kalmadı,No spare points left this
 PRODUCT_GO_TEAM,Ekip'e git,Go to Team
 PRODUCT_GO_RND,Ar-Ge'ye git,Go to R&D
 SALES_PROMISE_OPEN_SPRINT,Açık söz: {feature} · Sprint {n} sonuna kadar,Open promise: {feature} · by the end of sprint {n}
-FIN_BURN_TOOLS,Geçim ve araçlar,Living and tools
-FIN_BURN_SERVICE,Servis maliyeti,Service costs
 FIN_ONETIME_INCIDENT,Kesinti gideri,Incident costs
 FIN_ONETIME_AUDIT,Güvenlik denetimi,Security audit
 FIN_ONETIME_RETENTION,Bağlılık primi,Retention bonus
@@ -3016,7 +3015,6 @@ FIN_ONETIME_REFUNDS,İadeler,Refunds
 FIN_ONETIME_SIDE_WORK,Yan iş,Side contract
 FIN_ONETIME_MEETUP,Topluluk buluşması,Meetup
 FIN_ONETIME_SPONSOR,Sponsorluk,Sponsorship
-HR_ROW_TOOLS,Aylık araç gideri,Monthly tools
 EV_LOCK_NO_SPRINT,Süren bir sprint yok.,No sprint is running.
 EV_LOCK_MARKETING_EA,Pazarlama Erken Erişim'de açılır.,Marketing opens in Early Access.
 B2B_LOCK_PROMISE_BROKEN,Bu hesaba verdiğin son söz tutulmadı.,Your last promise to them was not kept.
