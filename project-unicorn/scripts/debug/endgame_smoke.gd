@@ -7892,9 +7892,6 @@ static func _case_hr_constants_contract() -> String:
 			return "role '%s' has no display label" % role_id
 		if String(HRConstants.ROLE_GROUP.get(role_id, "")) == "":
 			return "role '%s' has no department" % role_id
-		# §3: only the role's KEY and SECONDARY areas have help copy — the closed card never
-		# shows the other four, so there is nothing to say about them.
-		#
 		# İKİNCİL ALAN ARTIK HER ROLDE YOK (§4.4). Cross-cover YALNIZ ürün tarafının kendi
 		# içindedir: "Satış Temsilcisi — ana alanı Satış. İkincil alanı yoktur." Boş ikincil
 		# bir eksiklik değil, verilmiş bir hükümdür, ve vaka artık hükmü doğruluyor.
@@ -7907,11 +7904,6 @@ static func _case_hr_constants_contract() -> String:
 			return "product-side role '%s' lost its secondary area (§4.4 keeps it)" % role_id
 		if not product_side and secondary != "":
 			return "role '%s' still carries secondary '%s' — §4.4 removes it" % [role_id, secondary]
-		for area_key in [HRConstants.role_key_area(role_id), secondary]:
-			if String(area_key) == "":
-				continue
-			if HRConstants.role_area_meaning(role_id, String(area_key)) == "":
-				return "role '%s' has no meaning copy for area '%s'" % [role_id, String(area_key)]
 	if HRConstants.role_label(HRConstants.ROLE_MENTOR) != "Operating Partner":
 		return "the mentor label drifted (it is already on screen): '%s'" % HRConstants.role_label(HRConstants.ROLE_MENTOR)
 	# §13.1 DÖRT GRUP, ve altı rolün hepsi tam olarak birine düşer. Departman tablosu kalktı;

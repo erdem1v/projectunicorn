@@ -1173,11 +1173,3 @@ const FILE_NOTES_COUNT := 12
 
 static func file_notes_line(index: int) -> String:
 	return TranslationServer.translate("HR_FILE_NOTE_%d" % (posmod(index, FILE_NOTES_COUNT) + 1))
-
-
-## Rolün ana/ikincil ALANININ oyuncuya getirisi (HR_AREA_MEANING_<ROLE>_<AREA>). Yalnız rolün
-## kendi iki alanının satırı var; §4.4 altısını düz listede göstermeyi yasaklar.
-static func role_area_meaning(role_id: String, area_key: String) -> String:
-	if not is_employee_role(role_id):
-		return ""
-	return _derived("HR_AREA_MEANING_", role_id + "_" + area_key)

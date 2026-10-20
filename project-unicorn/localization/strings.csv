@@ -460,16 +460,6 @@ HR_BADGE_IDLE,Boşta,Idle
 HR_BADGE_OVERLOADED_JOBS,Aşırı yük,Overloaded
 HR_IDLE_HINT,Hiçbir işe atanmadı — duruyor ve maaş alıyor.,Not assigned to any job — standing idle and still on payroll.
 HR_OVERLOAD_HINT,"Birden fazla işte çalışıyor. Zamanı işler arasında bölünür, her iki işte de hızı belirgin düşer, ve morali normalden hızlı erir.","Working more than one job. Their time is split between them, they are markedly slower in both, and their morale erodes faster than normal."
-HR_AREA_MEANING_PRODUCT_MANAGER_PRODUCT,Çeyrek planının kart sayısı ve Ürün yıldızı isteyen kademeler,Cards in the quarter plan and the tiers that ask for Product stars
-HR_AREA_MEANING_PRODUCT_MANAGER_DESIGN,Tasarım yıldızı isteyen kademeler,Tiers that ask for Design stars
-HR_AREA_MEANING_DESIGNER_DESIGN,Sprint kartlarında tasarım aşamasının hızı,Speed of the design phase on sprint cards
-HR_AREA_MEANING_DESIGNER_PRODUCT,Ürün yıldızı isteyen kademeler,Tiers that ask for Product stars
-HR_AREA_MEANING_DEVELOPER_ENGINEERING,Geliştirme hızı ve hata oranı,Development speed and bug rate
-HR_AREA_MEANING_DEVELOPER_QA,Beta keşif hızı,Beta discovery speed
-HR_AREA_MEANING_TESTER_QA,Sprint kartlarında test aşamasının hızı,Speed of the test phase on sprint cards
-HR_AREA_MEANING_TESTER_ENGINEERING,Geliştirme hızı ve hata oranı,Development speed and bug rate
-HR_AREA_MEANING_SALES_REP_SALES,Kapanış olasılığı ve anlaşma boyutu,Close probability and deal size
-HR_AREA_MEANING_CUSTOMER_REP_CUSTOMER_SUCCESS,Destek hızı ve hesapların memnuniyeti,Support speed and account satisfaction
 SKILL_LABEL_CHARISMA,karizma,charisma
 ONB_SKILL_PRODUCT,Ürün,Product
 ONB_SKILL_PRODUCT_DESC,Özellik kartlarında Ürün yıldızı isteyen kademeler; ürün araştırması.,Product-star tiers on feature cards; product research.
@@ -1175,8 +1165,6 @@ PROD_CONFIRM_START,Onayla ve başlat,Confirm and start
 PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
 PROD_MARKET_SHARE,pazar payı {share},market share {share}
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
-PROD_TIP_WEAK,Zayıf yanın {axis}. v{version} sürümünde onu güçlendir; {rival} önünde.,Your weakest area is {axis}. Shore it up in v{version}; {rival} is ahead of you there.
-PROD_TIP_GOOD,Sorun yok. Zayıf yanın {axis}.,Nothing wrong right now. Your weakest area is {axis}.
 PROD_SHIP_FIRST_TITLE,İlk versiyon yayında,First version is live
 PROD_SHIP_VERSION_TITLE,v{version} yayında,v{version} is live
 PROD_SHIP_VERSION_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
@@ -1205,18 +1193,12 @@ You ship it. A few minutes later the repo is public, a small landing page is liv
 ""Now the hard part starts. We need to find someone who will pay for this."""
 PROD_SHIP_PUBLISH,Yayınla,Ship it
 PROD_DESIGN_DECISION_TITLE,Tasarım masasında karar,A decision at the design table
-PROD_DESIGN_CEILING_NOTE,"
-
-İnovasyon {inn} / tur kazancı tavanı {cap} — tavanı tur sayısı değil, masadaki ekip belirler.","
-
-Innovation {inn} / round gain ceiling {cap} — the ceiling is set by the team at the table, not by the number of rounds."
 PROD_DESIGN_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
 
 ""İstersen bir tur daha döneriz — zaman yakar, tasarımı parlatır. Ama her turun getirisi bir öncekinden az. Bir noktada daha iyi insanlar lazım olur, daha çok tur değil.""{note}","The design round is done. Frank is standing over the prototype.
 
 ""We can run another round if you want — it burns time and polishes the design. But every round returns less than the last. At some point you need better people, not more rounds.""{note}"
 PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
-PROD_ITER_CEILING_NOTE,"İnovasyon {inn} / tur kazancı tavanı {inn_max} · tavanı tur sayısı değil, masadaki ekip belirler.","Innovation {inn} / round gain ceiling {inn_max} · the ceiling comes from the team at the table, not from the number of rounds."
 PROD_EV_VERSION_SHIP_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
 
 ""Büyüdü. Yeni özellikler tuttu — ama yeni yüzey, yeni hata demek. Gözünü ayırma.""

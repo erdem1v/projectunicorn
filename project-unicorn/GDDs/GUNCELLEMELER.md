@@ -324,7 +324,7 @@ yerinin değiştiğini söyler, eski girişler tarihçedir.
 
 - **Ekip GDD §17.2, Test alanının işi ("canlı aşınma"); GUNCELLEMELER "EKİP MODÜLÜ (rev 11)" Kaldıraç tablosu**
   - Eski metin: Test beta keşif hızını ve Kararlılık tabanını oynatır; canlı aşınma Test alanının işidir; Yazılım destekte düzeltme hızını oynatır.
-  - Yürürlükteki kural: Test işi sprint kartlarının test aşamasını yürütür ve oyuncu metinlerinde başka vaat taşımaz (`HR_AREA_MEANING_TESTER_QA`, `ONB_SKILL_QA_DESC`). Canlı aşınma yoktur, düzeltme DESTEK'in işi değil sprintin düzeltme kartıdır; Test'in yayındaki ürüne etkisi sonraki fazda testçiyle geri gelir ve bugün Test'in o etkisi yoktur.
+  - Yürürlükteki kural: Test işi sprint kartlarının test aşamasını yürütür ve oyuncu metinlerinde başka vaat taşımaz (`ONB_SKILL_QA_DESC`). Canlı aşınma yoktur, düzeltme DESTEK'in işi değil sprintin düzeltme kartıdır; Test'in yayındaki ürüne etkisi sonraki fazda testçiyle geri gelir ve bugün Test'in o etkisi yoktur.
   - Kaynak: sahip kararı 2026-10-16 (Faz A görevi, Karar 2, 12).
 
 ## Faz B · olaylar (sahip kararı 2026-10-16)
@@ -707,7 +707,7 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
   - Yürürlükteki kural: İkisi de Ürün GDD rev 6.1'de kapandı. Kaldıraç tablosu Ürün §6.2'dedir: Ürün yol haritası/özellik kapılarını, Tasarım sprint kartlarında tasarım aşamasının hızını, Yazılım yapım hızını ve geliştirmede hata oranını, Test sprint kartlarında test aşamasının hızını oynatır; Satış ve Müşteri İlişkileri ürün inşasını kapılamaz. Yapım başına ekip seçimi Ürün §3'tedir (çoklu seçim, kurucu dahil; seçilenlerden bir lider). Lider yapım sürerken ayrılırsa yapım lidersiz sürer ve bara "Lider yok." notu düşer; oyuncu yeni lider atayabilir. Açık: liderin moral ve deneyim etkisi (ACIK_KARARLAR 2 ve 7).
   - Kaynak: Ürün GDD rev 6.1 "Bağlayıcı ilişkiler", §3, §6.2.
   - Not (Faz A, 2026-10-17): Test'in beta keşif hızı ve Kararlılık tabanı etkisi, Yazılım'ın destekte düzeltme hızı ve canlı aşınma kalktı (bkz. "Faz A · hatalar ve hata gösterimi").
-  - Not (Faz Q, 2026-10-19): Ürün'ün inovasyon tavanı ve Tasarım'ın deneyim tavanı kaldıraçları eksenlerle birlikte kalktı ve yukarıdaki kuraldan çıkarıldı; Faz A notunun kaldırdıkları da kuraldan çıktı (Test'te kalan etki sprint kartlarında test aşamasının hızıdır, `HR_AREA_MEANING_TESTER_QA`). Alanlarda kalan etki: Ürün'de çeyrek planının kart sayısı ile Ürün yıldızı isteyen kademeler, Tasarım'da sprint kartlarında tasarım aşamasının hızı ile Tasarım yıldızı isteyen kademeler (`HR_AREA_MEANING_PRODUCT_MANAGER_*`, `HR_AREA_MEANING_DESIGNER_*`; K7a, `02d22dc`).
+  - Not (Faz Q, 2026-10-19): Ürün'ün inovasyon tavanı ve Tasarım'ın deneyim tavanı kaldıraçları eksenlerle birlikte kalktı ve yukarıdaki kuraldan çıkarıldı; Faz A notunun kaldırdıkları da kuraldan çıktı (Test'te kalan etki sprint kartlarında test aşamasının hızıdır). Alanlarda kalan etki: Ürün'de çeyrek planının kart sayısı ile Ürün yıldızı isteyen kademeler, Tasarım'da sprint kartlarında tasarım aşamasının hızı ile Tasarım yıldızı isteyen kademeler (K7a, `02d22dc`).
 
 - **§17.3 "Olay motorunun borcu" (1. paragraf; kazanılacak üç şeyin 1. ve 2. maddesi; mimari düzeltme paragrafı; bekleyen içeriğin 5. maddesi)**
   - Eski metin: Motor insanları göremez: koşul tiplerinden yalnız biri kişiye dokunur, motor sinyale abone değildir, karakter hedef seçicisi yoktur; ayrılma olayı motor hazır olmadan yazılmaz.

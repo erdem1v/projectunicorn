@@ -21,7 +21,7 @@ These fire in a normal run today.
 |---|---|---|---|
 | `PROD_MENTOR_LINE` (+ caption `PROD_MENTOR_TAG` "FRANK KÖSEOĞLU · MENTOR") | Frank strip in the product path picker, `creation_flow.gd` | first visit to the B2C/B2B step while `product_path_frank_seen` is false | **A surface the document intends to remove but does not replace.** Bölüm 3 lists "pazar seçimi şeridi" among the places Frank is *tamamen kaldırıldı*, but no surface in Bölüm 1 or 2 covers it and the task list does not name it. Removing it on that basis alone would be an inference, not a ruling |
 | `PROD_EV_VERSION_SHIP_BODY` (+ `PROD_SHIP_VERSION_TITLE`, `PROD_SHIP_CONTINUE`) | EventModal, every v2+ ship | `ProductSystem._trigger_ship_moment(is_version = true)` | **Same shape.** Bölüm 3 lists "her sürüm yayını" as a place Frank is removed; no replacement text exists. Note the first-ship twin (surface 4) *was* rewritten, so this card now sits next to a rewritten sibling in a different voice |
-| `PROD_EV_ITER_DECISION_BODY` (+ `PROD_DESIGN_DECISION_TITLE`, `PROD_ITER_KEEP_GOING`, `PROD_TO_DEVELOPMENT_PLAIN`, `PROD_ITER_CEILING_NOTE`) | EventModal, end of design round 1 | `product_system.gd` hourly build seam, latched once per run | **Explicitly deferred, not missed.** The document's closing section says the design-round card (3) is not being written until the Build Bar work is finished, and flags that one of its two options does nothing. Awaiting authoring |
+| `PROD_EV_ITER_DECISION_BODY` (+ `PROD_DESIGN_DECISION_TITLE`, `PROD_ITER_KEEP_GOING`, `PROD_TO_DEVELOPMENT_PLAIN`) | EventModal, end of design round 1 | `product_system.gd` hourly build seam, latched once per run | **Explicitly deferred, not missed.** The document's closing section says the design-round card (3) is not being written until the Build Bar work is finished, and flags that one of its two options does nothing. Awaiting authoring |
 | `GATE_SERIES_A_TITLE`, `GATE_SERIES_A_BODY_0/1/2`, `GATE_ADVANCE`, `GATE_DECLINE` | EventModal, the Series A gate | `PhaseGateSystem`, MRR + growth streak + brand | **Awaiting design** (surface 12). Also the last live Frank copy still carrying em dashes: `GATE_ADVANCE` "Hazırız — geçelim" and `GATE_SERIES_A_BODY_0`. The dash ban applies to whatever key is touched, so they clear when this surface is rewritten. `GATE_SERIES_A_BODY_2` was byte-identical to the Traction gate's `_BODY_2`; that duplicate is now gone from the other side |
 
 ---
@@ -74,8 +74,7 @@ identified as twins rather than as separate lines.
 |---|---|---|
 | `PROD_SHIP_FIRST_BODY` | `PROD_EV_FIRST_SHIP_BODY` | TR byte-identical before this pass, EN divergent. The live twin has now been replaced by surface 4, so the two no longer even match |
 | `PROD_SHIP_VERSION_BODY` | `PROD_EV_VERSION_SHIP_BODY` | same pattern |
-| `PROD_DESIGN_DECISION_BODY` | `PROD_EV_ITER_DECISION_BODY` | ends with a `{note}` token fed from `PROD_ITER_CEILING_NOTE` |
-| `PROD_DESIGN_CEILING_NOTE` | `PROD_ITER_CEILING_NOTE` | the live one still has a reader in `product_system.gd` |
+| `PROD_DESIGN_DECISION_BODY` | `PROD_EV_ITER_DECISION_BODY` | ends with a `{note}` token that no key feeds |
 
 ---
 
