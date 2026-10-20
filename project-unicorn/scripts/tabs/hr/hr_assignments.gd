@@ -114,7 +114,7 @@ static func _cell(c: Character, job_id: String, on_toggle: Callable, read_only: 
 	if job_id == HRConstants.JOB_SALES and not ProductSystem.has_b2b_product():
 		return _closed(tr_key("SALES_LOCKED_NO_B2B"), "util/lock", UiTokens.D_BOX_JOB)
 	# Araştırma sütunu salt okunur (Ar-Ge §5.3): atama düğümün üzerinde yapılır, tek bir kutu
-	# yirmi düğümden hangisine diyemez. Tavandan önce: bu sütun tavan ne olursa olsun kapalı.
+	# bunca düğümden hangisine diyemez. Tavandan önce: bu sütun tavan ne olursa olsun kapalı.
 	if job_id == HRConstants.JOB_RESEARCH:
 		return _closed(tr_key("HR_ASSIGN_RESEARCH_ELSEWHERE"), "util/check" if checked else "util/lock", UiTokens.D_BOX_JOB)
 	# İş tavanı (§12.1): boş üçüncü hücre kilitli ve görünür kalır.

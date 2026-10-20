@@ -386,8 +386,8 @@ func _dispatch_daily_tick() -> void:
 		return  # direct calls from the smoke harness
 	# 0 · Period summary: the month closes before this week's flow is written to it.
 	SummarySystem.begin_day()
-	# 1 · Product. Destek önce: günlük memnuniyet zararını o uygular ve altyapı aşımı o
-	# zararın tavanına (§8.3) girer. §19 kenar sinyalleri en sonda, bugünün durumundan okunur.
+	# 1 · Product. Destek günlük memnuniyet zararını uygular. §19 kenar sinyalleri en sonda, bugünün
+	# durumundan okunur.
 	ProductSystem.daily_tick()
 	# Sprint haftası ve sürüm Destek'ten önce: kapanan sprintin düzelttiği hatalar ve MVP'de açılan
 	# sunucular bugünün destek ve altyapı hesabına girer.
@@ -440,6 +440,8 @@ func _dispatch_hourly_tick(hour: int) -> void:
 	SupportSystem.hourly_tick(hour)
 	# B2C audience and MRR derive every in-game hour.
 	SalesSystem.hourly_tick(hour)
+	# The servers grow the hour a sign or the audience takes the load to the line, for the player who switched it on.
+	InfraSystem.auto_adjust()
 	# What waited for the workday is delivered before the engine shows its next card.
 	MailClock.hourly_tick()
 	# An emergency the night rolled is asked for at the first full hour after it began.

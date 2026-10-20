@@ -66,13 +66,12 @@ static func next_renewal_day(c: Customer) -> int:
 
 
 ## Herkese açık sürüm, kademeler yazıldıktan sonra: kademesi canlıya geçen açık talep zamanında
-## karşılanmıştır (geç kalan talep tick_requests'te çoktan düşmüştür). Sunucu, yeni sürümün
-## yüküyle doluluk normal banda (sararma eşiğinin altına) inene kadar büyür; hiç küçülmez.
+## karşılanmıştır (geç kalan talep tick_requests'te çoktan düşmüştür). Sunucuya dokunulmaz: kapasiteyi
+## yalnız oyuncu ve açtığı otomatik ayar değiştirir.
 static func on_release() -> void:
 	for r in _p().requests:
 		if r.status == "open" and ProductState.is_feature_live(r.step):
 			r.status = "met"
-	InfraSystem.set_capacity(maxi(InfraSystem.units(), InfraSystem.units_for_occupancy(InfraSystem.OCCUPANCY_AMBER)))
 
 
 # --- Rakipler ---------------------------------------------------------------------------

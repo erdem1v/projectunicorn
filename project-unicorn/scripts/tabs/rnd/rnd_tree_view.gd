@@ -4,8 +4,8 @@ extends Control
 # ============================================================================
 # AR-GE AĞACI (§3 · §8).
 #
-# KAFES YÜK TAŞIYAN KARARDIR. Bir aile sütunu ÜST ÜSTE BEŞ KARO DEĞİLDİR; ÜÇ
-# SATIRDA beş yuvadır:
+# KAFES YÜK TAŞIYAN KARARDIR. Bir aile sütunu ÜST ÜSTE KARO DEĞİLDİR; ÜÇ
+# SATIRDA yuvalardır (devamı olmayan dalın altı boş kalır):
 #
 #         KÖK              (satır 0, sütuna ORTALI)
 #       /     \
@@ -41,7 +41,6 @@ const FAMILY_ORDER := [
 	ResearchSeam.FAMILY_PRACTICE,
 	ResearchSeam.FAMILY_DESIGN,
 ]
-const FAMILY_SIZE := 5          # §3 — her ailede bir kök, iki dal, iki devam
 const ROWS := 3
 const HEAD := UiTokens.SPACE_3XL   # a family's head over its column
 const CHEVRON := "res://assets/icons/util/chevron_left.svg"
@@ -152,7 +151,7 @@ func repaint() -> void:
 		(_tiles[nid] as Control).propagate_call(&"queue_redraw")
 	for family in _heads.keys():
 		var count: Label = (_heads[family] as Control).get_child(-1)
-		count.text = "%d/%d" % [_family_done(String(family)), FAMILY_SIZE]
+		count.text = _family_counter(String(family))
 	_detail.repaint()
 	queue_redraw()
 
@@ -189,7 +188,7 @@ func _place_detail() -> void:
 
 
 ## A family's head: its caps name, the area it reads (the design family's is its own name), and how
-## many of its five are done.
+## many of its nodes are done.
 func _make_head(family: String) -> HBoxContainer:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -199,20 +198,17 @@ func _make_head(family: String) -> HBoxContainer:
 	if Fmt.upper(area) != fam:
 		head.add_child(UiFactory.make_label(RnDUiShared.t("RND_AREA_OF").format({"area": area}), &"Caption"))
 	head.add_child(RnDUiShared.spacer())
-	head.add_child(UiFactory.make_label("%d/%d" % [_family_done(family), FAMILY_SIZE], &"Caption"))
+	head.add_child(UiFactory.make_label(_family_counter(family), &"Caption"))
 	for part: Control in head.get_children():
 		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	HRUiShared.set_mouse_ignore(head)
 	return head
 
 
-func _family_done(family: String) -> int:
-	var n: int = 0
-	for id in ResearchSeam.NODES.keys():
-		var nid := String(id)
-		if ResearchSeam.family(nid) == family and RnDSystem.node_completed(nid):
-			n += 1
-	return n
+## "2/4": the family's finished nodes over all of its nodes.
+func _family_counter(family: String) -> String:
+	var nodes: Array = ResearchSeam.NODES.keys().filter(func(id: String) -> bool: return ResearchSeam.family(id) == family)
+	return "%d/%d" % [nodes.filter(RnDSystem.node_completed).size(), nodes.size()]
 
 
 # ---------------------------------------------------------------- karo

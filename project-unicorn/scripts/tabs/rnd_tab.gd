@@ -21,7 +21,7 @@ extends Control
 # buradan da bağlansaydı sayfa iki kez kurulurdu.
 #
 # TAZELEME MODELİ: ucuz bir anahtar (düğüm durumları + aktif düğüm + donma) yeniden-kurma ile
-# yerinde-boyama arasında karar verir; `research_progress_changed` yirmi karoyu yıkmaz.
+# yerinde-boyama arasında karar verir; `research_progress_changed` bütün karoları yıkmaz.
 # ============================================================================
 
 ## The window follows the view's content (WindowLayer reads fit_height).

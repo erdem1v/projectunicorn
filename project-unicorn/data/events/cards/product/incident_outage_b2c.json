@@ -126,7 +126,13 @@
   "text": {
     "tr": {
       "title": "Uygulama açılmıyor",
-      "body": "Uygulama {seam:olay.clock} sularında çöktü, hâlâ açılmıyor. O saatten beri {seam:olay.affected_users} kişi girmeyi denedi.",
+      "body": {
+        "by_seam": "olay.outage_load",
+        "variants": {
+          "0": "Uygulama {seam:olay.clock} sularında çöktü, hâlâ açılmıyor. O saatten beri {seam:olay.affected_users} kişi girmeyi denedi.",
+          "91": "Uygulama {seam:olay.clock} sularında çöktü, hâlâ açılmıyor. O saatten beri {seam:olay.affected_users} kişi girmeyi denedi. Çöktüğü sırada sunucu yükü %{seam:olay.outage_load} düzeyindeydi."
+        }
+      },
       "options": {
         "night_fix": "Ekip şimdi düzeltsin",
         "founder_fix": "Kendin düzelt",
@@ -143,7 +149,13 @@
     },
     "en": {
       "title": "The app won't open",
-      "body": "The app went down at around {seam:olay.clock} and still won't open. {seam:olay.affected_users} people have tried to get in since then.",
+      "body": {
+        "by_seam": "olay.outage_load",
+        "variants": {
+          "0": "The app went down at around {seam:olay.clock} and still won't open. {seam:olay.affected_users} people have tried to get in since then.",
+          "91": "The app went down at around {seam:olay.clock} and still won't open. {seam:olay.affected_users} people have tried to get in since then. Server load was at {seam:olay.outage_load}% when it went down."
+        }
+      },
       "options": {
         "night_fix": "Have the team fix it now",
         "founder_fix": "Fix it yourself",

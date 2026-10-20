@@ -160,8 +160,7 @@ static func reports_per_day() -> float:
 	var new_code: float = ProductState.new_code_effort() \
 		* exp(-ProductState.version_age(ProductSystem.hour_start_fraction()) / INFLOW_TAU)
 	var base: float = floor_rate + INFLOW_NEWCODE_COEF * new_code
-	# §10 — altyapı akışı çarpar (ucuz sağlayıcı ×1,25, doluluk %100 üstü ×1,5);
-	# InfraSystem'den okunur, burada yeniden türetilmez.
+	# §10 — altyapı akışı çarpar (ucuz sağlayıcı ×1,25); InfraSystem'den okunur, burada yeniden türetilmez.
 	return base * usage_multiplier() * InfraSystem.report_inflow_multiplier()
 
 
@@ -238,14 +237,12 @@ static func validation_per_day(founder_share: float = 1.0) -> float:
 # =========================================================================
 
 ## §8.3 — iki kademenin toplamı, GÜNLÜK TAVANLA sınırlı. Negatif ya da sıfır döner.
-## §10 aşım zararı da tavanın İÇİNDE toplanır ("§8.3'ün −2,0 tavanı içinde"); ayrı kanal
-## olsaydı ihmal + aşım −2,8'e çıkardı.
 static func daily_satisfaction_damage() -> float:
 	var support: float = 0.0
 	if ProductState.is_live():
 		support = DAMAGE_INCOMING_PER_TEN * float(ProductState.reports_incoming()) / DAMAGE_PER_UNITS \
 			+ DAMAGE_CONFIRMED_PER_TEN * float(ProductState.costed(ProductState.open_bugs())) / DAMAGE_PER_UNITS
-	return maxf(support + InfraSystem.satisfaction_delta_per_day(), DAMAGE_DAILY_CAP)
+	return maxf(support, DAMAGE_DAILY_CAP)
 
 
 ## §8.3 dağıtımı — tikin zararı, tavanlı günlük zararın yedi günüdür. B2B'de zarar AKTİF

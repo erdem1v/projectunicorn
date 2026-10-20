@@ -1,11 +1,12 @@
 extends Control
 
-# Ürün penceresi, sprint ekranı. Ortak koyu başlıkta Ürün ve iki ölçü (tür ile ürün adı, sürüm); altında
-# denetim şeridi (SPRINT | ÇEYREK, PM yokken gerekçesiyle kilitli; Geçmiş ve devir anahtarı), gövdede SPRINT
-# görünümü (alanlar · bu sprint · sonraki) ya da ÇEYREK görünümü. Her değişiklikte kaynağın modelinden
-# baştan kurulur; kaynak yoksa canlı model ve eylemler SprintSystem'e gider, ürün türü seçilmemişse
-# şerit yoktur ve ortada tür seçici durur. Akordeon, geçmiş ve görünüm sekmenin yerel durumudur: modelin
-# `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar.
+# Ürün penceresi. Ortak koyu başlıkta Ürün ve iki ölçü (tür ile ürün adı, sürüm); altında denetim şeridi
+# (GENEL BAKIŞ | SPRINT | ÇEYREK; Genel Bakış v1.0'a, ÇEYREK PM'e kadar gerekçesiyle kilitli; Geçmiş ve devir
+# anahtarı), gövdede GENEL BAKIŞ (sunucu), SPRINT görünümü (alanlar · bu sprint · sonraki) ya da ÇEYREK görünümü.
+# Her değişiklikte kaynağın modelinden baştan kurulur; kaynak yoksa canlı model ve eylemler sistemlere gider, ürün
+# türü seçilmemişse şerit yoktur ve ortada tür seçici durur. Akordeon, geçmiş ve görünüm sekmenin yerel durumudur:
+# modelin `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar. Son açık kâğıt
+# pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz.
 
 ## ÇEYREK'te pencere içeriği kadar uzar (WindowLayer fit_height okur).
 signal fit_changed
@@ -13,8 +14,12 @@ signal fit_changed
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 ## Sürüm notu ekrandayken saat durur: oyuncu notu okumadan sonraki sprint işlemesin.
 const HOLD_RELEASE_NOTE := "product_release_note"
-const VIEW_KEYS := {"sprint": "PRODUCT_VIEW_SPRINT", "quarter": "PRODUCT_VIEW_QUARTER"}
+const VIEW_KEYS := {"overview": "PRODUCT_OV_TAB_OVERVIEW", "sprint": "PRODUCT_VIEW_SPRINT", "quarter": "PRODUCT_VIEW_QUARTER"}
+const OVERVIEW := preload("res://scripts/tabs/product/overview_view.gd")
 const BODY_PAD := Vector4i(UiTokens.SPACE_3XL, UiTokens.SPACE_XL, UiTokens.SPACE_3XL, UiTokens.SPACE_3XL)
+
+## Son açık kâğıt: sekme her açılışta yeniden kurulduğu için sürece bağlı durur.
+static var _last_view := "sprint"
 
 var frame_options: Dictionary
 var _source: Object = null
@@ -26,6 +31,8 @@ var _kpis: HBoxContainer
 var _ctl: PanelContainer
 var _ctl_row: HBoxContainer
 var _sprint_view: HBoxContainer
+var _overview_view: ScrollContainer
+var _overview: OVERVIEW
 var _areas_scroll: ScrollContainer
 var _areas: AreaPanel
 var _sprint: SprintPanel
@@ -71,6 +78,12 @@ func _ready() -> void:
 	_sprint_view.add_child(_sprint)
 	_quarter = QuarterView.new()
 	_quarter.action.connect(_on_action)
+	_overview_view = ScrollContainer.new()
+	_overview_view.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_overview = OVERVIEW.new()
+	_overview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_overview.action.connect(_on_action)
+	_overview_view.add_child(_overview)
 
 	# Tür seçici ortada, içeriği kadar uzun; pencere kısaysa gövde kayar.
 	_picker_view = ScrollContainer.new()
@@ -90,7 +103,7 @@ func _ready() -> void:
 		SprintSystem.apply_lead())
 	frame.add_child(SprintUiShared.pad(picker, Vector4i.ONE * UiTokens.SPACE_3XL))
 	picker.setup()
-	for view: Control in [_sprint_view, _quarter, _picker_view]:
+	for view: Control in [_overview_view, _sprint_view, _quarter, _picker_view]:
 		body.add_child(SprintUiShared.pad(view, BODY_PAD))
 		view.get_parent().set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -99,6 +112,7 @@ func _ready() -> void:
 	EventBus.build_progress_changed.connect(_queue_rebuild)
 	EventBus.day_advanced.connect(_queue_rebuild.unbind(1))
 	EventBus.desk_changed.connect(_queue_rebuild)
+	EventBus.infra_changed.connect(_queue_rebuild)
 	_rebuild()
 
 
@@ -131,19 +145,32 @@ func _rebuild() -> void:
 	var m: Dictionary = _source.model() if _source != null else ProductModel.live()
 	if _ui.is_empty():
 		_ui = m.ui.duplicate()
+		if _source == null:
+			_ui.view = _last_view
 	m.ui = _ui
-	# Sürüm notu yalnız SPRINT görünümünde durur ve saat onun için tutulur: notta görünüm SPRINT'tir.
-	var view: String = _ui.view if m.quarter.state == "open" and m.center.mode != "release" else "sprint"
+	# Sürüm notu yalnız SPRINT görünümünde durur ve saat onun için tutulur: notta görünüm SPRINT'tir. Açık olmayan
+	# kâğıt da SPRINT'e düşer; v1.0'dan önce hatırlanan GENEL BAKIŞ (önceki koşudan kalan) unutulur, yoksa yayında
+	# kendiliğinden öne çıkardı.
+	var view: String = _ui.view
+	if view == "overview" and m.get("overview") == null:
+		view = "sprint"
+		_ui.view = view
+		_last_view = view
+	if m.center.mode == "release" or (view == "quarter" and m.quarter.state != "open"):
+		view = "sprint"
 	var picking: bool = _source == null and not SprintSystem.is_typed()
 	_build_head(m.header)
 	_build_ctl(m, view)
 	_ctl.visible = not picking
 	_picker_view.get_parent().visible = picking
+	_overview_view.get_parent().visible = view == "overview" and not picking
 	_sprint_view.get_parent().visible = view == "sprint" and not picking
 	_quarter.get_parent().visible = view == "quarter" and not picking
 	_quarter.visible = _quarter.get_parent().visible
 	if _quarter.visible:
 		_quarter.setup(m)
+	elif _overview_view.get_parent().visible:
+		_overview.setup(m)
 	elif _sprint_view.get_parent().visible:
 		_areas.setup(m, false)
 		_sprint.setup(m)
@@ -187,40 +214,35 @@ func _build_head(h: Dictionary) -> void:
 		_kpis.add_child(UiFactory.D_kpi(tr("PRODUCT_KPI_PAYING"), Fmt.group(h.paying)))
 
 
-## SPRINT | ÇEYREK (PM yokken ÇEYREK kilitli, gerekçesi ipucunda) ... Geçmiş anahtarı; PM varken planlamayı ona
-## devretme anahtarı.
+## GENEL BAKIŞ | SPRINT | ÇEYREK (v1.0'dan önce GENEL BAKIŞ, PM yokken ÇEYREK kilitli, gerekçesi ipucunda) ...
+## Geçmiş anahtarı; PM varken planlamayı ona devretme anahtarı.
 func _build_ctl(m: Dictionary, view: String) -> void:
 	UiFactory.clear(_ctl_row)
-	var locked: bool = m.quarter.state != "open"
-	var views: Array = ["sprint"] if locked else VIEW_KEYS.keys()
-	_ctl_row.add_child(UiFactory.D_seg_tabs(views.map(func(id: String) -> String: return tr(VIEW_KEYS[id])),
-		views.find(view), func(i: int) -> void: _set_ui(views[i], "view")))
-	if locked:
-		var quarter := UiFactory.D_locked_tab(tr("PRODUCT_VIEW_QUARTER"))
+	var open_views: Array = VIEW_KEYS.keys().filter(func(id: String) -> bool:
+		return (id != "overview" or m.get("overview") != null) and (id != "quarter" or m.quarter.state == "open"))
+	if "overview" not in open_views:
+		var overview := UiFactory.D_locked_tab(tr(VIEW_KEYS.overview))
+		overview.tooltip_text = tr("PRODUCT_OV_LOCKED")
+		_ctl_row.add_child(overview)
+	_ctl_row.add_child(UiFactory.D_seg_tabs(open_views.map(func(id: String) -> String: return tr(VIEW_KEYS[id])),
+		open_views.find(view), func(i: int) -> void: _set_ui(open_views[i], "view")))
+	if "quarter" not in open_views:
+		var quarter := UiFactory.D_locked_tab(tr(VIEW_KEYS.quarter))
 		quarter.tooltip_text = tr("PRODUCT_QUARTER_NEED_PM")
 		_ctl_row.add_child(quarter)
 	_ctl_row.add_child(RnDUiShared.spacer())
-	_add_switch(tr("PRODUCT_HISTORY"), _ui.history_open, _set_ui.bind("history_open"))
+	SprintUiShared.switch(_ctl_row, tr("PRODUCT_HISTORY"), _ui.history_open, _set_ui.bind("history_open"))
 	var delegate: Variant = m.center.delegate
 	if delegate != null:
-		_add_switch(tr("PRODUCT_DELEGATE").format(delegate), delegate.on,
+		SprintUiShared.switch(_ctl_row, tr("PRODUCT_DELEGATE").format(delegate), delegate.on,
 			func(on: bool) -> void: _on_action("delegate", {"on": on}))
 
 
-## Şeridin etiketli anahtarı.
-func _add_switch(text: String, on: bool, toggled: Callable) -> void:
-	_ctl_row.add_child(SprintUiShared.label(text, &"MetaMuted"))
-	var toggle := CheckButton.new()
-	toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	toggle.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
-	toggle.button_pressed = on
-	toggle.toggled.connect(toggled)
-	_ctl_row.add_child(toggle)
-
-
-## Yalnız yerel durum: geçmiş anahtarı ve görünüm.
+## Yalnız yerel durum: geçmiş anahtarı, görünüm ve açık kademe önizlemesi.
 func _set_ui(value: Variant, key: String) -> void:
 	_ui[key] = value
+	if key == "view":
+		_last_view = value
 	_queue_rebuild()
 
 
@@ -238,6 +260,9 @@ func _on_ui_changed(open_area_id: String) -> void:
 
 func _on_action(kind: String, args: Dictionary) -> void:
 	_ui.hover_card = ""   # kare için zorlanan hover ilk eylemde bırakılır
+	if kind == "server_preview":
+		_set_ui(args.id, "server_preview")
+		return
 	if kind == "edit":
 		_ui.view = "sprint"
 	if _source != null:
@@ -266,6 +291,11 @@ func _act(kind: String, args: Dictionary) -> void:
 		"approve_all": SprintSystem.approve_all()
 		"edit": SprintSystem.edit(args.sprint)
 		"pick_goal": SprintSystem.pick_goal(args.area_id)
+		"server_tier":
+			InfraSystem.set_provider(args.id)
+			_ui.server_preview = ""
+		"server_step": InfraSystem.adjust_capacity(args.direction)
+		"server_auto": ProductState.set_infra_auto(args.on)
 		"team": EventBus.tab_changed.emit("hr")
 		"rnd":
 			# Önce sayfa: düğüm isteği monte olmuş Ar-Ge sayfasına düşer.

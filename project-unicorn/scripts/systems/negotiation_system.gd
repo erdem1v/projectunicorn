@@ -264,7 +264,7 @@ static func view_state() -> Dictionary:
 			# §5.3 — the confirmation strip carries the CAPACITY reading, whose owner is
 			# Ürün §10. Seats signed here land in that same count the same day.
 			"capacity_used": InfraSystem.served_count() + _units,
-			"capacity_total": int(round(InfraSystem.effective_capacity())),
+			"capacity_total": InfraSystem.purchased_capacity(),
 		},
 	}
 

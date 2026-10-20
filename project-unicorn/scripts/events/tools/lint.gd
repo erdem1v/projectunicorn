@@ -760,7 +760,7 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 		var block: Dictionary = text[locale]
 		_lint_variant_keys(where, locale, block)
 		# A body may be a variant set; every arm is checked, and the panel holds one of them at a time.
-		var arms: Array = _body_strings(block)
+		var arms: Array = body_strings(block)
 		var body: String = " ".join(PackedStringArray(arms))
 		for dash in DASH_CHARS:
 			if body.contains(dash):
@@ -1078,16 +1078,19 @@ static func _trees_of(card: Dictionary) -> Array:
 
 
 ## Every body string a locale block can carry: the plain one, or every arm of a variant
-## set. A key is returned as its key — the dash and trademark bans are about AUTHORED
-## prose, and a CSV key is checked by the localization gates instead.
-static func _body_strings(block: Dictionary) -> Array:
-	var body: Variant = block.get("body", "")
-	if typeof(body) == TYPE_DICTIONARY:
-		var out: Array = []
-		for v in (body as Dictionary).get("variants", {}).values():
-			out.append(String(v))
-		return out
-	return [String(body)]
+## set (an arm may itself be a variant set). A key is returned as its key — the dash and
+## trademark bans are about AUTHORED prose, and a CSV key is checked by the localization gates instead.
+static func body_strings(block: Dictionary) -> Array:
+	return _arms(block.get("body", ""))
+
+
+static func _arms(value: Variant) -> Array:
+	if typeof(value) != TYPE_DICTIONARY:
+		return [String(value)]
+	var out: Array = []
+	for arm in (value as Dictionary).get("variants", {}).values():
+		out.append_array(_arms(arm))
+	return out
 
 
 static func _text_block(card: Dictionary, locale: String) -> Dictionary:

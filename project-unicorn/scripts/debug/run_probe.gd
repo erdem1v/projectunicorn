@@ -40,7 +40,11 @@ extends RefCounted
 #                                           record drifts toward; q = the B2C quality term the audience and the
 #                                           price read, the product's fit to its audience x 5/7; u = that fit
 #                                           itself, 0-100; aud_star = where the audience stands on the star rows,
-#                                           1.00-3.00)
+#                                           1.00-3.00; occ = the servers' load as a ratio)
+#   PROBE SERVER day=<d> units=<n> tier=<local|cloud|enterprise> load=<pct> bill=<monthly $> auto=<0|1>
+#                                           (every week a product is live: the servers the founder runs, the units
+#                                           bought, the tier, the load in whole percent, the monthly bill and whether
+#                                           Auto adjust is on)
 #   PROBE CHURN day=<d> id=<cid> ...        (customer_churned — the autopsy's terminal)
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
 #   PROBE LEAD  day=<d> id=<pid> arch=<archetype> sector=<sector> star=<n> phase=<p> u=<n|-> loss=<area|->
@@ -91,14 +95,17 @@ extends RefCounted
 #                                           the founder's sittings, B2B signings)
 #   PROBE END   day=<d> run_active=<b> ending=<id> finite_runway_p<1|2|3>=<finite weeks>/<weeks>
 #               min_cash_pre_seed=<n> seed_day=<n|-1> first_sign_day=<n|-1> first_revenue_day=<n|-1>
-#               cheque_day=<n|-1> open_w1_12=<n> idle_w1_12=<n> u_unexplained_weeks=<n>
+#               cheque_day=<n|-1> open_w1_12=<n> idle_w1_12=<n> u_unexplained_weeks=<n> server_clicks=<n>
+#               auto_grows=<n> outage_eko=<n> outage_std=<n> outage_kur=<n>
 #                                           (the weeks are the weekly STATE readings, by phase;
 #                                           seed_day is the day the seed was signed; first_revenue_day
 #                                           the first daily tick that closed with MRR; cheque_day the
 #                                           day Frank's cheque was taken; open_w1_12 the weeks 1-12
 #                                           whose 08:00 found the B2B market open, idle_w1_12 those
 #                                           of them without a sitting; u_unexplained_weeks the weeks
-#                                           whose PROBE UFLUX counted an unexplained account)
+#                                           whose PROBE UFLUX counted an unexplained account; server_clicks the founder's
+#                                           Increase and Decrease presses, auto_grows the automatic increases, outage_* the
+#                                           night outages by the tier the servers were on: Economy, Standard, Enterprise)
 #   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
 #   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn id>=<n>... ...
 #                                           (full_run*: once, the day the Series A door opens)
@@ -150,7 +157,10 @@ extends RefCounted
 ##   core_only — rides the fix arm: no feature or request card outside the core area stays in a sprint, fix and
 ##               research cards are kept, and the lead fills what is left from the rest of the pool;
 ##   desk      — with a rep on the Satış job the founder sits only the leads above the reps' band, the rest are
-##               the reps' (the game's own pick_lead_for); with no rep he sits every lead, as the other arms do.
+##               the reps' (the game's own pick_lead_for); with no rep he sits every lead, as the other arms do;
+##   server    — how the founder runs the servers at each week's open: by default he presses Increase while the load is
+##               over 90%; "lean" holds it near 95% and "wide" near 60% (pressing Decrease too, while a step would still
+##               leave the load under the line); "auto" switches Auto adjust on and never presses.
 const PRESETS := {
 	"b2b_reps": {}, "b2b_solo": {}, "b2b_risk": {}, "b2b_slip": {}, "b2c": {}, "b2c_neglect": {},
 	"full_run": {"subtype": "erp"},
@@ -183,7 +193,17 @@ const PRESETS := {
 	"full_run_quality_core_desk": {"subtype": "erp", "fix": "worst", "core_only": true, "desk": true},
 	"full_run_vc_product": {"subtype": "erp", "vc": "product"},
 	"full_run_b2c_vc_product": {"subtype": "note_tool", "vc": "product"},
+	"full_run_server_lean": {"subtype": "erp", "server": "lean"},
+	"full_run_server_wide": {"subtype": "erp", "server": "wide"},
+	"full_run_server_auto": {"subtype": "erp", "server": "auto"},
+	"full_run_b2c_server_lean": {"subtype": "note_tool", "server": "lean"},
+	"full_run_b2c_server_wide": {"subtype": "note_tool", "server": "wide"},
+	"full_run_b2c_server_auto": {"subtype": "note_tool", "server": "auto"},
 }
+## The load, in percent, a manual founder holds the servers under (the default is the amber line).
+const SERVER_LINES := {"lean": 95, "wide": 60}
+## The most presses a founder makes on the servers in one week.
+const SERVER_PRESSES := 40
 const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Klipo"}
 # The played run has three answer policies on one world, a controlled experiment on what
 # the event cards do to the revenue curve:
@@ -232,6 +252,11 @@ static var _desk: bool = false              # full_run*: the founder leaves the 
 static var _release_seen: bool = false      # PROBE UFLUX: a version shipped since the last weekly reading
 static var _account_u: Dictionary = {}      # PROBE UFLUX: account id -> its fit at the last reading or its signature
 static var _u_unexplained_weeks: int = 0    # PROBE END: the weeks PROBE UFLUX counted an unexplained account
+static var _server_policy: String = ""      # full_run*: "" | lean | wide | auto (see PRESETS)
+static var _server_clicks: int = 0          # PROBE END: the founder's Increase and Decrease presses
+static var _auto_grows: int = 0             # PROBE END: the automatic increases
+static var _units_seen: int = 0             # the units bought at the last change of the servers
+static var _outages: Dictionary = {}        # PROBE END: tier -> night outages
 static var _lost_lead: Prospect = null      # PROBE REPLOSS: the lead the last reported loss took off the registry
 static var _bugs_open: int = 0              # PROBE BUGS: the open bugs at the last weekly line
 static var _bugs_cleared: int = 0           # PROBE BUGS: bugs a fix card cleared since then
@@ -299,6 +324,11 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_release_seen = false
 	_account_u = {}
 	_u_unexplained_weeks = 0
+	_server_policy = ""
+	_server_clicks = 0
+	_auto_grows = 0
+	_units_seen = 0
+	_outages = {}
 	_bugs_open = 0
 	_bugs_cleared = 0
 	ProductState.bugs_free = false
@@ -390,6 +420,7 @@ static func _wire_log() -> void:
 	EventBus.rep_deal_lost.connect(_on_rep_lost)
 	EventBus.prospect_arrived.connect(_on_lead)
 	EventBus.version_shipped.connect(func(_n: int) -> void: _release_seen = true)
+	EventBus.infra_changed.connect(_on_infra_changed)
 
 
 static func _on_month_ended(_data: Dictionary) -> void:
@@ -566,7 +597,17 @@ static func _log_gate() -> void:
 		GameState.get_profitable_month_streak(), GameState.get_mom_growth_avg_pct(PitchConstants.ARR_WINDOW_MONTHS)])
 
 
+## An increase while Auto adjust is on is the automatic one: the founder's own presses are made with it off or on a policy
+## that never switches it on.
+static func _on_infra_changed() -> void:
+	if ProductState.infra_auto() and InfraSystem.units() > _units_seen:
+		_auto_grows += 1
+	_units_seen = InfraSystem.units()
+
+
 static func _on_fire(event_id: String) -> void:
+	if event_id.begins_with("product.incident_outage_"):
+		_outages[InfraSystem.provider()] = int(_outages.get(InfraSystem.provider(), 0)) + 1
 	_fires[event_id] = int(_fires.get(event_id, 0)) + 1
 	_fires_by_day[GameState.day] = int(_fires_by_day.get(GameState.day, 0)) + 1
 	print("PROBE FIRE day=%d hour=%d id=%s src=%s" % [
@@ -773,9 +814,17 @@ static func _log_b2c() -> void:
 		SalesSystem.b2c_satisfaction_target(),
 		ProductState.open_bugs(), SalesSystem.b2c_users_lost(),
 		SalesSystem.b2c_quality(), ProductRead.interest(),
-		InfraSystem.occupancy(), SupportSystem.desk_roster().size(), ProductState.reports_incoming(),
+		InfraSystem.load_percent() / 100.0, SupportSystem.desk_roster().size(), ProductState.reports_incoming(),
 		SupportSystem.reports_per_day(), SupportSystem.validation_per_day(),
 		ProductQuality.fit(SalesSystem.B2C_FIT_CTX).value, ProductQuality._audience_star()])
+
+
+## PROBE SERVER — the servers this week, as the Sunucu block reads them.
+static func _log_server() -> void:
+	if not ProductState.is_live():
+		return
+	print("PROBE SERVER day=%d units=%d tier=%s load=%d bill=%d auto=%d" % [GameState.day, InfraSystem.units(),
+		InfraSystem.provider(), InfraSystem.load_percent(), InfraSystem.monthly_bill(), int(ProductState.infra_auto())])
 
 
 ## PROBE BUGS — the week's bugs: how many arrived (the change in the store plus what fix cards cleared), the store
@@ -1003,6 +1052,7 @@ static func _on_week_start() -> void:
 	_log_customers()
 	_log_uflux()
 	_log_b2c()
+	_log_server()
 	_log_bugs()
 	_log_areas()
 	if (GameState.day - 1) % MARKET_LOG_WEEKS == 0:
@@ -1068,11 +1118,13 @@ static func _finish() -> void:
 	var runway: Array = [1, 2, 3].map(func(ph: int) -> String:
 		var w: Vector2i = _runway_weeks.get(ph, Vector2i.ZERO)
 		return "finite_runway_p%d=%d/%d" % [ph, w.x, w.y])
-	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d u_unexplained_weeks=%d" % [
+	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d u_unexplained_weeks=%d server_clicks=%d auto_grows=%d outage_eko=%d outage_std=%d outage_kur=%d" % [
 		GameState.day, str(GameState.run_active), GameState.ending_id, " ".join(runway), _min_cash_pre_seed,
 		GameState.seed_closed_day, _first_sign_day, _first_revenue_day,
 		int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, -1)), _open_weeks.size(),
-		_open_weeks.filter(func(w: int) -> bool: return not _meetings_by_day.has(w)).size(), _u_unexplained_weeks])
+		_open_weeks.filter(func(w: int) -> bool: return not _meetings_by_day.has(w)).size(), _u_unexplained_weeks,
+		_server_clicks, _auto_grows, int(_outages.get(InfraSystem.PROVIDER_LOCAL, 0)),
+		int(_outages.get(InfraSystem.PROVIDER_CLOUD, 0)), int(_outages.get(InfraSystem.PROVIDER_ENTERPRISE, 0))])
 	_log_hr()
 
 
@@ -1119,6 +1171,7 @@ static func _play_the_week() -> void:
 	_plan_the_sprint()
 	_take_the_seed()
 	if GameState.get_flag("mvp_shipped", false):
+		_run_the_servers()
 		_work_the_pipeline()
 	if _vc_policy != "":
 		_play_the_hunt()
@@ -1433,8 +1486,27 @@ static func _hire_after_the_seed() -> void:
 		print("PROBE PLAY day=%d start_search %s/junior" % [GameState.day, role])
 
 
+## The servers, as the Sunucu block lets a player run them, at the week's open: the default founder presses Increase while
+## the load is over the amber line, "lean" and "wide" hold it near their own line (Decrease too, while a step would still
+## leave the load under it), "auto" switches Auto adjust on once and never presses. A press is a click, counted for PROBE END.
+static func _run_the_servers() -> void:
+	if _server_policy == "auto":
+		ProductState.set_infra_auto(true)
+		return
+	var line: int = int(SERVER_LINES.get(_server_policy, InfraSystem.LOAD_AMBER))
+	var presses: int = 0
+	while InfraSystem.load_percent() > line and presses < SERVER_PRESSES:
+		InfraSystem.adjust_capacity(1)
+		presses += 1
+	while _server_policy != "" and InfraSystem.units() > 1 and presses < SERVER_PRESSES \
+			and InfraSystem.load_percent(InfraSystem.units() - InfraSystem.capacity_step()) <= line:
+		InfraSystem.adjust_capacity(-1)
+		presses += 1
+	_server_clicks += presses
+
+
 ## The played run's operations — the things any player does once the product is live: research,
-## look after the roster. Servers and the price follow the releases on their own.
+## look after the roster. The price follows the releases on its own.
 static func _run_the_company() -> void:
 	if not ProductState.is_live():
 		return
@@ -1919,6 +1991,7 @@ static func _seed_world(preset: String) -> void:
 		_no_stop = bool(spec.get("no_stop", false))
 		_core_only = bool(spec.get("core_only", false))
 		_desk = bool(spec.get("desk", false))
+		_server_policy = String(spec.get("server", ""))
 		ProductState.bugs_free = _fix_arm == "off"
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log

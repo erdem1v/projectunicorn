@@ -245,6 +245,22 @@ static func key_button(kind: String, disabled: bool) -> Button:
 	return b
 
 
+## Şeridin etiketli anahtarı: soluk adı ve yanında anahtar `row`'a eklenir; `tip` ikisinin de ipucudur.
+static func switch(row: Control, text: String, on: bool, toggled: Callable, tip := "") -> void:
+	var title := label(text, &"MetaMuted")
+	if tip != "":
+		title.mouse_filter = Control.MOUSE_FILTER_STOP
+		title.tooltip_text = tip
+	row.add_child(title)
+	var toggle := CheckButton.new()
+	toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	toggle.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
+	toggle.tooltip_text = tip
+	toggle.button_pressed = on
+	toggle.toggled.connect(toggled)
+	row.add_child(toggle)
+
+
 ## Sütun ve şerit düğmesi: metni ve görünümü, basılınca `on_press`.
 static func button(text: String, variation: StringName, on_press: Callable) -> Button:
 	var b := Button.new()

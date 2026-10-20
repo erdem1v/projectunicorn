@@ -44,11 +44,10 @@ const CASH_TABLE := {"ai_engine": 600, "security_cert": 900, "analytics_engine":
 ## başka bir ailenin UCUZ ve ERKEN düğümünü işaret eder.
 const CROSS_EFFORT_CEIL := 50
 
-## §13'ün on katsayısı. `enterprise_trust` ve `product_note` katsayı DEĞİL kancadır
-## (§4.2'nin balina imza koşulu, §6'nın aylık notu) — ayrı sayılırlar.
+## §13'ün sekiz katsayısı. `enterprise_trust` ve `product_note` katsayı DEĞİL kancadır
+## (§4.2'nin kurumsal imza koşulu, §6'nın aylık notu) — ayrı sayılırlar.
 const COEFFICIENT_EFFECTS := [
-	"load_divisor", "validation_throughput", "bug_rate_ceil", "beta_decay",
-	"overage_satisfaction", "inflow_base", "license_cost", "b2c_conversion",
+	"validation_throughput", "bug_rate_ceil", "beta_decay", "inflow_base", "license_cost", "b2c_conversion",
 	"design_effort", "ai_usage_weight",
 ]
 const HOOK_EFFECTS := ["enterprise_trust", "product_note"]
@@ -122,7 +121,7 @@ static func _validate_node_set() -> void:
 			_fail("tree is missing node '%s', which ResearchSeam.NODES declares" % id)
 	for id in _nodes.keys():
 		if not ResearchSeam.NODES.has(id):
-			_fail("tree declares node '%s', which is not one of Ar-Ge §4's twenty" % id)
+			_fail("tree declares node '%s', which is not one of Ar-Ge §4's nineteen" % id)
 
 
 ## Per row: parent chain, arity, area, stars, effort band, cash table.
@@ -185,8 +184,8 @@ static func _validate_rows() -> void:
 		if cash != want_cash:
 			_fail("%s cash is $%d; §13's table says $%d" % [id, cash, want_cash])
 
-	if roots != 4 or branches != 8 or conts != 8:
-		_fail("tree shape is %d/%d/%d; §3 wants 4 roots / 8 branches / 8 continuations"
+	if roots != 4 or branches != 8 or conts != 7:
+		_fail("tree shape is %d/%d/%d; §3 wants 4 roots / 8 branches / 7 continuations"
 			% [roots, branches, conts])
 
 
@@ -203,7 +202,7 @@ static func _validate_cross_links() -> void:
 			_fail("%s carries a cross condition but is a %s; §3 puts them on continuations only"
 				% [id, place])
 		if not ResearchSeam.NODES.has(cross):
-			_fail("%s cross target '%s' is not one of the twenty" % [id, cross])
+			_fail("%s cross target '%s' is not one of the nineteen" % [id, cross])
 			continue
 		if ResearchSeam.family(cross) == ResearchSeam.family(String(id)):
 			_fail("%s cross target '%s' is in its OWN family; that is not a cross link" % [id, cross])
@@ -287,13 +286,13 @@ static func _validate_hidden_k3(line_id: String, raw: Dictionary) -> void:
 		_fail("hidden line '%s' K3 carries no research node; the catalog will refuse it" % line_id)
 		return
 	if not ResearchSeam.is_node(node):
-		_fail("hidden line '%s' K3 binds '%s', not one of the twenty" % [line_id, node])
+		_fail("hidden line '%s' K3 binds '%s', not one of the nineteen" % [line_id, node])
 	elif not ResearchSeam.may_gate_visible_step(node):
 		_fail("hidden line '%s' K3 binds '%s', a %s node — §3.1 forbids it and the catalog would refuse the line"
 			% [line_id, node, ResearchSeam.placement(node)])
 
 
-## §13's ten coefficients, each present exactly once and owned by a real system.
+## §13's eight coefficients, each present exactly once and owned by a real system.
 static func _validate_effects() -> void:
 	var seen: Dictionary = {}
 	for id in _nodes.keys():

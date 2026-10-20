@@ -460,8 +460,8 @@ static func D_said(face: Control, who: String, line: Label, gap := UiTokens.SPAC
 
 
 ## A segmented pick: its options side by side in one box, the one in force filled and underlined. Each
-## option is {text, tip?, icon?} (the icon after the text); a press on another calls `on_pick(index)`.
-## `off` reads only; `small` is the caps pick over a chart.
+## option is {text, tip?, icon?, off?} (the icon after the text; an `off` option is not open, its tip says why); a press
+## on another calls `on_pick(index)`. `off` reads only; `small` is the caps pick over a chart.
 static func D_seg_pick(options: Array, active: int, on_pick: Callable, off := false, small := false) -> PanelContainer:
 	var frame := PanelContainer.new()
 	frame.theme_type_variation = &"SegPickBox"
@@ -480,11 +480,33 @@ static func D_seg_pick(options: Array, active: int, on_pick: Callable, off := fa
 			b.icon = load(options[i].icon)
 			b.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		b.focus_mode = Control.FOCUS_NONE
-		b.disabled = off
+		b.disabled = off or options[i].get("off", false)
 		if i != active:
 			b.pressed.connect(on_pick.bind(i))
 		row.add_child(b)
 	return frame
+
+
+## A server's load bar: the track filled to the load (full at 100%), in ink up to the amber line, in the warning
+## colour past it and in danger past the over line; the amber line is marked across the track.
+static func D_load_bar(percent: int) -> Control:
+	var bar := Control.new()
+	bar.custom_minimum_size.y = UiTokens.D_BAR_TICK.y
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.draw.connect(func() -> void:
+		var track := Rect2(0.0, (bar.size.y - UiTokens.D_H_BAR) / 2.0, bar.size.x, UiTokens.D_H_BAR)
+		bar.draw_rect(track, UiTokens.D_BAR_TRACK)
+		var ink: Color = UiTokens.D_BAR_FILL
+		if percent > InfraSystem.LOAD_OVER:
+			ink = UiTokens.D_neg()
+		elif percent > InfraSystem.LOAD_AMBER:
+			ink = UiTokens.D_warn()
+		bar.draw_rect(Rect2(track.position, Vector2(track.size.x * minf(percent / 100.0, 1.0), track.size.y)), ink)
+		bar.draw_rect(Rect2(bar.size.x * InfraSystem.LOAD_AMBER / 100.0 - UiTokens.D_BAR_TICK.x / 2.0, 0.0,
+			UiTokens.D_BAR_TICK.x, bar.size.y), UiTokens.D_INK_1))
+	return bar
 
 
 ## A cost: its value in ink behind the cost disc, never in red (a cost is not a danger).

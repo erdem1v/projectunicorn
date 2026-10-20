@@ -203,8 +203,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"open_bugs_store_reads_and_writes": fail = _case_open_bugs_store_reads_and_writes()
 		"bugs_land_on_random_live_lines": fail = _case_bugs_land_on_random_live_lines()
 		"infra_capacity_moves_both_ways": fail = _case_infra_capacity_moves_both_ways()
-		"infra_heavy_step_costs_capacity": fail = _case_infra_heavy_step_costs_capacity()
-		"infra_overage_applies_and_stops": fail = _case_infra_overage_applies_and_stops()
+		"capacity_step_immediate":        fail = _case_capacity_step_immediate()
+		"load_mult_steps":                fail = _case_load_mult_steps(pinned)
+		"auto_capacity_grows_only":       fail = _case_auto_capacity_grows_only()
 		"infra_local_provider_tradeoff": fail = _case_infra_local_provider_tradeoff()
 		"product_read_catalogue":        fail = _case_product_read_catalogue()
 		"floor_ladder_areas":            fail = _case_floor_ladder_areas()
@@ -782,11 +783,9 @@ static func _seed_b2c() -> void:
 	SalesSystem.open_b2c_paid_tier(15)  # derives paying users → userbase record + MRR > 0
 
 
-## A day in which only the satisfaction drift writes the B2C record: the support desk's two-tier damage and the server
-## overage write it every day too, so the day starts with no reports, no open bugs, no carried residue and room on the servers.
+## A day in which only the satisfaction drift writes the B2C record: the support desk's two-tier damage writes it every day
+## too, so the day starts with no reports, no open bugs and no carried residue.
 static func _quiet_b2c_day() -> void:
-	InfraSystem.set_provider("cloud")
-	InfraSystem.set_capacity(100)
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
 	GameState.set_flag(ProductState.OPEN_BUGS, {})
 	SupportSystem.reset()
@@ -12862,9 +12861,8 @@ static func _case_month_history_save_typing() -> String:
 # --- B2C growth compounds both ways (word of mouth on the aggregate's satisfaction) ---
 
 ## The hourly audience delta at an audience and a satisfaction (-1 leaves the record as it is), with the quality term held at
-## 50 and room on the servers, so only the satisfaction rules move it.
+## 50, so only the satisfaction rules move it.
 static func _b2c_delta(audience: float, sat: int = -1) -> float:
-	InfraSystem.set_capacity(100)
 	if sat >= 0:
 		CustomerRegistry.set_satisfaction(SalesSystem.B2C_USERBASE_ID, sat)
 	GameState.set_flag("b2c_audience", audience)
@@ -14253,7 +14251,6 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 	GameState.set_flag(ProductState.OPEN_BUGS, {})
 	GameState.set_flag(ProductState.VALIDATION_PROGRESS, 0.0)
 	ProductState.refresh_on_publish(20.0)
-	InfraSystem.reset()
 	SupportSystem.reset()
 
 
@@ -14442,10 +14439,12 @@ static func _case_bugs_land_on_random_live_lines() -> String:
 	return ""
 
 
-## §10 — kapasite HER AN, ±1 birim, CEZASIZ artıp azalır; fatura günlük olarak
-## (aylık/30) burn'e işler ve YENİ FİYAT ERTESİ GÜNDEN itibaren geçerlidir.
+## §10 — kapasite HER AN, birimin onda biri kadar (en az bir birim) artıp azalır, CEZASIZ; fatura günlük olarak
+## (aylık/30) burn'e işler ve YENİ FİYAT ERTESİ GÜNDEN itibaren geçerlidir. Dolu sunucunun fatura ve kesinti ihtimalinden
+## başka bedeli yoktur: aynı kitle taşan ve bol kapasitede aynı destek zararını, bildirim akışını ve edinimi okur.
 ##
-## FALSİFİKASYON: adjust_capacity'ye bir ceza/kilit ekle → simetri iddiası FAIL.
+## FALSİFİKASYON: adjust_capacity'ye bir ceza/kilit ekle → simetri iddiası FAIL; SupportSystem.daily_satisfaction_damage'a
+## ya da InfraSystem.report_inflow_multiplier'a taşma çarpanı koy → gizli aşım iddiası FAIL.
 static func _case_infra_capacity_moves_both_ways() -> String:
 	_seed_support_fixture("b2c")
 	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
@@ -14456,17 +14455,35 @@ static func _case_infra_capacity_moves_both_ways() -> String:
 	if bill_10 != 10 * InfraSystem.unit_price(InfraSystem.PROVIDER_CLOUD, "b2c"):
 		return "monthly bill %d is not units x unit price" % bill_10
 
-	# YUKARI ve AŞAĞI, aynı adımla, aynı sonuca dönerek — hiçbir yönde ceza yok.
+	# YUKARI ve AŞAĞI, birimin onda biri kadar: küçük kapasitede bir birim, büyükte onda bir; hiçbir yönde ceza yok.
 	InfraSystem.adjust_capacity(1)
 	if InfraSystem.units() != 11:
-		return "raising by one step gave %d" % InfraSystem.units()
+		return "raising 10 units by a step gave %d, want 11" % InfraSystem.units()
+	InfraSystem.set_capacity(30)
+	InfraSystem.adjust_capacity(1)
+	if InfraSystem.units() != 33:
+		return "raising 30 units by a step gave %d, want 33" % InfraSystem.units()
 	InfraSystem.adjust_capacity(-1)
-	if InfraSystem.units() != 10:
-		return "lowering by one step gave %d" % InfraSystem.units()
-	if InfraSystem.monthly_bill() != bill_10:
-		return "a round trip changed the bill (%d -> %d)" % [bill_10, InfraSystem.monthly_bill()]
+	if InfraSystem.units() != 30 or InfraSystem.monthly_bill() != 3 * bill_10:
+		return "lowering 33 units by a step gave %d units and a bill of %d" % [InfraSystem.units(), InfraSystem.monthly_bill()]
 	if InfraSystem.set_capacity(-5) != 0:
 		return "capacity went negative"
+
+	# Dolu sunucunun fatura ve kesinti ihtimalinden başka bedeli yok: aynı 5.000 kişi 2 birimde (taşıyor) ve 8 birimde
+	# (bol) aynı zararı, aynı akışı ve aynı edinimi okur.
+	GameState.set_flag("b2c_audience", 5000.0)
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 60)
+	ProductState.add_bugs("line_note_tool_search", 40)
+	var readings: Array = []
+	for units in [2, 8]:
+		InfraSystem.set_capacity(units)
+		readings.append([InfraSystem.is_over_capacity(), SupportSystem.daily_satisfaction_damage(),
+			SupportSystem.reports_per_day(), SalesSystem._audience_delta_per_hour()])
+	if not readings[0][0] or readings[1][0]:
+		return "5000 users should overflow 2 units and fit 8 (%s, %s)" % [readings[0][0], readings[1][0]]
+	for i in range(1, 4):
+		if not is_equal_approx(float(readings[0][i]), float(readings[1][i])):
+			return "capacity moved reading %d: %s on 2 units, %s on 8" % [i, readings[0][i], readings[1][i]]
 
 	# Sağlayıcı göçü BEDELSİZ, ve fiyat FATURA YAYINLANDIĞINDA değişir.
 	InfraSystem.set_capacity(10)
@@ -14488,99 +14505,151 @@ static func _case_infra_capacity_moves_both_ways() -> String:
 	return ""
 
 
-## §10 — "ağır özellik yayınlamak KALICI bir işletme maliyetidir." Yük = 1 + Σağırlık/20,
-## etkin kapasite = satın alınan / yük. Aynı kapasiteyle aynı kullanıcı, ağır kademe
-## yayınlandıktan sonra daha dolu okur.
+## §10 — Artır ve Azalt birimin onda biri kadardır (en az bir birim) ve HEMEN işler: Sunucu bloğunun ipucunda yazan fatura ve
+## yük basıştan sonra aynen okunur, o gecenin zarı yeni yükü görür. 230 koltuklu defterde 6 birim %77, 5 birim %92 (sarı), 4
+## birim %115 (kırmızı) okunur.
 ##
-## FALSİFİKASYON: load_factor'ü sabit 1.0 yap → doluluk iddiası FAIL.
-static func _case_infra_heavy_step_costs_capacity() -> String:
-	_seed_support_fixture("b2c")
-	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
-	InfraSystem.set_capacity(3)                       # 3.000 kullanıcı kapasitesi
-	GameState.set_flag("b2c_audience", 2300.0)
-
-	if absf(InfraSystem.load_factor() - 1.0) > 0.0001:
-		return "an empty product already carries load %.3f" % InfraSystem.load_factor()
-	var occ_before: float = InfraSystem.occupancy()
-	var state_before: String = InfraSystem.capacity_state()
-	if state_before != InfraSystem.STATE_NORMAL:
-		return "a 77%% product reads %s before any heavy step" % state_before
-
-	# AĞIR kademe yayınla: note_tool capture K3, kullanım ağırlığı 3.
-	ProductState.set_line_tier("line_note_tool_capture", 3)
-	if ProductState.usage_weight_total() <= 0:
-		return "the shipped step contributed no usage weight"
-	if InfraSystem.load_factor() <= 1.0:
-		return "load stayed at %.3f after shipping a heavy step" % InfraSystem.load_factor()
-	if InfraSystem.effective_capacity() >= float(InfraSystem.purchased_capacity()):
-		return "effective capacity did not fall below what was purchased"
-	if InfraSystem.occupancy() <= occ_before:
-		return "occupancy did not rise (%.3f -> %.3f)" % [occ_before, InfraSystem.occupancy()]
-	if InfraSystem.capacity_state() == InfraSystem.STATE_NORMAL:
-		return "the same users on the same capacity still read normal after a heavy ship"
-	# Kapasite eklemek geri alır — hasar kalıcı değil.
-	InfraSystem.adjust_capacity(2)
-	if InfraSystem.capacity_state() != InfraSystem.STATE_NORMAL:
-		return "adding capacity did not clear the band (%s)" % InfraSystem.capacity_state()
+## FALSİFİKASYON: capacity_step'i hep 1 döndür → adım iddiası FAIL; adjust_capacity'yi sonraki tike bırak (yük ve fatura basıştan
+## sonra eskisi kalır) → ipucu iddiası FAIL; load_mult'u kapasite basışından önceki durumdan oku → zar iddiası FAIL.
+static func _case_capacity_step_immediate() -> String:
+	_incident_world(false)
+	for row in [[1, 1], [5, 1], [14, 1], [15, 2], [130, 13]]:
+		InfraSystem.set_capacity(row[0])
+		if InfraSystem.capacity_step() != row[1]:
+			return "%d units step by %d, want %d" % [row[0], InfraSystem.capacity_step(), row[1]]
+	InfraSystem.set_capacity(6)
+	for press in [-1, -1, 1]:
+		var server: Dictionary = ProductModel._server()
+		var tip: String = server.increase.tip if press > 0 else server.decrease.tip
+		var units: int = InfraSystem.units() + press * InfraSystem.capacity_step()
+		var load: int = InfraSystem.load_percent(units)
+		var bill: int = units * InfraSystem.unit_price(InfraSystem.provider())
+		for part in [str(load), Fmt.money_exact(bill)]:
+			if not tip.contains(part):
+				return "the tip before a press of %d reads '%s', want %s in it" % [press, tip, part]
+		var before: float = IncidentSystem.hazard()
+		InfraSystem.adjust_capacity(press)
+		if InfraSystem.units() != units or InfraSystem.load_percent() != load or InfraSystem.monthly_bill() != bill:
+			return "a press of %d left %d units, load %d, bill %d; the tip said %d, %d, %d" % [press, InfraSystem.units(),
+				InfraSystem.load_percent(), InfraSystem.monthly_bill(), units, load, bill]
+		if (IncidentSystem.hazard() > before) != (press < 0):
+			return "the night's odds went %.4f -> %.4f on a press of %d" % [before, IncidentSystem.hazard(), press]
 	return ""
 
 
-## §10 — %100 üstünde ÜÇ etki birden: memnuniyet −0,8/gün · GELEN ×1,5 · B2C edinim
-## ×0,6. Ve "hasar kalıcı değildir: kapasite eklendiği an etki durur."
+## §10 — dolu sunucu kesinti ihtimalini artırır, başka hiçbir şeyi: yük %90'a kadar 1,0 · %90 ile %100 arası 1,5 · %100 üstü
+## ya da kapasitesiz canlı ürün 2,5, kenarlar tam yüzdede (900/1000 hâlâ 1,0, 910/1000 ve 1000/1000 1,5, 1001/1000 2,5).
+## Kat tavandan SONRA ve yalnız kesintinin payına işler: kesintinin şansı tam katı kadar artar, öbür türlerin şansı aynı kalır
+## (B2B kitabında bu tarihte kesintiden başka tür yoktur; not uygulamasında ödeme de var, ikinci yarı onu sınar) ve tavan katı
+## yutmaz.
 ##
-## FALSİFİKASYON: is_over_capacity'yi false döndür → üç iddia da FAIL.
-static func _case_infra_overage_applies_and_stops() -> String:
-	_seed_support_fixture("b2c")
-	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
-	InfraSystem.set_capacity(2)                       # 2.000
-	GameState.set_flag("b2c_audience", 900.0)         # rahat
-
-	if InfraSystem.is_over_capacity():
-		return "a comfortable product reads over capacity"
-	if absf(InfraSystem.satisfaction_delta_per_day()) > 0.0001:
-		return "a comfortable product bleeds satisfaction"
-	if absf(InfraSystem.report_inflow_multiplier() - 1.0) > 0.0001:
-		return "a comfortable product multiplies inflow"
-	if absf(InfraSystem.acquisition_multiplier() - 1.0) > 0.0001:
-		return "a comfortable product throttles acquisition"
-
-	GameState.set_flag("b2c_audience", 5000.0)        # kapasitenin çok üstünde
-	if not InfraSystem.is_over_capacity():
-		return "5000 users on 2000 capacity did not read as overage"
-	if absf(InfraSystem.satisfaction_delta_per_day() - InfraSystem.OVERAGE_SATISFACTION) > 0.0001:
-		return "overage satisfaction is %.2f, §10 says %.2f" \
-			% [InfraSystem.satisfaction_delta_per_day(), InfraSystem.OVERAGE_SATISFACTION]
-	if absf(InfraSystem.report_inflow_multiplier() - InfraSystem.OVERAGE_INFLOW_MULT) > 0.0001:
-		return "overage inflow multiplier is %.2f, §10 says 1,5" \
-			% InfraSystem.report_inflow_multiplier()
-	if absf(InfraSystem.acquisition_multiplier() - InfraSystem.OVERAGE_ACQUISITION_MULT) > 0.0001:
-		return "overage acquisition multiplier is %.2f, §10 says 0,6" \
-			% InfraSystem.acquisition_multiplier()
-	# §8.3 — aşım zararı DESTEK'in −2,0 TAVANININ İÇİNDE toplanır, ayrı kanal değil.
-	GameState.set_flag(ProductState.REPORTS_INCOMING, 60)
-	ProductState.add_bugs("line_note_tool_search", 40)
-	if SupportSystem.daily_satisfaction_damage() < SupportSystem.DAMAGE_DAILY_CAP - 0.0001:
-		return "overage pushed daily damage past the −2,0 cap (%.2f)" \
-			% SupportSystem.daily_satisfaction_damage()
-
-	# KAPASİTE EKLE → ÜÇÜ DE ANINDA DURUR.
-	InfraSystem.set_capacity(8)
-	if InfraSystem.is_over_capacity():
-		return "adding capacity did not clear the overage"
-	if absf(InfraSystem.satisfaction_delta_per_day()) > 0.0001 \
-			or absf(InfraSystem.report_inflow_multiplier() - 1.0) > 0.0001 \
-			or absf(InfraSystem.acquisition_multiplier() - 1.0) > 0.0001:
-		return "an overage effect survived the capacity increase — §10 says damage is not permanent"
+## FALSİFİKASYON: InfraSystem.capacity_state'teki %90 kenarını `>=` yap → 900 iddiası FAIL; katı hazard'ın kırpmasından önce çarp →
+## tavan iddiası FAIL; katı bütün hazard'a çarp (`hazard`ın sonunu `odds * tier_mult() * load_mult()` yap) ya da `_weights`ın outage
+## şartını kaldır → ödeme iddiası FAIL.
+static func _case_load_mult_steps(payload: Dictionary) -> String:
+	_incident_world(false)
+	InfraSystem.set_capacity(20)
+	var chance := func(kind: String) -> float:
+		var weights: Dictionary = IncidentSystem._weights()
+		return IncidentSystem.hazard() * float(weights.get(kind, 0.0)) / IncidentSystem._total(weights)
+	var kinds: Array = IncidentSystem._weights().keys()
+	_set_served(230)
+	var calm: Dictionary = {}
+	for kind in kinds:
+		calm[kind] = chance.call(kind)
+	if calm.get("outage", 0.0) <= 0.0:
+		return "the calm week gives an outage no chance"
+	for row in [[900, 1.0], [910, 1.5], [1000, 1.5], [1001, 2.5]]:
+		_set_served(row[0])
+		if not is_equal_approx(IncidentSystem.load_mult(), row[1]):
+			return "%d seats on 1000 weigh the outage by %.2f, want %.2f" % [row[0], IncidentSystem.load_mult(), row[1]]
+		for kind in kinds:
+			var want: float = calm[kind] * (row[1] if kind == "outage" else 1.0)
+			if not is_equal_approx(chance.call(kind), want):
+				return "%d seats on 1000: a week's chance of %s is %.4f, want %.4f" % [row[0], kind, chance.call(kind), want]
+	# Kapasitesiz canlı ürün, hizmet ettiği kimse olmasa da, en yüksek katı okur.
+	InfraSystem.set_capacity(0)
+	_set_served(0)
+	if not is_equal_approx(IncidentSystem.load_mult(), 2.5):
+		return "a live product with no capacity weighs the outage by %.2f, want 2.5" % IncidentSystem.load_mult()
+	# Tavan katı yutmaz: tavan 0,2'ye inince (12 açık hata 0,25 isterdi) taşan sunucuda kesintinin haftalık şansı
+	# 0,2 × 2,5 × payıdır; 0,5 tavan tarafından kesilmez.
+	InfraSystem.set_capacity(20)
+	_set_served(1001)
+	ProductState.set_infra_provider(InfraSystem.PROVIDER_LOCAL)
+	ProductState.clear_line_bugs(BUG_LINE)
+	_seed_bugs(12)
+	var cfg: Dictionary = SprintCatalog.cfg("incident")
+	var ceiling: Variant = cfg.p_max
+	cfg.p_max = 0.2
+	var calm_weights: Dictionary = IncidentSystem._weights(false)
+	var got: float = chance.call("outage")
+	cfg.p_max = ceiling
+	var want: float = 0.2 * 2.5 * float(calm_weights.outage) / IncidentSystem._total(calm_weights)
+	if not is_equal_approx(got, want):
+		return "capped at 0.2, an outage over capacity is %.4f a week, want %.4f (the cap must not eat the load)" % [got, want]
+	# Kesintinin yanındaki tür: not uygulamasında ödeme. Kapasite sarı (13 birim) ve kırmızıyken (12 birim, 12.400 kullanıcı için)
+	# kesintinin haftalık şansı katı kadar artar, ödemeninki aynı kalır.
+	SaveManager.reset_all_owners()
+	GameState.initialize_run(payload)
+	_incident_world_b2c()
+	var app_kinds: Array = IncidentSystem._weights().keys()
+	if app_kinds.size() < 2:
+		return "the note app allows %s, the check needs a kind beside the outage" % str(app_kinds)
+	var app_calm: Dictionary = {}
+	for kind in app_kinds:
+		app_calm[kind] = chance.call(kind)
+	for row in [[13, 1.5], [12, 2.5]]:
+		InfraSystem.set_capacity(row[0])
+		for kind in app_kinds:
+			var app_want: float = app_calm[kind] * (row[1] if kind == "outage" else 1.0)
+			if not is_equal_approx(chance.call(kind), app_want):
+				return "%d units for 12,400 users: a week's chance of %s is %.4f, want %.4f" % [row[0], kind, chance.call(kind), app_want]
 	return ""
 
 
-## §10 — ucuz sağlayıcının bedeli DETERMİNİSTİKTİR: GELEN akışı ×1,25 ve kurumsal
-## hesap imzalamaz. Rastgele kesinti YOKTUR (uyarısız kayıp yasağı).
+## §10 — Otomatik ayarla kapalıyken hiçbir şey yapmaz; açıkken yük %80'e varınca kapasite, yükü yaklaşık %65'e indirecek en küçük
+## tam birime büyür ve son büyümeyi yazar; hiç küçültmez (küçültmek oyuncunun Azalt kararıdır).
 ##
-## FALSİFİKASYON: LOCAL_INFLOW_MULT'u 1.0 yap → akış iddiası FAIL.
+## FALSİFİKASYON: auto_adjust'ın anahtar denetimini sil → kapalı iddiası FAIL; yük eşiği denetimini sil (kapasite her saat yükü %65'e
+## getirecek birime ayarlanır) → %79 ve küçültmeme iddiaları FAIL; hedefi 65 yerine 80 yap → yük iddiası FAIL.
+static func _case_auto_capacity_grows_only() -> String:
+	_incident_world(false)
+	InfraSystem.set_capacity(20)
+	_set_served(800)
+	InfraSystem.auto_adjust()
+	if InfraSystem.units() != 20:
+		return "the switch is off and the servers moved to %d units" % InfraSystem.units()
+	ProductState.set_infra_auto(true)
+	_set_served(790)
+	InfraSystem.auto_adjust()
+	if InfraSystem.units() != 20:
+		return "at 79%% the servers grew to %d units" % InfraSystem.units()
+	_set_served(800)
+	InfraSystem.auto_adjust()
+	if InfraSystem.units() != 25 or InfraSystem.load_percent() != 64:
+		return "at 80%% the servers went to %d units, load %d%%; want 25 units and 64%%" % [InfraSystem.units(), InfraSystem.load_percent()]
+	var last: Dictionary = ProductState.infra_auto_last()
+	if int(last.get("old", 0)) != 1000 or int(last.get("new", 0)) != 1250 or int(last.get("day", -1)) != GameState.day:
+		return "the last automatic increase reads %s, want 1000 -> 1250 seats today" % str(last)
+	# Kitle erir: kapasite şişkin kalır, anahtar küçültmez.
+	_set_served(100)
+	InfraSystem.auto_adjust()
+	if InfraSystem.units() != 25:
+		return "the switch shrank the servers to %d units" % InfraSystem.units()
+	# Oyuncunun Azalt'ı anahtar açıkken de çalışır: 25 birimin onda biri, yarım yukarı yuvarlanır, üç birimdir.
+	InfraSystem.adjust_capacity(-1)
+	if InfraSystem.units() != 22:
+		return "Decrease with the switch on gave %d units, want 22" % InfraSystem.units()
+	return ""
+
+
+## §10 — ucuz sağlayıcının sabit bedeli GELEN akışı ×1,25'tir ve kurumsal hesap imzalamaz. Kurumsal'a geçiş geri dönüşsüzdür:
+## oradan hiçbir kademeye inilmez.
+##
+## FALSİFİKASYON: LOCAL_INFLOW_MULT'u 1.0 yap → akış iddiası FAIL; set_provider'daki Kurumsal denetimini sil → iniş iddiası FAIL.
 static func _case_infra_local_provider_tradeoff() -> String:
 	_seed_support_fixture("b2c")
-	InfraSystem.set_capacity(20)                      # bol kapasite: aşım karışmasın
 	GameState.set_flag("b2c_audience", 1000.0)
 
 	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
@@ -14595,9 +14664,8 @@ static func _case_infra_local_provider_tradeoff() -> String:
 		return "the local provider's inflow multiplier is %.2f, §10 says 1,25" \
 			% InfraSystem.report_inflow_multiplier()
 	var flow_local: float = SupportSystem.reports_per_day()
-	# LİTERALE karşı, sabitin KENDİSİNE karşı DEĞİL: ilk yazımda karşılaştırma
-	# InfraSystem.LOCAL_INFLOW_MULT ile yapılıyordu, yani sabiti 1,0'a çeken mutasyon
-	# eşitliğin iki yanını da oynatıyor ve case GEÇİYORDU.
+	# LİTERALE karşı, sabitin KENDİSİNE karşı DEĞİL: sabitle karşılaştırılsa onu 1,0'a çeken mutasyon
+	# eşitliğin iki yanını birlikte oynatır ve vaka geçer.
 	if flow_local <= flow_cloud:
 		return "the cheap provider cost nothing: %.4f/day vs neutral %.4f/day" % [flow_local, flow_cloud]
 	if absf(flow_local - flow_cloud * 1.25) > 0.0001:
@@ -14608,13 +14676,18 @@ static func _case_infra_local_provider_tradeoff() -> String:
 	if InfraSystem.meets_enterprise_trust():
 		return "the local provider satisfies the enterprise trust condition"
 
-	# Ve ucuzdur: bedelin tamamı deterministik, tek kuruş rastgele değil.
+	# Ve ucuzdur.
 	if InfraSystem.unit_price(InfraSystem.PROVIDER_LOCAL, "b2c") \
 			>= InfraSystem.unit_price(InfraSystem.PROVIDER_CLOUD, "b2c"):
 		return "the local provider is not the cheap one"
-	InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
+	if not InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE):
+		return "the move up to the enterprise provider was refused"
 	if not InfraSystem.meets_enterprise_trust():
 		return "the enterprise provider does not satisfy the trust condition"
+	# Kurumsal'a geçiş geri dönüşsüzdür: kural set_provider'da, seçici ve bot aynı kapıdan geçer.
+	for tier in [InfraSystem.PROVIDER_CLOUD, InfraSystem.PROVIDER_LOCAL]:
+		if InfraSystem.set_provider(tier) or InfraSystem.provider() != InfraSystem.PROVIDER_ENTERPRISE:
+			return "the enterprise provider let the company back down to '%s'" % tier
 	return ""
 
 
@@ -15774,17 +15847,17 @@ static func _case_research_node_map_binds() -> String:
 	if not ProductLines.load_errors().is_empty():
 		return "catalog refused to load: %s" % str(ProductLines.load_errors())
 
-	# Ar-Ge §4 — yirmi düğüm, dört aile, her ailede kök + iki dal + iki devam.
-	if ResearchSeam.NODES.size() != 20:
-		return "the seam knows %d nodes, Ar-Ge §4 has 20" % ResearchSeam.NODES.size()
+	# Ar-Ge §4 — on dokuz düğüm, dört aile, her ailede kök + iki dal + dalların altında devam.
+	if ResearchSeam.NODES.size() != 19:
+		return "the seam knows %d nodes, Ar-Ge §4 has 19" % ResearchSeam.NODES.size()
 	var by_place: Dictionary = {}
 	for node_id in ResearchSeam.NODES:
 		var p: String = ResearchSeam.placement(String(node_id))
 		by_place[p] = int(by_place.get(p, 0)) + 1
 	if int(by_place.get(ResearchSeam.PLACE_ROOT, 0)) != 4:
 		return "expected 4 root nodes, found %d" % int(by_place.get(ResearchSeam.PLACE_ROOT, 0))
-	if int(by_place.get(ResearchSeam.PLACE_CONT, 0)) != 8:
-		return "expected 8 continuation nodes, found %d" % int(by_place.get(ResearchSeam.PLACE_CONT, 0))
+	if int(by_place.get(ResearchSeam.PLACE_CONT, 0)) != 7:
+		return "expected 7 continuation nodes, found %d" % int(by_place.get(ResearchSeam.PLACE_CONT, 0))
 
 	# §12.5 — paylaşılan harita, ÜÇ ALT-TİPTE DE aynı.
 	for st in ProductLines.subtypes():
@@ -15918,6 +15991,9 @@ static func _case_save_v10_product_state() -> String:
 	GameState.set_flag(ProductState.INTEREST, 62.5)
 	GameState.set_flag(ProductState.INFRA_PROVIDER, "cloud")
 	GameState.set_flag(ProductState.INFRA_UNITS, 7)
+	ProductState.set_infra_auto(true)
+	ProductState.set_infra_auto_last({"day": 9, "old": 5000, "new": 6500})
+	ProductState.set_infra_served_weeks([4200, 4600, 5200])
 
 	var age_before: float = ProductState.version_age()
 	var usage_before: int = ProductState.usage_weight_total()
@@ -15959,6 +16035,13 @@ static func _case_save_v10_product_state() -> String:
 	if ProductState.infra_provider() != "cloud" or ProductState.infra_units() != 7:
 		_cleanup_save_slots()
 		return "the infrastructure choice did not survive"
+	var last: Dictionary = ProductState.infra_auto_last()
+	if not ProductState.infra_auto() or int(last.get("day", -1)) != 9 or int(last.get("old", 0)) != 5000 \
+			or int(last.get("new", 0)) != 6500 or ProductState.infra_served_weeks().map(func(n: Variant) -> int: return int(n)) \
+			!= [4200, 4600, 5200]:
+		_cleanup_save_slots()
+		return "the automatic adjustment (switch %s, last increase %s, served history %s) did not survive" % [
+			ProductState.infra_auto(), last, ProductState.infra_served_weeks()]
 	if ProductState.usage_weight_total() != usage_before:
 		_cleanup_save_slots()
 		return "usage weight total drifted (%d vs %d)" \
@@ -16005,7 +16088,8 @@ static func _case_save_v10_product_state() -> String:
 ## değerini 1 artır → merdiven FAIL · bir devam düğümünün `areas` dizisini tek alana indir →
 ## arity FAIL ve iki-alan sayımı FAIL (aynı mutasyonu iki bağımsız tel yakalar) ·
 ## knowledge_graph'ın `cross` hedefini ai_engine yap (dal, 90 efor, $600) → §3.1 tavanı üç
-## ayrı gerekçeyle FAIL · bir nakit değerini değiştir → tablo FAIL.
+## ayrı gerekçeyle FAIL · bir nakit değerini değiştir → tablo FAIL · rnd_tree.json'a silinen düğümü geri koy → 19 düğüm ve
+## sekiz katsayı iddiaları FAIL · RnDSystem.from_dict'ten `_known` süzgecini kaldır → eski kayıt iddiası FAIL.
 static func _case_rnd_tree_loads_and_validates() -> String:
 	ResearchTree.reload()
 	var errs: Array[String] = ResearchTree.load_errors()
@@ -16020,7 +16104,7 @@ static func _case_rnd_tree_loads_and_validates() -> String:
 		if not ResearchTree.has(String(id)):
 			return "tree is missing '%s'" % id
 
-	# --- §3: 4 kök / 8 dal / 8 devam ---
+	# --- §3: 4 kök / 8 dal / 7 devam (19 düğüm) ---
 	var roots := 0
 	var branches := 0
 	var conts := 0
@@ -16041,12 +16125,16 @@ static func _case_rnd_tree_loads_and_validates() -> String:
 		if ResearchTree.cash_of(nid) > 0:
 			cash_nodes += 1
 			cash_total += ResearchTree.cash_of(nid)
-	if roots != 4 or branches != 8 or conts != 8:
-		return "tree shape is %d/%d/%d, want 4/8/8" % [roots, branches, conts]
+	if roots != 4 or branches != 8 or conts != 7 or ResearchSeam.NODES.size() != 19:
+		return "tree shape is %d/%d/%d of %d nodes, want 4/8/7 of 19" % [roots, branches, conts, ResearchSeam.NODES.size()]
+	if ResearchSeam.is_node("incident_playbook"):
+		return "the retired node incident_playbook is back in the tree"
 
-	# --- §13: "İki alanlı düğüm sayısı: 8 (tüm devamlar)" ---
-	if two_area != 8:
-		return "%d nodes want two areas, §13 says 8" % two_area
+	# --- §13: sekiz katsayı, her biri tam bir düğümde; iki alanlı düğüm sayısı 7 (tüm devamlar) ---
+	if ResearchTree.COEFFICIENT_EFFECTS.size() != 8:
+		return "%d coefficients, §13 lists 8" % ResearchTree.COEFFICIENT_EFFECTS.size()
+	if two_area != 7:
+		return "%d nodes want two areas, there are 7 continuations" % two_area
 
 	# --- §13: "Çapraz koşul sayısı: 4 (yalnız devam-B düğümleri)" ---
 	if cross_links != 4:
@@ -16130,6 +16218,16 @@ static func _case_rnd_tree_loads_and_validates() -> String:
 	if not ResearchSeam.may_gate_visible_step(k3_node):
 		return "the hidden line's K3 binds '%s', a %s node — §3.1 forbids it" \
 			% [k3_node, ResearchSeam.placement(k3_node)]
+
+	# --- eski kayıt: silinen düğüm yüklemede süzülür, üzerindeki araştırma biter ---
+	RnDSystem.from_dict({"states": {"data_model": RnDSystem.STATE_DONE, "incident_playbook": RnDSystem.STATE_DONE},
+		"progress": {"incident_playbook": 70.0}, "paid": {"incident_playbook": 0}, "active": "incident_playbook"})
+	var loaded: Dictionary = RnDSystem.to_dict()
+	for table in ["states", "progress", "paid"]:
+		if (loaded[table] as Dictionary).has("incident_playbook"):
+			return "a save from before the node was retired kept it in '%s'" % table
+	if loaded.active != "" or RnDSystem.state_of("data_model") != RnDSystem.STATE_DONE:
+		return "the retired node's research did not end on load (active '%s')" % loaded.active
 
 	return ""
 
@@ -17073,6 +17171,16 @@ static func _incident_account(id: String, display: String, industry: String, sea
 	return c
 
 
+## The ERP book's seats add up to `total`: up to 30 on each of the first three accounts, the rest on Demir Holding.
+static func _set_served(total: int) -> void:
+	var left: int = total
+	for id in ["co_marmara", "co_ege_metal", "co_kuzey"]:
+		var small: Customer = CustomerRegistry.get_customer(id)
+		small.seats = mini(left, 30)
+		left -= small.seats
+	CustomerRegistry.get_customer("co_demir").seats = left
+
+
 ## A mid-morale hire whose engineering is `engineering` points (6 is three stars).
 static func _incident_hire(id: String, display: String, role_id: String, engineering: int) -> Character:
 	var c: Character = _make_employee(id, display, role_id, SEED_PACE, 0, 60)
@@ -17091,6 +17199,8 @@ static func _incident_world(started := true) -> void:
 	_incident_account("co_demir", "Demir Holding", "finance", 100, 2400)
 	_incident_account("co_kuzey", "Kuzey Perakende", "retail", 30, 1800)
 	SalesSystem.reflect_mrr()
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(20)   # 1.000 seats for a book of 230: the night rolls on the bugs alone
 	_set_founder_area(HRConstants.AREA_ENGINEERING, 4)
 	_incident_hire("char_inc_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER, 6)
 	_incident_hire("char_inc_test", "Selin Aras", HRConstants.ROLE_TESTER, 4)
@@ -17105,6 +17215,8 @@ static func _incident_world_b2c() -> void:
 	_seed_sprint_live("note_tool")
 	SalesSystem.add_b2c_audience(12400)
 	SalesSystem.open_b2c_paid_tier(8)
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(20)   # 20.000 users for 12.400: the night rolls on the bugs alone
 	_set_founder_area(HRConstants.AREA_ENGINEERING, 4)
 	_incident_hire("char_inc_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER, 6)
 	_incident_hire("char_inc_test", "Selin Aras", HRConstants.ROLE_TESTER, 4)
@@ -19699,14 +19811,7 @@ static func _case_card_body_tokens_resolve() -> String:
 		var slots: Array = (card.get("scope", {}) as Dictionary).keys()
 		for locale in ["tr", "en"]:
 			var block: Dictionary = (card.get("text", {}) as Dictionary).get(locale, {})
-			var bodies: Array = []
-			var body: Variant = block.get("body", "")
-			if typeof(body) == TYPE_DICTIONARY:
-				for v in (body as Dictionary).get("variants", {}).values():
-					bodies.append(String(v))
-			else:
-				bodies.append(String(body))
-			for b in bodies:
+			for b in EvLint.body_strings(block):
 				var text: String = b
 				# A CSV key resolves to its value; prose is checked as written.
 				var resolved: String = TranslationServer.translate(text)

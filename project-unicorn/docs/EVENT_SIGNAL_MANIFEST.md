@@ -19,7 +19,7 @@ signal with no emit point" a lint error, so the manifest is the lint rule's inpu
 |---|---|
 | Signals declared | **145** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **68** |
+| Emitted with **no production listener** | **67** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -152,7 +152,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `build_phase_changed` | `new_phase: String` | sprint_system | 2 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
 | `build_progress_changed` | `—` | product_state | 2 | 3 | product_tab · build_bar · build_hud_panel |
 | `line_bugs_cleared` | `line: String, n: int` | product_state | 1 | 0 | — |
-| `infra_changed` | `—` | product_state | 2 | 0 | — |
+| `infra_changed` | `—` | product_state | 3 | 1 | product_tab |
 
 ### GDD ÜRÜN rev 6.1 §19 · OKUMA YÜZEYİNİN SİNYALLERİ
 

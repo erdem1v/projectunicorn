@@ -745,7 +745,8 @@ func _run_b2b_shot(kind: String) -> void:
 ## entity instead of running its selector (the shot seed has no seed lead, for one) and names the
 ## PNG; a given slot that cannot bind fails the shot. An id of --hr-shot's roster (char_emp_shot_<n>)
 ## seeds that roster first. An emergency's card (INCIDENT_SHOTS) stands in the company it needs, at the hour its card
-## opens, with its sender and account given (the broken release's card in a B2B book, or in a B2C app with `market=b2c`);
+## opens, with its sender and account given (the broken release's card in a B2B book, or in a B2C app with `market=b2c`;
+## the outage's with `load=<pct>`, the server load it was rolled at, which its card tells above 90);
 ## the promise card stands in the second week of a sprint, its sender the person who works the promised card.
 func _run_event_shot(spec: String) -> void:
 	_begin_shot()
@@ -764,8 +765,10 @@ func _run_event_shot(spec: String) -> void:
 	if INCIDENT_SHOTS.has(event_id):
 		var emergency: Array = INCIDENT_SHOTS[event_id]
 		var b2b: bool = emergency[1] and given.get("market", "") != "b2c"
+		var load_pct: int = int(given.get("load", 0))
 		given.erase("market")
-		given.merge(_seed_incident_world(emergency[0], b2b), false)
+		given.erase("load")
+		given.merge(_seed_incident_world(emergency[0], b2b, load_pct), false)
 	elif event_id == "product.promise_due":
 		given.merge(_seed_promise_world(), false)
 	elif event_id in ["product.b2c_floor_signal", "product.b2c_floor_churn"]:
@@ -797,8 +800,8 @@ const INCIDENT_SHOTS := {
 ## audience and a paid plan, a developer and a designer. The outage is at 03:00 of the night it began at 02:10; the
 ## others find a full sprint running on the live product (so "Stop the sprint" names the card it pushes out) and the
 ## bugs the emergency hit. Returns the slots the card is given: B2B its largest account (the outage's night-shift
-## one), B2C its sender.
-func _seed_incident_world(kind: String, b2b: bool) -> Dictionary:
+## one), B2C its sender. `load_pct` is the server load the outage was rolled at.
+func _seed_incident_world(kind: String, b2b: bool, load_pct := 0) -> Dictionary:
 	var given := {}
 	if b2b:
 		_seed_theme_surface()
@@ -810,7 +813,7 @@ func _seed_incident_world(kind: String, b2b: bool) -> Dictionary:
 		GameState.day = 14
 		GameState.set_flag("mvp_shipped", true)
 		GameState.set_flag("mvp_launch_day", 6)
-		GameState.set_flag("mvp_market_type", "b2c")
+		SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id; the audience's fit reads the product's lines
 		SalesSystem.add_b2c_audience(12400)
 		SalesSystem.open_b2c_paid_tier(8)
 		for row in [["char_emp_shot_2", "Mert Yıldız", HRConstants.ROLE_DEVELOPER, 6],   # LOC-DATA debug seed / id
@@ -829,7 +832,7 @@ func _seed_incident_world(kind: String, b2b: bool) -> Dictionary:
 		return _stage_emergency(kind, b2b, given)
 	GameState.current_hour = 3
 	TimeManager.sync_to_current_hour()
-	IncidentSystem.stage("outage", 130)
+	IncidentSystem.stage("outage", 130, "", load_pct)
 	return given
 
 
@@ -837,7 +840,7 @@ func _seed_incident_world(kind: String, b2b: bool) -> Dictionary:
 ## sprint is running, the line the emergency hit holds its bugs, and its mail is stamped at its hour.
 func _stage_emergency(kind: String, b2b: bool, given: Dictionary) -> Dictionary:
 	ProductState.clear_line_bugs("line_erp_ledger")
-	SprintSystem.choose_type("erp" if b2b else "note_tool", "Fatura" if b2b else "Notly")   # LOC-DATA debug seed / id
+	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id; the B2C world chose its type before its audience
 	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
 		ProductState.set_line_tier(line_id, 1)
 	var chance: Dictionary = SprintCatalog.cfg("decision.sprint_chance")
@@ -3513,7 +3516,9 @@ func _run_ending_shot(key: String) -> void:
 # geçir (<stem>_skip, its confirm row open) and then Sprinti başlat (<stem>_start); live:week1 saves the
 # 1-week plan, presses Sprinti başlat (<stem>_run) and plays the week, the sprint closing onto its release note
 # (<stem>_close); live:rnd saves the planning with the founder in R&D, presses Ar-Ge'ye git and saves R&D with the
-# founder's node selected (<stem>_go).
+# founder's node selected (<stem>_go). live:overview_pre is the Sprint-1 plan with the pointer on the locked GENEL BAKIŞ tab
+# (<stem>_tip); live:server_* is GENEL BAKIŞ on the live ERP (see _seed_server), the plain frame and, for the states that
+# have a tip to read, <stem>_tip with the pointer on the control it belongs to.
 func _run_product_shot(id: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -3522,6 +3527,9 @@ func _run_product_shot(id: String) -> void:
 		_seed_product_live(id.trim_prefix("live:"))
 		await _mount_shot_shell()
 		EventBus.tab_changed.emit("product")
+		if id == "live:overview_pre" or id.begins_with("live:server"):
+			await _product_overview_shot(id.trim_prefix("live:"), stem)
+			return
 		if id in ["live:pick_named", "live:pick_relang"]:
 			var picker: TypePicker = _shell.find_children("*", "TypePicker", true, false)[0]
 			picker._pick_market("b2c")
@@ -3602,8 +3610,37 @@ func _run_product_shot(id: String) -> void:
 	get_tree().quit()
 
 
+## GENEL BAKIŞ of a live:overview_pre or live:server_* shot, and the tip of the control the state is about: the pointer rests
+## on it as a player's would and the tip is saved a moment later.
+func _product_overview_shot(scenario: String, stem: String) -> void:
+	var page: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()
+	if scenario != "overview_pre":
+		page._set_ui("overview", "view")
+	if scenario == "server_tier":
+		page._set_ui("enterprise", "server_preview")
+	await get_tree().process_frame
+	await get_tree().create_timer(0.5).timeout
+	var aim: Dictionary = {"overview_pre": Fmt.upper(tr("PRODUCT_OV_TAB_OVERVIEW")),
+		"server_80": tr("PRODUCT_SERVER_BTN_INCREASE").split("{n}")[0], "server_94": tr("PRODUCT_SERVER_BTN_DECREASE").split("{n}")[0],
+		"server_104": tr("PRODUCT_SERVER_BTN_DECREASE").split("{n}")[0], "server_tier": tr("PRODUCT_SERVER_TIER_STANDARD"),
+		"server_final": tr("PRODUCT_SERVER_TIER_ECONOMY")}
+	if not aim.has(scenario):
+		await _finish_shot(stem)
+		return
+	_save_shot(stem)
+	for node in _shell.find_children("*", "Button", true, false):
+		if (node as Button).text.begins_with(aim[scenario]):
+			var move := InputEventMouseMotion.new()
+			move.position = (node as Button).get_global_rect().get_center()
+			move.global_position = move.position
+			get_viewport().push_input(move)
+			break
+	await _finish_shot(stem + "_tip", 1.2)
+
+
 ## live:<pick|pick_named|pick_relang|plan|week1|active|decision_paper|b2c_mvp|b2c_live|b2b_mvp|b2b_mature|b2b_quarter|
-## b2b_requests|gate|rnd|delegate|solo15|solo15_tip|solo12_active>. The pick ones leave the product untyped (the type picker). The solo ones
+## b2b_requests|gate|rnd|delegate|solo15|solo15_tip|solo12_active|overview_pre|server_80|server_94|server_104|server_growth|
+## server_auto|server_tier|server_final|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
 ## the lead's plan applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active
 ## starts the lead's plan at 12 hours, two cards over capacity (6/5). The rest choose a type, staff it with the
@@ -3619,11 +3656,13 @@ func _run_product_shot(id: String) -> void:
 ## b2b_mvp is b2c_mvp on the ERP: the v1.0 release note of a B2B product. b2b_mature builds every line to its second tier
 ## and opens the next planning, so every area reads the third star. b2b_quarter is delegate on the ERP with the quarter
 ## view open: the PM's goal strip right after the MVP. b2b_requests signs two accounts once the faucet
-## opens at MVP and plays one more sprint, so the next planning carries their request cards.
+## opens at MVP and plays one more sprint, so the next planning carries their request cards. overview_pre is plan on the
+## ERP, before v1.0; server_* are the ERP past v1.0 on its next planning (_seed_server).
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
 		return
-	var b2b: bool = scenario.begins_with("b2b")
+	var b2b: bool = scenario.begins_with("b2b") or (scenario.begins_with("server") and scenario != "server_b2c") \
+		or scenario == "overview_pre"
 	var paper: String = ""   # decision_paper:<card id> asks for that real paper instead of the developer fixture
 	if scenario.begins_with("decision_paper:"):
 		paper = scenario.get_slice(":", 1)
@@ -3660,7 +3699,7 @@ func _seed_product_live(scenario: String) -> void:
 	SprintSystem.apply_lead()
 	if scenario in ["plan", "week1", "active"]:
 		SprintSystem.send_next(SprintCatalog.open_cards([])[0].id)
-	if scenario in ["plan", "week1"]:
+	if scenario in ["plan", "week1", "overview_pre"]:
 		return
 	if scenario in ["active", "decision_paper"]:
 		# The week's tick draws the paper at once; decision_paper's is the developer's, about the card in its
@@ -3701,6 +3740,10 @@ func _seed_product_live(scenario: String) -> void:
 			SprintSystem.publish()
 		if ProductState.is_live():
 			break
+	if scenario.begins_with("server"):
+		SprintSystem.plan_next()
+		_seed_server(scenario)
+		return
 	if scenario == "rnd":
 		SprintSystem.plan_next()
 		RnDSystem.start("data_model", [CharacterRegistry.get_founder().id])
@@ -3726,6 +3769,26 @@ func _seed_product_live(scenario: String) -> void:
 	sprint.call()
 	SprintSystem.plan_next()
 	SprintSystem.apply_lead()
+
+
+## The Sunucu block's states on the live ERP, one account on 20 units (1.000 seats) of the Standard tier: 800 seats (`server_80`),
+## 940 (`server_94`), 1.040 (`server_104`); `server_growth` 720 with a served history rising 80 a week toward the line;
+## `server_auto` the same with Auto adjust on and its last increase; `server_tier` Standard with the Enterprise preview open;
+## `server_final` the company on Enterprise; `server_b2c` the note app, 12.400 users on 13 units (13.000 users, 96%).
+func _seed_server(scenario: String) -> void:
+	if scenario == "server_b2c":
+		SalesSystem.add_b2c_audience(12400)
+	else:
+		var prospect: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")
+		SalesSystem.add_b2b_customer(prospect, {"server_80": 800, "server_94": 940, "server_104": 1040}.get(scenario, 720), 100, 85)
+		ProspectRegistry.remove(prospect.id)
+	InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE if scenario == "server_final" else InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(13 if scenario == "server_b2c" else 20)
+	if scenario in ["server_growth", "server_auto"]:
+		ProductState.set_infra_served_weeks([480, 560, 640, 720])
+	if scenario == "server_auto":
+		ProductState.set_infra_auto(true)
+		ProductState.set_infra_auto_last({"day": GameState.day, "old": 800, "new": 1000})
 
 
 ## Rows are [line id, tier].

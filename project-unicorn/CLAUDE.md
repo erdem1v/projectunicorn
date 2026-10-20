@@ -104,7 +104,12 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   toplu gece adımını o saatte durdurur; karar verilince tutuş kalkar ve gece kaldığı yerden sürer. Olay reddedilirse (kart kapısı)
   başlamamış sayılır: aralık sayacı, bedel ve tutuş ilerlemez. Bedel olaydan türer (`IncidentSystem.plan`): çip, geçmiş satırı
   ve uygulama aynı sayıyı okur. "Sprinti durdur" hattın düzeltme kartını koşan sprintin başına alır (`sprint_fix_first`,
-  `SprintSystem.put_first`) ve çip sprintten kayan kartın adını yazar. Sayılar `data/product/sprint.json` `incident` bloğunda [WORKING].
+  `SprintSystem.put_first`) ve çip sprintten kayan kartın adını yazar.
+  Zarın ihtimali açık hatadan ve sunucu kademesinden gelir; sunucunun doluluğu (`IncidentSystem.load_mult`: yük %90'a
+  kadar 1, %100'e kadar 1,5, üstü ya da kapasitesiz canlı ürün 2,5) tavandan sonra yalnız kesintinin şansını büyütür
+  ve kesinti kartı zar anındaki yükü yazar. Kapasiteyi yalnız oyuncu ve açtığı Otomatik ayarla değiştirir
+  (`InfraSystem`); dolu sunucunun başka bedeli yoktur. Sayılar `data/product/sprint.json` `incident` bloğunda
+  [WORKING].
 - **Söz olayı.** Sprintin son haftasında bu sprinte söz verilmiş kart ekibin hızıyla yetişmiyorsa sistem `product.promise_due`'yu
   ister (`SprintSystem.late_promise`, `_ask_promise`): sprintin tek kesintisi sayılır ve o hafta karar kâğıdı çekilmez. Hamleler:
   testi kısalt (`sprint_card_test`; kısaltılmış kart sürümde `SprintSystem.escape_chance` ihtimaliyle hatalı çıkabilir), fazla
@@ -247,7 +252,10 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   (anahtar `core_only`) sprintte Çekirdek dışı özellik ve talep kartı bırakmaz, düzeltme ve araştırma kartları kalır;
   `full_run_vc_product` ve `full_run_b2c_vc_product` seed'de ve Series A'da önce ürün fonuyla (Meridian) oturur; lead'li her
   B2B imzada `PROBE FIT`, satışçının kaybettiği her adayda `PROBE REPLOSS`, kurucunun görüşme ve pazarlıkta kaybettiği her adayda
-  `PROBE MLOSS`, her hafta `PROBE UFLUX` basılır). Karar değil defter basar;
+  `PROBE MLOSS`, her hafta `PROBE UFLUX` basılır;
+  `full_run_server_{lean,wide,auto}` ve `full_run_b2c_server_*` kollarında (anahtar `server`) kurucu sunucuyu her
+  haftanın açılışında Artır ve Azalt ile yönetir ya da Otomatik ayarla'yı açar, her hafta `PROBE SERVER` basılır).
+  Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
@@ -295,7 +303,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları HARITA Ürün'de), `--product-shot=live:<tür>` sprint
   motoruyla kurulan koşuda
   (`pick`, `pick_named`, `pick_relang`, `plan`, `week1`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
-  `gate`, `delegate`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`; kurulumları ve ikinci, üçüncü kareleri HARITA
+  `gate`, `delegate`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
+  `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_b2c`;
+  kurulumları ve ikinci, üçüncü kareleri HARITA
   Ürün'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
   B2B boş hâli `--sales-shot=b2b_pre`, kayıptan dönen lead'lerin kapısı `--sales-shot=returning`.
   Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,

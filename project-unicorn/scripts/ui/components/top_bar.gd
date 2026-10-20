@@ -83,6 +83,7 @@ var _offer_weeks_left: int = -1
 ## "trip", "sitting" ve "home" saati tutar.
 var _meeting := {}
 var _compact := false
+var _g: Dictionary          # yürürlükteki ızgara (`_grid`); her `_refresh` kurar
 var _slot_x := 0.0
 var _pulse: Tween
 var _pause_blink: Tween
@@ -171,13 +172,23 @@ func _refresh() -> void:
 	refresh_count += 1
 	_queued = false
 	_compact = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
-	var g: Dictionary = GRID[int(_compact)]
-	_refresh_brand(g)
-	_refresh_metrics(g)
-	_slot_x = minf(size.x - g.time - g.slot, g.day + g.pad + MAX_WEEK_BAR + g.pad)
-	_refresh_time(g)
-	_refresh_day(g)
+	var reading: Dictionary = UiTokens.D_runway_reading()
+	_g = _grid(reading.text == "")
+	_refresh_brand(_g)
+	_refresh_metrics(_g, reading)
+	_slot_x = minf(size.x - _g.time - _g.slot, _g.day + _g.pad + MAX_WEEK_BAR + _g.pad)
+	_refresh_time(_g)
+	_refresh_day(_g)
 	queue_redraw()
+
+
+## Yürürlükteki ızgara: RUNWAY hücresi gizliyken çizgi, ikinci metrik grubu ve gün bloğu onun bıraktığı boşluğu kapatır.
+func _grid(runway_hidden: bool) -> Dictionary:
+	var g: Dictionary = GRID[int(_compact)].duplicate()
+	var closed: int = g.rule - g.C if runway_hidden else 0
+	for key in ["rule", "E", "F", "G", "H", "day"]:
+		g[key] -= closed
+	return g
 
 
 ## Marka bloğu: turuncu kare + şirketin adı ve evre; sıkışık kipte yalnız kare.
@@ -199,19 +210,18 @@ func _refresh_brand(g: Dictionary) -> void:
 
 ## KASA tek kahraman, NET altında. Kepenk sayacı koşarken RUNWAY hücresi o sayaçtır. Kırmızı yalnız
 ## tehlikede: eksi kasa, kepenk, ilk runway eşiğinin altı; kasa artıdayken eksi NET mürekkeptir.
-func _refresh_metrics(g: Dictionary) -> void:
+func _refresh_metrics(g: Dictionary, reading: Dictionary) -> void:
 	var flow: Dictionary = FinanceSystem.get_monthly_flow()
 	var net: int = int(flow.net)
 	_paint($CashValue, Fmt.money_exact(GameState.cash), UiTokens.D_neg() if GameState.cash < 0 else null)
 	_paint($NetValue, ("+" if net > 0 else ("-" if net < 0 else "")) + Fmt.money_chip(absi(net)), UiTokens.D_net_ink(net))
 	# Kasa iki tik arasında eksiye düşebilir (olay, tek seferlik gider); kepenk sayacı sonraki tikte
 	# kurulur, o arada hücre RUNWAY kalır.
-	var reading: Dictionary = UiTokens.D_runway_reading()
 	$RunwayKey.text = Fmt.upper(tr("TOPBAR_SHUTTER" if reading.shutter else "FIN_CAP_RUNWAY"))
 	var runway: Label = $RunwayValue
 	runway.theme_type_variation = &"ValueText" if reading.ink == null else &"ValueTextStrong"
 	_paint(runway, reading.text, reading.ink)
-	# Net akış eksi değilken okunacak sayaç yok: hücre çizilmez.
+	# Net akış eksi değilken okunacak sayaç yok: hücre çizilmez ve yeri kapanır (_grid).
 	$RunwayKey.visible = reading.text != ""
 	runway.visible = reading.text != ""
 	$MrrValue.text = Fmt.money_chip(GameState.mrr)
@@ -288,11 +298,10 @@ func _refresh_day(g: Dictionary) -> void:
 ## Sıradaki satırının sözü sondadır (kâğıdın "bu hafta son"u, adımın çıtası): `tail` bütün kalır, satır
 ## yuvaya sığmazsa `head` sondan kısalıp "…" alır.
 func _fit_next(head: String, tail: String) -> String:
-	var g: Dictionary = GRID[int(_compact)]
 	var font: Font = $NextLine.get_theme_font("font")
 	var px: int = $NextLine.get_theme_font_size("font_size")
 	var line := head + tail
-	while head.length() > 1 and font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > g.slot - 2 * g.pad:
+	while head.length() > 1 and font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > _g.slot - 2 * _g.pad:
 		head = head.left(-1)
 		line = head.rstrip(" ·") + "… " + tail.lstrip(" ")
 	return line
@@ -405,12 +414,11 @@ func _paint(label: Label, text: String, ink) -> void:
 
 
 func _draw() -> void:
-	var g: Dictionary = GRID[int(_compact)]
 	var h: float = size.y
-	for x in [g.brand - 1, g.day, _slot_x]:
+	for x in [_g.brand - 1, _g.day, _slot_x]:
 		draw_rect(Rect2(x, 0, 1, h), UiTokens.D_LINE_1)
-	draw_rect(Rect2(g.rule, RULE_INSET, 1, h - 2 * RULE_INSET), UiTokens.D_LINE_1)
-	var time_end: float = _slot_x + g.slot + g.time
+	draw_rect(Rect2(_g.rule, RULE_INSET, 1, h - 2 * RULE_INSET), UiTokens.D_LINE_1)
+	var time_end: float = _slot_x + _g.slot + _g.time
 	if time_end < size.x:
 		draw_rect(Rect2(time_end, 0, 1, h), UiTokens.D_LINE_1)
 	_draw_week()
@@ -418,9 +426,8 @@ func _draw() -> void:
 
 ## Hafta çubuğunda `hour`'un x'i: 08:00 sol uçta, mesainin bitimi sağ uçta; aralık dışındaki saat uca oturur.
 func _week_x(hour: float) -> float:
-	var g: Dictionary = GRID[int(_compact)]
 	var start: int = TimeModel.WEEK_START_HOUR
-	return remap(clampf(hour, start, _week_end), start, _week_end, g.day + g.pad, _slot_x - g.pad)
+	return remap(clampf(hour, start, _week_end), start, _week_end, _g.day + _g.pad, _slot_x - _g.pad)
 
 
 ## Haftanın 08:00'den mesainin bitimine kadarki saatleri: mesai öncesi ince iz, geçen süre dolgu,

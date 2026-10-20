@@ -3007,3 +3007,24 @@ kalmamıştı. Rakip modeli kendi üç boyutunu tutar ve ürünle bağı koptu.
   eskiden onu FAIL sayıyordu. Havuz değişince uzun koşunun dördüncü tohumunda göründü.
 
 *Neden.* Faz Q Karar 24: mekanik tamamen kalkar; kodu, verisi ve metni temizlenir.
+
+
+### §27.41 · Faz C C1: sunucunun doluluğu kesintinin şansını büyütür, kesinti kartı yükü söyler
+
+*Belge ne diyordu.* §27.29 ve §27.32: gecenin zarı açık hatadan ve sunucu kademesinden gelir; sunucunun doluluğu zarda yoktu
+(`IncidentSystem.load_mult` 1 dönerdi) ve kesinti kartının gövdesi yalnız `olay.night_accounts` varyantlarını taşırdı.
+
+*Ne yapıldı.*
+- Yük kesintinin şansına girer, başka hiçbir türün değil: `load_mult` (`sprint.json` `incident.load`: yük %90'a kadar 1, %100'e
+  kadar 1,5, üstü ya da kapasitesiz canlı ürün 2,5) tavandan (`p_max`) sonra uygulanır ve yalnız kesintinin payına. `hazard`
+  türlerin ağırlıklarını kesintininki yük katıyla çarpılmış (`_weights`) ve çarpılmamış toplamıyla orantılar: haftanın ihtimali
+  `p × kademe × (W + (L − 1) w_kesinti) / W`, tür seçimi aynı ağırlıklarla; kesintinin haftalık şansı tam L katına çıkar, öbür
+  türlerinki değişmez ve tavan katı yutmaz.
+- Zar anındaki yük (`InfraSystem.load_percent`) kesintinin `pending.load`'ına, oradan `open.load`'a yazılır; yeni seam
+  `olay.outage_load` (TYPE_INT, yüzde; başka tür için 0). `product.incident_outage_b2b` ve `_b2c` gövdesi `by_seam: olay.outage_load`
+  varyantlarına bölünür (`0` düz gövde, `91` yük cümlesi eklenmiş gövde: yük %90'ın üstündeyken). B2B'de her `olay.night_accounts`
+  varyantı kendi içinde ikiye bölünür: varyant metni `{by_seam, variants}` olabilir (`EvPresenter.resolve_text` özyinelemelidir,
+  `seams_of` iç seam'leri de toplar, lint anahtarları iç içe de denetler).
+- Vakalar `capacity_step_immediate`, `load_mult_steps`, `incident_gap_and_spread`.
+
+*Neden.* Faz C Karar 1: dolu sunucu yalnız kesinti ihtimalini artırır; ekranda yazan kat aynen uygulanır (tavan yük çarpanını yutmaz).

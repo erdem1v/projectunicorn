@@ -12,7 +12,7 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **258** |
+| Seams (read) | **259** |
 | Effect verbs (write) | **75** |
 | Cards in the catalogue | 147 |
 | Arcs | 3 |
@@ -323,6 +323,7 @@ slot of that type (§17.12).
 | `olay.clock` | global | string | Incident | when the open emergency began, 02:10; a history row reads the latest emergency's |
 | `olay.line_users` | global | int | Incident | people the line the emergency hit reaches each day (B2C: the audience's share of it) |
 | `olay.night_accounts` | global | int | Incident | active B2B accounts of a night-shift sector |
+| `olay.outage_load` | global | int | Incident | the server load, in percent, the open outage was rolled at, for by_seam text; 0 for another kind |
 | `olay.payers` | global | int | Incident | people a fix outside the sprint costs morale (SprintSystem.payers, on the line the emergency hit); 0 locks the option |
 | `olay.service_up` | global | bool | Incident | no emergency is open, or the fix it was answered with is done |
 | `olay.shares` | global | int | Incident | how many times the post going round has been shared: a share of the audience |

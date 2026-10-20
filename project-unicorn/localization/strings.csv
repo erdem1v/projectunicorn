@@ -567,7 +567,6 @@ PROD_RND_NODE_DATA_WAREHOUSE,Veri Ambarı,Data Warehouse
 PROD_RND_NODE_BUG_TRACKER,Hata Takip Sistemi,Bug Tracker
 PROD_RND_NODE_CICD,Sürekli Entegrasyon,Continuous Integration
 PROD_RND_NODE_TEST_AUTOMATION,Test Otomasyonu,Test Automation
-PROD_RND_NODE_INCIDENT_PLAYBOOK,Olay Kitabı,Incident Playbook
 PROD_RND_NODE_SELF_SERVICE,Yardım Merkezi,Help Center
 PROD_RND_NODE_DESIGN_SYSTEM,Tasarım Sistemi,Design System
 PROD_RND_NODE_USER_RESEARCH,Kullanıcı Araştırması,User Research
@@ -2184,8 +2183,8 @@ PROD_RND_NODE_EDGE_INFERENCE_DESC,Model kullanıcının cihazında koşar. Zekâ
 PROD_RND_NODE_EDGE_INFERENCE_UNLOCK,Model artık cihazda çalışıyor; yapay zeka kademeleri sunucuya eskisi kadar yüklenmiyor.,"The model runs on the device now, and the AI tiers lean on the servers less than they did."
 PROD_RND_NODE_KNOWLEDGE_GRAPH_DESC,Kayıtlar arasındaki ilişki de veriye dönüşür. Ürün neyin neye bağlı olduğunu bilir.,The relations between records become data too. The product knows what is tied to what.
 PROD_RND_NODE_KNOWLEDGE_GRAPH_UNLOCK,Otomatik Düzenleme adında yeni bir özellik hattı. İçeriği Erken Erişim'de açılır.,A new feature line called Automatic Organisation. Its content opens in Early Access.
-PROD_RND_NODE_SCALABLE_BACKEND_DESC,Yük birçok makineye dağıtılır. Kalabalık gün artık bir kaza değil.,The load is spread across many machines. A busy day stops being an accident.
-PROD_RND_NODE_SCALABLE_BACKEND_UNLOCK,"Dayanıklılık hattının son kademesi · ERP'de tahsilat, Video Klip'te ortak kurgu. Aynı donanım artık daha çok kullanıcı taşıyor.","The last tier of the Durability line · collection in ERP, shared editing in Video Clip. The same hardware carries more people now."
+PROD_RND_NODE_SCALABLE_BACKEND_DESC,Yük birçok makineye dağıtılır.,The load is spread across many machines.
+PROD_RND_NODE_SCALABLE_BACKEND_UNLOCK,"Dayanıklılık hattının son kademesi · ERP'de tahsilat, Video Klip'te ortak kurgu.","The last tier of the Durability line · collection in ERP, shared editing in Video Clip."
 PROD_RND_NODE_SECURITY_CERT_DESC,Denetimden geçmiş güvenlik belgesi. Kurumsal alıcının ilk sorusu cevaplanmış olur.,A security certificate that has been through an audit. The corporate buyer's first question is already answered.
 PROD_RND_NODE_SECURITY_CERT_UNLOCK,Güvenlik & Yetki hattının son kademesi.,The last tier of the Security and Access line.
 PROD_RND_NODE_ANALYTICS_ENGINE_DESC,Ham kayıtları okuyan hesap katmanı. Sayıların ne dediği ürünün içinde görünür.,A computing layer that reads the raw records. What the numbers say becomes visible inside the product.
@@ -2200,8 +2199,6 @@ PROD_RND_NODE_CICD_DESC,Her değişiklik makinede kendi kendine kurulup sınanı
 PROD_RND_NODE_CICD_UNLOCK,Yazılan her değişiklik artık makinede kendi kendine sınanıyor; geliştirmeden daha az hata çıkıyor.,"Every change written is tested by the machine on its own now, and less comes out of development broken."
 PROD_RND_NODE_TEST_AUTOMATION_DESC,Sınamalar insan eli olmadan tekrar tekrar koşar. Aynı hata ikinci kez geçip gitmez.,The tests run again and again without a hand on them. The same bug does not slip past twice.
 PROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Kendi Kendine Servis adında yeni bir özellik hattı. Ayrıca Beta'da hata bulma temposu günler geçtikçe eskisi kadar düşmüyor.,A new feature line called Self Service. And Beta keeps finding bugs later into the run than it used to.
-PROD_RND_NODE_INCIDENT_PLAYBOOK_DESC,Kesinti anında kimin ne yapacağı yazılıdır. Panik yerine sıra vardır.,Who does what during an outage is written down. There is an order to follow instead of a panic.
-PROD_RND_NODE_INCIDENT_PLAYBOOK_UNLOCK,Kesinti anında ne yapılacağı artık yazılı; taşan kapasite müşteride eskisi kadar iz bırakmıyor.,"What to do in an outage is written down now, and capacity running over leaves less of a mark on the customer."
 PROD_RND_NODE_SELF_SERVICE_DESC,Sık sorulanın cevabı ürünün içinde durur. Kullanıcı beklemeden çıkışı bulur.,The answer to the common question sits inside the product. The user finds the way out without waiting.
 PROD_RND_NODE_SELF_SERVICE_UNLOCK,Kullanıcı cevabı ürünün içinde buluyor; destek masasına daha az iş düşüyor.,"Users find the answer inside the product, and less work reaches the support desk."
 PROD_RND_NODE_DESIGN_SYSTEM_DESC,Arayüzün parçaları bir kez tanımlanır. Her yeni ekran hazır parçalardan kurulur.,The pieces of the interface are defined once. Every new screen is built from parts that already exist.
@@ -2215,7 +2212,7 @@ PROD_RND_NODE_ACCESSIBILITY_UNLOCK,Bazı kurumsal hesapların aradığı erişim
 PROD_RND_NODE_PERSONALIZATION_DESC,Ürün kullanıcının alışkanlığını öğrenir. Aynı ekran herkeste aynı durmaz.,The product learns the user's habits. The same screen does not sit the same way for everyone.
 PROD_RND_NODE_PERSONALIZATION_UNLOCK,Uyarlanabilir Arayüz adında yeni bir özellik hattı. İçeriği Erken Erişim'de açılır.,A new feature line called Adaptive Interface. Its content opens in Early Access.
 PROD_RND_NODE_DATA_MODEL_DISCOVERY,Aynı müşteri üç ayrı tabloda üç ayrı isimle duruyordu. Perşembe akşamı üçü tek satırda birleşti. Ertesi sabah kimse hangi tablodan bakacağını sormadı.,The same customer sat in three tables under three different names. On Thursday evening the three became one row. The next morning nobody asked which table to look in.
-PROD_RND_NODE_SCALABLE_BACKEND_DISCOVERY,"Salı günü herkes aynı saatte girdi ve sayfa açılmadı. Cuma günü aynı kalabalık geldi, kimse fark etmedi. Aynı donanımla artık daha çok kullanıcı taşıyoruz.",On Tuesday everyone came in at the same hour and the page would not open. On Friday the same crowd arrived and nobody noticed. The same hardware carries more people now.
+PROD_RND_NODE_SCALABLE_BACKEND_DISCOVERY,"Salı günü herkes aynı saatte girdi ve sayfa açılmadı. Cuma günü aynı kalabalık geldi, kimse fark etmedi.",On Tuesday everyone came in at the same hour and the page would not open. On Friday the same crowd arrived and nobody noticed.
 PROD_RND_NODE_BUG_TRACKER_DISCOVERY,Hatalar sohbet penceresinde konuşuluyordu; ikisi orada kaldı. Şimdi her bildirimin bir numarası ve bir sahibi var.,"Bugs used to be talked over in a chat window, and two of them stayed there. Now every report has a number and an owner."
 PROD_RND_NODE_DESIGN_SYSTEM_DISCOVERY,İki ekranda buton iki farklı maviydi ve kimse hangisinin doğru olduğunu bilmiyordu. Bir öğleden sonra hepsi tek dosyaya taşındı.,The button was two different blues on two screens and nobody knew which one was right. One afternoon all of it moved into a single file.
 PROD_RND_NODE_AI_ENGINE_DISCOVERY,Model üç haftadır saçmalıyordu. Bu sabah ilk defa doğru cevabı verdi. Kimse alkışlamadı; herkes ekrana baktı.,The model had been talking nonsense for three weeks. This morning it gave the right answer for the first time. Nobody clapped; everyone just looked at the screen.
@@ -2875,6 +2872,44 @@ PRODUCT_HISTORY_CARDS_ONE,{n} kart,{n} card
 PRODUCT_VIEW_SPRINT,Sprint,Sprint
 PRODUCT_VIEW_QUARTER,Çeyrek,Quarter
 PRODUCT_QUARTER_NEED_PM,PM işe alınca,Once you hire a PM
+PRODUCT_OV_TAB_OVERVIEW,Genel Bakış,Overview
+PRODUCT_OV_LOCKED,v1.0 yayınlanınca açılır.,Opens when v1.0 ships.
+PRODUCT_SERVER_HEAD,Sunucu,Server
+PRODUCT_SERVER_TIER_ECONOMY,Ekonomik,Economy
+PRODUCT_SERVER_TIER_STANDARD,Standart,Standard
+PRODUCT_SERVER_TIER_ENTERPRISE,Kurumsal,Enterprise
+PRODUCT_SERVER_CAPACITY_SEATS,Kapasite {n} koltuk · ayda {bill},Capacity {n} seats · {bill} a month
+PRODUCT_SERVER_CAPACITY_USERS,Kapasite {n} kullanıcı · ayda {bill},Capacity {n} users · {bill} a month
+PRODUCT_SERVER_LOAD_SEATS,Yük %{load} · boş pay {spare} koltuk · ayda {spare_cost},Load {load}% · spare {spare} seats · {spare_cost} a month
+PRODUCT_SERVER_LOAD_USERS,Yük %{load} · boş pay {spare} kullanıcı · ayda {spare_cost},Load {load}% · spare {spare} users · {spare_cost} a month
+PRODUCT_SERVER_LOAD_OVER_SEATS,Yük %{load} · kapasitenin {short} koltuk üstünde,Load {load}% · {short} seats over capacity
+PRODUCT_SERVER_LOAD_OVER_USERS,Yük %{load} · kapasitenin {short} kullanıcı üstünde,Load {load}% · {short} users over capacity
+PRODUCT_SERVER_BTN_DECREASE,Azalt · {n},Decrease · {n}
+PRODUCT_SERVER_BTN_INCREASE,Artır · {n},Increase · {n}
+PRODUCT_SERVER_AUTO_TOGGLE,Otomatik ayarla,Auto adjust
+PRODUCT_SERVER_TIP_INCREASE_SEATS,{n} koltuk ekle · ayda {old_cost} → {new_cost} · yük %{old_load} → %{new_load},Add {n} seats · {old_cost} → {new_cost} a month · load {old_load}% → {new_load}%
+PRODUCT_SERVER_TIP_INCREASE_USERS,{n} kullanıcılık yer ekle · ayda {old_cost} → {new_cost} · yük %{old_load} → %{new_load},Add {n} users · {old_cost} → {new_cost} a month · load {old_load}% → {new_load}%
+PRODUCT_SERVER_TIP_DECREASE_SEATS,{n} koltuk çıkar · ayda {old_cost} → {new_cost} · yük %{old_load} → %{new_load},Remove {n} seats · {old_cost} → {new_cost} a month · load {old_load}% → {new_load}%
+PRODUCT_SERVER_TIP_DECREASE_USERS,{n} kullanıcılık yer çıkar · ayda {old_cost} → {new_cost} · yük %{old_load} → %{new_load},Remove room for {n} users · {old_cost} → {new_cost} a month · load {old_load}% → {new_load}%
+PRODUCT_SERVER_TIP_DECREASE_SHORT,Yük %{load} olur. Kapasite yetmez.,Load becomes {load}%. Capacity falls short.
+PRODUCT_SERVER_GROWTH,Bu büyüme hızıyla yük {weeks} hafta sonra %{edge} sınırını geçer.,"At this growth rate, load passes {edge}% in {weeks} weeks."
+PRODUCT_SERVER_GROWTH_ONE,Bu büyüme hızıyla yük gelecek hafta %{edge} sınırını geçer.,"At this growth rate, load passes {edge}% next week."
+PRODUCT_SERVER_WARN_HIGH,Yük %{load}. %{edge} üstünde kesinti ihtimali {mult} katına çıkar.,"Load {load}%. Above {edge}%, the chance of an outage is {mult} times higher."
+PRODUCT_SERVER_WARN_OVER,Yük %{load}. Kapasite yetmiyor; kesinti ihtimali {mult} katına çıkar.,Load {load}%. Capacity falls short; the chance of an outage is {mult} times higher.
+PRODUCT_SERVER_WARN_NONE,Ürün yayında ama kapasite yok; kesinti ihtimali {mult} katına çıkar.,The product is live with no capacity; the chance of an outage is {mult} times higher.
+PRODUCT_SERVER_AUTO_TIP,Açıkken yük %{edge} olunca kapasite bir adım büyür ve yük yaklaşık %{target} olur. Kapasiteyi küçültmez; boş payın parası bu blokta yazar.,"When on, capacity grows one step once load reaches {edge}%, bringing load to about {target}%. It never shrinks capacity; the cost of the spare room is shown in this block."
+PRODUCT_SERVER_AUTO_LAST_SEATS,Otomatik büyüme {date} · {old} → {new} koltuk,Automatic increase {date} · {old} → {new} seats
+PRODUCT_SERVER_AUTO_LAST_USERS,Otomatik büyüme {date} · {old} → {new} kullanıcı,Automatic increase {date} · {old} → {new} users
+PRODUCT_SERVER_TIER_TIP_PRICE_SEATS,{unit} koltuk başına ayda {price},{price} a month per {unit} seats
+PRODUCT_SERVER_TIER_TIP_PRICE_USERS,{unit} kullanıcı başına ayda {price},{price} a month per {unit} users
+PRODUCT_SERVER_TIER_TIP_OUTAGE,Kesinti ihtimali ×{mult},Outage chance ×{mult}
+PRODUCT_SERVER_TIER_TIP_REPORTS,%{pct} daha fazla hata bildirimi,{pct}% more bug reports
+PRODUCT_SERVER_TIER_TIP_CLAUSE_NO,Kurumsal sözleşme şartını karşılamaz,Does not meet the enterprise contract clause
+PRODUCT_SERVER_TIER_TIP_CLAUSE_YES,Kurumsal sözleşme şartını karşılar,Meets the enterprise contract clause
+PRODUCT_SERVER_TIER_TIP_FINAL,Kurumsal kademeden geri dönülmez.,There is no moving back down from Enterprise.
+PRODUCT_SERVER_TIER_LOCKED,Kurumsal sunucudasın; geri dönüş yok.,You are on Enterprise servers; there is no moving back.
+PRODUCT_SERVER_TIER_PREVIEW,{from} → {to} · ayda {old} → {new},{from} → {to} · {old} → {new} a month
+PRODUCT_SERVER_TIER_SWITCH,Geç,Switch
 PRODUCT_NEXT_EMPTY,→ ile kart gönder,Send cards with →
 PRODUCT_FLAG_DEADLINE,{customer} · {request} · son tarih,{customer} · {request} · deadline
 PRODUCT_THIS_QUARTER,Bu çeyrek,This quarter

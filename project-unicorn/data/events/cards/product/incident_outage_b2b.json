@@ -123,9 +123,27 @@
       "body": {
         "by_seam": "olay.night_accounts",
         "variants": {
-          "2": "Servis {seam:olay.clock} sularında çöktü, hâlâ açılmadı. Gece vardiyasıyla çalışan {seam:olay.night_accounts} hesap giriş yapamıyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı).",
-          "1": "Servis {seam:olay.clock} sularında çöktü, hâlâ açılmadı. Gece vardiyasıyla çalışan {customer} ekibi giriş yapamıyor ({seam:musteri.seats} kullanıcı).",
-          "0": "Servis {seam:olay.clock} sularında çöktü, hâlâ açılmadı. Bu saatte kullanan yok, ama {seam:olay.accounts} hesap sabah işe başlıyor."
+          "2": {
+            "by_seam": "olay.outage_load",
+            "variants": {
+              "0": "Servis {seam:olay.clock} sularında çöktü, hâlâ açılmadı. Gece vardiyasıyla çalışan {seam:olay.night_accounts} hesap giriş yapamıyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı).",
+              "91": "Servis {seam:olay.clock} sularında çöktü, hâlâ açılmadı. Gece vardiyasıyla çalışan {seam:olay.night_accounts} hesap giriş yapamıyor, en büyüğü {customer} ({seam:musteri.seats} kullanıcı). Çöktüğü sırada sunucu yükü %{seam:olay.outage_load} düzeyindeydi."
+            }
+          },
+          "1": {
+            "by_seam": "olay.outage_load",
+            "variants": {
+              "0": "Servis {seam:olay.clock} sularında çöktü, hâlâ açılmadı. Gece vardiyasıyla çalışan {customer} ekibi giriş yapamıyor ({seam:musteri.seats} kullanıcı).",
+              "91": "Servis {seam:olay.clock} sularında çöktü, hâlâ açılmadı. Gece vardiyasıyla çalışan {customer} ekibi giriş yapamıyor ({seam:musteri.seats} kullanıcı). Çöktüğü sırada sunucu yükü %{seam:olay.outage_load} düzeyindeydi."
+            }
+          },
+          "0": {
+            "by_seam": "olay.outage_load",
+            "variants": {
+              "0": "Servis {seam:olay.clock} sularında çöktü, hâlâ açılmadı. Bu saatte kullanan yok, ama {seam:olay.accounts} hesap sabah işe başlıyor.",
+              "91": "Servis {seam:olay.clock} sularında çöktü, hâlâ açılmadı. Bu saatte kullanan yok, ama {seam:olay.accounts} hesap sabah işe başlıyor. Çöktüğü sırada sunucu yükü %{seam:olay.outage_load} düzeyindeydi."
+            }
+          }
         }
       },
       "options": {
@@ -145,9 +163,27 @@
       "body": {
         "by_seam": "olay.night_accounts",
         "variants": {
-          "2": "The service went down at around {seam:olay.clock} and hasn't come back. {seam:olay.night_accounts} accounts on the night shift can't log in; the largest is {customer} ({seam:musteri.seats} users).",
-          "1": "The service went down at around {seam:olay.clock} and hasn't come back. The night shift at {customer} can't log in ({seam:musteri.seats} users).",
-          "0": "The service went down at around {seam:olay.clock} and hasn't come back. Nobody is on it at this hour, but {seam:olay.accounts} accounts start work in the morning."
+          "2": {
+            "by_seam": "olay.outage_load",
+            "variants": {
+              "0": "The service went down at around {seam:olay.clock} and hasn't come back. {seam:olay.night_accounts} accounts on the night shift can't log in; the largest is {customer} ({seam:musteri.seats} users).",
+              "91": "The service went down at around {seam:olay.clock} and hasn't come back. {seam:olay.night_accounts} accounts on the night shift can't log in; the largest is {customer} ({seam:musteri.seats} users). Server load was at {seam:olay.outage_load}% when it went down."
+            }
+          },
+          "1": {
+            "by_seam": "olay.outage_load",
+            "variants": {
+              "0": "The service went down at around {seam:olay.clock} and hasn't come back. The night shift at {customer} can't log in ({seam:musteri.seats} users).",
+              "91": "The service went down at around {seam:olay.clock} and hasn't come back. The night shift at {customer} can't log in ({seam:musteri.seats} users). Server load was at {seam:olay.outage_load}% when it went down."
+            }
+          },
+          "0": {
+            "by_seam": "olay.outage_load",
+            "variants": {
+              "0": "The service went down at around {seam:olay.clock} and hasn't come back. Nobody is on it at this hour, but {seam:olay.accounts} accounts start work in the morning.",
+              "91": "The service went down at around {seam:olay.clock} and hasn't come back. Nobody is on it at this hour, but {seam:olay.accounts} accounts start work in the morning. Server load was at {seam:olay.outage_load}% when it went down."
+            }
+          }
         }
       },
       "options": {

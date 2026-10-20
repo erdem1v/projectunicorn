@@ -14,7 +14,7 @@
     "edge_inference":     {"effort": 70, "cash": 0,   "areas": ["product", "engineering"], "stars": 2, "parent": "ai_engine",        "effect": "ai_usage_weight"},
     "knowledge_graph":    {"effort": 90, "cash": 0,   "areas": ["product", "design"],      "stars": 2, "parent": "semantic_index",   "cross": "design_system",    "opens_line": "line_hidden_auto_organize"},
 
-    "scalable_backend":   {"effort": 50, "cash": 0,   "areas": ["engineering"],            "stars": 1, "parent": "",                 "effect": "load_divisor"},
+    "scalable_backend":   {"effort": 50, "cash": 0,   "areas": ["engineering"],            "stars": 1, "parent": ""},
     "security_cert":      {"effort": 90, "cash": 900, "areas": ["engineering"],            "stars": 2, "parent": "scalable_backend", "cost_label": true, "effect": "enterprise_trust"},
     "analytics_engine":   {"effort": 80, "cash": 400, "areas": ["engineering"],            "stars": 2, "parent": "scalable_backend", "cost_label": true},
     "model_optimization": {"effort": 70, "cash": 0,   "areas": ["engineering", "product"], "stars": 2, "parent": "security_cert",    "effect": "license_cost"},
@@ -23,7 +23,6 @@
     "bug_tracker":        {"effort": 40, "cash": 0,   "areas": ["qa"],                     "stars": 1, "parent": "",                 "effect": "validation_throughput"},
     "cicd":               {"effort": 70, "cash": 0,   "areas": ["qa"],                     "stars": 2, "parent": "bug_tracker",      "effect": "bug_rate_ceil"},
     "test_automation":    {"effort": 70, "cash": 0,   "areas": ["qa"],                     "stars": 2, "parent": "bug_tracker",      "effect": "beta_decay",      "opens_line": "line_hidden_self_serve"},
-    "incident_playbook":  {"effort": 70, "cash": 0,   "areas": ["qa", "engineering"],      "stars": 2, "parent": "cicd",             "effect": "overage_satisfaction"},
     "self_service":       {"effort": 90, "cash": 0,   "areas": ["qa", "design"],           "stars": 2, "parent": "test_automation",  "cross": "design_system",    "effect": "inflow_base"},
 
     "design_system":      {"effort": 50, "cash": 0,   "areas": ["design"],                 "stars": 1, "parent": "",                 "effect": "design_effort"},

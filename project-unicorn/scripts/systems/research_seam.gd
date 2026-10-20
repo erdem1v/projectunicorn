@@ -7,9 +7,9 @@ extends RefCounted
 # `completed()` gerçek ağaca (RnDSystem) devreder. Ağaç açılmadan hiçbir düğüm tamamlanmaz
 # ve K3'ler kilitli kalır — belge açıkça yazıyor: "geçici bypass yazılmaz."
 #
-# DÜĞÜM KİMLİKLERİNİN TEK KAYNAĞI Ar-Ge GDD §4'tür (20 düğüm); tablo aşağıda birebir alınmıştır.
+# DÜĞÜM KİMLİKLERİNİN TEK KAYNAĞI Ar-Ge GDD §4'tür (19 düğüm); tablo aşağıda birebir alınmıştır.
 
-## Ar-Ge §3 — kademeli açılan dal yapısı. Her ailede bir KÖK, iki DAL, iki DEVAM.
+## Ar-Ge §3 — kademeli açılan dal yapısı. Her ailede bir KÖK, iki DAL ve dalların altında DEVAMlar vardır.
 ## Oyuncu ağacın tamamını asla görmez.
 const PLACE_ROOT := "root"
 const PLACE_BRANCH := "branch"
@@ -20,7 +20,7 @@ const FAMILY_PLATFORM := "platform"       # Yazılım alanı
 const FAMILY_PRACTICE := "practice"       # Test alanı
 const FAMILY_DESIGN := "design"           # Tasarım alanı
 
-## The twenty nodes, verbatim from Ar-Ge GDD §4.1-§4.4. Their names (PROD_RND_NODE_*) are
+## The nineteen nodes, verbatim from Ar-Ge GDD §4.1-§4.4. Their names (PROD_RND_NODE_*) are
 ## Turkish canonical (Veri Modeli, Semantik İndeks…), not proper nouns, so they translate.
 const NODES := {
 	# --- §4.1 CAPABILITY — Ürün alanı ---
@@ -39,7 +39,6 @@ const NODES := {
 	"bug_tracker":        {"family": "practice", "place": "root"},
 	"cicd":               {"family": "practice", "place": "branch"},
 	"test_automation":    {"family": "practice", "place": "branch"},
-	"incident_playbook":  {"family": "practice", "place": "continuation"},
 	"self_service":       {"family": "practice", "place": "continuation"},
 	# --- §4.4 DESIGN — Tasarım alanı ---
 	"design_system":      {"family": "design", "place": "root"},

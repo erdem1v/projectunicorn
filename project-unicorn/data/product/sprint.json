@@ -48,6 +48,7 @@
   },
   "incident": {
     "base": 0.1, "tier": {"local": 1.0, "cloud": 0.5, "enterprise": 0.25}, "bug_cap": 12, "bug_div": 8, "p_max": 0.3,
+    "load": {"amber": 1.5, "over": 2.5},
     "min_gap": 4, "launch_quiet": 3,
     "weights": {"outage": 1.0, "month_close": 1.5, "checkout": 1.0, "storm": 1.5},
     "fix": {

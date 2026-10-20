@@ -6,10 +6,13 @@ extends RefCounted
 # the card owns the words and the option structure, this file the numbers a cost is made of, so a chip, the history row
 # and what lands read one figure (plan).
 #
-# THE ROLL. p = min(BASE x load x (1 + min(open bugs, 12) / 8), P_MAX) x tier: the tier weighs the capped odds, so each
-# server tier keeps its share at any load or bug count. Two emergencies are at least MIN_GAP ticks apart. The die is
-# rolled once, in the 00:00 daily slice, and only decides: whether this week has one, which kind (by weight, among the
-# kinds the world allows) and the minute its mail is stamped (`pending`). A release that shipped a faulty card on a
+# THE ROLL. p = min(BASE x (1 + min(open bugs, 12) / 8), P_MAX) x tier: the tier weighs the capped odds, so each
+# server tier keeps its share at any bug count. How full the servers are (`load_mult`) weighs only the outage, after the
+# cap: its weight in the kind draw is multiplied and the week's odds grow by that much of it, so a full server makes
+# outages likelier and no other emergency, and the cap cannot swallow it. Two emergencies are at least MIN_GAP ticks
+# apart. The die is rolled once, in the 00:00 daily slice, and only decides: whether this week has one, which kind (by
+# weight, among the kinds the world allows) and the minute its mail is stamped (`pending`; an outage also keeps the
+# server load it was rolled at, which its card reads). A release that shipped a faulty card on a
 # critical line brings its own emergency (regression) the morning after, with no die. A sprint that brought a decision
 # paper has room for a service going down only (SERVICE_DOWN): any other kind is kept whole (`shifted`) and comes the
 # first week of a sprint without one. The card is asked for in the hourly slice of the first full hour after the stamp, with the clock held (a
@@ -26,8 +29,8 @@ extends RefCounted
 # Every number is in data/product/sprint.json `incident` and is [WORKING], except the server tiers'
 # weights (`tier`), which the owner set.
 #
-# State is GameState.incident: {last_day, pending: {kind, minute, line, began}, shifted (a pending kept for the next
-# sprint), open: {kind, start, opened, line, tried, version, act, back}, drains: [{line, pct}], forced}. `open` stays after the answer: the card's words and the history rows
+# State is GameState.incident: {last_day, pending: {kind, minute, line, began, load}, shifted (a pending kept for the next
+# sprint), open: {kind, start, opened, line, load, tried, version, act, back}, drains: [{line, pct}], forced}. `open` stays after the answer: the card's words and the history rows
 # read it.
 
 ## The card of each emergency, by kind and market.
@@ -61,21 +64,39 @@ static func _cfg(path: String) -> Variant:
 
 # --- The roll --------------------------------------------------------------
 
-## The server tier's weight on the odds: the cheaper the machines, the likelier the night.
-static func tier_mult() -> float:
-	return float((_cfg("tier") as Dictionary).get(InfraSystem.provider(), 1.0))
+## A server tier's weight on the odds (the one in use by default): the cheaper the machines, the likelier the night.
+static func tier_mult(provider_id: String = InfraSystem.provider()) -> float:
+	return float((_cfg("tier") as Dictionary).get(provider_id, 1.0))
 
 
-## How full the servers are is not part of the odds until the capacity rule is settled.
-static func load_mult() -> float:
-	return 1.0
+## How full the servers are (`state`: the capacity state in force by default), as the odds of an outage weigh it: 1 up to
+## the amber line, then the amber figure, then the over figure; a live product that bought no capacity reads over
+## (sprint.json `incident.load`).
+static func load_mult(state: String = InfraSystem.capacity_state()) -> float:
+	if not ProductState.is_live() or state == InfraSystem.STATE_NORMAL:
+		return 1.0
+	return float(_cfg("load.amber" if state == InfraSystem.STATE_AMBER else "load.over"))
 
 
-## The week's chance of an emergency tonight.
+## The week's chance of an emergency tonight: the bugs' odds, capped, under the tier, and then the servers' load on the
+## outage's share of it.
 static func hazard() -> float:
 	var bugs: int = mini(ProductState.costed(ProductState.open_bugs()), int(_cfg("bug_cap")))
-	var odds: float = float(_cfg("base")) * load_mult() * (1.0 + float(bugs) / float(_cfg("bug_div")))
-	return minf(odds, float(_cfg("p_max"))) * tier_mult()
+	var odds: float = minf(float(_cfg("base")) * (1.0 + float(bugs) / float(_cfg("bug_div"))), float(_cfg("p_max")))
+	return odds * tier_mult() * _total(_weights()) / _total(_weights(false))
+
+
+## The weight of each kind this world allows, the outage's with the servers' load unless `loaded` is false.
+static func _weights(loaded := true) -> Dictionary:
+	var out: Dictionary = {}
+	for kind in _cfg("weights"):
+		if _allows(kind):
+			out[kind] = float(_cfg("weights")[kind]) * (load_mult() if loaded and kind == "outage" else 1.0)
+	return out
+
+
+static func _total(weights: Dictionary) -> float:
+	return weights.values().reduce(func(sum: float, weight: float) -> float: return sum + weight, 0.0)
 
 
 ## Can the week have one: the product is live, MIN_GAP ticks have passed since the last, the launch weeks are over and
@@ -127,14 +148,8 @@ static func _kind_this_week() -> String:
 		return "regression"
 	if EvDice.unit("incident", GameState.day, "roll", "") >= hazard():
 		return ""
-	var allowed: Dictionary = {}
-	for kind in _cfg("weights"):
-		if _allows(kind):
-			allowed[kind] = float(_cfg("weights")[kind])
-	var total: float = 0.0
-	for weight in allowed.values():
-		total += float(weight)
-	var pick: float = EvDice.unit("incident", GameState.day, "kind", "") * total
+	var allowed: Dictionary = _weights()
+	var pick: float = EvDice.unit("incident", GameState.day, "kind", "") * _total(allowed)
 	for kind in allowed:
 		pick -= float(allowed[kind])
 		if pick < 0.0:
@@ -180,6 +195,7 @@ static func _schedule(kind: String, waive: bool) -> Dictionary:
 			var step: int = int(_cfg("outage.start_step"))
 			pending["minute"] = int(span[0]) + step * floori(EvDice.unit("incident", GameState.day, "start", "")
 				* ((int(span[1]) - int(span[0])) / step + 1))
+			pending["load"] = InfraSystem.load_percent()
 		"month_close":
 			pending["minute"] = _draw(_cfg("month_close.stamp"), "start")
 		"checkout":
@@ -214,14 +230,16 @@ static func force_on(kind: String, day: int) -> void:
 
 
 ## The emergency that began at `began` (a minute of today) as the card will read it: when it began, when it opens, the
-## line it hit and the people who tried the app since. Kept as `open`.
-static func stage(kind: String, began: int, line := "") -> void:
+## line it hit, the server load it was rolled at (an outage's) and the people who tried the app since. Kept as `open`.
+static func stage(kind: String, began: int, line := "", load_pct := 0) -> void:
 	var start: int = GameState.day * MailClock.DAY_MINUTES + began
 	var opened: int = MailClock.now()
 	var hours: float = float(opened - start) / 60.0
 	var open := {"kind": kind, "start": start, "opened": opened}
 	if line != "":
 		open["line"] = line
+	if load_pct > 0:
+		open["load"] = load_pct
 	match kind:
 		"outage":
 			if ProductState.market_type() == "b2c":
@@ -237,7 +255,7 @@ static func _ask(pending: Dictionary) -> void:
 	var kind: String = pending.kind
 	var line: String = String(pending.get("line", ""))
 	var before: Dictionary = GameState.incident.get("open", {})
-	stage(kind, int(pending.get("began", pending.minute)), line)
+	stage(kind, int(pending.get("began", pending.minute)), line, int(pending.get("load", 0)))
 	var market: String = ProductState.market_type()
 	var given: Dictionary = {}
 	var writer: String = _writer(kind)
@@ -368,6 +386,11 @@ static func hit_line() -> String:
 ## The version the open regression broke, "v1.4".
 static func version() -> String:
 	return String(GameState.incident.get("open", {}).get("version", ""))
+
+
+## The server load, in percent, the open outage was rolled at; 0 for another kind of emergency.
+static func outage_load() -> int:
+	return int(GameState.incident.get("open", {}).get("load", 0))
 
 
 ## Which of a card's bodies the open emergency reads (the card's `by_seam` variants): a month that cannot close and a

@@ -20,7 +20,9 @@ extends RefCounted
 #               result: {kind: "expected"|"actual", text} or null}],
 #   quarter: {state: "locked_no_pm"|"open",
 #             goal: {area_id, area_name, text, now, target, total, progress_text} or null, columns: [column]},
-#   ui: {view: "sprint"|"quarter", open_area: area id or "", history_open, hover_card: card id or ""},
+#   ui: {view: "overview"|"sprint"|"quarter", open_area: area id or "", history_open, hover_card: card id or "",
+#         server_preview: kademe id or "" (açık geçiş önizlemesi)},
+#   overview: {server: server} or null (v1.0'dan önce: GENEL BAKIŞ kilitli; fikstürde de yok),
 #   areas: [area],
 #   customers: null (B2C, satır yok) | [customer] ([] = "Açık talep yok"),
 #   center: center,
@@ -59,6 +61,12 @@ extends RefCounted
 #                     result: {kind: "expected"|"actual", text} or null, press: {outlet (anahtar), text} or {},
 #                     reviews: [{source, text}] (B2C güncellemesinin öne çıkan yorumları, gelene dek boş),
 #                     lead: person + {text, self}} or null}
+# server = {tiers: [{id, name, tip (üstüne gelince; kilitliyse gerekçe), off (kilitli), preview (geçiş önizlemesi),
+#                    final (Kurumsal'ın geri dönüşsüzlük notu ya da "")}], active (kademenin sırası),
+#           capacity: "Kapasite 6.500 koltuk · ayda $15.600", percent (çubuğun yükü, tam yüzde; kapasitesizde 0), state
+#           (InfraSystem.capacity_state), load: "Yük %80 · boş pay ..." ("" kapasitesizde),
+#           note: {text, tone: "over"|"warn"|"quiet", glyph} or null (tek satır: kesinti uyarısı, son otomatik büyüme ya da büyüme),
+#           decrease/increase: {text, tip}, auto: {on, tip}}
 # person = {name, role_text, look ({} ise baş harfler)}
 # column = {sprint, kind: "current"|"proposed"|"empty", capacity: {...} or null, pm, flags: [...], cards: [card], approved}
 # card = {id, name, kind, roles: [...], effort, state: SprintCard.State, effect: [part], tag_sprint: -1 or int,
@@ -83,6 +91,9 @@ extends RefCounted
 #   kelimesidir (ProductQuality.word_for), kelime ve renk ondan.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
+## Kademenin adı.
+const TIER_KEYS := {InfraSystem.PROVIDER_LOCAL: "PRODUCT_SERVER_TIER_ECONOMY", InfraSystem.PROVIDER_CLOUD: "PRODUCT_SERVER_TIER_STANDARD",
+	InfraSystem.PROVIDER_ENTERPRISE: "PRODUCT_SERVER_TIER_ENTERPRISE"}
 ## Kartın bulunduğu yerdeki düğmeleri; "+" kartın addable'ıyla açılır.
 const BUTTONS := {
 	SprintCard.State.ADAY: ["add", "send_next"],
@@ -134,7 +145,8 @@ static func live() -> Dictionary:
 		},
 		"versions": versions,
 		"quarter": _quarter(center, next),
-		"ui": {"view": "sprint", "open_area": "", "history_open": false, "hover_card": ""},
+		"ui": {"view": "sprint", "open_area": "", "history_open": false, "hover_card": "", "server_preview": ""},
+		"overview": {"server": _server()} if live_now else null,
 		"areas": SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()).map(
 			func(a: Dictionary) -> Dictionary: return _area(a.id, tags, changed.get(a.id, {}))),
 		"customers": _customers(tags) if ProductState.market_type() == "b2b" else null,
@@ -449,6 +461,90 @@ static func _goal() -> Dictionary:
 ## Alanın çeyrek hedefi olarak cümlesi (şerit ve hedef menüsü); fikstür de buradan okur.
 static func goal_text(area_id: String) -> String:
 	return _t("PRODUCT_GOAL_" + area_id.to_upper())
+
+
+# --- Genel Bakış -----------------------------------------------------------------------
+
+## Sunucu bloğu. Her sayı InfraSystem'den, kesinti katları IncidentSystem'den okunur; metin burada çözülür.
+static func _server() -> Dictionary:
+	var kind: String = "SEATS" if ProductState.market_type() == "b2b" else "USERS"
+	var provider: String = InfraSystem.provider()
+	var unit: int = InfraSystem.unit_size()
+	var units: int = InfraSystem.units()
+	var capacity: int = InfraSystem.purchased_capacity()
+	var served: int = InfraSystem.served_count()
+	var percent: int = InfraSystem.load_percent()
+	var bill: int = InfraSystem.monthly_bill()
+	var unit_price: int = InfraSystem.unit_price(provider)
+	var step: int = InfraSystem.capacity_step()
+	var more: int = units + step
+	var fewer: int = maxi(units - step, 0)
+	var load_text: String = ""
+	if capacity > 0:
+		load_text = _t("PRODUCT_SERVER_LOAD_OVER_" + kind).format({"load": percent, "short": Fmt.group(served - capacity)}) \
+			if percent > InfraSystem.LOAD_OVER else _t("PRODUCT_SERVER_LOAD_" + kind).format({"load": percent,
+				"spare": Fmt.group(capacity - served),
+				"spare_cost": Fmt.money_exact(roundi(float(capacity - served) / unit * unit_price))})
+	var decrease: String = _t("PRODUCT_SERVER_WARN_NONE").format({"mult": Fmt.number(IncidentSystem.load_mult(InfraSystem.STATE_OVER), 2)}) \
+		if fewer == 0 else _t("PRODUCT_SERVER_TIP_DECREASE_" + kind).format({"n": Fmt.group((units - fewer) * unit),
+			"old_cost": Fmt.money_exact(bill), "new_cost": Fmt.money_exact(fewer * unit_price), "old_load": percent,
+			"new_load": InfraSystem.load_percent(fewer)})
+	if fewer > 0 and InfraSystem.load_percent(fewer) > InfraSystem.LOAD_OVER:
+		decrease += "\n" + _t("PRODUCT_SERVER_TIP_DECREASE_SHORT").format({"load": InfraSystem.load_percent(fewer)})
+	return {
+		"tiers": InfraSystem.PROVIDER_IDS.map(func(id: String) -> Dictionary: return _tier(id, kind, provider, units, bill)),
+		"active": InfraSystem.PROVIDER_IDS.find(provider),
+		"capacity": _t("PRODUCT_SERVER_CAPACITY_" + kind).format({"n": Fmt.group(capacity), "bill": Fmt.money_exact(bill)}),
+		"percent": percent if capacity > 0 else 0, "state": InfraSystem.capacity_state(), "load": load_text,
+		"note": _server_note(kind, capacity, percent),
+		"decrease": {"text": _t("PRODUCT_SERVER_BTN_DECREASE").format({"n": Fmt.group(step * unit)}), "tip": decrease},
+		"increase": {"text": _t("PRODUCT_SERVER_BTN_INCREASE").format({"n": Fmt.group(step * unit)}),
+			"tip": _t("PRODUCT_SERVER_TIP_INCREASE_" + kind).format({"n": Fmt.group(step * unit), "old_cost": Fmt.money_exact(bill),
+				"new_cost": Fmt.money_exact(more * unit_price), "old_load": percent, "new_load": InfraSystem.load_percent(more)})},
+		"auto": {"on": ProductState.infra_auto(),
+			"tip": _t("PRODUCT_SERVER_AUTO_TIP").format({"edge": InfraSystem.AUTO_EDGE, "target": InfraSystem.AUTO_TARGET})},
+	}
+
+
+## Bloğun tek satırlık notu: kesinti uyarısı, yoksa anahtar açıkken son otomatik büyüme, kapalıyken büyüme; hiçbiri yoksa null.
+static func _server_note(kind: String, capacity: int, percent: int) -> Variant:
+	var mult: String = Fmt.number(IncidentSystem.load_mult(), 2)
+	if capacity <= 0:
+		return {"text": _t("PRODUCT_SERVER_WARN_NONE").format({"mult": mult}), "tone": "over", "glyph": "warn"}
+	if percent > InfraSystem.LOAD_OVER:
+		return {"text": _t("PRODUCT_SERVER_WARN_OVER").format({"load": percent, "mult": mult}), "tone": "over", "glyph": "warn"}
+	if percent > InfraSystem.LOAD_AMBER:
+		return {"text": _t("PRODUCT_SERVER_WARN_HIGH").format({"load": percent, "edge": InfraSystem.LOAD_AMBER, "mult": mult}),
+			"tone": "warn", "glyph": "warn"}
+	if ProductState.infra_auto():
+		var last: Dictionary = ProductState.infra_auto_last()
+		return null if last.is_empty() else {"tone": "quiet", "glyph": "info",
+			"text": _t("PRODUCT_SERVER_AUTO_LAST_" + kind).format({"date": Fmt.date_line(GameState.get_date_dict(int(last.day))),
+				"old": Fmt.group(int(last.old)), "new": Fmt.group(int(last.new))})}
+	var weeks: int = InfraSystem.weeks_to_amber()
+	if weeks <= 0:
+		return null
+	return {"tone": "quiet", "glyph": "clock", "text": _t("PRODUCT_SERVER_GROWTH_ONE" if weeks == 1 else "PRODUCT_SERVER_GROWTH").format(
+		{"edge": InfraSystem.LOAD_AMBER, "weeks": weeks})}
+
+
+## Bir kademe: adı, ipucu (fiyat, kesinti çarpanı, bedeller ve sözleşme şartı) ve seçilince açılan geçiş önizlemesi.
+## Kurumsal'dayken alttakiler kilitlidir ve ipucu gerekçedir.
+static func _tier(id: String, kind: String, active: String, units: int, bill: int) -> Dictionary:
+	var name: String = _t(TIER_KEYS[id])
+	var enterprise: bool = id == InfraSystem.PROVIDER_ENTERPRISE
+	var off: bool = active == InfraSystem.PROVIDER_ENTERPRISE and not enterprise
+	var parts: PackedStringArray = [_t("PRODUCT_SERVER_TIER_TIP_PRICE_" + kind).format(
+		{"price": Fmt.money_exact(InfraSystem.unit_price(id)), "unit": Fmt.group(InfraSystem.unit_size())}),
+		_t("PRODUCT_SERVER_TIER_TIP_OUTAGE").format({"mult": Fmt.number(IncidentSystem.tier_mult(id), 2)})]
+	if id == InfraSystem.PROVIDER_LOCAL:
+		parts.append(_t("PRODUCT_SERVER_TIER_TIP_REPORTS").format({"pct": roundi((InfraSystem.LOCAL_INFLOW_MULT - 1.0) * 100.0)}))
+	parts.append(_t("PRODUCT_SERVER_TIER_TIP_CLAUSE_" + ("YES" if enterprise else "NO")))
+	var final_note: String = _t("PRODUCT_SERVER_TIER_TIP_FINAL") if enterprise else ""
+	return {"id": id, "name": name, "off": off, "final": final_note,
+		"tip": _t("PRODUCT_SERVER_TIER_LOCKED") if off else "\n".join([name, SprintUiShared.SEP.join(parts), final_note]).strip_edges(),
+		"preview": _t("PRODUCT_SERVER_TIER_PREVIEW").format({"from": _t(TIER_KEYS.get(active, "")), "to": name,
+			"old": Fmt.money_exact(bill), "new": Fmt.money_exact(units * InfraSystem.unit_price(id))})}
 
 
 # --- Kart ------------------------------------------------------------------------------

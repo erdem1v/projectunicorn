@@ -76,6 +76,9 @@ const FLAG_TYPES := {
 	# --- §10 altyapı ---
 	"mvp_infra_provider": TYPE_STRING,          # sağlayıcı kimliği
 	"mvp_infra_units": TYPE_INT,                # satın alınan kapasite birimi
+	"mvp_infra_auto": TYPE_BOOL,                # Otomatik ayarla anahtarı
+	"mvp_infra_auto_last": TYPE_DICTIONARY,     # son otomatik büyüme {day, old, new}
+	"mvp_infra_served_weeks": TYPE_ARRAY,       # büyüme satırının geçmişi: son haftaların hizmet edilen sayısı
 	# --- B2C economy ---
 	# FLOAT so the hourly tick's slow erosion survives instead of rounding to zero each hour.
 	"b2c_audience": TYPE_FLOAT,

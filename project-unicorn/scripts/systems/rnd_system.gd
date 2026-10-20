@@ -757,7 +757,7 @@ static func is_frozen() -> bool:
 #  as 40. Every reader goes through float(), which progress_effort() does.
 
 static func to_dict() -> Dictionary:
-	# YAKALAMA DA TOHUMLAR. `from_dict` boş bir tabloyu `_ensure_seeded` ile yirmi düğüme
+	# YAKALAMA DA TOHUMLAR. `from_dict` boş bir tabloyu `_ensure_seeded` ile bütün düğümlere
 	# dolduruyor; yakalama tarafı tohumlamazsa kaydet → yükle → kaydet zinciri BÜYÜR ve
 	# `save_roundtrip_fingerprint` düşer. Tohumlayan `reset` koşu başlangıcında çağrılmıyor,
 	# yani v1 yayınlanmadan alınan bir kayıtta `_states` boş olabilir.
@@ -776,20 +776,36 @@ static func to_dict() -> Dictionary:
 	}
 
 
+## `table` keyed by node, without the nodes the tree no longer has (a save from before one was removed).
+static func _known(table: Dictionary) -> Dictionary:
+	for id in table.keys():
+		if not ResearchSeam.is_node(String(id)):
+			table.erase(id)
+	return table
+
+
 static func from_dict(d: Dictionary) -> void:
 	if d.is_empty():
 		_ensure_seeded()
 		return
-	_states = (d.get("states", {}) as Dictionary).duplicate()
-	_progress = (d.get("progress", {}) as Dictionary).duplicate()
+	_states = _known((d.get("states", {}) as Dictionary).duplicate())
+	_progress = _known((d.get("progress", {}) as Dictionary).duplicate())
 	_active = String(d.get("active", ""))
 	_assignees.clear()
 	for cid in (d.get("assignees", []) as Array):
 		_assignees.append(String(cid))
-	_paid = (d.get("paid", {}) as Dictionary).duplicate()
+	# A research on a node the tree no longer has ends: its people are free, its cash is not given back.
+	if _active != "" and not ResearchSeam.is_node(_active):
+		_active = ""
+		_release_assignees()
+	_paid = _known((d.get("paid", {}) as Dictionary).duplicate())
 	_freeze_job = String(d.get("freeze_job", ""))
 	_note_last_day = int(d.get("note_last_day", -1))
 	_note_pending = (d.get("note_pending", {}) as Dictionary).duplicate(true)
+	var emerging: String = String(_note_pending.get("node", ""))
+	if emerging != "" and not ResearchSeam.is_node(emerging):
+		_note_pending["node"] = ""
+		_note_pending["tech_key"] = ""
 	_note_unread = bool(d.get("note_unread", false))
 	# A save from before the count: a note in hand means the first one has come.
 	_notes_issued = int(d.get("notes_issued", 0 if _note_pending.is_empty() else 1))

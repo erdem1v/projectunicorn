@@ -25,6 +25,11 @@ const VERSION_LAUNCH_DAY := "mvp_version_launch_day"
 const INTEREST := "mvp_interest"
 const INFRA_PROVIDER := "mvp_infra_provider"
 const INFRA_UNITS := "mvp_infra_units"
+## Otomatik ayar anahtarı (varsayılan kapalı), son otomatik büyüme {day, old, new} ve büyüme satırının geçmişi: son
+## haftaların hizmet edilen sayısı.
+const INFRA_AUTO := "mvp_infra_auto"
+const INFRA_AUTO_LAST := "mvp_infra_auto_last"
+const INFRA_SERVED_WEEKS := "mvp_infra_served_weeks"
 ## §9 — "yeni kod terimi": son sürümün efor büyüklüğü, yayında damgalanır ve sürüm
 ## yaşıyla söner. Yeni sürüm sıfırdan havuz yaratmaz; yalnız bu terim tazelenir.
 const NEW_CODE_EFFORT := "mvp_new_code_effort"
@@ -295,3 +300,31 @@ static func set_infra_units(units: int) -> void:
 		return
 	GameState.set_flag(INFRA_UNITS, clamped)
 	EventBus.infra_changed.emit()
+
+
+static func infra_auto() -> bool:
+	return bool(GameState.get_flag(INFRA_AUTO, false))
+
+
+static func set_infra_auto(on: bool) -> void:
+	if infra_auto() == on:
+		return
+	GameState.set_flag(INFRA_AUTO, on)
+	EventBus.infra_changed.emit()
+
+
+## Son otomatik büyüme {day, old, new} (old ve new koltuk ya da kullanıcı); hiç büyümediyse {}.
+static func infra_auto_last() -> Dictionary:
+	return (GameState.get_flag(INFRA_AUTO_LAST, {}) as Dictionary).duplicate()
+
+
+static func set_infra_auto_last(last: Dictionary) -> void:
+	GameState.set_flag(INFRA_AUTO_LAST, last)
+
+
+static func infra_served_weeks() -> Array:
+	return (GameState.get_flag(INFRA_SERVED_WEEKS, []) as Array).duplicate()
+
+
+static func set_infra_served_weeks(served: Array) -> void:
+	GameState.set_flag(INFRA_SERVED_WEEKS, served)

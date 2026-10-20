@@ -191,8 +191,7 @@ static func _audience_delta_per_hour(quality: float = b2c_quality()) -> float:
 		+ GameState.brand * HOURLY_AUD_BRAND_COEF \
 		+ GameState.reputation * HOURLY_AUD_REPUTATION_COEF) \
 		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0)), quality) \
-		* SalesConstants.interest_mult(ProductRead.interest()) \
-		* InfraSystem.acquisition_multiplier()   # Ürün §10: over capacity, B2C acquisition ×0,6
+		* SalesConstants.interest_mult(ProductRead.interest())
 	var audience: float = b2c_audience()
 	# Word of mouth, both directions (see WOM_* above), on the aggregate B2C record's
 	# satisfaction. Before the record exists (no paid tier yet) neither term applies, so the
