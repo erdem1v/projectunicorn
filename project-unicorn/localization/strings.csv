@@ -1235,10 +1235,10 @@ VC_WHY_MOVED,Randevuyu kaydırdın,You moved the meeting
 VC_BLOCK_LATE,Mesainin kalanı bir fonla masaya oturmaya yetmez. Artık gelecek hafta.,"Not enough of the workday left to sit down with a fund. Next week, then."
 VC_CALLBACK_REOPENED,Kapı yeniden açıldı: {investor}. Tekrar iste.,{investor}'s door is open again. Ask again.
 VC_BEAT1_LABEL,Odayı oku · 1/4,Read the room · 1/4
-VC_B1_LINE,"""{investor}. Otur. Vaktim kısa — beni neden buraya çağırdığını göster.""","""{investor}. Sit. My time is short — show me why you called me here."""
+VC_B1_LINE,"""{investor}. Otur. Vaktim kısa. Beni neden buraya çağırdığını göster.""","""{investor}. Sit. My time is short. Show me why you called me here."""
 VC_B1_MONO,Odayı oku.,Read the room.
 VC_B1_MONO_WHY,Odayı oku: {reasons},Read the room: {reasons}
-VC_B1_CHOICE,Odayı oku — karşındakini tart.,Read the room — take their measure.
+VC_B1_CHOICE,Odayı oku.,Read the room.
 VC_APPROACH_PERCEPTION,Algı,Perception
 VC_BEAT2_LABEL,Anlatı · 2/4,Narrative · 2/4
 VC_B2_LINE,"""Rakamları gördüm. Şimdi anlatın: bu gelirin devam etmesini sağlayan ne?""","""I have seen the numbers. Now tell me what keeps this revenue coming."""
@@ -2339,7 +2339,7 @@ B2B_EV_REQ_COMPLAINT_EXPIRED,{customer} kaydı kapattı. Cevap veren olmadı.,{c
 B2B_EV_REQ_FEATURE_EXPIRED,{customer} sormayı bıraktı.,{customer} stopped asking.
 B2B_EV_REQ_RENEWAL_EXPIRED,{customer} yeniledi. Bizden arayan olmadı.,{customer} renewed. Nobody from our side called.
 FIXTURE_CONCURRENT_EXPIRE,Fixture kâğıdı süresi doldu.,The fixture paper expired.
-EV_MODIFIERS_MORE,ve daha fazlası,and more
+EV_MODIFIERS_MORE,Ve daha fazlası,And more
 TICKER_SRC_INTERNAL,İÇERİDEN,INTERNAL
 EFFECT_PHASE_ADVANCE,Yeni evre başlar,A new phase begins
 EFFECT_PHASE_HOLD,Şimdilik aynı evrede kalırsın,You stay in this phase for now
@@ -2398,15 +2398,15 @@ SALES_ODDS,İkna %{n},Persuasion {n}%
 SALES_MEETING_SKIP,Teklife geç,Skip to the offer
 SALES_MEETING_OPEN_OFFER,Rakamı konuş,Talk numbers
 SALES_MEETING_OBJECTION,"Açık konuşayım, {area} tarafınız bize yetmiyor.","To be frank, your {area} side is not enough for us."
-SALES_MOD_PRODUCT_FIT,ürün uyumu,product fit
-SALES_MOD_FOUNDER_SALES,senin satış tarafın,your sales side
-SALES_MOD_PRICE_SIGNAL,fiyat duyumu,the price signal
-SALES_MOD_PROVIDER,sağlayıcı kademesi,provider tier
-SALES_MOD_MISMATCH,masanın ölçeği,the size of the table
-SALES_MOD_CHARISMA,karizman,your charisma
+SALES_MOD_PRODUCT_FIT,Ürün uyumu,Product fit
+SALES_MOD_FOUNDER_SALES,Senin satış tarafın,Your sales side
+SALES_MOD_PRICE_SIGNAL,Fiyat duyumu,The price signal
+SALES_MOD_PROVIDER,Sağlayıcı kademesi,Provider tier
+SALES_MOD_MISMATCH,Masanın ölçeği,The size of the table
+SALES_MOD_CHARISMA,Karizman,Your charisma
 SALES_MOD_WARM_INTRO,Frank'in tanıştırması,Frank's introduction
-SALES_MOD_RETURNED,geçmiş bir görüşme,an earlier meeting
-SALES_MOD_ANSWERS,verdiğin cevaplar,the answers you gave
+SALES_MOD_RETURNED,Geçmiş bir görüşme,An earlier meeting
+SALES_MOD_ANSWERS,Verdiğin cevaplar,The answers you gave
 SALES_BLOCK_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
 SALES_BLOCK_WEEK_FULL,Bu haftaki toplantı hakların doldu. Yeni hafta başında yenilenir.,This week's meetings are spent. They come back when the new week starts.
 SALES_BLOCK_TOO_LATE,Mesai bitiyor. Bu hafta yeni bir masaya oturulmaz.,The workday is ending. No new table this week.

@@ -206,7 +206,7 @@ static func _modifier_labels() -> Dictionary:
 	}
 
 
-## "ürün uyumu · Çekirdek Zayıf": no number, the area the customer finds lacking (Core when none) and how this table reads it.
+## "Ürün uyumu · Çekirdek Zayıf": no number, the area the customer finds lacking (Core when none) and how this table reads it.
 static func _fit_line() -> String:
 	var area: String = String(_fit.loss_area) if _fit.loss_area != "" else "core"
 	return "%s%s%s %s" % [TranslationServer.translate(_fit.label_key), SprintCatalog.SEP, SprintCatalog.area_short(area),

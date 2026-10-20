@@ -2974,7 +2974,7 @@ kalmamıştı. Rakip modeli kendi üç boyutunu tutar ve ürünle bağı koptu.
 
 *Ne yapıldı.*
 - Terim `urun.product_fit` oldu: `delta = W_PRODUCT_FIT × clamp(U ÷ FIT_SCALE − 1, −1, 1)`, U adayın `ProductQuality.prospect_fit`'idir. Etiketi sayı
-  yazmaz (`SalesMeetingSystem._fit_line`: "ürün uyumu · Çekirdek Zayıf", yani müşterinin eksik bulduğu alan, yoksa Çekirdek, ve bu masanın o alanı okuduğu
+  yazmaz (`SalesMeetingSystem._fit_line`: "Ürün uyumu · Çekirdek Zayıf", yani müşterinin eksik bulduğu alan, yoksa Çekirdek, ve bu masanın o alanı okuduğu
   sözcük); zar ipucundaki kategorisi `MEETING_CHIP_PREP`'tir. `urun.axis_reading` gibi `urun.product_fit` de `EvSeams`'e kayıtlı bir seam DEĞİLDİR: yalnız
   ipucu listesinin anahtarıdır ve kartlar onu okuyamaz.
 - Kararlılık sorusu yerine her alıcı tipinin üç vurgu sorusu vardır (`probe_emphasis_trust`, `probe_emphasis_integrations`, `probe_emphasis_onboarding`;
