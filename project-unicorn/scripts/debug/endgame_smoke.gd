@@ -9785,7 +9785,7 @@ static func _seed_save_world() -> void:
 	RivalRegistry.advance_all()
 	GameState.set_flag("b2c_audience", 1234.5)      # KESİRLİ: int'e yuvarlanırsa yakalanır
 	GameState.set_flag("b2c_price", 29)             # int kalmalı
-	FinanceSystem.burn_breakdown["marketing"] = 777
+	FinanceSystem.set_burn_category("marketing", 777)
 	GameState.cs_escalation_days.append(42)         # Array[int] tipli kalmalı (net_history_90 2026-08-19'da emekli)
 
 	# SENTETİK EVENT GİTTİ. Fixture bir GameEvent kuruyor ve kuyruğa enjekte ediyordu; amacı
