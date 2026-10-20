@@ -154,7 +154,7 @@ static func _build_base_contributions(p: Prospect, fit: Dictionary) -> Array:
 	out.append({"seam": "sales.price_stance", "delta": SalesConstants.W_PRICE_SIGNAL * stance_signal})
 
 	# The provider ladder (Ürün §10).
-	var provider_ok: float = 1.0 if not InfraSystem.blocks_enterprise_signature() else -1.0
+	var provider_ok: float = -1.0 if InfraSystem.provider() == InfraSystem.PROVIDER_LOCAL else 1.0
 	out.append({"seam": "urun.capacity_tier", "delta": SalesConstants.W_PROVIDER_TIER * provider_ok})
 
 	# Star mismatch — a HARD curve, and Charisma is one of only two moments it may be touched.
@@ -343,7 +343,7 @@ static func _lose(reason: String) -> Dictionary:
 static func _derive_loss_reason() -> String:
 	if _fit.loss_area != "":
 		return SalesConstants.LOSS_WEAK_AREA
-	if _used_families.has("provider") and not bool(_facts.get("provider_enterprise_ok", true)):
+	if _used_families.has("provider") and not bool(_facts.get("provider_not_economy", true)):
 		return SalesConstants.LOSS_PROVIDER_TRUST
 	if _used_families.has("ladder") and bool(_facts.get("has_locked_next_step", false)):
 		return SalesConstants.LOSS_MISSING_TIER

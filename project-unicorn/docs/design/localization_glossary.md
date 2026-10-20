@@ -131,6 +131,7 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | Sprint {n} sonuna kadar | by the end of sprint {n} | Sözün son tarihi (`SALES_PROMISE_OPEN_SPRINT`); tür seçilmeden verilen söz hafta okur. TR/EN onay bekliyor. |
 | yer yok | no room | Sığmayan sözün kilidi: "Bir sonraki sprintte buna yer yok." ↔ "There is no room for it in the next sprint." (`SALES_LOCK_PROMISE_NO_ROOM`). TR/EN onay bekliyor. |
 | VC görüşmesi | VC meeting | |
+| sunucu maddesi · fesih bildirimi | server clause · termination notice | 3★ hesabın Kurumsal olmayan sunucuda imzaladığı sözleşme maddesi ve müşterinin süre dolunca bildirdiği fesih: hesap kartı etiketi "Sunucu maddesi · 9 Nis ↔ Server clause · 9 Apr" ve "Fesih bildirimi ↔ Termination notice" (`SALES_CLAUSE_LABEL*`), Sunucu bloğu "Kurumsal sunucu bekleyen {n} hesap ↔ {n} accounts waiting for Enterprise servers" (`SALES_CLAUSE_WAITING*`), müşterinin Bilgi İşlem'inden dört posta (`SALES_CLAUSE_*_SUBJECT` / `_BODY`), pazarlığın uyarı satırı (`SALES_CLAUSE_STRIP`). "Sözleşme feshi" yerine "fesih bildirimi": bildirim geri alınabilir. TR/EN onay bekliyor. |
 | Teklif / TEKLİF · {n} HAFTA | Offer / OFFER · {n} WEEKS | Tekil: OFFER · 1 WEEK (`_ONE`). |
 | SABIR | PATIENCE | Term-sheet kolu. |
 | MASADAN KALK | WALK AWAY | Kısa ve soğuk; "LEAVE THE TABLE" değil. |

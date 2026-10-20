@@ -88,6 +88,12 @@ extends Resource
 # not an amount, so it stays readable when the seat count moves.
 @export var signing_discount: float = 0.0
 
+# --- Kurumsal sunucu maddesi: imzada Kurumsal olmayan sunucuda 3★ ve üstü hesaba yazılır (B2BSalesSystem) ---
+# -1 = madde yok. `clause_due_day` maddenin süresinin dolduğu tik; `notice_end_day` müşterinin bildirdiği fesihle
+# sözleşmenin biteceği tik (süren bildirim yokken -1).
+@export var clause_due_day: int = -1
+@export var notice_end_day: int = -1
+
 
 # Map the satisfaction int onto the `health` band string. CustomerRegistry.set_satisfaction
 # re-derives it on every change.

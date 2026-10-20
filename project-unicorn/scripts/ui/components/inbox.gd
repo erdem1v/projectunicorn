@@ -15,8 +15,8 @@ const GROUP := &"inbox"
 const MENTOR_ID := "char_mentor_frank"
 ## A message kind's topic.
 const MESSAGE_TOPICS := {"intro": "EVENT_TAG_MENTOR", "summary": "EVENT_TAG_AGENDA",
-	"sales_week": "EVENT_TAG_CUSTOMER", "sales_loss": "EVENT_TAG_CUSTOMER", "rnd_note": "EVENT_TAG_PRODUCT",
-	"rnd_discovery": "EVENT_TAG_PRODUCT"}
+	"sales_week": "EVENT_TAG_CUSTOMER", "sales_loss": "EVENT_TAG_CUSTOMER", "clause": "EVENT_TAG_CUSTOMER",
+	"rnd_note": "EVENT_TAG_PRODUCT", "rnd_discovery": "EVENT_TAG_PRODUCT"}
 ## A category's sender when the card's speaker and slots name none.
 const CATEGORY_SENDERS := {"funding": "frank", "founder": "self", "team": "self", "world": "press",
 	"rival": "press", "customer": "desk", "product": "desk"}
@@ -313,6 +313,10 @@ static func _message_item(m: Dictionary) -> Dictionary:
 			it.subject = TranslationServer.translate(String(m.key)).format({"company": a.company})
 			it.line = first_line(lost_body(a))
 			it.right = ""
+		"clause":
+			it.sender = clause_sender(a)
+			it.line = first_line(clause_body(a))
+			it.right = ""
 		"rnd_note":
 			it.sender = named_employee(String(a.get("author_name", "")), String(a.get("author_role", "")))
 			it.line = first_line(note_lines(a)[0])
@@ -336,6 +340,22 @@ static func _reminder(id: String, topic: String, from: Dictionary, subject: Stri
 static func lost_body(a: Dictionary) -> String:
 	return TranslationServer.translate("SALES_REP_LOST_BODY").format(
 		{"company": a.company, "area": SprintCatalog.area_short(String(a.area))})
+
+
+## A server-clause mail's body in the live language; the days it names are ticks.
+static func clause_body(a: Dictionary) -> String:
+	var due: String = Fmt.day_month(GameState.get_date_dict(int(a.due)))
+	return TranslationServer.translate(B2BConstants.CLAUSE_MAILS[String(a.stage)][1]).format(
+		{"date": due, "since": due, "end": Fmt.day_month(GameState.get_date_dict(int(a.end)))})
+
+
+## The account's IT contact: the buyer met at the table while the account is on the book, initials after it left.
+static func clause_sender(a: Dictionary) -> Dictionary:
+	var c: Customer = CustomerRegistry.get_customer(String(a.id))
+	var face: Dictionary = {"mono": UiFactory.initials_of(String(a.name))} if c == null \
+		else {"look": CounterpartSystem.buyer_of(c).look}
+	return _sender("contact", TranslationServer.translate("SALES_CLAUSE_SENDER").format(a), "", String(a.name),
+		String(a.company), face)
 
 
 ## One lost deal as the weekly report says it.

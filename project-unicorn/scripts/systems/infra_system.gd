@@ -165,15 +165,18 @@ static func weeks_to_amber() -> int:
 # ---------------------------------------------------------------- oyuncu kararları
 
 ## Ekonomik ile Standart arasında geçiş her an ve bedelsizdir; yeni fiyat bir sonraki günden işler (fatura yalnız
-## daily_tick()'te yayımlandığı için bugünün burn'ü zaten yazılmıştır). Kurumsal'a geçiş geri dönüşsüzdür: kural burada,
-## çünkü seçici, bot ve debug aynı kapıdan geçer.
+## daily_tick()'te yayımlandığı için bugünün burn'ü zaten yazılmıştır). Kurumsal'a geçiş geri dönüşsüzdür ve hesapların
+## sunucu maddelerini karşılar: kural burada, çünkü seçici, posta düğmesi, bot ve debug aynı kapıdan geçer.
 static func set_provider(provider_id: String) -> bool:
 	if not is_provider(provider_id):
 		push_error("[InfraSystem] set_provider on unknown provider '%s'" % provider_id)
 		return false
 	if provider() == PROVIDER_ENTERPRISE and provider_id != PROVIDER_ENTERPRISE:
 		return false
+	var moves_up: bool = provider_id == PROVIDER_ENTERPRISE and provider() != PROVIDER_ENTERPRISE
 	ProductState.set_infra_provider(provider_id)
+	if moves_up:
+		B2BSalesSystem.meet_clauses()
 	return true
 
 
@@ -210,11 +213,11 @@ static func auto_adjust() -> void:
 
 # ---------------------------------------------------------------- §10 fatura
 
-## "aylık fatura = birim sayısı × birim fiyatı". Canlı ürün yoksa 0.
-static func monthly_bill() -> int:
+## "aylık fatura = birim sayısı × birim fiyatı", mevcut sağlayıcıda ya da `on_provider`'da. Canlı ürün yoksa 0.
+static func monthly_bill(on_provider: String = "") -> int:
 	if not ProductState.is_live():
 		return 0
-	return units() * unit_price(provider())
+	return units() * unit_price(on_provider if on_provider != "" else provider())
 
 
 static func daily_bill() -> int:
@@ -228,16 +231,10 @@ static func report_inflow_multiplier() -> float:
 	return LOCAL_INFLOW_MULT if ProductState.is_live() and provider() == PROVIDER_LOCAL else 1.0
 
 
-## §10 + §15 — Kurumsal Bulut büyük hesabın imza öncesi güven koşulunu karşılar; Ar-Ge
-## `security_cert` aynı koşulun ikinci yoludur. blocks_enterprise_signature() bundan ayrı
-## bir engeldir ve sertifika onu kaldırmaz.
+## Kartların okuduğu güven koşulu (`urun.enterprise_trust`): Kurumsal sunucu ya da Ar-Ge `security_cert`. Sözleşmenin
+## sunucu maddesini yalnız Kurumsal sunucu karşılar, sertifika karşılamaz (B2BSalesSystem).
 static func meets_enterprise_trust() -> bool:
 	return provider() == PROVIDER_ENTERPRISE or ResearchSeam.completed("security_cert")
-
-
-## §10 — Ekonomik Sağlayıcı seçiliyken "kurumsal hesap imzalamaz". Engel sağlayıcı kaynaklıdır.
-static func blocks_enterprise_signature() -> bool:
-	return provider() == PROVIDER_LOCAL
 
 
 # ---------------------------------------------------------------- günlük tik

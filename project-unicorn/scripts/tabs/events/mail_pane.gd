@@ -134,7 +134,7 @@ func _card() -> void:
 func _message() -> void:
 	var m: Dictionary = _item.msg
 	var a: Dictionary = m.args
-	var kind: String = {"intro": "MAIL_KIND_MESSAGE", "sales_loss": "MAIL_KIND_MESSAGE",
+	var kind: String = {"intro": "MAIL_KIND_MESSAGE", "sales_loss": "MAIL_KIND_MESSAGE", "clause": "MAIL_KIND_MESSAGE",
 		"rnd_discovery": "RND_DISCOVERY_TITLE"}.get(m.kind, "MAIL_KIND_REPORT")
 	match String(m.kind):
 		"intro":
@@ -147,6 +147,13 @@ func _message() -> void:
 			_mail(_kicker(kind), _item.subject, "", _sales_report(a))
 		"sales_loss":
 			_mail(_kicker(kind), _item.subject, INBOX.lost_body(a))
+		"clause":
+			_mail(_kicker(kind), _item.subject, INBOX.clause_body(a))
+			var account: Customer = CustomerRegistry.get_customer(String(a.id))
+			if account != null and account.clause_due_day >= 0:
+				_actions("", [[tr("SALES_CLAUSE_BTN_SWITCH").format({"old": Fmt.money_exact(InfraSystem.monthly_bill()),
+					"new": Fmt.money_exact(InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE))}),
+					_move_to_enterprise, true]])
 		"rnd_note", "rnd_discovery":
 			var note: bool = m.kind == "rnd_note"
 			if note:
@@ -778,6 +785,11 @@ func _actions(note: String, buttons: Array, blocked := false) -> void:
 		btn.pressed.connect(b[1])
 		row.add_child(btn)
 	_col.add_child(row)
+
+
+func _move_to_enterprise() -> void:
+	InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
+	populate(_item, _mode)
 
 
 func _go(tab: String, subpage := "") -> void:

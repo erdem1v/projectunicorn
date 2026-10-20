@@ -153,7 +153,11 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   kazanılır; temsilcinin planı dolunca müşterinin baktığı bir alan ürünün beklentisinin altındaysa kapanış ürün uyumuna
   bağlı bir zarla kaybedilebilir (`ProductQuality.close_chance`) ve kayıp haftada en çok bir mailla gelir, kalanı haftalık
   özetin satırıdır. Hesap imzada adayın ürüne uyumuyla açılır (tabanlar kalır) ve memnuniyeti hesabın kendi uyumuna kayar
-  (`ProductQuality.account_fit`; hesabın kullandığı hatlardaki açık hata düşer, güven defteri eklenir). B2C'de kitle her
+  (`ProductQuality.account_fit`; hesabın kullandığı hatlardaki açık hata düşer, güven defteri eklenir). 3★ ve üstü hesap
+  Kurumsal olmayan sunucuda imzalarsa sözleşmesine sunucu maddesi yazılır: 8 hafta içinde Kurumsal'a geçilmezse müşteri hakkını
+  kullanır; süre dolduğu tikte ve her ay başında memnuniyeti eşiğin 20 puandan az üstündeyse fesih bildirir (4 hafta sonra
+  sözleşme biter, hesap kayıp sayılır), değilse hakkını saklı tutar. Yalnız Kurumsal sunucuya geçiş maddeyi karşılar ve bildirimi
+  geri aldırır, güvenlik sertifikası karşılamaz; Kurumsal'dan inilmez (`B2BSalesSystem`, `InfraSystem.set_provider`). B2C'de kitle her
   oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
   Kitlenin büyüme ve erime terimi, B2C memnuniyetinin hedefi ve fiyat önerisi ürünün kitleye uyumunu okur
   (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir. Ürün sayfasının sözcüğü ve
@@ -254,7 +258,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   B2B imzada `PROBE FIT`, satışçının kaybettiği her adayda `PROBE REPLOSS`, kurucunun görüşme ve pazarlıkta kaybettiği her adayda
   `PROBE MLOSS`, her hafta `PROBE UFLUX` basılır;
   `full_run_server_{lean,wide,auto}` ve `full_run_b2c_server_*` kollarında (anahtar `server`) kurucu sunucuyu her
-  haftanın açılışında Artır ve Azalt ile yönetir ya da Otomatik ayarla'yı açar, her hafta `PROBE SERVER` basılır).
+  haftanın açılışında Artır ve Azalt ile yönetir ya da Otomatik ayarla'yı açar, her hafta `PROBE SERVER` basılır); `full_run*`
+  botu sunucu maddesi açık hesapların MRR'ı Kurumsal'ın ek faturasını geçince Kurumsal'a geçer, `PROBE END`'in `clause_ended=`
+  alanı maddenin bitirdiği sözleşmeleri sayar).
   Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
@@ -296,7 +302,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `sweep:<baş>:<son>:<adım>:<x|y>:<zm>`, `fit[:zm]` ya da `drag:<dx>:<dy>[:olay]`); `--pan-set=<küme>|<küme>` yalıtım
   düğmeleri (ilk küme taban, `SETDIFF|`), `--pan-gpu=<A>/<B>[;…]` alt görüntünün GPU ve CPU süresi (`GPU|`, `MEM|`);
   değerlerdeki `;` ve `|` tırnaklanır, düğme listesi `scripts/debug/office_pan_probe.gd` başındadır.
-  Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning`,
+  Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|economy|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning`,
   VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
@@ -304,7 +310,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   motoruyla kurulan koşuda
   (`pick`, `pick_named`, `pick_relang`, `plan`, `week1`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
   `gate`, `delegate`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
-  `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_b2c`;
+  `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_b2c`;
   kurulumları ve ikinci, üçüncü kareleri HARITA
   Ürün'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
   B2B boş hâli `--sales-shot=b2b_pre`, kayıptan dönen lead'lerin kapısı `--sales-shot=returning`.

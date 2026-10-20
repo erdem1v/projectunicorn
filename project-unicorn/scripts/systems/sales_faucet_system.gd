@@ -268,11 +268,6 @@ static func _seat_whale_condition(p: Prospect) -> void:
 
 static func _condition_met(condition: String, p: Prospect) -> bool:
 	match condition:
-		SalesConstants.WHALE_COND_PROVIDER:
-			# Ürün §10's signature block, asked of its owner: met by any provider but Local. §8
-			# lists "sağlayıcı ya da security_cert"; the certificate path
-			# (InfraSystem.meets_enterprise_trust) is not read here.
-			return not InfraSystem.blocks_enterprise_signature()
 		SalesConstants.WHALE_COND_LOCKED_TIER:
 			return SalesProbes.locked_line() == ""
 		SalesConstants.WHALE_COND_SLA:

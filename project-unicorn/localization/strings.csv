@@ -2411,7 +2411,6 @@ SALES_BLOCK_TOO_LATE,Mesai bitiyor. Bu hafta yeni bir masaya oturulmaz.,The work
 SALES_BLOCK_NO_LEAD,Bu aday artık boru hattında değil.,That lead is no longer in the pipeline.
 SALES_BLOCK_IN_DEAL,Bu şirketle anlaşma sürüyor.,A deal with them is under way.
 SALES_BLOCK_REASON_UNCHANGED,Aynı sebep hâlâ ortada. Değişmeden aynı cevabı verirler.,"The same reason still stands. Unchanged, they answer the same way."
-SALES_WHALE_PROVIDER_OR_CERT,Altyapı güvencesi istiyor.,They want an infrastructure assurance.
 SALES_WHALE_LOCKED_TIER,Kapalı bir kademeyi şart koşuyor.,They want a tier you have not opened.
 SALES_WHALE_SLA_PROMISE,Yazılı bir hizmet sözü istiyor.,They want a written service commitment.
 SALES_TICKER_SIGNED,{rep} imzayı aldı: {company},{rep} closed {company}
@@ -2443,7 +2442,6 @@ SALES_PROBE_PROBE_LADDER_LOCKED,İhtiyacımız olan kademe listede var ama kapal
 SALES_PROBE_PROBE_PROVIDER_TRUST,Veri nerede duruyor? Altyapıyı kimden alıyorsunuz?,Where does the data sit? Who do you buy infrastructure from?
 SALES_PROBE_PROBE_WHO_DO_I_CALL,Bir sorun çıktığında kimi arıyorum?,"When something breaks, who do I call?"
 SALES_PROBE_PROBE_SWITCHING_RISK,"Geçiş ne kadar sürer? İki kere sistem değiştirdik, ikisi de uzadı.",How long is the switch? We have done this twice and both ran long.
-SALES_PROBE_PROBE_CAPACITY,Yoğun günde ne oluyor? Bizim yükümüz sabit değil.,What happens on a heavy day? Our load is not flat.
 SALES_INNER_VOICE_0,Her cevap not ediliyor.,Every answer is being written down.
 SALES_INNER_VOICE_1,Sorular hazırlanmış. Bu görüşmeye çalışmışlar.,The questions were prepared. They worked on this meeting.
 SALES_INNER_VOICE_2,Kimse acele etmiyor. Bu iyiye de kötüye de gidebilir.,Nobody is hurrying. That can go either way.
@@ -2460,7 +2458,7 @@ SALES_MEMORY_PRICE,Geçen sefer rakamda anlaşamamıştık.,Last time we did not
 SALES_MEMORY_SWITCHING_RISK,Geçen sefer bizimle kimin ilgileneceği konuşulmuştu.,Last time we talked about who would look after us.
 SALES_LOCK_EMPHASIS_ENOUGH,{area} bunu henüz desteklemiyor.,{area} does not back that up yet.
 SALES_LOCK_STEPS_SHIPPED,Yayınlanmış kademeler bunu henüz desteklemiyor.,Shipped tiers do not back that up yet.
-SALES_LOCK_PROVIDER,Altyapın yerel bir sağlayıcıda.,Your infrastructure is with a local provider.
+SALES_LOCK_PROVIDER,Sunucuların Ekonomik kademede.,Your servers are on the Economy tier.
 SALES_LOCK_CS_STAFFED,Müşteri ilişkilerine atanmış kimse yok.,Nobody is assigned to customer success.
 SALES_LOCK_ONBOARDING_ENOUGH,{area} bunu henüz desteklemiyor.,{area} does not back that up yet.
 SALES_LOCK_OPEN_PITCH_PROMISE,Verilmiş bir sözün var.,You already gave your word.
@@ -2482,10 +2480,24 @@ SALES_ANS_PROBE_WHO_DO_I_CALL_A_CHARISMA,Sizin ölçeğinizde bir müşteriyle z
 SALES_ANS_PROBE_SWITCHING_RISK_A_STRENGTH,Ürün kolay öğreniliyor. Ekibinizin alışması uzun sürmez.,The product is easy to learn. Your people will not need long.
 SALES_ANS_PROBE_SWITCHING_RISK_A_ADMIT,Verinizi görmeden tarih vermek istemem.,I will not give you a date before I see your data.
 SALES_ANS_PROBE_SWITCHING_RISK_A_PROMISE,İmzalarsanız ihtiyacınız olan kademeyi bir sonraki sprintimize yazarım.,"Sign, and the tier you need goes into our next sprint, in writing."
-SALES_ANS_PROBE_CAPACITY_A_ADMIT,Yoğun günde kapasite zorlanıyor. Bugünkü hâli bu.,Capacity strains on a heavy day. This is where it stands.
-SALES_ANS_PROBE_CAPACITY_A_PROMISE,İhtiyacınız olan kademeyi yazılı olarak bir sonraki sprintimize alırım.,"I will put the tier you need into our next sprint, in writing."
 SALES_LOG_EXPIRED,{company} beklemekten vazgeçti,{company} stopped waiting
 SALES_LOG_FOUNDER_CLOSE,{company} anlaşmasını sen kapattın · {amount}/ay,You closed {company} · {amount}/mo
+SALES_CLAUSE_STRIP,Sözleşme maddesi: kurumsal sunucu · {weeks} hafta içinde · ayda {delta} fazla,Contract clause: Enterprise server · within {weeks} weeks · {delta} more a month
+SALES_CLAUSE_LABEL,Sunucu maddesi · {date},Server clause · {date}
+SALES_CLAUSE_LABEL_NOTICE,Fesih bildirimi · {date},Termination notice · {date}
+SALES_CLAUSE_WAITING,Kurumsal sunucu bekleyen {n} hesap,{n} accounts waiting for Enterprise servers
+SALES_CLAUSE_WAITING_ONE,Kurumsal sunucu bekleyen {n} hesap,{n} account waiting for Enterprise servers
+SALES_CLAUSE_SENDER,"{name} · {company}, Bilgi İşlem","{name} · {company}, IT"
+SALES_CLAUSE_SIGN_SUBJECT,Sözleşmedeki sunucu maddesi,The server clause in our contract
+SALES_CLAUSE_SIGN_BODY,Sözleşmede konuştuğumuz gibi verilerimizin kurumsal düzeyde bir sunucuda tutulmasını bekliyoruz. Taşımanın {date} tarihine kadar bitmesini rica ederiz.,"As agreed in the contract, we expect our data to be kept on an enterprise grade server. We would like the move to be done by {date}."
+SALES_CLAUSE_RESERVE_SUBJECT,Sunucu maddesi hâlâ açık,The server clause is still open
+SALES_CLAUSE_RESERVE_BODY,"Sözleşmemizdeki kurumsal sunucu maddesi hâlâ karşılanmıyor. Şimdilik devam ediyoruz, ancak sözleşmeyi feshetme hakkımızı saklı tutuyoruz.","The enterprise server clause in our contract is still not met. We are carrying on for now, but we reserve the right to end the contract."
+SALES_CLAUSE_NOTICE_SUBJECT,Sözleşmemizin feshi,Ending our contract
+SALES_CLAUSE_NOTICE_BODY,Sözleşmemizdeki kurumsal sunucu maddesi {since} tarihinden beri karşılanmıyor. Bu yüzden sözleşmemizi {end} tarihinde sonlandırıyoruz. O tarihe kadar verilerimiz kurumsal sunucuya taşınırsa kararımızı geri alırız.,"The enterprise server clause in our contract has not been met since {since}, so we are ending the contract on {end}. If our data is moved to an enterprise server before then, we will withdraw this notice."
+SALES_CLAUSE_WITHDRAW_SUBJECT,Fesih bildirimimizi geri alıyoruz,We are withdrawing our notice
+SALES_CLAUSE_WITHDRAW_BODY,Verilerimizin kurumsal sunucuya taşındığını gördük. Fesih bildirimimizi geri alıyoruz; sözleşmemiz sürüyor.,"We see our data has been moved to an enterprise server. We are withdrawing our notice, and the contract continues."
+SALES_CLAUSE_BTN_SWITCH,Kurumsal sunucuya geç · ayda {old} → {new},Move to Enterprise · {old} → {new} a month
+SALES_LOG_CLAUSE_ENDED,{company} · sözleşme feshedildi · sunucu maddesi,{company} · contract ended · server clause
 NEG_HOLD,Rakamında ısrar et,Hold your number
 NEG_HOLD_REASON,Anlaşma olmaz. Fiyattan kalkarlar ve bunu hatırlarlar.,No deal. They walk on the price and remember it.
 NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,Patience is out. Take this number or the table closes.

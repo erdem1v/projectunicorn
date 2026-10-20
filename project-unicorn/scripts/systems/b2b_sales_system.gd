@@ -46,6 +46,8 @@ static func daily_tick() -> void:
 
 
 static func _tick_customer(c: Customer) -> void:
+	if c.clause_due_day >= 0 and _tick_clause(c):
+		return
 	# The trust ledger forgives on its own, BEFORE the satisfaction drift, so this tick's target
 	# already reflects the (slightly smaller) grudge — a broken promise makes an account
 	# fragile for a month, not forever.
@@ -306,6 +308,67 @@ static func _remove_lost(c: Customer) -> void:
 	EventBus.customer_churned.emit(c.id)
 	CustomerRegistry.remove(c.id)      # emits customer_removed
 	SalesSystem.reflect_mrr()          # canonical MRR bridge after the account leaves
+
+
+# --- Kurumsal sunucu maddesi ---
+# Kurumsal olmayan sunucuda imzalayan 3★ ve üstü hesabın sözleşmesinde madde vardır: CLAUSE_WEEKS içinde Kurumsal'a
+# geçilmezse müşteri hakkını kullanır. Memnuniyeti eşiğin CLAUSE_MARGIN puandan az üstündeyse fesih bildirir (sözleşme
+# CLAUSE_NOTICE_WEEKS sonra biter), değilse hakkını saklı tutar. Kural süre dolduğu tikte ve her ay başında yeniden
+# işler; zar yok, oyuncu müşterinin okuduğu iki sayıyı görür (memnuniyet, eşik). Yalnız Kurumsal sunucuya geçiş karşılar
+# (`InfraSystem.set_provider` → `meet_clauses`); güvenlik sertifikası karşılamaz.
+
+## İmzada madde yazılır mı: yıldız eşiği geçiyor ve sunucu Kurumsal değil.
+static func clause_applies(star: int) -> bool:
+	return star >= B2BConstants.CLAUSE_STAR and InfraSystem.provider() != InfraSystem.PROVIDER_ENTERPRISE
+
+
+## İmza anı (`SalesSystem.add_b2b_customer`): maddeyi yazar ve hesabın bilgi işlemi bunu maille söyler.
+static func write_clause(c: Customer) -> void:
+	if not clause_applies(c.scale):
+		return
+	CustomerRegistry.set_clause(c.id, GameState.day + TimeModel.ticks(B2BConstants.CLAUSE_WEEKS), -1)
+	_post_clause(c, "sign")
+
+
+## Sunucu bloğunun "Kurumsal sunucu bekleyen N hesap" sayısı: maddesi açık hesaplar, fesih bildirmiş olanlar dahil.
+static func clause_waiting() -> int:
+	return CustomerRegistry.get_by_market("b2b").filter(func(c: Customer) -> bool: return c.clause_due_day >= 0).size()
+
+
+## Kurumsal sunucuya geçiş: açık maddeler karşılanır, süren fesih bildirimleri geri alınır.
+static func meet_clauses() -> void:
+	for c in CustomerRegistry.get_by_market("b2b"):
+		if c.clause_due_day < 0:
+			continue
+		if c.notice_end_day >= 0:
+			_post_clause(c, "withdraw")
+		CustomerRegistry.set_clause(c.id, -1, -1)
+
+
+## Maddesi açık hesabın günlük adımı: sözleşmenin bittiği tikte hesap kayıp sayılır ve true döner.
+static func _tick_clause(c: Customer) -> bool:
+	if c.notice_end_day >= 0:
+		if GameState.day < c.notice_end_day:
+			return false
+		SalesSystem.record_sales_event("clause_ended", "", c.company_name, c.mrr)
+		_remove_lost(c)
+		return true
+	var due_now: bool = GameState.day == c.clause_due_day
+	var month_start: bool = int(GameState.month_ledger.get("start_day", -1)) == GameState.day
+	if GameState.day < c.clause_due_day or not (due_now or month_start):
+		return false
+	if c.satisfaction < c.tolerance + B2BConstants.CLAUSE_MARGIN:
+		CustomerRegistry.set_clause(c.id, c.clause_due_day, GameState.day + TimeModel.ticks(B2BConstants.CLAUSE_NOTICE_WEEKS))
+		_post_clause(c, "notice")
+	elif due_now:
+		_post_clause(c, "reserve")
+	return false
+
+
+static func _post_clause(c: Customer, stage: String) -> void:
+	MessageSystem.post("clause", B2BConstants.CLAUSE_MAILS[stage][0], {"id": c.id, "stage": stage,
+		"company": c.company_name, "name": CounterpartSystem.buyer_of(c).name, "due": c.clause_due_day,
+		"end": c.notice_end_day})
 
 
 # --- Retention outcomes (called by the event effect verbs; WRITE-THROUGH LAW) ---

@@ -66,6 +66,7 @@ extends RefCounted
 #           capacity: "Kapasite 6.500 koltuk · ayda $15.600", percent (çubuğun yükü, tam yüzde; kapasitesizde 0), state
 #           (InfraSystem.capacity_state), load: "Yük %80 · boş pay ..." ("" kapasitesizde),
 #           note: {text, tone: "over"|"warn"|"quiet", glyph} or null (tek satır: kesinti uyarısı, son otomatik büyüme ya da büyüme),
+#           clause: "Kurumsal sunucu bekleyen 2 hesap" ya da "" (maddesi açık B2B hesap yoksa),
 #           decrease/increase: {text, tip}, auto: {on, tip}}
 # person = {name, role_text, look ({} ise baş harfler)}
 # column = {sprint, kind: "current"|"proposed"|"empty", capacity: {...} or null, pm, flags: [...], cards: [card], approved}
@@ -491,12 +492,14 @@ static func _server() -> Dictionary:
 			"new_load": InfraSystem.load_percent(fewer)})
 	if fewer > 0 and InfraSystem.load_percent(fewer) > InfraSystem.LOAD_OVER:
 		decrease += "\n" + _t("PRODUCT_SERVER_TIP_DECREASE_SHORT").format({"load": InfraSystem.load_percent(fewer)})
+	var waiting: int = B2BSalesSystem.clause_waiting()
 	return {
 		"tiers": InfraSystem.PROVIDER_IDS.map(func(id: String) -> Dictionary: return _tier(id, kind, provider, units, bill)),
 		"active": InfraSystem.PROVIDER_IDS.find(provider),
 		"capacity": _t("PRODUCT_SERVER_CAPACITY_" + kind).format({"n": Fmt.group(capacity), "bill": Fmt.money_exact(bill)}),
 		"percent": percent if capacity > 0 else 0, "state": InfraSystem.capacity_state(), "load": load_text,
 		"note": _server_note(kind, capacity, percent),
+		"clause": _t(Fmt.count_key("SALES_CLAUSE_WAITING", waiting)).format({"n": waiting}) if waiting > 0 else "",
 		"decrease": {"text": _t("PRODUCT_SERVER_BTN_DECREASE").format({"n": Fmt.group(step * unit)}), "tip": decrease},
 		"increase": {"text": _t("PRODUCT_SERVER_BTN_INCREASE").format({"n": Fmt.group(step * unit)}),
 			"tip": _t("PRODUCT_SERVER_TIP_INCREASE_" + kind).format({"n": Fmt.group(step * unit), "old_cost": Fmt.money_exact(bill),

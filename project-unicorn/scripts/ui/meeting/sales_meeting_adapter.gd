@@ -297,14 +297,19 @@ func _instrument(vs: Dictionary) -> Dictionary:
 		"deal": deal})
 
 
-## Seats × price = MRR, and the capacity those seats land in.
+## Seats × price = MRR, the capacity those seats land in and, for an account that signs with the server clause, what the
+## move to Enterprise would add to the bill.
 func _deal(vs: Dictionary) -> PackedStringArray:
 	var cf: Dictionary = vs.confirm
-	return PackedStringArray([
+	var lines := PackedStringArray([
 		tr("NEG_CONFIRM_LINE").format({"units": cf.units, "unit_label": tr(vs.units_label_key),
 			"price": Fmt.money_exact(cf.unit_price), "mrr": Fmt.money_exact(cf.mrr)}),
 		tr("NEG_CAPACITY").format({"used": Fmt.group(cf.capacity_used), "cap": Fmt.group(cf.capacity_total)}),
 	])
+	if B2BSalesSystem.clause_applies(_prospect.star):
+		lines.append(tr("SALES_CLAUSE_STRIP").format({"weeks": B2BConstants.CLAUSE_WEEKS, "delta": Fmt.money_exact(
+			InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE) - InfraSystem.monthly_bill())}))
+	return lines
 
 
 ## A result card; "" memory leaves its row out.

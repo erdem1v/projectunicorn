@@ -45,6 +45,20 @@ const SECTOR_TOLERANCE_BONUS := {
 }
 
 
+# ===================== Kurumsal sunucu maddesi (B2BSalesSystem) ======================
+const CLAUSE_STAR := 3                  # [ÇALIŞMA] onay bekliyor: bu yıldız ve üstü hesap, Kurumsal olmayan sunucuda maddeyle imzalar
+const CLAUSE_WEEKS := 8                 # [ÇALIŞMA] onay bekliyor: imzadan maddenin süresinin dolmasına
+const CLAUSE_NOTICE_WEEKS := 4          # [ÇALIŞMA] onay bekliyor: fesih bildiriminden sözleşmenin bitişine
+const CLAUSE_MARGIN := 20               # [ÇALIŞMA] onay bekliyor: eşiğin bundan az üstündeki memnuniyet fesih bildirir
+## Madde postasının aşaması → [konu anahtarı, gövde anahtarı].
+const CLAUSE_MAILS := {
+	"sign": ["SALES_CLAUSE_SIGN_SUBJECT", "SALES_CLAUSE_SIGN_BODY"],
+	"reserve": ["SALES_CLAUSE_RESERVE_SUBJECT", "SALES_CLAUSE_RESERVE_BODY"],
+	"notice": ["SALES_CLAUSE_NOTICE_SUBJECT", "SALES_CLAUSE_NOTICE_BODY"],
+	"withdraw": ["SALES_CLAUSE_WITHDRAW_SUBJECT", "SALES_CLAUSE_WITHDRAW_BODY"],
+}
+
+
 static func seed_tolerance(scale: int, industry: String) -> int:
 	# Seeded at signing from scale + sector. Higher = pickier (enters Risk sooner).
 	var t: int = TOLERANCE_BASE + (maxi(scale, 1) - 1) * TOLERANCE_PER_SCALE

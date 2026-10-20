@@ -36,6 +36,8 @@ func _server_card(parent: Control, server: Dictionary, preview: String) -> void:
 	if server.note != null:
 		card.add_child(_note(server.note))
 	card.add_child(_controls(server))
+	if server.clause != "":
+		card.add_child(UiFactory.D_glyph_tag(GLYPH % "shield", server.clause, &"warn"))
 
 
 func _tiers(server: Dictionary, preview: String) -> VBoxContainer:

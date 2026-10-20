@@ -55,7 +55,7 @@ const TABLE := {
 			"price_sensitive": true,
 		},
 		"honesty_premium": true,          # "Kabul et" earns this archetype's respect (§5.1)
-		"conditions": [SalesConstants.WHALE_COND_PROVIDER, SalesConstants.WHALE_COND_SLA],
+		"conditions": [SalesConstants.WHALE_COND_SLA],
 	},
 
 	# --- Stub 2 · the technical buyer ---------------------------------------
@@ -73,7 +73,7 @@ const TABLE := {
 			"price_sensitive": false,
 		},
 		"honesty_premium": false,
-		"conditions": [SalesConstants.WHALE_COND_LOCKED_TIER, SalesConstants.WHALE_COND_PROVIDER],
+		"conditions": [SalesConstants.WHALE_COND_LOCKED_TIER],
 	},
 
 	# --- Stub 3 · the finance buyer -----------------------------------------

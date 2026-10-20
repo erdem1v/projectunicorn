@@ -208,6 +208,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"load_mult_steps":                fail = _case_load_mult_steps(pinned)
 		"auto_capacity_grows_only":       fail = _case_auto_capacity_grows_only()
 		"infra_local_provider_tradeoff": fail = _case_infra_local_provider_tradeoff()
+		"enterprise_clause_timeline":    fail = _case_enterprise_clause_timeline()
 		"product_read_catalogue":        fail = _case_product_read_catalogue()
 		"floor_ladder_areas":            fail = _case_floor_ladder_areas()
 		"hr_frank_guard":           fail = _case_hr_frank_guard()
@@ -3709,12 +3710,12 @@ static func _case_sales_loss_reason_from_asked() -> String:
 			["", ["switching"], true, SalesConstants.LOSS_PRICE],
 			["", ["provider"], true, SalesConstants.LOSS_PROVIDER_TRUST],
 			["", ["ladder"], true, SalesConstants.LOSS_MISSING_TIER],
-			["", ["capacity"], false, SalesConstants.LOSS_PRICE],
+			["", ["emphasis"], false, SalesConstants.LOSS_PRICE],
 			["integrations", ["switching"], false, SalesConstants.LOSS_WEAK_AREA],
 			["core", [], true, SalesConstants.LOSS_WEAK_AREA]]:
 		SalesMeetingSystem._fit = {"loss_area": row[0]}
 		SalesMeetingSystem._used_families = row[1]
-		SalesMeetingSystem._facts = {"cs_staffed": row[2], "provider_enterprise_ok": false, "has_locked_next_step": true}
+		SalesMeetingSystem._facts = {"cs_staffed": row[2], "provider_not_economy": false, "has_locked_next_step": true}
 		var reason: String = SalesMeetingSystem._derive_loss_reason()
 		if reason != row[3]:
 			return "lacking '%s', asked %s, customer success staffed %s: walked out over %s, want %s" % [
@@ -14676,7 +14677,7 @@ static func _case_auto_capacity_grows_only() -> String:
 	return ""
 
 
-## §10 — ucuz sağlayıcının sabit bedeli GELEN akışı ×1,25'tir ve kurumsal hesap imzalamaz. Kurumsal'a geçiş geri dönüşsüzdür:
+## §10 — ucuz sağlayıcının sabit bedeli GELEN akışı ×1,25'tir ve güven koşulunu karşılamaz. Kurumsal'a geçiş geri dönüşsüzdür:
 ## oradan hiçbir kademeye inilmez.
 ##
 ## FALSİFİKASYON: LOCAL_INFLOW_MULT'u 1.0 yap → akış iddiası FAIL; set_provider'daki Kurumsal denetimini sil → iniş iddiası FAIL.
@@ -14688,8 +14689,6 @@ static func _case_infra_local_provider_tradeoff() -> String:
 	if absf(InfraSystem.report_inflow_multiplier() - 1.0) > 0.0001:
 		return "the neutral provider is not neutral (%.2f)" % InfraSystem.report_inflow_multiplier()
 	var flow_cloud: float = SupportSystem.reports_per_day()
-	if InfraSystem.blocks_enterprise_signature():
-		return "the cloud provider blocks an enterprise signature"
 
 	InfraSystem.set_provider(InfraSystem.PROVIDER_LOCAL)
 	if absf(InfraSystem.report_inflow_multiplier() - 1.25) > 0.0001:
@@ -14703,8 +14702,6 @@ static func _case_infra_local_provider_tradeoff() -> String:
 	if absf(flow_local - flow_cloud * 1.25) > 0.0001:
 		return "the multiplier did not reach the actual flow (%.4f vs %.4f)" \
 			% [flow_local, flow_cloud * 1.25]
-	if not InfraSystem.blocks_enterprise_signature():
-		return "the local provider does not block an enterprise signature"
 	if InfraSystem.meets_enterprise_trust():
 		return "the local provider satisfies the enterprise trust condition"
 
@@ -14720,6 +14717,98 @@ static func _case_infra_local_provider_tradeoff() -> String:
 	for tier in [InfraSystem.PROVIDER_CLOUD, InfraSystem.PROVIDER_LOCAL]:
 		if InfraSystem.set_provider(tier) or InfraSystem.provider() != InfraSystem.PROVIDER_ENTERPRISE:
 			return "the enterprise provider let the company back down to '%s'" % tier
+	return ""
+
+
+## Kurumsal sunucu maddesi: Kurumsal olmayan sunucuda imzalayan 3★ hesap maddeyle imzalar (8 hafta; güvenlik
+## sertifikası karşılamaz), 2★ imzalamaz ve imzada hesabın bilgi işlemi maille söyler. Süre dolduğu tikte kural: memnuniyet eşiğin
+## 20 puandan az üstündeyse fesih bildirimi (sözleşme 4 hafta sonra biter ve hesap kayıp sayılır), değilse hakkını saklı tutar
+## (tek mail); her ay başı kural yeniden işler ve hakkını saklı tutan hesap eşiğe inince bildirir. Kurumsal'a geçiş açık
+## maddeleri kapatır ve bildirimi geri aldırır; Kurumsal'dan inilmez ve Kurumsal'da imzalayan hesap maddesizdir.
+##
+## FALSİFİKASYON: meet_clauses'taki set_clause(-1, -1) satırını sil → geçiş iddiası FAIL; set_provider'daki Kurumsal denetimini sil →
+## iniş iddiası FAIL; _tick_clause'taki _remove_lost'u sil → fesih iddiası FAIL; clause_applies'ı Kurumsal'a bakmadan yaz →
+## Kurumsal'da imza iddiası FAIL.
+static func _case_enterprise_clause_timeline() -> String:
+	_seed_b2b(2000)
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(20)
+	RnDSystem.from_dict({"states": {"security_cert": RnDSystem.STATE_DONE}})
+	var mails := func(stage: String) -> int:
+		return (GameState.messages + GameState.mail_outbox).filter(func(m: Dictionary) -> bool:
+			return m.kind == "clause" and m.args.stage == stage).size()
+	var small: Customer = SalesSystem.add_b2b_customer(_add_prospect("clause_small", 2, ""), 40, 100, 70)
+	var a: Customer = SalesSystem.add_b2b_customer(_add_prospect("clause_a", 3, ""), 60, 100, 70)
+	var b: Customer = SalesSystem.add_b2b_customer(_add_prospect("clause_b", 3, ""), 60, 100, 70)
+	var signed: int = GameState.day
+	var due: int = signed + TimeModel.ticks(B2BConstants.CLAUSE_WEEKS)
+	if small.clause_due_day != -1:
+		return "a 2★ account signed with a server clause"
+	if not InfraSystem.meets_enterprise_trust() or a.clause_due_day != due or b.clause_due_day != due:
+		return "with the security certificate done the 3★ accounts' clause is due %d and %d, want %d" % [
+			a.clause_due_day, b.clause_due_day, due]
+	if B2BSalesSystem.clause_waiting() != 2 or mails.call("sign") != 2:
+		return "two clauses open: %d waiting, %d signing mails" % [B2BSalesSystem.clause_waiting(), mails.call("sign")]
+	# One tick: the satisfaction each account holds the moment the rule reads it; `month` stands for a month's first tick.
+	var step := func(pins: Dictionary, month := false) -> void:
+		for c: Customer in [a, b]:
+			if pins.has(c.id) and CustomerRegistry.get_customer(c.id) != null:
+				CustomerRegistry.set_satisfaction(c.id, int(pins[c.id]))
+		GameState.advance_day()
+		if month:
+			GameState.month_ledger["start_day"] = GameState.day
+		B2BSalesSystem.daily_tick()
+	var hold := {a.id: 90, b.id: 60}
+	if int(hold[a.id]) < a.tolerance + B2BConstants.CLAUSE_MARGIN or int(hold[b.id]) >= b.tolerance + B2BConstants.CLAUSE_MARGIN:
+		return "the fixture's satisfaction does not straddle the margin (tolerance %d and %d)" % [a.tolerance, b.tolerance]
+	while GameState.day < due - 1:
+		step.call(hold)
+	if mails.call("reserve") + mails.call("notice") != 0 or a.notice_end_day != -1 or b.notice_end_day != -1:
+		return "the clause moved before its period ran out (day %d, due %d)" % [GameState.day, due]
+	step.call(hold)   # the period ends: a satisfied account keeps its right, one under the margin gives notice
+	var b_end: int = due + TimeModel.ticks(B2BConstants.CLAUSE_NOTICE_WEEKS)
+	if mails.call("reserve") != 1 or a.notice_end_day != -1 or a.clause_due_day != due:
+		return "the satisfied account did not keep its right in one mail (%d mails, notice %d)" % [
+			mails.call("reserve"), a.notice_end_day]
+	if mails.call("notice") != 1 or b.notice_end_day != b_end:
+		return "the unsatisfied account's notice ends %d with %d mails, want %d and 1" % [
+			b.notice_end_day, mails.call("notice"), b_end]
+	step.call(hold, true)   # a month starts with both as they were: nothing new
+	if mails.call("reserve") != 1 or mails.call("notice") != 1:
+		return "a month's start sent a mail the accounts' state did not call for"
+	step.call({a.id: 60, b.id: 60}, true)   # the satisfied account has sunk under the margin
+	if mails.call("notice") != 2 or a.notice_end_day != GameState.day + TimeModel.ticks(B2BConstants.CLAUSE_NOTICE_WEEKS):
+		return "the account that sank under the margin did not give notice at the month's start (notice %d)" % a.notice_end_day
+	var lost_before: int = GameState.run_customers_lost
+	while GameState.day < b_end - 1:
+		step.call({b.id: 60})
+	if CustomerRegistry.get_customer(b.id) == null:
+		return "the contract ended before its notice ran out"
+	step.call({b.id: 60})
+	if CustomerRegistry.get_customer(b.id) != null or GameState.run_customers_lost != lost_before + 1:
+		return "the contract did not end with its notice (lost %d, was %d)" % [GameState.run_customers_lost, lost_before]
+	var logged: Array = GameState.sales_log.filter(func(row: Dictionary) -> bool:
+		return row.kind == "clause_ended" and row.company == b.company_name)
+	if logged.size() != 1 or CustomerRegistry.get_customer(a.id) == null:
+		return "the end of the contract is not in the sales log once (%d rows), or the other account went with it" % logged.size()
+	if B2BSalesSystem.clause_waiting() != 1:
+		return "%d clauses waiting after one contract ended, want 1" % B2BSalesSystem.clause_waiting()
+	# The move to Enterprise meets the open clause and takes the notice back; there is no way back down.
+	if not InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE):
+		return "the move up to Enterprise was refused"
+	if a.clause_due_day != -1 or a.notice_end_day != -1 or B2BSalesSystem.clause_waiting() != 0 or mails.call("withdraw") != 1:
+		return "Enterprise left the clause open (due %d, notice %d) or sent %d withdraw mails" % [
+			a.clause_due_day, a.notice_end_day, mails.call("withdraw")]
+	var a_notice_end: int = GameState.day + TimeModel.ticks(B2BConstants.CLAUSE_NOTICE_WEEKS)
+	while GameState.day <= a_notice_end:
+		step.call({a.id: 60})
+	if CustomerRegistry.get_customer(a.id) == null:
+		return "the account left on a notice Enterprise had taken back"
+	if InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD) or InfraSystem.provider() != InfraSystem.PROVIDER_ENTERPRISE:
+		return "the company went back down from Enterprise"
+	var later: Customer = SalesSystem.add_b2b_customer(_add_prospect("clause_c", 3, ""), 60, 100, 70)
+	if later.clause_due_day != -1 or mails.call("sign") != 2:
+		return "a 3★ account signed on Enterprise with a clause (due %d)" % later.clause_due_day
 	return ""
 
 
@@ -18959,7 +19048,7 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 	SalesLedger.set_open_pitch_promise(c.id)
 	SalesLedger.count_meeting()
 	SalesLedger.spend_inner_voice()
-	SalesProbes.remember("probe_capacity")
+	SalesProbes.remember("probe_ladder_reach")
 
 	var slot: String = "smoke_sales_v11"
 	if not SaveManager.save_to_slot(slot):
@@ -19020,7 +19109,7 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 		return "the week's meeting count did not survive (%d)" % SalesLedger.meetings_this_week()
 	if SalesLedger.inner_voice_left() >= SalesConstants.INNER_VOICE_BUDGET_PER_RUN:
 		return "the inner-voice budget did not survive"
-	if not GameState.sales_line_memory.has("probe_capacity"):
+	if not GameState.sales_line_memory.has("probe_ladder_reach"):
 		return "the content repeat memory did not survive"
 	SaveManager.delete_slot(slot)
 	return ""

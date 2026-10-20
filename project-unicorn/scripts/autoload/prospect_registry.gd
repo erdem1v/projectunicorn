@@ -55,6 +55,8 @@ func insert_raw(prospect: Prospect) -> void:
 	if prospect == null or prospect.id == "":
 		push_warning("[ProspectRegistry] insert_raw() called with null or missing id")
 		return
+	if not SalesConstants.WHALE_CONDITION_ORDER.has(prospect.whale_condition):
+		prospect.whale_condition = ""   # a condition no whale asks for any more
 	_prospects[prospect.id] = prospect
 
 

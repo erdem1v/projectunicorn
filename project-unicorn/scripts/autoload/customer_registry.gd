@@ -236,6 +236,17 @@ func set_market_ref(customer_id: String, ref: Dictionary) -> void:
 	c.market_ref = ref
 
 
+func set_clause(customer_id: String, due_day: int, notice_end_day: int) -> void:
+	# The Kurumsal sunucu maddesi's state (B2BSalesSystem), no signal: its readers repaint on the day's tick.
+	# -1 = no clause / no notice.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_clause on unknown id: %s" % customer_id)
+		return
+	c.clause_due_day = due_day
+	c.notice_end_day = notice_end_day
+
+
 func set_support_request(customer_id: String, since_day: int) -> void:
 	# HIDDEN request-channel bookkeeping — no signal. since_day == -1 means the account has
 	# no open request; any other value is the tick one opened (the escalation clock AND the

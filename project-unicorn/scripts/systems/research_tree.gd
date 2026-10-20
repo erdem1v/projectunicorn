@@ -45,7 +45,7 @@ const CASH_TABLE := {"ai_engine": 600, "security_cert": 900, "analytics_engine":
 const CROSS_EFFORT_CEIL := 50
 
 ## §13'ün sekiz katsayısı. `enterprise_trust` ve `product_note` katsayı DEĞİL kancadır
-## (§4.2'nin kurumsal imza koşulu, §6'nın aylık notu) — ayrı sayılırlar.
+## (`urun.enterprise_trust`'ı okuyan güvenlik ve sızıntı kartları, §6'nın aylık notu) — ayrı sayılırlar.
 const COEFFICIENT_EFFECTS := [
 	"validation_throughput", "bug_rate_ceil", "beta_decay", "inflow_base", "license_cost", "b2c_conversion",
 	"design_effort", "ai_usage_weight",

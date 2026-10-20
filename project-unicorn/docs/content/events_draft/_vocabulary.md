@@ -414,7 +414,7 @@ slot of that type (§17.12).
 | `urun.decision_trim_finishes` | global | bool | Product | taking the trim share off the decision card finishes it this sprint |
 | `urun.design_late` | global | bool | Product | the decision card is still in design after this week's work and a developer waits on it |
 | `urun.durability_tier` | global | int | Product | the tier the Durability line has reached; 1 is autosave and nothing more |
-| `urun.enterprise_trust` | global | bool | Product | the enterprise provider or security_cert research: the bar a large account checks before it signs |
+| `urun.enterprise_trust` | global | bool | Product | Enterprise servers or the security_cert research: the trust bar the security and leak cards read |
 | `urun.floor_area` | global | string | Product | localization key (PRODUCT_AREA_*_SHORT) of the worst area's name, '' without one; a card body prints it translated |
 | `urun.floor_state` | global | string | Product | '' | warning | crossed: the state of the worst area; '' in B2B and while no area is below the warning ratio |
 | `urun.interest` | global | float | Product | 0-100, refreshed on publish, decays by a half-life counted in weeks |

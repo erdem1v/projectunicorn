@@ -182,10 +182,9 @@ const PRESTIGE_SIGNING_BRAND := 3           # [ÇALIŞMA]
 # ============================ §8 · Whale ====================================
 # Adaptive condition: the FIRST UNMET item of an ordered list. A satisfied item is never
 # demanded (§8), so a whale never asks for something the player already has.
-const WHALE_COND_PROVIDER := "provider_or_cert"
 const WHALE_COND_LOCKED_TIER := "locked_tier"
 const WHALE_COND_SLA := "sla_promise"
-const WHALE_CONDITION_ORDER := [WHALE_COND_PROVIDER, WHALE_COND_LOCKED_TIER, WHALE_COND_SLA]
+const WHALE_CONDITION_ORDER := [WHALE_COND_LOCKED_TIER, WHALE_COND_SLA]
 
 
 # ============================ §9 · Re-pitch =================================

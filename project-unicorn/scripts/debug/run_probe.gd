@@ -96,7 +96,7 @@ extends RefCounted
 #   PROBE END   day=<d> run_active=<b> ending=<id> finite_runway_p<1|2|3>=<finite weeks>/<weeks>
 #               min_cash_pre_seed=<n> seed_day=<n|-1> first_sign_day=<n|-1> first_revenue_day=<n|-1>
 #               cheque_day=<n|-1> open_w1_12=<n> idle_w1_12=<n> u_unexplained_weeks=<n> server_clicks=<n>
-#               auto_grows=<n> outage_eko=<n> outage_std=<n> outage_kur=<n>
+#               auto_grows=<n> outage_eko=<n> outage_std=<n> outage_kur=<n> clause_ended=<n>
 #                                           (the weeks are the weekly STATE readings, by phase;
 #                                           seed_day is the day the seed was signed; first_revenue_day
 #                                           the first daily tick that closed with MRR; cheque_day the
@@ -105,7 +105,8 @@ extends RefCounted
 #                                           of them without a sitting; u_unexplained_weeks the weeks
 #                                           whose PROBE UFLUX counted an unexplained account; server_clicks the founder's
 #                                           Increase and Decrease presses, auto_grows the automatic increases, outage_* the
-#                                           night outages by the tier the servers were on: Economy, Standard, Enterprise)
+#                                           night outages by the tier the servers were on: Economy, Standard, Enterprise;
+#                                           clause_ended the contracts the server clause ended)
 #   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
 #   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn id>=<n>... ...
 #                                           (full_run*: once, the day the Series A door opens)
@@ -257,6 +258,7 @@ static var _server_clicks: int = 0          # PROBE END: the founder's Increase 
 static var _auto_grows: int = 0             # PROBE END: the automatic increases
 static var _units_seen: int = 0             # the units bought at the last change of the servers
 static var _outages: Dictionary = {}        # PROBE END: tier -> night outages
+static var _clause_ended: int = 0           # PROBE END: the contracts the server clause ended
 static var _lost_lead: Prospect = null      # PROBE REPLOSS: the lead the last reported loss took off the registry
 static var _bugs_open: int = 0              # PROBE BUGS: the open bugs at the last weekly line
 static var _bugs_cleared: int = 0           # PROBE BUGS: bugs a fix card cleared since then
@@ -329,6 +331,7 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_auto_grows = 0
 	_units_seen = 0
 	_outages = {}
+	_clause_ended = 0
 	_bugs_open = 0
 	_bugs_cleared = 0
 	ProductState.bugs_free = false
@@ -625,6 +628,8 @@ static func _on_churn(customer_id: String) -> void:
 	if c == null:
 		print("PROBE CHURN day=%d id=%s (record already gone)" % [GameState.day, customer_id])
 		return
+	if c.notice_end_day >= 0 and GameState.day >= c.notice_end_day:
+		_clause_ended += 1
 	print("PROBE CHURN day=%d id=%s sat=%d tol=%d trust=%.1f phase=%s streak=%d countdown=%d mrr=%d" % [
 		GameState.day, customer_id, c.satisfaction, c.tolerance, c.trust_offset,
 		c.lifecycle_phase, c.risk_streak, c.churn_countdown, c.mrr])
@@ -1118,13 +1123,13 @@ static func _finish() -> void:
 	var runway: Array = [1, 2, 3].map(func(ph: int) -> String:
 		var w: Vector2i = _runway_weeks.get(ph, Vector2i.ZERO)
 		return "finite_runway_p%d=%d/%d" % [ph, w.x, w.y])
-	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d u_unexplained_weeks=%d server_clicks=%d auto_grows=%d outage_eko=%d outage_std=%d outage_kur=%d" % [
+	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d u_unexplained_weeks=%d server_clicks=%d auto_grows=%d outage_eko=%d outage_std=%d outage_kur=%d clause_ended=%d" % [
 		GameState.day, str(GameState.run_active), GameState.ending_id, " ".join(runway), _min_cash_pre_seed,
 		GameState.seed_closed_day, _first_sign_day, _first_revenue_day,
 		int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, -1)), _open_weeks.size(),
 		_open_weeks.filter(func(w: int) -> bool: return not _meetings_by_day.has(w)).size(), _u_unexplained_weeks,
 		_server_clicks, _auto_grows, int(_outages.get(InfraSystem.PROVIDER_LOCAL, 0)),
-		int(_outages.get(InfraSystem.PROVIDER_CLOUD, 0)), int(_outages.get(InfraSystem.PROVIDER_ENTERPRISE, 0))])
+		int(_outages.get(InfraSystem.PROVIDER_CLOUD, 0)), int(_outages.get(InfraSystem.PROVIDER_ENTERPRISE, 0)), _clause_ended])
 	_log_hr()
 
 
@@ -1172,6 +1177,7 @@ static func _play_the_week() -> void:
 	_take_the_seed()
 	if GameState.get_flag("mvp_shipped", false):
 		_run_the_servers()
+		_answer_the_clause()
 		_work_the_pipeline()
 	if _vc_policy != "":
 		_play_the_hunt()
@@ -1503,6 +1509,19 @@ static func _run_the_servers() -> void:
 		InfraSystem.adjust_capacity(-1)
 		presses += 1
 	_server_clicks += presses
+
+
+## The server clause, as a player reads the Sunucu block's row: the move to Enterprise once the MRR of the accounts waiting on
+## it outgrows what Enterprise adds to the bill.
+static func _answer_the_clause() -> void:
+	if InfraSystem.provider() == InfraSystem.PROVIDER_ENTERPRISE:
+		return
+	var waiting: int = 0
+	for c: Customer in CustomerRegistry.get_by_market("b2b"):
+		if c.clause_due_day >= 0:
+			waiting += c.mrr
+	if waiting > InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE) - InfraSystem.monthly_bill():
+		InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
 
 
 ## The played run's operations — the things any player does once the product is live: research,

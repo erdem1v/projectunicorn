@@ -321,7 +321,7 @@ static func pipeline_optimistic_mrr() -> int:
 
 # --- Sales desk activity log. The owning system holds the seam, GameState holds the array +
 #     cap — the same split FinanceSystem.record_transaction uses. `kind` is an internal id
-#     ("lead_expired" | "auto_close" | "founder_close" | "cs_absorb"); the Sales tab maps it
+#     ("lead_expired" | "auto_close" | "founder_close" | "cs_absorb" | "clause_ended"); the Sales tab maps it
 #     to a localized line, so nothing player-facing is stored here. ---
 
 static func record_sales_event(kind: String, actor: String, company: String, mrr: int) -> void:
@@ -383,6 +383,7 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
 	CustomerRegistry.set_market_ref(c.id, ProductQuality.market_ref_for(c.scale, c.industry))
+	B2BSalesSystem.write_clause(c)
 	# The account arrives already owned when a rep has room, through the stewardship system's
 	# own seam: who holds an account is CS's rule, not Sales', and Sales only says "one more
 	# exists now".

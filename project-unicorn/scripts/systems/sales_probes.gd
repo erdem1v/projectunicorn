@@ -21,7 +21,7 @@ extends RefCounted
 #
 # ANSWER VERBS (§5.1, internal taxonomy — never drawn as a fixed palette, §5.1.1):
 #   strength   "Gücü göster"     — open ONLY on a real strength; otherwise a locked row that
-#                                  names the actual gap ("Altyapın yerel bir sağlayıcıda.")
+#                                  names the actual gap ("Sunucuların Ekonomik kademede.")
 #   admit      "Kabul et"        — always open; some archetypes pay an honesty premium
 #   promise    "Söz ver"         — §6's single-open-promise lock; narrows the Act 2 band
 #   charisma   "Yönü çevir"      — open only when the founder HAS Charisma (§5.1, moment 1)
@@ -72,9 +72,7 @@ static func facts_for(p: Prospect) -> Dictionary:
 		"support_staffed": ProductRead.support_staffed(),
 		# --- infrastructure, through Ürün §10 ---
 		"provider": InfraSystem.provider(),
-		"provider_enterprise_ok": not InfraSystem.blocks_enterprise_signature(),
-		"capacity_state": InfraSystem.capacity_state(),
-		"over_capacity": InfraSystem.is_over_capacity(),
+		"provider_not_economy": InfraSystem.provider() != InfraSystem.PROVIDER_LOCAL,
 		# --- R&D ---
 		"security_cert": ResearchSeam.completed("security_cert"),
 		# --- the company, through Ekip §15.3 ---
@@ -198,7 +196,7 @@ const CATALOGUE := [
 		"criteria": {"customer_star": {"min": 2}},
 		"answers": [
 			{"id": "a_strength", "verb": VERB_STRENGTH, "delta": 1.0,
-				"gate": {"provider_enterprise_ok": true}, "lock_fact": "provider"},
+				"gate": {"provider_not_economy": true}, "lock_fact": "provider"},
 			{"id": "a_admit", "verb": VERB_ADMIT, "delta": 0.35},
 			{"id": "a_reference", "verb": VERB_REFERENCE, "delta": 0.7,
 				"gate": {"has_reference": true}},
@@ -230,17 +228,6 @@ const CATALOGUE := [
 				"gate": {"onboarding_enough": true}, "lock_fact": "onboarding_enough"},
 			{"id": "a_admit", "verb": VERB_ADMIT, "delta": 0.4},
 			{"id": "a_promise", "verb": VERB_PROMISE, "delta": 0.8},
-		],
-	},
-
-	# --- Capacity ----------------------------------------------------------
-	{
-		"id": "probe_capacity",
-		"family": "capacity",
-		"criteria": {"over_capacity": true},
-		"answers": [
-			{"id": "a_admit", "verb": VERB_ADMIT, "delta": 0.35},
-			{"id": "a_promise", "verb": VERB_PROMISE, "delta": 0.85},
 		],
 	},
 ]

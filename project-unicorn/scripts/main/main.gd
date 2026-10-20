@@ -988,7 +988,10 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ##   frank_moment · thanks (two release thank-you notes, a kept word and a met request, the newest open) ·
 ##   rnd_note (week 14's note) · rnd_note_demand (the same note with a bug open on an ERP
 ##   line, so its first line names that line) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
-##   weekly_sales · rep_lost (the sales rep's mail of a desk deal lost over an area, through the real close) · weekly_lost
+##   weekly_sales · clause_sign · clause_reserve · clause_notice · clause_withdraw (the server clause's four mails of a 3★ account on
+##   Standard servers, the newest open: its signing, the day its period ends over a satisfied account and over one it does not
+##   satisfy, and that notice taken back by the move to Enterprise) ·
+##   rep_lost (the sales rep's mail of a desk deal lost over an area, through the real close) · weekly_lost
 ##   (the same week's summary: two closes and the two lost deals the rep did not mail) · weekly_lost_only (a week of the
 ##   lost deals alone: no table) · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
@@ -1034,6 +1037,8 @@ func _run_inbox_shot(state: String) -> void:
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 	if state in ["rep_lost", "weekly_lost", "weekly_lost_only"]:
 		_stage_desk_losses(state != "weekly_lost_only")
+	if state.begins_with("clause_"):
+		_stage_clause(state)
 	await _mount_shot_shell()
 	_wire_modal_signals()
 	var selina := "char_emp_shot_3"
@@ -1160,6 +1165,8 @@ func _run_inbox_shot(state: String) -> void:
 			var id: String = MessageSystem.post("sales_week", "SALES_WEEKLY_TITLE",
 				{"rows": rows, "accounts": CustomerRegistry.account_count()})
 			INBOX.show("m:" + id)
+		"clause_sign", "clause_reserve", "clause_notice", "clause_withdraw":
+			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "clause")[-1].id))
 		"rep_lost", "weekly_lost", "weekly_lost_only":
 			var kind: String = "sales_loss" if state == "rep_lost" else "sales_week"
 			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == kind)[-1].id))
@@ -1346,7 +1353,7 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals|returning>. `desk` puts a rep mid-processing on the desk; `picker` opens the steward
+## norep|discounted|frank|risk_stability|deals|returning|clause>. `desk` puts a rep mid-processing on the desk; `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
 ## week's meetings spent, an open promise by sprint, the log) with three calm accounts, Aras in its onboarding floor's
@@ -1361,6 +1368,7 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 ## `frank` adds Frank's introduction to the three leads of a founder with no Satış: it heads the list, tagged.
 ## `risk_stability` keeps the bugs at the complaint gate, so neither Risk account is there over outages: Ege, which
 ## holds no broken promise, reads the product's stability, Lale, whose promise broke, its falling satisfaction.
+## `clause` gives Kuzey an open server clause and Palmiye a notice: the cards' dated labels.
 ## `returning` gives two leads a loss over an area: the 2★ lead's Integrations is still empty (its door is shut, the reason
 ## under its buttons), the 1★ lead's Core is enough for a 1★ table (open).
 ## `deals` shows the founder's two table deals (the 3★ lead's two weeks into its plan, the 1★ lead's agreed this week)
@@ -1462,6 +1470,10 @@ func _run_sales_shot(kind: String) -> void:
 		var last: Prospect = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.star == 3)[0]
 		last.spawned_on_day = GameState.day - TimeModel.ticks(3)
 		last.expires_on_day = GameState.day + TimeModel.ticks(1)
+	if kind == "clause":
+		# Kuzey's server clause is open for five more weeks; Palmiye gave notice and its contract ends in three.
+		CustomerRegistry.set_clause("co_kuzey", GameState.day + TimeModel.ticks(5), -1)
+		CustomerRegistry.set_clause("co_palmiye", GameState.day - TimeModel.ticks(1), GameState.day + TimeModel.ticks(3))
 	if kind == "discounted":
 		# Nordica signed its 20 seats at $100; the discount takes MRR down while the stamp stays.
 		CustomerRegistry.get_customer("co_nordica").seat_price = 100
@@ -1556,6 +1568,24 @@ func _stage_desk_losses(closes: bool) -> void:
 		SalesRepSystem._close(rep, lead)
 	GameState.set_flag("sales_weekly_anchor_day", GameState.day - TimeModel.ticks(SalesConstants.WEEKLY_SUMMARY_INTERVAL_WEEKS))
 	SalesRepSystem._tick_weekly_summary()
+
+
+## --inbox-shot=clause_*: the theme seed's company on Standard servers with a 3★ account signed through the real path (its
+## signing mail). reserve and notice stand at the day the clause's period ends, the account's satisfaction what the rule
+## reads (90 keeps its right, 55 ends it); withdraw is that notice taken back by the move to Enterprise.
+func _stage_clause(state: String) -> void:
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(20)
+	var prospect: Prospect = SalesFaucetSystem.spawn_prospect("enterprise", "event")
+	var account: Customer = SalesSystem.add_b2b_customer(prospect, 60, 35, 70)
+	ProspectRegistry.remove(prospect.id)
+	if state == "clause_sign":
+		return
+	GameState.day = account.clause_due_day
+	CustomerRegistry.set_satisfaction(account.id, 90 if state == "clause_reserve" else 55)
+	B2BSalesSystem._tick_clause(account)
+	if state == "clause_withdraw":
+		InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
 
 
 ## The goal lists' fixture: week 1 at 08:00 as the run opens, `state` how far the first minute got. untyped · typed
@@ -3640,7 +3670,7 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 
 ## live:<pick|pick_named|pick_relang|plan|week1|active|decision_paper|b2c_mvp|b2c_live|b2b_mvp|b2b_mature|b2b_quarter|
 ## b2b_requests|gate|rnd|delegate|solo15|solo15_tip|solo12_active|overview_pre|server_80|server_94|server_104|server_growth|
-## server_auto|server_tier|server_final|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
+## server_auto|server_tier|server_final|server_clause|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
 ## the lead's plan applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active
 ## starts the lead's plan at 12 hours, two cards over capacity (6/5). The rest choose a type, staff it with the
@@ -3774,12 +3804,13 @@ func _seed_product_live(scenario: String) -> void:
 ## The Sunucu block's states on the live ERP, one account on 20 units (1.000 seats) of the Standard tier: 800 seats (`server_80`),
 ## 940 (`server_94`), 1.040 (`server_104`); `server_growth` 720 with a served history rising 80 a week toward the line;
 ## `server_auto` the same with Auto adjust on and its last increase; `server_tier` Standard with the Enterprise preview open;
-## `server_final` the company on Enterprise; `server_b2c` the note app, 12.400 users on 13 units (13.000 users, 96%).
+## `server_final` the company on Enterprise; `server_clause` the account a 3★ one whose contract holds the server clause (the
+## block's "waiting for Enterprise servers" row); `server_b2c` the note app, 12.400 users on 13 units (13.000 users, 96%).
 func _seed_server(scenario: String) -> void:
 	if scenario == "server_b2c":
 		SalesSystem.add_b2c_audience(12400)
 	else:
-		var prospect: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")
+		var prospect: Prospect = SalesFaucetSystem.spawn_prospect("enterprise" if scenario == "server_clause" else "mid", "event")
 		SalesSystem.add_b2b_customer(prospect, {"server_80": 800, "server_94": 940, "server_104": 1040}.get(scenario, 720), 100, 85)
 		ProspectRegistry.remove(prospect.id)
 	InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE if scenario == "server_final" else InfraSystem.PROVIDER_CLOUD)
@@ -4061,7 +4092,9 @@ const MEETING_SHOT_VC := {
 ## panel as the founder plays it, each playback skipped.
 ## Sales, Perde 1 and the act change: probe = the first question; locked = on to a question with a
 ## locked answer and its reason line; won = played to the customer's cut, its Devam into the offer
-## on screen; lost = played to the loss, its result card; handoff = past that Devam into Perde 2; frank = Frank's
+## on screen; lost = played to the loss, its result card; handoff = past that Devam into Perde 2; economy = a 3★ table
+## on Economy servers over their capacity, played to the cut and into Perde 2: no question about the load,
+## the confirm strip's warning line naming the server clause, MEETINGSHOT|economy| naming the load and the families asked; frank = Frank's
 ## introduction across a founder with neither Satış nor Karizma, the first question, and the needle's hover lines
 ## printed as MEETINGSHOT|frank|mods=<their seams> (a frame cannot show a hover).
 ## Sales, the product read at the table (the sector fixed, the sitting's first question the emphasis one): emph_trust,
@@ -4096,10 +4129,14 @@ func _run_meeting_shot(kind: String) -> void:
 			await _shot_pick(id)
 	else:
 		if kind == "locked" or kind == "lost":
-			# Yerel sağlayıcı ve K1 merdiveni: "Gücü göster" satırı kapanır ve gerekçesini yazar.
+			# Ekonomik kademe ve K1 merdiveni: "Gücü göster" satırı kapanır ve gerekçesini yazar.
 			ProductState.set_infra_provider("local")
 			_seed_line_state("erp", [["line_erp_ledger", 1]])
-		if kind in ["won", "handoff"]:
+		if kind == "economy":
+			ProductState.set_infra_provider("local")
+			InfraSystem.set_capacity(1)
+			_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 3000, 60, 13, false)   # LOC-DATA debug seed / id
+		if kind in ["won", "handoff", "economy"]:
 			_shot_healthy_erp()
 		if kind in ["lost", "frank"]:
 			# Kayıp karesi gerçekten kaybetmeli: kurucunun Satış'ı ve Karizma'sı sıfır, ürün K1,
@@ -4108,7 +4145,7 @@ func _run_meeting_shot(kind: String) -> void:
 			var founder: Character = CharacterRegistry.get_founder()
 			founder.role_stats[HRConstants.AREA_SALES] = 0
 			founder.role_stats[FounderConstants.SKILL_CHARISMA] = 0
-		var plays_out: bool = kind in ["won", "lost", "handoff"]
+		var plays_out: bool = kind in ["won", "lost", "handoff", "economy"]
 		var p: Prospect = _meeting_shot_lead(kind, plays_out)
 		await _mount_shot_shell()
 		await _shot_sales_sitting(p)
@@ -4131,8 +4168,10 @@ func _run_meeting_shot(kind: String) -> void:
 				await _shot_pick(_open_answer(false))
 		elif plays_out:
 			await _shot_play_sales(kind == "lost")
-			if kind == "handoff" and not (await _shot_act_two()):
+			if kind in ["handoff", "economy"] and not (await _shot_act_two()):
 				return
+		if kind == "economy":
+			print("MEETINGSHOT|economy|load=%d|asked=%s" % [InfraSystem.load_percent(), ",".join(SalesMeetingSystem._used_families)])
 	_probe_pause_interactivity(_meeting_panel, "meeting/" + kind)
 	await get_tree().create_timer(0.5).timeout
 	_save_shot("meeting_shot_%s" % kind)

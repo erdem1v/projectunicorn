@@ -118,7 +118,7 @@ static func _install_product() -> void:
 		"Product", "normal | amber | over | unprovisioned")
 	EvSeams.register("urun.enterprise_trust", G, TYPE_BOOL,
 		func() -> bool: return InfraSystem.meets_enterprise_trust(),
-		"Product", "the enterprise provider or security_cert research: the bar a large account checks before it signs")
+		"Product", "Enterprise servers or the security_cert research: the trust bar the security and leak cards read")
 	EvSeams.register("urun.support_staffed", G, TYPE_BOOL,
 		func() -> bool: return ProductRead.support_staffed(),
 		"Product", "the module's central pressure reads from this one boolean")

@@ -19,6 +19,7 @@ var _price := UiFactory.make_label("", &"ValueText", UiTokens.D_INK_1)
 var _high := UiFactory.make_label("", &"SmallMuted")
 var _deal := UiFactory.make_label("", &"ValueText", UiTokens.D_INK_1)
 var _capacity := UiFactory.make_label("", &"Caption")
+var _clause := UiFactory.make_label("", &"Caption", UiTokens.D_warn())
 
 
 ## The ruler itself: `_draw`, because a danger zone, an anchor tick, a trail of counters and a handle
@@ -101,10 +102,11 @@ func _init() -> void:
 	_deal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(SprintUiShared.pad(_deal, Vector4i(0, UiTokens.SPACE_M, 0, 0)))
 	add_child(_capacity)
+	add_child(_clause)
 
 
 ## `instrument`: NegotiationSystem.view_state() with the adapter's `price_label`, `locked_reason`
-## and `deal` (the MRR line, then the capacity line).
+## and `deal` (the MRR line, the capacity line, then the server clause the account would sign with, when it would).
 func show_instrument(instrument: Dictionary) -> void:
 	_rail.ins = instrument
 	_rail.tooltip_text = instrument.locked_reason
@@ -116,3 +118,5 @@ func show_instrument(instrument: Dictionary) -> void:
 	_price.add_theme_color_override("font_color", UiTokens.D_neg() if instrument.insulting else UiTokens.D_INK_1)
 	_deal.text = instrument.deal[0]
 	_capacity.text = instrument.deal[1]
+	_clause.text = instrument.deal[2] if instrument.deal.size() > 2 else ""
+	_clause.visible = _clause.text != ""

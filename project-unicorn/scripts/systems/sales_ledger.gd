@@ -357,7 +357,7 @@ static func _blocker_cleared(p: Prospect) -> bool:
 		SalesConstants.LOSS_MISSING_TIER:
 			return SalesProbes.locked_line() == ""
 		SalesConstants.LOSS_PROVIDER_TRUST:
-			return not InfraSystem.blocks_enterprise_signature()
+			return InfraSystem.provider() != InfraSystem.PROVIDER_LOCAL
 		SalesConstants.LOSS_PRICE:
 			return price_stance() == SalesConstants.STANCE_COMPETITIVE
 		SalesConstants.LOSS_SWITCHING_RISK:

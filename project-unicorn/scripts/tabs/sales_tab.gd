@@ -503,6 +503,8 @@ func _log_line(row: Dictionary) -> String:
 		"cs_absorb":
 			return tr("SALES_LOG_ABSORB").format({
 				"actor": String(row.get("actor", "")), "company": company})
+		"clause_ended":
+			return tr("SALES_LOG_CLAUSE_ENDED").format({"company": company})
 	return ""
 
 
@@ -537,6 +539,11 @@ func _account_card(c: Customer, off: bool) -> PanelContainer:
 	var calm: bool = not ATTENTION_RANK.has(c.lifecycle_phase)
 	var head := _name_row(c.display_name(), &"DataMedium" if calm and c.assigned_to != "" else &"DataStrong", c.scale)
 	head.add_child(UiFactory.D_tag(tr(tag[0]), tag[1]))
+	if c.clause_due_day >= 0:
+		var notice: bool = c.notice_end_day >= 0
+		head.add_child(UiFactory.D_tag(tr("SALES_CLAUSE_LABEL_NOTICE" if notice else "SALES_CLAUSE_LABEL").format({
+			"date": Fmt.day_month(GameState.get_date_dict(c.notice_end_day if notice else c.clause_due_day), true)}),
+			&"risk" if notice else &"warn"))
 	words.add_child(head)
 	words.add_child(_line(_meta_line(c), &"MetaMuted"))
 	if risk:

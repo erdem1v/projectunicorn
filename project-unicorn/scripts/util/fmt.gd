@@ -80,6 +80,11 @@ static func date_line(d: Dictionary) -> String:
 	return _t("DATE_LINE").format({"week": int(d.week), "mon": month_name(int(d.month)), "year": int(d.year)})
 
 
+## The tick's calendar day and month: "9 Nisan" / "9 April", abbreviated "9 Nis" / "9 Apr".
+static func day_month(d: Dictionary, abbreviated := false) -> String:
+	return "%d %s" % [int(d.day), month_abbr(int(d.month)) if abbreviated else month_name(int(d.month))]
+
+
 ## A real-world moment's date and time, in the locale's field order (TR 19.08.2026, EN 08/19/2026).
 static func stamp(unix: int) -> String:
 	var d: Dictionary = Time.get_datetime_dict_from_unix_time(unix)
