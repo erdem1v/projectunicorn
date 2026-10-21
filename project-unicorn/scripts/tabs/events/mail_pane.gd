@@ -147,6 +147,11 @@ func _message() -> void:
 			_mail(_kicker(kind), _item.subject, "", _sales_report(a))
 		"sales_loss":
 			_mail(_kicker(kind), _item.subject, INBOX.lost_body(a))
+		"support_week":
+			_mail(_kicker(kind), _item.subject, "", _support_report(a))
+			if String(a.fix) != "":
+				_actions("", [[tr("SUPPORT_RPT_BTN_FIX").format({"line": SprintCatalog.cap_name(String(a.fix))}),
+					SprintUiShared.open_product_area.bind(get_tree(), SprintCatalog.area_of_line(String(a.fix))), true]])
 		"clause":
 			_mail(_kicker(kind), _item.subject, INBOX.clause_body(a))
 			var account: Customer = CustomerRegistry.get_customer(String(a.id))
@@ -677,6 +682,29 @@ func _sales_report(a: Dictionary) -> VBoxContainer:
 	for lost in a.get("lost", []):
 		col.add_child(_wrapped(INBOX.lost_line(lost), &"DataText"))
 	return col
+
+
+## The support report's table: the lines with open bugs, then the week's news.
+func _support_report(a: Dictionary) -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
+	if not (a.lines as Array).is_empty():
+		col.add_child(_section("SUPPORT_RPT_SEC_TROUBLE", a.lines.map(func(r: Dictionary) -> Control:
+			return SprintUiShared.bug_line(ProductModel.bug_row_of(SprintCatalog.cap_name(String(r.line)), r.part,
+				int(r.delta)), &"DataText"))))
+	col.add_child(_section("SUPPORT_RPT_SEC_WEEK", a.news.map(func(r: Dictionary) -> Control:
+		return _wrapped(INBOX.support_line(r), &"DataText"))))
+	return col
+
+
+## A report's section: its heading over its rows.
+func _section(heading_key: String, rows: Array) -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	box.add_child(UiFactory.make_label(Fmt.upper(tr(heading_key)), &"KeyLabel"))
+	for row in rows:
+		box.add_child(row)
+	return box
 
 
 ## What a finished research opened (§5.8): no money, no chip, only the door. Its sentence, the continuation

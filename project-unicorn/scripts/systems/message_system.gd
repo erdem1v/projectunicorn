@@ -2,7 +2,7 @@ class_name MessageSystem
 extends RefCounted
 
 # The inbox's messages that are not engine cards: Frank's intro, the period summary, the R&D
-# note and discovery, the weekly sales report, a seller's lost-deal note. Engine decisions are read from EvHistory and
+# note and discovery, the weekly sales report, a seller's lost-deal note, the weekly support report. Engine decisions are read from EvHistory and
 # never copied here. A message is a CSV key and its args, never text, so it reads in the
 # language it is opened in. The only writer of GameState.messages.
 #
@@ -59,6 +59,14 @@ static func _deliver(msg: Dictionary) -> String:
 		"rnd_note":
 			EventBus.product_note_issued.emit(day)
 	return id
+
+
+## Drops the unread messages of `kind`: a report nobody opened gives way to the next one.
+static func drop_unread(kind: String) -> void:
+	var kept: Array = GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind != kind or m.read)
+	if kept.size() < GameState.messages.size():
+		GameState.messages.assign(kept)
+		EventBus.messages_changed.emit()
 
 
 static func mark_read(id: String) -> void:

@@ -71,6 +71,7 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | Otomatik ayarla | Auto adjust | `PRODUCT_SERVER_AUTO_TOGGLE`; anahtarın adı Erdem'indir. Son büyüme "Otomatik büyüme ↔ Automatic increase". |
 | hesap *(B2B müşteri)* | account | `PRODUCT_ACCOUNT_COUNT`; en büyük hesap "en büyüğü {hesap} ({n} kullanıcı) ↔ largest: {account} ({n} users)" (`PRODUCT_FX_TOP`). TR/EN onay bekliyor. |
 | Öncelikli *(düzeltme kartı etiketi)* | Priority | Hattın açık hatası öncelik eşiğinde (`PRODUCT_PRIORITY`). "Acil" değildir: "acil durum" olaylarıyla karışmasın diye ayrı kelime. TR/EN onay bekliyor. |
+| Destek raporu *(haftalık mail)* | Support report | `SUPPORT_RPT_*`: konu "Destek · Hafta 14 ↔ Support · Week 14", gönderen "{ad} · Müşteri temsilcisi ↔ {name} · Account manager", bölümler "En çok sorun çıkan ↔ Most trouble" ve "Bu hafta ↔ This week", temsilcinin satırı "Yetişemedim ↔ I could not keep up". Hat satırı Ürün penceresininkiyle aynıdır (`açık hata ↔ open bug`). TR/EN onay bekliyor. |
 | müşteri kaybı *(ürün fonunun geri dönüşü)* | customer churn | Yatırımcının koşulu: "{weeks} içinde müşteri kaybı %5 altında (şu an %2,5) ↔ Customer churn under 5% in 12 weeks (2.5% so far)" (`HUNT_CB_CHURN`). TR/EN onay bekliyor. |
 | itibar düşüşü *(hata ihmali)* | reputation drop | TopBar itibar ipucu: "Haftalardır açık kalan hatalar itibarı düşürdü. Son düşüş: {tarih} ↔ Bugs left open for weeks cost reputation. Last drop: {date}" (`REP_DROP_BUGS`). TR/EN onay bekliyor. |
 | puan *(efor)* | points | Tekil: point (`_ONE`). |

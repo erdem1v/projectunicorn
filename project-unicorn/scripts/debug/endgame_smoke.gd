@@ -551,6 +551,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"bug_cost_b2b_account_lines":            fail = _case_bug_cost_b2b_account_lines()
 		"bug_cost_b2c_audience":                 fail = _case_bug_cost_b2c_audience()
 		"support_inflow_is_bug_free":            fail = _case_support_inflow_is_bug_free()
+		"support_report_quiet_week":             fail = _case_support_report_quiet_week()
 		"neglect_reputation_below_zero":         fail = _case_neglect_reputation_below_zero()
 		"bugs_leave_sales_and_vc_alone":         fail = _case_bugs_leave_sales_and_vc_alone()
 		"vc_weakest_area":                       fail = _case_vc_weakest_area()
@@ -24714,6 +24715,68 @@ static func _case_support_inflow_is_bug_free() -> String:
 	ProductState.add_bugs("line_note_tool_search", 50)
 	if absf(SupportSystem.reports_per_day() - flow) > 1e-9:
 		return "50 open bugs moved the inflow from %.4f to %.4f a day" % [flow, SupportSystem.reports_per_day()]
+	return ""
+
+
+## Haftalık destek raporu yalnız bir Müşteri İlişkileri temsilcisi varken ve haftada yeni bir şey olduysa gelir: temsilcisiz hafta
+## yeni şey olsa da sessizdir; temsilci varken eşik altı yeni bir hat, sayısı büyüyen eski bir hat sessiz haftadır; bir hat
+## Öncelikli eşiğe varınca rapor temsilcinin adıyla gelir; okunmamış eski rapor yenisi gelince düşer, okunmuş kalır; düzeltme
+## hattı boşaltınca "sıfırlandı" ve en kötü hat değişimi yazılır. "Yetişemedim" cevapsız bildirim gelenlerin beşte biri ya da
+## fazlasıysa çıkar, ondan azsa çıkmaz.
+## FALSİFİKASYON: `weekly_report`te `news.is_empty()` dönüşünü sil ("yeni mi" hep doğru) → sessiz hafta iddiaları FAIL;
+## `reps.is_empty()` dönüşünü sil → temsilcisiz hafta iddiası FAIL; `drop_unread` çağrısını sil → düşme iddiası FAIL;
+## `report_news`te `>= incoming` yerine `> incoming` yaz → sınır iddiası FAIL.
+static func _case_support_report_quiet_week() -> String:
+	_seed_support_fixture("b2c")
+	var first: String = "line_note_tool_search"
+	var second: String = (ProductLines.line_ids("note_tool").filter(func(id: String) -> bool: return id != first))[0]
+	ProductState.set_line_tier(second, 1)
+	var reports := func() -> Array:
+		return GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == SupportSystem.REPORT_KIND)
+	var week := func() -> void:
+		GameState.advance_day()
+		SupportSystem.daily_tick()
+	ProductState.add_bugs(first, 5)
+	week.call()
+	if not reports.call().is_empty():
+		return "a week with nobody at the Müşteri İlişkileri desk mailed a report"
+	var rep: Character = _make_cs_rep("char_cs_report", 3, 6)
+	week.call()
+	if not reports.call().is_empty():
+		return "a week where nothing changed since the last one mailed a report"
+	ProductState.add_bugs(first, 2)
+	ProductState.add_bugs(second, 4)
+	week.call()
+	if not reports.call().is_empty():
+		return "a line growing past the priority line and a new line under it mailed a report"
+	ProductState.add_bugs(second, 1)
+	week.call()
+	var mails: Array = reports.call()
+	if mails.size() != 1 or mails[0].args.rep != rep.character_name or mails[0].args.news.size() != 1 \
+			or mails[0].args.news[0] != {"key": "SUPPORT_RPT_NEW_PRIORITY", "args": {"line": second, "n": 5}}:
+		return "a line reaching the priority line mailed %s, want the rep's one report with that line" % [mails]
+	if mails[0].args.fix != first or (mails[0].args.lines as Array).size() != 2 or int(mails[0].args.lines[1].delta) != 1:
+		return "the report named fix line '%s' and %d lines, want the worst line and both lines with open bugs" % [
+			mails[0].args.fix, (mails[0].args.lines as Array).size()]
+	# A fix empties the worst line: its report replaces the unread one.
+	ProductState.clear_line_bugs(first)
+	week.call()
+	mails = reports.call()
+	if mails.size() != 1 or mails[0].args.news.size() != 2 \
+			or mails[0].args.news[0] != {"key": "SUPPORT_RPT_NEW_CLEARED", "args": {"line": first}} \
+			or mails[0].args.news[1] != {"key": "SUPPORT_RPT_NEW_WORST", "args": {"line": second}}:
+		return "the fix week left %s, want the one new report: the first line cleared, the second now the worst" % [mails]
+	# A read report stays when the next one comes.
+	MessageSystem.mark_read(String(mails[0].id))
+	ProductState.add_bugs(first, 7)
+	week.call()
+	if reports.call().size() != 2:
+		return "a read report and the next one left %d reports, want both" % reports.call().size()
+	var behind := func(incoming: int, handled: int) -> bool:
+		return SupportSystem.report_news({}, {}, {"in": incoming, "done": handled}).size() == 1
+	if not behind.call(10, 8) or behind.call(10, 9) or behind.call(0, 0):
+		return "the behind line read %s for 10 in and 8 done, %s for 10 in and 9 done, want yes then no" % [
+			behind.call(10, 8), behind.call(10, 9)]
 	return ""
 
 

@@ -3165,6 +3165,16 @@ MAIL_RPT_CUSTOMER,Müşteri,Customer
 MAIL_RPT_STARS,Yıldız,Stars
 MAIL_RPT_SEATS,Koltuk,Seats
 MAIL_RPT_PRICE,Fiyat,Price
+SUPPORT_RPT_SUBJECT,Destek · Hafta {n},Support · Week {n}
+SUPPORT_RPT_SENDER,{name} · Müşteri temsilcisi,{name} · Account manager
+SUPPORT_RPT_SEC_TROUBLE,En çok sorun çıkan,Most trouble
+SUPPORT_RPT_SEC_WEEK,Bu hafta,This week
+SUPPORT_RPT_NEW_PRIORITY,{line} tarafında açık hata {n} oldu; artık Öncelikli.,{line} is up to {n} open bugs and now marked Priority.
+SUPPORT_RPT_NEW_CLEARED,{line} tarafında açık hata kalmadı.,{line} has no open bugs left.
+SUPPORT_RPT_NEW_WORST,En çok sorun çıkan yer artık {line}.,{line} is now where most of the trouble is.
+SUPPORT_RPT_SHIPPED,{line} düzeltmesi yayında: {from} → {to} açık hata.,The {line} fix is live: {from} → {to} open bugs.
+SUPPORT_RPT_BEHIND,"Yetişemedim: bu hafta {incoming} bildirim geldi, {handled} tanesine bakabildim.",I could not keep up: {incoming} reports came in this week and I got to {handled}.
+SUPPORT_RPT_BTN_FIX,{line} düzeltmesini aç,Open the {line} fix
 MAIL_CONTINUE,Devam et,Continue
 SUMMARY_ROW_TEAM_FOUNDER,Ekip · kurucu dahil,Team · incl. founder
 REC_SATISFACTION,Memnuniyet,Satisfaction

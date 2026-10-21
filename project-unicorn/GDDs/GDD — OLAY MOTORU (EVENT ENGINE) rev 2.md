@@ -3053,3 +3053,28 @@ bedeliydi.
   `sprint_decision_card_fires_shipped` tek kurucunun aceleyle yazılmış kod kâğıdıyla çalışır (tek kurucu kâğıtları arasında yalnız kartın eforunu okuyan lisans kâğıdıydı).
 
 *Neden.* Faz Q Karar 13: dışarıdan hizmetin her biçimi kalkar; suistimal edilebilir.
+
+
+### §27.43 · Faz C C7: haftalık destek raporu bir gelen kutusu mesajıdır
+
+*Belge ne diyordu.* §27.13: karar olmayan anlar motorun dışında `GameState.messages`'ta durur ve yalnız `MessageSystem` yazar. Destek
+tarafından oyuncuya haftalık bir özet giden bir yol yoktu: açık hata ve bildirim akışı yalnız DESTEK kartında ve Ürün penceresinde okunuyordu.
+
+*Ne yapıldı.*
+- `SupportSystem.weekly_report` (haftalık tik, `daily_tick`in sonu; sprint kapanışından sonra) mesaj türü `support_week`'i yazar
+  (`{rep, week, lines, news, fix}`). Gönderen `CustomerRepSystem.ranked_reps()[0]`'dır (Müşteri İlişkileri'nin en yüksek puanlı
+  temsilcisi); temsilci yoksa rapor yoktur. Haftada en çok bir rapor gelir ve okunmamış eski rapor yenisi gelince düşer
+  (`MessageSystem.drop_unread`); okunmuş rapor kalır.
+- "Yeni" son haftanın farkıdır (`SupportSystem.report_news`): hat Öncelikli eşiğine ulaştı (`SprintCatalog.is_priority_count`), hat
+  boşaldı ya da bir düzeltmeyle azaldı ama doludur (açık hata yalnız düzeltmeyle azalır; iki satır ayrıktır, bir düzeltme tek satır
+  yazar), en çok hatalı hat değişti, temsilci yetişemedi. Boşsa rapor yazılmaz. Önceki hafta hata defterinde
+  (`mvp_report_bugs`) ve bildirim sayacında (`mvp_report_week`, `{in, done}`) durur; ikisi de rapor yazılsın yazılmasın her haftalık
+  tikte yazılır. Eski kayıtta ikisi varsayılanla (boş) okunur: yüklemeden sonraki ilk rapor boş öncekiyle kıyaslanır.
+- "Yetişemedim": haftanın gelen bildirimlerinin beşte biri ya da fazlası doğrulanmadan kaldıysa (`REPORT_BEHIND_ONE_IN` 5 [ÇALIŞMA], onay
+  bekliyor); metin gelen ve doğrulanan sayıyı söyler.
+- Gelen kutusu raporu tablo olarak çizer (`MailPane._support_report`): hat satırları Ürün penceresinin AÇIK HATALAR satırıyla aynıdır
+  (`SprintUiShared.bug_line`), altında haftanın yenileri; düğme en kötü hattın alanını SPRINT'te açar (`SprintUiShared.open_product_area`).
+  "En çok istenen" bölümü ve yeni istek satırı istek tasarımıyla gelir (C6).
+- Vaka `support_report_quiet_week` yeni.
+
+*Neden.* Faz C Karar 11 (PRD Karar 12): destek temsilcisi haftada bir, yalnız yeni bir şey varsa yazar; rapor karar değildir.

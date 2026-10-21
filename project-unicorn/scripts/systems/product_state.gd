@@ -21,6 +21,10 @@ const BUG_STREAK := "mvp_bug_streak"
 ## O kuralın itibarı düşürdüğü son tik; 0 = hiç düşürmedi.
 const BUG_DROP_DAY := "mvp_bug_drop_day"
 const VALIDATION_PROGRESS := "mvp_validation_progress"
+## Haftalık destek raporunun karşılaştırdığı hâl: {hat kimliği: açık hata}, her haftalık tikte rapordan sonra yazılır.
+const REPORT_BUGS := "mvp_report_bugs"
+## Bu haftanın bildirim akışı {in: gelen, done: doğrulanan}; haftalık tikte rapordan sonra sıfırlanır.
+const REPORT_WEEK := "mvp_report_week"
 const VERSION_LAUNCH_DAY := "mvp_version_launch_day"
 const INTEREST := "mvp_interest"
 const INFRA_PROVIDER := "mvp_infra_provider"
@@ -159,17 +163,24 @@ static func line_bugs(line: String) -> int:
 	return int((GameState.get_flag(OPEN_BUGS, {}) as Dictionary).get(line, 0))
 
 
-## En çok açık hatası olan hat, hatasızsa ""; eşitlikte en çok kullanıcıyı etkileyen, o da eşitse küçük hat kimliği.
-static func worst_bug_line() -> String:
-	var bugs: Dictionary = open_bugs_by_line()
+## `bugs` ({hat kimliği: açık hata}, varsayılan şimdiki depo) hatlarının en çok hatalısı önde sıralısı; eşitlikte en çok
+## kullanıcıyı etkileyen, o da eşitse küçük hat kimliği.
+static func lines_by_bugs(bugs: Dictionary = open_bugs_by_line()) -> Array:
+	var users: Dictionary = {}
+	for line in bugs:
+		users[line] = SprintCatalog.line_users(line)
 	var ids: Array = bugs.keys()
-	ids.sort()
-	var worst: String = ""
-	for line in ids:
-		if worst == "" or int(bugs[line]) > int(bugs[worst]) or (int(bugs[line]) == int(bugs[worst])
-				and SprintCatalog.line_users(line) > SprintCatalog.line_users(worst)):
-			worst = line
-	return worst
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		if int(bugs[a]) != int(bugs[b]):
+			return int(bugs[a]) > int(bugs[b])
+		return int(users[a]) > int(users[b]) if users[a] != users[b] else a < b)
+	return ids
+
+
+## En çok açık hatası olan hat, hatasızsa "".
+static func worst_bug_line(bugs: Dictionary = open_bugs_by_line()) -> String:
+	var ids: Array = lines_by_bugs(bugs)
+	return "" if ids.is_empty() else ids[0]
 
 
 ## Açık hata, son haftalık tikin anlık görüntüsüne göre: bir hatta ya da (`line` boşsa) hepsinde.

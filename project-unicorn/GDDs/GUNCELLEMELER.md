@@ -327,6 +327,11 @@ yerinin değiştiğini söyler, eski girişler tarihçedir.
   - Yürürlükteki kural: Test işi sprint kartlarının test aşamasını yürütür ve oyuncu metinlerinde başka vaat taşımaz (`ONB_SKILL_QA_DESC`). Canlı aşınma yoktur, düzeltme DESTEK'in işi değil sprintin düzeltme kartıdır; Test'in yayındaki ürüne etkisi sonraki fazda testçiyle geri gelir ve bugün Test'in o etkisi yoktur.
   - Kaynak: sahip kararı 2026-10-16 (Faz A görevi, Karar 2, 12).
 
+- **ch03 §8 DESTEK, bölüm sessiz: Haftalık destek raporu**
+  - Eski metin: Yok. GDD Destek'ten oyuncuya haftalık bir bildirim yolu yazmaz; açık hata yalnız DESTEK kartında ve Ürün penceresinde okunur.
+  - Yürürlükteki kural: Müşteri İlişkileri alanındaki en yüksek puanlı temsilci (`CustomerRepSystem.ranked_reps()[0]`) haftalık tikte, haftada en çok bir, gelen kutusuna destek raporu yazar (mesaj türü `support_week`, saati durdurmaz); temsilci yoksa rapor yoktur. Rapor yalnız son haftada yeni bir şey varsa gelir: bir hat Öncelikli eşiğine (`fix_effort.priority`, 5) ulaştı, bir hat boşaldı ya da bir düzeltmeyle azaldı, en çok hatalı hat değişti, temsilci yetişemedi (cevapsız bildirim haftanın gelenlerinin beşte biri ya da fazlası, `SupportSystem.REPORT_BEHIND_ONE_IN` 5, onay bekliyor). Okunmamış eski rapor yenisi gelince kutudan düşer, okunmuş kalır. Rapor tablo çizer: hat satırları (Ürün penceresinin AÇIK HATALAR satırı, okuyla), altında haftanın yenileri; düğme ("Stok düzeltmesini aç") en kötü hattın alanını Ürün SPRINT'te açar. "En çok istenen" bölümü ve yeni istek satırı istek tasarımıyla gelir.
+  - Kaynak: sahip kararı 2026-10-17 (v2 §2.7: yeni bir şey yoksa gelmez, okunmamış eski rapor yenisi girince düşer) ve 2026-10-20 (Faz C · C7, Karar 11: gönderen en yüksek puanlı Müşteri İlişkileri temsilcisi).
+
 ## Faz B · olaylar (sahip kararı 2026-10-16)
 
 Bu bölüm olay kartlarının ve mailin ne zaman geldiğine dair cümlelerin yerine geçer; çakışmada bu bölüm geçerlidir. Sayılar

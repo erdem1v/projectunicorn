@@ -24,6 +24,8 @@ const RESULT_KEYS := {"expected": "PRODUCT_RESULT_EXPECTED", "actual": "PRODUCT_
 ## Kartın glif tuşları; listede olmayan tür (remove) kelimeyle yazılır.
 const KEY_GLYPHS := {"add": "res://assets/icons/util/plus.svg", "send_next": ARROW,
 	"pull": "res://assets/icons/util/chevron_up.svg"}
+## Hat satırının değişim oku: artış yukarı, azalış aşağı üçgen.
+const TREND_ICONS := {1: "res://assets/icons/util/tri_up.svg", -1: "res://assets/icons/util/tri_down.svg"}
 
 
 ## `count` seviye karesi: dolu kare kelimenin renginde, yarım seviye (cila) kareyi yarıya kadar
@@ -307,6 +309,30 @@ static func impact_bits(part: Dictionary) -> PackedStringArray:
 		bits.append(count("PRODUCT_ACCOUNT_COUNT", int(part.accounts)))
 	bits.append(count("PRODUCT_USER_COUNT", int(part.users)))
 	return bits
+
+
+## Hat satırı (`ProductModel.bug_row`): metni, sağında son haftalık tikten bu yana değişim oku (artış uyarı renginde,
+## azalış olumlu renkte; değişmediyse yuvası boş kalır, satırlar aynı genişlikte sarar); ayrıntı ipucunda.
+static func bug_line(row: Dictionary, variation: StringName) -> HBoxContainer:
+	var line := box(UiTokens.SPACE_M)
+	line.tooltip_text = row.tip
+	line.add_child(prose(String(row.text), variation))
+	var delta: int = int(row.delta)
+	if delta == 0:
+		var slot := Control.new()
+		slot.custom_minimum_size.x = UiTokens.D_ICON_TAG
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		line.add_child(slot)
+	else:
+		line.add_child(UiFactory.make_glyph(TREND_ICONS[signi(delta)], UiTokens.D_ICON_TAG,
+			UiTokens.D_warn() if delta > 0 else UiTokens.D_pos()))
+	return line
+
+
+## Ürün penceresi SPRINT'te, `area_id` alanı açık: önce sayfa açılır, sayfa kendi durumunu kurulurken alanı tohumlar.
+static func open_product_area(tree: SceneTree, area_id: String) -> void:
+	EventBus.tab_changed.emit("product")
+	tree.get_first_node_in_group(&"window_layer").get_current_page_body().open_area(area_id)
 
 
 ## SPRINT SONUNDA öngörüsü: her parça kazanç glifiyle kendi kutusunda, seviye kelimeyle okunur.

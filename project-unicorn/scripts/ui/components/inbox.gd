@@ -16,7 +16,7 @@ const MENTOR_ID := "char_mentor_frank"
 ## A message kind's topic.
 const MESSAGE_TOPICS := {"intro": "EVENT_TAG_MENTOR", "summary": "EVENT_TAG_AGENDA",
 	"sales_week": "EVENT_TAG_CUSTOMER", "sales_loss": "EVENT_TAG_CUSTOMER", "clause": "EVENT_TAG_CUSTOMER",
-	"rnd_note": "EVENT_TAG_PRODUCT", "rnd_discovery": "EVENT_TAG_PRODUCT"}
+	"support_week": "EVENT_TAG_PRODUCT", "rnd_note": "EVENT_TAG_PRODUCT", "rnd_discovery": "EVENT_TAG_PRODUCT"}
 ## A category's sender when the card's speaker and slots name none.
 const CATEGORY_SENDERS := {"funding": "frank", "founder": "self", "team": "self", "world": "press",
 	"rival": "press", "customer": "desk", "product": "desk"}
@@ -317,6 +317,10 @@ static func _message_item(m: Dictionary) -> Dictionary:
 			it.sender = clause_sender(a)
 			it.line = first_line(clause_body(a))
 			it.right = ""
+		"support_week":
+			it.sender = support_sender(String(a.rep))
+			it.subject = TranslationServer.translate(String(m.key)).format({"n": int(a.week)})
+			it.line = support_line(a.news[0])
 		"rnd_note":
 			it.sender = named_employee(String(a.get("author_name", "")), String(a.get("author_role", "")))
 			it.line = first_line(note_lines(a)[0])
@@ -356,6 +360,21 @@ static func clause_sender(a: Dictionary) -> Dictionary:
 		else {"look": CounterpartSystem.buyer_of(c).look}
 	return _sender("contact", TranslationServer.translate("SALES_CLAUSE_SENDER").format(a), "", String(a.name),
 		String(a.company), face)
+
+
+## The support report's sender: the rep who wrote it, named with the title the report carries; the report leaves
+## the room to its table.
+static func support_sender(rep: String) -> Dictionary:
+	return named_employee(rep, HRConstants.ROLE_CUSTOMER_REP).merged({"well": false, "title": "", "sig_name": "",
+		"sig_line": "", "name": TranslationServer.translate("SUPPORT_RPT_SENDER").format({"name": rep})}, true)
+
+
+## One of the support report's lines in the live language; a line id among its args reads as the line's name.
+static func support_line(row: Dictionary) -> String:
+	var args: Dictionary = (row.args as Dictionary).duplicate()
+	for key in args:
+		args[key] = SprintCatalog.cap_name(String(args[key])) if key == "line" else Fmt.group(int(args[key]))
+	return TranslationServer.translate(String(row.key)).format(args)
 
 
 ## One lost deal as the weekly report says it.

@@ -993,7 +993,9 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ##   satisfy, and that notice taken back by the move to Enterprise) ·
 ##   rep_lost (the sales rep's mail of a desk deal lost over an area, through the real close) · weekly_lost
 ##   (the same week's summary: two closes and the two lost deals the rep did not mail) · weekly_lost_only (a week of the
-##   lost deals alone: no table) · empty · long · team_read_only (Ekip
+##   lost deals alone: no table) · support_week (the weekly support report of a Müşteri İlişkileri rep, through the real weekly
+##   tick: a fix shipped, a line past the priority mark, the worst line changed) · support_behind (the same week and the rep
+##   did not keep up) · support_go (its button pressed: Ürün opens on the worst line's area) · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
 ##   finance_read_only (Finans read-only) · personal_read_only (Kişisel read-only) ·
 ##   personal_cheque_read_only (Kişisel read-only after Frank's cheque, a customer's card waiting) ·
@@ -1039,6 +1041,8 @@ func _run_inbox_shot(state: String) -> void:
 		_stage_desk_losses(state != "weekly_lost_only")
 	if state.begins_with("clause_"):
 		_stage_clause(state)
+	if state.begins_with("support_"):
+		_stage_support(state)
 	await _mount_shot_shell()
 	_wire_modal_signals()
 	var selina := "char_emp_shot_3"
@@ -1170,6 +1174,15 @@ func _run_inbox_shot(state: String) -> void:
 		"rep_lost", "weekly_lost", "weekly_lost_only":
 			var kind: String = "sales_loss" if state == "rep_lost" else "sales_week"
 			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == kind)[-1].id))
+		"support_week", "support_behind", "support_go":
+			INBOX.show("m:" + String(GameState.messages.filter(
+				func(m: Dictionary) -> bool: return m.kind == SupportSystem.REPORT_KIND)[-1].id))
+			if state == "support_go":
+				# The report's button through the pane's own row: the Product window opens on the worst line's area.
+				await get_tree().process_frame
+				var row: Control = get_tree().get_first_node_in_group(INBOX.GROUP)._pane._col.get_children()[-1]
+				(row.get_children()[-1] as Button).pressed.emit()
+				await get_tree().create_timer(0.6).timeout
 		"empty":
 			EventBus.tab_changed.emit("events")
 			get_tree().call_group(INBOX.GROUP, &"filter_for_shot", 1)
@@ -1586,6 +1599,33 @@ func _stage_clause(state: String) -> void:
 	B2BSalesSystem._tick_clause(account)
 	if state == "clause_withdraw":
 		InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
+
+
+## --inbox-shot=support_*: the theme seed's company with a Müşteri İlişkileri rep and the weekly tick that follows a week of
+## change: last week's ledger stood at the ledger 12 open bugs, the stock 3; this week the ledger fix shipped and the stock
+## went to 7 (a new priority line, now the worst) with 2 on the invoicing line. support_behind adds a week the rep did not
+## keep up with (23 reports in, 15 done); support_go presses the report's button.
+func _stage_support(state: String) -> void:
+	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+	GameState.set_flag("mvp_version", 1)
+	var rep := Character.new()
+	rep.id = "char_emp_shot_5"
+	rep.character_name = "Zeynep Aydın"   # LOC-DATA debug seed / id
+	rep.role = HRConstants.ROLE_CUSTOMER_REP
+	rep.category = "employee"
+	rep.monthly_salary = 7200
+	rep.morale = 65
+	rep.role_stats = HRConstants.seed_skills(rep.role, 7, 3, 4)
+	rep.traits.assign(["picks_it_up_fast"])
+	rep.status = HRConstants.STATUS_ACTIVE
+	CharacterRegistry.add(rep)
+	GameState.set_flag(ProductState.REPORT_BUGS, {"line_erp_ledger": 12, "line_erp_stock": 3})
+	ProductState.clear_line_bugs("line_erp_ledger")
+	ProductState.add_bugs("line_erp_stock", 7)
+	ProductState.add_bugs("line_erp_invoicing", 2)
+	if state == "support_behind":
+		GameState.set_flag(ProductState.REPORT_WEEK, {"in": 23, "done": 15})
+	SupportSystem.weekly_report()
 
 
 ## The goal lists' fixture: week 1 at 08:00 as the run opens, `state` how far the first minute got. untyped · typed

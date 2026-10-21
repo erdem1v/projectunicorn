@@ -131,7 +131,7 @@ static func area_alert(area_id: String, cleared: Array = []) -> bool:
 	if _over_capacity(area_id):
 		return true
 	return capabilities(area_id).any(func(line_id: String) -> bool:
-		return line_id not in cleared and ProductState.line_bugs(line_id) >= int(cfg("fix_effort.priority")))
+		return line_id not in cleared and is_priority_count(ProductState.line_bugs(line_id)))
 
 
 ## Kapalı satırın cümlesi: alanın kime yettiği, açık hata, sunucu aşımı, rakip çıkışı ve araştırmadan sonraki
@@ -242,7 +242,12 @@ static func candidates(area_id: String) -> Array:
 
 ## Öncelikli düzeltme: hattın açık hatası öncelik eşiğinde ya da üstünde.
 static func is_priority(card: Dictionary) -> bool:
-	return card.kind == "fix" and card.bugs >= int(cfg("fix_effort.priority"))
+	return card.kind == "fix" and is_priority_count(card.bugs)
+
+
+## Bir hattın `bugs` açık hatası öncelik eşiğinde ya da üstünde mi.
+static func is_priority_count(bugs: int) -> bool:
+	return bugs >= int(cfg("fix_effort.priority"))
 
 
 static func new_card(id: String, kind: String, area_id: String, effort: int, line := "", step := "",

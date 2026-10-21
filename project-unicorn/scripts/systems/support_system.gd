@@ -22,7 +22,7 @@ extends RefCounted
 #   daily_tick  — GÜNLÜK KESİNTİLER. §8.3 memnuniyet zararı ve §9 ilgi sönümü. İkisi
 #                 de belgede açıkça "/gün" yazılıdır; zarar tavanı GÜNLÜK bir tavandır ve
 #                 günlük değere uygulanır, tik yedi günü sonra alır. Haftalık hata ihmali kuralı
-#                 (itibar) da burada işler.
+#                 (itibar) ve haftalık destek raporu da burada işler.
 
 # ------------------------------------------------------ §9 canlı hata akışı
 # gelen bildirim/gün = (0,1 + 0,03 × yeni_kod_eforu × e^(−sürüm_yaşı/3)) × kullanım_çarpanı
@@ -115,6 +115,7 @@ static func hourly_tick(_hour: int) -> void:
 	var arrived: int = int(reports)
 	GameState.set_flag(ProductState.REPORTS_PROGRESS, reports - arrived)
 	GameState.set_flag(ProductState.REPORTS_INCOMING, ProductState.reports_incoming() + arrived)
+	_count_week("in", arrived)
 	# §8.2 — GELEN'i açık hataya çevirir; masa boşken de okurların tabanıyla. Her hata kendi başına bir canlı
 	# hatta düşer, hatlar eşit olasılıklı; hatsız ürünün bildirimi hat çıkana dek doğrulanmaz.
 	var lines: Array = ProductState.live_lines().filter(
@@ -122,8 +123,10 @@ static func hourly_tick(_hour: int) -> void:
 	if lines.is_empty():
 		return
 	var draw: RandomNumberGenerator = RngStreams.get_stream(RngStreams.STREAM_BUG_LINE)
-	for _i in _validate(TimeModel.per_tick(validation_per_day(founder_share)) * f):
+	var validated: int = _validate(TimeModel.per_tick(validation_per_day(founder_share)) * f)
+	for _i in validated:
 		ProductState.add_bugs(lines[draw.randi_range(0, lines.size() - 1)], 1)
+	_count_week("done", validated)
 
 
 static func daily_tick() -> void:
@@ -133,6 +136,7 @@ static func daily_tick() -> void:
 	_tick_neglect()
 	# İlgi türetilir ama duruma geri yazılır: tüketicisi Satış/Pazarlama tek bir sayı okur.
 	GameState.set_flag(ProductState.INTEREST, interest_now())
+	weekly_report()
 
 
 static func reset() -> void:
@@ -297,6 +301,76 @@ static func neglect_note() -> String:
 	var drop: Dictionary = neglect_drop()
 	return "" if drop.is_empty() else TranslationServer.translate(drop.reason).format(
 		{"date": Fmt.date_line(GameState.get_date_dict(int(drop.day)))})
+
+
+# =========================================================================
+#  HAFTALIK DESTEK RAPORU
+# =========================================================================
+
+## Cevapsız kalan bildirim haftanın gelenlerinin bu sayıda birine ya da fazlasına varınca temsilci yetişemedim der.
+const REPORT_BEHIND_ONE_IN := 5         # [ÇALIŞMA] onay bekliyor
+const REPORT_KIND := "support_week"
+
+
+## Haftalık tikte, sprint kapanışından sonra: Müşteri İlişkileri'nin en yüksek puanlı temsilcisi haftada en çok bir rapor
+## yazar. Temsilci yoksa ya da hafta sessizse (`report_news` boş) gelmez; okunmamış eski rapor yenisi gelince düşer. Hata
+## defteri ve bildirim sayacı rapor yazılsın yazılmasın hafta sonunda yazılır: "yeni", son haftanın farkıdır.
+static func weekly_report() -> void:
+	var before: Dictionary = GameState.get_flag(ProductState.REPORT_BUGS, {})
+	var now: Dictionary = ProductState.open_bugs_by_line()
+	var week: Dictionary = GameState.get_flag(ProductState.REPORT_WEEK, {})
+	GameState.set_flag(ProductState.REPORT_BUGS, now)
+	GameState.set_flag(ProductState.REPORT_WEEK, {})
+	var reps: Array = CustomerRepSystem.ranked_reps()
+	if reps.is_empty():
+		return
+	var news: Array = report_news(before, now, week)
+	if news.is_empty():
+		return
+	var lines: Array = ProductState.lines_by_bugs(now).map(func(line: String) -> Dictionary:
+		return {"line": line, "part": SprintCatalog.bugs_part(line, int(now[line])),
+			"delta": int(now[line]) - int(before.get(line, 0))})
+	MessageSystem.drop_unread(REPORT_KIND)
+	MessageSystem.post(REPORT_KIND, "SUPPORT_RPT_SUBJECT", {"rep": reps[0].character_name,
+		"week": int(GameState.get_date_dict().week), "lines": lines, "news": news,
+		"fix": ProductState.worst_bug_line(now)})
+
+
+## Haftanın yenileri, {key, args} satırları olarak: bir hat Öncelikli eşiğine ulaştı, sıfırlandı ya da bir düzeltmeyle
+## azaldı (açık hata yalnız düzeltmeyle azalır), en çok sorunlu hat değişti, temsilci yetişemedi. `before` ve `now`
+## {hat: açık hata} defterleri, `week` {in, done} bildirim sayacı. Boşsa hafta sessizdir.
+static func report_news(before: Dictionary, now: Dictionary, week: Dictionary) -> Array:
+	var news: Array = []
+	var lines: Array = before.keys()
+	for line in now:
+		if not before.has(line):
+			lines.append(line)
+	lines.sort()
+	for line in lines:
+		var was: int = int(before.get(line, 0))
+		var open: int = int(now.get(line, 0))
+		if SprintCatalog.is_priority_count(open) and not SprintCatalog.is_priority_count(was):
+			news.append({"key": "SUPPORT_RPT_NEW_PRIORITY", "args": {"line": line, "n": open}})
+		elif open == 0 and was > 0:
+			news.append({"key": "SUPPORT_RPT_NEW_CLEARED", "args": {"line": line}})
+		elif open < was:
+			news.append({"key": "SUPPORT_RPT_SHIPPED", "args": {"line": line, "from": was, "to": open}})
+	var worst: String = ProductState.worst_bug_line(now)
+	if worst != "" and worst != ProductState.worst_bug_line(before):
+		news.append({"key": "SUPPORT_RPT_NEW_WORST", "args": {"line": worst}})
+	var incoming: int = int(week.get("in", 0))
+	var handled: int = int(week.get("done", 0))
+	if incoming > 0 and (incoming - handled) * REPORT_BEHIND_ONE_IN >= incoming:
+		news.append({"key": "SUPPORT_RPT_BEHIND", "args": {"incoming": incoming, "handled": handled}})
+	return news
+
+
+## Bu haftanın bildirim sayacına `n` ekler (`key`: "in" gelen, "done" doğrulanan).
+static func _count_week(key: String, n: int) -> void:
+	if n > 0:
+		var week: Dictionary = (GameState.get_flag(ProductState.REPORT_WEEK, {}) as Dictionary).duplicate()
+		week[key] = int(week.get(key, 0)) + n
+		GameState.set_flag(ProductState.REPORT_WEEK, week)
 
 
 # =========================================================================

@@ -11,8 +11,6 @@ signal ui_changed(open_area: String)
 
 const CARD_SCENE := preload("res://scenes/tabs/product/SprintCard.tscn")
 const CHEVRONS := ["res://assets/icons/util/chevron_right.svg", "res://assets/icons/util/chevron_down.svg"]
-## Hat satırının değişim oku: artış yukarı, azalış aşağı üçgen.
-const TREND_ICONS := {1: "res://assets/icons/util/tri_up.svg", -1: "res://assets/icons/util/tri_down.svg"}
 
 var _model: Dictionary
 var _compact := false
@@ -156,7 +154,7 @@ func _add_open_body(col: VBoxContainer, area: Dictionary) -> void:
 		var rows := SprintUiShared.column(UiTokens.SPACE_S)
 		body.add_child(rows)
 		for row in area.bug_rows:
-			rows.add_child(_bug_row(row))
+			rows.add_child(SprintUiShared.bug_line(row, &"MetaText"))
 
 	body.add_child(SprintUiShared.section("PRODUCT_POSSIBLE", true))
 	if area["empty"]:
@@ -166,24 +164,6 @@ func _add_open_body(col: VBoxContainer, area: Dictionary) -> void:
 		body.add_child(card)
 		card.setup(c, SprintCard.Look.LOW)
 		card.action.connect(action.emit)
-
-
-## Hat satırı: metni, sağında son haftalık tikten bu yana değişim oku (artış uyarı renginde, azalış olumlu renkte;
-## değişmediyse yuvası boş kalır, satırlar aynı genişlikte sarar); ayrıntı ipucunda.
-func _bug_row(row: Dictionary) -> HBoxContainer:
-	var line := SprintUiShared.box(UiTokens.SPACE_M)
-	line.tooltip_text = row.tip
-	line.add_child(SprintUiShared.prose(String(row.text), &"MetaText"))
-	var delta: int = int(row.delta)
-	if delta == 0:
-		var slot := Control.new()
-		slot.custom_minimum_size.x = UiTokens.D_ICON_TAG
-		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		line.add_child(slot)
-	else:
-		line.add_child(UiFactory.make_glyph(TREND_ICONS[signi(delta)], UiTokens.D_ICON_TAG,
-			UiTokens.D_warn() if delta > 0 else UiTokens.D_pos()))
-	return line
 
 
 ## Müşteriler: talep sayısı ve talep kartları; dar sütunda yalnız başlık ve sayı.

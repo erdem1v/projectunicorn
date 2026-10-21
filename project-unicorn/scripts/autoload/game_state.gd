@@ -68,6 +68,8 @@ const FLAG_TYPES := {
 	"mvp_open_bugs_prev": TYPE_DICTIONARY,      # önceki haftalık tikteki hâli; okların tek kaynağı
 	"mvp_line_harden": TYPE_DICTIONARY,         # {hat kimliği: yeni hata düşmeyen son tik} — yeniden yazılmış hat
 	"mvp_validation_progress": TYPE_FLOAT,      # §8.2 doğrulama kesri
+	"mvp_report_bugs": TYPE_DICTIONARY,         # {hat kimliği: açık hata}: haftalık destek raporunun önceki hâli
+	"mvp_report_week": TYPE_DICTIONARY,         # {in, done}: bu haftanın gelen ve doğrulanan bildirimi
 	# --- §9 canlı akış ---
 	# SÜRÜM yaşı (§17): mvp_launch_day ilk yayında bir kez damgalanır, bu her yayında yeniden.
 	"mvp_version_launch_day": TYPE_FLOAT,

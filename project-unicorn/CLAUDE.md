@@ -130,6 +130,11 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   kartı): hesap sürümde en çok bir, sürüm en çok üç not alır, öncelik söz, istek, acil durum sırasıdır. B2C güncellemesinin
   notu bir tik sonra 2–3 öne çıkan yorum taşır (`SprintBridges.pick_reviews`, sürüm kaydında `reviews`, mesai içinde
   `at`). Sayılar `data/product/sprint.json` `thanks` ve `reviews` bloklarında [WORKING].
+- **Destek raporu.** Müşteri İlişkileri'nin en yüksek puanlı temsilcisi (`CustomerRepSystem.ranked_reps()[0]`) haftalık tikte, haftada en
+  çok bir, gelen kutusuna rapor yazar (`SupportSystem.weekly_report`, mesaj türü `support_week`, saati durdurmaz); temsilci yoksa ya da
+  haftada yeni bir şey yoksa gelmez. "Yeni" bir hattın Öncelikli eşiğe varması, boşalması ya da düzeltmeyle azalması, en kötü hattın
+  değişmesi ve temsilcinin yetişememesidir (cevapsız bildirim haftanın gelenlerinin beşte biri ya da fazlası, `REPORT_BEHIND_ONE_IN`
+  [WORKING]); okunmamış eski rapor yenisi gelince düşer. Düğme en kötü hattın alanını Ürün SPRINT'te açar.
 - Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber
   şeridine 10. yuvada tek satır düşer; modal açılmaz. Dönem özeti oyuncunun seçtiği sıklıkta
   gelen kutusuna mesaj olarak gelir (`summary_frequency`: haftalık, aylık, çeyreklik ya da yıllık; varsayılan

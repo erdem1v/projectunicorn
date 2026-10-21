@@ -163,8 +163,6 @@ func _on_support_input(ev: InputEvent) -> void:
 		_open_product()
 
 
-## Ürün penceresi, en çok hatası olan hattın alanı açık: önce sayfa açılır, sayfa kendi durumunu kurulurken modelden
-## tohumlar.
+## Ürün penceresi, en çok hatası olan hattın alanı açık.
 func _open_product() -> void:
-	EventBus.tab_changed.emit("product")
-	get_tree().get_first_node_in_group(&"window_layer").get_current_page_body().open_area(_model.worst_area)
+	SprintUiShared.open_product_area(get_tree(), _model.worst_area)
