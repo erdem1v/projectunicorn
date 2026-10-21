@@ -717,8 +717,7 @@ func _run_b2b_shot(kind: String) -> void:
 			# Frank's portrait on an event card, the MENTOR source badge and the
 			# open_term_table chip of "Masaya otur" — one frame. The offer-email card is
 			# unbuilt, so this renders the card on the same edge: a sheet with a deadline.
-			GameState.phase = 3
-			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
+			_seed_expiring_sheet("anchor")
 			card_id = "funding.sheet_expiry"
 		"chips":
 			_seed_hr_roster()
@@ -747,7 +746,8 @@ func _run_b2b_shot(kind: String) -> void:
 ## seeds that roster first. An emergency's card (INCIDENT_SHOTS) stands in the company it needs, at the hour its card
 ## opens, with its sender and account given (the broken release's card in a B2B book, or in a B2C app with `market=b2c`;
 ## the outage's with `load=<pct>`, the server load it was rolled at, which its card tells above 90);
-## the promise card stands in the second week of a sprint, its sender the person who works the promised card.
+## the promise card stands in the second week of a sprint, its sender the person who works the promised card;
+## the offer's expiry warning stands in the `investor` slot's sheet (anchor's without it) on its first warning week.
 func _run_event_shot(spec: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -771,6 +771,8 @@ func _run_event_shot(spec: String) -> void:
 		given.merge(_seed_incident_world(emergency[0], b2b, load_pct), false)
 	elif event_id == "product.promise_due":
 		given.merge(_seed_promise_world(), false)
+	elif event_id == "funding.sheet_expiry":
+		_seed_expiring_sheet(String(given.get("investor", "anchor")))
 	elif event_id in ["product.b2c_floor_signal", "product.b2c_floor_churn"]:
 		_seed_floor_world()
 	elif ["pm", "designer", "tester"].has(String(EvCatalog.card(event_id).get("pool_group", ""))):
@@ -897,6 +899,14 @@ func _seed_floor_world() -> void:
 	ProductState.set_line_tier(SprintCatalog.in_product("line_shared_security"), 1)
 	SalesSystem.add_b2c_audience(20000)
 	SalesSystem.open_b2c_paid_tier(8)
+
+
+## The Series A offer the expiry warning is shot in: `vc_id`'s sheet on the first morning the warning is admitted
+## (PitchConstants.WARNING_WEEKS left), so the card counts the days it counts in the game.
+func _seed_expiring_sheet(vc_id: String) -> void:
+	GameState.set_phase(3)
+	GameState.active_sheets.append(VCPitchSystem._make_sheet(vc_id,
+		GameState.day - TimeModel.ticks(PitchConstants.SHEET_VALIDITY_WEEKS - PitchConstants.WARNING_WEEKS)))
 
 
 ## The company the promise card is shot in: a live ERP whose roster tests its one sprint card, in testing and a week
