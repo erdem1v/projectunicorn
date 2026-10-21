@@ -1387,13 +1387,11 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     ritmi etkiler (trait task'ı; ISLER).
   - Kaynak: ofis karakterleri planı §2, §9 (Erdem, 2026-09-28).
 
-- **95 · Görüşme metinleri; mevcut VC satırlarında tire ve tırnak.**
-  - Ne oluyor: Panel mevcut VC satırlarını olduğu gibi gösterir: bazılarında tire var (`VC_B4_CALLBACK`,
-    `VC_B4_PUSH`; `VC_B1_LINE` ve `VC_B1_CHOICE` Faz Q K12'de tiresiz yazıldı) ve karşı taraf satırları tırnak içinde
-    (24 `VC_` anahtarı; tasarımda tırnak yok).
+- **95 · Görüşme metinleri; mevcut VC satırlarında tırnak.**
+  - Ne oluyor: Panel mevcut VC satırlarını olduğu gibi gösterir: karşı taraf satırları tırnak içinde (24 `VC_`
+    anahtarı; tasarımda tırnak yok).
   - Nerede: `localization/strings.csv`.
-  - Seçenekler: Sahip yeniden yazar; tırnaklar kalkar (LANGUAGE INTEGRITY LAW). Tire Erdem'in 2026-10-20 kararı 14
-    gereği kalkar.
+  - Seçenekler: Sahip yeniden yazar; tırnaklar kalkar (LANGUAGE INTEGRITY LAW).
   - Kaynak: CLAUDE.md §3, §5; 1888fe4, eba2140, 4ebcc5d, cf80260.
 
 ## Kod ve test altyapısı

@@ -36,7 +36,7 @@ static func chance_for(skill_name: String, difficulty: int, bonus: int = 0) -> f
 	return float(breakdown(skill_name, difficulty, bonus)["total"])
 
 
-## Additive breakdown of chance_for, for the Term Sheet Table's "temel %X · +%Y <skill>" split.
+## Additive breakdown of chance_for, for the Term Sheet Table's "Temel %X · +%Y <skill>" split.
 static func breakdown(skill_name: String, difficulty: int, bonus: int = 0) -> Dictionary:
 	var skill_val: int = GameState.get_founder_skill(skill_name)
 	var base: float = BASE_CHANCE - difficulty * DIFFICULTY_STEP   # difficulty folded into "temel"

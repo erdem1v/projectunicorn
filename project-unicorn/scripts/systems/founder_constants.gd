@@ -91,7 +91,7 @@ const PORTRAIT_IDS := [
 ]
 
 # --- Skill display keys (localization/strings.csv) ---
-# Lowercase inline odds fragments ("temel %35 · +%15 satış"), a different register from the
+# Lowercase inline odds fragments ("Temel %35 · +%15 satış"), a different register from the
 # Title Case area label (HRConstants.area_label), hence a separate table.
 const SKILL_LABEL_KEYS := {
 	"product": "SKILL_LABEL_PRODUCT", "design": "SKILL_LABEL_DESIGN",

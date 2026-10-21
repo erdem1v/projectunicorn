@@ -185,8 +185,3 @@ static func diff_label(diff: int) -> String:
 		DIFF_KOLAY: return TranslationServer.translate("PITCH_DIFF_EASY")
 		DIFF_ORTA: return TranslationServer.translate("PITCH_DIFF_MEDIUM")
 		_: return TranslationServer.translate("PITCH_DIFF_HARD")
-
-
-## Founder-skill display label for the odds split (home: FounderConstants.skill_label).
-static func skill_label(skill_name: String) -> String:
-	return FounderConstants.skill_label(skill_name)

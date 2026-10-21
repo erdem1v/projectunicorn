@@ -6751,7 +6751,7 @@ static func _case_lever_skill_new_keys() -> String:
 		return "can_read_prospect false at the Satış threshold"
 	var prev_locale: String = Localization.get_language()
 	Localization.set_language("tr")
-	var label: String = PitchConstants.skill_label("sales")
+	var label: String = FounderConstants.skill_label("sales")
 	Localization.set_language(prev_locale)
 	if label != "satış":
 		return "skill_label(sales)=%s (want satış via CSV)" % label
@@ -10856,6 +10856,18 @@ static func _case_loc_format_locale_flip() -> String:
 			if got != caps[loc][text]:
 				TranslationServer.set_locale(loc0)
 				return "%s upper('%s') = '%s', want %s" % [loc, text, got, caps[loc][text]]
+	# cap_first takes the first letter by the same rule and leaves the rest as written.
+	var firsts := {
+		"tr": {"iş": "İş", "ılık": "Ilık", "satış": "Satış", "+%15 satış": "+%15 satış", "": ""},
+		"en": {"interest": "Interest", "sales": "Sales", "": ""},
+	}
+	for loc in firsts:
+		TranslationServer.set_locale(loc)
+		for text in firsts[loc]:
+			var got: String = Fmt.cap_first(text)
+			if got != firsts[loc][text]:
+				TranslationServer.set_locale(loc0)
+				return "%s cap_first('%s') = '%s', want %s" % [loc, text, got, firsts[loc][text]]
 	TranslationServer.set_locale(loc0)
 	return ""
 

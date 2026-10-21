@@ -45,6 +45,12 @@ static func upper(s: String) -> String:
 	return out
 
 
+## The text with its first letter capitalised by upper()'s rule ("iş" → "İş"), the rest as written: a
+## lowercase CSV reading drawn at the head of a line.
+static func cap_first(s: String) -> String:
+	return upper(s.left(1)) + s.substr(1)
+
+
 # --- Counts -----------------------------------------------------------------
 
 ## The singular twin of a counted key: "<KEY>_ONE" when n is 1 (EN "1 week" vs "2 weeks").

@@ -53,7 +53,9 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   ödünç kelimelerde kalır: pitch, startup, demo, momentum, MRR, runway, churn, burn, laptop, mail, VC, hotfix, onboarding
   ve özel adlar. Türkçe büyük harfte ödünç kelime gövdesi Latin I'yı korur, ardındaki Türkçe ek Türkçe kurala uyar
   (`Fmt.upper`, gövde listesi `Fmt.LOANWORD_STEMS`: SPRINT, "İlk sprinti" → İLK SPRINTİ). Tek metinde dil karışmaz.
-  Oyuncuya görünen hiçbir metinde tire (— –) yoktur (ch01 §9).
+  Oyuncuya görünen hiçbir metinde tire (— –) yoktur (ch01 §9). Satır başında duran etiket büyük harfle başlar ve CSV'de
+  öyle yazılır; cümle ortasında da okunan metin küçük kalır, satır başında büyük ikizi (beceri adı `HRUiShared.skill_label`,
+  `SKILL_LABEL_*` değil) ya da `Fmt.cap_first` okunur.
 - Motorun bilmediği etki ya da koşul taslakta `[VOCAB?]` / `[COND?]` kalır ve kart bağlanmaz (ch11 §3). Oyuncu
   metnini kimin yazdığı açık karardır (`docs/ACIK_ISLER/ACIK_KARARLAR.md`).
 - Kartlar `text.tr` ve `text.en` bloklarını aynı id kümesiyle taşır. Her seçenek gerçek bir kaynağa mal olur ve
@@ -308,7 +310,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   düğmeleri (ilk küme taban, `SETDIFF|`), `--pan-gpu=<A>/<B>[;…]` alt görüntünün GPU ve CPU süresi (`GPU|`, `MEM|`);
   değerlerdeki `;` ve `|` tırnaklanır, düğme listesi `scripts/debug/office_pan_probe.gd` başındadır.
   Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|economy|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning`,
-  VC `open|sorgu|sheet|callback|ret|seed|long`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
+  VC `open|sorgu|sheet|callback|ret|seed|long`; `open:tip` ve `sorgu:tip` zar ipucunu açar), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
   fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları HARITA Ürün'de), `--product-shot=live:<tür>` sprint

@@ -161,7 +161,7 @@ func _lines(vs: Dictionary) -> Array:
 func _dice(chk: Dictionary) -> Dictionary:
 	var factors := []
 	if chk.skill_value > 0:
-		factors.append({"cat_key": "MEETING_CHIP_SKILL", "text": FounderConstants.skill_label(chk.skill),
+		factors.append({"cat_key": "MEETING_CHIP_SKILL", "text": HRUiShared.skill_label(chk.skill),
 			"sign": "+", "tone": "pos"})
 	factors.append({"cat_key": "MEETING_CHIP_ROOM", "text": PitchConstants.diff_label(chk.difficulty),
 		"sign": "−", "tone": "neutral" if chk.difficulty == PitchConstants.DIFF_KOLAY else "neg"})

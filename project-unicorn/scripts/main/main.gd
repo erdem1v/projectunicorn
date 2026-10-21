@@ -4148,8 +4148,10 @@ const MEETING_SHOT_VC := {
 ## sheet = a won room's result card; callback = a lukewarm room's callback
 ## and its condition; ret = a cold room's rejection, its cost and Frank on the way out; seed = the
 ## seed room's result card; long = a lukewarm room's closing beat under every earlier one, the most
-## the panel holds (pair it with --shot-scale=1.25 for the narrowest dock).
-func _run_meeting_shot(kind: String) -> void:
+## the panel holds (pair it with --shot-scale=1.25 for the narrowest dock). A VC kind with ":tip" hovers the first
+## option with a die (a frame cannot hover): open:tip, sorgu:tip.
+func _run_meeting_shot(shot: String) -> void:
+	var kind: String = shot.get_slice(":", 0)
 	_begin_shot()
 	_seed_sales_world()
 	if MEETING_SHOT_VC.has(kind):
@@ -4167,6 +4169,8 @@ func _run_meeting_shot(kind: String) -> void:
 		await get_tree().process_frame
 		for id: String in spec[2]:
 			await _shot_pick(id)
+		if shot.ends_with(":tip"):
+			_meeting_panel._on_hover(true, _meeting_panel._cards.filter(func(card) -> bool: return card.has_die)[0])
 	else:
 		if kind == "locked" or kind == "lost":
 			# Ekonomik kademe ve K1 merdiveni: "Gücü göster" satırı kapanır ve gerekçesini yazar.
@@ -4214,7 +4218,7 @@ func _run_meeting_shot(kind: String) -> void:
 			print("MEETINGSHOT|economy|load=%d|asked=%s" % [InfraSystem.load_percent(), ",".join(SalesMeetingSystem._used_families)])
 	_probe_pause_interactivity(_meeting_panel, "meeting/" + kind)
 	await get_tree().create_timer(0.5).timeout
-	_save_shot("meeting_shot_%s" % kind)
+	_save_shot("meeting_shot_%s" % shot.replace(":", "_"))
 	get_tree().quit()
 
 

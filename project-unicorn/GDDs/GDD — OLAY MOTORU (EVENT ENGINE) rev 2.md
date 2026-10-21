@@ -677,16 +677,17 @@ Motor bu yapının içeriğini doğrulamaz; yalnızca `effects_to_apply` listesi
 - **Sayısız.** Aritmetik gösterilmez.
 - **İşaretli** (▲ lehte / ▼ aleyhte).
 - **Büyüklüğe göre sıralı.**
+- **Büyük harfle başlar.** Her satır (etiket, beceri adı, katlanan satır) büyük harfle başlar.
 - **Maksimum 4 satır.** Fazlası işaretsiz, nötr bir "+N etken daha" satırında toplanır (`EV_MODIFIERS_MORE`; N kalan satır sayısıdır, büyüklük değil); satır kalanları aynı biçimde (işaret ve etiket) `rest`'inde taşır (`EvDice.modifier_lines`); satış görüşmesinde iğnenin İkna ipucu bütün satırları sıralar. Kart yazarının `modifier_lines` sözlüğü en çok 4 anahtar taşır (E-lint), bu yüzden kartta katlama oluşmaz.
 - Sayısal döküm yalnızca dev overlay'de.
 ```
 kalır %58        ← farklı renk tonu, hover edilebilir
 
   (hover)
-  ▲ morali iyi
-  ▲ ekipte sekiz ay
-  ▼ maaşı bandın altında
-  ▼ üst üste mesai
+  ▲ Morali iyi
+  ▲ Ekipte sekiz ay
+  ▼ Maaşı bandın altında
+  ▼ Üst üste mesai
 ```
 
 **Gerekçe:** Sayı vermek insan anını hesap tablosuna çevirir. Hiçbir şey vermemek kararı kör bırakır. Hover'a saklamak ikisini de çözer: yüzey sakin, derinlik mevcut.

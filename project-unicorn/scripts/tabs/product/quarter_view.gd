@@ -124,8 +124,7 @@ func _open_goal_menu(anchor: Control, areas: Array, picked: String) -> void:
 		var words := SprintUiShared.column(UiTokens.SPACE_XXS)
 		words.add_child(UiFactory.make_label(String(a.name), &"DataMedium", UiTokens.D_INK_1))
 		# Menüde tek başına duran cümle büyük harfle başlar; şeritte satır içinde CSV'deki gibi küçük.
-		var goal: String = a.goal_text
-		words.add_child(UiFactory.make_label(Fmt.upper(goal.left(1)) + goal.substr(1), &"Caption"))
+		words.add_child(UiFactory.make_label(Fmt.cap_first(a.goal_text), &"Caption"))
 		row.add_child(words)
 		var inset := SprintUiShared.pad(row, Vector4i(UiTokens.SPACE_M, UiTokens.SPACE_S, UiTokens.SPACE_M, UiTokens.SPACE_S))
 		inset.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

@@ -1226,7 +1226,7 @@ VC_B3_SPIN_CAP,"Yüksek risk, yüksek getiri.","High risk, high return."
 VC_B3_DEFLECT,Geçiştir: konuyu kaydır.,Deflect: move them off it.
 VC_APPROACH_DEFLECT,Geçiştir,Deflect
 VC_B3_DEFLECT_CAP,"Güvenli, ama masa buradan çıkmaz ({cap} tavan).","Safe, but the table stops here ({cap} ceiling)."
-VC_Q_CHURN,"""Churn'ün konuşuyor. Kaçan müşterileri anlat — neden gittiler?""","""Your churn is talking. Tell me about the customers who left — why did they go?"""
+VC_Q_CHURN,"""Churn'ün konuşuyor. Kaçan müşterileri anlat. Neden gittiler?""","""Your churn is talking. Tell me about the customers who left. Why did they go?"""
 VC_Q_CHURN_MONO,Churn'ü soracak. Sayıları hazırla.,They will ask about churn. Have the numbers ready.
 VC_Q_GROWTH,"""Büyüme grafiği düz. Bu çizgiyi neden yukarı kaldıramadın?""","""The growth chart is flat. Why couldn't you lift that line?"""
 VC_Q_GROWTH_MONO,Büyümenin durgunluğunu görecek.,They will see the growth has stalled.
@@ -1261,9 +1261,9 @@ VC_B4_WARM_LINE,"""Kararsızım. Bir yol var: sana bir koşul koyayım, tuttur, 
 VC_B4_WARM_MONO,"Ilık. Güvenli kapı mı, açgözlü kumar mı?","Lukewarm. The safe door, or the greedy bet?"
 VC_B4_QUIT,İkinci kez ılık. Bırak gitsin.,Lukewarm a second time. Let it go.
 VC_B4_QUIT_CAP,Reddedilme sayılır.,This counts as a rejection.
-VC_B4_CALLBACK,Callback'i kabul et — koşulu tuttur.,Take the callback — meet the condition.
+VC_B4_CALLBACK,Callback'i kabul et: koşulu tuttur.,Take the callback: meet the condition.
 VC_B4_CALLBACK_CAP,Güvenli. Kapı açık kalır.,Safe. The door stays open.
-VC_B4_PUSH,Masayı zorla — şimdi karar ver.,Push the table — decide now.
+VC_B4_PUSH,Masayı zorla: şimdi karar ver.,Push the table: decide now.
 VC_APPROACH_PUSH,Zorla,Push
 VC_B4_PUSH_CAP,Başarısızsan masa kapanır.,Fail and the table closes.
 VC_RES_CALLBACK,"""Koşulu biliyorsun. Tuttur, kapı açık.""","""You know the condition. Meet it and the door is open."""
@@ -1320,7 +1320,7 @@ GATE_SERIES_A_BODY_2,"Frank bu sefer oturmuyor bile.
 ""Beklemek de bir karar. Kirasını sen ödüyorsun.""","This time Frank does not even sit down.
 
 ""Waiting is a decision too. You are the one paying rent on it."""
-TERM_SPLIT_BASE,temel {pct},base {pct}
+TERM_SPLIT_BASE,Temel {pct},Base {pct}
 TERM_SPLIT_SKILL, · +{pct} {skill}, · +{pct} {skill}
 TERM_SPLIT_LEVERAGE, · +{pct} kaldıraç, · +{pct} leverage
 TERM_SPLIT_DECAY, · −{pct} tekrar, · −{pct} repeat
@@ -1338,7 +1338,7 @@ TERM_INVESTMENT,{amount} yatırım,{amount} investment
 TERM_CASH_RUNWAY,Kasa: {cash} · Runway: {runway},Cash: {cash} · Runway: {runway}
 TERM_CASH,Kasa: {cash},Cash: {cash}
 TERM_TABLES_CLOSED,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
-TERM_LEVERAGE_BOX,Cebinde 2. term sheet var — {investor}. Bunu onlar da biliyor.,You have a second term sheet in your pocket — {investor}. They know it too.
+TERM_LEVERAGE_BOX,Cebinde 2. term sheet var: {investor}. Bunu onlar da biliyor.,You have a second term sheet in your pocket: {investor}. They know it too.
 TERM_RESULT_ACCEPTED,Kabul ettiler. {move}.,They accepted. {move}.
 TERM_RESULT_REFUSED,Reddettiler. Olduğu yerde kaldı: {value}.,They refused. It stays where it was: {value}.
 TERM_RESULT_FINAL,"Son teklifim bu. İmzala, ya da masadan kalk.","This is my final offer. Sign, or walk away from the table."
@@ -1617,7 +1617,7 @@ EFFECT_AN_EMPLOYEE,Çalışan,An employee
 EFFECT_PROMISE_CREATE,Müşteri kalır · söz borcu,The customer stays · a promise owed
 EFFECT_RETAIN_DELAY,Kısa vadeli hamle,A short-term move
 EFFECT_RETAIN_DISCOUNT,Müşteri kalır · MRR {v},The customer stays · MRR {v}
-EFFECT_RETAIN_IGNORE,müdahale yok · sayaç işlemeye devam eder,no intervention · the counter keeps running
+EFFECT_RETAIN_IGNORE,Müdahale yok · sayaç işlemeye devam eder,No intervention · the counter keeps running
 EFFECT_PROMISE_HONOR,Müşteri kalır · söz borcu doğar · yol haritasına eklenir,The customer stays · a promise is owed · it goes on the roadmap
 EFFECT_PROMISE_REFUSE,Müşteriyi kaybet,Lose the customer
 EFFECT_EXPAND,Koltuk +{seats} · MRR {mrr},Seats +{seats} · MRR {mrr}
@@ -1828,9 +1828,9 @@ MEETING_ATT_WARY,temkinli,wary
 MEETING_ATT_LUKEWARM,ılık,lukewarm
 MEETING_ATT_WARM,sıcak,warm
 MEETING_DICE,ZAR ATILACAK,DICE ROLL
-MEETING_RISK_SAFE,güvenli,safe
-MEETING_RISK_RISKY,riskli,risky
-MEETING_RISK_DANGER,tehlikeli,dangerous
+MEETING_RISK_SAFE,Güvenli,Safe
+MEETING_RISK_RISKY,Riskli,Risky
+MEETING_RISK_DANGER,Tehlikeli,Dangerous
 MEETING_RISK_PCT,{risk} · %{pct},{risk} · {pct}%
 MEETING_CHIP_SKILL,BECERİ,SKILL
 MEETING_CHIP_PREP,HAZIRLIK,PREP
@@ -2477,7 +2477,7 @@ SEED_EXPECT_ON_TRACK,Üç aylık ortalama {avg}; beklenen {need}.,"Three-month a
 SEED_EXPECT_STALLED,Durgun. Üç aylık ortalama {avg}; beklenen {need}.,"Stalled. Three-month average {avg}, against the {need} expected."
 SEED_EXPECT_UNKNOWN,Ortalama için yeterli kapanmış ay yok.,Not enough closed months to read an average yet.
 SEED_LEVER_RAISE,Yatırım,Investment
-SEED_IMPLIED_POST,ima edilen değerleme {post},implied valuation {post}
+SEED_IMPLIED_POST,İma edilen değerleme {post},Implied valuation {post}
 SEED_WALK_LOCK,Turu geri çevirmek zor modda açılır.,Turning the round down unlocks in hard mode.
 SEED_FRANK_OPENING,"""Teklif duruyor, kaçmıyor. Ama pazarlık ettiğin her şeyin bir bedeli var: sabırları.""","""The offer is not going anywhere. But everything you negotiate for costs the same thing: their patience."""
 SEED_FRANK_NEXT_MOVE,"""Bir hamlen daha var.""","""You have another move."""
