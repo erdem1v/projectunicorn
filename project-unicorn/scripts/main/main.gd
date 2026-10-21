@@ -742,12 +742,17 @@ func _run_b2b_shot(kind: String) -> void:
 ## --event-shot=<card id>[:<slot>=<entity id>...]: any catalogued card, `version_scope: fixture` ones
 ## included, in the reading pane's preview (its options drawn, not taken). A given slot binds that
 ## entity instead of running its selector (the shot seed has no seed lead, for one) and names the
-## PNG; a given slot that cannot bind fails the shot. An id of --hr-shot's roster (char_emp_shot_<n>)
-## seeds that roster first. An emergency's card (INCIDENT_SHOTS) stands in the company it needs, at the hour its card
+## PNG; a given slot that cannot bind fails the shot, and so does a required slot no world binds. An emergency's
+## card (INCIDENT_SHOTS) stands in the company it needs, at the hour its card
 ## opens, with its sender and account given (the broken release's card in a B2B book, or in a B2C app with `market=b2c`;
 ## the outage's with `load=<pct>`, the server load it was rolled at, which its card tells above 90);
 ## the promise card stands in the second week of a sprint, its sender the person who works the promised card;
-## the offer's expiry warning stands in the `investor` slot's sheet (anchor's without it) on its first warning week.
+## an offer's expiry warning stands in the `investor` slot's sheet (anchor's without it) on its first warning week, and its
+## decision card in the same sheet on the day it runs out; a sprint paper stands in the sprint it interrupts;
+## the unseen build's card stands in the second sprint of a product nobody has launched. A card whose slots the bare
+## seed cannot bind (and every rival card, which names the product type's rival) stands in the theme seed's company
+## (_seed_company_world; an id of --hr-shot's roster, `char_emp_shot_<n>`, is in it); a slot whose `where` that
+## company does not meet binds the selector's pick without it.
 func _run_event_shot(spec: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -762,6 +767,9 @@ func _run_event_shot(spec: String) -> void:
 			_shot_fail("[EventShot] '%s' is not <slot>=<entity id>" % pair)
 			return
 		given[pair.get_slice("=", 0)] = pair.get_slice("=", 1)
+	var card: Dictionary = EvCatalog.card(event_id)
+	var scope: Dictionary = card.get("scope", {})
+	var selects: Array = scope.values().map(func(slot: Dictionary) -> String: return String(slot.get("select", "")))
 	if INCIDENT_SHOTS.has(event_id):
 		var emergency: Array = INCIDENT_SHOTS[event_id]
 		var b2b: bool = emergency[1] and given.get("market", "") != "b2c"
@@ -771,20 +779,33 @@ func _run_event_shot(spec: String) -> void:
 		given.merge(_seed_incident_world(emergency[0], b2b, load_pct), false)
 	elif event_id == "product.promise_due":
 		given.merge(_seed_promise_world(), false)
-	elif event_id == "funding.sheet_expiry":
-		_seed_expiring_sheet(String(given.get("investor", "anchor")))
+	elif "expiring_sheet" in selects or "decision_sheet" in selects:
+		_seed_expiring_sheet(String(given.get("investor", "anchor")), PitchConstants.WARNING_WEEKS if "expiring_sheet" in selects else 0)
 	elif event_id in ["product.b2c_floor_signal", "product.b2c_floor_churn"]:
 		_seed_floor_world()
-	elif ["pm", "designer", "tester"].has(String(EvCatalog.card(event_id).get("pool_group", ""))):
+	elif String(card.get("pool_group", "")) != "":
 		given.merge(_seed_paper_world(event_id), false)
-	elif given.values().any(func(id: String) -> bool: return id.begins_with("char_emp_shot_")):   # LOC-DATA debug seed / id
-		_seed_hr_roster()
+	elif event_id == "founder.unseen_build":
+		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+		GameState.product.sprint.number = 2
+	elif event_id.begins_with("rival.") or not bool(EvScope.resolve(scope, given).get("ok", false)):
+		_seed_company_world(event_id, selects)
 	var ctx: Dictionary = EventGate.bind_scope(event_id, given)
+	if ctx.is_empty() and not scope.is_empty():
+		var open: Dictionary = scope.duplicate(true)
+		for slot in open:
+			open[slot].erase("where")
+		var bound: Dictionary = EvScope.resolve(open, given)
+		ctx = bound.context if bound.ok else {}
 	for slot in given:
 		if String(ctx.get(slot, {}).get("id", "")) != given[slot]:
 			_shot_fail("[EventShot] %s: slot '%s' did not bind '%s'" % [event_id, slot, given[slot]])
 			return
-	_shot_pane(event_id, ctx)
+	for slot in scope:
+		if bool(scope[slot].get("required", true)) and not ctx.has(slot):
+			_shot_fail("[EventShot] %s: no world binds its slot '%s'" % [event_id, slot])
+			return
+	_shot_pane(event_id, ctx, EvPresenter.freeze_seams(card, ctx))
 	await get_tree().process_frame
 	await _finish_shot("event_shot_%s" % spec.replace(":", "_"), 0.35)
 
@@ -806,7 +827,7 @@ const INCIDENT_SHOTS := {
 func _seed_incident_world(kind: String, b2b: bool, load_pct := 0) -> Dictionary:
 	var given := {}
 	if b2b:
-		_seed_theme_surface()
+		_seed_theme_book()
 		_shot_customer("co_marmara", "Marmara Lojistik", "logistics", "active", 1900, 60, 20, false)   # LOC-DATA debug seed / id
 		_shot_customer("co_ege_metal", "Ege Metal", "manufacturing", "active", 1500, 40, 18, false)   # LOC-DATA debug seed / id
 		SalesSystem.reflect_mrr()
@@ -901,12 +922,45 @@ func _seed_floor_world() -> void:
 	SalesSystem.open_b2c_paid_tier(8)
 
 
-## The Series A offer the expiry warning is shot in: `vc_id`'s sheet on the first morning the warning is admitted
-## (PitchConstants.WARNING_WEEKS left), so the card counts the days it counts in the game.
-func _seed_expiring_sheet(vc_id: String) -> void:
+## The Series A offer an expiry card is shot in: `vc_id`'s sheet with `weeks_left` weeks to run, so the warning
+## (PitchConstants.WARNING_WEEKS left, the first morning it is admitted) counts the days it counts in the game and the
+## decision card (none left) finds the sheet run out.
+func _seed_expiring_sheet(vc_id: String, weeks_left := PitchConstants.WARNING_WEEKS) -> void:
 	GameState.set_phase(3)
 	GameState.active_sheets.append(VCPitchSystem._make_sheet(vc_id,
-		GameState.day - TimeModel.ticks(PitchConstants.SHEET_VALIDITY_WEEKS - PitchConstants.WARNING_WEEKS)))
+		GameState.day - TimeModel.ticks(PitchConstants.SHEET_VALIDITY_WEEKS - weeks_left)))
+
+
+## The company a card with a customer, employee or investor slot is shot in when no world of its own stands for it: the
+## theme seed's book (week 14, a shipped ERP, the HR shot roster, three accounts), and for the cards that read more an
+## account under a Müşteri İlişkileri rep with an open request (`open_request` slot) or an escalated one (`escalated`), a
+## signed seed round with Anchor Capital (`seed_lead` slot), a release whose thanks the account kept (the thank-you
+## note) or the pile of unanswered reports that makes the support desk hot. `selects` are the card's slot selectors.
+func _seed_company_world(event_id: String, selects: Array) -> void:
+	_seed_theme_book()
+	if "open_request" in selects or "escalated" in selects:
+		_shot_customer("co_palmiye", "Palmiye Turizm", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
+		CustomerRegistry.set_support_request("co_palmiye", GameState.day - 1)
+		CustomerRegistry.get_customer("co_palmiye").cs_escalated = "escalated" in selects
+	if "seed_lead" in selects:
+		SeedRoundSystem.accept("anchor", {"raise": 130000, "dilution_pct": 16})
+	if event_id == SprintBridges.THANKS_CARD:
+		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+		_stage_release_thanks()
+	if event_id == "product.support_overflow":
+		GameState.set_flag(ProductState.REPORTS_INCOMING, SupportSystem.WARMTH_HOT_AT + 1)
+	SalesSystem.reflect_mrr()
+
+
+## A release that kept Ege Sigorta's word and met Nordica's request: two thank-you notes, through the real bridge.
+func _stage_release_thanks() -> void:
+	var invoicing := "line_erp_invoicing_k2"
+	var ledger := "line_erp_ledger_k2"
+	PromiseRegistry.create("co_ege", invoicing, 4).status = "kept"
+	GameState.product.requests.append({"id": "co_nordica.1", "customer_id": "co_nordica", "step": ledger, "status": "met"})
+	var release := {"number": 5, "day": GameState.day, "shipped": [{"step": invoicing}, {"step": ledger}]}
+	GameState.product.releases.append(release)
+	SprintBridges.thank(release)
 
 
 ## The company the promise card is shot in: a live ERP whose roster tests its one sprint card, in testing and a week
@@ -946,9 +1000,11 @@ func _seed_promise_world() -> Dictionary:
 	return given
 
 
-## The company a pm, designer or tester paper is shot in: a live ERP (a B2B paper) or note app with the HR shot roster's
-## crew and a one-card sprint whose card, in the phase the paper's speaker works, waits on the paper. Returns the slots
-## the paper is given: its speaker and, for a pm paper, the account that asked for the card.
+## The company a sprint paper is shot in: a live ERP (a B2B paper) or note app with the HR shot roster's crew and a
+## one-card sprint whose card, in the phase the paper's speaker works, waits on the paper. The card is a feature card, a
+## request of Marmara Lojistik (for a B2B pm paper and the late sprint's, with Ege Metal asking for it too on the two accounts paper)
+## or, for the root cause paper, the fix card of a line whose bugs share one. Returns the slots the paper is given: its
+## speaker and, for a request, the account that asked for the card.
 func _seed_paper_world(event_id: String) -> Dictionary:
 	var paper: Dictionary = EvCatalog.card(event_id)
 	var b2b: bool = String(paper.get("guards", {}).get("market", "b2b")) == "b2b"
@@ -972,22 +1028,29 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 	var line: String = SprintCatalog.capabilities("core")[3]
 	var given := {}
 	var id: String = "feat:%s_k1" % line
-	if paper.pool_group == "pm":
+	if b2b and (paper.pool_group == "pm" or paper.scope.get("customer", {}).get("select", "") == "request"):
 		id = "req:co_marmara.1"
 		given["customer"] = "co_marmara"
-		GameState.product.requests.append({"id": "co_marmara.1", "customer_id": "co_marmara", "step": line + "_k1", "line": line,
-			"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 22800, "card_id": id, "day": GameState.day})
+		# The catalogue builds a step's card from its last request.
+		var asking: Array = ["co_ege_metal", "co_marmara"] if event_id == "product.sprint_pm_two_accounts" else ["co_marmara"]
+		for account in asking:
+			GameState.product.requests.append({"id": account + ".1", "customer_id": account, "step": line + "_k1", "line": line,
+				"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 22800, "card_id": "req:%s.1" % account, "day": GameState.day})
+	elif event_id == "product.sprint_dev_root_cause":
+		ProductState.add_bugs(line, int(SprintCatalog.cfg("paper.root_min")))
+		id = "fix:" + line
 	SprintSystem.add(id)
 	SprintSystem.start()
 	var card: Dictionary = GameState.product.cards[id]
 	var phase: int = {"design": 0, "dev": 1, "test": 2}.get(String(paper.stage), 1)
 	card.effort = 20
 	card.progress = [4.0 if phase > 0 else 0.0, 12.0 if phase > 1 else 0.0, 0.0]
-	var speaker: String = CharacterRegistry.get_employees().filter(
-		func(c: Character) -> bool: return c.role == paper.speaker_role)[0].id
+	var roles: Array = paper.speaker_role if paper.speaker_role is Array else [paper.speaker_role]
+	var crew: Array = CharacterRegistry.get_employees().filter(func(c: Character) -> bool: return c.role in roles)
+	var speaker: Character = crew[0] if not crew.is_empty() else CharacterRegistry.get_founder()
 	card.decision = true
-	GameState.product.decision = {"card_id": id, "event_id": event_id, "speaker": speaker}
-	given["employee"] = speaker
+	GameState.product.decision = {"card_id": id, "event_id": event_id, "speaker": speaker.id}
+	given["founder" if speaker.category == "founder" else "employee"] = speaker.id
 	return given
 
 
@@ -1153,14 +1216,7 @@ func _run_inbox_shot(state: String) -> void:
 			_shot_answered("team.resignation", {"employee": selina}, "acknowledge", 14)
 			INBOX.show("h:0")
 		"thanks":
-			# A release that kept Ege Sigorta's word and met Nordica's request: two thank-you notes, through the real bridge.
-			var invoicing := "line_erp_invoicing_k2"
-			var ledger := "line_erp_ledger_k2"
-			PromiseRegistry.create("co_ege", invoicing, 4).status = "kept"
-			GameState.product.requests.append({"id": "co_nordica.1", "customer_id": "co_nordica", "step": ledger, "status": "met"})
-			var release := {"number": 5, "day": GameState.day, "shipped": [{"step": invoicing}, {"step": ledger}]}
-			GameState.product.releases.append(release)
-			SprintBridges.thank(release)
+			_stage_release_thanks()
 			INBOX.show("h:%d" % (EventGate.history().size() - 1))
 		"frank_moment":
 			_shot_card("customer.frank_intro", {}, 8)
@@ -1362,8 +1418,8 @@ func _shot_paper(card_id: String, given: Dictionary, weeks: int) -> String:
 	return EvLatches.key_of(card_id, bound.context)
 
 
-## The reading pane alone on its own layer, at the inbox's width, reading a card in preview.
-func _shot_pane(card_id: String, ctx: Dictionary) -> void:
+## The reading pane alone on its own layer, at the inbox's width, reading a card in preview with the `names` it keeps.
+func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 	var back := PanelContainer.new()
 	back.theme = load(UiTokens.MENAJER_THEME)
 	back.theme_type_variation = &"WindowPanel"
@@ -1372,7 +1428,7 @@ func _shot_pane(card_id: String, ctx: Dictionary) -> void:
 	var pane: ScrollContainer = MAIL_PANE.new()
 	back.add_child(pane)
 	_on_shot_layer(back)
-	pane.populate(INBOX.card_item("preview", card_id, ctx, {}, GameState.day).merged({"kind": "active"}), "preview")
+	pane.populate(INBOX.card_item("preview", card_id, ctx, names, GameState.day).merged({"kind": "active"}), "preview")
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|
@@ -1543,6 +1599,11 @@ func _run_sales_shot(kind: String) -> void:
 # audit and a screenshot of the same tab verify each other.
 func _seed_theme_surface() -> void:
 	_seed_run_reproducible()
+	_seed_theme_book()
+
+
+## The theme seed's company over a run already seeded: week 14, a shipped ERP, the HR shot roster, three accounts and two leads.
+func _seed_theme_book() -> void:
 	GameState.day = 14
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_launch_day", 6)
@@ -3993,8 +4054,7 @@ func _run_vc_shot(spec: String) -> void:
 			TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SEED)
 		"k10":
 			# A sheet whose weeks ran out today: the decision card's moment.
-			GameState.active_sheets.append(VCPitchSystem._make_sheet("meridian",
-				GameState.day - TimeModel.ticks(PitchConstants.SHEET_VALIDITY_WEEKS)))
+			_seed_expiring_sheet("meridian", 0)
 			VCPitchSystem._vc("meridian")["status"] = "offered"
 		_:
 			_shot_fail("[VcShot] unknown --vc-shot kind: %s" % kind)
