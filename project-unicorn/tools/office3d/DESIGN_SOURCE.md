@@ -8,8 +8,8 @@
 - Şehir `office-city-v2.js`'ten dışa aktarılır (yatırımcı kulesi ve `meetRoom` kipi). `office-city.js`
   delta almadan, alındığı gibi durur: `office-sim-v12.js` onu içe aktarır ve o satır değişmez.
 - Kural: kopya bayt-bayt aynıdır. Değişebilen tek şey aşağıdaki deltalardır; geometri, malzeme ve
-  sayı satırlarına dokunulmaz. Tasarım güncellenirse modüller yeniden kopyalanır, deltalar yeniden
-  uygulanır, `bash tools/office3d/run_export.sh` ve `python tools/office3d/check_export.py` koşulur.
+  sayı satırlarına tabloda yazılanlar dışında dokunulmaz. Tasarım güncellenirse modüller yeniden kopyalanır,
+  deltalar yeniden uygulanır, `bash tools/office3d/run_export.sh` ve `python tools/office3d/check_export.py` koşulur.
 
 ## Modüller
 
@@ -27,11 +27,12 @@
 
 ## Deltalar
 
-Hepsi eklemedir; hiçbir tasarım satırı silinmez ya da değer değiştirmez. Eklenen satırlar
-`tools/office3d` işaretini taşır.
+`office-sim-v12.js`'in İş hanı masa satırları dışında hepsi eklemedir; o satırlarda değişen her şey tabloda
+sayılır. Delta blokları `tools/office3d` işaretini taşır.
 
 | dosya | ne | neden |
 |---|---|---|
+| `office-sim-v12.js` | `buildA2` açık ofis bloğu: üçüncü kümeye arka sağ koltuk eklendi (`if (k < 2) seats.push(arka sol); seats.push(arka sağ);`; masa, ziyaret noktası, istasyon ve yürüme zinciri öbür kümelerle aynı kalıp), `maxN: 10` yerine `maxN: desks.length` (plaza ve loft gibi), yorum `10 desks` yerine `11 desks`. İş hanı 10 → 11 çalışan masası, kurucu dahil 12 | Erdem 2026-10-20 Karar 6, katalog İş hanı 12 masa (`OfficeConstants.CATALOG`); üçüncü küme yarım kalmıştı (yalnız ön iki koltuk) |
 | `office-sim-v12.js` | `createOffice` içindeki `const H = { THREE, V, … lineMat };` nesnesi modül seviyesindeki `makeH()`'e taşındı (anahtar listesi bayt-bayt aynı); `createOffice` yerinde `const H = makeH();` çağırır | Dışa aktarma sayfası builder'ları `createOffice`'in açtığı renderer olmadan, aynı `H` ile çağırır. `makeH()` `initMats()`'ten sonra çağrılır, `createOffice`'teki sırayla aynı |
 | `office-sim-v12.js` | Dosya sonuna `setTier(t)`, `SHARED` (modül seviyesindeki paylaşılan malzemelerin tutamakları: `winMat … streetGlow`) ve `export { initMats, applyPalette, bake, buildA2, makeH, setTier, loadXbot, SHARED }` | `TIER` modülün `let`'idir, dışarıdan yazılamaz. Godot malzemeleri adla bağlar, adlar `SHARED` üzerinden verilir. Küçük resimler `loadXbot()`'un sözünü bekler |
 | `office-city-v2.js` | `const boats = [];` satırı ve tekne döngüsünde `boats.push(bt);`; dönen nesneye `frames, pin, ferry, cars, boats, wtex, facMats, crown: crownMat` | Kapanıştaki tutamaklar: düğüm adları (`frame_<id>`, `pin`, `ferry`, `car_<i>`, `boat_<i>`), su ve cephe malzemesi adları, JSON'daki araba şeritleri; kulenin tacı (`crown`), varışta parlar |
@@ -42,7 +43,7 @@ Hepsi eklemedir; hiçbir tasarım satırı silinmez ya da değer değiştirmez. 
 `L.elev.panels` üzerinden zaten açıktır; kule malzemeleri `towerMat()`'ın `userData.d/n` imzasından
 bulunur.
 
-Deltalardan sonra: `office-sim-v12.js` `fd075441c435578838e8115aa135663664d800bf3f17f0d89669179bb41fa354`,
+Deltalardan sonra: `office-sim-v12.js` `aa7023153b43cbaac783f714e84d733029320ad6a4e93faad0fae2cc1d0e6e2d`,
 `office-loft-v2.js` `eb7faced966c454bb72c9f27a4e0f1315487b079913db6ae35df17a225ed05cb`,
 `office-city-v2.js` `0db02b70f3878550d3cab2d22ee993f11d4a3210a04218836923a4d77114d5e8`,
 `office-meet.js` `9916f728a9d55aa20b24b6f3cce553657a7230fc595f34e2da175cc905209746`.

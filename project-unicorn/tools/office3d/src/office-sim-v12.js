@@ -748,11 +748,12 @@ function buildA2(env) {
   toilet(g, 16.25, 0, .4); toilet(g, 18.75, 0, .4);
   RB(g, .6, .85, 1.0, 19.55, .425, 3.9, X.cabinet, .02); RB(g, .45, .05, .5, 19.55, .87, 3.9, X.ceramic, .02);
   const wcs = [16.25, 18.75].map(x => S(x, 0, 1.3, 0, 'stand', [[x, 3.4], [17.5, 4.9], [17.5, 7]]));
-  // open office: 10 desks
+  // open office: 11 desks (tools/office3d: third cluster's back-right seat added)
   const desks = [], visits = [], st = { desk: [] };
   [7.9, 12.5, 17.1].forEach((cx, k) => {
     const seats = [[cx - .7, 9.9, 0, -1], [cx + .7, 9.9, 0, 1]];
-    if (k < 2) seats.push([cx - .7, 12.1, PI, -1], [cx + .7, 12.1, PI, 1]);
+    if (k < 2) seats.push([cx - .7, 12.1, PI, -1]);
+    seats.push([cx + .7, 12.1, PI, 1]);
     for (const [x, z, f, side] of seats) {
       const front = f === 0, ax = cx + side * 2.3;
       desks.push(S(x, 0, z, f, 'sit', front ? [[x, 7]] : [[x, 13.2], [ax, 13.2], [ax, 7]]));
@@ -851,7 +852,7 @@ function buildA2(env) {
     panes: PANES.slice(), low, posts, fades, pool, env,
     spot(p, s) { switch (s.k) { case 'desk': return p.id === 0 ? fs : desks[p.id - 1]; case 'visit': return visits[s.i % visits.length]; case 'meet': return meet[s.i % 7]; case 'eat': return eat[s.i % 4]; case 'coffee': return cof[s.i % 4]; case 'wc': return wcs[s.i % 2]; default: return OUT; } },
     elev: { o: 0, panels: [{ m: elL, ax: 'z', p0: elL.position.z, d: -.62 }, { m: elR, ax: 'z', p0: elR.position.z, d: .62 }], near: q => Math.abs(q.x - 1.4) < 1.6 && Math.abs(q.z - 7.1) < 1.3 },
-    maxN: 10, spd: SPEED,
+    maxN: desks.length, spd: SPEED,
     station: p => p.id === 0 ? st.founder : st.desk[p.id - 1], stations: [...st.desk, st.founder], connector: () => [],
   };
 }
