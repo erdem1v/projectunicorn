@@ -771,7 +771,6 @@ B2B_CHOICE_EXPAND,Koltukları ekle,Add the seats
 B2B_CHOICE_NOT_YET,Şimdi değil,Not now
 B2B_CHOICE_PROMISE_FIX,Düzeltme sözü ver,Promise a fix
 B2B_EV_RENEWAL_TITLE,Yenileme sinyali,Renewal signal
-PITCH_INNER_CLOSED,Olmadı. Frank ne der bilmiyorum ama bir sonraki var.,"It did not happen. I do not know what Frank will say, but there is a next one."
 HUNT_PAGE_TITLE,Series A Avı,The Series A Hunt
 HUNT_SEC_INVESTORS,Yatırımcılar,Investors
 HUNT_SEC_OFFERS,Teklifler,Offers
@@ -1165,37 +1164,9 @@ PROD_MARKET_SHARE,pazar payı {share},market share {share}
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
 PROD_SHIP_FIRST_TITLE,İlk versiyon yayında,First version is live
 PROD_SHIP_VERSION_TITLE,v{version} yayında,v{version} is live
-PROD_SHIP_VERSION_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
-
-""Büyüdü. Yeni özellikler tuttu — ama yeni yüzey, yeni hata demek. Gözünü ayırma.""
-
-Kullanıcılar farkı görecek. Rakipler de.","You push the new version live. Frank looks at the screen and nods slightly.
-
-""It grew. The new features landed — but new surface means new bugs. Keep your eyes on it.""
-
-Users will see the difference. So will your rivals."
 PROD_SHIP_CONTINUE,Yayına devam,Keep it live
-PROD_SHIP_FIRST_READY,İlk sürüm,The first version
-PROD_SHIP_FIRST_BODY,"Demo'ya bir kez daha bakıyorsun. Frank arkanda duruyor, telefonuna bakmıyor.
-
-""Tamam,"" diyor. ""Bu kadar kötü değil.""
-
-Yayına alıyorsun. Birkaç dakika sonra depo herkese açık, küçük bir açılış sayfası canlı, Frank elini cebine atıyor.
-
-""Şimdi zor kısmı başlıyor. Bunun parasını verecek birini bulmamız lazım.""","You look at the demo one more time. Frank stands behind you, not looking at his phone.
-
-""All right,"" he says. ""It is not that bad.""
-
-You ship it. A few minutes later the repo is public, a small landing page is live, and Frank puts a hand in his pocket.
-
-""Now the hard part starts. We need to find someone who will pay for this."""
 PROD_SHIP_PUBLISH,Yayınla,Ship it
 PROD_DESIGN_DECISION_TITLE,Tasarım masasında karar,A decision at the design table
-PROD_DESIGN_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
-
-""İstersen bir tur daha döneriz — zaman yakar, tasarımı parlatır. Ama her turun getirisi bir öncekinden az. Bir noktada daha iyi insanlar lazım olur, daha çok tur değil.""{note}","The design round is done. Frank is standing over the prototype.
-
-""We can run another round if you want — it burns time and polishes the design. But every round returns less than the last. At some point you need better people, not more rounds.""{note}"
 PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
 PROD_EV_VERSION_SHIP_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
 
@@ -1306,12 +1277,6 @@ VC_FRANK_COLD_MERIDIAN,"Ürünü açtılar, kapattılar. Toplantı bu.",They ope
 VC_FRANK_COLD_GENERAL_1,Bir hayır. Sonuncusu olmayacak. Sonraki odaya taşıma.,One no. Not the last one. Don't carry it into the next room.
 VC_FRANK_COLD_GENERAL_2,Üst üste iki. Sıradaki çok şey belirler. Acele etme.,Two in a row. The next one decides a lot. Take your time.
 VC_EV_OFFER_EXPIRING_TITLE,Masadaki teklif,The offer on the table
-VC_EV_OFFER_EXPIRING_BODY,"{investor} teklifi masada.
-
-Frank: ""Yatırımcılar bekletilmeyi sevmez. {days} gün içinde yanıt vermeliyiz.""","{investor}'s offer is on the table.
-
-Frank: ""Investors don't like being kept waiting. We need to give them an answer inside {days} days."""
-VC_EV_ACK,Anlaşıldı,Understood
 VC_EV_GO_FUNDING,Yatırım'a git,Go to Funding
 VC_EV_DECISION_TITLE,Teklifin süresi doldu,The offer window has closed
 VC_EV_DECISION_SIT,Masaya otur,Sit at the table
@@ -1322,9 +1287,6 @@ VC_EV_LAST_DAY_BODY,"Yatırımcılara dönüş yapmak için bugün son gün.
 Frank: ""Artık kaçış yok. İmzalayacaksan bugün imzala.""","Today is the last day to give the investors an answer.
 
 Frank: ""Nowhere left to run. If you're signing, sign today."""
-VC_EV_DEAL_TITLE,Yatırımcıdan teklif,The investor's offer
-PITCH_S0_NPC,« Frank iyi şeyler söyledi. Göster bakalım — neyi farklı yapıyorsun? »,« Frank spoke well of you. Show me — what are you doing differently? »
-PITCH_S0_INNER,İlk on saniye. Adam zaten Frank'e güveniyor; kapı aralık. Mesele kapıyı nasıl açtığım.,The first ten seconds. He already trusts Frank; the door is ajar. The question is how I open it.
 PITCH_DIFF_EASY,Kolay,Easy
 PITCH_DIFF_MEDIUM,Orta,Medium
 PITCH_DIFF_HARD,Zorlu,Hard
@@ -1930,22 +1892,6 @@ END_EV_SHUTTER_BODY,"Tırnaklarını kemirmenin sebebi belli: şirketin banka he
 Arayan Frank: ""Bilanço kötü görünüyor. Devam etmek istiyorsak ya yeni müşteri bul ya da bir şeyleri kesmeyi düşünelim.""","You know exactly why you've been chewing your nails: the company account is in the red.
 
 Frank calls. ""The books look bad. If we want to keep going, either bring in new customers or we start cutting."""
-END_EV_PIVOT_TITLE,Üçüncü kapı da kapandı,The Third Door Closed Too
-END_EV_PIVOT_BODY,"Üçüncü ret maili kısa. Hepsi kısadır.
-
-Frank uzun bir süre bir şey demiyor. Sonra:
-
-""Belki bu yıl değil. Belki bu şirket değil. Ama sen bitmedin.""
-
-VC yolu kapanıyor. Kendi paranla, kendi müşterinle, hâlâ gerçek bir şirket kurabilirsin. Ölçü artık takvim değil, defter: {months} ay üst üste artıda kal.","The third rejection email is short. They all are.
-
-Frank says nothing for a long while. Then:
-
-""Maybe not this year. Maybe not this company. But you are not finished.""
-
-The VC road is closing. Your own money, your own customers, and you can still build a real company. The measure is no longer the calendar but the books: stay in the black {months} months in a row."
-END_EV_PIVOT_ACCEPT,Pivot — devam ediyoruz,Pivot — we keep going
-END_EV_PIVOT_DECLINE,Hayır. Bitti.,No. It is over.
 END_EV_ACQ_TITLE,Devralma teklifi,Acquisition offer
 END_EV_ACQ_BODY,"Series A turu kapandı, ortada anlaşma yok.
 
@@ -1966,14 +1912,6 @@ Then a short message from Frank.
 ""Whichever way you go, I'm behind you."""
 END_EV_ACQ_ACCEPT,Sat,Sell
 END_EV_ACQ_DECLINE,Kendi paramla devam,Carry on with my own money
-DEAL_PROMPT_LINE,"Yatırımcıdan e-posta geldi. Teklif ekte.
-
-Frank: ""Üç gün içinde masaya oturmamız lazım. Şartları orada konuşacağız.""","An email from the investor. The offer is attached.
-
-Frank: ""We need to be at the table inside three days. That's where the terms get decided."""
-DEAL_PROMPT_SIT,Masaya şimdi otur.,Sit down at the table now.
-DEAL_PROMPT_VALIDITY,Geçerlilik: {days} gün,Valid for {days} days
-DEAL_PROMPT_DEFER,"Sonra — teklifi al, başka VC'lerle görüş.",Later — take the offer and go see other VCs.
 END_SA_BOARD_ONE,Yönetim kurulunda yatırımcıya {seats} koltuk tanındı.,The investor was granted {seats} seat on the board.
 END_SA_CUSTOMERS_ONE,Yolda {n} kurumsal müşteri kazanıldı.,{n} enterprise customer was won along the way.
 END_ACQ_BOOK_ONE,Devralınan defterde {n} müşteri ilişkisi bulunuyordu.,The book that changed hands held {n} customer relationship.

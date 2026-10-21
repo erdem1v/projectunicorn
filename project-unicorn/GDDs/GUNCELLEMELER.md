@@ -250,7 +250,7 @@ ve sahip onayı bekleyen kararlar `../docs/ACIK_ISLER/ACIK_KARARLAR.md` 96'dadı
 
 Bu bölüm ürün rev 7'nin ardından yapılan kalibrasyon turunun sahip kararlarını ve değişen kuralları kaydeder. Servis
 maliyetinin kuralı ch06 §1.1 ve ch08 §1 maddelerindedir. Turun ölçülen değerleri, kartları ve ajan kararları
-`../docs/ACIK_ISLER/ACIK_KARARLAR.md` 97'de, ölçümün tutmayan ve açık kalan yerleri 98–102'dedir; onlar bu bölümün
+`../docs/ACIK_ISLER/ACIK_KARARLAR.md` 97'de, ölçümün tutmayan ve açık kalan yerleri 98, 100 ve 101'dedir; onlar bu bölümün
 kuralı değildir.
 
 - **Bölüm yok: kalibrasyon turunun sahip kararları**
@@ -377,7 +377,7 @@ Bu bölüm olay kartlarının ve mailin ne zaman geldiğine dair cümlelerin yer
 
 - **§1.2 Destek yükü, formül satırı, "load > capacity" satırı ve "Reader" satırı**
   - Eski metin: yük = a·aktif_hesap + b·canlı_hata + c·sürüm_yaşı; kapasite = throughput × atanan × Müşteri Başarısı × Hız; aşımda yanıt süresi kötüleşir.
-  - Yürürlükteki kural: Destek iki sayaçla çalışır: GELEN BİLDİRİM ve DOĞRULANMIŞ HATA. Doğrulama/gün = 0,8 × Σ Müşteri İlişkileri etkin çıktısı × saat verimi [K]; düzeltme/gün = 1,2 × Σ Yazılım etkin çıktısı × saat verimi [K]; saat verimi gün içi verim eğrisidir, sekiz saat 1,0 (Ekip §8.2 maddesi); Hız yoktur. Bu hafta sprint kartı olmayan herkes doğrulamaya tabanla katılır (Ürün §8.2 maddesi). Yük tarafı Ürün §9'un GELEN akışıdır. Ayrı bir yanıt süresi sayısı yoktur; zarar iki kademelidir: doğrulanmamış her 10 GELEN için −0,6/gün, doğrulanmış açık her 10 için −0,3/gün, tavan −2,0/gün [K]. Oranlar ve zarar gün verisidir; her tik 7 günlük payını uygular, tavan önce günlük değere uygulanır (tik başına en çok −14). Toplantı atlamasının saatlerinde masadaki kurucu 0,4 katsayıyla sayılır (Satış §5.0 maddesi). Okuyucu DESTEK barının iki sayacı ve ısınma çizgisidir (20/40). Açık: akıştaki taşınan hata teriminin uygulanışı (ACIK_KARARLAR 45).
+  - Yürürlükteki kural: Destek iki sayaçla çalışır: GELEN BİLDİRİM ve DOĞRULANMIŞ HATA. Doğrulama/gün = 0,8 × Σ Müşteri İlişkileri etkin çıktısı × saat verimi [K]; düzeltme/gün = 1,2 × Σ Yazılım etkin çıktısı × saat verimi [K]; saat verimi gün içi verim eğrisidir, sekiz saat 1,0 (Ekip §8.2 maddesi); Hız yoktur. Bu hafta sprint kartı olmayan herkes doğrulamaya tabanla katılır (Ürün §8.2 maddesi). Yük tarafı Ürün §9'un GELEN akışıdır. Ayrı bir yanıt süresi sayısı yoktur; zarar iki kademelidir: doğrulanmamış her 10 GELEN için −0,6/gün, doğrulanmış açık her 10 için −0,3/gün, tavan −2,0/gün [K]. Oranlar ve zarar gün verisidir; her tik 7 günlük payını uygular, tavan önce günlük değere uygulanır (tik başına en çok −14). Toplantı atlamasının saatlerinde masadaki kurucu 0,4 katsayıyla sayılır (Satış §5.0 maddesi). Okuyucu DESTEK barının iki sayacı ve ısınma çizgisidir (20/40).
   - Kaynak: Ekip GDD §17.6; GDDs/README (ch06 §1.2 → Ekip §17.6); Ürün GDD rev 6.1 §8.1–§8.5, §9; `GDD — ZAMAN MODELİ.md` §3, §8, §9; sahip kararı 2026-09-27/28; `../docs/tasks/PRD_EKIP_VERIM_DESTEK.md` §2 D1, §3 V1.
   - Not (Faz A, 2026-10-17): Destek'in oyuncuya gösterdiği tek sayı AÇIK HATA'dır (GELEN BİLDİRİM iç sayaçtır); düzeltme/gün yoktur, akıştaki taşınan hata terimi silindi (ACIK_KARARLAR 45'in konusu kalktı) (bkz. "Faz A · hatalar ve hata gösterimi").
 
@@ -827,7 +827,7 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
 
 - **§11.5 Üretim hattı, "tüm oyuncu-yüzü satırlar açıkça etiketli YER TUTUCU olarak girer (örn. PH öneki)"**
   - Eski metin: Oyuncu-yüzü satırlar PH önekiyle etiketli yer tutucu olarak girer; gerçek düzyazıyı ajan yazmaz.
-  - Yürürlükteki kural: Satış penceresinde ve ilk B2B görüşmesinde ekrana çıkan satırlarda (54 `SALES_*` anahtarı ve Ekip'in `HR_FOUNDER_STATE_CARE` etiketi) ve `price_break.json` kartının metninde "PH:" öneki yoktur: her satır EN önce gözden geçirildi, motorun yapmadığını söyleyen satır düzeltildi, değerler yerinde yazıldı. CSV'nin hiçbir değeri ve `data/events/cards/**` metni (`_fixtures/` hariç) TR ya da EN'de "PH:" ile başlayamaz; kapı `loc_no_placeholder_text` smoke vakasıdır (`loc_sales_derived_keys`'in önek şartı kalktı). Toplantı sesinin kalanı (yaklaşık 150 satır) ayrı yazım turudur (ACIK_KARARLAR K31 açık). Açık: 55 satırın ve `price_break` metninin TR/EN'i sahip onayı bekliyor (`../docs/tasks/PRD_ONARIM_1.md` §8, §11.5).
+  - Yürürlükteki kural: Satış penceresinde ve ilk B2B görüşmesinde ekrana çıkan satırlarda (54 `SALES_*` anahtarı ve Ekip'in `HR_FOUNDER_STATE_CARE` etiketi) ve `price_break.json` kartının metninde "PH:" öneki yoktur: her satır EN önce gözden geçirildi, motorun yapmadığını söyleyen satır düzeltildi, değerler yerinde yazıldı. CSV'nin hiçbir değeri ve `data/events/cards/**` metni (`_fixtures/` hariç) TR ya da EN'de "PH:" ile başlayamaz; kapı `loc_no_placeholder_text` smoke vakasıdır (`loc_sales_derived_keys`'in önek şartı kalktı).
   - Kaynak: `../docs/tasks/PRD_ONARIM_1.md` §3.1 (S13); 43e0a28.
 
 - **§13 Kayıt, ilk paragraf (kaydedilen alanlar listesi)**

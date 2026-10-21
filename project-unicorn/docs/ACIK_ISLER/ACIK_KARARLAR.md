@@ -157,8 +157,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler: A) Metin: iç ses satırları şimdiki zamana ya da tepkiye çevrilir (ör. "Churn'ü soruyor. Sayılar hazır
     mı?"). TR ve EN sahip yazar, mekanik değişmez. B) Zamanlama: iç ses 2. vuruşta, soru gelmeden önce gösterilir.
     Bunun 1. vuruş istihbaratına bağlanıp bağlanmayacağı ayrıca seçilir. Bu, vuruş yapısını değiştirir. C) Olduğu gibi
-    kalır. K31 (toplantı diyaloglarının yazım turu) kapsamına alınabilir.
-  - Kaynak: ONERI_v3 §2 (şüphe 5); ACIK_KARARLAR K31 maddesi.
+    kalır.
+  - Kaynak: ONERI_v3 §2 (şüphe 5).
 
 - **11 · Elde tutma kartı yalnız Risk'e girişte açılıyor (kalibrasyon).**
   - Ne oluyor: `customer.retention` artık yalnız hesap Risk'e girerken açılıyor (`customer_health_changed`); önceden
@@ -625,9 +625,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   gelsin. B: kartlar kalsın, 7 gün ve 14 gün aralık şartı eklensin. Kaynak: ACIK_KARARLAR_D1-D13 §5, PUSH_ONCESI_KONTROL §8a.
 
 - **D12 · Eski "teklif e-postası" akışı.** `docs/writing/FRANK_UNWIRED.md` §4'teki akış (e-posta, 3 gün, 30 günlük
-  sayaç) K5 ve K10 ile çelişiyor; kartı bugün bağlı değil. Öneri: akış emekliye ayrılsın, metni K10 kartına ya da teklifin
-  geldiği ana taşınsın. Metin: `VC_EV_DEAL_TITLE`, `DEAL_PROMPT_LINE`, `DEAL_PROMPT_SIT`, `DEAL_PROMPT_VALIDITY`,
-  `DEAL_PROMPT_DEFER`; kod hiçbirini okumuyor, karar gelene kadar CSV'de kalır. Kaynak: ACIK_KARARLAR_D1-D13 §6 ve D12.
+  sayaç) K5 ve K10 ile çelişiyor; kartı bugün bağlı değil ve metni CSV'de yok. Öneri: akış emekliye ayrılsın.
+  Kaynak: ACIK_KARARLAR_D1-D13 §6 ve D12.
 
 - **E (isteklilik) modeli sabitleri.** 2cbbcd8'de seçilen EAGERNESS bloğu (`TermSheetTableSystem`) onaylanmadı.
   Ölçüm (63800db): saf politikada 4 masanın 2'si fonun kalkmasıyla bitti (hedef en çok %25); E0 = 70 + uyum ile
@@ -1148,23 +1147,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     modeliyle (Pazar 2) birlikte ele alınır; ölçüm Faz C'nin E2 turunda.
   - Kaynak: ch01 §5; kalibrasyon turu ölçümü (sahip kararı 2026-10-02); sahip kararı 2026-10-20 (gizli gider yok); 108.
 
-- **99 · Geç B2C memnuniyeti 10'a çakılı; doğrulanmış hata birikimi büyüyor.**
-  - Ne oluyor: Büyüyen 16 B2C koşusunda (`full_run_b2c`, `full_run_b2c_video`) 60. haftadan sonraki 688 haftanın
-    376'sında memnuniyet ≤ 10 (koşu başına 43 haftanın 15–34'ü). Hedef (deneyim) sonda 54 iken memnuniyet 16 koşunun
-    15'inde 10'da biter, dip 3'tür. Doğrulanmış hata 60. haftadan sonra 248–895'e çıkar, sonda 182–686'dır. Kapıya
-    ağızdan ağıza değil taban büyüme ve ücretli kartlarla varılır. `full_run_b2c_k1` etkilenmez (memnuniyet ≥ 25,
-    doğrulanmış ≤ 12). Neden: düzeltme tarafı geç oyunda doyuyor. Bot düzeltme koşusuna tek geliştirici ödünç
-    veriyor; masadaki kurucu düzeltir ama doğrulamaz (probe kurucusunun Müşteri İlişkileri'si 0). Sprint puanı işi ve
-    odak payını okumadığı için (96 (5)) düzeltmeyi genişletmek sprintten bedava ödünç olurdu; bot genişletilmedi.
-  - Nerede: `scripts/systems/sales_system.gd` (`_tick_satisfaction`, `SATISFACTION_*`); `support_system.gd`;
-    `sprint_system.gd` (`team`, `_points`); `scripts/debug/run_probe.gd` (düzeltme koşusu, masa).
-  - Oyuncuya etkisi: Büyük B2C ürününde memnuniyet dipte kalır; ağızdan ağıza büyüme geç oyunda çalışmaz.
-  - Seçenekler: A) Kabul: B2C geç oyununun baskısı budur. B) Destek ve düzeltme sabitleri yeniden ayarlanır. C) Sprint
-    puanı işi ve odağı okur (96 (5)), sonra bot düzeltmeyi genişletir ve yeniden ölçülür. D) Memnuniyetin itişi
-    yeniden ayarlanır.
-  - Kaynak: Ürün GDD (ch03) §8–§9; kalibrasyon turu ölçümü.
-  - Faz A ile değişti (2026-10-17): Düzeltme koşusu ve doğrulanmış hata birikimi yoktur: hata tek depodur, düzeltme sprintin düzeltme kartıdır ve geç B2C'de hatanın bedeli kitle kaybıdır. C seçeneğinin sprint yarısı Faz A Karar 13 ile uygulandı (sprint puanı Görevler matrisini okur; Yapım ve Destek'teki yazılımcı 0,5 sayılır). Bot düzeltme kolları (`fix_none`, `fix_worst`, `fix_due`, `fix_off`) bu değişikliklerle yeniden ölçüldü; ölçüm RAPOR_A'dadır. Madde açık kalır. Sahip onayı RAPOR_A'da.
-
 - **100 · Faz 3'te iki kararsız hafta üst üste gelebiliyor.**
   - Ne oluyor: Karar 12'nin ölçütü (faz 3'te her 2 haftada en az 1 karar ve kasanın en az %5'ini harcatan en az 1
     teklif) 56/56 faz 3 koşusunda tutar; oran en az 1,24 / 2 hafta. Daha sıkı okuma ("iki kararsız faz 3 haftası üst
@@ -1231,26 +1213,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 
 ## Metin ve yerelleştirme
 
-- **`TERM_INV_*` masa satırları (15 TR + 15 EN).** TR 95bc9ea'da, EN 8457ce3'te yazıldı; ikisi de onay bekliyor.
-  `TERM_INV_OUT_ANCHOR` için eski, onaylı EN satırı alternatif olarak duruyor. Kaynak: RAPOR_LOKAL §2b ve T2.1.
-
-- **Frank'in yaklaşma ve soğuk çıkış satırları (10 satır).** Yaklaşma: `FRANK_APPROACH_HALF`, `FRANK_APPROACH_NEAR`,
-  `FRANK_APPROACH_CLOSE`, `FRANK_DOOR_OPEN` (8e49dbd; kartlar `funding.frank_approach_*`, `funding.frank_door_open`).
-  Soğuk çıkış: `VC_FRANK_COLD_{ANCHOR,NEXUS,BOSPHORUS,MERIDIAN,GENERAL_1,GENERAL_2}` (28d5edc). TR ve EN aynı turda
-  taslak olarak yazıldı; bazı TR satırları EN'in çevirisi gibi. Sahibin düzeltmesini bekliyor.
-  Kaynak: ONERI_v3 §6, PUSH_ONCESI_KONTROL §8c.
-
 - **K32 · Frank'in kalan yüzeyleri (D11).** Yazılmamış: K10 karar kartı (bugün konuşmacısız), fonun masadan kalkması,
   "diğer teklifi göster" anı, fona özel masa açılışları, üçüncü redde "yol kapandı", seed'de çekilme onayı. F1–F6 taslakları
   ACIK_KARARLAR_D1-D13 §6'da. İnceleme notu: hepsi TR önce yeniden yazılır; F4 satırları E modelinden türetilmeli; F5 dönüş
   vaat ediyor; F2 suçlayıcı. Kaynak: ONERI_v3 K32, ACIK_KARARLAR_D1-D13 D11.
-
-- **K31 · Toplantı diyaloglarının yazım turu.** Satış toplantısının 54 satırından ve Ekip'teki kurucu durum etiketi
-  `HR_FOUNDER_STATE_CARE`'den "PH:" öneki kalktı (43e0a28; TR/EN sahip onayı bekliyor). Açık kalan toplantının sesidir:
-  VC ve seed'de tepki satırları az ve iki oda arasında ortak, fonların kendi sesi yok. Öneri: açılış, tepki, geçiş ve
-  gerekçeli kapanış slotları, "en uzun süredir söylenmemiş" seçimi, hafıza; önce yaklaşık 150 satırlık MVP, sonra
-  yaklaşık 425 satır. Fon ses kartları yalnız EN; Anchor'ınki onaylı.
-  Kaynak: ONERI_v3 K31, §5 ve §5.4; TOPLANTI_VE_SERIES_A_ONERI §A–§C.
 
 - **Olay içeriği eksik (ch11 §1–§2, ch14 §2).** ch11 dokuz ark ve Frank hariç ~40 düğüm, ch14 §2 demo için 40–60
   düğüm, en az bir rakip hamlesi ve bir olay (incident) istiyor. Canlı destede Frank'inkiler dahil 129 demo kapsamlı
@@ -1291,13 +1257,12 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     `TERM_FRANK_*`, `TERM_RESULT_*`, `FIN_MENTOR_QUOTE`.
   - Dünya, olay, son: `NEWS_S_*`, `NEWS_RIVAL_{UP,DOWN}_*`, `MONTH_FRANK_*`, `EFFECT_*`, `MENTOR_INTRO_BODY`,
     `END_{SA,ACQ,BK,BC,VC,BS,RF,GENERIC}*`, `END_META_*`, `END_EV_SHUTTER_*`, `END_EV_ACQ_{TITLE,ACCEPT,DECLINE}`.
-  Kayıttaki bekletilen Frank metni (üç `PITCH_*`, `VC_EV_*` ve `END_EV_PIVOT_*` satırları) aşağıdaki Frank belgeleri
-  maddesinde. Yalnız smoke'un okuduğu kayıt aileleri (`COMPANY_BG_*`, `PROD_FEAT_*_VOICE`, `PROD_TYPE_*_{BET,PITCH}`,
+  Yalnız smoke'un okuduğu kayıt aileleri (`COMPANY_BG_*`, `PROD_FEAT_*_VOICE`, `PROD_TYPE_*_{BET,PITCH}`,
   `B2B_PAIN_*`) oyunda okunmuyor. Kayıt dışında da yalnız smoke'un okuduğu satırlar var: B2B'ye özgü `SECTOR_TEXTILE`,
   fikstür `SECTOR_TESTING` ve `SECTOR_FALLBACK`. Oyunda `SECTOR_` yalnız `ProductCatalog.type_sector_labels` ile ürün
   tiplerinin sektörlerinden kurulur; bu iki id hiçbir ürün tipinde yok ve o yolun yedek anahtarı yok. Kayıttaki
-  referanssız emekli anahtarların çoğunu CSV süpürmesi sildi (84498d96); CSV'de kalanlar `VC_EV_OFFER_EXPIRING_BODY`
-  ve `END_EV_ACQ_BODY` (ikisi de okuyucusuz). Açık: EN geçişi yapılsın mı. Kaynak: localization_draft_en.
+  referanssız emekli anahtarların çoğunu CSV süpürmesi sildi (84498d96); CSV'de kalan `END_EV_ACQ_BODY` okuyucusuz.
+  Açık: EN geçişi yapılsın mı. Kaynak: localization_draft_en.
 
 - **Frank belgeleri (bu dosyalar kalır).** `docs/writing/FRANK_ORPHANS.md`: v6'da olmayan Frank satırları, satır satır
   sahip kararı bekliyor. `docs/writing/FRANK_UNWIRED.md` §4: D12. Seed kapısı: `funding.seed_door` kartı
@@ -1308,21 +1273,16 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   `time_manager.gd:45` INITIAL_HOUR (sabit kodda artık yok), `:245-279` (günlük yuva sırası hâlâ artık olmayan
   EventManager'ı sayıyor; günlük dağıtıcı `TimeManager._dispatch_daily_tick`), `event_manager.gd:804-816` (dosya yok);
   `time_manager.gd` bugün 450 satır, öbür atıfları (:115-143, :344-355, :402-404) yeniden doğrulanmalı. Belgede 81
-  ayrı dosya:satır atfı var; sahip bu gerçekleri tazeler ya da satır numaralarını sembol adına çevirir. Kodun
-  okumadığı ama karar gelene kadar CSV'de kalan Frank metni: `VC_EV_DEAL_TITLE`, `DEAL_PROMPT_LINE`,
-  `DEAL_PROMPT_SIT`, `DEAL_PROMPT_VALIDITY`, `DEAL_PROMPT_DEFER`, `VC_EV_ACK`, `END_EV_PIVOT_TITLE`,
-  `END_EV_PIVOT_BODY`, `END_EV_PIVOT_ACCEPT`, `END_EV_PIVOT_DECLINE`, `PITCH_S0_NPC`, `PITCH_S0_INNER`,
-  `PITCH_INNER_CLOSED`, `PROD_SHIP_VERSION_BODY`, `PROD_SHIP_FIRST_READY`, `PROD_SHIP_FIRST_BODY`,
-  `PROD_DESIGN_DECISION_BODY`.
+  ayrı dosya:satır atfı var; sahip bu gerçekleri tazeler ya da satır numaralarını sembol adına çevirir.
 
-- **66 · `OFFICE_REQ_ANGEL`'ın TR metni onay bekliyor.**
+- **66 · İş hanının ilk şartı Frank'in çeki.**
   - Ne oluyor: İş hanının ilk şartı Frank'in çekidir (`GameState.run_angel_amount > 0`); çek seed değildir, tek çek,
     tur değil. Harita kartındaki şart satırı `OFFICE_REQ_ANGEL` kapıya uyar: EN "Frank's cheque taken", TR "Frank'in
-    çeki alındı". TR satır sahibin onayından geçmedi.
+    çeki alındı".
   - Nerede: `localization/strings.csv` (`OFFICE_REQ_ANGEL`); `scripts/systems/office_system.gd`
     (`requirement_state`, "angel"); `scripts/ui/office/office_map_card.gd`.
-  - Oyuncuya etkisi: TR ekranda onaysız bir satır.
-  - Seçenekler: A) TR onaylanır. B) Sahip TR'yi yeniden yazar.
+  - Karar: Erdem'in 2026-10-20 kararı 3 ile ofisin tek şartı para olur, Frank'in çeki şartı kalkar; madde Faz C C9
+    ile silinir.
   - Kaynak: ofis tasarımının şart metni; CLAUDE.md §1, §5.
 
 - **68 · Yeniden adlandırılan iki anahtarın TR metninde oyuncuya görünen tire.**
@@ -1346,35 +1306,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Seçenekler: A) Sahip metni onaylar ya da yeniden yazar; kart `demo`'ya döner. B) Kart silinir; nabız yeter.
   - Kaynak: CLAUDE.md §3 (Frank'in külliyatı Erdem'indir; yeni Frank satırı onaysız ekrana çıkmaz); Erdem, 2026-09-27
     görev kararı (ilk taşınmayı Frank'in kartı önerir).
-
-- **86 · Haftalık modelin metin soruları.**
-  - Ne oluyor: Haftaya dönen oyuncu metinleri (önce EN, sonra TR) onay bekliyor; commit "TR/EN onay bekliyor" diye
-    işaretlidir, Frank satırlarının yeni hâli taslaktır. Onayın ötesinde açık kalan ifade soruları: (1) `END_DATE_LINE`
-    EN'de "ISSUE" yerine sözlüğün "No." karşılığı önerildi; `ENDING_RUN_META` TR'de "BU RUN" yerine "BU OYUN". (2)
-    `HR_SEARCHING` anlam değiştirdi: aramanın geçen gününü değil, dosyaların gelmesine kalan süreyi sayar (bir
-    haftalık aramada geçen hafta hep 0 olurdu). (3) `HR_NEWS_ON_LEAVE_MONTH` ("bu ay izinde") yerine `{n}` ve tekil
-    ikiz taşıyan `HR_NEWS_ON_LEAVE` geldi; önerilen TR "{name} {n} hafta izinde" (yaz izni 2 haftadır). Frank
-    satırlarının haftalık taslakları 90. maddededir.
-  - Nerede: `localization/strings.csv`; okuyanlar `scripts/systems/endings_copy.gd`, `scripts/modals/ending_scene.gd`,
-    `scripts/tabs/hr_tab.gd`, `scripts/systems/hr_morale_system.gd`.
-  - Oyuncuya etkisi: Onaysız metin ekranda.
-  - Seçenekler: A) Öneri onaylanır. B) Sahip metni yeniden yazar.
-  - Kaynak: CLAUDE.md §3, §5; `docs/design/localization_glossary.md` (SAYI {n} → No. {n}); GDD Zaman Modeli §5.
-
-- **89 · Okuyucusu olmayan iki gün sözlü anahtar: silinsin mi, bağlansın mı.**
-  - Ne oluyor: `DEAL_PROMPT_VALIDITY` (TR "Geçerlilik: {days} gün", EN "Valid for {days} days") ve
-    `VC_EV_OFFER_EXPIRING_BODY` (Frank'in "{days} gün içinde yanıt vermeliyiz" / "inside {days} days" satırı) hâlâ gün
-    der. Haftalık modelde tike bağlı metin gün saymaz ve "bugün" demez (GDD Zaman Modeli §5). İkisini de kod, sahne ya
-    da kart okumadığı için haftalık metin turu onlara dokunmadı (üçüncüsü `VC_EV_SKIP_MEETING` toplantı günü kartıyla
-    birlikte silindi). Birincisi "Frank belgeleri" maddesinde, kodun okumadığı ama karar gelene kadar CSV'de kalan Frank
-    metni arasında ve `docs/writing/FRANK_ORPHANS.md`'de satır kararı bekliyor; ikincisi DRAFT-EN kaydında CSV'de kalan
-    referanssız anahtarlar arasında.
-  - Nerede: `localization/strings.csv` (`DEAL_PROMPT_VALIDITY`, `VC_EV_OFFER_EXPIRING_BODY`).
-  - Oyuncuya etkisi: Bugün yok, ekrana çıkmıyorlar. Bu hâlleriyle bağlanırlarsa yanlış birim söylerler.
-  - Seçenekler: A) İkisi CSV'den silinir (ölü anahtar kuralı, CLAUDE.md §8). B) Bağlanırlar: önce haftalık metin yazılır
-    (önce EN, sonra TR; Frank satırı taslak olarak), sonra okuyucu kurulur. C) Frank satırlarının satır kararına
-    (FRANK_ORPHANS) kadar kalırlar.
-  - Kaynak: CLAUDE.md §3, §5, §8; GDD Zaman Modeli §5; `docs/writing/FRANK_ORPHANS.md`.
 
 - **90 · Haftalık modelin Frank taslakları onay bekliyor.**
   - Ne oluyor: Tike bağlı gün sözü taşıyan Frank satırlarının haftalık hâli taslak olarak yazıldı. Hiçbiri CSV'ye ya da
@@ -1457,15 +1388,12 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Kaynak: ofis karakterleri planı §2, §9 (Erdem, 2026-09-28).
 
 - **95 · Görüşme metinleri; mevcut VC satırlarında tire ve tırnak.**
-  - Ne oluyor: Görüşme akışının yeni anahtarları (`MEETING_*`: kicker'lar, VC ve satış rol adları, tutum ve risk
-    sözcükleri, sonuç kartı, davet, dönüş sorusu, `MEETING_ROLE_LINE`, `MEETING_RES_PAIR`, `MEETING_RES_COST_BRAND`)
-    EN önce yazıldı, TR tasarımın ifadelerini izler; onay bekliyor. Panel mevcut VC satırlarını olduğu gibi gösterir:
-    bazılarında tire var (`VC_B4_CALLBACK`, `VC_B4_PUSH`; `VC_B1_LINE` ve `VC_B1_CHOICE` Faz Q K12'de tiresiz yazıldı)
-    ve karşı taraf satırları tırnak içinde (24 `VC_` anahtarı; tasarımda tırnak yok). Satış satırlarında `PH:` öneki
-    kalmadı (43e0a28).
+  - Ne oluyor: Panel mevcut VC satırlarını olduğu gibi gösterir: bazılarında tire var (`VC_B4_CALLBACK`,
+    `VC_B4_PUSH`; `VC_B1_LINE` ve `VC_B1_CHOICE` Faz Q K12'de tiresiz yazıldı) ve karşı taraf satırları tırnak içinde
+    (24 `VC_` anahtarı; tasarımda tırnak yok).
   - Nerede: `localization/strings.csv`.
-  - Seçenekler: A) Yeni metin onaylanır. B) Sahip yeniden yazar; tırnaklar kalkar (LANGUAGE INTEGRITY LAW). Tire
-    Erdem'in 2026-10-20 kararı 14 gereği kalkar.
+  - Seçenekler: Sahip yeniden yazar; tırnaklar kalkar (LANGUAGE INTEGRITY LAW). Tire Erdem'in 2026-10-20 kararı 14
+    gereği kalkar.
   - Kaynak: CLAUDE.md §3, §5; 1888fe4, eba2140, 4ebcc5d, cf80260.
 
 ## Kod ve test altyapısı

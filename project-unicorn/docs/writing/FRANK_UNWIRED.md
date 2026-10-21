@@ -143,37 +143,26 @@ row in `scripts/modals/event_modal.gd`'s `_describe_modifier` so the terminal op
 
 ---
 
-## 4 · Surface 24 · Teklif e-postası geldi — text complete, old edge refused
+## 4 · Surface 24 · Teklif e-postası geldi — not built
 
-**Where the text lives.** `localization/strings.csv`, both locales — `VC_EV_DEAL_TITLE`
-("Yatırımcıdan teklif" / "The investor's offer"), `DEAL_PROMPT_LINE`, and the option
-`VC_EV_GO_FUNDING`. The card object is `VCPitchSystem._build_deal_prompt_event()`.
+**Where the text lives.** Nowhere. The card's title and body left the CSV (no code builds the card, so
+nothing read them); the navigation option `VC_EV_GO_FUNDING` ("Yatırım'a git" / "Go to Funding") stays
+because other cards use it.
 
 **Waiting on.** The new offer flow, which is four steps and none of them exist: the investor
 leaves the table promising the offer **by email**; the card fires when the email **arrives**;
 the player has **three days** to enter the term-sheet negotiation; only afterwards does the
 funding tab show the offer with a **30-day answer counter**. The only offer clock in the engine
-today is `PitchConstants.SHEET_VALIDITY_DAYS` (14 days), and it starts the instant the sheet is
+today is `PitchConstants.SHEET_VALIDITY_WEEKS` (3 weeks), and it starts the instant the sheet is
 granted.
 
-**How it is held inert.** Both call sites of `_offer_deal_prompt` — in `_grant_sheet` and in
-`_deliver_pending_sheet` — are removed, with a comment left in place at each. A granted sheet
-therefore cannot summon the card. Riding that old edge would have been an approximate trigger,
-which ships and lies. Falsification: `deal_prompt_is_inert` grants a sheet, runs five days, and
-asserts no `ev_vc_deal_prompt_<vc>` id reaches the queue while the sheet economy stays intact.
-The player is not stranded — Finance › Yatırım still opens the table on its own (`hunt_tab.gd`).
+**How it is held inert.** There is nothing to hold: no code builds the card. A granted sheet cannot
+summon it, and the player is not stranded; Finance › Yatırım still opens the table on its own
+(`hunt_tab.gd`).
 
 **Attaching it.** A day or two, mostly new mechanic rather than wiring:
 `scripts/systems/vc_pitch_system.gd` (the email delay, the 3-day window, the answer counter),
-`scripts/tabs/hunt_tab.gd` (the counter's display), and one enqueue site.
-
-**Document correction owed.** This surface's `{yatırımcı}` / `{investor}` token was **removed**
-from both the title and the body, and the v6 document should be corrected to match rather than
-left to drift. Turkish suffixes take vowel harmony and consonant assimilation from the word
-before them, so `{investor}'dan` produces the wrong suffix for most of the roster and the engine
-cannot inflect; `loc_csv_integrity` then forces the token out of the English column too, because
-the two locales must carry an identical token set. The ruled replacement text is what is in the
-CSV today.
+`scripts/tabs/hunt_tab.gd` (the counter's display), one enqueue site, and the card's text.
 
 ---
 
@@ -276,4 +265,4 @@ behaviour**, so nothing lost coverage.
 | `loc_event_en_coverage` | a new directory, and a blind spot | scans `data/events/unwired/` as well, and now audits `mentor_advisory` **modifier payloads** — player-facing prose the old field-only scan never looked at |
 
 New cases: `traction_gate_one_option`, `last_answer_warning`, `last_answer_warning_suppressed`,
-`buyout_card_is_inert`, `deal_prompt_is_inert`.
+`buyout_card_is_inert`.

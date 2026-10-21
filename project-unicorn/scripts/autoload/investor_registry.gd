@@ -54,7 +54,7 @@ const INVESTORS := [
 		"term_bands": {"valuation": "mid", "dilution": "mid"},
 		"opening_terms": {"valuation_m": 14, "dilution_pct": 18, "board_seats": 1, "board_veto": false},
 		"warm_intro": true,
-		# The copy speaks of this fund's lead as a man (INV_ARCH_BOSPHORUS, PITCH_S0_INNER).
+		# The copy speaks of this fund's lead as a man (INV_ARCH_BOSPHORUS).
 		"lead_sex": "m",
 	},
 	{

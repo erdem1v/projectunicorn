@@ -53,12 +53,6 @@ Açık işlerin tek yeri bu klasördür.
 ## Ürün rev 7
 - **Yeniden yuva listesi (PRD §5.9, §7.23).** GDD'de adı geçtiği ya da sahip tuttuğu için kalan, sprint geçişiyle
   oyun içi çağıranı kalmayan öğeler; her biri sprint ekranında bir yere bağlanır ya da sahibin kararıyla silinir:
-  - Hata trendi zinciri (ch03 §8.4 yön okları; sahip): `ProductSystem.bug_trend`, `health_state`, `product_bug_risk`,
-    `mvp_bug_history` penceresi; etiketleri `PROD_TREND_RISING`, `PROD_TREND_FALLING`, `PROD_RISK_LOW`, `PROD_RISK_MID`,
-    `PROD_RISK_HIGH`, `PROD_HEALTHY`, `PROD_RISKY`, `PROD_FLAT`. Faz A ile değişti (2026-10-17): zincir ve sekiz
-    etiketi silindi, çünkü girdileri (aşınma, canlı hata sayacı, ürün karmaşıklığı) kalktı ve zincir çalışamazdı;
-    hat panelindeki ok (`ProductModel.bug_row` `delta`: son haftalık tike göre artış ya da azalış) yön okunun yerini
-    aldı. Sahip onayı RAPOR_A'da.
   - Tip ekranının kilitli üçlüsü (ch03 §12.11, GUNCELLEMELER ch14 §2): `ProductCatalog.locked_type_ids`,
     `TYPE_SCREEN` kilitli listesi, `type_sector_labels`; tür seçici yalnız oynanabilir türleri çiziyor
     (ACIK_KARARLAR 96).
@@ -92,10 +86,6 @@ Açık işlerin tek yeri bu klasördür.
 - **Ürün rev 7 denetiminin plan dışı bulguları.** Kalibrasyon turu bunlara dokunmadı:
   - C-05: Penceresinde yapılabilir adım olmayan B2B talebi, adım açılınca aynı pencerenin sonraki bir tikinde doğuyor
     (ACIK_KARARLAR 96 (28) ve PRD'nin zamanlamasıyla çelişir).
-  - C-07: Planlanmış düzeltme kartı, ticket sayısı acil eşiğini geçince planlama anındaki eforunda kalıyor (3 ticket'ta
-    efor 1); tersi de var. Faz A K4 ile kapandı: başlamamış düzeltme kartının hata sayısı ve eforu her gün hata
-    deposundan yenilenir (`SprintSystem._refresh_fix_cards`), koşan kartınki başlatmada kilitlidir. Sahip onayı
-    RAPOR_A'da; onaydan sonra madde silinir.
   - C-09: Öngörü durum sözcüğü değişmeyen seviye geçişini de yazıyor ("Çekirdek Yeterli → Yeterli"):
     `SprintCatalog.card_effect` yarım adım yuvarlanmış seviye değişince `level` parçası verir, `SprintUiShared.forecast`
     iki ucun sözcüğünü eşit olsa da çizer. Faz Q K2 sözcüğü ürün sayfasının referansına göre ham seviyeden okur hâle
@@ -108,16 +98,8 @@ Açık işlerin tek yeri bu klasördür.
     anki kademelerden okur. Eksen sayıları Faz Q K7b'de kalktı; eskiden fiyat döngüden sonra yazılan eksen
     gerçekleşmesinin bütününden önce kuruluyordu (~%14 düşük ölçüsü o dönemin), şimdi yalnız sonraki kartlar eksik.
     Yeni kalite terimiyle yeniden ölçülmedi.
-  - C-13: Alan cümlelerinin alt-tür boyutu yok: her alt-tür aynı Çekirdek cümlesini okuyor (PRD §2.1 "şablon alan ×
-    durum × alt-tür"). Faz Q K2 ile konusunu yitirdi (`9a0dff9`): alan × söz şablonu kalktı, 19 alana özgü durum
-    cümlesi silindi; kapalı satırın cümlesi ürün sayfasının yıldız cümlesidir (`PRODUCT_STAR_*`, B2C'de
-    `PRODUCT_AUDIENCE_*`, Gelir'in dört satırı kalır) ve alt-türden bağımsızdır. Alanlara özgü tadın yitmesi ayrı
-    sahip sorusu. Sahip onayı Faz Q raporunda; onaydan sonra madde silinir.
   - INT-6: Koşan kartı "Çıkar"mak yapılmış puanı HIZ satırından düşürüyor (`SprintSystem.done_points` yalnız
     sprintteki ve devreden kartları sayar).
-  - INT-9: v14 göçünden sonra ilk günlük tike kadar ticket defteri boş: yüklemede düzeltme kartı ve "!" yok.
-    Faz A K3 ile kapandı: bilet defteri yoktur, `_migrate_16` açık hataları doğrudan hat deposuna yazar ve düzeltme
-    kartlarının sayısını kayda taşır. Sahip onayı RAPOR_A'da; onaydan sonra madde silinir.
   - INT-10: Eski yapım motorunun bayrak artıkları: ölü bir bayrak türü öneki ve tek okuyucusu silinen iki beyaz
     listeli bayrak.
   - LC-9: PM kovulunca ya da izne çıkınca onaylı planları sprintleri yönlendirmeyi sürdürüyor; ÇEYREK kilitli, planlar
@@ -129,8 +111,8 @@ Açık işlerin tek yeri bu klasördür.
     Ritim probe günlüklerinden okundu.
   - Probe kurucusunun Müşteri İlişkileri'si 0'dır (`main.gd` debug yükü): masadaki kurucu doğrulama yapmaz ve
     düzeltme koşusu kalktığı için düzeltme de yapmaz; düzeltme sprintin düzeltme kartındandır. B2C kolunda ödeyen
-    kullanıcı gelince kurucu Destek'i Yapım'ın yanında ikinci iş olarak alır ve sprintte yarım pay sayılır
-    (ACIK_KARARLAR 99). Faz A ile değişti (2026-10-17); sahip onayı RAPOR_A'da.
+    kullanıcı gelince kurucu Destek'i Yapım'ın yanında ikinci iş olarak alır ve sprintte yarım pay sayılır.
+    Faz A ile değişti (2026-10-17); sahip onayı RAPOR_A'da.
   - Bot `rival.funding_round`'da hep ilk seçeneği alır: "bekle"nin zamanladığı `rival.price_cut` yolu hiçbir probe'da
     koşmuyor. Sensible politika `founder.side_contract`'ta hep "al"ı seçer.
   - Faz 3 giriş kartlarının (`world.analyst_guide`, `world.newsletter_slot`) smoke vakası yok; onları yalnız probe

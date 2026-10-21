@@ -64,31 +64,13 @@ pass, never after. (Observed 2026-08-25 during the shutter smoke repair; no copy
 
 ---
 
-## C · Dead CSV twins — no reader anywhere
-
-Duplicates of live keys, with zero references in `scripts/`, `scenes/` or `data/`. Two of them
-carry a *different* English translation of byte-identical Turkish, which is how they were
-identified as twins rather than as separate lines.
-
-| key | twin of | note |
-|---|---|---|
-| `PROD_SHIP_FIRST_BODY` | `PROD_EV_FIRST_SHIP_BODY` | TR byte-identical before this pass, EN divergent. The live twin has now been replaced by surface 4, so the two no longer even match |
-| `PROD_SHIP_VERSION_BODY` | `PROD_EV_VERSION_SHIP_BODY` | same pattern |
-| `PROD_DESIGN_DECISION_BODY` | `PROD_EV_ITER_DECISION_BODY` | ends with a `{note}` token that no key feeds |
-
----
-
-## D · Orphaned by this pass
+## C · Orphaned by this pass
 
 Left in place and reported, per the rule that a Frank line outside the document is reported
-rather than deleted. All four groups are strings and modifier arms with no remaining caller.
+rather than deleted. Every row is a string or a modifier arm with no remaining caller.
 
 | key / symbol | was used by | why it is loose now |
 |---|---|---|
-| `VC_EV_ACK` ("Anlaşıldı" / "Understood") | the acks on surfaces 14, 15 and 16 | all three cards now carry the document's navigation option instead (`VC_EV_GO_FUNDING`, `END_EV_GO_FINANCE`) |
-| `VC_EV_SKIP_MEETING` ("Bugün değil (randevu yanar)") | surface 13's second option | the document removes it: burning a booked meeting is not a choice the game offers |
-| `DEAL_PROMPT_SIT`, `DEAL_PROMPT_DEFER`, `DEAL_PROMPT_VALIDITY` | surface 24's old two-option pair | replaced by the single navigation option; waiting is now the answer counter, not a card choice |
-| `END_EV_PIVOT_TITLE`, `END_EV_PIVOT_BODY`, `END_EV_PIVOT_ACCEPT`, `END_EV_PIVOT_DECLINE` | `ev_pivot_offer` | that card merged into the buyout card (surfaces 17 + 18), which uses the `END_EV_ACQ_*` keys. **The buyout card is WIRED as of 2026-08-27** (`data/events/cards/funding/acquisition_offer.json`), so `END_EV_ACQ_TITLE` / `_ACCEPT` / `_DECLINE` are live — these four pivot keys stay orphaned |
 | `END_EV_ACQ_BODY` | the buyout card, until 2026-08-27 | **NEWLY ORPHANED, deliberately.** The body carried `{investor}`, `{valuation}` and `{offer}`; only the first is a scope slot, so the other two would have reached the screen as literal braces (the defect `FRANK_VERIFY_2026-08-21.md:166` predicted). `{seam:}` cannot live in the CSV — `loc_csv_integrity` counts braces against `[a-z_]+` tokens — so the body moved INLINE into the card in both locales, byte-exact apart from the two machine tokens becoming `{seam:funding.acq_valuation}` / `{seam:funding.acq_offer}`. The v6 landing pass had already moved these same two tokens once (`{değerleme}` → `{valuation}`). Reported rather than deleted, per this file's own rule |
 | modifier `decline_vc_meeting` | surface 13's skip option | no caller left. The dispatcher arm stays: it is engine vocabulary, not content |
 | modifier `decline_pivot` | `ev_pivot_offer`'s option 2 | no caller left. Same reasoning |
@@ -102,7 +84,7 @@ payload as the document instructs.
 
 ---
 
-## E · Frank named, not Frank speaking
+## D · Frank named, not Frank speaking
 
 Listed for completeness so the sweep is provably exhaustive. These are identity strings,
 captions, badges, ledger rows and other characters talking *about* him — no voice, so they are
@@ -113,8 +95,7 @@ outside the document's scope by definition.
 `ANGEL_TX_LABEL` · `EFFECT_TO_FRANK` · `ANGEL_MONTH_HIGHLIGHT` · `GATE_OPENED` ·
 `ODA_EVENTS_FRANK_HEADER` ("Frank'ten not") · `ODA_MENTOR_TAG_FALLBACK` · `EVENT_TAG_MENTOR` ·
 `EVENT_MENTOR_ADVICE` · `INV_APPETITE_GATE_OPEN` ("Kapı açık · Frank'le konuş") ·
-`VC_WHY_WARM_INTRO` · `INV_ARCH_BOSPHORUS` · `PITCH_S0_NPC` · `PITCH_S0_INNER` ·
-`PITCH_INNER_CLOSED`.
+`VC_WHY_WARM_INTRO` · `INV_ARCH_BOSPHORUS`.
 
 One of these is worth a second look even though it is not voice: the stake beside
 `EFFECT_TO_FRANK`, `EFFECT_EQUITY`, prints `%{equity}` in Turkish and `{equity}%` in English.
@@ -122,7 +103,7 @@ Both parse as one token so the integrity gate passes, but the two columns are no
 
 ---
 
-## F · Frank text outside the CSV
+## E · Frank text outside the CSV
 
 | where | what | status |
 |---|---|---|
@@ -133,23 +114,18 @@ Both parse as one token so the integrity gate passes, but the two columns are no
 
 ---
 
-## G · Not an orphan, but the document should be corrected
+## F · Not an orphan, but the document should be corrected
 
 Recorded here so the source document and the build do not drift apart silently.
 
-1. **Surface 24 lost its `{investor}` token**, in the title and in the body, by ruling. Turkish
-   suffixes take vowel harmony and consonant assimilation from the preceding word, so
-   `{investor}'dan` produces the wrong suffix for most investor names and the engine cannot
-   inflect; `loc_csv_integrity` then requires the token to come out of English too, since the
-   two columns must carry an identical token set. The replacement text is in the CSV.
-2. **Turkish placeholder names became engine tokens** in every landed string —
+1. **Turkish placeholder names became engine tokens** in every landed string —
    `{yatırımcı}→{investor}`, `{gün}→{days}`, `{ay}→{months}`, `{eksen}→{axis}`,
    `{sürüm}→{version}`, `{rakip}→{rival}`, `{sayı}→{n}`, `{kol}→{lever}`,
    `{değerleme}→{valuation}`, `{teklif}→{offer}`. Prose is byte-exact; only the machine token
    moved, because the gate requires `[a-z_]+` names identical across both locales, and a
    Turkish-named token is not parsed as a token at all — it would have rendered on screen as
    literal `{yatırımcı}`.
-3. **Surface 17 + 18's English body carried an author's note inline**, in Turkish, glued to the
+2. **Surface 17 + 18's English body carried an author's note inline**, in Turkish, glued to the
    following word: `{investor} (buradaki investor bize seed turunda yatırım yapan
    yatırımcı)calls.` The task ruled that background "for your understanding only, not for the
    text", so the note was not landed and the line reads `{investor} calls.` The document should
