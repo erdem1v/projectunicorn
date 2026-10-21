@@ -70,8 +70,7 @@ Açık işlerin tek yeri bu klasördür.
     kurulumun Satış etki cümlesini seçer (`origin_traits_step.gd`).
   - Kritik hata bayrağı: `critical_bug_unfixed` (`GameState.FLAG_TYPES`, `EvEffects.GAME_FLAG_WHITELIST`; okuyanı
     `launch()`'tı).
-  - Okuyanı olmayan anahtarlar: `PROD_DEV_VERSION` (yalnız `loc_language_switch` smoke örneği), `PROD_MARKET_SHARE`
-    (yalnız bir smoke yorumu anıyor).
+  - Okuyanı olmayan anahtar: `PROD_DEV_VERSION` (yalnız `loc_language_switch` smoke örneği).
 
 ## Ürün rev 7 kalibrasyon turu
 - **Bayrakla ulaşılamayan görsel kabul yüzeyleri.** Turun görsel kabulü altı durumu repoda olmayan bir sürücüyle

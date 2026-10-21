@@ -3,9 +3,8 @@
 Every Frank line in the build that does **not** appear in
 `docs/content/events_draft/Frank Diyalogları · v6.md`, after the v6 landing pass (2026-08-20).
 
-**Nothing here has been deleted and nothing has been rewritten.** Erdem decides, per row,
-whether it is a surface the document missed or a duplicate of one it already covers. This list
-is the test of whether the document is complete, so it has not been shortened by tidying.
+Erdem decides, per row, whether it is a surface the document missed or a duplicate of one it
+already covers. A row whose key has no reader left is deleted with the key.
 
 Method: every CSV key in the Frank families plus every key whose Turkish or English value
 contains "Frank" (109 keys), each checked for a live reader across `scripts/`, `scenes/` and
@@ -19,7 +18,6 @@ These fire in a normal run today.
 
 | key(s) | where it renders | what fires it | reads like |
 |---|---|---|---|
-| `PROD_MENTOR_LINE` (+ caption `PROD_MENTOR_TAG` "FRANK KÖSEOĞLU · MENTOR") | Frank strip in the product path picker, `creation_flow.gd` | first visit to the B2C/B2B step while `product_path_frank_seen` is false | **A surface the document intends to remove but does not replace.** Bölüm 3 lists "pazar seçimi şeridi" among the places Frank is *tamamen kaldırıldı*, but no surface in Bölüm 1 or 2 covers it and the task list does not name it. Removing it on that basis alone would be an inference, not a ruling |
 | `PROD_EV_VERSION_SHIP_BODY` (+ `PROD_SHIP_VERSION_TITLE`, `PROD_SHIP_CONTINUE`) | EventModal, every v2+ ship | `ProductSystem._trigger_ship_moment(is_version = true)` | **Same shape.** Bölüm 3 lists "her sürüm yayını" as a place Frank is removed; no replacement text exists. Note the first-ship twin (surface 4) *was* rewritten, so this card now sits next to a rewritten sibling in a different voice |
 | `PROD_EV_ITER_DECISION_BODY` (+ `PROD_DESIGN_DECISION_TITLE`, `PROD_ITER_KEEP_GOING`, `PROD_TO_DEVELOPMENT_PLAIN`) | EventModal, end of design round 1 | `product_system.gd` hourly build seam, latched once per run | **Explicitly deferred, not missed.** The document's closing section says the design-round card (3) is not being written until the Build Bar work is finished, and flags that one of its two options does nothing. Awaiting authoring |
 | `GATE_SERIES_A_TITLE`, `GATE_SERIES_A_BODY_0/1/2`, `GATE_ADVANCE`, `GATE_DECLINE` | EventModal, the Series A gate | `PhaseGateSystem`, MRR + growth streak + brand | **Awaiting design** (surface 12). Also the last live Frank copy still carrying em dashes: `GATE_ADVANCE` "Hazırız — geçelim" and `GATE_SERIES_A_BODY_0`. The dash ban applies to whatever key is touched, so they clear when this surface is rewritten. `GATE_SERIES_A_BODY_2` was byte-identical to the Traction gate's `_BODY_2`; that duplicate is now gone from the other side |
@@ -66,12 +64,10 @@ pass, never after. (Observed 2026-08-25 during the shutter smoke repair; no copy
 
 ## C · Orphaned by this pass
 
-Left in place and reported, per the rule that a Frank line outside the document is reported
-rather than deleted. Every row is a string or a modifier arm with no remaining caller.
+Left in place and reported. Every row is a modifier arm with no remaining caller.
 
 | key / symbol | was used by | why it is loose now |
 |---|---|---|
-| `END_EV_ACQ_BODY` | the buyout card, until 2026-08-27 | **NEWLY ORPHANED, deliberately.** The body carried `{investor}`, `{valuation}` and `{offer}`; only the first is a scope slot, so the other two would have reached the screen as literal braces (the defect `FRANK_VERIFY_2026-08-21.md:166` predicted). `{seam:}` cannot live in the CSV — `loc_csv_integrity` counts braces against `[a-z_]+` tokens — so the body moved INLINE into the card in both locales, byte-exact apart from the two machine tokens becoming `{seam:funding.acq_valuation}` / `{seam:funding.acq_offer}`. The v6 landing pass had already moved these same two tokens once (`{değerleme}` → `{valuation}`). Reported rather than deleted, per this file's own rule |
 | modifier `decline_vc_meeting` | surface 13's skip option | no caller left. The dispatcher arm stays: it is engine vocabulary, not content |
 | modifier `decline_pivot` | `ev_pivot_offer`'s option 2 | no caller left. Same reasoning |
 | modifier `open_term_table` + `EFFECT_TERM_TABLE` | surface 24's "Masaya otur" | landed the day before this pass. No **event card** reaches it now; the dispatcher arm, the effect chip, the `game_shell.gd` debug driver and the `main.gd` chip fixture all remain |
@@ -91,10 +87,10 @@ captions, badges, ledger rows and other characters talking *about* him — no vo
 outside the document's scope by definition.
 
 `MENTOR_NAME` · `MENTOR_ROLE` · `HR_ROLE_MENTOR` · `UI_AVATAR_INITIALS` ("FK") ·
-`PROD_MENTOR_TAG` · `PROD_READY_TALK_FRANK` ("HAZIR · FRANK'LE KONUŞ") · `ODA_TOUR_PHONE_DESC` ·
+`PROD_MENTOR_TAG` · `ODA_TOUR_PHONE_DESC` ·
 `ANGEL_TX_LABEL` · `EFFECT_TO_FRANK` · `ANGEL_MONTH_HIGHLIGHT` · `GATE_OPENED` ·
 `ODA_EVENTS_FRANK_HEADER` ("Frank'ten not") · `ODA_MENTOR_TAG_FALLBACK` · `EVENT_TAG_MENTOR` ·
-`EVENT_MENTOR_ADVICE` · `INV_APPETITE_GATE_OPEN` ("Kapı açık · Frank'le konuş") ·
+`INV_APPETITE_GATE_OPEN` ("Kapı açık · Frank'le konuş") ·
 `VC_WHY_WARM_INTRO` · `INV_ARCH_BOSPHORUS`.
 
 One of these is worth a second look even though it is not voice: the stake beside

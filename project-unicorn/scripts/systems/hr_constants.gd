@@ -362,11 +362,6 @@ static func group_label(group_id: String) -> String:
 	return _derived("HR_GROUP_", group_id)
 
 
-## Character.relationship (ally | friendly | neutral | wary | hostile) as a word.
-static func relationship_label(relationship: String) -> String:
-	return _derived("HR_RELATION_", relationship)
-
-
 ## Bu rolü işe almanın kurucu sesiyle tek satırlık getirisi; kurucu/mentor için boş.
 static func role_phase_hint(role_id: String) -> String:
 	if not is_employee_role(role_id):
@@ -1167,9 +1162,3 @@ const FIRST_NAME_SEX := {
 	"James": "m", "Oliver": "m", "Daniel": "m", "Lucas": "m", "Ethan": "m", "Noah": "m", "Henry": "m", "Leo": "m",   # LOC-DATA name pool
 	"Emma": "w", "Sophie": "w", "Grace": "w", "Olivia": "w", "Chloe": "w", "Maya": "w",   # LOC-DATA name pool
 }
-# Tek satırlık dosya notu — mizaç verir, skill tekrarı yapmaz. Satırlar HR_FILE_NOTE_<n>.
-const FILE_NOTES_COUNT := 12
-
-
-static func file_notes_line(index: int) -> String:
-	return TranslationServer.translate("HR_FILE_NOTE_%d" % (posmod(index, FILE_NOTES_COUNT) + 1))

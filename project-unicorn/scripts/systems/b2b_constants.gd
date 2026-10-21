@@ -98,8 +98,8 @@ const SECTORS := ["construction", "health", "logistics", "insurance", "manufactu
 	"retail", "real_estate", "textile", "legal", "technology", "ecommerce", "media",
 	"finance"]
 # A FIXTURE sector, deliberately outside SECTORS: smoke and the run probe need a prospect
-# whose sector is not one of the thirteen the CompanyCatalog stocks. It carries its own
-# copy rows so the derived-key check covers it, but no company pool.
+# whose sector is not one of the thirteen the CompanyCatalog stocks. It has no copy rows and
+# no company pool, so every derived lookup on it falls back to the family's generic line.
 const SECTOR_FIXTURE := "testing"
 
 # Saves written before this migration carry the old Turkish name in `industry`.

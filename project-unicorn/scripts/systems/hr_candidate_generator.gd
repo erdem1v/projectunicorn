@@ -20,7 +20,7 @@ extends RefCounted
 # Candidate file shape (plain Dictionary):
 #   {"name": String, "role": String, "level": int, "archetype": String,
 #    "axes": {altı alan + leadership},   # HRConstants.EMPLOYEE_SKILL_KEYS, her biri 0..AREA_MAX
-#    "salary": int, "traits": Array[String], "note_index": int}
+#    "salary": int, "traits": Array[String]}
 
 
 # --- Deterministic mixer (arithmetic, NOT tunables) ---
@@ -36,7 +36,6 @@ const MIX_SALT_STRIDE := 7919
 # candidate k's block of draws from candidate k+1's.
 const SALT_FIRST_NAME := 11
 const SALT_LAST_NAME := 23
-const SALT_NOTE := 37
 const SALT_POSITIVE_PICK := 71
 const SALT_NEGATIVE_COUNT := 89
 const SALT_NEGATIVE_PICK := 113
@@ -80,7 +79,6 @@ static func generate(role_id: String, level: int, seed_value: int, lang := "tr")
 	# One shared list per pool so nothing repeats across the three files.
 	var used_first: Array = []
 	var used_last: Array = []
-	var used_notes: Array = []
 	var used_traits: Array = []
 
 	for k in range(HRConstants.CANDIDATE_COUNT):
@@ -101,10 +99,6 @@ static func generate(role_id: String, level: int, seed_value: int, lang := "tr")
 			"salary": int(quotes[archetype]),
 			"traits": _pick_traits(seed_value, k, _wants_cost_trait(seed_value, archetype),
 				used_traits, role_id),
-			# The INDEX is stored, never the sentence: a stored sentence would freeze one
-			# language into state.
-			"note_index": take_unused(range(HRConstants.FILE_NOTES_COUNT), used_notes,
-				_mix(seed_value, SALT_NOTE + salt)),
 		})
 
 	# §10.2: "Hiçbir aday bir diğerini bütün eksenlerde yenemez. ÜRETİMDEN SONRA KONTROL EDİLİR."

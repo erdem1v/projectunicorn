@@ -38,10 +38,10 @@ Founder: `founder_name` is optional and may be `""` (renders as "Kurucu"/"Founde
 5. **`ev_mvp_iter_decision_intro` option 1 is now a no-op** (Build Bar tree: `product_system.gd:1396-1397`, `advance_iteration` retired): a two-option card where one option changes nothing.
 6. **Blind terminal/irreversible choices** (no effect chip): pivot decline ends the run, acquisition accept ends the run, "Bugün değil" forfeits the meeting, first-ship "Yayınla" publishes the product (`event_modal.gd:526` returns `{}` for those types).
 7. **`mentor_line` / `mentor_choice` are never set by any live event** → the MENTOR TAVSİYESİ tab and mentor quote row never render.
-8. **Copy asserts facts the engine does not guarantee:** `END_EV_ACQ_BODY` "cuma akşamı" (fires at hour 00 on any weekday); `ev_ps_b2c_paid_tier` "birkaç yüz kişi" (gate is audience > 15); `HUNT_FRANK_LINE` "dört masa" (`CASCADE_TABLES := 3`, roster 5 incl. one locked); `FIN_MENTOR_QUOTE` "altı ay" hardcoded in words (`RUNWAY_WARN_MONTHS` is a constant elsewhere).
+8. **Copy asserts facts the engine does not guarantee:** `ev_ps_b2c_paid_tier` "birkaç yüz kişi" (gate is audience > 15); `HUNT_FRANK_LINE` "dört masa" (`CASCADE_TABLES := 3`, roster 5 incl. one locked); `FIN_MENTOR_QUOTE` "altı ay" hardcoded in words (`RUNWAY_WARN_MONTHS` is a constant elsewhere).
 9. The angel hire nudge (priority 3) can take the modal ahead of a priority-10 gate the same morning (slot 8a before 8; the queue never re-sorts a pumped card).
 
-Counts: **23 occurrences** (variant families counted once) · **7 with NO SURFACE** (the seven `END_META_*_FRANK`) + 7 unrendered ending titles listed in §4 · **33 `[COND?]` flags** (§2, one per bullet).
+Counts: **21 occurrences** (variant families counted once) · **7 with NO SURFACE** (the seven `END_META_*_FRANK`) + 7 unrendered ending titles listed in §4 · **31 `[COND?]` flags** (§2, one per bullet).
 
 ---
 
@@ -50,7 +50,6 @@ Counts: **23 occurrences** (variant families counted once) · **7 with NO SURFAC
 | # | key / id | surface | trigger (file:line) | moment | function | options | render risk |
 |---|---|---|---|---|---|---|---|
 | 1 | `MENTOR_INTRO_BODY` (+ `MENTOR_INTRO_CTA`) | boot modal `MentorIntroModal.tscn` | onboarding `completed` → `_swap_to_shell_and_modal`, `main.gd:1865-1882`; also F12 `:2410`, Shift+F4 `:2440` | the player has just named the company, picked a portrait and a skill spread; the clock is paused at day 1, 09:00; nothing has been built | Frank's first word: why he is here and what the founder must do alone | 1 (`Hadi başlayalım`), no state | **double-mount on new run; fires on save load** (`:1924-1926`, `:2147`) |
-| 2 | `PROD_MENTOR_LINE` | cream Frank strip in the product path picker, `creation_flow.gd:217-218, 283-310` | first visit to the B2C/B2B path step while flag `product_path_frank_seen` is false | the player is choosing between Kitle (B2C) and Kontrat (B2B) for the first build | Frank frames the one irreversible choice without picking | 1 (`UI_OK`) → `set_flag product_path_frank_seen` | none; never returns after the flag (persisted) |
 | 3 | `PROD_EV_ITER_DECISION_BODY` (`ev_mvp_iter_decision_intro`) | EventModal | end of design round 1, `product_system.gd:568-579` (hourly `_tick_build_hourly :511-516`), latch `_iter_intro_shown :179` | the first design round has just completed; round 2 has already started when the card renders | Frank explains that rounds return less each time and people matter more than rounds | 2: `PROD_ITER_KEEP_GOING` → **no modifiers**; `PROD_TO_DEVELOPMENT_PLAIN` → `enter_development` (chip `Geliştirme başlar`) | **option 1 is a no-op** (Build Bar tree); `one_shot` inert (injected), real latch serialized; fires mid-build by design; real hour available |
 | 4 | `PROD_EV_FIRST_SHIP_BODY` (`ev_mvp_ship_moment`) | EventModal | launch seam `_trigger_ship_moment(false)`, `product_system.gd:977, 1306-1308`; build `:1338-1362` | the first build finished its phases; the player pressed Ship | the first version goes live with Frank watching; the next job (a payer) is named | 1: `PROD_SHIP_PUBLISH` → `ship_active_build` (**no chip**) | badge reads ÜRÜN not MENTOR (`ship_moment` tag); `one_shot` inert; real hour available |
 | 5 | `PROD_EV_VERSION_SHIP_BODY` (`ev_mvp_version_ship_moment`) | EventModal | same seam with `is_version = true`, `:1311-1335` | a v2+ build just shipped | Frank marks growth and warns of new surface | 1: `PROD_SHIP_CONTINUE` → `ship_active_build` (no chip) | fires once per version ship by design |
@@ -70,10 +69,9 @@ Counts: **23 occurrences** (variant families counted once) · **7 with NO SURFAC
 | 21 | `ev_sheet_expiry_warning` (body inline in the card JSON) | EventModal (Frank-tagged, quote unattributed) | slot 8b `:427-435`; a sheet at `days_left == 3` | a term sheet has three days left | Frank: decide | 1: `VC_EV_GO_FUNDING` | **shared id across sheets → second warning dropped**; priority 9 (only Frank card under 10); hour 00 |
 | 22 | `VC_EV_LAST_DAY_BODY` (`ev_vc_d179_warning`) | EventModal | slot 8b `:493-497`; `day == 179 ∧ active_sheets ≠ ∅`; latch `vc_d179_warned` | the day before the Day-180 fork, with an offer in hand | Frank: sign today or not at all | 1: `VC_EV_GO_FUNDING` | hour 00; queues behind any angel/gate card that day |
 | 23 | `END_EV_SHUTTER_BODY` (`ev_shutter_warning`) | EventModal | slot 9 `endings_system.gd:96-106`; first day `cash < 0` | cash has just gone negative; a 7-day counter started | Frank: sell something or cut something | 1: `END_EV_GO_FINANCE` | re-arms after a recovery (by design); badge PİYASA; pulls a queued gate card; hour 00 |
-| 25 | `END_EV_ACQ_BODY` (`ev_acquisition_offer`) | EventModal | slot 9 `:201-212`; `phase == 3 ∧ 30 ≤ brand ≤ 50 ∧ vc_rejections ≥ 1`; latch `acquisition_offer_made`; **not shutter-gated** | a buyer's mail arrived after at least one VC said no | Frank: selling is not a defeat | 2: `END_EV_ACQ_ACCEPT` → **terminal** `acquisition` (no chip); `END_EV_ACQ_DECLINE` → `set_flag acquisition_offer_rejected` (no chip) | **body asserts "cuma akşamı"** at hour 00 on any weekday; can queue behind the shutter warning the same tick; badge PİYASA |
 | 26 | `END_META_SERIES_A_CLOSE_FRANK`, `END_META_ACQUISITION_FRANK`, `END_META_BANKRUPTCY_FRANK`, `END_META_BRAND_COLLAPSE_FRANK`, `END_META_VC_REJECTION_CASCADE_FRANK`, `END_META_PROFITABLE_BOOTSTRAP_FRANK`, `END_META_RUNNING_ON_FUMES_FRANK` (7) | **NO SURFACE** (`endings_copy.gd:53-66` overrides; `ending_scene.gd:509` fallback only) | `trigger_ending`, `endings_system.gd:228-254` | the run just ended | Frank's verdict on the run | none | authored, localized, never rendered; the paper bans mentor attribution (`endings_copy.gd:19-26`) |
 
-**Companion keys per row** (titles, option labels, wrappers; same surface as the row, no separate trigger): row 1 `MENTOR_INTRO_CTA` · row 3 `PROD_DESIGN_DECISION_TITLE`, `PROD_ITER_KEEP_GOING`, `PROD_TO_DEVELOPMENT_PLAIN` · row 4 `PROD_SHIP_PUBLISH`, `PROD_SHIP_FIRST_TITLE` (month highlight) · row 5 `PROD_SHIP_VERSION_TITLE`, `PROD_SHIP_CONTINUE` · row 10 `ANGEL_EVENT_TITLE`, `ANGEL_EVENT_BODY`, `ANGEL_CHOICE_ACCEPT`, `ANGEL_CHOICE_REFUSE`, `ANGEL_CHOICE_REFUSE_LOCK` · row 11 `ANGEL_NUDGE_TITLE`, `ANGEL_NUDGE_BODY`, `ANGEL_NUDGE_ACK` · row 14 `FIN_MENTOR_WARNING`, `FIN_MENTOR_QUOTE_WRAPPED`, `FIN_SNOOZE` · row 20 `VC_EV_MEETING_TITLE`, `VC_EV_ENTER_MEETING`, `VC_EV_SKIP_MEETING` · row 21 `VC_EV_OFFER_EXPIRING_TITLE`, `VC_EV_GO_FUNDING` · row 22 `VC_EV_LAST_DAY_TITLE`, `VC_EV_GO_FUNDING` · row 23 `END_EV_SHUTTER_TITLE`, `END_EV_GO_FINANCE` · row 25 `END_EV_ACQ_TITLE`, `END_EV_ACQ_ACCEPT`, `END_EV_ACQ_DECLINE`.
+**Companion keys per row** (titles, option labels, wrappers; same surface as the row, no separate trigger): row 1 `MENTOR_INTRO_CTA` · row 3 `PROD_DESIGN_DECISION_TITLE`, `PROD_ITER_KEEP_GOING`, `PROD_TO_DEVELOPMENT_PLAIN` · row 4 `PROD_SHIP_PUBLISH`, `PROD_SHIP_FIRST_TITLE` (month highlight) · row 5 `PROD_SHIP_VERSION_TITLE`, `PROD_SHIP_CONTINUE` · row 10 `ANGEL_EVENT_TITLE`, `ANGEL_EVENT_BODY`, `ANGEL_CHOICE_ACCEPT`, `ANGEL_CHOICE_REFUSE`, `ANGEL_CHOICE_REFUSE_LOCK` · row 11 `ANGEL_NUDGE_TITLE`, `ANGEL_NUDGE_BODY`, `ANGEL_NUDGE_ACK` · row 14 `FIN_MENTOR_WARNING`, `FIN_MENTOR_QUOTE_WRAPPED`, `FIN_SNOOZE` · row 20 `VC_EV_MEETING_TITLE`, `VC_EV_ENTER_MEETING`, `VC_EV_SKIP_MEETING` · row 21 `VC_EV_OFFER_EXPIRING_TITLE`, `VC_EV_GO_FUNDING` · row 22 `VC_EV_LAST_DAY_TITLE`, `VC_EV_GO_FUNDING` · row 23 `END_EV_SHUTTER_TITLE`, `END_EV_GO_FINANCE`.
 
 ---
 
@@ -93,9 +91,6 @@ Not provable here: founder's name (may be empty) · what Frank saw before (the "
 - `[COND?]` once-per-new-run guarantee (needs the `main.gd:1880-1882` duplicate removed and the load path to skip the mount)
 - `[COND?]` founder name non-empty (if Frank is to use it)
 - `[COND?]` origin variants (only if heir/corporate_refugee ever unlock)
-
-### 2 · `PROD_MENTOR_LINE` — path-picker strip
-Whitelist: a build is being created and the player is on the market step; `product_path_frank_seen` is false (first time) ← `creation_flow.gd:217-218`; no product has shipped yet ← creation flow precedes any build; phase 1; hour = real hour (player action, not a tick). Not provable: which path they lean to; day (any); cash above or below anything. `[COND?]` none needed (a strip with one OK).
 
 ### 3 · `ev_mvp_iter_decision_intro` — design round 1 ended
 Whitelist: an active build exists; its first design round just completed and **round 2 has already started** ← `product_system.gd:568-579`; hour = real hour of the hourly tick; `mvp_shipped` may be true (a v2 build) or false (the MVP) — **not guaranteed either way**; Frank is or is not a shareholder (unknown). Not provable: employees, MRR, customers. Fires once per run (`_iter_intro_shown`, serialized).
@@ -181,11 +176,6 @@ Whitelist: `day == 179` (Sun 28 Jun 2026, provable); ≥ 1 active sheet; hour 00
 Whitelist: `cash < 0` for the first time since the last recovery; `shutter_days_left` just set to 7 ← `endings_system.gd:19, 96-106`; the counter is the top bar's RUNWAY cell, keyed KEPENK (`TOPBAR_SHUTTER`); a queued gate card was pulled; hour 00. Not provable: MRR band; whether a recovery happened before (the card re-arms).
 - `[COND?]` first-time vs repeat shutter (readable only by keeping a counter; none today)
 
-### 25 · `ev_acquisition_offer` — the buyer's mail
-Whitelist: phase == 3; 30 ≤ brand ≤ 50; `vc_rejections ≥ 1`; `acquisition_offer_made` just latched; hour 00; **the weekday is whatever the calendar says that day** (provable, arbitrary). Not provable: "cuma akşamı" (defect 8); the offer figure (none exists in state: accept simply triggers the ending).
-- `[COND?]` an offer amount in state if Frank is to name a figure
-- `[COND?]` weekday/evening wording (only if the trigger were moved to a Friday-evening hourly path)
-
 ### 26 · `END_META_*_FRANK` — verdicts (no surface)
 Whitelist (from `ending_data` + run ledger, `endings_system.gd:232-254`, `game_state.gd:530-589`): ending id; day; cash; MRR; brand; reputation; phase; customers active; employees; company name; founder name (may be ""); signed terms (`equity_pct`, `board_seats`, `board_veto`, `valuation_m`, `investment_amount`); founder-friendly = `equity ≤ 18 ∧ not veto` (`endings_copy.gd:29, 81`); angel amount/pct (4 % if taken); `months alive = ceil(day/30)`; bankruptcy = exactly 7 days in the red (`SHUTTER_DAYS`); running_on_fumes = Day 180 fork with one of the four win conditions failed (`cash_went_negative`, 90-day net ≤ 0, unmanaged scandal (always false), MRR < 5000). Not provable: anything rendered (no surface).
 - `[COND?]` a surface (a Frank strip on `EndingScene`, or a pre-terminal beat)
@@ -202,8 +192,7 @@ Whitelist (from `ending_data` + run ledger, `endings_system.gd:232-254`, `game_s
 
 | key / place | why excluded |
 |---|---|
-| `MENTOR_NAME`, `MENTOR_ROLE`, `MENTOR_ROLE_LINE`, `HR_ROLE_MENTOR`, `PROD_MENTOR_TAG`, `UI_AVATAR_INITIALS` (FK), `ODA_MENTOR_TAG_FALLBACK`, `EVENT_TAG_MENTOR`, `EVENT_MENTOR_ADVICE` | identity, caption and badge strings; no voice |
-| `PROD_READY_TALK_FRANK` | Product Detail badge ("HAZIR · FRANK'LE KONUŞ"), a signpost to the gate card |
+| `MENTOR_NAME`, `MENTOR_ROLE`, `MENTOR_ROLE_LINE`, `HR_ROLE_MENTOR`, `PROD_MENTOR_TAG`, `UI_AVATAR_INITIALS` (FK), `ODA_MENTOR_TAG_FALLBACK`, `EVENT_TAG_MENTOR` | identity, caption and badge strings; no voice |
 | `ODA_TOUR_PHONE_DESC` | tour narrator describing the phone as Frank's channel |
 | `ANGEL_TX_LABEL`, `ANGEL_CAP_ROW`, `EFFECT_TO_FRANK`, `ANGEL_MONTH_HIGHLIGHT`, `GATE_OPENED` | ledger row, cap-table row, effect chip, month highlights (narrator) |
 | `VC_WHY_WARM_INTRO` | odds-breakdown reason chip |
@@ -216,6 +205,6 @@ Whitelist (from `ending_data` + run ledger, `endings_system.gd:232-254`, `game_s
 | `docs/content/events_draft/Y5/*` | unshipped drafts; not a reference (ruling 1) |
 
 ## 5. Counts
-23 occurrences (families counted once: 3 gate bodies ×2, 5 month lines, 7 term whispers, 7 ending verdicts) · 7 with no surface (row 26) + 7 unrendered titles · 33 `[COND?]` flags · 9 render/copy defects ranked in §0. Row numbers are stable ids: rows 15 (the Product Detail strip), 18 (the FrankPopup deal prompt) and 24 (the pivot card) left the build with their keys and are not reused.
+21 occurrences (families counted once: 3 gate bodies ×2, 5 month lines, 7 term whispers, 7 ending verdicts) · 7 with no surface (row 26) + 7 unrendered titles · 31 `[COND?]` flags · 9 render/copy defects ranked in §0. Row numbers are stable ids: rows 2 (the path-picker strip), 15 (the Product Detail strip), 18 (the FrankPopup deal prompt), 24 (the pivot card) and 25 (the old buyout card) left the build with their keys and are not reused.
 
 Stop. Waiting for the first scene to be named.

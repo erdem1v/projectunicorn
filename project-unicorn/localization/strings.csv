@@ -122,7 +122,6 @@ SALES_STRIP_NET,Bu ay net,Net this month
 SALES_ACCOUNT_SATISFACTION,Memnuniyet,Satisfaction
 SALES_PROSPECTS_EMPTY,Henüz aday yok.,No leads yet.
 SALES_CUSTOMERS_EMPTY,Henüz müşteri yok.,No customers yet.
-SALES_TIER2_TITLE,Kurumsal segment,Enterprise segment
 SALES_PER_MONTH,/ay,/mo
 SALES_SEATS,{n} koltuk,{n} seats
 SALES_TENURE,{n} aydır müşteri,customer for {n} mo
@@ -398,11 +397,6 @@ HR_GROUP_PRODUCT_DESIGN,Ürün & Tasarım,Product & Design
 HR_GROUP_DEVELOPMENT,Geliştirme Ekibi,Development
 HR_GROUP_SALES,Satış,Sales
 HR_GROUP_CUSTOMER_SUCCESS,Müşteri İlişkileri,Customer Success
-HR_RELATION_ALLY,Müttefik,Ally
-HR_RELATION_FRIENDLY,Dost,Friendly
-HR_RELATION_NEUTRAL,Nötr,Neutral
-HR_RELATION_WARY,Temkinli,Wary
-HR_RELATION_HOSTILE,Düşman,Hostile
 HR_COL_TASK,GÖREV,TASK
 HR_COL_ROLES,ROLLER,ROLES
 HR_COL_ROLE,Rol,Role
@@ -456,7 +450,6 @@ PER_NO_VALUATION,Değerleme henüz yok.,No valuation yet.
 PER_VALUATION_ROW,Değerleme · {value},Valuation · {value}
 HR_BADGE_IDLE,Boşta,Idle
 HR_BADGE_OVERLOADED_JOBS,Aşırı yük,Overloaded
-HR_IDLE_HINT,Hiçbir işe atanmadı — duruyor ve maaş alıyor.,Not assigned to any job — standing idle and still on payroll.
 HR_OVERLOAD_HINT,"Birden fazla işte çalışıyor. Zamanı işler arasında bölünür, her iki işte de hızı belirgin düşer, ve morali normalden hızlı erir.","Working more than one job. Their time is split between them, they are markedly slower in both, and their morale erodes faster than normal."
 SKILL_LABEL_CHARISMA,karizma,charisma
 ONB_SKILL_PRODUCT,Ürün,Product
@@ -616,7 +609,6 @@ HR_HOURS_COL_STATE,DURUM,STATE
 HR_HOURS_VALUE,{n} saat,{n} h
 HR_HOURS_EQUALISE,Tümünü şirkete eşitle,Match everyone to the company
 HR_HOURS_BACK_TO_COMPANY,şirkete dön,back to company
-HR_HOURS_BACK_TO_GROUP,gruba dön,back to the group
 HR_HOURS_COL_SCOPE,KAPSAM,SCOPE
 HR_HOURS_COL_START,BAŞLANGIÇ,START
 HR_HOURS_COMPANY_SUB,Kurucu + {n} çalışan,Founder + {n} employees
@@ -660,14 +652,11 @@ SECTOR_INSURANCE,Sigorta,Insurance
 SECTOR_MANUFACTURING,Üretim,Manufacturing
 SECTOR_RETAIL,Perakende,Retail
 SECTOR_REAL_ESTATE,Emlak,Real Estate
-SECTOR_TEXTILE,Tekstil,Textiles
 SECTOR_LEGAL,Hukuk,Legal
 SECTOR_TECHNOLOGY,Teknoloji,Technology
 SECTOR_ECOMMERCE,E-ticaret,E-commerce
 SECTOR_MEDIA,Medya,Media
 SECTOR_FINANCE,Finans,Finance
-SECTOR_TESTING,Testing,Testing
-SECTOR_FALLBACK,Sektör,Sector
 B2B_CONTACT_CONSTRUCTION,Saha Sorumlusu,Site Supervisor
 B2B_CONTACT_HEALTH,Başhekim Yardımcısı,Deputy Chief Physician
 B2B_CONTACT_LOGISTICS,Operasyon Müdürü,Operations Manager
@@ -708,7 +697,6 @@ B2B_COMPLAINT_TECHNOLOGY,"Sisteminiz sürekli hata veriyor, ekibimiz üretime d�
 B2B_COMPLAINT_ECOMMERCE,"Kampanya saatinde sistem çöküyor, siparişleri kaybediyoruz.","It crashes the moment a campaign goes live, and we lose orders."
 B2B_COMPLAINT_MEDIA,"Yayın anında sistem donuyor, akış kesiliyor.","It freezes mid-broadcast, and the stream cuts out."
 B2B_COMPLAINT_FINANCE,"Sistem gün içinde düşüyor, işlemler askıda kalıyor.","It goes down during the day, and transactions hang."
-B2B_COMPLAINT_TESTING,"Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",Your system has been failing a lot lately. My team can't do their job.
 B2B_COMPLAINT_FALLBACK,"Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",Your system has been failing a lot lately. My team can't do their job.
 B2B_RISK_VOICE_BROKEN,"Olacak dediniz, olmadı. Başka seçeneklere bakmaya başladık.",You said it would be there. It isn't. We've started looking at other options.
 B2B_RISK_VOICE_SHORT_1,İlk gün ne yapıyorsa bugün de onu yapıyor. Şimdiye kadar daha fazlasını bekliyorduk.,It does what it did on day one. We needed it to do more by now.
@@ -717,19 +705,6 @@ B2B_RISK_VOICE_SHORT_3,Yönetim bunun için neden hâlâ para ödediğimizi sord
 B2B_RISK_VOICE_ONBOARDING_1,"Hâlâ kurulumdayız ve ekibim şimdiden doğru karar mıydı diye soruyor.","We're still setting it up, and my team is already asking if this was the right call."
 B2B_RISK_VOICE_ONBOARDING_2,"Başlamak, demonuzda göründüğünden zor oldu.",Getting started has been harder than your demo made it look.
 B2B_EV_RISK_EXPIRED,{customer} bir daha aramadı.,{customer} didn't call again.
-B2B_PAIN_AI_VEC_EMBED_API,"Verimizi anlamlandıracak bir altyapı arıyoruz, kelime eşleşmesi yetmiyor.",We need something that understands our data — keyword matching is not enough.
-B2B_PAIN_AI_VEC_SEARCH_API,"Aradığımızı tarif edebilmek istiyoruz, birebir kelime değil.",We want to describe what we are looking for rather than guess the exact word.
-B2B_PAIN_AI_VEC_FILTER,"Aramayı tarihe ve etikete göre daraltamıyoruz, ekip boğuluyor.",We cannot narrow a search by date or tag and the team is drowning.
-B2B_PAIN_AI_VEC_DASHBOARD,"Kullanımı göremiyoruz, yönetim kör uçuyor.",We cannot see usage at all — management is flying blind.
-B2B_PAIN_AI_VEC_SCALING,"Yoğunlukta sistem yavaşlıyor, ölçeklenme derdimiz var.",It slows to a crawl under load; scaling is our problem.
-B2B_PAIN_AI_VEC_SDK,"Entegrasyon zor, hazır bir kütüphane olmadan bağlanamıyoruz.",Integration is hard — without a ready library we cannot connect.
-B2B_PAIN_SAAS_OPS_WORKFLOW,"Süreçler hâlâ elle yürüyor, otomasyon arıyoruz.",Everything still runs by hand; we are looking for automation.
-B2B_PAIN_SAAS_OPS_REPORTING,"Raporlama karmaşası içindeyiz, yönetim net veri istiyor.",Our reporting is a mess and management wants clean numbers.
-B2B_PAIN_SAAS_OPS_INTEGRATION,"Sistemlerimiz birbiriyle konuşmuyor, entegrasyon şart.",Our systems do not talk to each other; integration is a must.
-B2B_PAIN_SAAS_OPS_SCHEDULING,"Randevu ve planlama dağınık, çakışmalar yaşıyoruz.",Scheduling is scattered and we keep double-booking.
-B2B_PAIN_SAAS_OPS_FIELD,Sahadaki ekip bağlantı sorunundan çalışamıyor.,The field crew cannot work because the connection keeps failing.
-B2B_PAIN_SAAS_OPS_MOBILE,"Ekip telefondan giremiyor, saha kopuk kalıyor.",The team cannot get in from a phone so the field stays cut off.
-B2B_PAIN_FALLBACK,"Bu tarafta ciddi bir eksik var, çözecek bir araç arıyoruz.",There is a real gap on this side and we are looking for a tool that closes it.
 SECTOR_CONSUMER,Tüketici,Consumer
 SALES_B2C_USERBASE,{product} kullanıcıları,{product} users
 B2B_EV_RISK_TITLE,Müşteri riski,Account at risk
@@ -823,8 +798,6 @@ HUNT_MEETING_RESCHEDULE,Ertele ({when}),Reschedule ({when})
 HUNT_CANCEL_TIP,Bu fonun bir sonraki toplantısında ikna −{n}. Bu hafta yeni toplantı ayarlanamaz.,Conviction −{n} at this fund's next meeting. No new meeting can be booked this week.
 HUNT_RESCHEDULE_TIP,Bu fonun bir sonraki toplantısında ikna −{n}.,Conviction −{n} at this fund's next meeting.
 HUNT_MEETING_CANCELLED_THIS_WEEK,Bu hafta bir toplantı iptal edildi. Yenisi gelecek hafta ayarlanabilir.,A meeting was cancelled this week. The next one can be booked next week.
-PRICE_TIP_PREMIUM,Bu kategori premium fiyatı kaldırır,This category can carry a premium price
-PRICE_TIP_VOLUME,Bu kategori hacim oyunu — düşük fiyat mantıklı,This category is a volume game — a low price makes sense
 PRODUCT_FALLBACK_NAME,Ürün,Product
 HEALTH_HEALTHY,sağlıklı,healthy
 HEALTH_AT_RISK,riskli,at risk
@@ -861,18 +834,6 @@ HR_RESIGN_VOICE_1,"""Bir süre düşündüm. Burada tükeniyorum, daha fazla ta�
 HR_RESIGN_VOICE_2,"""Kimseyle sorunum yok. Sadece her sabah biraz daha zor kalkıyorum. O kadar.""","""I don't have a problem with anyone. It's just harder to get up every morning. That's all."""
 HR_RESIGN_VOICE_3,"""Bana kötü davranıldı demeyeceğim. Ama fark edilmedim.""","""I won't say I was treated badly. But nobody noticed me."""
 HR_RESIGN_VOICE_4,"""Başka bir yerden teklif geldi. Doğrusunu istersen, aramayı ben yaptım.""","""I got an offer from somewhere else. Honestly, I made the call myself."""
-HR_FILE_NOTE_1,Sorulardan çok cevapları seviyor.,Likes answers more than questions.
-HR_FILE_NOTE_2,"CV'si kısa, referansları uzun.","Short CV, long list of references."
-HR_FILE_NOTE_3,"İki startup batırmış, üçüncüye hazır.","Sank two startups, ready for a third."
-HR_FILE_NOTE_4,Görüşmeye kendi yaptığı bir şeyle gelmiş.,Came to the interview with something they had built.
-HR_FILE_NOTE_5,Son işinde kimse gitmesini istemedi.,Nobody at their last job wanted them to leave.
-HR_FILE_NOTE_6,Konuşmaktan çok not aldı.,Took more notes than they spoke.
-HR_FILE_NOTE_7,"Maaşı sordu, sonra ürünü sordu, sırayı fark etti.","Asked about salary, then about the product, and caught the order."
-HR_FILE_NOTE_8,"Büyük şirketten geliyor, küçüğü merak ediyor.","Coming from a big company, curious about a small one."
-HR_FILE_NOTE_9,Uzun bir aradan sonra dönüyor.,Coming back after a long break.
-HR_FILE_NOTE_10,"Herkesi tanıyor, kimseyle çalışmamış.","Knows everyone, has worked with no one."
-HR_FILE_NOTE_11,"Teknik soruda durdu, düşündü, doğru cevapladı.","Paused on the technical question, thought, answered correctly."
-HR_FILE_NOTE_12,Eski ekibinden iki kişi onu tavsiye etti.,Two people from their old team recommended them.
 HR_ERR_NO_SALARY,Maaş kaydı yok,No salary on record
 HR_RAISE_PERMANENT,"Zam kalıcıdır, geri alınmaz",A raise is permanent and cannot be undone
 HR_PROMOTION_PERMANENT,"Terfi kalıcıdır, geri alınmaz",A promotion is permanent and cannot be undone
@@ -1069,62 +1030,27 @@ PROD_TYPE_AI_ASSISTANT_NAME,Yapay Zeka Asistanı,AI Assistant
 PROD_TYPE_AI_ASSISTANT_CATEGORY,Asistan,Assistant
 PROD_TYPE_AI_ASSISTANT_DESC,Genel amaçlı sohbet asistanı.,A general-purpose chat assistant.
 PROD_TYPE_AI_ASSISTANT_TRADEOFF,Kitle büyük ama sadakat düşük; dev şirketlerin gölgesinde yaşarsın.,The audience is huge but loyalty is thin; you live in the shadow of giants.
-PROD_TYPE_AI_ASSISTANT_BET,"İnsanların her gün sorduğu şeye hızlı, temiz cevap. Refik'in üşendiği nişi kap.","A fast, clean answer to what people ask every day. Take the niche Refik cannot be bothered with."
-PROD_TYPE_AI_ASSISTANT_PITCH,Refik'in yetmediği yerlerde devreye giren asistan.,The assistant that steps in where Refik falls short.
 PROD_TYPE_AI_PHOTO_EDITOR_NAME,Görsel Düzenleyici,Photo Editor
 PROD_TYPE_AI_PHOTO_EDITOR_CATEGORY,Görsel · üretken,Visual · generative
 PROD_TYPE_AI_PHOTO_EDITOR_DESC,Görsel düzenleme ve üretim aracı.,An image editing and generation tool.
 PROD_TYPE_AI_PHOTO_EDITOR_TRADEOFF,Viral büyüme şansı var; API maliyeti marjı yer.,There is a shot at viral growth; API cost eats the margin.
-PROD_TYPE_AI_PHOTO_EDITOR_BET,"PixelForge açmaya üşenen milyonlar var. Tek tıkla iyi görünsünler, para versinler.","Millions cannot be bothered to open PixelForge. Let them look good in one click, and pay for it."
-PROD_TYPE_AI_PHOTO_EDITOR_PITCH,PixelForge'un karmaşıklığını unutturan bir araç.,A tool that makes you forget how complicated PixelForge is.
 PROD_TYPE_AI_CODE_COPILOT_NAME,Kod Yazan Asistan,Code Copilot
 PROD_TYPE_AI_CODE_COPILOT_CATEGORY,Geliştirici,Developer
 PROD_TYPE_AI_CODE_COPILOT_DESC,Kod yazımını hızlandıran yardımcı.,A helper that speeds up writing code.
 PROD_TYPE_AI_CODE_COPILOT_TRADEOFF,Geliştirici severse yayar; beğenmezse ilk gün siler.,If developers love it they spread it; if not they delete it on day one.
-PROD_TYPE_AI_CODE_COPILOT_BET,"Junior geliştiricinin yanında 7/24 duran bir kıdemli. Önce güvenini kazan, ekipler peşinden gelsin.","A senior sitting beside every junior, around the clock. Win their trust first and the teams follow."
-PROD_TYPE_AI_CODE_COPILOT_PITCH,"Kod yazarken öneren, tamamlayan, açıklayan asistan. Geliştiricinin yeni masa arkadaşı.","An assistant that suggests, completes and explains while you write. The developer's new desk mate."
 PROD_TYPE_AI_VECTOR_SEARCH_NAME,Kurumsal Arama,Enterprise Search
 PROD_TYPE_AI_VECTOR_SEARCH_CATEGORY,Arama,Search
 PROD_TYPE_AI_VECTOR_SEARCH_DESC,Anlamsal kurumsal arama motoru.,A semantic enterprise search engine.
 PROD_TYPE_AI_VECTOR_SEARCH_TRADEOFF,Bütçeler büyük ama karar yavaş; imza altı ay sürebilir.,The budgets are large but the decision is slow; a signature can take six months.
-PROD_TYPE_AI_VECTOR_SEARCH_BET,"Şirketler kendi verisinde kayboluyor. Anlamlı aramayı sat, IT bütçesi açılır.",Companies are lost inside their own data. Sell meaningful search and the IT budget opens.
-PROD_TYPE_AI_VECTOR_SEARCH_PITCH,Şirket verisinde kelimeyle değil anlamla arama yapan motor. Aradığını tarif edemesen de bulur.,An engine that searches company data by meaning rather than by word. It finds what you cannot quite describe.
 PROD_TYPE_SAAS_PROJECT_MGMT_NAME,Proje Yönetimi,Project Management
-PROD_TYPE_SAAS_PROJECT_MGMT_CATEGORY,İş akışı,Workflow
-PROD_TYPE_SAAS_PROJECT_MGMT_DESC,Ekiplerin işi tek panodan yürüttüğü araç.,One board for a team to run its work from.
-PROD_TYPE_SAAS_PROJECT_MGMT_TRADEOFF,Pazar kalabalık; ucuz ve hızlı olan sıyrılır.,The market is crowded; cheap and fast is what breaks through.
-PROD_TYPE_SAAS_PROJECT_MGMT_BET,"Vardiya'dan bıkan çok. Daha hafif, daha hızlı bir alternatif ol.","Plenty of people are tired of Vardiya. Be the lighter, faster alternative."
-PROD_TYPE_SAAS_PROJECT_MGMT_PITCH,Kim neyi ne zaman yapacak — ekiplerin işi tek panodan takip ettiği araç.,"Who does what, and when — one board a team runs its work from."
 PROD_TYPE_SAAS_CRM_NAME,Müşteri Takip (CRM),Customer Tracking (CRM)
 PROD_TYPE_SAAS_CRM_CATEGORY,Satış,Sales
 PROD_TYPE_SAAS_CRM_DESC,Müşteri ve görüşmeleri tek ekranda toplar.,Customers and conversations gathered on one screen.
 PROD_TYPE_SAAS_CRM_TRADEOFF,"Her şirkete lazım; geçiş maliyeti seni de korur, rakibi de.",Every company needs one; switching cost protects you and your rival alike.
-PROD_TYPE_SAAS_CRM_BET,"Satış ekipleri deal kaybediyor. Hepsini tek ekranda topla, vazgeçemesinler.",Sales teams are losing deals. Put it all on one screen and they cannot walk away.
-PROD_TYPE_SAAS_CRM_PITCH,"Satış ekibinin müşterileri ve görüşmeleri tek ekranda takip ettiği sistem. Unutulan müşteri, kaçan satış kalmaz.","The system a sales team tracks its customers and conversations from. No forgotten customer, no lost sale."
 PROD_TYPE_SAAS_ANALYTICS_NAME,Veri Panosu,Analytics Dashboard
-PROD_TYPE_SAAS_ANALYTICS_CATEGORY,Analitik,Analytics
-PROD_TYPE_SAAS_ANALYTICS_DESC,Metrik ve gösterge paneli seti.,A set of metric and indicator panels.
-PROD_TYPE_SAAS_ANALYTICS_TRADEOFF,Yönetici grafiğe para öder; veri bağlantıları sürekli bakım ister.,Managers pay for charts; the data connectors want constant maintenance.
-PROD_TYPE_SAAS_ANALYTICS_BET,Yönetici grafiğe para verir. Karmaşık veriyi tek bakışta anlaşılır yap.,A manager will pay for a chart. Make complex data legible at a glance.
-PROD_TYPE_SAAS_ANALYTICS_PITCH,Dağınık şirket verisini yöneticinin tek bakışta anlayacağı grafiklere çevirir.,Turns scattered company data into charts a manager understands at a glance.
 PROD_TYPE_SAAS_BILLING_NAME,Faturalama Altyapısı,Billing Infrastructure
-PROD_TYPE_SAAS_BILLING_CATEGORY,Finans · altyapı,Finance · infrastructure
-PROD_TYPE_SAAS_BILLING_DESC,Abonelik ve tahsilat altyapısı.,Subscription and collection infrastructure.
-PROD_TYPE_SAAS_BILLING_TRADEOFF,Sıkıcı ama vazgeçilmez; tek hata pahalıya patlar.,Boring but indispensable; one mistake is expensive.
-PROD_TYPE_SAAS_BILLING_BET,"Herkes tahsilat ister, kimse kurmak istemez. Sıkıcı ama vazgeçilmez ol.","Everyone wants collections, nobody wants to build it. Be boring and indispensable."
-PROD_TYPE_SAAS_BILLING_PITCH,"Abonelik, fatura ve tahsilatı şirketler adına yürüten altyapı. Sıkıcı, ama herkes muhtaç.","The infrastructure that runs subscriptions, invoices and collection on a company's behalf. Boring, and everyone depends on it."
 PROD_TYPE_SAAS_DEV_TOOLS_NAME,Geliştirici Araçları,Developer Tools
-PROD_TYPE_SAAS_DEV_TOOLS_CATEGORY,Geliştirici,Developer
-PROD_TYPE_SAAS_DEV_TOOLS_DESC,Geliştiricinin günlük angaryasını üstlenir.,Takes the developer's daily drudgery off their hands.
-PROD_TYPE_SAAS_DEV_TOOLS_TRADEOFF,Mühendis severse şirketine sokar; o güven yavaş kazanılır.,If an engineer loves it they bring it into the company; that trust is slow to earn.
-PROD_TYPE_SAAS_DEV_TOOLS_BET,Mühendislerin günlük acısını çöz. Severlerse şirketlerine sokarlar.,"Solve the daily pain of engineers. If they love it, they carry it inside."
-PROD_TYPE_SAAS_DEV_TOOLS_PITCH,Geliştiricilerin her gün uğraştığı angaryayı üstlenen araç seti. Mühendisten mühendise.,A toolset that takes on the drudgery developers face every day. From engineer to engineer.
 PROD_TYPE_SAAS_OPS_NAME,Süreç Otomasyon Platformu,Process Automation Platform
-PROD_TYPE_SAAS_OPS_CATEGORY,Operasyon,Operations
-PROD_TYPE_SAAS_OPS_DESC,Sahadan yönetime süreçleri tek yerde toplar.,Gathers processes from the field to management in one place.
-PROD_TYPE_SAAS_OPS_TRADEOFF,Sektörde para var ama satış döngüsü uzun.,There is money in the sector but the sales cycle is long.
-PROD_TYPE_SAAS_OPS_BET,"Sahada iş yürüten şirketler kâğıtla boğuluyor. Süreci dijitalleştir, vazgeçemesinler.",Companies running work in the field are drowning in paper. Digitise the process and they cannot go back.
-PROD_TYPE_SAAS_OPS_PITCH,"İnşaattan lojistiğe, süreçleri uçtan uca otomatikleştiren operasyon platformu.","An operations platform that automates processes end to end, from construction to logistics."
 PROD_TYPE_NOTE_TOOL_NAME,Not & Bilgi Aracı,Notes and Knowledge Tool
 PROD_TYPE_NOTE_TOOL_CATEGORY,Çalışma alanı,Workspace
 PROD_TYPE_NOTE_TOOL_DESC,Not · bağlantı · arama tek çalışma alanında.,Notes · links · search in one workspace.
@@ -1158,12 +1084,9 @@ PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan
 PROD_PATH_B2C,Kitle,Consumer
 PROD_PATH_B2C_DESC,"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.","You sell to a crowd. Users arrive, users leave, the numbers swing."
 PROD_PATH_B2B_DESC,"Şirketlere satarsın. Kontratlar büyük, ama ilk müşteriler sağlam bir ürün bekler.","You sell to companies. Contracts are big, but first customers expect a product that holds up."
-PROD_MENTOR_LINE,"B2C'de kalabalığa satarsın, kimseyi tanımazsın. B2B'de herkesi tanırsın, herkes seni tanır. İkisi de para. Farklı dertler.","In B2C you sell to a crowd and know nobody. In B2B you know everybody, and everybody knows you. Both are money. Different headaches."
 PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product type
 PROD_NAME_LABEL,Ürün adı,Product name
 PROD_CONFIRM_START,Onayla ve başlat,Confirm and start
-PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
-PROD_MARKET_SHARE,pazar payı {share},market share {share}
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
 PROD_SHIP_FIRST_TITLE,İlk versiyon yayında,First version is live
 PROD_SHIP_VERSION_TITLE,v{version} yayında,v{version} is live
@@ -1208,7 +1131,6 @@ VC_BLOCK_LATE,Mesainin kalanı bir fonla masaya oturmaya yetmez. Artık gelecek 
 VC_CALLBACK_REOPENED,Kapı yeniden açıldı: {investor}. Tekrar iste.,{investor}'s door is open again. Ask again.
 VC_BEAT1_LABEL,Odayı oku · 1/4,Read the room · 1/4
 VC_B1_LINE,"""{investor}. Otur. Vaktim kısa. Beni neden buraya çağırdığını göster.""","""{investor}. Sit. My time is short. Show me why you called me here."""
-VC_B1_MONO,Odayı oku.,Read the room.
 VC_B1_MONO_WHY,Odayı oku: {reasons},Read the room: {reasons}
 VC_B1_CHOICE,Odayı oku.,Read the room.
 VC_APPROACH_PERCEPTION,Algı,Perception
@@ -1429,71 +1351,6 @@ TERM_BOARD_SEAT_ONE,{n} koltuk,{n} seat
 FIN_SUBTAB_SUMMARY,Özet,Summary
 FIN_SUBTAB_INVESTMENT,Yatırım,Funding
 FIN_SUBTAB_LOCKED,Series A Avı'nda açılır,Opens in the Series A Hunt
-COMPANY_BG_EGE_SIGORTA,"Bölgesel oyuncu; acente ağı geniş, evrak işi hâlâ kâğıtta.","A regional player; a wide agency network, and the paperwork is still on paper."
-COMPANY_BG_POYRAZ_SIGORTA,"Fiyat kırarak büyüdü, şimdi hasar dosyalarının altında eziliyor.","Grew by undercutting on price, and is now buried under the claims files."
-COMPANY_BG_DENIZ_SIGORTA,"Kurumsal müşteriye çalışır, temkinli; yeni tedarikçiyi zor kabul eder.","Works with corporate clients, cautious; slow to accept a new supplier."
-COMPANY_BG_ADRIATIC_ASSURANCE,"Balkan pazarından bölgeye açıldı; merkez uzak, yerel ekip küçük.","Came into the region from the Balkan market; head office is far away, the local team is small."
-COMPANY_BG_VEGA_SIGORTA,"Genç yönetim, poliçeyi telefondan satıyor; büyüme hızlı, süreç dağınık.","Young management selling policies over the phone; growth is fast, process is scattered."
-COMPANY_BG_KUZEY_INSAAT,"Kamu ihalesiyle büyüdü; şantiyesi çok, merkez ofisi az.","Grew on public tenders; plenty of sites, not much head office."
-COMPANY_BG_ANADOLU_YAPI,"Aile şirketi, üçüncü kuşak yönetimde; dijitalleşmeye geç başladı.","A family firm, third generation in charge; late to start going digital."
-COMPANY_BG_MARMARA_INSAAT,"Konut projelerinde iddialı; nakit akışı gelgitli, karar tek adamda.","Ambitious in housing projects; cash flow comes in tides, decisions rest with one man."
-COMPANY_BG_TERRA_YAPI,"Yabancı ortaklı; raporlama standardı yüksek, sabrı az.","Foreign-owned partner; reporting standards are high, patience is short."
-COMPANY_BG_DONAU_BAU,"Avusturyalı; altyapı projeleriyle geldi, kalıcı mı belli değil.","Austrian; arrived with infrastructure projects, and nobody knows if they are staying."
-COMPANY_BG_DENIZ_LOJISTIK,"Liman çevresinde güçlü; filosu yaşlı, yazılımı daha yaşlı.",Strong around the port; the fleet is old and the software is older.
-COMPANY_BG_NORDICA_LOJISTIK,"İskandinav ortaklı; süreç disiplini yüksek, esnekliği düşük.","Scandinavian partner; high process discipline, low flexibility."
-COMPANY_BG_EGE_KARGO,Şehirlerarası dağıtımda eski toprak; el yazısı irsaliyeden yeni çıktı.,An old hand at intercity distribution; only just out of handwritten waybills.
-COMPANY_BG_MARMARA_LOJISTIK,"Depoculuğa yeni girdi; büyüme iştahı yüksek, ekibi yorgun.","New to warehousing; hungry for growth, and the team is tired."
-COMPANY_BG_NORDWIND_GMBH,Alman butik nakliyeci; bölge ofisi kendi kararını alamıyor.,A German boutique carrier; the regional office cannot make its own decisions.
-COMPANY_BG_ARAS_KLINIK,Tek şubeli butik klinik; randevu defteri hâlâ resepsiyonda.,A single-branch boutique clinic; the appointment book is still on the front desk.
-COMPANY_BG_MARMARA_KLINIK,"Zincirleşme yolunda; her şube kendi usulünce çalışıyor, merkez bunu dert etti.",On its way to becoming a chain; every branch works its own way and head office has started to mind.
-COMPANY_BG_BOSPHORUS_SAGLIK,"Yabancı hasta ağırlıklı; itibarına düşkün, hata payı tanımıyor.","Mostly foreign patients; protective of its reputation, allows no margin for error."
-COMPANY_BG_VITA_MEDIKAL,"Cihaz satışından hizmete döndü; satışı güçlü, operasyonu zayıf.","Moved from selling devices to selling services; strong at sales, weak at operations."
-COMPANY_BG_MEDISA_GRUP,"Bölge hastaneleriyle anlaşmalı; ihale takvimiyle yaşar, acelesi yoktur.",Contracted to the regional hospitals; lives by the tender calendar and is never in a hurry.
-COMPANY_BG_BEYKOZ_URETIM,"Yan sanayi tedarikçisi; müşterisi ne derse o, kendi sistemi yok gibi.","A sub-industry supplier; whatever the customer says goes, and it barely has a system of its own."
-COMPANY_BG_TRAKYA_FABRIKA,"Vardiya düzeni oturmuş, veri toplamaz; ustabaşının hafızası veritabanıdır.",The shift pattern is settled and no data is collected; the foreman's memory is the database.
-COMPANY_BG_EGE_METAL,İhracat ağırlıklı; Avrupa müşterisi belge istedikçe yazılım ihtiyacı büyüyor.,"Mostly export; the more documents European customers ask for, the more software it needs."
-COMPANY_BG_VULKAN_DOKUM,"Ağır sanayi, ağır karar alır; ama imza atınca yıllarca kalır.","Heavy industry, heavy decisions; but once they sign, they stay for years."
-COMPANY_BG_FERRUM_ENDUSTRI,"Makine parkı yeni, yönetim anlayışı eski; genç mühendisler sıkışmış durumda.","New machinery, old management thinking; the young engineers are stuck in between."
-COMPANY_BG_ANADOLU_MARKET,Bölgesel market zinciri; kasa sayısı arttıkça kaos da arttı.,"A regional grocery chain; the more tills they added, the more chaos came with them."
-COMPANY_BG_BRIGHTLINE_RETAIL,Uluslararası zincirin bölge iştiraki; merkezle konuşmak ayrı bir proje.,The regional arm of an international chain; talking to head office is a project of its own.
-COMPANY_BG_KARDELEN_MAGAZACILIK,Cadde mağazacılığında eski isim; AVM kiralarıyla boğuşuyor.,An old name in high-street retail; wrestling with shopping-centre rents.
-COMPANY_BG_EKIN_GIDA_MARKETLERI,İlçe pazarından zincire dönüştü; patron her şubeyi hâlâ tek tek arar.,Grew from a district market into a chain; the owner still calls every branch himself.
-COMPANY_BG_MODENA_CONCEPT,"Ev tekstili ve mobilya satar; sezon döngüsüne bağlı, stok takibi elde.","Sells home textiles and furniture; tied to the season cycle, stock tracked by hand."
-COMPANY_BG_PALMIYE_HOLDING,"Turizm arazileriyle büyüdü; portföyü geniş, kayıt düzeni dar.",Grew on tourism land; a broad portfolio and narrow record-keeping.
-COMPANY_BG_KIYI_GAYRIMENKUL,"Sahil projelerine odaklı; satışı hızlı, tapu sonrası ilgisi yavaş.","Focused on coastal developments; quick to sell, slow to care once the deed is signed."
-COMPANY_BG_METREKARE_DANISMANLIK,"Genç ekip, şube modeliyle büyüyor; şube açtıkça standart kayboluyor.",A young team growing through branches; every new branch loses a little more of the standard.
-COMPANY_BG_VESTERA_HOLDING,"Yabancı fonlarla ortak proje geliştirir; rapor ister, hem de her hafta.","Develops projects with foreign funds; wants reports, and wants them weekly."
-COMPANY_BG_PANORAMA_EMLAK,"Üç şehirde ofisi var; danışmanlar kendi telefonuyla çalışır, merkez göremez.",Offices in three cities; the agents work off their own phones and head office cannot see any of it.
-COMPANY_BG_BEYKOZ_TEKSTIL,"Aile şirketi; fason üretimden marka olmaya çalışıyor, sancılı.","A family firm trying to move from contract manufacturing to a brand of its own, painfully."
-COMPANY_BG_MENDERES_DOKUMA,Havlu ve ev tekstili ihracatçısı; sipariş takibi faks kokan bir sistemde.,A towel and home-textile exporter; order tracking runs on a system that still smells of fax.
-COMPANY_BG_IPLIKHANE,"Butik üretici; tasarımı güçlü, teslim tarihi zayıf.","A boutique producer; strong on design, weak on delivery dates."
-COMPANY_BG_NOVA_TEKSTIL,"Hızlı moda tedarikçisi; büyük müşteri ne isterse ona koşar, kendine vakti yok.",A fast-fashion supplier; runs after whatever the big customer wants and has no time for itself.
-COMPANY_BG_AEGEA_TEXTILE_GROUP,"Yunan ortaklı; iki ülkede üretim var, tek düzgün rapor yok.",Greek partner; production in two countries and not one clean report.
-COMPANY_BG_BOSPHORUS_LEGAL,"Kurumsal müvekkil ağırlıklı; saat ücretiyle yaşar, verim onun için paradır.","Mostly corporate clients; lives on the billable hour, and efficiency is money to them."
-COMPANY_BG_KAVANAGH_SONS,"İrlandalı butik ofisin bölge masası; usule düşkün, yeniliğe mesafeli.","The regional desk of an Irish boutique firm; devoted to procedure, wary of anything new."
-COMPANY_BG_ASLAN_DURU_HUKUK,"İki ortak, on avukat; dosya sayısı büyüdü, arşiv düzeni büyüyemedi.","Two partners, ten lawyers; the caseload grew and the filing system could not keep up."
-COMPANY_BG_MERIDYEN_HUKUK,Şirket birleşmelerinde isim yaptı; gizlilik takıntısı her aracı zorlaştırır.,Made its name on mergers; an obsession with confidentiality makes every tool harder.
-COMPANY_BG_LEX_ANADOLU,"Uluslararası ağın yerel üyesi; standartları dışarıdan, kadrosu içeriden.","The local member of an international network; standards from outside, staff from inside."
-COMPANY_BG_NEXUS_YAZILIM,"Kurumsal proje geliştirir; kendi ürünü yok, herkesinkini bilir.",Builds corporate projects; has no product of its own but knows everyone else's.
-COMPANY_BG_PIKSEL_TEKNOLOJI,"Ajans kökenli; işi çok, faturası geç.","Agency roots; plenty of work, late invoices."
-COMPANY_BG_VOLT_SISTEMLERI,Donanım ağırlıklı entegratör; yazılıma mecbur kaldıkça alışıyor.,A hardware-led integrator; getting used to software as it is forced into it.
-COMPANY_BG_ATLAS_BILISIM,Kamu projeleriyle büyüdü; güvenlik şartnamesi her cümlede.,Grew on public-sector projects; the security specification is in every sentence.
-COMPANY_BG_ORIGO_LABS,"Genç ürün stüdyosu; hızlı dener, hızlı vazgeçer.","A young product studio; tries fast, gives up fast."
-COMPANY_BG_SEPET_TICARET,"Pazaryerinde büyüdü, kendi sitesine geçti; kampanya günleri kâbusu.","Grew on a marketplace, then moved to its own site; campaign days are a nightmare."
-COMPANY_BG_HIZLI_PAZAR,Aynı gün teslimat iddiasında; operasyon bu iddiaya yetişemiyor.,Claims same-day delivery; operations cannot keep up with the claim.
-COMPANY_BG_VITRIN_ONLINE,"Niş kategoride lider; ekip küçük, her şey kurucunun telefonunda.","Leader in a niche category; small team, and everything lives on the founder's phone."
-COMPANY_BG_LOKA_STORE,"Sosyal medyadan doğdu; markası güçlü, altyapısı emekleme döneminde.",Born on social media; a strong brand on infrastructure that is still crawling.
-COMPANY_BG_ADRIATICA_MARKET,Balkanlara satış yapan bölgesel platform; gümrük ve iade derdi bitmez.,A regional platform selling into the Balkans; customs and returns never stop.
-COMPANY_BG_KANAL_MEDYA,"Yerel televizyondan dijitale döndü; arşivi altın, sistemi hurda.","Turned from local television to digital; the archive is gold, the system is scrap."
-COMPANY_BG_PUNTO_YAYIN,"Dergi grubundan kalan çekirdek; az kadro, çok başlık.","What is left of a magazine group; few staff, many titles."
-COMPANY_BG_EKRAN_PRODUKSIYON,"Dizi seti kökenli; proje bazlı yaşar, düzenli gider sevmez.",Came up on drama sets; lives project to project and hates fixed costs.
-COMPANY_BG_ANADOLU_DIGITAL,"Ajans ile içerik stüdyosu karışımı; müşteri raporu gecede biter, kendi raporu hiç.","Half agency, half content studio; a client report gets done overnight, its own report never does."
-COMPANY_BG_NORDLICHT_STUDIO,Alman yapım ortağıyla belgesel çeker; bütçe disiplini sıkı.,Shoots documentaries with a German production partner; tight budget discipline.
-COMPANY_BG_KULE_FINANS,"Faktoring ağırlıklı; risk iştahı düşük, evrak iştahı yüksek.","Mostly factoring; low appetite for risk, high appetite for paperwork."
-COMPANY_BG_ARGOS_YATIRIM,Halka arz danışmanlığına soyundu; itibar hassasiyeti aşırı.,Has taken up IPO advisory; extremely sensitive about reputation.
-COMPANY_BG_PUSULA_PORTFOY,"Varlıklı aile fonlarını yönetir; sessiz, sadık, yavaş.","Manages wealthy family funds; quiet, loyal, slow."
-COMPANY_BG_HELVETIA_DATA_AG,"İsviçre merkezli finansal veri sağlayıcı; bölge ofisi üç kişi, beklentisi otuz kişilik.",A Swiss-based financial data provider; the regional office is three people with the expectations of thirty.
-COMPANY_BG_LIRA_KAPITAL,KOBİ finansmanına odaklı; regülasyon her ay kapıyı çalar.,Focused on SME finance; regulation knocks on the door every month.
 NEWS_S_SEED_TEMKIN,Tohum yatırımcıları bu çeyrek temkinli; kapılar kapanmıyor ama yavaş açılıyor.,"Seed investors are cautious this quarter; the doors are not shut, but they open slowly."
 NEWS_S_SEED_ISTAH,Erken aşama iştahı canlı; melek ağları yeni dosya kabul ediyor.,Early-stage appetite is alive; angel networks are taking new files.
 NEWS_S_DEMO_SEZON,Demo günü sezonu açıldı; yatırımcı takvimleri şimdiden dolu.,Demo day season has opened; investor calendars are already full.
@@ -1592,7 +1449,6 @@ FIN_GOAL_PROGRESS,{met}/{total},{met}/{total}
 MONTH_ROW_CASH,Kasa,Cash
 MONTH_ROW_BRAND,Marka,Brand
 EVENT_CHOICE_PERMANENT,Seçim kalıcıdır · Oyun duraklatıldı,The choice is permanent · Game paused
-EVENT_MENTOR_ADVICE,MENTOR TAVSİYESİ,MENTOR'S ADVICE
 EVENT_TAG_CUSTOMER,MÜŞTERİ,CUSTOMER
 EVENT_TAG_TEAM,EKİP,TEAM
 EVENT_TAG_MARKET,PİYASA,MARKET
@@ -1600,7 +1456,6 @@ EVENT_TAG_PRODUCT,ÜRÜN,PRODUCT
 EVENT_TAG_MENTOR,MENTOR,MENTOR
 EVENT_TAG_AGENDA,GÜNDEM,AGENDA
 EFFECT_CASH,Nakit {v},Cash {v}
-EFFECT_MRR,MRR {v},MRR {v}
 EFFECT_BRAND,Marka {v},Brand {v}
 EFFECT_REPUTATION,İtibar {v},Reputation {v}
 EFFECT_TEAM,Ekip {v},Team {v}
@@ -1610,21 +1465,17 @@ EFFECT_SEATS,Koltuk {v},Seats {v}
 EFFECT_AUDIENCE,Kitle {v},Audience {v}
 EFFECT_AXIS,{axis} {v},{axis} {v}
 EFFECT_MORALE,Moral,Morale
-EFFECT_QUALITY_BONUS,Kalite +{n},Quality +{n}
 EFFECT_CHURN,Müşteri kaybı,A customer lost
 EFFECT_TERM_TABLE,Term sheet masası açılır,The term sheet table opens
 EFFECT_NEW_PROSPECT,Yeni aday,A new prospect
 EFFECT_CONVERT_AUDIENCE,Kitleden dönüşüm {pct},{pct} of the audience converts
 EFFECT_PAID_TIER,Ücretli katman açılır,The paid tier opens
-EFFECT_NEW_TEAMMATE,Yeni ekip üyesi,A new teammate
 EFFECT_DEPARTURE,{who} ayrılıyor,{who} is leaving
 EFFECT_AN_EMPLOYEE,Çalışan,An employee
 EFFECT_PROMISE_CREATE,Müşteri kalır · söz borcu,The customer stays · a promise owed
 EFFECT_RETAIN_DELAY,Kısa vadeli hamle,A short-term move
 EFFECT_RETAIN_DISCOUNT,Müşteri kalır · MRR {v},The customer stays · MRR {v}
 EFFECT_RETAIN_IGNORE,Müdahale yok · sayaç işlemeye devam eder,No intervention · the counter keeps running
-EFFECT_PROMISE_HONOR,Müşteri kalır · söz borcu doğar · yol haritasına eklenir,The customer stays · a promise is owed · it goes on the roadmap
-EFFECT_PROMISE_REFUSE,Müşteriyi kaybet,Lose the customer
 EFFECT_EXPAND,Koltuk +{seats} · MRR {mrr},Seats +{seats} · MRR {mrr}
 EFFECT_NO_CHANGE,Değişiklik yok,No change
 EFFECT_TO_FRANK,Frank'e,To Frank
@@ -1898,23 +1749,6 @@ Arayan Frank: ""Bilanço kötü görünüyor. Devam etmek istiyorsak ya yeni mü
 
 Frank calls. ""The books look bad. If we want to keep going, either bring in new customers or we start cutting."""
 END_EV_ACQ_TITLE,Devralma teklifi,Acquisition offer
-END_EV_ACQ_BODY,"Series A turu kapandı, ortada anlaşma yok.
-
-{investor} arıyor.
-
-""Şirketi almak isteyen biri var. {valuation} değerleme ile sana düşen miktar bu: {offer}. Karar senin, ben sadece masaya koyuyorum.""
-
-Sonra Frank'ten kısa bir mesaj.
-
-""Hangi kararı verirsen ver arkandayım.""","The Series A round is closed and there's no deal in it.
-
-{investor} calls.
-
-""There's someone who wants to buy the company. At a {valuation} valuation, your share comes to {offer}. It's your call. I'm just bringing it to you.""
-
-Then a short message from Frank.
-
-""Whichever way you go, I'm behind you."""
 END_EV_ACQ_ACCEPT,Sat,Sell
 END_EV_ACQ_DECLINE,Kendi paramla devam,Carry on with my own money
 END_SA_BOARD_ONE,Yönetim kurulunda yatırımcıya {seats} koltuk tanındı.,The investor was granted {seats} seat on the board.
@@ -2239,8 +2073,6 @@ RND_DISCOVERY_TITLE,Keşif,Discovery
 RND_HIDDEN_LINE_OPENED,Yeni özellik hattı açıldı: {line},A new feature line has opened: {line}
 RND_EA_LINE_NOTE,Bu hattın içeriği Erken Erişim'de açılıyor.,The content of this line opens in Early Access.
 RND_NOTE_TITLE,Aylık ürün notu,Monthly product note
-RND_NOTE_UNREAD,OKUNMADI,UNREAD
-RND_NOTE_OPEN,Aç,Open
 RND_NOTE_NO_WRITER,Kadronda Ürün Yöneticisi ya da Tasarımcı yok; rapor gelmez.,There is no Product Manager or Designer on staff; the note will not come.
 RND_NOTE_GO_PRODUCT,Ürün sayfasına git,Go to the product page
 RND_NOTE_GO_TREE,Ar-Ge'ye git,Go to R&D
@@ -2309,7 +2141,6 @@ SALES_ROUTE_REP,Temsilcide,With a rep
 SALES_TAG_FRANK_INTRO,Frank'in tanıştırdığı,Frank's introduction
 SALES_ROUTE_NO_REP,Temsilci yok,No rep to take it
 SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.
-SALES_EXPIRED_LINE,Beklemekten vazgeçti.,They stopped waiting.
 SALES_DESK_HEADER,Satış masası,Sales desk
 SALES_DESK_EMPTY,Satış işine atanmış kimse yok.,Nobody is assigned to the sales job.
 SALES_REP_DEAL,{company} · {deal},{company} · {deal}
@@ -2448,7 +2279,6 @@ NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,P
 B2B_LOCK_NO_PAIN_TARGET,Ne istediklerini söylemediler. Söz verilecek bir şey yok.,They haven't named what they want. There's nothing to promise yet.
 B2B_LOCK_PAIN_SHIPPED,İstedikleri şey zaten yayında.,What they asked for is already live.
 B2B_LOCK_PAIN_GATED,Bunu yapabilecek kimse yok henüz. Ne ekip var ne araştırma.,Nobody here can build that yet. Not the people and not the research.
-PROD_DESK_NOBODY_ELIGIBLE,Masayı taşıyabilecek kimse yok. Bir Müşteri Temsilcisi ya da Yazılımcı işe al.,Nobody can staff the desk. Hire a Customer Rep or an Engineer.
 SALES_PROMISE_OPEN,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} weeks
 SALES_PROMISE_OPEN_ONE,Açık söz: {feature} · {n} hafta,Open promise: {feature} · {n} week
 SALES_PROMISE_OPEN_THIS_WEEK,Açık söz: {feature} · bu hafta,Open promise: {feature} · this week
@@ -2578,7 +2408,6 @@ EFFECT_FUND_CLOSES,Bu fon kalıcı olarak kapanır,This fund closes for good
 VC_Q_REPEATABLE,"""Bu defterin çoğunu siz kapatmışsınız. Siz odada olmadığınızda da kapanıyor mu?""","""You closed most of this book yourself. Does it close when you are not in the room?"""
 VC_Q_REPEATABLE_MONO,Defteri kimin kapattığını soracak.,They will ask who closed the book.
 SEED_B1_LINE,"""{investor}. Geç oturun, kahve söylemeyeceğim; yarım saatimiz var. Sizi anlatın.""","""{investor}. Sit down, I will not order coffee; we have half an hour. Tell me about you."""
-SEED_B1_MONO,Odayı oku.,Read the room.
 SEED_B1_MONO_WHY,Odayı oku: {reasons},Read the room: {reasons}
 SEED_B2_LINE,"""Neden siz, neden şimdi? Bu iki soruya verdiğiniz cevap turun tamamı.""","""Why you, and why now? Your answer to those two questions is the whole round."""
 SEED_B2_MONO,Açı seç. Bu odada hikâye rakamdan ağır basar.,Pick an angle. In this room the story outweighs the number.

@@ -7038,7 +7038,6 @@ static func _case_hr_candidate_invariants() -> String:
 				var five_star: bool = false
 				var seen_traits: Array = []
 				var seen_names: Array = []
-				var seen_notes: Array = []
 				var seen_salaries: Array = []
 				var seen_archetypes: Array = []
 				for f in files:
@@ -7075,25 +7074,13 @@ static func _case_hr_candidate_invariants() -> String:
 							cost_files += 1
 					if String(f["role"]) != role_id:
 						return "%s: role mismatch (%s)" % [tag, String(f["role"])]
-					# THE NOTE, BY ITS INDEX. generate() hands back `note_index`; the note TEXT
-					# is resolved one layer up (HRSearchSystem.get_files → file_notes_line).
-					var note_index: int = int(f["note_index"])
-					if note_index < 0 or note_index >= HRConstants.FILE_NOTES_COUNT:
-						return "%s: note_index %d outside 0..%d" % [
-							tag, note_index, HRConstants.FILE_NOTES_COUNT - 1]
-					var note_key: String = "HR_FILE_NOTE_%d" % (note_index + 1)
-					if HRConstants.file_notes_line(note_index) == note_key:
-						return "%s: %s has no row in strings.csv" % [tag, note_key]
 					if String(f["name"]).strip_edges() == "":
 						return "%s: empty candidate name" % tag
-					# Batch no-repeat across every drawn pool: two identical names or the same
-					# file note twice reads as a generator bug on the card.
+					# Batch no-repeat across every drawn pool: two identical names reads as a
+					# generator bug on the card.
 					if seen_names.has(String(f["name"])):
 						return "%s: candidate name '%s' repeated across files" % [tag, String(f["name"])]
 					seen_names.append(String(f["name"]))
-					if seen_notes.has(note_index):
-						return "%s: file note %d repeated across files" % [tag, note_index]
-					seen_notes.append(note_index)
 					for t2 in f["traits"]:
 						if seen_traits.has(String(t2)):
 							return "%s: trait '%s' repeated across files" % [tag, String(t2)]
@@ -11000,13 +10987,14 @@ static func _case_loc_pick_fallback() -> String:
 
 
 ## Derived keys resolve. B2BConstants builds its copy keys from ids at runtime
-## (SECTOR_ + id, B2B_COMPLAINT_ + id, FEATURE_LABEL_ + feature_id …), which is what keeps
+## (B2B_CONTACT_ + id, B2B_COMPLAINT_ + id, FEATURE_LABEL_ + feature_id …), which is what keeps
 ## one id yielding one row in both languages — but it also means NO grep for tr("LITERAL")
 ## can see them, and a typo would reach the player as a raw token or silently fall back to
 ## the generic line. This walks the real id lists and asserts each derived key resolves to
 ## something OTHER than the fallback, in BOTH locales.
 static func _case_loc_b2b_derived_keys() -> String:
 	var loc0: String = TranslationServer.get_locale()
+	# The type screen cannot start these subtypes, but a save that already runs one still draws its pains.
 	var feature_ids: Array = []
 	for pid in ["ai_vector_search", "saas_ops"]:
 		for f in ProductCatalog.get_feature_pool(pid):
@@ -11015,11 +11003,9 @@ static func _case_loc_b2b_derived_keys() -> String:
 		TranslationServer.set_locale(loc0)
 		return "no feature ids found — the scan is not looking where it thinks"
 	var families := [
-		{"prefix": "SECTOR_", "fallback": "SECTOR_FALLBACK", "ids": _sector_ids_with_fixture()},
 		{"prefix": "B2B_CONTACT_", "fallback": "B2B_CONTACT_FALLBACK", "ids": B2BConstants.SECTORS},   # no fixture contact by design
 		{"prefix": "B2B_COMPLAINT_", "fallback": "B2B_COMPLAINT_FALLBACK", "ids": B2BConstants.SECTORS},
 		{"prefix": "FEATURE_LABEL_", "fallback": "FEATURE_LABEL_FALLBACK", "ids": feature_ids},
-		{"prefix": "B2B_PAIN_", "fallback": "B2B_PAIN_FALLBACK", "ids": feature_ids},
 	]
 	for loc in ["tr", "en"]:
 		TranslationServer.set_locale(loc)
@@ -11039,14 +11025,6 @@ static func _case_loc_b2b_derived_keys() -> String:
 					return "[%s] %s silently resolved to the family fallback" % [loc, key]
 	TranslationServer.set_locale(loc0)
 	return ""
-
-
-## The 13 market sectors plus the fixture one. Only the SECTOR_ label family covers the
-## fixture — it has no contact, no complaint voice and no company pool by design.
-static func _sector_ids_with_fixture() -> Array:
-	var out: Array = B2BConstants.SECTORS.duplicate()
-	out.append(B2BConstants.SECTOR_FIXTURE)
-	return out
 
 
 ## The v1→v2 save migration actually remaps. `industry` is persisted, so every save taken
@@ -12195,18 +12173,37 @@ static func _case_loc_save_sector_migration() -> String:
 ## Product catalog derived keys resolve. Same guard as loc_b2b_derived_keys: the catalog
 ## builds its copy keys from ids at runtime (PROD_TYPE_ + ID + _NAME, PROD_FEAT_ + ID +
 ## _VOICE …), so no grep for tr("LITERAL") can see them, and a typo would reach the player
-## as the raw id. Walks every sub-product type and every feature in both locales.
+## as the raw id. Walks every sub-product type, its sectors and its features in both locales:
+## the name on all of them (the product page and the sales name read it for a save that runs
+## a subtype the type screen no longer offers), the type-screen card rows (category,
+## description, tradeoff) on the cards the screen shows, playable and locked, and the bet and
+## pitch on the three sealed subtypes.
 static func _case_loc_product_derived_keys() -> String:
 	var loc0: String = TranslationServer.get_locale()
 	var types: Array = ProductCatalog.get_all_sub_product_types()
 	if types.size() < 8:
 		TranslationServer.set_locale(loc0)
 		return "only %d sub product types found — the scan is not looking where it thinks" % types.size()
+	var playable: Array = []
+	var on_screen: Array = []
+	for market in ["b2c", "b2b"]:
+		for pt in ProductCatalog.playable_types(market):
+			playable.append(String((pt as Dictionary).get("id", "")))
+		on_screen.append_array(ProductCatalog.locked_type_ids(market))
+	on_screen.append_array(playable)
+	if on_screen.size() < 8:
+		TranslationServer.set_locale(loc0)
+		return "only %d type-screen cards found — the scan is not looking where it thinks" % on_screen.size()
 	for loc in ["tr", "en"]:
 		TranslationServer.set_locale(loc)
 		for st in types:
 			var tid: String = String((st as Dictionary).get("id", ""))
-			for suffix in ["_NAME", "_CATEGORY", "_DESC", "_TRADEOFF", "_BET", "_PITCH"]:
+			var suffixes: Array = ["_NAME"]
+			if on_screen.has(tid):
+				suffixes.append_array(["_CATEGORY", "_DESC", "_TRADEOFF"])
+			if playable.has(tid):
+				suffixes.append_array(["_BET", "_PITCH"])
+			for suffix in suffixes:
 				var key: String = "PROD_TYPE_" + tid.to_upper() + suffix
 				if TranslationServer.translate(key) == key:
 					TranslationServer.set_locale(loc0)
@@ -12474,18 +12471,12 @@ static func _case_loc_b4_derived_keys() -> String:
 
 ## Every derived key B5 introduced resolves, in both locales.
 ##
-## Same reasoning as loc_b4_derived_keys: COMPANY_BG_<ID> and NEWS_<POOL_ID> are assembled
+## Same reasoning as loc_b4_derived_keys: NEWS_<POOL_ID> keys are assembled
 ## from ids at run time, so a typo is invisible to every grep and reaches the player as a
 ## raw token on a customer card or in the ticker. The id lists are walked for real.
 static func _case_loc_b5_derived_keys() -> String:
 	var loc0: String = TranslationServer.get_locale()
 	var wanted: Array[String] = []
-	for rec in CompanyCatalog.all():
-		var cid: String = String((rec as Dictionary).get("id", ""))
-		if cid == "":
-			TranslationServer.set_locale(loc0)
-			return "a company row has no id"
-		wanted.append("COMPANY_BG_" + cid)
 	for row in NewsFeedSystem.SEKTOR_POOL:
 		wanted.append("NEWS_" + String((row as Dictionary)["id"]).to_upper())
 	for i in NewsFeedSystem.RIVAL_UP_COUNT:
@@ -12494,7 +12485,7 @@ static func _case_loc_b5_derived_keys() -> String:
 		wanted.append("NEWS_RIVAL_DOWN_%d" % i)
 	for k in NewsFeedSystem.OUTLET_KEYS:
 		wanted.append(String(k))
-	if wanted.size() < 100:
+	if wanted.size() < 50:
 		return "only %d derived keys collected — the id lists are not being read" % wanted.size()
 	# An id with a non-ASCII character cannot form a clean derived key; three of the ticker
 	# ids carried ç/ö before this batch, so the shape is asserted rather than assumed.

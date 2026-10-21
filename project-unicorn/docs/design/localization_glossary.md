@@ -142,7 +142,6 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | KARARLILIK *(pitch radarı)* | RESOLVE | Monitör "kararlılık·stability"den ayrı anahtar. |
 | İlgilen | Check in | **Kapı kararı 2** — shipped "Attend" revize edildi. |
 | Değerlendir / Görüşmeye git | Evaluate / Go to meeting | Shipped. |
-| NÖTR *(ilişki pili)* | NEUTRAL | Etiket tablosunun ilk satırı; bugün ham enum basılıyor. |
 
 ## 6. Dünya, haber, ending
 

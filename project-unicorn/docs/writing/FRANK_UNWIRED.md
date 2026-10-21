@@ -102,7 +102,7 @@ moment: the Series A round closes with no deal, the investor who led the **seed*
 ready buyer, Frank says the last word. Sell, or carry on with your own money.
 
 **Where the text lives.** `localization/strings.csv`, both locales — `END_EV_ACQ_TITLE`
-("Devralma teklifi" / "Acquisition offer"), `END_EV_ACQ_BODY`, `END_EV_ACQ_ACCEPT` ("Sat" /
+("Devralma teklifi" / "Acquisition offer"), `END_EV_ACQ_ACCEPT` ("Sat" /
 "Sell"), `END_EV_ACQ_DECLINE` ("Kendi paramla devam" / "Carry on with my own money"). The card
 object is `EndingsSystem._build_buyout_offer_event()`, carrying both options wired to their real
 modifiers.
@@ -143,36 +143,13 @@ row in `scripts/modals/event_modal.gd`'s `_describe_modifier` so the terminal op
 
 ---
 
-## 4 · Surface 24 · Teklif e-postası geldi — not built
-
-**Where the text lives.** Nowhere. The card's title and body left the CSV (no code builds the card, so
-nothing read them); the navigation option `VC_EV_GO_FUNDING` ("Yatırım'a git" / "Go to Funding") stays
-because other cards use it.
-
-**Waiting on.** The new offer flow, which is four steps and none of them exist: the investor
-leaves the table promising the offer **by email**; the card fires when the email **arrives**;
-the player has **three days** to enter the term-sheet negotiation; only afterwards does the
-funding tab show the offer with a **30-day answer counter**. The only offer clock in the engine
-today is `PitchConstants.SHEET_VALIDITY_WEEKS` (3 weeks), and it starts the instant the sheet is
-granted.
-
-**How it is held inert.** There is nothing to hold: no code builds the card. A granted sheet cannot
-summon it, and the player is not stranded; Finance › Yatırım still opens the table on its own
-(`hunt_tab.gd`).
-
-**Attaching it.** A day or two, mostly new mechanic rather than wiring:
-`scripts/systems/vc_pitch_system.gd` (the email delay, the 3-day window, the answer counter),
-`scripts/tabs/hunt_tab.gd` (the counter's display), one enqueue site, and the card's text.
-
----
-
 ## 5 · The navigation modifier — seven cards want one mechanism
 
 **Where the text lives.** Already landed, in seven option labels, both locales:
 `data/events/reactive/ev_ps_frank_intro_b2b.json` ("Satış'a git" / "Go to Sales") ·
 `data/events/reactive/ev_ps_b2c_paid_tier.json` ("Ürüne git" / "Go to Product") ·
 `ANGEL_NUDGE_ACK` ("İK'ya git" / "Go to HR") · `VC_EV_GO_FUNDING` ("Yatırım'a git" / "Go to
-Funding", used by surfaces 14, 15 and 24) · `END_EV_GO_FINANCE` ("Finans'a git" / "Go to
+Funding", used by surfaces 14 and 15) · `END_EV_GO_FINANCE` ("Finans'a git" / "Go to
 Finance").
 
 **Waiting on.** One generic `navigate_to_tab` modifier. **These labels are live today and the

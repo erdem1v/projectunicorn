@@ -270,19 +270,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     Ret kalır; §10.7 ve A4 "ikinci ark başlamaz" diye yeniden yazılır.
   - Kaynak: Olay motoru GDD §10.7, §10.9, §20 A4, §27.
 
-- **18 · Okunmayan beş `EFFECT_*` anahtarı: DRAFT-EN kaydı onları okunan sayıyor.**
-  - Ne oluyor: `EFFECT_MRR`, `EFFECT_QUALITY_BONUS`, `EFFECT_NEW_TEAMMATE`, `EFFECT_PROMISE_HONOR` ve
-    `EFFECT_PROMISE_REFUSE` CSV'de duruyor. Ama çipleri kuran `EvChips` (`FIXED_CHIPS`, `describe`) hiçbirini
-    okumuyor, üretim kodunda da okuyanı yok. DRAFT-EN kaydı `EFFECT_*` ailesini "üretim kodunun okudukları" arasında
-    sayıyor ve "referanssız emekli anahtarları CSV süpürmesi siler" diyor; bu beş anahtar referanssız olduğu hâlde
-    okunan görünüyor.
-  - Nerede: `localization/strings.csv`; `scripts/events/present/chips.gd` (`FIXED_CHIPS`, `describe`);
-    `docs/ACIK_ISLER/ACIK_KARARLAR.md` (DRAFT-EN kaydı).
-  - Oyuncuya etkisi: Yok. Anahtarlar okunmayan metin.
-  - Seçenekler: A) Silinir. B) Kalır; DRAFT-EN kaydında "okunmayan, ileride çip olacak" diye ayrı satır alır. C)
-    Yeniden bağlanır, ör. `EFFECT_PROMISE_HONOR` / `_REFUSE` vaat kartlarının çipi olur (içerik kararı).
-  - Kaynak: CLAUDE.md §8 (ölü CSV anahtarı); ACIK_KARARLAR DRAFT-EN kaydı.
-
 - **19 · `arc_final_stretch` sönünce ticker'a ham "arc_faded" yazılıyor.**
   - Ne oluyor: `arc_final_stretch` fade politikasında `note_key: "arc_faded"` taşıyor. Bu ne bir CSV anahtarı ne bir
     kart metni; ark tanımının metin bloğu da yok. Ark Series A imzasında ya da bootstrap kilometre taşında
@@ -623,10 +610,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   Sürüm çıkışındaki Frank satırlarıyla bir gün arayla üst üste biniyorlar; "kapı açıldı" ile `gate_series_a` art arda
   iki günde geliyor. A: %50/%75/%90 satırları ch08 §5'teki Finans notuna taşınsın, `gate_series_a` en erken 3 gün sonra
   gelsin. B: kartlar kalsın, 7 gün ve 14 gün aralık şartı eklensin. Kaynak: ACIK_KARARLAR_D1-D13 §5, PUSH_ONCESI_KONTROL §8a.
-
-- **D12 · Eski "teklif e-postası" akışı.** `docs/writing/FRANK_UNWIRED.md` §4'teki akış (e-posta, 3 gün, 30 günlük
-  sayaç) K5 ve K10 ile çelişiyor; kartı bugün bağlı değil ve metni CSV'de yok. Öneri: akış emekliye ayrılsın.
-  Kaynak: ACIK_KARARLAR_D1-D13 §6 ve D12.
 
 - **E (isteklilik) modeli sabitleri.** 2cbbcd8'de seçilen EAGERNESS bloğu (`TermSheetTableSystem`) onaylanmadı.
   Ölçüm (63800db): saf politikada 4 masanın 2'si fonun kalkmasıyla bitti (hedef en çok %25); E0 = 70 + uyum ile
@@ -1000,8 +983,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
       durumu taşınmaz; cila eşlemesi 1,0'ın üstü → 0,5, 1,11 ve üstü → 1,0; `bug_count_at_bugfix_start_*` de düşer;
       sürüm geçmişi `releases`'a sprintsiz (−1) geçer (`save_manager.gd` `_migrate_15`).
     - Silmeler. (42) `PROD_RIVAL_PASSED` ("{rival} seni geçti.") TR metniyle silindi; süpürme listesi onu sahip kararı
-      diye işaretlemişti. (43) Frank anahtarları `PROD_MENTOR_LINE` ve `PROD_READY_TALK_FRANK` okuyucusuz kaldı; Frank
-      külliyatı olduğu için silinmedi. (44) Probe preset'leri `full_run_weak`, `b2c_keep`, `b2b_risk_keep`,
+      diye işaretlemişti. (43) Frank anahtarları `PROD_MENTOR_LINE` ve `PROD_READY_TALK_FRANK` okuyucusuz kaldı; Faz Q K22
+      süpürmesi Frank külliyatı dahil onları sildi. (44) Probe preset'leri `full_run_weak`, `b2c_keep`, `b2b_risk_keep`,
       `b2b_slip_keep` silindi (düz alt-tür, sprint oynayamaz).
     - Metin (TR/EN onay bekliyor). (46) Stage 1'in `PRODUCT_*` içerik anahtarları (alan adları ve kısa adları, alan ×
       durum cümleleri, rakip ve aşım ekleri, kart adları, araştırma ve rakip sesleri, rakip haber satırları, basın
@@ -1248,8 +1231,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 - **DRAFT-EN kaydı.** EN'i "düz doğru" ama ses geçişi görmemiş aileler (kayıt 2026-08-19, TR önce kuralından önce).
   Kayıttaki anahtarlardan CSV'de duran ve üretim kodunun okudukları (`6e3e190`):
   - Satış: `B2B_EV_EXPANSION_BODY`, `B2B_EV_REP_WARN_BODY`, `B2B_EV_RENEWAL_BODY`, `B2B_COMPLAINT_*`, `HUNT_FRANK_LINE`,
-    `HUNT_WALK_CONFIRM_BODY`, `HUNT_COUNTER_PIVOT`, `PRICE_TIP_PREMIUM`, `PRICE_TIP_VOLUME`.
-  - Ekip: `HR_RESIGN_VOICE_*`, `HR_FILE_NOTE_*`, `HR_TRAIT_*`, `HR_ROLE_HINT_*`, `HR_WARN_COMMISSION_CASH`,
+    `HUNT_WALK_CONFIRM_BODY`, `HUNT_COUNTER_PIVOT`.
+  - Ekip: `HR_RESIGN_VOICE_*`, `HR_TRAIT_*`, `HR_ROLE_HINT_*`, `HR_WARN_COMMISSION_CASH`,
     `HR_WARN_SALARY_CASHFLOW`.
   - Ürün: `PROD_TYPE_*_{DESC,TRADEOFF}`, `PROD_EV_{FIRST_SHIP,VERSION_SHIP,ITER_DECISION}_BODY`.
   - Finans ve VC: `VC_B1_*`…`VC_B4_*`, `VC_Q_*`, `VC_RES_*`, `VC_REACT_*`, `VC_WHY_*`, canlı `VC_EV_*` satırları
@@ -1257,15 +1240,12 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     `TERM_FRANK_*`, `TERM_RESULT_*`, `FIN_MENTOR_QUOTE`.
   - Dünya, olay, son: `NEWS_S_*`, `NEWS_RIVAL_{UP,DOWN}_*`, `MONTH_FRANK_*`, `EFFECT_*`, `MENTOR_INTRO_BODY`,
     `END_{SA,ACQ,BK,BC,VC,BS,RF,GENERIC}*`, `END_META_*`, `END_EV_SHUTTER_*`, `END_EV_ACQ_{TITLE,ACCEPT,DECLINE}`.
-  Yalnız smoke'un okuduğu kayıt aileleri (`COMPANY_BG_*`, `PROD_FEAT_*_VOICE`, `PROD_TYPE_*_{BET,PITCH}`,
-  `B2B_PAIN_*`) oyunda okunmuyor. Kayıt dışında da yalnız smoke'un okuduğu satırlar var: B2B'ye özgü `SECTOR_TEXTILE`,
-  fikstür `SECTOR_TESTING` ve `SECTOR_FALLBACK`. Oyunda `SECTOR_` yalnız `ProductCatalog.type_sector_labels` ile ürün
-  tiplerinin sektörlerinden kurulur; bu iki id hiçbir ürün tipinde yok ve o yolun yedek anahtarı yok. Kayıttaki
-  referanssız emekli anahtarların çoğunu CSV süpürmesi sildi (84498d96); CSV'de kalan `END_EV_ACQ_BODY` okuyucusuz.
+  Yalnız smoke'un okuduğu kayıt aileleri (`PROD_FEAT_*_VOICE` ve mühürlü üç tipin `PROD_TYPE_*_{BET,PITCH}`) oyunda
+  okunmuyor.
   Açık: EN geçişi yapılsın mı. Kaynak: localization_draft_en.
 
 - **Frank belgeleri (bu dosyalar kalır).** `docs/writing/FRANK_ORPHANS.md`: v6'da olmayan Frank satırları, satır satır
-  sahip kararı bekliyor. `docs/writing/FRANK_UNWIRED.md` §4: D12. Seed kapısı: `funding.seed_door` kartı
+  sahip kararı bekliyor. Seed kapısı: `funding.seed_door` kartı
   `SEED_DOOR_TITLE`, `SEED_DOOR_BODY` ve `SEED_DOOR_GO` metniyle 7946ff3'ten beri canlı; Frank v6 yüzey 12 bu kartı
   "yeniden tasarlanacak" diye metinsiz bırakıyor, metnin sahip onayı belirsiz. FRANK_UNWIRED §1, §5 ve §6 bayat: seed
   kapısının metni var, `goto_tab` fiili yedi kartta çalışıyor, `FIN_SUBTAB_INVESTMENT` EN'i "Funding"; belge
