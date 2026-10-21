@@ -131,6 +131,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
 		"runway_net_status":    fail = _case_runway_net_status()
 		"gross_runway_months":  fail = _case_gross_runway_months()
+		"runway_weeks_seam":    fail = _case_runway_weeks_seam()
 		"locale_switch":        fail = _case_locale_switch()
 		"b2b_lifecycle_and_countdown": fail = _case_b2b_lifecycle_and_countdown()
 		"b2b_onboarding_grace_floor": fail = _case_b2b_onboarding_grace_floor()
@@ -3083,6 +3084,43 @@ static func _case_gross_runway_months() -> String:
 	GameState.set_cash(0)
 	if VCPitchSystem.gross_runway_months() != 0.0:
 		return "gross at cash 0 should be 0"
+	return ""
+
+
+## finance.runway_weeks counts the whole weeks the net flow leaves the cash, rounded down like every screen that counts
+## them; a treasury below zero has none left whatever the flow, and a flow that is not negative has no clock (9999). The
+## investor's monthly update reads it live while it waits on the desk, so in a company that no longer drains it says
+## nothing of a runway.
+##
+## FALSIFICATION: drop the `GameState.cash < 0` branch of the seam → a negative treasury reads -1; round instead of
+## floor in TimeModel.whole_ticks → 5500 at a burn of 50 reads 16; take the 9999 variant out of the card's body → the
+## earning company's note prints "9999 weeks".
+static func _case_runway_weeks_seam() -> String:
+	GameState.set_cash(5500)
+	GameState.set_daily_burn(50)   # 110 days of cash: 15.7 weeks, which a countdown says as 15
+	if EvSeams.read("finance.runway_weeks") != 15:
+		return "5500 at a burn of 50 reads %s weeks, want 15" % str(EvSeams.read("finance.runway_weeks"))
+	GameState.set_daily_burn(0)
+	if EvSeams.read("finance.runway_weeks") != 9999:
+		return "a company with no cost reads %s weeks, want 9999" % str(EvSeams.read("finance.runway_weeks"))
+	GameState.set_cash(-100)
+	for burn in [50, 0]:
+		GameState.set_daily_burn(burn)
+		if EvSeams.read("finance.runway_weeks") != 0:
+			return "a negative treasury at a burn of %d reads %s weeks, want 0" % [burn, str(EvSeams.read("finance.runway_weeks"))]
+	var card: Dictionary = EvCatalog.card("funding.monthly_update")
+	for locale in ["en", "tr"]:
+		TranslationServer.set_locale(locale)
+		var body: Variant = EvPresenter.text_block(card).body
+		EvSeams.mock("finance.runway_weeks", 9999)
+		var earning: String = EvPresenter.resolve_text(body, {}, {})
+		EvSeams.mock("finance.runway_weeks", 8)
+		var draining: String = EvPresenter.resolve_text(body, {}, {})
+		EvSeams.clear_mocks()
+		if earning.contains("9999") or earning.to_lower().contains("runway"):
+			return "[%s] the note of a company that earns its costs reads '%s'" % [locale, earning]
+		if not draining.contains(" 8 "):
+			return "[%s] the note of a company with 8 weeks left reads '%s'" % [locale, draining]
 	return ""
 
 

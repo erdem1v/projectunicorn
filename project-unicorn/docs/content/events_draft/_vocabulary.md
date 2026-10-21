@@ -174,7 +174,7 @@ slot of that type (§17.12).
 | `finance.profit_streak_months` | global | int | Finance | consecutive closed months in the black with no red weeks |
 | `finance.reputation` | global | int | Finance | WRAPPER; clamped -10..100 |
 | `finance.runway_months` | global | float | Finance | INF when net >= 0 — compare with '<', never '>' |
-| `finance.runway_weeks` | global | int | Finance | WRAPPER; 9999 stands for default-alive |
+| `finance.runway_weeks` | global | int | Finance | whole weeks of net runway; 0 when cash < 0; 9999 when net flow is not negative (no clock), so compare with '<', never '>' |
 | `finance.shutter_weeks_left` | global | int | Finance | WRAPPER; -1 when not counting, else weeks left |
 | `finance.shutter_weeks_total` | global | int | Finance | the shutter window in weeks; card text interpolates this rather than typing it |
 | `finance.total_raised` | global | int | Finance | cash in from all rounds |

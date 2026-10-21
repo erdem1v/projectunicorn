@@ -749,8 +749,10 @@ func _run_b2b_shot(kind: String) -> void:
 ## the promise card stands in the second week of a sprint, its sender the person who works the promised card;
 ## an offer's expiry warning stands in the `investor` slot's sheet (anchor's without it) on its first warning week, and its
 ## decision card in the same sheet on the day it runs out; a sprint paper stands in the sprint it interrupts;
-## the unseen build's card stands in the second sprint of a product nobody has launched. A card whose slots the bare
-## seed cannot bind (and every rival card, which names the product type's rival) stands in the theme seed's company
+## the unseen build's card stands in the second sprint of a product nobody has launched; the savings note and the side
+## work paper stand in a founder whose savings run down, and the investor's monthly update in a company whose cash drains
+## (`runway=profit` shoots it in the company that earns its costs, where the note says nothing of a runway). A card whose
+## slots the bare seed cannot bind (and every rival card, which names the product type's rival) stands in the theme seed's company
 ## (_seed_company_world; an id of --hr-shot's roster, `char_emp_shot_<n>`, is in it); a slot whose `where` that
 ## company does not meet binds the selector's pick without it.
 func _run_event_shot(spec: String) -> void:
@@ -767,6 +769,8 @@ func _run_event_shot(spec: String) -> void:
 			_shot_fail("[EventShot] '%s' is not <slot>=<entity id>" % pair)
 			return
 		given[pair.get_slice("=", 0)] = pair.get_slice("=", 1)
+	var profit: bool = given.get("runway", "") == "profit"
+	given.erase("runway")
 	var card: Dictionary = EvCatalog.card(event_id)
 	var scope: Dictionary = card.get("scope", {})
 	var selects: Array = scope.values().map(func(slot: Dictionary) -> String: return String(slot.get("select", "")))
@@ -783,6 +787,14 @@ func _run_event_shot(spec: String) -> void:
 		_seed_expiring_sheet(String(given.get("investor", "anchor")), PitchConstants.WARNING_WEEKS if "expiring_sheet" in selects else 0)
 	elif event_id in ["product.b2c_floor_signal", "product.b2c_floor_churn"]:
 		_seed_floor_world()
+	elif event_id in ["founder.savings_note", "founder.side_contract"]:
+		_seed_savings_ground()
+	elif event_id == "funding.monthly_update":
+		_seed_company_world(event_id, selects)
+		if not profit:
+			# A shot never ticks, and the tick is what pulls the payroll into the burn; 8.5 weeks of the net flow read as 8.
+			FinanceSystem.set_burn_category("salaries", FinanceSystem.daily_rate(CharacterRegistry.get_total_monthly_salaries()))
+			GameState.set_cash(int(-GameState.get_net_daily_flow() * TimeModel.days(8.5)))
 	elif String(card.get("pool_group", "")) != "":
 		given.merge(_seed_paper_world(event_id), false)
 	elif event_id == "founder.unseen_build":
@@ -920,6 +932,13 @@ func _seed_floor_world() -> void:
 	ProductState.set_line_tier(SprintCatalog.in_product("line_shared_security"), 1)
 	SalesSystem.add_b2c_audience(20000)
 	SalesSystem.open_b2c_paid_tier(8)
+
+
+## founder.savings_note's ground: week 5, no product, savings for fewer than 24 weeks at a cost that runs.
+func _seed_savings_ground() -> void:
+	GameState.day = 5
+	GameState.set_cash(5000)
+	FinanceSystem.set_burn_category("marketing", 50)
 
 
 ## The Series A offer an expiry card is shot in: `vc_id`'s sheet with `weeks_left` weeks to run, so the warning
@@ -1091,10 +1110,7 @@ func _run_inbox_shot(state: String) -> void:
 		GameState.current_hour = 11
 		TimeManager.sync_to_current_hour()
 	if state == "beat":
-		# founder.savings_note's ground: week 5, no product, savings for fewer than 24 weeks at a cost that runs.
-		GameState.day = 5
-		GameState.set_cash(5000)
-		FinanceSystem.set_burn_category("marketing", 50)
+		_seed_savings_ground()
 	if state in ["morning", "night"]:
 		# One hour before the rollover, with a summary due at every tick and cash enough that no shutter warns.
 		SummarySystem.frequency_override = "weekly"

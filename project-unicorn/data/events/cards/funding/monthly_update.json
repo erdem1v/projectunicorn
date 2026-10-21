@@ -166,7 +166,13 @@
   "text": {
     "tr": {
       "title": "EV_FUNDING_MONTHLY_UPDATE_TITLE",
-      "body": "{investor} bu ayın notunu bekliyor. Runway satırında {seam:finance.runway_weeks} hafta yazıyor. Notu ekip de okuyor.",
+      "body": {
+        "by_seam": "finance.runway_weeks",
+        "variants": {
+          "0": "{investor} bu ayın notunu bekliyor. Runway satırında {seam:finance.runway_weeks} hafta yazıyor. Notu ekip de okuyor.",
+          "9999": "{investor} bu ayın notunu bekliyor. Gelir şu an gideri karşılıyor. Notu ekip de okuyor."
+        }
+      },
       "options": {
         "pay_cut": "EV_FUNDING_MONTHLY_UPDATE_PAY_CUT",
         "bridge": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE",
@@ -181,7 +187,13 @@
     },
     "en": {
       "title": "EV_FUNDING_MONTHLY_UPDATE_TITLE",
-      "body": "This month's update to {investor} is due. The runway line says {seam:finance.runway_weeks} weeks. The team reads these too.",
+      "body": {
+        "by_seam": "finance.runway_weeks",
+        "variants": {
+          "0": "This month's update to {investor} is due. The runway line says {seam:finance.runway_weeks} weeks. The team reads these too.",
+          "9999": "This month's update to {investor} is due. Revenue covers the costs right now. The team reads these too."
+        }
+      },
       "options": {
         "pay_cut": "EV_FUNDING_MONTHLY_UPDATE_PAY_CUT",
         "bridge": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE",

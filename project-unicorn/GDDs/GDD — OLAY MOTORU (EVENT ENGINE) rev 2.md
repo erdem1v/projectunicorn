@@ -3079,3 +3079,23 @@ tarafından oyuncuya haftalık bir özet giden bir yol yoktu: açık hata ve bil
 - Vaka `support_report_quiet_week` yeni.
 
 *Neden.* Faz C Karar 11 (PRD Karar 12): destek temsilcisi haftada bir, yalnız yeni bir şey varsa yazar; rapor karar değildir.
+
+### §27.44 · Faz C C2b: `finance.runway_weeks` kasa eksiyken 0 okur, 9999 "saat yok"tur ve masada bekleyen kâğıt onu yazmaz
+
+*Belge ne diyordu.* §8.4: gövdedeki sayı seam'den okunur ve bayatlayamaz; §3.2: varyant gövde seam'in tamsayı değerine göre seçilir.
+Seam'in "bu sayının saati yok" değerini kartın nasıl karşılayacağı yazılı değildi ve kâğıdın gövdesinin donmadan önce canlı okunduğu belirtilmemişti.
+
+*Ne yapıldı.*
+- `finance.runway_weeks` üst barın okuduğu gibi tam haftadır (`TimeModel.whole_ticks`, aşağı yuvarlar; önceden yuvarlıyordu ve kart ekrandaki
+  sayıdan bir hafta fazla vaat edebiliyordu). Kasa eksiyse net akış ne olursa olsun 0 okur (önceden 9999 okuyordu: aynı seam kasa sıfıra
+  inerken 0, sıfırın altında 9999'du ve `founder.savings_note` ile `founder.side_contract` tam kepenk anında koşullarını kaybediyordu). Net akış
+  eksi değilse saat yoktur ve 9999 okunur; koşul `<` ile yazılır, `>` ile asla.
+- Masada bekleyen kâğıt yalnız adları taşır (`EvPapers.names_of`); seam değerlerini cevapta ve süre dolumunda dondurur (`EvPresenter.freeze_seams`),
+  bekledikçe canlı okur. `funding.monthly_update` runway 2 ile 11 hafta arasındayken gelir ve bir hafta bekleyebilir: bu sürede şirket kâra geçerse
+  gövde "9999 hafta" yazardı. Gövde artık `by_seam: finance.runway_weeks` varyantıdır: `0` anahtarı runway cümlesini, `9999` anahtarı runway'den
+  söz etmeyen cümleyi taşır (TR/EN onay bekliyor). Başlık ve seçenek metinleri değişmedi; başlık varyantı desteklenmiyor (`lint.gd` başlığı
+  düz metin okur).
+- `--event-shot` `founder.savings_note` ve `founder.side_contract`'ı birikimi biten kurucuda, `funding.monthly_update`'i kasası aylık akışının
+  8,5 haftasına inmiş şirkette çeker (`:runway=profit` aynı şirketi giderini karşılarken çeker). Vaka `runway_weeks_seam` yeni.
+
+*Neden.* Faz C Karar 7 ve 2026-10-20 seçimi: runway yalnız net akış eksideyken yazılır; kârdaki şirketin kartı hiçbir yerde saat yokken saat sayısı yazmaz.

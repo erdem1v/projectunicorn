@@ -29,15 +29,15 @@ static func install() -> void:
 		func() -> float: return GameState.get_runway_months(),
 		"Finance", "INF when net >= 0 — compare with '<', never '>'")
 
-	# The week-valued runway the shutter and the soft cap think in, with INF mapped to 9999
-	# rather than multiplied.
+	# Whole weeks of net runway, read the way the TopBar reads them: a treasury below zero has none left
+	# whatever the flow, and net flow that is not negative has no clock, which 9999 stands for.
 	EvSeams.register("finance.runway_weeks", G, TYPE_INT,
 		func() -> int:
+			if GameState.cash < 0:
+				return 0
 			var months: float = GameState.get_runway_months()
-			if is_inf(months) or months < 0.0:
-				return 9999
-			return int(round(months * TimeModel.DAYS_PER_MONTH / TimeModel.DAYS_PER_TICK)),
-		"Finance", "WRAPPER; 9999 stands for default-alive")
+			return 9999 if is_inf(months) else TimeModel.whole_ticks(months),
+		"Finance", "whole weeks of net runway; 0 when cash < 0; 9999 when net flow is not negative (no clock), so compare with '<', never '>'")
 
 	EvSeams.register("finance.shutter_weeks_left", G, TYPE_INT,
 		func() -> int: return GameState.shutter_weeks_left,

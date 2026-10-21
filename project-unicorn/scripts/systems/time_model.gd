@@ -39,6 +39,11 @@ static func months(t: float) -> float:
 	return t * DAYS_PER_TICK / DAYS_PER_MONTH
 
 
+## Economy months → whole ticks, rounded down: a countdown never promises a tick the cash cannot cover.
+static func whole_ticks(economy_months: float) -> int:
+	return int(floor(economy_months * DAYS_PER_MONTH / DAYS_PER_TICK))
+
+
 ## Real seconds one tick takes at a speed with the default workday (the night is skipped).
 static func seconds_per_tick(speed: int) -> float:
 	return (HRConstants.START_HOUR_DEFAULT + HRConstants.WORK_HOURS_DEFAULT - WEEK_START_HOUR) \

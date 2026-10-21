@@ -422,20 +422,14 @@ static func net_runway_pair(before: float, after: float) -> Dictionary:
 	var before_text: String = net_runway_text(before)
 	var after_text: String = net_runway_text(after)
 	if before_text == after_text and is_finite(before) and GameState.cash >= 0 \
-			and _runway_weeks(before) != _runway_weeks(after):
+			and TimeModel.whole_ticks(before) != TimeModel.whole_ticks(after):
 		before_text = _runway_weeks_text(before)
 		after_text = _runway_weeks_text(after)
 	return {"before": before_text, "after": after_text, "changed": before_text != after_text}
 
 
 static func _runway_weeks_text(months: float) -> String:
-	return "%d %s" % [_runway_weeks(months), TranslationServer.translate("RUNWAY_UNIT_WEEKS")]
-
-
-## Whole weeks of runway. floor(), not round(): a countdown must never promise a week the cash
-## cannot cover.
-static func _runway_weeks(months: float) -> int:
-	return int(floor(maxf(months, 0.0) * TimeModel.DAYS_PER_MONTH / TimeModel.DAYS_PER_TICK))
+	return "%d %s" % [TimeModel.whole_ticks(months), TranslationServer.translate("RUNWAY_UNIT_WEEKS")]
 
 
 ## Build progress (0.0-1.0) as the whole percent every surface prints — the single
