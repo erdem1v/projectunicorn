@@ -490,6 +490,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"seed_sheet_round_trips":                fail = _case_seed_sheet_round_trips()
 		"office_move_gates_and_save":            fail = _case_office_move_gates_and_save()
 		"desk_cap_blocks_hire":                  fail = _case_desk_cap_blocks_hire()
+		"office_brand_once":                     fail = _case_office_brand_once()
 		"sprint_two_days_close":                 fail = _case_sprint_two_days_close()
 		"sprint_capacity_from_team":             fail = _case_sprint_capacity_from_team()
 		"sprint_team_follows_job_matrix":        fail = _case_sprint_team_follows_job_matrix()
@@ -20214,6 +20215,71 @@ static func _case_desk_cap_blocks_hire() -> String:
 	if OfficeSystem.hiring_closed() or not HRSearchSystem.can_start():
 		return "Plaza stayed closed with %d of %d desks taken" % [OfficeSystem.desks_taken(), OfficeConstants.CATALOG["plaza"].desks]
 	return ""
+
+
+## THE OFFICE BRAND JUMP: the first arrival at each tier of a run lifts the brand by the tier's points, once. From the
+## flat the business block adds 3 and Plaza 6; going back down to the business block adds nothing and neither does
+## the second arrival at Plaza; a tier skipped on the way up (the loft) still pays its 10 when it comes. The arrival
+## listeners (the toast) read the jump as still to come, and the tiers reached survive a real save file. Reading the
+## tiers writes nothing (the office card reads them). A save from before the jump, standing in the business block,
+## counts that tier as reached, and its first arrival still reads its jump to the listeners.
+##
+## FALSIFICATION: take the set_flag line out of OfficeSystem.daily_tick that claims the tier -> the move back down to
+## the business block adds 3 again and FAILS; claim the jump before office_changed is emitted -> the listener reads 0
+## and FAILS; take the fallback out of OfficeSystem.reached (the default of its get_flag) -> an old save reads no tiers
+## and FAILS; make reached write its fallback into the flag -> the read leaves a flag behind and FAILS; take the
+## set_flag that pins the tiers before the office changes out of daily_tick -> the first arrival's listener reads
+## the fallback, which counts the new office, as 0 and FAILS.
+static func _case_office_brand_once() -> String:
+	GameState.set_cash(10_000_000)
+	if OfficeSystem.brand_jump("ishani") != 3 or GameState.has_flag(OfficeSystem.FLAG_REACHED):
+		return "reading the jump in a fresh run wrote a flag or read %d, want 3" % OfficeSystem.brand_jump("ishani")
+	var heard: Array[int] = []
+	var listen := func(id: String) -> void: heard.append(OfficeSystem.brand_jump(id))
+	var arrive := func(id: String) -> int:
+		var before: int = GameState.brand
+		if not OfficeSystem.move_to(id):
+			return -1000
+		GameState.day += TimeModel.ticks(OfficeConstants.MOVE_WEEKS)
+		OfficeSystem.daily_tick()
+		return GameState.brand - before
+	var why := ""
+	EventBus.office_changed.connect(listen)
+	for step: Array in [["ishani", 3], ["plaza", 6], ["ishani", 0], ["plaza", 0], ["loft", 10]]:
+		var got: int = arrive.call(step[0])
+		if got != step[1]:
+			why = "arriving at %s moved the brand by %d, want %d" % [step[0], got, step[1]]
+			break
+	if why == "" and heard != [3, 6, 0, 0, 10]:
+		why = "the arrival listeners read the jump as %s, want [3, 6, 0, 0, 10]: still to come on a first visit" % str(heard)
+
+	if why == "":
+		_drain_all_modals()   # a card on screen refuses the save (can_save)
+		var slot: String = "smoke_brand_%d" % OS.get_process_id()
+		var loaded: bool = SaveManager.save_to_slot(slot) and SaveManager.apply_loaded_state(SaveManager.read_slot(slot))
+		SaveManager.delete_slot(slot)
+		if not loaded:
+			why = "the save did not round-trip"
+		for id in ["ishani", "plaza", "loft"]:
+			if why == "" and OfficeSystem.brand_jump(id) != 0:
+				why = "after a save and a load %s would lift the brand again" % id
+
+	# A save from before the jump has no list; it stands in the business block.
+	if why == "":
+		GameState.flags.erase(OfficeSystem.FLAG_REACHED)
+		GameState.office_id = "ishani"
+		if OfficeSystem.reached() != ["ishani"] or GameState.has_flag(OfficeSystem.FLAG_REACHED):
+			why = "an old save reads its tiers as %s (flag written: %s), want [ishani] and no write" \
+				% [str(OfficeSystem.reached()), GameState.has_flag(OfficeSystem.FLAG_REACHED)]
+		heard.clear()
+		for step: Array in [["plaza", 6], ["ishani", 0]]:
+			var got: int = arrive.call(step[0])
+			if why == "" and got != step[1]:
+				why = "from an old save arriving at %s moved the brand by %d, want %d" % [step[0], got, step[1]]
+		if why == "" and heard != [6, 0]:
+			why = "from an old save the arrival listeners read the jump as %s, want [6, 0]" % str(heard)
+	EventBus.office_changed.disconnect(listen)
+	return why
 
 
 # =========================================================================

@@ -1,5 +1,5 @@
 {
-  "_note": "Frank moves the company out of the founder's flat once his cheque is in. It reads office.current and office.moving, so a company already out of the flat, or on its way out, never hears it. One option and no cost: a beat, which GDD v2 ch.11 §4's cost law allows. Tagged critical so the sweep proposes it in the week it comes true instead of leaving it to a weighted draw.",
+  "_note": "Frank moves the company out of the founder's flat once the seed round is signed. It reads office.current and office.moving, so a company already out of the flat, or on its way out, never hears it. One option and no cost: a beat, which GDD v2 ch.11 §4's cost law allows. Tagged critical so the sweep proposes it in the week it comes true instead of leaving it to a weighted draw.",
   "id": "funding.frank_office_move",
   "version_scope": "ea",
   "category": "funding",
@@ -26,7 +26,7 @@
   "condition": {
     "all": [
       {
-        "seam": "investor.angel_taken",
+        "seam": "funding.seed_taken",
         "op": "==",
         "value": true
       },

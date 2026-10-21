@@ -11,15 +11,16 @@ const MOVE_WEEKS := 1                       # [WORKING] weeks from move_to to ar
 ## A move pays this many months of the new office's rent up front.
 const UPFRONT_MONTHS := 2                   # [WORKING]
 
-## id -> {tier_key, name_key, desc_key, desks, rent, room_keys}; the flat has no tier_key, being
+## id -> {tier_key, name_key, desc_key, desks, rent, brand, room_keys}; the flat has no tier_key, being
 ## no step of the ladder. `desks` seat the founder and the staff (the founder takes one), `rent` is
-## a month's.
+## a month's, `brand` the points the first arrival at the tier adds to the brand (the flat gives none).
 const CATALOG := {
 	"home": {
 		"name_key": "OFFICE_NAME_HOME",
 		"desc_key": "OFFICE_DESC_HOME",
 		"desks": 1,                         # [WORKING]
 		"rent": 0,
+		"brand": 0,
 		"room_keys": ["OFFICE_ROOM_STUDY_CORNER", "OFFICE_ROOM_KITCHEN_CORNER",
 			"OFFICE_ROOM_BEDROOM", "OFFICE_ROOM_BATHROOM", "OFFICE_ROOM_BALCONY"],
 	},
@@ -29,6 +30,7 @@ const CATALOG := {
 		"desc_key": "OFFICE_DESC_ISHANI",
 		"desks": 12,                        # [WORKING]
 		"rent": 4_000,                      # [WORKING]
+		"brand": 3,                         # [WORKING]
 		"room_keys": ["OFFICE_ROOM_OPEN_OFFICE", "OFFICE_ROOM_MEETING_ROOM",
 			"OFFICE_ROOM_FOUNDER_GLASS", "OFFICE_ROOM_KITCHEN", "OFFICE_ROOM_RESTROOM"],
 	},
@@ -38,6 +40,7 @@ const CATALOG := {
 		"desc_key": "OFFICE_DESC_PLAZA",
 		"desks": 38,                        # [WORKING]
 		"rent": 8_000,                      # [WORKING]
+		"brand": 6,                         # [WORKING]
 		"room_keys": ["OFFICE_ROOM_RECEPTION", "OFFICE_ROOM_MEETING_ROOMS_2",
 			"OFFICE_ROOM_BOARD_ROOM", "OFFICE_ROOM_DEPARTMENT_PODS",
 			"OFFICE_ROOM_PHONE_BOOTHS", "OFFICE_ROOM_CAFE_GAMES"],
@@ -48,6 +51,7 @@ const CATALOG := {
 		"desc_key": "OFFICE_DESC_LOFT",
 		"desks": 70,                        # [WORKING]
 		"rent": 18_000,                     # [WORKING]
+		"brand": 10,                        # [WORKING]
 		"room_keys": ["OFFICE_ROOM_RECEPTION_SECURITY", "OFFICE_ROOM_STAGE",
 			"OFFICE_ROOM_MEETING_ROOMS_3", "OFFICE_ROOM_PHONE_BOOTHS", "OFFICE_ROOM_GAMES",
 			"OFFICE_ROOM_VP_OFFICES", "OFFICE_ROOM_EXECUTIVE", "OFFICE_ROOM_FOUNDER_OFFICE"],

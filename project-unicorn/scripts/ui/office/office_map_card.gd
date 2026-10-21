@@ -79,6 +79,12 @@ func _init(office_id: String) -> void:
 	for key: String in office.room_keys:
 		rooms.add_child(UiFactory.make_pill(tr(key), plain.bg, plain.fg, false))
 	col.add_child(rooms)
+	var jump := OfficeSystem.brand_jump(office_id)
+	if jump > 0:
+		var brand := UiFactory.make_label(tr("OFFICE_CARD_BRAND").format({"n": jump}), &"CaptionMuted",
+			UiTokens.positive())
+		brand.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		col.add_child(brand)
 
 	if target:
 		col.add_child(UiFactory.make_section_header(tr("OFFICE_CARD_REQS")))

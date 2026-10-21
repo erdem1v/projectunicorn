@@ -286,8 +286,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `office_move_started` | `office_id: String, arrival_day: int` | main · office_system | 2 | 1 | office_hud |
-| `office_changed` | `office_id: String` | main · office_system | 2 | 2 | office_hud · office_view |
+| `office_move_started` | `office_id: String, arrival_day: int` | office_system | 1 | 1 | office_hud |
+| `office_changed` | `office_id: String` | office_system | 1 | 2 | office_hud · office_view |
 
 ### Save / system-menu signals
 

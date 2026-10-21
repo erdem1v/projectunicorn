@@ -111,6 +111,8 @@ const FLAG_TYPES := {
 	"angel_seed_accepted_day": TYPE_INT,
 	# RESERVED, no writer: the guaranteed-false gate behind "REDDET · ZOR MOD".
 	"hard_mode_unlocked": TYPE_BOOL,
+	# --- office ladder: the tiers whose first arrival has lifted the brand ---
+	"offices_reached": TYPE_ARRAY,
 	# --- origin reserves + UI snooze ---
 	"origin_press_sympathy": TYPE_BOOL,
 	"origin_low_capital": TYPE_BOOL,

@@ -2,8 +2,9 @@ extends Control
 
 # The office view's own controls: the move button at the bottom left (windows dock at the top
 # left) and the countdown of a move under way beside it. The shell's toast says when a move starts
-# and when it lands. OfficeCity mounts this on the view's overlay and opens the city map on
-# move_pressed. While a decision waits the button is off and says so: no move, no map.
+# and when it lands, with the brand a first arrival at the tier adds. OfficeCity mounts this on the
+# view's overlay and opens the city map on move_pressed. While a decision waits the button is off and
+# says so: no move, no map.
 # In the dark language from its root.
 
 signal move_pressed
@@ -58,7 +59,8 @@ func _ready() -> void:
 	EventBus.event_set_aside.connect(_refresh.unbind(1))
 	EventBus.event_resolved.connect(_refresh.unbind(2))
 	EventBus.office_move_started.connect(_on_move_started)
-	EventBus.office_changed.connect(_toast.bind("OFFICE_TOAST_MOVED"))
+	EventBus.office_changed.connect(func(office_id: String) -> void:
+		_toast(office_id, "OFFICE_TOAST_MOVED", OfficeSystem.brand_jump(office_id)))
 	_refresh()
 
 
@@ -116,7 +118,9 @@ func _on_move_started(office_id: String, _arrival_day: int) -> void:
 	_refresh()
 
 
-## What happened to the move, and where to.
-func _toast(office_id: String, head_key: String) -> void:
+## What happened to the move, and where to; `brand` is the points the arrival adds.
+func _toast(office_id: String, head_key: String, brand: int = 0) -> void:
+	var place: String = tr(OfficeConstants.CATALOG[office_id].name_key)
 	get_tree().call_group(&"toast", &"show_toast", tr(head_key),
-		tr(OfficeConstants.CATALOG[office_id].name_key), MOVE_GLYPH, UiTokens.D_INK_3)
+		tr("OFFICE_TOAST_BRAND").format({"office": place, "n": brand}) if brand > 0 else place,
+		MOVE_GLYPH, UiTokens.D_INK_3)

@@ -1881,9 +1881,9 @@ func _run_office_shot(spec: String) -> void:
 
 
 ## The shell's toast through its real callers, a frame each: F9 with no quicksave, F5 over an open window, F5
-## refused, a sales and a VC call put off, a move under way and its arrival; then F9 over the system menu (no
-## toast), F9 over unsaved progress (its question), its answer, which remounts the shell, and F9 while a decision
-## waits.
+## refused, a sales and a VC call put off, a move from the flat under way and its arrival (the business block's brand
+## jump with it); then F9 over the system menu (no toast), F9 over unsaved progress (its question), its answer,
+## which remounts the shell, and F9 while a decision waits.
 func _shot_toasts(view: Control) -> void:
 	_wire_modal_signals()
 	# The toast places itself when shown: wait for --shot-scale, which _begin_shot applies late.
@@ -1908,9 +1908,11 @@ func _shot_toasts(view: Control) -> void:
 		invite._postpone()
 		await _toast_frame("postponed_" + kind)
 		invite.stop()
-	EventBus.office_move_started.emit("plaza", GameState.day + 1)
+	GameState.set_cash(100_000)
+	OfficeSystem.move_to("ishani")
 	await _toast_frame("move_started")
-	EventBus.office_changed.emit(GameState.office_id)
+	GameState.day += TimeModel.ticks(OfficeConstants.MOVE_WEEKS)
+	OfficeSystem.daily_tick()
 	await _toast_frame("moved")
 	get_tree().call_group(&"toast", &"hide")
 	EventBus.system_menu_requested.emit()

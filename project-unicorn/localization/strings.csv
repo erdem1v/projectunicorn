@@ -2699,6 +2699,8 @@ OFFICE_CARD_LINE_CURRENT,{desks} masa · {taken} dolu · ayda {rent},{desks} des
 OFFICE_CARD_LINE_HOME,{desks} masa · kira yok,{desks} desk · no rent
 OFFICE_MOVE_TIP,"Kira ayda {rent}, peşin {upfront}. Aylık gider {old} → {new}. Taşınma bir hafta sürer; kira taşındığın hafta başlar.","Rent is {rent} a month, {upfront} paid up front. Monthly costs {old} → {new}. The move takes a week; rent starts the week you arrive."
 OFFICE_MOVE_OVER_CAP,"Ekibin {team} kişi, bu ofiste {desks} masa var. Taşındıktan sonra bir masa boşalana ya da daha büyük bir ofise geçene kadar işe alamazsın.","Your team is {team}, this office has {desks} desks. After the move you cannot hire until a desk frees up or you move to a bigger office."
+OFFICE_CARD_BRAND,Buraya taşınmak markanı bir kez {n} puan yükseltir.,"Moving here raises your brand by {n}, once."
+OFFICE_TOAST_BRAND,{office} · Marka +{n},{office} · Brand +{n}
 FRANK_OFFICE_MOVE_TITLE,Taşınma vakti,Time to move
 FRANK_OFFICE_MOVE_BODY,"Frank'ten mesaj.
 
