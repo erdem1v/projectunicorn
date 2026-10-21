@@ -489,6 +489,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"card_body_tokens_resolve":              fail = _case_card_body_tokens_resolve()
 		"seed_sheet_round_trips":                fail = _case_seed_sheet_round_trips()
 		"office_move_gates_and_save":            fail = _case_office_move_gates_and_save()
+		"desk_cap_blocks_hire":                  fail = _case_desk_cap_blocks_hire()
 		"sprint_two_days_close":                 fail = _case_sprint_two_days_close()
 		"sprint_capacity_from_team":             fail = _case_sprint_capacity_from_team()
 		"sprint_team_follows_job_matrix":        fail = _case_sprint_team_follows_job_matrix()
@@ -11623,7 +11624,7 @@ static func _case_promotion_and_raise_gate() -> String:
 	# can_promote'taki LEVEL_SENIOR kapısını sil → "Kıdemli terfi aldı" iddiası FAIL eder.
 	GameState.set_cash(500000)
 	var emp: Character = _make_employee("promo_a", "Promo A", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 3000, 60)
+		SEED_PACE, 4500, 60)
 
 	# --- §9.2 ZAM: aralık %3–10 ---
 	if HRConstants.RAISE_MAX_PCT != 10:
@@ -11686,7 +11687,7 @@ static func _case_promotion_and_raise_gate() -> String:
 
 	# --- §9.3 KIDEMLİ TAVANDIR ---
 	var senior: Character = _make_employee("promo_b", "Promo B", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 9000, 60)
+		SEED_PACE, 13500, 60)
 	senior.level = HRConstants.LEVEL_SENIOR
 	if HRActions.can_promote(senior):
 		return "a Kıdemli was promotable — §9.3 makes it the ceiling"
@@ -11892,7 +11893,7 @@ static func _case_save_migration_v6_to_v7() -> String:
 		"registries": {
 			"characters": [
 				{"id": "c_dev", "category": "employee", "role": "developer",
-					"monthly_salary": 4200,
+					"monthly_salary": 6300,
 					"role_stats": {"product": 2, "design": 1, "engineering": 7, "qa": 4,
 						"sales": 0, "customer_success": 0, "leadership": 3},
 					"area_experience": {"engineering": 80, "qa": 30},
@@ -11914,7 +11915,7 @@ static func _case_save_migration_v6_to_v7() -> String:
 		return "the legacy area list was mutated: %s" % str(dev.get("assigned_jobs"))
 
 	# --- §3 seviye maaş bandından türetilir ---
-	# $4.200 bir developer için Orta bandın (3.000-6.000) içinde.
+	# $6.300 bir developer için Orta bandın (4.500-9.000) içinde.
 	if int(dev.get("level", -1)) != HRConstants.LEVEL_MID:
 		return "level derived as %d, want Orta" % int(dev.get("level", -1))
 
@@ -11927,7 +11928,7 @@ static func _case_save_migration_v6_to_v7() -> String:
 			HRConstants.experience_threshold(17)]
 
 	# --- §9.1 maaş tabanı ---
-	if int(dev.get("salary_floor", -1)) != 4200:
+	if int(dev.get("salary_floor", -1)) != 6300:
 		return "salary floor did not seed from the current salary: %s" % str(dev.get("salary_floor"))
 
 	# --- §11.4 yaz izni: hafta indeksi pencerenin içinde ---
@@ -20049,37 +20050,61 @@ static func _case_seed_sheet_round_trips() -> String:
 	return ""
 
 
-## THE OFFICE LADDER: its gates, its week and its save. A fresh run sits in the flat; the
-## business block opens on Frank's cheque and its cash bar, not a dollar short; the move lands
-## MOVE_WEEKS ticks later and not a tick early; the flat is no way back; the office survives a real save
-## file; and that file aged to v12 (no office fields) puts a run that took the cheque in the
-## business block and leaves one that did not at home.
+## THE OFFICE LADDER: its one gate, its price, its week, its rent and its save. A fresh run sits in the flat; a
+## move needs the cash for its up-front rent, not a dollar short; that rent leaves the cash once, when the move is
+## decided; the move lands MOVE_WEEKS ticks later and not a tick early; the office rent starts the tick the company
+## arrives, not before and not a tick late; the flat is no way back; the office and its rent survive a real save
+## file, and an old save that stood in an office pays the rent on its first tick; and that file aged to v12 (no
+## office fields) puts a run that took the cheque in the business block and leaves one that did not at home.
+##
+## FALSIFICATION: take the apply_one_time_cost line out of OfficeSystem.move_to -> "the move left ... in the cash"
+## FAILS; run FinanceSystem.daily_tick before OfficeSystem.daily_tick in TimeManager -> the arrival tick's rent check FAILS.
 static func _case_office_move_gates_and_save() -> String:
 	if OfficeSystem.current() != "home":
 		return "a fresh run starts in '%s', want home" % OfficeSystem.current()
-	if OfficeSystem.can_move_to("ishani"):
-		return "the business block opened before Frank's cheque"
-	GameState.record_angel_round(AngelRoundSystem.EQUITY_PCT, AngelRoundSystem.CASH_AMOUNT)
-	var cash_bar: int = (OfficeConstants.CATALOG["ishani"].reqs as Array) \
-		.filter(func(r: Dictionary) -> bool: return r.kind == "cash")[0].value
-	GameState.set_cash(cash_bar - 1)
-	if OfficeSystem.can_move_to("ishani"):
-		return "the business block opened a dollar short of its cash bar"
-	GameState.set_cash(cash_bar)
+	var upfront: int = OfficeSystem.upfront("ishani")
+	if upfront != OfficeConstants.UPFRONT_MONTHS * int(OfficeConstants.CATALOG["ishani"].rent):
+		return "the up-front is %d, want %d months of the rent" % [upfront, OfficeConstants.UPFRONT_MONTHS]
+	GameState.set_cash(upfront - 1)
+	if OfficeSystem.can_move_to("ishani") or OfficeSystem.move_to("ishani"):
+		return "the business block opened a dollar short of its up-front rent"
+	if GameState.cash != upfront - 1 or OfficeSystem.is_moving():
+		return "a refused move still moved something (cash %d, moving %s)" % [GameState.cash, OfficeSystem.is_moving()]
+	GameState.set_cash(upfront)
 	if not OfficeSystem.can_move_to("ishani"):
-		return "cheque and cash left the business block shut: %s" \
-			% str(OfficeSystem.requirement_state("ishani"))
+		return "the exact up-front left the business block shut"
 	if not OfficeSystem.move_to("ishani") or not OfficeSystem.is_moving():
 		return "move_to did not start a move"
-	if OfficeSystem.move_to("ishani"):
-		return "a second move started while the first was on the road"
+	# The up-front is paid once, when the move is decided, and shows in the transactions.
+	if GameState.cash != 0:
+		return "the move left %d in the cash, want the up-front %d gone" % [GameState.cash, upfront]
+	var paid_row: Dictionary = GameState.transactions.back()
+	if paid_row.label != "office_upfront" or int(paid_row.amount) != -upfront:
+		return "the move's transaction row is %s, want office_upfront -%d" % [str(paid_row), upfront]
+	GameState.set_cash(5 * upfront)
+	if OfficeSystem.move_to("plaza") or GameState.cash != 5 * upfront:
+		return "a second move started or charged while the first was on the road"
+	if int(FinanceSystem.burn_breakdown["office"]) != 0:
+		return "the rent runs before the company has arrived"
+	var day_rent: int = FinanceSystem.daily_rate(int(OfficeConstants.CATALOG["ishani"].rent))
+	var week_rent: int = int(TimeModel.per_tick(day_rent))
 	for i in TimeModel.ticks(OfficeConstants.MOVE_WEEKS):
 		if OfficeSystem.current() != "home":
 			return "arrived after %d tick(s), want %d" % [i, OfficeConstants.MOVE_WEEKS]
+		var before: int = GameState.cash
 		_sim_day()
+		# The fresh run has no other cost, so a tick's cash change is the rent and only the rent.
+		var took: int = before - GameState.cash
+		var want: int = week_rent if OfficeSystem.current() == "ishani" else 0
+		if took != want:
+			return "tick %d took %d from the cash, want %d: the rent starts the week the company arrives" % [i + 1, took, want]
 	if OfficeSystem.current() != "ishani" or OfficeSystem.is_moving():
 		return "after %d ticks the office is '%s' (moving: %s)" \
 			% [OfficeConstants.MOVE_WEEKS, OfficeSystem.current(), OfficeSystem.is_moving()]
+	var before_next: int = GameState.cash
+	_sim_day()
+	if before_next - GameState.cash != week_rent:
+		return "the tick after arriving took %d, want the rent %d every week" % [before_next - GameState.cash, week_rent]
 	if OfficeSystem.can_move_to("home"):
 		return "the flat is offered as a way back"
 
@@ -20100,6 +20125,13 @@ static func _case_office_move_gates_and_save() -> String:
 		return done.call("apply_loaded_state returned false")
 	if OfficeSystem.current() != "ishani":
 		return done.call("the save loaded back into '%s'" % OfficeSystem.current())
+	if int(FinanceSystem.burn_breakdown["office"]) != day_rent:
+		return done.call("the loaded run carries a rent of %d a day, want %d" % [int(FinanceSystem.burn_breakdown["office"]), day_rent])
+	# A save from before the rent stood in the office with an empty office line: its first tick writes the rent.
+	FinanceSystem.set_burn_category("office", 0)
+	_sim_day()
+	if int(FinanceSystem.burn_breakdown["office"]) != day_rent:
+		return done.call("an office save with no rent line did not pay it on its first tick")
 
 	# The same file aged to v12: the office fields gone, the schema explicit.
 	for k in ["office_id", "office_move_to", "office_move_day", "mentor_line_key", "mentor_line_args"]:
@@ -20112,10 +20144,76 @@ static func _case_office_move_gates_and_save() -> String:
 		w.close()
 		var state: Dictionary = SaveManager.read_slot(slot).get("state", {})
 		var got: String = String(state.get("game_state", {}).get("office_id", ""))
-		var want: String = "ishani" if angel > 0 else "home"
-		if got != want:
-			return done.call("a v12 save with angel %d migrated to '%s', want '%s'" % [angel, got, want])
+		var want_office: String = "ishani" if angel > 0 else "home"
+		if got != want_office:
+			return done.call("a v12 save with angel %d migrated to '%s', want '%s'" % [angel, got, want_office])
 	return done.call("")
+
+
+## THE DESK CAP: home has none, an office hires as many as it has desks (the founder takes one). At home the 15th
+## person is hired; a company of 15 moves into the business block's 12 desks, all of them along, and cannot start a
+## search there; once desks free up the search starts and the hire fills them again; a bigger office opens it.
+##
+## FALSIFICATION: take `not OfficeSystem.hiring_closed()` out of HRSearchSystem.can_start -> the full office starts a search.
+static func _case_desk_cap_blocks_hire() -> String:
+	GameState.set_cash(1_000_000)
+	var crew: Array[String] = []
+	var seat := func(n: int) -> void:
+		for i in n:
+			var id: String = "desk_emp_%d" % crew.size()
+			crew.append(id)
+			_make_employee(id, id, HRConstants.EMPLOYEE_ROLES[crew.size() % HRConstants.EMPLOYEE_ROLES.size()], SEED_PACE, 0, 60)
+	var hire_one := func() -> bool:
+		if not HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR):
+			return false
+		GameState.day += TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS)
+		HRSearchSystem.daily_tick()
+		var hired: Character = HRSearchSystem.hire(0)
+		if hired != null:
+			crew.append(hired.id)
+		return hired != null
+	var move := func(id: String) -> bool:
+		if not OfficeSystem.move_to(id):
+			return false
+		GameState.day += TimeModel.ticks(OfficeConstants.MOVE_WEEKS)
+		OfficeSystem.daily_tick()
+		return OfficeSystem.current() == id
+
+	# At home: no cap. Founder and 13 employees are 14 people; the next hire is the 15th.
+	seat.call(13)
+	if OfficeSystem.hiring_closed() or not HRSearchSystem.can_start():
+		return "home closed the search at %d people" % OfficeSystem.desks_taken()
+	if not hire_one.call() or OfficeSystem.desks_taken() != 15:
+		return "the 15th person was not hired at home (%d at the desks)" % OfficeSystem.desks_taken()
+
+	# All 15 move into 12 desks; nobody is left behind and nobody more is hired.
+	if not move.call("ishani"):
+		return "the move into the business block failed"
+	if OfficeSystem.desks_taken() != 15 or OfficeSystem.desks_free() != 0:
+		return "the move changed the team (%d at the desks, %d free)" % [OfficeSystem.desks_taken(), OfficeSystem.desks_free()]
+	if not OfficeSystem.hiring_closed() or HRSearchSystem.can_start():
+		return "a team of 15 can start a search in 12 desks"
+	if HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR) \
+			or HRSearchSystem.get_state() != HRConstants.SEARCH_IDLE:
+		return "start_search got through a full office"
+	var warnings: Array = HRSearchSystem.preview_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR)["warnings"]
+	if warnings.size() != 1 or String(warnings[0]) == "HR_ATLAS_DESK_FULL":
+		return "a full office warns %s, want its one translated reason" % str(warnings)
+
+	# Desks free up: 15 - 4 = 11 at 12 desks leaves one, and the hire that takes it closes the office again.
+	for i in 4:
+		CharacterRegistry.remove(crew.pop_back())
+	if OfficeSystem.desks_free() != 1 or not HRSearchSystem.can_start():
+		return "one free desk did not open the search (%d free)" % OfficeSystem.desks_free()
+	if not hire_one.call() or not OfficeSystem.hiring_closed():
+		return "the hire into the last desk did not fill the office"
+
+	# A bigger office opens it again.
+	if not move.call("plaza"):
+		return "the move into Plaza failed"
+	if OfficeSystem.hiring_closed() or not HRSearchSystem.can_start():
+		return "Plaza stayed closed with %d of %d desks taken" % [OfficeSystem.desks_taken(), OfficeConstants.CATALOG["plaza"].desks]
+	return ""
 
 
 # =========================================================================

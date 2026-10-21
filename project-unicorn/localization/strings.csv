@@ -924,6 +924,9 @@ HR_HIRE_CONFIRM_BODY,Aylık {salary} ve tek seferlik {commission} komisyon. Runw
 HR_HIRE_CONFIRM_BODY_AFTER,Aylık {salary} ve tek seferlik {commission} komisyon. Runway {after}.,{salary} a month and a one-off commission of {commission}. Runway {after}.
 HR_ATLAS_CLOSE_BODY,Dosyalar kapanır. Yeni bir arayış başlatırsan adaylar {span} sonra gelir.,The files close. If you start a new search the candidates arrive in {span}.
 HR_ATLAS_CLOSE_OK,Dosyaları kapat,Close the files
+HR_ATLAS_DESK_LINE,Masa {desks} · boş {free},Desks {desks} · {free} free
+HR_ATLAS_DESK_FULL,Ofiste boş masa yok. Daha büyük bir ofise taşınınca işe alabilirsin.,There is no free desk in the office. You can hire once you move to a bigger one.
+HR_ATLAS_DESK_OFFICES,Ofisleri gör,See offices
 HR_CARD_RAISE,Zam yap,Give a raise
 HR_CARD_FIRE,İşten çıkar,Dismiss
 HR_CARD_LEAVE,İzne gönder,Send on leave
@@ -1387,8 +1390,10 @@ FIN_BURN_MARKETING,Pazarlama,Marketing
 FIN_BURN_OFFICE,Ofis,Office
 FIN_BURN_SERVERS,Sunucular,Servers
 FIN_BURN_EMPTY,Bu ay gider yok.,No expenses this month.
+FIN_OFFICE_TIP,{office} kirası · ayda {amount},{office} rent · {amount} a month
 FIN_ONETIME_BUILD,Özellik maliyeti,Feature cost
 FIN_ONETIME_VERSION,Sürüm özellikleri,Version features
+FIN_ONETIME_OFFICE,"Ofis taşınması, iki aylık peşin kira","Office move, two months' rent up front"
 FIN_MENTOR_WARNING,Mentor uyarısı,Mentor warning
 FIN_MENTOR_QUOTE,Runway {months} ayın altında. Ya gideri kıs ya geliri bul; ikisi de karar ister.,Runway is under {months} months. Cut what you spend or bring in more; either way it's a decision.
 FIN_MENTOR_QUOTE_SHUTTER,Runway diye bir şey kalmadı. Sayaç işliyor; bugün ne kestiğin önemli.,There's no runway left to speak of. The counter is running. What matters is what you cut today.
@@ -2647,13 +2652,8 @@ OFFICE_ROOM_GAMES,Oyun alanı,Games area
 OFFICE_ROOM_VP_OFFICES,VP odaları,VP offices
 OFFICE_ROOM_EXECUTIVE,Yönetim salonu,Executive room
 OFFICE_ROOM_FOUNDER_OFFICE,Kurucu ofisi,Founder's office
-OFFICE_REQ_ANGEL,Frank'in çeki alındı,Frank's cheque taken
-OFFICE_REQ_TEAM,Ekip en az {n} kişi,Team of at least {n}
-OFFICE_REQ_CASH,Kasada en az {money},At least {money} in the bank
-OFFICE_REQ_BRAND,Marka en az {n},Brand at least {n}
+OFFICE_REQ_CASH,"Peşin: {money}, iki aylık kira","Up front: {money}, two months' rent"
 OFFICE_REQ_NOW,şu an {value},now {value}
-OFFICE_REQ_NOW_CLOSED,alındı,taken
-OFFICE_REQ_NOW_OPEN,henüz değil,not yet
 OFFICE_STATUS_CURRENT,Mevcut,Current
 OFFICE_STATUS_MOVABLE,Taşınabilir,Can move
 OFFICE_STATUS_BLOCKED,Şartlar karşılanmadı,Requirements not met
@@ -2661,13 +2661,11 @@ OFFICE_MAP_TITLE,Ofis seç,Choose an office
 OFFICE_MAP_SUB,3 kademe · taşınma bir hafta sürer,3 tiers · moving takes a week
 OFFICE_MAP_LOADING,Şehir haritası hazırlanıyor,Preparing the city map
 OFFICE_MOVE_BTN,Ofisi taşı,Move the office
-OFFICE_CARD_DESKS,MASA,DESKS
 OFFICE_CARD_ROOMS,GETİRDİKLERİ,WHAT YOU GET
 OFFICE_CARD_REQS,ŞARTLAR,REQUIREMENTS
 OFFICE_CARD_CANCEL,Vazgeç,Cancel
 OFFICE_CARD_HERE,Buradasınız,You are here
 OFFICE_CARD_MOVE_GO,Buraya taşın,Move here
-OFFICE_CARD_UNMET,{n} şart karşılanmadı,{n} requirements unmet
 OFFICE_TOAST_MOVED,Yeni ofis,New office
 OFFICE_TOAST_MOVE_STARTED,Taşınma başladı,Move started
 OFFICE_HINT_SPACE,Boşluk: saati başlat,Space: start the clock
@@ -2696,6 +2694,11 @@ OFFICE_ACT_MEETING,Toplantıda,In a meeting
 OFFICE_ACT_LEAVE,Çıkıyor,Heading out
 OFFICE_MOVING_BADGE_ONE,Taşınıyor · 1 hafta,Moving · 1 week
 OFFICE_CARD_UNMET_ONE,1 şart karşılanmadı,1 requirement unmet
+OFFICE_CARD_LINE,{desks} masa · ayda {rent} kira,{desks} desks · {rent} rent a month
+OFFICE_CARD_LINE_CURRENT,{desks} masa · {taken} dolu · ayda {rent},{desks} desks · {taken} taken · {rent} a month
+OFFICE_CARD_LINE_HOME,{desks} masa · kira yok,{desks} desk · no rent
+OFFICE_MOVE_TIP,"Kira ayda {rent}, peşin {upfront}. Aylık gider {old} → {new}. Taşınma bir hafta sürer; kira taşındığın hafta başlar.","Rent is {rent} a month, {upfront} paid up front. Monthly costs {old} → {new}. The move takes a week; rent starts the week you arrive."
+OFFICE_MOVE_OVER_CAP,"Ekibin {team} kişi, bu ofiste {desks} masa var. Taşındıktan sonra bir masa boşalana ya da daha büyük bir ofise geçene kadar işe alamazsın.","Your team is {team}, this office has {desks} desks. After the move you cannot hire until a desk frees up or you move to a bigger office."
 FRANK_OFFICE_MOVE_TITLE,Taşınma vakti,Time to move
 FRANK_OFFICE_MOVE_BODY,"Frank'ten mesaj.
 

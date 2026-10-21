@@ -59,8 +59,9 @@ static func has_files_ready() -> bool:
 
 
 static func can_start() -> bool:
-	# One search at a time. Deliberately NOT an affordability check (§10 — the search is free).
-	return get_state() == HRConstants.SEARCH_IDLE
+	# One search at a time, and a desk for the hire: an office hires as many as it has desks, home has
+	# no cap. Deliberately NOT an affordability check (§10 — the search is free).
+	return get_state() == HRConstants.SEARCH_IDLE and not OfficeSystem.hiring_closed()
 
 
 static func get_files() -> Array:
@@ -95,7 +96,8 @@ static func current_level() -> int:
 
 static func start_search(role_id: String, level: int) -> bool:
 	if not can_start():
-		push_warning("[HRSearchSystem] start_search while state is '%s' — one search at a time" % get_state())
+		push_warning("[HRSearchSystem] start_search refused (state '%s', office full: %s)" % [get_state(),
+			OfficeSystem.hiring_closed()])
 		return false
 	if not HRConstants.is_employee_role(role_id):
 		push_warning("[HRSearchSystem] start_search with non-employee role '%s'" % role_id)
@@ -200,8 +202,10 @@ static func preview_search(role_id: String, level: int) -> Dictionary:
 	# role's monthly salary band there and the commission at each end of it. The concrete salary,
 	# its hours and the runway belong to preview_hire.
 	var warnings: Array[String] = []
-	if not can_start():
+	if get_state() != HRConstants.SEARCH_IDLE:
 		warnings.append(TranslationServer.translate("HR_WARN_SEARCH_OPEN"))
+	elif OfficeSystem.hiring_closed():
+		warnings.append(TranslationServer.translate("HR_ATLAS_DESK_FULL"))
 	var band: Array = HRConstants.salary_band_for_level(role_id, level)
 	return {
 		"can_start": can_start(),

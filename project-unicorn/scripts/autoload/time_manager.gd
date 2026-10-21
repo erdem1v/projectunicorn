@@ -404,9 +404,10 @@ func _dispatch_daily_tick() -> void:
 	# After the last reader of the week's pace (sprint, support, R&D, the customer desk).
 	CharacterRegistry.prune_productivity_mods()
 	RivalRegistry.advance_all()
-	FinanceSystem.daily_tick()
-	# A move lands before the event slot, so a card reading office.current sees today's office.
+	# A move lands (and the rent is written) before Finance pulls the week's burn, so the week of arrival pays
+	# the new rent, and before the event slot, so a card reading office.current sees today's office.
 	OfficeSystem.daily_tick()
+	FinanceSystem.daily_tick()
 	# Gate latches run after Finance (MRR and brand must be settled) and BEFORE the event slot:
 	# `funding.gate_traction` / `funding.seed_door` read the ratchets set here, and evaluated
 	# after the engine the card would arrive the morning after its own condition.

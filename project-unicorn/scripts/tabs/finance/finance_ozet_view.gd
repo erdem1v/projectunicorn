@@ -391,7 +391,12 @@ func _refresh_burn() -> void:
 	var grid := _share_grid(4)
 	_burn.add_child(grid)
 	for r in rows:
-		grid.add_child(SprintUiShared.label(String(r.label), &"MetaText"))
+		var item := SprintUiShared.label(String(r.label), &"MetaText")
+		if r.id == "office":
+			var here: Dictionary = OfficeConstants.CATALOG[OfficeSystem.current()]
+			item.tooltip_text = tr("FIN_OFFICE_TIP").format({"office": tr(here.name_key), "amount": Fmt.money_exact(here.rent)})
+			item.mouse_filter = Control.MOUSE_FILTER_PASS
+		grid.add_child(item)
 		grid.add_child(_share(float(r.pct) / 100.0, UiTokens.D_BAR_EMPH if r.pct == top else UiTokens.D_BAR_FILL))
 		# Kalemler günlük orandır; tutar üst barla aynı aylık hız.
 		for cell in [[Fmt.money(int(r.amount) * TimeModel.DAYS_PER_MONTH), &"MetaMuted"],

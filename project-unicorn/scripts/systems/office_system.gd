@@ -1,9 +1,9 @@
 class_name OfficeSystem
 extends RefCounted
 
-# Where the company works, and the week-long move to the next office. The state is GameState's
-# (office_id, office_move_to, office_move_day) and this is its only writer; the catalog and its
-# numbers are OfficeConstants'.
+# Where the company works, the rent it pays there and the week-long move to the next office. The state
+# is GameState's (office_id, office_move_to, office_move_day) and this is its only writer; the catalog
+# and its numbers are OfficeConstants'.
 
 
 static func current() -> String:
@@ -18,47 +18,52 @@ static func arrival_day() -> int:
 	return GameState.office_move_day
 
 
-## One row per requirement of `id`: {kind, value, ok, now}, where `now` is today's reading
-## (a bool for angel, a number for the others).
-static func requirement_state(id: String) -> Array:
-	var now := {
-		"angel": GameState.run_angel_amount > 0,
-		"team": HRSystem.headcount(),
-		"cash": GameState.cash,
-		"brand": GameState.brand,
-	}
-	var out: Array = []
-	for req: Dictionary in OfficeConstants.CATALOG[id].reqs:
-		var reading: Variant = now[req.kind]
-		var ok: bool = reading if req.kind == "angel" else reading >= req.value
-		out.append({"kind": req.kind, "value": req.value, "ok": ok, "now": reading})
-	return out
+## What a move to `id` pays now: UPFRONT_MONTHS of its rent.
+static func upfront(id: String) -> int:
+	return OfficeConstants.UPFRONT_MONTHS * int(OfficeConstants.CATALOG[id].rent)
 
 
-## Not the office already, not mid-move, never back to the flat (the design has no way home),
-## and every requirement met. Moving down a tier is allowed.
+## The desks the company takes: the founder's and every employee's (one on leave keeps theirs).
+static func desks_taken() -> int:
+	return 1 + HRSystem.headcount()
+
+
+## The free desks of the office the company works in; none when the team has outgrown it.
+static func desks_free() -> int:
+	return maxi(int(OfficeConstants.CATALOG[current()].desks) - desks_taken(), 0)
+
+
+## An office hires as many as it has desks. At home there is no cap: whoever is hired there works remotely.
+static func hiring_closed() -> bool:
+	return current() != "home" and desks_free() == 0
+
+
+## Not the office already, not mid-move, never back to the flat (the design has no way home), and the
+## cash covers the up-front rent. Moving down a tier is allowed; the whole team comes along.
 static func can_move_to(id: String) -> bool:
-	if id == current() or id == "home" or is_moving():
-		return false
-	return requirement_state(id).all(func(r: Dictionary) -> bool: return r.ok)
+	return id != current() and id != "home" and not is_moving() and GameState.cash >= upfront(id)
 
 
-## Starts the move; daily_tick lands it MOVE_WEEKS later. No money moves, so FinanceSystem's
-## "office" burn line stays 0.
+## Starts the move: the up-front rent leaves the cash now and daily_tick lands the move MOVE_WEEKS
+## later, the week the new rent starts.
 static func move_to(id: String) -> bool:
 	if not can_move_to(id):
 		return false
+	FinanceSystem.apply_one_time_cost(upfront(id), "office_upfront")
 	GameState.office_move_to = id
 	GameState.office_move_day = GameState.day + TimeModel.ticks(OfficeConstants.MOVE_WEEKS)
 	EventBus.office_move_started.emit(id, GameState.office_move_day)
 	return true
 
 
-## Lands a move on its arrival day.
+## Lands a move on its arrival day, then writes the rent of the office the company works in: Finance
+## runs after this and pulls it, so the week of arrival already pays it.
 static func daily_tick() -> void:
-	if not is_moving() or GameState.day < GameState.office_move_day:
-		return
-	GameState.office_id = GameState.office_move_to
-	GameState.office_move_to = ""
-	GameState.office_move_day = -1
-	EventBus.office_changed.emit(GameState.office_id)
+	if is_moving() and GameState.day >= GameState.office_move_day:
+		GameState.office_id = GameState.office_move_to
+		GameState.office_move_to = ""
+		GameState.office_move_day = -1
+		EventBus.office_changed.emit(GameState.office_id)
+	var rent: int = FinanceSystem.daily_rate(int(OfficeConstants.CATALOG[current()].rent))
+	if int(FinanceSystem.burn_breakdown["office"]) != rent:
+		FinanceSystem.set_burn_category("office", rent)

@@ -589,12 +589,12 @@ static func job_title(role_id: String, level: int) -> String:
 ## §9.1 maaş bantları, tek kaynak: işe alım, terfi ve zam önizlemesi buradan okur. Bantlar
 ## sınırlarda KASTEN örtüşür (güçlü junior ile zayıf orta aynı parayı isteyebilir). Aylık USD.
 const SALARY_BANDS_BY_LEVEL := {
-	"developer":       [[2000, 3000], [3000, 6000], [6000, 10000]],
-	"product_manager": [[1800, 2700], [2700, 5400], [5400, 9000]],
-	"tester":          [[1800, 2700], [2700, 5400], [5400, 9000]],
-	"designer":        [[1500, 2250], [2250, 4500], [4500, 7500]],
-	"sales_rep":       [[1500, 2250], [2250, 4500], [4500, 7500]],
-	"customer_rep":    [[1500, 2250], [2250, 4500], [4500, 7500]],
+	"developer":       [[3000, 4500], [4500, 9000], [9000, 15000]],
+	"product_manager": [[2700, 4050], [4050, 8100], [8100, 13500]],
+	"tester":          [[2700, 4050], [4050, 8100], [8100, 13500]],
+	"designer":        [[2250, 3375], [3375, 6750], [6750, 11250]],
+	"sales_rep":       [[2250, 3375], [3375, 6750], [6750, 11250]],
+	"customer_rep":    [[2250, 3375], [3375, 6750], [6750, 11250]],
 }
 
 

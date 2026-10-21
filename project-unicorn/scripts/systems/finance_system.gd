@@ -11,13 +11,13 @@ extends RefCounted
 # copy and GameState's starting daily_burn derives from it (starting_daily_burn()).
 # A category is here because a system WRITES it: salaries and overtime are daily_tick's pulls,
 # marketing is an event card's campaign (start_marketing_push), servers is InfraSystem's
-# set_burn_category, office is the rent hook (0 and unseen until a mechanic writes it;
-# get_burn_breakdown_pct skips zero rows). No invented fixed line.
+# set_burn_category, office is OfficeSystem's rent (get_burn_breakdown_pct skips zero rows). No invented
+# fixed line.
 const STARTING_BURN_BREAKDOWN := {
 	"salaries": 0,     # Overwritten every tick by pull from CharacterRegistry
 	"overtime": 0,     # Overwritten every tick by pull from WorkHoursSystem; 0 when nobody is over 8h
 	"marketing": 0,    # A card's marketing push while it runs (start_marketing_push); 0 otherwise
-	"office": 0,       # Rent hook; 0 and unseen until a mechanic writes it
+	"office": 0,       # OfficeSystem writes the rent of the office the company works in; 0 at home
 	"servers": 0,      # InfraSystem writes the monthly bill / 30 every day; 0 until the product ships
 }
 static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
@@ -37,6 +37,7 @@ const ONE_TIME_LABELS := {
 	"severance": "HR_COST_SEVERANCE",
 	"training": "HR_COST_TRAINING",
 	"rnd": "TAB_RND",
+	"office_upfront": "FIN_ONETIME_OFFICE",
 	# An event card's add_cash names one of these; EvLint refuses any other.
 	"incident": "FIN_ONETIME_INCIDENT",
 	"outage_credit": "FIN_ONETIME_OUTAGE_CREDIT",

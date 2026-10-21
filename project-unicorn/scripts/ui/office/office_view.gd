@@ -75,6 +75,12 @@ func close_map() -> void:
 		_city.close()
 
 
+## The city map, for a window that sends the player to choose an office.
+func open_map() -> void:
+	if layout.id != "city":
+		_city.open()
+
+
 ## Loads an office (or "city", the map, or "meet", the meeting room) in place of the one on
 ## screen. `road` is the map of the founder's trip: no controls, and the view takes no pointer.
 func load_layout(office_id: String, road := false) -> void:

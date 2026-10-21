@@ -45,6 +45,11 @@ extends RefCounted
 #                                           (every week a product is live: the servers the founder runs, the units
 #                                           bought, the tier, the load in whole percent, the monthly bill and whether
 #                                           Auto adjust is on)
+#   PROBE DECISION week=<w> surface=<tier|capacity|move|hire> target=<what>
+#                                           (a decision the founder takes at a surface of the game: the servers' tier
+#                                           (target = the tier) and capacity (the units they end the week on, or auto),
+#                                           a move (the office), a hire (the role whose search starts, or desks_full
+#                                           once a wanted hire waits on an office with no free desk))
 #   PROBE CHURN day=<d> id=<cid> ...        (customer_churned — the autopsy's terminal)
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
 #   PROBE LEAD  day=<d> id=<pid> arch=<archetype> sector=<sector> star=<n> phase=<p> u=<n|-> loss=<area|->
@@ -96,7 +101,8 @@ extends RefCounted
 #   PROBE END   day=<d> run_active=<b> ending=<id> finite_runway_p<1|2|3>=<finite weeks>/<weeks>
 #               min_cash_pre_seed=<n> seed_day=<n|-1> first_sign_day=<n|-1> first_revenue_day=<n|-1>
 #               cheque_day=<n|-1> open_w1_12=<n> idle_w1_12=<n> u_unexplained_weeks=<n> server_clicks=<n>
-#               auto_grows=<n> outage_eko=<n> outage_std=<n> outage_kur=<n> clause_ended=<n>
+#               auto_grows=<n> outage_eko=<n> outage_std=<n> outage_kur=<n> clause_ended=<n> first_hire_week=<n|-1>
+#               first_hire_runway=<months|-> move_weeks=<w,w,...|->
 #                                           (the weeks are the weekly STATE readings, by phase;
 #                                           seed_day is the day the seed was signed; first_revenue_day
 #                                           the first daily tick that closed with MRR; cheque_day the
@@ -106,7 +112,9 @@ extends RefCounted
 #                                           whose PROBE UFLUX counted an unexplained account; server_clicks the founder's
 #                                           Increase and Decrease presses, auto_grows the automatic increases, outage_* the
 #                                           night outages by the tier the servers were on: Economy, Standard, Enterprise;
-#                                           clause_ended the contracts the server clause ended)
+#                                           clause_ended the contracts the server clause ended; first_hire_week the tick of
+#                                           the first hire and first_hire_runway the months of that week's costs, the new
+#                                           salary in, the cash covered, revenue left out; move_weeks the ticks a move was decided on)
 #   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
 #   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn id>=<n>... ...
 #                                           (full_run*: once, the day the Series A door opens)
@@ -161,7 +169,13 @@ extends RefCounted
 ##               the reps' (the game's own pick_lead_for); with no rep he sits every lead, as the other arms do;
 ##   server    — how the founder runs the servers at each week's open: by default he presses Increase while the load is
 ##               over 90%; "lean" holds it near 95% and "wide" near 60% (pressing Decrease too, while a step would still
-##               leave the load under the line); "auto" switches Auto adjust on and never presses.
+##               leave the load under the line); "auto" switches Auto adjust on and never presses;
+##   cash      — when the first person is hired and how freely the company moves: "spend" hires once the cash covers two
+##               months of the costs the hire leaves and moves on two months of today's costs, "hoard" waits for 6.7
+##               months and never moves; every other arm hires and moves at six months. A company that moves goes up a step
+##               (the flat to the business block once the seed is in, then whenever its desks are full) once the cash
+##               covers the up-front rent and those months of today's costs; short of that it stays, and a full office
+##               hires nobody.
 const PRESETS := {
 	"b2b_reps": {}, "b2b_solo": {}, "b2b_risk": {}, "b2b_slip": {}, "b2c": {}, "b2c_neglect": {},
 	"full_run": {"subtype": "erp"},
@@ -200,11 +214,22 @@ const PRESETS := {
 	"full_run_b2c_server_lean": {"subtype": "note_tool", "server": "lean"},
 	"full_run_b2c_server_wide": {"subtype": "note_tool", "server": "wide"},
 	"full_run_b2c_server_auto": {"subtype": "note_tool", "server": "auto"},
+	"full_run_cash_spend": {"subtype": "erp", "cash": "spend"},
+	"full_run_cash_hoard": {"subtype": "erp", "cash": "hoard"},
+	"full_run_b2c_cash_spend": {"subtype": "note_tool", "cash": "spend"},
+	"full_run_b2c_cash_hoard": {"subtype": "note_tool", "cash": "hoard"},
 }
 ## The load, in percent, a manual founder holds the servers under (the default is the amber line).
 const SERVER_LINES := {"lean": 95, "wide": 60}
 ## The most presses a founder makes on the servers in one week.
 const SERVER_PRESSES := 40
+## The months of costs the cash must leave for a hire, and for the first hire by the cash arm.
+const HIRE_MONTHS := 6.0                                   # [WORKING]
+const FIRST_HIRE_MONTHS := {"spend": 2.0, "hoard": 6.7}    # [WORKING]
+## The months of today's costs the cash must keep once a move's up-front rent is paid (by the cash arm), and the office a
+## move goes up to.
+const MOVE_MONTHS := {"": 6.0, "spend": 2.0}               # [WORKING]
+const NEXT_OFFICE := {"home": "ishani", "ishani": "plaza", "plaza": "loft"}
 const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Klipo"}
 # The played run has three answer policies on one world, a controlled experiment on what
 # the event cards do to the revenue curve:
@@ -259,6 +284,11 @@ static var _auto_grows: int = 0             # PROBE END: the automatic increases
 static var _units_seen: int = 0             # the units bought at the last change of the servers
 static var _outages: Dictionary = {}        # PROBE END: tier -> night outages
 static var _clause_ended: int = 0           # PROBE END: the contracts the server clause ended
+static var _cash_arm: String = ""            # full_run*: "" | spend | hoard (see PRESETS)
+static var _first_hire_day: int = -1        # PROBE END: the tick of the first hire
+static var _first_hire_runway: float = 0.0  # PROBE END: the months of that week's costs the cash covered
+static var _move_days: Array[int] = []      # PROBE END: the ticks a move was decided on
+static var _desks_full: bool = false        # PROBE DECISION: a wanted hire is already waiting on a full office
 static var _lost_lead: Prospect = null      # PROBE REPLOSS: the lead the last reported loss took off the registry
 static var _bugs_open: int = 0              # PROBE BUGS: the open bugs at the last weekly line
 static var _bugs_cleared: int = 0           # PROBE BUGS: bugs a fix card cleared since then
@@ -332,6 +362,11 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_units_seen = 0
 	_outages = {}
 	_clause_ended = 0
+	_cash_arm = ""
+	_first_hire_day = -1
+	_first_hire_runway = 0.0
+	_move_days = []
+	_desks_full = false
 	_bugs_open = 0
 	_bugs_cleared = 0
 	ProductState.bugs_free = false
@@ -1123,18 +1158,20 @@ static func _finish() -> void:
 	var runway: Array = [1, 2, 3].map(func(ph: int) -> String:
 		var w: Vector2i = _runway_weeks.get(ph, Vector2i.ZERO)
 		return "finite_runway_p%d=%d/%d" % [ph, w.x, w.y])
-	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d u_unexplained_weeks=%d server_clicks=%d auto_grows=%d outage_eko=%d outage_std=%d outage_kur=%d clause_ended=%d" % [
+	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d u_unexplained_weeks=%d server_clicks=%d auto_grows=%d outage_eko=%d outage_std=%d outage_kur=%d clause_ended=%d first_hire_week=%d first_hire_runway=%s move_weeks=%s" % [
 		GameState.day, str(GameState.run_active), GameState.ending_id, " ".join(runway), _min_cash_pre_seed,
 		GameState.seed_closed_day, _first_sign_day, _first_revenue_day,
 		int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, -1)), _open_weeks.size(),
 		_open_weeks.filter(func(w: int) -> bool: return not _meetings_by_day.has(w)).size(), _u_unexplained_weeks,
 		_server_clicks, _auto_grows, int(_outages.get(InfraSystem.PROVIDER_LOCAL, 0)),
-		int(_outages.get(InfraSystem.PROVIDER_CLOUD, 0)), int(_outages.get(InfraSystem.PROVIDER_ENTERPRISE, 0)), _clause_ended])
+		int(_outages.get(InfraSystem.PROVIDER_CLOUD, 0)), int(_outages.get(InfraSystem.PROVIDER_ENTERPRISE, 0)), _clause_ended,
+		_first_hire_day, "%.1f" % _first_hire_runway if _first_hire_day >= 0 else "-",
+		",".join(_move_days.map(func(d: int) -> String: return str(d))) if not _move_days.is_empty() else "-"])
 	_log_hr()
 
 
 ## PROBE HR — üç sayı: kaç işe alım, aylık maaş yükü, kaç kişi §7'nin 50 bandının altında.
-## Sıfır işe alım bir hata değil bulgudur: probe'un işe alım yolu (`_hire_after_the_seed`)
+## Sıfır işe alım bir hata değil bulgudur: probe'un işe alım yolu (`_hire_the_team`)
 ## kapılıdır ve koşu İK'yı hiç egzersiz etmeyebilir.
 static func _log_hr() -> void:
 	var staff: Array[Character] = CharacterRegistry.get_employees()
@@ -1175,6 +1212,7 @@ static func _play_the_week() -> void:
 		return
 	_plan_the_sprint()
 	_take_the_seed()
+	_move_the_company()
 	if GameState.get_flag("mvp_shipped", false):
 		_run_the_servers()
 		_answer_the_clause()
@@ -1189,7 +1227,7 @@ static func _play_the_hour() -> void:
 	if not GameState.run_active or TimeManager.is_night():
 		return
 	if _full_run:
-		_hire_after_the_seed()
+		_hire_the_team()
 		_run_the_company()
 
 
@@ -1466,30 +1504,68 @@ static func _next_role() -> String:
 	return ""
 
 
-static func _hire_after_the_seed() -> void:
-	# Frank's money buys the first employee. Driven through
-	# HRSearchSystem exactly as the HR tab does it: start a search, wait for the files to
-	# arrive, hire the cheapest one.
-	if int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, 0)) <= 0:
-		return   # no cheque from Frank yet — hiring on the opening cash is a different run
+## The hires, driven through HRSearchSystem exactly as the HR tab does it: start a search, wait for the files to
+## arrive, hire the first one. A person is hired when the cash covers six months of the costs they leave (the first
+## one by the preset's cash arm); an office with no free desk starts no search, so its hires wait for a bigger office.
+static func _hire_the_team() -> void:
 	if HRSearchSystem.has_files_ready():
+		var preview: Dictionary = HRSearchSystem.preview_hire(0)
 		var hired: Character = HRSearchSystem.hire(0)
 		if hired != null:
 			_hire_started = false
+			if _first_hire_day < 0:
+				_first_hire_day = GameState.day
+				_first_hire_runway = float(GameState.cash) / float(int(preview.burn_after) * TimeModel.DAYS_PER_MONTH)
 			print("PROBE PLAY day=%d hire %s salary=%d burn=%d" % [
 				GameState.day, hired.role, hired.monthly_salary, GameState.daily_burn])
 		return
+	if OfficeSystem.hiring_closed():
+		if not _desks_full and _next_role() != "":
+			_desks_full = true
+			_decide("hire", "desks_full")
+		return
+	_desks_full = false
 	if _hire_started or not HRSearchSystem.can_start():
 		return
 	var role: String = _next_role()
 	if role == "":
 		return
-	var monthly_out: int = GameState.daily_burn * 30 + 6000 - GameState.mrr
-	if monthly_out > 0 and GameState.cash < monthly_out * 6:
+	# The month's costs with the hire in, the hire at the ceiling of the Junior band (what the first file asks at most).
+	var cost: int = GameState.daily_burn * TimeModel.DAYS_PER_MONTH \
+		+ int(HRConstants.salary_band_for_level(role, HRConstants.LEVEL_JUNIOR)[1])
+	if CharacterRegistry.get_employees().is_empty():
+		# The first hire waits for the cash alone, revenue left out: nothing has been earned yet.
+		if GameState.cash < cost * float(FIRST_HIRE_MONTHS.get(_cash_arm, HIRE_MONTHS)):
+			return
+	elif cost > GameState.mrr and GameState.cash < (cost - GameState.mrr) * HIRE_MONTHS:
 		return
 	if HRSearchSystem.start_search(role, HRConstants.LEVEL_JUNIOR):
 		_hire_started = true
 		print("PROBE PLAY day=%d start_search %s/junior" % [GameState.day, role])
+		_decide("hire", role)
+
+
+## The office, as the map's card lets a player decide it at the week's open: from the seed round on, the company goes up
+## a step when the cash covers the up-front rent and the arm's MOVE_MONTHS of today's costs (the flat, whose team has no
+## desk to outgrow, as soon as the seed is in; an office once its desks are full). The "hoard" arm never moves.
+static func _move_the_company() -> void:
+	var next: String = NEXT_OFFICE.get(OfficeSystem.current(), "")
+	if next == "" or _cash_arm == "hoard" or GameState.run_seed_amount <= 0:
+		return
+	if OfficeSystem.current() != "home" and not OfficeSystem.hiring_closed():
+		return
+	var months: float = MOVE_MONTHS.get(_cash_arm, MOVE_MONTHS[""])
+	if GameState.cash < OfficeSystem.upfront(next) + months * GameState.daily_burn * TimeModel.DAYS_PER_MONTH:
+		return
+	if OfficeSystem.move_to(next):
+		_move_days.append(GameState.day)
+		_decide("move", next)
+		print("PROBE PLAY day=%d move %s cash=%d burn=%d" % [GameState.day, next, GameState.cash, GameState.daily_burn])
+
+
+## A decision at a surface of the game, for PROBE DECISION.
+static func _decide(surface: String, target: String) -> void:
+	print("PROBE DECISION week=%d surface=%s target=%s" % [GameState.day, surface, target])
 
 
 ## The servers, as the Sunucu block lets a player run them, at the week's open: the default founder presses Increase while
@@ -1497,7 +1573,9 @@ static func _hire_after_the_seed() -> void:
 ## leave the load under it), "auto" switches Auto adjust on once and never presses. A press is a click, counted for PROBE END.
 static func _run_the_servers() -> void:
 	if _server_policy == "auto":
-		ProductState.set_infra_auto(true)
+		if not ProductState.infra_auto():
+			ProductState.set_infra_auto(true)
+			_decide("capacity", "auto")
 		return
 	var line: int = int(SERVER_LINES.get(_server_policy, InfraSystem.LOAD_AMBER))
 	var presses: int = 0
@@ -1509,6 +1587,8 @@ static func _run_the_servers() -> void:
 		InfraSystem.adjust_capacity(-1)
 		presses += 1
 	_server_clicks += presses
+	if presses > 0:
+		_decide("capacity", str(InfraSystem.units()))
 
 
 ## The server clause, as a player reads the Sunucu block's row: the move to Enterprise once the MRR of the accounts waiting on
@@ -1522,6 +1602,7 @@ static func _answer_the_clause() -> void:
 			waiting += c.mrr
 	if waiting > InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE) - InfraSystem.monthly_bill():
 		InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
+		_decide("tier", InfraSystem.PROVIDER_ENTERPRISE)
 
 
 ## The played run's operations — the things any player does once the product is live: research,
@@ -2011,6 +2092,7 @@ static func _seed_world(preset: String) -> void:
 		_core_only = bool(spec.get("core_only", false))
 		_desk = bool(spec.get("desk", false))
 		_server_policy = String(spec.get("server", ""))
+		_cash_arm = String(spec.get("cash", ""))
 		ProductState.bugs_free = _fix_arm == "off"
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log

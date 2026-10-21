@@ -187,9 +187,12 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | İş hanı | Business block | |
 | Plaza katı | Plaza floor | |
 | Depo loft | Warehouse loft | |
-| Masa | Desk | Kart hücresi MASA / DESKS. |
+| Masa | Desk | Ofis kartının satırı ve Atlas'ın başlığı (`OFFICE_CARD_LINE*`, `HR_ATLAS_DESK_LINE`: "Masa 12 · boş 3" ↔ "Desks 12 · 3 free"). |
+| Boş masa | Free desk | Atlas'ın masa satırı ve dolu ofisin uyarısı (`HR_ATLAS_DESK_LINE`, `HR_ATLAS_DESK_FULL`). |
+| Kira | Rent | Ofisin aylık bedeli (`OFFICE_CARD_LINE`, `FIN_OFFICE_TIP`); Finans'ın Ofis kalemi. |
+| Peşin | Up front | Taşınmada iki aylık kira, karar anında bir kez (`OFFICE_REQ_CASH`, `OFFICE_MOVE_TIP`, `FIN_ONETIME_OFFICE`). |
 | Taşınma | Move | Ofisin taşınması (`OFFICE_TOAST_MOVE_STARTED`, `OFFICE_MOVING_BADGE`). |
-| Şartlar | Requirements | Kart başlığı ŞARTLAR / REQUIREMENTS. |
+| Şartlar | Requirements | Kart başlığı ŞARTLAR / REQUIREMENTS; tek şart peşin kiradır. |
 | Kademe | Tier | Ürün hattının kademesi (K1–K3) de aynı çift. |
 | Taşınabilir | Can move | Kartın durum çipi. |
 | Ofisi taşı | Move the office | Ofisin sol altındaki düğme. |

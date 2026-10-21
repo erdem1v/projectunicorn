@@ -1659,8 +1659,10 @@ func _seed_goal(state: String) -> void:
 # picked; cheque the type picked (_01), then the first sprint started (_02). v1 is the founder alone on the MVP gate
 # (_seed_product_live's gate), v1.0 published (_01), then Ar-Ge opened (_02).
 # card_ishani / card_home (city only) = the company still in the flat, İş hanı's / the flat's card
-# open; card_tick (city only) = Plaza's card open through one daily tick: a _before frame, and an
-# OFFICECARD line with the cash reading the card draws before and after.
+# open; card_over (city only) = the same flat with fourteen on the roster, İş hanı's card telling a team of fifteen what
+# twelve desks mean; card_here (city only) = the company in İş hanı, its own card (desks taken, rent); card_tick (city
+# only) = Plaza's card open through one daily tick: a _before frame, and an OFFICECARD line with the cash reading the
+# card draws before and after.
 # desk_shut = a live B2C product, the founder on the build, nobody at the support desk, seven open bugs on two
 # lines: the DESTEK card's one line (_01), then a click on it: the Product window on the worst line's area (_02).
 # With --pan / --pan-gpu (OFFICE_PAN) the shot is handed over after the extra: the camera moves by pixel
@@ -1682,9 +1684,11 @@ func _run_office_shot(spec: String) -> void:
 	# Debug path: the shot writes the office straight past OfficeSystem. The map and the meeting
 	# room are no office: the company sits in a real one, which the map's pin and chips read.
 	GameState.office_id = "ishani" if office_id in OfficeLayout.AWAY else office_id
-	if extra in ["card_ishani", "card_home"]:
+	if extra in ["card_ishani", "card_home", "card_over"]:
 		# The flat's card, and İş hanı's as the move out of it: the company still lives in the flat.
 		GameState.office_id = "home"
+		if extra == "card_over":
+			OfficeCrowdProbe.seed_staff(9)
 	GameState.set_current_hour(hour)
 	TimeManager.sync_to_current_hour()
 	if extra == "crowd40":
@@ -1715,11 +1719,13 @@ func _run_office_shot(spec: String) -> void:
 			city.debug_pick("plaza")
 		"card_ishani", "card_home":
 			city.debug_pick(extra.trim_prefix("card_"))
+		"card_over", "card_here":
+			city.debug_pick("ishani")
 		"card_tick":
 			city.debug_pick("plaza")
 			# Today's cash as the card's reading draws it, if one of its labels does.
 			var on_card := func() -> String:
-				var now: String = tr("OFFICE_REQ_NOW").format({"value": UiTokens.format_money(GameState.cash)})
+				var now: String = tr("OFFICE_REQ_NOW").format({"value": Fmt.money_exact(GameState.cash)})
 				return now if city._card.find_children("*", "Label", true, false).any(
 					func(l: Label) -> bool: return l.text == now) else "absent"
 			await get_tree().create_timer(1.2).timeout
@@ -3068,8 +3074,9 @@ func _audit_color(c: Color) -> String:
 #   kepenk — uyari'nin akışı, kasa eksiye düşüp kepenk sayacı bir hafta işleyene kadar: BAND 2
 #   signal — artida'nın akışı, faz 2'de ayları takvimle kapanarak dört ay artıda kapanana kadar: yatırımcı iştahı
 #            + artıda ay sayısı
-#   gider  — on saatlik mesai, MVP'nin bulut sunucusu, bir kartın pazarlama kampanyası: gider dağılımının
-#            kalemleri; son işlemlerde kartların hukuk, veri alımı ve maaş indirimi satırı
+#   gider  — on saatlik mesai, MVP'nin bulut sunucusu, İş hanı'na taşınma, bir kartın pazarlama kampanyası: gider dağılımının
+#            beş kalemi (Ofis'in ipucu `FINSHOT|office_tip=` satırında); son işlemlerde ofisin iki aylık peşin kirası, kartların
+#            hukuk, veri alımı ve maaş indirimi satırı
 #   gider_empty — taze şirket, ekip ve sunucu yok: gider dağılımının boş hâli
 func _run_finance_shot(kind: String) -> void:
 	_begin_shot()
@@ -3092,6 +3099,7 @@ func _run_finance_shot(kind: String) -> void:
 		# The server the MVP opens with (SprintBridges.on_mvp), so its bill is a line.
 		InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
 		InfraSystem.set_capacity(InfraSystem.suggested_start_units())
+		OfficeSystem.move_to("ishani")   # the up-front is a transaction, the rent a line from the first tick
 	# artida: 3 imza × 20K = 60K MRR → günlük gelir 2000 > kadro burn'ü (~1500).
 	var profitable: bool = kind in ["artida", "signal"]   # LOC-DATA debug seed / id
 	var sign_mrr: int = 20000 if profitable else 1100
@@ -3113,6 +3121,7 @@ func _run_finance_shot(kind: String) -> void:
 			ProspectRegistry.remove(pr2.id)
 		if kind == "gider":   # LOC-DATA debug seed / id
 			InfraSystem.daily_tick()
+			OfficeSystem.daily_tick()
 		FinanceSystem.daily_tick()
 	if kind == "kepenk":   # LOC-DATA debug seed / id
 		# The melt goes on through the real flow until the shutter's counter has run a week.
@@ -3146,6 +3155,12 @@ func _run_finance_shot(kind: String) -> void:
 		# The fourth week's note, as a pointer resting on it shows it.
 		await get_tree().process_frame
 		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._pages.ozet._curve._hover_at(3)
+	if kind == "gider":   # LOC-DATA debug seed / id
+		# The Ofis row's tip, which a still frame cannot show.
+		await get_tree().process_frame
+		for row: Label in get_tree().get_root().find_children("*", "Label", true, false):
+			if row.text == tr("FIN_BURN_OFFICE") and row.tooltip_text != "":
+				print("FINSHOT|office_tip=%s" % row.tooltip_text)
 	await _finish_shot("finance_shot_%s" % kind)
 
 
@@ -3166,7 +3181,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 	return false
 
 
-# --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
+# --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|atlas-ofis|atlas-dolu|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
 # gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
 # dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai|izin>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
@@ -3180,6 +3195,8 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # (hr_shot_verim_dosya), her file back from a leave today, its leave row locked (hr_shot_verim_dosya_izin), the
 # founder's file (hr_shot_verim_kurucu). saatler-sprint = no roster: the founder alone
 # with a product type chosen, the hours panel's draft at 15 hours.
+# atlas = the search at home (no desk line, no strip); atlas-ofis = the company in İş hanı with free desks (the head's
+# desk line and the way to the city map); atlas-dolu = every one of its twelve desks taken (the amber line and the strip).
 # urunsuz = no roster: a developer and a customer rep, no product type yet (hr_shot_urunsuz), then the type
 # chosen (hr_shot_urunsuz_tur) and Görevler with it (hr_shot_urunsuz_tur_gorevler); each state prints
 # HRSHOT|<state>|idle=<n>|waiting=<n>.
@@ -3198,13 +3215,17 @@ func _run_hr_shot(kind: String) -> void:
 		_seed_hr_roster()
 		if kind == "kalabalik":   # LOC-DATA debug seed / id
 			OfficeCrowdProbe.seed_staff(34)
+		if kind in ["atlas-ofis", "atlas-dolu"]:   # LOC-DATA debug seed / id
+			GameState.office_id = "ishani"
+			if kind == "atlas-dolu":   # LOC-DATA debug seed / id
+				OfficeCrowdProbe.seed_staff(6)
 		# Kasa ve burn maaşları görsün: üst bar ile önizlemeler aynı gerçeği okur.
 		GameState.set_cash(240000)
 		FinanceSystem.daily_tick()
 		if kind.ends_with("-kilit"):
 			CharacterRegistry.get_employees()[0].last_raise_day = GameState.day
 	match kind:
-		"gorevler-bos", "atlas", "atlas-secili", "dosya-kurucu":   # LOC-DATA debug seed / id
+		"gorevler-bos", "atlas", "atlas-secili", "atlas-ofis", "atlas-dolu", "dosya-kurucu":   # LOC-DATA debug seed / id
 			pass
 		"saatler-sprint":   # LOC-DATA debug seed / id
 			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
@@ -3292,7 +3313,7 @@ func _run_hr_shot(kind: String) -> void:
 		_shot_fail("[HRShot] sekme gövdesi bulunamadı (get_current_page_body null)")
 		return
 	match kind:
-		"atlas", "dosyalar", "atlas-secili":   # LOC-DATA debug seed / id
+		"atlas", "dosyalar", "atlas-secili", "atlas-ofis", "atlas-dolu":   # LOC-DATA debug seed / id
 			tab.open_atlas()
 			if kind == "atlas-secili":   # LOC-DATA debug seed / id
 				var atlas: Node = get_tree().get_root().find_child("PanelLayer", true, false).get_child(-1)

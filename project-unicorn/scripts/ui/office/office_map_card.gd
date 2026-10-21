@@ -1,6 +1,6 @@
 extends PanelContainer
 
-# The office card on the city map: what an office is and brings, what it asks for today, and the
+# The office card on the city map: what an office is and brings, what its move costs today, and the
 # move. Built for one office at the top right of the view; OfficeCity builds a new one when the
 # pick or the language changes, and after every daily tick while the map is open, so today's
 # readings stay today's.
@@ -8,8 +8,6 @@ extends PanelContainer
 signal cancel_pressed
 signal move_pressed
 
-const INBOX := preload("res://scripts/ui/components/inbox.gd")
-const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
 const WIDTH := 340.0
 const THUMB_ASPECT := 1.6        # the 480x300 thumbnails
 
@@ -31,8 +29,10 @@ func _init(office_id: String) -> void:
 
 	var office: Dictionary = OfficeConstants.CATALOG[office_id]
 	var current := office_id == OfficeSystem.current()
-	var reqs: Array = OfficeSystem.requirement_state(office_id)
-	var unmet := reqs.filter(func(r: Dictionary) -> bool: return not r.ok).size()
+	# The flat is never a move target, so the card of a move is any office but this one and the flat.
+	var target := not current and office_id != "home"
+	var upfront: int = OfficeSystem.upfront(office_id)
+	var short := target and GameState.cash < upfront
 
 	var thumb := TextureRect.new()
 	thumb.texture = load("res://assets/art/office/thumb_%s.jpg" % office_id)
@@ -52,15 +52,24 @@ func _init(office_id: String) -> void:
 	if current:
 		head.add_child(UiFactory.make_pill(tr("OFFICE_STATUS_CURRENT"), UiTokens.BG_TOPBAR, UiTokens.CREAM, false))
 	else:
-		var look := UiTokens.badge_palette(&"negative" if unmet > 0 else &"positive")
-		head.add_child(UiFactory.make_pill(tr("OFFICE_STATUS_BLOCKED" if unmet > 0 else "OFFICE_STATUS_MOVABLE"),
+		var look := UiTokens.badge_palette(&"negative" if short else &"positive")
+		head.add_child(UiFactory.make_pill(tr("OFFICE_STATUS_BLOCKED" if short else "OFFICE_STATUS_MOVABLE"),
 			look.bg, look.fg, false))
 	col.add_child(UiFactory.make_label(tr(office.name_key), &"TitleSerif"))
 	var desc := UiFactory.make_label(tr(office.desc_key), &"CaptionMuted")
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(desc)
 
-	col.add_child(UiFactory.make_card(UiFactory.make_stat(tr("OFFICE_CARD_DESKS"), str(office.desks)), true))
+	var rent: String = Fmt.money_exact(office.rent)
+	var line: String
+	if office_id == "home":
+		line = tr("OFFICE_CARD_LINE_HOME").format({"desks": office.desks})
+	elif current:
+		line = tr("OFFICE_CARD_LINE_CURRENT").format({"desks": office.desks, "taken": OfficeSystem.desks_taken(),
+			"rent": rent})
+	else:
+		line = tr("OFFICE_CARD_LINE").format({"desks": office.desks, "rent": rent})
+	col.add_child(UiFactory.make_card(UiFactory.make_label(line, &"RowName"), true))
 
 	col.add_child(UiFactory.make_section_header(tr("OFFICE_CARD_ROOMS")))
 	var rooms := HFlowContainer.new()
@@ -71,10 +80,22 @@ func _init(office_id: String) -> void:
 		rooms.add_child(UiFactory.make_pill(tr(key), plain.bg, plain.fg, false))
 	col.add_child(rooms)
 
-	if not reqs.is_empty():
+	if target:
 		col.add_child(UiFactory.make_section_header(tr("OFFICE_CARD_REQS")))
-		for r: Dictionary in reqs:
-			col.add_child(_requirement_row(r))
+		col.add_child(_upfront_row(upfront))
+		var costs: int = GameState.daily_burn * TimeModel.DAYS_PER_MONTH
+		var tip := UiFactory.make_label(tr("OFFICE_MOVE_TIP").format({"rent": rent,
+			"upfront": Fmt.money_exact(upfront), "old": Fmt.money_exact(costs),
+			"new": Fmt.money_exact(costs + int(office.rent) - int(OfficeConstants.CATALOG[OfficeSystem.current()].rent))}),
+			&"CaptionMuted")
+		tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		col.add_child(tip)
+		var team: int = OfficeSystem.desks_taken()
+		if team > office.desks:
+			var over := UiFactory.make_label(tr("OFFICE_MOVE_OVER_CAP").format({"team": team, "desks": office.desks}),
+				&"CaptionMuted", UiTokens.badge_palette(&"accent").fg)
+			over.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			col.add_child(over)
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -100,7 +121,7 @@ func _init(office_id: String) -> void:
 		go.disabled = false
 		go.pressed.connect(move_pressed.emit)
 	else:
-		go.text = tr("OFFICE_CARD_UNMET_ONE") if unmet == 1 else tr("OFFICE_CARD_UNMET").format({"n": unmet})
+		go.text = tr("OFFICE_CARD_UNMET_ONE")
 	actions.add_child(go)
 
 
@@ -118,27 +139,14 @@ func _fit() -> void:
 	position = Vector2(room.x - size.x - UiTokens.SPACE_XL, UiTokens.SPACE_XL)
 
 
-func _requirement_row(r: Dictionary) -> HBoxContainer:
+## The row of the up-front rent: met or not against the cash today, with the cash on the right.
+func _upfront_row(upfront: int) -> HBoxContainer:
+	var ok := GameState.cash >= upfront
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	row.add_child(UiFactory.make_label("✓" if r.ok else "✗", &"RowName",
-		UiTokens.positive() if r.ok else UiTokens.negative()))
-	var text: String
-	var now: String = tr("OFFICE_REQ_NOW").format({"value": UiTokens.format_money(r.now) if r.kind == "cash" else str(r.now)})
-	match r.kind:
-		"angel":
-			# While the cheque list is open the row counts its steps, as the goal toast does.
-			var goal: Dictionary = ChequeRead.summary()
-			text = INBOX.goal_head(goal) if goal.get("list", "") == "cheque" else tr("OFFICE_REQ_ANGEL")
-			now = tr("OFFICE_REQ_NOW_CLOSED" if r.now else "OFFICE_REQ_NOW_OPEN")
-		"team":
-			text = tr("OFFICE_REQ_TEAM").format({"n": r.value})
-		"cash":
-			text = tr("OFFICE_REQ_CASH").format({"money": UiTokens.format_money(r.value)})
-		"brand":
-			text = tr("OFFICE_REQ_BRAND").format({"n": r.value})
-	var label := UiFactory.make_label(text, &"BodySerif")
+	row.add_child(UiFactory.make_label("✓" if ok else "✗", &"RowName", UiTokens.positive() if ok else UiTokens.negative()))
+	var label := UiFactory.make_label(tr("OFFICE_REQ_CASH").format({"money": Fmt.money_exact(upfront)}), &"BodySerif")
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(label)
-	row.add_child(UiFactory.make_label(now, &"RowMeta"))
+	row.add_child(UiFactory.make_label(tr("OFFICE_REQ_NOW").format({"value": Fmt.money_exact(GameState.cash)}), &"RowMeta"))
 	return row

@@ -16,6 +16,9 @@ extends "res://scripts/tabs/hr/hr_panel.gd"
 # yazar ve "İşe al" önce sorar.
 #
 # Her rakam motordan: preview_search ve preview_hire.
+#
+# Ofiste kadro (kurucu dahil) masa sayısına varınca arama başlamaz: başlıkta "Masa N · boş M" ve şehir
+# haritasına giden düğme, gövdede sarı neden şeridi. Evde sınır yoktur, ikisi de çizilmez.
 # ============================================================================
 
 ## İki adımın genişliği tasarımdan; dosya adımı üç kartı yan yana taşıyor ve pencereyi boydan örter.
@@ -34,7 +37,26 @@ func populate() -> void:
 	var agency: String = HRConstants.search_agency_name()
 	title.add_child(HRUiShared.D_mono(agency.left(1), UiTokens.D_H_BTN))
 	title.add_child(UiFactory.make_label(agency, &"TitleH2"))
+	if OfficeSystem.current() != "home":
+		_add_desks()
 	_rebuild()
+
+
+## An office's desks at the head's right, in amber once none is free, and the way to the city map.
+## Home has no cap, so it shows neither.
+func _add_desks() -> void:
+	title.add_child(spring())
+	var free: int = OfficeSystem.desks_free()
+	var line := UiFactory.make_label(tr("HR_ATLAS_DESK_LINE").format({
+		"desks": OfficeConstants.CATALOG[OfficeSystem.current()].desks, "free": free}), &"DataStrong",
+		UiTokens.D_warn() if free == 0 else null)
+	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	title.add_child(line)
+	var offices: Button = button(tr("HR_ATLAS_DESK_OFFICES"), &"SecondaryButtonSmall", _on_offices_pressed)
+	offices.icon = load("res://assets/icons/util/move.svg")
+	offices.disabled = EventGate.active_id() != ""
+	offices.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	title.add_child(offices)
 
 
 func _rebuild() -> void:
@@ -50,7 +72,10 @@ func _rebuild() -> void:
 # --- ADIM 1 · ROL + ADIM 2 · SEVİYE (11a) -----------------------------------
 
 func _build_search_step() -> void:
-	body.add_child(_step(tr("HR_ATLAS_STEP_ROLE")))
+	var full: bool = OfficeSystem.hiring_closed()
+	if full:
+		body.add_child(_desk_strip())
+	body.add_child(spaced(_step(tr("HR_ATLAS_STEP_ROLE")), UiTokens.SPACE_XL if full else 0))
 	var grid := GridContainer.new()
 	grid.columns = 3
 	# Üç eşit sütun: GridContainer boşluğu genişleyen sütunlara eşit dağıtır — şartı her
@@ -120,6 +145,28 @@ func _build_search_step() -> void:
 	var can: bool = bool(pv.get("can_start", false))
 	foot.add_child(UiFactory.make_label(String(pv.get("job_title", "")) if can else _first_warning(pv), &"MetaMuted"))
 	foot.add_child(button(cta, &"PrimaryButtonDark", _on_start_pressed if can else Callable()))
+
+
+## Every desk of the office is taken: the search cannot start, and the strip says why in the warning colour.
+func _desk_strip() -> PanelContainer:
+	var strip := PanelContainer.new()
+	strip.theme_type_variation = UiTokens.D_variation(&"TagWarnBox")
+	strip.custom_minimum_size.y = UiTokens.D_H_STRIP
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	row.add_child(UiFactory.make_glyph("res://assets/icons/util/lock.svg", UiTokens.D_ICON_ROW, UiTokens.D_warn()))
+	row.add_child(UiFactory.make_label(tr("HR_ATLAS_DESK_FULL"), &"DataText", UiTokens.D_warn()))
+	for part: Control in row.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	strip.add_child(row)
+	return strip
+
+
+## The Atlas and the window under it step aside for the city map.
+func _on_offices_pressed() -> void:
+	close()
+	EventBus.tab_changed.emit("")
+	get_tree().call_group(&"office_view", &"open_map")
 
 
 ## A step's caps key with its rule running right.

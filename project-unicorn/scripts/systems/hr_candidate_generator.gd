@@ -187,10 +187,12 @@ static func _salary_trio(role_id: String, level: int, seed_value: int, top_file:
 		var steps_low: int = (low_max - band_low) / SALARY_ROUND_TO
 		low += SALARY_ROUND_TO * (_mix(seed_value, SALT_ANCHOR) % (steps_low + 1))
 
-	var high_min: int = _ceil_to(float(low) * (1.0 + HRConstants.SALARY_SPREAD_MIN_R11))
+	# The band's ceiling caps every ask, also where it sits off the rounding step (3.375).
+	var high_min: int = mini(_ceil_to(float(low) * (1.0 + HRConstants.SALARY_SPREAD_MIN_R11)), band_high)
+	# The top file's Uzman asks the ceiling itself, which no other ask may reach.
+	var ask_cap: int = _floor_to(float(band_high)) - (SALARY_ROUND_TO if top_file else 0)
 	var high_max: int = maxi(mini(
-		_floor_to(float(low) * (1.0 + HRConstants.SALARY_SPREAD_MAX_R11)),
-		_floor_to(float(band_high))), high_min)
+		_floor_to(float(low) * (1.0 + HRConstants.SALARY_SPREAD_MAX_R11)), ask_cap), high_min)
 	var steps_high: int = (high_max - high_min) / SALARY_ROUND_TO
 	var high: int = high_min + SALARY_ROUND_TO * (_mix(seed_value, SALT_SPREAD) % (steps_high + 1))
 

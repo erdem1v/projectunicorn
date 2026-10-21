@@ -137,6 +137,12 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   haftada yeni bir şey yoksa gelmez. "Yeni" bir hattın Öncelikli eşiğe varması, boşalması ya da düzeltmeyle azalması, en kötü hattın
   değişmesi ve temsilcinin yetişememesidir (cevapsız bildirim haftanın gelenlerinin beşte biri ya da fazlası, `REPORT_BEHIND_ONE_IN`
   [WORKING]); okunmamış eski rapor yenisi gelince düşer. Düğme en kötü hattın alanını Ürün SPRINT'te açar.
+- **Ofis.** Şirket Ev'de başlar (1 masa, kirasız); İş hanı 12 masa ve ayda $4.000, Plaza 38 ve $8.000, Loft 70 ve $18.000
+  (`OfficeConstants.CATALOG`, kurucu bir masa tutar). Taşınmanın tek şartı paradır: kasa iki aylık kirayı karşılar
+  (`OfficeSystem.can_move_to`); bu peşin kira karar anında bir kez düşer (`FinanceSystem.apply_one_time_cost`, kimlik
+  `office_upfront`), taşınma bir hafta sürer ve bulunulan ofisin kirası varış haftasından her tik `office` kalemine yazılır
+  (`OfficeSystem.daily_tick`, finanstan önce). Masa tavanı yalnız ofiste vardır: kadro (kurucu dahil) masaya varınca arama
+  başlamaz (`HRSearchSystem.can_start`); evde sınır yoktur ve masadan büyük ekiple taşınmak serbesttir, herkes gelir.
 - Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber
   şeridine 10. yuvada tek satır düşer; modal açılmaz. Dönem özeti oyuncunun seçtiği sıklıkta
   gelen kutusuna mesaj olarak gelir (`summary_frequency`: haftalık, aylık, çeyreklik ya da yıllık; varsayılan
@@ -269,7 +275,11 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `full_run_server_{lean,wide,auto}` ve `full_run_b2c_server_*` kollarında (anahtar `server`) kurucu sunucuyu her
   haftanın açılışında Artır ve Azalt ile yönetir ya da Otomatik ayarla'yı açar, her hafta `PROBE SERVER` basılır); `full_run*`
   botu sunucu maddesi açık hesapların MRR'ı Kurumsal'ın ek faturasını geçince Kurumsal'a geçer, `PROBE END`'in `clause_ended=`
-  alanı maddenin bitirdiği sözleşmeleri sayar).
+  alanı maddenin bitirdiği sözleşmeleri sayar; `full_run_cash_{spend,hoard}` ve `full_run_b2c_cash_*` kollarında (anahtar
+  `cash`) ilk çalışan kasa iki aylık gidere (`spend`) ya da 6,7 aylık gidere (`hoard`, hiç taşınmaz) varınca alınır, öbür kollar
+  altı ayda alır ve `full_run*` botu seed'den sonra kasa peşin kira ile bugünkü giderin altı ayını (`spend` iki ayını) karşılayınca bir
+  üst ofise taşınır; her karar `PROBE DECISION` satırıdır (masa dolu ofiste bekleyen işe alım bir kez `hire desks_full`)
+  ve `PROBE END` `first_hire_week=`, `first_hire_runway=`, `move_weeks=` basar).
   Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
@@ -298,12 +308,13 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   döner, aynı karar için sonraki Esc sistem menüsünü açar, Ekip'in üstündeki dosyanın şeridi karara döner, karar
   verilir, saat durmuş kalır, Boşluk saati sürdürür) ve kare başına `GATEFLOW` satırı basar.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
-  founders|nav|crown|cast|cheque|untyped|v1|card_ishani|card_home|card_tick|desk_shut` (`crowd40` kırk kişilik kadro,
+  founders|nav|crown|cast|cheque|untyped|v1|card_ishani|card_home|card_over|card_here|card_tick|desk_shut` (`crowd40` kırk kişilik kadro,
   `LOOKS` satırı ve dört yakın kare;
   `founders` portre ile bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest
   dizisi; `cheque` çek listesinin ilk haftası (`_01` tür seçili, `_02` ilk sprint başlamış), `untyped` aynı hafta
   tür seçilmeden, `v1` v1.0 yayınlanınca (`_01`) ve Ar-Ge açılınca (`_02`); `card_ishani` ve `card_home` yalnız
-  `city`'de, şirket Ev'de iken İş hanı'nın ve Ev'in kartı açık; `card_tick` yalnız `city`'de, Plaza'nın kartı bir günlük
+  `city`'de, şirket Ev'de iken İş hanı'nın ve Ev'in kartı açık; `card_over` aynı Ev'de on dört çalışanla İş hanı'nın kartı,
+  `card_here` şirket İş hanı'nda kendi kartı; `card_tick` yalnız `city`'de, Plaza'nın kartı bir günlük
   tikten geçer (`_before` karesi, `OFFICECARD` satırı); `desk_shut` canlı B2C, iki hatta yedi açık hata: DESTEK
   kartının tek satırı (`_01`), kartın tıklanışı ve en çok hatalı hattın alanı açık Ürün penceresi (`_02`);
   `city:<saat>:crown` kulenin tacı). `--office-shot`'a `--pan=<adım;…>` eklenirse koşu yalnız 3B görüntüyü kamera

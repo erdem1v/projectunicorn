@@ -8,7 +8,7 @@ extends Control
 
 signal move_pressed
 
-## After Frank's cheque the button breathes until the company sets off on its first move.
+## Once the seed round is signed the button breathes until the company sets off on its first move.
 const PULSE_SCALE := 1.04     # [WORKING]
 const PULSE_ALPHA := 0.8      # [WORKING]
 const PULSE_TIME := 0.9       # [WORKING] seconds each way
@@ -95,7 +95,7 @@ func _refresh() -> void:
 			UiTokens.BADGE_BG, UiTokens.BADGE_FG, false)
 		_row.add_child(_badge)
 	_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_3XL)
-	var breathe := GameState.run_angel_amount > 0 and OfficeSystem.current() == "home" and not OfficeSystem.is_moving()
+	var breathe := GameState.run_seed_amount > 0 and OfficeSystem.current() == "home" and not OfficeSystem.is_moving()
 	if breathe == (_pulse != null):
 		return
 	if not breathe:
