@@ -28,6 +28,10 @@ const RETIRED_PRODUCT_FLAGS := ["mvp_innovation", "mvp_stability", "mvp_experien
 # tab would draw the raw id; they are dropped on every load.
 const RETIRED_TRANSACTION_LABELS := ["contractor"]
 
+# The run's dates count from 2012. A save written on the 2026 calendar stores its leave years that many years too far on; a
+# year past the loaded day's own can only come from it, so every load shifts it back and a shifted year is never shifted twice.
+const OLD_CALENDAR_YEAR_SHIFT := 2026 - 2012
+
 
 # Every Resource class that can reach a save file. A `match` because a global class name is
 # not a constant expression and cannot sit in a const Dictionary.
@@ -284,6 +288,10 @@ static func restore_registries(state: Dictionary) -> void:
 			var r: Resource = res_from_dict(d as Dictionary, entry[1])
 			if r != null:
 				entry[2].insert_raw(r)
+	var year: int = int(GameState.get_date_dict().year)
+	for c in CharacterRegistry.get_all():
+		if c.leave_taken_year > year:
+			c.leave_taken_year -= OLD_CALENDAR_YEAR_SHIFT
 
 
 # System routing lives in SaveManager, not here: the systems call into this class, so a

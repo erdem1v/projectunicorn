@@ -117,6 +117,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"series_a_road_closed_when_all_funds_close": fail = _case_series_a_road_closed_when_all_funds_close()
 		"save_drops_retired_prep": fail = _case_save_drops_retired_prep()
 		"save_drops_retired_transaction_label": fail = _case_save_drops_retired_transaction_label()
+		"save_old_calendar_leave_year": fail = _case_save_old_calendar_leave_year()
 		"pivot_closes_hunt":    fail = _case_pivot_closes_hunt()
 		"meeting_during_kepenk": fail = _case_meeting_during_kepenk()
 		"seat_upsell_moves_seats": fail = _case_seat_upsell_moves_seats()
@@ -2705,6 +2706,43 @@ static func _case_save_drops_retired_transaction_label() -> String:
 	var labels: Array = GameState.transactions.map(func(row: Dictionary) -> String: return String(row.label))
 	if labels != ["hire"]:
 		return "the load left the transactions labelled %s, want only the hire row" % str(labels)
+	return ""
+
+
+## 2026 takvimiyle yazılmış kaydın izin yılı bugünkü takvimin on dört yıl ilerisindedir: yükleme onu geri alır, takvimin
+## kendi yılını (2012) ve hiç izin almamayı (0) olduğu gibi bırakır. Gerçek bir kayıt, yıllar dosyaya GÜNCEL şemada geri
+## yazılarak eskitilir (düzeltme hiçbir sürüme bağlı değil); gün 40 2012'dedir.
+##
+## FALSİFİKASYON: `SaveCodec.restore_registries`teki `leave_taken_year` düzeltmesini sil → 2026 kalır ve FAIL.
+static func _case_save_old_calendar_leave_year() -> String:
+	var slot: String = "smoke_leave_year_%d" % OS.get_process_id()
+	_seed_save_world()
+	_drain_all_modals()
+	for id in ["emp_old", "emp_same", "emp_never"]:
+		_make_employee(id, id, HRConstants.ROLE_DEVELOPER)
+	if not SaveManager.save_to_slot(slot):
+		SaveManager.delete_slot(slot)
+		return "save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key()
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	var aged := {"emp_old": 2026, "emp_same": 2012, "emp_never": 0}
+	for row in (raw["state"]["registries"]["characters"] as Array):
+		if aged.has(row["id"]):
+			row["leave_taken_year"] = aged[row["id"]]
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	SaveManager.delete_slot(slot)
+	if not bool(payload.get("ok", false)):
+		return "the aged save was refused: %s" % String(payload.get("error_key", ""))
+	if not SaveManager.apply_loaded_state(payload):
+		return "apply_loaded_state returned false"
+	var want := {"emp_old": 2012, "emp_same": 2012, "emp_never": 0}
+	for id in want:
+		var read: int = CharacterRegistry.get_character(id).leave_taken_year
+		if read != want[id]:
+			return "%s came back with leave_taken_year %d, want %d" % [id, read, want[id]]
 	return ""
 
 

@@ -171,7 +171,9 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   cümlesi B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz.
 - Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 18, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
-  varsayılan taşır. Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`). Her koşunun kimliği vardır (`GameState.run_id`, metada): yuvalar koşu başınadır (`quick_<run>`, `auto_<run>_<n>`, `manual_<n>`) ve bir koşunun oto kaydı ötekininkini ezmez. Menü koşunun olmadığı yerdir: ana menüye dönüş süreç içi `SaveManager.end_run()` ile koşuyu bitirir ve kabuğu söker.
+  varsayılan taşır. Tarih kayıtta saklanmaz, `GameState.day`'den türer; yıl tutan tek alan `Character.leave_taken_year`'dır ve
+  2026 takvimiyle yazılmış değeri `SaveCodec.restore_registries` her yüklemede geri alır (`OLD_CALENDAR_YEAR_SHIFT`).
+  Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`). Her koşunun kimliği vardır (`GameState.run_id`, metada): yuvalar koşu başınadır (`quick_<run>`, `auto_<run>_<n>`, `manual_<n>`) ve bir koşunun oto kaydı ötekininkini ezmez. Menü koşunun olmadığı yerdir: ana menüye dönüş süreç içi `SaveManager.end_run()` ile koşuyu bitirir ve kabuğu söker.
 
 ## 7. UI ve tema — UI/STYLE LAW
 1. **Sözlük `UiTokens`'ındır.** Her renk palet tablosunda adlıdır; her boyut merdivendendir (`SIZE_MICRO 9 · META 10
