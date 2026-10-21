@@ -18384,6 +18384,22 @@ static func _case_event_i7_modifier_needs_seam() -> String:
 		return "an unlabelled contribution rendered anyway (%d line(s))" % rendered.size()
 	if String((rendered[0] as Dictionary)["sign"]) != "▲":
 		return "the sign was not derived from the contribution"
+
+	# Past the cap the rest fold into one unsigned "+N more" line that carries them, largest first.
+	var deltas: Array = [0.1, -0.2, 0.3, -0.4, 0.5, -0.6]
+	var many: Array = []
+	var named: Dictionary = {}
+	for i in deltas.size():
+		many.append({"seam": "s%d" % i, "delta": deltas[i]})
+		named["s%d" % i] = "line %d" % i
+	var folded: Array = EvDice.modifier_lines(many, named)
+	var more: Dictionary = folded[-1]
+	var rest: Array = more.get("rest", [])
+	if folded.size() != 5 or more.sign != "" or more.seam != "" or not more.label.contains("2") \
+			or rest.map(func(r: Dictionary) -> String: return r.seam) != ["s1", "s0"] or rest[0].sign != "▼":
+		return "six lines did not fold into four plus a '+2' line carrying s1, s0: %s" % [folded]
+	if EvDice.modifier_lines(many.slice(0, 4), named).any(func(r: Dictionary) -> bool: return r.has("rest")):
+		return "four lines folded although they fit the cap"
 	return ""
 
 

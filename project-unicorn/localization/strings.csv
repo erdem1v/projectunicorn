@@ -2275,7 +2275,8 @@ B2B_EV_REQ_COMPLAINT_EXPIRED,{customer} kaydı kapattı. Cevap veren olmadı.,{c
 B2B_EV_REQ_FEATURE_EXPIRED,{customer} sormayı bıraktı.,{customer} stopped asking.
 B2B_EV_REQ_RENEWAL_EXPIRED,{customer} yeniledi. Bizden arayan olmadı.,{customer} renewed. Nobody from our side called.
 FIXTURE_CONCURRENT_EXPIRE,Fixture kâğıdı süresi doldu.,The fixture paper expired.
-EV_MODIFIERS_MORE,Ve daha fazlası,And more
+EV_MODIFIERS_MORE,+{n} etken daha,+{n} more factors
+EV_MODIFIERS_MORE_ONE,+{n} etken daha,+{n} more factor
 TICKER_SRC_INTERNAL,İÇERİDEN,INTERNAL
 EFFECT_PHASE_ADVANCE,Yeni evre başlar,A new phase begins
 EFFECT_PHASE_HOLD,Şimdilik aynı evrede kalırsın,You stay in this phase for now

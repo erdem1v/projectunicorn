@@ -36,7 +36,7 @@ const CHIP_BY_SEAM := {
 	"sales.warm_intro": "MEETING_CHIP_ROOM",
 	"sales.loss_reason": "MEETING_CHIP_MEMORY",
 }
-## EvDice.modifier_lines' sign → the chip's sign and tone; the folded "and more" line has none.
+## EvDice.modifier_lines' sign → the chip's sign and tone; the folded "+N more factors" line has none.
 const CHIP_SIGNS := {"▲": ["+", "pos"], "▼": ["−", "neg"]}
 
 var _prospect: Prospect
@@ -132,9 +132,11 @@ func _act1(vs: Dictionary, entries: Array, gestures: Array) -> Dictionary:
 	_view = vs
 	var value := int(round(vs.odds * 100.0))
 	var band := _band(vs.odds)
+	# The persuasion's tip lists every reason: the die's chips stop at four and the "+N more factors" line.
 	var hover := []
 	for m: Dictionary in vs.modifier_lines:
-		hover.append(("%s %s" % [m.sign, m.label]).strip_edges())
+		for r: Dictionary in m.get("rest", [m]):
+			hover.append("%s %s" % [r.sign, r.label])
 	var step := {
 		"attitude": {"value": value, "word_key": UiTokens.attitude_word_key(band), "band": band,
 			"odds_text": tr("SALES_ODDS").format({"n": value}), "hover": hover,

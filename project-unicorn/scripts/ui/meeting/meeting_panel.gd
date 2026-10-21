@@ -710,7 +710,7 @@ func _on_hover(on: bool, card: OPTION) -> void:
 	var chips := HFlowContainer.new()
 	chips.add_theme_constant_override("h_separation", UiTokens.SPACE_L)
 	chips.add_theme_constant_override("v_separation", UiTokens.SPACE_S)
-	# The folded "and more" line has no category and no sign.
+	# The folded "+N more factors" line has no category and no sign.
 	for factor: Dictionary in dice.factors:
 		var chip := SprintUiShared.column(0)
 		if factor.cat_key != "":

@@ -40,8 +40,9 @@ static func check(odds: float, event_id: String, option_id: String) -> bool:
 	return unit("check", GameState.day, event_id, option_id) < clampf(odds, 0.0, 1.0)
 
 
-## The hover list (§9.6): signed, magnitude-sorted, at most `max_lines` lines with the rest
-## folded into one. NO NUMBERS — a number turns a human moment into a spreadsheet.
+## The hover list (§9.6): signed, magnitude-sorted, at most `max_lines` lines. The rest fold into
+## one unsigned "+N more factors" line that carries them, in the same shape, as `rest`.
+## NO NUMBERS — a number turns a human moment into a spreadsheet.
 ##
 ## I7 is enforced by the shape: a contribution names a seam and `labels` supplies that seam's
 ## line, so a contribution without a label cannot render.
@@ -54,16 +55,11 @@ static func modifier_lines(contributions: Array, labels: Dictionary, max_lines: 
 				"delta": float((c as Dictionary).get("delta", 0.0))})
 	scored.sort_custom(func(a, b): return absf(a["delta"]) > absf(b["delta"]))
 
-	var out: Array = []
-	for i in scored.size():
-		if i >= max_lines:
-			out.append({"sign": "", "label": TranslationServer.translate("EV_MODIFIERS_MORE"),
-				"seam": ""})
-			break
-		var row: Dictionary = scored[i]
-		out.append({
-			"sign": "▲" if float(row["delta"]) >= 0.0 else "▼",
-			"label": row["label"],
-			"seam": row["seam"],
-		})
+	var out: Array = scored.map(func(row: Dictionary) -> Dictionary:
+		return {"sign": "▲" if row["delta"] >= 0.0 else "▼", "label": row["label"], "seam": row["seam"]})
+	if out.size() > max_lines:
+		var rest: Array = out.slice(max_lines)
+		out = out.slice(0, max_lines)
+		var more := TranslationServer.translate(Fmt.count_key("EV_MODIFIERS_MORE", rest.size()))
+		out.append({"sign": "", "label": more.format({"n": rest.size()}), "seam": "", "rest": rest})
 	return out
