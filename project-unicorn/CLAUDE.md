@@ -137,7 +137,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   haftada yeni bir şey yoksa gelmez. "Yeni" bir hattın Öncelikli eşiğe varması, boşalması ya da düzeltmeyle azalması, en kötü hattın
   değişmesi ve temsilcinin yetişememesidir (cevapsız bildirim haftanın gelenlerinin beşte biri ya da fazlası, `REPORT_BEHIND_ONE_IN`
   [WORKING]); okunmamış eski rapor yenisi gelince düşer. Düğme en kötü hattın alanını Ürün SPRINT'te açar.
-- **Ofis.** Şirket Ev'de başlar (1 masa, kirasız); İş hanı 12 masa ve ayda $4.000, Plaza 38 ve $8.000, Loft 70 ve $18.000
+- **Ofis.** Şirket Ev'de başlar (1 masa, kirasız); İş hanı 13 masa ve ayda $4.000, Plaza 38 ve $8.000, Loft 70 ve $18.000
   (`OfficeConstants.CATALOG`, kurucu bir masa tutar). Taşınmanın tek şartı paradır: kasa iki aylık kirayı karşılar
   (`OfficeSystem.can_move_to`); bu peşin kira karar anında bir kez düşer (`FinanceSystem.apply_one_time_cost`, kimlik
   `office_upfront`), taşınma bir hafta sürer ve bulunulan ofisin kirası varış haftasından her tik `office` kalemine yazılır

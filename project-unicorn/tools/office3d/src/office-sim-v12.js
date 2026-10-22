@@ -748,12 +748,10 @@ function buildA2(env) {
   toilet(g, 16.25, 0, .4); toilet(g, 18.75, 0, .4);
   RB(g, .6, .85, 1.0, 19.55, .425, 3.9, X.cabinet, .02); RB(g, .45, .05, .5, 19.55, .87, 3.9, X.ceramic, .02);
   const wcs = [16.25, 18.75].map(x => S(x, 0, 1.3, 0, 'stand', [[x, 3.4], [17.5, 4.9], [17.5, 7]]));
-  // open office: 11 desks (tools/office3d: third cluster's back-right seat added)
+  // open office: 12 desks, three identical clusters of four (tools/office3d: the third cluster's back seats added)
   const desks = [], visits = [], st = { desk: [] };
-  [7.9, 12.5, 17.1].forEach((cx, k) => {
-    const seats = [[cx - .7, 9.9, 0, -1], [cx + .7, 9.9, 0, 1]];
-    if (k < 2) seats.push([cx - .7, 12.1, PI, -1]);
-    seats.push([cx + .7, 12.1, PI, 1]);
+  [7.9, 12.5, 17.1].forEach(cx => {
+    const seats = [[cx - .7, 9.9, 0, -1], [cx + .7, 9.9, 0, 1], [cx - .7, 12.1, PI, -1], [cx + .7, 12.1, PI, 1]];
     for (const [x, z, f, side] of seats) {
       const front = f === 0, ax = cx + side * 2.3;
       desks.push(S(x, 0, z, f, 'sit', front ? [[x, 7]] : [[x, 13.2], [ax, 13.2], [ax, 7]]));

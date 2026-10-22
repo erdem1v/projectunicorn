@@ -20185,7 +20185,7 @@ static func _case_office_move_gates_and_save() -> String:
 
 
 ## THE DESK CAP: home has none, an office hires as many as it has desks (the founder takes one). At home the 15th
-## person is hired; a company of 15 moves into the business block's 12 desks, all of them along, and cannot start a
+## person is hired; a company of 15 moves into the business block's 13 desks, all of them along, and cannot start a
 ## search there; once desks free up the search starts and the hire fills them again; a bigger office opens it.
 ##
 ## FALSIFICATION: take `not OfficeSystem.hiring_closed()` out of HRSearchSystem.can_start -> the full office starts a search.
@@ -20220,13 +20220,13 @@ static func _case_desk_cap_blocks_hire() -> String:
 	if not hire_one.call() or OfficeSystem.desks_taken() != 15:
 		return "the 15th person was not hired at home (%d at the desks)" % OfficeSystem.desks_taken()
 
-	# All 15 move into 12 desks; nobody is left behind and nobody more is hired.
+	# All 15 move into 13 desks; nobody is left behind and nobody more is hired.
 	if not move.call("ishani"):
 		return "the move into the business block failed"
 	if OfficeSystem.desks_taken() != 15 or OfficeSystem.desks_free() != 0:
 		return "the move changed the team (%d at the desks, %d free)" % [OfficeSystem.desks_taken(), OfficeSystem.desks_free()]
 	if not OfficeSystem.hiring_closed() or HRSearchSystem.can_start():
-		return "a team of 15 can start a search in 12 desks"
+		return "a team of 15 can start a search in 13 desks"
 	if HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR) \
 			or HRSearchSystem.get_state() != HRConstants.SEARCH_IDLE:
 		return "start_search got through a full office"
@@ -20234,8 +20234,8 @@ static func _case_desk_cap_blocks_hire() -> String:
 	if warnings.size() != 1 or String(warnings[0]) == "HR_ATLAS_DESK_FULL":
 		return "a full office warns %s, want its one translated reason" % str(warnings)
 
-	# Desks free up: 15 - 4 = 11 at 12 desks leaves one, and the hire that takes it closes the office again.
-	for i in 4:
+	# Desks free up: 15 - 3 = 12 at 13 desks leaves one, and the hire that takes it closes the office again.
+	for i in 3:
 		CharacterRegistry.remove(crew.pop_back())
 	if OfficeSystem.desks_free() != 1 or not HRSearchSystem.can_start():
 		return "one free desk did not open the search (%d free)" % OfficeSystem.desks_free()

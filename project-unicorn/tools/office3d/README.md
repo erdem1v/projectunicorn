@@ -150,4 +150,4 @@ Sayılar 4 haneye yuvarlanır; vektörler `[x, y, z]`.
 `bake()` aynı malzemeli ve aynı gölge bayraklı en az üç mesh'i tek tampona birleştirir. En ağır
 tamponlar yuvarlak kenarlı kutulardır (kutu başına 588 üçgen): loft'ta monitör gövdeleri (`0xc6c9ce`,
 370 bin üçgen) ve `X.black` (287 bin), plaza'da aynı ikisi. İndekslemeden sonra loft 37,7 MB, plaza 18 MB,
-İş hanı 8,5 MB, ev 5,4 MB, şehir 4,3 MB. Mahallenin payı: ev +23 bin üçgen ve +1,2 MB, İş hanı +10 bin ve +0,7 MB, loft +8 bin ve +0,5 MB.
+İş hanı 8,7 MB, ev 5,4 MB, şehir 4,3 MB. Mahallenin payı: ev +23 bin üçgen ve +1,2 MB, İş hanı +10 bin ve +0,7 MB, loft +8 bin ve +0,5 MB.

@@ -1,8 +1,8 @@
 class_name OfficeConstants
 extends RefCounted
 
-# The office ladder's catalog and the rhythm of the people in it. No figure is the GDD's: each one,
-# the office design's or the people's rhythm, is a [WORKING] value awaiting the owner.
+# The office ladder's catalog and the rhythm of the people in it. No figure is the GDD's: each one
+# marked [WORKING], the office design's or the people's rhythm, awaits the owner.
 # A move's one condition is the cash for its up-front rent; the rent itself runs every week from the
 # week the company arrives.
 
@@ -28,7 +28,7 @@ const CATALOG := {
 		"tier_key": "OFFICE_TIER_ISHANI",
 		"name_key": "OFFICE_NAME_ISHANI",
 		"desc_key": "OFFICE_DESC_ISHANI",
-		"desks": 12,                        # [WORKING]
+		"desks": 13,
 		"rent": 4_000,                      # [WORKING]
 		"brand": 3,                         # [WORKING]
 		"room_keys": ["OFFICE_ROOM_OPEN_OFFICE", "OFFICE_ROOM_MEETING_ROOM",

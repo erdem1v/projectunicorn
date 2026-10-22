@@ -1747,7 +1747,7 @@ func _seed_goal(state: String) -> void:
 # (_seed_product_live's gate), v1.0 published (_01), then Ar-Ge opened (_02).
 # card_ishani / card_home (city only) = the company still in the flat, İş hanı's / the flat's card
 # open; card_over (city only) = the same flat with fourteen on the roster, İş hanı's card telling a team of fifteen what
-# twelve desks mean; card_here (city only) = the company in İş hanı, its own card (desks taken, rent); card_tick (city
+# thirteen desks mean; card_here (city only) = the company in İş hanı, its own card (desks taken, rent); card_tick (city
 # only) = Plaza's card open through one daily tick: a _before frame, and an OFFICECARD line with the cash reading the
 # card draws before and after.
 # desk_shut = a live B2C product, the founder on the build, nobody at the support desk, seven open bugs on two
@@ -3285,7 +3285,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # founder's file (hr_shot_verim_kurucu). saatler-sprint = no roster: the founder alone
 # with a product type chosen, the hours panel's draft at 15 hours.
 # atlas = the search at home (no desk line, no strip); atlas-ofis = the company in İş hanı with free desks (the head's
-# desk line and the way to the city map); atlas-dolu = every one of its twelve desks taken (the amber line and the strip).
+# desk line and the way to the city map); atlas-dolu = every one of its thirteen desks taken (the amber line and the strip).
 # urunsuz = no roster: a developer and a customer rep, no product type yet (hr_shot_urunsuz), then the type
 # chosen (hr_shot_urunsuz_tur) and Görevler with it (hr_shot_urunsuz_tur_gorevler); each state prints
 # HRSHOT|<state>|idle=<n>|waiting=<n>.
@@ -3307,7 +3307,7 @@ func _run_hr_shot(kind: String) -> void:
 		if kind in ["atlas-ofis", "atlas-dolu"]:   # LOC-DATA debug seed / id
 			GameState.office_id = "ishani"
 			if kind == "atlas-dolu":   # LOC-DATA debug seed / id
-				OfficeCrowdProbe.seed_staff(6)
+				OfficeCrowdProbe.seed_staff(OfficeSystem.desks_free())
 		# Kasa ve burn maaşları görsün: üst bar ile önizlemeler aynı gerçeği okur.
 		GameState.set_cash(240000)
 		FinanceSystem.daily_tick()

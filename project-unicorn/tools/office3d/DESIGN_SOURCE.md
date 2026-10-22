@@ -32,7 +32,7 @@ sayılır. Delta blokları `tools/office3d` işaretini taşır.
 
 | dosya | ne | neden |
 |---|---|---|
-| `office-sim-v12.js` | `buildA2` açık ofis bloğu: üçüncü kümeye arka sağ koltuk eklendi (`if (k < 2) seats.push(arka sol); seats.push(arka sağ);`; masa, ziyaret noktası, istasyon ve yürüme zinciri öbür kümelerle aynı kalıp), `maxN: 10` yerine `maxN: desks.length` (plaza ve loft gibi), yorum `10 desks` yerine `11 desks`. İş hanı 10 → 11 çalışan masası, kurucu dahil 12 | Erdem 2026-10-20 Karar 6, katalog İş hanı 12 masa (`OfficeConstants.CATALOG`); üçüncü küme yarım kalmıştı (yalnız ön iki koltuk) |
+| `office-sim-v12.js` | `buildA2` açık ofis bloğu: üçüncü küme öbür ikisi gibi dört koltuklu oldu (alındığı hâldeki `if (k < 2) seats.push(arka sol, arka sağ)` koşulu ve `forEach`'in `k` parametresi kalktı, `seats` her kümede aynı dört koltuk; masa, ziyaret noktası, istasyon ve yürüme zinciri öbür kümelerle aynı kalıp), `maxN: 10` yerine `maxN: desks.length` (plaza ve loft gibi), yorum `10 desks` yerine `12 desks, three identical clusters of four`. İş hanı 10 → 12 çalışan masası, kurucu dahil 13; bitki ve yürüme yolu yerinde kaldı | Erdem 2026-10-22 "diğer masaları duplike et" ve katalog İş hanı 13 masa (`OfficeConstants.CATALOG`; 12 çalışan ve kurucu, kurucunun odası ayrı, üç dörtlü küme çalışanların ortak alanı); üçüncü küme yarım kalmıştı |
 | `office-sim-v12.js` | `createOffice` içindeki `const H = { THREE, V, … lineMat };` nesnesi modül seviyesindeki `makeH()`'e taşındı (anahtar listesi bayt-bayt aynı); `createOffice` yerinde `const H = makeH();` çağırır | Dışa aktarma sayfası builder'ları `createOffice`'in açtığı renderer olmadan, aynı `H` ile çağırır. `makeH()` `initMats()`'ten sonra çağrılır, `createOffice`'teki sırayla aynı |
 | `office-sim-v12.js` | Dosya sonuna `setTier(t)`, `SHARED` (modül seviyesindeki paylaşılan malzemelerin tutamakları: `winMat … streetGlow`) ve `export { initMats, applyPalette, bake, buildA2, makeH, setTier, loadXbot, SHARED }` | `TIER` modülün `let`'idir, dışarıdan yazılamaz. Godot malzemeleri adla bağlar, adlar `SHARED` üzerinden verilir. Küçük resimler `loadXbot()`'un sözünü bekler |
 | `office-city-v2.js` | `const boats = [];` satırı ve tekne döngüsünde `boats.push(bt);`; dönen nesneye `frames, pin, ferry, cars, boats, wtex, facMats, crown: crownMat` | Kapanıştaki tutamaklar: düğüm adları (`frame_<id>`, `pin`, `ferry`, `car_<i>`, `boat_<i>`), su ve cephe malzemesi adları, JSON'daki araba şeritleri; kulenin tacı (`crown`), varışta parlar |
@@ -43,7 +43,7 @@ sayılır. Delta blokları `tools/office3d` işaretini taşır.
 `L.elev.panels` üzerinden zaten açıktır; kule malzemeleri `towerMat()`'ın `userData.d/n` imzasından
 bulunur.
 
-Deltalardan sonra: `office-sim-v12.js` `aa7023153b43cbaac783f714e84d733029320ad6a4e93faad0fae2cc1d0e6e2d`,
+Deltalardan sonra: `office-sim-v12.js` `80c9fa7e8b69eb23ce9a9e6e6067c35d41cbeb4055580852b5d159c5acc2155f`,
 `office-loft-v2.js` `eb7faced966c454bb72c9f27a4e0f1315487b079913db6ae35df17a225ed05cb`,
 `office-city-v2.js` `0db02b70f3878550d3cab2d22ee993f11d4a3210a04218836923a4d77114d5e8`,
 `office-meet.js` `9916f728a9d55aa20b24b6f3cce553657a7230fc595f34e2da175cc905209746`.
