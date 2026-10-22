@@ -1,0 +1,169 @@
+{
+  "subtype": "erp",
+  "_doc": "GDD URUN rev 6 §12.11 — ERP (B2B). Kanca: v1 = ön muhasebe + stok + fatura; sürümlerle tam ERP'ye büyür. K3 yönü: AI nakit akışı öngörüsü (analytics_engine). Ürün kendi adıyla anılır; küçük işletme kısaltması ne adda ne chip'te geçer.",
+  "_anchor": "line_erp_cashflow_k3 is §12.10's solo-reachable K3: research node (analytics_engine) + engineering ★2 + product ★1. It is the lightest K3 in the file by design.",
+  "_telegraph": "§12.10 ekip telegrafı: ERP 'buna ekip lazım' diyen alt-tiptir. Paylaşılan Güvenlik & Yetki K3'ü YALNIZ ERP'de yükselir (toplam Yazılım ★5 + Test ★2 kişi). Denetim izi ve şifreleme, tek başına kurucunun uzanamayacağı kademedir; iskelet ve kademe adı ortak kalır, değişen yalnız kapıdır.",
+  "shared_gate_overrides": {
+    "line_shared_security_k3": {
+      "research": "security_cert",
+      "total": [{ "area": "engineering", "stars": 5 }],
+      "person": [{ "area": "qa", "stars": 2 }]
+    }
+  },
+  "lines": [
+    {
+      "id": "line_erp_cashflow",
+      "profile": "dev",
+      "steps": [
+        {
+          "id": "line_erp_cashflow_k1",
+          "effort": 5,
+          "usage_weight": 0,
+          "requires": {}
+        },
+        {
+          "id": "line_erp_cashflow_k2",
+          "effort": 8,
+          "usage_weight": 1,
+          "requires": {
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "product", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_erp_cashflow_k3",
+          "effort": 10,
+          "usage_weight": 3,
+          "ai": true,
+          "requires": {
+            "research": "analytics_engine",
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "product", "stars": 1 }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_erp_intake",
+      "profile": "dev",
+      "steps": [
+        {
+          "id": "line_erp_intake_k1",
+          "effort": 6,
+          "usage_weight": 0,
+          "requires": {}
+        },
+        {
+          "id": "line_erp_intake_k2",
+          "effort": 8,
+          "usage_weight": 1,
+          "requires": {
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "product", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_erp_intake_k3",
+          "effort": 11,
+          "usage_weight": 3,
+          "ai": true,
+          "license_cost": 1200,
+          "requires": {
+            "research": "semantic_index",
+            "person": [{ "area": "product", "stars": 2 }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_erp_ledger",
+      "profile": "test",
+      "steps": [
+        {
+          "id": "line_erp_ledger_k1",
+          "effort": 6,
+          "usage_weight": 1,
+          "requires": {}
+        },
+        {
+          "id": "line_erp_ledger_k2",
+          "effort": 8,
+          "usage_weight": 1,
+          "license_cost": 600,
+          "requires": {
+            "person": [{ "area": "product", "stars": 2 }, { "area": "qa", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_erp_ledger_k3",
+          "effort": 11,
+          "usage_weight": 2,
+          "requires": {
+            "research": "bug_tracker",
+            "person": [{ "area": "qa", "stars": 2 }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_erp_stock",
+      "profile": "design",
+      "steps": [
+        {
+          "id": "line_erp_stock_k1",
+          "effort": 5,
+          "usage_weight": 1,
+          "requires": {}
+        },
+        {
+          "id": "line_erp_stock_k2",
+          "effort": 8,
+          "usage_weight": 1,
+          "requires": {
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "design", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_erp_stock_k3",
+          "effort": 10,
+          "usage_weight": 1,
+          "license_cost": 900,
+          "requires": {
+            "research": "design_system",
+            "person": [{ "area": "design", "stars": 2 }, { "area": "engineering", "stars": 2 }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_erp_invoicing",
+      "profile": "design",
+      "steps": [
+        {
+          "id": "line_erp_invoicing_k1",
+          "effort": 6,
+          "usage_weight": 1,
+          "requires": {
+            "person": [{ "area": "design", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_erp_invoicing_k2",
+          "effort": 7,
+          "usage_weight": 2,
+          "requires": {
+            "total": [{ "area": "engineering", "stars": 3 }],
+            "person": [{ "area": "design", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_erp_invoicing_k3",
+          "effort": 9,
+          "usage_weight": 2,
+          "requires": {
+            "research": "scalable_backend",
+            "total": [{ "area": "engineering", "stars": 4 }],
+            "person": [{ "area": "design", "stars": 1 }]
+          }
+        }
+      ]
+    }
+  ]
+}

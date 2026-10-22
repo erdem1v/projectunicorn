@@ -1,0 +1,761 @@
+{
+  "groups": [
+    {
+      "id": "kural",
+      "title": "Ekip ve sprint kuralları",
+      "lede": "D0s simülasyonunun sonuçları: 9.460 koşu, 1, 3, 6, 12, 25 ve 50 kişi. PRD'nin kelimesi kelimesine okunuşu bu yedi yerde ya kapıyı tutmuyor ya da PRD bir şey söylemiyor."
+    },
+    {
+      "id": "derinlik",
+      "title": "Derinlik kartı",
+      "lede": "Derinlik kartı K3'ü biten hatta açılan, adı elle yazılmış kart. Büyük ekibin işinin çoğu bu kartlardan gelir: 50 kişide teslimin %96'sı."
+    },
+    {
+      "id": "kapi",
+      "title": "Kapılar ve ölçek",
+      "lede": "Kapının kendisini değiştiren ya da ekonomiyi kaydıran iki ayar ve bir ölçek sorusu."
+    },
+    {
+      "id": "metin",
+      "title": "Metinlerde PRD'nin sustuğu yerler",
+      "lede": "Metinleri yazarken PRD'nin cevap vermediği altı durum. Metinlerin kendisi aşağıda, Metinler bölümünde tek tek onaylanır."
+    },
+    {
+      "id": "maket",
+      "title": "Sprint planı ekranı",
+      "lede": "Maketi kurarken seçilen yerleşimler. Kareler Maket bölümünde."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "K1",
+      "group": "kural",
+      "title": "Bir kartın kaç kişi alacağını ne belirler?",
+      "why": "Kapı tutmuyor",
+      "facts": [
+        "PRD Karar 4: en büyük aşama işine en hızlı kişi gider. Kelimesi kelimesine okununca büyüklük hem kartın kaç kişi alacağını hem kimin gideceğini belirliyor.",
+        "Bu okumada küçük kartlar ekip bulamıyor. MVP 6 kişide 6., 25 kişide 8., 50 kişide 12. haftaya kayıyor; önerilen okumada 4., 2. ve 2. hafta.",
+        "50 kişide açık hata 21,8 (önerilen okumada 13,2). Söz veren 6 kişilik ekipte vadesi gelen sözlerin %25,6'sı kaçıyor (önerilen okumada %0,3).",
+        "Önerilen okumada Karar 4 bugünkü atamadan iyi: 50 kişide haftada 514 puan (bugün 494,5), açık hata 13,2 (bugün 22,8)."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Kaç kişi alacağını plan sırası, kimin gideceğini büyüklük belirlesin",
+          "desc": "Plan sırası kartın kadrosunu doldurur; en hızlı kişi yine en büyük işe gider."
+        },
+        {
+          "id": "B",
+          "label": "PRD'deki gibi ikisini de büyüklük belirlesin",
+          "desc": "Küçük kart, büyük kartlar dolana kadar bekler."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Karar 4'ün amacını (iyi kişi büyük işe) korur, küçük kartı aç bırakmaz."
+    },
+    {
+      "id": "K2",
+      "group": "kural",
+      "title": "Birden çok PM varken hangi kartı kim hazırlar?",
+      "why": "Kapı tutmuyor",
+      "facts": [
+        "Kapı: PM almak teslimi hiçbir ekipte düşürmemeli.",
+        "PRD'nin haftalık eşlemesinde 36. kişi olarak PM almak teslimi haftada 4,3 puan düşürüyor; 100 tohumun 94'ünde eksi. PRD'deki −2,5 de yeniden üretildi.",
+        "\"Yeni PM yalnız hazırlıksız kalacak kartı alır\" cümlesini sprint sonuna kadarki kapasiteyle okuyunca fark kalmıyor: −0,3 ± 0,3.",
+        "Önerilen okumada PM yıldızı işe yarıyor: 1★'tan 5★'a teslim %19 ile %22 artıyor, kaçan hata %29 ile %35 azalıyor."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Sprint ufkuyla",
+          "desc": "Yeni PM yalnız daha iyi PM'lerin sprint sonuna kadar yetişemeyeceği kartı alır."
+        },
+        {
+          "id": "B",
+          "label": "PRD'deki gibi haftalık",
+          "desc": "PM'ler her hafta yıldız sırasıyla en büyük karttan başlar."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "PRD'nin cümlesini değiştirmiyor, yalnız \"hazırlıksız kalacak\"ı sprint sonuna kadar okuyor; kapıyı tutuyor."
+    },
+    {
+      "id": "K3",
+      "group": "kural",
+      "title": "\"Yalnız bitecek kartlar, en çok bir devreden\" kuralı kalsın mı?",
+      "why": "Kapı tutmuyor",
+      "facts": [
+        "Sabit 2 haftalık sprintte bu kural planı yarıdan fazla boşaltıyor: plan doluluğu %34 ile %57.",
+        "Teslim 12, 25 ve 50 kişide %40, %46 ve %48 düşüyor; boşta kalma %30 ile %48.",
+        "\"Sprintte en çok bir talep\" kuralı ayrı ve kalıyor.",
+        "Kural kalkarsa ekibin sprint ortasında çektiği kart için de \"en çok bir devreden\" kalkar. Etkisi yalnız tek kurucuda görünür: sprintte 0,2 kart."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Kalksın",
+          "desc": "Plan ekibin kapasitesi kadar dolar; \"en çok bir talep\" kalır."
+        },
+        {
+          "id": "B",
+          "label": "Kalsın",
+          "desc": "Plan yalnız sprintte bitecek kartları alır."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "2 haftalık sprintte kural ekibin yarısını boşta bırakıyor."
+    },
+    {
+      "id": "K4",
+      "group": "kural",
+      "title": "Kadro dilimi 8 mi, 40 mı? (PRD'nin kalan sorusu 1)",
+      "why": "PRD sordu",
+      "facts": [
+        "Dilim, bir aşamaya kaç kişinin girebileceğini belirler: ihtiyacın 8'de biri kadar kişi, en az 1.",
+        "40'ta teslim 12, 25 ve 50 kişide %3,1, %5,1 ve %9,4 düşüyor; boşta kalma 2 ile 8 puan artıyor.",
+        "50 kişide kart arzının yetmediği sprintler %35'ten %55'e çıkıyor.",
+        "8'de büyük kartın her aşamasına 2 ya da 3 kişi girer, en iyiler orada toplanır."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "8",
+          "desc": "PRD'nin önerisi."
+        },
+        {
+          "id": "B",
+          "label": "40",
+          "desc": "Her aşamada genelde tek isim; okunuşu sade, büyük ekipte arz yetmez."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Ölçülen her ekipte 8 daha iyi."
+    },
+    {
+      "id": "K5",
+      "group": "kural",
+      "title": "Söz verilmiş kart atamada büyüklükten önce gelsin mi? (PRD'nin kalan sorusu 2)",
+      "why": "PRD sordu",
+      "facts": [
+        "K1'de A seçilirse fark yalnız 3 kişide: kaçan söz %20,8'den %13,6'ya iner. 6 kişi ve üstünde zaten %0.",
+        "K1'de B seçilirse şart: 3, 6 ve 12 kişide kaçan söz %36,8, %25,6 ve %14,4'ten %16,3, %0,3 ve %0'a iner.",
+        "Büyük kartın süresi değişmiyor: 50 kişide 4 hafta."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Söz ve tarihli kart önce gelsin",
+          "desc": "Öbür kartlarda büyüklük kuralı aynen işler."
+        },
+        {
+          "id": "B",
+          "label": "Önce gelmesin",
+          "desc": "Söz kartı da büyüklüğüne göre sıraya girer."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Bedeli ölçülemeyecek kadar küçük; küçük ekipte söz kaçmasını azaltıyor."
+    },
+    {
+      "id": "K6",
+      "group": "kural",
+      "title": "Testçi Geliştirme yapar mı?",
+      "why": "PRD çelişiyor",
+      "facts": [
+        "Karar 2'nin tablosu testçiye Geliştirme ve Düzeltme ×0,7 veriyor; Karar 6 \"testçi düzeltmez\" diyor.",
+        "Teslim üç kolda da hemen aynı: 6 ile 50 kişide ±%1.",
+        "Testçi Geliştirme'ye girince iyi testçinin değeri yarıya iniyor: 1★'tan 5★'a kaçan hata %62 yerine %30 azalıyor.",
+        "5★ testçili 6 kişide teslim haftada 51'den 60 puana çıkıyor ama kaçan hata iki katına çıkıyor (100 puanda 0,74'ten 1,48'e).",
+        "Testçi yıldızı kapısı (1★'tan 5★'a kaçan hata en az %40 azalmalı) yalnız A'da geçiyor."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Testçi yalnız test yapar",
+          "desc": "Testçinin ikincil alanı yok; boşta kalırsa uymayan iş kuralı işler."
+        },
+        {
+          "id": "B",
+          "label": "Geliştirme ×0,7 yapar, Düzeltme'ye girmez",
+          "desc": "Karar 6'nın okunuşu."
+        },
+        {
+          "id": "C",
+          "label": "Geliştirme ve Düzeltme ×0,7 yapar",
+          "desc": "Karar 2'nin tablosu."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Testçi yıldızı ancak böyle hissedilir; teslim değişmiyor."
+    },
+    {
+      "id": "K7",
+      "group": "kural",
+      "title": "Kurucu birden çok aşamaya uyuyorsa önce hangisine gider?",
+      "why": "PRD sessiz",
+      "facts": [
+        "Uyduğu sınıf önce (ana ya da güçlü alanı): kurucunun kendi işi en çok %8,1 düşüyor (senin sınırın %10). Ama ekip büyürken 72 adımın 2'sinde teslim artmıyor ve MVP 2 adımda 4 haftadan 8 haftaya gecikiyor.",
+        "Önce en öncelikli kartın aşaması: teslim her adımda artıyor, MVP yalnız 1 adımda gecikiyor; ama kurucunun kendi işi %19 düşüyor."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Sınıf önce",
+          "desc": "Kurucu önce güçlü alanında çalışır."
+        },
+        {
+          "id": "B",
+          "label": "Öncelikli kart önce",
+          "desc": "Kurucu boşluğu doldurur, kendi alanı geride kalabilir."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Senin \"kurucunun işi en çok %10 düşer\" kararını tutan tek okuma. Kurucu büyümesi kapısı ⚠️ olarak raporda kalır."
+    },
+    {
+      "id": "G1",
+      "group": "derinlik",
+      "title": "Derinlik kartı Q'nun oran sınırıyla nasıl yaşasın?",
+      "why": "PRD çelişiyor",
+      "facts": [
+        "Karar 13 iki şey söylüyor: kart K3'ü biten hatta açılır; oranı 1,5'e varmış alanda kart önerilmez. Q'nun sayılarıyla K3'ü biten alan zaten sınırda ya da üstünde, yani PRD'deki gibi uygulanırsa kart neredeyse hiç açılmaz.",
+        "Ölçüm, 104 hafta, 20 tohum. Boşta kalma 3 / 6 / 12 kişide: sınır kalırsa %45 / %74 / %88; sınır öneriden çıkarsa %16 / %17 / %16; kazanç sınırın dışında sayılırsa %16 / %18 / %67; alan başına en çok 8 kart olursa %19 / %62 / %88.",
+        "Sınır öneriden çıkarsa ekip doluyor, ama K3'ü bitmiş alanda kart ürün uyumunu artırmıyor: Q'nun sınırı uyumda duruyor. Kart yalnız beklenti yükselince (rakip çıkışı, B2C'de kitle büyümesi) işe yarar. Ekran sınırın üstünü zaten soluk kareyle gösteriyor.",
+        "Kazanç sınırın dışında sayılırsa her kart uyumu gerçekten artırır, ama Q'nun \"bir alana yüklenmek öbürünü kapatmaz\" kuralı delinir: Çekirdek'i doymuş, öteki alanları zayıf tipik bir 3★ hesapta uyum yalnız Çekirdek kartlarıyla 78'den 100'e çıkıyor.",
+        "Hiçbir yol 12 kişiden büyük ekibe hem dolu hem değerli iş vermiyor: ekibin zamanının en çok üçte biri değerli bir kartla geçiyor. O ölçekte iş derinlikten değil yeni hatlardan ve modüllerden (E) gelmeli."
+      ],
+      "options": [
+        {
+          "id": "a",
+          "label": "Sınır öneriden çıksın, kazanç her kartta %10 azalsın",
+          "desc": "Kartlar gelir, ekip boşta kalmaz; Q'nun kuralı korunur. Kazanç azalması PRD'de %25 (0,75), burada 0,9; onay bekliyor."
+        },
+        {
+          "id": "c",
+          "label": "Kazanç Q'nun sınırının dışında sayılsın",
+          "desc": "Alan başına 29 kart, kazanç her kartta %10 azalır. 1 ile 6 kişide her kart değerli; 12 kişide ekibin üçte ikisi boşta. Q'nun 1,5 sınırına dokunur."
+        },
+        {
+          "id": "b",
+          "label": "PRD'deki gibi sınır kalsın",
+          "desc": "Derinlik yalnız tek kurucuda anlamlı; 3 kişiden büyük ekip boşta kalır."
+        },
+        {
+          "id": "t",
+          "label": "Alan başına en çok 8 kart",
+          "desc": "Her kart değerli, 162 ad yeter; 6 kişide ekibin %62'si boşta."
+        }
+      ],
+      "rec": "a",
+      "rec_why": "Ekip 12 kişiye kadar boşta kalmıyor ve Q'nun kuralı korunuyor; kartın sınırın üstündeki katkısı ekranda soluk kare olarak dürüstçe görünüyor. 12 kişiden büyük ekibin değerli işi E'nin yeni hatlarına kalır; raporda ⚠️ olarak yazılır."
+    },
+    {
+      "id": "G2",
+      "group": "derinlik",
+      "title": "Derinlik kartının elle yazılmış adları bitince ne olsun?",
+      "why": "PRD sessiz",
+      "facts": [
+        "PRD: hat başına en az 6 elle yazılmış ad, şablon yok. Araştırma 19 hatta 162 ad buldu, hat başına yaklaşık 8.",
+        "G1'de a seçilirse 104 haftada hat başına açılan kart 3 kişide 13, 6 kişide 25, 12 kişide 47; tek hatlı iki alanda (İlk Kullanım, Entegrasyonlar) 6 kişide 41'e kadar. Adlar 3 kişiden itibaren bitiyor.",
+        "Adlar bitince kart açılmazsa her hatta yaklaşık 8 kart olur: bu, alan başına 8 kart tavanının sonucuyla aynı (6 kişide ekibin %62'si boşta)."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Ad listesi büyüsün",
+          "desc": "6 kişinin 104 haftalık tüketimine yetecek kadar: öteki hatlarda 25, tek hatlı iki alanda 40 ad, toplam yaklaşık 500. Kaynaklı araştırma ve yazım, derinlik kartının kod adımından (D8c) önce, yaklaşık 3 saat. Bitince o hatta kart açılmaz."
+        },
+        {
+          "id": "B",
+          "label": "Bugünkü 162 adla kalsın, bitince kart açılmaz",
+          "desc": "Küçük ekipte de arz daralır."
+        },
+        {
+          "id": "C",
+          "label": "Adlar bitince sıralı kart adı",
+          "desc": "Ör. \"Nakit Akışı · 9. iyileştirme\". PRD'nin \"şablon yok\" kuralına aykırı."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Demo ölçeğinde (6 ile 12 kişi) her kartın kendi adı olur; adlar biterse sonucu raporda ölçülmüş olarak görürsün."
+    },
+    {
+      "id": "G3",
+      "group": "derinlik",
+      "title": "İlk kartın kazancı g₀ = 0,25 seviye olsun mu?",
+      "why": "PRD sordu",
+      "facts": [
+        "0,25, ürün sayfasında 2★ Çekirdek'in bir karesi. İlk kart her alanda en az \"+1 kare\" yazar.",
+        "Bütün derinlik kartları birleşince bir alan en çok 1,0 seviye, yani bir kademe kadar yükselir.",
+        "İlk kart bir Çekirdek kademe kartından biraz fazla kazandırır (ürün uyumuna +7,8 puan, kademe +6,2); ikinci karttan sonra altında kalır.",
+        "0,125 ve 0,2 Çekirdek'te ilk karta yanlışlıkla \"ilk karttan az\" yazdırır; 0,5 derinliği kademenin önüne geçirir."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "0,25",
+          "desc": "Bir 2★ Çekirdek karesi."
+        },
+        {
+          "id": "B",
+          "label": "0,2",
+          "desc": "Bir Çekirdek kademe adımı; ilk kartın etiketi \"ilk karttan az\" çıkar."
+        },
+        {
+          "id": "C",
+          "label": "0,5",
+          "desc": "İki kare; derinlik kademeden güçlü olur."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Oyuncunun okuduğu \"+1 kare\" her alanda doğru çıkıyor."
+    },
+    {
+      "id": "G4",
+      "group": "derinlik",
+      "title": "Kartın etki satırı kareyi nasıl yazsın?",
+      "why": "PRD sessiz",
+      "facts": [
+        "Ekran alanın çubuğunu 10 karede gösterir; çubuk K2'den sonra çoğu alanda zaten doludur.",
+        "PRD örneği: \"Entegrasyonlar +1 kare (bu alandaki ilk karttan az)\"."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Kazançtan, aşağı yuvarlayarak",
+          "desc": "\"+N kare\"; kazanç bir karenin altındaysa \"bu alandaki ilk karttan az\"."
+        },
+        {
+          "id": "B",
+          "label": "Çubuğun gerçek farkından",
+          "desc": "Çubuk doluysa \"+0 kare\" çıkabilir."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Oyuncu kartın ne kattığını görür, çubuk dolu olsa da."
+    },
+    {
+      "id": "P1",
+      "group": "kapi",
+      "title": "Uymayan işin moral bedeli hangi bantla ölçülsün?",
+      "why": "Kapı tutmuyor",
+      "facts": [
+        "PM'i Test kutusu açık 6 kişilik ekipte 60 hafta: uymayan iş yalnız kişi boşta kalacaksa verildiğinde PM 28 moral kaybediyor (22 ile 34 arası).",
+        "PRD'nin 60 ile 90 bandı eski, koşulsuz kural içindi: koşulsuz ölçüm −98.",
+        "Uymayan işin bedeli sprint sonunda −2 moral (PRD, onay bekliyor)."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Koşullu ölçümün bandı 20 ile 35 olsun",
+          "desc": "Kapı yeni kurala göre okunur."
+        },
+        {
+          "id": "B",
+          "label": "60 ile 90 kalsın",
+          "desc": "Tutmadığı için moral bedeli yeniden ele alınır."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Koşul kaybı %71 azaltıyor; amaç da buydu."
+    },
+    {
+      "id": "P2",
+      "group": "kapi",
+      "title": "\"Kişi eklemek teslimi düşürmez\" kapısı nasıl okunsun?",
+      "why": "Ölçüm",
+      "facts": [
+        "Kapı bugün 20 tohumun ortancasına sıfır toleransla bakıyor. Tek bir adımın gürültüsü haftada 1 ile 3 puan; kapı gürültüyü yakalıyor.",
+        "Aynı tohumlarda ortalama farka bakınca 182 adımın yalnız biri gürültüden ayrılıyor: test darboğazındaki ekibe geliştirici eklemek (41'den 42 kişiye, −2,85 ± 0,83). Bu gerçek bir kusur; nedeni kod adımında (D2a) bulunup düzeltilir.",
+        "PM ekleme adımı da aynı: 100 tohumda fark yok."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Ortalama farka bak",
+          "desc": "Gürültüden ayrılan (2 standart hata) eksi adım yoksa kapı geçer."
+        },
+        {
+          "id": "B",
+          "label": "Sıfır tolerans kalsın",
+          "desc": "Kapı daha çok tohumla ölçülür."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Kapı gerçek kusuru yine yakalıyor, gürültüyü yakalamıyor."
+    },
+    {
+      "id": "P3",
+      "group": "kapi",
+      "title": "×5 puan ölçeğinde puan başına dolar bedelleri ne olsun?",
+      "why": "PRD sessiz",
+      "facts": [
+        "Kart puanları 5 katına çıkıyor. PRD bunu dört kart için yazıyor; 40 kart dosyası etkileniyor.",
+        "Puanla çarpılan dolar bedelleri (kâğıdın dışarıdan iş seçeneği, puan başına 1.000 $) aynı kalırsa aynı iş 5 kat pahalılaşır."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Puan başına bedeller 5'e bölünsün",
+          "desc": "Oyuncunun ödediği dolar bugünkü gibi kalır."
+        },
+        {
+          "id": "B",
+          "label": "Olduğu gibi kalsın",
+          "desc": "Aynı iş 5 kat pahalı olur."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Ölçek değişikliği ekonomiyi oynatmamalı."
+    },
+    {
+      "id": "T1",
+      "group": "metin",
+      "title": "Söz verilmiş kart \"Sonraki sprinte bırak\" denirse söze ne olur?",
+      "why": "PRD sessiz",
+      "facts": [
+        "PRD yalnız \"tarih kayabilir\" diyor.",
+        "Söz olayında bugün iki hamle var: sözü bir sprint ileri al (bir kez, hesabın memnuniyetine iz) ya da sözü bırak."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Söz bir sprint uzar",
+          "desc": "Söz olayındaki ek süreyle aynı bedel; ikinci kez bırakılırsa söz kırılır."
+        },
+        {
+          "id": "B",
+          "label": "Söz kırılır",
+          "desc": "Hesap sözün kırılma bedelini öder."
+        },
+        {
+          "id": "C",
+          "label": "Yalnız tarih kayar, bedel yok",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Mevcut söz kuralıyla aynı; çip sonucu yazar."
+    },
+    {
+      "id": "T2",
+      "group": "metin",
+      "title": "Testi testçi değil başkası yaptıysa gönder sorusunu kim söyler?",
+      "why": "PRD sessiz",
+      "facts": [
+        "PRD: konuşan bilinen hatayı bulan testçidir, testçi yoksa kurucunun notu.",
+        "Testi geliştirici, PM ya da tasarımcı da yapabiliyor."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Testi yapan kişi",
+          "desc": "En çok hatayı bulan söyler."
+        },
+        {
+          "id": "B",
+          "label": "Kurucunun notu",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Hatayı bulan kişi konuşur; kuralı her rolde aynı."
+    },
+    {
+      "id": "T3",
+      "group": "metin",
+      "title": "Hesap isteği kartının iş adı nereden gelsin?",
+      "why": "PRD sessiz",
+      "facts": [
+        "Kart başlığı \"{hesap} talebi: {iş}\". PRD örneği \"aylık rapor aktarımı\".",
+        "Derinlik adları hat başına elle yazıldı (19 hat, 162 ad)."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Hattın sıradaki derinlik adından",
+          "desc": "Elle yazılmış ad; şablon yok."
+        },
+        {
+          "id": "B",
+          "label": "C'nin istek verisinden",
+          "desc": "İstek kâğıdının konusu."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Ad havuzu tek kalır; istek kartı ile derinlik kartı aynı adı iki kez kullanmaz."
+    },
+    {
+      "id": "T4",
+      "group": "metin",
+      "title": "Hiçbir aşama taşmıyorken darboğaz cümlesi ne desin?",
+      "why": "PRD çelişiyor",
+      "facts": [
+        "Karar 10 \"her zaman tek cümle\" diyor, 1 kişi için \"ya da cümlesiz\" diyor.",
+        "Maket 1 kişi karesinde öneriyi kullandı; cümle olmayınca satır boş kalıyordu."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "\"Bu sprintte her aşama yetişiyor. En dolu aşama test.\"",
+          "desc": "Metin yazarının önerisi."
+        },
+        {
+          "id": "B",
+          "label": "Cümle olmasın",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Satır her ölçekte aynı yerde durur."
+    },
+    {
+      "id": "T5",
+      "group": "metin",
+      "title": "Çeyrek hedefi seçilmemişken başlık ne yazsın?",
+      "why": "PRD sessiz",
+      "facts": [
+        "Hedef yokken öneri en zayıf alana gidiyor."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "\"Bu çeyrek: en zayıf alan\"",
+          "desc": ""
+        },
+        {
+          "id": "B",
+          "label": "\"Bu çeyrek: hedef yok\"",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Önerinin ne yaptığını söylüyor."
+    },
+    {
+      "id": "T6",
+      "group": "metin",
+      "title": "Kart bilinen hatalarla gönderilince sürüm notu bunu yazsın mı?",
+      "why": "PRD sessiz",
+      "facts": [
+        "PRD'nin sürüm notunda böyle bir satır yok."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Yazsın",
+          "desc": "\"{kart} bilinen hatalarıyla çıktı: {hat} hattında {n} açık hata.\""
+        },
+        {
+          "id": "B",
+          "label": "Yazmasın",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Oyuncunun seçiminin sonucu görünür bir yere düşer."
+    },
+    {
+      "id": "U1",
+      "group": "maket",
+      "title": "12 ve 50 kişide kart listesi sığmıyor: kompakt kart olsun mu?",
+      "why": "Maket",
+      "facts": [
+        "12 kişide 6 kartın 2'si, 50 kişide 26 kartın 2'si görünüyor; geri kalanı kaydırmayla.",
+        "6 kişide üçüncü kartın yaklaşık 65 px'i kesik.",
+        "PRD'de kartı tek satıra indiren bir kip yok."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "8 kişiden sonra kompakt kart",
+          "desc": "Ad, aşama çipleri ve puan tek satırda; hazırlık ve ekip satırları ipucunda."
+        },
+        {
+          "id": "B",
+          "label": "Liste kaydırmalı kalsın",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Büyük ekipte planın tamamı bir bakışta görünür."
+    },
+    {
+      "id": "U2",
+      "group": "maket",
+      "title": "Kişi satırından aşama özetine ne zaman geçilsin?",
+      "why": "Maket",
+      "facts": [
+        "Kişi satırı 6 kişide 2, 12 kişide 4 satır tutuyor (EN'de 3 ve 5).",
+        "Özet: \"TEST · 11 kişi · 2 boşta\"."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "8 kişiden sonra özet",
+          "desc": ""
+        },
+        {
+          "id": "B",
+          "label": "Kişi satırı sığmadığında",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Eşik sabit olunca ekran ölçekte öngörülebilir değişir."
+    },
+    {
+      "id": "U3",
+      "group": "maket",
+      "title": "\"Planlamayı devret\" nerede dursun?",
+      "why": "Maket",
+      "facts": [
+        "Bugün üst denetim şeridinde bir anahtar.",
+        "Makette alt şeritte, düğmelerin solunda; nedeni ya da önerisi düğmenin hemen üstünde.",
+        "Devirdeyken \"Sprinti başlat\", \"Bu sprinti boş geçir\" ve öneri satırı gizli; yalnız \"Planlamayı geri al\" var."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Maketteki gibi alt şeritte",
+          "desc": ""
+        },
+        {
+          "id": "B",
+          "label": "Bugünkü yerinde",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Devir sprinti başlatma kararının yanında durur."
+    },
+    {
+      "id": "U4",
+      "group": "maket",
+      "title": "\"Sırada\" satırı dar mı uzun mu?",
+      "why": "Maket",
+      "facts": [
+        "Dar: \"SIRADA Stok Uyarısı · 2. haftada çekilir\" (6 ve 50 kişi kareleri).",
+        "Uzun: \"Sırada: Stok Uyarısı. Ekip 2. haftada bu kartı çeker.\" (12 kişi karesi)."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Dar",
+          "desc": "Tek satır."
+        },
+        {
+          "id": "B",
+          "label": "Uzun cümle",
+          "desc": "PRD'nin metni."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Alt şerit her satırı kart listesinden alıyor."
+    },
+    {
+      "id": "U5",
+      "group": "maket",
+      "title": "Kart ipucu hangi işi yazsın?",
+      "why": "Maket",
+      "facts": [
+        "İpucunun ihtiyaç satırı hazırlıktan önceki işi yazıyor (Toplu Fatura 12, 16 ve 10, toplam 38); kartın puan kutusu hazırlıktan sonrakini (29).",
+        "PRD örneği hazırlıktan önceki işi yazıyor."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Hazırlıktan sonraki iş",
+          "desc": "Puan kutusuyla aynı; hazırlık satırı farkı söyler."
+        },
+        {
+          "id": "B",
+          "label": "Hazırlıktan önceki iş",
+          "desc": "PRD'nin örneği."
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Aynı kartta iki farklı sayı görünmez."
+    },
+    {
+      "id": "U6",
+      "group": "maket",
+      "title": "Kadro tavanı ipucunda kaç aşama için yazılsın?",
+      "why": "Maket",
+      "facts": [
+        "12 kişide üç aşamanın tavanı birden yazılınca ipucunun ilk satırı iki satıra sarıyor."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Yalnız kartı en çok kısan aşama",
+          "desc": "\"Geliştirme en çok 2 kişi\"."
+        },
+        {
+          "id": "B",
+          "label": "Tavanı ekipten küçük her aşama",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Satır tek kalır, en önemli bilgi kalır."
+    },
+    {
+      "id": "U7",
+      "group": "maket",
+      "title": "Hesap isteği kartında \"talebi zamanında\" parçası kalksın mı?",
+      "why": "Maket",
+      "facts": [
+        "Başlık zaten \"Ege Sigorta talebi: Çoklu Entegrasyon\"; etki satırındaki \"Ege Sigorta talebi zamanında\" aynı şeyi tekrar ediyor."
+      ],
+      "options": [
+        {
+          "id": "A",
+          "label": "Kalksın",
+          "desc": ""
+        },
+        {
+          "id": "B",
+          "label": "Kalsın",
+          "desc": ""
+        }
+      ],
+      "rec": "A",
+      "rec_why": "Kart yüzü iki satırda kalır."
+    }
+  ],
+  "info": [
+    {
+      "title": "Tek hücrede tutmayan üç kapı",
+      "text": "Kurucu ve tasarımcıdan oluşan, geliştiricisiz 2 kişilik ekipte geç düzeltme payı %21,5 (sınır %20), toplam hata işi %22,6 (%20), açık hata eğimi haftada 0,2045 (0,2). 347 senaryonun geri kalanında tutuyor. Kod adımlarından sonra oyunda yeniden ölçülür."
+    },
+    {
+      "title": "Testçinin değeri",
+      "text": "Testçisiz ekibe 3★ testçi eklemek kaçan hatayı 12 kişide %15,2, 25 kişide %19 azaltıyor (kapı %20). K6'da A seçilse de kapı sınırda kalıyor; raporda ⚠️."
+    },
+    {
+      "title": "Gönder sorusunun sıklığı",
+      "text": "Bağlı kipte soru 25 ve 50 kişide sprintlerin %12'sinde ve %15'inde (sınır %10). Sayı simülasyonun söz yoğunluğu varsayımına bağlı; oyunda ölçülecek."
+    },
+    {
+      "title": "50 kişide boşta kalma",
+      "text": "En kötü hücre %17,7 (oynanış kapısı %15): 0. haftadan 50 kişi ve haftada 3 hesap. Ekip büyüyerek 50'ye varınca %6,4. Bu ölçek EA'nın."
+    },
+    {
+      "title": "Tek kurucu ve sabit 2 hafta",
+      "text": "Senin kararın (erken kapanış yok). Sınırsız arzda teslim haftada 5,1'den 4,5 puana iner, boşta kalma %14'ten %26'ya çıkar. Gerçek arzda 5,0 puan ve %10,9."
+    },
+    {
+      "title": "Kapı üstü hız basamağı bağlanmıyor",
+      "text": "Ürün GDD'sinin §12.8'indeki \"fazla Yazılım yıldızı hızı artırır\" basamağı oyunda hiç bağlanmadı. D'nin hızı kişinin yıldız eğrisinden geliyor; basamak da bağlanırsa aynı yıldız iki kez sayılır. Kod yerinde kalır, GDD'den ayrılık olarak ACIK_KARARLAR'a yazılır."
+    },
+    {
+      "title": "İkincil alan 0,7",
+      "text": "Ekip GDD'si ikincil alana 0,8 diyor, PRD Karar 2 0,7 diyor. PRD'nin 0,7'si uygulanır, ayrılık ACIK_KARARLAR'a yazılır."
+    },
+    {
+      "title": "Görevler ekranında Test kutusu",
+      "text": "Görevler ekranı bugün PM'e ve tasarımcıya Test kutusunu açmıyor. Uymayan iş kuralı bu kutuyu varsaydığı için kod adımında açılır."
+    }
+  ]
+}

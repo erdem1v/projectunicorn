@@ -1,0 +1,108 @@
+{
+ "cap": {
+  "60.0": {
+   "ok": {
+    "M3": true,
+    "M4": true,
+    "M5": false
+   }
+  },
+  "62.0": {
+   "ok": {
+    "M3": true,
+    "M4": true,
+    "M5": true
+   }
+  },
+  "64.0": {
+   "ok": {
+    "M3": true,
+    "M4": true,
+    "M5": true
+   }
+  },
+  "66.0": {
+   "ok": {
+    "M3": true,
+    "M4": true,
+    "M5": true
+   }
+  },
+  "68.0": {
+   "ok": {
+    "M3": true,
+    "M4": true,
+    "M5": true
+   }
+  },
+  "70.0": {
+   "ok": {
+    "M3": true,
+    "M4": true,
+    "M5": true
+   }
+  },
+  "80.0": {
+   "ok": {
+    "M3": true,
+    "M4": true,
+    "M5": true
+   }
+  }
+ },
+ "expect": {
+  "1.0": {
+   "stances": [
+    347,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "1.5": {
+   "stances": [
+    314,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "2.0": {
+   "stances": [
+    269,
+    8,
+    0,
+    0,
+    0
+   ]
+  }
+ },
+ "m7": {
+  "bugünkü kural: p_max 0,30; kademe çarpanı tavandan önce": {
+   "bad": 3,
+   "kur_tavan": 4.9845,
+   "kur_az": 2.72,
+   "load_ratio": 1.3305770787556377
+  },
+  "öneri a: p_max 0,45": {
+   "bad": 1,
+   "kur_tavan": 4.9845,
+   "kur_az": 2.72,
+   "load_ratio": 1.3305770787556377
+  },
+  "öneri b: p_max 0,65": {
+   "bad": 0,
+   "kur_tavan": 4.9845,
+   "kur_az": 2.72,
+   "load_ratio": 1.3305770787556377
+  },
+  "öneri c: p_max 0,30; kademe çarpanı tavandan sonra": {
+   "bad": 0,
+   "kur_tavan": 4.9845,
+   "kur_az": 2.72,
+   "load_ratio": 1.3305770787556377
+  }
+ }
+}

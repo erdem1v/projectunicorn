@@ -1,0 +1,63 @@
+# C0m · Faz C ekran maketleri (oyunun kendi arayüzüyle)
+
+Betik: `c0m_shots.gd` (giriş, `SceneTree`, `class_name` yok) ve `c0m_screens.gd` (ekranlar). Giriş betiği ekranları `_initialize`'da `load()` ile yükler: `-s` betiğinin kendi derleme turu autoload'ları çözemediği için oyun sınıflarına (`UiTokens`, `UiFactory`, `HRUiShared`, `SprintUiShared`, `WindowFrame`) bağlı kod ayrı dosyada durmak zorunda (build_theme.gd de aynı yolu izler).
+Her kare 1920×1080'lik bir `SubViewport`'ta çizilir: Ürün 1424×928, Satış 1280×760, Ekip 1352×928, Olaylar 1240×900 (`WindowLayer.SPECS`), pencere (208, 88)'de, `WindowFrame` gerçek çerçeve. Kök `menajer_theme.tres`. Yalnız `UiTokens` renkleri ve `D_*` yardımcıları; ham `Color` yok.
+Metinler `W1_METINLER.json`'dan; W1'de olmayan yalnız fikstür verisi (firma, hat, özellik adları) ve `strings.csv`'de zaten olan anahtarlar (alan adları, Yok/Zayıf/Yeterli/Güçlü, Değiştir, ofis adları) okunur. `strings.csv`'ye yazılmadı.
+Koşu: `"$GODOT" --path . --resolution 640x360 -s res://docs/tasks/faz_cde/c_taslak/C0m/c0m_shots.gd -- [--only=a,h]` (APPDATA ayrı, pencereli).
+Son koşuda `SCRIPT ERROR`, `Parse Error` ve `ERROR` satırı yok (çıkıştaki RID sızıntı uyarıları motorun `-s` çıkışındandır).
+
+Kapsam dışı kaldı: ADAYLAR sayfası, kurucu kâğıdı, destek raporu, Finans (PRD §4.6'nın öbür fikstürleri bu görevde yok); renk körü ve 1,25 ölçek kareleri (görev yalnız TR ve işaretli EN istedi).
+
+## Kareler
+
+| PNG | Ne gösterir | Fikstür | Gözlem |
+|---|---|---|---|
+| `png/c0m_a_genel_bakis_b2b.png` (+ `_en`) | Ürün · Genel Bakış B2B: Sürüm (alan satırları), Kararlılık, İstekler, İş, Sunucu | v1.4 · 3 hf önce; Çekirdek Yeterli 5, Entegrasyonlar Zayıf 2, Güven & Ölçek Yeterli 5, İlk Kullanım Güçlü 9; 7 açık hata ▲2, 1 kesinti; Fatura ve Stok hatları; Selin K.; iki istek ($1.800, $600); MRR $14.200 · 9 hesap; Sunucu Standart, 6.500 koltuk, yük %80, Kurumsal bekleyen 1 hesap | PRD örneği 3 alan satırı; 4. satır (Güçlü 9 kare) soluk kareleri göstermek için eklendi. Pencere 928 yüksek, içerik yaklaşık 590 px: altta ~200 px boş, İş bloğu sağ kolona ya da yan yana alınabilir. Taşma yok, EN'de taşma yok. |
+| `png/c0m_b_genel_bakis_b2c.png` | Genel Bakış B2C: "kullanıcı", madde satırı yok, İstekler yorum sayısıyla | v1.3; 12.800 kullanıcı, 640 ödeyen; Çekirdek Güçlü 9, İlk Kullanım Yeterli, Büyüme Zayıf, Gelir Yeterli; Eşitleme ve Arama hatları; üç istek (38, 21, 14 yorum); kapasite 16.000 kullanıcı $4.000, yük %80 | B2C alan cümlesi `PRODUCT_STAR_*` değil `PRODUCT_AUDIENCE_*` okur (kitle, şirket değil): C1'de area_sentence'ın B2C dalı bunu vermeli. B2C Standart $250 / 1.000 kullanıcıda sunucu MRR'nin %9,8'i olacak şekilde MRR $41.000 alındı. |
+| `png/c0m_c_istekler_3yildiz_yok.png` | 3★ hesap yokken İstekler tek satır | `ov.requests_no_large`; Kurumsal bekleyen satırı yok | Satır bilgi glifiyle Caption; ayrı varyasyon gerekmez. |
+| `png/c0m_d_kilit_v1_oncesi.png` | v1.0 öncesi kilit: GENEL BAKIŞ ve ÇEYREK kilitli, SPRINT açık | `D_locked_tab` ×2; ipucu "v1.0 yayınlanınca açılır." (üstüne gelinmiş) | Kilit gerekçesi bugünkü ÇEYREK gibi yalnız ipucunda; keşfedilebilirlik düşük, `D_locked_tab` belgesi "gerekçeyi yanında göster" diyor: Erdem seçsin (ipucu mu, şeritte yazı mı). Gövde SPRINT'in gerçek sayfası değil, yer tutucu (alan satırları, "Yok"). |
+| `png/c0m_e1_sunucu_yuk80.png` | Sunucu yük %80: büyüme satırı, Artır ipucu | 6.500 koltuk, $15.600, boş pay 1.300 = $3.120; büyüme 3 hf; ipucu `650 koltuk ekle · ayda $15.600 → $17.160 · yük %80 → %73` | İpucu kare için sabitlendi (gerçekte üstüne gelinince çıkar). |
+| `png/c0m_e2_sunucu_yuk94.png` | Yük %94: sarı çubuk ve uyarı, Azalt ipucu | boş pay 390 = $936; `server.warn_high` (×1,5); Azalt sonucu yük %104 | W1 metni "Yük %94. Yük %90 üstündeyken..." "Yük"ü iki kez söylüyor. Azalt, yük yetmezliğe düştüğünde `server.tip_decrease_short` ("Yük %104 olur. Kapasite yetmez.") kısa metnini okuyor; fatura satırı o zaman yok. |
+| `png/c0m_e3_sunucu_yuk104.png` | Yük %104: kırmızı çubuk, `server.warn_over` (×2,5), Azalt "yetmez" ipucu | boş pay 0 | W1'de aşımda boş pay metni yok: maket "boş pay 0 koltuk · ayda $0" yazıyor. Aşımda boş pay satırının yerine yalnız uyarı yazması daha doğru, W1'e karar gerek. |
+| `png/c0m_e4_sunucu_kademe_ipucu.png` | Kademe seçici ve kademe ipucu | `Standart · 50 koltuk başına ayda $120 · Kesinti ihtimali ×1,0 · Kurumsal sözleşme şartını karşılamaz` | PRD örneği Standart için ×0,5 diyor; C_PLAN'ın B tablosu (Ekonomik ×1,5, Standart ×1,0, Kurumsal ×0,6) ve `IncidentSystem.tier_mult` esas alındı, PRD örneği bayat görünüyor. |
+| `png/c0m_f_sunucu_anahtar_acik.png` | Anahtar açık: son otomatik büyüme satırı, Otomatik ayarla ipucu | yük %72; `Otomatik büyüme 12 Mar · 5.850 → 6.500 koltuk` | Büyüme satırı anahtar açıkken çizilmiyor, yerini son otomatik büyüme alıyor (PRD Karar 1). İpucu sağ kenara yakın; ekran kenarına sıkıştırma `clampf` ile. |
+| `png/c0m_g1_atlas_evde.png` | Atlas, evde: "Masa 1 · boş 0", "Ofisleri gör", neden şeridi, kilitli rol kartları | Ekip penceresi üstte karartılı | Şerit `AttentionStrip` (kırmızı ton): alarm gibi okunuyor, nötr bir `NoticeStrip` istenirse yeni varyasyon. Rol kartları soluk ama görünür. |
+| `png/c0m_g2_atlas_ofis_dolu.png` | Atlas, ofis dolu: "Masa 10 · boş 0" | aynı | Aynı yapı, `atlas.full` metni. |
+| `png/c0m_g3_atlas_bos_masa.png` | Atlas, boş masa var: "Masa 10 · boş 2", rol kartları açık | `HRConstants.EMPLOYEE_ROLES` | İsteğe bağlı ek kare. "Ofisleri gör" başlıkta `SecondaryButtonSmall` + `move.svg`. |
+| `png/c0m_g4_ofis_karti_evden.png` | Ofis kartı: Ev (Mevcut, `1 masa · kira yok`) ve İş hanı (Taşınabilir, `10 masa · ayda $4.000 kira`, şartlar ✓, taşın ipucu `Kira ayda $4.000. Aylık gider $120 → $4.120...`) | `OfficeConstants.CATALOG`, `office.*` | Kartlar Menajer dilinde `WindowPanel` + `D_tag` ile; gerçek `office_map_card.gd` hâlâ krem token okuyor (C-sonrası taşınmalı). Kartlar arası boşluk: gölge komşu kartı karartıyor, tek kartta sorun yok. |
+| `png/c0m_g5_ofis_karti_dolu.png` | Bulunulan ofis `10 masa · 8 dolu · ayda $4.000`; Plaza şartları: `Ekip en az 10 kişi (sen dahil)` ✗, kasa ✗, marka ✓ | Plaza $8.000 | `office.req_team` W1 metni "Ekip en az {n} kişi (sen dahil)"; PRD tablosunda "En az 10 kişi (sen dahil)": W1 uygulandı. |
+| `png/c0m_h_hesaplar.png` (+ `_en`) | Satış · HESAPLAR: KPI başlığı, ADAYLAR \| HESAPLAR, fiyat duruşu, dört görünüm sayılarıyla, firma arama, sütun başlıkları (Durum ▼ etkin), kaydırmalı liste (görünür çubuk), alt toplam | 330 hesap: 7 durumlu (her Durum etiketi), 54 yenilemesi yakın, 120 temsilcisiz (sayılar veriden); `330 hesap · 5.793 koltuk · ayda $202.755` | EN'de "Termination notice · Apr 9" etiketi 184 px istiyor (Durum sütunu); dokuz sütun 1280'de toplam ~1.250 px, ~20 px pay. `SALES_PROMISE_OPEN_SPRINT` ("Açık söz: Stok Sayacı · Sprint 9 sonuna kadar") tabloda kesiliyor: C_PLAN'ın kısa "Söz · Stok K2 · Sprint 9" biçimi W1'e girmeli. Etiket renkleri: Yenilemeyecek, Fesih, Ayrılabilir `risk`; Yenilemeyebilir, Sunucu maddesi `warn` (beş anlam iki renkte). |
+| `png/c0m_h_hesaplar_kaydirilmis.png` | 24. satıra kaydırılmış liste; başlık ve alt toplam sabit | aynı | Kaydırma çubuğu thumb'ı yaklaşık %3: 330 satırda kaydırma çubuğu tutmak zor, "Durumu olan" görünümü bu yüzden şart. |
+| `png/c0m_i_memnuniyet_ipucu.png` | Memnuniyet ipucu: başlık (61, eşik 36), terim satırları (işaretli, değer sağda), yenileme okuması, güncelleme yaşı satırı; hücrede en büyük olumsuz satırın adı ("61 · Açık hata") | Mavi Medya: uyum 63, açık hata −4, kesinti −2, söz +4 | PRD örneği toplam tutmuyordu (66 − 4 − 2 + 4 = 64, başlık 61): maket ürün uyumunu 63 aldı; metin "Ürün uyumu 66" ile sahip onayına bırakıldı. Gerçek oyunda çok satırlı ipucu için `_make_custom_tooltip` gerekir (`tooltip_text` tek metin). |
+| `png/c0m_j_satisci_raporu.png` | Satışçı raporu: Olaylar penceresinde kâğıt (konu, gönderen, gövde, 3 koltuk/ayrılma satırı, cevap seçenekleri çiplerle) | Mart yenilemeleri, 14 sözleşme; zam grubu "Kuzey Lojistik, Lale Klinik ve 8 hesap daha"; Poyraz aynı fiyat; Yelken indirim; Doruk son; Ege Gıda yenilemeyecek; `koltuk ekliyor`, `koltuk azaltıyor`, `başka ürüne geçiş` satırları; `Zam ayda $269`, `İndirim ayda $315`, `Ege Gıda ayrılır`... | Gövde 5 grup satırı + 3 sonuç satırı. W1'de rapor gövdesi için taşma satırı yok (`renew.list_more` ad listesinin sonudur); "gövde en çok 6 hesap satırı" kuralı kurucu kâğıdına ait görünüyor, satışçı raporuna nasıl uygulanacağı belirsiz: Erdem'e soru. Sonuç satırları grup satırlarından ayrı paragraf; birbirinden ayrışmıyor (ayrım için boşluk ya da hairline). Gerçek kâğıtta portre kutusu sağda durur; maket çizmedi. |
+
+## C1–C8 için UI notları
+
+**Kullanılan yardımcılar (hepsi var olan):**
+`UiFactory`: `D_kpi`, `D_seg_tabs`, `D_locked_tab`, `D_card`, `D_card_head`, `D_seg_pick`, `D_tag` (`risk`, `warn`, `pos`, `neutral`, `outline`), `D_glyph_tag`, `D_stars`, `make_glyph`, `make_label`, `make_avatar`, `make_close_button`.
+`HRUiShared`: `D_row` (hover ve seçili), `D_head`, `D_bar`, `D_mono`.
+`SprintUiShared`: `label`, `prose`, `box`, `column`, `pad`, `squares`, `word_color`, `section`, `LEVEL_KEYS`.
+`WindowFrame` (gerçek çerçeve, `frame_options`: title, kpi, pad). Varyasyonlar: `WinCtl`, `TableHead`, `TableRow`/`TableRowHover`, `SecondaryButtonSmall`, `GhostButtonSmall`, `PrimaryButtonDarkSmall`, `TooltipPanel`/`TooltipLabel`, `AttentionStrip`, `PickCard`, `DialogPanel`, `WinHead`, `PanelFoot`, `WindowPanel`, `OptionBar`, `FxChip`/`FxChipDanger`, `InboxList`/`InboxRow`/`InboxRowSelected`, `PaneBodyRich`, `TopicPill`, `KeyLabel`, `KeySmall`, `KeyText`, `DataStrong`, `DataText`, `Caption`, `MetaMuted`, `TitleH2`, `NameTitle`, `BodyLabel`, `SenderName`.
+
+**C1'de `build_theme`/`UiFactory`'ye girer (maket içinde yerel çizildi):**
+- `AreaSquares`: onluk kare dizisi (Q'nun `area_row.squares` ve `faint_from`), dolu kareler kelimenin renginde, `faint_from`'dan sonrası soluk (`ink.lerp(D_SURFACE_2, 0.55)`: C1'de adlı token, ör. `D_SQUARE_FAINT`), beşinci karenin altında referans işareti. `UiFactory.D_area_squares(row)` olarak; kare ölçüsü `D_SQUARE` 10, aralık `SPACE_XXS`.
+- `LoadBar`: yük çubuğu, %90'da çizgi (`D_BAR_TICK`), ≤%90 `D_BAR_FILL`, %90 üstü `D_warn()`, %100 üstü `D_neg()` (renk körü ikizi helper'dan). `UiFactory.D_load_bar(ratio)`.
+- Sıralanabilir sütun başlığı: `D_head` + `tri_down`/`tri_up` glifi, etkin başlık `D_INK_1`. Tıklanır hâli (`HRUiShared.D_sort_head`) yok.
+- İpucu satırı çifti (anahtar solda, işaretli değer sağda, `D_delta_color`) ve ince ayraç: `UiFactory.D_tip_rows`.
+- Hesap hücresi yardımcıları: kırpılan etiket (`OVERRUN_TRIM_ELLIPSIS` + genişleyen), sabit genişlikli hücre. Satır başı kenar boşluğu `SPACE_M`, başlık ve satır aynı sütun listesinden.
+- Atlas neden şeridi için nötr varyasyon (maket `AttentionStrip` kullandı, kırmızı ton).
+- Ofis kartı Menajer dilinde: `WindowPanel` + `D_tag`; `office_map_card.gd` krem token (`TitleSerif`, `make_pill`) okuyor.
+
+**Ölçüler (token'a girecek):** HESAPLAR sütunları (ham): Firma 196 (ad 118 + yıldızlar), Koltuk 56, Aylık 76, Memnuniyet 150, Durum 184, Yenileme 82, İstek 140, Temsilci 140, İlgilen 84; aralık `SPACE_M`; satır `D_H_ROW_LG` 44, başlık `D_H_HEAD` 36. Memnuniyet çubuğu sütun genişliğinde, yükseklik `D_H_PROGRESS - 2`. Genel Bakış: sağ kolon 540, sol kolon kalanı; blok `D_card`, satır bağlantısı `D_H_ROW_SM` 32. Atlas paneli 1440 geniş (`W_SEARCH`); ofis kartı 340. Satışçı raporu: seçenek çubuğunda etiket 300 px, çipler sağda sarar.
+
+**Metin eksikleri (W1'de yok, maket fikstürle yazdı, C1 öncesi W1'e):**
+1. Kararlılık hat satırı: `{hat} · {n} açık hata · {n} hesap/kullanıcı` (A'nın biçimi, B2B hesap, B2C kullanıcı).
+2. HESAPLAR başlığı: `accounts.kpi` tek satır; maket dört KPI hücresi çizdi (HESAPLAR/MRR/YILLIK/BU AY): ya dört anahtar ya şeritte tek satır.
+3. Tablo için kısa söz biçimi (`SALES_PROMISE_OPEN_SPRINT` uzun).
+4. Rapor gövdesi taşma satırı (6 satırı aşan hesaplar) ve sonuç satırlarının ayrımı.
+5. Aşımda (yük > %100) boş pay satırı.
+6. "Yenilemeyecek" tablo etiketi için ay kısaltması (`Mar` kısaltması `Fmt.month_abbr`).
+
+**Karar ya da çelişki (Erdem'e):** kilit gerekçesi ipucu mu şerit mi; kademe ipucundaki Standart kesinti çarpanı (×0,5 mi ×1,0 mı); PRD memnuniyet ipucu örneğinin toplamı; rapor gövdesinde "6 hesap satırı" sınırı satışçı raporuna da mı; Genel Bakış'ın alt boşluğu.
+
+**Teknik not:** ipucu kareleri `TooltipPanel` ile elle yerleştirildi; gerçekte `tooltip_text` (tek metin, kendi çizimi) olduğu için C3 ve C7 `_make_custom_tooltip` ya da kendi yüzen paneliyle yazmalı. Maket gerçek oyun durumuna dokunmaz; `MAIL_STAMP_AT` gibi anahtarlar kullanılmadı.

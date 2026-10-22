@@ -1,0 +1,18 @@
+{
+  "_not": "Rakipler (SENTEZ §8.1 tablosu; adlar rival_catalog.gd:117, K §4.1). Rakip kodda bugün çalışan ve hat kademesi taşımaz (K §4.1); buradaki ekip sayıları OYUN ÖLÇEĞİdir (SENTEZ §8.3: dev ~18-30 geliştirici), gerçek şirket boyu değil (varsayım A4). 'gelistirici' 2012 başı, 'buyume' yıllık, 'tavan' en çok geliştirici (G8), 'pay' 2012'de hizmet edilen havuzdaki hesap payı. Hepsi [WORKING]. 'turler' başlangıç seviyesi ve dönem hattı davranışıdır: dev 'Çoğu modülde dönem tavanında', yerleşik 'Orta', girişim 'Düşük'; dev dönem hattına ilk şirket K1 çıkardıktan ~1 yıl sonra başlar (SENTEZ §8.1).",
+  "turler": {
+    "dev": {"modul_tavanda_olasilik": 0.7, "platform_tavanda_olasilik": 0.7, "teknoloji_bekleme_hafta": 52, "teknoloji_bekleme_yedek_hafta": 104, "odak": "hepsi"},
+    "yerlesik": {"odak_modul_k": 2, "diger_modul_k": 1, "platform_k": 1, "teknoloji_bekleme_hafta": 26, "odak": "profiller", "genislik": "temel"},
+    "girisim": {"odak_modul_k": 1, "platform_k": {"ent": 1}, "teknoloji_bekleme_hafta": 0, "odak": "profilin lider sektörünün Z modülleri"}
+  },
+  "rakipler": [
+    {"id": "datenwald", "ad": "Datenwald", "tur": "dev", "gelistirici": 18, "buyume": 0.03, "tavan": 30, "pay": 0.42, "profiller": []},
+    {"id": "pythia", "ad": "Pythia", "tur": "yerlesik", "gelistirici": 6, "buyume": 0.06, "tavan": 15, "pay": 0.17, "profiller": ["Dağıtım ve Lojistik", "Perakende"]},
+    {"id": "werktag", "ad": "Werktag", "tur": "yerlesik", "gelistirici": 6, "buyume": 0.06, "tavan": 15, "pay": 0.17, "profiller": ["İmalat"]},
+    {"id": "ardenna", "ad": "Ardenna", "tur": "girisim", "gelistirici": 1.5, "buyume": 0.25, "tavan": 12, "pay": 0.048, "profiller": ["Hizmet"]},
+    {"id": "tacita", "ad": "Tacita", "tur": "girisim", "gelistirici": 1.5, "buyume": 0.25, "tavan": 12, "pay": 0.048, "profiller": ["Sağlık"]},
+    {"id": "raketenhaus", "ad": "Raketenhaus", "tur": "girisim", "gelistirici": 1.5, "buyume": 0.25, "tavan": 12, "pay": 0.048, "profiller": ["E-ticaret"]},
+    {"id": "sumpter", "ad": "Sumpter", "tur": "girisim", "gelistirici": 1.5, "buyume": 0.25, "tavan": 12, "pay": 0.048, "profiller": ["İmalat"]},
+    {"id": "thymeworks", "ad": "Thymeworks", "tur": "girisim", "gelistirici": 1.5, "buyume": 0.25, "tavan": 12, "pay": 0.048, "profiller": ["İnşaat"]}
+  ]
+}

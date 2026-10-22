@@ -1,0 +1,44 @@
+[
+ {
+  "senaryo": "S3",
+  "atama_kaydi": 162,
+  "ayni": true,
+  "deliv": 47.5,
+  "pred": 8.881784197001252e-16
+ },
+ {
+  "senaryo": "S4",
+  "atama_kaydi": 227,
+  "ayni": true,
+  "deliv": 90.0,
+  "pred": 8.881784197001252e-16
+ },
+ {
+  "senaryo": "HUY|S3",
+  "atama_kaydi": 156,
+  "ayni": true,
+  "deliv": 50.0,
+  "pred": 8.881784197001252e-16
+ },
+ {
+  "senaryo": "HUY|S4",
+  "atama_kaydi": 220,
+  "ayni": true,
+  "deliv": 90.0,
+  "pred": 8.881784197001252e-16
+ },
+ {
+  "senaryo": "A|S3|kaynakli|2",
+  "atama_kaydi": 157,
+  "ayni": true,
+  "deliv": 40.9375,
+  "pred": 6.661338147750939e-16
+ },
+ {
+  "senaryo": "S5",
+  "atama_kaydi": 432,
+  "ayni": true,
+  "deliv": 220.0,
+  "pred": 8.881784197001252e-16
+ }
+]

@@ -1,0 +1,622 @@
+{
+  "wave": "W3",
+  "summary_tr": "Bu dalgada üç oyun öğesi, altı yeni çip şablonu ve bir ISLER satırı var. B2B söz olayı Erdem'in onayladığı dört hamleyle gelir: Testi kısalt, Ekipten fazla mesai iste, Arayıp bir sprint ek süre iste, Söz kaçsın. Başlık sorunu söyler, gövde iki cümledir ve kartın testte olup olmamasına göre iki varyantı vardır. Memnuniyet çipleri oyuncunun kapanış tikinden sonra gerçekten gördüğü tek sayıyı yazar. Teşekkür maili seçeneksizdir, 1 ya da 2 cümledir, yalnız olayı ya da sürümü yaşamış hesaptan gelir ve üç tetikleyicinin her birinde en az dört varyant vardır; özellik adı tek belirteçle yazılır, ardına ek gelmez. B2C sürüm yorumları 2 ya da 3 kısa yorumdur, her biri kaynağıyla görünür; güncellemeyi suçlayan olumsuzlar yalnız sürüm o hatta hatalı çıktığında seçilir. Not, video ve pazaryeri metni yok. Örnek şirket W1'deki gibidir: Demir Holding (100 kullanıcı, memnuniyet 58), kart Toplu Fatura, ekip Deniz ve Mert (yazılım), Selin (test). Eleştiri turunun 14 bulgusundan 13'ü işlendi; “Testi kısalt”ın bileşik formülü ana oturum kararıyla max kuralına bırakıldı.",
+  "constants": [
+    {
+      "name": "PROMISE_CUT_TEST_ESCAPE",
+      "value": "%15 (sprint.json: \"cut_test_escape\": 0.15) · sonraki değer = max(önceki, %15)",
+      "why_tr": "Karar 14: kısaltılmış testin hatalı çıkma ihtimali tek ayar sabitinden okunur; bugünkü %40 testsiz zarı (faulty_chance) kısaltmanın değeri olarak kullanılmaz. Çip önceki ve sonraki değeri aynı fonksiyondan okur: önceki, kartın testinin bugünkü hatalı çıkma ihtimalidir (testçili kartta %0); sonraki, max(önceki, %15). D gelince sabit escape_chance'e bağlanır.",
+      "status": "onay bekliyor"
+    },
+    {
+      "name": "PROMISE_CRUNCH_MORALE",
+      "value": "−5 (o kartta bu sprintte kalan aşamalarda çalışan herkes)",
+      "why_tr": "“Ekipten fazla mesai iste”nin tek görünen bedeli. Bir haftalık fazla mesai, W1'deki tek gecelik düzeltmeden (−7) hafif tutuldu; B_PLAN'daki −4 Erdem'in “moral daha fazla düşebilir” sözüyle bir puan artırıldı. Saat çarpanı (CRUNCH_MULT 1,25) arkada kalır, metne süre ya da saat olarak yazılmaz.",
+      "status": "onay bekliyor"
+    },
+    {
+      "name": "PROMISE_EXTEND_TRUST",
+      "value": "−6 kalıcı iz (trust_offset) · söz başına bir kez",
+      "why_tr": "“Arayıp bir sprint ek süre iste”: hesap tarihi kabul eder ama memnuniyeti biraz düşer (Erdem: “onların memnuniyeti biraz düşer”). İz her tik 2,8 affedildiği için (TRUST_OFFSET_DECAY_PER_DAY 0,4 × 7) −3 ilk tikte −0,2'ye iner ve hiç görünmez; bu bedava bir çıkış olurdu. −6 ilk tikte −3,2'ye iner, hedef 58'den 55'e düşer ve oyuncu bir hafta 55 görür. Söz kaydına extended alanı eklenir, due_sprint bir artar.",
+      "status": "onay bekliyor"
+    },
+    {
+      "name": "PROMISE_BROKEN_CHAIN",
+      "value": "memnuniyet −20 (anlık) · kalıcı iz −12 · marka −3 · tolerans +5 (tavanlı) · hesaba 8 hafta yeni söz yok",
+      "why_tr": "Bugünkü zincir, koddan okundu: b2b_constants.gd PROMISE_BROKEN_SAT −20, PROMISE_BROKEN_OFFSET −12, PROMISE_BROKEN_BRAND −3, PROMISE_BROKEN_TOLERANCE +5 (PROMISE_TOLERANCE_CEILING 10), PROMISE_RELOCK_WEEKS 8 [WORKING]; uygulayan b2b_sales_system.gd on_promise_resolved “broken” dalı. Çipteki tek sayı oyuncunun kapanış tikinden sonra gördüğü değerdir: daily_tick önce PromiseRegistry.tick_deadlines'ı (memnuniyet −20, iz −12), aynı tikte _tick_customer'ı koşar; o da önce izi affeder (_forgiven_trust: −12 → −9,2), sonra memnuniyeti hedefe en çok 21 kaydırır (SAT_DRIFT_STEP 3 × 7). Örnek: memnuniyet ve sağlık 58, iz 0 → 38, hedef round(58 − 9,2) = 49, 38 + 11 = 49. Sonra iz söndükçe haftada yaklaşık 3 puan toparlanır.",
+      "status": "mevcut (kod)"
+    },
+    {
+      "name": "RELEASE_THANKS_EFFECT",
+      "value": "yok (yalnız mail)",
+      "why_tr": "PRD teşekküre etki şart koşmuyor. Tetikleyicilerin üçü de zaten ödüllüdür: tutulan söz hedefe +6 kalıcı iz ve +15 memnuniyet verir, zamanında karşılanan istek hattın puanını artırır, hızlı kapanan olay hesaba iz bırakmaz. Mailin üstüne +2 gibi bir iz eklemek aynı başarıyı iki kez sayardı. İstenirse öneri: hesaba +2 kalıcı iz.",
+      "status": "onay bekliyor"
+    },
+    {
+      "name": "RELEASE_THANKS_LIMITS",
+      "value": "hesap başına sürümde 1 · sürümde en çok 3 · öncelik söz > istek > acil durum · eşitlikte büyük hesap (koltuk)",
+      "why_tr": "Karar 16'nın sınırları aynen; öncelik sırası ve eşitlik kuralı öneri.",
+      "status": "onay bekliyor"
+    },
+    {
+      "name": "RELEASE_REVIEW_COUNT",
+      "value": "sürüm başına 2 ya da 3 yorum · en çok 1 olumsuz · aynı metin 52 hafta dönmez · aynı satırda iki yorum aynı gruptan gelmez",
+      "why_tr": "Karar 17: toplam 2 ile 3 kısa yorum. Olumsuz yorum sınırı ve tekrar kuralı öneri (kâğıtlardaki 52 hafta kuralıyla aynı).",
+      "status": "onay bekliyor"
+    },
+    {
+      "name": "RELEASE_REVIEW_NEG_LINE_BUGS",
+      "value": "B0'da seçilecek",
+      "why_tr": "Sürüm hatalı çıkmadığında bir hattın olumsuz yorum alması için gereken açık hata sayısı. B_PLAN 3'ten fazla diyordu; PRD §0 madde 8 gereği hat başına eşikler A'nın dağılımıyla yeniden seçilir.",
+      "status": "onay bekliyor"
+    }
+  ],
+  "items": [
+    {
+      "id": "product.promise_due",
+      "kind": "promise",
+      "title_tr": "B2B söz olayı",
+      "market": "b2b",
+      "severity": "kesinti (Karar 12: gelen sprintte kâğıt gelmez)",
+      "sender": {
+        "en": "Selin · QA Engineer",
+        "tr": "Selin · Test Mühendisi"
+      },
+      "when_tr": "Sprintin son haftasında, koşan sprintteki bir karta bu sprint için söz verilmiş bir B2B hesabı varsa (PromiseRegistry: open, due_sprint koşan sprint) ve kart bu hızla sprint sonuna yetişmeyecekse gelir. Konuşan, kartta o aşamada atanmış kişidir (assignees, role_of); kart testteyse testçi. Aşamada kimse yoksa gönderen “Kendine not” olur, gövde aynı kalır. Kart mesai içinde gelir (Karar 21); mesai başından sonra rastgele bir dakika.",
+      "stamp": "10:20",
+      "opens": "10:20",
+      "title": {
+        "en": "{seam:urun.promise_card} won't make this sprint",
+        "tr": "{seam:urun.promise_card} bu sprinte yetişmiyor"
+      },
+      "body_variants": [
+        {
+          "case_tr": "kart testte",
+          "en": "We promised {customer} that {seam:urun.promise_card} would ship this sprint. At this pace it won't, unless we shorten the tests.",
+          "tr": "{customer} ekibine {seam:urun.promise_card} için bu sprint sonu söz verdik. Bu hızla yetişmeyecek, testi kısaltırsak yetişir."
+        },
+        {
+          "case_tr": "kart henüz teste gelmedi (tasarımda ya da yazılımda)",
+          "en": "We promised {customer} that {seam:urun.promise_card} would ship this sprint. At this pace it won't.",
+          "tr": "{customer} ekibine {seam:urun.promise_card} için bu sprint sonu söz verdik. Bu hızla yetişmeyecek."
+        }
+      ],
+      "options": [
+        {
+          "id": "cut_test",
+          "does_tr": "Karar 14. Kartın kalan test işi kısalır, kart bu sprintte biter ve söz tutulur. Kart sürüme max(önceki, PROMISE_CUT_TEST_ESCAPE %15) ihtimalle hatalı girer; hatalıysa A'nın deposunda o hatta hata olarak doğar. Önceki değer testin bugünkü hatalı çıkma ihtimalidir (testçili kartta %0). Çip önceki ve sonraki değeri aynı fonksiyondan okur.",
+          "label": {
+            "en": "Shorten the tests",
+            "tr": "Testi kısalt"
+          },
+          "chips": [
+            {
+              "en": "The promise is kept",
+              "tr": "Söz tutulur"
+            },
+            {
+              "en": "Bug chance 0% → 15%",
+              "tr": "Hata ihtimali %0 → %15"
+            }
+          ],
+          "lock": {
+            "when_tr": "Kart test aşamasında değilse (body variant 2)",
+            "en": "The card hasn't reached testing yet.",
+            "tr": "Kart henüz teste gelmedi."
+          },
+          "best_when_tr": "Kart testte, ekip yorgun ve kartın hattında açık hata az; %15 riskle söz tutulur, kimsenin morali düşmez, hesap da hiç iz almaz.",
+          "locked_in_example": false
+        },
+        {
+          "id": "crunch",
+          "does_tr": "Kartta bu sprintte kalan aşamalarda çalışanlar fazla mesai yapar (arkada sprint_hours ×1,25, CRUNCH_MULT); kart biter, söz tutulur, test kısalmaz. Bedel: o kişilerin morali PROMISE_CRUNCH_MORALE (−5). Çip adları kartın assignees listesinden okur.",
+          "label": {
+            "en": "Ask the team for overtime",
+            "tr": "Ekipten fazla mesai iste"
+          },
+          "chips": [
+            {
+              "en": "The promise is kept",
+              "tr": "Söz tutulur"
+            },
+            {
+              "en": "Selin: morale −5",
+              "tr": "Selin: moral −5"
+            }
+          ],
+          "lock": {
+            "when_tr": "urun.crunch_finishes'in bu kart için karşılığı yanlışsa: fazla mesaiyle de kart sprint sonuna yetişmiyorsa",
+            "en": "Even with overtime it won't be done this sprint.",
+            "tr": "Fazla mesaiyle de bu sprintte bitmiyor."
+          },
+          "best_when_tr": "Kart henüz teste gelmedi ya da sürümün temiz çıkması önemli (hatta zaten açık hata var) ve ekibin morali yüksek; söz tutulur, hata riski artmaz.",
+          "locked_in_example": false
+        },
+        {
+          "id": "extend",
+          "does_tr": "Hesap aranır, söz bir sprint ileri alınır (due_sprint +1, extended = true). Hesabın hedefine PROMISE_EXTEND_TRUST (−6) kalıcı iz düşer; ilk tikte −3,2'ye affedilir ve oyuncu bir hafta 58 → 55 görür. Kart sonraki sprinte sürer; söz yeni tarihte tutulursa “kept” sayılır (ödülün tamamı mı yarısı mı, Erdem'e soru). Söz başına bir kez. Çipteki “to” değeri slip yolundaki aynı hesapla okunur.",
+          "label": {
+            "en": "Call and ask for one more sprint",
+            "tr": "Arayıp bir sprint ek süre iste"
+          },
+          "chips": [
+            {
+              "en": "Demir Holding: satisfaction 58 → 55",
+              "tr": "Demir Holding: memnuniyet 58 → 55"
+            },
+            {
+              "en": "The promise moves to the end of next sprint",
+              "tr": "Söz sonraki sprintin sonuna kayar"
+            }
+          ],
+          "lock": {
+            "when_tr": "Bu söz daha önce bir kez ertelendiyse (extended = true)",
+            "en": "This date has already been moved once.",
+            "tr": "Bu tarih bir kez ertelendi."
+          },
+          "best_when_tr": "Söz ilk kez sıkıştı, hesabın memnuniyeti ayrılma eşiğinin epey üstünde, ekip yorgun ve sürümün temiz çıkması isteniyor; küçük bir izle her şey korunur.",
+          "locked_in_example": false
+        },
+        {
+          "id": "slip",
+          "does_tr": "Bir şey yapılmaz; sprint kapanınca söz bugünkü yoldan bozulur (PromiseRegistry tick_deadlines → B2BSalesSystem.on_promise_resolved “broken”): memnuniyet −20, hedefe −12 kalıcı iz, marka −3, tolerans +5, hesaba 8 hafta yeni söz verilemez. Aynı tikte iz affedilir ve memnuniyet hedefe kayar; çip bu tikin sonundaki değeri yazar (PROMISE_BROKEN_CHAIN). Kart sonraki sprinte sürer.",
+          "label": {
+            "en": "Let the promise slip",
+            "tr": "Söz kaçsın"
+          },
+          "chips": [
+            {
+              "en": "Demir Holding: satisfaction 58 → 49",
+              "tr": "Demir Holding: memnuniyet 58 → 49"
+            },
+            {
+              "en": "Brand −3",
+              "tr": "Marka −3"
+            },
+            {
+              "en": "No new promise to this account for 8 weeks",
+              "tr": "Bu hesaba 8 hafta yeni söz verilemez"
+            }
+          ],
+          "lock": null,
+          "best_when_tr": "Ek süre bir kez kullanıldı, ekip tükenmiş ve kartın hattı hatalı; hesap küçük ya da zaten ayrılıyor, bedel yalnız o hesaba ve markaya düşer.",
+          "locked_in_example": false
+        }
+      ],
+      "expire": {
+        "en": "No decision came, so the sprint closed and the promise was broken.",
+        "tr": "Karar verilmedi, sprint kapandı ve söz tutulmadı.",
+        "does_tr": "“Söz kaçsın” yolu işler."
+      },
+      "tokens": [
+        {
+          "token": "{customer}",
+          "carries_tr": "karta bu sprint için söz verilmiş hesap",
+          "example": "Demir Holding",
+          "source_tr": "Kartın customer slotu, seçici: PromiseRegistry'de status open ve due_sprint koşan sprint olan, feature_id'si bu kartın kademesi olan söz; birden çok hesap varsa en büyüğü (koltuk; eşitlikte MRR, sonra kimlik). Öbür hesapların sözleri de aynı seçimle çözülür (B7 kararı; notlarda)."
+        },
+        {
+          "token": "{seam:urun.promise_card}",
+          "carries_tr": "söz verilen kartın ürün ekranındaki adı",
+          "example": "Toplu Fatura",
+          "source_tr": "Yeni seam: sözün feature_id'sinin kademe adı (PROD_STEP_*). urun.decision_card kâğıdın kartını okuduğu için ayrı seam."
+        },
+        {
+          "token": "çip “to” değeri (EFFECT_TRUST_ACCOUNT)",
+          "carries_tr": "hesabın memnuniyetinin, seçimin bedeli işledikten sonraki ilk tikin sonundaki değeri",
+          "example": "slip 49 · extend 55",
+          "source_tr": "B2BSalesSystem'in kendi sırası: sat' = sat + anlık düşüş (slip −20, extend 0); trust' = _forgiven_trust(trust + iz) (slip −12, extend −6); hedef = _target_on(c, day + 1, trust'); to = sat' değerinin hedefe SAT_DRIFT_STEP × 7 sınırıyla kaymış hâli (aşağı yönde cs_dampen dahil). B7 bunu tek fonksiyon yapar, çip ve motor onu okur."
+        }
+      ],
+      "constants": [
+        {
+          "name": "PROMISE_CUT_TEST_ESCAPE",
+          "value": "%15",
+          "why_tr": "Dalga sabitleri listesinde.",
+          "status": "onay bekliyor"
+        },
+        {
+          "name": "PROMISE_CRUNCH_MORALE",
+          "value": "−5",
+          "why_tr": "Dalga sabitleri listesinde.",
+          "status": "onay bekliyor"
+        },
+        {
+          "name": "PROMISE_EXTEND_TRUST",
+          "value": "−6, bir kez",
+          "why_tr": "Dalga sabitleri listesinde.",
+          "status": "onay bekliyor"
+        }
+      ],
+      "notes_tr": "Gövde Erdem'in ölçüsüyle iki cümle (“Ekol'e bu sprint sonu söz verdik. Testi kısaltırsak yetişir.”); gerçek şirket yerine {customer} slotu, Türkçede ek almasın diye “{customer} ekibine”. Başlık W1 kalıbında sorunu söyler (“Toplu Fatura bu sprinte yetişmiyor”). Variant 2'de test bilgisi gövdede tekrarlanmaz, kilit söyler. Dört seçeneğin en iyi olduğu durum ayrıdır: Testi kısalt moral ve hesabı korur ama sürümü riske atar; fazla mesai sürümü korur ama morali yer; ek süre ekibi ve sürümü korur ama hesaba görünür bir iz bırakır ve bir kez kullanılır; söz kaçsın hiçbir şey harcamaz, bedel hesaba ve markaya düşer. Variant 2'de “Testi kısalt” kilitlidir, en az üç seçenek açık kalır. Memnuniyet çipleri W1'deki gibi tek sayıdır ve oyuncunun kapanış tikinden sonra gerçekten gördüğü değerdir (58 → 49, 58 → 55); EFFECT_PROMISE_BROKEN_SAT şablonu bu yüzden silindi. Fazla mesai çipinde süre ve saat yok (Erdem). ERDEM'E SORU: ek süreyle ertelenip yeni tarihte tutulan söz tam “kept” ödülünü mü (+15 memnuniyet, +6 iz, tolerans −5) alsın, yarısını mı? Tam ödülle ek süre çoğu durumda en iyi hamle olur; öneri yarısı. B7'ye notlar: (1) “Testi kısalt”ın sonraki değeri max(önceki, %15)'tir. Kartı test rolü olmayan biri test ediyorsa önceki değer bugünkü faulty_chance'tir (%40); kısaltma ihtimali artırmaz ama düşürmez de, çip “%40 → %40” der. Faz A'nın tespitine göre bu %40 zarı pratikte hiç atılmıyor, kenar durum fiilen oluşmuyor; eleştirinin bileşik formülü (1 − (1 − önceki) × 0,85) ana oturum kararıyla alınmadı. (2) “partial” sonuç da promise_kept yayar; teşekkür maili yalnız “kept”te gider. (3) Söz olayı Karar 12'ye göre sprintin tek kesintisidir; aynı sprintte iki hesaba söz verildiyse tek kart gelir, konuşan aynı kişidir. (4) Kart sürüme kısaltılmış testle hatalı girerse W1'in “Sürüm sonrası bozulma” olayının girdisi olur; o olay 4 hafta aralık kuralına tabidir. (5) Aynı affetme kuralı W1'in küçük izlerini de (ör. “Sabah düzelt” −3) bir tikte görünmez kılabilir; B2'de her memnuniyet çipi tikin kendi hesabıyla doğrulanmalı."
+    },
+    {
+      "id": "customer.release_thanks",
+      "kind": "thanks",
+      "title_tr": "B2B teşekkür maili",
+      "market": "b2b",
+      "sender": {
+        "en": "Demir Holding · Finance Manager",
+        "tr": "Demir Holding · Finans Müdürü"
+      },
+      "when_tr": "Seçeneksiz mail, karar istemez. Teşekkürü yalnız olayı ya da sürümü gerçekten yaşamış hesap yazar. Üç tetikleyici: (1) acil durum hızla kapandı: B2B olayı “Ekip şimdi düzeltsin”, “Ekip bu akşam kalsın” ya da “Kendin düzelt” yoluyla aynı gece ya da aynı gün kapandı (IncidentSystem'in kapanış bayrağı). Gönderen olaydan gerçekten etkilenen hesaplardan biridir: kesintide servis kapalıyken çalışan gece vardiyalı hesap, ay sonunda maili yazan hesap, bozulmada bozulan hattı kullanan hesap; birden çoksa en büyüğü (koltuk). Kesinti hiçbir hesabın çalışma saatine denk gelmediyse (gece vardiyalı hesap yok, servis sabahtan önce açıldı) mail gitmez. Mail sonraki mesai penceresinde gelir. (2) söz verilen özellik çıktı: PromiseRegistry “kept” (partial değil); gönderen sözün hesabı. (3) istenen özellik çıktı: GameState.product.requests'te status open → met (zamanında karşılanan istek; C gelene kadar bugünkü requests); gönderen isteğin hesabı. (2) ve (3) sürümden sonraki ilk mesai penceresinde gelir. Bir hesaba bir sürümde en çok bir, bir sürümde en çok 3 mail; söz ile istek aynı özellikse söz metni seçilir.",
+      "stamp": "09:40",
+      "opens": "09:40",
+      "title": {
+        "en": "Thank you",
+        "tr": "Teşekkürler"
+      },
+      "body_variants": [
+        {
+          "case_tr": "tetikleyici: acil durum hızla kapandı · 1",
+          "en": "Thanks for fixing it so quickly.",
+          "tr": "Sorunu bu kadar hızlı çözdüğünüz için teşekkürler."
+        },
+        {
+          "case_tr": "tetikleyici: acil durum hızla kapandı · 2",
+          "en": "Thanks for jumping on it. Everything is working again.",
+          "tr": "Hızlı müdahaleniz için teşekkürler, her şey yeniden çalışıyor."
+        },
+        {
+          "case_tr": "tetikleyici: acil durum hızla kapandı · 3",
+          "en": "It's fixed. Great work, thank you.",
+          "tr": "Sorun çözülmüş, elinize sağlık."
+        },
+        {
+          "case_tr": "tetikleyici: acil durum hızla kapandı · 4 (yalnız gece, hesabın mesaisinden önce kapandıysa)",
+          "en": "Thanks for working on it overnight. Everything was running by morning.",
+          "tr": "Gece müdahale ettiğiniz için teşekkürler, sabah her şey çalışıyordu."
+        },
+        {
+          "case_tr": "tetikleyici: acil durum hızla kapandı · 5 (yalnız gece kapandıysa)",
+          "en": "We saw you worked on it overnight. Thank you.",
+          "tr": "Gece uğraştığınızı gördük, teşekkür ederiz."
+        },
+        {
+          "case_tr": "tetikleyici: söz verilen özellik çıktı · 1",
+          "en": "{seam:musteri.met_feature} arrived, just as you promised. Thank you.",
+          "tr": "Söz verdiğiniz {seam:musteri.met_feature} geldi, teşekkürler."
+        },
+        {
+          "case_tr": "tetikleyici: söz verilen özellik çıktı · 2 (yalnız ertelenmemiş söz)",
+          "en": "{seam:musteri.met_feature} arrived right when you said it would. Thank you.",
+          "tr": "{seam:musteri.met_feature} söylediğiniz tarihte geldi. Teşekkür ederiz."
+        },
+        {
+          "case_tr": "tetikleyici: söz verilen özellik çıktı · 3",
+          "en": "You kept your word. Thanks for {seam:musteri.met_feature}.",
+          "tr": "Sözünüzü tuttunuz, {seam:musteri.met_feature} için teşekkürler."
+        },
+        {
+          "case_tr": "tetikleyici: söz verilen özellik çıktı · 4 (yalnız ertelenmemiş söz)",
+          "en": "{seam:musteri.met_feature} shipped as promised. Nice work.",
+          "tr": "{seam:musteri.met_feature} söz verdiğiniz gibi çıktı. Elinize sağlık."
+        },
+        {
+          "case_tr": "tetikleyici: söz verilen özellik çıktı · 5 (yalnız ek süreyle ertelenmiş söz)",
+          "en": "{seam:musteri.met_feature} arrived on the new date. Thank you.",
+          "tr": "{seam:musteri.met_feature} yeni tarihte geldi, teşekkürler."
+        },
+        {
+          "case_tr": "tetikleyici: istenen özellik çıktı · 1",
+          "en": "We asked for {seam:musteri.met_feature} and it arrived. Thank you.",
+          "tr": "İstediğimiz {seam:musteri.met_feature} geldi, teşekkürler."
+        },
+        {
+          "case_tr": "tetikleyici: istenen özellik çıktı · 2",
+          "en": "Thanks for {seam:musteri.met_feature}. It's exactly what we needed.",
+          "tr": "{seam:musteri.met_feature} için teşekkürler, tam ihtiyacımız olan buydu."
+        },
+        {
+          "case_tr": "tetikleyici: istenen özellik çıktı · 3",
+          "en": "Thanks for listening to us. {seam:musteri.met_feature} will help us a lot.",
+          "tr": "Bizi dinlediğiniz için teşekkürler, {seam:musteri.met_feature} çok işimize yarayacak."
+        },
+        {
+          "case_tr": "tetikleyici: istenen özellik çıktı · 4",
+          "en": "We saw that {seam:musteri.met_feature} went live. Thank you.",
+          "tr": "{seam:musteri.met_feature} eklenmiş, gördük. Teşekkür ederiz."
+        }
+      ],
+      "options": [],
+      "tokens": [
+        {
+          "token": "{seam:musteri.met_feature}",
+          "carries_tr": "çıkan özelliğin ürün ekranındaki adı (kademe adı)",
+          "example": "Toplu Fatura",
+          "source_tr": "Yeni seam: söz tetikleyicisinde sözün feature_id'si, istek tetikleyicisinde isteğin step'i; ad PROD_STEP_* anahtarından. EN adı da oradan (Batch Invoicing). Kart customer slotu maili yazan hesaptır."
+        }
+      ],
+      "constants": [
+        {
+          "name": "RELEASE_THANKS_EFFECT",
+          "value": "yok (yalnız mail)",
+          "why_tr": "Dalga sabitleri listesinde.",
+          "status": "onay bekliyor"
+        },
+        {
+          "name": "RELEASE_THANKS_LIMITS",
+          "value": "hesap başına sürümde 1 · sürümde en çok 3 · söz > istek > acil durum",
+          "why_tr": "Dalga sabitleri listesinde.",
+          "status": "onay bekliyor"
+        }
+      ],
+      "notes_tr": "Erdem'in ölçüsü: “teşekkürler sorun çözülmüş… çok hızlı müdahale ettiğiniz için teşekkür ederiz… bir feature sözü vermişizdir, yaptığımız zaman teşekkür ederiz.” Her varyant 1 ya da 2 kısa cümle; işin nasıl kullanıldığını anlatan, takvimi öne alan ya da henüz yaşanmamış bir sonucu iddia eden cümle yok (reddedilen “Toplu faturayı bu ayın kapanışında ilk kez kullandık…” ve “kapanışı iki gün erken yaptık” örnekleri). Mail sürümden hemen sonra geldiği için yalnız “geldi”, “çıktı”, “eklenmiş” der. EN cümleler özellik adını özne yaparken geçmiş zaman kullanır (“arrived”, “went live”); böylece “Roles and Permissions is” gibi sayı uyumu sorunu çıkmaz. Varyant seçimi: tetikleyicinin varyantları arasından hesap ve sürümle hash'lenir, son kullanılan varyant dönmez. Acil durumda 4 ve 5 yalnız olay gece kapandıysa seçilebilir. Sözde extended = false iken 1–4, extended = true iken 1, 3 ve 5 seçilir: tarihi oyuncu kaydırdıysa “söylediğiniz tarihte” ve “söz verdiğiniz gibi” yarı yanlış olur. Gece varyantı 4 yalnız düzeltme hesabın mesai başından önce bittiyse doğrudur (kesinti ve ay sonunda “Ekip şimdi düzeltsin” ve gece “Kendin düzelt”). Gündüz kapanan olay (“Ekip bu akşam kalsın”) yalnız 1–3'ü kullanır. Gönderen bugünkü contact kuralıdır (inbox.gd contact(): masada tanışılan alıcı, yoksa sektörün yetkilisi); örnekteki unvan buradan gelir. B2C olaylarında teşekkür maili yok. Sürüm başına sınır için sayaç kayda girer (B8). Acil durum teşekkürünü olayı yaşamamış bir hesap yazamaz; kesintide slottaki en büyük hesap sabah açılan servisi hiç görmemişse “hızlı çözdünüz” yaşanmamış bir şeye teşekkür olurdu."
+    },
+    {
+      "id": "product.release_reviews",
+      "kind": "review",
+      "title_tr": "B2C sürüm sonrası öne çıkan yorumlar",
+      "market": "b2c",
+      "when_tr": "B2C sürümünün notunda, basın satırının altında bir satır. Sürüm notunun sonuç kısmı dolduğunda (fill_actual, sürümden bir tik sonra) mesai içinde görünür. 2 ya da 3 yorum, her biri kaynak etiketiyle.",
+      "title": {
+        "en": "Top comments after the release",
+        "tr": "Sürüm sonrası öne çıkan yorumlar"
+      },
+      "reviews": [
+        {
+          "case_tr": "Sosyal medya · yeni özellik, adlı · 1",
+          "en": "{feature} finally arrived. I'd been waiting for it for ages.",
+          "tr": "Sonunda {feature} gelmiş, uzun zamandır bekliyordum."
+        },
+        {
+          "case_tr": "Uygulama mağazası · yeni özellik, adlı · 2",
+          "en": "{feature} is exactly what I was looking for.",
+          "tr": "{feature} tam aradığım şeydi."
+        },
+        {
+          "case_tr": "Uygulama mağazası · yeni özellik, adlı · 3",
+          "en": "{feature} in the new version makes things a lot easier.",
+          "tr": "Yeni sürümdeki {feature} işimi epey kolaylaştırdı."
+        },
+        {
+          "case_tr": "Sosyal medya · yeni özellik, adlı · 4",
+          "en": "Thanks for {feature}. Tried it right away.",
+          "tr": "{feature} için teşekkürler, hemen denedim."
+        },
+        {
+          "case_tr": "Uygulama mağazası · yeni özellik, adsız · 1",
+          "en": "The new update is really good.",
+          "tr": "Yeni güncelleme çok iyi olmuş."
+        },
+        {
+          "case_tr": "Sosyal medya · yeni özellik, adsız · 2",
+          "en": "It gets a little better with every update. Keep going.",
+          "tr": "Her güncellemede biraz daha iyi oluyor, böyle devam."
+        },
+        {
+          "case_tr": "Uygulama mağazası · yeni özellik, adsız · 3",
+          "en": "Just updated. Liking it so far.",
+          "tr": "Yeni güncellemeyi yükledim, şimdilik beğendim."
+        },
+        {
+          "case_tr": "Uygulama mağazası · düzeltme · 1",
+          "en": "The update fixed the problem I had. Thanks.",
+          "tr": "Son güncellemeyle yaşadığım sorun düzelmiş, teşekkürler."
+        },
+        {
+          "case_tr": "Sosyal medya · düzeltme · 2",
+          "en": "The bug I'd had for weeks is finally gone.",
+          "tr": "Haftalardır çıkan hata sonunda gitti."
+        },
+        {
+          "case_tr": "Uygulama mağazası · düzeltme · 3",
+          "en": "What I complained about has been fixed. Thanks for listening.",
+          "tr": "Şikâyet ettiğim şey düzeltilmiş, dinlediğiniz için teşekkürler."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · Entegrasyonlar · 1 · güncellemeyi anar",
+          "en": "Since the update my linked accounts keep dropping. I reconnect them every day.",
+          "tr": "Güncellemeden beri bağladığım hesaplar kopuyor, her gün yeniden bağlıyorum."
+        },
+        {
+          "case_tr": "Sosyal medya · olumsuz · Entegrasyonlar · 2",
+          "en": "Importing from other apps stops halfway. Please look into it.",
+          "tr": "Başka uygulamalardan aktarım yarıda kesiliyor. Lütfen bakın."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · Entegrasyonlar · 3",
+          "en": "The share button doesn't send to any other app anymore.",
+          "tr": "Paylaş düğmesi artık hiçbir uygulamaya göndermiyor."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · Güvenlik & Yetki · 1",
+          "en": "It asks me to log in again every time I open it.",
+          "tr": "Her açışta yeniden giriş yapmamı istiyor."
+        },
+        {
+          "case_tr": "Sosyal medya · olumsuz · Güvenlik & Yetki · 2",
+          "en": "The password reset code never arrives. I can't get into my account.",
+          "tr": "Şifre sıfırlama kodu hiç gelmiyor, hesabıma giremiyorum."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · Güvenlik & Yetki · 3 · güncellemeyi anar",
+          "en": "Since the update, the people I share with can't see anything.",
+          "tr": "Güncellemeden beri paylaştığım kişiler hiçbir şey göremiyor."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · Dayanıklılık · 1",
+          "en": "When the app closes, my last changes are gone.",
+          "tr": "Uygulama kapanınca yaptığım son değişiklikler gidiyor."
+        },
+        {
+          "case_tr": "Sosyal medya · olumsuz · Dayanıklılık · 2",
+          "en": "Two days of my work didn't save. Is there any way to get it back?",
+          "tr": "İki günlük işim kaydedilmemiş. Geri almanın bir yolu var mı?"
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · Dayanıklılık · 3",
+          "en": "When the connection drops, the app freezes until I restart it.",
+          "tr": "İnternet gidince uygulama donuyor, ancak yeniden açınca düzeliyor."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · Mobil & Erişim · 1",
+          "en": "On my phone the screen is cut off and I can't tap the buttons.",
+          "tr": "Telefonda ekran taşıyor, düğmelere basamıyorum."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · Mobil & Erişim · 2 · güncellemeyi anar · yalnız Mobil Uygulama (K2) canlıysa",
+          "en": "Since the update the mobile app closes as soon as it opens.",
+          "tr": "Güncellemeden beri mobil uygulama açılır açılmaz kapanıyor."
+        },
+        {
+          "case_tr": "Sosyal medya · olumsuz · Mobil & Erişim · 3",
+          "en": "On my tablet the text overlaps.",
+          "tr": "Tablette yazılar üst üste biniyor."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · genel (kimlik hattı) · 1 · güncellemeyi anar",
+          "en": "The app has been slow since the update.",
+          "tr": "Güncellemeden beri uygulama yavaşladı."
+        },
+        {
+          "case_tr": "Sosyal medya · olumsuz · genel (kimlik hattı) · 2 · güncellemeyi anar",
+          "en": "Something broke in the new version. The old one worked better.",
+          "tr": "Yeni sürümde bir şey bozulmuş, eskisi daha iyi çalışıyordu."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · genel (kimlik hattı) · 3 · güncellemeyi anar",
+          "en": "Since the update, the feature I use most keeps giving errors.",
+          "tr": "Güncellemeden beri en çok kullandığım özellik hata veriyor."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · genel (kimlik hattı) · 4",
+          "en": "The feature I use most keeps throwing errors.",
+          "tr": "En çok kullandığım özellik sık sık hata veriyor."
+        },
+        {
+          "case_tr": "Sosyal medya · olumsuz · genel (kimlik hattı) · 5",
+          "en": "The app has been really slow lately.",
+          "tr": "Uygulama son zamanlarda çok yavaş."
+        },
+        {
+          "case_tr": "Uygulama mağazası · olumsuz · genel (kimlik hattı) · 6",
+          "en": "Some screens won't load until I try a second time.",
+          "tr": "Bazı ekranlar ancak ikinci denemede açılıyor."
+        }
+      ],
+      "options": [],
+      "tokens": [
+        {
+          "token": "{feature}",
+          "carries_tr": "bu sürümde canlıya geçen, ürünün kimlik hattından en etkili kademenin oyuncunun ürün ekranında gördüğü adı",
+          "example": "Paylaşılan Not",
+          "source_tr": "B8 bağlamasında seam değil CSV yer tutucusudur ({feature}): yorum bir kart değil sürüm notunun satırıdır, CSV değerinde {seam:} yazılamaz. Değer: sürümde canlıya geçen kimlik hattı kademeleri içinde impact puanı en yüksek olan (sprint.json impact.step/level); ad PROD_STEP_* anahtarından, EN adı da oradan. Ortak dört hattın kademeleri (Duyarlı Arayüz, Tekil Bağlantı, Hesap & Oturum gibi platform terimleri) kullanıcı ağzında doğal durmadığı için bu seam'e girmez; o sürümde adsız grup seçilir. Örnek bugünkü bir kimlik kademesidir, yalnız değeri gösterir."
+        }
+      ],
+      "constants": [
+        {
+          "name": "RELEASE_REVIEW_COUNT",
+          "value": "2 ya da 3, en çok 1 olumsuz",
+          "why_tr": "Dalga sabitleri listesinde.",
+          "status": "onay bekliyor"
+        },
+        {
+          "name": "RELEASE_REVIEW_NEG_LINE_BUGS",
+          "value": "B0'da seçilecek",
+          "why_tr": "Dalga sabitleri listesinde.",
+          "status": "onay bekliyor"
+        }
+      ],
+      "notes_tr": "Seçim kuralı (sırayla, en çok 3 yorum): (1) Sürümde yeni bir kademe canlıya geçtiyse bir “yeni özellik” yorumu: kademe ürünün kimlik hattındansa adlı grup %70, adsız grup %30 (hash); kademe ortak dört hattan biriyse yalnız adsız grup (yorumdaki ad oyuncunun ürün ekranında gördüğü addır ve platform terimi kullanıcı ağzında doğal durmaz). (2) Sürümde bir düzeltme kartı kapandıysa (A'nın deposunda hat temizlendi) bir “düzeltme” yorumu. (3) Sürüm hatalı çıktıysa (release.faulty) o hat için, çıkmadıysa açık hatası RELEASE_REVIEW_NEG_LINE_BUGS eşiğini geçen en kötü hat için bir olumsuz yorum: hat ortak dört hattan biriyse o hattın grubu, değilse (kimlik hatları) genel olumsuz grup. case_tr'sinde “güncellemeyi anar” yazan varyantlar yalnız sürüm o hatta hatalı çıktığında seçilir; öbür durumda yalnız belirtiyi anlatanlar seçilir (her grupta en az bir tane var). “yalnız Mobil Uygulama (K2) canlıysa” yazan varyant o kademe canlı değilken seçilmez. (4) Toplam 2'nin altında kaldıysa adsız “yeni özellik” yorumuyla 2'ye tamamlanır; satırda olumsuz yorum varsa tamamlayıcı yalnız adsız 3 olur (“yükledim, şimdilik beğendim”), çünkü “çok iyi olmuş” ya da “her güncellemede daha iyi” bir olumsuzun yanında onu yalanlar. Sıra: olumlu önce, olumsuz en sonda. Varyant hash'le seçilir, aynı metin 52 hafta dönmez; aynı satırda iki yorum aynı gruptan gelmez. Kaynak etiketi her yorumun case_tr'sindeki kaynaktır (kodda yorumla birlikte sabit). Hat adları koddan doğrulandı: PROD_LINE_SHARED_INTEGRATIONS Entegrasyonlar / Integrations, PROD_LINE_SHARED_SECURITY Güvenlik & Yetki / Security and Access, PROD_LINE_SHARED_DURABILITY Dayanıklılık / Durability, PROD_LINE_SHARED_MOBILE Mobil & Erişim / Mobile and Access. Hat adı yorumda geçmez: kullanıcı belirtiyi yazar, bu yüzden hat başına tam cümle varyantı var. Yorumlar ürüne bağlı değildir (Karar 19): not, video ve pazaryeri metni yok; mağaza (satıcı) sesi ve pazaryeri yorumları E'de eklenir. Puan yıldızı yok. Tırnak işareti arayüzün işidir, metinde yok."
+    },
+    {
+      "id": "chip.REVIEW_SOURCE_SOCIAL",
+      "kind": "chip_template",
+      "title_tr": "REVIEW_SOURCE_SOCIAL",
+      "market": "b2c",
+      "text": {
+        "en": "Social media",
+        "tr": "Sosyal medya"
+      },
+      "example": {
+        "en": "Social media",
+        "tr": "Sosyal medya"
+      },
+      "notes_tr": "Sürüm yorumunun kaynak etiketi."
+    },
+    {
+      "id": "chip.REVIEW_SOURCE_STORE",
+      "kind": "chip_template",
+      "title_tr": "REVIEW_SOURCE_STORE",
+      "market": "b2c",
+      "text": {
+        "en": "App store",
+        "tr": "Uygulama mağazası"
+      },
+      "example": {
+        "en": "App store",
+        "tr": "Uygulama mağazası"
+      },
+      "notes_tr": "Sürüm yorumunun kaynak etiketi; genel ad, marka değil. Pazaryerinin “Mağaza” etiketi E'de gelir."
+    },
+    {
+      "id": "chip.EFFECT_BUG_CHANCE",
+      "kind": "chip_template",
+      "title_tr": "EFFECT_BUG_CHANCE",
+      "market": "b2b",
+      "text": {
+        "en": "Bug chance {from}% → {to}%",
+        "tr": "Hata ihtimali %{from} → %{to}"
+      },
+      "example": {
+        "en": "Bug chance 0% → 15%",
+        "tr": "Hata ihtimali %0 → %15"
+      },
+      "notes_tr": "Karar 14: önceki ve sonraki değer aynı fonksiyondan okunur; sonraki değer max(önceki, PROMISE_CUT_TEST_ESCAPE). Erdem'in sözü “hata ihtimali artar”."
+    },
+    {
+      "id": "chip.EFFECT_PROMISE_KEPT",
+      "kind": "chip_template",
+      "title_tr": "EFFECT_PROMISE_KEPT",
+      "market": "b2b",
+      "text": {
+        "en": "The promise is kept",
+        "tr": "Söz tutulur"
+      },
+      "example": {
+        "en": "The promise is kept",
+        "tr": "Söz tutulur"
+      },
+      "notes_tr": "Testi kısalt ve fazla mesai yollarının sonucu. Var olan PRODUCT_FX_PROMISE_KEPT (“sözü tutulur”) küçük harfle bir bileşik satırın parçası olduğu için ayrı anahtar."
+    },
+    {
+      "id": "chip.EFFECT_PROMISE_MOVED",
+      "kind": "chip_template",
+      "title_tr": "EFFECT_PROMISE_MOVED",
+      "market": "b2b",
+      "text": {
+        "en": "The promise moves to the end of next sprint",
+        "tr": "Söz sonraki sprintin sonuna kayar"
+      },
+      "example": {
+        "en": "The promise moves to the end of next sprint",
+        "tr": "Söz sonraki sprintin sonuna kayar"
+      },
+      "notes_tr": "Ek süre yolu; memnuniyet izi var olan EFFECT_TRUST_ACCOUNT (W1) ile ayrı çipte yazar."
+    },
+    {
+      "id": "chip.EFFECT_PROMISE_RELOCK",
+      "kind": "chip_template",
+      "title_tr": "EFFECT_PROMISE_RELOCK",
+      "market": "b2b",
+      "text": {
+        "en": "No new promise to this account for {n} weeks",
+        "tr": "Bu hesaba {n} hafta yeni söz verilemez"
+      },
+      "example": {
+        "en": "No new promise to this account for 8 weeks",
+        "tr": "Bu hesaba 8 hafta yeni söz verilemez"
+      },
+      "notes_tr": "PROMISE_RELOCK_WEEKS (8, kodda [WORKING]). Bugün bu kilit satış ekranında B2B_LOCK_PROMISE_BROKEN ile görünüyor; çip aynı olguyu seçim anında söyler."
+    },
+    {
+      "id": "rule.isler_b2c_promise",
+      "kind": "rule",
+      "title_tr": "ISLER.md satırı: B2C söz eşdeğeri",
+      "market": "b2c",
+      "text_tr": "B2C söz eşdeğeri açık (Faz B Karar 15): B2C'de söz olayı yok, çünkü şirketler sürüm çıkmadan kullanıcıya tarih vermez, sürüm çıkınca not paylaşır; kullanıcılara tarih duyurmak ve “kampanya aracı” ikizi reddedildi; Erdem “üstüne düşünmek lazım” dedi, aday yön C'nin istek verisi gelince en çok istenen şeyin sürüm yorumlarında “hâlâ yok” diye görünmesi.",
+      "notes_tr": "Tek satır, docs/ACIK_ISLER/ISLER.md'ye uygulayıcı düşer. Aday yön yalnız bir işarettir, karar değildir."
+    }
+  ]
+}

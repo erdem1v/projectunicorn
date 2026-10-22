@@ -1,0 +1,5 @@
+exec(open("mkreport.py", encoding="utf-8").read())
+exec(open("post.py", encoding="utf-8").read())
+exec(open("rep_a.py", encoding="utf-8").read())
+exec(open("rep_b.py", encoding="utf-8").read())
+exec(open("rep_c.py", encoding="utf-8").read())

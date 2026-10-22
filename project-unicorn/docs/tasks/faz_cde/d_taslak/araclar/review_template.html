@@ -1,0 +1,408 @@
+<title>Faz B Yazım Dalgaları</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap">
+<style>
+/* Layout: one review queue per wave; each item is drawn like the game's dark inbox card, with the owner's mark bar under it. */
+:root {
+  --bg: #100E0B; --surface: #15120F; --inset: #1A1714; --line: #3A342D; --line-2: #4A4239;
+  --ink-strong: #FFFFFF; --ink: #E9E4DA; --ink-2: #B3AA9E; --ink-3: #9A9184;
+  --accent: #F2B53A; --accent-ink: #100E0B; --ok: #8DBF7A; --fix: #E8913A; --bad: #E2675B;
+  --ok-bg: rgba(141,191,122,.14); --fix-bg: rgba(232,145,58,.14); --bad-bg: rgba(226,103,91,.14);
+  --f-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-prose: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #F6F1E6; --surface: #FBF7EE; --inset: #F0E9DA; --line: #DDD3C0; --line-2: #C9BDA6;
+  --ink-strong: #17140F; --ink: #2B2722; --ink-2: #5E554A; --ink-3: #7A7062;
+  --accent: #B9790F; --accent-ink: #FFFFFF; --ok: #3E7A35; --fix: #A85A12; --bad: #B23A2E;
+  --ok-bg: rgba(62,122,53,.10); --fix-bg: rgba(168,90,18,.10); --bad-bg: rgba(178,58,46,.10);
+  color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #F6F1E6; --surface: #FBF7EE; --inset: #F0E9DA; --line: #DDD3C0; --line-2: #C9BDA6;
+  --ink-strong: #17140F; --ink: #2B2722; --ink-2: #5E554A; --ink-3: #7A7062;
+  --accent: #B9790F; --accent-ink: #FFFFFF; --ok: #3E7A35; --fix: #A85A12; --bad: #B23A2E;
+  --ok-bg: rgba(62,122,53,.10); --fix-bg: rgba(168,90,18,.10); --bad-bg: rgba(178,58,46,.10);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 64px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; letter-spacing: .01em; text-wrap: balance; margin: 0; color: var(--ink-strong); }
+h1 { font-size: 34px; line-height: 1.05; }
+.eyebrow { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .12em; font-size: 13px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); max-width: 68ch; margin: 0; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 6px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.tabs, .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab, .filter, .mark-btn { font: 600 14px/1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2);
+  background: transparent; border: 1px solid var(--line-2); border-radius: 4px; padding: 8px 12px; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.filter[aria-pressed="true"] { color: var(--ink-strong); border-color: var(--ink-3); }
+.tab:focus-visible, .filter:focus-visible, .mark-btn:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tally { margin-left: auto; font: 500 13px/1.3 var(--f-mono); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tally b { color: var(--ink); font-weight: 500; }
+.status { font: 400 13px/1.4 var(--f-mono); color: var(--ink-3); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.panel h2 { font-size: 20px; }
+.consts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.consts li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.consts li:last-child { border-bottom: 0; padding-bottom: 0; }
+.cname { font: 500 13px/1.3 var(--f-mono); color: var(--ink-strong); }
+.cwhy { color: var(--ink-2); font-size: 14px; }
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; display: flex; flex-direction: column; }
+.item[data-mark="approve"] { border-color: var(--ok); }
+.item[data-mark="fix"] { border-color: var(--fix); }
+.item[data-mark="reject"] { border-color: var(--bad); }
+.item-head { padding: 14px 16px 0; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.item-name { font: 600 22px/1.1 var(--f-display); color: var(--ink-strong); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font: 500 12px/1 var(--f-mono); color: var(--ink-2); border: 1px solid var(--line-2); border-radius: 3px; padding: 4px 6px; }
+.tag.sev { color: var(--fix); border-color: var(--fix); }
+.item-id { font: 400 12px/1.2 var(--f-mono); color: var(--ink-3); width: 100%; overflow-wrap: anywhere; }
+.when { padding: 6px 16px 0; color: var(--ink-2); font-size: 14px; }
+.card { margin: 12px 16px 0; background: var(--inset); border: 1px solid var(--line); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.sender { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font: 500 13px/1.3 var(--f-mono); color: var(--ink-3); }
+.lang { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 2px 8px; align-items: baseline; }
+.lang .k { font: 500 11px/1.6 var(--f-mono); color: var(--ink-3); letter-spacing: .08em; }
+.lang .tr { color: var(--ink); }
+.lang .en { color: var(--ink-2); }
+.title-tr { font: 600 21px/1.15 var(--f-display); color: var(--ink-strong); }
+.title-en { font: 500 17px/1.2 var(--f-display); color: var(--ink-2); }
+.prose-tr { font: 400 17px/1.5 var(--f-prose); color: var(--ink); max-width: 66ch; }
+.prose-en { font: 400 15px/1.5 var(--f-prose); color: var(--ink-2); max-width: 66ch; }
+.variant { border-top: 1px dashed var(--line-2); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.variant .case { font: 500 12px/1.3 var(--f-mono); color: var(--accent); }
+.options { display: flex; flex-direction: column; gap: 8px; }
+.opt { border: 1px solid var(--line-2); border-radius: 4px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.opt.locked { border-style: dashed; }
+.opt-label-tr { font: 500 16px/1.35 var(--f-body); color: var(--ink-strong); }
+.opt-label-en { font-size: 14px; color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px/1.3 var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 3px; padding: 3px 7px; }
+.chip .en { color: var(--ink-3); font-weight: 400; }
+.lock { font-size: 14px; color: var(--ink-2); }
+.lock b { color: var(--ink-3); font-weight: 500; font-family: var(--f-mono); font-size: 12px; }
+details { color: var(--ink-2); font-size: 14px; }
+summary { cursor: pointer; color: var(--ink-3); font: 500 12px/1.6 var(--f-mono); letter-spacing: .04em; }
+.why { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding-top: 4px; }
+.expire { border-top: 1px solid var(--line); padding-top: 8px; }
+.tokens-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 5px 8px 5px 0; vertical-align: top; }
+th { font: 500 11px/1.4 var(--f-mono); color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; }
+td code { font-family: var(--f-mono); font-size: 12px; color: var(--ink-strong); white-space: nowrap; }
+.notes { margin: 10px 16px 0; color: var(--ink-2); font-size: 14px; }
+.notes b { color: var(--ink-3); font-weight: 500; }
+.markbar { margin-top: 14px; border-top: 1px solid var(--line); padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+.mark-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mark-btn[data-v="approve"][aria-pressed="true"] { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.mark-btn[data-v="fix"][aria-pressed="true"] { background: var(--fix-bg); color: var(--fix); border-color: var(--fix); }
+.mark-btn[data-v="reject"][aria-pressed="true"] { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+.mark-btn:disabled { opacity: .45; cursor: not-allowed; }
+.saved { margin-left: auto; font: 400 12px/1.3 var(--f-mono); color: var(--ink-3); }
+textarea { width: 100%; min-height: 60px; resize: vertical; background: var(--bg); color: var(--ink); border: 1px solid var(--line-2);
+  border-radius: 4px; padding: 8px 10px; font: 400 14px/1.45 var(--f-body); }
+textarea::placeholder { color: var(--ink-3); }
+.rule-text { margin: 12px 16px 0; color: var(--ink); }
+.tok { color: var(--accent); border-bottom: 1px dotted var(--accent); }
+.tok-raw { display: none; font-family: var(--f-mono); font-size: .85em; }
+body.raw .tok-ex { display: none; }
+body.raw .tok-raw { display: inline; }
+.wrap, .wrap > *, .item > *, .card > *, .notes > *, .opt > *, .lang > *, details, .consts li > * { min-width: 0; }
+.lede, .cname, .cwhy, .tag, .chip, td, .rule-text, .when, .prose-tr, .prose-en { overflow-wrap: anywhere; }
+td code { white-space: normal; overflow-wrap: anywhere; }
+.empty { color: var(--ink-3); font-style: italic; }
+@media (max-width: 560px) { h1 { font-size: 28px; } .tally { margin-left: 0; width: 100%; } .item-name { font-size: 20px; } }
+@media (prefers-reduced-motion: no-preference) { .item { transition: border-color .15s ease; } }
+</style>
+
+<!--WAVES-->
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <div class="eyebrow">Project Unicorn · Faz B · Olaylar</div>
+    <h1 id="wave-title">Yazım dalgaları</h1>
+    <p class="lede" id="wave-summary"></p>
+    <p class="status" id="check-line"></p>
+  </header>
+
+  <div class="bar" role="toolbar" aria-label="Dalga ve süzgeç">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="filters" id="filters">
+      <button class="filter" data-f="all" aria-pressed="true" type="button">Hepsi</button>
+      <button class="filter" data-f="none" aria-pressed="false" type="button">İşaretsiz</button>
+      <button class="filter" data-f="fix" aria-pressed="false" type="button">Düzelt</button>
+      <button class="filter" data-f="reject" aria-pressed="false" type="button">Ret</button>
+      <button class="filter" id="raw-toggle" aria-pressed="false" type="button">Ham belirteç</button>
+    </div>
+    <div class="tally" id="tally"></div>
+  </div>
+  <p class="status" id="db-line">İşaretler yükleniyor…</p>
+
+  <section class="panel" id="consts-panel" hidden>
+    <h2>Onay bekleyen sabitler</h2>
+    <ul class="consts" id="consts"></ul>
+  </section>
+
+  <section class="panel" id="existing-panel" hidden>
+    <h2>Bugünkü kâğıtların akıbeti</h2>
+    <ul class="consts" id="existing"></ul>
+  </section>
+
+  <section class="panel">
+    <h2>Dalga hakkında genel not</h2>
+    <textarea id="general-note" placeholder="Bütün dalga için söylemek istediğin (ton, uzunluk, eksik olay)…"></textarea>
+    <span class="saved" id="general-saved"></span>
+  </section>
+
+  <main id="items" style="display:flex;flex-direction:column;gap:16px"></main>
+</div>
+
+<script>
+(function () {
+  const WAVES = [...document.querySelectorAll('script[type="application/json"][data-wave]')].map(s => JSON.parse(s.textContent));
+  const byWave = Object.fromEntries(WAVES.map(w => [w.wave, w]));
+  let current = byWave[location.hash.slice(1)] ? location.hash.slice(1) : WAVES[WAVES.length - 1].wave;
+  let filter = "all";
+  let db = null, unsub = null, writable = true;
+  const marks = {};            // wave -> { docId: {mark, note, at} }
+  const chains = {};           // docId -> promise (one write at a time per doc)
+  const MARK_NAMES = { approve: "Onay", fix: "Düzelt", reject: "Ret" };
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const docId = id => String(id).replace(/[^A-Za-z0-9_\-.~:@+]/g, "_");
+  const coll = w => "marks_" + w;
+
+  let EXAMPLES = {};
+  function filled(cls, text) {
+    const d = el("div", cls);
+    String(text || "").split(/(\{[^{}]+\})/).forEach(part => {
+      if (!/^\{[^{}]+\}$/.test(part)) { if (part) d.append(document.createTextNode(part)); return; }
+      const ex = EXAMPLES[part];
+      const t = el("span", "tok"); t.title = part;
+      t.append(el("span", "tok-ex", ex != null && ex !== "" ? String(ex) : part), el("span", "tok-raw", part));
+      d.append(t);
+    });
+    return d;
+  }
+  function langPair(pair, trCls, enCls) {
+    const box = el("div", "lang");
+    box.append(el("span", "k", "TR"), filled(trCls + " tr", pair.tr), el("span", "k", "EN"), filled(enCls + " en", pair.en));
+    return box;
+  }
+
+  function renderItem(item, w) {
+    EXAMPLES = {};
+    (item.tokens || []).forEach(t => { if (t.token) EXAMPLES[t.token] = t.example; });
+    const m = (marks[w] || {})[docId(item.id)] || {};
+    const art = el("article", "item");
+    art.dataset.id = item.id;
+    if (m.mark) art.dataset.mark = m.mark;
+
+    const head = el("div", "item-head");
+    head.append(el("span", "item-name", item.title_tr || (item.title && item.title.tr) || item.id));
+    const meta = el("div", "meta");
+    if (item.kind) meta.append(el("span", "tag", item.kind));
+    if (item.market) meta.append(el("span", "tag", item.market.toUpperCase()));
+    if (item.severity) meta.append(el("span", "tag sev", item.severity));
+    if (item.speaker_role) meta.append(el("span", "tag", item.speaker_role + (item.stage ? " · " + item.stage : "")));
+    if (item.replaces) meta.append(el("span", "tag", "yerine: " + item.replaces));
+    if (item.approved_text_changed) meta.append(el("span", "tag sev", "onaylı metin değişti"));
+    head.append(meta, el("span", "item-id", item.id));
+    art.append(head);
+
+    if (item.when_tr) {
+      const t = item.stamp ? ` · damga ${item.stamp}, kart ${item.opens || "?"}` : "";
+      art.append(el("p", "when", "Ne zaman: " + item.when_tr + t));
+    }
+    if (item.text_tr) art.append(el("p", "rule-text", item.text_tr));
+
+    const hasCard = item.title || item.body || item.body_variants || item.text || item.options || item.reviews;
+    if (hasCard) {
+      const card = el("div", "card");
+      if (item.sender || item.stamp) {
+        const s = el("div", "sender");
+        s.append(el("span", null, item.sender ? `${item.sender.tr} · ${item.sender.en}` : ""), el("span", null, item.stamp || ""));
+        card.append(s);
+      }
+      if (item.title) card.append(langPair(item.title, "title-tr", "title-en"));
+      if (item.text) card.append(langPair(item.text, "prose-tr", "prose-en"));
+      if (item.text && item.example) card.append(el("div", "lock", "Örnek: " + item.example));
+      if (item.body) card.append(langPair(item.body, "prose-tr", "prose-en"));
+      (item.body_variants || []).forEach(v => {
+        const box = el("div", "variant");
+        box.append(el("span", "case", v.case_tr || "varyant"), langPair(v, "prose-tr", "prose-en"));
+        card.append(box);
+      });
+      (item.reviews || []).forEach(v => {
+        const box = el("div", "variant");
+        box.append(el("span", "case", v.case_tr || v.source_tr || "yorum"), langPair(v, "prose-tr", "prose-en"));
+        card.append(box);
+      });
+      if (item.options && item.options.length) {
+        const opts = el("div", "options");
+        item.options.forEach(o => {
+          const box = el("div", "opt" + (o.locked_in_example ? " locked" : ""));
+          box.append(el("div", "opt-label-tr", (o.label && o.label.tr) || ""), el("div", "opt-label-en", (o.label && o.label.en) || ""));
+          if (o.chips && o.chips.length) {
+            const chips = el("div", "chips");
+            o.chips.forEach(c => { const ch = el("span", "chip", c.tr || ""); const en = el("span", "en", "  " + (c.en || "")); ch.append(en); chips.append(ch); });
+            box.append(chips);
+          }
+          if (o.lock) {
+            const lk = el("div", "lock");
+            const b = el("b", null, o.locked_in_example ? "Bu örnekte kilitli (" + (o.lock.when_tr || "?") + "): " : "Kilitlenir (" + (o.lock.when_tr || "?") + "): ");
+            lk.append(b, document.createTextNode(`${o.lock.tr || ""} · ${o.lock.en || ""}`));
+            box.append(lk);
+          }
+          if (o.does_tr || o.best_when_tr) {
+            const d = el("details");
+            d.append(el("summary", null, "ne yapar · ne zaman en iyisi"));
+            const why = el("div", "why");
+            if (o.does_tr) why.append(el("div", null, "Ne yapar: " + o.does_tr));
+            if (o.best_when_tr) why.append(el("div", null, "En iyi: " + o.best_when_tr));
+            d.append(why);
+            box.append(d);
+          }
+          opts.append(box);
+        });
+        card.append(opts);
+      }
+      if (item.expire) {
+        const ex = el("div", "expire");
+        ex.append(el("div", "lock", "Süre dolarsa" + (item.expire.does_tr ? ` (${item.expire.does_tr})` : "") + ":"), langPair(item.expire, "prose-tr", "prose-en"));
+        card.append(ex);
+      }
+      art.append(card);
+    }
+
+    if ((item.tokens && item.tokens.length) || (item.constants && item.constants.length) || item.notes_tr) {
+      const n = el("div", "notes");
+      if (item.notes_tr) { const p = el("p"); p.append(el("b", null, "Not: "), document.createTextNode(item.notes_tr)); n.append(p); }
+      if (item.constants && item.constants.length) {
+        const p = el("p"); p.append(el("b", null, "Onay bekleyen: "), document.createTextNode(item.constants.map(c => `${c.name} = ${c.value}`).join(" · "))); n.append(p);
+      }
+      if (item.tokens && item.tokens.length) {
+        const d = el("details"); d.append(el("summary", null, `belirteçler (${item.tokens.length})`));
+        const wrap = el("div", "tokens-wrap"); const t = el("table");
+        const thead = el("tr"); ["Belirteç", "Taşıdığı", "Örnek", "Kaynak"].forEach(h => thead.append(el("th", null, h))); t.append(thead);
+        item.tokens.forEach(tk => { const tr = el("tr"); const c = el("td"); c.append(el("code", null, tk.token)); tr.append(c, el("td", null, tk.carries_tr || ""), el("td", null, tk.example || ""), el("td", null, tk.source_tr || "")); t.append(tr); });
+        wrap.append(t); d.append(wrap); n.append(d);
+      }
+      art.append(n);
+    }
+
+    const bar = el("div", "markbar");
+    const row = el("div", "mark-row");
+    ["approve", "fix", "reject"].forEach(v => {
+      const b = el("button", "mark-btn", MARK_NAMES[v]); b.type = "button"; b.dataset.v = v;
+      b.setAttribute("aria-pressed", m.mark === v ? "true" : "false");
+      b.disabled = !db || !writable;
+      b.addEventListener("click", () => saveMark(w, item.id, m.mark === v ? "" : v, null));
+      row.append(b);
+    });
+    const saved = el("span", "saved", m.at ? "kaydedildi " + new Date(m.at).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "");
+    row.append(saved);
+    const ta = el("textarea"); ta.id = "note-" + w + "-" + docId(item.id); ta.placeholder = "Not (neyi değiştirelim, hangi seçenek, hangi cümle)…";
+    ta.value = m.note || ""; ta.disabled = !db || !writable;
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => saveMark(w, item.id, null, ta.value), 900); });
+    ta.addEventListener("blur", () => { clearTimeout(timer); if ((ta.value || "") !== (((marks[w] || {})[docId(item.id)] || {}).note || "")) saveMark(w, item.id, null, ta.value); });
+    bar.append(row, ta);
+    art.append(bar);
+    return art;
+  }
+
+  function visible(item, w) {
+    const m = ((marks[w] || {})[docId(item.id)] || {}).mark || "";
+    if (filter === "all") return true;
+    if (filter === "none") return !m;
+    return m === filter;
+  }
+
+  function renderTally() {
+    const wave = byWave[current]; const mk = marks[current] || {};
+    const c = { approve: 0, fix: 0, reject: 0 };
+    wave.items.forEach(i => { const v = (mk[docId(i.id)] || {}).mark; if (c[v] != null) c[v]++; });
+    const none = wave.items.length - c.approve - c.fix - c.reject;
+    $("#tally").innerHTML = "";
+    $("#tally").append(...[["öğe", wave.items.length], ["onay", c.approve], ["düzelt", c.fix], ["ret", c.reject], ["işaretsiz", none]]
+      .flatMap(([k, v], i) => { const s = el("span"); s.append(el("b", null, String(v)), document.createTextNode(" " + k + (i < 4 ? " · " : ""))); return [s]; }));
+  }
+
+  function render() {
+    const wave = byWave[current];
+    document.title = "Faz B Yazım Dalgaları";
+    $("#wave-title").textContent = `${wave.wave} · ${wave.title_tr || "Yazım dalgası"}`;
+    $("#wave-summary").textContent = wave.summary_tr || "";
+    $("#check-line").textContent = wave.check_line || "";
+    const tabs = $("#tabs"); tabs.innerHTML = "";
+    WAVES.forEach(w => { const b = el("button", "tab", w.wave); b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", w.wave === current ? "true" : "false");
+      b.addEventListener("click", () => { current = w.wave; history.replaceState(null, "", "#" + w.wave); subscribe(); render(); }); tabs.append(b); });
+    const cs = wave.constants || []; $("#consts-panel").hidden = !cs.length; $("#consts").innerHTML = "";
+    cs.forEach(c => { const li = el("li"); li.append(el("span", "cname", `${c.name} = ${c.value}`), el("span", "cwhy", c.why_tr || "")); $("#consts").append(li); });
+    const ex = wave.existing_tr || []; $("#existing-panel").hidden = !ex.length; $("#existing").innerHTML = "";
+    ex.forEach(x => { const li = el("li"); li.append(el("span", "cname", `${x.file} · ${x.kind_tr || ""}`), el("span", "cwhy", x.decision_tr || ""), el("span", "cwhy", x.why_tr || "")); $("#existing").append(li); });
+    const g = ((marks[current] || {})["_genel"] || {});
+    const gn = $("#general-note"); if (document.activeElement !== gn) gn.value = g.note || ""; gn.disabled = !db || !writable;
+    $("#general-saved").textContent = g.at ? "kaydedildi " + new Date(g.at).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "";
+    const box = $("#items"); const focusId = document.activeElement && document.activeElement.id; box.innerHTML = "";
+    const shown = wave.items.filter(i => visible(i, current));
+    if (!shown.length) box.append(el("p", "empty", "Bu süzgeçte öğe yok."));
+    shown.forEach(i => box.append(renderItem(i, current)));
+    if (focusId) { const f = document.getElementById(focusId); if (f) f.focus(); }
+    renderTally();
+  }
+
+  function saveMark(w, id, mark, note) {
+    if (!db || !writable) return;
+    const key = docId(id);
+    const prev = (marks[w] || {})[key] || {};
+    const body = { mark: mark == null ? (prev.mark || "") : mark, note: note == null ? (prev.note || "") : note, at: new Date().toISOString(), item: id };
+    marks[w] = marks[w] || {}; marks[w][key] = body;
+    if (mark != null) render(); else renderTally();
+    chains[key] = (chains[key] || Promise.resolve()).then(() => db.collection(coll(w)).doc(key).set(body)).catch(e => {
+      if (e && e.code === "invalid_argument") { writable = false; $("#db-line").textContent = "Bu görünümde işaret kaydedilemiyor; sayfa salt okunur."; render(); }
+      else $("#db-line").textContent = "İşaret kaydedilemedi (" + (e && e.code || "hata") + "). Bir süre sonra yeniden dene.";
+    });
+  }
+
+  function subscribe() {
+    if (!db) return;
+    if (unsub) unsub();
+    const w = current;
+    unsub = db.collection(coll(w)).onSnapshot(snap => {
+      const mk = {}; snap.docs.forEach(d => { if (d.exists) mk[d.id] = d.data(); });
+      marks[w] = mk; const a = document.activeElement;
+      if (a && a.tagName === "TEXTAREA") renderTally(); else render();
+    }, e => { $("#db-line").textContent = "İşaretler okunamıyor (" + e.code + ")."; });
+  }
+
+  $("#filters").addEventListener("click", e => { const b = e.target.closest(".filter"); if (!b) return;
+    if (b.id === "raw-toggle") { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on ? "true" : "false"); document.body.classList.toggle("raw", on); return; }
+    filter = b.dataset.f;
+    document.querySelectorAll(".filter[data-f]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); render(); });
+  let gTimer = null;
+  $("#general-note").addEventListener("input", e => { clearTimeout(gTimer); gTimer = setTimeout(() => saveMark(current, "_genel", null, e.target.value), 900); });
+
+  render();
+  if (window.claude && window.claude.use) {
+    window.claude.use("db").then(ns => {
+      db = ns;
+      if (!db) { $("#db-line").textContent = "İşaretler bu görünümde kullanılamıyor; metin okunabilir."; render(); return; }
+      $("#db-line").textContent = "İşaretlerin kaydedilir; ana oturum okuyup bağlama adımına taşır.";
+      subscribe(); render();
+    });
+  } else {
+    $("#db-line").textContent = "İşaretler bu görünümde kullanılamıyor; metin okunabilir.";
+  }
+})();
+</script>

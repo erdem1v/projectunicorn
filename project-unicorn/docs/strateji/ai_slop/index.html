@@ -1,0 +1,358 @@
+<title>AI Slop Riski</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek okuma şeridi; hüküm kutusu en üstte, sonra kanıt tabloları, önlemler ve kaynaklar. Menajer Masası dili. */
+:root{
+  --bg:#f3efe7; --surface:#fbf8f2; --ink:#26221c; --muted:#6d6457; --line:#d9d0c1;
+  --accent:#b8761c; --good:#3d7a4a; --warn:#a8741a; --bad:#a3402f; --info:#3f6f8f;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:46px} h2{font-size:30px} h3{font-size:21px}
+p{margin:0;max-width:72ch}
+ul,ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+section{display:flex;flex-direction:column;gap:14px}
+a{color:var(--info)}
+a.ref{font:500 11px/1 var(--f-mono);text-decoration:none;color:var(--info);padding:0 1px;vertical-align:1px}
+a.ref::before{content:"["} a.ref::after{content:"]"}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lead{font-size:18px;max-width:66ch}
+.note{font-size:13px;color:var(--muted)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip{display:inline-block;font:500 11px/1 var(--f-mono);letter-spacing:.04em;padding:4px 7px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.hi{color:var(--bad)} .mid{color:var(--warn)} .lo{color:var(--good)}
+.verdict{border-left:4px solid var(--bad);display:flex;flex-direction:column;gap:12px}
+.verdict .big{font:600 26px/1.2 var(--f-display);max-width:none}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.two .box{display:flex;flex-direction:column;gap:8px;min-width:0}
+.two .box.bad{border-top:3px solid var(--bad)} .two .box.good{border-top:3px solid var(--good)}
+.quote{border-left:3px solid var(--accent);padding:10px 14px;background:var(--surface);font-size:15px}
+.order{counter-reset:o;list-style:none;padding:0;gap:0}
+.order > li{counter-increment:o;display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.order > li::before{content:counter(o);font:600 20px/1 var(--f-display);color:var(--accent);text-align:right;padding-top:2px}
+.order .who{font:400 12px/1.4 var(--f-mono);color:var(--muted);display:block;margin-top:2px}
+.src-list{font-size:13px;gap:4px;padding-left:28px}
+.src-list li{overflow-wrap:anywhere}
+.src-list li:target{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+@media (max-width:560px){h1{font-size:36px} h2{font-size:26px} .lead{font-size:16px} .verdict .big{font-size:22px}}
+</style>
+
+<main>
+
+<header style="display:flex;flex-direction:column;gap:12px">
+  <span class="eyebrow">Project Unicorn · 22 Ekim 2026 · Erdem için</span>
+  <h1>AI Slop Riski</h1>
+  <p class="lead">Soru: oyunumuz oyuncu ve yayıncı gözünde "AI slop" sayılır mı; "sanat odaklı bir oyun değiliz" savunması tutar mı? Dört koldan web araştırması (95 arama), oyunumuzda YZ'nin değdiği her şeyin envanteri ve iki ayrı doğrulayıcı. Köşeli parantezli numaralar en alttaki kaynaklara gider.</p>
+</header>
+
+<section>
+  <span class="eyebrow">Hüküm</span>
+  <div class="box verdict">
+    <p class="big">Bugünkü hâliyle mağazaya çıksak slop sayılma riski yüksek. Aşağıdaki ilk yedi önlem yapılırsa büyük olasılıkla sayılmayız.</p>
+    <p>Oyuncu ve basının tarif ettiği slop dört şeyin birleşimi: görünen YZ görseli, kopya ya da çok küçük kapsam, az emek izlenimi ve YZ'yi saklamak <a class="ref" href="#k-1">1</a><a class="ref" href="#k-2">2</a><a class="ref" href="#k-3">3</a>. Oyunun özü, yani derin sistemler ve özgün tema, bu tarife uymuyor. Sorun, bu derinliğin bugün hiçbir yerde görünmemesi: mağaza sayfası yok, bitiş görselleri boş, müzik YZ, metinlerin çoğu ajan taslağı. Oyuncu oyunu önce kapsülden tanıyacak; derinlik ancak mağazada ve ilk beş dakikada gösterilirse savunma olur.</p>
+    <p>Oyuncunun baktığı şey oyunun ne kadar sanat odaklı olduğu değil, <b>emek izlenimi</b>. Bir oyuncunun sözü: "Emek vermemiş birine para ödemek adil gelmiyor" <a class="ref" href="#k-8">8</a>.</p>
+  </div>
+  <div class="two">
+    <div class="box bad"><h3>Slop sayılırız, eğer</h3><ul>
+      <li>kapsül, bitiş görselleri ya da ikonlar YZ ile yapılmış görünürse</li>
+      <li>metinlerde kalıplaşmış YZ dili kalırsa</li>
+      <li>Steam beyanı kısa ve geçiştirici olursa</li>
+      <li>YZ kullanımı saklanır ve sonradan ortaya çıkarsa</li>
+    </ul></div>
+    <div class="box good"><h3>Büyük olasılıkla sayılmayız, eğer</h3><ul>
+      <li>oyuncunun gördüğü görseller insan elinden çıkmışsa</li>
+      <li>metinler insan editörden geçmişse</li>
+      <li>Steam beyanı dürüst ve somutsa</li>
+      <li>kapsam ilk beş dakikada görünüyorsa</li>
+    </ul></div>
+  </div>
+  <p class="note">Belirsizlik: kodu ve metni YZ ile yazılmış, veri ve kart ağırlıklı bir yönetim oyununun tam eşi bulunamadı. En yakın örnekler iki yönü de gösteriyor: beyanlı küçük stüdyo yönetim ve simülasyon oyunları ticari başarı yakalayabiliyor (Supermarket Simulator); strateji kitlesinde YZ sese tepki gerçek ama atlatılabilir (Stellaris: The Machine Age) <a class="ref" href="#k-79">79</a><a class="ref" href="#k-80">80</a><a class="ref" href="#k-81">81</a>.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Savunma</span>
+  <h2>"Sanat odaklı değiliz" tutar mı?</h2>
+  <div class="box" style="display:flex;flex-direction:column;gap:10px">
+    <p><b>Yayıncıda zayıf tutar. Asıl zayıf noktamız sanat değil, metin.</b> Oyunumuzun ağırlığı metin, metin de birçok yayıncının ve mağazanın çizgisinde "varlık" sayılıyor <a class="ref" href="#k-35">35</a><a class="ref" href="#k-43">43</a>. Kodu ayrı tutan tek yayıncı kuralı (Fireshine) bile yalnız kod tamamlama gibi verimlilik araçlarını ayırıyor <a class="ref" href="#k-31">31</a><a class="ref" href="#k-74">74</a>.</p>
+    <p><b>"Son üründe yok" ya da "yer tutucuydu" savunmaları da tutmadı.</b> Larian "sanatçıların yerine YZ koymuyoruz" dedi, tepki dinmedi ve konsept sanatta ve metinde YZ'yi bıraktı <a class="ref" href="#k-38">38</a><a class="ref" href="#k-39">39</a>. Clair Obscur'un YZ dokuları yer tutucuydu ve yamayla kalktı; Indie Game Awards ödülleri yine de geri alındı, çünkü başvurudaki "YZ kullanmadık" beyanıyla çelişiyordu <a class="ref" href="#k-22">22</a>.</p>
+    <p><b>Tutan çerçeve şu:</b> "Kod YZ destekli; oyuncunun gördüğü şu şeyler insan elinden; metinler şu süreçten geçti." Ayrıntısı aşağıda, yayıncı bölümünde.</p>
+  </div>
+  <div class="box scroll">
+    <table>
+      <thead><tr><th>Yayıncı ya da mağaza</th><th>Kural</th><th>Bizim için anlamı</th></tr></thead>
+      <tbody>
+        <tr><td>Fireshine</td><td>"Üretken YZ'ye ya da üretken sanata dayanan ortaklarla çalışmıyoruz." Kod tamamlama gibi verimlilik araçlarını ayrı tutuyor <a class="ref" href="#k-31">31</a><a class="ref" href="#k-74">74</a>.</td><td>Kodu ayıran tek kanıt; ajanla yazılmış kod ve YZ metin taslağı bu ayrığa girmeyebilir.</td></tr>
+        <tr><td>Hooded Horse (Manor Lords)</td><td>Sözleşmede YZ varlığı yasak, yer tutucu da dahil. CEO geliştiricilere iş akışında üretken YZ'den tamamen kaçınmalarını öneriyor <a class="ref" href="#k-32">32</a><a class="ref" href="#k-33">33</a><a class="ref" href="#k-34">34</a>.</td><td>Strateji ve yönetim türünün doğal yayıncısı, ama bize kod için de kapalı sayılmalı.</td></tr>
+        <tr><td>Pocketpair yayıncılık</td><td>Üretken YZ'ye dayanan oyunları desteklemiyor <a class="ref" href="#k-3">3</a>.</td><td>Kapsülü YZ olan demoya bakılmıyor.</td></tr>
+        <tr><td>Panic (Playdate Catalog)</td><td>Sanat, ses, müzik, metin ve diyalogda YZ yasak; kodda serbest ama beyan şart <a class="ref" href="#k-35">35</a><a class="ref" href="#k-36">36</a>.</td><td>Metni de varlık sayan bir çizgi.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Sektörün havası da aleyhimize: GDC 2026 anketinde (~2.300 sektör profesyoneli) katılımcıların %52'si üretken YZ'nin sektöre olumsuz etkisi olduğunu düşünüyor; 2025'te %30, 2024'te %18'di. Programcıların bile %59'u olumsuz <a class="ref" href="#k-37">37</a><a class="ref" href="#k-75">75</a>. Oyuncu anketleri örneklemine göre ayrışıyor: çekirdek oyuncuda %85 olumsuz <a class="ref" href="#k-24">24</a>, ~3.800 Steam hayranında yalnız %8 "hiçbir koşulda almam" diyor ve en çok kabul gören koşul "insan incelemesi ve gözetimi" <a class="ref" href="#k-27">27</a><a class="ref" href="#k-40">40</a>.</p>
+</section>
+
+<section>
+  <span class="eyebrow">İşaretler</span>
+  <h2>Oyuncular neye bakıp "AI slop" diyor</h2>
+  <div class="box scroll">
+    <table>
+      <thead><tr><th>İşaret</th><th>Kanıt</th><th>Bizde</th></tr></thead>
+      <tbody>
+        <tr><td><b>Kapsül ve tanıtım görselleri</b>, en çok anılan ilk işaret</td><td>Görsel şikayetlerin başı YZ kapak sanatı <a class="ref" href="#k-6">6</a>; PC Gamer: YZ kapsül sanatı "bir veba" <a class="ref" href="#k-9">9</a>; Pocketpair'den bir yönetici kapsülü YZ olan demolara bakmıyor <a class="ref" href="#k-3">3</a>.</td><td><span class="chip hi">açık</span> Kapsül, ekran görüntüsü, fragman yok.</td></tr>
+        <tr><td><b>Oyunda görünen ya da duyulan YZ</b>: ara sahne, resim, yükleme ekranı, ses</td><td>Vapor World <a class="ref" href="#k-11">11</a>, Crimson Desert <a class="ref" href="#k-12">12</a>, Anno 117 <a class="ref" href="#k-13">13</a>, Black Ops 7 <a class="ref" href="#k-14">14</a>, Arc Raiders <a class="ref" href="#k-15">15</a></td><td><span class="chip hi">açık</span> Bitiş görselleri boş, müzik YZ, ikonların kaynağı kayıtsız.</td></tr>
+        <tr><td><b>Kopya ve küçük kapsam</b></td><td>2026'da Steam'e 2025'in tamamından fazla oyun çıktı <a class="ref" href="#k-70">70</a>; demolar günler içinde kopyalanıyor <a class="ref" href="#k-17">17</a>; "ucuz, ruhsuz yönetim oyunları" slop örneği <a class="ref" href="#k-18">18</a>.</td><td><span class="chip lo">lehimize</span> Kapsam geniş ve özgün, ama gösterilirse.</td></tr>
+        <tr><td><b>Saklamak, sonradan yakalanmak</b></td><td>Tepki YZ'yi saklayanlarda toplanıyor <a class="ref" href="#k-3">3</a>: 1666: Amsterdam <a class="ref" href="#k-19">19</a><a class="ref" href="#k-20">20</a>, Lutris <a class="ref" href="#k-21">21</a>, Clair Obscur <a class="ref" href="#k-22">22</a>, The Alters <a class="ref" href="#k-23">23</a>.</td><td><span class="chip mid">henüz beyan yok</span> Doğru yapılırsa risk düşük.</td></tr>
+        <tr><td><b>Metin, diyalog, yerelleştirme</b></td><td>Çekirdek oyuncuların %83'ü YZ diyaloğa olumsuz bakıyor <a class="ref" href="#k-24">24</a>; Rideshare Simulator <a class="ref" href="#k-25">25</a> ve Shrine's Legacy <a class="ref" href="#k-26">26</a> YZ metin suçlaması aldı.</td><td><span class="chip hi">en büyük yüzeyimiz</span> Metinlerin çoğu ajan taslağı.</td></tr>
+        <tr><td><b>Kod</b></td><td>Yalnız kod yüzünden yorum bombası yiyen oyun bulunamadı <a class="ref" href="#k-3">3</a><a class="ref" href="#k-17">17</a>; oyuncuların en çok kabul ettiği YZ kullanımı kod <a class="ref" href="#k-27">27</a><a class="ref" href="#k-28">28</a>. Ama basın kodu da slop anlatısına katıyor ve Claude'u adıyla anıyor <a class="ref" href="#k-1">1</a><a class="ref" href="#k-4">4</a>; "vibe-coded" hakaret olarak kullanılıyor <a class="ref" href="#k-16">16</a>.</td><td><span class="chip mid">oyuncuda düşük, basında orta</span></td></tr>
+        <tr><td><b>Kanıtsız suçlama</b></td><td>"YZ ses" denilen ses geliştiricinin eşinin sesiydi <a class="ref" href="#k-29">29</a>; "AI slop" kanıtsız savrulan bir hakaret oldu <a class="ref" href="#k-30">30</a>.</td><td>Jenerik görünen her yüzey suçlanabilir.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Steam</span>
+  <h2>Neyi beyan etmemiz gerekir</h2>
+  <p>Ocak 2026'da yeniden yazılan kural: beyan yalnız oyunla gelen ve oyuncunun tükettiği YZ içeriği için; sanat, ses, anlatı, yerelleştirme, pazarlama materyali ve mağaza içeriği dahil. "Verimlilik kazanımları bu bölümün odağı değil"; kod yardımcıları kapsam dışı sayılıyor <a class="ref" href="#k-43">43</a><a class="ref" href="#k-44">44</a><a class="ref" href="#k-45">45</a><a class="ref" href="#k-46">46</a>. Valve'ın sayfası doğrudan okunmadı, bir kez elle okunmalı.</p>
+  <div class="two">
+    <div class="box bad"><h3>Büyük olasılıkla gerekir</h3><ul>
+      <li>TR/EN oyun metinleri ve yerelleştirme (ajan taslağı, Erdem düzeltisi). "İnsan elden geçirdi" demenin beyanı kaldırdığını söyleyen kaynak yok.</li>
+      <li>Müzik (YZ aracıyla yapıldı)</li>
+      <li>İkonlar, YZ ile yapıldıysa (kaynak kayıtsız)</li>
+      <li>3B ofis geometrisi: YZ'nin yazdığı kodla üretildi, gri bölge</li>
+      <li>Mağaza metni ve tüm pazarlama materyali, YZ yaparsa</li>
+    </ul></div>
+    <div class="box good"><h3>Gerekmez</h3><ul>
+      <li>GDScript kodu ve araçlar <a class="ref" href="#k-44">44</a></li>
+      <li>Quaternius karakterleri (hazır paket)</li>
+      <li>Portreler (hazır modelin render'ı)</li>
+      <li>Fontlar (OFL lisanslı)</li>
+      <li>Canlı üretilen YZ: oyunda yok</li>
+    </ul></div>
+  </div>
+  <div class="box scroll">
+    <table>
+      <thead><tr><th>Beyanın bilinen etkisi (hepsi ilişki, neden kanıtı değil)</th><th>Kaynak</th></tr></thead>
+      <tbody>
+        <tr><td>Beyanlı oyunlar benzerlerine göre ilk dönemde ~%53 daha az yorum aldı; en az 100 yorumluda ortalama puan %84,6'ya karşı %88,3. Doğruysa ~4 puanlık fark %90 hedefimiz için önemli. Birincil rapor bulunamadı, yalnız yön göstergesi.</td><td><a class="ref" href="#k-7">7</a><a class="ref" href="#k-82">82</a></td></tr>
+        <tr><td>Beyanlı oyunlar yeni çıkışların ~üçte biri, tahmini satışın %10–27'si. Başarılılarda beyan daha uzun (medyan 22 kelimeye 13), insan gözetiminden söz eden beyan daha sık (%21'e %12), YZ'nin rolünün sınırını çizen dil daha sık (%59'a %41). Tek satırlık beyan başarısızlarda üç kat sık (%35'e %13).</td><td><a class="ref" href="#k-49">49</a><a class="ref" href="#k-50">50</a></td></tr>
+        <tr><td>Beyanlı ve sekiz haneli gelirli 12 oyunun içinde küçük stüdyo yönetim ve simülasyon oyunları var (Supermarket Simulator, Infection Free Zone, Bellwright). Yine de beyanlıların çoğu $10.000'ın altında.</td><td><a class="ref" href="#k-79">79</a></td></tr>
+        <tr><td>Haziran 2026 Next Fest'te istek listesini en çok büyüten 25 demonun 6'sında beyan vardı. Beyan gizli bir engel değil, avantaj da değil.</td><td><a class="ref" href="#k-3">3</a></td></tr>
+        <tr><td>Oyuncuların "YZ'yi gizle" filtresi talebi 14.000'den fazla oy aldı; Valve'ın kendi filtresi yok. Gelirse beyanın maliyeti artar (olasılık, kaynağı yok).</td><td><a class="ref" href="#k-52">52</a><a class="ref" href="#k-48">48</a><a class="ref" href="#k-53">53</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Örnekler</span>
+  <h2>Tepki görenler ve iyi karşılananlar</h2>
+  <div class="box scroll">
+    <table>
+      <thead><tr><th>Oyun</th><th>Ne oldu</th><th>Sonuç</th></tr></thead>
+      <tbody>
+        <tr><td>Agile Team (Eki 2026, bize yakın tür)</td><td>Oyun ve pazarlama görsellerinde YZ, Steam'de beyanlı</td><td>Görselleri "prompt'tan çıkmış gibi" diye slop örneği oldu. Beyan ve tür korumadı <a class="ref" href="#k-4">4</a><a class="ref" href="#k-5">5</a>.</td></tr>
+        <tr><td>Vapor World (Ağu 2026)</td><td>Beyanlı YZ ara sahneler</td><td>%36 olumlu; ara sahneler günler içinde kaldırıldı <a class="ref" href="#k-11">11</a><a class="ref" href="#k-71">71</a><a class="ref" href="#k-76">76</a>.</td></tr>
+        <tr><td>Anno 117 (Kas 2025, bize yakın tür)</td><td>Yükleme ekranında YZ görseli</td><td>"Yer tutucuydu" açıklaması; bazı oyuncular satın almayı erteledi <a class="ref" href="#k-13">13</a>.</td></tr>
+        <tr><td>Stellaris: The Machine Age (2024)</td><td>YZ ses beyanı</td><td>Yorumlar "Very Positive"ten "Mixed"e indi; Stellaris yine de en çok kazanan beyanlı oyunlar arasında <a class="ref" href="#k-81">81</a><a class="ref" href="#k-79">79</a>.</td></tr>
+        <tr><td>1666: Amsterdam (2026)</td><td>Beyansız YZ portre ve pazarlama sanatı</td><td>Özür ve "tam oyunda YZ yok" sözü; tepkiyi büyüten saklamaktı <a class="ref" href="#k-19">19</a><a class="ref" href="#k-20">20</a>.</td></tr>
+        <tr><td>Clair Obscur (Ara 2025)</td><td>Yer tutucu YZ dokular, başvuruda "YZ yok"</td><td>Indie Game Awards ödülleri geri alındı <a class="ref" href="#k-22">22</a><a class="ref" href="#k-77">77</a>.</td></tr>
+        <tr><td>Lutris (Mar 2026)</td><td>Claude kullanımı commit'lerden gizlendi</td><td>Tepki gizlemeye geldi, etiket geri kondu <a class="ref" href="#k-21">21</a>.</td></tr>
+        <tr><td>Supermarket Simulator (Nokta Games)</td><td>Küçük Türk stüdyo, beyanlı oyunlar listesinde</td><td>~%92 olumlu, 34.527 yorum <a class="ref" href="#k-79">79</a><a class="ref" href="#k-80">80</a>.</td></tr>
+        <tr><td>Big Ambitions · Software Inc</td><td>YZ öncesi küçük ekip yönetim oyunları</td><td>%91 ve ~%94 olumlu; övgü iş derinliğine ve sürekli güncellemeye <a class="ref" href="#k-61">61</a><a class="ref" href="#k-62">62</a>.</td></tr>
+        <tr><td>Shrine's Legacy</td><td>Haksız "ChatGPT ile yazılmış" suçlaması</td><td>Geliştirme kodunun fotoğraflarını paylaştı, çok olumlu kaldı <a class="ref" href="#k-26">26</a><a class="ref" href="#k-60">60</a>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Bizde</span>
+  <h2>Risk listemiz</h2>
+  <div class="box scroll">
+    <table>
+      <thead><tr><th>Öğe</th><th>Nasıl yapıldı</th><th>Risk</th><th>Neden</th></tr></thead>
+      <tbody>
+        <tr><td>Steam sayfası</td><td>Henüz yok</td><td><span class="chip hi">yüksek</span></td><td>Oyuncu ve yayıncı ilk burada değerlendirir; kapsül en hızlı slop işareti <a class="ref" href="#k-6">6</a><a class="ref" href="#k-2">2</a>.</td></tr>
+        <tr><td>Bitiş görselleri (7)</td><td>Yok, ekranda "GÖRSEL YAKINDA"</td><td><span class="chip hi">yüksek</span></td><td>Boş çerçeve bitmemiş görünür; kolay çözüm YZ görseli, oyuncu en sert ona tepki veriyor.</td></tr>
+        <tr><td>Müzik ("Döngü Modu")</td><td>YZ müzik aracı; $10 lisans depoda kayıtlı değil</td><td><span class="chip hi">yüksek</span></td><td>Ses beyana girer; tek parçanın tekrarı "hazır" hissini güçlendirir. Çözmesi ucuz.</td></tr>
+        <tr><td>Oyun metinleri (3.181 anahtar)</td><td>Ajan taslağı, Erdem düzeltisi</td><td><span class="chip hi">yüksek</span></td><td>Anlatı ve yerelleştirme beyana girer; oyuncular en çok diyalog metnine itiraz ediyor <a class="ref" href="#k-24">24</a>.</td></tr>
+        <tr><td>Arayüz ikonları (90 SVG)</td><td>Kaynak kayıtsız</td><td><span class="chip mid">orta</span></td><td>Her ekranda görünür; "kim çizdi" sorusunun cevabı yok.</td></tr>
+        <tr><td>3B ofis</td><td>YZ'nin yazdığı prosedürel kod, Erdem'in yönü</td><td><span class="chip mid">orta</span></td><td>Ekran görüntülerinin ana öğesi, beyan açısından gri bölge; hazır paketi bilerek reddetmemiz lehimize.</td></tr>
+        <tr><td>Karakterler (Quaternius)</td><td>Hazır paket</td><td><span class="chip mid">orta</span></td><td>YZ değil, ama yaygın modeller ve lisans tutarsız (README CC0, notlarda CC-BY, sitede QAL); atıf dosyası yok.</td></tr>
+        <tr><td>Arayüz dili (Menajer Masası)</td><td>Maket ve senin 11 kararın</td><td><span class="chip mid">orta</span></td><td>Tutarlı bir kimlik var; "web paneli" görünümü riski sürüyor.</td></tr>
+        <tr><td>Kod (basın ve yayıncı gözü)</td><td>Claude ajanları</td><td><span class="chip mid">orta</span></td><td>Basın Claude'u adıyla anıyor <a class="ref" href="#k-1">1</a><a class="ref" href="#k-4">4</a>; Hooded Horse çizgisi kodu dışarıda bırakmıyor <a class="ref" href="#k-32">32</a>. Commit'lerdeki Claude satırları silinmemeli: tepkiyi büyüten gizlemek <a class="ref" href="#k-21">21</a>.</td></tr>
+        <tr><td>Kod (oyuncu gözü)</td><td>Claude ajanları</td><td><span class="chip lo">düşük</span></td><td>Beyan dışı; yalnız kod yüzünden yorum bombası yiyen oyun bulunamadı.</td></tr>
+        <tr><td>Portreler, fontlar</td><td>Hazır model render'ı, OFL</td><td><span class="chip lo">düşük</span></td><td>YZ yüzü değil, lisans temiz.</td></tr>
+        <tr><td>Jenerik</td><td>Boş</td><td><span class="chip lo">düşük</span></td><td>"Arkasında insan var" sinyali şu an sıfır; ucuz kazanç.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Metin taraması: uzun çizgi TR ve EN'de sıfır. "X değil, Y" kalıbı TR'de 10 satır; EN'de "is not …, it …" 14, "no longer" 8. EN'de 644 uzun satırın 51'i dört kelimelik kısa bir cümleyle bitiyor ("Nobody notices. Until it falls over."). Bu kalıplar ürün özelliği, Ar-Ge ve adım açıklamalarında toplanıyor (~1.000 satır). Frank, olay kartları ve istifa sesleri somut ve insansı. Çözüm kelime yasağı değil; o katmanda bir insan editör turu ve özgül ayrıntı.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Önlemler</span>
+  <h2>Ne yapılmalı, öncelik sırasıyla</h2>
+  <p>Hepsi Steam Coming Soon sayfası açılmadan önce bitmeli. İlk yedisi hükmü değiştiren önlemler.</p>
+  <div class="box">
+    <ol class="order">
+      <li><div><b>Oyuncunun gördüğü hiçbir görselde üretken YZ yok.</b> Bitiş görselleri, kapsül, ana görsel ve logo dahil. Bitiş görselleri için illüstratör ya da tipografik "gazete manşeti" çözümü. <a class="ref" href="#k-11">11</a><a class="ref" href="#k-12">12</a><a class="ref" href="#k-13">13</a><a class="ref" href="#k-32">32</a><span class="who">Erdem karar verir · hemen</span></div></li>
+      <li><div><b>Müzik:</b> lisans belgesini depoya koy; insan besteci mi, beyan mı, karar ver.<span class="who">Erdem · bu hafta, ucuz</span></div></li>
+      <li><div><b>İkonların kaynağını</b> git geçmişinden kayda geçir; YZ çıktısıysa ya insan elinden geçsin ya beyan edilsin.<span class="who">Claude araştırır, Erdem karar verir · kapsülden önce</span></div></li>
+      <li><div><b>Quaternius lisansını doğrula</b>, atıf dosyasını yaz.<span class="who">Claude · kapsülden önce</span></div></li>
+      <li><div><b>Kapsül, ana görsel ve logo ücretli insan sanatçıya.</b> Eskizler saklansın, geliştirme günlüğünde paylaşılsın. <a class="ref" href="#k-6">6</a><a class="ref" href="#k-9">9</a><a class="ref" href="#k-3">3</a><span class="who">Baki sanatçıyı bulur ve yönetir, Erdem onaylar · Coming Soon'dan önce</span></div></li>
+      <li><div><b>Metin editör turu:</b> önce ürün, özellik ve Ar-Ge katmanı; EN metne ana dili İngilizce olan bir okuyucu. <a class="ref" href="#k-24">24</a><a class="ref" href="#k-43">43</a><span class="who">Erdem, gerekirse dış editör · demodan önce</span></div></li>
+      <li><div><b>Beyan metni:</b> somut, birkaç cümle; insan gözetimini anlatan ve YZ'nin rolünün sınırını doğru çizen. Yalnız doğru olanı yaz. <a class="ref" href="#k-49">49</a><a class="ref" href="#k-27">27</a><a class="ref" href="#k-47">47</a><span class="who">Claude taslak yazar, Erdem son sözü söyler · sayfa açılmadan</span></div></li>
+      <li><div><b>Kodun YZ ile yazıldığı söylenecek mi?</b> Valve istemiyor; GameDiscoverCo katılımcılarının %55,7'si etiket istiyor. Öneri: SSS'de ya da geliştirme günlüğünde tek cümle; tasarım emeğini ve kararları öne alsın, "vibe-coded" çağrışımından uzak dursun. Sonradan ortaya çıkmak daha pahalı. <a class="ref" href="#k-27">27</a><a class="ref" href="#k-21">21</a><a class="ref" href="#k-1">1</a><a class="ref" href="#k-4">4</a><span class="who">Erdem karar verir · 7 ile birlikte</span></div></li>
+      <li><div><b>Ekran görüntüleri ve fragman gerçek oyundan;</b> ilk beş dakikayı ve kapsamı göstersin. <a class="ref" href="#k-2">2</a><span class="who">Erdem çeker, Baki kurgular · Coming Soon</span></div></li>
+      <li><div><b>Mağaza metni ve tüm pazarlama materyali insan elinden;</b> YZ yaparsa beyana girer. <a class="ref" href="#k-43">43</a><a class="ref" href="#k-44">44</a><span class="who">Baki yazar, Erdem düzeltir · Coming Soon</span></div></li>
+      <li><div><b>Kör algı testi:</b> oyunu bilmeyen 5–10 oyuncuya kapsül ve 3 ekran görüntüsü, "Bu YZ ile mi yapılmış?"<span class="who">Baki · kapsül bitince</span></div></li>
+      <li><div><b>Geliştirme günlüğüyle şeffaflık:</b> kararlar, reddedilen yönler, eskizler, sürüm geçmişi. <a class="ref" href="#k-26">26</a><a class="ref" href="#k-60">60</a><a class="ref" href="#k-59">59</a><span class="who">Baki · sayfa açılınca, sürekli</span></div></li>
+      <li><div><b>Jenerik:</b> Erdem, Baki, sanatçı, besteci, Quaternius, font yazarları.<span class="who">Erdem ve Claude · demodan önce</span></div></li>
+      <li><div><b>"No Gen AI" mührünü kullanma;</b> metin YZ taslağı olduğu için doğru olmaz. <a class="ref" href="#k-69">69</a><a class="ref" href="#k-22">22</a><span class="who">herkes · sürekli</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Yayıncı</span>
+  <h2>Yayıncıya nasıl anlatılır</h2>
+  <p><b>Önce sor:</b> YZ politikanız ne, kod ile metni ayırıyor musunuz? Hooded Horse tipi yayıncılar bize kod için de kapalı sayılmalı <a class="ref" href="#k-32">32</a><a class="ref" href="#k-34">34</a>; Fireshine tipi yayıncılara ajanla yazılmış kod ve metin taslağı açıkça sorulmalı <a class="ref" href="#k-31">31</a><a class="ref" href="#k-74">74</a>.</p>
+  <div class="quote">İki kişilik ekibiz. Tasarım, sistemler ve her karar Erdem'in. Kodu ve metin taslaklarını Claude ajanlarıyla yazdık; metinleri [şu süreçle] düzenliyoruz. Oyuncunun gördüğü görsellerde üretken görsel YZ yok: kapsül [sanatçı], karakterler Quaternius paketi, 3B ofis bizim tasarımımız. Steam beyanımız şu: [...]</div>
+  <p>Ardından emek izlerini göster: tasarım belgeleri, karar kayıtları, test kapıları, sürüm geçmişi ve kapsam (B2B/B2C, dönemler, rakipler). Kapsam kendi başına emek kanıtı sayılmıyor; gösterilirse işe yarıyor <a class="ref" href="#k-2">2</a><a class="ref" href="#k-61">61</a>.</p>
+  <div class="box"><h3 style="margin-bottom:8px">Kaçınılacak ifadeler</h3><ul>
+    <li>"YZ kullanmadık" ya da gerçeği küçülten "neredeyse hiç": Clair Obscur'u yakan yanlış beyandı <a class="ref" href="#k-22">22</a>. YZ'nin rolünün sınırını doğru çizmek ise sorun değil <a class="ref" href="#k-49">49</a>.</li>
+    <li>"Sanat odaklı değiliz, o yüzden önemli değil": metin yayıncı ve mağaza kurallarına giriyor <a class="ref" href="#k-35">35</a><a class="ref" href="#k-43">43</a>.</li>
+    <li>"Yer tutucuydu" ya da "son üründe yok": Larian ve Clair Obscur'da işe yaramadı <a class="ref" href="#k-38">38</a><a class="ref" href="#k-22">22</a>.</li>
+    <li>"Herkes kullanıyor" ya da "YZ ile 10 kat hızlı yaptık": Epic'in tonu tepki çekti <a class="ref" href="#k-55">55</a><a class="ref" href="#k-54">54</a>.</li>
+    <li>Kendimizi "vibe-coded" diye tanımlamak <a class="ref" href="#k-16">16</a><a class="ref" href="#k-1">1</a>.</li>
+  </ul></div>
+</section>
+
+<section>
+  <span class="eyebrow">Sınırlar</span>
+  <h2>Bilmediklerimiz</h2>
+  <div class="box"><ul>
+    <li>Valve'ın güncel beyan sayfası doğrudan okunmadı; "kod kapsam dışı" ve "insan düzeltisinden geçen metin de beyana girer" ikincil kaynaklara dayanıyor. Steamworks sayfası bir kez elle okunmalı.</li>
+    <li>Kodu ve metni YZ ile yazılmış, veri ve kart ağırlıklı bir yönetim oyununun tam eşi bulunamadı.</li>
+    <li>Ekim 2026 Next Fest'in beyan ve istek listesi verisi henüz yayımlanmadı; etkinlik 26 Ekim'de bitiyor.</li>
+    <li>Game Oracle'ın özgün raporuna ulaşılamadı; %53 ve puan farkı ikincil kaynaklardan.</li>
+    <li>Reddit ve X'e doğrudan bakılmadı; oy sayıları haber sitelerinden.</li>
+    <li>Devolver, Raw Fury, Paradox gibi yayıncıların politikası için kaynak bulunamadı. Türk oyuncuların YZ metne tepkisi aranmadı.</li>
+    <li>Kendi açıklarımız: müzik lisansı, ikonların kaynağı, Quaternius lisansı, metinlerin ne kadarının gerçekten insan düzeltisinden geçtiği (beyan buna göre yazılır).</li>
+    <li>Doğrulanamayan ama çürütülemeyen: Pocketpair politikası, %17 güven oranı, Party Animals, Arc Raiders'ın yeniden kaydı, Black Ops 7'nin satış farkı.</li>
+  </ul></div>
+  <p class="note">Doğrulamada değişenler: bir veri tablosunda ters yazılmış iki satır düzeltildi ve ona dayanan gerekçeler kaldırıldı; hüküm koşullu hâle geldi; Agile Team'in beyanlı olduğu düzeltildi; kod riski "oyuncuda düşük, basın ve yayıncıda orta" diye ikiye ayrıldı; türe yakın başarılı örnekler eklendi; tarih ve örneklem ayrıntıları düzeltildi.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Kaynaklar</span>
+  <h2>Kaynak listesi</h2>
+  <div class="box"><ol class="src-list">
+<li id="k-1" value="1">Kotaku, &quot;Steam Next Fest Has Become A Massive Disaster And A Grim Look At The Future&quot;, 2026-10-20. <a href="https://kotaku.com/steam-next-fest-has-become-a-massive-disaster-and-a-grim-look-at-the-future-2000748008" target="_blank" rel="noopener">kotaku.com/steam-next-fest-has-become-a-massive-disaster-and-a-grim-lo…</a></li>
+<li id="k-2" value="2">PokeIndie, &quot;Steam Next Fest October 2026, 8,011 Demos and AI Slop&quot;, 2026-10-20. <a href="https://pokeindie.com/blog/steam-week-in-review-next-fest-8000-demos-ai-slop" target="_blank" rel="noopener">pokeindie.com/blog/steam-week-in-review-next-fest-8000-demos-ai-slop</a></li>
+<li id="k-3" value="3">Naavik, &quot;Steam Next Fest&#x27;s AI Problems&quot;, 2026-07-07. <a href="https://naavik.substack.com/p/steam-next-fests-ai-problems" target="_blank" rel="noopener">naavik.substack.com/p/steam-next-fests-ai-problems</a></li>
+<li id="k-4" value="4">Destructoid, &quot;&#x27;AI slop fest&#x27;: PC gamers are annoyed with Steam Next Fest&#x27;s abundance of AI titles&quot;, 2026-10-20. <a href="https://www.destructoid.com/ai-slop-fest-pc-gamers-annoyed-steam-next-fest-ai-titles/" target="_blank" rel="noopener">destructoid.com/ai-slop-fest-pc-gamers-annoyed-steam-next-fest-ai-titl…</a></li>
+<li id="k-5" value="5">Steam mağaza sayfası, Agile Team (YZ beyanı: &quot;AI assisted in asset generation and editing of game and marketing materials&quot;), 2026-10. <a href="https://store.steampowered.com/app/4459220/" target="_blank" rel="noopener">store.steampowered.com/app/4459220/</a></li>
+<li id="k-6" value="6">PC Guide, &quot;Steam Next Fest has even more generative AI than last time&quot;, 2026-10-20. <a href="https://www.pcguide.com/news/steam-next-fest-has-even-more-generative-ai-than-last-time-gamers-say-the-event-is-absolutely-ruined/" target="_blank" rel="noopener">pcguide.com/news/steam-next-fest-has-even-more-generative-ai-than-last…</a></li>
+<li id="k-7" value="7">Notebookcheck, &quot;Study suggests AI is hurting video game sales&quot; (Game Oracle aktarımı; ikincil, aktarımlar çelişkili), 2026-06-25. <a href="https://www.notebookcheck.net/Study-suggests-AI-is-hurting-video-game-sales.1328725.0.html" target="_blank" rel="noopener">notebookcheck.net/Study-suggests-AI-is-hurting-video-game-sales.132872…</a> ; ayrıca Digital Citizen (arama özeti) <a href="https://www.digitalcitizen.life/steam-games-that-disclose-ai-use-may-sell-far-less-new-study-finds/" target="_blank" rel="noopener">digitalcitizen.life/steam-games-that-disclose-ai-use-may-sell-far-less…</a></li>
+<li id="k-8" value="8">Shane the Gamer, &quot;Steam Next Fest Flooded With AI Games as Players Push for a No-AI Filter&quot;, 2026-10-20. <a href="https://www.shanethegamer.com/news/steam-next-fest-ai-games-filter/" target="_blank" rel="noopener">shanethegamer.com/news/steam-next-fest-ai-games-filter/</a></li>
+<li id="k-9" value="9">PC Gamer, &quot;Steam Week in Review: spammy, AI-generated capsule art is a pox&quot; (yalnız başlık), 2026. <a href="https://pcgamer.com/gaming-industry/steam-week-in-review-spammy-ai-generated-capsule-art-is-a-pox-and-it-makes-browsing-steam-less-fun/" target="_blank" rel="noopener">pcgamer.com/gaming-industry/steam-week-in-review-spammy-ai-generated-c…</a></li>
+<li id="k-10" value="10">Shacknews, &quot;Facepunch studio statement on AI slop, s&amp;box&quot;, 2026-04-29. <a href="https://www.shacknews.com/article/148928/facepunch-studio-statement-on-ai-slop-sbox" target="_blank" rel="noopener">shacknews.com/article/148928/facepunch-studio-statement-on-ai-slop-sbo…</a></li>
+<li id="k-11" value="11">Everything Edinburgh, &quot;One Studio&#x27;s AI Gamble Blew Up on Steam&quot; (Vapor World), 2026-08. <a href="https://everythingedinburgh.com/games/news/vapor-world-steam-ai-cutscene-backlash/" target="_blank" rel="noopener">everythingedinburgh.com/games/news/vapor-world-steam-ai-cutscene-backl…</a></li>
+<li id="k-12" value="12">GIGAZINE, Crimson Desert AI art, 2026-03-23. <a href="https://www.gigazine.net/gsc_news/en/20260323-crimson-desert-ai-art" target="_blank" rel="noopener">gigazine.net/gsc_news/en/20260323-crimson-desert-ai-art</a></li>
+<li id="k-13" value="13">VGC, &quot;Ubisoft says AI-generated art in Anno 117 was a placeholder&quot;, 2025-11. <a href="https://www.videogameschronicle.com/news/ubisoft-says-ai-generated-art-in-anno-117-was-a-placeholder-which-slipped-through-our-review-process" target="_blank" rel="noopener">videogameschronicle.com/news/ubisoft-says-ai-generated-art-in-anno-117…</a></li>
+<li id="k-14" value="14">Hitmarker, &quot;Call of Duty: Black Ops 7 faces backlash over AI-generated calling card artwork&quot;, 2025-11. <a href="https://hitmarker.net/news/call-of-duty-black-ops-7-faces-backlash-over-ai-generated-calling-card-artwork-1576825" target="_blank" rel="noopener">hitmarker.net/news/call-of-duty-black-ops-7-faces-backlash-over-ai-gen…</a></li>
+<li id="k-15" value="15">Top Gear, &quot;Arc Raiders already a hit, its AI voice acting has ruffled some&quot;, 2025-11. <a href="https://www.topgear.com/car-news/gaming/extraction-shooter-arc-raiders-already-a-hit-its-ai-voice-acting-has-ruffled-some" target="_blank" rel="noopener">topgear.com/car-news/gaming/extraction-shooter-arc-raiders-already-a-h…</a></li>
+<li id="k-16" value="16">PC Gamer, &quot;Steam Next Fest has over 8,000 demos, as worthless vibe coded slop levels up&quot; (yalnız başlık), 2026-10. <a href="https://www.pcgamer.com/gaming-industry/steam-week-in-review-steam-next-fest-has-over-8-000-demos-as-worthless-vibe-coded-slop-levels-up/" target="_blank" rel="noopener">pcgamer.com/gaming-industry/steam-week-in-review-steam-next-fest-has-o…</a></li>
+<li id="k-17" value="17">Aftermath, &quot;Game Developers Fear That Thieving AI Vibecoders Will Make Free Game Demos A Thing Of The Past&quot;, 2026-10-21. <a href="https://aftermath.site/steam-next-fest-demos-ai-vibecoded-clones-theft/" target="_blank" rel="noopener">aftermath.site/steam-next-fest-demos-ai-vibecoded-clones-theft/</a></li>
+<li id="k-18" value="18">FRVR, &quot;Steam Next Fest has become next-to-worthless as AI slop infests a list of 8,000 demos&quot;, 2026-10-20. <a href="https://frvr.com/blog/news/steam-next-fest-has-become-next-to-worthless-as-ai-slop-infests-a-list-of-8000-demos/" target="_blank" rel="noopener">frvr.com/blog/news/steam-next-fest-has-become-next-to-worthless-as-ai-…</a></li>
+<li id="k-19" value="19">FinalBoss, &quot;1666: Amsterdam Removes AI Art After Demo Backlash&quot;, 2026-08-12. <a href="https://finalboss.io/1666-amsterdam-removes-ai-art-after-demo-backlash-what-players-should-check-next" target="_blank" rel="noopener">finalboss.io/1666-amsterdam-removes-ai-art-after-demo-backlash-what-pl…</a></li>
+<li id="k-20" value="20">Shacknews, &quot;1666: Amsterdam dev addresses gen-AI accusations&quot;, 2026-06. <a href="https://www.shacknews.com/article/149598/panache-digital-games-1666-amsterdam-gen-ai" target="_blank" rel="noopener">shacknews.com/article/149598/panache-digital-games-1666-amsterdam-gen-…</a></li>
+<li id="k-21" value="21">GamingOnLinux, &quot;Lutris now being built with Claude AI, developer decides to hide it after backlash&quot;, 2026-03-12. <a href="https://www.gamingonlinux.com/2026/03/lutris-now-being-built-with-claude-ai-developer-decides-to-hide-it-after-backlash/" target="_blank" rel="noopener">gamingonlinux.com/2026/03/lutris-now-being-built-with-claude-ai-develo…</a></li>
+<li id="k-22" value="22">AV Club, Clair Obscur GenAI IGA awards rescinded, 2025-12. <a href="https://www.avclub.com/clair-obscur-genai-iga-awards-rescinded" target="_blank" rel="noopener">avclub.com/clair-obscur-genai-iga-awards-rescinded</a> ; VGC <a href="https://www.videogameschronicle.com/news/clair-obscur-expedition-33-game-of-the-year-award-pulled-after-admitting-to-generative-ai-use" target="_blank" rel="noopener">videogameschronicle.com/news/clair-obscur-expedition-33-game-of-the-ye…</a></li>
+<li id="k-23" value="23">ScreenHub, &quot;The Alters developer outlines use of GenAI after backlash&quot;, 2025. <a href="https://www.screenhub.com.au/news/games/the-alters-ai-2671396/" target="_blank" rel="noopener">screenhub.com.au/news/games/the-alters-ai-2671396/</a></li>
+<li id="k-24" value="24">GamesMarket, &quot;Quantic Foundry: most gamers are negative about the use of Gen AI in video games&quot;, 2025-12. <a href="https://www.gamesmarket.global/quantic-foundry-most-gamers-are-negative-about-the-use-of-gen-ai-in-video-games" target="_blank" rel="noopener">gamesmarket.global/quantic-foundry-most-gamers-are-negative-about-the-…</a></li>
+<li id="k-25" value="25">Game Developer, &quot;Saber Interactive denies replacing writers with AI on Rideshare Simulator&quot;, 2026-08-13. <a href="https://gamedeveloper.com/business/saber-interactive-denies-replacing-writers-with-ai-on-rideshare-stimulator-" target="_blank" rel="noopener">gamedeveloper.com/business/saber-interactive-denies-replacing-writers-…</a></li>
+<li id="k-26" value="26">Outlook Respawn, &quot;Shrine&#x27;s Legacy devs deny AI slop, ChatGPT rumors&quot;, 2025-12. <a href="https://respawn.outlookindia.com/gaming/gaming-news/shrines-legacy-devs-deny-ai-slop-chatgpt-rumors" target="_blank" rel="noopener">respawn.outlookindia.com/gaming/gaming-news/shrines-legacy-devs-deny-a…</a></li>
+<li id="k-27" value="27">GameDiscoverCo, &quot;What do Steam fans really think about AI in games?&quot;, 2026-07. <a href="https://newsletter.gamediscover.co/p/what-do-steam-fans-really-think-about" target="_blank" rel="noopener">newsletter.gamediscover.co/p/what-do-steam-fans-really-think-about</a></li>
+<li id="k-28" value="28">G2A, &quot;What players think about AI in games&quot; (nitel), 2026. <a href="https://www.g2a.com/news/features/gaming-entries/what-players-think-about-ai-in-games/" target="_blank" rel="noopener">g2a.com/news/features/gaming-entries/what-players-think-about-ai-in-ga…</a></li>
+<li id="k-29" value="29">Dexerto, &quot;Indie dev accused of using AI voice acting reveals it was his wife&quot;, 2026. <a href="https://www.dexerto.com/gaming/indie-dev-accused-of-using-ai-voice-acting-in-steam-game-reveals-it-was-actually-his-wife-3410085/" target="_blank" rel="noopener">dexerto.com/gaming/indie-dev-accused-of-using-ai-voice-acting-in-steam…</a></li>
+<li id="k-30" value="30">Creative Bloq, &quot;&#x27;AI slop&#x27; has become a harmful insult hurled around with no evidence&quot; (yalnız başlık), 2026. <a href="https://creativebloq.com/ai/ai-slop-has-become-a-harmful-insult-hurled-around-with-no-evidence-game-developers-claim" target="_blank" rel="noopener">creativebloq.com/ai/ai-slop-has-become-a-harmful-insult-hurled-around-…</a></li>
+<li id="k-31" value="31">Let&#x27;s Data Science, &quot;Fireshine Refuses Partners Using Generative AI Art&quot; (GamesIndustry.biz röportajının ikincil aktarımı), 2026-05-19. <a href="https://letsdatascience.com/news/fireshine-refuses-partners-using-generative-ai-art-06e96cf0" target="_blank" rel="noopener">letsdatascience.com/news/fireshine-refuses-partners-using-generative-a…</a></li>
+<li id="k-32" value="32">Hitmarker, &quot;CEO of Manor Lords publisher Hooded Horse states it will not work with studios using generative AI&quot;, 2026-01-09. <a href="https://hitmarker.net/news/ceo-of-manor-lords-publisher-hooded-horse-states-it-will-not-work-with-studios-using-generative-ai-1614733" target="_blank" rel="noopener">hitmarker.net/news/ceo-of-manor-lords-publisher-hooded-horse-states-it…</a></li>
+<li id="k-33" value="33">Wccftech, &quot;Publisher Hooded Horse Added &#x27;No F*ing AI Assets&#x27; to its Contracts&quot; (alıntıda yazım hatası var), 2026-01-09. <a href="https://wccftech.com/publisher-hooded-horse-added-no-fing-ai-assets-to-its-contracts-calls-genai-cancerous/amp/" target="_blank" rel="noopener">wccftech.com/publisher-hooded-horse-added-no-fing-ai-assets-to-its-con…</a></li>
+<li id="k-34" value="34">Techdirt, &quot;Game Publisher Bans Working With Devs That Use Any AI&quot;, 2026-01-16. <a href="https://www.techdirt.com/2026/01/16/game-publisher-bans-working-with-devs-that-use-any-ai-rather-than-banning-bad-uses-of-ai" target="_blank" rel="noopener">techdirt.com/2026/01/16/game-publisher-bans-working-with-devs-that-use…</a> ; ayrıca <a href="https://www.techdirt.com/tag/tim-bender/" target="_blank" rel="noopener">techdirt.com/tag/tim-bender/</a></li>
+<li id="k-35" value="35">Decrypt, &quot;Playdate Gaming Handheld Maker Bans Generative AI Tools&quot;, 2026. <a href="https://decrypt.co/364960/playdate-gaming-handheld-maker-bans-generative-ai-tools?amp=1" target="_blank" rel="noopener">decrypt.co/364960/playdate-gaming-handheld-maker-bans-generative-ai-to…</a> ; Let&#x27;s Data Science <a href="https://letsdatascience.com/news/playdate-maker-bans-generative-ai-in-catalog-38fa3bf0" target="_blank" rel="noopener">letsdatascience.com/news/playdate-maker-bans-generative-ai-in-catalog-…</a></li>
+<li id="k-36" value="36">Time Extension, &quot;The Playdate Has Had Enough Of All This Generative AI Nonsense&quot; (403, arama özeti), 2026-04. <a href="https://www.timeextension.com/news/2026/04/playdate-has-had-enough-of-all-this-generative-ai-nonsense" target="_blank" rel="noopener">timeextension.com/news/2026/04/playdate-has-had-enough-of-all-this-gen…</a></li>
+<li id="k-37" value="37">GDC, &quot;GDC 2026 State of the Game Industry&quot;, 2026-01. <a href="https://gdconf.com/article/gdc-2026-state-of-the-game-industry-reveals-impact-of-layoffs-generative-ai-and-more/" target="_blank" rel="noopener">gdconf.com/article/gdc-2026-state-of-the-game-industry-reveals-impact-…</a></li>
+<li id="k-38" value="38">VGC, &quot;&#x27;Holy f* guys, we&#x27;re not replacing artists&#x27;: Larian boss responds to AI backlash&quot;, 2025-12. <a href="https://www.videogameschronicle.com/news/holy-f-guys-were-not-replacing-artists-larian-boss-responds-to-ai-backlash" target="_blank" rel="noopener">videogameschronicle.com/news/holy-f-guys-were-not-replacing-artists-la…</a></li>
+<li id="k-39" value="39">Hitmarker, &quot;Larian confirms that it will no longer use generative AI for Divinity concept art&quot;, 2026-01. <a href="https://hitmarker.net/news/larian-confirms-that-it-will-no-longer-use-generative-ai-for-divinity-concept-art-and-writing-following-backlash-1615314" target="_blank" rel="noopener">hitmarker.net/news/larian-confirms-that-it-will-no-longer-use-generati…</a></li>
+<li id="k-40" value="40">WN Hub, &quot;Only 8% of gamers are strictly against AI-generated content in Steam games&quot;, 2026-07-09. <a href="https://wnhub.io/news/analytics/item-51398" target="_blank" rel="noopener">wnhub.io/news/analytics/item-51398</a></li>
+<li id="k-41" value="41">ScreenHub, &quot;ARC Raiders&#x27; AI voice acting is being replaced by humans&quot;, 2026. <a href="https://www.screenhub.com.au/news/games/arc-raiders-ai-voice-actors-replaced-2695984/" target="_blank" rel="noopener">screenhub.com.au/news/games/arc-raiders-ai-voice-actors-replaced-26959…</a></li>
+<li id="k-42" value="42">mein-mmo, &quot;Expedition 33 wins the Game Awards, forfeits a previously won award&quot; (yalnız ikincil başlık), 2025-12. <a href="https://mein-mmo.de/en/page/121/?term=kevin" target="_blank" rel="noopener">mein-mmo.de/en/page/121/?term=kevin</a></li>
+<li id="k-43" value="43">Game Developer, &quot;Valve tweaks and clarifies AI disclosure rules for Steam&quot;, 2026-01-16. <a href="https://gamedeveloper.com/business/valve-tweaks-and-clarifies-ai-disclosure-rules-for-steam" target="_blank" rel="noopener">gamedeveloper.com/business/valve-tweaks-and-clarifies-ai-disclosure-ru…</a></li>
+<li id="k-44" value="44">80.lv, &quot;Steam has clarified its rules on the use of AI in video games&quot;, 2026-01-19. <a href="https://80.lv/articles/steam-has-clarified-its-rules-on-the-use-of-ai-in-video-games" target="_blank" rel="noopener">80.lv/articles/steam-has-clarified-its-rules-on-the-use-of-ai-in-video…</a></li>
+<li id="k-45" value="45">GIGAZINE, &quot;Steam updates AI disclosure guidelines&quot;, 2026-01-20. <a href="https://gigazine.net/gsc_news/en/20260120-steam-updates-ai-disclosure-guidelines" target="_blank" rel="noopener">gigazine.net/gsc_news/en/20260120-steam-updates-ai-disclosure-guidelin…</a></li>
+<li id="k-46" value="46">Steamworks, Content Survey (güncel sayfa, bu çalışmada doğrudan okunmadı). <a href="https://partner.steamgames.com/doc/gettingstarted/contentsurvey" target="_blank" rel="noopener">partner.steamgames.com/doc/gettingstarted/contentsurvey</a></li>
+<li id="k-47" value="47">GamingOnLinux, &quot;Valve announces new rules for games with AI content on Steam&quot;, 2024-01-10. <a href="http://www.gamingonlinux.com/2024/01/valve-announces-new-rules-for-games-with-ai-content-on-steam" target="_blank" rel="noopener">gamingonlinux.com/2024/01/valve-announces-new-rules-for-games-with-ai-…</a></li>
+<li id="k-48" value="48">Indiecator, &quot;Steam Next Fest Has An AI Problem, and Players Can&#x27;t Filter It Out&quot;, 2026-06-16. <a href="https://indiecator.org/2026/06/16/steam-next-fest-has-an-ai-problem-and-players-cant-filter-it-out/" target="_blank" rel="noopener">indiecator.org/2026/06/16/steam-next-fest-has-an-ai-problem-and-player…</a></li>
+<li id="k-49" value="49">Sulka Haro, &quot;Three years of AI on Steam&quot;, 2026-07-13. <a href="https://fragwyz.substack.com/p/three-years-of-ai-on-steam" target="_blank" rel="noopener">fragwyz.substack.com/p/three-years-of-ai-on-steam</a></li>
+<li id="k-50" value="50">Cinevva, Steam AI disclosure study (ikincil özet), 2026-07-20. <a href="https://app.cinevva.com/news/2026-07-20-steam-ai-disclosure-study" target="_blank" rel="noopener">app.cinevva.com/news/2026-07-20-steam-ai-disclosure-study</a></li>
+<li id="k-51" value="51">PC Guide, &quot;PC gamers remain skeptical of Steam&#x27;s AI disclaimers&quot;, 2026-07-09. <a href="https://www.pcguide.com/news/pc-gamers-remain-skeptical-of-steams-ai-disclaimers-poll-shows-many-believe-game-devs-are-hiding-it/" target="_blank" rel="noopener">pcguide.com/news/pc-gamers-remain-skeptical-of-steams-ai-disclaimers-p…</a></li>
+<li id="k-52" value="52">Gaming Bible, &quot;10 game demos … that aren&#x27;t &#x27;vibe-coded slop&#x27;&quot;, 2026-10-20. <a href="https://www.gamingbible.com/news/platform/pc/steam-next-fest-autumn-2026-042158-20261020" target="_blank" rel="noopener">gamingbible.com/news/platform/pc/steam-next-fest-autumn-2026-042158-20…</a></li>
+<li id="k-53" value="53">80.lv, &quot;While players wish to filter out AI-generated games, SteamDB makes it possible&quot;, 2026. <a href="https://80.lv/articles/while-players-wish-to-filter-out-ai-generated-games-steamdb-makes-it-possible/" target="_blank" rel="noopener">80.lv/articles/while-players-wish-to-filter-out-ai-generated-games-ste…</a></li>
+<li id="k-54" value="54">VGC, &quot;Epic Games CEO says it&#x27;s &#x27;really irresponsible&#x27; of Steam to make studios disclose AI use&quot;. <a href="https://videogameschronicle.com/news/epic-games-ceo-says-its-really-irresponsible-of-steam-to-make-studios-disclose-ai-use" target="_blank" rel="noopener">videogameschronicle.com/news/epic-games-ceo-says-its-really-irresponsi…</a></li>
+<li id="k-55" value="55">Engadget, &quot;Epic thinks you&#x27;ll love its new vibe coded game launcher&quot;, 2026-10. <a href="https://engadget.com/2286721/epic-thinks-youll-love-its-new-vibe-coded-game-launcher/" target="_blank" rel="noopener">engadget.com/2286721/epic-thinks-youll-love-its-new-vibe-coded-game-la…</a></li>
+<li id="k-56" value="56">Notebookcheck, &quot;Party Animals hit with Steam review bombing as AI slop&quot; (zayıf: yalnız arama özeti), 2026-05. <a href="https://notebookcheck.net/Party-Animals-hit-with-Steam-review-bombing-as-AI-slop.1299780.0.html" target="_blank" rel="noopener">notebookcheck.net/Party-Animals-hit-with-Steam-review-bombing-as-AI-sl…</a></li>
+<li id="k-57" value="57">GIGAZINE, &quot;CODEX MORTIS: a game made 100% with AI appears on Steam&quot;, 2025-12-15. <a href="https://gigazine.net/gsc_news/en/20251215-codex-mortis" target="_blank" rel="noopener">gigazine.net/gsc_news/en/20251215-codex-mortis</a></li>
+<li id="k-58" value="58">PC Gamer, &quot;Indie dev is delisting his AI game from Steam…&quot; (Hardest), 2026. <a href="https://www.pcgamer.com/games/indie-dev-is-delisting-his-ai-game-from-steam-because-his-new-girlfriend-convinced-him-its-evil-the-game-existing-in-its-current-form-is-a-disgrace-to-all-game-makers-and-players/" target="_blank" rel="noopener">pcgamer.com/games/indie-dev-is-delisting-his-ai-game-from-steam-becaus…</a></li>
+<li id="k-59" value="59">Plagiarism Today, &quot;Game Developer Falsely Accused of Using AI&quot;, 2026-04-07. <a href="https://www.plagiarismtoday.com/2026/04/07/game-developer-falsely-accused-of-using-ai/" target="_blank" rel="noopener">plagiarismtoday.com/2026/04/07/game-developer-falsely-accused-of-using…</a></li>
+<li id="k-60" value="60">VICE, &quot;Steam Reviews Have a Serious AI Problem That Needs to Be Fixed&quot;, 2025-12-17. <a href="https://www.vice.com/en/article/steam-reviews-have-a-serious-ai-problem-that-needs-to-be-fixed/" target="_blank" rel="noopener">vice.com/en/article/steam-reviews-have-a-serious-ai-problem-that-needs…</a></li>
+<li id="k-61" value="61">PCGamesN, Big Ambitions 1.0, 2026-08-30. <a href="https://www.pcgamesn.com/big-ambitions/1-0-tycoon-life-sim" target="_blank" rel="noopener">pcgamesn.com/big-ambitions/1-0-tycoon-life-sim</a></li>
+<li id="k-62" value="62">VaporLens, Software Inc yorum özeti. <a href="https://vaporlens.app/app/362620/software_inc/stats/details" target="_blank" rel="noopener">vaporlens.app/app/362620/software_inc/stats/details</a></li>
+<li id="k-63" value="63">VaporLens, Mad Games Tycoon 2 (zayıf: otomatik özet). <a href="https://vaporlens.app/app/1342330/mad_games_tycoon_2.md" target="_blank" rel="noopener">vaporlens.app/app/1342330/mad_games_tycoon_2.md</a></li>
+<li id="k-64" value="64">Cinevva, &quot;Solo devs shipping games with AI&quot; (Keypress Express, tek kaynak), 2026-03-22. <a href="https://app.cinevva.com/news/2026-03-22-solo-devs-shipping-games-with-ai" target="_blank" rel="noopener">app.cinevva.com/news/2026-03-22-solo-devs-shipping-games-with-ai</a></li>
+<li id="k-65" value="65">Fix Gaming Channel, Detective Sherlock: Shadow Stalker review (zayıf: anekdot). <a href="https://www.fixgamingchannel.com/detective-sherlock-shadow-stalker-review/" target="_blank" rel="noopener">fixgamingchannel.com/detective-sherlock-shadow-stalker-review/</a></li>
+<li id="k-66" value="66">Engadget, &quot;Around a fifth of Steam Next Fest demos have a generative AI disclosure&quot;, 2026-06-16. <a href="https://engadget.com/2195840/around-a-fifth-of-steam-next-fest-demos-have-a-generative-ai-disclosure" target="_blank" rel="noopener">engadget.com/2195840/around-a-fifth-of-steam-next-fest-demos-have-a-ge…</a></li>
+<li id="k-67" value="67">PCGamesN, Next Fest generative AI (Cloudheim), 2025-10-21. <a href="https://www.pcgamesn.com/steam/next-fest-generative-ai" target="_blank" rel="noopener">pcgamesn.com/steam/next-fest-generative-ai</a></li>
+<li id="k-68" value="68">Shacknews, &quot;Godot open-source game engine bans genAI code contributions&quot;, 2026-06-30. <a href="https://www.shacknews.com/article/149876/godot-bans-generative-ai-code-contributions" target="_blank" rel="noopener">shacknews.com/article/149876/godot-bans-generative-ai-code-contributio…</a></li>
+<li id="k-69" value="69">GamingOnLinux, &quot;Indie devs have begun adding a No Generative AI stamp to their store pages&quot;, 2025-02. <a href="https://www.gamingonlinux.com/2025/02/indie-devs-have-begun-adding-a-no-generative-ai-stamp-to-their-store-pages/comment_id=276474" target="_blank" rel="noopener">gamingonlinux.com/2025/02/indie-devs-have-begun-adding-a-no-generative…</a></li>
+<li id="k-70" value="70">Kotaku, Steam releases 2026 vs 2025, slop and vibe coding, 2026-10. <a href="https://kotaku.com/steam-valve-slop-ai-genai-vibe-coding-pc-game-releases-2000746749" target="_blank" rel="noopener">kotaku.com/steam-valve-slop-ai-genai-vibe-coding-pc-game-releases-2000…</a></li>
+<li id="k-71" value="71">Pure Xbox, &quot;Vapor World to replace every AI cutscene&quot;, 2026-08. <a href="https://www.purexbox.com/news/2026/08/we-can-fix-this-quickly-new-xbox-game-pass-title-to-replace-every-ai-cutscene-this-week" target="_blank" rel="noopener">purexbox.com/news/2026/08/we-can-fix-this-quickly-new-xbox-game-pass-t…</a></li>
+<li id="k-72" value="72">VGC, &quot;Call of Duty: Black Ops 7 stumbles in European launch, with sales 63% below Battlefield 6&quot;, 2025-11. <a href="https://www.videogameschronicle.com/news/call-of-duty-black-ops-7-stumbles-in-european-launch-with-sales-63-below-battlefield-6" target="_blank" rel="noopener">videogameschronicle.com/news/call-of-duty-black-ops-7-stumbles-in-euro…</a></li>
+<li id="k-73" value="73">GameDev.net, &quot;Saber Interactive adds AI disclaimer to Rideshare on Steam&quot;, 2026-08. <a href="https://gamedev.net/news/5124-saber-interactive-adds-ai-disclaimer-to-rideshare-on-steam-ceo-matt-karch/" target="_blank" rel="noopener">gamedev.net/news/5124-saber-interactive-adds-ai-disclaimer-to-rideshar…</a></li>
+<li id="k-74" value="74">GameDev.net, &quot;Far Far West publisher says &#x27;we don&#x27;t work with partners that are relying on generative AI&#x27;&quot; (Fireshine), 2026. <a href="https://gamedev.net/news/far-far-west-publisher-says-we-dont-work-with-partners-that-are-relying-on-generative-ai-r3419/" target="_blank" rel="noopener">gamedev.net/news/far-far-west-publisher-says-we-dont-work-with-partner…</a></li>
+<li id="k-75" value="75">Hitmarker, &quot;Over 50% of game developers say generative AI is harming the industry, report reveals&quot; (GDC 2026 anketi, ~2.300 katılımcı), 2026-01. <a href="https://hitmarker.net/news/over-50-of-game-developers-say-generative-ai-is-harming-the-industry-report-reveals-1635057" target="_blank" rel="noopener">hitmarker.net/news/over-50-of-game-developers-say-generative-ai-is-har…</a></li>
+<li id="k-76" value="76">iXBT Games, Vapor World oyuncu tepkisi ve ara sahnelerin kaldırılması, 2026-08-22. <a href="https://ixbt.games/en/news/2026/08/22/igroki-raskritikovali-vapor-world-za-neiroslop-geimdirektor-zaiavil-ob-otkaze-ot-ii-i-udalenii-katscen-posle-volny-kritiki.html" target="_blank" rel="noopener">ixbt.games/en/news/2026/08/22/igroki-raskritikovali-vapor-world-za-nei…</a></li>
+<li id="k-77" value="77">Push Square, &quot;Expedition 33 stripped of Indie Game Awards&quot;, 2025-12. <a href="https://www.pushsquare.com/news/2025/12/ps5-fave-expedition-33-stripped-of-indie-game-awards-but-not-for-the-reasons-you-may-think" target="_blank" rel="noopener">pushsquare.com/news/2025/12/ps5-fave-expedition-33-stripped-of-indie-g…</a> ; Malay Mail, 2025-12-21. <a href="https://www.malaymail.com/news/tech-gadgets/2025/12/21/indie-game-awards-rescinds-honours-from-clair-obscur-expedition-33-for-genai-use/202718" target="_blank" rel="noopener">malaymail.com/news/tech-gadgets/2025/12/21/indie-game-awards-rescinds-…</a></li>
+<li id="k-78" value="78">Tech Times, &quot;Facepunch&#x27;s s&amp;box update demotes AI thumbnails&quot;, 2026-05-16. <a href="https://www.techtimes.com/articles/316737/20260516/facepunchs-sbox-update-demotes-ai-thumbnails-legitimate-creators-risk-being-caught-net.htm" target="_blank" rel="noopener">techtimes.com/articles/316737/20260516/facepunchs-sbox-update-demotes-…</a></li>
+<li id="k-79" value="79">WN Hub, Ichiro Lambe&#x27;nin beyanlı oyunlar gelir analizi, 2025-11-17. <a href="https://wnhub.io/news/analytics/item-49306" target="_blank" rel="noopener">wnhub.io/news/analytics/item-49306</a></li>
+<li id="k-80" value="80">Steam mağaza sayfası, Supermarket Simulator (%92 olumlu, 34.527 yorum; okuma tarihi 2026-10). <a href="https://store.steampowered.com/app/2670630/" target="_blank" rel="noopener">store.steampowered.com/app/2670630/</a></li>
+<li id="k-81" value="81">Inverse, Stellaris: The Machine Age ve YZ ses tepkisi, 2024. <a href="https://www.inverse.com/gaming/stellaris-the-machine-age-ai-paradox" target="_blank" rel="noopener">inverse.com/gaming/stellaris-the-machine-age-ai-paradox</a> ; Game Developer <a href="https://www.gamedeveloper.com/audio/stellaris-new-ai-characters-are-powered-by-ai-voices" target="_blank" rel="noopener">gamedeveloper.com/audio/stellaris-new-ai-characters-are-powered-by-ai-…</a></li>
+<li id="k-82" value="82">OpenCritic, &quot;AI is ruining game sales, numbers show&quot; (Game Oracle özeti; Digital Citizen aktarımıyla birlikte, farkın deneyim ve yayıncı desteği kontrol edildikten sonra da sürdüğünü söylüyor). <a href="https://opencritic.com/news/33528/ai-is-ruining-game-sales-numbers-show" target="_blank" rel="noopener">opencritic.com/news/33528/ai-is-ruining-game-sales-numbers-show</a></li>
+</ol></div>
+  <p class="note">İç kaynaklar (depo): strings.csv, EL_KITABI §1.3 ve K5, assets/audio, assets/endings/README.md, assets/icons, tools/office3d, assets/art/people/README.md ve LICENSES, data/credits.json, ART_BIBLE ve yardımcı yönetmen notları.</p>
+</section>
+
+</main>

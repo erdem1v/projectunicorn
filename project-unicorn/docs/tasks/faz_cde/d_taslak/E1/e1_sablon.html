@@ -1,0 +1,528 @@
+<title>Faz D E1 Durağı</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap">
+<style>
+/* Layout: one review desk in four stops (decisions, mockup, texts, measurements); every reviewable thing carries the owner's mark bar under it, drawn in the game's dark Menajer language. */
+:root {
+  --bg: #100E0B; --surface: #15120F; --inset: #1A1714; --line: #3A342D; --line-2: #4A4239;
+  --ink-strong: #FFFFFF; --ink: #E9E4DA; --ink-2: #B3AA9E; --ink-3: #9A9184;
+  --accent: #F2B53A; --accent-ink: #100E0B; --ok: #8DBF7A; --fix: #E8913A; --bad: #E2675B;
+  --ok-bg: rgba(141,191,122,.14); --fix-bg: rgba(232,145,58,.14); --bad-bg: rgba(226,103,91,.14); --acc-bg: rgba(242,181,58,.12);
+  --f-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-prose: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #F6F1E6; --surface: #FBF7EE; --inset: #F0E9DA; --line: #DDD3C0; --line-2: #C9BDA6;
+  --ink-strong: #17140F; --ink: #2B2722; --ink-2: #5E554A; --ink-3: #7A7062;
+  --accent: #B9790F; --accent-ink: #FFFFFF; --ok: #3E7A35; --fix: #A85A12; --bad: #B23A2E;
+  --ok-bg: rgba(62,122,53,.10); --fix-bg: rgba(168,90,18,.10); --bad-bg: rgba(178,58,46,.10); --acc-bg: rgba(185,121,15,.10);
+  color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #F6F1E6; --surface: #FBF7EE; --inset: #F0E9DA; --line: #DDD3C0; --line-2: #C9BDA6;
+  --ink-strong: #17140F; --ink: #2B2722; --ink-2: #5E554A; --ink-3: #7A7062;
+  --accent: #B9790F; --accent-ink: #FFFFFF; --ok: #3E7A35; --fix: #A85A12; --bad: #B23A2E;
+  --ok-bg: rgba(62,122,53,.10); --fix-bg: rgba(168,90,18,.10); --bad-bg: rgba(178,58,46,.10); --acc-bg: rgba(185,121,15,.10);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 64px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; letter-spacing: .01em; text-wrap: balance; margin: 0; color: var(--ink-strong); }
+h1 { font-size: 36px; line-height: 1.05; }
+h2 { font-size: 26px; line-height: 1.1; }
+h3 { font-size: 21px; line-height: 1.15; }
+p { margin: 0; }
+.eyebrow { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .12em; font-size: 13px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); max-width: 70ch; }
+.status { font: 400 13px/1.4 var(--f-mono); color: var(--ink-3); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 6px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.nav a, .btn, .filter, .mark-btn, .opt-btn { font: 600 14px/1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2);
+  background: transparent; border: 1px solid var(--line-2); border-radius: 4px; padding: 8px 12px; cursor: pointer; text-decoration: none; }
+.nav a:hover, .btn:hover, .filter:hover { color: var(--ink-strong); border-color: var(--ink-3); }
+.filter[aria-pressed="true"] { color: var(--ink-strong); border-color: var(--ink-3); background: var(--inset); }
+a:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tally { margin-left: auto; font: 500 13px/1.3 var(--f-mono); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tally b { color: var(--ink); font-weight: 500; }
+section.stop { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 80px; }
+.stop-head { display: flex; flex-direction: column; gap: 6px; border-top: 2px solid var(--accent); padding-top: 14px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.group-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; justify-content: space-between; }
+.group-head .lede { width: 100%; }
+.dec { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; display: flex; flex-direction: column; }
+.dec[data-chosen="1"] { border-color: var(--ink-3); }
+.dec-head { padding: 14px 16px 0; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.dec-id { font: 500 13px/1 var(--f-mono); color: var(--accent); }
+.tag { font: 500 12px/1 var(--f-mono); color: var(--ink-2); border: 1px solid var(--line-2); border-radius: 3px; padding: 4px 6px; }
+.tag.warn { color: var(--fix); border-color: var(--fix); }
+.facts { margin: 10px 16px 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; color: var(--ink); }
+.facts li::marker { color: var(--ink-3); }
+.pending { margin: 10px 16px 0; color: var(--fix); font: 500 13px/1.4 var(--f-mono); }
+.opts { margin: 12px 16px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.opt-btn { text-transform: none; letter-spacing: 0; font: 400 14px/1.4 var(--f-body); text-align: left; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; color: var(--ink); }
+.opt-btn .ol { font: 600 15px/1.3 var(--f-body); color: var(--ink-strong); display: flex; gap: 8px; align-items: baseline; }
+.opt-btn .ok { font: 500 12px/1 var(--f-mono); color: var(--ink-3); }
+.opt-btn .od { color: var(--ink-2); font-size: 13px; }
+.opt-btn .rec { font: 600 11px/1 var(--f-display); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.opt-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--acc-bg); }
+.opt-btn:disabled { cursor: not-allowed; opacity: .6; }
+.rec-why { margin: 8px 16px 0; color: var(--ink-2); font-size: 14px; }
+.rec-why b { color: var(--accent); font-weight: 500; font-family: var(--f-mono); font-size: 12px; }
+.markbar { margin-top: 12px; border-top: 1px solid var(--line); padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+.mark-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mark-btn[data-v="approve"][aria-pressed="true"] { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.mark-btn[data-v="fix"][aria-pressed="true"] { background: var(--fix-bg); color: var(--fix); border-color: var(--fix); }
+.mark-btn[data-v="reject"][aria-pressed="true"] { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+.mark-btn:disabled, .btn:disabled { opacity: .45; cursor: not-allowed; }
+.saved { margin-left: auto; font: 400 12px/1.3 var(--f-mono); color: var(--ink-3); }
+textarea { width: 100%; min-height: 56px; resize: vertical; background: var(--bg); color: var(--ink); border: 1px solid var(--line-2);
+  border-radius: 4px; padding: 8px 10px; font: 400 14px/1.45 var(--f-body); }
+textarea::placeholder { color: var(--ink-3); }
+.info { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.info li { display: flex; flex-direction: column; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.info li:last-child { border-bottom: 0; padding-bottom: 0; }
+.info b { font: 600 17px/1.2 var(--f-display); color: var(--ink-strong); letter-spacing: .01em; }
+.info span { color: var(--ink-2); font-size: 14px; }
+.frame { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; display: flex; flex-direction: column; }
+.frame[data-mark="approve"], .item[data-mark="approve"] { border-color: var(--ok); }
+.frame[data-mark="fix"], .item[data-mark="fix"] { border-color: var(--fix); }
+.frame[data-mark="reject"], .item[data-mark="reject"] { border-color: var(--bad); }
+.frame-head { padding: 14px 16px 10px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; }
+.frame-head p { width: 100%; color: var(--ink-2); font-size: 14px; }
+.shot { display: block; border-block: 1px solid var(--line); background: var(--inset); }
+.shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.langsw { display: flex; gap: 4px; margin-left: auto; }
+.langsw .filter { padding: 6px 10px; font-size: 13px; }
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; display: flex; flex-direction: column; }
+.item-head { padding: 14px 16px 0; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.item-name { font: 600 21px/1.1 var(--f-display); color: var(--ink-strong); }
+.item-id { font: 400 12px/1.2 var(--f-mono); color: var(--ink-3); width: 100%; overflow-wrap: anywhere; }
+.where { padding: 6px 16px 0; color: var(--ink-2); font-size: 14px; }
+.card { margin: 12px 16px 0; background: var(--inset); border: 1px solid var(--line); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.sender { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font: 500 13px/1.3 var(--f-mono); color: var(--ink-3); }
+.lang { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 2px 8px; align-items: baseline; }
+.lang .k { font: 500 11px/1.6 var(--f-mono); color: var(--ink-3); letter-spacing: .08em; }
+.title-tr { font: 600 20px/1.15 var(--f-display); color: var(--ink-strong); }
+.title-en { font: 500 17px/1.2 var(--f-display); color: var(--ink-2); }
+.prose-tr { font: 400 17px/1.5 var(--f-prose); color: var(--ink); max-width: 66ch; }
+.prose-en { font: 400 15px/1.5 var(--f-prose); color: var(--ink-2); max-width: 66ch; }
+.variant { border-top: 1px dashed var(--line-2); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.variant .case { font: 500 12px/1.3 var(--f-mono); color: var(--accent); }
+.options { display: flex; flex-direction: column; gap: 8px; }
+.opt { border: 1px solid var(--line-2); border-radius: 4px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px/1.3 var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 3px; padding: 3px 7px; }
+.chip .en { color: var(--ink-3); font-weight: 400; }
+.lock { font-size: 14px; color: var(--ink-2); }
+.names { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.names li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 2px 8px; }
+.names .n { font: 500 12px/1.6 var(--f-mono); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.names .nm { font: 600 16px/1.3 var(--f-body); color: var(--ink-strong); }
+.names .nm .en { font-weight: 400; color: var(--ink-2); }
+.names .gist { grid-column: 2; color: var(--ink-2); font-size: 13px; }
+.names a { color: var(--accent); font: 400 12px/1.4 var(--f-mono); overflow-wrap: anywhere; }
+details { color: var(--ink-2); font-size: 14px; }
+summary { cursor: pointer; color: var(--ink-3); font: 500 12px/1.6 var(--f-mono); letter-spacing: .04em; }
+.notes { margin: 10px 16px 0; color: var(--ink-2); font-size: 14px; display: flex; flex-direction: column; gap: 6px; }
+.notes b { color: var(--ink-3); font-weight: 500; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 6px 10px 6px 0; vertical-align: top; }
+th { font: 500 11px/1.4 var(--f-mono); color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; }
+td.num, th.num { text-align: right; }
+td code, .notes code { font-family: var(--f-mono); font-size: 12px; color: var(--ink-strong); }
+.res { font: 600 12px/1 var(--f-mono); padding: 3px 6px; border-radius: 3px; white-space: nowrap; }
+.res.g { color: var(--ok); background: var(--ok-bg); }
+.res.k { color: var(--bad); background: var(--bad-bg); }
+.res.o { color: var(--ink-3); border: 1px solid var(--line-2); }
+.tok { color: var(--accent); border-bottom: 1px dotted var(--accent); }
+.tok-raw { display: none; font-family: var(--f-mono); font-size: .85em; }
+body.raw .tok-ex { display: none; }
+body.raw .tok-raw { display: inline; }
+.empty { color: var(--ink-3); font-style: italic; }
+.wrap, .wrap > *, .item > *, .card > *, .dec > *, .frame > *, .panel > *, .lang > *, .opt > *, details, .names li > * { min-width: 0; }
+.lede, .facts li, .tag, .chip, td, .where, .prose-tr, .prose-en, .info span, .rec-why { overflow-wrap: anywhere; }
+@media (max-width: 560px) { h1 { font-size: 30px; } .tally { margin-left: 0; width: 100%; } .item-name { font-size: 19px; } .opts { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: no-preference) { .item, .dec, .frame, .opt-btn { transition: border-color .15s ease, background-color .15s ease; } }
+</style>
+
+<!--DATA-->
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <div class="eyebrow">Project Unicorn · Faz D · Ekip ve sprint</div>
+    <h1>E1 durağı</h1>
+    <p class="lede">Kod yazılmadan önce senin kararın gereken yerler. Her kararda ölçülen sayılar, seçenekler ve benim önerim var; önerim işaretli. Seçimin ve notun kaydedilir, ana oturum okuyup kod adımlarına taşır. Sabitler PRD'nin değerleriyle girer ve "onay bekliyor" olarak raporda kalır; onları ayrıca sormuyorum.</p>
+    <p class="status" id="db-line">İşaretler yükleniyor…</p>
+  </header>
+
+  <nav class="bar" aria-label="Bölümler">
+    <div class="nav">
+      <a href="#kararlar">Kararlar</a>
+      <a href="#maket">Maket</a>
+      <a href="#metinler">Metinler</a>
+      <a href="#olcum">Ölçüm</a>
+    </div>
+    <div class="tally" id="tally"></div>
+  </nav>
+
+  <section class="stop" id="kararlar">
+    <div class="stop-head">
+      <div class="eyebrow">1 · Kararlar</div>
+      <h2>Seçim bekleyen sorular</h2>
+      <p class="lede">Her soruda bir seçenek seç ya da notla başka bir yol yaz. "Önerileri seç" düğmesi o gruptaki seçilmemiş sorularda benim önerimi seçer; sonra tek tek değiştirebilirsin.</p>
+    </div>
+    <div id="groups" style="display:flex;flex-direction:column;gap:22px"></div>
+    <div class="panel">
+      <h3>Bilmen gerekenler (karar gerekmiyor)</h3>
+      <ul class="info" id="info"></ul>
+    </div>
+  </section>
+
+  <section class="stop" id="maket">
+    <div class="stop-head">
+      <div class="eyebrow">2 · Maket</div>
+      <h2>Ürün · Sprint planı</h2>
+      <p class="lede">Oyunun kendi arayüzüyle kuruldu: gerçek Ürün penceresi, gerçek kart ve çubuk bileşenleri, Menajer teması. Kişi, kart ve müşteri adları fikstür; yeni metinlerin hepsi Metinler bölümünden. Kare başına Onay ya da Düzelt, istersen not.</p>
+      <div class="langsw" role="group" aria-label="Kare dili" style="margin-left:0">
+        <button class="filter" type="button" data-lang="tr" aria-pressed="true">TR</button>
+        <button class="filter" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+    <div id="frames" style="display:flex;flex-direction:column;gap:18px"></div>
+  </section>
+
+  <section class="stop" id="metinler">
+    <div class="stop-head">
+      <div class="eyebrow">3 · Metinler</div>
+      <h2 id="w-title">Oyuncu metinleri</h2>
+      <p class="lede" id="w-summary"></p>
+      <p class="status" id="w-check"></p>
+    </div>
+    <div class="bar" style="position:static" role="toolbar" aria-label="Metin süzgeci">
+      <div class="nav" id="filters">
+        <button class="filter" data-f="all" aria-pressed="true" type="button">Hepsi</button>
+        <button class="filter" data-f="none" aria-pressed="false" type="button">İşaretsiz</button>
+        <button class="filter" data-f="fix" aria-pressed="false" type="button">Düzelt</button>
+        <button class="filter" data-f="reject" aria-pressed="false" type="button">Ret</button>
+        <button class="filter" id="raw-toggle" aria-pressed="false" type="button">Ham belirteç</button>
+      </div>
+      <div class="nav" id="kinds"></div>
+    </div>
+    <div id="items" style="display:flex;flex-direction:column;gap:16px"></div>
+  </section>
+
+  <section class="stop" id="olcum">
+    <div class="stop-head">
+      <div class="eyebrow">4 · Ölçüm</div>
+      <h2>Simülasyonun özeti</h2>
+      <p class="lede">D0s simülasyonu (Opus incelemesiyle düzeltilmiş hâli) ve g₀ hesabı. Tam tablolar <code>d_taslak/D0s_SIM.md</code> ve <code>d_taslak/D0t_G0.md</code>'de.</p>
+    </div>
+    <div class="panel">
+      <h3>Teslim ve boşta kalma, önerilen okuma</h3>
+      <div class="tbl"><table id="t-scale"></table></div>
+      <p class="status">Sınırsız kart arzı, 20 tohum ortancası, 21. ile 60. hafta. Teslim puan/hafta, ×5 ölçeğinde.</p>
+    </div>
+    <div class="panel">
+      <h3>Kapılar</h3>
+      <p class="lede" id="gate-sum"></p>
+      <div class="tbl"><table id="t-gates"></table></div>
+    </div>
+    <div class="panel">
+      <h3>Derinlik kartının kazancı, g₀ = 0,25</h3>
+      <div class="tbl"><table id="t-g0"></table></div>
+      <p class="status">Kare: ürün sayfasının 2★ Çekirdek karesi (0,25 seviye). Öteki alanlarda bir kare 0,20 seviye.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>Genel not</h3>
+    <textarea id="general-note" placeholder="Bu durak için söylemek istediğin başka bir şey…"></textarea>
+    <span class="saved" id="general-saved" style="margin-left:0"></span>
+  </section>
+</div>
+
+<script>
+(function () {
+  const J = id => JSON.parse(document.getElementById(id).textContent);
+  const E1 = J("d-e1"), W = J("d-w"), FRAMES = J("d-frames"), OLCUM = J("d-olcum");
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const docId = id => String(id).replace(/[^A-Za-z0-9_\-.~:@+]/g, "_");
+  const stamp = at => at ? "kaydedildi " + new Date(at).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "";
+  const MARK_NAMES = { approve: "Onay", fix: "Düzelt", reject: "Ret" };
+  const COLL = { dec: "e1_kararlar", frame: "e1_kareler", text: "e1_metinler", gen: "e1_genel" };
+  const store = { dec: {}, frame: {}, text: {}, gen: {} };
+  const chains = {};
+  let db = null, writable = true, frameLang = "tr", filter = "all", kind = "all";
+
+  function editing(root) { const a = document.activeElement; return a && a.tagName === "TEXTAREA" && root.contains(a); }
+
+  function save(kindKey, id, patch) {
+    if (!db || !writable) return;
+    const key = docId(id);
+    const body = Object.assign({ choice: "", mark: "", note: "" }, store[kindKey][key] || {}, patch, { at: new Date().toISOString(), item: id });
+    store[kindKey][key] = body;
+    tally();
+    const ck = kindKey + "/" + key;
+    chains[ck] = (chains[ck] || Promise.resolve()).then(() => db.collection(COLL[kindKey]).doc(key).set(body)).catch(e => {
+      if (e && (e.code === "invalid_argument" || e.code === "permission_denied")) { writable = false; $("#db-line").textContent = "Bu görünümde işaret kaydedilemiyor; sayfa salt okunur."; renderAll(); }
+      else $("#db-line").textContent = "İşaret kaydedilemedi (" + (e && e.code || "hata") + "). Bir süre sonra yeniden dene.";
+    });
+  }
+
+  function noteBox(kindKey, id, placeholder) {
+    const ta = el("textarea"); ta.id = "note-" + kindKey + "-" + docId(id); ta.placeholder = placeholder;
+    ta.value = ((store[kindKey][docId(id)] || {}).note) || ""; ta.disabled = !db || !writable;
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(kindKey, id, { note: ta.value }), 900); });
+    ta.addEventListener("blur", () => { clearTimeout(timer); if (ta.value !== (((store[kindKey][docId(id)] || {}).note) || "")) save(kindKey, id, { note: ta.value }); });
+    return ta;
+  }
+
+  function markRow(kindKey, id, kinds, rerender) {
+    const m = store[kindKey][docId(id)] || {};
+    const row = el("div", "mark-row");
+    kinds.forEach(v => {
+      const b = el("button", "mark-btn", MARK_NAMES[v]); b.type = "button"; b.dataset.v = v;
+      b.setAttribute("aria-pressed", m.mark === v ? "true" : "false"); b.disabled = !db || !writable;
+      b.addEventListener("click", () => { save(kindKey, id, { mark: m.mark === v ? "" : v }); rerender(); });
+      row.append(b);
+    });
+    row.append(el("span", "saved", stamp(m.at)));
+    return row;
+  }
+
+  /* ---------- decisions ---------- */
+  function renderDecision(d) {
+    const m = store.dec[docId(d.id)] || {};
+    const box = el("article", "dec"); box.id = "k-" + d.id; if (m.choice) box.dataset.chosen = "1";
+    const head = el("div", "dec-head");
+    head.append(el("span", "dec-id", d.id), el("h3", null, d.title), el("span", "tag" + (/çeliş|tutmuyor/.test(d.why) ? " warn" : ""), d.why));
+    box.append(head);
+    const ul = el("ul", "facts"); d.facts.forEach(f => ul.append(el("li", null, f))); box.append(ul);
+    if (d.pending) box.append(el("p", "pending", d.pending));
+    const opts = el("div", "opts"); opts.setAttribute("role", "group"); opts.setAttribute("aria-label", d.title);
+    d.options.forEach(o => {
+      const b = el("button", "opt-btn"); b.type = "button"; b.setAttribute("aria-pressed", m.choice === o.id ? "true" : "false"); b.disabled = !db || !writable;
+      const ol = el("span", "ol"); ol.append(el("span", "ok", o.id), document.createTextNode(o.label)); b.append(ol);
+      if (o.desc) b.append(el("span", "od", o.desc));
+      if (d.rec === o.id) b.append(el("span", "rec", "Önerim"));
+      b.addEventListener("click", () => { save("dec", d.id, { choice: m.choice === o.id ? "" : o.id }); renderGroups(); });
+      opts.append(b);
+    });
+    box.append(opts);
+    if (d.rec_why) { const p = el("p", "rec-why"); p.append(el("b", null, "Neden " + d.rec + ": "), document.createTextNode(d.rec_why)); box.append(p); }
+    const bar = el("div", "markbar");
+    const row = el("div", "mark-row"); row.append(el("span", "saved", stamp(m.at))); bar.append(row, noteBox("dec", d.id, "Not: başka bir yol, koşul ya da soru…"));
+    box.append(bar);
+    return box;
+  }
+
+  function renderGroups() {
+    const root = $("#groups"); if (editing(root)) return tally();
+    root.innerHTML = "";
+    E1.groups.forEach(g => {
+      const ds = E1.decisions.filter(d => d.group === g.id); if (!ds.length) return;
+      const wrap = el("div"); wrap.style.cssText = "display:flex;flex-direction:column;gap:12px";
+      const gh = el("div", "group-head");
+      const open = ds.filter(d => d.rec && !(store.dec[docId(d.id)] || {}).choice);
+      const btn = el("button", "btn", "Önerileri seç (" + open.length + ")"); btn.type = "button"; btn.disabled = !db || !writable || !open.length;
+      btn.addEventListener("click", () => { open.forEach(d => save("dec", d.id, { choice: d.rec })); renderGroups(); });
+      gh.append(el("h3", null, g.title), btn, el("p", "lede", g.lede));
+      wrap.append(gh);
+      ds.forEach(d => wrap.append(renderDecision(d)));
+      root.append(wrap);
+    });
+    tally();
+  }
+
+  /* ---------- frames ---------- */
+  function renderFrames() {
+    const root = $("#frames"); if (editing(root)) return tally();
+    root.innerHTML = "";
+    FRAMES.forEach(f => {
+      const m = store.frame[docId(f.key)] || {};
+      const art = el("article", "frame"); if (m.mark) art.dataset.mark = m.mark;
+      const head = el("div", "frame-head"); head.append(el("h3", null, f.title), el("span", "tag", f.key), el("p", null, f.caption));
+      art.append(head);
+      const a = el("a", "shot"); const src = "png/" + (frameLang === "en" ? f.en : f.tr); a.href = src; a.target = "_blank"; a.rel = "noopener";
+      const img = el("img"); img.src = src; img.alt = f.title + " (" + frameLang.toUpperCase() + ")"; img.loading = "lazy"; img.width = 1920; img.height = 1080;
+      a.append(img); art.append(a);
+      const bar = el("div", "markbar"); bar.append(markRow("frame", f.key, ["approve", "fix"], renderFrames), noteBox("frame", f.key, "Not: ne değişsin…"));
+      art.append(bar); root.append(art);
+    });
+    tally();
+  }
+
+  /* ---------- texts ---------- */
+  let EXAMPLES = {};
+  function filled(cls, text) {
+    const d = el("div", cls);
+    String(text || "").split(/(\{[^{}]+\})/).forEach(part => {
+      if (!/^\{[^{}]+\}$/.test(part)) { if (part) d.append(document.createTextNode(part)); return; }
+      const ex = EXAMPLES[part]; const t = el("span", "tok"); t.title = part;
+      t.append(el("span", "tok-ex", ex != null && ex !== "" ? String(ex) : part), el("span", "tok-raw", part)); d.append(t);
+    });
+    return d;
+  }
+  function langPair(pair, trCls, enCls) {
+    const box = el("div", "lang");
+    box.append(el("span", "k", "TR"), filled(trCls, pair.tr), el("span", "k", "EN"), filled(enCls, pair.en));
+    return box;
+  }
+  function renderItem(item) {
+    EXAMPLES = {}; (item.tokens || []).forEach(t => { if (t.token) EXAMPLES[t.token] = t.example; });
+    const m = store.text[docId(item.id)] || {};
+    const art = el("article", "item"); if (m.mark) art.dataset.mark = m.mark;
+    const head = el("div", "item-head");
+    const name = item.kind === "name" ? (item.line.tr + " · " + item.line.en) : (item.title_tr || (item.title && item.title.tr) || item.key);
+    head.append(el("span", "item-name", name), el("span", "tag", item.kind), el("span", "item-id", item.key + " · " + item.id));
+    art.append(head);
+    if (item.where) art.append(el("p", "where", item.where));
+    if (item.when_tr) art.append(el("p", "where", "Ne zaman: " + item.when_tr));
+    const card = el("div", "card");
+    if (item.kind === "name") {
+      if (item.existing_cards) card.append(el("div", "lock", "Hattın kademe kartları: " + item.existing_cards.tr.join(", ") + " · " + item.existing_cards.en.join(", ")));
+      const ol = el("ol", "names");
+      item.names.forEach((n, i) => {
+        const li = el("li"); li.append(el("span", "n", String(i + 1)));
+        const nm = el("span", "nm", n.tr + "  "); nm.append(el("span", "en", n.en)); li.append(nm);
+        const g = el("span", "gist", n.gist_tr || "");
+        if (n.source_url) { g.append(document.createTextNode(" ")); const a = el("a", null, (n.source_kind ? n.source_kind + " · " : "") + n.source_url.replace(/^https?:\/\//, "")); a.href = n.source_url; a.target = "_blank"; a.rel = "noopener"; g.append(a); }
+        li.append(g); ol.append(li);
+      });
+      card.append(ol);
+    } else {
+      if (item.sender) { const s = el("div", "sender"); s.append(el("span", null, item.sender.tr + " · " + item.sender.en), el("span", null, item.sender_founder ? "kurucu: " + item.sender_founder.tr : "")); card.append(s); }
+      if (item.current) { const box = el("div", "variant"); box.append(el("span", "case", "bugünkü metin"), langPair(item.current, "prose-en", "prose-en")); card.append(box); }
+      if (item.title) card.append(langPair(item.title, "title-tr", "title-en"));
+      if (item.text) card.append(langPair(item.text, "prose-tr", "prose-en"));
+      if (item.body) card.append(langPair(item.body, "prose-tr", "prose-en"));
+      (item.body_variants || []).forEach(v => { const box = el("div", "variant"); box.append(el("span", "case", (v.key ? v.key + " · " : "") + (v.case_tr || "varyant")), langPair(v, "prose-tr", "prose-en")); card.append(box); });
+      if (item.options && item.options.length) {
+        const opts = el("div", "options");
+        item.options.forEach(o => {
+          const box = el("div", "opt");
+          box.append(langPair(o.label || {}, "title-tr", "title-en"));
+          if (o.chips && o.chips.length) { const chips = el("div", "chips"); o.chips.forEach(c => { const ch = el("span", "chip", (c.when_tr ? c.when_tr + ": " : "") + (c.tr || "")); ch.append(el("span", "en", "  " + (c.en || ""))); chips.append(ch); }); box.append(chips); }
+          if (o.does_tr || o.best_when_tr) { const d = el("details"); d.append(el("summary", null, "ne yapar · ne zaman en iyisi")); if (o.does_tr) d.append(el("p", null, "Ne yapar: " + o.does_tr)); if (o.best_when_tr) d.append(el("p", null, "En iyi: " + o.best_when_tr)); box.append(d); }
+          opts.append(box);
+        });
+        card.append(opts);
+      }
+      if (item.expire) { const box = el("div", "variant"); box.append(el("span", "case", "süre dolarsa"), langPair(item.expire, "prose-tr", "prose-en")); card.append(box); }
+    }
+    art.append(card);
+    const n = el("div", "notes");
+    if (item.note) { const p = el("p"); p.append(el("b", null, "Yazarın notu: "), document.createTextNode(item.note)); n.append(p); }
+    if (item.constants && item.constants.length) { const p = el("p"); p.append(el("b", null, "Onay bekleyen: "), document.createTextNode(item.constants.map(c => c.name + " = " + c.value).join(" · "))); n.append(p); }
+    if (item.tokens && item.tokens.length) {
+      const d = el("details"); d.append(el("summary", null, "belirteçler (" + item.tokens.length + ")"));
+      const w = el("div", "tbl"); const t = el("table"); const hr = el("tr"); ["Belirteç", "Taşıdığı"].forEach(h => hr.append(el("th", null, h))); t.append(hr);
+      item.tokens.forEach(tk => { const tr = el("tr"); const c = el("td"); c.append(el("code", null, tk.token)); tr.append(c, el("td", null, tk.carries_tr || "")); t.append(tr); });
+      w.append(t); d.append(w); n.append(d);
+    }
+    if (item.source) n.append(el("p", "status", "Kaynak: " + item.source));
+    art.append(n);
+    const bar = el("div", "markbar"); bar.append(markRow("text", item.id, ["approve", "fix", "reject"], renderItems), noteBox("text", item.id, "Not: neyi değiştirelim, hangi cümle…"));
+    art.append(bar);
+    return art;
+  }
+  function renderItems() {
+    const root = $("#items"); if (editing(root)) return tally();
+    root.innerHTML = "";
+    const shown = W.items.filter(i => {
+      if (kind !== "all" && i.kind !== kind) return false;
+      const mk = (store.text[docId(i.id)] || {}).mark || "";
+      return filter === "all" || (filter === "none" ? !mk : mk === filter);
+    });
+    if (!shown.length) root.append(el("p", "empty", "Bu süzgeçte öğe yok."));
+    shown.forEach(i => root.append(renderItem(i)));
+    tally();
+  }
+
+  /* ---------- measurements (static) ---------- */
+  function renderOlcum() {
+    const ts = $("#t-scale"); const h = el("tr"); h.append(el("th", null, "")); OLCUM.scale.sizes.forEach(s => h.append(el("th", "num", s + " kişi"))); ts.append(h);
+    OLCUM.scale.rows.forEach(r => { const tr = el("tr"); tr.append(el("td", null, r.label)); r.values.forEach(v => tr.append(el("td", "num", v))); ts.append(tr); });
+    const cnt = { g: 0, k: 0, o: 0 }; OLCUM.gates.forEach(g => cnt[g.r]++);
+    $("#gate-sum").textContent = OLCUM.gates.length + " kapı: " + cnt.g + " geçti, " + cnt.k + " kaldı, " + cnt.o + " ölçülmedi. Kalanların çoğu yukarıdaki kararlara bağlı; bağlı olduğu soru satırda yazılı.";
+    const tg = $("#t-gates"); const gh = el("tr"); ["", "Kapı", "Sonuç", "Değer", "Soru"].forEach(x => gh.append(el("th", null, x))); tg.append(gh);
+    const RN = { g: "geçti", k: "kaldı", o: "ölçülmedi" };
+    OLCUM.gates.forEach(g => { const tr = el("tr"); const c = el("td"); c.append(el("code", null, g.no)); const r = el("td"); r.append(el("span", "res " + g.r, RN[g.r]));
+      tr.append(c, el("td", null, g.name), r, el("td", null, g.v), el("td", null, g.q || "")); tg.append(tr); });
+    const t0 = $("#t-g0"); const g0h = el("tr"); ["Kart", "Kazanç (seviye)", "Birikmiş", "Kare (2★ Çekirdek)", "Etki satırı"].forEach(x => g0h.append(el("th", x === "Kart" || x === "Etki satırı" ? null : "num", x))); t0.append(g0h);
+    let cum = 0;
+    for (let k = 1; k <= 11; k++) {
+      const g = 0.25 * Math.pow(0.75, k - 1); cum += g;
+      const sq = g / 0.25; const label = k === 1 ? "+1 kare" : (Math.floor(sq) >= 1 ? "+" + Math.floor(sq) + " kare (ilk karttan az)" : "ilk karttan az");
+      const tr = el("tr"); const f = x => x.toFixed(3).replace(".", ",");
+      tr.append(el("td", null, k + ". kart"), el("td", "num", f(g)), el("td", "num", f(cum)), el("td", "num", sq.toFixed(2).replace(".", ",")), el("td", null, label)); t0.append(tr);
+    }
+  }
+
+  /* ---------- tally, general note ---------- */
+  function tally() {
+    const dc = E1.decisions.filter(d => (store.dec[docId(d.id)] || {}).choice).length;
+    const fr = FRAMES.filter(f => (store.frame[docId(f.key)] || {}).mark).length;
+    const tx = W.items.filter(i => (store.text[docId(i.id)] || {}).mark).length;
+    const t = $("#tally"); t.innerHTML = "";
+    [["karar", dc, E1.decisions.length], ["kare", fr, FRAMES.length], ["metin", tx, W.items.length]].forEach(([k, a, b], i) => {
+      const s = el("span"); s.append(el("b", null, a + "/" + b), document.createTextNode(" " + k + (i < 2 ? " · " : ""))); t.append(s); });
+  }
+  function renderGeneral() {
+    const g = store.gen._genel || {}; const gn = $("#general-note");
+    if (document.activeElement !== gn) gn.value = g.note || ""; gn.disabled = !db || !writable;
+    $("#general-saved").textContent = stamp(g.at);
+  }
+  function renderAll() { renderGroups(); renderFrames(); renderItems(); renderGeneral(); }
+
+  $("#info").append(...E1.info.map(x => { const li = el("li"); li.append(el("b", null, x.title), el("span", null, x.text)); return li; }));
+  $("#w-title").textContent = "Oyuncu metinleri · " + W.items.length + " öğe";
+  $("#w-summary").textContent = W.summary_tr || "";
+  $("#w-check").textContent = W.check_line || "";
+  const kinds = ["all"].concat([...new Set(W.items.map(i => i.kind))]);
+  const KN = { all: "her tür", ui: "arayüz", chip: "çip", paper: "kâğıt", note: "sürüm notu", name: "derinlik adı", hr: "ekip", glossary: "sözlük" };
+  kinds.forEach(k => { const b = el("button", "filter", KN[k] || k); b.type = "button"; b.dataset.k = k; b.setAttribute("aria-pressed", k === "all" ? "true" : "false"); $("#kinds").append(b); });
+  $("#kinds").addEventListener("click", e => { const b = e.target.closest(".filter"); if (!b) return; kind = b.dataset.k;
+    document.querySelectorAll("#kinds .filter").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); renderItems(); });
+  $("#filters").addEventListener("click", e => { const b = e.target.closest(".filter"); if (!b) return;
+    if (b.id === "raw-toggle") { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on ? "true" : "false"); document.body.classList.toggle("raw", on); return; }
+    filter = b.dataset.f; document.querySelectorAll("#filters .filter[data-f]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); renderItems(); });
+  document.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => { frameLang = b.dataset.lang;
+    document.querySelectorAll("[data-lang]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); renderFrames(); }));
+  let gTimer = null;
+  $("#general-note").addEventListener("input", e => { clearTimeout(gTimer); gTimer = setTimeout(() => save("gen", "_genel", { note: e.target.value }), 900); });
+
+  renderOlcum(); renderAll();
+
+  function subscribeAll() {
+    Object.keys(COLL).forEach(k => {
+      db.collection(COLL[k]).onSnapshot(snap => {
+        const mk = {}; snap.docs.forEach(d => { if (d.exists) mk[d.id] = d.data(); });
+        store[k] = mk;
+        if (k === "dec") renderGroups(); else if (k === "frame") renderFrames(); else if (k === "text") renderItems(); else renderGeneral();
+      }, e => { $("#db-line").textContent = "İşaretler okunamıyor (" + (e && e.code) + ")."; });
+    });
+  }
+  if (window.claude && window.claude.use) {
+    window.claude.use("db").then(ns => {
+      db = ns;
+      if (!db) { $("#db-line").textContent = "İşaretler bu görünümde kullanılamıyor; içerik okunabilir."; renderAll(); return; }
+      $("#db-line").textContent = "Seçimlerin ve notların kaydedilir; ana oturum okuyup kod adımlarına taşır.";
+      subscribeAll(); renderAll();
+    });
+  } else {
+    $("#db-line").textContent = "İşaretler bu görünümde kullanılamıyor; içerik okunabilir.";
+  }
+})();
+</script>

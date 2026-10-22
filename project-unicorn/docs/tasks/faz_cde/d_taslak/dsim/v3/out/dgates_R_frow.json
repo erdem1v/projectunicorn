@@ -1,0 +1,698 @@
+{
+ "gates": [
+  {
+   "no": 1,
+   "ad": "ekleme_dusurmez",
+   "hedef": "her ekleme ve her daha-iyisiyle-degistirme >= 0 puan/hf (tolerans yok)",
+   "gecti": true,
+   "deger": "en kotu 0,4 (G|orta|pm-gel-tas|+1); eksi adim 0/72",
+   "kanit": "B: - | C: - | E: 72 adim, en kotu 0,4 (G|orta|pm-gel-tas|+1), eksi adim 0 | REP: - | ortalama farki -2 SE'nin altinda olan (gurultuden ayrilan) eksi adim: 0/72 []"
+  },
+  {
+   "no": 2,
+   "ad": "kurucu_buyume",
+   "hedef": "teslim her alimda artar; MVP gecikmez; kurucunun isi <= %12 duser, her dusus nedenli",
+   "gecti": false,
+   "deger": "72 adim: teslim en kucuk artis 0,4 (orta/pm-gel-tas/1); MVP gecikme 1; kurucu isi tabana gore en cok 19,0% (gel5/uc-gel/3); nedensiz dusus 0/15",
+   "kanit": "dususlerin nedeni (kurucu isi onceki adima gore >%2 dustu): {'asama': 7, 'bolundu': 8, 'hazirlik': 0, 'YOK': 0}; nedensiz: []"
+  },
+  {
+   "no": 3,
+   "ad": "mvp_tek_kurucu",
+   "hedef": "MVP sprint sonunda: 6. hafta, en gec 8",
+   "gecti": true,
+   "deger": "6. hafta 17 tohum, 8. hafta 3 tohum, baska 0",
+   "kanit": ""
+  },
+  {
+   "no": 4,
+   "ad": "kisi_basi_olcek",
+   "hedef": "S5 ve S6 kisi basi, S3'un %70 ile %150'si",
+   "gecti": true,
+   "deger": "S5 128,8%, S6 125,9% (kisi basi 8,2, 10,5, 10,3)",
+   "kanit": ""
+  },
+  {
+   "no": 6,
+   "ad": "duzeltme_payi",
+   "hedef": ">=2 kisi: erken <=30%, gec <=20%, hata sprinti <=5%, ust uste yok; tek kurucu erken <=50%, gec hata sprinti <=5%",
+   "gecti": false,
+   "deger": "198 senaryo: >=2 kisi en yuksek erken 16,1%, gec 21,5%, hata sprinti 1,0%; tek kurucu erken en cok 23,3%, hata sprinti en cok 0,2%",
+   "kanit": "ihlal: ['G|orta|tas-gel-test|1', 'GT|orta|tas-gel-test|1']"
+  },
+  {
+   "no": 7,
+   "ad": "toplam_hata_isi",
+   "hedef": ">=2 kisi <=%20, tek kurucu <=%35",
+   "gecti": false,
+   "deger": ">=2 kisi en cok 22,6% (G|orta|tas-gel-test|1); tek kurucu en cok 23,8%",
+   "kanit": "ihlal: [('G|orta|tas-gel-test|1', 0.226), ('GT|orta|tas-gel-test|1', 0.223)]"
+  },
+  {
+   "no": 8,
+   "ad": "acik_hata_sinirli",
+   "hedef": "son 20 haftanin egimi <= 0,2 hata/hf",
+   "gecti": true,
+   "deger": "en buyuk medyan egim 0,16 (GT|gel5|uc-gel|3)",
+   "kanit": ""
+  },
+  {
+   "no": 12,
+   "ad": "soru_sikligi",
+   "hedef": "bagli kip: soru sprintlerin <= %10'unda; esikli kip (karsilastirma): S2-S5, S10 <= 1/3, 6 ve 12 kisi >= 1/20",
+   "gecti": true,
+   "deger": "esikli: S2 5,8%, S3 18,0%, S4 31,2%, S5 16,2%; bagli kip (soz verilen kartta, PR senaryolari): ",
+   "kanit": ""
+  },
+  {
+   "no": 14,
+   "ad": "tahmin_sonuc",
+   "hedef": "plan-kapanis farki <= 1e-6",
+   "gecti": true,
+   "deger": "en buyuk fark 3.6e-15 (4280 kosu; asama ilerlemesi, bitis, n, F, duzeltme isi, cekilen kart)",
+   "kanit": ""
+  },
+  {
+   "no": 17,
+   "ad": "bosta_nedenli",
+   "hedef": "bosta <= %10; degilse her sprintte neden yazili (nedensiz 0); 50 kisi bosta <= %15 (PRD 4.3 madde 7)",
+   "gecti": true,
+   "deger": "4080 kosunun 3232'inde bosta > %10; nedensiz 0; 50 kisi bosta: S6 5,4%",
+   "kanit": ""
+  },
+  {
+   "no": 22,
+   "ad": "takim_bolme (EA)",
+   "hedef": "EA takimi ertelendi (PRD 7, QCD D5)",
+   "gecti": null,
+   "deger": "OLCULMEDI: kapsam disi",
+   "kanit": ""
+  },
+  {
+   "no": "N1",
+   "ad": "pm_ekleme",
+   "hedef": "PM eklemek teslimi hicbir senaryoda dusurmez (tolerans yok); kartin hazirlayani kurali Karar 4 ile yeniden olculur",
+   "gecti": false,
+   "deger": "karar4h: en kotu -1,0 (C36->C37), eksi adim 1/12; karar4: en kotu -4,0 (C36->C37), eksi adim 4/12; best: en kotu -0,5 (S4->S4 +3* PM), eksi adim 1/12; preparer: en kotu -2,5 (C36->C37), eksi adim 1/12",
+   "kanit": ""
+  },
+  {
+   "no": "N2",
+   "ad": "atama_sirasi",
+   "hedef": "her atama aninda ve asamada daha buyuk isde daha yavas kisi yok; ayni girdi ayni atama; uymayan is yalniz bosta kalacaga",
+   "gecti": true,
+   "deger": "250262 atama satiri: yeni atananlar arasinda ters 0, hafta basi tam eslemede ters 0, uymayan isi onden isi varken verilen 0; ayni girdi ayni atama 6/6 kosuda",
+   "kanit": "bilgi: surerken kartinda kalan (yapisal) yavas kisi sayisi 21102 (kisi aşama ya da hafta bitene dek kartinda kalir)"
+  },
+  {
+   "no": "N3",
+   "ad": "kendi_karti",
+   "hedef": "kendi gelistirdigi karti test eden x0,6 bulur, kurucu dahil",
+   "gecti": true,
+   "deger": "mikro test: gecti; tek kurucuda (S1) her test edilen kart kendi karti: True; A+S kosularinda 72018 test edilen kartin 7820'i kendi karti, 6124'i kurucu",
+   "kanit": ""
+  },
+  {
+   "no": "N4",
+   "ad": "early_closed",
+   "hedef": "erken kapanan sprint = 0 (PRD 4.3 madde 1)",
+   "gecti": true,
+   "deger": "4280 kosuda erken kapanan sprint 0",
+   "kanit": ""
+  },
+  {
+   "no": "N5",
+   "ad": "plan_fill",
+   "hedef": "plan anindaki doluluk medyani >= %90 (1, 3, 6, 12, 25, 50 kisi ve buyume egrisi)",
+   "gecti": false,
+   "deger": "S1 (1 kisi) 70,1%, S2 (3 kisi) 99,8%, S3 (6 kisi) 110,9%, S4 (12 kisi) 116,4%, S5 (25 kisi) 121,1%, S6 (50 kisi) 123,0%",
+   "kanit": ""
+  }
+ ],
+ "steps": [
+  [
+   5.25,
+   "G|orta|gel-tas-test|+1",
+   "E"
+  ],
+  [
+   9.0,
+   "G|orta|gel-tas-test|+2",
+   "E"
+  ],
+  [
+   10.0,
+   "G|orta|gel-tas-test|+3",
+   "E"
+  ],
+  [
+   3.625,
+   "G|orta|tas-gel-test|+1",
+   "E"
+  ],
+  [
+   10.625,
+   "G|orta|tas-gel-test|+2",
+   "E"
+  ],
+  [
+   10.0,
+   "G|orta|tas-gel-test|+3",
+   "E"
+  ],
+  [
+   5.5,
+   "G|orta|test-gel-tas|+1",
+   "E"
+  ],
+  [
+   6.0,
+   "G|orta|test-gel-tas|+2",
+   "E"
+  ],
+  [
+   12.75,
+   "G|orta|test-gel-tas|+3",
+   "E"
+  ],
+  [
+   0.375,
+   "G|orta|pm-gel-tas|+1",
+   "E"
+  ],
+  [
+   6.75,
+   "G|orta|pm-gel-tas|+2",
+   "E"
+  ],
+  [
+   10.375,
+   "G|orta|pm-gel-tas|+3",
+   "E"
+  ],
+  [
+   3.4375,
+   "G|orta|1yildiz|+1",
+   "E"
+  ],
+  [
+   6.25,
+   "G|orta|1yildiz|+2",
+   "E"
+  ],
+  [
+   5.5625,
+   "G|orta|1yildiz|+3",
+   "E"
+  ],
+  [
+   5.25,
+   "G|orta|uc-gel|+1",
+   "E"
+  ],
+  [
+   2.875,
+   "G|orta|uc-gel|+2",
+   "E"
+  ],
+  [
+   2.0,
+   "G|orta|uc-gel|+3",
+   "E"
+  ],
+  [
+   4.125,
+   "G|gel4|gel-tas-test|+1",
+   "E"
+  ],
+  [
+   9.875,
+   "G|gel4|gel-tas-test|+2",
+   "E"
+  ],
+  [
+   12.5,
+   "G|gel4|gel-tas-test|+3",
+   "E"
+  ],
+  [
+   5.3125,
+   "G|gel4|tas-gel-test|+1",
+   "E"
+  ],
+  [
+   8.6875,
+   "G|gel4|tas-gel-test|+2",
+   "E"
+  ],
+  [
+   12.5,
+   "G|gel4|tas-gel-test|+3",
+   "E"
+  ],
+  [
+   6.5,
+   "G|gel4|test-gel-tas|+1",
+   "E"
+  ],
+  [
+   5.375,
+   "G|gel4|test-gel-tas|+2",
+   "E"
+  ],
+  [
+   14.625,
+   "G|gel4|test-gel-tas|+3",
+   "E"
+  ],
+  [
+   1.875,
+   "G|gel4|pm-gel-tas|+1",
+   "E"
+  ],
+  [
+   4.25,
+   "G|gel4|pm-gel-tas|+2",
+   "E"
+  ],
+  [
+   11.25,
+   "G|gel4|pm-gel-tas|+3",
+   "E"
+  ],
+  [
+   3.125,
+   "G|gel4|1yildiz|+1",
+   "E"
+  ],
+  [
+   6.5,
+   "G|gel4|1yildiz|+2",
+   "E"
+  ],
+  [
+   7.9375,
+   "G|gel4|1yildiz|+3",
+   "E"
+  ],
+  [
+   4.125,
+   "G|gel4|uc-gel|+1",
+   "E"
+  ],
+  [
+   2.0,
+   "G|gel4|uc-gel|+2",
+   "E"
+  ],
+  [
+   2.0,
+   "G|gel4|uc-gel|+3",
+   "E"
+  ],
+  [
+   2.875,
+   "G|gel5|gel-tas-test|+1",
+   "E"
+  ],
+  [
+   10.25,
+   "G|gel5|gel-tas-test|+2",
+   "E"
+  ],
+  [
+   14.125,
+   "G|gel5|gel-tas-test|+3",
+   "E"
+  ],
+  [
+   5.25,
+   "G|gel5|tas-gel-test|+1",
+   "E"
+  ],
+  [
+   7.875,
+   "G|gel5|tas-gel-test|+2",
+   "E"
+  ],
+  [
+   14.125,
+   "G|gel5|tas-gel-test|+3",
+   "E"
+  ],
+  [
+   7.25,
+   "G|gel5|test-gel-tas|+1",
+   "E"
+  ],
+  [
+   3.75,
+   "G|gel5|test-gel-tas|+2",
+   "E"
+  ],
+  [
+   16.25,
+   "G|gel5|test-gel-tas|+3",
+   "E"
+  ],
+  [
+   1.875,
+   "G|gel5|pm-gel-tas|+1",
+   "E"
+  ],
+  [
+   3.375,
+   "G|gel5|pm-gel-tas|+2",
+   "E"
+  ],
+  [
+   11.25,
+   "G|gel5|pm-gel-tas|+3",
+   "E"
+  ],
+  [
+   1.875,
+   "G|gel5|1yildiz|+1",
+   "E"
+  ],
+  [
+   7.5,
+   "G|gel5|1yildiz|+2",
+   "E"
+  ],
+  [
+   8.75,
+   "G|gel5|1yildiz|+3",
+   "E"
+  ],
+  [
+   2.875,
+   "G|gel5|uc-gel|+1",
+   "E"
+  ],
+  [
+   2.0,
+   "G|gel5|uc-gel|+2",
+   "E"
+  ],
+  [
+   1.0,
+   "G|gel5|uc-gel|+3",
+   "E"
+  ],
+  [
+   6.625,
+   "G|tasarim_test|gel-tas-test|+1",
+   "E"
+  ],
+  [
+   9.0,
+   "G|tasarim_test|gel-tas-test|+2",
+   "E"
+  ],
+  [
+   8.5,
+   "G|tasarim_test|gel-tas-test|+3",
+   "E"
+  ],
+  [
+   3.25,
+   "G|tasarim_test|tas-gel-test|+1",
+   "E"
+  ],
+  [
+   12.375,
+   "G|tasarim_test|tas-gel-test|+2",
+   "E"
+  ],
+  [
+   8.5,
+   "G|tasarim_test|tas-gel-test|+3",
+   "E"
+  ],
+  [
+   6.125,
+   "G|tasarim_test|test-gel-tas|+1",
+   "E"
+  ],
+  [
+   7.125,
+   "G|tasarim_test|test-gel-tas|+2",
+   "E"
+  ],
+  [
+   10.875,
+   "G|tasarim_test|test-gel-tas|+3",
+   "E"
+  ],
+  [
+   0.75,
+   "G|tasarim_test|pm-gel-tas|+1",
+   "E"
+  ],
+  [
+   8.375,
+   "G|tasarim_test|pm-gel-tas|+2",
+   "E"
+  ],
+  [
+   10.25,
+   "G|tasarim_test|pm-gel-tas|+3",
+   "E"
+  ],
+  [
+   4.25,
+   "G|tasarim_test|1yildiz|+1",
+   "E"
+  ],
+  [
+   6.0,
+   "G|tasarim_test|1yildiz|+2",
+   "E"
+  ],
+  [
+   5.375,
+   "G|tasarim_test|1yildiz|+3",
+   "E"
+  ],
+  [
+   6.625,
+   "G|tasarim_test|uc-gel|+1",
+   "E"
+  ],
+  [
+   4.25,
+   "G|tasarim_test|uc-gel|+2",
+   "E"
+  ],
+  [
+   2.375,
+   "G|tasarim_test|uc-gel|+3",
+   "E"
+  ]
+ ],
+ "sig": [],
+ "pmx": {
+  "karar4h": [
+   [
+    8.0,
+    "C5->C6"
+   ],
+   [
+    0.5,
+    "C12->C13"
+   ],
+   [
+    10.0,
+    "C20->C21"
+   ],
+   [
+    1.5,
+    "C30->C31"
+   ],
+   [
+    -1.0,
+    "C36->C37"
+   ],
+   [
+    5.5,
+    "C45->C46"
+   ],
+   [
+    3.75,
+    "S2->S2 +3* PM"
+   ],
+   [
+    0.0,
+    "S3->S3 +3* PM"
+   ],
+   [
+    0.0,
+    "S4->S4 +3* PM"
+   ],
+   [
+    2.0,
+    "S5->S5 +3* PM"
+   ],
+   [
+    4.0,
+    "S6->S6 +3* PM"
+   ],
+   [
+    0.375,
+    "G|orta|pm-gel-tas|0->G|orta|pm-gel-tas|1"
+   ]
+  ],
+  "karar4": [
+   [
+    8.0,
+    "C5->C6"
+   ],
+   [
+    -0.5,
+    "C12->C13"
+   ],
+   [
+    6.5,
+    "C20->C21"
+   ],
+   [
+    -1.0,
+    "C30->C31"
+   ],
+   [
+    -4.0,
+    "C36->C37"
+   ],
+   [
+    1.5,
+    "C45->C46"
+   ],
+   [
+    3.75,
+    "S2->S2 +3* PM"
+   ],
+   [
+    0.0,
+    "S3->S3 +3* PM"
+   ],
+   [
+    1.0,
+    "S4->S4 +3* PM"
+   ],
+   [
+    -0.5,
+    "S5->S5 +3* PM"
+   ],
+   [
+    1.5,
+    "S6->S6 +3* PM"
+   ],
+   [
+    0.375,
+    "G|orta|pm-gel-tas|0->G|orta|pm-gel-tas|1"
+   ]
+  ],
+  "best": [
+   [
+    8.0,
+    "C5->C6"
+   ],
+   [
+    1.0,
+    "C12->C13"
+   ],
+   [
+    11.0,
+    "C20->C21"
+   ],
+   [
+    1.0,
+    "C30->C31"
+   ],
+   [
+    1.5,
+    "C36->C37"
+   ],
+   [
+    0.5,
+    "C45->C46"
+   ],
+   [
+    3.75,
+    "S2->S2 +3* PM"
+   ],
+   [
+    0.0,
+    "S3->S3 +3* PM"
+   ],
+   [
+    -0.5,
+    "S4->S4 +3* PM"
+   ],
+   [
+    3.5,
+    "S5->S5 +3* PM"
+   ],
+   [
+    0.5,
+    "S6->S6 +3* PM"
+   ],
+   [
+    0.375,
+    "G|orta|pm-gel-tas|0->G|orta|pm-gel-tas|1"
+   ]
+  ],
+  "preparer": [
+   [
+    8.0,
+    "C5->C6"
+   ],
+   [
+    0.0,
+    "C12->C13"
+   ],
+   [
+    8.0,
+    "C20->C21"
+   ],
+   [
+    1.5,
+    "C30->C31"
+   ],
+   [
+    -2.5,
+    "C36->C37"
+   ],
+   [
+    3.0,
+    "C45->C46"
+   ],
+   [
+    3.75,
+    "S2->S2 +3* PM"
+   ],
+   [
+    0.0,
+    "S3->S3 +3* PM"
+   ],
+   [
+    1.0,
+    "S4->S4 +3* PM"
+   ],
+   [
+    1.0,
+    "S5->S5 +3* PM"
+   ],
+   [
+    1.5,
+    "S6->S6 +3* PM"
+   ],
+   [
+    0.375,
+    "G|orta|pm-gel-tas|0->G|orta|pm-gel-tas|1"
+   ]
+  ]
+ },
+ "etiket": "R_frow"
+}

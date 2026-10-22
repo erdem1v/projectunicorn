@@ -1,0 +1,449 @@
+<title>Konuşulacaklar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek okuma şeridi; üstte özet tablo ve PRD sırası, altta sistem başına kart. Menajer Masası dili: sıcak kömür, açık mürekkep, amber. */
+:root{
+  --bg:#f3efe7; --surface:#fbf8f2; --ink:#26221c; --muted:#6d6457; --line:#d9d0c1;
+  --accent:#b8761c; --good:#3d7a4a; --warn:#a8741a; --bad:#a3402f; --info:#3f6f8f;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:46px} h2{font-size:30px} h3{font-size:24px}
+p{margin:0;max-width:72ch}
+ul,ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lead{font-size:18px;max-width:66ch}
+.note{font-size:13px;color:var(--muted)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.n{font:600 15px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.chip{display:inline-block;font:500 11px/1 var(--f-mono);letter-spacing:.04em;padding:4px 7px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.c-ok{color:var(--good)} .c-part{color:var(--warn)} .c-no{color:var(--bad)} .c-run{color:var(--info)}
+.src{font:400 12px/1.4 var(--f-mono);color:var(--muted)}
+.sys{display:flex;flex-direction:column;gap:12px}
+.sys header{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 14px}
+.sys .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:18px}
+.sys .cols > div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.lbl{font:500 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.closed li{color:var(--muted);font-size:14px}
+.open li{font-size:15px}
+.open li .src{display:block}
+.foot{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;border-top:1px solid var(--line);padding-top:10px;font-size:14px}
+.foot b{font-family:var(--f-mono);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px}
+.order{counter-reset:o;list-style:none;padding:0;gap:10px}
+.order li{counter-increment:o;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start}
+.order li::before{content:counter(o);font:600 22px/1 var(--f-display);color:var(--accent);text-align:right}
+.order li span{font-size:14px;color:var(--muted);display:block}
+.run{border-left:3px solid var(--info)}
+.flag{border-left:3px solid var(--bad)}
+@media (max-width:640px){.sys .cols{grid-template-columns:minmax(0,1fr)} h1{font-size:36px} h2{font-size:26px} .lead{font-size:16px}}
+</style>
+
+<main>
+
+<header style="display:flex;flex-direction:column;gap:12px">
+  <span class="eyebrow">Project Unicorn · 22 Ekim 2026 · Series A'ya kadar</span>
+  <h1>Konuşulacaklar</h1>
+  <p class="lead">Kural (Erdem, 22 Ekim): yalnız ne ve nasıl yapılacağı net olan iş koda gider. Bir sistemde netleşmeyen her şey park edilir ve burada listelenir; o sistemin PRD'si ayrıntılı yazılır, sonra kod. Pazar araştırmasının sentezi PRD değildir.</p>
+  <p class="note">Her "netleşen" senin bir kararına dayanır, her "konuşulacak" bir kaynağa. Pazar sentezinin "benim verdiğim küçük kararlar" bölümündeki 25 madde senin onayını taşımadığı için açık sayıldı. Göç, dosya ve kontrol gibi teknik maddeler listede yok; onları ben kapatırım.</p>
+</header>
+
+<section>
+  <span class="eyebrow">Özet</span>
+  <h2>14 sistem, 95 konu</h2>
+  <p class="note"><span class="chip c-part">kısmen net</span> yön senin, ayrıntının çoğu konuşulmadı · <span class="chip c-no">konuşulmadı</span> yalnız sorun ya da yön var</p>
+  <div class="box scroll">
+    <table>
+      <thead><tr><th>Sistem</th><th>Durum</th><th style="text-align:right">Konu</th><th>Bekleyen iş</th><th>PRD</th></tr></thead>
+      <tbody>
+        <tr><td><a href="#erp">ERP pazar modeli</a></td><td><span class="chip c-part">kısmen net</span></td><td class="n">11</td><td>C'nin pazar adımları</td><td>1</td></tr>
+        <tr><td><a href="#kart">Kart sistemi ve ürün geliştirme</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">10</td><td>D'nin derinlik ve istek kartı</td><td>1</td></tr>
+        <tr><td><a href="#arge">Ar-Ge ve dönemler</a></td><td><span class="chip c-part">kısmen net</span></td><td class="n">7</td><td>C'nin dönem tavanı</td><td>1</td></tr>
+        <tr><td><a href="#rakip">Rakipler</a></td><td><span class="chip c-part">kısmen net</span></td><td class="n">8</td><td>C'nin rakip şirketleri ve havuz</td><td>1</td></tr>
+        <tr><td><a href="#satis">B2B satış, fiyat ve pazarlık</a></td><td><span class="chip c-part">kısmen net</span></td><td class="n">11</td><td>C'nin imza ve fiyat adımları</td><td>2</td></tr>
+        <tr><td><a href="#hesap">Hesap yaşamı</a></td><td><span class="chip c-part">kısmen net</span></td><td class="n">11</td><td>C'nin defter, yenileme, istek, HESAPLAR</td><td>2</td></tr>
+        <tr><td><a href="#fon">Seed ve Series A görüşmesi</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">4</td><td>yok</td><td>3</td></tr>
+        <tr><td><a href="#ekip">Ekip, sprint ve atama</a></td><td><span class="chip c-part">kısmen net</span></td><td class="n">10</td><td>D'nin yeni motoru ve plan ekranı</td><td>4</td></tr>
+        <tr><td><a href="#alim">İşe alım adayları</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">3</td><td>yok</td><td>5</td></tr>
+        <tr><td><a href="#gorev">Görev ve öğretici</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">3</td><td>yok</td><td>6</td></tr>
+        <tr><td><a href="#b2c">B2C ve e-ticaret pazarı</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">3</td><td>yok</td><td>7</td></tr>
+        <tr><td><a href="#eko">Ekonomi dengesi</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">5</td><td>C'nin oyun içi ekonomi ölçümü</td><td>7</td></tr>
+        <tr><td><a href="#pazarlama">Pazarlama modülü</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">4</td><td>yok</td><td>7</td></tr>
+        <tr><td><a href="#sanat">Sanat yönü ve Steam</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">5</td><td>Baki'nin son kapsülü</td><td>8</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Sıra</span>
+  <h2>Önerilen PRD sırası</h2>
+  <p>Sıra bağımlılığa göre. Bir oturumda bir PRD: önce araştırma özeti ve sorular, sen tek seferde cevaplarsın, PRD kapanır, sonra kod.</p>
+  <div class="box">
+    <ol class="order">
+      <li><div><b>ERP pazarı, kart sistemi, Ar-Ge ve rakipler, tek paket.</b><span>Üçü birbirini besliyor, öbür her şey bunlara bağlı: rakip ve oyuncu aynı kartları ve aynı Ar-Ge ağacını yürüyor. 36 konu; en büyük oturum, iki parçaya bölünebilir. Pazar 2'nin kapanış simülasyonlarından çıkan 8 karar bu pakette.</span></div></li>
+      <li><div><b>B2B satış, fiyat, pazarlık ve hesap yaşamı.</b><span>Modül uyumu ve standart netleşince. Pazarlığın ilkesi burada kapanır.</span></div></li>
+      <li><div><b>Seed ve Series A görüşmesi.</b><span>2'nin pazarlık ilkesini kullanır; yeni arayüz burada.</span></div></li>
+      <li><div><b>Ekip, sprint ve atama.</b><span>Çekirdek zaten net. D'nin görsel sayfası gelince tek oturumda kapanır; 1 ile paralel olabilir.</span></div></li>
+      <li><div><b>İşe alım adayları.</b><span>Küçük ve bağımsız; 1 ile paralel kapanabilir.</span></div></li>
+      <li><div><b>Görev ve öğretici.</b><span>Playtest'ten sonra: oyuncunun nerede takıldığını görmeden karar verilmez.</span></div></li>
+      <li><div><b>B2C pazarı, pazarlama modülü ve ekonomi dengesi.</b><span>Pazarlama, kâra geçen şirketin orta oyundaki rahatlığını ve B2C dengesini çözebilir; bu yüzden ekonomiyle aynı oturumda. Ekonominin son ayarı öbür sistemler oturunca ölçümle yapılır.</span></div></li>
+      <li><div><b>Sanat yönü ve Steam.</b><span>Bağımsız, senin uygun anında. Baki'nin son kapsülünü açar.</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Şu an yürüyen</span>
+  <h2>Tam tanımlı ve süren işler</h2>
+  <div class="box run">
+    <ul>
+      <li><b>Q · K20</b>, oyuncu metnindeki tire temizliği. Kod hazır; Q kontrolleri auto modda, çalışma klasöründe ve mevcut test komutlarıyla koşuyor, sonra commit.</li>
+      <li><b>C · dört iş</b>, Q'dan sonra: kâra geçmiş şirkette yatırımcı notunun başlığı ve şıkları, destek raporu sıklığı, İş hanı'nın dört koltuklu üçüncü kümesi (12 mi 13 mü sende), Frank'in ofis kartı.</li>
+      <li><b>D · kapanmış kararlara dayanan 11 adım</b>, yaklaşık 31 saat, Q'dan sonra: hata modeli, PM ataması, kayıt yapısı, kişi hızı, düzeltme kartı. Açık kararın dokunduğu yerde bugünkü davranış korunuyor. Ayrıca ekip ekranı maketi ve soru sayfası hazırlanıyor.</li>
+      <li><b>Pazar 2 · 10 kapanış simülasyonu bitti.</b> 4 kapı geçti, 5 geçmedi; çıkan 8 karar aşağıda ilgili sistemlere işlendi (1 numaralı PRD).</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Sistemler</span>
+  <h2>Sistem sistem konuşulacaklar</h2>
+  <p class="note">Sol: senin kararlarınla netleşenler. Sağ: konuşulmamış olanlar, nereden çıktıklarıyla. Altta: bu konuşmayı bekleyen iş ve bağımlılık.</p>
+</section>
+
+<section class="box sys" id="erp">
+  <header><h3>ERP pazar modeli</h3><span class="chip c-part">kısmen net</span><span class="src">PRD 1</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>K1 beklenti ekranda sayı değil, istek ve şart olarak gelir</li>
+      <li>K3 koltuk artışı beklentiyi artırmaz; 1★ sürekli koltuk almaz</li>
+      <li>K6 rakip sürümleri standardı kurar; büyük hesap özellikli ürüne yönelir</li>
+      <li>K9 yıldız koltukla uyumlu, 5 basamak</li>
+      <li>Karar 1 (B) sektör modül profiliyle anlam kazanır</li>
+      <li>Karar 5 istek yalnız 3★ ve üstünden; demoda 5★ çok zor</li>
+      <li>Karar 6 koltuk bantları 3–10 / 10–30 / 30–100 / 100–300 / 300–1.000</li>
+      <li>Karar 11 ayrı ceza yok, ürün eskir</li>
+      <li>Karar 26 10 modül; oyuncu hedef sektör seçebilir</li>
+      <li>Karar 28 bitiş 2030; Karar 29 yıllık rapor ve B2B modül ödülü</li>
+      <li>17 Ekim: gizli gider ve nedensiz memnuniyet düşüşü yok</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>10 modülün her biri ne demek, hangi sektör hangisini ister? Tabloyu ajan kurdu. <span class="src">sentez §3.1–3.2, §16-1 · Karar 26 "ERP ileride ayrıntılandırılacak"</span></li>
+      <li>Müşterinin pazardaki yeri imzada sabitlenir mi? Küçük hesap standardın altına razı, 5★ en iyileri ister. <span class="src">sentez §4.2, §16-3</span></li>
+      <li>Oyuncu, sayı görmeden pazarda nerede durduğunu nereden anlar? Ürün sayfasındaki B2B sözcüğü kalkıyor. <span class="src">sentez §6.4 · C planı §8-17</span></li>
+      <li>Entegrasyon, Güvenlik, Dayanıklılık ve Mobil hatları müşterinin beklentisine ve şartına girer mi? <span class="src">C planı §8-16</span></li>
+      <li>Mevzuat (e-Belge, veri koruma, YZ yasası) standardın ikinci kaynağı olsun mu? <span class="src">sentez §16-4, -12, -25</span></li>
+      <li>Müşterinin şirketi büyür, durur ya da küçülür; sektöre göre fark olsun mu? <span class="src">C planı §8-23</span></li>
+      <li>Yıllık rapor Kasım'da mı; ödülün tek karşılığı "o modülü isteyen müşteri 12 ay daha sık gelir" mi; kurallar rapor mailinde mi? <span class="src">sentez §16-21 · C planı §8-26</span></li>
+      <li>Müşteri maili haftada en çok 2, istek ve şart modül kartında birleşir. Sınır doğru mu? Simülasyon isteğin ömrünü 26 haftadan 13'e indirdi ve ürün eskiyince memnuniyetin düşmesini açtı; ikisi de onayını bekliyor. <span class="src">sentez §16-11 · sim3.json</span></li>
+      <li>Ölü bölge: ürününü geliştirmeyen oyuncu 2022'den sonra yılda hiç kazanılabilir 1–2★ aday bulamıyor. 1★ müşterinin beklentisine 2. kademe üst sınırı konursa tek kurucu yılda 9–13 aday bulur, durgun oyuncu yine 0. Geride kalan oyuncu ne satabilmeli? <span class="src">sim G9 ❌ · sentez §13.4</span></li>
+      <li>Ürün dışı ayrılma (bütçe kesintisi gibi) ne sıklıkta olsun? Simülasyonun önerdiği oranla kapılar geçiyor; daha yüksek oran gerçek KOBİ tutma oranlarına yaklaşıyor ama 1★ kaybı %30 sınırına dayanıyor. <span class="src">sim G4, G6 · sentez §13.4</span></li>
+      <li>Hedef sektör seçimi ve sektörlerin artı ve eksileri ne zaman konuşulacak? <span class="src">Karar 26 "sonraki konu"</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>C: memnuniyet defteri, 10 modülün yapısı ve göçü, istenen seviye ve eskime, yıllık rapor. Pazar 2: YZ simülasyonu.</div><div><b>Bağımlılık</b>Kart sistemi, Ar-Ge ve dönemler, rakipler.</div></div>
+</section>
+
+<section class="box sys" id="kart">
+  <header><h3>Kart sistemi ve ürün geliştirme</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 1</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>Atama tarifi: kartın iki ölçüsü büyüklük ve gereksinim; büyük modül birkaç sprint sürebilir</li>
+      <li>Karar 24 kartlar baştan elden geçecek; hata hacmi o zaman yeniden ayarlanır</li>
+      <li>Karar 27 kademeler dönemle açılır, ilk kademeler biraz artırılır, Ar-Ge tavanı yükseltir</li>
+      <li>K4 tavan çok uzak</li>
+      <li>Karar 25 istek kartının adı isteğin konusundan; Karar 28 sürüm notu</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Her modülde kaç kademe var, her kademe oyuncuya ne kazandırır? Sentez "10 modül × 12 kademe = 120 kart" diyor, hiç konuşulmadı. <span class="src">sentez §14.3</span></li>
+      <li>Kartların büyüklük ve zorluk dağılımı: bugün en zor kart en çok 2★ istiyor, 3–5★ isteyen kart yok. <span class="src">D ölçüm notu 8</span></li>
+      <li>Çok sprintlik büyük kart ekranda nasıl görünür, yarıda nasıl durur?</li>
+      <li>Tempo, "ilk kademeler biraz artırılır" ne kadar? Bugünkü eğriyle 3 kişilik ekip ilk iki yılda hiçbir modülde 3. kademeye varamıyor, 6 kişi 1–4 modülde. Eğri yumuşatılırsa 6 kişi 4–7 modüle varıyor ama rakipler de çok erken doyuyor. Ya da hedef "ilk iki yılda 3 modülde 2. kademe" olur (3 kişi 7 modülde varıyor). <span class="src">sim Tempo ❌, G1 · sentez §15.2, §16-19</span></li>
+      <li>Her modülün iş payı (geliştirme, test, tasarım) ne olsun? Yeni 6 modülde yok. <span class="src">C planı §8-3</span></li>
+      <li>Bir karta kaç kişi girebileceğini belirleyen birim 0,5 mi 0,35 mi? 0,5'te rakipler erken doyuyor (dev 2015'te hatların %62'sinde tavanda). D'nin gerçek birimine bağlı. <span class="src">sim G1 · sentez §13.4</span></li>
+      <li>Derinlik kartı ile dönemin yeni kademesi aynı işi mi görüyor; standart hangisini sayar? <span class="src">C planı §8-29 · D tablosu D8c</span></li>
+      <li>Müşteri isteği ayrı kart mı, modül kartının içinde mi? <span class="src">sentez §14.3 · D tablosu D8d</span></li>
+      <li>Kartın yeni görünüşü. <span class="src">21 Ekim mesajın: "kart redesign"</span></li>
+      <li>E-ticaret ürününün geliştirme kartları ERP'ye göre nasıl? <span class="src">Karar 26</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>D: derinlik kartı ve hesap isteği kartı. C: 10 modülün kademe kısmı.</div><div><b>Bağımlılık</b>ERP pazarı, Ar-Ge, ekip (hata modeli ve gereksinim kapısı).</div></div>
+</section>
+
+<section class="box sys" id="arge">
+  <header><h3>Ar-Ge ve dönemler</h3><span class="chip c-part">kısmen net</span><span class="src">PRD 1</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>Karar 27 dönemle Ar-Ge'ye yeni şeyler gelir (ör. YZ); Ar-Ge tavanı yükseltir</li>
+      <li>Karar 4 "Olay el kitabı" düğümü kalktı</li>
+      <li>Karar 31 bilinen yol şimdilik yok, ileride düğüm adayı</li>
+      <li>21 Ekim: Ar-Ge tamamen elden geçecek; dönem ve YZ Ar-Ge'ye girer</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>YZ dönemi bir kez mi (2023), iki kez mi (2018 ve 2023), 2020'de bir kez mi? Araştırma özeti hazır. <span class="src">SORU_PAKETI_3 soru 1</span></li>
+      <li>Ağacın yeni hâli: hangi düğümler kalır, hangileri döneme bağlanır, kaç yılda bir dönem açılır? <span class="src">sentez §9.1, §14.4</span></li>
+      <li>Ar-Ge tavanı nasıl yükseltir: araştırma bitince seçili modüllerin tavanı bir üst kademeye mi? Hangi modüller seçili? <span class="src">sentez §16-20</span></li>
+      <li>Dönem düğümleri: e-Belge 2015, veri koruma 2016, API 2019, YZ dalgaları, ajan YZ 2028. Liste doğru mu? <span class="src">sentez §14.4 · C planı §8-27</span></li>
+      <li>Yeni modüllerin 3. kademe Ar-Ge düğümü hangisi? <span class="src">C planı §8-4</span></li>
+      <li>Rakipler aynı ağacı yürür; oyuncu bunu görür mü? <span class="src">sentez §14.4 · K2</span></li>
+      <li>Sanatta dönem değişimi yıla mı bağlansın, ofis taşınmasına mı? Ar-Ge dönemiyle örtüşüyor. <span class="src">sanat yönü kararı 4</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>C: dönem tavanı. Sonraki faz: Ar-Ge tavanı, dönem düğümleri, mevzuat, 4. kademe ve üstü.</div><div><b>Bağımlılık</b>ERP pazarı (dönem tablosu), kart sistemi (kademeler).</div></div>
+</section>
+
+<section class="box sys" id="rakip">
+  <header><h3>Rakipler</h3><span class="chip c-part">kısmen net</span><span class="src">PRD 1</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>K2 kopyalama yok; rakipler aynı kartları ve Ar-Ge ağacını yürüyen şirketler; fark hız, verim, satış, destek ve Ar-Ge'de</li>
+      <li>Karar 9 dev erken oyunda geçilmez, geç oyunda geçilebilir</li>
+      <li>Karar 29 yıllık rapor · Karar 31 bilinen yol yok</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Dev geç oyunda yeterince geçilemiyor: 2030'da güçlü oyuncuların yalnız %8–35'i önünde; Karar 9'a aykırı. Üç yol: (a) kapı "hatların yarısında ürünle devin önünde" diye okunur (bugün %77 geçiyor); (b) pay devri ve 2027 ihalesi büyütülür ama tutması için bitiş 2035 olmalı (Karar 28'e aykırı); (c) 5 modül (%97; Karar 26'ya aykırı). <span class="src">sim G2 ❌ · SIM_RAPOR_2 §4–5</span></li>
+      <li>"Devi geçmek" ne demek: yıllık rapordaki "en büyükler" listesinde önüne çıkmak mı? <span class="src">sentez §16-22</span></li>
+      <li>Rakip hangi kartı nasıl seçer? Ajanın beş adımlı kuralı var. <span class="src">sentez §16-8</span></li>
+      <li>Rakiplerin müşterileri yalnız sayı mı; tam simülasyon yalnız oyuncunun ürün türünde mi? <span class="src">sentez §16-9</span></li>
+      <li>Oyuncuya kim önde, kim kimi kopyalıyor bilgisi verilsin mi? <span class="src">K2 "ayrı soru, araştırılır"</span></li>
+      <li>Öncülük yalnız "erken gir" politikasıyla ödülleniyor (%63; politikasız %37). Devin payı sayılırken mevzuat hatları dahil mi (dev %35, kapı geçmez) yoksa yalnız teknoloji hatları mı (%0, geçer)? <span class="src">sim G3 · sentez §8.4</span></li>
+      <li>Rakibin parası: rakip ekibi geliri tam bağlanınca pazarın standardı donuyor (2. kademede ya da 2030'da 5,5'te). Rakiplere yatırımcı parası mı eklensin, gelir bağından mı vazgeçilsin? <span class="src">sim · sentez §13.4</span></li>
+      <li>B2C rakipleri bugünkü basit modelde mi kalsın? <span class="src">sentez §16-10 · C planı §8-38</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>C: rakip şirketler ve pazar havuzu.</div><div><b>Bağımlılık</b>Kart sistemi, Ar-Ge, ekip (rakibin iş gücü D'nin birimine bağlı).</div></div>
+</section>
+
+<section class="box sys flag" id="satis">
+  <header><h3>B2B satış, fiyat ve pazarlık</h3><span class="chip c-part">kısmen net</span><span class="src">PRD 2</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>K8 %60 tabanı kalkar</li>
+      <li>Karar 7 satışçı en çok kendi yıldızının bir üstüne gider, şansı düşer</li>
+      <li>Karar 30 ucuz, standart, pahalı; her birinin önerilen fiyatı var; koltuk başı; önerilen fiyat modüllerden ve kaliteden</li>
+      <li>22 Ekim: premium fiyatın dolar cinsinden önerilen fiyatı olur, pazarlık bunun üzerinden döner</li>
+      <li>Karar 14 satışçı raporunda bütün satırlar görünür · Karar 9 istekte temsilci şartı yok</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Pazarlık önerilen fiyatın etrafında nasıl döner? Müşteri karşı teklif verir mi, kaç tur sürer; bugünkü cetvel, sabır ve karşı teklif nasıl kalır? <span class="src">Karar 30 ve 22 Ekim · C planı §8-13</span></li>
+      <li>Pazarlık yalnız kurucunun görüşmesinde mi; satışçı kendi başına hangi fiyatla çalışır? <span class="src">sentez §16-15</span></li>
+      <li>Önerilen fiyatın formülü ve üç fiyatın kapanışa etkisi. Simülasyonda bugünkü çarpanlarla (ucuz 1,1 / standart 1 / pahalı 0,85) pahalı fiyat durumların %75'inde en çok kazandırıyor; 1,25 / 1 / 0,75 dengeli ama bir durumda %90; 1,4 / 1 / 0,65'te en kötü durum %85. Tek doğru fiyat olmamalı: hangi denge? <span class="src">sim fiyat kapısı ❌ · sentez §5.6, §15.3</span></li>
+      <li>Fiyat imzada sabit, yenilemede değişmez mi? Yeni modül eklenince ne olur? <span class="src">sentez §16-16</span></li>
+      <li>Rakibin fiyatı teklif ekranında ve kayıp satırında görünsün mü? <span class="src">sentez §16-17</span></li>
+      <li>Kapanış tek zar mı; görüşmedeki ibre kalır mı; %3–%92 sınırı. <span class="src">sentez §16-5 · C planı §8-13</span></li>
+      <li>Satışta verilen söz kapanışı nasıl etkiler? <span class="src">sentez §16-7 · C planı §8-37</span></li>
+      <li>Hangi evrede kaç yıldızlı aday gelir; zayıf ürün adayı nasıl kaybeder? <span class="src">C planı §8-18</span></li>
+      <li>4–5★ müşteride karşı masada kaç kişi, kaç soru? <span class="src">C planı §8-19</span></li>
+      <li>Kurucu da "bir üst yıldız" kuralına tabi mi; 2–12 haftalık satış süresi kalsın mı? <span class="src">sentez §16-6, §16-14</span></li>
+      <li>Seed ve Series A görüşmesi aynı pazarlık ilkesiyle mi kurulsun? <span class="src">yol haritası</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>C: kapanış zarı, B2B sayfa beklentisi, 5 yıldız, fiyat verisi, görüşme akışı, aday ve hesap kartı.</div><div><b>Bağımlılık</b>ERP pazarı (modül uyumu, standart), kart sistemi (modül kalitesi).</div></div>
+</section>
+
+<section class="box sys" id="hesap">
+  <header><h3>Hesap yaşamı</h3><span class="chip c-part">kısmen net</span><span class="src">PRD 2</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>Karar 8 "ayrılabilir" hatırlatıcısı kalır</li>
+      <li>Karar 9 temsilci yoksa istek müşterinin mailiyle gelir</li>
+      <li>Karar 10 her kayıp kayıptır; VC tutma oranını sorar</li>
+      <li>Karar 11 destek raporu · Karar 12–13 kurumsal sunucu maddesi</li>
+      <li>Karar 5 istek yalnız 3★ ve üstü · K3, K9</li>
+      <li>17 Ekim: memnuniyet nedensiz düşmez; ürün dışı ayrılma düşük olasılıkla ve nedeni yazılı</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Müşteri yalnız yenilemede mi ayrılır? Bugünkü Risk geri sayımı ve "Oyala" düğmesi kalkar mı? <span class="src">C planı §8-8</span></li>
+      <li>Ürün terimi kalkınca memnuniyetin tabanı ne olsun; PRD 65–70 diyor. <span class="src">C planı §8-6</span></li>
+      <li>Açık hata memnuniyeti ne kadar düşürür: bugünkü (hata başına −0,3, en çok −20) mi, PRD'deki (3 × hata, en çok 60) mı? <span class="src">C planı §8-7</span></li>
+      <li>"Memnun" ve "düşük" eşikleri neye göre? <span class="src">C planı §8-9</span></li>
+      <li>Yenileme şartı ayrıca memnuniyet düşürür mü, yoksa yalnız bilgi satırı mı? <span class="src">C planı §8-34</span></li>
+      <li>Söz nerede verilir: hesap satırında "Söz ver" düğmesi mi? Anlık +8 kalkıp söz tutulunca +6 mı? <span class="src">C planı §8-20 · C0v-22</span></li>
+      <li>"Hayır diyemez" huylu temsilcinin hesabına +5; "her sprint −3" satırı 8 hafta mı sürer? <span class="src">C0v-21, C0v-15</span></li>
+      <li>B2C'de adsız destek zararı kalksın mı? B2C büyümesini kaydırır. <span class="src">C0v-13, C0v-26</span></li>
+      <li>Gelen kutusundaki "risk nedeni" hangi alanı söyler? <span class="src">C0v-28</span></li>
+      <li>HESAPLAR: "Yenilemeyebilir" yerine "Şartlı" mı; "İlgilen" yalnız riskli satırda mı; hangi sütunlar? <span class="src">C planı §8-36 · sentez §14.2</span></li>
+      <li>Haftalık destek raporu hâlâ haftaların %70'inde geliyor (C7b ile 81 haftanın 70'inden 57'sine indi). Kalanın çoğu "bir hattın bütün hataları kapandı" haberi. Bu haber rapor sebebi sayılsın mı, yoksa haberler birkaç haftada bir tek raporda mı birleşsin? <span class="src">C7b ölçümü · Karar 11</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>C: memnuniyet defteri, yenileme, şart, istekler, Genel Bakış sol sütun, HESAPLAR.</div><div><b>Bağımlılık</b>ERP pazarı (standart, eskime), B2B satış (imza, fiyat), kart sistemi (istek kartı).</div></div>
+</section>
+
+<section class="box sys" id="fon">
+  <header><h3>Seed ve Series A görüşmesi</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 3</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>Karar 10 yatırımcı tutma oranını sorar</li>
+      <li>Karar 20 VC'nin ilk seçeneği "Odayı oku"</li>
+      <li>Ofis kartı seed'den sonra gelir; Frank'in metni onaylı (22 Ekim)</li>
+      <li>Runway yalnız eksideyken görünür</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Term sheet pazarlık kaldıraçlarının arayüzü eski ve kötü: yeni hâli ne? <span class="src">21 Ekim mesajın</span></li>
+      <li>Pazarlık hissi zayıf: B2B pazarlıkla aynı ilke mi? <span class="src">yol haritası</span></li>
+      <li>"Odayı oku" ne değiştiriyor, karizmaya mı bağlansın, gerek var mı? <span class="src">Karar 20</span></li>
+      <li>Demo nerede biter: Series A davetinde mi? <span class="src">el kitabı K2</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>yok.</div><div><b>Bağımlılık</b>B2B pazarlığın ilkesi, ekonomi.</div></div>
+</section>
+
+<section class="box sys" id="ekip">
+  <header><h3>Ekip, sprint ve atama</h3><span class="chip c-part">kısmen net</span><span class="src">PRD 4</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>Karar 18-A atamayı sistem yapar</li>
+      <li>Karar 19 zor işe en iyiler; hata işin karmaşıklığıyla ölçeklenir · Karar 21 PM için de aynı</li>
+      <li>Karar 20 (B) söz kartı öne geçmez · Karar 22 (B) "bu sorun N sprinttir sürüyor"</li>
+      <li>Karar 24 hata modeli; hacim bugünkü kalır · Karar 25 önceden ve anında atama</li>
+      <li>Karar 26 taşma yokken darboğaz satırı boş · Karar 27 "Bu çeyrek: hedef yok" · Karar 28 sürüm notu</li>
+      <li>Dışarıdan iş ve hizmet tamamen kalktı</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><p class="note">D bunları ekip ekranı maketiyle birlikte tek görsel sayfada, oyuncu örneği ve etkisiyle getiriyor.</p><ol>
+      <li>Bir kartta en çok kaç kişi çalışır, 8 mi? <span class="src">A4 K4</span></li>
+      <li>Testçi boşta kalınca geliştirmeye yardım eder mi, düzeltmeye girer mi? <span class="src">A4 K6</span></li>
+      <li>Kurucu birden çok işe uyuyorsa önce hangisine? <span class="src">A4 K7</span></li>
+      <li>Uymayan işte çalışanın morali hangi bantta düşer? <span class="src">A4 P1</span></li>
+      <li>Söze bağlı kart sonraki sprinte kalırsa söz bir sprint uzar, ikincide mi kırılır? <span class="src">A4 T1</span></li>
+      <li>Test sonucu kâğıdını kim söyler? <span class="src">A4 T2</span></li>
+      <li>Ekranın yedi seçimi: 8 kişiden sonra kompakt kart, devret düğmesinin yeri, "sırada" satırı, ipucu. <span class="src">A4 U1–U7</span></li>
+      <li>Eşikli gönder kipi ayarı kalsın mı? 18 Ekim'de "ayar olarak durur" demiştin. <span class="src">D tablosu §3</span></li>
+      <li>Aynı anda birden çok olay gelirse hangisi önce gelir? <span class="src">D tablosu D3b</span></li>
+      <li>"Özenli" ve "Aceleci" etiketleri ne demek? Yeni hata modelinde kişinin tek bir yapım kalitesi yok. <span class="src">D tablosu D5b</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>D: yeni hafta motoru, önceden atama ve süre kapısı, gönder sorusu, plan ekranı, etiketler, son ölçüm ve rapor. Derinlik ve istek kartları kart sistemine kaldı.</div><div><b>Bağımlılık</b>Kart sistemi: kartlar yenilenince hata hacmi ve atama yeniden ölçülür.</div></div>
+</section>
+
+<section class="box sys" id="alim">
+  <header><h3>İşe alım adayları</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 5</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>Ofiste masa kadar işe alım; masa doluysa alım kapalı</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Her rolde aday aynı şablonla geliyor: bir beceri 5★, öbürleri 0, sonrakiler 3/2; rastgelelik yok. Rol ve kıdeme göre beceri dağılımı nasıl olsun? <span class="src">21 Ekim mesajın</span></li>
+      <li>Junior aday 5★ olabilir mi; kıdem yıldızın üst sınırını mı belirler? <span class="src">21 Ekim mesajın</span></li>
+      <li>Kaç aday gelir, ne sıklıkla; yıldız ölçeği 5'e çıkınca aday kartı nasıl okunur? <span class="src">D tablosu D1</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>yok.</div><div><b>Bağımlılık</b>Ekip (yıldız ve beceri ölçeği). Küçük ve bağımsız.</div></div>
+</section>
+
+<section class="box sys" id="gorev">
+  <header><h3>Görev ve öğretici</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 6</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul><li>Henüz yok</li></ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Görev zinciri mi (Big Ambitions gibi), Frank'le ilk adımları öğreten öğretici mi, ikisi mi? <span class="src">21 Ekim mesajın</span></li>
+      <li>Görev, ofise taşınmak gibi davranışları yönlendirsin mi? <span class="src">yol haritası</span></li>
+      <li>Oyuncu nerede "ne yapmam gerek" diye takılıyor? Playtest henüz yapılmadı.</li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>yok.</div><div><b>Bağımlılık</b>Playtest bulguları; çekirdek sistemlerin oturması.</div></div>
+</section>
+
+<section class="box sys" id="b2c">
+  <header><h3>B2C ve e-ticaret pazarı</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 7</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>Karar 26 e-ticaret ileride ayrıntılandırılacak</li>
+      <li>Karar 29 B2C'de yalnız en büyük ve en hızlı büyüyen platformlar; modül ödülü yok</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>B2C'nin pazar modeli ERP'nin karşılığı mı olacak? Bugünkü kitle eğrisi tutarsız. <span class="src">yol haritası</span></li>
+      <li>B2C raporu hangi değerden sıralar? <span class="src">C planı §8-38</span></li>
+      <li>Demoda B2C var mı? <span class="src">el kitabı K2 önerisi: demo B2B</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>yok.</div><div><b>Bağımlılık</b>ERP pazarı, demo kapsamı.</div></div>
+</section>
+
+<section class="box sys" id="eko">
+  <header><h3>Ekonomi dengesi</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 7</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>17 Ekim: gizli gider yok</li>
+      <li>Karar 2 sunucu fiyatı bugünkü · Karar 3 ofiste iki aylık kira peşin</li>
+      <li>Ofisin tek getirisi bir kerelik marka</li>
+      <li>Karar 30 5★'ın yüksek geliri sorun değil · Kredi sonra, ayrı tasarım</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>50 kişilik şirket 2030'da maaşının 2–3 katını kazanıyor, hedef 1,2–2. Sebep 600 hesap varsayımı: bir ekip kaç hesaba bakabilmeli? <span class="src">sentez §13.5</span></li>
+      <li>Orta ve geç oyun fazla rahat; kasa evre 2'de hiç 4 ayın altına inmiyor. <span class="src">C2 ekonomi ölçümü</span></li>
+      <li>Evde kalmak en iyi strateji; uzaktan çalışmanın bedeli olsun mu? <span class="src">C9 cevapları · C2 ölçümü</span></li>
+      <li>Seed'de İş hanı'na taşınan oyuncu ~30 hafta işe alım yapamıyor. <span class="src">C2 ölçümü</span></li>
+      <li>İlk yarım yıl B2B yavaş: 26. haftada ayda 16–28 bin $. <span class="src">yol haritası</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>C: gerçek koşuyla ekonomi ölçümü.</div><div><b>Bağımlılık</b>Pazar, kart, ekip ve satış PRD'leri; ayar en sona.</div></div>
+</section>
+
+<section class="box sys" id="pazarlama">
+  <header><h3>Pazarlama modülü</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 7</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>22 Ekim: demoda yüzeysel de olsa bir pazarlama modülü olsun; kâra geçen şirketin orta oyun ekonomisini ve B2C dengesini çözebilir</li>
+      <li>17 Ekim: gizli gider yok; oyuncu her gideri görür ve yönetir</li>
+      <li>Bugün pazarlama yalnız bir olay kartının kampanyası: birkaç hafta giderin bir yüzdesini harcar, B2C kitle büyümesini hızlandırır</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Demoda modül ne kadar derin olsun: yalnız bütçe mi, kanal seçimi mi (reklam, içerik, etkinlik), hedef kitle mi? <span class="src">22 Ekim mesajın</span></li>
+      <li>Kâra geçen şirket parasını pazarlamaya nasıl yatırır; getirisi azalan harcama orta oyundaki rahatlığı nasıl dengeler? <span class="src">22 Ekim mesajın · C2 ekonomi ölçümü</span></li>
+      <li>Pazarlama B2C'de kitle büyümesini, B2B'de aday akışını ve markayı nasıl etkiler? <span class="src">22 Ekim mesajın</span></li>
+      <li>Bugünkü olay kartındaki kampanya bu modüle mi taşınır, kalkar mı? <span class="src">finance_system.gd marketing_push</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>yok.</div><div><b>Bağımlılık</b>B2C pazarı, B2B satış (aday akışı), ekonomi dengesi.</div></div>
+</section>
+
+<section class="box sys" id="sanat">
+  <header><h3>Sanat yönü ve Steam</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 8</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>20 Ekim: sanat döneme kilitlenmez, kopya yok, yöntemle kurulur</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Sanatın dört kararı: ortak taban, yön şimdi mi illüstratör denemesinden sonra mı, portreler, dönem değişimi neye bağlı. <span class="src">sanat yönü 2. tur</span></li>
+      <li>Next Fest Şubat mı, Haziran 2027 mi? <span class="src">el kitabı K1</span></li>
+      <li>Demo kapsamı tek satır mı: "Bootstrap'tan Series A davetine, 40–60 dk"? <span class="src">el kitabı K2</span></li>
+      <li>Tipografi maketlerden önce kilitlensin mi; "bitti" iki katlı mı olsun? <span class="src">el kitabı K3, K4</span></li>
+      <li>Oyunun adı ve YZ beyanı ne zaman, nasıl? <span class="src">el kitabı K5</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>Baki: son kapsül görselleri ve ekran görüntüleri.</div><div><b>Bağımlılık</b>Bağımsız; ekran görüntüleri değişecek ekranlara bağlı.</div></div>
+</section>
+
+<section>
+  <span class="eyebrow">Gündem dışı</span>
+  <h2>Sonraya kalanlar</h2>
+  <div class="box">
+    <ul>
+      <li>Olaylar: Faz B'nin 46 kâğıdından 27'si oyunda gelmiyor; yeni sistemler yeni kart isteyecek.</li>
+      <li>Tek metin turu, TR ve EN, sistemler bitince. İmalat sektörü ile Üretim modülünün adı ve 4–5★ hesapta eskime satırının biçimi burada görülür.</li>
+      <li>Eski görünen ekranlar (VC ve seed panelleri gibi) ilgili sistemlerin PRD'lerine dağıtılır.</li>
+      <li>Çalışma düzeni ve kod denetimi, işler bitince.</li>
+    </ul>
+  </div>
+</section>
+
+</main>

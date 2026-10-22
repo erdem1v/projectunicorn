@@ -1,0 +1,4246 @@
+{
+ "wave": "W2",
+ "summary_tr": "Bu dalgada 40 sprint ortası kâğıdı, bir sistem kâğıdı (Kart sprinte yetişmeyecek) ve on iki yeni çip şablonu var; eleştiri turundan sonraki hâlidir (27 bulgu, kararlar öğelerin notlarında). Dağılım: PM 6 (B2B 3, B2C 1, ikisi 2), tasarımcı 7 (2, 2, 3), yazılımcı 10 (3, 2, 5), testçi 8 (3, 2, 3), testçisiz test 3 (ikisi), kurucu tek 6 (1, 1, 4). Önerilen tablo 41 ediyordu; tasarımcının “ikisi” satırı 4'ten 3'e indi, çünkü düzeltme kartlarının tasarım payı yok (sprint.json shares.fix 0,0) ve tasarım aşaması test aşamasından seyrek gelir. Gövdeler bir ile üç kısa cümle; konuşan o aşamada kartta çalışan kişi, PM ise sprintteki müşteri isteği kartını anlatır. Etiketler her kâğıtta aynı kısa hamleler: “Çıkmadan düzelt”, “Bilinen hata olarak çık”, “Önümüzdeki sprinte at”, “Kartı sonraki sprinte bırak”, dışarıya iş için hep “serbest çalışan”. Bedel öznesine düşer ve görünür kalır: karta (puan, kayma, açık hata), kişiye (moral ya da verim), hesaba (tek seferlik −8 ya da W1'in “hemen −6, istediği çıkana kadar her sprint −3” kalıbı), kitleye (gövdedeki sayıdan türeyen kayıp), kasaya. Birkaç haftada silinen küçük iz ve Marka ±1 dalgadan çıktı. Bugünkü dokuz dosyadan beşi havuzda dört kâğıt oldu (iki renk kâğıdı birleşti), üç takip kâğıdı silindi ve bedelleri seçeneklere katlandı, Sprint yetişmeyecek yalnız bekleyen varken gelen sistem kâğıdı olarak kaldı. Not, video ve pazaryerine özel kâğıt yok. Örnek şirket W1'inki: B2B ERP 9 hesap (Demir Holding 100 kullanıcı, memnuniyet 58; Marmara Lojistik 64), B2C kitle 12.400, ödeyen 1.050, aylık $8; ekip Deniz (3★ yazılımcı), Mert (yazılımcı), Selin (testçi), Ece (tasarımcı), Aslı (ürün yöneticisi). Her öğede pool_group alanı dağılım grubunu söyler; sistem kâğıdı “system”dir ve 40'a sayılmaz.",
+ "constants": [
+  {
+   "name": "PAPER_TRUST_HIT",
+   "value": "tek seferlik memnuniyet −8",
+   "why_tr": "Ana oturum kararı 1: −2/−3/−4 iz haftada ≈2,8 affedildiği için oyuncuya görünmeden siliniyor, seçenek bedava çıkışa dönüyordu. −8 en az iki hafta görünür. Hesap istediğini almayınca bu kullanılır.",
+   "status": "onay bekliyor"
+  },
+  {
+   "name": "PAPER_TRUST_WAITING",
+   "value": "hemen −6 · istediği çıkana kadar her sprint sonunda −3",
+   "why_tr": "W1 Karar 8'in onaylı kalıbı; yalnız isteğin sonradan çıkacağı belli olan iki yerde: yenileme beklemesi ve masaüstüne kalan telefon desteği.",
+   "status": "onay bekliyor"
+  },
+  {
+   "name": "PAPER_CONTRACT_PER_POINT",
+   "value": "$1.000 / puan",
+   "why_tr": "Dışarıya yaptırılan işin tek fiyatı (B_PLAN §5.6). Orta seviye yazılımcı haftada 2 puan üretir ve haftası ≈ $1.050 tutar; dışarısı yaklaşık iki katı. D puanları ×5 yapınca $200'e iner.",
+   "status": "onay bekliyor"
+  },
+  {
+   "name": "PAPER_REOPEN_POINTS",
+   "value": "+1 puan",
+   "why_tr": "Kapsamı sonraki sprinte atmanın bedeli: iş yeniden açılır (B_INCELEME bulgu 20). Ertelemeyi bedava olmaktan çıkarır.",
+   "status": "onay bekliyor"
+  },
+  {
+   "name": "PAPER_MORALE_ONE",
+   "value": "tek kişi −3/−4 · olumlu +4/+6/+8",
+   "why_tr": "Tek kişilik kâğıtta bedel yalnız o kişiye düşer.",
+   "status": "onay bekliyor"
+  },
+  {
+   "name": "PAPER_B2C_LOSS",
+   "value": "küçük kitlenin %0,5'i · orta %1",
+   "why_tr": "B2C bedeli tek seferlik kitle kaybı; olaydan türer. Örnek kitle 12.400 → 62 ve 124. Marka ±1 bütün dalgadan çıktı.",
+   "status": "onay bekliyor"
+  },
+  {
+   "name": "PAPER_ASK_SILENT_MULT",
+   "value": "isteyen × 5",
+   "why_tr": "B2C'de istediğini alamayan kitlenin bedeli; sayı gövdeden türer (38 → −190).",
+   "status": "onay bekliyor"
+  },
+  {
+   "name": "PAPER_POINTS_SCALE",
+   "value": "bütün puan miktarları bugünkü ölçekte (+1, +2, +3, −1, −2, −3, +4, +5)",
+   "why_tr": "D bu listeyi ×5 yapar (B_INCELEME bulgu 6). Çipler miktarı fiilden okuduğu için metin değişmez.",
+   "status": "onay bekliyor"
+  },
+  {
+   "name": "PAPER_LATCH",
+   "value": "52 hafta, koşuda en çok 3, latch_key run",
+   "why_tr": "Karar 12 (bağlayıcı). Tek istisna arayüz yeniden yazımı (koşuda bir kez).",
+   "status": "bağlayıcı"
+  },
+  {
+   "name": "PAPER_PICK_WEIGHT",
+   "value": "1 / (1 + 2 × görülme)",
+   "why_tr": "B_PLAN §5.4: hiç görülmemiş kâğıt önce gelir.",
+   "status": "onay bekliyor"
+  }
+ ],
+ "existing_tr": [
+  {
+   "file": "sprint_two_paths.json",
+   "kind_tr": "çekilen",
+   "decision_tr": "40'a giriyor: yeni id product.sprint_dev_shorter_path (yazılımcı · geliştirme · ikisi); etiketler ve süre metni bugünkü anahtarlar.",
+   "why_tr": "Bugünkü bedel (−3 efor, −2 ilerleme) her durumda 1 puan kazandırıyordu; “Bilinen yol” hiç seçilmeye değmiyordu. Geçiş artık kartta yapılmış işin tamamını siler, karar kartın ilerlemesine bağlanır. Konuşan geliştirme aşamasındaki yazılımcı, gövde onun ağzından."
+  },
+  {
+   "file": "sprint_contractor.json",
+   "kind_tr": "çekilen",
+   "decision_tr": "40'a giriyor: id product.sprint_dev_contractor kalır (yazılımcı · geliştirme · ikisi).",
+   "why_tr": "Bedeller tek ölçeğe bağlandı: içeride öğrenme +2 puan, dışarısı 2 × $1.000. Bugün −$2.000 ile +3 ilerleme öğrenmeden her zaman iyiydi ve süre bitimi (+1) seçenekten ucuzdu. Etiketler ve süre metni bugünkü anahtarlar."
+  },
+  {
+   "file": "sprint_hardcoded_colors.json",
+   "kind_tr": "çekilen (yazar pilotunda Erdem onayladı)",
+   "decision_tr": "40'a giriyor: product.sprint_design_customer_colors (tasarımcı · tasarım · B2B), colors_again ile tek kâğıt. ONAYLI METİN DEĞİŞTİ, işaretli.",
+   "why_tr": "Gövde 4 cümle, §3 sınırı 3: son iki cümle virgülle birleşti, kelimeler aynı (onaylı metne tam dönüş sınırı bozar). satisfaction_delta −5 bir tikte siliniyordu; “Renkler değişmeyecek de” artık görünür tek seferlik −8. Serbest çalışan sabit −$5.000 yerine elle yolunun puanından türer (−$2.000). Konuşan tasarımcı (bugün masa)."
+  },
+  {
+   "file": "sprint_colors_again.json",
+   "kind_tr": "çekilen (yazar pilotunda Erdem onayladı)",
+   "decision_tr": "Dosya silinir; birleşik renk kâğıdının ikinci geliş varyantı olur. ONAYLI METİN DEĞİŞTİ.",
+   "why_tr": "Gövde 4 cümle: “Artık daha çok sayfa var.” düştü, kalan üç cümle aynı. Ayrı kâğıt olarak havuzda iki yer tutuyordu; birleşince 52 hafta kuralıyla en erken bir yıl sonra döner (bugün 8 hafta)."
+  },
+  {
+   "file": "sprint_unasked_rewrite.json",
+   "kind_tr": "çekilen",
+   "decision_tr": "40'a giriyor: product.sprint_dev_unasked_rewrite (yazılımcı · geliştirme · ikisi), koşuda bir kez.",
+   "why_tr": "Konuşan arayüzü yazan yazılımcı (Karar 10). Üç takip kâğıdının bedelleri seçeneklerin kendi çipine taşındı; dördüncü seçenek “Eski kodda kal” eklendi."
+  },
+  {
+   "file": "sprint_rewrite_bugs.json",
+   "kind_tr": "takip",
+   "decision_tr": "Silinir.",
+   "why_tr": "“Hemen geçiş”in 3 hafta sonra gelen gizli bedeliydi; seçerken görünmüyordu ve “bir düzine hata” itibar ±1 ile anlatılıyordu. Bedel artık seçenekte: A'nın deposuna 2 açık hata. Bütün ekibin verimini düşüren “Yeni işi durdur” seçeneği de gider."
+  },
+  {
+   "file": "sprint_rewrite_owner.json",
+   "kind_tr": "takip",
+   "decision_tr": "Silinir.",
+   "why_tr": "“İncelet”in 4 hafta sonra gelen gizli bedeliydi. Gönderen kurucunun notuydu, konuşan karta bağlı değildi. İncelemenin bedeli artık kartın devretmesi."
+  },
+  {
+   "file": "sprint_rewrite_reader.json",
+   "kind_tr": "takip",
+   "decision_tr": "Silinir.",
+   "why_tr": "“Kendin oku”nun 3 hafta sonra gelen gizli bedeliydi (kurucu −%20 · 4 hafta). Bedel artık seçenekte: kurucu verimi −%20 · 2 hafta."
+  },
+  {
+   "file": "sprint_late.json",
+   "kind_tr": "kapasite",
+   "decision_tr": "Sistem kâğıdı kalır, 40'ın dışında (bu dosyada product.sprint_late, kind system_paper).",
+   "why_tr": "Bir durumu bildirir, rol ve aşama konusu değildir. Yalnız kartı bekleyen biri varken (müşteri isteği kartı) ve fazla mesai kartı yetiştirebiliyorsa gelir; 26 hafta geçmeden dönmez, koşuda en çok 3 kez. Sprint başına bir kesinti kuralına sayılır; sözlü kartta yerine söz olayı gelir. Konuşanı kartta çalışan kişi; fazla mesainin bedeli Marka −2 yerine ekip morali."
+  },
+  {
+   "file": "data/product/sprint.json (decision bloğu)",
+   "kind_tr": "yapılandırma",
+   "decision_tr": "cards listesi 40 kâğıdın id'leriyle değişir; rate 0,35 ve kart başına zar kalkar.",
+   "why_tr": "PRD §0 madde 11 ve Karar 12: sprint başına en çok bir kâğıt, bazı sprintlerde hiç; sıklık kabul §4.5'e göre B5'te yeniden seçilir."
+  }
+ ],
+ "items": [
+  {
+   "id": "product.sprint_pm_scope_grew",
+   "kind": "paper",
+   "title_tr": "PM · Kartı çizerken büyüttük",
+   "market": "b2b",
+   "speaker_role": "product_manager",
+   "pool_group": "pm",
+   "stage": "any",
+   "replaces": null,
+   "sender": {
+    "en": "Aslı · Product Manager",
+    "tr": "Aslı · Ürün Yöneticisi"
+   },
+   "when_tr": "B2B. Koşan sprintte bir müşteri isteği kartı var ve kart bu hızla sprintte bitmiyor; isteğin dışında eklenen kısım (kartın puanının %40'ı, yukarı yuvarlanır) çıkınca bitiyor. Ekipte ürün yöneticisi var. Kartın aşaması önemsiz: PM önden gider, kâğıdı kartta çalışmadan yazar.",
+   "title": {
+    "en": "This card grew while we designed it",
+    "tr": "Kartı çizerken büyüttük"
+   },
+   "body": {
+    "en": "{customer} asked for this card, and it grew while we were designing it. The filters and the export were our idea. If we move them to next sprint, the card finishes this sprint.",
+    "tr": "Bu kartı {customer} istedi; biz çizerken büyüttük. Filtre ve dışa aktarma bizim fikrimiz. Onları önümüzdeki sprinte atarsak kart bu sprintte biter."
+   },
+   "options": [
+    {
+     "id": "defer_extra",
+     "does_tr": "sprint_card_trim {share 0.4, follow true}: eklenen kısım karttan çıkar ve aynı iş, +1 puanlık yeniden açma payıyla sonraki sprintin planına kart olarak girer.",
+     "label": {
+      "en": "Move them to next sprint",
+      "tr": "Önümüzdeki sprinte at"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing −2 points",
+       "tr": "Toplu Fatura −2 puan"
+      },
+      {
+       "en": "3 points of work left for next sprint",
+       "tr": "Sonraki sprinte 3 puanlık iş kalır"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı isteyen bekliyor (yenileme ya da söz yakın) ve sonraki sprintte yer var."
+    },
+    {
+     "id": "contractor",
+     "does_tr": "Eklenen kısım dışarıda yapılır: kasa −(çıkan puan × PAPER_CONTRACT_PER_POINT), kart bu sprintte bütün hâliyle biter.",
+     "label": {
+      "en": "Have a contractor build our additions",
+      "tr": "Eklediklerimizi serbest çalışana yaptır"
+     },
+     "chips": [
+      {
+       "en": "Cash −$2,000",
+       "tr": "Nakit −$2.000"
+      },
+      {
+       "en": "Batch Invoicing −2 points",
+       "tr": "Toplu Fatura −2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat, kartı isteyen bekliyor ve sonraki sprint de dolu."
+    },
+    {
+     "id": "as_drawn",
+     "does_tr": "Statüko; plan kartı zaten sonraki sprinte taşıyor. Çip bilgi çipidir, fiil yoktur.",
+     "label": {
+      "en": "Build it as designed",
+      "tr": "Çizildiği gibi yap"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing won't finish this sprint",
+       "tr": "Toplu Fatura bu sprintte bitmez"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı bu sprint bekleyen yok; kart bir sprint geç ama yeniden açma payı ödemeden bütün hâliyle çıkar."
+    }
+   ],
+   "expire": {
+    "en": "Nobody decided, so the card stayed as designed.",
+    "tr": "Karar verilmedi, kart çizildiği gibi kaldı.",
+    "does_tr": "“Çizildiği gibi yap” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "kartı isteyen hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu: o sprintte planlanmış müşteri isteği kartının sahibi (istek verisi)"
+    }
+   ],
+   "constants": [
+    {
+     "name": "PAPER_TRIM_SHARE",
+     "value": "kart puanının %40'ı, yukarı yuvarlanır",
+     "why_tr": "İsteğin dışında eklenen payın tek ayarı (B_PLAN K3).",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "TR gövde Erdem'in ölçü olarak verdiği PM cümlesidir; yalnız hesap adı slot oldu. EN “draw” yerine “design” der (eleştiri bulgu 6). Kâğıt yalnız B2B'ye indi (bulgu 8): B2C'de aynı kararı “Çoğu yalnız temel hâlini istiyor” taşır. Örnek: Demir Holding'in istediği Toplu Fatura (5 puan) bu hızla yetişmiyor; 2 puan çıkınca yetişiyor. Yeniden açma payı (+1) kapsamı ertelemenin bedelidir."
+  },
+  {
+   "id": "product.sprint_pm_phone_too",
+   "kind": "paper",
+   "title_tr": "PM · Telefondan da kullanmak istiyorlar",
+   "market": "both",
+   "speaker_role": "product_manager",
+   "pool_group": "pm",
+   "stage": "any",
+   "replaces": null,
+   "sender": {
+    "en": "Aslı · Product Manager",
+    "tr": "Aslı · Ürün Yöneticisi"
+   },
+   "when_tr": "Koşan sprintte bir müşteri isteği kartı var, Mobil & Erişim hattının ilk kademesi (Duyarlı Arayüz) çıkmamış ve kart bugün yetişiyor; telefon payı (2 puan) eklenince yetişmiyor. Ekipte ürün yöneticisi var.",
+   "title": {
+    "en": "They want it on their phones too",
+    "tr": "Telefondan da kullanmak istiyorlar"
+   },
+   "body_variants": [
+    {
+     "case_tr": "B2B",
+     "en": "{customer} wants to use this from their phones too, and we only designed it for desktop. If we add phone support now, the card won't finish this sprint.",
+     "tr": "{customer} bunu telefondan da kullanmak istiyor, biz yalnız masaüstüne göre çizdik. Telefon desteğini şimdi eklersek kart bu sprintte bitmez."
+    },
+    {
+     "case_tr": "B2C",
+     "en": "Most of the {seam:urun.decision_request_votes} people who asked for this card wrote from their phones, and we only designed it for desktop. If we add phone support now, the card won't finish this sprint.",
+     "tr": "Bu kartı isteyen {seam:urun.decision_request_votes} kişinin çoğu telefondan yazmış, biz yalnız masaüstüne göre çizdik. Telefon desteğini şimdi eklersek kart bu sprintte bitmez."
+    }
+   ],
+   "options": [
+    {
+     "id": "add_now",
+     "does_tr": "Kart +2 puan; plan kartı sonraki sprinte taşır (bilgi çipi).",
+     "label": {
+      "en": "Add phone support now",
+      "tr": "Telefon desteğini şimdi ekle"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing +2 points",
+       "tr": "Toplu Fatura +2 puan"
+      },
+      {
+       "en": "Batch Invoicing won't finish this sprint",
+       "tr": "Toplu Fatura bu sprintte bitmez"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı isteyen bir sprint daha bekleyebilir; iş tek parça ve yeniden açma payı olmadan çıkar."
+    },
+    {
+     "id": "phone_next",
+     "does_tr": "Telefon payı +1 yeniden açma payıyla sonraki sprintin planına girer; kart bu sprintte biter.",
+     "label": {
+      "en": "Move phone support to next sprint",
+      "tr": "Telefon desteğini önümüzdeki sprinte at"
+     },
+     "chips": [
+      {
+       "en": "3 points of work left for next sprint",
+       "tr": "Sonraki sprinte 3 puanlık iş kalır"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartın bu sprintte çıkması gerekiyor ve sonraki sprintte yer var."
+    },
+    {
+     "id": "desktop_b2b",
+     "does_tr": "Yalnız B2B. W1 Karar 8 kalıbı (PAPER_TRUST_WAITING): hesaba hemen −6, Duyarlı Arayüz çıkana kadar geçen her sprint sonunda −3 daha.",
+     "label": {
+      "en": "Keep it desktop only",
+      "tr": "Yalnız masaüstü olsun"
+     },
+     "chips": [
+      {
+       "en": "Demir Holding: satisfaction 58 → 52",
+       "tr": "Demir Holding: memnuniyet 58 → 52"
+      },
+      {
+       "en": "Satisfaction −3 at the end of each sprint until Responsive Interface ships",
+       "tr": "Duyarlı Arayüz çıkana kadar her sprint sonunda memnuniyet −3"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "İki sprint de dolu, hesabın memnuniyeti eşiğin epey üstünde ve Duyarlı Arayüz zaten yakında planda."
+    },
+    {
+     "id": "desktop_b2c",
+     "does_tr": "Yalnız B2C. Kitle bir kez −(isteyen × PAPER_ASK_SILENT_MULT).",
+     "label": {
+      "en": "Keep it desktop only",
+      "tr": "Yalnız masaüstü olsun"
+     },
+     "chips": [
+      {
+       "en": "Audience −190",
+       "tr": "Kitle −190"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "İki sprint de dolu ve kitle büyük."
+    }
+   ],
+   "expire": {
+    "en": "Nobody decided, so the card goes out desktop only.",
+    "tr": "Karar verilmedi, kart yalnız masaüstü için çıkacak.",
+    "does_tr": "Pazara göre “Yalnız masaüstü olsun” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "kartı isteyen hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu: o sprintte planlanmış müşteri isteği kartının sahibi (istek verisi)"
+    },
+    {
+     "token": "{seam:urun.decision_request_votes}",
+     "carries_tr": "B2C'de bu kartı isteyen kişi sayısı",
+     "example": "38",
+     "source_tr": "Yeni seam: istek kartının yorum sayısı (C gelene kadar B2C istek verisi yok, kâğıt gelmez)"
+    }
+   ],
+   "constants": [
+    {
+     "name": "PAPER_PHONE_POINTS",
+     "value": "+2 puan",
+     "why_tr": "Telefon düzeninin payı; D bütün puanları ×5 yapar.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Örnek: Demir Holding'in Toplu Fatura kartı; B2C'de 38 kişi. Seçenekler aynı işin üç zamanıdır: şimdi (kart kayar), sonra (+1 yeniden açma), hiç (hesap ya da kitle). Hesabın bedeli W1'in erteleme kalıbıdır: hesap telefon desteğini almadıkça her sprint sonunda yeniden düşer, bu yüzden oyuncuya görünür kalır. Gövde ve etiketler eleştiri bulgu 18'e göre (“bunu”, “telefon desteği”)."
+  },
+  {
+   "id": "product.sprint_pm_two_accounts",
+   "kind": "paper",
+   "title_tr": "PM · İki hesap aynı ekranı farklı istiyor",
+   "market": "b2b",
+   "speaker_role": "product_manager",
+   "pool_group": "pm",
+   "stage": "any",
+   "replaces": null,
+   "sender": {
+    "en": "Aslı · Product Manager",
+    "tr": "Aslı · Ürün Yöneticisi"
+   },
+   "when_tr": "Koşan sprintteki müşteri isteği kartını iki aktif hesap ayrı ayrı istemiş (istek verisinde iki hesap). Slot büyük olan hesaptır (koltuk sayısı). Ekipte ürün yöneticisi var.",
+   "title": {
+    "en": "Two accounts want the same screen differently",
+    "tr": "İki hesap aynı ekranı farklı istiyor"
+   },
+   "body": {
+    "en": "{customer} and {seam:urun.decision_second_account} both asked for this card, but each wants the screen built a different way. Doing both makes the card bigger.",
+    "tr": "Bu kartı hem {customer} hem {seam:urun.decision_second_account} istedi ama ekranı farklı biçimde istiyorlar. İkisini birden yaparsak kart büyür."
+   },
+   "options": [
+    {
+     "id": "first_way",
+     "does_tr": "İkinci hesaba: Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Build it the way {customer} wants",
+      "tr": "{customer} nasıl istiyorsa öyle yap"
+     },
+     "chips": [
+      {
+       "en": "Marmara Lojistik: satisfaction 64 → 56",
+       "tr": "Marmara Lojistik: memnuniyet 64 → 56"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "İkinci hesabın memnuniyeti eşiğin epey üstünde."
+    },
+    {
+     "id": "second_way",
+     "does_tr": "Slottaki hesaba: Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Build it the way {seam:urun.decision_second_account} wants",
+      "tr": "{seam:urun.decision_second_account} nasıl istiyorsa öyle yap"
+     },
+     "chips": [
+      {
+       "en": "Demir Holding: satisfaction 58 → 50",
+       "tr": "Demir Holding: memnuniyet 58 → 50"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Büyük hesap rahat, ikinci hesap ayrılma eşiğine yakın."
+    },
+    {
+     "id": "both_ways",
+     "does_tr": "Kart +2 puan (ekrana ayar eklenir, iki hesap da kendi hâlini seçer).",
+     "label": {
+      "en": "Add a setting for both",
+      "tr": "İkisine de ayar ekle"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing +2 points",
+       "tr": "Toplu Fatura +2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "İki hesap da eşiğe yakın ve sprintte iki puanlık boşluk var."
+    }
+   ],
+   "expire": {
+    "en": "Nobody decided, so the screen was built the way {customer} wanted.",
+    "tr": "Karar verilmedi, ekran {customer} nasıl istediyse öyle yapıldı.",
+    "does_tr": "“{customer} nasıl istiyorsa” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "kartı isteyen hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu: o sprintte planlanmış müşteri isteği kartının sahibi (istek verisi)"
+    },
+    {
+     "token": "{seam:urun.decision_second_account}",
+     "carries_tr": "aynı kartı isteyen ikinci hesabın adı",
+     "example": "Marmara Lojistik",
+     "source_tr": "Yeni seam: istek kartının ikinci sahibi (istek verisi)"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Seçenek hangi hesabın üzüleceğini seçtirir; bedel o hesaba düşer. Eleştiri bulgu 26 “{customer} de … de” önerdi; “de” ünlü uyumuyla da/de olur ve belirtecin ardına ek gibi çalışır (B_INCELEME Y15), bu yüzden “hem … hem” yazıldı. İkinci etiket bir seam belirteci taşır; seçenek etiketinde seam çözülüyor mu B0 doğrular, çözülmüyorsa etiket “Öbür hesap nasıl istiyorsa öyle yap” olur."
+  },
+  {
+   "id": "product.sprint_pm_renewal",
+   "kind": "paper",
+   "title_tr": "PM · Yenilemeden önce görmek istiyorlar",
+   "market": "b2b",
+   "speaker_role": "product_manager",
+   "pool_group": "pm",
+   "stage": "any",
+   "replaces": null,
+   "sender": {
+    "en": "Aslı · Product Manager",
+    "tr": "Aslı · Ürün Yöneticisi"
+   },
+   "when_tr": "Koşan sprintte bir müşteri isteği kartı var, isteyen hesabın sözleşme yenilemesi kartın plandaki çıkışından önce ve RENEWAL_WINDOW içinde (B0'da seçilecek). Kart sprintin başına alınınca yenilemeden önce çıkıyor. Ekipte ürün yöneticisi var.",
+   "title": {
+    "en": "They want to see it before renewal",
+    "tr": "Yenilemeden önce görmek istiyorlar"
+   },
+   "body": {
+    "en": "{customer} wants to see this card before they renew their contract. At this pace it goes out after the renewal.",
+    "tr": "{customer} sözleşmesini yenilemeden önce bu kartı görmek istiyor. Bu hızla kart yenilemeden sonra çıkıyor."
+   },
+   "options": [
+    {
+     "id": "front",
+     "does_tr": "Kart koşan sprintin en başına taşınır; sığmayan kart sonraki sprinte kayar (W1 Karar 9 girişi).",
+     "label": {
+      "en": "Move the card to the front of the sprint",
+      "tr": "Kartı sprintin başına al"
+     },
+     "chips": [
+      {
+       "en": "Warehouse and Shelf moves to the next sprint",
+       "tr": "Depo ve Raf sonraki sprinte kayar"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintteki öbür kart bir sprint beklemeye dayanır."
+    },
+    {
+     "id": "discount",
+     "does_tr": "Hesabın aylık ücretinin RENEWAL_DISCOUNT'u bir kez düşülür (tek seferlik gider, MRR değişmez); karşılığında bekleme bedeli (Beklesinler'deki −6 ve −3'ler) yazılmaz.",
+     "label": {
+      "en": "Give them a month's discount",
+      "tr": "Bir ay indirim ver"
+     },
+     "chips": [
+      {
+       "en": "Demir Holding: 20% off for a month −$560",
+       "tr": "Demir Holding: bir ay %20 indirim −$560"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Hesap ayrılma eşiğine yakın, kasa rahat ve sprintteki öbür kartın da bekleyeni var."
+    },
+    {
+     "id": "let_wait",
+     "does_tr": "W1 Karar 8 kalıbı (PAPER_TRUST_WAITING): hesaba hemen −6, kart çıkana kadar geçen her sprint sonunda −3 daha.",
+     "label": {
+      "en": "Let them wait",
+      "tr": "Beklesinler"
+     },
+     "chips": [
+      {
+       "en": "Demir Holding: satisfaction 58 → 52",
+       "tr": "Demir Holding: memnuniyet 58 → 52"
+      },
+      {
+       "en": "Satisfaction −3 at the end of each sprint until Batch Invoicing ships",
+       "tr": "Toplu Fatura çıkana kadar her sprint sonunda memnuniyet −3"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Hesabın memnuniyeti eşiğin epey üstünde ve kart bir sprint içinde çıkacak."
+    }
+   ],
+   "expire": {
+    "en": "Nobody decided, so the card kept its place.",
+    "tr": "Karar verilmedi, kart sırasında kaldı.",
+    "does_tr": "“Beklesinler” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "kartı isteyen hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu: o sprintte planlanmış müşteri isteği kartının sahibi (istek verisi)"
+    }
+   ],
+   "constants": [
+    {
+     "name": "RENEWAL_DISCOUNT",
+     "value": "aylık ücretin %20'si, bir kez",
+     "why_tr": "W1'in kesinti kredisi kademeleriyle (%10 ile %25) aynı ölçek. Örnek: Demir Holding $2.800 → $560.",
+     "status": "onay bekliyor"
+    },
+    {
+     "name": "RENEWAL_WINDOW",
+     "value": "B0'da seçilecek",
+     "why_tr": "Yenilemeye kaç hafta kala kâğıdın geldiği.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "İndirim artık birkaç haftada silinen bir +4 satın almıyor (eleştiri bulgu 1); bekleme bedelini parayla kapatır. İndirim çipi yeni şablondur (EFFECT_ONE_MONTH_DISCOUNT); finansa “İndirim” tek seferlik gider satırıyla girer."
+  },
+  {
+   "id": "product.sprint_pm_spec_unclear",
+   "kind": "paper",
+   "title_tr": "PM · İstek iki türlü okunuyor",
+   "market": "both",
+   "speaker_role": "product_manager",
+   "pool_group": "pm",
+   "stage": "any",
+   "replaces": null,
+   "sender": {
+    "en": "Aslı · Product Manager",
+    "tr": "Aslı · Ürün Yöneticisi"
+   },
+   "when_tr": "Koşan sprintte tasarım aşamasında puanı 5 ya da üstü bir müşteri isteği kartı. Ekipte ürün yöneticisi var. B2C varyantı istek verisiyle (C) gelir.",
+   "title": {
+    "en": "The request reads two ways",
+    "tr": "İstek iki türlü okunuyor"
+   },
+   "body_variants": [
+    {
+     "case_tr": "B2B",
+     "en": "{customer} wrote their request in one sentence, and the team read it two ways. One is a small change, the other is a new screen.",
+     "tr": "{customer} isteğini tek cümleyle yazmış, ekip bunu iki türlü anladı. Biri küçük bir değişiklik, öteki yeni bir ekran."
+    },
+    {
+     "case_tr": "B2C",
+     "en": "What the {seam:urun.decision_request_votes} people who asked for this card wrote can be read two ways. One is a small change, the other is a new screen.",
+     "tr": "Bu kartı isteyen {seam:urun.decision_request_votes} kişinin yazdıkları iki türlü okunuyor. Biri küçük bir değişiklik, öteki yeni bir ekran."
+    }
+   ],
+   "options": [
+    {
+     "id": "ask_b2b",
+     "does_tr": "Yalnız B2B. Kart +1 puan (cevap gelene kadar iş bekler).",
+     "label": {
+      "en": "Ask the {customer} team",
+      "tr": "{customer} ekibine sor"
+     },
+     "chips": [
+      {
+       "en": "Chart of Accounts +1 point",
+       "tr": "Hesap Planı +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var ve hesabı riske atmak istemiyorsun."
+    },
+    {
+     "id": "ask_b2c",
+     "does_tr": "Yalnız B2C. Kart +1 puan (anket cevapları beklenir).",
+     "label": {
+      "en": "Send a short survey",
+      "tr": "Kısa bir anket gönder"
+     },
+     "chips": [
+      {
+       "en": "Version History +1 point",
+       "tr": "Sürüm Geçmişi +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "small_b2b",
+     "does_tr": "Yalnız B2B. Kart −1 puan; Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Make the small change",
+      "tr": "Küçük olanı yap"
+     },
+     "chips": [
+      {
+       "en": "Chart of Accounts −1 point",
+       "tr": "Hesap Planı −1 puan"
+      },
+      {
+       "en": "Demir Holding: satisfaction 58 → 50",
+       "tr": "Demir Holding: memnuniyet 58 → 50"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve hesabın memnuniyeti eşiğin epey üstünde."
+    },
+    {
+     "id": "small_b2c",
+     "does_tr": "Yalnız B2C. Kart −1 puan; kitle bir kez −(isteyen × PAPER_ASK_SILENT_MULT).",
+     "label": {
+      "en": "Make the small change",
+      "tr": "Küçük olanı yap"
+     },
+     "chips": [
+      {
+       "en": "Version History −1 point",
+       "tr": "Sürüm Geçmişi −1 puan"
+      },
+      {
+       "en": "Audience −190",
+       "tr": "Kitle −190"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve kitle büyük."
+    },
+    {
+     "id": "big",
+     "does_tr": "Kart +3 puan.",
+     "label": {
+      "en": "Build the new screen",
+      "tr": "Yeni ekranı yap"
+     },
+     "chips": [
+      {
+       "en": "Chart of Accounts +3 points",
+       "tr": "Hesap Planı +3 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "İsteyen ayrılma eşiğine yakın (ya da isteyen çok) ve sprintte üç puanlık boşluk var."
+    }
+   ],
+   "expire": {
+    "en": "No answer went out, so the team made the small change.",
+    "tr": "Cevap gitmedi, ekip küçük olanı yaptı.",
+    "does_tr": "Pazara göre “Küçük olanı yap” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "kartı isteyen hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu: o sprintte planlanmış müşteri isteği kartının sahibi (istek verisi)"
+    },
+    {
+     "token": "{seam:urun.decision_request_votes}",
+     "carries_tr": "B2C'de bu kartı isteyen kişi sayısı",
+     "example": "38",
+     "source_tr": "Yeni seam: istek kartının yorum sayısı (C gelene kadar B2C istek verisi yok, kâğıt gelmez)"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Eleştiri bulgu 8 ile Kartı çizerken büyüttük B2B'ye indi; PM dağılımı (B2B 3, B2C 1, ikisi 2) tutsun diye bu kâğıt ikisine çıktı. Küçük olanın bedeli artık görünür (−8 ya da kitle); bugünkü hâliyle 1 puan kazandırıp görünmeyen −3 ödetiyordu (bulgu 1). Örnek kart B2B'de Hesap Planı, B2C'de Sürüm Geçmişi."
+  },
+  {
+   "id": "product.sprint_pm_core_first",
+   "kind": "paper",
+   "title_tr": "PM · Çoğu yalnız temel hâlini istiyor",
+   "market": "b2c",
+   "speaker_role": "product_manager",
+   "pool_group": "pm",
+   "stage": "any",
+   "replaces": null,
+   "sender": {
+    "en": "Aslı · Product Manager",
+    "tr": "Aslı · Ürün Yöneticisi"
+   },
+   "when_tr": "B2C. Koşan sprintte bir kullanıcı isteği kartı var ve kart bu hızla sprintte bitmiyor; kartın %40'ı çıkınca bitiyor. Ekipte ürün yöneticisi var. B2C istek verisi C ile gelir; o zamana kadar kâğıt gelmez.",
+   "title": {
+    "en": "Most only want the basic version",
+    "tr": "Çoğu yalnız temel hâlini istiyor"
+   },
+   "body": {
+    "en": "{seam:urun.decision_request_votes} people asked for this card, and most of what they wrote is about the basic version. If we ship just that, the card finishes this sprint.",
+    "tr": "Bu kartı {seam:urun.decision_request_votes} kişi istedi, yazdıklarının çoğu temel hâliyle ilgili. Yalnız onu çıkarırsak kart bu sprintte biter."
+   },
+   "options": [
+    {
+     "id": "core_only",
+     "does_tr": "sprint_card_trim {share 0.4, follow false}: kalan kısım çıkar ve geri gelmez; kitle bir kez −(isteyen × PAPER_ASK_SILENT_MULT).",
+     "label": {
+      "en": "Build only the basic version",
+      "tr": "Yalnız temel hâlini yap"
+     },
+     "chips": [
+      {
+       "en": "Version History −2 points",
+       "tr": "Sürüm Geçmişi −2 puan"
+      },
+      {
+       "en": "Audience −190",
+       "tr": "Kitle −190"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sonraki sprintler dolu ve kitle büyük."
+    },
+    {
+     "id": "rest_next",
+     "does_tr": "sprint_card_trim {share 0.4, follow true}: kalan kısım +1 yeniden açma payıyla sonraki sprintin planına girer.",
+     "label": {
+      "en": "Move the rest to next sprint",
+      "tr": "Kalanını önümüzdeki sprinte at"
+     },
+     "chips": [
+      {
+       "en": "Version History −2 points",
+       "tr": "Sürüm Geçmişi −2 puan"
+      },
+      {
+       "en": "3 points of work left for next sprint",
+       "tr": "Sonraki sprinte 3 puanlık iş kalır"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartın bu sprintte çıkması isteniyor ve sonraki sprintte yer var."
+    },
+    {
+     "id": "full",
+     "does_tr": "Statüko; plan kartı sonraki sprinte taşır (bilgi çipi).",
+     "label": {
+      "en": "Build the full version",
+      "tr": "Tam hâlini yap"
+     },
+     "chips": [
+      {
+       "en": "Version History won't finish this sprint",
+       "tr": "Sürüm Geçmişi bu sprintte bitmez"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı bu sprint bekleyen yok; tam hâli bir sprint geç ama ek pay ödemeden çıkar."
+    }
+   ],
+   "expire": {
+    "en": "Nobody decided, so the card carries on in full.",
+    "tr": "Karar verilmedi, kart tam hâliyle sürüyor.",
+    "does_tr": "“Tam hâlini yap” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_request_votes}",
+     "carries_tr": "B2C'de bu kartı isteyen kişi sayısı",
+     "example": "38",
+     "source_tr": "Yeni seam: istek kartının yorum sayısı (C gelene kadar B2C istek verisi yok, kâğıt gelmez)"
+    }
+   ],
+   "constants": [
+    {
+     "name": "PAPER_ASK_SILENT_MULT",
+     "value": "isteyen × 5",
+     "why_tr": "B2C'de istediğini alamayan kitlenin bedeli: her yazan kişinin arkasında yazmayan dört kişi sayılır. Sayı gövdeden türer (38 → −190).",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Örnek kart Sürüm Geçmişi (Dayanıklılık, 5 puan), 38 kişi. Marka −1 yerine gövdedeki sayıdan türeyen kitle kaybı (eleştiri bulgu 1): bugünkü hâliyle 2 puan kazandırıp hissedilmeyen Marka −1 ödetiyordu."
+  },
+  {
+   "id": "product.sprint_design_customer_colors",
+   "kind": "paper",
+   "title_tr": "Tasarımcı · Kendi renkleri (onaylı, birleşik)",
+   "market": "b2b",
+   "speaker_role": "designer",
+   "pool_group": "designer",
+   "stage": "design",
+   "replaces": "sprint_hardcoded_colors.json + sprint_colors_again.json",
+   "sender": {
+    "en": "Ece · UX/UI Designer",
+    "tr": "Ece · Tasarımcı"
+   },
+   "when_tr": "B2B, ürün canlı, faz traction ya da series A. Koşan sprintte tasarım aşamasında puanı 3 ya da üstü bir kart; slot en büyük aktif hesap (ölçek ≥ 2). İkinci geliş varyantı yalnız renkler elle değiştirilmişse (colors_by_hand) ve tek dosyaya toplanmamışsa (colors_central yok) gelir; 52 hafta kuralı yüzünden en erken bir yıl sonra.",
+   "title": {
+    "en": "Their own colours",
+    "tr": "Kendi renkleri"
+   },
+   "body_variants": [
+    {
+     "case_tr": "ilk geliş",
+     "en": "{customer} wants their logo and colours on the product before more of their staff use it. Changing them in house slows down {seam:urun.decision_card}. Every page has its colours written into the code, and new pages are no different.",
+     "tr": "{customer}, ürünü daha çok çalışanına açmadan önce kendi logosunu ve renklerini görmek istiyor. Renkleri içeride değiştirmek {seam:urun.decision_card} işini geciktirir. Her sayfanın renkleri koda tek tek yazılmış, yeni sayfalar da öyle."
+    },
+    {
+     "case_tr": "ikinci geliş (renkler elle değiştirilmişti)",
+     "en": "Every page added since the colour change is in the default colours. {customer} wants their own on every page. Doing it in house slows down {seam:urun.decision_card}.",
+     "tr": "Renk değişikliğinden sonra eklenen her sayfa varsayılan renklerle çıktı. {customer} kendi renklerini her sayfada görmek istiyor. Bunu içeride yapmak {seam:urun.decision_card} işini geciktirir."
+    }
+   ],
+   "options": [
+    {
+     "id": "by_hand",
+     "does_tr": "Kart +2 puan (ikinci gelişte +3); hesap genişler (b2b_expand); colors_by_hand bayrağı.",
+     "label": {
+      "en": "Change their colours by hand",
+      "tr": "Renkleri elle değiştir"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing +2 points",
+       "tr": "Toplu Fatura +2 puan"
+      },
+      {
+       "en": "Seats +20 · MRR +$560",
+       "tr": "Koltuk +20 · MRR +$560"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte iki puanlık boşluk var ve ürüne yakında yeni sayfa eklenmeyecek."
+    },
+    {
+     "id": "one_file",
+     "does_tr": "Kart +4 puan (ikinci gelişte +5); hesap genişler; colors_central bayrağı, ikinci geliş olmaz.",
+     "label": {
+      "en": "Pull every colour into one file",
+      "tr": "Bütün renkleri tek dosyaya topla"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing +4 points",
+       "tr": "Toplu Fatura +4 puan"
+      },
+      {
+       "en": "Seats +20 · MRR +$560",
+       "tr": "Koltuk +20 · MRR +$560"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Ürün büyüyor, yeni sayfalar gelecek ve sprintte dört puanlık boşluk var."
+    },
+    {
+     "id": "freelancer",
+     "does_tr": "Kasa −(elle yolunun puanı × PAPER_CONTRACT_PER_POINT): ilk gelişte −$2.000, ikincide −$3.000 (bugün −$5.000 ve −$6.000); hesap genişler; colors_by_hand bayrağı.",
+     "label": {
+      "en": "Have a freelancer change the colours",
+      "tr": "Renkleri bir serbest çalışana değiştirt"
+     },
+     "chips": [
+      {
+       "en": "Cash −$2,000",
+       "tr": "Nakit −$2.000"
+      },
+      {
+       "en": "Seats +20 · MRR +$560",
+       "tr": "Koltuk +20 · MRR +$560"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat ve sprint dolu."
+    },
+    {
+     "id": "as_is",
+     "does_tr": "Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir). Genişleme olmaz (b2b_expand_decline). Bugünkü satisfaction_delta −5 bir tikte siliniyordu. İkinci gelişte de açık (bugün yoktu).",
+     "label": {
+      "en": "Tell them the colours stay",
+      "tr": "Renkler değişmeyecek de"
+     },
+     "chips": [
+      {
+       "en": "Demir Holding: satisfaction 58 → 50",
+       "tr": "Demir Holding: memnuniyet 58 → 50"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Hesabın memnuniyeti eşiğin epey üstünde ve genişlemeye ihtiyaç yok."
+    }
+   ],
+   "expire": {
+    "en": "No answer went back, so {customer} took it as a no.",
+    "tr": "Cevap gitmedi, {customer} bunu hayır diye anladı.",
+    "does_tr": "İlk geliş: “Renkler değişmeyecek de” yolu işler (−8, genişleme yok). İkinci gelişin süre metni değişmez: “{customer} şikâyet etti, ekip sayfaları elle değiştirdi.” ve “Renkleri elle değiştir” yolu işler (kart +3)."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "renkleri isteyen hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu: en büyük aktif hesap"
+    },
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    }
+   ],
+   "constants": [
+    {
+     "name": "COLORS_FREELANCER_COST",
+     "value": "elle yolunun puanı × PAPER_CONTRACT_PER_POINT ($2.000 / $3.000)",
+     "why_tr": "Bugünkü sabit −$5.000 ve −$6.000 olaydan kopuktu; bedel elle yapılacak işten türer.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "approved_text_changed": true,
+   "notes_tr": "ONAYLI METİN DEĞİŞTİ, yalnız §3'ün cümle sınırı yüzünden. İlk gövde: onaylı metne tam dönüş gövdeyi 4 cümleye çıkarır; ≤3 için en küçük değişiklik son iki cümlenin virgülle birleşmesidir, kelimeler aynı kaldı (eleştiri: zararsız, işaretli gider). İkinci gövde: “Artık daha çok sayfa var.” düştü (+3 puanın gerekçesini çip taşır). Etiketler, başlık ve süre metinleri onaylı anahtarlarıyla aynen; ikinci gelişin başlığı onaylı “Yine renkler / The colours again”dir. Değişen sayılar metin değildir: “Renkler değişmeyecek de” görünür kalsın diye −8 (bulgu 1), serbest çalışan puandan türer. İki dosya tek kâğıtta birleşti (B_PLAN K8). Konuşan tasarım aşamasındaki tasarımcı (bugün masa). Genişleme çipindeki koltuk ve MRR b2b_expand'in kendi hesabından gelir."
+  },
+  {
+   "id": "product.sprint_design_gloves",
+   "kind": "paper",
+   "title_tr": "Tasarımcı · Depoda eldivenle kullanıyorlar",
+   "market": "b2b",
+   "speaker_role": "designer",
+   "pool_group": "designer",
+   "stage": "design",
+   "replaces": null,
+   "sender": {
+    "en": "Ece · UX/UI Designer",
+    "tr": "Ece · Tasarımcı"
+   },
+   "when_tr": "B2B. Koşan sprintte tasarım aşamasında Stok hattından bir kart; slot o hattı kullanan, depo işi olan sektördeki (lojistik, üretim, perakende; B0'da seçilecek) en büyük hesap.",
+   "title": {
+    "en": "They use it with gloves on in the warehouse",
+    "tr": "Depoda eldivenle kullanıyorlar"
+   },
+   "body": {
+    "en": "{customer} uses this screen in the warehouse with gloves on, and the buttons are too small for them. Making them bigger means redesigning half the screen.",
+    "tr": "{customer} bu ekranı depoda eldivenle kullanıyor, düğmeler onlara küçük geliyor. Büyütmek için ekranın yarısını yeniden çizmem gerekiyor."
+   },
+   "options": [
+    {
+     "id": "redraw",
+     "does_tr": "Kart +2 puan.",
+     "label": {
+      "en": "Redesign the screen",
+      "tr": "Ekranı yeniden çiz"
+     },
+     "chips": [
+      {
+       "en": "Warehouse and Shelf +2 points",
+       "tr": "Depo ve Raf +2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte iki puanlık boşluk var."
+    },
+    {
+     "id": "redraw_next",
+     "does_tr": "Yeniden çizim +1 yeniden açma payıyla sonraki sprintin planına girer; kart bu sprintte çizildiği gibi çıkar.",
+     "label": {
+      "en": "Move it to next sprint",
+      "tr": "Önümüzdeki sprinte at"
+     },
+     "chips": [
+      {
+       "en": "3 points of work left for next sprint",
+       "tr": "Sonraki sprinte 3 puanlık iş kalır"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartın bu sprintte çıkması gerekiyor ve sonraki sprintte yer var."
+    },
+    {
+     "id": "as_drawn",
+     "does_tr": "Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Keep it as designed",
+      "tr": "Çizildiği gibi kalsın"
+     },
+     "chips": [
+      {
+       "en": "Marmara Lojistik: satisfaction 64 → 56",
+       "tr": "Marmara Lojistik: memnuniyet 64 → 56"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "İki sprint de dolu ve hesabın memnuniyeti eşiğin epey üstünde."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the screen stayed as designed.",
+    "tr": "Cevap gelmedi, ekran çizildiği gibi kaldı.",
+    "does_tr": "“Çizildiği gibi kalsın” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "ekranı depoda kullanan hesap",
+     "example": "Marmara Lojistik",
+     "source_tr": "Kartın customer slotu: Stok hattını kullanan, depo sektöründeki en büyük hesap (A'nın hat listesi)"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Örnek kart Depo ve Raf (5 puan). “Yalnız ana düğmeleri büyüt” (+1 ve görünmeyen −2) çıktı, yerine “Önümüzdeki sprinte at” geldi (eleştiri bulgu 1)."
+  },
+  {
+   "id": "product.sprint_design_first_screen",
+   "kind": "paper",
+   "title_tr": "Tasarımcı · Kayıt ekranının iki hâli",
+   "market": "b2c",
+   "speaker_role": "designer",
+   "pool_group": "designer",
+   "stage": "design",
+   "replaces": null,
+   "sender": {
+    "en": "Ece · UX/UI Designer",
+    "tr": "Ece · Tasarımcı"
+   },
+   "when_tr": "B2C. Koşan sprintte tasarım aşamasında Güvenlik & Yetki hattından Hesap & Oturum kartı.",
+   "title": {
+    "en": "Two versions of the sign up screen",
+    "tr": "Kayıt ekranının iki hâli var"
+   },
+   "body": {
+    "en": "I designed two versions of the sign up screen: one asks three questions first, the other lets people straight in. Letting them in keeps more people, but the screens behind it have to change too.",
+    "tr": "Kayıt ekranının iki hâlini çizdim: biri önce üç soru soruyor, öteki hemen içeri alıyor. Hemen içeri alan daha çok kişiyi tutar ama arkasındaki ekranların da değişmesi gerekir."
+   },
+   "options": [
+    {
+     "id": "straight_in",
+     "does_tr": "Kart +2 puan.",
+     "label": {
+      "en": "Let them straight in",
+      "tr": "Hemen içeri alsın"
+     },
+     "chips": [
+      {
+       "en": "Accounts and Sessions +2 points",
+       "tr": "Hesap & Oturum +2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte iki puanlık boşluk var ve kitle büyümesi şu an önemli (ücretli plan ya da görüşme yakın)."
+    },
+    {
+     "id": "three_questions",
+     "does_tr": "Kitle bir kez −(haftalık yeni kullanıcı × %10 × 8), audience_delta + amount_seam.",
+     "label": {
+      "en": "Go with the three questions",
+      "tr": "Üç soruyla çıksın"
+     },
+     "chips": [
+      {
+       "en": "Audience −240",
+       "tr": "Kitle −240"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve haftalık yeni kullanıcı az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so sign up went out with the three questions.",
+    "tr": "Cevap gelmedi, kayıt ekranı üç soruyla çıktı.",
+    "does_tr": "“Üç soruyla çıksın” yolu işler."
+   },
+   "tokens": [],
+   "constants": [
+    {
+     "name": "FIRST_SCREEN_LOSS",
+     "value": "haftalık yeni kullanıcı × %10 × 8 hafta, bir kez",
+     "why_tr": "B_PLAN K4 ve B_INCELEME bulgu 21: bedel tutulamayan kişilerdir, hata değil. Örnek: haftada 300 yeni → 240.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "B_PLAN K4'ün konusu; metin baştan yazıldı. Kayıt ekranı her B2C ürününde vardır, ürüne bağlı değil."
+  },
+  {
+   "id": "product.sprint_design_notifications",
+   "kind": "paper",
+   "title_tr": "Tasarımcı · Bir bildirim daha",
+   "market": "b2c",
+   "speaker_role": "designer",
+   "pool_group": "designer",
+   "stage": "design",
+   "replaces": null,
+   "sender": {
+    "en": "Ece · UX/UI Designer",
+    "tr": "Ece · Tasarımcı"
+   },
+   "when_tr": "B2C, ürün canlı. Koşan sprintte tasarım aşamasında Mobil & Erişim ya da Entegrasyonlar hattından bir kart.",
+   "title": {
+    "en": "One more notification",
+    "tr": "Bir bildirim daha"
+   },
+   "body": {
+    "en": "This card adds another notification, and people already get three a day from us. With each new one, more people switch them off.",
+    "tr": "Bu kart bir bildirim daha ekliyor, kullanıcılara bizden zaten günde üç bildirim gidiyor. Her yeni bildirimde bildirimleri kapatanlar artıyor."
+   },
+   "options": [
+    {
+     "id": "add_it",
+     "does_tr": "Kitle bir kez −(kitle × PAPER_B2C_LOSS küçük).",
+     "label": {
+      "en": "Add the notification",
+      "tr": "Bildirimi ekle"
+     },
+     "chips": [
+      {
+       "en": "Audience −62",
+       "tr": "Kitle −62"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve kitle büyük."
+    },
+    {
+     "id": "digest",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Put it in a weekly digest",
+      "tr": "Haftalık özete koy"
+     },
+     "chips": [
+      {
+       "en": "Mobile App +1 point",
+       "tr": "Mobil Uygulama +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the notification went in.",
+    "tr": "Cevap gelmedi, bildirim eklendi.",
+    "does_tr": "“Bildirimi ekle” yolu işler."
+   },
+   "tokens": [],
+   "constants": [],
+   "notes_tr": "Örnek kart Mobil Uygulama. “Bildirim ayarı ekle” (+2 puan, Marka +1) çıktı: tek ödülü hissedilmeyen Marka +1'di ve “Haftalık özete koy”un altında kalıyordu (eleştiri bulgu 1). “Günde üç” gövdenin olgusudur, eşik değildir; B0 isterse cümleyi sayısız yazar (“zaten her gün bildirim gidiyor”)."
+  },
+  {
+   "id": "product.sprint_design_drawings_late",
+   "kind": "paper",
+   "title_tr": "Tasarımcı · Çizimler yetişmedi",
+   "market": "both",
+   "speaker_role": "designer",
+   "pool_group": "designer",
+   "stage": "design",
+   "replaces": null,
+   "sender": {
+    "en": "Ece · UX/UI Designer",
+    "tr": "Ece · Tasarımcı"
+   },
+   "when_tr": "Hafta sonunda kart hâlâ tasarım aşamasında, tasarım payı bitmemiş ve geliştirme payı atanmış biri bekliyor; konuşan tasarımcı.",
+   "title": {
+    "en": "The designs aren't ready",
+    "tr": "Çizimler yetişmedi"
+   },
+   "body": {
+    "en": "I couldn't finish the designs for {seam:urun.decision_card} this week, and development is waiting on me. If they start from the draft, there will be changes later.",
+    "tr": "{seam:urun.decision_card} çizimlerini bu hafta bitiremedim, geliştirme beni bekliyor. Taslakla başlarlarsa sonradan değişiklik çıkar."
+   },
+   "options": [
+    {
+     "id": "stay_late",
+     "does_tr": "Kartın kalan tasarım işi mesai dışında biter (ilerleme +1); yalnız konuşan kişinin morali −4.",
+     "label": {
+      "en": "Have {employee} stay late",
+      "tr": "{employee} akşam kalsın"
+     },
+     "chips": [
+      {
+       "en": "Ece: morale −4",
+       "tr": "Ece: moral −4"
+      },
+      {
+       "en": "Mobile App −1 point",
+       "tr": "Mobil Uygulama −1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Ece'nin morali yüksek ve kartın bu sprintte çıkması gerekiyor."
+    },
+    {
+     "id": "from_draft",
+     "does_tr": "Kart +1 puan (sonradan çıkan değişiklik).",
+     "label": {
+      "en": "Start from the draft",
+      "tr": "Taslakla başlasınlar"
+     },
+     "chips": [
+      {
+       "en": "Mobile App +1 point",
+       "tr": "Mobil Uygulama +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var ve Ece yorgun."
+    },
+    {
+     "id": "carry",
+     "does_tr": "sprint_card_carry: kart sonraki sprinte devreder, bu sprintin kapasitesi öbür kartlara kalır.",
+     "label": {
+      "en": "Leave the card for next sprint",
+      "tr": "Kartı sonraki sprinte bırak"
+     },
+     "chips": [
+      {
+       "en": "Carries over to the next sprint",
+       "tr": "Sonraki sprinte devreder"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı bekleyen yok ve sprintte başka iş var."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so development started from the draft.",
+    "tr": "Cevap gelmedi, geliştirme taslakla başladı.",
+    "does_tr": "“Taslakla başlasınlar” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    },
+    {
+     "token": "{employee}",
+     "carries_tr": "konuşan tasarımcı",
+     "example": "Ece",
+     "source_tr": "Kartın employee slotu: tasarım aşamasındaki kişi"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Tek kişilik kâğıt: bedel yalnız Ece'ye ya da karta düşer, ekibin saati düşmez. Moral bedeli Karar 6'nın dilidir (mesai süresi yazılmaz). İlerleme çipi kalan işi “−1 puan” diye okutur."
+  },
+  {
+   "id": "product.sprint_design_color_blind",
+   "kind": "paper",
+   "title_tr": "Tasarımcı · Durumları yalnız renk ayırıyor",
+   "market": "both",
+   "speaker_role": "designer",
+   "pool_group": "designer",
+   "stage": "design",
+   "replaces": null,
+   "sender": {
+    "en": "Ece · UX/UI Designer",
+    "tr": "Ece · Tasarımcı"
+   },
+   "when_tr": "Koşan sprintte tasarım aşamasında, durum gösteren bir ekranı olan kart (Fatura, Stok, Nakit Akışı, Sürüm Geçmişi, Entegrasyonlar; B0'da seçilecek).",
+   "title": {
+    "en": "Only colour tells the states apart",
+    "tr": "Durumları yalnız renk ayırıyor"
+   },
+   "body": {
+    "en": "On this screen, only red, yellow and green tell the states apart. Colour blind users can't tell them apart, so I want to add an icon to each.",
+    "tr": "Bu ekranda durumları yalnız renkler ayırıyor: kırmızı, sarı, yeşil. Renk körü kullanıcılar bunları ayıramıyor; her birine bir işaret eklemek istiyorum."
+   },
+   "options": [
+    {
+     "id": "icons",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Add the icons",
+      "tr": "İşaretleri ekle"
+     },
+     "chips": [
+      {
+       "en": "Cash Movements +1 point",
+       "tr": "Kasa Hareketleri +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "colour_only",
+     "does_tr": "sprint_card_trim {bugs 1}: kart çıkınca hattına 1 açık hata yazılır.",
+     "label": {
+      "en": "Keep colour only",
+      "tr": "Yalnız renk kalsın"
+     },
+     "chips": [
+      {
+       "en": "Cash Flow: 1 open bug at release",
+       "tr": "Nakit Akışı: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve hattı kullanan az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the screen went out with colour only.",
+    "tr": "Cevap gelmedi, ekran yalnız renkle çıktı.",
+    "does_tr": "“Yalnız renk kalsın” yolu işler."
+   },
+   "tokens": [],
+   "constants": [],
+   "notes_tr": "Bedel A'nın deposuna düşen açık hatadır: renk körü kullanıcının bildirdiği sorun o hattın hatası olur."
+  },
+  {
+   "id": "product.sprint_design_empty_state",
+   "kind": "paper",
+   "title_tr": "Tasarımcı · Yeni gelen boş ekran görüyor",
+   "market": "both",
+   "speaker_role": "designer",
+   "pool_group": "designer",
+   "stage": "design",
+   "replaces": null,
+   "sender": {
+    "en": "Ece · UX/UI Designer",
+    "tr": "Ece · Tasarımcı"
+   },
+   "when_tr": "Koşan sprintte tasarım aşamasında bir hattın ilk kademe kartı (hat yeni açılıyor). B2B'de slot o hattı kullanan en yeni hesap.",
+   "title": {
+    "en": "New users see an empty screen",
+    "tr": "Yeni gelen boş ekran görüyor"
+   },
+   "body": {
+    "en": "New users open this screen and find it completely empty, with nothing telling them where to start. A short first steps guide would make the card a little bigger.",
+    "tr": "Yeni gelenler bu ekranı açınca bomboş görüyor, nereden başlayacaklarını söyleyen bir şey yok. Kısa bir ilk adım rehberi çizersem kart biraz büyür."
+   },
+   "options": [
+    {
+     "id": "guide",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Add the guide",
+      "tr": "Rehberi çiz"
+     },
+     "chips": [
+      {
+       "en": "Cash Movements +1 point",
+       "tr": "Kasa Hareketleri +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "empty_b2b",
+     "does_tr": "Yalnız B2B. En yeni hesaba: Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Leave it empty",
+      "tr": "Boş kalsın"
+     },
+     "chips": [
+      {
+       "en": "Kuzey Tekstil: satisfaction 52 → 44",
+       "tr": "Kuzey Tekstil: memnuniyet 52 → 44"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve yeni hesabın memnuniyeti eşiğin epey üstünde."
+    },
+    {
+     "id": "empty_b2c",
+     "does_tr": "Yalnız B2C. Kitle bir kez −(kitle × PAPER_B2C_LOSS küçük).",
+     "label": {
+      "en": "Leave it empty",
+      "tr": "Boş kalsın"
+     },
+     "chips": [
+      {
+       "en": "Audience −62",
+       "tr": "Kitle −62"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve haftalık yeni kullanıcı az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the screen went out empty.",
+    "tr": "Cevap gelmedi, ekran boş çıktı.",
+    "does_tr": "Pazara göre “Boş kalsın” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "yalnız çipte: hattı kullanan en yeni hesap",
+     "example": "Kuzey Tekstil",
+     "source_tr": "Kartın customer slotu (B2B)"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Örnek B2B hesabı Kuzey Tekstil (52) uydurmadır; örnek şirketin dokuz hesabından biri."
+  },
+  {
+   "id": "product.sprint_dev_root_cause",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · Hatalar aynı yerden çıkıyor (Erdem'in ölçüsü)",
+   "market": "both",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": null,
+   "sender": {
+    "en": "Deniz · Software Engineer",
+    "tr": "Deniz · Yazılım Mühendisi"
+   },
+   "when_tr": "Koşan sprintte geliştirme aşamasında bir düzeltme kartı; kartta en az ROOT_MIN açık hata var (B0'da seçilecek, A'nın hat dağılımından). Konuşan kartın geliştirme payındaki yazılımcı.",
+   "title": {
+    "en": "The bugs come from the same place",
+    "tr": "Hatalar aynı yerden çıkıyor"
+   },
+   "body": {
+    "en": "{seam:urun.decision_root_bugs} of the {seam:urun.decision_line_name} bugs come from the same place. If I rewrite what's underneath, they won't come back; if I patch them one by one, one of them will.",
+    "tr": "{seam:urun.decision_line_name} hatalarının {seam:urun.decision_root_bugs} tanesi aynı yerden çıkıyor. Altını yeniden yazarsam bir daha çıkmaz, tek tek yamalarsam biri geri döner."
+   },
+   "options": [
+    {
+     "id": "rewrite",
+     "does_tr": "Kart +2 puan; line_harden 26: hatta 26 hafta aşınmadan yeni hata düşmez.",
+     "label": {
+      "en": "Rewrite what's underneath",
+      "tr": "Altını yeniden yaz"
+     },
+     "chips": [
+      {
+       "en": "Invoicing fix +2 points",
+       "tr": "Fatura düzeltmesi +2 puan"
+      },
+      {
+       "en": "Invoicing: no new bugs for 26 weeks",
+       "tr": "Fatura: 26 hafta yeni hata çıkmaz"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Hattı çok hesap kullanıyor ve sprintte iki puanlık boşluk var."
+    },
+    {
+     "id": "patch",
+     "does_tr": "sprint_card_trim {bugs 1}: kart kapanınca hatta 1 açık hata kalır.",
+     "label": {
+      "en": "Patch them one by one",
+      "tr": "Hataları tek tek yamala"
+     },
+     "chips": [
+      {
+       "en": "Invoicing: 1 open bug at release",
+       "tr": "Fatura: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve hattı kullanan az."
+    },
+    {
+     "id": "contractor",
+     "does_tr": "Kasa −(2 × PAPER_CONTRACT_PER_POINT); line_harden 26.",
+     "label": {
+      "en": "Get a contractor to rewrite it",
+      "tr": "Serbest çalışana yazdır"
+     },
+     "chips": [
+      {
+       "en": "Cash −$2,000",
+       "tr": "Nakit −$2.000"
+      },
+      {
+       "en": "Invoicing: no new bugs for 26 weeks",
+       "tr": "Fatura: 26 hafta yeni hata çıkmaz"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat, sprint dolu ve hat önemli."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the bugs were patched one by one.",
+    "tr": "Cevap gelmedi, hatalar tek tek yamalandı.",
+    "does_tr": "“Hataları tek tek yamala” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_line_name}",
+     "carries_tr": "kâğıdın kartının hattının adı",
+     "example": "Fatura",
+     "source_tr": "Yeni metin seam'i: kartın line alanı, PROD_LINE_* adı (B_PLAN §5.2'de önerildi)"
+    },
+    {
+     "token": "{seam:urun.decision_root_bugs}",
+     "carries_tr": "aynı kökten çıkan hata sayısı: düzeltme kartının hata sayısı",
+     "example": "3",
+     "source_tr": "Yeni seam: A'nın düzeltme kartındaki hata sayısı; kâğıdın geldiği eşik ROOT_MIN B0'da seçilecek"
+    }
+   ],
+   "constants": [
+    {
+     "name": "ROOT_MIN",
+     "value": "B0'da seçilecek",
+     "why_tr": "PRD §0 madde 8: hat başına eşikler A'nın dağılımıyla seçilir.",
+     "status": "onay bekliyor"
+    },
+    {
+     "name": "LINE_HARDEN_WEEKS",
+     "value": "26",
+     "why_tr": "B_PLAN §5.2 line_harden; yeniden yazımın ömrü.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Gövdenin ilk cümlesi Erdem'in beğendiği geliştirici kâğıdıdır; hat ve sayı belirteç oldu. İkinci cümleye “tek tek yamalarsam biri geri döner” eklendi ki yamala seçeneğinin bedeli gövdede görünsün. Örnek: Fatura düzeltmesi, 4 hata, 2 puan. Dışarıya iş bütün dalgada “serbest çalışan / contractor” (eleştiri bulgu 19). line_harden PRD'de açıkça yok, B_PLAN önerisidir (B0t §1.1)."
+  },
+  {
+   "id": "product.sprint_dev_shorter_path",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · Daha kısa bir yol buldum",
+   "market": "both",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": "sprint_two_paths.json",
+   "sender": {
+    "en": "Deniz · Software Engineer",
+    "tr": "Deniz · Yazılım Mühendisi"
+   },
+   "when_tr": "Koşan sprintte geliştirme aşamasında puanı 5 ya da üstü bir kart; kartta en az 1 puan iş yapılmış.",
+   "title": {
+    "en": "I found a shorter way",
+    "tr": "Daha kısa bir yol buldum"
+   },
+   "body": {
+    "en": "I found a shorter way to build {seam:urun.decision_card}. But if I switch now, what I've built so far is thrown away.",
+    "tr": "{seam:urun.decision_card} için daha kısa bir yol buldum. Ama şimdi geçersem bu karta yaptığım iş boşa gider."
+   },
+   "options": [
+    {
+     "id": "new_way",
+     "does_tr": "Kart −3 puan; sprint_card_progress −(kartta yapılmış iş), amount_seam urun.decision_card_done.",
+     "label": {
+      "en": "Take the shorter route",
+      "tr": "Kısa yola geç"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing −3 points",
+       "tr": "Toplu Fatura −3 puan"
+      },
+      {
+       "en": "2 points of finished work are lost",
+       "tr": "Yapılan 2 puan boşa gider"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartta yapılan iş 3 puandan az: geçiş toplamda kazandırır."
+    },
+    {
+     "id": "known_way",
+     "does_tr": "Statüko; çip plan tahmininden okunur (EFFECT_CARD_ON_TIME ya da EFFECT_CARD_LATE).",
+     "label": {
+      "en": "Stay on the known route",
+      "tr": "Bilinen yoldan devam et"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing finishes this sprint",
+       "tr": "Toplu Fatura bu sprintte biter"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartta 3 puan ya da daha çok iş yapılmış: geçiş kazandırdığından fazlasını yakar."
+    }
+   ],
+   "expire": {
+    "en": "No decision came, so the work stayed on the known route.",
+    "tr": "Karar verilmedi, iş bilinen yoldan sürdü.",
+    "does_tr": "“Bilinen yoldan devam et” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    },
+    {
+     "token": "(çip) yapılan puan",
+     "carries_tr": "kartta o ana kadar yapılmış iş",
+     "example": "2",
+     "source_tr": "Yeni seam urun.decision_card_done (SprintSystem kart ilerlemesi)"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Bugünkü kâğıt (−3 efor, −2 ilerleme) her durumda 1 puan kazandırıyordu; “Bilinen yol” hiçbir durumda en iyi değildi. Yeni hâlde geçiş kartta yapılmış işin tamamını siler. Etiketler ve süre metni bugünkü onaylı anahtarlar (eleştiri bulgu 16); statüko çipi sabit değil, plandan okunur. Örnekte kart yetişiyor."
+  },
+  {
+   "id": "product.sprint_dev_contractor",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · Bu işi daha önce yapmadım",
+   "market": "both",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": "sprint_contractor.json",
+   "sender": {
+    "en": "Deniz · Software Engineer",
+    "tr": "Deniz · Yazılım Mühendisi"
+   },
+   "when_tr": "Koşan sprintte geliştirme aşamasında puanı 5 ya da üstü bir kart.",
+   "title": {
+    "en": "I've never built this before",
+    "tr": "Bu işi daha önce yapmadım"
+   },
+   "body": {
+    "en": "{seam:urun.decision_card} needs something I've never built before. A contractor who knows it could do that part; if I learn it as I go, it takes longer.",
+    "tr": "{seam:urun.decision_card} daha önce hiç yapmadığım bir iş istiyor. Bilen bir serbest çalışan o kısmı yapabilir, ben öğrenerek yaparsam daha uzun sürer."
+   },
+   "options": [
+    {
+     "id": "contractor",
+     "does_tr": "Kasa −(2 × PAPER_CONTRACT_PER_POINT); kart değişmez.",
+     "label": {
+      "en": "Bring in a contractor",
+      "tr": "Serbest çalışan getir"
+     },
+     "chips": [
+      {
+       "en": "Cash −$2,000",
+       "tr": "Nakit −$2.000"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat ve sprint dolu."
+    },
+    {
+     "id": "learn",
+     "does_tr": "Kart +2 puan.",
+     "label": {
+      "en": "Learn it in house",
+      "tr": "İçeride öğren"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing +2 points",
+       "tr": "Toplu Fatura +2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa sıkışık ve sprintte iki puanlık boşluk var."
+    }
+   ],
+   "expire": {
+    "en": "No decision came, so the work went the slow way.",
+    "tr": "Karar verilmedi, iş yavaş yoldan sürdü.",
+    "does_tr": "“İçeride öğren” yolu işler (bugün süre bitimi +1 puandı, seçenekten ucuzdu)."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Bedel tek ölçekten türer: içeride öğrenmenin 2 puanı, dışarıda 2 × $1.000. Etiketler ve süre metni bugünkü anahtarlar. Eleştiri bulgu 19'un ikinci yarısı (havuzda sekiz “parayla geç” seçeneği) işlenmedi: her biri farklı bir işin puanından türer ve kasası rahat oyuncuya bilinçli bir kaçış; ağırlığı ekonomi ölçümünde (B6) raporlanır."
+  },
+  {
+   "id": "product.sprint_dev_unasked_rewrite",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · Arayüzü baştan yazdım",
+   "market": "both",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": "sprint_unasked_rewrite.json (ve üç takip kâğıdı)",
+   "sender": {
+    "en": "Deniz · Software Engineer",
+    "tr": "Deniz · Yazılım Mühendisi"
+   },
+   "when_tr": "Ürün canlı, ilk sürümden en az 24 hafta geçmiş, ekip 3 kişi ya da daha büyük; koşan sprintte geliştirme aşamasında puanı 5 ya da üstü, yetişen bir kart. Konuşan o kartın geliştirme payındaki en kıdemli yazılımcı (en az 12 haftalık). Koşuda bir kez gelir.",
+   "title": {
+    "en": "I rewrote the front end",
+    "tr": "Arayüzü baştan yazdım"
+   },
+   "body": {
+    "en": "I rewrote the whole front end in my spare time. {seam:urun.decision_card} takes less work on the new code, but nobody has reviewed it yet.",
+    "tr": "Boş vakitlerimde arayüzün tamamını baştan yazdım. {seam:urun.decision_card} yeni kodda daha az iş istiyor ama kodu henüz kimse incelemedi."
+   },
+   "options": [
+    {
+     "id": "review",
+     "does_tr": "sprint_card_carry; konuşanın morali +4.",
+     "label": {
+      "en": "Have the team review it first",
+      "tr": "Önce ekip incelesin"
+     },
+     "chips": [
+      {
+       "en": "Carries over to the next sprint",
+       "tr": "Sonraki sprinte devreder"
+      },
+      {
+       "en": "Deniz: morale +4",
+       "tr": "Deniz: moral +4"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı bu sprint bekleyen yok."
+    },
+    {
+     "id": "read_yourself",
+     "does_tr": "Kurucu verimi −%20 · 2 hafta; kart −1 puan; konuşanın morali +6.",
+     "label": {
+      "en": "Read the code yourself",
+      "tr": "Kodu kendin oku"
+     },
+     "chips": [
+      {
+       "en": "Your pace −20% · 2 weeks",
+       "tr": "Senin verimin −%20 · 2 hafta"
+      },
+      {
+       "en": "Batch Invoicing −1 point",
+       "tr": "Toplu Fatura −1 puan"
+      },
+      {
+       "en": "Deniz: morale +6",
+       "tr": "Deniz: moral +6"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Önümüzdeki iki hafta senin takvimin boş ve kart bu sprintte çıkmalı."
+    },
+    {
+     "id": "switch_now",
+     "does_tr": "Kart −2 puan; sprint_card_trim {bugs 2}; konuşanın morali +8.",
+     "label": {
+      "en": "Switch to the new code now",
+      "tr": "Hemen yeni koda geç"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing −2 points",
+       "tr": "Toplu Fatura −2 puan"
+      },
+      {
+       "en": "Invoicing: 2 open bugs at release",
+       "tr": "Fatura: çıkışta 2 açık hata"
+      },
+      {
+       "en": "Deniz: morale +8",
+       "tr": "Deniz: moral +8"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint sıkışık ve kartın hattını kullanan az."
+    },
+    {
+     "id": "keep_old",
+     "does_tr": "Konuşanın morali −8.",
+     "label": {
+      "en": "Stay on the old code",
+      "tr": "Eski kodda kal"
+     },
+     "chips": [
+      {
+       "en": "Deniz: morale −8",
+       "tr": "Deniz: moral −8"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sürüm yakın, hiçbir riske yer yok ve Deniz'in morali yüksek."
+    }
+   ],
+   "expire": {
+    "en": "Nobody looked at it, and {employee} stopped bringing it up.",
+    "tr": "Kimse bakmadı, {employee} konuyu bir daha açmadı.",
+    "does_tr": "Konuşanın morali −10 (bugünkü gibi)."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    },
+    {
+     "token": "{employee}",
+     "carries_tr": "konuşan yazılımcı",
+     "example": "Deniz",
+     "source_tr": "Kartın employee slotu: kartın geliştirme payındaki en kıdemli yazılımcı"
+    }
+   ],
+   "constants": [
+    {
+     "name": "UNASKED_REWRITE_LATCH",
+     "value": "koşuda bir kez (one_shot)",
+     "why_tr": "Havuz mandalının (52 hafta, en çok 3) tek istisnası; aynı kişinin arayüzü ikinci kez baştan yazması inandırıcı değil.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Bugünkü kâğıt üç gizli takip kâğıdı zamanlıyordu (3 ve 4 hafta sonra); seçenek anında görünmeyen bedeller taşıyordu. Bedeller artık seçeneğin kendisinde: inceleme kartı kaydırır, okuma kurucunun verimini yer, hemen geçiş A'nın deposuna 2 açık hata yazar. Dördüncü seçenek “Eski kodda kal” eklendi. Gövde konuşanın ağzına çevrildi (Karar 10)."
+  },
+  {
+   "id": "product.sprint_dev_security_update",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · Kütüphaneye güvenlik güncellemesi geldi",
+   "market": "both",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": null,
+   "sender": {
+    "en": "Mert · Software Engineer",
+    "tr": "Mert · Yazılım Mühendisi"
+   },
+   "when_tr": "Ürün canlı. Koşan sprintte geliştirme aşamasında bir kart.",
+   "title": {
+    "en": "A security update for a library we use",
+    "tr": "Kütüphaneye güvenlik güncellemesi geldi"
+   },
+   "body": {
+    "en": "A library we use just got a security update. Moving to it now makes {seam:urun.decision_card} a bit longer.",
+    "tr": "Kullandığımız bir kütüphaneye güvenlik güncellemesi geldi. Şimdi geçersek {seam:urun.decision_card} biraz uzar."
+   },
+   "options": [
+    {
+     "id": "update_now",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Update now",
+      "tr": "Şimdi güncelle"
+     },
+     "chips": [
+      {
+       "en": "Mobile App +1 point",
+       "tr": "Mobil Uygulama +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "later",
+     "does_tr": "Güvenlik & Yetki hattına hemen 1 açık hata (A'nın hatta hata ekleme noktası).",
+     "label": {
+      "en": "Leave the update for later",
+      "tr": "Güncellemeyi sonraya bırak"
+     },
+     "chips": [
+      {
+       "en": "Security and Access: 1 new open bug",
+       "tr": "Güvenlik & Yetki: 1 yeni açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart sıkışık ya da söz verilmiş."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the update was left for later.",
+    "tr": "Cevap gelmedi, güncelleme sonraya kaldı.",
+    "does_tr": "“Güncellemeyi sonraya bırak” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Açık hata hemen ve Güvenlik & Yetki hattına yazılır, çip de “yeni açık hata” der (eleştiri bulgu 10). A'nın add_bugs giriş noktası gerekir."
+  },
+  {
+   "id": "product.sprint_dev_multi_currency",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · İki para birimiyle çalışıyorlar",
+   "market": "b2b",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": null,
+   "sender": {
+    "en": "Deniz · Software Engineer",
+    "tr": "Deniz · Yazılım Mühendisi"
+   },
+   "when_tr": "B2B. Koşan sprintte geliştirme aşamasında Fatura, Defter ya da Nakit Akışı hattından bir kart; slot o hattı kullanan en büyük hesap.",
+   "title": {
+    "en": "They work in two currencies",
+    "tr": "İki para birimiyle çalışıyorlar"
+   },
+   "body": {
+    "en": "{customer} uses this screen in both dollars and euros, and we built it for a single currency. Adding the second one makes the card bigger.",
+    "tr": "{customer} bu ekranı hem dolarla hem avroyla kullanıyor, biz tek para birimine göre yazdık. İkinci para birimini eklersem kart büyür."
+   },
+   "options": [
+    {
+     "id": "add_currency",
+     "does_tr": "Kart +2 puan.",
+     "label": {
+      "en": "Add the second currency",
+      "tr": "İkinci para birimini ekle"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing +2 points",
+       "tr": "Toplu Fatura +2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte iki puanlık boşluk var."
+    },
+    {
+     "id": "currency_next",
+     "does_tr": "İkinci para birimi +1 yeniden açma payıyla sonraki sprintin planına girer.",
+     "label": {
+      "en": "Move it to next sprint",
+      "tr": "Önümüzdeki sprinte at"
+     },
+     "chips": [
+      {
+       "en": "3 points of work left for next sprint",
+       "tr": "Sonraki sprinte 3 puanlık iş kalır"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartın bu sprintte çıkması gerekiyor ve sonraki sprintte yer var."
+    },
+    {
+     "id": "single",
+     "does_tr": "Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Ship it with one currency",
+      "tr": "Tek para birimiyle çıksın"
+     },
+     "chips": [
+      {
+       "en": "Demir Holding: satisfaction 58 → 50",
+       "tr": "Demir Holding: memnuniyet 58 → 50"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "İki sprint de dolu ve hesabın memnuniyeti eşiğin epey üstünde."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the screen went out with one currency.",
+    "tr": "Cevap gelmedi, ekran tek para birimiyle çıktı.",
+    "does_tr": "“Tek para birimiyle çıksın” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "ekranı iki para birimiyle kullanan hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu: kartın hattını kullanan en büyük hesap"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "“Kurla çevirip göster” (+1 ve görünmeyen −2) çıktı, yerine “Önümüzdeki sprinte at” geldi (eleştiri bulgu 1)."
+  },
+  {
+   "id": "product.sprint_dev_import_tool",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · Eski kayıtlarını aktarmak istiyorlar",
+   "market": "b2b",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": null,
+   "sender": {
+    "en": "Deniz · Software Engineer",
+    "tr": "Deniz · Yazılım Mühendisi"
+   },
+   "when_tr": "B2B. Koşan sprintte geliştirme aşamasında Veri Girişi, Defter ya da Stok hattından bir kart; slot o hattı kullanan ve 8 haftadan yeni bir hesap (B0'da seçilecek).",
+   "title": {
+    "en": "They want to bring over their old records",
+    "tr": "Eski kayıtlarını aktarmak istiyorlar"
+   },
+   "body": {
+    "en": "{customer} wants to bring last year's records over from their old system. Doing it by hand takes them weeks; an import tool makes the card bigger.",
+    "tr": "{customer} geçen yılın kayıtlarını eski sisteminden aktarmak istiyor. Elle yapmak onlara haftalar sürer, bir aktarma aracı yazarsam kart büyür."
+   },
+   "options": [
+    {
+     "id": "build_tool",
+     "does_tr": "Kart +2 puan.",
+     "label": {
+      "en": "Write the import tool",
+      "tr": "Aktarma aracını yaz"
+     },
+     "chips": [
+      {
+       "en": "Spreadsheet Import +2 points",
+       "tr": "Tablo İçe Aktarma +2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte iki puanlık boşluk var."
+    },
+    {
+     "id": "we_import",
+     "does_tr": "Konuşanın verimi −%40 · 1 hafta, morali −3.",
+     "label": {
+      "en": "Have {employee} import them",
+      "tr": "Kayıtları {employee} aktarsın"
+     },
+     "chips": [
+      {
+       "en": "Deniz pace −40% · 1 week",
+       "tr": "Deniz verimi −%40 · 1 hafta"
+      },
+      {
+       "en": "Deniz: morale −3",
+       "tr": "Deniz: moral −3"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart sıkışık, Deniz'in sprintteki öbür işi bekleyebilir ve morali yüksek."
+    },
+    {
+     "id": "by_hand",
+     "does_tr": "Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Let them do it by hand",
+      "tr": "Elle aktarsınlar"
+     },
+     "chips": [
+      {
+       "en": "Kuzey Tekstil: satisfaction 52 → 44",
+       "tr": "Kuzey Tekstil: memnuniyet 52 → 44"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve hesabın memnuniyeti eşiğin epey üstünde."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so they're moving the records by hand.",
+    "tr": "Cevap gelmedi, kayıtları kendileri elle aktarıyor.",
+    "does_tr": "“Elle aktarsınlar” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "kayıt aktarmak isteyen yeni hesap",
+     "example": "Kuzey Tekstil",
+     "source_tr": "Kartın customer slotu"
+    },
+    {
+     "token": "{employee}",
+     "carries_tr": "konuşan yazılımcı",
+     "example": "Deniz",
+     "source_tr": "Kartın employee slotu: geliştirme payındaki kişi"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Tek kişilik bedel yalnız konuşan kişiye düşer; ekibin saati düşmez."
+  },
+  {
+   "id": "product.sprint_dev_backfill",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · Yeni alan eski kayıtlarda boş",
+   "market": "b2b",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": null,
+   "sender": {
+    "en": "Mert · Software Engineer",
+    "tr": "Mert · Yazılım Mühendisi"
+   },
+   "when_tr": "B2B. Koşan sprintte geliştirme aşamasında, hattı en az 2 hesabın kullandığı bir hattın ikinci ya da üçüncü kademe kartı.",
+   "title": {
+    "en": "The new field is empty on old records",
+    "tr": "Yeni alan eski kayıtlarda boş"
+   },
+   "body": {
+    "en": "The field this card adds will be empty on every old record. If I fill in the old ones too, the card gets a bit bigger.",
+    "tr": "Bu kartla gelen yeni alan bütün eski kayıtlarda boş görünecek. Eskileri de doldurursam kart biraz büyür."
+   },
+   "options": [
+    {
+     "id": "fill_old",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Fill in the old records too",
+      "tr": "Eski kayıtları da doldur"
+     },
+     "chips": [
+      {
+       "en": "Chart of Accounts +1 point",
+       "tr": "Hesap Planı +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "leave_empty",
+     "does_tr": "sprint_card_trim {bugs 1}: kart çıkınca hattına 1 açık hata yazılır; hattı kullanan bütün hesaplar A'nın hata bedelini öder.",
+     "label": {
+      "en": "Leave the old records empty",
+      "tr": "Eski kayıtlar boş kalsın"
+     },
+     "chips": [
+      {
+       "en": "Ledger: 1 open bug at release",
+       "tr": "Defter: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve hattı kullanan hesapların memnuniyeti eşiklerinin üstünde."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the old records stayed empty.",
+    "tr": "Cevap gelmedi, eski kayıtlar boş kaldı.",
+    "does_tr": "“Eski kayıtlar boş kalsın” yolu işler."
+   },
+   "tokens": [],
+   "constants": [],
+   "notes_tr": "Gövde ve etiket eleştiri bulgu 7'ye göre (“taşıma betiği” çıktı). Bedel hesaplara görünmeyen −2 yerine hattın açık hatasıdır: A'da hat hatası o hattı kullanan her hesabın memnuniyetini düşürür (bulgu 1). Örnek: Defter hattı, Hesap Planı kartı."
+  },
+  {
+   "id": "product.sprint_dev_old_phones",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · Eski telefonlarda yavaş açılıyor",
+   "market": "b2c",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": null,
+   "sender": {
+    "en": "Deniz · Software Engineer",
+    "tr": "Deniz · Yazılım Mühendisi"
+   },
+   "when_tr": "B2C, ürün canlı. Koşan sprintte geliştirme aşamasında Mobil & Erişim ya da Dayanıklılık hattından bir kart.",
+   "title": {
+    "en": "Slow to open on older phones",
+    "tr": "Eski telefonlarda yavaş açılıyor"
+   },
+   "body": {
+    "en": "With this card, the app takes twice as long to open on older phones. Making it lighter means reworking the loading order.",
+    "tr": "Bu kartla uygulama eski telefonlarda iki kat geç açılıyor. Hafifletmek için yükleme sırasını değiştirmem gerekiyor."
+   },
+   "options": [
+    {
+     "id": "rework",
+     "does_tr": "Kart +2 puan.",
+     "label": {
+      "en": "Rework the loading order",
+      "tr": "Yükleme sırasını değiştir"
+     },
+     "chips": [
+      {
+       "en": "Mobile App +2 points",
+       "tr": "Mobil Uygulama +2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte iki puanlık boşluk var."
+    },
+    {
+     "id": "off_on_old",
+     "does_tr": "Kart +1 puan; kitle bir kez −(kitle × PAPER_B2C_LOSS küçük).",
+     "label": {
+      "en": "Turn this feature off on older phones",
+      "tr": "Bu özelliği eski telefonlarda kapat"
+     },
+     "chips": [
+      {
+       "en": "Mobile App +1 point",
+       "tr": "Mobil Uygulama +1 puan"
+      },
+      {
+       "en": "Audience −62",
+       "tr": "Kitle −62"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var ama iki puanlık yok."
+    },
+    {
+     "id": "ship",
+     "does_tr": "Kitle bir kez −(kitle × PAPER_B2C_LOSS orta).",
+     "label": {
+      "en": "Ship it like this",
+      "tr": "Böyle çıksın"
+     },
+     "chips": [
+      {
+       "en": "Audience −124",
+       "tr": "Kitle −124"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve kitle hızla büyüyor."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the card went out like this.",
+    "tr": "Cevap gelmedi, kart böyle çıktı.",
+    "does_tr": "“Böyle çıksın” yolu işler."
+   },
+   "tokens": [],
+   "constants": [],
+   "notes_tr": "Orta yolun bedeli Marka −1 yerine küçük kitle kaybı (eleştiri bulgu 1); etiket neyin kapatıldığını söyler (bulgu 24)."
+  },
+  {
+   "id": "product.sprint_dev_relogin",
+   "kind": "paper",
+   "title_tr": "Yazılımcı · Herkes yeniden giriş yapacak",
+   "market": "b2c",
+   "speaker_role": "developer",
+   "pool_group": "developer",
+   "stage": "dev",
+   "replaces": null,
+   "sender": {
+    "en": "Mert · Software Engineer",
+    "tr": "Mert · Yazılım Mühendisi"
+   },
+   "when_tr": "B2C, ürün canlı. Koşan sprintte geliştirme aşamasında Güvenlik & Yetki hattından bir kart.",
+   "title": {
+    "en": "Everyone will have to log in again",
+    "tr": "Herkes yeniden giriş yapacak"
+   },
+   "body": {
+    "en": "This card changes the login, so once it ships everyone has to log in again. Keeping them logged in takes extra code.",
+    "tr": "Bu kart girişi değiştiriyor, çıkınca herkes bir kez yeniden giriş yapmak zorunda kalacak. Oturumları korumak için ek kod yazmam gerekiyor."
+   },
+   "options": [
+    {
+     "id": "carry_sessions",
+     "does_tr": "Kart +2 puan.",
+     "label": {
+      "en": "Keep everyone logged in",
+      "tr": "Oturumları koru"
+     },
+     "chips": [
+      {
+       "en": "Roles and Permissions +2 points",
+       "tr": "Roller ve İzinler +2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte iki puanlık boşluk var."
+    },
+    {
+     "id": "relogin",
+     "does_tr": "Kitle bir kez −(kitle × PAPER_B2C_LOSS orta).",
+     "label": {
+      "en": "Let everyone log in again",
+      "tr": "Herkes yeniden girsin"
+     },
+     "chips": [
+      {
+       "en": "Audience −124",
+       "tr": "Kitle −124"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve kitlenin çoğu her gün giriyor."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so everyone will log in once more.",
+    "tr": "Cevap gelmedi, herkes bir kez yeniden giriş yapacak.",
+    "does_tr": "“Herkes yeniden girsin” yolu işler."
+   },
+   "tokens": [],
+   "constants": [],
+   "notes_tr": "Gövde eleştiri bulgu 25'e göre; etiket gövdeyle aynı fiili kullanır (“Oturumları koru”)."
+  },
+  {
+   "id": "product.sprint_test_stock_transfer",
+   "kind": "paper",
+   "title_tr": "Testçi · Transferde ürün iki depoda görünüyor",
+   "market": "b2b",
+   "speaker_role": "tester",
+   "pool_group": "tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Selin · QA Engineer",
+    "tr": "Selin · Test Mühendisi"
+   },
+   "when_tr": "B2B. Koşan sprintte test aşamasında Stok hattından bir kart; konuşan kartın test payındaki testçi. Slot Stok hattını kullanan, birden çok deposu olan en büyük hesap.",
+   "title": {
+    "en": "Transfers show stock in both warehouses",
+    "tr": "Transferde ürün iki depoda görünüyor"
+   },
+   "body": {
+    "en": "When stock moves from one warehouse to another, it shows up in both. The count comes out higher than what's really on the shelves.",
+    "tr": "Bir ürün depodan depoya aktarılınca iki depoda birden görünüyor. Sayımda raftakinden fazla stok çıkıyor."
+   },
+   "options": [
+    {
+     "id": "fix",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Fix it before it ships",
+      "tr": "Çıkmadan düzelt"
+     },
+     "chips": [
+      {
+       "en": "Warehouse and Shelf +1 point",
+       "tr": "Depo ve Raf +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "transfer_off",
+     "does_tr": "Kart −1 puan (transfer bu sürümden çıkar); Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Turn transfers off for this release",
+      "tr": "Transferi bu sürümde kapat"
+     },
+     "chips": [
+      {
+       "en": "Warehouse and Shelf −1 point",
+       "tr": "Depo ve Raf −1 puan"
+      },
+      {
+       "en": "Marmara Lojistik: satisfaction 64 → 56",
+       "tr": "Marmara Lojistik: memnuniyet 64 → 56"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart sıkışık ve tek büyük çok depolu hesabın memnuniyeti eşiğin epey üstünde."
+    },
+    {
+     "id": "known_bug",
+     "does_tr": "sprint_card_trim {bugs 1}.",
+     "label": {
+      "en": "Ship it as a known bug",
+      "tr": "Bilinen hata olarak çık"
+     },
+     "chips": [
+      {
+       "en": "Stock: 1 open bug at release",
+       "tr": "Stok: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart söz verilmiş ve Stok hattını kullanan az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the card shipped with the bug.",
+    "tr": "Cevap gelmedi, kart hatayla çıktı.",
+    "does_tr": "“Bilinen hata olarak çık” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "yalnız çipte: Stok hattını kullanan çok depolu en büyük hesap",
+     "example": "Marmara Lojistik",
+     "source_tr": "Kartın customer slotu"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "İkinci cümle bedeli değil hatanın sonucunu söyler (eleştiri bulgu 11). “Transferi kapat” artık görünür −8 öder; bugünkü hâliyle 1 puan kazandırıp görünmeyen −3 ödetiyordu (bulgu 1)."
+  },
+  {
+   "id": "product.sprint_test_readonly_delete",
+   "kind": "paper",
+   "title_tr": "Testçi · Okuma yetkisiyle kayıt silinebiliyor",
+   "market": "b2b",
+   "speaker_role": "tester",
+   "pool_group": "tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Selin · QA Engineer",
+    "tr": "Selin · Test Mühendisi"
+   },
+   "when_tr": "B2B. Koşan sprintte test aşamasında, kayıt silinebilen bir ekranı olan kart (Fatura, Stok, Defter, Veri Girişi); konuşan testçi. Slot (employee) kartın geliştirme payındaki yazılımcı.",
+   "title": {
+    "en": "Read only users can delete records",
+    "tr": "Okuma yetkisiyle kayıt silinebiliyor"
+   },
+   "body": {
+    "en": "Users with read only access can delete records on this screen. There's no way to bring a deleted record back.",
+    "tr": "Yalnız okuma yetkisi olan kullanıcı bu ekranda kayıt silebiliyor. Silinen kaydı geri getirmenin de yolu yok."
+   },
+   "options": [
+    {
+     "id": "fix",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Fix it before it ships",
+      "tr": "Çıkmadan düzelt"
+     },
+     "chips": [
+      {
+       "en": "Chart of Accounts +1 point",
+       "tr": "Hesap Planı +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "dev_tonight",
+     "does_tr": "Kartı yazan yazılımcı mesai dışında düzeltir: yalnız onun morali −4; kart değişmez.",
+     "label": {
+      "en": "Have {dev} fix it tonight",
+      "tr": "{dev} akşam düzeltsin"
+     },
+     "chips": [
+      {
+       "en": "Mert: morale −4",
+       "tr": "Mert: moral −4"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu, kart yetişmeli ve Mert'in morali yüksek."
+    },
+    {
+     "id": "known_bug",
+     "does_tr": "sprint_card_trim {bugs 1, line: Güvenlik & Yetki}: kart çıkınca o hatta 1 açık hata.",
+     "label": {
+      "en": "Ship it as a known bug",
+      "tr": "Bilinen hata olarak çık"
+     },
+     "chips": [
+      {
+       "en": "Security and Access: 1 open bug at release",
+       "tr": "Güvenlik & Yetki: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart söz verilmiş ve ekranı kullanan az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the card shipped with the bug.",
+    "tr": "Cevap gelmedi, kart hatayla çıktı.",
+    "does_tr": "“Bilinen hata olarak çık” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{dev}",
+     "carries_tr": "kartın geliştirme payındaki yazılımcı (konuşan değil)",
+     "example": "Mert",
+     "source_tr": "Kartın dev slotu (select: sprint_dev): assignees'ten geliştirme rolündeki kişi"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Gövde eleştiri bulgu 12'ye göre. Üçüncü yol bu kâğıda özgü: hatayı kartı yazan kişi akşam düzeltir, bedel ona düşer (testçi kâğıtlarının tekrar eden ikili kararını kırar, bulgu 3). “Silmeyi bu ekrandan kaldır” (hesaplara görünmeyen −2) çıktı."
+  },
+  {
+   "id": "product.sprint_test_their_data",
+   "kind": "paper",
+   "title_tr": "Testçi · Hata yalnız onların verisinde çıkıyor",
+   "market": "b2b",
+   "speaker_role": "tester",
+   "pool_group": "tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Selin · QA Engineer",
+    "tr": "Selin · Test Mühendisi"
+   },
+   "when_tr": "B2B. Koşan sprintte test aşamasında bir kart; slot kartın hattını kullanan en büyük hesap. Konuşan testçi.",
+   "title": {
+    "en": "The bug only shows up with their data",
+    "tr": "Hata yalnız onların verisinde çıkıyor"
+   },
+   "body": {
+    "en": "This bug only shows up with {customer} data and never in our test data. To find it, I need a copy of theirs.",
+    "tr": "Bu hata yalnız {customer} verisiyle çıkıyor, bizim deneme verimizde hiç görünmüyor. Bulmak için onların verisinin bir kopyası lazım."
+   },
+   "options": [
+    {
+     "id": "ask_copy",
+     "does_tr": "sprint_card_carry: kopya gelene kadar kart sonraki sprinte devreder; hata kapanır.",
+     "label": {
+      "en": "Ask the {customer} team for a copy",
+      "tr": "{customer} ekibinden kopya iste"
+     },
+     "chips": [
+      {
+       "en": "Carries over to the next sprint",
+       "tr": "Sonraki sprinte devreder"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı bekleyen yok ve sprintte başka iş var."
+    },
+    {
+     "id": "bigger_data",
+     "does_tr": "Kart +2 puan (deneme verisi büyütülür, hata bulunur).",
+     "label": {
+      "en": "Build bigger test data",
+      "tr": "Deneme verisini büyüt"
+     },
+     "chips": [
+      {
+       "en": "Cash Flow Statement +2 points",
+       "tr": "Nakit Akış Tablosu +2 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart bu sprintte çıkmalı ve iki puanlık boşluk var."
+    },
+    {
+     "id": "known_bug",
+     "does_tr": "sprint_card_trim {bugs 1}.",
+     "label": {
+      "en": "Ship it as a known bug",
+      "tr": "Bilinen hata olarak çık"
+     },
+     "chips": [
+      {
+       "en": "Cash Flow: 1 open bug at release",
+       "tr": "Nakit Akışı: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart sıkışık ve hattı kullanan az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the card shipped with the bug.",
+    "tr": "Cevap gelmedi, kart hatayla çıktı.",
+    "does_tr": "“Bilinen hata olarak çık” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "hatayı kendi verisinde yaşayan hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu: kartın hattını kullanan en büyük hesap"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Eleştiri bulgu 3'ün önerdiği yeni kâğıt; taslaktaki “Faturada uzun adres kesiliyor” kâğıdının yerini aldı (saf ikili karardı). Üç yolun bedeli üç ayrı birim: zaman, puan, açık hata."
+  },
+  {
+   "id": "product.sprint_test_coupon",
+   "kind": "paper",
+   "title_tr": "Testçi · Kupon iki kez düşüyor (KDV kâğıdının yerine)",
+   "market": "b2c",
+   "speaker_role": "tester",
+   "pool_group": "tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Selin · QA Engineer",
+    "tr": "Selin · Test Mühendisi"
+   },
+   "when_tr": "B2C, ücretli plan açık. Koşan sprintte test aşamasında Ücretli plan kartı ya da ödeme ekranına dokunan, hattı olan bir kart (B0 seçer); konuşan testçi.",
+   "title": {
+    "en": "The coupon is applied twice",
+    "tr": "Kupon iki kez düşüyor"
+   },
+   "body": {
+    "en": "The coupon is applied twice, so customers get double the discount. Fixing it makes the card a bit longer.",
+    "tr": "Kupon iki kez düşüyor, müşteri iki kat indirim alıyor. Düzeltirsek kart biraz uzar."
+   },
+   "options": [
+    {
+     "id": "fix",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Fix it before it ships",
+      "tr": "Çıkmadan düzelt"
+     },
+     "chips": [
+      {
+       "en": "Paid plan +1 point",
+       "tr": "Ücretli plan +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "coupons_off",
+     "does_tr": "Kuponla gelecek abonelikler gelmez: ödeyen bir kez −(ödeyen × COUPON_SHARE), MRR buna göre düşer (W1'in EFFECT_PAYING_USERS çipi).",
+     "label": {
+      "en": "Turn coupons off for this release",
+      "tr": "Kuponları bu sürümde kapat"
+     },
+     "chips": [
+      {
+       "en": "Paying users −10 · MRR −$80",
+       "tr": "Ödeyen −10 · MRR −$80"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart sıkışık ve kupondan gelen abonelik az."
+    },
+    {
+     "id": "known_bug",
+     "does_tr": "sprint_card_trim {bugs 1}: kartın kendi hattına.",
+     "label": {
+      "en": "Ship it as a known bug",
+      "tr": "Bilinen hata olarak çık"
+     },
+     "chips": [
+      {
+       "en": "Paid plan: 1 open bug at release",
+       "tr": "Ücretli plan: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart sıkışık ve kupon kampanyası yok."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the card shipped with the bug.",
+    "tr": "Cevap gelmedi, kart hatayla çıktı.",
+    "does_tr": "“Bilinen hata olarak çık” yolu işler."
+   },
+   "tokens": [],
+   "constants": [
+    {
+     "name": "COUPON_SHARE",
+     "value": "ödeyenin %1'i",
+     "why_tr": "Kuponla gelen aylık abonelik payı. Örnek: 1.050 ödeyen → 10, aylık $8 → MRR −$80.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Gövde PRD §3'ün testçi ton örneğidir, aynen; ortak kapanış cümlesini havuzda yalnız bu kâğıt taşır. Karar 13'ün istediği KDV yerine geçen kâğıt budur. Abonelik kuponu her B2C ürününde olur; pazaryeri sepet kuponu değildir (E). Açık hata kartın kendi hattına yazılır (eleştiri bulgu 10); Ücretli plan kartının A'da hattı yoksa kâğıdın tetik kartı hattı olan bir kart olur. Marka −1 yerine ödeyen kaybı (bulgu 1)."
+  },
+  {
+   "id": "product.sprint_test_devices",
+   "kind": "paper",
+   "title_tr": "Testçi · Yalnız iki telefonda deneyebildim",
+   "market": "b2c",
+   "speaker_role": "tester",
+   "pool_group": "tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Selin · QA Engineer",
+    "tr": "Selin · Test Mühendisi"
+   },
+   "when_tr": "B2C. Koşan sprintte test aşamasında Mobil & Erişim hattından bir kart; konuşan testçi.",
+   "title": {
+    "en": "I could only test it on two phones",
+    "tr": "Yalnız iki telefonda deneyebildim"
+   },
+   "body": {
+    "en": "I could only test this card on the two phones we have. Most users are on other models, and the screen changes from phone to phone.",
+    "tr": "Bu kartı yalnız elimizdeki iki telefonda deneyebildim. Kullanıcıların çoğu başka modeller kullanıyor ve ekran telefona göre değişiyor."
+   },
+   "options": [
+    {
+     "id": "buy_phones",
+     "does_tr": "Kasa −TEST_PHONES; kart değişmez.",
+     "label": {
+      "en": "Buy a few test phones",
+      "tr": "Birkaç test telefonu al"
+     },
+     "chips": [
+      {
+       "en": "Cash −$1,200",
+       "tr": "Nakit −$1.200"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat ve kitlenin çoğu telefondan giriyor."
+    },
+    {
+     "id": "team_phones",
+     "does_tr": "Kart +1 puan (ekibin telefonlarında tek tek denenir).",
+     "label": {
+      "en": "Try it on the team's phones",
+      "tr": "Ekibin telefonlarında dene"
+     },
+     "chips": [
+      {
+       "en": "Mobile App +1 point",
+       "tr": "Mobil Uygulama +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa sıkışık ve sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "two_phones",
+     "does_tr": "sprint_card_trim {bugs 1}.",
+     "label": {
+      "en": "Make do with two phones",
+      "tr": "İki telefonla yetin"
+     },
+     "chips": [
+      {
+       "en": "Mobile and Access: 1 open bug at release",
+       "tr": "Mobil & Erişim: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa da sprint de sıkışık ve telefondan giren az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the card shipped after two phones.",
+    "tr": "Cevap gelmedi, kart iki telefonda denenip çıktı.",
+    "does_tr": "“İki telefonla yetin” yolu işler."
+   },
+   "tokens": [],
+   "constants": [
+    {
+     "name": "TEST_PHONES",
+     "value": "$1.200, bir kez",
+     "why_tr": "Birkaç orta sınıf test telefonu.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Taslaktaki “Silinen hesabın bilgileri silinmiyor” kâğıdının yerini aldı: o kâğıt da saf ikili karardı (eleştiri bulgu 3). Testçi dağılımı (B2B 3, B2C 2, ikisi 3) aynı kaldı. Üç yol üç birim: kasa, puan, açık hata."
+  },
+  {
+   "id": "product.sprint_test_after_midnight",
+   "kind": "paper",
+   "title_tr": "Testçi · Gece girilen kayıt önceki güne düşüyor",
+   "market": "both",
+   "speaker_role": "tester",
+   "pool_group": "tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Selin · QA Engineer",
+    "tr": "Selin · Test Mühendisi"
+   },
+   "when_tr": "Koşan sprintte test aşamasında, kayıt tarihi tutan bir hattan kart (B2B: Fatura, Stok, Defter, Nakit Akışı, Veri Girişi; B2C: Dayanıklılık); konuşan testçi.",
+   "title": {
+    "en": "Late night entries land on the day before",
+    "tr": "Gece girilen kayıt önceki güne düşüyor"
+   },
+   "body": {
+    "en": "Anything entered after midnight is saved under the day before. Daily totals don't add up for anyone working late.",
+    "tr": "Gece yarısından sonra girilen kayıtlar bir önceki güne yazılıyor. Geç saatte çalışanların gün toplamı tutmuyor."
+   },
+   "options": [
+    {
+     "id": "fix",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Fix it before it ships",
+      "tr": "Çıkmadan düzelt"
+     },
+     "chips": [
+      {
+       "en": "Cash Movements +1 point",
+       "tr": "Kasa Hareketleri +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "known_bug",
+     "does_tr": "sprint_card_trim {bugs 1}.",
+     "label": {
+      "en": "Ship it as a known bug",
+      "tr": "Bilinen hata olarak çık"
+     },
+     "chips": [
+      {
+       "en": "Cash Flow: 1 open bug at release",
+       "tr": "Nakit Akışı: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart sıkışık ve gece kayıt giren az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the card shipped with the bug.",
+    "tr": "Cevap gelmedi, kart hatayla çıktı.",
+    "does_tr": "“Bilinen hata olarak çık” yolu işler."
+   },
+   "tokens": [],
+   "constants": [],
+   "notes_tr": "İkinci cümle sonucu söyler (eleştiri bulgu 15). Testçi grubunda ikili karar yalnız burada ve “Çok kayıtla yavaşlıyor”da kaldı; öbür altı kâğıt üç yollu ve her birinin üçüncü yolu farklı birimde."
+  },
+  {
+   "id": "product.sprint_test_slow_many",
+   "kind": "paper",
+   "title_tr": "Testçi · Çok kayıtla yavaşlıyor",
+   "market": "both",
+   "speaker_role": "tester",
+   "pool_group": "tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Selin · QA Engineer",
+    "tr": "Selin · Test Mühendisi"
+   },
+   "when_tr": "Koşan sprintte test aşamasında liste ekranı olan bir kart; B2B'de hattı kullanan en büyük hesabın koltuğu SLOW_SEATS ya da üstü (B0'da seçilecek), B2C'de kitle 5.000 ya da üstü; konuşan testçi.",
+   "title": {
+    "en": "It slows down with lots of records",
+    "tr": "Çok kayıtla yavaşlıyor"
+   },
+   "body": {
+    "en": "This screen opens fast with a hundred records, but with ten thousand it takes half a minute. Loading it page by page makes the card a bit longer.",
+    "tr": "Bu ekran yüz kayıtla hızlı açılıyor, on bin kayıtla yarım dakika sürüyor. Sayfa sayfa yüklersek kart biraz uzar."
+   },
+   "options": [
+    {
+     "id": "paging",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Load it page by page",
+      "tr": "Sayfa sayfa yüklesin"
+     },
+     "chips": [
+      {
+       "en": "Warehouse and Shelf +1 point",
+       "tr": "Depo ve Raf +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "ship_b2b",
+     "does_tr": "Yalnız B2B. En büyük hesaba: Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Ship it like this",
+      "tr": "Böyle çıksın"
+     },
+     "chips": [
+      {
+       "en": "Demir Holding: satisfaction 58 → 50",
+       "tr": "Demir Holding: memnuniyet 58 → 50"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve büyük hesabın memnuniyeti eşiğin epey üstünde."
+    },
+    {
+     "id": "ship_b2c",
+     "does_tr": "Yalnız B2C. sprint_card_trim {bugs 1}.",
+     "label": {
+      "en": "Ship it like this",
+      "tr": "Böyle çıksın"
+     },
+     "chips": [
+      {
+       "en": "Durability: 1 open bug at release",
+       "tr": "Dayanıklılık: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint dolu ve çok kayıtlı kullanıcı az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the screen went out like this.",
+    "tr": "Cevap gelmedi, ekran böyle çıktı.",
+    "does_tr": "Pazara göre “Böyle çıksın” yolu işler."
+   },
+   "tokens": [],
+   "constants": [],
+   "notes_tr": "B2B'de yavaşlığı yaşayan büyük hesaptır, bedel ona düşer (görünür −8); B2C'de bedel hattın açık hatasıdır."
+  },
+  {
+   "id": "product.sprint_test_too_much",
+   "kind": "paper",
+   "title_tr": "Testçi · Test sandığımızdan uzun",
+   "market": "both",
+   "speaker_role": "tester",
+   "pool_group": "tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Selin · QA Engineer",
+    "tr": "Selin · Test Mühendisi"
+   },
+   "when_tr": "Koşan sprintte test aşamasında bir kart; tam testle kart sprintte bitmiyor, ana akışlarla bitiyor (urun.cut_test_finishes). Kartta açık söz yok (sözlü kartta bu yerine söz olayı gelir). Konuşan testçi.",
+   "title": {
+    "en": "Testing is bigger than we thought",
+    "tr": "Test sandığımızdan uzun"
+   },
+   "body": {
+    "en": "{seam:urun.decision_card} has more paths to test than we planned. If I test them all, the card won't finish this sprint.",
+    "tr": "{seam:urun.decision_card} kartında test edilecek senaryo sandığımızdan çok. Hepsini denersem kart bu sprintte bitmez."
+   },
+   "options": [
+    {
+     "id": "test_all",
+     "does_tr": "Kart +1 puan (test payı); plan kartı sonraki sprinte taşır (bilgi çipi).",
+     "label": {
+      "en": "Test every path",
+      "tr": "Hepsini dene"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing +1 point",
+       "tr": "Toplu Fatura +1 puan"
+      },
+      {
+       "en": "Batch Invoicing won't finish this sprint",
+       "tr": "Toplu Fatura bu sprintte bitmez"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı bu sprint bekleyen yok."
+    },
+    {
+     "id": "main_paths",
+     "does_tr": "sprint_card_test {mode: cut}: kalan test işi yarıya iner; hatalı çıkma ihtimali CUT_TEST_ESCAPE'e çıkar (Karar 14 ile aynı sabit).",
+     "label": {
+      "en": "Test the main paths",
+      "tr": "Ana akışları dene"
+     },
+     "chips": [
+      {
+       "en": "Chance of shipping with a bug 0% → 15%",
+       "tr": "Hatalı çıkma ihtimali %0 → %15"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartın bu sprintte çıkması gerekiyor ve hattını kullanan az."
+    },
+    {
+     "id": "dev_helps",
+     "does_tr": "Bir yazılımcının verimi −%30 · 1 hafta; kartın testi sprintte biter.",
+     "label": {
+      "en": "Have {dev} help with testing",
+      "tr": "Teste {dev} yardım etsin"
+     },
+     "chips": [
+      {
+       "en": "Mert pace −30% · 1 week",
+       "tr": "Mert verimi −%30 · 1 hafta"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Mert'in sprintteki kartı bekleyebilir."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so testing went on and the card moved to next sprint.",
+    "tr": "Cevap gelmedi, test sürdü ve kart sonraki sprinte kaldı.",
+    "does_tr": "“Hepsini dene” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    },
+    {
+     "token": "{dev}",
+     "carries_tr": "teste yardım edecek yazılımcı",
+     "example": "Mert",
+     "source_tr": "Kartın dev slotu (select: sprint_dev): sprintte geliştirme payı olan, konuşmayan yazılımcı"
+    }
+   ],
+   "constants": [
+    {
+     "name": "CUT_TEST_ESCAPE",
+     "value": "%15",
+     "why_tr": "Karar 14'ün kısaltılmış test sabiti (sprint.json); D gelince escape_chance'e bağlanır. Çip önceki ve sonrakini aynı yerden okur.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Söz olayındaki “Testi kısalt” ile aynı mekanizma, ama söz yokken. Örnekteki %0 bugünkü modelin değeridir (testçiyle yapılan test hatalı çıkmaz); %15 Karar 14'ün yeni sabitidir, zar gerçekten atılır. TR “senaryo” ve “akış” der (eleştiri bulgu 27)."
+  },
+  {
+   "id": "product.sprint_untested_own_code",
+   "kind": "paper",
+   "title_tr": "Testçisiz · Kendi kodumu test ediyorum",
+   "market": "both",
+   "speaker_role": "developer",
+   "pool_group": "no_tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Mert · Software Engineer",
+    "tr": "Mert · Yazılım Mühendisi"
+   },
+   "when_tr": "Ekipte testçi yok (ya da Test işinde kimse yok); koşan sprintte test aşamasındaki kartın test payı kartı yazan yazılımcıda. Konuşan o yazılımcı.",
+   "title": {
+    "en": "Testing my own code",
+    "tr": "Kendi kodumu test ediyorum"
+   },
+   "body": {
+    "en": "There's no tester on this card, so I'm testing it myself. The cases I didn't think of while writing it won't come to me while testing it either.",
+    "tr": "Bu kartta testçi yok, testi ben yapıyorum. Yazarken aklıma gelmeyen durumlar test ederken de gelmeyecek."
+   },
+   "options": [
+    {
+     "id": "founder_tests",
+     "does_tr": "Kurucu verimi −%15 · 1 hafta; testi kurucu yapar, kart açık hatasız çıkar.",
+     "label": {
+      "en": "Test it yourself",
+      "tr": "Testi sen yap"
+     },
+     "chips": [
+      {
+       "en": "Your pace −15% · 1 week",
+       "tr": "Senin verimin −%15 · 1 hafta"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Senin bu hafta takvimin boş."
+    },
+    {
+     "id": "outside_tester",
+     "does_tr": "Kasa −OUTSIDE_TESTER_WEEK; kart açık hatasız çıkar.",
+     "label": {
+      "en": "Hire a tester for a week",
+      "tr": "Bir haftalığına testçi tut"
+     },
+     "chips": [
+      {
+       "en": "Cash −$1,400",
+       "tr": "Nakit −$1.400"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat ve senin haftan dolu."
+    },
+    {
+     "id": "own_test",
+     "does_tr": "sprint_card_trim {bugs 1}: kart çıkınca hattına 1 açık hata yazılır.",
+     "label": {
+      "en": "Let {employee} test it",
+      "tr": "{employee} test etsin"
+     },
+     "chips": [
+      {
+       "en": "Invoicing: 1 open bug at release",
+       "tr": "Fatura: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa sıkışık, senin haftan dolu ve kartın hattını kullanan az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so {employee} tested it.",
+    "tr": "Cevap gelmedi, testi {employee} yaptı.",
+    "does_tr": "“{employee} test etsin” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{employee}",
+     "carries_tr": "konuşan, testi yapan yazılımcı",
+     "example": "Mert",
+     "source_tr": "Kartın employee slotu"
+    }
+   ],
+   "constants": [
+    {
+     "name": "OUTSIDE_TESTER_WEEK",
+     "value": "orta seviye testçi aylık maaşı ÷ 4,3 × 1,5 (örnek $1.400)",
+     "why_tr": "B_PLAN §5.6; dışarıdan bir haftalık testçi.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Bedel artık %40 zarına dayanmıyor (ana oturum kararı 2, eleştiri bulgu 2): bugünkü modelde testi yapan yazılımcıyla zar hiç atılmıyordu ve %40'ı Erdem fazla buldu. Kendi testinin bedeli kesin bir açık hatadır; D gelince çip ihtimale dönebilir. Kurucu izindeyse “Testi sen yap” kilitlenir: “Bu hafta izindesin.”"
+  },
+  {
+   "id": "product.sprint_untested_old_screens",
+   "kind": "paper",
+   "title_tr": "Testçisiz · Eski ekranlara kimse bakmadı",
+   "market": "both",
+   "speaker_role": "developer",
+   "pool_group": "no_tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Mert · Software Engineer",
+    "tr": "Mert · Yazılım Mühendisi"
+   },
+   "when_tr": "Ekipte testçi yok; koşan sprintte test aşamasında, hattının ikinci ya da üçüncü kademe kartı (eski ekranlara dokunuyor). Konuşan testi yapan kişi: yazılımcıysa birinci varyant, kurucuysa kurucunun kendi notu.",
+   "title": {
+    "en": "Nobody has looked at the old screens",
+    "tr": "Eski ekranlara kimse bakmadı"
+   },
+   "body_variants": [
+    {
+     "case_tr": "konuşan yazılımcı",
+     "en": "This card also touches the old {seam:urun.decision_line_name} screens. I only tested the new one; nobody has gone back to the old ones.",
+     "tr": "Bu kart {seam:urun.decision_line_name} hattındaki eski ekranlara da dokunuyor. Ben yalnız yenisini denedim, eskilere kimse bakmadı."
+    },
+    {
+     "case_tr": "konuşan kurucu (Kendine not)",
+     "en": "This card also touches the old {seam:urun.decision_line_name} screens. You only tested the new one.",
+     "tr": "Bu kart {seam:urun.decision_line_name} hattındaki eski ekranlara da dokunuyor. Sen yalnız yenisini test ettin."
+    }
+   ],
+   "options": [
+    {
+     "id": "test_old",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Test the old screens too",
+      "tr": "Eski ekranları da dene"
+     },
+     "chips": [
+      {
+       "en": "Batch Invoicing +1 point",
+       "tr": "Toplu Fatura +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "new_only",
+     "does_tr": "sprint_card_trim {bugs 1}.",
+     "label": {
+      "en": "The new one is enough",
+      "tr": "Yalnız yenisi yeter"
+     },
+     "chips": [
+      {
+       "en": "Invoicing: 1 open bug at release",
+       "tr": "Fatura: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart sıkışık ve hattı kullanan az."
+    },
+    {
+     "id": "founder_checks",
+     "does_tr": "Kurucu verimi −%10 · 1 hafta.",
+     "label": {
+      "en": "Check the old screens yourself",
+      "tr": "Eski ekranlara sen bak"
+     },
+     "chips": [
+      {
+       "en": "Your pace −10% · 1 week",
+       "tr": "Senin verimin −%10 · 1 hafta"
+      }
+     ],
+     "lock": {
+      "when_tr": "Testi kurucu yapıyorsa (kurucu varyantı)",
+      "en": "You're already doing the testing.",
+      "tr": "Testi zaten sen yapıyorsun."
+     },
+     "locked_in_example": false,
+     "best_when_tr": "Kart sıkışık ama senin bu hafta takvimin boş."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so only the new screen was tried.",
+    "tr": "Cevap gelmedi, yalnız yeni ekran denendi.",
+    "does_tr": "“Yalnız yenisi yeter” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_line_name}",
+     "carries_tr": "kâğıdın kartının hattının adı",
+     "example": "Fatura",
+     "source_tr": "Yeni metin seam'i: kartın line alanı, PROD_LINE_* adı (B_PLAN §5.2'de önerildi)"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Yazılımcı varyantı konuşanın kendi ağzından (eleştiri bulgu 9). Gönderen kurucu varyantında “Kendine not”tur; o varyantta üçüncü seçenek kilitli görünür, gerekçe yalnız olguyu söyler."
+  },
+  {
+   "id": "product.sprint_founder_test_pile",
+   "kind": "paper",
+   "title_tr": "Testçisiz · Test işi sende birikiyor",
+   "market": "both",
+   "speaker_role": "founder",
+   "pool_group": "no_tester",
+   "stage": "test",
+   "replaces": null,
+   "sender": {
+    "en": "Note to self",
+    "tr": "Kendine not"
+   },
+   "when_tr": "Ekipte testçi yok ve kurucu dışında en az bir yazılımcı var; test aşamasındaki bir kartın test payı kurucuda ve kart en az bir haftadır test aşamasında bekliyor.",
+   "title": {
+    "en": "Testing is piling up on you",
+    "tr": "Test işi sende birikiyor"
+   },
+   "body": {
+    "en": "You're testing every card, and the work piles up as the team keeps building. {seam:urun.decision_card} has been waiting for you since last week.",
+    "tr": "Bütün kartları sen test ediyorsun, ekip yazdıkça iş önünde birikiyor. {seam:urun.decision_card} geçen haftadan beri seni bekliyor."
+   },
+   "options": [
+    {
+     "id": "share",
+     "does_tr": "Bir yazılımcının verimi −%30 · 1 hafta; kartın testine katılır.",
+     "label": {
+      "en": "Share the testing with {employee}",
+      "tr": "Testi {employee} ile paylaş"
+     },
+     "chips": [
+      {
+       "en": "Deniz pace −30% · 1 week",
+       "tr": "Deniz verimi −%30 · 1 hafta"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Deniz'in sprintteki öbür kartı bekleyebilir."
+    },
+    {
+     "id": "main_paths",
+     "does_tr": "sprint_card_test {mode: cut}; ihtimal CUT_TEST_ESCAPE'e çıkar.",
+     "label": {
+      "en": "Test the main paths",
+      "tr": "Ana akışları test et"
+     },
+     "chips": [
+      {
+       "en": "Chance of shipping with a bug 0% → 15%",
+       "tr": "Hatalı çıkma ihtimali %0 → %15"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartın bu sprintte çıkması gerekiyor ve hattını kullanan az."
+    },
+    {
+     "id": "carry",
+     "does_tr": "sprint_card_carry.",
+     "label": {
+      "en": "Leave the card for next sprint",
+      "tr": "Kartı sonraki sprinte bırak"
+     },
+     "chips": [
+      {
+       "en": "Carries over to the next sprint",
+       "tr": "Sonraki sprinte devreder"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı bekleyen yok."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the card moved to next sprint.",
+    "tr": "Cevap verilmedi, kart sonraki sprinte kaldı.",
+    "does_tr": "“Kartı sonraki sprinte bırak” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    },
+    {
+     "token": "{employee}",
+     "carries_tr": "testi paylaşacak yazılımcı",
+     "example": "Deniz",
+     "source_tr": "Kartın employee slotu: sprintte geliştirme payı olan en kıdemli yazılımcı"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "%0 bugünkü modelde kurucunun testidir; %15 Karar 14'ün sabitidir ve gerçekten atılır. D gelince önceki değer kurucunun Test yıldızından okunur."
+  },
+  {
+   "id": "product.sprint_solo_rushed_code",
+   "kind": "paper",
+   "title_tr": "Kurucu tek · Bu kod aceleyle yazılmış",
+   "market": "both",
+   "speaker_role": "founder",
+   "pool_group": "solo",
+   "stage": "dev",
+   "replaces": null,
+   "sender": {
+    "en": "Note to self",
+    "tr": "Kendine not"
+   },
+   "when_tr": "Kurucu tek başına (ekip yok). Koşan sprintte geliştirme aşamasında, ilk sürümde açılmış bir hattın kartı; hatta en az 1 açık hata var.",
+   "title": {
+    "en": "This code was written in a hurry",
+    "tr": "Bu kod aceleyle yazılmış"
+   },
+   "body": {
+    "en": "You wrote the {seam:urun.decision_line_name} code in a hurry for the first version, and there's already a bug in it. Tidy it up now and no new ones will turn up for a while.",
+    "tr": "{seam:urun.decision_line_name} kodunu ilk sürüm için aceleyle yazmıştın, içinde şimdiden bir hata var. Şimdi toparlarsan bir süre yeni hata çıkmaz."
+   },
+   "options": [
+    {
+     "id": "evenings",
+     "does_tr": "Kurucu verimi −%20 · 2 hafta; line_harden 26.",
+     "label": {
+      "en": "Give it your evenings",
+      "tr": "Akşamlarını buna ver"
+     },
+     "chips": [
+      {
+       "en": "Your pace −20% · 2 weeks",
+       "tr": "Senin verimin −%20 · 2 hafta"
+      },
+      {
+       "en": "Invoicing: no new bugs for 26 weeks",
+       "tr": "Fatura: 26 hafta yeni hata çıkmaz"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Önümüzdeki iki haftada satış görüşmesi yok ve hat önemli."
+    },
+    {
+     "id": "contractor",
+     "does_tr": "Kasa −(2 × PAPER_CONTRACT_PER_POINT); line_harden 26.",
+     "label": {
+      "en": "Get a contractor to tidy it",
+      "tr": "Serbest çalışana toparlat"
+     },
+     "chips": [
+      {
+       "en": "Cash −$2,000",
+       "tr": "Nakit −$2.000"
+      },
+      {
+       "en": "Invoicing: no new bugs for 26 weeks",
+       "tr": "Fatura: 26 hafta yeni hata çıkmaz"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat ve takvimin dolu."
+    },
+    {
+     "id": "note",
+     "does_tr": "sprint_card_trim {bugs 1}.",
+     "label": {
+      "en": "Make a note and move on",
+      "tr": "Not al, devam et"
+     },
+     "chips": [
+      {
+       "en": "Invoicing: 1 open bug at release",
+       "tr": "Fatura: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Ürün çok yeni ve hattı kullanan az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the code stayed as it was.",
+    "tr": "Cevap verilmedi, kod olduğu gibi kaldı.",
+    "does_tr": "“Not al, devam et” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_line_name}",
+     "carries_tr": "kâğıdın kartının hattının adı",
+     "example": "Fatura",
+     "source_tr": "Yeni metin seam'i: kartın line alanı, PROD_LINE_* adı (B_PLAN §5.2'de önerildi)"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "B_PLAN K9; gövde eleştiri bulgu 17'ye göre kısaldı. “Kartın içinde toparla” (+2 puan) tek kurucunun haftası 2 puan olduğu için akşam yolundan her durumda pahalıydı, çıkarıldı."
+  },
+  {
+   "id": "product.sprint_solo_backup",
+   "kind": "paper",
+   "title_tr": "Kurucu tek · Veritabanının yedeği yok",
+   "market": "both",
+   "speaker_role": "founder",
+   "pool_group": "solo",
+   "stage": "any",
+   "replaces": null,
+   "sender": {
+    "en": "Note to self",
+    "tr": "Kendine not"
+   },
+   "when_tr": "Kurucu tek başına, ürün canlı ve Dayanıklılık hattında “Otomatik Kayıt” dışında kademe yok (B0'da seçilecek). Koşan sprint var.",
+   "title": {
+    "en": "The database has no backup",
+    "tr": "Veritabanının yedeği yok"
+   },
+   "body": {
+    "en": "The database has no backup at all; if something goes wrong, every record is gone. Setting up automatic backups makes this card a bit longer.",
+    "tr": "Veritabanının hiç yedeği yok, bir sorun çıkarsa bütün kayıtlar gider. Otomatik yedeği kurmak bu kartı biraz uzatır."
+   },
+   "options": [
+    {
+     "id": "set_up",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Set up the backup now",
+      "tr": "Yedeği şimdi kur"
+     },
+     "chips": [
+      {
+       "en": "Accounts and Sessions +1 point",
+       "tr": "Hesap & Oturum +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "outsource",
+     "does_tr": "Kasa −(1 × PAPER_CONTRACT_PER_POINT).",
+     "label": {
+      "en": "Get a contractor to set it up",
+      "tr": "Serbest çalışana kurdur"
+     },
+     "chips": [
+      {
+       "en": "Cash −$1,000",
+       "tr": "Nakit −$1.000"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat ve sprint dolu."
+    },
+    {
+     "id": "later",
+     "does_tr": "Dayanıklılık hattına hemen 1 açık hata.",
+     "label": {
+      "en": "Leave it for later",
+      "tr": "Sonraya bırak"
+     },
+     "chips": [
+      {
+       "en": "Durability: 1 new open bug",
+       "tr": "Dayanıklılık: 1 yeni açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa da sprint de sıkışık ve kullanıcı az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the backup was left for later.",
+    "tr": "Cevap verilmedi, yedek sonraya kaldı.",
+    "does_tr": "“Sonraya bırak” yolu işler."
+   },
+   "tokens": [],
+   "constants": [],
+   "notes_tr": "Açık hata “yedek yok” riskinin A'daki karşılığıdır ve hemen yazılır; çip “yeni açık hata” der, “çıkışta” demez (eleştiri bulgu 10)."
+  },
+  {
+   "id": "product.sprint_solo_server_bill",
+   "kind": "paper",
+   "title_tr": "Kurucu tek · Sunucu faturası iki katına çıktı",
+   "market": "both",
+   "speaker_role": "founder",
+   "pool_group": "solo",
+   "stage": "any",
+   "replaces": null,
+   "sender": {
+    "en": "Note to self",
+    "tr": "Kendine not"
+   },
+   "when_tr": "Kurucu tek başına, ürün canlı; koşan sprintteki kartın aşaması önemsiz. Ay sonuna 2 haftadan az var.",
+   "title": {
+    "en": "The server bill doubled",
+    "tr": "Sunucu faturası iki katına çıktı"
+   },
+   "body": {
+    "en": "Your server bill doubled this month. The cause is the {seam:urun.decision_card} code you wrote: it pulls the same data from scratch every time it opens.",
+    "tr": "Sunucu faturan bu ay iki katına çıktı. Sebebi yazdığın {seam:urun.decision_card} kodu: her açılışta aynı veriyi baştan çekiyor."
+   },
+   "options": [
+    {
+     "id": "fix_code",
+     "does_tr": "Kart +1 puan.",
+     "label": {
+      "en": "Fix the code",
+      "tr": "Kodu düzelt"
+     },
+     "chips": [
+      {
+       "en": "Version History +1 point",
+       "tr": "Sürüm Geçmişi +1 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprintte bir puanlık boşluk var."
+    },
+    {
+     "id": "pay",
+     "does_tr": "Kasa −(bu ayın sunucu gideri) bir kez; düzeltme +1 yeniden açma payıyla sonraki sprintin planına girer (sprint_card_trim {follow true}).",
+     "label": {
+      "en": "Pay it, fix the code next sprint",
+      "tr": "Faturayı öde, kodu sonraki sprintte düzelt"
+     },
+     "chips": [
+      {
+       "en": "Cash −$180",
+       "tr": "Nakit −$180"
+      },
+      {
+       "en": "2 points of work left for next sprint",
+       "tr": "Sonraki sprinte 2 puanlık iş kalır"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat ve kartın bu sprintte çıkması gerekiyor."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the bill was paid and the fix moved to next sprint.",
+    "tr": "Cevap verilmedi, fatura ödendi, düzeltme sonraki sprinte kaldı.",
+    "does_tr": "“Faturayı öde, kodu sonraki sprintte düzelt” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    }
+   ],
+   "constants": [
+    {
+     "name": "SERVER_BILL_EXTRA",
+     "value": "bu ayın sunucu gideri kadar, bir kez",
+     "why_tr": "Bedel faturanın kendisinden türer (InfraSystem'in aylık gideri). Örnek $180.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Ödeme yolu artık düzeltmeyi de sonraki sprinte koyar; “peki gelecek ay?” deliği kapandı (eleştiri bulgu 5). Etiket 6 kelime, iki hamle; W1'in “Sabah düzelt, hesaplara kredi ver” kalıbında."
+  },
+  {
+   "id": "product.sprint_solo_license",
+   "kind": "paper",
+   "title_tr": "Kurucu tek · Bu iş için hazır bir bileşen var",
+   "market": "both",
+   "speaker_role": "founder",
+   "pool_group": "solo",
+   "stage": "dev",
+   "replaces": null,
+   "sender": {
+    "en": "Note to self",
+    "tr": "Kendine not"
+   },
+   "when_tr": "Kurucu tek başına. Koşan sprintte geliştirme aşamasında puanı 5 ya da üstü bir kart.",
+   "title": {
+    "en": "There's a ready made component for this",
+    "tr": "Bu iş için hazır bir bileşen var"
+   },
+   "body": {
+    "en": "There's a ready made component that does what {seam:urun.decision_card} needs, and its licence costs {seam:urun.decision_license_year}. There's a free version too, but nobody has maintained it for two years.",
+    "tr": "{seam:urun.decision_card} için gereken işi yapan hazır bir bileşen var, lisansı {seam:urun.decision_license_year}. Ücretsiz bir sürümü de var ama iki yıldır kimse bakmıyor."
+   },
+   "options": [
+    {
+     "id": "buy",
+     "does_tr": "Kasa −lisans; kart −3 puan.",
+     "label": {
+      "en": "Buy the licence",
+      "tr": "Lisansı al"
+     },
+     "chips": [
+      {
+       "en": "Cash −$1,200",
+       "tr": "Nakit −$1.200"
+      },
+      {
+       "en": "Version History −3 points",
+       "tr": "Sürüm Geçmişi −3 puan"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa rahat ve kartın çabuk çıkması gerekiyor."
+    },
+    {
+     "id": "free",
+     "does_tr": "Kart −2 puan; sprint_card_trim {bugs 1}.",
+     "label": {
+      "en": "Use the free version",
+      "tr": "Ücretsiz sürümü kullan"
+     },
+     "chips": [
+      {
+       "en": "Version History −2 points",
+       "tr": "Sürüm Geçmişi −2 puan"
+      },
+      {
+       "en": "Durability: 1 open bug at release",
+       "tr": "Dayanıklılık: çıkışta 1 açık hata"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa sıkışık, kart acil ve hattı kullanan az."
+    },
+    {
+     "id": "write",
+     "does_tr": "Statüko (bilgi çipi).",
+     "label": {
+      "en": "Write it yourself",
+      "tr": "Kendin yaz"
+     },
+     "chips": [
+      {
+       "en": "Version History won't finish this sprint",
+       "tr": "Sürüm Geçmişi bu sprintte bitmez"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kasa sıkışık ve kartı bekleyen yok."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so you kept writing it yourself.",
+    "tr": "Cevap verilmedi, kodu kendin yazmaya devam ettin.",
+    "does_tr": "“Kendin yaz” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    },
+    {
+     "token": "{seam:urun.decision_license_year}",
+     "carries_tr": "bileşenin lisansı, para biçimli",
+     "example": "$1.200 / $1,200",
+     "source_tr": "Yeni seam: B2B koltuk başı $6, B2C kullanıcı başı $0,30, en az LICENSE_MIN; bir kez ödenir"
+    }
+   ],
+   "constants": [
+    {
+     "name": "LICENSE_COST",
+     "value": "B2B koltuk başı $6 · B2C kullanıcı başı $0,30 · en az $1.200, bir kez",
+     "why_tr": "B_PLAN §5.6; tek kurucunun kitlesi küçük olduğu için alt sınır eklendi.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "Gövde “yıllık” demez, bedel bir kez düşer (eleştiri bulgu 21). B_PLAN K5'in konusu; ekip varken bu konu “Bu işi daha önce yapmadım” kâğıdıyla karşılanır."
+  },
+  {
+   "id": "product.sprint_solo_watch",
+   "kind": "paper",
+   "title_tr": "Kurucu tek · Her hafta görmek istiyorlar",
+   "market": "b2b",
+   "speaker_role": "founder",
+   "pool_group": "solo",
+   "stage": "design",
+   "replaces": null,
+   "sender": {
+    "en": "Note to self",
+    "tr": "Kendine not"
+   },
+   "when_tr": "B2B, kurucu tek başına. Koşan sprintte tasarım ya da geliştirme aşamasında bir kart; slot o kartın hattını kullanan en büyük hesap.",
+   "title": {
+    "en": "{customer} wants to see it every week",
+    "tr": "{customer} her hafta görmek istiyor"
+   },
+   "body": {
+    "en": "{customer} wants to see this screen every week while you build it. That means getting a demo ready every week.",
+    "tr": "{customer} bu ekranı sen yaparken her hafta görmek istiyor. Her hafta bir gösterim hazırlaman gerekecek."
+   },
+   "options": [
+    {
+     "id": "weekly",
+     "does_tr": "Kurucu verimi −%15 · 2 hafta; hesaba bedel yazılmaz.",
+     "label": {
+      "en": "Show them every week",
+      "tr": "Her hafta göster"
+     },
+     "chips": [
+      {
+       "en": "Your pace −15% · 2 weeks",
+       "tr": "Senin verimin −%15 · 2 hafta"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Hesap ilk ve tek büyük hesabın, ya da ayrılma eşiğine yakın."
+    },
+    {
+     "id": "when_done",
+     "does_tr": "Hesaba tek seferlik memnuniyet −8 (trust_delta, PAPER_TRUST_HIT; iz haftada ≈2,8 affedilir).",
+     "label": {
+      "en": "Show them when it's done",
+      "tr": "Bitince göster"
+     },
+     "chips": [
+      {
+       "en": "Demir Holding: satisfaction 58 → 50",
+       "tr": "Demir Holding: memnuniyet 58 → 50"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Sprint sıkışık ve hesabın memnuniyeti eşiğin epey üstünde."
+    }
+   ],
+   "expire": {
+    "en": "No answer went back, so {customer} will wait until it's done.",
+    "tr": "Cevap gitmedi, {customer} bitmesini bekleyecek.",
+    "does_tr": "“Bitince göster” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{customer}",
+     "carries_tr": "ekranı izlemek isteyen hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu"
+    }
+   ],
+   "constants": [],
+   "notes_tr": "Saat birimi gövdeden çıktı (eleştiri bulgu 20). “Her hafta göster” artık iki haftada silinen bir +3 için verim ödetmiyor; bedelini ödeyerek “Bitince göster”in görünür −8'inden kaçınır (bulgu 1)."
+  },
+  {
+   "id": "product.sprint_solo_signup_code",
+   "kind": "paper",
+   "title_tr": "Kurucu tek · Kayıt kodu gelmiyor",
+   "market": "b2c",
+   "speaker_role": "founder",
+   "pool_group": "solo",
+   "stage": "any",
+   "replaces": null,
+   "sender": {
+    "en": "Note to self",
+    "tr": "Kendine not"
+   },
+   "when_tr": "B2C, kurucu tek başına, ürün canlı. Güvenlik & Yetki hattında açık hata var ve o hattın düzeltme kartı koşan sprintte değil.",
+   "title": {
+    "en": "The sign up code never arrives",
+    "tr": "Kayıt kodu gelmiyor"
+   },
+   "body": {
+    "en": "Most of the latest reviews in the app store say the same thing: the sign up code never arrives. And you're halfway through {seam:urun.decision_card}.",
+    "tr": "Uygulama mağazasındaki son yorumların çoğu aynı şeyi söylüyor: kayıt kodu gelmiyor. Sen ise {seam:urun.decision_card} kartının ortasındasın."
+   },
+   "options": [
+    {
+     "id": "fix_first",
+     "does_tr": "Güvenlik & Yetki düzeltme kartı koşan sprintin başına girer (Karar 9 girişi); sığmayan kart kayar.",
+     "label": {
+      "en": "Fix the sign up code first",
+      "tr": "Önce kayıt kodunu düzelt"
+     },
+     "chips": [
+      {
+       "en": "Security and Access fix goes to the front of the sprint",
+       "tr": "Güvenlik & Yetki düzeltmesi sprintin başına girer"
+      },
+      {
+       "en": "Version History moves to the next sprint",
+       "tr": "Sürüm Geçmişi sonraki sprinte kayar"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kartı bekleyen yok ve her hafta çok yeni kullanıcı geliyor."
+    },
+    {
+     "id": "finish_card",
+     "does_tr": "Kitle bir kez −(haftalık yeni kullanıcı × %30).",
+     "label": {
+      "en": "Finish the card first",
+      "tr": "Önce kartı bitir"
+     },
+     "chips": [
+      {
+       "en": "Audience −90",
+       "tr": "Kitle −90"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart bitmek üzere ve haftalık yeni kullanıcı az."
+    }
+   ],
+   "expire": {
+    "en": "No answer came, so the card carried on.",
+    "tr": "Cevap verilmedi, kart sürdü.",
+    "does_tr": "“Önce kartı bitir” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    }
+   ],
+   "constants": [
+    {
+     "name": "SIGNUP_LOSS",
+     "value": "haftalık yeni kullanıcı × %30, bir kez",
+     "why_tr": "Kodu alamayanlar kayıt olamaz. Örnek: haftada 300 yeni → 90.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "“Sen de” → “Sen ise” (eleştiri bulgu 23)."
+  },
+  {
+   "id": "product.sprint_late",
+   "kind": "system_paper",
+   "title_tr": "Sistem kâğıdı · Kart sprinte yetişmeyecek (havuz dışı)",
+   "market": "both",
+   "speaker_role": "developer",
+   "pool_group": "system",
+   "stage": "any",
+   "replaces": "sprint_late.json",
+   "sender": {
+    "en": "Deniz · Software Engineer",
+    "tr": "Deniz · Yazılım Mühendisi"
+   },
+   "when_tr": "Yalnız kartı bekleyen biri varken: kart bir müşteri isteği kartı (B2B'de isteyen hesap, B2C'de isteyen kullanıcılar). Sprintin son haftasında kart bu hızla yetişmiyor ama bu hafta fazla mesaiyle yetişiyor (urun.crunch_finishes). Kartta açık söz varsa onun yerine söz olayı gelir. Sprintte başka kâğıt, söz olayı ya da acil durum geldiyse gelmez. Öbür bütün durumlarda kart sessizce devreder ve kapanışta yazar. 26 hafta geçmeden dönmez, koşuda en çok 3 kez.",
+   "title": {
+    "en": "The card won't make the sprint",
+    "tr": "Kart sprinte yetişmeyecek"
+   },
+   "body_variants": [
+    {
+     "case_tr": "ekip · B2B",
+     "en": "At this pace {seam:urun.decision_card} won't be done by the end of the sprint, and the {customer} team is waiting for it. If the team works late this week, it makes it.",
+     "tr": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek ve {customer} ekibi bu kartı bekliyor. Bu hafta ekip fazla mesai yaparsa yetişir."
+    },
+    {
+     "case_tr": "ekip · B2C",
+     "en": "At this pace {seam:urun.decision_card} won't be done by the end of the sprint, and {seam:urun.decision_request_votes} people are waiting for it. If the team works late this week, it makes it.",
+     "tr": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek ve bu kartı {seam:urun.decision_request_votes} kişi bekliyor. Bu hafta ekip fazla mesai yaparsa yetişir."
+    },
+    {
+     "case_tr": "kurucu tek · B2B (Kendine not)",
+     "en": "At this pace {seam:urun.decision_card} won't be done by the end of the sprint, and the {customer} team is waiting for it. If you work evenings this week too, it makes it.",
+     "tr": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek ve {customer} ekibi bu kartı bekliyor. Bu hafta akşamları da çalışırsan yetişir."
+    },
+    {
+     "case_tr": "kurucu tek · B2C (Kendine not)",
+     "en": "At this pace {seam:urun.decision_card} won't be done by the end of the sprint, and {seam:urun.decision_request_votes} people are waiting for it. If you work evenings this week too, it makes it.",
+     "tr": "Bu hızla {seam:urun.decision_card} sprint sonuna yetişmeyecek ve bu kartı {seam:urun.decision_request_votes} kişi bekliyor. Bu hafta akşamları da çalışırsan yetişir."
+    }
+   ],
+   "options": [
+    {
+     "id": "carry",
+     "does_tr": "sprint_card_carry.",
+     "label": {
+      "en": "Carry it to the next sprint",
+      "tr": "Sonraki sprinte devret"
+     },
+     "chips": [
+      {
+       "en": "Carries over to the next sprint",
+       "tr": "Sonraki sprinte devreder"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Bekleyenin acelesi yok ve sonraki sprintte yer var."
+    },
+    {
+     "id": "crunch",
+     "does_tr": "Yalnız ekip varken. sprint_hours ×1,25 (bu sprint); bu sprintte kartı olan herkesin morali −5. Bugünkü Marka −2'nin yerine geçer.",
+     "label": {
+      "en": "Ask the team to work late",
+      "tr": "Ekipten fazla mesai iste"
+     },
+     "chips": [
+      {
+       "en": "Team work hours ×1.25 this sprint",
+       "tr": "Bu sprint ekibin çalışma saati ×1,25"
+      },
+      {
+       "en": "Deniz, Mert, Selin: morale −5",
+       "tr": "Deniz, Mert, Selin: moral −5"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart bu sürüme girmeli (yenileme ya da kitle bekliyor) ve ekibin morali yüksek."
+    },
+    {
+     "id": "crunch_solo",
+     "does_tr": "Yalnız kurucu tekken. sprint_hours ×1,25; kurucu verimi sonraki hafta −%15.",
+     "label": {
+      "en": "Work evenings too",
+      "tr": "Akşamları da çalış"
+     },
+     "chips": [
+      {
+       "en": "Your work hours ×1.25 this sprint",
+       "tr": "Bu sprint çalışma saatin ×1,25"
+      },
+      {
+       "en": "Your pace −15% · 1 week",
+       "tr": "Senin verimin −%15 · 1 hafta"
+      }
+     ],
+     "lock": null,
+     "locked_in_example": false,
+     "best_when_tr": "Kart bu sürüme girmeli ve gelecek hafta satış görüşmen yok."
+    }
+   ],
+   "expire": {
+    "en": "No decision came, so the card carried over to the next sprint.",
+    "tr": "Karar verilmedi, kart sonraki sprinte devretti.",
+    "does_tr": "“Sonraki sprinte devret” yolu işler."
+   },
+   "tokens": [
+    {
+     "token": "{seam:urun.decision_card}",
+     "carries_tr": "kâğıdın bağlı olduğu sprint kartının ürün ekranındaki adı",
+     "example": "Toplu Fatura",
+     "source_tr": "Var olan seam (urun.decision_card)"
+    },
+    {
+     "token": "{customer}",
+     "carries_tr": "kartı isteyen hesap",
+     "example": "Demir Holding",
+     "source_tr": "Kartın customer slotu: o sprintte planlanmış müşteri isteği kartının sahibi (istek verisi)"
+    },
+    {
+     "token": "{seam:urun.decision_request_votes}",
+     "carries_tr": "B2C'de bu kartı isteyen kişi sayısı",
+     "example": "38",
+     "source_tr": "Yeni seam: istek kartının yorum sayısı (C gelene kadar B2C istek verisi yok, kâğıt gelmez)"
+    }
+   ],
+   "constants": [
+    {
+     "name": "SPRINT_LATE_LATCH",
+     "value": "26 hafta, koşuda en çok 3",
+     "why_tr": "Ana oturum kararı 4 ve eleştiri bulgu 4: durum bildiren kâğıt havuzun tekrar kuralını delmesin; havuzdan (52 hafta) kısa, çünkü yalnız bekleyen varken gelir.",
+     "status": "onay bekliyor"
+    },
+    {
+     "name": "CRUNCH_MORALE",
+     "value": "−5, bu sprintte kartı olan herkes",
+     "why_tr": "Fazla mesainin bedeli moraldir (Erdem: “fazla mesai yapılırsa ekibin morali düşer”); bugünkü Marka −2 olaydan kopuktu.",
+     "status": "onay bekliyor"
+    }
+   ],
+   "notes_tr": "40'lık havuzun dışında, sistemin istediği kâğıt. Konuşan, kartın o anki aşamasında çalışan kişidir (Karar 10; bugün konuşansızdı); örnekte geliştirme aşamasındaki Deniz. Gövde artık bekleyeni söyler; bekleyen yoksa kâğıt gelmez. Fazla mesai etiketi W3'ün onaylı söz olayıyla aynı: “Ekipten fazla mesai iste” (eleştiri bulgu 22). Ekip ve kurucu fazla mesaisi W1'deki pazar seçenekleri gibi iki ayrı id'dir; oyuncu yalnız kendi durumununkini görür. Sprint başına bir kesinti kuralına sayılır."
+  },
+  {
+   "id": "chip.EFFECT_CARD_POINTS",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_CARD_POINTS",
+   "market": "both",
+   "text": {
+    "en": "{card} {v} points",
+    "tr": "{card} {v} puan"
+   },
+   "example": {
+    "en": "Batch Invoicing +2 points",
+    "tr": "Toplu Fatura +2 puan"
+   },
+   "notes_tr": "Kartın kalan işi: sprint_card_effort, sprint_card_progress (ilerleme kalan işi düşürdüğü için eksi okunur) ve sprint_card_trim. Kırmızı yalnız artı. EN tekil biçim gerekir (_ONE: “1 point”). Bugünkü EFFECT_SPRINT_EFFORT (“Efor +2”) ve EFFECT_SPRINT_PROGRESS (“İlerleme +1”) kartın adını söylemiyor; ikisinin yerine geçer."
+  },
+  {
+   "id": "chip.EFFECT_NEXT_SPRINT_WORK",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_NEXT_SPRINT_WORK",
+   "market": "both",
+   "text": {
+    "en": "{n} points of work left for next sprint",
+    "tr": "Sonraki sprinte {n} puanlık iş kalır"
+   },
+   "example": {
+    "en": "3 points of work left for next sprint",
+    "tr": "Sonraki sprinte 3 puanlık iş kalır"
+   },
+   "notes_tr": "sprint_card_trim {follow true}: ertelenen pay + yeniden açma payı. EN tekil biçim gerekir."
+  },
+  {
+   "id": "chip.EFFECT_CARD_LATE",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_CARD_LATE",
+   "market": "both",
+   "text": {
+    "en": "{card} won't finish this sprint",
+    "tr": "{card} bu sprintte bitmez"
+   },
+   "example": {
+    "en": "Batch Invoicing won't finish this sprint",
+    "tr": "Toplu Fatura bu sprintte bitmez"
+   },
+   "notes_tr": "Bilgi çipi, fiil yok: statüko seçeneğinin bedelini plan tahmininden (plan_outcome) okur. Nötr."
+  },
+  {
+   "id": "chip.EFFECT_CARD_ON_TIME",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_CARD_ON_TIME",
+   "market": "both",
+   "text": {
+    "en": "{card} finishes this sprint",
+    "tr": "{card} bu sprintte biter"
+   },
+   "example": {
+    "en": "Batch Invoicing finishes this sprint",
+    "tr": "Toplu Fatura bu sprintte biter"
+   },
+   "notes_tr": "Bilgi çipi, fiil yok; EFFECT_CARD_LATE'in ikizi. Nötr."
+  },
+  {
+   "id": "chip.EFFECT_SHIP_BUGS",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_SHIP_BUGS",
+   "market": "both",
+   "text": {
+    "en": "{line}: {n} open bugs at release",
+    "tr": "{line}: çıkışta {n} açık hata"
+   },
+   "example": {
+    "en": "Invoicing: 1 open bug at release",
+    "tr": "Fatura: çıkışta 1 açık hata"
+   },
+   "notes_tr": "sprint_card_trim {bugs n}: hata kart çıkınca yazılır. Hat adı A'nın hat satırıyla aynı. EN tekil biçim gerekir (“1 open bug”)."
+  },
+  {
+   "id": "chip.EFFECT_NEW_BUGS",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_NEW_BUGS",
+   "market": "both",
+   "text": {
+    "en": "{line}: {n} new open bugs",
+    "tr": "{line}: {n} yeni açık hata"
+   },
+   "example": {
+    "en": "Durability: 1 new open bug",
+    "tr": "Dayanıklılık: 1 yeni açık hata"
+   },
+   "notes_tr": "Hatta hemen hata ekleme (A'nın add_bugs noktası); kart çıkışına bağlı değil. EN tekil biçim gerekir."
+  },
+  {
+   "id": "chip.EFFECT_LINE_HARDEN",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_LINE_HARDEN",
+   "market": "both",
+   "text": {
+    "en": "{line}: no new bugs for {weeks} weeks",
+    "tr": "{line}: {weeks} hafta yeni hata çıkmaz"
+   },
+   "example": {
+    "en": "Invoicing: no new bugs for 26 weeks",
+    "tr": "Fatura: 26 hafta yeni hata çıkmaz"
+   },
+   "notes_tr": "line_harden {weeks} (B_PLAN §5.2). Yeşil."
+  },
+  {
+   "id": "chip.EFFECT_ESCAPE_CHANCE",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_ESCAPE_CHANCE",
+   "market": "both",
+   "text": {
+    "en": "Chance of shipping with a bug {from}% → {to}%",
+    "tr": "Hatalı çıkma ihtimali %{from} → %{to}"
+   },
+   "example": {
+    "en": "Chance of shipping with a bug 0% → 15%",
+    "tr": "Hatalı çıkma ihtimali %0 → %15"
+   },
+   "notes_tr": "sprint_card_test {cut}; önceki ve sonraki değer aynı fonksiyondan (Karar 14). W3'ün söz olayı da bu çipi kullanır."
+  },
+  {
+   "id": "chip.EFFECT_WORK_LOST",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_WORK_LOST",
+   "market": "both",
+   "text": {
+    "en": "{n} points of finished work are lost",
+    "tr": "Yapılan {n} puan boşa gider"
+   },
+   "example": {
+    "en": "2 points of finished work are lost",
+    "tr": "Yapılan 2 puan boşa gider"
+   },
+   "notes_tr": "sprint_card_progress amount_seam ile; kırmızı. EN tekil biçim gerekir."
+  },
+  {
+   "id": "chip.EFFECT_ONE_MONTH_DISCOUNT",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_ONE_MONTH_DISCOUNT",
+   "market": "both",
+   "text": {
+    "en": "{customer}: {pct}% off for a month {v}",
+    "tr": "{customer}: bir ay %{pct} indirim {v}"
+   },
+   "example": {
+    "en": "Demir Holding: 20% off for a month −$560",
+    "tr": "Demir Holding: bir ay %20 indirim −$560"
+   },
+   "notes_tr": "Tek seferlik gider; MRR değişmez. Finansta “İndirim” satırı (yeni FIN_ONETIME anahtarı)."
+  },
+  {
+   "id": "chip.EFFECT_FIX_FRONT",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_FIX_FRONT",
+   "market": "both",
+   "text": {
+    "en": "{card} goes to the front of the sprint",
+    "tr": "{card} sprintin başına girer"
+   },
+   "example": {
+    "en": "Security and Access fix goes to the front of the sprint",
+    "tr": "Güvenlik & Yetki düzeltmesi sprintin başına girer"
+   },
+   "notes_tr": "Karar 9'un girişi kâğıttan çağrılınca; kayan kart W1'in EFFECT_SPRINT_BUMP çipiyle ayrıca yazılır."
+  },
+  {
+   "id": "chip.EFFECT_TRUST_UNTIL_SHIPS",
+   "kind": "chip_template",
+   "title_tr": "EFFECT_TRUST_UNTIL_SHIPS",
+   "market": "both",
+   "text": {
+    "en": "Satisfaction {v} at the end of each sprint until {card} ships",
+    "tr": "{card} çıkana kadar her sprint sonunda memnuniyet {v}"
+   },
+   "example": {
+    "en": "Satisfaction −3 at the end of each sprint until Batch Invoicing ships",
+    "tr": "Toplu Fatura çıkana kadar her sprint sonunda memnuniyet −3"
+   },
+   "notes_tr": "W1 Karar 8 kalıbının (EFFECT_TRUST_PER_SPRINT) istek hâli: hesap istediğini alana kadar süren bedel. Kart çıkınca biter."
+  }
+ ]
+}

@@ -1,0 +1,214 @@
+<title>Demo Yol Haritası</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek okuma şeridi; envanter tablosu ve takvim kendi kutusunda kayar. Oyunun Menajer Masası dili: sıcak kömür, açık mürekkep, amber. */
+:root{
+  --bg:#f3efe7; --surface:#fbf8f2; --ink:#26221c; --muted:#6d6457; --line:#d9d0c1;
+  --accent:#b8761c; --good:#3d7a4a; --warn:#a8741a; --bad:#a3402f; --info:#3f6f8f;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:46px} h2{font-size:30px} h3{font-size:21px}
+p{margin:0;max-width:70ch}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lead{font-size:18px;max-width:64ch}
+.muted{color:var(--muted)} .note{font-size:13px;color:var(--muted)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+tr.grp td{font:600 13px/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);padding-top:16px;border-bottom:1px solid var(--accent)}
+.chip{display:inline-block;font:500 11px/1 var(--f-mono);letter-spacing:.04em;padding:4px 7px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.c-ok{color:var(--good)} .c-dec{color:var(--warn)} .c-res{color:var(--info)} .c-no{color:var(--bad)} .c-later{color:var(--muted)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.grid3 .box{display:flex;flex-direction:column;gap:8px;min-width:0}
+.tag{display:inline-block;font:500 11px/1 var(--f-mono);letter-spacing:.06em;padding:4px 7px;border-radius:3px;border:1px solid var(--line);color:var(--muted);align-self:flex-start}
+.weeks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.weeks .box{display:flex;flex-direction:column;gap:8px;min-width:0}
+.weeks .when{font:600 13px/1 var(--f-mono);color:var(--accent)}
+.flag{border-left:3px solid var(--bad)}
+@media (max-width:520px){h1{font-size:36px}h2{font-size:26px}.lead{font-size:16px}}
+</style>
+
+<main>
+
+<header style="display:flex;flex-direction:column;gap:12px">
+  <span class="eyebrow">Project Unicorn · 21 Ekim 2026 · Erdem, Baki ve yardımcı yönetmen için</span>
+  <h1>Demo Yol Haritası</h1>
+  <p class="lead">Hedef: demonun kapsadığı yolun (Bootstrap'tan Series A'ya, oyun içinde 2012–2014) eğlenceli ve akıcı olması. Series A sonrası, geç oyun ve perde değişimi bilerek bu planın dışında.</p>
+</header>
+
+<section>
+  <span class="eyebrow">Neden yavaşladık</span>
+  <h2>Bir haftalık iş neden uzadı</h2>
+  <div class="grid3">
+    <div class="box"><span class="tag">1</span><p>PRD'ler oyunun asıl modeli doğru kurulmadan yazıldı. Ajanlar tasarım boşluklarını kod yazarken buldu ve soru olarak geri getirdi; müşteri beklentisinin sabit bir tablo olması bunların en büyüğüydü.</p></div>
+    <div class="box"><span class="tag">2</span><p>Birbirine bağlı üç faz aynı anda koştu. D, C'yi bekledi; C'nin yarısı pazar modelini bekledi. Paralellik hız kazandırmadı, bekleme ve soru üretti.</p></div>
+    <div class="box"><span class="tag">3</span><p>Her PRD'nin ortasında Erdem durakları vardı. Kararlar dağınık sayfalarla ve onlarca soruyla geldi; haftalık limit de iki kez işi kesti.</p></div>
+  </div>
+  <div class="box" style="display:flex;flex-direction:column;gap:8px">
+    <h3>Bundan sonra</h3>
+    <ul>
+      <li>Önce sistemlerin listesi ve sırası; sonra her sistem için araştırma ve <b>kapalı bir PRD</b>. Bütün tasarım soruları geliştirmeden önce, tek oturumda Erdem'le kapatılır.</li>
+      <li>Geliştirme ajanına giden PRD'de açık tasarım sorusu kalmaz. Ajan yalnız PRD ile kod çeliştiğinde sorar; teknik seçimleri kendisi yapar ve raporda yazar.</li>
+      <li>Aynı anda en çok iki kodlayan oturum ve ayrı dosyalar. Birbirini bekleyen işler paralel koşmaz.</li>
+      <li>Görsel tutarlılık, göç ve eski kodun silinmesi sorulmaz, her işin içindedir.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Envanter</span>
+  <h2>Series A'ya kadar ele alınacak sistemler</h2>
+  <p class="note"><span class="chip c-ok">tasarım hazır</span> PRD'ye çevrilebilir · <span class="chip c-dec">karar gerekli</span> Erdem'in yönü lazım · <span class="chip c-res">araştırma gerekli</span> önce bakılacak · <span class="chip c-no">hata</span> bugün yanlış çalışıyor · <span class="chip c-later">sonra</span> demo sonrası ya da en son</p>
+  <div class="box scroll">
+    <table>
+      <thead><tr><th>Sistem</th><th>Bugünkü sorun</th><th>Durum</th><th>Neye bağlı</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="4">Ürün ve pazar</td></tr>
+        <tr><td>ERP pazar modeli</td><td>Müşteri beklentisi sabit bir tablo, bitiş çizgisi gibi çalışıyor; satışçı neredeyse hiç kaybetmiyor. Yeni model hazır: 10 modül, 9 sektör profili, 5★, istek ve şart, rakip şirketler, 2030'a dönem tablosu, yıllık rapor, üç fiyat seçeneği</td><td><span class="chip c-ok">tasarım hazır</span></td><td>Açık: dev rakip geç oyunda geçilemiyor (sim ❌); dört sim kapısı; YZ bir mi iki dalga mı</td></tr>
+        <tr><td>Kart sistemi</td><td>Kartlar az ve birbirine benziyor; en zor kart en çok 2★ istiyor, büyük çok sprintlik iş yok. ERP 2–3 yılda bitiyor</td><td><span class="chip c-dec">karar gerekli</span></td><td>Pazar modeli (10 modül × dönemle açılan kademeler), hata modeli</td></tr>
+        <tr><td>Ar-Ge ağacı</td><td>Yıl kilidi yok (YZ düğümü 2012'de açık); tavanı yükseltmiyor; rakipler kullanmıyor</td><td><span class="chip c-dec">karar gerekli</span></td><td>Dönem tablosu; YZ dalga sorusu buraya</td></tr>
+        <tr><td>B2C, e-ticaret tarafı</td><td>ERP kadar ayrıntılı değil; kitle eğrisi tutarsız; rakipleri eski modelde</td><td><span class="chip c-res">araştırma gerekli</span></td><td>Pazar modelinin B2C karşılığı</td></tr>
+
+        <tr class="grp"><td colspan="4">Ekip</td></tr>
+        <tr><td>Sprint ve atama</td><td>Eski atama kuralı; sprint sabit değil; hata işin büyüklüğüyle ölçeklenmiyor</td><td><span class="chip c-ok">tasarım hazır</span></td><td>D proaktif planı ölçüyor (sprintin tamamını önceden oynatan otomatik atama)</td></tr>
+        <tr><td>İşe alım adayları</td><td>Her rolde aynı şablon: biri tek beceride 5★ öbürlerinde 0, sonrakiler 3/2 gibi. Junior aday 5★ olabiliyor, rastgelelik yok</td><td><span class="chip c-no">hata</span></td><td>Küçük araştırma: rol ve kıdeme göre beceri dağılımı</td></tr>
+
+        <tr class="grp"><td colspan="4">Satış ve hesaplar</td></tr>
+        <tr><td>B2B pazarlık</td><td>Fiyatı serbestçe kaydırıp karşı teklif veriyorsun ama müşteri hiç pazarlık etmiyor. Üç fiyat seçeneği gelince: pazarlık mı olacak, kabul / ret mi?</td><td><span class="chip c-dec">karar gerekli</span></td><td>Fiyat modeli (pazar modeli)</td></tr>
+        <tr><td>Hesap yaşamı</td><td>Memnuniyet defteri, imza, yenileme, istekler, HESAPLAR tablosu (C'nin kalan beş adımı)</td><td><span class="chip c-ok">tasarım hazır</span></td><td>Pazar modeli; C'nin PRD'si buna göre güncellenir</td></tr>
+
+        <tr class="grp"><td colspan="4">Fon ve ekonomi</td></tr>
+        <tr><td>Seed ve Series A görüşmesi</td><td>Term sheet pazarlık kolları ve arayüzü eski ve kötü görünüyor; pazarlık hissi zayıf</td><td><span class="chip c-res">araştırma gerekli</span></td><td>B2B pazarlıkla aynı ilke kullanılabilir</td></tr>
+        <tr><td>Ekonomi dengesi</td><td>İlk yarım yıl B2B yavaş (26. haftada aylık 16–28 bin $). Orta ve geç oyun fazla rahat. Uzaktan çalışmanın bedeli yok, evde kalmak en iyi strateji; ofisin getirisi tek seferlik marka</td><td><span class="chip c-dec">karar gerekli</span></td><td>Pazar modeli, sprint ve kart sistemi bitince kalibrasyon</td></tr>
+        <tr><td>Kredi</td><td>Henüz yok</td><td><span class="chip c-later">sonra</span></td><td>Ayrı tasarım (Erdem)</td></tr>
+
+        <tr class="grp"><td colspan="4">Yönlendirme ve içerik</td></tr>
+        <tr><td>Görev ve öğretici</td><td>Oyuncuyu yönlendiren bir akış yok. Görev mantığı mı (Big Ambitions gibi), Frank'le ilk adımları öğreten bir öğretici mi, ikisi mi? Görev, ofise taşınmak gibi davranışları da yönlendirebilir</td><td><span class="chip c-dec">karar gerekli</span></td><td>Bu geceki playtest'in bulguları</td></tr>
+        <tr><td>Olaylar</td><td>Faz B'de 46 kâğıttan 27'si oyunda hiç gelmiyor; olay yazımı ertelendi; yeni sistemler yeni kartlar isteyecek</td><td><span class="chip c-later">sonra</span></td><td>Sistemler oturduktan sonra</td></tr>
+        <tr><td>Metin</td><td>Tek metin turu (TR / EN); bugünkü metinler büyük ölçüde kabul</td><td><span class="chip c-later">sonra</span></td><td>Sistemler bitince</td></tr>
+
+        <tr class="grp"><td colspan="4">Arayüz ve sanat</td></tr>
+        <tr><td>Eski görünen ekranlar</td><td>VC ve seed panelleri gibi koyu Menajer diline taşınmamış ya da eskimiş ekranlar</td><td><span class="chip c-res">araştırma gerekli</span></td><td>Ekran listesi çıkarılır, sistem PRD'lerine dağıtılır</td></tr>
+        <tr><td>Sanat yönü</td><td>Dört karar bekliyor: ortak taban, illüstratörle deneme, portreler, dönem değişiminin neye bağlanacağı</td><td><span class="chip c-dec">karar gerekli</span></td><td>Steam görselleri buna bağlı</td></tr>
+
+        <tr class="grp"><td colspan="4">Süreç ve teknik</td></tr>
+        <tr><td>Kod denetimi, test, push</td><td>İki günde 30'dan fazla commit, push edilmedi; test paketi şişkin; ölü kod ve belge temizliği yarım</td><td><span class="chip c-dec">karar gerekli</span></td><td>Bu haftanın işleri bitince</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Çalışırken çıkanlar</span>
+  <h2>Dört ajanın bulduğu yeni işler</h2>
+  <div class="grid3">
+    <div class="box"><span class="tag">PAZAR</span><ul>
+      <li>Dev rakip geç oyunda geçilemiyor: karara aykırı, bir yol bulunmalı.</li>
+      <li>İstek kartları sprint başına 4'e çıkıyor (sınır 3); şartlı yenileme neredeyse hiç çıkmıyor.</li>
+      <li>İyi oyuncu 1★ müşteriyi hiç kaybetmiyor; geliştirmeyi bırakan yeterince kaybetmiyor.</li>
+      <li>Demoda 4★ müşteriye neredeyse hiç ulaşılmıyor.</li>
+      <li>"İlk kademeler artsın" ile efor kuralı birleşince 3. kademe ~10 kat pahalı.</li>
+    </ul></div>
+    <div class="box"><span class="tag">SATIŞ VE EKONOMİ</span><ul>
+      <li>Üç fiyat seçeneğiyle görüşmedeki serbest fiyat kaydırması kalkıyor.</li>
+      <li>5★ hesap ayda 50 bin $ getirebiliyor; demoda 5★ zaten çok zor.</li>
+      <li>Üç kart kârdaki şirkette runway yerine "9999" yazıyor (C'nin giderler devamı).</li>
+      <li>Uzaktan çalışmanın bedeli yok, ofis cazip değil.</li>
+    </ul></div>
+    <div class="box"><span class="tag">EKİP VE TEMİZLİK</span><ul>
+      <li>Atama sprintin tamamına bakmıyor; MVP 3 kişide 2 hafta gecikiyor.</li>
+      <li>Hata modeli: kartlar yenilenince hata miktarı yeniden ayarlanacak.</li>
+      <li>Ekran görüntüsü kurulumları kartlara sahte değer basıyordu (düzeltiliyor).</li>
+      <li>Okunmayan metin anahtarları süpürülüyor.</li>
+      <li>Toplantı sesi önerisi silindi; git'te duruyor, geri getirilebilir.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Sıra</span>
+  <h2>Önerilen takvim</h2>
+  <div class="weeks">
+    <div class="box"><span class="when">Bu hafta</span><h3>Kapanış ve ilk test</h3><ul>
+      <li>Çalışan işler biter: ev ve ofis, 3B masalar, temizlik.</li>
+      <li>Push.</li>
+      <li>Bu gece Baki'yle ilk kullanıcı testi; yarın bulgu listesi.</li>
+    </ul></div>
+    <div class="box"><span class="when">1. hafta · kod yok</span><h3>Tasarım haftası</h3><ul>
+      <li>P1 Ürün, pazar, kart, Ar-Ge (en büyüğü; temeli hazır)</li>
+      <li>P2 Ekip ve sprint (D'nin sonucuyla)</li>
+      <li>P3 Satış, pazarlık, hesap yaşamı</li>
+      <li>P4 Seed ve Series A görüşmesi</li>
+      <li>P5 İşe alım adayları (küçük)</li>
+      <li>P6 Görev ve öğretici (playtest bulgusuyla)</li>
+    </ul></div>
+    <div class="box"><span class="when">2. ve 3. hafta</span><h3>Geliştirme</h3><ul>
+      <li>İki hat, ayrı dosyalar: A ürün, pazar, kart, Ar-Ge; B ekip, sprint, işe alım.</li>
+      <li>Sonra satış ve fon.</li>
+      <li>Ortada Erdem durağı yok; her hattın sonunda bir oyun oturumu.</li>
+    </ul></div>
+    <div class="box"><span class="when">4. hafta</span><h3>Ayar ve tam test</h3><ul>
+      <li>Kalibrasyon simülasyonu.</li>
+      <li>Baştan sona insan testi.</li>
+      <li>Tek metin turu, olayların ilk dalgası.</li>
+    </ul></div>
+  </div>
+  <p class="note">Bu bir tahmin. İki hesabın haftalık limitiyle 3–4 hafta gerçekçi görünüyor; en büyük hızlandırıcı PRD'lerin geliştirmeden önce kapalı olması. Bu sırada Baki Steam tarafında ilerler.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Baki için</span>
+  <h2>Steam sayfası şimdi başlayabilir mi?</h2>
+  <div class="grid3">
+    <div class="box"><span class="tag c-ok" style="border-color:currentColor">ŞİMDİ BAŞLAYABİLİR</span><ul>
+      <li>Sayfa metni: TR / EN taslağı 19 Ekim'de yazıldı.</li>
+      <li>Logo: kilidi hazır (kare solda, "Project / Unicorn" iki satır).</li>
+      <li>Kapsül kompozisyon taslakları ve rakip sayfaların incelemesi.</li>
+      <li>Fragman senaryosu, istek listesi ve topluluk planı.</li>
+    </ul></div>
+    <div class="box"><span class="tag c-dec" style="border-color:currentColor">BEKLEMELİ</span><ul>
+      <li>Son kapsül görselleri: sanat yönünün dört kararına bağlı.</li>
+      <li>Ekran görüntüleri: ürün sayfası, sprint planı, pazar ve satış ekranları değişecek. Bugünküler yalnız yer tutucu.</li>
+    </ul></div>
+    <div class="box flag"><span class="tag">DİKKAT</span><ul>
+      <li>Oyunun adı kesinleşmeli: strateji el kitabındaki K5 hâlâ açık.</li>
+      <li>Kapsülü yapay zekâyla üretmek Steam'de beyan ister ve "YZ yapımı oyun" algısı riski taşır; insan eliyle kapsül daha güvenli.</li>
+      <li>Next Fest tarihi (öneri Haziran 2027) seçilmeli; sayfanın açılış zamanı buna göre.</li>
+      <li>Kapsül ölçüleri Steamworks belgesinden doğrulanmalı.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Erdem'in vereceği yön</span>
+  <h2>Tasarım haftasından önce</h2>
+  <div class="box"><ul>
+    <li><b>Görev ve öğretici:</b> görev zinciri mi, Frank'le öğretici mi, ikisi mi? (Bu geceki testten sonra.)</li>
+    <li><b>B2B pazarlık:</b> üç fiyat seçeneğinden sonra gerçek bir pazarlık mı, yoksa kabul / ret mi?</li>
+    <li><b>Sanat yönünün dört kararı</b> (Baki'nin kapsülü buna bağlı).</li>
+    <li><b>Oyunun adı ve Next Fest tarihi.</b></li>
+    <li><b>YZ bir mi iki dalga mı:</b> Ar-Ge PRD'sinde, araştırma özetiyle gelecek.</li>
+  </ul></div>
+  <p class="note">Ayrıntılı kararların tek kaynağı: docs/tasks/faz_cde/ERDEM_KARARLAR_2026-10-20.md · Pazar modeli: docs/tasks/faz_cde/pazar2/out/SENTEZ_ERP_PAZARI.md</p>
+</section>
+
+</main>

@@ -1,0 +1,11 @@
+{
+  "_not": "SIM2 katmanı: --mod sim2 bunu constants.json'un üstüne uygular (anahtar constants.json'da olmak zorunda). Satış zarı Erdem 6-7'nin cevabıdır; diğer satırlar SIM2 ayar turlarıdır (SIM_RAPOR_2.md §3, onay bekliyor). KURAL adayları (urun_disi_ayrilma, donem_ilk_yil_sart, dev_ihale_yili) burada kapalıdır, --ayar ile açılır.",
+  "satis_modeli": "zar",
+  "koltuk_esik": [1, 0.05],
+  "gidis_olasilik": [[0.10, 0.80, 0.10], [0.30, 0.45, 0.25], [0.30, 0.45, 0.25], [0.30, 0.45, 0.25], [0.30, 0.45, 0.25]],
+  "gidis_yeniden_cek": 0.5,
+  "sart_sure_hafta": 13,
+  "memnun_esik": 80,
+  "dusuk_esik": 50,
+  "dusuk_yildiz_sart": 0.3
+}

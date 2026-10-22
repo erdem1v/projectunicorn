@@ -1,0 +1,74 @@
+[
+ {
+  "ad": "Uymayan is tabani (PM, Test kutusu, qa 2)",
+  "beklenen": "3,0 puan/hf (0,256 -> 0,3)",
+  "bulunan": "3.00",
+  "gecti": true
+ },
+ {
+  "ad": "Uymayan is, yuksek Test puani (qa 8)",
+  "beklenen": "10 x Y(8) x 0,4 = 6,16 (taban islemez)",
+  "bulunan": "6.16",
+  "gecti": true
+ },
+ {
+  "ad": "Huy: GOZU YUKSEKTE x1,15, TITIZ x0,85",
+  "beklenen": "11,6 / 13,34 / 9,86 (Y(6) = 1,16)",
+  "bulunan": "11.60 / 13.34 / 9.86",
+  "gecti": true
+ },
+ {
+  "ad": "Duzeltme karti",
+  "beklenen": "1 hata 2 - 3 hata 6 - 5 hata 10 - 12 hata 24",
+  "bulunan": "1 hata 2 - 3 hata 6 - 5 hata 10 - 12 hata 24",
+  "gecti": true
+ },
+ {
+  "ad": "Karar 4 (PRD birebir, KEYMODE=size): 5*,5*,3*,3*,1*,1* gelistirici; kartlar 26, 16, 10",
+  "beklenen": "26'ya en hizli dort (5a 5b 3a 3b), 16'ya kalan iki (1a 1b), 10'a kimse",
+  "bulunan": "{26.0: ['3a', '3b', '5a', '5b'], 16.0: ['1a', '1b']}",
+  "gecti": true
+ },
+ {
+  "ad": "Karar 4 (KEYMODE=plan): ayni girdi, kadroyu plan sirasi belirler",
+  "beklenen": "10'a, 16'ya, 26'ya ikiser kisi; en hizli iki 26'da, sonraki iki 16'da, son iki 10'da",
+  "bulunan": "{26.0: ['5a', '5b'], 16.0: ['3a', '3b'], 10.0: ['1a', '1b']}",
+  "gecti": true
+ },
+ {
+  "ad": "Ayni girdi ayni atama (kisi listesi ters ve karisik, iki kip)",
+  "beklenen": "uc listede de ayni (kisi, kart) ciftleri",
+  "bulunan": "size: True, plan: True",
+  "gecti": true
+ },
+ {
+  "ad": "Uymayan is koşulu (PM, Test kutusu)",
+  "beklenen": "hazirlik varken Test'e girmez; hazirlik yokken girer",
+  "bulunan": "hazirlik var: False; yok: True",
+  "gecti": true
+ },
+ {
+  "ad": "Kendi karti x0,6 (kurucu dahil)",
+  "beklenen": "C = 0,57 x sqrt(Y(qa)) x 0,6 (kendi) / x 1,0 (baskasi)",
+  "bulunan": "kurucu kendi karti, qa 0 C=0.2418 (beklenen 0.2418); gelistirici kendi karti, qa 6 C=0.3683 (beklenen 0.3683); testci basqasinin karti, qa 6 C=0.6139 (beklenen 0.6139)",
+  "gecti": true
+ },
+ {
+  "ad": "PM esleme: 5* ve 1* PM; kartlar 40, 25, 15",
+  "beklenen": "pm_5 buyuk karttan baslar (40, sonra 25); pm_1 kalani alir; her kartin tek hazirlayani",
+  "bulunan": "{15: 'pm_5', 40: 'pm_5', 25: 'pm_5'}",
+  "gecti": true
+ },
+ {
+  "ad": "Yeni PM daha once baslanmis karti almaz, hazirlanmamisi alir",
+  "beklenen": "eski kartlarin hazirlayani degismez; yeni kart pm_3'te",
+  "bulunan": "True; yeni=pm_3",
+  "gecti": true
+ },
+ {
+  "ad": "Cekme: ekip bosta kalinca siradaki kart sprinte girer",
+  "beklenen": "ekip bosta kalinca en az bir kart ayni sprintte cekilir",
+  "bulunan": "2 kart sprintte; bitenler: [True, False]",
+  "gecti": true
+ }
+]
