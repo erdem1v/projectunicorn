@@ -39,7 +39,7 @@ MAP = {
     "funding.frank_approach_near": ("FRANK", "Already a message from Frank."),
     "funding.frank_cheque": ("FRANK", "His offer, his money."),
     "funding.frank_door_open": ("FRANK", "Already a message from Frank."),
-    "funding.frank_office_move": ("FRANK", "\"Frank'ten mesaj\" (EA scope)."),
+    "funding.frank_office_move": ("FRANK", "\"Frank'ten mesaj\"."),
     "funding.gate_series_a": ("FRANK", "Speaker is Frank; body is a scene (\"Frank telefonunu ters çevirip masaya koyuyor\") that a mail cannot show: needs a rewrite in the full pass."),
     "funding.gate_traction": ("FRANK", "\"Frank'ten mesaj\"."),
     "funding.hire_nudge": ("FRANK", "\"Frank'ten mesaj\"."),

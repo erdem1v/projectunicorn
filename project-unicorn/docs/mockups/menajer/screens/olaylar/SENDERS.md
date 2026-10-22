@@ -54,7 +54,7 @@ Kurallar (öneri):
 | `funding.frank_approach_near` | funding | interrupt | tracked | Frank (speaker) | FRANK | Already a message from Frank. |
 | `funding.frank_cheque` | funding | interrupt | tracked | Frank (speaker) | FRANK | His offer, his money. |
 | `funding.frank_door_open` | funding | interrupt | tracked | Frank (speaker) | FRANK | Already a message from Frank. |
-| `funding.frank_office_move` | funding | interrupt | tracked, ea | Frank (speaker) | FRANK | "Frank'ten mesaj" (EA scope). |
+| `funding.frank_office_move` | funding | interrupt | tracked | Frank (speaker) | FRANK | "Frank'ten mesaj". |
 | `funding.gate_series_a` | funding | interrupt | tracked | Frank (speaker) | FRANK | Speaker is Frank; body is a scene ("Frank telefonunu ters çevirip masaya koyuyor") that a mail cannot show: needs a rewrite in the full pass. |
 | `funding.gate_traction` | funding | interrupt | tracked | Frank (speaker) | FRANK | "Frank'ten mesaj". |
 | `funding.hire_nudge` | funding | interrupt | tracked | Frank (speaker) | FRANK | "Frank'ten mesaj". |

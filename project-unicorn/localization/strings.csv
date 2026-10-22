@@ -2532,9 +2532,9 @@ OFFICE_TOAST_BRAND,{office} · Marka +{n},{office} · Brand +{n}
 FRANK_OFFICE_MOVE_TITLE,Taşınma vakti,Time to move
 FRANK_OFFICE_MOVE_BODY,"Frank'ten mesaj.
 
-""Daire işini gördü, bundan sonrasını kaldırmaz. O parayı şirket senin mutfağında otursun diye koymadım. Şehirde bir dolaş, şirkete düzgün bir ofis bul.""","A message from Frank.
+""Daire işini gördü, bundan sonrasını kaldırmaz. Seed'i şirket senin mutfağında otursun diye kapatmadın. Şehirde bir dolaş, şirkete düzgün bir ofis bul.""","A message from Frank.
 
-""The flat did its job. It won't do the next one. I didn't put money in so the company could keep living in your kitchen. Go and look around the city and find it a real office."""
+""The flat did its job. It won't do the next one. You didn't close a seed round so the company could keep living in your kitchen. Go and look around the city and find the company a proper office."""
 FRANK_OFFICE_MOVE_OK,Bakacağım,I'll look into it
 FRANK_ADVISORY_MEETING_SET,Görüşme ayarlandı. Hazırlıklı git.,Meeting's set. Go in prepared.
 FRANK_ADVISORY_PAID_TIER,Artık ücret almanın vakti. Fiyatı belirle.,Time to start charging. Set the price.
