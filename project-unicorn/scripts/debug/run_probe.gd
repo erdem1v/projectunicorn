@@ -102,7 +102,8 @@ extends RefCounted
 #               min_cash_pre_seed=<n> seed_day=<n|-1> first_sign_day=<n|-1> first_revenue_day=<n|-1>
 #               cheque_day=<n|-1> open_w1_12=<n> idle_w1_12=<n> u_unexplained_weeks=<n> server_clicks=<n>
 #               auto_grows=<n> outage_eko=<n> outage_std=<n> outage_kur=<n> clause_ended=<n> first_hire_week=<n|-1>
-#               first_hire_runway=<months|-> move_weeks=<w,w,...|->
+#               first_hire_runway=<months|-> move_weeks=<w,w,...|-> support_reports=<n>/<n>
+#               support_news=worst:<n>,cleared:<n>,shipped:<n>,priority:<n>,behind:<n>
 #                                           (the weeks are the weekly STATE readings, by phase;
 #                                           seed_day is the day the seed was signed; first_revenue_day
 #                                           the first daily tick that closed with MRR; cheque_day the
@@ -114,7 +115,9 @@ extends RefCounted
 #                                           night outages by the tier the servers were on: Economy, Standard, Enterprise;
 #                                           clause_ended the contracts the server clause ended; first_hire_week the tick of
 #                                           the first hire and first_hire_runway the months of that week's costs, the new
-#                                           salary in, the cash covered, revenue left out; move_weeks the ticks a move was decided on)
+#                                           salary in, the cash covered, revenue left out; move_weeks the ticks a move was decided on;
+#                                           support_reports the weeks the support report came over the weeks a live product had a
+#                                           rep at the desk, support_news the reports each news line was in)
 #   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
 #   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn id>=<n>... ...
 #                                           (full_run*: once, the day the Series A door opens)
@@ -311,6 +314,12 @@ static var _desks_full: bool = false        # PROBE DECISION: a wanted hire is a
 static var _lost_lead: Prospect = null      # PROBE REPLOSS: the lead the last reported loss took off the registry
 static var _bugs_open: int = 0              # PROBE BUGS: the open bugs at the last weekly line
 static var _bugs_cleared: int = 0           # PROBE BUGS: bugs a fix card cleared since then
+static var _support_weeks: int = 0          # PROBE END: the weeks a live product had a rep at the support desk
+static var _support_reports: int = 0        # PROBE END: the weeks among them that mailed a report
+static var _support_news: Dictionary = {}   # PROBE END: news kind -> reports it was in
+static var _support_at: int = -1            # the arrival minute of the last report counted
+const SUPPORT_NEWS := {"SUPPORT_RPT_NEW_WORST": "worst", "SUPPORT_RPT_NEW_CLEARED": "cleared",
+	"SUPPORT_RPT_SHIPPED": "shipped", "SUPPORT_RPT_NEW_PRIORITY": "priority", "SUPPORT_RPT_BEHIND": "behind"}
 static var _runway_weeks: Dictionary = {}   # phase -> Vector2i(weeks with a finite runway, weeks)
 static var _min_cash_pre_seed: int = 0      # the lowest weekly cash before the seed round closed
 static var _run_seed: int = 424242
@@ -395,6 +404,10 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_desks_full = false
 	_bugs_open = 0
 	_bugs_cleared = 0
+	_support_weeks = 0
+	_support_reports = 0
+	_support_news = {}
+	_support_at = -1
 	ProductState.bugs_free = false
 	_hire_started = false
 	_gate_day = -1
@@ -912,6 +925,23 @@ static func _log_bugs() -> void:
 	_bugs_cleared = 0
 
 
+## PROBE END's support report counters: a week with a rep and a live product is a week the report could come; the
+## report the tick just wrote waits in the outbox or is already delivered, and its arrival minute tells it from
+## the ones counted before. Read before the founder plays the week, so the desk is the one the tick saw.
+static func _count_support_report() -> void:
+	if not ProductState.is_live() or CustomerRepSystem.ranked_reps().is_empty():
+		return
+	_support_weeks += 1
+	for m in GameState.mail_outbox + GameState.messages:
+		if m.kind == SupportSystem.REPORT_KIND and int(m.at) > _support_at:
+			_support_at = int(m.at)
+			_support_reports += 1
+			var kinds: Array = m.args.news.map(func(item: Dictionary) -> String: return SUPPORT_NEWS[item.key])
+			for kind in SUPPORT_NEWS.values():
+				if kinds.has(kind):
+					_support_news[kind] = int(_support_news.get(kind, 0)) + 1
+
+
 ## PROBE AREAS — the live product's areas this week. ProductQuality.level is read because the screen's
 ## area_level rounds to halves; the launches are the rival_hits on the area's lines inside the rival window.
 static func _log_areas() -> void:
@@ -1115,6 +1145,7 @@ static func _run_sim() -> void:
 ## 08:00, the week opens (night_skipped, both modes): the founder plays the week, the week's
 ## ledger lines print, and the run stops on its last week.
 static func _on_week_start() -> void:
+	_count_support_report()
 	_play_the_week()
 	_log_state()
 	_log_customers()
@@ -1186,7 +1217,7 @@ static func _finish() -> void:
 	var runway: Array = [1, 2, 3].map(func(ph: int) -> String:
 		var w: Vector2i = _runway_weeks.get(ph, Vector2i.ZERO)
 		return "finite_runway_p%d=%d/%d" % [ph, w.x, w.y])
-	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d u_unexplained_weeks=%d server_clicks=%d auto_grows=%d outage_eko=%d outage_std=%d outage_kur=%d clause_ended=%d first_hire_week=%d first_hire_runway=%s move_weeks=%s" % [
+	print("PROBE END day=%d run_active=%s ending=%s %s min_cash_pre_seed=%d seed_day=%d first_sign_day=%d first_revenue_day=%d cheque_day=%d open_w1_12=%d idle_w1_12=%d u_unexplained_weeks=%d server_clicks=%d auto_grows=%d outage_eko=%d outage_std=%d outage_kur=%d clause_ended=%d first_hire_week=%d first_hire_runway=%s move_weeks=%s support_reports=%d/%d support_news=%s" % [
 		GameState.day, str(GameState.run_active), GameState.ending_id, " ".join(runway), _min_cash_pre_seed,
 		GameState.seed_closed_day, _first_sign_day, _first_revenue_day,
 		int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, -1)), _open_weeks.size(),
@@ -1194,7 +1225,9 @@ static func _finish() -> void:
 		_server_clicks, _auto_grows, int(_outages.get(InfraSystem.PROVIDER_LOCAL, 0)),
 		int(_outages.get(InfraSystem.PROVIDER_CLOUD, 0)), int(_outages.get(InfraSystem.PROVIDER_ENTERPRISE, 0)), _clause_ended,
 		_first_hire_day, "%.1f" % _first_hire_runway if _first_hire_day >= 0 else "-",
-		",".join(_move_days.map(func(d: int) -> String: return str(d))) if not _move_days.is_empty() else "-"])
+		",".join(_move_days.map(func(d: int) -> String: return str(d))) if not _move_days.is_empty() else "-",
+		_support_reports, _support_weeks, ",".join(SUPPORT_NEWS.values().map(func(kind: String) -> String:
+			return "%s:%d" % [kind, int(_support_news.get(kind, 0))]))])
 	_log_hr()
 
 

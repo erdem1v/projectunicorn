@@ -3068,7 +3068,9 @@ tarafından oyuncuya haftalık bir özet giden bir yol yoktu: açık hata ve bil
   (`MessageSystem.drop_unread`); okunmuş rapor kalır.
 - "Yeni" son haftanın farkıdır (`SupportSystem.report_news`): hat Öncelikli eşiğine ulaştı (`SprintCatalog.is_priority_count`), hat
   boşaldı ya da bir düzeltmeyle azaldı ama doludur (açık hata yalnız düzeltmeyle azalır; iki satır ayrıktır, bir düzeltme tek satır
-  yazar), en çok hatalı hat değişti, temsilci yetişemedi. Boşsa rapor yazılmaz. Önceki hafta hata defterinde
+  yazar), en çok hatalı hat değişti, temsilci yetişemedi. Önceki en çok hatalı hattın açık hatası o hafta azaldıysa unvanın başka
+  hatta geçmesi haber değildir (düzeltme satırı onu söyler); yeni en çok hatalı hat öncekini en az `REPORT_WORST_LEAD` (2
+  [ÇALIŞMA], onay bekliyor) açık hatayla geçmediyse de değildir. Boşsa rapor yazılmaz. Önceki hafta hata defterinde
   (`mvp_report_bugs`) ve bildirim sayacında (`mvp_report_week`, `{in, done}`) durur; ikisi de rapor yazılsın yazılmasın her haftalık
   tikte yazılır. Eski kayıtta ikisi varsayılanla (boş) okunur: yüklemeden sonraki ilk rapor boş öncekiyle kıyaslanır.
 - "Yetişemedim": haftanın gelen bildirimlerinin beşte biri ya da fazlası doğrulanmadan kaldıysa (`REPORT_BEHIND_ONE_IN` 5 [ÇALIŞMA], onay

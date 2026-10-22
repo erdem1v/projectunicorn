@@ -25038,11 +25038,14 @@ static func _case_support_inflow_is_bug_free() -> String:
 ## Haftalık destek raporu yalnız bir Müşteri İlişkileri temsilcisi varken ve haftada yeni bir şey olduysa gelir: temsilcisiz hafta
 ## yeni şey olsa da sessizdir; temsilci varken eşik altı yeni bir hat, sayısı büyüyen eski bir hat sessiz haftadır; bir hat
 ## Öncelikli eşiğe varınca rapor temsilcinin adıyla gelir; okunmamış eski rapor yenisi gelince düşer, okunmuş kalır; düzeltme
-## hattı boşaltınca "sıfırlandı" ve en kötü hat değişimi yazılır. "Yetişemedim" cevapsız bildirim gelenlerin beşte biri ya da
-## fazlasıysa çıkar, ondan azsa çıkmaz.
+## hattı boşaltınca yalnız "sıfırlandı" yazılır, unvanın başka hatta geçmesi ayrıca yazılmaz. Önceki en kötü hat azalmadan başka
+## bir hat onu iki açık hata farkla geçince en kötü hat değişimi yazılır, bir farkla geçince yazılmaz. "Yetişemedim" cevapsız
+## bildirim gelenlerin beşte biri ya da fazlasıysa çıkar, ondan azsa çıkmaz.
 ## FALSİFİKASYON: `weekly_report`te `news.is_empty()` dönüşünü sil ("yeni mi" hep doğru) → sessiz hafta iddiaları FAIL;
 ## `reps.is_empty()` dönüşünü sil → temsilcisiz hafta iddiası FAIL; `drop_unread` çağrısını sil → düşme iddiası FAIL;
-## `report_news`te `>= incoming` yerine `> incoming` yaz → sınır iddiası FAIL.
+## `report_news`te `>= incoming` yerine `> incoming` yaz → sınır iddiası FAIL; `and was_open >= int(before.get(was_worst, 0))`
+## koşulunu sil → düzeltme haftası ve "önceki en kötü hat azaldı" iddiaları FAIL; `REPORT_WORST_LEAD`i 1 yap → "bir farkla
+## geçti" iddiası FAIL.
 static func _case_support_report_quiet_week() -> String:
 	_seed_support_fixture("b2c")
 	var first: String = "line_note_tool_search"
@@ -25079,16 +25082,25 @@ static func _case_support_report_quiet_week() -> String:
 	ProductState.clear_line_bugs(first)
 	week.call()
 	mails = reports.call()
-	if mails.size() != 1 or mails[0].args.news.size() != 2 \
-			or mails[0].args.news[0] != {"key": "SUPPORT_RPT_NEW_CLEARED", "args": {"line": first}} \
-			or mails[0].args.news[1] != {"key": "SUPPORT_RPT_NEW_WORST", "args": {"line": second}}:
-		return "the fix week left %s, want the one new report: the first line cleared, the second now the worst" % [mails]
-	# A read report stays when the next one comes.
+	if mails.size() != 1 or mails[0].args.news != [{"key": "SUPPORT_RPT_NEW_CLEARED", "args": {"line": first}}]:
+		return "the fix week left %s, want the one new report: the first line cleared and nothing about the title moving to the second" % [mails]
+	# A read report stays when the next one comes; the first line passes the second, which did not drop, by two.
 	MessageSystem.mark_read(String(mails[0].id))
 	ProductState.add_bugs(first, 7)
 	week.call()
 	if reports.call().size() != 2:
 		return "a read report and the next one left %d reports, want both" % reports.call().size()
+	if not (reports.call()[1].args.news as Array).has({"key": "SUPPORT_RPT_NEW_WORST", "args": {"line": first}}):
+		return "the first line passing the second by two left %s, want the title moving to it" % [reports.call()[1].args.news]
+	var worst_news := func(before: Dictionary, now: Dictionary) -> int:
+		return SupportSystem.report_news(before, now, {}).filter(
+			func(item: Dictionary) -> bool: return item.key == "SUPPORT_RPT_NEW_WORST").size()
+	var was: Dictionary = {first: 3, second: 1}
+	if worst_news.call(was, {first: 3, second: 5}) != 1 or worst_news.call(was, {first: 3, second: 4}) != 0 \
+			or worst_news.call({first: 7, second: 5}, {first: 1, second: 5}) != 0:
+		return "the title news read %d for a lead of 2, %d for a lead of 1 and %d when the old worst line dropped, want 1, 0, 0" % [
+			worst_news.call(was, {first: 3, second: 5}), worst_news.call(was, {first: 3, second: 4}),
+			worst_news.call({first: 7, second: 5}, {first: 1, second: 5})]
 	var behind := func(incoming: int, handled: int) -> bool:
 		return SupportSystem.report_news({}, {}, {"in": incoming, "done": handled}).size() == 1
 	if not behind.call(10, 8) or behind.call(10, 9) or behind.call(0, 0):

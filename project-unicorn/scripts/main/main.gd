@@ -1092,7 +1092,7 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ##   rep_lost (the sales rep's mail of a desk deal lost over an area, through the real close) · weekly_lost
 ##   (the same week's summary: two closes and the two lost deals the rep did not mail) · weekly_lost_only (a week of the
 ##   lost deals alone: no table) · support_week (the weekly support report of a Müşteri İlişkileri rep, through the real weekly
-##   tick: a fix shipped, a line past the priority mark, the worst line changed) · support_behind (the same week and the rep
+##   tick: a fix empties the worst line, another passes the priority mark, no title news) · support_behind (the same week and the rep
 ##   did not keep up) · support_go (its button pressed: Ürün opens on the worst line's area) · empty · long · team_read_only (Ekip
 ##   read-only over a decision) · team_tasks_read_only (its Görevler) · sales_read_only (Satış read-only) ·
 ##   finance_read_only (Finans read-only) · personal_read_only (Kişisel read-only) ·

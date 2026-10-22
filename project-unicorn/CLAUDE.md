@@ -135,8 +135,9 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
 - **Destek raporu.** Müşteri İlişkileri'nin en yüksek puanlı temsilcisi (`CustomerRepSystem.ranked_reps()[0]`) haftalık tikte, haftada en
   çok bir, gelen kutusuna rapor yazar (`SupportSystem.weekly_report`, mesaj türü `support_week`, saati durdurmaz); temsilci yoksa ya da
   haftada yeni bir şey yoksa gelmez. "Yeni" bir hattın Öncelikli eşiğe varması, boşalması ya da düzeltmeyle azalması, en kötü hattın
-  değişmesi ve temsilcinin yetişememesidir (cevapsız bildirim haftanın gelenlerinin beşte biri ya da fazlası, `REPORT_BEHIND_ONE_IN`
-  [WORKING]); okunmamış eski rapor yenisi gelince düşer. Düğme en kötü hattın alanını Ürün SPRINT'te açar.
+  değişmesi (önceki en kötü hat o hafta azaldıysa ya da yeni en kötü hat onu `REPORT_WORST_LEAD` [WORKING] açık hatadan az
+  geçtiyse değil) ve temsilcinin yetişememesidir (cevapsız bildirim haftanın gelenlerinin beşte biri ya da fazlası,
+  `REPORT_BEHIND_ONE_IN` [WORKING]); okunmamış eski rapor yenisi gelince düşer. Düğme en kötü hattın alanını Ürün SPRINT'te açar.
 - **Ofis.** Şirket Ev'de başlar (1 masa, kirasız); İş hanı 13 masa ve ayda $4.000, Plaza 38 ve $8.000, Loft 70 ve $18.000
   (`OfficeConstants.CATALOG`, kurucu bir masa tutar). Taşınmanın tek şartı paradır: kasa iki aylık kirayı karşılar
   (`OfficeSystem.can_move_to`); bu peşin kira karar anında bir kez düşer (`FinanceSystem.apply_one_time_cost`, kimlik
@@ -281,7 +282,9 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `cash`) ilk çalışan kasa iki aylık gidere (`spend`) ya da 6,7 aylık gidere (`hoard`, hiç taşınmaz) varınca alınır, öbür kollar
   altı ayda alır ve `full_run*` botu seed'den sonra kasa peşin kira ile bugünkü giderin altı ayını (`spend` iki ayını) karşılayınca bir
   üst ofise taşınır; her karar `PROBE DECISION` satırıdır (masa dolu ofiste bekleyen işe alım bir kez `hire desks_full`)
-  ve `PROBE END` `first_hire_week=`, `first_hire_runway=`, `move_weeks=` basar).
+  ve `PROBE END` `first_hire_week=`, `first_hire_runway=`, `move_weeks=` basar); her koşunun `PROBE END`'i destek raporunun
+  sıklığını da basar: `support_reports=` (rapor gelen hafta / canlı üründe temsilcisi olan hafta), `support_news=` (her haber
+  türü kaç raporda).
   Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir

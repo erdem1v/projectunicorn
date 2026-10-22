@@ -309,6 +309,8 @@ static func neglect_note() -> String:
 
 ## Cevapsız kalan bildirim haftanın gelenlerinin bu sayıda birine ya da fazlasına varınca temsilci yetişemedim der.
 const REPORT_BEHIND_ONE_IN := 5         # [ÇALIŞMA] onay bekliyor
+## Yeni en kötü hat, öncekinin açık hatasını bu kadar ya da fazla geçince unvanın değişmesi haber olur.
+const REPORT_WORST_LEAD := 2            # [ÇALIŞMA] onay bekliyor
 const REPORT_KIND := "support_week"
 
 
@@ -337,8 +339,10 @@ static func weekly_report() -> void:
 
 
 ## Haftanın yenileri, {key, args} satırları olarak: bir hat Öncelikli eşiğine ulaştı, sıfırlandı ya da bir düzeltmeyle
-## azaldı (açık hata yalnız düzeltmeyle azalır), en çok sorunlu hat değişti, temsilci yetişemedi. `before` ve `now`
-## {hat: açık hata} defterleri, `week` {in, done} bildirim sayacı. Boşsa hafta sessizdir.
+## azaldı (açık hata yalnız düzeltmeyle azalır), en çok sorunlu hat değişti, temsilci yetişemedi. Unvanın değişmesi
+## önceki en kötü hattın açık hatası o hafta azaldıysa haber değildir (düzeltme satırı onu zaten söyler) ve yeni en kötü
+## hat öncekini `REPORT_WORST_LEAD` farkla geçmediyse de değildir.
+## `before` ve `now` {hat: açık hata} defterleri, `week` {in, done} bildirim sayacı. Boşsa hafta sessizdir.
 static func report_news(before: Dictionary, now: Dictionary, week: Dictionary) -> Array:
 	var news: Array = []
 	var lines: Array = before.keys()
@@ -356,7 +360,10 @@ static func report_news(before: Dictionary, now: Dictionary, week: Dictionary) -
 		elif open < was:
 			news.append({"key": "SUPPORT_RPT_SHIPPED", "args": {"line": line, "from": was, "to": open}})
 	var worst: String = ProductState.worst_bug_line(now)
-	if worst != "" and worst != ProductState.worst_bug_line(before):
+	var was_worst: String = ProductState.worst_bug_line(before)
+	var was_open: int = int(now.get(was_worst, 0))
+	if worst != "" and worst != was_worst and was_open >= int(before.get(was_worst, 0)) \
+			and int(now[worst]) - was_open >= REPORT_WORST_LEAD:
 		news.append({"key": "SUPPORT_RPT_NEW_WORST", "args": {"line": worst}})
 	var incoming: int = int(week.get("in", 0))
 	var handled: int = int(week.get("done", 0))
