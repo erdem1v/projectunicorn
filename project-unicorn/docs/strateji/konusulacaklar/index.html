@@ -68,7 +68,7 @@ td.n{font:600 15px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;text-alig
 
 <section>
   <span class="eyebrow">Özet</span>
-  <h2>14 sistem, 95 konu</h2>
+  <h2>16 sistem, 104 konu</h2>
   <p class="note"><span class="chip c-part">kısmen net</span> yön senin, ayrıntının çoğu konuşulmadı · <span class="chip c-no">konuşulmadı</span> yalnız sorun ya da yön var</p>
   <div class="box scroll">
     <table>
@@ -87,7 +87,9 @@ td.n{font:600 15px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;text-alig
         <tr><td><a href="#b2c">B2C ve e-ticaret pazarı</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">3</td><td>yok</td><td>7</td></tr>
         <tr><td><a href="#eko">Ekonomi dengesi</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">5</td><td>C'nin oyun içi ekonomi ölçümü</td><td>7</td></tr>
         <tr><td><a href="#pazarlama">Pazarlama modülü</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">4</td><td>yok</td><td>7</td></tr>
-        <tr><td><a href="#sanat">Sanat yönü ve Steam</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">5</td><td>Baki'nin son kapsülü</td><td>8</td></tr>
+        <tr><td><a href="#iflas">İflas, kepenk ve kredi</a></td><td><span class="chip c-no">konuşulmadı</span></td><td class="n">4</td><td>yok</td><td>7</td></tr>
+        <tr><td><a href="#ayarlar">Ayarlar</a></td><td><span class="chip c-part">kısmen net</span></td><td class="n">3</td><td>yok</td><td>küçük</td></tr>
+        <tr><td><a href="#sanat">Sanat yönü ve Steam</a></td><td><span class="chip c-part">kısmen net</span></td><td class="n">7</td><td>Baki'nin son kapsülü</td><td>8</td></tr>
       </tbody>
     </table>
   </div>
@@ -105,7 +107,7 @@ td.n{font:600 15px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;text-alig
       <li><div><b>Ekip, sprint ve atama.</b><span>Çekirdek zaten net. D'nin görsel sayfası gelince tek oturumda kapanır; 1 ile paralel olabilir.</span></div></li>
       <li><div><b>İşe alım adayları.</b><span>Küçük ve bağımsız; 1 ile paralel kapanabilir.</span></div></li>
       <li><div><b>Görev ve öğretici.</b><span>Playtest'ten sonra: oyuncunun nerede takıldığını görmeden karar verilmez.</span></div></li>
-      <li><div><b>B2C pazarı, pazarlama modülü ve ekonomi dengesi.</b><span>Pazarlama, kâra geçen şirketin orta oyundaki rahatlığını ve B2C dengesini çözebilir; bu yüzden ekonomiyle aynı oturumda. Ekonominin son ayarı öbür sistemler oturunca ölçümle yapılır.</span></div></li>
+      <li><div><b>B2C pazarı, pazarlama modülü, iflas ve kredi, ekonomi dengesi.</b><span>Pazarlama, kâra geçen şirketin orta oyundaki rahatlığını ve B2C dengesini çözebilir; bu yüzden ekonomiyle aynı oturumda. Ekonominin son ayarı öbür sistemler oturunca ölçümle yapılır.</span></div></li>
       <li><div><b>Sanat yönü ve Steam.</b><span>Bağımsız, senin uygun anında. Baki'nin son kapsülünü açar.</span></div></li>
     </ol>
   </div>
@@ -416,11 +418,47 @@ td.n{font:600 15px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;text-alig
   <div class="foot"><div><b>Bekleyen iş</b>yok.</div><div><b>Bağımlılık</b>B2C pazarı, B2B satış (aday akışı), ekonomi dengesi.</div></div>
 </section>
 
+<section class="box sys" id="iflas">
+  <header><h3>İflas, kepenk ve kredi</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 7</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Netleşenler</span><ul>
+      <li>Kredi sonra, ayrı tasarım</li>
+      <li>17 Ekim: gizli gider yok; oyuncu her gideri görür</li>
+      <li>22 Ekim: iflas senaryoları elden geçecek; birkaç günde iflas oyuncu için tatsız</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>Kasa eksiye düşünce iflasa kadar ne kadar süre geçsin, oyuncu bu sürede ne yapabilsin: maaş kesme, işten çıkarma, acil yatırım, kredi? <span class="src">22 Ekim mesajın</span></li>
+      <li>Kredi sistemi: ne zaman açılır, nasıl çalışır, bedeli ne? <span class="src">kredi kararın · yol haritası</span></li>
+      <li>İflas sonu ekranı ve Frank'in satırı: "28 gün kırmızıda kaldın" diyor, oyunda zaman artık hafta hafta. <span class="src">RAPOR_Q §0.4</span></li>
+      <li>"Kasa tükeniyor" yumuşak sonu: büyüyen test botları 104. haftada bu sona takılıyor. Bu son ne zaman ve nasıl gelmeli? <span class="src">D ölçümü (D0a)</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>yok.</div><div><b>Bağımlılık</b>Ekonomi dengesi, seed ve Series A görüşmesi.</div></div>
+</section>
+
+<section class="box sys" id="ayarlar">
+  <header><h3>Ayarlar</h3><span class="chip c-part">kısmen net</span><span class="src">küçük, bağımsız</span></header>
+  <div class="cols">
+    <div class="closed"><span class="lbl">Bugün oyunda</span><ul>
+      <li>Ana ses, müzik ve efekt ayrı kaydırıcılarla; varsayılanlar ana ses %100, müzik %35, efekt %70</li>
+      <li>Oyun arka plandayken sessize alma var ve açık; arka planda duraklatma da açık</li>
+      <li>Ortam sesi kanalı yok (oyunda ortam sesi de yok); hareket bulanıklığı ve kamera sarsıntısı yok</li>
+    </ul></div>
+    <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
+      <li>İlk açılışta ses ne kadar yüksek duyuluyor? Ana ses %100 ama müzik %35; yorum "%50 civarı, bağırmayan bir seviye" öneriyor. Gerçek oyunda dinlenip varsayılan ayarlanmalı. <span class="src">Twitter yorumu · settings.gd</span></li>
+      <li>Ortam sesi gelirse ayrı kaydırıcısı olsun. <span class="src">Twitter yorumu</span></li>
+      <li>İleride kamera hareketi ya da ekran efekti eklenirse yüzdesel ayarı olsun. <span class="src">Twitter yorumu</span></li>
+    </ol></div>
+  </div>
+  <div class="foot"><div><b>Bekleyen iş</b>yok.</div><div><b>Bağımlılık</b>Müzik kararı (birkaç parça, ses düzeyi).</div></div>
+</section>
+
 <section class="box sys" id="sanat">
-  <header><h3>Sanat yönü ve Steam</h3><span class="chip c-no">konuşulmadı</span><span class="src">PRD 8</span></header>
+  <header><h3>Sanat yönü ve Steam</h3><span class="chip c-part">kısmen net</span><span class="src">PRD 8</span></header>
   <div class="cols">
     <div class="closed"><span class="lbl">Netleşenler</span><ul>
       <li>20 Ekim: sanat döneme kilitlenmez, kopya yok, yöntemle kurulur</li>
+      <li>22 Ekim: kapsül, logo, müzik ve metin dahil üretim YZ ile sürer; hedef "AI slop" damgasından kaçınmak, oyun YZ diye bağırmamalı (AI Slop Riski sayfası)</li>
     </ul></div>
     <div class="open"><span class="lbl">Konuşulacaklar</span><ol>
       <li>Sanatın dört kararı: ortak taban, yön şimdi mi illüstratör denemesinden sonra mı, portreler, dönem değişimi neye bağlı. <span class="src">sanat yönü 2. tur</span></li>
@@ -428,9 +466,24 @@ td.n{font:600 15px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;text-alig
       <li>Demo kapsamı tek satır mı: "Bootstrap'tan Series A davetine, 40–60 dk"? <span class="src">el kitabı K2</span></li>
       <li>Tipografi maketlerden önce kilitlensin mi; "bitti" iki katlı mı olsun? <span class="src">el kitabı K3, K4</span></li>
       <li>Oyunun adı ve YZ beyanı ne zaman, nasıl? <span class="src">el kitabı K5</span></li>
+      <li>Kapsül en kritik tek görsel: yayıncılar imzadan sonra ilk iş kapsülü yeniliyor. YZ kapsülünün kör testten geçme çıtası ne olsun? <span class="src">Dora Özsoy, X, 13 Ekim · AI Slop Riski</span></li>
+      <li>Çıkış takvimi ve fiyat: çıkışı en az ~60 gün önce duyurmak, büyük çıkış indiriminden kaçınmak, Next Fest'te ilk 50'ye girme hedefi. <span class="src">MrAente, X, 14 Ekim</span></li>
     </ol></div>
   </div>
   <div class="foot"><div><b>Bekleyen iş</b>Baki: son kapsül görselleri ve ekran görüntüleri.</div><div><b>Bağımlılık</b>Bağımsız; ekran görüntüleri değişecek ekranlara bağlı.</div></div>
+</section>
+
+<section>
+  <span class="eyebrow">Hatalar</span>
+  <h2>Bulunan küçük hatalar</h2>
+  <p class="note">Tasarım sorusu değil, tam tanımlı düzeltmeler. Yeni çalışma yöntemiyle ilk işlerden olabilir.</p>
+  <div class="box run"><ul>
+    <li>Tüketici talep verisi hep 0 döndüğü için üç PM kâğıdı (çekirdek önce, telefon da, belirsiz tarif) oyunda hiç gelmiyor. B2C istek tasarımına bağlı. <span class="src">RAPOR_Q §0.4</span></li>
+    <li>İngilizce ekranda haber şeridinin kaynak adları Türkçe çıkıyor (Gündem, Girişim Bülteni, Sektör Telgrafı, Ekonomi Postası). <span class="src">RAPOR_Q §0.4</span></li>
+    <li>İflas sonundaki Frank satırı "28 gün" diyor; haftalık zamanla uyuşmuyor (iflas bölümünde). <span class="src">RAPOR_Q §0.4</span></li>
+    <li>Destek raporunun "kısmi düzeltme" haberi oyunda tetiklenemiyor; D'nin yeni hata modelinden sonra bakılacak. <span class="src">RAPOR_C §5.2</span></li>
+    <li>Atlas uyarı şeridinin rengi: sen "sarı" dedin, kodda kehribar. <span class="src">RAPOR_C §5.2</span></li>
+  </ul></div>
 </section>
 
 <section>
@@ -441,7 +494,7 @@ td.n{font:600 15px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;text-alig
       <li>Olaylar: Faz B'nin 46 kâğıdından 27'si oyunda gelmiyor; yeni sistemler yeni kart isteyecek.</li>
       <li>Tek metin turu, TR ve EN, sistemler bitince. İmalat sektörü ile Üretim modülünün adı ve 4–5★ hesapta eskime satırının biçimi burada görülür.</li>
       <li>Eski görünen ekranlar (VC ve seed panelleri gibi) ilgili sistemlerin PRD'lerine dağıtılır.</li>
-      <li>Çalışma düzeni ve kod denetimi, işler bitince.</li>
+      <li>Çalışma düzeni ve kod denetimi, işler bitince. Q'nun okunmayan ama açık maddelere bağlı 7 metin ailesi (RAPOR_Q §0.3) burada ele alınır.</li>
     </ul>
   </div>
 </section>
